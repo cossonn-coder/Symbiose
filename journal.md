@@ -271,6 +271,19 @@ Voir [[feedback-design]] mémoire mise à jour.
 
 ## Backlog
 
+> Chaque sprint à venir possède un **kickoff autosuffisant** dans le
+> dossier `sprints/`. À l'ouverture d'une nouvelle session, donner à
+> Claude l'instruction « lis `sprints/sprint_X.md` » suffit à reprendre
+> sans le contexte de cette session.
+
+| Sprint | Fichier kickoff |
+|---|---|
+| Sprint conception bis (zones blanches) | `sprints/sprint_conception_bis.md` |
+| Sprint 1 (recalibrage visuel) | `sprints/sprint_1_recalibrage_visuel.md` |
+| Sprint 2 (orchestration C#) | `sprints/sprint_2_orchestration.md` |
+| Sprint 3 (portage simulation) | `sprints/sprint_3_portage_simulation.md` |
+| Sprint 4 (mécaniques conception) | `sprints/sprint_4_mecaniques_conception.md` |
+
 ### Sprint 0 — gel et infrastructure documentaire — TERMINÉ ✅
 - [x] État des lieux complet
 - [x] `CLAUDE.md` projet

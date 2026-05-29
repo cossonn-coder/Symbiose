@@ -176,17 +176,17 @@ historiques.
 
 ## Backlog actif
 
-Sprint en cours : **Sprint conception bis — zones blanches restantes**
-(cycle de sauvegarde, gestion météo, multijoueur, lore, panne sèche,
-accessibilité).
+Chaque sprint à venir possède un **kickoff autosuffisant** dans
+`sprints/`. À l'ouverture d'une nouvelle session, Nico donne
+l'instruction « lis `sprints/sprint_X.md` » et Claude reprend sans
+contexte préalable.
 
-Sprints suivants prévus :
-- Sprint 1 : recalibrer dimensions sprites, refaire `world/TileGrid.cs`
-  avec grille 3×3 tuiles et maison centrale
-- Sprint 2 : fondations orchestration (`Main.cs` propre, `GameManager`,
-  `TurnSystem`, nouvelle `Main.tscn`)
-- Sprint 3 : portage `effects.py` et `engine.py` en C#, tests de parité
-- Sprint 4 : intégration progressive des mécaniques Sprint conception
-  (Vigueur, paliers, encyclopédie, carnet, magazine, foyer)
+| Sprint | Kickoff |
+|---|---|
+| Sprint conception bis (zones blanches : sauvegarde, météo, lore…) | `sprints/sprint_conception_bis.md` |
+| Sprint 1 (recalibrage visuel + grille 3×3 + maison) | `sprints/sprint_1_recalibrage_visuel.md` |
+| Sprint 2 (orchestration C# : Main, GameManager, TurnSystem) | `sprints/sprint_2_orchestration.md` |
+| Sprint 3 (portage simulation Python → C# + parité) | `sprints/sprint_3_portage_simulation.md` |
+| Sprint 4 (Vigueur, paliers, encyclopédie, carnet, magazine, foyer) | `sprints/sprint_4_mecaniques_conception.md` |
 
-Pour le détail complet du backlog, voir la section dédiée du `journal.md`.
+Pour l'historique des décisions, voir `journal.md`.
