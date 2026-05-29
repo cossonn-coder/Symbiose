@@ -209,7 +209,7 @@ prévisible** — récompense rare qui cristallise la philo non-action.
 - `effects.py` → pas encore en C#
 - `engine.py` → pas encore en C# (boucle 52 semaines + succession)
 
-### Systèmes à concevoir (issus du Sprint conception + Sprint conception bis)
+### Systèmes à concevoir (Sprint conception + bis + zone Z7)
 - **Vigueur universelle** (D11) — couche transversale (joueur + plantes +
   auxiliaires + nuisibles)
 - **Paliers de maîtrise** (D12) — méta-état du joueur, conditions de
@@ -227,6 +227,18 @@ prévisible** — récompense rare qui cristallise la philo non-action.
 - **Pages secrètes** (D18) — sources de drop, lieu de consultation,
   volume cible v1.0, contenu narratif. Session future dédiée.
 - **Action « manger »** (D19) — organes consommables → Vigueur joueur
+- **Éclairement spatial pixel-exact** (D20) — `LightField` v2 avec
+  ombres portées par canopées et structures, 4 tranches + intégrale,
+  recalcul hebdomadaire. Voir `sprints/sprint_eclairement.md`.
+- **Système temporel pérennes ligneuses** (D21) — âge en années, courbe
+  pluri-décennale pour les arbres (figuier, pommier, cerisier, noyer,
+  chêne premiers)
+- **Héritage génétique de la graine** (D22) — `genetic_factor` ∈ [0.7,
+  1.3] hérité à la fécondation, distribution gaussienne, généralisable
+  (hauteur, vigueur, résistance)
+- **Catalogue arbres pérennes étendu** (D23) — différé post-validation
+  du squelette (poirier, prunier, châtaignier, frêne, tilleul, bouleau,
+  saule, aulne, peuplier, érable…)
 
 ### Données calibrage
 - Sprites tuiles **78×57** sur disque (et non 96×48 codé dans `TileGrid.cs`)
@@ -264,7 +276,8 @@ contexte préalable.
 |---|---|
 | Sprint 1 (recalibrage visuel + grille 3×3 + maison) | `sprints/sprint_1_recalibrage_visuel.md` |
 | Sprint 2 (orchestration C# : Main, GameManager, TurnSystem) | `sprints/sprint_2_orchestration.md` |
-| Sprint 3 (portage simulation Python → C# + parité) | `sprints/sprint_3_portage_simulation.md` |
+| Sprint éclairement (Z7, D20-D22 : ombres + pérennes + génétique) | `sprints/sprint_eclairement.md` |
+| Sprint 3 (portage simulation — peut absorber le sprint éclairement) | `sprints/sprint_3_portage_simulation.md` |
 | Sprint 4 (Vigueur, paliers, encyclopédie, carnet, magazine, foyer) | `sprints/sprint_4_mecaniques_conception.md` |
 
 Pour l'historique des décisions, voir `journal.md`.
