@@ -1,0 +1,66 @@
+[gd_scene format=3 uid="uid://b7jnafuoq3yjv"]
+
+[node name="Main" type="Node2D" unique_id=293915938]
+
+[node name="TimeManager" type="Node" parent="." unique_id=1614755609]
+
+[node name="EcologySimulation" type="Node" parent="." unique_id=181795760]
+
+[node name="Node" type="Node" parent="." unique_id=1424072867]
+
+[node name="PlayerController" type="Node" parent="." unique_id=1051280361]
+
+[node name="GardenManager" type="Node" parent="." unique_id=931323588]
+
+[node name="GardenSave" type="Node" parent="." unique_id=1881837512]
+
+[node name="timestamp_global" type="Node" parent="GardenSave" unique_id=219310688]
+
+[node name="état écologique compressé" type="Node" parent="GardenSave" unique_id=1241744214]
+
+[node name="tendances dynamiques" type="Node" parent="GardenSave" unique_id=1948214631]
+
+[node name="Entités écologiques" type="Node" parent="." unique_id=2096298949]
+
+[node name="SolidCell" type="Node" parent="Entités écologiques" unique_id=528295110]
+
+[node name="humidité" type="Node" parent="Entités écologiques/SolidCell" unique_id=282730168]
+
+[node name="matière organique" type="Node" parent="Entités écologiques/SolidCell" unique_id=1614465610]
+
+[node name="biomase microbienne" type="Node" parent="Entités écologiques/SolidCell" unique_id=388192859]
+
+[node name="compaction" type="Node" parent="Entités écologiques/SolidCell" unique_id=1068080543]
+
+[node name="fertilité lente" type="Node" parent="Entités écologiques/SolidCell" unique_id=602084474]
+
+[node name="Organism" type="Node" parent="Entités écologiques" unique_id=482641582]
+
+[node name="énergie" type="Node" parent="Entités écologiques/Organism" unique_id=1513027213]
+
+[node name="eau" type="Node" parent="Entités écologiques/Organism" unique_id=1780894048]
+
+[node name="âge" type="Node" parent="Entités écologiques/Organism" unique_id=295651818]
+
+[node name="santé" type="Node" parent="Entités écologiques/Organism" unique_id=70465062]
+
+[node name="stress écologique" type="Node" parent="Entités écologiques/Organism" unique_id=1077509135]
+
+[node name="reproduction" type="Node" parent="Entités écologiques/Organism" unique_id=702100777]
+
+[node name="interactions" type="Node" parent="Entités écologiques/Organism" unique_id=418925945]
+
+[node name="SimulationAdapter" type="Node" parent="." unique_id=1985307300]
+
+[node name="TurnSystem" type="Node" parent="." unique_id=919823415]
+
+[node name="EcologySystem" type="Node" parent="." unique_id=812998169]
+
+[node name="EcosystemManager" type="Node" parent="." unique_id=2072774978]
+
+[node name="SolidGrid" type="TileMap" parent="EcosystemManager" unique_id=928437232]
+format = 2
+
+[node name="LightField" type="Sprite2D" parent="EcosystemManager" unique_id=1441193943]
+
+[node name="PlantInstances" type="Node2D" parent="EcosystemManager" unique_id=1678204360]

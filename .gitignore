@@ -1,0 +1,9 @@
+# Godot 4+ specific ignores
+.godot/
+/android/
+
+# Claude Code — permissions locales par utilisateur
+.claude/settings.local.json
+
+# Caches Python du moteur de simulation
+data/code/__pycache__/
