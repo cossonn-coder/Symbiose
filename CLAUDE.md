@@ -53,7 +53,7 @@ Le moteur Python dans `data/code/` (`models.py`, `fields.py`, `effects.py`,
 
 Pour le détail historique, voir `data/code/models.py` et `data/code/fields.py`.
 
-## Mécaniques centrales (depuis Sprint conception, 2026-05-29)
+## Mécaniques centrales (Sprint conception + Sprint conception bis, 2026-05-29)
 
 ### Vigueur unifiée (Qi + Mana)
 Chaque être vivant possède sa **Vigueur** (≡ Mana, énergie propre).
@@ -63,8 +63,12 @@ le territoire et y retourne à la mort.
 
 **Modèle de Vigueur joueur** (base, à ajuster post-test) :
 - Montant initial 100, +10/semaine simulée, full au passage de saison
-- Sources extra : récolte plantes mûres, méditation au foyer
+- Sources extra : récolte plantes mûres, méditation au foyer, **consommer
+  une feuille / fleur / fruit (action « manger »)** — Vigueur retrouvée
+  proportionnelle à la maturité de l'organe consommé
 - **Vigueur max augmente avec les paliers de maîtrise**
+- **La vitesse de régen passive augmente aussi avec la maîtrise** : plus
+  on comprend l'écologie, plus vite on se ressource au jardin
 
 ### Maîtrise et paliers
 5 paliers par famille botanique et par concept écologique transversal :
@@ -82,15 +86,24 @@ Observer → formuler → tester → conclure. Trial & error, prise de risque,
 diversification d'idées sont récompensés. Aucune action n'est punitive en
 soi — c'est l'écosystème qui répond.
 
-### Encyclopédie & Carnet
+### Trois voix narratives diégétiques
 - **Encyclopédie** : wiki ingame qui se complète aux découvertes (voir
   une espèce = entrée basique ; cycle complet = description bio ; cycles
-  répétés avec succès = effets écosystémiques).
+  répétés avec succès = effets écosystémiques). Voix « naturaliste qui
+  observe ».
 - **Carnet auto** : enregistrement automatique des événements,
   consultable, indexé. **Descriptif au début**, **interprétatif au seuil
-  de maîtrise** sur le concept concerné. Préserve la méthode scientifique
-  pendant l'apprentissage, révèle les causes une fois la compréhension
-  intériorisée.
+  de maîtrise** sur le concept concerné. Voix interne à la première
+  personne. Préserve la méthode scientifique pendant l'apprentissage,
+  révèle les causes une fois la compréhension intériorisée.
+- **Pages secrètes** : connaissances perdues, éparses, ésotériques —
+  trouvées par hasard, gagnées après une belle réalisation, découvertes
+  en fouillant. Voix multiples : extraits poétiques, savoirs paysans,
+  herbiers anciens, citations type Fukuoka / Sackville-West / sorcières
+  médicinales. Consultation pressentie : coffret au grenier de la maison.
+
+**Pas de narrateur externe omniscient, pas de PNJ, pas de quête imposée.**
+Histoire émergente via les événements rares (bouture, oiseau, vent).
 
 ### Acquisition d'espèces (4 canaux)
 1. Succession spontanée (`niche_index` dans le moteur Python)
@@ -120,6 +133,64 @@ Pas d'achat, pas de conquête : la connaissance ouvre l'espace.
 432 plots × 15 min temps réel = trois mitigations actives simultanément :
 **pause libre + notifications hiérarchisées + zoom contextuel**.
 
+### Gestion des aléas météo
+Préavis météo par **signes diégétiques** (oiseaux, ciel, anneau lunaire,
+brume, sol qui craquelle) — pas d'icône calendrier. L'interprétation
+explicite débloque au palier de maîtrise du concept « météo / climat ».
+Action joueur en **deux temps** :
+- **Préparation** (planification, temps figé) : paillage profond, voiles
+  d'hivernage, brise-vent, structures persistantes — Vigueur modérée
+- **Réaction** (saison, temps réel) : arrosage ciblé, sauver une plante
+  précise, secouer une branche givrée — Vigueur élevée (urgence)
+
+**~20 %** d'événements météo restent **imprévisibles** tant qu'on n'est
+pas au palier transcendant en météo. **Au transcendant : tout devient
+prévisible** — récompense rare qui cristallise la philo non-action.
+
+### Profils, avatars, déménagement
+- **Profils multiples** sur la même installation. Un profil = un **avatar
+  joueur** (nom, encyclopédie, paliers, banque de graines, Vigueur max
+  courante) + un ou plusieurs **terrains**.
+- **Déménagement** : un avatar peut migrer d'un terrain à un autre. Il
+  emporte son savoir, ses paliers, ses graines, sa Vigueur max. Le
+  terrain reste lui-même (sol, climat, friche). Le savoir voyage, le
+  territoire non.
+- **Encyclopédie et paliers strictement par avatar** — pas de méta-savoir
+  inter-avatars. Nouvel avatar = repart de zéro.
+- **Pas de multijoueur synchrone** (incompatible pause libre / temps lent).
+  Asynchrone + co-saison hot-seat 2 joueurs = backlog v2.0+.
+
+### Cycle de sauvegarde
+- **Auto-save uniquement au passage de saison.** Pas d'auto-save
+  intra-saison. Perdre une saison en cas de crash est accepté.
+- **JSON lisible**, pas binaire — debug + curiosité future du joueur.
+- **Un seul save par profil.** Pas de save-scumming.
+- **Pas de migration de save < v1.0** — champ `engine_version` dans le
+  save, casse explicite sinon.
+- **Seed d'origine du terrain persistée** dans le profil : permet de
+  re-générer le même point de départ (debug, partage école avec un ami).
+
+### Conditions de panne sèche
+- **Pas de game over.** La succession spontanée (`SeedBank-sol`) ramène
+  des pionnières en quelques saisons même sur un jardin saccagé. C'est
+  le fonctionnement normal d'un sol vivant.
+- **Pas de bouton « recommencer »** — run éternel = éternel. Pour un
+  autre jardin : déménager ou créer un autre profil.
+
+### Difficulty / accessibilité
+- **Pas de mode difficulté classique** (le jeu n'est pas un jeu de score).
+- **Réglages d'aide modulaires** (menu Options) :
+  - Vitesse simulation : 30 à 180 s/semaine, défaut 60 s
+  - Verbosité notifications : silencieux / important / tout (défaut important)
+  - Encyclopédie de démarrage : vierge / amorcée (défaut) / fournie
+  - Carnet interprétatif anticipé : OUI/NON (défaut NON, préserve la méthode)
+- **Mode debug champs écologiques** (overlay heatmaps) = toggle libre
+  Options dès le début, étiqueté « affichage technique — déconseillé en
+  première découverte ». Accessibilité > récompense punitive.
+- **Page d'accueil minimale** au premier lancement : 4-5 pictogrammes
+  silencieux des gestes de base (cliquer, planter, observer, méditer,
+  manger). Pas de texte, pas de tutoriel imposé.
+
 ## Architecture courante (mise à jour : 2026-05-29)
 
 ### Fonctionnels (~1700 lignes C#)
@@ -138,7 +209,7 @@ Pas d'achat, pas de conquête : la connaissance ouvre l'espace.
 - `effects.py` → pas encore en C#
 - `engine.py` → pas encore en C# (boucle 52 semaines + succession)
 
-### Systèmes à concevoir (issus du Sprint conception)
+### Systèmes à concevoir (issus du Sprint conception + Sprint conception bis)
 - **Vigueur universelle** (D11) — couche transversale (joueur + plantes +
   auxiliaires + nuisibles)
 - **Paliers de maîtrise** (D12) — méta-état du joueur, conditions de
@@ -148,6 +219,14 @@ Pas d'achat, pas de conquête : la connaissance ouvre l'espace.
 - **Carnet auto** (D14) — capture événements, indexation, bascule
   descriptif → interprétatif
 - **Extension de terrain par maîtrise** (D15) — apparition tuile thématique
+- **Forecast météo** (D16) — décaler le tirage `random.choice` 1-2 sem
+  en avance dans `engine.py`, alimenter les signes diégétiques
+- **SeedBank-joueur ↔ SeedBank-sol** (D17) — séparer la banque
+  transportable (suit l'avatar au déménagement) de la banque intrinsèque
+  au terrain, Python puis C#
+- **Pages secrètes** (D18) — sources de drop, lieu de consultation,
+  volume cible v1.0, contenu narratif. Session future dédiée.
+- **Action « manger »** (D19) — organes consommables → Vigueur joueur
 
 ### Données calibrage
 - Sprites tuiles **78×57** sur disque (et non 96×48 codé dans `TileGrid.cs`)
@@ -183,7 +262,6 @@ contexte préalable.
 
 | Sprint | Kickoff |
 |---|---|
-| Sprint conception bis (zones blanches : sauvegarde, météo, lore…) | `sprints/sprint_conception_bis.md` |
 | Sprint 1 (recalibrage visuel + grille 3×3 + maison) | `sprints/sprint_1_recalibrage_visuel.md` |
 | Sprint 2 (orchestration C# : Main, GameManager, TurnSystem) | `sprints/sprint_2_orchestration.md` |
 | Sprint 3 (portage simulation Python → C# + parité) | `sprints/sprint_3_portage_simulation.md` |
