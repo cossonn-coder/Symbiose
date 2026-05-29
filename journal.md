@@ -17,6 +17,7 @@ structurante, ou par incident notable. À jour à la fin de chaque session.
 - [2026-05-29 — Sprint conception : redéfinition de la vision du jeu](#2026-05-29--sprint-conception--redéfinition-de-la-vision-du-jeu)
 - [2026-05-29 — Sprint conception bis : zones blanches refermées](#2026-05-29--sprint-conception-bis--zones-blanches-refermées)
 - [2026-05-29 — Zone Z7 : éclairement spatial pixel-exact](#2026-05-29--zone-z7--éclairement-spatial-pixel-exact)
+- [2026-05-29 — Sprint conception éclairement & reproduction (recadrage Z7)](#2026-05-29--sprint-conception-éclairement--reproduction-recadrage-z7)
 - [Dette technique consolidée](#dette-technique-consolidée)
 - [Backlog](#backlog)
 
@@ -534,6 +535,164 @@ porter `effects.py` et `engine.py` dans la foulée.
 
 ---
 
+## 2026-05-29 — Sprint conception éclairement & reproduction (recadrage Z7)
+
+### Contexte
+
+Session ouverte sur « lis `sprints/sprint_eclairement.md` ». La lecture du
+kickoff Z7 **et du code réel** (`fields.py`, `GridField.cs`, `PlantData.cs`,
+`TileData.cs`) a fait remonter trois frictions entre l'intention du kickoff
+et l'état du code. Plutôt que d'implémenter, on a rouvert la conception et
+tranché l'architecture en profondeur. **Session de conception pure — aucun
+fichier de code touché.**
+
+### Frictions relevées à la lecture
+
+1. **Confusion d'échelle « tuile » vs « plot »** dans le kickoff. La réalité
+   du code : monde 3×3 **tuiles**, une tuile = 6×8 **plots** quinconce
+   (= 432 plots, déjà cité dans l'UX), un plot = sprite 78×57 px. Le
+   « 78×57 » du kickoff désignait donc **un plot**, pas une tuile — chiffrage
+   mémoire faux d'un facteur ~48 (sans conséquence, RAM négligeable).
+2. **Lumière pixel ↔ photosynthèse par plot.** Tout le moteur indexe par
+   plot ; une ombre pixel-exacte traverse les frontières de plots. Le
+   mapping pixel↔plot n'était pas défini : vraie zone blanche.
+3. **Inversion de la source de vérité (D10).** `GridField.cs` est en v4
+   (OM tri-compartiment, rain feedback, `PathogenPressure`) alors que
+   `fields.py` est resté en v3. Le test de parité du kickoff est impossible
+   tant que l'OM diverge.
+
+### Décisions structurantes
+
+**1. Architecture lumière = Option A (maillage adaptatif).**
+- **Décision** : « stop les plots » pour la lumière et les plantes. **Canopée
+  + lumière au pixel** (structure fine = gameplay des ombres), **chimie du
+  sol au plot** (phénomène diffus et lent — le pixel n'y apporte rien et la
+  diffusion lisse de toute façon). Maillage adapté au phénomène.
+- **Décision** : un **seul pont** pixel↔plot, propre et unidirectionnel — la
+  photosynthèse lit la lumière-pixel sous l'empreinte de canopée → module la
+  croissance. Le souterrain reste entièrement en monde-plot (inchangé).
+- **Décision** : l'espace de simulation de la lumière est **top-down
+  cartésien** (vue de dessus, en cm), **jamais** l'espace iso d'affichage —
+  sinon la perspective fausserait les longueurs d'ombre. Le rendu projette en
+  iso après coup.
+- Écarté : Option B (tout au pixel — refonte totale, revalidation 500 ans,
+  gain nul sur la chimie lisse) et Option C (lumière agrégée par plot —
+  contredit « stop les plots » et sous-exploite le pixel).
+
+**2. Calibration de l'échelle spatiale.**
+- **Décision** : **1 plot = 50×50 cm** (maille potagère permaculture). Monde
+  3×3 tuiles × (6×8) = 432 plots = **12×9 m ≈ 108 m²**, jardin familial
+  crédible.
+- **Décision** : résolution de l'espace-sol lumière = **2 cm/px** (~270 k
+  px-sol monde, ~5,4 MB pour 5 floats/px — négligeable).
+- **Décision** : orientation par défaut **Nord en haut, soleil culminant au
+  Sud** (à confirmer en implémentation).
+- **Décision** : le plot ne porte plus la position des plantes — il ne sert
+  **que** de maille à la chimie du sol. La position des plantes devient
+  **continue** (pixel-sol `x_cm, y_cm`), plot-foyer = `floor(pos / 50 cm)`.
+
+**3. Modèle d'ombre (D20).**
+- **Décision** : angles solaires par **calcul astronomique** (latitude
+  ~49°N), déterministe, 4 tranches (matin/midi/soir/nuit) × saisons. Bonus :
+  arme le palier « météo/climat » transcendant (tout devient prévisible).
+- **Décision** : `longueur_ombre = hauteur / tan(élévation)`, direction
+  opposée à l'azimut. Ombre = **capsule** (disque de canopée glissé sur la
+  longueur d'ombre), rasterisée en pixels-sol.
+- **Décision** : opacité d'ombre **variable par espèce** → nouveau champ
+  `foliage_density` (noyer dense ~0.8, bouleau léger ~0.4). Mécanique
+  permaculture (choisir un arbre à ombre légère pour un sous-étage).
+- **Décision** : cumul **multiplicatif** des ombres ; **plancher de lumière
+  diffuse ~15 %** (rien ne descend à 0 → sous-bois et plantes d'ombre
+  viables).
+- **Décision** : **intégrale journalière** = moyenne des 3 tranches éclairées
+  pondérée par l'intensité solaire ; c'est elle qui pilote la photosynthèse.
+
+**4. Empreintes des plantes.**
+- **Décision** : canopée = disque de **rayon tabulé par stade** (nouvelle
+  donnée à calibrer, comme les hauteurs).
+- **Décision** : racines = **rayon racinaire continu** (cm → ensemble de
+  plots exploités pour l'uptake). **Remplace** les `RootOffsets` discrets,
+  cohérent avec la position continue.
+- **Décision** : `current_height = canopy_height_potential × genetic_factor
+  × growth_factor` ; boucle de feedback lumière reçue → growth_factor →
+  hauteur → ombre des voisins au tick suivant.
+
+**5. Pérennes ligneuses (D21).**
+- **Décision** : **base commune polymorphe** — annuelles et arbres exposent
+  la même interface (`current_height`, `canopy_radius`, `foliage_density`,
+  `root_radius`). Seule la **logique de croissance** diffère (stades discrets
+  vs courbe d'âge). Le LightField/photosynthèse les traitent uniformément,
+  zéro duplication. (Écarté : classe `PerennialWoody` totalement séparée.)
+- **Décision** : `age_years` (+1/52 par tick) ; courbe âge→(hauteur, rayon) =
+  **interpolation des points tabulés** (spline monotone), aucun calage.
+- **Décision** : `foliage_density` **saisonnière** — un arbre caduc
+  (`WinterStrategy = dormant`) perd son ombre l'hiver. Levier permaculture
+  majeur (soleil d'hiver sous un fruitier caduc, ombre d'été). Généralisé aux
+  vivaces dormantes.
+- **Décision** : **arbres requalifiés par taille** — figuier + pommier =
+  fruitiers de jardin jouables, cerisier intermédiaire, **noyer + chêne =
+  sujets structurants de lisière** (un chêne mûr fait la taille du jardin
+  entier ; aucune échelle ne le rend « une plante parmi d'autres »).
+
+**6. Génétique & reproduction (D17 + D22) — élargissement assumé.**
+- **Décision** : concevoir **D17 (banque de graines par espèce) et D22
+  (héritage) ensemble**, car D22 a besoin d'un porteur que l'actuelle
+  SeedBank (densités d'archétypes par plot, sans espèces ni génétique) ne
+  fournit pas.
+- **Décision** : **deux banques distinctes** — **SeedBank-sol** (génétique
+  vectorielle par espèce, liée au terrain, brassage féral conservé) +
+  **SeedBank-joueur** (lots par espèce, transportable, suit l'avatar).
+- **Décision** : `genetic_factor` devient un **vecteur de gènes extensible**
+  (`{hauteur, vigueur, résistance, sécheresse…}`), seul `hauteur` rempli pour
+  l'instant.
+- **Décision** : héritage **biparental** — père compatible à portée de
+  pollinisation ; `gène_enfant = moyenne(parents) + mutation gaussienne` ;
+  sinon autofécondation. **Pollinisation par espèce** (anémogame/entomogame),
+  rayon modulé par les **pollinisateurs auxiliaires** (vraie mécanique
+  permaculture : favoriser les auxiliaires → meilleures graines).
+- **Décision** : hybridation inter-espèces autorisée entre espèces proches,
+  **par introgression sur espèce fixe** — l'enfant garde l'espèce de la mère,
+  les gènes du père décalent ses facteurs vectoriels (parfois hors [0.7,1.3]
+  = vigueur hybride). **Pas** de génération de nouvelles `PlantData` (écarté :
+  trop lourd, sous-système complet).
+
+**7. Séquencement de l'implémentation — découpage en deux sprints.**
+- **Décision** : la conception est close, mais l'implémentation se scinde car
+  D17+D22 sont devenus un moteur de génétique des populations dont le coût
+  dépasse D20.
+  - **Sprint éclairement** = D20 (ombres pixel) + D21 (pérennes) +
+    calibration des empreintes/densités + **réalignement OM Python→v4**
+    (préalable à toute parité). `genetic_factor` **neutre 1.0** en attendant.
+  - **Sprint génétique/reproduction** = D17 + D22 complets.
+
+### Données restant à calibrer (Sprint éclairement, en code)
+
+Rayon de canopée par stade et `foliage_density` des 14 espèces ; rayons
+racinaires ; courbes âge→(hauteur, rayon, densité) des arbres ; échelle
+cm/px (2 cm/px actée) ; pondération des tranches solaires.
+
+### Zones blanches différées
+
+- **Version physique (tuiles 3D + cartes MTG)** : la bascule pixel découple
+  la version vidéo (continue) de la version physique (cases). À traiter dans
+  une session dédiée — le moteur Python n'est peut-être plus la source unique
+  des deux versions.
+- Ordre exact du tick hebdomadaire (croissance / lumière / photosynthèse /
+  feedback).
+- Profondeur racinaire (modèle resté 2D).
+- Confirmation de l'orientation du monde.
+
+### Ce qui a été produit dans cette session
+
+- Cette entrée `journal.md` + dette consolidée affinée (D17, D20-D22)
+- `CLAUDE.md` mis à jour (Option A, échelle, backlog scindé)
+- `sprints/sprint_eclairement.md` réécrit (recadré Option A, sans génétique)
+- `sprints/sprint_genetique.md` créé (D17 + D22)
+- Mémoire actualisée (`project_status.md`, `project_python_source.md`)
+- Commit dédié
+
+---
+
 ## Dette technique consolidée
 
 | Code | Description | Priorité |
@@ -547,19 +706,19 @@ porter `effects.py` et `engine.py` dans la foulée.
 | D7 | Stubs vides hors namespace `Symbiose` (Main, EcologySystem, etc.) | 🟡 |
 | D8 | `Main.tscn` obsolète (Node vides en français), à supprimer/refaire | 🟡 |
 | D9 | Conflit de nom `PlantInstance` (`core/PlantData.cs` data vs `plants/PlantInstance.cs` Node Godot) | 🟡 |
-| D10 | Divergence Python ↔ C# : OM tri-compartiment et `PathogenPressure` n'existent qu'en C# | 🟢 |
+| D10 | Divergence Python ↔ C# : OM tri-compartiment et `PathogenPressure` n'existent qu'en C#. **Réalignement Python→v4 préalable au Sprint éclairement** (sinon test de parité impossible) | 🟢 → 🟡 |
 | D11 | Moteur Python à étendre : **Vigueur universelle** (joueur + plantes + auxiliaires + nuisibles), couche transversale à concevoir | 🟡 |
 | D12 | Moteur Python à étendre : **paliers de maîtrise** (méta-état du joueur, conditions de passage par famille et concept) | 🟡 |
 | D13 | Système **Magazine de botanique** à concevoir (coût Vigueur + maîtrise, déblocage espèces) | 🟡 |
 | D14 | Système **Carnet auto** à concevoir (enregistrement événements, indexation, bascule descriptif → interprétatif) | 🟡 |
 | D15 | Mécanique d'**extension du terrain par maîtrise** (tuile thématique apparaît au palier maîtrise d'une famille) | 🟢 |
 | D16 | Décaler le tirage météo en `forecast` 1-2 semaines en avance dans `engine.py`, pour alimenter les signes diégétiques (Z2) | 🟡 |
-| D17 | Séparer `SeedBank-joueur` (transportable, suit l'avatar au déménagement) de `SeedBank-sol` (intrinsèque au terrain), Python puis C# (Z3) | 🟡 |
+| D17 | Séparer `SeedBank-joueur` (lots par espèce, transportable, suit l'avatar) de `SeedBank-sol` (génétique vectorielle par espèce, intrinsèque au terrain), Python puis C# (Z3). **Couplé à D22** dans le Sprint génétique/reproduction | 🟡 |
 | D18 | Système de **pages secrètes** à concevoir — sources, lieu de consultation, volume cible v1.0, génération de contenu (Z4) | 🟢 |
 | D19 | Action gameplay **« manger »** à concevoir (organes consommables → Vigueur joueur) (Z5) | 🟡 |
-| D20 | **Éclairement spatial pixel-exact** : `LightField` v2 avec ombres portées par canopées et structures, 4 tranches + intégrale, recalcul hebdo (Z7) | 🟡 |
-| D21 | **Système temporel des pérennes ligneuses** : âge en années, courbe pluri-décennale, distinct du `GrowthStage` (Z7) | 🟡 |
-| D22 | **Héritage génétique de la graine** : `genetic_factor` ∈ [0.7, 1.3], hérité à la fécondation, généralisable (hauteur, vigueur, résistance) (Z7) | 🟡 |
+| D20 | **Éclairement spatial pixel-exact (Option A)** : canopée + lumière au pixel-sol top-down (2 cm/px), chimie du sol au plot (50 cm). Soleil astronomique ~49°N, 4 tranches + intégrale, ombres-capsules, `foliage_density` par espèce, plancher diffus 15 %. Position des plantes continue. **Sprint éclairement** (Z7) | 🟡 |
+| D21 | **Système temporel des pérennes ligneuses** : base commune polymorphe avec les annuelles, `age_years`, courbe d'âge interpolée, `foliage_density` saisonnière (caduc), arbres requalifiés (figuier/pommier jardin, noyer/chêne lisière). **Sprint éclairement** (Z7) | 🟡 |
+| D22 | **Héritage génétique de la graine** : vecteur de gènes extensible, héritage biparental (pollinisation par espèce, modulée par auxiliaires), hybridation par introgression sur espèce fixe. **Sprint génétique/reproduction**, couplé à D17 (Z7) | 🟡 |
 | D23 | **Catalogue arbres pérennes étendu** : poirier, prunier, châtaignier, frêne, tilleul, bouleau, saule, aulne, peuplier, érable… — différé post-validation squelette (Z7) | 🟢 |
 
 ---
@@ -575,7 +734,8 @@ porter `effects.py` et `engine.py` dans la foulée.
 |---|---|
 | Sprint 1 (recalibrage visuel) | `sprints/sprint_1_recalibrage_visuel.md` |
 | Sprint 2 (orchestration C#) | `sprints/sprint_2_orchestration.md` |
-| Sprint éclairement (Z7, D20-D22) | `sprints/sprint_eclairement.md` |
+| Sprint éclairement (Z7, D20-D21 : ombres pixel + pérennes + réalignement OM) | `sprints/sprint_eclairement.md` |
+| Sprint génétique/reproduction (Z7, D17+D22 : banques + héritage biparental) | `sprints/sprint_genetique.md` |
 | Sprint 3 (portage simulation — peut absorber le sprint éclairement) | `sprints/sprint_3_portage_simulation.md` |
 | Sprint 4 (mécaniques conception) | `sprints/sprint_4_mecaniques_conception.md` |
 
@@ -608,7 +768,13 @@ porter `effects.py` et `engine.py` dans la foulée.
 - [x] Audit botanique des 14 espèces actuelles
 - [x] 5 arbres pérennes premiers calibrés
 - [x] Kickoff sprint éclairement rédigé (`sprints/sprint_eclairement.md`)
-- [ ] Implémentation : reportée au sprint dédié
+- [x] **Recadrage conception (2026-05-29)** : Option A (lumière+plantes au
+      pixel, sol au plot), échelle 50 cm / 2 cm/px, soleil astronomique,
+      empreintes par stade, pérennes polymorphes, génétique biparentale par
+      introgression. Voir entrée *Sprint conception éclairement & reproduction*.
+- [x] **Implémentation scindée en deux sprints** : éclairement (D20-D21)
+      puis génétique/reproduction (D17+D22)
+- [ ] Implémentation : reportée aux deux sprints dédiés
 
 ### Sprint 1 — recalibrage visuel
 - [ ] Mesurer dimensions exactes de tous les sprites attendus

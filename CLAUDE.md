@@ -227,18 +227,34 @@ prévisible** — récompense rare qui cristallise la philo non-action.
 - **Pages secrètes** (D18) — sources de drop, lieu de consultation,
   volume cible v1.0, contenu narratif. Session future dédiée.
 - **Action « manger »** (D19) — organes consommables → Vigueur joueur
-- **Éclairement spatial pixel-exact** (D20) — `LightField` v2 avec
-  ombres portées par canopées et structures, 4 tranches + intégrale,
-  recalcul hebdomadaire. Voir `sprints/sprint_eclairement.md`.
-- **Système temporel pérennes ligneuses** (D21) — âge en années, courbe
-  pluri-décennale pour les arbres (figuier, pommier, cerisier, noyer,
-  chêne premiers)
-- **Héritage génétique de la graine** (D22) — `genetic_factor` ∈ [0.7,
-  1.3] hérité à la fécondation, distribution gaussienne, généralisable
-  (hauteur, vigueur, résistance)
+- **Éclairement spatial pixel-exact — Option A** (D20) — maillage adaptatif :
+  **canopée + lumière au pixel-sol** (top-down cartésien, 2 cm/px), **chimie
+  du sol au plot** (50 cm). Soleil astronomique ~49°N, 4 tranches + intégrale
+  journalière, ombres-capsules, `foliage_density` par espèce, plancher diffus
+  15 %. Position des plantes **continue** (pixel-sol). Voir
+  `sprints/sprint_eclairement.md`.
+- **Système temporel pérennes ligneuses** (D21) — **base commune polymorphe**
+  avec les annuelles (même interface lumière) ; `age_years`, courbe d'âge
+  interpolée, `foliage_density` saisonnière (caduc nu l'hiver). Arbres
+  requalifiés : figuier/pommier = jardin, cerisier intermédiaire,
+  **noyer/chêne = sujets de lisière**.
+- **Héritage génétique de la graine** (D22) — **vecteur de gènes extensible**
+  (hauteur d'abord), héritage **biparental** (pollinisation par espèce
+  modulée par les auxiliaires), hybridation inter-espèces par **introgression
+  sur espèce fixe**. Couplé à D17 dans le **Sprint génétique/reproduction**.
 - **Catalogue arbres pérennes étendu** (D23) — différé post-validation
   du squelette (poirier, prunier, châtaignier, frêne, tilleul, bouleau,
   saule, aulne, peuplier, érable…)
+
+### Échelle spatiale actée (Sprint conception éclairement, 2026-05-29)
+- **1 plot = 50×50 cm** ; monde 3×3 tuiles × (6×8 plots) = **432 plots =
+  12×9 m ≈ 108 m²**
+- Le **plot** ne sert plus qu'à la **chimie du sol** (humidité, fertilité,
+  microbiome, soil_memory…). La **position des plantes est continue**
+  (pixel-sol `x_cm, y_cm`), plot-foyer = `floor(pos / 50 cm)`.
+- **Lumière** : grille pixel-sol **top-down cartésienne** à **2 cm/px**
+  (≠ espace iso d'affichage). Empreintes : canopée = disque rayon tabulé par
+  stade ; racines = rayon continu → plots exploités (remplace `RootOffsets`).
 
 ### Données calibrage
 - Sprites tuiles **78×57** sur disque (et non 96×48 codé dans `TileGrid.cs`)
@@ -276,7 +292,8 @@ contexte préalable.
 |---|---|
 | Sprint 1 (recalibrage visuel + grille 3×3 + maison) | `sprints/sprint_1_recalibrage_visuel.md` |
 | Sprint 2 (orchestration C# : Main, GameManager, TurnSystem) | `sprints/sprint_2_orchestration.md` |
-| Sprint éclairement (Z7, D20-D22 : ombres + pérennes + génétique) | `sprints/sprint_eclairement.md` |
+| Sprint éclairement (Z7, D20-D21 : ombres pixel + pérennes + réalignement OM) | `sprints/sprint_eclairement.md` |
+| Sprint génétique/reproduction (Z7, D17+D22 : banques + héritage biparental) | `sprints/sprint_genetique.md` |
 | Sprint 3 (portage simulation — peut absorber le sprint éclairement) | `sprints/sprint_3_portage_simulation.md` |
 | Sprint 4 (Vigueur, paliers, encyclopédie, carnet, magazine, foyer) | `sprints/sprint_4_mecaniques_conception.md` |
 
