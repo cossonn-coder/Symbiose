@@ -1,8 +1,14 @@
 # SYMBIOSE
 
-Jeu roguelike écologique en permaculture. Version vidéo (Godot 4 / C#) et
-version physique (tuiles 3D imprimées + cartes MTG) développées en parallèle.
-Public : amis et famille de Nico, ingénieur électronique embarqué à Grenoble.
+**Sandbox écologique évolutif** en permaculture — jardin éternel à un seul
+run. Version vidéo (Godot 4 / C#) et version physique (tuiles 3D imprimées
++ cartes MTG) développées en parallèle. Public : amis et famille de Nico,
+ingénieur électronique embarqué à Grenoble.
+
+> Avant : « roguelike écologique ». Redéfini le 2026-05-29 — voir
+> Sprint conception dans `journal.md`. Ne plus utiliser le vocabulaire
+> roguelike (run, shop inter-run, extinction terminale, héritage entre
+> runs).
 
 ## Source de vérité
 
@@ -24,21 +30,95 @@ Le moteur Python dans `data/code/` (`models.py`, `fields.py`, `effects.py`,
 - Pixel art : filtre `Nearest` partout (réglé dans `project.godot`)
 - Résolution 1920×1080
 - Zoom par paliers entiers ×4 / ×8 / ×16 / ×32 — jamais de fraction
-- Tour par tour saisonnier — pas de temps réel sauf pendant la phase saison
+- **Boucle hybride** : phase planification en temps figé ↔ phase saison
+  de 15 minutes en temps réel (1 semaine = 60 secondes)
 
 ## Philosophie de design — NE JAMAIS DÉRIVER
 
-1. Le joueur agit sur le MILIEU, jamais directement sur les plantes
-2. Jamais bonus/malus direct — toujours flux → contrainte écologique →
-   réponse biologique émergente
-3. Simulation déterministe (seed global, hash de bruit spatial)
-4. Indices biologiques visuels uniquement — pas de chiffres ni de barres
-   (sauf mode debug)
-5. Roguelike Run C — même terrain entre runs, le sol porte la mémoire
-6. La sagesse écologique prime — pas de tutoriel explicite
-7. Hétérogénéité persistante — deux joueurs n'ont jamais le même terrain
+1. Le joueur agit **principalement** sur le MILIEU. L'action directe sur
+   les êtres vivants reste possible (écraser un nuisible, déraciner une
+   plante) mais coûteuse en Vigueur et perturbatrice — la permaculture
+   s'enseigne par l'usure de la solution facile.
+2. Jamais bonus/malus direct **sur les plantes** — toujours flux →
+   contrainte écologique → réponse biologique émergente.
+3. Simulation déterministe (seed global, hash de bruit spatial).
+4. **Run éternel** — un jardin unique et persistant, le sol porte la
+   mémoire et grandit avec le joueur.
+5. Indices biologiques visuels + encyclopédie et carnet auto comme
+   dispositifs informationnels. Pas de chiffres ni de barres en HUD
+   primaire (sauf mode debug).
+6. La sagesse écologique prime — pas de tutoriel imposé. L'apprentissage
+   est diffus : action → conséquence → consultation → hypothèse.
+7. Hétérogénéité persistante — deux joueurs n'ont jamais le même terrain.
 
-Pour le détail, voir `data/code/models.py` et `data/code/fields.py`.
+Pour le détail historique, voir `data/code/models.py` et `data/code/fields.py`.
+
+## Mécaniques centrales (depuis Sprint conception, 2026-05-29)
+
+### Vigueur unifiée (Qi + Mana)
+Chaque être vivant possède sa **Vigueur** (≡ Mana, énergie propre).
+Les **champs écologiques existants** (`microbiome`, `soil_memory`, `om_*`,
+`fertilite`) modélisent le **Qi territorial**. La Vigueur se puise dans
+le territoire et y retourne à la mort.
+
+**Modèle de Vigueur joueur** (base, à ajuster post-test) :
+- Montant initial 100, +10/semaine simulée, full au passage de saison
+- Sources extra : récolte plantes mûres, méditation au foyer
+- **Vigueur max augmente avec les paliers de maîtrise**
+
+### Maîtrise et paliers
+5 paliers par famille botanique et par concept écologique transversal :
+**découverte → investissement → maîtrise → expertise → transcendant**.
+La maîtrise débloque : extension de terrain (tuile thématique), accès au
+magazine, basculement du carnet en mode interprétatif, augmentation de
+la Vigueur max joueur.
+
+**Transcendant = non-action existentielle** : l'écosystème devient
+auto-suffisant, le joueur n'a plus besoin d'agir. Les perturbations
+entretiennent l'engagement à très long terme.
+
+### Apprentissage par méthode scientifique
+Observer → formuler → tester → conclure. Trial & error, prise de risque,
+diversification d'idées sont récompensés. Aucune action n'est punitive en
+soi — c'est l'écosystème qui répond.
+
+### Encyclopédie & Carnet
+- **Encyclopédie** : wiki ingame qui se complète aux découvertes (voir
+  une espèce = entrée basique ; cycle complet = description bio ; cycles
+  répétés avec succès = effets écosystémiques).
+- **Carnet auto** : enregistrement automatique des événements,
+  consultable, indexé. **Descriptif au début**, **interprétatif au seuil
+  de maîtrise** sur le concept concerné. Préserve la méthode scientifique
+  pendant l'apprentissage, révèle les causes une fois la compréhension
+  intériorisée.
+
+### Acquisition d'espèces (4 canaux)
+1. Succession spontanée (`niche_index` dans le moteur Python)
+2. Événements rares (bouture, oiseau, vent)
+3. Exploration de friche périphérique (abstraite au début)
+4. **Magazine de botanique** — déblocage par Vigueur joueur + maîtrise
+
+### Auxiliaires
+**Visibles dès le début, non identifiables sans maîtrise.** Modèle
+technique : champ ambiant `GridField` pour la dynamique + sprites
+apparents pour la perception. Tu vois l'insecte avant de connaître son
+nom — posture du naturaliste débutant.
+
+### Maison normande — hub vivant (5 fonctions)
+Atelier · Semis intérieur · Magazine de botanique · Carnet · **Foyer**
+(point de récupération de Vigueur).
+
+### Démarrage du jardin (3 écoles au choix)
+Friche pionnière · Sol modeste · Jardin abandonné.
+
+### Extension du terrain
+**Par maîtrise écologique** uniquement. Maîtriser une famille fait
+apparaître une tuile thématique (verger, mare, prairie aromatique…).
+Pas d'achat, pas de conquête : la connaissance ouvre l'espace.
+
+### UX du volume cognitif
+432 plots × 15 min temps réel = trois mitigations actives simultanément :
+**pause libre + notifications hiérarchisées + zoom contextuel**.
 
 ## Architecture courante (mise à jour : 2026-05-29)
 
@@ -58,12 +138,24 @@ Pour le détail, voir `data/code/models.py` et `data/code/fields.py`.
 - `effects.py` → pas encore en C#
 - `engine.py` → pas encore en C# (boucle 52 semaines + succession)
 
+### Systèmes à concevoir (issus du Sprint conception)
+- **Vigueur universelle** (D11) — couche transversale (joueur + plantes +
+  auxiliaires + nuisibles)
+- **Paliers de maîtrise** (D12) — méta-état du joueur, conditions de
+  passage par famille et concept
+- **Magazine de botanique** (D13) — déblocage espèces, coût Vigueur +
+  maîtrise
+- **Carnet auto** (D14) — capture événements, indexation, bascule
+  descriptif → interprétatif
+- **Extension de terrain par maîtrise** (D15) — apparition tuile thématique
+
 ### Données calibrage
 - Sprites tuiles **78×57** sur disque (et non 96×48 codé dans `TileGrid.cs`)
 - Sprites plantes : sheets 1408×768 + PNG individuels en RGB sans alpha
 - Pas de sprite maison à ce jour
 
-Voir `journal.md` pour le détail de l'avancement et les décisions.
+Voir `journal.md` pour le détail de l'avancement et les décisions
+historiques.
 
 ## Garde-fous spécifiques
 
@@ -72,8 +164,10 @@ Voir `journal.md` pour le détail de l'avancement et les décisions.
 - **Pédagogie explicite** à chaque proposition d'architecture — Nico
   apprend Godot/C# en frontend, vient du C/Python embarqué.
 - **Pas de fichier créé sans demande explicite** — concevoir en
-  conversation d'abord, puis ne créer que sur "OK", "vas-y", "lets go".
-- **Un fichier modifié à la fois** sauf demande contraire.
+  conversation d'abord, puis ne créer que sur « OK », « vas-y », « lets go ».
+- **Un fichier modifié à la fois** sauf demande contraire (cette règle
+  est suspendue quand une synchro cohérente multi-fichiers est explicitement
+  demandée — typiquement avant un commit).
 - **Avant tout sprint**, vérifier que git est à jour. Nextcloud a déjà
   perdu transitoirement des fichiers le 2026-05-29.
 - **Max 3 questions à la fois.**
@@ -82,10 +176,17 @@ Voir `journal.md` pour le détail de l'avancement et les décisions.
 
 ## Backlog actif
 
-Sprint en cours : **Sprint 0 — gel de l'état et infrastructure documentaire.**
+Sprint en cours : **Sprint conception bis — zones blanches restantes**
+(cycle de sauvegarde, gestion météo, multijoueur, lore, panne sèche,
+accessibilité).
 
-Prochaine priorité après Sprint 0 :
+Sprints suivants prévus :
 - Sprint 1 : recalibrer dimensions sprites, refaire `world/TileGrid.cs`
-  avec grille 3×3 tuiles et maison centrale.
+  avec grille 3×3 tuiles et maison centrale
+- Sprint 2 : fondations orchestration (`Main.cs` propre, `GameManager`,
+  `TurnSystem`, nouvelle `Main.tscn`)
+- Sprint 3 : portage `effects.py` et `engine.py` en C#, tests de parité
+- Sprint 4 : intégration progressive des mécaniques Sprint conception
+  (Vigueur, paliers, encyclopédie, carnet, magazine, foyer)
 
 Pour le détail complet du backlog, voir la section dédiée du `journal.md`.
