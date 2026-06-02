@@ -4,7 +4,9 @@ Scénario de test : 1 tuile terre, 5 plantes, 1 an complet.
 Champs continus initialisés : humidité 1.5/3, fertilité 1.0/3, microbiome 0.3/3
 """
 
+import sys
 import random
+from collections import Counter
 from models import Tile, Tomato, Basil, Sunflower, Bean, Clover
 from fields import init_eco, inject_patch
 from engine import Engine
@@ -47,7 +49,39 @@ print("╚═══════════════════════�
 print(f"\nÉtat initial : {eco}")
 
 engine = Engine(game_state)
-engine.run_years(500, verbose=True)
+
+# --- Trajectoire de succession : composition du couvert installé ---------
+# Échantillonnée en plein été (S26) : les annuelles pionnières sont encore
+# vivantes (elles meurent à l'hiver, winter_strategy="die"), le couvert est
+# donc représentatif. Comptage des plantes vivantes par archétype.
+def composition_couvert(tile) -> Counter:
+    c = Counter()
+    for p in tile.plants:
+        if p.is_alive:
+            c[getattr(p.plant_class, "archetype", None) or "cultivée"] += 1
+    return c
+
+# Nombre d'années simulées : 1er argument CLI, sinon 500 par défaut.
+# Permet « python3 main.py 60 » pour une simu courte (gain de temps).
+N_YEARS    = int(sys.argv[1]) if len(sys.argv) > 1 else 500
+SNAP_EVERY = 10    # un instantané tous les 10 ans
+SNAP_WEEK  = 26    # plein été — couvert maximal
+
+print("\nTRAJECTOIRE DE SUCCESSION — couvert vivant au plein été (S26)")
+print(f"{'année':>6} {'pion':>5} {'fixe':>5} {'gram':>5} {'comp':>5} {'cult':>5} {'%vivace':>8}")
+for y in range(1, N_YEARS + 1):
+    for _ in range(52):
+        wiy = ((engine.week - 1) % 52) + 1
+        engine.tick_semaine()
+        if wiy == SNAP_WEEK and (y == 1 or y == N_YEARS or y % SNAP_EVERY == 0):
+            c    = composition_couvert(tile)
+            pion = c["pioneer"]; fix = c["nitrogen_fixer"]
+            gra  = c["grass"];   comp = c["competitor"]; cult = c["cultivée"]
+            viv  = fix + gra + comp
+            spont = pion + viv          # couvert spontané (hors cultivées)
+            pct  = 100.0 * viv / spont if spont else 0.0
+            print(f"{y:>6} {pion:>5} {fix:>5} {gra:>5} {comp:>5} {cult:>5} {pct:>7.0f}%")
+    engine.game_state["log"].clear()    # éviter l'accumulation mémoire (non imprimé)
 
 # --- Résumé final ---
 print("\n" + "═"*52)

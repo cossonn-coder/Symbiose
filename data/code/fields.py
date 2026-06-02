@@ -317,6 +317,9 @@ SEED_ARCHETYPES = ["pioneer", "nitrogen_fixer", "grass", "competitor"]
 
 SEED_VIABILITY_LOSS = 0.998   # vieillissement hebdomadaire des graines
 SEED_DISTURBANCE_GAIN = 0.002 # enrichissement par perturbation (pioneer surtout)
+SEED_LATE_GAIN = 0.0008       # propagules vivaces tardives ∝ maturité (dispersion lente)
+SEED_LATE_MIN_MATURITY = 0.2  # pas de propagules tardives sur sol jeune
+SEED_COMPETITOR_MATURITY = 0.4 # competitor (le plus tardif) : sol déjà bien établi
 
 
 class SeedBank:
@@ -364,6 +367,29 @@ class SeedBank:
                 d = disturbance_field.at_plot(r, c)
                 self.add(r, c, "pioneer",
                          d * SEED_DISTURBANCE_GAIN)
+
+    def tick_late_succession_enrichment(self,
+                                        soil_deep_field: "GridField") -> None:
+        """
+        Sol mûr → arrivée lente de propagules vivaces (dispersion vent/oiseaux
+        qui n'aboutit que quand le milieu est prêt). Symétrique de
+        tick_disturbance_enrichment (qui n'amorce que pioneer).
+
+        Trickle faible ∝ maturité (soil_memory_deep) :
+          - fixatrice + graminée dès qu'un sol commence à s'établir
+          - competitor (archétype le plus tardif) seulement sur sol bien mûr
+        Sans cet amorçage, les vivaces n'ont aucune source de départ dans la
+        banque et le gradient de choix n'a rien à choisir.
+        """
+        for r in range(self.rows):
+            for c in range(self.cols):
+                m = soil_deep_field.at_plot(r, c)
+                if m < SEED_LATE_MIN_MATURITY:
+                    continue
+                self.add(r, c, "nitrogen_fixer", m * SEED_LATE_GAIN)
+                self.add(r, c, "grass",          m * SEED_LATE_GAIN)
+                self.add(r, c, "competitor",
+                         max(0.0, m - SEED_COMPETITOR_MATURITY) * SEED_LATE_GAIN)
 
     def tick_plant_production(self, plants: list) -> None:
         """Plantes matures → production de graines dans la banque locale."""
@@ -544,6 +570,7 @@ class EcoFields:
         """Mise à jour hebdomadaire de la banque de graines."""
         self.seed_bank.tick_aging()
         self.seed_bank.tick_disturbance_enrichment(self.disturbance)
+        self.seed_bank.tick_late_succession_enrichment(self.soil_memory_deep)
         self.seed_bank.tick_plant_production(plants)
 
     # --- Soil memory ---

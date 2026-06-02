@@ -21,7 +21,7 @@ from models import (Tile, PlantInstance, Tomato, Basil, Bean, Clover,
                    Sunflower, Pepper, WEED_CATALOGUE)
 from effects import resolve_plant_turn, apply_mutations, AddRondelle, RemoveRondelle, ReduceHealth, InjectField, apply_disturbances
 from fields import (EcoFields, init_eco, inject_patch, SHADOW_DENSITY,
-                    EXUDATE_BASE, EXUDATE_OM_SHARE)
+                    EXUDATE_BASE, EXUDATE_OM_SHARE, SEED_ARCHETYPES)
 
 SAISONS = {
     "printemps": range(1,  14),
@@ -50,6 +50,27 @@ def est_phase_floraison(week, saison):
 def est_phase_recolte(week, saison):
     if saison not in PHASES_ACTIVES: return False
     return week == SAISONS[saison].stop - 1
+
+def choisir_archetype(candidates: list[str],
+                      soil_deep: float, fertilite: float) -> str:
+    """
+    Choix de l'archétype qui germe parmi les candidats, ∝ maturité du sol.
+
+    Gradient de succession (rang = index dans SEED_ARCHETYPES) :
+        pioneer(0) → nitrogen_fixer(1) → grass(2) → competitor(3)
+    Rang cible = soil_deep * 3 (continu → bascule douce, pas de seuil dur).
+    On choisit le candidat dont le rang est le plus proche du rang cible
+    (tie-break déterministe : le plus avancé dans la succession).
+
+    Filet conservé : sur sol pauvre en azote (fertilite < 0.3), la fixatrice
+    prime si elle a germé — biologiquement, l'azote limitant la sélectionne.
+    """
+    if fertilite < 0.3 and "nitrogen_fixer" in candidates:
+        return "nitrogen_fixer"
+    rang_cible = soil_deep * (len(SEED_ARCHETYPES) - 1)
+    return min(candidates,
+               key=lambda a: (abs(SEED_ARCHETYPES.index(a) - rang_cible),
+                              -SEED_ARCHETYPES.index(a)))
 
 @dataclass
 class Alea:
@@ -304,7 +325,6 @@ class Engine:
                 disturbance = eco.disturbance.at_plot(r, c)
                 soil_deep   = eco.soil_memory_deep.at_plot(r, c)
                 fertilite   = eco.fertilite.at_plot(r, c)
-                micro       = eco.microbiome.at_plot(r, c)
 
                 niche = eco.seed_bank.niche_index(
                     r, c, light, root_density, disturbance, soil_deep
@@ -321,12 +341,8 @@ class Engine:
                 if not candidates:
                     continue
 
-                # Choisir l'archétype le plus adapté aux conditions locales
-                chosen = candidates[0]
-                if fertilite < 0.3 and "nitrogen_fixer" in candidates:
-                    chosen = "nitrogen_fixer"
-                elif micro < 0.3 and "pioneer" in candidates:
-                    chosen = "pioneer"
+                # Choisir l'archétype ∝ maturité du sol (gradient succession)
+                chosen = choisir_archetype(candidates, soil_deep, fertilite)
 
                 plant_class = WEED_CATALOGUE.get(chosen)
                 if not plant_class:
@@ -450,11 +466,7 @@ class Engine:
                 if not candidates:
                     continue
 
-                chosen = candidates[0]
-                if fertilite < 0.25 and "nitrogen_fixer" in candidates:
-                    chosen = "nitrogen_fixer"
-                elif fertilite < 0.4 and "pioneer" in candidates:
-                    chosen = "pioneer"
+                chosen = choisir_archetype(candidates, soil_deep, fertilite)
 
                 plant_class = WEED_CATALOGUE.get(chosen)
                 if not plant_class:
