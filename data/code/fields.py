@@ -52,6 +52,12 @@ OM_STABLE_MINER  = 0.40    # stable → fertilite (minéralisation lente)
 LEACHING_LOSS    = 0.999   # lessivage nutriments (perte fertilite/semaine)
 BIOMASS_EXPORT   = 0.20    # fraction exportée à la récolte (le reste = nécromasse)
 
+# Puits microbien — mortalité modulée par la disponibilité de carbone frais.
+# Sans nourriture (om_fresh bas), les microbes respirent leurs réserves et
+# meurent : le microbiome devient un solde apports (exsudats/OM) − pertes.
+MICROBE_FOOD_REF  = 1.0    # om_fresh au-dessus duquel les microbes sont rassasiés
+MICROBE_DECAY_MAX = 0.006  # déclin hebdomadaire max du microbiome à famine totale
+
 # Boucle rhizosphère — exsudats racinaires (chantier A)
 EXUDATE_BASE     = 0.060   # dépôt total à pleine photosynthèse (microbiome + om_fresh)
 EXUDATE_OM_SHARE = 0.15    # part de l'exsudat versée à om_fresh (le reste → microbiome)
@@ -632,6 +638,12 @@ class EcoFields:
                             d_active * OM_ACTIVE_MINER +
                             d_stable * OM_STABLE_MINER)
                 self.fertilite.add(r, c, released)
+
+                # Puits microbien : sans carbone frais, les microbes meurent.
+                # famine ∈ [0,1] : nulle si om_fresh abondant, maximale si épuisé.
+                famine = 1.0 - min(1.0, fresh / MICROBE_FOOD_REF)
+                if famine > 0.0:
+                    self.microbiome.data[r][c] *= (1.0 - MICROBE_DECAY_MAX * famine)
 
                 # Lessivage nutriments
                 self.fertilite.data[r][c] *= LEACHING_LOSS
