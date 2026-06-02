@@ -1,45 +1,73 @@
 """
 SYMBIOSE — main.py
-Scénario de test : 1 tuile terre, 5 plantes, 1 an complet.
-Champs continus initialisés : humidité 1.5/3, fertilité 1.0/3, microbiome 0.3/3
+Scénario de test MULTI-TUILES : monde 3×3 (9 tuiles × 6×8 plots = 432 plots),
+sols contrastés. La moitié des tuiles (index pair) reçoit des plantes compagnes
+ATTIRE-AUXILIAIRES (achillée, phacélie) qui posent la rondelle `auxiliaire` →
+renforcent la régulation des ravageurs (M6). Les tuiles témoins (index impair)
+n'en ont pas. On observe ainsi le contraste de régulation, la succession et la
+sénescence (un pommier sur la tuile centrale) sur la durée.
 """
 
 import sys
 import random
 from collections import Counter
-from models import Tile, Tomato, Basil, Sunflower, Bean, Clover
+from models import (Tile, Tomato, Basil, Sunflower, Bean, Clover, Pepper,
+                    Yarrow, Phacelia)
 from perennials import AppleTree
 from fields import init_eco, inject_patch
 from engine import Engine
 
 random.seed(42)
 
-# Tuile
-tile = Tile(tile_id="A1", soil_type="terre")
+# 9 tuiles, sols contrastés (sable = pauvre/sec, argile = humide, terre = standard)
+SOILS = ["terre", "argile", "sable",
+         "terre", "terre",  "sable",
+         "argile", "terre", "sable"]
 
-# Champs continus initiaux (valeurs continues, pas rondelles)
-eco = init_eco("A1", rows=6, cols=8,
-               humidite=1.5, fertilite=1.0, microbiome=0.3)
 
-# Rondelles discrètes (variables de gameplay)
-tile.stakes[0].add("pollinisateur")   # déjà un pollinisateur présent
+def build_tile(idx: int, soil: str):
+    tid = f"T{idx}"
+    tile = Tile(tile_id=tid, soil_type=soil)
+    if soil == "sable":
+        eco = init_eco(tid, 6, 8, humidite=1.0, fertilite=0.6, microbiome=0.2)
+    elif soil == "argile":
+        eco = init_eco(tid, 6, 8, humidite=2.0, fertilite=1.2, microbiome=0.3)
+    else:
+        eco = init_eco(tid, 6, 8, humidite=1.5, fertilite=1.0, microbiome=0.3)
+    return tile, eco
 
-# Plantation — espacées pour éviter conflits root immédiats
-tile.add_plant(Tomato,    2, 2)   # séparé du basilic
-tile.add_plant(Basil,     2, 5)   # compagnon mais distant
-tile.add_plant(Sunflower, 0, 1)
-tile.add_plant(Bean,      4, 2)
-tile.add_plant(Clover,    4, 6)
-# Pommier dans un coin (L=70 ans) — observer sénescence/mort par âge (D27).
-# Placé en bordure pour limiter l'ombrage sur la trajectoire de succession.
-tile.add_plant(AppleTree, 0, 7)
 
-# Injecter un patch humide sous la tomate (arrosage initial joueur)
-inject_patch(eco, "humidite", center_row=2, center_col=2, value=0.5, radius=1)
+def plant_garden(tile, with_auxiliaries: bool):
+    """Jardin diversifié de base ; +attire-auxiliaires si demandé."""
+    tile.add_plant(Tomato,    2, 2)
+    tile.add_plant(Basil,     2, 4)
+    tile.add_plant(Bean,      4, 2)
+    tile.add_plant(Sunflower, 0, 1)
+    tile.add_plant(Pepper,    4, 6)
+    if with_auxiliaries:
+        tile.add_plant(Yarrow,   3, 5)   # achillée (vivace attire-auxiliaires)
+        tile.add_plant(Phacelia, 1, 6)   # phacélie (annuelle attire-auxiliaires)
+        tile.add_plant(Clover,   5, 4)
+
+
+tiles = []
+ecos = {}
+aux_tiles = set()
+for i, soil in enumerate(SOILS):
+    tile, eco = build_tile(i, soil)
+    with_aux = (i % 2 == 0)
+    plant_garden(tile, with_aux)
+    if with_aux:
+        aux_tiles.add(tile.tile_id)
+    tiles.append(tile)
+    ecos[tile.tile_id] = eco
+
+# Pommier sur la tuile centrale (T4), en coin — observer la sénescence (~70 ans).
+tiles[4].add_plant(AppleTree, 0, 7)
 
 game_state = {
-    "tiles": [tile],
-    "eco":   {"A1": eco},
+    "tiles": tiles,
+    "eco":   ecos,
     "scores": {},
     "current_player": "joueur_1",
     "week": 1,
@@ -47,99 +75,94 @@ game_state = {
 }
 
 print("╔══════════════════════════════════════════════════════╗")
-print("║         SYMBIOSE — Simulation                        ║")
-print("║   Diffusion écologique continue + uptake racinaire   ║")
+print("║   SYMBIOSE — Simulation monde 3×3 (9 tuiles)         ║")
+print("║   Attire-auxiliaires (achillée/phacélie) vs témoins  ║")
 print("╚══════════════════════════════════════════════════════╝")
-print(f"\nÉtat initial : {eco}")
+print(f"Tuiles attire-auxiliaires : {sorted(aux_tiles)}")
+print(f"Tuiles témoins            : {sorted(t.tile_id for t in tiles if t.tile_id not in aux_tiles)}")
 
 engine = Engine(game_state)
 
-# --- Trajectoire de succession : composition du couvert installé ---------
-# Échantillonnée en plein été (S26) : les annuelles pionnières sont encore
-# vivantes (elles meurent à l'hiver, winter_strategy="die"), le couvert est
-# donc représentatif. Comptage des plantes vivantes par archétype.
-def composition_couvert(tile) -> Counter:
+
+def composition(tiles) -> Counter:
+    """Couvert vivant agrégé sur toutes les tuiles, par archétype."""
     c = Counter()
-    for p in tile.plants:
-        if p.is_alive:
-            c[getattr(p.plant_class, "archetype", None) or "cultivée"] += 1
+    for tile in tiles:
+        for p in tile.plants:
+            if p.is_alive:
+                c[getattr(p.plant_class, "archetype", None) or "cultivée"] += 1
     return c
 
-# Nombre d'années simulées : 1er argument CLI, sinon 500 par défaut.
-# Permet « python3 main.py 60 » pour une simu courte (gain de temps).
-N_YEARS    = int(sys.argv[1]) if len(sys.argv) > 1 else 500
-SNAP_EVERY = 10    # un instantané tous les 10 ans
+
+def aux_rondelles(tiles, group) -> float:
+    """Moyenne de rondelles `auxiliaire` sur un groupe de tuiles."""
+    sel = [t for t in tiles if t.tile_id in group]
+    if not sel:
+        return 0.0
+    return sum(t.get_rondelle_count("auxiliaire") for t in sel) / len(sel)
+
+
+# Nombre d'années : 1er argument CLI, sinon 30 (9 tuiles = lourd ; le coût/an
+# grimpe avec le nombre de plantes). Pour la maturité de succession ou la
+# sénescence du pommier (~70 ans), lancer « python3 main.py 200 ».
+N_YEARS    = int(sys.argv[1]) if len(sys.argv) > 1 else 30
+SNAP_EVERY = 10
 SNAP_WEEK  = 26    # plein été — couvert maximal
 
-print("\nTRAJECTOIRE DE SUCCESSION — couvert vivant au plein été (S26)")
-print(f"{'année':>6} {'pion':>5} {'fixe':>5} {'gram':>5} {'comp':>5} {'cult':>5} {'%vivace':>8}")
+control_tiles = {t.tile_id for t in tiles} - aux_tiles
+
+print("\nTRAJECTOIRE — couvert vivant agrégé (S26) + rondelles auxiliaire moyennes")
+print(f"{'année':>6} {'pion':>5} {'fixe':>5} {'gram':>5} {'comp':>5} {'cult':>5} "
+      f"{'%viv':>5} {'aux+':>5} {'aux0':>5}")
 for y in range(1, N_YEARS + 1):
     for _ in range(52):
         wiy = ((engine.week - 1) % 52) + 1
         engine.tick_semaine()
         if wiy == SNAP_WEEK and (y == 1 or y == N_YEARS or y % SNAP_EVERY == 0):
-            c    = composition_couvert(tile)
+            c = composition(tiles)
             pion = c["pioneer"]; fix = c["nitrogen_fixer"]
             gra  = c["grass"];   comp = c["competitor"]; cult = c["cultivée"]
             viv  = fix + gra + comp
-            spont = pion + viv          # couvert spontané (hors cultivées)
+            spont = pion + viv
             pct  = 100.0 * viv / spont if spont else 0.0
-            print(f"{y:>6} {pion:>5} {fix:>5} {gra:>5} {comp:>5} {cult:>5} {pct:>7.0f}%")
-    engine.game_state["log"].clear()    # éviter l'accumulation mémoire (non imprimé)
+            a_plus = aux_rondelles(tiles, aux_tiles)
+            a_zero = aux_rondelles(tiles, control_tiles)
+            print(f"{y:>6} {pion:>5} {fix:>5} {gra:>5} {comp:>5} {cult:>5} "
+                  f"{pct:>4.0f}% {a_plus:>5.1f} {a_zero:>5.1f}")
+    engine.game_state["log"].clear()
 
 # --- Résumé final ---
-print("\n" + "═"*52)
-print("RÉSUMÉ FINAL")
-print("═"*52)
+print("\n" + "═"*60)
+print("RÉSUMÉ FINAL — par tuile")
+print("═"*60)
+print(f"{'tuile':>6} {'sol':>7} {'aux?':>5} {'vivantes':>9} "
+      f"{'aux●':>5} {'pollin●':>8} {'vitalité':>9}")
+for tile in tiles:
+    eco = ecos[tile.tile_id]
+    alive = sum(1 for p in tile.plants if p.is_alive)
+    is_aux = "oui" if tile.tile_id in aux_tiles else "—"
+    auxr = tile.get_rondelle_count("auxiliaire")
+    polr = tile.get_rondelle_count("pollinisateur")
+    print(f"{tile.tile_id:>6} {tile.soil_type:>7} {is_aux:>5} {alive:>9} "
+          f"{auxr:>5} {polr:>8} {eco.vitalite_average():>9.3f}")
 
-alive = [p for p in tile.plants if p.is_alive]
-dead  = [p for p in tile.plants if not p.is_alive]
+# Moyennes par groupe (montre l'effet attire-auxiliaires)
+def group_avg(group, fn):
+    sel = [t for t in tiles if t.tile_id in group]
+    return sum(fn(t) for t in sel) / len(sel) if sel else 0.0
 
-print(f"\nPlantes survivantes ({len(alive)}) :")
-for p in alive:
-    r, c = p.position
-    hum  = eco.humidite.at_plot(r, c)
-    fert = eco.fertilite.at_plot(r, c)
-    print(f"  {p}  hum={hum:.2f} fert={fert:.2f}")
+print("\nContraste attire-auxiliaires vs témoins (moyennes par tuile) :")
+for label, group in [("attire-aux", aux_tiles), ("témoins   ", control_tiles)]:
+    auxr = group_avg(group, lambda t: t.get_rondelle_count("auxiliaire"))
+    vit  = group_avg(group, lambda t: ecos[t.tile_id].vitalite_average())
+    alive = group_avg(group, lambda t: sum(1 for p in t.plants if p.is_alive))
+    print(f"  {label} : auxiliaire●={auxr:.1f}  vitalité={vit:.3f}  vivantes={alive:.1f}")
 
-if dead:
-    print(f"\nPlantes mortes ({len(dead)}) :")
-    for p in dead:
-        print(f"  {p.name}@{p.position}")
-
-print(f"\nChamps écologiques finaux :")
-s = eco.summary()
-for var, val in s.items():
-    bar = "█" * int(val) + "░" * max(0, 3 - int(val))
-    print(f"  {var:12s} {bar} {val:.2f}/3.00")
-
-print(f"\nRondelles discrètes :")
-for var in ["maladie", "pollinisateur", "paillage"]:
-    count = tile.get_rondelle_count(var)
-    if count:
-        print(f"  {var:15s} {'●'*count}")
-
-print(f"\nScores finaux :")
 scores = game_state.get("scores", {})
 if scores:
+    print("\nScores finaux :")
     for pid, sc in scores.items():
         total = sum(sc.values())
         print(f"  {pid} — récolte:{sc.get('recolte',0)} "
               f"luxuriance:{sc.get('luxuriance',0)} "
-              f"biodiversité:{sc.get('biodiversite',0)} "
-              f"TOTAL:{total}")
-
-print(f"\nConflits : {sum(1 for c in tile.conflicts if c.resolved)} résolus, "
-      f"{sum(1 for c in tile.conflicts if not c.resolved)} actifs")
-
-# Carte de chaleur humidité finale
-print(f"\nCarte humidité finale (grille 6×8) :")
-print(eco.humidite.ascii_map(precision=2))
-
-# Carte de vitalité dérivée (grandeur non stockée, calculée à la demande)
-print(f"\nCarte vitalité dérivée (grille 6×8) :")
-for r in range(eco.rows):
-    prefix = "  " if r % 2 == 1 else ""
-    cells = " ".join(f"{eco.vitalite(r, c):.2f}" for c in range(eco.cols))
-    print(prefix + cells)
-print(f"vitalité moyenne : {eco.vitalite_average():.3f}")
+              f"biodiversité:{sc.get('biodiversite',0)} TOTAL:{total}")

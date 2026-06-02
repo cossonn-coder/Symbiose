@@ -25,6 +25,7 @@ structurante, ou par incident notable. À jour à la fin de chaque session.
 - [2026-06-02 — Conception mini-sprint mortalité réaliste (sénescence)](#2026-06-02--conception-mini-sprint-mortalité-réaliste-sénescence)
 - [2026-06-02 — Mortalité réaliste passe 1 : santé dynamique + sénescence (Python)](#2026-06-02--mortalité-réaliste-passe-1--santé-dynamique--sénescence-python)
 - [2026-06-02 — Mortalité réaliste passe 2 : fonte, fongique, ravageurs régulés, renouvellement (Python)](#2026-06-02--mortalité-réaliste-passe-2--fonte-fongique-ravageurs-régulés-renouvellement-python)
+- [2026-06-02 — Attire-auxiliaires + monde 9 tuiles (Python)](#2026-06-02--attire-auxiliaires--monde-9-tuiles-python)
 - [Dette technique consolidée](#dette-technique-consolidée)
 - [Backlog](#backlog)
 
@@ -1163,6 +1164,58 @@ mourait à ~28 ans d'un cumul fonte/fongique/fond au lieu de sénescence).
 
 Portage C# de toute la mortalité réaliste (passes 1+2) → dette D27/D24.
 Unification du renouvellement provisoire par D17+D22 (Sprint génétique).
+
+---
+
+## 2026-06-02 — Attire-auxiliaires + monde 9 tuiles (Python)
+
+### Contexte
+
+Demande de Nico après la passe 2 : **ajouter des plantes qui attirent les
+prédateurs des ravageurs**, et passer `main.py` sur **plusieurs tuiles**.
+Décisions actées : **espèce(s) dédiée(s) + signal explicite** (rondelle
+`auxiliaire`) ; **9 tuiles** (monde 3×3 complet).
+
+### Réalisé
+
+- **Rondelle `auxiliaire`** (`models.py`, `RONDELLE_TYPES`) — miroir discret de
+  `pollinisateur`, posée par les plantes compagnes à la floraison.
+- **2 espèces compagnes** : **Achillée millefeuille** (`Yarrow`, Asteraceae,
+  vivace — ombelles) et **Phacélie** (`Phacelia`, Boraginaceae, annuelle —
+  engrais vert mellifère). Toutes deux posent `auxiliaire` (Phacélie aussi
+  `pollinisateur`). Ajoutées au `PLANT_CATALOGUE`.
+- **Terme prédateur** (`effects.py`, `herbivory_pressure`) : intègre la rondelle
+  `auxiliaire` avec un poids fort →
+  `predator = 0.4·biodiversité + 0.2·pollinisateur + 0.15·stabilité + 0.4·auxiliaire`.
+- **`main.py` réécrit en monde 3×3** (9 tuiles, sols contrastés terre/argile/
+  sable). Tuiles paires = attire-auxiliaires (achillée+phacélie+trèfle), impaires
+  = témoins. Rapport agrégé + table par tuile + **contraste attire-aux vs témoins**
+  (rondelles `auxiliaire`, vitalité, vivantes). Défaut `N_YEARS=30` (9 tuiles
+  lourdes ; CLI pour runs longs).
+
+### Recalibration clé
+
+Le test a révélé que `HERBIVORY_BASE=0.02` plafonnait la pression herbivore
+**sous le seuil de morsure** (0.015) → l'herbivorie ne mordait jamais et la
+régulation prédateurs (donc les attire-auxiliaires) était **inerte**. Relevé à
+**0.05** : désormais une monoculture appauvrie sans auxiliaires **mord** (−1
+santé), et diversité **ou** rondelles `auxiliaire` **ou** microbiome riche la
+ramènent sous le seuil. La leçon permaculture (critère 4) devient réelle.
+
+### Validation
+
+- Contraste direct : monoculture+sol pauvre+0 aux → pression 0.018 (mord) ;
+  +3 `auxiliaire` → régulée ; polyculture → régulée ; sol riche → régulée.
+- `main.py` 9 tuiles : exit 0, rondelles `auxiliaire`=3 sur tuiles attire-aux,
+  0 sur témoins (contraste net).
+- Stabilité : mono-tuile 200 ans, aucune extinction, santé dynamique (1/2/3
+  mêlées), vitalité 0.192 — la hausse d'`HERBIVORY_BASE` ne déstabilise pas.
+
+### Note
+
+Mécanique provisoire cohérente avec la **régulation émergente** (passe 2) : le
+**champ auxiliaire ambiant dédié** (dynamique proie-prédateur + sprites visibles,
+fiche Auxiliaires de `CLAUDE.md`) reste un sprint futur. Portage C# → D27/D24.
 
 ---
 

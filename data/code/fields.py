@@ -76,7 +76,7 @@ SOIL_DEEP_RATE   = 0.02    # intégration lente (décennale)
 
 # Perturbations écologiques
 MORTALITY_RATE      = 0.010   # probabilité d'affaiblissement spontané/semaine
-HERBIVORY_BASE      = 0.020   # pression herbivore de base
+HERBIVORY_BASE      = 0.050   # pression herbivore de base (monoculture non régulée mord)
 DISTURBANCE_INERTIA = 0.900   # inertie du champ de perturbation spatial
 CLIMATE_AMPLITUDE   = 0.080   # amplitude oscillation climatique de fond
 

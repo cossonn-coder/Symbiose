@@ -424,12 +424,15 @@ def herbivory_pressure(plant: PlantInstance, tile: Tile,
     micro_norm = min(1.0, eco.microbiome.at_plot(r, c) / 3.0) if eco else 0.3
 
     # Régulation par les auxiliaires (prédateurs des ravageurs) — ÉMERGENTE :
-    # diversité du voisinage + fleurs (rondelles pollinisateur attirent coccinelles,
-    # syrphes…) + habitat stable (faible perturbation = refuge) répriment les
-    # ravageurs. Pas de champ dédié (le champ auxiliaire ambiant = sprint futur).
+    # diversité du voisinage + fleurs (pollinisateur attire coccinelles, syrphes…)
+    # + habitat stable (refuge) + plantes compagnes attire-auxiliaires (rondelle
+    # `auxiliaire` : achillée, phacélie → nectar des prédateurs). Pas de champ
+    # ambiant dédié (= sprint futur).
     pollin    = min(1.0, tile.get_rondelle_count("pollinisateur") / 3.0)
+    aux       = min(1.0, tile.get_rondelle_count("auxiliaire") / 3.0)
     stability = 1.0 - (eco.disturbance.at_plot(r, c) if eco else 0.5)
-    predator  = min(1.0, 0.5 * biodiversity_index + 0.3 * pollin + 0.2 * stability)
+    predator  = min(1.0, 0.4 * biodiversity_index + 0.2 * pollin
+                         + 0.15 * stability + 0.4 * aux)
 
     # Pression nette : biomasse × base × (1−microbiome) × (1−régulation prédateurs)
     pressure = (biomass_local * HERBIVORY_BASE
