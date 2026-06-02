@@ -15,6 +15,7 @@ Sprint éclairement (D20-D21) :
 """
 
 from __future__ import annotations
+import math
 from abc import ABC
 from dataclasses import dataclass, field
 from typing import Callable
@@ -272,6 +273,9 @@ class PlantBase(ABC):
     archetype: str | None = None         # archétype succession écologique
     reproduction_rate: float = 0.02      # production graines par semaine
     foliage_density: float | None = None # opacité d'ombre [0-1] ; None ⇒ défaut strate
+    # Mortalité réaliste (D27) — longévité + âge de fructification
+    longevity_years: float | None = None # longévité (ans) ; None ⇒ défaut par life_cycle
+    maturity_years: float = 0.0          # âge de 1re fructification (renouvellement arbres)
 
     # --- Interface lumière (polymorphe) ---
 
@@ -302,6 +306,18 @@ class PlantBase(ABC):
             return 0.0
         return cls.foliage_density if cls.foliage_density is not None \
             else STRATE_DEFAULTS[inst.stage.strate]["density"]
+
+    @classmethod
+    def longevity(cls) -> float:
+        """
+        Longévité (ans). Override explicite (longevity_years) sinon défaut par
+        cycle de vie : annuelle = ∞ (meurt à l'hiver, sénescence sans objet),
+        bisannuelle = 2, vivace herbacée = 5.
+        """
+        if cls.longevity_years is not None:
+            return cls.longevity_years
+        return {"annual": math.inf, "biennial": 2.0,
+                "perennial": 5.0}.get(cls.life_cycle, 5.0)
 
     def get_all_effects(self, stage_index: int) -> list[dict]:
         """Fusionne les effets famille + les effets du stade courant."""
@@ -486,6 +502,7 @@ class MedicagoLupulina(PlantBase):
     archetype = "nitrogen_fixer"
     reproduction_rate = 0.05
     foliage_density = 0.40
+    longevity_years = 3    # vivace courte
     growth_stages = [
         GrowthStage(
             name="semis", duration_weeks=2, strate="sol",
@@ -537,6 +554,7 @@ class PoaAnnua(PlantBase):
     archetype = "grass"
     reproduction_rate = 0.06
     foliage_density = 0.35     # graminée fine, ombre légère
+    longevity_years = 3        # vivace courte
     growth_stages = [
         GrowthStage(
             name="semis", duration_weeks=2, strate="sol",
@@ -574,6 +592,7 @@ class Taraxacum(PlantBase):
     archetype = "competitor"
     reproduction_rate = 0.04
     foliage_density = 0.50
+    longevity_years = 8    # vivace longue
     growth_stages = [
         GrowthStage(
             name="semis", duration_weeks=3, strate="sol",

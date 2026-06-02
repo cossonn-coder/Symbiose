@@ -394,8 +394,10 @@ def background_mortality(plant: PlantInstance, eco,
     adjusted_rate = MORTALITY_RATE * max(0.2, 1.0 - plant.stress_memory * 0.6)
 
     if noise < adjusted_rate:
-        # Affaiblissement — pas de mort directe
-        new_health = max(1, int(plant.health * 0.7))
+        # Affaiblissement déterministe. Plancher levé (D27) : sur une plante déjà
+        # à health=1, le coup peut atteindre 0 → mort. Reste rare (modulé par
+        # stress_memory) et ne touche en pratique que les sujets déjà affaiblis.
+        new_health = int(plant.health * 0.7)
         if new_health < plant.health:
             return [ReduceHealth(
                 plant,
@@ -449,7 +451,11 @@ def apply_disturbances(tile, eco, game_state: dict,
         plant.stress_memory += (disturbance_local - plant.stress_memory) * 0.08
         plant.stress_memory = max(0.0, min(1.0, plant.stress_memory))
 
-    # Nettoyer les plantes mortes
+    # Morts de fond (plancher levé, D27) → nécromasse avant nettoyage
+    for plant in tile.plants:
+        if not plant.is_alive:
+            eco.add_necromass(*plant.position, plant.current_stage + 1.0,
+                              harvested=False)
     tile.plants = [p for p in tile.plants if p.is_alive]
 
     return log

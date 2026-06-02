@@ -15,13 +15,16 @@ Tick order :
 """
 
 from __future__ import annotations
+import math
 import random
 from dataclasses import dataclass
 from models import (Tile, PlantInstance, Tomato, Basil, Bean, Clover,
                    Sunflower, Pepper, WEED_CATALOGUE)
 from effects import resolve_plant_turn, apply_mutations, AddRondelle, RemoveRondelle, ReduceHealth, InjectField, apply_disturbances
 from fields import (EcoFields, init_eco, inject_patch,
-                    EXUDATE_BASE, EXUDATE_OM_SHARE, SEED_ARCHETYPES)
+                    EXUDATE_BASE, EXUDATE_OM_SHARE, SEED_ARCHETYPES,
+                    _hash_noise, SENESCENCE_ONSET, SEN_RATE,
+                    HEAL_RATE, HEAL_SEN_CUTOFF)
 
 SAISONS = {
     "printemps": range(1,  14),
@@ -111,8 +114,11 @@ def appliquer_alea(alea, tile, eco, game_state):
                 muts.append(RemoveRondelle(tile.tile_id, alea.variable, min(amt,cur), alea.nom))
         log += apply_mutations(muts, game_state)
     elif alea.mode == "health":
+        # Cible les vrais semis (stade nommé "semis"), pas l'index 0 — sinon le
+        # stade perpétuel des pérennes ligneuses ("arbre", index 0) serait frappé
+        # comme un semis fragile à chaque saison (D27).
         muts = [ReduceHealth(p, 1, alea.nom)
-                for p in tile.plants if p.is_alive and p.current_stage == 0]
+                for p in tile.plants if p.is_alive and p.stage.name == "semis"]
         log += apply_mutations(muts, game_state)
         # Mort éventuelle → nécromasse
         for p in tile.plants:
@@ -262,6 +268,60 @@ class Engine:
             plant.growth_factor += (target_g - plant.growth_factor) * 0.10
             plant.growth_factor  = max(0.3, min(1.0, plant.growth_factor))
 
+    def _tick_senescence_health(self, tile, eco):
+        """
+        Mortalité réaliste (D27) — santé dynamique.
+
+          Sénescence : au-delà de SENESCENCE_ONSET·longévité, une pression de
+                       déclin croissante ∝ âge fait chuter la santé ; mort à 0.
+                       Sautée pour les annuelles (longévité = ∞, elles meurent
+                       à l'hiver).
+          Guérison   : en bon milieu (lumière × humidité, peu de perturbation)
+                       et hors fin de vie (sen < HEAL_SEN_CUTOFF), la santé
+                       remonte → fini les « zombies » bloqués à 1/3.
+
+        Déterministe via _hash_noise (flux week·3 déclin / week·5 guérison,
+        décorrélés). Les sujets tués déposent leur nécromasse avant nettoyage.
+        """
+        log = []
+        seed = self.game_state.get("seed", 42)
+        week = self.week
+        deaths = []
+        for plant in tile.plants:
+            if not plant.is_alive:
+                continue
+            r, c = plant.position
+            L = plant.plant_class.longevity()
+            # Sénescence par âge
+            sen = 0.0
+            if L != math.inf:
+                denom = (1.0 - SENESCENCE_ONSET) * L
+                if denom > 0:
+                    sen = max(0.0, min(1.0,
+                              (plant.age_years - SENESCENCE_ONSET * L) / denom))
+                if sen > 0.0 and _hash_noise(seed, week * 3, r, c) < sen * SEN_RATE:
+                    plant.health = max(0, plant.health - 1)
+                    if not plant.is_alive:
+                        deaths.append(plant)
+                        log.append(f"    🪦 {plant.name}@{plant.position} meurt de "
+                                   f"sénescence (âge={plant.age_years:.0f}/{L:.0f} ans)")
+                        continue
+            # Guérison (convalescence) — coupée en fin de vie
+            if plant.health < 3 and sen < HEAL_SEN_CUTOFF:
+                light   = eco.lumiere.light_received(plant)
+                hum     = eco.humidite.at_plot(r, c)
+                disturb = eco.disturbance.local(r, c)
+                Q = light * min(1.0, hum) * max(0.0, 1.0 - disturb)
+                if _hash_noise(seed, week * 5, r, c) < Q * HEAL_RATE:
+                    plant.health = min(3, plant.health + 1)
+        for plant in deaths:
+            biomass = plant.current_stage + 1.0
+            deposited = eco.add_necromass(*plant.position, biomass, harvested=False)
+            log.append(f"    🍂 Nécromasse +{deposited:.2f} OM @{plant.position}")
+        if deaths:
+            tile.plants = [p for p in tile.plants if p.is_alive]
+        return log
+
     def _resoudre_conflits(self, tile, eco):
         log = []
         for c in tile.detect_conflicts():
@@ -382,6 +442,23 @@ class Engine:
 
         for plant in list(tile.plants):
             if not plant.is_alive:
+                continue
+
+            # Monocarpie bisannuelle (M3) : floraison/graines l'an 2 puis mort.
+            if (plant.plant_class.life_cycle == "biennial"
+                    and plant.age_years >= 2.0):
+                biomass = (plant.current_stage + 1.0) * 1.2
+                deposited = eco.add_necromass(*plant.position,
+                                              biomass, harvested=False)
+                arch = getattr(plant.plant_class, "archetype", None)
+                rate = getattr(plant.plant_class, "reproduction_rate", 0.02)
+                if arch:
+                    eco.seed_bank.add(*plant.position, arch, rate)
+                log.append(
+                    f"    ✿ {plant.plant_class.name}@{plant.position} meurt "
+                    f"(bisannuelle, an 2) — nécromasse +{deposited:.2f} OM"
+                )
+                to_remove.append(plant)
                 continue
 
             ws = plant.plant_class.winter_strategy
@@ -545,6 +622,9 @@ class Engine:
 
             # 9. Mise à jour mémoire physiologique
             self._update_physiology(tile, eco)
+
+            # 9b. Mortalité réaliste — sénescence + santé dynamique (D27)
+            log += self._tick_senescence_health(tile, eco)
 
             # 10. Floraison
             if est_phase_floraison(week_in_year, saison):

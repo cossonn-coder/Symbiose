@@ -8,6 +8,7 @@ import sys
 import random
 from collections import Counter
 from models import Tile, Tomato, Basil, Sunflower, Bean, Clover
+from perennials import AppleTree
 from fields import init_eco, inject_patch
 from engine import Engine
 
@@ -29,6 +30,9 @@ tile.add_plant(Basil,     2, 5)   # compagnon mais distant
 tile.add_plant(Sunflower, 0, 1)
 tile.add_plant(Bean,      4, 2)
 tile.add_plant(Clover,    4, 6)
+# Pommier dans un coin (L=70 ans) — observer sénescence/mort par âge (D27).
+# Placé en bordure pour limiter l'ombrage sur la trajectoire de succession.
+tile.add_plant(AppleTree, 0, 7)
 
 # Injecter un patch humide sous la tomate (arrosage initial joueur)
 inject_patch(eco, "humidite", center_row=2, center_col=2, value=0.5, radius=1)

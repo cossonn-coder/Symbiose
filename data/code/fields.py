@@ -80,6 +80,12 @@ HERBIVORY_BASE      = 0.020   # pression herbivore de base
 DISTURBANCE_INERTIA = 0.900   # inertie du champ de perturbation spatial
 CLIMATE_AMPLITUDE   = 0.080   # amplitude oscillation climatique de fond
 
+# Mortalité réaliste (D27) — sénescence + santé dynamique
+SENESCENCE_ONSET = 0.70   # début du déclin (× longévité)
+SEN_RATE         = 0.04   # pente de la pression de sénescence (proba/sem à sen=1)
+HEAL_RATE        = 0.06   # proba de remontée de santé/sem en bon milieu (Q=1)
+HEAL_SEN_CUTOFF  = 0.50   # au-delà de cette sénescence, la guérison se coupe
+
 # Uptake racinaire par stade
 UPTAKE = {
     "humidite":  {0: 0.05, 1: 0.10, 2: 0.18, 3: 0.12},
