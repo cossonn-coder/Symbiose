@@ -91,7 +91,7 @@ class Fig(PerennialWoody):
     rarity = "Établie"
     keywords = ["Fruitier", "Jardin", "Ombre dense"]
     foliage_density = 0.75
-    reproduction_rate = 0.0
+    reproduction_rate = 0.15   # dispersion (M7) — gated par la lumière
     longevity_years = 80
     maturity_years = 5
     age_curve = [(0, 30, 20), (5, 200, 150), (10, 400, 250), (20, 500, 300)]
@@ -104,7 +104,7 @@ class AppleTree(PerennialWoody):
     rarity = "Établie"
     keywords = ["Fruitier", "Jardin", "Mellifère"]
     foliage_density = 0.60
-    reproduction_rate = 0.0
+    reproduction_rate = 0.15
     longevity_years = 70
     maturity_years = 5
     age_curve = [(0, 30, 20), (5, 200, 120), (10, 350, 200),
@@ -118,7 +118,7 @@ class CherryTree(PerennialWoody):
     rarity = "Établie"
     keywords = ["Fruitier", "Intermédiaire", "Mellifère"]
     foliage_density = 0.60
-    reproduction_rate = 0.0
+    reproduction_rate = 0.15
     longevity_years = 60
     maturity_years = 5
     age_curve = [(0, 40, 25), (5, 250, 150), (10, 500, 280),
@@ -132,7 +132,7 @@ class WalnutTree(PerennialWoody):
     rarity = "Climacique"
     keywords = ["Lisière", "Ombre dense", "Structurant"]
     foliage_density = 0.80
-    reproduction_rate = 0.0
+    reproduction_rate = 0.10   # glandée (mast) plus rare
     longevity_years = 200
     maturity_years = 15
     age_curve = [(0, 40, 25), (5, 300, 200), (10, 600, 350),
@@ -146,7 +146,7 @@ class OakTree(PerennialWoody):
     rarity = "Sentinelle"
     keywords = ["Lisière", "Sujet structurant", "Centenaire"]
     foliage_density = 0.75
-    reproduction_rate = 0.0
+    reproduction_rate = 0.08   # glandée (mast) rare
     longevity_years = 500
     maturity_years = 25
     age_curve = [(0, 30, 20), (5, 200, 150), (10, 400, 300),

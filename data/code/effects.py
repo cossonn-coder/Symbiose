@@ -15,7 +15,8 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from models import PlantInstance, Tile, EFFECT_REGISTRY, register_effect, RONDELLE_TYPES
-from fields import _hash_noise, HERBIVORY_BASE, MORTALITY_RATE, climate_stress
+from fields import (_hash_noise, HERBIVORY_BASE, MORTALITY_RATE, climate_stress,
+                    DAMPOFF_BASE, DAMPOFF_HUM_SEUIL, FUNGAL_BASE, NECROMASS_PER_CM)
 
 if TYPE_CHECKING:
     from fields import EcoFields
@@ -324,6 +325,76 @@ def apply_mutations(mutations: list, game_state: dict) -> list[str]:
 # PERTURBATIONS ÉCOLOGIQUES
 # ---------------------------------------------------------------------------
 
+def necromass_biomass(plant: PlantInstance) -> float:
+    """
+    Nécromasse déposée à la mort ∝ hauteur (D27, décision #5). Un chêne mort
+    rend bien plus de MO et ouvre une grande trouée qu'un semis. Remplace l'ancien
+    barème par stade pour TOUTES les morts (pas la récolte, qui exporte).
+    """
+    return plant.current_height * NECROMASS_PER_CM
+
+
+def _local_density(plant: PlantInstance, tile: Tile, same_family: bool = False) -> float:
+    """Densité de plantes vivantes voisines [0,1] (option : même famille seulement)."""
+    r, c = plant.position
+    nearby = [p for p in tile.plants
+              if p.is_alive and p is not plant
+              and p.position in tile.plots_within_radius(r, c, 1)]
+    if same_family:
+        n = sum(1 for p in nearby
+                if p.plant_class.family == plant.plant_class.family)
+    else:
+        n = len(nearby)
+    return min(1.0, n / 6.0)
+
+
+def damping_off(plant: PlantInstance, tile: Tile, eco,
+                seed: int, week: int, saison: str) -> list[Mutation]:
+    """
+    Fonte des semis (M4) — mort des semis en sol trop humide / dense / froid,
+    atténuée par un microbiome vivant. Leçon permaculture : ne pas semer serré
+    dans un sol froid et détrempé ; un sol vivant protège.
+    """
+    if not plant.is_alive or plant.stage.name != "semis":
+        return []
+    r, c = plant.position
+    hum_norm = min(1.0, eco.humidite.at_plot(r, c) / 3.0)
+    excess = max(0.0, hum_norm - DAMPOFF_HUM_SEUIL)
+    if excess <= 0.0:
+        return []
+    density = _local_density(plant, tile)
+    saison_factor = 1.0 if saison in ("printemps", "automne") else 0.4
+    # Protection microbiome via la logistique existante (disease_probability)
+    p = eco.disease_probability(r, c, base_rate=DAMPOFF_BASE)
+    p *= excess * (0.3 + density) * saison_factor
+    if _hash_noise(seed, week * 11, r, c) < p:
+        return [ReduceHealth(plant, plant.health, reason="fonte des semis")]
+    return []
+
+
+def fungal_disease(plant: PlantInstance, tile: Tile, eco,
+                   seed: int, week: int) -> list[Mutation]:
+    """
+    Maladies fongiques généralisées (M5) — pression ∝ humidité × densité de la
+    MÊME famille (la monoculture propage) × susceptibilité familiale, atténuée
+    par le microbiome. Le mildiou Solanacées (rondelle) reste un cas à part :
+    ces familles ont juste la susceptibilité la plus élevée.
+    """
+    if not plant.is_alive or plant.stage.name == "semis":
+        return []
+    susc = getattr(plant.plant_class, "fungal_susceptibility", 0.5)
+    if susc <= 0.0:
+        return []
+    r, c = plant.position
+    hum_norm = min(1.0, eco.humidite.at_plot(r, c) / 3.0)
+    density = _local_density(plant, tile, same_family=True)
+    p = eco.disease_probability(r, c, base_rate=FUNGAL_BASE)
+    p *= hum_norm * (0.4 + density) * susc
+    if _hash_noise(seed, week * 13, r, c) < p:
+        return [ReduceHealth(plant, 1, reason="maladie fongique")]
+    return []
+
+
 def herbivory_pressure(plant: PlantInstance, tile: Tile,
                        game_state: dict, eco) -> list[Mutation]:
     """
@@ -352,22 +423,33 @@ def herbivory_pressure(plant: PlantInstance, tile: Tile,
     # Microbiome local normalisé
     micro_norm = min(1.0, eco.microbiome.at_plot(r, c) / 3.0) if eco else 0.3
 
-    # Pression nette
+    # Régulation par les auxiliaires (prédateurs des ravageurs) — ÉMERGENTE :
+    # diversité du voisinage + fleurs (rondelles pollinisateur attirent coccinelles,
+    # syrphes…) + habitat stable (faible perturbation = refuge) répriment les
+    # ravageurs. Pas de champ dédié (le champ auxiliaire ambiant = sprint futur).
+    pollin    = min(1.0, tile.get_rondelle_count("pollinisateur") / 3.0)
+    stability = 1.0 - (eco.disturbance.at_plot(r, c) if eco else 0.5)
+    predator  = min(1.0, 0.5 * biodiversity_index + 0.3 * pollin + 0.2 * stability)
+
+    # Pression nette : biomasse × base × (1−microbiome) × (1−régulation prédateurs)
     pressure = (biomass_local * HERBIVORY_BASE
-                * max(0.0, 1.0 - biodiversity_index)
-                * max(0.0, 1.0 - micro_norm))
+                * max(0.0, 1.0 - micro_norm)
+                * max(0.0, 1.0 - predator))
 
     if pressure < 0.005:
         return []
 
-    # Application probabiliste sur la santé (pas de mort brutale)
+    # Application probabiliste sur la santé
     mutations = []
     if pressure > plant.stress_memory * 0.5:
         # La plante stressée résiste mieux (paradoxe biologique)
         effective_pressure = pressure * max(0.3, 1.0 - plant.stress_memory * 0.5)
         if effective_pressure > 0.015:
+            # Ravageurs LÉTAUX (M6) : forte infestation non régulée (monoculture
+            # sans auxiliaires ni microbiome) → dégâts doublés, mort possible.
+            lethal = predator < 0.2 and micro_norm < 0.2
             mutations.append(ReduceHealth(
-                plant, 1,
+                plant, 2 if lethal else 1,
                 reason=f"herbivorie p={pressure:.3f}"
             ))
     return mutations
@@ -390,8 +472,14 @@ def background_mortality(plant: PlantInstance, eco,
     r, c = plant.position
     noise = _hash_noise(seed, week, r, c)
 
-    # Le stress mémorisé réduit la mortalité (plante endurcie)
-    adjusted_rate = MORTALITY_RATE * max(0.2, 1.0 - plant.stress_memory * 0.6)
+    # Le stress mémorisé réduit la mortalité (plante endurcie) ; les sujets
+    # ÉTABLIS (grande taille) résistent fortement — la mortalité de fond frappe
+    # surtout les jeunes/petits (démographie végétale réaliste, D27). Un arbre
+    # adulte ne meurt donc quasi que de sénescence.
+    establishment = min(1.0, plant.current_height / 200.0)
+    adjusted_rate = (MORTALITY_RATE
+                     * max(0.2, 1.0 - plant.stress_memory * 0.6)
+                     * (1.0 - 0.8 * establishment))
 
     if noise < adjusted_rate:
         # Affaiblissement déterministe. Plancher levé (D27) : sur une plante déjà
@@ -409,16 +497,18 @@ def background_mortality(plant: PlantInstance, eco,
 
 def apply_disturbances(tile, eco, game_state: dict,
                        seed: int, week: int,
-                       year_fraction: float) -> list[str]:
+                       year_fraction: float, saison: str = "") -> list[str]:
     """
     Applique toutes les perturbations de fond pour un tick.
     Appelée après la croissance et les effets biotiques.
 
     Order :
       1. Oscillation climatique (modifie evaporation in-tick via growth_modifier)
-      2. Herbivorie diffuse
-      3. Micro-mortalité déterministe
-      4. Mise à jour stress_memory des plantes
+      2. Herbivorie diffuse + ravageurs létaux (M6)
+      3. Fonte des semis (M4) + maladies fongiques (M5)
+      4. Micro-mortalité déterministe
+      5. Mise à jour stress_memory des plantes
+      6. Nécromasse ∝ hauteur (D27) pour les morts du tick, puis nettoyage
     """
     log = []
 
@@ -434,8 +524,11 @@ def apply_disturbances(tile, eco, game_state: dict,
     for plant in list(tile.plants):
         if not plant.is_alive:
             continue
-        # Herbivorie
+        # Herbivorie + ravageurs létaux
         all_mutations += herbivory_pressure(plant, tile, game_state, eco)
+        # Fonte des semis + maladies fongiques
+        all_mutations += damping_off(plant, tile, eco, seed, week, saison)
+        all_mutations += fungal_disease(plant, tile, eco, seed, week)
         # Mortalité de fond
         all_mutations += background_mortality(plant, eco, seed, week)
 
@@ -451,10 +544,10 @@ def apply_disturbances(tile, eco, game_state: dict,
         plant.stress_memory += (disturbance_local - plant.stress_memory) * 0.08
         plant.stress_memory = max(0.0, min(1.0, plant.stress_memory))
 
-    # Morts de fond (plancher levé, D27) → nécromasse avant nettoyage
+    # Morts du tick (fond / fonte / fongique / ravageurs) → nécromasse ∝ hauteur
     for plant in tile.plants:
         if not plant.is_alive:
-            eco.add_necromass(*plant.position, plant.current_stage + 1.0,
+            eco.add_necromass(*plant.position, necromass_biomass(plant),
                               harvested=False)
     tile.plants = [p for p in tile.plants if p.is_alive]
 

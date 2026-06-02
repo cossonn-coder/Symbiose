@@ -276,6 +276,7 @@ class PlantBase(ABC):
     # Mortalité réaliste (D27) — longévité + âge de fructification
     longevity_years: float | None = None # longévité (ans) ; None ⇒ défaut par life_cycle
     maturity_years: float = 0.0          # âge de 1re fructification (renouvellement arbres)
+    fungal_susceptibility: float = 0.5   # sensibilité aux maladies fongiques [0-1]
 
     # --- Interface lumière (polymorphe) ---
 
@@ -341,6 +342,7 @@ class Solanaceae(PlantBase):
     """
     family = "Solanaceae"
     space_tolerance_weeks = 2  # réagissent vite à la compétition
+    fungal_susceptibility = 1.0  # mildiou — la plus sensible
     family_effects = [
         {
             "type": "permanent",
@@ -383,6 +385,7 @@ class Asteraceae(PlantBase):
     """
     family = "Asteraceae"
     space_tolerance_weeks = 3
+    fungal_susceptibility = 0.4
     family_effects = [
         {
             "type": "floraison",
@@ -402,6 +405,7 @@ class Lamiaceae(PlantBase):
     """
     family = "Lamiaceae"
     space_tolerance_weeks = 4  # très tolérantes
+    fungal_susceptibility = 0.2  # aromatiques — peu sensibles
     family_effects = [
         {
             "type": "permanent",
@@ -420,6 +424,7 @@ class Poaceae(PlantBase):
     """
     family = "Poaceae"
     space_tolerance_weeks = 6   # très tolérantes à la compétition
+    fungal_susceptibility = 0.4
     family_effects = [
         {
             "type": "permanent",
@@ -454,6 +459,7 @@ class BursaPastoris(PlantBase):
     archetype = "pioneer"
     reproduction_rate = 0.08   # forte production graines
     foliage_density = 0.35     # feuillage léger
+    fungal_susceptibility = 0.6
     growth_stages = [
         GrowthStage(
             name="semis", duration_weeks=2, strate="sol",
@@ -781,6 +787,7 @@ class Clover(Fabaceae):
     life_cycle = "perennial"
     winter_strategy = "dormant"
     foliage_density = 0.40
+    reproduction_rate = 0.35   # ressemis (M7) — vivace sans archétype
     growth_stages = [
         GrowthStage(
             name="semis", duration_weeks=2, strate="sol",

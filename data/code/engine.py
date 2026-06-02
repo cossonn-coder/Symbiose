@@ -20,11 +20,13 @@ import random
 from dataclasses import dataclass
 from models import (Tile, PlantInstance, Tomato, Basil, Bean, Clover,
                    Sunflower, Pepper, WEED_CATALOGUE)
-from effects import resolve_plant_turn, apply_mutations, AddRondelle, RemoveRondelle, ReduceHealth, InjectField, apply_disturbances
+from effects import (resolve_plant_turn, apply_mutations, AddRondelle,
+                     RemoveRondelle, ReduceHealth, InjectField,
+                     apply_disturbances, necromass_biomass)
 from fields import (EcoFields, init_eco, inject_patch,
                     EXUDATE_BASE, EXUDATE_OM_SHARE, SEED_ARCHETYPES,
                     _hash_noise, SENESCENCE_ONSET, SEN_RATE,
-                    HEAL_RATE, HEAL_SEN_CUTOFF)
+                    HEAL_RATE, HEAL_SEN_CUTOFF, RESEED_RADIUS_CM)
 
 SAISONS = {
     "printemps": range(1,  14),
@@ -120,10 +122,10 @@ def appliquer_alea(alea, tile, eco, game_state):
         muts = [ReduceHealth(p, 1, alea.nom)
                 for p in tile.plants if p.is_alive and p.stage.name == "semis"]
         log += apply_mutations(muts, game_state)
-        # Mort éventuelle → nécromasse
+        # Mort éventuelle → nécromasse ∝ hauteur
         for p in tile.plants:
             if p.health == 0:
-                eco.add_necromass(*p.position, 0.5, harvested=False)
+                eco.add_necromass(*p.position, necromass_biomass(p), harvested=False)
     return log
 
 @dataclass
@@ -315,11 +317,75 @@ class Engine:
                 if _hash_noise(seed, week * 5, r, c) < Q * HEAL_RATE:
                     plant.health = min(3, plant.health + 1)
         for plant in deaths:
-            biomass = plant.current_stage + 1.0
-            deposited = eco.add_necromass(*plant.position, biomass, harvested=False)
+            deposited = eco.add_necromass(*plant.position,
+                                          necromass_biomass(plant), harvested=False)
             log.append(f"    🍂 Nécromasse +{deposited:.2f} OM @{plant.position}")
         if deaths:
             tile.plants = [p for p in tile.plants if p.is_alive]
+        return log
+
+    def _renewal(self, tile, eco, week):
+        """
+        Renouvellement (M7, PROVISOIRE) — dispersion locale à la saison des graines.
+
+        Concerne ce que la banque de graines par archétype ne couvre PAS :
+          - vivaces herbacées sans archétype (trèfle) — sinon elles disparaissent
+            quand elles meurent de vieillesse, faute de source de ressemis ;
+          - arbres mûrs (age_years ≥ maturity_years) — mast / glandée.
+
+        Chaque parent éligible tente (p = reproduction_rate, hash) un semis de la
+        MÊME espèce sur un plot libre à portée (RESEED_RADIUS_CM), gated par la
+        niche : sous une canopée fermée niche≈0 → pas de germination, les arbres
+        s'auto-limitent (pas de climax forestier galopant).
+
+        Déterministe (_hash_noise). Sera unifié et remplacé par la SeedBank-espèce
+        génétique (D17+D22) — ne pas doubler ce système au Sprint génétique.
+        """
+        log = []
+        seed = self.game_state.get("seed", 42)
+        occupied: set[tuple] = set()
+        for p in tile.plants:
+            if p.is_alive:
+                occupied.update(p.root_plots)
+                occupied.add(p.position)
+        radius_plots = int(RESEED_RADIUS_CM // 50) + 1
+
+        for parent in list(tile.plants):
+            if not parent.is_alive:
+                continue
+            cls = parent.plant_class
+            is_tree = hasattr(cls, "age_curve")   # PerennialWoody
+            if is_tree:
+                if parent.age_years < getattr(cls, "maturity_years", 0):
+                    continue
+            else:
+                if cls.life_cycle != "perennial" or cls.archetype is not None:
+                    continue
+            rate = getattr(cls, "reproduction_rate", 0.0)
+            if rate <= 0.0:
+                continue
+            pr, pc = parent.position
+            if _hash_noise(seed, week * 17, pr, pc) >= rate:
+                continue
+            # Le parent fructifie : germination sur le plot libre le mieux éclairé
+            # à portée (un semis a besoin d'un gap de lumière ; sous canopée fermée
+            # aucun plot n'est assez clair → pas de recrutement, auto-limitation).
+            best = None
+            best_light = 0.35   # seuil de viabilité d'un semis
+            for (r, c) in sorted(tile.plots_within_radius(pr, pc, radius_plots)):
+                if (r, c) in occupied or not tile.is_valid_plot(r, c):
+                    continue
+                light = eco.lumiere.at_plot(r, c)
+                if light > best_light:
+                    best_light = light
+                    best = (r, c)
+            if best:
+                child = tile.add_plant(cls, *best)
+                if child:
+                    occupied.add(best)
+                    occupied.update(child.root_plots)
+                    log.append(f"    🌰 Renouvellement : {cls.name} @{best} "
+                               f"[lum={best_light:.2f}]")
         return log
 
     def _resoudre_conflits(self, tile, eco):
@@ -334,8 +400,8 @@ class Engine:
                 mort = loser.regress()
                 if mort:
                     log.append(f"    ✗ {loser.name}@{loser.position} meurt (conflit).")
-                    biomass = loser.current_stage + 1.0
-                    deposited = eco.add_necromass(*loser.position, biomass, harvested=False)
+                    deposited = eco.add_necromass(*loser.position,
+                                                  necromass_biomass(loser), harvested=False)
                     log.append(f"    🍂 Nécromasse +{deposited:.2f} OM @{loser.position}")
                 else:
                     log.append(f"    ↓ {loser.name}@{loser.position} → [{loser.stage.name}] (conflit).")
@@ -447,9 +513,8 @@ class Engine:
             # Monocarpie bisannuelle (M3) : floraison/graines l'an 2 puis mort.
             if (plant.plant_class.life_cycle == "biennial"
                     and plant.age_years >= 2.0):
-                biomass = (plant.current_stage + 1.0) * 1.2
                 deposited = eco.add_necromass(*plant.position,
-                                              biomass, harvested=False)
+                                              necromass_biomass(plant), harvested=False)
                 arch = getattr(plant.plant_class, "archetype", None)
                 rate = getattr(plant.plant_class, "reproduction_rate", 0.02)
                 if arch:
@@ -464,10 +529,9 @@ class Engine:
             ws = plant.plant_class.winter_strategy
 
             if ws == "die":
-                # Biomasse → nécromasse + graines dans la banque
-                biomass = (plant.current_stage + 1.0) * 1.2
+                # Biomasse → nécromasse ∝ hauteur + graines dans la banque
                 deposited = eco.add_necromass(*plant.position,
-                                              biomass, harvested=False)
+                                              necromass_biomass(plant), harvested=False)
                 # Injection graines
                 arch = getattr(plant.plant_class, "archetype", None)
                 rate = getattr(plant.plant_class, "reproduction_rate", 0.02)
@@ -646,6 +710,11 @@ class Engine:
                         deposited = eco.add_necromass(*plant.position,
                                                       biomass, harvested=True)
 
+            # 11b. Renouvellement (M7) — dispersion à la saison des graines (automne)
+            if saison == "automne" and est_phase_recolte(week_in_year, saison):
+                rlog = self._renewal(tile, eco, week)
+                if rlog: log += rlog
+
             # 12. Conflits
             clog = self._resoudre_conflits(tile, eco)
             if clog: log += clog
@@ -655,7 +724,7 @@ class Engine:
             year_fraction = (week - 1) / 52.0
             eco.tick_disturbance(seed, week)
             dlog = apply_disturbances(tile, eco, self.game_state,
-                                      seed, week, year_fraction)
+                                      seed, week, year_fraction, saison)
             if dlog: log += dlog
 
             # 14. Banque de graines (vieillissement + enrichissement)

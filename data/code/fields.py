@@ -86,6 +86,13 @@ SEN_RATE         = 0.04   # pente de la pression de sénescence (proba/sem à se
 HEAL_RATE        = 0.06   # proba de remontée de santé/sem en bon milieu (Q=1)
 HEAL_SEN_CUTOFF  = 0.50   # au-delà de cette sénescence, la guérison se coupe
 
+# Mortalité réaliste (D27) — passe 2 : fonte, fongique, renouvellement, nécromasse
+DAMPOFF_BASE      = 0.08   # fonte des semis (damping-off), base avant modulation
+DAMPOFF_HUM_SEUIL = 0.50   # humidité normalisée au-delà de laquelle la fonte démarre
+FUNGAL_BASE       = 0.04   # maladies fongiques adultes, base avant modulation
+RESEED_RADIUS_CM  = 150.0  # rayon de dispersion du renouvellement (M7)
+NECROMASS_PER_CM  = 0.03   # nécromasse déposée par cm de hauteur à la mort
+
 # Uptake racinaire par stade
 UPTAKE = {
     "humidite":  {0: 0.05, 1: 0.10, 2: 0.18, 3: 0.12},
