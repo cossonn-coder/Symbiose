@@ -204,16 +204,10 @@ class Fabaceae(PlantBase):
     """
     family = "Fabaceae"
     space_tolerance_weeks = 4  # très tolérantes à la compétition
+    # Bonus spécifique légumineuses : fixation N₂ → fertilité. L'enrichissement
+    # du microbiome n'est plus scripté ici — il émerge des exsudats universels
+    # (boucle rhizosphère, _apply_exudates).
     family_effects = [
-        {
-            "type": "permanent",
-            "trigger": "weekly",
-            "action": "inject_field",
-            "variable": "microbiome",
-            "amount": 0.04,
-            "cible": "local",
-            "description": "Fixation N₂ — enrichit le microbiome racinaire"
-        },
         {
             "type": "permanent",
             "trigger": "weekly",
@@ -317,7 +311,7 @@ class BursaPastoris(PlantBase):
             effects=[
                 {
                     "type": "permanent", "trigger": "weekly",
-                    "action": "inject_field", "variable": "organic_matter",
+                    "action": "inject_field", "variable": "om_fresh",
                     "amount": 0.03, "cible": "local",
                     "description": "Pionnière — enrichit la MO"
                 }
@@ -367,12 +361,6 @@ class MedicagoLupulina(PlantBase):
             effects=[
                 {
                     "type": "permanent", "trigger": "weekly",
-                    "action": "inject_field", "variable": "microbiome",
-                    "amount": 0.05, "cible": "local",
-                    "description": "Fixation N₂ — microbiome"
-                },
-                {
-                    "type": "permanent", "trigger": "weekly",
                     "action": "inject_field", "variable": "fertilite",
                     "amount": 0.04, "cible": "local",
                     "description": "Fixation N₂ — fertilité"
@@ -385,13 +373,8 @@ class MedicagoLupulina(PlantBase):
             ],
         ),
     ]
+    # Microbiome non scripté : émerge des exsudats universels (boucle rhizosphère).
     family_effects = [
-        {
-            "type": "permanent", "trigger": "weekly",
-            "action": "inject_field", "variable": "microbiome",
-            "amount": 0.04, "cible": "local",
-            "description": "Fixation N₂ familiale"
-        },
         {
             "type": "permanent", "trigger": "weekly",
             "action": "inject_field", "variable": "fertilite",
@@ -431,7 +414,7 @@ class PoaAnnua(PlantBase):
             effects=[
                 {
                     "type": "permanent", "trigger": "weekly",
-                    "action": "inject_field", "variable": "organic_matter",
+                    "action": "inject_field", "variable": "om_fresh",
                     "amount": 0.02, "cible": "local",
                     "description": "Graminée — accumulation MO racinaire"
                 }

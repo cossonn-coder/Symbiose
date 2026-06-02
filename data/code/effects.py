@@ -127,8 +127,17 @@ def resolve(effect: dict, plant: PlantInstance, tile: Tile,
         amount   = effect.get("amount", 0.0)
         cible    = effect.get("cible", "local")
         if cible == "local" and eco:
-            mutations.append(InjectField(tile.tile_id, variable, amount, r, c,
-                                         source=f"{plant.name}"))
+            # Enrichissement spatial (chantier B) : réparti sur l'empreinte
+            # racinaire, pas sur le seul plot central. On répartit (share),
+            # sans dupliquer la quantité totale.
+            plots = [(rr, cc) for (rr, cc) in plant.root_plots
+                     if 0 <= rr < eco.rows and 0 <= cc < eco.cols]
+            if not plots:
+                plots = [(r, c)]
+            share = amount / len(plots)
+            for rr, cc in plots:
+                mutations.append(InjectField(tile.tile_id, variable, share, rr, cc,
+                                             source=f"{plant.name}"))
         elif cible == "global" and eco:
             mutations.append(InjectField(tile.tile_id, variable, amount,
                                          source=f"{plant.name}"))

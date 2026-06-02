@@ -97,3 +97,11 @@ print(f"\nConflits : {sum(1 for c in tile.conflicts if c.resolved)} résolus, "
 # Carte de chaleur humidité finale
 print(f"\nCarte humidité finale (grille 6×8) :")
 print(eco.humidite.ascii_map(precision=2))
+
+# Carte de vitalité dérivée (grandeur non stockée, calculée à la demande)
+print(f"\nCarte vitalité dérivée (grille 6×8) :")
+for r in range(eco.rows):
+    prefix = "  " if r % 2 == 1 else ""
+    cells = " ".join(f"{eco.vitalite(r, c):.2f}" for c in range(eco.cols))
+    print(prefix + cells)
+print(f"vitalité moyenne : {eco.vitalite_average():.3f}")

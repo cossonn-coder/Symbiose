@@ -20,7 +20,8 @@ from dataclasses import dataclass
 from models import (Tile, PlantInstance, Tomato, Basil, Bean, Clover,
                    Sunflower, Pepper, WEED_CATALOGUE)
 from effects import resolve_plant_turn, apply_mutations, AddRondelle, RemoveRondelle, ReduceHealth, InjectField, apply_disturbances
-from fields import EcoFields, init_eco, inject_patch, SHADOW_DENSITY
+from fields import (EcoFields, init_eco, inject_patch, SHADOW_DENSITY,
+                    EXUDATE_BASE, EXUDATE_OM_SHARE)
 
 SAISONS = {
     "printemps": range(1,  14),
@@ -143,16 +144,81 @@ class Engine:
         return log
 
     def _apply_uptake(self, tile, eco):
+        """
+        Uptake racinaire SPATIAL (chantier B) : la plante puise sur toute son
+        empreinte racinaire `root_plots`, pas seulement le plot central. La
+        quantité prélevée est répartie (share = 1/nb plots) — on ne duplique
+        pas la consommation. La compétition souterraine entre voisines devient
+        alors émergente : deux empreintes qui se chevauchent puisent le même sol.
+        """
         log = []
         for plant in tile.plants:
             if not plant.is_alive: continue
-            r, c = plant.position
-            consumed = eco.plant_uptake(r, c, plant.current_stage,
-                                        shade_memory=plant.shade_memory,
-                                        drought_memory=plant.drought_memory)
-            if consumed:
-                parts = " ".join(f"{v}↓{d:.3f}" for v,d in consumed.items())
-                log.append(f"    🌿 {plant.name}@{plant.position} : {parts}")
+            plots = [(r, c) for (r, c) in plant.root_plots
+                     if 0 <= r < eco.rows and 0 <= c < eco.cols]
+            if not plots:
+                plots = [plant.position]
+            share = 1.0 / len(plots)
+            total = {}
+            for r, c in plots:
+                consumed = eco.plant_uptake(r, c, plant.current_stage,
+                                            shade_memory=plant.shade_memory,
+                                            drought_memory=plant.drought_memory,
+                                            share=share)
+                for k, v in consumed.items():
+                    total[k] = round(total.get(k, 0.0) + v, 3)
+            if total:
+                parts = " ".join(f"{v}↓{d:.3f}" for v, d in total.items())
+                log.append(f"    🌿 {plant.name}@{plant.position} ×{len(plots)}plt : {parts}")
+        return log
+
+    def _apply_exudates(self, tile, eco):
+        """
+        Boucle rhizosphère (chantier A) — exsudats racinaires.
+
+        Chaque plante vivante « paie » le sol en carbone : elle dépose des
+        exsudats proportionnels à sa photosynthèse (lumière reçue × surface
+        foliaire × santé) sur son empreinte racinaire. L'essentiel nourrit le
+        microbiome local, une fraction l'om_fresh.
+
+        Borne (anti-emballement, piège n°1) : le dépôt de microbiome décroît à
+        mesure que le microbiome local sature (×(1 − micro_norm)). La boucle
+        exsudats → microbiome → santé/uptake → exsudats converge, n'explose pas.
+        """
+        log = []
+        deposited_total = 0.0
+        for plant in tile.plants:
+            if not plant.is_alive:
+                continue
+            # Photosynthèse : lumière reçue (canopée) × surface foliaire × santé
+            foliar = [(r, c) for (r, c) in plant.foliar_plots
+                      if 0 <= r < eco.rows and 0 <= c < eco.cols]
+            if foliar:
+                light = sum(eco.lumiere.at_plot(r, c) for r, c in foliar) / len(foliar)
+            else:
+                light = eco.lumiere.at_plot(*plant.position)
+            leaf_factor = min(1.0, len(plant.foliar_plots) / 5.0)
+            health_factor = plant.health / 3.0
+            photo = light * leaf_factor * health_factor
+            if photo <= 0.0:
+                continue
+
+            exudate = EXUDATE_BASE * photo
+            roots = [(r, c) for (r, c) in plant.root_plots
+                     if 0 <= r < eco.rows and 0 <= c < eco.cols]
+            if not roots:
+                roots = [plant.position]
+            micro_share = exudate * (1.0 - EXUDATE_OM_SHARE) / len(roots)
+            om_share    = exudate * EXUDATE_OM_SHARE / len(roots)
+            for r, c in roots:
+                micro_norm = min(1.0, eco.microbiome.at_plot(r, c) / 3.0)
+                eco.microbiome.add(r, c, micro_share * (1.0 - micro_norm))
+                eco.om_fresh.add(r, c, om_share)
+                deposited_total += micro_share * (1.0 - micro_norm) + om_share
+
+        if deposited_total > 0.001:
+            log.append(f"    🦠 Exsudats → microbiome/om +{deposited_total:.3f} "
+                       f"(boucle rhizosphère)")
         return log
 
     def _update_physiology(self, tile, eco):
@@ -462,6 +528,9 @@ class Engine:
             # 8. Uptake racinaire (après effets, avant physiologie)
             log += self._apply_uptake(tile, eco)
 
+            # 8b. Exsudats racinaires — boucle rhizosphère (chantier A)
+            log += self._apply_exudates(tile, eco)
+
             # 9. Mise à jour mémoire physiologique
             self._update_physiology(tile, eco)
 
@@ -522,8 +591,10 @@ class Engine:
             log.append(
                 f"  → {len(alive)} plante(s) | "
                 f"hum={s['humidite']:.2f} fert={s['fertilite']:.3f} "
-                f"micro={s['microbiome']:.3f} om={s['organic_mat']:.3f} "
-                f"soil={s['soil_memory']:.3f} stress={stress_avg:.3f}"
+                f"micro={s['microbiome']:.3f} "
+                f"om(f/a/s)={s['om_fresh']:.2f}/{s['om_active']:.2f}/{s['om_stable']:.2f} "
+                f"soil={s['soil_memory']:.3f} vit={s['vitalite']:.3f} "
+                f"stress={stress_avg:.3f}"
             )
 
         sc = self.game_state.get("scores", {})

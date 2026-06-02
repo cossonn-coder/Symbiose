@@ -290,7 +290,7 @@ contexte préalable.
 
 | Sprint | Kickoff |
 |---|---|
-| Sprint sol vivant (Python : OM v4 + racines spatiales + boucle rhizosphère + vitalité, lève D10) | `sprints/sprint_sol_vivant.md` |
+| ✅ **TERMINÉ 2026-06-02** — Sprint sol vivant (OM v4 + racines spatiales + boucle rhizosphère + vitalité ; D10 levée côté Python). Chantier C mycorhizes différé (extension future, palier avancé) ; portage C# = dette D24 | `sprints/sprint_sol_vivant.md` |
 | Sprint 1 (recalibrage visuel + grille 3×3 + maison) | `sprints/sprint_1_recalibrage_visuel.md` |
 | Sprint 2 (orchestration C# : Main, GameManager, TurnSystem) | `sprints/sprint_2_orchestration.md` |
 | Sprint éclairement (Z7, D20-D21 : ombres pixel + pérennes + réalignement OM) | `sprints/sprint_eclairement.md` |

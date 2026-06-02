@@ -33,11 +33,36 @@ EVAPORATION    = 0.997
 DRAINAGE       = 0.993
 SOIL_RETENTION = 0.010
 
-# Cycle biogéochimique
-DECAY_RATE       = 0.012   # minéralisation hebdomadaire organic_matter → fertilite
-CARBON_LOSS      = 0.998   # respiration microbienne (perte carbone/semaine)
+# Cycle biogéochimique — OM v4 tri-compartiment (cascade fresh → active → stable)
+# Taux de décomposition hebdomadaire par compartiment (avant modulation microbiome).
+OM_FRESH_DECAY   = 0.080   # débris récents / sucres : rapide (semaines)
+OM_ACTIVE_DECAY  = 0.018   # MO partiellement digérée : vitesse moyenne (mois)
+OM_STABLE_DECAY  = 0.0006  # humus : très lent (décennies)
+
+# Devenir de la masse décomposée de chaque compartiment.
+# Trois destinations : humification (→ compartiment suivant), minéralisation
+# (→ fertilite), respiration (→ CO₂, perte nette). Les trois somment à 1.0 :
+# aucune création de matière, le reste est respiré.
+OM_FRESH_HUMIF   = 0.45    # fresh → active
+OM_FRESH_MINER   = 0.25    # fresh → fertilite
+OM_ACTIVE_HUMIF  = 0.25    # active → stable
+OM_ACTIVE_MINER  = 0.45    # active → fertilite (minéralisation principale)
+OM_STABLE_MINER  = 0.40    # stable → fertilite (minéralisation lente)
+
 LEACHING_LOSS    = 0.999   # lessivage nutriments (perte fertilite/semaine)
 BIOMASS_EXPORT   = 0.20    # fraction exportée à la récolte (le reste = nécromasse)
+
+# Boucle rhizosphère — exsudats racinaires (chantier A)
+EXUDATE_BASE     = 0.060   # dépôt total à pleine photosynthèse (microbiome + om_fresh)
+EXUDATE_OM_SHARE = 0.15    # part de l'exsudat versée à om_fresh (le reste → microbiome)
+UPTAKE_MICRO_BONUS = 0.40  # bonus d'uptake fertilité à microbiome saturé (rétroaction)
+
+# Vitalité dérivée — pondérations (cf. vitalite()), somme des positifs = 1.0
+VIT_W_MICRO     = 0.35
+VIT_W_ACTIVE    = 0.25
+VIT_W_FERT      = 0.20
+VIT_W_STRUCTURE = 0.20
+VIT_W_DISTURB   = 0.15     # pénalité (soustraite)
 
 # Soil memory
 SOIL_FAST_RATE   = 0.15    # intégration rapide (annuelle)
@@ -421,7 +446,9 @@ class EcoFields:
     soil_memory:      GridField = field(default=None)   # mémoire effective (composite)
     soil_memory_fast: GridField = field(default=None)   # annuelle (lerp 0.15)
     soil_memory_deep: GridField = field(default=None)   # décennale (lerp 0.02)
-    organic_matter:   GridField = field(default=None)   # nécromasse / compost in situ
+    om_fresh:         GridField = field(default=None)   # débris récents / exsudats (rapide)
+    om_active:        GridField = field(default=None)   # MO partiellement digérée (réserve)
+    om_stable:        GridField = field(default=None)   # humus (structure, rétention, mémoire)
     disturbance:      DisturbanceField = field(default=None)
     seed_bank:        SeedBank = field(default=None)
 
@@ -436,9 +463,12 @@ class EcoFields:
             self.soil_memory_fast = GridField(self.rows, self.cols, max_val=1.0)
         if self.soil_memory_deep is None:
             self.soil_memory_deep = GridField(self.rows, self.cols, max_val=1.0)
-        if self.organic_matter is None:
-            self.organic_matter = GridField(self.rows, self.cols,
-                                            initial=0.0, max_val=10.0)
+        if self.om_fresh is None:
+            self.om_fresh  = GridField(self.rows, self.cols, initial=0.0, max_val=10.0)
+        if self.om_active is None:
+            self.om_active = GridField(self.rows, self.cols, initial=0.0, max_val=10.0)
+        if self.om_stable is None:
+            self.om_stable = GridField(self.rows, self.cols, initial=0.0, max_val=10.0)
         if self.disturbance is None:
             self.disturbance = DisturbanceField(self.rows, self.cols)
         if self.seed_bank is None:
@@ -452,7 +482,9 @@ class EcoFields:
             "lumiere":     self.lumiere,
             "soil_memory": self.soil_memory,
             "disturbance":      self.disturbance,
-            "organic_matter":   self.organic_matter,
+            "om_fresh":         self.om_fresh,
+            "om_active":        self.om_active,
+            "om_stable":        self.om_stable,
             "soil_memory_fast": self.soil_memory_fast,
             "soil_memory_deep": self.soil_memory_deep,
         }.get(name)
@@ -523,7 +555,9 @@ class EcoFields:
             for c in range(self.cols):
                 micro = self.microbiome.at_plot(r, c) / 3.0
                 fert  = min(1.0, self.fertilite.at_plot(r, c) / 3.0)
-                om    = min(1.0, self.organic_matter.at_plot(r, c) / 5.0)
+                om    = min(1.0, (self.om_fresh.at_plot(r, c) +
+                                  self.om_active.at_plot(r, c) +
+                                  self.om_stable.at_plot(r, c)) / 5.0)
 
                 # Signature des plantes sur ce plot
                 sig = 0.0
@@ -556,29 +590,50 @@ class EcoFields:
 
     def tick_decomposition(self) -> None:
         """
-        Cycle biogéochimique hebdomadaire.
-        
-        1. Minéralisation : organic_matter → fertilite
-           vitesse modulée par microbiome (sol vivant = recyclage rapide)
-        2. Respiration microbienne : perte carbone (organic_matter)
-        3. Lessivage : perte lente fertilite
+        Cycle biogéochimique hebdomadaire — cascade OM v4 (fresh → active → stable).
+
+        Chaque compartiment se décompose à son propre rythme, modulé par le
+        microbiome (sol vivant = recyclage rapide). La masse décomposée se
+        répartit en trois : humification (compartiment suivant), minéralisation
+        (→ fertilite), respiration (CO₂, perte nette). Aucune création de matière.
+
+          fresh  ──décompose──┬─ humifie → active
+                              ├─ minéralise → fertilite
+                              └─ respire (perdu)
+          active ──décompose──┬─ humifie → stable
+                              ├─ minéralise → fertilite (∝ microbiome)
+                              └─ respire (perdu)
+          stable ──décompose──┬─ minéralise → fertilite
+                              └─ respire (perdu)
+
+        Puis lessivage lent de la fertilité.
         """
         for r in range(self.rows):
             for c in range(self.cols):
-                om    = self.organic_matter.data[r][c]
                 micro = self.microbiome.at_plot(r, c) / 3.0
+                speed = 0.5 + micro * 0.5   # sol vivant décompose jusqu'à 2× plus vite
 
-                # 1. Minéralisation (OM → fertilite)
-                # Sol vivant décompose 2x plus vite que sol mort
-                decomp_rate = DECAY_RATE * (0.5 + micro * 0.5)
-                released = om * decomp_rate
-                self.organic_matter.add(r, c, -released)
+                fresh  = self.om_fresh.data[r][c]
+                active = self.om_active.data[r][c]
+                stable = self.om_stable.data[r][c]
+
+                # 1. Fresh
+                d_fresh = fresh * OM_FRESH_DECAY * speed
+                # 2. Active
+                d_active = active * OM_ACTIVE_DECAY * speed
+                # 3. Stable
+                d_stable = stable * OM_STABLE_DECAY * speed
+
+                self.om_fresh.add(r, c, -d_fresh)
+                self.om_active.add(r, c, -d_active + d_fresh * OM_FRESH_HUMIF)
+                self.om_stable.add(r, c, -d_stable + d_active * OM_ACTIVE_HUMIF)
+
+                released = (d_fresh  * OM_FRESH_MINER +
+                            d_active * OM_ACTIVE_MINER +
+                            d_stable * OM_STABLE_MINER)
                 self.fertilite.add(r, c, released)
 
-                # 2. Respiration microbienne (perte carbone)
-                self.organic_matter.data[r][c] *= CARBON_LOSS
-
-                # 3. Lessivage nutriments
+                # Lessivage nutriments
                 self.fertilite.data[r][c] *= LEACHING_LOSS
 
     def add_necromass(self, r: int, c: int,
@@ -588,10 +643,11 @@ class EcoFields:
         harvested=True : une fraction est exportée (récolte) → moins de retour sol.
         Retourne la quantité effectivement déposée.
         """
-        # Récolte exporte BIOMASS_EXPORT, mort laisse tout sur place
+        # Récolte exporte BIOMASS_EXPORT, mort laisse tout sur place.
+        # La nécromasse fraîche entre par le compartiment fresh (cascade ensuite).
         export_fraction = BIOMASS_EXPORT if harvested else 0.0
         deposited = biomass * (1.0 - export_fraction)
-        self.organic_matter.add(r, c, deposited)
+        self.om_fresh.add(r, c, deposited)
         return deposited
 
     # --- Météo ---
@@ -612,16 +668,24 @@ class EcoFields:
 
     def plant_uptake(self, r: int, c: int, stage_index: int,
                       shade_memory: float = 0.0,
-                      drought_memory: float = 0.0) -> dict[str, float]:
+                      drought_memory: float = 0.0,
+                      share: float = 1.0) -> dict[str, float]:
         """
         Consommation racinaire modulée par la mémoire physiologique.
 
         shade_memory  → réduit la transpiration (plante étiolée, moins de surface foliaire)
         drought_memory → réduit la consommation d'eau (racines adaptées, stomates fermés)
+        share         → fraction prélevée sur CE plot (1/nb plots de l'empreinte
+                        racinaire), pour répartir l'uptake sur root_plots sans
+                        multiplier la quantité totale (chantier B).
+
+        Rétroaction rhizosphère : un microbiome riche améliore l'assimilation des
+        nutriments (bonus borné UPTAKE_MICRO_BONUS) — la boucle vertueuse côté plante.
         """
+        micro_norm = min(1.0, self.microbiome.at_plot(r, c) / 3.0)
         consumed = {}
         for var, by_stage in UPTAKE.items():
-            amount = by_stage.get(stage_index, 0.0)
+            amount = by_stage.get(stage_index, 0.0) * share
             if amount <= 0:
                 continue
             if var == "humidite":
@@ -631,6 +695,9 @@ class EcoFields:
                 amount *= (0.5 + light * 0.5) * shade_factor
                 # Stress hydrique adaptatif (plante économise l'eau)
                 amount *= max(0.5, 1.0 - drought_memory * 0.3)
+            elif var == "fertilite":
+                # Microbiome riche → meilleure assimilation des nutriments
+                amount *= 1.0 + micro_norm * UPTAKE_MICRO_BONUS
             f = self.get_field(var)
             real = min(amount, f.at_plot(r, c))
             if real > 0:
@@ -657,19 +724,57 @@ class EcoFields:
         protection = 1.0 / (1.0 + math.exp(-6.0 * (micro_norm - 0.5)))
         return base_rate * max(0.02, 1.0 - protection)
 
+    # --- Vitalité (grandeur dérivée, non stockée) ---
+
+    def vitalite(self, r: int, c: int) -> float:
+        """
+        Vitalité du sol en un plot — grandeur DÉRIVÉE calculée à la demande,
+        jamais stockée (décision #2 : le Qi territorial = les champs existants).
+
+        Synthèse lisible de la santé du sol vivant : vie microbienne, réserve de
+        fertilité (om_active + fertilite), structure (humus), moins la perturbation.
+        Bornée [0, 1]. Préfigure la Vigueur (D11) que plantes et joueur puiseront.
+        """
+        micro     = min(1.0, self.microbiome.at_plot(r, c) / 3.0)
+        active    = min(1.0, self.om_active.at_plot(r, c) / 5.0)
+        fert      = min(1.0, self.fertilite.at_plot(r, c) / 3.0)
+        structure = min(1.0, self.om_stable.at_plot(r, c) / 5.0)
+        disturb   = self.disturbance.at_plot(r, c)
+        v = (micro     * VIT_W_MICRO +
+             active    * VIT_W_ACTIVE +
+             fert      * VIT_W_FERT +
+             structure * VIT_W_STRUCTURE -
+             disturb   * VIT_W_DISTURB)
+        return max(0.0, min(1.0, v))
+
+    def vitalite_average(self) -> float:
+        n = self.rows * self.cols
+        if not n:
+            return 0.0
+        total = sum(self.vitalite(r, c)
+                    for r in range(self.rows) for c in range(self.cols))
+        return total / n
+
     # --- Résumé ---
 
     def summary(self) -> dict:
+        om_total = (self.om_fresh.average() +
+                    self.om_active.average() +
+                    self.om_stable.average())
         return {
             "humidite":    round(self.humidite.average(),         3),
             "fertilite":   round(self.fertilite.average(),        3),
             "microbiome":  round(self.microbiome.average(),       3),
-            "organic_mat": round(self.organic_matter.average(),   3),
+            "om_fresh":    round(self.om_fresh.average(),         3),
+            "om_active":   round(self.om_active.average(),        3),
+            "om_stable":   round(self.om_stable.average(),        3),
+            "organic_mat": round(om_total,                        3),
             "lumiere_moy": round(self.lumiere.average(),          3),
             "soil_fast":   round(self.soil_memory_fast.average(), 3),
             "soil_deep":   round(self.soil_memory_deep.average(), 3),
             "soil_memory": round(self.soil_memory.average(),      3),
             "disturbance": round(self.disturbance.average(),      3),
+            "vitalite":    round(self.vitalite_average(),         3),
         }
 
     def __repr__(self) -> str:
