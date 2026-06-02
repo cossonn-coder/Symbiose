@@ -20,7 +20,7 @@ from dataclasses import dataclass
 from models import (Tile, PlantInstance, Tomato, Basil, Bean, Clover,
                    Sunflower, Pepper, WEED_CATALOGUE)
 from effects import resolve_plant_turn, apply_mutations, AddRondelle, RemoveRondelle, ReduceHealth, InjectField, apply_disturbances
-from fields import (EcoFields, init_eco, inject_patch, SHADOW_DENSITY,
+from fields import (EcoFields, init_eco, inject_patch,
                     EXUDATE_BASE, EXUDATE_OM_SHARE, SEED_ARCHETYPES)
 
 SAISONS = {
@@ -145,11 +145,12 @@ class Engine:
         for plant in tile.plants:
             if not plant.is_alive: continue
             plant.age_weeks += 1
+            plant.age_years += 1.0 / 52.0   # âge total (courbe d'âge des pérennes)
             stage = plant.stage
             if stage.duration_weeks == 0: continue
             r, c = plant.position
             hum   = eco.humidite.at_plot(r, c)
-            light = eco.lumiere.at_plot(r, c)
+            light = eco.lumiere.light_received(plant)   # lumière reçue (canopée, auto-ombrage exclu)
             # Seuils de croissance : humidité ET lumière suffisantes
             ok_hum   = hum   >= 0.15
             ok_light = light >= 0.2   # trop d'ombre = stagnation
@@ -211,13 +212,8 @@ class Engine:
         for plant in tile.plants:
             if not plant.is_alive:
                 continue
-            # Photosynthèse : lumière reçue (canopée) × surface foliaire × santé
-            foliar = [(r, c) for (r, c) in plant.foliar_plots
-                      if 0 <= r < eco.rows and 0 <= c < eco.cols]
-            if foliar:
-                light = sum(eco.lumiere.at_plot(r, c) for r, c in foliar) / len(foliar)
-            else:
-                light = eco.lumiere.at_plot(*plant.position)
+            # Photosynthèse : lumière reçue (canopée, auto-ombrage exclu) × surface × santé
+            light = eco.lumiere.light_received(plant)
             leaf_factor = min(1.0, len(plant.foliar_plots) / 5.0)
             health_factor = plant.health / 3.0
             photo = light * leaf_factor * health_factor
@@ -252,7 +248,7 @@ class Engine:
         for plant in tile.plants:
             if not plant.is_alive: continue
             r, c = plant.position
-            light = eco.lumiere.at_plot(r, c)
+            light = eco.lumiere.light_received(plant)
             hum   = eco.humidite.at_plot(r, c)
             # Shade memory : intégration lente de l'ombre vécue
             plant.shade_memory += (1.0 - light - plant.shade_memory) * 0.10
@@ -261,6 +257,10 @@ class Engine:
             drought_stress = max(0.0, 1.0 - hum / 0.5) if hum < 0.5 else 0.0
             plant.drought_memory += (drought_stress - plant.drought_memory) * 0.05
             plant.drought_memory  = max(0.0, min(1.0, plant.drought_memory))
+            # Growth factor : la lumière reçue module la hauteur (feedback → ombre)
+            target_g = 0.6 + 0.4 * light
+            plant.growth_factor += (target_g - plant.growth_factor) * 0.10
+            plant.growth_factor  = max(0.3, min(1.0, plant.growth_factor))
 
     def _resoudre_conflits(self, tile, eco):
         log = []

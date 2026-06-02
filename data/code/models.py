@@ -2,12 +2,82 @@
 SYMBIOSE — models.py
 Dataclasses et hiérarchie de plantes (3 niveaux : Famille → Genre → Espèce).
 Système de rondelles, instances de plantes, gestion des conflits spatiaux.
+
+Sprint éclairement (D20-D21) :
+  - Empreintes métriques : hauteur + rayon de canopée + rayon racinaire par
+    stade (cm), opacité d'ombre `foliage_density` par espèce. Les anciens
+    `foliar_offsets`/`root_offsets` (dessinés à la main) sont REMPLACÉS par une
+    dérivation rayon → plots (cf. _plots_in_radius).
+  - Position continue `x_cm, y_cm` (cadrage hybride : lue par le LightField ;
+    le sous-sol reste indexé au plot via plot_foyer).
+  - Interface lumière polymorphe (height_at / canopy_radius_at / root_radius_at /
+    foliage_density_at) partagée avec les pérennes ligneuses (perennials.py).
 """
 
 from __future__ import annotations
 from abc import ABC
 from dataclasses import dataclass, field
 from typing import Callable
+
+# ---------------------------------------------------------------------------
+# ÉCHELLE SPATIALE
+# ---------------------------------------------------------------------------
+
+PLOT_CM = 50.0   # 1 plot = 50×50 cm (maille potagère, échelle actée)
+
+
+def _plots_in_radius(x_cm: float, y_cm: float, radius_cm: float) -> list[tuple]:
+    """
+    Plots (row, col) dont le centre cartésien tombe dans un disque de rayon
+    `radius_cm` centré sur la position continue (x_cm, y_cm).
+
+    Embedding cartésien orthogonal : centre du plot (r, c) = (c·50+25, r·50+25).
+    Le plot-foyer est toujours inclus. Peut renvoyer des plots hors grille — les
+    consommateurs (uptake, conflits…) filtrent via is_valid_plot.
+
+    Échelle de référence (plante au centre de son plot) :
+        rayon ≤ 35      → 1 plot (foyer)
+        rayon 50–70     → 5 plots (croix)
+        rayon 71–99     → 9 plots (bloc 3×3)
+    """
+    fr = int(y_cm // PLOT_CM)
+    fc = int(x_cm // PLOT_CM)
+    k = int(radius_cm // PLOT_CM) + 1
+    r2 = radius_cm * radius_cm
+    out = []
+    for dr in range(-k, k + 1):
+        for dc in range(-k, k + 1):
+            r = fr + dr
+            c = fc + dc
+            cx = c * PLOT_CM + PLOT_CM / 2
+            cy = r * PLOT_CM + PLOT_CM / 2
+            if (cx - x_cm) ** 2 + (cy - y_cm) ** 2 <= r2:
+                out.append((r, c))
+    if (fr, fc) not in out:
+        out.append((fr, fc))
+    return out
+
+# ---------------------------------------------------------------------------
+# DÉFAUTS PAR STRATE — extensibilité du catalogue
+# ---------------------------------------------------------------------------
+#
+# Une espèce hérite GRATUITEMENT de ces valeurs via sa strate par stade. Elle
+# ne renseigne explicitement (override sur GrowthStage / classe) que ce qui
+# dévie (rosette large, racines traçantes, feuillage opaque…). Ajouter une
+# espèce « standard » ne demande donc qu'une hauteur par stade et sa strate.
+#
+#   height   : hauteur potentielle de repli (cm) si canopy_height non précisé
+#   canopy_r : rayon de canopée par défaut (cm)
+#   root_r   : rayon racinaire par défaut (cm)
+#   density  : opacité d'ombre par défaut [0–1]
+
+STRATE_DEFAULTS = {
+    "sol":       {"height": 10,  "canopy_r": 25, "root_r": 30, "density": 0.40},
+    "basse":     {"height": 30,  "canopy_r": 30, "root_r": 30, "density": 0.50},
+    "moyenne":   {"height": 80,  "canopy_r": 50, "root_r": 55, "density": 0.55},
+    "haute":     {"height": 180, "canopy_r": 55, "root_r": 60, "density": 0.65},
+    "grimpante": {"height": 150, "canopy_r": 25, "root_r": 55, "density": 0.50},
+}
 
 # ---------------------------------------------------------------------------
 # REGISTRE D'EFFETS (callbacks complexes)
@@ -31,11 +101,13 @@ class GrowthStage:
     name: str                        # "semis", "jeune", "adulte", "mature"
     duration_weeks: int              # durée minimale avant passage au stade suivant (0 = vivace)
     strate: str                      # "haute","moyenne","basse","sol","grimpante"
-    foliar_offsets: list[tuple]      # (Δrow, Δcol) depuis plot central — empreinte aérienne
-    root_offsets: list[tuple]        # (Δrow, Δcol) depuis plot central — empreinte souterraine
-    vigueur_cost: int                # coût Vigueur pour atteindre ce stade
-    effects: list[dict]              # effets data-driven actifs à ce stade
+    vigueur_cost: int = 0            # coût Vigueur pour atteindre ce stade
+    effects: list[dict] = field(default_factory=list)  # effets data-driven du stade
     callback: str | None = None      # clé dans EFFECT_REGISTRY si effet complexe
+    # Empreintes métriques (cm) — None ⇒ défaut de la strate (STRATE_DEFAULTS)
+    canopy_height: float | None = None   # hauteur potentielle de la canopée
+    canopy_radius: float | None = None   # rayon de la canopée (ombre + foliar_plots)
+    root_radius:   float | None = None   # rayon racinaire (uptake + root_plots)
 
 # ---------------------------------------------------------------------------
 # INSTANCE DE PLANTE (avant PlantBase pour la forward ref)
@@ -44,15 +116,27 @@ class GrowthStage:
 @dataclass
 class PlantInstance:
     plant_class: type                # ex: Tomato
-    position: tuple                  # (row, col) du plot central sur la tuile
+    position: tuple                  # (row, col) du plot-foyer sur la tuile
     current_stage: int = 0          # index dans plant_class.growth_stages
     age_weeks: int = 0              # âge dans le stade courant
+    age_years: float = 0.0         # âge total (pérennes ligneuses : courbe d'âge)
     health: int = 3                 # 3=sain, 2=affaibli, 1=malade, 0=mort
+    growth_factor: float = 1.0      # intégration de la lumière reçue → module la hauteur
+    # Position continue (cadrage hybride : lue par le LightField). Initialisée au
+    # centre du plot-foyer si non fournie (cf. __post_init__).
+    x_cm: float | None = None
+    y_cm: float | None = None
     # Mémoire physiologique
     shade_memory: float = 0.0       # intégration lente de l'ombre vécue [0-1]
     drought_memory: float = 0.0     # intégration lente du stress hydrique [0-1]
     stress_memory: float = 0.0      # intégration des perturbations subies [0-1]
                                     # stress↑ → croissance↓ mais résistance↑
+
+    def __post_init__(self):
+        if self.x_cm is None or self.y_cm is None:
+            r, c = self.position
+            self.x_cm = c * PLOT_CM + PLOT_CM / 2
+            self.y_cm = r * PLOT_CM + PLOT_CM / 2
 
     @property
     def stage(self) -> GrowthStage:
@@ -63,16 +147,34 @@ class PlantInstance:
         return self.plant_class.name
 
     @property
+    def plot_foyer(self) -> tuple:
+        """Plot de rattachement au sous-sol = floor(position continue / 50 cm)."""
+        return (int(self.y_cm // PLOT_CM), int(self.x_cm // PLOT_CM))
+
+    @property
+    def current_height(self) -> float:
+        """Hauteur effective (cm) = potentiel du stade/âge × growth_factor."""
+        return self.plant_class.height_at(self)
+
+    @property
+    def canopy_radius(self) -> float:
+        return self.plant_class.canopy_radius_at(self)
+
+    @property
+    def root_radius(self) -> float:
+        return self.plant_class.root_radius_at(self)
+
+    @property
     def foliar_plots(self) -> list[tuple]:
-        """Plots occupés en aérien à ce stade."""
-        r, c = self.position
-        return [(r + dr, c + dc) for dr, dc in self.stage.foliar_offsets]
+        """Plots occupés en aérien — dérivés du rayon de canopée."""
+        return _plots_in_radius(self.x_cm, self.y_cm,
+                                self.plant_class.canopy_radius_at(self))
 
     @property
     def root_plots(self) -> list[tuple]:
-        """Plots occupés en souterrain à ce stade."""
-        r, c = self.position
-        return [(r + dr, c + dc) for dr, dc in self.stage.root_offsets]
+        """Plots exploités en souterrain — dérivés du rayon racinaire."""
+        return _plots_in_radius(self.x_cm, self.y_cm,
+                                self.plant_class.root_radius_at(self))
 
     @property
     def is_alive(self) -> bool:
@@ -148,6 +250,12 @@ class PlantBase(ABC):
     """
     Classe abstraite racine.
     Les sous-classes définissent family, genus, name, growth_stages, etc.
+
+    Interface lumière polymorphe (height_at / canopy_radius_at / root_radius_at /
+    foliage_density_at) : implémentation par défaut = lecture des stades, avec
+    repli sur STRATE_DEFAULTS. Les pérennes ligneuses (perennials.py) la
+    surchargent pour interpoler des courbes d'âge. Le LightField n'appelle QUE
+    ces méthodes → annuelles et arbres traités uniformément, zéro duplication.
     """
     family: str = ""
     genus: str = ""
@@ -160,8 +268,40 @@ class PlantBase(ABC):
     # Cycle de vie saisonnier
     life_cycle: str = "perennial"        # "annual" | "biennial" | "perennial"
     winter_strategy: str = "dormant"     # "die" | "dormant" | "evergreen"
+    deciduous: bool = False              # perd son feuillage l'hiver (ombre nulle)
     archetype: str | None = None         # archétype succession écologique
     reproduction_rate: float = 0.02      # production graines par semaine
+    foliage_density: float | None = None # opacité d'ombre [0-1] ; None ⇒ défaut strate
+
+    # --- Interface lumière (polymorphe) ---
+
+    @classmethod
+    def height_at(cls, inst: "PlantInstance") -> float:
+        """Hauteur effective (cm) = potentiel du stade × growth_factor."""
+        st = inst.stage
+        h = st.canopy_height if st.canopy_height is not None \
+            else STRATE_DEFAULTS[st.strate]["height"]
+        return h * inst.growth_factor
+
+    @classmethod
+    def canopy_radius_at(cls, inst: "PlantInstance") -> float:
+        st = inst.stage
+        return st.canopy_radius if st.canopy_radius is not None \
+            else STRATE_DEFAULTS[st.strate]["canopy_r"]
+
+    @classmethod
+    def root_radius_at(cls, inst: "PlantInstance") -> float:
+        st = inst.stage
+        return st.root_radius if st.root_radius is not None \
+            else STRATE_DEFAULTS[st.strate]["root_r"]
+
+    @classmethod
+    def foliage_density_at(cls, inst: "PlantInstance", saison: str | None = None) -> float:
+        """Opacité d'ombre. Les caducs renvoient 0 l'hiver (cf. pérennes)."""
+        if cls.deciduous and saison == "hiver":
+            return 0.0
+        return cls.foliage_density if cls.foliage_density is not None \
+            else STRATE_DEFAULTS[inst.stage.strate]["density"]
 
     def get_all_effects(self, stage_index: int) -> list[dict]:
         """Fusionne les effets famille + les effets du stade courant."""
@@ -297,17 +437,15 @@ class BursaPastoris(PlantBase):
     winter_strategy = "die"
     archetype = "pioneer"
     reproduction_rate = 0.08   # forte production graines
+    foliage_density = 0.35     # feuillage léger
     growth_stages = [
         GrowthStage(
             name="semis", duration_weeks=2, strate="sol",
-            foliar_offsets=[(0,0)], root_offsets=[(0,0)],
-            vigueur_cost=0,
-            effects=[],
+            vigueur_cost=0, effects=[], canopy_height=3,
         ),
         GrowthStage(
             name="adulte", duration_weeks=4, strate="basse",
-            foliar_offsets=[(0,0),(0,1)], root_offsets=[(0,0)],
-            vigueur_cost=0,
+            vigueur_cost=0, canopy_height=25,
             effects=[
                 {
                     "type": "permanent", "trigger": "weekly",
@@ -319,8 +457,7 @@ class BursaPastoris(PlantBase):
         ),
         GrowthStage(
             name="mature", duration_weeks=3, strate="basse",
-            foliar_offsets=[(0,0),(0,1)], root_offsets=[(0,0)],
-            vigueur_cost=0,
+            vigueur_cost=0, canopy_height=40,
             effects=[
                 {
                     "type": "recolte",
@@ -348,16 +485,15 @@ class MedicagoLupulina(PlantBase):
     winter_strategy = "dormant"
     archetype = "nitrogen_fixer"
     reproduction_rate = 0.05
+    foliage_density = 0.40
     growth_stages = [
         GrowthStage(
             name="semis", duration_weeks=2, strate="sol",
-            foliar_offsets=[(0,0)], root_offsets=[(0,0)],
-            vigueur_cost=0, effects=[],
+            vigueur_cost=0, effects=[], canopy_height=3,
         ),
         GrowthStage(
             name="adulte", duration_weeks=0, strate="sol",  # vivace
-            foliar_offsets=[(0,0),(0,1),(1,0)], root_offsets=[(0,0),(1,0)],
-            vigueur_cost=0,
+            vigueur_cost=0, canopy_height=30, root_radius=50,  # pivot légumineuse
             effects=[
                 {
                     "type": "permanent", "trigger": "weekly",
@@ -400,17 +536,15 @@ class PoaAnnua(PlantBase):
     winter_strategy = "dormant"
     archetype = "grass"
     reproduction_rate = 0.06
+    foliage_density = 0.35     # graminée fine, ombre légère
     growth_stages = [
         GrowthStage(
             name="semis", duration_weeks=2, strate="sol",
-            foliar_offsets=[(0,0)], root_offsets=[(0,0)],
-            vigueur_cost=0, effects=[],
+            vigueur_cost=0, effects=[], canopy_height=3,
         ),
         GrowthStage(
             name="adulte", duration_weeks=0, strate="basse",  # vivace
-            foliar_offsets=[(0,0),(0,1),(-1,0)],
-            root_offsets=[(0,0),(0,1),(1,0),(0,-1)],  # footprint racinaire large
-            vigueur_cost=0,
+            vigueur_cost=0, canopy_height=30, root_radius=75,  # racines fibreuses larges
             effects=[
                 {
                     "type": "permanent", "trigger": "weekly",
@@ -439,17 +573,16 @@ class Taraxacum(PlantBase):
     winter_strategy = "dormant"
     archetype = "competitor"
     reproduction_rate = 0.04
+    foliage_density = 0.50
     growth_stages = [
         GrowthStage(
             name="semis", duration_weeks=3, strate="sol",
-            foliar_offsets=[(0,0)], root_offsets=[(0,0)],
-            vigueur_cost=0, effects=[],
+            vigueur_cost=0, effects=[], canopy_height=3,
         ),
         GrowthStage(
             name="rosette", duration_weeks=0, strate="basse",  # vivace
-            foliar_offsets=[(0,0),(-1,0),(0,-1),(0,1),(1,0)],
-            root_offsets=[(0,0),(-1,0),(1,0),(0,1),(0,-1)],  # pivot large
-            vigueur_cost=0,
+            vigueur_cost=0, canopy_height=30,
+            canopy_radius=55, root_radius=60,  # rosette large, basse + pivot
             effects=[
                 {
                     "type": "permanent", "trigger": "weekly",
@@ -490,32 +623,19 @@ class Tomato(Solanaceae):
     space_tolerance_weeks = 2
     life_cycle = "annual"
     winter_strategy = "die"
+    foliage_density = 0.55
     growth_stages = [
         GrowthStage(
-            name="semis",
-            duration_weeks=3,
-            strate="basse",
-            foliar_offsets=[(0, 0)],
-            root_offsets=[(0, 0)],
-            vigueur_cost=1,
-            effects=[],
+            name="semis", duration_weeks=3, strate="basse",
+            vigueur_cost=1, effects=[], canopy_height=5,
         ),
         GrowthStage(
-            name="jeune",
-            duration_weeks=4,
-            strate="moyenne",
-            foliar_offsets=[(0, 0), (-1, 0), (1, 0)],
-            root_offsets=[(0, 0), (0, 1)],
-            vigueur_cost=2,
-            effects=[],
+            name="jeune", duration_weeks=4, strate="moyenne",
+            vigueur_cost=2, effects=[], canopy_height=30,
         ),
         GrowthStage(
-            name="adulte",
-            duration_weeks=6,
-            strate="moyenne",
-            foliar_offsets=[(0, 0), (-1, 0), (1, 0), (0, -1), (0, 1)],
-            root_offsets=[(0, 0), (0, 1), (1, 0), (-1, 0)],
-            vigueur_cost=2,
+            name="adulte", duration_weeks=6, strate="moyenne",
+            vigueur_cost=2, canopy_height=100,
             effects=[
                 {
                     "type": "floraison",
@@ -527,12 +647,8 @@ class Tomato(Solanaceae):
             ],
         ),
         GrowthStage(
-            name="mature",
-            duration_weeks=4,
-            strate="moyenne",
-            foliar_offsets=[(0, 0), (-1, 0), (1, 0), (0, -1), (0, 1)],
-            root_offsets=[(0, 0), (0, 1), (1, 0), (-1, 0)],
-            vigueur_cost=0,
+            name="mature", duration_weeks=4, strate="moyenne",
+            vigueur_cost=0, canopy_height=150,
             effects=[
                 {
                     "type": "recolte",
@@ -554,23 +670,15 @@ class Pepper(Solanaceae):
     space_tolerance_weeks = 2
     life_cycle = "annual"
     winter_strategy = "die"
+    foliage_density = 0.50
     growth_stages = [
         GrowthStage(
-            name="semis",
-            duration_weeks=3,
-            strate="basse",
-            foliar_offsets=[(0, 0)],
-            root_offsets=[(0, 0)],
-            vigueur_cost=1,
-            effects=[],
+            name="semis", duration_weeks=3, strate="basse",
+            vigueur_cost=1, effects=[], canopy_height=5,
         ),
         GrowthStage(
-            name="adulte",
-            duration_weeks=8,
-            strate="moyenne",
-            foliar_offsets=[(0, 0), (-1, 0), (1, 0)],
-            root_offsets=[(0, 0), (0, 1)],
-            vigueur_cost=2,
+            name="adulte", duration_weeks=8, strate="moyenne",
+            vigueur_cost=2, canopy_height=60,
             effects=[
                 {
                     "type": "floraison",
@@ -582,12 +690,8 @@ class Pepper(Solanaceae):
             ],
         ),
         GrowthStage(
-            name="mature",
-            duration_weeks=4,
-            strate="moyenne",
-            foliar_offsets=[(0, 0), (-1, 0), (1, 0)],
-            root_offsets=[(0, 0), (0, 1)],
-            vigueur_cost=0,
+            name="mature", duration_weeks=4, strate="moyenne",
+            vigueur_cost=0, canopy_height=80,
             effects=[
                 {
                     "type": "recolte",
@@ -610,32 +714,19 @@ class Bean(Fabaceae):
     space_tolerance_weeks = 3
     life_cycle = "annual"
     winter_strategy = "die"
+    foliage_density = 0.50
     growth_stages = [
         GrowthStage(
-            name="semis",
-            duration_weeks=2,
-            strate="sol",
-            foliar_offsets=[(0, 0)],
-            root_offsets=[(0, 0)],
-            vigueur_cost=1,
-            effects=[],
+            name="semis", duration_weeks=2, strate="sol",
+            vigueur_cost=1, effects=[], canopy_height=5,
         ),
         GrowthStage(
-            name="jeune",
-            duration_weeks=3,
-            strate="grimpante",
-            foliar_offsets=[(0, 0), (-1, 0)],
-            root_offsets=[(0, 0)],
-            vigueur_cost=1,
-            effects=[],
+            name="jeune", duration_weeks=3, strate="grimpante",
+            vigueur_cost=1, effects=[], canopy_height=30,
         ),
         GrowthStage(
-            name="adulte",
-            duration_weeks=6,
-            strate="grimpante",
-            foliar_offsets=[(0, 0), (-1, 0), (-2, 0), (0, -1)],
-            root_offsets=[(0, 0), (1, 0)],
-            vigueur_cost=2,
+            name="adulte", duration_weeks=6, strate="grimpante",
+            vigueur_cost=2, canopy_height=150,
             effects=[
                 {
                     "type": "floraison",
@@ -647,12 +738,8 @@ class Bean(Fabaceae):
             ],
         ),
         GrowthStage(
-            name="mature",
-            duration_weeks=3,
-            strate="grimpante",
-            foliar_offsets=[(0, 0), (-1, 0), (-2, 0), (0, -1)],
-            root_offsets=[(0, 0), (1, 0)],
-            vigueur_cost=0,
+            name="mature", duration_weeks=3, strate="grimpante",
+            vigueur_cost=0, canopy_height=200,
             effects=[
                 {
                     "type": "recolte",
@@ -674,23 +761,15 @@ class Clover(Fabaceae):
     space_tolerance_weeks = 5  # très tolérant, couvre-sol résilient
     life_cycle = "perennial"
     winter_strategy = "dormant"
+    foliage_density = 0.40
     growth_stages = [
         GrowthStage(
-            name="semis",
-            duration_weeks=2,
-            strate="sol",
-            foliar_offsets=[(0, 0)],
-            root_offsets=[(0, 0)],
-            vigueur_cost=0,
-            effects=[],
+            name="semis", duration_weeks=2, strate="sol",
+            vigueur_cost=0, effects=[], canopy_height=2,
         ),
         GrowthStage(
-            name="adulte",
-            duration_weeks=0,  # vivace — reste adulte indéfiniment
-            strate="sol",
-            foliar_offsets=[(0, 0), (0, 1), (1, 0)],
-            root_offsets=[(0, 0), (0, 1)],
-            vigueur_cost=1,
+            name="adulte", duration_weeks=0, strate="sol",  # vivace
+            vigueur_cost=1, canopy_height=15,
             effects=[
                 {
                     "type": "permanent",
@@ -721,32 +800,19 @@ class Sunflower(Asteraceae):
     space_tolerance_weeks = 2  # compétitif, surtout en strate haute
     life_cycle = "annual"
     winter_strategy = "die"
+    foliage_density = 0.70     # grandes feuilles, ombre dense
     growth_stages = [
         GrowthStage(
-            name="semis",
-            duration_weeks=2,
-            strate="basse",
-            foliar_offsets=[(0, 0)],
-            root_offsets=[(0, 0)],
-            vigueur_cost=1,
-            effects=[],
+            name="semis", duration_weeks=2, strate="basse",
+            vigueur_cost=1, effects=[], canopy_height=5,
         ),
         GrowthStage(
-            name="jeune",
-            duration_weeks=3,
-            strate="moyenne",
-            foliar_offsets=[(0, 0), (-1, 0)],
-            root_offsets=[(0, 0), (1, 0)],
-            vigueur_cost=1,
-            effects=[],
+            name="jeune", duration_weeks=3, strate="moyenne",
+            vigueur_cost=1, effects=[], canopy_height=50,
         ),
         GrowthStage(
-            name="adulte",
-            duration_weeks=6,
-            strate="haute",
-            foliar_offsets=[(0, 0), (-1, 0), (0, -1), (0, 1)],
-            root_offsets=[(0, 0), (1, 0), (-1, 0), (0, 1)],
-            vigueur_cost=2,
+            name="adulte", duration_weeks=6, strate="haute",
+            vigueur_cost=2, canopy_height=180,
             effects=[
                 {
                     "type": "floraison",
@@ -765,12 +831,8 @@ class Sunflower(Asteraceae):
             ],
         ),
         GrowthStage(
-            name="mature",
-            duration_weeks=3,
-            strate="haute",
-            foliar_offsets=[(0, 0), (-1, 0), (0, -1), (0, 1)],
-            root_offsets=[(0, 0), (1, 0), (-1, 0), (0, 1)],
-            vigueur_cost=0,
+            name="mature", duration_weeks=3, strate="haute",
+            vigueur_cost=0, canopy_height=250,
             effects=[
                 {
                     "type": "recolte",
@@ -800,23 +862,15 @@ class Basil(Lamiaceae):
     space_tolerance_weeks = 4
     life_cycle = "annual"
     winter_strategy = "die"
+    foliage_density = 0.60     # compact dense
     growth_stages = [
         GrowthStage(
-            name="semis",
-            duration_weeks=2,
-            strate="basse",
-            foliar_offsets=[(0, 0)],
-            root_offsets=[(0, 0)],
-            vigueur_cost=1,
-            effects=[],
+            name="semis", duration_weeks=2, strate="basse",
+            vigueur_cost=1, effects=[], canopy_height=3,
         ),
         GrowthStage(
-            name="adulte",
-            duration_weeks=8,
-            strate="basse",
-            foliar_offsets=[(0, 0), (0, 1)],
-            root_offsets=[(0, 0)],
-            vigueur_cost=1,
+            name="adulte", duration_weeks=8, strate="basse",
+            vigueur_cost=1, canopy_height=25, canopy_radius=30,  # buisson compact
             effects=[
                 {
                     "type": "permanent",
@@ -838,12 +892,8 @@ class Basil(Lamiaceae):
             callback="basil_companion_check",
         ),
         GrowthStage(
-            name="mature",  # monte en graines
-            duration_weeks=3,
-            strate="basse",
-            foliar_offsets=[(0, 0), (0, 1)],
-            root_offsets=[(0, 0)],
-            vigueur_cost=0,
+            name="mature", duration_weeks=3, strate="basse",
+            vigueur_cost=0, canopy_height=40, canopy_radius=30,
             effects=[
                 {
                     "type": "recolte",

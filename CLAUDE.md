@@ -13,7 +13,8 @@ ingénieur électronique embarqué à Grenoble.
 ## Source de vérité
 
 Le moteur Python dans `data/code/` (`models.py`, `fields.py`, `effects.py`,
-`engine.py`, `main.py`) est la **source de vérité écologique** du jeu.
+`engine.py`, `perennials.py`, `main.py`) est la **source de vérité écologique**
+du jeu.
 
 - Toute mécanique Godot doit avoir un équivalent Python ou être propagée
   vers Python avant intégration.
@@ -227,17 +228,19 @@ prévisible** — récompense rare qui cristallise la philo non-action.
 - **Pages secrètes** (D18) — sources de drop, lieu de consultation,
   volume cible v1.0, contenu narratif. Session future dédiée.
 - **Action « manger »** (D19) — organes consommables → Vigueur joueur
-- **Éclairement spatial pixel-exact — Option A** (D20) — maillage adaptatif :
-  **canopée + lumière au pixel-sol** (top-down cartésien, 2 cm/px), **chimie
-  du sol au plot** (50 cm). Soleil astronomique ~49°N, 4 tranches + intégrale
-  journalière, ombres-capsules, `foliage_density` par espèce, plancher diffus
-  15 %. Position des plantes **continue** (pixel-sol). Voir
-  `sprints/sprint_eclairement.md`.
-- **Système temporel pérennes ligneuses** (D21) — **base commune polymorphe**
-  avec les annuelles (même interface lumière) ; `age_years`, courbe d'âge
-  interpolée, `foliage_density` saisonnière (caduc nu l'hiver). Arbres
-  requalifiés : figuier/pommier = jardin, cerisier intermédiaire,
-  **noyer/chêne = sujets de lisière**.
+- ✅ **Éclairement spatial — Option A** (D20) — **fait en Python le 2026-06-02**
+  (Sprint éclairement). `LightField` v2 **analytique** dans `fields.py` :
+  ombres-capsules astronomiques ~49°N, 4 saisons × 3 tranches + intégrale
+  journalière, `foliage_density` par espèce, cumul multiplicatif, plancher 15 %,
+  auto-ombrage exclu (tri hauteur-décroissante). **Pas de grille pixel** côté
+  moteur (la grille 2 cm/px reste pour le **rendu Godot**). Position des plantes
+  **continue côté lumière** (`x_cm, y_cm`), sous-sol indexé au plot
+  (`plot_foyer`). Portage C# = dette D24.
+- ✅ **Pérennes ligneuses** (D21) — **fait en Python le 2026-06-02**.
+  `perennials.py` : `PerennialWoody` surcharge l'interface lumière polymorphe
+  (`age_years`, courbe d'âge interpolée, `foliage_density` saisonnière — caduc
+  nu l'hiver). 5 arbres : figuier/pommier = jardin, cerisier intermédiaire,
+  **noyer/chêne = lisière**. Portage C# = dette D24.
 - **Héritage génétique de la graine** (D22) — **vecteur de gènes extensible**
   (hauteur d'abord), héritage **biparental** (pollinisation par espèce
   modulée par les auxiliaires), hybridation inter-espèces par **introgression
@@ -295,7 +298,7 @@ contexte préalable.
 | Sprint diversification écologique (D26 : étendre le catalogue d'espèces — à séquencer après éclairement D21 + décision class-based/data-driven, coordonné D22). Pas encore de kickoff | — |
 | Sprint 1 (recalibrage visuel + grille 3×3 + maison) | `sprints/sprint_1_recalibrage_visuel.md` |
 | Sprint 2 (orchestration C# : Main, GameManager, TurnSystem) | `sprints/sprint_2_orchestration.md` |
-| Sprint éclairement (Z7, D20-D21 : ombres pixel + pérennes + réalignement OM) | `sprints/sprint_eclairement.md` |
+| ✅ **TERMINÉ 2026-06-02 (Python)** — Sprint éclairement (D20+D21 levées Python) : `LightField` v2 analytique (ombres-capsules astro, intégrale, auto-ombrage exclu) + `perennials.py` (5 arbres, courbe d'âge, caduc) + position continue côté lumière + extensibilité catalogue (`STRATE_DEFAULTS`). 500 ans stables. Portage C# + parité = dette D24 ; nouvelle cible succession ~65 % (mosaïque) actée | `sprints/sprint_eclairement.md` |
 | Sprint génétique/reproduction (Z7, D17+D22 : banques + héritage biparental) | `sprints/sprint_genetique.md` |
 | Sprint 3 (portage simulation — peut absorber le sprint éclairement) | `sprints/sprint_3_portage_simulation.md` |
 | Sprint 4 (Vigueur, paliers, encyclopédie, carnet, magazine, foyer) | `sprints/sprint_4_mecaniques_conception.md` |
