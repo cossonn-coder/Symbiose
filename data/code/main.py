@@ -43,8 +43,8 @@ game_state = {
 }
 
 print("╔══════════════════════════════════════════════════════╗")
-print("║         SYMBIOSE — Simulation 10 ans v2             ║")
-print("║   Diffusion écologique continue + uptake racinaire  ║")
+print("║         SYMBIOSE — Simulation                        ║")
+print("║   Diffusion écologique continue + uptake racinaire   ║")
 print("╚══════════════════════════════════════════════════════╝")
 print(f"\nÉtat initial : {eco}")
 

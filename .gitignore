@@ -2,8 +2,9 @@
 .godot/
 /android/
 
-# Claude Code — permissions locales par utilisateur
+# Claude Code — permissions locales par utilisateur + verrou runtime
 .claude/settings.local.json
+.claude/scheduled_tasks.lock
 
 # Caches Python du moteur de simulation
 data/code/__pycache__/
