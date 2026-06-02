@@ -291,7 +291,7 @@ contexte préalable.
 | Sprint | Kickoff |
 |---|---|
 | ✅ **TERMINÉ 2026-06-02** — Sprint sol vivant (OM v4 + racines spatiales + boucle rhizosphère + vitalité ; D10 levée côté Python) + consolidation puits microbien. Chantier C mycorhizes différé (extension future) ; portage C# = dette D24 | `sprints/sprint_sol_vivant.md` |
-| Mini-sprint succession (D25 : stades pionnier → pérenne, choix d'archétype ∝ maturité du sol + amorçage de la banque) — kickoff à créer | _à créer_ |
+| Mini-sprint succession (D25 : pionnier → prairie, choix d'archétype ∝ maturité du sol + amorçage de la banque) | `sprints/sprint_succession.md` |
 | Sprint 1 (recalibrage visuel + grille 3×3 + maison) | `sprints/sprint_1_recalibrage_visuel.md` |
 | Sprint 2 (orchestration C# : Main, GameManager, TurnSystem) | `sprints/sprint_2_orchestration.md` |
 | Sprint éclairement (Z7, D20-D21 : ombres pixel + pérennes + réalignement OM) | `sprints/sprint_eclairement.md` |
