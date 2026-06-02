@@ -22,6 +22,7 @@ structurante, ou par incident notable. À jour à la fin de chaque session.
 - [2026-06-02 — Consolidation sol vivant : puits microbien (Python)](#2026-06-02--consolidation-sol-vivant--puits-microbien-python)
 - [2026-06-02 — Mini-sprint succession : gradient pionnier → prairie ∝ maturité du sol](#2026-06-02--mini-sprint-succession--gradient-pionnier--prairie--maturité-du-sol)
 - [2026-06-02 — Sprint éclairement : ombres-capsules astronomiques + pérennes (Python)](#2026-06-02--sprint-éclairement--ombres-capsules-astronomiques--pérennes-python)
+- [2026-06-02 — Conception mini-sprint mortalité réaliste (sénescence)](#2026-06-02--conception-mini-sprint-mortalité-réaliste-sénescence)
 - [Dette technique consolidée](#dette-technique-consolidée)
 - [Backlog](#backlog)
 
@@ -1009,6 +1010,42 @@ recalibrage vers l'ancien 80 %).
 
 ---
 
+## 2026-06-02 — Conception mini-sprint mortalité réaliste (sénescence)
+
+### Contexte
+
+Question de Nico en fin de Sprint éclairement : **les plantes meurent-elles ?**
+Audit du code → 4 causes (hiver des annuelles, conflit, mortalité de fond,
+maladie/herbivorie) mais **aucune sénescence** : `age_years` (ajouté au sprint
+éclairement) n'est lu par aucune règle de mort, et `background_mortality`
+**plafonne à `health=1`** (`max(1, …)`) → les vivaces/arbres sont quasi
+immortels. Preuve : au run 500 ans, trèfle/minette/pissenlit à **age=25998 sem
+(~500 ans), santé bloquée à 1/3** (« zombies »). Session de **conception pure**.
+
+### Décisions (validées par Nico)
+
+1. **Santé = vitalité dynamique** : elle chute **et se rétablit** (convalescence
+   si bon milieu). Plancher de `background_mortality` levé.
+2. **Sénescence couplée à la santé** (≠ seuil dur, ≠ proba directe) : au-delà de
+   70 % de la longévité, déclin de santé → mort à 0. Vulnérabilité émergente.
+3. **Causes de mort naturelles élargies** (demande de Nico) : **fonte des semis**
+   (damping-off, stade semis), **maladies fongiques** généralisées (au-delà du
+   mildiou), **ravageurs létaux** sur plante affaiblie. Toutes via `health`.
+4. **Renouvellement « comme dans la nature »** : ressemis des vivaces +
+   **semis d'arbres** (mast) — aujourd'hui `reproduction_rate=0` → verger sans
+   descendance. Mécanisme **provisoire** (semis local direct), à unifier par la
+   SeedBank-espèce génétique (D17+D22).
+5. **Mort → nécromasse ∝ taille** (`current_height`) : un chêne mort ouvre une
+   grande trouée → relance la succession (mosaïque).
+
+### Produit
+
+- `sprints/sprint_senescence.md` (kickoff autosuffisant) ; dette **D27** ;
+  backlog `CLAUDE.md` ; cette entrée. **Aucun code touché** — implémentation à
+  une session future.
+
+---
+
 ## Dette technique consolidée
 
 | Code | Description | Priorité |
@@ -1039,6 +1076,7 @@ recalibrage vers l'ancien 80 %).
 | D24 | **Portage C# de la logique sol vivant** : uptake spatial sur `root_plots`, exsudats (`_apply_exudates`), bonus microbiome→uptake, `vitalite()` dérivée — codés en Python le 2026-06-02, pas encore en C#. **+ gradient de succession** (`choisir_archetype`, `tick_late_succession_enrichment`, 2026-06-02). **+ système d'éclairement** (`LightField` v2 analytique, interface lumière polymorphe, `perennials.py`, hauteurs/rayons/`foliage_density` sur `PlantData`, 2026-06-02). À absorber dans le **Sprint 3 (portage)** | 🟡 |
 | D25 | **Succession écologique pionnier → prairie** : choix d'archétype ∝ maturité (`soil_memory_deep`) + amorçage de la banque en propagules vivaces. **Traité le 2026-06-02 (mini-sprint succession)** — couvert installé bascule pionnier → prairie vivace (~80 %) sur ~30 ans, stable 500 ans. Portage C# reporté (→ D24) | 🟢 ✅ |
 | D26 | **Sprint diversification écologique** : catalogue de test très incomplet (5 familles, 4 archétypes). Étendre les espèces. À séquencer **après** Sprint éclairement (D21 = strates/ligneux, nouveaux archétypes) et une décision *class-based vs data-driven*, en coordination avec la génétique (D22). Étendre `SOIL_SIGNATURE` pour les nouvelles familles | 🟢 |
+| D27 | **Mortalité réaliste (sénescence)** : santé dynamique (chute + récupération, plancher `background_mortality` levé), sénescence par âge couplée à la santé (`longevity_years`, onset 70 %), fonte des semis (damping-off), maladies fongiques généralisées, ravageurs létaux, renouvellement (ressemis vivaces + semis arbres). **Conçu le 2026-06-02** (`sprints/sprint_senescence.md`) — pas encore implémenté. Le renouvellement est provisoire (→ unifié par D17+D22). Portage C# inclus dans cette dette | 🟡 |
 
 ---
 
