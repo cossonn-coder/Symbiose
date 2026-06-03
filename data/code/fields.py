@@ -364,6 +364,17 @@ def _hash_noise(seed: int, week: int, r: int, c: int) -> float:
     return (h & 0x7FFFFFFF) / 0x7FFFFFFF
 
 
+def hash_gauss(seed: int, week: int, r: int, c: int, k: int = 0) -> float:
+    """
+    Échantillon N(0,1) déterministe — Box-Muller sur deux tirages _hash_noise
+    décorrélés. Aucun RNG live (règle de design #3). `k` décale le flux pour
+    obtenir plusieurs tirages indépendants au même (semaine, position).
+    """
+    u1 = max(1e-9, _hash_noise(seed, week * 2 + k,     r, c))
+    u2 =            _hash_noise(seed, week * 2 + k + 1, r, c)
+    return math.sqrt(-2.0 * math.log(u1)) * math.cos(2.0 * math.pi * u2)
+
+
 def climate_stress(year_fraction: float, phase: float = 0.0) -> float:
     """
     Oscillation climatique lente — sin(2π * fraction_annuelle + phase).
@@ -416,6 +427,45 @@ SEED_LATE_GAIN = 0.0008       # propagules vivaces tardives ∝ maturité (dispe
 SEED_LATE_MIN_MATURITY = 0.2  # pas de propagules tardives sur sol jeune
 SEED_COMPETITOR_MATURITY = 0.4 # competitor (le plus tardif) : sol déjà bien établi
 
+# Pool génétique par espèce (D22) — couche posée PAR-DESSUS les archétypes.
+SPECIES_SEED_VIABILITY_LOSS = 0.997   # vieillissement (densité) du pool génétique
+SPECIES_POOL_MIN_DENSITY    = 0.005   # en-deçà : pool négligeable → gènes neutres
+
+
+class GeneStat:
+    """
+    Distribution d'un gène en banque-sol pour une espèce × plot : moyenne +
+    variance, mise à jour par Welford pondéré (poids = densité de graines
+    déposées). La granularité « moyenne+variance par plot » a été actée le
+    2026-06-03 (pas d'échantillons stockés).
+
+    Le vieillissement décroît le poids uniformément (moyenne/variance
+    inchangées) → les dépôts récents pèsent davantage : la lignée locale dérive.
+    """
+    __slots__ = ("mean", "var", "weight")
+
+    def __init__(self, mean: float = 1.0, var: float = 0.0, weight: float = 0.0):
+        self.mean = mean
+        self.var = var
+        self.weight = weight
+
+    def add(self, x: float, w: float) -> None:
+        if w <= 0.0:
+            return
+        S = self.var * self.weight
+        nw = self.weight + w
+        delta = x - self.mean
+        self.mean += (w / nw) * delta
+        S += w * delta * (x - self.mean)
+        self.var = max(0.0, S / nw)
+        self.weight = nw
+
+    def decay(self, factor: float) -> None:
+        self.weight *= factor
+
+    def sample(self, seed: int, week: int, r: int, c: int, k: int = 0) -> float:
+        return self.mean + hash_gauss(seed, week, r, c, k) * math.sqrt(self.var)
+
 
 class SeedBank:
     """
@@ -435,6 +485,11 @@ class SeedBank:
         self.data: list[list[dict]] = [
             [{a: 0.01 for a in SEED_ARCHETYPES} for _ in range(cols)]
             for _ in range(rows)
+        ]
+        # Couche espèce + génétique (D22), par-dessus les archétypes :
+        # species[r][c] = dict classe → {"density": float, "genes": {gène: GeneStat}}
+        self.species: list[list[dict]] = [
+            [{} for _ in range(cols)] for _ in range(rows)
         ]
 
     def get(self, r: int, c: int, archetype: str) -> float:
@@ -498,6 +553,62 @@ class SeedBank:
             if archetype:
                 r, c = p.position
                 self.add(r, c, archetype, rate * 0.5)
+
+    # --- Couche espèce + génétique (D22) ---
+
+    def add_species(self, r: int, c: int, plant_class: type,
+                    density: float, genes: dict) -> None:
+        """
+        Dépose des graines d'une espèce (avec leur vecteur de gènes) au plot.
+        Met à jour la distribution moyenne+variance de chaque gène, pondérée par
+        la densité. C'est le pont « chute / mort → banque-sol » (génétique
+        féral conservée au terrain).
+        """
+        cell = self.species[r][c]
+        rec = cell.get(plant_class)
+        if rec is None:
+            rec = {"density": 0.0, "genes": {}}
+            cell[plant_class] = rec
+        rec["density"] += density
+        for g, value in genes.items():
+            stat = rec["genes"].get(g)
+            if stat is None:
+                stat = GeneStat()
+                rec["genes"][g] = stat
+            stat.add(value, density)
+
+    def species_density(self, r: int, c: int, plant_class: type) -> float:
+        rec = self.species[r][c].get(plant_class)
+        return rec["density"] if rec else 0.0
+
+    def sample_genes(self, r: int, c: int, plant_class: type,
+                     seed: int, week: int) -> dict:
+        """
+        Tire un vecteur de gènes pour un semis spontané de cette espèce, à partir
+        de la distribution locale (moyenne+variance). Pool négligeable → dict
+        vide (gènes neutres 1.0, rétro-compatibilité totale).
+        """
+        rec = self.species[r][c].get(plant_class)
+        if not rec or rec["density"] < SPECIES_POOL_MIN_DENSITY:
+            return {}
+        from models import clamp_gene
+        return {g: clamp_gene(stat.sample(seed, week, r, c, k=2 * i))
+                for i, (g, stat) in enumerate(rec["genes"].items())}
+
+    def tick_species_aging(self) -> None:
+        """Vieillissement du pool génétique (densité), purge des pools épuisés."""
+        for r in range(self.rows):
+            for c in range(self.cols):
+                cell = self.species[r][c]
+                dead = []
+                for cls, rec in cell.items():
+                    rec["density"] *= SPECIES_SEED_VIABILITY_LOSS
+                    for stat in rec["genes"].values():
+                        stat.decay(SPECIES_SEED_VIABILITY_LOSS)
+                    if rec["density"] < 1e-4:
+                        dead.append(cls)
+                for cls in dead:
+                    del cell[cls]
 
     def niche_index(self, r: int, c: int,
                     light: float, root_density: float,
@@ -664,6 +775,7 @@ class EcoFields:
     def tick_seed_bank(self, plants: list, seed: int = 0, week: int = 0) -> None:
         """Mise à jour hebdomadaire de la banque de graines."""
         self.seed_bank.tick_aging()
+        self.seed_bank.tick_species_aging()
         self.seed_bank.tick_disturbance_enrichment(self.disturbance)
         self.seed_bank.tick_late_succession_enrichment(self.soil_memory_deep)
         self.seed_bank.tick_plant_production(plants)

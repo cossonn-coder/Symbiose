@@ -1,0 +1,89 @@
+"""
+SYMBIOSE — seeds.py
+Banque de graines du joueur (D17) — la moitié transportable du couple de banques.
+
+Deux banques distinctes (Sprint génétique 2026-06-03) :
+  - SeedBank-sol      : champ écologique latent, par espèce × plot, génétique
+                        vectorielle (moyenne+variance). Vit dans `fields.SeedBank`
+                        (couche `species`), reste AU TERRAIN au déménagement.
+  - SeedBank-joueur   : ce fichier. Inventaire discret, lots de graines par
+                        espèce, génétique héritée/sélectionnée. SUIT L'AVATAR.
+
+Ponts (engine) : récolte d'une plante mûre → graine dans la banque-joueur ;
+semis depuis la banque-joueur → plante portant la génétique de la graine.
+
+Le vecteur de gènes (models.GENE_NAMES) est extensible ; seul `hauteur` est
+rempli au départ.
+"""
+from __future__ import annotations
+import json
+from dataclasses import dataclass, field
+
+from models import neutral_genes, PLANT_CATALOGUE
+
+
+@dataclass
+class Seed:
+    """Une graine récoltée : espèce (clé catalogue) + vecteur de gènes hérité."""
+    species: str                       # clé PLANT_CATALOGUE, ex: "tomate"
+    genes: dict = field(default_factory=neutral_genes)
+
+    @property
+    def plant_class(self):
+        return PLANT_CATALOGUE.get(self.species)
+
+
+class PlayerSeedBank:
+    """
+    Banque de graines du joueur — lots par espèce, transportable (suit l'avatar
+    au déménagement, contrairement à la banque-sol). Sérialisable JSON (save
+    lisible par profil, cf. cycle de sauvegarde).
+    """
+
+    def __init__(self):
+        self.lots: dict[str, list[Seed]] = {}
+
+    def add(self, seed: Seed) -> None:
+        self.lots.setdefault(seed.species, []).append(seed)
+
+    def count(self, species: str | None = None) -> int:
+        if species is None:
+            return sum(len(v) for v in self.lots.values())
+        return len(self.lots.get(species, []))
+
+    def take(self, species: str) -> Seed | None:
+        """Retire et renvoie une graine de l'espèce (FIFO), ou None si vide."""
+        lot = self.lots.get(species)
+        return lot.pop(0) if lot else None
+
+    def mean_gene(self, species: str, gene: str = "hauteur") -> float | None:
+        """Moyenne d'un gène sur le lot d'une espèce (suivi de la sélection)."""
+        lot = self.lots.get(species)
+        if not lot:
+            return None
+        return sum(s.genes.get(gene, 1.0) for s in lot) / len(lot)
+
+    # --- Sérialisation JSON (save lisible, pas binaire) ---
+
+    def to_dict(self) -> dict:
+        return {sp: [{"species": s.species, "genes": s.genes} for s in lot]
+                for sp, lot in self.lots.items() if lot}
+
+    def to_json(self, indent: int = 2) -> str:
+        return json.dumps(self.to_dict(), indent=indent, ensure_ascii=False)
+
+    @classmethod
+    def from_dict(cls, d: dict) -> "PlayerSeedBank":
+        bank = cls()
+        for sp, lot in d.items():
+            bank.lots[sp] = [Seed(species=s["species"], genes=dict(s["genes"]))
+                             for s in lot]
+        return bank
+
+    @classmethod
+    def from_json(cls, text: str) -> "PlayerSeedBank":
+        return cls.from_dict(json.loads(text))
+
+    def __repr__(self) -> str:
+        parts = " ".join(f"{sp}×{len(lot)}" for sp, lot in self.lots.items() if lot)
+        return f"PlayerSeedBank[{parts or 'vide'}]"

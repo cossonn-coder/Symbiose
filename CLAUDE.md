@@ -13,7 +13,8 @@ ingénieur électronique embarqué à Grenoble.
 ## Source de vérité
 
 Le moteur Python dans `data/code/` (`models.py`, `fields.py`, `effects.py`,
-`engine.py`, `perennials.py`, `main.py`) est la **source de vérité écologique**
+`engine.py`, `perennials.py`, `seeds.py`, `reproduction.py`, `main.py`) est la
+**source de vérité écologique**
 du jeu.
 
 - Toute mécanique Godot doit avoir un équivalent Python ou être propagée
@@ -222,9 +223,10 @@ prévisible** — récompense rare qui cristallise la philo non-action.
 - **Extension de terrain par maîtrise** (D15) — apparition tuile thématique
 - **Forecast météo** (D16) — décaler le tirage `random.choice` 1-2 sem
   en avance dans `engine.py`, alimenter les signes diégétiques
-- **SeedBank-joueur ↔ SeedBank-sol** (D17) — séparer la banque
-  transportable (suit l'avatar au déménagement) de la banque intrinsèque
-  au terrain, Python puis C#
+- ✅ **SeedBank-joueur ↔ SeedBank-sol** (D17) — **fait en Python le 2026-06-03**
+  (Sprint génétique). `seeds.py` (`PlayerSeedBank` transportable + JSON, ponts
+  récolte→joueur) ; banque-sol = couche `species` génétique dans `fields.SeedBank`
+  (`GeneStat` moyenne+variance par espèce × plot). Portage C# = dette D24.
 - **Pages secrètes** (D18) — sources de drop, lieu de consultation,
   volume cible v1.0, contenu narratif. Session future dédiée.
 - **Action « manger »** (D19) — organes consommables → Vigueur joueur
@@ -241,10 +243,13 @@ prévisible** — récompense rare qui cristallise la philo non-action.
   (`age_years`, courbe d'âge interpolée, `foliage_density` saisonnière — caduc
   nu l'hiver). 5 arbres : figuier/pommier = jardin, cerisier intermédiaire,
   **noyer/chêne = lisière**. Portage C# = dette D24.
-- **Héritage génétique de la graine** (D22) — **vecteur de gènes extensible**
-  (hauteur d'abord), héritage **biparental** (pollinisation par espèce
-  modulée par les auxiliaires), hybridation inter-espèces par **introgression
-  sur espèce fixe**. Couplé à D17 dans le **Sprint génétique/reproduction**.
+- ✅ **Héritage génétique de la graine** (D22) — **fait en Python le 2026-06-03**
+  (Sprint génétique). `reproduction.py` : vecteur de gènes extensible
+  (`GENE_NAMES`, hauteur d'abord), héritage **biparental** déterministe
+  (pollinisation par espèce `wind/insect/self`, rayon modulé par les auxiliaires),
+  autofécondation à défaut, **introgression intra-famille** (l'enfant garde
+  l'espèce de la mère). `genetic_factor` réel branché dans `height_at`. Renouvellement
+  M7 (`_renewal`) remplacé par `_reproduction`. Portage C# = dette D24.
 - **Catalogue arbres pérennes étendu** (D23) — différé post-validation
   du squelette (poirier, prunier, châtaignier, frêne, tilleul, bouleau,
   saule, aulne, peuplier, érable…)
@@ -300,7 +305,7 @@ contexte préalable.
 | Sprint 1 (recalibrage visuel + grille 3×3 + maison) | `sprints/sprint_1_recalibrage_visuel.md` |
 | Sprint 2 (orchestration C# : Main, GameManager, TurnSystem) | `sprints/sprint_2_orchestration.md` |
 | ✅ **TERMINÉ 2026-06-02 (Python)** — Sprint éclairement (D20+D21 levées Python) : `LightField` v2 analytique (ombres-capsules astro, intégrale, auto-ombrage exclu) + `perennials.py` (5 arbres, courbe d'âge, caduc) + position continue côté lumière + extensibilité catalogue (`STRATE_DEFAULTS`). 500 ans stables. Portage C# + parité = dette D24 ; nouvelle cible succession ~65 % (mosaïque) actée | `sprints/sprint_eclairement.md` |
-| Sprint génétique/reproduction (Z7, D17+D22 : banques + héritage biparental) | `sprints/sprint_genetique.md` |
+| ✅ **TERMINÉ 2026-06-03 (Python)** — Sprint génétique/reproduction (D17+D22 levées Python) : deux banques (`seeds.py` joueur transportable+JSON ; couche `species`/`GeneStat` de `fields.SeedBank`), héritage biparental déterministe + pollinisation par espèce modulée auxiliaires + introgression intra-famille (`reproduction.py`), `genetic_factor` branché, `_renewal` (M7) remplacé par `_reproduction`. 20/20 tests, `main.py 30` stable. Portage C# = dette D24 | `sprints/sprint_genetique.md` |
 | Sprint 3 (portage simulation — peut absorber le sprint éclairement) | `sprints/sprint_3_portage_simulation.md` |
 | Sprint 4 (Vigueur, paliers, encyclopédie, carnet, magazine, foyer) | `sprints/sprint_4_mecaniques_conception.md` |
 

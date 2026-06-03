@@ -19,7 +19,7 @@ import math
 import random
 from dataclasses import dataclass
 from models import (Tile, PlantInstance, Tomato, Basil, Bean, Clover,
-                   Sunflower, Pepper, WEED_CATALOGUE)
+                   Sunflower, Pepper, WEED_CATALOGUE, PLANT_CATALOGUE)
 from effects import (resolve_plant_turn, apply_mutations, AddRondelle,
                      RemoveRondelle, ReduceHealth, InjectField,
                      apply_disturbances, necromass_biomass)
@@ -27,6 +27,15 @@ from fields import (EcoFields, init_eco, inject_patch,
                     EXUDATE_BASE, EXUDATE_OM_SHARE, SEED_ARCHETYPES,
                     _hash_noise, SENESCENCE_ONSET, SEN_RATE,
                     HEAL_RATE, HEAL_SEN_CUTOFF, RESEED_RADIUS_CM)
+from reproduction import find_father, child_genes, is_seed_bearing
+from seeds import Seed
+
+# Pont récolte → banque-joueur (D17) : classe → clé catalogue (inverse).
+_SPECIES_KEY = {cls: key for key, cls in PLANT_CATALOGUE.items()}
+
+# Coût en Vigueur de la récolte sélective (D11) — différé : hook neutre tant que
+# la Vigueur n'est pas implémentée (décision 2026-06-03).
+HARVEST_VIGUEUR_COST = 0
 
 SAISONS = {
     "printemps": range(1,  14),
@@ -324,22 +333,25 @@ class Engine:
             tile.plants = [p for p in tile.plants if p.is_alive]
         return log
 
-    def _renewal(self, tile, eco, week):
+    def _reproduction(self, tile, eco, week):
         """
-        Renouvellement (M7, PROVISOIRE) — dispersion locale à la saison des graines.
+        Reproduction génétique (D17 + D22) — REMPLACE le renouvellement provisoire
+        M7. Pour chaque parent en âge de porter des graines qui fructifie ce tick
+        (p = reproduction_rate, hash) :
 
-        Concerne ce que la banque de graines par archétype ne couvre PAS :
-          - vivaces herbacées sans archétype (trèfle) — sinon elles disparaissent
-            quand elles meurent de vieillesse, faute de source de ressemis ;
-          - arbres mûrs (age_years ≥ maturity_years) — mast / glandée.
+          1. Appariement biparental : père compatible (même famille) à portée de
+             pollinisation, modulée par les auxiliaires → vecteur de gènes enfant
+             (moyenne parents + mutation ; autofécondation à défaut ; introgression
+             inter-espèces décalant les gènes sans changer d'espèce).
+          2. Pont « chute → banque-sol » : les graines (gènes hérités) entrent
+             dans le pool génétique du plot (succession féral future).
+          3. Recrutement direct : seulement pour ce que la succession par archétype
+             ne germe PAS (vivaces/arbres SANS archétype, ex-domaine de M7). Les
+             archétypes se ressèment via _succession, qui échantillonne le pool.
 
-        Chaque parent éligible tente (p = reproduction_rate, hash) un semis de la
-        MÊME espèce sur un plot libre à portée (RESEED_RADIUS_CM), gated par la
-        niche : sous une canopée fermée niche≈0 → pas de germination, les arbres
-        s'auto-limitent (pas de climax forestier galopant).
-
-        Déterministe (_hash_noise). Sera unifié et remplacé par la SeedBank-espèce
-        génétique (D17+D22) — ne pas doubler ce système au Sprint génétique.
+        Le recrutement reste gated par la lumière (un semis a besoin d'un gap ;
+        sous canopée fermée → auto-limitation, pas de climax galopant).
+        Déterministe (_hash_noise / hash_gauss).
         """
         log = []
         seed = self.game_state.get("seed", 42)
@@ -351,41 +363,44 @@ class Engine:
         radius_plots = int(RESEED_RADIUS_CM // 50) + 1
 
         for parent in list(tile.plants):
-            if not parent.is_alive:
+            if not parent.is_alive or not is_seed_bearing(parent):
                 continue
             cls = parent.plant_class
-            is_tree = hasattr(cls, "age_curve")   # PerennialWoody
-            if is_tree:
-                if parent.age_years < getattr(cls, "maturity_years", 0):
-                    continue
-            else:
-                if cls.life_cycle != "perennial" or cls.archetype is not None:
-                    continue
             rate = getattr(cls, "reproduction_rate", 0.0)
             if rate <= 0.0:
                 continue
             pr, pc = parent.position
             if _hash_noise(seed, week * 17, pr, pc) >= rate:
+                continue   # le parent ne fructifie pas ce tick
+
+            # 1+2. Héritage biparental → dépôt génétique dans la banque-sol
+            father = find_father(parent, tile.plants, tile, seed, week)
+            g_child = child_genes(parent, father, seed, week)
+            eco.seed_bank.add_species(pr, pc, cls, rate, g_child)
+
+            # 3. Recrutement direct, domaine ex-M7 uniquement
+            is_tree = hasattr(cls, "age_curve")
+            if not is_tree and (cls.life_cycle != "perennial"
+                                or cls.archetype is not None):
                 continue
-            # Le parent fructifie : germination sur le plot libre le mieux éclairé
-            # à portée (un semis a besoin d'un gap de lumière ; sous canopée fermée
-            # aucun plot n'est assez clair → pas de recrutement, auto-limitation).
-            best = None
-            best_light = 0.35   # seuil de viabilité d'un semis
+            best, best_light = None, 0.35   # seuil de viabilité d'un semis
             for (r, c) in sorted(tile.plots_within_radius(pr, pc, radius_plots)):
                 if (r, c) in occupied or not tile.is_valid_plot(r, c):
                     continue
                 light = eco.lumiere.at_plot(r, c)
                 if light > best_light:
-                    best_light = light
-                    best = (r, c)
+                    best_light, best = light, (r, c)
             if best:
                 child = tile.add_plant(cls, *best)
                 if child:
+                    child.genes = g_child
                     occupied.add(best)
                     occupied.update(child.root_plots)
-                    log.append(f"    🌰 Renouvellement : {cls.name} @{best} "
-                               f"[lum={best_light:.2f}]")
+                    tag = "auto" if father is None else (
+                        "introgr." if father.plant_class is not cls else "biparental")
+                    log.append(f"    🌰 Reproduction : {cls.name} @{best} "
+                               f"[lum={best_light:.2f} h={g_child.get('hauteur', 1.0):.2f} "
+                               f"{tag}]")
         return log
 
     def _resoudre_conflits(self, tile, eco):
@@ -478,9 +493,13 @@ class Engine:
                 if any(p.position == (r, c) for p in tile.plants if p.is_alive):
                     continue
 
-                # Germination
+                # Germination — gènes échantillonnés du pool génétique du plot
+                # (banque-sol féral). Pool vide → gènes neutres (rétro-compatible).
                 new_plant = tile.add_plant(plant_class, r, c)
                 if new_plant:
+                    g = eco.seed_bank.sample_genes(r, c, plant_class, seed, week)
+                    if g:
+                        new_plant.genes = g
                     log.append(
                         f"    🌿 Germination : {plant_class.name} @({r},{c}) "
                         f"[niche={niche:.3f} arch={chosen}]"
@@ -618,6 +637,9 @@ class Engine:
 
                 new_plant = tile.add_plant(plant_class, r, c)
                 if new_plant:
+                    g = eco.seed_bank.sample_genes(r, c, plant_class, seed, week * 100)
+                    if g:
+                        new_plant.genes = g
                     log.append(
                         f"    🌸 Spring flush : {plant_class.name} @({r},{c}) "
                         f"[niche={niche:.3f} arch={chosen}]"
@@ -701,6 +723,7 @@ class Engine:
             # 11. Récolte
             if est_phase_recolte(week_in_year, saison):
                 log.append("  🍎 Récolte :")
+                player_bank = self.game_state.get("player_seed_bank")
                 for plant in list(tile.plants):
                     if plant.is_alive:
                         _, rl = resolve_plant_turn(plant, tile, self.game_state, "recolte")
@@ -709,10 +732,17 @@ class Engine:
                         biomass = (plant.current_stage + 1.0) * 0.4
                         deposited = eco.add_necromass(*plant.position,
                                                       biomass, harvested=True)
+                        # Pont récolte → banque-joueur (D17) : graines sélectionnées
+                        # (génétique préservée). Inerte si aucune banque-joueur
+                        # n'est attachée au game_state (ex: main.py).
+                        if player_bank is not None and is_seed_bearing(plant):
+                            key = _SPECIES_KEY.get(plant.plant_class)
+                            if key:
+                                player_bank.add(Seed(key, dict(plant.genes)))
 
-            # 11b. Renouvellement (M7) — dispersion à la saison des graines (automne)
+            # 11b. Reproduction génétique (D17+D22) — saison des graines (automne)
             if saison == "automne" and est_phase_recolte(week_in_year, saison):
-                rlog = self._renewal(tile, eco, week)
+                rlog = self._reproduction(tile, eco, week)
                 if rlog: log += rlog
 
             # 12. Conflits

@@ -26,6 +26,7 @@ structurante, ou par incident notable. À jour à la fin de chaque session.
 - [2026-06-02 — Mortalité réaliste passe 1 : santé dynamique + sénescence (Python)](#2026-06-02--mortalité-réaliste-passe-1--santé-dynamique--sénescence-python)
 - [2026-06-02 — Mortalité réaliste passe 2 : fonte, fongique, ravageurs régulés, renouvellement (Python)](#2026-06-02--mortalité-réaliste-passe-2--fonte-fongique-ravageurs-régulés-renouvellement-python)
 - [2026-06-02 — Attire-auxiliaires + monde 9 tuiles (Python)](#2026-06-02--attire-auxiliaires--monde-9-tuiles-python)
+- [2026-06-03 — Sprint génétique / reproduction : banques + héritage biparental (Python)](#2026-06-03--sprint-génétique--reproduction--banques--héritage-biparental-python)
 - [Dette technique consolidée](#dette-technique-consolidée)
 - [Backlog](#backlog)
 
@@ -1236,6 +1237,75 @@ fléau — philo non-punitive).
 
 ---
 
+## 2026-06-03 — Sprint génétique / reproduction : banques + héritage biparental (Python)
+
+**Objectif** : lever D17 (deux banques de graines) + D22 (génétique des
+populations) et **remplacer** le renouvellement provisoire M7 (`_renewal`) par
+la vraie reproduction génétique. Python seul (source de vérité) ; le portage C#
+rejoint la dette D24 — le C# n'a aujourd'hui que des stubs Godot de 15 lignes,
+aucun moteur à porter, donc la « parité 1 saison » du kickoff était intestable
+(décision actée en début de session).
+
+**Zones blanches tranchées (2026-06-03)** :
+- Granularité banque-sol = **moyenne + variance par espèce × plot** (pas
+  d'échantillons stockés) → `GeneStat` (Welford pondéré).
+- Compatibilité d'hybridation = **par famille botanique** (`species_compatible`).
+- Coût Vigueur de la récolte sélective = **différé** (hook `HARVEST_VIGUEUR_COST
+  = 0`, branché au Sprint 4 Vigueur / D11).
+
+**Vecteur de gènes (D22)** — `models.GENE_NAMES = ("hauteur",)`, extensible sans
+refactor. Plage normale [0.7, 1.3] (gaussienne σ=0.10), bornes dures [0.4, 1.6]
+que l'introgression peut atteindre (vigueur hybride). `PlantInstance.genes` (vide
+⇒ neutre 1.0) + `gene()`. `genetic_factor` enfin **branché** :
+`current_height = potentiel × growth_factor × gene("hauteur")` (annuelles ET
+pérennes ligneuses).
+
+**Deux banques (D17)** :
+- **Banque-sol** = couche `species` ajoutée **par-dessus** les archétypes dans
+  `fields.SeedBank` (`add_species`, `sample_genes`, `tick_species_aging`). Par
+  espèce × plot : densité + distribution `GeneStat` par gène. Vieillit (0.997/sem),
+  les dépôts récents pèsent plus → la lignée locale dérive. Reste au terrain.
+- **Banque-joueur** = `seeds.py` (`Seed`, `PlayerSeedBank`) : lots par espèce,
+  transportable (suit l'avatar), **sérialisation JSON** (save lisible).
+
+**Reproduction biparentale (D22)** — `reproduction.py`, déterministe (hash, pas
+de RNG live) :
+- `find_father` : père de même famille, en âge de fleurir, à portée de
+  pollinisation. `pollination_mode` (wind/insect/self) + `pollination_radius_cm`
+  par espèce (graminées + chêne/noyer = anémophiles longue portée).
+- En mode insecte, le rayon est modulé par les rondelles `pollinisateur` +
+  `auxiliaire` de la tuile (×0.5 sans → ×1.5 à saturation) : **favoriser les
+  auxiliaires = plus de brassage = meilleures graines** (mécanique permaculture).
+  Sans partenaire à portée → **autofécondation** (mutation réduite, consanguinité).
+- `child_genes` : moyenne(parents) + mutation gaussienne par gène. Introgression
+  intra-famille = père hétérospécifique décale les gènes, l'enfant **garde
+  l'espèce de la mère** (aucune nouvelle `PlantData`).
+
+**Intégration moteur** — `_renewal` (M7) **supprimé**, remplacé par
+`_reproduction` (même phase : récolte d'automne). Chaque parent fécond qui
+fructifie dépose ses graines (gènes hérités) dans la banque-sol [pont chute→sol],
+puis recrute directement **uniquement** ce que la succession par archétype ne
+germe pas (vivaces/arbres sans archétype — ex-domaine de M7), gated par la
+lumière. Les germinations de `_succession`/`_spring_flush` échantillonnent les
+gènes du pool du plot (vide ⇒ neutre, rétro-compatible). Pont récolte→banque-
+joueur dans la phase récolte (inerte si aucune banque-joueur attachée au
+`game_state`, donc `main.py` inchangé).
+
+**Tests** (`test_genetique.py`, gardé) — **20/20** déterministe :
+genetic_factor branché ; **sélection émergente** (lignée sélectionnée 1.00→1.33
+sur 14 générations vs dérive neutre ~1.00) ; **brassage** (auxiliaires → rayon
+75→225 cm → outcrossing au lieu d'autoféc.) ; introgression intra-famille,
+inter-familles interdite ; banque-sol dépôt/échantillonnage ; intégration moteur
+4 ans + pont récolte. Non-régression : `main.py 30` stable, sans crash ;
+circulation des gènes féraux confirmée (été an 25, 6/33 vivantes portent des
+gènes hérités, dérive autour de 1.0).
+
+**Reste** : portage C# (→ D24, avec tout le moteur) ; nouveaux gènes du vecteur
+(vigueur, résistance pathogène, tolérance sécheresse) = extensions futures ;
+coût Vigueur récolte = Sprint 4 (D11).
+
+---
+
 ## Dette technique consolidée
 
 | Code | Description | Priorité |
@@ -1256,17 +1326,17 @@ fléau — philo non-punitive).
 | D14 | Système **Carnet auto** à concevoir (enregistrement événements, indexation, bascule descriptif → interprétatif) | 🟡 |
 | D15 | Mécanique d'**extension du terrain par maîtrise** (tuile thématique apparaît au palier maîtrise d'une famille) | 🟢 |
 | D16 | Décaler le tirage météo en `forecast` 1-2 semaines en avance dans `engine.py`, pour alimenter les signes diégétiques (Z2) | 🟡 |
-| D17 | Séparer `SeedBank-joueur` (lots par espèce, transportable, suit l'avatar) de `SeedBank-sol` (génétique vectorielle par espèce, intrinsèque au terrain), Python puis C# (Z3). **Couplé à D22** dans le Sprint génétique/reproduction | 🟡 |
+| D17 | Séparer `SeedBank-joueur` (lots par espèce, transportable, suit l'avatar) de `SeedBank-sol` (génétique vectorielle par espèce, intrinsèque au terrain), Python puis C# (Z3). **Couplé à D22** dans le Sprint génétique/reproduction. **Traité le 2026-06-03 (Sprint génétique, Python)** — `seeds.py` (`PlayerSeedBank` lots + JSON, ponts récolte→joueur), couche `species` dans `fields.SeedBank` (`add_species`/`sample_genes`/`GeneStat`). Portage C# → D24 | 🟢 ✅ (Python) / 🟡 (C#) |
 | D18 | Système de **pages secrètes** à concevoir — sources, lieu de consultation, volume cible v1.0, génération de contenu (Z4) | 🟢 |
 | D19 | Action gameplay **« manger »** à concevoir (organes consommables → Vigueur joueur) (Z5) | 🟡 |
 | D20 | **Éclairement spatial (Option A)** : ombres-capsules astronomiques ~49°N, 4 saisons × 3 tranches + intégrale, `foliage_density` par espèce, cumul multiplicatif, plancher 15 %, auto-ombrage exclu. **Traité le 2026-06-02 (Sprint éclairement, Python)** — `LightField` v2 **analytique** (sans grille pixel ; la grille 2 cm/px reste pour le rendu Godot). Position continue côté lumière. Portage C# → D24 | 🟢 ✅ (Python) |
 | D21 | **Pérennes ligneuses** : base polymorphe commune aux annuelles, `age_years`, courbe d'âge interpolée, `foliage_density` saisonnière (caduc nu l'hiver). **Traité le 2026-06-02 (Sprint éclairement, Python)** — `perennials.py`, 5 arbres (figuier/pommier jardin, cerisier intermédiaire, noyer/chêne lisière). Portage C# → D24 | 🟢 ✅ (Python) |
-| D22 | **Héritage génétique de la graine** : vecteur de gènes extensible, héritage biparental (pollinisation par espèce, modulée par auxiliaires), hybridation par introgression sur espèce fixe. **Sprint génétique/reproduction**, couplé à D17 (Z7) | 🟡 |
+| D22 | **Héritage génétique de la graine** : vecteur de gènes extensible, héritage biparental (pollinisation par espèce, modulée par auxiliaires), hybridation par introgression sur espèce fixe. **Sprint génétique/reproduction**, couplé à D17 (Z7). **Traité le 2026-06-03 (Sprint génétique, Python)** — `reproduction.py` (appariement biparental déterministe, moyenne+mutation, autoféc., introgression intra-famille), `GENE_NAMES`/`clamp_gene` dans `models.py`, `genetic_factor` réel branché dans `height_at`. Portage C# → D24 | 🟢 ✅ (Python) / 🟡 (C#) |
 | D23 | **Catalogue arbres pérennes étendu** : poirier, prunier, châtaignier, frêne, tilleul, bouleau, saule, aulne, peuplier, érable… — différé post-validation squelette (Z7) | 🟢 |
-| D24 | **Portage C# de la logique sol vivant** : uptake spatial sur `root_plots`, exsudats (`_apply_exudates`), bonus microbiome→uptake, `vitalite()` dérivée — codés en Python le 2026-06-02, pas encore en C#. **+ gradient de succession** (`choisir_archetype`, `tick_late_succession_enrichment`, 2026-06-02). **+ système d'éclairement** (`LightField` v2 analytique, interface lumière polymorphe, `perennials.py`, hauteurs/rayons/`foliage_density` sur `PlantData`, 2026-06-02). À absorber dans le **Sprint 3 (portage)** | 🟡 |
+| D24 | **Portage C# de la logique sol vivant** : uptake spatial sur `root_plots`, exsudats (`_apply_exudates`), bonus microbiome→uptake, `vitalite()` dérivée — codés en Python le 2026-06-02, pas encore en C#. **+ gradient de succession** (`choisir_archetype`, `tick_late_succession_enrichment`, 2026-06-02). **+ système d'éclairement** (`LightField` v2 analytique, interface lumière polymorphe, `perennials.py`, hauteurs/rayons/`foliage_density` sur `PlantData`, 2026-06-02). **+ génétique/reproduction** (`seeds.py`, `reproduction.py`, couche `species`+`GeneStat` de `SeedBank`, `genes`/`gene()` sur l'instance, pollinisation, 2026-06-03). À absorber dans le **Sprint 3 (portage)** | 🟡 |
 | D25 | **Succession écologique pionnier → prairie** : choix d'archétype ∝ maturité (`soil_memory_deep`) + amorçage de la banque en propagules vivaces. **Traité le 2026-06-02 (mini-sprint succession)** — couvert installé bascule pionnier → prairie vivace (~80 %) sur ~30 ans, stable 500 ans. Portage C# reporté (→ D24) | 🟢 ✅ |
 | D26 | **Sprint diversification écologique** : catalogue de test très incomplet (5 familles, 4 archétypes). Étendre les espèces. À séquencer **après** Sprint éclairement (D21 = strates/ligneux, nouveaux archétypes) et une décision *class-based vs data-driven*, en coordination avec la génétique (D22). Étendre `SOIL_SIGNATURE` pour les nouvelles familles | 🟢 |
-| D27 | **Mortalité réaliste (sénescence)** : santé dynamique (chute + récupération, plancher `background_mortality` levé), sénescence par âge (`longevity_years`, onset 70 %), fonte des semis, maladies fongiques (susceptibilité familiale), ravageurs **régulés par prédateurs émergents** (biodiversité + fleurs + stabilité), renouvellement, nécromasse ∝ hauteur, résistance des sujets établis. **Implémenté en Python le 2026-06-02** (passe 1 M1–M3 + passe 2 M4–M7) — 500 ans stables, santé dynamique, arbres meurent de sénescence. Renouvellement **provisoire** (→ unifié par D17+D22) ; champ auxiliaire dédié = sprint futur. **Reste : portage C#** (→ D24) | 🟢 ✅ (Python) / 🟡 (C#) |
+| D27 | **Mortalité réaliste (sénescence)** : santé dynamique (chute + récupération, plancher `background_mortality` levé), sénescence par âge (`longevity_years`, onset 70 %), fonte des semis, maladies fongiques (susceptibilité familiale), ravageurs **régulés par prédateurs émergents** (biodiversité + fleurs + stabilité), renouvellement, nécromasse ∝ hauteur, résistance des sujets établis. **Implémenté en Python le 2026-06-02** (passe 1 M1–M3 + passe 2 M4–M7) — 500 ans stables, santé dynamique, arbres meurent de sénescence. Renouvellement **provisoire** (`_renewal`/M7) **remplacé le 2026-06-03 par `_reproduction`** (Sprint génétique, D17+D22) ; champ auxiliaire dédié = sprint futur. **Reste : portage C#** (→ D24) | 🟢 ✅ (Python) / 🟡 (C#) |
 
 ---
 
@@ -1281,8 +1351,8 @@ fléau — philo non-punitive).
 |---|---|
 | Sprint 1 (recalibrage visuel) | `sprints/sprint_1_recalibrage_visuel.md` |
 | Sprint 2 (orchestration C#) | `sprints/sprint_2_orchestration.md` |
-| Sprint éclairement (Z7, D20-D21 : ombres pixel + pérennes + réalignement OM) | `sprints/sprint_eclairement.md` |
-| Sprint génétique/reproduction (Z7, D17+D22 : banques + héritage biparental) | `sprints/sprint_genetique.md` |
+| Sprint éclairement (Z7, D20-D21 : ombres pixel + pérennes + réalignement OM) — ✅ **TERMINÉ 2026-06-02 (Python)** | `sprints/sprint_eclairement.md` |
+| Sprint génétique/reproduction (Z7, D17+D22 : banques + héritage biparental) — ✅ **TERMINÉ 2026-06-03 (Python)** | `sprints/sprint_genetique.md` |
 | Sprint 3 (portage simulation — peut absorber le sprint éclairement) | `sprints/sprint_3_portage_simulation.md` |
 | Sprint 4 (mécaniques conception) | `sprints/sprint_4_mecaniques_conception.md` |
 

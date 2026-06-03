@@ -54,7 +54,7 @@ class PerennialWoody(PlantBase):
     @classmethod
     def height_at(cls, inst) -> float:
         h, _ = cls._interp(inst.age_years)
-        return h * inst.growth_factor
+        return h * inst.growth_factor * inst.gene("hauteur")
 
     @classmethod
     def canopy_radius_at(cls, inst) -> float:
@@ -132,6 +132,8 @@ class WalnutTree(PerennialWoody):
     rarity = "Climacique"
     keywords = ["Lisière", "Ombre dense", "Structurant"]
     foliage_density = 0.80
+    pollination_mode = "wind"        # anémophile (chatons)
+    pollination_radius_cm = 600.0
     reproduction_rate = 0.10   # glandée (mast) plus rare
     longevity_years = 200
     maturity_years = 15
@@ -146,6 +148,8 @@ class OakTree(PerennialWoody):
     rarity = "Sentinelle"
     keywords = ["Lisière", "Sujet structurant", "Centenaire"]
     foliage_density = 0.75
+    pollination_mode = "wind"        # anémophile (chatons)
+    pollination_radius_cm = 800.0
     reproduction_rate = 0.08   # glandée (mast) rare
     longevity_years = 500
     maturity_years = 25

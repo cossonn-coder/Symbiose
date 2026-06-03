@@ -26,6 +26,29 @@ from typing import Callable
 
 PLOT_CM = 50.0   # 1 plot = 50×50 cm (maille potagère, échelle actée)
 
+# Vecteur de gènes héréditaire (D22) — extensible sans refactor. Seul `hauteur`
+# est rempli au départ ; ajouter un gène = l'ajouter ici et le calculer en repro.
+GENE_NAMES = ("hauteur",)
+
+# Plage « normale » du vecteur de gènes — gaussienne centrée 1.0, σ initial 0.10.
+# L'introgression inter-espèces peut pousser HORS de [GENE_MIN, GENE_MAX]
+# (vigueur hybride) → bornes dures plus larges au tirage.
+GENE_INIT_SIGMA = 0.10
+MUTATION_SIGMA  = 0.05      # mutation gaussienne par génération
+GENE_MIN, GENE_MAX           = 0.70, 1.30
+GENE_HARD_MIN, GENE_HARD_MAX = 0.40, 1.60
+
+
+def clamp_gene(x: float) -> float:
+    """Borne un facteur génétique aux limites dures (l'introgression peut sortir
+    de la plage normale, mais jamais des limites physiologiques)."""
+    return max(GENE_HARD_MIN, min(GENE_HARD_MAX, x))
+
+
+def neutral_genes() -> dict:
+    """Vecteur de gènes neutre (tous les facteurs = 1.0)."""
+    return {g: 1.0 for g in GENE_NAMES}
+
 
 def _plots_in_radius(x_cm: float, y_cm: float, radius_cm: float) -> list[tuple]:
     """
@@ -132,12 +155,19 @@ class PlantInstance:
     drought_memory: float = 0.0     # intégration lente du stress hydrique [0-1]
     stress_memory: float = 0.0      # intégration des perturbations subies [0-1]
                                     # stress↑ → croissance↓ mais résistance↑
+    # Vecteur de gènes héréditaire (D22). Vide ⇒ tous neutres (1.0). Rempli à la
+    # naissance (semis génétique : succession, renouvellement, semis joueur).
+    genes: dict = field(default_factory=dict)
 
     def __post_init__(self):
         if self.x_cm is None or self.y_cm is None:
             r, c = self.position
             self.x_cm = c * PLOT_CM + PLOT_CM / 2
             self.y_cm = r * PLOT_CM + PLOT_CM / 2
+
+    def gene(self, name: str) -> float:
+        """Facteur génétique pour un gène (1.0 = neutre si absent du vecteur)."""
+        return self.genes.get(name, 1.0)
 
     @property
     def stage(self) -> GrowthStage:
@@ -272,6 +302,9 @@ class PlantBase(ABC):
     deciduous: bool = False              # perd son feuillage l'hiver (ombre nulle)
     archetype: str | None = None         # archétype succession écologique
     reproduction_rate: float = 0.02      # production graines par semaine
+    # Pollinisation (D22) — pilote l'appariement biparental (reproduction.py)
+    pollination_mode: str = "insect"     # "wind" | "insect" | "self"
+    pollination_radius_cm: float = 150.0 # portée de croisement (distance euclidienne)
     foliage_density: float | None = None # opacité d'ombre [0-1] ; None ⇒ défaut strate
     # Mortalité réaliste (D27) — longévité + âge de fructification
     longevity_years: float | None = None # longévité (ans) ; None ⇒ défaut par life_cycle
@@ -282,11 +315,11 @@ class PlantBase(ABC):
 
     @classmethod
     def height_at(cls, inst: "PlantInstance") -> float:
-        """Hauteur effective (cm) = potentiel du stade × growth_factor."""
+        """Hauteur effective (cm) = potentiel du stade × growth_factor × génétique."""
         st = inst.stage
         h = st.canopy_height if st.canopy_height is not None \
             else STRATE_DEFAULTS[st.strate]["height"]
-        return h * inst.growth_factor
+        return h * inst.growth_factor * inst.gene("hauteur")
 
     @classmethod
     def canopy_radius_at(cls, inst: "PlantInstance") -> float:
@@ -425,6 +458,8 @@ class Poaceae(PlantBase):
     family = "Poaceae"
     space_tolerance_weeks = 6   # très tolérantes à la compétition
     fungal_susceptibility = 0.4
+    pollination_mode = "wind"        # graminées anémophiles
+    pollination_radius_cm = 300.0    # le pollen voyage loin au vent
     family_effects = [
         {
             "type": "permanent",
@@ -1228,6 +1263,19 @@ class Tile:
             f"Tuile[{self.tile_id}] sol={self.soil_type} "
             f"plantes={len(alive)} conflits={len([c for c in self.conflicts if not c.resolved])}"
         )
+
+# ---------------------------------------------------------------------------
+# COMPATIBILITÉ DE CROISEMENT (D22)
+# ---------------------------------------------------------------------------
+
+def species_compatible(a: type, b: type) -> bool:
+    """
+    Deux espèces peuvent-elles se croiser ? (groupe de compatibilité = famille
+    botanique, décision 2026-06-03). Même espèce → croisement pur ; espèces
+    distinctes de même famille → introgression (l'enfant garde l'espèce mère).
+    """
+    return bool(a.family) and a.family == b.family
+
 
 # ---------------------------------------------------------------------------
 # CATALOGUE DES ESPÈCES DISPONIBLES
