@@ -9,9 +9,9 @@
 
 ## Où on en est
 
-- Conception **figée** (`CONCEPTION_METEO.md`). Implémentation **pas commencée**.
-- Pivot à porter : `random.choice(ALEAS_METEO)` (RNG live, viole philo #3) →
-  fonction pure `weather_at(seed, week)` via `_hash_noise`.
+- **Sous-sprint 01 (déterminisation) : FAIT.** Météo + ravageurs déterminisés ;
+  `weather_at(seed, week)` pure livrée dans `sim/weather.py`. Reste 02/03/04.
+- Conception **figée** (`CONCEPTION_METEO.md`).
 
 ## Découpage (4 sous-sprints autosuffisants)
 
@@ -42,9 +42,33 @@ Aucun changement de comportement non documenté.
 
 ## Journal des hash golden
 
-- _(à remplir au fil des sous-sprints)_
+- **01** : `fbb0c16b…` → `a2fefba2…`. Raison : tirage météo/ravageur + 3 effets
+  discrets passés de RNG live à `_hash_noise` → séquence déterministe différente
+  (mêmes types d'événements, garden survit 30 ans, contraste auxiliaires
+  préservé). PASS reconfirmé après capture.
 
 ## Décisions prises en cours de route
 
-- _(vide au démarrage — voir `CONCEPTION_METEO.md` pour les décisions figées)_
+- **La spec §0 se trompait** : la météo n'était PAS le dernier îlot non conforme.
+  `sim/effects.py` avait **3 `random.random()` live** (add_rondelle, reduce_health,
+  PropagateDisease), masqués par la béquille `random.seed(42)`. Décision Nico
+  (Path A) : les déterminiser aussi, sinon « déterminisme sans random.seed »
+  impossible et golden non reproductible. Migrés vers `_hash_noise` (canaux
+  **week·19 / week·23 / week·29**, décorrélés des flux existants 1/3/5/11/13/17).
+- **`sim/weather.py` créé** (kickoff l'autorisait) : `WeatherEvent(kind, intensity,
+  duration_weeks, scope)` + `weather_at(seed, week)` pure (catalogue + saisonnalité
+  §1.3) + `forecast()` (offert d'avance, pour le sous-sprint 04). Canaux-sentinelles
+  `K_OCC/K_PICK/K_MAG/K_PEST` aux coords `90_00x` (hors grille 6×8). `P_EVENT=0.60`
+  (calibrage post-test).
+- **Cadence préservée** (couplage inchangé, 01) : `weather_at` consulté au **début
+  de saison** seulement, mappé vers les effets `Alea` EXISTANTS via `WEATHER_ALEA`
+  (dans `engine.py`). Mappings approximatifs (Sécheresse≈Canicule, Grêle≈santé,
+  Redoux=neutre) à remplacer par température (02) + réponses médiées (03).
+  → **À reprendre en 02/04** : pour que le forecast soit honnête (cohérence §3),
+  il faudra que l'engine consulte/applique la météo de façon hebdomadaire, pas
+  seulement au passage de saison.
+- **Code conservé** : `ALEAS_METEO` gardé (supplanté, commenté) ; `ALEAS_RAVAGEURS`
+  toujours utilisé via canal `K_PEST`.
+- **`random.seed(42)` + imports `random` orphelins retirés** des 4 fichiers
+  (`main.py`, `test_golden.py`, `test_auxiliaires.py`, `test_genetique.py`).
 </content>

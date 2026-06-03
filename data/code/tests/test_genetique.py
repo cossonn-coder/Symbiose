@@ -192,8 +192,6 @@ def test_banque_sol_sampling():
 
 def test_integration_engine():
     print("\n[5b] Intégration moteur — run 4 ans + pont récolte → banque-joueur")
-    import random
-    random.seed(42)
     from world import Tile
     from fields import init_eco
     from sim.engine import Engine

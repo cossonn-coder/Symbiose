@@ -24,7 +24,6 @@ Lancement (depuis data/code/) :
 import sys
 import os
 import hashlib
-import random
 
 from world import Tile
 from plants import (Tomato, Basil, Sunflower, Bean, Clover, Pepper,
@@ -45,8 +44,8 @@ _RONDELLES = ("fertilite", "humidite", "lombric", "maladie",
 
 
 def build_world():
-    """Construit le monde déterministe du golden. random.seed FIXE ici."""
-    random.seed(42)
+    """Construit le monde déterministe du golden (météo désormais pure : plus de
+    random.seed — cf. sous-sprint 01 déterminisation, CONCEPTION_METEO.md §0)."""
     tiles = []
     ecos = {}
     for i, soil in enumerate(SOILS):

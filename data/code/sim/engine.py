@@ -16,7 +16,6 @@ Tick order :
 
 from __future__ import annotations
 import math
-import random
 from dataclasses import dataclass
 from world import Tile
 from plants import (PlantInstance, Tomato, Basil, Bean, Clover,
@@ -31,6 +30,7 @@ from fields import (EcoFields, init_eco, inject_patch,
 from sim.reproduction import find_father, child_genes, is_seed_bearing
 from sim.seeds import Seed
 from sim.succession import succession, spring_flush
+from sim.weather import weather_at, WeatherEvent, K_PEST
 
 # Pont récolte → banque-joueur (D17) : classe → clé catalogue (inverse).
 _SPECIES_KEY = {cls: key for key, cls in PLANT_CATALOGUE.items()}
@@ -72,6 +72,9 @@ class Alea:
     nom: str; description: str
     variable: str; delta: float; mode: str = "field"
 
+# Ancien catalogue météo, conservé pour mémoire. SUPPLANTÉ (sous-sprint 01) par
+# weather_at(seed, week) + WEATHER_ALEA ci-dessous : le tirage n'est plus un
+# random.choice live mais une fonction pure déterministe (CONCEPTION_METEO.md §0).
 ALEAS_METEO = [
     Alea("Canicule",     "Humidité chute.",    "humidite",  -0.4, "field"),
     Alea("Pluies",       "Humidité monte.",     "humidite",  +0.5, "field"),
@@ -80,6 +83,23 @@ ALEAS_METEO = [
     Alea("Vent fort",    "Paillage dispersé.",  "paillage",  -1,   "rondelle"),
     Alea("Brouillard",   "Risque maladie.",     "maladie",   +1,   "rondelle"),
 ]
+
+# Couplage PROVISOIRE (sous-sprint 01) : WeatherEvent.kind → effet Alea EXISTANT.
+# On réutilise STRICTEMENT les effets déjà en place (humidité/paillage/santé)
+# pour préserver le couplage le temps de la déterminisation. Plusieurs kinds du
+# catalogue §1.3 mappent sur le même effet faute de mieux (Sécheresse≈Canicule,
+# Grêle≈dégât santé, Redoux=neutre) : la température (02) et les réponses médiées
+# par gène (03) remplaceront ces mappings approximatifs.
+WEATHER_ALEA = {
+    "Beau temps":      Alea("Beau temps",      "Aucun effet.",       "",         0.0, "none"),
+    "Gelée tardive":   Alea("Gelée tardive",   "Semis touchés.",     "",        -1.0, "health"),
+    "Canicule":        Alea("Canicule",        "Humidité chute.",    "humidite", -0.4, "field"),
+    "Sécheresse":      Alea("Sécheresse",      "Humidité chute.",    "humidite", -0.4, "field"),
+    "Tempête":         Alea("Tempête",         "Paillage dispersé.", "paillage", -1,   "rondelle"),
+    "Grêle":           Alea("Grêle",           "Feuillage abîmé.",   "",        -1.0, "health"),
+    "Pluie prolongée": Alea("Pluie prolongée", "Humidité monte.",    "humidite", +0.5, "field"),
+    "Redoux":          Alea("Redoux",          "Aucun effet.",       "",         0.0, "none"),
+}
 ALEAS_RAVAGEURS = [
     Alea("Pucerons",  "Fertilité réduite.", "fertilite", -0.3, "field"),
     Alea("Limaces",   "Semis grignotés.",   "",          -1.0, "health"),
@@ -485,8 +505,15 @@ class Engine:
 
         # 1. Aléas début de saison
         if est_debut_saison(week_in_year):
-            meteo    = random.choice(ALEAS_METEO)
-            ravageur = random.choice(ALEAS_RAVAGEURS)
+            seed = self.game_state.get("seed", 42)
+            # Météo : fonction PURE de (seed, week) — plus de RNG live. On garde
+            # le WeatherEvent (kind/intensity/scope) pour le forecast (04) mais on
+            # le mappe ici vers un effet Alea existant (couplage inchangé, 01).
+            event    = weather_at(seed, week)
+            meteo    = WEATHER_ALEA[event.kind]
+            # Ravageur : déterminisé sur un canal séparé (décorrélé de la météo).
+            pidx     = int(_hash_noise(seed, week, *K_PEST) * len(ALEAS_RAVAGEURS)) % len(ALEAS_RAVAGEURS)
+            ravageur = ALEAS_RAVAGEURS[pidx]
             log.append(f"  🌤  {meteo.nom} : {meteo.description}")
             log.append(f"  🐛  {ravageur.nom} : {ravageur.description}")
             for tile in self.tiles:

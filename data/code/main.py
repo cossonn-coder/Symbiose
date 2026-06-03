@@ -9,15 +9,12 @@ sénescence (un pommier sur la tuile centrale) sur la durée.
 """
 
 import sys
-import random
 from collections import Counter
 from world import Tile
 from plants import (Tomato, Basil, Sunflower, Bean, Clover, Pepper,
                     Yarrow, Phacelia, AppleTree)
 from fields import init_eco, inject_patch
 from sim.engine import Engine
-
-random.seed(42)
 
 # 9 tuiles, sols contrastés (sable = pauvre/sec, argile = humide, terre = standard)
 SOILS = ["terre", "argile", "sable",

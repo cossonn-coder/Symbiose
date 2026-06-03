@@ -19,14 +19,11 @@ Usage (depuis data/code/) : python3 -m tests.test_auxiliaires [n_years]   (défa
 """
 
 import sys
-import random
 from sim import effects   # module (le patch ci-dessous doit cibler sim.effects)
 from world import Tile
 from plants import Tomato, Yarrow, Phacelia
 from fields import init_eco
 from sim.engine import Engine
-
-random.seed(42)
 
 # Instrumentation : on enveloppe herbivory_pressure pour compter les dégâts
 # d'herbivorie par tuile, à la source (robuste, indépendant du log texte).

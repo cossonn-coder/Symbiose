@@ -7,10 +7,15 @@ Effets flux (microbiome, fertilité) : injection directe dans les champs continu
 
 Philosophie : jamais bonus/malus directs sur les plantes.
   → flux → contrainte écologique → réponse biologique émergente.
+
+Déterminisme (philo #3) : les tirages discrets passent par `_hash_noise(seed,
+week·K, r, c)` — jamais de RNG live. Découvert au sous-sprint déterminisation
+météo (2026-06-03) : ces effets utilisaient encore `random.random()`, masqué par
+la béquille `random.seed(42)`. Migrés vers le hash spatial comme le reste du
+moteur (canaux week·19 / week·23 / week·29, décorrélés des flux existants).
 """
 
 from __future__ import annotations
-import random
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -122,6 +127,8 @@ def resolve(effect: dict, plant: PlantInstance, tile: Tile,
     action = effect.get("action", "")
     eco = _get_eco(game_state, tile.tile_id)
     r, c = plant.position
+    seed = game_state.get("seed", 42)
+    week = game_state.get("week", 0)
 
     # --- inject_field : flux écologique direct ---
     if action == "inject_field":
@@ -155,7 +162,7 @@ def resolve(effect: dict, plant: PlantInstance, tile: Tile,
             # Les pollinisateurs sont attirés par la lumière locale
             light = eco.lumiere.at_plot(r, c)
             proba *= (0.5 + light * 0.5)
-        if random.random() <= proba:
+        if _hash_noise(seed, week * 19, r, c) <= proba:
             real = _clamp_rondelle(tile, variable, amount, max_val)
             if real > 0:
                 mutations.append(AddRondelle(tile.tile_id, variable, real,
@@ -184,7 +191,7 @@ def resolve(effect: dict, plant: PlantInstance, tile: Tile,
             p = eco.disease_probability(r, c, base_rate=base_p)
         else:
             p = base_p
-        if random.random() <= p:
+        if _hash_noise(seed, week * 23, r, c) <= p:
             mutations.append(ReduceHealth(plant, amount,
                                           reason=effect.get("description", "")))
 
@@ -309,8 +316,12 @@ def apply_mutations(mutations: list, game_state: dict) -> list[str]:
 
         elif isinstance(m, PropagateDisease):
             eco = _get_eco(game_state, m.source_plant.position[0])
-            # Tirage probabiliste
-            if random.random() <= m.probability:
+            # Tirage déterministe (philo #3) : hash spatial sur la cible, canal
+            # week·29 décorrélé. game_state porte seed/week pendant le tick.
+            seed = game_state.get("seed", 42)
+            week = game_state.get("week", 0)
+            tr, tc = m.target_plant.position
+            if _hash_noise(seed, week * 29, tr, tc) <= m.probability:
                 m.target_plant.health = max(0, m.target_plant.health - 1)
                 log.append(f"  ✓ {m}")
             else:
