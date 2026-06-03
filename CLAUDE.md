@@ -268,6 +268,19 @@ historiques.
 - **Max 3 questions à la fois.**
 - **Mettre à jour `journal.md` à la fin de chaque sprint** — c'est notre
   mémoire partagée des décisions et de l'avancement.
+- **Anticiper le coût en tokens et découper les gros sprints.** Avant un
+  sprint, classer son ampleur (petit / moyen / gros). Un sprint **gros**
+  (touche beaucoup de fichiers couplés, exploration large) se découpe en
+  **sous-sprints autosuffisants**, chacun une unité logique testable qui
+  **préserve le golden**. Viser 3-6 sous-sprints, jamais 20 (chaque
+  sous-sprint relancé à froid repaie son amorçage — le sur-découpage coûte
+  aussi).
+  - Structure : `sprints/sprint_X/00_etat.md` (état partagé léger, ~20
+    lignes : où on en est, décisions, ce qui reste — mis à jour en fin de
+    chaque sous-sprint) + `01_*.md`, `02_*.md`… (kickoffs autonomes).
+  - Boucle : lancer `0N` → travailler → vérifier le golden → mettre à jour
+    `00_etat.md` → commit → **`/clear`** → lancer `0N+1`. Le `/clear` entre
+    tronçons est le vrai levier d'économie (le contexte ne se cumule pas).
 
 ## Backlog actif
 
@@ -278,6 +291,7 @@ autosuffisants de `sprints/`) vit désormais dans **[`BACKLOG.md`](BACKLOG.md)**
 **Prochain sprint** : conception météo/climat + signes diégétiques (conception
 seule, cf. D16 dans `DETTE.md` + section « Gestion des aléas météo »).
 
-À l'ouverture d'une session, Nico donne « lis `sprints/sprint_X.md` » et Claude
-reprend sans contexte préalable. Historique des décisions : `journal.md` (entrées
-récentes) + `journal_archive/`.
+À l'ouverture d'une session, Nico donne « lis `sprints/sprint_X.md` » (sprint
+simple) ou « lis `sprints/sprint_X/00_etat.md` puis `0N_*.md` » (sprint découpé)
+et Claude reprend sans contexte préalable. Historique des décisions :
+`journal.md` (entrées récentes) + `journal_archive/`.
