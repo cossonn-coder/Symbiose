@@ -21,7 +21,7 @@
 | D13 | Système **Magazine de botanique** à concevoir (coût Vigueur + maîtrise, déblocage espèces) | 🟡 |
 | D14 | Système **Carnet auto** à concevoir (enregistrement événements, indexation, bascule descriptif → interprétatif) | 🟡 |
 | D15 | Mécanique d'**extension du terrain par maîtrise** (tuile thématique apparaît au palier maîtrise d'une famille) | 🟢 |
-| D16 | Décaler le tirage météo en `forecast` 1-2 semaines en avance dans `engine.py`, pour alimenter les signes diégétiques (Z2) | 🟡 |
+| D16 | Décaler le tirage météo en `forecast` 1-2 semaines en avance dans `engine.py`, pour alimenter les signes diégétiques (Z2). **Conçu le 2026-06-03 (Sprint conception météo)** — `data/code/CONCEPTION_METEO.md`. Pivot : `random.choice` → fonction pure `weather_at(seed, week)` (`_hash_noise`) ⇒ forecast = évaluation en avance, sans tirage décalé à stocker. Champ `temperature` ambiant + gène rusticité induits. **Reste : implémentation** (sprint découpé, re-figer le golden) | 🟢 ✅ (conçu) / 🟡 (impl.) |
 | D17 | Séparer `SeedBank-joueur` (lots par espèce, transportable, suit l'avatar) de `SeedBank-sol` (génétique vectorielle par espèce, intrinsèque au terrain), Python puis C# (Z3). **Couplé à D22** dans le Sprint génétique/reproduction. **Traité le 2026-06-03 (Sprint génétique, Python)** — `seeds.py` (`PlayerSeedBank` lots + JSON, ponts récolte→joueur), couche `species` dans `fields.SeedBank` (`add_species`/`sample_genes`/`GeneStat`). Portage C# → D24 | 🟢 ✅ (Python) / 🟡 (C#) |
 | D18 | Système de **pages secrètes** à concevoir — sources, lieu de consultation, volume cible v1.0, génération de contenu (Z4) | 🟢 |
 | D19 | Action gameplay **« manger »** à concevoir (organes consommables → Vigueur joueur) (Z5) | 🟡 |

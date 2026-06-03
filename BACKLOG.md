@@ -16,7 +16,8 @@
 | Sprint éclairement (Z7, D20-D21 : ombres pixel + pérennes + réalignement OM) — ✅ **TERMINÉ 2026-06-02 (Python)** | `sprints/sprint_eclairement.md` |
 | Sprint génétique/reproduction (Z7, D17+D22 : banques + héritage biparental) — ✅ **TERMINÉ 2026-06-03 (Python)** | `sprints/sprint_genetique.md` |
 | Sprint refactor structurel (réorg `data/code/` en paquets + archive journal + dette/backlog source unique + golden output) — ✅ **TERMINÉ 2026-06-03** | `sprints/sprint_refactor_structurel.md` |
-| **Sprint conception météo** (PROCHAIN — conception seule : météo/climat + signes diégétiques, cf. D16). Pas encore de kickoff | — |
+| Sprint conception météo (conception seule : météo/climat + signes diégétiques, D16+Z2) — ✅ **TERMINÉ 2026-06-03** → spec `data/code/CONCEPTION_METEO.md` | `sprints/sprint_conception_meteo.md` |
+| **Sprint implémentation météo** (PROCHAIN — porter `CONCEPTION_METEO.md` en Python : `weather_at`/forecast, champ `temperature`, gène rusticité, signes ; **découpé en 4 sous-sprints, re-figer le golden**) | `sprints/sprint_meteo_impl/00_etat.md` |
 | Sprint diversification écologique (D26 : étendre le catalogue d'espèces). Pas encore de kickoff | — |
 | Sprint 3 (portage simulation — peut absorber le sprint éclairement) | `sprints/sprint_3_portage_simulation.md` |
 | Sprint 4 (mécaniques conception) | `sprints/sprint_4_mecaniques_conception.md` |
