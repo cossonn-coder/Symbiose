@@ -379,6 +379,8 @@ def damping_off(plant: PlantInstance, tile: Tile, eco,
     # Protection microbiome via la logistique existante (disease_probability)
     p = eco.disease_probability(r, c, base_rate=DAMPOFF_BASE)
     p *= excess * (0.3 + density) * saison_factor
+    # resistance_pathogene : un semis au génotype résistant succombe moins (1/gène).
+    p /= plant.gene("resistance_pathogene")
     if _hash_noise(seed, week * 11, r, c) < p:
         return [ReduceHealth(plant, plant.health, reason="fonte des semis")]
     return []
@@ -397,6 +399,10 @@ def fungal_disease(plant: PlantInstance, tile: Tile, eco,
     susc = getattr(plant.plant_class, "fungal_susceptibility", 0.5)
     if susc <= 0.0:
         return []
+    # resistance_pathogene (génotype individuel) module la susceptibilité familiale :
+    # gène >1 → moins sensible. Au sein d'une même famille, deux sujets réagissent
+    # différemment → sélection émergente des lignées résistantes (philo #2/#7).
+    susc /= plant.gene("resistance_pathogene")
     r, c = plant.position
     hum_norm = min(1.0, eco.humidite.at_plot(r, c) / 3.0)
     density = _local_density(plant, tile, same_family=True)
@@ -404,6 +410,41 @@ def fungal_disease(plant: PlantInstance, tile: Tile, eco,
     p *= hum_norm * (0.4 + density) * susc
     if _hash_noise(seed, week * 13, r, c) < p:
         return [ReduceHealth(plant, 1, reason="maladie fongique")]
+    return []
+
+
+# --- Stress hydrique sévère (voie sécheresse → santé, Sprint gènes du vecteur) ---
+# La sécheresse ne faisait jusqu'ici que STAGNER la croissance (gate ok_hum). On
+# ajoute une voie de DÉGÂT : une sécheresse sévère ET prolongée (drought_memory
+# élevée) abîme le tissu, médiée par le génotype — comme le gel. Donne une vraie
+# pression de sélection sur tolerance_secheresse (philo #2/#7), sans bonus direct.
+DROUGHT_DAMAGE_THRESHOLD = 0.6   # drought_memory au-delà de laquelle le tissu souffre
+DROUGHT_DAMAGE_RATE      = 0.10  # probabilité de base à mémoire de stress saturée
+
+
+def drought_stress_damage(plant: PlantInstance, eco,
+                          seed: int, week: int) -> list[Mutation]:
+    """
+    Dégât du stress hydrique sévère prolongé (Sprint gènes du vecteur).
+
+        sévérité = (drought_memory − seuil) / (1 − seuil)   [0,1] au-delà du seuil
+        effectif = DROUGHT_DAMAGE_RATE × sévérité × (1 / tolerance_secheresse)
+
+    drought_memory intègre lentement le déficit hydrique (_update_physiology) :
+    seul un stress installé (pas une semaine sèche isolée) franchit le seuil. Le
+    gène `tolerance_secheresse` réduit la susceptibilité (>1 → tissu plus résistant).
+    Déterministe (_hash_noise, canal week·37, décorrélé des autres tirages du tick).
+    """
+    if not plant.is_alive:
+        return []
+    dm = plant.drought_memory
+    if dm <= DROUGHT_DAMAGE_THRESHOLD:
+        return []
+    sev = (dm - DROUGHT_DAMAGE_THRESHOLD) / (1.0 - DROUGHT_DAMAGE_THRESHOLD)
+    p = DROUGHT_DAMAGE_RATE * sev / plant.gene("tolerance_secheresse")
+    r, c = plant.position
+    if _hash_noise(seed, week * 37, r, c) < p:
+        return [ReduceHealth(plant, 1, reason="stress hydrique sévère")]
     return []
 
 
@@ -544,6 +585,8 @@ def apply_disturbances(tile, eco, game_state: dict,
         # Fonte des semis + maladies fongiques
         all_mutations += damping_off(plant, tile, eco, seed, week, saison)
         all_mutations += fungal_disease(plant, tile, eco, seed, week)
+        # Stress hydrique sévère (voie sécheresse → santé, médiée par génotype)
+        all_mutations += drought_stress_damage(plant, eco, seed, week)
         # Mortalité de fond
         all_mutations += background_mortality(plant, eco, seed, week)
 

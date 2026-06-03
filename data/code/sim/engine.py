@@ -191,12 +191,16 @@ class Engine:
             hum   = eco.humidite.at_plot(r, c)
             light = eco.lumiere.light_received(plant)   # lumière reçue (canopée, auto-ombrage exclu)
             temp  = eco.temperature.at_plot(r, c)       # température ambiante (météo 02)
-            # Seuils de croissance : humidité ET lumière ET température suffisantes
-            ok_hum   = hum   >= 0.15
+            # Seuils de croissance : humidité ET lumière ET température suffisantes.
+            # tolerance_secheresse abaisse le seuil d'humidité (gène >1 → la plante
+            # continue de croître en sol plus sec avant de stagner).
+            ok_hum   = hum   >= 0.15 / plant.gene("tolerance_secheresse")
             ok_light = light >= 0.2   # trop d'ombre = stagnation
             ok_temp  = temp  >= plant.plant_class.temp_min_growth   # trop froid = stagnation
             can_grow = ok_hum and ok_light and ok_temp
-            if plant.age_weeks >= stage.duration_weeks and can_grow:
+            # vigueur accélère l'avancement de stade (gène >1 → durée requise réduite).
+            needed = stage.duration_weeks / plant.gene("vigueur")
+            if plant.age_weeks >= needed and can_grow:
                 if plant.advance_stage():
                     log.append(f"    🌱 {plant.name}@{plant.position} → [{plant.stage.name}] "
                                f"(hum={hum:.2f} lum={light:.2f} t={temp:.1f}°C)")
@@ -349,7 +353,8 @@ class Engine:
                 hum     = eco.humidite.at_plot(r, c)
                 disturb = eco.disturbance.local(r, c)
                 Q = light * min(1.0, hum) * max(0.0, 1.0 - disturb)
-                if _hash_noise(seed, week * 5, r, c) < Q * HEAL_RATE:
+                # vigueur accélère la convalescence (gène >1 → guérit plus vite).
+                if _hash_noise(seed, week * 5, r, c) < Q * HEAL_RATE * plant.gene("vigueur"):
                     plant.health = min(3, plant.health + 1)
         for plant in deaths:
             deposited = eco.add_necromass(*plant.position,

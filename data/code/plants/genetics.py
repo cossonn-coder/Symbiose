@@ -12,7 +12,17 @@ dessus sans créer de cycle (notamment fields/seedbank.py qui importe clamp_gene
 #  - `hauteur`        : module la hauteur effective (Sprint génétique).
 #  - `rusticite_froid`: résistance au gel (météo 03). >1 = plus rustique → moins
 #    de dégât tissulaire quand la température ambiante passe sous 0 °C. Neutre 1.0.
-GENE_NAMES = ("hauteur", "rusticite_froid")
+#  - `vigueur`        : fitness générale (Sprint gènes du vecteur). >1 = croît
+#    plus vite (avancement de stade accéléré) et se rétablit plus vite
+#    (convalescence). Sens PROVISOIRE : à recâbler sur la Vigueur universelle
+#    (D11) une fois cette couche conçue. Neutre 1.0.
+#  - `resistance_pathogene` : résistance aux maladies fongiques (fonte des semis
+#    + maladie adulte). >1 = moins sensible (susceptibilité = 1/gène). Neutre 1.0.
+#  - `tolerance_secheresse` : tolérance au stress hydrique. >1 = croît en sol plus
+#    sec (seuil de stagnation abaissé) ET tissu plus résistant à la sécheresse
+#    sévère prolongée (susceptibilité = 1/gène). Neutre 1.0.
+GENE_NAMES = ("hauteur", "rusticite_froid", "vigueur",
+              "resistance_pathogene", "tolerance_secheresse")
 
 # Plage « normale » du vecteur de gènes — gaussienne centrée 1.0, σ initial 0.10.
 # L'introgression inter-espèces peut pousser HORS de [GENE_MIN, GENE_MAX]
