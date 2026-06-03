@@ -37,6 +37,7 @@ K_OCC  = (90_001, 0)   # un événement a-t-il lieu, ou temps calme ?
 K_PICK = (90_002, 0)   # lequel (parmi les candidats de la saison) ?
 K_MAG  = (90_003, 0)   # intensité (loi normale via hash_gauss)
 K_PEST = (90_004, 0)   # ravageur (canal séparé, hors météo)
+K_SIGN = (90_005, 0)   # un événement émet-il un signe diégétique ? (§4.3)
 
 # Probabilité qu'une SEMAINE porte un VRAI événement (sinon temps calme).
 # Sous-sprint 02 : la météo passe en cadence HEBDOMADAIRE (consultée chaque
@@ -170,3 +171,104 @@ def forecast(seed: int, week: int, horizon: int = 2) -> list[WeatherEvent]:
     ceci ; l'engine ne s'en sert pas encore.)
     """
     return [weather_at(seed, week + k) for k in range(1, horizon + 1)]
+
+
+# --- Signes diégétiques (Z2, CONCEPTION_METEO.md §4) ------------------------
+# Un signe = un indice perceptif rendu dans le monde 1-2 semaines AVANT
+# l'événement (jamais d'icône calendrier, philo #5). Ces libellés sont des
+# DONNÉES (français, voix naturaliste) que la couche d'affichage (Godot, plus
+# tard) traduira en sprites/sons. AUCUNE logique de rendu ici.
+#
+# Table recopiée fidèlement de §4.1. Note : la spec groupe « Canicule /
+# sécheresse » sur une même ligne → Canicule et Sécheresse partagent leurs
+# signes. C'est l'ambiguïté VOULUE (§4.1 « certains signes sont ambigus entre
+# deux événements proches ») : un même signe pointe vers plusieurs événements,
+# ce qui crée l'incertitude d'interprétation des débuts.
+_SIGNES_CHALEUR_SEC = (
+    "ciel blanc laiteux",
+    "insectes au ras du sol",
+    "sol qui craquelle",
+    "feuilles qui se recroquevillent",
+)
+SIGN_TABLE: dict[str, tuple[str, ...]] = {
+    "Gelée tardive": (
+        "ciel clair et étoilé au crépuscule",
+        "brume rasante au petit matin",
+        "anneau (halo) autour de la lune",
+    ),
+    "Canicule": _SIGNES_CHALEUR_SEC,
+    "Sécheresse": _SIGNES_CHALEUR_SEC,
+    "Tempête": (
+        "oiseaux qui se taisent puis s'agitent et volent bas",
+        "le vent tourne",
+        "ciel qui vire au plomb",
+    ),
+    "Grêle": (
+        "nuages d'enclume sombres",
+        "chute brutale de la lumière",
+        "calme lourd « avant l'orage »",
+    ),
+    "Pluie prolongée": (
+        "ciel bas et gris constant",
+        "escargots et limaces qui sortent",
+        "hirondelles qui rasent le sol",
+    ),
+    "Redoux": (
+        "fonte, gouttes",
+        "oiseaux qui se remettent à chanter",
+    ),
+}
+
+
+def is_signed(seed: int, week: int) -> bool:
+    """
+    Masque de signe (§4.3) : l'événement de la semaine `week` émet-il un signe
+    diégétique ? ~80 % oui. PURE et déterministe.
+
+    `week` = la semaine ABSOLUE de l'ÉVÉNEMENT (pas la semaine d'observation) →
+    un événement donné est signé (ou non) de façon STABLE, qu'on l'observe à
+    j-1 ou j-2. Les ~20 % non signés arrivent sans préavis tant qu'on n'est pas
+    transcendant ; au transcendant, le palier lève le masque CÔTÉ UI (l'événement
+    lui-même ne change pas — seule la visibilité de son signe dépend de la
+    maîtrise, déterminisme simulatoire intact).
+    """
+    return _hash_noise(seed, week, *K_SIGN) > 0.20
+
+
+@dataclass(frozen=True)
+class WeatherSign:
+    """
+    Lecture perceptive d'un événement météo à venir, structure immuable (philo
+    #3). `signed` porte le masque §4.3 : l'appelant (couche palier/UI, D12)
+    décide d'afficher les `signed=True` seulement (sous transcendant), ou de
+    tout révéler au transcendant — sans re-toucher ce module.
+    """
+    kind: str                  # type de l'événement annoncé
+    in_weeks: int              # dans combien de semaines il tombe (1..horizon)
+    signs: tuple[str, ...]     # signes perceptifs (données, voix naturaliste)
+    signed: bool               # émet-il un signe ? (~80 %, §4.3)
+
+
+def weather_signs(seed: int, week: int, horizon: int = 2) -> list[WeatherSign]:
+    """
+    Signes diégétiques visibles à la semaine `week` parce qu'un événement météo
+    arrive dans 1..`horizon` semaines (§4). PURE, sans état, sans RNG live : on
+    lit `weather_at` en avance (le « cadeau de la fonction pure », §3) et on
+    classe. Read-only sur la simulation — n'écrit dans aucun champ.
+
+    Renvoie la structure COMPLÈTE (tous les événements à venir, calme exclu),
+    chacun avec son flag `signed` (décision actée 04). Le filtrage selon le
+    palier de maîtrise (D12) est à la charge de l'appelant.
+    """
+    out: list[WeatherSign] = []
+    for k in range(1, horizon + 1):
+        ev = weather_at(seed, week + k)
+        if ev.kind == CALME.kind:        # temps calme : aucun signe
+            continue
+        out.append(WeatherSign(
+            kind=ev.kind,
+            in_weeks=k,
+            signs=SIGN_TABLE[ev.kind],
+            signed=is_signed(seed, week + k),
+        ))
+    return out

@@ -22,6 +22,12 @@
   pas par le nom de l'événement. Reste 04. ⚠ **Pas de kickoff `03_*.md`
   pré-écrit** (absent du disque) : travaillé directement depuis la spec figée
   `CONCEPTION_METEO.md` §2.3 + §7 #3-4 et les notes de passation du 02.
+- **Sous-sprint 04 (forecast + signes) : FAIT.** `weather_signs(seed, week,
+  horizon=2)` pure livrée dans `sim/weather.py` + `@dataclass WeatherSign(kind,
+  in_weeks, signs, signed)` + table `SIGN_TABLE` (§4.1) + masque `is_signed`
+  (canal `K_SIGN`, §4.3). **Read-only** : golden **INCHANGÉ** (`63bfdac4…` PASS
+  *sans* `--capture`) → aucun couplage n'a fui. Test dédié `tests/test_signes.py`
+  (8/8). **Sprint météo d'implémentation TERMINÉ.**
 - Conception **figée** (`CONCEPTION_METEO.md`).
 
 ## Découpage (4 sous-sprints autosuffisants)
@@ -73,6 +79,11 @@ Aucun changement de comportement non documenté.
   (2 runs, hash sortie identique), jardin vivant à 30 ans (9 tuiles, 8-9/tuile vs
   9-10 avant — mortalité modérée attendue ; score 7755→7475), génétique 20/20,
   contraste auxiliaires préservé (0 vs 23). PASS reconfirmé après capture.
+- **04** : `63bfdac4…` → `63bfdac4…` (**INCHANGÉ**). Raison : aucune. 04 est
+  read-only sur la simulation (`tick_semaine` non touché) — il ne fait que LIRE
+  `weather_at` en avance et classer. Golden PASS *sans* `--capture` = preuve
+  qu'aucun couplage n'a fui dans la sim. `test_signes` 8/8, génétique/auxiliaires
+  inchangés, `main.py` exit 0.
 
 ## Décisions prises en cours de route
 
@@ -173,4 +184,30 @@ Aucun changement de comportement non documenté.
   *sélection visible du froid* restera discrète tant que les populations vivantes
   sont quasi-neutres. Calibrage/émergence à revisiter (intensités de gel, balance
   pionnières/cultivées), pas en 03.
+
+### Sous-sprint 04
+
+- **Forme du retour `weather_signs` actée (décision Nico)** : **structure
+  COMPLÈTE + flag `signed`**. `weather_signs` renvoie TOUS les événements à venir
+  (calme exclu), chacun portant `signed: bool`. L'appelant (couche palier/UI,
+  **D12, hors périmètre**) filtre : afficher les `signed=True` sous transcendant,
+  tout révéler au transcendant — **sans re-toucher `weather.py`** (« marche
+  transcendant gratuite », data-driven). L'événement lui-même ne change jamais ;
+  seule la *visibilité* du signe dépend de la maîtrise (philo #3 intacte).
+- **`is_signed(seed, week)`** indexé sur la **semaine de l'ÉVÉNEMENT** (pas la
+  semaine d'observation) → un événement est signé (ou non) de façon **stable**,
+  qu'on l'observe à j-1 ou j-2. Canal `K_SIGN=(90_005,0)`, seuil `> 0.20`.
+  Mesuré **82.1 %** signés sur 669 événements (cible ~80 %).
+- **`SIGN_TABLE` recopiée fidèlement de §4.1.** La spec groupe « Canicule /
+  sécheresse » → les deux `kind` **partagent** le tuple `_SIGNES_CHALEUR_SEC` :
+  c'est l'**ambiguïté voulue** (un même signe pointe vers ≥ 2 événements). Test
+  trouve **4 signes partagés**.
+- **Cohérence forecast == réalité prouvée** (pas seulement « par construction ») :
+  sur 1040 semaines × horizon 2, le `kind` annoncé == `weather_at(seed, week+k)`
+  réel. Acquis grâce à la **cadence hebdomadaire** actée en 02.
+- **Read-only strict** : `weather.py` reste pur (aucun `print`, aucun champ
+  écrit, n'importe que `fields`). `tests/test_signes.py` créé (style `check`/
+  ✅❌/`SystemExit`, lancé `python3 -m tests.test_signes`).
+- **Hors périmètre confirmé non fait** : rendu des signes (sprites Godot),
+  paliers/bascule interprétative du carnet (D12), révélation transcendant (UI).
 </content>
