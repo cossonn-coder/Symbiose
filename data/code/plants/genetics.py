@@ -6,9 +6,13 @@ Fondation pure : aucun import interne au projet → tout le monde peut s'appuyer
 dessus sans créer de cycle (notamment fields/seedbank.py qui importe clamp_gene).
 """
 
-# Vecteur de gènes héréditaire (D22) — extensible sans refactor. Seul `hauteur`
-# est rempli au départ ; ajouter un gène = l'ajouter ici et le calculer en repro.
-GENE_NAMES = ("hauteur",)
+# Vecteur de gènes héréditaire (D22) — extensible sans refactor. Ajouter un gène
+# = l'ajouter ici ; `child_genes` (reproduction) le calcule alors automatiquement
+# sur un canal de hash décorrélé (l'index dans ce tuple), sans toucher aux autres.
+#  - `hauteur`        : module la hauteur effective (Sprint génétique).
+#  - `rusticite_froid`: résistance au gel (météo 03). >1 = plus rustique → moins
+#    de dégât tissulaire quand la température ambiante passe sous 0 °C. Neutre 1.0.
+GENE_NAMES = ("hauteur", "rusticite_froid")
 
 # Plage « normale » du vecteur de gènes — gaussienne centrée 1.0, σ initial 0.10.
 # L'introgression inter-espèces peut pousser HORS de [GENE_MIN, GENE_MAX]

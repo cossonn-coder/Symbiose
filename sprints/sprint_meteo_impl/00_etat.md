@@ -15,6 +15,13 @@
   saisonnières + deltas météo hebdo), gate `ok_temp` dans la croissance,
   évaporation couplée à la température, **météo passée en cadence hebdomadaire**
   (décision Nico). Reste 03/04.
+- **Sous-sprint 03 (réponses médiées) : FAIT.** Gène `rusticite_froid` ajouté au
+  vecteur génétique ; gel et grêle quittent la voie `health` plate pour un dégât
+  **médié** (`sévérité_milieu × susceptibilité_gène × (1 − protection_paillage)`,
+  helper `Engine._mediated_damage`). Gel piloté par le MILIEU (température < 0),
+  pas par le nom de l'événement. Reste 04. ⚠ **Pas de kickoff `03_*.md`
+  pré-écrit** (absent du disque) : travaillé directement depuis la spec figée
+  `CONCEPTION_METEO.md` §2.3 + §7 #3-4 et les notes de passation du 02.
 - Conception **figée** (`CONCEPTION_METEO.md`).
 
 ## Découpage (4 sous-sprints autosuffisants)
@@ -58,6 +65,14 @@ Aucun changement de comportement non documenté.
   (c) évaporation couplée à la température. Vérifs : déterminisme OK (2 runs
   identiques), jardin vivant à 30 ans (9 tuiles, comptes 9-10/tuile), génétique
   20/20, contraste auxiliaires préservé (0 vs 29). PASS reconfirmé après capture.
+- **03** : `4bcae3a3…` → `63bfdac4…`. Raison : gel et grêle abandonnent la voie
+  `health` plate (`ReduceHealth(1)` sur tous les semis) pour un dégât **médié par
+  le gène × le paillage**, mappé en points de santé entiers (floor) → nouvelle
+  séquence de santé/mortalité des semis. Le gel devient piloté par la température
+  ambiante (temp < 0), plus par le nom de l'événement. Vérifs : déterminisme OK
+  (2 runs, hash sortie identique), jardin vivant à 30 ans (9 tuiles, 8-9/tuile vs
+  9-10 avant — mortalité modérée attendue ; score 7755→7475), génétique 20/20,
+  contraste auxiliaires préservé (0 vs 23). PASS reconfirmé après capture.
 
 ## Décisions prises en cours de route
 
@@ -118,4 +133,44 @@ Aucun changement de comportement non documenté.
 - **Couplage évaporation↔température** dans `tick_hydrology` : `evap = EVAPORATION
   − EVAP_TEMP_COEF·max(0, temp−EVAP_TEMP_REF)`, borné par `EVAP_MIN=0.975`. Chaud →
   assèche un peu plus (canicule → stress hydrique émergent), jamais brutal.
+
+### Sous-sprint 03
+
+- **Gène `rusticite_froid` ajouté** à `GENE_NAMES` (`plants/genetics.py`). >1 =
+  plus rustique → susceptibilité < 1 au gel. **Héritage automatique** : `child_genes`
+  boucle sur `GENE_NAMES` avec un canal de hash décorrélé par index (`week*29+i,
+  k=4*i`) → ajouter l'index 1 **ne touche pas** les tirages de `hauteur` (index 0).
+  Les gènes ne sont **pas** sérialisés dans le golden → l'ajout du gène seul est
+  golden-neutre ; c'est la **réécriture du dégât** qui change le golden.
+- **Helper `Engine._mediated_damage(tile, eco, severity, reason, gene_name)`** :
+  `effectif = sévérité × (1/gène) × (1 − protection_paillage)`, mappé en points de
+  santé entiers par division entière (`DAMAGE_STEP=0.55`), déterministe. Vise le
+  vrai stade « semis » (même garde-fou pérennes que `appliquer_alea`). Nécromasse
+  ∝ hauteur **seulement pour les morts de ce dégât** (pas de double-comptage,
+  contrairement au `appliquer_alea` historique — propre car golden re-figé).
+- **Gel = piloté par le MILIEU** : `tick_semaine` déclenche le dégât quand
+  `temp_now < TEMP_FROST_DAMAGE (0 °C)`, peu importe le nom de l'événement (gelée
+  tardive OU dérive froide). C'est la forme la plus pure « flux→contrainte→réponse ».
+  Gène = `rusticite_froid`. Constantes : `FROST_SEVERITY_REF=6.0`.
+- **Grêle = impact physique localisé** : médiée par la protection (paillage) +
+  l'intensité (`HAIL_SEVERITY_REF=1.45`), **sans gène** (le froid n'aide pas contre
+  la grêle). Sortie de la boucle `WEATHER_ALEA` (entrée dict conservée, commentée
+  « SUPPLANTÉ »). `appliquer_alea` mode `health` toujours utilisé par les
+  **ravageurs** (Limaces/Chenilles) — hors périmètre météo, intact.
+- **Protection** : seul `paillage` existe comme rondelle protectrice
+  (`PAILLAGE_PROTECT=0.25`, cap 1.0 = 4 rondelles). Les **voiles d'hivernage**
+  (gel/grêle) et **tuteurs** (verse) de la spec §6.1 sont des structures de
+  préparation **gated sur la Vigueur (D11, hors périmètre)** → non implémentés.
+- **VERSE (tempête) différée** : `dégât ∝ gène hauteur × absence de tuteur` (§2.3)
+  exige un **système de tuteur** qui n'existe pas (gated D11). Le gène `hauteur`
+  existe déjà → verse sera « prêt côté gène » dès que le tuteur arrivera. Tempête
+  garde pour l'instant son effet `paillage −1` (dispersion) via `WEATHER_ALEA`.
+- ⚠ **Observation à creuser (post-test, pas un bug)** : sur 40 ans, **quasi aucune
+  plante vivante ne porte un gène non neutre** — le jardin devient dominé par les
+  **pionnières de la succession spontanée** (`SeedBank-sol`), qui n'ont pas de
+  vecteur génétique. Seules les lignées **cultivées qui se reproduisent** portent
+  `rusticite_froid`. La médiation **mord bien** (survie/score baissent), mais la
+  *sélection visible du froid* restera discrète tant que les populations vivantes
+  sont quasi-neutres. Calibrage/émergence à revisiter (intensités de gel, balance
+  pionnières/cultivées), pas en 03.
 </content>

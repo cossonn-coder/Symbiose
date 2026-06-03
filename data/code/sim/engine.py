@@ -97,6 +97,10 @@ WEATHER_ALEA = {
     "Canicule":        Alea("Canicule",        "Humidité chute.",    "humidite", -0.4, "field"),
     "Sécheresse":      Alea("Sécheresse",      "Humidité chute.",    "humidite", -0.4, "field"),
     "Tempête":         Alea("Tempête",         "Paillage dispersé.", "paillage", -1,   "rondelle"),
+    # Grêle : SUPPLANTÉ (sous-sprint 03). Ne passe plus par la voie `health` plate ;
+    # routé via _mediated_damage (impact physique × exposition × protection). Entrée
+    # conservée pour mémoire — n'est plus consultée par tick_semaine (cf. CLAUDE.md
+    # « ne jamais jeter de code »).
     "Grêle":           Alea("Grêle",           "Feuillage abîmé.",   "",        -1.0, "health"),
     "Pluie prolongée": Alea("Pluie prolongée", "Humidité monte.",    "humidite", +0.5, "field"),
     "Redoux":          Alea("Redoux",          "Aucun effet.",       "",         0.0, "none"),
@@ -108,6 +112,22 @@ ALEAS_RAVAGEURS = [
     Alea("Calme",     "Aucun ravageur.",    "",            0.0, "none"),
     Alea("Chenilles", "Feuillage abîmé.",  "",           -1.0, "health"),
 ]
+
+# --- Réponses médiées par le milieu (CONCEPTION_METEO.md §2.3) -------------
+# Gel et grêle ne frappent plus « à plat » (ancienne voie `health`, à la limite
+# de la philo #2). Le dégât subi par un individu ÉMERGE de son état et de son
+# génotype :
+#     dégât = sévérité_milieu × susceptibilité_génétique × (1 − protection)
+# Deux semis voisins réagissent différemment selon leur gène de rusticité et le
+# paillage local. Conséquence émergente recherchée : sur plusieurs générations,
+# le gel élague les lignées peu rustiques → sélection naturelle du froid (philo
+# #2/#7), sans aucun bonus/malus direct.
+TEMP_FROST_DAMAGE  = 0.0    # °C — sous ce seuil, le tissu tendre exposé gèle
+FROST_SEVERITY_REF = 6.0    # °C sous 0 donnant une sévérité de référence ≈ 1
+HAIL_SEVERITY_REF  = 1.45   # intensité (σ) de grêle donnant une sévérité ≈ 1
+PAILLAGE_PROTECT   = 0.25   # chaque rondelle paillage retire 25 % du dégât (cap 1)
+DAMAGE_STEP        = 0.55   # dégât effectif → points de santé perdus (floor)
+
 
 def appliquer_alea(alea, tile, eco, game_state):
     log = []
@@ -502,6 +522,46 @@ class Engine:
 
         return log
 
+    def _mediated_damage(self, tile, eco, severity, reason, gene_name=None):
+        """
+        Dégât MÉDIÉ sur le tissu tendre exposé (stade « semis »), conforme à la
+        philo #2 (CONCEPTION_METEO.md §2.3) — remplace la voie `health` plate pour
+        le gel et la grêle.
+
+            effectif = sévérité × susceptibilité_gène × (1 − protection_paillage)
+
+        - `gene_name` : gène de rusticité (>1 ⇒ susceptibilité < 1, plus résistant).
+          None ⇒ dégât physique pur (grêle : le froid n'aide pas).
+        - protection : le paillage local amortit (chaque rondelle −PAILLAGE_PROTECT).
+        - mappage déterministe `effectif → points de santé` par division entière
+          (DAMAGE_STEP) : aucun RNG, deux runs identiques (philo #3). La granularité
+          entière de `health` fait que le gène départage surtout aux seuils (une
+          plante rustique encaisse 0 là où une fragile perd 1).
+
+        On vise le vrai stade « semis » (pas l'index 0) pour ne pas frapper le
+        stade perpétuel des pérennes ligneuses (même garde-fou que appliquer_alea).
+        """
+        log = []
+        if severity <= 0:
+            return log
+        protection = min(1.0, tile.get_rondelle_count("paillage") * PAILLAGE_PROTECT)
+        newly_dead = []
+        for p in tile.plants:
+            if not p.is_alive or p.stage.name != "semis":
+                continue
+            suscept   = (1.0 / p.gene(gene_name)) if gene_name else 1.0
+            effective = severity * suscept * (1.0 - protection)
+            lost      = min(p.health, int(effective / DAMAGE_STEP))
+            if lost > 0:
+                log += apply_mutations([ReduceHealth(p, lost, reason)], self.game_state)
+                if p.health == 0:
+                    newly_dead.append(p)
+        # Mort → nécromasse ∝ hauteur (uniquement les morts de CE dégât, pas de
+        # double-comptage des morts antérieures encore présentes sur la tuile).
+        for p in newly_dead:
+            eco.add_necromass(*p.position, necromass_biomass(p), harvested=False)
+        return log
+
     def tick_semaine(self):
         week         = self.week
         week_in_year = ((week - 1) % 52) + 1   # 1-52 cyclique
@@ -522,9 +582,30 @@ class Engine:
         temp_now      = temp_norm(week_in_year, year_fraction, phase) + temperature_delta(event)
         for tile in self.tiles:
             self._eco(tile).temperature.fill(temp_now)
+
+        # Gel : dégât tissulaire MÉDIÉ, piloté par le MILIEU (température < 0), pas
+        # par le nom de l'événement (sous-sprint 03). Que le froid vienne d'une
+        # gelée tardive ou d'une dérive interannuelle froide, le tissu tendre
+        # souffre — modulé par le gène `rusticite_froid` × le paillage local.
+        if temp_now < TEMP_FROST_DAMAGE:
+            frost_sev = (TEMP_FROST_DAMAGE - temp_now) / FROST_SEVERITY_REF
+            log.append(f"  ❄  gel t={temp_now:.1f}°C (sév={frost_sev:.2f})")
+            for tile in self.tiles:
+                log += self._mediated_damage(tile, self._eco(tile), frost_sev,
+                                             "gel (tissu tendre)",
+                                             gene_name="rusticite_froid")
+
         if event.kind != "Beau temps":
             log.append(f"  🌤  {event.kind} (T≈{temp_now:.1f}°C, i={event.intensity:.2f})")
-            if event.kind not in TEMP_DRIVEN:
+            if event.kind == "Grêle":
+                # Grêle : impact physique LOCALISÉ sur le feuillage exposé. Médiée
+                # par la protection (paillage), pas par le froid (aucun gène) ;
+                # sévérité ∝ intensité de l'événement. Remplace la voie `health`.
+                hail_sev = event.intensity / HAIL_SEVERITY_REF
+                for tile in self.tiles:
+                    log += self._mediated_damage(tile, self._eco(tile), hail_sev,
+                                                 "grêle (feuillage)")
+            elif event.kind not in TEMP_DRIVEN:
                 meteo = WEATHER_ALEA[event.kind]
                 for tile in self.tiles:
                     log += appliquer_alea(meteo, tile, self._eco(tile), self.game_state)
