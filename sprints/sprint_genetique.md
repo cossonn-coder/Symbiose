@@ -16,6 +16,44 @@ biparental, pollinisation par espèce, hybridation par introgression.
 
 ---
 
+## ⚠️ Mise à jour 2026-06-03 — synchronisation avant démarrage
+
+Ce kickoff a été écrit le 2026-05-29, **avant** les sprints sol vivant,
+succession, éclairement et mortalité réaliste. État réel du code aujourd'hui :
+
+**Ce qui a changé et impacte le travail :**
+- `reproduction_rate` est désormais **actif**. Le renouvellement provisoire
+  **M7** (`engine._renewal`, mini-sprint sénescence) l'utilise pour ressemer les
+  vivaces sans archétype (trèfle, achillée) et les arbres mûrs. **CE SPRINT DOIT
+  REMPLACER `_renewal`** par la vraie SeedBank-espèce génétique — c'est le pont
+  principal du sprint. Ne pas doubler le système.
+- `maturity_years` existe sur les arbres (âge de 1re fructification) → condition
+  de production de graines. `longevity_years` et `fungal_susceptibility` aussi
+  sur `PlantBase` (cf. sprint sénescence).
+- `SeedBank` a gagné `tick_late_succession_enrichment` (amorçage propagules
+  vivaces ∝ maturité du sol) en plus de `tick_plant_production` (graines par
+  archétype au stade ≥2) et `tick_disturbance_enrichment`. La couche
+  espèce+génétique s'ajoute **par-dessus** ces trois.
+- Rondelles **`pollinisateur` ET `auxiliaire`** existent (posées par les
+  mellifères + achillée/phacélie). La pollinisation par insectes doit lire ces
+  rondelles — le levier « favoriser les auxiliaires = meilleures graines » est
+  déjà alimenté côté terrain.
+- **Positions continues** `x_cm/y_cm` en place → calculer `pollination_radius`
+  en distance euclidienne réelle (cohérent avec la lumière), pas en plots.
+- Espèces ajoutées depuis la conception : achillée (vivace), phacélie
+  (annuelle) + catalogue d'arbres (`perennials.py`). Tous candidats repro.
+
+**Inchangé / confirmé :**
+- `genetic_factor` toujours neutre 1.0 dans `height_at`/`PerennialWoody` → ce
+  sprint le branche pour de bon.
+- Le modèle d'archétypes (pioneer/…/competitor) pilote toujours `niche_index` et
+  la succession : la génétique par espèce s'ajoute **sans le casser**.
+
+**Workflow actif :** bypassPermissions + carte blanche (implémenter sans
+valider chaque étape une fois la conception figée) ; aucun code n'est jeté.
+
+---
+
 ## Avant de commencer
 
 1. **`CLAUDE.md`** chargé. Relire D17 et D22.
