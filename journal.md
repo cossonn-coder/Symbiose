@@ -1217,6 +1217,23 @@ Mécanique provisoire cohérente avec la **régulation émergente** (passe 2) : 
 **champ auxiliaire ambiant dédié** (dynamique proie-prédateur + sprites visibles,
 fiche Auxiliaires de `CLAUDE.md`) reste un sprint futur. Portage C# → D27/D24.
 
+### Vérification du contraste (run 500 ans + test dédié)
+
+Le run `main.py` 9 tuiles / 500 ans (69 min, exit 0, 20 plantes/tuile, vitalité
+~0.21, mosaïque %vivace 23–87 %) **noie le contraste** attire-aux vs témoins :
+à maturité, toutes les tuiles sont diverses + microbiome riche → la régulation
+des ravageurs est déjà saturée par la diversité/le sol, les auxiliaires
+deviennent redondants (écologiquement correct : un jardin établi s'auto-régule).
+
+Pour **isoler** l'effet, `test_auxiliaires.py` (gardé) : 2 tuiles jumelles sous
+**stress chronique** (sol sableux pauvre + monoculture tomate re-semée chaque
+an). Instrumentation : wrap de `herbivory_pressure` comptant les dégâts par
+tuile. Résultat sur 30 ans, déterministe : **AUX = 0 dégât herbivorie, TÉMOIN =
+6** (écart monotone). Le mécanisme attire-prédateurs est donc fonctionnel de
+bout en bout (rondelle posée → terme prédateur → dégâts ravageurs réduits) ;
+l'amplitude reste modeste car `HERBIVORY_BASE` bas (ravageurs = nuisance, pas
+fléau — philo non-punitive).
+
 ---
 
 ## Dette technique consolidée
