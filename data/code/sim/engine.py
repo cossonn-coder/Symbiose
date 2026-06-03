@@ -30,7 +30,8 @@ from fields import (EcoFields, init_eco, inject_patch,
 from sim.reproduction import find_father, child_genes, is_seed_bearing
 from sim.seeds import Seed
 from sim.succession import succession, spring_flush
-from sim.weather import weather_at, WeatherEvent, K_PEST
+from sim.weather import (weather_at, WeatherEvent, K_PEST,
+                         temp_norm, temperature_delta, TEMP_DRIVEN)
 
 # Pont récolte → banque-joueur (D17) : classe → clé catalogue (inverse).
 _SPECIES_KEY = {cls: key for key, cls in PLANT_CATALOGUE.items()}
@@ -169,14 +170,18 @@ class Engine:
             r, c = plant.position
             hum   = eco.humidite.at_plot(r, c)
             light = eco.lumiere.light_received(plant)   # lumière reçue (canopée, auto-ombrage exclu)
-            # Seuils de croissance : humidité ET lumière suffisantes
+            temp  = eco.temperature.at_plot(r, c)       # température ambiante (météo 02)
+            # Seuils de croissance : humidité ET lumière ET température suffisantes
             ok_hum   = hum   >= 0.15
             ok_light = light >= 0.2   # trop d'ombre = stagnation
-            can_grow = ok_hum and ok_light
+            ok_temp  = temp  >= plant.plant_class.temp_min_growth   # trop froid = stagnation
+            can_grow = ok_hum and ok_light and ok_temp
             if plant.age_weeks >= stage.duration_weeks and can_grow:
                 if plant.advance_stage():
                     log.append(f"    🌱 {plant.name}@{plant.position} → [{plant.stage.name}] "
-                               f"(hum={hum:.2f} lum={light:.2f})")
+                               f"(hum={hum:.2f} lum={light:.2f} t={temp:.1f}°C)")
+            elif not ok_temp:
+                log.append(f"    ❄ {plant.name}@{plant.position} stagne (froid t={temp:.1f}°C)")
             elif not ok_light:
                 log.append(f"    🌑 {plant.name}@{plant.position} stagne (ombre lum={light:.2f})")
             elif not ok_hum:
@@ -503,23 +508,34 @@ class Engine:
         saison       = saison_de(week_in_year)
         log          = [f"\n{'='*54}", f"S{week_in_year:02d}/Y{(week-1)//52+1} — {saison.upper()}"]
 
-        # 1. Aléas début de saison
+        # 1. Météo HEBDOMADAIRE (sous-sprint 02) — fonction PURE de (seed, week).
+        # Chaque semaine on écrit la TEMPÉRATURE ambiante (normale saisonnière +
+        # delta transitoire de l'événement) dans chaque tuile, AVANT la boucle
+        # par tuile : l'hydrologie (évaporation) et le gate de croissance la
+        # liront. Gel/canicule/redoux agissent désormais PAR la température ; les
+        # autres événements gardent leur effet milieu via WEATHER_ALEA
+        # (remplacement progressif des mappings approximatifs, sous-sprint 03).
+        seed          = self.game_state.get("seed", 42)
+        event         = weather_at(seed, week)
+        year_fraction = (week - 1) / 52.0
+        phase         = (seed & 0xFFFF) / 0xFFFF * 2.0 * math.pi   # caractère d'année dérivé du seed
+        temp_now      = temp_norm(week_in_year, year_fraction, phase) + temperature_delta(event)
+        for tile in self.tiles:
+            self._eco(tile).temperature.fill(temp_now)
+        if event.kind != "Beau temps":
+            log.append(f"  🌤  {event.kind} (T≈{temp_now:.1f}°C, i={event.intensity:.2f})")
+            if event.kind not in TEMP_DRIVEN:
+                meteo = WEATHER_ALEA[event.kind]
+                for tile in self.tiles:
+                    log += appliquer_alea(meteo, tile, self._eco(tile), self.game_state)
+
+        # 1b. Ravageur — début de saison, canal séparé décorrélé de la météo.
         if est_debut_saison(week_in_year):
-            seed = self.game_state.get("seed", 42)
-            # Météo : fonction PURE de (seed, week) — plus de RNG live. On garde
-            # le WeatherEvent (kind/intensity/scope) pour le forecast (04) mais on
-            # le mappe ici vers un effet Alea existant (couplage inchangé, 01).
-            event    = weather_at(seed, week)
-            meteo    = WEATHER_ALEA[event.kind]
-            # Ravageur : déterminisé sur un canal séparé (décorrélé de la météo).
             pidx     = int(_hash_noise(seed, week, *K_PEST) * len(ALEAS_RAVAGEURS)) % len(ALEAS_RAVAGEURS)
             ravageur = ALEAS_RAVAGEURS[pidx]
-            log.append(f"  🌤  {meteo.nom} : {meteo.description}")
             log.append(f"  🐛  {ravageur.nom} : {ravageur.description}")
             for tile in self.tiles:
-                eco = self._eco(tile)
-                log += appliquer_alea(meteo,    tile, eco, self.game_state)
-                log += appliquer_alea(ravageur, tile, eco, self.game_state)
+                log += appliquer_alea(ravageur, tile, self._eco(tile), self.game_state)
 
         # Spring flush — première semaine du printemps
         if week_in_year == SAISONS["printemps"].start:

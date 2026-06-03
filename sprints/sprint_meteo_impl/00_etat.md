@@ -10,7 +10,11 @@
 ## Où on en est
 
 - **Sous-sprint 01 (déterminisation) : FAIT.** Météo + ravageurs déterminisés ;
-  `weather_at(seed, week)` pure livrée dans `sim/weather.py`. Reste 02/03/04.
+  `weather_at(seed, week)` pure livrée dans `sim/weather.py`.
+- **Sous-sprint 02 (température) : FAIT.** Champ `temperature` ambiant (normales
+  saisonnières + deltas météo hebdo), gate `ok_temp` dans la croissance,
+  évaporation couplée à la température, **météo passée en cadence hebdomadaire**
+  (décision Nico). Reste 03/04.
 - Conception **figée** (`CONCEPTION_METEO.md`).
 
 ## Découpage (4 sous-sprints autosuffisants)
@@ -46,6 +50,14 @@ Aucun changement de comportement non documenté.
   discrets passés de RNG live à `_hash_noise` → séquence déterministe différente
   (mêmes types d'événements, garden survit 30 ans, contraste auxiliaires
   préservé). PASS reconfirmé après capture.
+- **02** : `a2fefba2…` → `4bcae3a3…`. Raison : (a) nouveau gate `ok_temp` dans
+  `_avancer_stades` (croissance bloquée sous `temp_min_growth`, défaut 5 °C →
+  stagnation hivernale semaines ~1-8) ; (b) météo passée en **hebdomadaire**
+  (`weather_at` consulté chaque semaine, `P_EVENT` 0.60→0.15) → nouvelle séquence
+  d'événements + log enrichi (lignes 🌤 hebdo, ❄ froid, t=…°C sur les avancées) ;
+  (c) évaporation couplée à la température. Vérifs : déterminisme OK (2 runs
+  identiques), jardin vivant à 30 ans (9 tuiles, comptes 9-10/tuile), génétique
+  20/20, contraste auxiliaires préservé (0 vs 29). PASS reconfirmé après capture.
 
 ## Décisions prises en cours de route
 
@@ -71,4 +83,39 @@ Aucun changement de comportement non documenté.
   toujours utilisé via canal `K_PEST`.
 - **`random.seed(42)` + imports `random` orphelins retirés** des 4 fichiers
   (`main.py`, `test_golden.py`, `test_auxiliaires.py`, `test_genetique.py`).
+
+### Sous-sprint 02
+
+- **Cadence météo HEBDOMADAIRE actée (décision Nico).** `weather_at(seed, week)`
+  est désormais consulté **chaque semaine** dans `tick_semaine` (bloc « 1. Météo
+  hebdomadaire »), plus seulement au début de saison. Le **ravageur** reste, lui,
+  au début de saison (bloc « 1b », canal `K_PEST` inchangé). Conséquence directe :
+  le **forecast (04) sera pleinement read-only et honnête** (ce qui est prévu =
+  ce qui arrive, même fonction pure rejouée).
+- **`P_EVENT` 0.60 → 0.15** (`sim/weather.py`) : en hebdo, 0.60 effondrait le
+  jardin. 0.15 vise ~8 événements notables/an. Calibrage post-test.
+- **Température = champ ambiant** (`EcoFields.temperature`, `GridField` avec
+  `min_val=-20` pour autoriser le gel). Écrit chaque semaine par l'engine :
+  `temp_norm(wiy, year_fraction, phase)` + `temperature_delta(event)`. Spatialement
+  uniforme en 02 (deltas gel/canicule/redoux sont `global`) ; le champ est prêt
+  pour de la localité (grêle/patch) en 03+.
+- **`temp_norm` dans `sim/weather.py`** (couche `sim`, peut lire `fields.noise`) :
+  `T_MOY=11`, `T_AMP=7`, + dérive interannuelle `climate_stress × DRIFT_TEMP(=12)`,
+  `phase` dérivée du seed (caractère d'année, philo #7). Hiver ~4 °C, été ~18 °C.
+- **`GridField` étendu** : param `min_val` (défaut 0.0 → **aucun** changement de
+  comportement pour les champs existants, golden des autres champs intact) +
+  méthode `fill()`. Surgical.
+- **Gel/canicule/redoux migrés vers la TEMPÉRATURE** (`TEMP_DRIVEN` dans
+  `weather.py`) : plus d'effet `WEATHER_ALEA` pour eux. Les autres (Sécheresse,
+  Tempête, Grêle, Pluie prolongée) **gardent leur mapping `WEATHER_ALEA`** appliqué
+  hebdo. → **À reprendre en 03** : Grêle fait encore un `ReduceHealth` direct sur
+  les semis (voie `health`) ; c'est exactement la voie à réécrire (milieu × gène
+  de rusticité × protection). Le gel ne fait plus QUE gater la croissance — le
+  **dégât tissulaire du gel** (médié par gène) est à ajouter en 03.
+- **`temp_min_growth` = attribut de classe** (`PlantBase`, défaut 5 °C, extensible
+  par espèce comme `longevity_years`). Aucune espèce ne l'override encore — tuning
+  post-test.
+- **Couplage évaporation↔température** dans `tick_hydrology` : `evap = EVAPORATION
+  − EVAP_TEMP_COEF·max(0, temp−EVAP_TEMP_REF)`, borné par `EVAP_MIN=0.975`. Chaud →
+  assèche un peu plus (canicule → stress hydrique émergent), jamais brutal.
 </content>

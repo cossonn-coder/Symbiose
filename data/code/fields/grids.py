@@ -21,10 +21,12 @@ class GridField:
     """Grille 2D de floats avec voisinage hexagonal."""
 
     def __init__(self, rows: int, cols: int,
-                 initial: float = 0.0, max_val: float = 3.0):
+                 initial: float = 0.0, max_val: float = 3.0,
+                 min_val: float = 0.0):
         self.rows    = rows
         self.cols    = cols
         self.max_val = max_val
+        self.min_val = min_val   # plancher (0 par défaut ; négatif pour température/gel)
         self.data: list[list[float]] = [
             [float(initial)] * cols for _ in range(rows)
         ]
@@ -33,7 +35,14 @@ class GridField:
         return self.data[r][c]
 
     def set(self, r: int, c: int, v: float) -> None:
-        self.data[r][c] = max(0.0, min(self.max_val, v))
+        self.data[r][c] = max(self.min_val, min(self.max_val, v))
+
+    def fill(self, value: float) -> None:
+        """Écrit `value` (bornée) sur tous les plots — champ ambiant uniforme."""
+        v = max(self.min_val, min(self.max_val, value))
+        for r in range(self.rows):
+            for c in range(self.cols):
+                self.data[r][c] = v
 
     def add(self, r: int, c: int, delta: float) -> None:
         self.set(r, c, self.data[r][c] + delta)
@@ -65,7 +74,7 @@ class GridField:
             for c in range(self.cols):
                 nb = self.hex_neighbors(r, c)
                 avg = sum(old[nr][nc] for nr,nc in nb) / len(nb) if nb else old[r][c]
-                self.data[r][c] = max(0.0, min(
+                self.data[r][c] = max(self.min_val, min(
                     self.max_val,
                     old[r][c] * inertia + avg * (1.0 - inertia)
                 ))

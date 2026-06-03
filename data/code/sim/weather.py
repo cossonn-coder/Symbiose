@@ -22,9 +22,10 @@ aucun import de `sim.engine` (sinon cycle, car engine importe weather).
 """
 
 from __future__ import annotations
+import math
 from dataclasses import dataclass
 
-from fields import _hash_noise, hash_gauss
+from fields import _hash_noise, hash_gauss, climate_stress
 
 
 # --- Canaux-sentinelles ----------------------------------------------------
@@ -37,10 +38,35 @@ K_PICK = (90_002, 0)   # lequel (parmi les candidats de la saison) ?
 K_MAG  = (90_003, 0)   # intensité (loi normale via hash_gauss)
 K_PEST = (90_004, 0)   # ravageur (canal séparé, hors météo)
 
-# Probabilité qu'un début de saison porte un VRAI événement (sinon temps calme).
-# Calibrage indicatif (post-test, cf. CONCEPTION_METEO.md §5) — l'ancien modèle
-# avait presque toujours un aléa actif au passage de saison.
-P_EVENT = 0.60
+# Probabilité qu'une SEMAINE porte un VRAI événement (sinon temps calme).
+# Sous-sprint 02 : la météo passe en cadence HEBDOMADAIRE (consultée chaque
+# semaine, plus seulement au passage de saison) → P_EVENT abaissé de 0.60 (01,
+# 4×/an) à 0.15 pour viser ~8 événements notables/an et laisser le jardin
+# survivre 30 ans. Calibrage post-test (CONCEPTION_METEO.md §5).
+P_EVENT = 0.15
+
+# --- Climat normal saisonnier (CONCEPTION_METEO.md §1.1) -------------------
+# Normale de température : sinusoïde Normandie océanique. Minimum ~semaine 4
+# (fin janvier), maximum ~semaine 30 (fin juillet). Faible amplitude (hivers
+# doux, étés frais). T_MOY/T_AMP = calibrage post-test.
+T_MOY = 11.0   # °C — moyenne annuelle
+T_AMP = 7.0    # °C — demi-amplitude saisonnière
+# Dérive interannuelle (§1.2) : on réutilise climate_stress (±CLIMATE_AMPLITUDE
+# ≈ ±0.08) ; ce facteur la convertit en ±~1 °C de « caractère » d'année.
+DRIFT_TEMP = 12.0
+
+# --- Deltas de température par événement (CONCEPTION_METEO.md §2.1/2.2) -----
+# Gel/canicule/redoux migrent de leur mapping provisoire WEATHER_ALEA (humidité/
+# santé, 01) vers de VRAIS deltas de température transitoires. Les autres
+# événements (Sécheresse, Tempête, Grêle, Pluie prolongée) gardent leur effet
+# milieu existant via WEATHER_ALEA (engine) — remplacement progressif (03).
+TEMP_DELTA_BASE = {
+    "Gelée tardive": -9.0,   # plonge sous 0 au printemps → gate de croissance + (gel tissulaire = 03)
+    "Canicule":      +7.0,   # été brûlant → évaporation accrue (couplage hydrologie)
+    "Redoux":        +5.0,   # hiver doux → réveil prématuré (vulnérabilité émergente)
+}
+# Événements pilotés par la température (pas d'effet WEATHER_ALEA en plus).
+TEMP_DRIVEN = frozenset(TEMP_DELTA_BASE)
 
 
 @dataclass(frozen=True)
@@ -103,6 +129,37 @@ def weather_at(seed: int, week: int) -> WeatherEvent:
     kind, scope, duration, _ = cands[int(pick * len(cands)) % len(cands)]
     mag = abs(hash_gauss(seed, week, K_MAG[0], K_MAG[1]))
     return WeatherEvent(kind, round(mag, 3), duration, scope)
+
+
+def temp_norm(week_in_year: int, year_fraction: float | None = None,
+              phase: float = 0.0) -> float:
+    """
+    Température NORMALE de la semaine (°C) — toile de fond lisse, 100 % prévisible
+    (CONCEPTION_METEO.md §1.1) : `T_MOY − T_AMP·cos(2π·(w − 4)/52)`.
+
+    `week_in_year` ∈ [1, 52]. Si `year_fraction` est fourni, on superpose la dérive
+    interannuelle `climate_stress` (§1.2, `phase` dérivée du seed) → certaines
+    années plus fraîches/douces, sur plusieurs ans. Fonction PURE (pas de RNG).
+    """
+    base = T_MOY - T_AMP * math.cos(2.0 * math.pi * (week_in_year - 4) / 52.0)
+    if year_fraction is not None:
+        base += climate_stress(year_fraction, phase) * DRIFT_TEMP
+    return base
+
+
+def temperature_delta(event: WeatherEvent) -> float:
+    """
+    Delta de température transitoire (°C) porté par un `WeatherEvent`, modulé par
+    son intensité (magnitude en σ). 0 pour les événements non thermiques (le
+    milieu réagit alors via WEATHER_ALEA côté engine). Pure et déterministe.
+    """
+    base = TEMP_DELTA_BASE.get(event.kind, 0.0)
+    if base == 0.0:
+        return 0.0
+    # intensity ∈ [~0, ~3] (abs d'une normale) ; on garantit un effet plancher
+    # quand l'événement tombe et on borne pour éviter les extrêmes absurdes.
+    scale = max(0.5, min(2.0, event.intensity))
+    return base * scale
 
 
 def forecast(seed: int, week: int, horizon: int = 2) -> list[WeatherEvent]:

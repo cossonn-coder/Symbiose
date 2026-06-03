@@ -28,6 +28,18 @@ EVAPORATION    = 0.997
 DRAINAGE       = 0.993
 SOIL_RETENTION = 0.010
 
+# Température ambiante (sous-sprint météo 02) — champ ambiant écrit chaque semaine
+# par l'engine (normale saisonnière + deltas météo), lu par le gate de croissance
+# et par l'évaporation ci-dessous.
+T_AMBIENT_INIT = 11.0    # °C — initialisation (= T_MOY) avant la 1re écriture météo
+TEMP_MIN       = -20.0   # plancher physique du champ (gel sévère)
+TEMP_MAX       = 45.0    # plafond physique
+# Couplage évaporation ↔ température : au-dessus d'une référence, plus il fait
+# chaud, plus le sol perd d'humidité (canicule → stress hydrique émergent).
+EVAP_TEMP_REF  = 11.0    # °C — référence (aucun surplus d'évaporation en dessous)
+EVAP_TEMP_COEF = 0.0008  # perte d'humidité supplémentaire par °C au-dessus de la réf
+EVAP_MIN       = 0.975   # borne basse du multiplicateur (n'assèche jamais brutalement)
+
 # Cycle biogéochimique — OM v4 tri-compartiment (cascade fresh → active → stable)
 # Taux de décomposition hebdomadaire par compartiment (avant modulation microbiome).
 OM_FRESH_DECAY   = 0.080   # débris récents / sucres : rapide (semaines)
@@ -120,6 +132,7 @@ class EcoFields:
     om_stable:        GridField = field(default=None)   # humus (structure, rétention, mémoire)
     disturbance:      DisturbanceField = field(default=None)
     seed_bank:        SeedBank = field(default=None)
+    temperature:      GridField = field(default=None)   # °C ambiant (météo 02)
 
     def __post_init__(self):
         if self.humidite    is None: self.humidite    = GridField(self.rows, self.cols)
@@ -142,6 +155,10 @@ class EcoFields:
             self.disturbance = DisturbanceField(self.rows, self.cols)
         if self.seed_bank is None:
             self.seed_bank = SeedBank(self.rows, self.cols)
+        if self.temperature is None:
+            self.temperature = GridField(self.rows, self.cols,
+                                         initial=T_AMBIENT_INIT,
+                                         max_val=TEMP_MAX, min_val=TEMP_MIN)
 
     def get_field(self, name: str) -> GridField | None:
         return {
@@ -156,6 +173,7 @@ class EcoFields:
             "om_stable":        self.om_stable,
             "soil_memory_fast": self.soil_memory_fast,
             "soil_memory_deep": self.soil_memory_deep,
+            "temperature":      self.temperature,
         }.get(name)
 
     # --- Tick diffusion ---
@@ -174,7 +192,7 @@ class EcoFields:
     def tick_hydrology(self) -> None:
         """
         Cycle hydrologique complet. Ordre strict :
-          1. Évaporation atmosphérique
+          1. Évaporation atmosphérique (couplée à la température : chaud → +)
           2. Pluie de fond (apport diffus constant)
           3. Rétention sol (couplage soil_memory)
           4. Drainage naturel
@@ -183,7 +201,13 @@ class EcoFields:
         for r in range(self.rows):
             for c in range(self.cols):
                 h = self.humidite.data[r][c]
-                h *= EVAPORATION                                    # 1. évaporation
+                # 1. Évaporation : multiplicateur de base diminué quand il fait
+                # chaud (au-dessus de EVAP_TEMP_REF), borné par EVAP_MIN.
+                temp = self.temperature.data[r][c]
+                evap = EVAPORATION - EVAP_TEMP_COEF * max(0.0, temp - EVAP_TEMP_REF)
+                if evap < EVAP_MIN:
+                    evap = EVAP_MIN
+                h *= evap                                           # 1. évaporation
                 h += BASE_RAIN                                      # 2. pluie de fond
                 h += self.soil_memory.at_plot(r, c) * SOIL_RETENTION  # 3. rétention
                 h *= DRAINAGE                                       # 4. drainage

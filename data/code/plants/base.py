@@ -284,6 +284,7 @@ class PlantBase(ABC):
     longevity_years: float | None = None # longévité (ans) ; None ⇒ défaut par life_cycle
     maturity_years: float = 0.0          # âge de 1re fructification (renouvellement arbres)
     fungal_susceptibility: float = 0.5   # sensibilité aux maladies fongiques [0-1]
+    temp_min_growth: float = 5.0         # °C — seuil de croissance (météo 02) ; en deçà, stagnation. Extensible par espèce.
 
     # --- Interface lumière (polymorphe) ---
 
