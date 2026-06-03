@@ -1353,6 +1353,8 @@ coût Vigueur récolte = Sprint 4 (D11).
 | Sprint 2 (orchestration C#) | `sprints/sprint_2_orchestration.md` |
 | Sprint éclairement (Z7, D20-D21 : ombres pixel + pérennes + réalignement OM) — ✅ **TERMINÉ 2026-06-02 (Python)** | `sprints/sprint_eclairement.md` |
 | Sprint génétique/reproduction (Z7, D17+D22 : banques + héritage biparental) — ✅ **TERMINÉ 2026-06-03 (Python)** | `sprints/sprint_genetique.md` |
+| **Sprint conception météo** (PROCHAIN — conception seule : météo/climat + signes diégétiques, cf. D16). Pas encore de kickoff | — |
+| **Sprint refactor structurel** (réorg `data/code/` en paquets + archive journal + dette/backlog source unique + golden output) | `sprints/sprint_refactor_structurel.md` |
 | Sprint 3 (portage simulation — peut absorber le sprint éclairement) | `sprints/sprint_3_portage_simulation.md` |
 | Sprint 4 (mécaniques conception) | `sprints/sprint_4_mecaniques_conception.md` |
 
