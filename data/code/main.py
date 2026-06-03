@@ -11,11 +11,11 @@ sénescence (un pommier sur la tuile centrale) sur la durée.
 import sys
 import random
 from collections import Counter
-from models import (Tile, Tomato, Basil, Sunflower, Bean, Clover, Pepper,
-                    Yarrow, Phacelia)
-from perennials import AppleTree
+from world import Tile
+from plants import (Tomato, Basil, Sunflower, Bean, Clover, Pepper,
+                    Yarrow, Phacelia, AppleTree)
 from fields import init_eco, inject_patch
-from engine import Engine
+from sim.engine import Engine
 
 random.seed(42)
 

@@ -1,5 +1,5 @@
 """
-SYMBIOSE — effects.py v2
+SYMBIOSE — sim/effects.py v2
 Système hybride probabiliste.
 
 Effets discrets (maladie, pollinisateur) : probabilité modulée par les champs.
@@ -14,7 +14,8 @@ import random
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from models import PlantInstance, Tile, EFFECT_REGISTRY, register_effect, RONDELLE_TYPES
+from plants import PlantInstance, EFFECT_REGISTRY, register_effect
+from world import Tile, RONDELLE_TYPES
 from fields import (_hash_noise, HERBIVORY_BASE, MORTALITY_RATE, climate_stress,
                     DAMPOFF_BASE, DAMPOFF_HUM_SEUIL, FUNGAL_BASE, NECROMASS_PER_CM)
 

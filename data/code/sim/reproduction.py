@@ -1,5 +1,5 @@
 """
-SYMBIOSE — reproduction.py
+SYMBIOSE — sim/reproduction.py
 Héritage génétique biparental (D22).
 
 À la production de graines sur une plante mère fécondée :
@@ -21,7 +21,7 @@ Aucun RNG live (règle de design #3).
 """
 from __future__ import annotations
 
-from models import species_compatible, GENE_NAMES, MUTATION_SIGMA, clamp_gene
+from plants import species_compatible, GENE_NAMES, MUTATION_SIGMA, clamp_gene
 from fields import _hash_noise, hash_gauss
 
 # Modulation insecte du rayon de croisement (mode "insect" uniquement).

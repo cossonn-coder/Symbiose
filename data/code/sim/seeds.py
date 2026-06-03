@@ -1,5 +1,5 @@
 """
-SYMBIOSE — seeds.py
+SYMBIOSE — sim/seeds.py
 Banque de graines du joueur (D17) — la moitié transportable du couple de banques.
 
 Deux banques distinctes (Sprint génétique 2026-06-03) :
@@ -12,14 +12,14 @@ Deux banques distinctes (Sprint génétique 2026-06-03) :
 Ponts (engine) : récolte d'une plante mûre → graine dans la banque-joueur ;
 semis depuis la banque-joueur → plante portant la génétique de la graine.
 
-Le vecteur de gènes (models.GENE_NAMES) est extensible ; seul `hauteur` est
-rempli au départ.
+Le vecteur de gènes (plants.genetics.GENE_NAMES) est extensible ; seul `hauteur`
+est rempli au départ.
 """
 from __future__ import annotations
 import json
 from dataclasses import dataclass, field
 
-from models import neutral_genes, PLANT_CATALOGUE
+from plants import neutral_genes, PLANT_CATALOGUE
 
 
 @dataclass

@@ -15,15 +15,16 @@ tuile sur N années.
 
 Hypothèse : la tuile TÉMOIN accumule plus de dégâts ravageurs que la tuile AUX.
 
-Usage : python3 test_auxiliaires.py [n_years]   (défaut 30)
+Usage (depuis data/code/) : python3 -m tests.test_auxiliaires [n_years]   (défaut 30)
 """
 
 import sys
 import random
-import effects
-from models import Tile, Tomato, Yarrow, Phacelia
+from sim import effects   # module (le patch ci-dessous doit cibler sim.effects)
+from world import Tile
+from plants import Tomato, Yarrow, Phacelia
 from fields import init_eco
-from engine import Engine
+from sim.engine import Engine
 
 random.seed(42)
 

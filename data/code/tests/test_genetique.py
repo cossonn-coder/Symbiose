@@ -13,16 +13,16 @@ Cinq vérifications, toutes DÉTERMINISTES (aucun RNG live) :
   5. Intégration moteur : banque-sol génétique + pont récolte → banque-joueur,
      sur une vraie tuile, sans crash.
 
-Usage : python3 test_genetique.py
+Usage (depuis data/code/) : python3 -m tests.test_genetique
 """
 import math
 
-from models import (PlantInstance, Tomato, Pepper, Bean, species_compatible,
+from plants import (PlantInstance, Tomato, Pepper, Bean, species_compatible,
                     GENE_NAMES)
 from fields import SeedBank, GeneStat, hash_gauss
-from reproduction import (find_father, child_genes, is_seed_bearing,
-                          pollinator_reach)
-from seeds import Seed, PlayerSeedBank
+from sim.reproduction import (find_father, child_genes, is_seed_bearing,
+                              pollinator_reach)
+from sim.seeds import Seed, PlayerSeedBank
 
 SEED = 0x5AB1057E
 _results = []
@@ -194,10 +194,10 @@ def test_integration_engine():
     print("\n[5b] Intégration moteur — run 4 ans + pont récolte → banque-joueur")
     import random
     random.seed(42)
-    from models import Tile
+    from world import Tile
     from fields import init_eco
-    from engine import Engine
-    from perennials import AppleTree
+    from sim.engine import Engine
+    from plants import AppleTree
 
     tile = Tile(tile_id="G0", soil_type="terre")
     eco = init_eco("G0", 6, 8, humidite=1.5, fertilite=1.0, microbiome=0.3)

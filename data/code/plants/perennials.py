@@ -1,5 +1,5 @@
 """
-SYMBIOSE — perennials.py
+SYMBIOSE — plants/perennials.py
 Pérennes ligneuses (D21) — base commune polymorphe avec les annuelles.
 
 Les arbres exposent la MÊME interface lumière que les annuelles
@@ -16,7 +16,7 @@ génétique/reproduction, pas ici.
 """
 
 from __future__ import annotations
-from models import PlantBase, GrowthStage
+from plants.base import PlantBase, GrowthStage
 
 
 class PerennialWoody(PlantBase):
@@ -155,12 +155,3 @@ class OakTree(PerennialWoody):
     maturity_years = 25
     age_curve = [(0, 30, 20), (5, 200, 150), (10, 400, 300),
                  (20, 700, 450), (50, 1500, 800), (100, 3000, 1200)]
-
-
-PERENNIAL_CATALOGUE: dict[str, type] = {
-    "figuier":  Fig,
-    "pommier":  AppleTree,
-    "cerisier": CherryTree,
-    "noyer":    WalnutTree,
-    "chene":    OakTree,
-}

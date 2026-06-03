@@ -12,17 +12,33 @@ ingénieur électronique embarqué à Grenoble.
 
 ## Source de vérité
 
-Le moteur Python dans `data/code/` (`models.py`, `fields.py`, `effects.py`,
-`engine.py`, `perennials.py`, `seeds.py`, `reproduction.py`, `main.py`) est la
-**source de vérité écologique**
-du jeu.
+Le moteur Python dans `data/code/`, **réorganisé en paquets** (Sprint refactor
+structurel, 2026-06-03), est la **source de vérité écologique** du jeu :
+
+- `constants.py` — échelle (`PLOT_CM`)
+- `plants/` — `genetics.py` (gènes, `clamp_gene`, `species_compatible`),
+  `base.py` (`GrowthStage`/`PlantInstance`/`ConflictNotification`/`PlantBase`
+  + 5 familles + empreintes + registre d'effets), `species.py`,
+  `perennials.py`, `catalogue.py`
+- `world/` — `tile.py` (`Tile`, `StakeSlot`, `RONDELLE_TYPES`)
+- `fields/` — `noise.py` (fondation déterministe), `grids.py`, `light.py`,
+  `seedbank.py`, `ecofields.py`
+- `sim/` — `effects.py`, `seeds.py`, `reproduction.py`, `succession.py`,
+  `engine.py`
+- `main.py` (scénario 9 tuiles) ; `tests/` (`test_golden.py` non-régression
+  déterministe, `test_genetique.py`, `test_auxiliaires.py`)
+
+Règle de couches : `plants ← fields ← sim ← engine ← main` (les couches basses
+n'importent jamais les hautes). Imports absolus ; lancement depuis `data/code/`
+(`python3 main.py`, `python3 -m tests.test_golden`).
 
 - Toute mécanique Godot doit avoir un équivalent Python ou être propagée
   vers Python avant intégration.
-- Quand Python et C# divergent (cf entrée D10 du `journal.md`), prioriser
+- Quand Python et C# divergent (cf D10 dans `DETTE.md`), prioriser
   l'alignement vers Python sauf décision explicite contraire de Nico.
 - `main.py` tourne — il a simulé 500+ ans sans crash. C'est la référence
-  comportementale.
+  comportementale. **Tout changement du moteur doit préserver le golden output**
+  (`tests/test_golden.py` — déterminisme, règle de design #3).
 
 ## Stack technique
 
@@ -208,51 +224,15 @@ prévisible** — récompense rare qui cristallise la philo non-action.
 - `Main.cs` (la classe s'appelle encore `Node2d`, hors namespace)
 
 ### Non-portés
-- `effects.py` → pas encore en C#
-- `engine.py` → pas encore en C# (boucle 52 semaines + succession)
+- `sim/effects.py` → pas encore en C#
+- `sim/engine.py` + `sim/succession.py` → pas encore en C# (boucle 52 semaines
+  + succession)
 
-### Systèmes à concevoir (Sprint conception + bis + zone Z7)
-- **Vigueur universelle** (D11) — couche transversale (joueur + plantes +
-  auxiliaires + nuisibles)
-- **Paliers de maîtrise** (D12) — méta-état du joueur, conditions de
-  passage par famille et concept
-- **Magazine de botanique** (D13) — déblocage espèces, coût Vigueur +
-  maîtrise
-- **Carnet auto** (D14) — capture événements, indexation, bascule
-  descriptif → interprétatif
-- **Extension de terrain par maîtrise** (D15) — apparition tuile thématique
-- **Forecast météo** (D16) — décaler le tirage `random.choice` 1-2 sem
-  en avance dans `engine.py`, alimenter les signes diégétiques
-- ✅ **SeedBank-joueur ↔ SeedBank-sol** (D17) — **fait en Python le 2026-06-03**
-  (Sprint génétique). `seeds.py` (`PlayerSeedBank` transportable + JSON, ponts
-  récolte→joueur) ; banque-sol = couche `species` génétique dans `fields.SeedBank`
-  (`GeneStat` moyenne+variance par espèce × plot). Portage C# = dette D24.
-- **Pages secrètes** (D18) — sources de drop, lieu de consultation,
-  volume cible v1.0, contenu narratif. Session future dédiée.
-- **Action « manger »** (D19) — organes consommables → Vigueur joueur
-- ✅ **Éclairement spatial — Option A** (D20) — **fait en Python le 2026-06-02**
-  (Sprint éclairement). `LightField` v2 **analytique** dans `fields.py` :
-  ombres-capsules astronomiques ~49°N, 4 saisons × 3 tranches + intégrale
-  journalière, `foliage_density` par espèce, cumul multiplicatif, plancher 15 %,
-  auto-ombrage exclu (tri hauteur-décroissante). **Pas de grille pixel** côté
-  moteur (la grille 2 cm/px reste pour le **rendu Godot**). Position des plantes
-  **continue côté lumière** (`x_cm, y_cm`), sous-sol indexé au plot
-  (`plot_foyer`). Portage C# = dette D24.
-- ✅ **Pérennes ligneuses** (D21) — **fait en Python le 2026-06-02**.
-  `perennials.py` : `PerennialWoody` surcharge l'interface lumière polymorphe
-  (`age_years`, courbe d'âge interpolée, `foliage_density` saisonnière — caduc
-  nu l'hiver). 5 arbres : figuier/pommier = jardin, cerisier intermédiaire,
-  **noyer/chêne = lisière**. Portage C# = dette D24.
-- ✅ **Héritage génétique de la graine** (D22) — **fait en Python le 2026-06-03**
-  (Sprint génétique). `reproduction.py` : vecteur de gènes extensible
-  (`GENE_NAMES`, hauteur d'abord), héritage **biparental** déterministe
-  (pollinisation par espèce `wind/insect/self`, rayon modulé par les auxiliaires),
-  autofécondation à défaut, **introgression intra-famille** (l'enfant garde
-  l'espèce de la mère). `genetic_factor` réel branché dans `height_at`. Renouvellement
-  M7 (`_renewal`) remplacé par `_reproduction`. Portage C# = dette D24.
-- **Catalogue arbres pérennes étendu** (D23) — différé post-validation
-  du squelette (poirier, prunier, châtaignier, frêne, tilleul, bouleau,
-  saule, aulne, peuplier, érable…)
+### Systèmes à concevoir / dette technique
+
+La **dette technique consolidée** (D1–D28 : Vigueur, paliers, magazine, carnet,
+forecast météo, pages secrètes, action « manger », portage C#, etc.) vit
+désormais dans **[`DETTE.md`](DETTE.md)** — source unique, plus de duplication.
 
 ### Échelle spatiale actée (Sprint conception éclairement, 2026-05-29)
 - **1 plot = 50×50 cm** ; monde 3×3 tuiles × (6×8 plots) = **432 plots =
@@ -291,24 +271,13 @@ historiques.
 
 ## Backlog actif
 
-Chaque sprint à venir possède un **kickoff autosuffisant** dans
-`sprints/`. À l'ouverture d'une nouvelle session, Nico donne
-l'instruction « lis `sprints/sprint_X.md` » et Claude reprend sans
-contexte préalable.
+Le **backlog des sprints** (terminés + à venir, avec les kickoffs
+autosuffisants de `sprints/`) vit désormais dans **[`BACKLOG.md`](BACKLOG.md)**
+— source unique, plus de duplication.
 
-| Sprint | Kickoff |
-|---|---|
-| ✅ **TERMINÉ 2026-06-02** — Sprint sol vivant (OM v4 + racines spatiales + boucle rhizosphère + vitalité ; D10 levée côté Python) + consolidation puits microbien. Chantier C mycorhizes différé (extension future) ; portage C# = dette D24 | `sprints/sprint_sol_vivant.md` |
-| ✅ **TERMINÉ 2026-06-02** — Mini-sprint succession (D25 levée : gradient pionnier → prairie ∝ maturité du sol + amorçage banque en propagules vivaces). Couvert installé bascule vers prairie vivace ~80 % sur ~30 ans, stable 500 ans. Portage C# = dette D24 | `sprints/sprint_succession.md` |
-| ✅ **TERMINÉ 2026-06-02 (Python)** — Mini-sprint mortalité réaliste / sénescence (D27 : santé dynamique + sénescence par âge + fonte des semis + maladies fongiques + ravageurs régulés par **prédateurs émergents** + renouvellement + nécromasse ∝ hauteur + résistance des sujets établis). 500 ans stables, arbres meurent de sénescence, plus de zombies à 1/3. Renouvellement provisoire (→ D17+D22) ; champ auxiliaire dédié = sprint futur ; portage C# = dette D27/D24 | `sprints/sprint_senescence.md` |
-| **Sprint conception météo** (PROCHAIN, acté 2026-06-03) : concevoir le système météo/climat + signes diégétiques (cf. D16 forecast + section « Gestion des aléas météo »). Conception seule, pas d'implémentation. Pas encore de kickoff | — |
-| **Sprint refactor structurel** (réorg `data/code/` en paquets + archive journal + dette/backlog source unique + golden output déterministe). Sprint sans changement de comportement | `sprints/sprint_refactor_structurel.md` |
-| Sprint diversification écologique (D26 : étendre le catalogue d'espèces — à séquencer après éclairement D21 + décision class-based/data-driven, coordonné D22). Pas encore de kickoff | — |
-| Sprint 1 (recalibrage visuel + grille 3×3 + maison) | `sprints/sprint_1_recalibrage_visuel.md` |
-| Sprint 2 (orchestration C# : Main, GameManager, TurnSystem) | `sprints/sprint_2_orchestration.md` |
-| ✅ **TERMINÉ 2026-06-02 (Python)** — Sprint éclairement (D20+D21 levées Python) : `LightField` v2 analytique (ombres-capsules astro, intégrale, auto-ombrage exclu) + `perennials.py` (5 arbres, courbe d'âge, caduc) + position continue côté lumière + extensibilité catalogue (`STRATE_DEFAULTS`). 500 ans stables. Portage C# + parité = dette D24 ; nouvelle cible succession ~65 % (mosaïque) actée | `sprints/sprint_eclairement.md` |
-| ✅ **TERMINÉ 2026-06-03 (Python)** — Sprint génétique/reproduction (D17+D22 levées Python) : deux banques (`seeds.py` joueur transportable+JSON ; couche `species`/`GeneStat` de `fields.SeedBank`), héritage biparental déterministe + pollinisation par espèce modulée auxiliaires + introgression intra-famille (`reproduction.py`), `genetic_factor` branché, `_renewal` (M7) remplacé par `_reproduction`. 20/20 tests, `main.py 30` stable. Portage C# = dette D24 | `sprints/sprint_genetique.md` |
-| Sprint 3 (portage simulation — peut absorber le sprint éclairement) | `sprints/sprint_3_portage_simulation.md` |
-| Sprint 4 (Vigueur, paliers, encyclopédie, carnet, magazine, foyer) | `sprints/sprint_4_mecaniques_conception.md` |
+**Prochain sprint** : conception météo/climat + signes diégétiques (conception
+seule, cf. D16 dans `DETTE.md` + section « Gestion des aléas météo »).
 
-Pour l'historique des décisions, voir `journal.md`.
+À l'ouverture d'une session, Nico donne « lis `sprints/sprint_X.md` » et Claude
+reprend sans contexte préalable. Historique des décisions : `journal.md` (entrées
+récentes) + `journal_archive/`.

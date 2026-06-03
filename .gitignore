@@ -6,5 +6,6 @@
 .claude/settings.local.json
 .claude/scheduled_tasks.lock
 
-# Caches Python du moteur de simulation
+# Caches Python du moteur de simulation (paquets : plants/ world/ fields/ sim/ tests/)
 data/code/__pycache__/
+data/code/**/__pycache__/
