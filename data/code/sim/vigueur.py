@@ -56,6 +56,33 @@ def regen_rate(game_state: dict, player: str) -> float:
     return REGEN_BASE * palier_bonus(player)
 
 
+# --- Primitives de transaction (D11, sous-sprint 2) ------------------------
+def spend(game_state: dict, player: str, cost: float) -> float:
+    """Débite la Vigueur du joueur et renvoie le RATIO d'effort réalisé : 1.0 si
+    le coût est entièrement payé, sinon `courante / cost` ∈ [0, 1[. Draine
+    `min(cost, courante)` — plancher 0, jamais de dette (spec §2/§3 : on dépense
+    ce qu'on a). Le sens du ratio < 1 appartient à l'appelant (cf. `sim/actions.py`)
+    : action graduée tronquée (récolte partielle) ou action binaire échouée
+    (déracinage/écrasement à vide)."""
+    if cost <= 0:
+        return 1.0
+    st = ensure_player(game_state, player)
+    courante = st["courante"]
+    ratio = 1.0 if courante >= cost else courante / cost
+    st["courante"] = max(0.0, courante - cost)
+    return ratio
+
+
+def gain(game_state: dict, player: str, amount: float) -> None:
+    """Crédite la Vigueur du joueur, plafonnée à `vigueur_max` (spec §2.1/§2.3).
+    No-op si `amount <= 0`."""
+    if amount <= 0:
+        return
+    st = ensure_player(game_state, player)
+    cap = st["max_base"] * palier_bonus(player)
+    st["courante"] = min(cap, st["courante"] + amount)
+
+
 # --- Cycle (appelé par le tick, GARDÉ côté engine) -------------------------
 def tick_player_vigueur(game_state: dict) -> None:
     """Régen passive hebdomadaire, plafonnée (spec §2.1). No-op si aucune couche

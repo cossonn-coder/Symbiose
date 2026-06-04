@@ -25,6 +25,18 @@ vraies voies écologiques et re-figeait).
   (`if "vigueur" in game_state` → no-op strict, golden écolo intact). Golden
   JOUEUR dédié `tests/test_vigueur.py` (10/10, hash `e63b9d7f…fb621`,
   `vigueur_hash.txt`). Golden écolo **inchangé** (PASS sans `--capture`). Reste 2/3/4.
+- **Sous-sprint 2 (coûts d'action) : FAIT.** Primitives `spend`/`gain` ajoutées à
+  `sim/vigueur.py` (`spend` renvoie un **ratio d'effort** ∈ [0,1], draine
+  `min(cost, courante)`, pas de dette). Nouveau module `sim/actions.py` :
+  constantes de coût (`NUL/FAIBLE=5/MODERE=15/ELEVE=30/URGENCE_MULT=1.5`),
+  `HARVEST_VIGUEUR_COST=FAIBLE` (le `=0` mort **supprimé** de `engine.py`),
+  `HARVEST_GAIN_FULL=15`, helper `maturite`, et 3 actions sur le vivant :
+  `recolter` (graduée, net+ sur mûr, Qi→joueur via `harvested=True`, plante
+  vivante, gain×ratio), `deraciner` (binaire tout-ou-rien, ÉLEVÉ, Qi→sol via
+  `harvested=False`, échoue à vide), `ecraser` (binaire, **comptabilité Vigueur
+  seule** — pas d'entité nuisible encore, valide `× URGENCE`). Golden joueur
+  étendu (A5–A9) → **32/32**, hash trajectoire passive **inchangé**. Golden écolo
+  **inchangé** (`ee79dd66…f0f947`). Reste 3/4.
 - Conception **figée** (`CONCEPTION_VIGUEUR.md`).
 
 ## Découpage (suit CONCEPTION_VIGUEUR.md §8)

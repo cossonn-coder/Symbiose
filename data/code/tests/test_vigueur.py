@@ -35,6 +35,7 @@ from plants import Tomato, Basil, Bean
 from fields import init_eco
 from sim.engine import Engine
 from sim import vigueur as V
+from sim import actions as ACT
 
 SEED = 0x5AB1057E
 HASH_FILE = os.path.join(os.path.dirname(__file__), "vigueur_hash.txt")
@@ -125,6 +126,118 @@ def test_interface_paliers():
 
 
 # ---------------------------------------------------------------------------
+# A5. Primitives de transaction spend / gain (sous-sprint 2)
+# ---------------------------------------------------------------------------
+
+def test_primitives_spend_gain():
+    print("\n[A5] primitives spend (ratio d'effort) / gain (plafonné)")
+    gs = {}
+    st = V.ensure_player(gs, "j")
+    st["courante"] = 50.0
+    r = V.spend(gs, "j", 30.0)
+    check("spend couvert → ratio 1.0", r == 1.0, f"ratio={r}")
+    check("débit exact", st["courante"] == 20.0, f"courante={st['courante']}")
+    r = V.spend(gs, "j", 40.0)
+    check("spend partiel → ratio = courante/cost", r == 0.5, f"ratio={r}")
+    check("drainé à 0 (pas de dette)", st["courante"] == 0.0,
+          f"courante={st['courante']}")
+    check("spend coût nul → ratio 1.0, no-op", V.spend(gs, "j", 0.0) == 1.0)
+    V.gain(gs, "j", 1000.0)
+    check("gain plafonné à vigueur_max", st["courante"] == V.vigueur_max(gs, "j"),
+          f"courante={st['courante']}")
+
+
+# ---------------------------------------------------------------------------
+# A6. recolter — action graduée : net positif sur mûr, plante vivante, Qi exporté
+# ---------------------------------------------------------------------------
+
+def test_recolter():
+    print("\n[A6] recolter : net positif sur mûr, plante vivante, Qi exporté")
+    gs = _minimal_state()
+    tile = gs["tiles"][0]; eco = gs["eco"]["T0"]
+    plant = tile.plants[0]
+    plant.current_stage = len(plant.plant_class.growth_stages) - 1   # pleinement mûr
+    V.ensure_player(gs, "joueur_1")["courante"] = 50.0
+    om_avant = eco.summary()["om_fresh"]
+    ratio = ACT.recolter(gs, "joueur_1", plant, eco)
+    cour = gs["vigueur"]["joueur_1"]["courante"]
+    attendu = 50.0 - ACT.HARVEST_VIGUEUR_COST + ACT.HARVEST_GAIN_FULL * 1.0
+    check("effort plein (ratio 1.0)", ratio == 1.0, f"ratio={ratio}")
+    check("récolte mûre = net positif", cour == attendu and cour > 50.0,
+          f"courante={cour} attendu={attendu}")
+    check("plante reste vivante", plant.is_alive)
+    check("Qi exporté → résidu déposé (om_fresh ↑)",
+          eco.summary()["om_fresh"] > om_avant)
+
+
+# ---------------------------------------------------------------------------
+# A7. deraciner — action binaire : net négatif, Qi au sol, échec à vide
+# ---------------------------------------------------------------------------
+
+def test_deraciner():
+    print("\n[A7] deraciner : binaire, net négatif, Qi au sol, échec à vide")
+    gs = _minimal_state()
+    tile = gs["tiles"][0]; eco = gs["eco"]["T0"]
+    plant = tile.plants[0]
+    plant.current_stage = len(plant.plant_class.growth_stages) - 1
+    st = V.ensure_player(gs, "joueur_1"); st["courante"] = 50.0
+    om_avant = eco.summary()["om_fresh"]
+    ok = ACT.deraciner(gs, "joueur_1", plant, eco)
+    check("déracinage payé → succès", ok)
+    check("plante morte", not plant.is_alive)
+    check("coût ÉLEVÉ débité, aucun gain", st["courante"] == 50.0 - ACT.ELEVE,
+          f"courante={st['courante']}")
+    check("Qi retourne au sol (om_fresh ↑)", eco.summary()["om_fresh"] > om_avant)
+    # Échec à vide : Vigueur < ÉLEVÉ → plante survit, drainée à 0, rien accompli.
+    plant2 = tile.plants[1]
+    st["courante"] = 10.0
+    ok2 = ACT.deraciner(gs, "joueur_1", plant2, eco)
+    check("déracinage à vide → échec", not ok2)
+    check("plante survit à l'échec", plant2.is_alive)
+    check("Vigueur drainée à 0", st["courante"] == 0.0, f"courante={st['courante']}")
+
+
+# ---------------------------------------------------------------------------
+# A8. ecraser — comptabilité seule + multiplicateur d'urgence
+# ---------------------------------------------------------------------------
+
+def test_ecraser():
+    print("\n[A8] ecraser : comptabilité Vigueur seule, multiplicateur d'urgence")
+    gs = {}
+    st = V.ensure_player(gs, "joueur_1"); st["courante"] = 100.0
+    ok = ACT.ecraser(gs, "joueur_1", urgence=True)
+    check("écrasement urgent payé", ok)
+    check("coût MODERE × URGENCE débité",
+          st["courante"] == 100.0 - ACT.MODERE * ACT.URGENCE_MULT,
+          f"courante={st['courante']}")
+    st["courante"] = 100.0
+    ACT.ecraser(gs, "joueur_1", urgence=False)
+    check("hors urgence = MODERE sec", st["courante"] == 100.0 - ACT.MODERE,
+          f"courante={st['courante']}")
+
+
+# ---------------------------------------------------------------------------
+# A9. Non-régression : enchaîner des actions ne crée jamais d'état écolo fantôme
+#     (les actions vivent AU-DESSUS du tick — golden écolo testé à part)
+# ---------------------------------------------------------------------------
+
+def test_actions_hors_tick():
+    print("\n[A9] les actions ne polluent pas l'état écolo hors de leur cible")
+    gs = _minimal_state()
+    tile = gs["tiles"][0]; eco = gs["eco"]["T0"]
+    V.ensure_player(gs, "joueur_1")["courante"] = 100.0
+    # Une séquence dépense+gain ne touche ni `week` ni `seed` ni le nombre de
+    # plantes vivantes au-delà de la cible explicitement déracinée.
+    n_avant = sum(1 for p in tile.plants if p.is_alive)
+    week_avant = gs["week"]
+    ACT.recolter(gs, "joueur_1", tile.plants[0], eco)   # cible vivante
+    ACT.ecraser(gs, "joueur_1", urgence=True)           # pas de cible
+    check("la récolte ne tue pas la cible", n_avant ==
+          sum(1 for p in tile.plants if p.is_alive))
+    check("aucune avance de tick (week inchangé)", gs["week"] == week_avant)
+
+
+# ---------------------------------------------------------------------------
 # B. Golden de trajectoire (hash) — cadencement régen vs refill via l'engine
 # ---------------------------------------------------------------------------
 
@@ -184,6 +297,11 @@ if __name__ == "__main__":
     test_regen_plafonnee()
     test_refill_saison()
     test_interface_paliers()
+    test_primitives_spend_gain()
+    test_recolter()
+    test_deraciner()
+    test_ecraser()
+    test_actions_hors_tick()
     test_golden_trajectoire()
 
     print("\n" + "=" * 60)

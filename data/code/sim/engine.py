@@ -37,10 +37,6 @@ from sim.vigueur import tick_player_vigueur, refill_saison
 # Pont récolte → banque-joueur (D17) : classe → clé catalogue (inverse).
 _SPECIES_KEY = {cls: key for key, cls in PLANT_CATALOGUE.items()}
 
-# Coût en Vigueur de la récolte sélective (D11) — différé : hook neutre tant que
-# la Vigueur n'est pas implémentée (décision 2026-06-03).
-HARVEST_VIGUEUR_COST = 0
-
 SAISONS = {
     "printemps": range(1,  14),
     "ete":       range(14, 27),
