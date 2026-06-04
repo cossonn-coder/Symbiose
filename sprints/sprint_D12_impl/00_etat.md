@@ -34,9 +34,19 @@ champ) — comme la Vigueur a gardé son golden intact. Si un hash bouge → bug
   branchés (récolte/déraciner/écraser×urgence-séparée/favoriser/bêcher/grelinette) ;
   `manger` base NUL inchangé. Golden joueur **vigueur 103/103** (96 + section G),
   **maitrise 35/35**. **Golden écolo INTACT.**
-- **i4 — Détection de succès branchée (§9).** Lire les signaux du tick (§9.1) depuis
-  la couche gameplay, fenêtre d'imputation geste→amélioration, tag provenance
-  *féral* vs *replanté* (§9.6), gate d'observation. Le plus délicat → en dernier.
+- **i4 — Détection de succès branchée (§9).** ✅ **FAIT 2026-06-04 → impl. D12 COMPLÈTE.**
+  Nouveau module **`sim/maitrise_detection.py`** (logement **(a)** : appelé par le
+  driver APRÈS chaque tick, importe `maitrise`+`plants`, `engine` ne l'importe
+  jamais). Lit le `log` retourné (marqueurs `🌱/⏸/🌑/❄/🌰`) + l'état post-tick →
+  crédite des preuves TOUTE SEULE. **Fenêtre d'imputation** geste→amélioration
+  (`noter_geste`, clé `zone=(tile_id,r,c)`), **tag provenance** féral/replanté
+  (`marquer_replante`, défaut féral), **gate d'observation** = palier ≥ 1, **nature
+  croissante §9.2** (`NATURE_REQUISE` par palier), concept par cause (sec→eau,
+  ombre→lumière, froid→météo), pollinisation (repro biparentale+geste),
+  naturalisation férale §9.4(b) + conjonction palier 5. Détection **pure maîtrise**
+  (pas de Vigueur — pont §4.3 auto laissé au driver). Golden joueur neuf
+  `tests/test_maitrise_detection.py` **20/20** (positif/négatif/gate/nature/
+  pollinisation/féral/intégration moteur réel). **Golden écolo INTACT.**
 
 ## Décisions déjà actées (conception)
 - Unité = **objet de maîtrise générique** (pas les familles), data-driven.
@@ -57,6 +67,18 @@ champ) — comme la Vigueur a gardé son golden intact. Si un hash bouge → bug
   atténuations = **D12.4 post-test** : placeholders nommés posés, pas les bons chiffres.
 
 ## État courant
+- **2026-06-04 (i4) : impl. D12 COMPLÈTE.** Nouveau `sim/maitrise_detection.py`
+  (détection auto au-dessus du tick, logement (a), appelé par le driver après
+  chaque tick). État gameplay neuf logé dans `maitrise[player]["_detection"]`
+  (maitrise.py possède `objets`, la détection possède `_detection` — maitrise.py
+  reste pur). **Décisions posées :** identité = `zone=(tile_id,r,c)` ; signaux lus
+  via parsing du `log` (events) + balayage `tiles[].plants` (santé/naturalisation) ;
+  gate d'observation = palier ≥ 1 ; nature croissante §9.2 ; détection ne touche PAS
+  la Vigueur (pont §4.3 auto → driver). Placeholders `FENETRE_IMPUTATION=4`/
+  `STAGE_NATURALISATION=2` → **D12.4**. `actions.py` **inchangé** (le driver relie
+  geste→`noter_geste` et tick→`detecter`). Golden joueur **détection 20/20**,
+  maitrise **35/35**, vigueur **103/103**. **Golden écolo `c950f06c…`/`b005d9ba…`
+  VÉRIFIÉS INCHANGÉS** ; `main.py` tourne.
 - **2026-06-04 :** **i3 implémenté** (`actions.py` : seam `cout_action` + tables
   `COUTS`/`OBJETS_TOUCHES` + helpers `_cle_espece`/`_objets_action` + `f_globale`/
   `f_objets`, 6 gestes branchés). `actions.py` importe `plants.catalogue` (reverse
