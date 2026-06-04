@@ -37,6 +37,18 @@ vraies voies écologiques et re-figeait).
   seule** — pas d'entité nuisible encore, valide `× URGENCE`). Golden joueur
   étendu (A5–A9) → **32/32**, hash trajectoire passive **inchangé**. Golden écolo
   **inchangé** (`ee79dd66…f0f947`). Reste 3/4.
+- **Sous-sprint 3 (façade `vigueur_plante`) : FAIT.** Module neuf
+  `sim/vigueur_plante.py` — façade PURE read-only `vigueur_plante(plant, eco) =
+  sante × maturite × qi_local × gene("vigueur")`. `sante = health/3` (D27) ;
+  `maturite` **déplacé d'`actions.py` ici** (mutualisé, `actions.py` le réimporte) ;
+  `qi_local` lit `fertilite`/`microbiome` sous `root_plots` en **miroir de
+  `plant_uptake`** (`min(1,champ/3) × (1+micro×UPTAKE_MICRO_BONUS)`, moyenne
+  clampée [0,1], `at_plot` renvoie 0 hors grille) ; gène **enveloppé tel quel**
+  (D22b stabilisé, §6). Descripteur diégétique qualitatif `decrire_vigueur`
+  (imperceptible/chétif/vigoureux/éclatant, philo #5, seuils provisoires). Golden
+  joueur étendu (C1–C6) → **51/51**, trajectoire passive **inchangée**. Golden
+  écolo **inchangé** (`ee79dd66…f0f947`) — jamais appelé dans le tick. Reste 4
+  (optionnel, tandem D19).
 - Conception **figée** (`CONCEPTION_VIGUEUR.md`).
 
 ## Découpage (suit CONCEPTION_VIGUEUR.md §8)

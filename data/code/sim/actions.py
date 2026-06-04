@@ -24,6 +24,7 @@ Vigueur et n'accomplit rien (philo #1/#6, sans sermon).
 from __future__ import annotations
 
 from sim.vigueur import spend, gain
+from sim.vigueur_plante import maturite   # facteur partagé (mutualisé, pas dupliqué)
 from sim.effects import necromass_biomass
 
 # Paliers de coût, relatifs à la base 100 / +10 par semaine (spec §3.1, à
@@ -40,16 +41,6 @@ HARVEST_VIGUEUR_COST = FAIBLE
 
 # Gain brut d'une récolte d'organe pleinement mûr (× maturité × effort).
 HARVEST_GAIN_FULL = 15.0
-
-
-def maturite(plant) -> float:
-    """Avancement de stade ∈ [0, 1] : un semis ≈ 0, un adulte = 1. Helper minimal
-    local — la façade complète `vigueur_plante` (santé × maturité × qi × gène,
-    spec §1) est le sous-sprint 3."""
-    n = len(plant.plant_class.growth_stages)
-    if n <= 1:
-        return 1.0
-    return plant.current_stage / (n - 1)
 
 
 def recolter(game_state: dict, player: str, plant, eco) -> float:
