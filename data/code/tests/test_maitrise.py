@@ -19,10 +19,18 @@ Vérifications :
   4. Plafond (§1) : jamais au-delà de PALIER_MAX.
   5. Monotonie (§2.4) : aucune séquence d'appels ne fait baisser un palier.
   6. Déterminisme : même séquence d'injections → même état.
+  7. Agrégats (§3.2) : accumulation absolue (pool unique) + complétude-ratio
+     (non diluée par la taille du catalogue).
+  8. Spillover famille (§3.1) : une espèce sœur maîtrisée accélère ses sœurs,
+     jamais hors famille.
+  9. `palier_bonus` (§4.1) : 1 + K·log1p(accumulation), neutre sans savoir,
+     rendements décroissants.
 
 Usage (depuis data/code/) :
   python3 -m tests.test_maitrise
 """
+import math
+
 from world import Tile
 from plants import Tomato, Basil, Bean
 from fields import init_eco
@@ -181,6 +189,102 @@ def test_determinisme():
     check("deux exécutions identiques → état identique", a == b, f"{a} == {b}")
 
 
+# ---------------------------------------------------------------------------
+# 7. Agrégats dérivés (§3.2) : accumulation absolue + complétude-ratio
+# ---------------------------------------------------------------------------
+
+def test_agregats():
+    print("\n[7] agrégats : accumulation absolue (pool unique) + complétude non diluée")
+    gs = {}
+    M.decouvrir(gs, "j", "basilic")                       # basilic au palier 1
+    for _ in range(M.preuves_requises(1) + M.preuves_requises(2)):
+        M.enregistrer_preuve(gs, "j", "tomate")          # tomate pile au palier 3
+    check("tomate au palier 3 (support du calcul)", M.palier(gs, "j", "tomate") == 3)
+    check("accumulation = Σ paliers (3 + 1 = 4)", M.accumulation_globale(gs, "j") == 4.0,
+          f"acc={M.accumulation_globale(gs, 'j')}")
+    check("complétude = Σ / (PALIER_MAX × découverts) = 4/10 = 0.4",
+          abs(M.completude_ratio(gs, "j") - 0.4) < 1e-12,
+          f"compl={M.completude_ratio(gs, 'j')}")
+    # Pas de dilution : découvrir un objet de plus NE BAISSE PAS l'accumulation
+    # absolue (elle ne fait qu'augmenter) — § anti-dilution.
+    M.decouvrir(gs, "j", "haricot")
+    check("découverte → accumulation absolue monte (4 → 5)",
+          M.accumulation_globale(gs, "j") == 5.0)
+    check("complétude reflète « ce que je connais » (5 / 15)",
+          abs(M.completude_ratio(gs, "j") - 5 / 15) < 1e-12)
+    # Lecture pure : aucun agrégat ne crée de clé (no-op golden préservé).
+    vierge = {}
+    check("agrégats nuls sur joueur inconnu",
+          M.accumulation_globale(vierge, "x") == 0.0
+          and M.completude_ratio(vierge, "x") == 0.0)
+    check("lecture d'agrégats ne crée AUCUNE clé `maitrise`", vierge == {})
+
+
+# ---------------------------------------------------------------------------
+# 8. Spillover famille (§3.1) : sœur maîtrisée accélère, jamais hors famille
+# ---------------------------------------------------------------------------
+
+def test_spillover_famille():
+    print("\n[8] spillover intra-famille : la maîtrise d'une sœur accélère, jamais au-delà")
+    # Mapping famille dérivé du catalogue (§10.1) — non figé.
+    check("tomate & poivron = Solanaceae (sœurs)",
+          M.famille_de("tomate") == "Solanaceae" == M.famille_de("poivron"))
+    check("haricot = Fabaceae (autre famille)", M.famille_de("haricot") == "Fabaceae")
+    check("concept transversal sans famille (pas de spillover)",
+          M.famille_de("eau") is None)
+
+    gs = {}
+    # Tomate poussée à fond AVANT d'avoir des sœurs découvertes (sa propre
+    # progression n'est donc pas spillover-boostée).
+    for _ in range(40):
+        M.enregistrer_preuve(gs, "j", "tomate")
+    check("tomate maîtrisée (palier élevé)", M.palier(gs, "j", "tomate") >= 3)
+    # Deux nouvelles espèces, même nombre d'injections : poivron (sœur de tomate)
+    # vs haricot (autre famille). Une seule preuve suffit à départager.
+    M.decouvrir(gs, "j", "poivron")
+    M.decouvrir(gs, "j", "haricot")
+    M.enregistrer_preuve(gs, "j", "poivron")
+    M.enregistrer_preuve(gs, "j", "haricot")
+    check("spillover : poivron (sœur d'une tomate maîtrisée) franchit un palier "
+          "là où haricot stagne",
+          M.palier(gs, "j", "poivron") > M.palier(gs, "j", "haricot"),
+          f"poivron={M.palier(gs,'j','poivron')} haricot={M.palier(gs,'j','haricot')}")
+
+    # Une sœur SEULEMENT découverte (palier 1, aucune maîtrise) ne transfère rien.
+    gs2 = {}
+    M.decouvrir(gs2, "j", "tomate")     # sœur juste découverte
+    M.decouvrir(gs2, "j", "poivron")
+    avant = M.palier(gs2, "j", "poivron")
+    M.enregistrer_preuve(gs2, "j", "poivron")
+    check("sœur non maîtrisée (palier 1) ⇒ aucun boost (1 preuve ne suffit pas)",
+          M.palier(gs2, "j", "poivron") == avant,
+          f"poivron={M.palier(gs2,'j','poivron')}")
+
+
+# ---------------------------------------------------------------------------
+# 9. palier_bonus (§4.1) : 1 + K·log1p(accumulation), neutre, log-saturé
+# ---------------------------------------------------------------------------
+
+def test_palier_bonus():
+    print("\n[9] palier_bonus : neutre sans savoir, formule §4.1, rendements décroissants")
+    gs = {}
+    check("bonus neutre 1.0 sans aucune maîtrise (golden Vigueur intact)",
+          M.palier_bonus(gs, "j") == 1.0)
+    M.decouvrir(gs, "j", "basilic")
+    for _ in range(M.preuves_requises(1) + M.preuves_requises(2)):
+        M.enregistrer_preuve(gs, "j", "tomate")          # acc = 3 + 1 = 4
+    attendu = 1.0 + M.PALIER_BONUS_K * math.log1p(4.0)
+    check("bonus = 1 + K·log1p(accumulation) (§4.1)",
+          abs(M.palier_bonus(gs, "j") - attendu) < 1e-12,
+          f"bonus={M.palier_bonus(gs, 'j')} attendu={attendu}")
+    check("savoir acquis → bonus > 1.0", M.palier_bonus(gs, "j") > 1.0)
+    # Forme logarithmique = rendements décroissants (anti-super-héros §3.2).
+    delta_01 = math.log1p(1.0) - math.log1p(0.0)
+    delta_12 = math.log1p(2.0) - math.log1p(1.0)
+    check("log → rendements décroissants (le 2ᵉ point d'accumulation pèse moins)",
+          delta_12 < delta_01, f"Δ01={delta_01:.4f} Δ12={delta_12:.4f}")
+
+
 if __name__ == "__main__":
     print("=" * 60)
     print("SYMBIOSE — Golden JOUEUR Maîtrise (D12, tronçon i1)")
@@ -192,6 +296,9 @@ if __name__ == "__main__":
     test_plafond()
     test_monotonie()
     test_determinisme()
+    test_agregats()
+    test_spillover_famille()
+    test_palier_bonus()
 
     print("\n" + "=" * 60)
     passed = sum(1 for _, ok in _results if ok)

@@ -16,23 +16,30 @@ ne contient aucun joueur — donc aucune clé `vigueur` — et reste un no-op st
 le hook côté `engine` est gardé par `if "vigueur" in game_state`. Si le golden
 bouge, c'est un bug (quelque chose a fui dans le tick).
 
-Interface paliers STUBBÉE (spec §2.3, décision actée) : `palier_bonus()` renvoie
-1.0 tant que D12 (paliers de maîtrise) n'existe pas. Quand les paliers arriveront,
-ils rempliront cette fonction SANS retoucher cette couche.
+Interface paliers (D12, tronçon i2) : `palier_bonus(game_state, player)` délègue
+désormais à `sim/maitrise.py` (accumulation-log §4.1). Le stub neutre 1.0 a vécu ;
+la *forme* du pont (plafond/régen × `palier_bonus`, déjà câblés ci-dessous) est
+INCHANGÉE — D12 ne fait que remplir la valeur. Seule retouche assumée vs le plan
+§4.1 (point ouvert i2, défaut (a) acté) : la signature gagne `game_state`, car
+l'accumulation vit PAR JOUEUR dans `game_state["maitrise"]` (pas d'état caché
+module-level → déterminisme préservé). Sens de dépendance : Vigueur → Maîtrise
+(la capacité de Vigueur dérive de la maîtrise), jamais l'inverse.
 """
 from __future__ import annotations
+
+from sim import maitrise
 
 # Modèle de base (chiffres CLAUDE.md / spec §2, *à calibrer post-test*).
 MAX_BASE   = 100.0   # plafond de Vigueur joueur avant bonus paliers
 REGEN_BASE = 10.0    # régen passive par semaine simulée
 
 
-# --- Interface paliers (D12) — stubbée -------------------------------------
-def palier_bonus(player: str) -> float:
-    """Multiplicateur de maîtrise (D12). Stub : 1.0 tant que les paliers
-    n'existent pas. Quand D12 arrivera, il remplit cette fonction SANS toucher
-    au reste de la couche Vigueur (même découplage que météo↔paliers)."""
-    return 1.0
+# --- Interface paliers (D12) — remplie par la couche Maîtrise (§4.1) --------
+def palier_bonus(game_state: dict, player: str) -> float:
+    """Multiplicateur de maîtrise (D12, §4.1), délégué à `maitrise.palier_bonus`.
+    Vaut 1.0 tant qu'aucune maîtrise n'est acquise (accumulation 0) → la couche
+    Vigueur sans maîtrise reste à l'identique (golden intact)."""
+    return maitrise.palier_bonus(game_state, player)
 
 
 # --- État joueur -----------------------------------------------------------
@@ -47,13 +54,13 @@ def ensure_player(game_state: dict, player: str) -> dict:
 def vigueur_max(game_state: dict, player: str) -> float:
     """Plafond courant = max_base du joueur × bonus de maîtrise (spec §2.3)."""
     st = ensure_player(game_state, player)
-    return st["max_base"] * palier_bonus(player)
+    return st["max_base"] * palier_bonus(game_state, player)
 
 
 def regen_rate(game_state: dict, player: str) -> float:
     """Vitesse de régen passive = base × bonus de maîtrise (spec §2.3) — la
     compréhension écologique fait se ressourcer plus vite (CLAUDE.md)."""
-    return REGEN_BASE * palier_bonus(player)
+    return REGEN_BASE * palier_bonus(game_state, player)
 
 
 # --- Primitives de transaction (D11, sous-sprint 2) ------------------------
@@ -79,7 +86,7 @@ def gain(game_state: dict, player: str, amount: float) -> None:
     if amount <= 0:
         return
     st = ensure_player(game_state, player)
-    cap = st["max_base"] * palier_bonus(player)
+    cap = st["max_base"] * palier_bonus(game_state, player)
     st["courante"] = min(cap, st["courante"] + amount)
 
 
@@ -91,8 +98,8 @@ def tick_player_vigueur(game_state: dict) -> None:
     if not vig:
         return
     for player, st in vig.items():
-        cap = st["max_base"] * palier_bonus(player)
-        st["courante"] = min(cap, st["courante"] + REGEN_BASE * palier_bonus(player))
+        cap = st["max_base"] * palier_bonus(game_state, player)
+        st["courante"] = min(cap, st["courante"] + REGEN_BASE * palier_bonus(game_state, player))
 
 
 def refill_saison(game_state: dict) -> None:
@@ -102,4 +109,4 @@ def refill_saison(game_state: dict) -> None:
     if not vig:
         return
     for player, st in vig.items():
-        st["courante"] = st["max_base"] * palier_bonus(player)
+        st["courante"] = st["max_base"] * palier_bonus(game_state, player)

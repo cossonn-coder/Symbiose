@@ -16,10 +16,14 @@ champ) — comme la Vigueur a gardé son golden intact. Si un hash bouge → bug
   franchissement de palier sur courbe log §2.3, monotone §2.4). Catalogue-agnostique
   (un objet = une clé string). Golden joueur `tests/test_maitrise.py` **18/18** (preuves
   **injectées** par API, pas de détection auto). **Golden écolo intact.**
-- **i2 — Agrégats + ponts Vigueur (strate 2 + §4.1/§4.3).** complétude-ratio,
-  accumulation-log, spillover famille (lit `plants/`), **remplir `palier_bonus`**,
-  sources ponctuelles (découverte/succès → `gain`). ⚠ point ouvert : `palier_bonus
-  (player)` n'a pas `game_state` (voir §Points ouverts).
+- **i2 — Agrégats + ponts Vigueur (strate 2 + §4.1/§4.3).** ✅ **FAIT 2026-06-04.**
+  `maitrise.py` : `accumulation_globale`/`completude_ratio` (§3.2), `palier_bonus
+  (game_state, player)` = `1+K·log1p(acc)` (§4.1), spillover intra-famille dans
+  `enregistrer_preuve` (lit `plants/catalogue` → famille ; sœur maîtrisée accélère,
+  jamais hors famille). `vigueur.py` : `palier_bonus` **délègue** à maitrise (point
+  ouvert tranché → **(a)** : signature `(game_state, player)`, 5 sites + A4 maj).
+  Sources ponctuelles §4.3 dans `actions.py` (`observer`, `crediter_succes`).
+  Golden joueur **maitrise 35/35**, **vigueur 96/96**. **Golden écolo INTACT.**
 - **i3 — Seam `cout_action` + table objets-touchés (§4.2/§10.4).** `cout_action
   (player, action, objets_touches)` = terme global × terme objets ; table §10.4
   data-driven ; objets non câblés = atténuation neutre 1.0. Brancher sur les
@@ -36,26 +40,27 @@ champ) — comme la Vigueur a gardé son golden intact. Si un hash bouge → bug
   action×objet). Monotone. Spillover **intra-famille only**.
 
 ## Points ouverts (à trancher dans le tronçon concerné, défaut sobre + signaler)
-- **i2 :** `palier_bonus(player)` ne reçoit pas `game_state` (appelée ainsi dans
-  `vigueur_max`/`regen_rate`/`gain`/`tick_player_vigueur`/`refill_saison`). Or
-  l'accumulation-log vit dans `game_state["maitrise"]`. Choisir : (a) changer la
-  signature `palier_bonus(game_state, player)` partout (retouche la couche Vigueur,
-  ce que §4.1 voulait éviter) ; (b) registre par-joueur mis à jour par la couche
-  maîtrise et lu par `palier_bonus`. **Défaut proposé : (a)** — explicite,
-  déterministe, sans état caché module-level ; à confirmer au tronçon i2.
-- **Calibrage** `K`/`BASE`/`R`/atténuations/gains ponctuels = **D12.4 post-test** :
-  poser des placeholders nommés, ne pas chercher les bons chiffres.
+- **i2 (TRANCHÉ 2026-06-04) :** `palier_bonus` → **(a)** signature `(game_state,
+  player)`, délégation `vigueur.palier_bonus → maitrise.palier_bonus`. Sens de
+  dépendance posé : **Vigueur → Maîtrise** (jamais l'inverse) → `maitrise.py` reste
+  pur (importe `plants` seul), et les **gains ponctuels §4.3** vivent dans la couche
+  d'orchestration `actions.py` (qui voit les deux), pas dans `maitrise.py` (sinon
+  cycle d'import). `vigueur.py` est retouché (assumé : le plan §4.1 « ne pas
+  toucher » était inatteignable car le bonus est par-joueur).
+- **Calibrage** `K`/`BASE`/`R`/`SPILLOVER_RATE`/`GAIN_DECOUVERTE`/`GAIN_SUCCES`/
+  atténuations = **D12.4 post-test** : placeholders nommés posés, pas les bons chiffres.
 
 ## État courant
-- **2026-06-04 :** **i1 implémenté** (`sim/maitrise.py` + `tests/test_maitrise.py`
-  18/18). Module pur (lib std `math` seule), purement additif, zéro hook tick.
-  Décisions i1 prises : invariant « objet dans le dict ⇒ palier ≥ 1 » (absence = 0),
-  auto-découverte sur `enregistrer_preuve`, consommation cumulative (reliquat reporté),
-  placeholders `PREUVES_BASE=2`/`PREUVES_R=2` (courbe 2,4,8,16 — calibrage D12.4).
-  **Prochain : i2** (agrégats + ponts Vigueur).
+- **2026-06-04 :** **i2 implémenté** (`maitrise.py` agrégats+spillover+`palier_bonus`,
+  `vigueur.py` délégation, `actions.py` gains ponctuels). maitrise **35/35**, vigueur
+  **96/96**. `maitrise` importe `plants.catalogue` (mapping famille) — reste pur côté
+  Vigueur. `preuves` devient flottant quand le spillover joue (déterministe : 0.5×int).
+  **Prochain : i3** (seam `cout_action` + table objets-touchés §10.4 sur `actions.py`).
+- **i1 (rappel)** : module pur, invariant « dans le dict ⇒ palier ≥ 1 », auto-découverte,
+  consommation cumulative, placeholders `PREUVES_BASE=2`/`PREUVES_R=2`.
 - Golden de référence à préserver : écolo `c950f06c…` / champ `b005d9ba…` /
-  joueur Vigueur 87/87 (`tests/test_vigueur.py`, hash trajectoire `e63b9d7f…`).
-  **Tous VÉRIFIÉS INCHANGÉS après i1.**
+  joueur Vigueur (hash trajectoire `e63b9d7f…`, inchangé : pont neutre sans maîtrise).
+  **Tous VÉRIFIÉS INCHANGÉS après i2** (golden + pop relancés, hash identiques).
 
 ## Boucle
 Lancer `0N` → coder → vérifier les golden → MAJ ce fichier → commit → `/clear` →
