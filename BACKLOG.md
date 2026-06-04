@@ -18,7 +18,10 @@
 | Sprint refactor structurel (réorg `data/code/` en paquets + archive journal + dette/backlog source unique + golden output) — ✅ **TERMINÉ 2026-06-03** | `sprints/sprint_refactor_structurel.md` |
 | Sprint conception météo (conception seule : météo/climat + signes diégétiques, D16+Z2) — ✅ **TERMINÉ 2026-06-03** → spec `data/code/CONCEPTION_METEO.md` | `sprints/sprint_conception_meteo.md` |
 | Sprint conception Vigueur (conception seule : Vigueur universelle + coûts d'action, D11) — ✅ **TERMINÉ 2026-06-04** → spec `data/code/CONCEPTION_VIGUEUR.md` | — |
-| **Sprint implémentation météo** (PROCHAIN — porter `CONCEPTION_METEO.md` en Python : `weather_at`/forecast, champ `temperature`, gène rusticité, signes ; **découpé en 4 sous-sprints, re-figer le golden**) | `sprints/sprint_meteo_impl/00_etat.md` |
+| Sprint implémentation météo (porter `CONCEPTION_METEO.md` en Python : `weather_at`/forecast, `temperature`, gène rusticité, signes) — ✅ **TERMINÉ 2026-06-04** (4 sous-sprints, golden `63bfdac4…`) | `sprints/sprint_meteo_impl/00_etat.md` |
+| Sprint implémentation Vigueur (porter `CONCEPTION_VIGUEUR.md` en Python : couche joueur + coûts d'action + façade plante + manger, D11) — ✅ **TERMINÉ 2026-06-04** (4 sous-sprints, golden joueur 59/59, golden écolo `ee79dd66…` jamais re-figé) | `sprints/sprint_vigueur/00_etat.md` |
+| **Sprint conception paliers de maîtrise** (PROCHAIN — conception seule, D12 : méta-état joueur, 5 paliers découverte→transcendant par famille et par concept, conditions de passage, déblocages ; remplit `palier_bonus()` stubbé par D11 → débloque Vigueur max + magazine D13 + carnet interprétatif D14 + extension terrain D15). Conception en conversation, pas de kickoff | — |
+| Sprint conception vie macroscopique observable (conception seule, D31 : voir auxiliaires/pollinisateurs/nuisibles apparaître/croître/décliner ; trancher d'abord **champ ambiant `GridField` vs agents discrets** ; façade `vigueur_auxiliaire`/`vigueur_nuisible` patron §1 ; débloque gain négatif de manger + écraser réel). Pas de kickoff | — |
 | Sprint diversification écologique (D26 : étendre le catalogue d'espèces). Pas encore de kickoff | — |
 | Sprint 3 (portage simulation — peut absorber le sprint éclairement) | `sprints/sprint_3_portage_simulation.md` |
 | Sprint 4 (mécaniques conception) | `sprints/sprint_4_mecaniques_conception.md` |
