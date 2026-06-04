@@ -448,52 +448,72 @@ def drought_stress_damage(plant: PlantInstance, eco,
     return []
 
 
+# --- Herbivorie : la pression vient du champ RAVAGEUR visible (D31.2) ---
+# Câblage D31.2 (CONCEPTION_VIE_MACRO.md §1/§2.2) : on referme la boucle vu↔agi.
+# Avant, la pression était reconstruite d'un proxy (biomasse × diversité ×
+# microbiome) et la régulation d'un second proxy `predator` (biodiv + rondelles +
+# stabilité) — aucune entité visible. Désormais c'est le RAVAGEUR VISIBLE (le
+# champ de population qui dessine les sprites) qui mord ; le champ qui DESSINE est
+# le champ qui AGIT.
+HERBIVORY_GAIN         = 0.20  # densité ravageur [0,1] → pression sur la santé (knob de calibrage, §8)
+HERBIVORY_LETHAL_AUX   = 0.20  # densité auxiliaire en dessous de laquelle un foyer non régulé tourne au létal
+HERBIVORY_LETHAL_MICRO = 0.20  # microbiome normalisé en dessous duquel le sol mort ne tamponne plus
+
+
 def herbivory_pressure(plant: PlantInstance, tile: Tile,
                        game_state: dict, eco) -> list[Mutation]:
     """
-    Pression herbivore diffuse — pas de ravageur visible.
-    Dépend de la biomasse locale, de la diversité et du microbiome.
+    Pression herbivore = densité LOCALE du champ `ravageur` (D31.2).
 
-    pressure = biomasse * HERBIVORY_BASE * (1 - biodiversite) * (1 - microbiome)
+        pression = ravageur[r,c] · HERBIVORY_GAIN
 
-    Polyculture et microbiome élevé → pression faible.
-    Monoculture → pression forte → instabilité émergente.
+    Le champ ravageur intègre DÉJÀ sa régulation par les auxiliaires (sa survie
+    est rabotée par la densité du champ `auxiliaire` à chaque tick, cf.
+    fields/population.py) → lire le ravageur, c'est lire une pression DÉJÀ
+    régulée : pas de second multiplicateur (donc pas de double comptage de
+    l'auxiliaire). L'auxiliaire est lu DIRECTEMENT seulement pour la bascule
+    LÉTALE (un foyer non régulé sur sol mort).
+
+    Boucle d'apprentissage (CONCEPTION_VIE_MACRO.md §1) : je vois les ravageurs →
+    mes plantes souffrent là où leur densité est haute → j'installe de l'habitat →
+    les auxiliaires arrivent → le champ ravageur reflue → mes plantes récupèrent.
     """
     if not plant.is_alive:
         return []
 
     r, c = plant.position
-    # Biomasse locale = nombre de plantes adultes/matures sur les plots voisins + soi
-    nearby = [p for p in tile.plants
-              if p.is_alive and p.current_stage >= 2
-              and p.position in tile.plots_within_radius(r, c, 1) + [plant.position]]
-    biomass_local = len(nearby) / 6.0  # normalisé [0, 1] sur 6 voisins max
+    rav = eco.populations["ravageur"].at_plot(r, c) if eco else 0.0
+    pressure = rav * HERBIVORY_GAIN
 
-    # Index de biodiversité : proportion de familles différentes dans le voisinage
-    families = {p.plant_class.family for p in nearby}
-    biodiversity_index = min(1.0, len(families) / 4.0)  # 4 familles = max
-
-    # Microbiome local normalisé
-    micro_norm = min(1.0, eco.microbiome.at_plot(r, c) / 3.0) if eco else 0.3
-
-    # Régulation par les auxiliaires (prédateurs des ravageurs) — ÉMERGENTE :
-    # diversité du voisinage + fleurs (pollinisateur attire coccinelles, syrphes…)
-    # + habitat stable (refuge) + plantes compagnes attire-auxiliaires (rondelle
-    # `auxiliaire` : achillée, phacélie → nectar des prédateurs). Pas de champ
-    # ambiant dédié (= sprint futur).
-    pollin    = min(1.0, tile.get_rondelle_count("pollinisateur") / 3.0)
-    aux       = min(1.0, tile.get_rondelle_count("auxiliaire") / 3.0)
-    stability = 1.0 - (eco.disturbance.at_plot(r, c) if eco else 0.5)
-    predator  = min(1.0, 0.4 * biodiversity_index + 0.2 * pollin
-                         + 0.15 * stability + 0.4 * aux)
-
-    # Pression nette : biomasse × base × (1−microbiome) × (1−régulation prédateurs)
-    pressure = (biomass_local * HERBIVORY_BASE
-                * max(0.0, 1.0 - micro_norm)
-                * max(0.0, 1.0 - predator))
+    # ───────── SUPPLANTÉ D31.2 — conservé pour mémoire ─────────
+    # Ancien modèle (proxies sans entité visible). La pression dérivait de la
+    # biomasse locale ; la régulation d'un terme `predator` agrégé (biodiversité +
+    # rondelles pollinisateur/auxiliaire + stabilité). Les deux sont remplacés par
+    # la lecture directe des champs de population (ravageur ci-dessus, auxiliaire
+    # pour la bascule létale ci-dessous). Cf. CONCEPTION_VIE_MACRO.md §1/§2.2, D27.
+    #
+    # nearby = [p for p in tile.plants
+    #           if p.is_alive and p.current_stage >= 2
+    #           and p.position in tile.plots_within_radius(r, c, 1) + [plant.position]]
+    # biomass_local = len(nearby) / 6.0
+    # families = {p.plant_class.family for p in nearby}
+    # biodiversity_index = min(1.0, len(families) / 4.0)
+    # pollin    = min(1.0, tile.get_rondelle_count("pollinisateur") / 3.0)
+    # aux_rond  = min(1.0, tile.get_rondelle_count("auxiliaire") / 3.0)
+    # stability = 1.0 - (eco.disturbance.at_plot(r, c) if eco else 0.5)
+    # predator  = min(1.0, 0.4 * biodiversity_index + 0.2 * pollin
+    #                      + 0.15 * stability + 0.4 * aux_rond)
+    # pressure  = (biomass_local * HERBIVORY_BASE
+    #              * max(0.0, 1.0 - micro_norm)
+    #              * max(0.0, 1.0 - predator))
+    # ───────────────────────────────────────────────────────────
 
     if pressure < 0.005:
         return []
+
+    # Microbiome + auxiliaire locaux → bascule LÉTALE (lecture directe des champs).
+    micro_norm = min(1.0, eco.microbiome.at_plot(r, c) / 3.0) if eco else 0.3
+    aux = eco.populations["auxiliaire"].at_plot(r, c) if eco else 0.0
 
     # Application probabiliste sur la santé
     mutations = []
@@ -501,9 +521,10 @@ def herbivory_pressure(plant: PlantInstance, tile: Tile,
         # La plante stressée résiste mieux (paradoxe biologique)
         effective_pressure = pressure * max(0.3, 1.0 - plant.stress_memory * 0.5)
         if effective_pressure > 0.015:
-            # Ravageurs LÉTAUX (M6) : forte infestation non régulée (monoculture
-            # sans auxiliaires ni microbiome) → dégâts doublés, mort possible.
-            lethal = predator < 0.2 and micro_norm < 0.2
+            # Ravageurs LÉTAUX (M6) : foyer non régulé (peu d'auxiliaires) sur sol
+            # mort (microbiome bas) → dégâts doublés, mort possible.
+            lethal = (aux < HERBIVORY_LETHAL_AUX
+                      and micro_norm < HERBIVORY_LETHAL_MICRO)
             mutations.append(ReduceHealth(
                 plant, 2 if lethal else 1,
                 reason=f"herbivorie p={pressure:.3f}"

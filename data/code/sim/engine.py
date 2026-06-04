@@ -402,7 +402,7 @@ class Engine:
                 continue   # le parent ne fructifie pas ce tick
 
             # 1+2. Héritage biparental → dépôt génétique dans la banque-sol
-            father = find_father(parent, tile.plants, tile, seed, week)
+            father = find_father(parent, tile.plants, tile, eco, seed, week)
             g_child = child_genes(parent, father, seed, week)
             eco.seed_bank.add_species(pr, pc, cls, rate, g_child)
 

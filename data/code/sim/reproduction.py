@@ -26,7 +26,8 @@ from fields import _hash_noise, hash_gauss
 
 # Modulation insecte du rayon de croisement (mode "insect" uniquement).
 INSECT_BASE_REACH   = 0.5   # rayon effectif sans pollinisateurs (× rayon nominal)
-INSECT_FULL_BONUS   = 1.0   # bonus de rayon à saturation des rondelles
+INSECT_FULL_BONUS   = 1.0   # bonus de rayon à saturation du champ pollinisateur
+POLLINATOR_SAT      = 0.40  # densité du champ pollinisateur saturant le bonus (knob, D31.2)
 SELFING_SIGMA_RATIO = 0.5   # mutation réduite en autofécondation (consanguinité)
 
 
@@ -42,21 +43,35 @@ def _euclid2(a, b) -> float:
     return (a.x_cm - b.x_cm) ** 2 + (a.y_cm - b.y_cm) ** 2
 
 
-def pollinator_reach(mother, tile) -> float:
+def pollinator_reach(mother, tile, eco) -> float:
     """
     Rayon de croisement effectif (cm). Anémophile/autogame : rayon nominal.
-    Insecte : modulé par les rondelles `pollinisateur` + `auxiliaire` (saturation
-    à ~6 rondelles cumulées). Sans pollinisateur → rayon réduit → autofécondation.
+    Insecte : modulé par la DENSITÉ LOCALE du champ `pollinisateur` (D31.2) —
+    saturation à POLLINATOR_SAT. Sans pollinisateur → rayon réduit → autofécondation.
+
+    Câblage D31.2 (CONCEPTION_VIE_MACRO.md §2.2 #3) : ce sont désormais les
+    pollinisateurs VISIBLES qui élargissent le brassage. Les rondelles
+    `pollinisateur`/`auxiliaire` ne modulent plus ICI ; elles restent terme-source
+    d'HABITAT du champ (cf. `_pollinisateur_habitat_grid`/`_stability_grid`), donc
+    favoriser les auxiliaires nourrit toujours le brassage — via le champ, pas en
+    double.
+
+    ───────── SUPPLANTÉ D31.2 — conservé pour mémoire ─────────
+    # Ancienne modulation directe par les rondelles (saturation ~6 rondelles cumulées) :
+    # sat = min(1.0, (tile.get_rondelle_count("pollinisateur")
+    #                 + tile.get_rondelle_count("auxiliaire")) / 6.0)
+    ───────────────────────────────────────────────────────────
     """
     cls = mother.plant_class
     if cls.pollination_mode != "insect":
         return cls.pollination_radius_cm
-    sat = min(1.0, (tile.get_rondelle_count("pollinisateur")
-                    + tile.get_rondelle_count("auxiliaire")) / 6.0)
+    r, c = mother.position
+    dens = eco.populations["pollinisateur"].at_plot(r, c) if eco else 0.0
+    sat = min(1.0, dens / POLLINATOR_SAT)
     return cls.pollination_radius_cm * (INSECT_BASE_REACH + INSECT_FULL_BONUS * sat)
 
 
-def find_father(mother, plants, tile, seed, week):
+def find_father(mother, plants, tile, eco, seed, week):
     """
     Père compatible (même famille) à portée, en âge de fleurir, le plus proche
     prioritaire (tie-break déterministe par hash). None si la mère est autogame
@@ -64,7 +79,7 @@ def find_father(mother, plants, tile, seed, week):
     """
     if mother.plant_class.pollination_mode == "self":
         return None
-    reach2 = pollinator_reach(mother, tile) ** 2
+    reach2 = pollinator_reach(mother, tile, eco) ** 2
     candidates = []
     for p in plants:
         if p is mother or not p.is_alive:

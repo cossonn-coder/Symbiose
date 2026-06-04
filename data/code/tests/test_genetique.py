@@ -113,7 +113,7 @@ def test_selection_emergente():
 # ---------------------------------------------------------------------------
 
 class _FakeTile:
-    """Tuile minimale : seules les rondelles comptent pour la pollinisation."""
+    """Tuile minimale (param `tile` de find_father/pollinator_reach)."""
     def __init__(self, pollinisateur=0, auxiliaire=0):
         self._r = {"pollinisateur": pollinisateur, "auxiliaire": auxiliaire}
 
@@ -121,23 +121,39 @@ class _FakeTile:
         return self._r.get(v, 0)
 
 
+class _FakeField:
+    """Champ de densité uniforme minimal — pilote pollinator_reach (D31.2)."""
+    def __init__(self, density=0.0):
+        self.density = density
+
+    def at_plot(self, r, c):
+        return self.density
+
+
+class _FakeEco:
+    """Eco minimal : seule la densité du champ pollinisateur compte ici (D31.2)."""
+    def __init__(self, pollinisateur_density=0.0):
+        self.populations = {"pollinisateur": _FakeField(pollinisateur_density)}
+
+
 def test_brassage_pollinisation():
-    print("\n[3] Brassage — auxiliaires élargissent le rayon de croisement")
+    print("\n[3] Brassage — le champ pollinisateur élargit le rayon de croisement")
     mere = _tomato(1.0, pos=(2, 2))
     # Père grand placé à 130 cm (hors rayon réduit ~75 cm, dans rayon nominal 150)
     pere = _tomato(1.3, pos=(2, 2))
     pere.x_cm, pere.y_cm = mere.x_cm + 130.0, mere.y_cm
     plants = [mere, pere]
 
-    sans = _FakeTile(pollinisateur=0, auxiliaire=0)
-    avec = _FakeTile(pollinisateur=3, auxiliaire=3)
-    reach_sans = pollinator_reach(mere, sans)
-    reach_avec = pollinator_reach(mere, avec)
-    check("rayon ↑ avec auxiliaires", reach_avec > reach_sans,
+    tile = _FakeTile()
+    eco_sans = _FakeEco(pollinisateur_density=0.0)
+    eco_avec = _FakeEco(pollinisateur_density=0.5)   # > POLLINATOR_SAT → bonus plein
+    reach_sans = pollinator_reach(mere, tile, eco_sans)
+    reach_avec = pollinator_reach(mere, tile, eco_avec)
+    check("rayon ↑ avec pollinisateurs", reach_avec > reach_sans,
           f"{reach_sans:.0f}cm → {reach_avec:.0f}cm")
 
-    pere_sans = find_father(mere, plants, sans, SEED, 7)
-    pere_avec = find_father(mere, plants, avec, SEED, 7)
+    pere_sans = find_father(mere, plants, tile, eco_sans, SEED, 7)
+    pere_avec = find_father(mere, plants, tile, eco_avec, SEED, 7)
     check("sans pollinisateur → autofécondation", pere_sans is None)
     check("avec pollinisateurs → père trouvé", pere_avec is pere)
 
