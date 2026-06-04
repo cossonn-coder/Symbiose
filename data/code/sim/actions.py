@@ -24,7 +24,7 @@ Vigueur et n'accomplit rien (philo #1/#6, sans sermon).
 from __future__ import annotations
 
 from sim.vigueur import spend, gain
-from sim.vigueur_plante import maturite   # facteur partagé (mutualisé, pas dupliqué)
+from sim.vigueur_plante import maturite, vigueur_plante   # facteurs partagés (mutualisés, pas dupliqués)
 from sim.effects import necromass_biomass
 
 # Paliers de coût, relatifs à la base 100 / +10 par semaine (spec §3.1, à
@@ -41,6 +41,34 @@ HARVEST_VIGUEUR_COST = FAIBLE
 
 # Gain brut d'une récolte d'organe pleinement mûr (× maturité × effort).
 HARVEST_GAIN_FULL = 15.0
+
+
+def manger(game_state: dict, player: str, plant, eco) -> float:
+    """Manger un organe nourricier mûr (spec §3.3, première ligne) — le pendant
+    « ressourcement GRATUIT » de recolter. Coût **NUL** (§3.3) : aucune dépense.
+
+    Gain ∝ **valeur vivante de l'organe** : on inaugure ENFIN la façade
+    `vigueur_plante` comme MODULATEUR DE VALEUR (spec §1) — santé × maturité × Qi
+    × gène. Un fruit éclatant nourrit plus qu'une feuille chétive sur sol pauvre.
+    (recolter reste, lui, sur `maturite` seule : il met en BANQUE un produit mûr,
+    tandis que manger ABSORBE la vitalité — sémantiques distinctes, recâblage de
+    recolter sur la façade différé pour préserver sa propriété « net positif ».)
+
+    No-op écolo (décision actée, philo #2) : la plante reste VIVANTE (≠ déraciner)
+    et **aucun champ n'est touché**. L'organe est entièrement consommé par le
+    joueur → rien ne retourne au sol (pas d'`add_necromass` ; le Qi part vers le
+    joueur via `gain`, §4). Toucher `health`/`current_stage` serait un malus
+    DIRECT sur la plante — interdit. La déplétion réelle (organe qui disparaît et
+    repousse) + la valeur fine par type d'organe relèvent de **D19** ; les
+    organes à gain NÉGATIF (manger un nuisible) relèvent de **D31**. v1 ne fixe
+    que la comptabilité Vigueur du gain ⇒ manger est répétable (borné par
+    `vigueur_max`). NE cible JAMAIS le bourgeon apical : couper l'apex est
+    l'action `tailler` (réponse hormonale = **D29**), pas manger.
+
+    Renvoie la valeur de l'organe consommé (gain nominal, avant plafonnement)."""
+    gain_organe = HARVEST_GAIN_FULL * vigueur_plante(plant, eco)
+    gain(game_state, player, gain_organe)   # coût NUL → pas de spend
+    return gain_organe
 
 
 def recolter(game_state: dict, player: str, plant, eco) -> float:

@@ -49,6 +49,20 @@ vraies voies écologiques et re-figeait).
   joueur étendu (C1–C6) → **51/51**, trajectoire passive **inchangée**. Golden
   écolo **inchangé** (`ee79dd66…f0f947`) — jamais appelé dans le tick. Reste 4
   (optionnel, tandem D19).
+- **Sous-sprint 4 (action « manger ») : FAIT.** `manger(game_state, player, plant,
+  eco)` ajouté à `sim/actions.py` — pendant « ressourcement GRATUIT » de recolter.
+  **Coût NUL** ; gain = `HARVEST_GAIN_FULL × vigueur_plante(plant, eco)` → la façade
+  inaugure son rôle de **modulateur de valeur** (§1) : un organe éclatant nourrit
+  plus qu'un chétif. **recolter laissé tel quel** (banque ∝ maturité ≠ absorption de
+  vitalité ; recâblage différé, A6 intact). **No-op écolo strict** : plante VIVANTE,
+  aucun champ touché, pas d'`add_necromass` (organe consommé par le joueur, Qi→joueur
+  via `gain`, §4) ; toucher health/stage serait un malus direct (philo #2, interdit).
+  Décisions actées avec Nico (2026-06-04) : v1 = **comptabilité du gain seule**,
+  **répétable** (borné par `vigueur_max`) ; déplétion/repousse + valeur fine par type
+  d'organe → **D19** ; organes à gain NÉGATIF (manger un nuisible, ex. limace) → **D31** ;
+  manger ne cible JAMAIS le bourgeon apical (apex = `tailler`, réponse hormonale **D29**).
+  Golden joueur étendu (D1–D4) → **59/59**, trajectoire passive **inchangée**. Golden
+  écolo **inchangé** (`ee79dd66…f0f947`). **Sprint Vigueur D11 complet (1/2/3/4).**
 - Conception **figée** (`CONCEPTION_VIGUEUR.md`).
 
 ## Découpage (suit CONCEPTION_VIGUEUR.md §8)
