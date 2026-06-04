@@ -26,6 +26,7 @@ from __future__ import annotations
 from sim.vigueur import spend, gain
 from sim.vigueur_plante import maturite, vigueur_plante   # facteurs partagés (mutualisés, pas dupliqués)
 from sim.effects import necromass_biomass
+from fields.population import DENSITE_PAR_SPRITE   # « un geste = un individu = un quantum » (D31.3 §5)
 
 # Paliers de coût, relatifs à la base 100 / +10 par semaine (spec §3.1, à
 # calibrer post-test).
@@ -34,6 +35,12 @@ FAIBLE = 5.0
 MODERE = 15.0
 ELEVE  = 30.0
 URGENCE_MULT = 1.5   # majoration des actions de phase « saison » (urgence, §3.1)
+
+# Malus de microbiome local du bêchage (CONCEPTION_VIGUEUR §3.2, « biner/bêcher :
+# microbiome ↓ » — la conception ne chiffrait pas l'ampleur). Knob sobre, calibrage
+# post-test : microbiome est sur l'échelle [0, 3] (cf. ecofields), ce malus en
+# retire ~1/6 localement — perceptible sans être brutal.
+BECHAGE_MICROBIOME_MALUS = 0.5
 
 # Le hook de la conception (§3.5) devient réel : le geste de prélèvement de la
 # récolte sélective coûte FAIBLE (remplace le `=0` neutre supprimé de l'engine).
@@ -102,13 +109,91 @@ def deraciner(game_state: dict, player: str, plant, eco) -> bool:
     return True
 
 
-def ecraser(game_state: dict, player: str, urgence: bool = True) -> bool:
-    """Écraser un nuisible (spec §3.3) — action BINAIRE. Pour l'instant
-    COMPTABILITÉ VIGUEUR SEULE : aucune entité nuisible n'existe encore dans le
-    moteur (champ ambiant nuisible/auxiliaire à concevoir, §1). Coût
-    MODÉRÉ × URGENCE — ce geste valide le multiplicateur d'urgence ; la
-    suppression locale émergente ET le retour de pression viendront avec le champ
-    nuisible. Tout-ou-rien (binaire) : effet futur appliqué seulement si payé.
-    Renvoie True si le geste a été pleinement payé."""
+def ecraser(game_state: dict, player: str, eco, r: int, c: int,
+            urgence: bool = True) -> bool:
+    """Écraser un nuisible (spec §3.3) — action BINAIRE, désormais RÉELLE (D31.3).
+    L'aveu de la v1 (« aucune entité nuisible n'existe encore ») est levé : le
+    champ `ravageur` (D31.1/D31.2) fournit l'entité ciblable, et le sprite cliqué
+    fournit le plot `(r, c)`.
+
+    Coût MODÉRÉ × URGENCE (inchangé — ce geste reste le validateur du multiplicateur
+    d'urgence). Effet : retire UN quantum (`DENSITE_PAR_SPRITE`, « un geste = un
+    individu », §5) de `ravageur` au plot ciblé. `GridField.add` borne déjà ≥ 0.
+    Tout-ou-rien (binaire) : l'effet n'est appliqué QUE si le coût est intégralement
+    payé — forcer le geste à vide draine la Vigueur sans rien accomplir.
+
+    Pédagogie (philo #1, sans sermon) : le champ REPOUSSE depuis sa ressource
+    (l'hôte-feuillage est toujours là) → quelques semaines plus tard la pression
+    REVIENT. Net négatif sec, le raccourci s'use. Le canal vertueux symétrique est
+    `favoriser_auxiliaire` (régulation émergente, durable).
+    Renvoie True si le geste a été pleinement payé (et donc appliqué)."""
     cost = MODERE * (URGENCE_MULT if urgence else 1.0)
-    return spend(game_state, player, cost) >= 1.0
+    if spend(game_state, player, cost) < 1.0:
+        return False
+    eco.populations["ravageur"].add(r, c, -DENSITE_PAR_SPRITE)
+    return True
+
+
+def favoriser_auxiliaire(game_state: dict, player: str, tile) -> bool:
+    """Favoriser un auxiliaire (spec §3.2 / CONCEPTION_VIE_MACRO §5) — action sur
+    le MILIEU, le pendant VERTUEUX d'« écraser ». Coût MODÉRÉ. Action binaire :
+    effet appliqué seulement si le coût est intégralement payé.
+
+    Effet (défaut SOBRE tranché, point ouvert #1) : pose une rondelle `auxiliaire`
+    sur la tuile. Elle est DÉJÀ lue par `_stability_grid` (`population.py:273`)
+    comme nectar/refuge → terme-source d'habitat PERSISTANT du champ `auxiliaire`,
+    zéro machinerie neuve. Les rondelles sont au niveau TUILE (uniforme) ; le
+    placement LOCAL d'habitat (hôtel à insectes à un plot précis) demanderait un
+    champ habitat par plot — renvoyé à D30/futur (on ne crée pas de champ neuf pour
+    cocher la case).
+
+    Pédagogie : rien tout de suite, puis SEMAINES PLUS TARD les auxiliaires
+    s'installent ET RESTENT (plancher d'habitat) → régulation émergente, durable —
+    contraste avec « écraser » dont la pression revient.
+
+    Renvoie True si payé ET une rondelle a pu être posée. Échec (et Vigueur tout de
+    même dépensée, contrat binaire) si la Vigueur ne couvre pas le coût ; renvoie
+    False sans effet si toutes les tiges sont déjà saturées (cas-bord : 10 tiges ×
+    3 rondelles, jamais atteint en pratique)."""
+    if spend(game_state, player, MODERE) < 1.0:
+        return False
+    for slot in tile.stakes:
+        if slot.add("auxiliaire"):
+            return True
+    return False
+
+
+def becher(game_state: dict, player: str, eco, r: int, c: int) -> bool:
+    """Biner / bêcher — retourner la terre (spec §3.2). Action BINAIRE, coût FAIBLE
+    (geste rapide, « fausse bonne idée »). Effet : tue la faune du sol → retire un
+    quantum de `vers_de_terre` ET abaisse le `microbiome` local de
+    `BECHAGE_MICROBIOME_MALUS`. Tout-ou-rien : appliqué seulement si payé.
+
+    Pédagogie « visuel AVANT santé » (CONCEPTION_VIE_MACRO §5) : la chute de
+    `vers_de_terre` fait DISPARAÎTRE des sprites de vers — feedback viscéral
+    immédiat — *avant* la dette différée `microbiome ↓ → uptake ↓ → vigueur ↓` des
+    plantes. Le joueur découvre le bon outil par la conséquence (philo #1/#6, sans
+    sermon). Le jumeau qui PRÉSERVE est `grelinette`.
+    Renvoie True si le geste a été pleinement payé (et donc appliqué)."""
+    if spend(game_state, player, FAIBLE) < 1.0:
+        return False
+    eco.populations["vers_de_terre"].add(r, c, -DENSITE_PAR_SPRITE)
+    eco.microbiome.add(r, c, -BECHAGE_MICROBIOME_MALUS)
+    return True
+
+
+def grelinette(game_state: dict, player: str) -> bool:
+    """Grelinette — ameublir SANS retourner (spec §3.2, principe no-dig). Action
+    BINAIRE, coût MODÉRÉ. Le JUMEAU QUI PRÉSERVE de `becher` : même intention
+    (décompacter) mais ne tue NI vers NI microbiome → no-op écologique côté Python
+    pour l'instant. Livré dès maintenant (point ouvert #2, défaut sobre tranché)
+    pour ancrer le couple pédagogique becher/grelinette : le contraste s'enseigne
+    À L'ŒIL (les sprites de vers disparaissent après bêchage, restent après
+    grelinette), pas par un texte.
+
+    Son BÉNÉFICE propre (aération + infiltration ↑) attend le champ
+    structure/compaction du sol → DIFFÉRÉ à D30 (on n'invente pas D30 ici). D'ici
+    là, grelinette ne fait que dépenser la Vigueur du travail du sol sans dette
+    biologique — c'est déjà le bon geste, son gain mécanique viendra.
+    Renvoie True si le geste a été pleinement payé."""
+    return spend(game_state, player, MODERE) >= 1.0
