@@ -11,11 +11,11 @@ event-driven. **Golden écolo JAMAIS re-figé** (`c950f06c…` engine / `b005d9b
 champ) — comme la Vigueur a gardé son golden intact. Si un hash bouge → bug.
 
 ## Découpage (sprint GROS → 4 tronçons autosuffisants ; révisable par Nico)
-- **i1 — Cœur : objet de maîtrise + progression intra-objet (strate 0+1).**
+- **i1 — Cœur : objet de maîtrise + progression intra-objet (strate 0+1).** ✅ **FAIT 2026-06-04.**
   `sim/maitrise.py` (état par avatar, `decouvrir` 0→1, `enregistrer_preuve` →
   franchissement de palier sur courbe log §2.3, monotone §2.4). Catalogue-agnostique
-  (un objet = une clé string). Golden joueur `tests/test_maitrise.py` (preuves
-  **injectées** par API, pas de détection auto). **Golden écolo intact.**  ← CE KICKOFF (`01`)
+  (un objet = une clé string). Golden joueur `tests/test_maitrise.py` **18/18** (preuves
+  **injectées** par API, pas de détection auto). **Golden écolo intact.**
 - **i2 — Agrégats + ponts Vigueur (strate 2 + §4.1/§4.3).** complétude-ratio,
   accumulation-log, spillover famille (lit `plants/`), **remplir `palier_bonus`**,
   sources ponctuelles (découverte/succès → `gain`). ⚠ point ouvert : `palier_bonus
@@ -47,9 +47,15 @@ champ) — comme la Vigueur a gardé son golden intact. Si un hash bouge → bug
   poser des placeholders nommés, ne pas chercher les bons chiffres.
 
 ## État courant
-- **2026-06-04 :** structure créée, kickoff `01` (i1) écrit. Rien d'implémenté.
+- **2026-06-04 :** **i1 implémenté** (`sim/maitrise.py` + `tests/test_maitrise.py`
+  18/18). Module pur (lib std `math` seule), purement additif, zéro hook tick.
+  Décisions i1 prises : invariant « objet dans le dict ⇒ palier ≥ 1 » (absence = 0),
+  auto-découverte sur `enregistrer_preuve`, consommation cumulative (reliquat reporté),
+  placeholders `PREUVES_BASE=2`/`PREUVES_R=2` (courbe 2,4,8,16 — calibrage D12.4).
+  **Prochain : i2** (agrégats + ponts Vigueur).
 - Golden de référence à préserver : écolo `c950f06c…` / champ `b005d9ba…` /
   joueur Vigueur 87/87 (`tests/test_vigueur.py`, hash trajectoire `e63b9d7f…`).
+  **Tous VÉRIFIÉS INCHANGÉS après i1.**
 
 ## Boucle
 Lancer `0N` → coder → vérifier les golden → MAJ ce fichier → commit → `/clear` →
