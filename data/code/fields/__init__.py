@@ -25,6 +25,11 @@ from fields.seedbank import (
     SEED_LATE_GAIN, SEED_LATE_MIN_MATURITY, SEED_COMPETITOR_MATURITY,
     SPECIES_SEED_VIABILITY_LOSS, SPECIES_POOL_MIN_DENSITY,
 )
+from fields.population import (
+    PopulationField, TrophicSpec, SpriteSample,
+    build_population_specs, sample_sprites,
+    POP_MAX, POP_INERTIA, DENSITE_PAR_SPRITE, SPRITES_PAR_PLOT_MAX,
+)
 from fields.ecofields import (
     EcoFields, init_eco, inject_patch,
     HUMIDITY_INERTIA, FERTILITY_INERTIA, MICROBE_INERTIA,

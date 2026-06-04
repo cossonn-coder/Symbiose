@@ -12,6 +12,7 @@ from dataclasses import dataclass, field
 from fields.grids import GridField, DisturbanceField
 from fields.light import LightField
 from fields.seedbank import SeedBank
+from fields.population import PopulationField, build_population_specs
 
 # ---------------------------------------------------------------------------
 # CONSTANTES ÉCOLOGIQUES
@@ -133,6 +134,10 @@ class EcoFields:
     disturbance:      DisturbanceField = field(default=None)
     seed_bank:        SeedBank = field(default=None)
     temperature:      GridField = field(default=None)   # °C ambiant (météo 02)
+    # Vie macroscopique observable (D31.1) — 4 champs de population déterministes
+    # (ravageur, auxiliaire, pollinisateur, vers_de_terre). CALCULÉS mais PAS
+    # encore lus par la santé/les services → golden INTACT (le câblage est D31.2).
+    populations:      dict = field(default=None)
 
     def __post_init__(self):
         if self.humidite    is None: self.humidite    = GridField(self.rows, self.cols)
@@ -159,6 +164,13 @@ class EcoFields:
             self.temperature = GridField(self.rows, self.cols,
                                          initial=T_AMBIENT_INIT,
                                          max_val=TEMP_MAX, min_val=TEMP_MIN)
+        if self.populations is None:
+            self.populations = {
+                spec.name: PopulationField(spec, self.rows, self.cols)
+                for spec in build_population_specs()
+            }
+        # Ordre de tick = ordre trophique (ravageur d'abord ; cf. build_population_specs).
+        self._population_order = list(self.populations.keys())
 
     def get_field(self, name: str) -> GridField | None:
         return {
@@ -224,6 +236,25 @@ class EcoFields:
     def tick_disturbance(self, seed: int, week: int) -> None:
         """Met à jour le champ de perturbation spatiale (bruit déterministe)."""
         self.disturbance.tick(seed, week)
+
+    # --- Vie macroscopique (D31.1) ---
+
+    def tick_populations(self, tile, plants) -> None:
+        """
+        Ticke les 4 champs de population dans l'ordre trophique. Le ravageur
+        d'abord (il lit l'auxiliaire de la semaine précédente → décalage proie-
+        prédateur), puis l'auxiliaire lit le ravageur fraîchement mis à jour.
+
+        À appeler APRÈS les autres champs (température, perturbation à jour).
+        Pure lecture des champs existants : n'écrit QUE sur les champs de
+        population, ne produit aucun log → golden INTACT (D31.1).
+        """
+        for name in self._population_order:
+            popfield = self.populations[name]
+            predator_fields = [self.populations[p]
+                               for p in popfield.spec.predators
+                               if p in self.populations]
+            popfield.tick(self, tile, plants, predator_fields)
 
     # --- Banque de graines ---
 

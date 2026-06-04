@@ -710,6 +710,13 @@ class Engine:
                                       seed, week, year_fraction, saison)
             if dlog: log += dlog
 
+            # 13b. Vie macroscopique (D31.1) — champs de population (ravageur,
+            # auxiliaire, pollinisateur, vers). CALCULÉS après les champs dont ils
+            # dépendent (température, perturbation), mais RIEN dans la santé/les
+            # services ne les LIT encore (câblage = D31.2). Aucun log produit
+            # → golden INTACT.
+            eco.tick_populations(tile, tile.plants)
+
             # 14. Banque de graines (vieillissement + enrichissement)
             eco.tick_seed_bank(tile.plants, seed=seed, week=week)
 
