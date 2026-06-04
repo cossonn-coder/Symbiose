@@ -28,6 +28,7 @@ from sim.vigueur_plante import maturite, vigueur_plante   # facteurs partagés (
 from sim.effects import necromass_biomass
 from sim import maitrise as M   # couche savoir (D12) — orchestrée ici pour les gains ponctuels §4.3
 from fields.population import DENSITE_PAR_SPRITE   # « un geste = un individu = un quantum » (D31.3 §5)
+from plants.catalogue import PLANT_CATALOGUE, PERENNIAL_CATALOGUE   # reverse classe→clé (seam coût, §10.4)
 
 # Paliers de coût, relatifs à la base 100 / +10 par semaine (spec §3.1, à
 # calibrer post-test).
@@ -56,6 +57,117 @@ HARVEST_GAIN_FULL = 15.0
 # tick (comme toute la couche Vigueur).
 GAIN_DECOUVERTE = FAIBLE    # « chaque découverte donne envie d'en savoir plus » (§4.3)
 GAIN_SUCCES     = MODERE    # « un jardinier actif est un jardinier vigoureux » (§4.3)
+
+
+# =========================================================================
+# Seam COÛT D'ACTION (CONCEPTION_MAITRISE §4.2/§10.4) — second seam de la
+# maîtrise (le premier, `palier_bonus`, vit dans `vigueur.py`). La maîtrise rend
+# les gestes MOINS CHERS en Vigueur, *contextuellement* : selon ce que l'action
+# touche. Modèle (§4.2) : `base × f_globale(player) × f_objets(player, objets)`,
+# atténuation ∈ ]0,1]. NEUTRE (1.0) tant qu'aucune maîtrise n'est acquise → tous
+# les coûts en dur d'avant restent identiques (golden Vigueur intact). Ce seam vit
+# ICI (couche d'orchestration qui voit Vigueur ET Maîtrise), pas dans `maitrise.py`
+# qui reste pur (sens de dépendance acté i2).
+# =========================================================================
+
+# Coûts de BASE par action — les littéraux d'avant, REGROUPÉS en table (ils
+# deviennent la `base` du seam ; les constantes restent, on ne supprime rien).
+COUTS = {
+    "recolter":             HARVEST_VIGUEUR_COST,
+    "deraciner":            ELEVE,
+    "ecraser":              MODERE,            # × URGENCE_MULT appliqué PAR-DESSUS (phase saison)
+    "favoriser_auxiliaire": MODERE,
+    "becher":               FAIBLE,
+    "grelinette":           MODERE,
+    "manger":               NUL,               # coût NUL → cout_action renvoie 0 sans rien lire (§10.5)
+}
+
+# Objets STATIQUES touchés par chaque geste (§10.4, terme 2 : technique + outil/
+# structure requis). La CIBLE VIVANTE n'y est PAS (dynamique : elle dépend de la
+# plante cliquée → l'appelant l'ajoute via `_objets_action`). Clés = strings au
+# même titre que les espèces (maîtrise catalogue-agnostique, i1). Aucun de ces
+# objets n'a d'état moteur aujourd'hui → `M.palier(...) == 0` → atténuation neutre
+# 1.0 (dégradation gracieuse §10.5) ; la table les NOMME pour quand leur sprint
+# (D29/D30/D31) les câblera. Reflète §10.4 telle quelle.
+OBJETS_TOUCHES = {
+    "recolter":             ("récolte", "sécateur"),
+    "deraciner":            ("arrachage", "bêche"),
+    "ecraser":              (),                          # geste brut, terme 2 vide (§10.4)
+    "favoriser_auxiliaire": ("aménagement-habitat",),
+    "becher":               ("bêchage", "bêche"),
+    "grelinette":           ("ameublissement", "grelinette"),
+    "manger":               (),                          # coût NUL → terme 2 vide (§10.5)
+}
+
+# Atténuations maximales — PLACEHOLDERS NOMMÉS, *calibrage D12.4*. Bornées < 1 pour
+# garantir un PLANCHER strictement positif (atténuation jamais ≤ 0, §4.2) : même un
+# joueur omniscient paie un coût résiduel. 0.0 redonnerait le coût en dur.
+ATT_GLOBALE_MAX = 0.5   # réduction max par la connaissance écologique GÉNÉRALE (terme 1)
+ATT_OBJET_MAX   = 0.5   # réduction max par la maîtrise d'UN objet concret à fond (terme 2)
+
+# Reverse classe → clé catalogue (miroir de `_FAMILLE_DE_ESPECE` côté maitrise i2) :
+# pour résoudre la clé d'espèce d'une `PlantInstance` cliquée. Dérivé des catalogues
+# moteur, ne duplique aucune liste figée.
+_CLE_DE_CLASSE = {
+    cls: cle for cle, cls in {**PLANT_CATALOGUE, **PERENNIAL_CATALOGUE}.items()
+}
+
+
+def _cle_espece(plant) -> str | None:
+    """Clé catalogue d'une `PlantInstance` (reverse classe→clé), ou `None` si la
+    résolution échoue. Dégradation gracieuse (kickoff §C) : un `None` fait traiter
+    le geste comme « sans cible » (terme 2 sans espèce) plutôt que de planter."""
+    return _CLE_DE_CLASSE.get(getattr(plant, "plant_class", None))
+
+
+def _objets_action(action: str, plant=None) -> list[str]:
+    """Objets touchés par un geste = la STATIQUE de la table (§10.4) ∪ la cible
+    vivante dynamique (clé d'espèce) quand il y a une plante. La cible apporte le
+    SPILLOVER famille gratuitement (sa maîtrise monte déjà via §3.1, i2)."""
+    objets = list(OBJETS_TOUCHES[action])
+    if plant is not None:
+        cle = _cle_espece(plant)
+        if cle is not None:
+            objets.append(cle)
+    return objets
+
+
+def f_globale(game_state: dict, player: str) -> float:
+    """Terme 1 (§4.2) — atténuation par la connaissance écologique GÉNÉRALE
+    (concepts + vivants découverts), uniforme sur toute action. On lit la
+    **complétude-ratio** de i2 (§3.2, ∈ [0,1] — « à quel point je maîtrise ce que
+    je connais ») : naturellement bornée → atténuation propre sans log. Forme :
+    `1 − ATT_GLOBALE_MAX · mesure`, décroissante vers le plancher `1−ATT_GLOBALE_MAX
+    > 0`. PLACEHOLDER NOMMÉ → calibrage D12.4."""
+    return 1.0 - ATT_GLOBALE_MAX * M.completude_ratio(game_state, player)
+
+
+def f_objets(game_state: dict, player: str, objets_touches) -> float:
+    """Terme 2 (§4.2) — atténuation par la maîtrise des objets CONCRETS touchés.
+    Chaque objet contribue `1 − ATT_OBJET_MAX · palier/PALIER_MAX` ; un objet inconnu
+    (palier 0) contribue **neutre 1.0**. On combine par MOYENNE des atténuations
+    (sobre, bornée : reste ∈ [plancher, 1], jamais → 0 même avec beaucoup d'objets).
+    `None`/`[]` → 1.0 (terme 2 absent). PLACEHOLDER NOMMÉ → calibrage D12.4."""
+    if not objets_touches:
+        return 1.0
+    facteurs = [
+        1.0 - ATT_OBJET_MAX * (M.palier(game_state, player, o) / M.PALIER_MAX)
+        for o in objets_touches
+    ]
+    return sum(facteurs) / len(facteurs)
+
+
+def cout_action(game_state: dict, player: str, action: str,
+                objets_touches=None) -> float:
+    """Le seam (§4.2). `base × f_globale × f_objets`, atténuation ∈ ]0,1]. Coût NUL
+    préservé : si `base == 0` (manger, §10.5) → renvoie 0 SANS rien lire. NEUTRE à
+    vide : sans maîtrise, `f_globale == f_objets == 1.0` → `cout_action == base`
+    (non-régression du golden Vigueur). L'urgence (`ecraser`) reste un facteur
+    SÉPARÉ appliqué par-dessus par l'appelant (ce n'est pas de la maîtrise)."""
+    base = COUTS[action]
+    if base == 0.0:
+        return 0.0
+    return base * f_globale(game_state, player) * f_objets(game_state, player, objets_touches)
 
 
 # --- Ponts maîtrise → Vigueur (§4.3) : orchestration au-dessus des deux couches
@@ -123,7 +235,8 @@ def recolter(game_state: dict, player: str, plant, eco) -> float:
     tronqué : gain ET résidu × ratio (récolte partielle). Sur du mûr, net positif
     (gain ≫ coût) — le canal de ressourcement légitime.
     Renvoie le ratio d'effort réalisé ∈ [0, 1]."""
-    ratio = spend(game_state, player, HARVEST_VIGUEUR_COST)
+    cost = cout_action(game_state, player, "recolter", _objets_action("recolter", plant))
+    ratio = spend(game_state, player, cost)
     gain(game_state, player, HARVEST_GAIN_FULL * maturite(plant) * ratio)
     biomass = (plant.current_stage + 1.0) * 0.4   # même barème que le tick récolte
     eco.add_necromass(*plant.position, biomass * ratio, harvested=True)
@@ -138,7 +251,8 @@ def deraciner(game_state: dict, player: str, plant, eco) -> bool:
     vide, la Vigueur est drainée et rien n'est accompli — le raccourci destructeur
     échoue quand on est épuisé.
     Renvoie True si la plante a effectivement été déracinée."""
-    ratio = spend(game_state, player, ELEVE)
+    cost = cout_action(game_state, player, "deraciner", _objets_action("deraciner", plant))
+    ratio = spend(game_state, player, cost)
     if ratio < 1.0:
         return False
     plant.health = 0
@@ -164,7 +278,9 @@ def ecraser(game_state: dict, player: str, eco, r: int, c: int,
     REVIENT. Net négatif sec, le raccourci s'use. Le canal vertueux symétrique est
     `favoriser_auxiliaire` (régulation émergente, durable).
     Renvoie True si le geste a été pleinement payé (et donc appliqué)."""
-    cost = MODERE * (URGENCE_MULT if urgence else 1.0)
+    # Pas de cible vivante de catalogue (le nuisible n'est pas une espèce câblée,
+    # D31) → terme 2 vide ; l'URGENCE reste un facteur SÉPARÉ par-dessus le seam.
+    cost = cout_action(game_state, player, "ecraser") * (URGENCE_MULT if urgence else 1.0)
     if spend(game_state, player, cost) < 1.0:
         return False
     eco.populations["ravageur"].add(r, c, -DENSITE_PAR_SPRITE)
@@ -192,7 +308,9 @@ def favoriser_auxiliaire(game_state: dict, player: str, tile) -> bool:
     même dépensée, contrat binaire) si la Vigueur ne couvre pas le coût ; renvoie
     False sans effet si toutes les tiges sont déjà saturées (cas-bord : 10 tiges ×
     3 rondelles, jamais atteint en pratique)."""
-    if spend(game_state, player, MODERE) < 1.0:
+    cost = cout_action(game_state, player, "favoriser_auxiliaire",
+                       OBJETS_TOUCHES["favoriser_auxiliaire"])
+    if spend(game_state, player, cost) < 1.0:
         return False
     for slot in tile.stakes:
         if slot.add("auxiliaire"):
@@ -212,7 +330,8 @@ def becher(game_state: dict, player: str, eco, r: int, c: int) -> bool:
     plantes. Le joueur découvre le bon outil par la conséquence (philo #1/#6, sans
     sermon). Le jumeau qui PRÉSERVE est `grelinette`.
     Renvoie True si le geste a été pleinement payé (et donc appliqué)."""
-    if spend(game_state, player, FAIBLE) < 1.0:
+    cost = cout_action(game_state, player, "becher", OBJETS_TOUCHES["becher"])
+    if spend(game_state, player, cost) < 1.0:
         return False
     eco.populations["vers_de_terre"].add(r, c, -DENSITE_PAR_SPRITE)
     eco.microbiome.add(r, c, -BECHAGE_MICROBIOME_MALUS)
@@ -233,4 +352,5 @@ def grelinette(game_state: dict, player: str) -> bool:
     là, grelinette ne fait que dépenser la Vigueur du travail du sol sans dette
     biologique — c'est déjà le bon geste, son gain mécanique viendra.
     Renvoie True si le geste a été pleinement payé."""
-    return spend(game_state, player, MODERE) >= 1.0
+    cost = cout_action(game_state, player, "grelinette", OBJETS_TOUCHES["grelinette"])
+    return spend(game_state, player, cost) >= 1.0

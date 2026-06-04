@@ -581,6 +581,52 @@ def test_gains_ponctuels():
 
 
 # ---------------------------------------------------------------------------
+# G. Seam cout_action (D12·i3) — la maîtrise allège le coût des gestes
+#    (CONCEPTION_MAITRISE §4.2/§10.4). NEUTRE à vide (non-régression), décroissant
+#    avec la maîtrise, plancher > 0. Event-driven hors tick, déterministe sans RNG.
+# ---------------------------------------------------------------------------
+
+def test_seam_cout_action():
+    print("\n[G] seam cout_action : la maîtrise allège le coût des gestes (§4.2/§10.4)")
+    gs = _minimal_state()
+    plant = gs["tiles"][0].plants[0]   # Tomato → clé catalogue "tomate"
+    V.ensure_player(gs, "joueur_1")
+    check("résolution classe→clé d'espèce (reverse catalogue)",
+          ACT._cle_espece(plant) == "tomate", f"clé={ACT._cle_espece(plant)}")
+    # Neutre à vide : sans maîtrise, cout_action == base (ce qui garde A5–E verts).
+    base = ACT.cout_action(gs, "joueur_1", "deraciner",
+                           ACT._objets_action("deraciner", plant))
+    check("sans maîtrise : cout_action == base (ELEVE)", base == ACT.ELEVE,
+          f"cout={base}")
+    # On maîtrise la technique d'arrachage ET l'espèce ciblée → le coût baisse
+    # (terme 2 par-objet + terme 1 global montent tous deux).
+    for _ in range(20):
+        M.enregistrer_preuve(gs, "joueur_1", "arrachage")   # technique (terme 2)
+        M.enregistrer_preuve(gs, "joueur_1", "tomate")      # espèce ciblée (terme 2 + global)
+    avec = ACT.cout_action(gs, "joueur_1", "deraciner",
+                           ACT._objets_action("deraciner", plant))
+    check("avec maîtrise : coût strictement < base", avec < ACT.ELEVE, f"cout={avec}")
+    check("plancher : atténuation jamais ≤ 0 (coût strictement positif)",
+          avec > 0.0, f"cout={avec}")
+    # Un objet NON maîtrisé n'allège PAS le terme 2 : sur un joueur VIERGE, un geste
+    # dont les objets sont tous inconnus reste exactement à sa base.
+    gs_vierge = _minimal_state(); V.ensure_player(gs_vierge, "joueur_1")
+    check("objet non maîtrisé (joueur vierge) → becher == base (FAIBLE)",
+          ACT.cout_action(gs_vierge, "joueur_1", "becher", ACT.OBJETS_TOUCHES["becher"])
+          == ACT.FAIBLE)
+    # Coût NUL préservé (§10.5) : manger renvoie 0 sans rien lire, même avec maîtrise.
+    check("manger : coût NUL préservé (base 0 → 0, même avec maîtrise)",
+          ACT.cout_action(gs, "joueur_1", "manger") == 0.0)
+    # Effet de bout-en-bout : une vraie récolte coûte MOINS de Vigueur avec maîtrise.
+    eco = gs["eco"]["T0"]; plant.current_stage = len(plant.plant_class.growth_stages) - 1
+    st = gs["vigueur"]["joueur_1"]; st["max_base"] = 1000.0; st["courante"] = 500.0
+    ACT.recolter(gs, "joueur_1", plant, eco)
+    debit = 500.0 - st["courante"] + ACT.HARVEST_GAIN_FULL   # net = gain − coût ; on isole le coût
+    check("récolte branchée : coût payé < HARVEST_VIGUEUR_COST (maîtrise active)",
+          debit < ACT.HARVEST_VIGUEUR_COST, f"coût payé={debit:.3f}")
+
+
+# ---------------------------------------------------------------------------
 # B. Golden de trajectoire (hash) — cadencement régen vs refill via l'engine
 # ---------------------------------------------------------------------------
 
@@ -663,6 +709,7 @@ if __name__ == "__main__":
     test_ecraser_pression_revient()
     test_pont_maitrise_vigueur()
     test_gains_ponctuels()
+    test_seam_cout_action()
     test_golden_trajectoire()
 
     print("\n" + "=" * 60)

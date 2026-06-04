@@ -24,10 +24,16 @@ champ) — comme la Vigueur a gardé son golden intact. Si un hash bouge → bug
   ouvert tranché → **(a)** : signature `(game_state, player)`, 5 sites + A4 maj).
   Sources ponctuelles §4.3 dans `actions.py` (`observer`, `crediter_succes`).
   Golden joueur **maitrise 35/35**, **vigueur 96/96**. **Golden écolo INTACT.**
-- **i3 — Seam `cout_action` + table objets-touchés (§4.2/§10.4).** `cout_action
-  (player, action, objets_touches)` = terme global × terme objets ; table §10.4
-  data-driven ; objets non câblés = atténuation neutre 1.0. Brancher sur les
-  actions de `sim/actions.py`.
+- **i3 — Seam `cout_action` + table objets-touchés (§4.2/§10.4).** ✅ **FAIT 2026-06-04.**
+  `actions.py` : `cout_action(game_state, player, action, objets_touches)` =
+  `base × f_globale × f_objets` ; `COUTS` (littéraux d'avant regroupés) ;
+  `OBJETS_TOUCHES` (§10.4, objets statiques) ; helpers `_cle_espece` (reverse
+  classe→clé catalogue) + `_objets_action` (statique ∪ cible vivante). `f_globale`
+  = `1−ATT_GLOBALE_MAX·completude_ratio` ; `f_objets` = moyenne des
+  `1−ATT_OBJET_MAX·palier/PALIER_MAX` (inconnu→1.0). Les **6 gestes payants**
+  branchés (récolte/déraciner/écraser×urgence-séparée/favoriser/bêcher/grelinette) ;
+  `manger` base NUL inchangé. Golden joueur **vigueur 103/103** (96 + section G),
+  **maitrise 35/35**. **Golden écolo INTACT.**
 - **i4 — Détection de succès branchée (§9).** Lire les signaux du tick (§9.1) depuis
   la couche gameplay, fenêtre d'imputation geste→amélioration, tag provenance
   *féral* vs *replanté* (§9.6), gate d'observation. Le plus délicat → en dernier.
@@ -51,11 +57,18 @@ champ) — comme la Vigueur a gardé son golden intact. Si un hash bouge → bug
   atténuations = **D12.4 post-test** : placeholders nommés posés, pas les bons chiffres.
 
 ## État courant
-- **2026-06-04 :** **i2 implémenté** (`maitrise.py` agrégats+spillover+`palier_bonus`,
-  `vigueur.py` délégation, `actions.py` gains ponctuels). maitrise **35/35**, vigueur
-  **96/96**. `maitrise` importe `plants.catalogue` (mapping famille) — reste pur côté
-  Vigueur. `preuves` devient flottant quand le spillover joue (déterministe : 0.5×int).
-  **Prochain : i3** (seam `cout_action` + table objets-touchés §10.4 sur `actions.py`).
+- **2026-06-04 :** **i3 implémenté** (`actions.py` : seam `cout_action` + tables
+  `COUTS`/`OBJETS_TOUCHES` + helpers `_cle_espece`/`_objets_action` + `f_globale`/
+  `f_objets`, 6 gestes branchés). `actions.py` importe `plants.catalogue` (reverse
+  classe→clé) — `maitrise.py` reste pur. **Choix documentés :** `f_globale` lit
+  `completude_ratio` (borné [0,1], pas de log) ; `f_objets` = moyenne des atténuations
+  (bornée, jamais →0) ; urgence d'`ecraser` = facteur SÉPARÉ par-dessus le seam.
+  Atténuations = placeholders `ATT_GLOBALE_MAX`/`ATT_OBJET_MAX = 0.5` → **D12.4**.
+  maitrise **35/35**, vigueur **103/103** (96 + section G). **Prochain : i4**
+  (détection automatique de succès §9 : signaux du tick, fenêtre d'imputation, tag
+  féral, gate d'observation — le plus délicat).
+- **2026-06-04 (i2) :** `maitrise.py` agrégats+spillover+`palier_bonus`, `vigueur.py`
+  délégation, `actions.py` gains ponctuels. `preuves` flottant quand spillover joue.
 - **i1 (rappel)** : module pur, invariant « dans le dict ⇒ palier ≥ 1 », auto-découverte,
   consommation cumulative, placeholders `PREUVES_BASE=2`/`PREUVES_R=2`.
 - Golden de référence à préserver : écolo `c950f06c…` / champ `b005d9ba…` /
