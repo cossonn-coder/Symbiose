@@ -32,6 +32,7 @@ from sim.seeds import Seed
 from sim.succession import succession, spring_flush
 from sim.weather import (weather_at, WeatherEvent, K_PEST,
                          temp_norm, temperature_delta, TEMP_DRIVEN)
+from sim.vigueur import tick_player_vigueur, refill_saison
 
 # Pont récolte → banque-joueur (D17) : classe → clé catalogue (inverse).
 _SPECIES_KEY = {cls: key for key, cls in PLANT_CATALOGUE.items()}
@@ -749,6 +750,15 @@ class Engine:
             for pid, s in sc.items():
                 log.append(f"  📊 {pid} R:{s.get('recolte',0)} "
                            f"L:{s.get('luxuriance',0)} B:{s.get('biodiversite',0)}")
+
+        # Couche Vigueur JOUEUR (D11) — event-driven, AU-DESSUS du tick écolo.
+        # GARDÉE : no-op strict si aucune couche joueur (le golden n'a pas de clé
+        # `vigueur` → hash intact). Plein au passage de saison, sinon régen passive.
+        if "vigueur" in self.game_state:
+            if est_debut_saison(week_in_year):
+                refill_saison(self.game_state)
+            else:
+                tick_player_vigueur(self.game_state)
 
         self.game_state["week"] += 1
         for line in log: self._log(line)
