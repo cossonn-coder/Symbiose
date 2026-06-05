@@ -21,11 +21,14 @@ inerte d'abord** (tronçon 1, golden INTACT car non lue), **puis câblée à l'e
 (visuel + numérique vs gabarit `growth_stages`/`age_curve`) **avant** de figer.
 
 ## Découpage (sprint GROS → 6 tronçons ; révisable par Nico)
-- **1 — Structure + croissance Python (cœur), INERTE.** ⬜ `Segment`, auxine le long
-  de la structure, allongement/débourrement, **bornage** (chute du vieux bois, plafond),
-  déterminisme (`_hash_noise`). **Non câblée à l'empreinte → golden INTACT.** Test de
-  croissance libre (une espèce). *(raffinement vs §M du doc : golden intact ici,
-  re-figeage au tronçon 2.)*
+- **1 — Structure + croissance Python (cœur), INERTE.** ✅ `Segment` (base+dir+length
+  +`has_bud`) sur `PlantInstance` (1 apex au collet) ; `sim/growth.py` (auxine le long
+  de la structure, allongement/émission, débourrement, **bornage** : retrait d'apex à
+  `MAX_REACH`, senescence du bois sans apex, plafond `MAX_SEGMENTS` dur, **rejet de
+  souche** → run éternel), appelé par l'engine après la physiologie. Déterministe
+  (`_hash_noise`, zéro RNG). `tests/test_croissance.py` **19/19**. **Golden INTACT**
+  (`c950f06c…` — structure non lue). Phototropisme **stubé neutre** (apex droit, jitter
+  latéral) → tronçon 2.
 - **2 — Profil par espèce + dérivation d'empreinte.** ⬜ Schéma §E sur `PlantBase`,
   profil de la **démonstratrice (tomate)** calibré sur ses stages, `height_at`/
   `canopy_radius_at`/`foliage_density_at` lisent le **cache d'empreinte** (§G).
@@ -51,8 +54,10 @@ organes **tout procéduraux** / racines **rayon dérivé**. Intensité **continu
 moteur **permanent**, déclencheurs naturels **plus tard**.
 
 ## Points ouverts (à trancher dans le tronçon concerné, défaut sobre + signaler)
-- **1** : représentation exacte d'un `Segment` (base+dir+length vs base+extrémité) ;
-  où loger la boucle de croissance (`engine._tick_*` vs module dédié `sim/growth.py`).
+- **1** ✅ tranché : `Segment` = **base+dir+length** (extrémité dérivée) + `has_bud`
+  (bourgeon axillaire, §D.3) ; boucle = **module dédié `sim/growth.py`** appelé par
+  l'engine (§9c, après `_update_physiology`). Bornage : portée `MAX_REACH_CM` +
+  senescence + plafond dur + rejet de souche (leviers de module, calibrage = tronçon 2).
 - **2** : forme du cache d'empreinte (recalcul/tick vs invalidation) ; ordre de
   migration des espèces.
 - **3** : effet hormonal exact de `cible="branche"` (dominance ~inchangée).

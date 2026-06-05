@@ -33,6 +33,7 @@ from sim.succession import succession, spring_flush
 from sim.weather import (weather_at, WeatherEvent, K_PEST,
                          temp_norm, temperature_delta, TEMP_DRIVEN)
 from sim.vigueur import tick_player_vigueur, refill_saison
+from sim.growth import grow_plant
 
 # Pont récolte → banque-joueur (D17) : classe → clé catalogue (inverse).
 _SPECIES_KEY = {cls: key for key, cls in PLANT_CATALOGUE.items()}
@@ -661,6 +662,15 @@ class Engine:
 
             # 9. Mise à jour mémoire physiologique
             self._update_physiology(tile, eco)
+
+            # 9c. Croissance de structure (D29 réorienté, tronçon 1) — INERTE.
+            # La structure de segments pousse mais n'est PAS encore lue par
+            # l'empreinte (height_at vient des stades) → golden INTACT. Aucun
+            # log, aucune mutation des champs/attributs hashés (cf. sim/growth.py).
+            # Le câblage à l'empreinte = tronçon 2 (re-figeage maîtrisé).
+            for plant in tile.plants:
+                if plant.is_alive:
+                    grow_plant(plant, seed, week)
 
             # 9b. Mortalité réaliste — sénescence + santé dynamique (D27)
             log += self._tick_senescence_health(tile, eco)

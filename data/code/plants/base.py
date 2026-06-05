@@ -108,6 +108,34 @@ class GrowthStage:
     root_radius:   float | None = None   # rayon racinaire (uptake + root_plots)
 
 # ---------------------------------------------------------------------------
+# SEGMENT — unité de la structure morphologique (croissance procédurale)
+# ---------------------------------------------------------------------------
+#
+# D29 réorienté (croissance procédurale, tronçon 1). Une plante n'est plus
+# décrite par son seul stade : elle porte un ARBRE de segments enraciné au
+# collet (CONCEPTION_CROISSANCE.md §C). Pour CE tronçon la structure est
+# INERTE — elle pousse à côté (sim/growth.py) mais n'est PAS encore lue par
+# l'empreinte (height_at vient toujours des stades). Le câblage = tronçon 2.
+#
+# Représentation actée : base + direction + longueur (l'extrémité = base +
+# dir·length_cm). `has_bud` (bourgeon axillaire dormant) matérialise le §D.3 :
+# un segment porte un bourgeon qui peut débourrer une fois quand l'auxine
+# locale tombe sous le seuil. `organs` reste vide ici (tronçon 5).
+
+@dataclass
+class Segment:
+    parent: int | None               # index du segment porteur (None = collet)
+    base: tuple                      # (x_cm, y_cm, z_cm) — origine
+    dir: tuple                       # vecteur directeur unitaire 3D
+    length_cm: float                 # longueur courante
+    thickness_cm: float              # épaisseur (épaissit avec l'âge → vieux bois)
+    age_weeks: int                   # âge du segment
+    auxin: float                     # niveau d'auxine local [0,1] (cf. growth §D.1)
+    is_apex: bool                    # True si extrémité de croissance active
+    has_bud: bool = True             # bourgeon axillaire dormant (consommé au débourrement)
+    organs: list = field(default_factory=list)  # feuilles/fleurs/fruits (tronçon 5)
+
+# ---------------------------------------------------------------------------
 # INSTANCE DE PLANTE (avant PlantBase pour la forward ref)
 # ---------------------------------------------------------------------------
 
@@ -132,12 +160,26 @@ class PlantInstance:
     # Vecteur de gènes héréditaire (D22). Vide ⇒ tous neutres (1.0). Rempli à la
     # naissance (semis génétique : succession, renouvellement, semis joueur).
     genes: dict = field(default_factory=dict)
+    # Structure morphologique (croissance procédurale, D29 réorienté, tronçon 1).
+    # Vide à la déclaration ⇒ une plante naît avec UN segment apex au collet
+    # (cf. __post_init__). INERTE à ce tronçon : poussée par sim/growth.py mais
+    # pas encore lue par l'empreinte (height_at vient des stades — câblage = t.2).
+    segments: list = field(default_factory=list)
 
     def __post_init__(self):
         if self.x_cm is None or self.y_cm is None:
             r, c = self.position
             self.x_cm = c * PLOT_CM + PLOT_CM / 2
             self.y_cm = r * PLOT_CM + PLOT_CM / 2
+        if not self.segments:
+            # Collet : un seul segment apex, vertical, au point sol (x,y,z=0).
+            # auxin=1.0 (plein) — recalculé chaque tick par growth.py de toute
+            # façon ; la valeur initiale n'influe pas la dynamique.
+            self.segments = [Segment(
+                parent=None, base=(self.x_cm, self.y_cm, 0.0),
+                dir=(0.0, 0.0, 1.0), length_cm=1.0, thickness_cm=0.5,
+                age_weeks=0, auxin=1.0, is_apex=True,
+            )]
 
     def gene(self, name: str) -> float:
         """Facteur génétique pour un gène (1.0 = neutre si absent du vecteur)."""
