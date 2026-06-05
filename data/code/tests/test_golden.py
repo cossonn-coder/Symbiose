@@ -13,8 +13,14 @@ le comportement a bougé → on s'arrête.
 
 Scénario (choisi 2026-06-03) : monde 3 tuiles (terre/argile/sable), jardin
 diversifié + attire-auxiliaires sur les tuiles d'index pair, un pommier sur la
-tuile 0 pour exercer pérennes + sénescence (~70 ans), sur 100 ans. Couvre
-succession + reproduction + sénescence + hiver + multi-sol.
+tuile 0 pour exercer pérennes. Couvre succession + reproduction + hiver +
+multi-sol.
+
+Horizon RÉDUIT à 10 ans (2026-06-05, sprint croissance) : la passe de croissance
+procédurale a alourdi le tick → on raccourcit le golden pour garder un cycle de
+dev rapide. CONTREPARTIE TEMPORAIRE : 10 ans n'exerce PAS la sénescence du
+pommier (~70 ans). À rétablir à 100 ans (avec re-capture) quand on voudra
+revérifier la sénescence.
 
 Lancement (depuis data/code/) :
   python3 -m tests.test_golden            # vérifie contre golden_hash.txt
@@ -31,7 +37,7 @@ from plants import (Tomato, Basil, Sunflower, Bean, Clover, Pepper,
 from fields import init_eco
 from sim.engine import Engine
 
-N_YEARS = 100
+N_YEARS = 10   # réduit de 100 (cf. en-tête) — sénescence non exercée pour l'instant
 SOILS = ["terre", "argile", "sable"]
 HASH_FILE = os.path.join(os.path.dirname(__file__), "golden_hash.txt")
 

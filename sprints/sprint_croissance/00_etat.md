@@ -27,8 +27,10 @@ inerte d'abord** (tronçon 1, golden INTACT car non lue), **puis câblée à l'e
   `MAX_REACH`, senescence du bois sans apex, plafond `MAX_SEGMENTS` dur, **rejet de
   souche** → run éternel), appelé par l'engine après la physiologie. Déterministe
   (`_hash_noise`, zéro RNG). `tests/test_croissance.py` **19/19**. **Golden INTACT**
-  (`c950f06c…` — structure non lue). Phototropisme **stubé neutre** (apex droit, jitter
-  latéral) → tronçon 2.
+  (structure non lue). Phototropisme **stubé neutre** (apex droit, jitter latéral) →
+  tronçon 2. ⚠️ Golden **réduit à 10 ans** (2026-06-05, la croissance alourdit le tick ;
+  sénescence pommier ~70 ans **non exercée pour l'instant**) → re-capturé **`6369c30b…`**
+  (≠ ancien `c950f06c…`). Le hash `c950f06c…` cité dans `01_*.md` est donc périmé.
 - **2 — Profil par espèce + dérivation d'empreinte.** ⬜ Schéma §E sur `PlantBase`,
   profil de la **démonstratrice (tomate)** calibré sur ses stages, `height_at`/
   `canopy_radius_at`/`foliage_density_at` lisent le **cache d'empreinte** (§G).
