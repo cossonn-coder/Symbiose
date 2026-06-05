@@ -1,5 +1,14 @@
 # Conception — Hormones de croissance : auxine & dominance apicale (SYMBIOSE)
 
+> ⚠️ **REFONDU (2026-06-05) — ce document est ARCHIVÉ.** Son modèle « 2 scalaires
+> hormonaux, repos neutre » a été **abandonné** au Sprint conception Croissance
+> procédurale : l'auxine devient un **niveau le long d'une structure morphologique
+> réelle** (segments), pilotée en moteur **permanent**, avec rendu pixel procédural.
+> **Source de vérité actuelle : [`CONCEPTION_CROISSANCE.md`](CONCEPTION_CROISSANCE.md).**
+> On conserve ce fichier pour l'historique (biologie §A toujours valable, action
+> `tailler` absorbée comme appelant du seam §F du nouveau doc). Ne plus l'implémenter
+> tel quel.
+
 > **Document de conception. Aucun code écrit.** Spec de référence pour le futur
 > sprint d'implémentation Python de la réponse hormonale à la taille (dette
 > **D29**), qui devra préserver `tests/test_golden.py`.
