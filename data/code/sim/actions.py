@@ -25,6 +25,7 @@ from __future__ import annotations
 
 from sim.vigueur import spend, gain
 from sim.vigueur_plante import maturite, vigueur_plante   # facteurs partagés (mutualisés, pas dupliqués)
+from sim.growth import atteindre_segment   # seam de perturbation §F (sim→sim, pas de cycle : growth n'importe pas actions)
 from sim.effects import necromass_biomass
 from sim import maitrise as M   # couche savoir (D12) — orchestrée ici pour les gains ponctuels §4.3
 from fields.population import DENSITE_PAR_SPRITE   # « un geste = un individu = un quantum » (D31.3 §5)
@@ -50,6 +51,11 @@ HARVEST_VIGUEUR_COST = FAIBLE
 
 # Gain brut d'une récolte d'organe pleinement mûr (× maturité × effort).
 HARVEST_GAIN_FULL = 15.0
+
+# Fraction de `HARVEST_GAIN_FULL · maturité` rendue par `tailler` (décision #3) :
+# tailler récupère un PEU de Vigueur (organe coupé), mais reste NET coûteux. Proxy
+# `∝ maturité` en attendant les organes mûrs réels (tronçon 5) qui le raffineront.
+GAIN_TAILLE_RATIO = 0.3
 
 # Sources PONCTUELLES de Vigueur liées à la maîtrise (CONCEPTION_MAITRISE §4.3) —
 # placeholders nommés, *calibrage D12.4*. La découverte motive (petit +), le
@@ -79,6 +85,7 @@ COUTS = {
     "favoriser_auxiliaire": MODERE,
     "becher":               FAIBLE,
     "grelinette":           MODERE,
+    "tailler":              MODERE,            # geste direct sur le vivant (philo #1) — coût modéré
     "manger":               NUL,               # coût NUL → cout_action renvoie 0 sans rien lire (§10.5)
 }
 
@@ -96,6 +103,7 @@ OBJETS_TOUCHES = {
     "favoriser_auxiliaire": ("aménagement-habitat",),
     "becher":               ("bêchage", "bêche"),
     "grelinette":           ("ameublissement", "grelinette"),
+    "tailler":              ("taille", "sécateur"),
     "manger":               (),                          # coût NUL → terme 2 vide (§10.5)
 }
 
@@ -257,6 +265,64 @@ def deraciner(game_state: dict, player: str, plant, eco) -> bool:
         return False
     plant.health = 0
     eco.add_necromass(*plant.position, necromass_biomass(plant), harvested=False)
+    return True
+
+
+def _profondeur(segs: list, i: int) -> int:
+    """Profondeur d'un segment dans l'arbre (collet = 0). Local à la sélection de
+    cible (l'engine/test choisit le segment ; depuis Godot tronçon 4+ il viendra du
+    clic). O(profondeur), borné par MAX_SEGMENTS."""
+    d, p = 0, segs[i].parent
+    while p is not None:
+        d, p = d + 1, segs[p].parent
+    return d
+
+
+def _segment_cible(plant, cible: str) -> int | None:
+    """Sélecteur déterministe du segment visé par un geste structurel (point ouvert
+    §00 n°3, défaut sobre + signalé) :
+      - `cible="apex"`    → l'apex MENEUR (apex à la hauteur de cime la plus haute) :
+        l'écimage rabat la flèche.
+      - `cible="branche"` → un LATÉRAL (apex non-meneur le plus profond) : l'égourmandage
+        retire un gourmand SANS toucher la flèche → la dominance reste ~inchangée
+        (elle émerge du choix de cible, pas d'une mécanique dédiée). Repli sur le
+        meneur s'il n'existe aucun latéral.
+    Renvoie `None` si rien n'est coupable (plante réduite au collet, protégé) : le
+    geste reste alors un no-op géométrique (coût/gain conservés — on a quand même
+    « taillé »)."""
+    segs = plant.segments
+    apexes = [i for i, s in enumerate(segs) if s.is_apex]
+    if not apexes:
+        return None
+    z = lambda i: segs[i].base[2] + segs[i].dir[2] * segs[i].length_cm   # hauteur de cime (tip z)
+    meneur = max(apexes, key=z)
+    target = meneur
+    if cible == "branche":
+        laterals = [i for i in apexes if segs[i].parent is not None and i != meneur]
+        if laterals:
+            target = max(laterals, key=lambda i: _profondeur(segs, i))
+    return target if segs[target].parent is not None else None   # collet (parent None) → rien à couper
+
+
+def tailler(game_state: dict, player: str, plant, eco, *, cible: str = "apex") -> bool:
+    """Tailler (écimage si `cible='apex'`, égourmandage si `'branche'`) — geste DIRECT
+    sur le vivant (philo #1 : permis mais coûteux), à RÉPONSE ÉMERGENTE (philo #2 :
+    on appelle le seam structurel `atteindre_segment`, et c'est le tick de croissance
+    suivant qui PRODUIT le débourrement — aucun « +X latéraux » codé en dur).
+
+    Binaire tout-ou-rien, sur le modèle de `deraciner` : le seam n'est appelé QUE si
+    le coût (MODÉRÉ, allégé par la maîtrise via `cout_action`) est intégralement payé.
+    Gain en Vigueur ∝ maturité (organe coupé récupéré, décision #3 — proxy raffiné au
+    tronçon 5). `eco` est dans la signature par cohérence avec la famille des gestes
+    (réservé : tailler n'écrit aucun champ écolo aujourd'hui).
+    Renvoie True si le geste a été pleinement payé (et donc appliqué)."""
+    cost = cout_action(game_state, player, "tailler", _objets_action("tailler", plant))
+    if spend(game_state, player, cost) < 1.0:
+        return False                          # Vigueur insuffisante → rien n'est écrit (structure intacte)
+    seg_id = _segment_cible(plant, cible)
+    if seg_id is not None:
+        atteindre_segment(plant, seg_id, intensite=1.0)   # ≥ COUPE_NETTE → écimage du sous-arbre ciblé
+    gain(game_state, player, HARVEST_GAIN_FULL * maturite(plant) * GAIN_TAILLE_RATIO)
     return True
 
 

@@ -67,6 +67,13 @@ def _signature(plant):
              s.is_apex, s.has_bud) for s in plant.segments]
 
 
+def _apex_meneur(plant):
+    """Index de l'apex à la cime la plus haute (= ce que `_segment_cible('apex')` vise)."""
+    segs = plant.segments
+    apex = [i for i, s in enumerate(segs) if s.is_apex]
+    return max(apex, key=lambda i: segs[i].base[2] + segs[i].dir[2] * segs[i].length_cm)
+
+
 # --- 1. Naissance : 1 segment apex au collet -------------------------------
 
 def test_naissance():
@@ -216,6 +223,75 @@ def test_allure_determinisme():
           f"hfin {h1[-1]:.1f} vs {h2[-1]:.1f}")
 
 
+# --- 7. Seam de perturbation §F : atteindre_segment (écimage / doux / collet) ----
+#
+# Le seam est l'UNIQUE point d'entrée d'altération de structure (tronçon 3). On le
+# teste DIRECTEMENT (sans Vigueur ni `tailler` — contrat ACTION testé dans
+# test_vigueur). Il n'écrit que l'ÉTAT (auxine / segments) ; l'architecture de
+# réponse (débourrement) ÉMERGE au tick `grow_plant` suivant (philo #2).
+
+def test_seam_ecimage():
+    p = _fresh()
+    _grow(p, 20)
+    # Amener l'apex meneur à PORTER de la longueur avant d'écimer : couper un tip
+    # fraîchement émis (longueur 0) ne rabaisserait PAS la cime (le bois parent la
+    # tient déjà à la même hauteur). On vise un apex bien engagé → la coupe RABAT
+    # réellement (décision #2), robuste à la parité du calibrage.
+    week = 21
+    while p.segments[_apex_meneur(p)].length_cm < G.EMIT_LENGTH * 0.5:
+        G.grow_plant(p, SEED, week); week += 1
+    n_before, h_before = len(p.segments), _height(p)
+    G.atteindre_segment(p, _apex_meneur(p), intensite=1.0)   # ≥ COUPE_NETTE → écimage
+    check("écimage: sous-arbre retiré (len ↓)", len(p.segments) < n_before,
+          f"{n_before}→{len(p.segments)}")
+    check("écimage: hauteur de cime baisse (rabat)", _height(p) < h_before,
+          f"{h_before:.1f}→{_height(p):.1f}")
+    n_cut = len(p.segments)
+    _grow(p, 6, week0=week)
+    # Débourrement ÉMERGENT : moins d'apex → l'auxine retombe → les bourgeons
+    # survivants naissent latéraux au(x) tick(s) suivant(s). Rien n'est codé ici.
+    check("écimage: débourrement émergent (latéraux nés au tick suivant)",
+          len(p.segments) > n_cut, f"{n_cut}→{len(p.segments)}")
+    check("écimage: ramification présente après débourrement",
+          _branch_points(p) >= 1, f"branch={_branch_points(p)}")
+
+
+def test_seam_doux():
+    p = _fresh()
+    _grow(p, 24)
+    n_before = len(p.segments)
+    seg = _apex_meneur(p)
+    a_before = p.segments[seg].auxin
+    G.atteindre_segment(p, seg, intensite=0.3)   # < COUPE_NETTE → perturbation douce
+    check("doux: intensité sous le seuil d'écimage", 0.3 < G.COUPE_NETTE)
+    check("doux: aucun segment retiré", len(p.segments) == n_before,
+          f"len={len(p.segments)}")
+    check("doux: auxine locale baissée de l'intensité",
+          abs(p.segments[seg].auxin - max(0.0, a_before - 0.3)) < 1e-9,
+          f"{a_before:.3f}→{p.segments[seg].auxin:.3f}")
+
+
+def test_seam_collet_protege():
+    p = _fresh()   # 1 segment = collet apex (parent None)
+    G.atteindre_segment(p, 0, intensite=1.0)   # ≥ COUPE_NETTE MAIS collet → rien retiré
+    check("collet protégé: rien retiré (collet jamais coupé)",
+          len(p.segments) == 1, f"len={len(p.segments)}")
+    _grow(p, 10)
+    check("collet protégé: la plante repart (rejet de souche)",
+          _height(p) > 0.0, f"h={_height(p):.1f}")
+
+
+def test_seam_determinisme():
+    def run():
+        p = _fresh()
+        _grow(p, 20)
+        G.atteindre_segment(p, _apex_meneur(p), intensite=1.0)
+        _grow(p, 10, week0=21)
+        return _signature(p)
+    check("seam: déterministe (même séquence d'appels → structures identiques)",
+          run() == run())
+
+
 def test_temoin_non_migre():
     """Une espèce NON migrée (Basil) garde l'ancien chemin (empreinte = stades) :
     sa structure pousse mais n'est jamais lue (footprint reste None)."""
@@ -244,6 +320,10 @@ if __name__ == "__main__":
     test_determinisme()
     test_allure_tomate()
     test_allure_determinisme()
+    test_seam_ecimage()
+    test_seam_doux()
+    test_seam_collet_protege()
+    test_seam_determinisme()
     test_temoin_non_migre()
 
     print("\n" + "=" * 60)

@@ -202,6 +202,49 @@ def test_deraciner():
 
 
 # ---------------------------------------------------------------------------
+# A7b. tailler — action binaire : coût MODÉRÉ, gain ∝ maturité, appelle le seam
+#      structurel (§F). La RÉPONSE (débourrement) est testée côté structure dans
+#      test_croissance ; ici on vérifie le CONTRAT Vigueur (coût/binaire/gain/objets).
+# ---------------------------------------------------------------------------
+
+def test_tailler():
+    print("\n[A7b] tailler : binaire, coût MODÉRÉ, gain ∝ maturité, seam appelé")
+    gs = _minimal_state()
+    tile = gs["tiles"][0]; eco = gs["eco"]["T0"]
+    plant = tile.plants[0]   # Tomato → clé "tomate"
+    st = V.ensure_player(gs, "joueur_1"); st["courante"] = 100.0
+    # Coût : sur une plante IMMATURE (maturité 0 → gain nul), tailler débite MODERE net.
+    plant.current_stage = 0
+    ok = ACT.tailler(gs, "joueur_1", plant, eco)
+    check("tailler payé → succès", ok)
+    check("coût MODÉRÉ débité (immature → gain nul)",
+          st["courante"] == 100.0 - ACT.MODERE, f"courante={st['courante']}")
+    # Gain : sur une plante MÛRE, le gain ∝ maturité remonte la Vigueur au-dessus du
+    # seul débit du coût (reste net coûteux : gain < coût).
+    plant.current_stage = len(plant.plant_class.growth_stages) - 1   # mûr → maturité 1
+    st["courante"] = 100.0
+    ACT.tailler(gs, "joueur_1", plant, eco)
+    attendu = 100.0 - ACT.MODERE + ACT.HARVEST_GAIN_FULL * 1.0 * ACT.GAIN_TAILLE_RATIO
+    check("gain ∝ maturité ajouté (mûr → net > coût seul)",
+          abs(st["courante"] - attendu) < 1e-9 and st["courante"] > 100.0 - ACT.MODERE,
+          f"courante={st['courante']} attendu={attendu}")
+    # Binaire : Vigueur < coût → échec, structure inchangée, Vigueur drainée à 0.
+    plant2 = tile.plants[1]
+    n2 = len(plant2.segments)
+    st["courante"] = 5.0
+    ok_vide = ACT.tailler(gs, "joueur_1", plant2, eco)
+    check("tailler à vide → échec (binaire)", not ok_vide)
+    check("structure inchangée à l'échec", len(plant2.segments) == n2,
+          f"len={len(plant2.segments)}")
+    check("Vigueur drainée à 0", st["courante"] == 0.0, f"courante={st['courante']}")
+    # Objets touchés : technique + outil + clé d'espèce (cible vivante dynamique).
+    objets = ACT._objets_action("tailler", plant)
+    check("objets = taille + sécateur + clé d'espèce",
+          "taille" in objets and "sécateur" in objets and "tomate" in objets,
+          f"objets={objets}")
+
+
+# ---------------------------------------------------------------------------
 # A8. ecraser — comptabilité seule + multiplicateur d'urgence
 # ---------------------------------------------------------------------------
 
@@ -689,6 +732,7 @@ if __name__ == "__main__":
     test_primitives_spend_gain()
     test_recolter()
     test_deraciner()
+    test_tailler()
     test_ecraser()
     test_actions_hors_tick()
     test_facade_purete()

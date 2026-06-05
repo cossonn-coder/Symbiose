@@ -60,6 +60,11 @@ MAX_REACH_CM     = 200.0  # ↳ défaut PlantBase.max_height_cm/max_extent_cm (g
 WOOD_PERSISTENCE = 60     # ↳ défaut PlantBase.wood_persistence (longévité du bois sans apex)
 MAX_SEGMENTS     = 40     # plafond dur de segments par plante (filet de sécurité)
 
+# --- Seam de perturbation (§F) ---------------------------------------------
+COUPE_NETTE = 0.8   # intensité-seuil : AU-DELÀ, la perturbation ÉCIME (retrait du
+                    # segment ciblé + son sous-arbre) ; EN DEÇÀ, elle ne fait que
+                    # baisser l'auxine locale (perturbation douce). Levier de calibrage.
+
 
 # ---------------------------------------------------------------------------
 # Géométrie 3D (pure)
@@ -162,6 +167,37 @@ def _rebuild(plant, kill: set) -> None:
         s.parent = None if s.parent is None else remap[s.parent]
         new_segs.append(s)
     plant.segments = new_segs
+
+
+# ---------------------------------------------------------------------------
+# Seam de perturbation §F — point d'entrée UNIQUE de l'altération de structure
+# ---------------------------------------------------------------------------
+
+def atteindre_segment(plant, segment_id: int, intensite: float) -> None:
+    """Seam de perturbation (CONCEPTION_CROISSANCE §F) — l'UNIQUE point d'entrée par
+    lequel quoi que ce soit abîme la structure. Le mécanisme ne sait PAS qui :
+    `tailler` aujourd'hui ; grêle / ravageur / vent plus tard appelleront le MÊME
+    seam. Pur structurel — couche `sim`, déterministe, zéro RNG, zéro Vigueur.
+
+    `intensite` ∈ [0,1] continue :
+      - DOUX (< COUPE_NETTE) : baisse SEULEMENT l'auxine locale → lève l'inhibition
+        en aval (modélise notching / courbure). La structure reste intacte ; le
+        débourrement local peut SUIVRE au prochain `grow_plant` si l'auxine retombe
+        sous AUXIN_INHIB_THRESHOLD — émergent, non codé ici.
+      - NET (≥ COUPE_NETTE) : écimage = retrait du segment ciblé ET de tout son
+        sous-arbre (décision #2 : segment INCLUS). COLLET PROTÉGÉ : si le segment est
+        le collet (`parent is None`) on ne retire rien (la baisse d'auxine suffit ;
+        `grow_plant` a déjà le rejet de souche s'il ne reste aucun apex).
+
+    Le seam n'écrit QUE l'ÉTAT (auxine / liste de segments). L'architecture de
+    réponse (débourrement des bourgeons survivants) ÉMERGE au tick de croissance
+    suivant — c'est tout l'intérêt du découplage (philo #2)."""
+    segs = plant.segments
+    seg = segs[segment_id]
+    seg.auxin = max(0.0, seg.auxin - intensite)             # douce : lève l'inhibition
+    if intensite >= COUPE_NETTE and seg.parent is not None:  # net, hors collet → écimage
+        ch = _children(segs)
+        _rebuild(plant, set(_subtree(segment_id, ch)))       # seg INCLUS (décision #2)
 
 
 # ---------------------------------------------------------------------------

@@ -53,9 +53,25 @@ inerte d'abord** (tronçon 1, golden INTACT car non lue), **puis câblée à l'e
   > 3→150, couronne 18→49), pas le golden. (c) `apical_dominance_base` dut passer à
   > **2.2** (>1) car `AUXIN_DECAY`/seuil (modules, fixes) ne permettent pas de tenir
   > une flèche de ~19 segments sous 1.0 → attribut redéfini en « force » (1.0=nominal).
-- **3 — Seam `atteindre_segment` + `tailler`.** ⬜ Seam continu (§F), `tailler`
-  rebranché (apex/branche), coût `MODERE`/gain ∝ maturité inchangés. Démonstratrice
-  **pommier** (`etale`, fructification latérale). **Absorbe D29 hormones.**
+- **3 — Seam `atteindre_segment` + `tailler`.** ✅ Seam continu (§F) posé dans
+  `sim/growth.py` (doux = baisse d'auxine ; net ≥ `COUPE_NETTE` = écimage du sous-arbre,
+  collet protégé ; pur structurel, zéro RNG/Vigueur). `tailler` branchée dans
+  `sim/actions.py` (binaire calqué sur `deraciner` : coût `MODERE` via `cout_action`,
+  gain ∝ maturité × `GAIN_TAILLE_RATIO`, appelle le seam → débourrement ÉMERGENT au
+  tick suivant). **Golden INTACT** (`6369c30b…` engine, pop & vigueur_hash inchangés —
+  `tailler` jamais appelée par le scénario). `test_croissance` **43/43** (+4 seam :
+  écimage→débourrement, doux, collet protégé, déterminisme), `test_vigueur` **110/110**
+  (+7 : contrat coût/binaire/gain/objets de `tailler`). **Absorbe D29 hormones**
+  (modèle scalaire `dominance_apicale`/`reponse_taille` définitivement jeté).
+  Points tranchés : `COUPE_NETTE=0.8`, `GAIN_TAILLE_RATIO=0.3`, `_segment_cible`
+  (apex = cime z max ; branche = apex latéral le plus profond, repli meneur ; collet→None).
+  > **Périmètre réduit vs kickoff initial** : la démonstratrice **pommier** (`etale`,
+  > fructification latérale) est sortie → **tronçon 3bis** dédié (re-figerait le golden,
+  > exige l'override `PerennialWoody` + calibrage `age_curve`). Ici on démontre sur la
+  > **tomate** (déjà procédurale), golden intact.
+- **3bis — Migration procédurale du pommier.** ⬜ Port `etale`, fructification
+  latérale, override `PerennialWoody`, calibrage `age_curve` décennal → re-figeage
+  golden localisé.
 - **4 — Rendu pixel structure (Godot).** ⬜ Projection iso + rastérisation segments
   aux zooms ×4…×32, LOD (§H.1/§H.3). Premier rendu visible des branches.
 - **5 — Organes procéduraux (Godot) — RISQUE N°1.** ⬜ Générateur feuilles/fleurs/
@@ -84,4 +100,7 @@ moteur **permanent**, déclencheurs naturels **plus tard**.
   `canopy_radius` sans organes = `max_horiz + foliage_halfwidth` (couronne non nulle
   même droit). `root_radius` = **k·canopy** (k=`PROC_ROOT_RATIO`=1.0). `foliage_density`
   = ancien chemin (→ tronçon 5). Ordre de migration = **tomate seule** ce tronçon.
-- **3** : effet hormonal exact de `cible="branche"` (dominance ~inchangée).
+- **3** ✅ défaut tranché : `cible="branche"` = retrait de l'**apex latéral le plus
+  profond** (non-meneur) → la flèche n'est pas touchée, donc la dominance reste
+  ~inchangée (elle émerge du choix de cible, pas d'une mécanique dédiée). Repli sur le
+  meneur s'il n'y a aucun latéral. Heuristique alternative encore possible (calibrage).
