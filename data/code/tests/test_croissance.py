@@ -22,7 +22,7 @@ Usage (depuis data/code/) :
 """
 from collections import Counter
 
-from plants import Tomato, PlantInstance
+from plants import Tomato, Basil, PlantInstance
 import sim.growth as G
 
 SEED = 0x5AB1057E
@@ -155,15 +155,96 @@ def test_determinisme():
           f"len {len(p1.segments)} vs {len(p2.segments)}")
 
 
+# --- 6. Allure d'empreinte (tronçon 2) : la TOMATE migrée lit la structure -----
+#
+# La tomate est la 1re espèce `procedural_growth` : son empreinte
+# (height_at/canopy_radius_at/root_radius_at) est DÉRIVÉE de la structure (§G), plus
+# des stades. On valide l'ALLURE en croissance libre (semaine d'été fixe pour
+# écarter le ralenti hivernal) : la flèche monte MONOTONIQUEMENT de ~3 cm vers son
+# gabarit (~150 cm), la couronne s'élargit dans l'enveloppe, le tout déterministe.
+# Au-delà du pic, la plante S'ÉTALE (auxine relâchée avec l'âge, §D.1) — on ne teste
+# donc la monotonie QUE sur la phase de montée (jusqu'au pic).
+
+H_GABARIT = 150.0   # Tomato.max_height_cm
+FHW       = 18.0    # Tomato.foliage_halfwidth (couronne minimale, flèche droite)
+CR_ENV    = FHW + 32.0   # enveloppe de couronne = foliage_halfwidth + max_extent_cm
+
+
+def _free_growth(plant, n, week=20):
+    """Croissance libre déterministe (été fixe, pleine vigueur) ; renvoie les
+    trajectoires d'empreinte (hauteur, rayon de couronne)."""
+    plant.growth_factor = 1.0
+    hs, crs = [], []
+    for _ in range(n):
+        G.grow_plant(plant, SEED, week)
+        hs.append(Tomato.height_at(plant))
+        crs.append(Tomato.canopy_radius_at(plant))
+    return hs, crs
+
+
+def test_allure_tomate():
+    p = _fresh()
+    hs, crs = _free_growth(p, 80)
+    peak = max(range(len(hs)), key=lambda i: hs[i])
+    # Départ bas (jeune flèche) puis montée jusqu'au gabarit.
+    check("allure: départ bas (~3 cm)", hs[0] < 10, f"h0={hs[0]:.1f}")
+    check("allure: hauteur monte vers le gabarit (~150 cm)",
+          140 <= hs[peak] <= H_GABARIT + 6, f"pic={hs[peak]:.1f}@t{peak+1}")
+    check("allure: jamais au-dessus du gabarit", max(hs) <= H_GABARIT + 6,
+          f"max={max(hs):.1f}")
+    check("allure: montée monotone (jusqu'au pic)",
+          all(hs[i] >= hs[i-1] - 1e-9 for i in range(1, peak + 1)))
+    # Couronne : non nulle dès le départ (foliage_halfwidth), s'élargit dans l'enveloppe.
+    check("allure: couronne non nulle au départ", abs(crs[0] - FHW) < 1e-6,
+          f"cr0={crs[0]:.1f}")
+    # +overshoot : l'apex latéral se retire APRÈS avoir dépassé max_extent d'un pas
+    # d'élongation (la couronne peut donc excéder l'enveloppe nominale de ~1 tick).
+    check("allure: couronne dans l'enveloppe", FHW - 1e-6 <= max(crs) <= CR_ENV + G.GROWTH_SPEED,
+          f"crmax={max(crs):.1f} (env={CR_ENV:.0f}+{G.GROWTH_SPEED:.0f})")
+    check("allure: couronne monotone (jusqu'au pic)",
+          all(crs[i] >= crs[i-1] - 1e-9 for i in range(1, peak + 1)))
+    # root_radius dérivé (= PROC_ROOT_RATIO · couronne).
+    check("allure: rayon racinaire dérivé de la couronne",
+          abs(Tomato.root_radius_at(p) - Tomato.canopy_radius_at(p)) < 1e-6)
+
+
+def test_allure_determinisme():
+    p1, p2 = _fresh(), _fresh()
+    h1, c1 = _free_growth(p1, 60)
+    h2, c2 = _free_growth(p2, 60)
+    check("allure: empreinte déterministe (60 ticks)", h1 == h2 and c1 == c2,
+          f"hfin {h1[-1]:.1f} vs {h2[-1]:.1f}")
+
+
+def test_temoin_non_migre():
+    """Une espèce NON migrée (Basil) garde l'ancien chemin (empreinte = stades) :
+    sa structure pousse mais n'est jamais lue (footprint reste None)."""
+    check("témoin: Tomato migrée (procedural_growth)", Tomato.procedural_growth)
+    check("témoin: Basil non migrée", not Basil.procedural_growth)
+    b = PlantInstance(plant_class=Basil, position=POS)
+    cr_avant = Basil.canopy_radius_at(b)
+    b.growth_factor = 1.0
+    for k in range(20):
+        G.grow_plant(b, SEED, 1 + k)
+    check("témoin: structure pousse quand même", len(b.segments) > 1,
+          f"len={len(b.segments)}")
+    check("témoin: empreinte = stades (inchangée par la structure)",
+          Basil.canopy_radius_at(b) == cr_avant, f"cr={Basil.canopy_radius_at(b)}")
+    check("témoin: cache d'empreinte jamais peuplé", b.footprint is None)
+
+
 if __name__ == "__main__":
     print("=" * 60)
-    print("SYMBIOSE — Croissance procédurale (D29 réorienté, tronçon 1)")
+    print("SYMBIOSE — Croissance procédurale (D29 réorienté, tronçons 1-2)")
     print("=" * 60)
     test_naissance()
     test_croissance_dominance()
     test_debourrement()
     test_bornage()
     test_determinisme()
+    test_allure_tomate()
+    test_allure_determinisme()
+    test_temoin_non_migre()
 
     print("\n" + "=" * 60)
     passed = sum(1 for _, ok in _results if ok)

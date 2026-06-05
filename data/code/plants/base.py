@@ -77,6 +77,11 @@ STRATE_DEFAULTS = {
     "grimpante": {"height": 150, "canopy_r": 25, "root_r": 55, "density": 0.50},
 }
 
+# Empreinte procédurale (D29 réorienté, tronçon 2) — rayon racinaire dérivé de la
+# couronne (§G, §8 acté : pas de structure souterraine). k calibré : la tomate
+# veut root ≈ canopy (drip-line). Module-level (1 espèce migrée) → per-espèce plus tard.
+PROC_ROOT_RATIO = 1.0   # root_radius = PROC_ROOT_RATIO · canopy_radius
+
 # ---------------------------------------------------------------------------
 # REGISTRE D'EFFETS (callbacks complexes)
 # ---------------------------------------------------------------------------
@@ -165,6 +170,11 @@ class PlantInstance:
     # (cf. __post_init__). INERTE à ce tronçon : poussée par sim/growth.py mais
     # pas encore lue par l'empreinte (height_at vient des stades — câblage = t.2).
     segments: list = field(default_factory=list)
+    # Cache d'empreinte dérivée de la structure (croissance procédurale, tronçon 2).
+    # None ⇒ pas encore calculé (avant le 1er tick de grow_plant) ; recalculé une
+    # fois par tick en fin de grow_plant pour les espèces `procedural_growth`. Les
+    # classmethods d'empreinte le lisent ; repli à la volée si None (update_footprint).
+    footprint: dict | None = None
 
     def __post_init__(self):
         if self.x_cm is None or self.y_cm is None:
@@ -184,6 +194,42 @@ class PlantInstance:
     def gene(self, name: str) -> float:
         """Facteur génétique pour un gène (1.0 = neutre si absent du vecteur)."""
         return self.genes.get(name, 1.0)
+
+    def update_footprint(self) -> None:
+        """
+        Recalcule l'empreinte dérivée de la structure (CONCEPTION_CROISSANCE §G).
+        Pure géométrie sur `segments` + leviers de profil de l'espèce — aucun import
+        de sim (respect des couches : plants ne dépend pas de growth). Appelée en fin
+        de grow_plant (structure à jour) ; repli à la volée si lue avant le 1er tick.
+
+          height   ← max(z) des extrémités de segments (la flèche la plus haute) ;
+          canopy_r ← extension horizontale max + foliage_halfwidth (couronne non
+                     nulle même en flèche droite, point dur §C : feuilles absentes
+                     avant le tronçon 5) ;
+          root_r   ← PROC_ROOT_RATIO · canopy_r (rayon dérivé, §8 — pas de racine réelle).
+        """
+        segs = self.segments
+        cx, cy = segs[0].base[0], segs[0].base[1]
+        max_z = 0.0
+        max_horiz = 0.0
+        for s in segs:
+            tx = s.base[0] + s.dir[0] * s.length_cm
+            ty = s.base[1] + s.dir[1] * s.length_cm
+            tz = s.base[2] + s.dir[2] * s.length_cm
+            if tz > max_z:
+                max_z = tz
+            h = math.hypot(tx - cx, ty - cy)
+            if h > max_horiz:
+                max_horiz = h
+        canopy_r = max_horiz + self.plant_class.foliage_halfwidth
+        self.footprint = {"height": max_z, "canopy_r": canopy_r,
+                          "root_r": canopy_r * PROC_ROOT_RATIO}
+
+    def footprint_value(self, key: str) -> float:
+        """Lecture du cache d'empreinte, avec repli (recalcul si pas encore peuplé)."""
+        if self.footprint is None:
+            self.update_footprint()
+        return self.footprint[key]
 
     @property
     def stage(self) -> GrowthStage:
@@ -328,11 +374,35 @@ class PlantBase(ABC):
     fungal_susceptibility: float = 0.5   # sensibilité aux maladies fongiques [0-1]
     temp_min_growth: float = 5.0         # °C — seuil de croissance (météo 02) ; en deçà, stagnation. Extensible par espèce.
 
+    # --- Profil de croissance procédurale (D29 réorienté, tronçon 2) ---
+    # Leviers PAR ESPÈCE lus par sim/growth.py (CONCEPTION_CROISSANCE §E.1). Les
+    # DÉFAUTS reproduisent les anciennes constantes de module de growth.py → une
+    # espèce non migrée pousse exactement comme au tronçon 1 (golden de structure
+    # intact). Une espèce migrée (procedural_growth=True) règle ces leviers sur ses
+    # growth_stages/age_curve (« reproduire l'allure d'abord », §E.3).
+    growth_speed:          float = 2.0    # cm/tick d'allongement de l'apex (≡ GROWTH_SPEED)
+    port_archetype:        str   = "fleche"   # stratégie de port (§E.2) — descriptif ici
+    apical_dominance_base: float = 1.0    # FORCE de dominance = production d'auxine d'un apex au repos (1.0 = nominal ≡ AUXIN_SOURCE ; >1 = flèche tenue plus longtemps, cf. Tomato)
+    branch_angle:          float = 50.0   # angle d'insertion des latéraux (degrés, ≡ BRANCH_ANGLE)
+    phototropism_gain:     float = 0.0    # sensibilité lumière — RÉSERVÉ (phototropisme stubé neutre)
+    wood_persistence:      int   = 60     # longévité du bois sans apex (semaines, ≡ WOOD_PERSISTENCE)
+    max_height_cm:         float = 200.0  # plafond de hauteur de l'apex (≡ MAX_REACH_CM, défaut d'arbre)
+    max_extent_cm:         float = 200.0  # plafond d'extension horizontale de la couronne
+    organ_site:            str   = "terminal"  # "terminal"|"lateral" — naissance fleurs/fruits (tronçon 5)
+    foliage_halfwidth:     float = 0.0    # demi-largeur de feuillage autour d'un segment (couronne non nulle)
+    # Bascule vers la voie procédurale (empreinte dérivée de la structure §G). OFF par
+    # défaut : l'espèce garde l'ancien chemin (stades). True = migrée (ici : Tomato).
+    procedural_growth:     bool  = False
+
     # --- Interface lumière (polymorphe) ---
 
     @classmethod
     def height_at(cls, inst: "PlantInstance") -> float:
-        """Hauteur effective (cm) = potentiel du stade × growth_factor × génétique."""
+        """Hauteur effective (cm). Voie procédurale (§G) : max(z) de la structure ×
+        génétique (growth_factor déjà intégré dans la croissance). Sinon : potentiel
+        du stade × growth_factor × génétique."""
+        if cls.procedural_growth:
+            return inst.footprint_value("height") * inst.gene("hauteur")
         st = inst.stage
         h = st.canopy_height if st.canopy_height is not None \
             else STRATE_DEFAULTS[st.strate]["height"]
@@ -340,12 +410,16 @@ class PlantBase(ABC):
 
     @classmethod
     def canopy_radius_at(cls, inst: "PlantInstance") -> float:
+        if cls.procedural_growth:
+            return inst.footprint_value("canopy_r")
         st = inst.stage
         return st.canopy_radius if st.canopy_radius is not None \
             else STRATE_DEFAULTS[st.strate]["canopy_r"]
 
     @classmethod
     def root_radius_at(cls, inst: "PlantInstance") -> float:
+        if cls.procedural_growth:
+            return inst.footprint_value("root_r")
         st = inst.stage
         return st.root_radius if st.root_radius is not None \
             else STRATE_DEFAULTS[st.strate]["root_r"]

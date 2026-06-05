@@ -220,6 +220,28 @@ class Tomato(Solanaceae):
     life_cycle = "annual"
     winter_strategy = "die"
     foliage_density = 0.55
+    # --- Profil de croissance procédurale (D29 réorienté, tronçon 2) ---
+    # DÉMONSTRATRICE : 1re espèce migrée sur la voie procédurale (§G). L'empreinte
+    # (height_at/canopy_radius_at/root_radius_at) est dérivée de la STRUCTURE, plus
+    # des stades. Calibration sur les growth_stages réels (5→30→100→150 cm) — §E.3
+    # « reproduire l'allure d'abord ». En croissance libre la flèche monte
+    # MONOTONIQUEMENT de ~3 cm vers le gabarit ~150 cm (pic ~tick 75), couronne de
+    # ~18 cm (jeune flèche) vers ~49 cm (≈ strate « moyenne » 50) ; PUIS, avec l'âge,
+    # l'auxine se relâche et la plante S'ÉTALE (§D.1 « vieux sujet s'étale ») — la
+    # hauteur n'est donc pas un plateau éternel, c'est voulu (moteur permanent).
+    #   • vitesse / angle laissés aux DÉFAUTS → dynamique de croissance identique au
+    #     tronçon 1 sur la fenêtre courte/décapitée que testent les tests structurels ;
+    #   • apical_dominance_base=2.2 (> nominal) : la flèche reste tenue jusqu'à ~150 cm
+    #     SANS saturer MAX_SEGMENTS (sinon l'élagage amputerait la flèche). Nécessaire
+    #     car AUXIN_DECAY/seuil (modules) sont fixes : une flèche de ~19 segments exige
+    #     une production d'apex > 1 pour inhiber ses bourgeons profonds.
+    procedural_growth     = True
+    port_archetype        = "buissonnant"
+    apical_dominance_base = 2.2   # flèche tenue jusqu'au gabarit (cf. ci-dessus)
+    max_height_cm         = 150.0 # gabarit mature (growth_stages : 150 cm)
+    max_extent_cm         = 32.0  # extension horizontale de la couronne
+    foliage_halfwidth     = 18.0  # canopée non nulle même en flèche (feuilles : tronçon 5)
+    organ_site            = "terminal"
     growth_stages = [
         GrowthStage(
             name="semis", duration_weeks=3, strate="basse",

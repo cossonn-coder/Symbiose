@@ -31,10 +31,28 @@ inerte d'abord** (tronçon 1, golden INTACT car non lue), **puis câblée à l'e
   tronçon 2. ⚠️ Golden **réduit à 10 ans** (2026-06-05, la croissance alourdit le tick ;
   sénescence pommier ~70 ans **non exercée pour l'instant**) → re-capturé **`6369c30b…`**
   (≠ ancien `c950f06c…`). Le hash `c950f06c…` cité dans `01_*.md` est donc périmé.
-- **2 — Profil par espèce + dérivation d'empreinte.** ⬜ Schéma §E sur `PlantBase`,
-  profil de la **démonstratrice (tomate)** calibré sur ses stages, `height_at`/
-  `canopy_radius_at`/`foliage_density_at` lisent le **cache d'empreinte** (§G).
-  **Re-figeage golden** (migration incrémentale §I). Racines = rayon dérivé.
+- **2 — Profil par espèce + dérivation d'empreinte.** ✅ Schéma §E posé sur
+  `PlantBase` (attributs de classe, défauts = ex-constantes de module → espèces non
+  migrées inchangées) ; `grow_plant` lit le profil depuis `plant.plant_class`.
+  **Tomate migrée** (`procedural_growth=True`) : `height_at`/`canopy_radius_at`/
+  `root_radius_at` lisent un **cache `inst.footprint`** recalculé en fin de
+  `grow_plant` (repli à la volée si None). `foliage_density_at` garde l'ancien chemin
+  (feuilles = tronçon 5). Racines = `PROC_ROOT_RATIO·canopy` (k=1.0). `test_croissance`
+  **33/33** (5 structure tronçon 1 intacts + allure tomate + témoin Basil).
+  **Golden NON re-figé** : il reste **`6369c30b…`** (engine) / **`b005d9ba…`** (pop),
+  inchangés — LÉGITIME, pas une fuite (cf. ⚠️ ci-dessous). Suite complète verte
+  (genetique 20, maitrise 35+20, signes 8, vigueur 103, main.py OK).
+  > ⚠️ **2 imprécisions du kickoff `02_*.md` corrigées** : (a) il citait les stades
+  > de Bourse-à-pasteur (~40 cm) comme ceux de la tomate → recalibré sur la VRAIE
+  > tomate **~150 cm** (choix Nico, §E.3). (b) Il prédisait un **re-figeage** ; en
+  > fait la tomate **meurt à w2-3 dans le scénario golden** (froid de démarrage
+  > t≈4.4 °C < seuil 5 °C + mildiou familial Solanaceae -1 santé/sem → morte avant
+  > de pousser ; **comportement préexistant**, identique au tronçon 1). À ses tailles
+  > (≤35 cm → 1 seul plot) l'empreinte procédurale ne perturbe **rien** → golden
+  > intact. La vraie couverture du procédural = le **test d'allure** (montée monotone
+  > 3→150, couronne 18→49), pas le golden. (c) `apical_dominance_base` dut passer à
+  > **2.2** (>1) car `AUXIN_DECAY`/seuil (modules, fixes) ne permettent pas de tenir
+  > une flèche de ~19 segments sous 1.0 → attribut redéfini en « force » (1.0=nominal).
 - **3 — Seam `atteindre_segment` + `tailler`.** ⬜ Seam continu (§F), `tailler`
   rebranché (apex/branche), coût `MODERE`/gain ∝ maturité inchangés. Démonstratrice
   **pommier** (`etale`, fructification latérale). **Absorbe D29 hormones.**
@@ -60,6 +78,10 @@ moteur **permanent**, déclencheurs naturels **plus tard**.
   (bourgeon axillaire, §D.3) ; boucle = **module dédié `sim/growth.py`** appelé par
   l'engine (§9c, après `_update_physiology`). Bornage : portée `MAX_REACH_CM` +
   senescence + plafond dur + rejet de souche (leviers de module, calibrage = tronçon 2).
-- **2** : forme du cache d'empreinte (recalcul/tick vs invalidation) ; ordre de
-  migration des espèces.
+- **2** ✅ tranché : cache d'empreinte = **dict `inst.footprint` recalculé 1×/tick**
+  en fin de `grow_plant` (défaut sobre ; repli à la volée si None), **pas**
+  d'invalidation paresseuse. Bascule par espèce = **flag `procedural_growth`**.
+  `canopy_radius` sans organes = `max_horiz + foliage_halfwidth` (couronne non nulle
+  même droit). `root_radius` = **k·canopy** (k=`PROC_ROOT_RATIO`=1.0). `foliage_density`
+  = ancien chemin (→ tronçon 5). Ordre de migration = **tomate seule** ce tronçon.
 - **3** : effet hormonal exact de `cible="branche"` (dominance ~inchangée).
