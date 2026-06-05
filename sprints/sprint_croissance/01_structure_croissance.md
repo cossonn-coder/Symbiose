@@ -16,8 +16,9 @@ encore être lue par `height_at`/le `LightField`. C'est l'équivalent du tronço
 la Vigueur/Maîtrise : on construit l'**état + la dynamique inerte** d'abord, on
 **branche** ensuite (tronçon 2).
 
-**Le golden écolo NE bouge PAS** (`c950f06c…` engine / `b005d9ba…` champ) **à ce
-tronçon** : tant que personne ne **lit** la structure (l'empreinte vient encore des
+**Le golden écolo NE bouge PAS** (`6369c30b…` engine / `b005d9ba…` champ ; golden
+réduit à **10 ans** le 2026-06-05, cf. `00_etat.md` — ancien hash 100 ans `c950f06c…`)
+**à ce tronçon** : tant que personne ne **lit** la structure (l'empreinte vient encore des
 stades), le tick produit le même résultat. Si un hash bouge ici, c'est une **fuite**
 (quelque chose lit déjà la structure) → bug, pas un re-figeage. *(Le re-figeage
 viendra au tronçon 2, quand on câblera l'empreinte.)*
@@ -102,7 +103,7 @@ Profil **par espèce** (tronçon 2). Phototropisme réel (tronçon 2). Seam/`tai
 ```
 cd data/code
 python3 -m tests.test_croissance     # nouveau, doit passer
-python3 -m tests.test_golden         # DOIT rester c950f06c… / b005d9ba…  (INTACT — structure non lue)
+python3 -m tests.test_golden         # DOIT rester 6369c30b… / b005d9ba…  (INTACT — structure non lue ; golden 10 ans)
 python3 -m tests.test_genetique && python3 -m tests.test_auxiliaires
 python3 main.py                      # tourne sans crash
 ```
