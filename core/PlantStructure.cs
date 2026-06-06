@@ -1,0 +1,138 @@
+// SYMBIOSE — PlantStructure.cs
+// Miroir C# de la structure de croissance procédurale (tronçon 4 du sprint
+// Croissance). C# est ici un CONSOMMATEUR PASSIF : zéro logique écologique,
+// zéro RNG. Le moteur de croissance vit UNIQUEMENT en Python (source de vérité,
+// data/code/sim/growth.py). Python EXPORTE la structure déjà calculée en JSON
+// (tools/export_structure.py) ; ce fichier la LIT et la rend disponible au
+// renderer (visuals/PlantRenderer.cs).
+//
+// Ne PAS confondre avec core/PlantData.cs : celui-là modélise la plante à
+// l'ANCIEN modèle (offsets de plots, hérité d'avant la croissance procédurale)
+// et survit pour le reste du code C# (non porté). Ici on n'ajoute QUE ce dont le
+// rendu de structure a besoin : les segments de bois.
+
+using Godot;
+using System.Collections.Generic;
+
+namespace Symbiose
+{
+	// ---------------------------------------------------------------------------
+	// SEGMENT — miroir minimal du Segment Python (plants/base.py)
+	// ---------------------------------------------------------------------------
+	// Pédagogie C# : un `record struct` est un type VALEUR (copié, pas référencé,
+	// comme un struct C) doté de l'égalité par valeur et d'une syntaxe concise.
+	// Idéal pour un petit agrégat de données immuables sans identité propre.
+	// On ne mirrore QUE les champs utiles au rendu : base, dir, length, thickness,
+	// is_apex. Les champs purement dynamiques du Python (age_weeks, auxin, has_bud,
+	// parent, organs) ne servent pas au dessin → on ne les transporte pas.
+	public readonly record struct Segment(
+		Vector3 Base,        // origine du segment (cm, espace sol 3D)
+		Vector3 Dir,         // vecteur directeur unitaire 3D
+		float LengthCm,      // longueur → extrémité = Base + Dir * LengthCm
+		float ThicknessCm,   // épaisseur (vieux bois = épais) → largeur de trait
+		bool IsApex);        // extrémité de croissance active (dessinée en vert)
+
+	// ---------------------------------------------------------------------------
+	// PLANT STRUCTURE — un spécimen exporté (DTO)
+	// ---------------------------------------------------------------------------
+	// DTO = Data Transfer Object : sac de données issu du JSON, sans comportement.
+	// HeightCm / CanopyRadiusCm = empreinte dérivée (§G) — sert à dessiner la
+	// silhouette de couronne au LOD faible (zoom ×4), quand on ne rastérise pas
+	// chaque brindille.
+	public sealed class PlantStructure
+	{
+		public string Title = "";
+		public string SpeciesName = "";
+		public float HeightCm;
+		public float CanopyRadiusCm;
+		public Vector3 ColletCm;             // point sol du collet (origine projection)
+		public List<Segment> Segments = new();
+	}
+
+	// ---------------------------------------------------------------------------
+	// CHARGEUR JSON
+	// ---------------------------------------------------------------------------
+	// Choix : `Json` natif de Godot (Json.ParseString) plutôt que System.Text.Json.
+	// Pourquoi ? C'est l'API idiomatique du moteur, zéro dépendance .NET ajoutée,
+	// et elle retourne des Variant/Dictionary/Array que Godot manipule nativement.
+	// Compromis : peu typée (tout est Variant → on caste à la main, double pour les
+	// nombres). Pour un DTO aussi simple, le coût de typage manuel est négligeable
+	// et l'on évite d'introduire une stack de sérialisation .NET dans un projet où
+	// Nico débute le frontend.
+	public static class StructureLoader
+	{
+		// Chemin du JSON exporté par Python. On le lit DIRECTEMENT là où Python
+		// l'écrit (data/code/tools/), sous res:// (= racine du projet Godot). Pas de
+		// copie/duplication : source unique. NB : pour un export PCK packagé il
+		// faudrait l'ajouter aux filtres d'export ; en éditeur/dev, FileAccess lit
+		// le fichier projet sans souci.
+		public const string DefaultPath = "res://data/code/tools/structure.json";
+
+		public static List<PlantStructure> Load(string path = DefaultPath)
+		{
+			var result = new List<PlantStructure>();
+
+			if (!FileAccess.FileExists(path))
+			{
+				GD.PrintErr($"[StructureLoader] Fichier introuvable : {path} "
+							+ "(as-tu lancé `python3 -m tools.export_structure` ?)");
+				return result;
+			}
+
+			using var file = FileAccess.Open(path, FileAccess.ModeFlags.Read);
+			string text = file.GetAsText();
+
+			// ParseString retourne un Variant ; il vaut `null` si le JSON est invalide.
+			Variant parsed = Json.ParseString(text);
+			if (parsed.VariantType != Variant.Type.Dictionary)
+			{
+				GD.PrintErr($"[StructureLoader] JSON racine invalide dans {path}");
+				return result;
+			}
+
+			var root = parsed.AsGodotDictionary();
+			if (!root.ContainsKey("specimens"))
+			{
+				GD.PrintErr("[StructureLoader] Clé 'specimens' absente.");
+				return result;
+			}
+
+			var specimens = root["specimens"].AsGodotArray();
+			foreach (var specVar in specimens)
+				result.Add(ParseSpecimen(specVar.AsGodotDictionary()));
+
+			GD.Print($"[StructureLoader] {result.Count} spécimens chargés depuis {path}.");
+			return result;
+		}
+
+		private static PlantStructure ParseSpecimen(Godot.Collections.Dictionary spec)
+		{
+			var plant = new PlantStructure
+			{
+				Title = spec["title"].AsString(),
+				SpeciesName = spec["species"].AsString(),
+				ColletCm = ParseVec3(spec["collet_cm"].AsGodotArray()),
+			};
+
+			var fp = spec["footprint"].AsGodotDictionary();
+			plant.HeightCm = (float)fp["height_cm"].AsDouble();
+			plant.CanopyRadiusCm = (float)fp["canopy_radius_cm"].AsDouble();
+
+			foreach (var segVar in spec["segments"].AsGodotArray())
+			{
+				var seg = segVar.AsGodotDictionary();
+				plant.Segments.Add(new Segment(
+					Base: ParseVec3(seg["base"].AsGodotArray()),
+					Dir: ParseVec3(seg["dir"].AsGodotArray()),
+					LengthCm: (float)seg["length_cm"].AsDouble(),
+					ThicknessCm: (float)seg["thickness_cm"].AsDouble(),
+					IsApex: seg["is_apex"].AsBool()));
+			}
+
+			return plant;
+		}
+
+		private static Vector3 ParseVec3(Godot.Collections.Array a) =>
+			new Vector3((float)a[0].AsDouble(), (float)a[1].AsDouble(), (float)a[2].AsDouble());
+	}
+}

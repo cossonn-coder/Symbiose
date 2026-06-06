@@ -22,8 +22,17 @@ public partial class TileGrid : Node2D
 	// Décalage global pour centrer la grille à l'écran
 	[Export] public Vector2 GridOffset = new Vector2(200f, 100f);
 
+	// Démo de structure procédurale (tronçon 4) : affiche les spécimens exportés
+	// par Python par-dessus la grille. Désactivable dans l'éditeur.
+	[Export] public bool ShowPlantDemo = true;
+	// Palier de zoom propagé aux PlantRenderer (stub : caméra/zoom pas câblée).
+	[Export] public int PlantZoomPalier = 16;
+
 	// Référence aux sprites des tuiles (un Sprite2D par plot)
 	private readonly List<Sprite2D> _tileSprites = new();
+
+	// Référence aux renderers de plantes de démo
+	private readonly List<PlantRenderer> _plantRenderers = new();
 
 	// ---------------------------------------------------------------------------
 	// INITIALISATION
@@ -32,6 +41,52 @@ public partial class TileGrid : Node2D
 	public override void _Ready()
 	{
 		BuildGrid();
+		if (ShowPlantDemo)
+			SpawnPlantDemo();
+	}
+
+	// ---------------------------------------------------------------------------
+	// DÉMO STRUCTURE PROCÉDURALE (tronçon 4)
+	// Charge les spécimens exportés par Python et instancie un PlantRenderer par
+	// spécimen, posé sur un plot de démonstration. But = VOIR les branches ; pas un
+	// système de spawn de gameplay (ça viendra). Positions hardcodées.
+	// ---------------------------------------------------------------------------
+
+	private void SpawnPlantDemo()
+	{
+		var structures = StructureLoader.Load();
+		if (structures.Count == 0)
+			return;
+
+		// Plots de démo (row, col), un par spécimen. Espacés pour limiter le
+		// chevauchement (le pommier an 10 a une grande couronne).
+		var demoPlots = new (int row, int col)[]
+		{
+			(4, 1), // Tomate · flèche mûre
+			(3, 3), // Pommier · an 3
+			(2, 5), // Pommier · an 7
+			(1, 7), // Pommier · an 10 (le plus étalé, au fond)
+		};
+
+		for (int i = 0; i < structures.Count; i++)
+		{
+			var (row, col) = demoPlots[i % demoPlots.Length];
+			var renderer = new PlantRenderer
+			{
+				// Collet posé sur la position sol du plot dans la grille existante.
+				Position = HexToScreen(row, col) + GridOffset,
+				ZoomPalier = PlantZoomPalier,
+				// Au-dessus des tuiles (ZIndex tuile = row, 0..5). Simplification :
+				// les plantes en bas d'écran (row élevé) passent devant.
+				ZIndex = 100 + row,
+				Name = $"Plant_{structures[i].SpeciesName}_{i}",
+			};
+			AddChild(renderer);
+			renderer.SetStructure(structures[i]);
+			_plantRenderers.Add(renderer);
+		}
+
+		GD.Print($"[TileGrid] {_plantRenderers.Count} plantes de démo affichées.");
 	}
 
 	private void BuildGrid()

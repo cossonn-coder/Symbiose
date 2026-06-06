@@ -92,8 +92,21 @@ inerte d'abord** (tronçon 1, golden INTACT car non lue), **puis câblée à l'e
   0.21→0.34, sous le seuil). `population` (`b005d9ba…`) & `vigueur_hash`
   (`e63b9d7f…`) **intacts**. `test_croissance` **57/57** (+14 : allure pommier,
   déterminisme, témoin ligneux Fig non migré).
-- **4 — Rendu pixel structure (Godot).** ⬜ Projection iso + rastérisation segments
-  aux zooms ×4…×32, LOD (§H.1/§H.3). Premier rendu visible des branches.
+- **4 — Rendu pixel structure (Godot).** ✅ **Pont JSON read-only** :
+  `tools/export_structure.py` (mêmes spécimens/SEED que `render_structure.py`) dump
+  `tools/structure.json` déterministe (Tomate 40 seg, Pommier an3/7/10 — an10
+  h≈351/cr≈197). **Golden INTACT** (`5a5f1cee…`) : l'exporteur ne LIT que
+  `grow_plant`/empreinte. Côté C# (namespace `Symbiose`) : `core/PlantStructure.cs`
+  = miroir `record struct Segment` (Base/Dir/Length/Thickness/IsApex) + DTO
+  `PlantStructure` + chargeur `Json.ParseString` lisant `res://data/code/tools/
+  structure.json` (source unique, pas de copie). `visuals/PlantRenderer.cs` =
+  `Node2D._Draw` : `Iso()` = portage EXACT de `_iso` (cos30/sin30/`PxPerCm`=0.42
+  `[Export]`), `DrawLine(antialiased:false)` trié épaisseur ↓, apex vert/bois brun,
+  largeur arrondie au pixel ; LOD §H.3 = silhouette de couronne si `ZoomPalier≤4`
+  (stub `[Export]`=16, caméra non câblée). `TileGrid` spawne 4 plantes de démo
+  (`[Export] ShowPlantDemo`). **Pas d'organes** (tronçon 5). ⚠️ Compilation C# **non
+  vérifiée** (pas de `dotnet` CLI ici) → à confirmer dans Godot par Nico ; rendu
+  visuel à valider à l'œil (les 4 spécimens au-dessus de la grille).
 - **5 — Organes procéduraux (Godot) — RISQUE N°1.** ⬜ Générateur feuilles/fleurs/
   fruits, stades d'organe, palette/saison (§H.2). Itératif.
 - **6 — Save de la structure.** ⬜ Sérialisation JSON bornée (§J), option d'allègement.
