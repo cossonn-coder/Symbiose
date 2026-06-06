@@ -17,7 +17,6 @@
 
 using Godot;
 using System.Collections.Generic;
-using Symbiose;
 
 namespace Symbiose
 {
