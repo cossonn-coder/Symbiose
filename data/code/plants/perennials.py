@@ -51,18 +51,28 @@ class PerennialWoody(PlantBase):
                 return h0 + (h1 - h0) * t, r0 + (r1 - r0) * t
         return curve[-1][1], curve[-1][2]
 
+    # Migration procédurale (tronçon 3bis) : un arbre `procedural_growth` (pommier)
+    # dérive son empreinte de la STRUCTURE de segments comme les annuelles migrées —
+    # on délègue alors à PlantBase (voie procédurale §G, qui lit inst.footprint). Les
+    # arbres NON migrés (flag False, défaut) gardent l'age_curve interpolée au mot près.
     @classmethod
     def height_at(cls, inst) -> float:
+        if cls.procedural_growth:
+            return super().height_at(inst)
         h, _ = cls._interp(inst.age_years)
         return h * inst.growth_factor * inst.gene("hauteur")
 
     @classmethod
     def canopy_radius_at(cls, inst) -> float:
+        if cls.procedural_growth:
+            return super().canopy_radius_at(inst)
         _, r = cls._interp(inst.age_years)
         return r
 
     @classmethod
     def root_radius_at(cls, inst) -> float:
+        if cls.procedural_growth:
+            return super().root_radius_at(inst)
         _, r = cls._interp(inst.age_years)
         return r * cls.root_ratio
 
@@ -109,6 +119,46 @@ class AppleTree(PerennialWoody):
     maturity_years = 5
     age_curve = [(0, 30, 20), (5, 200, 120), (10, 350, 200),
                  (20, 500, 280), (50, 700, 350)]
+    # --- Profil de croissance procédurale (tronçon 3bis) ---
+    # 1re LIGNEUSE migrée : l'empreinte (height/canopy/root) est dérivée de la
+    # STRUCTURE de segments (§G), plus de l'age_curve. Cible de calibration =
+    # l'allure dans la fenêtre du golden (10 ans → ~350 cm de haut, ~200 cm de
+    # couronne, §E.3 « reproduire l'allure d'abord »). Le point 50 ans (700/350)
+    # et la sénescence (~70 ans) sont HORS fenêtre golden → non exercés.
+    # Valeurs CALIBRÉES via la sonde §C (growth_factor=1.0, cycle saisonnier réel,
+    # 520 ticks) pour approcher ~350/~200 à l'an 10, montée monotone et bornée :
+    #   • growth_speed=0.83 : l'apex monte ~0.83 cm/tick d'été → ~351 cm à l'an 10
+    #     (et non vers l'an 5 comme à 1.5) sans atteindre le plafond max_height_cm ;
+    #   • emit_length_cm=50 : une flèche de 350 cm en ~7 segments → dominance facile
+    #     à tenir (≠ 44 segments à 8 cm, physiquement hors plafond) ;
+    #   • max_segments=70 : flèche + charpentières dans le plafond ; à l'an 10 ~55
+    #     segments → marge confortable (le filet dur n'ampute jamais la flèche) ;
+    #   • wood_persistence=4000 sem. (~la vie de l'arbre) : sans ça les charpentières
+    #     d'un arbre sans apex actif mourraient en ~1 an → couronne effondrée ;
+    #   • apical_dominance_base=2.0 : flèche tenue ~7 segments puis relâchée avec l'âge
+    #     (AUXIN_RELEASE_SCALE) → l'étalement `etale` (couronne large) ÉMERGE vers l'an 7 ;
+    #   • branch_angle=70° : insertion latérale assez horizontale → étalement marqué ;
+    #   • foliage_halfwidth=50 : couronne isolée ~197 cm à l'an 10 (cible 200, -1,5 %).
+    #     CRITIQUE pour la SURVIE : root_r = PROC_ROOT_RATIO·canopy_r (k=1.0) et la
+    #     jeune flèche n'a quasi pas de latéraux avant l'an 7 → à 30 la couronne ET
+    #     les racines tiennent dans 1 plot ; tout le prélèvement d'eau (_apply_uptake,
+    #     share=1/nplots) se concentre sur le plot-foyer qui s'assèche → drought_memory
+    #     > 0.6 → mort par stress hydrique vers l'an 3. À 50 les racines couvrent
+    #     plusieurs plots → prélèvement dilué → l'arbre survit sain les 10 ans (≠
+    #     l'age_curve qui tabulait une couronne large dès l'an 5). Levier existant,
+    #     scope minimal — pas de PROC_ROOT_RATIO par espèce.
+    procedural_growth     = True
+    port_archetype        = "etale"   # decurrent : dominance relâchée avec l'âge → couronne large
+    growth_speed          = 0.83
+    apical_dominance_base = 2.0
+    branch_angle          = 70.0
+    max_height_cm         = 700.0     # plafond (point 50 ans) — non atteint à l'an 10
+    max_extent_cm         = 350.0     # plafond d'extension (point 50 ans) — non atteint à l'an 10
+    emit_length_cm        = 50.0
+    max_segments          = 70
+    wood_persistence      = 4000
+    foliage_halfwidth     = 50.0      # couronne non nulle + racines viables (cf. ci-dessus)
+    organ_site            = "lateral" # fructification latérale (lu au tronçon 5)
 
 
 class CherryTree(PerennialWoody):

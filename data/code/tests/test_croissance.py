@@ -22,7 +22,7 @@ Usage (depuis data/code/) :
 """
 from collections import Counter
 
-from plants import Tomato, Basil, PlantInstance
+from plants import Tomato, Basil, AppleTree, Fig, PlantInstance
 import sim.growth as G
 
 SEED = 0x5AB1057E
@@ -309,9 +309,76 @@ def test_temoin_non_migre():
     check("témoin: cache d'empreinte jamais peuplé", b.footprint is None)
 
 
+# --- 8. Allure pommier (tronçon 3bis) : 1re LIGNEUSE migrée ----------------
+#
+# Le pommier (AppleTree) est la 1re pérenne ligneuse `procedural_growth` : son
+# empreinte (height/canopy/root) est DÉRIVÉE de la structure (§G), plus de
+# l'age_curve interpolée. Cible d'allure = la fenêtre du golden (10 ans →
+# ~350 cm de haut, ~200 cm de couronne ; §E.3 « reproduire l'allure d'abord »).
+# On valide en croissance libre sur 520 ticks (cycle saisonnier RÉEL via 1+k,
+# growth_factor=1.0) : montée monotone de la flèche vers ~350, couronne qui
+# s'élargit (l'étalement `etale` émerge du relâchement d'auxine), bornage.
+
+
+def _grow_apple(n=520):
+    p = PlantInstance(plant_class=AppleTree, position=POS)
+    p.growth_factor = 1.0
+    hs, crs, lens = [], [], []
+    for k in range(n):
+        G.grow_plant(p, SEED, 1 + k)            # cycle saisonnier réel (1+k)
+        hs.append(AppleTree.height_at(p))
+        crs.append(AppleTree.canopy_radius_at(p))
+        lens.append(len(p.segments))
+    return p, hs, crs, lens
+
+
+def test_allure_pommier():
+    p, hs, crs, lens = _grow_apple()
+    h10, cr10 = hs[-1], crs[-1]
+    # Montée : départ bas (jeune flèche), an 10 dans ±20 % du gabarit (350 cm).
+    check("pommier: départ bas (~30 cm)", hs[0] < 40, f"h0={hs[0]:.1f}")
+    check("pommier: hauteur an 10 ≈ 350 (±20 %)", 300 <= h10 <= 420, f"h10={h10:.1f}")
+    check("pommier: montée monotone (la flèche ne redescend jamais)",
+          all(hs[i] >= hs[i-1] - 1e-9 for i in range(1, len(hs))), f"h10={h10:.1f}")
+    # Couronne : non nulle au départ (foliage_halfwidth), s'élargit vers ~200 (±20 %).
+    check("pommier: couronne non nulle au départ",
+          crs[0] >= AppleTree.foliage_halfwidth - 1e-9, f"cr0={crs[0]:.1f}")
+    check("pommier: couronne an 10 ≈ 200 (±20 %)", 160 <= cr10 <= 240, f"cr10={cr10:.1f}")
+    check("pommier: couronne s'élargit (cr10 > cr0)", cr10 > crs[0],
+          f"{crs[0]:.1f}→{cr10:.1f}")
+    # Bornage (run éternel) : len plafonné par max_segments, jamais éteint.
+    check("pommier: structure bornée (≤ max_segments)",
+          max(lens) <= AppleTree.max_segments, f"max={max(lens)} (cap={AppleTree.max_segments})")
+    check("pommier: jamais éteint (≥1, run éternel)", min(lens) >= 1, f"min={min(lens)}")
+
+
+def test_allure_pommier_determinisme():
+    _, h1, c1, _ = _grow_apple(260)
+    _, h2, c2, _ = _grow_apple(260)
+    check("pommier: empreinte déterministe (260 ticks)", h1 == h2 and c1 == c2,
+          f"hfin {h1[-1]:.1f} vs {h2[-1]:.1f}")
+
+
+def test_pommier_temoin_non_migre():
+    """Une LIGNEUSE NON migrée (Figuier) garde l'age_curve : l'override résolu ne
+    fuit pas. Sa hauteur suit age_years ; sa structure pousse mais reste non lue."""
+    check("témoin ligneux: AppleTree migré", AppleTree.procedural_growth)
+    check("témoin ligneux: Fig non migré", not Fig.procedural_growth)
+    f = PlantInstance(plant_class=Fig, position=POS)
+    f.age_years = 10.0                          # age_curve Fig : (10, 400, 250)
+    h_age = Fig.height_at(f)                     # = 400 × growth_factor × gène
+    for k in range(40):
+        G.grow_plant(f, SEED, 1 + k)
+    check("témoin ligneux: hauteur = age_curve (inchangée par la structure)",
+          abs(Fig.height_at(f) - h_age) < 1e-9, f"h={Fig.height_at(f):.1f}")
+    check("témoin ligneux: structure poussée mais jamais lue", len(f.segments) > 1,
+          f"len={len(f.segments)}")
+    check("témoin ligneux: cache d'empreinte jamais peuplé", f.footprint is None)
+
+
 if __name__ == "__main__":
     print("=" * 60)
-    print("SYMBIOSE — Croissance procédurale (D29 réorienté, tronçons 1-2)")
+    print("SYMBIOSE — Croissance procédurale (D29 réorienté, tronçons 1-3bis)")
     print("=" * 60)
     test_naissance()
     test_croissance_dominance()
@@ -325,6 +392,9 @@ if __name__ == "__main__":
     test_seam_collet_protege()
     test_seam_determinisme()
     test_temoin_non_migre()
+    test_allure_pommier()
+    test_allure_pommier_determinisme()
+    test_pommier_temoin_non_migre()
 
     print("\n" + "=" * 60)
     passed = sum(1 for _, ok in _results if ok)

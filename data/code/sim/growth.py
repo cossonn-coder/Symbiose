@@ -221,11 +221,14 @@ def _update_auxin(segs: list, dominance: float) -> None:
             par.auxin = max(par.auxin, s.auxin * AUXIN_DECAY)
 
 
-def _elongate_emit(plant, speed: float, max_height: float, max_extent: float) -> None:
+def _elongate_emit(plant, speed: float, max_height: float, max_extent: float,
+                   emit_length: float) -> None:
     """§D.2 — l'apex allonge, émet un segment axial au seuil, se retire à portée.
     Bornage par le gabarit du profil espèce : l'apex se retire quand son extrémité
     dépasse `max_height` en hauteur OU `max_extent` en extension horizontale — la
-    structure reste dans l'enveloppe (hauteur × rayon de couronne) de l'espèce."""
+    structure reste dans l'enveloppe (hauteur × rayon de couronne) de l'espèce.
+    `emit_length` (profil espèce) = longueur d'un segment émis : grand pour un arbre
+    (flèche en peu de segments), petit pour une herbacée (granularité fine)."""
     segs = plant.segments
     collet = segs[0].base
     new_segs = []
@@ -238,8 +241,8 @@ def _elongate_emit(plant, speed: float, max_height: float, max_extent: float) ->
             s.is_apex = False                     # gabarit atteint → l'apex se retire
             continue
         s.length_cm += speed
-        if s.length_cm >= EMIT_LENGTH:
-            s.length_cm = EMIT_LENGTH             # cap → le segment devient du bois
+        if s.length_cm >= emit_length:
+            s.length_cm = emit_length             # cap → le segment devient du bois
             s.is_apex = False
             new_segs.append(_mk(i, _tip(s), s.dir, s.auxin))  # apex axial (droit)
     segs.extend(new_segs)
@@ -264,9 +267,10 @@ def _debourrement(plant, seed: int, week: int, branch_angle: float,
     segs.extend(new_segs)
 
 
-def _elaguer(plant, wood_persistence: int) -> None:
-    """§D.6 — sénescence du bois sans apex + plafond MAX_SEGMENTS. Collet protégé.
-    `wood_persistence` (profil espèce) = longévité du bois sans apex actif."""
+def _elaguer(plant, wood_persistence: int, max_segments: int) -> None:
+    """§D.6 — sénescence du bois sans apex + plafond `max_segments`. Collet protégé.
+    `wood_persistence` (profil espèce) = longévité du bois sans apex actif ;
+    `max_segments` (profil espèce) = plafond dur de segments (haut pour un arbre)."""
     segs = plant.segments
     if len(segs) <= 1:
         return
@@ -284,7 +288,7 @@ def _elaguer(plant, wood_persistence: int) -> None:
     # priorité »), puis — filet DUR — les extrémités les plus profondes (taille
     # de la couronne) jusqu'à repasser sous le plafond. Garantit le bornage.
     alive = len(segs) - len(kill)
-    if alive > MAX_SEGMENTS:
+    if alive > max_segments:
         improd = sorted(
             (i for i in range(len(segs))
              if i not in kill and segs[i].parent is not None and not has_apex[i]),
@@ -294,7 +298,7 @@ def _elaguer(plant, wood_persistence: int) -> None:
              if segs[i].parent is not None),
             key=lambda i: -depth[i])
         for i in improd + deepest:
-            if alive <= MAX_SEGMENTS:
+            if alive <= max_segments:
                 break
             if i in kill:
                 continue
@@ -346,10 +350,11 @@ def grow_plant(plant, seed: int, week: int) -> None:
         s.age_weeks += 1
     speed = cls.growth_speed * plant.growth_factor * _season_factor(week)
     _update_auxin(segs, cls.apical_dominance_base)
-    _elongate_emit(plant, speed, cls.max_height_cm, cls.max_extent_cm)
+    _elongate_emit(plant, speed, cls.max_height_cm, cls.max_extent_cm,
+                   cls.emit_length_cm)
     _debourrement(plant, seed, week, math.radians(cls.branch_angle),
                   cls.apical_dominance_base)
-    _elaguer(plant, cls.wood_persistence)
+    _elaguer(plant, cls.wood_persistence, cls.max_segments)
     # Rejet de souche : une plante vivante entièrement dormante (plus aucun apex,
     # ex. après senescence totale du vieux bois) reprend du collet → run éternel.
     if not any(s.is_apex for s in plant.segments):

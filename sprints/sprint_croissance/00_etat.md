@@ -69,9 +69,29 @@ inerte d'abord** (tronçon 1, golden INTACT car non lue), **puis câblée à l'e
   > fructification latérale) est sortie → **tronçon 3bis** dédié (re-figerait le golden,
   > exige l'override `PerennialWoody` + calibrage `age_curve`). Ici on démontre sur la
   > **tomate** (déjà procédurale), golden intact.
-- **3bis — Migration procédurale du pommier.** ⬜ Port `etale`, fructification
-  latérale, override `PerennialWoody`, calibrage `age_curve` décennal → re-figeage
-  golden localisé.
+- **3bis — Migration procédurale du pommier.** ✅ 1re LIGNEUSE migrée
+  (`procedural_growth=True`). **Override `PerennialWoody` résolu** : `height_at`/
+  `canopy_radius_at`/`root_radius_at` délèguent à `super()` (voie procédurale §G)
+  quand le flag est levé ; arbres non migrés (Fig/Cherry/Walnut/Oak) inchangés à
+  l'`age_curve`. **Plafonds par espèce promus** sur `PlantBase` : `emit_length_cm`
+  (défaut 8) + `max_segments` (défaut 40) = ex-constantes module → espèces non
+  migrées identiques. `grow_plant` les passe à `_elongate_emit`/`_elaguer`.
+  **Profil pommier calibré** (sonde 520 ticks, growth_factor=1.0, cycle réel) :
+  `growth_speed=0.83`, `apical_dominance_base=2.0`, `branch_angle=70`,
+  `emit_length_cm=50`, `max_segments=70`, `wood_persistence=4000`,
+  `foliage_halfwidth=50`, `max_height_cm=700`, `max_extent_cm=350`,
+  `organ_site="lateral"`, `port_archetype="etale"` → an 10 isolé **h≈351 / cr≈197**
+  (cible 350/200), montée monotone, bornée (≤55 seg < 70). ⚠️ **Survie** : à
+  `foliage_halfwidth=30` la jeune flèche (couronne=fhw, racines=k·couronne, k=1)
+  tient dans 1 plot → `_apply_uptake` concentre le prélèvement sur le plot-foyer →
+  `drought_memory>0.6` → **mort par stress hydrique vers l'an 3**. `fhw=50` élargit
+  les racines (plusieurs plots) → prélèvement dilué → pommier **vivant sain les 10
+  ans** (santé 3). Levier existant, pas de `PROC_ROOT_RATIO` par espèce.
+  **Golden re-figé `5a5f1cee…`** (ex `6369c30b…`) : dérive **localisée** (diff par
+  tuile = SEUL le Pommier (0,7) change, T1/T2 byte-identiques ; `drought_memory`
+  0.21→0.34, sous le seuil). `population` (`b005d9ba…`) & `vigueur_hash`
+  (`e63b9d7f…`) **intacts**. `test_croissance` **57/57** (+14 : allure pommier,
+  déterminisme, témoin ligneux Fig non migré).
 - **4 — Rendu pixel structure (Godot).** ⬜ Projection iso + rastérisation segments
   aux zooms ×4…×32, LOD (§H.1/§H.3). Premier rendu visible des branches.
 - **5 — Organes procéduraux (Godot) — RISQUE N°1.** ⬜ Générateur feuilles/fleurs/
