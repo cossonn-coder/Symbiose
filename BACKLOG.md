@@ -35,9 +35,27 @@
 | ~~**Sprint impl. Hormones (D29, Python)** — 2 scalaires + cinétique + `tailler` + démonstrateur, golden préservé~~ ⚠️ **SUPERSEDED 2026-06-05** : modèle scalaire abandonné, découpage `sprints/sprint_D29_impl/` archivé. Absorbé dans le **Sprint impl. Croissance procédurale** (tronçon 3) ci-dessous | `sprints/sprint_D29_impl/00_etat.md` (archivé) |
 | Sprint conception Croissance procédurale (conception seule, D29 réorienté : auxine structurelle + rendu pixel procédural + morphogénèse) — ✅ **TERMINÉ 2026-06-05** → spec `data/code/CONCEPTION_CROISSANCE.md` (A–M). Pivot : **structure de segments** en Python (remplace les 2 scalaires), **moteur permanent**, **auxine le long de la structure**, **phototropisme** (`LightField`), **empreinte dérivée** (contrat `height_at`… inchangé → golden re-figé localisé), **organes tout procéduraux**, racines rayon dérivé. **Profil de croissance PAR ESPÈCE** (vitesse + `port_archetype`) à décrire pour les 14 espèces, calibré sur `growth_stages`/`age_curve`. Absorbe `CONCEPTION_HORMONES.md` | `sprints/sprint_hormones.md` + audit session 2026-06-05 |
 | **Sprint impl. Croissance procédurale (D29, Python+Godot)** — porter `CONCEPTION_CROISSANCE.md`. Sprint **GROS, 6 tronçons** (§M) : **1** structure+croissance Python (`Segment`, auxine, débourrement, bornage ; golden re-figé) ; **2** profil par espèce + dérivation d'empreinte (démonstratrice tomate, migration incrémentale §I) ; **3** seam `atteindre_segment` + `tailler` rebranché (démonstratrice pommier ; **absorbe D29 hormones**) ; **4** rendu pixel structure (Godot, zooms ×4…×32, LOD) ; **5** organes procéduraux (Godot — **risque n°1**, itératif) ; **6** save de la structure (JSON borné). **Plus tard** : déclencheurs naturels du seam (grêle/chenille/vent), marqueur `🌿`, profil du reste du catalogue. Kickoff tronçon 1 prêt | `sprints/sprint_croissance/00_etat.md` + `01_structure_croissance.md` |
-| Sprint diversification écologique (D26 : étendre le catalogue d'espèces). Pas encore de kickoff | — |
+| Sprint diversification écologique (D26 : étendre le catalogue d'espèces ; décision class-based vs data-driven) | `sprints/dette_kickoffs/D26_diversification_ecologique.md` |
 | Sprint 3 (portage simulation — peut absorber le sprint éclairement) | `sprints/sprint_3_portage_simulation.md` |
 | Sprint 4 (mécaniques conception) | `sprints/sprint_4_mecaniques_conception.md` |
+
+### Kickoffs de dette dormante — `sprints/dette_kickoffs/`
+> Écrits le 2026-06-06 : **un kickoff autosuffisant par dette sans sprint** (les
+> dettes C# ont déjà les leurs : sprint_1/2/3/4). Carte + ordre recommandé + choix
+> de design à trancher dans **`sprints/dette_kickoffs/00_index.md`**.
+
+| Dette | Kickoff |
+|---|---|
+| D13 — Magazine de botanique | `sprints/dette_kickoffs/D13_magazine_botanique.md` |
+| D14 — Carnet auto | `sprints/dette_kickoffs/D14_carnet_auto.md` |
+| D15 — Extension du terrain par maîtrise | `sprints/dette_kickoffs/D15_extension_terrain.md` |
+| D12.2 — Table palier→déblocage (après D13/D14/D15) | `sprints/dette_kickoffs/D12_2_table_deblocage.md` |
+| D18 — Pages secrètes | `sprints/dette_kickoffs/D18_pages_secretes.md` |
+| D19 — Organes comestibles (manger) | `sprints/dette_kickoffs/D19_organes_comestibles.md` |
+| D23 — Catalogue d'arbres pérennes étendu | `sprints/dette_kickoffs/D23_catalogue_arbres.md` |
+| D26 — Diversification écologique | `sprints/dette_kickoffs/D26_diversification_ecologique.md` |
+| D30 — Champ structure/compaction du sol | `sprints/dette_kickoffs/D30_structure_compaction_sol.md` |
+| D32 — Optimisation du LightField (perf) | `sprints/dette_kickoffs/D32_optim_lightfield.md` |
 
 ### Sprint 0 — gel et infrastructure documentaire — TERMINÉ ✅
 - [x] État des lieux complet
