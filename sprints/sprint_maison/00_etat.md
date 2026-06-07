@@ -67,10 +67,28 @@ la **seule maison** comme obstacle dans `compute`. Cf. §1 du doc.
   Suite complète verte (croissance 57, ombre 4, genetique 20, maitrise 35+20,
   population, signes 8, vigueur 110, senescence). **Valeurs maquette** (tronçon 4) :
   **marqué=0.30** (défaut, Q3), **subtil=0.10** → Nico tranche à l'œil. → `03_*.md`
-- **4 — Maquette saisonnière 3 secteurs.** ⬜ `render_structure.py` +
-  `export_structure.py` : grille `secteurs × 4 saisons × plantes`, vrai
-  `LightField` + maison + albédo. → outil seul, golden intact. → `04_*.md`
-- **5 — (plus tard, hors ce sprint)** rendu Godot maison + ombre, portage C# (D24).
+- **4 — Maquette saisonnière 3 secteurs.** ✅ FAIT (2026-06-07). Outil seul,
+  **golden + suite INTACTS** (hash `16a1b937…` inchangé). `render_structure.py` :
+  `render_maquette()` → grille **3 secteurs (S/NE/NO, lignes) × 4 saisons
+  (colonnes)** dans un vrai `LightField` + maison + albédo, **2 fichiers** subtil
+  (`maquette_saison_subtil.svg`, strength 0.10) vs marqué (`…_marque.svg`, 0.30) →
+  **Nico tranche à l'œil**. Ombre maison **empilée par tranches diurnes** (umbra
+  sombre / pénombre) sur sol éclairé, **plus longue l'hiver** ; volume maison
+  tracé ; plant penché (apex vert). Ancien aperçu structure **préservé**
+  (`… apercu`). `export_structure.py` : `export_maquette()` → pont JSON
+  `maquette_secteurs.json` (mêmes spécimens, pour futur Godot) ; ancien pont
+  préservé (`… structure`). **Sujet = TOMATE** (tige unique → signal
+  subtil/marqué net ; le pommier branche et noie le signal). Snapshots = 4 saisons
+  an 2. **Constats à signaler à Nico** : (a) lumière reçue contrastée **S≈1.00 >
+  NE≈0.74 > NO≈0.41** (gradient net) ; (b) la pente vient du gradient de
+  lumière-sol **LOCAL = ombre maison + AUTO-OMBRAGE de la canopée** → même en plein
+  soleil la plante vigoureuse se penche un peu (réaliste, pas un bug — « S droit »
+  pas strictement tenu) ; (c) modèle solaire **symétrique E-O** (angles ±45°) →
+  NE/NO diffèrent surtout par la **PHASE** d'ombre, pas la lumière intégrée ;
+  l'écart S>NE>NO vient de la PROFONDEUR dans la bande d'ombre. Métrique panneau =
+  **pli** (déport horizontal du sommet, cm), ↑ clairement avec strength. → `04_*.md`
+- **Sprint maison CLOS côté Python.** Reste **tronçon 5** (plus tard, hors sprint) :
+  rendu Godot maison + ombre, portage C# (D24).
 
 ## Boucle de travail (rappel CLAUDE.md)
 Lancer `0N` → travailler → vérifier le golden/tests → mettre à jour ce fichier →

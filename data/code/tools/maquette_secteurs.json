@@ -1,0 +1,3976 @@
+{
+ "house": {
+  "footprint_cm": [
+   600.0,
+   600.0,
+   1400.0,
+   1400.0
+  ],
+  "height_cm": 600.0,
+  "latitude_deg": 49.0,
+  "wall_albedo": 0.35
+ },
+ "phototropism_strength": 0.3,
+ "sectors": [
+  {
+   "collet_world_cm": [
+    1000.0,
+    1700.0
+   ],
+   "name": "S \u2014 plein soleil",
+   "saisons": [
+    {
+     "light_received": 1.0,
+     "saison": "printemps",
+     "specimen": {
+      "collet_cm": [
+       400.0,
+       300.0,
+       0.0
+      ],
+      "footprint": {
+       "canopy_radius_cm": 45.587,
+       "height_cm": 90.354
+      },
+      "segments": [
+       {
+        "base": [
+         400.0,
+         300.0,
+         0.0
+        ],
+        "dir": [
+         0.0,
+         0.0,
+         1.0
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 2.15
+       },
+       {
+        "base": [
+         400.0,
+         300.0,
+         8.0
+        ],
+        "dir": [
+         0.0,
+         0.0,
+         1.0
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.83
+       },
+       {
+        "base": [
+         400.0,
+         300.0,
+         16.0
+        ],
+        "dir": [
+         0.0,
+         0.048,
+         0.999
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.71
+       },
+       {
+        "base": [
+         400.0,
+         300.386,
+         23.991
+        ],
+        "dir": [
+         0.0,
+         0.097,
+         0.995
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.59
+       },
+       {
+        "base": [
+         400.0,
+         301.159,
+         31.953
+        ],
+        "dir": [
+         0.0,
+         0.147,
+         0.989
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.47
+       },
+       {
+        "base": [
+         400.0,
+         302.334,
+         39.866
+        ],
+        "dir": [
+         0.0,
+         0.197,
+         0.98
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.35
+       },
+       {
+        "base": [
+         400.0,
+         303.911,
+         47.709
+        ],
+        "dir": [
+         0.0,
+         0.247,
+         0.969
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.23
+       },
+       {
+        "base": [
+         400.0,
+         305.885,
+         55.462
+        ],
+        "dir": [
+         0.0,
+         0.293,
+         0.956
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.11
+       },
+       {
+        "base": [
+         400.0,
+         308.231,
+         63.11
+        ],
+        "dir": [
+         0.0,
+         0.403,
+         0.915
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.99
+       },
+       {
+        "base": [
+         400.0,
+         311.451,
+         70.434
+        ],
+        "dir": [
+         0.0,
+         0.506,
+         0.862
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.78
+       },
+       {
+        "base": [
+         400.0,
+         315.502,
+         77.332
+        ],
+        "dir": [
+         0.0,
+         0.612,
+         0.791
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.45
+       },
+       {
+        "base": [
+         400.0,
+         320.397,
+         83.66
+        ],
+        "dir": [
+         0.163,
+         0.701,
+         0.695
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.33
+       },
+       {
+        "base": [
+         401.305,
+         326.002,
+         89.218
+        ],
+        "dir": [
+         0.319,
+         0.759,
+         0.568
+        ],
+        "is_apex": true,
+        "length_cm": 2.0,
+        "thickness_cm": 0.3
+       }
+      ],
+      "species": "Tomato",
+      "title": "S \u2014 plein soleil \u00b7 printemps"
+     }
+    },
+    {
+     "light_received": 1.0,
+     "saison": "ete",
+     "specimen": {
+      "collet_cm": [
+       400.0,
+       300.0,
+       0.0
+      ],
+      "footprint": {
+       "canopy_radius_cm": 48.398,
+       "height_cm": 83.66
+      },
+      "segments": [
+       {
+        "base": [
+         400.0,
+         300.0,
+         0.0
+        ],
+        "dir": [
+         0.0,
+         0.0,
+         1.0
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 2.54
+       },
+       {
+        "base": [
+         400.0,
+         300.0,
+         8.0
+        ],
+        "dir": [
+         0.0,
+         0.0,
+         1.0
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 2.22
+       },
+       {
+        "base": [
+         400.0,
+         300.0,
+         16.0
+        ],
+        "dir": [
+         0.0,
+         0.048,
+         0.999
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 2.1
+       },
+       {
+        "base": [
+         400.0,
+         300.386,
+         23.991
+        ],
+        "dir": [
+         0.0,
+         0.097,
+         0.995
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.98
+       },
+       {
+        "base": [
+         400.0,
+         301.159,
+         31.953
+        ],
+        "dir": [
+         0.0,
+         0.147,
+         0.989
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.86
+       },
+       {
+        "base": [
+         400.0,
+         302.334,
+         39.866
+        ],
+        "dir": [
+         0.0,
+         0.197,
+         0.98
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.74
+       },
+       {
+        "base": [
+         400.0,
+         303.911,
+         47.709
+        ],
+        "dir": [
+         0.0,
+         0.247,
+         0.969
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.62
+       },
+       {
+        "base": [
+         400.0,
+         305.885,
+         55.462
+        ],
+        "dir": [
+         0.0,
+         0.293,
+         0.956
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.5
+       },
+       {
+        "base": [
+         400.0,
+         308.231,
+         63.11
+        ],
+        "dir": [
+         0.0,
+         0.403,
+         0.915
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.38
+       },
+       {
+        "base": [
+         400.0,
+         311.451,
+         70.434
+        ],
+        "dir": [
+         0.0,
+         0.506,
+         0.862
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.17
+       },
+       {
+        "base": [
+         400.0,
+         315.502,
+         77.332
+        ],
+        "dir": [
+         0.0,
+         0.612,
+         0.791
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.84
+       },
+       {
+        "base": [
+         400.0,
+         300.0,
+         8.0
+        ],
+        "dir": [
+         0.775,
+         0.298,
+         0.557
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.42
+       },
+       {
+        "base": [
+         400.0,
+         300.0,
+         16.0
+        ],
+        "dir": [
+         0.742,
+         0.225,
+         0.632
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.42
+       },
+       {
+        "base": [
+         400.0,
+         300.386,
+         23.991
+        ],
+        "dir": [
+         -0.041,
+         -0.797,
+         0.603
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.42
+       },
+       {
+        "base": [
+         400.0,
+         301.159,
+         31.953
+        ],
+        "dir": [
+         0.375,
+         0.608,
+         0.699
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.42
+       },
+       {
+        "base": [
+         400.0,
+         302.334,
+         39.866
+        ],
+        "dir": [
+         -0.277,
+         -0.583,
+         0.764
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.42
+       },
+       {
+        "base": [
+         400.0,
+         303.911,
+         47.709
+        ],
+        "dir": [
+         0.417,
+         0.795,
+         0.44
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.42
+       },
+       {
+        "base": [
+         400.0,
+         305.885,
+         55.462
+        ],
+        "dir": [
+         -0.539,
+         0.608,
+         0.583
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.42
+       },
+       {
+        "base": [
+         400.0,
+         308.231,
+         63.11
+        ],
+        "dir": [
+         0.441,
+         0.735,
+         0.515
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.42
+       },
+       {
+        "base": [
+         400.0,
+         311.451,
+         70.434
+        ],
+        "dir": [
+         0.856,
+         0.165,
+         0.49
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.42
+       },
+       {
+        "base": [
+         400.0,
+         315.502,
+         77.332
+        ],
+        "dir": [
+         0.21,
+         0.936,
+         0.284
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.42
+       },
+       {
+        "base": [
+         406.203,
+         302.385,
+         12.454
+        ],
+        "dir": [
+         0.77,
+         0.461,
+         0.441
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         405.935,
+         301.802,
+         21.052
+        ],
+        "dir": [
+         0.757,
+         0.393,
+         0.523
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         399.672,
+         294.01,
+         28.811
+        ],
+        "dir": [
+         -0.175,
+         -0.831,
+         0.528
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         403.0,
+         306.026,
+         37.549
+        ],
+        "dir": [
+         0.453,
+         0.707,
+         0.543
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         397.786,
+         297.671,
+         45.978
+        ],
+        "dir": [
+         -0.383,
+         -0.642,
+         0.665
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         403.333,
+         310.275,
+         51.23
+        ],
+        "dir": [
+         0.489,
+         0.819,
+         0.3
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         395.685,
+         310.748,
+         60.124
+        ],
+        "dir": [
+         -0.574,
+         0.708,
+         0.412
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         403.524,
+         314.113,
+         67.232
+        ],
+        "dir": [
+         0.506,
+         0.795,
+         0.335
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         406.847,
+         312.768,
+         74.356
+        ],
+        "dir": [
+         0.848,
+         0.345,
+         0.403
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         401.68,
+         322.987,
+         79.603
+        ],
+        "dir": [
+         0.36,
+         0.883,
+         0.3
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         412.362,
+         306.077,
+         15.981
+        ],
+        "dir": [
+         0.734,
+         0.606,
+         0.307
+        ],
+        "is_apex": true,
+        "length_cm": 0.0,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         411.989,
+         304.944,
+         25.233
+        ],
+        "dir": [
+         0.741,
+         0.544,
+         0.393
+        ],
+        "is_apex": true,
+        "length_cm": 0.0,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         398.27,
+         287.364,
+         33.038
+        ],
+        "dir": [
+         -0.305,
+         -0.844,
+         0.441
+        ],
+        "is_apex": true,
+        "length_cm": 0.0,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         406.625,
+         311.679,
+         41.897
+        ],
+        "dir": [
+         0.513,
+         0.777,
+         0.366
+        ],
+        "is_apex": true,
+        "length_cm": 0.0,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         394.723,
+         292.537,
+         51.294
+        ],
+        "dir": [
+         -0.48,
+         -0.685,
+         0.549
+        ],
+        "is_apex": true,
+        "length_cm": 0.0,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         407.245,
+         316.827,
+         53.63
+        ],
+        "dir": [
+         0.524,
+         0.797,
+         0.3
+        ],
+        "is_apex": true,
+        "length_cm": 0.0,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         391.096,
+         316.41,
+         63.424
+        ],
+        "dir": [
+         -0.573,
+         0.763,
+         0.3
+        ],
+        "is_apex": true,
+        "length_cm": 0.0,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         407.569,
+         320.472,
+         69.915
+        ],
+        "dir": [
+         0.53,
+         0.793,
+         0.3
+        ],
+        "is_apex": true,
+        "length_cm": 0.0,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         413.631,
+         315.525,
+         77.577
+        ],
+        "dir": [
+         0.806,
+         0.511,
+         0.3
+        ],
+        "is_apex": true,
+        "length_cm": 0.0,
+        "thickness_cm": 0.3
+       }
+      ],
+      "species": "Tomato",
+      "title": "S \u2014 plein soleil \u00b7 ete"
+     }
+    },
+    {
+     "light_received": 1.0,
+     "saison": "automne",
+     "specimen": {
+      "collet_cm": [
+       400.0,
+       300.0,
+       0.0
+      ],
+      "footprint": {
+       "canopy_radius_cm": 50.653,
+       "height_cm": 64.501
+      },
+      "segments": [
+       {
+        "base": [
+         400.0,
+         300.0,
+         0.0
+        ],
+        "dir": [
+         0.0,
+         0.0,
+         1.0
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 2.93
+       },
+       {
+        "base": [
+         400.0,
+         300.0,
+         8.0
+        ],
+        "dir": [
+         0.0,
+         0.0,
+         1.0
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 2.61
+       },
+       {
+        "base": [
+         400.0,
+         300.0,
+         16.0
+        ],
+        "dir": [
+         0.0,
+         0.048,
+         0.999
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 2.49
+       },
+       {
+        "base": [
+         400.0,
+         300.386,
+         23.991
+        ],
+        "dir": [
+         0.0,
+         0.097,
+         0.995
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 2.37
+       },
+       {
+        "base": [
+         400.0,
+         301.159,
+         31.953
+        ],
+        "dir": [
+         0.0,
+         0.147,
+         0.989
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 2.25
+       },
+       {
+        "base": [
+         400.0,
+         302.334,
+         39.866
+        ],
+        "dir": [
+         0.0,
+         0.197,
+         0.98
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 2.13
+       },
+       {
+        "base": [
+         400.0,
+         303.911,
+         47.709
+        ],
+        "dir": [
+         0.0,
+         0.247,
+         0.969
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 2.01
+       },
+       {
+        "base": [
+         400.0,
+         300.386,
+         23.991
+        ],
+        "dir": [
+         -0.041,
+         -0.797,
+         0.603
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.81
+       },
+       {
+        "base": [
+         400.0,
+         301.159,
+         31.953
+        ],
+        "dir": [
+         0.375,
+         0.608,
+         0.699
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.81
+       },
+       {
+        "base": [
+         400.0,
+         302.334,
+         39.866
+        ],
+        "dir": [
+         -0.277,
+         -0.583,
+         0.764
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.81
+       },
+       {
+        "base": [
+         400.0,
+         303.911,
+         47.709
+        ],
+        "dir": [
+         0.417,
+         0.795,
+         0.44
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.81
+       },
+       {
+        "base": [
+         400.0,
+         305.885,
+         55.462
+        ],
+        "dir": [
+         -0.539,
+         0.608,
+         0.583
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.81
+       },
+       {
+        "base": [
+         399.672,
+         294.01,
+         28.811
+        ],
+        "dir": [
+         -0.175,
+         -0.831,
+         0.528
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.69
+       },
+       {
+        "base": [
+         403.0,
+         306.026,
+         37.549
+        ],
+        "dir": [
+         0.453,
+         0.707,
+         0.543
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.69
+       },
+       {
+        "base": [
+         397.786,
+         297.671,
+         45.978
+        ],
+        "dir": [
+         -0.383,
+         -0.642,
+         0.665
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.69
+       },
+       {
+        "base": [
+         403.333,
+         310.275,
+         51.23
+        ],
+        "dir": [
+         0.489,
+         0.819,
+         0.3
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.69
+       },
+       {
+        "base": [
+         398.27,
+         287.364,
+         33.038
+        ],
+        "dir": [
+         -0.305,
+         -0.844,
+         0.441
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.57
+       },
+       {
+        "base": [
+         406.625,
+         311.679,
+         41.897
+        ],
+        "dir": [
+         0.513,
+         0.777,
+         0.366
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.57
+       },
+       {
+        "base": [
+         394.723,
+         292.537,
+         51.294
+        ],
+        "dir": [
+         -0.48,
+         -0.685,
+         0.549
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.57
+       },
+       {
+        "base": [
+         395.829,
+         280.613,
+         36.569
+        ],
+        "dir": [
+         -0.427,
+         -0.836,
+         0.343
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.45
+       },
+       {
+        "base": [
+         410.73,
+         317.891,
+         44.821
+        ],
+        "dir": [
+         0.605,
+         0.737,
+         0.3
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.45
+       },
+       {
+        "base": [
+         395.685,
+         310.748,
+         60.124
+        ],
+        "dir": [
+         0.263,
+         0.919,
+         0.295
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.42
+       },
+       {
+        "base": [
+         392.41,
+         273.922,
+         39.315
+        ],
+        "dir": [
+         -0.535,
+         -0.79,
+         0.3
+        ],
+        "is_apex": false,
+        "length_cm": 6.0,
+        "thickness_cm": 0.33
+       },
+       {
+        "base": [
+         403.333,
+         310.275,
+         51.23
+        ],
+        "dir": [
+         -0.367,
+         0.819,
+         0.441
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         407.245,
+         316.827,
+         53.63
+        ],
+        "dir": [
+         0.53,
+         0.557,
+         -0.639
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         397.786,
+         297.671,
+         45.978
+        ],
+        "dir": [
+         0.002,
+         0.245,
+         0.97
+        ],
+        "is_apex": true,
+        "length_cm": 6.0,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         394.723,
+         292.537,
+         51.294
+        ],
+        "dir": [
+         0.333,
+         -0.868,
+         0.367
+        ],
+        "is_apex": true,
+        "length_cm": 6.0,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         390.884,
+         287.061,
+         55.684
+        ],
+        "dir": [
+         -0.85,
+         -0.524,
+         -0.044
+        ],
+        "is_apex": true,
+        "length_cm": 6.0,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         397.786,
+         318.098,
+         62.483
+        ],
+        "dir": [
+         -0.593,
+         0.627,
+         0.504
+        ],
+        "is_apex": true,
+        "length_cm": 4.0,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         403.0,
+         306.026,
+         37.549
+        ],
+        "dir": [
+         -0.024,
+         0.982,
+         0.187
+        ],
+        "is_apex": true,
+        "length_cm": 2.0,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         406.625,
+         311.679,
+         41.897
+        ],
+        "dir": [
+         0.041,
+         0.981,
+         -0.19
+        ],
+        "is_apex": true,
+        "length_cm": 2.0,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         410.73,
+         317.891,
+         44.821
+        ],
+        "dir": [
+         0.859,
+         -0.08,
+         0.505
+        ],
+        "is_apex": true,
+        "length_cm": 2.0,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         415.572,
+         323.79,
+         47.221
+        ],
+        "dir": [
+         -0.303,
+         0.953,
+         0.011
+        ],
+        "is_apex": true,
+        "length_cm": 2.0,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         400.398,
+         316.828,
+         54.757
+        ],
+        "dir": [
+         -0.178,
+         0.899,
+         0.4
+        ],
+        "is_apex": true,
+        "length_cm": 0.0,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         411.484,
+         321.287,
+         48.518
+        ],
+        "dir": [
+         0.664,
+         0.685,
+         0.3
+        ],
+        "is_apex": true,
+        "length_cm": 0.0,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         399.672,
+         294.01,
+         28.811
+        ],
+        "dir": [
+         0.419,
+         -0.319,
+         0.85
+        ],
+        "is_apex": true,
+        "length_cm": 0.0,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         398.27,
+         287.364,
+         33.038
+        ],
+        "dir": [
+         -0.153,
+         0.048,
+         0.987
+        ],
+        "is_apex": true,
+        "length_cm": 0.0,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         395.829,
+         280.613,
+         36.569
+        ],
+        "dir": [
+         0.352,
+         -0.936,
+         0.024
+        ],
+        "is_apex": true,
+        "length_cm": 0.0,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         392.41,
+         273.922,
+         39.315
+        ],
+        "dir": [
+         -0.806,
+         -0.375,
+         -0.458
+        ],
+        "is_apex": true,
+        "length_cm": 0.0,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         389.199,
+         269.185,
+         41.115
+        ],
+        "dir": [
+         0.44,
+         -0.891,
+         0.108
+        ],
+        "is_apex": true,
+        "length_cm": 0.0,
+        "thickness_cm": 0.3
+       }
+      ],
+      "species": "Tomato",
+      "title": "S \u2014 plein soleil \u00b7 automne"
+     }
+    },
+    {
+     "light_received": 1.0,
+     "saison": "hiver",
+     "specimen": {
+      "collet_cm": [
+       400.0,
+       300.0,
+       0.0
+      ],
+      "footprint": {
+       "canopy_radius_cm": 50.061,
+       "height_cm": 66.535
+      },
+      "segments": [
+       {
+        "base": [
+         400.0,
+         300.0,
+         0.0
+        ],
+        "dir": [
+         0.0,
+         0.0,
+         1.0
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 3.32
+       },
+       {
+        "base": [
+         400.0,
+         300.0,
+         8.0
+        ],
+        "dir": [
+         0.0,
+         0.0,
+         1.0
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 3.0
+       },
+       {
+        "base": [
+         400.0,
+         300.0,
+         16.0
+        ],
+        "dir": [
+         0.0,
+         0.048,
+         0.999
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 2.88
+       },
+       {
+        "base": [
+         400.0,
+         300.386,
+         23.991
+        ],
+        "dir": [
+         0.0,
+         0.097,
+         0.995
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 2.76
+       },
+       {
+        "base": [
+         400.0,
+         301.159,
+         31.953
+        ],
+        "dir": [
+         0.0,
+         0.147,
+         0.989
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 2.64
+       },
+       {
+        "base": [
+         400.0,
+         302.334,
+         39.866
+        ],
+        "dir": [
+         0.0,
+         0.197,
+         0.98
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 2.52
+       },
+       {
+        "base": [
+         400.0,
+         300.386,
+         23.991
+        ],
+        "dir": [
+         -0.041,
+         -0.797,
+         0.603
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.2
+       },
+       {
+        "base": [
+         400.0,
+         301.159,
+         31.953
+        ],
+        "dir": [
+         0.375,
+         0.608,
+         0.699
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.2
+       },
+       {
+        "base": [
+         400.0,
+         302.334,
+         39.866
+        ],
+        "dir": [
+         -0.277,
+         -0.583,
+         0.764
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.2
+       },
+       {
+        "base": [
+         400.0,
+         303.911,
+         47.709
+        ],
+        "dir": [
+         0.417,
+         0.795,
+         0.44
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.2
+       },
+       {
+        "base": [
+         399.672,
+         294.01,
+         28.811
+        ],
+        "dir": [
+         -0.175,
+         -0.831,
+         0.528
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.08
+       },
+       {
+        "base": [
+         403.0,
+         306.026,
+         37.549
+        ],
+        "dir": [
+         0.453,
+         0.707,
+         0.543
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.08
+       },
+       {
+        "base": [
+         397.786,
+         297.671,
+         45.978
+        ],
+        "dir": [
+         -0.383,
+         -0.642,
+         0.665
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.08
+       },
+       {
+        "base": [
+         398.27,
+         287.364,
+         33.038
+        ],
+        "dir": [
+         -0.305,
+         -0.844,
+         0.441
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.96
+       },
+       {
+        "base": [
+         406.625,
+         311.679,
+         41.897
+        ],
+        "dir": [
+         0.513,
+         0.777,
+         0.366
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.96
+       },
+       {
+        "base": [
+         403.333,
+         310.275,
+         51.23
+        ],
+        "dir": [
+         -0.367,
+         0.819,
+         0.441
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.69
+       },
+       {
+        "base": [
+         397.786,
+         297.671,
+         45.978
+        ],
+        "dir": [
+         0.002,
+         0.245,
+         0.97
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.66
+       },
+       {
+        "base": [
+         394.723,
+         292.537,
+         51.294
+        ],
+        "dir": [
+         0.333,
+         -0.868,
+         0.367
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.66
+       },
+       {
+        "base": [
+         403.0,
+         306.026,
+         37.549
+        ],
+        "dir": [
+         -0.024,
+         0.982,
+         0.187
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.6
+       },
+       {
+        "base": [
+         406.625,
+         311.679,
+         41.897
+        ],
+        "dir": [
+         0.041,
+         0.981,
+         -0.19
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.6
+       },
+       {
+        "base": [
+         410.73,
+         317.891,
+         44.821
+        ],
+        "dir": [
+         0.859,
+         -0.08,
+         0.505
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.6
+       },
+       {
+        "base": [
+         399.672,
+         294.01,
+         28.811
+        ],
+        "dir": [
+         0.419,
+         -0.319,
+         0.85
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.57
+       },
+       {
+        "base": [
+         398.27,
+         287.364,
+         33.038
+        ],
+        "dir": [
+         -0.153,
+         0.048,
+         0.987
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.57
+       },
+       {
+        "base": [
+         395.829,
+         280.613,
+         36.569
+        ],
+        "dir": [
+         0.352,
+         -0.936,
+         0.024
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.57
+       },
+       {
+        "base": [
+         397.802,
+         299.63,
+         53.734
+        ],
+        "dir": [
+         -0.115,
+         0.19,
+         0.975
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.54
+       },
+       {
+        "base": [
+         397.39,
+         285.59,
+         54.229
+        ],
+        "dir": [
+         0.211,
+         -0.909,
+         0.36
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.54
+       },
+       {
+        "base": [
+         402.81,
+         313.882,
+         39.046
+        ],
+        "dir": [
+         0.175,
+         0.938,
+         0.3
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.39
+       },
+       {
+        "base": [
+         406.953,
+         319.526,
+         40.375
+        ],
+        "dir": [
+         0.235,
+         0.925,
+         0.3
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.39
+       },
+       {
+        "base": [
+         417.605,
+         317.25,
+         48.862
+        ],
+        "dir": [
+         0.899,
+         0.109,
+         0.425
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.39
+       },
+       {
+        "base": [
+         403.025,
+         291.461,
+         35.612
+        ],
+        "dir": [
+         0.519,
+         -0.357,
+         0.777
+        ],
+        "is_apex": true,
+        "length_cm": 7.5,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         397.042,
+         287.749,
+         40.934
+        ],
+        "dir": [
+         -0.267,
+         -0.01,
+         0.964
+        ],
+        "is_apex": true,
+        "length_cm": 7.5,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         396.881,
+         301.147,
+         61.535
+        ],
+        "dir": [
+         -0.258,
+         0.327,
+         0.909
+        ],
+        "is_apex": true,
+        "length_cm": 5.5,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         400.398,
+         316.828,
+         54.757
+        ],
+        "dir": [
+         -0.801,
+         0.539,
+         -0.261
+        ],
+        "is_apex": true,
+        "length_cm": 5.5,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         404.208,
+         321.384,
+         41.446
+        ],
+        "dir": [
+         0.354,
+         0.886,
+         0.3
+        ],
+        "is_apex": true,
+        "length_cm": 1.5,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         408.834,
+         326.922,
+         42.775
+        ],
+        "dir": [
+         0.406,
+         0.863,
+         0.3
+        ],
+        "is_apex": true,
+        "length_cm": 1.5,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         424.795,
+         318.12,
+         52.26
+        ],
+        "dir": [
+         0.899,
+         0.293,
+         0.326
+        ],
+        "is_apex": true,
+        "length_cm": 1.5,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         398.647,
+         273.128,
+         36.76
+        ],
+        "dir": [
+         0.926,
+         -0.288,
+         -0.245
+        ],
+        "is_apex": true,
+        "length_cm": 0.5,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         397.39,
+         285.59,
+         54.229
+        ],
+        "dir": [
+         0.595,
+         -0.091,
+         0.798
+        ],
+        "is_apex": true,
+        "length_cm": 0.0,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         399.075,
+         278.319,
+         57.11
+        ],
+        "dir": [
+         -0.485,
+         -0.727,
+         0.486
+        ],
+        "is_apex": true,
+        "length_cm": 0.0,
+        "thickness_cm": 0.3
+       }
+      ],
+      "species": "Tomato",
+      "title": "S \u2014 plein soleil \u00b7 hiver"
+     }
+    }
+   ]
+  },
+  {
+   "collet_world_cm": [
+    1560.0,
+    470.0
+   ],
+   "name": "NE \u2014 p\u00e9nombre",
+   "saisons": [
+    {
+     "light_received": 0.751,
+     "saison": "printemps",
+     "specimen": {
+      "collet_cm": [
+       160.0,
+       470.0,
+       0.0
+      ],
+      "footprint": {
+       "canopy_radius_cm": 24.994,
+       "height_cm": 79.228
+      },
+      "segments": [
+       {
+        "base": [
+         160.0,
+         470.0,
+         0.0
+        ],
+        "dir": [
+         0.0,
+         0.0,
+         1.0
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 2.15
+       },
+       {
+        "base": [
+         160.0,
+         470.0,
+         8.0
+        ],
+        "dir": [
+         0.0,
+         0.0,
+         1.0
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.8
+       },
+       {
+        "base": [
+         160.0,
+         470.0,
+         16.0
+        ],
+        "dir": [
+         0.0,
+         0.0,
+         1.0
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.65
+       },
+       {
+        "base": [
+         160.0,
+         470.0,
+         24.0
+        ],
+        "dir": [
+         0.0,
+         0.0,
+         1.0
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.5
+       },
+       {
+        "base": [
+         160.0,
+         470.0,
+         32.0
+        ],
+        "dir": [
+         0.051,
+         0.0,
+         0.999
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.35
+       },
+       {
+        "base": [
+         160.407,
+         470.0,
+         39.99
+        ],
+        "dir": [
+         0.102,
+         0.0,
+         0.995
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.2
+       },
+       {
+        "base": [
+         161.219,
+         470.0,
+         47.948
+        ],
+        "dir": [
+         0.101,
+         0.068,
+         0.993
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.05
+       },
+       {
+        "base": [
+         162.03,
+         470.546,
+         55.888
+        ],
+        "dir": [
+         0.101,
+         0.136,
+         0.986
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.9
+       },
+       {
+        "base": [
+         162.835,
+         471.636,
+         63.773
+        ],
+        "dir": [
+         0.099,
+         0.204,
+         0.974
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.45
+       },
+       {
+        "base": [
+         163.631,
+         473.265,
+         71.565
+        ],
+        "dir": [
+         0.098,
+         0.27,
+         0.958
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         164.413,
+         475.425,
+         79.228
+        ],
+        "dir": [
+         0.096,
+         0.335,
+         0.937
+        ],
+        "is_apex": true,
+        "length_cm": 0.0,
+        "thickness_cm": 0.3
+       }
+      ],
+      "species": "Tomato",
+      "title": "NE \u2014 p\u00e9nombre \u00b7 printemps"
+     }
+    },
+    {
+     "light_received": 0.738,
+     "saison": "ete",
+     "specimen": {
+      "collet_cm": [
+       160.0,
+       470.0,
+       0.0
+      ],
+      "footprint": {
+       "canopy_radius_cm": 33.566,
+       "height_cm": 98.689
+      },
+      "segments": [
+       {
+        "base": [
+         160.0,
+         470.0,
+         0.0
+        ],
+        "dir": [
+         0.0,
+         0.0,
+         1.0
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 2.54
+       },
+       {
+        "base": [
+         160.0,
+         470.0,
+         8.0
+        ],
+        "dir": [
+         0.0,
+         0.0,
+         1.0
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 2.19
+       },
+       {
+        "base": [
+         160.0,
+         470.0,
+         16.0
+        ],
+        "dir": [
+         0.0,
+         0.0,
+         1.0
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 2.04
+       },
+       {
+        "base": [
+         160.0,
+         470.0,
+         24.0
+        ],
+        "dir": [
+         0.0,
+         0.0,
+         1.0
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.89
+       },
+       {
+        "base": [
+         160.0,
+         470.0,
+         32.0
+        ],
+        "dir": [
+         0.051,
+         0.0,
+         0.999
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.74
+       },
+       {
+        "base": [
+         160.407,
+         470.0,
+         39.99
+        ],
+        "dir": [
+         0.102,
+         0.0,
+         0.995
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.59
+       },
+       {
+        "base": [
+         161.219,
+         470.0,
+         47.948
+        ],
+        "dir": [
+         0.101,
+         0.068,
+         0.993
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.44
+       },
+       {
+        "base": [
+         162.03,
+         470.546,
+         55.888
+        ],
+        "dir": [
+         0.101,
+         0.136,
+         0.986
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.29
+       },
+       {
+        "base": [
+         162.835,
+         471.636,
+         63.773
+        ],
+        "dir": [
+         0.099,
+         0.204,
+         0.974
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.84
+       },
+       {
+        "base": [
+         163.631,
+         473.265,
+         71.565
+        ],
+        "dir": [
+         0.098,
+         0.27,
+         0.958
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.69
+       },
+       {
+        "base": [
+         164.413,
+         475.425,
+         79.228
+        ],
+        "dir": [
+         0.096,
+         0.335,
+         0.937
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.54
+       },
+       {
+        "base": [
+         165.179,
+         478.106,
+         86.726
+        ],
+        "dir": [
+         0.144,
+         0.396,
+         0.907
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.39
+       },
+       {
+        "base": [
+         166.329,
+         481.278,
+         93.98
+        ],
+        "dir": [
+         0.194,
+         0.45,
+         0.872
+        ],
+        "is_apex": true,
+        "length_cm": 5.401,
+        "thickness_cm": 0.3
+       }
+      ],
+      "species": "Tomato",
+      "title": "NE \u2014 p\u00e9nombre \u00b7 ete"
+     }
+    },
+    {
+     "light_received": 0.751,
+     "saison": "automne",
+     "specimen": {
+      "collet_cm": [
+       160.0,
+       470.0,
+       0.0
+      ],
+      "footprint": {
+       "canopy_radius_cm": 45.701,
+       "height_cm": 114.955
+      },
+      "segments": [
+       {
+        "base": [
+         160.0,
+         470.0,
+         0.0
+        ],
+        "dir": [
+         0.0,
+         0.0,
+         1.0
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 2.93
+       },
+       {
+        "base": [
+         160.0,
+         470.0,
+         8.0
+        ],
+        "dir": [
+         0.0,
+         0.0,
+         1.0
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 2.58
+       },
+       {
+        "base": [
+         160.0,
+         470.0,
+         16.0
+        ],
+        "dir": [
+         0.0,
+         0.0,
+         1.0
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 2.43
+       },
+       {
+        "base": [
+         160.0,
+         470.0,
+         24.0
+        ],
+        "dir": [
+         0.0,
+         0.0,
+         1.0
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 2.28
+       },
+       {
+        "base": [
+         160.0,
+         470.0,
+         32.0
+        ],
+        "dir": [
+         0.051,
+         0.0,
+         0.999
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 2.13
+       },
+       {
+        "base": [
+         160.407,
+         470.0,
+         39.99
+        ],
+        "dir": [
+         0.102,
+         0.0,
+         0.995
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.98
+       },
+       {
+        "base": [
+         161.219,
+         470.0,
+         47.948
+        ],
+        "dir": [
+         0.101,
+         0.068,
+         0.993
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.83
+       },
+       {
+        "base": [
+         162.03,
+         470.546,
+         55.888
+        ],
+        "dir": [
+         0.101,
+         0.136,
+         0.986
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.68
+       },
+       {
+        "base": [
+         162.835,
+         471.636,
+         63.773
+        ],
+        "dir": [
+         0.099,
+         0.204,
+         0.974
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.23
+       },
+       {
+        "base": [
+         163.631,
+         473.265,
+         71.565
+        ],
+        "dir": [
+         0.098,
+         0.27,
+         0.958
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.08
+       },
+       {
+        "base": [
+         164.413,
+         475.425,
+         79.228
+        ],
+        "dir": [
+         0.096,
+         0.335,
+         0.937
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.93
+       },
+       {
+        "base": [
+         165.179,
+         478.106,
+         86.726
+        ],
+        "dir": [
+         0.144,
+         0.396,
+         0.907
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.78
+       },
+       {
+        "base": [
+         166.329,
+         481.278,
+         93.98
+        ],
+        "dir": [
+         0.194,
+         0.45,
+         0.872
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.63
+       },
+       {
+        "base": [
+         167.877,
+         484.878,
+         100.954
+        ],
+        "dir": [
+         0.242,
+         0.501,
+         0.831
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.48
+       },
+       {
+        "base": [
+         160.0,
+         470.0,
+         8.0
+        ],
+        "dir": [
+         -0.707,
+         -0.074,
+         0.703
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.45
+       },
+       {
+        "base": [
+         169.815,
+         488.884,
+         107.602
+        ],
+        "dir": [
+         0.354,
+         0.538,
+         0.765
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.33
+       },
+       {
+        "base": [
+         154.341,
+         469.411,
+         13.624
+        ],
+        "dir": [
+         -0.629,
+         0.008,
+         0.777
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         160.0,
+         470.0,
+         16.0
+        ],
+        "dir": [
+         -0.645,
+         0.243,
+         0.724
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         172.648,
+         493.187,
+         113.723
+        ],
+        "dir": [
+         0.46,
+         0.565,
+         0.685
+        ],
+        "is_apex": true,
+        "length_cm": 1.798,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         149.307,
+         469.474,
+         19.841
+        ],
+        "dir": [
+         -0.699,
+         0.137,
+         0.702
+        ],
+        "is_apex": true,
+        "length_cm": 0.0,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         154.837,
+         471.942,
+         21.794
+        ],
+        "dir": [
+         -0.552,
+         0.332,
+         0.765
+        ],
+        "is_apex": true,
+        "length_cm": 0.0,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         160.0,
+         470.0,
+         24.0
+        ],
+        "dir": [
+         -0.485,
+         0.65,
+         0.584
+        ],
+        "is_apex": true,
+        "length_cm": 0.0,
+        "thickness_cm": 0.3
+       }
+      ],
+      "species": "Tomato",
+      "title": "NE \u2014 p\u00e9nombre \u00b7 automne"
+     }
+    },
+    {
+     "light_received": 0.807,
+     "saison": "hiver",
+     "specimen": {
+      "collet_cm": [
+       160.0,
+       470.0,
+       0.0
+      ],
+      "footprint": {
+       "canopy_radius_cm": 38.097,
+       "height_cm": 34.839
+      },
+      "segments": [
+       {
+        "base": [
+         160.0,
+         470.0,
+         0.0
+        ],
+        "dir": [
+         0.0,
+         0.0,
+         1.0
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 3.32
+       },
+       {
+        "base": [
+         160.0,
+         470.0,
+         8.0
+        ],
+        "dir": [
+         0.0,
+         0.0,
+         1.0
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 2.97
+       },
+       {
+        "base": [
+         160.0,
+         470.0,
+         16.0
+        ],
+        "dir": [
+         0.0,
+         0.0,
+         1.0
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 2.82
+       },
+       {
+        "base": [
+         160.0,
+         470.0,
+         24.0
+        ],
+        "dir": [
+         0.0,
+         0.0,
+         1.0
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 2.67
+       },
+       {
+        "base": [
+         160.0,
+         470.0,
+         8.0
+        ],
+        "dir": [
+         -0.707,
+         -0.074,
+         0.703
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.84
+       },
+       {
+        "base": [
+         154.341,
+         469.411,
+         13.624
+        ],
+        "dir": [
+         -0.629,
+         0.008,
+         0.777
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.69
+       },
+       {
+        "base": [
+         160.0,
+         470.0,
+         16.0
+        ],
+        "dir": [
+         -0.645,
+         0.243,
+         0.724
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.69
+       },
+       {
+        "base": [
+         149.307,
+         469.474,
+         19.841
+        ],
+        "dir": [
+         -0.699,
+         0.137,
+         0.702
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.54
+       },
+       {
+        "base": [
+         154.837,
+         471.942,
+         21.794
+        ],
+        "dir": [
+         -0.552,
+         0.332,
+         0.765
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.54
+       },
+       {
+        "base": [
+         160.0,
+         470.0,
+         24.0
+        ],
+        "dir": [
+         -0.485,
+         0.65,
+         0.584
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.54
+       },
+       {
+        "base": [
+         143.718,
+         470.573,
+         25.459
+        ],
+        "dir": [
+         -0.749,
+         0.263,
+         0.608
+        ],
+        "is_apex": true,
+        "length_cm": 4.975,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         150.419,
+         474.598,
+         27.912
+        ],
+        "dir": [
+         -0.441,
+         0.454,
+         0.774
+        ],
+        "is_apex": true,
+        "length_cm": 4.975,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         156.116,
+         475.202,
+         28.675
+        ],
+        "dir": [
+         -0.353,
+         0.746,
+         0.565
+        ],
+        "is_apex": true,
+        "length_cm": 4.975,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         160.0,
+         470.0,
+         32.0
+        ],
+        "dir": [
+         -0.819,
+         -0.06,
+         0.571
+        ],
+        "is_apex": true,
+        "length_cm": 4.975,
+        "thickness_cm": 0.3
+       }
+      ],
+      "species": "Tomato",
+      "title": "NE \u2014 p\u00e9nombre \u00b7 hiver"
+     }
+    }
+   ]
+  },
+  {
+   "collet_world_cm": [
+    700.0,
+    470.0
+   ],
+   "name": "NO \u2014 ombre",
+   "saisons": [
+    {
+     "light_received": 0.399,
+     "saison": "printemps",
+     "specimen": {
+      "collet_cm": [
+       500.0,
+       470.0,
+       0.0
+      ],
+      "footprint": {
+       "canopy_radius_cm": 28.748,
+       "height_cm": 70.791
+      },
+      "segments": [
+       {
+        "base": [
+         500.0,
+         470.0,
+         0.0
+        ],
+        "dir": [
+         0.0,
+         0.0,
+         1.0
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 2.15
+       },
+       {
+        "base": [
+         500.0,
+         470.0,
+         8.0
+        ],
+        "dir": [
+         -0.043,
+         -0.043,
+         0.998
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.8
+       },
+       {
+        "base": [
+         499.657,
+         469.657,
+         15.985
+        ],
+        "dir": [
+         -0.043,
+         -0.043,
+         0.998
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.65
+       },
+       {
+        "base": [
+         499.315,
+         469.315,
+         23.971
+        ],
+        "dir": [
+         -0.09,
+         -0.043,
+         0.995
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.5
+       },
+       {
+        "base": [
+         498.593,
+         468.973,
+         31.931
+        ],
+        "dir": [
+         -0.137,
+         -0.042,
+         0.99
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.32
+       },
+       {
+        "base": [
+         497.493,
+         468.633,
+         39.847
+        ],
+        "dir": [
+         -0.184,
+         -0.042,
+         0.982
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.14
+       },
+       {
+        "base": [
+         496.019,
+         468.296,
+         47.703
+        ],
+        "dir": [
+         -0.226,
+         -0.042,
+         0.973
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.96
+       },
+       {
+        "base": [
+         494.209,
+         467.962,
+         55.489
+        ],
+        "dir": [
+         -0.268,
+         -0.041,
+         0.963
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.48
+       },
+       {
+        "base": [
+         492.066,
+         467.631,
+         63.189
+        ],
+        "dir": [
+         -0.309,
+         -0.041,
+         0.95
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         489.596,
+         467.305,
+         70.791
+        ],
+        "dir": [
+         -0.349,
+         -0.04,
+         0.936
+        ],
+        "is_apex": true,
+        "length_cm": 0.0,
+        "thickness_cm": 0.3
+       }
+      ],
+      "species": "Tomato",
+      "title": "NO \u2014 ombre \u00b7 printemps"
+     }
+    },
+    {
+     "light_received": 0.412,
+     "saison": "ete",
+     "specimen": {
+      "collet_cm": [
+       500.0,
+       470.0,
+       0.0
+      ],
+      "footprint": {
+       "canopy_radius_cm": 35.303,
+       "height_cm": 87.007
+      },
+      "segments": [
+       {
+        "base": [
+         500.0,
+         470.0,
+         0.0
+        ],
+        "dir": [
+         0.0,
+         0.0,
+         1.0
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 2.54
+       },
+       {
+        "base": [
+         500.0,
+         470.0,
+         8.0
+        ],
+        "dir": [
+         -0.043,
+         -0.043,
+         0.998
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 2.19
+       },
+       {
+        "base": [
+         499.657,
+         469.657,
+         15.985
+        ],
+        "dir": [
+         -0.043,
+         -0.043,
+         0.998
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 2.04
+       },
+       {
+        "base": [
+         499.315,
+         469.315,
+         23.971
+        ],
+        "dir": [
+         -0.09,
+         -0.043,
+         0.995
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.89
+       },
+       {
+        "base": [
+         498.593,
+         468.973,
+         31.931
+        ],
+        "dir": [
+         -0.137,
+         -0.042,
+         0.99
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.71
+       },
+       {
+        "base": [
+         497.493,
+         468.633,
+         39.847
+        ],
+        "dir": [
+         -0.184,
+         -0.042,
+         0.982
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.53
+       },
+       {
+        "base": [
+         496.019,
+         468.296,
+         47.703
+        ],
+        "dir": [
+         -0.226,
+         -0.042,
+         0.973
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.35
+       },
+       {
+        "base": [
+         494.209,
+         467.962,
+         55.489
+        ],
+        "dir": [
+         -0.268,
+         -0.041,
+         0.963
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.87
+       },
+       {
+        "base": [
+         492.066,
+         467.631,
+         63.189
+        ],
+        "dir": [
+         -0.309,
+         -0.041,
+         0.95
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.69
+       },
+       {
+        "base": [
+         489.596,
+         467.305,
+         70.791
+        ],
+        "dir": [
+         -0.349,
+         -0.04,
+         0.936
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.51
+       },
+       {
+        "base": [
+         486.801,
+         466.984,
+         78.28
+        ],
+        "dir": [
+         -0.389,
+         -0.04,
+         0.92
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.33
+       },
+       {
+        "base": [
+         483.688,
+         466.668,
+         85.643
+        ],
+        "dir": [
+         -0.432,
+         -0.039,
+         0.901
+        ],
+        "is_apex": true,
+        "length_cm": 1.514,
+        "thickness_cm": 0.3
+       }
+      ],
+      "species": "Tomato",
+      "title": "NO \u2014 ombre \u00b7 ete"
+     }
+    },
+    {
+     "light_received": 0.399,
+     "saison": "automne",
+     "specimen": {
+      "collet_cm": [
+       500.0,
+       470.0,
+       0.0
+      ],
+      "footprint": {
+       "canopy_radius_cm": 43.452,
+       "height_cm": 102.493
+      },
+      "segments": [
+       {
+        "base": [
+         500.0,
+         470.0,
+         0.0
+        ],
+        "dir": [
+         0.0,
+         0.0,
+         1.0
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 2.93
+       },
+       {
+        "base": [
+         500.0,
+         470.0,
+         8.0
+        ],
+        "dir": [
+         -0.043,
+         -0.043,
+         0.998
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 2.58
+       },
+       {
+        "base": [
+         499.657,
+         469.657,
+         15.985
+        ],
+        "dir": [
+         -0.043,
+         -0.043,
+         0.998
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 2.43
+       },
+       {
+        "base": [
+         499.315,
+         469.315,
+         23.971
+        ],
+        "dir": [
+         -0.09,
+         -0.043,
+         0.995
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 2.28
+       },
+       {
+        "base": [
+         498.593,
+         468.973,
+         31.931
+        ],
+        "dir": [
+         -0.137,
+         -0.042,
+         0.99
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 2.1
+       },
+       {
+        "base": [
+         497.493,
+         468.633,
+         39.847
+        ],
+        "dir": [
+         -0.184,
+         -0.042,
+         0.982
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.92
+       },
+       {
+        "base": [
+         496.019,
+         468.296,
+         47.703
+        ],
+        "dir": [
+         -0.226,
+         -0.042,
+         0.973
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.74
+       },
+       {
+        "base": [
+         494.209,
+         467.962,
+         55.489
+        ],
+        "dir": [
+         -0.268,
+         -0.041,
+         0.963
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.26
+       },
+       {
+        "base": [
+         492.066,
+         467.631,
+         63.189
+        ],
+        "dir": [
+         -0.309,
+         -0.041,
+         0.95
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.08
+       },
+       {
+        "base": [
+         489.596,
+         467.305,
+         70.791
+        ],
+        "dir": [
+         -0.349,
+         -0.04,
+         0.936
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.9
+       },
+       {
+        "base": [
+         486.801,
+         466.984,
+         78.28
+        ],
+        "dir": [
+         -0.389,
+         -0.04,
+         0.92
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.72
+       },
+       {
+        "base": [
+         483.688,
+         466.668,
+         85.643
+        ],
+        "dir": [
+         -0.432,
+         -0.039,
+         0.901
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.54
+       },
+       {
+        "base": [
+         480.228,
+         466.358,
+         92.85
+        ],
+        "dir": [
+         -0.475,
+         -0.038,
+         0.879
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.36
+       },
+       {
+        "base": [
+         476.43,
+         466.056,
+         99.884
+        ],
+        "dir": [
+         -0.512,
+         -0.037,
+         0.858
+        ],
+        "is_apex": true,
+        "length_cm": 3.041,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         500.0,
+         470.0,
+         8.0
+        ],
+        "dir": [
+         0.678,
+         0.494,
+         0.545
+        ],
+        "is_apex": true,
+        "length_cm": 1.52,
+        "thickness_cm": 0.3
+       }
+      ],
+      "species": "Tomato",
+      "title": "NO \u2014 ombre \u00b7 automne"
+     }
+    },
+    {
+     "light_received": 0.252,
+     "saison": "hiver",
+     "specimen": {
+      "collet_cm": [
+       500.0,
+       470.0,
+       0.0
+      ],
+      "footprint": {
+       "canopy_radius_cm": 49.074,
+       "height_cm": 111.454
+      },
+      "segments": [
+       {
+        "base": [
+         500.0,
+         470.0,
+         0.0
+        ],
+        "dir": [
+         0.0,
+         0.0,
+         1.0
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 3.32
+       },
+       {
+        "base": [
+         500.0,
+         470.0,
+         8.0
+        ],
+        "dir": [
+         -0.043,
+         -0.043,
+         0.998
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 2.97
+       },
+       {
+        "base": [
+         499.657,
+         469.657,
+         15.985
+        ],
+        "dir": [
+         -0.043,
+         -0.043,
+         0.998
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 2.82
+       },
+       {
+        "base": [
+         499.315,
+         469.315,
+         23.971
+        ],
+        "dir": [
+         -0.09,
+         -0.043,
+         0.995
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 2.67
+       },
+       {
+        "base": [
+         498.593,
+         468.973,
+         31.931
+        ],
+        "dir": [
+         -0.137,
+         -0.042,
+         0.99
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 2.49
+       },
+       {
+        "base": [
+         497.493,
+         468.633,
+         39.847
+        ],
+        "dir": [
+         -0.184,
+         -0.042,
+         0.982
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 2.31
+       },
+       {
+        "base": [
+         496.019,
+         468.296,
+         47.703
+        ],
+        "dir": [
+         -0.226,
+         -0.042,
+         0.973
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 2.13
+       },
+       {
+        "base": [
+         494.209,
+         467.962,
+         55.489
+        ],
+        "dir": [
+         -0.268,
+         -0.041,
+         0.963
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.65
+       },
+       {
+        "base": [
+         492.066,
+         467.631,
+         63.189
+        ],
+        "dir": [
+         -0.309,
+         -0.041,
+         0.95
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.47
+       },
+       {
+        "base": [
+         489.596,
+         467.305,
+         70.791
+        ],
+        "dir": [
+         -0.349,
+         -0.04,
+         0.936
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.29
+       },
+       {
+        "base": [
+         486.801,
+         466.984,
+         78.28
+        ],
+        "dir": [
+         -0.389,
+         -0.04,
+         0.92
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 1.11
+       },
+       {
+        "base": [
+         483.688,
+         466.668,
+         85.643
+        ],
+        "dir": [
+         -0.432,
+         -0.039,
+         0.901
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.93
+       },
+       {
+        "base": [
+         480.228,
+         466.358,
+         92.85
+        ],
+        "dir": [
+         -0.475,
+         -0.038,
+         0.879
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.75
+       },
+       {
+        "base": [
+         476.43,
+         466.056,
+         99.884
+        ],
+        "dir": [
+         -0.512,
+         -0.037,
+         0.858
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.57
+       },
+       {
+        "base": [
+         500.0,
+         470.0,
+         8.0
+        ],
+        "dir": [
+         0.678,
+         0.494,
+         0.545
+        ],
+        "is_apex": false,
+        "length_cm": 8.0,
+        "thickness_cm": 0.54
+       },
+       {
+        "base": [
+         472.333,
+         465.762,
+         106.749
+        ],
+        "dir": [
+         -0.548,
+         -0.036,
+         0.835
+        ],
+        "is_apex": true,
+        "length_cm": 5.631,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         505.424,
+         473.949,
+         12.357
+        ],
+        "dir": [
+         0.678,
+         0.494,
+         0.545
+        ],
+        "is_apex": true,
+        "length_cm": 4.111,
+        "thickness_cm": 0.3
+       },
+       {
+        "base": [
+         499.657,
+         469.657,
+         15.985
+        ],
+        "dir": [
+         -0.799,
+         -0.25,
+         0.547
+        ],
+        "is_apex": true,
+        "length_cm": 4.111,
+        "thickness_cm": 0.3
+       }
+      ],
+      "species": "Tomato",
+      "title": "NO \u2014 ombre \u00b7 hiver"
+     }
+    }
+   ]
+  }
+ ]
+}

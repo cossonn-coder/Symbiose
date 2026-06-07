@@ -100,7 +100,73 @@ def export(path: str) -> dict:
     return doc
 
 
+def export_maquette(path: str) -> dict:
+    """Pont JSON de la MAQUETTE SAISONNIÈRE (sprint maison, tronçon 4) : les 3
+    secteurs (S/NE/NO) × 4 saisons, poussés dans un vrai LightField + maison, pour
+    qu'un futur rendu Godot dessine la MÊME scène (ombre déterministe + plants
+    penchés) que le SVG. Réutilise EXACTEMENT les spécimens de render_structure.py
+    (import direct → mêmes positions/SEED/strength → cohérence byte-stable). Dump
+    la maison (projeteur d'ombre) + par secteur/saison : lumière reçue + géométrie
+    du plant (`_specimen_dict`)."""
+    from tools.render_structure import (SECTEURS_MAQ, SAISON_WEEK_MAQ, SAISONS_ORDRE,
+                                        MAQ_SPECIES, _grow_sector)
+    from world.building import House
+
+    house = House()
+    strength = 0.30                                   # marqué (défaut Q3)
+    orig = MAQ_SPECIES.phototropism_strength
+    MAQ_SPECIES.phototropism_strength = strength
+    try:
+        secteurs = []
+        for name, ox, oy, rows, cols, lx, ly in SECTEURS_MAQ:
+            snaps = _grow_sector(MAQ_SPECIES, ox, oy, rows, cols, lx, ly, house)
+            secteurs.append((name, ox + lx, oy + ly, snaps))
+    finally:
+        MAQ_SPECIES.phototropism_strength = orig
+
+    hx0, hy0, hx1, hy1 = house.footprint_bounds
+    doc = {
+        "phototropism_strength": strength,
+        "house": {
+            "footprint_cm": [_r(hx0), _r(hy0), _r(hx1), _r(hy1)],
+            "height_cm": _r(house.height_cm),
+            "wall_albedo": _r(house.wall_albedo),
+            "latitude_deg": _r(house.latitude_deg),
+        },
+        "sectors": [
+            {
+                "name": name,
+                "collet_world_cm": [_r(cwx), _r(cwy)],
+                "saisons": [
+                    {
+                        "saison": s,
+                        "light_received": _r(snaps[s][1]),
+                        "specimen": _specimen_dict(snaps[s][0], f"{name} · {s}"),
+                    }
+                    for s in SAISONS_ORDRE
+                ],
+            }
+            for (name, cwx, cwy, snaps) in secteurs
+        ],
+    }
+    with open(path, "w") as f:
+        json.dump(doc, f, indent=1, sort_keys=True)
+        f.write("\n")
+    print(f"[export maquette] écrit : {path}")
+    for sec in doc["sectors"]:
+        cells = "  ".join(f"{sa['saison'][:4]}:lum{sa['light_received']:.2f}/"
+                          f"seg{len(sa['specimen']['segments'])}"
+                          for sa in sec["saisons"])
+        print(f"  {sec['name']:18s} {cells}")
+    return doc
+
+
 if __name__ == "__main__":
-    out = sys.argv[1] if len(sys.argv) > 1 else \
-        os.path.join(os.path.dirname(__file__), "structure.json")
-    export(out)
+    here = os.path.dirname(__file__)
+    if len(sys.argv) > 1 and sys.argv[1] == "structure":
+        # Ancien pont structure (préservé) : python3 -m tools.export_structure structure [out.json]
+        out = sys.argv[2] if len(sys.argv) > 2 else os.path.join(here, "structure.json")
+        export(out)
+    else:
+        # Tronçon 4 : pont JSON de la maquette saisonnière (secteurs × saisons).
+        export_maquette(os.path.join(here, "maquette_secteurs.json"))
