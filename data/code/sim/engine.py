@@ -632,8 +632,12 @@ class Engine:
             eco = self._eco(tile)
             log.append(f"  [{tile.tile_id}]")
 
-            # 2. Lumière directionnelle (avant tout le reste)
-            lum_log = eco.tick_light(tile.plants, saison)
+            # 2. Lumière directionnelle (avant tout le reste). La maison (si posée
+            # dans le monde) projette son ombre/albédo dans CETTE tuile selon son
+            # offset monde (tronçon 2). Absente → lumière historique inchangée.
+            lum_log = eco.tick_light(tile.plants, saison,
+                                     house=self.game_state.get("house"),
+                                     tile_origin=(tile.origin_x_cm, tile.origin_y_cm))
             log += lum_log
 
             # 3. Hydrologie : évaporation → pluie de fond → rétention → drainage

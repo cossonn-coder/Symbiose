@@ -26,6 +26,10 @@ SOLAR_HOUR_ANGLES = (-45.0, 0.0, 45.0)   # matin · midi · soir
 # (centre + 4 points à 0.6·rayon) — capte l'ombrage partiel d'un voisin plus haut.
 CANOPY_SAMPLE_FRAC = 0.6
 
+# Portée de l'effet espalier : le sol DEVANT un mur ensoleillé reçoit la lumière
+# réfléchie (albédo) sur ≈ 2,5 m, falloff linéaire avec la distance au mur (§3).
+WALL_ALBEDO_RADIUS_CM = 250.0
+
 
 def solar_slice(decl_deg: float, hour_angle_deg: float,
                 lat_deg: float = LATITUDE_DEG):
@@ -81,6 +85,66 @@ def _point_in_capsule(px: float, py: float,
     return (px - qx) ** 2 + (py - qy) ** 2 <= radius * radius
 
 
+def _point_in_swept_rect(px: float, py: float,
+                         x0: float, y0: float, x1: float, y1: float,
+                         dx: float, dy: float, length: float) -> bool:
+    """Le point (px,py) est-il dans le rectangle [x0,x1]×[y0,y1] BALAYÉ le long de
+    (dx,dy) sur `length` ? (ombre d'un pavé opaque = la maison, §3).
+
+    Analytique, sans raster : le point est dans le balayage ssi il existe
+    s∈[0,length] tel que (px−s·dx, py−s·dy) retombe dans le rectangle. Sur chaque
+    axe la contrainte donne un intervalle de s ; on intersecte avec [0,length]."""
+    s_lo, s_hi = 0.0, length
+    if abs(dx) < 1e-12:
+        if not (x0 <= px <= x1):
+            return False
+    else:
+        a, b = (px - x1) / dx, (px - x0) / dx
+        lo, hi = (a, b) if a <= b else (b, a)
+        if lo > s_lo: s_lo = lo
+        if hi < s_hi: s_hi = hi
+        if s_lo > s_hi:
+            return False
+    if abs(dy) < 1e-12:
+        if not (y0 <= py <= y1):
+            return False
+    else:
+        a, b = (py - y1) / dy, (py - y0) / dy
+        lo, hi = (a, b) if a <= b else (b, a)
+        if lo > s_lo: s_lo = lo
+        if hi < s_hi: s_hi = hi
+        if s_lo > s_hi:
+            return False
+    return s_lo <= s_hi
+
+
+def _wall_albedo_bonus(wx: float, wy: float,
+                       x0: float, y0: float, x1: float, y1: float,
+                       albedo: float, radius: float,
+                       sun_dx: float, sun_dy: float) -> float:
+    """Surplus de lumière réfléchie sur le sol DEVANT une face de mur ENSOLEILLÉE
+    (effet espalier, §3). Repère : x=Est, y=Sud. (sun_dx,sun_dy) = direction du
+    soleil (= −direction d'ombre). Une face n'est éclairée que si le soleil la
+    frappe (normale·soleil > 0). Contribution bornée, falloff linéaire avec la
+    distance perpendiculaire au mur, nulle au-delà de `radius`."""
+    bonus = 0.0
+    # face : (normale_x, normale_y, distance_devant_le_mur, dans_l'extension_latérale)
+    faces = (
+        ( 0.0,  1.0, wy - y1, x0 <= wx <= x1),   # Sud   (mur y=y1)
+        ( 0.0, -1.0, y0 - wy, x0 <= wx <= x1),   # Nord  (mur y=y0)
+        ( 1.0,  0.0, wx - x1, y0 <= wy <= y1),   # Est   (mur x=x1)
+        (-1.0,  0.0, x0 - wx, y0 <= wy <= y1),   # Ouest (mur x=x0)
+    )
+    for nx, ny, perp, in_strip in faces:
+        if not in_strip or perp <= 0.0 or perp > radius:
+            continue
+        lit = nx * sun_dx + ny * sun_dy          # face éclairée si le soleil la frappe
+        if lit <= 0.0:
+            continue
+        bonus += albedo * lit * (1.0 - perp / radius)
+    return bonus
+
+
 class LightField(GridField):
     """
     Champ de lumière v2 — ombres-capsules astronomiques calculées analytiquement
@@ -117,8 +181,16 @@ class LightField(GridField):
         """Intégrale journalière de lumière reçue par la plante (défaut plein soleil)."""
         return self.received.get(id(plant), 1.0)
 
-    def compute(self, plants: list, saison: str) -> list[str]:
-        """Recalcule lumière-sol (grille) + lumière reçue par plante pour ce tick."""
+    def compute(self, plants: list, saison: str,
+                house=None, tile_origin: tuple = (0.0, 0.0)) -> list[str]:
+        """Recalcule lumière-sol (grille) + lumière reçue par plante pour ce tick.
+
+        `house` : config `House` (pavé opaque, seul obstacle GLOBAL, option B §1)
+        ou None. Si fournie, son **ombre** (rectangle balayé §3) et l'**albédo** de
+        ses murs ensoleillés (espalier §3) sont injectés, en convertissant chaque
+        plot/échantillon en coordonnées MONDE via `tile_origin` (offset cm de la
+        tuile). **None → comportement historique strictement inchangé** (le golden
+        smoke test des autres scénarios reste bit-identique)."""
         slices = self._sun_slices(saison)
         alive = [p for p in plants if p.is_alive]
 
@@ -128,6 +200,14 @@ class LightField(GridField):
             cls = p.plant_class
             infos.append((p, p.x_cm, p.y_cm, p.current_height,
                           cls.canopy_radius_at(p), cls.foliage_density_at(p, saison)))
+
+        # --- Géométrie maison (espace MONDE), si présente ---
+        ox, oy = tile_origin
+        hx0 = hy0 = hx1 = hy1 = h_height = wall_albedo = 0.0
+        if house is not None:
+            hx0, hy0, hx1, hy1 = house.footprint_bounds
+            h_height    = house.height_cm
+            wall_albedo = house.wall_albedo
 
         self.received = {}
         if not slices:                       # nuit polaire théorique : plancher partout
@@ -140,15 +220,20 @@ class LightField(GridField):
 
         total_w = sum(w for _, _, _, w in slices)
 
-        # --- Lumière reçue par plante (ombres des seuls voisins plus hauts) ---
+        # --- Lumière reçue par plante (ombres des voisins plus hauts + maison) ---
         order = sorted(infos, key=lambda t: t[3], reverse=True)  # plus haut → plus bas
         for p, px, py, ph, pr, pd in infos:
             d = pr * CANOPY_SAMPLE_FRAC
             samples = ((px, py), (px + d, py), (px - d, py), (px, py + d), (px, py - d))
             acc = 0.0
             for sdx, sdy, inv_tan, w in slices:
+                h_len = h_height * inv_tan
                 att_sum = 0.0
                 for sx, sy in samples:
+                    # Maison opaque (seul obstacle global) : test en coords monde.
+                    if house is not None and _point_in_swept_rect(
+                            sx + ox, sy + oy, hx0, hy0, hx1, hy1, sdx, sdy, h_len):
+                        continue             # plein ombre (att=0) → plancher après moyenne
                     att = 1.0
                     for q, qx, qy, qh, qr, qd in order:
                         if qh <= ph:
@@ -162,19 +247,31 @@ class LightField(GridField):
                 acc += light_slice * w
             self.received[id(p)] = acc / total_w
 
-        # --- Lumière-sol par plot (toutes les ombres + plancher) ---
+        # --- Lumière-sol par plot (ombres plantes + maison + albédo + plancher) ---
         for r in range(self.rows):
             cy = r * PLOT_CM + PLOT_CM / 2
+            wy = cy + oy
             for c in range(self.cols):
                 cx = c * PLOT_CM + PLOT_CM / 2
+                wx = cx + ox
                 acc = 0.0
                 for sdx, sdy, inv_tan, w in slices:
-                    att = 1.0
-                    for q, qx, qy, qh, qr, qd in infos:
-                        if qd <= 0.0:
-                            continue
-                        if _point_in_capsule(cx, cy, qx, qy, sdx, sdy, qh * inv_tan, qr):
-                            att *= (1.0 - qd)
+                    if house is not None and _point_in_swept_rect(
+                            wx, wy, hx0, hy0, hx1, hy1, sdx, sdy, h_height * inv_tan):
+                        att = 0.0            # sous la maison : ombre pleine
+                    else:
+                        att = 1.0
+                        for q, qx, qy, qh, qr, qd in infos:
+                            if qd <= 0.0:
+                                continue
+                            if _point_in_capsule(cx, cy, qx, qy, sdx, sdy, qh * inv_tan, qr):
+                                att *= (1.0 - qd)
+                    if house is not None and wall_albedo > 0.0:
+                        att += _wall_albedo_bonus(wx, wy, hx0, hy0, hx1, hy1,
+                                                  wall_albedo, WALL_ALBEDO_RADIUS_CM,
+                                                  -sdx, -sdy)
                     acc += att * w
-                self.data[r][c] = max(LIGHT_FLOOR, acc / total_w)
+                # Plafond [LIGHT_FLOOR, 1.0] : préserve le contrat [0,1] de la
+                # lumière-sol (no-op sans maison, acc/total_w ≤ 1).
+                self.data[r][c] = min(1.0, max(LIGHT_FLOOR, acc / total_w))
         return []

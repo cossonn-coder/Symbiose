@@ -234,9 +234,12 @@ class EcoFields:
 
     # --- Lumière ---
 
-    def tick_light(self, plants: list, saison: str) -> list[str]:
-        """Recalcule le champ de lumière pour ce tick."""
-        return self.lumiere.compute(plants, saison)
+    def tick_light(self, plants: list, saison: str,
+                   house=None, tile_origin: tuple = (0.0, 0.0)) -> list[str]:
+        """Recalcule le champ de lumière pour ce tick (+ ombre/albédo de la maison
+        si `house` est fournie ; `tile_origin` = offset monde de la tuile)."""
+        return self.lumiere.compute(plants, saison,
+                                    house=house, tile_origin=tile_origin)
 
     # --- Perturbations ---
 

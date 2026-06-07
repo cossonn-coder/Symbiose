@@ -27,7 +27,7 @@ import sys
 import os
 import hashlib
 
-from world import Tile
+from world import Tile, House
 from plants import (Tomato, Basil, Sunflower, Bean, Clover, Pepper,
                     Yarrow, Phacelia, AppleTree)
 from fields import init_eco
@@ -47,14 +47,22 @@ _RONDELLES = ("fertilite", "humidite", "lombric", "maladie",
               "pollinisateur", "paillage", "auxiliaire")
 
 
+# Offsets monde des 2 tuiles vs la maison centrée (1000,1000 ; empreinte
+# [600,600]→[1400,1400]) : T0 au NORD (subit l'ombre), T1 au SUD (zone albédo).
+# Le smoke test exerce ainsi l'ombre + l'albédo de la maison (tronçon 2).
+TILE_ORIGINS = {0: (700.0, 0.0), 1: (700.0, 1500.0)}
+
+
 def build_world():
     """Monde déterministe du smoke test : 2 tuiles 6×8 (terre/argile), jardin
-    diversifié + attire-auxiliaires sur la tuile paire, un pommier (pérenne)."""
+    diversifié + attire-auxiliaires sur la tuile paire, un pommier (pérenne).
+    Maison centrée → ombre/albédo injectés (T0 ombragée au nord, T1 au sud)."""
     tiles = []
     ecos = {}
     for i, soil in enumerate(SOILS):
         tid = f"T{i}"
-        tile = Tile(tile_id=tid, soil_type=soil)
+        ox, oy = TILE_ORIGINS[i]
+        tile = Tile(tile_id=tid, soil_type=soil, origin_x_cm=ox, origin_y_cm=oy)
         if soil == "argile":
             eco = init_eco(tid, 6, 8, humidite=2.0, fertilite=1.2, microbiome=0.3)
         else:
@@ -98,6 +106,7 @@ def compute_hash() -> str:
     game_state = {
         "tiles": tiles, "eco": ecos, "scores": {},
         "current_player": "joueur_1", "week": 1, "log": [],
+        "house": House(),   # maison centrée par défaut → ombre/albédo (tronçon 2)
     }
     engine = Engine(game_state)
     h = hashlib.sha256()

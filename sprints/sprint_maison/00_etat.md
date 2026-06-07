@@ -35,9 +35,20 @@ la **seule maison** comme obstacle dans `compute`. Cf. §1 du doc.
   6×8 × 4 ans (~5,6 s, déterministe) ; sénescence ~60 ans sortie en
   `tests/test_senescence.py` (6×6 argile, ~20 s, à la demande). Suite complète
   verte. **Nouveau golden hash** : `8ef7729f…0094a62f`. → `01_*.md`
-- **2 — Ombre de la maison dans `LightField`.** ⬜ Rectangle balayé (sol + reçu),
-  par position monde de la tuile, + **albédo espalier borné** (désactivable, 2b si
-  lourd). `test_ombre_maison`. → re-figeage localisé. → `02_*.md`
+- **2 — Ombre de la maison dans `LightField`.** ✅ FAIT (2026-06-07). Rectangle
+  balayé analytique (`_point_in_swept_rect`) injecté sur **sol ET reçu-plante**,
+  test en coords MONDE via `tile_origin` (offset tuile) ; maison **opaque**
+  (att=0 → plancher `LIGHT_FLOOR`). **Albédo espalier INCLUS** (option 2, pas 2b) :
+  `_wall_albedo_bonus` ajoute la réflexion des faces ENSOLEILLÉES (sud/est/ouest)
+  sur ≈ 2,5 m (`WALL_ALBEDO_RADIUS_CM=250`, falloff linéaire), `wall_albedo=0`
+  l'annule. Plafond **[LIGHT_FLOOR, 1.0]** conservé (contrat [0,1] aval). Câblé
+  `engine→ecofields.tick_light→compute` ; **sans `house` → chemin bit-identique**
+  (prouvé : golden inchangé avant ajout maison). `test_ombre_maison` (4 tests :
+  N<S, allongement hiver, espalier, déterminisme) vert. Smoke test golden ENRICHI
+  d'une maison (T0 nord ombragée, T1 sud albédo) → **nouveau hash
+  `0aa2892c…1c8d3678`**. Suite complète verte (genetique 20, croissance 57,
+  maitrise 35+20, population, signes 8, vigueur 110, senescence). Coût maison ≈
+  **+2,6 %** du tick (ombre +3,5 ms, albédo +6,5 ms / 1600 plots). → `02_*.md`
 - **3 — Phototropisme branché dans `growth.py`.** ⬜ Apex se penche, déterministe,
   borné, **intensité paramétrable** ; maquette rend **subtil ET marqué** (Nico
   tranche). `test_phototropisme`. → re-figeage maîtrisé. **(risqué)** → `03_*.md`
@@ -61,5 +72,14 @@ maison paramétrable (Q5) · maquette annuelle 4 images/saison (Q6).
   16 | chemin | 11 plots dans chaque axe → coins 11×11, arêtes 11×16/16×11,
   maison 16×16 au centre. `origin_*_cm` des tuiles : col0=0/600/1450, idem lignes.
   Golden smoke test = 2 tuiles 6×8 × 4 ans.
-- **2** : forme exacte du test point-dans-rectangle-balayé ; rayon/falloff albédo.
+- **2** : ✅ TRANCHÉ. Test = `_point_in_swept_rect` analytique (intervalle de `s`
+  par axe ∩ [0,longueur]). Albédo : rayon **250 cm**, falloff **linéaire**
+  `1−perp/rayon`, faces éclairées via `normale·soleil>0`. **⚠️ Point d'arbitrage
+  pour Nico** : la lumière-sol est plafonnée à **1.0** (contrat [0,1] aval :
+  shade_memory/growth_factor/niche). En plein soleil ouvert la lumière vaut déjà
+  1.0, donc l'espalier du mur **sud** y **sature** (pas strictement > plein champ).
+  L'effet reste démontrable là où il y a de la marge (pied du mur **est**,
+  partiellement ombré le soir — c'est ce que teste `test_ombre_maison`). Un vrai
+  « point chaud > 1 » (microclimat thermique du mur sud) demanderait un **champ
+  thermique distinct** → hors périmètre, à décider plus tard si on veut le rendre.
 - **3** : valeur finale `phototropism_strength` (Nico tranche à l'œil).
