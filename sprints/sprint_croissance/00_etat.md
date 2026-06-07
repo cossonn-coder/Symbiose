@@ -126,7 +126,21 @@ inerte d'abord** (tronçon 1, golden INTACT car non lue), **puis câblée à l'e
   l'hiver (grow_plant seul ne la tue pas) — artefact de maquette, pas un bug moteur.
   **Itérable** : forme des feuilles (ellipses), densité, palettes = leviers
   d'ajustement esthétique à l'œil. → outil seul.
-- **6 — Save de la structure.** ⬜ Sérialisation JSON bornée (§J), option d'allègement.
+- **6 — Save de la structure.** ✅ FAIT (2026-06-07). **Contrat de sérialisation
+  borné** (le système de save GLOBAL n'existe pas encore → on livre la sérialisation
+  round-trip de la structure, prête pour le futur save ; choix Nico). `plants/base.py` :
+  `Segment.to_dict()`/`from_dict()` (9 champs structurels ; `base`/`dir` listes JSON →
+  tuples au chargement) + `PlantInstance.structure_to_dict()`/`restore_structure()`
+  (liste de segments ; invalide le cache d'empreinte → recalculé à la reprise).
+  **Allègement §J satisfait par CONSTRUCTION** : les organes (feuilles/fleurs/fruits)
+  sont régénérés par le rendu (tronçon 5), JAMAIS stockés → seul le bois est
+  sérialisé. **Pures additions** (méthodes neuves) → **golden INTACT** (`16a1b937…`).
+  `test_croissance` **67/67** (+10 sérial : round-trip fidèle, base/dir en tuples,
+  organes exclus, **structure restaurée pousse à l'identique** sur 40 ticks, empreinte
+  dérivée identique à la reprise). **Sprint croissance CLOS côté Python.**
+  ⏭ Reste hors sprint : système de save GLOBAL (transversal : structure + sol +
+  populations + génétique + vigueur + maîtrise + seed d'origine + `engine_version`)
+  → sprint dédié futur ; portage C# (D24).
 
 ## Plus tard (hors chantier, ligne BACKLOG)
 Déclencheurs naturels du seam (grêle/chenille/vent → `atteindre_segment`) ; marqueur

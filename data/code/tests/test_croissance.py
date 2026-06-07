@@ -21,8 +21,9 @@ Usage (depuis data/code/) :
   python3 -m tests.test_croissance
 """
 from collections import Counter
+import json
 
-from plants import Tomato, Basil, AppleTree, Fig, PlantInstance
+from plants import Tomato, Basil, AppleTree, Fig, PlantInstance, Segment
 import sim.growth as G
 
 SEED = 0x5AB1057E
@@ -376,9 +377,48 @@ def test_pommier_temoin_non_migre():
     check("témoin ligneux: cache d'empreinte jamais peuplé", f.footprint is None)
 
 
+def test_serialisation_structure():
+    """Tronçon 6 (§J) : la structure de segments est sérialisable en JSON et
+    round-trip FIDÈLE (sérialise → JSON → désérialise = structure identique), et
+    une structure restaurée **continue de pousser à l'identique** (l'état complet
+    du bois est restitué). Les organes (régénérés) ne sont PAS stockés."""
+    p = PlantInstance(plant_class=Tomato, position=POS)
+    p.growth_factor = 1.0
+    for k in range(60):
+        G.grow_plant(p, SEED, 1 + k)
+    check("sérial: structure non triviale", len(p.segments) > 5, f"len={len(p.segments)}")
+
+    # Round-trip JSON : sérialise → texte → recharge dans une instance NEUVE.
+    blob = json.dumps(p.structure_to_dict())            # doit être JSON-sérialisable
+    data = json.loads(blob)
+    q = PlantInstance(plant_class=Tomato, position=POS)
+    q.restore_structure(data)
+    check("sérial: même nombre de segments", len(q.segments) == len(p.segments))
+    check("sérial: round-trip FIDÈLE (segments identiques)", q.segments == p.segments)
+    check("sérial: base/dir restitués en tuples",
+          all(isinstance(s.base, tuple) and isinstance(s.dir, tuple) for s in q.segments))
+    check("sérial: cache d'empreinte invalidé au chargement", q.footprint is None)
+
+    # Allègement §J : les organes (régénérés par le rendu) ne sont PAS sérialisés.
+    check("sérial: organes exclus du dict (allègement §J)",
+          all("organs" not in d for d in data))
+    check("sérial: organes restaurés vides", all(s.organs == [] for s in q.segments))
+
+    # Continuation déterministe : la structure restaurée pousse comme l'originale.
+    q.growth_factor = 1.0
+    for k in range(40):
+        G.grow_plant(p, SEED, 61 + k)
+        G.grow_plant(q, SEED, 61 + k)
+    check("sérial: restaurée pousse à l'identique (len)", len(q.segments) == len(p.segments),
+          f"p={len(p.segments)} q={len(q.segments)}")
+    check("sérial: restaurée pousse à l'identique (structure)", q.segments == p.segments)
+    check("sérial: empreinte dérivée identique après reprise",
+          abs(Tomato.height_at(q) - Tomato.height_at(p)) < 1e-9)
+
+
 if __name__ == "__main__":
     print("=" * 60)
-    print("SYMBIOSE — Croissance procédurale (D29 réorienté, tronçons 1-3bis)")
+    print("SYMBIOSE — Croissance procédurale (D29 réorienté, tronçons 1-6)")
     print("=" * 60)
     test_naissance()
     test_croissance_dominance()
@@ -395,6 +435,7 @@ if __name__ == "__main__":
     test_allure_pommier()
     test_allure_pommier_determinisme()
     test_pommier_temoin_non_migre()
+    test_serialisation_structure()
 
     print("\n" + "=" * 60)
     passed = sum(1 for _, ok in _results if ok)

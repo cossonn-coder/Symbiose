@@ -140,6 +140,39 @@ class Segment:
     has_bud: bool = True             # bourgeon axillaire dormant (consommé au débourrement)
     organs: list = field(default_factory=list)  # feuilles/fleurs/fruits (tronçon 5)
 
+    # --- Sérialisation (croissance procédurale, tronçon 6 — §J) ---
+    # Contrat borné : on ne sérialise QUE le bois (les 9 champs structurels). Les
+    # `organs` (feuilles/fleurs/fruits) sont régénérés à la volée par le rendu
+    # (tronçon 5) → JAMAIS stockés = l'« option d'allègement » §J, satisfaite par
+    # construction. JSON-friendly : `base`/`dir` deviennent des listes, restituées
+    # en tuples au chargement (round-trip fidèle, cf. tests/test_croissance.py).
+    def to_dict(self) -> dict:
+        return {
+            "parent": self.parent,
+            "base": list(self.base),
+            "dir": list(self.dir),
+            "length_cm": self.length_cm,
+            "thickness_cm": self.thickness_cm,
+            "age_weeks": self.age_weeks,
+            "auxin": self.auxin,
+            "is_apex": self.is_apex,
+            "has_bud": self.has_bud,
+        }
+
+    @classmethod
+    def from_dict(cls, d: dict) -> "Segment":
+        return cls(
+            parent=d["parent"],
+            base=tuple(d["base"]),
+            dir=tuple(d["dir"]),
+            length_cm=d["length_cm"],
+            thickness_cm=d["thickness_cm"],
+            age_weeks=d["age_weeks"],
+            auxin=d["auxin"],
+            is_apex=d["is_apex"],
+            has_bud=d.get("has_bud", True),
+        )
+
 # ---------------------------------------------------------------------------
 # INSTANCE DE PLANTE (avant PlantBase pour la forward ref)
 # ---------------------------------------------------------------------------
@@ -230,6 +263,22 @@ class PlantInstance:
         if self.footprint is None:
             self.update_footprint()
         return self.footprint[key]
+
+    # --- Sérialisation de la STRUCTURE (croissance procédurale, tronçon 6 — §J) ---
+    # La structure de segments fait partie de l'état → sérialisée dans le futur save
+    # JSON. Bornée (§D.6 : `MAX_SEGMENTS`) → taille maîtrisée. On ne stocke QUE les
+    # segments (le bois) ; l'empreinte (`footprint`) et les organes sont REGÉNÉRÉS
+    # (cache recalculé au 1er grow_plant / organes par le rendu) → exclus du save.
+    def structure_to_dict(self) -> list:
+        """Sérialise la structure = liste de segments (champs §C.1). JSON-friendly."""
+        return [s.to_dict() for s in self.segments]
+
+    def restore_structure(self, data: list) -> None:
+        """Restaure la structure depuis une liste de dicts (cf. structure_to_dict).
+        Invalide le cache d'empreinte (recalculé au prochain grow_plant / à la volée
+        via footprint_value)."""
+        self.segments = [Segment.from_dict(d) for d in data]
+        self.footprint = None
 
     @property
     def stage(self) -> GrowthStage:
