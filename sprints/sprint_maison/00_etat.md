@@ -27,10 +27,14 @@ Champs lumière **par tuile CONSERVÉS** (pas de `LightField` global — coût �
 la **seule maison** comme obstacle dans `compute`. Cf. §1 du doc.
 
 ## Découpage (4 tronçons + 1 plus tard ; cf. §9)
-- **1 — Monde agrandi + maison INERTE + golden smoke test.** ⬜ Nouveau layout
-  3×3 (centre = maison, 8 tuiles jardin + chemins), offset monde par tuile, objet
-  config `House` (data seule, **ne projette pas encore d'ombre**), nouveau
-  `main.py` démo, **golden minimal reconstruit**. → `01_*.md`
+- **1 — Monde agrandi + maison INERTE + golden smoke test.** ✅ FAIT (2026-06-07).
+  `world/building.py` (`House`, data pure, défauts 8×8×6 m centrée, albédo 0.35) ;
+  `Tile.origin_x_cm/origin_y_cm` (inertes, défaut 0, jamais lus par le moteur —
+  vérifié par grep) ; `main.py` réécrit en **démo** (8 tuiles + maison + chemins,
+  contraste attire-aux conservé) ; **golden = smoke test** 2 tuiles (terre/argile)
+  6×8 × 4 ans (~5,6 s, déterministe) ; sénescence ~60 ans sortie en
+  `tests/test_senescence.py` (6×6 argile, ~20 s, à la demande). Suite complète
+  verte. **Nouveau golden hash** : `8ef7729f…0094a62f`. → `01_*.md`
 - **2 — Ombre de la maison dans `LightField`.** ⬜ Rectangle balayé (sol + reçu),
   par position monde de la tuile, + **albédo espalier borné** (désactivable, 2b si
   lourd). `test_ombre_maison`. → re-figeage localisé. → `02_*.md`
@@ -52,8 +56,10 @@ Nico tranche sur exemples (Q3) · golden smoke test (Q4) · calcaire + albédo +
 maison paramétrable (Q5) · maquette annuelle 4 images/saison (Q6).
 
 ## Points ouverts (à trancher dans le tronçon concerné, défaut sobre + signaler)
-- **1** : largeur des chemins (défaut 50 cm = 1 plot) ; plot-arithmétique exact du
-  layout 20×20 avec chemins ; forme du golden smoke test minimal (combien de
-  tuiles/années).
+- **1** : ✅ TRANCHÉ. Chemins = **50 cm (1 plot)**, NON simulés (espace monde entre
+  tuiles, modèle sobre). Layout figé (cm, monde 2000²) : bandes 11 | chemin |
+  16 | chemin | 11 plots dans chaque axe → coins 11×11, arêtes 11×16/16×11,
+  maison 16×16 au centre. `origin_*_cm` des tuiles : col0=0/600/1450, idem lignes.
+  Golden smoke test = 2 tuiles 6×8 × 4 ans.
 - **2** : forme exacte du test point-dans-rectangle-balayé ; rayon/falloff albédo.
 - **3** : valeur finale `phototropism_strength` (Nico tranche à l'œil).

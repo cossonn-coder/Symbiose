@@ -1,26 +1,22 @@
 """
 SYMBIOSE — tests/test_golden.py
-Filet de non-régression DÉTERMINISTE pour le sprint refactor structurel.
+Filet de non-régression DÉTERMINISTE — désormais un SMOKE TEST rapide.
 
-Le refactor ne doit RIEN changer au comportement (règle de design #3 :
-simulation déterministe). Ce test rejoue un scénario fixe et calcule un hash
-sha256 de :
-  1. le LOG complet, semaine par semaine (concaténé incrémentalement) ;
-  2. un DIGEST d'état final (chaque plante + champs écologiques de chaque tuile).
+Le moteur est déterministe (règle de design #3) : ce test rejoue un scénario fixe
+et calcule un hash sha256 de (1) le LOG complet semaine par semaine + (2) un
+DIGEST d'état final (chaque plante + champs écologiques de chaque tuile). Si le
+hash diffère de la référence (`golden_hash.txt`), le comportement a bougé.
 
-Si le hash après refactor diffère du hash de référence (`golden_hash.txt`),
-le comportement a bougé → on s'arrête.
+REFONTE smoke test (sprint maison, tronçon 1 — décision Q4,
+CONCEPTION_MAISON_OMBRE.md §7). Le golden n'est plus le scénario lourd de
+`main.py` (devenu une démo) : il vise « quelques secondes » pour tourner souvent.
+Petit monde, court horizon, mais qui exerce toujours le cœur du tick :
+succession + reproduction (automne) + transition hivernale + pérenne (pommier)
++ multi-sol (terre/argile).
 
-Scénario (choisi 2026-06-03) : monde 3 tuiles (terre/argile/sable), jardin
-diversifié + attire-auxiliaires sur les tuiles d'index pair, un pommier sur la
-tuile 0 pour exercer pérennes. Couvre succession + reproduction + hiver +
-multi-sol.
-
-Horizon RÉDUIT à 10 ans (2026-06-05, sprint croissance) : la passe de croissance
-procédurale a alourdi le tick → on raccourcit le golden pour garder un cycle de
-dev rapide. CONTREPARTIE TEMPORAIRE : 10 ans n'exerce PAS la sénescence du
-pommier (~70 ans). À rétablir à 100 ans (avec re-capture) quand on voudra
-revérifier la sénescence.
+Ce qui NE rentre plus ici, par construction trop long :
+  - sénescence du pommier (~70 ans) → `tests/test_senescence.py` (lancé à la demande).
+  - ombre de la maison / phototropisme (tronçons 2-3) → tests ciblés dédiés.
 
 Lancement (depuis data/code/) :
   python3 -m tests.test_golden            # vérifie contre golden_hash.txt
@@ -37,8 +33,10 @@ from plants import (Tomato, Basil, Sunflower, Bean, Clover, Pepper,
 from fields import init_eco
 from sim.engine import Engine
 
-N_YEARS = 10   # réduit de 100 (cf. en-tête) — sénescence non exercée pour l'instant
-SOILS = ["terre", "argile", "sable"]
+# Smoke test : 2 sols contrastés, 4 ans (assez pour succession + automne ×4 +
+# hiver ×4 + croissance du pommier ; pas pour sa sénescence, cf. en-tête).
+N_YEARS = 4
+SOILS = ["terre", "argile"]
 HASH_FILE = os.path.join(os.path.dirname(__file__), "golden_hash.txt")
 
 # Attributs d'instance capturés dans le digest (ordre fixe).
@@ -50,16 +48,14 @@ _RONDELLES = ("fertilite", "humidite", "lombric", "maladie",
 
 
 def build_world():
-    """Construit le monde déterministe du golden (météo désormais pure : plus de
-    random.seed — cf. sous-sprint 01 déterminisation, CONCEPTION_METEO.md §0)."""
+    """Monde déterministe du smoke test : 2 tuiles 6×8 (terre/argile), jardin
+    diversifié + attire-auxiliaires sur la tuile paire, un pommier (pérenne)."""
     tiles = []
     ecos = {}
     for i, soil in enumerate(SOILS):
         tid = f"T{i}"
         tile = Tile(tile_id=tid, soil_type=soil)
-        if soil == "sable":
-            eco = init_eco(tid, 6, 8, humidite=1.0, fertilite=0.6, microbiome=0.2)
-        elif soil == "argile":
+        if soil == "argile":
             eco = init_eco(tid, 6, 8, humidite=2.0, fertilite=1.2, microbiome=0.3)
         else:
             eco = init_eco(tid, 6, 8, humidite=1.5, fertilite=1.0, microbiome=0.3)
@@ -75,7 +71,7 @@ def build_world():
             tile.add_plant(Clover,   5, 4)
         tiles.append(tile)
         ecos[tid] = eco
-    # Pommier sur la tuile 0 (exerce pérennes + sénescence sur 100 ans)
+    # Pommier sur la tuile 0 (exerce les pérennes : dormance hivernale, age_curve)
     tiles[0].add_plant(AppleTree, 0, 7)
     return tiles, ecos
 

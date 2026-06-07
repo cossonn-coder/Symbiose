@@ -65,6 +65,12 @@ class Tile:
     soil_type: str                                             # "terre","argile","sable","roche"
     grid_rows: int = 6
     grid_cols: int = 8                                         # 48 plots en quinconce
+    # Offset monde (sprint maison, tronçon 1) : position du plot (0,0) de cette
+    # tuile dans le repère monde, en cm. origin_x_cm ↔ col (est-ouest, x),
+    # origin_y_cm ↔ row (nord-sud, y). INERTE ce tronçon (stocké, jamais lu par le
+    # moteur) : il situe la tuile vs la maison pour l'injection d'ombre du tronçon 2.
+    origin_x_cm: float = 0.0
+    origin_y_cm: float = 0.0
     plants: list[PlantInstance] = field(default_factory=list)
     stakes: list[StakeSlot] = field(
         default_factory=lambda: [StakeSlot(i) for i in range(10)]

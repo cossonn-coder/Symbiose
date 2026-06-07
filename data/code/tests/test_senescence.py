@@ -1,0 +1,77 @@
+"""
+SYMBIOSE — tests/test_senescence.py
+Test LONG, lancé À LA DEMANDE (hors smoke test).
+
+Récupère la couverture de la sénescence du pommier (~70 ans) qui a quitté le
+golden quand celui-ci est devenu un smoke test rapide (sprint maison, tronçon 1,
+décision Q4). Plutôt qu'un hash global gonflé, c'est une assertion de
+COMPORTEMENT, robuste et lisible : un pommier laissé vieillir finit par mourir
+de sénescence, dans la fenêtre d'âge attendue (au-delà de SENESCENCE_ONSET ×
+longévité, sans dépasser de beaucoup la longévité).
+
+Déterministe : la mort par sénescence est tirée via `_hash_noise` (pas de RNG).
+
+Lancement (depuis data/code/) :
+  python3 -m tests.test_senescence
+"""
+
+import sys
+
+from world import Tile
+from plants import AppleTree
+from fields import init_eco, SENESCENCE_ONSET
+from sim.engine import Engine
+
+MAX_YEARS = 110   # garde-fou : longévité 70 ans → mort attendue bien avant
+
+
+def run_until_apple_death():
+    """Fait vieillir un pommier précis (position (0,0)) jusqu'à SA mort ; renvoie
+    (cause, âge_ans). La cause est lue dans le log de la semaine de décès, ciblé
+    sur SON identité « nom@(0, 0) » — la succession/reproduction peut faire mourir
+    d'AUTRES plantes de sénescence, il ne faut pas les confondre avec la nôtre.
+    Tuile 6×6 argile bien pourvue en eau (humidité 2.5) : assez d'espace
+    racinaire et d'humidité pour que le pommier vieillisse SANS mourir avant de
+    stress hydrique ou de compétition — on veut isoler la sénescence (age-based).
+    Petit monde quand même → test rapide (~20 s) malgré l'horizon ~60 ans."""
+    tile = Tile(tile_id="T0", soil_type="argile", grid_rows=6, grid_cols=6)
+    eco = init_eco("T0", 6, 6, humidite=2.5, fertilite=1.2, microbiome=0.3)
+    apple = tile.add_plant(AppleTree, 3, 3)
+    tag = f"{apple.name}@{apple.position}"   # identité exacte dans les logs
+    game_state = {
+        "tiles": [tile], "eco": {"T0": eco}, "scores": {},
+        "current_player": "joueur_1", "week": 1, "log": [],
+    }
+    engine = Engine(game_state)
+
+    for _ in range(MAX_YEARS * 52):
+        log = engine.tick_semaine()
+        if not apple.is_alive:        # NOTRE pommier vient de mourir cette semaine
+            cause = "autre"
+            for line in log:
+                if tag in line and "meurt de sénescence" in line:
+                    cause = "senescence"
+                    break
+            return cause, apple.age_years
+        game_state["log"].clear()
+    return "vivant", apple.age_years   # jamais mort dans l'horizon (anomalie)
+
+
+def test_apple_dies_of_senescence():
+    L = AppleTree.longevity()              # 70 ans
+    onset = SENESCENCE_ONSET * L           # 49 ans : début de la pression de déclin
+    cause, age = run_until_apple_death()
+    assert cause == "senescence", f"cause de mort inattendue : {cause} (âge {age:.1f} ans)"
+    assert onset <= age <= 1.6 * L, (
+        f"mort à {age:.1f} ans hors fenêtre attendue [{onset:.0f}, {1.6*L:.0f}]")
+    print(f"[senescence] PASS — pommier mort de sénescence à {age:.1f} ans "
+          f"(longévité {L:.0f}, onset {onset:.0f})")
+
+
+if __name__ == "__main__":
+    try:
+        test_apple_dies_of_senescence()
+    except AssertionError as e:
+        print(f"[senescence] FAIL — {e}")
+        sys.exit(1)
+    sys.exit(0)
