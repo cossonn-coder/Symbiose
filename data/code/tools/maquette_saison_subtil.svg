@@ -22,6 +22,22 @@
 <line x1="146.5" y1="188.2" x2="145.7" y2="182.0" stroke="#7a5230" stroke-width="0.8" stroke-linecap="round"/>
 <line x1="145.7" y1="182.0" x2="144.7" y2="175.8" stroke="#7a5230" stroke-width="0.8" stroke-linecap="round"/>
 <line x1="144.7" y1="175.8" x2="144.5" y2="174.3" stroke="#5ec46a" stroke-width="0.8" stroke-linecap="round"/>
+<ellipse cx="154.3" cy="233.7" rx="6.8" ry="3.9" fill="#4ec548" fill-opacity="0.92"/>
+<ellipse cx="145.5" cy="222.5" rx="6.8" ry="3.9" fill="#4ec548" fill-opacity="0.92"/>
+<ellipse cx="156.1" cy="219.0" rx="6.8" ry="3.9" fill="#4ec548" fill-opacity="0.92"/>
+<ellipse cx="154.5" cy="213.2" rx="6.8" ry="3.9" fill="#4ec548" fill-opacity="0.92"/>
+<ellipse cx="140.6" cy="196.8" rx="6.8" ry="3.9" fill="#4ec548" fill-opacity="0.92"/>
+<ellipse cx="151.6" cy="201.4" rx="6.8" ry="3.9" fill="#4ec548" fill-opacity="0.92"/>
+<ellipse cx="153.1" cy="193.7" rx="6.8" ry="3.9" fill="#4ec548" fill-opacity="0.92"/>
+<ellipse cx="150.1" cy="188.7" rx="6.8" ry="3.9" fill="#4ec548" fill-opacity="0.92"/>
+<ellipse cx="148.5" cy="182.9" rx="6.8" ry="3.9" fill="#4ec548" fill-opacity="0.92"/>
+<ellipse cx="147.5" cy="179.3" rx="6.8" ry="3.9" fill="#4ec548" fill-opacity="0.92"/>
+<circle cx="148.1" cy="174.3" r="2.6" fill="#e8d24a"/>
+<circle cx="145.6" cy="177.7" r="2.6" fill="#e8d24a"/>
+<circle cx="141.6" cy="176.4" r="2.6" fill="#e8d24a"/>
+<circle cx="141.6" cy="172.1" r="2.6" fill="#e8d24a"/>
+<circle cx="145.6" cy="170.8" r="2.6" fill="#e8d24a"/>
+<circle cx="144.5" cy="174.3" r="2.0" fill="#e8c63a"/>
 </g>
 <text x="18" y="73" fill="#dfeaf3" font-family="monospace" font-size="12">S — plein soleil</text>
 <text x="282" y="73" fill="#9fc0dc" font-family="monospace" font-size="12" text-anchor="end">printemps</text>
@@ -55,6 +71,28 @@
 <line x1="431.0" y1="158.0" x2="430.1" y2="155.3" stroke="#5ec46a" stroke-width="0.8" stroke-linecap="round"/>
 <line x1="446.9" y1="236.3" x2="448.7" y2="235.3" stroke="#5ec46a" stroke-width="0.8" stroke-linecap="round"/>
 <line x1="439.9" y1="233.7" x2="438.7" y2="233.5" stroke="#5ec46a" stroke-width="0.8" stroke-linecap="round"/>
+<ellipse cx="430.6" cy="196.8" rx="6.8" ry="3.9" fill="#3f9e3a" fill-opacity="0.92"/>
+<ellipse cx="441.6" cy="201.4" rx="6.8" ry="3.9" fill="#3f9e3a" fill-opacity="0.92"/>
+<ellipse cx="443.1" cy="193.7" rx="6.8" ry="3.9" fill="#3f9e3a" fill-opacity="0.92"/>
+<ellipse cx="440.1" cy="188.7" rx="6.8" ry="3.9" fill="#3f9e3a" fill-opacity="0.92"/>
+<ellipse cx="438.5" cy="182.9" rx="6.8" ry="3.9" fill="#3f9e3a" fill-opacity="0.92"/>
+<ellipse cx="437.1" cy="177.0" rx="6.8" ry="3.9" fill="#3f9e3a" fill-opacity="0.92"/>
+<ellipse cx="437.3" cy="170.3" rx="6.8" ry="3.9" fill="#3f9e3a" fill-opacity="0.92"/>
+<ellipse cx="433.6" cy="246.4" rx="6.8" ry="3.9" fill="#3f9e3a" fill-opacity="0.92"/>
+<ellipse cx="426.9" cy="158.6" rx="6.8" ry="3.9" fill="#3f9e3a" fill-opacity="0.92"/>
+<ellipse cx="442.9" cy="235.6" rx="6.8" ry="3.9" fill="#3f9e3a" fill-opacity="0.92"/>
+<ellipse cx="428.4" cy="238.2" rx="6.8" ry="3.9" fill="#3f9e3a" fill-opacity="0.92"/>
+<ellipse cx="437.4" cy="158.7" rx="6.8" ry="3.9" fill="#3f9e3a" fill-opacity="0.92"/>
+<ellipse cx="448.1" cy="240.5" rx="6.8" ry="3.9" fill="#3f9e3a" fill-opacity="0.92"/>
+<ellipse cx="444.9" cy="236.3" rx="6.8" ry="3.9" fill="#3f9e3a" fill-opacity="0.92"/>
+<circle cx="434.5" cy="233.8" r="4.6" fill="#d8392a"/>
+<circle cx="433.1" cy="232.4" r="1.4" fill="#ffffff" fill-opacity="0.45"/>
+<circle cx="430.1" cy="155.3" r="4.6" fill="#d8392a"/>
+<circle cx="428.7" cy="153.9" r="1.4" fill="#ffffff" fill-opacity="0.45"/>
+<circle cx="448.7" cy="235.3" r="4.6" fill="#d8392a"/>
+<circle cx="447.3" cy="234.0" r="1.4" fill="#ffffff" fill-opacity="0.45"/>
+<circle cx="438.7" cy="233.5" r="4.6" fill="#d8392a"/>
+<circle cx="437.3" cy="232.2" r="1.4" fill="#ffffff" fill-opacity="0.45"/>
 </g>
 <text x="308" y="73" fill="#dfeaf3" font-family="monospace" font-size="12">S — plein soleil</text>
 <text x="572" y="73" fill="#9fc0dc" font-family="monospace" font-size="12" text-anchor="end">été</text>
@@ -107,6 +145,51 @@
 <line x1="736.1" y1="216.3" x2="739.5" y2="214.4" stroke="#5ec46a" stroke-width="0.8" stroke-linecap="round"/>
 <line x1="729.0" y1="213.8" x2="726.2" y2="211.5" stroke="#5ec46a" stroke-width="0.8" stroke-linecap="round"/>
 <line x1="713.3" y1="209.4" x2="713.3" y2="209.4" stroke="#5ec46a" stroke-width="0.8" stroke-linecap="round"/>
+<ellipse cx="733.1" cy="193.7" rx="6.8" ry="3.9" fill="#a8392a" fill-opacity="0.92"/>
+<ellipse cx="730.1" cy="188.7" rx="6.8" ry="3.9" fill="#9c5a22" fill-opacity="0.92"/>
+<ellipse cx="728.5" cy="182.9" rx="6.8" ry="3.9" fill="#a8392a" fill-opacity="0.92"/>
+<ellipse cx="727.1" cy="177.0" rx="6.8" ry="3.9" fill="#a8392a" fill-opacity="0.92"/>
+<ellipse cx="727.3" cy="170.3" rx="6.8" ry="3.9" fill="#c4762a" fill-opacity="0.92"/>
+<ellipse cx="723.6" cy="246.4" rx="6.8" ry="3.9" fill="#c4762a" fill-opacity="0.92"/>
+<ellipse cx="716.9" cy="158.6" rx="6.8" ry="3.9" fill="#b8902f" fill-opacity="0.92"/>
+<ellipse cx="732.9" cy="235.6" rx="6.8" ry="3.9" fill="#c4762a" fill-opacity="0.92"/>
+<ellipse cx="718.0" cy="237.2" rx="6.8" ry="3.9" fill="#9c5a22" fill-opacity="0.92"/>
+<ellipse cx="727.0" cy="157.3" rx="6.8" ry="3.9" fill="#c4762a" fill-opacity="0.92"/>
+<ellipse cx="740.7" cy="239.0" rx="6.8" ry="3.9" fill="#c4762a" fill-opacity="0.92"/>
+<ellipse cx="733.1" cy="236.1" rx="6.8" ry="3.9" fill="#b8902f" fill-opacity="0.92"/>
+<ellipse cx="728.5" cy="225.2" rx="6.8" ry="3.9" fill="#c4762a" fill-opacity="0.92"/>
+<ellipse cx="713.2" cy="147.5" rx="6.8" ry="3.9" fill="#b8902f" fill-opacity="0.92"/>
+<ellipse cx="747.1" cy="225.9" rx="6.8" ry="3.9" fill="#c9a23a" fill-opacity="0.92"/>
+<ellipse cx="728.3" cy="235.8" rx="6.8" ry="3.9" fill="#c9a23a" fill-opacity="0.92"/>
+<ellipse cx="728.2" cy="224.3" rx="6.8" ry="3.9" fill="#9c5a22" fill-opacity="0.92"/>
+<ellipse cx="714.7" cy="224.3" rx="6.8" ry="3.9" fill="#9c5a22" fill-opacity="0.92"/>
+<ellipse cx="708.6" cy="139.8" rx="6.8" ry="3.9" fill="#b8902f" fill-opacity="0.92"/>
+<ellipse cx="754.4" cy="224.9" rx="6.8" ry="3.9" fill="#c9a23a" fill-opacity="0.92"/>
+<ellipse cx="713.0" cy="232.3" rx="6.8" ry="3.9" fill="#c9a23a" fill-opacity="0.92"/>
+<ellipse cx="740.4" cy="219.3" rx="6.8" ry="3.9" fill="#c9a23a" fill-opacity="0.92"/>
+<ellipse cx="732.8" cy="214.9" rx="6.8" ry="3.9" fill="#c4762a" fill-opacity="0.92"/>
+<ellipse cx="709.1" cy="215.5" rx="6.8" ry="3.9" fill="#c9a23a" fill-opacity="0.92"/>
+<ellipse cx="707.1" cy="137.1" rx="6.8" ry="3.9" fill="#b8902f" fill-opacity="0.92"/>
+<ellipse cx="760.0" cy="223.0" rx="6.8" ry="3.9" fill="#c4762a" fill-opacity="0.92"/>
+<ellipse cx="706.4" cy="228.8" rx="6.8" ry="3.9" fill="#c9a23a" fill-opacity="0.92"/>
+<ellipse cx="745.9" cy="212.2" rx="6.8" ry="3.9" fill="#b8902f" fill-opacity="0.92"/>
+<ellipse cx="737.6" cy="219.3" rx="6.8" ry="3.9" fill="#b8902f" fill-opacity="0.92"/>
+<ellipse cx="726.5" cy="206.2" rx="6.8" ry="3.9" fill="#c4762a" fill-opacity="0.92"/>
+<ellipse cx="708.2" cy="212.3" rx="6.8" ry="3.9" fill="#b8902f" fill-opacity="0.92"/>
+<circle cx="714.4" cy="139.3" r="4.6" fill="#d8392a"/>
+<circle cx="713.1" cy="137.9" r="1.4" fill="#ffffff" fill-opacity="0.45"/>
+<circle cx="761.9" cy="223.6" r="4.6" fill="#d8392a"/>
+<circle cx="760.5" cy="222.2" r="1.4" fill="#ffffff" fill-opacity="0.45"/>
+<circle cx="713.4" cy="234.0" r="4.6" fill="#d8392a"/>
+<circle cx="712.0" cy="232.6" r="1.4" fill="#ffffff" fill-opacity="0.45"/>
+<circle cx="739.3" cy="209.1" r="4.6" fill="#d8392a"/>
+<circle cx="737.9" cy="207.7" r="1.4" fill="#ffffff" fill-opacity="0.45"/>
+<circle cx="739.5" cy="214.4" r="4.6" fill="#d8392a"/>
+<circle cx="738.1" cy="213.0" r="1.4" fill="#ffffff" fill-opacity="0.45"/>
+<circle cx="726.2" cy="211.5" r="4.6" fill="#d8392a"/>
+<circle cx="724.8" cy="210.1" r="1.4" fill="#ffffff" fill-opacity="0.45"/>
+<circle cx="713.3" cy="209.4" r="4.6" fill="#d8392a"/>
+<circle cx="711.9" cy="208.1" r="1.4" fill="#ffffff" fill-opacity="0.45"/>
 </g>
 <text x="598" y="73" fill="#dfeaf3" font-family="monospace" font-size="12">S — plein soleil</text>
 <text x="862" y="73" fill="#9fc0dc" font-family="monospace" font-size="12" text-anchor="end">automne</text>
@@ -159,6 +242,40 @@
 <line x1="1032.9" y1="212.5" x2="1035.2" y2="211.7" stroke="#5ec46a" stroke-width="0.8" stroke-linecap="round"/>
 <line x1="1013.4" y1="209.2" x2="1010.4" y2="208.3" stroke="#5ec46a" stroke-width="0.8" stroke-linecap="round"/>
 <line x1="1004.6" y1="205.2" x2="1004.6" y2="205.2" stroke="#5ec46a" stroke-width="0.8" stroke-linecap="round"/>
+<ellipse cx="1011.5" cy="245.1" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1024.4" cy="229.6" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1021.5" cy="237.1" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1004.7" cy="229.7" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1016.7" cy="236.7" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1018.0" cy="223.9" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1005.1" cy="224.5" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1012.5" cy="236.5" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1020.9" cy="215.7" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1022.7" cy="222.6" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="999.7" cy="215.9" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1010.6" cy="235.6" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1021.0" cy="204.2" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1029.4" cy="219.0" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1017.2" cy="215.6" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1009.5" cy="202.2" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1021.3" cy="240.0" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1020.8" cy="230.2" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1011.8" cy="226.3" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1003.3" cy="215.7" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="999.7" cy="208.7" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1006.3" cy="227.4" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1015.9" cy="233.3" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1000.1" cy="236.3" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="996.4" cy="237.7" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1022.9" cy="215.3" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1026.8" cy="207.7" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1033.5" cy="217.8" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1032.9" cy="203.8" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1040.6" cy="214.3" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1014.5" cy="202.6" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1008.7" cy="200.5" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="999.8" cy="208.2" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1005.9" cy="203.0" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
 </g>
 <text x="888" y="73" fill="#dfeaf3" font-family="monospace" font-size="12">S — plein soleil</text>
 <text x="1152" y="73" fill="#9fc0dc" font-family="monospace" font-size="12" text-anchor="end">hiver</text>
@@ -182,6 +299,20 @@
 <line x1="150.3" y1="510.3" x2="150.1" y2="503.8" stroke="#7a5230" stroke-width="0.8" stroke-linecap="round"/>
 <line x1="150.1" y1="503.8" x2="149.8" y2="497.5" stroke="#7a5230" stroke-width="0.8" stroke-linecap="round"/>
 <line x1="149.8" y1="497.5" x2="149.8" y2="497.5" stroke="#5ec46a" stroke-width="0.8" stroke-linecap="round"/>
+<ellipse cx="145.5" cy="538.3" rx="6.8" ry="3.9" fill="#4ec548" fill-opacity="0.92"/>
+<ellipse cx="145.9" cy="537.0" rx="6.8" ry="3.9" fill="#4ec548" fill-opacity="0.92"/>
+<ellipse cx="157.1" cy="520.7" rx="6.8" ry="3.9" fill="#4ec548" fill-opacity="0.92"/>
+<ellipse cx="158.3" cy="518.5" rx="6.8" ry="3.9" fill="#4ec548" fill-opacity="0.92"/>
+<ellipse cx="139.7" cy="509.8" rx="6.8" ry="3.9" fill="#4ec548" fill-opacity="0.92"/>
+<ellipse cx="155.5" cy="509.5" rx="6.8" ry="3.9" fill="#4ec548" fill-opacity="0.92"/>
+<ellipse cx="157.9" cy="501.5" rx="6.8" ry="3.9" fill="#4ec548" fill-opacity="0.92"/>
+<ellipse cx="154.8" cy="500.4" rx="6.8" ry="3.9" fill="#4ec548" fill-opacity="0.92"/>
+<circle cx="153.4" cy="497.5" r="2.6" fill="#e8d24a"/>
+<circle cx="150.9" cy="500.9" r="2.6" fill="#e8d24a"/>
+<circle cx="146.8" cy="499.6" r="2.6" fill="#e8d24a"/>
+<circle cx="146.8" cy="495.4" r="2.6" fill="#e8d24a"/>
+<circle cx="150.9" cy="494.1" r="2.6" fill="#e8d24a"/>
+<circle cx="149.8" cy="497.5" r="2.0" fill="#e8c63a"/>
 </g>
 <text x="18" y="383" fill="#dfeaf3" font-family="monospace" font-size="12">NE — pénombre</text>
 <text x="282" y="383" fill="#9fc0dc" font-family="monospace" font-size="12" text-anchor="end">printemps</text>
@@ -207,6 +338,16 @@
 <line x1="439.8" y1="497.5" x2="439.3" y2="491.2" stroke="#7a5230" stroke-width="1.0" stroke-linecap="round"/>
 <line x1="439.3" y1="491.2" x2="438.7" y2="485.1" stroke="#7a5230" stroke-width="0.8" stroke-linecap="round"/>
 <line x1="438.7" y1="485.1" x2="438.3" y2="481.0" stroke="#5ec46a" stroke-width="0.8" stroke-linecap="round"/>
+<ellipse cx="447.1" cy="520.7" rx="6.8" ry="3.9" fill="#3f9e3a" fill-opacity="0.92"/>
+<ellipse cx="448.3" cy="518.5" rx="6.8" ry="3.9" fill="#3f9e3a" fill-opacity="0.92"/>
+<ellipse cx="429.7" cy="509.8" rx="6.8" ry="3.9" fill="#3f9e3a" fill-opacity="0.92"/>
+<ellipse cx="445.5" cy="509.5" rx="6.8" ry="3.9" fill="#3f9e3a" fill-opacity="0.92"/>
+<ellipse cx="447.9" cy="501.5" rx="6.8" ry="3.9" fill="#3f9e3a" fill-opacity="0.92"/>
+<ellipse cx="444.5" cy="497.2" rx="6.8" ry="3.9" fill="#3f9e3a" fill-opacity="0.92"/>
+<ellipse cx="443.0" cy="491.7" rx="6.8" ry="3.9" fill="#3f9e3a" fill-opacity="0.92"/>
+<ellipse cx="442.2" cy="486.7" rx="6.8" ry="3.9" fill="#3f9e3a" fill-opacity="0.92"/>
+<circle cx="438.3" cy="481.0" r="4.6" fill="#d8392a"/>
+<circle cx="436.9" cy="479.6" r="1.4" fill="#ffffff" fill-opacity="0.45"/>
 </g>
 <text x="308" y="383" fill="#dfeaf3" font-family="monospace" font-size="12">NE — pénombre</text>
 <text x="572" y="383" fill="#9fc0dc" font-family="monospace" font-size="12" text-anchor="end">été</text>
@@ -241,6 +382,28 @@
 <line x1="722.4" y1="542.4" x2="722.4" y2="542.4" stroke="#5ec46a" stroke-width="0.8" stroke-linecap="round"/>
 <line x1="724.8" y1="544.1" x2="724.8" y2="544.1" stroke="#5ec46a" stroke-width="0.8" stroke-linecap="round"/>
 <line x1="730.0" y1="543.6" x2="730.0" y2="543.6" stroke="#5ec46a" stroke-width="0.8" stroke-linecap="round"/>
+<ellipse cx="735.5" cy="509.5" rx="6.8" ry="3.9" fill="#9c5a22" fill-opacity="0.92"/>
+<ellipse cx="737.9" cy="501.5" rx="6.8" ry="3.9" fill="#a8392a" fill-opacity="0.92"/>
+<ellipse cx="734.5" cy="497.2" rx="6.8" ry="3.9" fill="#9c5a22" fill-opacity="0.92"/>
+<ellipse cx="733.0" cy="491.7" rx="6.8" ry="3.9" fill="#a8392a" fill-opacity="0.92"/>
+<ellipse cx="732.1" cy="485.7" rx="6.8" ry="3.9" fill="#a8392a" fill-opacity="0.92"/>
+<ellipse cx="733.1" cy="478.7" rx="6.8" ry="3.9" fill="#c4762a" fill-opacity="0.92"/>
+<ellipse cx="723.7" cy="556.9" rx="6.8" ry="3.9" fill="#c4762a" fill-opacity="0.92"/>
+<ellipse cx="721.0" cy="469.1" rx="6.8" ry="3.9" fill="#b8902f" fill-opacity="0.92"/>
+<ellipse cx="719.6" cy="549.3" rx="6.8" ry="3.9" fill="#c4762a" fill-opacity="0.92"/>
+<ellipse cx="723.8" cy="550.7" rx="6.8" ry="3.9" fill="#9c5a22" fill-opacity="0.92"/>
+<ellipse cx="735.3" cy="467.2" rx="6.8" ry="3.9" fill="#c4762a" fill-opacity="0.92"/>
+<ellipse cx="726.4" cy="541.7" rx="6.8" ry="3.9" fill="#c4762a" fill-opacity="0.92"/>
+<ellipse cx="721.8" cy="547.9" rx="6.8" ry="3.9" fill="#b8902f" fill-opacity="0.92"/>
+<ellipse cx="728.9" cy="538.7" rx="6.8" ry="3.9" fill="#c4762a" fill-opacity="0.92"/>
+<circle cx="726.4" cy="466.2" r="4.6" fill="#d8392a"/>
+<circle cx="725.1" cy="464.9" r="1.4" fill="#ffffff" fill-opacity="0.45"/>
+<circle cx="722.4" cy="542.4" r="4.6" fill="#d8392a"/>
+<circle cx="721.1" cy="541.0" r="1.4" fill="#ffffff" fill-opacity="0.45"/>
+<circle cx="724.8" cy="544.1" r="4.6" fill="#d8392a"/>
+<circle cx="723.4" cy="542.7" r="1.4" fill="#ffffff" fill-opacity="0.45"/>
+<circle cx="730.0" cy="543.6" r="4.6" fill="#d8392a"/>
+<circle cx="728.6" cy="542.2" r="1.4" fill="#ffffff" fill-opacity="0.45"/>
 </g>
 <text x="598" y="383" fill="#dfeaf3" font-family="monospace" font-size="12">NE — pénombre</text>
 <text x="862" y="383" fill="#9fc0dc" font-family="monospace" font-size="12" text-anchor="end">automne</text>
@@ -280,6 +443,24 @@
 <line x1="1009.5" y1="537.9" x2="1006.0" y2="534.2" stroke="#5ec46a" stroke-width="0.8" stroke-linecap="round"/>
 <line x1="1013.3" y1="540.2" x2="1009.2" y2="538.2" stroke="#5ec46a" stroke-width="0.8" stroke-linecap="round"/>
 <line x1="1020.0" y1="536.8" x2="1017.2" y2="532.5" stroke="#5ec46a" stroke-width="0.8" stroke-linecap="round"/>
+<ellipse cx="1027.9" cy="501.5" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1024.5" cy="497.2" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1023.0" cy="491.7" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1022.1" cy="485.7" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1023.1" cy="478.7" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1013.7" cy="556.9" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1011.0" cy="469.1" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1009.6" cy="549.3" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1013.8" cy="550.7" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1025.0" cy="465.1" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1014.4" cy="538.1" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1009.2" cy="544.8" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1015.5" cy="537.0" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1009.0" cy="458.4" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1001.6" cy="535.8" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1004.8" cy="539.8" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1012.0" cy="544.0" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1015.2" cy="538.6" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
 </g>
 <text x="888" y="383" fill="#dfeaf3" font-family="monospace" font-size="12">NE — pénombre</text>
 <text x="1152" y="383" fill="#9fc0dc" font-family="monospace" font-size="12" text-anchor="end">hiver</text>
@@ -302,6 +483,19 @@
 <line x1="149.1" y1="825.3" x2="148.6" y2="818.2" stroke="#7a5230" stroke-width="0.9" stroke-linecap="round"/>
 <line x1="148.6" y1="818.2" x2="148.1" y2="811.0" stroke="#7a5230" stroke-width="0.8" stroke-linecap="round"/>
 <line x1="148.1" y1="811.0" x2="148.1" y2="811.0" stroke="#5ec46a" stroke-width="0.8" stroke-linecap="round"/>
+<ellipse cx="143.9" cy="851.9" rx="6.8" ry="3.9" fill="#4ec548" fill-opacity="0.92"/>
+<ellipse cx="155.0" cy="842.6" rx="6.8" ry="3.9" fill="#4ec548" fill-opacity="0.92"/>
+<ellipse cx="141.3" cy="836.9" rx="6.8" ry="3.9" fill="#4ec548" fill-opacity="0.92"/>
+<ellipse cx="142.6" cy="830.8" rx="6.8" ry="3.9" fill="#4ec548" fill-opacity="0.92"/>
+<ellipse cx="157.6" cy="815.3" rx="6.8" ry="3.9" fill="#4ec548" fill-opacity="0.92"/>
+<ellipse cx="143.9" cy="818.0" rx="6.8" ry="3.9" fill="#4ec548" fill-opacity="0.92"/>
+<ellipse cx="141.2" cy="812.9" rx="6.8" ry="3.9" fill="#4ec548" fill-opacity="0.92"/>
+<circle cx="151.7" cy="811.0" r="2.6" fill="#e8d24a"/>
+<circle cx="149.2" cy="814.5" r="2.6" fill="#e8d24a"/>
+<circle cx="145.2" cy="813.2" r="2.6" fill="#e8d24a"/>
+<circle cx="145.2" cy="808.9" r="2.6" fill="#e8d24a"/>
+<circle cx="149.2" cy="807.6" r="2.6" fill="#e8d24a"/>
+<circle cx="148.1" cy="811.0" r="2.0" fill="#e8c63a"/>
 </g>
 <text x="18" y="693" fill="#dfeaf3" font-family="monospace" font-size="12">NO — ombre</text>
 <text x="282" y="693" fill="#9fc0dc" font-family="monospace" font-size="12" text-anchor="end">printemps</text>
@@ -326,6 +520,15 @@
 <line x1="438.1" y1="811.0" x2="437.5" y2="803.8" stroke="#7a5230" stroke-width="1.0" stroke-linecap="round"/>
 <line x1="437.5" y1="803.8" x2="436.8" y2="796.6" stroke="#7a5230" stroke-width="0.8" stroke-linecap="round"/>
 <line x1="436.8" y1="796.6" x2="436.6" y2="795.2" stroke="#5ec46a" stroke-width="0.8" stroke-linecap="round"/>
+<ellipse cx="431.3" cy="836.9" rx="6.8" ry="3.9" fill="#3f9e3a" fill-opacity="0.92"/>
+<ellipse cx="432.6" cy="830.8" rx="6.8" ry="3.9" fill="#3f9e3a" fill-opacity="0.92"/>
+<ellipse cx="447.6" cy="815.3" rx="6.8" ry="3.9" fill="#3f9e3a" fill-opacity="0.92"/>
+<ellipse cx="433.9" cy="818.0" rx="6.8" ry="3.9" fill="#3f9e3a" fill-opacity="0.92"/>
+<ellipse cx="430.9" cy="809.3" rx="6.8" ry="3.9" fill="#3f9e3a" fill-opacity="0.92"/>
+<ellipse cx="432.7" cy="803.6" rx="6.8" ry="3.9" fill="#3f9e3a" fill-opacity="0.92"/>
+<ellipse cx="433.1" cy="799.8" rx="6.8" ry="3.9" fill="#3f9e3a" fill-opacity="0.92"/>
+<circle cx="436.6" cy="795.2" r="4.6" fill="#d8392a"/>
+<circle cx="435.3" cy="793.8" r="1.4" fill="#ffffff" fill-opacity="0.45"/>
 </g>
 <text x="308" y="693" fill="#dfeaf3" font-family="monospace" font-size="12">NO — ombre</text>
 <text x="572" y="693" fill="#9fc0dc" font-family="monospace" font-size="12" text-anchor="end">été</text>
@@ -353,6 +556,18 @@
 <line x1="726.0" y1="789.3" x2="725.1" y2="782.0" stroke="#7a5230" stroke-width="0.8" stroke-linecap="round"/>
 <line x1="725.1" y1="782.0" x2="724.7" y2="779.2" stroke="#5ec46a" stroke-width="0.8" stroke-linecap="round"/>
 <line x1="730.0" y1="867.2" x2="730.2" y2="867.3" stroke="#5ec46a" stroke-width="0.8" stroke-linecap="round"/>
+<ellipse cx="737.6" cy="815.3" rx="6.8" ry="3.9" fill="#9c5a22" fill-opacity="0.92"/>
+<ellipse cx="723.9" cy="818.0" rx="6.8" ry="3.9" fill="#9c5a22" fill-opacity="0.92"/>
+<ellipse cx="720.9" cy="809.3" rx="6.8" ry="3.9" fill="#a8392a" fill-opacity="0.92"/>
+<ellipse cx="722.7" cy="803.6" rx="6.8" ry="3.9" fill="#9c5a22" fill-opacity="0.92"/>
+<ellipse cx="722.8" cy="796.8" rx="6.8" ry="3.9" fill="#a8392a" fill-opacity="0.92"/>
+<ellipse cx="722.4" cy="789.8" rx="6.8" ry="3.9" fill="#a8392a" fill-opacity="0.92"/>
+<ellipse cx="720.4" cy="783.9" rx="6.8" ry="3.9" fill="#c4762a" fill-opacity="0.92"/>
+<ellipse cx="735.7" cy="868.1" rx="6.8" ry="3.9" fill="#c4762a" fill-opacity="0.92"/>
+<circle cx="724.7" cy="779.2" r="4.6" fill="#d8392a"/>
+<circle cx="723.4" cy="777.8" r="1.4" fill="#ffffff" fill-opacity="0.45"/>
+<circle cx="730.2" cy="867.3" r="4.6" fill="#d8392a"/>
+<circle cx="728.8" cy="865.9" r="1.4" fill="#ffffff" fill-opacity="0.45"/>
 </g>
 <text x="598" y="693" fill="#dfeaf3" font-family="monospace" font-size="12">NO — ombre</text>
 <text x="862" y="693" fill="#9fc0dc" font-family="monospace" font-size="12" text-anchor="end">automne</text>
@@ -383,6 +598,16 @@
 <line x1="1014.1" y1="774.7" x2="1013.4" y2="769.5" stroke="#5ec46a" stroke-width="0.8" stroke-linecap="round"/>
 <line x1="1021.1" y1="867.5" x2="1021.6" y2="867.6" stroke="#5ec46a" stroke-width="0.8" stroke-linecap="round"/>
 <line x1="1020.0" y1="860.3" x2="1018.3" y2="856.5" stroke="#5ec46a" stroke-width="0.8" stroke-linecap="round"/>
+<ellipse cx="1013.9" cy="818.0" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1010.9" cy="809.3" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1012.7" cy="803.6" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1012.8" cy="796.8" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1012.4" cy="789.8" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1010.1" cy="781.7" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1026.1" cy="868.2" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1018.9" cy="769.9" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1027.6" cy="867.8" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
+<ellipse cx="1011.6" cy="859.7" rx="6.8" ry="3.9" fill="#2c6e28" fill-opacity="0.92"/>
 </g>
 <text x="888" y="693" fill="#dfeaf3" font-family="monospace" font-size="12">NO — ombre</text>
 <text x="1152" y="693" fill="#9fc0dc" font-family="monospace" font-size="12" text-anchor="end">hiver</text>

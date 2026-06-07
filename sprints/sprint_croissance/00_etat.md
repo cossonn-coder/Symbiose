@@ -107,8 +107,25 @@ inerte d'abord** (tronçon 1, golden INTACT car non lue), **puis câblée à l'e
   (`[Export] ShowPlantDemo`). **Pas d'organes** (tronçon 5). ⚠️ Compilation C# **non
   vérifiée** (pas de `dotnet` CLI ici) → à confirmer dans Godot par Nico ; rendu
   visuel à valider à l'œil (les 4 spécimens au-dessus de la grille).
-- **5 — Organes procéduraux (Godot) — RISQUE N°1.** ⬜ Générateur feuilles/fleurs/
-  fruits, stades d'organe, palette/saison (§H.2). Itératif.
+- **5 — Organes procéduraux — RISQUE N°1.** ✅ **Prototype PYTHON SVG fait**
+  (2026-06-07, choix Nico : Python d'abord, port Godot différé D24). Générateur
+  d'organes dans `tools/render_structure.py` (`_draw_organs` + helpers), **pur RENDU
+  read-only, golden + suite INTACTS** (hash `16a1b937…` inchangé), **déterministe**
+  (zéro RNG, tout via `_hash_noise`). Structuré « specs 3D → projection iso » pour
+  portage Godot futur. **Feuilles** le long des rameaux feuillés (`_is_leafy` :
+  apex ou bois fin ≤1.6 cm ; tronc nu), **couleur saisonnière** (printemps clair /
+  été plein / automne jaune-rouge tiré au hash / hiver persistant foncé ;
+  `foliage_density_at` gère deciduous+hiver→0). **Fleurs/fruits** selon
+  `organ_site` (`terminal`=bouts d'apex / `lateral`=rameaux hors meneur) ×
+  `REPRO_BY_SEASON` (Tomato : fleur→tomate rouge ; AppleTree : fleur→pomme verte→
+  pomme mûre), plafonnés (`MAX_FRUITS`=10). Palette par espèce (`ORGAN_PALETTE`).
+  Câblé dans la **maquette maison** (`_panel_sector`, saison réelle) ET l'**aperçu**
+  (`_panel`, été). **Couvre les 2 espèces procédurales** (Tomato, AppleTree — seules
+  migrées `procedural_growth`). Organes **non exportés** dans `maquette_secteurs.json`
+  (reconstructibles §J). ⚠️ Maquette : la tomate (non caduque) garde son feuillage
+  l'hiver (grow_plant seul ne la tue pas) — artefact de maquette, pas un bug moteur.
+  **Itérable** : forme des feuilles (ellipses), densité, palettes = leviers
+  d'ajustement esthétique à l'œil. → outil seul.
 - **6 — Save de la structure.** ⬜ Sérialisation JSON bornée (§J), option d'allègement.
 
 ## Plus tard (hors chantier, ligne BACKLOG)
