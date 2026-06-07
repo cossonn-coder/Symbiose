@@ -49,9 +49,24 @@ la **seule maison** comme obstacle dans `compute`. Cf. §1 du doc.
   `0aa2892c…1c8d3678`**. Suite complète verte (genetique 20, croissance 57,
   maitrise 35+20, population, signes 8, vigueur 110, senescence). Coût maison ≈
   **+2,6 %** du tick (ombre +3,5 ms, albédo +6,5 ms / 1600 plots). → `02_*.md`
-- **3 — Phototropisme branché dans `growth.py`.** ⬜ Apex se penche, déterministe,
-  borné, **intensité paramétrable** ; maquette rend **subtil ET marqué** (Nico
-  tranche). `test_phototropisme`. → re-figeage maîtrisé. **(risqué)** → `03_*.md`
+- **3 — Phototropisme branché dans `growth.py`.** ✅ FAIT (2026-06-07). À l'émission
+  d'un segment axial, l'apex tourne vers le **gradient de lumière-sol local**
+  (`_phototropic_bias`, différences finies `_light_gradient` sur plots voisins,
+  bornes **clampées** → pas de fausse pente en lisière). Déterministe (zéro RNG),
+  **borné** : ≤ `MAX_PHOTOTROPISM_TILT`=**12°/émission** + plancher de verticalité
+  `MIN_APEX_Z`=**0.30** (lean max acos(0.30)≈72°, jamais à plat). Intensité par
+  espèce `PlantBase.phototropism_strength` (l'ancien `phototropism_gain` RÉSERVÉ a
+  été **renommé** → ⚠ diverge de `CONCEPTION_CROISSANCE.md` §E qui dit encore
+  `phototropism_gain`). **Lumière uniforme/None → biais nul** = structure
+  bit-identique (piège §7 couvert). `LightField` du tick (`eco.lumiere`) threadé
+  dans `grow_plant(plant, seed, week, light_field=None)` — **4e arg optionnel** →
+  tests/outils positionnels (`test_croissance` 57/57) inchangés. `test_phototropisme`
+  (11 checks) vert. **Re-figeage maîtrisé** (Tomato + AppleTree procéduraux penchent
+  sous l'ombre maison) : **nouveau golden hash `16a1b937…9135dbda`** (stable 2×,
+  sénescence pommier inchangée 59.8 ans → dérive cohérente, pas d'emballement).
+  Suite complète verte (croissance 57, ombre 4, genetique 20, maitrise 35+20,
+  population, signes 8, vigueur 110, senescence). **Valeurs maquette** (tronçon 4) :
+  **marqué=0.30** (défaut, Q3), **subtil=0.10** → Nico tranche à l'œil. → `03_*.md`
 - **4 — Maquette saisonnière 3 secteurs.** ⬜ `render_structure.py` +
   `export_structure.py` : grille `secteurs × 4 saisons × plantes`, vrai
   `LightField` + maison + albédo. → outil seul, golden intact. → `04_*.md`
@@ -82,4 +97,7 @@ maison paramétrable (Q5) · maquette annuelle 4 images/saison (Q6).
   partiellement ombré le soir — c'est ce que teste `test_ombre_maison`). Un vrai
   « point chaud > 1 » (microclimat thermique du mur sud) demanderait un **champ
   thermique distinct** → hors périmètre, à décider plus tard si on veut le rendre.
-- **3** : valeur finale `phototropism_strength` (Nico tranche à l'œil).
+- **3** : ✅ TRANCHÉ (provisoire). `phototropism_strength` **marqué=0.30** (défaut),
+  **subtil=0.10** pour la maquette comparative (tronçon 4) → **valeur finale tranchée
+  par Nico à l'œil** sur les rendus. Bornes : `MAX_PHOTOTROPISM_TILT`=12°/émission,
+  `MIN_APEX_Z`=0.30 (jamais à plat). Tous trois = leviers de module dans `growth.py`.

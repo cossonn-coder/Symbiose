@@ -667,14 +667,14 @@ class Engine:
             # 9. Mise à jour mémoire physiologique
             self._update_physiology(tile, eco)
 
-            # 9c. Croissance de structure (D29 réorienté, tronçon 1) — INERTE.
-            # La structure de segments pousse mais n'est PAS encore lue par
-            # l'empreinte (height_at vient des stades) → golden INTACT. Aucun
-            # log, aucune mutation des champs/attributs hashés (cf. sim/growth.py).
-            # Le câblage à l'empreinte = tronçon 2 (re-figeage maîtrisé).
+            # 9c. Croissance de structure (D29 réorienté). Phototropisme branché
+            # (sprint maison, tronçon 3) : l'apex se penche vers le gradient de la
+            # lumière-sol du tick (eco.lumiere, déjà recalculée à l'étape 2). Pour
+            # une espèce procédurale (Tomato, AppleTree) la structure biaisée nourrit
+            # l'empreinte → re-figeage maîtrisé du golden ; les autres restent INERTES.
             for plant in tile.plants:
                 if plant.is_alive:
-                    grow_plant(plant, seed, week)
+                    grow_plant(plant, seed, week, eco.lumiere)
 
             # 9b. Mortalité réaliste — sénescence + santé dynamique (D27)
             log += self._tick_senescence_health(tile, eco)

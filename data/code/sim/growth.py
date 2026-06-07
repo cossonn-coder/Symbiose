@@ -21,14 +21,18 @@ Algorithme (CONCEPTION_CROISSANCE.md §D), dans l'ordre, par plante vivante :
   §D.6 bornage : le bois trop vieux et sans apex actif meurt et TOMBE ; plafond
         MAX_SEGMENTS ; collet (parent=None) protégé → structure bornée.
 
-Phototropisme (§D.4) : STUBÉ NEUTRE ici (apex droit ; jitter déterministe sur la
-direction des latéraux). Le biais LightField se branchera au tronçon 2, quand
-l'empreinte sera câblée. Les constantes ci-dessous sont des LEVIERS de module
-(valeurs plausibles, à calibrer §L) ; le profil PAR ESPÈCE = tronçon 2.
+Phototropisme (§D.4) : BRANCHÉ (sprint maison, tronçon 3). À l'émission d'un
+segment axial, l'apex biaise sa direction horizontale vers le gradient local de
+lumière-sol (lu dans le LightField passé à grow_plant), de façon déterministe,
+bornée (angle max/émission, jamais à plat) et d'intensité paramétrable par espèce
+(PlantBase.phototropism_strength). LightField absent (None) → apex droit = ancien
+comportement (les tests/outils qui n'injectent pas de lumière restent inchangés).
+Le jitter déterministe d'azimut des LATÉRAUX (§D.3) est conservé tel quel.
 """
 from __future__ import annotations
 import math
 
+from constants import PLOT_CM
 from fields import _hash_noise
 
 # Tronçon 2 : les leviers PAR ESPÈCE (vitesse, dominance, angle, gabarit, longévité
@@ -54,6 +58,11 @@ THICKEN_RATE   = 0.03    # cm/tick d'épaississement du bois porteur
 # --- Débourrement (§D.3) ----------------------------------------------------
 BRANCH_ANGLE = math.radians(50.0)  # ↳ défaut PlantBase.branch_angle (50°) — converti à la lecture
 JITTER_RAD   = math.radians(20.0)  # amplitude du jitter déterministe d'azimut
+
+# --- Phototropisme (§D.4 — biais directionnel vers la lumière) --------------
+PHOTOTROPISM_STRENGTH = 0.30                # ↳ défaut PlantBase.phototropism_strength (MARQUÉ, Q3)
+MAX_PHOTOTROPISM_TILT = math.radians(12.0)  # déviation max d'azimut par segment émis (borné)
+MIN_APEX_Z            = 0.30                 # composante verticale plancher de l'apex (jamais à plat)
 
 # --- Bornage (§D.6 — run éternel) ------------------------------------------
 MAX_REACH_CM     = 200.0  # ↳ défaut PlantBase.max_height_cm/max_extent_cm (gabarit d'arbre)
@@ -113,6 +122,62 @@ def _lateral_dir(d: tuple, theta: float, phi: float) -> tuple:
     return _norm((ct*d[0] + st*(cp*u[0] + sp*v[0]),
                   ct*d[1] + st*(cp*u[1] + sp*v[1]),
                   ct*d[2] + st*(cp*u[2] + sp*v[2])))
+
+
+# ---------------------------------------------------------------------------
+# Phototropisme (§D.4) — biais directionnel vers la lumière (pure, déterministe)
+# ---------------------------------------------------------------------------
+
+def _light_at(lf, r: int, c: int) -> float:
+    """Lumière-sol au plot (r,c), bornes CLAMPÉES sur la grille. Le clamp (≠
+    at_plot qui renvoie 0 hors grille) évite une fausse pente au bord de tuile :
+    en lisière, la différence finie devient unilatérale au lieu de plonger à 0."""
+    rr = 0 if r < 0 else (lf.rows - 1 if r >= lf.rows else r)
+    cc = 0 if c < 0 else (lf.cols - 1 if c >= lf.cols else c)
+    return lf.data[rr][cc]
+
+
+def _light_gradient(tx: float, ty: float, lf) -> tuple:
+    """Gradient horizontal de la lumière-sol au point (tx,ty) cm (repère tuile-local,
+    x=Est, y=Sud). Différences finies entre plots voisins (Est−Ouest, Sud−Nord).
+    Pointe vers le plus lumineux ; (0,0) si l'éclairement est uniforme (→ pas de
+    biais : le golden ne dérive pas en lumière homogène, piège §7)."""
+    fr = int(ty // PLOT_CM)
+    fc = int(tx // PLOT_CM)
+    gx = _light_at(lf, fr, fc + 1) - _light_at(lf, fr, fc - 1)
+    gy = _light_at(lf, fr + 1, fc) - _light_at(lf, fr - 1, fc)
+    return (gx, gy)
+
+
+def _phototropic_bias(d: tuple, tx: float, ty: float, lf, strength: float) -> tuple:
+    """Direction de l'apex `d` biaisée vers le gradient de lumière (§D.4). Rotation
+    de `d` vers le gradient horizontal, d'un angle BORNÉ (≤ MAX_PHOTOTROPISM_TILT par
+    émission, ∝ gradient × strength) et avec un PLANCHER de verticalité (MIN_APEX_Z :
+    l'apex ne se couche jamais à plat — la verticalité reste l'attracteur, la lumière
+    la dévie). Déterministe, zéro RNG. strength≤0 ou lumière uniforme → `d` inchangé."""
+    if strength <= 0.0 or lf is None:
+        return d
+    gx, gy = _light_gradient(tx, ty, lf)
+    gmag = math.hypot(gx, gy)
+    if gmag < 1e-9:
+        return d                                   # éclairement uniforme : pas de biais
+    tilt = min(MAX_PHOTOTROPISM_TILT, strength * gmag)
+    gh = (gx / gmag, gy / gmag, 0.0)               # direction unitaire vers le clair (horizontale)
+    dot = d[0] * gh[0] + d[1] * gh[1]              # gh[2] = 0
+    # composante de gh perpendiculaire à d (axe de rotation dans le plan (d, gh))
+    perp = (gh[0] - dot * d[0], gh[1] - dot * d[1], -dot * d[2])
+    pm = math.sqrt(perp[0]**2 + perp[1]**2 + perp[2]**2)
+    if pm < 1e-9:
+        return d                                   # apex déjà aligné sur le gradient
+    perp = (perp[0]/pm, perp[1]/pm, perp[2]/pm)
+    ct, st = math.cos(tilt), math.sin(tilt)
+    nd = _norm((ct*d[0] + st*perp[0], ct*d[1] + st*perp[1], ct*d[2] + st*perp[2]))
+    if nd[2] < MIN_APEX_Z:                          # plancher : jamais à plat
+        h = math.hypot(nd[0], nd[1])
+        if h > 1e-9:
+            k = math.sqrt(max(0.0, 1.0 - MIN_APEX_Z * MIN_APEX_Z)) / h
+            nd = (nd[0] * k, nd[1] * k, MIN_APEX_Z)
+    return nd
 
 
 # ---------------------------------------------------------------------------
@@ -222,13 +287,16 @@ def _update_auxin(segs: list, dominance: float) -> None:
 
 
 def _elongate_emit(plant, speed: float, max_height: float, max_extent: float,
-                   emit_length: float) -> None:
+                   emit_length: float, light_field=None, strength: float = 0.0) -> None:
     """§D.2 — l'apex allonge, émet un segment axial au seuil, se retire à portée.
     Bornage par le gabarit du profil espèce : l'apex se retire quand son extrémité
     dépasse `max_height` en hauteur OU `max_extent` en extension horizontale — la
     structure reste dans l'enveloppe (hauteur × rayon de couronne) de l'espèce.
     `emit_length` (profil espèce) = longueur d'un segment émis : grand pour un arbre
-    (flèche en peu de segments), petit pour une herbacée (granularité fine)."""
+    (flèche en peu de segments), petit pour une herbacée (granularité fine).
+    Phototropisme (§D.4) : le segment émis prend la direction de l'apex BIAISÉE vers
+    le gradient de lumière local (`_phototropic_bias`), bornée et déterministe ;
+    `light_field=None` ou `strength=0` → direction axiale droite (ancien comportement)."""
     segs = plant.segments
     collet = segs[0].base
     new_segs = []
@@ -244,7 +312,9 @@ def _elongate_emit(plant, speed: float, max_height: float, max_extent: float,
         if s.length_cm >= emit_length:
             s.length_cm = emit_length             # cap → le segment devient du bois
             s.is_apex = False
-            new_segs.append(_mk(i, _tip(s), s.dir, s.auxin))  # apex axial (droit)
+            tip = _tip(s)
+            new_dir = _phototropic_bias(s.dir, tip[0], tip[1], light_field, strength)
+            new_segs.append(_mk(i, tip, new_dir, s.auxin))  # apex penché vers la lumière
     segs.extend(new_segs)
 
 
@@ -330,13 +400,16 @@ def _season_factor(week: int) -> float:
 # Point d'entrée — une passe de croissance par plante par tick
 # ---------------------------------------------------------------------------
 
-def grow_plant(plant, seed: int, week: int) -> None:
+def grow_plant(plant, seed: int, week: int, light_field=None) -> None:
     """
     Fait pousser la structure de `plant` d'un tick, selon le PROFIL DE SON ESPÈCE
     (plant.plant_class : vitesse, dominance, gabarit, angle… cf. PlantBase §E). Les
     constantes de module ci-dessus ne sont plus lues ici — elles restent les DÉFAUTS
     mirroir sur PlantBase. `growth_factor` (lumière intégrée) module la vitesse, en
     LECTURE seule.
+
+    `light_field` (LightField du tick, ou None) : source du gradient pour le
+    phototropisme (§D.4). None → apex droit, comportement historique inchangé.
 
     Tronçon 2 : pour une espèce MIGRÉE (`procedural_growth`), l'empreinte est
     recalculée en fin de passe (update_footprint, §G) → height_at/canopy_radius_at…
@@ -351,7 +424,7 @@ def grow_plant(plant, seed: int, week: int) -> None:
     speed = cls.growth_speed * plant.growth_factor * _season_factor(week)
     _update_auxin(segs, cls.apical_dominance_base)
     _elongate_emit(plant, speed, cls.max_height_cm, cls.max_extent_cm,
-                   cls.emit_length_cm)
+                   cls.emit_length_cm, light_field, cls.phototropism_strength)
     _debourrement(plant, seed, week, math.radians(cls.branch_angle),
                   cls.apical_dominance_base)
     _elaguer(plant, cls.wood_persistence, cls.max_segments)
