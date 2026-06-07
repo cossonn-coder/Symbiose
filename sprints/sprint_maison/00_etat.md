@@ -117,5 +117,9 @@ maison paramétrable (Q5) · maquette annuelle 4 images/saison (Q6).
   thermique distinct** → hors périmètre, à décider plus tard si on veut le rendre.
 - **3** : ✅ TRANCHÉ (provisoire). `phototropism_strength` **marqué=0.30** (défaut),
   **subtil=0.10** pour la maquette comparative (tronçon 4) → **valeur finale tranchée
-  par Nico à l'œil** sur les rendus. Bornes : `MAX_PHOTOTROPISM_TILT`=12°/émission,
-  `MIN_APEX_Z`=0.30 (jamais à plat). Tous trois = leviers de module dans `growth.py`.
+  par Nico à l'œil** sur les rendus. **Verdict tronçon 4 (2026-06-07)** : Nico penche
+  **marqué (0.30, = défaut actuel)** mais ne peut pas trancher définitivement **sans
+  les feuilles/fleurs/fruits** → **à RECONFIRMER une fois les organes rendus**
+  (tronçon 5 de la croissance procédurale). Aucun changement de code : le défaut est
+  déjà 0.30. Bornes : `MAX_PHOTOTROPISM_TILT`=12°/émission, `MIN_APEX_Z`=0.30 (jamais
+  à plat). Tous trois = leviers de module dans `growth.py`.
