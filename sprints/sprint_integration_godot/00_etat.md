@@ -80,9 +80,8 @@ carnet. Indices **visuels** d'abord (philo #5 : pas de chiffres en HUD primaire)
    ci-dessous.**
 3. **Saison animée** : bouton « avancer », `step_week` ×N, **interpolation**
    visuelle entre snapshots ; cycle de saison + auto-save déclenché.
-   → **Kickoff prêt (2026-06-10) : `03_saison_animee.md`** (machine à états
-   Planification↔Saison, step en Task de fond pollée dans `_Process`, fondu
-   naissances/morts, hook `OnSeasonEnd` — auto-save réel = sprint save global).
+   → **✅ CLOSE (2026-06-10, confirmée F5 par Nico) — voir « Avancement »
+   ci-dessous.**
 4. **Actions joueur** : clic → commande Python (planter, arroser, tailler,
    manger…) ; Python valide + applique (coût Vigueur), renvoie le snapshot.
 5. **Organes + overlays + vie macro** : porter `_draw_organs` en C#, heatmaps
@@ -193,6 +192,40 @@ carnet. Indices **visuels** d'abord (philo #5 : pas de chiffres en HUD primaire)
   zoom par paliers ×4-×32, rotation de la vue par quarts de tour gauche/
   droite = re-projection, pas rotation canvas). Pure vue, tranche dédiée
   après t3/t4.
+
+### Tranche 3 — saison animée : ✅ CLOSE (2026-06-10, confirmée F5)
+- **Livré** : `world/WorldView.cs` SEUL modifié (zéro Python, protocole v0
+  suffisant). Boucle hybride côté vue : machine à états **Planification
+  (défaut) ↔ Saison ↔ Pause**, bascule **Espace** (`_UnhandledInput`) ;
+  accumulateur temps réel dans `_Process` (`SecondsPerWeek=60`,
+  `DebugSecondsPerWeek=3` prioritaire si >0 — à remettre à 0 hors debug) ;
+  **step en `Task.Run` pollée** par `IsCompleted` (une seule en vol, échec →
+  Planification + erreur) ; `ApplySnapshot` en **diff par clé**
+  `tile|species|x|y` (connue → `SetStructure`, nouvelle → fondu in 0,6 s,
+  disparue → fondu out 0,9 s + `QueueFree`) ; **fin de saison** = `season` du
+  snapshot change → retour auto Planification + hook `OnSeasonEnd()` (TODO
+  auto-save, sprint save global) ; **HUD provisoire** `CanvasLayer` + `Label`
+  28 px contour noir : « été · an 1 — semaine 5/13 [====------] état »
+  (jauge intra-semaine animée, fige en pause).
+- **Décisions prises** :
+  - Plante persistante = **mise à jour** (`SetStructure` → `QueueRedraw`),
+    pas destroy/recreate — le fondu ne marque que naissances/morts.
+  - `_ExitTree` **attend la Task en vol** (2 s) avant `quit` — jamais deux
+    écritures concurrentes sur le pipe, même à la fermeture.
+  - Step **consommé même en pause** (semaine déjà engagée côté moteur).
+  - Sémantique horloge assumée : `week` = **prochaine semaine à simuler** →
+    la planification s'affiche « semaine 1/13 » de la saison À VENIR (rien
+    d'elle n'est simulé) — cohérent boucle hybride (préparer puis vivre).
+- **Confirmé par Nico dans Godot (2026-06-10)** : critères tous validés —
+  lancement figé en planification ; Espace → semaines défilent, fondus
+  visibles (« pixels verts » naissances/morts) ; **pause/reprise OK** ;
+  **aucun gel perceptible** aux ticks ; été complet déroulé (13 sem.) +
+  retours auto en planification aux passages été→automne. Golden intact
+  (`16a1b937…`). Au passage : 1ʳᵉ saison post-warmup = 1 semaine (warmup 12
+  sem. → démarrage sem. 13/13 du printemps), assumé kickoff.
+- **Prochaine : tranche 4 (actions joueur), kickoff `04_*.md` à écrire**
+  (figer le format des commandes verbe+cible+params ; la machine à états t3
+  donne déjà la distinction préparation/réaction).
 
 ## Lien dette
 Lève progressivement **D24** (le « portage C# » devient « pont », plus un portage
