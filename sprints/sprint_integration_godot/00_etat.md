@@ -223,9 +223,14 @@ carnet. Indices **visuels** d'abord (philo #5 : pas de chiffres en HUD primaire)
   retours auto en planification aux passages été→automne. Golden intact
   (`16a1b937…`). Au passage : 1ʳᵉ saison post-warmup = 1 semaine (warmup 12
   sem. → démarrage sem. 13/13 du printemps), assumé kickoff.
-- **Prochaine : tranche 4 (actions joueur), kickoff `04_*.md` à écrire**
-  (figer le format des commandes verbe+cible+params ; la machine à états t3
-  donne déjà la distinction préparation/réaction).
+- **Prochaine : tranche 4 — kickoff PRÊT : `04_camera_actions.md`**
+  (demande Nico : inclure la caméra). **2 volets séquentiels** : A = caméra
+  D35 (pan flèches, zoom paliers, rotation quarts de tour par re-projection
+  `Orientation` dans `WorldToScreen` + `RebuildWorld`) ; B = actions joueur
+  (Vigueur branchée dans `sim_server.py` via façades existantes, commande
+  `action` verbe+cible+params, plante désignée PAR POSITION, `urgence` =
+  phase Saison, 8 gestes existants — `planter`/`arroser` EXCLUS : pas
+  d'équivalent moteur, backlog). Committable volet par volet.
 
 ## Lien dette
 Lève progressivement **D24** (le « portage C# » devient « pont », plus un portage
