@@ -119,18 +119,48 @@ namespace Symbiose
 			plant.CanopyRadiusCm = (float)fp["canopy_radius_cm"].AsDouble();
 
 			foreach (var segVar in spec["segments"].AsGodotArray())
-			{
-				var seg = segVar.AsGodotDictionary();
-				plant.Segments.Add(new Segment(
-					Base: ParseVec3(seg["base"].AsGodotArray()),
-					Dir: ParseVec3(seg["dir"].AsGodotArray()),
-					LengthCm: (float)seg["length_cm"].AsDouble(),
-					ThicknessCm: (float)seg["thickness_cm"].AsDouble(),
-					IsApex: seg["is_apex"].AsBool()));
-			}
+				plant.Segments.Add(ParseSegment(segVar.AsGodotDictionary()));
 
 			return plant;
 		}
+
+		// -------------------------------------------------------------------
+		// POINT D'ENTRÉE SNAPSHOT (sprint Intégration, tranche 2)
+		// Même schéma de segments que structure.json (format Croissance·6) mais
+		// reçu par le PONT (SimBridge) au lieu d'un fichier, et par PLANTE du
+		// snapshot au lieu d'un specimen complet : pas de collet_cm/footprint
+		// dédiés. Le collet = base du PREMIER segment (exactement ce que fait
+		// tools/export_structure.py côté Python). Le rayon de couronne n'est pas
+		// exposé par le snapshot v0 → 0 (le LOD silhouette n'est pas utilisé en
+		// tranche 2 ; si besoin un jour : l'exposer en LECTURE dans le snapshot
+		// Python, jamais le recalculer ici).
+		// -------------------------------------------------------------------
+
+		public static PlantStructure FromSnapshot(Godot.Collections.Dictionary plant)
+		{
+			var ps = new PlantStructure
+			{
+				Title = plant["name"].AsString(),
+				SpeciesName = plant["species"].AsString(),
+				HeightCm = (float)plant["height_cm"].AsDouble(),
+				CanopyRadiusCm = 0f,
+			};
+			foreach (var segVar in plant["segments"].AsGodotArray())
+				ps.Segments.Add(ParseSegment(segVar.AsGodotDictionary()));
+			if (ps.Segments.Count > 0)
+				ps.ColletCm = ps.Segments[0].Base;
+			return ps;
+		}
+
+		// Un segment JSON → Segment C# (champs communs structure.json/snapshot ;
+		// les champs dynamiques du moteur — auxin, age_weeks… — sont ignorés).
+		private static Segment ParseSegment(Godot.Collections.Dictionary seg) =>
+			new Segment(
+				Base: ParseVec3(seg["base"].AsGodotArray()),
+				Dir: ParseVec3(seg["dir"].AsGodotArray()),
+				LengthCm: (float)seg["length_cm"].AsDouble(),
+				ThicknessCm: (float)seg["thickness_cm"].AsDouble(),
+				IsApex: seg["is_apex"].AsBool());
 
 		private static Vector3 ParseVec3(Godot.Collections.Array a) =>
 			new Vector3((float)a[0].AsDouble(), (float)a[1].AsDouble(), (float)a[2].AsDouble());

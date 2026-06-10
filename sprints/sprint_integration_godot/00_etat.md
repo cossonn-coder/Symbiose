@@ -76,7 +76,8 @@ carnet. Indices **visuels** d'abord (philo #5 : pas de chiffres en HUD primaire)
    (tuiles hétérogènes + maison + plantes procédurales + ombre) — **corrige
    D2/D3/D8** au passage (tuiles **78×57**, noms de sprites, scène principale
    propre). Reprend `TileGrid`/`PlantRenderer`.
-   → **Kickoff prêt (2026-06-10) : `02_monde_statique.md`**
+   → **✅ FAITE côté code (2026-06-10), F5 à confirmer par Nico — voir
+   « Avancement » ci-dessous.**
 3. **Saison animée** : bouton « avancer », `step_week` ×N, **interpolation**
    visuelle entre snapshots ; cycle de saison + auto-save déclenché.
 4. **Actions joueur** : clic → commande Python (planter, arroser, tailler,
@@ -140,6 +141,48 @@ carnet. Indices **visuels** d'abord (philo #5 : pas de chiffres en HUD primaire)
   arrêt propre. GTX 950M / Compatibility OpenGL 3.3. NB : le visuel à l'écran
   reste l'ancienne démo (tuiles opaques 96×48 + spécimens `structure.json`) —
   c'est l'objet de la tranche 2.
+
+### Tranche 2 — monde statique rendu : ✅ code écrit (2026-06-10), F5 à confirmer
+- **Livré Python** : fabrique du monde extraite de `main.py`
+  (`build_world_full()` : 8 tuiles SECTORS plantées + maison ; scénario démo
+  passé sous `if __name__ == "__main__"`, sortie vérifiée **byte-identique**) ;
+  `sim_server.py` accepte `init(config="full")` (import de la fabrique, zéro
+  copie) ; `tests/test_sim_server.py` étendu (**30/30** : 8 tuiles, 3 sols,
+  origins distincts, maison [600,600]→[1400,1400], 53 plantes posées, config
+  inconnue refusée + le serveur survit). **Golden intact** (`16a1b937…`).
+- **Livré C#** : `world/WorldView.cs` + `WorldView.tscn` (**nouvelle scène
+  principale**, `run/main_scene` basculé ; `Main.tscn`/`TileGrid.tscn`
+  conservés) — au `_Ready` : Start → Init(42,"full") → StepWeek×12 (~1,8 s
+  mesuré) → rendu. **Projection UNIQUE** `WorldToScreen` calibrée sur le
+  losange réel de `tile_terre.png` (78×39 px pour 50 cm → 0,78/0,39 px/cm,
+  `PxPerCmZ`=0,78) — `PlantRenderer.Iso` délègue désormais à cette projection
+  (l'ancien couple cos30×0,42 supprimé, **D2 levée**). Sol = couche ZIndex 0,
+  maison+plantes = nœud `Objects` **YSortEnabled** (tri de profondeur iso).
+  `StructureLoader.FromSnapshot()` (collet = base du segment 0, comme
+  `export_structure.py`). Caméra de cadrage zoom 0,5.
+- **Décisions prises** :
+  - **Placeholders procéduraux** pour tuiles ET maison (décision Nico
+    2026-06-10) : les PNG tuiles sont **opaques** (damier de transparence cuit
+    en gris, alpha=255 partout — c'était la cause des « tuiles opaques » vues
+    en t1) et de **tailles incohérentes** (78×57 vs 32×23) → **D34** ; cahier
+    des charges + prompt LLM image : `assets/sprites/tiles/GENERATION_TUILES.md`.
+    Couleurs des losanges = teintes dominantes mesurées des PNG (terre #967a64,
+    argile #cd7434, sable #f1e9bb), damier ±5 % pour lire la grille, fond
+    fenêtre gris pierre = chemins.
+  - Échelle plante = **échelle monde** (0,78 px/cm : pommier 350 cm ≈ 273 px) —
+    la démo TileGrid affichera ses spécimens plus grands, assumé.
+  - `canopy_radius` **pas exposé** dans le snapshot (LOD silhouette inutilisé
+    en t2 ; `CanopyRadiusCm=0`) — à exposer en lecture si besoin futur.
+  - Plantes du snapshot **sans segments** (germinations non procédurales) :
+    pas de nœud créé, comptées en console (« pousses minimales » assumées).
+- **Mesures** : snapshot full ~17 Ko sem 2 (54 plantes) → **~83 Ko sem 13**
+  (152 plantes, germinations seedbank comprises) — toujours négligeable à
+  1 snapshot/60 s. Tick full ≈ 150 ms.
+- **Dette** : **D2 ✅, D8 ✅** levées ; **D3** statuée (obsolescence partielle :
+  rendu procédural) ; **D4** mitigée (placeholder maison) ; **D34** ouverte
+  (ré-export assets tuiles). `DETTE.md` à jour.
+- **Reste** : F5 de Nico (critères kickoff : 8 tuiles aux bons sols jointives,
+  maison centrale, plantes posées en position monde avec branches).
 
 ## Lien dette
 Lève progressivement **D24** (le « portage C# » devient « pont », plus un portage

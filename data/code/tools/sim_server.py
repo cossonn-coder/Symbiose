@@ -16,7 +16,7 @@ construction. Si Godot a besoin d'une donnée absente, on l'ajoute au SNAPSHOT
 (lecture seule), jamais au tick.
 
 Protocole v0 (requête → réponse, champ `cmd` obligatoire) :
-  → {"cmd": "init", "seed": 42, "config": "smoke"}
+  → {"cmd": "init", "seed": 42, "config": "smoke"}   # ou "full" (monde 20×20 m)
   ← {"ok": true, "engine_version": "...", "world": {tuiles + maison, statique}}
   → {"cmd": "step_week"}
   ← {"ok": true, "snapshot": {...}}
@@ -66,20 +66,26 @@ class SimServer:
     def cmd_init(self, msg: dict) -> dict:
         seed = msg.get("seed", 0x5AB1057E)
         config = msg.get("config", "smoke")
-        if config != "smoke":
-            return {"ok": False,
-                    "error": f"config inconnue : {config!r} (v0 : 'smoke' seul ; "
-                             "le monde complet 8 tuiles + maison vient en tranche 2)"}
         if not isinstance(seed, int):
             return {"ok": False, "error": f"seed doit être un entier (reçu {seed!r})"}
-        # Réutilise la fabrique du golden smoke test (2 tuiles terre/argile +
-        # maison centrée) — même monde, même déterminisme, zéro duplication.
-        from tests.test_golden import build_world
-        tiles, ecos = build_world()
+        if config == "smoke":
+            # Réutilise la fabrique du golden smoke test (2 tuiles terre/argile +
+            # maison centrée) — même monde, même déterminisme, zéro duplication.
+            from tests.test_golden import build_world
+            tiles, ecos = build_world()
+            house = House()
+        elif config == "full":
+            # Monde COMPLET 20×20 m (tranche 2) : fabrique de main.py (8 tuiles
+            # SECTORS plantées + maison) — import, pas de copie, même principe.
+            from main import build_world_full
+            tiles, ecos, _aux_tiles, house = build_world_full()
+        else:
+            return {"ok": False,
+                    "error": f"config inconnue : {config!r} ('smoke' ou 'full')"}
         game_state = {
             "tiles": tiles, "eco": ecos, "scores": {},
             "current_player": "joueur_1", "week": 1, "log": [],
-            "house": House(), "seed": seed,
+            "house": house, "seed": seed,
         }
         self.engine = Engine(game_state)
         return {"ok": True, "engine_version": ENGINE_VERSION,

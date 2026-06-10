@@ -22,24 +22,17 @@ namespace Symbiose
 {
 	public partial class PlantRenderer : Node2D
 	{
-		// --- Projection iso : portage EXACT de tools/render_structure.py:_iso ---
-		// (dx,dy,dz)cm relatifs au collet → px écran.
-		//   x = (dx - dy)·cos30·k
-		//   y = ((dx + dy)·sin30 - dz)·k
-		// dz (hauteur) tire vers le HAUT : en 2D Godot +Y est vers le BAS, donc on
-		// SOUSTRAIT dz, exactement comme le SVG de la maquette. k = PxPerCm.
-		private const float Cos30 = 0.8660254f;
-		private const float Sin30 = 0.5f;
-
-		// Échelle px/cm. La maquette SVG utilise 0.42 (choisi pour tenir dans un
-		// panneau) ; on le garde par défaut car Nico a déjà validé cette allure
-		// visuellement. À 0.42, un pommier de 350 cm fait ~147 px de haut, soit ~3
-		// tuiles (TileH≈48-57 px) — raisonnable. POINT OUVERT : l'échelle « vraie »
-		// du jeu dépend de la géométrie de tuile (PLOT_CM=50 ↔ TileW px) ; les deux
-		// projections (plante iso vs grille en quinconce) ne sont PAS le même modèle
-		// (cf. obstacle 2 du kickoff). On ne partage que l'ANCRAGE (le collet). Export
-		// pour que Nico règle l'allure en direct dans l'éditeur.
-		[Export] public float PxPerCm = 0.42f;
+		// --- Projection iso : DÉLÉGUÉE à WorldView.WorldToScreen (tranche 2) ---
+		// UNE seule projection pour tout le monde (tuiles, maison, plantes),
+		// calibrée sur le losange réel du sprite tuile (78×39 px pour 50 cm →
+		// 0.78 px/cm) — c'est la levée de D2 : l'ancien couple cos30/sin30 ×
+		// PxPerCm=0.42 (maquette SVG, allure « panneau ») dupliquait un 2ᵉ modèle
+		// iso qui ne coïncidait pas avec la grille. dz (hauteur) tire vers le
+		// HAUT : en 2D Godot +Y est vers le BAS, donc on SOUSTRAIT dz·PxPerCmZ.
+		// NB : l'échelle est désormais celle du MONDE — un pommier de 350 cm fait
+		// ~273 px de haut (~7 plots), c'est voulu (cohérence spatiale empreintes ↔
+		// couronnes). L'ancienne démo TileGrid affichera donc ses spécimens plus
+		// grands qu'avant — elle n'est plus la scène principale, assumé.
 
 		// Palier de zoom STUBÉ (la caméra/zoom n'est pas encore câblée — beaucoup de
 		// C# est stub). Pilote le LOD (§H.3) : ≤4 → silhouette de couronne ; ≥8 →
@@ -65,9 +58,8 @@ namespace Symbiose
 		// PROJECTION
 		// ---------------------------------------------------------------------------
 
-		private Vector2 Iso(float dx, float dy, float dz) =>
-			new Vector2((dx - dy) * Cos30 * PxPerCm,
-						((dx + dy) * Sin30 - dz) * PxPerCm);
+		private static Vector2 Iso(float dx, float dy, float dz) =>
+			WorldView.WorldToScreen(dx, dy) - new Vector2(0f, dz * WorldView.PxPerCmZ);
 
 		// ---------------------------------------------------------------------------
 		// DESSIN
@@ -109,7 +101,7 @@ namespace Symbiose
 				// Largeur ∝ épaisseur, ARRONDIE au pixel (pixel art). NB : à un vrai
 				// zoom ×N, 1 px logique = N px écran ; l'arrondi entier ici donne un
 				// trait net au palier. min 1 px pour rester visible.
-				float w = Mathf.Max(1f, Mathf.Round(s.ThicknessCm * PxPerCm * 2.2f));
+				float w = Mathf.Max(1f, Mathf.Round(s.ThicknessCm * WorldView.PxPerCmX * 2.2f));
 				Color color = s.IsApex ? ApexColor : WoodColor;
 
 				DrawLine(p1, p2, color, w, antialiased: false);
@@ -123,8 +115,8 @@ namespace Symbiose
 		{
 			float cr = _structure.CanopyRadiusCm;
 			Vector2 center = Iso(0f, 0f, _structure.HeightCm * 0.55f);
-			float rx = cr * PxPerCm;            // largeur ~ rayon couronne projeté
-			float ry = cr * PxPerCm * 0.8f;     // couronne légèrement aplatie
+			float rx = cr * WorldView.PxPerCmX;        // largeur ~ rayon couronne projeté
+			float ry = cr * WorldView.PxPerCmX * 0.8f; // couronne légèrement aplatie
 
 			const int n = 24;
 			var pts = new Vector2[n];

@@ -233,9 +233,14 @@ prévisible** — récompense rare qui cristallise la philo non-action.
 - `core/PlantCatalogue.cs` — 14 espèces dont indicatrices avec UnlockCondition
 - `core/SpriteLoader.cs` — autoload, chargement récursif
 - `core/PlantStructure.cs` — miroir `Segment` + chargeur `structure.json`
-  (pont JSON, Sprint croissance·4)
-- `visuals/PlantRenderer.cs` — rendu pixel des branches (projection `Iso()`,
-  LOD silhouette ; compilation à confirmer dans Godot)
+  + `FromSnapshot()` (plante du pont, Intégration·2)
+- `core/SimBridge.cs` — pont sous-process vers `tools/sim_server.py`
+  (Intégration·1, confirmé dans Godot)
+- `visuals/PlantRenderer.cs` — rendu pixel des branches (LOD silhouette ;
+  projection déléguée à `WorldView.WorldToScreen` depuis Intégration·2)
+- `world/WorldView.cs` + `WorldView.tscn` — **scène principale** (Intégration·2,
+  F5 à confirmer) : monde complet du snapshot, projection unique calibrée
+  78×39 px/plot, placeholders procéduraux tuiles + maison (D34)
 
 ### Stubs vides (à écrire — deviendront la VUE, pas un moteur)
 - `core/GameManager.cs`, `EcologySystem.cs`, `TurnSystem.cs`, `SeedBankSystem.cs`
@@ -305,9 +310,11 @@ Le **backlog des sprints** (terminés + à venir, avec les kickoffs
 autosuffisants de `sprints/`) vit désormais dans **[`BACKLOG.md`](BACKLOG.md)**
 — source unique, plus de duplication.
 
-**Prochain sprint** : **Intégration Godot ↔ Python, tranche 1 — pont vivant
-minimal** (`sim_server.py` ↔ `SimBridge.cs`). Kickoffs :
-`sprints/sprint_integration_godot/00_etat.md` puis `01_pont_minimal.md`.
+**Sprint en cours** : **Intégration Godot ↔ Python** — tranche 1 (pont) CLOSE ;
+tranche 2 (monde statique rendu : `WorldView.cs`/`.tscn` nouvelle scène
+principale, placeholders procéduraux, D34 assets tuiles) code fait le
+2026-06-10, **F5 de Nico à confirmer**. Prochaine : tranche 3 (saison animée).
+Kickoffs : `sprints/sprint_integration_godot/00_etat.md`.
 
 À l'ouverture d'une session, Nico donne « lis `sprints/sprint_X.md` » (sprint
 simple) ou « lis `sprints/sprint_X/00_etat.md` puis `0N_*.md` » (sprint découpé)

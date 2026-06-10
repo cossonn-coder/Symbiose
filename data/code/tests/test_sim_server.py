@@ -12,7 +12,10 @@ protocole v0 par les pipes. Couvre les contrats du kickoff 01_pont_minimal.md :
   3. robustesse   — ligne malformée / cmd inconnue / step avant init →
                     {"ok": false} et le serveur SURVIT (répond encore après) ;
   4. déterminisme — 2 runs même seed → réponses byte-identiques ;
-  5. arrêt propre — EOF sur stdin (Godot mort sans quit) → le process meurt.
+  5. arrêt propre — EOF sur stdin (Godot mort sans quit) → le process meurt ;
+  6. monde full   — init(config="full") (tranche 2) : layout 3×3 de main.py
+                    (8 tuiles SECTORS, sols variés, origins distincts, maison
+                    [600,600]→[1400,1400], 53 plantes), config inconnue refusée.
 
 Mesure aussi la taille du snapshot (octets/semaine) — la donnée qui tranchera
 « complet vs diffs » (cf. 00_etat.md, pas d'optimisation avant mesure).
@@ -146,6 +149,44 @@ def main() -> int:
     except subprocess.TimeoutExpired:
         s3.proc.kill()
         check("EOF stdin → le serveur meurt", False, "timeout : process zombie")
+
+    # --- 6. monde full (tranche 2) -------------------------------------------
+    print("[monde full]")
+    s4 = ServerProc()
+    r = s4.send(cmd="init", seed=42, config="nimporte_quoi")
+    check("config inconnue → ok:false", r.get("ok") is False)
+    r = s4.send(cmd="init", seed=42, config="full")
+    check("init full ok (le serveur a survécu à la config refusée)",
+          r.get("ok") is True)
+    world = r.get("world", {})
+    tiles = world.get("tiles", [])
+    check("monde full : 8 tuiles", len(tiles) == 8,
+          f"tuiles={[t['id'] for t in tiles]}")
+    check("ids = les 8 orientations",
+          {t["id"] for t in tiles} == {"NO", "N", "NE", "O", "E", "SO", "S", "SE"})
+    check("3 sols représentés",
+          {t["soil"] for t in tiles} == {"terre", "argile", "sable"})
+    check("origins tous distincts",
+          len({(t["origin_x_cm"], t["origin_y_cm"]) for t in tiles}) == 8)
+    check("layout dans le monde 20×20 m",
+          all(0 <= t["origin_x_cm"] and 0 <= t["origin_y_cm"]
+              and t["origin_x_cm"] + t["cols"] * 50 <= 2000
+              and t["origin_y_cm"] + t["rows"] * 50 <= 2000 for t in tiles))
+    check("maison 8×8 m centrée",
+          world.get("house", {}).get("footprint_cm") == [600, 600, 1400, 1400],
+          f"footprint={world.get('house', {}).get('footprint_cm')}")
+    r = s4.send(cmd="snapshot")
+    snap = r.get("snapshot", {})
+    check("53 plantes posées (semaine 1, rien simulé)",
+          len(snap.get("plants", [])) == 53, f"n={len(snap.get('plants', []))}")
+    # Mesure full (critère kickoff t2 : noter la taille dans 00_etat.md)
+    r = s4.send(cmd="step_week")
+    size = len(json.dumps(r, sort_keys=True, separators=(",", ":")))
+    n_seg = sum(len(p["segments"]) for p in r["snapshot"]["plants"])
+    print(f"  📏 taille snapshot full semaine 2 : {size} octets "
+          f"({len(r['snapshot']['plants'])} plantes, {n_seg} segments)")
+    s4.send(cmd="quit")
+    check("quit full → exit 0", s4.close() == 0)
 
     # --- bilan ----------------------------------------------------------------
     n_fail = sum(1 for _, ok in _results if not ok)
