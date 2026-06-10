@@ -1508,10 +1508,16 @@ germinations seedbank comprises) — négligeable à 1 snapshot/60 s. Tick full
 procédural), **D4 mitigée** (placeholder), **D34 ouverte** (ré-export assets
 tuiles). `DETTE.md` à jour.
 
-**Statut.** Code écrit + tests Python verts — **reste le F5 de Nico**
-(critères : 8 tuiles aux bons sols jointives, maison centrale, plantes en
-position monde avec branches). Signalé au passage : un dossier `symbiose/`
-parasite (projet Godot vide auto-créé) traîne à la racine, non suivi par git.
+**Statut.** Tranche 2 **CLOSE** — confirmée par Nico dans Godot le jour même :
+monde complet (1188 plots, maison, **152 plantes affichées / 0 ignorées**,
+warmup 12 semaines = 3451 ms sur son poste). Plantes « toutes petites » =
+attendu (échelle monde × zoom cadrage 0,5), résolu par les futurs paliers de
+zoom. **Demande post-F5 → D35** : contrôles caméra (déplacement aux flèches,
+zoom par paliers ×4-×32, rotation de la vue par quarts de tour — re-projection
+d'orientation dans `WorldToScreen`, pas une rotation canvas). Signalé au
+passage : un dossier `symbiose/` parasite (projet Godot vide auto-créé) traîne
+à la racine, non suivi par git. **Prochaine : tranche 3 (saison animée),
+kickoff `03_*.md` à écrire.**
 
 ---
 

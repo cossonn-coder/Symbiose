@@ -76,8 +76,8 @@ carnet. Indices **visuels** d'abord (philo #5 : pas de chiffres en HUD primaire)
    (tuiles hétérogènes + maison + plantes procédurales + ombre) — **corrige
    D2/D3/D8** au passage (tuiles **78×57**, noms de sprites, scène principale
    propre). Reprend `TileGrid`/`PlantRenderer`.
-   → **✅ FAITE côté code (2026-06-10), F5 à confirmer par Nico — voir
-   « Avancement » ci-dessous.**
+   → **✅ CLOSE (2026-06-10, confirmée F5 par Nico) — voir « Avancement »
+   ci-dessous.**
 3. **Saison animée** : bouton « avancer », `step_week` ×N, **interpolation**
    visuelle entre snapshots ; cycle de saison + auto-save déclenché.
 4. **Actions joueur** : clic → commande Python (planter, arroser, tailler,
@@ -142,7 +142,7 @@ carnet. Indices **visuels** d'abord (philo #5 : pas de chiffres en HUD primaire)
   reste l'ancienne démo (tuiles opaques 96×48 + spécimens `structure.json`) —
   c'est l'objet de la tranche 2.
 
-### Tranche 2 — monde statique rendu : ✅ code écrit (2026-06-10), F5 à confirmer
+### Tranche 2 — monde statique rendu : ✅ CLOSE (2026-06-10, confirmée F5)
 - **Livré Python** : fabrique du monde extraite de `main.py`
   (`build_world_full()` : 8 tuiles SECTORS plantées + maison ; scénario démo
   passé sous `if __name__ == "__main__"`, sortie vérifiée **byte-identique**) ;
@@ -181,8 +181,15 @@ carnet. Indices **visuels** d'abord (philo #5 : pas de chiffres en HUD primaire)
 - **Dette** : **D2 ✅, D8 ✅** levées ; **D3** statuée (obsolescence partielle :
   rendu procédural) ; **D4** mitigée (placeholder maison) ; **D34** ouverte
   (ré-export assets tuiles). `DETTE.md` à jour.
-- **Reste** : F5 de Nico (critères kickoff : 8 tuiles aux bons sols jointives,
-  maison centrale, plantes posées en position monde avec branches).
+- **Confirmé par Nico dans Godot (2026-06-10)** : monde complet affiché —
+  1188 plots placeholder, maison [600,600]→[1400,1400] h=600, **152 plantes
+  affichées / 0 sans segments**, warmup 12 semaines = **3451 ms** sur son
+  poste (vs 1,8 s sur la VM). Plantes « toutes petites » = attendu (échelle
+  monde 0,78 px/cm × zoom cadrage 0,5) → résolu par les paliers de zoom.
+- **Demande Nico post-F5 → D35** : contrôles caméra (déplacement flèches,
+  zoom par paliers ×4-×32, rotation de la vue par quarts de tour gauche/
+  droite = re-projection, pas rotation canvas). Pure vue, tranche dédiée
+  après t3/t4.
 
 ## Lien dette
 Lève progressivement **D24** (le « portage C# » devient « pont », plus un portage
