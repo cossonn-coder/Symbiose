@@ -108,7 +108,7 @@ carnet. Indices **visuels** d'abord (philo #5 : pas de chiffres en HUD primaire)
 
 ## Avancement
 
-### Tranche 1 — pont vivant minimal : ✅ (2026-06-10, côté code)
+### Tranche 1 — pont vivant minimal : ✅ CLOSE (2026-06-10, confirmée dans Godot)
 - **Livré** : `data/code/tools/sim_server.py` (serveur stdin/stdout, protocole
   v0 : `init`/`step_week`/`snapshot`/`quit`, survit aux commandes malformées,
   meurt sur EOF) ; `data/code/tests/test_sim_server.py` (**20/20** : forme,
@@ -133,8 +133,12 @@ carnet. Indices **visuels** d'abord (philo #5 : pas de chiffres en HUD primaire)
   an 5 (198 segments, le bois domine ~250 o/segment, borné par `MAX_SEGMENTS`).
   Extrapolé 8 tuiles ≈ 200 Ko/snapshot pour 1 snapshot/60 s réel → **snapshot
   complet VALIDÉ, pas de diffs** (question ouverte tranchée).
-- **Reste** : Nico lance F5 dans Godot et confirme la compilation + le résumé
-  console (critère 4 du kickoff).
+- **Confirmé par Nico dans Godot (2026-06-10)** : F5 → console = moteur lancé
+  (pid), init 2 tuiles + maison, semaine 5 / printemps, 17 plantes vivantes
+  listées (pommier `stade=arbre`, T0 avec attire-auxiliaires vs T1 sans),
+  arrêt propre. GTX 950M / Compatibility OpenGL 3.3. NB : le visuel à l'écran
+  reste l'ancienne démo (tuiles opaques 96×48 + spécimens `structure.json`) —
+  c'est l'objet de la tranche 2.
 
 ## Lien dette
 Lève progressivement **D24** (le « portage C# » devient « pont », plus un portage

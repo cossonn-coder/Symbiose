@@ -1429,9 +1429,11 @@ centraliser au sprint save global) ; `init` réutilise la fabrique du golden
 = compteur moteur brut ; ceinture `redirect_stdout(stderr)` autour du tick
 (stdout réservé au protocole).
 
-**Statut.** Tranche 1 ✅ côté code ; **reste la confirmation Godot par Nico**
-(F5 → résumé console après 4 semaines). Prochaine : tranche 2 « monde statique
-rendu » (D2/D3/D8) — kickoff `02_*.md` à écrire.
+**Statut.** Tranche 1 **CLOSE** — confirmée par Nico dans Godot le jour même
+(F5 → moteur lancé, semaine 5 / printemps, 17 plantes vivantes listées, arrêt
+propre ; GTX 950M / Compatibility). Le visuel à l'écran reste l'ancienne démo
+(tuiles opaques + spécimens `structure.json`) — c'est l'objet de la tranche 2
+« monde statique rendu » (D2/D3/D8), kickoff `02_*.md` à écrire.
 
 ---
 
