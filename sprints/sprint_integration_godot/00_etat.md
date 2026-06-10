@@ -76,6 +76,7 @@ carnet. Indices **visuels** d'abord (philo #5 : pas de chiffres en HUD primaire)
    (tuiles hétérogènes + maison + plantes procédurales + ombre) — **corrige
    D2/D3/D8** au passage (tuiles **78×57**, noms de sprites, scène principale
    propre). Reprend `TileGrid`/`PlantRenderer`.
+   → **Kickoff prêt (2026-06-10) : `02_monde_statique.md`**
 3. **Saison animée** : bouton « avancer », `step_week` ×N, **interpolation**
    visuelle entre snapshots ; cycle de saison + auto-save déclenché.
 4. **Actions joueur** : clic → commande Python (planter, arroser, tailler,
