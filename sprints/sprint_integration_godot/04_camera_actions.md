@@ -80,7 +80,9 @@ dans les registres internes de l'esclave.
 1. **Déplacement** : flèches (maintien), vitesse constante en px ÉCRAN
    (ressenti identique à tout zoom), dans `_Process`. Borné au rectangle du
    monde + marge (~10 %) — on ne se perd pas dans le gris.
-2. **Zoom par paliers** : molette et/ou touches `+`/`-`. Paliers
+2. **Zoom par paliers à la MOLETTE** (décision Nico 2026-06-10 : molette,
+   pas de touches) : molette haut = palier supérieur, bas = inférieur
+   (`InputEventMouseButton`, `WheelUp`/`WheelDown`). Paliers
    `{0.5, 1, 2, 4, 8, 16, 32}` — les paliers < 4 sont **provisoires** (vue
    d'ensemble sur placeholders vectoriels, aucun artefact possible) ; la
    règle projet « ×4-×32, jamais de fraction » s'appliquera strictement
@@ -94,25 +96,33 @@ dans les registres internes de l'esclave.
    si `Iso` projette des offsets monde via `WorldToScreen`, la rotation est
    gratuite (linéarité) ; sinon l'adapter — la plante doit « tourner » avec
    le monde (son phototropisme penche vers la maison quelle que soit la vue).
-4. L'horloge/HUD t3 et la boucle saison **continuent de fonctionner pendant**
+4. **Affichage des commandes possibles** (décision Nico 2026-06-10) : le HUD
+   liste à l'écran ce que le joueur PEUT faire — une légende discrète (coin
+   bas-gauche, même `CanvasLayer` que l'horloge, petite police) :
+   « Espace lancer/pause · flèches déplacer · molette zoom ·
+   PageUp/Down pivoter ». Au volet B, s'y ajoutent les gestes `1..8` avec
+   leur nom (et le coût refusé/accepté reste au HUD du haut). Toujours
+   PROVISOIRE (philo #5/#6 : pas de tutoriel imposé — la vraie v1 aura la
+   page d'accueil pictogrammes ; ici c'est l'instrument de validation).
+5. L'horloge/HUD t3 et la boucle saison **continuent de fonctionner pendant**
    pan/zoom/rotation (aucune interaction entre caméra et machine à états).
 
 ## Volet B — Actions joueur (protocole v1 : serveur + vue)
 
 ### Côté Python (`tools/sim_server.py` + tests — PAS le moteur)
 
-5. **Brancher la Vigueur joueur** (façades existantes) : `ensure_player` à
+6. **Brancher la Vigueur joueur** (façades existantes) : `ensure_player` à
    l'`init` ; `tick_player_vigueur` à chaque `step_week` ; `refill_saison`
    quand la saison du compteur change. Snapshot enrichi (lecture seule) :
    `"player": {"vigueur": x, "vigueur_max": y}`. `ENGINE_VERSION` → "0.2.0".
-6. **Commande `action`** :
+7. **Commande `action`** :
    `{"cmd":"action", "verb":"manger", "target":{...}, "params":{...}}` →
    réponse `{"ok":true, "result":{"applied":bool, "cost":…, "gain":…,
    "vigueur":…, "message":…}, "snapshot":{…}}` (snapshot frais TOUJOURS
    joint : l'effet est visible immédiatement, un seul aller-retour).
    Verbe inconnu / cible introuvable / Vigueur insuffisante → `applied:false`
    + message, le serveur SURVIT (même règle que les commandes malformées v0).
-7. **Désignation des cibles** (décision proposée, cf. pédagogie 3) :
+8. **Désignation des cibles** (décision proposée, cf. pédagogie 3) :
    - plot : `{"tile":"T3","r":2,"c":5}` (becher, ecraser) ;
    - tuile : `{"tile":"T3"}` (favoriser_auxiliaire) ; rien (grelinette) ;
    - **plante : par position** `{"tile":"T3","x_cm":…,"y_cm":…}` + match
@@ -122,7 +132,7 @@ dans les registres internes de l'esclave.
    - `params` : `{"cible":"apex"|"branche"}` (tailler), `{"urgence":bool}`
      (ecraser — la vue envoie `urgence=true` si phase Saison, `false` en
      Planification : la machine à états t3 alimente la couture déjà codée).
-8. **`tests/test_sim_server.py` étendu** (golden joueur du protocole) :
+9. **`tests/test_sim_server.py` étendu** (golden joueur du protocole) :
    vigueur présente et régénérée, refill au passage de saison, manger
    (gain, plante par position), deraciner (plante disparaît du snapshot
    suivant), cible introuvable → `applied:false` + serveur survivant,
@@ -131,18 +141,18 @@ dans les registres internes de l'esclave.
 
 ### Côté C# (`WorldView.cs` — UI minimale de validation)
 
-9. **Sélection du verbe au clavier** : touches `1..8` (l'ordre de la table
-   `COUTS` ; affiché au HUD). Aucun menu — les vrais outils/boutons = sprint
-   UI.
-10. **Clic gauche = exécuter** : `ScreenToWorld(souris)` → désignation selon
+10. **Sélection du verbe au clavier** : touches `1..8` (l'ordre de la table
+    `COUTS` ; affichées dans la légende des commandes du volet A·4, avec le
+    nom du geste). Aucun menu — les vrais outils/boutons = sprint UI.
+11. **Clic gauche = exécuter** : `ScreenToWorld(souris)` → désignation selon
     le verbe (plante la plus proche dans un rayon de tolérance ~30 cm monde,
     ou plot/tuile contenant le point) → commande `action` (en Task, même
     pattern qu'un step : UNE requête en vol, pipe maître/esclave) →
     `ApplySnapshot` de la réponse (un déracinement s'efface en fondu t3).
-11. **HUD enrichi** (toujours provisoire) : 2ᵉ ligne « Vigueur 85/100 —
+12. **HUD enrichi** (toujours provisoire) : 2ᵉ ligne « Vigueur 85/100 —
     geste : manger [3] ». Refusé (`applied:false`) → message console +
     flash du label (pas de popup).
-12. **Actions et phases** : autorisées dans les DEUX phases (préparation en
+13. **Actions et phases** : autorisées dans les DEUX phases (préparation en
     Planification, réaction en Saison — philo météo §deux temps), seule
     l'`urgence` change. En Saison, l'action peut attendre qu'un step en vol
     se termine (file d'UNE intention max, sinon ignorer le clic — pas de
@@ -151,11 +161,13 @@ dans les registres internes de l'esclave.
 ## Critères de succès (vérifiables, F5 Nico)
 
 Volet A :
-- [ ] Flèches : la vue se déplace, bornée au monde ; zoom : paliers nets
-      molette/+/- ; le monde reste lisible à ×4.
+- [ ] Flèches : la vue se déplace, bornée au monde ; **molette** : paliers
+      de zoom nets ; le monde reste lisible à ×4.
 - [ ] PageUp/PageDown : le monde pivote par quarts de tour (la maison montre
       d'autres façades, les plantes penchent dans le bon sens), l'horloge et
       la saison en cours n'en souffrent pas.
+- [ ] La **légende des commandes** est lisible à l'écran (Espace / flèches /
+      molette / PageUp-Down) sans consulter aucun doc.
 - [ ] `python3 -m tests.test_golden` inchangé (rien de Python touché).
 
 Volet B :
