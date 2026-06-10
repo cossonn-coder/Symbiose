@@ -80,6 +80,9 @@ carnet. Indices **visuels** d'abord (philo #5 : pas de chiffres en HUD primaire)
    ci-dessous.**
 3. **Saison animée** : bouton « avancer », `step_week` ×N, **interpolation**
    visuelle entre snapshots ; cycle de saison + auto-save déclenché.
+   → **Kickoff prêt (2026-06-10) : `03_saison_animee.md`** (machine à états
+   Planification↔Saison, step en Task de fond pollée dans `_Process`, fondu
+   naissances/morts, hook `OnSeasonEnd` — auto-save réel = sprint save global).
 4. **Actions joueur** : clic → commande Python (planter, arroser, tailler,
    manger…) ; Python valide + applique (coût Vigueur), renvoie le snapshot.
 5. **Organes + overlays + vie macro** : porter `_draw_organs` en C#, heatmaps
