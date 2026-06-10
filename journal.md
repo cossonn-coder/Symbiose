@@ -45,6 +45,7 @@ structurante, ou par incident notable. À jour à la fin de chaque session.
 - [2026-06-07 — Sprint Maison & ombre déterministe : conception + tronçons 1-4 (Python) — CLOS](#2026-06-07-sprint-maison-ombre-d-terministe-conception-tron-ons-1-4-python-clos)
 - [2026-06-07 — Sprint Croissance·5 + ·6 : organes procéduraux + sérialisation — sprint CLOS (Python)](#2026-06-07-sprint-croissance-5-6-organes-proc-duraux-s-rialisation-sprint-clos-python)
 - [2026-06-07 — Kickoff Sprint Intégration Godot ↔ Python : Option B actée](#2026-06-07-kickoff-sprint-int-gration-godot-python-option-b-act-e)
+- [2026-06-10 — Sprint Intégration·1 : pont vivant minimal `sim_server.py` ↔ `SimBridge.cs`](#2026-06-10-sprint-int-gration-1-pont-vivant-minimal-sim_serverpy-simbridgecs)
 
 ---
 
@@ -1395,6 +1396,42 @@ seul le rendu se porte) ; D2/D3/D4/D8 seront levées par les tranches 2. Kickoff
 autosuffisant : `sprints/sprint_integration_godot/00_etat.md` (commit `ae2d958`).
 
 **Statut.** Kickoff prêt. **PROCHAIN sprint actif.**
+
+---
+
+## 2026-06-10 — Sprint Intégration·1 : pont vivant minimal `sim_server.py` ↔ `SimBridge.cs`
+
+Première tranche du sprint Intégration (Option B) : **le tube est prouvé côté
+Python**. Le moteur tourne en sous-process et dialogue en JSON ligne-délimité,
+maître/esclave strict (Godot envoie, Python répond — jamais de message spontané).
+
+**Livré.** `tools/sim_server.py` (adaptateur stdlib pure : importe le moteur
+comme `main.py`, zéro modification de logique → **golden intact par
+construction**, vérifié `16a1b937…`). Protocole v0 : `init(seed,config)` →
+`engine_version` + monde statique (tuiles + maison) ; `step_week`/`snapshot` →
+snapshot (horloge + plantes vivantes : `tile`, `species`, `x_cm`/`y_cm` locaux,
+`stage`, `height_cm`, segments via `structure_to_dict()` — le format
+Croissance·6, pas un 2ᵉ schéma) ; `quit`/EOF → arrêt propre ; commande
+malformée → `ok:false` et le serveur survit. `tests/test_sim_server.py` :
+**20/20** dont **déterminisme** (2 runs même seed → réponses byte-identiques).
+Côté C# : `core/SimBridge.cs` (`System.Diagnostics.Process`, pipes redirigés
+sauf stderr → tracebacks visibles dans la console Godot ; API synchrone +
+`SmokeTest()`) ; toggle `RunSimBridgeTest` dans `TileGrid._Ready`.
+
+**Décision : snapshot complet VALIDÉ, pas de diffs** (question ouverte du
+kickoff tranchée par la mesure) : ~51 Ko/snapshot à l'an 5 sur 2 tuiles
+(le bois domine, ~250 o/segment, borné `MAX_SEGMENTS`) ; extrapolé 8 tuiles
+≈ 200 Ko pour 1 snapshot/60 s réel — négligeable.
+
+**Décisions secondaires.** `ENGINE_VERSION="0.1.0"` locale au serveur (à
+centraliser au sprint save global) ; `init` réutilise la fabrique du golden
+(`build_world`, monde smoke 2 tuiles — complet en tranche 2) ; `week` snapshot
+= compteur moteur brut ; ceinture `redirect_stdout(stderr)` autour du tick
+(stdout réservé au protocole).
+
+**Statut.** Tranche 1 ✅ côté code ; **reste la confirmation Godot par Nico**
+(F5 → résumé console après 4 semaines). Prochaine : tranche 2 « monde statique
+rendu » (D2/D3/D8) — kickoff `02_*.md` à écrire.
 
 ---
 

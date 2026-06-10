@@ -70,7 +70,8 @@ carnet. Indices **visuels** d'abord (philo #5 : pas de chiffres en HUD primaire)
    un `core/SimBridge.cs` qui lance le sous-process, parse le snapshot. **But :
    prouver le tube** (un snapshot s'affiche, une semaine avance). Réutilise le
    schéma `structure.json`. Golden Python **intact** (on lit le moteur, on n'y
-   touche pas). → **Kickoff prêt (2026-06-10) : `01_pont_minimal.md`**
+   touche pas). → **✅ FAIT côté Python + C# écrit (2026-06-10), voir
+   « Avancement » ci-dessous. Compilation Godot à confirmer par Nico.**
 2. **Monde statique rendu** : Godot dessine le **monde complet** du snapshot
    (tuiles hétérogènes + maison + plantes procédurales + ombre) — **corrige
    D2/D3/D8** au passage (tuiles **78×57**, noms de sprites, scène principale
@@ -104,6 +105,36 @@ carnet. Indices **visuels** d'abord (philo #5 : pas de chiffres en HUD primaire)
   relancé (rejoue depuis le save) — défaut **persistant**, à confirmer.
 - **Où vit le save** : ici (Python) ou attendre le « sprint save global » — défaut
   **Python ici**, convergent.
+
+## Avancement
+
+### Tranche 1 — pont vivant minimal : ✅ (2026-06-10, côté code)
+- **Livré** : `data/code/tools/sim_server.py` (serveur stdin/stdout, protocole
+  v0 : `init`/`step_week`/`snapshot`/`quit`, survit aux commandes malformées,
+  meurt sur EOF) ; `data/code/tests/test_sim_server.py` (**20/20** : forme,
+  avancement, robustesse, déterminisme 2 runs byte-identiques, arrêt propre) ;
+  `core/SimBridge.cs` (Process + pipes, API synchrone `Init/StepWeek/
+  GetSnapshot/Quit` + `SmokeTest()` statique) ; toggle `RunSimBridgeTest` dans
+  `world/TileGrid.cs`. **Golden intact** (`16a1b937…`).
+- **Décisions prises** :
+  - `ENGINE_VERSION = "0.1.0"` **locale à `sim_server.py`** — le sprint save
+    global décidera où la centraliser (moteur non touché).
+  - Monde du `init` : **réutilise `tests.test_golden.build_world`** (2 tuiles
+    terre/argile + maison) — zéro duplication ; `config="smoke"` seul accepté
+    en v0, le monde complet vient en tranche 2.
+  - `week` du snapshot = **compteur moteur brut** (prochaine semaine à simuler,
+    1 = rien simulé) ; `year`/`season` dérivés. Plantes : position **locale
+    tuile** (`x_cm`,`y_cm`) + `tile` pour replacer en monde via `origin_*_cm`.
+  - Segments via `structure_to_dict()` **bruts** (format Croissance·6, pas de
+    2ᵉ format, pas d'arrondi — pas d'optimisation avant mesure).
+  - C# : stderr **non redirigé** (tracebacks Python → console Godot) ;
+    `Dispose()` kill le process (jamais de Python zombie).
+- **Mesure taille snapshot** (2 tuiles, JSON compact) : ~7 Ko sem 5 → ~51 Ko
+  an 5 (198 segments, le bois domine ~250 o/segment, borné par `MAX_SEGMENTS`).
+  Extrapolé 8 tuiles ≈ 200 Ko/snapshot pour 1 snapshot/60 s réel → **snapshot
+  complet VALIDÉ, pas de diffs** (question ouverte tranchée).
+- **Reste** : Nico lance F5 dans Godot et confirme la compilation + le résumé
+  console (critère 4 du kickoff).
 
 ## Lien dette
 Lève progressivement **D24** (le « portage C# » devient « pont », plus un portage

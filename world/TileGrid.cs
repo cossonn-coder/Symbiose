@@ -25,6 +25,11 @@ public partial class TileGrid : Node2D
 	// Démo de structure procédurale (tronçon 4) : affiche les spécimens exportés
 	// par Python par-dessus la grille. Désactivable dans l'éditeur.
 	[Export] public bool ShowPlantDemo = true;
+
+	// Smoke test du pont Python (sprint Intégration, tranche 1) : lance le moteur
+	// en sous-process, avance 4 semaines, résume en console. Pas de rendu —
+	// preuve du tube uniquement (cf. core/SimBridge.cs). Désactivable.
+	[Export] public bool RunSimBridgeTest = true;
 	// Palier de zoom propagé aux PlantRenderer (stub : caméra/zoom pas câblée).
 	[Export] public int PlantZoomPalier = 16;
 
@@ -43,6 +48,8 @@ public partial class TileGrid : Node2D
 		BuildGrid();
 		if (ShowPlantDemo)
 			SpawnPlantDemo();
+		if (RunSimBridgeTest)
+			SimBridge.SmokeTest();
 	}
 
 	// ---------------------------------------------------------------------------
