@@ -70,7 +70,7 @@ carnet. Indices **visuels** d'abord (philo #5 : pas de chiffres en HUD primaire)
    un `core/SimBridge.cs` qui lance le sous-process, parse le snapshot. **But :
    prouver le tube** (un snapshot s'affiche, une semaine avance). Réutilise le
    schéma `structure.json`. Golden Python **intact** (on lit le moteur, on n'y
-   touche pas).
+   touche pas). → **Kickoff prêt (2026-06-10) : `01_pont_minimal.md`**
 2. **Monde statique rendu** : Godot dessine le **monde complet** du snapshot
    (tuiles hétérogènes + maison + plantes procédurales + ombre) — **corrige
    D2/D3/D8** au passage (tuiles **78×57**, noms de sprites, scène principale

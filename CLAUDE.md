@@ -20,13 +20,20 @@ structurel, 2026-06-03), est la **source de vérité écologique** du jeu :
   `base.py` (`GrowthStage`/`PlantInstance`/`ConflictNotification`/`PlantBase`
   + 5 familles + empreintes + registre d'effets), `species.py`,
   `perennials.py`, `catalogue.py`
-- `world/` — `tile.py` (`Tile`, `StakeSlot`, `RONDELLE_TYPES`)
+- `world/` — `tile.py` (`Tile`, `StakeSlot`, `RONDELLE_TYPES`), `building.py`
+  (`House` paramétrable, ombre + albédo espalier)
 - `fields/` — `noise.py` (fondation déterministe), `grids.py`, `light.py`,
-  `seedbank.py`, `ecofields.py`
+  `seedbank.py`, `ecofields.py`, `population.py` (vie macro, 4 guildes)
 - `sim/` — `effects.py`, `seeds.py`, `reproduction.py`, `succession.py`,
-  `engine.py`
-- `main.py` (scénario 9 tuiles) ; `tests/` (`test_golden.py` non-régression
-  déterministe, `test_genetique.py`, `test_auxiliaires.py`)
+  `engine.py`, `weather.py` (météo pure `weather_at`), `growth.py`
+  (morphogénèse segments + auxine + phototropisme), `vigueur.py` /
+  `vigueur_plante.py` / `vigueur_macro.py`, `actions.py` (gestes joueur +
+  `cout_action`), `maitrise.py` / `maitrise_detection.py`
+- `main.py` (démo 8 tuiles + maison, banc d'essai — n'est plus le golden) ;
+  `tools/` (`render_structure.py` maquettes SVG, `export_structure.py` pont
+  JSON → Godot) ; `tests/` (`test_golden.py` = smoke test déterministe
+  2 tuiles × 4 ans + 11 suites ciblées : génétique, croissance, maîtrise,
+  vigueur, population, ombre maison, phototropisme, sénescence, signes…)
 
 Règle de couches : `plants ← fields ← sim ← engine ← main` (les couches basses
 n'importent jamais les hautes). Imports absolus ; lancement depuis `data/code/`
@@ -38,7 +45,9 @@ n'importent jamais les hautes). Imports absolus ; lancement depuis `data/code/`
   l'alignement vers Python sauf décision explicite contraire de Nico.
 - `main.py` tourne — il a simulé 500+ ans sans crash. C'est la référence
   comportementale. **Tout changement du moteur doit préserver le golden output**
-  (`tests/test_golden.py` — déterminisme, règle de design #3).
+  (`tests/test_golden.py` — déterminisme, règle de design #3). Depuis le Sprint
+  maison (2026-06-07) le golden est un **smoke test** (2 tuiles × 4 ans) ; tout
+  re-figeage doit être **maîtrisé et annoncé** (dérive localisée, expliquée).
 
 ## Stack technique
 
@@ -69,7 +78,8 @@ n'importent jamais les hautes). Imports absolus ; lancement depuis `data/code/`
    est diffus : action → conséquence → consultation → hypothèse.
 7. Hétérogénéité persistante — deux joueurs n'ont jamais le même terrain.
 
-Pour le détail historique, voir `data/code/models.py` et `data/code/fields.py`.
+Pour le détail historique, voir `journal.md` + `journal_archive/` (les anciens
+`models.py`/`fields.py` ont été éclatés en paquets au refactor du 2026-06-03).
 
 ## Mécaniques centrales (Sprint conception + Sprint conception bis, 2026-05-29)
 
@@ -148,7 +158,7 @@ apparaître une tuile thématique (verger, mare, prairie aromatique…).
 Pas d'achat, pas de conquête : la connaissance ouvre l'espace.
 
 ### UX du volume cognitif
-432 plots × 15 min temps réel = trois mitigations actives simultanément :
+1600 plots (monde 20×20 m) × 15 min temps réel = trois mitigations actives simultanément :
 **pause libre + notifications hiérarchisées + zoom contextuel**.
 
 ### Gestion des aléas météo
@@ -209,34 +219,41 @@ prévisible** — récompense rare qui cristallise la philo non-action.
   silencieux des gestes de base (cliquer, planter, observer, méditer,
   manger). Pas de texte, pas de tutoriel imposé.
 
-## Architecture courante (mise à jour : 2026-05-29)
+## Architecture courante (mise à jour : 2026-06-10)
 
-### Fonctionnels (~1700 lignes C#)
+> **Architecture Godot ACTÉE le 2026-06-07 = Option B** : Python reste le
+> moteur (sous-process, pont JSON stdin/stdout), **Godot est une VUE**. Plus
+> de portage C# intégral de la simulation — seul le **rendu** se porte.
+> Kickoff : `sprints/sprint_integration_godot/00_etat.md`.
+
+### Fonctionnels (C#)
 - `core/PlantData.cs` — GrowthStage, PlantData, PlantInstance
 - `core/GridField.cs` — GridField, LightField, EcoFields complet
 - `core/TileData.cs` — Tile, StakeSlot, ConflictNotification
 - `core/PlantCatalogue.cs` — 14 espèces dont indicatrices avec UnlockCondition
 - `core/SpriteLoader.cs` — autoload, chargement récursif
+- `core/PlantStructure.cs` — miroir `Segment` + chargeur `structure.json`
+  (pont JSON, Sprint croissance·4)
+- `visuals/PlantRenderer.cs` — rendu pixel des branches (projection `Iso()`,
+  LOD silhouette ; compilation à confirmer dans Godot)
 
-### Stubs vides (à écrire)
+### Stubs vides (à écrire — deviendront la VUE, pas un moteur)
 - `core/GameManager.cs`, `EcologySystem.cs`, `TurnSystem.cs`, `SeedBankSystem.cs`
-- `plants/*`, `ui/*`, `visuals/*`, `world/SoilField.cs`
+- `plants/*`, `ui/*`, `world/SoilField.cs`
 - `Main.cs` (la classe s'appelle encore `Node2d`, hors namespace)
-
-### Non-portés
-- `sim/effects.py` → pas encore en C#
-- `sim/engine.py` + `sim/succession.py` → pas encore en C# (boucle 52 semaines
-  + succession)
 
 ### Systèmes à concevoir / dette technique
 
-La **dette technique consolidée** (D1–D28 : Vigueur, paliers, magazine, carnet,
-forecast météo, pages secrètes, action « manger », portage C#, etc.) vit
-désormais dans **[`DETTE.md`](DETTE.md)** — source unique, plus de duplication.
+La **dette technique consolidée** (D1–D33 : magazine, carnet, extension
+terrain, pages secrètes, organes comestibles, structure du sol, couleur
+physiologique, pont Godot, etc.) vit désormais dans **[`DETTE.md`](DETTE.md)**
+— source unique, plus de duplication.
 
-### Échelle spatiale actée (Sprint conception éclairement, 2026-05-29)
-- **1 plot = 50×50 cm** ; monde 3×3 tuiles × (6×8 plots) = **432 plots =
-  12×9 m ≈ 108 m²**
+### Échelle spatiale actée (éclairement 2026-05-29, agrandie au Sprint maison 2026-06-07)
+- **1 plot = 50×50 cm** ; monde **20×20 m = 1600 plots**, **maison centrale
+  8×8×6 m** (paramétrable) + 8 tuiles hétérogènes, **chemins en pierre de
+  50 cm** entre tuiles (non simulés ; pas d'ombrage inter-tuiles, seule la
+  maison ombrage globalement via `origin_*_cm`)
 - Le **plot** ne sert plus qu'à la **chimie du sol** (humidité, fertilité,
   microbiome, soil_memory…). La **position des plantes est continue**
   (pixel-sol `x_cm, y_cm`), plot-foyer = `floor(pos / 50 cm)`.
@@ -288,8 +305,9 @@ Le **backlog des sprints** (terminés + à venir, avec les kickoffs
 autosuffisants de `sprints/`) vit désormais dans **[`BACKLOG.md`](BACKLOG.md)**
 — source unique, plus de duplication.
 
-**Prochain sprint** : conception météo/climat + signes diégétiques (conception
-seule, cf. D16 dans `DETTE.md` + section « Gestion des aléas météo »).
+**Prochain sprint** : **Intégration Godot ↔ Python, tranche 1 — pont vivant
+minimal** (`sim_server.py` ↔ `SimBridge.cs`). Kickoffs :
+`sprints/sprint_integration_godot/00_etat.md` puis `01_pont_minimal.md`.
 
 À l'ouverture d'une session, Nico donne « lis `sprints/sprint_X.md` » (sprint
 simple) ou « lis `sprints/sprint_X/00_etat.md` puis `0N_*.md` » (sprint découpé)

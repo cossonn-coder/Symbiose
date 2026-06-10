@@ -42,6 +42,9 @@ structurante, ou par incident notable. À jour à la fin de chaque session.
 - [2026-06-04 — Sprint impl. D31.1 : champs de population + perception (Python)](#2026-06-04-sprint-impl-d311-champs-de-population-perception-python)
 - [2026-06-04 — Sprint impl. maîtrise D12·i1 : cœur + progression intra-objet (Python)](#2026-06-04-sprint-impl-ma-trise-d12-i1-c-ur-progression-intra-objet-python)
 - [2026-06-04 — Sprint conception Hormones de croissance : D29 auxine / dominance apicale (conception seule)](#2026-06-04-sprint-conception-hormones-de-croissance-d29-auxine-dominance-apicale-conception-seule)
+- [2026-06-07 — Sprint Maison & ombre déterministe : conception + tronçons 1-4 (Python) — CLOS](#2026-06-07-sprint-maison-ombre-d-terministe-conception-tron-ons-1-4-python-clos)
+- [2026-06-07 — Sprint Croissance·5 + ·6 : organes procéduraux + sérialisation — sprint CLOS (Python)](#2026-06-07-sprint-croissance-5-6-organes-proc-duraux-s-rialisation-sprint-clos-python)
+- [2026-06-07 — Kickoff Sprint Intégration Godot ↔ Python : Option B actée](#2026-06-07-kickoff-sprint-int-gration-godot-python-option-b-act-e)
 
 ---
 
@@ -1282,6 +1285,116 @@ esthétique anticipé (rastérisation manuelle en repli).
 
 **Statut.** Tronçon 4 ✅. Prochain = **tronçon 5 — organes procéduraux** (risque n°1,
 itératif/esthétique) : **à cadrer avec Nico avant** de lancer.
+
+---
+
+## 2026-06-07 — Sprint Maison & ombre déterministe : conception + tronçons 1-4 (Python) — CLOS
+
+La **maison normande** entre dans la simulation : elle projette une **ombre
+déterministe** dans le `LightField` et les plantes **se penchent vers la lumière**
+(phototropisme). Conception figée le matin (`data/code/CONCEPTION_MAISON_OMBRE.md`,
+commit `57ff88f`, Q1-Q6 toutes tranchées), 4 tronçons implémentés dans la journée.
+
+**Décision : monde agrandi 20×20 m = 1600 plots, maison centrale 8×8×6 m.**
+Calcaire de Montmartin, **albédo espalier borné** (réflexion des murs ensoleillés,
+≈2,5 m, falloff linéaire), maison **paramétrable** (config terrain). **Chemins en
+pierre de 50 cm** entre tuiles, NON simulés — c'est l'option B : les champs lumière
+**par tuile sont conservés** (pas de `LightField` global, coût ×30 évité) ; seule
+la maison ombrage globalement, via un offset monde par tuile (`origin_*_cm`).
+
+**Décision : le golden devient un smoke test** (2 tuiles 6×8 × 4 ans, ~5,6 s).
+`main.py` cesse d'être le golden → **démo/banc d'essai** ; la sénescence ~60 ans
+sort en `tests/test_senescence.py` séparé. Maison + phototropisme couverts par
+tests ciblés (`test_ombre_maison` 4, `test_phototropisme` 11), pas par un hash
+global gonflé.
+
+**Tronçons.** **t1** monde + maison INERTE (`world/building.py`, golden re-capturé
+`8ef7729f…`) → **t2** ombre analytique (rectangle balayé `_point_in_swept_rect`,
+opaque → plancher `LIGHT_FLOOR`, albédo inclus, sans `house` chemin bit-identique ;
+coût ≈ +2,6 %/tick ; golden enrichi d'une maison `0aa2892c…`) → **t3** phototropisme
+branché dans `growth.py` (gradient de lumière-sol **local** par différences finies,
+borné ≤12°/émission + plancher de verticalité `MIN_APEX_Z`=0.30, zéro RNG ;
+re-figeage maîtrisé → golden **`16a1b937…`**) → **t4** maquette saisonnière
+3 secteurs (S/NE/NO) × 4 saisons, 2 fichiers subtil (0.10) vs marqué (0.30).
+
+**Constats de la maquette** (à retenir) : (a) gradient net **S≈1.00 > NE≈0.74 >
+NO≈0.41** ; (b) la pente vient du gradient **local = ombre maison + AUTO-OMBRAGE
+de la canopée** → même en plein soleil une plante vigoureuse se penche un peu
+(réaliste, pas un bug) ; (c) modèle solaire **symétrique E-O** → NE/NO diffèrent
+surtout par la phase d'ombre.
+
+**Décision (provisoire) : phototropisme marqué = 0.30** (défaut actuel). Nico ne
+peut pas trancher définitivement **sans les organes rendus** → à reconfirmer
+avec feuilles/fleurs/fruits (Godot). ⚠ `phototropism_gain` (réservé) renommé
+`phototropism_strength` — `CONCEPTION_CROISSANCE.md` §E dit encore l'ancien nom.
+
+**Statut.** Sprint **CLOS côté Python** (t1-t4). Reste hors sprint : rendu Godot
+maison + ombre (t5), portage C# (D24).
+
+---
+
+## 2026-06-07 — Sprint Croissance·5 + ·6 : organes procéduraux + sérialisation — sprint CLOS (Python)
+
+Les deux derniers tronçons du sprint Croissance procédurale, le même jour que la
+clôture du sprint maison.
+
+**Tronçon 5 — organes procéduraux (le risque n°1). Décision : prototype Python SVG
+d'abord, port Godot différé** (choix Nico ; l'affinage esthétique se fera mieux
+dans le moteur de rendu → D24/D33). Générateur dans `tools/render_structure.py`
+(`_draw_organs`) : **feuilles** le long des rameaux feuillés (`_is_leafy` : apex ou
+bois fin ≤1,6 cm, tronc nu), **couleur saisonnière** (printemps clair / été plein /
+automne jaune-rouge tiré au hash / hiver), **fleurs/fruits** selon `organ_site`
+(terminal/latéral) × `REPRO_BY_SEASON`, plafonnés (`MAX_FRUITS`=10), palette par
+espèce. **Pur rendu read-only, déterministe** (zéro RNG, tout `_hash_noise`),
+structuré « specs 3D → projection iso » pour le portage Godot futur. Couvre les
+2 espèces procédurales (Tomato, AppleTree). **Golden + suite INTACTS** (`16a1b937…`).
+→ Surfacé **D33** : la couleur ne varie que par saison ; elle devrait porter le
+**diagnostic physiologique** (hydratation, chlorose, étiolement, sénescence,
+ravageurs, maladies) — canal d'apprentissage central (philo #5), à concevoir.
+
+**Tronçon 6 — sérialisation de la structure. Décision : contrat borné** (le save
+GLOBAL n'existe pas encore → on livre le **round-trip** prêt pour lui ; choix
+Nico). `Segment.to_dict()/from_dict()` + `PlantInstance.structure_to_dict()/
+restore_structure()` (invalide le cache d'empreinte). **Allègement §J par
+construction** : les organes ne sont **jamais stockés** (régénérés par le rendu) —
+seul le bois est sérialisé. Pures additions → **golden INTACT**. `test_croissance`
+**67/67** (dont : structure restaurée pousse **à l'identique** sur 40 ticks).
+
+**Statut.** Sprint Croissance procédurale **CLOS côté Python** (tronçons 1-6).
+Reste hors sprint : save global transversal, rendu pixel Godot des organes,
+portage C# (D24), profil du reste du catalogue, déclencheurs naturels du seam,
+marqueur `🌿`.
+
+---
+
+## 2026-06-07 — Kickoff Sprint Intégration Godot ↔ Python : Option B actée
+
+**Décision structurante : Option B — Python reste le moteur, Godot devient la
+vue.** Pas de portage C# intégral du moteur (l'Option A). Validée par Nico
+(« tes recommandations sont bonnes, on suivra ce chemin »). Pourquoi :
+- Le moteur fait **~7 500 lignes 100 % stdlib** (vérifié) → il se **gèle en
+  exécutable autonome** (PyInstaller/Nuitka), zéro Python à installer chez les
+  joueurs — le seul vrai reproche fait à B tombe.
+- **Source de vérité unique** (règle projet) : A dédoublerait le moteur →
+  divergence permanente à re-porter à chaque évolution.
+- **Budget temps réel énorme** : 1 sem = 60 s réel, tick ≈ 177 ms → la
+  sérialisation JSON + IPC est négligeable (marge ×339).
+- Déterminisme + debug : flux JSON inspectable, même seed → même run.
+
+**Protocole** (direction actée, détails en tranche 1) : sous-process +
+stdin/stdout, **JSON ligne-délimité**, Godot pilote la boucle ; **snapshot complet**
+du monde (diffs = optimisation ultérieure) ; schéma versionné (`engine_version`) ;
+**Python possède les règles**, Godot est « bête » (rend + transmet l'intention).
+
+**Découpage en 6 tranches verticales** : 1 pont vivant minimal (`sim_server.py` ↔
+`SimBridge.cs`) → 2 monde statique rendu (corrige D2/D3/D8) → 3 saison animée →
+4 actions joueur → 5 organes/overlays/vie macro → 6 packaging PyInstaller.
+
+**Conséquence dette** : **D24 change de nature** (« portage intégral » → « pont » ;
+seul le rendu se porte) ; D2/D3/D4/D8 seront levées par les tranches 2. Kickoff
+autosuffisant : `sprints/sprint_integration_godot/00_etat.md` (commit `ae2d958`).
+
+**Statut.** Kickoff prêt. **PROCHAIN sprint actif.**
 
 ---
 
