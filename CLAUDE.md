@@ -315,10 +315,12 @@ CLOSES**, toutes confirmées F5 : 1 (pont `sim_server.py`/`SimBridge`),
 2 (monde statique `WorldView` scène principale, placeholders, D34 assets),
 3 (saison animée Planification↔Saison↔Pause) le 2026-06-10 ; 4 (caméra D35 +
 actions joueur protocole v1 + ombre solaire animée + perfs F4) et 5 (taille
-au segment près à la souris, protocole 0.2.1) le 2026-06-11. **Prochaine :
-tranche 6 (organes + overlays debug + vie macro), kickoff `06_*.md` à
-écrire.** Puis packaging (PyInstaller). Kickoffs :
-`sprints/sprint_integration_godot/00_etat.md`. Rappel :
+au segment près à la souris, protocole 0.2.1) le 2026-06-11. **Tranche 6 EN
+COURS** (kickoff `06_organes_overlays_viemacro.md`) : **volet A (organes
+procéduraux, protocole 0.2.2) CODÉ + COMMITTÉ (7b100f6, 2026-06-11), en
+attente F5** ; restent volets B (vie macro visible) et C (heatmaps debug F6).
+Puis packaging (PyInstaller). Reprise :
+`sprints/sprint_integration_godot/00_etat.md` §REPRISE. Rappel :
 `DebugSecondsPerWeek=3` actif dans `WorldView.cs`, à remettre à 0 hors debug.
 
 À l'ouverture d'une session, Nico donne « lis `sprints/sprint_X.md` » (sprint

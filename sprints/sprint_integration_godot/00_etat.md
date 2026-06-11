@@ -455,6 +455,18 @@ carnet. Indices **visuels** d'abord (philo #5 : pas de chiffres en HUD primaire)
   reproducteur = D19/D33). Si le F5 juge ça gênant : filtre par stade = 1
   ligne côté serveur, à trancher.
 
+### REPRISE (session suivante, démarrage à froid)
+1. **F5 Nico du volet A** d'abord (critères : pommier fleurs printemps →
+   fruits verts été → fruits rouges + feuillage automnal → nu l'hiver ;
+   tomate cycle propre ; FPS stable au F4). `DebugSecondsPerWeek=3` actif =
+   pratique pour voir défiler les saisons.
+2. Retours F5 → triage (workflow acté : correctif de volet, ou dette/backlog).
+3. Puis **volet B (vie macro visible)** et **volet C (heatmaps F6)** — tout
+   est spécifié dans `06_organes_overlays_viemacro.md` (§4-7 et §8-10).
+   `ENGINE_VERSION` : 0.2.2 → 0.2.3 (B) → 0.3.0 (C, fin de tranche).
+4. Fin de tranche : remettre `DebugSecondsPerWeek=0`, noter les mesures de
+   taille snapshot ici, puis t7 = packaging PyInstaller.
+
 ## Lien dette
 Lève progressivement **D24** (le « portage C# » devient « pont », plus un portage
 intégral) + **D2/D3/D4/D8** (rendu/scène). À refléter dans `DETTE.md`/`BACKLOG.md`
