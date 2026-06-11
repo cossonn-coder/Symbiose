@@ -33,6 +33,11 @@ serveur fait foi — Godot transmet l'INTENTION, Python possède les RÈGLES) :
   plante : {"tile": "T3", "x_cm": …, "y_cm": …}   # position LOCALE tuile, ±0.1 cm
            (le snapshot n'expose pas d'id moteur et les plantes ne bougent
             jamais : la position EST l'identité — déjà la clé du diff t3)
+           + pour `tailler` (tranche 5) : champ OPTIONNEL "segment": i =
+           l'index dans `segments` du snapshot (= ordre structure_to_dict(),
+           stable et déterministe) — la branche cliquée. Validé ICI (bornes,
+           collet protégé) AVANT d'appeler la façade : un segment invalide est
+           un refus métier qui ne coûte RIEN. Absent → repli params.cible.
   plot   : {"tile": "T3", "r": 2, "c": 5}          # becher, ecraser
   tuile  : {"tile": "T3"}                          # favoriser_auxiliaire
   rien   : {}                                      # grelinette
@@ -71,7 +76,8 @@ from sim import vigueur as V      # état Vigueur joueur (ensure/spend/gain, D11
 # save JSON : casse explicite si schéma incompatible). Locale au serveur pour
 # l'instant — le « sprint save global » décidera où la centraliser.
 # 0.2.0 (tranche 4) : commande `action` + bloc `player` dans le snapshot.
-ENGINE_VERSION = "0.2.0"
+# 0.2.1 (tranche 5) : `target.segment` optionnel sur `tailler` (taille au clic).
+ENGINE_VERSION = "0.2.1"
 
 # Tolérance du match plante-par-position (kickoff t4 §8) : les positions du
 # snapshot reviennent telles quelles dans la cible → l'epsilon n'absorbe que le
@@ -212,9 +218,25 @@ class SimServer:
             if cible not in ("apex", "branche"):
                 return bilan(False, 0.0, 0.0,
                              f"cible de taille inconnue : {cible!r}")
-            ok = A.tailler(gs, player, plant, eco, cible=cible)
+            # Segment explicite (tranche 5, la branche cliquée) : validé AVANT
+            # la façade — un refus de désignation ne draine pas la Vigueur.
+            # NB : bool est un sous-type d'int en Python → exclu explicitement.
+            seg = target.get("segment")
+            if seg is not None:
+                if not isinstance(seg, int) or isinstance(seg, bool):
+                    return bilan(False, 0.0, 0.0,
+                                 f"segment non entier : {seg!r}")
+                if not 0 <= seg < len(plant.segments):
+                    return bilan(False, 0.0, 0.0,
+                                 f"segment hors structure : {seg} "
+                                 f"(plante à {len(plant.segments)} segments)")
+                if plant.segments[seg].parent is None:
+                    return bilan(False, 0.0, 0.0,
+                                 "le collet est protégé — rien à couper ici")
+            ok = A.tailler(gs, player, plant, eco, cible=cible, segment_id=seg)
+            quoi = f"segment {seg}" if seg is not None else cible
             return bilan(ok, cost, 0.0,
-                         f"taillé ({cible}) : {plant.name}" if ok
+                         f"taillé ({quoi}) : {plant.name}" if ok
                          else "Vigueur insuffisante — rien taillé")
 
         if verb in ("ecraser", "becher"):

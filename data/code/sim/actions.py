@@ -304,11 +304,18 @@ def _segment_cible(plant, cible: str) -> int | None:
     return target if segs[target].parent is not None else None   # collet (parent None) → rien à couper
 
 
-def tailler(game_state: dict, player: str, plant, eco, *, cible: str = "apex") -> bool:
+def tailler(game_state: dict, player: str, plant, eco, *, cible: str = "apex",
+            segment_id: int | None = None) -> bool:
     """Tailler (écimage si `cible='apex'`, égourmandage si `'branche'`) — geste DIRECT
     sur le vivant (philo #1 : permis mais coûteux), à RÉPONSE ÉMERGENTE (philo #2 :
     on appelle le seam structurel `atteindre_segment`, et c'est le tick de croissance
     suivant qui PRODUIT le débourrement — aucun « +X latéraux » codé en dur).
+
+    `segment_id` (tranche 5 — taille au clic depuis Godot) : si fourni ET valide
+    (existe, pas le collet `parent is None`), il REMPLACE le sélecteur déterministe
+    `_segment_cible` — le joueur a désigné LA branche à la souris. Sinon (None ou
+    invalide), comportement t4 inchangé : `cible` choisit apex/branche. Coût et
+    gain identiques dans les deux voies — on ne tarife pas la précision.
 
     Binaire tout-ou-rien, sur le modèle de `deraciner` : le seam n'est appelé QUE si
     le coût (MODÉRÉ, allégé par la maîtrise via `cout_action`) est intégralement payé.
@@ -319,7 +326,13 @@ def tailler(game_state: dict, player: str, plant, eco, *, cible: str = "apex") -
     cost = cout_action(game_state, player, "tailler", _objets_action("tailler", plant))
     if spend(game_state, player, cost) < 1.0:
         return False                          # Vigueur insuffisante → rien n'est écrit (structure intacte)
-    seg_id = _segment_cible(plant, cible)
+    seg_id = None
+    if segment_id is not None:
+        segs = plant.segments
+        if 0 <= segment_id < len(segs) and segs[segment_id].parent is not None:
+            seg_id = segment_id               # choix explicite du joueur (clic)
+    if seg_id is None:
+        seg_id = _segment_cible(plant, cible)
     if seg_id is not None:
         atteindre_segment(plant, seg_id, intensite=1.0)   # ≥ COUPE_NETTE → écimage du sous-arbre ciblé
     gain(game_state, player, HARVEST_GAIN_FULL * maturite(plant) * GAIN_TAILLE_RATIO)

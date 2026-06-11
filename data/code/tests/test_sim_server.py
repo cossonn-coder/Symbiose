@@ -22,7 +22,12 @@ protocole v0 par les pipes. Couvre les contrats du kickoff 01_pont_minimal.md :
                     (applied:false) sur verbe inconnu / cible introuvable /
                     Vigueur insuffisante AVEC serveur survivant, déterminisme
                     2 runs avec les MÊMES actions. Le golden écolo, lui, ne
-                    passe JAMAIS par ce serveur → intact par construction.
+                    passe JAMAIS par ce serveur → intact par construction ;
+  8. taille au segment — (tranche 5) `tailler` avec `target.segment` explicite
+                    (la branche cliquée) : le snapshot JOINT perd exactement le
+                    sous-arbre ciblé ; segment hors bornes / collet / non
+                    entier → applied:false SANS coût et le serveur survit ;
+                    le repli params.cible (t4) reste intact.
 
 Mesure aussi la taille du snapshot (octets/semaine) — la donnée qui tranchera
 « complet vs diffs » (cf. 00_etat.md, pas d'optimisation avant mesure).
@@ -308,6 +313,74 @@ def main() -> int:
     a2.close(); b2.close()
     check("2 runs mêmes actions → réponses byte-identiques",
           a2.raw_lines == b2.raw_lines)
+
+    # --- 8. taille au segment (tranche 5) ------------------------------------
+    print("[taille au segment]")
+    s7 = ServerProc()
+    s7.send(cmd="init", seed=42)
+    # Avancer jusqu'à une plante à ≥ 3 segments (assez de bois pour qu'un
+    # sous-arbre ciblé se distingue du tout). Borné : le smoke en produit vite.
+    proie = None
+    for _ in range(30):
+        snap = s7.send(cmd="step_week")["snapshot"]
+        proie = next((p for p in snap["plants"] if len(p["segments"]) >= 3), None)
+        if proie:
+            break
+    check("une plante à ≥ 3 segments existe", proie is not None,
+          proie and f"{proie['species']}, {len(proie['segments'])} segments "
+                    f"(semaine {snap['week']})")
+    segs = proie["segments"]
+    pos = {"tile": proie["tile"], "x_cm": proie["x_cm"], "y_cm": proie["y_cm"]}
+
+    def meme_plante(snapshot):
+        return next((p for p in snapshot["plants"]
+                     if p["tile"] == pos["tile"] and p["x_cm"] == pos["x_cm"]
+                     and p["y_cm"] == pos["y_cm"]), None)
+
+    # Refus de désignation = ne coûte RIEN (validé serveur, façade jamais payée).
+    vig0 = s7.send(cmd="snapshot")["snapshot"]["player"]["vigueur"]
+    r = s7.send(cmd="action", verb="tailler", target={**pos, "segment": 999})
+    check("segment hors bornes → applied:false", r["result"]["applied"] is False)
+    r = s7.send(cmd="action", verb="tailler", target={**pos, "segment": 0})
+    check("collet (segment 0) → applied:false (protégé)",
+          r["result"]["applied"] is False, r["result"]["message"])
+    r = s7.send(cmd="action", verb="tailler", target={**pos, "segment": "apex"})
+    check("segment non entier → applied:false", r["result"]["applied"] is False)
+    check("aucun de ces refus n'a coûté de Vigueur",
+          r["result"]["vigueur"] == vig0, f"vigueur={r['result']['vigueur']}")
+
+    # Sous-arbre attendu du segment visé = 1er enfant du collet (calcul TEST,
+    # via les champs `parent` du snapshot — les parents précèdent toujours
+    # leurs enfants dans structure_to_dict, un passage avant suffit).
+    vise = next(i for i, sg in enumerate(segs) if sg["parent"] is not None)
+    dans_sous_arbre = [False] * len(segs)
+    dans_sous_arbre[vise] = True
+    for i, sg in enumerate(segs):
+        if sg["parent"] is not None and dans_sous_arbre[sg["parent"]]:
+            dans_sous_arbre[i] = True
+    n_coupe = sum(dans_sous_arbre)
+
+    r = s7.send(cmd="action", verb="tailler", target={**pos, "segment": vise})
+    check("tailler un segment explicite → applied:true",
+          r["result"]["applied"] is True, r["result"]["message"])
+    check("le message nomme le segment",
+          f"segment {vise}" in r["result"]["message"])
+    apres = meme_plante(r["snapshot"])
+    check("le snapshot JOINT perd exactement le sous-arbre ciblé",
+          apres is not None
+          and len(apres["segments"]) == len(segs) - n_coupe,
+          f"{len(segs)} − {n_coupe} → "
+          f"{apres and len(apres['segments'])} segments")
+
+    # Repli t4 intact : tailler SANS segment passe toujours par params.cible.
+    r = s7.send(cmd="action", verb="tailler", target=pos,
+                params={"cible": "apex"})
+    check("repli params.cible (sans segment) → applied:true (compat t4)",
+          r["result"]["applied"] is True, r["result"]["message"])
+    check("le serveur survit (snapshot répond encore)",
+          s7.send(cmd="snapshot").get("ok") is True)
+    s7.send(cmd="quit")
+    check("quit taille → exit 0", s7.close() == 0)
 
     # --- bilan ----------------------------------------------------------------
     n_fail = sum(1 for _, ok in _results if not ok)
