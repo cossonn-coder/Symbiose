@@ -364,6 +364,37 @@ carnet. Indices **visuels** d'abord (philo #5 : pas de chiffres en HUD primaire)
   Nico sur livrable → tri en sprint indépendant ou dette + clôture
   facilitée du sprint en cours (pas de dev immédiat) — appliqué ici même.
 
+### Tranche 5 — taille au segment près (souris) : CODÉE (2026-06-11), en attente F5
+- **Livré Python (commit 5b8d793)** : `sim/actions.py:tailler` accepte
+  `segment_id` keyword — valide (existe, pas le collet) → REMPLACE le
+  sélecteur `_segment_cible`, sinon comportement t4 inchangé (compat prouvée :
+  `test_vigueur` 110/110 et `test_croissance` 67/67 SANS modification) ; coût/
+  gain identiques (on ne tarife pas la précision). `sim_server.py` protocole
+  **0.2.1** : `target.segment` optionnel sur `tailler` (= index dans
+  `segments` du snapshot, ordre `structure_to_dict()` stable), validé AVANT
+  la façade — hors bornes / collet / non entier = refus métier à **coût
+  NUL** ; message « taillé (segment i) ». `test_sim_server.py` **58/58**
+  (le snapshot joint perd EXACTEMENT le sous-arbre ciblé — vérifié via les
+  champs `parent`, repli `params.cible` intact, serveur survivant).
+  **Golden écolo intact** (`16a1b937…`).
+- **Livré C#** : `PlantRenderer.cs` — propriété `HighlightSegment` (setter
+  early-out : écrite chaque frame, redraw seulement au CHANGEMENT ; remise à
+  −1 à chaque `SetStructure`, les index changent à chaque snapshot) ;
+  `FindSegmentNear(canvasPos, maxPx)` = distance point-segment via la MÊME
+  géométrie que le dessin (Iso, leçon D2) — **segment 0 (collet) exclu** :
+  clic au pied → repli t4, jamais un refus surprise ; surbrillance jaune
+  clair (la couleur du flash de geste réussi — un seul langage visuel)
+  dessinée par-dessus le bois. `WorldView.cs` — `UpdateTailleHighlight()`
+  chaque frame en mode tailler (même résolution que le clic : ce qui est
+  surligné = ce qui part) ; tolérance **8 px ÉCRAN** à tout zoom
+  (divisée par le palier) ; clic → `target.segment` si une branche est
+  trouvée, `params.cible` toujours joint en repli ; légende mise à jour.
+  Témoin de build → **« t5 taille au segment — 2026-06-11 »**.
+- **Critères F5** (kickoff `05_taille_segment.md`) : surbrillance suit la
+  souris en mode 7 ; clic → CETTE branche + sous-arbre disparaissent, flash
+  jaune ; clic au pied = comportement t4 ; segment disparu entre temps →
+  refus propre.
+
 ## Lien dette
 Lève progressivement **D24** (le « portage C# » devient « pont », plus un portage
 intégral) + **D2/D3/D4/D8** (rendu/scène). À refléter dans `DETTE.md`/`BACKLOG.md`

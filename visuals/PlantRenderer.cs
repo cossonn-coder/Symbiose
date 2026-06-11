@@ -43,6 +43,9 @@ namespace Symbiose
 		private static readonly Color ApexColor = new Color("5ec46a");
 		private static readonly Color WoodColor = new Color("7a5230");
 		private static readonly Color CrownColor = new Color("3f7a4e"); // silhouette LOD
+		// Surbrillance du segment sous la souris en mode tailler (tranche 5) :
+		// même jaune clair que le flash de geste réussi — un seul langage visuel.
+		private static readonly Color HighlightColor = new Color("ffe66b");
 
 		// La structure à dessiner (assignée par le spawner, cf. TileGrid). Null tant
 		// que rien n'est chargé → _Draw ne fait rien.
@@ -60,6 +63,23 @@ namespace Symbiose
 		// des plantes. ShowBehindParent la dessine SOUS le bois, même YSort.
 		private PlantShadow _shadow;
 
+		// Segment à surligner (index dans Segments = l'ordre du SNAPSHOT, le
+		// même que structure_to_dict() Python — c'est CET index qui part dans
+		// target.segment). −1 = aucun. 📖 Propriété avec setter early-out : on
+		// peut l'écrire chaque frame depuis WorldView, le QueueRedraw (coûteux
+		// sur un vieil arbre) ne part qu'au CHANGEMENT de segment survolé.
+		private int _highlightSegment = -1;
+		public int HighlightSegment
+		{
+			get => _highlightSegment;
+			set
+			{
+				if (value == _highlightSegment) return;
+				_highlightSegment = value;
+				QueueRedraw();
+			}
+		}
+
 		public override void _Ready()
 		{
 			_shadow = new PlantShadow { Name = "Shadow", ShowBehindParent = true };
@@ -70,6 +90,11 @@ namespace Symbiose
 		public void SetStructure(PlantStructure s)
 		{
 			_structure = s;
+			// Les index de segments changent à chaque snapshot (une coupe
+			// réindexe la structure côté moteur) : une surbrillance gardée
+			// pointerait la mauvaise branche — le survol la re-résout au
+			// prochain frame, on repart de « rien ».
+			_highlightSegment = -1;
 			_spreadCm = 8f;   // minimum visible, même pour une pousse droite
 			_heightCm = 10f;  // plancher : même une pousse projette un soupçon
 			if (s != null)
@@ -100,6 +125,47 @@ namespace Symbiose
 		// vers le même point monde (la maison) quelle que soit la vue.
 		private static Vector2 Iso(float dx, float dy, float dz) =>
 			WorldView.WorldToScreenOffset(dx, dy) - new Vector2(0f, dz * WorldView.PxPerCmZ);
+
+		// ---------------------------------------------------------------------------
+		// HIT-TEST DE SEGMENT (tranche 5 — taille au clic)
+		// ---------------------------------------------------------------------------
+
+		/// <summary>
+		/// Le segment le plus proche de `canvasPos` (souris en coordonnées
+		/// canvas, cf. GetGlobalMousePosition) à moins de `maxDistPx` px CANVAS,
+		/// ou −1. L'index renvoyé est celui du SNAPSHOT (ordre préservé par
+		/// StructureLoader.FromSnapshot) : il part tel quel dans target.segment.
+		/// 📖 La géométrie est EXACTEMENT celle de DrawSegments (même Iso, mêmes
+		/// extrémités — leçon D2 : pas de 2ᵉ projection « presque pareille ») :
+		/// on surligne précisément ce qu'on dessine. Distance point-segment via
+		/// Geometry2D.GetClosestPointToSegment (clamp aux extrémités compris).
+		/// ~50 segments max par plante (MAX_SEGMENTS) : linéaire, trivial.
+		/// Le segment 0 (collet, protégé moteur) est EXCLU : un clic au pied ne
+		/// doit pas désigner l'incoupable — il retombe sur le repli t4
+		/// (params.cible), comportement inchangé, critère 2 du kickoff.
+		/// </summary>
+		public int FindSegmentNear(Vector2 canvasPos, float maxDistPx)
+		{
+			if (_structure == null || _structure.Segments.Count < 2)
+				return -1;
+			// ToLocal : canvas → repère local du nœud (sa Position est le
+			// collet à l'écran) — le même espace que les primitives de _Draw.
+			Vector2 local = ToLocal(canvasPos);
+			Vector3 collet = _structure.ColletCm;
+			int best = -1;
+			float bestD = maxDistPx;
+			for (int i = 1; i < _structure.Segments.Count; i++)   // 0 = collet, exclu
+			{
+				var s = _structure.Segments[i];
+				Vector3 tip = s.Base + s.Dir * s.LengthCm;
+				Vector2 p1 = Iso(s.Base.X - collet.X, s.Base.Y - collet.Y, s.Base.Z);
+				Vector2 p2 = Iso(tip.X - collet.X, tip.Y - collet.Y, tip.Z);
+				float d = local.DistanceTo(
+					Geometry2D.GetClosestPointToSegment(local, p1, p2));
+				if (d < bestD) { bestD = d; best = i; }
+			}
+			return best;
+		}
 
 		// ---------------------------------------------------------------------------
 		// DESSIN
@@ -150,6 +216,28 @@ namespace Symbiose
 
 				DrawLine(p1, p2, color, w, antialiased: false);
 			}
+
+			// Surbrillance (tranche 5) : le segment sous la souris en mode
+			// tailler se redessine PAR-DESSUS, après tout le bois.
+			DrawHighlight(collet);
+		}
+
+		// Le segment surligné, en clair et un peu plus large — « c'est CETTE
+		// branche que le sécateur va prendre ». Index lu dans la liste
+		// ORIGINALE du snapshot (le tri par épaisseur de DrawSegments est une
+		// copie locale) : ce qu'on surligne = ce qu'on enverra en target.segment.
+		private void DrawHighlight(Vector3 collet)
+		{
+			int hi = HighlightSegment;
+			if (hi < 0 || hi >= _structure.Segments.Count)
+				return;
+			var s = _structure.Segments[hi];
+			Vector3 tip = s.Base + s.Dir * s.LengthCm;
+			Vector2 p1 = Iso(s.Base.X - collet.X, s.Base.Y - collet.Y, s.Base.Z);
+			Vector2 p2 = Iso(tip.X - collet.X, tip.Y - collet.Y, tip.Z);
+			float w = Mathf.Max(2f,
+				Mathf.Round(s.ThicknessCm * WorldView.PxPerCmX * 2.2f) + 2f);
+			DrawLine(p1, p2, HighlightColor, w, antialiased: false);
 		}
 
 		// Silhouette grossière de couronne pour le LOD faible : une ellipse pleine

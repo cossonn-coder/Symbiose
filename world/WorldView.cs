@@ -76,7 +76,7 @@ namespace Symbiose
 		// droite de l'écran + imprimé en console au lancement : si la version à
 		// l'écran n'est pas celle annoncée par Claude, le circuit VM → sync
 		// Nextcloud → build Godot n'est pas passé (piège connu depuis t3).
-		public const string Build = "t4·C2 ombres O + perfs F4 — 2026-06-11";
+		public const string Build = "t5 taille au segment — 2026-06-11";
 
 		// -------------------------------------------------------------------
 		// CALIBRATION (mesurée sur assets/sprites/tiles/tile_terre.png — D2)
@@ -317,6 +317,13 @@ namespace Symbiose
 		private const float PickRadiusCm = 30f;
 		// Rayon du survol (étiquette) : un peu plus généreux que le clic.
 		private const float HoverRadiusCm = 40f;
+		// Tolérance du hit-test de segment (tranche 5), en px ÉCRAN — divisée
+		// par le zoom pour travailler en canvas : le ressenti au pixel près est
+		// le même à tous les paliers (comme PanSpeedPx).
+		private const float SegmentPickPx = 8f;
+		// Plante dont un segment est surligné (mode tailler) — pour éteindre
+		// l'ancienne quand la souris change de plante.
+		private PlantRenderer _highlightNode;
 		private double _vigueur = -1.0, _vigueurMax;   // bloc player du snapshot
 		private string _lastActionMsg = "";
 		private Label _actionLabel;                // 2e ligne HUD (Vigueur+geste)
@@ -546,6 +553,9 @@ namespace Symbiose
 			// 0b) Étiquette au survol (volet B) — chaque frame, ~170 distances :
 			//     trivial, pas de cache à inventer.
 			UpdateHoverTag();
+			// 0b') Surbrillance de la branche sous la souris (mode tailler, t5).
+			//      Chaque frame aussi, mais le redraw ne part qu'au CHANGEMENT.
+			UpdateTailleHighlight();
 			// 0c) Soleil (volet C) : la jauge intra-semaine est l'heure du jour.
 			//     Early-out interne si le soleil a bougé de moins de 2°.
 			UpdateSun();
@@ -1125,7 +1135,7 @@ namespace Symbiose
 				+ " · molette zoom · PageUp/PageDown pivoter\n"
 				+ "M mode simu · F3 étiquettes · F4 perfs · H maison transparente · O ombres\n"
 				+ "gestes : 1 récolter · 2 déraciner · 3 écraser · 4 favoriser aux. · "
-				+ "5 bêcher · 6 grelinette · 7 tailler (Maj = branche) · 8 manger"
+				+ "5 bêcher · 6 grelinette · 7 tailler (survolez la branche, Maj = latéral auto) · 8 manger"
 				+ " — clic gauche = agir";
 			hud.AddChild(legend);
 			AddChild(hud);
@@ -1210,11 +1220,17 @@ namespace Symbiose
 						["x_cm"] = node.GetMeta("lx"),
 						["y_cm"] = node.GetMeta("ly"),
 					};
-					// Taille : Maj+clic vise un latéral (égourmandage), sinon
-					// l'apex (écimage) — défaut sobre ; le choix de la branche
-					// AU CLIC (picking de segment) est à l'étude, cf. 00_etat.
+					// Taille (tranche 5) : la branche sous la souris, si le
+					// hit-test en trouve une, part en target.segment — c'est
+					// LA coupe choisie au clic. params.cible reste TOUJOURS
+					// envoyé : repli serveur si segment absent (clic au pied
+					// sans survol précis = comportement t4 inchangé).
 					if (verb == "tailler")
+					{
 						prms["cible"] = shift ? "branche" : "apex";
+						int seg = node.FindSegmentNear(canvasPos, SegmentPickTolPx());
+						if (seg >= 0) target["segment"] = seg;
+					}
 					break;
 
 				case 'q':   // plot (tile, r, c) sous le clic
@@ -1297,6 +1313,38 @@ namespace Symbiose
 			}
 			tileId = null; r = c = 0;
 			return false;
+		}
+
+		// Tolérance du hit-test de segment en px CANVAS : 8 px ÉCRAN quel que
+		// soit le palier de zoom (le canvas est multiplié par Zoom à l'écran).
+		private float SegmentPickTolPx() =>
+			SegmentPickPx / (_camera != null ? _camera.Zoom.X : 1f);
+
+		// Surbrillance de la branche sous la souris en mode tailler (tranche
+		// 5) : MÊME résolution que le clic (FindPlant rayon 30 cm, puis
+		// FindSegmentNear) — ce qui est surligné est EXACTEMENT ce qui partira
+		// en target.segment. Appelée chaque frame ; les setters
+		// HighlightSegment font early-out, le redraw ne part qu'au changement.
+		private void UpdateTailleHighlight()
+		{
+			PlantRenderer node = null;
+			int seg = -1;
+			if (_gesteIndex >= 0 && Gestes[_gesteIndex].Verb == "tailler"
+				&& _plantNodes.Count > 0)
+			{
+				Vector2 mouse = GetGlobalMousePosition();
+				node = FindPlant(ScreenToWorld(mouse), PickRadiusCm);
+				if (node != null)
+				{
+					seg = node.FindSegmentNear(mouse, SegmentPickTolPx());
+					if (seg < 0) node = null;   // au pied sans branche : rien
+				}
+			}
+			if (_highlightNode != null && _highlightNode != node
+				&& IsInstanceValid(_highlightNode))
+				_highlightNode.HighlightSegment = -1;
+			_highlightNode = node;
+			if (node != null) node.HighlightSegment = seg;
 		}
 
 		// Étiquette au survol (demande Nico 2e F5 t4) : seule la plante la plus
