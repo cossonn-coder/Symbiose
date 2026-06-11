@@ -219,7 +219,7 @@ prévisible** — récompense rare qui cristallise la philo non-action.
   silencieux des gestes de base (cliquer, planter, observer, méditer,
   manger). Pas de texte, pas de tutoriel imposé.
 
-## Architecture courante (mise à jour : 2026-06-10)
+## Architecture courante (mise à jour : 2026-06-11)
 
 > **Architecture Godot ACTÉE le 2026-06-07 = Option B** : Python reste le
 > moteur (sous-process, pont JSON stdin/stdout), **Godot est une VUE**. Plus
@@ -249,7 +249,7 @@ prévisible** — récompense rare qui cristallise la philo non-action.
 
 ### Systèmes à concevoir / dette technique
 
-La **dette technique consolidée** (D1–D33 : magazine, carnet, extension
+La **dette technique consolidée** (D1–D35 : magazine, carnet, extension
 terrain, pages secrètes, organes comestibles, structure du sol, couleur
 physiologique, pont Godot, etc.) vit désormais dans **[`DETTE.md`](DETTE.md)**
 — source unique, plus de duplication.
@@ -310,11 +310,16 @@ Le **backlog des sprints** (terminés + à venir, avec les kickoffs
 autosuffisants de `sprints/`) vit désormais dans **[`BACKLOG.md`](BACKLOG.md)**
 — source unique, plus de duplication.
 
-**Sprint en cours** : **Intégration Godot ↔ Python** — tranches 1 (pont) et
-2 (monde statique rendu : `WorldView.cs`/`.tscn` nouvelle scène principale,
-placeholders procéduraux, D34 assets tuiles, D35 contrôles caméra) **CLOSES**
-le 2026-06-10. **Prochaine : tranche 3 (saison animée), kickoff `03_*.md` à
-écrire.** Kickoffs : `sprints/sprint_integration_godot/00_etat.md`.
+**Sprint en cours** : **Intégration Godot ↔ Python** — tranches **1 à 5
+CLOSES**, toutes confirmées F5 : 1 (pont `sim_server.py`/`SimBridge`),
+2 (monde statique `WorldView` scène principale, placeholders, D34 assets),
+3 (saison animée Planification↔Saison↔Pause) le 2026-06-10 ; 4 (caméra D35 +
+actions joueur protocole v1 + ombre solaire animée + perfs F4) et 5 (taille
+au segment près à la souris, protocole 0.2.1) le 2026-06-11. **Prochaine :
+tranche 6 (organes + overlays debug + vie macro), kickoff `06_*.md` à
+écrire.** Puis packaging (PyInstaller). Kickoffs :
+`sprints/sprint_integration_godot/00_etat.md`. Rappel :
+`DebugSecondsPerWeek=3` actif dans `WorldView.cs`, à remettre à 0 hors debug.
 
 À l'ouverture d'une session, Nico donne « lis `sprints/sprint_X.md` » (sprint
 simple) ou « lis `sprints/sprint_X/00_etat.md` puis `0N_*.md` » (sprint découpé)

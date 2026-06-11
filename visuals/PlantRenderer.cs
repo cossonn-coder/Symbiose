@@ -131,10 +131,23 @@ namespace Symbiose
 		// ---------------------------------------------------------------------------
 
 		/// <summary>
+		/// Portée du picking de segment autour du COLLET, en cm MONDE (correctif
+		/// t5·B, retour F5 Nico : « les segments qui dépassent le carré de départ
+		/// ne peuvent pas être taillés » — le filtre par collet à 30 cm excluait
+		/// toute la couronne d'un arbre). 📖 Pourquoi spread + height : la souris
+		/// est re-projetée au SOL (z=0) par ScreenToWorld ; un point de branche à
+		/// hauteur dz recule son point-sol apparent de dz sur x ET y (l'inverse du
+		/// tirage iso vertical) — l'écart max au collet est donc borné par
+		/// l'étalement horizontal PLUS la hauteur, marge ×1,5 + tolérance fixe.
+		/// </summary>
+		public float PickExtentCm => 1.5f * (_spreadCm + _heightCm) + 40f;
+
+		/// <summary>
 		/// Le segment le plus proche de `canvasPos` (souris en coordonnées
 		/// canvas, cf. GetGlobalMousePosition) à moins de `maxDistPx` px CANVAS,
-		/// ou −1. L'index renvoyé est celui du SNAPSHOT (ordre préservé par
-		/// StructureLoader.FromSnapshot) : il part tel quel dans target.segment.
+		/// ou −1 ; `distPx` = la distance trouvée (pour comparer ENTRE plantes,
+		/// correctif t5·B). L'index renvoyé est celui du SNAPSHOT (ordre préservé
+		/// par StructureLoader.FromSnapshot) : il part tel quel dans target.segment.
 		/// 📖 La géométrie est EXACTEMENT celle de DrawSegments (même Iso, mêmes
 		/// extrémités — leçon D2 : pas de 2ᵉ projection « presque pareille ») :
 		/// on surligne précisément ce qu'on dessine. Distance point-segment via
@@ -144,8 +157,9 @@ namespace Symbiose
 		/// doit pas désigner l'incoupable — il retombe sur le repli t4
 		/// (params.cible), comportement inchangé, critère 2 du kickoff.
 		/// </summary>
-		public int FindSegmentNear(Vector2 canvasPos, float maxDistPx)
+		public int FindSegmentNear(Vector2 canvasPos, float maxDistPx, out float distPx)
 		{
+			distPx = float.MaxValue;
 			if (_structure == null || _structure.Segments.Count < 2)
 				return -1;
 			// ToLocal : canvas → repère local du nœud (sa Position est le
@@ -164,6 +178,7 @@ namespace Symbiose
 					Geometry2D.GetClosestPointToSegment(local, p1, p2));
 				if (d < bestD) { bestD = d; best = i; }
 			}
+			if (best >= 0) distPx = bestD;
 			return best;
 		}
 

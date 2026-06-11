@@ -76,7 +76,7 @@ namespace Symbiose
 		// droite de l'écran + imprimé en console au lancement : si la version à
 		// l'écran n'est pas celle annoncée par Claude, le circuit VM → sync
 		// Nextcloud → build Godot n'est pas passé (piège connu depuis t3).
-		public const string Build = "t5 taille au segment — 2026-06-11";
+		public const string Build = "t5·B portée de taille — 2026-06-11";
 
 		// -------------------------------------------------------------------
 		// CALIBRATION (mesurée sur assets/sprites/tiles/tile_terre.png — D2)
@@ -1207,7 +1207,15 @@ namespace Symbiose
 			switch (kind)
 			{
 				case 'p':   // plante la plus proche dans le rayon de tolérance
-					node = FindPlant(w, PickRadiusCm);
+					// Taille (tranche 5, correctif t5·B) : la plante se résout
+					// par LA BRANCHE sous la souris (toutes plantes, couronnes
+					// débordantes comprises) ; sans branche sous le curseur,
+					// repli sur le collet à 30 cm = comportement t4 inchangé.
+					int segIdx = -1;
+					if (verb == "tailler")
+						node = FindSegmentGlobal(canvasPos, out segIdx);
+					if (node == null)
+						node = FindPlant(w, PickRadiusCm);
 					if (node == null)
 					{
 						_lastActionMsg = $"{nom} : aucune plante à portée du clic";
@@ -1220,16 +1228,12 @@ namespace Symbiose
 						["x_cm"] = node.GetMeta("lx"),
 						["y_cm"] = node.GetMeta("ly"),
 					};
-					// Taille (tranche 5) : la branche sous la souris, si le
-					// hit-test en trouve une, part en target.segment — c'est
-					// LA coupe choisie au clic. params.cible reste TOUJOURS
-					// envoyé : repli serveur si segment absent (clic au pied
-					// sans survol précis = comportement t4 inchangé).
+					// params.cible reste TOUJOURS envoyé : repli serveur si
+					// target.segment est absent (clic au pied).
 					if (verb == "tailler")
 					{
 						prms["cible"] = shift ? "branche" : "apex";
-						int seg = node.FindSegmentNear(canvasPos, SegmentPickTolPx());
-						if (seg >= 0) target["segment"] = seg;
+						if (segIdx >= 0) target["segment"] = segIdx;
 					}
 					break;
 
@@ -1320,26 +1324,46 @@ namespace Symbiose
 		private float SegmentPickTolPx() =>
 			SegmentPickPx / (_camera != null ? _camera.Zoom.X : 1f);
 
+		/// <summary>
+		/// LA branche sous la souris, toutes plantes confondues (correctif
+		/// t5·B) : le segment le plus proche du curseur sous la tolérance,
+		/// cherché chez TOUTES les plantes dont la portée (PickExtentCm,
+		/// étalement + hauteur) atteint le point souris — plus de filtre par
+		/// collet à 30 cm, qui excluait la couronne des arbres. Préfiltre
+		/// monde au carré (pas de racine), puis hit-test exact par segment ;
+		/// ~170 plantes dont une poignée passent le préfiltre : trivial.
+		/// Survol ET clic passent ici : ce qui est surligné = ce qui part.
+		/// </summary>
+		private PlantRenderer FindSegmentGlobal(Vector2 canvasMouse, out int segIndex)
+		{
+			segIndex = -1;
+			PlantRenderer best = null;
+			float bestD = SegmentPickTolPx();
+			Vector2 w = ScreenToWorld(canvasMouse);
+			foreach (var node in _plantNodes.Values)
+			{
+				float dx = (float)node.GetMeta("wx").AsDouble() - w.X;
+				float dy = (float)node.GetMeta("wy").AsDouble() - w.Y;
+				float ext = node.PickExtentCm;
+				if (dx * dx + dy * dy > ext * ext) continue;
+				int seg = node.FindSegmentNear(canvasMouse, bestD, out float d);
+				if (seg >= 0 && d < bestD) { bestD = d; best = node; segIndex = seg; }
+			}
+			return best;
+		}
+
 		// Surbrillance de la branche sous la souris en mode tailler (tranche
-		// 5) : MÊME résolution que le clic (FindPlant rayon 30 cm, puis
-		// FindSegmentNear) — ce qui est surligné est EXACTEMENT ce qui partira
-		// en target.segment. Appelée chaque frame ; les setters
-		// HighlightSegment font early-out, le redraw ne part qu'au changement.
+		// 5) : MÊME résolution que le clic (FindSegmentGlobal) — ce qui est
+		// surligné est EXACTEMENT ce qui partira en target.segment. Appelée
+		// chaque frame ; les setters HighlightSegment font early-out, le
+		// redraw ne part qu'au changement.
 		private void UpdateTailleHighlight()
 		{
 			PlantRenderer node = null;
 			int seg = -1;
 			if (_gesteIndex >= 0 && Gestes[_gesteIndex].Verb == "tailler"
 				&& _plantNodes.Count > 0)
-			{
-				Vector2 mouse = GetGlobalMousePosition();
-				node = FindPlant(ScreenToWorld(mouse), PickRadiusCm);
-				if (node != null)
-				{
-					seg = node.FindSegmentNear(mouse, SegmentPickTolPx());
-					if (seg < 0) node = null;   // au pied sans branche : rien
-				}
-			}
+				node = FindSegmentGlobal(GetGlobalMousePosition(), out seg);
 			if (_highlightNode != null && _highlightNode != node
 				&& IsInstanceValid(_highlightNode))
 				_highlightNode.HighlightSegment = -1;

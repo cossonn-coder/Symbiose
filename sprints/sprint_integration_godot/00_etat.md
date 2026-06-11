@@ -394,6 +394,29 @@ carnet. Indices **visuels** d'abord (philo #5 : pas de chiffres en HUD primaire)
   souris en mode 7 ; clic → CETTE branche + sous-arbre disparaissent, flash
   jaune ; clic au pied = comportement t4 ; segment disparu entre temps →
   refus propre.
+- **1er F5 Nico (2026-06-11) : 3/3 critères validés.** Retours triagés :
+  - **« Les segments qui dépassent le carré de départ ne peuvent pas être
+    taillés »** → défaut du livrable (le filtre par collet à 30 cm excluait
+    la couronne débordante d'un arbre) → **correctif t5·B (C# seul)** :
+    `FindSegmentGlobal` cherche LA branche sous la souris chez TOUTES les
+    plantes (préfiltre `PickExtentCm` = 1,5×(étalement+hauteur) — la hauteur
+    compte car la souris est re-projetée au sol z=0), survol ET clic ; sans
+    branche sous le curseur, repli collet 30 cm = t4. `FindSegmentNear`
+    renvoie aussi la distance (comparaison entre plantes). Build témoin →
+    **« t5·B portée de taille — 2026-06-11 »**. En attente F5.
+  - **« Taillée, la plante devrait repousser à deux têtes (hors
+    monocotylédones) »** → **le moteur le fait DÉJÀ** (vérifié par
+    expérience, 2026-06-11) : tomate écimée semaine 9 → **2 apex** dès le
+    tick suivant (témoin : 1 apex), émergent du débourrement §D.3 (bourgeons
+    sous le seuil d'auxine une fois l'apex dominant coupé — rien de codé en
+    dur, philo #2). Les monocotylédones (graminées) sont insensibles par
+    construction (profil d'espèce, CONCEPTION_CROISSANCE). Les nouvelles
+    têtes font quelques cm la 1ʳᵉ semaine — probablement invisibles au
+    moment du F5 ; à ré-observer sur 2-3 semaines simulées. Si le port
+    « touffu » reste jugé trop timide à l'usage → sprint CALIBRAGE moteur
+    (AUXIN_INHIB_THRESHOLD / dominance), pas de mécanique manquante.
+- **CLAUDE.md rafraîchi** (demande Nico, même date) : tranches 1-5 closes,
+  prochaine = t6, D1–D35, rappel DebugSecondsPerWeek.
 
 ## Lien dette
 Lève progressivement **D24** (le « portage C# » devient « pont », plus un portage
