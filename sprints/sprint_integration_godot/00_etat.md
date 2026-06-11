@@ -422,6 +422,39 @@ carnet. Indices **visuels** d'abord (philo #5 : pas de chiffres en HUD primaire)
   debug), kickoff PRÊT `06_organes_overlays_viemacro.md`** — dernière tranche
   de contenu avant t7 = packaging.
 
+### Tranche 6 — volet A (organes procéduraux) : CODÉ (2026-06-11), en attente F5
+- **Livré Python** : `sim_server.py` protocole **0.2.2** — 3 hints par plante
+  au snapshot (lecture seule, kickoff §1) : `foliage_density`
+  (`foliage_density_at(plant, saison)`, déjà saisonnier — caduc hiver = 0),
+  `organ` (proxy saisonnier `REPRO_BY_SEASON` **importée de
+  `tools.render_structure`** — outil→outil, zéro duplication ; espèce absente
+  → repli `DEFAULT_REPRO` : fleur printemps, fruit mûr été/automne, rien
+  l'hiver), `organ_site` (profil d'espèce). Moteur JAMAIS touché.
+  `test_sim_server.py` **68/68** (section 9 : hints présents/bornés, printemps
+  = flower partout, été = pommier `fruit_unripe` ≠ tomate `fruit_ripe`
+  (cycles distincts, critère F5), hiver = organ null partout + pommier caduc
+  densité 0). **Golden écolo intact** (`16a1b937…`). Mesure : hints ≈ +60
+  o/plante comme prévu (snapshot smoke sem 40 : ~39 Ko / 23 plantes).
+- **Livré C#** : `PlantStructure.cs` — 3 champs DTO (lecture TOLÉRANTE,
+  défauts si snapshot pré-0.2.2 ; `organ` null JSON → "" = rien) ;
+  `PlantRenderer.cs` — portage de `_draw_organs` : feuilles (segments apex ou
+  ≤ 1,6 cm, 1/11 cm, déport 7 cm au hash, ellipse-polygone 10 pts, opacité
+  0,92, **sous-échantillonnage au hash si densité < 1** — ajout kickoff vs
+  prototype), couleur palette espèce × saison (printemps ×1,25, automne
+  AUTUMN_LEAVES au hash, hiver ×0,7 persistants), fleurs 5 pétales + cœur /
+  fruits disque + reflet aux bouts d'apex (`terminal`) ou latéraux hors
+  meneur (`lateral`), plafond 10 ; **hash C# local** (mix entier xorshift,
+  stable inter-frames/sessions, zéro Random — pas de parité bit-à-bit avec le
+  SVG, assumé kickoff). Dessin dans `DrawSegments` APRÈS le bois, AVANT la
+  surbrillance t5 ; redraw **uniquement au SetStructure** (leçon perf C2).
+  `WorldView.cs` — statique `CurrentSeason` (assigné dans ApplySnapshot AVANT
+  les SetStructure), témoin de build → **« t6·A organes procéduraux —
+  2026-06-11 »**.
+- **Signalé (design, pas bug)** : le proxy saisonnier fleurit TOUTE plante à
+  apex, même une pousse d'une semaine (fidèle au prototype SVG — le vrai état
+  reproducteur = D19/D33). Si le F5 juge ça gênant : filtre par stade = 1
+  ligne côté serveur, à trancher.
+
 ## Lien dette
 Lève progressivement **D24** (le « portage C# » devient « pont », plus un portage
 intégral) + **D2/D3/D4/D8** (rendu/scène). À refléter dans `DETTE.md`/`BACKLOG.md`

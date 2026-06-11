@@ -47,6 +47,13 @@ namespace Symbiose
 		public float CanopyRadiusCm;
 		public Vector3 ColletCm;             // point sol du collet (origine projection)
 		public List<Segment> Segments = new();
+
+		// --- Hints d'organes (sprint Intégration t6·A, protocole 0.2.2) ---
+		// PUR rendu, calculés côté Python (proxy saisonnier du prototype SVG,
+		// cf. tools/render_structure.py) : la vue dessine, ne décide rien.
+		public float FoliageDensity = 1f;    // 0..1, déjà saisonnier (caduc hiver = 0)
+		public string Organ = "";            // ""|"flower"|"fruit_unripe"|"fruit_ripe"
+		public string OrganSite = "terminal"; // "terminal"|"lateral" — où naissent fleurs/fruits
 	}
 
 	// ---------------------------------------------------------------------------
@@ -145,6 +152,15 @@ namespace Symbiose
 				HeightCm = (float)plant["height_cm"].AsDouble(),
 				CanopyRadiusCm = 0f,
 			};
+			// Hints d'organes (t6·A). Lecture TOLÉRANTE (ContainsKey + défauts) :
+			// un snapshot pré-0.2.2 reste lisible. `organ` JSON null → Variant
+			// Nil → AsString() rend "" = « pas d'organe », exactement le défaut.
+			if (plant.ContainsKey("foliage_density"))
+				ps.FoliageDensity = (float)plant["foliage_density"].AsDouble();
+			if (plant.ContainsKey("organ"))
+				ps.Organ = plant["organ"].AsString();
+			if (plant.ContainsKey("organ_site"))
+				ps.OrganSite = plant["organ_site"].AsString();
 			foreach (var segVar in plant["segments"].AsGodotArray())
 				ps.Segments.Add(ParseSegment(segVar.AsGodotDictionary()));
 			if (ps.Segments.Count > 0)

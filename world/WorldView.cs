@@ -76,7 +76,7 @@ namespace Symbiose
 		// droite de l'écran + imprimé en console au lancement : si la version à
 		// l'écran n'est pas celle annoncée par Claude, le circuit VM → sync
 		// Nextcloud → build Godot n'est pas passé (piège connu depuis t3).
-		public const string Build = "t5·B portée de taille — 2026-06-11";
+		public const string Build = "t6·A organes procéduraux — 2026-06-11";
 
 		// -------------------------------------------------------------------
 		// CALIBRATION (mesurée sur assets/sprites/tiles/tile_terre.png — D2)
@@ -149,6 +149,12 @@ namespace Symbiose
 		// (plantes + maison) — PlantShadow._Draw devient un no-op, UpdateSun
 		// s'endort. Lu par PlantShadow.
 		public static bool ShadowsOn { get; private set; } = true;
+		// Saison courante du snapshot (t6·A) — lue par PlantRenderer pour la
+		// COULEUR des feuilles (printemps clair, automne chaud…). Les hints
+		// foliage_density/organ arrivent déjà saisonnés du serveur ; seule la
+		// teinte se décide côté vue. Mise à jour dans ApplySnapshot AVANT les
+		// SetStructure : les redraws qui suivent voient la bonne saison.
+		public static string CurrentSeason { get; private set; } = "ete";
 		private const float LatitudeDeg = 49.0f;    // = fields/light.py LATITUDE_DEG
 		// Ombre bornée à 3,5× la hauteur : au ras de l'horizon 1/tan(élév) → ∞,
 		// l'écran n'a pas besoin d'ombres kilométriques pour dire « soir ».
@@ -954,6 +960,7 @@ namespace Symbiose
 			int weekInYear = snap["week_in_year"].AsInt32();
 			_weekInSeason = ((weekInYear - 1) % 13) + 1;
 			string season = snap["season"].AsString();
+			CurrentSeason = season;   // AVANT les SetStructure (couleur feuilles t6·A)
 
 			int born = 0, grown = 0, empty = 0, nSegs = 0;
 			var seen = new HashSet<string>();

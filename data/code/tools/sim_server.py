@@ -71,13 +71,26 @@ from world import House
 from sim.engine import Engine, saison_de
 from sim import actions as A      # les 8 gestes joueur (façades, sprint Vigueur/D31.3)
 from sim import vigueur as V      # état Vigueur joueur (ensure/spend/gain, D11)
+# Table « stade reproducteur visible par saison » du prototype SVG (tranche 6,
+# volet A) : import OUTIL → OUTIL (render_structure est un outil, pas le
+# moteur), zéro duplication — la table validée visuellement au sprint
+# Croissance reste la source unique du proxy saisonnier.
+from tools.render_structure import REPRO_BY_SEASON
 
 # Version du protocole/moteur exposée dès le v0 (même philosophie que le futur
 # save JSON : casse explicite si schéma incompatible). Locale au serveur pour
 # l'instant — le « sprint save global » décidera où la centraliser.
 # 0.2.0 (tranche 4) : commande `action` + bloc `player` dans le snapshot.
 # 0.2.1 (tranche 5) : `target.segment` optionnel sur `tailler` (taille au clic).
-ENGINE_VERSION = "0.2.1"
+# 0.2.2 (tranche 6·A) : 3 hints d'organes par plante au snapshot
+#       (foliage_density, organ, organ_site) — pur rendu, lecture seule.
+ENGINE_VERSION = "0.2.2"
+
+# Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
+# printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les
+# herbacées du catalogue en attendant le VRAI état reproducteur (D19/D33).
+DEFAULT_REPRO = {"printemps": "flower", "ete": "fruit_ripe",
+                 "automne": "fruit_ripe", "hiver": None}
 
 # Tolérance du match plante-par-position (kickoff t4 §8) : les positions du
 # snapshot reviennent telles quelles dans la cible → l'epsilon n'absorbe que le
@@ -336,19 +349,30 @@ class SimServer:
         gs = self.engine.game_state
         week = gs["week"]
         week_in_year = ((week - 1) % 52) + 1
+        saison = saison_de(week_in_year)
         plants = []
         for tile in gs["tiles"]:
             for p in tile.plants:
                 if not p.is_alive:
                     continue
+                cls = p.plant_class
+                # Hints d'organes (tranche 6·A, kickoff §1) : les organes ne
+                # sont PAS un état moteur (§J : reconstructibles à la volée) —
+                # on expose le proxy SAISONNIER du prototype SVG, la vue
+                # dessine. Le vrai état reproducteur (maturité réelle,
+                # déplétion par `manger`) = D19/D33, sprints moteur dédiés.
+                repro = REPRO_BY_SEASON.get(cls.__name__, DEFAULT_REPRO)
                 plants.append({
                     "tile": tile.tile_id,
-                    "species": p.plant_class.__name__,
+                    "species": cls.__name__,
                     "name": p.name,
                     "x_cm": p.x_cm, "y_cm": p.y_cm,
                     "stage": p.current_stage,
                     "stage_name": p.stage.name,
                     "height_cm": p.current_height,
+                    "foliage_density": cls.foliage_density_at(p, saison),
+                    "organ": repro.get(saison),
+                    "organ_site": cls.organ_site,
                     "segments": p.structure_to_dict(),
                 })
         # Bloc joueur (tranche 4, lecture seule) : la vue affiche la Vigueur
@@ -356,7 +380,7 @@ class SimServer:
         player = gs["current_player"]
         st = V.ensure_player(gs, player)
         return {"week": week, "week_in_year": week_in_year,
-                "year": (week - 1) // 52 + 1, "season": saison_de(week_in_year),
+                "year": (week - 1) // 52 + 1, "season": saison,
                 "player": {"vigueur": st["courante"],
                            "vigueur_max": V.vigueur_max(gs, player)},
                 "plants": plants}
