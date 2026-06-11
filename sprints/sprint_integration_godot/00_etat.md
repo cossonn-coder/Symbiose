@@ -254,12 +254,63 @@ carnet. Indices **visuels** d'abord (philo #5 : pas de chiffres en HUD primaire)
     **sprint Python dédié** gravé au backlog (compétition intra-plot).
   - **Plantes mortes visibles + décomposition** : moteur aussi → **sprint
     « décomposition & compost »** gravé au backlog.
-- **Prochaine étape : volet B — actions joueur** (kickoff
-  `04_camera_actions.md` §B) : Vigueur branchée dans `sim_server.py` via
-  façades existantes, commande `action` verbe+cible+params, plante désignée
-  PAR POSITION, `urgence` = phase Saison, 8 gestes existants —
-  `planter`/`arroser` EXCLUS : pas d'équivalent moteur, backlog. S'y ajoute
-  l'étiquette au survol (picking partagé clic/survol).
+### Tranche 4 — volet B (actions joueur) : CODÉ (2026-06-11), en attente F5
+- **Livré Python** : `sim_server.py` protocole **v1** (`ENGINE_VERSION
+  0.2.0`) — `ensure_player` à l'init (le tick moteur fait seul régen+refill,
+  hook existant `engine.py:774` gardé par `"vigueur" in game_state`) ; bloc
+  `player {vigueur, vigueur_max}` au snapshot ; commande **`action`**
+  (verbe+target+params → `result` ACK/NAK + **snapshot frais joint**).
+  Désignations : plante PAR POSITION (±0,1 cm, `PLANT_EPSILON_CM`), plot
+  `(tile,r,c)` borné, tuile, rien. Refus métier = `ok:true` +
+  `applied:false` + message (le `ok:false` reste aux commandes malformées).
+  Le serveur appelle les façades `sim/actions.py` SANS réimplémenter de
+  règle (coût×maîtrise×urgence, effets — tout côté moteur).
+- **Tests** : `test_sim_server.py` **47/47** (bloc player, régen +10/sem via
+  tick, refill plein à la semaine 14, manger/deraciner par position +
+  disparition dans le snapshot JOINT, URGENCE_MULT 15→22,5 visible, refus
+  verbe inconnu/cible introuvable/plot hors tuile/Vigueur insuffisante avec
+  serveur survivant, déterminisme 2 runs MÊMES actions byte-identiques).
+  **Golden écolo intact** (`16a1b937…`, vérifié).
+- **Livré C#** : `SimBridge.Action(verb, target, params)` (réponse complète
+  result+snapshot) ; `WorldView.cs` — **`ScreenToWorld`** (inverse analytique
+  + orientation défaite dans l'ordre inverse, à côté de l'aller, leçon D2) ;
+  touches **1..8 en `PhysicalKeycode`** (AZERTY : la rangée chiffres émet
+  `&é"'(…` en Keycode) dans l'ordre de la table `COUTS` ; clic gauche →
+  désignation par famille de cible (plante ≤ 30 cm monde, plot/tuile par
+  containment, grelinette sans cible) → action en **Task** (pipe
+  maître/esclave : UNE requête en vol, step OU action ; clic ignoré sinon ;
+  `_ExitTree` attend les deux) ; `tailler` Maj+clic = branche ; `ecraser`
+  `urgence` = phase Saison (Pause = tarif planification, temps figé) ; HUD
+  2ᵉ ligne « Vigueur x/y — geste : … » + dernier message, flash rouge sur
+  refus ; **étiquette AU SURVOL** (F3 cycle survol/toutes/aucune, défaut
+  survol — demande Nico 2e F5) via le même `FindPlant` que le clic ; légende
+  enrichie gestes 1..8.
+- **1er F5 Nico (2026-06-11)** : actions ✓, refus/flash ✓, survol ✓. Retour
+  triagé + correctifs :
+  - **Turbo affamait les clics** (pipe jamais libre) → **file d'UNE
+    intention** : clic mémorisé (le dernier gagne), part en priorité dès que
+    le pipe se libère, avant la semaine suivante.
+  - **« tailler ne montre rien »** : la coupe est réelle et immédiate
+    (prouvé : 6→5 segments dans le snapshot joint) mais invisible sur de
+    jeunes sujets → **flash jaune de la plante ciblée** à chaque geste
+    réussi (après ApplySnapshot — pas de conflit avec le fondu de mort).
+  - **Messages instructifs serveur** : `manger` affiche le gain
+    (« +4.1 Vigueur — gain ∝ maturité ») ; `ecraser` affiche
+    « ravageurs 0.80 → 0.60 » (lecture pure du champ — les sprites = t5).
+  - **Pas des bugs (design expliqué)** : régen = +10/semaine SIMULÉE (rien
+    en Planification, temps figé — la « méditation au foyer » comblera) ;
+    manger à 0 Vigueur fonctionne (coût nul, gain ∝ maturité — un semis ne
+    nourrit pas) ; spam manger = D19 (déplétion d'organe, déjà gravé) ;
+    ombre disque uniforme = placeholder → volet C.
+- **Décisions Nico (2026-06-11)** : ordre de fin de tranche = **volet C
+  (ombre solaire animée) PUIS volet D (taille au segment près à la souris)**.
+  Volet D pré-étudié : moteur prêt (`atteindre_segment(seg_id)`), il faudra
+  étendre la façade `tailler` de `sim/actions.py` (couche joueur, golden
+  écolo intact), le protocole (`target.segment`), et le hit-test/surbrillance
+  des segments côté vue.
+- **À re-valider F5 (correctifs volet B)** : clic en Turbo (intention
+  mémorisée), flash jaune sur geste réussi, gain affiché sur manger,
+  ravageurs chiffrés sur écraser. `DebugSecondsPerWeek=3` encore actif.
 
 ## Lien dette
 Lève progressivement **D24** (le « portage C# » devient « pont », plus un portage

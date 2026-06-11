@@ -122,6 +122,22 @@ namespace Symbiose
 		}
 
 		/// <summary>
+		/// Geste joueur (protocole v1, tranche 4) : verbe + cible + params.
+		/// Renvoie la réponse COMPLÈTE (`result` = ACK/NAK métier + Vigueur,
+		/// `snapshot` = état frais joint) — c'est le seul appel où l'appelant a
+		/// besoin des deux. Un refus métier (Vigueur insuffisante, cible
+		/// introuvable) arrive en `ok:true` + `result.applied=false` : Python
+		/// possède les RÈGLES, la vue ne pré-valide rien.
+		/// </summary>
+		public GDict Action(string verb, GDict target = null, GDict prms = null)
+		{
+			var msg = new GDict { ["cmd"] = "action", ["verb"] = verb };
+			if (target != null) msg["target"] = target;
+			if (prms != null) msg["params"] = prms;
+			return Request(msg);
+		}
+
+		/// <summary>
 		/// Cœur du pont : écrit 1 ligne JSON, lit 1 ligne JSON (bloquant).
 		/// Retourne le message si ok:true, sinon null (+ erreur en console).
 		/// </summary>

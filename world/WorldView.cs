@@ -6,8 +6,19 @@
 // snapshot. Depuis la tranche 3, le monde VIT : boucle hybride Planification
 // (temps figé) ↔ Saison (temps réel, 1 semaine = SecondsPerWeek s), bascule à
 // la touche Espace. Depuis la tranche 4, la caméra est JOUABLE (D35) : pan aux
-// flèches, zoom molette par paliers, rotation de la vue par quarts de tour.
+// flèches, zoom molette par paliers, rotation de la vue par quarts de tour —
+// et le joueur AGIT (volet B) : touches 1..8 = geste, clic gauche = exécuter.
 // Aucune logique écologique ici : Godot est « bête », il projette et affiche.
+//
+// 📖 Pédagogie — le protocole d'action (volet B, kickoff t4 §3) :
+// Python possède les RÈGLES (validité, coût Vigueur × maîtrise × urgence,
+// effet), Godot transmet l'INTENTION : verbe + désignation non-ambiguë de la
+// cible (plante par position, plot (tile,r,c), tuile, rien). Aucune
+// pré-validation côté C# — un refus métier revient en `applied:false` + message
+// et la vue l'AFFICHE, c'est tout. Analogie embarqué : le maître SPI envoie une
+// commande structurée, l'esclave répond ACK/NAK + données — jamais le maître
+// n'écrit dans les registres internes de l'esclave. Et comme le pipe est
+// maître/esclave 1↔1 : UNE requête en vol, step OU action, jamais les deux.
 //
 // 📖 Pédagogie — le tick bloque, l'écran non (tranche 3) :
 // SimBridge.StepWeek() est SYNCHRONE (~150-300 ms le tick complet). L'appeler
@@ -115,6 +126,26 @@ namespace Symbiose
 			return new Vector2((dxCm - dyCm) * PxPerCmX, (dxCm + dyCm) * PxPerCmY);
 		}
 
+		/// <summary>
+		/// L'INVERSE de WorldToScreen (picking, volet B) : canvas → monde (cm).
+		/// 📖 La projection est linéaire (matrice 2×2, déterminant non nul) →
+		/// inversible analytiquement : sx=(x−y)·a, sy=(x+y)·b donne
+		/// x = sx/2a + sy/2b et y = −sx/2a + sy/2b. Puis on défait l'orientation
+		/// — transformations inverses DANS L'ORDRE INVERSE : l'inverse du quart
+		/// de tour (x,y)→(y, W−x) est (u,v)→(W−v, u). GetGlobalMousePosition
+		/// rend la souris déjà en canvas (pan/zoom caméra défaits par Godot) —
+		/// cette fonction est donc le SEUL maillon manquant. Écrite ici, à côté
+		/// de l'aller (leçon D2 : jamais deux projections « presque pareilles »).
+		/// </summary>
+		public static Vector2 ScreenToWorld(Vector2 scr)
+		{
+			float x = scr.X / (2f * PxPerCmX) + scr.Y / (2f * PxPerCmY);
+			float y = -scr.X / (2f * PxPerCmX) + scr.Y / (2f * PxPerCmY);
+			for (int i = 0; i < _orientation; i++)
+				(x, y) = (WorldCm - y, x);
+			return new Vector2(x, y);
+		}
+
 		// -------------------------------------------------------------------
 		// RÉGLAGES (exportés : ajustables dans l'inspecteur sans recompiler)
 		// -------------------------------------------------------------------
@@ -204,10 +235,47 @@ namespace Symbiose
 		//              (vitesse max du pont — observation longue durée, debug).
 		private enum SimMode { Saison, Continu, Turbo }
 		private SimMode _simMode = SimMode.Saison;
-		private bool _labelsVisible = true;   // étiquettes espèce·stade (F3)
+		// Étiquettes espèce·stade (F3 cycle) : Survol = seule l'étiquette sous
+		// la souris (demande Nico 2e F5 t4, défaut), Toutes, Aucune.
+		private enum LabelMode { Survol, Toutes, Aucune }
+		private LabelMode _labelMode = LabelMode.Survol;
 		private bool _houseGhost;             // maison transparente (H)
 		private float _timeAccum;                  // secondes réelles écoulées
-		private Task<GDict> _pendingStep;          // LA requête en vol (ou null)
+		private Task<GDict> _pendingStep;          // step en vol (ou null)
+
+		// --- Actions joueur (tranche 4, volet B) ----------------------------
+		// Les 8 gestes, dans l'ORDRE de la table COUTS de sim/actions.py
+		// (kickoff B·10). Kind = famille de cible : p = plante (par position),
+		// q = plot (tile,r,c), t = tuile, '-' = sans cible.
+		private static readonly (string Verb, string Nom, char Kind)[] Gestes =
+		{
+			("recolter",             "récolter",       'p'),
+			("deraciner",            "déraciner",      'p'),
+			("ecraser",              "écraser",        'q'),
+			("favoriser_auxiliaire", "favoriser aux.", 't'),
+			("becher",               "bêcher",         'q'),
+			("grelinette",           "grelinette",     '-'),
+			("tailler",              "tailler",        'p'),
+			("manger",               "manger",         'p'),
+		};
+		private int _gesteIndex = -1;              // aucun geste sélectionné
+		private Task<GDict> _pendingAction;        // action en vol (ou null)
+		// File d'UNE intention (retour F5 Nico : en Turbo le pipe ne désemplit
+		// jamais → tout clic était ignoré). Si une requête est en vol, le clic
+		// est MÉMORISÉ (un seul) et part en PRIORITÉ dès que le pipe se libère
+		// — avant la semaine suivante. Un 2e clic pendant l'attente l'écrase.
+		private (string Verb, GDict Target, GDict Prms, PlantRenderer Node)? _queuedIntent;
+		// Plante visée par l'action en vol → flash de feedback si appliquée
+		// (retour F5 Nico : « tailler ne montre rien » — la coupe de quelques
+		// cm sur un jeune sujet est invisible sans surlignage).
+		private PlantRenderer _actionTargetNode;
+		// Rayon de tolérance du clic sur une plante, en cm MONDE (kickoff B·11).
+		private const float PickRadiusCm = 30f;
+		// Rayon du survol (étiquette) : un peu plus généreux que le clic.
+		private const float HoverRadiusCm = 40f;
+		private double _vigueur = -1.0, _vigueurMax;   // bloc player du snapshot
+		private string _lastActionMsg = "";
+		private Label _actionLabel;                // 2e ligne HUD (Vigueur+geste)
 		// Plantes affichées, indexées par clé stable (tile|species|x|y) — base
 		// du diff naissance/mort entre deux snapshots.
 		private readonly Dictionary<string, PlantRenderer> _plantNodes = new();
@@ -274,9 +342,11 @@ namespace Symbiose
 
 		public override void _ExitTree()
 		{
-			// Un step encore en vol occupe le pipe : on l'attend avant d'écrire
-			// "quit" (sinon deux écritures concurrentes — règle (b) de l'en-tête).
+			// Une requête encore en vol (step OU action) occupe le pipe : on
+			// l'attend avant d'écrire "quit" (sinon deux écritures concurrentes
+			// — règle (b) de l'en-tête).
 			try { _pendingStep?.Wait(2000); } catch { /* moteur déjà mort : Quit gère */ }
+			try { _pendingAction?.Wait(2000); } catch { /* idem */ }
 			_bridge?.Quit();
 		}
 
@@ -291,6 +361,15 @@ namespace Symbiose
 			// univoques en AZERTY).
 			if (ev is InputEventKey k && k.Pressed && !k.Echo)
 			{
+				// Gestes 1..8 en PhysicalKeycode (POSITION de la touche, pas son
+				// étiquette) : en AZERTY la rangée des chiffres non-shiftée émet
+				// &é"'(-è_ comme Keycode — le code physique, lui, reste Key1..8
+				// quel que soit le layout. 📖 C'est la différence scancode/keysym.
+				if (k.PhysicalKeycode >= Key.Key1 && k.PhysicalKeycode <= Key.Key8)
+				{
+					SelectGeste((int)(k.PhysicalKeycode - Key.Key1));
+					return;
+				}
 				switch (k.Keycode)
 				{
 					case Key.Space:    TogglePhase();  break;
@@ -304,11 +383,13 @@ namespace Symbiose
 				}
 			}
 			// Molette = paliers de zoom (décision Nico 2026-06-10 : molette,
-			// pas de touches).
+			// pas de touches). Clic gauche = exécuter le geste courant (volet B).
 			else if (ev is InputEventMouseButton mb && mb.Pressed)
 			{
 				if (mb.ButtonIndex == MouseButton.WheelUp)   StepZoom(+1);
 				if (mb.ButtonIndex == MouseButton.WheelDown) StepZoom(-1);
+				if (mb.ButtonIndex == MouseButton.Left)
+					TryAction(GetGlobalMousePosition(), mb.ShiftPressed);
 			}
 		}
 
@@ -349,13 +430,16 @@ namespace Symbiose
 
 		private void ToggleLabels()
 		{
-			_labelsVisible = !_labelsVisible;
+			// Cycle Survol → Toutes → Aucune. En Survol, c'est UpdateHoverTag
+			// (chaque frame) qui allume la seule étiquette sous la souris.
+			_labelMode = (LabelMode)(((int)_labelMode + 1) % 3);
+			bool all = _labelMode == LabelMode.Toutes;
 			foreach (var node in _plantNodes.Values)
 			{
 				var tag = node.GetNodeOrNull<Label>("Tag");
-				if (tag != null) tag.Visible = _labelsVisible;
+				if (tag != null) tag.Visible = all;
 			}
-			GD.Print($"[WorldView] F3 → étiquettes : {(_labelsVisible ? "ON" : "OFF")}.");
+			GD.Print($"[WorldView] F3 → étiquettes : {_labelMode}.");
 		}
 
 		private void ToggleHouseGhost()
@@ -380,6 +464,9 @@ namespace Symbiose
 			// 0) Caméra : pan aux flèches — actif dans TOUTES les phases (la
 			//    caméra n'interagit jamais avec la machine à états).
 			UpdateCameraPan((float)delta);
+			// 0b) Étiquette au survol (volet B) — chaque frame, ~170 distances :
+			//     trivial, pas de cache à inventer.
+			UpdateHoverTag();
 
 			// 1) Consommer un step terminé — TOUJOURS, même en pause : la
 			//    semaine était déjà engagée côté moteur, son résultat est dû.
@@ -398,12 +485,59 @@ namespace Symbiose
 				ApplySnapshot(step.Result);
 			}
 
+			// 1b) Consommer une action terminée (volet B) : afficher l'ACK/NAK
+			//     métier et appliquer le snapshot frais joint (un déracinement
+			//     s'efface par le fondu t3, sans step).
+			if (_pendingAction != null && _pendingAction.IsCompleted)
+			{
+				var act = _pendingAction;
+				var targetNode = _actionTargetNode;
+				_pendingAction = null;
+				_actionTargetNode = null;
+				if (act.IsFaulted || act.Result == null)
+					GD.PrintErr("[WorldView] action en échec de PROTOCOLE (cf. SimBridge).");
+				else
+				{
+					var res = act.Result["result"].AsGodotDictionary();
+					bool applied = res["applied"].AsBool();
+					_lastActionMsg = res["message"].AsString();
+					GD.Print($"[WorldView] action {(applied ? "OK" : "REFUSÉE")} : "
+							 + $"{_lastActionMsg} (coût {res["cost"].AsDouble():F1}, "
+							 + $"Vigueur {res["vigueur"].AsDouble():F1}).");
+					if (!applied) FlashActionLabel();
+					ApplySnapshot(act.Result["snapshot"].AsGodotDictionary());
+					// Flash de la plante ciblée — APRÈS ApplySnapshot : si elle
+					// vient de mourir (déraciner), son fondu de sortie anime
+					// déjà modulate, on ne lui dispute pas la propriété.
+					if (applied && targetNode != null && IsInstanceValid(targetNode)
+						&& _plantNodes.ContainsValue(targetNode))
+					{
+						targetNode.Modulate = new Color(1.7f, 1.7f, 1.1f);
+						targetNode.CreateTween().TweenProperty(
+							targetNode, "modulate", Colors.White, 0.5f);
+					}
+				}
+			}
+
+			// 1c) File d'une intention : le pipe vient de se libérer → l'action
+			//     mémorisée part EN PRIORITÉ sur la semaine suivante (sinon, en
+			//     Turbo, le step relancé immédiatement affamerait les clics).
+			if (_queuedIntent != null && _pendingStep == null && _pendingAction == null)
+			{
+				var it = _queuedIntent.Value;
+				_queuedIntent = null;
+				LaunchAction(it.Verb, it.Target, it.Prms, it.Node);
+			}
+
 			// 2) Accumulateur temps réel (seulement quand la saison court).
 			if (_phase != Phase.Saison) return;
 			_timeAccum += (float)delta;
 			float spw = DebugSecondsPerWeek > 0f ? DebugSecondsPerWeek : SecondsPerWeek;
 			if (_simMode == SimMode.Turbo) spw = 0f;   // step dès que le pont répond
-			if (_timeAccum >= spw && _pendingStep == null)
+			// Le step ne part que si le PIPE est libre : ni step NI action en
+			// vol (maître/esclave 1↔1 — une action pendant la saison retarde la
+			// semaine d'une frame ou deux, jamais l'inverse ne corrompt le tube).
+			if (_timeAccum >= spw && _pendingStep == null && _pendingAction == null)
 			{
 				_timeAccum = 0f;
 				// Task.Run : la requête part sur un thread du pool ; on ne
@@ -613,7 +747,7 @@ namespace Symbiose
 		// monde — assumé, c'est un instrument de debug, pas l'UI finale.
 		private Label MakeTag(GDict p)
 		{
-			var tag = new Label { Name = "Tag", Visible = _labelsVisible };
+			var tag = new Label { Name = "Tag", Visible = _labelMode == LabelMode.Toutes };
 			tag.AddThemeFontSizeOverride("font_size", 11);
 			tag.AddThemeColorOverride("font_color", new Color(1f, 1f, 1f, 0.85f));
 			tag.AddThemeColorOverride("font_outline_color", Colors.Black);
@@ -659,12 +793,22 @@ namespace Symbiose
 					continue;
 				}
 				Vector2 o = _origins[p["tile"].AsString()];
+				float wx = o.X + (float)p["x_cm"].AsDouble();
+				float wy = o.Y + (float)p["y_cm"].AsDouble();
 				var renderer = new PlantRenderer
 				{
-					Position = WorldToScreen(o.X + (float)p["x_cm"].AsDouble(),
-											 o.Y + (float)p["y_cm"].AsDouble()),
+					Position = WorldToScreen(wx, wy),
 					Name = $"{p["tile"].AsString()}_{p["species"].AsString()}_{_plantSeq++}",
 				};
+				// Métadonnées de picking (volet B) : position MONDE pour la
+				// distance au clic/survol, et la désignation EXACTE du snapshot
+				// (tile + x/y locaux) renvoyée telle quelle au serveur — la
+				// position est l'identité, on n'invente pas d'id (kickoff §8).
+				renderer.SetMeta("wx", wx);
+				renderer.SetMeta("wy", wy);
+				renderer.SetMeta("tile", p["tile"]);
+				renderer.SetMeta("lx", p["x_cm"]);
+				renderer.SetMeta("ly", p["y_cm"]);
 				if (fade) renderer.Modulate = new Color(1f, 1f, 1f, 0f);
 				_objects.AddChild(renderer);
 				renderer.SetStructure(structure);
@@ -696,6 +840,15 @@ namespace Symbiose
 			GD.Print($"[WorldView] {season} an {_year}, semaine {_weekInSeason}/13 : "
 					 + $"{_plantNodes.Count} plantes (+{born} −{dead.Count}, "
 					 + $"{grown} maj, {empty} sans segments).");
+
+			// Bloc joueur (volet B, lecture seule) → 2e ligne du HUD.
+			if (snap.ContainsKey("player"))
+			{
+				var pl = snap["player"].AsGodotDictionary();
+				_vigueur = pl["vigueur"].AsDouble();
+				_vigueurMax = pl["vigueur_max"].AsDouble();
+			}
+			UpdateActionHud();
 
 			// Fin de saison : retour AUTOMATIQUE en planification (boucle
 			// hybride) + hook auto-save. Détection = le nom de saison change.
@@ -743,22 +896,36 @@ namespace Symbiose
 			_clockLabel.Text = "t4 — chargement du monde…";
 			hud.AddChild(_clockLabel);
 
+			// 2e ligne (volet B) : Vigueur + geste sélectionné + dernier ACK/NAK
+			// du serveur. Chiffres au HUD = assumé PROVISOIRE (philo #5 : le HUD
+			// final passera par des indices visuels, ceci est l'instrument de
+			// validation de la tranche).
+			_actionLabel = new Label { Position = new Vector2(16f, 52f) };
+			_actionLabel.AddThemeFontSizeOverride("font_size", 20);
+			_actionLabel.AddThemeColorOverride("font_color", Colors.White);
+			_actionLabel.AddThemeColorOverride("font_outline_color", Colors.Black);
+			_actionLabel.AddThemeConstantOverride("outline_size", 6);
+			hud.AddChild(_actionLabel);
+
 			// Légende des commandes (décision Nico 2026-06-10) : ce que le
 			// joueur PEUT faire, coin bas-gauche, petite police. PROVISOIRE
 			// (philo #5/#6 : pas de tutoriel imposé — la v1 aura la page
 			// d'accueil pictogrammes ; ici c'est l'instrument de validation).
-			// Le volet B y ajoutera les gestes 1..8. Position fixe : la
-			// résolution projet est 1920×1080.
-			var legend = new Label { Position = new Vector2(16f, 1080f - 66f) };
+			// Position fixe : la résolution projet est 1920×1080.
+			var legend = new Label { Position = new Vector2(16f, 1080f - 90f) };
 			legend.AddThemeFontSizeOverride("font_size", 18);
 			legend.AddThemeColorOverride("font_color", Colors.White);
 			legend.AddThemeColorOverride("font_outline_color", Colors.Black);
 			legend.AddThemeConstantOverride("outline_size", 6);
 			legend.Text = "Espace lancer/pause · flèches déplacer"
 				+ " · molette zoom · PageUp/PageDown pivoter\n"
-				+ "M mode simu · F3 étiquettes · H maison transparente";
+				+ "M mode simu · F3 étiquettes (survol/toutes/aucune) · H maison transparente\n"
+				+ "gestes : 1 récolter · 2 déraciner · 3 écraser · 4 favoriser aux. · "
+				+ "5 bêcher · 6 grelinette · 7 tailler (Maj = branche) · 8 manger"
+				+ " — clic gauche = agir";
 			hud.AddChild(legend);
 			AddChild(hud);
+			UpdateActionHud();
 		}
 
 		private void UpdateClock()
@@ -790,6 +957,178 @@ namespace Symbiose
 			}
 			_clockLabel.Text =
 				$"{_season} · an {_year} — semaine {_weekInSeason}/13{jauge}   {etat}";
+		}
+
+		// -------------------------------------------------------------------
+		// ACTIONS JOUEUR (tranche 4, volet B) — touches 1..8 = geste, clic
+		// gauche = exécuter. La vue RÉSOUT la désignation (plante/plot/tuile)
+		// et TRANSMET ; Python valide, applique, répond ACK/NAK + snapshot.
+		// -------------------------------------------------------------------
+
+		private void SelectGeste(int idx)
+		{
+			_gesteIndex = idx;
+			_lastActionMsg = "";
+			GD.Print($"[WorldView] geste : {Gestes[idx].Nom} [{idx + 1}].");
+			UpdateActionHud();
+		}
+
+		private void TryAction(Vector2 canvasPos, bool shift)
+		{
+			if (_world == null || _lastSnap == null) return;   // monde pas prêt
+			if (_gesteIndex < 0)
+			{
+				_lastActionMsg = "aucun geste sélectionné (touches 1..8)";
+				UpdateActionHud();
+				FlashActionLabel();
+				return;
+			}
+
+			var (verb, nom, kind) = Gestes[_gesteIndex];
+			Vector2 w = ScreenToWorld(canvasPos);
+			GDict target = null;
+			var prms = new GDict();
+			PlantRenderer node = null;
+
+			switch (kind)
+			{
+				case 'p':   // plante la plus proche dans le rayon de tolérance
+					node = FindPlant(w, PickRadiusCm);
+					if (node == null)
+					{
+						_lastActionMsg = $"{nom} : aucune plante à portée du clic";
+						UpdateActionHud(); FlashActionLabel();
+						return;
+					}
+					target = new GDict
+					{
+						["tile"] = node.GetMeta("tile"),
+						["x_cm"] = node.GetMeta("lx"),
+						["y_cm"] = node.GetMeta("ly"),
+					};
+					// Taille : Maj+clic vise un latéral (égourmandage), sinon
+					// l'apex (écimage) — défaut sobre ; le choix de la branche
+					// AU CLIC (picking de segment) est à l'étude, cf. 00_etat.
+					if (verb == "tailler")
+						prms["cible"] = shift ? "branche" : "apex";
+					break;
+
+				case 'q':   // plot (tile, r, c) sous le clic
+				case 't':   // tuile sous le clic
+					if (!FindPlot(w, out string tileId, out int r, out int c))
+					{
+						_lastActionMsg = $"{nom} : aucune tuile ici (chemin/maison)";
+						UpdateActionHud(); FlashActionLabel();
+						return;
+					}
+					target = new GDict { ["tile"] = tileId };
+					if (kind == 'q') { target["r"] = r; target["c"] = c; }
+					// La couture préparation/réaction (§3.1, déjà codée moteur) :
+					// en phase Saison le geste est une RÉACTION → urgence (×1.5).
+					// En Pause on réfléchit : temps figé = tarif planification.
+					if (verb == "ecraser")
+						prms["urgence"] = _phase == Phase.Saison;
+					break;
+
+				// '-' : grelinette, pas de cible.
+			}
+
+			// Pipe occupé (step ou action en vol) → l'intention est MÉMORISÉE
+			// (une seule, la dernière gagne) et partira dès que le tube se
+			// libère — indispensable en Turbo où le pipe ne dort jamais.
+			if (_pendingStep != null || _pendingAction != null)
+			{
+				_queuedIntent = (verb, target, prms, node);
+				GD.Print($"[WorldView] pipe occupé — intention {verb} mémorisée.");
+				return;
+			}
+			LaunchAction(verb, target, prms, node);
+		}
+
+		private void LaunchAction(string verb, GDict target, GDict prms, PlantRenderer node)
+		{
+			GD.Print($"[WorldView] → action {verb} "
+					 + (target != null ? Json.Stringify(target) : "(sans cible)")
+					 + (prms != null && prms.Count > 0 ? $" params {Json.Stringify(prms)}" : "") + ".");
+			_actionTargetNode = node;
+			var prmsArg = prms != null && prms.Count > 0 ? prms : null;
+			_pendingAction = Task.Run(() => _bridge.Action(verb, target, prmsArg));
+		}
+
+		/// <summary>Plante affichée la plus proche du point MONDE (cm), dans
+		/// `radiusCm`, ou null. ~170 nœuds : recherche linéaire, pas de quadtree
+		/// à inventer (leçon perf : mesurer avant d'optimiser).</summary>
+		private PlantRenderer FindPlant(Vector2 w, float radiusCm)
+		{
+			PlantRenderer best = null;
+			float bestD = radiusCm * radiusCm;
+			foreach (var node in _plantNodes.Values)
+			{
+				float dx = (float)node.GetMeta("wx").AsDouble() - w.X;
+				float dy = (float)node.GetMeta("wy").AsDouble() - w.Y;
+				float d = dx * dx + dy * dy;
+				if (d < bestD) { bestD = d; best = node; }
+			}
+			return best;
+		}
+
+		/// <summary>Tuile + plot contenant le point MONDE (cm). False si le
+		/// point tombe entre les tuiles (chemins) ou sur la maison.</summary>
+		private bool FindPlot(Vector2 w, out string tileId, out int r, out int c)
+		{
+			foreach (var tv in _world["tiles"].AsGodotArray())
+			{
+				var t = tv.AsGodotDictionary();
+				float ox = (float)t["origin_x_cm"].AsDouble();
+				float oy = (float)t["origin_y_cm"].AsDouble();
+				int rows = t["rows"].AsInt32(), cols = t["cols"].AsInt32();
+				if (w.X >= ox && w.X < ox + cols * PlotCm
+					&& w.Y >= oy && w.Y < oy + rows * PlotCm)
+				{
+					tileId = t["id"].AsString();
+					c = (int)((w.X - ox) / PlotCm);
+					r = (int)((w.Y - oy) / PlotCm);
+					return true;
+				}
+			}
+			tileId = null; r = c = 0;
+			return false;
+		}
+
+		// Étiquette au survol (demande Nico 2e F5 t4) : seule la plante la plus
+		// proche de la souris montre la sienne. Premier consommateur du picking
+		// ScreenToWorld — le clic réutilise exactement la même résolution.
+		private void UpdateHoverTag()
+		{
+			if (_labelMode != LabelMode.Survol || _plantNodes.Count == 0) return;
+			var best = FindPlant(ScreenToWorld(GetGlobalMousePosition()), HoverRadiusCm);
+			foreach (var node in _plantNodes.Values)
+			{
+				var tag = node.GetNodeOrNull<Label>("Tag");
+				if (tag != null) tag.Visible = node == best;
+			}
+		}
+
+		private void UpdateActionHud()
+		{
+			if (_actionLabel == null) return;
+			string vig = _vigueur < 0 ? "Vigueur —"
+				: $"Vigueur {_vigueur:F0}/{_vigueurMax:F0}";
+			string geste = _gesteIndex < 0 ? "aucun (1..8)"
+				: $"{Gestes[_gesteIndex].Nom} [{_gesteIndex + 1}]";
+			string msg = string.IsNullOrEmpty(_lastActionMsg) ? ""
+				: $"   ·   {_lastActionMsg}";
+			_actionLabel.Text = $"{vig} — geste : {geste}{msg}";
+		}
+
+		// Refus métier → flash rouge de la 2e ligne (kickoff B·12 : pas de
+		// popup ; le détail est en console).
+		private void FlashActionLabel()
+		{
+			if (_actionLabel == null) return;
+			_actionLabel.Modulate = new Color(1f, 0.35f, 0.35f);
+			_actionLabel.CreateTween()
+				.TweenProperty(_actionLabel, "modulate", Colors.White, 0.6f);
 		}
 
 		// -------------------------------------------------------------------
@@ -883,8 +1222,9 @@ namespace Symbiose
 		// 1188 polygones + ~170 plantes = instantané, pas d'optimisation.
 		// SANS fondu : même semaine vue d'un autre coin, pas des naissances.
 		// La caméra ne bouge pas (défaut sobre) : la boîte du monde projeté est
-		// la même à toute orientation — recentrer sur le MÊME point monde
-		// demanderait ScreenToWorld, qui arrive au volet B (picking).
+		// la même à toute orientation — suivre le MÊME point monde pendant la
+		// rotation (ScreenToWorld existe depuis le volet B) reste une finition
+		// pour le sprint UI si le besoin se confirme à l'usage.
 		private void RebuildWorld()
 		{
 			_ground.QueueFree();
