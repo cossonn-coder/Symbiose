@@ -223,14 +223,43 @@ carnet. Indices **visuels** d'abord (philo #5 : pas de chiffres en HUD primaire)
   retours auto en planification aux passages été→automne. Golden intact
   (`16a1b937…`). Au passage : 1ʳᵉ saison post-warmup = 1 semaine (warmup 12
   sem. → démarrage sem. 13/13 du printemps), assumé kickoff.
-- **Prochaine : tranche 4 — kickoff PRÊT : `04_camera_actions.md`**
-  (demande Nico : inclure la caméra). **2 volets séquentiels** : A = caméra
-  D35 (pan flèches, zoom paliers, rotation quarts de tour par re-projection
-  `Orientation` dans `WorldToScreen` + `RebuildWorld`) ; B = actions joueur
-  (Vigueur branchée dans `sim_server.py` via façades existantes, commande
-  `action` verbe+cible+params, plante désignée PAR POSITION, `urgence` =
-  phase Saison, 8 gestes existants — `planter`/`arroser` EXCLUS : pas
-  d'équivalent moteur, backlog). Committable volet par volet.
+### Tranche 4 — volet A (caméra D35) : ✅ CLOS (2026-06-11, confirmé F5)
+- **Livré** : `world/WorldView.cs` + `visuals/PlantRenderer.cs`. Caméra
+  jouable : **pan flèches** (vitesse px écran, bornée monde + marge 10 %),
+  **zoom molette** par paliers {0.5, 1, 2, 4, 8, 16, 32} centré souris
+  (paliers < 4 provisoires, cf. kickoff), **rotation PageUp/PageDown** par
+  quarts de tour (`_orientation` dans `WorldToScreen` + `RebuildWorld()` ;
+  variante **`WorldToScreenOffset`** point/vecteur pour les offsets plante —
+  le phototropisme penche vers le même point monde à toute orientation).
+  **Légende des commandes** au HUD (bas-gauche). **D35 levée.**
+- **Retours Nico (1er F5 t4) intégrés** : toit **pyramidal** 4 pans + façades
+  teintées côté MONDE (soleil au sud — la maison tourne visiblement) ;
+  **boussole** N/S/E/O au sol ; **étiquettes** espèce·stade sous chaque
+  plante (toggle **F3**) ; **maison transparente** (toggle **H**) ; **modes
+  simu** (touche **M**) : Saison / Continu / Turbo ; **ombres placeholder**
+  (maison vers le nord, disque au pied des plantes) ; sens de rotation =
+  caméra orbite à droite sur PageUp.
+- **Retour Nico (2e F5, 2026-06-11) — triage** :
+  - **Ombre solaire animée** (direction/longueur selon heure du jour et
+    saison, au lieu du nord fixe) : le modèle existe déjà côté moteur
+    (`fields/light.py:solar_slice`, azimut+élévation astronomiques). Décision
+    Nico : **après le volet B** (volet C de cette tranche ou t5) — portage
+    de la formule côté vue, balayage de l'arc solaire pendant la semaine
+    vécue (le moteur n'a pas de notion de jour : 1 semaine vécue ≈ 1 journée
+    visuelle, fidèle au modèle, zéro Python touché).
+  - **Étiquette au survol uniquement** (pas toutes à la fois) : intégrée au
+    **volet B** — premier consommateur du picking `ScreenToWorld`.
+  - **Plusieurs plantes par plot** : limite réelle du MOTEUR
+    (`sim/succession.py` : « Plot déjà occupé → pas de germination ») →
+    **sprint Python dédié** gravé au backlog (compétition intra-plot).
+  - **Plantes mortes visibles + décomposition** : moteur aussi → **sprint
+    « décomposition & compost »** gravé au backlog.
+- **Prochaine étape : volet B — actions joueur** (kickoff
+  `04_camera_actions.md` §B) : Vigueur branchée dans `sim_server.py` via
+  façades existantes, commande `action` verbe+cible+params, plante désignée
+  PAR POSITION, `urgence` = phase Saison, 8 gestes existants —
+  `planter`/`arroser` EXCLUS : pas d'équivalent moteur, backlog. S'y ajoute
+  l'étiquette au survol (picking partagé clic/survol).
 
 ## Lien dette
 Lève progressivement **D24** (le « portage C# » devient « pont », plus un portage

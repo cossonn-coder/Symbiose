@@ -43,14 +43,29 @@ namespace Symbiose
 		private static readonly Color ApexColor = new Color("5ec46a");
 		private static readonly Color WoodColor = new Color("7a5230");
 		private static readonly Color CrownColor = new Color("3f7a4e"); // silhouette LOD
+		private static readonly Color ShadowColor = new Color(0f, 0f, 0f, 0.18f);
 
 		// La structure à dessiner (assignée par le spawner, cf. TileGrid). Null tant
 		// que rien n'est chargé → _Draw ne fait rien.
 		private PlantStructure _structure;
+		// Étendue horizontale max des segments autour du collet (cm) — rayon de
+		// l'ombre au sol, recalculé à chaque SetStructure (t4 A2).
+		private float _spreadCm;
 
 		public void SetStructure(PlantStructure s)
 		{
 			_structure = s;
+			_spreadCm = 8f;   // minimum visible, même pour une pousse droite
+			if (s != null)
+			{
+				Vector3 collet = s.ColletCm;
+				foreach (var seg in s.Segments)
+				{
+					Vector3 tip = seg.Base + seg.Dir * seg.LengthCm;
+					float d = new Vector2(tip.X - collet.X, tip.Y - collet.Y).Length();
+					if (d > _spreadCm) _spreadCm = d;
+				}
+			}
 			QueueRedraw(); // redemande un _Draw au prochain frame
 		}
 
@@ -58,8 +73,14 @@ namespace Symbiose
 		// PROJECTION
 		// ---------------------------------------------------------------------------
 
+		// dx/dy sont des OFFSETS au collet (vecteurs) → variante Offset de la
+		// projection : seule la partie linéaire de l'orientation de vue (D35,
+		// tranche 4) s'applique. WorldToScreen (points absolus) ajouterait la
+		// translation du quart de tour et téléporterait chaque branche. Effet
+		// gagné : la plante « tourne » avec le monde — son phototropisme penche
+		// vers le même point monde (la maison) quelle que soit la vue.
 		private static Vector2 Iso(float dx, float dy, float dz) =>
-			WorldView.WorldToScreen(dx, dy) - new Vector2(0f, dz * WorldView.PxPerCmZ);
+			WorldView.WorldToScreenOffset(dx, dy) - new Vector2(0f, dz * WorldView.PxPerCmZ);
 
 		// ---------------------------------------------------------------------------
 		// DESSIN
@@ -70,6 +91,13 @@ namespace Symbiose
 			if (_structure == null || _structure.Segments.Count == 0)
 				return;
 
+			// Ombre au sol D'ABORD (sous le bois) : ancre la plante au sol —
+			// deux plantes alignées se distinguent, et la courbure se LIT (on
+			// voit de combien l'apex s'écarte de l'aplomb du collet). C'est un
+			// indice de PROFONDEUR de la vue, pas l'ombrage écologique (lui vit
+			// dans le champ lumière Python, overlay en t5).
+			DrawGroundShadow();
+
 			// LOD §H.3 : zoom faible → on ne rastérise pas chaque brindille, on
 			// dessine la silhouette de couronne dérivée de l'empreinte (§G).
 			if (ZoomPalier <= 4)
@@ -79,6 +107,22 @@ namespace Symbiose
 			}
 
 			DrawSegments();
+		}
+
+		// Disque monde de rayon _spreadCm centré au collet, projeté point par
+		// point via WorldToScreenOffset → ellipse iso exacte qui suit aussi
+		// l'orientation de la vue (D35).
+		private void DrawGroundShadow()
+		{
+			const int n = 16;
+			var pts = new Vector2[n];
+			for (int i = 0; i < n; i++)
+			{
+				float a = Mathf.Tau * i / n;
+				pts[i] = WorldView.WorldToScreenOffset(
+					_spreadCm * Mathf.Cos(a), _spreadCm * Mathf.Sin(a));
+			}
+			DrawColoredPolygon(pts, ShadowColor);
 		}
 
 		private void DrawSegments()
