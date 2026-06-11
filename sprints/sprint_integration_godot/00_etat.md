@@ -308,9 +308,61 @@ carnet. Indices **visuels** d'abord (philo #5 : pas de chiffres en HUD primaire)
   étendre la façade `tailler` de `sim/actions.py` (couche joueur, golden
   écolo intact), le protocole (`target.segment`), et le hit-test/surbrillance
   des segments côté vue.
-- **À re-valider F5 (correctifs volet B)** : clic en Turbo (intention
-  mémorisée), flash jaune sur geste réussi, gain affiché sur manger,
-  ravageurs chiffrés sur écraser. `DebugSecondsPerWeek=3` encore actif.
+- **2e F5 Nico (2026-06-11) : correctifs volet B VALIDÉS** (« ok c'est
+  bon ») → **volet B CLOS, commit 48f1bdd**.
+
+### Tranche 4 — volet C (ombre solaire animée) : CODÉ (2026-06-11), en attente F5
+- **Livré (C# seul, zéro Python)** : `WorldView.cs` — portage de
+  `fields/light.py:solar_slice` (latitude 49°N, déclinaison saisonnière
+  ±23,4°, lever/coucher astronomiques `cos H = −tan φ·tan δ`) ; la **jauge
+  intra-semaine devient l'heure du jour** (1 semaine vécue ≈ 1 journée
+  visuelle, du lever au coucher) ; statiques partagées `SunShadowDir` /
+  `SunInvTan` (borné 3,5× la hauteur) / `SunStrength` ; Planification/
+  Turbo → midi figé, Pause → ombre figée (accumulateur gelé) ; **early-out
+  < 2°** (≈ 1 redraw/s à 60 s/sem, ~15/s en debug 3 s). Ombre MAISON =
+  enveloppe convexe monde (empreinte + coins déplacés + faîte,
+  `Geometry2D.ConvexHull`) re-projetée — survit à la rotation D35. Alpha ∝
+  force solaire (soleil bas = ombre pâle et longue). `PlantRenderer.cs` —
+  le disque devient une **ombre-capsule** (disque glissé le long de la
+  direction sur hauteur × 1/tan(élévation)) = le modèle EXACT des
+  ombres-capsules du moteur ; `_heightCm` calculé au `SetStructure`.
+- **Valeurs attendues** (vérifiées sur le `solar_slice` Python) : hiver
+  jour court ±60°, ombre midi 3,15×h ; été ±120°, midi 0,48×h, ombres du
+  soir pointant légèrement SUD (soleil levé au nord-est — réalisme
+  gratuit). Les saisons se lisent à l'œil.
+- **F5 Nico (2026-06-11) : volet C VALIDÉ, 5/5 critères** (balayage,
+  saisons contrastées, pause/planification, rotation, maison transparente
+  qui ombre toujours). Témoin de build vu et adopté. Au passage Nico a
+  observé les ombres SUD des matins/soirs d'été — réel (azimut du lever
+  `cos A = sin δ/cos φ` → lever au NE à δ=+23,4°), pédagogie donnée.
+- **Idée design Nico consignée (2026-06-11)** : un événement météo se
+  représentera comme l'ombre — déroulé sur la SEMAINE vécue (pluie, vent,
+  gel), même granularité hebdo que le moteur, et son impact (humidité,
+  température, ombrage, vent) suivra le même patron visuel. À reprendre au
+  sprint rendu météo (cf. `CONCEPTION_METEO.md`).
+
+### Tranche 4 — volet C2 (perf ombres + mesures) : CODÉ (2026-06-11), F5 rapide à faire
+- **Retour perf Nico** : « plus la simulation avance plus l'ombre ralentit
+  le jeu ». Cause racine : le balayage solaire faisait `QueueRedraw` sur la
+  PLANTE entière (tous segments, ~15×/s en debug). Livré :
+  - **Ombre = nœud enfant `PlantShadow`** (`ShowBehindParent`) : le soleil
+    ne redessine QUE les ombres (1 petit polygone chacune), plus jamais les
+    segments — le coût ne grandit plus avec l'âge des plantes.
+  - **Touche O** : coupe toutes les ombres (`WorldView.ShadowsOn`,
+    `_Draw` no-op + `UpdateSun` endormi = coût strictement nul).
+  - **Touche F4 — overlay de perfs** (demande Nico) : FPS, durée du dernier
+    tick complet (pipe+sim+parse), cadence réelle s/semaine (+ jours
+    simulés/s), plantes (+pousses), segments, état ombres, zoom. Mesuré
+    côté vue, moteur non instrumenté.
+  - Témoin de build → **« t4·C2 ombres O + perfs F4 — 2026-06-11 »**.
+- **TRANCHE 4 CLOSE après ce F5** (volets A, B, C, C2). La taille au
+  segment près (ex-volet D) devient la **tranche 5 — kickoff PRÊT :
+  `05_taille_segment.md`** (façade `tailler(segment_id)` + protocole
+  `target.segment` + hit-test/surbrillance). Après t5 : t6 = organes +
+  overlays + vie macro (kickoff `06_*.md` à écrire).
+- **Workflow acté (2026-06-11, cf. mémoire feedback-format)** : un retour
+  Nico sur livrable → tri en sprint indépendant ou dette + clôture
+  facilitée du sprint en cours (pas de dev immédiat) — appliqué ici même.
 
 ## Lien dette
 Lève progressivement **D24** (le « portage C# » devient « pont », plus un portage

@@ -43,7 +43,6 @@ namespace Symbiose
 		private static readonly Color ApexColor = new Color("5ec46a");
 		private static readonly Color WoodColor = new Color("7a5230");
 		private static readonly Color CrownColor = new Color("3f7a4e"); // silhouette LOD
-		private static readonly Color ShadowColor = new Color(0f, 0f, 0f, 0.18f);
 
 		// La structure à dessiner (assignée par le spawner, cf. TileGrid). Null tant
 		// que rien n'est chargé → _Draw ne fait rien.
@@ -51,11 +50,28 @@ namespace Symbiose
 		// Étendue horizontale max des segments autour du collet (cm) — rayon de
 		// l'ombre au sol, recalculé à chaque SetStructure (t4 A2).
 		private float _spreadCm;
+		// Hauteur de cime (cm) — porte la LONGUEUR de l'ombre-capsule (t4 volet
+		// C) : longueur = hauteur × 1/tan(élévation), exactement le modèle
+		// ombres-capsules du moteur (fields/light.py §3).
+		private float _heightCm;
+		// L'ombre vit dans un nœud ENFANT séparé (volet C2, retour perf Nico) :
+		// quand le soleil balaye, SEULE l'ombre se redessine (un polygone),
+		// jamais les segments — le coût du balayage ne grandit plus avec l'âge
+		// des plantes. ShowBehindParent la dessine SOUS le bois, même YSort.
+		private PlantShadow _shadow;
+
+		public override void _Ready()
+		{
+			_shadow = new PlantShadow { Name = "Shadow", ShowBehindParent = true };
+			AddChild(_shadow);
+			_shadow.SetExtent(_spreadCm, _heightCm);   // si SetStructure a précédé
+		}
 
 		public void SetStructure(PlantStructure s)
 		{
 			_structure = s;
 			_spreadCm = 8f;   // minimum visible, même pour une pousse droite
+			_heightCm = 10f;  // plancher : même une pousse projette un soupçon
 			if (s != null)
 			{
 				Vector3 collet = s.ColletCm;
@@ -64,8 +80,11 @@ namespace Symbiose
 					Vector3 tip = seg.Base + seg.Dir * seg.LengthCm;
 					float d = new Vector2(tip.X - collet.X, tip.Y - collet.Y).Length();
 					if (d > _spreadCm) _spreadCm = d;
+					float z = tip.Z - collet.Z;
+					if (z > _heightCm) _heightCm = z;
 				}
 			}
+			_shadow?.SetExtent(_spreadCm, _heightCm);
 			QueueRedraw(); // redemande un _Draw au prochain frame
 		}
 
@@ -91,12 +110,9 @@ namespace Symbiose
 			if (_structure == null || _structure.Segments.Count == 0)
 				return;
 
-			// Ombre au sol D'ABORD (sous le bois) : ancre la plante au sol —
-			// deux plantes alignées se distinguent, et la courbure se LIT (on
-			// voit de combien l'apex s'écarte de l'aplomb du collet). C'est un
-			// indice de PROFONDEUR de la vue, pas l'ombrage écologique (lui vit
-			// dans le champ lumière Python, overlay en t5).
-			DrawGroundShadow();
+			// L'ombre au sol n'est PLUS dessinée ici (volet C2) : elle vit dans
+			// le nœud enfant PlantShadow (ShowBehindParent) — le balayage du
+			// soleil ne redessine qu'elle, jamais ces segments-ci.
 
 			// LOD §H.3 : zoom faible → on ne rastérise pas chaque brindille, on
 			// dessine la silhouette de couronne dérivée de l'empreinte (§G).
@@ -107,22 +123,6 @@ namespace Symbiose
 			}
 
 			DrawSegments();
-		}
-
-		// Disque monde de rayon _spreadCm centré au collet, projeté point par
-		// point via WorldToScreenOffset → ellipse iso exacte qui suit aussi
-		// l'orientation de la vue (D35).
-		private void DrawGroundShadow()
-		{
-			const int n = 16;
-			var pts = new Vector2[n];
-			for (int i = 0; i < n; i++)
-			{
-				float a = Mathf.Tau * i / n;
-				pts[i] = WorldView.WorldToScreenOffset(
-					_spreadCm * Mathf.Cos(a), _spreadCm * Mathf.Sin(a));
-			}
-			DrawColoredPolygon(pts, ShadowColor);
 		}
 
 		private void DrawSegments()
@@ -170,6 +170,57 @@ namespace Symbiose
 				pts[i] = center + new Vector2(rx * Mathf.Cos(a), ry * Mathf.Sin(a));
 			}
 			DrawColoredPolygon(pts, CrownColor);
+		}
+	}
+
+	// =======================================================================
+	// OMBRE-CAPSULE AU SOL (t4 volet C, isolée en C2 — retour perf Nico) :
+	// disque monde de rayon spread glissé depuis le collet le long de la
+	// direction d'ombre solaire, sur hauteur × 1/tan(élévation) — le modèle
+	// EXACT des ombres-capsules du moteur (fields/light.py §3). Nœud séparé :
+	// quand UpdateSun balaye (≥ 2°), il ne fait QueueRedraw QUE sur ces nœuds
+	// — un petit polygone chacun — jamais sur les segments des plantes. Chaque
+	// point passe par WorldToScreenOffset → l'ombre suit AUSSI la rotation de
+	// la vue (D35). Touche O (WorldView.ShadowsOn) : _Draw vide = coût nul.
+	// =======================================================================
+	public partial class PlantShadow : Node2D
+	{
+		private static readonly Color ShadowColor = new Color(0f, 0f, 0f, 0.18f);
+		private float _spreadCm = 8f;    // rayon de la capsule (étalement)
+		private float _heightCm = 10f;   // hauteur de cime → longueur d'ombre
+
+		public void SetExtent(float spreadCm, float heightCm)
+		{
+			_spreadCm = spreadCm;
+			_heightCm = heightCm;
+			QueueRedraw();
+		}
+
+		public override void _Draw()
+		{
+			if (!WorldView.ShadowsOn) return;
+			Vector2 dir = WorldView.SunShadowDir;            // unité, monde
+			Vector2 end = dir * (_heightCm * WorldView.SunInvTan);
+			float a0 = Mathf.Atan2(dir.Y, dir.X);
+			const int n = 8;                                  // par demi-cercle
+			var pts = new Vector2[2 * (n + 1)];
+			int k = 0;
+			for (int i = 0; i <= n; i++)                      // arrière (collet)
+			{
+				float a = a0 + Mathf.Pi / 2f + Mathf.Pi * i / n;
+				pts[k++] = WorldView.WorldToScreenOffset(
+					_spreadCm * Mathf.Cos(a), _spreadCm * Mathf.Sin(a));
+			}
+			for (int i = 0; i <= n; i++)                      // avant (bout d'ombre)
+			{
+				float a = a0 - Mathf.Pi / 2f + Mathf.Pi * i / n;
+				pts[k++] = WorldView.WorldToScreenOffset(
+					end.X + _spreadCm * Mathf.Cos(a), end.Y + _spreadCm * Mathf.Sin(a));
+			}
+			// Soleil bas → lumière faible → ombre plus pâle (et plus longue).
+			var col = ShadowColor;
+			col.A = ShadowColor.A * Mathf.Clamp(WorldView.SunStrength * 1.4f, 0.3f, 1f);
+			DrawColoredPolygon(pts, col);
 		}
 	}
 }

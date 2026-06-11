@@ -72,6 +72,12 @@ namespace Symbiose
 {
 	public partial class WorldView : Node2D
 	{
+		// TÉMOIN DE BUILD — incrémenté à CHAQUE volet livré. Affiché en haut à
+		// droite de l'écran + imprimé en console au lancement : si la version à
+		// l'écran n'est pas celle annoncée par Claude, le circuit VM → sync
+		// Nextcloud → build Godot n'est pas passé (piège connu depuis t3).
+		public const string Build = "t4·C2 ombres O + perfs F4 — 2026-06-11";
+
 		// -------------------------------------------------------------------
 		// CALIBRATION (mesurée sur assets/sprites/tiles/tile_terre.png — D2)
 		// Le losange UTILE du sprite fait 78×39 px (iso 2:1 exact) + un socle
@@ -125,6 +131,40 @@ namespace Symbiose
 				(dxCm, dyCm) = (dyCm, -dxCm);
 			return new Vector2((dxCm - dyCm) * PxPerCmX, (dxCm + dyCm) * PxPerCmY);
 		}
+
+		// --- Soleil de la vue (volet C) --------------------------------------
+		// 📖 Pédagogie — la MÊME formule que le moteur, pas une invention :
+		// fields/light.py:solar_slice (astronomie : latitude 49°N, déclinaison
+		// saisonnière ±23,4°, angle horaire → azimut + élévation → direction et
+		// longueur d'ombre). Le moteur n'échantillonne que 3 tranches horaires
+		// pour l'INTÉGRALE écologique hebdo ; la vue, elle, balaye l'angle
+		// horaire CONTINÛMENT pendant la semaine vécue : 1 semaine (60 s) ≈ 1
+		// journée visuelle, du lever au coucher (le moteur n'a pas de notion de
+		// jour — c'est un éclairage de vue, fidèle au modèle, jamais une règle).
+		// Ces statiques sont LUES par PlantRenderer (capsules d'ombre).
+		public static Vector2 SunShadowDir { get; private set; } = new Vector2(0f, -1f);
+		public static float SunInvTan { get; private set; } = 1.0f;   // longueur = h × invTan
+		public static float SunStrength { get; private set; } = 1.0f; // sin(élévation)
+		// Touche O (volet C2, retour perf Nico) : coupe TOUTES les ombres
+		// (plantes + maison) — PlantShadow._Draw devient un no-op, UpdateSun
+		// s'endort. Lu par PlantShadow.
+		public static bool ShadowsOn { get; private set; } = true;
+		private const float LatitudeDeg = 49.0f;    // = fields/light.py LATITUDE_DEG
+		// Ombre bornée à 3,5× la hauteur : au ras de l'horizon 1/tan(élév) → ∞,
+		// l'écran n'a pas besoin d'ombres kilométriques pour dire « soir ».
+		private const float MaxInvTan = 3.5f;
+		// Marge au lever/coucher (°) : on ne balaye pas jusqu'à l'horizon exact.
+		private const float SunriseMarginDeg = 8f;
+		private float _lastSunH = float.NaN;        // dernier angle horaire appliqué
+		private string _lastSunSeason;
+
+		// = SOLAR_DECLINATION de fields/light.py (clés sans accent du moteur).
+		private static float DeclinationOf(string season) => season switch
+		{
+			"ete"   => 23.4f,
+			"hiver" => -23.4f,
+			_       => 0.0f,    // printemps / automne : équinoxes
+		};
 
 		/// <summary>
 		/// L'INVERSE de WorldToScreen (picking, volet B) : canvas → monde (cm).
@@ -218,6 +258,10 @@ namespace Symbiose
 		private Node2D _objects;   // maison + plantes, YSort (cf. en-tête)
 		private Node2D _ground;    // sol — reconstruit à chaque rotation
 		private Node2D _house;     // pour le mode transparent (touche H)
+		// Ombre maison ANIMÉE (volet C) : le polygone est recalculé quand le
+		// soleil bouge — paramètres gardés en champs pour ne pas relire le GDict.
+		private Polygon2D _houseShadow;
+		private float _hx0, _hy0, _hx1, _hy1, _hWallCm, _hHeightCm;
 		private Camera2D _camera;
 		private GDict _world;      // réponse de init (tuiles + maison) — pour RebuildWorld
 		private GDict _lastSnap;   // dernier snapshot appliqué — pour RebuildWorld
@@ -286,12 +330,26 @@ namespace Symbiose
 		private int _year, _weekInSeason;
 		private Label _clockLabel;
 
+		// --- Overlay de perfs (F4, volet C2 — demande Nico) -----------------
+		// Mesuré dans la vue, sans instrumenter le moteur : durée du dernier
+		// tick COMPLET (pipe + sim + parse, côté joueur c'est ça la vérité),
+		// cadence réelle entre deux semaines, et volumes du dernier snapshot.
+		private Label _perfLabel;
+		private bool _perfVisible;
+		private ulong _stepStartMs;            // départ du step en vol
+		private ulong _lastStepEndMs;          // fin du step précédent
+		private double _lastTickMs = -1;       // durée du dernier tick (ms)
+		private double _lastWeekGapSec = -1;   // s réelles entre 2 semaines
+		private int _nSegments;                // segments dessinés (snapshot)
+		private int _nPousses;                 // plantes sans segments
+
 		// -------------------------------------------------------------------
 		// CYCLE DE VIE
 		// -------------------------------------------------------------------
 
 		public override void _Ready()
 		{
+			GD.Print($"[WorldView] build : {Build}");
 			RenderingServer.SetDefaultClearColor(FondPierre);
 			// Champ STATIQUE (partagé avec PlantRenderer via WorldToScreen) :
 			// toujours repartir « nord en haut » à l'ouverture de la scène.
@@ -379,7 +437,9 @@ namespace Symbiose
 					case Key.Pagedown: RotateView(-1); break;
 					case Key.M:        CycleSimMode();    break;
 					case Key.F3:       ToggleLabels();    break;
+					case Key.F4:       TogglePerf();      break;
 					case Key.H:        ToggleHouseGhost(); break;
+					case Key.O:        ToggleShadows();   break;
 				}
 			}
 			// Molette = paliers de zoom (décision Nico 2026-06-10 : molette,
@@ -449,6 +509,25 @@ namespace Symbiose
 			GD.Print($"[WorldView] H → maison {(_houseGhost ? "transparente" : "opaque")}.");
 		}
 
+		private void ToggleShadows()
+		{
+			ShadowsOn = !ShadowsOn;
+			if (_houseShadow != null) _houseShadow.Visible = ShadowsOn;
+			// Re-dessiner les nœuds d'ombre : OFF → _Draw vide les efface ;
+			// ON → repartir d'un soleil « sale » force le recalcul immédiat.
+			_lastSunH = float.NaN;
+			foreach (var node in _plantNodes.Values)
+				node.GetNodeOrNull<Node2D>("Shadow")?.QueueRedraw();
+			GD.Print($"[WorldView] O → ombres {(ShadowsOn ? "ON" : "OFF")}.");
+		}
+
+		private void TogglePerf()
+		{
+			_perfVisible = !_perfVisible;
+			if (_perfLabel != null) _perfLabel.Visible = _perfVisible;
+			GD.Print($"[WorldView] F4 → perfs {(_perfVisible ? "ON" : "OFF")}.");
+		}
+
 		// Modulate = teinte × alpha appliquée au nœud ET ses enfants : un seul
 		// réglage rend les 5 polygones de la maison fantomatiques. L'ombre
 		// portée n'est PAS affectée (elle vit dans _ground) : une maison
@@ -467,6 +546,11 @@ namespace Symbiose
 			// 0b) Étiquette au survol (volet B) — chaque frame, ~170 distances :
 			//     trivial, pas de cache à inventer.
 			UpdateHoverTag();
+			// 0c) Soleil (volet C) : la jauge intra-semaine est l'heure du jour.
+			//     Early-out interne si le soleil a bougé de moins de 2°.
+			UpdateSun();
+			// 0d) Overlay de perfs (F4) — toutes phases.
+			if (_perfVisible) UpdatePerf();
 
 			// 1) Consommer un step terminé — TOUJOURS, même en pause : la
 			//    semaine était déjà engagée côté moteur, son résultat est dû.
@@ -474,6 +558,10 @@ namespace Symbiose
 			{
 				var step = _pendingStep;
 				_pendingStep = null;
+				ulong now = Time.GetTicksMsec();
+				_lastTickMs = now - _stepStartMs;
+				if (_lastStepEndMs > 0) _lastWeekGapSec = (now - _lastStepEndMs) / 1000.0;
+				_lastStepEndMs = now;
 				if (step.IsFaulted || step.Result == null)
 				{
 					// Moteur mort ou réponse invalide (SimBridge a déjà loggé le
@@ -540,6 +628,7 @@ namespace Symbiose
 			if (_timeAccum >= spw && _pendingStep == null && _pendingAction == null)
 			{
 				_timeAccum = 0f;
+				_stepStartMs = Time.GetTicksMsec();
 				// Task.Run : la requête part sur un thread du pool ; on ne
 				// touche à RIEN d'autre qu'au pipe depuis ce thread (règle (a)).
 				_pendingStep = Task.Run(() => _bridge.StepWeek());
@@ -553,6 +642,98 @@ namespace Symbiose
 		/// protocole v0 n'a pas de commande `save`, on ne l'invente pas en t3.
 		/// </summary>
 		private void OnSeasonEnd() { }
+
+		// -------------------------------------------------------------------
+		// SOLEIL (volet C) — portage de fields/light.py:solar_slice, balayé
+		// continûment sur la semaine vécue. Appelé chaque frame, mais ne
+		// REDESSINE que si l'angle horaire a bougé de ≥ 2° (à 60 s/semaine
+		// c'est ~1 redraw/s ; à 3 s debug, ~15/s — toujours trivial).
+		// -------------------------------------------------------------------
+
+		private void UpdateSun()
+		{
+			if (!ShadowsOn) return;        // ombres coupées (O) : zéro travail
+			if (_season == null) return;   // pas encore de snapshot
+			float spw = DebugSecondsPerWeek > 0f ? DebugSecondsPerWeek : SecondsPerWeek;
+
+			// Lever/coucher astronomiques : cos H_set = −tan φ · tan δ. C'est
+			// LUI qui fait les jours longs d'été (±120° à 49°N) et courts
+			// d'hiver (±60°) — aucune table à écrire, la formule décide.
+			float phi = Mathf.DegToRad(LatitudeDeg);
+			float dec = Mathf.DegToRad(DeclinationOf(_season));
+			float hSet = Mathf.RadToDeg(Mathf.Acos(
+				Mathf.Clamp(-Mathf.Tan(phi) * Mathf.Tan(dec), -1f, 1f)));
+
+			// Angle horaire courant : la jauge intra-semaine devient l'heure du
+			// jour. Temps figé (Planification), plein régime (Turbo) → midi.
+			float h;
+			if (_phase == Phase.Planification || _simMode == SimMode.Turbo || spw <= 0f)
+				h = 0f;
+			else
+				h = Mathf.Lerp(-hSet + SunriseMarginDeg, hSet - SunriseMarginDeg,
+							   Mathf.Clamp(_timeAccum / spw, 0f, 1f));
+			// En Pause, _timeAccum est figé → h ne bouge plus : l'ombre attend.
+
+			if (_season == _lastSunSeason && !float.IsNaN(_lastSunH)
+				&& Mathf.Abs(h - _lastSunH) < 2f)
+				return;   // soleil quasi immobile : rien à redessiner
+			_lastSunH = h;
+			_lastSunSeason = _season;
+
+			// --- solar_slice (fields/light.py), au degré près -----------------
+			float H = Mathf.DegToRad(h);
+			float sinElev = Mathf.Sin(phi) * Mathf.Sin(dec)
+				+ Mathf.Cos(phi) * Mathf.Cos(dec) * Mathf.Cos(H);
+			if (sinElev <= 1e-3f) return;   // sous l'horizon (marge le rend rare)
+			float elev = Mathf.Asin(Mathf.Clamp(sinElev, -1f, 1f));
+			float cosElev = Mathf.Cos(elev);
+			float cosAz = (Mathf.Sin(dec) - sinElev * Mathf.Sin(phi))
+				/ (cosElev * Mathf.Cos(phi));
+			float az = Mathf.Acos(Mathf.Clamp(cosAz, -1f, 1f));
+			if (h > 0f) az = Mathf.Tau - az;   // après-midi → soleil à l'Ouest
+
+			// L'ombre pointe à l'OPPOSÉ du soleil. Monde : x = Est, y = Sud →
+			// midi (az = 180°) donne (0, −1) = plein Nord, comme le moteur.
+			SunShadowDir = new Vector2(-Mathf.Sin(az), Mathf.Cos(az));
+			SunInvTan = Mathf.Min(cosElev / sinElev, MaxInvTan);
+			SunStrength = sinElev;
+
+			// Re-projeter les ombres : maison (polygone) + nœuds PlantShadow
+			// SEULS (volet C2 : jamais les segments des plantes — le balayage
+			// ne coûte plus ∝ taille des plantes).
+			UpdateHouseShadow();
+			foreach (var node in _plantNodes.Values)
+				node.GetNodeOrNull<Node2D>("Shadow")?.QueueRedraw();
+		}
+
+		// Ombre de la maison = enveloppe convexe, EN COORDONNÉES MONDE, de
+		// l'empreinte au sol + des coins hauts-de-mur projetés au sol le long
+		// de la direction d'ombre + du faîte projeté — puis projection écran
+		// point à point (une enveloppe convexe reste convexe par application
+		// affine : l'ordre des sommets survit à la projection ET à la rotation).
+		private void UpdateHouseShadow()
+		{
+			if (_houseShadow == null) return;
+			Vector2 d = SunShadowDir;
+			float lWall = _hWallCm * SunInvTan;
+			float lApex = _hHeightCm * SunInvTan;
+			var w = new Vector2[]
+			{
+				new(_hx0, _hy0), new(_hx1, _hy0), new(_hx1, _hy1), new(_hx0, _hy1),
+				new Vector2(_hx0, _hy0) + d * lWall, new Vector2(_hx1, _hy0) + d * lWall,
+				new Vector2(_hx1, _hy1) + d * lWall, new Vector2(_hx0, _hy1) + d * lWall,
+				new Vector2((_hx0 + _hx1) / 2f, (_hy0 + _hy1) / 2f) + d * lApex,
+			};
+			var hull = Geometry2D.ConvexHull(w);
+			var scr = new Vector2[hull.Length];
+			for (int i = 0; i < hull.Length; i++)
+				scr[i] = WorldToScreen(hull[i].X, hull[i].Y);
+			_houseShadow.Polygon = scr;
+			// Soleil bas = lumière faible = ombre plus pâle (et plus longue).
+			var col = OmbreColor;
+			col.A = OmbreColor.A * Mathf.Clamp(SunStrength * 1.4f, 0.3f, 1f);
+			_houseShadow.Color = col;
+		}
 
 		// -------------------------------------------------------------------
 		// SOL — un losange placeholder par plot
@@ -699,21 +880,15 @@ namespace Symbiose
 			_objects.AddChild(_house);
 			ApplyHouseGhost();   // ré-applique la transparence après un rebuild
 
-			// Ombre portée PLACEHOLDER : soleil au sud → ombre vers le NORD.
-			// Rectangle (ombre des murs) + pointe (ombre du faîte), longueur ≈
-			// hauteur. Posée dans _ground : sous tous les objets, par-dessus
-			// les plots (ordre d'ajout), et reconstruite avec la rotation.
-			_ground.AddChild(new Polygon2D
-			{
-				Polygon = new[]
-				{
-					WorldToScreen(x0, y0), WorldToScreen(x1, y0),
-					WorldToScreen(x1, y0 - wallCm),
-					WorldToScreen((x0 + x1) / 2f, y0 - heightCm),
-					WorldToScreen(x0, y0 - wallCm),
-				},
-				Color = OmbreColor,
-			});
+			// Ombre portée ANIMÉE (volet C) : polygone recalculé par
+			// UpdateHouseShadow quand le soleil bouge. Posée dans _ground :
+			// sous tous les objets, par-dessus les plots (ordre d'ajout), et
+			// reconstruite avec la rotation (BuildHouse rappelée).
+			_houseShadow = new Polygon2D { Color = OmbreColor };
+			_ground.AddChild(_houseShadow);
+			(_hx0, _hy0, _hx1, _hy1) = (x0, y0, x1, y1);
+			(_hWallCm, _hHeightCm) = (wallCm, heightCm);
+			UpdateHouseShadow();
 
 			GD.Print($"[WorldView] maison placeholder : empreinte "
 					 + $"[{x0},{y0}]→[{x1},{y1}] cm, h={heightCm} cm (murs {wallCm} cm).");
@@ -770,7 +945,7 @@ namespace Symbiose
 			_weekInSeason = ((weekInYear - 1) % 13) + 1;
 			string season = snap["season"].AsString();
 
-			int born = 0, grown = 0, empty = 0;
+			int born = 0, grown = 0, empty = 0, nSegs = 0;
 			var seen = new HashSet<string>();
 			foreach (var pv in snap["plants"].AsGodotArray())
 			{
@@ -781,6 +956,7 @@ namespace Symbiose
 					empty++;   // germination sans bois : rien à dessiner encore
 					continue;
 				}
+				nSegs += structure.Segments.Count;
 				string key = PlantKey(p);
 				seen.Add(key);
 
@@ -837,6 +1013,8 @@ namespace Symbiose
 				else node.QueueFree();
 			}
 
+			_nSegments = nSegs;
+			_nPousses = empty;
 			GD.Print($"[WorldView] {season} an {_year}, semaine {_weekInSeason}/13 : "
 					 + $"{_plantNodes.Count} plantes (+{born} −{dead.Count}, "
 					 + $"{grown} maj, {empty} sans segments).");
@@ -907,6 +1085,32 @@ namespace Symbiose
 			_actionLabel.AddThemeConstantOverride("outline_size", 6);
 			hud.AddChild(_actionLabel);
 
+			// Overlay de perfs (F4, volet C2) : sous la ligne d'action, caché
+			// par défaut. Instrument debug (philo #5 : autorisé, hors HUD final).
+			_perfLabel = new Label { Position = new Vector2(16f, 86f), Visible = false };
+			_perfLabel.AddThemeFontSizeOverride("font_size", 16);
+			_perfLabel.AddThemeColorOverride("font_color", new Color(1f, 1f, 0.8f));
+			_perfLabel.AddThemeColorOverride("font_outline_color", Colors.Black);
+			_perfLabel.AddThemeConstantOverride("outline_size", 5);
+			hud.AddChild(_perfLabel);
+
+			// Témoin de build (coin haut-droit) : LA réponse à « est-ce que je
+			// fais tourner la bonne version ? ». Discret mais toujours visible.
+			var build = new Label
+			{
+				Text = Build,
+				Position = new Vector2(1920f - 16f, 10f),
+				// Ancré à droite : on aligne la FIN du texte sur x=1904 en
+				// décalant de sa largeur estimée — un Label n'a pas d'ancrage
+				// droit sans Container ; à 14 px, ~7 px/caractère suffit.
+			};
+			build.Position -= new Vector2(Build.Length * 7f, 0f);
+			build.AddThemeFontSizeOverride("font_size", 14);
+			build.AddThemeColorOverride("font_color", new Color(1f, 1f, 1f, 0.65f));
+			build.AddThemeColorOverride("font_outline_color", Colors.Black);
+			build.AddThemeConstantOverride("outline_size", 4);
+			hud.AddChild(build);
+
 			// Légende des commandes (décision Nico 2026-06-10) : ce que le
 			// joueur PEUT faire, coin bas-gauche, petite police. PROVISOIRE
 			// (philo #5/#6 : pas de tutoriel imposé — la v1 aura la page
@@ -919,7 +1123,7 @@ namespace Symbiose
 			legend.AddThemeConstantOverride("outline_size", 6);
 			legend.Text = "Espace lancer/pause · flèches déplacer"
 				+ " · molette zoom · PageUp/PageDown pivoter\n"
-				+ "M mode simu · F3 étiquettes (survol/toutes/aucune) · H maison transparente\n"
+				+ "M mode simu · F3 étiquettes · F4 perfs · H maison transparente · O ombres\n"
 				+ "gestes : 1 récolter · 2 déraciner · 3 écraser · 4 favoriser aux. · "
 				+ "5 bêcher · 6 grelinette · 7 tailler (Maj = branche) · 8 manger"
 				+ " — clic gauche = agir";
@@ -1119,6 +1323,22 @@ namespace Symbiose
 			string msg = string.IsNullOrEmpty(_lastActionMsg) ? ""
 				: $"   ·   {_lastActionMsg}";
 			_actionLabel.Text = $"{vig} — geste : {geste}{msg}";
+		}
+
+		// Overlay de perfs (F4) — mesures côté VUE, le moteur n'est pas
+		// instrumenté : tick complet (pipe+sim+parse — la vérité du joueur),
+		// cadence réelle entre 2 semaines (→ jours simulés/seconde), volumes.
+		private void UpdatePerf()
+		{
+			if (_perfLabel == null) return;
+			string tick = _lastTickMs < 0 ? "—" : $"{_lastTickMs:F0} ms";
+			string cad = _lastWeekGapSec <= 0 ? "—"
+				: $"{_lastWeekGapSec:F1} s/sem ({7.0 / _lastWeekGapSec:F1} j/s)";
+			_perfLabel.Text =
+				$"FPS {Engine.GetFramesPerSecond():F0} · tick {tick} · cadence {cad}\n"
+				+ $"plantes {_plantNodes.Count} (+{_nPousses} pousses) · "
+				+ $"segments {_nSegments} · ombres {(ShadowsOn ? "ON" : "OFF")} · "
+				+ $"zoom ×{ZoomSteps[_zoomIndex]}";
 		}
 
 		// Refus métier → flash rouge de la 2e ligne (kickoff B·12 : pas de
