@@ -417,6 +417,10 @@ carnet. Indices **visuels** d'abord (philo #5 : pas de chiffres en HUD primaire)
     (AUXIN_INHIB_THRESHOLD / dominance), pas de mécanique manquante.
 - **CLAUDE.md rafraîchi** (demande Nico, même date) : tranches 1-5 closes,
   prochaine = t6, D1–D35, rappel DebugSecondsPerWeek.
+- **2e F5 Nico (2026-06-11) : correctif t5·B validé (« ok c'est bon ») →
+  TRANCHE 5 CLOSE.** Prochaine : **tranche 6 (organes + vie macro + overlays
+  debug), kickoff PRÊT `06_organes_overlays_viemacro.md`** — dernière tranche
+  de contenu avant t7 = packaging.
 
 ## Lien dette
 Lève progressivement **D24** (le « portage C# » devient « pont », plus un portage
