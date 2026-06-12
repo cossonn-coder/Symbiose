@@ -494,16 +494,47 @@ carnet. Indices **visuels** d'abord (philo #5 : pas de chiffres en HUD primaire)
   nom ; FPS stable au F4 (comparer avant/après, ~700 sprites smoke en
   automne ; couper avec O ne joue PAS sur eux — pas de toggle dédié, pas
   demandé).
+- **1er F5 Nico (2026-06-12) — retours triagés** (écraser un ravageur ✓) :
+  - **« FPS à 3, vie macro à 9 500 »** + **« beaucoup trop, petits animaux,
+    ne devraient apparaître qu'en zoomant »** → défaut du livrable →
+    **correctif t6·B2 (C# seul)** : **LOD** (invisibles sous le palier ×4 —
+    la plage pixel art commence là) + **culling viewport** (seul le cadre
+    caméra se dessine ; à ×4+ c'est une fraction du monde — 9 500 DrawCircle
+    plein cadre était LE coût) + **touche I** (vie macro ON/OFF, coût nul à
+    OFF, demande explicite) ; F4 affiche « OFF » / « (LOD : zoomez ×4) ».
+  - **« Les pollinisateurs devraient se déplacer sur toute la carte »** →
+    correctif partiel B2 : amplitude d'errance 18 → **120 cm** (déambulation
+    de butinage ~2,5 m, fréquences non commensurables, ~1 m/s). Le vol libre
+    sur toute la carte serait un AGENT à trajectoire — hors modèle tranché
+    (sprite = quantum de densité ANCRÉ, CONCEPTION_VIE_MACRO §3) ; si le
+    butinage élargi ne suffit pas au F5 → sprint conception dédié.
+  - **« Vers de terre = traits immobiles, pour montrer leur présence ? »** →
+    OUI, design : le ver vit DANS le sol — le tiret = indice de présence en
+    surface (turricules), il dit « ce sol est vivant », pas « regarde-moi
+    bouger ». Indicateur de sol, pas un animal de surface.
+  - **« Écraser un pollinisateur/auxiliaire impossible — il faut pouvoir se
+    tromper »** → MOTEUR (`sim/actions.py:ecraser` ne touche que le champ
+    ravageur) → **sprint « écraser maladroit / impact multi-guildes » gravé
+    au BACKLOG** (philo #1 : la maladresse enseigne).
+  - **« Grouille en hiver, devrait dormir dès l'automne ; ne se réveille
+    qu'à l'été, devrait au printemps »** → MOTEUR (inertie 0.85 ≈ 13 sem
+    d'extinction ; warmth=(T−6)/18 quasi nul au printemps frais) → **sprint
+    « saisonnalité vie macro (calibrage) » gravé au BACKLOG** (golden
+    re-figeage maîtrisé à prévoir — D31.2 lit ces champs).
+  - Témoin de build → **« t6·B2 vie macro LOD+I — 2026-06-12 »**. En
+    attente F5 (critères : FPS retombé au dézoom ET au zoom ×4+ ; bestioles
+    seulement à ×4+ ; I coupe/rallume ; pollinisateurs déambulent).
 
 ### REPRISE (session suivante, démarrage à froid)
-1. **F5 Nico du volet B** (critères ci-dessus). `DebugSecondsPerWeek=3` actif
-   = pratique pour atteindre l'été où la vie émerge (~semaine 17+).
+1. **F5 Nico du correctif t6·B2** (critères ci-dessus, fin de la liste de
+   triage). `DebugSecondsPerWeek=3` actif.
 2. Retours F5 → triage (workflow acté : correctif de volet, ou dette/backlog).
 3. Puis **volet C (heatmaps debug F6)** — spécifié dans
    `06_organes_overlays_viemacro.md` (§8-10). `ENGINE_VERSION` : 0.2.3 →
    0.3.0 (C, fin de tranche).
 4. Fin de tranche : remettre `DebugSecondsPerWeek=0`, noter les mesures de
-   taille snapshot ici, puis t7 = packaging PyInstaller.
+   taille snapshot ici, puis t7 = packaging PyInstaller. Au backlog depuis le
+   F5 t6·B : écraser maladroit multi-guildes + saisonnalité vie macro.
 
 ## Lien dette
 Lève progressivement **D24** (le « portage C# » devient « pont », plus un portage

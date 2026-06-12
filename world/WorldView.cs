@@ -76,7 +76,7 @@ namespace Symbiose
 		// droite de l'écran + imprimé en console au lancement : si la version à
 		// l'écran n'est pas celle annoncée par Claude, le circuit VM → sync
 		// Nextcloud → build Godot n'est pas passé (piège connu depuis t3).
-		public const string Build = "t6·B vie macro — 2026-06-12";
+		public const string Build = "t6·B2 vie macro LOD+I — 2026-06-12";
 
 		// -------------------------------------------------------------------
 		// CALIBRATION (mesurée sur assets/sprites/tiles/tile_terre.png — D2)
@@ -155,6 +155,10 @@ namespace Symbiose
 		// teinte se décide côté vue. Mise à jour dans ApplySnapshot AVANT les
 		// SetStructure : les redraws qui suivent voient la bonne saison.
 		public static string CurrentSeason { get; private set; } = "ete";
+		// Palier de zoom courant (t6·B2) — lu par MacroLife pour son LOD
+		// (les bestioles n'apparaissent qu'en zoomant). Mis à jour par
+		// FrameCamera et StepZoom, les deux seuls écrivains du zoom.
+		public static float CurrentZoom { get; private set; } = 0.5f;
 		private const float LatitudeDeg = 49.0f;    // = fields/light.py LATITUDE_DEG
 		// Ombre bornée à 3,5× la hauteur : au ras de l'horizon 1/tan(élév) → ∞,
 		// l'écran n'a pas besoin d'ombres kilométriques pour dire « soir ».
@@ -461,6 +465,7 @@ namespace Symbiose
 					case Key.F4:       TogglePerf();      break;
 					case Key.H:        ToggleHouseGhost(); break;
 					case Key.O:        ToggleShadows();   break;
+					case Key.I:        ToggleMacroLife(); break;
 				}
 			}
 			// Molette = paliers de zoom (décision Nico 2026-06-10 : molette,
@@ -540,6 +545,16 @@ namespace Symbiose
 			foreach (var node in _plantNodes.Values)
 				node.GetNodeOrNull<Node2D>("Shadow")?.QueueRedraw();
 			GD.Print($"[WorldView] O → ombres {(ShadowsOn ? "ON" : "OFF")}.");
+		}
+
+		// Touche I (correctif t6·B2, demande Nico F5) : montre/cache la vie
+		// macro. Visible=false court-circuite _Process ET le dessin (coût nul) ;
+		// les données continuent de suivre les snapshots — rallumer est gratuit.
+		private void ToggleMacroLife()
+		{
+			if (_macroLife == null) return;
+			_macroLife.Visible = !_macroLife.Visible;
+			GD.Print($"[WorldView] I → vie macro {(_macroLife.Visible ? "ON" : "OFF")}.");
 		}
 
 		private void TogglePerf()
@@ -1155,7 +1170,7 @@ namespace Symbiose
 			legend.AddThemeConstantOverride("outline_size", 6);
 			legend.Text = "Espace lancer/pause · flèches déplacer"
 				+ " · molette zoom · PageUp/PageDown pivoter\n"
-				+ "M mode simu · F3 étiquettes · F4 perfs · H maison transparente · O ombres\n"
+				+ "M mode simu · F3 étiquettes · F4 perfs · H maison transparente · O ombres · I vie macro\n"
 				+ "gestes : 1 récolter · 2 déraciner · 3 écraser · 4 favoriser aux. · "
 				+ "5 bêcher · 6 grelinette · 7 tailler (survolez la branche, Maj = latéral auto) · 8 manger"
 				+ " — clic gauche = agir";
@@ -1431,7 +1446,11 @@ namespace Symbiose
 			_perfLabel.Text =
 				$"FPS {Engine.GetFramesPerSecond():F0} · tick {tick} · cadence {cad}\n"
 				+ $"plantes {_plantNodes.Count} (+{_nPousses} pousses) · "
-				+ $"segments {_nSegments} · vie macro {_macroLife?.Count ?? 0} · "
+				+ $"segments {_nSegments} · vie macro "
+				+ (_macroLife == null ? "—"
+					: !_macroLife.Visible ? "OFF"
+					: CurrentZoom < 4f ? $"{_macroLife.Count} (LOD : zoomez ×4)"
+					: _macroLife.Count.ToString()) + " · "
 				+ $"ombres {(ShadowsOn ? "ON" : "OFF")} · "
 				+ $"zoom ×{ZoomSteps[_zoomIndex]}";
 		}
@@ -1467,6 +1486,7 @@ namespace Symbiose
 			_camera.Position = WorldToScreen(WorldCm / 2f, WorldCm / 2f)
 				- new Vector2(0f, 100f);
 			_camera.Zoom = Vector2.One * ZoomSteps[_zoomIndex];
+			CurrentZoom = ZoomSteps[_zoomIndex];
 			_camera.MakeCurrent();
 		}
 
@@ -1519,6 +1539,7 @@ namespace Symbiose
 			_camera.Position = ClampToWorld(
 				mouse + (_camera.Position - mouse) * (oldZ / newZ));
 			_camera.Zoom = Vector2.One * newZ;
+			CurrentZoom = newZ;
 			GD.Print($"[WorldView] zoom ×{newZ}.");
 		}
 

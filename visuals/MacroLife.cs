@@ -44,16 +44,33 @@ namespace Symbiose
 		private const float AnimHz = 20f;
 		// Opacité de base : présents mais discrets — des bestioles, pas des UI.
 		private const float BaseAlpha = 0.9f;
+		// LOD (correctif t6·B2, retour F5 : « ce sont des petits animaux, ils
+		// ne devraient apparaître que quand on zoome ») : invisible sous ce
+		// palier. ×4 = le début de la plage pixel art officielle — à la vue
+		// d'ensemble on lit le PAYSAGE, pas les pucerons. 📖 C'est aussi LE
+		// correctif de perf : à ×4+ la caméra ne voit qu'une fraction du monde,
+		// le culling ci-dessous ne dessine que ça (9 500 DrawCircle plein cadre
+		// = FPS 3 au F5 — le dessin était le coût, pas la boucle).
+		private const float MinZoom = 4f;
+		// Marge du rectangle de culling, en px canvas : couvre l'amplitude
+		// d'errance max (~120 cm × 0,78) pour ne pas couper un point au bord.
+		private const float CullMarginPx = 160f;
 
 		// Par guilde : couleur, rayon du point en px canvas (0 = tiret du ver),
 		// amplitude d'errance en cm MONDE et pulsation (rad/s). Le pollinisateur
 		// erre plus large (kickoff §5), le ver bouge à peine et lentement.
+		// Pollinisateur : amplitude 120 cm (correctif t6·B2, retour F5 : « ils
+		// devraient se déplacer ») — il déambule sur ~2,5 m autour de son
+		// ancre (fréquences non commensurables → trajectoire de butinage, pas
+		// un cercle), à vitesse contenue (0.9 rad/s ≈ 1 m/s de pointe). Un vrai
+		// vol libre sur toute la carte serait un AGENT (état, trajectoire) —
+		// hors modèle : le sprite reste un quantum de densité locale ancré.
 		private static readonly Dictionary<string, (Color Col, float RadiusPx,
 			float AmpCm, float Speed)> Guilds = new()
 		{
 			["ravageur"]      = (new Color("3a2c1e"), 2.2f, 6f, 2.0f),
 			["auxiliaire"]    = (new Color("ece6d2"), 2.2f, 6f, 2.6f),
-			["pollinisateur"] = (new Color("e9c83c"), 2.6f, 18f, 3.2f),
+			["pollinisateur"] = (new Color("e9c83c"), 2.6f, 120f, 0.9f),
 			["vers_de_terre"] = (new Color("6b4a32"), 0f, 1.5f, 0.6f),
 		};
 		// Guilde inconnue d'un futur protocole : point gris, pas un crash.
@@ -158,9 +175,20 @@ namespace Symbiose
 			QueueRedraw();
 		}
 
+		// Le LOD vient de basculer (zoom franchit MinZoom) → UN redraw pour
+		// effacer ou raviver le canvas, puis silence tant que rien ne change.
+		private bool _lastZoomOk;
+
 		public override void _Process(double delta)
 		{
-			if (_entries.Count == 0) return;   // jardin d'hiver : coût nul
+			if (!Visible) return;              // touche I : coût strictement nul
+			bool zoomOk = WorldView.CurrentZoom >= MinZoom;
+			if (zoomOk != _lastZoomOk)
+			{
+				_lastZoomOk = zoomOk;
+				QueueRedraw();
+			}
+			if (!zoomOk || _entries.Count == 0) return;
 			_animAccum += (float)delta;
 			if (_animAccum < 1f / AnimHz) return;
 			_animAccum = 0f;
@@ -170,6 +198,12 @@ namespace Symbiose
 		public override void _Draw()
 		{
 			if (_entries.Count == 0) return;
+			if (WorldView.CurrentZoom < MinZoom) return;   // LOD : trop loin
+			// Culling : seul ce que la caméra cadre se dessine. La transform
+			// canvas→écran de Godot (pan + zoom), inversée, ramène le rectangle
+			// du viewport en coordonnées canvas — notre espace de dessin.
+			Rect2 vis = (GetCanvasTransform().AffineInverse()
+						 * GetViewportRect()).Grow(CullMarginPx);
 			float now = NowSec();
 			List<string> gone = null;
 			foreach (var kv in _entries)
@@ -178,6 +212,8 @@ namespace Symbiose
 				float alpha = Mathf.Clamp((now - e.BornAt) / FadeInSec, 0f, 1f);
 				if (e.DyingAt >= 0f)
 				{
+					// La purge des morts finit AVANT le culling : un fondu
+					// achevé hors champ doit s'oublier aussi.
 					float fade = 1f - (now - e.DyingAt) / FadeOutSec;
 					if (fade <= 0f)
 					{
@@ -186,6 +222,8 @@ namespace Symbiose
 					}
 					alpha = Mathf.Min(alpha, fade);
 				}
+				if (!vis.HasPoint(WorldView.WorldToScreen(e.Wx, e.Wy)))
+					continue;   // hors cadre : ni sin/cos ni dessin
 				var (col, radiusPx, ampCm, speed) =
 					Guilds.TryGetValue(e.Guild, out var g) ? g : GuildeInconnue;
 
