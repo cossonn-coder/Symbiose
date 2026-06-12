@@ -581,24 +581,40 @@ carnet. Indices **visuels** d'abord (philo #5 : pas de chiffres en HUD primaire)
     **sprint « physico-chimie du sol : température du sol + pH » gravé au
     BACKLOG** — l'introspection 0.3.0 les exposera automatiquement à F6 le
     jour où ils existeront.
-  - Témoin de build → **« t6·C2 légendes heatmap — 2026-06-12 »**. En
-    attente F5.
+  - Témoin de build → **« t6·C2 légendes heatmap — 2026-06-12 »**.
+- **2e F5 Nico (2026-06-12, build C2) : F6 FONCTIONNE** (« c'est bien de
+  pouvoir enfin voir les heatmaps des différents fields, content de
+  l'avancée ») — le 1er échec était bien le build resté en B2. **4 retours
+  → SOUS-SPRINT INDÉPENDANT t6·C3, kickoff PRÊT
+  `06b_finitions_heatmap.md`** (décision Nico : à lancer APRÈS le /clear,
+  pas de dev immédiat) :
+  1. légende = rampe dégradée continue (pas 2 pavés) + repenser la
+     normalisation (échelle FIXE par champ recommandée — le min/max auto
+     rend les champs uniformes « binaires/bruités ») ;
+  2. température identique partout malgré l'ombre → diagnostic lecture
+     (champ = AIR hebdo, probablement uniforme par construction) +
+     pédagogie ; l'ombre→température du sol = sprint physico-chimie déjà
+     au BACKLOG ;
+  3. OM/microbiome « aléatoires » → pédagogie (hétérogénéité de fondation
+     voulue, design #7) + vérifier la corrélation avec le vivant à
+     l'échelle fixe ;
+  4. sprites visibles sur des plots « absents » → errance visuelle
+     (pollinisateur ±120 cm) + fondu de mort ; recommandation : en mode
+     heatmap de guilde, resserrer l'errance sur l'ancre.
 
 ### REPRISE (session suivante, démarrage à froid)
-1. **F5 Nico du correctif t6·C2** : (a) vérifier le TÉMOIN haut-droit
-   d'abord ; (b) F6 → heatmap + légende colorée sous la Vigueur ; (c)
-   Maj+F6 cycle 16 champs, chaque légende suit son champ ; (d) OFF = FPS
-   strictement inchangé. `DebugSecondsPerWeek=3` actif (l'humidité bouge à
-   chaque semaine).
-2. Retours F5 → triage (workflow acté : correctif de volet, ou dette/backlog).
+1. **Lancer le sous-sprint t6·C3** : lire `00_etat.md` (ce fichier) puis
+   **`06b_finitions_heatmap.md`** (kickoff autosuffisant — 4 retours triés,
+   options à trancher, critères F5). C# seul attendu, golden intact.
+2. F5 Nico du C3 → triage habituel.
 3. **Fin de tranche 6** après validation : remettre `DebugSecondsPerWeek=0`,
    vérifier les mesures notées (snapshot smoke 24 Ko sem 20 avec sprites ;
    full ~210 Ko au pic d'automne — sprites compacts), mettre à jour
    `CLAUDE.md` (sprint en cours) et `journal.md` (clôture de tranche).
 4. Puis **t7 = packaging PyInstaller** (kickoff à écrire : gel du moteur en
    binaire, `SimBridge` pointe le binaire, export Godot pour amis/famille).
-   Au backlog depuis le F5 t6·B : écraser maladroit multi-guildes +
-   saisonnalité vie macro.
+   Au backlog depuis t6 : écraser maladroit multi-guildes + saisonnalité
+   vie macro + physico-chimie du sol (temp sol/pH).
 
 ## Lien dette
 Lève progressivement **D24** (le « portage C# » devient « pont », plus un portage
