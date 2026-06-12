@@ -9,3 +9,12 @@
 # Caches Python du moteur de simulation (paquets : plants/ world/ fields/ sim/ tests/)
 data/code/__pycache__/
 data/code/**/__pycache__/
+
+# Tranche 7 — artefacts PyInstaller (gel du moteur). Le .spec et la recette
+# dans tools/ SONT versionnés ; build/, dist/ et binaires gelés non.
+data/code/build/
+data/code/dist/
+data/code/tools/build/
+data/code/tools/dist/
+sim_server
+sim_server.exe

@@ -64,6 +64,13 @@ import sys
 CODE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SERVER = os.path.join(CODE_DIR, "tools", "sim_server.py")
 
+# Tranche 7 (packaging) : si SIM_SERVER_BIN pointe un binaire gelé
+# (PyInstaller), la suite ENTIÈRE tourne contre lui au lieu du script —
+# mêmes 87 checks, déterminisme byte-à-byte compris. Sans la variable,
+# rien ne change (script + interpréteur courant, comme avant).
+SERVER_BIN = os.environ.get("SIM_SERVER_BIN")
+SERVER_CMD = [SERVER_BIN] if SERVER_BIN else [sys.executable, SERVER]
+
 _results = []
 
 
@@ -78,7 +85,7 @@ class ServerProc:
 
     def __init__(self):
         self.proc = subprocess.Popen(
-            [sys.executable, SERVER], cwd=CODE_DIR,
+            SERVER_CMD, cwd=CODE_DIR,
             stdin=subprocess.PIPE, stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL, text=True)
         self.raw_lines = []          # réponses brutes (pour le déterminisme)

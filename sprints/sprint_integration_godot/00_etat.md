@@ -654,14 +654,52 @@ pendant la tranche : écraser maladroit multi-guildes, saisonnalité vie
 macro (calibrage), physico-chimie du sol (temp sol + pH), compétition
 intra-plot, décomposition & compost.
 
+### Tranche 7 — packaging : ⏳ partie VM FAITE, reste le gel Windows par Nico
+**Fait sur la VM Linux (répétition + code, golden `16a1b937…` intact) :**
+- **Répétition PyInstaller validée** : `sim_server` gelé `--onefile`
+  (~8 Mo, venv `/tmp/pyi-venv`, PyInstaller 6.20). Piège vécu : sans
+  `--paths=.` le binaire crashe `ModuleNotFoundError: world` (analyse
+  depuis `tools/`, pas depuis `data/code/`) → option **obligatoire**,
+  documentée. Les deux `--hidden-import` (`tests.test_golden`, `main`)
+  confirmés nécessaires (imports différés smoke/full).
+- **Preuves** : protocole OK sur le binaire (init smoke ET full, step,
+  fields, quit) ; **87/87** via `SIM_SERVER_BIN` ; sorties
+  **byte-identiques** script vs binaire (seed 1234 × 4 sem, 27 396 octets
+  `cmp` vert) → déterminisme survit au gel.
+- **`tests/test_sim_server.py`** : variable d'env `SIM_SERVER_BIN`
+  (additif pur — `SERVER_CMD`) ; sans elle, comportement inchangé. 87/87
+  en mode script AUSSI (non-régression).
+- **`SimBridge.cs` — résolution à deux modes** dans `Start()` :
+  (a) binaire `sim_server[.exe]` à côté de `OS.GetExecutablePath()` =
+  mode DISTRIBUÉ ; (b) repli dev `python3` puis `python` + script `res://`
+  (Windows dev). `TryLaunch()` factorisé ; `CreateNoWindow` (pas de cmd
+  parasite Windows) ; UTF-8 sans BOM forcé sur les pipes. **Print du mode
+  choisi** (témoin : « Mode BINAIRE » vs « Mode DEV »). ⚠ NON COMPILÉ ici
+  (ni dotnet ni Godot sur la VM) — à vérifier au build Nico.
+- **`.spec` versionné** (`tools/sim_server.spec`, rejouable) +
+  **recette complète** `tools/RECETTE_PACKAGING.md` (étage 1 gel Windows
+  pas-à-pas, étage 2 export Godot + assemblage, pièges SmartScreen/console,
+  pédagogie PyInstaller). `.gitignore` : `build/ dist/ sim_server[.exe]`
+  hors git. Témoin build → **« t7 packaging (binaire/dev) — 2026-06-12 »**.
+
+**Reste à faire (Nico, sur le poste Windows — allers-retours prévus) :**
+1. Geler `sim_server.exe` via `RECETTE_PACKAGING.md` étage 1 ; valider
+   87/87 avec `$env:SIM_SERVER_BIN`.
+2. Compiler le projet C# (le build VALIDE `SimBridge.cs` modifié — pas
+   testé ici) ; F5 éditeur doit toujours marcher (mode DEV).
+3. Export Godot Windows + poser `sim_server.exe` à côté de l'exe
+   (étage 2) ; test hors éditeur : double-clic → monde, saison, geste, F6 ;
+   vérifier « Mode BINAIRE » via `Symbiose.console.exe`.
+→ Quand ces 3 cases sont vertes : **tranche 7 CLOSE = sprint Intégration CLOS.**
+
 ### REPRISE (session suivante, démarrage à froid)
-1. **Lancer la tranche 7 — packaging PyInstaller** : lire `00_etat.md` (ce
-   fichier) puis **`07_packaging.md`** (kickoff autosuffisant). But : geler
-   le moteur Python en binaire autonome, `SimBridge` le pointe, export
-   Godot installable pour amis/famille. C'est la DERNIÈRE tranche du
-   sprint Intégration.
+1. **Tranche 7 = en attente du gel/build Windows par Nico** (la partie VM
+   est faite, cf. section ci-dessus). Si Nico revient avec un retour de
+   build : appliquer le correctif sur `SimBridge.cs`/recette, PAS de
+   nouveau dev. Sinon, sur son OK « t7 close », graver la clôture.
 2. Après t7 : sprint Intégration CLOS → retour aux sprints moteur/contenu
-   (BACKLOG.md : save global, sprints Python gravés, D19/D33…).
+   (BACKLOG.md : save global — hook `OnSeasonEnd` posé —, sprints Python
+   gravés, D19/D33…).
 
 ## Lien dette
 Lève progressivement **D24** (le « portage C# » devient « pont », plus un portage

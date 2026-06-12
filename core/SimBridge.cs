@@ -23,8 +23,17 @@
 //  - Json natif de Godot (Json.ParseString/Stringify), cohérent avec
 //    PlantStructure.cs : Variant/Dictionary manipulés nativement, zéro stack
 //    de sérialisation .NET ajoutée.
-//  - Chemin : python3 + script sous res:// — le binaire gelé (PyInstaller,
-//    tranche 6) remplacera ce couple ICI, un seul point à changer.
+//  - Chemin (tranche 7) : DEUX modes, résolus dans Start(). Mode DISTRIBUÉ =
+//    binaire gelé PyInstaller `sim_server[.exe]` posé À CÔTÉ de l'exécutable
+//    Godot (il ne peut pas vivre dans le .pck : un exécutable ne se lance pas
+//    depuis une archive). Mode DEV (repli) = python3 + script sous res://,
+//    inchangé — F5 dans l'éditeur marche toujours sans binaire. La console
+//    affiche le mode choisi (témoin).
+//  - Encodage des pipes : UTF-8 SANS BOM explicite des deux côtés C#. Sous
+//    Windows, .NET prendrait sinon la codepage console (cp1252…) ; et un BOM
+//    en tête de flux casserait le premier json.loads côté Python. Le protocole
+//    est de toute façon ASCII par construction (json.dumps ensure_ascii côté
+//    serveur, verbes sans accents) — ceinture et bretelles.
 
 using Godot;
 using System.Diagnostics;
@@ -49,35 +58,70 @@ namespace Symbiose
 
 		public bool Start()
 		{
+			// MODE DISTRIBUÉ (tranche 7) : binaire gelé à côté de l'exécutable
+			// Godot. En éditeur, GetExecutablePath() pointe l'éditeur lui-même
+			// → pas de binaire à côté → on tombe naturellement sur le repli dev.
+			string exeDir = System.IO.Path.GetDirectoryName(OS.GetExecutablePath());
+			string binName = OS.GetName() == "Windows" ? "sim_server.exe" : "sim_server";
+			string binPath = System.IO.Path.Combine(exeDir, binName);
+			if (System.IO.File.Exists(binPath) && TryLaunch(binPath, "", exeDir))
+			{
+				GD.Print($"[SimBridge] Mode BINAIRE — moteur gelé {binPath} (pid {_proc.Id}).");
+				return true;
+			}
+
+			// MODE DEV (repli, inchangé) : python3 + script sous res://.
 			// GlobalizePath : res://… → chemin absolu disque (l'OS ne connaît
-			// pas res://). Ne marche qu'en éditeur/dev — l'export PCK packagera
-			// le binaire gelé autrement (tranche 6).
+			// pas res://). Ne marche qu'en éditeur/dev. Sous Windows dev,
+			// l'interpréteur s'appelle souvent "python" — on tente les deux.
 			string script = ProjectSettings.GlobalizePath(ServerScript);
 			string cwd = ProjectSettings.GlobalizePath(CodeDir);
+			foreach (string python in new[] { "python3", "python" })
+			{
+				if (TryLaunch(python, $"\"{script}\"", cwd))
+				{
+					GD.Print($"[SimBridge] Mode DEV — {python} + sim_server.py (pid {_proc.Id}).");
+					return true;
+				}
+			}
 
+			GD.PrintErr("[SimBridge] Aucun moteur lançable : ni binaire gelé "
+				+ $"({binPath}), ni python3/python + script.");
+			return false;
+		}
+
+		private bool TryLaunch(string fileName, string arguments, string cwd)
+		{
 			var psi = new ProcessStartInfo
 			{
-				FileName = "python3",            // Linux/macOS ; Windows : "python" (tranche 6)
-				Arguments = $"\"{script}\"",
+				FileName = fileName,
+				Arguments = arguments,
 				WorkingDirectory = cwd,
 				UseShellExecute = false,         // requis pour rediriger les pipes
 				RedirectStandardInput = true,    // Godot → Python
 				RedirectStandardOutput = true,   // Python → Godot
 				// stderr volontairement NON redirigé (cf. en-tête).
+				// Sous Windows, une app GUI qui lance une app console ouvre
+				// sinon une fenêtre cmd noire à côté du jeu (console parasite).
+				// Le serveur reste une app console (il lui faut ses stdio) —
+				// c'est au PARENT de ne pas lui créer de fenêtre.
+				CreateNoWindow = true,
+				// UTF-8 sans BOM (cf. en-tête — codepage Windows, BOM fatal).
+				StandardInputEncoding = new System.Text.UTF8Encoding(false),
+				StandardOutputEncoding = new System.Text.UTF8Encoding(false),
 			};
 
 			try
 			{
 				_proc = Process.Start(psi);
+				return true;
 			}
 			catch (System.Exception e)
 			{
-				GD.PrintErr($"[SimBridge] Échec du lancement de python3 : {e.Message}");
+				GD.Print($"[SimBridge] {fileName} : lancement impossible ({e.Message}).");
 				_proc = null;
 				return false;
 			}
-			GD.Print($"[SimBridge] Moteur Python lancé (pid {_proc.Id}).");
-			return true;
 		}
 
 		public void Quit()
