@@ -76,7 +76,7 @@ namespace Symbiose
 		// droite de l'écran + imprimé en console au lancement : si la version à
 		// l'écran n'est pas celle annoncée par Claude, le circuit VM → sync
 		// Nextcloud → build Godot n'est pas passé (piège connu depuis t3).
-		public const string Build = "t6·A organes procéduraux — 2026-06-11";
+		public const string Build = "t6·B vie macro — 2026-06-12";
 
 		// -------------------------------------------------------------------
 		// CALIBRATION (mesurée sur assets/sprites/tiles/tile_terre.png — D2)
@@ -263,6 +263,11 @@ namespace Symbiose
 		private SimBridge _bridge;
 		private Node2D _objects;   // maison + plantes, YSort (cf. en-tête)
 		private Node2D _ground;    // sol — reconstruit à chaque rotation
+		// Vie macro (t6·B) : UN nœud pour tous les points (cf. MacroLife.cs).
+		// ZIndex 5 = entre sol (0) et objets (10) — les bestioles vivent au ras
+		// du sol, sous les plantes. Enfant direct de WorldView : il survit à
+		// RebuildWorld (il se re-projette seul à chaque dessin d'animation).
+		private MacroLife _macroLife;
 		private Node2D _house;     // pour le mode transparent (touche H)
 		// Ombre maison ANIMÉE (volet C) : le polygone est recalculé quand le
 		// soleil bouge — paramètres gardés en champs pour ne pas relire le GDict.
@@ -402,6 +407,9 @@ namespace Symbiose
 					(float)t["origin_x_cm"].AsDouble(),
 					(float)t["origin_y_cm"].AsDouble());
 			}
+
+			_macroLife = new MacroLife { Name = "MacroLife", ZIndex = 5 };
+			AddChild(_macroLife);
 
 			BuildHud();
 			ApplySnapshot(snap, fade: false);   // monde initial : pas de fondu
@@ -1036,6 +1044,13 @@ namespace Symbiose
 					 + $"{_plantNodes.Count} plantes (+{born} −{dead.Count}, "
 					 + $"{grown} maj, {empty} sans segments).");
 
+			// Vie macro (t6·B) : même diff doux que les plantes, délégué au
+			// nœud MacroLife. Lecture TOLÉRANTE : un snapshot pré-0.2.3 n'a
+			// pas le bloc — la vue affiche simplement un jardin sans bestioles.
+			if (snap.ContainsKey("sprites"))
+				_macroLife?.SetSprites(snap["sprites"].AsGodotDictionary(),
+									   _origins, fade);
+
 			// Bloc joueur (volet B, lecture seule) → 2e ligne du HUD.
 			if (snap.ContainsKey("player"))
 			{
@@ -1416,7 +1431,8 @@ namespace Symbiose
 			_perfLabel.Text =
 				$"FPS {Engine.GetFramesPerSecond():F0} · tick {tick} · cadence {cad}\n"
 				+ $"plantes {_plantNodes.Count} (+{_nPousses} pousses) · "
-				+ $"segments {_nSegments} · ombres {(ShadowsOn ? "ON" : "OFF")} · "
+				+ $"segments {_nSegments} · vie macro {_macroLife?.Count ?? 0} · "
+				+ $"ombres {(ShadowsOn ? "ON" : "OFF")} · "
 				+ $"zoom ×{ZoomSteps[_zoomIndex]}";
 		}
 

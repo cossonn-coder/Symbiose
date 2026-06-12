@@ -454,16 +454,54 @@ carnet. Indices **visuels** d'abord (philo #5 : pas de chiffres en HUD primaire)
   apex, même une pousse d'une semaine (fidèle au prototype SVG — le vrai état
   reproducteur = D19/D33). Si le F5 juge ça gênant : filtre par stade = 1
   ligne côté serveur, à trancher.
+- **F5 Nico (2026-06-12) : volet A VALIDÉ** → enchaînement direct volet B.
+
+### Tranche 6 — volet B (vie macro visible) : CODÉ (2026-06-12), en attente F5
+- **Livré Python** : `sim_server.py` protocole **0.2.3** — bloc `sprites` au
+  snapshot : par tuile et par guilde, tableaux **COMPACTS**
+  `[r, c, x_frac, y_frac, activite]` issus de `sample_sprites` (échantillonnage
+  CÔTÉ SERVEUR, fonction PURE de `fields/population.py` — la vue n'a pas besoin
+  de `_hash_noise`). Arrondis déterministes (x/y 3 déc. = 0,05 cm, activité 2).
+  **Compact d'emblée, tranché à la MESURE** (kickoff §4 : mesurer avant
+  d'optimiser) : pic d'automne du monde full ≈ **8 600 sprites** → 705 Ko en
+  format objet verbeux vs **210 Ko** en tableaux (smoke : 173 sprites sem 20,
+  snapshot total 24 Ko). Moteur JAMAIS touché. `test_sim_server.py` **77/77**
+  (section 10 : bloc par tuile × 4 guildes, forme/bornes, cap 4/plot/guilde,
+  zéro sprite sem 1, émergence estivale, positions STABLES entre semaines
+  (slots ancrés), 2 snapshots sans step identiques = lecture pure).
+  **Golden écolo intact** (`16a1b937…`, vérifié).
+- **Livré C#** : `visuals/MacroLife.cs` (nouveau) — **UN seul nœud** pour tous
+  les points (8 600 Node2D engorgeraient la scène ; un CanvasItem batch tout),
+  ZIndex 5 entre sol (0) et objets (10), enfant direct de WorldView (survit à
+  RebuildWorld, se re-projette à chaque dessin → rotation D35 gratuite).
+  Formes sobres SANS nom (kickoff §5 — naturaliste débutant) : ravageur point
+  sombre, auxiliaire point clair, pollinisateur point jaune qui erre plus
+  large, ver tiret terre orienté monde. **Errance** sin/cos sur l'horloge
+  réelle, déphasée par hash djb2 de la clé (zéro Random, stable
+  inter-sessions), amplitude ∝ activité (plancher 0,3). **Diff doux** : clé
+  `tile|guild|r|c|x|y`, fondus 0,6 s / 0,9 s (les durées des plantes t3), slot
+  qui re-franchit son seuil pendant son fondu de mort → reprend sans pop.
+  **Anim à 20 Hz** (accumulateur dans `_Process`, leçon perf C2), coût nul si
+  0 sprite. `WorldView.cs` : création du nœud, `SetSprites` dans ApplySnapshot
+  (lecture TOLÉRANTE pré-0.2.3), compteur « vie macro N » au F4. Témoin de
+  build → **« t6·B vie macro — 2026-06-12 »**.
+- **Choix signalé (design)** : l'errance continue en Planification (animation
+  d'ambiance, pas du temps simulé — comme les fondus t3). Si le temps figé
+  doit TOUT figer : une ligne à ajouter, à trancher au F5.
+- **Critères F5** (kickoff) : points vivants sur les tuiles, plus nombreux où
+  ça fleurit/paille ; geste écraser → des points disparaissent au plot (le
+  message « ravageurs 0.80 → 0.60 » devient VISIBLE) ; aucune étiquette de
+  nom ; FPS stable au F4 (comparer avant/après, ~700 sprites smoke en
+  automne ; couper avec O ne joue PAS sur eux — pas de toggle dédié, pas
+  demandé).
 
 ### REPRISE (session suivante, démarrage à froid)
-1. **F5 Nico du volet A** d'abord (critères : pommier fleurs printemps →
-   fruits verts été → fruits rouges + feuillage automnal → nu l'hiver ;
-   tomate cycle propre ; FPS stable au F4). `DebugSecondsPerWeek=3` actif =
-   pratique pour voir défiler les saisons.
+1. **F5 Nico du volet B** (critères ci-dessus). `DebugSecondsPerWeek=3` actif
+   = pratique pour atteindre l'été où la vie émerge (~semaine 17+).
 2. Retours F5 → triage (workflow acté : correctif de volet, ou dette/backlog).
-3. Puis **volet B (vie macro visible)** et **volet C (heatmaps F6)** — tout
-   est spécifié dans `06_organes_overlays_viemacro.md` (§4-7 et §8-10).
-   `ENGINE_VERSION` : 0.2.2 → 0.2.3 (B) → 0.3.0 (C, fin de tranche).
+3. Puis **volet C (heatmaps debug F6)** — spécifié dans
+   `06_organes_overlays_viemacro.md` (§8-10). `ENGINE_VERSION` : 0.2.3 →
+   0.3.0 (C, fin de tranche).
 4. Fin de tranche : remettre `DebugSecondsPerWeek=0`, noter les mesures de
    taille snapshot ici, puis t7 = packaging PyInstaller.
 

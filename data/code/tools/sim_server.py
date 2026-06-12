@@ -71,6 +71,10 @@ from world import House
 from sim.engine import Engine, saison_de
 from sim import actions as A      # les 8 gestes joueur (façades, sprint Vigueur/D31.3)
 from sim import vigueur as V      # état Vigueur joueur (ensure/spend/gain, D11)
+# Échantillonneur de vie macro (tranche 6·B) : fonction PURE et déterministe
+# densité → entités (fields/population.py §3). L'échantillonnage se fait CÔTÉ
+# SERVEUR — la vue n'a pas besoin de _hash_noise (kickoff t6 §4).
+from fields.population import sample_sprites
 # Table « stade reproducteur visible par saison » du prototype SVG (tranche 6,
 # volet A) : import OUTIL → OUTIL (render_structure est un outil, pas le
 # moteur), zéro duplication — la table validée visuellement au sprint
@@ -84,7 +88,12 @@ from tools.render_structure import REPRO_BY_SEASON
 # 0.2.1 (tranche 5) : `target.segment` optionnel sur `tailler` (taille au clic).
 # 0.2.2 (tranche 6·A) : 3 hints d'organes par plante au snapshot
 #       (foliage_density, organ, organ_site) — pur rendu, lecture seule.
-ENGINE_VERSION = "0.2.2"
+# 0.2.3 (tranche 6·B) : bloc `sprites` au snapshot (vie macro, D31 côté vue) —
+#       par tuile et par guilde, tableaux COMPACTS [r, c, x_frac, y_frac,
+#       activite]. Compact d'emblée : mesuré 705 Ko/snapshot en format objet
+#       verbeux au pic d'automne du monde full (~8600 sprites) vs 210 Ko en
+#       tableaux — la mitigation prévue au kickoff §4 s'impose à la mesure.
+ENGINE_VERSION = "0.2.3"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les
@@ -375,6 +384,22 @@ class SimServer:
                     "organ_site": cls.organ_site,
                     "segments": p.structure_to_dict(),
                 })
+        # Vie macro (tranche 6·B, kickoff §4) : sprites échantillonnés depuis
+        # les 4 champs de population — PURE lecture (sample_sprites ne modifie
+        # rien, positions par hash indépendantes de la semaine : un slot vit
+        # toujours au même point, il apparaît/disparaît quand la densité
+        # franchit son seuil). Format compact par guilde, cf. ENGINE_VERSION.
+        # Arrondis : x/y_frac 3 déc. (= 0,05 cm dans le plot), activite 2 —
+        # et round() est déterministe, la clé de diff côté vue reste stable.
+        sprites = {}
+        for tile in gs["tiles"]:
+            eco = gs["eco"][tile.tile_id]
+            sprites[tile.tile_id] = {
+                f.spec.name: [
+                    [s.row, s.col, round(s.x_frac, 3), round(s.y_frac, 3),
+                     round(s.activite, 2)]
+                    for s in sample_sprites(f, gs["seed"])]
+                for f in eco.populations.values()}
         # Bloc joueur (tranche 4, lecture seule) : la vue affiche la Vigueur
         # au HUD. vigueur_max passe par la façade (bonus maîtrise compris).
         player = gs["current_player"]
@@ -383,7 +408,7 @@ class SimServer:
                 "year": (week - 1) // 52 + 1, "season": saison,
                 "player": {"vigueur": st["courante"],
                            "vigueur_max": V.vigueur_max(gs, player)},
-                "plants": plants}
+                "plants": plants, "sprites": sprites}
 
 
 def main() -> int:
