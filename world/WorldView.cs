@@ -76,7 +76,7 @@ namespace Symbiose
 		// droite de l'écran + imprimé en console au lancement : si la version à
 		// l'écran n'est pas celle annoncée par Claude, le circuit VM → sync
 		// Nextcloud → build Godot n'est pas passé (piège connu depuis t3).
-		public const string Build = "t6·C2 légendes heatmap — 2026-06-12";
+		public const string Build = "t6·C3 finitions heatmap — 2026-06-12";
 
 		// -------------------------------------------------------------------
 		// CALIBRATION (mesurée sur assets/sprites/tiles/tile_terre.png — D2)
@@ -585,6 +585,8 @@ namespace Symbiose
 			_overlayOn = !_overlayOn;
 			if (_fieldOverlay != null) _fieldOverlay.Visible = _overlayOn;
 			if (_overlayOn) _fieldsStale = true;   // (re)fetch au prochain tour
+			else if (_macroLife != null)
+				_macroLife.FocusGuild = null;      // errance libre dès OFF
 			UpdateFieldHud();
 			GD.Print($"[WorldView] F6 → heatmap {(_overlayOn ? "ON" : "OFF")}.");
 		}
@@ -603,10 +605,15 @@ namespace Symbiose
 			GD.Print($"[WorldView] Maj+F6 → champ : {_fieldNames[_fieldIndex]}.");
 		}
 
-		// Légende de la heatmap (correctif C2, demande Nico) : les DEUX pôles
-		// du dégradé du champ affiché, en pavés colorés + libellés + bornes
-		// réelles — exactement les couleurs que FieldOverlay interpole.
-		// Affichée UNIQUEMENT quand son champ est à l'écran.
+		// Légende de la heatmap (t6·C3, retour 1 du F5) : une RAMPE CONTINUE
+		// de pavés interpolés entre les deux pôles — exactement le Lerp que
+		// FieldOverlay applique aux losanges, en BBCode (zéro nouveau nœud).
+		// Bornes affichées = celles de l'ÉCHELLE (fixes si le champ en a) ;
+		// sur échelle fixe on ajoute « grille a..b » : où la grille VIT
+		// réellement (« grille 14.1..14.1 » = uniforme, c'est la vérité du
+		// modèle, pas un bug d'affichage). Affichée UNIQUEMENT à l'écran.
+		private const int LegendSteps = 14;
+
 		private void UpdateFieldHud()
 		{
 			if (_fieldLabel == null) return;
@@ -618,11 +625,29 @@ namespace Symbiose
 			_fieldLabel.Visible = true;
 			string nom = _fieldNames != null && _fieldNames.Length > 0
 				? _fieldNames[_fieldIndex] : "…";
-			var (lo, hi, labLo, labHi) = FieldOverlay.PaletteOf(nom);
-			string bornes = _fieldOverlay?.FieldName == nom
-				? $"[color=#{lo.ToHtml(false)}]██[/color] {labLo} ({_fieldOverlay.Min:F2})"
-				  + $"  →  [color=#{hi.ToHtml(false)}]██[/color] {labHi} ({_fieldOverlay.Max:F2})"
-				: "chargement…";
+			var (lo, hi, labLo, labHi, _, _) = FieldOverlay.PaletteOf(nom);
+			string bornes;
+			if (_fieldOverlay?.FieldName == nom)
+			{
+				var ramp = new System.Text.StringBuilder();
+				for (int i = 0; i < LegendSteps; i++)
+				{
+					Color c = lo.Lerp(hi, i / (float)(LegendSteps - 1));
+					ramp.Append($"[color=#{c.ToHtml(false)}]█[/color]");
+				}
+				bornes = $"{labLo} ({_fieldOverlay.Min:F2}) {ramp} "
+					   + $"{labHi} ({_fieldOverlay.Max:F2})";
+				if (_fieldOverlay.FixedScale)
+					bornes += $"   ·   grille {_fieldOverlay.GridMin:F2}"
+							+ $"..{_fieldOverlay.GridMax:F2}";
+				// Pédagogie (t6·C3, retour 2) : ce champ EST l'air hebdo,
+				// uniforme par construction (engine fill) — la température
+				// du sol modulée par l'ombre = sprint physico-chimie, backlog.
+				if (nom == "temperature")
+					bornes += "   ·   air hebdo (uniforme — temp. du sol : à venir)";
+			}
+			else
+				bornes = "chargement…";
 			_fieldLabel.Text =
 				$"heatmap (debug) — {nom} : {bornes}   ·   Maj+F6 champ suivant";
 		}
@@ -759,6 +784,11 @@ namespace Symbiose
 										  f.Result["tiles"].AsGodotDictionary(),
 										  _origins);
 					_fieldsStale = false;
+					// Mode instrument (t6·C3) : si la grille AFFICHÉE est
+					// une guilde, ses points MacroLife se resserrent sur
+					// leur ancre (un nom non-guilde est sans effet là-bas).
+					if (_macroLife != null)
+						_macroLife.FocusGuild = _fieldOverlay.FieldName;
 					// Témoin console (diag F5) : la grille est bien arrivée.
 					GD.Print($"[WorldView] heatmap {_fieldOverlay.FieldName} : "
 							 + $"min {_fieldOverlay.Min:F2}, max {_fieldOverlay.Max:F2}.");

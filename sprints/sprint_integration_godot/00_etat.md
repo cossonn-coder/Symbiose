@@ -602,16 +602,51 @@ carnet. Indices **visuels** d'abord (philo #5 : pas de chiffres en HUD primaire)
      (pollinisateur ±120 cm) + fondu de mort ; recommandation : en mode
      heatmap de guilde, resserrer l'errance sur l'ancre.
 
+### Tranche 6 — sous-sprint C3 (finitions heatmap) : CODÉ (2026-06-12), en attente F5
+- **Diagnostic Python (lecture seule, conservé `tools/diag_fields_span.py`)** :
+  `temperature` est **uniforme PAR CONSTRUCTION** (`engine.py:587`
+  `temperature.fill(temp_now)` — l'air hebdo, un seul nombre par semaine) ;
+  `om_stable` span 0,001 et `soil_memory_deep` span 0,0014 = bruit
+  microscopique que le min/max AUTO étalait sur toute la palette — c'était
+  LE rendu « binaire/aléatoire » du F5. Humidité/microbiome/om_fresh ont de
+  vrais gradients (span 0,45..0,92), corrélés au vivant.
+- **Livré C# (zéro Python, golden intact `16a1b937…` vérifié)** :
+  - `FieldOverlay.cs` — **échelle FIXE par champ** (option a du kickoff) :
+    la table `Palettes` gagne `FixMin`/`FixMax` (NaN = repli auto). Bornes
+    SOURCÉES du moteur : temperature **−5..35 °C** (`temp_norm` 11±7 +
+    dérive + gel/canicule), humidite/fertilite/microbiome **0..3** (le
+    moteur normalise par /3.0), lumiere/disturbance/guildes **0..1**
+    (`_clamp01`) ; om_*/soil_memory* restent AUTO (pas de bornes
+    naturelles). Valeur hors bornes → clamp (sature au pôle). Exposés :
+    `GridMin`/`GridMax`/`FixedScale` pour le HUD.
+  - `WorldView.cs` — légende = **rampe continue 14 pavés** interpolés en
+    BBCode (le Lerp exact du dessin) ; sur échelle fixe, ajout
+    « grille a..b » (où la grille VIT — « grille 14.11..14.11 » = uniforme,
+    vérité du modèle) ; champ temperature → suffixe pédagogique « air
+    hebdo (uniforme — temp. du sol : à venir) ».
+  - `MacroLife.cs` — **mode instrument** (option b du kickoff, retour 4) :
+    propriété `FocusGuild` posée par WorldView quand la grille AFFICHÉE est
+    une guilde → les points de CETTE guilde resserrent leur errance à
+    ±4 cm sur l'ancre (la corrélation carte↔points saute aux yeux) ;
+    errance libre rétablie au F6 OFF ; un nom non-guilde est sans effet
+    (aucun sprite ne porte ce nom — zéro cas spécial).
+  - Témoin de build → **« t6·C3 finitions heatmap — 2026-06-12 »**.
+- **Retour 3 (OM « aléatoires »)** : pas de correctif — pédagogie
+  (hétérogénéité de fondation voulue, design #7 ; l'OM se dépose où la vie
+  meurt) + l'échelle fixe/auto assainie rend les motifs lisibles ; à
+  vérifier visuellement au F5 (corrélation om_fresh ↔ zones de mortalité).
+
 ### REPRISE (session suivante, démarrage à froid)
-1. **Lancer le sous-sprint t6·C3** : lire `00_etat.md` (ce fichier) puis
-   **`06b_finitions_heatmap.md`** (kickoff autosuffisant — 4 retours triés,
-   options à trancher, critères F5). C# seul attendu, golden intact.
-2. F5 Nico du C3 → triage habituel.
-3. **Fin de tranche 6** après validation : remettre `DebugSecondsPerWeek=0`,
+1. **F5 Nico du C3** (témoin « t6·C3 finitions heatmap ») — critères :
+   rampe continue ≥ 10 nuances ; humidité qui sèche = glisse vers l'ocre
+   SANS re-normalisation ; temperature = aplat honnête + ligne « grille
+   14.x..14.x » + pédagogie air/sol ; heatmap d'une guilde → ses points
+   collent aux zones chaudes ; OFF = coût nul. Triage habituel.
+2. **Fin de tranche 6** après validation : remettre `DebugSecondsPerWeek=0`,
    vérifier les mesures notées (snapshot smoke 24 Ko sem 20 avec sprites ;
    full ~210 Ko au pic d'automne — sprites compacts), mettre à jour
    `CLAUDE.md` (sprint en cours) et `journal.md` (clôture de tranche).
-4. Puis **t7 = packaging PyInstaller** (kickoff à écrire : gel du moteur en
+3. Puis **t7 = packaging PyInstaller** (kickoff à écrire : gel du moteur en
    binaire, `SimBridge` pointe le binaire, export Godot pour amis/famille).
    Au backlog depuis t6 : écraser maladroit multi-guildes + saisonnalité
    vie macro + physico-chimie du sol (temp sol/pH).

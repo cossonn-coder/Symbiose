@@ -34,52 +34,75 @@ namespace Symbiose
 		// haute) et SES libellés, affichés en légende quand il est à l'écran.
 		// Les 4 guildes reprennent les teintes des points MacroLife (un seul
 		// langage visuel : la heatmap ravageur double les points sombres).
+		//
+		// 📖 Échelle FIXE par champ (t6·C3, retour F5 « rendu binaire ») :
+		// le min/max AUTO étalait le bruit d'un champ quasi uniforme sur
+		// toute la palette (om_stable : span 0,001 → psychédélique). Quand le
+		// champ a des bornes PHYSIQUES côté moteur, on les fige ici — la
+		// couleur devient comparable d'une semaine à l'autre (une carte
+		// météo, pas un contraste auto). Provenance des bornes :
+		//   temperature −5..35 °C  : temp_norm = 11 ± 7 °C + dérive + gel/canicule ;
+		//   humidite/fertilite/microbiome 0..3 : le moteur normalise par /3.0
+		//     (effects.py, ecofields.py — min(1, x/3)) ;
+		//   lumiere/disturbance/guildes 0..1 : _clamp01 et stability = 1 − d.
+		// NaN = pas de bornes naturelles (om_*, soil_memory*) → repli min/max
+		// AUTO de la grille, comme avant.
 		private static readonly System.Collections.Generic.Dictionary<string,
-			(Color Low, Color High, string LowLabel, string HighLabel)> Palettes = new()
+			(Color Low, Color High, string LowLabel, string HighLabel,
+			 float FixMin, float FixMax)> Palettes = new()
 		{
-			["temperature"]      = (new Color("3a6fd8"), new Color("d83a3a"), "froid", "chaud"),
-			["humidite"]         = (new Color("c8a96e"), new Color("2f6fd0"), "sec", "humide"),
-			["lumiere"]          = (new Color("2e2e38"), new Color("f5e36b"), "ombre", "plein soleil"),
-			["fertilite"]        = (new Color("d8cfa8"), new Color("2f8f4f"), "pauvre", "fertile"),
-			["microbiome"]       = (new Color("d8d2c0"), new Color("2f8f8f"), "inerte", "vivant"),
-			["om_fresh"]         = (new Color("e0d6a8"), new Color("8f7a3a"), "sol nu", "litière"),
-			["om_active"]        = (new Color("e0d6a8"), new Color("6f5a2a"), "peu", "en digestion"),
-			["om_stable"]        = (new Color("e0d6a8"), new Color("5a4630"), "peu", "humus"),
-			["soil_memory"]      = (new Color("c8c8c8"), new Color("4f4f9f"), "jeune", "ancien"),
-			["soil_memory_fast"] = (new Color("c8c8c8"), new Color("6f6fb8"), "jeune", "récent"),
-			["soil_memory_deep"] = (new Color("c8c8c8"), new Color("3a3a8f"), "jeune", "profond"),
-			["disturbance"]      = (new Color("d8d8d0"), new Color("a83a78"), "calme", "perturbé"),
-			["ravageur"]         = (new Color("e8e2d4"), new Color("3a2c1e"), "absent", "infesté"),
-			["auxiliaire"]       = (new Color("e8e2d4"), new Color("3f7a4e"), "absent", "présent"),
-			["pollinisateur"]    = (new Color("e8e2d4"), new Color("c89a1e"), "absent", "butinant"),
-			["vers_de_terre"]    = (new Color("e8e2d4"), new Color("6b4a32"), "absent", "fouisseur"),
+			["temperature"]      = (new Color("3a6fd8"), new Color("d83a3a"), "froid", "chaud", -5f, 35f),
+			["humidite"]         = (new Color("c8a96e"), new Color("2f6fd0"), "sec", "humide", 0f, 3f),
+			["lumiere"]          = (new Color("2e2e38"), new Color("f5e36b"), "ombre", "plein soleil", 0f, 1f),
+			["fertilite"]        = (new Color("d8cfa8"), new Color("2f8f4f"), "pauvre", "fertile", 0f, 3f),
+			["microbiome"]       = (new Color("d8d2c0"), new Color("2f8f8f"), "inerte", "vivant", 0f, 3f),
+			["om_fresh"]         = (new Color("e0d6a8"), new Color("8f7a3a"), "sol nu", "litière", float.NaN, float.NaN),
+			["om_active"]        = (new Color("e0d6a8"), new Color("6f5a2a"), "peu", "en digestion", float.NaN, float.NaN),
+			["om_stable"]        = (new Color("e0d6a8"), new Color("5a4630"), "peu", "humus", float.NaN, float.NaN),
+			["soil_memory"]      = (new Color("c8c8c8"), new Color("4f4f9f"), "jeune", "ancien", float.NaN, float.NaN),
+			["soil_memory_fast"] = (new Color("c8c8c8"), new Color("6f6fb8"), "jeune", "récent", float.NaN, float.NaN),
+			["soil_memory_deep"] = (new Color("c8c8c8"), new Color("3a3a8f"), "jeune", "profond", float.NaN, float.NaN),
+			["disturbance"]      = (new Color("d8d8d0"), new Color("a83a78"), "calme", "perturbé", 0f, 1f),
+			["ravageur"]         = (new Color("e8e2d4"), new Color("3a2c1e"), "absent", "infesté", 0f, 1f),
+			["auxiliaire"]       = (new Color("e8e2d4"), new Color("3f7a4e"), "absent", "présent", 0f, 1f),
+			["pollinisateur"]    = (new Color("e8e2d4"), new Color("c89a1e"), "absent", "butinant", 0f, 1f),
+			["vers_de_terre"]    = (new Color("e8e2d4"), new Color("6b4a32"), "absent", "fouisseur", 0f, 1f),
 		};
 		// Champ inconnu de la table (futur champ moteur ramassé par
-		// l'introspection) : bleu→rouge générique, jamais un crash.
-		private static readonly (Color, Color, string, string) DefaultPalette =
-			(new Color("3a6fd8"), new Color("d83a3a"), "min", "max");
+		// l'introspection) : bleu→rouge générique en échelle auto, jamais un
+		// crash.
+		private static readonly (Color, Color, string, string, float, float) DefaultPalette =
+			(new Color("3a6fd8"), new Color("d83a3a"), "min", "max", float.NaN, float.NaN);
 
-		/// <summary>Palette du champ (couleurs basse/haute + libellés) — lue
-		/// par WorldView pour la légende du HUD.</summary>
-		public static (Color Low, Color High, string LowLabel, string HighLabel)
+		/// <summary>Palette du champ (couleurs basse/haute + libellés +
+		/// bornes fixes, NaN = auto) — lue par WorldView pour la légende.</summary>
+		public static (Color Low, Color High, string LowLabel, string HighLabel,
+					   float FixMin, float FixMax)
 			PaletteOf(string field) =>
 			field != null && Palettes.TryGetValue(field, out var p) ? p : DefaultPalette;
 
 		/// <summary>Nom du champ affiché (HUD) ; null si aucune grille.</summary>
 		public string FieldName { get; private set; }
-		/// <summary>Bornes de la normalisation (HUD min/max).</summary>
+		/// <summary>Bornes de la NORMALISATION (fixes si le champ en a,
+		/// sinon min/max de la grille) — celles de la rampe de légende.</summary>
 		public float Min { get; private set; }
 		public float Max { get; private set; }
+		/// <summary>Min/max RÉELS de la grille reçue (HUD : sur une échelle
+		/// fixe, dit où la grille vit — « grille 14.1..14.1 » = uniforme).</summary>
+		public float GridMin { get; private set; }
+		public float GridMax { get; private set; }
+		/// <summary>true si le champ affiché a des bornes physiques figées.</summary>
+		public bool FixedScale { get; private set; }
 
 		// Dernière réponse `fields` du serveur (grilles par tuile) + origins.
 		private GDict _tiles;
 		private System.Collections.Generic.Dictionary<string, Vector2> _origins;
 
 		/// <summary>
-		/// Nouvelle grille reçue : mémorise, calcule min/max (normalisation
-		/// AUTO par champ — un microbiome 0..3 et une humidité 0..1 se lisent
-		/// pareil), redessine. La projection se fait au _Draw : la rotation
-		/// D35 n'a besoin que d'un QueueRedraw.
+		/// Nouvelle grille reçue : mémorise, choisit la normalisation
+		/// (bornes FIXES du champ si la table en donne, sinon min/max AUTO
+		/// de la grille — t6·C3), redessine. La projection se fait au
+		/// _Draw : la rotation D35 n'a besoin que d'un QueueRedraw.
 		/// </summary>
 		public void SetGrid(string fieldName, GDict tiles,
 							System.Collections.Generic.Dictionary<string, Vector2> origins)
@@ -98,7 +121,11 @@ namespace Symbiose
 					if (f > mx) mx = f;
 				}
 			}
-			Min = mn; Max = mx;
+			GridMin = mn; GridMax = mx;
+			var pal = PaletteOf(fieldName);
+			FixedScale = !float.IsNaN(pal.FixMin);
+			Min = FixedScale ? pal.FixMin : mn;
+			Max = FixedScale ? pal.FixMax : mx;
 			QueueRedraw();
 		}
 
@@ -112,7 +139,7 @@ namespace Symbiose
 			Vector2 s = new(0f, WorldView.TileHPx / 2f);
 			Vector2 o = new(-WorldView.TileWPx / 2f, 0f);
 			float span = Max - Min;
-			var (low, high, _, _) = PaletteOf(FieldName);
+			var (low, high, _, _, _, _) = PaletteOf(FieldName);
 			foreach (var kv in _tiles)
 			{
 				if (!_origins.TryGetValue(kv.Key.AsString(), out Vector2 org))
@@ -126,7 +153,11 @@ namespace Symbiose
 						// row-major : l'index recompose (r, c) — l'ordre du
 						// serveur (boucle rows puis cols), pas un 2e contrat.
 						float v = (float)vals[r * cols + c].AsDouble();
-						float tt = span > 1e-6f ? (v - Min) / span : 0.5f;
+						// Clamp : sur une échelle fixe, une valeur hors
+						// bornes (canicule à 36 °C) sature au pôle au lieu
+						// d'extrapoler la couleur.
+						float tt = span > 1e-6f
+							? Mathf.Clamp((v - Min) / span, 0f, 1f) : 0.5f;
 						// Interpolation entre les 2 pôles du champ (la légende
 						// du HUD montre exactement ces couleurs-là).
 						Color col = low.Lerp(high, tt);

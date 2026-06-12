@@ -55,6 +55,18 @@ namespace Symbiose
 		// Marge du rectangle de culling, en px canvas : couvre l'amplitude
 		// d'errance max (~120 cm × 0,78) pour ne pas couper un point au bord.
 		private const float CullMarginPx = 160f;
+		// Errance résiduelle quand la heatmap de SA guilde est affichée
+		// (t6·C3, retour 4 : « des points bougent dans des cases où la carte
+		// les dit absents » — c'était l'errance VISUELLE, surtout le
+		// pollinisateur ±120 cm). Un instrument doit montrer la corrélation :
+		// les points se rassemblent sur leur ancre (±4 cm = dans le plot),
+		// l'errance libre reste le mode normal hors heatmap de guilde.
+		private const float FocusAmpCm = 4f;
+
+		/// <summary>Champ heatmap affiché (F6) — posé par WorldView. Si c'est
+		/// le nom d'une guilde, SES points resserrent leur errance sur
+		/// l'ancre ; tout autre nom (humidite…) ou null = sans effet.</summary>
+		public string FocusGuild { get; set; }
 
 		// Par guilde : couleur, rayon du point en px canvas (0 = tiret du ver),
 		// amplitude d'errance en cm MONDE et pulsation (rad/s). Le pollinisateur
@@ -232,6 +244,10 @@ namespace Symbiose
 				float ph1 = (e.Phase & 0xffff) * (Mathf.Tau / 65536f);
 				float ph2 = (e.Phase >> 16) * (Mathf.Tau / 65536f);
 				float amp = ampCm * (0.3f + 0.7f * e.Act);
+				// Mode instrument (t6·C3) : heatmap de MA guilde à l'écran →
+				// je me tiens sur mon ancre, la corrélation saute aux yeux.
+				if (e.Guild == FocusGuild)
+					amp = Mathf.Min(amp, FocusAmpCm);
 				Vector2 scr = WorldView.WorldToScreen(
 					e.Wx + amp * Mathf.Sin(now * speed + ph1),
 					e.Wy + amp * Mathf.Cos(now * speed * 0.73f + ph2));
