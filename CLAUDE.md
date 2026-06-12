@@ -310,18 +310,19 @@ Le **backlog des sprints** (terminés + à venir, avec les kickoffs
 autosuffisants de `sprints/`) vit désormais dans **[`BACKLOG.md`](BACKLOG.md)**
 — source unique, plus de duplication.
 
-**Sprint en cours** : **Intégration Godot ↔ Python** — tranches **1 à 5
+**Sprint en cours** : **Intégration Godot ↔ Python** — tranches **1 à 6
 CLOSES**, toutes confirmées F5 : 1 (pont `sim_server.py`/`SimBridge`),
 2 (monde statique `WorldView` scène principale, placeholders, D34 assets),
 3 (saison animée Planification↔Saison↔Pause) le 2026-06-10 ; 4 (caméra D35 +
 actions joueur protocole v1 + ombre solaire animée + perfs F4) et 5 (taille
-au segment près à la souris, protocole 0.2.1) le 2026-06-11. **Tranche 6 EN
-COURS** (kickoff `06_organes_overlays_viemacro.md`) : **volet A (organes
-procéduraux, protocole 0.2.2) CODÉ + COMMITTÉ (7b100f6, 2026-06-11), en
-attente F5** ; restent volets B (vie macro visible) et C (heatmaps debug F6).
-Puis packaging (PyInstaller). Reprise :
-`sprints/sprint_integration_godot/00_etat.md` §REPRISE. Rappel :
-`DebugSecondsPerWeek=3` actif dans `WorldView.cs`, à remettre à 0 hors debug.
+au segment près à la souris, protocole 0.2.1) le 2026-06-11 ; 6 (organes
+procéduraux + vie macro `MacroLife` + heatmaps debug F6 `FieldOverlay`,
+protocole 0.2.2→0.3.0, golden jamais re-figé) le 2026-06-12 —
+`DebugSecondsPerWeek` remis à 0 (rythme design 60 s/semaine). **Reste
+tranche 7 = packaging PyInstaller** (gel du moteur en binaire, export Godot
+pour amis/famille), dernière tranche du sprint — kickoff
+`sprints/sprint_integration_godot/07_packaging.md`. Reprise :
+`sprints/sprint_integration_godot/00_etat.md` §REPRISE.
 
 À l'ouverture d'une session, Nico donne « lis `sprints/sprint_X.md` » (sprint
 simple) ou « lis `sprints/sprint_X/00_etat.md` puis `0N_*.md` » (sprint découpé)

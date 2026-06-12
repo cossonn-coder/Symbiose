@@ -602,7 +602,7 @@ carnet. Indices **visuels** d'abord (philo #5 : pas de chiffres en HUD primaire)
      (pollinisateur ±120 cm) + fondu de mort ; recommandation : en mode
      heatmap de guilde, resserrer l'errance sur l'ancre.
 
-### Tranche 6 — sous-sprint C3 (finitions heatmap) : CODÉ (2026-06-12), en attente F5
+### Tranche 6 — sous-sprint C3 (finitions heatmap) : ✅ CLOS (2026-06-12, confirmé F5)
 - **Diagnostic Python (lecture seule, conservé `tools/diag_fields_span.py`)** :
   `temperature` est **uniforme PAR CONSTRUCTION** (`engine.py:587`
   `temperature.fill(temp_now)` — l'air hebdo, un seul nombre par semaine) ;
@@ -635,21 +635,33 @@ carnet. Indices **visuels** d'abord (philo #5 : pas de chiffres en HUD primaire)
   (hétérogénéité de fondation voulue, design #7 ; l'OM se dépose où la vie
   meurt) + l'échelle fixe/auto assainie rend les motifs lisibles ; à
   vérifier visuellement au F5 (corrélation om_fresh ↔ zones de mortalité).
+- **F5 Nico (2026-06-12, après une sync Nextcloud PARTIELLE — WorldView
+  resté C2 + FieldOverlay C3 = CS8132, résolu par attente de sync) :
+  « ok c'est bien » → C3 VALIDÉ.**
+
+### TRANCHE 6 — ✅ CLOSE (2026-06-12, volets A + B/B2 + C/C2/C3 tous confirmés F5)
+Dernière tranche de CONTENU du sprint Intégration. Bilan : protocole
+0.2.2 → 0.3.0 (hints organes, bloc sprites compact, commande `fields` par
+introspection), `MacroLife.cs` + `FieldOverlay.cs` nouveaux, organes
+procéduraux portés, 87/87 au test serveur, golden `16a1b937…` JAMAIS re-figé
+sur toute la tranche. Mesures finales : snapshot smoke ~24 Ko sem 20
+(sprites inclus) ; full ~210 Ko au pic d'automne (8 600 sprites, format
+compact) — toujours négligeable à 1 snapshot/60 s. **`DebugSecondsPerWeek`
+REMIS À 0** (rythme design 60 s/semaine ; c'est un `[Export]` : re-réglable
+à 3 dans l'inspecteur pour une validation rapide). Témoin de build →
+**« t6 CLOSE (rythme design 60 s/sem) — 2026-06-12 »**. Gravés au BACKLOG
+pendant la tranche : écraser maladroit multi-guildes, saisonnalité vie
+macro (calibrage), physico-chimie du sol (temp sol + pH), compétition
+intra-plot, décomposition & compost.
 
 ### REPRISE (session suivante, démarrage à froid)
-1. **F5 Nico du C3** (témoin « t6·C3 finitions heatmap ») — critères :
-   rampe continue ≥ 10 nuances ; humidité qui sèche = glisse vers l'ocre
-   SANS re-normalisation ; temperature = aplat honnête + ligne « grille
-   14.x..14.x » + pédagogie air/sol ; heatmap d'une guilde → ses points
-   collent aux zones chaudes ; OFF = coût nul. Triage habituel.
-2. **Fin de tranche 6** après validation : remettre `DebugSecondsPerWeek=0`,
-   vérifier les mesures notées (snapshot smoke 24 Ko sem 20 avec sprites ;
-   full ~210 Ko au pic d'automne — sprites compacts), mettre à jour
-   `CLAUDE.md` (sprint en cours) et `journal.md` (clôture de tranche).
-3. Puis **t7 = packaging PyInstaller** (kickoff à écrire : gel du moteur en
-   binaire, `SimBridge` pointe le binaire, export Godot pour amis/famille).
-   Au backlog depuis t6 : écraser maladroit multi-guildes + saisonnalité
-   vie macro + physico-chimie du sol (temp sol/pH).
+1. **Lancer la tranche 7 — packaging PyInstaller** : lire `00_etat.md` (ce
+   fichier) puis **`07_packaging.md`** (kickoff autosuffisant). But : geler
+   le moteur Python en binaire autonome, `SimBridge` le pointe, export
+   Godot installable pour amis/famille. C'est la DERNIÈRE tranche du
+   sprint Intégration.
+2. Après t7 : sprint Intégration CLOS → retour aux sprints moteur/contenu
+   (BACKLOG.md : save global, sprints Python gravés, D19/D33…).
 
 ## Lien dette
 Lève progressivement **D24** (le « portage C# » devient « pont », plus un portage

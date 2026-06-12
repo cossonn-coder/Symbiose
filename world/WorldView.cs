@@ -76,7 +76,7 @@ namespace Symbiose
 		// droite de l'écran + imprimé en console au lancement : si la version à
 		// l'écran n'est pas celle annoncée par Claude, le circuit VM → sync
 		// Nextcloud → build Godot n'est pas passé (piège connu depuis t3).
-		public const string Build = "t6·C3 finitions heatmap — 2026-06-12";
+		public const string Build = "t6 CLOSE (rythme design 60 s/sem) — 2026-06-12";
 
 		// -------------------------------------------------------------------
 		// CALIBRATION (mesurée sur assets/sprites/tiles/tile_terre.png — D2)
@@ -215,8 +215,10 @@ namespace Symbiose
 		// 60 = réglage design (plage Options prévue 30-180 s).
 		[Export] public float SecondsPerWeek = 60f;
 		// Si > 0, REMPLACE SecondsPerWeek — sans ça, valider une saison = 13 min
-		// de patience. Défaut 3 s pour la validation t3 ; remettre à 0 ensuite.
-		[Export] public float DebugSecondsPerWeek = 3f;
+		// de patience. Remis à 0 à la clôture de la tranche 6 (2026-06-12) :
+		// le rythme design (60 s/semaine) redevient le défaut. Pour valider
+		// vite en debug : remettre 3 ici ou via l'inspecteur (c'est un Export).
+		[Export] public float DebugSecondsPerWeek = 0f;
 		// Durées des fondus d'apparition (naissance) / disparition (mort).
 		[Export] public float FadeInSec = 0.6f;
 		[Export] public float FadeOutSec = 0.9f;
