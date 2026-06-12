@@ -76,7 +76,7 @@ namespace Symbiose
 		// droite de l'écran + imprimé en console au lancement : si la version à
 		// l'écran n'est pas celle annoncée par Claude, le circuit VM → sync
 		// Nextcloud → build Godot n'est pas passé (piège connu depuis t3).
-		public const string Build = "t6·B2 vie macro LOD+I — 2026-06-12";
+		public const string Build = "t6·C heatmaps F6 — 2026-06-12";
 
 		// -------------------------------------------------------------------
 		// CALIBRATION (mesurée sur assets/sprites/tiles/tile_terre.png — D2)
@@ -272,6 +272,19 @@ namespace Symbiose
 		// du sol, sous les plantes. Enfant direct de WorldView : il survit à
 		// RebuildWorld (il se re-projette seul à chaque dessin d'animation).
 		private MacroLife _macroLife;
+
+		// --- Overlay debug champs écologiques (t6·C, touche F6) -------------
+		// ZIndex 3 : par-dessus le sol et l'ombre maison, sous la vie macro et
+		// les objets. La MACHINE de requêtes vit ici (maître/esclave : la même
+		// file qu'un step/action — UNE requête en vol, leçon t4·B) ; le nœud
+		// FieldOverlay ne fait que dessiner la dernière grille reçue.
+		private FieldOverlay _fieldOverlay;
+		private bool _overlayOn;
+		private string[] _fieldNames;          // registre du serveur (1 requête)
+		private int _fieldIndex;
+		private bool _fieldsStale;             // snapshot reçu depuis la grille
+		private Task<GDict> _pendingFields;    // requête fields en vol (ou null)
+		private Label _fieldLabel;             // nom + min/max (HUD, debug)
 		private Node2D _house;     // pour le mode transparent (touche H)
 		// Ombre maison ANIMÉE (volet C) : le polygone est recalculé quand le
 		// soleil bouge — paramètres gardés en champs pour ne pas relire le GDict.
@@ -339,6 +352,10 @@ namespace Symbiose
 		// Plante dont un segment est surligné (mode tailler) — pour éteindre
 		// l'ancienne quand la souris change de plante.
 		private PlantRenderer _highlightNode;
+		// Le pipe est maître/esclave 1↔1 : libre = AUCUNE requête en vol
+		// (step, action ou fields). LA condition de toute écriture sur le tube.
+		private bool PipeFree =>
+			_pendingStep == null && _pendingAction == null && _pendingFields == null;
 		private double _vigueur = -1.0, _vigueurMax;   // bloc player du snapshot
 		private string _lastActionMsg = "";
 		private Label _actionLabel;                // 2e ligne HUD (Vigueur+geste)
@@ -415,6 +432,12 @@ namespace Symbiose
 			_macroLife = new MacroLife { Name = "MacroLife", ZIndex = 5 };
 			AddChild(_macroLife);
 
+			_fieldOverlay = new FieldOverlay
+			{
+				Name = "FieldOverlay", ZIndex = 3, Visible = false,
+			};
+			AddChild(_fieldOverlay);
+
 			BuildHud();
 			ApplySnapshot(snap, fade: false);   // monde initial : pas de fondu
 
@@ -430,6 +453,7 @@ namespace Symbiose
 			// — règle (b) de l'en-tête).
 			try { _pendingStep?.Wait(2000); } catch { /* moteur déjà mort : Quit gère */ }
 			try { _pendingAction?.Wait(2000); } catch { /* idem */ }
+			try { _pendingFields?.Wait(2000); } catch { /* idem */ }
 			_bridge?.Quit();
 		}
 
@@ -466,6 +490,10 @@ namespace Symbiose
 					case Key.H:        ToggleHouseGhost(); break;
 					case Key.O:        ToggleShadows();   break;
 					case Key.I:        ToggleMacroLife(); break;
+					case Key.F6:
+						if (k.ShiftPressed) CycleField();
+						else ToggleFieldOverlay();
+						break;
 				}
 			}
 			// Molette = paliers de zoom (décision Nico 2026-06-10 : molette,
@@ -545,6 +573,49 @@ namespace Symbiose
 			foreach (var node in _plantNodes.Values)
 				node.GetNodeOrNull<Node2D>("Shadow")?.QueueRedraw();
 			GD.Print($"[WorldView] O → ombres {(ShadowsOn ? "ON" : "OFF")}.");
+		}
+
+		// Touche F6 (t6·C) : heatmap ON/OFF. OFF = coût STRICTEMENT nul
+		// (critère kickoff) : nœud caché, _fieldsStale ignoré, plus AUCUNE
+		// requête `fields` ne part — le serveur n'est même pas au courant.
+		private void ToggleFieldOverlay()
+		{
+			_overlayOn = !_overlayOn;
+			if (_fieldOverlay != null) _fieldOverlay.Visible = _overlayOn;
+			if (_overlayOn) _fieldsStale = true;   // (re)fetch au prochain tour
+			UpdateFieldHud();
+			GD.Print($"[WorldView] F6 → heatmap {(_overlayOn ? "ON" : "OFF")}.");
+		}
+
+		// Maj+F6 : champ suivant (cycle sur le registre du serveur).
+		private void CycleField()
+		{
+			if (!_overlayOn || _fieldNames == null || _fieldNames.Length == 0)
+			{
+				GD.Print("[WorldView] Maj+F6 : ouvrir d'abord l'overlay (F6).");
+				return;
+			}
+			_fieldIndex = (_fieldIndex + 1) % _fieldNames.Length;
+			_fieldsStale = true;   // la grille du nouveau champ part au prochain tour
+			UpdateFieldHud();
+			GD.Print($"[WorldView] Maj+F6 → champ : {_fieldNames[_fieldIndex]}.");
+		}
+
+		private void UpdateFieldHud()
+		{
+			if (_fieldLabel == null) return;
+			if (!_overlayOn)
+			{
+				_fieldLabel.Visible = false;
+				return;
+			}
+			_fieldLabel.Visible = true;
+			string nom = _fieldNames != null && _fieldNames.Length > 0
+				? _fieldNames[_fieldIndex] : "…";
+			string bornes = _fieldOverlay?.FieldName == nom
+				? $" · min {_fieldOverlay.Min:F2} · max {_fieldOverlay.Max:F2}"
+				: " · chargement…";
+			_fieldLabel.Text = $"heatmap (debug) : {nom}{bornes} — Maj+F6 champ suivant";
 		}
 
 		// Touche I (correctif t6·B2, demande Nico F5) : montre/cache la vie
@@ -649,11 +720,53 @@ namespace Symbiose
 			// 1c) File d'une intention : le pipe vient de se libérer → l'action
 			//     mémorisée part EN PRIORITÉ sur la semaine suivante (sinon, en
 			//     Turbo, le step relancé immédiatement affamerait les clics).
-			if (_queuedIntent != null && _pendingStep == null && _pendingAction == null)
+			if (_queuedIntent != null && PipeFree)
 			{
 				var it = _queuedIntent.Value;
 				_queuedIntent = null;
 				LaunchAction(it.Verb, it.Target, it.Prms, it.Node);
+			}
+
+			// 1d) Consommer une réponse `fields` (t6·C) : registre (liste de
+			//     noms) ou grilles — distingués par la clé présente.
+			if (_pendingFields != null && _pendingFields.IsCompleted)
+			{
+				var f = _pendingFields;
+				_pendingFields = null;
+				if (f.IsFaulted || f.Result == null)
+					GD.PrintErr("[WorldView] requête fields en échec (cf. SimBridge).");
+				else if (f.Result.ContainsKey("fields"))
+				{
+					var arr = f.Result["fields"].AsGodotArray();
+					_fieldNames = new string[arr.Count];
+					for (int i = 0; i < arr.Count; i++)
+						_fieldNames[i] = arr[i].AsString();
+					GD.Print($"[WorldView] fields : {_fieldNames.Length} champs au registre.");
+					// la grille du champ courant part au prochain tour (stale).
+				}
+				else
+				{
+					_fieldOverlay.SetGrid(f.Result["field"].AsString(),
+										  f.Result["tiles"].AsGodotDictionary(),
+										  _origins);
+					_fieldsStale = false;
+				}
+				UpdateFieldHud();
+			}
+
+			// 1e) Lancer la requête fields suivante — UNIQUEMENT overlay ON et
+			//     pipe libre (priorité : action en file > fields > step — un
+			//     instrument ne double jamais un geste). D'abord le registre
+			//     (une fois), puis la grille du champ courant si périmée.
+			if (_overlayOn && PipeFree && _queuedIntent == null)
+			{
+				if (_fieldNames == null)
+					_pendingFields = Task.Run(() => _bridge.Fields());
+				else if (_fieldsStale && _fieldNames.Length > 0)
+				{
+					string nom = _fieldNames[_fieldIndex];
+					_pendingFields = Task.Run(() => _bridge.Fields(nom));
+				}
 			}
 
 			// 2) Accumulateur temps réel (seulement quand la saison court).
@@ -661,10 +774,11 @@ namespace Symbiose
 			_timeAccum += (float)delta;
 			float spw = DebugSecondsPerWeek > 0f ? DebugSecondsPerWeek : SecondsPerWeek;
 			if (_simMode == SimMode.Turbo) spw = 0f;   // step dès que le pont répond
-			// Le step ne part que si le PIPE est libre : ni step NI action en
-			// vol (maître/esclave 1↔1 — une action pendant la saison retarde la
-			// semaine d'une frame ou deux, jamais l'inverse ne corrompt le tube).
-			if (_timeAccum >= spw && _pendingStep == null && _pendingAction == null)
+			// Le step ne part que si le PIPE est libre : ni step, ni action,
+			// ni fields en vol (maître/esclave 1↔1 — une requête d'instrument
+			// retarde la semaine d'une frame ou deux, jamais elle ne corrompt
+			// le tube).
+			if (_timeAccum >= spw && PipeFree)
 			{
 				_timeAccum = 0f;
 				_stepStartMs = Time.GetTicksMsec();
@@ -1066,6 +1180,11 @@ namespace Symbiose
 				_macroLife?.SetSprites(snap["sprites"].AsGodotDictionary(),
 									   _origins, fade);
 
+			// Heatmap (t6·C) : la grille affichée date de la semaine d'avant →
+			// périmée. Si l'overlay est ON, _Process relancera UNE requête
+			// `fields` dès que le pipe sera libre ; OFF, le flag dort.
+			_fieldsStale = true;
+
 			// Bloc joueur (volet B, lecture seule) → 2e ligne du HUD.
 			if (snap.ContainsKey("player"))
 			{
@@ -1141,6 +1260,16 @@ namespace Symbiose
 			_perfLabel.AddThemeConstantOverride("outline_size", 5);
 			hud.AddChild(_perfLabel);
 
+			// Ligne heatmap (t6·C) : nom du champ + min/max, visible quand
+			// l'overlay est ouvert. Instrument debug, étiqueté comme tel
+			// (« mode debug champs écologiques » de la conception, philo #5).
+			_fieldLabel = new Label { Position = new Vector2(16f, 110f), Visible = false };
+			_fieldLabel.AddThemeFontSizeOverride("font_size", 16);
+			_fieldLabel.AddThemeColorOverride("font_color", new Color(0.8f, 0.9f, 1f));
+			_fieldLabel.AddThemeColorOverride("font_outline_color", Colors.Black);
+			_fieldLabel.AddThemeConstantOverride("outline_size", 5);
+			hud.AddChild(_fieldLabel);
+
 			// Témoin de build (coin haut-droit) : LA réponse à « est-ce que je
 			// fais tourner la bonne version ? ». Discret mais toujours visible.
 			var build = new Label
@@ -1170,7 +1299,7 @@ namespace Symbiose
 			legend.AddThemeConstantOverride("outline_size", 6);
 			legend.Text = "Espace lancer/pause · flèches déplacer"
 				+ " · molette zoom · PageUp/PageDown pivoter\n"
-				+ "M mode simu · F3 étiquettes · F4 perfs · H maison transparente · O ombres · I vie macro\n"
+				+ "M mode simu · F3 étiquettes · F4 perfs · H maison transparente · O ombres · I vie macro · F6 heatmap debug (Maj+F6 champ)\n"
 				+ "gestes : 1 récolter · 2 déraciner · 3 écraser · 4 favoriser aux. · "
 				+ "5 bêcher · 6 grelinette · 7 tailler (survolez la branche, Maj = latéral auto) · 8 manger"
 				+ " — clic gauche = agir";
@@ -1294,10 +1423,10 @@ namespace Symbiose
 				// '-' : grelinette, pas de cible.
 			}
 
-			// Pipe occupé (step ou action en vol) → l'intention est MÉMORISÉE
-			// (une seule, la dernière gagne) et partira dès que le tube se
-			// libère — indispensable en Turbo où le pipe ne dort jamais.
-			if (_pendingStep != null || _pendingAction != null)
+			// Pipe occupé (step, action ou fields en vol) → l'intention est
+			// MÉMORISÉE (une seule, la dernière gagne) et partira dès que le
+			// tube se libère — indispensable en Turbo où le pipe ne dort jamais.
+			if (!PipeFree)
 			{
 				_queuedIntent = (verb, target, prms, node);
 				GD.Print($"[WorldView] pipe occupé — intention {verb} mémorisée.");
@@ -1572,6 +1701,8 @@ namespace Symbiose
 			AddChild(_objects);
 			BuildHouse(_world);
 			ApplySnapshot(_lastSnap, fade: false);
+			// La heatmap se re-projette au _Draw : un redraw suffit (t6·C).
+			_fieldOverlay?.QueueRedraw();
 		}
 	}
 }

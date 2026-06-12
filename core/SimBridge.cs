@@ -138,6 +138,20 @@ namespace Symbiose
 		}
 
 		/// <summary>
+		/// Mode debug champs écologiques (t6·C) : sans argument → le REGISTRE
+		/// (`fields` = liste de noms) ; avec un nom → les grilles par tuile
+		/// (`tiles` = {id: {rows, cols, values row-major}}). L'appelant
+		/// distingue les deux par la clé présente. Champ inconnu → null
+		/// (erreur loggée par Request, le serveur survit).
+		/// </summary>
+		public GDict Fields(string field = null)
+		{
+			var msg = new GDict { ["cmd"] = "fields" };
+			if (field != null) msg["field"] = field;
+			return Request(msg);
+		}
+
+		/// <summary>
 		/// Cœur du pont : écrit 1 ligne JSON, lit 1 ligne JSON (bloquant).
 		/// Retourne le message si ok:true, sinon null (+ erreur en console).
 		/// </summary>

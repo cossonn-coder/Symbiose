@@ -26,6 +26,12 @@ Protocole v1 (requête → réponse, champ `cmd` obligatoire) :
   ← {"ok": true, "result": {"applied": bool, "cost": x, "gain": x,
                             "vigueur": x, "vigueur_max": x, "message": "..."},
      "snapshot": {...}}     # snapshot frais TOUJOURS joint (effet visible en 1 aller-retour)
+  → {"cmd": "fields"}                                # mode debug (t6·C)
+  ← {"ok": true, "fields": [noms…]}                  # registre découvert
+  → {"cmd": "fields", "field": "microbiome"}
+  ← {"ok": true, "field": "...", "tiles": {tid: {rows, cols, values}}}
+     # values = liste row-major ; le snapshot hebdo n'embarque PAS les
+     # grilles (volume) — la vue ne les demande que si l'overlay est ON.
   → {"cmd": "quit"}
   ← {"ok": true}
 Cibles d'action (tranche 4, décision kickoff : désignation NON-AMBIGUË, le
@@ -75,6 +81,10 @@ from sim import vigueur as V      # état Vigueur joueur (ensure/spend/gain, D11
 # densité → entités (fields/population.py §3). L'échantillonnage se fait CÔTÉ
 # SERVEUR — la vue n'a pas besoin de _hash_noise (kickoff t6 §4).
 from fields.population import sample_sprites
+# Type de base des champs écologiques (tranche 6·C) : le registre de la
+# commande `fields` se DÉCOUVRE par introspection (tout attribut GridField
+# d'EcoFields) — un champ ajouté au moteur apparaît tout seul dans l'overlay.
+from fields.grids import GridField
 # Table « stade reproducteur visible par saison » du prototype SVG (tranche 6,
 # volet A) : import OUTIL → OUTIL (render_structure est un outil, pas le
 # moteur), zéro duplication — la table validée visuellement au sprint
@@ -93,7 +103,10 @@ from tools.render_structure import REPRO_BY_SEASON
 #       activite]. Compact d'emblée : mesuré 705 Ko/snapshot en format objet
 #       verbeux au pic d'automne du monde full (~8600 sprites) vs 210 Ko en
 #       tableaux — la mitigation prévue au kickoff §4 s'impose à la mesure.
-ENGINE_VERSION = "0.2.3"
+# 0.3.0 (tranche 6·C, fin de tranche) : commande `fields` (mode debug champs
+#       écologiques) — registre par introspection + grilles par tuile à la
+#       demande, HORS snapshot (volume : la vue ne paie que l'overlay ouvert).
+ENGINE_VERSION = "0.3.0"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les
@@ -164,6 +177,36 @@ class SimServer:
         if self.engine is None:
             return {"ok": False, "error": "snapshot avant init"}
         return {"ok": True, "snapshot": self._snapshot()}
+
+    def cmd_fields(self, msg: dict) -> dict:
+        """Mode debug champs écologiques (tranche 6·C, kickoff §8). Sans
+        `field` : le REGISTRE, découvert par introspection (attributs GridField
+        d'EcoFields, triés) + les 4 guildes de population (ordre trophique du
+        dict). Avec `field` : les grilles par tuile, row-major. PURE lecture —
+        l'overlay est un instrument, jamais une règle."""
+        if self.engine is None:
+            return {"ok": False, "error": "fields avant init"}
+        gs = self.engine.game_state
+        eco0 = next(iter(gs["eco"].values()))
+        field = msg.get("field")
+        if field is None:
+            direct = sorted(k for k, v in vars(eco0).items()
+                            if isinstance(v, GridField))
+            return {"ok": True,
+                    "fields": direct + list(eco0.populations.keys())}
+        tiles_out = {}
+        for tile in gs["tiles"]:
+            eco = gs["eco"][tile.tile_id]
+            obj = vars(eco).get(field)
+            if not isinstance(obj, GridField):
+                obj = eco.populations.get(field) if isinstance(field, str) else None
+            if not isinstance(obj, GridField):
+                return {"ok": False, "error": f"champ inconnu : {field!r}"}
+            # round(4) : précision d'instrument, et déterministe (cf. sprites).
+            tiles_out[tile.tile_id] = {
+                "rows": obj.rows, "cols": obj.cols,
+                "values": [round(v, 4) for row in obj.data for v in row]}
+        return {"ok": True, "field": field, "tiles": tiles_out}
 
     # ------------------------------------------------------------- actions
     # Le serveur APPELLE les façades de sim/actions.py (sprint Vigueur +
@@ -416,7 +459,8 @@ def main() -> int:
     dispatch = {"init": server.cmd_init,
                 "step_week": server.cmd_step_week,
                 "snapshot": server.cmd_snapshot,
-                "action": server.cmd_action}
+                "action": server.cmd_action,
+                "fields": server.cmd_fields}
     # 1 ligne lue = 1 réponse écrite. EOF (Godot mort sans quit) → fin de boucle.
     for line in sys.stdin:
         line = line.strip()

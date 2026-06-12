@@ -521,20 +521,55 @@ carnet. Indices **visuels** d'abord (philo #5 : pas de chiffres en HUD primaire)
     d'extinction ; warmth=(T−6)/18 quasi nul au printemps frais) → **sprint
     « saisonnalité vie macro (calibrage) » gravé au BACKLOG** (golden
     re-figeage maîtrisé à prévoir — D31.2 lit ces champs).
-  - Témoin de build → **« t6·B2 vie macro LOD+I — 2026-06-12 »**. En
-    attente F5 (critères : FPS retombé au dézoom ET au zoom ×4+ ; bestioles
-    seulement à ×4+ ; I coupe/rallume ; pollinisateurs déambulent).
+  - Témoin de build → **« t6·B2 vie macro LOD+I — 2026-06-12 »**.
+- **2e F5 Nico (2026-06-12) : correctif B2 VALIDÉ (« ok c'est tout bon ») →
+  volet B CLOS.**
+
+### Tranche 6 — volet C (heatmaps debug F6) : CODÉ (2026-06-12), en attente F5
+- **Livré Python** : `sim_server.py` protocole **0.3.0** (fin de tranche) —
+  commande **`fields`** HORS snapshot (kickoff §8 : le snapshot hebdo
+  n'embarque pas les grilles, la vue ne paie que l'overlay ouvert). Sans
+  argument → **registre découvert par INTROSPECTION** (tout attribut
+  `GridField` d'`EcoFields`, trié, + les 4 guildes — un champ ajouté au
+  moteur apparaîtra tout seul) : **16 champs** (humidite, fertilite,
+  microbiome, soil_memory ×3, om_ ×3, temperature, disturbance, lumiere +
+  ravageur/auxiliaire/pollinisateur/vers_de_terre). Avec `field` → grilles
+  par tuile `{rows, cols, values row-major}` (round 4). Champ inconnu →
+  `ok:false`, serveur survivant. `test_sim_server.py` **87/87** (section
+  11 : registre, dimensions exactes, guilde interrogeable, refus + survie,
+  lecture pure, avant init). **Golden écolo intact** (`16a1b937…`, vérifié).
+- **Livré C#** : `SimBridge.Fields(field?)` ; `visuals/FieldOverlay.cs`
+  (nouveau) — **_Draw de losanges** par plot, choix justifié vs ImageTexture
+  (kickoff §9 laissait le choix) : zéro gestion Image/Texture/Transform
+  oblique, re-projection gratuite à la rotation D35 (un QueueRedraw), et le
+  redraw est RARE (1×/semaine + toggle + rotation) — 1 188 polygones une
+  fois par minute ≠ coût (BuildGround en pose autant en permanence).
+  **Normalisation AUTO par champ** (min/max de la grille), dégradé bleu →
+  rouge (HSV 240°→0°), alpha 0,7, ZIndex 3 (sol < heatmap < vie macro <
+  objets). `WorldView.cs` : **F6** ON/OFF (« OFF = coût strictement nul » :
+  aucune requête ne part), **Maj+F6** champ suivant ; machine de requêtes
+  dans la MÊME file que step/action — propriété **`PipeFree`** (les 3
+  pendings), priorité action en file > fields > step ; ligne HUD « heatmap
+  (debug) : nom · min · max » ; légende mise à jour ; `_ExitTree` attend les
+  trois Tasks. Témoin de build → **« t6·C heatmaps F6 — 2026-06-12 »**.
+- **Critères F5** (kickoff) : F6 → heatmap lisible qui SUIT la simulation
+  (humidité qui sèche entre semaines, microbiome qui s'étend) ; Maj+F6
+  cycle les 16 champs (dont les 4 guildes — la heatmap ravageur double les
+  points de vie macro) ; rotation/zoom suivent ; OFF → FPS inchangé
+  strictement.
 
 ### REPRISE (session suivante, démarrage à froid)
-1. **F5 Nico du correctif t6·B2** (critères ci-dessus, fin de la liste de
-   triage). `DebugSecondsPerWeek=3` actif.
+1. **F5 Nico du volet C** (critères ci-dessus). `DebugSecondsPerWeek=3`
+   actif (pratique : l'humidité bouge à chaque semaine).
 2. Retours F5 → triage (workflow acté : correctif de volet, ou dette/backlog).
-3. Puis **volet C (heatmaps debug F6)** — spécifié dans
-   `06_organes_overlays_viemacro.md` (§8-10). `ENGINE_VERSION` : 0.2.3 →
-   0.3.0 (C, fin de tranche).
-4. Fin de tranche : remettre `DebugSecondsPerWeek=0`, noter les mesures de
-   taille snapshot ici, puis t7 = packaging PyInstaller. Au backlog depuis le
-   F5 t6·B : écraser maladroit multi-guildes + saisonnalité vie macro.
+3. **Fin de tranche 6** après validation : remettre `DebugSecondsPerWeek=0`,
+   vérifier les mesures notées (snapshot smoke 24 Ko sem 20 avec sprites ;
+   full ~210 Ko au pic d'automne — sprites compacts), mettre à jour
+   `CLAUDE.md` (sprint en cours) et `journal.md` (clôture de tranche).
+4. Puis **t7 = packaging PyInstaller** (kickoff à écrire : gel du moteur en
+   binaire, `SimBridge` pointe le binaire, export Godot pour amis/famille).
+   Au backlog depuis le F5 t6·B : écraser maladroit multi-guildes +
+   saisonnalité vie macro.
 
 ## Lien dette
 Lève progressivement **D24** (le « portage C# » devient « pont », plus un portage
