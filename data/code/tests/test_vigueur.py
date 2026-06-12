@@ -274,6 +274,25 @@ def test_ecraser():
           eco.populations["ravageur"].at_plot(3, 3) == 0.30,
           f"densité={eco.populations['ravageur'].at_plot(3, 3)}")
     check("Vigueur drainée à 0", st["courante"] == 0.0, f"courante={st['courante']}")
+    # Maladresse (retour F5 2026-06-12) : écraser le sprite cliqué QUELLE QUE
+    # soit sa guilde — un auxiliaire cliqué meurt, le ravageur n'est PAS touché.
+    st["courante"] = 100.0
+    eco.populations["auxiliaire"].set(4, 4, 0.30)
+    eco.populations["ravageur"].set(4, 4, 0.20)
+    ok_aux = ACT.ecraser(gs, "joueur_1", eco, 4, 4, guilde="auxiliaire", urgence=False)
+    check("écraser un auxiliaire payé", ok_aux)
+    check("un quantum d'auxiliaire retiré",
+          abs(eco.populations["auxiliaire"].at_plot(4, 4) - (0.30 - DENSITE_PAR_SPRITE)) < 1e-9,
+          f"aux={eco.populations['auxiliaire'].at_plot(4, 4)}")
+    check("ravageur co-localisé INTACT (on n'a écrasé QUE l'auxiliaire)",
+          eco.populations["ravageur"].at_plot(4, 4) == 0.20,
+          f"rav={eco.populations['ravageur'].at_plot(4, 4)}")
+    # Guilde inconnue → refus AVANT toute dépense (erreur de protocole).
+    st["courante"] = 100.0
+    ko = ACT.ecraser(gs, "joueur_1", eco, 4, 4, guilde="licorne", urgence=False)
+    check("guilde inconnue → échec sans effet", not ko)
+    check("guilde inconnue → AUCUNE Vigueur dépensée", st["courante"] == 100.0,
+          f"courante={st['courante']}")
 
 
 # ---------------------------------------------------------------------------

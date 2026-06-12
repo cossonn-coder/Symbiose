@@ -340,29 +340,38 @@ def tailler(game_state: dict, player: str, plant, eco, *, cible: str = "apex",
 
 
 def ecraser(game_state: dict, player: str, eco, r: int, c: int,
-            urgence: bool = True) -> bool:
-    """Écraser un nuisible (spec §3.3) — action BINAIRE, désormais RÉELLE (D31.3).
-    L'aveu de la v1 (« aucune entité nuisible n'existe encore ») est levé : le
-    champ `ravageur` (D31.1/D31.2) fournit l'entité ciblable, et le sprite cliqué
-    fournit le plot `(r, c)`.
+            guilde: str = "ravageur", urgence: bool = True) -> bool:
+    """Écraser l'être vivant CLIQUÉ (spec §3.3) — action BINAIRE, RÉELLE (D31.3).
+    Le geste suit la souris : on écrase le sprite désigné, QUELLE QUE SOIT sa
+    guilde. Le sprite cliqué fournit le plot `(r, c)` ET la guilde (`ravageur`,
+    `auxiliaire`, `pollinisateur`, `vers_de_terre`). Le code v1 codait `ravageur`
+    en dur → on ne pouvait écraser QUE des nuisibles ; désormais on peut SE
+    TROMPER (retour F5 Nico, 2026-06-12 : « il faut pouvoir être maladroit »).
 
     Coût MODÉRÉ × URGENCE (inchangé — ce geste reste le validateur du multiplicateur
     d'urgence). Effet : retire UN quantum (`DENSITE_PAR_SPRITE`, « un geste = un
-    individu », §5) de `ravageur` au plot ciblé. `GridField.add` borne déjà ≥ 0.
+    individu », §5) de la guilde ciblée au plot. `GridField.add` borne déjà ≥ 0.
     Tout-ou-rien (binaire) : l'effet n'est appliqué QUE si le coût est intégralement
     payé — forcer le geste à vide draine la Vigueur sans rien accomplir.
 
-    Pédagogie (philo #1, sans sermon) : le champ REPOUSSE depuis sa ressource
-    (l'hôte-feuillage est toujours là) → quelques semaines plus tard la pression
-    REVIENT. Net négatif sec, le raccourci s'use. Le canal vertueux symétrique est
-    `favoriser_auxiliaire` (régulation émergente, durable).
+    `guilde` inconnue → refus EN AMONT de toute dépense (erreur de protocole, pas
+    une maladresse de jeu) : le défaut `ravageur` n'est qu'une compat des appels
+    historiques, le pont passe toujours la guilde explicitement.
+
+    Pédagogie (philo #1+#6, sans sermon) : écraser un AUXILIAIRE ou un
+    POLLINISATEUR se paie — la régulation/pollinisation locale chute, l'erreur
+    d'identification s'apprend par la conséquence. Et le champ REPOUSSE depuis sa
+    ressource → quelques semaines plus tard la densité REVIENT. Net négatif sec,
+    le raccourci s'use. Le canal vertueux symétrique est `favoriser_auxiliaire`.
     Renvoie True si le geste a été pleinement payé (et donc appliqué)."""
-    # Pas de cible vivante de catalogue (le nuisible n'est pas une espèce câblée,
-    # D31) → terme 2 vide ; l'URGENCE reste un facteur SÉPARÉ par-dessus le seam.
+    if guilde not in eco.populations:
+        return False
+    # Pas de cible vivante de catalogue (les guildes ne sont pas des espèces
+    # câblées, D31) → terme 2 vide ; l'URGENCE reste un facteur SÉPARÉ par-dessus.
     cost = cout_action(game_state, player, "ecraser") * (URGENCE_MULT if urgence else 1.0)
     if spend(game_state, player, cost) < 1.0:
         return False
-    eco.populations["ravageur"].add(r, c, -DENSITE_PAR_SPRITE)
+    eco.populations[guilde].add(r, c, -DENSITE_PAR_SPRITE)
     return True
 
 

@@ -290,6 +290,20 @@ def main() -> int:
           cout_calme == 15.0 and cout_urgence == 22.5,
           f"calme={cout_calme}, urgence={cout_urgence}")
 
+    # Maladresse (protocole 0.3.1) : on écrase le SPRITE cliqué, guilde comprise —
+    # pas seulement le ravageur. Guilde inconnue → refus PUR (rien dépensé).
+    r = s5.send(cmd="action", verb="ecraser",
+                target={"tile": "T0", "r": 0, "c": 0, "guilde": "licorne"})
+    check("ecraser guilde inconnue → applied:false, serveur survivant",
+          r["result"]["applied"] is False and s5.send(cmd="snapshot").get("ok") is True,
+          r["result"]["message"])
+    r = s5.send(cmd="action", verb="ecraser",
+                target={"tile": "T0", "r": 0, "c": 0, "guilde": "auxiliaire"},
+                params={"urgence": False})
+    check("ecraser une guilde explicite (auxiliaire) → appliqué ET nommé",
+          r["result"]["applied"] is True and "auxiliaire" in r["result"]["message"],
+          r["result"]["message"])
+
     # Vigueur insuffisante : drainer à la grelinette (sans cible) jusqu'au refus.
     refus = None
     for _ in range(8):

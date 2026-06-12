@@ -106,7 +106,9 @@ from tools.render_structure import REPRO_BY_SEASON
 # 0.3.0 (tranche 6·C, fin de tranche) : commande `fields` (mode debug champs
 #       écologiques) — registre par introspection + grilles par tuile à la
 #       demande, HORS snapshot (volume : la vue ne paie que l'overlay ouvert).
-ENGINE_VERSION = "0.3.0"
+# 0.3.1 (post-intégration) : `target.guilde` optionnel sur `ecraser` (écraser le
+#       sprite cliqué quelle que soit sa guilde — défaut `ravageur` = compat).
+ENGINE_VERSION = "0.3.1"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les
@@ -317,19 +319,24 @@ class SimServer:
                              f"plot hors tuile : r={r!r}, c={c!r}")
             if verb == "ecraser":
                 urgence = bool(params.get("urgence", False))
+                # Guilde du SPRITE cliqué (protocole 0.3.1) : on écrase ce qui
+                # est sous la souris, quelle que soit sa nature. Défaut ravageur
+                # = compat des clients < 0.3.1 (Godot passe désormais la guilde).
+                guilde = target.get("guilde", "ravageur")
+                if guilde not in eco.populations:
+                    return bilan(False, 0.0, 0.0,
+                                 f"guilde inconnue : {guilde!r}")
                 cost = (A.cout_action(gs, player, "ecraser")
                         * (A.URGENCE_MULT if urgence else 1.0))
-                # Pression ravageur avant/après DANS le message (retour F5
-                # Nico : « je ne sais pas ce que j'écrase » — les sprites de
-                # vie macro arrivent en t5, d'ici là on lit l'effet). Lecture
-                # pure du champ, aucune règle ajoutée.
-                avant = eco.populations["ravageur"].get(r, c)
-                ok = A.ecraser(gs, player, eco, r, c, urgence=urgence)
-                apres = eco.populations["ravageur"].get(r, c)
+                # Densité de la guilde ciblée avant/après DANS le message (la vue
+                # confirme l'effet en un aller-retour). Lecture pure, zéro règle.
+                avant = eco.populations[guilde].get(r, c)
+                ok = A.ecraser(gs, player, eco, r, c, guilde=guilde, urgence=urgence)
+                apres = eco.populations[guilde].get(r, c)
                 return bilan(ok, cost, 0.0,
-                             f"écrasé en ({r},{c})"
+                             f"écrasé un {guilde} en ({r},{c})"
                              + (" [urgence]" if urgence else "")
-                             + f" — ravageurs {avant:.2f} → {apres:.2f}" if ok
+                             + f" — {guilde} {avant:.2f} → {apres:.2f}" if ok
                              else "Vigueur insuffisante — rien écrasé")
             cost = A.cout_action(gs, player, "becher", A.OBJETS_TOUCHES["becher"])
             ok = A.becher(gs, player, eco, r, c)
