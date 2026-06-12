@@ -76,7 +76,7 @@ namespace Symbiose
 		// droite de l'écran + imprimé en console au lancement : si la version à
 		// l'écran n'est pas celle annoncée par Claude, le circuit VM → sync
 		// Nextcloud → build Godot n'est pas passé (piège connu depuis t3).
-		public const string Build = "t6·C heatmaps F6 — 2026-06-12";
+		public const string Build = "t6·C2 légendes heatmap — 2026-06-12";
 
 		// -------------------------------------------------------------------
 		// CALIBRATION (mesurée sur assets/sprites/tiles/tile_terre.png — D2)
@@ -284,7 +284,9 @@ namespace Symbiose
 		private int _fieldIndex;
 		private bool _fieldsStale;             // snapshot reçu depuis la grille
 		private Task<GDict> _pendingFields;    // requête fields en vol (ou null)
-		private Label _fieldLabel;             // nom + min/max (HUD, debug)
+		// Légende de la heatmap (correctif C2) : RichTextLabel — le BBCode
+		// [color] permet les PAVÉS colorés du dégradé, un Label ne sait pas.
+		private RichTextLabel _fieldLabel;
 		private Node2D _house;     // pour le mode transparent (touche H)
 		// Ombre maison ANIMÉE (volet C) : le polygone est recalculé quand le
 		// soleil bouge — paramètres gardés en champs pour ne pas relire le GDict.
@@ -601,6 +603,10 @@ namespace Symbiose
 			GD.Print($"[WorldView] Maj+F6 → champ : {_fieldNames[_fieldIndex]}.");
 		}
 
+		// Légende de la heatmap (correctif C2, demande Nico) : les DEUX pôles
+		// du dégradé du champ affiché, en pavés colorés + libellés + bornes
+		// réelles — exactement les couleurs que FieldOverlay interpole.
+		// Affichée UNIQUEMENT quand son champ est à l'écran.
 		private void UpdateFieldHud()
 		{
 			if (_fieldLabel == null) return;
@@ -612,10 +618,13 @@ namespace Symbiose
 			_fieldLabel.Visible = true;
 			string nom = _fieldNames != null && _fieldNames.Length > 0
 				? _fieldNames[_fieldIndex] : "…";
+			var (lo, hi, labLo, labHi) = FieldOverlay.PaletteOf(nom);
 			string bornes = _fieldOverlay?.FieldName == nom
-				? $" · min {_fieldOverlay.Min:F2} · max {_fieldOverlay.Max:F2}"
-				: " · chargement…";
-			_fieldLabel.Text = $"heatmap (debug) : {nom}{bornes} — Maj+F6 champ suivant";
+				? $"[color=#{lo.ToHtml(false)}]██[/color] {labLo} ({_fieldOverlay.Min:F2})"
+				  + $"  →  [color=#{hi.ToHtml(false)}]██[/color] {labHi} ({_fieldOverlay.Max:F2})"
+				: "chargement…";
+			_fieldLabel.Text =
+				$"heatmap (debug) — {nom} : {bornes}   ·   Maj+F6 champ suivant";
 		}
 
 		// Touche I (correctif t6·B2, demande Nico F5) : montre/cache la vie
@@ -750,6 +759,9 @@ namespace Symbiose
 										  f.Result["tiles"].AsGodotDictionary(),
 										  _origins);
 					_fieldsStale = false;
+					// Témoin console (diag F5) : la grille est bien arrivée.
+					GD.Print($"[WorldView] heatmap {_fieldOverlay.FieldName} : "
+							 + $"min {_fieldOverlay.Min:F2}, max {_fieldOverlay.Max:F2}.");
 				}
 				UpdateFieldHud();
 			}
@@ -1251,24 +1263,31 @@ namespace Symbiose
 			_actionLabel.AddThemeConstantOverride("outline_size", 6);
 			hud.AddChild(_actionLabel);
 
-			// Overlay de perfs (F4, volet C2) : sous la ligne d'action, caché
+			// Légende heatmap (t6·C2, demande Nico) : SOUS la ligne Vigueur,
+			// AU-DESSUS du FPS. RichTextLabel pour les pavés colorés du
+			// dégradé ; visible seulement quand le champ est affiché.
+			_fieldLabel = new RichTextLabel
+			{
+				Position = new Vector2(16f, 80f),
+				CustomMinimumSize = new Vector2(1300f, 30f),
+				BbcodeEnabled = true, FitContent = true,
+				ScrollActive = false, Visible = false,
+				AutowrapMode = TextServer.AutowrapMode.Off,
+			};
+			_fieldLabel.AddThemeFontSizeOverride("normal_font_size", 16);
+			_fieldLabel.AddThemeColorOverride("default_color", new Color(0.85f, 0.92f, 1f));
+			_fieldLabel.AddThemeColorOverride("font_outline_color", Colors.Black);
+			_fieldLabel.AddThemeConstantOverride("outline_size", 5);
+			hud.AddChild(_fieldLabel);
+
+			// Overlay de perfs (F4, volet C2) : sous la légende heatmap, caché
 			// par défaut. Instrument debug (philo #5 : autorisé, hors HUD final).
-			_perfLabel = new Label { Position = new Vector2(16f, 86f), Visible = false };
+			_perfLabel = new Label { Position = new Vector2(16f, 112f), Visible = false };
 			_perfLabel.AddThemeFontSizeOverride("font_size", 16);
 			_perfLabel.AddThemeColorOverride("font_color", new Color(1f, 1f, 0.8f));
 			_perfLabel.AddThemeColorOverride("font_outline_color", Colors.Black);
 			_perfLabel.AddThemeConstantOverride("outline_size", 5);
 			hud.AddChild(_perfLabel);
-
-			// Ligne heatmap (t6·C) : nom du champ + min/max, visible quand
-			// l'overlay est ouvert. Instrument debug, étiqueté comme tel
-			// (« mode debug champs écologiques » de la conception, philo #5).
-			_fieldLabel = new Label { Position = new Vector2(16f, 110f), Visible = false };
-			_fieldLabel.AddThemeFontSizeOverride("font_size", 16);
-			_fieldLabel.AddThemeColorOverride("font_color", new Color(0.8f, 0.9f, 1f));
-			_fieldLabel.AddThemeColorOverride("font_outline_color", Colors.Black);
-			_fieldLabel.AddThemeConstantOverride("outline_size", 5);
-			hud.AddChild(_fieldLabel);
 
 			// Témoin de build (coin haut-droit) : LA réponse à « est-ce que je
 			// fais tourner la bonne version ? ». Discret mais toujours visible.

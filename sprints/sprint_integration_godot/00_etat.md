@@ -557,10 +557,39 @@ carnet. Indices **visuels** d'abord (philo #5 : pas de chiffres en HUD primaire)
   cycle les 16 champs (dont les 4 guildes — la heatmap ravageur double les
   points de vie macro) ; rotation/zoom suivent ; OFF → FPS inchangé
   strictement.
+- **1er F5 Nico (2026-06-12) — retours triagés** :
+  - **« Aucune heatmap, F6/Maj+F6 inertes »** → suspicion n°1 = **build
+    resté en t6·B2** (le symptôme exact : pas de `case F6` → silence total,
+    pas même la ligne HUD « chargement » ni un print console ; piège sync
+    Nextcloud→build documenté depuis t3). Vérif au prochain F5 : témoin
+    haut-droit = **« t6·C2 légendes heatmap »**. Si le témoin était DÉJÀ
+    t6·C : relever les messages console `[WorldView]`/`[SimBridge]` au F6
+    (un print « heatmap … min/max » a été ajouté à la réception de grille).
+  - **Légende couleur demandée** (sous la Vigueur, au-dessus du FPS ; bleu
+    froid → rouge chaud pour la température, code couleur approprié PAR
+    champ ; visible seulement quand le champ l'est) → **correctif t6·C2** :
+    table de **palettes par champ** dans `FieldOverlay` (température
+    bleu→rouge, humidité sec-ocre→bleu d'eau, lumière ombre→jaune soleil,
+    fertilité pauvre→vert, OM paille→humus, soil_memory gris→indigo,
+    disturbance calme→magenta, 4 guildes pâle→teinte MacroLife — un seul
+    langage visuel ; champ inconnu → bleu→rouge générique), le dessin
+    interpole CES pôles ; légende = `RichTextLabel` BBCode à y=80 (sous
+    Vigueur y=52, au-dessus du F4 descendu à y=112) : « heatmap (debug) —
+    humidite : ██ sec (0.12) → ██ humide (0.87) · Maj+F6 champ suivant ».
+  - **« Il manque température du sol ≠ air, et pH du sol »** → MOTEUR (un
+    seul champ `temperature` = l'air de `weather_at` ; pH inexistant) →
+    **sprint « physico-chimie du sol : température du sol + pH » gravé au
+    BACKLOG** — l'introspection 0.3.0 les exposera automatiquement à F6 le
+    jour où ils existeront.
+  - Témoin de build → **« t6·C2 légendes heatmap — 2026-06-12 »**. En
+    attente F5.
 
 ### REPRISE (session suivante, démarrage à froid)
-1. **F5 Nico du volet C** (critères ci-dessus). `DebugSecondsPerWeek=3`
-   actif (pratique : l'humidité bouge à chaque semaine).
+1. **F5 Nico du correctif t6·C2** : (a) vérifier le TÉMOIN haut-droit
+   d'abord ; (b) F6 → heatmap + légende colorée sous la Vigueur ; (c)
+   Maj+F6 cycle 16 champs, chaque légende suit son champ ; (d) OFF = FPS
+   strictement inchangé. `DebugSecondsPerWeek=3` actif (l'humidité bouge à
+   chaque semaine).
 2. Retours F5 → triage (workflow acté : correctif de volet, ou dette/backlog).
 3. **Fin de tranche 6** après validation : remettre `DebugSecondsPerWeek=0`,
    vérifier les mesures notées (snapshot smoke 24 Ko sem 20 avec sprites ;

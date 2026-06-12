@@ -28,6 +28,43 @@ namespace Symbiose
 		// l'effacer (l'œil garde les plantes et la maison pour se repérer).
 		private const float Alpha = 0.7f;
 
+		// Palette PAR CHAMP (correctif t6·C2, demande Nico F5) : un dégradé
+		// unique bleu→rouge mentirait — « chaud » n'a pas de sens pour de
+		// l'humidité. Chaque champ porte SES deux pôles (couleur basse →
+		// haute) et SES libellés, affichés en légende quand il est à l'écran.
+		// Les 4 guildes reprennent les teintes des points MacroLife (un seul
+		// langage visuel : la heatmap ravageur double les points sombres).
+		private static readonly System.Collections.Generic.Dictionary<string,
+			(Color Low, Color High, string LowLabel, string HighLabel)> Palettes = new()
+		{
+			["temperature"]      = (new Color("3a6fd8"), new Color("d83a3a"), "froid", "chaud"),
+			["humidite"]         = (new Color("c8a96e"), new Color("2f6fd0"), "sec", "humide"),
+			["lumiere"]          = (new Color("2e2e38"), new Color("f5e36b"), "ombre", "plein soleil"),
+			["fertilite"]        = (new Color("d8cfa8"), new Color("2f8f4f"), "pauvre", "fertile"),
+			["microbiome"]       = (new Color("d8d2c0"), new Color("2f8f8f"), "inerte", "vivant"),
+			["om_fresh"]         = (new Color("e0d6a8"), new Color("8f7a3a"), "sol nu", "litière"),
+			["om_active"]        = (new Color("e0d6a8"), new Color("6f5a2a"), "peu", "en digestion"),
+			["om_stable"]        = (new Color("e0d6a8"), new Color("5a4630"), "peu", "humus"),
+			["soil_memory"]      = (new Color("c8c8c8"), new Color("4f4f9f"), "jeune", "ancien"),
+			["soil_memory_fast"] = (new Color("c8c8c8"), new Color("6f6fb8"), "jeune", "récent"),
+			["soil_memory_deep"] = (new Color("c8c8c8"), new Color("3a3a8f"), "jeune", "profond"),
+			["disturbance"]      = (new Color("d8d8d0"), new Color("a83a78"), "calme", "perturbé"),
+			["ravageur"]         = (new Color("e8e2d4"), new Color("3a2c1e"), "absent", "infesté"),
+			["auxiliaire"]       = (new Color("e8e2d4"), new Color("3f7a4e"), "absent", "présent"),
+			["pollinisateur"]    = (new Color("e8e2d4"), new Color("c89a1e"), "absent", "butinant"),
+			["vers_de_terre"]    = (new Color("e8e2d4"), new Color("6b4a32"), "absent", "fouisseur"),
+		};
+		// Champ inconnu de la table (futur champ moteur ramassé par
+		// l'introspection) : bleu→rouge générique, jamais un crash.
+		private static readonly (Color, Color, string, string) DefaultPalette =
+			(new Color("3a6fd8"), new Color("d83a3a"), "min", "max");
+
+		/// <summary>Palette du champ (couleurs basse/haute + libellés) — lue
+		/// par WorldView pour la légende du HUD.</summary>
+		public static (Color Low, Color High, string LowLabel, string HighLabel)
+			PaletteOf(string field) =>
+			field != null && Palettes.TryGetValue(field, out var p) ? p : DefaultPalette;
+
 		/// <summary>Nom du champ affiché (HUD) ; null si aucune grille.</summary>
 		public string FieldName { get; private set; }
 		/// <summary>Bornes de la normalisation (HUD min/max).</summary>
@@ -75,6 +112,7 @@ namespace Symbiose
 			Vector2 s = new(0f, WorldView.TileHPx / 2f);
 			Vector2 o = new(-WorldView.TileWPx / 2f, 0f);
 			float span = Max - Min;
+			var (low, high, _, _) = PaletteOf(FieldName);
 			foreach (var kv in _tiles)
 			{
 				if (!_origins.TryGetValue(kv.Key.AsString(), out Vector2 org))
@@ -89,9 +127,10 @@ namespace Symbiose
 						// serveur (boucle rows puis cols), pas un 2e contrat.
 						float v = (float)vals[r * cols + c].AsDouble();
 						float tt = span > 1e-6f ? (v - Min) / span : 0.5f;
-						// Dégradé bleu → rouge par la teinte HSV (240° → 0°) :
-						// froid = pauvre, chaud = riche — le code couleur météo.
-						Color col = Color.FromHsv((1f - tt) * 2f / 3f, 0.85f, 0.95f, Alpha);
+						// Interpolation entre les 2 pôles du champ (la légende
+						// du HUD montre exactement ces couleurs-là).
+						Color col = low.Lerp(high, tt);
+						col.A = Alpha;
 						Vector2 ctr = WorldView.WorldToScreen(
 							org.X + (c + 0.5f) * WorldView.PlotCm,
 							org.Y + (r + 0.5f) * WorldView.PlotCm);
