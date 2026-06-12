@@ -445,6 +445,17 @@ class PlantBase(ABC):
     # défaut : l'espèce garde l'ancien chemin (stades). True = migrée (ici : Tomato).
     procedural_growth:     bool  = False
 
+    # --- Réponse à l'écrasement (volet 2, CONCEPTION_ECRASEMENT §5) ---
+    # DEUX axes indépendants, LUS UNIQUEMENT par sim.actions.ecraser_plante (geste
+    # joueur event-driven, hors tick) → défauts NEUTRES = golden intact (au repos
+    # rien ne les lit). Calibrage de DÉPART par espèce dans species.py/perennials.py.
+    resistance_ecrasement:  float = 0.5   # ∈ [0,1] — résistance STRUCTURELLE : pilote
+                                          # l'intensité au seam (haute → reste DOUX/plie ;
+                                          # basse → NET/casse). Modulée par l'âge (Q4).
+    stimulation_ecrasement: float = 0.0   # ∈ [0,1] — BÉNÉFICE de repousse : seuil qui
+                                          # ÉPARGNE la santé en régime NET (basilic 0.85
+                                          # → écimé mais repart ; tournesol 0.05 → décapité).
+
     # --- Interface lumière (polymorphe) ---
 
     @classmethod

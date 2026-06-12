@@ -74,6 +74,27 @@ COUPE_NETTE = 0.8   # intensité-seuil : AU-DELÀ, la perturbation ÉCIME (retra
                     # segment ciblé + son sous-arbre) ; EN DEÇÀ, elle ne fait que
                     # baisser l'auxine locale (perturbation douce). Levier de calibrage.
 
+# --- Calibrage de l'ÉCRASEMENT (volet 2, CONCEPTION_ECRASEMENT §5) ----------
+# Ces leviers sont LUS par sim.actions.ecraser_plante (geste joueur event-driven),
+# JAMAIS par grow_plant → le golden ne peut pas bouger. growth.py reste pur
+# structurel : la mutation `health` (régime NET) est faite dans actions.py ; ici on
+# ne fournit que les CONSTANTES + la fonction d'âge (pures, déterministes).
+INTENSITE_PIED     = 1.0    # intensité nominale d'un pied au sol (espèce de résistance
+                           # nulle → NET franc) ; modulée par resistance × âge en aval.
+SEUIL_DEGAT        = 0.5    # seuil sur (1 − stimulation) : au-delà, un écrasement NET
+                           # entame la santé. Sépare les épargnées (stim ≥ 0.5 : basilic,
+                           # pâturin, trèfle…) des entamées (stim < 0.5 : tournesol…).
+LIGNIFICATION_SCALE = 52.0  # semaines : échelle de lignification. f≈0 pour un semis
+                           # (s'écrase), → 1 pour un sujet établi (résistance pleine).
+
+
+def f_lignification(age_weeks: float) -> float:
+    """Fraction de lignification ∈ [0,1] (Q4) — croissante bornée de l'âge. Un semis
+    (age_weeks ≈ 0) ⇒ ≈ 0 : sa résistance effective est quasi nulle, il s'écrase. Un
+    sujet établi (age_weeks ≥ LIGNIFICATION_SCALE) ⇒ 1 : résistance pleine (un tronc
+    ne s'écrase pas). Pure, déterministe (zéro RNG)."""
+    return min(1.0, max(0.0, age_weeks) / LIGNIFICATION_SCALE)
+
 
 # ---------------------------------------------------------------------------
 # Géométrie 3D (pure)

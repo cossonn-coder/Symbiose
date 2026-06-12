@@ -424,6 +424,70 @@ def main() -> int:
     s7.send(cmd="quit")
     check("quit taille → exit 0", s7.close() == 0)
 
+    # --- 8b. écraser une PLANTE (écraser·volet 2, protocole 0.3.2) ------------
+    # Routage sur la FORME du target (Q6) : `ecraser` avec x_cm/y_cm (sans guilde)
+    # vise la plante, pas une guilde animale. Effet ÉMERGENT (déformée/écimée/meurt).
+    print("[écraser une plante (volet 2)]")
+    s8 = ServerProc()
+    s8.send(cmd="init", seed=42)
+    proie = None
+    for _ in range(30):
+        snap = s8.send(cmd="step_week")["snapshot"]
+        proie = next((p for p in snap["plants"] if len(p["segments"]) >= 2), None)
+        if proie:
+            break
+    check("une plante à ≥ 2 segments existe", proie is not None,
+          proie and f"{proie['species']}, {len(proie['segments'])} segments")
+    pos = {"tile": proie["tile"], "x_cm": proie["x_cm"], "y_cm": proie["y_cm"]}
+    vig0 = s8.send(cmd="snapshot")["snapshot"]["player"]["vigueur"]
+    # Écraser par POSITION (ni guilde ni r/c) → routé PLANTE, coût = tailler (MODÉRÉ).
+    r = s8.send(cmd="action", verb="ecraser", target=pos)
+    msg = r["result"]["message"]
+    check("écraser par position → routé plante (applied:true)",
+          r["result"]["applied"] is True, msg)
+    check("message nomme la plante + issue émergente (déformée/écimée/meurt)",
+          ("déformée" in msg or "écimée" in msg or "meurt" in msg), msg)
+    check("coût = base tailler (MODÉRÉ) débité",
+          vig0 - r["result"]["vigueur"] == 15.0, f"Δvigueur={vig0 - r['result']['vigueur']}")
+    # Le collet (segment 0) est une cible VALIDE pour écraser (≠ tailler qui le refuse).
+    r = s8.send(cmd="action", verb="ecraser", target={**pos, "segment": 0})
+    check("écraser le collet (segment 0) → applied:true (cible valide, Q2)",
+          r["result"]["applied"] is True, r["result"]["message"])
+    # Refus de désignation (segment hors bornes) → ne coûte rien.
+    vig1 = s8.send(cmd="snapshot")["snapshot"]["player"]["vigueur"]
+    r = s8.send(cmd="action", verb="ecraser", target={**pos, "segment": 999})
+    check("segment hors bornes → applied:false sans coût",
+          r["result"]["applied"] is False and r["result"]["vigueur"] == vig1,
+          r["result"]["message"])
+    # La guilde animale reste routée par r/c+guilde (non-régression du volet 1).
+    r = s8.send(cmd="action", verb="ecraser",
+                target={"tile": "T0", "r": 0, "c": 0, "guilde": "ravageur"})
+    check("écraser une guilde par r/c → toujours routé guilde (volet 1 intact)",
+          r["result"]["applied"] is True and "ravageur" in r["result"]["message"],
+          r["result"]["message"])
+    s8.send(cmd="quit")
+    check("quit écraser-plante → exit 0", s8.close() == 0)
+
+    # Déterminisme byte-à-byte de l'écrasement d'une plante (pas de RNG).
+    def run_ecraser_plante(seed):
+        s = ServerProc()
+        s.send(cmd="init", seed=seed)
+        snap = None
+        for _ in range(30):
+            snap = s.send(cmd="step_week")["snapshot"]
+            if any(len(p["segments"]) >= 2 for p in snap["plants"]):
+                break
+        p = next(p for p in snap["plants"] if len(p["segments"]) >= 2)
+        s.send(cmd="action", verb="ecraser",
+               target={"tile": p["tile"], "x_cm": p["x_cm"], "y_cm": p["y_cm"]})
+        s.send(cmd="snapshot")
+        s.send(cmd="quit")
+        return s
+    a8, b8 = run_ecraser_plante(42), run_ecraser_plante(42)
+    a8.close(); b8.close()
+    check("2 runs écraser-plante même seed → byte-identiques",
+          a8.raw_lines == b8.raw_lines)
+
     # --- 9. hints organes (tranche 6·A) ---------------------------------------
     print("[hints organes]")
     ORGANES = {None, "flower", "fruit_unripe", "fruit_ripe"}

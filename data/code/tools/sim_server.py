@@ -44,7 +44,10 @@ serveur fait foi — Godot transmet l'INTENTION, Python possède les RÈGLES) :
            stable et déterministe) — la branche cliquée. Validé ICI (bornes,
            collet protégé) AVANT d'appeler la façade : un segment invalide est
            un refus métier qui ne coûte RIEN. Absent → repli params.cible.
-  plot   : {"tile": "T3", "r": 2, "c": 5}          # becher, ecraser
+           + pour `ecraser` une PLANTE (volet 2) : MÊME cible position (+ `segment`
+           optionnel, mais le collet 0 est ici VALIDE, défaut Q2). Le routage
+           plante/guilde se fait sur la FORME du target (Q6) : position → plante.
+  plot   : {"tile": "T3", "r": 2, "c": 5}          # becher, ecraser (guilde animale)
   tuile  : {"tile": "T3"}                          # favoriser_auxiliaire
   rien   : {}                                      # grelinette
   params : {"cible": "apex"|"branche"} (tailler) ; {"urgence": bool} (ecraser —
@@ -108,7 +111,11 @@ from tools.render_structure import REPRO_BY_SEASON
 #       demande, HORS snapshot (volume : la vue ne paie que l'overlay ouvert).
 # 0.3.1 (post-intégration) : `target.guilde` optionnel sur `ecraser` (écraser le
 #       sprite cliqué quelle que soit sa guilde — défaut `ravageur` = compat).
-ENGINE_VERSION = "0.3.1"
+# 0.3.2 (écraser·volet 2) : `ecraser` route aussi vers une PLANTE quand le `target`
+#       la désigne par position (`x_cm`/`y_cm`, + `segment` optionnel) au lieu de
+#       `r`/`c`+`guilde` — déforme / écime / fait mourir (sentier). Routage sur la
+#       FORME du target (Q6) ; compat guilde animale inchangée.
+ENGINE_VERSION = "0.3.2"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les
@@ -311,6 +318,45 @@ class SimServer:
             if tile is None:
                 return bilan(False, 0.0, 0.0,
                              f"tuile introuvable : {target.get('tile')!r}")
+            # Écraser une PLANTE (volet 2) : routé sur la FORME du target (Q6) — la
+            # plante est désignée par position (x_cm/y_cm), la guilde animale par
+            # r/c+guilde. `segment` optionnel reprend `tailler` 0.2.1, MAIS le collet
+            # (segment 0) est ici une cible VALIDE (défaut Q2) — on ne le rejette pas.
+            if (verb == "ecraser" and target.get("guilde") is None
+                    and target.get("x_cm") is not None):
+                plant = self._plant_at(tile, target.get("x_cm"), target.get("y_cm"))
+                if plant is None:
+                    return bilan(False, 0.0, 0.0,
+                                 "aucune plante vivante à cette position")
+                urgence = bool(params.get("urgence", False))
+                cost = (A.cout_action(gs, player, "tailler",
+                                      A._objets_action("tailler", plant))
+                        * (A.URGENCE_MULT if urgence else 1.0))
+                seg = target.get("segment")
+                if seg is not None:
+                    if not isinstance(seg, int) or isinstance(seg, bool):
+                        return bilan(False, 0.0, 0.0, f"segment non entier : {seg!r}")
+                    if not 0 <= seg < len(plant.segments):
+                        return bilan(False, 0.0, 0.0,
+                                     f"segment hors structure : {seg} "
+                                     f"(plante à {len(plant.segments)} segments)")
+                n_avant = len(plant.segments)
+                ok = A.ecraser_plante(gs, player, plant, eco,
+                                      segment_id=seg, urgence=urgence)
+                # Diagnostic ÉMERGENT pour le message (lecture pure) : on lit ce que
+                # le geste a produit, on ne le décide pas.
+                if not ok:
+                    quoi = "Vigueur insuffisante — rien écrasé"
+                elif not plant.is_alive:
+                    quoi = "meurt"
+                elif len(plant.segments) < n_avant:
+                    quoi = "écimée"
+                else:
+                    quoi = "déformée"
+                return bilan(ok, cost, 0.0,
+                             f"écrasé {plant.name} : {quoi}"
+                             + (" [urgence]" if urgence and ok else "")
+                             if ok else quoi)
             r, c = target.get("r"), target.get("c")
             if (not isinstance(r, int) or not isinstance(c, int)
                     or not (0 <= r < tile.grid_rows)

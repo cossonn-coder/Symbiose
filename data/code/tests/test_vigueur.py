@@ -31,9 +31,10 @@ import os
 import hashlib
 
 from world import Tile
-from plants import Tomato, Basil, Bean
+from plants import Tomato, Basil, Bean, Sunflower, PoaAnnua
 from fields import init_eco, DENSITE_PAR_SPRITE
 from sim.engine import Engine
+from sim.growth import grow_plant, f_lignification, COUPE_NETTE, SEUIL_DEGAT
 from sim import vigueur as V
 from sim import actions as ACT
 from sim import vigueur_plante as VP
@@ -293,6 +294,120 @@ def test_ecraser():
     check("guilde inconnue → échec sans effet", not ko)
     check("guilde inconnue → AUCUNE Vigueur dépensée", st["courante"] == 100.0,
           f"courante={st['courante']}")
+
+
+# ---------------------------------------------------------------------------
+# A8b. ecraser_plante (écraser·volet 2) — réponse ÉMERGENTE des plantes :
+#      déformation (DOUX) / écimage (NET) / mort par santé (sentier, Q3),
+#      modulée par les deux traits d'espèce (résistance × âge, stimulation).
+# ---------------------------------------------------------------------------
+
+def _gs_with(*especes):
+    """game_state minimal portant les espèces voulues (pour calibrer l'écrasement
+    espèce par espèce). `especes` = liste de (classe, r, c)."""
+    tile = Tile(tile_id="T0", soil_type="terre")
+    eco = init_eco("T0", 10, 12, humidite=1.5, fertilite=1.0, microbiome=0.3)
+    for cls, r, c in especes:
+        tile.add_plant(cls, r, c)
+    gs = {"tiles": [tile], "eco": {"T0": eco}, "scores": {},
+          "current_player": "joueur_1", "week": 1, "log": [], "seed": SEED}
+    return gs, tile, eco
+
+
+def _construire(plant, n_ticks):
+    """Fait pousser la STRUCTURE de `plant` n_ticks (chaîne de segments + auxine)."""
+    for w in range(1, n_ticks + 1):
+        grow_plant(plant, SEED, w)
+    return plant
+
+
+def test_ecraser_plante():
+    print("\n[A8b] ecraser_plante : déformation / écimage / mort (sentier), par traits")
+    gs, tile, eco = _gs_with((PoaAnnua, 1, 1), (Sunflower, 2, 2),
+                             (Basil, 3, 3), (Bean, 4, 4))
+    st = V.ensure_player(gs, "joueur_1"); st["max_base"] = 10_000.0; st["courante"] = 10_000.0
+
+    # (a) DOUX — pâturin ÉTABLI (résistance 0.9 × âge plein) : intensité 0.1 < seuil.
+    #     Structure intacte, auxine du collet baissée, santé NON touchée.
+    poa = tile.plants[0]
+    grow_plant(poa, SEED, 1)                       # donne une auxine réelle au collet
+    for s in poa.segments:
+        s.age_weeks = 60                           # établi → f_lignification ≈ 1
+    aux_av, n_av, sante_av = poa.segments[0].auxin, len(poa.segments), poa.health
+    intensite_poa = 1.0 * (1.0 - 0.9 * f_lignification(60))
+    check("pâturin établi → régime DOUX (intensité < COUPE_NETTE)",
+          intensite_poa < COUPE_NETTE, f"intensité={intensite_poa:.3f}")
+    ok = ACT.ecraser_plante(gs, "joueur_1", poa, eco)
+    check("écraser un pâturin établi → payé", ok)
+    check("DOUX : structure intacte (rien d'écimé)", len(poa.segments) == n_av)
+    check("DOUX : auxine du collet baissée (déformation → ramification émergente)",
+          poa.segments[0].auxin < aux_av, f"{aux_av:.3f} → {poa.segments[0].auxin:.3f}")
+    check("DOUX : santé NON touchée", poa.health == sante_av)
+
+    # (b) NET — tournesol jeune (résistance 0.15) avec une chaîne de segments :
+    #     écimage du sous-arbre ciblé ET santé entamée (stimulation 0.05 < épargne).
+    sun = _construire(tile.plants[1], 12)
+    check("tournesol a une chaîne de segments (≥ 2)", len(sun.segments) >= 2,
+          f"{len(sun.segments)} segments")
+    vise = next(i for i, s in enumerate(sun.segments) if s.parent is not None)
+    n_av, sante_av = len(sun.segments), sun.health
+    age_sun = max(s.age_weeks for s in sun.segments)
+    intensite_sun = 1.0 * (1.0 - 0.15 * f_lignification(age_sun))
+    check("tournesol jeune → régime NET (intensité ≥ COUPE_NETTE)",
+          intensite_sun >= COUPE_NETTE, f"intensité={intensite_sun:.3f}")
+    ok = ACT.ecraser_plante(gs, "joueur_1", sun, eco, segment_id=vise)
+    check("NET : écimage (le sous-arbre ciblé a disparu)", len(sun.segments) < n_av,
+          f"{n_av} → {len(sun.segments)}")
+    check("NET + stimulation basse (tournesol 0.05) → santé entamée (−1)",
+          sun.health == sante_av - 1, f"santé {sante_av} → {sun.health}")
+
+    # (c) NET — basilic (résistance 0.4) ÉPARGNÉ : écimé MAIS santé intacte car il
+    #     PROFITE (stimulation 0.85 ≥ seuil d'épargne) → le pincement.
+    bas = _construire(tile.plants[2], 10)
+    check("(1 − stim basilic) sous le seuil de dégât (épargné)",
+          (1.0 - 0.85) < SEUIL_DEGAT)
+    vise_b = next(i for i, s in enumerate(bas.segments) if s.parent is not None)
+    n_av, sante_av = len(bas.segments), bas.health
+    ok = ACT.ecraser_plante(gs, "joueur_1", bas, eco, segment_id=vise_b)
+    check("basilic écimé (NET)", len(bas.segments) < n_av, f"{n_av} → {len(bas.segments)}")
+    check("basilic ÉPARGNÉ : santé intacte (repart buissonnant = pincement)",
+          bas.health == sante_av, f"santé={bas.health}")
+
+    # (d) SENTIER (Q3) — semis fragile (tournesol non poussé : réduit au collet) :
+    #     3 écrasements du COLLET → santé 3→0 → mort. Le collet est PROTÉGÉ (jamais
+    #     retiré) : c'est la SANTÉ qui réalise la mort, pas la structure (rejet de
+    #     souche n'a donc rien à ressusciter).
+    semis = tile.plants[3]                          # Haricot jeune (fragile), 1 segment (collet)
+    n_seg0 = len(semis.segments)
+    for i in range(3):
+        ACT.ecraser_plante(gs, "joueur_1", semis, eco)   # cible défaut = collet
+    check("semis : 3 écrasements du collet → santé tombée à 0", semis.health == 0,
+          f"santé={semis.health}")
+    check("semis : mort émergente (is_alive False)", not semis.is_alive)
+    check("collet protégé : structure JAMAIS retirée (mort par santé, pas structure)",
+          len(semis.segments) == n_seg0, f"{n_seg0} → {len(semis.segments)}")
+
+    # (e) Coût = celui de `tailler` (× urgence), binaire (effet QUE si payé).
+    gs2, tile2, eco2 = _gs_with((Basil, 1, 1))
+    plant2 = _construire(tile2.plants[0], 6)
+    st2 = V.ensure_player(gs2, "joueur_1")
+    cout_nominal = ACT.cout_action(gs2, "joueur_1", "tailler",
+                                   ACT._objets_action("tailler", plant2))
+    check("coût nominal = base tailler (MODÉRÉ, sans maîtrise)",
+          cout_nominal == ACT.MODERE, f"coût={cout_nominal}")
+    st2["courante"] = cout_nominal - 1.0            # insuffisant
+    n_av, sante_av = len(plant2.segments), plant2.health
+    ok_vide = ACT.ecraser_plante(gs2, "joueur_1", plant2, eco2)
+    check("écraser à vide → échec (binaire)", not ok_vide)
+    check("échec : structure ET santé inchangées",
+          len(plant2.segments) == n_av and plant2.health == sante_av)
+    check("échec binaire : Vigueur drainée à 0", st2["courante"] == 0.0,
+          f"courante={st2['courante']}")
+    st2["courante"] = 1000.0
+    ACT.ecraser_plante(gs2, "joueur_1", plant2, eco2, urgence=True)
+    check("urgence : coût = MODÉRÉ × URGENCE débité",
+          st2["courante"] == 1000.0 - ACT.MODERE * ACT.URGENCE_MULT,
+          f"courante={st2['courante']}")
 
 
 # ---------------------------------------------------------------------------
@@ -753,6 +868,7 @@ if __name__ == "__main__":
     test_deraciner()
     test_tailler()
     test_ecraser()
+    test_ecraser_plante()
     test_actions_hors_tick()
     test_facade_purete()
     test_facade_sante()

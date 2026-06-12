@@ -25,7 +25,8 @@ from __future__ import annotations
 
 from sim.vigueur import spend, gain
 from sim.vigueur_plante import maturite, vigueur_plante   # facteurs partagés (mutualisés, pas dupliqués)
-from sim.growth import atteindre_segment   # seam de perturbation §F (sim→sim, pas de cycle : growth n'importe pas actions)
+from sim.growth import (atteindre_segment,   # seam de perturbation §F (sim→sim, pas de cycle : growth n'importe pas actions)
+                        f_lignification, INTENSITE_PIED, SEUIL_DEGAT, COUPE_NETTE)  # calibrage écrasement (volet 2)
 from sim.effects import necromass_biomass
 from sim import maitrise as M   # couche savoir (D12) — orchestrée ici pour les gains ponctuels §4.3
 from fields.population import DENSITE_PAR_SPRITE   # « un geste = un individu = un quantum » (D31.3 §5)
@@ -372,6 +373,48 @@ def ecraser(game_state: dict, player: str, eco, r: int, c: int,
     if spend(game_state, player, cost) < 1.0:
         return False
     eco.populations[guilde].add(r, c, -DENSITE_PAR_SPRITE)
+    return True
+
+
+def ecraser_plante(game_state: dict, player: str, plant, eco, *,
+                   segment_id: int | None = None, urgence: bool = False) -> bool:
+    """Écraser une PLANTE cliquée (volet 2, CONCEPTION_ECRASEMENT §5) — geste DIRECT
+    sur le vivant (philo #1), à RÉPONSE ÉMERGENTE (philo #2). Le pied frappe le seam
+    structurel partagé (`atteindre_segment`, le MÊME que `tailler`) avec une intensité
+    modulée par la résistance de l'espèce et son âge (lignification, Q4) ; la déformation
+    (régime DOUX → auxine baissée → ramification émergente au tick) ou l'écimage (régime
+    NET) en DÉCOULENT — rien n'est écrit à la main sur la structure.
+
+    `intensite = INTENSITE_PIED × (1 − resistance × f_lignification(age))`. Une espèce
+    résistante (pâturin) ou un sujet âgé (tronc) restent DOUX (plient) ; un semis ou une
+    espèce fragile (tournesol) passent NET (cassent).
+
+    La MORT (Q3, sentier) : le rejet de souche (growth.py) ressuscitant toute plante sans
+    apex, la structure SEULE ne peut pas tuer. En régime NET on entame donc la `health`
+    (−1, geste direct comme `deraciner`), SAUF si l'espèce PROFITE de l'écrasement
+    (`stimulation_ecrasement` haute → seuil non franchi : le basilic est écimé MAIS repart,
+    le tournesol est décapité et meurt en ~3 passages). `health` est l'ENTIER 0-3 ; la
+    modulation joue en SEUIL, pas en fraction. Cumulatif (Q5).
+
+    `segment_id` : le segment désigné à la souris si fourni et valide, sinon le COLLET
+    (segment 0, Q2) — écimer le collet d'un semis ne retire rien (collet protégé), c'est
+    la santé qui réalise la mort. Coût = celui de `tailler` (MODÉRÉ, geste direct, Q6)
+    × URGENCE éventuelle ; binaire (effet appliqué QUE si le coût est intégralement payé).
+    Renvoie True si le geste a été pleinement payé (et donc appliqué)."""
+    cost = (cout_action(game_state, player, "tailler", _objets_action("tailler", plant))
+            * (URGENCE_MULT if urgence else 1.0))
+    if spend(game_state, player, cost) < 1.0:
+        return False                          # Vigueur insuffisante → rien n'est écrit
+    cls = plant.plant_class
+    age_weeks = max((s.age_weeks for s in plant.segments), default=0)   # ≡ proxy d'âge de growth.py
+    intensite = INTENSITE_PIED * (1.0 - cls.resistance_ecrasement * f_lignification(age_weeks))
+    intensite = max(0.0, min(1.0, intensite))   # le seam attend une intensité ∈ [0,1]
+    seg_id = 0                                  # défaut : le collet (Q2)
+    if segment_id is not None and 0 <= segment_id < len(plant.segments):
+        seg_id = segment_id                     # segment désigné à la souris
+    atteindre_segment(plant, seg_id, intensite)  # DOUX déforme / NET écime (+ auxine)
+    if intensite >= COUPE_NETTE and (1.0 - cls.stimulation_ecrasement) >= SEUIL_DEGAT:
+        plant.health -= 1                       # NET sur une espèce qui n'en profite pas → sentier
     return True
 
 

@@ -22,6 +22,8 @@ class BursaPastoris(PlantBase):
     family = "Brassicaceae"
     genus  = "Capsella"
     name   = "Bourse-à-pasteur"
+    resistance_ecrasement  = 0.55  # hampe cassable, rosette survit (volet 2 §4)
+    stimulation_ecrasement = 0.2
     rarity = "Pionnière"
     keywords = ["Pionnière", "Couvre-sol", "Compost"]
     space_tolerance_weeks = 5
@@ -71,6 +73,8 @@ class MedicagoLupulina(PlantBase):
     family = "Fabaceae"
     genus  = "Medicago"
     name   = "Minette"
+    resistance_ecrasement  = 0.7   # port bas rampant, encaisse (volet 2 §4)
+    stimulation_ecrasement = 0.5
     rarity = "Pionnière"
     keywords = ["Fixatrice N₂", "Couvre-sol", "Mellifère"]
     space_tolerance_weeks = 5
@@ -123,6 +127,8 @@ class PoaAnnua(PlantBase):
     family = "Poaceae"
     genus  = "Poa"
     name   = "Pâturin annuel"
+    resistance_ecrasement  = 0.9   # graminée : talle, PROFITE du piétinement (volet 2 §4)
+    stimulation_ecrasement = 0.9
     rarity = "Pionnière"
     keywords = ["Couvre-sol", "Structurante", "Invasive"]
     space_tolerance_weeks = 7
@@ -161,6 +167,8 @@ class Taraxacum(PlantBase):
     family = "Asteraceae"
     genus  = "Taraxacum"
     name   = "Pissenlit"
+    resistance_ecrasement  = 0.8   # rosette plaquée, encaisse, repart mou (volet 2 §4)
+    stimulation_ecrasement = 0.4
     rarity = "Établie"
     keywords = ["Accumulatrice", "Mellifère", "Bioindicatrice", "Résistant"]
     space_tolerance_weeks = 8   # extrêmement tolérant
@@ -214,6 +222,8 @@ class Taraxacum(PlantBase):
 class Tomato(Solanaceae):
     genus = "Solanum"
     name = "Tomate"
+    resistance_ecrasement  = 0.35  # tige cassante, repart un peu (volet 2 §4)
+    stimulation_ecrasement = 0.4
     rarity = "Établie"
     keywords = ["Mellifère", "Compagne", "Tuteur"]
     space_tolerance_weeks = 2
@@ -283,6 +293,8 @@ class Tomato(Solanaceae):
 class Pepper(Solanaceae):
     genus = "Capsicum"
     name = "Poivron"
+    resistance_ecrasement  = 0.35  # buissonnant cassant, repart un peu (volet 2 §4)
+    stimulation_ecrasement = 0.4
     rarity = "Établie"
     keywords = ["Mellifère", "Compagne"]
     space_tolerance_weeks = 2
@@ -327,6 +339,8 @@ class Pepper(Solanaceae):
 class Bean(Fabaceae):
     genus = "Phaseolus"
     name = "Haricot"
+    resistance_ecrasement  = 0.3   # tige volubile fragile (volet 2 §4)
+    stimulation_ecrasement = 0.2
     rarity = "Pionnière"
     keywords = ["Fixatrice N₂", "Grimpante", "Compagne"]
     space_tolerance_weeks = 3
@@ -374,6 +388,8 @@ class Bean(Fabaceae):
 class Clover(Fabaceae):
     genus = "Trifolium"
     name = "Trèfle"
+    resistance_ecrasement  = 0.85  # couvre-sol piétinable, ramifie (volet 2 §4)
+    stimulation_ecrasement = 0.8
     rarity = "Pionnière"
     keywords = ["Fixatrice N₂", "Couvre-sol", "Mellifère"]
     space_tolerance_weeks = 5  # très tolérant, couvre-sol résilient
@@ -414,6 +430,8 @@ class Clover(Fabaceae):
 class Sunflower(Asteraceae):
     genus = "Helianthus"
     name = "Tournesol"
+    resistance_ecrasement  = 0.15  # flèche unique : écimé = décapité, ne repart pas (volet 2 §4)
+    stimulation_ecrasement = 0.05
     rarity = "Établie"
     keywords = ["Mellifère", "Structurante", "Accumulatrice"]
     space_tolerance_weeks = 2  # compétitif, surtout en strate haute
@@ -476,6 +494,8 @@ class Sunflower(Asteraceae):
 class Basil(Lamiaceae):
     genus = "Ocimum"
     name = "Basilic"
+    resistance_ecrasement  = 0.4   # écimé facilement MAIS repart buissonnant = le pincement (volet 2 §4)
+    stimulation_ecrasement = 0.85
     rarity = "Pionnière"
     keywords = ["Compagne", "Mellifère", "Dynamisante"]
     space_tolerance_weeks = 4
@@ -544,6 +564,8 @@ class Yarrow(Asteraceae):
     """
     genus = "Achillea"
     name = "Achillée millefeuille"
+    resistance_ecrasement  = 0.75  # stolons, repart (volet 2 §4)
+    stimulation_ecrasement = 0.6
     rarity = "Établie"
     keywords = ["Auxiliaire", "Mellifère", "Compagne", "Médicinale"]
     space_tolerance_weeks = 5
@@ -583,6 +605,8 @@ class Phacelia(PlantBase):
     family = "Boraginaceae"
     genus = "Phacelia"
     name = "Phacélie"
+    resistance_ecrasement  = 0.45  # tige tendre dressée, déformée (volet 2 §4)
+    stimulation_ecrasement = 0.2
     rarity = "Établie"
     keywords = ["Auxiliaire", "Mellifère", "Engrais vert", "Compagne"]
     space_tolerance_weeks = 4

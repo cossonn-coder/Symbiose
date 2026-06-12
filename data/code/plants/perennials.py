@@ -35,6 +35,17 @@ class PerennialWoody(PlantBase):
     root_ratio = 1.0
     age_curve: list[tuple] = []   # [(age_years, height_cm, canopy_radius_cm), ...]
 
+    # --- Réponse à l'écrasement (volet 2, CONCEPTION_ECRASEMENT §4, Q4) ---
+    # NB calibrage : la table §4 notait « base 0.1 × âge » pour les arbres, mais avec
+    # la formule FIGÉE `intensité = INTENSITE_PIED·(1 − resistance·f_lignification(âge))`
+    # une résistance de 0.1 laisse un tronc établi (f→1) à intensité 0.9 ≥ COUPE_NETTE :
+    # toujours NET, donc écimable/tuable — ce qui CONTREDIT « tronc inécrasable ». On porte
+    # donc une résistance HAUTE et on laisse la RAMPE d'âge (`f_lignification`) réaliser
+    # l'intention : un SEMIS d'arbre (âge ≈ 0 → f ≈ 0 → résistance effective ≈ 0) s'écrase,
+    # le TRONC établi (f → 1 → résistance pleine) plie (DOUX) — exactement Q4.
+    resistance_ecrasement  = 0.9   # tronc établi inécrasable ; semis s'écrase via l'âge
+    stimulation_ecrasement = 0.3
+
     # Stade unique : l'arbre ne « change pas de stade », il grandit avec l'âge.
     growth_stages = [GrowthStage(name="arbre", duration_weeks=0, strate="haute")]
 
