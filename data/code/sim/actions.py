@@ -30,6 +30,7 @@ from sim.growth import (atteindre_segment,   # seam de perturbation §F (sim→s
 from sim.effects import necromass_biomass
 from sim import maitrise as M   # couche savoir (D12) — orchestrée ici pour les gains ponctuels §4.3
 from fields.population import DENSITE_PAR_SPRITE   # « un geste = un individu = un quantum » (D31.3 §5)
+from fields.seedbank import GrainEnAttente          # dépôt de `planter` (germination différée, distinct de la banque-sol)
 from plants.catalogue import PLANT_CATALOGUE, PERENNIAL_CATALOGUE   # reverse classe→clé (seam coût, §10.4)
 
 # Paliers de coût, relatifs à la base 100 / +10 par semaine (spec §3.1, à
@@ -80,6 +81,7 @@ GAIN_SUCCES     = MODERE    # « un jardinier actif est un jardinier vigoureux �
 # Coûts de BASE par action — les littéraux d'avant, REGROUPÉS en table (ils
 # deviennent la `base` du seam ; les constantes restent, on ne supprime rien).
 COUTS = {
+    "planter":              FAIBLE,            # dépose une graine (phase planification, §3.2/Q7)
     "recolter":             HARVEST_VIGUEUR_COST,
     "deraciner":            ELEVE,
     "ecraser":              MODERE,            # × URGENCE_MULT appliqué PAR-DESSUS (phase saison)
@@ -98,6 +100,7 @@ COUTS = {
 # 1.0 (dégradation gracieuse §10.5) ; la table les NOMME pour quand leur sprint
 # (D29/D30/D31) les câblera. Reflète §10.4 telle quelle.
 OBJETS_TOUCHES = {
+    "planter":              ("semis",),                  # technique ; pas de cible vivante (on DÉPOSE une graine)
     "recolter":             ("récolte", "sécateur"),
     "deraciner":            ("arrachage", "bêche"),
     "ecraser":              (),                          # geste brut, terme 2 vide (§10.4)
@@ -234,6 +237,48 @@ def manger(game_state: dict, player: str, plant, eco) -> float:
     gain_organe = HARVEST_GAIN_FULL * vigueur_plante(plant, eco)
     gain(game_state, player, gain_organe)   # coût NUL → pas de spend
     return gain_organe
+
+
+def planter(game_state: dict, player: str, tile, eco, species: str,
+            r: int, c: int) -> bool:
+    """Planter (spec §3.2 / CONCEPTION_PLANTER_ARROSER §2.1, Q1) — geste sur le
+    MILIEU, canal VERTUEUX (philo #1). Le geste **ne fait PAS pousser** une plante :
+    il DÉPOSE une graine (`GrainEnAttente`) qui germera plus tard via la
+    **succession ordinaire**, quand le plot sera libre ET la niche favorable. On
+    enseigne ainsi « le bon moment » (planter hors saison → ça ne lève pas →
+    hypothèse, philo #6) ; aucun semis n'est spawné directement (philo #2 : pas
+    d'écriture directe sur le vivant, c'est le tick qui lèvera).
+
+    Source = **banque-joueur uniquement** (Q2) : `PlayerSeedBank.take(species)`
+    (FIFO, gènes hérités). **Refus si lot vide** — EN AMONT de toute dépense (on ne
+    paie pas la Vigueur d'un semis qu'on ne peut pas faire ; symétrique du refus de
+    protocole d'`ecraser`). Les gènes de la graine sont copiés TELS QUELS dans le
+    grain (PAS de moyennage banque-sol → la sélection D17/D22 garde son sens).
+
+    `cultive=True` (Q5/B) est posé sur le dépôt et **transmis à la plante** quand
+    elle germe (`maitrise_detection.marquer_replante` → cultivé vs féral, §9.4).
+
+    Coût **FAIBLE**, phase planification (Q7) ; binaire tout-ou-rien (sur le modèle
+    de `deraciner`) : la graine n'est retirée de la banque QUE si le coût est
+    intégralement payé — forcer le geste à vide draine la Vigueur sans rien
+    déposer, et la graine est conservée. **Empilement autorisé** (Q4) : on ne
+    refuse JAMAIS un plot occupé ; la graine **patiente** (la succession ne lève
+    que sur plot libre). `eco` est réservé (cohérence avec la famille des gestes +
+    routage du pont) : le dépôt n'écrit aucun champ écolo.
+    Renvoie True si la graine a été déposée."""
+    bank = game_state.get("player_seed_bank")
+    if bank is None or bank.count(species) == 0:
+        return False                          # lot vide (Q2) — aucune Vigueur dépensée
+    cost = cout_action(game_state, player, "planter", _objets_action("planter"))
+    if spend(game_state, player, cost) < 1.0:
+        return False                          # Vigueur insuffisante → graine conservée
+    seed = bank.take(species)
+    tile.grains_en_attente.setdefault((r, c), []).append(
+        GrainEnAttente(species=species, genes=dict(seed.genes),
+                       cultive=True, player=player,
+                       semaine_depot=game_state.get("week", 0))
+    )
+    return True
 
 
 def recolter(game_state: dict, player: str, plant, eco) -> float:

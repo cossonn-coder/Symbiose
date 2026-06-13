@@ -6,6 +6,7 @@ archétypes de succession + couche espèce/génétique (D22, moyenne+variance).
 
 from __future__ import annotations
 import math
+from dataclasses import dataclass, field
 
 from fields.noise import _hash_noise, hash_gauss
 from plants.genetics import clamp_gene
@@ -25,6 +26,31 @@ SEED_COMPETITOR_MATURITY = 0.4 # competitor (le plus tardif) : sol déjà bien �
 # Pool génétique par espèce (D22) — couche posée PAR-DESSUS les archétypes.
 SPECIES_SEED_VIABILITY_LOSS = 0.997   # vieillissement (densité) du pool génétique
 SPECIES_POOL_MIN_DENSITY    = 0.005   # en-deçà : pool négligeable → gènes neutres
+
+
+@dataclass
+class GrainEnAttente:
+    """
+    Graine DÉPOSÉE par le joueur (geste `planter`), en attente de germination —
+    structure DISTINCTE de la banque-sol agrégée (`SeedBank.species`). On ne la
+    mélange PAS au pool moyenne/variance : ses gènes restent PROPRES (non
+    moyennés), pour que semer une belle graine sélectionnée (D17/D22) ait un sens.
+
+    Germination DIFFÉRÉE (conception §2.1, Q1) : la succession ordinaire la lève
+    quand le plot est libre ET la niche favorable — on enseigne ainsi « le bon
+    moment ». Levée telle quelle (pas de `sample_genes`).
+
+    - `cultive` : tag « replanté » (B/Q5), posé au dépôt, transmis à la plante à
+      la germination (`maitrise_detection.marquer_replante`) → cultivé vs féral.
+    - `player`  : l'avatar qui a planté — la détection « replanté » est PAR
+      AVATAR ; le grain porte son auteur pour créditer le bon joueur à la levée.
+    - `semaine_depot` : trace du dépôt (FIFO sur plot : on lève le plus ancien).
+    """
+    species: str
+    genes: dict = field(default_factory=dict)   # gènes PROPRES (de la Seed jouée)
+    cultive: bool = True
+    player: str = ""
+    semaine_depot: int = 0
 
 
 class GeneStat:

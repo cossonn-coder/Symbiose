@@ -116,9 +116,16 @@ sable 0.985, roche 0.975}`. **Modulation espèce** (`tolerance_exces_eau`) :
    (planter event-driven, structure neuve vide → la succession ne trouve aucun
    grain → comportement inchangé).
 
-**Critères Session A** : [ ] dépôt + refus lot vide + coût ; [ ] levée gènes
-propres + tag transmis ; [ ] empilement → patiente → lève au dégagement ;
-[ ] **golden `16a1b937…` intact**.
+**Critères Session A** : [x] dépôt + refus lot vide + coût ; [x] levée gènes
+propres + tag transmis ; [x] empilement → patiente → lève au dégagement ;
+[x] **golden `16a1b937…` intact**.
+
+> ✅ **Session A CLOSE (2026-06-13).** `GrainEnAttente` (`fields/seedbank.py`,
+> gènes propres + `cultive`/`player`/`semaine_depot`), `Tile.grains_en_attente`,
+> `planter` (`sim/actions.py`, coût `FAIBLE` binaire, refus lot vide en amont),
+> levée différée (`succession.py` helper `_lever_grains_en_attente`, canal de hash
+> distinct, `marquer_replante` en import local). `test_planter` 18/18, golden
+> `16a1b937…` intact, vigueur 135/135, croissance 67/67. Détail : `journal.md`.
 
 → `journal`/`00_etat` court, **commit**, **`/clear`**.
 

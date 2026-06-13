@@ -72,6 +72,12 @@ class Tile:
     origin_x_cm: float = 0.0
     origin_y_cm: float = 0.0
     plants: list[PlantInstance] = field(default_factory=list)
+    # Graines DÉPOSÉES par le joueur (geste `planter`), en attente de germination
+    # différée (conception planter/arroser §2.1). Clé = plot (r, c), valeur =
+    # liste de `GrainEnAttente` (FIFO : on lève la plus ancienne). Porté par la
+    # Tile (porteur des plantes) ≠ banque-sol agrégée (sur `eco`). VIDE au repos →
+    # le tick golden ne lit rien ici tant qu'aucune graine n'est plantée.
+    grains_en_attente: dict = field(default_factory=dict)
     stakes: list[StakeSlot] = field(
         default_factory=lambda: [StakeSlot(i) for i in range(10)]
     )

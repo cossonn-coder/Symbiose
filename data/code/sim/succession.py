@@ -10,8 +10,8 @@ Extrait d'engine.py (Sprint refactor structurel) — les méthodes Engine
 
 from __future__ import annotations
 
-from plants import WEED_CATALOGUE
-from fields import SEED_ARCHETYPES
+from plants import WEED_CATALOGUE, PLANT_CATALOGUE, PERENNIAL_CATALOGUE
+from fields import SEED_ARCHETYPES, _hash_noise
 
 
 def choisir_archetype(candidates: list[str],
@@ -34,6 +34,79 @@ def choisir_archetype(candidates: list[str],
     return min(candidates,
                key=lambda a: (abs(SEED_ARCHETYPES.index(a) - rang_cible),
                               -SEED_ARCHETYPES.index(a)))
+
+
+def _lever_grains_en_attente(game_state: dict, tile, eco, week: int, seed: int,
+                             occupied_roots: set, niche_mult: float,
+                             hash_canal: int) -> list[str]:
+    """Lève les graines DÉPOSÉES par le joueur (`planter`) AVANT le balayage des
+    adventices. Pour chaque plot LIBRE portant un `GrainEnAttente` et dont la niche
+    est favorable, lève la PLUS ANCIENNE (FIFO) : crée la plante via
+    `tile.add_plant`, lui donne ses gènes PROPRES (PAS de `sample_genes`) et
+    transmet le tag `cultive` (`marquer_replante`, par avatar — cultivé vs féral,
+    §9.4). Déterministe (réutilise le hash de niche, aucun RNG). Un plot occupé → la
+    graine PATIENTE (Q4) ; elle lèvera quand le plot se libérera.
+
+    `occupied_roots` est MUTÉ (les plots de la plante levée s'y ajoutent) → le
+    balayage adventices qui suit ne re-germe pas sur le plot pris. VIDE au repos
+    (`grains_en_attente` vide) → court-circuit immédiat, golden inchangé."""
+    if not tile.grains_en_attente:
+        return []                              # cas nominal du golden : rien à lever
+    # Import local : couplage event-driven (uniquement sur le chemin « planté »),
+    # garde l'en-tête de succession « écologie pure » et évite tout ordre de
+    # chargement fragile (succession est importée avant engine dans sim/__init__).
+    from sim.maitrise_detection import marquer_replante
+
+    log = []
+    for (r, c), grains in tile.grains_en_attente.items():
+        if not grains:
+            continue
+        if (r, c) in occupied_roots or not tile.is_valid_plot(r, c):
+            continue                           # plot occupé → la graine patiente (Q4)
+
+        neighbors = tile.neighbors(r, c)
+        root_density = sum(
+            1 for nr, nc in neighbors if (nr, nc) in occupied_roots
+        ) / max(len(neighbors), 1)
+
+        light       = eco.lumiere.at_plot(r, c)
+        disturbance = eco.disturbance.at_plot(r, c)
+        soil_deep   = eco.soil_memory_deep.at_plot(r, c)
+
+        niche = eco.seed_bank.niche_index(
+            r, c, light, root_density, disturbance, soil_deep
+        ) * niche_mult
+
+        if niche < 0.01:
+            continue                           # niche trop pauvre → pas encore le bon moment
+
+        # Tirage déterministe sur un canal de hash DISTINCT des adventices : une
+        # graine plantée lève à proba = niche (sans l'escompte de densité féral des
+        # adventices → un semis délibéré prend plus volontiers qu'une graine férale).
+        if _hash_noise(seed, hash_canal, r, c) >= niche:
+            continue
+
+        grain = grains[0]
+        plant_class = (PLANT_CATALOGUE.get(grain.species)
+                       or PERENNIAL_CATALOGUE.get(grain.species))
+        if plant_class is None:
+            grains.pop(0)                      # espèce inconnue (ne devrait pas arriver) → grain jeté
+            continue
+
+        new_plant = tile.add_plant(plant_class, r, c)
+        if new_plant is None:
+            continue
+        grains.pop(0)                          # FIFO : la plus ancienne levée
+        new_plant.genes = dict(grain.genes)    # gènes PROPRES (≠ sample_genes du féral)
+        occupied_roots.update(new_plant.root_plots)
+        occupied_roots.add(new_plant.position)
+        if grain.cultive:
+            marquer_replante(game_state, grain.player, tile.tile_id, r, c)
+        log.append(
+            f"    🌱 Levée (planté) : {plant_class.name} @({r},{c}) "
+            f"[niche={niche:.3f}]"
+        )
+    return log
 
 
 def succession(game_state: dict, tile, eco, week: int) -> list[str]:
@@ -59,6 +132,12 @@ def succession(game_state: dict, tile, eco, week: int) -> list[str]:
         if p.is_alive:
             occupied_roots.update(p.root_plots)
             occupied_roots.add(p.position)
+
+    # Levée des graines plantées (event-driven) AVANT les adventices : un grain
+    # déposé a priorité sur la germination spontanée du plot.
+    log += _lever_grains_en_attente(game_state, tile, eco, week, seed,
+                                    occupied_roots, niche_mult=1.0,
+                                    hash_canal=week * 7 + 50)
 
     for r in range(tile.grid_rows):
         for c in range(tile.grid_cols):
@@ -134,6 +213,12 @@ def spring_flush(game_state: dict, tile, eco, week: int) -> list[str]:
         if p.is_alive:
             occupied_roots.update(p.root_plots)
             occupied_roots.add(p.position)
+
+    # Levée des graines plantées (même priorité qu'en succession normale), avec le
+    # boost printanier ×2.5 sur la niche — le printemps est un bon moment pour lever.
+    log += _lever_grains_en_attente(game_state, tile, eco, week, seed,
+                                    occupied_roots, niche_mult=2.5,
+                                    hash_canal=week * 100 + 50)
 
     germinations = 0
     for r in range(tile.grid_rows):
