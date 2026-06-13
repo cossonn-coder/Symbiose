@@ -208,9 +208,21 @@ propres + tag transmis ; [x] empilement → patiente → lève au dégagement ;
     (coûts planter/arroser), `test_croissance` (non-régression — l'asphyxie
     touche le chemin croissance), `test_sim_server`. **`main.py` tourne**.
 
-**Critères Session C** : [ ] pont route planter/arroser ; [ ] banque-joueur au
-snapshot ; [ ] protocole 0.3.3 ; [ ] déterminisme pont ; [ ] toute la suite
-verte (golden = nouvelle empreinte T1).
+**Critères Session C** : [x] pont route planter/arroser ; [x] banque-joueur au
+snapshot ; [x] protocole 0.3.3 ; [x] déterminisme pont ; [x] toute la suite
+verte (golden = empreinte Session B `7ee907d3…`, INCHANGÉ — le pont ne touche pas
+le moteur).
+
+> ✅ **Session C CLOSE (2026-06-13) — SPRINT CLOS.** Routing `planter`/`arroser`
+> dans `_do_action` (cible position → plot-foyer via helper `_plot_at`, miroir de
+> `PlantInstance.plot_foyer`). `planter` : `params.species` validé contre
+> `PLANT_CATALOGUE`, refus « lot vide » en amont (sans coût), façade `A.planter`,
+> coût `FAIBLE`. `arroser` : `params.urgence`/`phase=="saison"` → `× URGENCE_MULT`,
+> message humidité avant→après. Banque-joueur attachée à `cmd_init` (remplie à la
+> récolte) + exposée au snapshot `player.seeds`. `ENGINE_VERSION` 0.3.2 → **0.3.3**.
+> `test_sim_server` **113/113** (section 12 neuve, 2 runs byte-identiques) ; golden
+> `7ee907d3…` intact, `test_vigueur` 135/135, `test_croissance` 67/67, `test_planter`
+> 18/18, `test_eau` 20/20 ; `main.py` exit 0. Détail : `journal.md`.
 
 ## Pièges identifiés (à ne pas réapprendre à chaud)
 

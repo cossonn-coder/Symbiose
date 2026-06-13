@@ -48,10 +48,16 @@ serveur fait foi — Godot transmet l'INTENTION, Python possède les RÈGLES) :
            optionnel, mais le collet 0 est ici VALIDE, défaut Q2). Le routage
            plante/guilde se fait sur la FORME du target (Q6) : position → plante.
   plot   : {"tile": "T3", "r": 2, "c": 5}          # becher, ecraser (guilde animale)
+  point  : {"tile": "T3", "x_cm": …, "y_cm": …}    # planter, arroser (position LOCALE
+           tuile) — résolue en plot-foyer côté serveur (floor(/PLOT_CM)) : les
+           gestes de milieu écrivent au plot (banque-sol / champ humidité). Hors
+           tuile = refus de désignation (ne coûte rien).
   tuile  : {"tile": "T3"}                          # favoriser_auxiliaire
   rien   : {}                                      # grelinette
   params : {"cible": "apex"|"branche"} (tailler) ; {"urgence": bool} (ecraser —
-           true si phase Saison côté vue : la couture préparation/réaction §3.1)
+           true si phase Saison côté vue : la couture préparation/réaction §3.1) ;
+           {"species": "clé catalogue"} (planter, OBLIGATOIRE) ; {"urgence": bool}
+           ou {"phase": "saison"} (arroser — réaction en phase Saison)
 Refus métier (verbe inconnu, cible introuvable, Vigueur insuffisante) →
 {"ok": true, "result": {"applied": false, "message": …}} : le geste a échoué
 mais le PROTOCOLE a réussi. {"ok": false} reste réservé aux commandes
@@ -76,10 +82,13 @@ _CODE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if _CODE_DIR not in sys.path:
     sys.path.insert(0, _CODE_DIR)
 
+from constants import PLOT_CM     # échelle plot (position continue → plot-foyer)
+from plants import PLANT_CATALOGUE  # validation d'espèce plantable (planter)
 from world import House
 from sim.engine import Engine, saison_de
-from sim import actions as A      # les 8 gestes joueur (façades, sprint Vigueur/D31.3)
+from sim import actions as A      # les 10 gestes joueur (façades, sprint Vigueur/D31.3)
 from sim import vigueur as V      # état Vigueur joueur (ensure/spend/gain, D11)
+from sim.seeds import PlayerSeedBank  # banque-joueur (source de planter, remplie à la récolte)
 # Échantillonneur de vie macro (tranche 6·B) : fonction PURE et déterministe
 # densité → entités (fields/population.py §3). L'échantillonnage se fait CÔTÉ
 # SERVEUR — la vue n'a pas besoin de _hash_noise (kickoff t6 §4).
@@ -115,7 +124,13 @@ from tools.render_structure import REPRO_BY_SEASON
 #       la désigne par position (`x_cm`/`y_cm`, + `segment` optionnel) au lieu de
 #       `r`/`c`+`guilde` — déforme / écime / fait mourir (sentier). Routage sur la
 #       FORME du target (Q6) ; compat guilde animale inchangée.
-ENGINE_VERSION = "0.3.2"
+# 0.3.3 (planter·arroser, sprint éponyme) : verbes `planter` (target tile +
+#       `x_cm`/`y_cm` + `params.species`, clé catalogue) et `arroser` (target tile +
+#       `x_cm`/`y_cm`, `params.urgence`/`phase`) — gestes sur le MILIEU. La position
+#       continue se RÉSOUT en plot-foyer (`floor(/PLOT_CM)`) côté serveur, les
+#       façades écrivent au plot. Banque-joueur attachée à l'init (remplie à la
+#       récolte) + exposée au snapshot (`player.seeds`, lots plantables).
+ENGINE_VERSION = "0.3.3"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les
@@ -160,6 +175,12 @@ class SimServer:
             "tiles": tiles, "eco": ecos, "scores": {},
             "current_player": "joueur_1", "week": 1, "log": [],
             "house": house, "seed": seed,
+            # Banque-joueur (sprint planter·arroser) : source des graines de
+            # `planter`. Vide à l'init ; le tick de récolte (engine.py, gardé par
+            # `if player_seed_bank is not None`) y dépose les graines sélectionnées
+            # (D17) au fil des automnes. Le golden écolo n'init jamais via ce
+            # serveur → intact. Sérialisable JSON (futur save par profil).
+            "player_seed_bank": PlayerSeedBank(),
         }
         self.engine = Engine(game_state)
         # Brancher la Vigueur joueur (tranche 4) : l'OPT-IN se fait ICI, pas
@@ -313,6 +334,56 @@ class SimServer:
                          f"taillé ({quoi}) : {plant.name}" if ok
                          else "Vigueur insuffisante — rien taillé")
 
+        # Gestes sur le MILIEU désignés par POSITION continue (planter·arroser,
+        # protocole 0.3.3). La cible est un POINT (x_cm/y_cm) ; on le résout en
+        # plot-foyer (`_plot_at`, floor(/PLOT_CM)) car les façades écrivent au
+        # plot (banque-sol pour planter, champ humidité pour arroser). Un point
+        # hors tuile est un refus de désignation → ne coûte RIEN (façade jamais
+        # appelée), comme un segment invalide pour tailler.
+        if verb in ("planter", "arroser"):
+            tile, eco = tile_cible()
+            if tile is None:
+                return bilan(False, 0.0, 0.0,
+                             f"tuile introuvable : {target.get('tile')!r}")
+            rc = self._plot_at(tile, target.get("x_cm"), target.get("y_cm"))
+            if rc is None:
+                return bilan(False, 0.0, 0.0,
+                             f"position hors tuile : x={target.get('x_cm')!r}, "
+                             f"y={target.get('y_cm')!r}")
+            r, c = rc
+            if verb == "planter":
+                species = params.get("species")
+                if not isinstance(species, str) or species not in PLANT_CATALOGUE:
+                    return bilan(False, 0.0, 0.0,
+                                 f"espèce non plantable : {species!r}")
+                # Refus « lot vide » EN AMONT (comme la façade) → message clair,
+                # distinct de la Vigueur insuffisante, et aucune dépense.
+                bank = gs.get("player_seed_bank")
+                if bank is None or bank.count(species) == 0:
+                    return bilan(False, 0.0, 0.0,
+                                 f"lot vide — aucune graine de {species} en banque")
+                cost = A.cout_action(gs, player, "planter",
+                                     A._objets_action("planter"))
+                ok = A.planter(gs, player, tile, eco, species, r, c)
+                return bilan(ok, cost, 0.0,
+                             f"graine déposée ({species}) en ({r},{c}) — "
+                             "germera au bon moment" if ok
+                             else "Vigueur insuffisante — graine conservée")
+            # arroser : phase saison ⇒ urgence (× URGENCE_MULT). Accepte
+            # `params.urgence` (bool) OU `params.phase == "saison"` (couture §3.1).
+            urgence = bool(params.get("urgence", False)
+                           or params.get("phase") == "saison")
+            cost = (A.cout_action(gs, player, "arroser",
+                                  A.OBJETS_TOUCHES["arroser"])
+                    * (A.URGENCE_MULT if urgence else 1.0))
+            h_avant = eco.humidite.at_plot(r, c)
+            ok = A.arroser(gs, player, eco, r, c, urgence=urgence)
+            h_apres = eco.humidite.at_plot(r, c)
+            return bilan(ok, cost, 0.0,
+                         f"arrosé ({r},{c}) : humidité {h_avant:.2f} → {h_apres:.2f}"
+                         + (" [urgence]" if urgence else "") if ok
+                         else "Vigueur insuffisante — rien arrosé")
+
         if verb in ("ecraser", "becher"):
             tile, eco = tile_cible()
             if tile is None:
@@ -425,6 +496,21 @@ class SimServer:
                 return p
         return None
 
+    @staticmethod
+    def _plot_at(tile, x_cm, y_cm):
+        """Le plot-foyer (r, c) d'une position LOCALE continue, ou None si hors
+        tuile. Même convention que `PlantInstance.plot_foyer` (canon moteur) :
+        `(int(y // PLOT_CM), int(x // PLOT_CM))` — y→ligne, x→colonne. Sert aux
+        gestes de milieu désignés par point (planter·arroser). NB : bool est un
+        sous-type d'int → exclu (un `true` JSON n'est pas une coordonnée)."""
+        if (not isinstance(x_cm, (int, float)) or isinstance(x_cm, bool)
+                or not isinstance(y_cm, (int, float)) or isinstance(y_cm, bool)):
+            return None
+        r, c = int(y_cm // PLOT_CM), int(x_cm // PLOT_CM)
+        if 0 <= r < tile.grid_rows and 0 <= c < tile.grid_cols:
+            return (r, c)
+        return None
+
     # ------------------------------------------------------- sérialisation
 
     def _world_static(self) -> dict:
@@ -498,12 +584,19 @@ class SimServer:
                 for f in eco.populations.values()}
         # Bloc joueur (tranche 4, lecture seule) : la vue affiche la Vigueur
         # au HUD. vigueur_max passe par la façade (bonus maîtrise compris).
+        # `seeds` (0.3.3) = lots PLANTABLES de la banque-joueur, {clé catalogue:
+        # nombre} (lots vides masqués) — la vue propose les graines disponibles à
+        # `planter`. Pur compteur : la génétique reste côté moteur (D17/D22).
         player = gs["current_player"]
         st = V.ensure_player(gs, player)
+        bank = gs.get("player_seed_bank")
+        seeds = {sp: len(lot) for sp, lot in bank.lots.items()
+                 if lot} if bank is not None else {}
         return {"week": week, "week_in_year": week_in_year,
                 "year": (week - 1) // 52 + 1, "season": saison,
                 "player": {"vigueur": st["courante"],
-                           "vigueur_max": V.vigueur_max(gs, player)},
+                           "vigueur_max": V.vigueur_max(gs, player),
+                           "seeds": seeds},
                 "plants": plants, "sprites": sprites}
 
 
