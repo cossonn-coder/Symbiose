@@ -218,7 +218,7 @@ namespace Symbiose
 		// de patience. Remis à 0 à la clôture de la tranche 6 (2026-06-12) :
 		// le rythme design (60 s/semaine) redevient le défaut. Pour valider
 		// vite en debug : remettre 3 ici ou via l'inspecteur (c'est un Export).
-		[Export] public float DebugSecondsPerWeek = 0f;
+		[Export] public float DebugSecondsPerWeek = 1f;
 		// Durées des fondus d'apparition (naissance) / disparition (mort).
 		[Export] public float FadeInSec = 0.6f;
 		[Export] public float FadeOutSec = 0.9f;
