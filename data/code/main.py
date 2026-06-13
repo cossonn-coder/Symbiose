@@ -31,9 +31,11 @@ import sys
 from collections import Counter
 from world import Tile, House
 from plants import (Tomato, Basil, Sunflower, Bean, Clover, Pepper,
-                    Yarrow, Phacelia, AppleTree)
+                    Yarrow, Phacelia, AppleTree, PLANT_CATALOGUE)
 from fields import init_eco
 from sim.engine import Engine
+from sim import actions as ACT, vigueur as VIG
+from sim.seeds import PlayerSeedBank, Seed
 
 # Layout 3×3 : (nom, soil, rows, cols, origin_x_cm, origin_y_cm, attire_aux).
 # rows = hauteur en plots (y), cols = largeur en plots (x). Le centre (600,600,
@@ -114,6 +116,54 @@ def aux_rondelles(tiles, group) -> float:
     return sum(t.get_rondelle_count("auxiliaire") for t in sel) / len(sel)
 
 
+# --- Potager dédié (scénario démo) -----------------------------------------
+# La tuile "N" (terre, plein nord, 11×16) devient un POTAGER : on y sème chaque
+# printemps un carré dense de cultures via le GESTE planter() FIDÈLE — graine
+# prise dans la banque-joueur, coût FAIBLE de Vigueur, germination différée par
+# la succession (le tick lève les grains quand la niche est favorable). Aucune
+# plante n'est spawnée directement (philo #2). Le verrou d'occupation étant levé
+# (sprint compétition intra-plot), les grains lèvent même sur un plot déjà pris.
+POTAGER_TILE_ID  = "N"
+POTAGER_CROPS    = ["tomate", "basilic", "poivron", "tournesol"]
+POTAGER_PER_CROP = 7                       # ~6-8 plots/espèce → potager dense
+
+
+def potager_plan():
+    """Grille dense du potager : une bande de POTAGER_PER_CROP plots par culture
+    (lignes 1,3,5,7 ; colonnes 1..7). Positions valides dans la tuile 11×16."""
+    plan = []
+    for i, sp in enumerate(POTAGER_CROPS):
+        r = 1 + 2 * i
+        for c in range(1, 1 + POTAGER_PER_CROP):
+            plan.append((sp, r, c))
+    return plan
+
+
+def sow_potager(game_state, tile, eco, player, plan, done):
+    """Sème (geste planter() fidèle) les plots du plan pas encore semés cette
+    année, tant que la Vigueur du joueur le permet. La banque-joueur est
+    réapprovisionnée à la volée (les sachets de graines du joueur). On lit le coût
+    AVANT de planter pour ne pas drainer la Vigueur d'un semis impossible.
+    Renvoie le nombre de graines déposées cet appel."""
+    bank = game_state["player_seed_bank"]
+    st = VIG.ensure_player(game_state, player)
+    objs = ACT._objets_action("planter")
+    n = 0
+    for key in plan:
+        if key in done:
+            continue
+        sp, r, c = key
+        cost = ACT.cout_action(game_state, player, "planter", objs)
+        if st["courante"] < cost:          # plus assez de Vigueur cette semaine
+            break
+        if bank.count(sp) == 0:
+            bank.add(Seed(species=sp))     # sachet de graines du joueur
+        if ACT.planter(game_state, player, tile, eco, sp, r, c):
+            done.add(key)
+            n += 1
+    return n
+
+
 if __name__ == "__main__":
     tiles, ecos, aux_tiles, HOUSE = build_world_full()
 
@@ -126,6 +176,14 @@ if __name__ == "__main__":
         "week": 1,
         "log":  [],
     }
+
+    # Potager : banque-joueur + opt-in Vigueur (le moteur recharge alors la
+    # Vigueur au passage de saison et la régénère chaque semaine).
+    game_state["player_seed_bank"] = PlayerSeedBank()
+    VIG.ensure_player(game_state, "joueur_1")
+    POTAGER     = next((t for t in tiles if t.tile_id == POTAGER_TILE_ID), None)
+    POTAGER_ECO = ecos.get(POTAGER_TILE_ID)
+    POTAGER_PLAN = potager_plan()
 
     print("╔══════════════════════════════════════════════════════╗")
     print("║   SYMBIOSE — Démo monde 20×20 m (maison centrale)    ║")
@@ -146,15 +204,36 @@ if __name__ == "__main__":
     SNAP_EVERY = 10
     SNAP_WEEK  = 26    # plein été — couvert maximal
 
-    control_tiles = {t.tile_id for t in tiles} - aux_tiles
+    # Le potager (tuile dense semée à la main) est exclu du contraste attire-aux
+    # vs témoins : ses chiffres n'ont rien à voir avec la régulation passive.
+    control_tiles = {t.tile_id for t in tiles} - aux_tiles - {POTAGER_TILE_ID}
+
+    # Suivi du potager : les cultures sont des ANNUELLES (mortes en hiver) → un
+    # recensement de fin de run (sem. 52) lirait toujours 0. On suit donc le PIC
+    # de cultures vivantes par espèce sur toute la durée (le couvert estival réel).
+    crop_of = {PLANT_CATALOGUE[k]: k for k in POTAGER_CROPS}
+    potager_peak = Counter()
 
     print("\nTRAJECTOIRE — couvert vivant agrégé (S26) + rondelles auxiliaire moyennes")
     print(f"{'année':>6} {'pion':>5} {'fixe':>5} {'gram':>5} {'comp':>5} {'cult':>5} "
           f"{'%viv':>5} {'aux+':>5} {'aux0':>5}")
     for y in range(1, N_YEARS + 1):
+        sown = set()                          # potager re-semé chaque printemps
         for _ in range(52):
             wiy = ((engine.week - 1) % 52) + 1
+            # Semis du potager au printemps (sem. 1-13), étalé : la Vigueur (100
+            # au passage de saison, +10/sem) borne le nombre de plots par semaine.
+            if POTAGER is not None and 1 <= wiy <= 13:
+                sow_potager(game_state, POTAGER, POTAGER_ECO, "joueur_1",
+                            POTAGER_PLAN, sown)
             engine.tick_semaine()
+            if POTAGER is not None:
+                cur = Counter()
+                for p in POTAGER.plants:
+                    if p.is_alive and p.plant_class in crop_of:
+                        cur[crop_of[p.plant_class]] += 1
+                for sp in POTAGER_CROPS:
+                    potager_peak[sp] = max(potager_peak[sp], cur[sp])
             if wiy == SNAP_WEEK and (y == 1 or y == N_YEARS or y % SNAP_EVERY == 0):
                 c = composition(tiles)
                 pion = c["pioneer"]; fix = c["nitrogen_fixer"]
@@ -194,6 +273,19 @@ if __name__ == "__main__":
         vit  = group_avg(group, lambda t: ecos[t.tile_id].vitalite_average())
         alive = group_avg(group, lambda t: sum(1 for p in t.plants if p.is_alive))
         print(f"  {label} : auxiliaire●={auxr:.1f}  vitalité={vit:.3f}  vivantes={alive:.1f}")
+
+    # --- Potager : bilan des cultures semées chaque printemps via planter() ---
+    if POTAGER is not None:
+        grains = sum(len(g) for g in POTAGER.grains_en_attente.values())
+        vst = game_state["vigueur"]["joueur_1"]
+        vmax = vst["max_base"] * VIG.palier_bonus(game_state, "joueur_1")
+        print(f"\nPotager (tuile {POTAGER_TILE_ID}) — semé via planter() chaque "
+              f"printemps, {POTAGER_PER_CROP} plots/espèce :")
+        print("  (pic de cultures vivantes sur la durée — annuelles, mortes en hiver)")
+        for sp in POTAGER_CROPS:
+            print(f"  {sp:>10} : pic {potager_peak.get(sp, 0)} vivante(s)")
+        print(f"  grains encore en attente de levée : {grains}")
+        print(f"  Vigueur joueur_1 (fin de run) : {vst['courante']:.0f}/{vmax:.0f}")
 
     scores = game_state.get("scores", {})
     if scores:
