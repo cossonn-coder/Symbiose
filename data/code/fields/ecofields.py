@@ -87,6 +87,31 @@ OM_ACTIVE_HUMIF  = 0.25    # active → stable
 OM_ACTIVE_MINER  = 0.45    # active → fertilite (minéralisation principale)
 OM_STABLE_MINER  = 0.40    # stable → fertilite (minéralisation lente)
 
+# Constitution → cinétique de décomposition de la couche FRAÎCHE
+# (CONCEPTION_DECOMPOSITION_COMPOST §1.2). La couche fraîche n'est plus un
+# scalaire `om_fresh` mais une liste de PARCELLES par plot (cf. Parcelle).
+# Colonnes : (decay base/sem, humifie→om_active, minéralise→fertilite) ; le
+# reste (1 − humif − miner) est respiré (CO₂, perte nette — modèle v4 conservé).
+#
+# `diffus` (exsudats racinaires) REPREND les valeurs historiques de l'ancien
+# `om_fresh` (OM_FRESH_DECAY/HUMIF/MINER) → sur le flux dominant le tick reste
+# BIT-IDENTIQUE, et la dérive golden se limite aux tissus episodiques
+# (nécromasse/injections en `herbace`). Les autres tissus = placeholders §1.2
+# (calibrage post-test ; le doc conception propose diffus 0.50/0.15/0.55, à
+# basculer une fois l'équivalence golden levée).
+TISSU = {
+    # tissu      decay                humif            miner
+    "diffus":  (OM_FRESH_DECAY, OM_FRESH_HUMIF, OM_FRESH_MINER),  # = ancien om_fresh
+    "feuille": (0.25,           0.30,           0.45),
+    "fleur":   (0.30,           0.20,           0.50),
+    "herbace": (0.15,           0.35,           0.35),
+    "fruit":   (0.28,           0.20,           0.50),
+    "bois":    (0.02,           0.55,           0.10),
+}
+# Ordre d'itération STABLE (déterminisme philo #3 : jamais dépendre de l'ordre
+# d'insertion des dépôts). La fusion par tissu garantit ≤ 6 parcelles/plot.
+TISSU_ORDER = ("diffus", "feuille", "fleur", "herbace", "fruit", "bois")
+
 LEACHING_LOSS    = 0.999   # lessivage nutriments (perte fertilite/semaine)
 BIOMASS_EXPORT   = 0.20    # fraction exportée à la récolte (le reste = nécromasse)
 
@@ -142,6 +167,23 @@ SOIL_SIGNATURE = {
 
 
 # ---------------------------------------------------------------------------
+# PARCELLE DE LITIÈRE — unité de stockage de la couche fraîche (remplace om_fresh)
+# ---------------------------------------------------------------------------
+
+@dataclass
+class Parcelle:
+    """Tas de litière d'un `tissu` donné sur un plot (CONCEPTION §1.1).
+
+    La somme des masses des parcelles d'un plot = l'ancien `om_fresh` (lecture
+    dérivée via `EcoFields.om_fresh_at`). `age_sem` (semaines depuis dépôt) sert
+    aux sous-sprints ③④ (maturité fruit, signal animal) — non lu en ①.
+    """
+    tissu:   str
+    masse:   float
+    age_sem: float = 0.0
+
+
+# ---------------------------------------------------------------------------
 # ECOFIELDS — conteneur complet
 # ---------------------------------------------------------------------------
 
@@ -158,7 +200,7 @@ class EcoFields:
     soil_memory:      GridField = field(default=None)   # mémoire effective (composite)
     soil_memory_fast: GridField = field(default=None)   # annuelle (lerp 0.15)
     soil_memory_deep: GridField = field(default=None)   # décennale (lerp 0.02)
-    om_fresh:         GridField = field(default=None)   # débris récents / exsudats (rapide)
+    litiere:          list = field(default=None)        # parcelles fraîches par plot (remplace om_fresh)
     om_active:        GridField = field(default=None)   # MO partiellement digérée (réserve)
     om_stable:        GridField = field(default=None)   # humus (structure, rétention, mémoire)
     disturbance:      DisturbanceField = field(default=None)
@@ -180,8 +222,12 @@ class EcoFields:
             self.soil_memory_fast = GridField(self.rows, self.cols, max_val=1.0)
         if self.soil_memory_deep is None:
             self.soil_memory_deep = GridField(self.rows, self.cols, max_val=1.0)
-        if self.om_fresh is None:
-            self.om_fresh  = GridField(self.rows, self.cols, initial=0.0, max_val=10.0)
+        if self.litiere is None:
+            # Grille de listes (un nouvel objet par plot, jamais partagé). Chaque
+            # plot porte d'emblée sa parcelle `diffus` PERMANENTE (masse 0) qui
+            # reçoit les exsudats et ne disparaît jamais (§1.1).
+            self.litiere = [[[Parcelle("diffus", 0.0)] for _ in range(self.cols)]
+                            for _ in range(self.rows)]
         if self.om_active is None:
             self.om_active = GridField(self.rows, self.cols, initial=0.0, max_val=10.0)
         if self.om_stable is None:
@@ -210,13 +256,44 @@ class EcoFields:
             "lumiere":     self.lumiere,
             "soil_memory": self.soil_memory,
             "disturbance":      self.disturbance,
-            "om_fresh":         self.om_fresh,
             "om_active":        self.om_active,
             "om_stable":        self.om_stable,
             "soil_memory_fast": self.soil_memory_fast,
             "soil_memory_deep": self.soil_memory_deep,
             "temperature":      self.temperature,
         }.get(name)
+
+    # --- Litière (couche fraîche : parcelles, remplace om_fresh) ---
+
+    def om_fresh_at(self, r: int, c: int) -> float:
+        """Σ des masses de parcelles du plot = ancien `om_fresh.at_plot(r,c)`."""
+        return sum(p.masse for p in self.litiere[r][c])
+
+    def om_fresh_average(self) -> float:
+        """Moyenne par plot de la litière fraîche = ancien `om_fresh.average()`."""
+        n = self.rows * self.cols
+        if not n:
+            return 0.0
+        total = sum(p.masse
+                    for row in self.litiere for cell in row for p in cell)
+        return total / n
+
+    def deposer_litiere(self, r: int, c: int, tissu: str, masse: float) -> None:
+        """Point d'entrée UNIQUE pour tout écrivain de matière fraîche.
+
+        Fusion par tissu (bornage déterministe, §1.1) : si une parcelle de même
+        `tissu` existe au plot → masse cumulée, `age_sem` = moyenne pondérée par
+        la masse (le dépôt neuf, d'âge 0, rajeunit le tas). Sinon append.
+        """
+        if masse <= 0.0:
+            return
+        for p in self.litiere[r][c]:
+            if p.tissu == tissu:
+                total = p.masse + masse
+                p.age_sem = (p.age_sem * p.masse) / total if total > 0 else 0.0
+                p.masse = total
+                return
+        self.litiere[r][c].append(Parcelle(tissu, masse))
 
     # --- Tick diffusion ---
 
@@ -319,7 +396,7 @@ class EcoFields:
             for c in range(self.cols):
                 micro = self.microbiome.at_plot(r, c) / 3.0
                 fert  = min(1.0, self.fertilite.at_plot(r, c) / 3.0)
-                om    = min(1.0, (self.om_fresh.at_plot(r, c) +
+                om    = min(1.0, (self.om_fresh_at(r, c) +
                                   self.om_active.at_plot(r, c) +
                                   self.om_stable.at_plot(r, c)) / 5.0)
 
@@ -382,28 +459,46 @@ class EcoFields:
                 if worms is not None:
                     speed += WORM_DECOMP_BONUS * worms.at_plot(r, c)
 
-                fresh  = self.om_fresh.data[r][c]
+                # Lectures AVANT toute mutation (ordre historique : d_active se
+                # calcule sur l'active d'AVANT l'humification du frais → équivalence).
+                fresh  = self.om_fresh_at(r, c)   # Σ parcelles, avant décompo (famine)
                 active = self.om_active.data[r][c]
                 stable = self.om_stable.data[r][c]
 
-                # 1. Fresh
-                d_fresh = fresh * OM_FRESH_DECAY * speed
-                # 2. Active
+                # 1. Couche fraîche = parcelles de litière (§1.3). Chaque parcelle
+                #    décompose à la cinétique de son tissu ; on accumule les flux
+                #    humif/miner pour les appliquer en UN add (comme l'ancien fresh).
+                cell = self.litiere[r][c]
+                cell.sort(key=lambda p: TISSU_ORDER.index(p.tissu))
+                fresh_humif = 0.0
+                fresh_miner = 0.0
+                survivors = []
+                for p in cell:
+                    decay, humif, miner = TISSU[p.tissu]
+                    d = p.masse * decay * speed
+                    p.masse  -= d
+                    p.age_sem += 1.0
+                    fresh_humif += d * humif
+                    fresh_miner += d * miner
+                    # (le reste est respiré — perte nette)
+                    if p.tissu == "diffus" or p.masse > 1e-9:
+                        survivors.append(p)   # `diffus` permanente même à masse 0
+                self.litiere[r][c] = survivors
+
+                # 2. Active   3. Stable
                 d_active = active * OM_ACTIVE_DECAY * speed
-                # 3. Stable
                 d_stable = stable * OM_STABLE_DECAY * speed
 
-                self.om_fresh.add(r, c, -d_fresh)
-                self.om_active.add(r, c, -d_active + d_fresh * OM_FRESH_HUMIF)
+                self.om_active.add(r, c, -d_active + fresh_humif)
                 self.om_stable.add(r, c, -d_stable + d_active * OM_ACTIVE_HUMIF)
 
-                released = (d_fresh  * OM_FRESH_MINER +
+                released = (fresh_miner +
                             d_active * OM_ACTIVE_MINER +
                             d_stable * OM_STABLE_MINER)
                 self.fertilite.add(r, c, released)
 
                 # Puits microbien : sans carbone frais, les microbes meurent.
-                # famine ∈ [0,1] : nulle si om_fresh abondant, maximale si épuisé.
+                # famine ∈ [0,1] : nulle si litière abondante, maximale si épuisée.
                 famine = 1.0 - min(1.0, fresh / MICROBE_FOOD_REF)
                 if famine > 0.0:
                     self.microbiome.data[r][c] *= (1.0 - MICROBE_DECAY_MAX * famine)
@@ -422,7 +517,9 @@ class EcoFields:
         # La nécromasse fraîche entre par le compartiment fresh (cascade ensuite).
         export_fraction = BIOMASS_EXPORT if harvested else 0.0
         deposited = biomass * (1.0 - export_fraction)
-        self.om_fresh.add(r, c, deposited)
+        # Tissu générique en ① (`herbace`) ; le sous-sprint ② raffinera
+        # feuille/bois selon la source (squelette persistant, abscission).
+        self.deposer_litiere(r, c, "herbace", deposited)
         return deposited
 
     # --- Météo ---
@@ -541,14 +638,14 @@ class EcoFields:
     # --- Résumé ---
 
     def summary(self) -> dict:
-        om_total = (self.om_fresh.average() +
+        om_total = (self.om_fresh_average() +
                     self.om_active.average() +
                     self.om_stable.average())
         return {
             "humidite":    round(self.humidite.average(),         3),
             "fertilite":   round(self.fertilite.average(),        3),
             "microbiome":  round(self.microbiome.average(),       3),
-            "om_fresh":    round(self.om_fresh.average(),         3),
+            "om_fresh":    round(self.om_fresh_average(),         3),
             "om_active":   round(self.om_active.average(),        3),
             "om_stable":   round(self.om_stable.average(),        3),
             "organic_mat": round(om_total,                        3),

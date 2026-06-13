@@ -258,7 +258,7 @@ def _soil_food_grid(eco, tile, plants) -> list[list[float]]:
     for r in range(eco.rows):
         for c in range(eco.cols):
             micro = min(1.0, eco.microbiome.at_plot(r, c) / 3.0)
-            om = min(1.0, (eco.om_fresh.at_plot(r, c)
+            om = min(1.0, (eco.om_fresh_at(r, c)
                            + eco.om_active.at_plot(r, c)) / OM_REF)
             g[r][c] = _clamp01(0.5 * micro + 0.5 * om)
     return g

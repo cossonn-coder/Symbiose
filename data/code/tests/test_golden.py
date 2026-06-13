@@ -33,9 +33,10 @@ from plants import (Tomato, Basil, Sunflower, Bean, Clover, Pepper,
 from fields import init_eco
 from sim.engine import Engine
 
-# Smoke test : 2 sols contrastés, 4 ans (assez pour succession + automne ×4 +
-# hiver ×4 + croissance du pommier ; pas pour sa sénescence, cf. en-tête).
-N_YEARS = 4
+# Smoke test : 2 sols contrastés, 2 ans (raccourci au sous-sprint ① décompo —
+# assez pour succession + automne ×2 + hiver ×2 + croissance du pommier ; pas
+# pour sa sénescence, cf. en-tête). Étendu à 4 ans = trop long pour un smoke.
+N_YEARS = 2
 SOILS = ["terre", "argile"]
 HASH_FILE = os.path.join(os.path.dirname(__file__), "golden_hash.txt")
 

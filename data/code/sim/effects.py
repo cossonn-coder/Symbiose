@@ -304,6 +304,19 @@ def apply_mutations(mutations: list, game_state: dict) -> list[str]:
         elif isinstance(m, InjectField):
             eco = _get_eco(game_state, m.tile_id)
             if not eco: continue
+            # `om_fresh` n'est plus un GridField : les injections d'espèces
+            # (paillage / engrais vert, plants/species.py) déposent une parcelle
+            # `herbace` (tissu générique en ① ; ② raffinera). Intercepté AVANT
+            # get_field, qui renverrait None (le champ n'existe plus).
+            if m.variable == "om_fresh":
+                if m.row is not None:
+                    eco.deposer_litiere(m.row, m.col, "herbace", m.amount)
+                else:
+                    for r in range(eco.rows):
+                        for c in range(eco.cols):
+                            eco.deposer_litiere(r, c, "herbace", m.amount)
+                log.append(f"  ~ {m}")
+                continue
             f = eco.get_field(m.variable)
             if not f: continue
             if m.row is not None:

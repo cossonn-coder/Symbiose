@@ -285,7 +285,7 @@ class Engine:
             for r, c in roots:
                 micro_norm = min(1.0, eco.microbiome.at_plot(r, c) / 3.0)
                 eco.microbiome.add(r, c, micro_share * (1.0 - micro_norm))
-                eco.om_fresh.add(r, c, om_share)
+                eco.deposer_litiere(r, c, "diffus", om_share)
                 deposited_total += micro_share * (1.0 - micro_norm) + om_share
 
         if deposited_total > 0.001:
