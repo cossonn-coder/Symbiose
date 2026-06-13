@@ -150,6 +150,12 @@ FUNGAL_BASE       = 0.04   # maladies fongiques adultes, base avant modulation
 RESEED_RADIUS_CM  = 150.0  # rayon de dispersion du renouvellement (M7)
 NECROMASS_PER_CM  = 0.03   # nécromasse déposée par cm de hauteur à la mort
 
+# Litière `bois` déposée par cm de segment coupé (décompo·compost ②, kickoff §A.1).
+# Aligné sur l'esprit de NECROMASS_PER_CM (proxy longueur ; le diamètre = raffinage
+# futur). Knob, calibrage post-test. La taille (`tailler`) et l'écimage NET
+# (`ecraser_plante`) déposent `Σ length_cm × BOIS_PAR_CM` du sous-arbre retiré.
+BOIS_PAR_CM       = 0.03
+
 # Uptake racinaire par stade
 UPTAKE = {
     "humidite":  {0: 0.05, 1: 0.10, 2: 0.18, 3: 0.12},
@@ -507,19 +513,24 @@ class EcoFields:
                 self.fertilite.data[r][c] *= LEACHING_LOSS
 
     def add_necromass(self, r: int, c: int,
-                      biomass: float, harvested: bool = False) -> float:
+                      biomass: float, harvested: bool = False,
+                      tissu: str = "herbace") -> float:
         """
         Ajoute de la nécromasse au plot lors d'une mort ou récolte.
         harvested=True : une fraction est exportée (récolte) → moins de retour sol.
         Retourne la quantité effectivement déposée.
+
+        `tissu` (décompo·compost ②, kickoff §A.2) : la couche fraîche est typée par
+        constitution. Défaut `herbace` (tiges molles, résidus de récolte) → compat
+        bit-identique avec ① ; les appelants raffinent (`feuille` pour les caducs
+        via `sim.effects.tissu_mort`). Le `bois` du squelette mort se déposera
+        lentement par fragmentation (phase B), PAS ici (la mort ne dépose que mou).
         """
         # Récolte exporte BIOMASS_EXPORT, mort laisse tout sur place.
-        # La nécromasse fraîche entre par le compartiment fresh (cascade ensuite).
+        # La nécromasse fraîche entre par la litière (cascade ensuite).
         export_fraction = BIOMASS_EXPORT if harvested else 0.0
         deposited = biomass * (1.0 - export_fraction)
-        # Tissu générique en ① (`herbace`) ; le sous-sprint ② raffinera
-        # feuille/bois selon la source (squelette persistant, abscission).
-        self.deposer_litiere(r, c, "herbace", deposited)
+        self.deposer_litiere(r, c, tissu, deposited)
         return deposited
 
     # --- Météo ---

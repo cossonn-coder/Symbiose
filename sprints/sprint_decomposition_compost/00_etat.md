@@ -34,7 +34,7 @@ compost** + **pile à bois** posables. Absorbe **D19** + une part de **D33**.
 | # | Sujet | Kickoff | État |
 |---|---|---|---|
 | ① | Parcelles + cascade + `om_fresh` dérivé + recâblage + **raccourci golden** | `01_parcelles_cascade.md` | **FAIT (2026-06-13)** |
-| ② | Dépôts vivant & mort (taille→bois, squelette persistant + fragmentation, abscission, écraser-squelette) | `02_depots_vivant_mort.md` | **À FAIRE** (gros — phases A/B/C, A\|B coupable) |
+| ② | Dépôts vivant & mort (taille→bois, squelette persistant + fragmentation, abscission, écraser-squelette) | `02_depots_vivant_mort.md` | **Phase A FAITE (2026-06-13)** ; **B/C À FAIRE** (gros) |
 | ③ | Organes-fruits traçables (maturité, `manger` ciblé, chute) — **absorbe D19** | `03_*.md` (à écrire) | en attente |
 | ④ | Attraction animale (fruit→guildes, pile à bois→habitat) | `04_*.md` (à écrire) | en attente |
 | ⑤ | Structures posables + gestes (composter/empiler/retourner/epandre, jauge, amendements) | `05_*.md` (à écrire) | en attente |
@@ -77,8 +77,36 @@ compost** + **pile à bois** posables. Absorbe **D19** + une part de **D33**.
   competition (14), eau (20), sim_server (113), senescence, génétique (20),
   maîtrise (35). `main.py 30` exit 0.
 
+## Acquis sous-sprint ② — Phase A (2026-06-13) : dépôts immédiats
+- **Seam tranché = option (a)** : `atteindre_segment` (`sim/growth.py`) **retourne
+  la liste des segments retirés** (`[]` en DOUX/collet). Sûr : les 2 appelants
+  (`tailler`, `ecraser_plante`) + les 4 appels de `test_croissance` ignorent le
+  retour.
+- **`tailler`→`bois`** (intention Nico) : dépose `Σ length_cm × BOIS_PAR_CM`
+  (knob, `ecofields.py`, =0.03 comme `NECROMASS_PER_CM`) du sous-arbre RÉELLEMENT
+  coupé, en litière `bois` au plot. Rien coupé → rien déposé. Gain Vigueur
+  inchangé. **`ecraser_plante` dépose AUSSI** sur écimage NET (même seam, voulu).
+- **Mort → tissus mous typés** : `add_necromass(...,  tissu="herbace")` (défaut
+  compat ①). Helper `sim/effects.tissu_mort(plant)` = `feuille` (caducs) /
+  `herbace` (autres). Câblé aux **6 sites de mort** (`engine.py` : alea-santé,
+  sénescence, conflit, bisannuelle, annuelle-die, `_mediated_damage`) + `deraciner`
+  (`actions.py`). Récolte/résidus restent `herbace` (défaut). **Pas encore de
+  bois à la mort** (le squelette qui fragmente = phase B).
+- **Golden NEUTRE (non re-figé)** : hashs **bit-identiques à ①** — golden
+  `f75d1c21…`, population `9f351303…`. Cause : le seul caduc du scénario
+  (`AppleTree`) est **pérenne** (ne meurt pas en 2 ans) → toutes les morts sont
+  des annuelles non caduques → `herbace`, comme ①. `tailler`/`ecraser`/`deraciner`
+  ne sont pas exercés par le golden (succession pure). La vraie dérive caduque
+  viendra de l'**abscission (phase C)** : le pommier larguera du `feuille` chaque
+  automne.
+- Suites vertes : croissance 67, competition 14, eau 20, sim_server 113,
+  senescence, génétique 20, vigueur 135, maîtrise 35. `main.py 30` exit 0.
+
 ## REPRISE (démarrage à froid)
-Lire ce fichier puis le prochain kickoff. ① est FAIT → écrire `02_*.md` (dépôts
-vivant & mort : `tailler`→`bois`, squelette persistant + fragmentation,
-abscission d'automne, `ecraser`-squelette). Le doc de conception
-(`data/code/CONCEPTION_DECOMPOSITION_COMPOST.md`) tranche tous les « pourquoi ».
+Lire ce fichier puis `02_depots_vivant_mort.md`. ① FAIT, ② **Phase A FAITE** →
+reprendre **Phase B** (squelette persistant : mort ne retire plus la plante,
+`tick_skeletons` sèche→couchée→fragmentation `bois`→retrait final ; **ombre =
+silhouette nue, RISQUE #1** — trancher silhouette `SILHOUETTE_SECHE` vs ombre
+nulle, §B.3) puis **Phase C** (abscission d'automne caducs→`feuille`,
+`ecraser`-squelette→couchée). B/C re-figeront le golden (squelette + abscission
+du pommier). Doc conception §2 tranche les « pourquoi ».

@@ -22,7 +22,7 @@ from plants import (PlantInstance, Tomato, Basil, Bean, Clover,
                     Sunflower, Pepper, PLANT_CATALOGUE)
 from sim.effects import (resolve_plant_turn, apply_mutations, AddRondelle,
                          RemoveRondelle, ReduceHealth, InjectField,
-                         apply_disturbances, necromass_biomass)
+                         apply_disturbances, necromass_biomass, tissu_mort)
 from fields import (EcoFields, init_eco, inject_patch,
                     EXUDATE_BASE, EXUDATE_OM_SHARE,
                     _hash_noise, SENESCENCE_ONSET, SEN_RATE,
@@ -153,10 +153,11 @@ def appliquer_alea(alea, tile, eco, game_state):
         muts = [ReduceHealth(p, 1, alea.nom)
                 for p in tile.plants if p.is_alive and p.stage.name == "semis"]
         log += apply_mutations(muts, game_state)
-        # Mort éventuelle → nécromasse ∝ hauteur
+        # Mort éventuelle → nécromasse ∝ hauteur (tissus mous typés, ②)
         for p in tile.plants:
             if p.health == 0:
-                eco.add_necromass(*p.position, necromass_biomass(p), harvested=False)
+                eco.add_necromass(*p.position, necromass_biomass(p),
+                                  harvested=False, tissu=tissu_mort(p))
     return log
 
 @dataclass
@@ -401,7 +402,8 @@ class Engine:
                     plant.health = min(3, plant.health + 1)
         for plant in deaths:
             deposited = eco.add_necromass(*plant.position,
-                                          necromass_biomass(plant), harvested=False)
+                                          necromass_biomass(plant), harvested=False,
+                                          tissu=tissu_mort(plant))
             log.append(f"    🍂 Nécromasse +{deposited:.2f} OM @{plant.position}")
         if deaths:
             tile.plants = [p for p in tile.plants if p.is_alive]
@@ -490,7 +492,8 @@ class Engine:
                 if mort:
                     log.append(f"    ✗ {loser.name}@{loser.position} meurt (conflit).")
                     deposited = eco.add_necromass(*loser.position,
-                                                  necromass_biomass(loser), harvested=False)
+                                                  necromass_biomass(loser), harvested=False,
+                                                  tissu=tissu_mort(loser))
                     log.append(f"    🍂 Nécromasse +{deposited:.2f} OM @{loser.position}")
                 else:
                     log.append(f"    ↓ {loser.name}@{loser.position} → [{loser.stage.name}] (conflit).")
@@ -524,7 +527,8 @@ class Engine:
             if (plant.plant_class.life_cycle == "biennial"
                     and plant.age_years >= 2.0):
                 deposited = eco.add_necromass(*plant.position,
-                                              necromass_biomass(plant), harvested=False)
+                                              necromass_biomass(plant), harvested=False,
+                                              tissu=tissu_mort(plant))
                 arch = getattr(plant.plant_class, "archetype", None)
                 rate = getattr(plant.plant_class, "reproduction_rate", 0.02)
                 if arch:
@@ -541,7 +545,8 @@ class Engine:
             if ws == "die":
                 # Biomasse → nécromasse ∝ hauteur + graines dans la banque
                 deposited = eco.add_necromass(*plant.position,
-                                              necromass_biomass(plant), harvested=False)
+                                              necromass_biomass(plant), harvested=False,
+                                              tissu=tissu_mort(plant))
                 # Injection graines
                 arch = getattr(plant.plant_class, "archetype", None)
                 rate = getattr(plant.plant_class, "reproduction_rate", 0.02)
@@ -607,7 +612,8 @@ class Engine:
         # Mort → nécromasse ∝ hauteur (uniquement les morts de CE dégât, pas de
         # double-comptage des morts antérieures encore présentes sur la tuile).
         for p in newly_dead:
-            eco.add_necromass(*p.position, necromass_biomass(p), harvested=False)
+            eco.add_necromass(*p.position, necromass_biomass(p),
+                              harvested=False, tissu=tissu_mort(p))
         return log
 
     def tick_semaine(self):

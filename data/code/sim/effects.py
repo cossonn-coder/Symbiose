@@ -359,6 +359,14 @@ def necromass_biomass(plant: PlantInstance) -> float:
     return plant.current_height * NECROMASS_PER_CM
 
 
+def tissu_mort(plant: PlantInstance) -> str:
+    """Tissu de litière des parties MOLLES déposées à la mort (décompo·compost ②,
+    kickoff §A.2). Les caducs (`deciduous`, perennials.py) larguent du `feuille`
+    (décompo rapide), les autres de l'`herbace` (annuelles, tiges molles). Le bois
+    du squelette se fragmentera lentement en phase B — pas géré ici."""
+    return "feuille" if plant.plant_class.deciduous else "herbace"
+
+
 def _local_density(plant: PlantInstance, tile: Tile, same_family: bool = False) -> float:
     """Densité de plantes vivantes voisines [0,1] (option : même famille seulement)."""
     r, c = plant.position

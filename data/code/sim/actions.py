@@ -27,8 +27,9 @@ from sim.vigueur import spend, gain
 from sim.vigueur_plante import maturite, vigueur_plante   # facteurs partagés (mutualisés, pas dupliqués)
 from sim.growth import (atteindre_segment,   # seam de perturbation §F (sim→sim, pas de cycle : growth n'importe pas actions)
                         f_lignification, INTENSITE_PIED, SEUIL_DEGAT, COUPE_NETTE)  # calibrage écrasement (volet 2)
-from sim.effects import necromass_biomass
+from sim.effects import necromass_biomass, tissu_mort   # tissu_mort : litière molle typée à la mort (②)
 from sim import maitrise as M   # couche savoir (D12) — orchestrée ici pour les gains ponctuels §4.3
+from fields.ecofields import BOIS_PAR_CM            # litière `bois` déposée par la taille/écimage (②)
 from fields.population import DENSITE_PAR_SPRITE   # « un geste = un individu = un quantum » (D31.3 §5)
 from fields.seedbank import GrainEnAttente          # dépôt de `planter` (germination différée, distinct de la banque-sol)
 from plants.catalogue import PLANT_CATALOGUE, PERENNIAL_CATALOGUE   # reverse classe→clé (seam coût, §10.4)
@@ -347,7 +348,8 @@ def deraciner(game_state: dict, player: str, plant, eco) -> bool:
     if ratio < 1.0:
         return False
     plant.health = 0
-    eco.add_necromass(*plant.position, necromass_biomass(plant), harvested=False)
+    eco.add_necromass(*plant.position, necromass_biomass(plant),
+                      harvested=False, tissu=tissu_mort(plant))
     return True
 
 
@@ -403,8 +405,13 @@ def tailler(game_state: dict, player: str, plant, eco, *, cible: str = "apex",
     Binaire tout-ou-rien, sur le modèle de `deraciner` : le seam n'est appelé QUE si
     le coût (MODÉRÉ, allégé par la maîtrise via `cout_action`) est intégralement payé.
     Gain en Vigueur ∝ maturité (organe coupé récupéré, décision #3 — proxy raffiné au
-    tronçon 5). `eco` est dans la signature par cohérence avec la famille des gestes
-    (réservé : tailler n'écrit aucun champ écolo aujourd'hui).
+    tronçon 5).
+
+    Décompo·compost ② (intention Nico : « toute matière taillée doit être en
+    décomposition ») : la masse du sous-arbre RÉELLEMENT retiré (`Σ length_cm ×
+    BOIS_PAR_CM`) retombe en litière `bois` au plot-foyer (philo #2 : on dépose,
+    le tick décompose). On récupère ET on rend au sol — le gain Vigueur est
+    inchangé. Rien retiré (DOUX/collet) → rien déposé.
     Renvoie True si le geste a été pleinement payé (et donc appliqué)."""
     cost = cout_action(game_state, player, "tailler", _objets_action("tailler", plant))
     if spend(game_state, player, cost) < 1.0:
@@ -417,7 +424,9 @@ def tailler(game_state: dict, player: str, plant, eco, *, cible: str = "apex",
     if seg_id is None:
         seg_id = _segment_cible(plant, cible)
     if seg_id is not None:
-        atteindre_segment(plant, seg_id, intensite=1.0)   # ≥ COUPE_NETTE → écimage du sous-arbre ciblé
+        removed = atteindre_segment(plant, seg_id, intensite=1.0)   # ≥ COUPE_NETTE → écimage du sous-arbre ciblé
+        masse_bois = sum(s.length_cm for s in removed) * BOIS_PAR_CM
+        eco.deposer_litiere(*plant.position, "bois", masse_bois)    # no-op si masse_bois ≤ 0
     gain(game_state, player, HARVEST_GAIN_FULL * maturite(plant) * GAIN_TAILLE_RATIO)
     return True
 
@@ -494,7 +503,11 @@ def ecraser_plante(game_state: dict, player: str, plant, eco, *,
     seg_id = 0                                  # défaut : le collet (Q2)
     if segment_id is not None and 0 <= segment_id < len(plant.segments):
         seg_id = segment_id                     # segment désigné à la souris
-    atteindre_segment(plant, seg_id, intensite)  # DOUX déforme / NET écime (+ auxine)
+    removed = atteindre_segment(plant, seg_id, intensite)  # DOUX déforme / NET écime (+ auxine)
+    # ② : un écimage NET casse du bois au sol (même logique que `tailler` ; le coup
+    # de pied qui brise une branche la met en litière). Vide en régime DOUX/collet.
+    masse_bois = sum(s.length_cm for s in removed) * BOIS_PAR_CM
+    eco.deposer_litiere(*plant.position, "bois", masse_bois)   # no-op si masse_bois ≤ 0
     if intensite >= COUPE_NETTE and (1.0 - cls.stimulation_ecrasement) >= SEUIL_DEGAT:
         plant.health -= 1                       # NET sur une espèce qui n'en profite pas → sentier
     return True

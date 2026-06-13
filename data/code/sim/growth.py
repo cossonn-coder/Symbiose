@@ -268,7 +268,7 @@ def _rebuild(plant, kill: set) -> None:
 # Seam de perturbation §F — point d'entrée UNIQUE de l'altération de structure
 # ---------------------------------------------------------------------------
 
-def atteindre_segment(plant, segment_id: int, intensite: float) -> None:
+def atteindre_segment(plant, segment_id: int, intensite: float) -> list:
     """Seam de perturbation (CONCEPTION_CROISSANCE §F) — l'UNIQUE point d'entrée par
     lequel quoi que ce soit abîme la structure. Le mécanisme ne sait PAS qui :
     `tailler` aujourd'hui ; grêle / ravageur / vent plus tard appelleront le MÊME
@@ -286,13 +286,21 @@ def atteindre_segment(plant, segment_id: int, intensite: float) -> None:
 
     Le seam n'écrit QUE l'ÉTAT (auxine / liste de segments). L'architecture de
     réponse (débourrement des bourgeons survivants) ÉMERGE au tick de croissance
-    suivant — c'est tout l'intérêt du découplage (philo #2)."""
+    suivant — c'est tout l'intérêt du découplage (philo #2).
+
+    Retourne la LISTE des segments réellement retirés (décompo·compost ② : la
+    matière coupée doit retourner au sol en litière `bois`, option (a) du kickoff).
+    `[]` en régime DOUX ou sur le collet protégé → l'appelant ne dépose rien."""
     segs = plant.segments
     seg = segs[segment_id]
     seg.auxin = max(0.0, seg.auxin - intensite)             # douce : lève l'inhibition
     if intensite >= COUPE_NETTE and seg.parent is not None:  # net, hors collet → écimage
         ch = _children(segs)
-        _rebuild(plant, set(_subtree(segment_id, ch)))       # seg INCLUS (décision #2)
+        kill = _subtree(segment_id, ch)                      # seg INCLUS (décision #2)
+        removed = [segs[i] for i in kill]                    # matière coupée → litière (②)
+        _rebuild(plant, set(kill))
+        return removed
+    return []
 
 
 # ---------------------------------------------------------------------------
