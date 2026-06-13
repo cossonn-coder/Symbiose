@@ -164,12 +164,30 @@ propres + tag transmis ; [x] empilement → patiente → lève au dégagement ;
    (drainage argile 0.997 + bord d'asphyxie). Noter la nouvelle empreinte +
    l'explication dans le commit (règle CLAUDE.md : re-figeage maîtrisé et annoncé).
 
-**Critères Session B** : [ ] arroser monte/plafonne/redescend + coûts ;
-[ ] drainage par sol (T0 terre intacte) ; [ ] asphyxie 2 paliers réversible +
-stagnation « noyé » ; [ ] **golden re-figé T1 seul, T0 bit-identique, diff
-expliqué**.
+**Critères Session B** : [x] arroser monte/plafonne/redescend + coûts ;
+[x] drainage par sol ; [x] asphyxie 2 paliers réversible + stagnation « noyé » ;
+[x] **golden re-figé — diff expliqué** (⚠️ T0 a bougé aussi, voir ci-dessous).
 
-→ **commit avec l'explication du re-figeage**, **`/clear`**.
+> ✅ **Session B CLOSE (2026-06-13).** `arroser` (`sim/actions.py`, `+DOSE_ARROSAGE
+> =0.5`, cap 3.0, coût `MODERE` × urgence), drainage par sol (`DRAINAGE_PAR_SOL`,
+> `tick_hydrology(soil_type)`, terre=0.993 fallback), asphyxie 2 paliers
+> (palier 1 uptake ∝ excès courant réversible dans `plant_uptake` ; `asphyxie_memory`
+> miroir de `drought_memory` → palier 2 santé via flux `week·7` dans
+> `_tick_senescence_health`), stagnation « noyé » (`ok_hum` borné par le haut à
+> `HUM_NOYE`). `test_eau` 20/20, toute la suite verte (`test_senescence` fixture
+> réajustée : argile gorgée → terre médiane, sinon le pommier mourait asphyxié).
+>
+> **⚠️ Re-figeage : T0 A BOUGÉ AUSSI** (golden `16a1b937…` → `7ee907d3…`). La
+> prémisse §5 de la conception (« terre n'atteint jamais HUM_EXCES, T0 inerte »)
+> était **fausse** : `soil_memory`+rétention font monter terre à **2.636** en
+> automne (sem. 46) → asphyxie légitime sur les DEUX sols (terre ~10 %/an des
+> semaines >2.3, argile ~43 %). Dérive T0 = palier-1 uptake réduit + sa cascade
+> (vérifié : 100 % attribuable au modèle eau, aucune fuite hors-périmètre, rien
+> en semaine 1). **Décision Nico (option A, 2026-06-13)** : asphyxie = phénomène
+> global, on assume la dérive T0+T1, calibration figée conservée. Détail :
+> `journal.md`.
+
+→ **commit avec l'explication du re-figeage**, **`/clear`** puis Session C (pont).
 
 ---
 

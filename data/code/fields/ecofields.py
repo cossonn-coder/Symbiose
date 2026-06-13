@@ -26,8 +26,31 @@ MICROBE_INERTIA   = 0.92   # plus diffusif pour aura basilic
 
 BASE_RAIN      = 0.015
 EVAPORATION    = 0.997
-DRAINAGE       = 0.993
+DRAINAGE       = 0.993   # drainage de référence (terre) — conservé comme fallback
 SOIL_RETENTION = 0.010
+
+# Drainage par type de sol (CONCEPTION_PLANTER_ARROSER §2.3 (a), Q8/Q11). Plus
+# proche de 1 = MOINS d'eau évacuée par tick = sol qui RETIENT. La terre garde la
+# valeur historique (0.993) → tuile terre du golden bit-identique. L'argile retient
+# (s'engorge → asphyxie facile), le sable/roche drainent vite (asphyxie rare). Le
+# remède au sur-arrosage = connaître son sol, PAS un geste `drainer` (Q8).
+DRAINAGE_PAR_SOL = {
+    "terre":  0.993,   # référence — VALEUR ACTUELLE inchangée
+    "argile": 0.997,   # retient → s'engorge
+    "sable":  0.985,   # draine vite → sèche vite
+    "roche":  0.975,   # ruisselle → très drainant
+}
+
+# Modèle « eau » — asphyxie par excès (CONCEPTION_PLANTER_ARROSER §2.3 (b), Q11).
+# Versant HAUT, miroir de la gradation sécheresse existante (engine `drought_*`).
+# Échelle humidité = [0, 3]. Valeurs de DÉPART (calibrage post-test, cf. §4).
+HUM_EXCES = 2.3   # seuil palier 1 : au-dessus, les racines boivent mal (anoxie) → uptake↓
+HUM_NOYE  = 2.6   # seuil stagnation « noyé » (miroir haut du seuil « sec ») → ok_hum faux
+ASPHYXIE_UPTAKE_MALUS = 0.5   # réduction max d'uptake à excès plein (hum=3) — palier 1, doux/réversible
+ASPHYXIE_UPTAKE_FLOOR = 0.5   # plancher du facteur d'uptake (jamais 0 : racines réduites, pas mortes)
+ASPHYXIE_MEMORY_LERP  = 0.05  # intégration lente de l'asphyxie — IDENTIQUE à drought_memory (symétrie)
+ASPHYXIE_HEALTH_SEUIL = 0.10  # mémoire au-delà de laquelle la santé peut chuter (palier 2, « si ça dure »)
+ASPHYXIE_RATE         = 0.04  # pente de la pression santé (proba/sem) — miroir de SEN_RATE
 
 # Température ambiante (sous-sprint météo 02) — champ ambiant écrit chaque semaine
 # par l'engine (normale saisonnière + deltas météo), lu par le gate de croissance
@@ -208,15 +231,20 @@ class EcoFields:
 
     # --- Hydrologie ---
 
-    def tick_hydrology(self) -> None:
+    def tick_hydrology(self, soil_type: str = "terre") -> None:
         """
         Cycle hydrologique complet. Ordre strict :
           1. Évaporation atmosphérique (couplée à la température : chaud → +)
           2. Pluie de fond (apport diffus constant)
           3. Rétention sol (couplage soil_memory)
-          4. Drainage naturel
+          4. Drainage naturel — fonction du `soil_type` (§2.3 a, Q11)
         L'uptake racinaire est géré séparément dans engine.
+
+        `soil_type` (passé par l'engine, qui porte la `Tile`) choisit le drainage
+        dans `DRAINAGE_PAR_SOL` ; défaut/inconnu → `DRAINAGE` (terre = 0.993,
+        valeur historique) → la tuile terre du golden reste bit-identique.
         """
+        drainage = DRAINAGE_PAR_SOL.get(soil_type, DRAINAGE)
         for r in range(self.rows):
             for c in range(self.cols):
                 h = self.humidite.data[r][c]
@@ -229,7 +257,7 @@ class EcoFields:
                 h *= evap                                           # 1. évaporation
                 h += BASE_RAIN                                      # 2. pluie de fond
                 h += self.soil_memory.at_plot(r, c) * SOIL_RETENTION  # 3. rétention
-                h *= DRAINAGE                                       # 4. drainage
+                h *= drainage                                       # 4. drainage (par sol)
                 self.humidite.set(r, c, h)
 
     # --- Lumière ---
@@ -430,9 +458,17 @@ class EcoFields:
         nutriments (bonus borné UPTAKE_MICRO_BONUS) — la boucle vertueuse côté plante.
         """
         micro_norm = min(1.0, self.microbiome.at_plot(r, c) / 3.0)
+        # Asphyxie palier 1 (§2.3 b, doux & RÉVERSIBLE) : au-dessus de HUM_EXCES, le
+        # sol gorgé devient anoxique → les racines boivent mal → l'uptake de TOUT
+        # baisse ∝ l'excès courant (≠ mémoire : se lève dès que le sol s'assèche).
+        # En dessous du seuil (toute la tuile terre) → facteur 1.0, aucun effet.
+        hum_local = self.humidite.at_plot(r, c)
+        excess_norm = min(1.0, max(0.0, (hum_local - HUM_EXCES) / (3.0 - HUM_EXCES)))
+        asphyxie_factor = max(ASPHYXIE_UPTAKE_FLOOR,
+                              1.0 - excess_norm * ASPHYXIE_UPTAKE_MALUS)
         consumed = {}
         for var, by_stage in UPTAKE.items():
-            amount = by_stage.get(stage_index, 0.0) * share
+            amount = by_stage.get(stage_index, 0.0) * share * asphyxie_factor
             if amount <= 0:
                 continue
             if var == "humidite":

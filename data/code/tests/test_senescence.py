@@ -30,12 +30,15 @@ def run_until_apple_death():
     (cause, âge_ans). La cause est lue dans le log de la semaine de décès, ciblé
     sur SON identité « nom@(0, 0) » — la succession/reproduction peut faire mourir
     d'AUTRES plantes de sénescence, il ne faut pas les confondre avec la nôtre.
-    Tuile 6×6 argile bien pourvue en eau (humidité 2.5) : assez d'espace
-    racinaire et d'humidité pour que le pommier vieillisse SANS mourir avant de
-    stress hydrique ou de compétition — on veut isoler la sénescence (age-based).
+    Tuile 6×6 terre, humidité de CONFORT (1.5) : assez d'espace racinaire et
+    d'eau pour que le pommier vieillisse SANS mourir d'un stress hydrique — ni
+    par le BAS (sécheresse) ni par le HAUT (asphyxie, modèle eau Session B :
+    sur argile gorgée hum→3.0 soutenu, le pommier mourrait asphyxié à ~27 ans,
+    bien avant la sénescence). On isole donc la sénescence (age-based) sur un sol
+    drainant à humidité médiane, entre les deux seuils de stress.
     Petit monde quand même → test rapide (~20 s) malgré l'horizon ~60 ans."""
-    tile = Tile(tile_id="T0", soil_type="argile", grid_rows=6, grid_cols=6)
-    eco = init_eco("T0", 6, 6, humidite=2.5, fertilite=1.2, microbiome=0.3)
+    tile = Tile(tile_id="T0", soil_type="terre", grid_rows=6, grid_cols=6)
+    eco = init_eco("T0", 6, 6, humidite=1.5, fertilite=1.2, microbiome=0.3)
     apple = tile.add_plant(AppleTree, 3, 3)
     tag = f"{apple.name}@{apple.position}"   # identité exacte dans les logs
     game_state = {

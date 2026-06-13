@@ -41,6 +41,11 @@ MODERE = 15.0
 ELEVE  = 30.0
 URGENCE_MULT = 1.5   # majoration des actions de phase « saison » (urgence, §3.1)
 
+# Dose d'humidité d'un arrosage (CONCEPTION_PLANTER_ARROSER §4, Q9), échelle [0,3].
+# Calée sur l'aléa « Pluies » (`+0.5`) : un geste = une bonne pluie locale. Cap 3.0
+# appliqué dans `arroser` ; le tick (évaporation × drainage) la fait redescendre.
+DOSE_ARROSAGE = 0.5
+
 # Malus de microbiome local du bêchage (CONCEPTION_VIGUEUR §3.2, « biner/bêcher :
 # microbiome ↓ » — la conception ne chiffrait pas l'ampleur). Knob sobre, calibrage
 # post-test : microbiome est sur l'échelle [0, 3] (cf. ecofields), ce malus en
@@ -82,6 +87,7 @@ GAIN_SUCCES     = MODERE    # « un jardinier actif est un jardinier vigoureux �
 # deviennent la `base` du seam ; les constantes restent, on ne supprime rien).
 COUTS = {
     "planter":              FAIBLE,            # dépose une graine (phase planification, §3.2/Q7)
+    "arroser":              MODERE,            # × URGENCE_MULT appliqué PAR-DESSUS si phase saison
     "recolter":             HARVEST_VIGUEUR_COST,
     "deraciner":            ELEVE,
     "ecraser":              MODERE,            # × URGENCE_MULT appliqué PAR-DESSUS (phase saison)
@@ -101,6 +107,7 @@ COUTS = {
 # (D29/D30/D31) les câblera. Reflète §10.4 telle quelle.
 OBJETS_TOUCHES = {
     "planter":              ("semis",),                  # technique ; pas de cible vivante (on DÉPOSE une graine)
+    "arroser":              ("arrosage", "arrosoir"),    # technique + outil ; on écrit un CHAMP, pas de cible vivante
     "recolter":             ("récolte", "sécateur"),
     "deraciner":            ("arrachage", "bêche"),
     "ecraser":              (),                          # geste brut, terme 2 vide (§10.4)
@@ -278,6 +285,36 @@ def planter(game_state: dict, player: str, tile, eco, species: str,
                        cultive=True, player=player,
                        semaine_depot=game_state.get("week", 0))
     )
+    return True
+
+
+def arroser(game_state: dict, player: str, eco, r: int, c: int,
+            urgence: bool = False) -> bool:
+    """Arroser (spec §3.2 / CONCEPTION_PLANTER_ARROSER §2.2, Q8-Q12) — geste sur le
+    MILIEU, canal VERTUEUX (philo #1). Canon philo #2 : on écrit UNIQUEMENT le champ
+    `eco.humidite` au plot cliqué (`+DOSE_ARROSAGE`, cap 3.0, CUMULATIF) — RIEN
+    d'autre. La plante « se débrouille » avec l'humidité du sol au tick suivant
+    (Q12 a) : sa stagnation « sec » se lève si l'eau remonte, l'excès → asphyxie
+    (modèle eau, tick). On n'écrit JAMAIS un attribut de la plante.
+
+    Transitoire par construction : `tick_hydrology` (évaporation × drainage) fait
+    REDESCENDRE l'apport → ré-arroser COÛTE = l'usure de la solution facile (philo
+    #1). La diffusion (`HUMIDITY_INERTIA`, au tick) mouille naturellement autour
+    (Q8) — on n'écrit que le plot cliqué. Cumuler les doses peut franchir le seuil
+    d'excès → noyade (§2.3) : arroser n'est bénéfique QUE dosé (fausse bonne idée
+    si abusé).
+
+    DEUX phases (Q10) : planification (prévention, coût simple) ET saison (réaction,
+    `urgence=True` → `× URGENCE_MULT`). Coût **MODÉRÉ**. Binaire tout-ou-rien (modèle
+    `deraciner`) : le champ n'est mouillé QUE si le coût est intégralement payé —
+    forcer le geste à vide draine la Vigueur sans rien arroser.
+    Renvoie True si le geste a été pleinement payé (et donc appliqué)."""
+    cost = (cout_action(game_state, player, "arroser", OBJETS_TOUCHES["arroser"])
+            * (URGENCE_MULT if urgence else 1.0))
+    if spend(game_state, player, cost) < 1.0:
+        return False                          # Vigueur insuffisante → champ intact
+    h = eco.humidite.at_plot(r, c)
+    eco.humidite.set(r, c, min(3.0, h + DOSE_ARROSAGE))
     return True
 
 

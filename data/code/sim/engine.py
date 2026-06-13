@@ -26,7 +26,9 @@ from sim.effects import (resolve_plant_turn, apply_mutations, AddRondelle,
 from fields import (EcoFields, init_eco, inject_patch,
                     EXUDATE_BASE, EXUDATE_OM_SHARE,
                     _hash_noise, SENESCENCE_ONSET, SEN_RATE,
-                    HEAL_RATE, HEAL_SEN_CUTOFF, RESEED_RADIUS_CM)
+                    HEAL_RATE, HEAL_SEN_CUTOFF, RESEED_RADIUS_CM,
+                    HUM_EXCES, HUM_NOYE, ASPHYXIE_MEMORY_LERP,
+                    ASPHYXIE_HEALTH_SEUIL, ASPHYXIE_RATE)
 from sim.reproduction import find_father, child_genes, is_seed_bearing
 from sim.seeds import Seed
 from sim.succession import succession, spring_flush
@@ -192,7 +194,12 @@ class Engine:
             # Seuils de croissance : humidité ET lumière ET température suffisantes.
             # tolerance_secheresse abaisse le seuil d'humidité (gène >1 → la plante
             # continue de croître en sol plus sec avant de stagner).
-            ok_hum   = hum   >= 0.15 / plant.gene("tolerance_secheresse")
+            # Humidité suffisante par le BAS (sécheresse, modulée par le gène) ET
+            # pas excessive par le HAUT (asphyxie « noyé » au-delà de HUM_NOYE,
+            # §2.3 b). La borne haute est inerte sous le seuil (toute tuile drainante
+            # / terre : hum ≤ HUM_NOYE → ok_hum inchangé, message « sec » conservé).
+            ok_hum   = (hum >= 0.15 / plant.gene("tolerance_secheresse")
+                        and hum <= HUM_NOYE)
             ok_light = light >= 0.2   # trop d'ombre = stagnation
             ok_temp  = temp  >= plant.plant_class.temp_min_growth   # trop froid = stagnation
             can_grow = ok_hum and ok_light and ok_temp
@@ -207,7 +214,10 @@ class Engine:
             elif not ok_light:
                 log.append(f"    🌑 {plant.name}@{plant.position} stagne (ombre lum={light:.2f})")
             elif not ok_hum:
-                log.append(f"    ⏸  {plant.name}@{plant.position} stagne (sec hum={hum:.2f})")
+                if hum > HUM_NOYE:
+                    log.append(f"    🌊 {plant.name}@{plant.position} stagne (noyé hum={hum:.2f})")
+                else:
+                    log.append(f"    ⏸  {plant.name}@{plant.position} stagne (sec hum={hum:.2f})")
         return log
 
     def _apply_uptake(self, tile, eco):
@@ -302,6 +312,14 @@ class Engine:
             drought_stress = max(0.0, 1.0 - hum / 0.5) if hum < 0.5 else 0.0
             plant.drought_memory += (drought_stress - plant.drought_memory) * 0.05
             plant.drought_memory  = max(0.0, min(1.0, plant.drought_memory))
+            # Asphyxie memory : MIROIR haut de la sécheresse — stress d'excès quand
+            # hum > HUM_EXCES, même intégration lente (ASPHYXIE_MEMORY_LERP = 0.05).
+            # Réversible : s'efface dès que le sol redescend (exces_stress → 0). Sous
+            # le seuil (terre/sol drainant) → reste 0.0, aucun effet (§2.3 b, palier 2).
+            exces_stress = (max(0.0, (hum - HUM_EXCES) / (3.0 - HUM_EXCES))
+                            if hum > HUM_EXCES else 0.0)
+            plant.asphyxie_memory += (exces_stress - plant.asphyxie_memory) * ASPHYXIE_MEMORY_LERP
+            plant.asphyxie_memory  = max(0.0, min(1.0, plant.asphyxie_memory))
             # Growth factor : la lumière reçue module la hauteur (feedback → ombre)
             target_g = 0.6 + 0.4 * light
             plant.growth_factor += (target_g - plant.growth_factor) * 0.10
@@ -344,6 +362,21 @@ class Engine:
                         deaths.append(plant)
                         log.append(f"    🪦 {plant.name}@{plant.position} meurt de "
                                    f"sénescence (âge={plant.age_years:.0f}/{L:.0f} ans)")
+                        continue
+            # Asphyxie soutenue (palier 2, §2.3 b) — miroir HAUT de la sénescence :
+            # quand la mémoire d'excès d'eau dépasse ASPHYXIE_HEALTH_SEUIL (« si ça
+            # dure »), la santé chute par paliers, même forme probabiliste que le
+            # déclin sénescent (flux week·7, décorrélé de week·3/·5). Réversible : un
+            # assèchement vide la mémoire (§2.3) → la pression retombe. Sous le seuil
+            # (terre/sol drainant : asphyxie_memory reste 0) → strictement inerte.
+            if plant.asphyxie_memory > ASPHYXIE_HEALTH_SEUIL:
+                pression = plant.asphyxie_memory - ASPHYXIE_HEALTH_SEUIL
+                if _hash_noise(seed, week * 7, r, c) < pression * ASPHYXIE_RATE:
+                    plant.health = max(0, plant.health - 1)
+                    if not plant.is_alive:
+                        deaths.append(plant)
+                        log.append(f"    🪦 {plant.name}@{plant.position} meurt "
+                                   f"asphyxié (excès d'eau soutenu)")
                         continue
             # Guérison (convalescence) — coupée en fin de vie
             if plant.health < 3 and sen < HEAL_SEN_CUTOFF:
@@ -641,7 +674,8 @@ class Engine:
             log += lum_log
 
             # 3. Hydrologie : évaporation → pluie de fond → rétention → drainage
-            eco.tick_hydrology()
+            #    (le drainage dépend du type de sol de la tuile, §2.3 a).
+            eco.tick_hydrology(tile.soil_type)
 
             # 4. Décomposition biogéochimique (OM → fertilite, pertes C)
             eco.tick_decomposition()

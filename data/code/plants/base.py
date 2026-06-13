@@ -193,6 +193,8 @@ class PlantInstance:
     # Mémoire physiologique
     shade_memory: float = 0.0       # intégration lente de l'ombre vécue [0-1]
     drought_memory: float = 0.0     # intégration lente du stress hydrique [0-1]
+    asphyxie_memory: float = 0.0    # intégration lente de l'excès d'eau [0-1]
+                                    # miroir HAUT de drought_memory (même lerp, anoxie soutenue → santé↓)
     stress_memory: float = 0.0      # intégration des perturbations subies [0-1]
                                     # stress↑ → croissance↓ mais résistance↑
     # Vecteur de gènes héréditaire (D22). Vide ⇒ tous neutres (1.0). Rempli à la
