@@ -64,6 +64,15 @@ PHOTOTROPISM_STRENGTH = 0.30                # ↳ défaut PlantBase.phototropism
 MAX_PHOTOTROPISM_TILT = math.radians(12.0)  # déviation max d'azimut par segment émis (borné)
 MIN_APEX_Z            = 0.30                 # composante verticale plancher de l'apex (jamais à plat)
 
+# --- Étiolement (compétition intra-plot, Q7 — « filer vers la lumière ») -----
+# Un HÉLIOPHILE (tolérance à l'ombre effective < 1) ombragé (lumière effective
+# sous le seuil) ALLONGE plus vite en axial (tige grêle, entre-nœuds longs) :
+# combiné au phototropisme, il a une chance d'atteindre une trouée → SAUVÉ. Le
+# coût (robustesse −10 %) est porté côté convalescence (engine._tick_senescence_health).
+# Un sciaphile (tol ≥ 1) ne s'étiole jamais. light_field absent → pas d'étiolement.
+ETIOLEMENT_LIGHT_SEUIL = 0.40   # lumière effective sous laquelle un héliophile file
+ETIOLEMENT_GAIN        = 0.30   # +30 % de vitesse axiale quand étiolé
+
 # --- Bornage (§D.6 — run éternel) ------------------------------------------
 MAX_REACH_CM     = 200.0  # ↳ défaut PlantBase.max_height_cm/max_extent_cm (gabarit d'arbre)
 WOOD_PERSISTENCE = 60     # ↳ défaut PlantBase.wood_persistence (longévité du bois sans apex)
@@ -418,6 +427,28 @@ def _season_factor(week: int) -> float:
 
 
 # ---------------------------------------------------------------------------
+# Étiolement (Q7) — partagé entre growth (élongation) et engine (robustesse)
+# ---------------------------------------------------------------------------
+
+def shade_tolerance_effective(plant) -> float:
+    """Tolérance à l'ombre effective = base d'espèce × gène individuel (Q6)."""
+    return plant.plant_class.shade_tolerance_base() * plant.gene("tolerance_ombre")
+
+
+def est_etiole(plant, light_field) -> bool:
+    """Vrai si la plante S'ÉTIOLE ce tick : héliophile (tolérance effective < 1)
+    sous une lumière effective < ETIOLEMENT_LIGHT_SEUIL. light_field None ⇒ False
+    (les outils/tests sans lumière restent inchangés)."""
+    if light_field is None:
+        return False
+    tol = shade_tolerance_effective(plant)
+    if tol >= 1.0:
+        return False
+    light_eff = min(1.0, light_field.light_received(plant) * tol)
+    return light_eff < ETIOLEMENT_LIGHT_SEUIL
+
+
+# ---------------------------------------------------------------------------
 # Point d'entrée — une passe de croissance par plante par tick
 # ---------------------------------------------------------------------------
 
@@ -443,6 +474,11 @@ def grow_plant(plant, seed: int, week: int, light_field=None) -> None:
     for s in segs:
         s.age_weeks += 1
     speed = cls.growth_speed * plant.growth_factor * _season_factor(week)
+    # Étiolement (Q7) : un héliophile ombragé file vers la lumière — élongation
+    # axiale accrue. Émergent : combiné au phototropisme (_elongate_emit), l'apex
+    # grêle peut atteindre une trouée et être sauvé.
+    if est_etiole(plant, light_field):
+        speed *= (1.0 + ETIOLEMENT_GAIN)
     _update_auxin(segs, cls.apical_dominance_base)
     _elongate_emit(plant, speed, cls.max_height_cm, cls.max_extent_cm,
                    cls.emit_length_cm, light_field, cls.phototropism_strength)

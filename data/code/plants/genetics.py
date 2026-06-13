@@ -21,8 +21,15 @@ dessus sans créer de cycle (notamment fields/seedbank.py qui importe clamp_gene
 #  - `tolerance_secheresse` : tolérance au stress hydrique. >1 = croît en sol plus
 #    sec (seuil de stagnation abaissé) ET tissu plus résistant à la sécheresse
 #    sévère prolongée (susceptibilité = 1/gène). Neutre 1.0.
+#  - `tolerance_ombre`      : MODULATEUR individuel de la tolérance à l'ombre, en
+#    facteur de la base d'espèce (`PlantBase.shade_tolerance_base`, défaut par
+#    strate). Neutre 1.0 → la plante prend la tolérance de son espèce ; le gène
+#    fait dériver l'individu (variation + sélection naturelle de la sciaphilie,
+#    compétition intra-plot). Lu en germination (lumière effective) et en
+#    croissance (growth_factor sur lumière corrigée).
 GENE_NAMES = ("hauteur", "rusticite_froid", "vigueur",
-              "resistance_pathogene", "tolerance_secheresse")
+              "resistance_pathogene", "tolerance_secheresse",
+              "tolerance_ombre")
 
 # Plage « normale » du vecteur de gènes — gaussienne centrée 1.0, σ initial 0.10.
 # L'introgression inter-espèces peut pousser HORS de [GENE_MIN, GENE_MAX]

@@ -77,6 +77,20 @@ STRATE_DEFAULTS = {
     "grimpante": {"height": 150, "canopy_r": 25, "root_r": 55, "density": 0.50},
 }
 
+# Tolérance à l'ombre de RÉFÉRENCE par strate (compétition intra-plot, Q6).
+# >1 = sciaphile (prospère/lève à l'ombre), <1 = héliophile (pénalisé dès
+# l'ombrage). Défaut écologique : les strates basses du sous-bois tolèrent
+# l'ombre, les hautes la fuient. Valeur de DÉPART (calibrage §4), modulée
+# individuellement par le gène `tolerance_ombre`. La base d'espèce est dérivée
+# de la strate du stade MATURE (cf. PlantBase.shade_tolerance_base).
+STRATE_SHADE_TOLERANCE = {
+    "sol":       1.25,
+    "basse":     1.25,
+    "moyenne":   1.00,
+    "haute":     0.90,
+    "grimpante": 1.00,
+}
+
 # Empreinte procédurale (D29 réorienté, tronçon 2) — rayon racinaire dérivé de la
 # couronne (§G, §8 acté : pas de structure souterraine). k calibré : la tomate
 # veut root ≈ canopy (drip-line). Module-level (1 espèce migrée) → per-espèce plus tard.
@@ -424,6 +438,10 @@ class PlantBase(ABC):
     maturity_years: float = 0.0          # âge de 1re fructification (renouvellement arbres)
     fungal_susceptibility: float = 0.5   # sensibilité aux maladies fongiques [0-1]
     temp_min_growth: float = 5.0         # °C — seuil de croissance (météo 02) ; en deçà, stagnation. Extensible par espèce.
+    # Tolérance à l'ombre de référence (compétition intra-plot, Q6). None ⇒ dérivée
+    # de la strate du stade mature (STRATE_SHADE_TOLERANCE) ; override explicite si
+    # l'espèce dévie de sa strate (ex. annuelle héliophile en strate basse).
+    shade_tolerance: float | None = None
 
     # --- Profil de croissance procédurale (D29 réorienté, tronçon 2) ---
     # Leviers PAR ESPÈCE lus par sim/growth.py (CONCEPTION_CROISSANCE §E.1). Les
@@ -495,6 +513,18 @@ class PlantBase(ABC):
             return 0.0
         return cls.foliage_density if cls.foliage_density is not None \
             else STRATE_DEFAULTS[inst.stage.strate]["density"]
+
+    @classmethod
+    def shade_tolerance_base(cls) -> float:
+        """Tolérance à l'ombre de RÉFÉRENCE de l'espèce (sciaphile >1, héliophile
+        <1). Override explicite via `shade_tolerance`, sinon dérivée de la strate
+        du stade MATURE (dernier `growth_stages`). Modulée individuellement par le
+        gène `tolerance_ombre` : tolérance effective = base × gene("tolerance_ombre").
+        Lue en germination (lumière effective) et en croissance (growth_factor)."""
+        if cls.shade_tolerance is not None:
+            return cls.shade_tolerance
+        strate = cls.growth_stages[-1].strate if cls.growth_stages else "moyenne"
+        return STRATE_SHADE_TOLERANCE.get(strate, 1.0)
 
     @classmethod
     def longevity(cls) -> float:

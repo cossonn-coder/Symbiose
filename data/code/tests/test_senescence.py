@@ -39,6 +39,18 @@ def run_until_apple_death():
     Petit monde quand même → test rapide (~20 s) malgré l'horizon ~60 ans."""
     tile = Tile(tile_id="T0", soil_type="terre", grid_rows=6, grid_cols=6)
     eco = init_eco("T0", 6, 6, humidite=1.5, fertilite=1.2, microbiome=0.3)
+    # Isolation de la sénescence : on COUPE la succession adventice sur cette
+    # tuile. Depuis le sprint compétition intra-plot, le verrou d'occupation est
+    # levé et les adventices peuvent coloniser DENSÉMENT les plots du pommier ;
+    # une vingtaine d'adventices vivaces (Poa fibreuse, pissenlit à pivot) entre
+    # alors en compétition hydrique avec le pommier solitaire et le tue vers
+    # ~7 ans — comportement émergent légitime de la compétition, mais qui défait
+    # l'ISOLATION voulue par ce test (vérifier la VOIE de mort par sénescence en
+    # vieillissant un arbre seul). On neutralise donc la germination spontanée
+    # ici (double de test), comme on a déjà choisi l'humidité médiane pour écarter
+    # les deux stress hydriques. La compétition, elle, est couverte par
+    # tests/test_competition.py.
+    eco.seed_bank.germination_candidates = lambda *a, **k: []
     apple = tile.add_plant(AppleTree, 3, 3)
     tag = f"{apple.name}@{apple.position}"   # identité exacte dans les logs
     game_state = {

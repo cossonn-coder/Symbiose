@@ -35,7 +35,7 @@ from sim.succession import succession, spring_flush
 from sim.weather import (weather_at, WeatherEvent, K_PEST,
                          temp_norm, temperature_delta, TEMP_DRIVEN)
 from sim.vigueur import tick_player_vigueur, refill_saison
-from sim.growth import grow_plant
+from sim.growth import grow_plant, est_etiole
 
 # Pont récolte → banque-joueur (D17) : classe → clé catalogue (inverse).
 _SPECIES_KEY = {cls: key for key, cls in PLANT_CATALOGUE.items()}
@@ -320,8 +320,13 @@ class Engine:
                             if hum > HUM_EXCES else 0.0)
             plant.asphyxie_memory += (exces_stress - plant.asphyxie_memory) * ASPHYXIE_MEMORY_LERP
             plant.asphyxie_memory  = max(0.0, min(1.0, plant.asphyxie_memory))
-            # Growth factor : la lumière reçue module la hauteur (feedback → ombre)
-            target_g = 0.6 + 0.4 * light
+            # Growth factor : la lumière EFFECTIVE module la hauteur (feedback →
+            # ombre). Tolérance à l'ombre (Q6) = base d'espèce × gène individuel :
+            # un sciaphile garde sa croissance à l'ombre (light_eff relevé, cap 1.0),
+            # un héliophile ombragé décroît (et s'étiole — tronçon 3).
+            tol = plant.plant_class.shade_tolerance_base() * plant.gene("tolerance_ombre")
+            light_eff = min(1.0, light * tol)
+            target_g = 0.6 + 0.4 * light_eff
             plant.growth_factor += (target_g - plant.growth_factor) * 0.10
             plant.growth_factor  = max(0.3, min(1.0, plant.growth_factor))
 
@@ -385,7 +390,14 @@ class Engine:
                 disturb = eco.disturbance.local(r, c)
                 Q = light * min(1.0, hum) * max(0.0, 1.0 - disturb)
                 # vigueur accélère la convalescence (gène >1 → guérit plus vite).
-                if _hash_noise(seed, week * 5, r, c) < Q * HEAL_RATE * plant.gene("vigueur"):
+                heal = Q * HEAL_RATE * plant.gene("vigueur")
+                # Coût de robustesse de l'étiolement (Q7) : un héliophile étiolé
+                # convalesce −10 % — la tige grêle est fragile ; s'il n'atteint pas
+                # la lumière (qui lèverait l'étiolement), il se rétablit moins bien
+                # et dépérit par le déclin existant. Émergent, pas un verdict.
+                if est_etiole(plant, eco.lumiere):
+                    heal *= 0.90
+                if _hash_noise(seed, week * 5, r, c) < heal:
                     plant.health = min(3, plant.health + 1)
         for plant in deaths:
             deposited = eco.add_necromass(*plant.position,

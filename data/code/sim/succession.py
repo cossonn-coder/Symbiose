@@ -61,8 +61,14 @@ def _lever_grains_en_attente(game_state: dict, tile, eco, week: int, seed: int,
     for (r, c), grains in tile.grains_en_attente.items():
         if not grains:
             continue
-        if (r, c) in occupied_roots or not tile.is_valid_plot(r, c):
-            continue                           # plot occupé → la graine patiente (Q4)
+        if not tile.is_valid_plot(r, c):
+            continue
+        # Verrou d'occupation LEVÉ (compétition intra-plot, Q1/Q4) : un grain lève
+        # même sur plot occupé — la cohabitation est décidée par les champs réels
+        # (lumière-sol ombragée + sol établi déjà dans niche_index), pas par un
+        # terme « occupation » artificiel. `occupied_roots` reste lu pour la
+        # densité racinaire voisine et MUTÉ après chaque levée (anti
+        # double-germination intra-tick sur la même position).
 
         neighbors = tile.neighbors(r, c)
         root_density = sum(
@@ -73,9 +79,22 @@ def _lever_grains_en_attente(game_state: dict, tile, eco, week: int, seed: int,
         disturbance = eco.disturbance.at_plot(r, c)
         soil_deep   = eco.soil_memory_deep.at_plot(r, c)
 
+        grain = grains[0]
+        plant_class = (PLANT_CATALOGUE.get(grain.species)
+                       or PERENNIAL_CATALOGUE.get(grain.species))
+        if plant_class is None:
+            grains.pop(0)                      # espèce inconnue (ne devrait pas arriver) → grain jeté
+            continue
+
         niche = eco.seed_bank.niche_index(
             r, c, light, root_density, disturbance, soil_deep
         ) * niche_mult
+
+        # Escompte la lumière requise par la tolérance à l'ombre du grain (Q6,
+        # même frein que la succession) : base d'espèce × gène propre du grain.
+        if light > 0.0:
+            tol = plant_class.shade_tolerance_base() * grain.genes.get("tolerance_ombre", 1.0)
+            niche *= min(1.0, light * tol) / light
 
         if niche < 0.01:
             continue                           # niche trop pauvre → pas encore le bon moment
@@ -84,13 +103,6 @@ def _lever_grains_en_attente(game_state: dict, tile, eco, week: int, seed: int,
         # graine plantée lève à proba = niche (sans l'escompte de densité féral des
         # adventices → un semis délibéré prend plus volontiers qu'une graine férale).
         if _hash_noise(seed, hash_canal, r, c) >= niche:
-            continue
-
-        grain = grains[0]
-        plant_class = (PLANT_CATALOGUE.get(grain.species)
-                       or PERENNIAL_CATALOGUE.get(grain.species))
-        if plant_class is None:
-            grains.pop(0)                      # espèce inconnue (ne devrait pas arriver) → grain jeté
             continue
 
         new_plant = tile.add_plant(plant_class, r, c)
@@ -126,6 +138,11 @@ def succession(game_state: dict, tile, eco, week: int) -> list[str]:
     log = []
     seed = game_state.get("seed", 42)
 
+    # Tolérance à l'ombre par archétype (compétition intra-plot, Q6) — escompte la
+    # lumière requise à la germination, par espèce candidate (cf. germination_candidates).
+    arch_tolerance = {a: cls.shade_tolerance_base()
+                      for a, cls in WEED_CATALOGUE.items()}
+
     # Index des plots occupés (racinaire)
     occupied_roots: set[tuple] = set()
     for p in tile.plants:
@@ -141,9 +158,9 @@ def succession(game_state: dict, tile, eco, week: int) -> list[str]:
 
     for r in range(tile.grid_rows):
         for c in range(tile.grid_cols):
-            # Plot déjà occupé → pas de germination
-            if (r, c) in occupied_roots:
-                continue
+            # Verrou d'occupation LEVÉ (Q1) : on ne saute plus les plots occupés.
+            # Le frein vient des champs réels (lumière-sol ombragée + sol établi
+            # déjà dans niche_index) — pas d'un terme « occupation » artificiel.
             if not tile.is_valid_plot(r, c):
                 continue
 
@@ -167,7 +184,7 @@ def succession(game_state: dict, tile, eco, week: int) -> list[str]:
 
             # Priorité écologique : sol pauvre → fixatrice, sinon ordre standard
             candidates = eco.seed_bank.germination_candidates(
-                r, c, seed, week, niche
+                r, c, seed, week, niche, light=light, arch_tolerance=arch_tolerance
             )
 
             if not candidates:
@@ -178,10 +195,6 @@ def succession(game_state: dict, tile, eco, week: int) -> list[str]:
 
             plant_class = WEED_CATALOGUE.get(chosen)
             if not plant_class:
-                continue
-
-            # Vérifier qu'il n'y a pas déjà une plante sur ce plot exact
-            if any(p.position == (r, c) for p in tile.plants if p.is_alive):
                 continue
 
             # Germination — gènes échantillonnés du pool génétique du plot
@@ -208,6 +221,9 @@ def spring_flush(game_state: dict, tile, eco, week: int) -> list[str]:
     log = []
     seed = game_state.get("seed", 42)
 
+    arch_tolerance = {a: cls.shade_tolerance_base()
+                      for a, cls in WEED_CATALOGUE.items()}
+
     occupied_roots: set[tuple] = set()
     for p in tile.plants:
         if p.is_alive:
@@ -223,8 +239,7 @@ def spring_flush(game_state: dict, tile, eco, week: int) -> list[str]:
     germinations = 0
     for r in range(tile.grid_rows):
         for c in range(tile.grid_cols):
-            if (r, c) in occupied_roots:
-                continue
+            # Verrou d'occupation LEVÉ (Q1) — cf. succession().
             if not tile.is_valid_plot(r, c):
                 continue
 
@@ -246,7 +261,8 @@ def spring_flush(game_state: dict, tile, eco, week: int) -> list[str]:
                 continue
 
             candidates = eco.seed_bank.germination_candidates(
-                r, c, seed, week * 100, niche   # seed différent du tick normal
+                r, c, seed, week * 100, niche,   # seed différent du tick normal
+                light=light, arch_tolerance=arch_tolerance
             )
 
             if not candidates:
@@ -256,9 +272,6 @@ def spring_flush(game_state: dict, tile, eco, week: int) -> list[str]:
 
             plant_class = WEED_CATALOGUE.get(chosen)
             if not plant_class:
-                continue
-
-            if any(p.position == (r, c) for p in tile.plants if p.is_alive):
                 continue
 
             new_plant = tile.add_plant(plant_class, r, c)

@@ -8,7 +8,8 @@ Couvre (critères Session A) :
   1. Dépôt : take banque-joueur, grain posé, coût FAIBLE débité.
   2. Refus lot vide : aucune Vigueur dépensée, aucun grain.
   3. Levée : gènes PROPRES (pas neutres, pas échantillonnés) + tag `replante`.
-  4. Empilement (Q4) : plot occupé → la graine PATIENTE, puis lève au dégagement.
+  4. Co-occupation (compétition intra-plot, §2.4) : plot occupé → la graine
+     LÈVE quand même (verrou levé) → deux plantes partagent le plot.
 
 Le golden ÉCOLOGIQUE (`tests/test_golden.py`) reste l'autorité du « rien ne
 bouge au tick » ; ici on exerce le chemin planté, hors golden.
@@ -128,39 +129,38 @@ def test_levee():
 
 
 # ---------------------------------------------------------------------------
-# 4. Empilement (Q4) : plot occupé → patiente → lève au dégagement
+# 4. Co-occupation (compétition intra-plot, §2.4) : plot occupé → la graine
+#    LÈVE quand même — le verrou d'occupation est levé, deux plantes partagent
+#    le plot (la cohabitation est arbitrée ensuite par les champs réels, pas par
+#    un verrou artificiel). Inverse l'ancien comportement Q4 (« patiente »).
 # ---------------------------------------------------------------------------
-def test_empilement_patiente():
-    print("\n[4] plot occupé : la graine patiente, puis lève une fois libéré")
+def test_co_occupation():
+    print("\n[4] plot occupé : la graine LÈVE quand même (co-occupation §2.4)")
     gs, tile, eco, bank = _state_avec_graine()
     V.ensure_player(gs, "joueur_1")
     occupant = tile.add_plant(Tomato, 2, 2)        # plot déjà occupé
     ACT.planter(gs, "joueur_1", tile, eco, "tomate", 2, 2)
 
-    for w in range(3, 10):
-        gs["week"] = w
-        succession(gs, tile, eco, w)
-    patiente = len(tile.grains_en_attente.get((2, 2), [])) == 1
-    pas_de_doublon = sum(1 for p in tile.plants if p.is_alive and p.position == (2, 2)) == 1
-    check("plot occupé → la graine PATIENTE (toujours en attente)", patiente)
-    check("aucune levée tant que le plot est pris", pas_de_doublon)
-
-    tile.remove_plant(occupant)                    # on libère le plot
     leve = False
-    for w in range(10, 22):
+    for w in range(3, 15):
         gs["week"] = w
         succession(gs, tile, eco, w)
-        if any(p.is_alive and p.position == (2, 2) for p in tile.plants):
-            leve = bool(tile.grains_en_attente.get((2, 2), []) == [])
+        # deux plantes vivantes sur (2,2) = l'occupant + la levée du grain
+        if sum(1 for p in tile.plants if p.is_alive and p.position == (2, 2)) >= 2:
+            leve = True
             break
-    check("la graine lève une fois le plot libéré", leve)
+    check("plot occupé → la graine lève quand même (co-occupation)", leve)
+    check("grain consommé après la levée",
+          not tile.grains_en_attente.get((2, 2)),
+          f"reste={len(tile.grains_en_attente.get((2, 2), []))}")
+    check("l'occupant initial est toujours vivant", occupant.is_alive)
 
 
 def main():
     test_depot()
     test_refus_lot_vide()
     test_levee()
-    test_empilement_patiente()
+    test_co_occupation()
     n_ok = sum(1 for _, ok in _results if ok)
     n = len(_results)
     print(f"\n[test_planter] {n_ok}/{n} OK")

@@ -253,18 +253,32 @@ class SeedBank:
 
     def germination_candidates(self, r: int, c: int,
                                seed: int, week: int,
-                               niche: float) -> list[str]:
+                               niche: float,
+                               light: float = 0.0,
+                               arch_tolerance: dict | None = None) -> list[str]:
         """
         Tirage déterministe des archétypes qui germent sur ce plot.
         hash(seed, week, r, c) < niche * seed_density → germination.
         Retourne la liste des archétypes qui passent le seuil.
+
+        Compétition intra-plot (Q6) : si `arch_tolerance` est fourni (map
+        archétype → tolérance à l'ombre de l'espèce), la lumière requise est
+        ESCOMPTÉE par espèce. La niche varie ∝ lumière (`niche_index`) ; on
+        substitue la lumière effective `light_eff = min(1, light × tolérance)` :
+        un sciaphile « voit » plus de lumière qu'il n'y en a (lève à l'ombre),
+        un héliophile en voit moins (ne lève pas sous canopée). `arch_tolerance`
+        absent ⇒ comportement historique (rétro-compatible).
         """
         candidates = []
         for archetype in SEED_ARCHETYPES:
             density = self.get(r, c, archetype)
             if density < 0.001:
                 continue
-            threshold = niche * density
+            niche_eff = niche
+            if arch_tolerance and light > 0.0:
+                tol = arch_tolerance.get(archetype, 1.0)
+                niche_eff = niche * (min(1.0, light * tol) / light)
+            threshold = niche_eff * density
             noise = _hash_noise(seed, week * 7 + SEED_ARCHETYPES.index(archetype),
                                 r, c)
             if noise < threshold:
