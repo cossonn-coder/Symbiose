@@ -27,9 +27,9 @@ from sim.vigueur import spend, gain
 from sim.vigueur_plante import maturite, vigueur_plante   # facteurs partagés (mutualisés, pas dupliqués)
 from sim.growth import (atteindre_segment,   # seam de perturbation §F (sim→sim, pas de cycle : growth n'importe pas actions)
                         f_lignification, INTENSITE_PIED, SEUIL_DEGAT, COUPE_NETTE)  # calibrage écrasement (volet 2)
-from sim.effects import necromass_biomass, tissu_mort   # tissu_mort : litière molle typée à la mort (②)
+from sim.effects import deposer_mort   # mort → squelette persistant (②B), point d'entrée unique
 from sim import maitrise as M   # couche savoir (D12) — orchestrée ici pour les gains ponctuels §4.3
-from fields.ecofields import BOIS_PAR_CM            # litière `bois` déposée par la taille/écimage (②)
+from fields.ecofields import BOIS_PAR_CM, ECRASER_FRAG_BOOST   # litière `bois` (taille/écimage) + boost fragmentation (②)
 from fields.population import DENSITE_PAR_SPRITE   # « un geste = un individu = un quantum » (D31.3 §5)
 from fields.seedbank import GrainEnAttente          # dépôt de `planter` (germination différée, distinct de la banque-sol)
 from plants.catalogue import PLANT_CATALOGUE, PERENNIAL_CATALOGUE   # reverse classe→clé (seam coût, §10.4)
@@ -348,8 +348,7 @@ def deraciner(game_state: dict, player: str, plant, eco) -> bool:
     if ratio < 1.0:
         return False
     plant.health = 0
-    eco.add_necromass(*plant.position, necromass_biomass(plant),
-                      harvested=False, tissu=tissu_mort(plant))
+    deposer_mort(plant, eco)   # squelette persistant (②B), point d'entrée unique
     return True
 
 
@@ -496,6 +495,17 @@ def ecraser_plante(game_state: dict, player: str, plant, eco, *,
             * (URGENCE_MULT if urgence else 1.0))
     if spend(game_state, player, cost) < 1.0:
         return False                          # Vigueur insuffisante → rien n'est écrit
+    # ②C.2 : écraser un SQUELETTE (mort) → on le pousse au sol (seche → couchee) et on
+    # accélère sa fragmentation (dépôt immédiat d'une part du bois restant). Même philo
+    # que l'écrasement du vivant ; pas de `health` (déjà mort), pas de seam structurel.
+    if plant.morte:
+        if plant.stade_mort == "seche":
+            plant.stade_mort = "couchee"
+        chute = plant.bois_restant * ECRASER_FRAG_BOOST
+        if chute > 0.0:
+            eco.deposer_litiere(*plant.position, "bois", chute)
+            plant.bois_restant -= chute
+        return True
     cls = plant.plant_class
     age_weeks = max((s.age_weeks for s in plant.segments), default=0)   # ≡ proxy d'âge de growth.py
     intensite = INTENSITE_PIED * (1.0 - cls.resistance_ecrasement * f_lignification(age_weeks))

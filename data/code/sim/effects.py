@@ -22,7 +22,8 @@ from typing import TYPE_CHECKING
 from plants import PlantInstance, EFFECT_REGISTRY, register_effect
 from world import Tile, RONDELLE_TYPES
 from fields import (_hash_noise, HERBIVORY_BASE, MORTALITY_RATE, climate_stress,
-                    DAMPOFF_BASE, DAMPOFF_HUM_SEUIL, FUNGAL_BASE, NECROMASS_PER_CM)
+                    DAMPOFF_BASE, DAMPOFF_HUM_SEUIL, FUNGAL_BASE, NECROMASS_PER_CM,
+                    FRAC_BOIS_MORT)
 
 if TYPE_CHECKING:
     from fields import EcoFields
@@ -363,8 +364,42 @@ def tissu_mort(plant: PlantInstance) -> str:
     """Tissu de litière des parties MOLLES déposées à la mort (décompo·compost ②,
     kickoff §A.2). Les caducs (`deciduous`, perennials.py) larguent du `feuille`
     (décompo rapide), les autres de l'`herbace` (annuelles, tiges molles). Le bois
-    du squelette se fragmentera lentement en phase B — pas géré ici."""
+    du squelette se fragmente lentement (phase B) — pas ici."""
     return "feuille" if plant.plant_class.deciduous else "herbace"
+
+
+def frac_bois_mort(plant: PlantInstance) -> float:
+    """Fraction LIGNEUSE de la nécromasse (décompo·compost ②, phase B). Seules les
+    plantes ligneuses (PerennialWoody, reconnues par l'attribut `age_curve`) laissent
+    un squelette de bois qui se fragmente ; les herbacées/annuelles → 0 (tout en
+    tissu mou, retrait immédiat — équivalent à l'ancien filtre is_alive)."""
+    return FRAC_BOIS_MORT if getattr(plant.plant_class, "age_curve", None) else 0.0
+
+
+def deposer_mort(plant: PlantInstance, eco) -> float:
+    """Mort d'une plante → squelette persistant (CONCEPTION §2.2, phase B). Point
+    d'entrée UNIQUE de la mort, remplace `add_necromass(∝ hauteur)` à tous les sites.
+
+      1. dépose IMMÉDIATEMENT les tissus mous (litière typée, ∝ hauteur) au plot ;
+      2. marque le squelette `seche` et réserve la part ligneuse dans `bois_restant`
+         (fragmentée ensuite par `engine._tick_skeletons`) ;
+      3. ne retire PAS la plante (le retrait est centralisé dans `_tick_skeletons`).
+
+    IDEMPOTENT : si la plante est déjà `morte` (vue par un autre site de mort le même
+    tick, ou un tick suivant), no-op → aucun double dépôt. Retourne la masse molle
+    déposée (0.0 si déjà morte), pour les logs."""
+    if plant.morte:
+        return 0.0
+    r, c = plant.position
+    biomass = necromass_biomass(plant)
+    fb = frac_bois_mort(plant)
+    mous = biomass * (1.0 - fb)
+    eco.deposer_litiere(r, c, tissu_mort(plant), mous)
+    plant.morte = True
+    plant.stade_mort = "seche"
+    plant.bois_restant = biomass * fb
+    plant.semaines_mort = 0
+    return mous
 
 
 def _local_density(plant: PlantInstance, tile: Tile, same_family: bool = False) -> float:
@@ -644,12 +679,13 @@ def apply_disturbances(tile, eco, game_state: dict,
         plant.stress_memory += (disturbance_local - plant.stress_memory) * 0.08
         plant.stress_memory = max(0.0, min(1.0, plant.stress_memory))
 
-    # Morts du tick (fond / fonte / fongique / ravageurs) → nécromasse ∝ hauteur
+    # Morts du tick (fond / fonte / fongique / ravageurs) → squelette persistant
+    # (②B). `deposer_mort` est idempotent : un sujet déjà marqué mort plus tôt dans
+    # le tick (sénescence, conflit…) est ignoré ici (zéro double dépôt). Aucun
+    # retrait : le seul point de retrait est `engine._tick_skeletons`.
     for plant in tile.plants:
         if not plant.is_alive:
-            eco.add_necromass(*plant.position, necromass_biomass(plant),
-                              harvested=False)
-    tile.plants = [p for p in tile.plants if p.is_alive]
+            deposer_mort(plant, eco)
 
     return log
 

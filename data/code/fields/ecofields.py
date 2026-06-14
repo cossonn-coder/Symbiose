@@ -156,6 +156,25 @@ NECROMASS_PER_CM  = 0.03   # nécromasse déposée par cm de hauteur à la mort
 # (`ecraser_plante`) déposent `Σ length_cm × BOIS_PAR_CM` du sous-arbre retiré.
 BOIS_PAR_CM       = 0.03
 
+# --- Squelette post-mortem (décompo·compost ②, phase B) --------------------
+# À la mort, une plante ne disparaît plus : ses tissus MOUS tombent tout de suite
+# (litière feuille/herbace, cf. tissu_mort), et sa part LIGNEUSE reste en squelette
+# debout (`seche`) puis couché (`couchee`) qui se fragmente en litière `bois`
+# semaine après semaine. Seules les plantes LIGNEUSES (PerennialWoody, reconnues
+# par `age_curve`) ont une part de bois ; les herbacées/annuelles → 0 (retrait
+# immédiat, équivalent à l'ancien filtre). Knobs, calibrage post-test.
+FRAC_BOIS_MORT    = 0.45   # part ligneuse de la nécromasse d'une plante ligneuse
+T_SECHE           = 6      # semaines debout (`seche`) avant de tomber (`couchee`)
+FRAG_RATE         = 0.04   # fraction de `bois_restant` libérée/semaine (× vitesse locale)
+ECRASER_FRAG_BOOST = 0.50  # part de `bois_restant` libérée d'un coup quand on écrase
+                           # un squelette (phase C.2 : on le pousse au sol et on casse)
+
+# --- Abscission d'automne (décompo·compost ②, phase C) ---------------------
+# Les caducs (deciduous, PerennialWoody) larguent leur feuillage en fin d'automne
+# → litière `feuille`. Événement léger, borné, déterministe (aucun RNG).
+ABSCISSION_WEEKS  = (38, 39)   # 2 dernières semaines d'automne (saison = 27..39)
+ABSCISSION_FRAC   = 0.15       # part de la nécromasse-hauteur larguée par semaine d'abscission
+
 # Uptake racinaire par stade
 UPTAKE = {
     "humidite":  {0: 0.05, 1: 0.10, 2: 0.18, 3: 0.12},
@@ -434,6 +453,19 @@ class EcoFields:
                 # Mémoire effective composite
                 effective = fast * 0.7 + deep * 0.3
                 self.soil_memory.set(r, c, effective)
+
+    def decomp_speed(self, r: int, c: int) -> float:
+        """Vitesse locale de décomposition (microbiome + bioturbation des vers) —
+        facteur partagé par `tick_decomposition` (inline, golden figé) et la
+        fragmentation des squelettes (`engine._tick_skeletons`, ②B). Même formule
+        que la boucle de décompo → un bois de squelette se fragmente au rythme du
+        sol vivant local."""
+        micro = self.microbiome.at_plot(r, c) / 3.0
+        speed = 0.5 + micro * 0.5
+        worms = self.populations["vers_de_terre"] if self.populations else None
+        if worms is not None:
+            speed += WORM_DECOMP_BONUS * worms.at_plot(r, c)
+        return speed
 
     def tick_decomposition(self) -> None:
         """

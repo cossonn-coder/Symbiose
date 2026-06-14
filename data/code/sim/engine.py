@@ -22,13 +22,14 @@ from plants import (PlantInstance, Tomato, Basil, Bean, Clover,
                     Sunflower, Pepper, PLANT_CATALOGUE)
 from sim.effects import (resolve_plant_turn, apply_mutations, AddRondelle,
                          RemoveRondelle, ReduceHealth, InjectField,
-                         apply_disturbances, necromass_biomass, tissu_mort)
+                         apply_disturbances, deposer_mort)
 from fields import (EcoFields, init_eco, inject_patch,
                     EXUDATE_BASE, EXUDATE_OM_SHARE,
                     _hash_noise, SENESCENCE_ONSET, SEN_RATE,
                     HEAL_RATE, HEAL_SEN_CUTOFF, RESEED_RADIUS_CM,
                     HUM_EXCES, HUM_NOYE, ASPHYXIE_MEMORY_LERP,
-                    ASPHYXIE_HEALTH_SEUIL, ASPHYXIE_RATE)
+                    ASPHYXIE_HEALTH_SEUIL, ASPHYXIE_RATE, NECROMASS_PER_CM,
+                    T_SECHE, FRAG_RATE, ABSCISSION_WEEKS, ABSCISSION_FRAC)
 from sim.reproduction import find_father, child_genes, is_seed_bearing
 from sim.seeds import Seed
 from sim.succession import succession, spring_flush
@@ -153,11 +154,10 @@ def appliquer_alea(alea, tile, eco, game_state):
         muts = [ReduceHealth(p, 1, alea.nom)
                 for p in tile.plants if p.is_alive and p.stage.name == "semis"]
         log += apply_mutations(muts, game_state)
-        # Mort éventuelle → nécromasse ∝ hauteur (tissus mous typés, ②)
+        # Mort éventuelle → squelette persistant (②B, idempotent : skip si déjà morte)
         for p in tile.plants:
             if p.health == 0:
-                eco.add_necromass(*p.position, necromass_biomass(p),
-                                  harvested=False, tissu=tissu_mort(p))
+                deposer_mort(p, eco)
     return log
 
 @dataclass
@@ -401,12 +401,10 @@ class Engine:
                 if _hash_noise(seed, week * 5, r, c) < heal:
                     plant.health = min(3, plant.health + 1)
         for plant in deaths:
-            deposited = eco.add_necromass(*plant.position,
-                                          necromass_biomass(plant), harvested=False,
-                                          tissu=tissu_mort(plant))
+            deposited = deposer_mort(plant, eco)
             log.append(f"    🍂 Nécromasse +{deposited:.2f} OM @{plant.position}")
-        if deaths:
-            tile.plants = [p for p in tile.plants if p.is_alive]
+        # Pas de retrait ici (②B) : le mort devient squelette, retiré par
+        # _tick_skeletons une fois son bois épuisé (herbacée → dès ce tick).
         return log
 
     def _reproduction(self, tile, eco, week):
@@ -491,14 +489,66 @@ class Engine:
                 mort = loser.regress()
                 if mort:
                     log.append(f"    ✗ {loser.name}@{loser.position} meurt (conflit).")
-                    deposited = eco.add_necromass(*loser.position,
-                                                  necromass_biomass(loser), harvested=False,
-                                                  tissu=tissu_mort(loser))
+                    deposited = deposer_mort(loser, eco)
                     log.append(f"    🍂 Nécromasse +{deposited:.2f} OM @{loser.position}")
                 else:
                     log.append(f"    ↓ {loser.name}@{loser.position} → [{loser.stage.name}] (conflit).")
                 c.resolved = True
-        tile.plants = [p for p in tile.plants if p.is_alive]
+        # Pas de retrait ici (②B) : squelette → _tick_skeletons.
+        return log
+
+    def _tick_skeletons(self, tile, eco):
+        """Squelettes post-mortem (décompo·compost ②, phase B). SEUL point de retrait
+        des plantes mortes. Pour chaque morte :
+          1. `seche` debout : `semaines_mort += 1` ; ≥ T_SECHE → bascule `couchee` ;
+          2. fragmentation : libère `bois_restant × FRAG_RATE × vitesse_locale` en
+             litière `bois` au plot (vitesse = décompo locale, comme tick_decomposition) ;
+          3. retrait centralisé en fin de pass : morte à bois épuisé OU non ligneuse
+             (bois=0 d'emblée → retrait dès ce tick, équivalent à l'ancien filtre).
+        Filet de sécurité : une plante morte NON marquée (chemin de dégât hebdo qui
+        n'est jamais passé par deposer_mort) est retirée silencieusement, comme le
+        faisait l'ancien filtre is_alive de la sénescence.
+
+        Déterministe : itération en ordre `tile.plants`, fragmentation = pur calcul,
+        zéro RNG. La litière déposée ici est décomposée au tick SUIVANT (cohérence
+        de cascade : _tick_skeletons tourne en fin de tick, après tick_decomposition)."""
+        log = []
+        for plant in tile.plants:
+            if plant.is_alive or not plant.morte:
+                continue
+            r, c = plant.position
+            if plant.stade_mort == "seche":
+                plant.semaines_mort += 1
+                if plant.semaines_mort >= T_SECHE:
+                    plant.stade_mort = "couchee"
+            if plant.bois_restant > 1e-9:
+                d = min(plant.bois_restant,
+                        plant.bois_restant * FRAG_RATE * eco.decomp_speed(r, c))
+                eco.deposer_litiere(r, c, "bois", d)
+                plant.bois_restant -= d
+                if d > 1e-4:
+                    log.append(f"    🪵 Fragmentation +{d:.3f} bois @{plant.position} "
+                               f"(reste {plant.bois_restant:.2f})")
+        # Retrait : vivantes conservées ; mortes conservées TANT QU'il reste du bois.
+        tile.plants = [p for p in tile.plants
+                       if p.is_alive or (p.morte and p.bois_restant > 1e-9)]
+        return log
+
+    def _abscission(self, tile, eco):
+        """Abscission d'automne (décompo·compost ②, phase C.1) : les caducs VIVANTS
+        (deciduous, PerennialWoody) larguent leur feuillage en fin d'automne →
+        litière `feuille` (∝ nécromasse-hauteur). Événement léger, borné, sans RNG.
+        Appelé seulement aux ABSCISSION_WEEKS. Persistants : rien."""
+        log = []
+        for plant in tile.plants:
+            if not plant.is_alive or not plant.plant_class.deciduous:
+                continue
+            r, c = plant.position
+            masse = plant.current_height * NECROMASS_PER_CM * ABSCISSION_FRAC
+            if masse > 0.0:
+                eco.deposer_litiere(r, c, "feuille", masse)
+                log.append(f"    🍂 Abscission {plant.name}@{plant.position} "
+                           f"→ feuille +{masse:.3f}")
         return log
 
     # -----------------------------------------------------------------------
@@ -517,7 +567,6 @@ class Engine:
         pour la succession printanière.
         """
         log = []
-        to_remove = []
 
         for plant in list(tile.plants):
             if not plant.is_alive:
@@ -526,37 +575,30 @@ class Engine:
             # Monocarpie bisannuelle (M3) : floraison/graines l'an 2 puis mort.
             if (plant.plant_class.life_cycle == "biennial"
                     and plant.age_years >= 2.0):
-                deposited = eco.add_necromass(*plant.position,
-                                              necromass_biomass(plant), harvested=False,
-                                              tissu=tissu_mort(plant))
                 arch = getattr(plant.plant_class, "archetype", None)
                 rate = getattr(plant.plant_class, "reproduction_rate", 0.02)
                 if arch:
                     eco.seed_bank.add(*plant.position, arch, rate)
+                deposited = deposer_mort(plant, eco)   # squelette (②B), pas de retrait
                 log.append(
                     f"    ✿ {plant.plant_class.name}@{plant.position} meurt "
                     f"(bisannuelle, an 2) — nécromasse +{deposited:.2f} OM"
                 )
-                to_remove.append(plant)
                 continue
 
             ws = plant.plant_class.winter_strategy
 
             if ws == "die":
-                # Biomasse → nécromasse ∝ hauteur + graines dans la banque
-                deposited = eco.add_necromass(*plant.position,
-                                              necromass_biomass(plant), harvested=False,
-                                              tissu=tissu_mort(plant))
-                # Injection graines
+                # Graines dans la banque + mort → squelette persistant (②B)
                 arch = getattr(plant.plant_class, "archetype", None)
                 rate = getattr(plant.plant_class, "reproduction_rate", 0.02)
                 if arch:
                     eco.seed_bank.add(*plant.position, arch, rate)
+                deposited = deposer_mort(plant, eco)
                 log.append(
                     f"    ❄ {plant.plant_class.name}@{plant.position} "
                     f"meurt (annual) — nécromasse +{deposited:.2f} OM"
                 )
-                to_remove.append(plant)
 
             elif ws == "dormant":
                 # Métabolisme minimal — on marque via stress_memory élevé
@@ -570,9 +612,8 @@ class Engine:
             elif ws == "evergreen":
                 plant.stress_memory = min(1.0, plant.stress_memory + 0.05)
 
-        for p in to_remove:
-            tile.remove_plant(p)
-
+        # Pas de retrait ici (②B) : les morts hivernaux sont des squelettes,
+        # retirés par _tick_skeletons (herbacées sans bois → dès ce tick).
         return log
 
     def _mediated_damage(self, tile, eco, severity, reason, gene_name=None):
@@ -609,11 +650,10 @@ class Engine:
                 log += apply_mutations([ReduceHealth(p, lost, reason)], self.game_state)
                 if p.health == 0:
                     newly_dead.append(p)
-        # Mort → nécromasse ∝ hauteur (uniquement les morts de CE dégât, pas de
-        # double-comptage des morts antérieures encore présentes sur la tuile).
+        # Mort → squelette persistant (②B). `deposer_mort` est idempotent : les
+        # morts antérieures encore présentes (squelettes) ne sont pas re-déposées.
         for p in newly_dead:
-            eco.add_necromass(*p.position, necromass_biomass(p),
-                              harvested=False, tissu=tissu_mort(p))
+            deposer_mort(p, eco)
         return log
 
     def tick_semaine(self):
@@ -790,10 +830,21 @@ class Engine:
             slog = succession(self.game_state, tile, eco, week)
             if slog: log += slog
 
+            # 15b. Abscission d'automne (②C.1) — caducs vivants → litière feuille.
+            if saison == "automne" and week_in_year in ABSCISSION_WEEKS:
+                alog = self._abscission(tile, eco)
+                if alog: log += alog
+
             # 16. Transition hivernale (semaines 48-52)
             if saison == "hiver" and week_in_year in SAISONS["hiver"] and (week_in_year - SAISONS["hiver"].start) >= 9:
                 wlog = self._winter_transition(tile, eco, week)
                 if wlog: log += wlog
+
+            # 16b. Squelettes post-mortem (②B) — APRÈS tous les sites de mort du tick
+            # (gel pré-boucle, sénescence, conflits, perturbations, hiver). Seul point
+            # de retrait des morts ; fragmente le bois (litière décomposée au tick+1).
+            sklog = self._tick_skeletons(tile, eco)
+            if sklog: log += sklog
 
             # 17. Soil memory (fin de saison)
             if est_fin_saison(week_in_year):

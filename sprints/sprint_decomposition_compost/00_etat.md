@@ -34,7 +34,7 @@ compost** + **pile à bois** posables. Absorbe **D19** + une part de **D33**.
 | # | Sujet | Kickoff | État |
 |---|---|---|---|
 | ① | Parcelles + cascade + `om_fresh` dérivé + recâblage + **raccourci golden** | `01_parcelles_cascade.md` | **FAIT (2026-06-13)** |
-| ② | Dépôts vivant & mort (taille→bois, squelette persistant + fragmentation, abscission, écraser-squelette) | `02_depots_vivant_mort.md` | **Phase A FAITE (2026-06-13)** ; **B/C À FAIRE** (gros) |
+| ② | Dépôts vivant & mort (taille→bois, squelette persistant + fragmentation, abscission, écraser-squelette) | `02_depots_vivant_mort.md` | **FAIT (2026-06-14)** — A (2026-06-13) + B/C (2026-06-14) |
 | ③ | Organes-fruits traçables (maturité, `manger` ciblé, chute) — **absorbe D19** | `03_*.md` (à écrire) | en attente |
 | ④ | Attraction animale (fruit→guildes, pile à bois→habitat) | `04_*.md` (à écrire) | en attente |
 | ⑤ | Structures posables + gestes (composter/empiler/retourner/epandre, jauge, amendements) | `05_*.md` (à écrire) | en attente |
@@ -102,11 +102,55 @@ compost** + **pile à bois** posables. Absorbe **D19** + une part de **D33**.
 - Suites vertes : croissance 67, competition 14, eau 20, sim_server 113,
   senescence, génétique 20, vigueur 135, maîtrise 35. `main.py 30` exit 0.
 
+## Acquis sous-sprint ② — Phases B & C (2026-06-14) : squelette + abscission
+- **État post-mortem** sur `PlantInstance` (`plants/base.py`) : `morte`,
+  `stade_mort` (`""`/`seche`/`couchee`), `bois_restant`, `semaines_mort` — inertes
+  tant que la plante vit. `is_alive ≡ health > 0` inchangé.
+- **`deposer_mort(plant, eco)`** (`sim/effects.py`, idempotent sur `morte`) :
+  dépose la **fraction molle** `biomass × (1 − frac_bois)` en `tissu_mort`,
+  marque `morte`, met `bois_restant = biomass × frac_bois`. `frac_bois_mort` =
+  `FRAC_BOIS_MORT` (0.45) **seulement** pour les ligneuses (`age_curve`), 0 sinon.
+- **Squelette persistant** : la mort ne retire **plus** la plante. `_tick_skeletons`
+  (`engine.py`, étape 16b, APRÈS tous les sites de mort) : `seche`→`couchee` après
+  `T_SECHE`=6 sem, fragmente `bois_restant × FRAG_RATE(0.04) × decomp_speed(r,c)`
+  en litière `bois`/sem, **seul point de retrait** (filtre `is_alive or (morte and
+  bois_restant>1e-9)` → herbacées retirées le tick même, ligneuses après épuisement).
+- **Ombre silhouette (RISQUE #1 tranché = `SILHOUETTE_SECHE`=0.30)** : squelette
+  `seche` debout projette un tronc nu dégressif (`light.py`) ; `couchee`/herbacées
+  retirées → rien. Jamais déclenchée par le golden (aucune ligneuse n'y meurt).
+- **Abscission d'automne (C.1)** : `_abscission` (étape 15b, semaines `ABSCISSION_WEEKS`
+  =(38,39)) — caducs **vivants** larguent `current_height × NECROMASS_PER_CM ×
+  ABSCISSION_FRAC(0.15)` en `feuille`. **`ecraser`-squelette (C.2)** : sur un mort,
+  `seche`→`couchee` + largue `bois_restant × ECRASER_FRAG_BOOST(0.50)` d'un coup.
+- **Golden RE-FIGÉ LARGE (maîtrisé, déterministe h1==h2)** :
+  - smoke `tests/test_golden.py` :
+    `f75d1c21… → 908f591bee5b45736bc3e542253c3807a81e5551fcb0e50ab8703446df5d11b6`
+  - champ population `tests/test_population.py` :
+    `9f351303… → 435e6f72c220a2d19daed00712d09dc6c2d5d6f129066bd7ea3f37b99f557a61`
+  - **Cause de la dérive (analysée par diff complet old↔new)** :
+    1. **PRINCIPALE** — toute mort dépose désormais sa nécromasse via `deposer_mort`.
+       L'ancien `_resoudre_conflits` (étape 12, AVANT `apply_disturbances`) avait un
+       filtre **inconditionnel** `tile.plants=[… if is_alive]` qui balayait
+       *silencieusement* (sans dépôt) les morts survenues entre sénescence et
+       conflits — typiquement la **Tomate tuée par le mildiou familial dès la
+       semaine 3** de chaque printemps. Ce filtre retiré (B), la morte persiste
+       jusqu'à `apply_disturbances` qui la dépose → +nécromasse `herbace` aux plots
+       Tomate (2,2) sur T0+T1 chaque printemps → cascade fertilité/succession sur
+       2 ans (≈ toute la dérive de trajectoire). **Correction conforme au design**
+       (« toute mort dépose ses tissus mous », ① / phase A), pas un bug introduit.
+    2. **SECONDAIRE** — abscission du pommier (`feuille` aux sem. 38/39 et 90/91).
+    3. **Fragmentation `bois`** : 0 occurrence (aucune ligneuse ne meurt en 2 ans).
+    4. **Silhouette** : jamais déclenchée (aucun squelette ne persiste d'un tick
+       à l'autre dans le golden).
+- Suites vertes : golden, population, vigueur 135, croissance 67, competition 14,
+  eau 20, génétique 20, maîtrise 35, maîtrise_detection 20, auxiliaires,
+  signes 8, ombre_maison 4, phototropisme 11, planter 18, sim_server 113,
+  **sénescence** (pommier mort de sénescence à 59.8 ans → exerce la fragmentation
+  ligneuse + silhouette SANS casse). `main.py 5` exit 0.
+
 ## REPRISE (démarrage à froid)
-Lire ce fichier puis `02_depots_vivant_mort.md`. ① FAIT, ② **Phase A FAITE** →
-reprendre **Phase B** (squelette persistant : mort ne retire plus la plante,
-`tick_skeletons` sèche→couchée→fragmentation `bois`→retrait final ; **ombre =
-silhouette nue, RISQUE #1** — trancher silhouette `SILHOUETTE_SECHE` vs ombre
-nulle, §B.3) puis **Phase C** (abscission d'automne caducs→`feuille`,
-`ecraser`-squelette→couchée). B/C re-figeront le golden (squelette + abscission
-du pommier). Doc conception §2 tranche les « pourquoi ».
+Lire ce fichier puis le kickoff du prochain sous-sprint. ①+② **FAITS**. Reste :
+**③ organes-fruits traçables** (`manger` ciblé, maturité, chute — absorbe D19),
+**④ attraction animale**, **⑤ structures posables** (bac à compost / pile à bois),
+**⑥ vue Godot** (différé). Écrire `03_*.md` avant d'attaquer ③. Doc conception §3+
+tranche les « pourquoi ».

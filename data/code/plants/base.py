@@ -224,6 +224,15 @@ class PlantInstance:
     # fois par tick en fin de grow_plant pour les espèces `procedural_growth`. Les
     # classmethods d'empreinte le lisent ; repli à la volée si None (update_footprint).
     footprint: dict | None = None
+    # État post-mortem (décompo·compost ②, phase B). Defaults → plante vivante
+    # strictement inchangée (golden de structure intact). À la mort, le sujet n'est
+    # plus retiré : `sim.effects.deposer_mort` le marque squelette, puis
+    # `engine._tick_skeletons` fait sèche→couchée→fragmentation du `bois_restant`
+    # avant le retrait final (seul point de retrait des morts).
+    morte: bool = False          # True dès la mort (skip biologie via is_alive)
+    stade_mort: str = ""         # "" vivant · "seche" debout · "couchee" au sol
+    bois_restant: float = 0.0    # réservoir de bois à fragmenter en litière `bois`
+    semaines_mort: int = 0       # compteur sèche→couchée
 
     def __post_init__(self):
         if self.x_cm is None or self.y_cm is None:

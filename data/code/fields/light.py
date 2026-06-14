@@ -30,6 +30,12 @@ CANOPY_SAMPLE_FRAC = 0.6
 # réfléchie (albédo) sur ≈ 2,5 m, falloff linéaire avec la distance au mur (§3).
 WALL_ALBEDO_RADIUS_CM = 250.0
 
+# Densité d'ombre d'un squelette post-mortem DEBOUT (décompo·compost ②, phase B.3) :
+# un tronc nu + brindilles projette une ombre DÉGRESSIVE, pas la canopée pleine. Le
+# squelette `couchee` (au sol) n'ombre plus (exclu des obstacles). Défini ici (et non
+# dans ecofields) pour respecter les couches : ecofields importe light, pas l'inverse.
+SILHOUETTE_SECHE = 0.30
+
 
 def solar_slice(decl_deg: float, hour_angle_deg: float,
                 lat_deg: float = LATITUDE_DEG):
@@ -200,6 +206,15 @@ class LightField(GridField):
             cls = p.plant_class
             infos.append((p, p.x_cm, p.y_cm, p.current_height,
                           cls.canopy_radius_at(p), cls.foliage_density_at(p, saison)))
+        # Squelettes post-mortem DEBOUT (②B.3) : ombre dégressive d'un tronc nu
+        # (densité SILHOUETTE_SECHE), pas la canopée pleine. Les couchés (au sol) et
+        # les morts non marqués sont exclus → ombre nulle. Sans squelette ligneux
+        # debout (cas du golden 2 ans), `infos` est strictement inchangé.
+        for p in plants:
+            if getattr(p, "morte", False) and p.stade_mort == "seche":
+                cls = p.plant_class
+                infos.append((p, p.x_cm, p.y_cm, p.current_height,
+                              cls.canopy_radius_at(p), SILHOUETTE_SECHE))
 
         # --- Géométrie maison (espace MONDE), si présente ---
         ox, oy = tile_origin
