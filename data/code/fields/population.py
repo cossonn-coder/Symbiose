@@ -66,6 +66,26 @@ DEF_DISTURB_W  = 0.60  # sensibilité de la survie à la perturbation locale
 
 
 # ---------------------------------------------------------------------------
+# ATTRACTION ANIMALE PAR LE FRUIT TOMBÉ (décompo·compost ④, CONCEPTION §4)
+# ---------------------------------------------------------------------------
+# Une parcelle `fruit` (déposée par engine._tick_fruits à la chute des sur-mûrs)
+# émet un signal selon son `age_sem` (succession sur le fruit), AJOUTÉ à la
+# capacité de charge des guildes via `signal_fn` (terme additif, clampé) :
+#   - FRAIS (age bas) → nourrit l'`auxiliaire` (frugivores, oiseaux) ;
+#   - POURRI (age élevé) → appelle le `ravageur` DOMINANT (charognards, mouches)
+#     + une PETITE fraction `auxiliaire` (décomposeurs : la décompo n'est jamais
+#     pur déchet). Pas de 5ᵉ guilde (tranché Nico).
+# Invariant golden : à ZÉRO parcelle `fruit`, sig=0 partout → capacité inchangée.
+# Knobs CONSERVATIFS (un tas de fruits ne sature pas la guilde), calibrage post-test.
+FRUIT_FRAIS_SEM  = 3.0   # semaines : durée de la fenêtre « frais » (frais→0 au-delà)
+FRUIT_POURRI_SEM = 6.0   # semaines au-delà de FRUIT_FRAIS_SEM pour atteindre « pourri » plein
+FRUIT_SIGNAL_REF = 0.45  # masse de litière `fruit` saturant l'intensité du signal (≈ 3 fruits)
+FRUIT_AUX_GAIN   = 0.50  # boost max de capacité `auxiliaire` d'un tas frais plein
+FRUIT_RAV_GAIN   = 0.60  # boost max de capacité `ravageur` d'un tas pourri plein
+FRAC_AUX_POURRI  = 0.25  # part du signal pourri qui va AUSSI à l'auxiliaire (décomposeurs)
+
+
+# ---------------------------------------------------------------------------
 # CONSTANTES DE PERCEPTION (échantillonnage sprite — §3)
 # ---------------------------------------------------------------------------
 
@@ -100,6 +120,10 @@ class TrophicSpec:
                       (lus dans eco.populations au tick — puits biotique).
       - salt        : canal _hash_noise DÉDIÉ pour les positions de sprites
                       (décorrélé des autres guildes et des tirages du tick).
+      - signal_fn   : (eco, tile, plants) → grille [rows][cols] ≥ 0, terme ADDITIF
+                      optionnel à la capacité (attraction par le fruit tombé, ④).
+                      None (défaut) = pas de signal → capacité inchangée (golden
+                      neutre pour les guildes sans fruit : pollinisateur, vers).
     Les pondérations ont des défauts de module, surchargeables par guilde.
     """
     name: str
@@ -107,6 +131,7 @@ class TrophicSpec:
     resource_fn: Callable
     habitat_fn: Callable
     predators: tuple[str, ...] = ()
+    signal_fn: Callable | None = None
     resource_w: float = DEF_RESOURCE_W
     habitat_w: float = DEF_HABITAT_W
     pred_w: float = DEF_PRED_W
@@ -154,6 +179,9 @@ class PopulationField(GridField):
         spec = self.spec
         res = spec.resource_fn(eco, tile, plants)
         hab = spec.habitat_fn(eco, tile, plants)
+        # Terme additif optionnel (attraction par le fruit tombé, ④). None → 0
+        # partout → capacité strictement inchangée (golden neutre sans fruit).
+        sig = spec.signal_fn(eco, tile, plants) if spec.signal_fn else None
         self.activite_grid = res   # mémorise la ressource pour `activite()`
         for r in range(self.rows):
             for c in range(self.cols):
@@ -164,7 +192,8 @@ class PopulationField(GridField):
                 pop = self.data[r][c]
 
                 capacite = _clamp01(spec.resource_w * res[r][c]
-                                    + spec.habitat_w * hab[r][c])
+                                    + spec.habitat_w * hab[r][c]
+                                    + (sig[r][c] if sig else 0.0))
                 survie = (warmth
                           * (1.0 - min(1.0, spec.pred_w * predation))
                           * (1.0 - min(1.0, spec.disturb_w * disturb)))
@@ -296,6 +325,56 @@ def _undisturbed_grid(eco, tile, plants) -> list[list[float]]:
     return g
 
 
+# --- Signal d'attraction par le fruit tombé (④, CONCEPTION §4) --------------
+# Terme ADDITIF à la capacité (≠ ressource/habitat) : il APPELLE la faune sans
+# rien retirer à la plante (philo #2). Lit la parcelle `fruit` du plot — unique
+# par plot (fusion par tissu, acquis ①) → lecture déterministe, pas d'ordre.
+
+def _fruit_litter(eco, r: int, c: int) -> tuple[float, float]:
+    """(masse, age_sem) de la parcelle `fruit` du plot, (0, 0) si aucune."""
+    for p in eco.litiere[r][c]:
+        if p.tissu == "fruit":
+            return p.masse, p.age_sem
+    return 0.0, 0.0
+
+
+def _fruit_weights(age_sem: float) -> tuple[float, float]:
+    """Poids (frais, pourri) ∈ [0,1] selon l'âge : frais décroît, pourri croît."""
+    frais  = _clamp01(1.0 - age_sem / FRUIT_FRAIS_SEM)
+    pourri = _clamp01((age_sem - FRUIT_FRAIS_SEM) / FRUIT_POURRI_SEM)
+    return frais, pourri
+
+
+def _aux_fruit_signal(eco, tile, plants) -> list[list[float]]:
+    """Attraction `auxiliaire` : fruit frais (frugivores) + fraction du pourri
+    (décomposeurs). Borné par FRUIT_AUX_GAIN (un tas plein ne sature pas)."""
+    g = _zero_grid(eco.rows, eco.cols)
+    for r in range(eco.rows):
+        for c in range(eco.cols):
+            masse, age = _fruit_litter(eco, r, c)
+            if masse <= 0.0:
+                continue
+            sig = min(1.0, masse / FRUIT_SIGNAL_REF)
+            frais, pourri = _fruit_weights(age)
+            g[r][c] = FRUIT_AUX_GAIN * sig * (frais + FRAC_AUX_POURRI * pourri)
+    return g
+
+
+def _rav_fruit_signal(eco, tile, plants) -> list[list[float]]:
+    """Attraction `ravageur` : fruit pourri (charognards, mouches), DOMINANT.
+    Borné par FRUIT_RAV_GAIN."""
+    g = _zero_grid(eco.rows, eco.cols)
+    for r in range(eco.rows):
+        for c in range(eco.cols):
+            masse, age = _fruit_litter(eco, r, c)
+            if masse <= 0.0:
+                continue
+            sig = min(1.0, masse / FRUIT_SIGNAL_REF)
+            _, pourri = _fruit_weights(age)
+            g[r][c] = FRUIT_RAV_GAIN * sig * pourri
+    return g
+
+
 # ---------------------------------------------------------------------------
 # LES 4 INSTANCES (chaîne trophique — CONCEPTION_VIE_MACRO.md §2.2)
 # ---------------------------------------------------------------------------
@@ -317,11 +396,13 @@ def build_population_specs() -> list[TrophicSpec]:
             name="ravageur", salt=_SALT_RAVAGEUR,
             resource_fn=_foliage_grid, habitat_fn=_monoculture_grid,
             predators=("auxiliaire",),
+            signal_fn=_rav_fruit_signal,   # fruit pourri → charognards (④)
         ),
         TrophicSpec(
             name="auxiliaire", salt=_SALT_AUXILIAIRE,
             resource_fn=_ravageur_grid, habitat_fn=_stability_grid,
             predators=(),
+            signal_fn=_aux_fruit_signal,   # fruit frais → frugivores (④)
         ),
         TrophicSpec(
             name="pollinisateur", salt=_SALT_POLLINISATEUR,

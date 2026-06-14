@@ -36,7 +36,7 @@ compost** + **pile à bois** posables. Absorbe **D19** + une part de **D33**.
 | ① | Parcelles + cascade + `om_fresh` dérivé + recâblage + **raccourci golden** | `01_parcelles_cascade.md` | **FAIT (2026-06-13)** |
 | ② | Dépôts vivant & mort (taille→bois, squelette persistant + fragmentation, abscission, écraser-squelette) | `02_depots_vivant_mort.md` | **FAIT (2026-06-14)** — A (2026-06-13) + B/C (2026-06-14) |
 | ③ | Organes-fruits traçables (maturité, `manger` ciblé, chute) — **absorbe D19** | `03_organes_fruits.md` | **FAIT (2026-06-14)** — golden NEUTRE |
-| ④ | Attraction animale (fruit→guildes, pile à bois→habitat) | `04_*.md` (à écrire) | en attente |
+| ④ | Attraction animale (fruit→guildes ; pile→habitat reporté ⑤) | `04_attraction_animale.md` | **FAIT (2026-06-14)** — golden NEUTRE |
 | ⑤ | Structures posables + gestes (composter/empiler/retourner/epandre, jauge, amendements) | `05_*.md` (à écrire) | en attente |
 | ⑥ | Vue (post-mortem visible, litière, maturité-fruit) — **quand Godot reprend** | `06_*.md` (à écrire) | différé |
 
@@ -186,11 +186,41 @@ compost** + **pile à bois** posables. Absorbe **D19** + une part de **D33**.
   maîtrise_detection, auxiliaires, signes 8, ombre_maison 4, phototropisme 11,
   planter 18, sim_server 113, senescence, **fruits 21**. `main.py 5` exit 0.
 
+## Acquis sous-sprint ④ (2026-06-14) : attraction animale (fruit→guildes)
+- **Tout dans `fields/population.py`** (couche `fields` intacte, aucun import
+  `sim`/`tools`). Le fruit tombé appelle la faune selon `age_sem` : **frais →
+  `auxiliaire`** (frugivores), **pourri → `ravageur` DOMINANT + frac.
+  `auxiliaire`** (décomposeurs). **Aucune 5ᵉ guilde** ; le fruit ne touche jamais
+  la plante (philo #2).
+- **Mécanisme** : 3ᵉ terme additif **optionnel `signal_fn`** sur `TrophicSpec`
+  (défaut `None` → terme 0 → capacité inchangée → pollinisateur/vers
+  **bit-identiques**). Branché dans `tick` : `capacite = clamp(resource_w·res +
+  habitat_w·hab + signal)`. Helpers purs `_fruit_litter` (parcelle `fruit`
+  unique/plot par fusion ① → déterministe), `_fruit_weights(age)`,
+  `_aux_fruit_signal` = `FRUIT_AUX_GAIN·sig·(frais+FRAC_AUX_POURRI·pourri)`,
+  `_rav_fruit_signal` = `FRUIT_RAV_GAIN·sig·pourri`, `sig=min(1,masse/
+  FRUIT_SIGNAL_REF)`. Knobs conservatifs : FRAIS_SEM=3, POURRI_SEM=6, REF=0.45,
+  AUX_GAIN=0.50, RAV_GAIN=0.60, FRAC_AUX_POURRI=0.25.
+- **Décision #0** : **pile à bois → habitat (§4.1) reportée à ⑤** (la structure
+  n'existe pas avant ⑤ ; réutilisera le patron rondelle/`_stability_grid`).
+- **Golden NEUTRE (non re-figé), vérifié** : smoke `908f591b…`, population
+  `435e6f72…` **bit-identiques à ③**. Cause : le golden ne crée aucune litière
+  `fruit` (AppleTree `maturity_years`=5 > 2 ans → pas de nouaison → pas de chute)
+  → `signal`=0 partout → capacité inchangée. (La §7 prévoyait « re-figé
+  population » avant le constat empirique de ③ ; ④ confirme la neutralité.)
+- Nouveau **`tests/test_attraction.py`** (17 checks, 2 niveaux : modèle pur exact
+  + intégré après 15 ticks, plot-fruit vs témoin). Suites vertes : golden,
+  population, fruits 21, vigueur 135, croissance 67, competition 14, eau 20,
+  génétique 20, maîtrise 35, maîtrise_detection, auxiliaires, signes 8,
+  ombre_maison 4, phototropisme 11, planter 18, sim_server 113, senescence,
+  **attraction 17**. `main.py 5` exit 0.
+
 ## REPRISE (démarrage à froid)
-Lire ce fichier puis le kickoff du prochain sous-sprint. ①+②+③ **FAITS**. Reste :
-**④ attraction animale** (fruit frais→`auxiliaire` / pourri→`ravageur`, pile à
-bois→habitat), **⑤ structures posables** (bac à compost / pile à bois + gestes
-composter/empiler/retourner/epandre), **⑥ vue Godot** (différé : post-mortem
-visible, litière, maturité-fruit). Écrire `04_*.md` avant d'attaquer ④. Doc
-conception §4+ tranche les « pourquoi ». Hooks posés pour ⑥ : `plant.fruits` au
-snapshot (`segment`/`maturite`/`masse`), `manger` routé sur `target.fruit`.
+Lire ce fichier puis le kickoff du prochain sous-sprint. ①+②+③+④ **FAITS**. Reste :
+**⑤ structures posables** (bac à compost / pile à bois + gestes composter/empiler/
+retourner/epandre + jauge `compost_mur` + amendements + **pile→habitat reporté
+ici depuis ④**), **⑥ vue Godot** (différé : post-mortem visible, litière,
+maturité-fruit). Écrire `05_*.md` avant d'attaquer ⑤. Doc conception §5 tranche
+les « pourquoi ». Hooks posés pour ⑥ : `plant.fruits` au snapshot, `manger` routé
+sur `target.fruit`. Patron habitat pour ⑤ : rondelle `auxiliaire` lue par
+`_stability_grid` (cf. `favoriser_auxiliaire`).
