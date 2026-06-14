@@ -24,7 +24,7 @@ Vigueur et n'accomplit rien (philo #1/#6, sans sermon).
 from __future__ import annotations
 
 from sim.vigueur import spend, gain
-from sim.vigueur_plante import maturite, vigueur_plante   # facteurs partagés (mutualisés, pas dupliqués)
+from sim.vigueur_plante import maturite, vigueur_plante, sante, qi_local   # facteurs partagés (mutualisés, pas dupliqués)
 from sim.growth import (atteindre_segment,   # seam de perturbation §F (sim→sim, pas de cycle : growth n'importe pas actions)
                         f_lignification, INTENSITE_PIED, SEUIL_DEGAT, COUPE_NETTE)  # calibrage écrasement (volet 2)
 from sim.effects import deposer_mort   # mort → squelette persistant (②B), point d'entrée unique
@@ -219,30 +219,44 @@ def crediter_succes(game_state: dict, player: str, objet: str) -> int:
     return apres
 
 
-def manger(game_state: dict, player: str, plant, eco) -> float:
+def manger(game_state: dict, player: str, plant, eco, *, fruit_index=None) -> float:
     """Manger un organe nourricier mûr (spec §3.3, première ligne) — le pendant
     « ressourcement GRATUIT » de recolter. Coût **NUL** (§3.3) : aucune dépense.
 
-    Gain ∝ **valeur vivante de l'organe** : on inaugure ENFIN la façade
-    `vigueur_plante` comme MODULATEUR DE VALEUR (spec §1) — santé × maturité × Qi
-    × gène. Un fruit éclatant nourrit plus qu'une feuille chétive sur sol pauvre.
+    Deux modes (③ absorbe D19) :
+
+    • CIBLÉ (`fruit_index` fourni) — on consomme UN fruit traçable précis
+      (`plant.fruits[fruit_index]`). Gain ∝ **maturité de CE fruit** : un fruit
+      vert nourrit peu, un fruit éclatant beaucoup. Le fruit DISPARAÎT ensuite
+      (déplétion réelle D19) → il ne tombera pas en litière et ne sera pas
+      remangé. La valeur reprend les autres facteurs de la façade `vigueur_plante`
+      (santé × Qi × gène) mais SUBSTITUE la maturité de l'organe à celle de la
+      plante. Index hors-borne ⇒ repli sur le mode générique (no-op de sécurité).
+
+    • GÉNÉRIQUE (legacy, `fruit_index=None`) — pas de fruit ciblé : on inaugure la
+      façade `vigueur_plante` comme MODULATEUR DE VALEUR (spec §1), santé ×
+      maturité-plante × Qi × gène. C'est le chemin historique (carnet/tests
+      vigueur D1-D4) — conservé pour les organes non encore tracés (feuille,
+      fleur) et la rétro-compatibilité.
+
     (recolter reste, lui, sur `maturite` seule : il met en BANQUE un produit mûr,
     tandis que manger ABSORBE la vitalité — sémantiques distinctes, recâblage de
     recolter sur la façade différé pour préserver sa propriété « net positif ».)
 
-    No-op écolo (décision actée, philo #2) : la plante reste VIVANTE (≠ déraciner)
-    et **aucun champ n'est touché**. L'organe est entièrement consommé par le
-    joueur → rien ne retourne au sol (pas d'`add_necromass` ; le Qi part vers le
-    joueur via `gain`, §4). Toucher `health`/`current_stage` serait un malus
-    DIRECT sur la plante — interdit. La déplétion réelle (organe qui disparaît et
-    repousse) + la valeur fine par type d'organe relèvent de **D19** ; les
-    organes à gain NÉGATIF (manger un nuisible) relèvent de **D31**. v1 ne fixe
-    que la comptabilité Vigueur du gain ⇒ manger est répétable (borné par
-    `vigueur_max`). NE cible JAMAIS le bourgeon apical : couper l'apex est
-    l'action `tailler` (réponse hormonale = **D29**), pas manger.
+    No-op écolo (philo #2) : la plante reste VIVANTE (≠ déraciner) et **aucun
+    champ n'est touché**. L'organe est entièrement consommé par le joueur → rien
+    ne retourne au sol (le Qi part vers le joueur via `gain`, §4). Toucher
+    `health`/`current_stage` serait un malus DIRECT — interdit. Les organes à gain
+    NÉGATIF (manger un nuisible) relèvent de **D31**. NE cible JAMAIS le bourgeon
+    apical : couper l'apex est l'action `tailler` (D29), pas manger.
 
     Renvoie la valeur de l'organe consommé (gain nominal, avant plafonnement)."""
-    gain_organe = HARVEST_GAIN_FULL * vigueur_plante(plant, eco)
+    if fruit_index is not None and 0 <= fruit_index < len(plant.fruits):
+        fruit = plant.fruits.pop(fruit_index)   # déplétion réelle (D19) : l'organe disparaît
+        gain_organe = (HARVEST_GAIN_FULL * sante(plant) * fruit.maturite
+                       * qi_local(plant, eco) * plant.gene("vigueur"))
+    else:
+        gain_organe = HARVEST_GAIN_FULL * vigueur_plante(plant, eco)
     gain(game_state, player, gain_organe)   # coût NUL → pas de spend
     return gain_organe
 

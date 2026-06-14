@@ -35,7 +35,7 @@ compost** + **pile à bois** posables. Absorbe **D19** + une part de **D33**.
 |---|---|---|---|
 | ① | Parcelles + cascade + `om_fresh` dérivé + recâblage + **raccourci golden** | `01_parcelles_cascade.md` | **FAIT (2026-06-13)** |
 | ② | Dépôts vivant & mort (taille→bois, squelette persistant + fragmentation, abscission, écraser-squelette) | `02_depots_vivant_mort.md` | **FAIT (2026-06-14)** — A (2026-06-13) + B/C (2026-06-14) |
-| ③ | Organes-fruits traçables (maturité, `manger` ciblé, chute) — **absorbe D19** | `03_*.md` (à écrire) | en attente |
+| ③ | Organes-fruits traçables (maturité, `manger` ciblé, chute) — **absorbe D19** | `03_organes_fruits.md` | **FAIT (2026-06-14)** — golden NEUTRE |
 | ④ | Attraction animale (fruit→guildes, pile à bois→habitat) | `04_*.md` (à écrire) | en attente |
 | ⑤ | Structures posables + gestes (composter/empiler/retourner/epandre, jauge, amendements) | `05_*.md` (à écrire) | en attente |
 | ⑥ | Vue (post-mortem visible, litière, maturité-fruit) — **quand Godot reprend** | `06_*.md` (à écrire) | différé |
@@ -148,9 +148,49 @@ compost** + **pile à bois** posables. Absorbe **D19** + une part de **D33**.
   **sénescence** (pommier mort de sénescence à 59.8 ans → exerce la fragmentation
   ligneuse + silhouette SANS casse). `main.py 5` exit 0.
 
+## Acquis sous-sprint ③ (2026-06-14) : organes-fruits traçables (absorbe D19)
+- **`Fruit{segment_id, maturite, masse}`** (`plants/base.py`) : un fruit cesse
+  d'être un proxy de rendu saisonnier (`REPRO_BY_SEASON`) → **état moteur** porté
+  par `PlantInstance.fruits` (liste, vide tant que pas de nouaison). Flag
+  d'éligibilité `PlantBase.fruitier` (Tomato, AppleTree). Le moteur ne lit JAMAIS
+  `segment_id` (repère VUE ⑥) → déterminisme/golden indépendants de la structure.
+- **`organ_sites(plant)`** (`plants/base.py`, couche basse) : sites reproducteurs
+  = (index segment, position 3D), pure géométrie sur `plant.segments`
+  (`terminal`=tous apex / `lateral`=apex sauf meneur), plafond `MAX_ORGANS`=10.
+  Source UNIQUE partagée par le moteur ; miroir du proxy VUE `_organ_sites`
+  (`tools/render_structure`) laissé intact (frontière de couches : `sim` n'importe
+  pas `tools`). Duplication mineure `MAX_ORGANS`/`MAX_FRUITS` assumée/documentée.
+- **`engine._tick_fruits` (étape 15c, chaque semaine)** : (1) **nouaison annuelle**
+  à `FRUIT_NOUAISON_WEEK`=14 (début d'été) pour `fruitier` **ET** `age_years ≥
+  maturity_years` — pose un fruit vert/site, l'ancienne cohorte non récoltée chute
+  d'abord en `fruit` ; (2) **maturation** `maturite += FRUIT_DMAT`(0.08) ; (3)
+  **chute** des sur-mûrs (`maturite > MATURITE_CHUTE`=1.3) → litière `fruit`
+  (`FRUIT_MASSE`=0.15). Gate fixe + tri stable + zéro RNG.
+- **`manger` dual-mode** (`sim/actions.py`) : `fruit_index` valide → consomme CE
+  fruit, gain `= HARVEST_GAIN_FULL × santé × **maturité_fruit** × Qi × gène`,
+  l'organe **disparaît** (déplétion réelle D19). Sans index (ou hors-borne) →
+  chemin **générique legacy** (façade `vigueur_plante` plante entière) → tests
+  vigueur D1-D4 préservés. Coût NUL inchangé.
+- **Pont `sim_server.py` 0.3.3 → 0.3.4** : snapshot expose `plant.fruits`
+  (`[{segment, maturite, masse}]`) ; `manger` route `target.fruit` (validé int +
+  bornes, comme `tailler.segment`) → `fruit_index`.
+- **Golden NEUTRE (non re-figé)** : smoke `908f591b…`, population `435e6f72…`
+  **bit-identiques à ②**. Cause : seule espèce `fruitier` du scénario = AppleTree,
+  `maturity_years`=5 > fenêtre 2 ans → nouaison jamais déclenchée (gate d'âge,
+  comme la neutralité ②A). Vérifié empiriquement.
+- Nouveau test **`tests/test_fruits.py`** (21 checks) : nouaison, gate d'âge,
+  annualité+remplacement de cohorte, maturation, chute→litière, déterminisme
+  (h1==h2), `manger` ciblé (gain ∝ maturité, ratio 3× exact, déplétion),
+  `manger` générique (fallback). Suites vertes : golden, population, vigueur 135,
+  croissance 67, competition 14, eau 20, génétique 20, maîtrise 35,
+  maîtrise_detection, auxiliaires, signes 8, ombre_maison 4, phototropisme 11,
+  planter 18, sim_server 113, senescence, **fruits 21**. `main.py 5` exit 0.
+
 ## REPRISE (démarrage à froid)
-Lire ce fichier puis le kickoff du prochain sous-sprint. ①+② **FAITS**. Reste :
-**③ organes-fruits traçables** (`manger` ciblé, maturité, chute — absorbe D19),
-**④ attraction animale**, **⑤ structures posables** (bac à compost / pile à bois),
-**⑥ vue Godot** (différé). Écrire `03_*.md` avant d'attaquer ③. Doc conception §3+
-tranche les « pourquoi ».
+Lire ce fichier puis le kickoff du prochain sous-sprint. ①+②+③ **FAITS**. Reste :
+**④ attraction animale** (fruit frais→`auxiliaire` / pourri→`ravageur`, pile à
+bois→habitat), **⑤ structures posables** (bac à compost / pile à bois + gestes
+composter/empiler/retourner/epandre), **⑥ vue Godot** (différé : post-mortem
+visible, litière, maturité-fruit). Écrire `04_*.md` avant d'attaquer ④. Doc
+conception §4+ tranche les « pourquoi ». Hooks posés pour ⑥ : `plant.fruits` au
+snapshot (`segment`/`maturite`/`masse`), `manger` routé sur `target.fruit`.

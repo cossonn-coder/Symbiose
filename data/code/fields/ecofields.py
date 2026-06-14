@@ -175,6 +175,15 @@ ECRASER_FRAG_BOOST = 0.50  # part de `bois_restant` libérée d'un coup quand on
 ABSCISSION_WEEKS  = (38, 39)   # 2 dernières semaines d'automne (saison = 27..39)
 ABSCISSION_FRAC   = 0.15       # part de la nécromasse-hauteur larguée par semaine d'abscission
 
+# --- Organes-fruits traçables (décompo·compost ③, absorbe D19) --------------
+# Un fruit devient un état moteur : il NOUE (une fois/an, début d'été), MÛRIT
+# chaque semaine, puis TOMBE en litière `fruit` s'il n'est pas cueilli (chute →
+# cascade fertilité). Knobs CONSERVATIFS (la dérive golden doit rester petite),
+# calibrage post-test. Déterministe : aucun RNG, sites triés (cf. organ_sites).
+FRUIT_MASSE       = 0.15   # masse d'un fruit = litière `fruit` déposée à la chute (placeholder)
+FRUIT_DMAT        = 0.08   # maturation/semaine : atteint 1.0 (mûr) en ~12-13 sem (été→automne)
+MATURITE_CHUTE    = 1.3    # sur-maturité : au-delà, le fruit non cueilli tombe (fermentation = ④)
+
 # Uptake racinaire par stade
 UPTAKE = {
     "humidite":  {0: 0.05, 1: 0.10, 2: 0.18, 3: 0.12},

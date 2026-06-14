@@ -170,6 +170,7 @@ class AppleTree(PerennialWoody):
     wood_persistence      = 4000
     foliage_halfwidth     = 50.0      # couronne non nulle + racines viables (cf. ci-dessus)
     organ_site            = "lateral" # fructification latérale (lu au tronçon 5)
+    fruitier              = True      # porte des fruits traçables (③ ; 1re fructif. à maturity_years=5)
 
 
 class CherryTree(PerennialWoody):

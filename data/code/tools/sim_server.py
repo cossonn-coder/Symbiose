@@ -130,7 +130,14 @@ from tools.render_structure import REPRO_BY_SEASON
 #       continue se RÉSOUT en plot-foyer (`floor(/PLOT_CM)`) côté serveur, les
 #       façades écrivent au plot. Banque-joueur attachée à l'init (remplie à la
 #       récolte) + exposée au snapshot (`player.seeds`, lots plantables).
-ENGINE_VERSION = "0.3.3"
+# 0.3.4 (décompo·compost ③, organes-fruits, absorbe D19) : le snapshot expose
+#       `plant.fruits` = liste de fruits TRACÉS (vrai état moteur ≠ proxy `organ`),
+#       chacun {segment, maturite, masse}. Le geste `manger` accepte
+#       `target.fruit` (index dans cette liste) → consomme CE fruit, gain ∝ sa
+#       maturité, l'organe disparaît (déplétion réelle). `manger` sans `fruit`
+#       garde le mode générique (legacy). Nouaison/maturation/chute pilotées par
+#       engine._tick_fruits ; les sur-mûrs tombent en litière `fruit`.
+ENGINE_VERSION = "0.3.4"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les
@@ -292,11 +299,24 @@ class SimServer:
             # le geste recalcule le même en interne) : pour l'affichage HUD.
             cost = A.cout_action(gs, player, verb, A._objets_action(verb, plant))
             if verb == "manger":
-                g = A.manger(gs, player, plant, eco)
+                # Fruit ciblé (③, D19) : index dans plant.fruits du snapshot.
+                # Validé AVANT la façade — un index invalide ne mange rien (et,
+                # côté actions, retombe sur le mode générique). NB : bool < int.
+                fidx = target.get("fruit")
+                if fidx is not None:
+                    if not isinstance(fidx, int) or isinstance(fidx, bool):
+                        return bilan(False, 0.0, 0.0,
+                                     f"fruit non entier : {fidx!r}")
+                    if not 0 <= fidx < len(plant.fruits):
+                        return bilan(False, 0.0, 0.0,
+                                     f"fruit hors structure : {fidx} "
+                                     f"(la plante porte {len(plant.fruits)} fruits)")
+                g = A.manger(gs, player, plant, eco, fruit_index=fidx)
                 # Gain nominal DANS le message (retour F5 Nico : « rien ne se
                 # passe » = organe immature, gain ≈ 0 — qu'on le LISE).
+                cible = f"fruit #{fidx}" if fidx is not None else plant.name
                 return bilan(True, 0.0, g,
-                             f"mangé : {plant.name} (+{g:.1f} Vigueur — "
+                             f"mangé : {cible} (+{g:.1f} Vigueur — "
                              f"gain ∝ maturité de l'organe)")
             if verb == "recolter":
                 ratio = A.recolter(gs, player, plant, eco)
@@ -565,6 +585,17 @@ class SimServer:
                     "organ": repro.get(saison),
                     "organ_site": cls.organ_site,
                     "segments": p.structure_to_dict(),
+                    # Fruits traçables (③, D19) : VRAI état moteur (≠ proxy
+                    # `organ`). Index implicite = position dans la liste (clé du
+                    # geste `manger` ciblé). `segment` = ancrage structurel pour
+                    # que la vue place le sprite ; `maturite` pilote le rendu
+                    # (vert→mûr→sur-mûr) et le gain à la consommation.
+                    "fruits": [
+                        {"segment": f.segment_id,
+                         "maturite": f.maturite,
+                         "masse": f.masse}
+                        for f in p.fruits
+                    ],
                 })
         # Vie macro (tranche 6·B, kickoff §4) : sprites échantillonnés depuis
         # les 4 champs de population — PURE lecture (sample_sprites ne modifie

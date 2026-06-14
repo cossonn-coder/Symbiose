@@ -10,7 +10,8 @@ from plants.genetics import (
 )
 from plants.base import (
     _plots_in_radius, STRATE_DEFAULTS, EFFECT_REGISTRY, register_effect,
-    GrowthStage, Segment, PlantInstance, ConflictNotification, PlantBase,
+    GrowthStage, Segment, Fruit, MAX_ORGANS, organ_sites,
+    PlantInstance, ConflictNotification, PlantBase,
     Solanaceae, Fabaceae, Asteraceae, Lamiaceae, Poaceae,
 )
 from plants.species import (

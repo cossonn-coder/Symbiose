@@ -188,6 +188,66 @@ class Segment:
         )
 
 # ---------------------------------------------------------------------------
+# FRUIT — organe reproducteur traçable (décompo·compost ③, absorbe D19)
+# ---------------------------------------------------------------------------
+#
+# Un fruit cesse d'être un PROXY DE RENDU saisonnier (REPRO_BY_SEASON, côté
+# tools/render_structure) : il devient un ÉTAT MOTEUR réel porté par la plante.
+# Il naît à la nouaison, mûrit semaine après semaine (engine._tick_fruits), se
+# mange UN par UN (actions.manger ciblé → déplétion = D19) et tombe en litière
+# `fruit` s'il n'est pas cueilli (chute → deposer_litiere → cascade fertilité).
+#
+# `segment_id` = index, AU MOMENT DE LA NOUAISON, du segment porteur dans
+# `plant.segments` (repère pour la VUE ⑥ qui placera le sprite ; les indices
+# pouvant glisser ensuite avec la croissance, c'est un repère best-effort,
+# réconcilié quand Godot reprendra). Le MOTEUR ne lit JAMAIS segment_id : seules
+# `masse` (litière à la chute) et `maturite` (gain de `manger`, seuil de chute)
+# pèsent sur la simulation → déterminisme et golden indépendants de la structure.
+
+@dataclass
+class Fruit:
+    segment_id: int       # index du segment porteur à la nouaison (repère VUE)
+    maturite: float       # 0→1 (mûr), puis >1 = sur-mûr (tombe au-delà du seuil)
+    masse:    float       # masse de litière `fruit` déposée à la chute
+
+# Plafond d'organes reproducteurs portés simultanément (anti-fouillis ET borne de
+# la dérive litière). Aligné sur le MAX_FRUITS du rendu (tools/render_structure) ;
+# constante côté plants (couche basse) pour que `sim` et `tools` la partagent sans
+# que `sim` importe `tools` (frontière de couches, CLAUDE.md).
+MAX_ORGANS = 10
+
+def organ_sites(plant) -> list:
+    """Sites reproducteurs d'une plante = (index de segment porteur, position 3D
+    cm en repère tuile-local). PURE géométrie déterministe sur `plant.segments`
+    (zéro RNG) selon le profil `organ_site` de l'espèce :
+      - `terminal` : tous les apex (bouts de flèche) ;
+      - `lateral`  : les apex SAUF le meneur (cime) → fructification sur rameaux.
+    Plafonné/sous-échantillonné à MAX_ORGANS (régulier). Source unique des sites,
+    partagée par engine._tick_fruits (état moteur) — miroir de la dérivation
+    visuelle `_organ_sites` du rendu (tools), qui reste le proxy de la VUE."""
+    apex_idx = [i for i, s in enumerate(plant.segments) if s.is_apex]
+    if not apex_idx:
+        return []
+    if plant.plant_class.organ_site == "lateral" and len(apex_idx) > 1:
+        def _tip_z(i):
+            s = plant.segments[i]
+            return s.base[2] + s.dir[2] * s.length_cm
+        leader = max(apex_idx, key=_tip_z)
+        rest = [i for i in apex_idx if i != leader]
+        apex_idx = rest or apex_idx
+    sites = []
+    for i in apex_idx:
+        s = plant.segments[i]
+        tip = (s.base[0] + s.dir[0] * s.length_cm,
+               s.base[1] + s.dir[1] * s.length_cm,
+               s.base[2] + s.dir[2] * s.length_cm)
+        sites.append((i, tip))
+    if len(sites) > MAX_ORGANS:
+        step = len(sites) / MAX_ORGANS
+        sites = [sites[int(k * step)] for k in range(MAX_ORGANS)]
+    return sites
+
+# ---------------------------------------------------------------------------
 # INSTANCE DE PLANTE (avant PlantBase pour la forward ref)
 # ---------------------------------------------------------------------------
 
@@ -233,6 +293,11 @@ class PlantInstance:
     stade_mort: str = ""         # "" vivant · "seche" debout · "couchee" au sol
     bois_restant: float = 0.0    # réservoir de bois à fragmenter en litière `bois`
     semaines_mort: int = 0       # compteur sèche→couchée
+    # Organes-fruits traçables (décompo·compost ③, absorbe D19). Vide → aucun
+    # fruit (défaut : golden inchangé tant que rien ne noue). Peuplé à la nouaison
+    # par engine._tick_fruits (espèces `fruitier` parvenues à `maturity_years`),
+    # mûri/tombé/mangé ensuite. Cf. dataclass Fruit.
+    fruits: list = field(default_factory=list)
 
     def __post_init__(self):
         if self.x_cm is None or self.y_cm is None:
@@ -445,6 +510,12 @@ class PlantBase(ABC):
     # Mortalité réaliste (D27) — longévité + âge de fructification
     longevity_years: float | None = None # longévité (ans) ; None ⇒ défaut par life_cycle
     maturity_years: float = 0.0          # âge de 1re fructification (renouvellement arbres)
+    # Organes-fruits traçables (décompo·compost ③, absorbe D19). Critère
+    # d'ÉLIGIBILITÉ fruitière : seules les espèces au profil reproducteur fruitier
+    # portent des `fruits` (Tomato, AppleTree — périmètre de REPRO_BY_SEASON).
+    # Gate complet (engine._tick_fruits) = `fruitier ET age_years >= maturity_years`
+    # → un jeune plant (pommier < 5 ans) ne fructifie pas. Défaut False = inerte.
+    fruitier: bool = False
     fungal_susceptibility: float = 0.5   # sensibilité aux maladies fongiques [0-1]
     temp_min_growth: float = 5.0         # °C — seuil de croissance (météo 02) ; en deçà, stagnation. Extensible par espèce.
     # Tolérance à l'ombre de référence (compétition intra-plot, Q6). None ⇒ dérivée

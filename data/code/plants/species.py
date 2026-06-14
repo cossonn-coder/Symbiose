@@ -252,6 +252,7 @@ class Tomato(Solanaceae):
     max_extent_cm         = 32.0  # extension horizontale de la couronne
     foliage_halfwidth     = 18.0  # canopée non nulle même en flèche (feuilles : tronçon 5)
     organ_site            = "terminal"
+    fruitier              = True   # porte des fruits traçables (③ ; maturity_years=0 → dès l'année)
     growth_stages = [
         GrowthStage(
             name="semis", duration_weeks=3, strate="basse",

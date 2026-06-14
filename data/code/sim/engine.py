@@ -19,7 +19,7 @@ import math
 from dataclasses import dataclass
 from world import Tile
 from plants import (PlantInstance, Tomato, Basil, Bean, Clover,
-                    Sunflower, Pepper, PLANT_CATALOGUE)
+                    Sunflower, Pepper, PLANT_CATALOGUE, Fruit, organ_sites)
 from sim.effects import (resolve_plant_turn, apply_mutations, AddRondelle,
                          RemoveRondelle, ReduceHealth, InjectField,
                          apply_disturbances, deposer_mort)
@@ -29,7 +29,8 @@ from fields import (EcoFields, init_eco, inject_patch,
                     HEAL_RATE, HEAL_SEN_CUTOFF, RESEED_RADIUS_CM,
                     HUM_EXCES, HUM_NOYE, ASPHYXIE_MEMORY_LERP,
                     ASPHYXIE_HEALTH_SEUIL, ASPHYXIE_RATE, NECROMASS_PER_CM,
-                    T_SECHE, FRAG_RATE, ABSCISSION_WEEKS, ABSCISSION_FRAC)
+                    T_SECHE, FRAG_RATE, ABSCISSION_WEEKS, ABSCISSION_FRAC,
+                    FRUIT_MASSE, FRUIT_DMAT, MATURITE_CHUTE)
 from sim.reproduction import find_father, child_genes, is_seed_bearing
 from sim.seeds import Seed
 from sim.succession import succession, spring_flush
@@ -48,6 +49,11 @@ SAISONS = {
     "hiver":     range(40, 53),
 }
 PHASES_ACTIVES = {"printemps", "ete", "automne"}
+
+# Nouaison (③) : la mise à fruit a lieu UNE fois par an, au début de l'été.
+# Un rendez-vous annuel fixe (≠ tick par tick) évite la sur-création de fruits
+# et garantit le déterminisme (pitfall #4 du kickoff).
+FRUIT_NOUAISON_WEEK = SAISONS["ete"].start
 
 def saison_de(week):
     for nom, r in SAISONS.items():
@@ -551,6 +557,56 @@ class Engine:
                            f"→ feuille +{masse:.3f}")
         return log
 
+    def _tick_fruits(self, tile, eco, week_in_year):
+        """Organes-fruits traçables (décompo·compost ③, absorbe D19). Donne aux
+        fruits un VRAI état moteur (≠ proxy de rendu). Trois temps :
+          1. Nouaison annuelle (semaine FRUIT_NOUAISON_WEEK) pour les espèces
+             `fruitier` parvenues à `maturity_years` : on installe un fruit vert
+             (maturité 0) à chaque site reproducteur (`organ_sites`, borné à
+             MAX_ORGANS). Les fruits non récoltés de l'an passé chutent d'abord
+             en litière `fruit` (on ne ré-empile pas une cohorte sur l'autre).
+          2. Maturation hebdomadaire : `maturite += FRUIT_DMAT`.
+          3. Chute (§2.4) : un fruit dont la maturité dépasse MATURITE_CHUTE est
+             sur-mûr → tombe en litière `fruit` (déclenche la cascade fertilité).
+
+        Le geste `manger` ciblé (sim.actions, D19) retire un fruit précis hors de
+        ce pas. Déterministe : gate annuel fixe (pas de RNG), `organ_sites` itère
+        en ordre trié, itération en ordre `tile.plants`. NEUTRE pour le golden
+        tant qu'aucune espèce `fruitier` n'atteint `maturity_years` dans la
+        fenêtre (AppleTree : maturity_years=5 > 2 ans simulés)."""
+        log = []
+        for plant in tile.plants:
+            if not plant.is_alive:
+                continue
+            cls = plant.plant_class
+            if not getattr(cls, "fruitier", False):
+                continue
+            r, c = plant.position
+            # 1. Nouaison annuelle (gate âge inclus → golden NEUTRE hors maturité).
+            if (week_in_year == FRUIT_NOUAISON_WEEK
+                    and plant.age_years >= cls.maturity_years):
+                for f in plant.fruits:          # cohorte précédente non récoltée
+                    eco.deposer_litiere(r, c, "fruit", f.masse)
+                sites = organ_sites(plant)
+                plant.fruits = [Fruit(seg_id, 0.0, FRUIT_MASSE)
+                                for seg_id, _pos in sites]
+                if plant.fruits:
+                    log.append(f"    🍎 Nouaison {plant.name}@{plant.position} "
+                               f"→ {len(plant.fruits)} fruits")
+            # 2-3. Maturation + chute des sur-mûrs.
+            if plant.fruits:
+                survivors = []
+                for f in plant.fruits:
+                    f.maturite += FRUIT_DMAT
+                    if f.maturite > MATURITE_CHUTE:
+                        eco.deposer_litiere(r, c, "fruit", f.masse)
+                        log.append(f"    🍂 Chute fruit (mûr {f.maturite:.2f}) "
+                                   f"{plant.name}@{plant.position} → fruit +{f.masse:.3f}")
+                    else:
+                        survivors.append(f)
+                plant.fruits = survivors
+        return log
+
     # -----------------------------------------------------------------------
     # CYCLE SAISONNIER
     # -----------------------------------------------------------------------
@@ -834,6 +890,13 @@ class Engine:
             if saison == "automne" and week_in_year in ABSCISSION_WEEKS:
                 alog = self._abscission(tile, eco)
                 if alog: log += alog
+
+            # 15c. Organes-fruits (③) — nouaison annuelle + maturation + chute des
+            # sur-mûrs → litière `fruit`. Gate fruitier+âge à l'intérieur (golden
+            # NEUTRE hors maturité) ; appelé chaque semaine (la nouaison se borne
+            # elle-même à FRUIT_NOUAISON_WEEK).
+            flog = self._tick_fruits(tile, eco, week_in_year)
+            if flog: log += flog
 
             # 16. Transition hivernale (semaines 48-52)
             if saison == "hiver" and week_in_year in SAISONS["hiver"] and (week_in_year - SAISONS["hiver"].start) >= 9:
