@@ -42,7 +42,7 @@ exclus du décompte et **conservés au cœur des fichiers**).
 | SS | Titre | Risque | Statut |
 |----|-------|--------|--------|
 | ① | Déchets & docs/conception + helper comptage | nul | ✅ CLOS (2026-06-15) |
-| ② | Journal éclaté (index + par sprint) | faible | ⬜ |
+| ② | Journal éclaté (index + par sprint) | faible | ✅ CLOS (2026-06-15) |
 | ③ | Python cœur sim 1 (engine, ecofields, effects) | élevé | ⬜ |
 | ④ | Python cœur sim 2 (actions, base, species, growth) | élevé | ⬜ |
 | ⑤ | Python outils & tests (sim_server, render, 2 tests) | moyen | ⬜ |
@@ -51,7 +51,7 @@ exclus du décompte et **conservés au cœur des fichiers**).
 
 ## Reprise
 
-Tronçon courant : **SS②**. Lire `02_*.md` (journal éclaté).
+Tronçon courant : **SS③**. Lire `03_*.md` (Python cœur sim 1 — engine, ecofields, effects).
 
 ## Journal de bord (rempli en fin de tronçon)
 
@@ -81,3 +81,25 @@ Tronçon courant : **SS②**. Lire `02_*.md` (journal éclaté).
     `00_etat.md` ramené à 176 l (en-tête + Tranche 7 + REPRISE, flux de reprise
     préservé).
   - **docs/desktop/** : laissé tel quel (tous < 500), RAS.
+- **SS② CLOS (2026-06-15)** — golden inchangé `908f591bee…` (aucun code moteur
+  touché). `journal.md` (2385 l) éclaté → **`journal/` 41 fichiers** (entrées
+  inline, numérotées 13→53, convention `NN_date_slug.md`) + `journal.md` réduit
+  à un **index de pointeurs (89 l)**.
+  - **Extraction par script déterministe** (copie verbatim, zéro reformulation) :
+    découpe aux frontières `## YYYY-MM-DD`. Complétude prouvée : 1948 lignes
+    non-blanches identiques source↔fichiers (seule normalisation = lignes
+    blanches inter-entrées collapsées). Tous < 500 l (max 82).
+  - **`journal_archive/` LAISSÉ tel quel** (décision tranchée) : déjà éclaté
+    même convention, nommé emplacement historique stable dans `CLAUDE.md` ET
+    référencé par sprints clos (`sprints/_clos/`, mémoire figée) → unification
+    casserait des pointeurs historiques, donc pas « propre ». Deux dossiers à
+    sémantique claire : `journal_archive/` (01-12, avant refactor structurel) +
+    `journal/` (13-53, le reste).
+  - **Liens** : aucune ancre profonde `journal.md#section` externe. 53 liens de
+    l'index vérifiés (0 cassé). Renvois « voir `journal.md` » (CLAUDE.md l.81/330,
+    BACKLOG, _clos) restent valides : `journal.md` existe comme index.
+  - ⚠️ **À signaler Nico** : `CLAUDE.md` l.330 dit « `journal.md` (entrées
+    récentes) + `journal_archive/` » — désormais légèrement imprécis (les entrées
+    récentes sont dans `journal/`, pointées par l'index). Laissé tel quel
+    (surgical / un fichier à la fois) ; à rafraîchir au SS⑦ qui grave les règles
+    dans CLAUDE.md.
