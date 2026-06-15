@@ -29,7 +29,7 @@ from sim.growth import (atteindre_segment,   # seam de perturbation §F (sim→s
                         f_lignification, INTENSITE_PIED, SEUIL_DEGAT, COUPE_NETTE)  # calibrage écrasement (volet 2)
 from sim.effects import deposer_mort   # mort → squelette persistant (②B), point d'entrée unique
 from sim import maitrise as M   # couche savoir (D12) — orchestrée ici pour les gains ponctuels §4.3
-from fields.ecofields import BOIS_PAR_CM, ECRASER_FRAG_BOOST   # litière `bois` (taille/écimage) + boost fragmentation (②)
+from fields.ecofields import BOIS_PAR_CM, ECRASER_FRAG_BOOST, Structure   # litière `bois` (taille/écimage) + boost fragmentation (②) + structures posables (⑤)
 from fields.population import DENSITE_PAR_SPRITE   # « un geste = un individu = un quantum » (D31.3 §5)
 from fields.seedbank import GrainEnAttente          # dépôt de `planter` (germination différée, distinct de la banque-sol)
 from plants.catalogue import PLANT_CATALOGUE, PERENNIAL_CATALOGUE   # reverse classe→clé (seam coût, §10.4)
@@ -97,6 +97,10 @@ COUTS = {
     "grelinette":           MODERE,
     "tailler":              MODERE,            # geste direct sur le vivant (philo #1) — coût modéré
     "manger":               NUL,               # coût NUL → cout_action renvoie 0 sans rien lire (§10.5)
+    "poser_bac":            MODERE,            # pose une structure (phase planification, ⑤ §5.1)
+    "poser_pile":           MODERE,
+    "composter":            FAIBLE,            # déplace la litière tendre plot→bac (canal vertueux §5.1)
+    "empiler_bois":         FAIBLE,            # déplace le bois plot→pile
 }
 
 # Objets STATIQUES touchés par chaque geste (§10.4, terme 2 : technique + outil/
@@ -117,6 +121,10 @@ OBJETS_TOUCHES = {
     "grelinette":           ("ameublissement", "grelinette"),
     "tailler":              ("taille", "sécateur"),
     "manger":               (),                          # coût NUL → terme 2 vide (§10.5)
+    "poser_bac":            ("compostage", "bac-à-compost"),
+    "poser_pile":           ("compostage", "pile-à-bois"),
+    "composter":            ("compostage",),
+    "empiler_bois":         ("compostage", "pile-à-bois"),
 }
 
 # Atténuations maximales — PLACEHOLDERS NOMMÉS, *calibrage D12.4*. Bornées < 1 pour
@@ -604,3 +612,86 @@ def grelinette(game_state: dict, player: str) -> bool:
     Renvoie True si le geste a été pleinement payé."""
     cost = cout_action(game_state, player, "grelinette", OBJETS_TOUCHES["grelinette"])
     return spend(game_state, player, cost) >= 1.0
+
+
+# =========================================================================
+# Structures posables & compostage (décompo·compost ⑤ phase A, CONCEPTION §5)
+# Le CANAL VERTUEUX bon marché (philo #1) : poser une structure (planification,
+# MODÉRÉ) puis y déplacer la litière du sol (courant, FAIBLE). Aucun champ écolo
+# touché par ces gestes (philo #2) : on ne fait que DÉPLACER de la matière (litière
+# → contenu de structure) ; la maturation/l'amendement viendront aux phases B/C.
+# =========================================================================
+
+def _ramasser_vers_structure(eco, r: int, c: int, struct: Structure) -> float:
+    """Déplace du plot (r,c) vers `struct` toutes les parcelles que la structure
+    ACCEPTE (§5) : retire de la litière, fusionne dans le contenu. **Conserve la
+    masse** (déplacement, jamais de création). La parcelle `diffus` (exsudats) n'est
+    acceptée par aucune structure → reste au sol (décision ⑤A). Déterministe :
+    parcourt la litière dans son ordre courant, aucun RNG. Renvoie la masse
+    transférée (diagnostic/test)."""
+    transfere = 0.0
+    restant = []
+    for p in eco.litiere[r][c]:
+        if p.masse > 0.0 and struct.accepte(p.tissu):
+            eco.deposer_dans_structure(struct, p.tissu, p.masse)
+            transfere += p.masse
+        else:
+            restant.append(p)            # diffus, bois (pour un bac), parcelles vides
+    eco.litiere[r][c] = restant
+    return transfere
+
+
+def poser_bac(game_state: dict, player: str, eco, r: int, c: int) -> Structure | None:
+    """Poser un bac à compost (§5.1) au plot (r,c) — phase PLANIFICATION, coût
+    MODÉRÉ. Crée une structure VIDE et l'ajoute à `eco.structures`. Binaire (modèle
+    `deraciner`/`planter`) : la structure n'est posée QUE si le coût est
+    intégralement payé — un geste à vide draine la Vigueur sans rien poser.
+    Renvoie la `Structure` posée, ou None si la Vigueur est insuffisante."""
+    cost = cout_action(game_state, player, "poser_bac", OBJETS_TOUCHES["poser_bac"])
+    if spend(game_state, player, cost) < 1.0:
+        return None
+    struct = Structure(kind="bac", plot=(r, c))
+    eco.structures.append(struct)
+    return struct
+
+
+def poser_pile(game_state: dict, player: str, eco, r: int, c: int) -> Structure | None:
+    """Poser une pile à bois (§5.1) au plot (r,c) — phase PLANIFICATION, coût
+    MODÉRÉ. Symétrique de `poser_bac` (kind=`pile`). La pile → habitat `auxiliaire`
+    (§4.1) est branchée en phase C (rondelle, patron `favoriser_auxiliaire`) ; en
+    phase A elle ne fait que recevoir du bois.
+    Renvoie la `Structure` posée, ou None si la Vigueur est insuffisante."""
+    cost = cout_action(game_state, player, "poser_pile", OBJETS_TOUCHES["poser_pile"])
+    if spend(game_state, player, cost) < 1.0:
+        return None
+    struct = Structure(kind="pile", plot=(r, c))
+    eco.structures.append(struct)
+    return struct
+
+
+def composter(game_state: dict, player: str, eco, r: int, c: int,
+              struct: Structure) -> bool:
+    """Composter (§5.1) — ramasser la litière de SURFACE tendre du plot (r,c) vers
+    le bac `struct`. Action sur le MILIEU, canal vertueux bon marché (philo #1) :
+    coût FAIBLE. Binaire : le transfert n'a lieu que si le coût est payé. La parcelle
+    `diffus` reste au sol (décision ⑤A) ; le bac refuse aussi le `bois`. No-op
+    silencieux si rien à ramasser (plot propre) — on paie le geste, comme `becher`.
+    Renvoie True si le geste a été pleinement payé (et donc appliqué)."""
+    cost = cout_action(game_state, player, "composter", OBJETS_TOUCHES["composter"])
+    if spend(game_state, player, cost) < 1.0:
+        return False
+    _ramasser_vers_structure(eco, r, c, struct)
+    return True
+
+
+def empiler_bois(game_state: dict, player: str, eco, r: int, c: int,
+                 struct: Structure) -> bool:
+    """Empiler du bois (§5.1) — déplacer les parcelles `bois` du plot (r,c) vers la
+    pile `struct`. Jumeau de `composter` pour la matière ligneuse (BRF / hügelkultur).
+    Coût FAIBLE, binaire, philo #1. La pile n'accepte QUE le `bois` (§5).
+    Renvoie True si le geste a été pleinement payé (et donc appliqué)."""
+    cost = cout_action(game_state, player, "empiler_bois", OBJETS_TOUCHES["empiler_bois"])
+    if spend(game_state, player, cost) < 1.0:
+        return False
+    _ramasser_vers_structure(eco, r, c, struct)
+    return True

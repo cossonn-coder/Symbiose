@@ -37,7 +37,7 @@ compost** + **pile à bois** posables. Absorbe **D19** + une part de **D33**.
 | ② | Dépôts vivant & mort (taille→bois, squelette persistant + fragmentation, abscission, écraser-squelette) | `02_depots_vivant_mort.md` | **FAIT (2026-06-14)** — A (2026-06-13) + B/C (2026-06-14) |
 | ③ | Organes-fruits traçables (maturité, `manger` ciblé, chute) — **absorbe D19** | `03_organes_fruits.md` | **FAIT (2026-06-14)** — golden NEUTRE |
 | ④ | Attraction animale (fruit→guildes ; pile→habitat reporté ⑤) | `04_attraction_animale.md` | **FAIT (2026-06-14)** — golden NEUTRE |
-| ⑤ | Structures posables + gestes (composter/empiler/retourner/epandre, jauge, amendements) | `05_structures_posables.md` | **kickoff écrit (2026-06-15)**, à coder — 3 phases A/B/C |
+| ⑤ | Structures posables + gestes (composter/empiler/retourner/epandre, jauge, amendements) | `05_structures_posables.md` | **Phase A FAITE (2026-06-15)** — golden NEUTRE. Reste B (maturation+jauge+retourner) & C (epandre+pile+habitat) |
 | ⑥ | Vue (post-mortem visible, litière, maturité-fruit) — **quand Godot reprend** | `06_*.md` (à écrire) | différé |
 
 ## Conventions
@@ -215,15 +215,51 @@ compost** + **pile à bois** posables. Absorbe **D19** + une part de **D33**.
   ombre_maison 4, phototropisme 11, planter 18, sim_server 113, senescence,
   **attraction 17**. `main.py 5` exit 0.
 
+## Acquis sous-sprint ⑤ — Phase A (2026-06-15) : modèle + poser + composter/empiler
+- **Décisions ⑤ figées** : **#1** structures portées par `eco`
+  (`EcoFields.structures: list[Structure]`, init `[]`) — couche `fields`, à côté
+  de `litiere`. **#2** contenu = réutilisation de `Parcelle` ;
+  `Structure{kind, plot, contenu, compost_mur}` (`ecofields.py`). **Décision ⑤A
+  (dévie de la lettre du §5)** : le **bac REFUSE `diffus`** — les exsudats sont
+  DANS le sol (parcelle permanente du plot, non ramassable). `STRUCTURE_ACCEPTE =
+  {bac: {feuille,fleur,herbace,fruit}, pile: {bois}}`. *(tranché avec Nico.)*
+- **`fields/ecofields.py`** : helper module `_fusion_parcelle(parcelles, tissu,
+  masse)` extrait (fusion par tissu PARTAGÉE litière ↔ structures) → `deposer_litiere`
+  refactorisé pour l'appeler (**bit-identique**, golden neutre). Nouveau
+  `Structure.accepte(tissu)` + `EcoFields.deposer_dans_structure(struct, tissu, masse)`
+  (miroir de `deposer_litiere`, garde-fou d'acceptation). Exports `Structure` /
+  `STRUCTURE_ACCEPTE` ajoutés à `fields/__init__.py`.
+- **`sim/actions.py`** : `poser_bac`/`poser_pile` (→ `Structure | None`, coût
+  `MODÉRÉ`, binaire), `composter`/`empiler_bois` (coût `FAIBLE`, binaire) via le
+  helper `_ramasser_vers_structure(eco, r, c, struct)` (déplace les parcelles
+  acceptées plot→structure, **masse conservée**, `diffus`/`bois` restent au sol
+  pour le bac). Entrées `COUTS` + `OBJETS_TOUCHES` (concept maîtrise `"compostage"`,
+  sans état moteur → atténuation neutre 1.0). Aucun champ écolo touché (philo #2).
+- **Golden NEUTRE (non re-figé), PROUVÉ** : smoke `908f591bee…`, population
+  `435e6f72…` **bit-identiques à ④**. Cause : le golden ne pose aucune structure
+  (succession pure) ET le refactor `_fusion_parcelle` est bit-identique → tick
+  inchangé. **Aucune modif de `engine.py`/`tick_decomposition` en phase A.**
+- Nouveau **`tests/test_structures.py` (34 checks)** : poser (binaire), acceptation
+  §5, composter (tendre→bac, diffus/bois restent, masse conservée), empiler,
+  fusion contenu (age pondéré), déterminisme, neutralité refactor. Suites vertes :
+  golden, population, structures 34, fruits, attraction, vigueur 135, croissance 67,
+  competition, eau, génétique 20, maîtrise 35, maîtrise_detection 20, signes 8,
+  ombre_maison, phototropisme 11, planter, sénescence, sim_server 113 ;
+  auxiliaires (AUX < TÉMOIN, régulation OK). `main.py 5` exit 0.
+- **Reste ⑤** : **phase B** (`tick_structures` maturation hybride ∝ constitution +
+  jauge `compost_mur` + `retourner`, appel après `tick_decomposition` dans
+  `engine.py`) puis **phase C** (`epandre` trio humus borné + amendement pile +
+  pile→habitat `auxiliaire` via rondelle + pont 0.3.5). Golden attendu NEUTRE.
+
 ## REPRISE (démarrage à froid)
-Lire ce fichier puis le kickoff du prochain sous-sprint. ①+②+③+④ **FAITS**. Reste :
-**⑤ structures posables** (bac à compost / pile à bois + gestes composter/empiler/
-retourner/epandre + jauge `compost_mur` + amendements + **pile→habitat reporté
-ici depuis ④**), **⑥ vue Godot** (différé : post-mortem visible, litière,
-maturité-fruit). **Kickoff `05_structures_posables.md` ÉCRIT (2026-06-15)** —
-prochaine étape = le coder (3 phases internes A/B/C : modèle+poser+composter ·
-maturation+jauge+retourner · epandre+pile+habitat ; golden attendu NEUTRE sur
-les 3, à PROUVER ; pont 0.3.4→0.3.5). Doc conception §5/§4.1 tranche les
-« pourquoi ». Hooks posés pour ⑥ : `plant.fruits` au snapshot, `manger` routé
-sur `target.fruit`. Patron habitat pour ⑤ : rondelle `auxiliaire` lue par
+Lire ce fichier puis le kickoff `05_structures_posables.md`. ①+②+③+④ **FAITS** ;
+⑤ **phase A FAITE** (cf. §Acquis ⑤ Phase A). **PROCHAINE ÉTAPE = ⑤ phase B**
+(`tick_structures` maturation hybride ∝ constitution + jauge `compost_mur` +
+geste `retourner`, appelé après `tick_decomposition` dans `engine.py` ; golden
+attendu NEUTRE — structures vides ⇒ no-op strict). Puis **phase C** (`epandre`
+trio humus borné + amendement pile + pile→habitat `auxiliaire` via rondelle +
+pont 0.3.4→0.3.5). Le kickoff §«Plan d'implémentation»/§«Décisions #3» détaille
+les knobs de B/C. Ensuite **⑥ vue Godot** (différé : post-mortem visible, litière,
+maturité-fruit). Hooks posés pour ⑥ : `plant.fruits` au snapshot, `manger` routé
+sur `target.fruit`. Patron habitat pour ⑤C : rondelle `auxiliaire` lue par
 `_stability_grid` (cf. `favoriser_auxiliaire`).

@@ -217,6 +217,57 @@ class Parcelle:
     age_sem: float = 0.0
 
 
+def _fusion_parcelle(parcelles: list, tissu: str, masse: float) -> None:
+    """Fusion par tissu (bornage déterministe, §1.1) — PARTAGÉE litière ↔ structures.
+
+    Si une parcelle de même `tissu` existe → masse cumulée, `age_sem` = moyenne
+    pondérée par la masse (le dépôt neuf, d'âge 0, rajeunit le tas). Sinon append.
+    Suppose `masse > 0` (l'appelant garde le no-op + tout filtre d'acceptation).
+    """
+    for p in parcelles:
+        if p.tissu == tissu:
+            total = p.masse + masse
+            p.age_sem = (p.age_sem * p.masse) / total if total > 0 else 0.0
+            p.masse = total
+            return
+    parcelles.append(Parcelle(tissu, masse))
+
+
+# ---------------------------------------------------------------------------
+# STRUCTURES POSABLES — bac à compost & pile à bois (décompo·compost ⑤, §5)
+# ---------------------------------------------------------------------------
+
+# Tissus recevables par chaque type de structure (§5, table). Le bac à compost
+# digère la litière de SURFACE tendre ; il refuse le `bois` (trop lent) ET la
+# parcelle `diffus` (exsudats racinaires DANS le sol, non ramassables, et parcelle
+# permanente du plot — décision ⑤A : dévie de la lettre du §5 qui listait diffus).
+# La pile à bois ne prend QUE le `bois` (BRF / hügelkultur).
+STRUCTURE_ACCEPTE = {
+    "bac":  frozenset(("feuille", "fleur", "herbace", "fruit")),
+    "pile": frozenset(("bois",)),
+}
+
+
+@dataclass
+class Structure:
+    """Structure de compostage posée par le joueur (CONCEPTION §5).
+
+    Deux `kind` : `bac` (matière tendre → compost mûr) et `pile` (bois →
+    amendement structure + habitat auxiliaire §4.1). Le `contenu` réutilise la
+    `Parcelle` de la litière (mêmes tissus, même fusion par tissu) ; il mûrira en
+    `compost_mur` (jauge mesurée) au tick `tick_structures` (phase B). `plot` =
+    plot-foyer (r, c) du placement (phase planification). Posée VIDE.
+    """
+    kind:        str
+    plot:        tuple                                  # (r, c)
+    contenu:     list  = field(default_factory=list)    # list[Parcelle]
+    compost_mur: float = 0.0
+
+    def accepte(self, tissu: str) -> bool:
+        """Le tissu est-il recevable par cette structure (§5) ?"""
+        return tissu in STRUCTURE_ACCEPTE[self.kind]
+
+
 # ---------------------------------------------------------------------------
 # ECOFIELDS — conteneur complet
 # ---------------------------------------------------------------------------
@@ -235,6 +286,7 @@ class EcoFields:
     soil_memory_fast: GridField = field(default=None)   # annuelle (lerp 0.15)
     soil_memory_deep: GridField = field(default=None)   # décennale (lerp 0.02)
     litiere:          list = field(default=None)        # parcelles fraîches par plot (remplace om_fresh)
+    structures:       list = field(default=None)        # bac à compost / pile à bois posés (⑤, §5)
     om_active:        GridField = field(default=None)   # MO partiellement digérée (réserve)
     om_stable:        GridField = field(default=None)   # humus (structure, rétention, mémoire)
     disturbance:      DisturbanceField = field(default=None)
@@ -262,6 +314,8 @@ class EcoFields:
             # reçoit les exsudats et ne disparaît jamais (§1.1).
             self.litiere = [[[Parcelle("diffus", 0.0)] for _ in range(self.cols)]
                             for _ in range(self.rows)]
+        if self.structures is None:
+            self.structures = []          # aucune structure posée au repos (⑤A)
         if self.om_active is None:
             self.om_active = GridField(self.rows, self.cols, initial=0.0, max_val=10.0)
         if self.om_stable is None:
@@ -315,19 +369,22 @@ class EcoFields:
     def deposer_litiere(self, r: int, c: int, tissu: str, masse: float) -> None:
         """Point d'entrée UNIQUE pour tout écrivain de matière fraîche.
 
-        Fusion par tissu (bornage déterministe, §1.1) : si une parcelle de même
-        `tissu` existe au plot → masse cumulée, `age_sem` = moyenne pondérée par
-        la masse (le dépôt neuf, d'âge 0, rajeunit le tas). Sinon append.
+        Fusion par tissu (`_fusion_parcelle`, §1.1) : masse cumulée, `age_sem`
+        moyenné par la masse (le dépôt neuf, d'âge 0, rajeunit le tas). No-op si
+        `masse ≤ 0`.
         """
         if masse <= 0.0:
             return
-        for p in self.litiere[r][c]:
-            if p.tissu == tissu:
-                total = p.masse + masse
-                p.age_sem = (p.age_sem * p.masse) / total if total > 0 else 0.0
-                p.masse = total
-                return
-        self.litiere[r][c].append(Parcelle(tissu, masse))
+        _fusion_parcelle(self.litiere[r][c], tissu, masse)
+
+    def deposer_dans_structure(self, struct: "Structure",
+                               tissu: str, masse: float) -> None:
+        """Ajoute de la matière au `contenu` d'une structure (miroir de
+        `deposer_litiere`, même fusion par tissu). No-op si `masse ≤ 0` ou si le
+        tissu est REFUSÉ par la structure (garde-fou §5 ; le geste pré-filtre)."""
+        if masse <= 0.0 or not struct.accepte(tissu):
+            return
+        _fusion_parcelle(struct.contenu, tissu, masse)
 
     # --- Tick diffusion ---
 

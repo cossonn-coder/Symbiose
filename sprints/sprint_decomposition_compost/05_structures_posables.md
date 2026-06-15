@@ -15,6 +15,15 @@
 > Godot** (⑥, intégration en pause) : on conçoit l'état moteur + le pont, la vue
 > viendra.
 
+> ## ⏩ AVANCEMENT — reprise à froid
+> **Phase A FAITE (2026-06-15)** : modèle `Structure`/`eco.structures`, gestes
+> `poser_bac`/`poser_pile`/`composter`/`empiler_bois`, helper `_fusion_parcelle`
+> partagé, `test_structures.py` (34/34), **golden NEUTRE prouvé**
+> (`908f591bee…`/`435e6f72…`). Décisions #1 et #2 figées ; **décision ⑤A** : le bac
+> **refuse `diffus`** (exsudats dans le sol). Détail dans `00_etat.md` §Acquis ⑤
+> Phase A. **➡️ COMMENCER ICI = PHASE B** (maturation + jauge + `retourner`), puis
+> phase C. Décision #3 (knobs maturation/trio/habitat) à figer au début de B/C.
+
 ## Ampleur & risque (à lire avant de coder)
 Sous-sprint **MOYEN à GROS** (le plus gros de la série après ①) : un **état
 moteur neuf** (les structures et leur contenu), **5 gestes** nouveaux, une
@@ -25,7 +34,7 @@ chacune testable et préservant le golden :
 
 | Phase | Contenu | Golden attendu |
 |---|---|---|
-| **A** | **Modèle de structure** (`eco.structures`) + `poser_bac`/`poser_pile` + `composter`/`empiler_bois` (déplacent les parcelles du plot vers la structure) | **NEUTRE** (rien posé dans le scénario) |
+| ~~**A**~~ ✅ | **Modèle de structure** (`eco.structures`) + `poser_bac`/`poser_pile` + `composter`/`empiler_bois` (déplacent les parcelles du plot vers la structure) | **NEUTRE prouvé** (2026-06-15) |
 | **B** | **Maturation hybride** (`tick_structures`, passive ∝ constitution) + jauge `compost_mur` + `retourner` (accélère/lisse) | **NEUTRE** (aucune structure à ticker) |
 | **C** | **`epandre`** (bac → plot, trio humus borné par la jauge) + amendement **pile** (biais structure) + **pile → habitat `auxiliaire`** (§4.1) | **NEUTRE** (geste jamais déclenché par le golden) |
 
