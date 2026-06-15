@@ -43,7 +43,7 @@ exclus du décompte et **conservés au cœur des fichiers**).
 |----|-------|--------|--------|
 | ① | Déchets & docs/conception + helper comptage | nul | ✅ CLOS (2026-06-15) |
 | ② | Journal éclaté (index + par sprint) | faible | ✅ CLOS (2026-06-15) |
-| ③ | Python cœur sim 1 (engine, ecofields, effects) | élevé | ⬜ |
+| ③ | Python cœur sim 1 (engine, ecofields, effects) | élevé | ✅ CLOS (2026-06-15) |
 | ④ | Python cœur sim 2 (actions, base, species, growth) | élevé | ⬜ |
 | ⑤ | Python outils & tests (sim_server, render, 2 tests) | moyen | ⬜ |
 | ⑥ | C# WorldView (1759 l) | moyen | ⬜ |
@@ -51,7 +51,13 @@ exclus du décompte et **conservés au cœur des fichiers**).
 
 ## Reprise
 
-Tronçon courant : **SS③**. Lire `03_*.md` (Python cœur sim 1 — engine, ecofields, effects).
+Tronçon courant : **SS④**. Lire `04_*.md` (Python cœur sim 2 — actions, base, species, growth).
+
+> **Recalibrage de portée (acté avec Nico, SS③)** : le seuil 500 est un garde-fou,
+> pas un dogme — l'objectif réel est **un fichier = une responsabilité cohérente**,
+> fichiers courts pour relire vite (tokens / concentration). PAS une-fonction-par-
+> fichier (cohésion + coût d'amorçage). On éclate donc **tous** les gros modules,
+> y compris ceux déjà sous 500 lignes de code pur — découpe par concept.
 
 ## Journal de bord (rempli en fin de tronçon)
 
@@ -103,3 +109,24 @@ Tronçon courant : **SS③**. Lire `03_*.md` (Python cœur sim 1 — engine, eco
     récentes sont dans `journal/`, pointées par l'index). Laissé tel quel
     (surgical / un fichier à la fois) ; à rafraîchir au SS⑦ qui grave les règles
     dans CLAUDE.md.
+- **SS③ CLOS (2026-06-15)** — golden inchangé `908f591bee…` (vérifié après CHAQUE
+  module), `main.py` tourne, **19/19 suites vertes**. Trois modules cœur éclatés en
+  paquets (API ré-exportée par les `__init__` → **zéro appelant modifié**) :
+  - `sim/engine.py` (967 l / 604 code) → `sim/engine/` : `calendrier` (saisons/phases),
+    `aleas` (météo/ravageur + dégât médié), `croissance`/`mortalite`/`decompo`
+    (**mixins** : la grosse classe `Engine` scindée par héritage, `self` préservé,
+    ordre du tick intact), `boucle` (l'orchestrateur `tick_semaine` + runners).
+  - `fields/ecofields.py` (863 l / 459 code) → `fields/ecofields/` : `constants`
+    (calibration), `litiere` (`Parcelle`/`Structure`), `container` (`EcoFields` 337 code).
+  - `sim/effects.py` (703 l / 403 code) → `sim/effects/` : `mutations` (dataclasses),
+    `resolution` (resolve/apply_mutations/callbacks 208 code), `perturbations`
+    (mortalités, herbivorie, `deposer_mort`, `apply_disturbances`).
+  - **Max code pur après découpe = 337** (container) ; tous < 500.
+  - ⚠️ **À signaler Nico** : la redistribution des imports a laissé tomber des
+    imports **morts pré-existants** (utilisés seulement dans des commentaires ou plus
+    du tout) : engine `Tile`/`PlantInstance`/`Tomato`/`Basil`/`Bean`/`Clover`/
+    `Sunflower`/`Pepper`/`InjectField`/`init_eco`/`inject_patch`/`EcoFields`/
+    `WeatherEvent` ; effects `RONDELLE_TYPES`/`HERBIVORY_BASE`/`EcoFields`(TYPE_CHECKING).
+    Aucun n'était utilisé (golden + 19 suites le confirment).
+  - **Décision portée** : recalibrée avec Nico en cours de tronçon (cf. §Reprise) —
+    on découpe désormais TOUS les gros fichiers, pas seulement les > 500 code pur.
