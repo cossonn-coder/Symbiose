@@ -1,8 +1,9 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://sbjv0m1opooc"]
 
-[ext_resource type="Script" path="res://world/WorldView.cs" id="1_wview"]
+[ext_resource type="Script" uid="uid://b8fv0jy73dghx" path="res://world/WorldView.cs" id="1_wview"]
 
-[node name="WorldView" type="Node2D"]
+[node name="WorldView" type="Node2D" unique_id=852541250]
 script = ExtResource("1_wview")
+DebugSecondsPerWeek = 3.0
 
-[node name="Camera" type="Camera2D" parent="."]
+[node name="Camera" type="Camera2D" parent="." unique_id=1771169222]
