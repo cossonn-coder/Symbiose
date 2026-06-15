@@ -1,7 +1,7 @@
 """
 SYMBIOSE — sim/maitrise_detection.py
 Couche DÉTECTION DE SUCCÈS (D12, tronçon i4) — le dernier et le plus délicat.
-Spec de référence : `data/code/CONCEPTION_MAITRISE.md` §9 (le succès par axe).
+Spec de référence : `docs/conception/CONCEPTION_MAITRISE.md` §9 (le succès par axe).
 
 Jusqu'ici (i1–i3) les preuves de maîtrise arrivaient PAR INJECTION (`crediter_succes`/
 `enregistrer_preuve` appelés à la main). Ce module BRANCHE la détection

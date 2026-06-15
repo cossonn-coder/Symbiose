@@ -1,7 +1,7 @@
 # Sous-sprint ④ — Attraction animale : le fruit tombé appelle la faune (frais → `auxiliaire`, pourri → `ravageur` + frac.)
 
 > **Kickoff autosuffisant (démarrage à froid).** Lire d'abord `00_etat.md`
-> (§Acquis ①②③) et `data/code/CONCEPTION_DECOMPOSITION_COMPOST.md` (**§4**
+> (§Acquis ①②③) et `docs/conception/CONCEPTION_DECOMPOSITION_COMPOST.md` (**§4**
 > surtout, + §1.2 ligne `fruit`, + §7 ligne ④, + `CONCEPTION_VIE_MACRO.md` §2
 > pour le modèle des 4 guildes). ③ a donné aux fruits un **état moteur** qui
 > **tombe en litière `fruit`** (`deposer_litiere(r,c,"fruit",masse)` quand un

@@ -41,7 +41,7 @@ exclus du décompte et **conservés au cœur des fichiers**).
 
 | SS | Titre | Risque | Statut |
 |----|-------|--------|--------|
-| ① | Déchets & docs/conception + helper comptage | nul | ⬜ à faire |
+| ① | Déchets & docs/conception + helper comptage | nul | ✅ CLOS (2026-06-15) |
 | ② | Journal éclaté (index + par sprint) | faible | ⬜ |
 | ③ | Python cœur sim 1 (engine, ecofields, effects) | élevé | ⬜ |
 | ④ | Python cœur sim 2 (actions, base, species, growth) | élevé | ⬜ |
@@ -51,8 +51,33 @@ exclus du décompte et **conservés au cœur des fichiers**).
 
 ## Reprise
 
-Tronçon courant : **SS①**. Lire `01_dechets_docs.md`.
+Tronçon courant : **SS②**. Lire `02_*.md` (journal éclaté).
 
 ## Journal de bord (rempli en fin de tronçon)
 
-- (rien encore)
+- **SS① CLOS (2026-06-15)** — golden inchangé `908f591bee…` (aucun code moteur
+  touché, vérifié avant/après).
+  - **Helper** : `tools/compte_ldc.py` (nouveau dossier `tools/` racine = outil
+    *du dépôt*, pas du moteur ; `tokenize` pour Python, repli ligne-à-ligne pour
+    C#). Testé sur `.py` et `.cs`. `--seuil` (défaut 500), tri sur code pur ⚠.
+  - **Fossiles purgés** : `sortie.txt` (19 Mo, avril), CV PDF (avril), 6 SVG
+    maquettes régénérables (juin mais sorties de `render_structure.py` → ajoutées
+    à `.gitignore`). ⚠️ **À signaler Nico** : les SVG dataient de juin (règle
+    « mai/juin = ne pas supprimer ») mais le kickoff §B les classe régénérables ;
+    choix de les sortir du suivi + gitignore.
+  - **Conception regroupée** : 11 `CONCEPTION_*.md` → `docs/conception/` (`git mv`).
+    `CONCEPTION_MAITRISE` (561 l) scindé → `maitrise/01_modele` (204) +
+    `02_succes_par_axe` (100) + `03_taxonomie_objets` (140) + index (22). Contenu
+    intégral préservé. **Pointeurs `data/code/CONCEPTION_` → `docs/conception/`
+    corrigés** dans docstrings .py (commentaires only, golden intact) + doc vivante
+    (DETTE/BACKLOG/journal/dette_kickoffs/decompo). Archives `_clos/` et
+    `journal_archive/` laissées telles quelles.
+  - **Sprints clos archivés** sous `sprints/_clos/` (22 entrées). Gardés en place :
+    refactor_global (courant), integration_godot (t7 active), decomposition_compost
+    (⑥ différé = doute), dette_kickoffs, sprint_1/2/3/4 (C# futurs), etude_sol_vivant
+    (référencée Sprint 3).
+  - **`integration_godot/00_etat.md`** (707 l, sprint actif) scindé : historique
+    tranches 1-6 → `_avancement_t1_t3.md` (120) + `_avancement_t4_t6.md` (439) ;
+    `00_etat.md` ramené à 176 l (en-tête + Tranche 7 + REPRISE, flux de reprise
+    préservé).
+  - **docs/desktop/** : laissé tel quel (tous < 500), RAS.

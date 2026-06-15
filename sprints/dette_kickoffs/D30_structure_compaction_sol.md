@@ -26,7 +26,7 @@ qui préserve » (no-op écolo). On ferme l'asymétrie.
   `GridField` (432 plots) diffusés/tickés chaque semaine.
 - `vers_de_terre` fournit **déjà** un couplage minimal : bioturbation → léger bonus
   de décomposition/minéralisation (`WORM_DECOMP_BONUS`, câblé à D31.2).
-- Spec de référence : `data/code/CONCEPTION_VIGUEUR.md` **§3.6** (couple
+- Spec de référence : `docs/conception/CONCEPTION_VIGUEUR.md` **§3.6** (couple
   biner/grelinette, tableau des gestes de sol) et **§ « champ structure/compaction »**
   (~l.231) qui pose explicitement la question ci-dessous.
 

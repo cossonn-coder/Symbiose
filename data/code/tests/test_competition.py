@@ -1,7 +1,7 @@
 """
 SYMBIOSE — tests/test_competition.py
 Tests ciblés du sprint COMPÉTITION INTRA-PLOT (conception FIGÉE Q1-Q11,
-data/code/CONCEPTION_COMPETITION_INTRAPLOT.md). Lancé à la demande (hors smoke
+docs/conception/CONCEPTION_COMPETITION_INTRAPLOT.md). Lancé à la demande (hors smoke
 test). Couvre les MÉCANISMES, par assertion de comportement déterministe — pas
 de hash global.
 

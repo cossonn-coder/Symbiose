@@ -1,7 +1,7 @@
 # Sous-sprint ② — Dépôts vivant & mort : `tailler`→bois, squelette persistant, abscission, écraser-squelette
 
 > **Kickoff autosuffisant (démarrage à froid).** Lire d'abord `00_etat.md`
-> (§Acquis ①) et `data/code/CONCEPTION_DECOMPOSITION_COMPOST.md` (§2 surtout).
+> (§Acquis ①) et `docs/conception/CONCEPTION_DECOMPOSITION_COMPOST.md` (§2 surtout).
 > ① a posé l'infrastructure parcelles + `deposer_litiere`. ② **alimente** enfin
 > les tissus `bois`/`feuille`/`fruit`/`fleur` par les **vrais dépôts** du vivant
 > et du mort. Il ne crée **aucun organe-fruit traçable** (③), **aucune

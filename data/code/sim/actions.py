@@ -1,7 +1,7 @@
 """
 SYMBIOSE — sim/actions.py
 Actions JOUEUR sur le vivant (D11, sous-sprint 2) — coûts/gains de Vigueur.
-Spec de référence : `data/code/CONCEPTION_VIGUEUR.md` §3 (catalogue d'actions),
+Spec de référence : `docs/conception/CONCEPTION_VIGUEUR.md` §3 (catalogue d'actions),
 §3.5 (HARVEST_VIGUEUR_COST réel), §4 (Qi territorial, flag `harvested`).
 
 Découpage des responsabilités (décision actée 2026-06-04) :

@@ -77,7 +77,7 @@ Le jeu est **déterministe** (seed global) mais les pages doivent *sembler* fort
 > un gain. (Si plus tard tu veux des indices, ce sera un raffinement, pas la v1.)
 
 ## Périmètre — phase CONCEPTION (livrable)
-`data/code/CONCEPTION_PAGES_SECRETES.md` actant : les 3 choix ; les **3 robinets**
+`docs/conception/CONCEPTION_PAGES_SECRETES.md` actant : les 3 choix ; les **3 robinets**
 d'obtention (hasard ↔ événements rares ; récompense ↔ succès de maîtrise ; fouille ↔
 action grenier) ancrés sur des signaux **déterministes existants** ; l'**interface**
 (`pages_trouvees(game_state, player)`, `reveler_page(...)` appelée par le driver,

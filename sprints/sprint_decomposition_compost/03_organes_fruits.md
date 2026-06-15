@@ -1,7 +1,7 @@
 # Sous-sprint ③ — Organes-fruits traçables : maturité par fruit, `manger` ciblé, chute des non-cueillis *(absorbe D19)*
 
 > **Kickoff autosuffisant (démarrage à froid).** Lire d'abord `00_etat.md`
-> (§Acquis ① et ②) et `data/code/CONCEPTION_DECOMPOSITION_COMPOST.md` (**§3**
+> (§Acquis ① et ②) et `docs/conception/CONCEPTION_DECOMPOSITION_COMPOST.md` (**§3**
 > surtout, + §2.4 chute, + §7 ligne ③). ① a posé l'infrastructure parcelles +
 > `deposer_litiere`. ② a branché les **vrais dépôts** du vivant et du mort
 > (`tailler`→bois, squelette persistant, abscission, écraser-squelette). ③

@@ -82,7 +82,7 @@ paliers → **débloquerait-il les tuiles du nouveau terrain immédiatement ?**
 > strictement par avatar, le terrain reste intrinsèque ».
 
 ## Périmètre — phase CONCEPTION (livrable)
-`data/code/CONCEPTION_TERRAIN.md` actant : les 3 choix ; la **carte thème ↔ famille/
+`docs/conception/CONCEPTION_TERRAIN.md` actant : les 3 choix ; la **carte thème ↔ famille/
 concept** (verger/mare/prairie… → quel objet de maîtrise) ; le **mécanisme de
 révélation** (tuile périphérique : `actif=False` → `True`, génération déterministe du
 sol depuis la seed, amorçage de banque) ; l'**interface** (`tuiles_disponibles(

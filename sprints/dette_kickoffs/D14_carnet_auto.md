@@ -82,7 +82,7 @@ Le carnet est une **voix**. Deux registres par entrée (descriptif / interpréta
 > comme livrable éditorial à relire, pas du code.
 
 ## Périmètre — phase CONCEPTION (livrable)
-`data/code/CONCEPTION_CARNET.md` actant : les 3 choix ; la **source d'événements**
+`docs/conception/CONCEPTION_CARNET.md` actant : les 3 choix ; la **source d'événements**
 (réutiliser les marqueurs de `maitrise_detection.py`, **sans** toucher au tick) ;
 l'**interface** (`carnet_consigner(event)` appelée par le **driver** après le tick —
 même logement que la détection de succès, jamais importée par `engine`) ;

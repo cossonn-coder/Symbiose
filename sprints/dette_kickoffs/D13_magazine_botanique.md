@@ -77,7 +77,7 @@ monte (offres qui apparaissent), pas une liste plate.
 > Reco : **(A)** si tu veux du caractère, **(B)** pour un MVP. À toi selon l'effort.
 
 ## Périmètre — phase CONCEPTION (livrable de ce sprint)
-Produire `data/code/CONCEPTION_MAGAZINE.md` qui acte : les 3 choix ci-dessus ; la
+Produire `docs/conception/CONCEPTION_MAGAZINE.md` qui acte : les 3 choix ci-dessus ; la
 **signature de l'interface** côté moteur (`magazine_offres(game_state, player) ->
 list[espèce]` lisant `completude_ratio` ; `acheter_au_magazine(game_state, player,
 espèce) -> bool` qui `spend` la Vigueur puis dépose un lot dans `PlayerSeedBank`) ;

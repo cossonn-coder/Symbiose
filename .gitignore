@@ -18,3 +18,8 @@ data/code/tools/build/
 data/code/tools/dist/
 sim_server
 sim_server.exe
+
+# Maquettes SVG régénérables par tools/render_structure.py (cibles visuelles,
+# pas des sources). Sorties du suivi au Sprint refactor global (SS①).
+data/code/tools/*.svg
+data/code/tools/*.svg.import

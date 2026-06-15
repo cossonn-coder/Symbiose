@@ -259,7 +259,7 @@ Portage C# non concerné (dette D24). Dette consolidée en **D28** (refactor fai
 ## 2026-06-03 — Sprint conception météo / climat + signes diégétiques
 
 **Conception seule, aucun code.** Livrable = spec dédiée à étudier :
-[`data/code/CONCEPTION_METEO.md`](data/code/CONCEPTION_METEO.md). Couvre **D16**
+[`docs/conception/CONCEPTION_METEO.md`](docs/conception/CONCEPTION_METEO.md). Couvre **D16**
 (forecast) et **Z2** (signes diégétiques). Climat de référence : Normandie
 ~49°N, océanique tempéré.
 
@@ -323,7 +323,7 @@ L'imprévisibilité ressentie est **informationnelle (UX)**, jamais simulatoire.
 
 ### Contexte
 
-Implémentation de la conception météo figée (`data/code/CONCEPTION_METEO.md`),
+Implémentation de la conception météo figée (`docs/conception/CONCEPTION_METEO.md`),
 couvrant **D16** (forecast) + **Z2** (signes). Sprint **gros** découpé en
 **4 sous-sprints autosuffisants** (`sprints/sprint_meteo_impl/`), chacun une unité
 testable préservant ou re-figeant le golden une seule fois.
@@ -446,7 +446,7 @@ sécheresse → santé** (pas seulement la stagnation de croissance).
 ## 2026-06-04 — Sprint conception Vigueur : couche transversale D11 (conception seule)
 
 Conception de la **Vigueur universelle** (D11), aucun code. Produit la spec
-`data/code/CONCEPTION_VIGUEUR.md`, sur le modèle de `CONCEPTION_METEO.md`.
+`docs/conception/CONCEPTION_VIGUEUR.md`, sur le modèle de `CONCEPTION_METEO.md`.
 
 **Le pivot :** la Vigueur n'est pas *un* système mais **deux strates**. Le moteur
 modélise déjà la quasi-totalité de la « Vigueur des plantes » sous d'autres noms
@@ -503,7 +503,7 @@ météo (Godot), auxine/taille riche (D29), portage C# (D24).
 
 ## 2026-06-04 — Sprint conception paliers de maîtrise : D12 (conception seule)
 
-**Conception seule, aucun code.** Spec → `data/code/CONCEPTION_MAITRISE.md`.
+**Conception seule, aucun code.** Spec → `docs/conception/CONCEPTION_MAITRISE.md`.
 Couvre **D12** ; remplit l'interface stubbée par le Sprint Vigueur
 (`sim/vigueur.py:palier_bonus() == 1.0`). **Périmètre : squelette réutilisable
 seulement** (décision Nico) — le câblage fin est déclaré en sous-sprints.
@@ -646,7 +646,7 @@ pollinisateurs, vers de terre). Le moteur ne tenait jusqu'ici que des **flux
 abstraits** (`herbivory_pressure` scalaire, terme `predator` reconstruit de
 proxies, `ALEAS_RAVAGEURS` événementiels) — aucune entité à vitalité propre.
 Modèle technique **hybride** déjà tranché le 2026-06-04 après profilage (D32).
-Aboutit à `data/code/CONCEPTION_VIE_MACRO.md`.
+Aboutit à `docs/conception/CONCEPTION_VIE_MACRO.md`.
 
 **Découpage : passage unique** (conception, un seul fichier, contexte chargé).
 
@@ -1109,7 +1109,7 @@ bloquée), D12.4 (calibrage post-test) et D12.5 (portage C#, D24).
 ## 2026-06-04 — Sprint conception Hormones de croissance : D29 auxine / dominance apicale (conception seule)
 
 **Conception SEULE** (cadrage Nico) — aucun code moteur. Livrable :
-`data/code/CONCEPTION_HORMONES.md` (volets A–I). Surface la réponse architecturale
+`docs/conception/CONCEPTION_HORMONES.md` (volets A–I). Surface la réponse architecturale
 à la taille que `CONCEPTION_VIGUEUR.md` §3.3 avait renvoyée à D29 : couper l'apex
 lève la **dominance apicale**, l'auxine cesse d'inhiber → les bourgeons latéraux
 **débourrent** → ramification, port buissonnant, **mise à fruit**.
@@ -1170,7 +1170,7 @@ trivial ultérieur).
 **Placeholders → calibrage post-test** : `DEBOURR_RATE`, `DOMINANCE_RECOVERY`,
 `RAMIF_MAX`, `K_R`, `K_H`, seuils mise à fruit / marqueur `🌿`, coût exact.
 
-**Statut.** D29 **conçu** → `data/code/CONCEPTION_HORMONES.md`. Prochain = sprint
+**Statut.** D29 **conçu** → `docs/conception/CONCEPTION_HORMONES.md`. Prochain = sprint
 d'implémentation Python des hormones (état + cinétique + `tailler` + démonstrateur ;
 golden écolo préservé sans re-figeage). Aucun golden touché (conception pure).
 
@@ -1220,7 +1220,7 @@ d'attributs sur `PlantBase` ; les `growth_stages`/`age_curve` existants devienne
 une graminée `port_archetype="graminee"` est insensible à l'écimage **par
 construction**.
 
-**Livrable** : `data/code/CONCEPTION_CROISSANCE.md` (volets A–M) qui **absorbe et
+**Livrable** : `docs/conception/CONCEPTION_CROISSANCE.md` (volets A–M) qui **absorbe et
 refond** `CONCEPTION_HORMONES.md` (modèle 2 scalaires abandonné ; doc conservé avec
 en-tête de renvoi). Découpage du chantier (**gros, 6 tronçons** + nature/marqueur
 `🌿`/reste du catalogue « plus tard ») en §M.
@@ -1295,7 +1295,7 @@ itératif/esthétique) : **à cadrer avec Nico avant** de lancer.
 
 La **maison normande** entre dans la simulation : elle projette une **ombre
 déterministe** dans le `LightField` et les plantes **se penchent vers la lumière**
-(phototropisme). Conception figée le matin (`data/code/CONCEPTION_MAISON_OMBRE.md`,
+(phototropisme). Conception figée le matin (`docs/conception/CONCEPTION_MAISON_OMBRE.md`,
 commit `57ff88f`, Q1-Q6 toutes tranchées), 4 tronçons implémentés dans la journée.
 
 **Décision : monde agrandi 20×20 m = 1600 plots, maison centrale 8×8×6 m.**
@@ -1672,7 +1672,7 @@ en deux volets, **moteur Python**.
   — la maladresse devient possible et instructive (philo #1). Pont `target.guilde`,
   protocole 0.3.1.
 - **Volet 2 (ce sprint)** : réponse des **plantes** à l'écrasement. Conception
-  **FIGÉE** Q1–Q6 (`data/code/CONCEPTION_ECRASEMENT.md`). Le geste réutilise le
+  **FIGÉE** Q1–Q6 (`docs/conception/CONCEPTION_ECRASEMENT.md`). Le geste réutilise le
   **seam de perturbation partagé** (`growth.py:atteindre_segment`, le même que
   `tailler`) — zéro mécanique neuve dans le moteur de croissance.
 
@@ -1861,7 +1861,7 @@ cohabitation/éclaircissage quand plusieurs plantes partagent un plot).
 
 Suite directe du sprint planter/arroser : **réaliser Q4** (« EMPILEMENT
 AUTORISÉ », renvoyée ici). **Aucun code moteur** — livrable = conception figée
-`data/code/CONCEPTION_COMPETITION_INTRAPLOT.md` + kickoff d'impl
+`docs/conception/CONCEPTION_COMPETITION_INTRAPLOT.md` + kickoff d'impl
 `sprints/sprint_competition_intraplot.md`. Golden inchangé (`7ee907d3…`).
 
 **Posture cadrée d'emblée** : la compétition est **déjà émergente** dans le
@@ -1979,7 +1979,7 @@ Nico veut les reprendre.
 
 ## 2026-06-13 — Sprint conception : décomposition & compost — CONCEPTION SEULE (FIGÉE)
 
-Spec figée → [`data/code/CONCEPTION_DECOMPOSITION_COMPOST.md`](data/code/CONCEPTION_DECOMPOSITION_COMPOST.md).
+Spec figée → [`docs/conception/CONCEPTION_DECOMPOSITION_COMPOST.md`](docs/conception/CONCEPTION_DECOMPOSITION_COMPOST.md).
 Conception en conversation (4 rounds de questions, Nico tranche), **aucun code
 moteur écrit**. Seul changement code de la session : `world/WorldView.cs`
 `DebugSecondsPerWeek` 0 → **3** (Nico : la simu doit tourner vite pour tester

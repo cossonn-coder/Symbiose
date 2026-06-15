@@ -2,7 +2,7 @@
 SYMBIOSE — sim/vigueur_macro.py
 Vigueur des POPULATIONS macroscopiques (ravageur / auxiliaire / pollinisateur /
 vers de terre) — façade dérivée, PURE, read-only (D31.3).
-Spec de référence : `data/code/CONCEPTION_VIE_MACRO.md` §4 (façades `vigueur_*`,
+Spec de référence : `docs/conception/CONCEPTION_VIE_MACRO.md` §4 (façades `vigueur_*`,
 `qi_local` TROPHIQUE, populations PAS individus) ; patron emprunté à
 `sim/vigueur_plante.py` §1 (façade dérivée, la décision structurante).
 
