@@ -1,0 +1,65 @@
+"""
+SYMBIOSE — tools/simserver/version.py
+Version du protocole/moteur + constantes de repli partagées par les handlers.
+
+Éclaté de l'ex-`tools/sim_server.py` (Sprint refactor global, SS⑤) : ces
+constantes étaient en tête du module monolithe ; elles vivent désormais ici,
+importées par les mixins de commandes / actions / sérialisation.
+"""
+from __future__ import annotations
+
+# Version du protocole/moteur exposée dès le v0 (même philosophie que le futur
+# save JSON : casse explicite si schéma incompatible). Locale au serveur pour
+# l'instant — le « sprint save global » décidera où la centraliser.
+# 0.2.0 (tranche 4) : commande `action` + bloc `player` dans le snapshot.
+# 0.2.1 (tranche 5) : `target.segment` optionnel sur `tailler` (taille au clic).
+# 0.2.2 (tranche 6·A) : 3 hints d'organes par plante au snapshot
+#       (foliage_density, organ, organ_site) — pur rendu, lecture seule.
+# 0.2.3 (tranche 6·B) : bloc `sprites` au snapshot (vie macro, D31 côté vue) —
+#       par tuile et par guilde, tableaux COMPACTS [r, c, x_frac, y_frac,
+#       activite]. Compact d'emblée : mesuré 705 Ko/snapshot en format objet
+#       verbeux au pic d'automne du monde full (~8600 sprites) vs 210 Ko en
+#       tableaux — la mitigation prévue au kickoff §4 s'impose à la mesure.
+# 0.3.0 (tranche 6·C, fin de tranche) : commande `fields` (mode debug champs
+#       écologiques) — registre par introspection + grilles par tuile à la
+#       demande, HORS snapshot (volume : la vue ne paie que l'overlay ouvert).
+# 0.3.1 (post-intégration) : `target.guilde` optionnel sur `ecraser` (écraser le
+#       sprite cliqué quelle que soit sa guilde — défaut `ravageur` = compat).
+# 0.3.2 (écraser·volet 2) : `ecraser` route aussi vers une PLANTE quand le `target`
+#       la désigne par position (`x_cm`/`y_cm`, + `segment` optionnel) au lieu de
+#       `r`/`c`+`guilde` — déforme / écime / fait mourir (sentier). Routage sur la
+#       FORME du target (Q6) ; compat guilde animale inchangée.
+# 0.3.3 (planter·arroser, sprint éponyme) : verbes `planter` (target tile +
+#       `x_cm`/`y_cm` + `params.species`, clé catalogue) et `arroser` (target tile +
+#       `x_cm`/`y_cm`, `params.urgence`/`phase`) — gestes sur le MILIEU. La position
+#       continue se RÉSOUT en plot-foyer (`floor(/PLOT_CM)`) côté serveur, les
+#       façades écrivent au plot. Banque-joueur attachée à l'init (remplie à la
+#       récolte) + exposée au snapshot (`player.seeds`, lots plantables).
+# 0.3.4 (décompo·compost ③, organes-fruits, absorbe D19) : le snapshot expose
+#       `plant.fruits` = liste de fruits TRACÉS (vrai état moteur ≠ proxy `organ`),
+#       chacun {segment, maturite, masse}. Le geste `manger` accepte
+#       `target.fruit` (index dans cette liste) → consomme CE fruit, gain ∝ sa
+#       maturité, l'organe disparaît (déplétion réelle). `manger` sans `fruit`
+#       garde le mode générique (legacy). Nouaison/maturation/chute pilotées par
+#       engine._tick_fruits ; les sur-mûrs tombent en litière `fruit`.
+# 0.3.5 (décompo·compost ⑤, structures posables) : le snapshot expose
+#       `eco.structures` par tuile (liste de {kind, plot, compost_mur}) — l'index
+#       implicite = position dans la liste = `target.structure` des gestes. Six
+#       verbes neufs au routeur : `poser_bac`/`poser_pile` (target plot {r,c},
+#       planification), `composter`/`empiler_bois` (target plot {r,c} + `structure`,
+#       déplacent la litière → contenu), `retourner` (target {structure}, accélère
+#       la maturation), `epandre` (target plot {r,c} + `structure`, `params.q`
+#       optionnel — restitue le compost mûr au sol en trio humus, borné par la
+#       jauge). La pile pose en plus une rondelle `auxiliaire` (habitat §4.1).
+ENGINE_VERSION = "0.3.5"
+
+# Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
+# printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les
+# herbacées du catalogue en attendant le VRAI état reproducteur (D19/D33).
+DEFAULT_REPRO = {"printemps": "flower", "ete": "fruit_ripe",
+                 "automne": "fruit_ripe", "hiver": None}
+
+# Tolérance du match plante-par-position (kickoff t4 §8) : les positions du
+# snapshot reviennent telles quelles dans la cible → l'epsilon n'absorbe que le
+# bruit de sérialisation JSON (float64 round-trip, en pratique exact).
+PLANT_EPSILON_CM = 0.1

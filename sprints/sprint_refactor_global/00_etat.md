@@ -45,13 +45,13 @@ exclus du décompte et **conservés au cœur des fichiers**).
 | ② | Journal éclaté (index + par sprint) | faible | ✅ CLOS (2026-06-15) |
 | ③ | Python cœur sim 1 (engine, ecofields, effects) | élevé | ✅ CLOS (2026-06-15) |
 | ④ | Python cœur sim 2 (actions, base, species, growth) | élevé | ✅ CLOS (2026-06-15) |
-| ⑤ | Python outils & tests (sim_server, render, 2 tests) | moyen | ⬜ |
+| ⑤ | Python outils & tests (sim_server, render, 2 tests) | moyen | ✅ CLOS (2026-06-15) |
 | ⑥ | C# WorldView (1759 l) | moyen | ⬜ |
 | ⑦ | C# reste & finition + grave règles dans CLAUDE.md | moyen | ⬜ |
 
 ## Reprise
 
-Tronçon courant : **SS⑤**. Lire `05_*.md` (Python outils & tests — sim_server, render_structure/export_structure, gros tests).
+Tronçon courant : **SS⑥**. Lire `06_*.md` (C# WorldView, 1759 l — premier tronçon C#, build Godot à vérifier).
 
 > **Recalibrage de portée (acté avec Nico, SS③)** : le seuil 500 est un garde-fou,
 > pas un dogme — l'objectif réel est **un fichier = une responsabilité cohérente**,
@@ -156,3 +156,34 @@ Tronçon courant : **SS⑤**. Lire `05_*.md` (Python outils & tests — sim_serv
     `_phototropic_bias`/`_objets_action`/`_cle_espece`) → tous ré-exportés par les
     `__init__`. `species.py` était le seul fichier réellement > 500 code pur ; les 3
     autres sous 500 ont été éclatés au titre du recalibrage de portée (SS③).
+- **SS⑤ CLOS (2026-06-15)** — golden inchangé `908f591bee…`, **19/19 suites vertes**
+  (golden, pont 123/123, Vigueur 135/135, + 16 autres), `vigueur_hash.txt` intact,
+  pont vérifié en vrai sous-process (aller-retour réel). 4 cibles éclatées, chacune
+  gardant son **point d'entrée historique mince** (chemin/nom inchangés) :
+  - `tools/sim_server.py` (779 l / 480 code) → entrée mince (docstring protocole +
+    bootstrap sys.path + `__main__`) + paquet `tools/simserver/` : `version`
+    (ENGINE_VERSION + historique), `commands` (CommandsMixin init/step/snapshot/fields),
+    `actions` (ActionsMixin cmd_action/_do_action/_plant_at/_plot_at, 300 code),
+    `serialize` (SerializeMixin _world_static/_snapshot), `server` (SimServer mixins +
+    boucle `main`). **Pont Godot intact** : `SimBridge.cs` invoque toujours
+    `tools/sim_server.py` ; `.spec` non touché (Analysis suit les imports statiques,
+    `tests.test_golden`/`main` déjà en hiddenimports). Classe scindée par MIXINS
+    (comme Engine SS③).
+  - `tools/render_structure.py` (592 l / 371 code) → entrée mince (CLI + ré-exports) +
+    paquet `tools/maquette/` : `iso` (projection + convex_hull), `organes`
+    (feuilles/fleurs/fruits + **REPRO_BY_SEASON**), `apercu` (render structure),
+    `secteurs` (maquette saisonnière). API ré-exportée vérifiée : `tools/simserver`
+    importe `REPRO_BY_SEASON`, `tools/export_structure` importe `SECTEURS_MAQ`/
+    `SAISON_WEEK_MAQ`/`SAISONS_ORDRE`/`MAQ_SPECIES`/`_grow_sector` → tous OK.
+  - `tests/test_vigueur.py` (899 l / 653 code) → entrée orchestratrice (même ordre) +
+    paquet `tests/vigueur/` : `harness` (check/_results/helpers partagés), `contrats`,
+    `gestes`, `facades`, `manger`, `macro`, `maitrise_seam`, `golden_traj`. `HASH_FILE`
+    pointe toujours `tests/vigueur_hash.txt`. 135/135 inchangé.
+  - `tests/test_sim_server.py` (825 l / 617 code) → entrée orchestratrice + paquet
+    `tests/simserver/` : `harness` (ServerProc/check/run_scenario), `base` (§1-6),
+    `actions` (§7), `taille` (§8+8b), `organes` (§9), `macro` (§10), `fields` (§11),
+    `planter` (§12), `structures` (§13). 123/123 inchangé.
+  - **Max code pur après découpe = 308** (cultivees, inchangé) ; toutes les nouvelles
+    pièces SS⑤ < 320 (sim_server/actions 300, gestes 213, maquette/secteurs 171).
+  - **Tests/outils ne participent pas au hash golden** (vérifié : golden re-lancé,
+    identique). Les 6 SVG de maquette restent gitignorés (SS①).

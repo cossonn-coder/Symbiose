@@ -1,0 +1,56 @@
+"""
+SYMBIOSE — tools/simserver/server.py
+Assemblage de `SimServer` (les trois mixins) + la boucle stdin/stdout qui
+applique le framing du protocole (1 ligne = 1 message JSON). Cœur d'orchestration
+du pont — la logique des commandes vit dans commands/actions/serialize.
+"""
+from __future__ import annotations
+import json
+import sys
+
+from .commands import CommandsMixin
+from .actions import ActionsMixin
+from .serialize import SerializeMixin
+
+
+class SimServer(CommandsMixin, ActionsMixin, SerializeMixin):
+    """État du serveur : un Engine (ou None avant `init`). Dispatch des commandes."""
+
+    def __init__(self):
+        self.engine = None
+
+
+def main() -> int:
+    server = SimServer()
+    dispatch = {"init": server.cmd_init,
+                "step_week": server.cmd_step_week,
+                "snapshot": server.cmd_snapshot,
+                "action": server.cmd_action,
+                "fields": server.cmd_fields}
+    # 1 ligne lue = 1 réponse écrite. EOF (Godot mort sans quit) → fin de boucle.
+    for line in sys.stdin:
+        line = line.strip()
+        if not line:
+            continue
+        quit_after = False
+        try:
+            msg = json.loads(line)
+            if not isinstance(msg, dict):
+                resp = {"ok": False, "error": "message JSON non-objet"}
+            else:
+                cmd = msg.get("cmd")
+                if cmd == "quit":
+                    resp, quit_after = {"ok": True}, True
+                elif cmd in dispatch:
+                    resp = dispatch[cmd](msg)
+                else:
+                    resp = {"ok": False, "error": f"commande inconnue : {cmd!r}"}
+        except Exception as e:                       # le serveur survit à tout
+            resp = {"ok": False, "error": f"{type(e).__name__}: {e}"}
+        # Compact (1 ligne) + sort_keys (stable entre runs → déterminisme
+        # vérifiable byte-à-byte). flush OBLIGATOIRE : sans lui la réponse
+        # reste dans le buffer et Godot attend indéfiniment (piège n°1 des pipes).
+        print(json.dumps(resp, sort_keys=True, separators=(",", ":")), flush=True)
+        if quit_after:
+            break
+    return 0
