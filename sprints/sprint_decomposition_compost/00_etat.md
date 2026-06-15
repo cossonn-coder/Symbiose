@@ -37,7 +37,7 @@ compost** + **pile à bois** posables. Absorbe **D19** + une part de **D33**.
 | ② | Dépôts vivant & mort (taille→bois, squelette persistant + fragmentation, abscission, écraser-squelette) | `02_depots_vivant_mort.md` | **FAIT (2026-06-14)** — A (2026-06-13) + B/C (2026-06-14) |
 | ③ | Organes-fruits traçables (maturité, `manger` ciblé, chute) — **absorbe D19** | `03_organes_fruits.md` | **FAIT (2026-06-14)** — golden NEUTRE |
 | ④ | Attraction animale (fruit→guildes ; pile→habitat reporté ⑤) | `04_attraction_animale.md` | **FAIT (2026-06-14)** — golden NEUTRE |
-| ⑤ | Structures posables + gestes (composter/empiler/retourner/epandre, jauge, amendements) | `05_*.md` (à écrire) | en attente |
+| ⑤ | Structures posables + gestes (composter/empiler/retourner/epandre, jauge, amendements) | `05_structures_posables.md` | **kickoff écrit (2026-06-15)**, à coder — 3 phases A/B/C |
 | ⑥ | Vue (post-mortem visible, litière, maturité-fruit) — **quand Godot reprend** | `06_*.md` (à écrire) | différé |
 
 ## Conventions
@@ -220,7 +220,10 @@ Lire ce fichier puis le kickoff du prochain sous-sprint. ①+②+③+④ **FAITS
 **⑤ structures posables** (bac à compost / pile à bois + gestes composter/empiler/
 retourner/epandre + jauge `compost_mur` + amendements + **pile→habitat reporté
 ici depuis ④**), **⑥ vue Godot** (différé : post-mortem visible, litière,
-maturité-fruit). Écrire `05_*.md` avant d'attaquer ⑤. Doc conception §5 tranche
-les « pourquoi ». Hooks posés pour ⑥ : `plant.fruits` au snapshot, `manger` routé
+maturité-fruit). **Kickoff `05_structures_posables.md` ÉCRIT (2026-06-15)** —
+prochaine étape = le coder (3 phases internes A/B/C : modèle+poser+composter ·
+maturation+jauge+retourner · epandre+pile+habitat ; golden attendu NEUTRE sur
+les 3, à PROUVER ; pont 0.3.4→0.3.5). Doc conception §5/§4.1 tranche les
+« pourquoi ». Hooks posés pour ⑥ : `plant.fruits` au snapshot, `manger` routé
 sur `target.fruit`. Patron habitat pour ⑤ : rondelle `auxiliaire` lue par
 `_stability_grid` (cf. `favoriser_auxiliaire`).
