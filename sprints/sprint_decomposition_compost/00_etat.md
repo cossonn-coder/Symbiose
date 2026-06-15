@@ -37,7 +37,7 @@ compost** + **pile à bois** posables. Absorbe **D19** + une part de **D33**.
 | ② | Dépôts vivant & mort (taille→bois, squelette persistant + fragmentation, abscission, écraser-squelette) | `02_depots_vivant_mort.md` | **FAIT (2026-06-14)** — A (2026-06-13) + B/C (2026-06-14) |
 | ③ | Organes-fruits traçables (maturité, `manger` ciblé, chute) — **absorbe D19** | `03_organes_fruits.md` | **FAIT (2026-06-14)** — golden NEUTRE |
 | ④ | Attraction animale (fruit→guildes ; pile→habitat reporté ⑤) | `04_attraction_animale.md` | **FAIT (2026-06-14)** — golden NEUTRE |
-| ⑤ | Structures posables + gestes (composter/empiler/retourner/epandre, jauge, amendements) | `05_structures_posables.md` | **Phases A+B FAITES (2026-06-15)** — golden NEUTRE. Reste C (epandre+pile+habitat) |
+| ⑤ | Structures posables + gestes (composter/empiler/retourner/epandre, jauge, amendements) | `05_structures_posables.md` | **FAIT (2026-06-15)** — A+B+C, golden NEUTRE, pont 0.3.5 |
 | ⑥ | Vue (post-mortem visible, litière, maturité-fruit) — **quand Godot reprend** | `06_*.md` (à écrire) | différé |
 
 ## Conventions
@@ -284,20 +284,54 @@ compost** + **pile à bois** posables. Absorbe **D19** + une part de **D33**.
   `fertilite` borné par `compost_mur`) + amendement pile (biais structure) +
   pile→habitat `auxiliaire` (rondelle, patron `favoriser_auxiliaire`) + pont 0.3.4→0.3.5.
 
+## Acquis sous-sprint ⑤ — Phase C (2026-06-15) : epandre + amendement pile + habitat + pont
+- **Décision #3 figée (volets trio/habitat), placeholders du kickoff** : **trio
+  humus** `EPANDRE_W` (knobs dans `sim/actions.py`, à côté de `DOSE_ARROSAGE`/
+  `BECHAGE_*` — `epandre` est un geste joueur qui amende un champ, comme `becher`) :
+  bac `{om_stable:0.6, microbiome:0.3, fertilite:0.3}`, **pile = bac ×(1.3,0.5,0.4)**
+  = `{0.78, 0.15, 0.12}` (biais structure, humus forestier). **Habitat = sobre** :
+  `poser_pile` pose une **rondelle `auxiliaire`** sur la tuile (patron exact de
+  `favoriser_auxiliaire`, lue par `_stability_grid`) — zéro champ neuf, le local au
+  plot reste différé (D30).
+- **`sim/actions.py`** : `epandre(eco, r, c, struct, q=None)` → **borné** par
+  `compost_mur` (`q=None` ⇒ tout le dispo ; demande > jauge tronquée) ; **refus EN
+  AMONT si jauge vide/demande ≤ 0** (aucune Vigueur dépensée, modèle `planter`/lot
+  vide) ; décrémente la jauge, dépose le trio via `GridField.add` **borné**
+  (microbiome ensemencé, philo #4 — pas un `set`). Renvoie la quantité épandue.
+  `poser_pile` prend désormais **`tile`** en plus de `eco` (asymétrie voulue : seule
+  la pile a l'habitat ; bac inchangé) et pose la rondelle (best-effort, n'échoue pas
+  la pose si tiges saturées). Coût `epandre` = `FAIBLE` (canal vertueux §5.1).
+- **`tools/sim_server.py` 0.3.4 → 0.3.5** : snapshot expose `eco.structures` par
+  tuile (`[{kind, plot, compost_mur}]`, index = `target.structure`). Routeur : 6
+  verbes (`poser_bac`/`poser_pile` target plot ; `composter`/`empiler_bois` plot +
+  `structure` ; `retourner` `structure` ; `epandre` plot + `structure` + `params.q`
+  optionnel). Validation des bornes + cohérence kind/geste (composter↔bac,
+  empiler↔pile) ICI = refus de désignation, ne coûte rien.
+- **Golden NEUTRE (non re-figé), PROUVÉ** : smoke `908f591bee…`, population
+  `435e6f72…` **bit-identiques à ④/A/B**. Cause : le golden ne pose aucune structure
+  et n'appelle aucun geste ⑤ ; `epandre` est event-driven hors tick. Vérifié.
+- **`tests/test_structures.py` 48 → 65 checks** (+17 phase C) : epandre (borné,
+  trio au bon ratio, q=None, plot voisin intact, jauge vide → 0 + zéro Vigueur),
+  biais pile (om_stable↑/fertilite↓ vs bac à q égal), habitat (rondelle posée,
+  bac n'en pose pas). **`tests/test_sim_server.py` 113 → 123** (+10 : pont 0.3.5,
+  snapshot structures, index invalide/kind mismatch refusés, aller-retour réel
+  poser→composter→retourner→epandre). Suites vertes : golden, population, structures
+  65, sim_server 123, vigueur 135, croissance 67, competition, eau 20, génétique 20,
+  maîtrise 35, maîtrise_detection 20, signes 8, ombre_maison 4, phototropisme 11,
+  planter, sénescence, fruits 21, attraction, auxiliaires (régulation OK).
+  `main.py 5` exit 0. **⑤ CLOS, DoD complète.**
+
 ## REPRISE (démarrage à froid)
-Lire ce fichier puis le kickoff `05_structures_posables.md`. ①+②+③+④ **FAITS** ;
-⑤ **phases A+B FAITES** (cf. §Acquis ⑤ Phase A & Phase B). **PROCHAINE ÉTAPE = ⑤
-phase C** : `epandre(bac→plot, q)` borné par `compost_mur` → **trio humus**
-(`om_stable` += q×W_STABLE, `microbiome` ensemencé en `add` borné — pas un `set`,
-philo #4 —, `fertilite` += q×W_FERT) ; **amendement pile** = même API biais
-structure (W_STABLE fort, W_FERT faible, plus lent) ; **pile→habitat `auxiliaire`**
-= rondelle posée à `poser_pile` (patron `favoriser_auxiliaire`, lue par
-`_stability_grid`) ; **pont 0.3.4→0.3.5** (snapshot `eco.structures` [{kind, plot,
-compost_mur}] + routeur des 6 gestes). Décision #3 volets trio/habitat à figer au
-début de C (placeholders kickoff : W_STABLE≈0.6, W_MICRO≈0.3, W_FERT≈0.3 bac ;
-pile ×(1.3, 0.5, 0.4)). Golden attendu NEUTRE (geste jamais déclenché par le smoke).
-Le kickoff §«Plan d'implémentation»/§«Décisions #3» détaille les knobs de C.
-Ensuite **⑥ vue Godot** (différé : post-mortem visible, litière,
-maturité-fruit). Hooks posés pour ⑥ : `plant.fruits` au snapshot, `manger` routé
-sur `target.fruit`. Patron habitat pour ⑤C : rondelle `auxiliaire` lue par
-`_stability_grid` (cf. `favoriser_auxiliaire`).
+①+②+③+④+⑤ **TOUS FAITS** (sous-sprints moteur du sprint décompo·compost) — cf.
+§Acquis. Le **canal vertueux complet** existe côté moteur : litière typée (①),
+dépôts vivant/mort + squelette + abscission (②), organes-fruits traçables (③),
+attraction animale (④), structures posables bac/pile + composter/empiler/retourner/
+**epandre** trio humus + habitat pile (⑤). Pont **0.3.5** (snapshot `structures`,
+6 gestes routés). Golden jamais re-figé depuis ② (`908f591bee…` / `435e6f72…`).
+
+**Reste = ⑥ VUE GODOT** (différé tant que l'intégration Godot est en pause) :
+rendre visibles le post-mortem (squelettes), la litière, la maturité-fruit, les
+bac/pile + jauge `compost_mur`, les auxiliaires autour de la pile. Tous les
+**hooks moteur sont posés** : `plant.fruits` au snapshot (`manger` sur
+`target.fruit`), `eco.structures` au snapshot, rondelle `auxiliaire` de la pile
+lue par `_stability_grid`. Le kickoff `06_*.md` reste à écrire.

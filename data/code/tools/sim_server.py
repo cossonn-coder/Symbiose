@@ -137,7 +137,16 @@ from tools.render_structure import REPRO_BY_SEASON
 #       maturité, l'organe disparaît (déplétion réelle). `manger` sans `fruit`
 #       garde le mode générique (legacy). Nouaison/maturation/chute pilotées par
 #       engine._tick_fruits ; les sur-mûrs tombent en litière `fruit`.
-ENGINE_VERSION = "0.3.4"
+# 0.3.5 (décompo·compost ⑤, structures posables) : le snapshot expose
+#       `eco.structures` par tuile (liste de {kind, plot, compost_mur}) — l'index
+#       implicite = position dans la liste = `target.structure` des gestes. Six
+#       verbes neufs au routeur : `poser_bac`/`poser_pile` (target plot {r,c},
+#       planification), `composter`/`empiler_bois` (target plot {r,c} + `structure`,
+#       déplacent la litière → contenu), `retourner` (target {structure}, accélère
+#       la maturation), `epandre` (target plot {r,c} + `structure`, `params.q`
+#       optionnel — restitue le compost mûr au sol en trio humus, borné par la
+#       jauge). La pile pose en plus une rondelle `auxiliaire` (habitat §4.1).
+ENGINE_VERSION = "0.3.5"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les
@@ -501,6 +510,96 @@ class SimServer:
                          "sol ameubli à la grelinette" if ok
                          else "Vigueur insuffisante")
 
+        # Structures posables & compostage (⑤, protocole 0.3.5). Toutes ciblent une
+        # tuile ; poser/composter/empiler/epandre désignent un PLOT {r,c}, les gestes
+        # sur une structure existante (composter/empiler/retourner/epandre) la
+        # désignent par INDEX dans `eco.structures` (= ordre du snapshot). Validation
+        # des bornes ICI (refus de désignation → ne coûte rien), la façade fait foi.
+        if verb in ("poser_bac", "poser_pile", "composter", "empiler_bois",
+                    "retourner", "epandre"):
+            tile, eco = tile_cible()
+            if tile is None:
+                return bilan(False, 0.0, 0.0,
+                             f"tuile introuvable : {target.get('tile')!r}")
+
+            def plot_rc():
+                """(r, c) entier dans la grille, ou (None, message)."""
+                r, c = target.get("r"), target.get("c")
+                if (not isinstance(r, int) or isinstance(r, bool)
+                        or not isinstance(c, int) or isinstance(c, bool)
+                        or not (0 <= r < tile.grid_rows)
+                        or not (0 <= c < tile.grid_cols)):
+                    return None, f"plot hors tuile : r={r!r}, c={c!r}"
+                return (r, c), None
+
+            def struct_cible():
+                """La Structure désignée par `target.structure`, ou (None, message)."""
+                idx = target.get("structure")
+                if not isinstance(idx, int) or isinstance(idx, bool):
+                    return None, f"structure non entier : {idx!r}"
+                if not 0 <= idx < len(eco.structures):
+                    return None, (f"structure hors liste : {idx} "
+                                  f"({len(eco.structures)} posées sur {tile.tile_id})")
+                return eco.structures[idx], None
+
+            cost = A.cout_action(gs, player, verb, A.OBJETS_TOUCHES[verb])
+
+            if verb in ("poser_bac", "poser_pile"):
+                rc, err = plot_rc()
+                if rc is None:
+                    return bilan(False, 0.0, 0.0, err)
+                r, c = rc
+                if verb == "poser_bac":
+                    s = A.poser_bac(gs, player, eco, r, c)
+                else:
+                    s = A.poser_pile(gs, player, eco, tile, r, c)
+                quoi = "bac à compost" if verb == "poser_bac" else "pile à bois"
+                return bilan(s is not None, cost, 0.0,
+                             f"{quoi} posé en ({r},{c}) sur {tile.tile_id}"
+                             if s is not None
+                             else "Vigueur insuffisante — rien posé")
+
+            struct, err = struct_cible()
+            if struct is None:
+                return bilan(False, 0.0, 0.0, err)
+            # Cohérence kind/geste : composter→bac, empiler→pile (refus de
+            # désignation, ne coûte rien). retourner/epandre marchent sur les deux.
+            if verb == "composter" and struct.kind != "bac":
+                return bilan(False, 0.0, 0.0, "cette structure n'est pas un bac à compost")
+            if verb == "empiler_bois" and struct.kind != "pile":
+                return bilan(False, 0.0, 0.0, "cette structure n'est pas une pile à bois")
+
+            if verb == "retourner":
+                ok = A.retourner(gs, player, struct)
+                return bilan(ok, cost, 0.0,
+                             "compost retourné (maturation accélérée)" if ok
+                             else "Vigueur insuffisante — rien retourné")
+
+            rc, err = plot_rc()
+            if rc is None:
+                return bilan(False, 0.0, 0.0, err)
+            r, c = rc
+            if verb == "composter":
+                ok = A.composter(gs, player, eco, r, c, struct)
+                return bilan(ok, cost, 0.0,
+                             f"litière tendre compostée ({r},{c}) → bac" if ok
+                             else "Vigueur insuffisante — rien composté")
+            if verb == "empiler_bois":
+                ok = A.empiler_bois(gs, player, eco, r, c, struct)
+                return bilan(ok, cost, 0.0,
+                             f"bois empilé ({r},{c}) → pile" if ok
+                             else "Vigueur insuffisante — rien empilé")
+            # epandre : params.q optionnel (None ⇒ tout le disponible).
+            q = params.get("q")
+            if q is not None and (not isinstance(q, (int, float))
+                                  or isinstance(q, bool)):
+                return bilan(False, 0.0, 0.0, f"quantité non numérique : {q!r}")
+            epandu = A.epandre(gs, player, eco, r, c, struct, q=q)
+            return bilan(epandu > 0.0, cost, 0.0,
+                         f"compost épandu en ({r},{c}) : {epandu:.2f} "
+                         f"(jauge restante {struct.compost_mur:.2f})" if epandu > 0.0
+                         else "rien épandu (jauge vide ou Vigueur insuffisante)")
+
         return bilan(False, 0.0, 0.0, f"verbe inconnu : {verb!r}")
 
     @staticmethod
@@ -605,6 +704,7 @@ class SimServer:
         # Arrondis : x/y_frac 3 déc. (= 0,05 cm dans le plot), activite 2 —
         # et round() est déterministe, la clé de diff côté vue reste stable.
         sprites = {}
+        structures = {}
         for tile in gs["tiles"]:
             eco = gs["eco"][tile.tile_id]
             sprites[tile.tile_id] = {
@@ -613,6 +713,13 @@ class SimServer:
                      round(s.activite, 2)]
                     for s in sample_sprites(f, gs["seed"])]
                 for f in eco.populations.values()}
+            # Structures posables (⑤, 0.3.5) : index implicite = position dans la
+            # liste = `target.structure` des gestes. `compost_mur` = jauge mûre
+            # épandable. PURE lecture (la vue dessine bac/pile + jauge en ⑥).
+            structures[tile.tile_id] = [
+                {"kind": st.kind, "plot": list(st.plot),
+                 "compost_mur": round(st.compost_mur, 4)}
+                for st in eco.structures]
         # Bloc joueur (tranche 4, lecture seule) : la vue affiche la Vigueur
         # au HUD. vigueur_max passe par la façade (bonus maîtrise compris).
         # `seeds` (0.3.3) = lots PLANTABLES de la banque-joueur, {clé catalogue:
@@ -628,7 +735,8 @@ class SimServer:
                 "player": {"vigueur": st["courante"],
                            "vigueur_max": V.vigueur_max(gs, player),
                            "seeds": seeds},
-                "plants": plants, "sprites": sprites}
+                "plants": plants, "sprites": sprites,
+                "structures": structures}
 
 
 def main() -> int:

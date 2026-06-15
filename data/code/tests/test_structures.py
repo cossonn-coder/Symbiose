@@ -27,6 +27,7 @@ import sys
 
 from fields import init_eco, Structure, STRUCTURE_ACCEPTE
 from fields.ecofields import RETOURNE_DUREE
+from world.tile import Tile
 from sim import actions as ACT
 from sim import vigueur as V
 
@@ -49,6 +50,12 @@ def _gs(courante=None):
     return gs
 
 
+def _tile(rows=4, cols=4):
+    """Tuile minimale (porteuse des tiges/rondelles) — `poser_pile` y pose son
+    habitat auxiliaire (§4.1)."""
+    return Tile(tile_id="T0", soil_type="terre", grid_rows=rows, grid_cols=cols)
+
+
 def _masse(parcelles, tissu=None):
     return sum(p.masse for p in parcelles if tissu is None or p.tissu == tissu)
 
@@ -59,9 +66,10 @@ def _masse(parcelles, tissu=None):
 def test_poser():
     print("\n[1] poser_bac / poser_pile : structure vide, bon kind, binaire")
     eco = init_eco("T0", 4, 4)
+    tile = _tile()
     gs = _gs()
     bac = ACT.poser_bac(gs, "joueur_1", eco, 1, 1)
-    pile = ACT.poser_pile(gs, "joueur_1", eco, 2, 2)
+    pile = ACT.poser_pile(gs, "joueur_1", eco, tile, 2, 2)
     check("bac posé (Structure renvoyée)", bac is not None and bac.kind == "bac")
     check("pile posée", pile is not None and pile.kind == "pile")
     check("2 structures dans eco.structures", len(eco.structures) == 2)
@@ -145,7 +153,7 @@ def test_empiler():
     eco.deposer_litiere(2, 2, "bois", 4.0)
     eco.deposer_litiere(2, 2, "feuille", 1.0)       # doit RESTER au sol
     gs = _gs()
-    pile = ACT.poser_pile(gs, "joueur_1", eco, 2, 2)
+    pile = ACT.poser_pile(gs, "joueur_1", eco, _tile(), 2, 2)
     ok = ACT.empiler_bois(gs, "joueur_1", eco, 2, 2, pile)
     check("geste payé/appliqué", ok)
     check("pile reçoit le bois (4.0)", abs(_masse(pile.contenu, "bois") - 4.0) < 1e-9)
@@ -337,9 +345,92 @@ def test_determinisme_maturation():
     check("maturation reproductible", a == b, f"{a[0]}")
 
 
+# ---------------------------------------------------------------------------
+# 13. epandre (phase C) : borné par la jauge + trio humus au bon ratio
+# ---------------------------------------------------------------------------
+def test_epandre():
+    print("\n[13] epandre : borné par compost_mur, trio humus (bac équilibré)")
+    eco = init_eco("T0", 4, 4)
+    bac = Structure(kind="bac", plot=(0, 0))
+    eco.structures.append(bac)
+    bac.compost_mur = 2.0                     # jauge mûre (posée directement)
+    gs = _gs()
+    epandu = ACT.epandre(gs, "joueur_1", eco, 3, 3, bac, q=2.0)
+    w = ACT.EPANDRE_W["bac"]
+    check("épandu = 2.0 (toute la jauge)", abs(epandu - 2.0) < 1e-9, f"{epandu}")
+    check("jauge décrémentée → 0", abs(bac.compost_mur) < 1e-9)
+    check("om_stable += q×0.6", abs(eco.om_stable.at_plot(3, 3) - 2.0 * w["om_stable"]) < 1e-9)
+    check("microbiome ensemencé += q×0.3",
+          abs(eco.microbiome.at_plot(3, 3) - 2.0 * w["microbiome"]) < 1e-9)
+    check("fertilite += q×0.3", abs(eco.fertilite.at_plot(3, 3) - 2.0 * w["fertilite"]) < 1e-9)
+    check("plot voisin INTACT (épandage local)",
+          eco.om_stable.at_plot(0, 0) == 0.0 and eco.fertilite.at_plot(0, 0) == 0.0)
+
+    # Bornage (piège #5) : demander plus que la jauge → tronqué à la jauge.
+    bac.compost_mur = 1.5
+    epandu2 = ACT.epandre(gs, "joueur_1", eco, 2, 2, bac, q=10.0)
+    check("demande > jauge → tronqué à 1.5", abs(epandu2 - 1.5) < 1e-9, f"{epandu2}")
+    check("jauge vidée", abs(bac.compost_mur) < 1e-9)
+
+    # q=None → épand tout le disponible.
+    bac.compost_mur = 0.8
+    epandu3 = ACT.epandre(gs, "joueur_1", eco, 1, 1, bac, q=None)
+    check("q=None → tout le disponible (0.8)", abs(epandu3 - 0.8) < 1e-9)
+
+    # Jauge vide → refus EN AMONT, aucune Vigueur dépensée.
+    v_avant = gs["vigueur"]["joueur_1"]["courante"]
+    epandu4 = ACT.epandre(gs, "joueur_1", eco, 1, 1, bac, q=5.0)
+    check("jauge vide → 0.0 épandu", epandu4 == 0.0)
+    check("jauge vide → AUCUNE Vigueur dépensée",
+          gs["vigueur"]["joueur_1"]["courante"] == v_avant)
+
+
+# ---------------------------------------------------------------------------
+# 14. Biais structure : la pile amende plus de structure, moins de fertilité
+# ---------------------------------------------------------------------------
+def test_pile_biais():
+    print("\n[14] epandre pile : biais structure (om_stable fort, fertilite faible)")
+    eco = init_eco("T0", 4, 4)
+    bac = Structure(kind="bac", plot=(0, 0))
+    pile = Structure(kind="pile", plot=(1, 1))
+    eco.structures += [bac, pile]
+    bac.compost_mur = pile.compost_mur = 2.0
+    gs = _gs()
+    ACT.epandre(gs, "joueur_1", eco, 0, 0, bac, q=2.0)    # bac → plot (0,0)
+    ACT.epandre(gs, "joueur_1", eco, 3, 3, pile, q=2.0)   # pile → plot (3,3)
+    check("pile : om_stable > bac (biais structure)",
+          eco.om_stable.at_plot(3, 3) > eco.om_stable.at_plot(0, 0),
+          f"pile {eco.om_stable.at_plot(3, 3):.3f} vs bac {eco.om_stable.at_plot(0, 0):.3f}")
+    check("pile : fertilite < bac (nourrit peu)",
+          eco.fertilite.at_plot(3, 3) < eco.fertilite.at_plot(0, 0),
+          f"pile {eco.fertilite.at_plot(3, 3):.3f} vs bac {eco.fertilite.at_plot(0, 0):.3f}")
+
+
+# ---------------------------------------------------------------------------
+# 15. Pile → habitat auxiliaire (§4.1) : poser_pile pose une rondelle, lue par
+#     _stability_grid (patron favoriser_auxiliaire)
+# ---------------------------------------------------------------------------
+def test_pile_habitat():
+    print("\n[15] poser_pile : pose une rondelle auxiliaire (habitat §4.1)")
+    eco = init_eco("T0", 4, 4)
+    tile = _tile()
+    check("tuile vierge : 0 rondelle auxiliaire",
+          tile.get_rondelle_count("auxiliaire") == 0)
+    gs = _gs()
+    pile = ACT.poser_pile(gs, "joueur_1", eco, tile, 2, 2)
+    check("pile posée", pile is not None)
+    check("rondelle auxiliaire posée sur la tuile",
+          tile.get_rondelle_count("auxiliaire") == 1)
+    # Le bac, lui, NE pose PAS d'habitat (asymétrie voulue).
+    tile2 = _tile()
+    ACT.poser_bac(gs, "joueur_1", eco, 1, 1)
+    check("poser_bac n'ajoute aucune rondelle",
+          tile2.get_rondelle_count("auxiliaire") == 0)
+
+
 def main():
     print("=" * 60)
-    print("TEST STRUCTURES POSABLES (décompo·compost ⑤ phases A+B)")
+    print("TEST STRUCTURES POSABLES (décompo·compost ⑤ phases A+B+C)")
     print("=" * 60)
     test_poser()
     test_acceptation()
@@ -353,6 +444,9 @@ def main():
     test_pile_plus_lente()
     test_tick_neutre()
     test_determinisme_maturation()
+    test_epandre()
+    test_pile_biais()
+    test_pile_habitat()
 
     print("\n" + "=" * 60)
     total = len(_results)
