@@ -26,6 +26,7 @@ Usage (depuis data/code/) :
 import sys
 
 from fields import init_eco, Structure, STRUCTURE_ACCEPTE
+from fields.ecofields import RETOURNE_DUREE
 from sim import actions as ACT
 from sim import vigueur as V
 
@@ -218,9 +219,127 @@ def test_neutralite_refactor():
     check("dépôt masse ≤ 0 → no-op", abs(feuille.masse - 4.0) < 1e-9)
 
 
+# ---------------------------------------------------------------------------
+# 8. Maturation passive (phase B) : compost_mur monte, contenu fond, masse bornée
+# ---------------------------------------------------------------------------
+def test_maturation():
+    print("\n[8] tick_structures : maturation passive → compost_mur, masse bornée")
+    eco = init_eco("T0", 4, 4)
+    bac = Structure(kind="bac", plot=(1, 1))
+    eco.structures.append(bac)
+    eco.deposer_dans_structure(bac, "feuille", 4.0)
+    masse_initiale = _masse(bac.contenu)
+    for _ in range(10):
+        eco.tick_structures()
+    mur = bac.compost_mur
+    reste = _masse(bac.contenu)
+    check("compost_mur a monté (> 0)", mur > 0.0, f"{mur:.4f}")
+    check("contenu a fondu (< initial)", reste < masse_initiale, f"{reste:.4f}")
+    check("age_sem a vieilli (= 10 sem)",
+          all(abs(p.age_sem - 10.0) < 1e-9 for p in bac.contenu))
+    # Conservation bornée : ce qui sort en mûr + ce qui reste ≤ masse initiale
+    # (le complément = respiration, perte nette assumée — pas de création).
+    check("compost_mur + reste ≤ masse initiale (rien créé)",
+          mur + reste <= masse_initiale + 1e-9,
+          f"{mur + reste:.4f} ≤ {masse_initiale:.4f}")
+
+
+# ---------------------------------------------------------------------------
+# 9. retourner : accélère la maturation + lisse les âges (bonus, jamais blocage)
+# ---------------------------------------------------------------------------
+def test_retourner():
+    print("\n[9] retourner : bac retourné mûrit plus vite + lisse les âges")
+    eco = init_eco("T0", 4, 4)
+    bac_t = Structure(kind="bac", plot=(0, 0))   # témoin (jamais retourné)
+    bac_r = Structure(kind="bac", plot=(1, 1))   # retourné
+    eco.structures += [bac_t, bac_r]
+    for b in (bac_t, bac_r):
+        eco.deposer_dans_structure(b, "feuille", 3.0)
+        eco.deposer_dans_structure(b, "herbace", 2.0)
+    # Âges DISTINCTS pour que le lissage (moyenne pondérée) soit testable, pas trivial.
+    for b in (bac_t, bac_r):
+        next(p for p in b.contenu if p.tissu == "feuille").age_sem = 10.0
+        next(p for p in b.contenu if p.tissu == "herbace").age_sem = 2.0
+
+    gs = _gs()
+    ok = ACT.retourner(gs, "joueur_1", bac_r)
+    check("retourner payé/appliqué", ok and bac_r.retourne_restant == RETOURNE_DUREE)
+
+    eco.tick_structures()
+    check("retourné : compost_mur > témoin",
+          bac_r.compost_mur > bac_t.compost_mur,
+          f"{bac_r.compost_mur:.4f} vs {bac_t.compost_mur:.4f}")
+    check("retourné : âges lissés (feuille == herbace)",
+          abs(bac_r.contenu[0].age_sem - bac_r.contenu[1].age_sem) < 1e-9)
+    check("drapeau décompté (RETOURNE_DUREE-1)",
+          abs(bac_r.retourne_restant - (RETOURNE_DUREE - 1)) < 1e-9)
+
+    # Binaire : Vigueur insuffisante → False, drapeau non posé.
+    bac_p = Structure(kind="bac", plot=(2, 2))
+    gs_pauvre = _gs(courante=1.0)             # < FAIBLE (5)
+    res = ACT.retourner(gs_pauvre, "joueur_1", bac_p)
+    check("Vigueur insuffisante → False, drapeau à 0",
+          res is False and bac_p.retourne_restant == 0.0)
+
+
+# ---------------------------------------------------------------------------
+# 10. Biais cinétique : la pile (bois) mûrit beaucoup plus lentement que le bac
+# ---------------------------------------------------------------------------
+def test_pile_plus_lente():
+    print("\n[10] pile (bois) mûrit plus lentement que le bac (tendre)")
+    eco = init_eco("T0", 4, 4)
+    bac = Structure(kind="bac", plot=(0, 0))
+    pile = Structure(kind="pile", plot=(1, 1))
+    eco.structures += [bac, pile]
+    eco.deposer_dans_structure(bac, "feuille", 5.0)
+    eco.deposer_dans_structure(pile, "bois", 5.0)
+    for _ in range(10):
+        eco.tick_structures()
+    check("bac mûrit plus que la pile à masse égale",
+          bac.compost_mur > pile.compost_mur,
+          f"bac {bac.compost_mur:.4f} vs pile {pile.compost_mur:.4f}")
+
+
+# ---------------------------------------------------------------------------
+# 11. Neutralité du tick : aucune structure → tick_structures no-op strict
+# ---------------------------------------------------------------------------
+def test_tick_neutre():
+    print("\n[11] tick_structures sans structure : no-op strict (invariant golden)")
+    eco = init_eco("T0", 4, 4)
+    eco.deposer_litiere(1, 1, "feuille", 2.0)
+    fert_avant = eco.fertilite.data[1][1]
+    om_avant = eco.om_stable.data[1][1]
+    eco.tick_structures()                     # structures == [] → boucle vide
+    check("structures toujours vides", eco.structures == [])
+    check("fertilite inchangée", eco.fertilite.data[1][1] == fert_avant)
+    check("om_stable inchangé", eco.om_stable.data[1][1] == om_avant)
+
+
+# ---------------------------------------------------------------------------
+# 12. Déterminisme de la maturation
+# ---------------------------------------------------------------------------
+def _scenario_maturation():
+    eco = init_eco("T0", 4, 4)
+    bac = Structure(kind="bac", plot=(1, 1))
+    eco.structures.append(bac)
+    eco.deposer_dans_structure(bac, "feuille", 2.0)
+    eco.deposer_dans_structure(bac, "fruit", 1.0)
+    for _ in range(8):
+        eco.tick_structures()
+    return (round(bac.compost_mur, 9),
+            sorted((p.tissu, round(p.masse, 9), round(p.age_sem, 9)) for p in bac.contenu))
+
+
+def test_determinisme_maturation():
+    print("\n[12] déterminisme : maturation reproductible (h1 == h2)")
+    a = _scenario_maturation()
+    b = _scenario_maturation()
+    check("maturation reproductible", a == b, f"{a[0]}")
+
+
 def main():
     print("=" * 60)
-    print("TEST STRUCTURES POSABLES (décompo·compost ⑤ phase A)")
+    print("TEST STRUCTURES POSABLES (décompo·compost ⑤ phases A+B)")
     print("=" * 60)
     test_poser()
     test_acceptation()
@@ -229,6 +348,11 @@ def main():
     test_fusion_contenu()
     test_determinisme()
     test_neutralite_refactor()
+    test_maturation()
+    test_retourner()
+    test_pile_plus_lente()
+    test_tick_neutre()
+    test_determinisme_maturation()
 
     print("\n" + "=" * 60)
     total = len(_results)

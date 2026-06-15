@@ -247,6 +247,31 @@ STRUCTURE_ACCEPTE = {
     "pile": frozenset(("bois",)),
 }
 
+# Maturation hybride (⑤ phase B, §5.2). La maturation est une décompo CONFINÉE :
+# chaque parcelle du contenu mûrit à la cinétique de son tissu (`TISSU[tissu]`,
+# `decay` = « tendre vite / bois lent », déjà calibré §1.2), la fraction
+# humifiée+minéralisée s'accumule dans la jauge `compost_mur`, le reste est respiré
+# (perte nette, comme un tas de compost qui fond). `MATUR_BAC`/`MATUR_PILE` =
+# multiplicateurs de vitesse par type de structure (la pile à bois est très lente :
+# BRF / hügelkultur). `retourner` MULTIPLIE la vitesse et LISSE les âges pendant
+# `RETOURNE_DUREE` semaines. Knobs, calibrage post-test (n'affectent ni le golden,
+# neutre, ni le déterminisme).
+MATUR_BAC           = 0.40   # vitesse de maturation du bac (× decay du tissu)
+MATUR_PILE          = 0.20   # pile à bois : ~25× plus lente que le bac sur son tissu
+MATUR_RETOURNE_MULT = 2.0    # `retourner` double la vitesse pendant RETOURNE_DUREE sem
+RETOURNE_DUREE      = 4       # semaines d'effet d'un retournement (drapeau décompté)
+
+
+def _lisser_ages(parcelles: list) -> None:
+    """Homogénéise les âges du contenu (`retourner`, §5.2) : chaque parcelle prend
+    l'âge moyen pondéré par la masse. Conserve la masse, déterministe (zéro RNG)."""
+    total = sum(p.masse for p in parcelles)
+    if total <= 0.0:
+        return
+    moyen = sum(p.age_sem * p.masse for p in parcelles) / total
+    for p in parcelles:
+        p.age_sem = moyen
+
 
 @dataclass
 class Structure:
@@ -258,10 +283,11 @@ class Structure:
     `compost_mur` (jauge mesurée) au tick `tick_structures` (phase B). `plot` =
     plot-foyer (r, c) du placement (phase planification). Posée VIDE.
     """
-    kind:        str
-    plot:        tuple                                  # (r, c)
-    contenu:     list  = field(default_factory=list)    # list[Parcelle]
-    compost_mur: float = 0.0
+    kind:            str
+    plot:            tuple                              # (r, c)
+    contenu:         list  = field(default_factory=list)  # list[Parcelle]
+    compost_mur:     float = 0.0
+    retourne_restant: float = 0.0                       # semaines d'accélération restantes (⑤B, `retourner`)
 
     def accepte(self, tissu: str) -> bool:
         """Le tissu est-il recevable par cette structure (§5) ?"""
@@ -609,6 +635,42 @@ class EcoFields:
 
                 # Lessivage nutriments
                 self.fertilite.data[r][c] *= LEACHING_LOSS
+
+    def tick_structures(self) -> None:
+        """Maturation hebdomadaire du contenu des structures (⑤ phase B, §5.2).
+
+        Décompo CONFINÉE, miroir de `tick_decomposition` : chaque parcelle du
+        contenu mûrit à la cinétique de son tissu (`TISSU[tissu]`), la fraction
+        humifiée+minéralisée s'accumule dans `compost_mur` (compost mûr, jauge
+        mesurée §5.3 — épandable en phase C), le reste est respiré (perte nette)
+        et vieillit (`age_sem++`). Le bac mûrit vite (tendres), la pile très
+        lentement (`bois`). `retourner` (drapeau `retourne_restant`) MULTIPLIE la
+        vitesse et LISSE les âges du contenu pendant `RETOURNE_DUREE` semaines.
+
+        Aucun champ du sol n'est touché (philo #2) : la maturation reste confinée
+        à la structure ; c'est `epandre` (phase C) qui restitue au sol. **No-op
+        STRICT si `structures == []`** (invariant golden ⑤ : boucle vide → zéro
+        écriture). Déterministe : structures dans l'ordre d'insertion, contenu
+        trié `TISSU_ORDER`, zéro RNG.
+        """
+        for struct in self.structures:
+            base = MATUR_BAC if struct.kind == "bac" else MATUR_PILE
+            retourne = struct.retourne_restant > 0.0
+            mult = MATUR_RETOURNE_MULT if retourne else 1.0
+            struct.contenu.sort(key=lambda p: TISSU_ORDER.index(p.tissu))
+            survivors = []
+            for p in struct.contenu:
+                decay, humif, miner = TISSU[p.tissu]
+                d = p.masse * decay * base * mult
+                p.masse  -= d
+                p.age_sem += 1.0
+                struct.compost_mur += d * (humif + miner)   # le reste est respiré
+                if p.masse > 1e-9:
+                    survivors.append(p)
+            struct.contenu = survivors
+            if retourne:
+                _lisser_ages(struct.contenu)
+                struct.retourne_restant -= 1.0
 
     def add_necromass(self, r: int, c: int,
                       biomass: float, harvested: bool = False,

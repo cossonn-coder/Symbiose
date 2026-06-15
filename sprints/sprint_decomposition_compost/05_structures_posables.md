@@ -16,13 +16,15 @@
 > viendra.
 
 > ## ⏩ AVANCEMENT — reprise à froid
-> **Phase A FAITE (2026-06-15)** : modèle `Structure`/`eco.structures`, gestes
-> `poser_bac`/`poser_pile`/`composter`/`empiler_bois`, helper `_fusion_parcelle`
-> partagé, `test_structures.py` (34/34), **golden NEUTRE prouvé**
-> (`908f591bee…`/`435e6f72…`). Décisions #1 et #2 figées ; **décision ⑤A** : le bac
-> **refuse `diffus`** (exsudats dans le sol). Détail dans `00_etat.md` §Acquis ⑤
-> Phase A. **➡️ COMMENCER ICI = PHASE B** (maturation + jauge + `retourner`), puis
-> phase C. Décision #3 (knobs maturation/trio/habitat) à figer au début de B/C.
+> **Phases A+B FAITES (2026-06-15)** : A = modèle `Structure`/`eco.structures` +
+> gestes `poser_bac`/`poser_pile`/`composter`/`empiler_bois` ; B = `tick_structures`
+> (maturation confinée ∝ `TISSU.decay`, jauge `compost_mur`, masse qui fond) +
+> geste `retourner` (drapeau `retourne_restant`, ×2 vitesse + lissage d'âges) +
+> appel étape 4b dans `engine.py`. `test_structures.py` (48/48), **golden NEUTRE
+> prouvé** (`908f591bee…`/`435e6f72…`). Décisions #1, #2, ⑤A et #3-volet-B figées.
+> Détail dans `00_etat.md` §Acquis ⑤ Phase A & Phase B. **➡️ COMMENCER ICI = PHASE
+> C** (`epandre` trio humus borné + amendement pile + pile→habitat + pont 0.3.5).
+> Décision #3 (volets trio/habitat) à figer au début de C.
 
 ## Ampleur & risque (à lire avant de coder)
 Sous-sprint **MOYEN à GROS** (le plus gros de la série après ①) : un **état
@@ -35,7 +37,7 @@ chacune testable et préservant le golden :
 | Phase | Contenu | Golden attendu |
 |---|---|---|
 | ~~**A**~~ ✅ | **Modèle de structure** (`eco.structures`) + `poser_bac`/`poser_pile` + `composter`/`empiler_bois` (déplacent les parcelles du plot vers la structure) | **NEUTRE prouvé** (2026-06-15) |
-| **B** | **Maturation hybride** (`tick_structures`, passive ∝ constitution) + jauge `compost_mur` + `retourner` (accélère/lisse) | **NEUTRE** (aucune structure à ticker) |
+| ~~**B**~~ ✅ | **Maturation hybride** (`tick_structures`, passive ∝ constitution) + jauge `compost_mur` + `retourner` (accélère/lisse) | **NEUTRE prouvé** (2026-06-15) |
 | **C** | **`epandre`** (bac → plot, trio humus borné par la jauge) + amendement **pile** (biais structure) + **pile → habitat `auxiliaire`** (§4.1) | **NEUTRE** (geste jamais déclenché par le golden) |
 
 > **Risque #1 = re-figeage golden — mais ⑤ sera NEUTRE sur les 3 phases.** Comme

@@ -29,7 +29,7 @@ from sim.growth import (atteindre_segment,   # seam de perturbation §F (sim→s
                         f_lignification, INTENSITE_PIED, SEUIL_DEGAT, COUPE_NETTE)  # calibrage écrasement (volet 2)
 from sim.effects import deposer_mort   # mort → squelette persistant (②B), point d'entrée unique
 from sim import maitrise as M   # couche savoir (D12) — orchestrée ici pour les gains ponctuels §4.3
-from fields.ecofields import BOIS_PAR_CM, ECRASER_FRAG_BOOST, Structure   # litière `bois` (taille/écimage) + boost fragmentation (②) + structures posables (⑤)
+from fields.ecofields import BOIS_PAR_CM, ECRASER_FRAG_BOOST, Structure, RETOURNE_DUREE   # litière `bois` (taille/écimage) + boost fragmentation (②) + structures posables (⑤) + durée retournement (⑤B)
 from fields.population import DENSITE_PAR_SPRITE   # « un geste = un individu = un quantum » (D31.3 §5)
 from fields.seedbank import GrainEnAttente          # dépôt de `planter` (germination différée, distinct de la banque-sol)
 from plants.catalogue import PLANT_CATALOGUE, PERENNIAL_CATALOGUE   # reverse classe→clé (seam coût, §10.4)
@@ -101,6 +101,7 @@ COUTS = {
     "poser_pile":           MODERE,
     "composter":            FAIBLE,            # déplace la litière tendre plot→bac (canal vertueux §5.1)
     "empiler_bois":         FAIBLE,            # déplace le bois plot→pile
+    "retourner":            FAIBLE,            # accélère/lisse la maturation du bac (bonus §5.2, canal vertueux)
 }
 
 # Objets STATIQUES touchés par chaque geste (§10.4, terme 2 : technique + outil/
@@ -125,6 +126,7 @@ OBJETS_TOUCHES = {
     "poser_pile":           ("compostage", "pile-à-bois"),
     "composter":            ("compostage",),
     "empiler_bois":         ("compostage", "pile-à-bois"),
+    "retourner":            ("compostage", "fourche"),
 }
 
 # Atténuations maximales — PLACEHOLDERS NOMMÉS, *calibrage D12.4*. Bornées < 1 pour
@@ -694,4 +696,19 @@ def empiler_bois(game_state: dict, player: str, eco, r: int, c: int,
     if spend(game_state, player, cost) < 1.0:
         return False
     _ramasser_vers_structure(eco, r, c, struct)
+    return True
+
+
+def retourner(game_state: dict, player: str, struct: Structure) -> bool:
+    """Retourner le compost (§5.1/§5.2) — geste d'entretien : arme le drapeau
+    `retourne_restant` qui, pendant `RETOURNE_DUREE` semaines, MULTIPLIE la vitesse
+    de maturation et LISSE les âges du contenu (tick_structures). C'est un **BONUS**,
+    jamais une obligation (philo : le bac mûrit seul, aucune corvée bloquante).
+    Coût FAIBLE, binaire (canal vertueux §5.1). N'écrit aucun champ écolo (philo #2)
+    — ne touche que la structure. Pensé pour le bac ; sur une pile, accélère
+    marginalement le bois (pas interdit). Renvoie True si le geste a été payé."""
+    cost = cout_action(game_state, player, "retourner", OBJETS_TOUCHES["retourner"])
+    if spend(game_state, player, cost) < 1.0:
+        return False
+    struct.retourne_restant = RETOURNE_DUREE
     return True

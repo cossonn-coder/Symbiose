@@ -793,6 +793,9 @@ class Engine:
 
             # 4. Décomposition biogéochimique (OM → fertilite, pertes C)
             eco.tick_decomposition()
+            # 4b. Maturation confinée des structures posées (⑤B, §5.2). No-op
+            #     strict si aucune structure n'est posée → golden NEUTRE.
+            eco.tick_structures()
 
             # 5. Diffusion spatiale (humidité, fertilité, microbiome)
             eco.tick_diffusion()
