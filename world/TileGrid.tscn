@@ -1,0 +1,11 @@
+[gd_scene format=3 uid="uid://fi6dceq8mhid"]
+
+[ext_resource type="Script" uid="uid://btx026jmqwvpy" path="res://world/TileGrid.cs" id="1_yq54n"]
+
+[node name="TileGrid" type="Node2D" unique_id=1586863632]
+script = ExtResource("1_yq54n")
+SoilType = null
+GridOffset = null
+ShowPlantDemo = null
+RunSimBridgeTest = null
+PlantZoomPalier = null

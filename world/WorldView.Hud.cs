@@ -128,18 +128,30 @@ namespace Symbiose
 			// joueur PEUT faire, coin bas-gauche, petite police. PROVISOIRE
 			// (philo #5/#6 : pas de tutoriel imposé — la v1 aura la page
 			// d'accueil pictogrammes ; ici c'est l'instrument de validation).
-			// Position fixe : la résolution projet est 1920×1080.
-			var legend = new Label { Position = new Vector2(16f, 1080f - 90f) };
+			// Position fixe : la résolution projet est 1920×1080. AutowrapMode +
+			// largeur bornée (retour F5 Nico : le texte des gestes débordait) :
+			// la ligne se replie au lieu de sortir de l'écran, quoi qu'on écrive.
+			var legend = new Label
+			{
+				Position = new Vector2(16f, 1080f - 96f),
+				CustomMinimumSize = new Vector2(1888f, 0f),
+				AutowrapMode = TextServer.AutowrapMode.WordSmart,
+			};
 			legend.AddThemeFontSizeOverride("font_size", 18);
 			legend.AddThemeColorOverride("font_color", Colors.White);
 			legend.AddThemeColorOverride("font_outline_color", Colors.Black);
 			legend.AddThemeConstantOverride("outline_size", 6);
+			// Ligne toggles triée par POSITION des touches sur AZERTY, de gauche à
+			// droite (retour F5 Nico) : F3 F4 (rangée Fn) · H (rangée du milieu) ·
+			// F6 · I O (rangée du haut) · M (rangée du milieu, à droite).
+			// La liste des gestes n'est plus énumérée (elle débordait) : Tab cycle,
+			// le HUD en haut à gauche montre toujours le geste courant et sa cible.
 			legend.Text = "Espace lancer/pause · flèches déplacer"
 				+ " · molette zoom · PageUp/PageDown pivoter\n"
-				+ "M mode simu · F3 étiquettes · F4 perfs · H maison transparente · O ombres · I vie macro · F6 heatmap debug (Maj+F6 champ)\n"
-				+ "gestes (1..8 direct, [ ] cyclent toute la palette) : 1 récolter · 2 déraciner · 3 écraser nuisible · "
-				+ "4 favoriser aux. · 5 bêcher · 6 grelinette · 7 tailler (survolez la branche, Maj = latéral) · 8 manger · "
-				+ "planter (S = graine) · arroser · écraser plante — clic gauche = agir";
+				+ "F3 étiquettes · F4 perfs · H maison transparente · F6 heatmap debug (Maj+F6 champ)"
+				+ " · I vie macro · O ombres · M mode simu\n"
+				+ "Tab geste suivant · 1..9 gestes directs · S graine (planter) · clic gauche = agir"
+				+ " — geste courant affiché en haut à gauche";
 			hud.AddChild(legend);
 			AddChild(hud);
 			UpdateActionHud();
@@ -183,16 +195,21 @@ namespace Symbiose
 				: $"Vigueur {_vigueur:F0}/{_vigueurMax:F0}";
 			string geste;
 			if (_gesteIndex < 0)
-				geste = "aucun (1..8, [ ] cycler)";
+				geste = "aucun (Tab ou 1..9)";
 			else
 			{
 				var g = Gestes[_gesteIndex];
-				// Touche directe seulement pour les 8 premiers ; le reste via [ ].
-				geste = _gesteIndex < 8 ? $"{g.Nom} [{_gesteIndex + 1}]" : g.Nom;
+				geste = $"{g.Nom} [{_gesteIndex + 1}]";
 				// `planter` affiche l'espèce courante (S cycle) — la cible attendue.
 				if (g.Verb == "planter")
 					geste += _seeds.Count == 0 ? " : aucune graine (S)"
 						   : $" : {_seeds[_seedIndex].Key} (×{_seeds[_seedIndex].Count}, S)";
+				// `ameublir` rappelle la variante Maj (grelinette, global).
+				else if (g.Verb == "becher")
+					geste += " (Maj : grelinette)";
+				// `écraser` rappelle l'auto plante/nuisible.
+				else if (g.Verb == "ecraser")
+					geste += " (plante ou nuisible)";
 			}
 			string msg = string.IsNullOrEmpty(_lastActionMsg) ? ""
 				: $"   ·   {_lastActionMsg}";

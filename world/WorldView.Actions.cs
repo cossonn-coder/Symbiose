@@ -24,17 +24,15 @@ namespace Symbiose
 		// qui scale pour les 6 gestes compost à venir (sous-sprint 03).
 		private static readonly (string Verb, string Nom, char Kind)[] Gestes =
 		{
-			("recolter",             "récolter",          'p'),
-			("deraciner",            "déraciner",         'p'),
-			("ecraser",              "écraser (nuisible)",'q'),
-			("favoriser_auxiliaire", "favoriser aux.",    't'),
-			("becher",               "bêcher",            'q'),
-			("grelinette",           "grelinette",        '-'),
-			("tailler",              "tailler",           'p'),
-			("manger",               "manger",            'p'),
-			("planter",              "planter",           'm'),
-			("arroser",              "arroser",           'm'),
-			("ecraser",              "écraser (plante)",  'p'),
+			("recolter",             "récolter",       'p'),
+			("deraciner",            "déraciner",      'p'),
+			("ecraser",              "écraser",        'x'),   // plante OU nuisible
+			("favoriser_auxiliaire", "favoriser aux.", 't'),
+			("becher",               "ameublir",       'a'),   // bêcher / Maj grelinette
+			("tailler",              "tailler",        'p'),
+			("manger",               "manger",         'p'),
+			("planter",              "planter",        'm'),
+			("arroser",              "arroser",        'm'),
 		};
 		private int _gesteIndex = -1;              // aucun geste sélectionné
 		// Graines plantables du snapshot (player.seeds, lots non vides), triées
@@ -80,9 +78,9 @@ namespace Symbiose
 			UpdateActionHud();
 		}
 
-		// Sélection cyclique sur TOUTE la palette (touches [ et ], cf. Controls) :
-		// dépasse les 8 touches chiffrées. Premier appel sans geste → bord selon
-		// le sens. Modulo positif (les chiffres peuvent être négatifs en C#).
+		// Sélection cyclique sur TOUTE la palette (touche Tab, cf. Controls) :
+		// une seule touche atteint tous les gestes. Premier appel sans geste →
+		// bord selon le sens. Modulo positif (les indices peuvent être négatifs).
 		private void CyclePalette(int dir)
 		{
 			int n = Gestes.Length;
@@ -122,7 +120,7 @@ namespace Symbiose
 			if (_world == null || _lastSnap == null) return;   // monde pas prêt
 			if (_gesteIndex < 0)
 			{
-				_lastActionMsg = "aucun geste sélectionné (touches 1..8)";
+				_lastActionMsg = "aucun geste sélectionné (Tab ou 1..9)";
 				UpdateActionHud();
 				FlashActionLabel();
 				return;
@@ -165,29 +163,55 @@ namespace Symbiose
 						prms["cible"] = shift ? "branche" : "apex";
 						if (segIdx >= 0) target["segment"] = segIdx;
 					}
-					// Écraser une PLANTE (vue·rattrapage 01) : même picking que les
-					// autres gestes 'p' ; sans `guilde`, le serveur route sur la
-					// plante (≠ écraser-nuisible kind 'q' qui vise une guilde au
-					// plot). Couture préparation/réaction comme ecraser/arroser.
-					if (verb == "ecraser")
-						prms["urgence"] = _phase == Phase.Saison;
 					break;
 
-				case 'q':   // plot (tile, r, c) sous le clic
-				case 't':   // tuile sous le clic
-					if (!FindPlot(w, out string tileId, out int r, out int c))
+				case 'x':   // ÉCRASER, geste unifié (retour F5 Nico) : une plante
+					// si elle est sous le curseur, sinon un nuisible au plot. Le
+					// serveur route DÉJÀ par la forme de la cible (x_cm ⇒ plante,
+					// sinon guilde) — la vue n'a qu'à choisir la désignation. Le
+					// verbe reste "ecraser" dans les deux cas.
+					node = FindPlant(w, PickRadiusCm);
+					if (node != null)
+						target = new GDict
+						{
+							["tile"] = node.GetMeta("tile"),
+							["x_cm"] = node.GetMeta("lx"),
+							["y_cm"] = node.GetMeta("ly"),
+						};
+					else if (FindPlot(w, out string xTile, out int xr, out int xc))
+						target = new GDict { ["tile"] = xTile, ["r"] = xr, ["c"] = xc };
+					else
+					{
+						_lastActionMsg = $"{nom} : aucune plante ni tuile sous le clic";
+						UpdateActionHud(); FlashActionLabel();
+						return;
+					}
+					prms["urgence"] = _phase == Phase.Saison;
+					break;
+
+				case 'a':   // AMEUBLIR, geste unifié (retour F5 Nico) : clic =
+					// bêcher CE plot ; Maj+clic = grelinette, qui ameublit TOUT le
+					// jardin (geste global du moteur, sans cible). Le verbe envoyé
+					// dépend donc du Maj — d'où la réaffectation de `verb`.
+					if (shift) { verb = "grelinette"; break; }   // global, pas de cible
+					if (!FindPlot(w, out string aTile, out int ar, out int ac))
 					{
 						_lastActionMsg = $"{nom} : aucune tuile ici (chemin/maison)";
 						UpdateActionHud(); FlashActionLabel();
 						return;
 					}
-					target = new GDict { ["tile"] = tileId };
-					if (kind == 'q') { target["r"] = r; target["c"] = c; }
-					// La couture préparation/réaction (§3.1, déjà codée moteur) :
-					// en phase Saison le geste est une RÉACTION → urgence (×1.5).
-					// En Pause on réfléchit : temps figé = tarif planification.
-					if (verb == "ecraser")
-						prms["urgence"] = _phase == Phase.Saison;
+					verb = "becher";
+					target = new GDict { ["tile"] = aTile, ["r"] = ar, ["c"] = ac };
+					break;
+
+				case 't':   // tuile entière (favoriser auxiliaire)
+					if (!FindPlot(w, out string tTile, out _, out _))
+					{
+						_lastActionMsg = $"{nom} : aucune tuile ici (chemin/maison)";
+						UpdateActionHud(); FlashActionLabel();
+						return;
+					}
+					target = new GDict { ["tile"] = tTile };
 					break;
 
 				case 'm':   // point de MILIEU : planter / arroser (protocole 0.3.3)

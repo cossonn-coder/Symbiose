@@ -28,15 +28,15 @@ namespace Symbiose
 				// étiquette) : en AZERTY la rangée des chiffres non-shiftée émet
 				// &é"'(-è_ comme Keycode — le code physique, lui, reste Key1..8
 				// quel que soit le layout. 📖 C'est la différence scancode/keysym.
-				if (k.PhysicalKeycode >= Key.Key1 && k.PhysicalKeycode <= Key.Key8)
+				if (k.PhysicalKeycode >= Key.Key1 && k.PhysicalKeycode <= Key.Key9)
 				{
 					SelectGeste((int)(k.PhysicalKeycode - Key.Key1));
 					return;
 				}
-				// Palette > 8 gestes : [ et ] cyclent TOUTE la liste (en
-				// PhysicalKeycode, position de touche stable en AZERTY/QWERTY).
-				if (k.PhysicalKeycode == Key.Bracketleft)  { CyclePalette(-1); return; }
-				if (k.PhysicalKeycode == Key.Bracketright) { CyclePalette(+1); return; }
+				// Tab = geste suivant : UNE touche cycle toute la palette (retour
+				// F5 Nico). Plus robuste que les chiffres pour atteindre les
+				// derniers gestes ; le HUD montre toujours le geste courant.
+				if (k.Keycode == Key.Tab) { CyclePalette(+1); return; }
 				switch (k.Keycode)
 				{
 					case Key.Space:    TogglePhase();  break;

@@ -124,3 +124,12 @@ moteur à rendre : `sprints/sprint_decomposition_compost/00_etat.md` (§Acquis �
   golden `908f591bee…` inchangé, témoin de build bumpé. **F5 Nico** : (a) cycler
   une graine (S) et planter sur un plot ; (b) arroser en Pause vs Saison (coût
   ×1.5) ; (c) écraser une plante (déformée/écimée/meurt selon l'espèce).
+- **01b (2026-06-16, retour F5)** — planter/arroser étaient inatteignables (gestes
+  9-10, seulement via `[ ]` en position US sur AZERTY). Refonte ergonomie :
+  **Tab cycle toute la palette** (une touche, remplace `[ ]`), chiffres **1..9**
+  en direct. Palette **fusionnée à 9 gestes** : « écraser » = plante si sous le
+  curseur sinon nuisible (le serveur route déjà par forme de cible) ; « ameublir »
+  = bêcher (clic, plot) / **Maj+clic = grelinette** (global). Légende : ligne
+  toggles triée par position AZERTY (F3·F4·H·F6·I·O·M), énumération des gestes
+  retirée (débordait) + **AutowrapMode** de sécurité, le HUD montre le geste
+  courant. Build vert, golden `908f591bee…` inchangé.
