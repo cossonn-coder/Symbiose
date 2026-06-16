@@ -58,6 +58,19 @@ class CommandsMixin:
             # SECTORS plantées + maison) — import, pas de copie, même principe.
             from main import build_world_full
             tiles, ecos, _aux_tiles, house = build_world_full()
+            # Démo/F5 (vue·rattrapage 02) : pré-vieillir le(s) fruitier(s) du
+            # verger à leur âge de maturité (`maturity_years`) pour qu'ils NOUENT
+            # des fruits dès le 1er début d'été (semaine 14) au lieu de l'an 6 —
+            # on teste fruits + `manger` sans dérouler 5 ans en Turbo. PUR réglage
+            # d'init côté serveur, config "full" SEULEMENT : la démo 500 ans de
+            # main.py et le golden smoke (config "smoke") ne le voient jamais.
+            # `age_years` n'altère que la courbe d'âge et la grille de nouaison ;
+            # déterministe (constante), monde toujours 53 plantes (on vieillit, on
+            # n'ajoute pas).
+            for _t in tiles:
+                for _p in _t.plants:
+                    if getattr(_p.plant_class, "fruitier", False):
+                        _p.age_years = float(_p.plant_class.maturity_years)
         else:
             return {"ok": False,
                     "error": f"config inconnue : {config!r} ('smoke' ou 'full')"}

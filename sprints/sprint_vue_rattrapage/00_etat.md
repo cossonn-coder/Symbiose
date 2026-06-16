@@ -149,6 +149,17 @@ sim_server. Prochain après F5 : **03** (lire `03_litiere_structures.md`).
   grise ; (b) un fruitier mûr (pommier à `maturity_years`, scénario long/saisons)
   montre des fruits qui verdissent→mûrissent→brunissent ; (c) `manger` un fruit →
   il disparaît, gain ∝ maturité. Réserves notées en §REPRISE.
+- **02b (2026-06-16, retour F5 Nico : A+B validés, C trop long)** — levier démo :
+  le handler `init` config **"full"** pré-vieillit le(s) fruitier(s) à
+  `maturity_years` (`commands.py`) → le pommier NOUE des fruits dès l'**été de
+  l'an 1** (semaine 14) au lieu de l'an 6, **plus besoin de Turbo 5 ans pour le
+  Bloc C**. main.py (démo 500 ans) et golden smoke intacts (lever en config full
+  seulement). Monde toujours 53 plantes (on vieillit, on n'ajoute pas), pont
+  inchangé (réglage d'init, pas de champ neuf → pas de bump). Test
+  `morts.test_pommier_fruite` (section 14b) garde le levier + le chemin nouaison→
+  `plant.fruits`→snapshot. **140/140**, golden `908f591bee…` inchangé. NB : la
+  structure procédurale reste petite au 1er été (≈13 sem de croissance) → peu de
+  fruits d'abord, davantage les étés suivants quand le branchage s'étoffe.
 - **01 (2026-06-16)** — planter / arroser / écraser-plante câblés (pur C#, moteur
   intact). Palette portée de 8 à **11 gestes** ; touches 1..8 directes + **[ ]**
   cyclent toute la palette (scale pour les 6 gestes compost de 03), **S** cycle

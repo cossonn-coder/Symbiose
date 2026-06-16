@@ -83,3 +83,32 @@ def test_morts():
     dump = lambda sn: json.dumps(sn, sort_keys=True, separators=(",", ":"))
     check("2 runs même seed → snapshot post-déracinage byte-identique",
           dump(snap1) == dump(snap1b))
+
+
+def test_pommier_fruite():
+    """Levier démo/F5 (vue·rattrapage 02) : la config "full" pré-vieillit le
+    pommier à `maturity_years` → il NOUE des fruits réels dès le 1er début d'été
+    (semaine 14) au lieu de l'an 6. Garde-fou de ce levier ET du chemin nouaison
+    → `plant.fruits` → snapshot (Partie A vivante)."""
+    print("[pommier mûr → fruits dès l'été]")
+    s = ServerProc()
+    s.send(cmd="init", seed=42, config="full")
+    snap = s.send(cmd="snapshot")["snapshot"]
+    # `week` = PROCHAINE semaine à simuler → il faut atteindre 15 pour que la
+    # semaine 14 (nouaison, début été) ait été TICKÉE et le fruit installé.
+    while snap["week"] < 15:
+        snap = s.send(cmd="step_week")["snapshot"]
+    pommier = next((p for p in snap["plants"]
+                    if p["species"] == "AppleTree" and not p.get("dead", False)),
+                   None)
+    check("config full : un pommier vivant à l'été", pommier is not None)
+    check("le pommier pré-âgé a noué des fruits réels",
+          pommier and len(pommier.get("fruits", [])) > 0,
+          pommier and f"{len(pommier.get('fruits', []))} fruits")
+    if pommier and pommier.get("fruits"):
+        f0 = pommier["fruits"][0]
+        check("un fruit porte {segment, maturite, masse}",
+              all(k in f0 for k in ("segment", "maturite", "masse")),
+              str(f0))
+    s.send(cmd="quit")
+    check("quit pommier fruité → exit 0", s.close() == 0)
