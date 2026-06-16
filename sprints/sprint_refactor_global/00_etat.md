@@ -46,7 +46,7 @@ exclus du décompte et **conservés au cœur des fichiers**).
 | ③ | Python cœur sim 1 (engine, ecofields, effects) | élevé | ✅ CLOS (2026-06-15) |
 | ④ | Python cœur sim 2 (actions, base, species, growth) | élevé | ✅ CLOS (2026-06-15) |
 | ⑤ | Python outils & tests (sim_server, render, 2 tests) | moyen | ✅ CLOS (2026-06-15) |
-| ⑥ | C# WorldView (1759 l) | moyen | 🟢 build OK (0 w/0 e) — F5 visuel à valider Nico |
+| ⑥ | C# WorldView (1759 l) | moyen | ✅ CLOS (2026-06-16) — build vert + F5 identique |
 | ⑦ | C# reste & finition + grave règles dans CLAUDE.md | moyen | ⬜ |
 
 ## Reprise
