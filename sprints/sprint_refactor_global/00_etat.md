@@ -46,15 +46,18 @@ exclus du décompte et **conservés au cœur des fichiers**).
 | ③ | Python cœur sim 1 (engine, ecofields, effects) | élevé | ✅ CLOS (2026-06-15) |
 | ④ | Python cœur sim 2 (actions, base, species, growth) | élevé | ✅ CLOS (2026-06-15) |
 | ⑤ | Python outils & tests (sim_server, render, 2 tests) | moyen | ✅ CLOS (2026-06-15) |
-| ⑥ | C# WorldView (1759 l) | moyen | 🟡 FAIT — build/F5 à valider Nico |
+| ⑥ | C# WorldView (1759 l) | moyen | 🟢 build OK (0 w/0 e) — F5 visuel à valider Nico |
 | ⑦ | C# reste & finition + grave règles dans CLAUDE.md | moyen | ⬜ |
 
 ## Reprise
 
 Tronçon courant : **SS⑦** (dernier). Lire `07_*.md` (purge C# mort, fichiers
 restants éclatés, règles gravées dans CLAUDE.md, recalibrage seuil).
-⚠️ **Préalable** : faire valider le build/F5 de SS⑥ par Nico (la VM n'a pas de
-toolchain C# — voir journal SS⑥). Branche de travail : `refactor/ss6-worldview`.
+⚠️ **Préalable** : F5 visuel de SS⑥ par Nico (build déjà vérifié vert, voir
+journal SS⑥). Branche de travail : `refactor/ss6-worldview`.
+**Outillage** : `dotnet` SDK 8.0.422 installé sur la VM en local utilisateur
+(`~/.dotnet`, ajouté au `~/.bashrc`) — `dotnet build Symbiose.csproj` lançable
+désormais ici.
 
 > **Recalibrage de portée (acté avec Nico, SS③)** : le seuil 500 est un garde-fou,
 > pas un dogme — l'objectif réel est **un fichier = une responsabilité cohérente**,
@@ -190,8 +193,11 @@ toolchain C# — voir journal SS⑥). Branche de travail : `refactor/ss6-worldvi
     pièces SS⑤ < 320 (sim_server/actions 300, gestes 213, maquette/secteurs 171).
   - **Tests/outils ne participent pas au hash golden** (vérifié : golden re-lancé,
     identique). Les 6 SVG de maquette restent gitignorés (SS①).
-- **SS⑥ FAIT (2026-06-16) — build/F5 EN ATTENTE de validation Nico** (la VM n'a
-  ni `dotnet` ni Godot ; compilation non lançable ici). `world/WorldView.cs`
+- **SS⑥ FAIT (2026-06-16) — build VÉRIFIÉ VERT, F5 visuel en attente Nico.**
+  `dotnet` SDK 8.0.422 installé sur la VM (local user `~/.dotnet`) : `dotnet
+  build Symbiose.csproj` → **La génération a réussi, 0 avertissement, 0 erreur**
+  (Godot.NET.Sdk 4.6.0 restauré depuis NuGet, `Symbiose.dll` produit).
+  `world/WorldView.cs`
   (1759 l / **1106 code pur** ⚠) éclaté en **9 fichiers `partial class`** par
   CONCEPT (la scène `WorldView.tscn` pointe toujours la même classe — refactor
   pur, aucun comportement touché) :
@@ -219,6 +225,6 @@ toolchain C# — voir journal SS⑥). Branche de travail : `refactor/ss6-worldvi
     **146 membres** identiques à l'original (diff git : 0 perdu, 0 ajouté,
     0 dupliqué) ; `using` adéquats par fichier (aucun manquant, aucun inutile →
     pas de CS8019). Max code pur après découpe = **211** (Hud) ; tous < 500.
-  - ⚠️ **À FAIRE Nico** : `dotnet build Symbiose.csproj` (0 erreur/warning
-    nouveau) + **F5** (rendu/caméra/ombre/actions identiques). Si vert → merge
-    `refactor/ss6-worldview` sur `main`. Sinon, me signaler l'erreur.
+  - ⚠️ **À FAIRE Nico** : **F5** (rendu/caméra/ombre/actions identiques — le
+    build est déjà vert). Si visuellement OK → merge `refactor/ss6-worldview`
+    sur `main`. Sinon, me signaler ce qui diffère.
