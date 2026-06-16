@@ -101,7 +101,14 @@ retour, triage (correctif ou dette/sous-sprint indépendant, pas de dev immédia
   de guildes suivent les densités) — rien à rendre, juste à constater au F5.
 
 ## REPRISE (démarrage à froid)
-**01 CLOS** (build vert, golden `908f591bee…` inchangé, F5 à valider par Nico).
+**01 CLOS ET VALIDÉ F5 (2026-06-16)** — Tab cycle la palette, S cycle la graine,
+planter/arroser/écraser-plante/ameublir OK ; kit de démarrage `full` confirmé
+(tournesol/tomate/basilic plantés, coût 5 chacun). Semis qui germent puis meurent
+= comportement de design (démographie D27 : mortalité de fond ∝ jeunesse/petitesse
++ fonte des semis ∝ densité, plantés tard dans un monde saturé), PAS un bug.
+Décisions gardées en l'état (confort de test) : kit de démarrage, Maj=grelinette,
+palette Tab. NB : binaire F5 affichait « 01b » (01c purement Python, rebuild non
+requis) — le prochain rebuild C# affichera le témoin à jour.
 Prochain : **02** (lire `02_fruits_squelettes.md`) — premier à toucher le
 snapshot en LECTURE (exposer les plantes mortes/squelettes), donc re-vérifier
 `908f591bee…` + `tests/test_sim_server.py` après chaque ajout serialize.
