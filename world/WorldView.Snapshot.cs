@@ -157,6 +157,14 @@ namespace Symbiose
 				_macroLife?.SetSprites(snap["sprites"].AsGodotDictionary(),
 									   _origins, fade);
 
+			// Décompo·compost (③, lecture seule, protocole 0.3.7/0.3.5) : litière
+			// au sol (layer batché) + structures bac/pile (nœuds YSort). Lecture
+			// TOLÉRANTE : un snapshot ancien sans ces blocs → rien dessiné.
+			if (snap.ContainsKey("litiere"))
+				ApplyLitiere(snap["litiere"].AsGodotDictionary());
+			if (snap.ContainsKey("structures"))
+				ApplyStructures(snap["structures"].AsGodotDictionary());
+
 			// Heatmap (t6·C) : la grille affichée date de la semaine d'avant →
 			// périmée. Si l'overlay est ON, _Process relancera UNE requête
 			// `fields` dès que le pipe sera libre ; OFF, le flag dort.

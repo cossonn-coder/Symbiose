@@ -73,7 +73,7 @@ amis/famille de Nico.
 |---|-------|---------|----------|--------|------|
 | 01 | **Gestes joueur manquants** : planter (choix graine), arroser, écraser-plante — pur câblage C# (pont prêt) | `01_gestes_manquants.md` | non | neutre | ✅ |
 | 02 | **Cycle de vie visible** : fruits réels (maturité vert→mûr→sur-mûr) + squelettes post-mortem + abscission. Snapshot expose les morts (lecture) | `02_fruits_squelettes.md` | snapshot RO | neutre | ✅ |
-| 03 | **Sol vivant & compost** : litière au sol + structures bac/pile + jauge `compost_mur` + 6 gestes compost. Snapshot expose la litière (lecture) | `03_litiere_structures.md` | snapshot RO | neutre | ⬜ (Partie A faite) |
+| 03 | **Sol vivant & compost** : litière au sol + structures bac/pile + jauge `compost_mur` + 6 gestes compost. Snapshot expose la litière (lecture) | `03_litiere_structures.md` | snapshot RO | neutre | ✅ (codé, F5 Nico en attente) |
 | 04 | **Packaging (tranche 7)** : gel PyInstaller + export Godot — clôture avec Nico (poste Windows) | `04_packaging.md` | non | neutre | ⬜ (VM faite) |
 
 > **Ordre** : 01→02→03 rattrapent la vue, **04 ferme** (le build distribué
@@ -99,19 +99,35 @@ retour, triage (correctif ou dette/sous-sprint indépendant, pas de dev immédia
   de guildes suivent les densités) — rien à rendre, juste à constater au F5.
 
 ## REPRISE (démarrage à froid)
-**03·A FAITE (Python pur, golden NEUTRE, 2026-06-16)** — le snapshot expose la
-**litière** par tuile (`litiere[tile] = [[r, c, tissu_dominant, masse], …]`, liste
-creuse, `diffus` écarté car non rendu). Pont **0.3.7**. Nouveau module de test
-`tests/simserver/litiere.py` (section 15, levier = `deraciner` un pommier →
-`deposer_mort` dépose une litière `feuille` sur son plot). **152/152** sim_server,
-golden `908f591bee…` inchangé. **PROCHAIN = 03·B/C/D (C#)** : rendu litière au sol
-(discret), structures bac/pile + jauge `compost_mur`, câblage des 6 gestes compost
-(routés 0.3.5). Lire `03_litiere_structures.md` Parties B→D.
-État moteur de référence : golden `908f591bee…` / population `435e6f72…`, pont
-`ENGINE_VERSION 0.3.7`, `tests/test_sim_server.py` **152 checks** (section 15
-`litiere.py`). Détail des features moteur à rendre :
-`sprints/sprint_decomposition_compost/00_etat.md` (§Acquis ①–⑤) +
-`docs/conception/CONCEPTION_DECOMPOSITION_COMPOST.md`.
+**03 COMPLET (B/C/D codé, build vert, EN ATTENTE F5 Nico, 2026-06-16)** — la vue
+rend désormais le canal décompo·compost. Restent **F5 Nico** (cf. points ci-dessous)
+puis **04 packaging** = dernière tranche du sprint. Lire `04_packaging.md`.
+État moteur de référence INCHANGÉ : golden `908f591bee…` / population `435e6f72…`,
+pont `ENGINE_VERSION 0.3.7`, `tests/test_sim_server.py` **152 checks**. Le C# de 03
+est **pur rendu/câblage** (aucune touche moteur).
+
+**À VÉRIFIER au F5 de 03 (points soulevés en codant B/C/D)** :
+- **LOD litière** : la litière n'apparaît qu'à partir du zoom ×2 (palier sous la
+  vie macro ×4) — en vue d'ensemble on ne la voit pas (voulu, sobre). Réglable
+  (`LitterLayer.MinZoom`). Lever déterministe : `deraciner` un pommier (config
+  full) → litière `feuille` ocre sur son plot, visible en zoomant.
+- **Calibrages à l'œil** : densité de litière (`LitterLayer.MasseRef = 2.5`) et
+  remplissage des structures (`CompostStructure.MurRef = 6`) sont des références
+  posées sans mesure (la masse d'une litière/jauge dépend du scénario) — à ajuster
+  au F5 si « toujours plein » ou « toujours vide ».
+- **Garde-fou phase NON posé** : poser/composter/empiler/épandre sont jouables en
+  TOUTE phase (le serveur applique quelle que soit la phase). Le kickoff prévoyait
+  un garde-fou « planification » mais « à confirmer au F5 » → laissé permissif
+  pour ne pas frustrer. À trancher avec Nico.
+- **Structure ↔ litière au MÊME plot** : `composter`/`empiler` ramassent la litière
+  du plot OÙ est posée la structure (clic sur la structure). Composter une litière
+  d'un plot voisin n'est pas câblé (design minimal du kickoff). À juger à l'usage.
+
+**03·A (rappel, FAIT Python pur)** — snapshot expose la **litière** par tuile
+(`litiere[tile] = [[r, c, tissu_dominant, masse], …]`, liste creuse, `diffus`
+écarté). Pont **0.3.7**, module `tests/simserver/litiere.py` (section 15).
+Détail des features moteur rendues : `sprints/sprint_decomposition_compost/00_etat.md`
+(§Acquis ①–⑤) + `docs/conception/CONCEPTION_DECOMPOSITION_COMPOST.md`.
 
 **02 (rappel) : CODÉ, build vert, EN ATTENTE F5 Nico** — fruits réels + squelettes
 post-mortem + `manger` ciblé. Snapshot 0.3.6 (les morts). Points à vérifier au F5
@@ -133,6 +149,25 @@ ci-dessous.
   juger au F5 (peut demander un meilleur rendu en dette si peu lisible).
 
 ## Journal de bord (rempli en fin de sous-sprint)
+- **03·B/C/D (2026-06-16)** — sol vivant & compost RENDU (C# pur, moteur intact,
+  golden `908f591bee…` inchangé). **B litière** : nouveau layer batché
+  `visuals/LitterLayer.cs` (patron MacroLife — UN CanvasItem, re-projeté au _Draw,
+  LOD ×2, culling) ; amas semi-transparents jitterés par hash (philo #3) au plot,
+  couleur par tissu dominant (feuille ocre, fleur rosé, herbacé paille, fruit
+  rouille, bois brun), densité/alpha ∝ masse. **C structures** : nouveau nœud
+  `visuals/CompostStructure.cs` (un par structure, dans la couche YSort `_objects`
+  → occlusion correcte avec les plantes) ; bac = caisse iso ouverte remplie de
+  compost ∝ jauge, pile = tas de rondins sur assise d'humus ∝ jauge ; empreinte
+  tourne avec la vue (WorldToScreenOffset), hauteur en vertical écran. Diff = pleine
+  reconstruction par snapshot (peu nombreuses, jauge change, pas de fondu). **D
+  gestes** : palette 9 → **15** (les 6 compost via Tab) ; 2 kinds neufs dans
+  TryAction — `q` (poser_bac/poser_pile → plot {tile,r,c}, planification) et `s`
+  (composter/empiler_bois/retourner/épandre → structure du plot cliqué via
+  `target.structure` index-dans-la-tuile + {r,c} sauf retourner ; épandre omet
+  params.q ⇒ tout le dispo). Câblage `world/WorldView.Compost.cs` (ApplyLitiere/
+  ApplyStructures/FindStructureIndex) ; `_structs.Clear()` ajouté à RebuildWorld.
+  Build vert (0 warning), LDC max 308 (Actions.cs) < 350, sim_server **152/152**.
+  Témoin bumpé « vue·rattrapage 03 ». **F5 Nico** + réserves : cf. §REPRISE.
 - **03·A (2026-06-16)** — litière exposée au snapshot (Python pur, lecture seule,
   golden NEUTRE). `serialize.py` ajoute `litiere[tile] = [[r, c, tissu_dominant,
   masse], …]` dans la boucle des tuiles (à côté de `sprites`/`structures`) : par

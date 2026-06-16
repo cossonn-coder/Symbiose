@@ -122,8 +122,9 @@ namespace Symbiose
 		private void RebuildWorld()
 		{
 			_ground.QueueFree();
-			_objects.QueueFree();   // emporte maison, plantes et fondus en cours
+			_objects.QueueFree();   // emporte maison, plantes, structures et fondus
 			_plantNodes.Clear();
+			_structs.Clear();       // nœuds libérés avec _objects → ApplyStructures recrée
 
 			BuildGround(_world);
 			_objects = new Node2D { Name = "Objects", ZIndex = 10, YSortEnabled = true };

@@ -90,7 +90,7 @@ namespace Symbiose
 		// droite de l'écran + imprimé en console au lancement : si la version à
 		// l'écran n'est pas celle annoncée par Claude, le circuit VM → sync
 		// Nextcloud → build Godot n'est pas passé (piège connu depuis t3).
-		public const string Build = "vue·rattrapage 02 — fruits réels + squelettes post-mortem — 2026-06-16";
+		public const string Build = "vue·rattrapage 03 — litière au sol + structures bac/pile + 6 gestes compost — 2026-06-16";
 
 		// -------------------------------------------------------------------
 		// RÉGLAGES (exportés : ajustables dans l'inspecteur sans recompiler)
@@ -203,6 +203,8 @@ namespace Symbiose
 					(float)t["origin_x_cm"].AsDouble(),
 					(float)t["origin_y_cm"].AsDouble());
 			}
+
+			BuildLitterLayer();   // litière au sol (③·B) — ZIndex 1, sous la macro
 
 			_macroLife = new MacroLife { Name = "MacroLife", ZIndex = 5 };
 			AddChild(_macroLife);

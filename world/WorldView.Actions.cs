@@ -19,9 +19,11 @@ namespace Symbiose
 		// (kickoff B·10). Kind = famille de cible : p = plante (par position),
 		// q = plot (tile,r,c), t = tuile, m = point de MILIEU sur une tuile
 		// (x_cm/y_cm LOCAUX — planter/arroser, protocole 0.3.3), '-' = sans cible.
-		// Au-delà de 8 entrées les touches 1..8 ne couvrent plus tout : la
-		// sélection cyclique [ ] (cf. Controls) parcourt TOUTE la palette — choix
-		// qui scale pour les 6 gestes compost à venir (sous-sprint 03).
+		// Au-delà de 9 entrées les touches 1..9 ne couvrent plus tout : la
+		// sélection cyclique Tab (cf. Controls) parcourt TOUTE la palette — c'est
+		// par elle qu'on atteint les 6 gestes compost (03). Kinds compost :
+		// q = poser une structure au plot (planification) ; s = agir sur la
+		// structure EXISTANTE du plot cliqué (composter/empiler/retourner/épandre).
 		private static readonly (string Verb, string Nom, char Kind)[] Gestes =
 		{
 			("recolter",             "récolter",       'p'),
@@ -33,6 +35,12 @@ namespace Symbiose
 			("manger",               "manger",         'p'),
 			("planter",              "planter",        'm'),
 			("arroser",              "arroser",        'm'),
+			("poser_bac",            "poser bac",      'q'),   // compost ⑤ (planification)
+			("poser_pile",           "poser pile",     'q'),
+			("composter",            "composter",      's'),   // litière tendre → bac
+			("empiler_bois",         "empiler bois",   's'),   // bois → pile
+			("retourner",            "retourner",      's'),   // accélère la maturation
+			("epandre",              "épandre",        's'),   // compost mûr → sol
 		};
 		private int _gesteIndex = -1;              // aucun geste sélectionné
 		// Graines plantables du snapshot (player.seeds, lots non vides), triées
@@ -258,6 +266,45 @@ namespace Symbiose
 					}
 					if (verb == "arroser")
 						prms["urgence"] = _phase == Phase.Saison;
+					break;
+
+				case 'q':   // POSER une structure (compost ⑤) : plot {tile, r, c}.
+					// Geste de PLANIFICATION dans le modèle préparation/réaction —
+					// pas de garde-fou DUR ici (à confirmer au F5) : le serveur
+					// applique quelle que soit la phase, on relaie son verdict.
+					if (!FindPlot(w, out string qTile, out int qr, out int qc))
+					{
+						_lastActionMsg = $"{nom} : aucune tuile ici (chemin/maison)";
+						UpdateActionHud(); FlashActionLabel();
+						return;
+					}
+					target = new GDict { ["tile"] = qTile, ["r"] = qr, ["c"] = qc };
+					break;
+
+				case 's':   // AGIR sur la structure du plot cliqué (compost ⑤) :
+					// composter/empiler/retourner/épandre. La vue résout la
+					// structure AU plot (target.structure = son index dans la tuile)
+					// et joint le plot (source de litière) sauf pour `retourner`.
+					if (!FindPlot(w, out string sTile, out int sr, out int sc))
+					{
+						_lastActionMsg = $"{nom} : aucune tuile ici (chemin/maison)";
+						UpdateActionHud(); FlashActionLabel();
+						return;
+					}
+					int sIdx = FindStructureIndex(verb, sTile, sr, sc);
+					if (sIdx < 0)
+					{
+						_lastActionMsg = $"{nom} : aucune structure adaptée sur ce plot";
+						UpdateActionHud(); FlashActionLabel();
+						return;
+					}
+					target = new GDict { ["tile"] = sTile, ["structure"] = sIdx };
+					if (verb != "retourner")   // retourner n'a pas besoin du plot
+					{
+						target["r"] = sr;
+						target["c"] = sc;
+					}
+					// `epandre` : params.q omis ⇒ le serveur épand TOUT le disponible.
 					break;
 
 				// '-' : grelinette, pas de cible.
