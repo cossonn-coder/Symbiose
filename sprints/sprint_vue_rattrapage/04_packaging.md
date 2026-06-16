@@ -23,10 +23,11 @@ le rattrapage, pas avant.
 ## ⚠️ Mises à jour à reporter (le sprint a vieilli depuis l'écriture de 07)
 - **Golden** : la référence n'est plus `16a1b937…` mais **`908f591bee…`**
   (décompo·compost l'a re-figé). Toute mention « golden intact » vise ce hash.
-- **`test_sim_server`** : n'est plus 87 checks mais **123 + ceux ajoutés en
-  02/03** (snapshot 0.3.7). Le critère devient : **tous les checks** passent sur
-  le **binaire gelé** (`SIM_SERVER_BIN`), déterminisme byte-identique.
-- **Protocole** : `ENGINE_VERSION` aura atteint **0.3.7** (après 02/03). Le gel
+- **`test_sim_server`** : n'est plus 87 checks mais **158** (02/03 + correctif F5
+  du 03). Le critère devient : **tous les checks** passent sur le **binaire gelé**
+  (`SIM_SERVER_BIN`), déterminisme byte-identique.
+- **Protocole** : `ENGINE_VERSION` a atteint **0.3.8** (02/03 + correctif F5 :
+  snapshot expose les morts, la litière, le `contenu` des structures). Le gel
   ré-emballe ce moteur-là.
 - **Build C# vérifiable sur la VM** désormais (`dotnet build`) — mais l'**export
   Godot et le F5 restent à Nico** (Godot pas sur la VM).

@@ -73,7 +73,7 @@ amis/famille de Nico.
 |---|-------|---------|----------|--------|------|
 | 01 | **Gestes joueur manquants** : planter (choix graine), arroser, écraser-plante — pur câblage C# (pont prêt) | `01_gestes_manquants.md` | non | neutre | ✅ |
 | 02 | **Cycle de vie visible** : fruits réels (maturité vert→mûr→sur-mûr) + squelettes post-mortem + abscission. Snapshot expose les morts (lecture) | `02_fruits_squelettes.md` | snapshot RO | neutre | ✅ |
-| 03 | **Sol vivant & compost** : litière au sol + structures bac/pile + jauge `compost_mur` + 6 gestes compost. Snapshot expose la litière (lecture) | `03_litiere_structures.md` | snapshot RO | neutre | ✅ (+ correctif F5 : composter le sol → bac proche, remplissage visible) |
+| 03 | **Sol vivant & compost** : litière au sol + structures bac/pile + jauge `compost_mur` + 6 gestes compost. Snapshot expose la litière (lecture) | `03_litiere_structures.md` | snapshot RO | neutre | ✅ **VALIDÉ F5** (+ correctif F5 : composter le sol → bac proche, remplissage visible) |
 | 04 | **Packaging (tranche 7)** : gel PyInstaller + export Godot — clôture avec Nico (poste Windows) | `04_packaging.md` | non | neutre | ⬜ (VM faite) |
 
 > **Ordre** : 01→02→03 rattrapent la vue, **04 ferme** (le build distribué
@@ -99,10 +99,10 @@ retour, triage (correctif ou dette/sous-sprint indépendant, pas de dev immédia
   de guildes suivent les densités) — rien à rendre, juste à constater au F5.
 
 ## REPRISE (démarrage à froid)
-**03 COMPLET + correctif F5 appliqué (build vert, 2026-06-16)** — la vue rend le
-canal décompo·compost ET le correctif F5 (composter le sol → bac proche +
-remplissage visible). **Reste un 2e F5 de confirmation** (cf. ci-dessous) puis
-**04 packaging** = dernière tranche du sprint. Lire `04_packaging.md`.
+**03 VALIDÉ F5 (correctif inclus, 2026-06-16)** — la vue rend tout le canal
+décompo·compost, composter ramasse la litière au sol → bac proche, remplissage
+visible. **Tranches 01→03 toutes closes.** Reste **04 packaging** = DERNIÈRE
+tranche du sprint, à faire AVEC Nico sur poste Windows. Lire `04_packaging.md`.
 État moteur de référence INCHANGÉ : golden `908f591bee…` / population `435e6f72…`,
 pont **`ENGINE_VERSION 0.3.8`** (snapshot expose `contenu` des structures, RO),
 `tests/test_sim_server.py` **158 checks** (+6 : section 13b remplissage du bac).
