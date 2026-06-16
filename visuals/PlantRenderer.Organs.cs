@@ -1,0 +1,216 @@
+// SYMBIOSE — PlantRenderer.Organs.cs
+// Organes procéduraux (feuilles / fleurs / fruits) — partial de PlantRenderer.
+// Portage de tools/render_structure.py §« ORGANES PROCÉDURAUX » (_draw_organs,
+// validé visuellement en SVG). Extrait de PlantRenderer.cs au refactor SS⑦.
+//
+// Constantes et palette IDENTIQUES au prototype ; seul le hash diffère (local
+// C#, pas de parité bit-à-bit requise : c'est de la décoration de vue, il faut
+// juste la STABILITÉ inter-frames et inter-sessions).
+
+using Godot;
+using System.Collections.Generic;
+
+namespace Symbiose
+{
+	public partial class PlantRenderer : Node2D
+	{
+		private const float LeafMaxThickCm = 1.6f; // au-delà = bois structurel, nu
+		private const float LeafSpacingCm = 11f;   // une feuille tous les ~11 cm
+		private const float LeafOffsetCm = 7f;     // déport latéral p/r à l'axe
+		private const float LeafSizeCm = 7f;       // demi-grandeur d'une feuille
+		private const int MaxFruits = 10;          // plafond anti-fouillis
+
+		// Palette par espèce (= ORGAN_PALETTE du prototype) : feuille, fleur,
+		// fruit vert, fruit mûr. Espèce inconnue → défaut.
+		private readonly struct OrganPalette
+		{
+			public readonly Color Leaf, Flower, FruitUnripe, FruitRipe;
+			public OrganPalette(string leaf, string flower, string unripe, string ripe)
+			{
+				Leaf = new Color(leaf); Flower = new Color(flower);
+				FruitUnripe = new Color(unripe); FruitRipe = new Color(ripe);
+			}
+		}
+		private static readonly System.Collections.Generic.Dictionary<string, OrganPalette>
+			Palettes = new()
+			{
+				["Tomato"] = new OrganPalette("3f9e3a", "e8d24a", "5fae3f", "d8392a"),
+				["AppleTree"] = new OrganPalette("3f8e3a", "f3e0e8", "82ae4f", "cc382e"),
+			};
+		private static readonly OrganPalette DefaultPalette =
+			new OrganPalette("469a3f", "ead85a", "6fae45", "cf3a2e");
+		private static readonly Color[] AutumnLeaves =
+		{
+			new Color("c9a23a"), new Color("c4762a"), new Color("a8392a"),
+			new Color("b8902f"), new Color("9c5a22"),
+		};
+		private static readonly Color FlowerHeart = new Color("e8c63a");
+
+		// Hash entier → [0,1) déterministe (mix multiplicatif xorshift). Remplace
+		// le _hash_noise(SEED, canal, i, j) du prototype : mêmes ENTRÉES (canal,
+		// index segment, index feuille) → même feuille au même endroit à chaque
+		// frame ET à chaque session — zéro Random, philo #3.
+		private static float Hash01(int channel, int i, int j)
+		{
+			uint h = (uint)channel * 0x9E3779B1u
+				   ^ (uint)i * 0x85EBCA77u ^ (uint)j * 0xC2B2AE3Du;
+			h ^= h >> 15; h *= 0x2C1B3C6Du;
+			h ^= h >> 12; h *= 0x297A2D39u;
+			h ^= h >> 15;
+			return (h & 0xFFFFFF) / 16777216f;
+		}
+
+		// Couleur d'une feuille (= _leaf_color) : palette espèce + décalage
+		// saisonnier — printemps clair (×1.25), été plein, automne tiré dans la
+		// palette chaude au hash, hiver foncé (×0.7, atteint seulement si la
+		// densité saisonnière n'est pas nulle, donc persistant).
+		private static Color LeafColor(OrganPalette pal, string season, float h)
+		{
+			switch (season)
+			{
+				case "printemps": return Scaled(pal.Leaf, 1.25f);
+				case "automne": return AutumnLeaves[(int)(h * AutumnLeaves.Length) % AutumnLeaves.Length];
+				case "hiver": return Scaled(pal.Leaf, 0.7f);
+				default: return pal.Leaf;   // été
+			}
+		}
+
+		private static Color Scaled(Color c, float f) =>
+			new Color(Mathf.Clamp(c.R * f, 0f, 1f), Mathf.Clamp(c.G * f, 0f, 1f),
+					  Mathf.Clamp(c.B * f, 0f, 1f), c.A);
+
+		// Un segment porte des feuilles s'il est jeune/fin (rameau) ou un apex —
+		// le bois épais (tronc/charpente) reste nu (= _is_leafy).
+		private static bool IsLeafy(Segment s) =>
+			s.IsApex || s.ThicknessCm <= LeafMaxThickCm;
+
+		// ---------------------------------------------------------------------------
+		// ORGANES — feuilles / fleurs / fruits (t6·A, portage _draw_organs)
+		// ---------------------------------------------------------------------------
+
+		private void DrawOrgans(Vector3 collet)
+		{
+			string season = WorldView.CurrentSeason;
+			if (!Palettes.TryGetValue(_structure.SpeciesName, out var pal))
+				pal = DefaultPalette;
+
+			// --- FEUILLES — densité saisonnière calculée côté Python (caduc
+			// hiver → 0, on ne dessine rien). densité < 1 → SOUS-ÉCHANTILLONNAGE
+			// au hash (canal 17) : un feuillage léger (0.35) garde ~1 feuille
+			// sur 3, toujours LES MÊMES (stabilité inter-frames).
+			float density = _structure.FoliageDensity;
+			if (density > 0f)
+			{
+				for (int i = 0; i < _structure.Segments.Count; i++)
+				{
+					var s = _structure.Segments[i];
+					if (!IsLeafy(s)) continue;
+					int n = Mathf.Max(1, (int)(s.LengthCm / LeafSpacingCm));
+					// Perpendiculaire HORIZONTALE à l'axe du rameau (plan sol) —
+					// le déport latéral des feuilles, comme le prototype.
+					float hmag = new Vector2(s.Dir.X, s.Dir.Y).Length();
+					Vector2 perp = hmag > 1e-6f
+						? new Vector2(-s.Dir.Y / hmag, s.Dir.X / hmag)
+						: new Vector2(1f, 0f);
+					for (int j = 0; j < n; j++)
+					{
+						if (Hash01(17, i, j) >= density) continue;
+						float t = (j + 0.5f) / n;
+						Vector3 p = s.Base + s.Dir * (s.LengthCm * t);
+						float h1 = Hash01(7, i, j);
+						float h2 = Hash01(11, i, j);
+						float side = h1 < 0.5f ? 1f : -1f;
+						float off = LeafOffsetCm * (0.5f + h2);
+						float lx = p.X + perp.X * off * side;
+						float ly = p.Y + perp.Y * off * side;
+						float lz = p.Z + (h2 - 0.5f) * LeafOffsetCm;
+						Vector2 c = Iso(lx - collet.X, ly - collet.Y, lz);
+						Color col = LeafColor(pal, season, Hash01(13, i, j));
+						col.A = 0.92f;
+						float r = LeafSizeCm * WorldView.PxPerCmX;
+						DrawEllipse(c, r * 1.15f, r * 0.65f, col);
+					}
+				}
+			}
+
+			// --- FLEURS / FRUITS — stade visible décidé côté Python (proxy
+			// saisonnier REPRO_BY_SEASON, kickoff t6) ; "" = rien cette saison.
+			string organ = _structure.Organ;
+			if (string.IsNullOrEmpty(organ)) return;
+			foreach (Vector3 site in OrganSites())
+			{
+				Vector2 c = Iso(site.X - collet.X, site.Y - collet.Y, site.Z);
+				if (organ == "flower")
+				{
+					// Corolle = 5 pétales clairs + cœur (tailles px du prototype).
+					for (int p = 0; p < 5; p++)
+					{
+						float a = Mathf.Tau * p / 5f;
+						DrawCircle(c + new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * 3.6f,
+								   2.6f, pal.Flower);
+					}
+					DrawCircle(c, 2f, FlowerHeart);
+				}
+				else
+				{
+					bool ripe = organ == "fruit_ripe";
+					float rad = ripe ? 4.6f : 3.6f;
+					DrawCircle(c, rad, ripe ? pal.FruitRipe : pal.FruitUnripe);
+					// Reflet : petit disque blanc décalé haut-gauche.
+					DrawCircle(c - new Vector2(rad * 0.3f, rad * 0.3f),
+							   rad * 0.3f, new Color(1f, 1f, 1f, 0.45f));
+				}
+			}
+		}
+
+		// Points 3D (cm, tuile-local) où naissent fleurs/fruits (= _organ_sites) :
+		// bouts d'apex (`terminal`) ou bouts des latéraux HORS meneur (`lateral`,
+		// le meneur = apex le plus haut, exclu → fructification latérale).
+		// Plafonné à MaxFruits par sous-échantillonnage régulier (anti-fouillis).
+		private List<Vector3> OrganSites()
+		{
+			var apex = new List<Segment>();
+			foreach (var s in _structure.Segments)
+				if (s.IsApex) apex.Add(s);
+			if (apex.Count == 0) return new List<Vector3>();
+			if (_structure.OrganSite == "lateral" && apex.Count > 1)
+			{
+				int leader = 0;
+				float zMax = float.MinValue;
+				for (int i = 0; i < apex.Count; i++)
+				{
+					float z = apex[i].Base.Z + apex[i].Dir.Z * apex[i].LengthCm;
+					if (z > zMax) { zMax = z; leader = i; }
+				}
+				apex.RemoveAt(leader);
+			}
+			var tips = new List<Vector3>(apex.Count);
+			foreach (var s in apex)
+				tips.Add(s.Base + s.Dir * s.LengthCm);
+			if (tips.Count > MaxFruits)
+			{
+				float step = (float)tips.Count / MaxFruits;
+				var sampled = new List<Vector3>(MaxFruits);
+				for (int i = 0; i < MaxFruits; i++)
+					sampled.Add(tips[(int)(i * step)]);
+				return sampled;
+			}
+			return tips;
+		}
+
+		// Ellipse pleine alignée écran (Godot n'a pas de DrawEllipse natif) :
+		// petit polygone de 10 points — les feuilles se dessinent au SetStructure
+		// seulement, le coût par redraw reste trivial (~10 vertices/feuille).
+		private void DrawEllipse(Vector2 center, float rx, float ry, Color col)
+		{
+			const int n = 10;
+			var pts = new Vector2[n];
+			for (int i = 0; i < n; i++)
+			{
+				float a = Mathf.Tau * i / n;
+				pts[i] = center + new Vector2(rx * Mathf.Cos(a), ry * Mathf.Sin(a));
+			}
+			DrawColoredPolygon(pts, col);
+		}
+	}
+}
