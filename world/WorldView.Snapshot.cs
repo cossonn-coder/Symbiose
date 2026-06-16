@@ -79,9 +79,17 @@ namespace Symbiose
 				string key = PlantKey(p);
 				seen.Add(key);
 
+				// Squelette (0.3.6) : `dead` → mode bois nu. Le mort GARDE sa clé
+				// (même tile|species|x|y) → il n'est pas fondu sortant ; il bascule
+				// squelette sur place jusqu'à ce que le moteur le retire (clé alors
+				// absente → fondu). stade_mort = "seche"/"couchee".
+				string stadeMort = p.ContainsKey("dead") && p["dead"].AsBool()
+					? p["stade_mort"].AsString() : null;
+
 				if (_plantNodes.TryGetValue(key, out var node))
 				{
 					node.SetStructure(structure);   // la plante a poussé
+					node.SetSkeleton(stadeMort);     // ou vient de mourir / s'est couchée
 					var t = node.GetNodeOrNull<Label>("Tag");
 					if (t != null) t.Text = TagText(p);   // le stade évolue
 					grown++;
@@ -107,6 +115,7 @@ namespace Symbiose
 				if (fade) renderer.Modulate = new Color(1f, 1f, 1f, 0f);
 				_objects.AddChild(renderer);
 				renderer.SetStructure(structure);
+				renderer.SetSkeleton(stadeMort);   // squelette déjà mort au chargement (save)
 				renderer.AddChild(MakeTag(p));
 				if (fade)
 					renderer.CreateTween()
@@ -115,7 +124,10 @@ namespace Symbiose
 				born++;
 			}
 
-			// Plantes affichées absentes du snapshot = mortes → fondu sortant.
+			// Plantes affichées absentes du snapshot = RETIRÉES par le moteur
+			// (squelette à bois épuisé, ②B ; ou herbacée morte au tick) → fondu
+			// sortant. La mort SEULE ne retire plus une plante (elle devient
+			// squelette, traité ci-dessus) : ici c'est la fin de vie du bois.
 			var dead = new List<string>();
 			foreach (var kv in _plantNodes)
 				if (!seen.Contains(kv.Key)) dead.Add(kv.Key);

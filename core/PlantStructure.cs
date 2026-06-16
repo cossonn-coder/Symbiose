@@ -33,6 +33,19 @@ namespace Symbiose
 		bool IsApex);        // extrémité de croissance active (dessinée en vert)
 
 	// ---------------------------------------------------------------------------
+	// FRUIT — miroir d'un fruit tracé du moteur (plant.fruits, décompo·compost ③)
+	// ---------------------------------------------------------------------------
+	// VRAI état moteur (≠ proxy saisonnier `Organ`) : un fruit NOUE vert, MÛRIT
+	// chaque semaine (maturité 0→1), sur-mûrit (>1.3 = MATURITE_CHUTE), tombe ou se
+	// mange. `SegmentId` = index du segment porteur à la nouaison (repère VUE
+	// best-effort, les indices glissent avec la croissance) → la vue ancre le
+	// sprite au bout de ce segment. L'index DANS la liste = clé du `manger` ciblé.
+	public readonly record struct FruitData(
+		int SegmentId,       // segment porteur (index dans Segments, best-effort)
+		float Maturite,      // 0→1 (mûr), >1.3 = sur-mûr/fermenté → teinte brune
+		float Masse);        // masse → taille du sprite
+
+	// ---------------------------------------------------------------------------
 	// PLANT STRUCTURE — un spécimen exporté (DTO)
 	// ---------------------------------------------------------------------------
 	// DTO = Data Transfer Object : sac de données issu du JSON, sans comportement.
@@ -54,6 +67,12 @@ namespace Symbiose
 		public float FoliageDensity = 1f;    // 0..1, déjà saisonnier (caduc hiver = 0)
 		public string Organ = "";            // ""|"flower"|"fruit_unripe"|"fruit_ripe"
 		public string OrganSite = "terminal"; // "terminal"|"lateral" — où naissent fleurs/fruits
+
+		// --- Fruits tracés (③, protocole 0.3.4) : VRAI état moteur ---
+		// Les FLEURS restent sur le proxy `Organ` (pas d'état moteur de fleur) ;
+		// les FRUITS basculent ici (maturité visible, déplétion par `manger`).
+		// Ordre = ordre du snapshot = index moteur (clé du geste `manger` ciblé).
+		public List<FruitData> Fruits = new();
 	}
 
 	// ---------------------------------------------------------------------------
@@ -161,6 +180,17 @@ namespace Symbiose
 				ps.Organ = plant["organ"].AsString();
 			if (plant.ContainsKey("organ_site"))
 				ps.OrganSite = plant["organ_site"].AsString();
+			// Fruits tracés (③, 0.3.4) : lecture tolérante (un snapshot pré-0.3.4
+			// ou une plante morte n'a pas la clé → liste vide, rien à dessiner).
+			if (plant.ContainsKey("fruits"))
+				foreach (var fv in plant["fruits"].AsGodotArray())
+				{
+					var f = fv.AsGodotDictionary();
+					ps.Fruits.Add(new FruitData(
+						f["segment"].AsInt32(),
+						(float)f["maturite"].AsDouble(),
+						(float)f["masse"].AsDouble()));
+				}
 			foreach (var segVar in plant["segments"].AsGodotArray())
 				ps.Segments.Add(ParseSegment(segVar.AsGodotDictionary()));
 			if (ps.Segments.Count > 0)

@@ -49,10 +49,17 @@ def test_actions_v1():
           r["result"]["applied"] is True
           and r["result"]["vigueur"] == vig_avant - 30.0,
           f"vigueur {vig_avant} → {r['result']['vigueur']}")
-    disparue = all(not (p["tile"] == pos["tile"] and p["x_cm"] == pos["x_cm"]
-                        and p["y_cm"] == pos["y_cm"])
-                   for p in r["snapshot"]["plants"])
-    check("la plante a disparu du snapshot JOINT (1 aller-retour)", disparue)
+    # Depuis 0.3.6 (vue·rattrapage 02), le snapshot N'EFFACE PLUS les morts : une
+    # plante déracinée devient un SQUELETTE exposé (`dead=true`) au lieu de
+    # « disparaître » (l'ancien `if not is_alive: continue` la masquait alors
+    # qu'elle persistait déjà dans `tile.plants`). On vérifie donc qu'elle est
+    # passée squelette à la MÊME clé (tile|x|y) — toujours un seul aller-retour.
+    squelette = next((p for p in r["snapshot"]["plants"]
+                      if p["tile"] == pos["tile"] and p["x_cm"] == pos["x_cm"]
+                      and p["y_cm"] == pos["y_cm"]), None)
+    check("la plante déracinée passe squelette (dead=true) dans le snapshot JOINT",
+          squelette is not None and squelette.get("dead") is True,
+          squelette and f"stade_mort={squelette.get('stade_mort')}")
     r = s5.send(cmd="action", verb="deraciner", target=pos)
     check("re-deraciner la même position → applied:false (plus personne)",
           r["result"]["applied"] is False)

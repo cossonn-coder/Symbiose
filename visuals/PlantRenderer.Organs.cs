@@ -18,7 +18,10 @@ namespace Symbiose
 		private const float LeafSpacingCm = 11f;   // une feuille tous les ~11 cm
 		private const float LeafOffsetCm = 7f;     // déport latéral p/r à l'axe
 		private const float LeafSizeCm = 7f;       // demi-grandeur d'une feuille
-		private const int MaxFruits = 10;          // plafond anti-fouillis
+		private const int MaxFruits = 10;          // plafond anti-fouillis (proxy fleurs)
+		private const float MaturiteChute = 1.3f;  // miroir MATURITE_CHUTE moteur : sur-mûr → chute
+		// Brun fermenté d'un fruit sur-mûr (④) — vers quoi tire la couleur au-delà du mûr.
+		private static readonly Color FruitRotten = new Color("6b4a2f");
 
 		// Palette par espèce (= ORGAN_PALETTE du prototype) : feuille, fleur,
 		// fruit vert, fruit mûr. Espèce inconnue → défaut.
@@ -133,34 +136,88 @@ namespace Symbiose
 				}
 			}
 
-			// --- FLEURS / FRUITS — stade visible décidé côté Python (proxy
-			// saisonnier REPRO_BY_SEASON, kickoff t6) ; "" = rien cette saison.
-			string organ = _structure.Organ;
-			if (string.IsNullOrEmpty(organ)) return;
-			foreach (Vector3 site in OrganSites())
+			// --- FLEURS — proxy saisonnier (REPRO_BY_SEASON, kickoff t6) : il
+			// n'y a PAS d'état moteur de fleur, on garde le proxy. "flower" =
+			// floraison de la saison, dessinée aux sites reproducteurs.
+			if (_structure.Organ == "flower")
+				foreach (Vector3 site in OrganSites())
+					DrawFlower(Iso(site.X - collet.X, site.Y - collet.Y, site.Z), pal);
+
+			// --- FRUITS — VRAI état moteur (plant.fruits, ③), plus le proxy : la
+			// maturité (vert→mûr→brun) et la déplétion par `manger` deviennent
+			// OBSERVABLES. Une espèce sans fruit moteur (herbacées) n'en montre
+			// donc plus — c'est l'état réel, pas une décoration saisonnière.
+			DrawFruits(collet, pal);
+		}
+
+		// Corolle de fleur = 5 pétales clairs + cœur (tailles px du prototype).
+		private void DrawFlower(Vector2 c, OrganPalette pal)
+		{
+			for (int p = 0; p < 5; p++)
 			{
-				Vector2 c = Iso(site.X - collet.X, site.Y - collet.Y, site.Z);
-				if (organ == "flower")
-				{
-					// Corolle = 5 pétales clairs + cœur (tailles px du prototype).
-					for (int p = 0; p < 5; p++)
-					{
-						float a = Mathf.Tau * p / 5f;
-						DrawCircle(c + new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * 3.6f,
-								   2.6f, pal.Flower);
-					}
-					DrawCircle(c, 2f, FlowerHeart);
-				}
-				else
-				{
-					bool ripe = organ == "fruit_ripe";
-					float rad = ripe ? 4.6f : 3.6f;
-					DrawCircle(c, rad, ripe ? pal.FruitRipe : pal.FruitUnripe);
-					// Reflet : petit disque blanc décalé haut-gauche.
-					DrawCircle(c - new Vector2(rad * 0.3f, rad * 0.3f),
-							   rad * 0.3f, new Color(1f, 1f, 1f, 0.45f));
-				}
+				float a = Mathf.Tau * p / 5f;
+				DrawCircle(c + new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * 3.6f,
+						   2.6f, pal.Flower);
 			}
+			DrawCircle(c, 2f, FlowerHeart);
+		}
+
+		// Fruits tracés : un disque par entrée de `_structure.Fruits`, ancré au
+		// bout de son segment porteur, COULEUR ∝ maturité, TAILLE ∝ masse. Reflet
+		// blanc haut-gauche comme le proxy d'avant — continuité visuelle.
+		private void DrawFruits(Vector3 collet, OrganPalette pal)
+		{
+			foreach (var f in _structure.Fruits)
+			{
+				Vector3 p3 = FruitPoint(f);
+				Vector2 c = Iso(p3.X - collet.X, p3.Y - collet.Y, p3.Z);
+				// masse → rayon (FRUIT_MASSE=0.15 côté moteur → ~4.5 px ; borné).
+				float rad = 3.0f + Mathf.Min(f.Masse, 0.3f) * 10f;
+				DrawCircle(c, rad, FruitColor(pal, f.Maturite));
+				DrawCircle(c - new Vector2(rad * 0.3f, rad * 0.3f),
+						   rad * 0.3f, new Color(1f, 1f, 1f, 0.45f));
+			}
+		}
+
+		// Couleur d'un fruit selon sa maturité : interpolation vert→mûr sur [0,1],
+		// puis mûr→brun fermenté de 1.0 au seuil de chute (1.3 = MATURITE_CHUTE).
+		private static Color FruitColor(OrganPalette pal, float mat)
+		{
+			if (mat <= 1f)
+				return pal.FruitUnripe.Lerp(pal.FruitRipe, Mathf.Clamp(mat, 0f, 1f));
+			float t = Mathf.Clamp((mat - 1f) / (MaturiteChute - 1f), 0f, 1f);
+			return pal.FruitRipe.Lerp(FruitRotten, t);
+		}
+
+		// Point 3D (cm tuile-local) où ancrer un fruit = bout de son segment
+		// porteur. `SegmentId` est un repère BEST-EFFORT (les indices glissent
+		// avec la croissance, cf. moteur) → on borne à un segment valide.
+		private Vector3 FruitPoint(FruitData f)
+		{
+			var segs = _structure.Segments;
+			if (segs.Count == 0) return _structure.ColletCm;
+			var s = segs[Mathf.Clamp(f.SegmentId, 0, segs.Count - 1)];
+			return s.Base + s.Dir * s.LengthCm;
+		}
+
+		/// <summary>Index (= ordre du snapshot = clé `manger` moteur) du fruit le
+		/// plus proche de `canvasPos`, ou −1 si la plante n'a aucun fruit. MÊME
+		/// projection que DrawFruits → on cible exactement ce qu'on voit.</summary>
+		public int FindFruitNear(Vector2 canvasPos)
+		{
+			if (_structure == null || _structure.Fruits.Count == 0) return -1;
+			Vector2 local = ToLocal(canvasPos);
+			Vector3 collet = _structure.ColletCm;
+			int best = -1;
+			float bestD = float.MaxValue;
+			for (int i = 0; i < _structure.Fruits.Count; i++)
+			{
+				Vector3 p3 = FruitPoint(_structure.Fruits[i]);
+				Vector2 c = Iso(p3.X - collet.X, p3.Y - collet.Y, p3.Z);
+				float d = local.DistanceSquaredTo(c);
+				if (d < bestD) { bestD = d; best = i; }
+			}
+			return best;
 		}
 
 		// Points 3D (cm, tuile-local) où naissent fleurs/fruits (= _organ_sites) :

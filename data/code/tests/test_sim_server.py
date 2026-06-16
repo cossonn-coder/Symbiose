@@ -82,6 +82,7 @@ from tests.simserver.macro import test_vie_macro
 from tests.simserver.fields import test_champs_debug
 from tests.simserver.planter import test_planter_arroser
 from tests.simserver.structures import test_structures
+from tests.simserver.morts import test_morts
 
 
 def main() -> int:
@@ -93,6 +94,7 @@ def main() -> int:
     test_champs_debug()      # section 11
     test_planter_arroser()   # section 12
     test_structures()        # section 13
+    test_morts()             # section 14 : squelettes exposés (0.3.6)
 
     # --- bilan ----------------------------------------------------------------
     n_fail = sum(1 for _, ok in harness._results if not ok)

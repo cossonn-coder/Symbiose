@@ -90,7 +90,7 @@ namespace Symbiose
 		// droite de l'écran + imprimé en console au lancement : si la version à
 		// l'écran n'est pas celle annoncée par Claude, le circuit VM → sync
 		// Nextcloud → build Godot n'est pas passé (piège connu depuis t3).
-		public const string Build = "vue·rattrapage 01b — palette Tab + gestes fusionnés — 2026-06-16";
+		public const string Build = "vue·rattrapage 02 — fruits réels + squelettes post-mortem — 2026-06-16";
 
 		// -------------------------------------------------------------------
 		// RÉGLAGES (exportés : ajustables dans l'inspecteur sans recompiler)

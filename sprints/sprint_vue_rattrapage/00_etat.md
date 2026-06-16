@@ -74,7 +74,7 @@ amis/famille de Nico.
 | # | Sujet | Kickoff | Moteur ? | Golden | État |
 |---|-------|---------|----------|--------|------|
 | 01 | **Gestes joueur manquants** : planter (choix graine), arroser, écraser-plante — pur câblage C# (pont prêt) | `01_gestes_manquants.md` | non | neutre | ✅ |
-| 02 | **Cycle de vie visible** : fruits réels (maturité vert→mûr→sur-mûr) + squelettes post-mortem + abscission. Snapshot expose les morts (lecture) | `02_fruits_squelettes.md` | snapshot RO | neutre | ⬜ |
+| 02 | **Cycle de vie visible** : fruits réels (maturité vert→mûr→sur-mûr) + squelettes post-mortem + abscission. Snapshot expose les morts (lecture) | `02_fruits_squelettes.md` | snapshot RO | neutre | ✅ |
 | 03 | **Sol vivant & compost** : litière au sol + structures bac/pile + jauge `compost_mur` + 6 gestes compost. Snapshot expose la litière (lecture) | `03_litiere_structures.md` | snapshot RO | neutre | ⬜ |
 | 04 | **Packaging (tranche 7)** : gel PyInstaller + export Godot — clôture avec Nico (poste Windows) | `04_packaging.md` | non | neutre | ⬜ (VM faite) |
 
@@ -101,23 +101,54 @@ retour, triage (correctif ou dette/sous-sprint indépendant, pas de dev immédia
   de guildes suivent les densités) — rien à rendre, juste à constater au F5.
 
 ## REPRISE (démarrage à froid)
-**01 CLOS ET VALIDÉ F5 (2026-06-16)** — Tab cycle la palette, S cycle la graine,
-planter/arroser/écraser-plante/ameublir OK ; kit de démarrage `full` confirmé
-(tournesol/tomate/basilic plantés, coût 5 chacun). Semis qui germent puis meurent
-= comportement de design (démographie D27 : mortalité de fond ∝ jeunesse/petitesse
-+ fonte des semis ∝ densité, plantés tard dans un monde saturé), PAS un bug.
-Décisions gardées en l'état (confort de test) : kit de démarrage, Maj=grelinette,
-palette Tab. NB : binaire F5 affichait « 01b » (01c purement Python, rebuild non
-requis) — le prochain rebuild C# affichera le témoin à jour.
-Prochain : **02** (lire `02_fruits_squelettes.md`) — premier à toucher le
-snapshot en LECTURE (exposer les plantes mortes/squelettes), donc re-vérifier
-`908f591bee…` + `tests/test_sim_server.py` après chaque ajout serialize.
+**02 CODÉ, build vert, EN ATTENTE F5 Nico (2026-06-16)** — fruits réels (état
+moteur `plant.fruits`, maturité→couleur vert→mûr→brun, masse→taille) + squelettes
+post-mortem (silhouette bois mort sèche/couchée) + `manger` ciblé sur le fruit
+sous le clic. Snapshot 0.3.6 expose les morts en LECTURE (golden NEUTRE). 136/136
+sim_server. Prochain après F5 : **03** (lire `03_litiere_structures.md`).
 État moteur de référence : golden `908f591bee…` / population `435e6f72…`, pont
-`ENGINE_VERSION 0.3.5`, `tests/test_sim_server.py` 123 checks. Détail des features
-moteur à rendre : `sprints/sprint_decomposition_compost/00_etat.md` (§Acquis ①–⑤)
-+ `docs/conception/CONCEPTION_DECOMPOSITION_COMPOST.md`.
+`ENGINE_VERSION 0.3.6`, `tests/test_sim_server.py` **136 checks** (section 14
+`morts.py`). Détail des features moteur à rendre :
+`sprints/sprint_decomposition_compost/00_etat.md` (§Acquis ①–⑤) +
+`docs/conception/CONCEPTION_DECOMPOSITION_COMPOST.md`.
+
+**À VÉRIFIER au F5 (points soulevés en codant 02)** :
+- **Annuelles sans squelette** : le récit du kickoff (« une annuelle qui meurt
+  laisse une silhouette sèche ») ne correspond PAS au moteur — seules les vivaces
+  LIGNEUSES (`age_curve`, p.ex. AppleTree) laissent un squelette persistant ; les
+  herbacées (bois=0) sont retirées au tick même de leur mort, jamais vues. Pour
+  voir un squelette au F5 : **déraciner un pommier** (mort immédiate + bois) ou
+  attendre une sénescence ligneuse (test long). Pas un bug, design moteur ②B.
+- **Fruits proxy perdus pour les non-fruitiers** : les fruits basculent sur
+  l'état moteur réel (kickoff Partie B) → une espèce SANS nouaison moteur (tomate,
+  herbacées) ne montre plus de fruit décoratif d'été/automne. Les FLEURS restent
+  sur le proxy. Voir des fruits = espèce `fruitier` (pommier) à `maturity_years`.
+- **« couchée » = aplatissement d'affichage** (z×0.18) : le moteur ne ré-oriente
+  pas les segments d'un squelette (flag seul) — première lecture « à terre », à
+  juger au F5 (peut demander un meilleur rendu en dette si peu lisible).
 
 ## Journal de bord (rempli en fin de sous-sprint)
+- **02 (2026-06-16)** — cycle de vie visible. **Partie A (Python, lecture seule,
+  golden NEUTRE)** : `serialize.py` n'ignore plus les morts — chaque plante porte
+  `dead` (false/true) ; un squelette expose `{stade_mort, bois_restant,
+  semaines_mort}` + sa structure. Pont **0.3.6** (`version.py`). Nouveau module de
+  test `tests/simserver/morts.py` (section 14) : levier déterministe = `deraciner`
+  un pommier (ligneux) → squelette `seche`, bois>0, byte-identique en rejeu. Deux
+  tests adaptés au changement : `actions.py` (un déraciné ne « disparaît » plus, il
+  passe squelette — l'ancien snapshot le MASQUAIT) et `structures.py` (engine_version
+  0.3.6). **123 → 136 checks** (+11 morts, +2 adaptés). Golden `908f591bee…` inchangé.
+  **Partie B (C#)** : `PlantStructure.Fruits` (miroir `FruitData`), rendu fruits
+  depuis l'état moteur réel (`PlantRenderer.Organs.cs` : `DrawFruits`, couleur
+  vert→mûr→brun via `FruitColor`/`MaturiteChute=1.3`, taille ∝ masse) ; les fleurs
+  restent sur le proxy saisonnier. **Partie C** : `manger` (kind `p`) ajoute
+  `target.fruit = FindFruitNear(clic)` si la plante porte des fruits. **Partie D** :
+  `PlantRenderer` mode squelette (`SetSkeleton`/`DrawSkeleton`, bois mort gris-brun,
+  aplati si couchée), câblé dans `WorldView.Snapshot.cs` (lecture `dead`). Build C#
+  vert (0 warning), tous fichiers < 350 LDC (max 272, Actions.cs), témoin bumpé
+  « vue·rattrapage 02 ». **F5 Nico** : (a) déraciner un pommier → silhouette sèche
+  grise ; (b) un fruitier mûr (pommier à `maturity_years`, scénario long/saisons)
+  montre des fruits qui verdissent→mûrissent→brunissent ; (c) `manger` un fruit →
+  il disparaît, gain ∝ maturité. Réserves notées en §REPRISE.
 - **01 (2026-06-16)** — planter / arroser / écraser-plante câblés (pur C#, moteur
   intact). Palette portée de 8 à **11 gestes** ; touches 1..8 directes + **[ ]**
   cyclent toute la palette (scale pour les 6 gestes compost de 03), **S** cycle

@@ -51,7 +51,14 @@ from __future__ import annotations
 #       la maturation), `epandre` (target plot {r,c} + `structure`, `params.q`
 #       optionnel — restitue le compost mûr au sol en trio humus, borné par la
 #       jauge). La pile pose en plus une rondelle `auxiliaire` (habitat §4.1).
-ENGINE_VERSION = "0.3.5"
+# 0.3.6 (vue·rattrapage 02, cycle de vie visible) : le snapshot expose les
+#       PLANTES MORTES persistantes (squelettes ②B) au lieu de les sauter —
+#       chacune porte `dead=true` + {stade_mort ("seche"/"couchee"), bois_restant,
+#       semaines_mort} et sa structure (silhouette nue à dessiner). Les vivantes
+#       gagnent `dead=false` (drapeau explicite). PUR ajout de sérialisation
+#       (lecture seule, `tile.plants` contient déjà les morts) → golden NEUTRE.
+#       Champs optionnels côté vue (tolérance pré-0.3.6, comme les bumps précédents).
+ENGINE_VERSION = "0.3.6"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

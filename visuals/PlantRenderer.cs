@@ -43,6 +43,9 @@ namespace Symbiose
 		private static readonly Color ApexColor = new Color("5ec46a");
 		private static readonly Color WoodColor = new Color("7a5230");
 		private static readonly Color CrownColor = new Color("3f7a4e"); // silhouette LOD
+		// Bois MORT (squelette post-mortem, vue·rattrapage 02) : gris-brun éteint,
+		// aucune teinte d'apex — la mort se lit à la couleur dès le premier regard.
+		private static readonly Color DeadWoodColor = new Color("6b5d4f");
 		// Surbrillance du segment sous la souris en mode tailler (tranche 5) :
 		// même jaune clair que le flash de geste réussi — un seul langage visuel.
 		private static readonly Color HighlightColor = new Color("ffe66b");
@@ -88,6 +91,18 @@ namespace Symbiose
 			_shadow = new PlantShadow { Name = "Shadow", ShowBehindParent = true };
 			AddChild(_shadow);
 			_shadow.SetExtent(_spreadCm, _heightCm);   // si SetStructure a précédé
+		}
+
+		// État post-mortem (vue·rattrapage 02) : null/"" = plante vivante ;
+		// "seche" = squelette debout ; "couchee" = squelette au sol (silhouette
+		// aplatie). Posé par WorldView.ApplySnapshot d'après le `dead`/`stade_mort`
+		// du snapshot (0.3.6). Une fois mort, un nœud ne « ressuscite » jamais.
+		private string _deadStade;
+		public void SetSkeleton(string stadeMort)
+		{
+			if (_deadStade == stadeMort) return;   // early-out : pas de redraw inutile
+			_deadStade = stadeMort;
+			QueueRedraw();
 		}
 
 		public void SetStructure(PlantStructure s)
@@ -198,6 +213,15 @@ namespace Symbiose
 			// le nœud enfant PlantShadow (ShowBehindParent) — le balayage du
 			// soleil ne redessine qu'elle, jamais ces segments-ci.
 
+			// Squelette post-mortem (vue·rattrapage 02) : bois nu, ni feuilles ni
+			// organes ni LOD — la mort se lit à la couleur et (couchée) à
+			// l'aplatissement. Court-circuite tout le rendu vivant.
+			if (!string.IsNullOrEmpty(_deadStade))
+			{
+				DrawSkeleton();
+				return;
+			}
+
 			// LOD §H.3 : zoom faible → on ne rastérise pas chaque brindille, on
 			// dessine la silhouette de couronne dérivée de l'empreinte (§G).
 			if (ZoomPalier <= 4)
@@ -244,6 +268,33 @@ namespace Symbiose
 			// Surbrillance (tranche 5) : le segment sous la souris en mode
 			// tailler se redessine PAR-DESSUS, après tout le bois.
 			DrawHighlight(collet);
+		}
+
+		// Aplatissement de la silhouette « couchée » : le moteur ne ré-oriente PAS
+		// les segments d'un squelette (stade_mort est un simple flag), on écrase
+		// donc la composante verticale à l'AFFICHAGE pour la lecture « à terre ».
+		// "sèche" garde sa hauteur (facteur 1).
+		private const float CoucheeFlatten = 0.18f;
+
+		// Squelette = mêmes segments que DrawSegments (même tri tronc-dessous, même
+		// projection Iso) mais en bois MORT uniforme, sans organes ni surbrillance,
+		// et aplati au sol si "couchée". La disparition (bois épuisé) est gérée en
+		// amont : le moteur retire la plante, le snapshot ne la liste plus, le nœud
+		// fond et QueueFree (WorldView.ApplySnapshot).
+		private void DrawSkeleton()
+		{
+			Vector3 collet = _structure.ColletCm;
+			float zf = _deadStade == "couchee" ? CoucheeFlatten : 1f;
+			var segs = new List<Segment>(_structure.Segments);
+			segs.Sort((a, b) => b.ThicknessCm.CompareTo(a.ThicknessCm));
+			foreach (var s in segs)
+			{
+				Vector3 tip = s.Base + s.Dir * s.LengthCm;
+				Vector2 p1 = Iso(s.Base.X - collet.X, s.Base.Y - collet.Y, s.Base.Z * zf);
+				Vector2 p2 = Iso(tip.X - collet.X, tip.Y - collet.Y, tip.Z * zf);
+				float w = Mathf.Max(1f, Mathf.Round(s.ThicknessCm * WorldView.PxPerCmX * 2.2f));
+				DrawLine(p1, p2, DeadWoodColor, w, antialiased: false);
+			}
 		}
 
 		// Le segment surligné, en clair et un peu plus large — « c'est CETTE

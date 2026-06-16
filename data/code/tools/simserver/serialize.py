@@ -58,16 +58,12 @@ class SerializeMixin:
         plants = []
         for tile in gs["tiles"]:
             for p in tile.plants:
-                if not p.is_alive:
-                    continue
                 cls = p.plant_class
-                # Hints d'organes (tranche 6·A, kickoff §1) : les organes ne
-                # sont PAS un état moteur (§J : reconstructibles à la volée) —
-                # on expose le proxy SAISONNIER du prototype SVG, la vue
-                # dessine. Le vrai état reproducteur (maturité réelle,
-                # déplétion par `manger`) = D19/D33, sprints moteur dédiés.
-                repro = REPRO_BY_SEASON.get(cls.__name__, DEFAULT_REPRO)
-                plants.append({
+                # Socle commun vivant/mort : l'identité (clé de diff côté vue =
+                # tile|species|x|y), la position et la STRUCTURE — le bois à
+                # dessiner, silhouette nue pour un squelette comme branchage pour
+                # un vif. Tout le reste (organes, fruits) ne vaut que pour un vivant.
+                base = {
                     "tile": tile.tile_id,
                     "species": cls.__name__,
                     "name": p.name,
@@ -75,22 +71,46 @@ class SerializeMixin:
                     "stage": p.current_stage,
                     "stage_name": p.stage.name,
                     "height_cm": p.current_height,
-                    "foliage_density": cls.foliage_density_at(p, saison),
-                    "organ": repro.get(saison),
-                    "organ_site": cls.organ_site,
                     "segments": p.structure_to_dict(),
-                    # Fruits traçables (③, D19) : VRAI état moteur (≠ proxy
-                    # `organ`). Index implicite = position dans la liste (clé du
-                    # geste `manger` ciblé). `segment` = ancrage structurel pour
-                    # que la vue place le sprite ; `maturite` pilote le rendu
-                    # (vert→mûr→sur-mûr) et le gain à la consommation.
-                    "fruits": [
-                        {"segment": f.segment_id,
-                         "maturite": f.maturite,
-                         "masse": f.masse}
-                        for f in p.fruits
-                    ],
-                })
+                }
+                # SQUELETTES post-mortem (décompo·compost ②B) : la mort ne retire
+                # plus la plante — `engine._tick_skeletons` la garde TANT QU'il
+                # reste du bois (seules les vivaces LIGNEUSES persistent ici ; les
+                # herbacées, bois=0, sont retirées au tick même de leur mort, donc
+                # jamais visibles dans un snapshot). On les EXPOSE en LECTURE pour
+                # que la vue dessine la silhouette sèche/couchée. C'est de la pure
+                # sérialisation (`tile.plants` contient déjà les morts) : aucune
+                # écriture moteur → golden NEUTRE. `dead` est aussi posé (false) sur
+                # les vivantes = drapeau explicite, lecture tolérante côté vue.
+                if not p.is_alive:
+                    base["dead"] = True
+                    base["stade_mort"] = p.stade_mort          # "seche" | "couchee"
+                    base["bois_restant"] = round(p.bois_restant, 4)
+                    base["semaines_mort"] = p.semaines_mort
+                    plants.append(base)
+                    continue
+                # Hints d'organes (tranche 6·A, kickoff §1) : les organes ne
+                # sont PAS un état moteur (§J : reconstructibles à la volée) —
+                # on expose le proxy SAISONNIER du prototype SVG, la vue
+                # dessine. Les FLEURS restent sur ce proxy ; les FRUITS, eux,
+                # ont désormais un vrai état moteur (`fruits`, ③).
+                repro = REPRO_BY_SEASON.get(cls.__name__, DEFAULT_REPRO)
+                base["dead"] = False
+                base["foliage_density"] = cls.foliage_density_at(p, saison)
+                base["organ"] = repro.get(saison)
+                base["organ_site"] = cls.organ_site
+                # Fruits traçables (③, D19) : VRAI état moteur (≠ proxy `organ`).
+                # Index implicite = position dans la liste (clé du geste `manger`
+                # ciblé). `segment` = ancrage structurel pour que la vue place le
+                # sprite ; `maturite` pilote le rendu (vert→mûr→sur-mûr) et le gain
+                # à la consommation ; `masse` la taille du sprite.
+                base["fruits"] = [
+                    {"segment": f.segment_id,
+                     "maturite": f.maturite,
+                     "masse": f.masse}
+                    for f in p.fruits
+                ]
+                plants.append(base)
         # Vie macro (tranche 6·B, kickoff §4) : sprites échantillonnés depuis
         # les 4 champs de population — PURE lecture (sample_sprites ne modifie
         # rien, positions par hash indépendantes de la semaine : un slot vit

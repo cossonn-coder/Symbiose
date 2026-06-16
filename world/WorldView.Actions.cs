@@ -163,6 +163,15 @@ namespace Symbiose
 						prms["cible"] = shift ? "branche" : "apex";
 						if (segIdx >= 0) target["segment"] = segIdx;
 					}
+					// Manger CIBLÉ (③, protocole 0.3.4) : si la plante porte des
+					// fruits, on consomme CELUI le plus proche du clic (gain ∝ sa
+					// maturité, l'organe disparaît) ; sans fruit, target.fruit reste
+					// absent → chemin générique (plante entière) côté serveur.
+					if (verb == "manger")
+					{
+						int fruitIdx = node.FindFruitNear(canvasPos);
+						if (fruitIdx >= 0) target["fruit"] = fruitIdx;
+					}
 					break;
 
 				case 'x':   // ÉCRASER, geste unifié (retour F5 Nico) : une plante
