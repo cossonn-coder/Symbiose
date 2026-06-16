@@ -6,6 +6,7 @@
 // le picking (collet / branche sous la souris) et la surbrillance de taille.
 
 using Godot;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using GDict = Godot.Collections.Dictionary;
 
@@ -13,22 +14,34 @@ namespace Symbiose
 {
 	public partial class WorldView : Node2D
 	{
-		// --- Actions joueur (tranche 4, volet B) ----------------------------
-		// Les 8 gestes, dans l'ORDRE de la table COUTS de sim/actions.py
+		// --- Actions joueur (tranche 4, volet B ; +3 gestes vue·rattrapage 01) -
+		// Les gestes, dans l'ORDRE de la table COUTS de sim/actions.py
 		// (kickoff B·10). Kind = famille de cible : p = plante (par position),
-		// q = plot (tile,r,c), t = tuile, '-' = sans cible.
+		// q = plot (tile,r,c), t = tuile, m = point de MILIEU sur une tuile
+		// (x_cm/y_cm LOCAUX — planter/arroser, protocole 0.3.3), '-' = sans cible.
+		// Au-delà de 8 entrées les touches 1..8 ne couvrent plus tout : la
+		// sélection cyclique [ ] (cf. Controls) parcourt TOUTE la palette — choix
+		// qui scale pour les 6 gestes compost à venir (sous-sprint 03).
 		private static readonly (string Verb, string Nom, char Kind)[] Gestes =
 		{
-			("recolter",             "récolter",       'p'),
-			("deraciner",            "déraciner",      'p'),
-			("ecraser",              "écraser",        'q'),
-			("favoriser_auxiliaire", "favoriser aux.", 't'),
-			("becher",               "bêcher",         'q'),
-			("grelinette",           "grelinette",     '-'),
-			("tailler",              "tailler",        'p'),
-			("manger",               "manger",         'p'),
+			("recolter",             "récolter",          'p'),
+			("deraciner",            "déraciner",         'p'),
+			("ecraser",              "écraser (nuisible)",'q'),
+			("favoriser_auxiliaire", "favoriser aux.",    't'),
+			("becher",               "bêcher",            'q'),
+			("grelinette",           "grelinette",        '-'),
+			("tailler",              "tailler",           'p'),
+			("manger",               "manger",            'p'),
+			("planter",              "planter",           'm'),
+			("arroser",              "arroser",           'm'),
+			("ecraser",              "écraser (plante)",  'p'),
 		};
 		private int _gesteIndex = -1;              // aucun geste sélectionné
+		// Graines plantables du snapshot (player.seeds, lots non vides), triées
+		// par clé pour un ordre de cycle STABLE ; l'espèce courante (S cycle) sert
+		// de params.species à `planter`. Le serveur reste juge (catalogue + banque).
+		private readonly List<(string Key, int Count)> _seeds = new();
+		private int _seedIndex;
 		private Task<GDict> _pendingAction;        // action en vol (ou null)
 		// File d'UNE intention (retour F5 Nico : en Turbo le pipe ne désemplit
 		// jamais → tout clic était ignoré). Si une requête est en vol, le clic
@@ -65,6 +78,43 @@ namespace Symbiose
 			_lastActionMsg = "";
 			GD.Print($"[WorldView] geste : {Gestes[idx].Nom} [{idx + 1}].");
 			UpdateActionHud();
+		}
+
+		// Sélection cyclique sur TOUTE la palette (touches [ et ], cf. Controls) :
+		// dépasse les 8 touches chiffrées. Premier appel sans geste → bord selon
+		// le sens. Modulo positif (les chiffres peuvent être négatifs en C#).
+		private void CyclePalette(int dir)
+		{
+			int n = Gestes.Length;
+			int idx = _gesteIndex < 0 ? (dir > 0 ? 0 : n - 1)
+									  : ((_gesteIndex + dir) % n + n) % n;
+			SelectGeste(idx);
+		}
+
+		// Espèce courante pour `planter` (touche S). Cycle sur les lots non vides
+		// du snapshot ; rien à faire si la banque est vide.
+		private void CycleSeed()
+		{
+			if (_seeds.Count == 0)
+			{
+				GD.Print("[WorldView] aucune graine en banque (récoltez en automne).");
+				return;
+			}
+			_seedIndex = (_seedIndex + 1) % _seeds.Count;
+			GD.Print($"[WorldView] graine : {_seeds[_seedIndex].Key} (×{_seeds[_seedIndex].Count}).");
+			UpdateActionHud();
+		}
+
+		// Met à jour la liste des graines plantables depuis player.seeds (appelé
+		// par ApplySnapshot). Tri par clé = ordre de cycle STABLE d'un snapshot à
+		// l'autre ; l'index est borné si un lot a disparu (tout planté).
+		private void ApplySeeds(GDict seeds)
+		{
+			_seeds.Clear();
+			foreach (var k in seeds.Keys)
+				_seeds.Add((k.AsString(), seeds[k].AsInt32()));
+			_seeds.Sort((a, b) => string.CompareOrdinal(a.Key, b.Key));
+			if (_seedIndex >= _seeds.Count) _seedIndex = 0;
 		}
 
 		private void TryAction(Vector2 canvasPos, bool shift)
@@ -115,6 +165,12 @@ namespace Symbiose
 						prms["cible"] = shift ? "branche" : "apex";
 						if (segIdx >= 0) target["segment"] = segIdx;
 					}
+					// Écraser une PLANTE (vue·rattrapage 01) : même picking que les
+					// autres gestes 'p' ; sans `guilde`, le serveur route sur la
+					// plante (≠ écraser-nuisible kind 'q' qui vise une guilde au
+					// plot). Couture préparation/réaction comme ecraser/arroser.
+					if (verb == "ecraser")
+						prms["urgence"] = _phase == Phase.Saison;
 					break;
 
 				case 'q':   // plot (tile, r, c) sous le clic
@@ -131,6 +187,43 @@ namespace Symbiose
 					// en phase Saison le geste est une RÉACTION → urgence (×1.5).
 					// En Pause on réfléchit : temps figé = tarif planification.
 					if (verb == "ecraser")
+						prms["urgence"] = _phase == Phase.Saison;
+					break;
+
+				case 'm':   // point de MILIEU : planter / arroser (protocole 0.3.3)
+					// Le serveur attend un POINT continu {tile, x_cm, y_cm} LOCAL
+					// (il le résout lui-même en plot via _plot_at) — PAS un (r,c).
+					// On trouve la tuile sous le clic, puis on convertit le point
+					// MONDE en coordonnées locales (point − origine de la tuile).
+					if (!FindPlot(w, out string mTile, out _, out _))
+					{
+						_lastActionMsg = $"{nom} : aucune tuile ici (chemin/maison)";
+						UpdateActionHud(); FlashActionLabel();
+						return;
+					}
+					Vector2 mo = _origins[mTile];
+					target = new GDict
+					{
+						["tile"] = mTile,
+						["x_cm"] = w.X - mo.X,
+						["y_cm"] = w.Y - mo.Y,
+					};
+					if (verb == "planter")
+					{
+						// Aucune graine en banque → message clair côté vue : il n'y
+						// a littéralement aucune espèce à proposer (les lots vides
+						// sont déjà masqués par le serveur). Récolter en automne
+						// remplit player.seeds. (Le serveur reste juge du reste :
+						// espèce inconnue / Vigueur → ses messages sont relayés.)
+						if (_seeds.Count == 0)
+						{
+							_lastActionMsg = "planter : aucune graine en banque (récoltez en automne)";
+							UpdateActionHud(); FlashActionLabel();
+							return;
+						}
+						prms["species"] = _seeds[_seedIndex].Key;
+					}
+					if (verb == "arroser")
 						prms["urgence"] = _phase == Phase.Saison;
 					break;
 

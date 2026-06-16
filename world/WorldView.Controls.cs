@@ -33,9 +33,14 @@ namespace Symbiose
 					SelectGeste((int)(k.PhysicalKeycode - Key.Key1));
 					return;
 				}
+				// Palette > 8 gestes : [ et ] cyclent TOUTE la liste (en
+				// PhysicalKeycode, position de touche stable en AZERTY/QWERTY).
+				if (k.PhysicalKeycode == Key.Bracketleft)  { CyclePalette(-1); return; }
+				if (k.PhysicalKeycode == Key.Bracketright) { CyclePalette(+1); return; }
 				switch (k.Keycode)
 				{
 					case Key.Space:    TogglePhase();  break;
+					case Key.S:        CycleSeed();    break;   // espèce pour planter
 					// Monde anti-horaire = la CAMÉRA orbite vers la droite
 					// (ressenti validé par Nico au 1er F5 t4).
 					case Key.Pageup:   RotateView(+1); break;

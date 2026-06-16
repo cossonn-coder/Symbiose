@@ -73,7 +73,7 @@ amis/famille de Nico.
 ## Carte des sous-sprints (4 — vertical slices, révisable)
 | # | Sujet | Kickoff | Moteur ? | Golden | État |
 |---|-------|---------|----------|--------|------|
-| 01 | **Gestes joueur manquants** : planter (choix graine), arroser, manger-fruit ciblé, écraser-plante — pur câblage C# (pont prêt) | `01_gestes_manquants.md` | non | neutre | ⬜ |
+| 01 | **Gestes joueur manquants** : planter (choix graine), arroser, écraser-plante — pur câblage C# (pont prêt) | `01_gestes_manquants.md` | non | neutre | ✅ |
 | 02 | **Cycle de vie visible** : fruits réels (maturité vert→mûr→sur-mûr) + squelettes post-mortem + abscission. Snapshot expose les morts (lecture) | `02_fruits_squelettes.md` | snapshot RO | neutre | ⬜ |
 | 03 | **Sol vivant & compost** : litière au sol + structures bac/pile + jauge `compost_mur` + 6 gestes compost. Snapshot expose la litière (lecture) | `03_litiere_structures.md` | snapshot RO | neutre | ⬜ |
 | 04 | **Packaging (tranche 7)** : gel PyInstaller + export Godot — clôture avec Nico (poste Windows) | `04_packaging.md` | non | neutre | ⬜ (VM faite) |
@@ -101,11 +101,26 @@ retour, triage (correctif ou dette/sous-sprint indépendant, pas de dev immédia
   de guildes suivent les densités) — rien à rendre, juste à constater au F5.
 
 ## REPRISE (démarrage à froid)
-Aucun sous-sprint encore fait. Commencer par **01** (lire `01_gestes_manquants.md`).
+**01 CLOS** (build vert, golden `908f591bee…` inchangé, F5 à valider par Nico).
+Prochain : **02** (lire `02_fruits_squelettes.md`) — premier à toucher le
+snapshot en LECTURE (exposer les plantes mortes/squelettes), donc re-vérifier
+`908f591bee…` + `tests/test_sim_server.py` après chaque ajout serialize.
 État moteur de référence : golden `908f591bee…` / population `435e6f72…`, pont
 `ENGINE_VERSION 0.3.5`, `tests/test_sim_server.py` 123 checks. Détail des features
 moteur à rendre : `sprints/sprint_decomposition_compost/00_etat.md` (§Acquis ①–⑤)
 + `docs/conception/CONCEPTION_DECOMPOSITION_COMPOST.md`.
 
 ## Journal de bord (rempli en fin de sous-sprint)
-*(vide — à remplir)*
+- **01 (2026-06-16)** — planter / arroser / écraser-plante câblés (pur C#, moteur
+  intact). Palette portée de 8 à **11 gestes** ; touches 1..8 directes + **[ ]**
+  cyclent toute la palette (scale pour les 6 gestes compost de 03), **S** cycle
+  l'espèce à planter (depuis `player.seeds`). **Correction protocole** : le
+  kickoff annonçait `target = {tile, r, c}` pour planter/arroser, mais le serveur
+  réel (0.3.3, `actions.py:137`) attend un **point continu `{tile, x_cm, y_cm}`
+  local** qu'il résout en plot via `_plot_at` → nouveau kind `'m'` (point milieu)
+  côté vue. Écraser-plante = nouvelle entrée kind `'p'` (picking plante existant,
+  sans `guilde` → routé sur la plante) avec urgence préparation/réaction. Garde-
+  fou taille : tous fichiers `WorldView.*.cs` restent sous ~350 LDC. Build vert,
+  golden `908f591bee…` inchangé, témoin de build bumpé. **F5 Nico** : (a) cycler
+  une graine (S) et planter sur un plot ; (b) arroser en Pause vs Saison (coût
+  ×1.5) ; (c) écraser une plante (déformée/écimée/meurt selon l'espèce).

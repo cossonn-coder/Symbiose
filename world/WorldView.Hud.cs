@@ -137,9 +137,9 @@ namespace Symbiose
 			legend.Text = "Espace lancer/pause · flèches déplacer"
 				+ " · molette zoom · PageUp/PageDown pivoter\n"
 				+ "M mode simu · F3 étiquettes · F4 perfs · H maison transparente · O ombres · I vie macro · F6 heatmap debug (Maj+F6 champ)\n"
-				+ "gestes : 1 récolter · 2 déraciner · 3 écraser · 4 favoriser aux. · "
-				+ "5 bêcher · 6 grelinette · 7 tailler (survolez la branche, Maj = latéral auto) · 8 manger"
-				+ " — clic gauche = agir";
+				+ "gestes (1..8 direct, [ ] cyclent toute la palette) : 1 récolter · 2 déraciner · 3 écraser nuisible · "
+				+ "4 favoriser aux. · 5 bêcher · 6 grelinette · 7 tailler (survolez la branche, Maj = latéral) · 8 manger · "
+				+ "planter (S = graine) · arroser · écraser plante — clic gauche = agir";
 			hud.AddChild(legend);
 			AddChild(hud);
 			UpdateActionHud();
@@ -181,8 +181,19 @@ namespace Symbiose
 			if (_actionLabel == null) return;
 			string vig = _vigueur < 0 ? "Vigueur —"
 				: $"Vigueur {_vigueur:F0}/{_vigueurMax:F0}";
-			string geste = _gesteIndex < 0 ? "aucun (1..8)"
-				: $"{Gestes[_gesteIndex].Nom} [{_gesteIndex + 1}]";
+			string geste;
+			if (_gesteIndex < 0)
+				geste = "aucun (1..8, [ ] cycler)";
+			else
+			{
+				var g = Gestes[_gesteIndex];
+				// Touche directe seulement pour les 8 premiers ; le reste via [ ].
+				geste = _gesteIndex < 8 ? $"{g.Nom} [{_gesteIndex + 1}]" : g.Nom;
+				// `planter` affiche l'espèce courante (S cycle) — la cible attendue.
+				if (g.Verb == "planter")
+					geste += _seeds.Count == 0 ? " : aucune graine (S)"
+						   : $" : {_seeds[_seedIndex].Key} (×{_seeds[_seedIndex].Count}, S)";
+			}
 			string msg = string.IsNullOrEmpty(_lastActionMsg) ? ""
 				: $"   ·   {_lastActionMsg}";
 			_actionLabel.Text = $"{vig} — geste : {geste}{msg}";

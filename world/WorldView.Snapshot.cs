@@ -156,6 +156,10 @@ namespace Symbiose
 				var pl = snap["player"].AsGodotDictionary();
 				_vigueur = pl["vigueur"].AsDouble();
 				_vigueurMax = pl["vigueur_max"].AsDouble();
+				// Graines plantables (0.3.3) → choix d'espèce pour `planter`.
+				// Lecture tolérante : un snapshot pré-0.3.3 n'a pas la clé.
+				if (pl.ContainsKey("seeds"))
+					ApplySeeds(pl["seeds"].AsGodotDictionary());
 			}
 			UpdateActionHud();
 
