@@ -81,6 +81,7 @@ pointeur ci-dessous. Ne plus écrire le contenu des entrées ici.
 - [2026-06-14 — Sprint décompo & compost · sous-sprint ③ : organes-fruits traçables — golden NEUTRE — absorbe D19](journal/51_2026-06-14_sprint-décompo-compost-sous-sprint-③-organes-fru.md)
 - [2026-06-14 — Sprint décompo & compost · sous-sprint ④ : attraction animale (fruit→guildes) — golden NEUTRE](journal/52_2026-06-14_sprint-décompo-compost-sous-sprint-④-attraction.md)
 - [2026-06-15 — Sprint décompo & compost · sous-sprint ⑤ : structures posables (bac/pile) — golden NEUTRE — ⑤ CLOS](journal/53_2026-06-15_sprint-décompo-compost-sous-sprint-⑤-structures.md)
+- [2026-06-16 — Sprint REFACTOR GLOBAL · SS①–⑦ TOUS CLOS — golden inchangé, dépôt rangé (un fichier = une responsabilité), seuil taille recalibré ~350](journal/54_2026-06-16_sprint-refactor-global-SS1-7-CLOS.md)
 
 ---
 

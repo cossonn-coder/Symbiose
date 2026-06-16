@@ -233,25 +233,34 @@ prévisible** — récompense rare qui cristallise la philo non-action.
 > Kickoff : `sprints/sprint_integration_godot/00_etat.md`.
 
 ### Fonctionnels (C#)
-- `core/PlantData.cs` — GrowthStage, PlantData, PlantInstance
-- `core/GridField.cs` — GridField, LightField, EcoFields complet
-- `core/TileData.cs` — Tile, StakeSlot, ConflictNotification
-- `core/PlantCatalogue.cs` — 14 espèces dont indicatrices avec UnlockCondition
+> Refactor SS⑦ (2026-06-16) : multi-classes et gros fichiers éclatés en
+> **un fichier = une classe / un concept** (namespace `Symbiose`, chemins
+> `res://` inchangés — C# résout par type, pas par nom de fichier).
+- `core/GrowthStage.cs` · `PlantData.cs` · `PlantInstance.cs` (ex-`PlantData.cs`)
+- `core/GridField.cs` · `LightField.cs` · `EcoFields.cs` (ex-`GridField.cs`)
+- `core/Tile.cs` · `StakeSlot.cs` · `ConflictNotification.cs` · `RondelleRules.cs`
+  (ex-`TileData.cs`)
+- `core/PlantCatalogue.cs` (types + registre + helpers) + partials
+  `.Cultivees.cs` · `.Succession.cs` · `.Indicatrices.cs` — 14 espèces dont
+  indicatrices avec `UnlockCondition`
 - `core/SpriteLoader.cs` — autoload, chargement récursif
 - `core/PlantStructure.cs` — miroir `Segment` + chargeur `structure.json`
   + `FromSnapshot()` (plante du pont, Intégration·2)
 - `core/SimBridge.cs` — pont sous-process vers `tools/sim_server.py`
   (Intégration·1, confirmé dans Godot)
-- `visuals/PlantRenderer.cs` — rendu pixel des branches (LOD silhouette ;
-  projection déléguée à `WorldView.WorldToScreen` depuis Intégration·2)
-- `world/WorldView.cs` + `WorldView.tscn` — **scène principale** (Intégration·2,
-  confirmée F5) : monde complet du snapshot, projection unique calibrée
+- `visuals/PlantRenderer.cs` + `PlantRenderer.Organs.cs` (organes procéduraux,
+  partial) + `visuals/PlantShadow.cs` (ombre-capsule) — rendu pixel des branches
+  (LOD silhouette ; projection déléguée à `WorldView.WorldToScreen`)
+- `visuals/FieldOverlay.cs` (heatmaps debug F6) · `visuals/MacroLife.cs` (vie macro)
+- `world/WorldView.cs` (+ 8 partials par concept, SS⑥) + `WorldView.tscn` —
+  **scène principale** : monde complet du snapshot, projection unique calibrée
   78×39 px/plot, placeholders procéduraux tuiles + maison (D34, caméra D35)
 
-### Stubs vides (à écrire — deviendront la VUE, pas un moteur)
-- `core/GameManager.cs`, `EcologySystem.cs`, `TurnSystem.cs`, `SeedBankSystem.cs`
-- `plants/*`, `ui/*`, `world/SoilField.cs`
-- `Main.cs` (la classe s'appelle encore `Node2d`, hors namespace)
+> **Stubs C# du portage intégral SUPPRIMÉS au SS⑦** (Option B actée : Godot est
+> une VUE, le portage C# de la simulation est abandonné). `GameManager`,
+> `EcologySystem`, `TurnSystem`, `SeedBankSystem`, `plants/*`, `ui/*`,
+> `world/SoilField.cs`, `Main.cs/.tscn`, `world/TileGrid.cs/.tscn` retirés
+> (historique git préservé). Plus de squelette moteur en C#.
 
 ### Systèmes à concevoir / dette technique
 
@@ -291,6 +300,20 @@ historiques.
 - **Un fichier modifié à la fois** sauf demande contraire (cette règle
   est suspendue quand une synchro cohérente multi-fichiers est explicitement
   demandée — typiquement avant un commit).
+- **Taille des fichiers — garde-fou, pas dogme** (gravé au refactor global
+  SS⑦, 2026-06-16). Règle réelle : **un fichier = une responsabilité cohérente**
+  (une classe / un concept), court pour relire vite. Seuil chiffré :
+  **aucun fichier > ~350 lignes de CODE PUR** (max empirique mesuré sur le
+  dépôt refactoré = **337**, `data/code/fields/ecofields/container.py`).
+  Comptage = `tools/compte_ldc.py` (commentaires pédagogiques EXCLUS du décompte
+  et **exigés au cœur des fichiers**, jamais sacrifiés pour gagner des lignes).
+  Dépassement toléré uniquement s'il est **signalé + justifié** à Nico.
+  Python éclaté → paquet avec `__init__.py` ré-exportant l'API publique (imports
+  appelants intacts) ; C# multi-classes → un fichier par classe, ou `partial`
+  quand le découpage par concept garde un état fortement partagé.
+- **Arbo cible** : conception dans `docs/conception/`, journal éclaté par entrée
+  dans `journal/` (+ `journal_archive/` 01-12 avant refactor structurel) indexé
+  par `journal.md` ; sprints clos sous `sprints/_clos/`.
 - **Avant tout sprint**, vérifier que git est à jour. Nextcloud a déjà
   perdu transitoirement des fichiers le 2026-05-29.
 - **Max 3 questions à la fois.**
@@ -333,4 +356,5 @@ pour amis/famille), dernière tranche du sprint — kickoff
 À l'ouverture d'une session, Nico donne « lis `sprints/sprint_X.md` » (sprint
 simple) ou « lis `sprints/sprint_X/00_etat.md` puis `0N_*.md` » (sprint découpé)
 et Claude reprend sans contexte préalable. Historique des décisions :
-`journal.md` (entrées récentes) + `journal_archive/`.
+`journal.md` (index de pointeurs) → entrées détaillées dans `journal/` (13→…)
++ `journal_archive/` (01-12, avant refactor structurel).

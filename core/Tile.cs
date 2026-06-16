@@ -1,6 +1,6 @@
-// SYMBIOSE — TileData.cs
-// Équivalent C# de Tile + StakeSlot + ConflictNotification (models.py)
-// Gestion de la tuile, des rondelles, des conflits spatiaux.
+// SYMBIOSE — Tile.cs
+// Tuile complète : plantes, tiges/rondelles, conflits spatiaux, géométrie
+// quinconce. Équivalent C# de Tile (models.py). Extrait de TileData.cs (SS⑦).
 
 using System;
 using System.Collections.Generic;
@@ -8,93 +8,6 @@ using System.Linq;
 
 namespace Symbiose
 {
-	// ---------------------------------------------------------------------------
-	// CONSTANTES RONDELLES
-	// ---------------------------------------------------------------------------
-
-	public static class RondelleRules
-	{
-		public static readonly HashSet<string> ValidTypes = new()
-		{
-			"fertilite", "humidite", "lombric",
-			"maladie", "pollinisateur", "paillage"
-		};
-
-		// Cap structurel par type — maladie volontairement limité à 6
-		public static readonly Dictionary<string, int> TypeCap = new()
-		{
-			{ "maladie",       6 },
-			{ "pollinisateur", 9 },
-			{ "paillage",      9 },
-			{ "fertilite",     9 },
-			{ "humidite",      9 },
-			{ "lombric",       9 },
-		};
-	}
-
-	// ---------------------------------------------------------------------------
-	// STAKESLOT — tige avec rondelles empilées
-	// ---------------------------------------------------------------------------
-
-	public class StakeSlot
-	{
-		public int          SlotId;
-		public List<string> Rondelles = new(); // max 3 du même type
-
-		public string Variable => Rondelles.Count > 0 ? Rondelles[0] : null;
-		public int    Count    => Rondelles.Count;
-		public bool   IsBonus  => Count == 3;
-
-		public bool Add(string rondelleType)
-		{
-			if (!RondelleRules.ValidTypes.Contains(rondelleType))
-				throw new ArgumentException($"Type inconnu : {rondelleType}");
-			if (Count >= 3) return false;
-			if (Rondelles.Count > 0 && Rondelles[0] != rondelleType) return false;
-			Rondelles.Add(rondelleType);
-			return true;
-		}
-
-		public string RemoveTop()
-		{
-			if (Rondelles.Count == 0) return null;
-			string top = Rondelles[^1];
-			Rondelles.RemoveAt(Rondelles.Count - 1);
-			return top;
-		}
-
-		public override string ToString() =>
-			$"Tige#{SlotId} [{Variable ?? "—"} ×{Count}]";
-	}
-
-	// ---------------------------------------------------------------------------
-	// CONFLICT NOTIFICATION — conflit spatial entre plantes
-	// ---------------------------------------------------------------------------
-
-	public class ConflictNotification
-	{
-		public List<PlantInstance> Plants;
-		public List<(int r, int c)> Plots;
-		public string ConflictType;   // "foliar" | "root"
-		public int    WeeksActive = 0;
-		public bool   Resolved    = false;
-
-		public void Tick()
-		{
-			if (!Resolved) WeeksActive++;
-		}
-
-		// La plante la plus jeune (AgeWeeks le plus bas) perd
-		public PlantInstance Loser() =>
-			Plants.OrderBy(p => p.AgeWeeks).First();
-
-		public override string ToString()
-		{
-			string noms = string.Join(" vs ", Plants.Select(p => p.Data.Name));
-			return $"CONFLIT [{ConflictType}] {noms} semaines={WeeksActive}";
-		}
-	}
-
 	// ---------------------------------------------------------------------------
 	// TILE — tuile complète
 	// ---------------------------------------------------------------------------
