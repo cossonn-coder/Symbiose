@@ -103,6 +103,18 @@ retour, triage (correctif ou dette/sous-sprint indépendant, pas de dev immédia
 décompo·compost, composter ramasse la litière au sol → bac proche, remplissage
 visible. **Tranches 01→03 toutes closes.** Reste **04 packaging** = DERNIÈRE
 tranche du sprint, à faire AVEC Nico sur poste Windows. Lire `04_packaging.md`.
+
+> **EN COURS (2026-06-16)** : le packaging (étage 1 gel PyInstaller + étage 2
+> export Godot) est **exécuté par une instance Claude Code sur le poste Windows
+> de Nico** (brief autosuffisant pointant `data/code/tools/RECETTE_PACKAGING.md`,
+> avec correction 87→**158 checks** / protocole **0.3.8**). Elle EXÉCUTE+VÉRIFIE
+> seulement (pas de commit/docs/golden). **CLÔTURE EN ATTENTE de son rapport** :
+> dès que Nico colle le rapport (158/158 sur binaire, témoin « Mode BINAIRE »,
+> double-clic OK), faire la clôture ICI sur la VM = §Clôture de `04_packaging.md`
+> (graver sprint VUE + sprint Intégration Godot CLOS dans ce fichier,
+> `sprint_integration_godot/00_etat.md`, `journal/`, mémoires ; commit suggéré
+> en bas de `04_packaging.md`). Si le rapport signale un échec (sync en retard,
+> ModuleNotFoundError, <158 checks) → triage, pas de clôture.
 État moteur de référence INCHANGÉ : golden `908f591bee…` / population `435e6f72…`,
 pont **`ENGINE_VERSION 0.3.8`** (snapshot expose `contenu` des structures, RO),
 `tests/test_sim_server.py` **158 checks** (+6 : section 13b remplissage du bac).
