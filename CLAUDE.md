@@ -52,6 +52,12 @@ n'importent jamais les hautes). Imports absolus ; lancement depuis `data/code/`
 ## Stack technique
 
 - Godot 4.6 .NET, C# .NET 8.0
+- **Build C# sur la VM** : `dotnet` SDK 8.0 est installé en local utilisateur
+  (`~/.dotnet`, dans le PATH via `~/.bashrc`). `dotnet build Symbiose.csproj`
+  est lançable directement — c'est le **filet de compilation** pour tout
+  tronçon C# (le **F5 visuel reste à Nico**, Godot n'est pas sur la VM). Pas de
+  `dotnet`/Godot système, pas de `sudo` (mot de passe requis). Installé le
+  2026-06-16 (SS⑥ refactor).
 - Namespace `Symbiose` sur tous les fichiers de gameplay
 - **GDScript INTERDIT** — tout en C#
 - Pixel art : filtre `Nearest` partout (réglé dans `project.godot`)
