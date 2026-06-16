@@ -65,7 +65,8 @@ Mesure aussi la taille du snapshot (octets/semaine) — la donnée qui tranchera
 > Refactor structurel (Sprint refactor global, SS⑤) : cette entrée orchestre
 > désormais le paquet `tests/simserver/` (harness `ServerProc` partagé + un
 > module par section : base, actions, taille, organes, macro, fields, planter,
-> structures). Même ordre d'exécution, même compteur `harness._results` — zéro
+> structures, morts, litiere). Même ordre d'exécution, même compteur
+> `harness._results` — zéro
 > check retiré. `python3 tools/sim_server.py` reste lancé en vrai sous-process.
 
 Usage (depuis data/code/) :
@@ -83,6 +84,7 @@ from tests.simserver.fields import test_champs_debug
 from tests.simserver.planter import test_planter_arroser
 from tests.simserver.structures import test_structures
 from tests.simserver.morts import test_morts, test_pommier_fruite
+from tests.simserver.litiere import test_litiere
 
 
 def main() -> int:
@@ -96,6 +98,7 @@ def main() -> int:
     test_structures()        # section 13
     test_morts()             # section 14 : squelettes exposés (0.3.6)
     test_pommier_fruite()    # section 14b : levier pommier mûr → fruits dès l'été
+    test_litiere()           # section 15 : litière typée par plot exposée (0.3.7)
 
     # --- bilan ----------------------------------------------------------------
     n_fail = sum(1 for _, ok in harness._results if not ok)

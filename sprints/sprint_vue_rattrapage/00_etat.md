@@ -51,13 +51,11 @@ amis/famille de Nico.
   mais PAS encore rendu**.
 - `player` : `vigueur, vigueur_max, seeds {clé: nombre}` (lots plantables).
 
-## Les DEUX manques du snapshot (à exposer en lecture, golden neutre)
-- **Plantes mortes persistantes (squelettes)** : `_snapshot` fait
-  `if not p.is_alive: continue` → les squelettes (`morte`, `stade_mort`
-  `seche`/`couchee`, `bois_restant`, `semaines_mort`) sont **invisibles**. À
-  exposer (sous-sprint 02).
-- **Litière par plot** : `EcoFields.litiere` (parcelles `{tissu, masse, age}`)
-  n'est pas dans le snapshot. À exposer de façon compacte (sous-sprint 03).
+## Les DEUX manques du snapshot (à exposer en lecture, golden neutre) — RÉSOLUS
+- ✅ **Plantes mortes persistantes (squelettes)** : exposées en 02 (snapshot
+  0.3.6, `dead` + `{stade_mort, bois_restant, semaines_mort}`).
+- ✅ **Litière par plot** : exposée en 03·A (snapshot 0.3.7, `litiere[tile] =
+  [[r, c, tissu_dominant, masse], …]`, liste creuse, `diffus` écarté).
 
 ## Ce que la VUE C# gère DÉJÀ (à étendre)
 - Palette de **8 gestes** (touches 1..8, `WorldView.Actions.cs` tableau `Gestes`) :
@@ -75,7 +73,7 @@ amis/famille de Nico.
 |---|-------|---------|----------|--------|------|
 | 01 | **Gestes joueur manquants** : planter (choix graine), arroser, écraser-plante — pur câblage C# (pont prêt) | `01_gestes_manquants.md` | non | neutre | ✅ |
 | 02 | **Cycle de vie visible** : fruits réels (maturité vert→mûr→sur-mûr) + squelettes post-mortem + abscission. Snapshot expose les morts (lecture) | `02_fruits_squelettes.md` | snapshot RO | neutre | ✅ |
-| 03 | **Sol vivant & compost** : litière au sol + structures bac/pile + jauge `compost_mur` + 6 gestes compost. Snapshot expose la litière (lecture) | `03_litiere_structures.md` | snapshot RO | neutre | ⬜ |
+| 03 | **Sol vivant & compost** : litière au sol + structures bac/pile + jauge `compost_mur` + 6 gestes compost. Snapshot expose la litière (lecture) | `03_litiere_structures.md` | snapshot RO | neutre | ⬜ (Partie A faite) |
 | 04 | **Packaging (tranche 7)** : gel PyInstaller + export Godot — clôture avec Nico (poste Windows) | `04_packaging.md` | non | neutre | ⬜ (VM faite) |
 
 > **Ordre** : 01→02→03 rattrapent la vue, **04 ferme** (le build distribué
@@ -101,16 +99,23 @@ retour, triage (correctif ou dette/sous-sprint indépendant, pas de dev immédia
   de guildes suivent les densités) — rien à rendre, juste à constater au F5.
 
 ## REPRISE (démarrage à froid)
-**02 CODÉ, build vert, EN ATTENTE F5 Nico (2026-06-16)** — fruits réels (état
-moteur `plant.fruits`, maturité→couleur vert→mûr→brun, masse→taille) + squelettes
-post-mortem (silhouette bois mort sèche/couchée) + `manger` ciblé sur le fruit
-sous le clic. Snapshot 0.3.6 expose les morts en LECTURE (golden NEUTRE). 136/136
-sim_server. Prochain après F5 : **03** (lire `03_litiere_structures.md`).
+**03·A FAITE (Python pur, golden NEUTRE, 2026-06-16)** — le snapshot expose la
+**litière** par tuile (`litiere[tile] = [[r, c, tissu_dominant, masse], …]`, liste
+creuse, `diffus` écarté car non rendu). Pont **0.3.7**. Nouveau module de test
+`tests/simserver/litiere.py` (section 15, levier = `deraciner` un pommier →
+`deposer_mort` dépose une litière `feuille` sur son plot). **152/152** sim_server,
+golden `908f591bee…` inchangé. **PROCHAIN = 03·B/C/D (C#)** : rendu litière au sol
+(discret), structures bac/pile + jauge `compost_mur`, câblage des 6 gestes compost
+(routés 0.3.5). Lire `03_litiere_structures.md` Parties B→D.
 État moteur de référence : golden `908f591bee…` / population `435e6f72…`, pont
-`ENGINE_VERSION 0.3.6`, `tests/test_sim_server.py` **136 checks** (section 14
-`morts.py`). Détail des features moteur à rendre :
+`ENGINE_VERSION 0.3.7`, `tests/test_sim_server.py` **152 checks** (section 15
+`litiere.py`). Détail des features moteur à rendre :
 `sprints/sprint_decomposition_compost/00_etat.md` (§Acquis ①–⑤) +
 `docs/conception/CONCEPTION_DECOMPOSITION_COMPOST.md`.
+
+**02 (rappel) : CODÉ, build vert, EN ATTENTE F5 Nico** — fruits réels + squelettes
+post-mortem + `manger` ciblé. Snapshot 0.3.6 (les morts). Points à vérifier au F5
+ci-dessous.
 
 **À VÉRIFIER au F5 (points soulevés en codant 02)** :
 - **Annuelles sans squelette** : le récit du kickoff (« une annuelle qui meurt
@@ -128,6 +133,21 @@ sim_server. Prochain après F5 : **03** (lire `03_litiere_structures.md`).
   juger au F5 (peut demander un meilleur rendu en dette si peu lisible).
 
 ## Journal de bord (rempli en fin de sous-sprint)
+- **03·A (2026-06-16)** — litière exposée au snapshot (Python pur, lecture seule,
+  golden NEUTRE). `serialize.py` ajoute `litiere[tile] = [[r, c, tissu_dominant,
+  masse], …]` dans la boucle des tuiles (à côté de `sprites`/`structures`) : par
+  plot, on filtre les parcelles de SURFACE (`tissu != "diffus" && masse > 0`),
+  `tissu_dominant` = parcelle de plus grande masse, `masse` = Σ de surface arrondie
+  (4 déc., déterministe) ; plots vides OMIS (liste creuse). La parcelle `diffus`
+  (exsudats/humus permanent) est écartée car non rendue. Pont **0.3.6 → 0.3.7**
+  (`version.py` + historique). Nouveau module `tests/simserver/litiere.py`
+  (section 15, **12 checks**) : levier déterministe = `deraciner` un pommier (config
+  full) → `deposer_mort` dépose une litière `feuille` sur son plot-foyer ; on vérifie
+  litière vide au départ, apparition ciblée au bon plot, format compact, omission des
+  plots vides, déterminisme byte-à-byte. Un check adapté : `structures.py`
+  (engine_version 0.3.6 → 0.3.7). **140 → 152 checks** (+12). Golden `908f591bee…`
+  inchangé. **Reste 03·B/C/D (C#)** : rendu litière + structures + 6 gestes (cf.
+  REPRISE). Partie A seule = pas de build C# / témoin de vue à toucher.
 - **02 (2026-06-16)** — cycle de vie visible. **Partie A (Python, lecture seule,
   golden NEUTRE)** : `serialize.py` n'ignore plus les morts — chaque plante porte
   `dead` (false/true) ; un squelette expose `{stade_mort, bois_restant,

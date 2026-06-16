@@ -58,7 +58,15 @@ from __future__ import annotations
 #       gagnent `dead=false` (drapeau explicite). PUR ajout de sérialisation
 #       (lecture seule, `tile.plants` contient déjà les morts) → golden NEUTRE.
 #       Champs optionnels côté vue (tolérance pré-0.3.6, comme les bumps précédents).
-ENGINE_VERSION = "0.3.6"
+# 0.3.7 (vue·rattrapage 03, litière au sol) : le snapshot expose `litiere` par
+#       tuile = `[[r, c, tissu_dominant, masse], …]`, la couche fraîche de
+#       nécromasse de SURFACE par plot non vide (dominant = parcelle de plus
+#       grande masse hors `diffus` ; masse = Σ des parcelles de surface ;
+#       `diffus`, exsudats/humus permanent, écarté car non rendu). Liste creuse
+#       (plots sans litière de surface OMIS). PUR ajout de sérialisation
+#       (`eco.litiere` rempli par le tick) → golden NEUTRE. La vue dessine en
+#       03·B (indice écologique discret, philo #5).
+ENGINE_VERSION = "0.3.7"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

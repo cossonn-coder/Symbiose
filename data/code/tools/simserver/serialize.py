@@ -120,6 +120,7 @@ class SerializeMixin:
         # et round() est déterministe, la clé de diff côté vue reste stable.
         sprites = {}
         structures = {}
+        litiere = {}
         for tile in gs["tiles"]:
             eco = gs["eco"][tile.tile_id]
             sprites[tile.tile_id] = {
@@ -135,6 +136,27 @@ class SerializeMixin:
                 {"kind": st.kind, "plot": list(st.plot),
                  "compost_mur": round(st.compost_mur, 4)}
                 for st in eco.structures]
+            # Litière typée par plot (décompo·compost ①, rendue par la vue en
+            # 03·B) : la couche fraîche de nécromasse au sol. On n'expose QUE ce
+            # qui se dessine — la parcelle `diffus` (exsudats racinaires, humus
+            # permanent, masse souvent > 0 via croissance) n'est PAS de la litière
+            # de surface : on l'écarte du tissu dominant ET du total. Format
+            # COMPACT (cf. `sprites`) : par plot non vide `[r, c, tissu_dominant,
+            # masse]` — dominant = parcelle de plus grande masse hors `diffus`,
+            # masse = Σ des parcelles de surface (densité ∝ masse côté vue). Les
+            # plots sans litière de surface sont OMIS (liste creuse). PURE lecture
+            # (`eco.litiere` est déjà rempli par le tick) → golden NEUTRE.
+            plots = []
+            for r in range(eco.rows):
+                for c in range(eco.cols):
+                    surface = [p for p in eco.litiere[r][c]
+                               if p.tissu != "diffus" and p.masse > 0.0]
+                    if not surface:
+                        continue
+                    dominant = max(surface, key=lambda p: p.masse)
+                    total = sum(p.masse for p in surface)
+                    plots.append([r, c, dominant.tissu, round(total, 4)])
+            litiere[tile.tile_id] = plots
         # Bloc joueur (tranche 4, lecture seule) : la vue affiche la Vigueur
         # au HUD. vigueur_max passe par la façade (bonus maîtrise compris).
         # `seeds` (0.3.3) = lots PLANTABLES de la banque-joueur, {clé catalogue:
@@ -151,4 +173,4 @@ class SerializeMixin:
                            "vigueur_max": V.vigueur_max(gs, player),
                            "seeds": seeds},
                 "plants": plants, "sprites": sprites,
-                "structures": structures}
+                "structures": structures, "litiere": litiere}
