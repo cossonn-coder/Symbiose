@@ -1,0 +1,183 @@
+// SYMBIOSE — WorldView.Snapshot.cs (partial de WorldView, SS⑥ refactor global)
+// Appliquer un snapshot du moteur = un DIFF avec ce qui est affiché (tranche
+// 3). Clé stable d'une plante = tuile + espèce + position (une plante ne bouge
+// jamais ; le moteur n'expose pas d'id, la position en tient lieu) :
+//  · clé connue   → SetStructure (swap sec : la plante a grandi)
+//  · clé nouvelle → créer + fondu d'apparition (naissance)
+//  · clé disparue → fondu de disparition puis QueueFree (mort)
+// Sol et maison ne bougent pas. ~150 nœuds à 1 fois/60 s : trivial.
+
+using Godot;
+using System.Collections.Generic;
+using GDict = Godot.Collections.Dictionary;
+
+namespace Symbiose
+{
+	public partial class WorldView : Node2D
+	{
+		// Saison courante du snapshot (t6·A) — lue par PlantRenderer pour la
+		// COULEUR des feuilles (printemps clair, automne chaud…). Les hints
+		// foliage_density/organ arrivent déjà saisonnés du serveur ; seule la
+		// teinte se décide côté vue. Mise à jour dans ApplySnapshot AVANT les
+		// SetStructure : les redraws qui suivent voient la bonne saison.
+		public static string CurrentSeason { get; private set; } = "ete";
+
+		// Plantes affichées, indexées par clé stable (tile|species|x|y) — base
+		// du diff naissance/mort entre deux snapshots.
+		private readonly Dictionary<string, PlantRenderer> _plantNodes = new();
+		private int _plantSeq;                     // noms de nœuds uniques
+		// Horloge du dernier snapshot appliqué (pour le Label + fin de saison).
+		private string _season;
+		private int _year, _weekInSeason;
+
+		private static string PlantKey(GDict p) =>
+			$"{p["tile"].AsString()}|{p["species"].AsString()}"
+			+ $"|{p["x_cm"].AsDouble():F1}|{p["y_cm"].AsDouble():F1}";
+
+		// Étiquette debug « espèce · stade » sous la plante (demande Nico F5
+		// t4), toggle F3. Enfant du PlantRenderer : elle suit position,
+		// rotation de vue et fondu (Modulate) gratuitement. Elle zoome avec le
+		// monde — assumé, c'est un instrument de debug, pas l'UI finale.
+		private Label MakeTag(GDict p)
+		{
+			var tag = new Label { Name = "Tag", Visible = _labelMode == LabelMode.Toutes };
+			tag.AddThemeFontSizeOverride("font_size", 11);
+			tag.AddThemeColorOverride("font_color", new Color(1f, 1f, 1f, 0.85f));
+			tag.AddThemeColorOverride("font_outline_color", Colors.Black);
+			tag.AddThemeConstantOverride("outline_size", 4);
+			tag.Text = TagText(p);
+			tag.Position = new Vector2(-30f, 6f);   // sous le collet, centré à la louche
+			return tag;
+		}
+
+		private static string TagText(GDict p) =>
+			$"{p["species"].AsString()} · {p["stage_name"].AsString()}";
+
+		private void ApplySnapshot(GDict snap, bool fade = true)
+		{
+			_lastSnap = snap;   // gardé pour RebuildWorld (rotation)
+
+			// Horloge (52 sem/an, saisons de 13 — sim/engine.py saison_de).
+			_year = snap["year"].AsInt32();
+			int weekInYear = snap["week_in_year"].AsInt32();
+			_weekInSeason = ((weekInYear - 1) % 13) + 1;
+			string season = snap["season"].AsString();
+			CurrentSeason = season;   // AVANT les SetStructure (couleur feuilles t6·A)
+
+			int born = 0, grown = 0, empty = 0, nSegs = 0;
+			var seen = new HashSet<string>();
+			foreach (var pv in snap["plants"].AsGodotArray())
+			{
+				var p = pv.AsGodotDictionary();
+				var structure = StructureLoader.FromSnapshot(p);
+				if (structure.Segments.Count == 0)
+				{
+					empty++;   // germination sans bois : rien à dessiner encore
+					continue;
+				}
+				nSegs += structure.Segments.Count;
+				string key = PlantKey(p);
+				seen.Add(key);
+
+				if (_plantNodes.TryGetValue(key, out var node))
+				{
+					node.SetStructure(structure);   // la plante a poussé
+					var t = node.GetNodeOrNull<Label>("Tag");
+					if (t != null) t.Text = TagText(p);   // le stade évolue
+					grown++;
+					continue;
+				}
+				Vector2 o = _origins[p["tile"].AsString()];
+				float wx = o.X + (float)p["x_cm"].AsDouble();
+				float wy = o.Y + (float)p["y_cm"].AsDouble();
+				var renderer = new PlantRenderer
+				{
+					Position = WorldToScreen(wx, wy),
+					Name = $"{p["tile"].AsString()}_{p["species"].AsString()}_{_plantSeq++}",
+				};
+				// Métadonnées de picking (volet B) : position MONDE pour la
+				// distance au clic/survol, et la désignation EXACTE du snapshot
+				// (tile + x/y locaux) renvoyée telle quelle au serveur — la
+				// position est l'identité, on n'invente pas d'id (kickoff §8).
+				renderer.SetMeta("wx", wx);
+				renderer.SetMeta("wy", wy);
+				renderer.SetMeta("tile", p["tile"]);
+				renderer.SetMeta("lx", p["x_cm"]);
+				renderer.SetMeta("ly", p["y_cm"]);
+				if (fade) renderer.Modulate = new Color(1f, 1f, 1f, 0f);
+				_objects.AddChild(renderer);
+				renderer.SetStructure(structure);
+				renderer.AddChild(MakeTag(p));
+				if (fade)
+					renderer.CreateTween()
+						.TweenProperty(renderer, "modulate:a", 1f, FadeInSec);
+				_plantNodes[key] = renderer;
+				born++;
+			}
+
+			// Plantes affichées absentes du snapshot = mortes → fondu sortant.
+			var dead = new List<string>();
+			foreach (var kv in _plantNodes)
+				if (!seen.Contains(kv.Key)) dead.Add(kv.Key);
+			foreach (string key in dead)
+			{
+				var node = _plantNodes[key];
+				_plantNodes.Remove(key);   // hors index : le fondu finit seul
+				if (fade)
+				{
+					var tw = node.CreateTween();
+					tw.TweenProperty(node, "modulate:a", 0f, FadeOutSec);
+					tw.TweenCallback(Callable.From(node.QueueFree));
+				}
+				else node.QueueFree();
+			}
+
+			_nSegments = nSegs;
+			_nPousses = empty;
+			GD.Print($"[WorldView] {season} an {_year}, semaine {_weekInSeason}/13 : "
+					 + $"{_plantNodes.Count} plantes (+{born} −{dead.Count}, "
+					 + $"{grown} maj, {empty} sans segments).");
+
+			// Vie macro (t6·B) : même diff doux que les plantes, délégué au
+			// nœud MacroLife. Lecture TOLÉRANTE : un snapshot pré-0.2.3 n'a
+			// pas le bloc — la vue affiche simplement un jardin sans bestioles.
+			if (snap.ContainsKey("sprites"))
+				_macroLife?.SetSprites(snap["sprites"].AsGodotDictionary(),
+									   _origins, fade);
+
+			// Heatmap (t6·C) : la grille affichée date de la semaine d'avant →
+			// périmée. Si l'overlay est ON, _Process relancera UNE requête
+			// `fields` dès que le pipe sera libre ; OFF, le flag dort.
+			_fieldsStale = true;
+
+			// Bloc joueur (volet B, lecture seule) → 2e ligne du HUD.
+			if (snap.ContainsKey("player"))
+			{
+				var pl = snap["player"].AsGodotDictionary();
+				_vigueur = pl["vigueur"].AsDouble();
+				_vigueurMax = pl["vigueur_max"].AsDouble();
+			}
+			UpdateActionHud();
+
+			// Fin de saison : retour AUTOMATIQUE en planification (boucle
+			// hybride) + hook auto-save. Détection = le nom de saison change.
+			// En mode Continu/Turbo, on n'arrête PAS (demande Nico F5 t4) —
+			// le hook auto-save reste appelé à chaque passage, lui.
+			if (_season != null && season != _season)
+			{
+				OnSeasonEnd();
+				if (_simMode == SimMode.Saison)
+				{
+					GD.Print($"[WorldView] passage de saison : {season}, an {_year} "
+							 + "— retour en planification.");
+					_phase = Phase.Planification;
+				}
+				else
+					GD.Print($"[WorldView] passage de saison : {season}, an {_year} "
+							 + $"— mode {_simMode}, on enchaîne.");
+			}
+			_season = season;
+			UpdateClock();
+		}
+	}
+}
