@@ -131,10 +131,14 @@ class SerializeMixin:
                 for f in eco.populations.values()}
             # Structures posables (⑤, 0.3.5) : index implicite = position dans la
             # liste = `target.structure` des gestes. `compost_mur` = jauge mûre
-            # épandable. PURE lecture (la vue dessine bac/pile + jauge en ⑥).
+            # épandable ; `contenu` = masse BRUTE en cours de maturation (Σ des
+            # parcelles du contenu, 0.3.8). La vue remplit le bac/pile ∝
+            # (contenu + compost_mur) → on VOIT la structure se remplir au
+            # compostage (avant maturation) et se vider à l'épandage. PURE lecture.
             structures[tile.tile_id] = [
                 {"kind": st.kind, "plot": list(st.plot),
-                 "compost_mur": round(st.compost_mur, 4)}
+                 "compost_mur": round(st.compost_mur, 4),
+                 "contenu": round(sum(p.masse for p in st.contenu), 4)}
                 for st in eco.structures]
             # Litière typée par plot (décompo·compost ①, rendue par la vue en
             # 03·B) : la couche fraîche de nécromasse au sol. On n'expose QUE ce

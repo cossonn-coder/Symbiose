@@ -65,9 +65,14 @@ namespace Symbiose
 					var plot = st["plot"].AsGodotArray();
 					int r = plot[0].AsInt32(), c = plot[1].AsInt32();
 					float mur = (float)st["compost_mur"].AsDouble();
+					// `contenu` (0.3.8) : masse brute en cours de maturation. Absente
+					// d'un snapshot pré-0.3.8 → 0 (lecture tolérante). Le remplissage
+					// visuel = contenu + compost_mur (se remplit au compostage).
+					float contenu = st.ContainsKey("contenu")
+						? (float)st["contenu"].AsDouble() : 0f;
 					float cx = o.X + (c + 0.5f) * PlotCm;
 					float cy = o.Y + (r + 0.5f) * PlotCm;
-					var node = new CompostStructure(kind, mur)
+					var node = new CompostStructure(kind, mur, contenu)
 					{
 						Position = WorldToScreen(cx, cy),
 						Name = $"struct_{tileId}_{r}_{c}_{kind}",
@@ -102,6 +107,26 @@ namespace Symbiose
 					if (s.Tile == tile && s.R == r && s.C == c)
 						return s.Index;
 			return fallback;
+		}
+
+		/// <summary>
+		/// Index (dans sa tuile) de la structure du `kind` voulu la PLUS PROCHE du
+		/// plot (tile,r,c) de litière cliqué, ou -1 si la tuile n'en porte aucune.
+		/// Sert composter/empiler (retour F5) : on clique la litière au sol, la vue
+		/// l'achemine vers le bac/pile le plus proche. Distance = Manhattan en plots
+		/// (déterministe, premier index gagne à égalité). Le moteur composte la
+		/// litière du plot (r,c) vers cette structure, où qu'elle soit dans la tuile.
+		/// </summary>
+		private int FindNearestStructure(string kind, string tile, int r, int c)
+		{
+			int best = -1, bestDist = int.MaxValue;
+			foreach (var s in _structs)
+			{
+				if (s.Tile != tile || s.Kind != kind) continue;
+				int d = Mathf.Abs(s.R - r) + Mathf.Abs(s.C - c);
+				if (d < bestDist) { bestDist = d; best = s.Index; }
+			}
+			return best;
 		}
 	}
 }

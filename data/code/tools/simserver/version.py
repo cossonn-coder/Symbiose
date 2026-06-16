@@ -66,7 +66,13 @@ from __future__ import annotations
 #       (plots sans litière de surface OMIS). PUR ajout de sérialisation
 #       (`eco.litiere` rempli par le tick) → golden NEUTRE. La vue dessine en
 #       03·B (indice écologique discret, philo #5).
-ENGINE_VERSION = "0.3.7"
+# 0.3.8 (vue·rattrapage 03 correctif F5) : chaque structure du bloc `structures`
+#       gagne `contenu` = masse BRUTE en cours de maturation (Σ des parcelles
+#       `st.contenu`), à côté de `compost_mur` (mûr). La vue remplit la caisse/
+#       pile ∝ (contenu + compost_mur) → on VOIT le bac se remplir au compostage
+#       (le brut, avant maturation) et se vider à l'épandage (le mûr). PUR ajout
+#       de sérialisation (`st.contenu` déjà rempli par `composter`) → golden NEUTRE.
+ENGINE_VERSION = "0.3.8"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

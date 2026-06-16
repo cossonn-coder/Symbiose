@@ -5,7 +5,10 @@
 // objets (`_objects`) — donc il s'occulte correctement avec les plantes et la
 // maison, comme tout volume au sol. La jauge `compost_mur` (matière mûre,
 // épandable) est rendue en REMPLISSAGE VISUEL (philo : pas de chiffre en HUD) :
-// le bac se remplit de compost sombre, la pile prend une assise d'humus.
+// le bac se remplit de compost sombre, la pile prend une assise d'humus. Le
+// remplissage suit la masse TOTALE (`contenu` brut + `compost_mur` mûr, 0.3.8)
+// → la structure se remplit DÈS le compostage (avant maturation) et se vide à
+// l'épandage. Échelle réelle mesurée : un plot bien fourni ≈ 1-6 de litière.
 //
 // 📖 Pédagogie — un nœud par structure (l'inverse de la litière/macro) : elles
 // sont PEU nombreuses, persistantes et doivent trier en profondeur (YSort) avec
@@ -26,9 +29,11 @@ namespace Symbiose
 		private const float PileHalfCm = 20f;
 		// Hauteurs (cm) extrudées vers le haut de l'écran.
 		private const float BacWallCm = 26f;
-		// Référence de jauge pour saturer le remplissage (compost_mur n'a pas de
-		// borne dure) : au-delà, structure « pleine ». Calibrage post-F5.
-		private const float MurRef = 6f;
+		// Masse de référence pour saturer le remplissage (la masse n'a pas de borne
+		// dure) : au-delà, structure « pleine ». Couvre ≈ un plot bien fourni
+		// (1-6) à quelques plots compostés. Calibrage post-F5 (« toujours plein /
+		// toujours vide » → ajuster cette seule constante).
+		private const float MasseRef = 6f;
 
 		// Teintes bois — caisse claire (planches), arêtes sombres, compost mûr.
 		private static readonly Color BoisClair  = new Color("9a6f44");
@@ -40,12 +45,12 @@ namespace Symbiose
 		private static readonly Color RondinCol  = new Color("a9855c");
 
 		private readonly string _kind;   // "bac" | "pile"
-		private float _mur;              // jauge compost_mur (saturée à MurRef)
+		private readonly float _masse;   // contenu + compost_mur (saturé à MasseRef)
 
-		public CompostStructure(string kind, float compostMur)
+		public CompostStructure(string kind, float compostMur, float contenu)
 		{
 			_kind = kind;
-			_mur = compostMur;
+			_masse = compostMur + contenu;   // remplissage = matière TOTALE présente
 		}
 
 		// Les 4 coins de l'empreinte, projetés en OFFSET (vecteur) autour du
@@ -63,7 +68,7 @@ namespace Symbiose
 
 		public override void _Draw()
 		{
-			float sat = Mathf.Clamp(_mur / MurRef, 0f, 1f);
+			float sat = Mathf.Clamp(_masse / MasseRef, 0f, 1f);
 			if (_kind == "pile") DrawPile(sat);
 			else DrawBac(sat);
 		}

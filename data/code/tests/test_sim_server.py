@@ -82,7 +82,7 @@ from tests.simserver.organes import test_hints_organes
 from tests.simserver.macro import test_vie_macro
 from tests.simserver.fields import test_champs_debug
 from tests.simserver.planter import test_planter_arroser
-from tests.simserver.structures import test_structures
+from tests.simserver.structures import test_structures, test_structure_contenu
 from tests.simserver.morts import test_morts, test_pommier_fruite
 from tests.simserver.litiere import test_litiere
 
@@ -96,6 +96,7 @@ def main() -> int:
     test_champs_debug()      # section 11
     test_planter_arroser()   # section 12
     test_structures()        # section 13
+    test_structure_contenu() # section 13b : le bac se remplit (contenu, 0.3.8)
     test_morts()             # section 14 : squelettes exposés (0.3.6)
     test_pommier_fruite()    # section 14b : levier pommier mûr → fruits dès l'été
     test_litiere()           # section 15 : litière typée par plot exposée (0.3.7)

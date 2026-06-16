@@ -281,30 +281,52 @@ namespace Symbiose
 					target = new GDict { ["tile"] = qTile, ["r"] = qr, ["c"] = qc };
 					break;
 
-				case 's':   // AGIR sur la structure du plot cliqué (compost ⑤) :
-					// composter/empiler/retourner/épandre. La vue résout la
-					// structure AU plot (target.structure = son index dans la tuile)
-					// et joint le plot (source de litière) sauf pour `retourner`.
+				case 's':   // compost ⑤ : composter/empiler/retourner/épandre.
+					// DEUX désignations selon le geste (retour F5 Nico) :
+					//  · composter / empiler_bois = on clique la LITIÈRE au sol (comme
+					//    tailler/cueillir) ; la vue route vers le bac/pile le plus
+					//    proche de la MÊME tuile (target.structure) en joignant le plot
+					//    cliqué comme SOURCE (target.r/c). Le moteur composte la litière
+					//    d'un plot indépendant du plot de la structure (actions/compost).
+					//  · retourner / épandre = on clique la STRUCTURE elle-même.
 					if (!FindPlot(w, out string sTile, out int sr, out int sc))
 					{
 						_lastActionMsg = $"{nom} : aucune tuile ici (chemin/maison)";
 						UpdateActionHud(); FlashActionLabel();
 						return;
 					}
-					int sIdx = FindStructureIndex(verb, sTile, sr, sc);
-					if (sIdx < 0)
+					if (verb == "composter" || verb == "empiler_bois")
 					{
-						_lastActionMsg = $"{nom} : aucune structure adaptée sur ce plot";
-						UpdateActionHud(); FlashActionLabel();
-						return;
+						string sKind = verb == "composter" ? "bac" : "pile";
+						int near = FindNearestStructure(sKind, sTile, sr, sc);
+						if (near < 0)
+						{
+							_lastActionMsg = verb == "composter"
+								? "composter : aucun bac dans cette tuile (posez-en un)"
+								: "empiler : aucune pile dans cette tuile (posez-en une)";
+							UpdateActionHud(); FlashActionLabel();
+							return;
+						}
+						target = new GDict { ["tile"] = sTile, ["structure"] = near,
+											 ["r"] = sr, ["c"] = sc };
 					}
-					target = new GDict { ["tile"] = sTile, ["structure"] = sIdx };
-					if (verb != "retourner")   // retourner n'a pas besoin du plot
+					else   // retourner / épandre : clic sur la structure du plot
 					{
-						target["r"] = sr;
-						target["c"] = sc;
+						int sIdx = FindStructureIndex(verb, sTile, sr, sc);
+						if (sIdx < 0)
+						{
+							_lastActionMsg = $"{nom} : aucune structure sur ce plot";
+							UpdateActionHud(); FlashActionLabel();
+							return;
+						}
+						target = new GDict { ["tile"] = sTile, ["structure"] = sIdx };
+						if (verb != "retourner")   // épandre cible le plot (r,c)
+						{
+							target["r"] = sr;
+							target["c"] = sc;
+						}
+						// épandre : params.q omis ⇒ le serveur épand TOUT le disponible.
 					}
-					// `epandre` : params.q omis ⇒ le serveur épand TOUT le disponible.
 					break;
 
 				// '-' : grelinette, pas de cible.

@@ -73,7 +73,7 @@ amis/famille de Nico.
 |---|-------|---------|----------|--------|------|
 | 01 | **Gestes joueur manquants** : planter (choix graine), arroser, écraser-plante — pur câblage C# (pont prêt) | `01_gestes_manquants.md` | non | neutre | ✅ |
 | 02 | **Cycle de vie visible** : fruits réels (maturité vert→mûr→sur-mûr) + squelettes post-mortem + abscission. Snapshot expose les morts (lecture) | `02_fruits_squelettes.md` | snapshot RO | neutre | ✅ |
-| 03 | **Sol vivant & compost** : litière au sol + structures bac/pile + jauge `compost_mur` + 6 gestes compost. Snapshot expose la litière (lecture) | `03_litiere_structures.md` | snapshot RO | neutre | ✅ (codé, F5 Nico en attente) |
+| 03 | **Sol vivant & compost** : litière au sol + structures bac/pile + jauge `compost_mur` + 6 gestes compost. Snapshot expose la litière (lecture) | `03_litiere_structures.md` | snapshot RO | neutre | ✅ (+ correctif F5 : composter le sol → bac proche, remplissage visible) |
 | 04 | **Packaging (tranche 7)** : gel PyInstaller + export Godot — clôture avec Nico (poste Windows) | `04_packaging.md` | non | neutre | ⬜ (VM faite) |
 
 > **Ordre** : 01→02→03 rattrapent la vue, **04 ferme** (le build distribué
@@ -99,12 +99,27 @@ retour, triage (correctif ou dette/sous-sprint indépendant, pas de dev immédia
   de guildes suivent les densités) — rien à rendre, juste à constater au F5.
 
 ## REPRISE (démarrage à froid)
-**03 COMPLET (B/C/D codé, build vert, EN ATTENTE F5 Nico, 2026-06-16)** — la vue
-rend désormais le canal décompo·compost. Restent **F5 Nico** (cf. points ci-dessous)
-puis **04 packaging** = dernière tranche du sprint. Lire `04_packaging.md`.
+**03 COMPLET + correctif F5 appliqué (build vert, 2026-06-16)** — la vue rend le
+canal décompo·compost ET le correctif F5 (composter le sol → bac proche +
+remplissage visible). **Reste un 2e F5 de confirmation** (cf. ci-dessous) puis
+**04 packaging** = dernière tranche du sprint. Lire `04_packaging.md`.
 État moteur de référence INCHANGÉ : golden `908f591bee…` / population `435e6f72…`,
-pont `ENGINE_VERSION 0.3.7`, `tests/test_sim_server.py` **152 checks**. Le C# de 03
-est **pur rendu/câblage** (aucune touche moteur).
+pont **`ENGINE_VERSION 0.3.8`** (snapshot expose `contenu` des structures, RO),
+`tests/test_sim_server.py` **158 checks** (+6 : section 13b remplissage du bac).
+Le C# reste **pur rendu/câblage** (aucune touche moteur).
+
+**À VÉRIFIER au 2e F5 (correctif F5 du 03)** :
+- **composter / empiler = clic sur la LITIÈRE au sol** (comme tailler/cueillir),
+  plus sur le bac. La vue route vers le **bac/pile le plus proche de la MÊME
+  tuile**. Pas de bac dans la tuile → message « posez-en un ». retourner/épandre
+  restent un clic sur la STRUCTURE.
+- **Remplissage VISIBLE** : le bac/pile se remplit dès le compostage (`contenu`
+  brut, avant maturation) et se vide à l'épandage (`compost_mur`). Saturation à
+  `MasseRef = 6` (mesuré : un plot bien fourni ≈ 1-6 de litière) — si « toujours
+  plein / toujours vide » au F5, ajuster CETTE seule constante (`CompostStructure.cs`).
+- **Levier déterministe** : init full → litière déjà présente sur les plots ;
+  poser un bac, sélectionner « composter » (Tab), cliquer un plot avec litière →
+  la litière file dans le bac, qui se remplit. Épandre (clic bac) le vide.
 
 **À VÉRIFIER au F5 de 03 (points soulevés en codant B/C/D)** :
 - **LOD litière** : la litière n'apparaît qu'à partir du zoom ×2 (palier sous la
@@ -149,6 +164,23 @@ ci-dessous.
   juger au F5 (peut demander un meilleur rendu en dette si peu lisible).
 
 ## Journal de bord (rempli en fin de sous-sprint)
+- **03 correctif F5 (2026-06-16, retour F5 Nico)** — deux réserves levées, moteur
+  intact (golden `908f591bee…`). **(1) Composter le sol** : le moteur acceptait
+  DÉJÀ `composter(eco, r, c, struct)` avec `(r,c)` = plot de litière indépendant du
+  plot du bac ; seul le câblage C# forçait le plot du bac. Le `case 's'`
+  (`WorldView.Actions.cs`) route maintenant composter/empiler comme un **clic sur la
+  litière** → `FindNearestStructure(kind, tile, r, c)` (nouvelle méthode,
+  `WorldView.Compost.cs`, distance Manhattan en plots) achemine vers le bac/pile le
+  plus proche de la tuile ; retourner/épandre restent un clic sur la structure.
+  **(2) Remplissage visible** : le rendu ne lisait que `compost_mur` (mûr, lent) →
+  bac vide juste après compostage. Snapshot **0.3.7 → 0.3.8** : `serialize.py`
+  expose `contenu` (Σ masse brute des parcelles, RO, golden NEUTRE) ;
+  `CompostStructure.cs` remplit ∝ **`contenu + compost_mur`** (`MurRef`→`MasseRef=6`,
+  calibré sur la mesure : un plot fourni ≈ 1-6). Tests : section **13b**
+  (`structures.py`, +6 checks) composte une litière d'un AUTRE plot → bac `contenu>0`,
+  `compost_mur==0` (pas de maturation sans step), litière source ramassée.
+  **152 → 158 checks**. Build vert (0 warning), LDC max 326 (Actions.cs) < 350.
+  Témoin « vue·rattrapage 03 correctif F5 ». **2e F5 Nico** : cf. §REPRISE.
 - **03·B/C/D (2026-06-16)** — sol vivant & compost RENDU (C# pur, moteur intact,
   golden `908f591bee…` inchangé). **B litière** : nouveau layer batché
   `visuals/LitterLayer.cs` (patron MacroLife — UN CanvasItem, re-projeté au _Draw,
