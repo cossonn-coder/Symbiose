@@ -21,6 +21,7 @@ champs et les ticke).
 """
 
 from __future__ import annotations
+import math
 from dataclasses import dataclass, field
 from typing import Callable
 
@@ -33,11 +34,34 @@ from fields.noise import _hash_noise
 # ---------------------------------------------------------------------------
 
 POP_MAX = 1.0          # densité normalisée par plot ∈ [0, POP_MAX]
-POP_INERTIA = 0.85     # inertie du champ (le décalage temporel proie↔prédateur)
+POP_INERTIA = 0.85     # inertie de MONTÉE (la pop croît vers sa cible à ce rythme)
+# Inertie de DÉCRUE (CONCEPTION_SAISONNALITE_VIE_MACRO.md §4) : quand la cible
+# tombe sous la pop courante, la relaxation est PLUS RAPIDE → la dormance
+# automnale ne traîne plus 13 semaines (0.55⁴ ≈ 0.09, extinction en ~4 sem).
+# Asymétrie écologique : « meurt vite quand le milieu se dégrade, recolonise
+# lentement quand il s'améliore ». Knob de recours → remonter vers 0.70 si les
+# bust estivaux deviennent trop pointus (sprites qui clignotent).
+POP_INERTIA_DECAY = 0.55
 
 # Couplage température → vitalité de la guilde (chaud = naissances, froid = mort).
+# C'est le signal d'INTENSITÉ (« combien » la guilde prospère quand elle est
+# active), distinct de la porte saisonnière `phenology` (« quand », ci-dessous).
 T_COLD_ZERO = 6.0      # °C : en dessous, plus aucune chaleur utile (warmth = 0)
 T_WARM_FULL = 24.0     # °C : au-dessus, chaleur maximale (warmth = 1)
+
+# --- Saisonnalité photopériodique (CONCEPTION_SAISONNALITE_VIE_MACRO.md §2-3) ---
+# La DORMANCE/le RÉVEIL des guildes se pilotent par la LONGUEUR DU JOUR, pas par
+# la température seule : un signal anticipateur fiable et déterministe (le jour
+# court ne ment pas, un redoux si). `daylength(wiy)` est une sinusoïde 8 h↔16 h
+# à ~49°N, pic au solstice d'été (wiy≈25, qui PRÉCÈDE le pic thermique wiy≈30 —
+# le déphasage saisonnier réel). Chaque guilde a ensuite sa propre FENÊTRE
+# d'activité (seuils en heures de jour) — voir TrophicSpec.daylen_min/full.
+W_SOLSTICE_ETE = 25    # semaine du jour le plus long
+DAYLEN_MOY_H   = 12.0  # longueur de jour moyenne (équinoxes), heures
+DAYLEN_AMP_H   = 4.0   # demi-amplitude → 8 h (solstice hiver) ↔ 16 h (solstice été)
+# Fenêtre phénologique PAR DÉFAUT (heures de jour) — surchargée par guilde.
+DEF_DAYLEN_MIN  = 10.0  # en dessous → dormance (phenology = 0)
+DEF_DAYLEN_FULL = 13.0  # au-dessus → pleine activité (phenology = 1)
 
 # Références de normalisation des ressources trophiques → [0, 1].
 FOLIAGE_REF = 2.0      # somme de feuillage (santé/3 × densité) saturant la ressource
@@ -104,6 +128,28 @@ def _clamp01(x: float) -> float:
     return 0.0 if x < 0.0 else 1.0 if x > 1.0 else x
 
 
+def _smoothstep(x: float, a: float, b: float) -> float:
+    """Rampe LISSE [0,1] entre les seuils a (→0) et b (→1) — Hermite 3t²−2t³.
+    Plus douce qu'une rampe linéaire (dérivée nulle aux bornes) → pas de
+    cassure d'activité quand le jour franchit un seuil."""
+    if a == b:
+        return 0.0 if x < a else 1.0
+    t = _clamp01((x - a) / (b - a))
+    return t * t * (3.0 - 2.0 * t)
+
+
+def daylength(week_in_year: int) -> float:
+    """
+    Longueur du jour (heures) à ~49°N — sinusoïde 8 h↔16 h, pic au solstice d'été
+    (CONCEPTION_SAISONNALITE_VIE_MACRO.md §2). Fonction PURE de la semaine (philo
+    #3) : le forecast et la phénologie florale (arc pollinisation) pourront s'y
+    appuyer. NON-monotone → une simple rampe sur cette grandeur donne du même
+    coup le réveil printanier ET la dormance automnale, des deux côtés du solstice.
+    """
+    return DAYLEN_MOY_H + DAYLEN_AMP_H * math.cos(
+        2.0 * math.pi * (week_in_year - W_SOLSTICE_ETE) / 52.0)
+
+
 # ---------------------------------------------------------------------------
 # SPEC TROPHIQUE — la donnée qui paramètre le mécanisme générique
 # ---------------------------------------------------------------------------
@@ -136,7 +182,11 @@ class TrophicSpec:
     habitat_w: float = DEF_HABITAT_W
     pred_w: float = DEF_PRED_W
     disturb_w: float = DEF_DISTURB_W
-    inertia: float = POP_INERTIA
+    inertia: float = POP_INERTIA               # inertie de MONTÉE
+    inertia_decay: float = POP_INERTIA_DECAY   # inertie de DÉCRUE (§4)
+    # Fenêtre phénologique de la guilde (heures de jour) : porte saisonnière §3.
+    daylen_min: float = DEF_DAYLEN_MIN
+    daylen_full: float = DEF_DAYLEN_FULL
 
 
 # ---------------------------------------------------------------------------
@@ -169,12 +219,18 @@ class PopulationField(GridField):
             [0.0] * cols for _ in range(rows)
         ]
 
-    def tick(self, eco, tile, plants, predator_fields: list["PopulationField"]) -> None:
+    def tick(self, eco, tile, plants, predator_fields: list["PopulationField"],
+             week_in_year: int = W_SOLSTICE_ETE) -> None:
         """
         Intègre un tick de dynamique. Lit eco (température, perturbation), les
         plantes (via resource_fn/habitat_fn) et les champs prédateurs ; n'écrit
-        QUE sur soi-même. Aucun log, aucune écriture sur les champs existants
-        → golden-neutre (D31.1).
+        QUE sur soi-même. Aucun log, aucune écriture sur les champs existants.
+
+        `week_in_year` ∈ [1,52] pilote la PORTE saisonnière photopériodique
+        (`phenology`, §3) — défaut = plein été (réveil maximal) pour que d'anciens
+        appels de test sans saison restent neutres ; l'engine passe toujours la
+        vraie semaine. `survie = phenology · warmth · (1−préd) · (1−perturb)` :
+        phenology dit QUAND la guilde est active, warmth COMBIEN.
         """
         spec = self.spec
         res = spec.resource_fn(eco, tile, plants)
@@ -183,6 +239,10 @@ class PopulationField(GridField):
         # partout → capacité strictement inchangée (golden neutre sans fruit).
         sig = spec.signal_fn(eco, tile, plants) if spec.signal_fn else None
         self.activite_grid = res   # mémorise la ressource pour `activite()`
+        # Porte saisonnière : scalaire GLOBAL à la tuile (la photopériode ne varie
+        # pas d'un plot à l'autre) → calculé UNE fois hors de la boucle r×c.
+        phenology = _smoothstep(daylength(week_in_year),
+                                spec.daylen_min, spec.daylen_full)
         for r in range(self.rows):
             for c in range(self.cols):
                 temp = eco.temperature.at_plot(r, c)
@@ -194,13 +254,15 @@ class PopulationField(GridField):
                 capacite = _clamp01(spec.resource_w * res[r][c]
                                     + spec.habitat_w * hab[r][c]
                                     + (sig[r][c] if sig else 0.0))
-                survie = (warmth
+                survie = (phenology * warmth
                           * (1.0 - min(1.0, spec.pred_w * predation))
                           * (1.0 - min(1.0, spec.disturb_w * disturb)))
                 cible = capacite * survie
+                # Inertie ASYMÉTRIQUE (§4) : décrue rapide / montée au rythme calibré.
+                inertie = spec.inertia_decay if cible < pop else spec.inertia
                 self.data[r][c] = max(0.0, min(
                     self.max_val,
-                    pop * spec.inertia + cible * (1.0 - spec.inertia)
+                    pop * inertie + cible * (1.0 - inertie)
                 ))
 
     def activite(self, r: int, c: int) -> float:
@@ -397,22 +459,26 @@ def build_population_specs() -> list[TrophicSpec]:
             resource_fn=_foliage_grid, habitat_fn=_monoculture_grid,
             predators=("auxiliaire",),
             signal_fn=_rav_fruit_signal,   # fruit pourri → charognards (④)
+            daylen_min=10.0, daylen_full=13.0,   # fenêtre estivale (printemps tardif→automne)
         ),
         TrophicSpec(
             name="auxiliaire", salt=_SALT_AUXILIAIRE,
             resource_fn=_ravageur_grid, habitat_fn=_stability_grid,
             predators=(),
             signal_fn=_aux_fruit_signal,   # fruit frais → frugivores (④)
+            daylen_min=10.0, daylen_full=13.0,   # suit le ravageur (sa proie)
         ),
         TrophicSpec(
             name="pollinisateur", salt=_SALT_POLLINISATEUR,
             resource_fn=_flower_grid, habitat_fn=_pollinisateur_habitat_grid,
             predators=(),
+            daylen_min=12.0, daylen_full=14.5,   # ÉTROITE : seulement les jours longs
         ),
         TrophicSpec(
             name="vers_de_terre", salt=_SALT_VERS,
             resource_fn=_soil_food_grid, habitat_fn=_undisturbed_grid,
             predators=(),
+            daylen_min=8.5, daylen_full=10.0,    # LARGE : sol tamponné, quasi toute l'année
         ),
     ]
 

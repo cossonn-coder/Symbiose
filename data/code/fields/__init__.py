@@ -27,7 +27,7 @@ from fields.seedbank import (
 )
 from fields.population import (
     PopulationField, TrophicSpec, SpriteSample,
-    build_population_specs, sample_sprites,
+    build_population_specs, sample_sprites, daylength,
     POP_MAX, POP_INERTIA, DENSITE_PAR_SPRITE, SPRITES_PAR_PLOT_MAX,
 )
 from fields.ecofields import (

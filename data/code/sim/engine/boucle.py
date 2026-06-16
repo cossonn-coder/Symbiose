@@ -232,7 +232,7 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin):
             # dépendent (température, perturbation), mais RIEN dans la santé/les
             # services ne les LIT encore (câblage = D31.2). Aucun log produit
             # → golden INTACT.
-            eco.tick_populations(tile, tile.plants)
+            eco.tick_populations(tile, tile.plants, week_in_year)
 
             # 14. Banque de graines (vieillissement + enrichissement)
             eco.tick_seed_bank(tile.plants, seed=seed, week=week)

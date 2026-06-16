@@ -195,22 +195,26 @@ class EcoFields:
 
     # --- Vie macroscopique (D31.1) ---
 
-    def tick_populations(self, tile, plants) -> None:
+    def tick_populations(self, tile, plants, week_in_year: int = 25) -> None:
         """
         Ticke les 4 champs de population dans l'ordre trophique. Le ravageur
         d'abord (il lit l'auxiliaire de la semaine précédente → décalage proie-
         prédateur), puis l'auxiliaire lit le ravageur fraîchement mis à jour.
 
+        `week_in_year` pilote la porte saisonnière photopériodique des guildes
+        (dormance hivernale / réveil printanier — CONCEPTION_SAISONNALITE_VIE_MACRO).
+        Défaut 25 (plein été) pour les appels de test sans saison.
+
         À appeler APRÈS les autres champs (température, perturbation à jour).
         Pure lecture des champs existants : n'écrit QUE sur les champs de
-        population, ne produit aucun log → golden INTACT (D31.1).
+        population, ne produit aucun log.
         """
         for name in self._population_order:
             popfield = self.populations[name]
             predator_fields = [self.populations[p]
                                for p in popfield.spec.predators
                                if p in self.populations]
-            popfield.tick(self, tile, plants, predator_fields)
+            popfield.tick(self, tile, plants, predator_fields, week_in_year)
 
     # --- Banque de graines ---
 

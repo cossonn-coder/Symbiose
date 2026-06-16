@@ -22,7 +22,8 @@ import hashlib
 from world import Tile
 from plants import Tomato, Basil, Sunflower, Bean, Yarrow, Phacelia
 from fields import (init_eco, POP_MAX, SPRITES_PAR_PLOT_MAX,
-                    sample_sprites, PopulationField, build_population_specs)
+                    sample_sprites, PopulationField, build_population_specs,
+                    daylength)
 from sim.engine import Engine
 
 N_WEEKS = 60
@@ -79,6 +80,90 @@ def compute_hash() -> str:
     h = hashlib.sha256()
     h.update(population_digest(tiles, ecos).encode("utf-8"))
     return h.hexdigest()
+
+
+# ---------------------------------------------------------------------------
+# 3. SAISONNALITÉ (CONCEPTION_SAISONNALITE_VIE_MACRO.md §6)
+# ---------------------------------------------------------------------------
+# Ces tests PROUVENT le comportement saisonnier indépendamment du hash golden :
+# dormance hivernale franche (plus de « vie qui grouille en hiver »), réveil
+# saisonnier, fenêtre par guilde, et robustesse au redoux (la photopériode ne
+# lit pas la température).
+
+def _mean_density(ecos, guild) -> float:
+    """Densité moyenne d'une guilde sur tous les plots de toutes les tuiles."""
+    tot = n = 0
+    for eco in ecos.values():
+        f = eco.populations[guild]
+        for r in range(f.rows):
+            for c in range(f.cols):
+                tot += f.at_plot(r, c); n += 1
+    return tot / n if n else 0.0
+
+
+def _run_trace(n_weeks=110):
+    """Simule n_weeks et renvoie {guilde: (pic_annuel, max_hiver_profond)}.
+    Hiver profond = wiy 44-49 (porte photopériodique fermée pour les guildes
+    estivales)."""
+    tiles, ecos = build_world()
+    gs = {"tiles": tiles, "eco": ecos, "scores": {},
+          "current_player": "joueur_1", "week": 1, "log": [], "seed": SEED}
+    engine = Engine(gs)
+    peak = {g: 0.0 for g in GUILDS}
+    hiver = {g: [] for g in GUILDS}
+    for _ in range(n_weeks):
+        engine.tick_semaine()
+        gs["log"].clear()
+        wiy = ((gs["week"] - 2) % 52) + 1   # semaine qui vient d'être simulée
+        for g in GUILDS:
+            m = _mean_density(ecos, g)
+            peak[g] = max(peak[g], m)
+            if 44 <= wiy <= 49:
+                hiver[g].append(m)
+    return {g: (peak[g], max(hiver[g])) for g in GUILDS}
+
+
+def test_saisonnalite_dormance_reveil():
+    """Les guildes PHOTOSENSIBLES (ravageur/auxiliaire/pollinisateur) décollent
+    en saison et S'ÉTEIGNENT en plein hiver (dormance, plus de traîne)."""
+    res = _run_trace()
+    for g in ("ravageur", "auxiliaire", "pollinisateur"):
+        peak, hiv = res[g]
+        assert peak > 0.05, f"{g} ne décolle jamais (pic {peak:.3f})"
+        assert hiv < 0.02, f"{g} grouille encore en hiver (max {hiv:.3f})"
+    print("[pop] dormance hivernale + réveil saisonnier (3 guildes) : OK")
+
+
+def test_vers_insensibles_photoperiode():
+    """Le ver de terre (fenêtre LARGE) garde une fraction hivernale bien plus
+    grande que les guildes estivales → la fenêtre par guilde fonctionne."""
+    res = _run_trace()
+    peak, hiv = res["vers_de_terre"]
+    assert peak > 0.05, f"vers ne décolle jamais (pic {peak:.3f})"
+    assert hiv > 0.25 * peak, \
+        f"vers trop éteint en hiver ({hiv:.3f} vs pic {peak:.3f}) — devrait rester actif"
+    print(f"[pop] vers actifs l'hiver ({hiv:.3f} = {hiv/peak:.0%} du pic) : OK")
+
+
+def test_photoperiode_verrouille_redoux():
+    """Un REDOUX hivernal (température estivale en plein hiver) ne réveille PAS
+    le ravageur : phenology(wiy=46)=0 annule la cible quelle que soit la chaleur.
+    Test signature de la valeur ajoutée (lumière ≠ température)."""
+    assert daylength(46) < 9.0 < daylength(30), "photopériode hiver/été incohérente"
+
+    def _tick_warm(wiy):
+        eco = init_eco("R", 6, 8, humidite=1.5, fertilite=1.0, microbiome=0.3)
+        rav = eco.populations["ravageur"]
+        rav.fill(0.5)
+        eco.temperature.fill(20.0)   # redoux : chaud comme en été
+        eco.tick_populations(Tile(tile_id="R", soil_type="terre"), [], week_in_year=wiy)
+        return rav.at_plot(3, 4)
+
+    hiver = _tick_warm(46)
+    ete   = _tick_warm(25)
+    assert hiver < 0.5, "le ravageur ne devrait pas se maintenir au redoux hivernal"
+    assert ete > hiver, "à chaleur égale, l'été doit préserver mieux que l'hiver"
+    print(f"[pop] photopériode verrouille le redoux (hiver {hiver:.3f} < été {ete:.3f}) : OK")
 
 
 # ---------------------------------------------------------------------------
@@ -156,6 +241,9 @@ def test_determinisme_golden():
 
 
 def main():
+    test_saisonnalite_dormance_reveil()
+    test_vers_insensibles_photoperiode()
+    test_photoperiode_verrouille_redoux()
     test_bornes_densite()
     test_cap_sprites()
     test_positions_independantes_semaine()
