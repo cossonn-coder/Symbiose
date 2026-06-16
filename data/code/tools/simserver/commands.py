@@ -13,13 +13,28 @@ import sys
 from world import House
 from sim.engine import Engine
 from sim import vigueur as V      # état Vigueur joueur (ensure/spend/gain, D11)
-from sim.seeds import PlayerSeedBank  # banque-joueur (source de planter, remplie à la récolte)
+from sim.seeds import PlayerSeedBank, Seed  # banque-joueur (source de planter, remplie à la récolte)
 # Type de base des champs écologiques (tranche 6·C) : le registre de la
 # commande `fields` se DÉCOUVRE par introspection (tout attribut GridField
 # d'EcoFields) — un champ ajouté au moteur apparaît tout seul dans l'overlay.
 from fields.grids import GridField
 
 from .version import ENGINE_VERSION
+
+# Kit de démarrage déposé dans la banque-joueur, UNIQUEMENT en config "full" (le
+# monde de jeu réel, celui du F5) : une graine de chaque, pour tester `planter`
+# dès le lancement sans attendre une récolte d'automne. La config "smoke"
+# (fixture de test déterministe) garde une banque VIDE → le flux empty→récolte
+# reste exercé tel quel par tests/simserver/planter.py.
+BANQUE_DEPART = ("tournesol", "tomate", "basilic")
+
+
+def _banque_initiale(config: str) -> PlayerSeedBank:
+    bank = PlayerSeedBank()
+    if config == "full":
+        for sp in BANQUE_DEPART:
+            bank.add(Seed(species=sp))   # gènes neutres (défaut)
+    return bank
 
 
 class CommandsMixin:
@@ -51,11 +66,14 @@ class CommandsMixin:
             "current_player": "joueur_1", "week": 1, "log": [],
             "house": house, "seed": seed,
             # Banque-joueur (sprint planter·arroser) : source des graines de
-            # `planter`. Vide à l'init ; le tick de récolte (engine.py, gardé par
+            # `planter`. Le tick de récolte (engine.py, gardé par
             # `if player_seed_bank is not None`) y dépose les graines sélectionnées
             # (D17) au fil des automnes. Le golden écolo n'init jamais via ce
             # serveur → intact. Sérialisable JSON (futur save par profil).
-            "player_seed_bank": PlayerSeedBank(),
+            # Kit de démarrage en config "full" seulement (retour F5 Nico) : 1
+            # graine de chaque espèce potagère emblématique pour tester `planter`
+            # sans attendre un automne. "smoke" reste à banque vide (cf. helper).
+            "player_seed_bank": _banque_initiale(config),
         }
         self.engine = Engine(game_state)
         # Brancher la Vigueur joueur (tranche 4) : l'OPT-IN se fait ICI, pas

@@ -133,3 +133,8 @@ moteur à rendre : `sprints/sprint_decomposition_compost/00_etat.md` (§Acquis �
   toggles triée par position AZERTY (F3·F4·H·F6·I·O·M), énumération des gestes
   retirée (débordait) + **AutowrapMode** de sécurité, le HUD montre le geste
   courant. Build vert, golden `908f591bee…` inchangé.
+- **01c (2026-06-16, retour F5)** — kit de démarrage banque-joueur (1 tournesol +
+  1 tomate + 1 basilic) pour tester `planter` sans attendre un automne. Réservé à
+  la config **`full`** (monde du F5) ; `smoke` reste à banque vide → le flux
+  empty→récolte de `tests/simserver/planter.py` est intact. Golden inchangé,
+  sim_server **123/123**, pas de bump `ENGINE_VERSION` (aucun champ nouveau).
