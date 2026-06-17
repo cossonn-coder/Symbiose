@@ -111,22 +111,21 @@ pas un gros morceau.
 
 ---
 
-## 5. Découpe d'IMPLÉMENTATION pressentie (après conception figée)
+## 5. Découpe d'IMPLÉMENTATION — voir le doc §L (élargie le 2026-06-17)
 
-Révisée vs backlog (① floraison → ② nouaison → ③ chenille→papillon → ④ brassage),
-car ④ est déjà fait :
-
-1. **① Floraison réelle + phénologie** (préalable, état moteur ; reconnecte
-   `_flower_grid`). Re-figeage golden à évaluer.
-2. **② Nouaison gated par pollinisation** (`_tick_fruits` lit l'intégrale de
-   pollinisation). Probablement **golden ≈ neutre** : la seule `fruitier`
-   précoce du smoke est la **tomate** (`maturity_years=0`) qui **meurt w2-3**
-   (froid de démarrage, cf. [[tomate_mort_precoce]]) AVANT la nouaison w14 →
-   à vérifier.
-3. **③ Rétroaction floraison ↔ champ/Vigueur pollinisateur**.
-4. **④ Chenille → papillon** (transfert inter-guildes). **Re-figeage golden
-   MAÎTRISÉ attendu** (touche les champs population que l'herbivorie lit, D31.2).
-5. **⑤ (option) Brassage multi-pères** si jugé utile.
+> Cette section pressentie est **superséd​ée** par la découpe finale du doc de
+> conception (`§L`). Résumé : **7 tronçons** — ①→⑤ MOTEUR (re-fige le golden
+> isolé), ⑥⑦ COUCHE JOUEUR (golden neutre, sprint distinct) :
+>
+> 1. **① Floraison réelle + phénologie** (A) — golden visé NEUTRE.
+> 2. **② Registre + champs par type + nectar** (C/E) — golden re-figé MAÎTRISÉ.
+> 3. **③ Butineurs déterministes** (F) — golden probablement neutre (smoke).
+> 4. **④ Nouaison pollinisée** (B) — golden probablement neutre (tomate/pommier).
+> 5. **⑤ Ponts de cycle de vie** (D : chenille→papillon, syrphe_larve→syrphe) —
+>    golden re-figé MAÎTRISÉ (invariant larves=0 ⇒ herbivorie/prédation inchangées).
+> 6. **⑥ Ruche & miel** (H/I) — golden neutre. 7. **⑦ Piqûre/alarme** (J) — golden neutre.
+>
+> Brassage multi-pères (ancien ⑤) **non retenu**.
 
 ---
 
@@ -152,21 +151,36 @@ car ④ est déjà fait :
 
 ## 7. Prochaine étape
 
-~~Démarrer la conversation de conception~~ — **FAIT le 2026-06-16.** Conception
-**COMPLÈTE & FIGÉE** : `docs/conception/CONCEPTION_POLLINISATION_CYCLE_VIE.md`
-(§A–§E tranchés, synthèse moteur + découpe §F). Décisions clés :
+~~Démarrer la conversation de conception~~ — **FAIT le 2026-06-16, ÉLARGI &
+RE-FIGÉ le 2026-06-17.** La 1ʳᵉ passe était incomplète (manquaient : catalogue
+d'acteurs pollinisateurs multi-rôles, trajectoire de butinage, couche joueur
+ruche/miel). Conception complète :
+`docs/conception/CONCEPTION_POLLINISATION_CYCLE_VIE.md`, réorganisée en
+**Partie I (moteur, re-fige le golden) / Partie II (couche joueur)**.
+Décisions clés :
 - **A** floraison = scalaire `floraison ∈[0,1]`, double porte **GDD + photopériode**,
   fenêtre par espèce (estivale).
-- **B** nouaison **continue** ∝ dose de pollinisation, **fin de floraison par
-  plante** (remplace `FRUIT_NOUAISON_WEEK`), `self`/`wind` pleins, entomophiles
-  **sans plancher**.
-- **C** ressource pollinisateur = `floraison × attractivite_pollinisateur`
-  (mellifère), **pas de Vigueur joueur**.
-- **D** **cycle bouclé** : champ `chenille` dédié + maturité, ponte des papillons,
-  maturation par la nourriture, **famine → mortalité**, métamorphose → pollinisateur.
-- **E** non retenu (l'existant suffit).
+- **B** nouaison **continue** ∝ `pollen_recu` (dépôts d'agents conspécifiques),
+  **fin de floraison par plante** (remplace `FRUIT_NOUAISON_WEEK`), `self`/`wind`
+  pleins, entomophiles **sans plancher**.
+- **C/E** **champs pollinisateurs PAR TYPE** + **registre data-driven**
+  `PollinatorSpec` (abeille/syrphe/papillon au départ, extensible) ; ressource =
+  `floraison × attractivite(type)` ; **pas de Vigueur joueur** pour le butinage.
+- **D** **ponts de cycle de vie** (patron généralisé) : chenille→papillon (larve
+  +herbivorie) **et** syrphe_larve→syrphe (larve −ravageur, prédatrice puceron) ;
+  ponte/maturation/**famine→mortalité**/métamorphose.
+- **F** **butineurs déterministes MÉCANIQUES** : trajectoire fleur-en-fleur,
+  **constance florale** (pollen conspécifique), simulés en Python + exposés
+  snapshot (bascule actée des sprites perceptifs → load-bearing).
+- **G** brassage multi-pères **non retenu** (l'existant suffit).
+- **H/I/J** (couche joueur) : **ruche** capture un essaim sauvage ; **miel** =
+  intégrale du nectar butiné → Vigueur via `recolter_miel`, **équipement débloqué
+  par maîtrise** ; **piqûre** = alarme émergente (écraser/récolter sans gear →
+  phéromone → piqûre au curseur, philo #1).
 
-**PROCHAINE étape = implémentation** (sprint MOTEUR découpé **①→④**, re-fige le
-golden de façon isolée). Écrire les kickoffs d'impl `01_*.md`…`04_*.md` au
-démarrage. Reprise à froid : « lis `docs/conception/CONCEPTION_POLLINISATION_CYCLE_VIE.md`
-§F puis le tronçon ① ».
+**PROCHAINE étape = implémentation.** Découpe **7 tronçons** (cf doc §L) :
+①→⑤ MOTEUR (re-fige le golden isolé), ⑥⑦ COUCHE JOUEUR (golden neutre, sprint
+distinct APRÈS le moteur). Ordre conseillé ①→⑤. Écrire les kickoffs d'impl
+`01_*.md`…au démarrage. **Reprise à froid** : « lis
+`docs/conception/CONCEPTION_POLLINISATION_CYCLE_VIE.md` §K-§L puis lance le
+tronçon ① (Floraison réelle + phénologie, golden visé NEUTRE) ».
