@@ -252,6 +252,14 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
             # golden NEUTRE. À 0 pollinisateur (0 agent), pollen_recu reste 0.
             self._tick_butineurs(tile, eco, seed, week_in_year)
 
+            # 13d. Ponts de cycle de vie (arc pollinisation §D, tronçon ⑤) — APRÈS
+            # les guildes (13b) et les butineurs (13c), ordre §K.2. Ponte/maturation/
+            # famine/métamorphose des larves (chenille→papillon, syrphe_larve→syrphe).
+            # La chenille s'ajoute à l'herbivorie, la syrphe_larve prédate le ravageur
+            # (lus au tick SUIVANT → décalage proie-prédateur). Re-figeage MAÎTRISÉ :
+            # à larves=0 (aucun adulte/hors fenêtre), comportement inchangé (§D.6).
+            eco.tick_lifecycle_bridges(tile, tile.plants, week_in_year)
+
             # 14. Banque de graines (vieillissement + enrichissement)
             eco.tick_seed_bank(tile.plants, seed=seed, week=week)
 

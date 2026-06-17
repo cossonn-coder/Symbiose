@@ -17,7 +17,9 @@ from fields.grids import GridField, DisturbanceField
 from fields.light import LightField
 from fields.seedbank import SeedBank
 from fields.population import (PopulationField, build_population_specs,
-                               build_pollinator_specs, POLLINATOR_NAMES)
+                               build_pollinator_specs, build_lifecycle_bridges,
+                               POLLINATOR_NAMES, daylength)
+from fields.lifecycle import larval_field_names, tick_bridges
 from .constants import *          # constantes de calibration écologique
 from .litiere import *            # Parcelle, Structure, STRUCTURE_ACCEPTE, MATUR_*…
 from .litiere import _fusion_parcelle, _lisser_ages   # helpers privés (hors import *)
@@ -49,6 +51,13 @@ class EcoFields:
     # champ agrégé `pollinisateur`). Lus par pollinator_reach (brassage, D31.2) et
     # la Vigueur macro via `pollinator_density`.
     populations:      dict = field(default=None)
+    # Champs larvaires des ponts de cycle de vie (§D, tronçon ⑤) :
+    # `chenille`/`chenille_nourrie` (→ papillon) et `syrphe_larve`/
+    # `syrphe_larve_nourrie` (→ syrphe). Densité + maturité moyenne ∈[0,1] par
+    # plot, PERSISTANTS. Pas un PopulationField (pas une guilde trophique : un
+    # STADE traité à part) ; `chenille` est lu par l'herbivorie (perturbations),
+    # `syrphe_larve` entre comme prédateur du ravageur (cf. _predator_field).
+    larvae:           dict = field(default=None)
     # Butineurs du tick courant (arc pollinisation §F, tronçon ③) — agents
     # échantillonnés/marchés par engine._tick_butineurs depuis les champs
     # pollinisateurs. État TRANSIENT (recalculé chaque tick, pas de persistance
@@ -96,6 +105,12 @@ class EcoFields:
             }
         # Ordre de tick = ordre trophique (ravageur d'abord ; cf. build_population_specs).
         self._population_order = list(self.populations.keys())
+        if self.larvae is None:
+            # Une grille par champ larvaire des ponts (§D) : densité + maturité,
+            # bornées [0,1]. Démarrent à 0 → invariant golden (§D.6) tant qu'aucun
+            # adulte ne pond.
+            self.larvae = {name: GridField(self.rows, self.cols, max_val=1.0)
+                           for name in larval_field_names(build_lifecycle_bridges())}
         if self.foragers is None:
             self.foragers = []          # aucun butineur tant que le tick n'a pas tourné
 
@@ -224,10 +239,29 @@ class EcoFields:
         """
         for name in self._population_order:
             popfield = self.populations[name]
-            predator_fields = [self.populations[p]
-                               for p in popfield.spec.predators
-                               if p in self.populations]
+            predator_fields = [pf for p in popfield.spec.predators
+                               if (pf := self._predator_field(p)) is not None]
             popfield.tick(self, tile, plants, predator_fields, week_in_year)
+
+    def _predator_field(self, name: str):
+        """Résout un champ prédateur par nom : d'abord une guilde (`populations`),
+        sinon un champ larvaire (`larvae`) — le syrphe_larve prédate le ravageur
+        (§D.3.2) sans être une guilde. Retourne un objet `.at_plot`-compatible ou
+        None. À densité nulle, contribue +0 → invariant golden (§D.6)."""
+        f = self.populations.get(name)
+        return f if f is not None else self.larvae.get(name)
+
+    def tick_lifecycle_bridges(self, tile, plants, week_in_year: int = 25) -> None:
+        """Ticke les ponts de cycle de vie (§D, tronçon ⑤) — APRÈS les guildes et
+        les butineurs (ordre §K.2). Délègue au tick PUR `fields.lifecycle.tick_bridges`
+        (ponte/maturation/famine/métamorphose), en lui passant la photopériode du
+        moment (`daylength(week_in_year)`). N'écrit que `eco.larvae` + le terme-source
+        de métamorphose dans les champs adultes (papillon/syrphe). Aucun log.
+
+        No-op STRICT si aucun pont (registre vide) ou si chaque pont reste à 0
+        (aucun adulte, ou hors fenêtre de ponte) → golden inchangé (§D.6)."""
+        tick_bridges(self, tile, plants, build_lifecycle_bridges(),
+                     daylength(week_in_year))
 
     def pollinator_density(self, r: int, c: int) -> float:
         """Densité pollinisatrice TOTALE en un plot = somme des champs par type

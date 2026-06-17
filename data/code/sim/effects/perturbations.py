@@ -190,9 +190,10 @@ HERBIVORY_LETHAL_MICRO = 0.20  # microbiome normalisé en dessous duquel le sol 
 def herbivory_pressure(plant: PlantInstance, tile: Tile,
                        game_state: dict, eco) -> list[Mutation]:
     """
-    Pression herbivore = densité LOCALE du champ `ravageur` (D31.2).
+    Pression herbivore = densité LOCALE du champ `ravageur` + de la `chenille`
+    (larve du papillon, pont §D) (D31.2 + arc pollinisation ⑤).
 
-        pression = ravageur[r,c] · HERBIVORY_GAIN
+        pression = (ravageur[r,c] + chenille[r,c]) · HERBIVORY_GAIN
 
     Le champ ravageur intègre DÉJÀ sa régulation par les auxiliaires (sa survie
     est rabotée par la densité du champ `auxiliaire` à chaque tick, cf.
@@ -210,7 +211,12 @@ def herbivory_pressure(plant: PlantInstance, tile: Tile,
 
     r, c = plant.position
     rav = eco.populations["ravageur"].at_plot(r, c) if eco else 0.0
-    pressure = rav * HERBIVORY_GAIN
+    # Pont de cycle de vie §D (tronçon ⑤) : la chenille (larve du papillon) broute
+    # le feuillage → s'AJOUTE à la pression du ravageur. À chenille=0 (aucune ponte)
+    # → +0 → pression strictement inchangée vs avant ⑤ (invariant golden §D.6).
+    chen = (eco.larvae["chenille"].at_plot(r, c)
+            if eco and "chenille" in getattr(eco, "larvae", {}) else 0.0)
+    pressure = (rav + chen) * HERBIVORY_GAIN
 
     # ───────── SUPPLANTÉ D31.2 — conservé pour mémoire ─────────
     # Ancien modèle (proxies sans entité visible). La pression dérivait de la

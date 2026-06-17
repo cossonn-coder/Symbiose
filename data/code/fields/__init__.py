@@ -28,10 +28,13 @@ from fields.seedbank import (
 from fields.foragers import (
     ForagerParams, ForagerAgent, sample_foragers,
 )
+from fields.lifecycle import (
+    LifeCycleBridge, tick_bridges, larval_field_names,
+)
 from fields.population import (
     PopulationField, TrophicSpec, PollinatorSpec, SpriteSample,
-    build_population_specs, build_pollinator_registry, POLLINATOR_NAMES,
-    sample_sprites, daylength,
+    build_population_specs, build_pollinator_registry, build_lifecycle_bridges,
+    POLLINATOR_NAMES, sample_sprites, daylength,
     POP_MAX, POP_INERTIA, DENSITE_PAR_SPRITE, SPRITES_PAR_PLOT_MAX,
 )
 from fields.ecofields import (

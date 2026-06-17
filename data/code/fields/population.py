@@ -28,6 +28,7 @@ from typing import Callable
 from fields.grids import GridField
 from fields.noise import _hash_noise
 from fields.foragers import ForagerParams   # spec d'agent butineur (§F, tronçon ③)
+from fields.lifecycle import LifeCycleBridge  # pont de cycle de vie (§D, tronçon ⑤)
 
 
 # ---------------------------------------------------------------------------
@@ -475,7 +476,11 @@ def build_population_specs() -> list[TrophicSpec]:
         TrophicSpec(
             name="ravageur", salt=_SALT_RAVAGEUR,
             resource_fn=_foliage_grid, habitat_fn=_monoculture_grid,
-            predators=("auxiliaire",),
+            # `syrphe_larve` (pont §D, tronçon ⑤) entre comme prédateur SUPPLÉMENTAIRE
+            # du ravageur (réutilise le mécanisme `predators` ; résolu dans les champs
+            # larvaires par EcoFields._predator_field). À syrphe_larve=0 → +0 prédation
+            # → comportement strictement inchangé (invariant golden §D.6).
+            predators=("auxiliaire", "syrphe_larve"),
             signal_fn=_rav_fruit_signal,   # fruit pourri → charognards (④)
             daylen_min=10.0, daylen_full=13.0,   # fenêtre estivale (printemps tardif→automne)
         ),
@@ -539,8 +544,9 @@ class PollinatorSpec:
       - habitat_fn          : terme-source d'habitat (rondelle dédiée).
       - daylen_min/full     : fenêtre d'activité photopériodique (porte des guildes).
       - forager             : paramètres d'agent butineur (§F, tronçon ③).
-
-    Champ FUTUR (hors ②/③) : `bridge` (pont larvaire §D, tronçon ⑤).
+      - bridge              : pont de cycle de vie larvaire optionnel (§D, tronçon
+                              ⑤) — `None` pour l'abeille (nid hors sol, pas de larve
+                              au sol). Source UNIQUE des ponts (build_lifecycle_bridges).
     """
     name: str
     salt: int
@@ -550,6 +556,7 @@ class PollinatorSpec:
     daylen_min: float
     daylen_full: float
     forager: ForagerParams
+    bridge: LifeCycleBridge | None = None
 
 
 def _make_nectar_grid(attractivite: dict, defaut: float) -> Callable:
@@ -586,6 +593,18 @@ _FORAGER_ABEILLE  = ForagerParams(n_max=12, substeps=6, perception=2, deposit=0.
 _FORAGER_SYRPHE   = ForagerParams(n_max=8,  substeps=4, perception=1, deposit=0.4, recharge=0.5)
 _FORAGER_PAPILLON = ForagerParams(n_max=6,  substeps=5, perception=2, deposit=0.4, recharge=0.5)
 
+# Ponts de cycle de vie PAR TYPE (§D, tronçon ⑤). La chenille (→ papillon) mange le
+# FEUILLAGE (`_foliage_grid`, même ressource que le ravageur — elle s'ajoute à la
+# pression d'herbivorie) ; la syrphe_larve (→ syrphe) prédate le RAVAGEUR
+# (`_ravageur_grid` — elle est le symétrique bénéfique). Fenêtres de PONTE estivales
+# (placeholders §D.5). L'abeille n'a pas de pont (nid hors sol).
+_BRIDGE_PAPILLON = LifeCycleBridge(
+    larva="chenille", larva_nourrie="chenille_nourrie", adult="papillon",
+    resource_fn=_foliage_grid, daylen_min=11.0, daylen_full=13.0)
+_BRIDGE_SYRPHE = LifeCycleBridge(
+    larva="syrphe_larve", larva_nourrie="syrphe_larve_nourrie", adult="syrphe",
+    resource_fn=_ravageur_grid, daylen_min=10.5, daylen_full=12.5)
+
 
 def build_pollinator_registry() -> list[PollinatorSpec]:
     """Registre §E des types de pollinisateurs (donnée pure). Trois types au
@@ -606,16 +625,23 @@ def build_pollinator_registry() -> list[PollinatorSpec]:
             attractivite=_ATTRACT_SYRPHE, attractivite_defaut=_ATTRACT_DEFAUT,
             habitat_fn=_auxiliaire_habitat_grid,
             daylen_min=10.5, daylen_full=13.0,   # printemps → été (précoce)
-            forager=_FORAGER_SYRPHE,
+            forager=_FORAGER_SYRPHE, bridge=_BRIDGE_SYRPHE,
         ),
         PollinatorSpec(
             name="papillon", salt=_SALT_PAPILLON,
             attractivite=_ATTRACT_PAPILLON, attractivite_defaut=_ATTRACT_DEFAUT,
             habitat_fn=_pollinisateur_habitat_grid,
             daylen_min=12.5, daylen_full=14.5,   # été
-            forager=_FORAGER_PAPILLON,
+            forager=_FORAGER_PAPILLON, bridge=_BRIDGE_PAPILLON,
         ),
     ]
+
+
+def build_lifecycle_bridges() -> list[LifeCycleBridge]:
+    """Ponts de cycle de vie (§D) extraits du registre §E — source UNIQUE. Deux
+    au démarrage (chenille→papillon, syrphe_larve→syrphe) ; l'abeille (bridge=None)
+    est écartée. Lu par EcoFields (instanciation des champs larvaires + tick)."""
+    return [ps.bridge for ps in build_pollinator_registry() if ps.bridge is not None]
 
 
 def build_pollinator_specs() -> list[TrophicSpec]:

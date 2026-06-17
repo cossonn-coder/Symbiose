@@ -86,16 +86,50 @@
   - Sanity (verger full) : pommier fleurit ~w33, noue 1 fruit ~w36 (pollen 2.25
     déposé par butineurs sur l'arbre isolé), déterministe.
 
-## Reste (⑤)
+- **⑤ Ponts de cycle de vie (D) — CLOS, golden re-figé MAÎTRISÉ.** ✅
+  - `fields/lifecycle.py` NEUF (mirror de `foragers.py`, garde-fou taille) :
+    `LifeCycleBridge` (data : larva/larva_nourrie/adult/resource_fn + fenêtre ponte
+    + taux ponte/matur/métam/perte/famine, placeholders §D.5), `larval_field_names`,
+    `tick_bridges` PURE & déterministe (ponte→maturation→famine→métamorphose, §D.3),
+    duck-typée sur `eco`. N'importe PAS `population` (les ponts y sont CONSTRUITS) →
+    aucun cycle ; reçoit la photopériode de l'appelant (copie locale `_smoothstep`).
+  - `population.py` : `bridge` ajouté à `PollinatorSpec` ; 2 ponts
+    `_BRIDGE_PAPILLON` (chenille, ressource=`_foliage_grid`, +herbivorie) et
+    `_BRIDGE_SYRPHE` (syrphe_larve, ressource=`_ravageur_grid`, −ravageur) attachés
+    à papillon/syrphe (abeille=None) ; `build_lifecycle_bridges()` (source UNIQUE) ;
+    **`syrphe_larve` ajouté aux prédateurs du ravageur** (`predators=("auxiliaire",
+    "syrphe_larve")`).
+  - `ecofields/container.py` : `eco.larvae` (4 GridField [0,1] : chenille(_nourrie),
+    syrphe_larve(_nourrie)) ; `_predator_field` (résout populations PUIS larvae) ;
+    `tick_lifecycle_bridges` (délègue à `tick_bridges`, photopériode `daylength`).
+  - `perturbations.py` : **`HERBIVORY_GAIN` lit `(ravageur + chenille)`** (chenille
+    via `eco.larvae`, garde-fou `getattr`).
+  - Câblé boucle.py **étape 13d** (APRÈS guildes 13b & butineurs 13c, ordre §K.2).
+  - **INVARIANT §D.6 PROUVÉ** : ponte neutralisée (larves=0 partout) → golden
+    **bit-identique** au pré-⑤ `08f18502…f9b3` → toute dérive vient des seuls cycles.
+  - **Golden re-figé MAÎTRISÉ** : `08f18502…f9b3` → **`4f9fad91…1260`**. Dérive par
+    (a) chenille→herbivorie ↑, (b) syrphe_larve→prédation ravageur → densités →
+    santé/brassage. Déterministe (2 runs =), état final sain (69 plantes/110 sem).
+  - **Golden de champ `population_hash.txt` re-figé** : `6caab9d7…` → `71f7ddda…`.
+  - `tests/test_lifecycle.py` NEUF (invariant 0-adulte/chenille-0 ≡ ravageur,
+    chenille mord seule, cycle syrphe_larve→syrphe, famine, déterminisme — 6/6).
+    Toute la suite verte (golden, population, attraction, fruits, croissance…).
+  - **⚠ Garde-fou taille SIGNALÉ** : `container.py` **356** & `population.py` **354**
+    LDC pur (seuil ~350) — fichiers CŒUR pré-existants déjà à ~345, +10/+11 par l'arc
+    (responsabilité unique préservée, commentaires pédago non sacrifiés). Split de
+    `container.py` = candidat futur, hors périmètre surgical ⑤.
 
-- **⑤ Ponts de cycle de vie (D)** — chenille→papillon, syrphe_larve→syrphe ;
-  `HERBIVORY_GAIN` lit `ravageur + chenille`. **Golden re-figé MAÎTRISÉ.** §D.
+## Reste
+
 - **⑥⑦ COUCHE JOUEUR** (ruche/miel H/I, piqûre J) — sprint distinct, golden neutre.
+- **Vue Godot** (sprites chenilles/syrphes/papillons, larves) : différé, hooks posés
+  (`eco.larvae` non exposé au snapshot à ce tronçon — pas de bump de pont).
 
 ## Garde-fous
 
 - Golden re-figé uniquement aux tronçons ② et ⑤ — **maîtrisé + annoncé**, isolé.
 - Déterminisme : `seed`/`_hash_noise`/`daylength`, jamais de RNG vivant.
-- Couches `plants ← fields ← sim` ; ~350 l code pur ; doc d'abord (FAIT).
-- **Reprise à froid** : « lis `sprints/sprint_pollinisation_cycle_vie/00_etat.md`
-  puis lance le tronçon ⑤ (conception §D : ponts de cycle de vie) ».
+- Couches `plants ← fields ← sim` ; ~350 l code pur (⑤ : 2 fichiers cœur signalés).
+- **Partie I MOTEUR TERMINÉE** (①→⑤). Reprise Partie II : « lis
+  `sprints/sprint_pollinisation_cycle_vie/00_etat.md` puis lance le tronçon ⑥
+  (conception §H/§I : ruche & miel) ».
