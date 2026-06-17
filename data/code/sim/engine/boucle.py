@@ -40,13 +40,14 @@ from .aleas import (appliquer_alea, ALEAS_RAVAGEURS, WEATHER_ALEA,
 from .croissance import CroissanceMixin
 from .mortalite import MortaliteMixin
 from .decompo import DecompoMixin
+from .floraison import FloraisonMixin
 
 # Pont récolte → banque-joueur (D17) : classe → clé catalogue (inverse).
 _SPECIES_KEY = {cls: key for key, cls in PLANT_CATALOGUE.items()}
 
 
 @dataclass
-class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin):
+class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin):
     game_state: dict
 
     def __post_init__(self):
@@ -181,6 +182,13 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin):
 
             # 9b. Mortalité réaliste — sénescence + santé dynamique (D27)
             log += self._tick_senescence_health(tile, eco)
+
+            # 9d. Floraison RÉELLE (phénologie, arc pollinisation ①). Double porte
+            # GDD + photopériode → état floral scalaire `floraison`. INERTE : n'écrit
+            # que floraison/gdd_accum et n'émet aucun log → golden NEUTRE. B/C/F
+            # liront `floraison` aux tronçons suivants (la « phase floraison » proxy
+            # ci-dessous, étape 10, reste en place jusqu'à la reconnexion ②/③).
+            self._tick_floraison(tile, eco, week_in_year)
 
             # 10. Floraison
             if est_phase_floraison(week_in_year, saison):

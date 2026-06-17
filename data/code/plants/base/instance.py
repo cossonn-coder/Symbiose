@@ -65,6 +65,14 @@ class PlantInstance:
     # par engine._tick_fruits (espèces `fruitier` parvenues à `maturity_years`),
     # mûri/tombé/mangé ensuite. Cf. dataclass Fruit.
     fruits: list = field(default_factory=list)
+    # État floral moteur (arc pollinisation, tronçon ① — CONCEPTION_POLLINISATION §A).
+    # `floraison` = intensité de floraison ∈ [0,1] (l'« assiette » que liront la
+    # ressource des champs pollinisateurs §C, les butineurs §F et la dose de pollen
+    # §B) ; `gdd_accum` = degrés-jours cumulés (forçage thermique, reset annuel).
+    # INERTES à ce tronçon : écrits par engine._tick_floraison mais lus par PERSONNE
+    # (B/C/F branchés ensuite) → golden NEUTRE. Hors `_PLANT_ATTRS` du golden.
+    floraison: float = 0.0
+    gdd_accum: float = 0.0
 
     def __post_init__(self):
         if self.x_cm is None or self.y_cm is None:
