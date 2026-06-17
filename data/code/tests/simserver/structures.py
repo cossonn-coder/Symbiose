@@ -14,7 +14,7 @@ def test_structures():
     print("\n[13] structures posables : poser/composter/retourner/epandre + snapshot")
     s13 = ServerProc()
     init13 = s13.send(cmd="init", seed=42)
-    check("engine_version 0.3.8", init13.get("engine_version") == "0.3.8",
+    check("engine_version 0.3.9", init13.get("engine_version") == "0.3.9",
           init13.get("engine_version"))
     rb = s13.send(cmd="action", verb="poser_bac",
                   target={"tile": "T0", "r": 1, "c": 1})

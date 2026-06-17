@@ -41,13 +41,15 @@ from .croissance import CroissanceMixin
 from .mortalite import MortaliteMixin
 from .decompo import DecompoMixin
 from .floraison import FloraisonMixin
+from .butineurs import ButineurMixin
 
 # Pont récolte → banque-joueur (D17) : classe → clé catalogue (inverse).
 _SPECIES_KEY = {cls: key for key, cls in PLANT_CATALOGUE.items()}
 
 
 @dataclass
-class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin):
+class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
+             ButineurMixin):
     game_state: dict
 
     def __post_init__(self):
@@ -241,6 +243,14 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin):
             # services ne les LIT encore (câblage = D31.2). Aucun log produit
             # → golden INTACT.
             eco.tick_populations(tile, tile.plants, week_in_year)
+
+            # 13c. Butineurs déterministes (arc pollinisation §F, tronçon ③) —
+            # échantillonnés sur les champs pollinisateurs FRAÎCHEMENT mis à jour,
+            # ils marchent de fleur en fleur et déposent le pollen conspécifique
+            # dans `pollen_recu` (lu par la nouaison §B au tronçon ④). N'écrit que
+            # pollen_recu (hors digest) + eco.foragers (transient), aucun log →
+            # golden NEUTRE. À 0 pollinisateur (0 agent), pollen_recu reste 0.
+            self._tick_butineurs(tile, eco, seed, week_in_year)
 
             # 14. Banque de graines (vieillissement + enrichissement)
             eco.tick_seed_bank(tile.plants, seed=seed, week=week)

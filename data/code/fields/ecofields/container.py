@@ -49,6 +49,11 @@ class EcoFields:
     # champ agrégé `pollinisateur`). Lus par pollinator_reach (brassage, D31.2) et
     # la Vigueur macro via `pollinator_density`.
     populations:      dict = field(default=None)
+    # Butineurs du tick courant (arc pollinisation §F, tronçon ③) — agents
+    # échantillonnés/marchés par engine._tick_butineurs depuis les champs
+    # pollinisateurs. État TRANSIENT (recalculé chaque tick, pas de persistance
+    # inter-tick, §F.2) : sert UNIQUEMENT au snapshot (rendu Godot). Hors golden.
+    foragers:         list = field(default=None)
 
     def __post_init__(self):
         if self.humidite    is None: self.humidite    = GridField(self.rows, self.cols)
@@ -91,6 +96,8 @@ class EcoFields:
             }
         # Ordre de tick = ordre trophique (ravageur d'abord ; cf. build_population_specs).
         self._population_order = list(self.populations.keys())
+        if self.foragers is None:
+            self.foragers = []          # aucun butineur tant que le tick n'a pas tourné
 
     def get_field(self, name: str) -> GridField | None:
         return {

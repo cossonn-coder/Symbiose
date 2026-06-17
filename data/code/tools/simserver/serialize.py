@@ -119,6 +119,7 @@ class SerializeMixin:
         # Arrondis : x/y_frac 3 déc. (= 0,05 cm dans le plot), activite 2 —
         # et round() est déterministe, la clé de diff côté vue reste stable.
         sprites = {}
+        foragers = {}
         structures = {}
         litiere = {}
         for tile in gs["tiles"]:
@@ -129,6 +130,15 @@ class SerializeMixin:
                      round(s.activite, 2)]
                     for s in sample_sprites(f, gs["seed"])]
                 for f in eco.populations.values()}
+            # Butineurs déterministes (arc pollinisation §F, 0.3.9) : agents
+            # échantillonnés/marchés par engine._tick_butineurs (eco.foragers, déjà
+            # rempli par le tick). Format COMPACT (cf. `sprites`) par tuile :
+            # [guild, r, c, x_frac, y_frac, espèce-cible, charge(0/1)]. PURE lecture
+            # → golden NEUTRE. La vue dessine l'insecte de fleur en fleur.
+            foragers[tile.tile_id] = [
+                [a.guild, a.row, a.col, round(a.x_frac, 3), round(a.y_frac, 3),
+                 a.target, int(a.carrying)]
+                for a in (eco.foragers or [])]
             # Structures posables (⑤, 0.3.5) : index implicite = position dans la
             # liste = `target.structure` des gestes. `compost_mur` = jauge mûre
             # épandable ; `contenu` = masse BRUTE en cours de maturation (Σ des
@@ -176,5 +186,5 @@ class SerializeMixin:
                 "player": {"vigueur": st["courante"],
                            "vigueur_max": V.vigueur_max(gs, player),
                            "seeds": seeds},
-                "plants": plants, "sprites": sprites,
+                "plants": plants, "sprites": sprites, "foragers": foragers,
                 "structures": structures, "litiere": litiere}

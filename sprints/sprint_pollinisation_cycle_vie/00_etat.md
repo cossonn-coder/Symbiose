@@ -43,10 +43,30 @@
   - Tests adaptés (guildes : test_population/attraction/genetique/simserver).
     Sanity : l'abeille décolle (nectar réel) et dort l'hiver (dormance OK).
 
-## Reste (ordre conseillé ③→④→⑤)
+- **③ Butineurs déterministes (F) — CLOS, golden NEUTRE.** ✅
+  - `PlantInstance.pollen_recu: float` (instance.py) — accumulateur conspécifique,
+    écrit par les butineurs, lu par PERSONNE à ce tronçon (④ le lira). Hors digest.
+  - `fields/foragers.py` NEUF (split de population.py, garde-fou taille) :
+    `ForagerParams` (n_max/substeps/perception/deposit/recharge), `ForagerAgent`
+    (snapshot), `sample_foragers(field, species_grids, params, seed, wiy)` = PURE
+    & déterministe (agents dérivés densité+`_hash_noise`, recréés chaque tick §F.2),
+    marche par montée de gradient + constance florale (dépose si conspécifique,
+    re-ciblage → charge perdue §F.4). Duck-typé sur le champ → aucun cycle.
+  - `build_pollinator_registry()` factorisé dans population.py (source UNIQUE
+    attractivité+fenêtres+`forager`), `PollinatorSpec.forager` ajouté.
+  - `sim/engine/butineurs.py` NEUF (`ButineurMixin._tick_butineurs`) : construit la
+    carte des fleurs PAR TYPE (floraison × attractivité, anémophiles écartées) +
+    index plot→plantes, appelle `sample_foragers`, applique les dépôts à
+    `pollen_recu` (réparti ∝ floraison), range les agents dans `eco.foragers`.
+    Câblé boucle.py étape 13c (après tick_populations). `eco.foragers` (transient).
+  - Snapshot : bloc `foragers` par tuile `[guild,r,c,x,y,target,charge]` ; pont
+    **0.3.8 → 0.3.9** (test structures adapté). **Golden INCHANGÉ** `08f18502…f9b3`.
+  - Tailles : population.py 344, foragers.py 107, butineurs.py 53 (tous < 350).
+  - Sanity : bosquet phacélie dense → pollen déposé (total 40.5 / 2 ans, pas de
+    reset avant ④), déterministe (2 runs identiques), 0 butineur l'hiver (dormance).
 
-- **③ Butineurs déterministes (F)** — agents, constance florale, dépôt
-  `pollen_recu` + snapshot. Golden probablement neutre. §F.
+## Reste (ordre conseillé ④→⑤)
+
 - **④ Nouaison pollinisée (B)** — `_tick_fruits` lit `pollen_recu`, modes, fin de
   floraison par plante (remplace `FRUIT_NOUAISON_WEEK`). §B.
 - **⑤ Ponts de cycle de vie (D)** — chenille→papillon, syrphe_larve→syrphe ;
@@ -59,4 +79,4 @@
 - Déterminisme : `seed`/`_hash_noise`/`daylength`, jamais de RNG vivant.
 - Couches `plants ← fields ← sim` ; ~350 l code pur ; doc d'abord (FAIT).
 - **Reprise à froid** : « lis `sprints/sprint_pollinisation_cycle_vie/00_etat.md`
-  puis lance le tronçon ② (conception §C/§E) ».
+  puis lance le tronçon ④ (conception §B) ».

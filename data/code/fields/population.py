@@ -27,6 +27,7 @@ from typing import Callable
 
 from fields.grids import GridField
 from fields.noise import _hash_noise
+from fields.foragers import ForagerParams   # spec d'agent butineur (§F, tronçon ③)
 
 
 # ---------------------------------------------------------------------------
@@ -537,9 +538,9 @@ class PollinatorSpec:
       - attractivite_defaut : préférence d'une famille non listée (fleur générique).
       - habitat_fn          : terme-source d'habitat (rondelle dédiée).
       - daylen_min/full     : fenêtre d'activité photopériodique (porte des guildes).
+      - forager             : paramètres d'agent butineur (§F, tronçon ③).
 
-    Champs FUTURS (hors ②, ajoutés à leur tronçon) : `bridge` (pont larvaire §D,
-    tronçon ⑤) et `forager` (agents butineurs §F, tronçon ③).
+    Champ FUTUR (hors ②/③) : `bridge` (pont larvaire §D, tronçon ⑤).
     """
     name: str
     salt: int
@@ -548,6 +549,7 @@ class PollinatorSpec:
     habitat_fn: Callable
     daylen_min: float
     daylen_full: float
+    forager: ForagerParams
 
 
 def _make_nectar_grid(attractivite: dict, defaut: float) -> Callable:
@@ -576,32 +578,51 @@ def _make_nectar_grid(attractivite: dict, defaut: float) -> Callable:
     return _grid
 
 
-def build_pollinator_specs() -> list[TrophicSpec]:
-    """Registre §E → TrophicSpec prêts pour le `PopulationField` générique. Trois
-    types au démarrage (abeille/syrphe/papillon, §E.2), extensible par données.
-    Ressource = nectar (floraison × attractivite), habitat = rondelle dédiée, ni
-    prédateur ni signal fruit. Les fenêtres photopériodiques diffèrent par type
-    (l'abeille large, le syrphe précoce, le papillon estival) — placeholders §E.2."""
-    registre = [
+# Paramètres d'agent butineur PAR TYPE (§F, tronçon ③ — placeholders calibrage).
+# L'abeille : nombreuse, tournée longue, large perception (forte porteuse de pollen).
+# Le syrphe : moins nombreux, tournée courte, perception serrée. Le papillon :
+# peu nombreux mais bonne perception (vol large). deposit/recharge homogènes.
+_FORAGER_ABEILLE  = ForagerParams(n_max=12, substeps=6, perception=2, deposit=0.5, recharge=0.5)
+_FORAGER_SYRPHE   = ForagerParams(n_max=8,  substeps=4, perception=1, deposit=0.4, recharge=0.5)
+_FORAGER_PAPILLON = ForagerParams(n_max=6,  substeps=5, perception=2, deposit=0.4, recharge=0.5)
+
+
+def build_pollinator_registry() -> list[PollinatorSpec]:
+    """Registre §E des types de pollinisateurs (donnée pure). Trois types au
+    démarrage (abeille/syrphe/papillon, §E.2), extensible par données. Source
+    UNIQUE de l'attractivité florale, des fenêtres photopériodiques et des
+    paramètres butineurs — lue à la fois par `build_pollinator_specs` (champs) et
+    par `engine._tick_butineurs` (agents §F, qui a besoin de l'attractivité)."""
+    return [
         PollinatorSpec(
             name="abeille", salt=_SALT_POLLINISATEUR,
             attractivite=_ATTRACT_ABEILLE, attractivite_defaut=_ATTRACT_DEFAUT,
             habitat_fn=_pollinisateur_habitat_grid,
             daylen_min=11.5, daylen_full=14.0,   # été LARGE
+            forager=_FORAGER_ABEILLE,
         ),
         PollinatorSpec(
             name="syrphe", salt=_SALT_SYRPHE,
             attractivite=_ATTRACT_SYRPHE, attractivite_defaut=_ATTRACT_DEFAUT,
             habitat_fn=_auxiliaire_habitat_grid,
             daylen_min=10.5, daylen_full=13.0,   # printemps → été (précoce)
+            forager=_FORAGER_SYRPHE,
         ),
         PollinatorSpec(
             name="papillon", salt=_SALT_PAPILLON,
             attractivite=_ATTRACT_PAPILLON, attractivite_defaut=_ATTRACT_DEFAUT,
             habitat_fn=_pollinisateur_habitat_grid,
             daylen_min=12.5, daylen_full=14.5,   # été
+            forager=_FORAGER_PAPILLON,
         ),
     ]
+
+
+def build_pollinator_specs() -> list[TrophicSpec]:
+    """Registre §E → TrophicSpec prêts pour le `PopulationField` générique.
+    Ressource = nectar (floraison × attractivite), habitat = rondelle dédiée, ni
+    prédateur ni signal fruit. Les fenêtres photopériodiques diffèrent par type
+    (l'abeille large, le syrphe précoce, le papillon estival) — placeholders §E.2."""
     return [
         TrophicSpec(
             name=ps.name, salt=ps.salt,
@@ -609,7 +630,7 @@ def build_pollinator_specs() -> list[TrophicSpec]:
             habitat_fn=ps.habitat_fn, predators=(),
             daylen_min=ps.daylen_min, daylen_full=ps.daylen_full,
         )
-        for ps in registre
+        for ps in build_pollinator_registry()
     ]
 
 

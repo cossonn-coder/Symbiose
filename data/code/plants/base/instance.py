@@ -73,6 +73,13 @@ class PlantInstance:
     # (B/C/F branchés ensuite) → golden NEUTRE. Hors `_PLANT_ATTRS` du golden.
     floraison: float = 0.0
     gdd_accum: float = 0.0
+    # Dose de pollen conspécifique reçue (arc pollinisation, tronçon ③ — §B.1/§F.4).
+    # Accumulateur PAR plante : incrémenté à CHAQUE dépôt d'un butineur (§F)
+    # transportant du pollen de la MÊME espèce (constance florale mécanique), non
+    # plus une intégrale `densité × floraison`. Écrit par engine._tick_butineurs ;
+    # lu par PERSONNE à ce tronçon (la nouaison §B le lira au tronçon ④, et le
+    # remettra à 0 à la nouaison). Hors `_PLANT_ATTRS` du golden → golden NEUTRE.
+    pollen_recu: float = 0.0
 
     def __post_init__(self):
         if self.x_cm is None or self.y_cm is None:

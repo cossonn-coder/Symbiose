@@ -72,7 +72,15 @@ from __future__ import annotations
 #       pile ∝ (contenu + compost_mur) → on VOIT le bac se remplir au compostage
 #       (le brut, avant maturation) et se vider à l'épandage (le mûr). PUR ajout
 #       de sérialisation (`st.contenu` déjà rempli par `composter`) → golden NEUTRE.
-ENGINE_VERSION = "0.3.8"
+# 0.3.9 (pollinisation ③, butineurs déterministes §F) : le snapshot expose
+#       `foragers` par tuile = `[[guild, r, c, x_frac, y_frac, espèce-cible,
+#       charge], …]`, les agents butineurs (abeille/syrphe/papillon) échantillonnés
+#       et marchés fleur-en-fleur par engine._tick_butineurs (eco.foragers). Ils
+#       déposent réellement le pollen conspécifique dans `pollen_recu` (lu par la
+#       nouaison §B au tronçon ④). PUR ajout de sérialisation (état transient déjà
+#       calculé par le tick, n'écrit que pollen_recu/eco.foragers) → golden NEUTRE.
+#       Champ optionnel côté vue (tolérance pré-0.3.9, comme les bumps précédents).
+ENGINE_VERSION = "0.3.9"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

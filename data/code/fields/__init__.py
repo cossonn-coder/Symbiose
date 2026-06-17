@@ -25,9 +25,13 @@ from fields.seedbank import (
     SEED_LATE_GAIN, SEED_LATE_MIN_MATURITY, SEED_COMPETITOR_MATURITY,
     SPECIES_SEED_VIABILITY_LOSS, SPECIES_POOL_MIN_DENSITY,
 )
+from fields.foragers import (
+    ForagerParams, ForagerAgent, sample_foragers,
+)
 from fields.population import (
-    PopulationField, TrophicSpec, SpriteSample,
-    build_population_specs, sample_sprites, daylength,
+    PopulationField, TrophicSpec, PollinatorSpec, SpriteSample,
+    build_population_specs, build_pollinator_registry, POLLINATOR_NAMES,
+    sample_sprites, daylength,
     POP_MAX, POP_INERTIA, DENSITE_PAR_SPRITE, SPRITES_PAR_PLOT_MAX,
 )
 from fields.ecofields import (
