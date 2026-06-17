@@ -37,6 +37,10 @@ from .gestes import (
 from .compost import (
     EPANDRE_W, poser_bac, poser_pile, composter, empiler_bois, retourner, epandre,
 )
+from .ruche import (
+    CONCEPT_ABEILLES, SEUIL_EQUIPEMENT, MIEL_VIGUEUR_RATIO, RECOLTE_SANS_EQUIP,
+    poser_ruche, equipe, recolter_miel,
+)
 
 __all__ = [
     "maturite",
@@ -49,4 +53,6 @@ __all__ = [
     "ecraser", "ecraser_plante", "favoriser_auxiliaire", "becher", "grelinette",
     "EPANDRE_W", "poser_bac", "poser_pile", "composter", "empiler_bois",
     "retourner", "epandre",
+    "CONCEPT_ABEILLES", "SEUIL_EQUIPEMENT", "MIEL_VIGUEUR_RATIO", "RECOLTE_SANS_EQUIP",
+    "poser_ruche", "equipe", "recolter_miel",
 ]

@@ -80,7 +80,17 @@ from __future__ import annotations
 #       nouaison §B au tronçon ④). PUR ajout de sérialisation (état transient déjà
 #       calculé par le tick, n'écrit que pollen_recu/eco.foragers) → golden NEUTRE.
 #       Champ optionnel côté vue (tolérance pré-0.3.9, comme les bumps précédents).
-ENGINE_VERSION = "0.3.9"
+# 0.4.0 (pollinisation ⑥, ruche & miel §H/§I — couche joueur) : chaque structure du
+#       bloc `structures` gagne `essaim` ∈ [0,1] (peuplement) et `miel` ∈ [0,MIEL_MAX]
+#       (réserve), à 0 pour bac/pile. Deux verbes neufs au routeur : `poser_ruche`
+#       (target plot {r,c}, planification — pose une ruche VIDE qui capture un essaim
+#       sauvage au tick si le champ abeille local suffit) et `recolter_miel` (target
+#       {structure} index — transfère le miel → Vigueur joueur, gain ∝ réserve, gaté
+#       par l'équipement apicole débloqué par MAÎTRISE du concept pollinisation ;
+#       sans équipement → récolte partielle, l'alarme/piqûre §J vient au ⑦). La ruche
+#       peuplée renforce l'habitat abeille local (§H.2). Moteur ⑥ → golden NEUTRE
+#       (le smoke n'instancie aucune ruche). Champs optionnels côté vue.
+ENGINE_VERSION = "0.4.0"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

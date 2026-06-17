@@ -119,17 +119,54 @@
     (responsabilité unique préservée, commentaires pédago non sacrifiés). Split de
     `container.py` = candidat futur, hors périmètre surgical ⑤.
 
+- **⑥ Ruche & miel (H/I) — CLOS, golden NEUTRE.** ✅
+  - `Structure` (litiere.py) : +`essaim`/`miel` (0.0, inutilisés par bac/pile) ;
+    `STRUCTURE_ACCEPTE["ruche"] = frozenset()` (n'absorbe AUCUNE litière → `accepte()`
+    faux, `tick_structures` la traverse sans rien faire, contenu toujours vide).
+  - `fields/apiculture.py` NEUF (PURE, duck-typé sur eco, miroir lifecycle/foragers) :
+    `tick_ruches(eco, tile, plants)` — **no-op STRICT si aucune ruche** (retour AVANT
+    toute lecture de champ → golden NEUTRE §H.3). Capture/déclin de l'essaim ← champ
+    `abeille` LOCAL (≥`ESSAIM_MIN` croissance saturante, sinon famine §H.2) ; miel ←
+    `res_abeille` LOCAL (réutilise `_make_nectar_grid` + registre §E, SOURCE UNIQUE),
+    `miel += MIEL_RATE·essaim·nectar`, plafond `MIEL_MAX`. Importe population, jamais
+    l'inverse → aucun cycle.
+  - `fields/population.py` : `_abeille_habitat_grid` (= `_pollinisateur_habitat_grid`
+    + bump LOCAL des ruches peuplées, §H.2, lit `eco.structures` en duck-type) attaché
+    à l'abeille (papillon garde le générique) ; `RUCHE_HABITAT_W`.
+  - `sim/actions/ruche.py` NEUF : `poser_ruche` (MODÉRÉ, binaire, modèle `poser_bac`),
+    `recolter_miel` (canal récolte FAIBLE, miel→Vigueur ×`MIEL_VIGUEUR_RATIO`, **gaté
+    par équipement = palier maîtrise** `CONCEPT_ABEILLES="pollinisation"` ≥ `SEUIL=3` ;
+    sans équipement → récolte partielle `RECOLTE_SANS_EQUIP`, alarme/piqûre §J = ⑦ ;
+    réserve vide → 0 sans Vigueur dépensée), `equipe()`. Coûts/objets dans couts.py,
+    ré-exports __init__.py.
+  - Câblé boucle.py **étape 13e** (APRÈS guildes 13b, lit `abeille` fraîche).
+  - Pont **0.3.9 → 0.4.0** : `structures` gagne `essaim`/`miel` ; verbes `poser_ruche`
+    (target plot) & `recolter_miel` (target structure index) routés. Round-trip serveur
+    confirmé. Test simserver `structures.py` : assertion version 0.3.9 → 0.4.0.
+  - **Golden INCHANGÉ** `4f9fad91…1260` (le smoke n'instancie aucune ruche).
+  - `tests/test_ruche.py` NEUF (poser, capture/déclin, miel monte/plafonne/0-sans-fleur,
+    habitat §H.2, récolte équipée/partielle/vide, neutralité no-op, déterminisme — 20/20).
+    Toute la suite verte (golden, structures 65, sim_server 158, population, attraction,
+    lifecycle, fruits, vigueur, maîtrise, génétique, croissance…).
+  - **⚠ Garde-fou taille SIGNALÉ** : `population.py` **363** LDC pur (seuil ~350) —
+    déjà flagué à 354 au ⑤, +9 par `_abeille_habitat_grid`+`RUCHE_HABITAT_W` (§H.2
+    appartient aux habitat_fn de la couche registre ; le sortir créerait un cycle
+    population↔apiculture). Responsabilité unique préservée. Split = candidat futur.
+
 ## Reste
 
-- **⑥⑦ COUCHE JOUEUR** (ruche/miel H/I, piqûre J) — sprint distinct, golden neutre.
-- **Vue Godot** (sprites chenilles/syrphes/papillons, larves) : différé, hooks posés
-  (`eco.larvae` non exposé au snapshot à ce tronçon — pas de bump de pont).
+- **⑦ COUCHE JOUEUR** (piqûre §J : alarme émergente, temps réel moteur + Godot) —
+  hook posé dans `recolter_miel` (récolte sans équipement). Golden neutre.
+- **Vue Godot** (sprites chenilles/syrphes/papillons, larves, ruche/miel) : différé,
+  hooks posés (`eco.larvae` non exposé ; `essaim`/`miel` exposés au snapshot 0.4.0).
 
 ## Garde-fous
 
 - Golden re-figé uniquement aux tronçons ② et ⑤ — **maîtrisé + annoncé**, isolé.
+  ⑥ golden NEUTRE (ruche absente du smoke).
 - Déterminisme : `seed`/`_hash_noise`/`daylength`, jamais de RNG vivant.
-- Couches `plants ← fields ← sim` ; ~350 l code pur (⑤ : 2 fichiers cœur signalés).
-- **Partie I MOTEUR TERMINÉE** (①→⑤). Reprise Partie II : « lis
-  `sprints/sprint_pollinisation_cycle_vie/00_etat.md` puis lance le tronçon ⑥
-  (conception §H/§I : ruche & miel) ».
+- Couches `plants ← fields ← sim` ; ~350 l code pur (⑤ : 2 fichiers cœur signalés ;
+  ⑥ : `population.py` à 363, signalé).
+- **Partie I MOTEUR TERMINÉE** (①→⑤). **⑥ ruche & miel CLOS.** Reprise : « lis
+  `sprints/sprint_pollinisation_cycle_vie/00_etat.md` puis lance le tronçon ⑦
+  (conception §J : piqûre — alarme émergente) ».

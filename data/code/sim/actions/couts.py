@@ -53,6 +53,8 @@ COUTS = {
     "empiler_bois":         FAIBLE,            # déplace le bois plot→pile
     "retourner":            FAIBLE,            # accélère/lisse la maturation du bac (bonus §5.2, canal vertueux)
     "epandre":              FAIBLE,            # restitue le compost mûr au sol → trio humus (§5.3, canal vertueux)
+    "poser_ruche":          MODERE,            # pose une ruche (phase planification, ⑥ §H.1)
+    "recolter_miel":        HARVEST_VIGUEUR_COST,  # canal récolte (miel → Vigueur, ⑥ §I.2)
 }
 
 # Objets STATIQUES touchés par chaque geste (§10.4, terme 2 : technique + outil/
@@ -79,6 +81,8 @@ OBJETS_TOUCHES = {
     "empiler_bois":         ("compostage", "pile-à-bois"),
     "retourner":            ("compostage", "fourche"),
     "epandre":              ("compostage", "amendement"),
+    "poser_ruche":          ("apiculture", "ruche"),
+    "recolter_miel":        ("apiculture", "équipement-apicole"),
 }
 
 # Atténuations maximales — PLACEHOLDERS NOMMÉS, *calibrage D12.4*. Bornées < 1 pour

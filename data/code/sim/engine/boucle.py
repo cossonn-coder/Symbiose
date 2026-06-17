@@ -25,6 +25,7 @@ import math
 from dataclasses import dataclass
 from plants import PLANT_CATALOGUE
 from fields import _hash_noise, ABSCISSION_WEEKS
+from fields.apiculture import tick_ruches   # ruches : capture essaim + miel (⑥, §H/§I)
 from sim.effects import resolve_plant_turn, apply_disturbances
 from sim.reproduction import is_seed_bearing
 from sim.seeds import Seed
@@ -259,6 +260,12 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
             # (lus au tick SUIVANT → décalage proie-prédateur). Re-figeage MAÎTRISÉ :
             # à larves=0 (aucun adulte/hors fenêtre), comportement inchangé (§D.6).
             eco.tick_lifecycle_bridges(tile, tile.plants, week_in_year)
+
+            # 13e. Ruches (arc pollinisation ⑥, §H/§I — couche joueur) — APRÈS les
+            # guildes (13b) : la capture d'essaim lit le champ `abeille` FRAÎCHEMENT
+            # mis à jour, le miel l'intègre via le nectar local. No-op STRICT si
+            # aucune ruche n'est posée → golden NEUTRE (§H.3 ; le smoke n'en pose pas).
+            tick_ruches(eco, tile, tile.plants)
 
             # 14. Banque de graines (vieillissement + enrichissement)
             eco.tick_seed_bank(tile.plants, seed=seed, week=week)

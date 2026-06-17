@@ -145,10 +145,13 @@ class SerializeMixin:
             # parcelles du contenu, 0.3.8). La vue remplit le bac/pile ∝
             # (contenu + compost_mur) → on VOIT la structure se remplir au
             # compostage (avant maturation) et se vider à l'épandage. PURE lecture.
+            # Ruche (⑥, 0.4.0) : `essaim`/`miel` (0 pour bac/pile) → la vue dessine le
+            # peuplement et la réserve de miel. PURE ajout de sérialisation.
             structures[tile.tile_id] = [
                 {"kind": st.kind, "plot": list(st.plot),
                  "compost_mur": round(st.compost_mur, 4),
-                 "contenu": round(sum(p.masse for p in st.contenu), 4)}
+                 "contenu": round(sum(p.masse for p in st.contenu), 4),
+                 "essaim": round(st.essaim, 4), "miel": round(st.miel, 4)}
                 for st in eco.structures]
             # Litière typée par plot (décompo·compost ①, rendue par la vue en
             # 03·B) : la couche fraîche de nécromasse au sol. On n'expose QUE ce

@@ -59,6 +59,10 @@ def _fusion_parcelle(parcelles: list, tissu: str, masse: float) -> None:
 STRUCTURE_ACCEPTE = {
     "bac":  frozenset(("feuille", "fleur", "herbace", "fruit")),
     "pile": frozenset(("bois",)),
+    "ruche": frozenset(),     # apiculture (⑥, §H) : n'absorbe AUCUNE litière (ce n'est
+                              # pas un composteur) → `accepte()` toujours faux, donc
+                              # `composter`/`empiler` la refusent et `tick_structures`
+                              # la traverse sans rien faire (contenu toujours vide).
 }
 
 # Maturation hybride (⑤ phase B, §5.2). La maturation est une décompo CONFINÉE :
@@ -102,6 +106,11 @@ class Structure:
     contenu:         list  = field(default_factory=list)  # list[Parcelle]
     compost_mur:     float = 0.0
     retourne_restant: float = 0.0                       # semaines d'accélération restantes (⑤B, `retourner`)
+    # Apiculture (⑥, §H/§I) — état d'une `ruche`, INUTILISÉ par bac/pile (restent 0.0,
+    # pas de régression). `essaim` ∈ [0,1] = peuplement capturé (tick_ruches), `miel`
+    # ∈ [0, MIEL_MAX] = réserve produite (intégrale du nectar mellifère butiné).
+    essaim:          float = 0.0
+    miel:            float = 0.0
 
     def accepte(self, tissu: str) -> bool:
         """Le tissu est-il recevable par cette structure (§5) ?"""

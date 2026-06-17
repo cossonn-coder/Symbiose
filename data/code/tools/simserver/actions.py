@@ -281,7 +281,7 @@ class ActionsMixin:
         # désignent par INDEX dans `eco.structures` (= ordre du snapshot). Validation
         # des bornes ICI (refus de désignation → ne coûte rien), la façade fait foi.
         if verb in ("poser_bac", "poser_pile", "composter", "empiler_bois",
-                    "retourner", "epandre"):
+                    "retourner", "epandre", "poser_ruche", "recolter_miel"):
             tile, eco = tile_cible()
             if tile is None:
                 return bilan(False, 0.0, 0.0,
@@ -309,24 +309,42 @@ class ActionsMixin:
 
             cost = A.cout_action(gs, player, verb, A.OBJETS_TOUCHES[verb])
 
-            if verb in ("poser_bac", "poser_pile"):
+            if verb in ("poser_bac", "poser_pile", "poser_ruche"):
                 rc, err = plot_rc()
                 if rc is None:
                     return bilan(False, 0.0, 0.0, err)
                 r, c = rc
                 if verb == "poser_bac":
                     s = A.poser_bac(gs, player, eco, r, c)
-                else:
+                    quoi = "bac à compost"
+                elif verb == "poser_pile":
                     s = A.poser_pile(gs, player, eco, tile, r, c)
-                quoi = "bac à compost" if verb == "poser_bac" else "pile à bois"
+                    quoi = "pile à bois"
+                else:
+                    s = A.poser_ruche(gs, player, eco, r, c)   # ⑥ §H.1
+                    quoi = "ruche"
                 return bilan(s is not None, cost, 0.0,
-                             f"{quoi} posé en ({r},{c}) sur {tile.tile_id}"
+                             f"{quoi} posé{'e' if verb == 'poser_ruche' else ''} "
+                             f"en ({r},{c}) sur {tile.tile_id}"
                              if s is not None
                              else "Vigueur insuffisante — rien posé")
 
             struct, err = struct_cible()
             if struct is None:
                 return bilan(False, 0.0, 0.0, err)
+            # Récolte du miel (⑥ §I.2) : geste sur une ruche (par index), gain Vigueur
+            # ∝ miel transféré, gaté par l'équipement (maîtrise §I.3). Refus de
+            # désignation (pas une ruche) → ne coûte rien.
+            if verb == "recolter_miel":
+                if struct.kind != "ruche":
+                    return bilan(False, 0.0, 0.0, "cette structure n'est pas une ruche")
+                g = A.recolter_miel(gs, player, struct)
+                equipe = A.equipe(gs, player)
+                return bilan(g > 0.0, cost, g,
+                             f"miel récolté (+{g:.1f} Vigueur"
+                             f"{'' if equipe else ' — récolte partielle, sans équipement'})"
+                             if g > 0.0
+                             else "rien récolté (réserve vide ou Vigueur insuffisante)")
             # Cohérence kind/geste : composter→bac, empiler→pile (refus de
             # désignation, ne coûte rien). retourner/epandre marchent sur les deux.
             if verb == "composter" and struct.kind != "bac":

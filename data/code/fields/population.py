@@ -392,6 +392,26 @@ def _auxiliaire_habitat_grid(eco, tile, plants) -> list[list[float]]:
     return [[val] * eco.cols for _ in range(eco.rows)]
 
 
+# Bump d'habitat abeille des RUCHES peuplées (⑥, §H.2 — placeholder calibrage). Une
+# ruche peuplée devient un terme-source d'habitat LOCAL pour l'abeille → renforce la
+# population qui l'a remplie (boucle vertueuse, interconnexion §H.2). Lu DIRECTEMENT
+# sur `eco.structures` (duck-typé, pas d'import de l'apiculture → pas de cycle).
+RUCHE_HABITAT_W = 0.40
+
+
+def _abeille_habitat_grid(eco, tile, plants) -> list[list[float]]:
+    """Habitat de l'abeille = `_pollinisateur_habitat_grid` (rondelle) + bump LOCAL
+    des ruches peuplées (§H.2). Sans ruche posée → identique au générique partagé
+    avec le papillon → **golden NEUTRE** (le smoke n'instancie aucune ruche)."""
+    g = _pollinisateur_habitat_grid(eco, tile, plants)
+    for st in getattr(eco, "structures", ()):
+        if getattr(st, "kind", None) == "ruche" and st.essaim > 0.0:
+            r, c = st.plot
+            if 0 <= r < eco.rows and 0 <= c < eco.cols:
+                g[r][c] = _clamp01(g[r][c] + RUCHE_HABITAT_W * st.essaim)
+    return g
+
+
 def _undisturbed_grid(eco, tile, plants) -> list[list[float]]:
     """Habitat des vers = sol NON perturbé (1 − perturbation)."""
     g = _zero_grid(eco.rows, eco.cols)
@@ -616,7 +636,7 @@ def build_pollinator_registry() -> list[PollinatorSpec]:
         PollinatorSpec(
             name="abeille", salt=_SALT_POLLINISATEUR,
             attractivite=_ATTRACT_ABEILLE, attractivite_defaut=_ATTRACT_DEFAUT,
-            habitat_fn=_pollinisateur_habitat_grid,
+            habitat_fn=_abeille_habitat_grid,    # rondelle + bump ruche peuplée (§H.2)
             daylen_min=11.5, daylen_full=14.0,   # été LARGE
             forager=_FORAGER_ABEILLE,
         ),
