@@ -22,12 +22,29 @@
   - Sanity (non-régression du mécanisme) : annuelles estivales matures fleurissent
     (~0.58 pic sur 2 ans) ; tomate/poivron (morts précoces) & pommier (5 ans) à 0.
 
-## Reste (ordre conseillé ②→③→④→⑤)
+- **② Registre + champs par type + nectar (C/E) — CLOS, golden re-figé MAÎTRISÉ.** ✅
+  - `PollinatorSpec` data-driven + `build_pollinator_specs()` (population.py) :
+    3 types **abeille/syrphe/papillon**, attractivité florale PAR FAMILLE
+    botanique (dicts placeholders §E.2), fenêtres photopériodiques distinctes.
+  - `_make_nectar_grid(attractivite, defaut)` = ressource `Σ floraison ×
+    préférence[famille]` / `FLOWER_REF` → **remplace `_flower_grid`** (proxy
+    stade ≥ 2, conservé/annoté). `_auxiliaire_habitat_grid` pour le syrphe.
+  - `build_population_specs()` ne renvoie plus le champ agrégé `pollinisateur` ;
+    `EcoFields` compose `build_population_specs() + build_pollinator_specs()` →
+    guildes = ravageur/auxiliaire/vers + abeille/syrphe/papillon.
+  - `EcoFields.pollinator_density(r,c)` = somme des 3 types ; lu par
+    `pollinator_reach` (reproduction.py) et `vigueur_pollinisateur` (vigueur_macro.py,
+    borné [0,1]). L'abeille réutilise le canal sprite `_SALT_POLLINISATEUR` (continuité).
+  - **Golden PRINCIPAL re-figé** : `af3bfa8f…972f` → **`08f18502…f9b3`**. Dérive
+    par le SEUL canal `pollinator_reach` (densité nectar-réelle au lieu du proxy
+    stade≥2) → brassage génétique des descendants sur 4 ans. Déterministe (2 runs
+    identiques), état final sain (46 plantes, succession normale).
+  - **Golden de champ `population_hash.txt` re-figé** : `6dc7004d…` → `6caab9d7…`.
+  - Tests adaptés (guildes : test_population/attraction/genetique/simserver).
+    Sanity : l'abeille décolle (nectar réel) et dort l'hiver (dormance OK).
 
-- **② Registre + champs par type + nectar (C/E)** — `PollinatorSpec` data-driven,
-  N `PopulationField` (abeille/syrphe/papillon), ressource = `floraison ×
-  attractivite` (remplace `_flower_grid`). **Golden re-figé MAÎTRISÉ.**
-  Reprise : conception §C, §E.
+## Reste (ordre conseillé ③→④→⑤)
+
 - **③ Butineurs déterministes (F)** — agents, constance florale, dépôt
   `pollen_recu` + snapshot. Golden probablement neutre. §F.
 - **④ Nouaison pollinisée (B)** — `_tick_fruits` lit `pollen_recu`, modes, fin de

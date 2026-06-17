@@ -325,7 +325,10 @@ def _monoculture_grid(eco, tile, plants) -> list[list[float]]:
 
 
 def _flower_grid(eco, tile, plants) -> list[list[float]]:
-    """Fleurs en floraison (ressource du pollinisateur) — plantes matures vivantes."""
+    """SUPPLANTÉ (arc pollinisation ② — voir `_make_nectar_grid`) : proxy
+    historique « fleurs = plantes matures (stade ≥ 2) ». Remplacé par la VRAIE
+    floraison (tronçon ①) pondérée par type. Conservé pour mémoire / repli.
+    Fleurs en floraison (ressource du pollinisateur) — plantes matures vivantes."""
     g = _zero_grid(eco.rows, eco.cols)
     for p in plants:
         if not p.is_alive or p.current_stage < 2:
@@ -373,8 +376,17 @@ def _stability_grid(eco, tile, plants) -> list[list[float]]:
 
 
 def _pollinisateur_habitat_grid(eco, tile, plants) -> list[list[float]]:
-    """Habitat du pollinisateur = rondelle pollinisateur (terme-source uniforme)."""
+    """Habitat du pollinisateur = rondelle pollinisateur (terme-source uniforme).
+    Habitat de l'abeille ET du papillon (arc pollinisation §E.2 ; la ruche §H, hub
+    abeille, viendra en Partie II)."""
     val = min(1.0, tile.get_rondelle_count("pollinisateur") / 3.0)
+    return [[val] * eco.cols for _ in range(eco.rows)]
+
+
+def _auxiliaire_habitat_grid(eco, tile, plants) -> list[list[float]]:
+    """Habitat du syrphe = rondelle auxiliaire (terme-source uniforme), miroir de
+    `_pollinisateur_habitat_grid` (§E.2 : le syrphe niche côté auxiliaires)."""
+    val = min(1.0, tile.get_rondelle_count("auxiliaire") / 3.0)
     return [[val] * eco.cols for _ in range(eco.rows)]
 
 
@@ -438,20 +450,25 @@ def _rav_fruit_signal(eco, tile, plants) -> list[list[float]]:
 
 
 # ---------------------------------------------------------------------------
-# LES 4 INSTANCES (chaîne trophique — CONCEPTION_VIE_MACRO.md §2.2)
+# INSTANCES NON-POLLINISATRICES (chaîne trophique — CONCEPTION_VIE_MACRO.md §2.2)
 # ---------------------------------------------------------------------------
 # Canaux _hash_noise dédiés (décorrélés) par guilde pour les positions sprites.
 _SALT_RAVAGEUR      = 0x2A0001
 _SALT_AUXILIAIRE    = 0x2A1001
-_SALT_POLLINISATEUR = 0x2A2001
+_SALT_POLLINISATEUR = 0x2A2001   # réutilisé par l'abeille (héritière du champ historique)
 _SALT_VERS          = 0x2A3001
+_SALT_SYRPHE        = 0x2A4001
+_SALT_PAPILLON      = 0x2A5001
 
 
 def build_population_specs() -> list[TrophicSpec]:
     """
-    Construit les 4 specs dans l'ORDRE DE TICK (chaîne trophique). Le ravageur
+    Construit les specs NON pollinisatrices dans l'ORDRE DE TICK. Le ravageur
     tick en premier (il lit l'auxiliaire de la semaine PRÉCÉDENTE → décalage),
-    puis l'auxiliaire lit le ravageur fraîchement mis à jour.
+    puis l'auxiliaire lit le ravageur fraîchement mis à jour. Le vers de terre est
+    indépendant. Les pollinisateurs (registre §E) sont ajoutés à part par
+    `build_pollinator_specs` (le conteneur concatène) — ils n'ont ni prédateur ni
+    proie ici, donc leur ordre de tick est golden-neutre.
     """
     return [
         TrophicSpec(
@@ -469,17 +486,130 @@ def build_population_specs() -> list[TrophicSpec]:
             daylen_min=10.0, daylen_full=13.0,   # suit le ravageur (sa proie)
         ),
         TrophicSpec(
-            name="pollinisateur", salt=_SALT_POLLINISATEUR,
-            resource_fn=_flower_grid, habitat_fn=_pollinisateur_habitat_grid,
-            predators=(),
-            daylen_min=12.0, daylen_full=14.5,   # ÉTROITE : seulement les jours longs
-        ),
-        TrophicSpec(
             name="vers_de_terre", salt=_SALT_VERS,
             resource_fn=_soil_food_grid, habitat_fn=_undisturbed_grid,
             predators=(),
             daylen_min=8.5, daylen_full=10.0,    # LARGE : sol tamponné, quasi toute l'année
         ),
+    ]
+
+
+# ---------------------------------------------------------------------------
+# REGISTRE DATA-DRIVEN DES POLLINISATEURS (arc pollinisation §C/§E)
+# ---------------------------------------------------------------------------
+# Le champ unique `pollinisateur` (proxy `_flower_grid`, stade ≥ 2) est REMPLACÉ
+# par N champs PAR TYPE. Chaque type est déclaré par DONNÉE (`PollinatorSpec`) :
+# sa ressource = nectar = Σ_plantes (floraison × préférence_florale[famille]) —
+# la VRAIE floraison (tronçon ①) pondérée par le type (§C.1). Ajouter un type
+# (bourdon, abeille solitaire…) = ajouter une entrée, sans recoder le mécanisme.
+# La densité TOTALE (somme des types) est ce que lisent `pollinator_reach`
+# (brassage) et la Vigueur macro — cf. EcoFields.pollinator_density.
+POLLINATOR_NAMES = ("abeille", "syrphe", "papillon")
+
+# Préférences florales PAR TYPE (placeholders, calibrage post-test §E.2). Familles
+# absentes → `_ATTRACT_DEFAUT`. Anémophiles (Poaceae/Fagaceae/Juglandaceae) ≈ 0.
+_ATTRACT_DEFAUT  = 0.30   # fleur « générique » d'une famille non cataloguée
+_ATTRACT_ABEILLE = {      # mellifères profondes / nectarifères
+    "Lamiaceae": 1.0, "Boraginaceae": 1.0, "Fabaceae": 0.85, "Rosaceae": 0.80,
+    "Asteraceae": 0.60, "Brassicaceae": 0.50, "Solanaceae": 0.40,
+    "Poaceae": 0.0, "Fagaceae": 0.10, "Juglandaceae": 0.10,
+}
+_ATTRACT_SYRPHE = {       # fleurs ouvertes (composées, ombellifères)
+    "Asteraceae": 1.0, "Brassicaceae": 0.90, "Boraginaceae": 0.60, "Rosaceae": 0.60,
+    "Lamiaceae": 0.40, "Fabaceae": 0.30, "Solanaceae": 0.30,
+    "Poaceae": 0.0, "Fagaceae": 0.0, "Juglandaceae": 0.0,
+}
+_ATTRACT_PAPILLON = {     # fleurs tubulaires / composées riches en nectar
+    "Lamiaceae": 1.0, "Asteraceae": 0.90, "Boraginaceae": 0.70, "Fabaceae": 0.50,
+    "Rosaceae": 0.40, "Brassicaceae": 0.30, "Solanaceae": 0.30,
+    "Poaceae": 0.0, "Fagaceae": 0.0, "Juglandaceae": 0.0,
+}
+
+
+@dataclass(frozen=True)
+class PollinatorSpec:
+    """Type de pollinisateur, déclaré PAR DONNÉE (§E.1). Le `PopulationField`
+    générique le ticke comme une guilde ordinaire : on n'expose ici que ce qui
+    DIFFÈRE d'une guilde trophique.
+
+      - attractivite        : préférence florale PAR FAMILLE botanique (le nectar
+                              perçu par CE type) ; alimente la resource_fn (§C.1).
+      - attractivite_defaut : préférence d'une famille non listée (fleur générique).
+      - habitat_fn          : terme-source d'habitat (rondelle dédiée).
+      - daylen_min/full     : fenêtre d'activité photopériodique (porte des guildes).
+
+    Champs FUTURS (hors ②, ajoutés à leur tronçon) : `bridge` (pont larvaire §D,
+    tronçon ⑤) et `forager` (agents butineurs §F, tronçon ③).
+    """
+    name: str
+    salt: int
+    attractivite: dict
+    attractivite_defaut: float
+    habitat_fn: Callable
+    daylen_min: float
+    daylen_full: float
+
+
+def _make_nectar_grid(attractivite: dict, defaut: float) -> Callable:
+    """Fabrique la resource_fn d'un type de pollinisateur (§C.1) : nectar perçu =
+    Σ_plantes vivantes en floraison (floraison × préférence[famille]) réparti sur
+    l'empreinte canopée, normalisé par FLOWER_REF. REMPLACE `_flower_grid` : la
+    ressource suit la VRAIE floraison (①) au lieu du proxy stade ≥ 2.
+
+    Invariant golden : floraison = 0 partout (aucune plante en fleur) ⇒ grille
+    nulle ⇒ champ pollinisateur nul (comme une absence de fleur)."""
+    def _grid(eco, tile, plants) -> list[list[float]]:
+        g = _zero_grid(eco.rows, eco.cols)
+        for p in plants:
+            if not p.is_alive or p.floraison <= 0.0:
+                continue
+            w = p.floraison * attractivite.get(p.plant_class.family, defaut)
+            if w <= 0.0:
+                continue
+            for (r, c) in p.foliar_plots:
+                if 0 <= r < eco.rows and 0 <= c < eco.cols:
+                    g[r][c] += w
+        for r in range(eco.rows):
+            for c in range(eco.cols):
+                g[r][c] = min(1.0, g[r][c] / FLOWER_REF)
+        return g
+    return _grid
+
+
+def build_pollinator_specs() -> list[TrophicSpec]:
+    """Registre §E → TrophicSpec prêts pour le `PopulationField` générique. Trois
+    types au démarrage (abeille/syrphe/papillon, §E.2), extensible par données.
+    Ressource = nectar (floraison × attractivite), habitat = rondelle dédiée, ni
+    prédateur ni signal fruit. Les fenêtres photopériodiques diffèrent par type
+    (l'abeille large, le syrphe précoce, le papillon estival) — placeholders §E.2."""
+    registre = [
+        PollinatorSpec(
+            name="abeille", salt=_SALT_POLLINISATEUR,
+            attractivite=_ATTRACT_ABEILLE, attractivite_defaut=_ATTRACT_DEFAUT,
+            habitat_fn=_pollinisateur_habitat_grid,
+            daylen_min=11.5, daylen_full=14.0,   # été LARGE
+        ),
+        PollinatorSpec(
+            name="syrphe", salt=_SALT_SYRPHE,
+            attractivite=_ATTRACT_SYRPHE, attractivite_defaut=_ATTRACT_DEFAUT,
+            habitat_fn=_auxiliaire_habitat_grid,
+            daylen_min=10.5, daylen_full=13.0,   # printemps → été (précoce)
+        ),
+        PollinatorSpec(
+            name="papillon", salt=_SALT_PAPILLON,
+            attractivite=_ATTRACT_PAPILLON, attractivite_defaut=_ATTRACT_DEFAUT,
+            habitat_fn=_pollinisateur_habitat_grid,
+            daylen_min=12.5, daylen_full=14.5,   # été
+        ),
+    ]
+    return [
+        TrophicSpec(
+            name=ps.name, salt=ps.salt,
+            resource_fn=_make_nectar_grid(ps.attractivite, ps.attractivite_defaut),
+            habitat_fn=ps.habitat_fn, predators=(),
+            daylen_min=ps.daylen_min, daylen_full=ps.daylen_full,
+        )
+        for ps in registre
     ]
 
 

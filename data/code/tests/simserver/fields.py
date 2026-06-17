@@ -10,7 +10,7 @@ from .harness import check, ServerProc
 
 def test_champs_debug():
     print("[champs debug]")
-    GUILDES = {"ravageur", "auxiliaire", "pollinisateur", "vers_de_terre"}
+    GUILDES = {"ravageur", "auxiliaire", "abeille", "syrphe", "papillon", "vers_de_terre"}
     s11 = ServerProc()
     r = s11.send(cmd="fields")
     check("fields avant init → ok:false", r.get("ok") is False)
@@ -21,7 +21,7 @@ def test_champs_debug():
           {"microbiome", "humidite", "fertilite", "lumiere",
            "temperature", "disturbance"} <= set(noms),
           f"n={len(noms)}")
-    check("registre : les 4 guildes présentes", GUILDES <= set(noms))
+    check("registre : les 6 guildes présentes", GUILDES <= set(noms))
     check("registre : aucun doublon", len(noms) == len(set(noms)))
 
     rows_cols = {t["id"]: (t["rows"], t["cols"]) for t in rw["world"]["tiles"]}

@@ -165,7 +165,7 @@ def test_integre_pourri_plus_de_ravageur_que_frais():
 
 def _digest(eco):
     out = []
-    for g in ("ravageur", "auxiliaire", "pollinisateur", "vers_de_terre"):
+    for g in ("ravageur", "auxiliaire", "abeille", "syrphe", "papillon", "vers_de_terre"):
         f = eco.populations[g]
         for r in range(f.rows):
             out.append(" ".join(f"{f.at_plot(r, c):.9f}" for c in range(f.cols)))

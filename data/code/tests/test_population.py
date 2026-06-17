@@ -29,7 +29,7 @@ from sim.engine import Engine
 N_WEEKS = 60
 SEED = 0x5AB1057E
 HASH_FILE = os.path.join(os.path.dirname(__file__), "population_hash.txt")
-GUILDS = ("ravageur", "auxiliaire", "pollinisateur", "vers_de_terre")
+GUILDS = ("ravageur", "auxiliaire", "abeille", "syrphe", "papillon", "vers_de_terre")
 
 
 def build_world():
@@ -124,10 +124,12 @@ def _run_trace(n_weeks=110):
 
 
 def test_saisonnalite_dormance_reveil():
-    """Les guildes PHOTOSENSIBLES (ravageur/auxiliaire/pollinisateur) décollent
-    en saison et S'ÉTEIGNENT en plein hiver (dormance, plus de traîne)."""
+    """Les guildes PHOTOSENSIBLES (ravageur/auxiliaire/abeille) décollent en
+    saison et S'ÉTEIGNENT en plein hiver (dormance, plus de traîne). L'abeille
+    représente les pollinisateurs : sa ressource = nectar (floraison × attractivite,
+    ②) — elle ne décolle que si le jardin fleurit pour de vrai."""
     res = _run_trace()
-    for g in ("ravageur", "auxiliaire", "pollinisateur"):
+    for g in ("ravageur", "auxiliaire", "abeille"):
         peak, hiv = res[g]
         assert peak > 0.05, f"{g} ne décolle jamais (pic {peak:.3f})"
         assert hiv < 0.02, f"{g} grouille encore en hiver (max {hiv:.3f})"

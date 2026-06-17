@@ -16,7 +16,8 @@ from dataclasses import dataclass, field
 from fields.grids import GridField, DisturbanceField
 from fields.light import LightField
 from fields.seedbank import SeedBank
-from fields.population import PopulationField, build_population_specs
+from fields.population import (PopulationField, build_population_specs,
+                               build_pollinator_specs, POLLINATOR_NAMES)
 from .constants import *          # constantes de calibration écologique
 from .litiere import *            # Parcelle, Structure, STRUCTURE_ACCEPTE, MATUR_*…
 from .litiere import _fusion_parcelle, _lisser_ages   # helpers privés (hors import *)
@@ -42,9 +43,11 @@ class EcoFields:
     disturbance:      DisturbanceField = field(default=None)
     seed_bank:        SeedBank = field(default=None)
     temperature:      GridField = field(default=None)   # °C ambiant (météo 02)
-    # Vie macroscopique observable (D31.1) — 4 champs de population déterministes
-    # (ravageur, auxiliaire, pollinisateur, vers_de_terre). CALCULÉS mais PAS
-    # encore lus par la santé/les services → golden INTACT (le câblage est D31.2).
+    # Vie macroscopique observable (D31.1) — champs de population déterministes :
+    # ravageur, auxiliaire, vers_de_terre + N pollinisateurs PAR TYPE (abeille,
+    # syrphe, papillon — registre §E, arc pollinisation ②, remplacent l'ancien
+    # champ agrégé `pollinisateur`). Lus par pollinator_reach (brassage, D31.2) et
+    # la Vigueur macro via `pollinator_density`.
     populations:      dict = field(default=None)
 
     def __post_init__(self):
@@ -79,9 +82,12 @@ class EcoFields:
                                          initial=T_AMBIENT_INIT,
                                          max_val=TEMP_MAX, min_val=TEMP_MIN)
         if self.populations is None:
+            # Guildes trophiques PUIS pollinisateurs par type (registre §E). Les
+            # pollinisateurs sont sans prédateur/proie → leur ordre est neutre.
+            specs = build_population_specs() + build_pollinator_specs()
             self.populations = {
                 spec.name: PopulationField(spec, self.rows, self.cols)
-                for spec in build_population_specs()
+                for spec in specs
             }
         # Ordre de tick = ordre trophique (ravageur d'abord ; cf. build_population_specs).
         self._population_order = list(self.populations.keys())
@@ -215,6 +221,14 @@ class EcoFields:
                                for p in popfield.spec.predators
                                if p in self.populations]
             popfield.tick(self, tile, plants, predator_fields, week_in_year)
+
+    def pollinator_density(self, r: int, c: int) -> float:
+        """Densité pollinisatrice TOTALE en un plot = somme des champs par type
+        (abeille + syrphe + papillon, §C/§E). Remplace l'ancien champ agrégé unique
+        `pollinisateur` ; lue par `pollinator_reach` (brassage génétique) et la
+        Vigueur macro. Bornée par la somme, non re-clampée (les lecteurs saturent)."""
+        return sum(self.populations[n].at_plot(r, c)
+                   for n in POLLINATOR_NAMES if n in self.populations)
 
     # --- Banque de graines ---
 

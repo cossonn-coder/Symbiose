@@ -66,7 +66,9 @@ def pollinator_reach(mother, tile, eco) -> float:
     if cls.pollination_mode != "insect":
         return cls.pollination_radius_cm
     r, c = mother.position
-    dens = eco.populations["pollinisateur"].at_plot(r, c) if eco else 0.0
+    # Densité pollinisatrice TOTALE = somme des types (abeille/syrphe/papillon,
+    # arc pollinisation §C/§E ; remplace l'ancien champ agrégé `pollinisateur`).
+    dens = eco.pollinator_density(r, c) if eco else 0.0
     sat = min(1.0, dens / POLLINATOR_SAT)
     return cls.pollination_radius_cm * (INSECT_BASE_REACH + INSECT_FULL_BONUS * sat)
 

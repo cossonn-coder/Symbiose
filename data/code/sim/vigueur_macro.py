@@ -30,7 +30,7 @@ gain signé de « manger un individu » reste en dette D19.
 """
 from __future__ import annotations
 
-from fields.population import POP_MAX
+from fields.population import POP_MAX, POLLINATOR_NAMES
 
 
 def densite(field, r: int, c: int) -> float:
@@ -66,8 +66,12 @@ def vigueur_auxiliaire(r: int, c: int, eco) -> float:
 
 
 def vigueur_pollinisateur(r: int, c: int, eco) -> float:
-    """Vitalité de la population POLLINISATEUR locale — ressource = fleurs (§4)."""
-    return _vigueur_pop(eco.populations["pollinisateur"], r, c)
+    """Vitalité POLLINISATRICE locale — somme des types (abeille/syrphe/papillon,
+    arc pollinisation §C/§E ; ressource = nectar = floraison × attractivite).
+    Bornée [0, 1] (la somme des types peut dépasser 1 sur un plot très fleuri)."""
+    v = sum(_vigueur_pop(eco.populations[n], r, c)
+            for n in POLLINATOR_NAMES if n in eco.populations)
+    return min(1.0, v)
 
 
 def vigueur_ver(r: int, c: int, eco) -> float:

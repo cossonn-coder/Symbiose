@@ -131,9 +131,14 @@ class _FakeField:
 
 
 class _FakeEco:
-    """Eco minimal : seule la densité du champ pollinisateur compte ici (D31.2)."""
+    """Eco minimal : seule la densité pollinisatrice TOTALE compte ici (D31.2).
+    Depuis l'arc pollinisation ②, pollinator_reach lit `eco.pollinator_density`
+    (somme des types abeille/syrphe/papillon) au lieu d'un champ agrégé unique."""
     def __init__(self, pollinisateur_density=0.0):
-        self.populations = {"pollinisateur": _FakeField(pollinisateur_density)}
+        self._dens = pollinisateur_density
+
+    def pollinator_density(self, r, c):
+        return self._dens
 
 
 def test_brassage_pollinisation():
