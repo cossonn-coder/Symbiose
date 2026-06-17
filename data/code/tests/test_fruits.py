@@ -5,21 +5,29 @@ Tests ciblés des organes-fruits traçables (décompo·compost ③, absorbe D19)
 Un fruit cesse d'être un PROXY DE RENDU saisonnier : il devient un ÉTAT MOTEUR
 réel (engine._tick_fruits) — il naît à la nouaison, mûrit, se mange UN par UN
 (actions.manger ciblé → déplétion) et tombe en litière `fruit` s'il n'est pas
-cueilli (cascade fertilité). Hors golden : on force l'âge et la structure pour
-exercer le cycle complet en quelques ticks (le golden, lui, reste NEUTRE car
-AppleTree fructifie à maturity_years=5 > sa fenêtre de 2 ans).
+cueilli (cascade fertilité). Hors golden : on force l'âge, la structure et la
+`floraison` pour exercer le cycle complet en quelques ticks (le golden, lui,
+reste NEUTRE car AppleTree fructifie à maturity_years=5 > sa fenêtre de 2 ans,
+donc ne fleurit jamais dans le golden).
+
+Nouaison POLLINISÉE (tronçon ④, §B) : la nouaison ne se déclenche plus à une
+semaine fixe (FRUIT_NOUAISON_WEEK), mais EN FIN DE FLORAISON, par plante — quand
+sa `floraison` retombe après avoir culminé. La fraction de sites qui nouent
+dépend du MODE : `insect` lit la dose `pollen_recu` (g(), sans plancher),
+`self`/`wind` nouent pleinement.
 
 Couvre :
-  1. Nouaison : à FRUIT_NOUAISON_WEEK, une espèce `fruitier` mûre pose un fruit
-     vert (maturité ≈ 0) par site reproducteur (`organ_sites`).
+  1. Nouaison : en fin de floraison, une fruitière mûre pose des fruits verts
+     (maturité ≈ 0) sur ses sites reproducteurs (`organ_sites`).
   2. Gate d'âge : sous `maturity_years`, AUCUN fruit (→ neutralité golden).
-  3. Annualité : la nouaison ne se déclenche QU'à FRUIT_NOUAISON_WEEK ; une
-     nouvelle cohorte fait chuter l'ancienne en litière.
+  3. Cohorte annuelle : une nouvelle nouaison fait chuter l'ancienne en litière.
   4. Maturation : `maturite += FRUIT_DMAT` à chaque tick.
   5. Chute : un fruit sur-mûr (> MATURITE_CHUTE) tombe → litière `fruit`.
   6. Déterminisme : deux runs identiques → fruits identiques (zéro RNG).
-  7. manger ciblé : gain ∝ maturité du fruit visé, l'organe DISPARAÎT (D19).
-  8. manger générique : sans `fruit_index` (ou index hors-borne) → façade
+  7. Modes de pollinisation : `insect` sans pollen → 0 fruit (sans plancher) ;
+     dose forte → nouaison ≈ pleine ; `self` → pleine sans pollen.
+  8. manger ciblé : gain ∝ maturité du fruit visé, l'organe DISPARAÎT (D19).
+  9. manger générique : sans `fruit_index` (ou index hors-borne) → façade
      plante entière (chemin legacy, tests vigueur D1-D4 préservés).
 
 Usage (depuis data/code/) :
@@ -31,7 +39,8 @@ from world import Tile
 from plants import AppleTree, Fruit, organ_sites
 from plants.base import Segment
 from fields import init_eco, FRUIT_MASSE, FRUIT_DMAT, MATURITE_CHUTE
-from sim.engine import Engine, FRUIT_NOUAISON_WEEK
+from sim.engine import Engine
+from sim.engine.decompo import frac_nouaison
 from sim import actions as ACT
 from sim import vigueur as V
 from sim.vigueur_plante import vigueur_plante
@@ -73,14 +82,26 @@ def _litiere_fruit(eco, r, c):
     return sum(p.masse for p in eco.litiere[r][c] if p.tissu == "fruit")
 
 
+def _nouer(eng, tile, eco, plant, pollen=100.0, w=1):
+    """Force une nouaison « en fin de floraison » : pleine floraison (arme
+    `a_fleuri`) puis fanaison (déclenche la nouaison). `pollen` alimente la dose
+    entomophile (insect → frac=g(pollen)). Le 2e pas mûrit la cohorte d'un cran
+    (maturité ≈ FRUIT_DMAT), comme l'ancienne nouaison à pas unique."""
+    plant.floraison = 1.0
+    eng._tick_fruits(tile, eco, w)         # arme a_fleuri (pleine floraison)
+    plant.floraison = 0.0
+    plant.pollen_recu = pollen
+    eng._tick_fruits(tile, eco, w)         # floraison fanée → nouaison
+
+
 # ---------------------------------------------------------------------------
 # 1. Nouaison
 # ---------------------------------------------------------------------------
 def test_nouaison():
-    print("\n[1] nouaison : un fruit vert par site reproducteur à FRUIT_NOUAISON_WEEK")
+    print("\n[1] nouaison : fruits verts par site reproducteur en fin de floraison")
     gs, tile, eco, apple, eng = _monde(age_years=6.0, n_apex=3)
     attendu = len(organ_sites(apple))   # lateral : 3 apex → meneur retiré → 2
-    eng._tick_fruits(tile, eco, FRUIT_NOUAISON_WEEK)
+    _nouer(eng, tile, eco, apple)       # dose forte → frac≈1 → tous les sites
     check("nombre de fruits = nombre de sites", len(apple.fruits) == attendu,
           f"{len(apple.fruits)} fruits / {attendu} sites")
     check("fruits verts (mûris d'un seul pas)",
@@ -96,30 +117,31 @@ def test_nouaison():
 def test_gate_age():
     print("\n[2] gate d'âge : sous maturity_years, AUCUNE nouaison (→ golden NEUTRE)")
     gs, tile, eco, apple, eng = _monde(age_years=1.0, n_apex=3)  # < maturity_years=5
-    eng._tick_fruits(tile, eco, FRUIT_NOUAISON_WEEK)
+    _nouer(eng, tile, eco, apple)
     check("jeune arbre : zéro fruit", apple.fruits == [],
           f"age={apple.age_years} maturity_years={AppleTree.maturity_years}")
     apple.age_years = 6.0
-    eng._tick_fruits(tile, eco, FRUIT_NOUAISON_WEEK)
+    _nouer(eng, tile, eco, apple)
     check("arbre mûr : fruits posés", len(apple.fruits) > 0)
 
 
 # ---------------------------------------------------------------------------
-# 3. Annualité (rendez-vous fixe + remplacement de cohorte)
+# 3. Cohorte annuelle (remplacement de cohorte)
 # ---------------------------------------------------------------------------
-def test_annualite():
-    print("\n[3] annualité : nouaison QUE à FRUIT_NOUAISON_WEEK ; nouvelle cohorte → chute de l'ancienne")
+def test_cohorte():
+    print("\n[3] cohorte : floraison sans fanaison ne noue pas ; nouvelle cohorte → chute de l'ancienne")
     gs, tile, eco, apple, eng = _monde(age_years=6.0, n_apex=3)
-    # Une semaine ordinaire ne noue rien.
-    eng._tick_fruits(tile, eco, FRUIT_NOUAISON_WEEK + 1)
-    check("hors nouaison : aucun fruit créé", apple.fruits == [])
-    # Nouaison année 1.
-    eng._tick_fruits(tile, eco, FRUIT_NOUAISON_WEEK)
+    # Pleine floraison SANS fanaison ne noue rien (front descendant requis).
+    apple.floraison = 1.0
+    eng._tick_fruits(tile, eco, 1)
+    check("floraison sans fanaison : aucun fruit créé", apple.fruits == [])
+    # Nouaison année 1 (fin de floraison).
+    _nouer(eng, tile, eco, apple)
     n1 = len(apple.fruits)
     check("nouaison année 1", n1 > 0)
     # Nouaison année 2 : l'ancienne cohorte (non récoltée) chute en litière.
     avant = _litiere_fruit(eco, 3, 3)
-    eng._tick_fruits(tile, eco, FRUIT_NOUAISON_WEEK)
+    _nouer(eng, tile, eco, apple)
     apres = _litiere_fruit(eco, 3, 3)
     check("cohorte précédente versée en litière `fruit`", apres > avant,
           f"litière {avant:.3f} → {apres:.3f}")
@@ -133,9 +155,9 @@ def test_annualite():
 def test_maturation():
     print("\n[4] maturation : maturité += FRUIT_DMAT par tick ordinaire")
     gs, tile, eco, apple, eng = _monde(age_years=6.0, n_apex=1)
-    eng._tick_fruits(tile, eco, FRUIT_NOUAISON_WEEK)   # nouaison (1er pas)
+    _nouer(eng, tile, eco, apple)        # nouaison (cohorte verte, +1 pas)
     m0 = apple.fruits[0].maturite
-    eng._tick_fruits(tile, eco, FRUIT_NOUAISON_WEEK + 1)  # tick ordinaire
+    eng._tick_fruits(tile, eco, 2)       # tick ordinaire (floraison=0, a_fleuri faux)
     m1 = apple.fruits[0].maturite
     check("la maturité augmente d'un pas", abs((m1 - m0) - FRUIT_DMAT) < 1e-9,
           f"{m0:.3f} → {m1:.3f} (+{FRUIT_DMAT})")
@@ -150,7 +172,7 @@ def test_chute():
     # Fruit posé juste SOUS le seuil ; un pas le pousse au-delà → chute.
     apple.fruits = [Fruit(0, MATURITE_CHUTE - FRUIT_DMAT / 2, FRUIT_MASSE)]
     avant = _litiere_fruit(eco, 3, 3)
-    eng._tick_fruits(tile, eco, FRUIT_NOUAISON_WEEK + 1)
+    eng._tick_fruits(tile, eco, 1)
     apres = _litiere_fruit(eco, 3, 3)
     check("le fruit a quitté la plante", apple.fruits == [])
     check("masse déposée en litière `fruit`",
@@ -164,9 +186,10 @@ def test_determinisme():
     print("\n[6] déterminisme : deux runs identiques → fruits identiques (zéro RNG)")
     def run():
         gs, tile, eco, apple, eng = _monde(age_years=6.0, n_apex=4)
+        _nouer(eng, tile, eco, apple)        # nouaison déterministe
         traj = []
-        for w in range(FRUIT_NOUAISON_WEEK, FRUIT_NOUAISON_WEEK + 8):
-            eng._tick_fruits(tile, eco, w)
+        for w in range(8):
+            eng._tick_fruits(tile, eco, w)   # maturation ordinaire
             traj.append(tuple(round(f.maturite, 6) for f in apple.fruits))
         return traj
     a, b = run(), run()
@@ -175,10 +198,38 @@ def test_determinisme():
 
 
 # ---------------------------------------------------------------------------
+# 7. Modes de pollinisation (§B.2 : insect lit la dose SANS plancher ; self plein)
+# ---------------------------------------------------------------------------
+def test_modes():
+    print("\n[7] modes : insect sans pollen → 0 fruit ; dose forte → plein ; self → plein sans pollen")
+    # insect, dose nulle → aucun fruit (sans plancher = pression écologique).
+    gs, tile, eco, apple, eng = _monde(age_years=6.0, n_apex=3)
+    _nouer(eng, tile, eco, apple, pollen=0.0)
+    check("insect sans pollen : 0 fruit (sans plancher)", apple.fruits == [],
+          f"frac(0)={frac_nouaison(0.0):.3f}")
+    # insect, dose forte → nouaison ≈ pleine.
+    gs, tile, eco, apple, eng = _monde(age_years=6.0, n_apex=3)
+    plein = len(organ_sites(apple))
+    _nouer(eng, tile, eco, apple, pollen=100.0)
+    check("insect dose forte : nouaison ≈ pleine", len(apple.fruits) == plein,
+          f"{len(apple.fruits)}/{plein} (frac(100)={frac_nouaison(100.0):.3f})")
+    # self : nouaison pleine MÊME sans pollen (court-circuite la dose).
+    gs, tile, eco, apple, eng = _monde(age_years=6.0, n_apex=3)
+    mode_orig = AppleTree.pollination_mode
+    try:
+        AppleTree.pollination_mode = "self"
+        _nouer(eng, tile, eco, apple, pollen=0.0)
+        check("self sans pollen : nouaison pleine", len(apple.fruits) == plein,
+              f"{len(apple.fruits)}/{plein}")
+    finally:
+        AppleTree.pollination_mode = mode_orig
+
+
+# ---------------------------------------------------------------------------
 # 7. manger ciblé (gain ∝ maturité, déplétion réelle D19)
 # ---------------------------------------------------------------------------
 def test_manger_cible():
-    print("\n[7] manger ciblé : gain ∝ maturité du fruit visé, l'organe DISPARAÎT")
+    print("\n[8] manger ciblé : gain ∝ maturité du fruit visé, l'organe DISPARAÎT")
     gs, tile, eco, apple, eng = _monde(age_years=6.0, n_apex=1)
     apple.fruits = [Fruit(0, 0.3, FRUIT_MASSE), Fruit(0, 0.9, FRUIT_MASSE)]
     g_vert = ACT.manger(gs, "joueur_1", apple, eco, fruit_index=0)
@@ -197,7 +248,7 @@ def test_manger_cible():
 # 8. manger générique (fallback legacy — D1-D4 vigueur préservés)
 # ---------------------------------------------------------------------------
 def test_manger_generique():
-    print("\n[8] manger générique : sans index (ou hors-borne) → façade plante entière")
+    print("\n[9] manger générique : sans index (ou hors-borne) → façade plante entière")
     gs, tile, eco, apple, eng = _monde(age_years=6.0, n_apex=1)
     apple.fruits = [Fruit(0, 0.5, FRUIT_MASSE)]
     attendu = ACT.HARVEST_GAIN_FULL * vigueur_plante(apple, eco)
@@ -212,10 +263,11 @@ def test_manger_generique():
 def main():
     test_nouaison()
     test_gate_age()
-    test_annualite()
+    test_cohorte()
     test_maturation()
     test_chute()
     test_determinisme()
+    test_modes()
     test_manger_cible()
     test_manger_generique()
 

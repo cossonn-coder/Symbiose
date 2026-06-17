@@ -264,10 +264,11 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
                 alog = self._abscission(tile, eco)
                 if alog: log += alog
 
-            # 15c. Organes-fruits (③) — nouaison annuelle + maturation + chute des
-            # sur-mûrs → litière `fruit`. Gate fruitier+âge à l'intérieur (golden
-            # NEUTRE hors maturité) ; appelé chaque semaine (la nouaison se borne
-            # elle-même à FRUIT_NOUAISON_WEEK).
+            # 15c. Organes-fruits (③ + nouaison pollinisée ④) — nouaison EN FIN DE
+            # FLORAISON par plante (lit `floraison` + `pollen_recu` + mode) +
+            # maturation + chute des sur-mûrs → litière `fruit`. Gate fruitier+âge+
+            # floraison à l'intérieur (golden NEUTRE hors maturité/floraison) ;
+            # appelé chaque semaine (le front de floraison est détecté par plante).
             flog = self._tick_fruits(tile, eco, week_in_year)
             if flog: log += flog
 

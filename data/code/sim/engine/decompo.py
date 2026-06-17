@@ -13,7 +13,25 @@ from __future__ import annotations
 from plants import Fruit, organ_sites
 from fields import (T_SECHE, FRAG_RATE, NECROMASS_PER_CM, ABSCISSION_FRAC,
                     FRUIT_MASSE, FRUIT_DMAT, MATURITE_CHUTE)
-from .calendrier import FRUIT_NOUAISON_WEEK
+
+# Nouaison « en fin de floraison, par plante » (arc pollinisation ④ — §B.2).
+# `floraison` (état floral ∈[0,1], écrit par engine._tick_floraison) monte vers 1
+# pendant la fenêtre de floraison puis retombe vers 0 (fanaison). On arme la
+# plante quand elle dépasse SEUIL_FLEURI (« en fleurs »), on NOUE quand elle
+# repasse sous SEUIL_NOUAISON (« fleurs fanées »). Knobs de calibrage (post-test).
+SEUIL_FLEURI   = 0.5
+SEUIL_NOUAISON = 0.2
+# Demi-saturation de la rampe douce g(pollen_recu) = pollen / (pollen + POLLEN_DEMI)
+# ∈ [0,1[ (Monod) : dose faible → quelques fruits, dose forte → nouaison ≈ pleine,
+# JAMAIS de plancher (0 pollen → 0 fruit). Knob de calibrage (post-test, §B.2).
+POLLEN_DEMI    = 2.0
+
+
+def frac_nouaison(pollen_recu: float) -> float:
+    """g(pollen_recu) : fraction de sites qui nouent, rampe douce saturante
+    (Monod). Sans plancher (pollen=0 → 0) → un fruitier entomophile sans
+    butineur ne fait pas de fruit (pression écologique assumée, §B.2)."""
+    return pollen_recu / (pollen_recu + POLLEN_DEMI)
 
 
 class DecompoMixin:
@@ -72,22 +90,31 @@ class DecompoMixin:
         return log
 
     def _tick_fruits(self, tile, eco, week_in_year):
-        """Organes-fruits traçables (décompo·compost ③, absorbe D19). Donne aux
-        fruits un VRAI état moteur (≠ proxy de rendu). Trois temps :
-          1. Nouaison annuelle (semaine FRUIT_NOUAISON_WEEK) pour les espèces
-             `fruitier` parvenues à `maturity_years` : on installe un fruit vert
-             (maturité 0) à chaque site reproducteur (`organ_sites`, borné à
-             MAX_ORGANS). Les fruits non récoltés de l'an passé chutent d'abord
-             en litière `fruit` (on ne ré-empile pas une cohorte sur l'autre).
+        """Organes-fruits traçables (décompo·compost ③, absorbe D19 ; nouaison
+        POLLINISÉE ④ — §B). Donne aux fruits un VRAI état moteur (≠ proxy de
+        rendu). Trois temps :
+          1. Nouaison EN FIN DE FLORAISON, par plante (remplace le rendez-vous
+             global FRUIT_NOUAISON_WEEK) : une fruitière mûre s'arme quand sa
+             `floraison` dépasse SEUIL_FLEURI puis NOUE quand sa floraison
+             retombe sous SEUIL_NOUAISON (fleurs fanées). La fraction de sites
+             qui nouent dépend du MODE de pollinisation : `self`/`wind` court-
+             circuitent (frac=1, nouaison pleine sans insectes) ; `insect` lit la
+             dose `pollen_recu` déposée par les butineurs (§F) via g() — SANS
+             plancher (0 butineur → 0 fruit, §B.2). On pose un fruit vert
+             (maturité 0) sur les `round(frac × |sites|)` premiers sites
+             reproducteurs (`organ_sites`, borné MAX_ORGANS) ; `pollen_recu` est
+             remis à 0 (cohorte suivante repart de zéro). Les fruits non récoltés
+             de l'an passé chutent d'abord en litière `fruit`.
           2. Maturation hebdomadaire : `maturite += FRUIT_DMAT`.
           3. Chute (§2.4) : un fruit dont la maturité dépasse MATURITE_CHUTE est
              sur-mûr → tombe en litière `fruit` (déclenche la cascade fertilité).
 
         Le geste `manger` ciblé (sim.actions, D19) retire un fruit précis hors de
-        ce pas. Déterministe : gate annuel fixe (pas de RNG), `organ_sites` itère
-        en ordre trié, itération en ordre `tile.plants`. NEUTRE pour le golden
-        tant qu'aucune espèce `fruitier` n'atteint `maturity_years` dans la
-        fenêtre (AppleTree : maturity_years=5 > 2 ans simulés)."""
+        ce pas. Déterministe : `floraison`/`pollen_recu`/`organ_sites` dérivent de
+        la météo pure et des butineurs déterministes (zéro RNG), itération en
+        ordre `tile.plants`. NEUTRE pour le golden tant qu'aucune espèce
+        `fruitier` mûre ne fleurit dans la fenêtre (tomate : meurt w2-3 ;
+        AppleTree : maturity_years=5 > 2 ans simulés → floraison nulle)."""
         log = []
         for plant in tile.plants:
             if not plant.is_alive:
@@ -96,17 +123,26 @@ class DecompoMixin:
             if not getattr(cls, "fruitier", False):
                 continue
             r, c = plant.position
-            # 1. Nouaison annuelle (gate âge inclus → golden NEUTRE hors maturité).
-            if (week_in_year == FRUIT_NOUAISON_WEEK
+            # 1. Armement à la pleine floraison, nouaison à la fanaison (par plante).
+            if plant.floraison >= SEUIL_FLEURI:
+                plant.a_fleuri = True
+            if (plant.a_fleuri and plant.floraison < SEUIL_NOUAISON
                     and plant.age_years >= cls.maturity_years):
                 for f in plant.fruits:          # cohorte précédente non récoltée
                     eco.deposer_litiere(r, c, "fruit", f.masse)
+                # Fraction nouée selon le mode (philo #2 : flux de pollinisation →
+                # contrainte → fruits ; self/wind nouent toujours pleinement).
+                frac = (frac_nouaison(plant.pollen_recu)
+                        if cls.pollination_mode == "insect" else 1.0)
                 sites = organ_sites(plant)
+                n = round(frac * len(sites))
                 plant.fruits = [Fruit(seg_id, 0.0, FRUIT_MASSE)
-                                for seg_id, _pos in sites]
+                                for seg_id, _pos in sites[:n]]
+                plant.a_fleuri = False          # cohorte posée → ré-armée l'an prochain
+                plant.pollen_recu = 0.0         # nouvelle cohorte repart de zéro (§B.1)
                 if plant.fruits:
                     log.append(f"    🍎 Nouaison {plant.name}@{plant.position} "
-                               f"→ {len(plant.fruits)} fruits")
+                               f"→ {len(plant.fruits)} fruits (frac {frac:.2f})")
             # 2-3. Maturation + chute des sur-mûrs.
             if plant.fruits:
                 survivors = []

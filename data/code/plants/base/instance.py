@@ -80,6 +80,13 @@ class PlantInstance:
     # lu par PERSONNE à ce tronçon (la nouaison §B le lira au tronçon ④, et le
     # remettra à 0 à la nouaison). Hors `_PLANT_ATTRS` du golden → golden NEUTRE.
     pollen_recu: float = 0.0
+    # Front de floraison pour la nouaison « en fin de floraison, par plante »
+    # (arc pollinisation, tronçon ④ — §B.2). Passe à True quand `floraison`
+    # franchit le seuil de pleine floraison ; la nouaison (engine._tick_fruits)
+    # la consomme (→ False) quand `floraison` retombe (fleurs fanées), ce qui
+    # arme la cohorte suivante. Remplace le rendez-vous global FRUIT_NOUAISON_WEEK.
+    # Hors `_PLANT_ATTRS` du golden → golden NEUTRE.
+    a_fleuri: bool = False
 
     def __post_init__(self):
         if self.x_cm is None or self.y_cm is None:

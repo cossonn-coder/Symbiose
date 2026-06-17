@@ -65,10 +65,29 @@
   - Sanity : bosquet phacélie dense → pollen déposé (total 40.5 / 2 ans, pas de
     reset avant ④), déterministe (2 runs identiques), 0 butineur l'hiver (dormance).
 
-## Reste (ordre conseillé ④→⑤)
+- **④ Nouaison pollinisée (B) — CLOS, golden NEUTRE.** ✅
+  - `PlantInstance.a_fleuri: bool` (instance.py) — front de floraison : armé quand
+    `floraison ≥ SEUIL_FLEURI`, consommé à la nouaison. Hors `_PLANT_ATTRS`.
+  - `sim/engine/decompo.py:_tick_fruits` RÉÉCRIT : nouaison **en fin de floraison
+    PAR PLANTE** (armée à `SEUIL_FLEURI=0.5`, nouée quand `floraison < SEUIL_NOUAISON=0.2`)
+    + gate `age_years ≥ maturity_years` — **remplace `FRUIT_NOUAISON_WEEK`** (import
+    retiré ; constante conservée dans calendrier.py). Fraction nouée `frac` :
+    `self`/`wind` → 1.0 (plein) ; `insect` → `frac_nouaison(pollen_recu) =
+    pollen/(pollen+POLLEN_DEMI)` (Monod, **SANS plancher** : 0 pollen → 0 fruit, §B.2).
+    `n = round(frac × |organ_sites|)` premiers sites ; `pollen_recu` remis à 0.
+  - Câblage boucle.py étape 15c (commentaire mis à jour, appel inchangé).
+  - **Golden INCHANGÉ** `08f18502…f9b3` : aucun fruitier mûr ne fleurit dans le
+    smoke (tomate meurt w2-3, pommier maturity 5 > 2 ans → floraison nulle).
+  - `tests/test_fruits.py` adapté (helper `_nouer` = pleine floraison→fanaison ;
+    nouveau test [7] modes : insect 0-pollen→0 fruit, dose forte→plein, self→plein ;
+    24/24). `tests/simserver/morts.py::test_pommier_fruite` adapté (la nouaison
+    suit la fanaison fin d'été, plus la semaine 14 ; pommier full noue grâce aux
+    butineurs du jardin — 158/158).
+  - Sanity (verger full) : pommier fleurit ~w33, noue 1 fruit ~w36 (pollen 2.25
+    déposé par butineurs sur l'arbre isolé), déterministe.
 
-- **④ Nouaison pollinisée (B)** — `_tick_fruits` lit `pollen_recu`, modes, fin de
-  floraison par plante (remplace `FRUIT_NOUAISON_WEEK`). §B.
+## Reste (⑤)
+
 - **⑤ Ponts de cycle de vie (D)** — chenille→papillon, syrphe_larve→syrphe ;
   `HERBIVORY_GAIN` lit `ravageur + chenille`. **Golden re-figé MAÎTRISÉ.** §D.
 - **⑥⑦ COUCHE JOUEUR** (ruche/miel H/I, piqûre J) — sprint distinct, golden neutre.
@@ -79,4 +98,4 @@
 - Déterminisme : `seed`/`_hash_noise`/`daylength`, jamais de RNG vivant.
 - Couches `plants ← fields ← sim` ; ~350 l code pur ; doc d'abord (FAIT).
 - **Reprise à froid** : « lis `sprints/sprint_pollinisation_cycle_vie/00_etat.md`
-  puis lance le tronçon ④ (conception §B) ».
+  puis lance le tronçon ⑤ (conception §D : ponts de cycle de vie) ».

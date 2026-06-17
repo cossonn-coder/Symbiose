@@ -87,24 +87,30 @@ def test_morts():
 
 def test_pommier_fruite():
     """Levier démo/F5 (vue·rattrapage 02) : la config "full" pré-vieillit le
-    pommier à `maturity_years` → il NOUE des fruits réels dès le 1er début d'été
-    (semaine 14) au lieu de l'an 6. Garde-fou de ce levier ET du chemin nouaison
+    pommier à `maturity_years` → il fleurit et NOUE des fruits réels dès la 1re
+    année au lieu de l'an 6. Depuis la nouaison POLLINISÉE (④, §B), la nouaison
+    n'a plus lieu à une semaine fixe mais EN FIN DE FLORAISON (fin d'été) ; le
+    pommier (entomophile) noue grâce au pollen déposé par les butineurs du jardin
+    full. Garde-fou de ce levier ET du chemin floraison → pollinisation → nouaison
     → `plant.fruits` → snapshot (Partie A vivante)."""
-    print("[pommier mûr → fruits dès l'été]")
+    print("[pommier mûr → fruits en fin de floraison]")
     s = ServerProc()
     s.send(cmd="init", seed=42, config="full")
     snap = s.send(cmd="snapshot")["snapshot"]
-    # `week` = PROCHAINE semaine à simuler → il faut atteindre 15 pour que la
-    # semaine 14 (nouaison, début été) ait été TICKÉE et le fruit installé.
-    while snap["week"] < 15:
+    # La nouaison suit la fanaison (fin d'été) et n'est plus calée sur une semaine
+    # fixe → on avance jusqu'à voir le pommier porter des fruits (cap an 1).
+    pommier = None
+    while snap["week"] < 52:
         snap = s.send(cmd="step_week")["snapshot"]
-    pommier = next((p for p in snap["plants"]
-                    if p["species"] == "AppleTree" and not p.get("dead", False)),
-                   None)
-    check("config full : un pommier vivant à l'été", pommier is not None)
-    check("le pommier pré-âgé a noué des fruits réels",
+        pommier = next((p for p in snap["plants"]
+                        if p["species"] == "AppleTree" and not p.get("dead", False)),
+                       None)
+        if pommier and pommier.get("fruits"):
+            break
+    check("config full : un pommier vivant", pommier is not None)
+    check("le pommier pré-âgé a noué des fruits réels (fin de floraison)",
           pommier and len(pommier.get("fruits", [])) > 0,
-          pommier and f"{len(pommier.get('fruits', []))} fruits")
+          pommier and f"{len(pommier.get('fruits', []))} fruits @ S{snap['week']}")
     if pommier and pommier.get("fruits"):
         f0 = pommier["fruits"][0]
         check("un fruit porte {segment, maturite, masse}",
