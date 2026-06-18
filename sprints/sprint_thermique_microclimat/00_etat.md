@@ -24,7 +24,7 @@ thermique de la pluie/nuages. Tout émerge des champs déjà calculés (philo #2
 |---|---------|---------------|--------|
 | ① | Socle T_sol diurne (surchauffe solaire + inertie lerp) + évaporation branchée | hydrologie | ✅ |
 | ② | Refroidissement évaporatif (chaleur latente) | température/hydro | ✅ |
-| ③ | Isolation par le couvert (litière) | température légère | ⬜ |
+| ③ | Isolation par le couvert (litière) | température légère | ✅ |
 | ④ | Nébulosité (effet thermique pluie/nuages, diurne) | température/météo | ⬜ |
 | ⑤ | T ressentie (mix air/sol) → croissance | croissance | ⬜ |
 | ⑥ | Gel nocturne localisé (couvert + nébulosité + neige protègent) | gel | ⬜ |
@@ -60,5 +60,16 @@ vicieux sécheresse en place. Golden **RE-FIGÉ** :
 ciblées (eau/croissance/population/génétique) PASS. `main.py 3` OK (pas de crash).
 Dérive = température/hydro → cascade succession (traçable, comme ① — attendu).
 
-**Prochain** : implémenter ③ (`sprints/sprint_thermique_microclimat/03_isolation_couvert.md`).
-Kickoffs ④→⑩ écrits au fil de l'eau (un avant chaque `/clear`).
+**③ CLOS (2026-06-18).** Terme **isolation par le couvert** ajouté à la cible
+thermique dans `thermique.py` : `cible -= ISOLATION_COUVERT · litière_norm` avec
+`litière_norm = min(1, om_fresh_at(r,c) / LITIERE_REF)` (knobs `ISOLATION_COUVERT=4.0`,
+`LITIERE_REF=2.0` dans `constants.py`). Litière lue = fin du tick précédent (2b avant
+décompo, voulu). Vérif mécanisme isolé (lum=1, hum=0, convergé) : litière 0 → T_sol
+35.0 ; litière 2.0 (saturée) → 31.0 = −4 °C pile = ISOLATION_COUVERT ; sature à
+litière ≥ LITIERE_REF. Monotone, borné. Interconnexion : litière de la décompo → thermique.
+Golden **RE-FIGÉ** : `aab6c60acc3829c887e3821681a7494d355ca034fd4802ca22bc8a8ef7cf17d4`.
+Suites ciblées (eau 20/20, croissance 67/67, population, génétique 20/20) PASS.
+`main.py 3` OK. Dérive = température/hydro légère → cascade succession (traçable, comme ①②).
+
+**Prochain** : implémenter ④ (`sprints/sprint_thermique_microclimat/04_nebulosite.md`).
+Kickoffs ⑤→⑩ écrits au fil de l'eau (un avant chaque `/clear`).

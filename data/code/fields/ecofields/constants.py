@@ -72,6 +72,13 @@ INTENSITE_SAISON = {"hiver": 0.35, "printemps": 0.70, "automne": 0.60, "ete": 1.
 # °C. C'est le terme qui crée le CERCLE VICIEUX de la sécheresse : sec → moins de
 # refroidissement → plus chaud → évapore plus → encore plus sec (émergent recherché).
 REFROID_EVAP    = 6.0    # °C — refroidissement max d'un sol saturé
+# Isolation par le couvert (tronçon ③) : une litière dense (paillis naturel issu de
+# la décompo) tamponne le sol et l'isole de la surchauffe solaire diurne. C'est le
+# pendant thermique du paillage permacole, et une illustration de l'interconnexion
+# des acteurs (la litière de la décompo agit sur la thermique). La masse de litière
+# du plot (`om_fresh_at`) est normalisée par LITIERE_REF : au-delà, le couvert sature.
+ISOLATION_COUVERT = 4.0  # °C — tampon max d'une litière dense saturée
+LITIERE_REF       = 2.0  # masse de litière au-dessus de laquelle le couvert sature
 
 # Cycle biogéochimique — OM v4 tri-compartiment (cascade fresh → active → stable)
 # Taux de décomposition hebdomadaire par compartiment (avant modulation microbiome).

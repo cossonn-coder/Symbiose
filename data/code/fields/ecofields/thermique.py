@@ -6,36 +6,41 @@ Isolé de `container.py` (déjà dense) pour le garder sous le seuil de taille :
 conteneur n'expose qu'une fine méthode `tick_thermique` qui délègue ici. Fonction
 pure, zéro RNG, zéro log — déterminisme philo #3.
 
-Modèle (tronçon ②, sprint thermique-microclimat) — surchauffe solaire − latente :
+Modèle (tronçon ③, sprint thermique-microclimat) — solaire − latente − isolation :
 
     cible[r,c]            = T_air + GAIN_SOLAIRE · lumière_sol[r,c] · intensité_saison
                                   − REFROID_EVAP · humidité_norm[r,c]
+                                  − ISOLATION_COUVERT · litière_norm[r,c]
     temperature_sol[r,c] += (cible − temperature_sol[r,c]) · THERMAL_INERTIA
 
 T_air (champ `temperature`, rempli uniforme par l'engine) sert de base ; la
 lumière-sol (intégrale diurne du LightField, où l'ombre maison/canopée est déjà
 encodée) module la surchauffe ; `intensité_saison` l'atténue en saison froide ;
 le terme latent (②) refroidit les plots humides (l'eau qui s'évapore prend de
-l'énergie au sol → cercle vicieux de la sécheresse) ; l'inertie tamponne les
-sauts d'une semaine sur l'autre (le sol garde sa chaleur).
+l'énergie au sol → cercle vicieux de la sécheresse) ; le terme isolation (③)
+tamponne les plots couverts d'une litière dense (paillis naturel issu de la
+décompo → interconnexion des acteurs) ; l'inertie tamponne les sauts d'une
+semaine sur l'autre (le sol garde sa chaleur).
 
-L'humidité lue ici est celle de FIN du tick précédent : `tick_thermique` tourne
-en 2b, AVANT `tick_hydrology` (3). Cohérent (la T_sol du matin dépend de
-l'humidité accumulée) et déterministe — ne pas réordonner.
+L'humidité ET la litière lues ici sont celles de FIN du tick précédent :
+`tick_thermique` tourne en 2b, AVANT `tick_hydrology` (3) et AVANT la décompo.
+Cohérent (la T_sol du matin dépend de l'humidité/du couvert accumulés) et
+déterministe — ne pas réordonner.
 
-Les termes isolation par le couvert (③) et nébulosité (④) s'ajouteront à `cible`
-aux tronçons suivants.
+Le terme nébulosité (④) s'ajoutera à `cible` au tronçon suivant.
 """
 
 from __future__ import annotations
 
-from .constants import GAIN_SOLAIRE, THERMAL_INERTIA, INTENSITE_SAISON, REFROID_EVAP
+from .constants import (GAIN_SOLAIRE, THERMAL_INERTIA, INTENSITE_SAISON,
+                        REFROID_EVAP, ISOLATION_COUVERT, LITIERE_REF)
 
 
 def tick_thermique(eco, saison: str) -> None:
     """Met à jour `eco.temperature_sol` depuis `eco.temperature` (T_air),
-    `eco.lumiere` (lumière-sol diurne) et `eco.humidite` (refroidissement
-    évaporatif). Pure : n'écrit QUE `temperature_sol`."""
+    `eco.lumiere` (lumière-sol diurne), `eco.humidite` (refroidissement
+    évaporatif) et la litière (`om_fresh_at`, isolation par le couvert).
+    Pure : n'écrit QUE `temperature_sol`."""
     intensite = INTENSITE_SAISON.get(saison, 1.0)
     t_sol = eco.temperature_sol
     for r in range(eco.rows):
@@ -43,7 +48,9 @@ def tick_thermique(eco, saison: str) -> None:
             t_air    = eco.temperature.data[r][c]
             lum      = eco.lumiere.at_plot(r, c)
             hum_norm = min(1.0, eco.humidite.at_plot(r, c) / 3.0)
+            lit_norm = min(1.0, eco.om_fresh_at(r, c) / LITIERE_REF)
             cible = (t_air + GAIN_SOLAIRE * lum * intensite
-                     - REFROID_EVAP * hum_norm)
+                     - REFROID_EVAP * hum_norm
+                     - ISOLATION_COUVERT * lit_norm)
             cur   = t_sol.data[r][c]
             t_sol.set(r, c, cur + (cible - cur) * THERMAL_INERTIA)
