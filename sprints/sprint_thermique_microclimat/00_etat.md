@@ -27,7 +27,7 @@ thermique de la pluie/nuages. Tout émerge des champs déjà calculés (philo #2
 | ③ | Isolation par le couvert (litière) | température légère | ✅ |
 | ④ | Nébulosité (effet thermique pluie/nuages, diurne) | température/météo | ✅ |
 | ⑤ | T ressentie (mix air/sol) → croissance | croissance | ✅ |
-| ⑥ | Gel nocturne localisé (couvert + nébulosité + neige protègent) | gel | ⬜ |
+| ⑥ | Gel nocturne localisé (couvert + nébulosité + neige protègent) | NEUTRE (smoke ne gèle pas) | ✅ |
 | ⑦ | Catalogue : Neige + Orage + effets | météo (tirages) | ⬜ |
 | ⑧ | Snapshot météo + carte température (Python) | NEUTRE | ⬜ |
 | ⑨ | Rendu Godot des événements (pluie/neige/vent/grêle/orage) | NEUTRE (vue) | ⬜ |
@@ -101,5 +101,28 @@ population PASS. `main.py 3` OK. Le **gel lit encore T_air** (c'est ⑥, sépar�
 croissance spatialisée → dates de stade/floraison/reproduction/succession décalées
 (traçable, comme ①②③④).
 
-**Prochain** : implémenter ⑥ (`sprints/sprint_thermique_microclimat/06_gel_nocturne.md`).
-Kickoffs ⑦→⑩ écrits au fil de l'eau (un avant chaque `/clear`).
+**⑥ CLOS (2026-06-18).** Le gel n'est plus GLOBAL/uniforme mais **localisé au plot**.
+Helper pur `fields/ecofields/thermique.py::t_min_nuit_at(eco, r, c, t_air, nebul)` =
+**carte nocturne SÉPARÉE** (la logique s'inverse : la nuit le soleil ne joue plus, on
+ne relit PAS `temperature_sol`) : `T_min_nuit = T_air − RAYONNEMENT_NOCTURNE·(1−couvert)·
+(1−nébulosité)`, `couvert = min(1, om_fresh_at/LITIERE_REF)` (même normalisation que
+l'isolation diurne ③). Knob `RAYONNEMENT_NOCTURNE=5.0` dans `constants.py`. `boucle.py`
+calcule la sévérité PAR PLANTE (depuis T_min_nuit à son plot) et la passe via le nouveau
+param **`severity_fn`** (option a) de `mortalite.py::_mediated_damage` ; grêle/canicule
+gardent le scalaire (chemin inchangé). Log gel devient **par tuile avec plage**
+(`❄ gel [id] t_air=… sév min→max`). Le paillage agit désormais à DEUX échelles
+(rondelle joueur + litière émergente) — voulu.
+
+**Golden NEUTRE, hash INCHANGÉ `b1173a78…` (PAS re-figé).** ⚠️ Raison : le smoke
+(seed 42) ne descend **jamais** sous `TEMP_FROST_DAMAGE=0.0` (semaine la plus froide =
++1.53 °C, « Gelée tardive ») → l'ancien gel global ne se déclenchait DÉJÀ jamais ; le
+localiser ne change donc rien à la sortie. Le mécanisme N'EST PAS exercé par le golden.
+Vérif mécanisme isolée (t_air=−2 °C, helper réel sur tuile 0 après 25 sem) : plot nu
+(litière 0) → T_min_nuit −7.0 (sév 1.17, gèle) ; plot couvert saturé (litière 2.04) →
+−2.0 = T_air (épargné) ; nébul 0→0.9 sur plot nu : sév 1.17→0.42. Monotone, borné.
+**Aucun test gel à recalibrer** (il n'en existe pas ; test_croissance ne code aucun
+seuil gel). Suites croissance 67/67, eau 20/20, génétique 20/20, population PASS.
+`main.py 3` exit 0, scores OK.
+
+**Prochain** : implémenter ⑦ (`sprints/sprint_thermique_microclimat/07_catalogue_neige_orage.md`).
+Kickoffs ⑧→⑩ écrits au fil de l'eau (un avant chaque `/clear`).

@@ -249,7 +249,8 @@ class MortaliteMixin:
         # retirés par _tick_skeletons (herbacées sans bois → dès ce tick).
         return log
 
-    def _mediated_damage(self, tile, eco, severity, reason, gene_name=None):
+    def _mediated_damage(self, tile, eco, severity, reason, gene_name=None,
+                         severity_fn=None):
         """
         Dégât MÉDIÉ sur le tissu tendre exposé (stade « semis »), conforme à la
         philo #2 (CONCEPTION_METEO.md §2.3) — remplace la voie `health` plate pour
@@ -259,7 +260,15 @@ class MortaliteMixin:
 
         - `gene_name` : gène de rusticité (>1 ⇒ susceptibilité < 1, plus résistant).
           None ⇒ dégât physique pur (grêle : le froid n'aide pas).
-        - protection : le paillage local amortit (chaque rondelle −PAILLAGE_PROTECT).
+        - `severity_fn` : sévérité LOCALISÉE au plot (gel nocturne ⑥). Si fournie,
+          chaque plante reçoit `severity_fn(p)` (calculée depuis T_min_nuit à SON
+          plot) au lieu du scalaire `severity` uniforme — un coin paillé/sous-nuages
+          (sév 0) est épargné quand un coin nu/clair gèle. Grêle/canicule passent
+          toujours un scalaire (severity_fn=None) → chemin de dégât inchangé.
+        - protection : le paillage RONDELLE local amortit (chaque rondelle
+          −PAILLAGE_PROTECT). ⚠️ Le paillage agit désormais à DEUX échelles : la
+          rondelle (geste joueur, ici) ET la litière `om_fresh` (couvert émergent,
+          dans T_min_nuit côté severity_fn). Les deux jouent — c'est voulu.
         - mappage déterministe `effectif → points de santé` par division entière
           (DAMAGE_STEP) : aucun RNG, deux runs identiques (philo #3). La granularité
           entière de `health` fait que le gène départage surtout aux seuils (une
@@ -269,15 +278,18 @@ class MortaliteMixin:
         stade perpétuel des pérennes ligneuses (même garde-fou que appliquer_alea).
         """
         log = []
-        if severity <= 0:
+        if severity_fn is None and severity <= 0:
             return log
         protection = min(1.0, tile.get_rondelle_count("paillage") * PAILLAGE_PROTECT)
         newly_dead = []
         for p in tile.plants:
             if not p.is_alive or p.stage.name != "semis":
                 continue
+            sev = severity_fn(p) if severity_fn is not None else severity
+            if sev <= 0:
+                continue
             suscept   = (1.0 / p.gene(gene_name)) if gene_name else 1.0
-            effective = severity * suscept * (1.0 - protection)
+            effective = sev * suscept * (1.0 - protection)
             lost      = min(p.health, int(effective / DAMAGE_STEP))
             if lost > 0:
                 log += apply_mutations([ReduceHealth(p, lost, reason)], self.game_state)

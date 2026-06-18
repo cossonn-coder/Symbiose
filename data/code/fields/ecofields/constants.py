@@ -100,6 +100,14 @@ NEBULOSITE = {
 # autant. C'est ce qui spatialise ENFIN la croissance (GDD locaux émergents).
 T_PLANTE_ALPHA = 0.5
 
+# Gel nocturne (tronçon ⑥) : la nuit le soleil ne chauffe plus ; les zones
+# DÉCOUVERTES rayonnent vers le ciel clair et gèlent le plus. T_min_nuit
+# descend sous T_air d'autant que le sol est nu (1−couvert) et le ciel clair
+# (1−nébulosité). La logique s'INVERSE par rapport au diurne : on ne réutilise
+# PAS temperature_sol (le soleil ne joue plus la nuit), on calcule une carte
+# nocturne séparée. RAYONNEMENT_NOCTURNE = chute max (ciel clair, sol nu).
+RAYONNEMENT_NOCTURNE = 5.0
+
 # Cycle biogéochimique — OM v4 tri-compartiment (cascade fresh → active → stable)
 # Taux de décomposition hebdomadaire par compartiment (avant modulation microbiome).
 OM_FRESH_DECAY   = 0.080   # débris récents / sucres : rapide (semaines)

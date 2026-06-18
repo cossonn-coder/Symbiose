@@ -26,6 +26,7 @@ from dataclasses import dataclass
 from plants import PLANT_CATALOGUE
 from fields import _hash_noise, ABSCISSION_WEEKS
 from fields.ecofields.constants import NEBULOSITE   # table météo→nébulosité (④)
+from fields.ecofields.thermique import t_min_nuit_at  # gel nocturne localisé (⑥)
 from fields.apiculture import tick_ruches   # ruches : capture essaim + miel (⑥, §H/§I)
 from fields.alarme import tick_alarme       # phéromone d'alarme apienne : décroissance (⑦, §J)
 from sim.effects import resolve_plant_turn, apply_disturbances
@@ -96,13 +97,26 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
         # par le nom de l'événement (sous-sprint 03). Que le froid vienne d'une
         # gelée tardive ou d'une dérive interannuelle froide, le tissu tendre
         # souffre — modulé par le gène `rusticite_froid` × le paillage local.
+        # ⑥ : le gel est désormais LOCALISÉ au plot. T_air reste uniforme, mais
+        # T_min_nuit descend plus bas sur un coin nu/sous ciel clair (rayonnement)
+        # que sur un coin paillé (litière) ou sous nuages → un coin abrité peut
+        # rester au-dessus du seuil (sév 0, épargné) pendant qu'un coin nu gèle.
         if temp_now < TEMP_FROST_DAMAGE:
-            frost_sev = (TEMP_FROST_DAMAGE - temp_now) / FROST_SEVERITY_REF
-            log.append(f"  ❄  gel t={temp_now:.1f}°C (sév={frost_sev:.2f})")
             for tile in self.tiles:
-                log += self._mediated_damage(tile, self._eco(tile), frost_sev,
+                eco = self._eco(tile)
+                def frost_sev(p, eco=eco):
+                    r, c = p.position
+                    t_min = t_min_nuit_at(eco, r, c, temp_now, nebul)
+                    return max(0.0, (TEMP_FROST_DAMAGE - t_min) / FROST_SEVERITY_REF)
+                sevs = [frost_sev(p) for p in tile.plants
+                        if p.is_alive and p.stage.name == "semis"]
+                if sevs:
+                    log.append(f"  ❄  gel [{tile.tile_id}] t_air={temp_now:.1f}°C "
+                               f"sév {min(sevs):.2f}→{max(sevs):.2f}")
+                log += self._mediated_damage(tile, eco, 0.0,
                                              "gel (tissu tendre)",
-                                             gene_name="rusticite_froid")
+                                             gene_name="rusticite_froid",
+                                             severity_fn=frost_sev)
 
         if event.kind != "Beau temps":
             log.append(f"  🌤  {event.kind} (T≈{temp_now:.1f}°C, i={event.intensity:.2f})")
