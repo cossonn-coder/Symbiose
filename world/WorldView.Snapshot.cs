@@ -229,7 +229,11 @@ namespace Symbiose
 			if (snap.ContainsKey("weather"))
 				ApplyWeather(snap["weather"].AsGodotDictionary());
 			if (snap.ContainsKey("temperature"))
-				ApplySnow(snap["temperature"].AsGodotDictionary());
+			{
+				var temperature = snap["temperature"].AsGodotDictionary();
+				ApplySnow(temperature);        // manteau neigeux par tuile (⑨)
+				ApplySoilTemp(temperature);    // heatmap T sol spatialisée F7 (⑩)
+			}
 
 			// Heatmap (t6·C) : la grille affichée date de la semaine d'avant →
 			// périmée. Si l'overlay est ON, _Process relancera UNE requête

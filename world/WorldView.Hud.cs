@@ -149,7 +149,7 @@ namespace Symbiose
 			legend.Text = "Espace lancer/pause · flèches déplacer"
 				+ " · molette zoom · PageUp/PageDown pivoter\n"
 				+ "F3 étiquettes · F4 perfs · H maison transparente · F6 heatmap debug (Maj+F6 champ)"
-				+ " · I vie macro · O ombres · M mode simu\n"
+				+ " · F7 carte T sol · I vie macro · O ombres · M mode simu\n"
 				+ "Tab geste suivant · 1..9 gestes directs · S graine (planter) · clic gauche = agir"
 				+ " — geste courant affiché en haut à gauche";
 			hud.AddChild(legend);
@@ -320,9 +320,9 @@ namespace Symbiose
 							+ $"..{_fieldOverlay.GridMax:F2}";
 				// Pédagogie (t6·C3, retour 2) : ce champ EST l'air hebdo,
 				// uniforme par construction (engine fill) — la température
-				// du sol modulée par l'ombre = sprint physico-chimie, backlog.
+				// du sol spatialisée a sa propre carte depuis le tronçon ⑩ : touche F7.
 				if (nom == "temperature")
-					bornes += "   ·   air hebdo (uniforme — temp. du sol : à venir)";
+					bornes += "   ·   air hebdo (uniforme — temp. du sol spatialisée : F7)";
 			}
 			else
 				bornes = "chargement…";

@@ -18,9 +18,13 @@ namespace Symbiose
 		// au-dessus de la litière (1) et du sol (0), SOUS la vie macro (5) et les
 		// plantes (10) — la neige est au sol, les plantes en dépassent.
 		private SnowLayer _snowLayer;
+		// Heatmap T sol spatialisée (⑩, Node2D monde) : ZIndex 3 comme FieldOverlay
+		// — par-dessus sol/ombre/manteau, sous vie macro (5) et plantes (10). Cachée
+		// par défaut, allumée à F7. Lit `temperature[tile].t_sol` du snapshot.
+		private SoilTempOverlay _soilTempOverlay;
 
-		// Crée les deux couches (appelé en _Ready, avant BuildHud pour l'ordre Z
-		// du CanvasLayer ambiance, et après _origins pour le manteau).
+		// Crée les couches météo (appelé en _Ready, avant BuildHud pour l'ordre Z
+		// du CanvasLayer ambiance, et après _origins pour le manteau / la heatmap).
 		private void BuildMeteoLayers()
 		{
 			_weatherLayer = new WeatherLayer { Name = "Weather" };
@@ -28,6 +32,12 @@ namespace Symbiose
 
 			_snowLayer = new SnowLayer { Name = "Snow", ZIndex = 2 };
 			AddChild(_snowLayer);
+
+			_soilTempOverlay = new SoilTempOverlay
+			{
+				Name = "SoilTempOverlay", ZIndex = 3, Visible = false,
+			};
+			AddChild(_soilTempOverlay);
 		}
 
 		// Bloc `weather` (lecture tolérante : pré-0.5.0 sans le bloc → ciel neutre).
@@ -36,5 +46,20 @@ namespace Symbiose
 		// Bloc `temperature` (lecture tolérante : pré-0.5.0 → pas de manteau).
 		private void ApplySnow(GDict temperature) =>
 			_snowLayer?.SetSnow(temperature, _origins);
+
+		// Bloc `temperature.t_sol` → heatmap T sol (⑩). Même GDict que ApplySnow ;
+		// l'overlay ne redessine que s'il est visible (coût nul quand caché).
+		private void ApplySoilTemp(GDict temperature) =>
+			_soilTempOverlay?.SetTemperature(temperature, _origins);
+
+		// Touche F7 : carte thermique du SOL ON/OFF. Visible=false court-circuite
+		// _Draw (coût nul) ; les données continuent de suivre les snapshots —
+		// rallumer est gratuit (même esprit que ToggleMacroLife/ToggleFieldOverlay).
+		private void ToggleSoilTemp()
+		{
+			if (_soilTempOverlay == null) return;
+			_soilTempOverlay.Visible = !_soilTempOverlay.Visible;
+			GD.Print($"[WorldView] F7 → carte T sol {(_soilTempOverlay.Visible ? "ON" : "OFF")}.");
+		}
 	}
 }

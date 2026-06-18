@@ -55,6 +55,7 @@ namespace Symbiose
 						if (k.ShiftPressed) CycleField();
 						else ToggleFieldOverlay();
 						break;
+					case Key.F7:       ToggleSoilTemp();   break;
 				}
 			}
 			// Molette = paliers de zoom (décision Nico 2026-06-10 : molette,

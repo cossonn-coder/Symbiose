@@ -86,6 +86,7 @@ pointeur ci-dessous. Ne plus écrire le contenu des entrées ici.
 - [2026-06-16 — Arc Pollinisation & cycle de vie CONCEPTION FIGÉE (A–E) — floraison réelle (GDD+photopériode), nouaison pollinisée, ressource mellifère, chenille→papillon bouclé ; impl ①→④ à venir](journal/56_2026-06-16_conception-pollinisation-cycle-vie-FIGEE.md)
 - [2026-06-18 — Sprint Pollinisation & cycle de vie · implémentation ①→⑦ MOTEUR CLOS — floraison/nectar/butineurs/nouaison/ponts larvaires + ruche/miel + piqûre-alarme émergente (pont 0.4.1) ; golden `4f9fad91…1260` ; reste vue Godot (F5)](journal/57_2026-06-18_sprint-pollinisation-implémentation-①-⑦-CLOS-moteur.md)
 - [2026-06-18 — Sprint Pollinisation & cycle de vie · vue Godot — SPRINT TERMINÉ (butineurs fleur-en-fleur + dépôt pollen, piqûre temps réel vue pure, ruche/miel dessinés) ; golden INTACT, 0 ligne Python](journal/58_2026-06-18_sprint-pollinisation-vue-godot-CLOS-sprint-terminé.md)
+- [2026-06-18 — Sprint THERMIQUE & MICROCLIMAT CLOS (10 tronçons) — T sol spatialisée couplée au LightField (surchauffe/évapo/isolation/nébulosité/gel localisé/neige), croissance spatialisée, pont 0.5.0, rendu météo + manteau + heatmap F7 ; goldens maîtrisés ①→⑦, ⑧⑨⑩ NEUTRES](journal/59_2026-06-18_sprint-thermique-microclimat-CLOS.md)
 
 ---
 

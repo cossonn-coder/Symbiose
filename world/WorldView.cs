@@ -90,7 +90,7 @@ namespace Symbiose
 		// droite de l'écran + imprimé en console au lancement : si la version à
 		// l'écran n'est pas celle annoncée par Claude, le circuit VM → sync
 		// Nextcloud → build Godot n'est pas passé (piège connu depuis t3).
-		public const string Build = "thermique ⑨ — rendu météo : ambiance écran (pluie/neige/grêle/orage/tempête) + manteau neigeux par tuile — 2026-06-18";
+		public const string Build = "thermique ⑩ — heatmap T sol spatialisée (F7) — SPRINT CLOS — 2026-06-18";
 
 		// -------------------------------------------------------------------
 		// RÉGLAGES (exportés : ajustables dans l'inspecteur sans recompiler)

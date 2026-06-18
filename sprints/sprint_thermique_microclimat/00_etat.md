@@ -31,7 +31,7 @@ thermique de la pluie/nuages. Tout émerge des champs déjà calculés (philo #2
 | ⑦ | Catalogue : Neige + Orage + effets | météo (tirages) — LARGE | ✅ |
 | ⑧ | Snapshot météo + carte température (Python) | NEUTRE | ✅ |
 | ⑨ | Rendu Godot des événements (pluie/neige/vent/grêle/orage) | NEUTRE (vue) | ✅ |
-| ⑩ | Heatmap température debug F6 (`FieldOverlay`) | NEUTRE (vue) | ⬜ |
+| ⑩ | Heatmap température du SOL debug F7 (`SoilTempOverlay`) | NEUTRE (vue) | ✅ |
 
 ## §REPRISE
 
@@ -220,5 +220,63 @@ Pluie/Neige/Orage le ciel se charge + précipitations ; manteau blanc en hiver e
 Beau temps ≈ inchangé ; zoom/pan ne décrochent pas l'ambiance (écran), le manteau suit
 les tuiles (monde).
 
-**Prochain** : implémenter ⑩ (`sprints/sprint_thermique_microclimat/10_heatmap_temperature.md`,
-écrit). DERNIER tronçon du sprint.
+**⑩ CLOS (2026-06-18). — DERNIER TRONÇON, SPRINT CLOS.** Heatmap de la
+**température du SOL spatialisée** sur touche **F7** — **VUE PURE, golden NEUTRE
+par construction** (zéro fichier Python touché ; vérifié `git status` = seuls des
+`.cs`). 1 fichier neuf + 4 câblages :
+- `visuals/SoilTempOverlay.cs` (neuf) — Node2D ZIndex 3, caché par défaut. Calque
+  EXACT de `FieldOverlay._Draw` mais source = snapshot `temperature[tile].t_sol`
+  (grille 2D row-major lue directement, ≠ index plat `values[r*cols+c]` de la
+  commande `fields`). RÉUTILISE `FieldOverlay.PaletteOf("temperature")` (froid
+  #3a6fd8 → chaud #d83a3a, échelle FIXE −5..35 °C, clamp aux bornes), losanges
+  ±TileWPx/2 / ±TileHPx/2, Alpha 0.7. Projection au `_Draw` via `WorldToScreen`
+  → rotation D35 gratuite (QueueRedraw).
+- `world/WorldView.Meteo.cs` — champ `_soilTempOverlay`, instanciation dans
+  `BuildMeteoLayers()` (ZIndex 3, caché), helper `ApplySoilTemp(temperature)`,
+  `ToggleSoilTemp()` (flip `Visible`, GD.Print — coût nul quand caché).
+- `world/WorldView.Snapshot.cs` — branche `temperature` existante (⑨) : `ApplySnow`
+  + `ApplySoilTemp` partagent le MÊME GDict (un seul `ContainsKey`).
+- `world/WorldView.Controls.cs` — touche **F7** (libre) → `ToggleSoilTemp()`.
+- `world/WorldView.Hud.cs` — `legend.Text` + « F7 carte T sol » ; HUD `temperature`
+  passe de « temp. du sol : à venir » à « temp. du sol spatialisée : F7 ».
+- `world/WorldView.cs` — bump `Build` (« thermique ⑩ … SPRINT CLOS »).
+
+Overlay **SÉPARÉ** de F6 (≠ champ de plus) : F6 vient de la commande `fields`
+(T air UNIFORME), F7 du snapshot (T sol SPATIALISÉE) — les deux coexistent,
+disent deux choses. **Filet `dotnet build Symbiose.csproj` : 0 erreur, 0 warning.**
+Golden **NON re-figé** (NEUTRE). **F5 = Nico** : F7 → carte thermique du sol ;
+en plein été un coin sud/sec/ensoleillé plus ROUGE qu'un coin nord/ombragé/humide
+(≠ l'aplat uniforme de F6) ; zoom/pan/rotation suivent ; F7 → masquée, coût nul.
+
+---
+
+## 🏁 SPRINT THERMIQUE & MICROCLIMAT — CLOS (2026-06-18)
+
+**10 tronçons, tous CLOS.** Thermique spatialisée émergée des champs (philo #2/#3) :
+T sol vs air, soleil vs ombre, évaporation/isolation/nébulosité/neige, gel localisé,
+croissance spatialisée, exposée au pont (0.5.0) et rendue (météo écran + manteau +
+heatmap F7).
+
+**Knobs introduits** (`fields/ecofields/constants.py` sauf mention) :
+`GAIN_SOLAIRE=15` (placeholder, calibrage post-test), `REFROID_EVAP=6.0`,
+`ISOLATION_COUVERT=4.0`, `LITIERE_REF=2.0`, `K_NEBUL_DIURNE=0.8` + table `NEBULOSITE`,
+`T_PLANTE_ALPHA=0.5`, `RAYONNEMENT_NOCTURNE=5.0`, `SNOW_ACCUM=0.5`/`SNOW_MELT_BASE=0.05`/
+`SNOW_MELT_WARM=0.03`, `TEMP_DELTA_BASE["Neige"]=-6.0`, `ORAGE_VENT` (aleas.py).
+
+**Goldens successifs** : ① `50a6fd2d…` → ② `7cfef331…` → ③ `aab6c60a…` →
+④ `c8af9e11…` → ⑤ `b1173a78…` (⑥ NEUTRE, inchangé) → ⑦ `5fddfe54…` (+ `population_hash`
+`5e6e688f…`) → ⑧⑨⑩ NEUTRES (inchangé `5fddfe54…`).
+
+**Protocole pont** : 0.5.0 (snapshot `weather` + `temperature[tile]{snow,t_sol}`).
+
+**Dette ouverte** (à reporter dans DETTE.md) :
+- **D37** — vent continu (reporté du sprint).
+- **D38** — rosée / hygrométrie (reporté du sprint).
+- **`container.py` = 372 ldc code pur** (> seuil ~350) — candidat éclatement
+  (sortir un mixin décompo/litière) à un futur sprint refactor.
+- **`test_pommier_fruite`** (section 14b smoke pont) échoue DÉJÀ sur HEAD propre
+  depuis le re-figeage LARGE de ⑦ (météo seed 42 décalée → le pommier ne fructifie
+  plus avant S52 dans CE scénario) — à traiter HORS sprint thermique.
+
+**Prochain = choix Nico** : BACKLOG.md (saisonnalité vie macro, physico-chimie sol,
+t7 packaging PyInstaller…) ou DETTE.md. PAS d'enchaînement automatique.
