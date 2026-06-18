@@ -101,7 +101,21 @@ from __future__ import annotations
 #       côté vue, §J.3). Le moteur ne réinjecte l'alarme dans AUCUN champ figé (pur
 #       puits) → golden NEUTRE (§J.4 ; le smoke n'écrase aucune abeille, ne récolte
 #       aucun miel). Champ optionnel côté vue (tolérance pré-0.4.1).
-ENGINE_VERSION = "0.4.1"
+# 0.5.0 (thermique ⑧, snapshot météo + carte température — 1er bloc du sprint
+#       thermique au pont) : le snapshot gagne DEUX blocs lecture-seule. `weather`
+#       = scalaire GLOBAL du tick courant (météo de `week-1`, recalculée par le
+#       helper PUR sim.weather.weather_state) : {kind, intensity, scope
+#       ("global"/"local"), nebulosite, t_air, signs} ; `signs` = préavis
+#       diégétiques (weather_signs, horizon 2) avec flag `signed` (filtrage palier
+#       D12 laissé à la vue). `temperature` = par tuile {snow (manteau ⑦),
+#       t_sol (grille 2D rows×cols de la T de surface ⑤)} — états déjà calculés,
+#       lus directement ; T_air uniforme NON dupliquée par plot. Mineure car schéma
+#       ÉTENDU (pas cassé) : PUR ajout lecture-seule → golden NEUTRE, champs
+#       optionnels côté vue (tolérance pré-0.5.0). Refactor léger associé : helper
+#       partagé `weather_state` rebranché côté engine (boucle.py étape 1) ET snapshot
+#       → un seul calcul météo, jamais deux qui dérivent (valeurs identiques, golden
+#       inchangé). ⑨ (rendu Godot) + ⑩ (heatmap debug) consommeront ces blocs.
+ENGINE_VERSION = "0.5.0"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

@@ -85,6 +85,7 @@ from tests.simserver.planter import test_planter_arroser
 from tests.simserver.structures import test_structures, test_structure_contenu
 from tests.simserver.morts import test_morts, test_pommier_fruite
 from tests.simserver.litiere import test_litiere
+from tests.simserver.meteo import test_meteo
 
 
 def main() -> int:
@@ -100,6 +101,7 @@ def main() -> int:
     test_morts()             # section 14 : squelettes exposés (0.3.6)
     test_pommier_fruite()    # section 14b : levier pommier mûr → fruits dès l'été
     test_litiere()           # section 15 : litière typée par plot exposée (0.3.7)
+    test_meteo()             # section 16 : météo + carte température exposées (0.5.0)
 
     # --- bilan ----------------------------------------------------------------
     n_fail = sum(1 for _, ok in harness._results if not ok)

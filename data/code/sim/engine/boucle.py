@@ -21,11 +21,9 @@ mixins frères (croissance.py / mortalite.py / decompo.py).
 """
 
 from __future__ import annotations
-import math
 from dataclasses import dataclass
 from plants import PLANT_CATALOGUE
 from fields import _hash_noise, ABSCISSION_WEEKS
-from fields.ecofields.constants import NEBULOSITE   # table météo→nébulosité (④)
 from fields.ecofields.thermique import t_min_nuit_at  # gel nocturne localisé (⑥)
 from fields.apiculture import tick_ruches   # ruches : capture essaim + miel (⑥, §H/§I)
 from fields.alarme import tick_alarme       # phéromone d'alarme apienne : décroissance (⑦, §J)
@@ -33,8 +31,7 @@ from sim.effects import resolve_plant_turn, apply_disturbances
 from sim.reproduction import is_seed_bearing
 from sim.seeds import Seed
 from sim.succession import succession, spring_flush
-from sim.weather import (weather_at, K_PEST, temp_norm, temperature_delta,
-                         TEMP_DRIVEN)
+from sim.weather import weather_state, K_PEST, TEMP_DRIVEN
 from sim.vigueur import tick_player_vigueur, refill_saison
 from sim.growth import grow_plant
 from .calendrier import (SAISONS, saison_de, est_debut_saison, est_fin_saison,
@@ -85,11 +82,10 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
         # autres événements gardent leur effet milieu via WEATHER_ALEA
         # (remplacement progressif des mappings approximatifs, sous-sprint 03).
         seed          = self.game_state.get("seed", 42)
-        event         = weather_at(seed, week)
-        year_fraction = (week - 1) / 52.0
-        phase         = (seed & 0xFFFF) / 0xFFFF * 2.0 * math.pi   # caractère d'année dérivé du seed
-        temp_now      = temp_norm(week_in_year, year_fraction, phase) + temperature_delta(event)
-        nebul         = NEBULOSITE.get(event.kind, 0.10)   # ④ : ciel couvert → moins de surchauffe solaire (défaut ≈ clair)
+        # État météo consolidé (événement + T_air + nébulosité) via le helper PUR
+        # partagé avec le snapshot (serialize §A) — un seul calcul, jamais deux qui
+        # dérivent. T_air = normale saisonnière + delta transitoire ; nébulosité ④.
+        event, temp_now, nebul = weather_state(seed, week)
         is_neige      = (event.kind == "Neige")            # ⑦ : pilote l'accumulation du manteau
         for tile in self.tiles:
             eco = self._eco(tile)

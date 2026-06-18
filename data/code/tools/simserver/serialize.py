@@ -9,6 +9,10 @@ from __future__ import annotations
 
 from sim.engine import saison_de
 from sim import vigueur as V      # état Vigueur joueur (ensure/spend/gain, D11)
+# Météo PURE (sprint thermique ⑧) : helper consolidé partagé avec l'engine
+# (boucle.py étape 1) + signes diégétiques + cas calme. Recalculés ici car le
+# snapshot LIT l'état sans accès aux locaux du tick — fonctions pures, golden NEUTRE.
+from sim.weather import weather_state, weather_signs, CALME, T_MOY
 # Échantillonneur de vie macro (tranche 6·B) : fonction PURE et déterministe
 # densité → entités (fields/population.py §3). L'échantillonnage se fait CÔTÉ
 # SERVEUR — la vue n'a pas besoin de _hash_noise (kickoff t6 §4).
@@ -123,6 +127,7 @@ class SerializeMixin:
         structures = {}
         litiere = {}
         alarme = {}
+        temperature = {}
         for tile in gs["tiles"]:
             eco = gs["eco"][tile.tile_id]
             sprites[tile.tile_id] = {
@@ -190,6 +195,44 @@ class SerializeMixin:
                         if v > 0.0:
                             foyers.append([r, c, round(v, 4)])
             alarme[tile.tile_id] = foyers
+            # Carte température par tuile (sprint thermique ⑧, §B) : ÉTATS
+            # persistants déjà calculés par le tick → lecture DIRECTE (≠ météo
+            # scalaire, recalculée par fonction pure plus bas). `snow` = manteau
+            # neigeux scalaire (⑦, voile blanc ∝ snow côté vue). `t_sol` = grille 2D
+            # rows×cols de la température de surface spatialisée (heatmap ⑩) ;
+            # T_air uniforme N'EST PAS dupliquée par plot (elle vit dans `weather`).
+            # PURE lecture (`eco.snow`/`eco.temperature_sol` remplis par le tick)
+            # → golden NEUTRE. Champ optionnel côté vue (tolérance pré-0.5.0).
+            temperature[tile.tile_id] = {
+                "snow": round(eco.snow, 3),
+                "t_sol": [[round(eco.temperature_sol.data[r][c], 2)
+                           for c in range(eco.cols)] for r in range(eco.rows)],
+            }
+        # Météo scalaire GLOBALE du tick (sprint thermique ⑧, §A) : la météo qui a
+        # produit l'état COURANT est celle de la semaine DÉJÀ simulée = `week − 1`
+        # (`week` = prochaine à simuler). `weather_state` étant PURE, on la RECALCULE
+        # (rien à stocker côté moteur) → golden NEUTRE. `signs` = préavis diégétique
+        # des événements à venir (1-2 sem, philo #5) ; on expose le flag `signed`,
+        # le filtrage par palier de maîtrise (D12) reste à la charge de la VUE.
+        # À l'init (rien simulé, `last < 1`) : temps calme, normale, pas de signe.
+        last = gs["week"] - 1
+        if last >= 1:
+            ev, t_air, nebul = weather_state(gs["seed"], last)
+            signs = weather_signs(gs["seed"], last, horizon=2)
+        else:
+            ev, t_air, nebul, signs = CALME, T_MOY, 0.10, []
+        weather = {
+            "kind": ev.kind,
+            "intensity": round(ev.intensity, 3),
+            "scope": ev.scope,
+            "nebulosite": round(nebul, 3),
+            "t_air": round(t_air, 2),
+            "signs": [
+                {"kind": s.kind, "in_weeks": s.in_weeks,
+                 "signs": list(s.signs), "signed": s.signed}
+                for s in signs
+            ],
+        }
         # Bloc joueur (tranche 4, lecture seule) : la vue affiche la Vigueur
         # au HUD. vigueur_max passe par la façade (bonus maîtrise compris).
         # `seeds` (0.3.3) = lots PLANTABLES de la banque-joueur, {clé catalogue:
@@ -206,4 +249,5 @@ class SerializeMixin:
                            "vigueur_max": V.vigueur_max(gs, player),
                            "seeds": seeds},
                 "plants": plants, "sprites": sprites, "foragers": foragers,
-                "structures": structures, "litiere": litiere, "alarme": alarme}
+                "structures": structures, "litiere": litiere, "alarme": alarme,
+                "weather": weather, "temperature": temperature}

@@ -29,7 +29,7 @@ thermique de la pluie/nuages. Tout émerge des champs déjà calculés (philo #2
 | ⑤ | T ressentie (mix air/sol) → croissance | croissance | ✅ |
 | ⑥ | Gel nocturne localisé (couvert + nébulosité + neige protègent) | NEUTRE (smoke ne gèle pas) | ✅ |
 | ⑦ | Catalogue : Neige + Orage + effets | météo (tirages) — LARGE | ✅ |
-| ⑧ | Snapshot météo + carte température (Python) | NEUTRE | ⬜ |
+| ⑧ | Snapshot météo + carte température (Python) | NEUTRE | ✅ |
 | ⑨ | Rendu Godot des événements (pluie/neige/vent/grêle/orage) | NEUTRE (vue) | ⬜ |
 | ⑩ | Heatmap température debug F6 (`FieldOverlay`) | NEUTRE (vue) | ⬜ |
 
@@ -161,5 +161,37 @@ Vérif mécanisme manteau (helper réel) : (a) 1 sem Neige → snow 0.5, 2 sem �
 (10 °C) snow 0.65 (dégel plus rapide). Suites croissance 67/67, eau 20/20,
 génétique 20/20, population PASS. `main.py 3` exit 0.
 
-**Prochain** : implémenter ⑧ (`sprints/sprint_thermique_microclimat/08_snapshot_meteo.md`).
-Kickoffs ⑧→⑩ écrits au fil de l'eau (un avant chaque `/clear`).
+**⑧ CLOS (2026-06-18).** Snapshot météo + carte température exposés au pont
+(protocole **0.5.0**). DEUX blocs lecture-seule ajoutés à `serialize._snapshot` :
+(A) `weather` = scalaire GLOBAL du tick courant (météo de `week-1`, kind/intensity/
+scope/nebulosite/t_air + `signs` = préavis diégétiques `weather_signs` horizon 2,
+flag `signed` exposé, filtrage palier D12 laissé à la vue) ; (B) `temperature[tile]`
+= {snow (manteau ⑦), t_sol (grille 2D rows×cols de la T de surface ⑤)}, états déjà
+calculés → lecture DIRECTE. T_air uniforme NON dupliquée par plot.
+
+**Choix §A = helper partagé** (défaut du kickoff, DRY) : nouveau `sim/weather.py::
+weather_state(seed, week) -> (WeatherEvent, t_air, nebul)` PUR, rebranché côté
+engine (`boucle.py` étape 1, −5 lignes + import `math`/`weather_at`/`temp_norm`/
+`temperature_delta`/`NEBULOSITE` retirés devenus orphelins) ET côté snapshot →
+un seul calcul météo, jamais deux qui dérivent. Couche OK (`sim.weather` importe
+`fields.ecofields.constants.NEBULOSITE`, donnée pure côté `fields`).
+
+**Golden NEUTRE, hash INCHANGÉ `5fddfe54…` (PAS re-figé)** — invariant respecté :
+zéro écriture moteur, `weather_state`/`weather_signs` pures, `boucle` produit des
+valeurs IDENTIQUES à l'ancien calcul inline. `main.py 3` exit 0. Suites ciblées
+croissance 67/67, eau PASS, génétique 20/20, population PASS, signes 8/8.
+
+**Smoke pont** : nouvelle section 16 `tests/simserver/meteo.py` (câblée dans
+`test_sim_server.py`) — forme des deux blocs + COHÉRENCE avec un recalcul pur
+indépendant (le pont == `weather_state`/`weather_signs` rejoués côté test, champ
+par champ) + dimensions t_sol == rows×cols + snow=0 au printemps (pas de Neige) +
+déterminisme byte-à-byte. **183/184 checks verts**.
+
+⚠️ **1 échec PRÉEXISTANT, non lié à ⑧** : `test_pommier_fruite` (section 14b,
+« pommier pré-âgé a noué des fruits réels — 0 fruits @ S52 ») échoue DÉJÀ sur HEAD
+propre (vérifié par `git stash`) — vraisemblablement une conséquence du re-figeage
+LARGE de ⑦ (météo seed 42 décalée → le pommier ne fructifie plus avant S52 dans CE
+scénario de test). **À signaler/traiter hors ⑧** (le golden, lui, est intact).
+
+**Prochain** : implémenter ⑨ (`sprints/sprint_thermique_microclimat/09_rendu_godot_evenements.md`).
+Kickoffs ⑨→⑩ écrits au fil de l'eau (un avant chaque `/clear`).

@@ -26,6 +26,7 @@ import math
 from dataclasses import dataclass
 
 from fields import _hash_noise, hash_gauss, climate_stress
+from fields.ecofields.constants import NEBULOSITE   # table météo→nébulosité (④, donnée PURE côté fields)
 
 
 # --- Canaux-sentinelles ----------------------------------------------------
@@ -164,6 +165,26 @@ def temperature_delta(event: WeatherEvent) -> float:
     # quand l'événement tombe et on borne pour éviter les extrêmes absurdes.
     scale = max(0.5, min(2.0, event.intensity))
     return base * scale
+
+
+def weather_state(seed: int, week: int) -> tuple[WeatherEvent, float, float]:
+    """
+    État météo COMPLET de la semaine `week` : `(événement, T_air °C, nébulosité)`.
+    Point de vérité UNIQUE du calcul que l'engine (boucle.py étape 1) et le
+    snapshot (serialize.py §A) faisaient à l'identique — un seul endroit pour
+    qu'ils ne divergent jamais. PURE et déterministe (aucun état moteur lu).
+
+    `T_air` = normale saisonnière (avec dérive interannuelle, `phase` dérivée du
+    seed = « caractère d'année ») + delta transitoire de l'événement. `nébulosité`
+    = table NEBULOSITE indexée par le type d'événement (défaut ciel ≈ clair).
+    """
+    week_in_year  = ((week - 1) % 52) + 1
+    event         = weather_at(seed, week)
+    year_fraction = (week - 1) / 52.0
+    phase         = (seed & 0xFFFF) / 0xFFFF * 2.0 * math.pi
+    t_air         = temp_norm(week_in_year, year_fraction, phase) + temperature_delta(event)
+    nebul         = NEBULOSITE.get(event.kind, 0.10)
+    return event, t_air, nebul
 
 
 def forecast(seed: int, week: int, horizon: int = 2) -> list[WeatherEvent]:
