@@ -13,6 +13,7 @@ résolues sur l'instance Engine. Comportement identique à l'ancien `engine.py`.
 from __future__ import annotations
 from fields import (EXUDATE_BASE, EXUDATE_OM_SHARE, HUM_NOYE, HUM_EXCES,
                     ASPHYXIE_MEMORY_LERP)
+from fields.ecofields.constants import T_PLANTE_ALPHA
 from .calendrier import saison_de
 
 
@@ -29,7 +30,9 @@ class CroissanceMixin:
             r, c = plant.position
             hum   = eco.humidite.at_plot(r, c)
             light = eco.lumiere.light_received(plant)   # lumière reçue (canopée, auto-ombrage exclu)
-            temp  = eco.temperature.at_plot(r, c)       # température ambiante (météo 02)
+            t_air = eco.temperature.at_plot(r, c)            # T_air (masse, uniforme — météo 02)
+            t_sol = eco.temperature_sol.at_plot(r, c)        # microclimat de surface local (①–④)
+            temp  = T_PLANTE_ALPHA * t_air + (1.0 - T_PLANTE_ALPHA) * t_sol   # T ressentie (⑤)
             # Seuils de croissance : humidité ET lumière ET température suffisantes.
             # tolerance_secheresse abaisse le seuil d'humidité (gène >1 → la plante
             # continue de croître en sol plus sec avant de stagner).

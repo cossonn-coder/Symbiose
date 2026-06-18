@@ -94,6 +94,12 @@ NEBULOSITE = {
     "Orage": 0.85, "Neige": 0.70,   # Orage/Neige réservés à ⑦ (inoffensifs ici)
 }
 
+# T ressentie par la plante (tronçon ⑤) : le gate de croissance ne lit plus
+# T_air nu mais un mélange air/sol local. α = poids de T_air ; (1−α) = poids
+# de temperature_sol (microclimat déjà spatialisé). À α=0.5, air et sol pèsent
+# autant. C'est ce qui spatialise ENFIN la croissance (GDD locaux émergents).
+T_PLANTE_ALPHA = 0.5
+
 # Cycle biogéochimique — OM v4 tri-compartiment (cascade fresh → active → stable)
 # Taux de décomposition hebdomadaire par compartiment (avant modulation microbiome).
 OM_FRESH_DECAY   = 0.080   # débris récents / sucres : rapide (semaines)

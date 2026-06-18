@@ -26,7 +26,7 @@ thermique de la pluie/nuages. Tout émerge des champs déjà calculés (philo #2
 | ② | Refroidissement évaporatif (chaleur latente) | température/hydro | ✅ |
 | ③ | Isolation par le couvert (litière) | température légère | ✅ |
 | ④ | Nébulosité (effet thermique pluie/nuages, diurne) | température/météo | ✅ |
-| ⑤ | T ressentie (mix air/sol) → croissance | croissance | ⬜ |
+| ⑤ | T ressentie (mix air/sol) → croissance | croissance | ✅ |
 | ⑥ | Gel nocturne localisé (couvert + nébulosité + neige protègent) | gel | ⬜ |
 | ⑦ | Catalogue : Neige + Orage + effets | météo (tirages) | ⬜ |
 | ⑧ | Snapshot météo + carte température (Python) | NEUTRE | ⬜ |
@@ -85,5 +85,21 @@ hum=0, lit=0, convergé) : nébul=0 → 35.0 °C ; nébul=0.5 → 29.0 ; nébul=
 Dérive = T_sol modulée par la nébulosité hebdo (même « Beau temps » a 0.10 → toutes les
 semaines bougent un peu) → cascade hydro/croissance/succession (traçable, comme ①②③).
 
-**Prochain** : implémenter ⑤ (`sprints/sprint_thermique_microclimat/05_t_ressentie.md`).
-Kickoffs ⑥→⑩ écrits au fil de l'eau (un avant chaque `/clear`).
+**⑤ CLOS (2026-06-18).** Le gate de croissance ne lit plus T_air nu mais une **T
+ressentie** = mélange air/sol local : dans `sim/engine/croissance.py::_avancer_stades`,
+`temp = T_PLANTE_ALPHA·t_air + (1−T_PLANTE_ALPHA)·temperature_sol[r,c]` (knob
+`T_PLANTE_ALPHA=0.5` dans `fields/ecofields/constants.py` ; import direct
+`from fields.ecofields.constants import T_PLANTE_ALPHA`, les knobs thermiques ne
+sont pas ré-exportés par `fields/__init__.py`). 1re fois que la croissance est
+SPATIALISÉE (GDD locaux : coin chaud/sec pousse plus vite, coin frais/ombragé/humide
+stagne plus longtemps). Vérif mécanisme (sem. 20, tuile 0) : T_air uniforme 14.11 °C ;
+T_sol spatialisé 13.45→24.49 ; T ressentie 13.78→19.30 (mix α=0.5) — ≠ T_air par plot.
+Golden **RE-FIGÉ** : `b1173a78a98e32e6705aaa9c573eadc8df2bfe1cb3bfbf46ed4ba18a8831ecc2`.
+**`test_croissance` NON re-calibré** (67/67 PASS — aucun seuil T_air codé en dur, il
+teste le mécanisme du gate pas des valeurs absolues). Suites eau 20/20, génétique 20/20,
+population PASS. `main.py 3` OK. Le **gel lit encore T_air** (c'est ⑥, séparé). Dérive =
+croissance spatialisée → dates de stade/floraison/reproduction/succession décalées
+(traçable, comme ①②③④).
+
+**Prochain** : implémenter ⑥ (`sprints/sprint_thermique_microclimat/06_gel_nocturne.md`).
+Kickoffs ⑦→⑩ écrits au fil de l'eau (un avant chaque `/clear`).
