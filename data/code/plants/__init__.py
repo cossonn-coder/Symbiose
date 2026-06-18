@@ -17,6 +17,7 @@ from plants.base import (
 from plants.species import (
     BursaPastoris, MedicagoLupulina, PoaAnnua, Taraxacum,
     Tomato, Pepper, Bean, Clover, Sunflower, Basil, Yarrow, Phacelia,
+    Borage, Comfrey, Mustard, Thyme, Lavender,
 )
 from plants.perennials import (
     PerennialWoody, Fig, AppleTree, CherryTree, WalnutTree, OakTree,

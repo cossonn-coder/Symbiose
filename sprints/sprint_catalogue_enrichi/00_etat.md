@@ -41,7 +41,7 @@ guildes abstraites à des **espèces NOMMÉES** rattachées aux guildes.
 | # | Tronçon | Golden | Statut |
 |---|---------|--------|--------|
 | ① | Doc-conception `CONCEPTION_CATALOGUE_ENRICHI.md` (audit + matrices + sélection + partage doc/code) | INTACT (0 code) | ✅ |
-| ② | Plantes lot 1 — familles connues (thym, lavande, bourrache, consoude, moutarde) | re-figé maîtrisé / neutre | ⬜ |
+| ② | Plantes lot 1 — familles connues (thym, lavande, bourrache, consoude, moutarde) | NEUTRE (hash intact) | ✅ |
 | ③ | Plantes lot 2 — familles + cycles neufs (carotte, ortie, courgette, mâche, ail) + `_ATTRACT_*` + **vérif `biennial`/`evergreen`** | re-figé maîtrisé + corrections moteur ? | ⬜ |
 | ④ | Faune nommée — **parfums** (puceron, coccinelle, carabe, merle, hérisson, lombric…) : sprite + encyclopédie | NEUTRE | ⬜ |
 | ⑤ | Faune nommée — **nouveaux pollinisateurs** (bourdon, osmie) : registre data-driven | re-figé maîtrisé (pollen/nouaison) | ⬜ |
@@ -55,6 +55,15 @@ guildes abstraites à des **espèces NOMMÉES** rattachées aux guildes.
 `winter_strategy="evergreen"` sont codés mais **jamais exercés** → ③ devra les
 vérifier (trou possible).
 
-**Prochain au choix Nico** : ② (plantes familles connues, le plus direct) ou ④
-(faune en parfums, golden-neutre → des bestioles nommées vite). Kickoff
-`0N_*.md` à écrire au lancement du tronçon retenu (pas d'enchaînement auto).
+**② CLOS** le 2026-06-18 — +5 plantes : thym/lavande (`aromatiques.py`, nouveau
+fichier, Lamiacées evergreen) + bourrache/consoude/moutarde (`compagnes.py`,
+217 LDC). Câblées `species/__init__.py`, `plants/__init__.py`, `catalogue.py`
+(PLANT_CATALOGUE seul ; WEED_/PERENNIAL_ intacts). Golden **NEUTRE** (hash
+`5fddfe54…` inchangé — espèces non plantées par le smoke). Chemin
+`winter_strategy="evergreen"` désormais EXERCÉ : nouveau `tests/test_evergreen.py`
+(thym vivant + feuillé après hiver ; 5 espèces germent). `biennial` reste à
+vérifier en ③ (carotte/ail).
+
+**Prochain au choix Nico** : ③ (familles + cycles neufs : carotte, ortie,
+courgette, mâche, ail + vérif `biennial`) ou ④ (faune en parfums, golden-neutre).
+Kickoff `0N_*.md` à écrire au lancement (pas d'enchaînement auto).

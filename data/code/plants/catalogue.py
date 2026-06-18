@@ -5,7 +5,8 @@ Catalogues d'espèces : cultivées + adventices (succession) + pérennes ligneus
 
 from __future__ import annotations
 from plants.species import (Tomato, Pepper, Bean, Clover, Sunflower, Basil,
-                            Yarrow, Phacelia,
+                            Yarrow, Phacelia, Borage, Comfrey, Mustard,
+                            Thyme, Lavender,
                             BursaPastoris, MedicagoLupulina, PoaAnnua, Taraxacum)
 from plants.perennials import Fig, AppleTree, CherryTree, WalnutTree, OakTree
 
@@ -20,6 +21,13 @@ PLANT_CATALOGUE: dict[str, type] = {
     "basilic":   Basil,
     "achillee":  Yarrow,
     "phacelie":  Phacelia,
+    # Aromatiques persistantes (Lamiacées evergreen)
+    "thym":      Thyme,
+    "lavande":   Lavender,
+    # Mellifères / engrais verts compagnons
+    "bourrache": Borage,
+    "consoude":  Comfrey,
+    "moutarde":  Mustard,
     # Adventices / succession écologique
     "bourse_pasteur": BursaPastoris,
     "minette":        MedicagoLupulina,

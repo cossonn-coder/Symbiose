@@ -9,17 +9,21 @@ ici → tous les imports existants (`from plants.species import Tomato, …` et 
 ré-export en bloc de `plants/__init__.py`) marchent sans changement.
 
 Orientation :
-  - `adventices.py` — 4 archétypes de succession (pioneer/N₂/grass/competitor)
-  - `cultivees.py`  — légumes du potager (Solanacées, Légumineuses, Astéracées…)
-  - `compagnes.py`  — attire-auxiliaires (Achillée, Phacélie)
+  - `adventices.py`   — 4 archétypes de succession (pioneer/N₂/grass/competitor)
+  - `cultivees.py`    — légumes du potager (Solanacées, Légumineuses, Astéracées…)
+  - `compagnes.py`    — attire-auxiliaires + mellifères + engrais verts (Achillée,
+                        Phacélie, Bourrache, Consoude, Moutarde)
+  - `aromatiques.py`  — Lamiacées aromatiques persistantes/evergreen (Thym, Lavande)
 """
 
 from .adventices import BursaPastoris, MedicagoLupulina, PoaAnnua, Taraxacum
 from .cultivees import Tomato, Pepper, Bean, Clover, Sunflower, Basil
-from .compagnes import Yarrow, Phacelia
+from .compagnes import Yarrow, Phacelia, Borage, Comfrey, Mustard
+from .aromatiques import Thyme, Lavender
 
 __all__ = [
     "BursaPastoris", "MedicagoLupulina", "PoaAnnua", "Taraxacum",
     "Tomato", "Pepper", "Bean", "Clover", "Sunflower", "Basil",
-    "Yarrow", "Phacelia",
+    "Yarrow", "Phacelia", "Borage", "Comfrey", "Mustard",
+    "Thyme", "Lavender",
 ]
