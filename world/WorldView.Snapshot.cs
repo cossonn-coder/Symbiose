@@ -26,6 +26,12 @@ namespace Symbiose
 		// du diff naissance/mort entre deux snapshots.
 		private readonly Dictionary<string, PlantRenderer> _plantNodes = new();
 		private int _plantSeq;                     // noms de nœuds uniques
+		// Phéromone d'alarme apienne (⑦ §J, snapshot 0.4.1) : par tuile, les plots
+		// en alarme → intensité. Liste CREUSE côté serveur (foyers > 0) ; ici un
+		// dict par plot pour un lookup O(1) au curseur (piqûre temps réel). Vide au
+		// repos. Lu par TickPiqure (WorldView.Piqure.cs).
+		private readonly Dictionary<string, Dictionary<(int R, int C), float>>
+			_alarme = new();
 		// Horloge du dernier snapshot appliqué (pour le Label + fin de saison).
 		private string _season;
 		private int _year, _weekInSeason;
@@ -53,6 +59,41 @@ namespace Symbiose
 		private static string TagText(GDict p) =>
 			$"{p["species"].AsString()} · {p["stage_name"].AsString()}";
 
+		// Reconstruit l'index d'alarme par plot depuis le bloc CREUX du snapshot
+		// (format `[r, c, intensité]` par tuile). Reconstruction pleine : l'alarme
+		// décroît vite côté moteur, pas de diff à tenir.
+		private void ApplyAlarme(GDict alarme)
+		{
+			_alarme.Clear();
+			foreach (var tileKv in alarme)
+			{
+				var foyers = tileKv.Value.AsGodotArray();
+				if (foyers.Count == 0) continue;
+				var d = new Dictionary<(int R, int C), float>();
+				foreach (var fv in foyers)
+				{
+					var f = fv.AsGodotArray();
+					d[(f[0].AsInt32(), f[1].AsInt32())] = (float)f[2].AsDouble();
+				}
+				_alarme[tileKv.Key.AsString()] = d;
+			}
+		}
+
+		// Range une plante VIVANTE dans l'index nom-FR → positions MONDE (cm), pour
+		// les fleurs de saut des butineurs (ForagerLayer). Les morts (squelettes) ne
+		// fleurissent pas → écartés. Clé = `name` (Phacélie…), pas `species` (anglais).
+		private void IndexPlantByName(GDict p)
+		{
+			if (p.ContainsKey("dead") && p["dead"].AsBool()) return;
+			Vector2 o = _origins[p["tile"].AsString()];
+			var pos = new Vector2(o.X + (float)p["x_cm"].AsDouble(),
+								  o.Y + (float)p["y_cm"].AsDouble());
+			string name = p["name"].AsString();
+			if (!_plantsByName.TryGetValue(name, out var list))
+				_plantsByName[name] = list = new List<Vector2>();
+			list.Add(pos);
+		}
+
 		private void ApplySnapshot(GDict snap, bool fade = true)
 		{
 			_lastSnap = snap;   // gardé pour RebuildWorld (rotation)
@@ -66,6 +107,7 @@ namespace Symbiose
 
 			int born = 0, grown = 0, empty = 0, nSegs = 0;
 			var seen = new HashSet<string>();
+			_plantsByName.Clear();   // index des fleurs de saut des butineurs
 			foreach (var pv in snap["plants"].AsGodotArray())
 			{
 				var p = pv.AsGodotDictionary();
@@ -78,6 +120,7 @@ namespace Symbiose
 				nSegs += structure.Segments.Count;
 				string key = PlantKey(p);
 				seen.Add(key);
+				IndexPlantByName(p);   // fleurs cibles des butineurs (vivantes only)
 
 				// Squelette (0.3.6) : `dead` → mode bois nu. Le mort GARDE sa clé
 				// (même tile|species|x|y) → il n'est pas fondu sortant ; il bascule
@@ -157,6 +200,14 @@ namespace Symbiose
 				_macroLife?.SetSprites(snap["sprites"].AsGodotDictionary(),
 									   _origins, fade);
 
+			// Butineurs (arc pollinisation, 0.3.9, lecture seule) : agents
+			// fleur-en-fleur, dessinés par ForagerLayer (≠ nuage MacroLife). L'index
+			// nom→positions vient d'être reconstruit ci-dessus (fleurs de saut).
+			// Lecture TOLÉRANTE : un snapshot pré-0.3.9 sans le bloc → aucun butineur.
+			if (snap.ContainsKey("foragers"))
+				_foragerLayer?.SetForagers(snap["foragers"].AsGodotDictionary(),
+										   _origins, _plantsByName, fade);
+
 			// Décompo·compost (③, lecture seule, protocole 0.3.7/0.3.5) : litière
 			// au sol (layer batché) + structures bac/pile (nœuds YSort). Lecture
 			// TOLÉRANTE : un snapshot ancien sans ces blocs → rien dessiné.
@@ -164,6 +215,12 @@ namespace Symbiose
 				ApplyLitiere(snap["litiere"].AsGodotDictionary());
 			if (snap.ContainsKey("structures"))
 				ApplyStructures(snap["structures"].AsGodotDictionary());
+
+			// Alarme apienne (⑦ §J, 0.4.1, lecture seule) : foyers de phéromone par
+			// plot, consommés par la piqûre temps réel. Lecture TOLÉRANTE : un
+			// snapshot pré-0.4.1 n'a pas le bloc → aucun foyer, aucune piqûre.
+			if (snap.ContainsKey("alarme"))
+				ApplyAlarme(snap["alarme"].AsGodotDictionary());
 
 			// Heatmap (t6·C) : la grille affichée date de la semaine d'avant →
 			// périmée. Si l'overlay est ON, _Process relancera UNE requête

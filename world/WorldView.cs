@@ -90,7 +90,7 @@ namespace Symbiose
 		// droite de l'écran + imprimé en console au lancement : si la version à
 		// l'écran n'est pas celle annoncée par Claude, le circuit VM → sync
 		// Nextcloud → build Godot n'est pas passé (piège connu depuis t3).
-		public const string Build = "vue·rattrapage 03 correctif F5 — composter le sol → bac proche + remplissage visible — 2026-06-16";
+		public const string Build = "pollinisation vue — butineurs fleur-en-fleur (ForagerLayer) + ruche/miel + piqûre temps réel (§J) — 2026-06-18";
 
 		// -------------------------------------------------------------------
 		// RÉGLAGES (exportés : ajustables dans l'inspecteur sans recompiler)
@@ -127,6 +127,14 @@ namespace Symbiose
 		// du sol, sous les plantes. Enfant direct de WorldView : il survit à
 		// RebuildWorld (il se re-projette seul à chaque dessin d'animation).
 		private MacroLife _macroLife;
+		// Butineurs (arc pollinisation) : agents fleur-en-fleur, distincts du nuage
+		// MacroLife. ZIndex 11 = AU-DESSUS des plantes/objets (10) — l'abeille se
+		// pose sur la corolle, on doit la voir par-dessus. Survit à RebuildWorld.
+		private ForagerLayer _foragerLayer;
+		// Index plantes-par-NOM-FR (Phacélie…) → positions MONDE (cm), reconstruit
+		// à chaque snapshot. Sert les fleurs de saut des butineurs (le `target` est
+		// le nom FR, qui matche `name`, pas `species`/anglais).
+		private readonly Dictionary<string, List<Vector2>> _plantsByName = new();
 
 		private GDict _world;      // réponse de init (tuiles + maison) — pour RebuildWorld
 		private GDict _lastSnap;   // dernier snapshot appliqué — pour RebuildWorld
@@ -208,6 +216,9 @@ namespace Symbiose
 
 			_macroLife = new MacroLife { Name = "MacroLife", ZIndex = 5 };
 			AddChild(_macroLife);
+
+			_foragerLayer = new ForagerLayer { Name = "ForagerLayer", ZIndex = 11 };
+			AddChild(_foragerLayer);
 
 			_fieldOverlay = new FieldOverlay
 			{
@@ -373,6 +384,9 @@ namespace Symbiose
 
 			// 2) Accumulateur temps réel (seulement quand la saison court).
 			if (_phase != Phase.Saison) return;
+			// 2a) Piqûre temps réel (⑦ §J) : réaction au curseur pilotée par
+			//     l'état moteur (alarme + densité abeille). Coût nul hors foyer.
+			TickPiqure((float)delta);
 			_timeAccum += (float)delta;
 			float spw = DebugSecondsPerWeek > 0f ? DebugSecondsPerWeek : SecondsPerWeek;
 			if (_simMode == SimMode.Turbo) spw = 0f;   // step dès que le pont répond
@@ -396,6 +410,11 @@ namespace Symbiose
 		/// TODO (sprint save global) : déclencher l'auto-save ici — le
 		/// protocole v0 n'a pas de commande `save`, on ne l'invente pas en t3.
 		/// </summary>
-		private void OnSeasonEnd() { }
+		private void OnSeasonEnd()
+		{
+			// Le pollen déposé sur les fleurs s'accumule PAR SAISON (décision Nico) :
+			// on repart d'une ardoise vierge à chaque bascule de saison.
+			_foragerLayer?.ClearPollen();
+		}
 	}
 }

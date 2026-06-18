@@ -187,10 +187,23 @@
 
 ## Reste
 
-- **Vue Godot** (sprites chenilles/syrphes/papillons, larves, ruche/miel, **piqûre
-  temps réel** au curseur : coût Vigueur + perturbation locale §J.2) : différé, hooks
-  posés — `eco.larvae` non exposé ; `essaim`/`miel` au snapshot 0.4.0 ; `alarme` +
-  densité `abeille` au snapshot 0.4.1 (de quoi animer la piqûre côté vue).
+- **Vue Godot — FAITE (confirmée F5 2026-06-18)**, golden INTACT (aucune ligne Python) :
+  - `visuals/ForagerLayer.cs` (NEUF) : butineurs abeille/syrphe/papillon dessinés en
+    AGENTS fleur-en-fleur (bloc snapshot `foragers`), saut entre fleurs conspécifiques
+    voisines via index `_plantsByName` (clé = `name` FR, ≠ `species` anglais). Point
+    pollen sur le dos quand l'agent porte ; **dépôt de pollen sur les fleurs butinées**
+    (par atterrissage, accumulé/capé par saison, vidé à `OnSeasonEnd`). LOD ×4 + culling.
+  - `visuals/MacroLife.cs` : abeille/syrphe/papillon RETIRÉS du nuage de densité
+    (`NonDessine`) — ils vivent dans ForagerLayer (pas de double affichage).
+  - `visuals/PiqureFlash.cs` (NEUF) + `world/WorldView.Piqure.cs` (NEUF) : **piqûre
+    temps réel** « vue pure » — accumulateur déterministe `taux × alarme × densité
+    abeille` (densité lue dans ForagerLayer), coût Vigueur LOCAL (écrasé au snapshot,
+    pas de retour moteur), éclat éphémère. Câblé chaque frame en Saison.
+  - `world/WorldView.Compost.cs` + `visuals/CompostStructure.cs` : ruche (essaim/miel)
+    dessinée (3 hausses iso, remplissage miel + abeilles au trou de vol).
+  - Calibrages exposés si retouche : `HopSec` (par guilde), `MaxPollenPerFlower`,
+    `TauxPiqure`/`CoutPiqure`/`RayonPiqureCm`.
+  - NON fait (assumé) : sprites larves/chenilles (`eco.larvae` non exposé au snapshot).
 
 ## Garde-fous
 

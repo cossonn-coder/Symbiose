@@ -82,12 +82,24 @@ namespace Symbiose
 		{
 			["ravageur"]      = (new Color("3a2c1e"), 2.2f, 6f, 2.0f),
 			["auxiliaire"]    = (new Color("ece6d2"), 2.2f, 6f, 2.6f),
+			// Pollinisateur (legacy) : l'ancien champ agrégé d'avant l'éclatement ②.
+			// Les types abeille/syrphe/papillon ne sont PLUS dessinés ici — ce sont
+			// des AGENTS (butineurs fleur-en-fleur, ForagerLayer), pas un nuage de
+			// densité (cf. _NonDessine ci-dessous).
 			["pollinisateur"] = (new Color("e9c83c"), 2.6f, 120f, 0.9f),
 			["vers_de_terre"] = (new Color("6b4a32"), 0f, 1.5f, 0.6f),
 		};
 		// Guilde inconnue d'un futur protocole : point gris, pas un crash.
 		private static readonly (Color, float, float, float) GuildeInconnue =
 			(new Color("999999"), 2.0f, 4f, 2.0f);
+
+		// Guildes IGNORÉES ici (décision Nico 2026-06-18) : les pollinisateurs
+		// typés sont des AGENTS butineurs (vol fleur-en-fleur, ForagerLayer), pas
+		// un nuage de densité ancré. On NE les stocke ni ne les dessine plus dans
+		// MacroLife — sinon double affichage (nuage + butineur) et points gris
+		// GuildeInconnue. MacroLife garde ravageur/auxiliaire/vers_de_terre.
+		private static readonly HashSet<string> NonDessine =
+			new() { "abeille", "syrphe", "papillon" };
 
 		// Un sprite affiché. Position MONDE absolue en cm (origin de la tuile
 		// déjà ajoutée) ; Phase = hash de la clé → déphasages d'errance propres.
@@ -140,6 +152,7 @@ namespace Symbiose
 				foreach (var guildKv in tileKv.Value.AsGodotDictionary())
 				{
 					string guild = guildKv.Key.AsString();
+					if (NonDessine.Contains(guild)) continue;   // butineurs → ForagerLayer
 					foreach (var ev in guildKv.Value.AsGodotArray())
 					{
 						// Format compact 0.2.3 : [r, c, x_frac, y_frac, activite].

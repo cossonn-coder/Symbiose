@@ -70,9 +70,15 @@ namespace Symbiose
 					// visuel = contenu + compost_mur (se remplit au compostage).
 					float contenu = st.ContainsKey("contenu")
 						? (float)st["contenu"].AsDouble() : 0f;
+					// Ruche (⑥, 0.4.0) : essaim [0,1] + miel [0, MIEL_MAX]. Absents
+					// d'un snapshot pré-0.4.0 ou d'un bac/pile → 0 (lecture tolérante).
+					float essaim = st.ContainsKey("essaim")
+						? (float)st["essaim"].AsDouble() : 0f;
+					float miel = st.ContainsKey("miel")
+						? (float)st["miel"].AsDouble() : 0f;
 					float cx = o.X + (c + 0.5f) * PlotCm;
 					float cy = o.Y + (r + 0.5f) * PlotCm;
-					var node = new CompostStructure(kind, mur, contenu)
+					var node = new CompostStructure(kind, mur, contenu, essaim, miel)
 					{
 						Position = WorldToScreen(cx, cy),
 						Name = $"struct_{tileId}_{r}_{c}_{kind}",

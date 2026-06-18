@@ -44,13 +44,30 @@ namespace Symbiose
 		// Rondins de la pile : sections claires (aubier) cernées.
 		private static readonly Color RondinCol  = new Color("a9855c");
 
-		private readonly string _kind;   // "bac" | "pile"
-		private readonly float _masse;   // contenu + compost_mur (saturé à MasseRef)
+		// Ruche (⑥ apiculture, vue piqûre) : demi-empreinte + hauteur d'une hausse
+		// extrudée. `MielMaxRef` = MIEL_MAX moteur (10) → la jauge miel sature à
+		// pleine réserve ; `essaim` arrive déjà borné [0,1] (pas de ref à diviser).
+		private const float RucheHalfCm = 15f;
+		private const float RucheBoxCm  = 13f;   // hauteur d'une hausse
+		private const float MielMaxRef  = 10f;
+		// Teintes ruche : bois pâle des hausses, miel ambré, abeilles (= MacroLife).
+		private static readonly Color RucheBois = new Color("c9a86a");
+		private static readonly Color RucheBord = new Color("7a5a30");
+		private static readonly Color MielCol   = new Color("e6a92a");
+		private static readonly Color AbeilleCol = new Color("e9c83c");
 
-		public CompostStructure(string kind, float compostMur, float contenu)
+		private readonly string _kind;   // "bac" | "pile" | "ruche"
+		private readonly float _masse;   // contenu + compost_mur (saturé à MasseRef)
+		private readonly float _essaim;  // [0,1] peuplement de la ruche (⑥)
+		private readonly float _miel;    // [0, MIEL_MAX] réserve de miel (⑥)
+
+		public CompostStructure(string kind, float compostMur, float contenu,
+								float essaim = 0f, float miel = 0f)
 		{
 			_kind = kind;
 			_masse = compostMur + contenu;   // remplissage = matière TOTALE présente
+			_essaim = essaim;
+			_miel = miel;
 		}
 
 		// Les 4 coins de l'empreinte, projetés en OFFSET (vecteur) autour du
@@ -68,9 +85,57 @@ namespace Symbiose
 
 		public override void _Draw()
 		{
+			if (_kind == "ruche") { DrawRuche(); return; }
 			float sat = Mathf.Clamp(_masse / MasseRef, 0f, 1f);
 			if (_kind == "pile") DrawPile(sat);
 			else DrawBac(sat);
+		}
+
+		// RUCHE : une pile de 3 hausses vue en iso (mêmes 2 faces avant + dessus
+		// que le bac). Le REMPLISSAGE des faces ∝ miel/MIEL_MAX (la réserve « monte »
+		// dans les hausses, philo : pas de chiffre). Le peuplement (`essaim`) se
+		// lit en abeilles posées au trou de vol — densité ∝ essaim, sans nom (vie
+		// macro). Posée en couche YSort → s'occulte avec plantes et maison.
+		private void DrawRuche()
+		{
+			float miel = Mathf.Clamp(_miel / MielMaxRef, 0f, 1f);
+			Vector2[] g = Footprint(RucheHalfCm);
+			int front = 0;
+			for (int i = 1; i < 4; i++) if (g[i].Y > g[front].Y) front = i;
+			int right = (front + 3) % 4, left = front;
+
+			// 3 hausses empilées : on extrude chaque caisson par RucheBoxCm. Les
+			// faces se remplissent de miel du BAS vers le haut (jauge globale).
+			for (int box = 0; box < 3; box++)
+			{
+				Vector2 dn = new Vector2(0f, -box * RucheBoxCm * WorldView.PxPerCmZ);
+				Vector2 upBox = new Vector2(0f, -RucheBoxCm * WorldView.PxPerCmZ);
+				Vector2[] baseR = { g[0] + dn, g[1] + dn, g[2] + dn, g[3] + dn };
+				Vector2[] topR = { baseR[0] + upBox, baseR[1] + upBox,
+								   baseR[2] + upBox, baseR[3] + upBox };
+				// Part de miel revenant à CETTE hausse (remplissage du bas) : la
+				// jauge globale × 3 hausses, la part de chacune saturée à 1.
+				float boxMiel = Mathf.Clamp(miel * 3f - box, 0f, 1f);
+				foreach (int w in new[] { right, left })
+				{
+					var face = new[] { baseR[w], baseR[(w + 1) % 4],
+									   topR[(w + 1) % 4], topR[w] };
+					Color bois = w == left ? RucheBois : RucheBord;
+					DrawColoredPolygon(face, bois.Lerp(MielCol, 0.7f * boxMiel));
+					DrawPolyline(new[] { baseR[w], topR[w], topR[(w + 1) % 4] },
+								 RucheBord, 1.5f);
+				}
+			}
+			// Trou de vol + abeilles : au pied de la face avant, densité ∝ essaim.
+			Vector2 vol = (g[left] + g[(left + 1) % 4]) * 0.5f;
+			int nAbeilles = Mathf.RoundToInt(_essaim * 6f);
+			for (int i = 0; i < nAbeilles; i++)
+			{
+				float a = i * 1.3f;
+				Vector2 p = vol + new Vector2(Mathf.Cos(a) * 5f,
+											  -2f - Mathf.Sin(a) * 4f);
+				DrawCircle(p, 1.4f, AbeilleCol);
+			}
 		}
 
 		// BAC : caisse ouverte vue en iso. Empreinte au sol → 2 faces visibles

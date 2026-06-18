@@ -233,6 +233,7 @@ namespace Symbiose
 					: !_macroLife.Visible ? "OFF"
 					: CurrentZoom < 4f ? $"{_macroLife.Count} (LOD : zoomez ×4)"
 					: _macroLife.Count.ToString()) + " · "
+				+ $"butineurs {(_foragerLayer == null ? "—" : _foragerLayer.Count.ToString())} · "
 				+ $"ombres {(ShadowsOn ? "ON" : "OFF")} · "
 				+ $"zoom ×{ZoomSteps[_zoomIndex]}";
 		}
