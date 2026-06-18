@@ -24,6 +24,7 @@ from sim.growth import (atteindre_segment,   # seam de perturbation §F (sim→s
 from sim.effects import deposer_mort   # mort → squelette persistant (②B), point d'entrée unique
 from fields.ecofields import BOIS_PAR_CM, ECRASER_FRAG_BOOST   # litière `bois` (taille/écimage) + boost fragmentation (②)
 from fields.population import DENSITE_PAR_SPRITE   # « un geste = un individu = un quantum » (D31.3 §5)
+from fields.alarme import declencher_alarme, ALARME_DEPOT   # phéromone d'alarme apienne (⑦ §J)
 from fields.seedbank import GrainEnAttente          # dépôt de `planter` (germination différée, distinct de la banque-sol)
 from .couts import cout_action, _objets_action, OBJETS_TOUCHES, URGENCE_MULT
 
@@ -305,6 +306,11 @@ def ecraser(game_state: dict, player: str, eco, r: int, c: int,
     if spend(game_state, player, cost) < 1.0:
         return False
     eco.populations[guilde].add(r, c, -DENSITE_PAR_SPRITE)
+    # ⑦ §J.1 : écraser une ABEILLE libère une phéromone d'alarme locale → les
+    # abeilles du rayon piquent le curseur (réaction temps réel, côté Godot). Le
+    # geste reste possible (philo #1) mais émergemment puni — aucun malus en dur ici.
+    if guilde == "abeille":
+        declencher_alarme(eco, r, c, ALARME_DEPOT)
     return True
 
 

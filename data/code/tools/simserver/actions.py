@@ -338,7 +338,7 @@ class ActionsMixin:
             if verb == "recolter_miel":
                 if struct.kind != "ruche":
                     return bilan(False, 0.0, 0.0, "cette structure n'est pas une ruche")
-                g = A.recolter_miel(gs, player, struct)
+                g = A.recolter_miel(gs, player, struct, eco)   # eco → alarme §J si nu
                 equipe = A.equipe(gs, player)
                 return bilan(g > 0.0, cost, g,
                              f"miel récolté (+{g:.1f} Vigueur"

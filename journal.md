@@ -84,6 +84,7 @@ pointeur ci-dessous. Ne plus écrire le contenu des entrées ici.
 - [2026-06-16 — Sprint REFACTOR GLOBAL · SS①–⑦ TOUS CLOS — golden inchangé, dépôt rangé (un fichier = une responsabilité), seuil taille recalibré ~350](journal/54_2026-06-16_sprint-refactor-global-SS1-7-CLOS.md)
 - [2026-06-16 — Sprint saisonnalité vie macro CLOS — photopériode + inertie asymétrique (dormance/réveil par guilde), golden RE-FIGÉ maîtrisé (herbivorie saisonnière)](journal/55_2026-06-16_sprint-saisonnalité-vie-macro-CLOS.md)
 - [2026-06-16 — Arc Pollinisation & cycle de vie CONCEPTION FIGÉE (A–E) — floraison réelle (GDD+photopériode), nouaison pollinisée, ressource mellifère, chenille→papillon bouclé ; impl ①→④ à venir](journal/56_2026-06-16_conception-pollinisation-cycle-vie-FIGEE.md)
+- [2026-06-18 — Sprint Pollinisation & cycle de vie · implémentation ①→⑦ MOTEUR CLOS — floraison/nectar/butineurs/nouaison/ponts larvaires + ruche/miel + piqûre-alarme émergente (pont 0.4.1) ; golden `4f9fad91…1260` ; reste vue Godot (F5)](journal/57_2026-06-18_sprint-pollinisation-implémentation-①-⑦-CLOS-moteur.md)
 
 ---
 

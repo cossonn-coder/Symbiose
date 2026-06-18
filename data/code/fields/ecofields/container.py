@@ -63,6 +63,12 @@ class EcoFields:
     # pollinisateurs. État TRANSIENT (recalculé chaque tick, pas de persistance
     # inter-tick, §F.2) : sert UNIQUEMENT au snapshot (rendu Godot). Hors golden.
     foragers:         list = field(default=None)
+    # Phéromone d'alarme apienne (arc pollinisation ⑦, §J). Posée au plot d'une
+    # action directe coûteuse (écraser une abeille / récolter sans équipement),
+    # décroît au tick (`fields.alarme.tick_alarme`). PUR PUITS lu par le snapshot :
+    # Godot anime la piqûre temps réel ; le moteur n'y réinjecte aucun champ figé →
+    # golden NEUTRE (§J.4).
+    alarme:           GridField = field(default=None)
 
     def __post_init__(self):
         if self.humidite    is None: self.humidite    = GridField(self.rows, self.cols)
@@ -113,6 +119,8 @@ class EcoFields:
                            for name in larval_field_names(build_lifecycle_bridges())}
         if self.foragers is None:
             self.foragers = []          # aucun butineur tant que le tick n'a pas tourné
+        if self.alarme is None:
+            self.alarme = GridField(self.rows, self.cols, max_val=1.0)   # ⑦ §J, à 0 au repos
 
     def get_field(self, name: str) -> GridField | None:
         return {

@@ -23,6 +23,7 @@ from __future__ import annotations
 from sim.vigueur import spend, gain
 from sim import maitrise as M               # gate équipement = palier de maîtrise (D12)
 from fields.ecofields import Structure       # structure posable (⑤) — kind="ruche" (⑥)
+from fields.alarme import declencher_alarme, ALARME_DEPOT   # phéromone d'alarme apienne (⑦ §J)
 from .couts import cout_action, OBJETS_TOUCHES
 
 # Gate de l'équipement apicole (§I.3) : il APPARAÎT comme capacité au palier de
@@ -61,21 +62,28 @@ def equipe(game_state: dict, player: str) -> bool:
     return M.palier(game_state, player, CONCEPT_ABEILLES) >= SEUIL_EQUIPEMENT
 
 
-def recolter_miel(game_state: dict, player: str, struct: Structure) -> float:
+def recolter_miel(game_state: dict, player: str, struct: Structure, eco=None) -> float:
     """Récolter le miel d'une ruche (§I.2) — canal récolte, coût FAIBLE, gain ∝ miel
     transféré × `MIEL_VIGUEUR_RATIO`. **Refus EN AMONT si rien à récolter** (réserve
     vide → aucune Vigueur dépensée, modèle `epandre`). Avec l'équipement (§I.3) : vide
-    la réserve. Sans équipement : récolte PARTIELLE (`RECOLTE_SANS_EQUIP`) — la
-    pénalité émergente (alarme/piqûre §J) sera câblée au tronçon ⑦. L'effort est
-    tronqué si la Vigueur ne couvre pas le coût (ratio de `spend`, comme `recolter`).
+    la réserve. Sans équipement : récolte PARTIELLE (`RECOLTE_SANS_EQUIP`) ET pose une
+    phéromone d'alarme au plot de la ruche (§J.1, ⑦) → les abeilles piquent au curseur
+    (réaction temps réel, côté Godot ; le moteur ne fait que poser le signal). L'effort
+    est tronqué si la Vigueur ne couvre pas le coût (ratio de `spend`, comme `recolter`).
+
+    `eco` (optionnel) ne sert qu'au dépôt d'alarme : absent (appels de test sans monde)
+    → la récolte fonctionne, sans signal posé (dégradation gracieuse, cf `declencher_alarme`).
     Renvoie la Vigueur effectivement gagnée (0.0 = rien récolté / non payé)."""
     if struct.miel <= 0.0:
         return 0.0                              # réserve vide → aucune Vigueur dépensée
     cost = cout_action(game_state, player, "recolter_miel", OBJETS_TOUCHES["recolter_miel"])
     ratio = spend(game_state, player, cost)
-    frac = 1.0 if equipe(game_state, player) else RECOLTE_SANS_EQUIP
+    equipped = equipe(game_state, player)
+    frac = 1.0 if equipped else RECOLTE_SANS_EQUIP
     recolte = struct.miel * frac * ratio
     struct.miel -= recolte
     gain_v = recolte * MIEL_VIGUEUR_RATIO
     gain(game_state, player, gain_v)
+    if not equipped and eco is not None:
+        declencher_alarme(eco, struct.plot[0], struct.plot[1], ALARME_DEPOT)
     return gain_v

@@ -26,6 +26,7 @@ from dataclasses import dataclass
 from plants import PLANT_CATALOGUE
 from fields import _hash_noise, ABSCISSION_WEEKS
 from fields.apiculture import tick_ruches   # ruches : capture essaim + miel (⑥, §H/§I)
+from fields.alarme import tick_alarme       # phéromone d'alarme apienne : décroissance (⑦, §J)
 from sim.effects import resolve_plant_turn, apply_disturbances
 from sim.reproduction import is_seed_bearing
 from sim.seeds import Seed
@@ -266,6 +267,13 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
             # mis à jour, le miel l'intègre via le nectar local. No-op STRICT si
             # aucune ruche n'est posée → golden NEUTRE (§H.3 ; le smoke n'en pose pas).
             tick_ruches(eco, tile, tile.plants)
+
+            # 13f. Alarme apienne (arc pollinisation ⑦, §J) — décroissance hebdo de la
+            # phéromone posée par une action directe (écraser une abeille / récolter
+            # sans équipement). PUR PUITS lu par le snapshot (Godot anime la piqûre
+            # temps réel) : ne touche QUE `eco.alarme`, jamais un champ figé → no-op de
+            # fait quand aucune alarme n'est posée (le smoke n'en pose pas) → golden NEUTRE.
+            tick_alarme(eco)
 
             # 14. Banque de graines (vieillissement + enrichissement)
             eco.tick_seed_bank(tile.plants, seed=seed, week=week)

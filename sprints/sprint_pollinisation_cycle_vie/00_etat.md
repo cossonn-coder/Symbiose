@@ -153,20 +153,53 @@
     appartient aux habitat_fn de la couche registre ; le sortir créerait un cycle
     population↔apiculture). Responsabilité unique préservée. Split = candidat futur.
 
+- **⑦ Piqûre — alarme émergente (J) — CLOS, golden NEUTRE.** ✅ (PART MOTEUR ;
+  piqûre temps réel laissée au F5 Godot, hooks posés — décision Nico : Godot pas
+  sur la VM, périmètre « moteur + hooks ».)
+  - `PlantInstance` inchangé : l'alarme est un CHAMP, pas un attribut de plante.
+  - `fields/alarme.py` NEUF (PURE, duck-typé sur `eco`, miroir apiculture/foragers/
+    lifecycle — garde-fou taille) : `declencher_alarme(eco,r,c,intensite=ALARME_DEPOT)`
+    (dépôt cumulatif borné, `GridField.add`) + `tick_alarme(eco)` (décroissance
+    × `ALARME_DECAY=0.5`, snap à 0 sous `ALARME_FLOOR=0.01` → liste snapshot creuse).
+    N'importe PAS `sim` → aucun cycle (sim/actions appelle, jamais l'inverse).
+  - `ecofields/container.py` : `eco.alarme` (GridField [0,1], transient, à 0 au repos).
+  - **Déclencheurs (philo #1)** : `sim/actions/gestes.ecraser` dépose l'alarme quand
+    `guilde == "abeille"` (phéromone APIENNE — un ravageur écrasé n'en pose pas) ;
+    `sim/actions/ruche.recolter_miel` gagne un param `eco` (optionnel, dégradation
+    gracieuse) et dépose l'alarme au plot de la ruche SANS équipement (avec équipement
+    = enfumoir → aucune). Routeur `actions.py` passe `eco` à `recolter_miel`.
+  - Câblé boucle.py **étape 13f** (APRÈS ruches 13e) : décroissance hebdo. PUR PUITS —
+    n'écrit QUE `eco.alarme`, jamais un champ figé → no-op de fait sans alarme posée.
+  - Pont **0.4.0 → 0.4.1** : snapshot expose `alarme` par tuile = liste CREUSE
+    `[[r,c,intensite],…]` (foyers > 0). PAS de verbe neuf (effet de bord des verbes
+    existants). Round-trip confirmé : `ecraser` abeille (T0,2,2) → `alarme:[[2,2,1.0]]`.
+  - **Golden INCHANGÉ** `4f9fad91…1260` (le smoke n'écrase aucune abeille, ne récolte
+    aucun miel → alarme 0 partout ; et même active, pur puits non réinjecté).
+    `population_hash.txt` inchangé `71f7ddda…`.
+  - `tests/test_alarme.py` NEUF (déclencheur écraser abeille vs ravageur, récolte
+    nue vs équipée vs sans-eco, décroissance+snap, neutralité PUR PUITS, déterminisme
+    — 16/16). Suite verte : golden, ruche 20/20, lifecycle, sim_server 158/158
+    (version 0.4.1), structures 65/65, population, attraction, fruits, vigueur 135/135,
+    maîtrise 35/35.
+  - **⚠ Garde-fou taille** : `container.py` ~359 LDC pur (+3 code : 1 champ + 2 init ;
+    le bloc commentaire ⑦ est EXCLU du décompte) — déjà signalé à 356 au ⑤/⑥. `alarme.py`
+    ≈20 LDC pur (très en-deçà). `population.py` non touché (reste à 363).
+
 ## Reste
 
-- **⑦ COUCHE JOUEUR** (piqûre §J : alarme émergente, temps réel moteur + Godot) —
-  hook posé dans `recolter_miel` (récolte sans équipement). Golden neutre.
-- **Vue Godot** (sprites chenilles/syrphes/papillons, larves, ruche/miel) : différé,
-  hooks posés (`eco.larvae` non exposé ; `essaim`/`miel` exposés au snapshot 0.4.0).
+- **Vue Godot** (sprites chenilles/syrphes/papillons, larves, ruche/miel, **piqûre
+  temps réel** au curseur : coût Vigueur + perturbation locale §J.2) : différé, hooks
+  posés — `eco.larvae` non exposé ; `essaim`/`miel` au snapshot 0.4.0 ; `alarme` +
+  densité `abeille` au snapshot 0.4.1 (de quoi animer la piqûre côté vue).
 
 ## Garde-fous
 
 - Golden re-figé uniquement aux tronçons ② et ⑤ — **maîtrisé + annoncé**, isolé.
-  ⑥ golden NEUTRE (ruche absente du smoke).
+  ⑥ et ⑦ golden NEUTRE (ruche/alarme absentes du smoke).
 - Déterminisme : `seed`/`_hash_noise`/`daylength`, jamais de RNG vivant.
 - Couches `plants ← fields ← sim` ; ~350 l code pur (⑤ : 2 fichiers cœur signalés ;
-  ⑥ : `population.py` à 363, signalé).
-- **Partie I MOTEUR TERMINÉE** (①→⑤). **⑥ ruche & miel CLOS.** Reprise : « lis
-  `sprints/sprint_pollinisation_cycle_vie/00_etat.md` puis lance le tronçon ⑦
-  (conception §J : piqûre — alarme émergente) ».
+  ⑥/⑦ : `population.py` 363 + `container.py` ~359, signalés).
+- **SPRINT POLLINISATION & CYCLE DE VIE TERMINÉ côté moteur** : Partie I (①→⑤) +
+  Partie II couche joueur (⑥ ruche & miel, ⑦ piqûre/alarme) CLOSES. Reste la **vue
+  Godot** (piqûre temps réel + sprites), hors VM (F5 Nico). Reprise éventuelle : « lis
+  `sprints/sprint_pollinisation_cycle_vie/00_etat.md` ».

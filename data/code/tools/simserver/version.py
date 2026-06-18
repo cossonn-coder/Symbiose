@@ -90,7 +90,18 @@ from __future__ import annotations
 #       sans équipement → récolte partielle, l'alarme/piqûre §J vient au ⑦). La ruche
 #       peuplée renforce l'habitat abeille local (§H.2). Moteur ⑥ → golden NEUTRE
 #       (le smoke n'instancie aucune ruche). Champs optionnels côté vue.
-ENGINE_VERSION = "0.4.0"
+# 0.4.1 (pollinisation ⑦, piqûre — alarme émergente §J — couche joueur) : le snapshot
+#       expose `alarme` par tuile = liste CREUSE `[[r, c, intensite], …]`, les foyers
+#       de phéromone d'alarme apienne (champ `eco.alarme`). Posés au plot d'une action
+#       directe coûteuse — `ecraser` une ABEILLE (gestes.py) ou `recolter_miel` SANS
+#       équipement (ruche.py reçoit `eco` en plus) — et décrus chaque tick
+#       (engine étape 13f, `fields.alarme.tick_alarme`). Pas de verbe neuf au routeur
+#       (effet de bord des verbes existants). Godot lit l'intensité au curseur → les
+#       abeilles du rayon PIQUENT (coût Vigueur + perturbation appliqués TEMPS RÉEL
+#       côté vue, §J.3). Le moteur ne réinjecte l'alarme dans AUCUN champ figé (pur
+#       puits) → golden NEUTRE (§J.4 ; le smoke n'écrase aucune abeille, ne récolte
+#       aucun miel). Champ optionnel côté vue (tolérance pré-0.4.1).
+ENGINE_VERSION = "0.4.1"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

@@ -122,6 +122,7 @@ class SerializeMixin:
         foragers = {}
         structures = {}
         litiere = {}
+        alarme = {}
         for tile in gs["tiles"]:
             eco = gs["eco"][tile.tile_id]
             sprites[tile.tile_id] = {
@@ -174,6 +175,21 @@ class SerializeMixin:
                     total = sum(p.masse for p in surface)
                     plots.append([r, c, dominant.tissu, round(total, 4)])
             litiere[tile.tile_id] = plots
+            # Phéromone d'alarme apienne (⑦, §J, 0.4.1) : liste CREUSE des plots en
+            # alarme `[r, c, intensite]` (foyers > 0 seulement). Godot lit l'intensité
+            # au curseur → les abeilles présentes piquent (réaction temps réel, coût
+            # Vigueur côté vue). PURE lecture (`eco.alarme` rempli par les déclencheurs
+            # + décru par le tick) → golden NEUTRE (vide tant qu'aucune abeille écrasée
+            # / aucun miel récolté nu). Champ optionnel côté vue (tolérance pré-0.4.1).
+            af = getattr(eco, "alarme", None)
+            foyers = []
+            if af is not None:
+                for r in range(eco.rows):
+                    for c in range(eco.cols):
+                        v = af.data[r][c]
+                        if v > 0.0:
+                            foyers.append([r, c, round(v, 4)])
+            alarme[tile.tile_id] = foyers
         # Bloc joueur (tranche 4, lecture seule) : la vue affiche la Vigueur
         # au HUD. vigueur_max passe par la façade (bonus maîtrise compris).
         # `seeds` (0.3.3) = lots PLANTABLES de la banque-joueur, {clé catalogue:
@@ -190,4 +206,4 @@ class SerializeMixin:
                            "vigueur_max": V.vigueur_max(gs, player),
                            "seeds": seeds},
                 "plants": plants, "sprites": sprites, "foragers": foragers,
-                "structures": structures, "litiere": litiere}
+                "structures": structures, "litiere": litiere, "alarme": alarme}
