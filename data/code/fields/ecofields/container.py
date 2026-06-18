@@ -195,10 +195,11 @@ class EcoFields:
 
     # --- Microclimat de surface (T_sol) ---
 
-    def tick_thermique(self, saison: str) -> None:
-        """Recalcule la carte `temperature_sol` (surchauffe solaire + inertie, ①).
-        Délègue au helper pur `thermique.tick_thermique` (container déjà dense)."""
-        _tick_thermique(self, saison)
+    def tick_thermique(self, saison: str, nebulosite: float = 0.0) -> None:
+        """Recalcule `temperature_sol` (solaire·nébulosité − latente − isolation, ④).
+        `nebulosite` = scalaire météo du tick (0 = ciel clair). Délègue au helper
+        pur `thermique.tick_thermique` (container déjà dense)."""
+        _tick_thermique(self, saison, nebulosite)
 
     # --- Hydrologie ---
 

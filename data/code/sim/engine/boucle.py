@@ -25,6 +25,7 @@ import math
 from dataclasses import dataclass
 from plants import PLANT_CATALOGUE
 from fields import _hash_noise, ABSCISSION_WEEKS
+from fields.ecofields.constants import NEBULOSITE   # table météo→nébulosité (④)
 from fields.apiculture import tick_ruches   # ruches : capture essaim + miel (⑥, §H/§I)
 from fields.alarme import tick_alarme       # phéromone d'alarme apienne : décroissance (⑦, §J)
 from sim.effects import resolve_plant_turn, apply_disturbances
@@ -87,6 +88,7 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
         year_fraction = (week - 1) / 52.0
         phase         = (seed & 0xFFFF) / 0xFFFF * 2.0 * math.pi   # caractère d'année dérivé du seed
         temp_now      = temp_norm(week_in_year, year_fraction, phase) + temperature_delta(event)
+        nebul         = NEBULOSITE.get(event.kind, 0.10)   # ④ : ciel couvert → moins de surchauffe solaire (défaut ≈ clair)
         for tile in self.tiles:
             self._eco(tile).temperature.fill(temp_now)
 
@@ -148,7 +150,8 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
             #     lumière (il la lit), AVANT l'hydrologie (qui lit T_sol). Surchauffe
             #     solaire par plot + inertie ; T_air (champ `temperature`) inchangé →
             #     croissance et gel toujours sur T_air jusqu'aux tronçons ⑤/⑥.
-            eco.tick_thermique(saison)
+            #     ④ : la nébulosité de l'événement du tick bride le gain solaire.
+            eco.tick_thermique(saison, nebul)
 
             # 3. Hydrologie : évaporation → pluie de fond → rétention → drainage
             #    (le drainage dépend du type de sol de la tuile, §2.3 a).

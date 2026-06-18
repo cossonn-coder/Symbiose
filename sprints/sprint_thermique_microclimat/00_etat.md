@@ -25,7 +25,7 @@ thermique de la pluie/nuages. Tout émerge des champs déjà calculés (philo #2
 | ① | Socle T_sol diurne (surchauffe solaire + inertie lerp) + évaporation branchée | hydrologie | ✅ |
 | ② | Refroidissement évaporatif (chaleur latente) | température/hydro | ✅ |
 | ③ | Isolation par le couvert (litière) | température légère | ✅ |
-| ④ | Nébulosité (effet thermique pluie/nuages, diurne) | température/météo | ⬜ |
+| ④ | Nébulosité (effet thermique pluie/nuages, diurne) | température/météo | ✅ |
 | ⑤ | T ressentie (mix air/sol) → croissance | croissance | ⬜ |
 | ⑥ | Gel nocturne localisé (couvert + nébulosité + neige protègent) | gel | ⬜ |
 | ⑦ | Catalogue : Neige + Orage + effets | météo (tirages) | ⬜ |
@@ -71,5 +71,19 @@ Golden **RE-FIGÉ** : `aab6c60acc3829c887e3821681a7494d355ca034fd4802ca22bc8a8ef
 Suites ciblées (eau 20/20, croissance 67/67, population, génétique 20/20) PASS.
 `main.py 3` OK. Dérive = température/hydro légère → cascade succession (traçable, comme ①②).
 
-**Prochain** : implémenter ④ (`sprints/sprint_thermique_microclimat/04_nebulosite.md`).
-Kickoffs ⑤→⑩ écrits au fil de l'eau (un avant chaque `/clear`).
+**④ CLOS (2026-06-18).** 4ᵉ et DERNIER terme de la cible thermique DIURNE :
+`cible = T_air + GAIN_SOLAIRE · lum · intensité · (1 − K_NEBUL_DIURNE · nébulosité) − …`
+(knob `K_NEBUL_DIURNE=0.8` + table `NEBULOSITE` indexée par `event.kind`, données PURES
+dans `constants.py`). 1re fois que la MÉTÉO entre dans la carte T_sol : `boucle.py`
+calcule `nebul = NEBULOSITE.get(event.kind, 0.10)` une fois/tick (scalaire, pas un champ)
+et le passe à `eco.tick_thermique(saison, nebul)` en 2b. Couche respectée (`sim` importe
+`fields.ecofields.constants`, table pure côté `fields`). Vérif mécanisme isolé (lum=1,
+hum=0, lit=0, convergé) : nébul=0 → 35.0 °C ; nébul=0.5 → 29.0 ; nébul=1 → 23.0 (= 20 +
+15·0.2, surchauffe résiduelle 20 %) — monotone, borné. Golden **RE-FIGÉ** :
+`c8af9e1184aac258ba48c22a42c5548e55cb735ab51d51fbd5c03aebb0ec93cc`. Suites ciblées
+(eau 20/20, croissance 67/67, population, génétique 20/20) PASS. `main.py 3` OK.
+Dérive = T_sol modulée par la nébulosité hebdo (même « Beau temps » a 0.10 → toutes les
+semaines bougent un peu) → cascade hydro/croissance/succession (traçable, comme ①②③).
+
+**Prochain** : implémenter ⑤ (`sprints/sprint_thermique_microclimat/05_t_ressentie.md`).
+Kickoffs ⑥→⑩ écrits au fil de l'eau (un avant chaque `/clear`).

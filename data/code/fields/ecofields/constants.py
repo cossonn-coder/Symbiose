@@ -79,6 +79,20 @@ REFROID_EVAP    = 6.0    # °C — refroidissement max d'un sol saturé
 # du plot (`om_fresh_at`) est normalisée par LITIERE_REF : au-delà, le couvert sature.
 ISOLATION_COUVERT = 4.0  # °C — tampon max d'une litière dense saturée
 LITIERE_REF       = 2.0  # masse de litière au-dessus de laquelle le couvert sature
+# Nébulosité (tronçon ④) : un ciel couvert bloque le soleil → le sol chauffe moins.
+# C'est le 1er terme où la MÉTÉO (événement `weather_at`) entre dans la carte T_sol.
+# `nébulosité ∈ [0,1]` (0 = ciel clair, 1 = couvert total), lue dans la table
+# NEBULOSITE indexée par `event.kind` (donnée PURE, pas d'import inverse vers `sim`).
+# K_NEBUL_DIURNE = part de la surchauffe annulée par un ciel TOTALEMENT couvert :
+# à nébulosité=1 il reste 20 % du gain solaire (les nuages ne sont pas opaques).
+# La nébulosité est un scalaire PAR TICK (météo uniforme sur le monde, comme T_air)
+# → passé en argument à `tick_thermique`, jamais un champ par plot.
+K_NEBUL_DIURNE = 0.8
+NEBULOSITE = {
+    "Beau temps": 0.10, "Sécheresse": 0.05, "Canicule": 0.10, "Gelée tardive": 0.05,
+    "Redoux": 0.60, "Pluie prolongée": 0.90, "Tempête": 0.80, "Grêle": 0.70,
+    "Orage": 0.85, "Neige": 0.70,   # Orage/Neige réservés à ⑦ (inoffensifs ici)
+}
 
 # Cycle biogéochimique — OM v4 tri-compartiment (cascade fresh → active → stable)
 # Taux de décomposition hebdomadaire par compartiment (avant modulation microbiome).
