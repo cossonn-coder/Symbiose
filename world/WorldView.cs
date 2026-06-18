@@ -90,7 +90,7 @@ namespace Symbiose
 		// droite de l'écran + imprimé en console au lancement : si la version à
 		// l'écran n'est pas celle annoncée par Claude, le circuit VM → sync
 		// Nextcloud → build Godot n'est pas passé (piège connu depuis t3).
-		public const string Build = "pollinisation vue — butineurs fleur-en-fleur (ForagerLayer) + ruche/miel + piqûre temps réel (§J) — 2026-06-18";
+		public const string Build = "thermique ⑨ — rendu météo : ambiance écran (pluie/neige/grêle/orage/tempête) + manteau neigeux par tuile — 2026-06-18";
 
 		// -------------------------------------------------------------------
 		// RÉGLAGES (exportés : ajustables dans l'inspecteur sans recompiler)
@@ -225,6 +225,8 @@ namespace Symbiose
 				Name = "FieldOverlay", ZIndex = 3, Visible = false,
 			};
 			AddChild(_fieldOverlay);
+
+			BuildMeteoLayers();   // ambiance écran + manteau neigeux (⑨) — avant le HUD
 
 			BuildHud();
 			ApplySnapshot(snap, fade: false);   // monde initial : pas de fondu

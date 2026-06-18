@@ -30,7 +30,7 @@ thermique de la pluie/nuages. Tout émerge des champs déjà calculés (philo #2
 | ⑥ | Gel nocturne localisé (couvert + nébulosité + neige protègent) | NEUTRE (smoke ne gèle pas) | ✅ |
 | ⑦ | Catalogue : Neige + Orage + effets | météo (tirages) — LARGE | ✅ |
 | ⑧ | Snapshot météo + carte température (Python) | NEUTRE | ✅ |
-| ⑨ | Rendu Godot des événements (pluie/neige/vent/grêle/orage) | NEUTRE (vue) | ⬜ |
+| ⑨ | Rendu Godot des événements (pluie/neige/vent/grêle/orage) | NEUTRE (vue) | ✅ |
 | ⑩ | Heatmap température debug F6 (`FieldOverlay`) | NEUTRE (vue) | ⬜ |
 
 ## §REPRISE
@@ -193,5 +193,32 @@ propre (vérifié par `git stash`) — vraisemblablement une conséquence du re-
 LARGE de ⑦ (météo seed 42 décalée → le pommier ne fructifie plus avant S52 dans CE
 scénario de test). **À signaler/traiter hors ⑧** (le golden, lui, est intact).
 
-**Prochain** : implémenter ⑨ (`sprints/sprint_thermique_microclimat/09_rendu_godot_evenements.md`).
-Kickoffs ⑨→⑩ écrits au fil de l'eau (un avant chaque `/clear`).
+**⑨ CLOS (2026-06-18).** Rendu Godot de la météo — **VUE PURE, golden NEUTRE par
+construction** (zéro fichier Python touché). 3 fichiers neufs + 2 câblages :
+- `visuals/WeatherLayer.cs` — ambiance globale en **CanvasLayer écran** (indépendant
+  caméra) : un wrapper `WeatherLayer:CanvasLayer` (Layer 1, ajouté AVANT le HUD →
+  sous les labels) + un peintre `WeatherSky:Node2D` qui dessine au `_Draw` le voile
+  de **nébulosité** (alpha lissé `MoveToward`, plafonné `VeilMax=0.55` pour garder le
+  monde lisible) + les **précipitations** par `kind` (Pluie/Orage=traits, Neige=flocons
+  dérivants, Grêle=grains rapides, Tempête=stries horizontales) + **flash d'orage**
+  (rect blanc pulsé ~2.4 s). Positions des particules dérivées d'un **HASH d'indice**
+  (zéro Random, comme LitterLayer/MacroLife), animation par accumulateur `_t`.
+- `visuals/SnowLayer.cs` — **manteau neigeux par tuile** en Node2D MONDE (ZIndex 2,
+  sous les plantes) : un voile blanc = quadrilatère des 4 coins de la tuile projetés
+  `WorldToScreen` (rotation D35 gratuite), alpha ∝ `temperature[tile].snow`. Dimensions
+  rows×cols **déduites de la grille `t_sol`** (pas de cache rows/cols séparé).
+- `world/WorldView.Meteo.cs` (partial neuf) — champs `_weatherLayer`/`_snowLayer`,
+  `BuildMeteoLayers()`, helpers `ApplyWeather`/`ApplySnow`.
+- `world/WorldView.cs` — `BuildMeteoLayers()` en `_Ready` avant `BuildHud` + bump `Build`.
+- `world/WorldView.Snapshot.cs` — 2 branches `ContainsKey("weather")`/`("temperature")`
+  (lecture tolérante, comme tous les blocs). Re-projection après rotation via le
+  ré-`ApplySnapshot(_lastSnap)` de `RebuildWorld` (déjà en place).
+
+**Filet `dotnet build Symbiose.csproj` : 0 erreur, 0 warning.** Golden **NON re-figé**
+(NEUTRE : rien côté moteur). **F5 = Nico** (Godot pas sur la VM) : par temps de
+Pluie/Neige/Orage le ciel se charge + précipitations ; manteau blanc en hiver enneigé ;
+Beau temps ≈ inchangé ; zoom/pan ne décrochent pas l'ambiance (écran), le manteau suit
+les tuiles (monde).
+
+**Prochain** : implémenter ⑩ (`sprints/sprint_thermique_microclimat/10_heatmap_temperature.md`,
+écrit). DERNIER tronçon du sprint.

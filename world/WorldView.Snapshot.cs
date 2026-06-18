@@ -222,6 +222,15 @@ namespace Symbiose
 			if (snap.ContainsKey("alarme"))
 				ApplyAlarme(snap["alarme"].AsGodotDictionary());
 
+			// Météo (⑨, snapshot 0.5.0, lecture seule) : ambiance globale (bloc
+			// `weather` → ciel/précip écran) + manteau neigeux par tuile (bloc
+			// `temperature.snow`). Lecture TOLÉRANTE : un snapshot pré-0.5.0 sans
+			// ces blocs → jardin sans météo dessinée, aucun crash.
+			if (snap.ContainsKey("weather"))
+				ApplyWeather(snap["weather"].AsGodotDictionary());
+			if (snap.ContainsKey("temperature"))
+				ApplySnow(snap["temperature"].AsGodotDictionary());
+
 			// Heatmap (t6·C) : la grille affichée date de la semaine d'avant →
 			// périmée. Si l'overlay est ON, _Process relancera UNE requête
 			// `fields` dès que le pipe sera libre ; OFF, le flag dort.
