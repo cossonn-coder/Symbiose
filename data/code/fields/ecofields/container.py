@@ -23,6 +23,7 @@ from fields.lifecycle import larval_field_names, tick_bridges
 from .constants import *          # constantes de calibration écologique
 from .litiere import *            # Parcelle, Structure, STRUCTURE_ACCEPTE, MATUR_*…
 from .litiere import _fusion_parcelle, _lisser_ages   # helpers privés (hors import *)
+from .thermique import tick_thermique as _tick_thermique   # calcul pur T_sol (①)
 
 
 @dataclass
@@ -44,7 +45,11 @@ class EcoFields:
     om_stable:        GridField = field(default=None)   # humus (structure, rétention, mémoire)
     disturbance:      DisturbanceField = field(default=None)
     seed_bank:        SeedBank = field(default=None)
-    temperature:      GridField = field(default=None)   # °C ambiant (météo 02)
+    temperature:      GridField = field(default=None)   # °C ambiant T_air (météo 02, rempli uniforme)
+    # Microclimat de surface T_sol (sprint thermique ①) — surchauffe solaire par
+    # plot avec inertie, calculée par `tick_thermique` depuis lumiere + T_air.
+    # Lu par l'évaporation (`tick_hydrology`) ; spatialise l'assèchement soleil/ombre.
+    temperature_sol:  GridField = field(default=None)
     # Vie macroscopique observable (D31.1) — champs de population déterministes :
     # ravageur, auxiliaire, vers_de_terre + N pollinisateurs PAR TYPE (abeille,
     # syrphe, papillon — registre §E, arc pollinisation ②, remplacent l'ancien
@@ -101,6 +106,10 @@ class EcoFields:
             self.temperature = GridField(self.rows, self.cols,
                                          initial=T_AMBIENT_INIT,
                                          max_val=TEMP_MAX, min_val=TEMP_MIN)
+        if self.temperature_sol is None:
+            self.temperature_sol = GridField(self.rows, self.cols,
+                                             initial=T_AMBIENT_INIT,
+                                             max_val=TEMP_MAX, min_val=TEMP_MIN)
         if self.populations is None:
             # Guildes trophiques PUIS pollinisateurs par type (registre §E). Les
             # pollinisateurs sont sans prédateur/proie → leur ordre est neutre.
@@ -135,6 +144,7 @@ class EcoFields:
             "soil_memory_fast": self.soil_memory_fast,
             "soil_memory_deep": self.soil_memory_deep,
             "temperature":      self.temperature,
+            "temperature_sol":  self.temperature_sol,
         }.get(name)
 
     # --- Litière (couche fraîche : parcelles, remplace om_fresh) ---
@@ -183,6 +193,13 @@ class EcoFields:
         self.fertilite.diffuse(inertia=FERTILITY_INERTIA)
         self.microbiome.diffuse(inertia=MICROBE_INERTIA)
 
+    # --- Microclimat de surface (T_sol) ---
+
+    def tick_thermique(self, saison: str) -> None:
+        """Recalcule la carte `temperature_sol` (surchauffe solaire + inertie, ①).
+        Délègue au helper pur `thermique.tick_thermique` (container déjà dense)."""
+        _tick_thermique(self, saison)
+
     # --- Hydrologie ---
 
     def tick_hydrology(self, soil_type: str = "terre") -> None:
@@ -204,7 +221,9 @@ class EcoFields:
                 h = self.humidite.data[r][c]
                 # 1. Évaporation : multiplicateur de base diminué quand il fait
                 # chaud (au-dessus de EVAP_TEMP_REF), borné par EVAP_MIN.
-                temp = self.temperature.data[r][c]
+                # Lit DÉSORMAIS la T_sol microclimatique (sprint thermique ①) : un
+                # plot ensoleillé surchauffe et s'assèche, un plot ombragé reste frais.
+                temp = self.temperature_sol.data[r][c]
                 evap = EVAPORATION - EVAP_TEMP_COEF * max(0.0, temp - EVAP_TEMP_REF)
                 if evap < EVAP_MIN:
                     evap = EVAP_MIN

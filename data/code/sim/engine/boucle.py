@@ -144,6 +144,12 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
                                      tile_origin=(tile.origin_x_cm, tile.origin_y_cm))
             log += lum_log
 
+            # 2b. Microclimat de surface T_sol (sprint thermique ①) — APRÈS la
+            #     lumière (il la lit), AVANT l'hydrologie (qui lit T_sol). Surchauffe
+            #     solaire par plot + inertie ; T_air (champ `temperature`) inchangé →
+            #     croissance et gel toujours sur T_air jusqu'aux tronçons ⑤/⑥.
+            eco.tick_thermique(saison)
+
             # 3. Hydrologie : évaporation → pluie de fond → rétention → drainage
             #    (le drainage dépend du type de sol de la tuile, §2.3 a).
             eco.tick_hydrology(tile.soil_type)

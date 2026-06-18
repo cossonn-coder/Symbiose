@@ -57,6 +57,17 @@ EVAP_TEMP_REF  = 11.0    # °C — référence (aucun surplus d'évaporation en 
 EVAP_TEMP_COEF = 0.0008  # perte d'humidité supplémentaire par °C au-dessus de la réf
 EVAP_MIN       = 0.975   # borne basse du multiplicateur (n'assèche jamais brutalement)
 
+# --- Microclimat de surface T_sol (sprint thermique-microclimat, tronçon ①) ---
+# Le champ `temperature_sol` (par plot) spatialise la thermique : un plot au soleil
+# surchauffe au-dessus de T_air, un plot à l'ombre (maison/canopée) reste frais. La
+# cible thermique est lissée temporellement (inertie du sol) vers laquelle T_sol
+# converge tick après tick. Les termes refroidissement évaporatif (②), isolation par
+# le couvert (③) et nébulosité (④) viendront s'ajouter à la cible aux tronçons suivants.
+GAIN_SOLAIRE    = 15.0   # °C — surchauffe max d'un plot en plein soleil d'été (lum=1, été)
+THERMAL_INERTIA = 0.5    # lissage temporel de T_sol vers sa cible (1 = pas d'inertie ; petit = sol très tamponné)
+# Fraction du rayonnement d'été par saison : un soleil d'hiver chauffe moins le sol.
+INTENSITE_SAISON = {"hiver": 0.35, "printemps": 0.70, "automne": 0.60, "ete": 1.0}
+
 # Cycle biogéochimique — OM v4 tri-compartiment (cascade fresh → active → stable)
 # Taux de décomposition hebdomadaire par compartiment (avant modulation microbiome).
 OM_FRESH_DECAY   = 0.080   # débris récents / sucres : rapide (semaines)
