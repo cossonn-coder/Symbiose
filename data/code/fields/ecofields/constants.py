@@ -67,6 +67,11 @@ GAIN_SOLAIRE    = 15.0   # °C — surchauffe max d'un plot en plein soleil d'é
 THERMAL_INERTIA = 0.5    # lissage temporel de T_sol vers sa cible (1 = pas d'inertie ; petit = sol très tamponné)
 # Fraction du rayonnement d'été par saison : un soleil d'hiver chauffe moins le sol.
 INTENSITE_SAISON = {"hiver": 0.35, "printemps": 0.70, "automne": 0.60, "ete": 1.0}
+# Refroidissement évaporatif (tronçon ②) : l'eau qui s'évapore prend de l'énergie au
+# sol (chaleur latente). Un sol saturé (hum=3 → norm=1) reste plus frais de REFROID_EVAP
+# °C. C'est le terme qui crée le CERCLE VICIEUX de la sécheresse : sec → moins de
+# refroidissement → plus chaud → évapore plus → encore plus sec (émergent recherché).
+REFROID_EVAP    = 6.0    # °C — refroidissement max d'un sol saturé
 
 # Cycle biogéochimique — OM v4 tri-compartiment (cascade fresh → active → stable)
 # Taux de décomposition hebdomadaire par compartiment (avant modulation microbiome).

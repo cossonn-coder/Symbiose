@@ -23,7 +23,7 @@ thermique de la pluie/nuages. Tout émerge des champs déjà calculés (philo #2
 | # | Tronçon | Dérive golden | Statut |
 |---|---------|---------------|--------|
 | ① | Socle T_sol diurne (surchauffe solaire + inertie lerp) + évaporation branchée | hydrologie | ✅ |
-| ② | Refroidissement évaporatif (chaleur latente) | température/hydro | ⬜ |
+| ② | Refroidissement évaporatif (chaleur latente) | température/hydro | ✅ |
 | ③ | Isolation par le couvert (litière) | température légère | ⬜ |
 | ④ | Nébulosité (effet thermique pluie/nuages, diurne) | température/météo | ⬜ |
 | ⑤ | T ressentie (mix air/sol) → croissance | croissance | ⬜ |
@@ -50,5 +50,15 @@ l'humidité. `GAIN_SOLAIRE=15` placeholder, calibrage post-test. **Conséquence 
 « localisée » au sens strict, mais à une dérive *causalement traçable* au mécanisme.
 Suites ciblées non thermiques INCHANGÉES (génétique/croissance/eau/population/…).
 
-**Prochain** : implémenter ② (`sprints/sprint_thermique_microclimat/02_refroidissement_evaporatif.md`).
-Kickoffs ③→⑩ écrits au fil de l'eau (un avant chaque `/clear`).
+**② CLOS (2026-06-18).** Terme **chaleur latente** ajouté à la cible thermique dans
+`thermique.py` : `cible -= REFROID_EVAP · humidité_norm` (knob `REFROID_EVAP=6.0`
+dans `constants.py`). Humidité lue = fin du tick précédent (2b avant `tick_hydrology`,
+voulu). Vérif mécanisme : à `lum=1.0` constant, T_sol décroît monotone quand l'humidité
+monte (25.83 @hum=1.12 → 25.42 @hum=1.35) = refroidissement évaporatif isolé. Cercle
+vicieux sécheresse en place. Golden **RE-FIGÉ** :
+`7cfef3312f0f38a983214cef8f49f4a81e59a706e0c9501a35c1933afa9cbc70`. Suites
+ciblées (eau/croissance/population/génétique) PASS. `main.py 3` OK (pas de crash).
+Dérive = température/hydro → cascade succession (traçable, comme ① — attendu).
+
+**Prochain** : implémenter ③ (`sprints/sprint_thermique_microclimat/03_isolation_couvert.md`).
+Kickoffs ④→⑩ écrits au fil de l'eau (un avant chaque `/clear`).
