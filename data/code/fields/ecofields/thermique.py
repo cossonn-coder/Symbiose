@@ -39,7 +39,8 @@ from __future__ import annotations
 
 from .constants import (GAIN_SOLAIRE, THERMAL_INERTIA, INTENSITE_SAISON,
                         REFROID_EVAP, ISOLATION_COUVERT, LITIERE_REF,
-                        K_NEBUL_DIURNE, RAYONNEMENT_NOCTURNE)
+                        K_NEBUL_DIURNE, RAYONNEMENT_NOCTURNE,
+                        SNOW_ACCUM, SNOW_MELT_BASE, SNOW_MELT_WARM)
 
 
 def tick_thermique(eco, saison: str, nebulosite: float = 0.0) -> None:
@@ -78,12 +79,29 @@ def t_min_nuit_at(eco, r: int, c: int, t_air: float, nebulosite: float) -> float
 
         T_min_nuit = T_air − RAYONNEMENT_NOCTURNE · (1 − couvert) · (1 − nébulosité)
 
-    - `couvert` = litière locale normalisée `min(1, om_fresh_at/LITIERE_REF)` — la
-      MÊME normalisation que l'isolation diurne ③ : un sol nu rayonne à plein, un
-      sol paillé garde sa chaleur (+ manteau neigeux ⑦ quand la Neige existera).
+    - `couvert` = litière locale normalisée `min(1, om_fresh_at/LITIERE_REF)` PLUS
+      le manteau neigeux `eco.snow` (⑦) : un sol nu rayonne à plein, un sol paillé
+      OU enneigé garde sa chaleur. Sous un bon manteau (`snow→1`) le couvert sature
+      à 1 → `T_min_nuit → T_air` : la neige PROTÈGE du gel (effet igloo).
     - `(1 − nébulosité)` : un ciel couvert renvoie l'IR → peu de gel. Les gelées
       arrivent par nuit CLAIRE et calme.
 
-    Pure, zéro RNG, zéro effet de bord (philo #3)."""
-    couvert = min(1.0, eco.om_fresh_at(r, c) / LITIERE_REF)
+    Pure, zéro RNG, zéro effet de bord (philo #3 — lit `eco.snow`, ne l'écrit pas)."""
+    couvert = min(1.0, eco.om_fresh_at(r, c) / LITIERE_REF + eco.snow)
     return t_air - RAYONNEMENT_NOCTURNE * (1.0 - couvert) * (1.0 - nebulosite)
+
+
+def snow_next(snow: float, temp_now: float, is_neige: bool) -> float:
+    """Manteau neigeux du prochain tick (⑦) — fonction PURE de l'état précédent.
+
+    Isolé ici (comme `t_min_nuit_at`) pour garder `container.py` sous le seuil de
+    taille : le conteneur n'expose qu'une fine `tick_snow` qui délègue.
+
+    - Semaine de Neige → accumulation bornée : `min(1, snow + SNOW_ACCUM)`.
+    - Sinon → fonte : `snow − SNOW_MELT_BASE − SNOW_MELT_WARM·max(0, temp_now)`,
+      bornée à 0. Fond lentement au froid (fond constant), vite au dégel (couplage
+      température). Déterministe, zéro RNG."""
+    if is_neige:
+        return min(1.0, snow + SNOW_ACCUM)
+    melt = SNOW_MELT_BASE + SNOW_MELT_WARM * max(0.0, temp_now)
+    return max(0.0, snow - melt)

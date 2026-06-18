@@ -53,7 +53,17 @@ WEATHER_ALEA = {
     "Grêle":           Alea("Grêle",           "Feuillage abîmé.",   "",        -1.0, "health"),
     "Pluie prolongée": Alea("Pluie prolongée", "Humidité monte.",    "humidite", +0.5, "field"),
     "Redoux":          Alea("Redoux",          "Aucun effet.",       "",         0.0, "none"),
+    # Orage (⑦) = composite pluie battante + vent. La table ne porte qu'UN effet
+    # par kind → on y met la PLUIE (humidité ↑) ; le VENT (paillage dispersé) est
+    # appliqué EN SÉQUENCE par boucle.py via ORAGE_VENT ci-dessous (option (b) du
+    # kickoff : 2 aléas enchaînés, plus lisible qu'un champ `extra` sur Alea).
+    "Orage":           Alea("Orage",           "Pluie battante.",    "humidite", +0.5, "field"),
 }
+
+# Volet VENT de l'Orage (⑦), appliqué en séquence après la pluie (cf. WEATHER_ALEA
+# ci-dessus). Identique au coup de vent de la Tempête (paillage −1) ; séparé pour
+# que l'Orage = pluie + vent sans dupliquer l'entrée Tempête.
+ORAGE_VENT = Alea("Orage (vent)", "Paillage dispersé.", "paillage", -1, "rondelle")
 ALEAS_RAVAGEURS = [
     Alea("Pucerons",  "Fertilité réduite.", "fertilite", -0.3, "field"),
     Alea("Limaces",   "Semis grignotés.",   "",          -1.0, "health"),

@@ -39,7 +39,7 @@ from sim.vigueur import tick_player_vigueur, refill_saison
 from sim.growth import grow_plant
 from .calendrier import (SAISONS, saison_de, est_debut_saison, est_fin_saison,
                         est_phase_floraison, est_phase_recolte)
-from .aleas import (appliquer_alea, ALEAS_RAVAGEURS, WEATHER_ALEA,
+from .aleas import (appliquer_alea, ALEAS_RAVAGEURS, WEATHER_ALEA, ORAGE_VENT,
                     TEMP_FROST_DAMAGE, FROST_SEVERITY_REF, HAIL_SEVERITY_REF)
 from .croissance import CroissanceMixin
 from .mortalite import MortaliteMixin
@@ -90,8 +90,13 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
         phase         = (seed & 0xFFFF) / 0xFFFF * 2.0 * math.pi   # caractère d'année dérivé du seed
         temp_now      = temp_norm(week_in_year, year_fraction, phase) + temperature_delta(event)
         nebul         = NEBULOSITE.get(event.kind, 0.10)   # ④ : ciel couvert → moins de surchauffe solaire (défaut ≈ clair)
+        is_neige      = (event.kind == "Neige")            # ⑦ : pilote l'accumulation du manteau
         for tile in self.tiles:
-            self._eco(tile).temperature.fill(temp_now)
+            eco = self._eco(tile)
+            eco.temperature.fill(temp_now)
+            # ⑦ : manteau neigeux AVANT le gel (le gel lit `eco.snow` via t_min_nuit_at).
+            # Accumule si Neige, fond sinon (∝ température). Scalaire par tuile.
+            eco.tick_snow(temp_now, is_neige)
 
         # Gel : dégât tissulaire MÉDIÉ, piloté par le MILIEU (température < 0), pas
         # par le nom de l'événement (sous-sprint 03). Que le froid vienne d'une
@@ -132,6 +137,11 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
                 meteo = WEATHER_ALEA[event.kind]
                 for tile in self.tiles:
                     log += appliquer_alea(meteo, tile, self._eco(tile), self.game_state)
+                # ⑦ Orage = composite : la pluie (WEATHER_ALEA ci-dessus) PUIS le
+                # vent (paillage dispersé), appliqués en séquence.
+                if event.kind == "Orage":
+                    for tile in self.tiles:
+                        log += appliquer_alea(ORAGE_VENT, tile, self._eco(tile), self.game_state)
 
         # 1b. Ravageur — début de saison, canal séparé décorrélé de la météo.
         if est_debut_saison(week_in_year):

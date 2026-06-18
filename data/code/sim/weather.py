@@ -65,6 +65,7 @@ TEMP_DELTA_BASE = {
     "Gelée tardive": -9.0,   # plonge sous 0 au printemps → gate de croissance + (gel tissulaire = 03)
     "Canicule":      +7.0,   # été brûlant → évaporation accrue (couplage hydrologie)
     "Redoux":        +5.0,   # hiver doux → réveil prématuré (vulnérabilité émergente)
+    "Neige":         -6.0,   # ⑦ : tombe sous 0 → entre dans TEMP_DRIVEN, déclenche le gel ET dépose le manteau neigeux (effet igloo, cf. thermique.t_min_nuit_at)
 }
 # Événements pilotés par la température (pas d'effet WEATHER_ALEA en plus).
 TEMP_DRIVEN = frozenset(TEMP_DELTA_BASE)
@@ -100,6 +101,8 @@ _CATALOGUE = [
     ("Grêle",            "local",  1,     (10, 26)),   # orages de fin printemps/été
     ("Pluie prolongée",  "global", 3,     (27, 52)),   # automne + hiver (état)
     ("Redoux",           "global", 1,     (40, 52)),   # hiver
+    ("Neige",            "global", 2,     (44, 52)),   # ⑦ cœur de l'hiver (état multi-semaines, dépose le manteau)
+    ("Orage",            "local",  1,     (16, 30)),   # ⑦ été (orages convectifs : pluie battante + vent)
 ]
 
 
@@ -216,6 +219,16 @@ SIGN_TABLE: dict[str, tuple[str, ...]] = {
     "Redoux": (
         "fonte, gouttes",
         "oiseaux qui se remettent à chanter",
+    ),
+    "Neige": (
+        "ciel bas et ouaté",
+        "silence feutré, sons étouffés",
+        "air qui pique et sèche",
+    ),
+    "Orage": (
+        "chaleur lourde et moite",
+        "cumulus qui bourgeonnent en tours",
+        "premiers grondements lointains",
     ),
 }
 

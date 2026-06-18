@@ -28,7 +28,7 @@ thermique de la pluie/nuages. Tout émerge des champs déjà calculés (philo #2
 | ④ | Nébulosité (effet thermique pluie/nuages, diurne) | température/météo | ✅ |
 | ⑤ | T ressentie (mix air/sol) → croissance | croissance | ✅ |
 | ⑥ | Gel nocturne localisé (couvert + nébulosité + neige protègent) | NEUTRE (smoke ne gèle pas) | ✅ |
-| ⑦ | Catalogue : Neige + Orage + effets | météo (tirages) | ⬜ |
+| ⑦ | Catalogue : Neige + Orage + effets | météo (tirages) — LARGE | ✅ |
 | ⑧ | Snapshot météo + carte température (Python) | NEUTRE | ⬜ |
 | ⑨ | Rendu Godot des événements (pluie/neige/vent/grêle/orage) | NEUTRE (vue) | ⬜ |
 | ⑩ | Heatmap température debug F6 (`FieldOverlay`) | NEUTRE (vue) | ⬜ |
@@ -124,5 +124,42 @@ Vérif mécanisme isolée (t_air=−2 °C, helper réel sur tuile 0 après 25 se
 seuil gel). Suites croissance 67/67, eau 20/20, génétique 20/20, population PASS.
 `main.py 3` exit 0, scores OK.
 
-**Prochain** : implémenter ⑦ (`sprints/sprint_thermique_microclimat/07_catalogue_neige_orage.md`).
+**⑦ CLOS (2026-06-18).** **Neige** + **Orage** ajoutés au catalogue météo
+(`sim/weather.py::_CATALOGUE` : Neige global durée 2 fenêtre 44-52, Orage local
+durée 1 fenêtre 16-30) + entrées `SIGN_TABLE` (voix naturaliste). **Neige** thermique :
+`TEMP_DELTA_BASE["Neige"]=-6.0` → entre AUTO dans `TEMP_DRIVEN` (pas d'effet
+`WEATHER_ALEA` en plus) → déclenche le gel via la température ET dépose le manteau.
+**Orage** non thermique = composite **pluie + vent** (option (b) du kickoff) :
+`WEATHER_ALEA["Orage"]` = pluie (humidité +0.5), `ORAGE_VENT` (aleas.py) = vent
+(paillage −1) appliqué EN SÉQUENCE dans `boucle.py`. **Manteau neigeux** = nouvel
+état scalaire `eco.snow ∈ [0,1]` PAR TUILE (pas un GridField) ; helper PUR
+`thermique.snow_next` + fine délégation `container.tick_snow` (calcul PUR sorti du
+conteneur comme la T_sol au ①). ⚠️ **container.py = 372 ldc code pur** (> seuil ~350 /
+max historique 337) : dépassement ANTÉRIEUR à ⑦ (déjà 359 au ⑥) + mon ajout
+irréductible (attribut d'état `snow` + délégation 2 lignes ; le gros calcul est bien
+en `thermique.py`). **À SIGNALER à Nico** — candidat éclatement du conteneur (sortir
+un mixin décompo/litière ?) à un futur sprint refactor, hors scope ⑦. `boucle.py` appelle `eco.tick_snow(temp_now,
+is_neige)` AVANT le gel (qui lit `snow`). Knobs `SNOW_ACCUM=0.5`/`SNOW_MELT_BASE=0.05`/
+`SNOW_MELT_WARM=0.03` (constants.py). **Effet igloo** branché dans `t_min_nuit_at` :
+`couvert = min(1, om_fresh_at/LITIERE_REF + eco.snow)` → sous bon manteau, couvert
+sature, `T_min_nuit → T_air`, la neige PROTÈGE du gel. TODO « + neige ⑦ » retiré.
+
+**Golden RE-FIGÉ LARGE** : `b1173a78…` → **`5fddfe5430dd896de497d5ac9424951f0f29f3f38ad7b50cdb588310a5ffe9f6`**.
+Cause TRACÉE (pas un bug) : ajouter Neige/Orage à `_CATALOGUE` allonge la liste
+`cands` des fenêtres été (16-30) et hiver (44-52) → l'index `int(pick·len(cands))`
+se décale → TOUS les événements de ces fenêtres changent, cascade complète
+hydro/croissance/succession. Sur le smoke (seed 0x5AB1057E, 4 ans) : Neige tombe
+en semaine 96, Orage en 16/23/122/186 → la fenêtre est bien exercée.
+**`population_hash.txt` AUSSI re-figé** (`5e6e688f…`) : `compute_hash` fait tourner
+l'`Engine` → la météo décalée décale la température → les densités de population.
+Ce n'est pas une suite « météo en dur » : c'est la même dérive maîtrisée en aval ;
+les 4 sous-tests comportementaux (photopériode/bornes/cap/positions) PASSENT.
+
+Vérif mécanisme manteau (helper réel) : (a) 1 sem Neige → snow 0.5, 2 sem → 1.0
+(sature) ; (b) sol nu sans neige t_air=2 → T_min −3.0 (gèle) ; sous manteau snow=1
+→ T_min 2.0 = T_air (igloo) ; (c) fonte 1 sem : froid (0 °C) snow 0.95, dégel
+(10 °C) snow 0.65 (dégel plus rapide). Suites croissance 67/67, eau 20/20,
+génétique 20/20, population PASS. `main.py 3` exit 0.
+
+**Prochain** : implémenter ⑧ (`sprints/sprint_thermique_microclimat/08_snapshot_meteo.md`).
 Kickoffs ⑧→⑩ écrits au fil de l'eau (un avant chaque `/clear`).

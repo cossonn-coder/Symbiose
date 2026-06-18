@@ -108,6 +108,16 @@ T_PLANTE_ALPHA = 0.5
 # nocturne séparée. RAYONNEMENT_NOCTURNE = chute max (ciel clair, sol nu).
 RAYONNEMENT_NOCTURNE = 5.0
 
+# Manteau neigeux (tronçon ⑦) : la neige s'accumule en un état persistant `eco.snow`
+# ∈ [0,1] (manteau uniforme par tuile) qui ISOLE le sol — effet igloo. Un manteau
+# épais s'ajoute au couvert de litière dans T_min_nuit : sous la neige, le sol ne
+# rayonne plus → il ne gèle plus (contre-intuitif mais réel). Le manteau s'accumule
+# les semaines de Neige et FOND ensuite, lentement au froid, vite au dégel (couplage
+# température). Scalaire par tuile (la modulation par canopée = raffinage futur).
+SNOW_ACCUM     = 0.5     # accumulation par semaine de Neige (manteau plein en ~2 sem)
+SNOW_MELT_BASE = 0.05    # fonte de fond hebdomadaire, même au froid (sublimation/tassement)
+SNOW_MELT_WARM = 0.03    # fonte supplémentaire par °C au-dessus de 0 (dégel)
+
 # Cycle biogéochimique — OM v4 tri-compartiment (cascade fresh → active → stable)
 # Taux de décomposition hebdomadaire par compartiment (avant modulation microbiome).
 OM_FRESH_DECAY   = 0.080   # débris récents / sucres : rapide (semaines)

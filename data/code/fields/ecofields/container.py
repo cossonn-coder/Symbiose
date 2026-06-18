@@ -24,6 +24,7 @@ from .constants import *          # constantes de calibration écologique
 from .litiere import *            # Parcelle, Structure, STRUCTURE_ACCEPTE, MATUR_*…
 from .litiere import _fusion_parcelle, _lisser_ages   # helpers privés (hors import *)
 from .thermique import tick_thermique as _tick_thermique   # calcul pur T_sol (①)
+from .thermique import snow_next as _snow_next              # manteau neigeux pur (⑦)
 
 
 @dataclass
@@ -50,6 +51,13 @@ class EcoFields:
     # plot avec inertie, calculée par `tick_thermique` depuis lumiere + T_air.
     # Lu par l'évaporation (`tick_hydrology`) ; spatialise l'assèchement soleil/ombre.
     temperature_sol:  GridField = field(default=None)
+    # Manteau neigeux (sprint thermique ⑦) — scalaire d'état PAR TUILE ∈ [0,1] :
+    # la neige tombe sur toute la tuile (pas un GridField). S'accumule les semaines
+    # de Neige, fond ensuite (cf. `tick_snow`). Lu par `t_min_nuit_at` (gel nocturne)
+    # où il s'ajoute au couvert de litière → effet igloo. À 0 au repos (golden NEUTRE
+    # tant que le smoke ne neige pas, mais le catalogue météo décale les tirages → ⑦
+    # re-fige LARGE par ailleurs).
+    snow:             float = 0.0
     # Vie macroscopique observable (D31.1) — champs de population déterministes :
     # ravageur, auxiliaire, vers_de_terre + N pollinisateurs PAR TYPE (abeille,
     # syrphe, papillon — registre §E, arc pollinisation ②, remplacent l'ancien
@@ -200,6 +208,13 @@ class EcoFields:
         `nebulosite` = scalaire météo du tick (0 = ciel clair). Délègue au helper
         pur `thermique.tick_thermique` (container déjà dense)."""
         _tick_thermique(self, saison, nebulosite)
+
+    def tick_snow(self, temp_now: float, is_neige: bool) -> None:
+        """Met à jour le manteau neigeux `eco.snow` (⑦). Délègue au helper PUR
+        `thermique.snow_next` (container déjà dense). Accumule si l'événement du
+        tick est `Neige`, fond sinon (∝ température). À appeler AVANT le gel
+        nocturne (qui lit `snow` via `t_min_nuit_at`)."""
+        self.snow = _snow_next(self.snow, temp_now, is_neige)
 
     # --- Hydrologie ---
 
