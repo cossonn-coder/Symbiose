@@ -7,6 +7,7 @@ from __future__ import annotations
 from plants.species import (Tomato, Pepper, Bean, Clover, Sunflower, Basil,
                             Yarrow, Phacelia, Borage, Comfrey, Mustard,
                             Thyme, Lavender,
+                            Carrot, Zucchini, CornSalad, Nettle, Garlic,
                             BursaPastoris, MedicagoLupulina, PoaAnnua, Taraxacum)
 from plants.perennials import Fig, AppleTree, CherryTree, WalnutTree, OakTree
 
@@ -28,6 +29,13 @@ PLANT_CATALOGUE: dict[str, type] = {
     "bourrache": Borage,
     "consoude":  Comfrey,
     "moutarde":  Mustard,
+    # Potagères lot 2 — familles botaniques neuves (Apiaceae, Cucurbitaceae, Caprifoliaceae)
+    "carotte":   Carrot,
+    "courgette": Zucchini,
+    "mache":     CornSalad,
+    # Spontanée non-archétype (Urticaceae) + compagne répulsive bisannuelle (Amaryllidaceae)
+    "ortie":     Nettle,
+    "ail":       Garlic,
     # Adventices / succession écologique
     "bourse_pasteur": BursaPastoris,
     "minette":        MedicagoLupulina,

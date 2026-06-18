@@ -13,7 +13,7 @@ d'accumulatrice/engrais vert (injection locale de fertilité / matière organiqu
 """
 
 from __future__ import annotations
-from plants.base import PlantBase, GrowthStage, Asteraceae
+from plants.base import PlantBase, GrowthStage, Asteraceae, Amaryllidaceae
 
 
 class Yarrow(Asteraceae):
@@ -269,6 +269,64 @@ class Mustard(PlantBase):
                     "type": "recolte",
                     "action": "score", "axis": "biodiversite", "amount": 1,
                     "description": "Monte en graines — biodiversité"
+                },
+            ],
+        ),
+    ]
+
+
+class Garlic(Amaryllidaceae):
+    """
+    Allium sativum — Ail (Amaryllidaceae).
+    Bisannuelle compagne répulsive : ses composés soufrés éloignent les nuisibles
+    du voisinage (family_effects Amaryllidaceae → protège la santé des voisines,
+    bonne compagne des Solanacées/Rosacées). Feuilles dressées étroites l'an 1,
+    hampe florale (« fleur d'ail ») l'an 2, puis bulbe comestible. Cycle bisannuel
+    → exerce le gate annuel de montaison (rosette an 1, hampe an 2).
+    """
+    genus = "Allium"
+    name = "Ail"
+    resistance_ecrasement  = 0.4   # hampe tendre, casse ; le bulbe survit sous terre
+    stimulation_ecrasement = 0.2
+    rarity = "Établie"
+    keywords = ["Répulsif", "Comestible", "Compagne", "Bisannuelle"]
+    space_tolerance_weeks = 4
+    life_cycle = "biennial"
+    winter_strategy = "dormant"
+    foliage_density = 0.20         # feuilles étroites, ombre faible
+    longevity_years = 2
+    reproduction_rate = 0.03
+    growth_stages = [
+        GrowthStage(
+            name="plantation", duration_weeks=3, strate="sol",
+            vigueur_cost=1, effects=[], canopy_height=4,
+        ),
+        # An 1 : feuilles dressées (PAS d'effet floraison → pas le stade de montaison).
+        GrowthStage(
+            name="feuilles", duration_weeks=6, strate="basse",
+            vigueur_cost=1, effects=[], canopy_height=25, canopy_radius=12,
+        ),
+        # An 2 : hampe florale (1er stade fleuri → stade de montaison du gate).
+        GrowthStage(
+            name="hampe", duration_weeks=4, strate="basse",
+            vigueur_cost=2, canopy_height=50, canopy_radius=12,
+            effects=[
+                {
+                    "type": "floraison",
+                    "action": "add_rondelle", "variable": "pollinisateur",
+                    "amount": 1, "probability": 0.5,
+                    "description": "Fleur d'ail — visitée modérément"
+                },
+            ],
+        ),
+        GrowthStage(
+            name="mature", duration_weeks=3, strate="basse",
+            vigueur_cost=0, canopy_height=50,
+            effects=[
+                {
+                    "type": "recolte",
+                    "action": "score", "axis": "recolte", "amount": 2,
+                    "description": "Récolte du bulbe"
                 },
             ],
         ),

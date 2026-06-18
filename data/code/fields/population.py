@@ -537,17 +537,23 @@ POLLINATOR_NAMES = ("abeille", "syrphe", "papillon")
 _ATTRACT_DEFAUT  = 0.30   # fleur « générique » d'une famille non cataloguée
 _ATTRACT_ABEILLE = {      # mellifères profondes / nectarifères
     "Lamiaceae": 1.0, "Boraginaceae": 1.0, "Fabaceae": 0.85, "Rosaceae": 0.80,
-    "Asteraceae": 0.60, "Brassicaceae": 0.50, "Solanaceae": 0.40,
+    "Cucurbitaceae": 0.70, "Asteraceae": 0.60, "Brassicaceae": 0.50,
+    "Apiaceae": 0.45, "Solanaceae": 0.40, "Caprifoliaceae": 0.40,
+    "Amaryllidaceae": 0.30, "Urticaceae": 0.0,
     "Poaceae": 0.0, "Fagaceae": 0.10, "Juglandaceae": 0.10,
 }
 _ATTRACT_SYRPHE = {       # fleurs ouvertes (composées, ombellifères)
-    "Asteraceae": 1.0, "Brassicaceae": 0.90, "Boraginaceae": 0.60, "Rosaceae": 0.60,
-    "Lamiaceae": 0.40, "Fabaceae": 0.30, "Solanaceae": 0.30,
+    "Apiaceae": 1.0, "Asteraceae": 1.0, "Brassicaceae": 0.90, "Boraginaceae": 0.60,
+    "Rosaceae": 0.60, "Caprifoliaceae": 0.50, "Lamiaceae": 0.40,
+    "Cucurbitaceae": 0.40, "Fabaceae": 0.30, "Solanaceae": 0.30,
+    "Amaryllidaceae": 0.20, "Urticaceae": 0.0,
     "Poaceae": 0.0, "Fagaceae": 0.0, "Juglandaceae": 0.0,
 }
 _ATTRACT_PAPILLON = {     # fleurs tubulaires / composées riches en nectar
-    "Lamiaceae": 1.0, "Asteraceae": 0.90, "Boraginaceae": 0.70, "Fabaceae": 0.50,
-    "Rosaceae": 0.40, "Brassicaceae": 0.30, "Solanaceae": 0.30,
+    "Lamiaceae": 1.0, "Asteraceae": 0.90, "Boraginaceae": 0.70, "Apiaceae": 0.50,
+    "Fabaceae": 0.50, "Cucurbitaceae": 0.40, "Rosaceae": 0.40,
+    "Brassicaceae": 0.30, "Solanaceae": 0.30, "Caprifoliaceae": 0.30,
+    "Amaryllidaceae": 0.20, "Urticaceae": 0.0,
     "Poaceae": 0.0, "Fagaceae": 0.0, "Juglandaceae": 0.0,
 }
 

@@ -272,6 +272,56 @@ class Lamiaceae(PlantBase):
         }
     ]
 
+class Urticaceae(PlantBase):
+    """
+    Famille : Urticacées (orties).
+    Bioindicatrice/améliorante des sols riches en azote : injection locale de
+    fertilité, comme une légumineuse mais par minéralisation d'une biomasse
+    azotée abondante (patron Fabaceae). Anémophile (fleurs discrètes pollinisées
+    par le vent → aucune retombée sur les butineurs, _ATTRACT_* = 0).
+    """
+    family = "Urticaceae"
+    space_tolerance_weeks = 5        # robuste, encaisse bien la compétition
+    fungal_susceptibility = 0.3
+    pollination_mode = "wind"        # anémophile — fleurs discrètes
+    pollination_radius_cm = 300.0    # le pollen voyage loin au vent
+    family_effects = [
+        {
+            "type": "permanent",
+            "trigger": "weekly",
+            "action": "inject_field",
+            "variable": "fertilite",
+            "amount": 0.03,
+            "cible": "local",
+            "description": "Biomasse azotée — enrichit la fertilité du sol"
+        }
+    ]
+
+
+class Amaryllidaceae(PlantBase):
+    """
+    Famille : Amaryllidacées (aulx, oignons).
+    Répulsif familial : les composés soufrés éloignent les nuisibles du
+    voisinage. Faute d'action moteur qui injecte du NÉGATIF dans le champ
+    `ravageur` (cf. note ③), on réutilise le levier défensif data-pur des
+    Lamiacées (adjacency_bonus → protège la santé des voisines). Une vraie
+    baisse du champ `ravageur` resterait une action moteur à créer (dette).
+    """
+    family = "Amaryllidaceae"
+    space_tolerance_weeks = 4
+    fungal_susceptibility = 0.3
+    family_effects = [
+        {
+            "type": "permanent",
+            "trigger": "weekly",
+            "action": "adjacency_bonus",
+            "bonus": "reduce_maladie_rondelle",
+            "amount": 1,
+            "description": "Répulsif soufré — protège les voisines au voisinage"
+        }
+    ]
+
+
 class Poaceae(PlantBase):
     """
     Famille : Graminées.

@@ -14,16 +14,22 @@ Orientation :
   - `compagnes.py`    — attire-auxiliaires + mellifères + engrais verts (Achillée,
                         Phacélie, Bourrache, Consoude, Moutarde)
   - `aromatiques.py`  — Lamiacées aromatiques persistantes/evergreen (Thym, Lavande)
+  - `potageres.py`    — potagères lot 2 à familles NEUVES (Carotte/Apiaceae,
+                        Courgette/Cucurbitaceae, Mâche/Caprifoliaceae)
+  - `sauvages.py`     — spontanées non-archétypes (Ortie/Urticaceae)
 """
 
 from .adventices import BursaPastoris, MedicagoLupulina, PoaAnnua, Taraxacum
 from .cultivees import Tomato, Pepper, Bean, Clover, Sunflower, Basil
-from .compagnes import Yarrow, Phacelia, Borage, Comfrey, Mustard
+from .compagnes import Yarrow, Phacelia, Borage, Comfrey, Mustard, Garlic
 from .aromatiques import Thyme, Lavender
+from .potageres import Carrot, Zucchini, CornSalad
+from .sauvages import Nettle
 
 __all__ = [
     "BursaPastoris", "MedicagoLupulina", "PoaAnnua", "Taraxacum",
     "Tomato", "Pepper", "Bean", "Clover", "Sunflower", "Basil",
-    "Yarrow", "Phacelia", "Borage", "Comfrey", "Mustard",
+    "Yarrow", "Phacelia", "Borage", "Comfrey", "Mustard", "Garlic",
     "Thyme", "Lavender",
+    "Carrot", "Zucchini", "CornSalad", "Nettle",
 ]

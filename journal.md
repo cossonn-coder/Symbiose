@@ -89,6 +89,7 @@ pointeur ci-dessous. Ne plus écrire le contenu des entrées ici.
 - [2026-06-18 — Sprint THERMIQUE & MICROCLIMAT CLOS (10 tronçons) — T sol spatialisée couplée au LightField (surchauffe/évapo/isolation/nébulosité/gel localisé/neige), croissance spatialisée, pont 0.5.0, rendu météo + manteau + heatmap F7 ; goldens maîtrisés ①→⑦, ⑧⑨⑩ NEUTRES](journal/59_2026-06-18_sprint-thermique-microclimat-CLOS.md)
 - [2026-06-18 — Sprint CATALOGUE ENRICHI · tronçon ① : conception FIGÉE (audit + 2 matrices espèce×feature + ~10 plantes par niche + faune nommée « parfum »/types, découpage ②→⑥) — golden INTACT (doc seul)](journal/60_2026-06-18_conception-catalogue-enrichi-FIGEE.md)
 - [2026-06-18 — Sprint CATALOGUE ENRICHI · tronçon ② : +5 plantes (thym, lavande, bourrache, consoude, moutarde) familles connues — attractivité héritée gratis, chemin `evergreen` enfin exercé (test_evergreen.py), golden NEUTRE — ② CLOS](journal/61_2026-06-18_sprint-catalogue-enrichi-tronçon-②-plantes-lot1.md)
+- [2026-06-18 — Sprint CATALOGUE ENRICHI · tronçon ③ : +5 plantes (carotte, ortie, courgette, mâche, ail), 5 familles NEUVES + `_ATTRACT_*`, gate `biennial` comblé (rosette an 1 / montaison an 2, `croissance.py`), tests biennial+lot2, golden NEUTRE — ③ CLOS](journal/62_2026-06-18_sprint-catalogue-enrichi-tronçon-③-plantes-lot2.md)
 
 ---
 

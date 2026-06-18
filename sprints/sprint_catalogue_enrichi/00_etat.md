@@ -42,7 +42,7 @@ guildes abstraites à des **espèces NOMMÉES** rattachées aux guildes.
 |---|---------|--------|--------|
 | ① | Doc-conception `CONCEPTION_CATALOGUE_ENRICHI.md` (audit + matrices + sélection + partage doc/code) | INTACT (0 code) | ✅ |
 | ② | Plantes lot 1 — familles connues (thym, lavande, bourrache, consoude, moutarde) | NEUTRE (hash intact) | ✅ |
-| ③ | Plantes lot 2 — familles + cycles neufs (carotte, ortie, courgette, mâche, ail) + `_ATTRACT_*` + **vérif `biennial`/`evergreen`** | re-figé maîtrisé + corrections moteur ? | ⬜ |
+| ③ | Plantes lot 2 — familles + cycles neufs (carotte, ortie, courgette, mâche, ail) + `_ATTRACT_*` + **vérif `biennial`/`evergreen`** | NEUTRE (hash intact) | ✅ |
 | ④ | Faune nommée — **parfums** (puceron, coccinelle, carabe, merle, hérisson, lombric…) : sprite + encyclopédie | NEUTRE | ⬜ |
 | ⑤ | Faune nommée — **nouveaux pollinisateurs** (bourdon, osmie) : registre data-driven | re-figé maîtrisé (pollen/nouaison) | ⬜ |
 | ⑥ | Vue Godot / sprites / encyclopédie | NEUTRE | ⬜ |
@@ -64,6 +64,35 @@ fichier, Lamiacées evergreen) + bourrache/consoude/moutarde (`compagnes.py`,
 (thym vivant + feuillé après hiver ; 5 espèces germent). `biennial` reste à
 vérifier en ③ (carotte/ail).
 
-**Prochain au choix Nico** : ③ (familles + cycles neufs : carotte, ortie,
-courgette, mâche, ail + vérif `biennial`) ou ④ (faune en parfums, golden-neutre).
-Kickoff `0N_*.md` à écrire au lancement (pas d'enchaînement auto).
+**③ CLOS** le 2026-06-18 — +5 plantes, 5 familles botaniques NEUVES :
+- `species/potageres.py` (nouveau fichier — cultivees.py déjà à ~308 LDC, le
+  garde-fou interdisait l'ajout) : carotte (Apiaceae), courgette (Cucurbitaceae),
+  mâche (Caprifoliaceae) ; `species/sauvages.py` (nouveau) : ortie (Urticaceae) ;
+  ail (Amaryllidaceae) ajouté à `compagnes.py`.
+- 2 familles neuves PORTANT un effet familial → classes dans `familles.py`
+  (`Urticaceae` = injection fertilité/biomasse azotée ; `Amaryllidaceae` =
+  répulsif via `adjacency_bonus reduce_maladie_rondelle`). Les 3 autres (Apiaceae,
+  Cucurbitaceae, Caprifoliaceae) sans effet familial → `family="…"` au niveau
+  espèce (patron Phacelia/Borage). `_ATTRACT_*` (×3) étendus aux 5 familles
+  (Apiaceae syrphe=1.0 ; Urticaceae anémophile 0.0 partout).
+- **GATE BISANNUEL comblé** (`sim/engine/croissance.py`, `_bolt_bloque`) : une
+  bisannuelle ne franchit pas son stade de montaison (1er stade fleuri) tant que
+  `age_years < 1.0` → rosette l'an 1, ombelle/hampe l'an 2, puis mort. AUCUNE
+  espèce du smoke n'est bisannuelle → golden NEUTRE (si ce gate l'avait bougé,
+  c'eût été une fuite, pas un re-figeage).
+- Golden **NEUTRE** (hash `5fddfe54…` inchangé). Tests neufs :
+  `tests/test_biennial.py` (carotte+ail : rosette an 1, montaison an 2, mort) +
+  `tests/test_catalogue_lot2.py` (sanity 5 clés, attractivité syrphe/ortie,
+  courgette fruitier pollinisée vs sans pollen). evergreen non-régressé.
+- ⚠️ **Signalements** : (1) `fields/population.py` ≈ 369 LDC pur > garde-fou ~350
+  — DÉJÀ au-dessus avant ③ (363 → +5 clés familles) ; à éclater dans un futur
+  sprint refactor, pas dans un tronçon catalogue. (2) Amaryllidaceae répulsif =
+  `adjacency_bonus` (effet existant) ; un vrai abaissement de pression `ravageur`
+  serait une action moteur neuve → dette si on veut le rendre littéral. (3) Mort
+  de la bisannuelle ≈ âge 1.9 par la RAMPE de sénescence (longévité 2) AVANT le
+  déclencheur monocarpique à age≥2.0 ; les deux disent « meurt en fin d'an 2 »,
+  le test ne couple pas la mort à un chemin précis.
+
+**Prochain au choix Nico** : ④ (faune en parfums, golden-neutre) ou ⑤ (nouveaux
+pollinisateurs, re-figé maîtrisé). Kickoff `0N_*.md` à écrire au lancement (pas
+d'enchaînement auto).

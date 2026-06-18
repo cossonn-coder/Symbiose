@@ -24,7 +24,8 @@ from .effets import EFFECT_REGISTRY, register_effect
 from .stades import GrowthStage, Segment, Fruit, MAX_ORGANS, organ_sites
 from .instance import PlantInstance, ConflictNotification
 from .familles import (PlantBase,
-                       Solanaceae, Fabaceae, Asteraceae, Lamiaceae, Poaceae)
+                       Solanaceae, Fabaceae, Asteraceae, Lamiaceae, Poaceae,
+                       Urticaceae, Amaryllidaceae)
 
 __all__ = [
     "_plots_in_radius", "STRATE_DEFAULTS", "STRATE_SHADE_TOLERANCE", "PROC_ROOT_RATIO",
@@ -32,4 +33,5 @@ __all__ = [
     "GrowthStage", "Segment", "Fruit", "MAX_ORGANS", "organ_sites",
     "PlantInstance", "ConflictNotification", "PlantBase",
     "Solanaceae", "Fabaceae", "Asteraceae", "Lamiaceae", "Poaceae",
+    "Urticaceae", "Amaryllidaceae",
 ]

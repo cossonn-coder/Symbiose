@@ -17,6 +17,32 @@ from fields.ecofields.constants import T_PLANTE_ALPHA
 from .calendrier import saison_de
 
 
+def _bolt_stage_index(plant_class) -> int | None:
+    """Index du stade de MONTAISON d'une espèce = 1er stade portant un effet
+    `floraison` (convention du gate bisannuel, catalogue enrichi ③). None si
+    l'espèce ne fleurit pas par stade. Pure lecture de données."""
+    for i, st in enumerate(plant_class.growth_stages):
+        if any(e.get("type") == "floraison" for e in st.effects):
+            return i
+    return None
+
+
+def _bolt_bloque(plant) -> bool:
+    """Gate annuel des BISANNUELLES (catalogue enrichi ③). Une bisannuelle ne
+    franchit PAS son stade de montaison tant que `age_years < 1.0` : rosette
+    l'an 1, montaison/floraison l'an 2 (puis mort monocarpique, mortalite.py).
+    Bloque le passage VERS le stade de montaison (et au-delà) avant 1 an.
+
+    N'a d'effet QUE pour `life_cycle == "biennial"` → AUCUNE espèce du smoke n'est
+    bisannuelle ⇒ golden NEUTRE. Si ce gate déplaçait le hash golden, c'est qu'il
+    fuit sur une espèce non bisannuelle (BUG, pas un re-figeage)."""
+    cls = plant.plant_class
+    if cls.life_cycle != "biennial" or plant.age_years >= 1.0:
+        return False
+    bolt = _bolt_stage_index(cls)
+    return bolt is not None and plant.current_stage + 1 >= bolt
+
+
 class CroissanceMixin:
     def _avancer_stades(self, tile, eco):
         log = []
@@ -48,7 +74,11 @@ class CroissanceMixin:
             # vigueur accélère l'avancement de stade (gène >1 → durée requise réduite).
             needed = stage.duration_weeks / plant.gene("vigueur")
             if plant.age_weeks >= needed and can_grow:
-                if plant.advance_stage():
+                if _bolt_bloque(plant):
+                    # Bisannuelle an 1 : reste en rosette (ne monte pas à fleur).
+                    log.append(f"    🌿 {plant.name}@{plant.position} en rosette "
+                               f"(bisannuelle, an 1)")
+                elif plant.advance_stage():
                     log.append(f"    🌱 {plant.name}@{plant.position} → [{plant.stage.name}] "
                                f"(hum={hum:.2f} lum={light:.2f} t={temp:.1f}°C)")
             elif not ok_temp:
