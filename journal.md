@@ -87,6 +87,7 @@ pointeur ci-dessous. Ne plus écrire le contenu des entrées ici.
 - [2026-06-18 — Sprint Pollinisation & cycle de vie · implémentation ①→⑦ MOTEUR CLOS — floraison/nectar/butineurs/nouaison/ponts larvaires + ruche/miel + piqûre-alarme émergente (pont 0.4.1) ; golden `4f9fad91…1260` ; reste vue Godot (F5)](journal/57_2026-06-18_sprint-pollinisation-implémentation-①-⑦-CLOS-moteur.md)
 - [2026-06-18 — Sprint Pollinisation & cycle de vie · vue Godot — SPRINT TERMINÉ (butineurs fleur-en-fleur + dépôt pollen, piqûre temps réel vue pure, ruche/miel dessinés) ; golden INTACT, 0 ligne Python](journal/58_2026-06-18_sprint-pollinisation-vue-godot-CLOS-sprint-terminé.md)
 - [2026-06-18 — Sprint THERMIQUE & MICROCLIMAT CLOS (10 tronçons) — T sol spatialisée couplée au LightField (surchauffe/évapo/isolation/nébulosité/gel localisé/neige), croissance spatialisée, pont 0.5.0, rendu météo + manteau + heatmap F7 ; goldens maîtrisés ①→⑦, ⑧⑨⑩ NEUTRES](journal/59_2026-06-18_sprint-thermique-microclimat-CLOS.md)
+- [2026-06-18 — Sprint CATALOGUE ENRICHI · tronçon ① : conception FIGÉE (audit + 2 matrices espèce×feature + ~10 plantes par niche + faune nommée « parfum »/types, découpage ②→⑥) — golden INTACT (doc seul)](journal/60_2026-06-18_conception-catalogue-enrichi-FIGEE.md)
 
 ---
 

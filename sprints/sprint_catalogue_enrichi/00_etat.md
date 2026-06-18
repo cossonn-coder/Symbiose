@@ -40,12 +40,21 @@ guildes abstraites à des **espèces NOMMÉES** rattachées aux guildes.
 
 | # | Tronçon | Golden | Statut |
 |---|---------|--------|--------|
-| ① | Doc-conception `CONCEPTION_CATALOGUE_ENRICHI.md` (audit + matrices + sélection + partage doc/code) | INTACT (0 code) | ⬜ |
-| ②+ | Implémentation par lots (plantes, puis animaux nommés) — **kickoffs écrits APRÈS figeage du doc ①** | à définir | ⬜ |
+| ① | Doc-conception `CONCEPTION_CATALOGUE_ENRICHI.md` (audit + matrices + sélection + partage doc/code) | INTACT (0 code) | ✅ |
+| ② | Plantes lot 1 — familles connues (thym, lavande, bourrache, consoude, moutarde) | re-figé maîtrisé / neutre | ⬜ |
+| ③ | Plantes lot 2 — familles + cycles neufs (carotte, ortie, courgette, mâche, ail) + `_ATTRACT_*` + **vérif `biennial`/`evergreen`** | re-figé maîtrisé + corrections moteur ? | ⬜ |
+| ④ | Faune nommée — **parfums** (puceron, coccinelle, carabe, merle, hérisson, lombric…) : sprite + encyclopédie | NEUTRE | ⬜ |
+| ⑤ | Faune nommée — **nouveaux pollinisateurs** (bourdon, osmie) : registre data-driven | re-figé maîtrisé (pollen/nouaison) | ⬜ |
+| ⑥ | Vue Godot / sprites / encyclopédie | NEUTRE | ⬜ |
 
 ## §REPRISE
 
-**Rien de fait.** Prochain : tronçon ① — lire `01_doc_conception.md` (kickoff
-autosuffisant) et produire `docs/conception/CONCEPTION_CATALOGUE_ENRICHI.md`.
-Le découpage des tronçons d'implémentation ②+ sera arrêté à la fin du doc (sa
-dernière section = « partage doc/code » qui propose les lots).
+**① CLOS** le 2026-06-18 — doc figé `docs/conception/CONCEPTION_CATALOGUE_ENRICHI.md`
+(golden `5fddfe54…` intact, doc seul). Découpage ②→⑥ arrêté ci-dessus (détail
+§7 du doc). **Alerte moteur** : `life_cycle="biennial"` et
+`winter_strategy="evergreen"` sont codés mais **jamais exercés** → ③ devra les
+vérifier (trou possible).
+
+**Prochain au choix Nico** : ② (plantes familles connues, le plus direct) ou ④
+(faune en parfums, golden-neutre → des bestioles nommées vite). Kickoff
+`0N_*.md` à écrire au lancement du tronçon retenu (pas d'enchaînement auto).
