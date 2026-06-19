@@ -62,8 +62,9 @@ class EcoFields:
     # NOMMÉS par espèce (scission ④b/c/d) regroupés en catégories : ravageur
     # (puceron/limace/doryphore), auxiliaire (coccinelle/chrysope/carabe/merle/
     # hérisson), detritivore (lombric/cloporte) + N pollinisateurs PAR TYPE (abeille,
-    # syrphe, papillon — registre §E, arc pollinisation ②, remplacent l'ancien
-    # champ agrégé `pollinisateur`). Lus par pollinator_reach (brassage, D31.2) et
+    # syrphe, papillon + bourdon/osmie ajoutés au catalogue ⑤ — registre §E, arc
+    # pollinisation ②, remplacent l'ancien champ agrégé `pollinisateur`). Lus par
+    # pollinator_reach (brassage, D31.2) et
     # la Vigueur macro via `pollinator_density`.
     populations:      dict = field(default=None)
     # Champs larvaires des ponts de cycle de vie (§D, tronçon ⑤) :

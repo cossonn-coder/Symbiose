@@ -15,7 +15,8 @@ def test_vie_macro():
     print("[vie macro]")
     GUILDES = {"puceron", "limace", "doryphore",
                "coccinelle", "chrysope", "carabe", "merle", "herisson",
-               "abeille", "syrphe", "papillon", "lombric", "cloporte"}
+               "abeille", "syrphe", "papillon", "bourdon", "osmie",
+               "lombric", "cloporte"}
     s10 = ServerProc()
     r = s10.send(cmd="init", seed=42)
     snap = s10.send(cmd="snapshot")["snapshot"]
@@ -23,7 +24,7 @@ def test_vie_macro():
     check("bloc sprites présent, indexé par tuile",
           set(spr.keys()) == {t["id"] for t in r["world"]["tiles"]},
           f"tuiles={sorted(spr.keys())}")
-    check("les 12 espèces par tuile (3 ravageurs + 5 auxiliaires + 3 pollinisateurs + ver)",
+    check("les 15 espèces par tuile (3 ravageurs + 5 auxiliaires + 5 pollinisateurs + 2 vers)",
           all(set(g.keys()) == GUILDES for g in spr.values()))
     check("semaine 1 : aucun sprite (populations à zéro, rien simulé)",
           all(not lst for g in spr.values() for lst in g.values()))

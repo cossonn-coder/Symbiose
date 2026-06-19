@@ -31,7 +31,8 @@ SEED = 0x5AB1057E
 HASH_FILE = os.path.join(os.path.dirname(__file__), "population_hash.txt")
 GUILDS = ("puceron", "limace", "doryphore",
           "coccinelle", "chrysope", "carabe", "merle", "herisson",
-          "abeille", "syrphe", "papillon", "lombric", "cloporte")
+          "abeille", "syrphe", "papillon", "bourdon", "osmie",
+          "lombric", "cloporte")
 
 
 def build_world():

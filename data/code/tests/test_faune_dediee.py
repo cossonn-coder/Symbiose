@@ -45,8 +45,10 @@ from fields.population import (
     _foliage_solanaceae_grid, _solanaceae_grid,
     _limace_food_grid, _litter_grid, _foliage_grid,
     _espece_grid, _undisturbed_structure_grid, _pile_grid, _undisturbed_grid,
-    _base_habitat_grid, _merle_food_grid,
+    _base_habitat_grid, _merle_food_grid, _osmie_habitat_grid,
+    _pollinisateur_habitat_grid,
     daylength, _smoothstep, build_lifecycle_bridges,
+    build_pollinator_registry, build_pollinator_specs, POLLINATOR_NAMES,
     LIMACE_LITTER_W, LIMACE_FOLIAGE_W, DORY_AIL_REPULSE,
     PILE_HABITAT_W, MERLE_BASE_HABITAT,
 )
@@ -385,6 +387,93 @@ def test_graphe_symetrique():
                        f"graphe symétrique : `{lien}` cite-t-il bien `{nom}` en retour ?")
 
 
+# ---------------------------------------------------------------------------
+# 9. POLLINISATEURS B (⑤) — bourdon & osmie, registre data-driven
+# ---------------------------------------------------------------------------
+
+POLLINISATEURS_B = ("bourdon", "osmie")
+
+
+def test_cinq_pollinisateurs_nommes():
+    reg = {p.name: p for p in build_pollinator_registry()}
+    _check(set(POLLINATOR_NAMES) == set(reg),
+           f"POLLINATOR_NAMES == registre (vu {sorted(reg)})")
+    _check(len(POLLINATOR_NAMES) == 5, "5 types de pollinisateurs (3 + bourdon/osmie)")
+    specs = {s.name: s for s in build_population_specs()}
+    # Les pollinisateurs B sont des specs trophiques générées (catégorie dédiée).
+    pspecs = {s.name: s for s in build_pollinator_specs()}
+    for nom in POLLINISATEURS_B:
+        _check(nom in reg, f"`{nom}` existe au registre")
+        _check(nom not in specs, f"`{nom}` n'est PAS une guilde trophique consommatrice")
+        _check(pspecs[nom].category == "pollinisateur", f"`{nom}` catégorie pollinisateur")
+        _check(pspecs[nom].predators == (), f"`{nom}` sans prédateur (pollinisateur)")
+        _check(reg[nom].bridge is None, f"`{nom}` sans pont larvaire (nid hors chaîne ④)")
+    # Triades PROPRES : attractivités distinctes, salts distincts.
+    salts = {reg[n].salt for n in reg}
+    _check(len(salts) == len(reg), "chaque type a SON salt (positions sprites décorrélées)")
+
+
+def test_attractivite_bourdon_osmie():
+    reg = {p.name: p for p in build_pollinator_registry()}
+    bourdon, osmie, abeille = reg["bourdon"], reg["osmie"], reg["abeille"]
+    # Bourdon = langue longue : Fabacées/Lamiacées au max + buzz-pollinisation Solanacées.
+    _check(bourdon.attractivite["Fabaceae"] == 1.0 and bourdon.attractivite["Lamiaceae"] == 1.0,
+           "bourdon : Fabacées & Lamiacées maximales")
+    _check(bourdon.attractivite["Solanaceae"] > abeille.attractivite["Solanaceae"],
+           "bourdon : Solanacées > abeille (buzz-pollinisation tomate/poivron)")
+    # Osmie = abeille des vergers : Rosacées au max, Apiacées élevées.
+    _check(osmie.attractivite["Rosaceae"] == 1.0,
+           "osmie : Rosacées maximales (arbres fruitiers)")
+    _check(osmie.attractivite["Rosaceae"] > abeille.attractivite["Rosaceae"] and
+           osmie.attractivite["Apiaceae"] >= 0.8,
+           "osmie : pollinisatrice de vergers (Rosacées > abeille, Apiacées hautes)")
+    # Anémophiles ≈ nulles pour les deux (graminées/chêne/noyer).
+    for n in POLLINISATEURS_B:
+        _check(reg[n].attractivite["Poaceae"] == 0.0,
+               f"`{n}` : graminées non visitées (anémophiles)")
+
+
+def test_fenetres_pollinisateurs_b():
+    reg = {p.name: p for p in build_pollinator_registry()}
+    # Bourdon PRÉCOCE/frais : fenêtre s'ouvre AVANT l'abeille (jours courts tolérés).
+    _check(reg["bourdon"].daylen_min == 9.5 and reg["bourdon"].daylen_full == 12.0,
+           "bourdon : fenêtre précoce 9.5/12.0 (frais, jours courts)")
+    _check(reg["bourdon"].daylen_min < reg["abeille"].daylen_min,
+           "bourdon : démarre plus tôt que l'abeille (comble la fenêtre précoce)")
+    _check(reg["osmie"].daylen_min == 10.0 and reg["osmie"].daylen_full == 12.5,
+           "osmie : fenêtre printanière 10.0/12.5 (abeille des vergers)")
+
+
+def test_osmie_habitat_niche_bois():
+    # Osmie : abeille solitaire qui NICHE dans le bois → habitat bumpe sur une `pile`
+    # (faune↔structures §5.3). Sans pile ni rondelle → identique au plancher pollinisateur.
+    tile, eco = _eco()
+    base = _pollinisateur_habitat_grid(eco, tile, tile.plants)
+    osm0 = _osmie_habitat_grid(eco, tile, tile.plants)
+    _check(all(abs(osm0[r][c] - base[r][c]) < 1e-9 for r in range(ROWS) for c in range(COLS)),
+           "osmie sans pile : habitat == plancher pollinisateur (rondelle)")
+    eco.structures.append(Structure(kind="pile", plot=(1, 5)))
+    osm1 = _osmie_habitat_grid(eco, tile, tile.plants)
+    _check(abs(osm1[1][5] - min(1.0, base[1][5] + PILE_HABITAT_W)) < 1e-9,
+           f"pile posée → osmie bumpe au plot (={osm1[1][5]:.2f}, niche-bois)")
+    _check(not _grid_nonzero([[osm1[r][c] if (r, c) != (1, 5) else 0.0
+                               for c in range(COLS)] for r in range(ROWS)]),
+           "osmie : bump LOCAL à la pile, nul ailleurs (sans rondelle)")
+
+
+def test_pollinisateurs_b_dans_densite():
+    # La densité pollinisatrice TOTALE (lue par pollinator_reach + Vigueur macro)
+    # SOMME désormais bourdon/osmie : sans leur ajout à POLLINATOR_NAMES, le pollen
+    # déposé ne nourrirait pas la nouaison. On le prouve via eco.pollinator_density.
+    tile, eco = _eco()
+    d0 = eco.pollinator_density(2, 2)
+    eco.populations["bourdon"].set(2, 2, 0.40)
+    eco.populations["osmie"].set(2, 2, 0.25)
+    d1 = eco.pollinator_density(2, 2)
+    _check(abs((d1 - d0) - 0.65) < 1e-9,
+           f"pollinator_density somme bourdon+osmie (Δ={d1 - d0:.2f} attendu 0.65)")
+
+
 def main():
     test_trois_ravageurs_nommes()
     test_category_density_est_la_somme()
@@ -403,6 +492,11 @@ def main():
     test_phenologie_hivernale()
     test_metadata_encyclo()
     test_graphe_symetrique()
+    test_cinq_pollinisateurs_nommes()
+    test_attractivite_bourdon_osmie()
+    test_fenetres_pollinisateurs_b()
+    test_osmie_habitat_niche_bois()
+    test_pollinisateurs_b_dans_densite()
     print("[faune] TOUS LES TESTS PASSENT")
     return 0
 

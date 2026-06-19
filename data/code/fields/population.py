@@ -605,6 +605,21 @@ def _pile_grid(eco, tile, plants) -> list[list[float]]:
     return g
 
 
+def _osmie_habitat_grid(eco, tile, plants) -> list[list[float]]:
+    """Habitat de l'osmie (⑤) = rondelle pollinisateur (nichoirs posés) + bump des
+    structures `pile` à bois mort : l'abeille solitaire NICHE dans les cavités du
+    bois (faune↔structures §5.3 — une pile de bois lui offre des galeries). Sans
+    pile ni rondelle → habitat nul (mais le nectar Rosacées/Apiacées suffit à la
+    capacité additive). Golden NEUTRE pour la part `pile` : le smoke n'en pose aucune."""
+    g = _pollinisateur_habitat_grid(eco, tile, plants)
+    for st in getattr(eco, "structures", ()):
+        if getattr(st, "kind", None) == "pile":
+            r, c = st.plot
+            if 0 <= r < eco.rows and 0 <= c < eco.cols:
+                g[r][c] = _clamp01(g[r][c] + PILE_HABITAT_W)
+    return g
+
+
 def _base_habitat_grid(eco, tile, plants) -> list[list[float]]:
     """Habitat du merle (④c) = plancher constant léger (oiseau ubiquiste, présent
     toute saison ; haies/structures hautes = placeholder différé). UNIFORME → c'est
@@ -699,6 +714,8 @@ _SALT_LOMBRIC       = _SALT_VERS   # lombric = héritier du champ vers_de_terre 
 _SALT_CLOPORTE      = 0x2AC001
 _SALT_SYRPHE        = 0x2A4001
 _SALT_PAPILLON      = 0x2A5001
+_SALT_BOURDON       = 0x2AD001   # pollinisateur B précoce/frais (⑤ catalogue enrichi)
+_SALT_OSMIE         = 0x2AE001   # abeille solitaire niche-bois (⑤ catalogue enrichi)
 
 
 def build_population_specs() -> list[TrophicSpec]:
@@ -822,7 +839,7 @@ def build_population_specs() -> list[TrophicSpec]:
 # (bourdon, abeille solitaire…) = ajouter une entrée, sans recoder le mécanisme.
 # La densité TOTALE (somme des types) est ce que lisent `pollinator_reach`
 # (brassage) et la Vigueur macro — cf. EcoFields.pollinator_density.
-POLLINATOR_NAMES = ("abeille", "syrphe", "papillon")
+POLLINATOR_NAMES = ("abeille", "syrphe", "papillon", "bourdon", "osmie")
 
 # Préférences florales PAR TYPE (placeholders, calibrage post-test §E.2). Familles
 # absentes → `_ATTRACT_DEFAUT`. Anémophiles (Poaceae/Fagaceae/Juglandaceae) ≈ 0.
@@ -847,6 +864,20 @@ _ATTRACT_PAPILLON = {     # fleurs tubulaires / composées riches en nectar
     "Brassicaceae": 0.30, "Solanaceae": 0.30, "Caprifoliaceae": 0.30,
     "Amaryllidaceae": 0.20, "Urticaceae": 0.0,
     "Poaceae": 0.0, "Fagaceae": 0.0, "Juglandaceae": 0.0,
+}
+_ATTRACT_BOURDON = {      # langue longue : Fabacées/Lamiacées + BUZZ Solanacées (⑤)
+    "Fabaceae": 1.0, "Lamiaceae": 1.0, "Boraginaceae": 0.90, "Rosaceae": 0.70,
+    "Cucurbitaceae": 0.70, "Solanaceae": 0.65, "Asteraceae": 0.55,
+    "Brassicaceae": 0.45, "Apiaceae": 0.40, "Caprifoliaceae": 0.40,
+    "Amaryllidaceae": 0.30, "Urticaceae": 0.0,
+    "Poaceae": 0.0, "Fagaceae": 0.10, "Juglandaceae": 0.10,
+}
+_ATTRACT_OSMIE = {        # abeille des vergers : Rosacées (arbres fruitiers) + Apiacées (⑤)
+    "Rosaceae": 1.0, "Apiaceae": 0.85, "Brassicaceae": 0.75, "Boraginaceae": 0.65,
+    "Fabaceae": 0.55, "Lamiaceae": 0.50, "Asteraceae": 0.50,
+    "Cucurbitaceae": 0.40, "Caprifoliaceae": 0.40, "Solanaceae": 0.35,
+    "Amaryllidaceae": 0.25, "Urticaceae": 0.0,
+    "Poaceae": 0.0, "Fagaceae": 0.10, "Juglandaceae": 0.10,
 }
 
 
@@ -910,6 +941,11 @@ def _make_nectar_grid(attractivite: dict, defaut: float) -> Callable:
 _FORAGER_ABEILLE  = ForagerParams(n_max=12, substeps=6, perception=2, deposit=0.5, recharge=0.5)
 _FORAGER_SYRPHE   = ForagerParams(n_max=8,  substeps=4, perception=1, deposit=0.4, recharge=0.5)
 _FORAGER_PAPILLON = ForagerParams(n_max=6,  substeps=5, perception=2, deposit=0.4, recharge=0.5)
+# Le bourdon : peu nombreux mais TRAPU, fort porteur de pollen (dépôt élevé), longue
+# tournée. L'osmie : solitaire (effectif faible) mais très efficace par fleur (scopa
+# pileuse → dépôt élevé), tournée courte. Placeholders §E.2, calibrage post-test.
+_FORAGER_BOURDON  = ForagerParams(n_max=8,  substeps=6, perception=2, deposit=0.6, recharge=0.5)
+_FORAGER_OSMIE    = ForagerParams(n_max=5,  substeps=4, perception=2, deposit=0.6, recharge=0.5)
 
 # Ponts de cycle de vie PAR TYPE (§D, tronçon ⑤). La chenille (→ papillon) mange le
 # FEUILLAGE (`_foliage_grid`, même ressource que le ravageur — elle s'ajoute à la
@@ -951,6 +987,21 @@ def build_pollinator_registry() -> list[PollinatorSpec]:
             habitat_fn=_pollinisateur_habitat_grid,
             daylen_min=12.5, daylen_full=14.5,   # été
             forager=_FORAGER_PAPILLON, bridge=_BRIDGE_PAPILLON,
+        ),
+        # --- pollinisateurs B (catalogue enrichi ⑤) — sans pont larvaire --------
+        PollinatorSpec(
+            name="bourdon", salt=_SALT_BOURDON,
+            attractivite=_ATTRACT_BOURDON, attractivite_defaut=_ATTRACT_DEFAUT,
+            habitat_fn=_pollinisateur_habitat_grid,
+            daylen_min=9.5, daylen_full=12.0,    # PRÉCOCE/frais : jours courts tolérés
+            forager=_FORAGER_BOURDON,            # comble la fenêtre où l'abeille n'est pas
+        ),
+        PollinatorSpec(
+            name="osmie", salt=_SALT_OSMIE,
+            attractivite=_ATTRACT_OSMIE, attractivite_defaut=_ATTRACT_DEFAUT,
+            habitat_fn=_osmie_habitat_grid,      # rondelle + niche-bois (pile, §5.3)
+            daylen_min=10.0, daylen_full=12.5,   # printanier (abeille des vergers)
+            forager=_FORAGER_OSMIE,
         ),
     ]
 

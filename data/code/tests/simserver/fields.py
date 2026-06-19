@@ -12,7 +12,8 @@ def test_champs_debug():
     print("[champs debug]")
     GUILDES = {"puceron", "limace", "doryphore",
                "coccinelle", "chrysope", "carabe", "merle", "herisson",
-               "abeille", "syrphe", "papillon", "lombric", "cloporte"}
+               "abeille", "syrphe", "papillon", "bourdon", "osmie",
+               "lombric", "cloporte"}
     s11 = ServerProc()
     r = s11.send(cmd="fields")
     check("fields avant init → ok:false", r.get("ok") is False)
@@ -23,7 +24,7 @@ def test_champs_debug():
           {"microbiome", "humidite", "fertilite", "lumiere",
            "temperature", "disturbance"} <= set(noms),
           f"n={len(noms)}")
-    check("registre : les 12 espèces de population présentes", GUILDES <= set(noms))
+    check("registre : les 15 espèces de population présentes", GUILDES <= set(noms))
     check("registre : aucun doublon", len(noms) == len(set(noms)))
 
     rows_cols = {t["id"]: (t["rows"], t["cols"]) for t in rw["world"]["tiles"]}
