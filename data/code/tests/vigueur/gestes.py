@@ -160,15 +160,16 @@ def test_ecraser():
           f"densité={eco.populations['puceron'].at_plot(3, 3)}")
     check("Vigueur drainée à 0", st["courante"] == 0.0, f"courante={st['courante']}")
     # Maladresse (retour F5 2026-06-12) : écraser le sprite cliqué QUELLE QUE
-    # soit sa guilde — un auxiliaire cliqué meurt, le ravageur n'est PAS touché.
+    # soit son espèce — un auxiliaire cliqué (coccinelle, scindée ④c) meurt, le
+    # ravageur co-localisé n'est PAS touché.
     st["courante"] = 100.0
-    eco.populations["auxiliaire"].set(4, 4, 0.30)
+    eco.populations["coccinelle"].set(4, 4, 0.30)
     eco.populations["puceron"].set(4, 4, 0.20)
-    ok_aux = ACT.ecraser(gs, "joueur_1", eco, 4, 4, guilde="auxiliaire", urgence=False)
-    check("écraser un auxiliaire payé", ok_aux)
-    check("un quantum d'auxiliaire retiré",
-          abs(eco.populations["auxiliaire"].at_plot(4, 4) - (0.30 - DENSITE_PAR_SPRITE)) < 1e-9,
-          f"aux={eco.populations['auxiliaire'].at_plot(4, 4)}")
+    ok_aux = ACT.ecraser(gs, "joueur_1", eco, 4, 4, guilde="coccinelle", urgence=False)
+    check("écraser une coccinelle (auxiliaire) payé", ok_aux)
+    check("un quantum de coccinelle retiré",
+          abs(eco.populations["coccinelle"].at_plot(4, 4) - (0.30 - DENSITE_PAR_SPRITE)) < 1e-9,
+          f"aux={eco.populations['coccinelle'].at_plot(4, 4)}")
     check("ravageur co-localisé INTACT (on n'a écrasé QUE l'auxiliaire)",
           eco.populations["puceron"].at_plot(4, 4) == 0.20,
           f"rav={eco.populations['puceron'].at_plot(4, 4)}")

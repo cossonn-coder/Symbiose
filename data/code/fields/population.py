@@ -125,6 +125,18 @@ DORY_AIL_REPULSE = 0.6   # l'ail (Amaryllidaceae) rogne l'habitat doryphore (ré
 
 
 # ---------------------------------------------------------------------------
+# CONSTANTES DE SCISSION DE L'AUXILIAIRE (faune nommée ④c, CONCEPTION_FAUNE_DEDIEE §2)
+# ---------------------------------------------------------------------------
+# Le champ unique `auxiliaire` se scinde en coccinelle / chrysope / carabe / merle /
+# hérisson. Chacun chasse SA proie nommée (coccinelle/chrysope→puceron,
+# carabe/hérisson→limace) → les `predators` posés en ④b S'ACTIVENT, les boucles
+# proie↔prédateur deviennent réelles. Habitats neufs ancrés sur les STRUCTURES
+# (piles ⑤) : poser une pile de bois attire carabe + hérisson (faune↔structures §3).
+PILE_HABITAT_W     = 0.40  # bump d'habitat des structures `pile` (carabe/hérisson)
+MERLE_BASE_HABITAT = 0.20  # plancher d'habitat ubiquiste du merle (oiseau résident)
+
+
+# ---------------------------------------------------------------------------
 # CONSTANTES DE PERCEPTION (échantillonnage sprite — §3)
 # ---------------------------------------------------------------------------
 
@@ -471,11 +483,31 @@ def _solanaceae_grid(eco, tile, plants) -> list[list[float]]:
 
 
 def _ravageur_grid(eco, tile, plants) -> list[list[float]]:
-    """Ressource de l'auxiliaire = la proie animale = AGRÉGAT de la catégorie
-    `ravageur` (puceron + limace + doryphore, modèle B ④b ; C11). La syrphe_larve
-    (pont ⑤) le réutilise comme proie : elle prédate l'ensemble des ravageurs."""
+    """Proie animale = AGRÉGAT de la catégorie `ravageur` (puceron + limace +
+    doryphore, modèle B). Depuis ④c, les auxiliaires NOMMÉS chassent chacun UNE
+    proie précise (`_espece_grid`, ci-dessous) et ne lisent plus cet agrégat. Seule
+    la syrphe_larve (pont ⑤) le réutilise comme proie : généraliste, elle prédate
+    l'ensemble des ravageurs (doc §4 « ponts inchangés »)."""
     return [[eco.category_density("ravageur", r, c) for c in range(eco.cols)]
             for r in range(eco.rows)]
+
+
+def _espece_grid(name: str) -> Callable:
+    """Fabrique une resource_fn lisant le champ de population d'UNE espèce nommée
+    (généralise `_ravageur_grid` à un membre unique, scission ④c). Câble chaque
+    prédateur sur SA proie (coccinelle/chrysope→puceron, carabe/hérisson→limace) au
+    lieu de l'agrégat de guilde → les boucles proie↔prédateur deviennent réelles.
+
+    ROBUSTE à l'ordre des scissions : si `name` n'existe pas encore comme champ
+    (catégorie pas encore scindée), la grille est NULLE — le merle/hérisson pourront
+    ainsi viser `lombric` (④d) sans casser tant qu'il n'existe pas."""
+    def _grid(eco, tile, plants) -> list[list[float]]:
+        f = eco.populations.get(name)
+        if f is None:
+            return _zero_grid(eco.rows, eco.cols)
+        return [[f.at_plot(r, c) for c in range(eco.cols)]
+                for r in range(eco.rows)]
+    return _grid
 
 
 def _stability_grid(eco, tile, plants) -> list[list[float]]:
@@ -530,6 +562,60 @@ def _undisturbed_grid(eco, tile, plants) -> list[list[float]]:
     for r in range(eco.rows):
         for c in range(eco.cols):
             g[r][c] = 1.0 - eco.disturbance.at_plot(r, c)
+    return g
+
+
+# --- Habitats neufs des auxiliaires nommés (scission ④c, doc §2) -------------
+# Ancrés sur les STRUCTURES `pile` (⑤) : lecture DIRECTE d'`eco.structures`,
+# duck-typée comme `_abeille_habitat_grid` lit les ruches (pas d'import de
+# l'apiculture/compost → pas de cycle de couche). À ZÉRO structure posée (cas du
+# smoke golden), ces termes-sources sont nuls → golden NEUTRE pour leur part.
+
+def _undisturbed_structure_grid(eco, tile, plants) -> list[list[float]]:
+    """Habitat du carabe (④c) = sol NON perturbé + bump des structures `pile` à bois
+    (faune↔structures §3 : un carabe se réfugie sous le bois mort). Sans pile posée
+    → identique à `_undisturbed_grid` (le carabe vit déjà du sol stable)."""
+    g = _undisturbed_grid(eco, tile, plants)
+    for st in getattr(eco, "structures", ()):
+        if getattr(st, "kind", None) == "pile":
+            r, c = st.plot
+            if 0 <= r < eco.rows and 0 <= c < eco.cols:
+                g[r][c] = _clamp01(g[r][c] + PILE_HABITAT_W)
+    return g
+
+
+def _pile_grid(eco, tile, plants) -> list[list[float]]:
+    """Habitat du hérisson (④c) = présence de structures `pile`/tas (refuge nocturne).
+    Terme-source NUL sans pile posée → le hérisson dépend ENTIÈREMENT d'un aménagement
+    joueur (poser une pile attire carabe + hérisson, synergie de cartes §8). Golden
+    NEUTRE : le smoke n'instancie aucune structure."""
+    g = _zero_grid(eco.rows, eco.cols)
+    for st in getattr(eco, "structures", ()):
+        if getattr(st, "kind", None) == "pile":
+            r, c = st.plot
+            if 0 <= r < eco.rows and 0 <= c < eco.cols:
+                g[r][c] = _clamp01(g[r][c] + PILE_HABITAT_W)
+    return g
+
+
+def _base_habitat_grid(eco, tile, plants) -> list[list[float]]:
+    """Habitat du merle (④c) = plancher constant léger (oiseau ubiquiste, présent
+    toute saison ; haies/structures hautes = placeholder différé). UNIFORME → c'est
+    sa NOURRITURE (fruit frais + vers) qui le concentre spatialement, pas l'habitat."""
+    return [[MERLE_BASE_HABITAT] * eco.cols for _ in range(eco.rows)]
+
+
+def _merle_food_grid(eco, tile, plants) -> list[list[float]]:
+    """Nourriture du merle (④c) : fruit FRAIS (frugivore — `_aux_fruit_signal` repromu
+    de signal additif en RESSOURCE, C13) + vers de terre. Tant que ④d n'a pas scindé
+    `vers_de_terre`, on lit l'AGRÉGAT `category_density("detritivore")` (note kickoff)
+    → bascule sur `_espece_grid("lombric")` en ④d. Borné [0,1]."""
+    fruit = _aux_fruit_signal(eco, tile, plants)
+    g = _zero_grid(eco.rows, eco.cols)
+    for r in range(eco.rows):
+        for c in range(eco.cols):
+            vers = eco.category_density("detritivore", r, c)
+            g[r][c] = _clamp01(fruit[r][c] + vers)
     return g
 
 
@@ -592,6 +678,11 @@ _SALT_PUCERON       = _SALT_RAVAGEUR   # puceron = héritier du champ ravageur (
 _SALT_LIMACE        = 0x2A6001
 _SALT_DORYPHORE     = 0x2A7001
 _SALT_AUXILIAIRE    = 0x2A1001
+_SALT_COCCINELLE    = _SALT_AUXILIAIRE   # coccinelle = héritière du champ auxiliaire (④c, continuité sprites)
+_SALT_CHRYSOPE      = 0x2A8001
+_SALT_CARABE        = 0x2A9001
+_SALT_MERLE         = 0x2AA001
+_SALT_HERISSON      = 0x2AB001
 _SALT_POLLINISATEUR = 0x2A2001   # réutilisé par l'abeille (héritière du champ historique)
 _SALT_VERS          = 0x2A3001
 _SALT_SYRPHE        = 0x2A4001
@@ -601,19 +692,19 @@ _SALT_PAPILLON      = 0x2A5001
 def build_population_specs() -> list[TrophicSpec]:
     """
     Construit les specs NON pollinisatrices dans l'ORDRE DE TICK. Les ravageurs
-    (puceron/limace/doryphore, scindés en ④b) tickent en premier (ils lisent
-    l'auxiliaire de la semaine PRÉCÉDENTE → décalage), puis l'auxiliaire lit
-    l'AGRÉGAT ravageur fraîchement mis à jour (`_ravageur_grid` = category_density).
-    Le vers de terre est indépendant. Les pollinisateurs (registre §E) sont ajoutés
-    à part par `build_pollinator_specs` (le conteneur concatène) — ils n'ont ni
-    prédateur ni proie ici, donc leur ordre de tick est golden-neutre.
+    (puceron/limace/doryphore, scindés en ④b) tickent en premier (ils lisent les
+    auxiliaires de la semaine PRÉCÉDENTE → décalage proie↔prédateur), puis les
+    auxiliaires (coccinelle/chrysope/carabe/merle/hérisson, scindés en ④c) chassent
+    chacun SA proie fraîchement mise à jour (`_espece_grid`). Le vers de terre est
+    indépendant. Les pollinisateurs (registre §E) sont ajoutés à part par
+    `build_pollinator_specs` (le conteneur concatène) — ni prédateur ni proie ici,
+    donc leur ordre de tick est golden-neutre.
 
-    SCISSION ④b (CONCEPTION_FAUNE_DEDIEE §2) : les `predators` listent les VRAIS
-    prédateurs nommés (coccinelle/chrysope/carabe/hérisson), qui n'existent pas
-    encore (scindés en ④c) → `_predator_field` renvoie None → prédation 0 pour eux
-    jusqu'à ④c (la régulation auxiliaire se rebranchera alors). Seul `syrphe_larve`
-    (pont ⑤) est déjà résolu. Transitoirement, l'auxiliaire ne RÉGULE donc plus le
-    ravageur (il le MANGE encore comme ressource) → re-figeage golden attendu.
+    SCISSION ④c (CONCEPTION_FAUNE_DEDIEE §2) : les `predators` nommés posés en ④b
+    EXISTENT enfin comme champs → `_predator_field` les résout → les boucles
+    proie↔prédateur se referment (coccinelle/chrysope régulent le puceron,
+    carabe/hérisson la limace). C'est la résorption de la régression transitoire ④b
+    (où la prédation était à 0) ET la cause du re-figeage golden MAÎTRISÉ #2.
     """
     return [
         TrophicSpec(
@@ -640,12 +731,40 @@ def build_population_specs() -> list[TrophicSpec]:
             predators=("carabe",),               # ④c (inactif jusque-là)
             daylen_min=10.0, daylen_full=13.0,   # fenêtre estivale
         ),
+        # --- Catégorie `auxiliaire` : 5 espèces nommées (scission ④c, doc §2) ----
+        # Chacune chasse SA proie nommée (`_espece_grid`) avec SON habitat propre.
+        # Sans prédateur (sommets de chaîne de jardin, doc §5.5) ; leur frein est la
+        # fenêtre + l'habitat. Le fruit frais (ex-signal de l'auxiliaire) devient la
+        # RESSOURCE du merle (`_merle_food_grid`, C13).
         TrophicSpec(
-            name="auxiliaire", category="auxiliaire", salt=_SALT_AUXILIAIRE,
-            resource_fn=_ravageur_grid, habitat_fn=_stability_grid,
+            name="coccinelle", category="auxiliaire", salt=_SALT_COCCINELLE,
+            resource_fn=_espece_grid("puceron"), habitat_fn=_stability_grid,
             predators=(),
-            signal_fn=_aux_fruit_signal,   # fruit frais → frugivores (④)
-            daylen_min=10.0, daylen_full=13.0,   # suit le ravageur (sa proie)
+            daylen_min=10.0, daylen_full=13.0,   # estivale (suit le puceron)
+        ),
+        TrophicSpec(
+            name="chrysope", category="auxiliaire", salt=_SALT_CHRYSOPE,
+            resource_fn=_espece_grid("puceron"), habitat_fn=_auxiliaire_habitat_grid,
+            predators=(),
+            daylen_min=10.0, daylen_full=13.0,   # estivale
+        ),
+        TrophicSpec(
+            name="carabe", category="auxiliaire", salt=_SALT_CARABE,
+            resource_fn=_espece_grid("limace"), habitat_fn=_undisturbed_structure_grid,
+            predators=(),
+            daylen_min=9.0, daylen_full=12.0,    # nocturne→large (élargie comme la limace, sa proie)
+        ),
+        TrophicSpec(
+            name="merle", category="auxiliaire", salt=_SALT_MERLE,
+            resource_fn=_merle_food_grid, habitat_fn=_base_habitat_grid,
+            predators=(),
+            daylen_min=8.5, daylen_full=10.0,    # toute saison (oiseau résident, fenêtre LARGE)
+        ),
+        TrophicSpec(
+            name="herisson", category="auxiliaire", salt=_SALT_HERISSON,
+            resource_fn=_espece_grid("limace"), habitat_fn=_pile_grid,
+            predators=(),
+            daylen_min=9.0, daylen_full=12.0,    # nocturne→large
         ),
         TrophicSpec(
             # name reste "vers_de_terre" en ④a (clé de champ inchangée) ; la

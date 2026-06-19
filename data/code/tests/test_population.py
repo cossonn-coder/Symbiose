@@ -29,7 +29,8 @@ from sim.engine import Engine
 N_WEEKS = 60
 SEED = 0x5AB1057E
 HASH_FILE = os.path.join(os.path.dirname(__file__), "population_hash.txt")
-GUILDS = ("puceron", "limace", "doryphore", "auxiliaire",
+GUILDS = ("puceron", "limace", "doryphore",
+          "coccinelle", "chrysope", "carabe", "merle", "herisson",
           "abeille", "syrphe", "papillon", "vers_de_terre")
 
 
@@ -125,12 +126,13 @@ def _run_trace(n_weeks=110):
 
 
 def test_saisonnalite_dormance_reveil():
-    """Les guildes PHOTOSENSIBLES (ravageur/auxiliaire/abeille) décollent en
-    saison et S'ÉTEIGNENT en plein hiver (dormance, plus de traîne). L'abeille
-    représente les pollinisateurs : sa ressource = nectar (floraison × attractivite,
-    ②) — elle ne décolle que si le jardin fleurit pour de vrai."""
+    """Les guildes PHOTOSENSIBLES (puceron/coccinelle/abeille) décollent en
+    saison et S'ÉTEIGNENT en plein hiver (dormance, plus de traîne). La coccinelle
+    (auxiliaire, scindée ④c) suit le puceron, sa proie. L'abeille représente les
+    pollinisateurs : sa ressource = nectar (floraison × attractivite, ②) — elle ne
+    décolle que si le jardin fleurit pour de vrai."""
     res = _run_trace()
-    for g in ("puceron", "auxiliaire", "abeille"):
+    for g in ("puceron", "coccinelle", "abeille"):
         peak, hiv = res[g]
         assert peak > 0.05, f"{g} ne décolle jamais (pic {peak:.3f})"
         assert hiv < 0.02, f"{g} grouille encore en hiver (max {hiv:.3f})"

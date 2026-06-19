@@ -85,10 +85,10 @@ def test_actions_v1():
           r["result"]["applied"] is False and s5.send(cmd="snapshot").get("ok") is True,
           r["result"]["message"])
     r = s5.send(cmd="action", verb="ecraser",
-                target={"tile": "T0", "r": 0, "c": 0, "guilde": "auxiliaire"},
+                target={"tile": "T0", "r": 0, "c": 0, "guilde": "coccinelle"},
                 params={"urgence": False})
-    check("ecraser une guilde explicite (auxiliaire) → appliqué ET nommé",
-          r["result"]["applied"] is True and "auxiliaire" in r["result"]["message"],
+    check("ecraser une espèce explicite (coccinelle, auxiliaire ④c) → appliqué ET nommé",
+          r["result"]["applied"] is True and "coccinelle" in r["result"]["message"],
           r["result"]["message"])
 
     # Vigueur insuffisante : drainer à la grelinette (sans cible) jusqu'au refus.

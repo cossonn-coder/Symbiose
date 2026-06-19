@@ -46,7 +46,7 @@ guildes abstraites à des **espèces NOMMÉES** rattachées aux guildes.
 | ④ | Faune nommée — **modèle B, champ dédié par espèce** (RE-DÉCOUPÉ a→e, voir ci-dessous). ~~parfums (A)~~ CADUC | re-figé MAÎTRISÉ large | ⬜ |
 | ④a | Scaffolding catégorie : `TrophicSpec.category` + `category_density` + 6 consommateurs recâblés | **NEUTRE** | ✅ |
 | ④b | Scinder `ravageur` → puceron/limace/doryphore | re-figé #1 | ✅ |
-| ④c | Scinder `auxiliaire` → coccinelle/chrysope/carabe/merle/hérisson | re-figé #2 | ⬜ |
+| ④c | Scinder `auxiliaire` → coccinelle/chrysope/carabe/merle/hérisson | re-figé #2 | ✅ |
 | ④d | Scinder `detritivore` → lombric/cloporte (decomp→lombric, fruit pourri→cloporte) | re-figé #3 | ⬜ |
 | ④e | Encyclopédie (blurb/interconnexions) + tests + stub pont | NEUTRE | ⬜ |
 | ⑤ | Faune nommée — **nouveaux pollinisateurs** (bourdon, osmie) : registre data-driven | re-figé maîtrisé (pollen/nouaison) | ⬜ |
@@ -168,6 +168,55 @@ LOCALISÉS (une catégorie à la fois). ④a pose le filet (`category_density`) 
      (0 fruit @ S52 — chaîne pollinisation gardée au niveau unitaire : test_fruits 24/24,
      test_ruche 20/20). → dette, à traiter séparément.
 
-**Prochain au choix Nico** : ④c (scinder auxiliaire → coccinelle/chrysope/carabe/
-merle/hérisson — résorbe la régression de prédation, re-figé #2) ou ⑤ (pollinisateurs
+**④c CLOS** le 2026-06-19 — `auxiliaire` scindé en 5 champs NOMMÉS (modèle B), golden
+**re-figé MAÎTRISÉ #2** :
+- `build_population_specs()` pose 5 specs `category="auxiliaire"`, triades PROPRES,
+  via la fabrique `_espece_grid(name)` (chasse SA proie fraîchement mise à jour) :
+  - **coccinelle** = héritière du champ `auxiliaire` (salt identique → continuité
+    sprites) ; proie `puceron`, habitat `_stability_grid`, fenêtre estivale 10/13.
+  - **chrysope** = proie `puceron`, habitat `_auxiliaire_habitat_grid` (rondelle), 10/13.
+  - **carabe** = proie `limace`, habitat `_undisturbed_structure_grid` (sol non perturbé
+    + bump des structures `pile`/bois mort), fenêtre précoce 9/12.
+  - **merle** = OMNIVORE : nourriture `_merle_food_grid` (fruit FRAIS `_aux_fruit_signal`
+    repromu de signal additif en RESSOURCE + agrégat `category_density("detritivore")`),
+    habitat plancher uniforme `MERLE_BASE_HABITAT=0.20`, fenêtre large 8.5/10.
+  - **hérisson** = proie `limace`, habitat `_pile_grid` (NUL sans pile posée → dépend
+    ENTIÈREMENT d'un aménagement joueur), fenêtre 9/12.
+- **Boucles proie↔prédateur ACTIVES** : les prédateurs nommés posés en ④b
+  (coccinelle/chrysope sur puceron, carabe/hérisson sur limace) existent enfin comme
+  champs → `_predator_field` les résout → prédation appliquée (avec un lag d'une
+  semaine, ils tickent après les ravageurs) → **résorbe la régression transitoire ④b**.
+- **Habitats sur STRUCTURES** (`pile`, ⑤) lus en duck-typing sur `eco.structures`
+  (comme `_abeille_habitat_grid` lit les ruches — pas de cycle de couche). À ZÉRO
+  structure (cas du smoke) → termes nuls → cette part reste **golden NEUTRE**.
+- **Réconciliation kickoff↔doc** : le kickoff disait `_ravageur_grid` → SUPPRIMÉ,
+  mais le doc figé §4 liste le **pont syrphe inchangé** (il lit `_ravageur_grid`).
+  Décision : `_ravageur_grid` CONSERVÉ pour le seul pont syrphe (doc = source de
+  vérité) ; retiré uniquement comme ressource des auxiliaires (désormais `_espece_grid`).
+- `signal_fn=_aux_fruit_signal` RETIRÉ de l'auxiliaire (devient la ressource du merle) ;
+  `_rav_fruit_signal` reste utilisé par la limace.
+- **Re-figeage attribuable** : golden `63d50eeb…` → **`533276328199…`** ;
+  pop-golden `1f7dcda831…` → **`e707002f435b…`** ; vigueur-traj **`e63b9d7f…` INCHANGÉ**
+  (la trajectoire Vigueur joueur ne dépend pas de la régulation des ravageurs).
+- ~7 suites adaptées (clé `auxiliaire`→`coccinelle` ou `category_density`, listes
+  d'espèces 8→12). Test neuf : `test_faune_dediee.py` +4 fonctions (5 auxiliaires,
+  proies propres, habitats `pile`, merle omnivore) → 10 fonctions au total, vertes.
+  `dotnet build` OK (0 erreur — ④c est Python pur).
+- ⚠️ **Signalements** :
+  1. **`fields/population.py` toujours > garde-fou ~350 LDC** (encore alourdi par les
+     5 triades) → à **éclater en paquet** `fields/population/` dans un futur sprint
+     refactor (hors tronçon catalogue). À arbitrer avec Nico.
+  2. **Mêmes deux échecs PRÉ-EXISTANTS hors périmètre** (re-prouvés sur HEAD ④b via
+     `git stash`, PAS causés par ④c) : `test_senescence` (~2.7 ans) ; `test_sim_server`
+     pommier nouaison (0 fruit @ S52, suite 183/184). → dette, à traiter séparément.
+  3. **Observation** : `test_auxiliaires.py` (diagnostic NON-assertif) montre désormais
+     **0 dégât herbivorie sur les DEUX tuiles** (AUX et TÉMOIN) sur 30 ans — conséquence
+     attendue des boucles refermées (coccinelle régule le puceron même sans rondelle).
+     Le scénario ne distingue plus AUX/TÉMOIN ; à revisiter si on veut re-mesurer
+     l'effet attire-auxiliaire (le levier est désormais l'HABITAT, pas la simple
+     présence). Pas un blocage : aucune assertion, script de mesure.
+
+**Prochain au choix Nico** : ④d (scinder `detritivore` → lombric/cloporte ;
+`_merle_food_grid` basculera de `category_density("detritivore")` vers
+`_espece_grid("lombric")` — note posée dans le code ; re-figé #3) ou ⑤ (pollinisateurs
 B, indépendant). Pas d'enchaînement auto ; `/clear` entre tronçons.

@@ -16,7 +16,9 @@ from .harness import check, _minimal_state, _mature
 def test_macro_facade_densite_ressource():
     print("\n[E1] façade vigueur_macro : densité × ressource trophique")
     gs = _minimal_state(); eco = gs["eco"]["T0"]
-    aux = eco.populations["auxiliaire"]
+    # `auxiliaire` est une CATÉGORIE depuis ④c : on pose une espèce membre
+    # (coccinelle) et on lit la façade de catégorie `vigueur_auxiliaire` (agrégat).
+    aux = eco.populations["coccinelle"]
     aux.set(2, 2, 0.8); aux.activite_grid[2][2] = 0.5   # densité + ressource connues
     v = VM.vigueur_auxiliaire(2, 2, eco)
     check("vigueur = densité × activite (ressource trophique)",

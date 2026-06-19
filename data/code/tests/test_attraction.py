@@ -133,27 +133,34 @@ def test_signal_neutralite_sans_fruit():
 # ---------------------------------------------------------------------------
 
 def test_integre_frais_monte_auxiliaire():
+    # Depuis ④c, le fruit FRAIS nourrit le MERLE (frugivore) : `_aux_fruit_signal`
+    # repromu de signal additif en RESSOURCE du merle (`_merle_food_grid`). On lit
+    # donc la catégorie `auxiliaire` (agrégat des 5 espèces, dont le merle).
     tile, eco = _make_eco()
     _deposit_fruit(eco, FRUIT_R, FRUIT_C, FRUIT_SIGNAL_REF, age_sem=0.0)
     _tick(tile, eco, 15)
-    aux = eco.populations["auxiliaire"]
-    _check(aux.at_plot(FRUIT_R, FRUIT_C) > aux.at_plot(CTRL_R, CTRL_C) + 1e-4,
-           "fruit frais → auxiliaire(plot) > auxiliaire(témoin)")
+    aux_plot = eco.category_density("auxiliaire", FRUIT_R, FRUIT_C)
+    aux_ctrl = eco.category_density("auxiliaire", CTRL_R, CTRL_C)
+    _check(aux_plot > aux_ctrl + 1e-4,
+           "fruit frais → auxiliaire(plot) > auxiliaire(témoin) (via le merle)")
 
 
 def test_integre_pourri_monte_ravageur():
     tile, eco = _make_eco()
     _deposit_fruit(eco, FRUIT_R, FRUIT_C, FRUIT_SIGNAL_REF, age_sem=12.0)
     _tick(tile, eco, 15)
-    aux = eco.populations["auxiliaire"]
-    # « ravageur » est désormais une CATÉGORIE (puceron/limace/doryphore, ④b) :
-    # le signal du fruit pourri alimente la spec `limace` (détritivore préf.).
+    # « ravageur » est une CATÉGORIE (puceron/limace/doryphore, ④b) : le fruit pourri
+    # alimente la spec `limace` (détritivore préf.). Côté auxiliaire (catégorie de 5
+    # espèces, ④c), le fruit pourri appelle AUSSI le merle via la fraction pourri de
+    # `_aux_fruit_signal` (FRAC_AUX_POURRI) repromue en ressource → légère hausse.
     rav_plot = eco.category_density("ravageur", FRUIT_R, FRUIT_C)
     rav_ctrl = eco.category_density("ravageur", CTRL_R, CTRL_C)
     _check(rav_plot > rav_ctrl + 1e-4,
            "fruit pourri → ravageur(plot) > ravageur(témoin)")
-    _check(aux.at_plot(FRUIT_R, FRUIT_C) > aux.at_plot(CTRL_R, CTRL_C) + 1e-4,
-           "fruit pourri → auxiliaire(plot) > témoin aussi (fraction décomposeurs)")
+    aux_plot = eco.category_density("auxiliaire", FRUIT_R, FRUIT_C)
+    aux_ctrl = eco.category_density("auxiliaire", CTRL_R, CTRL_C)
+    _check(aux_plot > aux_ctrl + 1e-4,
+           "fruit pourri → auxiliaire(plot) > témoin aussi (fraction décomposeurs, merle)")
 
 
 def test_integre_pourri_plus_de_ravageur_que_frais():
@@ -168,7 +175,8 @@ def test_integre_pourri_plus_de_ravageur_que_frais():
 
 def _digest(eco):
     out = []
-    for g in ("puceron", "limace", "doryphore", "auxiliaire",
+    for g in ("puceron", "limace", "doryphore",
+              "coccinelle", "chrysope", "carabe", "merle", "herisson",
               "abeille", "syrphe", "papillon", "vers_de_terre"):
         f = eco.populations[g]
         for r in range(f.rows):
@@ -189,7 +197,8 @@ def test_integre_neutralite_uniforme():
     """Sans fruit, l'eco uniforme reste uniforme : aucun signal parasite."""
     tile, eco = _make_eco()
     _tick(tile, eco, 15)
-    for g in ("puceron", "limace", "doryphore", "auxiliaire"):
+    for g in ("puceron", "limace", "doryphore",
+              "coccinelle", "chrysope", "carabe", "merle", "herisson"):
         f = eco.populations[g]
         v0 = f.at_plot(FRUIT_R, FRUIT_C)
         uniforme = all(abs(f.at_plot(r, c) - v0) < EPS
