@@ -1,4 +1,10 @@
-# Tronçon ④ — FAUNE nommée « parfums » (modèle A)
+> ⚠️ **CADUC depuis le 2026-06-19.** Ce kickoff cadrait le modèle **A « parfum »**
+> (animaux = variantes de sprite d'une guilde, triade mutualisée). Nico a tranché
+> le **modèle B** (chaque animal a SA triade propre, guildes → catégories) — voir
+> `docs/conception/CONCEPTION_FAUNE_DEDIEE.md` et les kickoffs `04a_*`→`04e_*`.
+> Conservé en historique (règle « ne rien jeter »). **NE PAS implémenter ce doc.**
+
+# Tronçon ④ — FAUNE nommée « parfums » (modèle A) — CADUC
 
 > Sprint CATALOGUE ENRICHI. État partagé : `00_etat.md` (lire d'abord).
 > Doc de référence FIGÉ : `docs/conception/CONCEPTION_CATALOGUE_ENRICHI.md`

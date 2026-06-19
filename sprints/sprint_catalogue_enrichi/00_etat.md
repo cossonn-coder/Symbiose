@@ -43,9 +43,14 @@ guildes abstraites à des **espèces NOMMÉES** rattachées aux guildes.
 | ① | Doc-conception `CONCEPTION_CATALOGUE_ENRICHI.md` (audit + matrices + sélection + partage doc/code) | INTACT (0 code) | ✅ |
 | ② | Plantes lot 1 — familles connues (thym, lavande, bourrache, consoude, moutarde) | NEUTRE (hash intact) | ✅ |
 | ③ | Plantes lot 2 — familles + cycles neufs (carotte, ortie, courgette, mâche, ail) + `_ATTRACT_*` + **vérif `biennial`/`evergreen`** | NEUTRE (hash intact) | ✅ |
-| ④ | Faune nommée — **parfums** (puceron, coccinelle, carabe, merle, hérisson, lombric…) : sprite + encyclopédie | NEUTRE | ⬜ |
+| ④ | Faune nommée — **modèle B, champ dédié par espèce** (RE-DÉCOUPÉ a→e, voir ci-dessous). ~~parfums (A)~~ CADUC | re-figé MAÎTRISÉ large | ⬜ |
+| ④a | Scaffolding catégorie : `TrophicSpec.category` + `category_density` + 6 consommateurs recâblés | **NEUTRE** | ⬜ |
+| ④b | Scinder `ravageur` → puceron/limace/doryphore | re-figé #1 | ⬜ |
+| ④c | Scinder `auxiliaire` → coccinelle/chrysope/carabe/merle/hérisson | re-figé #2 | ⬜ |
+| ④d | Scinder `detritivore` → lombric/cloporte (decomp→lombric, fruit pourri→cloporte) | re-figé #3 | ⬜ |
+| ④e | Encyclopédie (blurb/interconnexions) + tests + stub pont | NEUTRE | ⬜ |
 | ⑤ | Faune nommée — **nouveaux pollinisateurs** (bourdon, osmie) : registre data-driven | re-figé maîtrisé (pollen/nouaison) | ⬜ |
-| ⑥ | Vue Godot / sprites / encyclopédie | NEUTRE | ⬜ |
+| ⑥ | Vue Godot / sprites / encyclopédie + protocole pont `target.espece` | NEUTRE | ⬜ |
 
 ## §REPRISE
 
@@ -93,6 +98,21 @@ vérifier en ③ (carotte/ail).
   déclencheur monocarpique à age≥2.0 ; les deux disent « meurt en fin d'an 2 »,
   le test ne couple pas la mort à un chemin précis.
 
-**Prochain au choix Nico** : ④ (faune en parfums, golden-neutre) ou ⑤ (nouveaux
-pollinisateurs, re-figé maîtrisé). Kickoff `0N_*.md` à écrire au lancement (pas
-d'enchaînement auto).
+**Tournant ④ — modèle A abandonné, modèle B tranché** (2026-06-19, Nico) : le
+kickoff `04_faune_parfums.md` (modèle **A « parfum »** = sprite-variante, triade
+mutualisée au niveau guilde) est **CADUC**. Nico a tranché le **modèle B** :
+**chaque animal a SA triade propre** (nourriture/prédateur/habitat) et **les
+guildes deviennent des catégories** (les espèces remplacent les champs). C'est une
+**refonte de la vie macro** (3 champs → 10), pas un ajout cosmétique. Conception
+FIGÉE : `docs/conception/CONCEPTION_FAUNE_DEDIEE.md` (amende §5.1 du catalogue).
+Audit clé : **6 consommateurs lisent `populations[guilde]` en dur** dont la SANTÉ
+des plantes (`perturbations.py`) → d'où le re-figeage golden large mais maîtrisé.
+
+**Stratégie de migration** : ④ re-découpé en **a→e** pour des re-figeages
+LOCALISÉS (une catégorie à la fois). ④a pose le filet (`category_density`) et reste
+**golden NEUTRE** (invariant de contrôle) ; ④b/c/d scindent chacun une catégorie
+(un nouveau hash attribuable chacun) ; ④e = encyclo+tests, neutre.
+
+**Prochain au choix Nico** : lancer **④a** (filet, golden-neutre — recommandé EN
+PREMIER, il sécurise les scissions) ou ⑤ (pollinisateurs B, indépendant). Pas
+d'enchaînement auto ; `/clear` entre chaque tronçon a→e.
