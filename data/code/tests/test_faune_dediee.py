@@ -1,9 +1,11 @@
 """
 SYMBIOSE — tests/test_faune_dediee.py
-Tronçons ④b/④c (catalogue enrichi) — scission des champs uniques `ravageur` puis
-`auxiliaire` en espèces NOMMÉES (modèle B, CONCEPTION_FAUNE_DEDIEE.md §2) :
-  ④b ravageur  → puceron / limace / doryphore
-  ④c auxiliaire → coccinelle / chrysope / carabe / merle / hérisson
+Tronçons ④b/④c/④d (catalogue enrichi) — scission des champs uniques `ravageur`,
+`auxiliaire` puis `vers_de_terre` en espèces NOMMÉES (modèle B,
+CONCEPTION_FAUNE_DEDIEE.md §2) :
+  ④b ravageur     → puceron / limace / doryphore
+  ④c auxiliaire   → coccinelle / chrysope / carabe / merle / hérisson
+  ④d detritivore  → lombric (humus du sol) / cloporte (litière)
 
 Garde-fous de la SCISSION (indépendants du hash golden) :
   1. EXISTENCE  — les espèces sont des champs distincts, tous de la bonne catégorie,
@@ -238,10 +240,52 @@ def test_merle_omnivore_fruit_et_vers():
            f"merle : habitat plancher uniforme (={MERLE_BASE_HABITAT})")
     food0 = _merle_food_grid(eco, tile, tile.plants)
     _check(not _grid_nonzero(food0), "merle : nourriture nulle sans fruit ni vers")
-    # Pose des vers (catégorie détritivore) → la nourriture du merle monte au plot.
-    eco.populations["vers_de_terre"].set(2, 2, 0.30)
+    # Pose du LOMBRIC (④d : le merle mange le ver, PAS le cloporte) → nourriture monte.
+    eco.populations["lombric"].set(2, 2, 0.30)
     food1 = _merle_food_grid(eco, tile, tile.plants)
-    _check(food1[2][2] > 0.0, "merle : nourriture > 0 là où il y a des vers (omnivore)")
+    _check(food1[2][2] > 0.0, "merle : nourriture > 0 là où il y a des lombrics (omnivore)")
+    # Le cloporte (autre détritivore) ne nourrit PAS le merle (proie du carabe/hérisson).
+    tile2, eco2 = _eco()
+    eco2.populations["cloporte"].set(2, 2, 0.30)
+    food2 = _merle_food_grid(eco2, tile2, tile2.plants)
+    _check(not _grid_nonzero(food2), "merle : le cloporte seul ne le nourrit pas (vise le lombric)")
+
+
+def test_deux_detritivores_nommes():
+    # ④d : `vers_de_terre` scindé en lombric (humus du sol) + cloporte (litière).
+    specs = {s.name: s for s in build_population_specs()}
+    _check("lombric" in specs and specs["lombric"].category == "detritivore",
+           "lombric : champ de catégorie detritivore")
+    _check("cloporte" in specs and specs["cloporte"].category == "detritivore",
+           "cloporte : champ de catégorie detritivore")
+    _check("vers_de_terre" not in specs, "plus de champ `vers_de_terre` après ④d")
+    # Prédateurs propres : lombric = merle/hérisson ; cloporte = carabe/hérisson.
+    _check(specs["lombric"].predators == ("merle", "herisson"),
+           "lombric : proie du merle et du hérisson")
+    _check(specs["cloporte"].predators == ("carabe", "herisson"),
+           "cloporte : proie du carabe et du hérisson")
+    # Ressource du cloporte = litière (nulle sans litière, montée avec).
+    tile, eco = _eco()
+    food0 = _litter_grid(eco, tile, tile.plants)
+    _check(not _grid_nonzero(food0), "cloporte : ressource litière nulle sans litière")
+    eco.deposer_litiere(3, 4, "feuille", 2.0)
+    food1 = _litter_grid(eco, tile, tile.plants)
+    _check(food1[3][4] > 0.0, "cloporte : ressource litière > 0 avec litière déposée")
+    # Fruit pourri → cloporte (signal_fn repris de la limace, qui n'en a plus).
+    _check(specs["cloporte"].signal_fn is not None, "cloporte : porte le signal fruit pourri")
+    _check(specs["limace"].signal_fn is None, "limace : signal fruit pourri retiré (passé au cloporte)")
+
+
+def test_decomp_speed_suit_le_lombric():
+    # C6 : decomp_speed ne dépend QUE du lombric (le ver fait l'humus), pas du cloporte.
+    tile, eco = _eco()
+    base = eco.decomp_speed(2, 2)
+    eco.populations["cloporte"].set(2, 2, 0.50)
+    _check(abs(eco.decomp_speed(2, 2) - base) < 1e-9,
+           "decomp_speed insensible au cloporte (litière, pas humus du sol)")
+    eco.populations["lombric"].set(2, 2, 0.50)
+    _check(eco.decomp_speed(2, 2) > base,
+           "decomp_speed accélérée par le lombric (bioturbation)")
 
 
 def main():
@@ -255,6 +299,8 @@ def main():
     test_proies_des_predateurs()
     test_habitats_structures_pile()
     test_merle_omnivore_fruit_et_vers()
+    test_deux_detritivores_nommes()
+    test_decomp_speed_suit_le_lombric()
     print("[faune] TOUS LES TESTS PASSENT")
     return 0
 

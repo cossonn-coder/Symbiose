@@ -4,7 +4,7 @@ Filet de non-régression pour la vie macroscopique (D31.1).
 
 Deux garanties :
   1. GOLDEN DE CHAMP — les densités des champs de population (puceron/limace/
-     doryphore/auxiliaire/pollinisateurs/vers_de_terre) sont DÉTERMINISTES et
+     doryphore/auxiliaire/pollinisateurs/lombric/cloporte) sont DÉTERMINISTES et
      reproductibles sur N semaines (hash sha256 contre `population_hash.txt`).
   2. BORNES & PERCEPTION — densité ∈ [0, POP_MAX] partout ; `sample_sprites`
      respecte le cap par plot ; les positions de sprites sont INDÉPENDANTES de
@@ -31,7 +31,7 @@ SEED = 0x5AB1057E
 HASH_FILE = os.path.join(os.path.dirname(__file__), "population_hash.txt")
 GUILDS = ("puceron", "limace", "doryphore",
           "coccinelle", "chrysope", "carabe", "merle", "herisson",
-          "abeille", "syrphe", "papillon", "vers_de_terre")
+          "abeille", "syrphe", "papillon", "lombric", "cloporte")
 
 
 def build_world():
@@ -140,10 +140,10 @@ def test_saisonnalite_dormance_reveil():
 
 
 def test_vers_insensibles_photoperiode():
-    """Le ver de terre (fenêtre LARGE) garde une fraction hivernale bien plus
-    grande que les guildes estivales → la fenêtre par guilde fonctionne."""
+    """Le lombric (fenêtre LARGE 8.5/10) garde une fraction hivernale bien plus
+    grande que les espèces estivales → la fenêtre par espèce fonctionne."""
     res = _run_trace()
-    peak, hiv = res["vers_de_terre"]
+    peak, hiv = res["lombric"]
     assert peak > 0.05, f"vers ne décolle jamais (pic {peak:.3f})"
     assert hiv > 0.25 * peak, \
         f"vers trop éteint en hiver ({hiv:.3f} vs pic {peak:.3f}) — devrait rester actif"

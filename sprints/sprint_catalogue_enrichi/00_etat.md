@@ -47,7 +47,7 @@ guildes abstraites à des **espèces NOMMÉES** rattachées aux guildes.
 | ④a | Scaffolding catégorie : `TrophicSpec.category` + `category_density` + 6 consommateurs recâblés | **NEUTRE** | ✅ |
 | ④b | Scinder `ravageur` → puceron/limace/doryphore | re-figé #1 | ✅ |
 | ④c | Scinder `auxiliaire` → coccinelle/chrysope/carabe/merle/hérisson | re-figé #2 | ✅ |
-| ④d | Scinder `detritivore` → lombric/cloporte (decomp→lombric, fruit pourri→cloporte) | re-figé #3 | ⬜ |
+| ④d | Scinder `detritivore` → lombric/cloporte (decomp→lombric, fruit pourri→cloporte) | re-figé #3 | ✅ |
 | ④e | Encyclopédie (blurb/interconnexions) + tests + stub pont | NEUTRE | ⬜ |
 | ⑤ | Faune nommée — **nouveaux pollinisateurs** (bourdon, osmie) : registre data-driven | re-figé maîtrisé (pollen/nouaison) | ⬜ |
 | ⑥ | Vue Godot / sprites / encyclopédie + protocole pont `target.espece` | NEUTRE | ⬜ |
@@ -216,7 +216,38 @@ LOCALISÉS (une catégorie à la fois). ④a pose le filet (`category_density`) 
      l'effet attire-auxiliaire (le levier est désormais l'HABITAT, pas la simple
      présence). Pas un blocage : aucune assertion, script de mesure.
 
-**Prochain au choix Nico** : ④d (scinder `detritivore` → lombric/cloporte ;
-`_merle_food_grid` basculera de `category_density("detritivore")` vers
-`_espece_grid("lombric")` — note posée dans le code ; re-figé #3) ou ⑤ (pollinisateurs
-B, indépendant). Pas d'enchaînement auto ; `/clear` entre tronçons.
+**④d CLOS** le 2026-06-19 — `detritivore` scindé en 2 champs NOMMÉS (modèle B),
+golden **re-figé MAÎTRISÉ #3**. Dernière scission, l'écosystème faune est refermé :
+- `build_population_specs()` pose 2 specs `category="detritivore"` en **position
+  PROIE** (après ravageurs, avant auxiliaires → prédateurs les lisent frais) :
+  - **lombric** = héritier du champ `vers_de_terre` (salt identique → continuité
+    sprites) ; humus du sol (`_soil_food_grid` / habitat `_undisturbed_grid`),
+    proie `(merle, herisson)`, fenêtre LARGE `8.5/10`. **Pilote `decomp_speed`.**
+  - **cloporte** = litière + fruit pourri (`_litter_grid` / `_humide_litiere_grid`),
+    proie `(carabe, herisson)`, `signal_fn=_rav_fruit_signal`, fenêtre `9/12`.
+- `signal_fn=_rav_fruit_signal` **retiré de la limace** (le pourri passe au cloporte,
+  défaut « cloporte seul » du kickoff §C13).
+- Recâblages moteur : `_merle_food_grid` lit `_espece_grid("lombric")` (était
+  `category_density("detritivore")` — le merle mange le ver, pas le cloporte) ;
+  `container.py` `decomp_speed` + `tick_decomposition` → `populations["lombric"]` ;
+  `gestes.py:becher` → `["lombric"]` ; `constants.py` commentaire maj. C5 vigueur
+  **inchangé** (`_vigueur_categorie("detritivore")` somme auto depuis ④a).
+- **Re-figeage attribuable** : golden `533276328199…` → **`9be1c05a7282…`** ;
+  pop-golden `e707002f435b…` → **`58ecf6d89e21…`** ; vigueur-traj **`e63b9d7f…`
+  INCHANGÉ**. Causes (toutes ④d) : ordre de tick (détritivores en proie), prédation
+  du lombric active (merle/hérisson, était 0), cloporte neuf, limace perd le pourri,
+  `decomp_speed` sur lombric seul.
+- ~4 suites adaptées (clé `vers_de_terre`→`lombric`/`cloporte`, listes 12→13).
+  Test neuf : `test_faune_dediee.py` +2 fonctions (2 détritivores nommés, decomp suit
+  le lombric) ; `test_attraction` 2 tests renommés ravageur→détritivore.
+  `dotnet build` OK (Python pur).
+- ⚠️ **Signalements** : (1) `fields/population.py` toujours > garde-fou ~350 LDC →
+  éclatement en paquet `fields/population/` dans un sprint refactor dédié. (2) Mêmes
+  deux échecs PRÉ-EXISTANTS hors périmètre (`test_senescence` ~2.7 ans ;
+  `test_sim_server` pommier nouaison 0 fruit @ S52). (3) Dette détritivore littérale :
+  `decomp_speed` ne lit que le lombric (humus), le cloporte (litière) ne décompose
+  pas encore — choix assumé kickoff §5.3.
+
+**Prochain au choix Nico** : ④e (encyclopédie blurb/interconnexions + tests + stub
+pont, golden NEUTRE) ou ⑤ (pollinisateurs B, indépendant). Pas d'enchaînement auto ;
+`/clear` entre tronçons.

@@ -5,8 +5,9 @@ règle d'échantillonnage des sprites.
 
 Modèle TRANCHÉ (CONCEPTION_VIE_MACRO.md §2, hybride) :
   - DYNAMIQUE = un `PopulationField` générique (sous-classe `GridField`),
-    instancié une fois par guilde (ravageur / auxiliaire / pollinisateur /
-    vers_de_terre), borné aux 432 plots → ~gratuit (D32).
+    instancié une fois par ESPÈCE nommée (scission ④b/c/d), regroupée en catégorie
+    (ravageur / auxiliaire / detritivore) + pollinisateurs par type, borné aux
+    432 plots → ~gratuit (D32).
   - PERCEPTION = sprites ÉCHANTILLONNÉS depuis le champ (`sample_sprites`),
     fonction PURE déterministe densité → entités.
 
@@ -605,17 +606,20 @@ def _base_habitat_grid(eco, tile, plants) -> list[list[float]]:
     return [[MERLE_BASE_HABITAT] * eco.cols for _ in range(eco.rows)]
 
 
+_lombric_grid = _espece_grid("lombric")
+
+
 def _merle_food_grid(eco, tile, plants) -> list[list[float]]:
     """Nourriture du merle (④c) : fruit FRAIS (frugivore — `_aux_fruit_signal` repromu
-    de signal additif en RESSOURCE, C13) + vers de terre. Tant que ④d n'a pas scindé
-    `vers_de_terre`, on lit l'AGRÉGAT `category_density("detritivore")` (note kickoff)
-    → bascule sur `_espece_grid("lombric")` en ④d. Borné [0,1]."""
+    de signal additif en RESSOURCE, C13) + LOMBRIC (④d : le merle mange le ver, pas
+    le cloporte prioritairement → `_espece_grid("lombric")`, non l'agrégat de
+    catégorie). Borné [0,1]."""
     fruit = _aux_fruit_signal(eco, tile, plants)
+    vers  = _lombric_grid(eco, tile, plants)
     g = _zero_grid(eco.rows, eco.cols)
     for r in range(eco.rows):
         for c in range(eco.cols):
-            vers = eco.category_density("detritivore", r, c)
-            g[r][c] = _clamp01(fruit[r][c] + vers)
+            g[r][c] = _clamp01(fruit[r][c] + vers[r][c])
     return g
 
 
@@ -685,26 +689,30 @@ _SALT_MERLE         = 0x2AA001
 _SALT_HERISSON      = 0x2AB001
 _SALT_POLLINISATEUR = 0x2A2001   # réutilisé par l'abeille (héritière du champ historique)
 _SALT_VERS          = 0x2A3001
+_SALT_LOMBRIC       = _SALT_VERS   # lombric = héritier du champ vers_de_terre (④d, continuité sprites)
+_SALT_CLOPORTE      = 0x2AC001
 _SALT_SYRPHE        = 0x2A4001
 _SALT_PAPILLON      = 0x2A5001
 
 
 def build_population_specs() -> list[TrophicSpec]:
     """
-    Construit les specs NON pollinisatrices dans l'ORDRE DE TICK. Les ravageurs
-    (puceron/limace/doryphore, scindés en ④b) tickent en premier (ils lisent les
-    auxiliaires de la semaine PRÉCÉDENTE → décalage proie↔prédateur), puis les
-    auxiliaires (coccinelle/chrysope/carabe/merle/hérisson, scindés en ④c) chassent
-    chacun SA proie fraîchement mise à jour (`_espece_grid`). Le vers de terre est
-    indépendant. Les pollinisateurs (registre §E) sont ajoutés à part par
-    `build_pollinator_specs` (le conteneur concatène) — ni prédateur ni proie ici,
-    donc leur ordre de tick est golden-neutre.
+    Construit les specs NON pollinisatrices dans l'ORDRE DE TICK = **toutes les
+    PROIES avant tous les PRÉDATEURS**. Ravageurs (puceron/limace/doryphore, ④b) et
+    détritivores (lombric/cloporte, ④d) tickent d'abord ; ensuite les auxiliaires
+    (coccinelle/chrysope/carabe/merle/hérisson, ④c) chassent chacun SA proie
+    fraîchement mise à jour (`_espece_grid`). Chaque proie lit, elle, ses prédateurs
+    de la semaine PRÉCÉDENTE (ils tickent après) → décalage d'inertie proie↔prédateur
+    cohérent sur TOUTE la chaîne (boom-bust). Les pollinisateurs (registre §E) sont
+    ajoutés à part par `build_pollinator_specs` (le conteneur concatène) — ni
+    prédateur ni proie ici, donc leur ordre de tick est golden-neutre.
 
-    SCISSION ④c (CONCEPTION_FAUNE_DEDIEE §2) : les `predators` nommés posés en ④b
-    EXISTENT enfin comme champs → `_predator_field` les résout → les boucles
-    proie↔prédateur se referment (coccinelle/chrysope régulent le puceron,
-    carabe/hérisson la limace). C'est la résorption de la régression transitoire ④b
-    (où la prédation était à 0) ET la cause du re-figeage golden MAÎTRISÉ #2.
+    SCISSION ④d (CONCEPTION_FAUNE_DEDIEE §2) : `vers_de_terre` devient lombric +
+    cloporte (`category="detritivore"`). Le détritivore n'est plus un puits isolé :
+    le lombric est proie du merle/hérisson, le cloporte du carabe/hérisson → ils
+    PASSENT en position proie (avant les auxiliaires) pour que leurs prédateurs les
+    lisent frais, comme la chaîne ravageur→auxiliaire (④c). C'est la cause du
+    re-figeage golden MAÎTRISÉ #3.
     """
     return [
         TrophicSpec(
@@ -717,12 +725,10 @@ def build_population_specs() -> list[TrophicSpec]:
         TrophicSpec(
             name="limace", category="ravageur", salt=_SALT_LIMACE,
             resource_fn=_limace_food_grid, habitat_fn=_humide_litiere_grid,
-            predators=("carabe", "herisson"),    # ④c (inactifs jusque-là)
-            # Le fruit pourri appelle la limace (détritivore) — porteur TRANSITOIRE
-            # du signal pourri en ④b (doc §3 : « pourri → cloporte + petite part
-            # limace »). En ④d, le signal DOMINANT passe au cloporte, la limace n'en
-            # garde qu'une fraction. Préserve l'attraction pourri→ravageur d'ici là.
-            signal_fn=_rav_fruit_signal,
+            predators=("carabe", "herisson"),    # ④c
+            # ④d : le signal fruit pourri (`_rav_fruit_signal`), porté TRANSITOIREMENT
+            # par la limace en ④b, passe au CLOPORTE (détritivore dédié, doc §C13,
+            # défaut « cloporte seul »). La limace n'a plus de terme-source fruit.
             daylen_min=9.0, daylen_full=12.0,    # humide/frais : fenêtre plus large/précoce
         ),
         TrophicSpec(
@@ -730,6 +736,27 @@ def build_population_specs() -> list[TrophicSpec]:
             resource_fn=_foliage_solanaceae_grid, habitat_fn=_solanaceae_grid,
             predators=("carabe",),               # ④c (inactif jusque-là)
             daylen_min=10.0, daylen_full=13.0,   # fenêtre estivale
+        ),
+        # --- Catégorie `detritivore` : 2 espèces nommées (scission ④d, doc §2) ----
+        # Position PROIE (avant les auxiliaires) : lombric/cloporte sont mangés par
+        # merle/hérisson/carabe → ils doivent ticker AVANT pour être lus frais.
+        TrophicSpec(
+            # lombric = héritier du champ `vers_de_terre` (salt identique → continuité
+            # sprites) ; ressource = MO+microbiome du sol (pas la litière de surface).
+            name="lombric", category="detritivore", salt=_SALT_LOMBRIC,
+            resource_fn=_soil_food_grid, habitat_fn=_undisturbed_grid,
+            predators=("merle", "herisson"),     # ④d : le ver n'est plus un puits isolé
+            daylen_min=8.5, daylen_full=10.0,    # LARGE : sol tamponné, quasi toute l'année
+        ),
+        TrophicSpec(
+            # cloporte = détritivore de LITIÈRE (≠ lombric, qui fait l'humus du sol).
+            # Partage la ressource litière avec la limace (compétition implicite) et
+            # son habitat humide. Reçoit le signal fruit POURRI (charognard, doc §C13).
+            name="cloporte", category="detritivore", salt=_SALT_CLOPORTE,
+            resource_fn=_litter_grid, habitat_fn=_humide_litiere_grid,
+            predators=("carabe", "herisson"),    # ④d
+            signal_fn=_rav_fruit_signal,         # fruit pourri → cloporte (repris de la limace)
+            daylen_min=9.0, daylen_full=12.0,    # humide : fenêtre large/précoce (comme la limace)
         ),
         # --- Catégorie `auxiliaire` : 5 espèces nommées (scission ④c, doc §2) ----
         # Chacune chasse SA proie nommée (`_espece_grid`) avec SON habitat propre.
@@ -765,14 +792,6 @@ def build_population_specs() -> list[TrophicSpec]:
             resource_fn=_espece_grid("limace"), habitat_fn=_pile_grid,
             predators=(),
             daylen_min=9.0, daylen_full=12.0,    # nocturne→large
-        ),
-        TrophicSpec(
-            # name reste "vers_de_terre" en ④a (clé de champ inchangée) ; la
-            # CATÉGORIE est déjà "detritivore" (lombric+cloporte y vivront en ④d).
-            name="vers_de_terre", category="detritivore", salt=_SALT_VERS,
-            resource_fn=_soil_food_grid, habitat_fn=_undisturbed_grid,
-            predators=(),
-            daylen_min=8.5, daylen_full=10.0,    # LARGE : sol tamponné, quasi toute l'année
         ),
     ]
 

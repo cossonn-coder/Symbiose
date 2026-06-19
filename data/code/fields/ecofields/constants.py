@@ -126,7 +126,7 @@ OM_STABLE_DECAY  = 0.0006  # humus : très lent (décennies)
 
 # Câblage D31.2 (option SOBRE du point ouvert vers de terre) : la bioturbation
 # accélère « un poil » la décomposition/minéralisation locale. C'est le SEUL
-# service rendu par le champ `vers_de_terre` à la sim pour l'instant ; le système
+# service rendu par le champ `lombric` (④d ; ex-`vers_de_terre`) à la sim ; le système
 # complet structure/aération/infiltration du sol reste DIFFÉRÉ à D30. Borné et
 # léger pour ne pas inventer D30 ici (cf. kickoff #4, CONCEPTION_VIE_MACRO.md §7).
 WORM_DECOMP_BONUS = 0.25   # densité ver [0,1] → bonus additif à `speed` (knob, D31.2)

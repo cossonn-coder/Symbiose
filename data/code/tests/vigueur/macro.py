@@ -79,26 +79,26 @@ def test_becher_vs_grelinette():
     print("\n[E5] bêcher tue vers + microbiome ; grelinette préserve (contraste)")
     gs = _minimal_state(); eco = gs["eco"]["T0"]
     st = V.ensure_player(gs, "joueur_1"); st["courante"] = 100.0
-    eco.populations["vers_de_terre"].set(2, 2, 0.30)
+    eco.populations["lombric"].set(2, 2, 0.30)
     eco.microbiome.set(2, 2, 2.0)   # assez haut pour que le malus ne soit pas clampé
     micro_avant = eco.microbiome.at_plot(2, 2)
     ok = ACT.becher(gs, "joueur_1", eco, 2, 2)
     check("bêchage payé (FAIBLE)", ok and st["courante"] == 100.0 - ACT.FAIBLE,
           f"courante={st['courante']}")
     check("un quantum de vers retiré (sprites de vers disparaissent)",
-          abs(eco.populations["vers_de_terre"].at_plot(2, 2) - (0.30 - DENSITE_PAR_SPRITE)) < 1e-9)
+          abs(eco.populations["lombric"].at_plot(2, 2) - (0.30 - DENSITE_PAR_SPRITE)) < 1e-9)
     check("microbiome local abaissé (dette différée)",
           abs(eco.microbiome.at_plot(2, 2) - (micro_avant - ACT.BECHAGE_MICROBIOME_MALUS)) < 1e-9,
           f"micro={eco.microbiome.at_plot(2, 2)}")
     # Grelinette : jumeau qui préserve — ni vers ni microbiome touchés.
-    vers_avant = eco.populations["vers_de_terre"].at_plot(2, 2)
+    vers_avant = eco.populations["lombric"].at_plot(2, 2)
     micro2 = eco.microbiome.at_plot(2, 2)
     st["courante"] = 100.0
     okg = ACT.grelinette(gs, "joueur_1")
     check("grelinette payée (MODÉRÉ)", okg and st["courante"] == 100.0 - ACT.MODERE,
           f"courante={st['courante']}")
     check("grelinette NE tue PAS les vers",
-          eco.populations["vers_de_terre"].at_plot(2, 2) == vers_avant)
+          eco.populations["lombric"].at_plot(2, 2) == vers_avant)
     check("grelinette préserve le microbiome", eco.microbiome.at_plot(2, 2) == micro2)
 
 

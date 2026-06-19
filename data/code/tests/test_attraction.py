@@ -4,9 +4,10 @@ Sous-sprint ④ (décompo·compost) — attraction animale par le fruit tombé.
 
 Le fruit tombé (parcelle `fruit` déposée par engine._tick_fruits à la chute des
 sur-mûrs) émet un signal selon son `age_sem`, AJOUTÉ à la capacité de charge :
-  - FRAIS (age bas)  → nourrit l'`auxiliaire` (frugivores) ;
-  - POURRI (age haut) → appelle le `ravageur` DOMINANT + une PETITE fraction
-    `auxiliaire` (décomposeurs).
+  - FRAIS (age bas)  → nourrit l'`auxiliaire` (frugivores, via le merle) ;
+  - POURRI (age haut) → appelle le DÉTRITIVORE (cloporte, ④d ; le signal
+    `_rav_fruit_signal` reste « pourri-dominant » au niveau FONCTION mais est désormais
+    câblé sur le cloporte, plus la limace) + une PETITE fraction `auxiliaire`.
 Pas de 5ᵉ guilde ; le fruit ne touche JAMAIS la plante (philo #2).
 
 Deux niveaux de vérification :
@@ -145,39 +146,40 @@ def test_integre_frais_monte_auxiliaire():
            "fruit frais → auxiliaire(plot) > auxiliaire(témoin) (via le merle)")
 
 
-def test_integre_pourri_monte_ravageur():
+def test_integre_pourri_monte_detritivore():
     tile, eco = _make_eco()
     _deposit_fruit(eco, FRUIT_R, FRUIT_C, FRUIT_SIGNAL_REF, age_sem=12.0)
     _tick(tile, eco, 15)
-    # « ravageur » est une CATÉGORIE (puceron/limace/doryphore, ④b) : le fruit pourri
-    # alimente la spec `limace` (détritivore préf.). Côté auxiliaire (catégorie de 5
-    # espèces, ④c), le fruit pourri appelle AUSSI le merle via la fraction pourri de
+    # ④d : le signal fruit POURRI a migré du ravageur (limace) vers le CLOPORTE
+    # (détritivore charognard, doc §C13). Le pourri monte donc la catégorie
+    # `detritivore` (lombric/cloporte) au plot-fruit. Côté auxiliaire (5 espèces, ④c),
+    # le fruit pourri appelle AUSSI le merle via la fraction pourri de
     # `_aux_fruit_signal` (FRAC_AUX_POURRI) repromue en ressource → légère hausse.
-    rav_plot = eco.category_density("ravageur", FRUIT_R, FRUIT_C)
-    rav_ctrl = eco.category_density("ravageur", CTRL_R, CTRL_C)
-    _check(rav_plot > rav_ctrl + 1e-4,
-           "fruit pourri → ravageur(plot) > ravageur(témoin)")
+    det_plot = eco.category_density("detritivore", FRUIT_R, FRUIT_C)
+    det_ctrl = eco.category_density("detritivore", CTRL_R, CTRL_C)
+    _check(det_plot > det_ctrl + 1e-4,
+           "fruit pourri → detritivore(plot) > detritivore(témoin) (via le cloporte)")
     aux_plot = eco.category_density("auxiliaire", FRUIT_R, FRUIT_C)
     aux_ctrl = eco.category_density("auxiliaire", CTRL_R, CTRL_C)
     _check(aux_plot > aux_ctrl + 1e-4,
            "fruit pourri → auxiliaire(plot) > témoin aussi (fraction décomposeurs, merle)")
 
 
-def test_integre_pourri_plus_de_ravageur_que_frais():
-    """Monotonie intégrée : pourri appelle plus de ravageur que frais."""
+def test_integre_pourri_plus_de_detritivore_que_frais():
+    """Monotonie intégrée : pourri appelle plus de détritivore (cloporte) que frais."""
     t1, e1 = _make_eco(); _deposit_fruit(e1, FRUIT_R, FRUIT_C, FRUIT_SIGNAL_REF, 0.0)
     t2, e2 = _make_eco(); _deposit_fruit(e2, FRUIT_R, FRUIT_C, FRUIT_SIGNAL_REF, 12.0)
     _tick(t1, e1, 15); _tick(t2, e2, 15)
-    rav_frais = e1.category_density("ravageur", FRUIT_R, FRUIT_C)
-    rav_pourri = e2.category_density("ravageur", FRUIT_R, FRUIT_C)
-    _check(rav_pourri > rav_frais, "ravageur(pourri) > ravageur(frais)")
+    det_frais = e1.category_density("detritivore", FRUIT_R, FRUIT_C)
+    det_pourri = e2.category_density("detritivore", FRUIT_R, FRUIT_C)
+    _check(det_pourri > det_frais, "detritivore(pourri) > detritivore(frais)")
 
 
 def _digest(eco):
     out = []
     for g in ("puceron", "limace", "doryphore",
               "coccinelle", "chrysope", "carabe", "merle", "herisson",
-              "abeille", "syrphe", "papillon", "vers_de_terre"):
+              "abeille", "syrphe", "papillon", "lombric", "cloporte"):
         f = eco.populations[g]
         for r in range(f.rows):
             out.append(" ".join(f"{f.at_plot(r, c):.9f}" for c in range(f.cols)))
@@ -213,8 +215,8 @@ def main():
     test_signal_echelle_masse()
     test_signal_neutralite_sans_fruit()
     test_integre_frais_monte_auxiliaire()
-    test_integre_pourri_monte_ravageur()
-    test_integre_pourri_plus_de_ravageur_que_frais()
+    test_integre_pourri_monte_detritivore()
+    test_integre_pourri_plus_de_detritivore_que_frais()
     test_determinisme()
     test_integre_neutralite_uniforme()
     print("[attraction] TOUS LES TESTS PASSENT")

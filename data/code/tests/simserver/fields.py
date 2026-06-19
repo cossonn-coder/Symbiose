@@ -12,7 +12,7 @@ def test_champs_debug():
     print("[champs debug]")
     GUILDES = {"puceron", "limace", "doryphore",
                "coccinelle", "chrysope", "carabe", "merle", "herisson",
-               "abeille", "syrphe", "papillon", "vers_de_terre"}
+               "abeille", "syrphe", "papillon", "lombric", "cloporte"}
     s11 = ServerProc()
     r = s11.send(cmd="fields")
     check("fields avant init → ok:false", r.get("ok") is False)

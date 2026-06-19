@@ -15,7 +15,7 @@ def test_vie_macro():
     print("[vie macro]")
     GUILDES = {"puceron", "limace", "doryphore",
                "coccinelle", "chrysope", "carabe", "merle", "herisson",
-               "abeille", "syrphe", "papillon", "vers_de_terre"}
+               "abeille", "syrphe", "papillon", "lombric", "cloporte"}
     s10 = ServerProc()
     r = s10.send(cmd="init", seed=42)
     snap = s10.send(cmd="snapshot")["snapshot"]

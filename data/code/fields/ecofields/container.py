@@ -58,8 +58,10 @@ class EcoFields:
     # tant que le smoke ne neige pas, mais le catalogue météo décale les tirages → ⑦
     # re-fige LARGE par ailleurs).
     snow:             float = 0.0
-    # Vie macroscopique observable (D31.1) — champs de population déterministes :
-    # ravageur, auxiliaire, vers_de_terre + N pollinisateurs PAR TYPE (abeille,
+    # Vie macroscopique observable (D31.1) — champs de population déterministes,
+    # NOMMÉS par espèce (scission ④b/c/d) regroupés en catégories : ravageur
+    # (puceron/limace/doryphore), auxiliaire (coccinelle/chrysope/carabe/merle/
+    # hérisson), detritivore (lombric/cloporte) + N pollinisateurs PAR TYPE (abeille,
     # syrphe, papillon — registre §E, arc pollinisation ②, remplacent l'ancien
     # champ agrégé `pollinisateur`). Lus par pollinator_reach (brassage, D31.2) et
     # la Vigueur macro via `pollinator_density`.
@@ -398,7 +400,7 @@ class EcoFields:
         sol vivant local."""
         micro = self.microbiome.at_plot(r, c) / 3.0
         speed = 0.5 + micro * 0.5
-        worms = self.populations["vers_de_terre"] if self.populations else None
+        worms = self.populations["lombric"] if self.populations else None
         if worms is not None:
             speed += WORM_DECOMP_BONUS * worms.at_plot(r, c)
         return speed
@@ -423,13 +425,14 @@ class EcoFields:
 
         Puis lessivage lent de la fertilité.
         """
-        worms = self.populations["vers_de_terre"] if self.populations else None
+        worms = self.populations["lombric"] if self.populations else None
         for r in range(self.rows):
             for c in range(self.cols):
                 micro = self.microbiome.at_plot(r, c) / 3.0
                 speed = 0.5 + micro * 0.5   # sol vivant décompose jusqu'à 2× plus vite
-                # Bioturbation des vers : accélère « un poil » la décomposition
-                # locale (D31.2, option sobre ; structure/aération = D30 différé).
+                # Bioturbation du LOMBRIC (④d : le ver, pas le cloporte, brasse l'humus
+                # du sol) : accélère « un poil » la décompo locale (D31.2, option sobre ;
+                # structure/aération = D30 différé). Cloporte = litière (dette si littéral).
                 if worms is not None:
                     speed += WORM_DECOMP_BONUS * worms.at_plot(r, c)
 

@@ -405,19 +405,19 @@ def favoriser_auxiliaire(game_state: dict, player: str, tile) -> bool:
 def becher(game_state: dict, player: str, eco, r: int, c: int) -> bool:
     """Biner / bêcher — retourner la terre (spec §3.2). Action BINAIRE, coût FAIBLE
     (geste rapide, « fausse bonne idée »). Effet : tue la faune du sol → retire un
-    quantum de `vers_de_terre` ET abaisse le `microbiome` local de
-    `BECHAGE_MICROBIOME_MALUS`. Tout-ou-rien : appliqué seulement si payé.
+    quantum de `lombric` (④d ; ex-`vers_de_terre`) ET abaisse le `microbiome` local
+    de `BECHAGE_MICROBIOME_MALUS`. Tout-ou-rien : appliqué seulement si payé.
 
     Pédagogie « visuel AVANT santé » (CONCEPTION_VIE_MACRO §5) : la chute de
-    `vers_de_terre` fait DISPARAÎTRE des sprites de vers — feedback viscéral
-    immédiat — *avant* la dette différée `microbiome ↓ → uptake ↓ → vigueur ↓` des
-    plantes. Le joueur découvre le bon outil par la conséquence (philo #1/#6, sans
-    sermon). Le jumeau qui PRÉSERVE est `grelinette`.
+    `lombric` fait DISPARAÎTRE des sprites de vers — feedback viscéral immédiat —
+    *avant* la dette différée `microbiome ↓ → uptake ↓ → vigueur ↓` des plantes. Le
+    joueur découvre le bon outil par la conséquence (philo #1/#6, sans sermon). Le
+    jumeau qui PRÉSERVE est `grelinette`.
     Renvoie True si le geste a été pleinement payé (et donc appliqué)."""
     cost = cout_action(game_state, player, "becher", OBJETS_TOUCHES["becher"])
     if spend(game_state, player, cost) < 1.0:
         return False
-    eco.populations["vers_de_terre"].add(r, c, -DENSITE_PAR_SPRITE)
+    eco.populations["lombric"].add(r, c, -DENSITE_PAR_SPRITE)
     eco.microbiome.add(r, c, -BECHAGE_MICROBIOME_MALUS)
     return True
 
