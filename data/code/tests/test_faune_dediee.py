@@ -474,6 +474,34 @@ def test_pollinisateurs_b_dans_densite():
            f"pollinator_density somme bourdon+osmie (Δ={d1 - d0:.2f} attendu 0.65)")
 
 
+# ---------------------------------------------------------------------------
+# 10. ENCYCLO DES POLLINISATEURS (⑥) — blurb + graphe (donnée pure, golden NEUTRE)
+# ---------------------------------------------------------------------------
+
+POLLINISATEURS = ("abeille", "syrphe", "papillon", "bourdon", "osmie")
+# Tokens NON-trophiques admis dans le graphe des pollinisateurs : floraison nouée
+# (`fruit`), niches (`ruche`/`miel` sociale, `pile` maçonne), stades larvaires des
+# ponts ⑤ (`chenille`, `syrphe_larve`) et la proie de la larve de syrphe (`puceron`).
+_POLLINISATEUR_TOKENS = {"fruit", "ruche", "miel", "pile", "chenille",
+                         "syrphe_larve", "puceron"}
+
+
+def test_metadata_encyclo_pollinisateurs():
+    # Les 5 pollinisateurs portent désormais un blurb + un graphe (⑥, splat dans le
+    # TrophicSpec via build_pollinator_specs). DONNÉE PURE → golden NEUTRE.
+    pspecs = {s.name: s for s in build_pollinator_specs()}
+    for nom in POLLINISATEURS:
+        s = pspecs[nom]
+        _check(bool(s.blurb.strip()), f"`{nom}` : blurb d'encyclopédie non vide")
+        _check(len(s.interconnexions) >= 1, f"`{nom}` : ≥1 interconnexion déclarée")
+        for lien in s.interconnexions:
+            _check(lien in _POLLINISATEUR_TOKENS,
+                   f"`{nom}` : interconnexion `{lien}` est un token connu")
+        # Hors du sous-graphe trophique symétrique : aucun pollinisateur ne se
+        # déclare proie/prédateur d'un autre (predators vides, cf. section 9).
+        _check(s.predators == (), f"`{nom}` : sans prédateur (pollinisateur)")
+
+
 def main():
     test_trois_ravageurs_nommes()
     test_category_density_est_la_somme()
@@ -497,6 +525,7 @@ def main():
     test_fenetres_pollinisateurs_b()
     test_osmie_habitat_niche_bois()
     test_pollinisateurs_b_dans_densite()
+    test_metadata_encyclo_pollinisateurs()
     print("[faune] TOUS LES TESTS PASSENT")
     return 0
 

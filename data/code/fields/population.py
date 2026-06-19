@@ -1017,13 +1017,16 @@ def build_pollinator_specs() -> list[TrophicSpec]:
     """Registre §E → TrophicSpec prêts pour le `PopulationField` générique.
     Ressource = nectar (floraison × attractivite), habitat = rondelle dédiée, ni
     prédateur ni signal fruit. Les fenêtres photopériodiques diffèrent par type
-    (l'abeille large, le syrphe précoce, le papillon estival) — placeholders §E.2."""
+    (l'abeille large, le syrphe précoce, le papillon estival) — placeholders §E.2.
+    `**encyclo_meta` splat le blurb/graphe d'encyclopédie (⑥) — DONNÉE PURE jamais
+    lue par le tick, comme pour les trophiques (golden NEUTRE)."""
     return [
         TrophicSpec(
             name=ps.name, category="pollinisateur", salt=ps.salt,
             resource_fn=_make_nectar_grid(ps.attractivite, ps.attractivite_defaut),
             habitat_fn=ps.habitat_fn, predators=(),
             daylen_min=ps.daylen_min, daylen_full=ps.daylen_full,
+            **encyclo_meta(ps.name),
         )
         for ps in build_pollinator_registry()
     ]

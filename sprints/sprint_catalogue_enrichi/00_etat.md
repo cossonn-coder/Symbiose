@@ -50,7 +50,8 @@ guildes abstraites à des **espèces NOMMÉES** rattachées aux guildes.
 | ④d | Scinder `detritivore` → lombric/cloporte (decomp→lombric, fruit pourri→cloporte) | re-figé #3 | ✅ |
 | ④e | Encyclopédie (blurb/interconnexions) + tests + stub pont | NEUTRE | ✅ |
 | ⑤ | Faune nommée — **nouveaux pollinisateurs** (bourdon, osmie) : registre data-driven | re-figé maîtrisé (pollen/nouaison) | ✅ |
-| ⑥ | Vue Godot / sprites / encyclopédie + protocole pont `target.espece` | NEUTRE | ⬜ |
+| ⑥a | Python : encyclopédie 5 pollinisateurs + protocole pont `target.espece` | NEUTRE | ✅ |
+| ⑥b | C# / Godot : table sprite par espèce + butineurs B + heatmaps + bascule client `target.espece` | NEUTRE (vue) | ⬜ |
 
 ## §REPRISE
 
@@ -299,5 +300,40 @@ golden **re-figé MAÎTRISÉ** (pollen → nouaison) :
   (blurb/interconnexions) des pollinisateurs NON faite (jamais eu d'entrée
   `FAUNE_ENCYCLO`) → reste à ⑥ avec sprites + `target.espece`, comme prévu §7.3.
 
-**Prochain au choix Nico** : ne reste que ⑥ (vue Godot + sprites + encyclopédie +
-protocole pont `target.espece`). Pas d'enchaînement auto ; `/clear` entre tronçons.
+**⑥ scindé** (2026-06-19, avec Nico) en **⑥a (Python testable)** + **⑥b (C#/Godot,
+F5 = Nico)** — deux natures de travail : ⑥a vérifiable bout en bout (golden + suite
++ `dotnet build`), ⑥b ne l'est qu'au `dotnet build` (rendu visuel = F5 Nico).
+Cadrage validé : encyclo = **données seules des 5 pollinisateurs** (pas d'UI Godot,
+n'existe pas → sprint séparé) ; sprites = **placeholders procéduraux par espèce**
+(pas de PNG d'insectes).
+
+**⑥a CLOS** le 2026-06-19 — Python pur, golden **NEUTRE** (donnée pure + repli
+protocole sans effet moteur) :
+- **Encyclopédie des 5 pollinisateurs** (`fields/faune_encyclo.py`) : abeille,
+  syrphe, papillon, bourdon, osmie ajoutés à `FAUNE_ENCYCLO` (blurb + graphe).
+  Aucun pollinisateur n'avait d'entrée jusque-là (ni les 2 de ⑤ ni les 3 anciens).
+  Tokens non-trophiques : `fruit`, `ruche`/`miel`, `pile`, `chenille`/`syrphe_larve`,
+  `puceron`. Hors sous-graphe trophique symétrique (pas de proie réciproque).
+- **Splat** : `build_pollinator_specs()` (population.py) ajoute `**encyclo_meta(
+  ps.name)` au `TrophicSpec` généré → les 5 portent blurb/interconnexions. DONNÉE
+  PURE jamais lue par `tick`.
+- **Protocole `target.espece`** (`tools/simserver/actions.py:ecraser`) : clé
+  canonique `espece`, `guilde` accepté en repli (`target.get("espece",
+  target.get("guilde", "puceron"))`) → pas de casse client entre ⑥a et ⑥b. Variable/
+  message renommés `guilde`→`espece` ; commentaire stub `serialize.py` maj.
+- **3 goldens INCHANGÉS** : golden `f7e1a9b4…`, pop-golden `a39834df…`, vigueur-traj
+  `e63b9d7f…`. Tests neufs : `test_faune_dediee.py` section 10 (encyclo
+  pollinisateurs) ; `tests/simserver/actions.py` bascule clé `espece` + cas repli
+  `guilde`. Suite verte SAUF 2 échecs PRÉ-EXISTANTS (`test_senescence` ~2.7 ans ;
+  `test_sim_server` pommier nouaison 0 fruit @ S52 → 184/185). `dotnet build` OK.
+- Confirmé : le snapshot `sprites` émet **15 clés d'espèce** (10 trophiques + 5
+  pollinisateurs) — sérialisation par espèce prête pour la table sprite client ⑥b.
+- ⚠️ Signalement inchangé : `fields/population.py` toujours > garde-fou ~350 LDC →
+  éclatement en paquet `fields/population/` dans un sprint refactor dédié.
+
+**Reste : ⑥b (vue Godot, C#)** — clôt le sprint. `MacroLife.cs` mappe encore les 3
+anciennes guildes (`ravageur`/`auxiliaire`/`vers_de_terre`) → les 10 espèces
+nommées tombent en point gris `GuildeInconnue` : étendre la table sprite par espèce
+(placeholders procéduraux). + butineurs bourdon/osmie (`ForagerLayer.cs`), heatmaps
+par catégorie (`FieldOverlay.cs`), émission `target.espece` (`WorldView.Actions.cs`).
+Pas d'enchaînement auto ; `/clear` avant ⑥b.

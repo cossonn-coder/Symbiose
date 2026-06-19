@@ -230,26 +230,28 @@ class ActionsMixin:
                              f"plot hors tuile : r={r!r}, c={c!r}")
             if verb == "ecraser":
                 urgence = bool(params.get("urgence", False))
-                # Guilde du SPRITE cliqué (protocole 0.3.1) : on écrase ce qui
-                # est sous la souris, quelle que soit sa nature. Défaut puceron
-                # = compat des clients < 0.3.1 (le champ `ravageur` n'existe plus
-                # depuis ④b — c'est désormais une CATÉGORIE, pas un champ). Le
-                # ré-acheminement par `target.espece` reste de la dette ⑥ (C9/C10).
-                guilde = target.get("guilde", "puceron")
-                if guilde not in eco.populations:
+                # ESPÈCE du SPRITE cliqué (protocole ⑥, `target.espece`) : on écrase
+                # ce qui est sous la souris, quelle que soit sa nature. Depuis la
+                # scission ④b-d le snapshot émet des CLÉS D'ESPÈCE (puceron…cloporte),
+                # plus les anciennes guildes — la clé canonique est donc `espece`.
+                # `guilde` reste accepté en repli pour les clients < ⑥ (bascule
+                # coordonnée : le client Godot passe à `espece` en ⑥b). Défaut puceron
+                # = repli ultime des clients qui ne désignent rien.
+                espece = target.get("espece", target.get("guilde", "puceron"))
+                if espece not in eco.populations:
                     return bilan(False, 0.0, 0.0,
-                                 f"guilde inconnue : {guilde!r}")
+                                 f"espèce inconnue : {espece!r}")
                 cost = (A.cout_action(gs, player, "ecraser")
                         * (A.URGENCE_MULT if urgence else 1.0))
-                # Densité de la guilde ciblée avant/après DANS le message (la vue
+                # Densité de l'espèce ciblée avant/après DANS le message (la vue
                 # confirme l'effet en un aller-retour). Lecture pure, zéro règle.
-                avant = eco.populations[guilde].get(r, c)
-                ok = A.ecraser(gs, player, eco, r, c, guilde=guilde, urgence=urgence)
-                apres = eco.populations[guilde].get(r, c)
+                avant = eco.populations[espece].get(r, c)
+                ok = A.ecraser(gs, player, eco, r, c, guilde=espece, urgence=urgence)
+                apres = eco.populations[espece].get(r, c)
                 return bilan(ok, cost, 0.0,
-                             f"écrasé un {guilde} en ({r},{c})"
+                             f"écrasé un {espece} en ({r},{c})"
                              + (" [urgence]" if urgence else "")
-                             + f" — {guilde} {avant:.2f} → {apres:.2f}" if ok
+                             + f" — {espece} {avant:.2f} → {apres:.2f}" if ok
                              else "Vigueur insuffisante — rien écrasé")
             cost = A.cout_action(gs, player, "becher", A.OBJETS_TOUCHES["becher"])
             ok = A.becher(gs, player, eco, r, c)

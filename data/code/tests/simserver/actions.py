@@ -77,17 +77,24 @@ def test_actions_v1():
           cout_calme == 15.0 and cout_urgence == 22.5,
           f"calme={cout_calme}, urgence={cout_urgence}")
 
-    # Maladresse (protocole 0.3.1) : on écrase le SPRITE cliqué, guilde comprise —
-    # pas seulement le ravageur. Guilde inconnue → refus PUR (rien dépensé).
+    # Maladresse (protocole ⑥, `target.espece`) : on écrase le SPRITE cliqué, espèce
+    # comprise — pas seulement le ravageur. Espèce inconnue → refus PUR (rien dépensé).
     r = s5.send(cmd="action", verb="ecraser",
-                target={"tile": "T0", "r": 0, "c": 0, "guilde": "licorne"})
-    check("ecraser guilde inconnue → applied:false, serveur survivant",
+                target={"tile": "T0", "r": 0, "c": 0, "espece": "licorne"})
+    check("ecraser espèce inconnue → applied:false, serveur survivant",
           r["result"]["applied"] is False and s5.send(cmd="snapshot").get("ok") is True,
           r["result"]["message"])
     r = s5.send(cmd="action", verb="ecraser",
-                target={"tile": "T0", "r": 0, "c": 0, "guilde": "coccinelle"},
+                target={"tile": "T0", "r": 0, "c": 0, "espece": "coccinelle"},
                 params={"urgence": False})
     check("ecraser une espèce explicite (coccinelle, auxiliaire ④c) → appliqué ET nommé",
+          r["result"]["applied"] is True and "coccinelle" in r["result"]["message"],
+          r["result"]["message"])
+    # Repli compat (clients < ⑥) : la clé legacy `guilde` est encore acceptée.
+    r = s5.send(cmd="action", verb="ecraser",
+                target={"tile": "T0", "r": 0, "c": 0, "guilde": "coccinelle"},
+                params={"urgence": False})
+    check("ecraser via clé legacy `guilde` → encore accepté (bascule client en ⑥b)",
           r["result"]["applied"] is True and "coccinelle" in r["result"]["message"],
           r["result"]["message"])
 

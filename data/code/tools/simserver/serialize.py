@@ -120,12 +120,11 @@ class SerializeMixin:
         # rien, positions par hash indépendantes de la semaine : un slot vit
         # toujours au même point, il apparaît/disparaît quand la densité
         # franchit son seuil).
-        # STUB SÉRIALISATION PAR ESPÈCE (faune ④e, C10) : la clé est `f.spec.name`
-        # → depuis la scission ④b/c/d, le snapshot émet DÉJÀ 10 clés d'espèce
-        # (puceron, limace… cloporte) au lieu des 3 anciennes guildes. RESTE pour
-        # le tronçon ⑥ (vue Godot) : la TABLE sprite par espèce côté client + le
-        # protocole `target.espece` (C9) — bascule coordonnée client↔serveur. Ne
-        # rien changer ici tant que ⑥ n'est pas fait (le client lit ces clés).
+        # SÉRIALISATION PAR ESPÈCE (faune ④e/⑥) : la clé est `f.spec.name` → depuis
+        # la scission ④b/c/d le snapshot émet 10 clés d'espèce (puceron…cloporte) au
+        # lieu des 3 anciennes guildes. Le pont accepte désormais `target.espece`
+        # (⑥a, simserver/actions.py:ecraser ; `guilde` reste en repli pour la bascule
+        # client). RESTE en ⑥b (vue Godot) : la TABLE sprite par espèce côté client.
         # Arrondis : x/y_frac 3 déc. (= 0,05 cm dans le plot), activite 2 —
         # et round() est déterministe, la clé de diff côté vue reste stable.
         sprites = {}

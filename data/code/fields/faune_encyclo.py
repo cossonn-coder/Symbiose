@@ -13,12 +13,17 @@ Aucun import (donnée pure) → aucun cycle de couche.
   blurb           : texte d'observation du naturaliste (ce qu'on VOIT, pas la
                     cause cachée — l'interprétation se mérite au palier de maîtrise).
   interconnexions : noms LIÉS dans le graphe §3 — proies/prédateurs nommés (les 10
-                    espèces) + éléments du milieu qui font la niche (`fruit` tombé,
-                    `pile` de bois, `ail` répulsif, `syrphe_larve` du pont ⑤). Donnée
-                    PURE : les vraies boucles vivent dans `predators`/`resource_fn`,
-                    pas ici. INVARIANT (testé) : tout `predators` d'une espèce est
-                    inclus dans ses `interconnexions`, et le sous-graphe entre les 10
-                    espèces nommées est SYMÉTRIQUE (si A cite B, B cite A).
+                    espèces trophiques) + éléments du milieu qui font la niche
+                    (`fruit` tombé/noué, `pile` de bois, `ail` répulsif, `ruche`/
+                    `miel`, stades larvaires `chenille`/`syrphe_larve` des ponts ⑤).
+                    Donnée PURE : les vraies boucles vivent dans `predators`/
+                    `resource_fn`, pas ici. INVARIANT (testé) : tout `predators`
+                    d'une espèce est inclus dans ses `interconnexions`, et le
+                    sous-graphe entre les 10 espèces trophiques nommées est
+                    SYMÉTRIQUE (si A cite B, B cite A). Les 5 pollinisateurs
+                    (abeille/syrphe/papillon/bourdon/osmie, ⑥) sont décrits ici aussi
+                    mais hors du sous-graphe trophique symétrique (ils pointent vers
+                    la floraison/niche, pas vers des proies réciproques).
 """
 from __future__ import annotations
 
@@ -77,12 +82,46 @@ FAUNE_ENCYCLO: dict[str, tuple[str, tuple[str, ...]]] = {
         "fruits pourris ; fuit la sécheresse et le plein soleil.",
         ("carabe", "herisson", "limace", "fruit"),
     ),
+    # --- pollinisateurs (catalogue enrichi ⑤/⑥) ------------------------------
+    # Liés à la FLORAISON qu'ils fécondent (→ `fruit`, nouaison), et selon le
+    # type à un stade larvaire (pont ⑤ : `chenille`, `syrphe_larve`), une niche
+    # (`ruche`, `miel` pour l'abeille sociale ; `pile` de bois pour l'osmie
+    # maçonne) ou une proie de leur larve (`puceron` pour la syrphe). Donnée pure :
+    # ces liens nourrissent l'encyclopédie ET les synergies de cartes (§8 physique).
+    "abeille": (
+        "Butineuse sociale infatigable ; elle relie la ruche aux corolles "
+        "ouvertes et, de fleur en fleur, noue les fruits sans qu'on la voie "
+        "travailler.",
+        ("ruche", "miel", "fruit"),
+    ),
+    "syrphe": (
+        "Mouche déguisée en guêpe, immobile en vol stationnaire au-dessus des "
+        "fleurs ; sa larve, elle, dévore les pucerons sous les feuilles.",
+        ("syrphe_larve", "puceron", "fruit"),
+    ),
+    "papillon": (
+        "Visiteur diurne aux ailes larges butinant de fleur en fleur ; on "
+        "l'admire sans songer que sa chenille, plus tôt, a brouté le feuillage.",
+        ("chenille", "fruit"),
+    ),
+    "bourdon": (
+        "Gros butineur pelucheux, premier levé par temps frais ; il fait vibrer "
+        "les fleurs cachées que d'autres délaissent et féconde jusqu'aux "
+        "Solanacées.",
+        ("fruit",),
+    ),
+    "osmie": (
+        "Abeille solitaire et maçonne ; elle niche dans le bois mort et "
+        "pollinise les premiers arbres fruitiers avant l'éveil des ruches.",
+        ("pile", "fruit"),
+    ),
 }
 
 
 def encyclo_meta(name: str) -> dict:
     """Métadonnée d'une espèce, prête à splatter dans `TrophicSpec(**...)`.
-    Espèce inconnue (un pollinisateur, hors périmètre ④) → métadonnée vide :
-    blurb absent, graphe vide — pas d'erreur, pas de fausse entrée d'encyclo."""
+    Couvre les 10 espèces trophiques (④) + les 5 pollinisateurs (⑥). Nom inconnu
+    (champ larvaire intermédiaire, futur ajout) → métadonnée vide : blurb absent,
+    graphe vide — pas d'erreur, pas de fausse entrée d'encyclo."""
     blurb, liens = FAUNE_ENCYCLO.get(name, ("", ()))
     return {"blurb": blurb, "interconnexions": liens}
