@@ -44,7 +44,7 @@ guildes abstraites à des **espèces NOMMÉES** rattachées aux guildes.
 | ② | Plantes lot 1 — familles connues (thym, lavande, bourrache, consoude, moutarde) | NEUTRE (hash intact) | ✅ |
 | ③ | Plantes lot 2 — familles + cycles neufs (carotte, ortie, courgette, mâche, ail) + `_ATTRACT_*` + **vérif `biennial`/`evergreen`** | NEUTRE (hash intact) | ✅ |
 | ④ | Faune nommée — **modèle B, champ dédié par espèce** (RE-DÉCOUPÉ a→e, voir ci-dessous). ~~parfums (A)~~ CADUC | re-figé MAÎTRISÉ large | ⬜ |
-| ④a | Scaffolding catégorie : `TrophicSpec.category` + `category_density` + 6 consommateurs recâblés | **NEUTRE** | ⬜ |
+| ④a | Scaffolding catégorie : `TrophicSpec.category` + `category_density` + 6 consommateurs recâblés | **NEUTRE** | ✅ |
 | ④b | Scinder `ravageur` → puceron/limace/doryphore | re-figé #1 | ⬜ |
 | ④c | Scinder `auxiliaire` → coccinelle/chrysope/carabe/merle/hérisson | re-figé #2 | ⬜ |
 | ④d | Scinder `detritivore` → lombric/cloporte (decomp→lombric, fruit pourri→cloporte) | re-figé #3 | ⬜ |
@@ -113,6 +113,24 @@ LOCALISÉS (une catégorie à la fois). ④a pose le filet (`category_density`) 
 **golden NEUTRE** (invariant de contrôle) ; ④b/c/d scindent chacun une catégorie
 (un nouveau hash attribuable chacun) ; ④e = encyclo+tests, neutre.
 
-**Prochain au choix Nico** : lancer **④a** (filet, golden-neutre — recommandé EN
-PREMIER, il sécurise les scissions) ou ⑤ (pollinisateurs B, indépendant). Pas
-d'enchaînement auto ; `/clear` entre chaque tronçon a→e.
+**④a CLOS** le 2026-06-19 — filet de catégorie posé, golden **NEUTRE** (hash
+`5fddfe54…` inchangé) :
+- `TrophicSpec` gagne `category: str` (champ requis) ; les 3 specs trophiques
+  taguées (`ravageur`/`auxiliaire`/`detritivore` — le `name` du champ reste
+  `vers_de_terre` jusqu'à ④d) + les pollinisateurs `category="pollinisateur"`
+  (catégorie isolée, lue par aucun agrégat trophique).
+- `EcoFields.category_fields(cat)` (liste des champs membres) + `category_density(
+  cat, r, c)` (somme des densités) — la guilde devient une VUE.
+- **6 consommateurs recâblés** : santé des plantes `perturbations.py` (C1 ravageur,
+  C2 auxiliaire → `category_density`) ; vigueur macro `vigueur_macro.py` (C3/C4/C5 →
+  `_vigueur_categorie` qui itère `category_fields` en sommant `densité×activité` —
+  PAS un simple `category_density`, sinon on perdrait le facteur Qi trophique).
+  `decomp_speed` (C6) et `gestes.py:420` (C8) **inchangés** (champ encore nommé
+  `vers_de_terre`).
+- À un membre par catégorie, agrégat == champ unique → **golden NEUTRE prouvé**
+  (golden `5fddfe54…`, pop-golden `5e6e688f…`, vigueur-traj `e63b9d7f…` inchangés ;
+  suites complètes vertes ; `dotnet build` OK).
+
+**Prochain au choix Nico** : ④b (scinder ravageur → puceron/limace/doryphore,
+re-figé #1) ou ⑤ (pollinisateurs B, indépendant). Pas d'enchaînement auto ;
+`/clear` entre tronçons.

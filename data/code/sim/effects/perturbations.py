@@ -210,7 +210,7 @@ def herbivory_pressure(plant: PlantInstance, tile: Tile,
         return []
 
     r, c = plant.position
-    rav = eco.populations["ravageur"].at_plot(r, c) if eco else 0.0
+    rav = eco.category_density("ravageur", r, c) if eco else 0.0
     # Pont de cycle de vie §D (tronçon ⑤) : la chenille (larve du papillon) broute
     # le feuillage → s'AJOUTE à la pression du ravageur. À chenille=0 (aucune ponte)
     # → +0 → pression strictement inchangée vs avant ⑤ (invariant golden §D.6).
@@ -246,7 +246,7 @@ def herbivory_pressure(plant: PlantInstance, tile: Tile,
 
     # Microbiome + auxiliaire locaux → bascule LÉTALE (lecture directe des champs).
     micro_norm = min(1.0, eco.microbiome.at_plot(r, c) / 3.0) if eco else 0.3
-    aux = eco.populations["auxiliaire"].at_plot(r, c) if eco else 0.0
+    aux = eco.category_density("auxiliaire", r, c) if eco else 0.0
 
     # Application probabiliste sur la santé
     mutations = []

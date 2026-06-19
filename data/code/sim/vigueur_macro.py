@@ -54,15 +54,25 @@ def _vigueur_pop(field, r: int, c: int) -> float:
     return densite(field, r, c) * qi_local(field, r, c)
 
 
+def _vigueur_categorie(category: str, r: int, c: int, eco) -> float:
+    """Vitalité agrégée d'une CATÉGORIE (modèle B, CONCEPTION_FAUNE_DEDIEE.md §1) :
+    somme des `_vigueur_pop` (densité × Qi trophique) des espèces membres, bornée
+    [0, 1]. Tant qu'une catégorie n'a qu'un membre (④a), == l'ancien champ unique →
+    golden NEUTRE. La somme (pas la moyenne) reflète qu'une catégorie peuplée de
+    plusieurs espèces vigoureuses est globalement plus vivante."""
+    v = sum(_vigueur_pop(f, r, c) for f in eco.category_fields(category))
+    return min(1.0, v)
+
+
 def vigueur_nuisible(r: int, c: int, eco) -> float:
     """Vitalité de la population RAVAGEUR locale — ressource = feuillage-hôte (§4)."""
-    return _vigueur_pop(eco.populations["ravageur"], r, c)
+    return _vigueur_categorie("ravageur", r, c, eco)
 
 
 def vigueur_auxiliaire(r: int, c: int, eco) -> float:
     """Vitalité de la population AUXILIAIRE locale — ressource = proie (ravageur)
     + nectar/habitat (§4)."""
-    return _vigueur_pop(eco.populations["auxiliaire"], r, c)
+    return _vigueur_categorie("auxiliaire", r, c, eco)
 
 
 def vigueur_pollinisateur(r: int, c: int, eco) -> float:
@@ -75,9 +85,9 @@ def vigueur_pollinisateur(r: int, c: int, eco) -> float:
 
 
 def vigueur_ver(r: int, c: int, eco) -> float:
-    """Vitalité de la population VERS DE TERRE locale — ressource = microbiome/OM
-    en décomposition (§4)."""
-    return _vigueur_pop(eco.populations["vers_de_terre"], r, c)
+    """Vitalité de la population DÉTRITIVORE locale (lombric/cloporte dès ④d ;
+    `vers_de_terre` seul en ④a) — ressource = microbiome/OM en décomposition (§4)."""
+    return _vigueur_categorie("detritivore", r, c, eco)
 
 
 # --- Lecture diégétique : descripteur qualitatif (philo #5 — pas de chiffre) ---

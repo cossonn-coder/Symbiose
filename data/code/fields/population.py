@@ -173,8 +173,16 @@ class TrophicSpec:
                       None (défaut) = pas de signal → capacité inchangée (golden
                       neutre pour les guildes sans fruit : pollinisateur, vers).
     Les pondérations ont des défauts de module, surchargeables par guilde.
+
+    `category` (modèle B, CONCEPTION_FAUNE_DEDIEE.md §1) : la GUILDE rétrogradée en
+    ÉTIQUETTE. Plusieurs espèces nommées partageront une même catégorie
+    (ravageur / auxiliaire / detritivore) ; les consommateurs qui raisonnaient
+    « par guilde » (santé des plantes, vigueur macro) lisent désormais l'AGRÉGAT
+    de la catégorie (`EcoFields.category_density` / `category_fields`). Tant qu'une
+    catégorie n'a qu'un membre (état ④a), l'agrégat == le champ → golden NEUTRE.
     """
     name: str
+    category: str
     salt: int
     resource_fn: Callable
     habitat_fn: Callable
@@ -494,7 +502,7 @@ def build_population_specs() -> list[TrophicSpec]:
     """
     return [
         TrophicSpec(
-            name="ravageur", salt=_SALT_RAVAGEUR,
+            name="ravageur", category="ravageur", salt=_SALT_RAVAGEUR,
             resource_fn=_foliage_grid, habitat_fn=_monoculture_grid,
             # `syrphe_larve` (pont §D, tronçon ⑤) entre comme prédateur SUPPLÉMENTAIRE
             # du ravageur (réutilise le mécanisme `predators` ; résolu dans les champs
@@ -505,14 +513,16 @@ def build_population_specs() -> list[TrophicSpec]:
             daylen_min=10.0, daylen_full=13.0,   # fenêtre estivale (printemps tardif→automne)
         ),
         TrophicSpec(
-            name="auxiliaire", salt=_SALT_AUXILIAIRE,
+            name="auxiliaire", category="auxiliaire", salt=_SALT_AUXILIAIRE,
             resource_fn=_ravageur_grid, habitat_fn=_stability_grid,
             predators=(),
             signal_fn=_aux_fruit_signal,   # fruit frais → frugivores (④)
             daylen_min=10.0, daylen_full=13.0,   # suit le ravageur (sa proie)
         ),
         TrophicSpec(
-            name="vers_de_terre", salt=_SALT_VERS,
+            # name reste "vers_de_terre" en ④a (clé de champ inchangée) ; la
+            # CATÉGORIE est déjà "detritivore" (lombric+cloporte y vivront en ④d).
+            name="vers_de_terre", category="detritivore", salt=_SALT_VERS,
             resource_fn=_soil_food_grid, habitat_fn=_undisturbed_grid,
             predators=(),
             daylen_min=8.5, daylen_full=10.0,    # LARGE : sol tamponné, quasi toute l'année
@@ -677,7 +687,7 @@ def build_pollinator_specs() -> list[TrophicSpec]:
     (l'abeille large, le syrphe précoce, le papillon estival) — placeholders §E.2."""
     return [
         TrophicSpec(
-            name=ps.name, salt=ps.salt,
+            name=ps.name, category="pollinisateur", salt=ps.salt,
             resource_fn=_make_nectar_grid(ps.attractivite, ps.attractivite_defaut),
             habitat_fn=ps.habitat_fn, predators=(),
             daylen_min=ps.daylen_min, daylen_full=ps.daylen_full,

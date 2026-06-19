@@ -314,6 +314,24 @@ class EcoFields:
         return sum(self.populations[n].at_plot(r, c)
                    for n in POLLINATOR_NAMES if n in self.populations)
 
+    # --- Agrégation par CATÉGORIE (modèle B, CONCEPTION_FAUNE_DEDIEE.md §1.2) ---
+    # La guilde n'est plus un champ stocké mais une VUE : la somme des espèces qui
+    # partagent l'étiquette `spec.category`. Les consommateurs « par guilde » (santé
+    # des plantes, vigueur macro) lisent ces agrégats au lieu de `populations[nom]`.
+    # Tant qu'une catégorie n'a qu'un membre (④a), l'agrégat == le champ unique →
+    # golden NEUTRE. Les pollinisateurs (PollinatorSpec, sans `category`) en sont
+    # naturellement exclus (getattr → None).
+
+    def category_fields(self, category: str) -> list:
+        """Champs de population membres d'une CATÉGORIE (étiquette `spec.category`)."""
+        return [pf for pf in self.populations.values()
+                if getattr(pf.spec, "category", None) == category]
+
+    def category_density(self, category: str, r: int, c: int) -> float:
+        """Densité agrégée d'une catégorie = somme des densités des espèces membres.
+        Remplace la lecture directe `populations["ravageur"].at_plot(...)`."""
+        return sum(pf.at_plot(r, c) for pf in self.category_fields(category))
+
     # --- Banque de graines ---
 
     def tick_seed_bank(self, plants: list, seed: int = 0, week: int = 0) -> None:
