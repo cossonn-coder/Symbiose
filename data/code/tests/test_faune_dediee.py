@@ -1,11 +1,12 @@
 """
 SYMBIOSE — tests/test_faune_dediee.py
-Tronçons ④b/④c/④d (catalogue enrichi) — scission des champs uniques `ravageur`,
-`auxiliaire` puis `vers_de_terre` en espèces NOMMÉES (modèle B,
-CONCEPTION_FAUNE_DEDIEE.md §2) :
+Tronçons ④b/④c/④d/④e (catalogue enrichi) — scission des champs uniques `ravageur`,
+`auxiliaire` puis `vers_de_terre` en 10 espèces NOMMÉES (modèle B,
+CONCEPTION_FAUNE_DEDIEE.md §2) + métadonnée d'encyclopédie (④e) :
   ④b ravageur     → puceron / limace / doryphore
   ④c auxiliaire   → coccinelle / chrysope / carabe / merle / hérisson
   ④d detritivore  → lombric (humus du sol) / cloporte (litière)
+  ④e métadonnée   → blurb + interconnexions par espèce (donnée pure, golden NEUTRE)
 
 Garde-fous de la SCISSION (indépendants du hash golden) :
   1. EXISTENCE  — les espèces sont des champs distincts, tous de la bonne catégorie,
@@ -23,6 +24,12 @@ Garde-fous de la SCISSION (indépendants du hash golden) :
      (coccinelle/chrysope sur puceron, carabe/hérisson sur limace) ; habitats sur
      STRUCTURES (`pile` → carabe & hérisson montent) ; boucle proie↔prédateur active
      (les prédateurs nommés du ④b existent enfin comme champs).
+  7. COUVERTURE COMPLÈTE (④e) — exactement 10 espèces trophiques, catégories ∈
+     {ravageur, auxiliaire, detritivore} chacune peuplée ; triade complète (resource_fn
+     + habitat_fn callables, predators tous résolubles) ; salts distincts ; phénologie
+     hivernale nulle (puceron/doryphore) vs lombric quasi annuel.
+  8. MÉTADONNÉE ENCYCLO (④e) — chaque espèce a un blurb et des interconnexions ;
+     `predators ⊆ interconnexions` ; le sous-graphe entre espèces nommées est SYMÉTRIQUE.
 
 Lancement (depuis data/code/) :
   python3 -m tests.test_faune_dediee
@@ -33,11 +40,13 @@ import sys
 from world import Tile
 from plants import Tomato, Bean, Garlic
 from fields import init_eco, build_population_specs, Structure
+from fields.lifecycle import larval_field_names
 from fields.population import (
     _foliage_solanaceae_grid, _solanaceae_grid,
     _limace_food_grid, _litter_grid, _foliage_grid,
     _espece_grid, _undisturbed_structure_grid, _pile_grid, _undisturbed_grid,
     _base_habitat_grid, _merle_food_grid,
+    daylength, _smoothstep, build_lifecycle_bridges,
     LIMACE_LITTER_W, LIMACE_FOLIAGE_W, DORY_AIL_REPULSE,
     PILE_HABITAT_W, MERLE_BASE_HABITAT,
 )
@@ -45,6 +54,12 @@ from fields.population import (
 ROWS, COLS = 6, 8
 RAVAGEURS = ("puceron", "limace", "doryphore")
 AUXILIAIRES = ("coccinelle", "chrysope", "carabe", "merle", "herisson")
+DETRITIVORES = ("lombric", "cloporte")
+ESPECES = RAVAGEURS + AUXILIAIRES + DETRITIVORES   # les 10 espèces de ④
+CATEGORIES = ("ravageur", "auxiliaire", "detritivore")
+# Tokens du graphe §3 qui ne sont PAS des espèces trophiques nommées (éléments du
+# milieu + champ larvaire du pont ⑤) — admis dans `interconnexions`.
+_MILIEU_TOKENS = {"fruit", "pile", "ail"}
 
 
 def _eco(plants_specs=()):
@@ -288,6 +303,88 @@ def test_decomp_speed_suit_le_lombric():
            "decomp_speed accélérée par le lombric (bioturbation)")
 
 
+# ---------------------------------------------------------------------------
+# 7. COUVERTURE COMPLÈTE (④e) — 10 espèces, triade, salts, fenêtres hiver
+# ---------------------------------------------------------------------------
+
+def test_couverture_dix_especes():
+    specs = build_population_specs()
+    noms = {s.name for s in specs}
+    _check(len(specs) == 10, f"exactement 10 espèces trophiques (vu {len(specs)})")
+    _check(noms == set(ESPECES), f"les 10 espèces attendues (vu {sorted(noms)})")
+    # Catégories valides + chacune peuplée.
+    for s in specs:
+        _check(s.category in CATEGORIES, f"`{s.name}` : catégorie valide ({s.category})")
+    tile, eco = _eco()
+    for cat in CATEGORIES:
+        membres = eco.category_fields(cat)
+        _check(len(membres) >= 1, f"la catégorie `{cat}` a ≥1 membre")
+
+
+def test_triade_et_salts():
+    specs = build_population_specs()
+    known = set(ESPECES) | set(larval_field_names(build_lifecycle_bridges()))
+    salts = set()
+    for s in specs:
+        _check(callable(s.resource_fn), f"`{s.name}` : resource_fn callable")
+        _check(callable(s.habitat_fn), f"`{s.name}` : habitat_fn callable")
+        for pred in s.predators:
+            _check(pred in known,
+                   f"`{s.name}` : prédateur `{pred}` est une espèce/larve connue")
+        salts.add(s.salt)
+    _check(len(salts) == 10, f"les 10 salts sont distincts (vu {len(salts)})")
+
+
+def test_phenologie_hivernale():
+    specs = {s.name: s for s in build_population_specs()}
+
+    def phen(nom, week):
+        s = specs[nom]
+        return _smoothstep(daylength(week), s.daylen_min, s.daylen_full)
+
+    # Solstice d'hiver (w=51, jour le plus court ≈ 8 h) : tout le monde dormant.
+    for nom in ("puceron", "doryphore"):
+        _check(phen(nom, 51) == 0.0, f"`{nom}` : phénologie NULLE au solstice d'hiver")
+    # Début de printemps (w≈7, jour ≈ 9,6 h) : le lombric (fenêtre 8,5/10) s'éveille
+    # déjà alors que le puceron (10/13) dort encore → « quasi annuel » vs estival.
+    _check(phen("puceron", 7) == 0.0, "puceron : encore dormant au jour court de printemps")
+    _check(phen("lombric", 7) > 0.0, "lombric : déjà actif au jour court (fenêtre large)")
+    # Plein été (w=25, ≈ 16 h) : tout le monde au maximum.
+    for nom in ESPECES:
+        _check(phen(nom, 25) == 1.0, f"`{nom}` : phénologie pleine au solstice d'été")
+
+
+# ---------------------------------------------------------------------------
+# 8. MÉTADONNÉE ENCYCLO (④e) — blurb, interconnexions, graphe symétrique
+# ---------------------------------------------------------------------------
+
+def test_metadata_encyclo():
+    specs = {s.name: s for s in build_population_specs()}
+    for nom in ESPECES:
+        s = specs[nom]
+        _check(bool(s.blurb.strip()), f"`{nom}` : blurb d'encyclopédie non vide")
+        _check(len(s.interconnexions) >= 1, f"`{nom}` : ≥1 interconnexion déclarée")
+        # Tout nom lié est soit une espèce, soit un champ larvaire, soit un milieu.
+        for lien in s.interconnexions:
+            _check(lien in set(ESPECES) | {"syrphe_larve"} | _MILIEU_TOKENS,
+                   f"`{nom}` : interconnexion `{lien}` est un nom connu")
+        # Les vrais prédateurs apparaissent TOUS dans le graphe relationnel.
+        for pred in s.predators:
+            _check(pred in s.interconnexions,
+                   f"`{nom}` : son prédateur `{pred}` figure dans interconnexions")
+
+
+def test_graphe_symetrique():
+    # Le sous-graphe ENTRE espèces nommées est réciproque (si A cite B, B cite A) :
+    # garantit qu'aucun lien proie↔prédateur/compétition n'est déclaré à sens unique.
+    specs = {s.name: s for s in build_population_specs()}
+    for nom in ESPECES:
+        for lien in specs[nom].interconnexions:
+            if lien in ESPECES:   # on n'exige la symétrie qu'entre les 10 espèces
+                _check(nom in specs[lien].interconnexions,
+                       f"graphe symétrique : `{lien}` cite-t-il bien `{nom}` en retour ?")
+
+
 def main():
     test_trois_ravageurs_nommes()
     test_category_density_est_la_somme()
@@ -301,6 +398,11 @@ def main():
     test_merle_omnivore_fruit_et_vers()
     test_deux_detritivores_nommes()
     test_decomp_speed_suit_le_lombric()
+    test_couverture_dix_especes()
+    test_triade_et_salts()
+    test_phenologie_hivernale()
+    test_metadata_encyclo()
+    test_graphe_symetrique()
     print("[faune] TOUS LES TESTS PASSENT")
     return 0
 

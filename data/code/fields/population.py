@@ -30,6 +30,7 @@ from fields.grids import GridField
 from fields.noise import _hash_noise
 from fields.foragers import ForagerParams   # spec d'agent butineur (§F, tronçon ③)
 from fields.lifecycle import LifeCycleBridge  # pont de cycle de vie (§D, tronçon ⑤)
+from fields.faune_encyclo import encyclo_meta  # blurb + interconnexions (④e, donnée pure)
 
 
 # ---------------------------------------------------------------------------
@@ -223,6 +224,11 @@ class TrophicSpec:
     # Fenêtre phénologique de la guilde (heures de jour) : porte saisonnière §3.
     daylen_min: float = DEF_DAYLEN_MIN
     daylen_full: float = DEF_DAYLEN_FULL
+    # Métadonnée d'ENCYCLOPÉDIE (④e, CONCEPTION_FAUNE_DEDIEE §1.1) — DONNÉE PURE,
+    # jamais lue par `tick` → golden NEUTRE. `blurb` = texte naturaliste ; rendu = ⑥.
+    # `interconnexions` = graphe relationnel §3 (source : fields/faune_encyclo.py).
+    blurb: str = ""
+    interconnexions: tuple[str, ...] = ()
 
 
 # ---------------------------------------------------------------------------
@@ -721,6 +727,7 @@ def build_population_specs() -> list[TrophicSpec]:
             # Prédateurs nommés (④c) + syrphe_larve (pont ⑤, déjà résolu).
             predators=("coccinelle", "chrysope", "syrphe_larve"),
             daylen_min=10.0, daylen_full=13.0,   # fenêtre estivale
+            **encyclo_meta("puceron"),
         ),
         TrophicSpec(
             name="limace", category="ravageur", salt=_SALT_LIMACE,
@@ -730,12 +737,14 @@ def build_population_specs() -> list[TrophicSpec]:
             # par la limace en ④b, passe au CLOPORTE (détritivore dédié, doc §C13,
             # défaut « cloporte seul »). La limace n'a plus de terme-source fruit.
             daylen_min=9.0, daylen_full=12.0,    # humide/frais : fenêtre plus large/précoce
+            **encyclo_meta("limace"),
         ),
         TrophicSpec(
             name="doryphore", category="ravageur", salt=_SALT_DORYPHORE,
             resource_fn=_foliage_solanaceae_grid, habitat_fn=_solanaceae_grid,
             predators=("carabe",),               # ④c (inactif jusque-là)
             daylen_min=10.0, daylen_full=13.0,   # fenêtre estivale
+            **encyclo_meta("doryphore"),
         ),
         # --- Catégorie `detritivore` : 2 espèces nommées (scission ④d, doc §2) ----
         # Position PROIE (avant les auxiliaires) : lombric/cloporte sont mangés par
@@ -747,6 +756,7 @@ def build_population_specs() -> list[TrophicSpec]:
             resource_fn=_soil_food_grid, habitat_fn=_undisturbed_grid,
             predators=("merle", "herisson"),     # ④d : le ver n'est plus un puits isolé
             daylen_min=8.5, daylen_full=10.0,    # LARGE : sol tamponné, quasi toute l'année
+            **encyclo_meta("lombric"),
         ),
         TrophicSpec(
             # cloporte = détritivore de LITIÈRE (≠ lombric, qui fait l'humus du sol).
@@ -757,6 +767,7 @@ def build_population_specs() -> list[TrophicSpec]:
             predators=("carabe", "herisson"),    # ④d
             signal_fn=_rav_fruit_signal,         # fruit pourri → cloporte (repris de la limace)
             daylen_min=9.0, daylen_full=12.0,    # humide : fenêtre large/précoce (comme la limace)
+            **encyclo_meta("cloporte"),
         ),
         # --- Catégorie `auxiliaire` : 5 espèces nommées (scission ④c, doc §2) ----
         # Chacune chasse SA proie nommée (`_espece_grid`) avec SON habitat propre.
@@ -768,30 +779,35 @@ def build_population_specs() -> list[TrophicSpec]:
             resource_fn=_espece_grid("puceron"), habitat_fn=_stability_grid,
             predators=(),
             daylen_min=10.0, daylen_full=13.0,   # estivale (suit le puceron)
+            **encyclo_meta("coccinelle"),
         ),
         TrophicSpec(
             name="chrysope", category="auxiliaire", salt=_SALT_CHRYSOPE,
             resource_fn=_espece_grid("puceron"), habitat_fn=_auxiliaire_habitat_grid,
             predators=(),
             daylen_min=10.0, daylen_full=13.0,   # estivale
+            **encyclo_meta("chrysope"),
         ),
         TrophicSpec(
             name="carabe", category="auxiliaire", salt=_SALT_CARABE,
             resource_fn=_espece_grid("limace"), habitat_fn=_undisturbed_structure_grid,
             predators=(),
             daylen_min=9.0, daylen_full=12.0,    # nocturne→large (élargie comme la limace, sa proie)
+            **encyclo_meta("carabe"),
         ),
         TrophicSpec(
             name="merle", category="auxiliaire", salt=_SALT_MERLE,
             resource_fn=_merle_food_grid, habitat_fn=_base_habitat_grid,
             predators=(),
             daylen_min=8.5, daylen_full=10.0,    # toute saison (oiseau résident, fenêtre LARGE)
+            **encyclo_meta("merle"),
         ),
         TrophicSpec(
             name="herisson", category="auxiliaire", salt=_SALT_HERISSON,
             resource_fn=_espece_grid("limace"), habitat_fn=_pile_grid,
             predators=(),
             daylen_min=9.0, daylen_full=12.0,    # nocturne→large
+            **encyclo_meta("herisson"),
         ),
     ]
 

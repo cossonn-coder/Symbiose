@@ -43,12 +43,12 @@ guildes abstraites à des **espèces NOMMÉES** rattachées aux guildes.
 | ① | Doc-conception `CONCEPTION_CATALOGUE_ENRICHI.md` (audit + matrices + sélection + partage doc/code) | INTACT (0 code) | ✅ |
 | ② | Plantes lot 1 — familles connues (thym, lavande, bourrache, consoude, moutarde) | NEUTRE (hash intact) | ✅ |
 | ③ | Plantes lot 2 — familles + cycles neufs (carotte, ortie, courgette, mâche, ail) + `_ATTRACT_*` + **vérif `biennial`/`evergreen`** | NEUTRE (hash intact) | ✅ |
-| ④ | Faune nommée — **modèle B, champ dédié par espèce** (RE-DÉCOUPÉ a→e, voir ci-dessous). ~~parfums (A)~~ CADUC | re-figé MAÎTRISÉ large | ⬜ |
+| ④ | Faune nommée — **modèle B, champ dédié par espèce** (RE-DÉCOUPÉ a→e, voir ci-dessous). ~~parfums (A)~~ CADUC | re-figé MAÎTRISÉ large | ✅ |
 | ④a | Scaffolding catégorie : `TrophicSpec.category` + `category_density` + 6 consommateurs recâblés | **NEUTRE** | ✅ |
 | ④b | Scinder `ravageur` → puceron/limace/doryphore | re-figé #1 | ✅ |
 | ④c | Scinder `auxiliaire` → coccinelle/chrysope/carabe/merle/hérisson | re-figé #2 | ✅ |
 | ④d | Scinder `detritivore` → lombric/cloporte (decomp→lombric, fruit pourri→cloporte) | re-figé #3 | ✅ |
-| ④e | Encyclopédie (blurb/interconnexions) + tests + stub pont | NEUTRE | ⬜ |
+| ④e | Encyclopédie (blurb/interconnexions) + tests + stub pont | NEUTRE | ✅ |
 | ⑤ | Faune nommée — **nouveaux pollinisateurs** (bourdon, osmie) : registre data-driven | re-figé maîtrisé (pollen/nouaison) | ⬜ |
 | ⑥ | Vue Godot / sprites / encyclopédie + protocole pont `target.espece` | NEUTRE | ⬜ |
 
@@ -248,6 +248,28 @@ golden **re-figé MAÎTRISÉ #3**. Dernière scission, l'écosystème faune est 
   `decomp_speed` ne lit que le lombric (humus), le cloporte (litière) ne décompose
   pas encore — choix assumé kickoff §5.3.
 
-**Prochain au choix Nico** : ④e (encyclopédie blurb/interconnexions + tests + stub
-pont, golden NEUTRE) ou ⑤ (pollinisateurs B, indépendant). Pas d'enchaînement auto ;
-`/clear` entre tronçons.
+**④e CLOS** le 2026-06-19 — encyclopédie + tests + stub pont, golden **NEUTRE**.
+**④ (faune nommée) COMPLET côté Python.**
+- `fields/faune_encyclo.py` (NOUVEAU, donnée pure 0 import) : `FAUNE_ENCYCLO`
+  {name: (blurb, interconnexions)} sur les 10 espèces + `encyclo_meta(name)`
+  (splat dans `TrophicSpec` ; inconnu → vide). Séparé de `population.py` (déjà
+  > garde-fou).
+- `TrophicSpec` gagne `blurb`/`interconnexions` = **DONNÉE PURE jamais lue par
+  `tick`** ; `fields/__init__.py` ré-exporte ; `serialize.py` = commentaire stub
+  (snapshot par espèce DÉJÀ acquis depuis ④b, clé `f.spec.name`).
+- `test_faune_dediee.py` → 17 fonctions (+couverture 10 espèces, salts distincts,
+  phénologie hiver, blurb non vide, `predators ⊆ interconnexions`, graphe
+  SYMÉTRIQUE). Correction data : `herisson` cite `lombric` (symétrie).
+- Golden `9be1c05a…` / pop `58ecf6d8…` **INCHANGÉS** (neutre prouvé) ; `dotnet
+  build` OK.
+
+**Bilan refonte faune B** (3 re-figeages localisés, vigueur `e63b9d7f…` inchangé) :
+④a NEUTRE (`5fddfe54`) → ④b `63d50eeb` → ④c `53327632` → ④d `9be1c05a` (golden
+final) → ④e neutre. 3 champs abstraits → 10 espèces nommées data-driven.
+
+**Frontière ⑥** : sérialisation par espèce acquise ; reste table sprite par
+espèce côté client + protocole `target.espece` (réacheminement actions ciblées).
+
+**Prochain au choix Nico** : ⑤ (pollinisateurs B bourdon/osmie, registre
+data-driven, re-figeage maîtrisé pollen/nouaison) ou ⑥ (vue Godot + sprites +
+encyclopédie + `target.espece`). Pas d'enchaînement auto ; `/clear` entre tronçons.

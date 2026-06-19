@@ -116,10 +116,16 @@ class SerializeMixin:
                 ]
                 plants.append(base)
         # Vie macro (tranche 6·B, kickoff §4) : sprites échantillonnés depuis
-        # les 4 champs de population — PURE lecture (sample_sprites ne modifie
+        # les champs de population — PURE lecture (sample_sprites ne modifie
         # rien, positions par hash indépendantes de la semaine : un slot vit
         # toujours au même point, il apparaît/disparaît quand la densité
-        # franchit son seuil). Format compact par guilde, cf. ENGINE_VERSION.
+        # franchit son seuil).
+        # STUB SÉRIALISATION PAR ESPÈCE (faune ④e, C10) : la clé est `f.spec.name`
+        # → depuis la scission ④b/c/d, le snapshot émet DÉJÀ 10 clés d'espèce
+        # (puceron, limace… cloporte) au lieu des 3 anciennes guildes. RESTE pour
+        # le tronçon ⑥ (vue Godot) : la TABLE sprite par espèce côté client + le
+        # protocole `target.espece` (C9) — bascule coordonnée client↔serveur. Ne
+        # rien changer ici tant que ⑥ n'est pas fait (le client lit ces clés).
         # Arrondis : x/y_frac 3 déc. (= 0,05 cm dans le plot), activite 2 —
         # et round() est déterministe, la clé de diff côté vue reste stable.
         sprites = {}

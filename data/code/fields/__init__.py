@@ -37,6 +37,7 @@ from fields.population import (
     POLLINATOR_NAMES, sample_sprites, daylength,
     POP_MAX, POP_INERTIA, DENSITE_PAR_SPRITE, SPRITES_PAR_PLOT_MAX,
 )
+from fields.faune_encyclo import FAUNE_ENCYCLO, encyclo_meta
 from fields.ecofields import (
     EcoFields, init_eco, inject_patch,
     HUMIDITY_INERTIA, FERTILITY_INERTIA, MICROBE_INERTIA,
