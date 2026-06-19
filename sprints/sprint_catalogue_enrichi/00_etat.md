@@ -49,7 +49,7 @@ guildes abstraites à des **espèces NOMMÉES** rattachées aux guildes.
 | ④c | Scinder `auxiliaire` → coccinelle/chrysope/carabe/merle/hérisson | re-figé #2 | ✅ |
 | ④d | Scinder `detritivore` → lombric/cloporte (decomp→lombric, fruit pourri→cloporte) | re-figé #3 | ✅ |
 | ④e | Encyclopédie (blurb/interconnexions) + tests + stub pont | NEUTRE | ✅ |
-| ⑤ | Faune nommée — **nouveaux pollinisateurs** (bourdon, osmie) : registre data-driven | re-figé maîtrisé (pollen/nouaison) | ⬜ |
+| ⑤ | Faune nommée — **nouveaux pollinisateurs** (bourdon, osmie) : registre data-driven | re-figé maîtrisé (pollen/nouaison) | ✅ |
 | ⑥ | Vue Godot / sprites / encyclopédie + protocole pont `target.espece` | NEUTRE | ⬜ |
 
 ## §REPRISE
@@ -270,6 +270,34 @@ final) → ④e neutre. 3 champs abstraits → 10 espèces nommées data-driven.
 **Frontière ⑥** : sérialisation par espèce acquise ; reste table sprite par
 espèce côté client + protocole `target.espece` (réacheminement actions ciblées).
 
-**Prochain au choix Nico** : ⑤ (pollinisateurs B bourdon/osmie, registre
-data-driven, re-figeage maîtrisé pollen/nouaison) ou ⑥ (vue Godot + sprites +
-encyclopédie + `target.espece`). Pas d'enchaînement auto ; `/clear` entre tronçons.
+**⑤ CLOS** le 2026-06-19 — 2 pollinisateurs NOMMÉS (bourdon, osmie) ajoutés au
+registre data-driven `build_pollinator_registry()` (modèle `PollinatorSpec`),
+golden **re-figé MAÎTRISÉ** (pollen → nouaison) :
+- `fields/population.py` : salts `_SALT_BOURDON=0x2AD001` / `_SALT_OSMIE=0x2AE001` ;
+  `POLLINATOR_NAMES` 3→5 (load-bearing : lu par butineurs + `pollinator_density`
+  + `vigueur_macro`) ; attractivités `_ATTRACT_BOURDON` (Fabaceae/Lamiaceae=1.0,
+  Solanaceae=0.65 *buzz pollination*) / `_ATTRACT_OSMIE` (Rosaceae=1.0,
+  Apiaceae=0.85) ; foragers `_FORAGER_BOURDON` (n_max=8, deposit=0.6) /
+  `_FORAGER_OSMIE` (n_max=5, deposit=0.6) ; `_osmie_habitat_grid` (rondelle
+  pollinisateur + bump structures `pile` = niche-bois, duck-typing comme les
+  habitats ④c) ; 2 entrées registre — bourdon (daylen 9.5/12.0 précoce), osmie
+  (10.0/12.5 printanier, habitat dédié). `bridge=None` (pas de pont larvaire).
+- `ecofields/container.py` : commentaire maj (5 pollinisateurs).
+- **Re-figeage attribuable** : golden `9be1c05a…` → **`f7e1a9b43b24…`** (plus de
+  pollen → plus de nouaison → fruits → aval décompo) ; pop-golden `58ecf6d8…` →
+  **`a39834dfb1e6…`** (dérive PUREMENT ADDITIVE : 13 champs existants byte-identiques,
+  bourdon/osmie ajoutés au digest, ni proie ni prédateur) ; vigueur-traj
+  **`e63b9d7f…` INCHANGÉ**.
+- Tests : `test_faune_dediee.py` +section 9 (5 fonctions, 26 checks pollinisateurs B) ;
+  `test_population.py` `GUILDS` += bourdon/osmie ; `simserver/macro.py`+`fields.py`
+  GUILDES 13→15. `dotnet build` OK.
+- ⚠️ **Signalements** : (1) `fields/population.py` toujours > garde-fou ~350 LDC
+  (alourdi par les 2 triades pollinisateurs) → éclatement en paquet
+  `fields/population/` dans un sprint refactor dédié. (2) Mêmes deux échecs
+  PRÉ-EXISTANTS hors périmètre (`test_senescence` ~2.7 ans ; `test_sim_server`
+  pommier nouaison 0 fruit @ S52 — suite 183/184). (3) Encyclopédie
+  (blurb/interconnexions) des pollinisateurs NON faite (jamais eu d'entrée
+  `FAUNE_ENCYCLO`) → reste à ⑥ avec sprites + `target.espece`, comme prévu §7.3.
+
+**Prochain au choix Nico** : ne reste que ⑥ (vue Godot + sprites + encyclopédie +
+protocole pont `target.espece`). Pas d'enchaînement auto ; `/clear` entre tronçons.
