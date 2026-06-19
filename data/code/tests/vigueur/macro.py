@@ -33,13 +33,13 @@ def test_macro_facade_densite_ressource():
 def test_macro_facade_purete():
     print("\n[E2] façade vigueur_macro : lecture PURE (aucune écriture)")
     gs = _minimal_state(); eco = gs["eco"]["T0"]
-    eco.populations["ravageur"].set(1, 1, 0.5)
-    dens_avant = eco.populations["ravageur"].at_plot(1, 1)
+    eco.populations["puceron"].set(1, 1, 0.5)
+    dens_avant = eco.populations["puceron"].at_plot(1, 1)
     eco_avant = eco.summary()
     a = VM.vigueur_nuisible(1, 1, eco); b = VM.vigueur_nuisible(1, 1, eco)
     check("déterministe (même entrée → même sortie)", a == b, f"{a}=={b}")
     check("aucune mutation du champ lu",
-          eco.populations["ravageur"].at_plot(1, 1) == dens_avant)
+          eco.populations["puceron"].at_plot(1, 1) == dens_avant)
     check("aucune mutation de l'état écolo", eco.summary() == eco_avant)
 
 
@@ -108,7 +108,7 @@ def test_ecraser_pression_revient():
     # Laisse le ravageur s'installer sur le feuillage (relaxation déterministe).
     for _ in range(12):
         eco.tick_populations(tile, plants)
-    rav = eco.populations["ravageur"]
+    rav = eco.populations["puceron"]
     r, c = max(((rr, cc) for rr in range(rav.rows) for cc in range(rav.cols)),
                key=lambda rc: rav.at_plot(*rc))
     d_eq = rav.at_plot(r, c)

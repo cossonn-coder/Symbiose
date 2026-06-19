@@ -145,9 +145,12 @@ def test_integre_pourri_monte_ravageur():
     tile, eco = _make_eco()
     _deposit_fruit(eco, FRUIT_R, FRUIT_C, FRUIT_SIGNAL_REF, age_sem=12.0)
     _tick(tile, eco, 15)
-    rav = eco.populations["ravageur"]
     aux = eco.populations["auxiliaire"]
-    _check(rav.at_plot(FRUIT_R, FRUIT_C) > rav.at_plot(CTRL_R, CTRL_C) + 1e-4,
+    # « ravageur » est désormais une CATÉGORIE (puceron/limace/doryphore, ④b) :
+    # le signal du fruit pourri alimente la spec `limace` (détritivore préf.).
+    rav_plot = eco.category_density("ravageur", FRUIT_R, FRUIT_C)
+    rav_ctrl = eco.category_density("ravageur", CTRL_R, CTRL_C)
+    _check(rav_plot > rav_ctrl + 1e-4,
            "fruit pourri → ravageur(plot) > ravageur(témoin)")
     _check(aux.at_plot(FRUIT_R, FRUIT_C) > aux.at_plot(CTRL_R, CTRL_C) + 1e-4,
            "fruit pourri → auxiliaire(plot) > témoin aussi (fraction décomposeurs)")
@@ -158,14 +161,15 @@ def test_integre_pourri_plus_de_ravageur_que_frais():
     t1, e1 = _make_eco(); _deposit_fruit(e1, FRUIT_R, FRUIT_C, FRUIT_SIGNAL_REF, 0.0)
     t2, e2 = _make_eco(); _deposit_fruit(e2, FRUIT_R, FRUIT_C, FRUIT_SIGNAL_REF, 12.0)
     _tick(t1, e1, 15); _tick(t2, e2, 15)
-    rav_frais = e1.populations["ravageur"].at_plot(FRUIT_R, FRUIT_C)
-    rav_pourri = e2.populations["ravageur"].at_plot(FRUIT_R, FRUIT_C)
+    rav_frais = e1.category_density("ravageur", FRUIT_R, FRUIT_C)
+    rav_pourri = e2.category_density("ravageur", FRUIT_R, FRUIT_C)
     _check(rav_pourri > rav_frais, "ravageur(pourri) > ravageur(frais)")
 
 
 def _digest(eco):
     out = []
-    for g in ("ravageur", "auxiliaire", "abeille", "syrphe", "papillon", "vers_de_terre"):
+    for g in ("puceron", "limace", "doryphore", "auxiliaire",
+              "abeille", "syrphe", "papillon", "vers_de_terre"):
         f = eco.populations[g]
         for r in range(f.rows):
             out.append(" ".join(f"{f.at_plot(r, c):.9f}" for c in range(f.cols)))
@@ -185,7 +189,7 @@ def test_integre_neutralite_uniforme():
     """Sans fruit, l'eco uniforme reste uniforme : aucun signal parasite."""
     tile, eco = _make_eco()
     _tick(tile, eco, 15)
-    for g in ("ravageur", "auxiliaire"):
+    for g in ("puceron", "limace", "doryphore", "auxiliaire"):
         f = eco.populations[g]
         v0 = f.at_plot(FRUIT_R, FRUIT_C)
         uniforme = all(abs(f.at_plot(r, c) - v0) < EPS

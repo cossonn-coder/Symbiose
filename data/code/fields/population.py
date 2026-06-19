@@ -112,6 +112,19 @@ FRAC_AUX_POURRI  = 0.25  # part du signal pourri qui va AUSSI à l'auxiliaire (d
 
 
 # ---------------------------------------------------------------------------
+# CONSTANTES DE SCISSION DU RAVAGEUR (faune nommée ④b, CONCEPTION_FAUNE_DEDIEE §2)
+# ---------------------------------------------------------------------------
+# Le champ unique `ravageur` se scinde en puceron / limace / doryphore. Chacun a
+# SA triade (resource_fn/habitat_fn/predators) ; la catégorie `ravageur` reste la
+# somme (pression herbivore subie par les plantes, C1). Placeholders, calibrage
+# post-test (comme les guildes — décision §5.6).
+LITTER_REF       = 2.0   # masse de litière de surface (hors `fruit`) saturant la ressource détritivore
+LIMACE_LITTER_W  = 1.0   # ressource limace : litière DOMINANTE (détritivore d'abord, §2)
+LIMACE_FOLIAGE_W = 0.30  # + grignotage opportuniste du feuillage tendre (secondaire)
+DORY_AIL_REPULSE = 0.6   # l'ail (Amaryllidaceae) rogne l'habitat doryphore (répulsif §4.4)
+
+
+# ---------------------------------------------------------------------------
 # CONSTANTES DE PERCEPTION (échantillonnage sprite — §3)
 # ---------------------------------------------------------------------------
 
@@ -368,10 +381,101 @@ def _soil_food_grid(eco, tile, plants) -> list[list[float]]:
     return g
 
 
+# --- Ressources/habitats des 3 ravageurs nommés (scission ④b, doc §2) ---------
+
+def _litter_grid(eco, tile, plants) -> list[list[float]]:
+    """Litière de SURFACE en décompo d'un plot (doc §2) = Σ masses des parcelles
+    HORS `fruit` (le fruit a son propre signal d'attraction), normalisée. Ressource
+    détritivore : nourrit la limace (préférence) — réutilisée par le cloporte (④d)."""
+    g = _zero_grid(eco.rows, eco.cols)
+    for r in range(eco.rows):
+        for c in range(eco.cols):
+            masse = sum(p.masse for p in eco.litiere[r][c] if p.tissu != "fruit")
+            g[r][c] = min(1.0, masse / LITTER_REF)
+    return g
+
+
+def _limace_food_grid(eco, tile, plants) -> list[list[float]]:
+    """Ressource MIXTE de la limace (④b) : litière DOMINANTE (détritivore d'abord)
+    + grignotage opportuniste du feuillage tendre. Clé du modèle B : `resource_fn`
+    pilote la POPULATION (ce qui la nourrit), la catégorie `ravageur` pilote le
+    DÉGÂT (ce qu'elle abîme, C1) — deux choses séparées (doc §2 « Cas limace »)."""
+    litter = _litter_grid(eco, tile, plants)
+    foliage = _foliage_grid(eco, tile, plants)
+    g = _zero_grid(eco.rows, eco.cols)
+    for r in range(eco.rows):
+        for c in range(eco.cols):
+            g[r][c] = _clamp01(LIMACE_LITTER_W * litter[r][c]
+                               + LIMACE_FOLIAGE_W * foliage[r][c])
+    return g
+
+
+def _humide_litiere_grid(eco, tile, plants) -> list[list[float]]:
+    """Habitat de la limace (④b ; partagé avec le cloporte ④d) : sol HUMIDE +
+    sous-litière. `humide` devient une VRAIE ressource (lecture de `eco.humidite`,
+    qui existe) — gain du modèle B sur le A : la niche est réelle, pas une porte."""
+    litter = _litter_grid(eco, tile, plants)
+    g = _zero_grid(eco.rows, eco.cols)
+    for r in range(eco.rows):
+        for c in range(eco.cols):
+            hum = min(1.0, eco.humidite.at_plot(r, c) / 3.0)
+            g[r][c] = _clamp01(0.5 * hum + 0.5 * litter[r][c])
+    return g
+
+
+def _foliage_solanaceae_grid(eco, tile, plants) -> list[list[float]]:
+    """Feuillage des seules Solanaceae (ressource du doryphore, ④b) — `_foliage_grid`
+    filtré par famille : la pression doryphore est NULLE là où aucune Solanaceae ne
+    pousse (interconnexion plante-hôte ↔ ravageur spécialiste)."""
+    g = _zero_grid(eco.rows, eco.cols)
+    for p in plants:
+        if not p.is_alive or p.current_stage < 1:
+            continue
+        if p.plant_class.family != "Solanaceae":
+            continue
+        w = p.health / 3.0
+        for (r, c) in p.foliar_plots:
+            if 0 <= r < eco.rows and 0 <= c < eco.cols:
+                g[r][c] += w
+    for r in range(eco.rows):
+        for c in range(eco.cols):
+            g[r][c] = min(1.0, g[r][c] / FOLIAGE_REF)
+    return g
+
+
+def _solanaceae_grid(eco, tile, plants) -> list[list[float]]:
+    """Habitat du doryphore (④b) = présence locale de Solanaceae, RÉDUITE par la
+    présence d'ail (Amaryllidaceae répulsif, doc §4.4). L'ail n'a PAS de rondelle
+    dédiée (son effet ③ est une injection microbiome) → on lit ici sa présence
+    foliaire pour rogner l'habitat du ravageur de la pomme de terre."""
+    solana = _zero_grid(eco.rows, eco.cols)
+    ail    = _zero_grid(eco.rows, eco.cols)
+    for p in plants:
+        if not p.is_alive or p.current_stage < 1:
+            continue
+        fam = p.plant_class.family
+        cible = (solana if fam == "Solanaceae"
+                 else ail if fam == "Amaryllidaceae" else None)
+        if cible is None:
+            continue
+        for (r, c) in p.foliar_plots:
+            if 0 <= r < eco.rows and 0 <= c < eco.cols:
+                cible[r][c] += p.health / 3.0
+    g = _zero_grid(eco.rows, eco.cols)
+    for r in range(eco.rows):
+        for c in range(eco.cols):
+            s = min(1.0, solana[r][c] / FOLIAGE_REF)
+            a = min(1.0, ail[r][c] / FOLIAGE_REF)
+            g[r][c] = _clamp01(s * (1.0 - DORY_AIL_REPULSE * a))
+    return g
+
+
 def _ravageur_grid(eco, tile, plants) -> list[list[float]]:
-    """Ressource de l'auxiliaire = la proie animale, i.e. le champ ravageur."""
-    rav = eco.populations["ravageur"]
-    return [[rav.at_plot(r, c) for c in range(eco.cols)] for r in range(eco.rows)]
+    """Ressource de l'auxiliaire = la proie animale = AGRÉGAT de la catégorie
+    `ravageur` (puceron + limace + doryphore, modèle B ④b ; C11). La syrphe_larve
+    (pont ⑤) le réutilise comme proie : elle prédate l'ensemble des ravageurs."""
+    return [[eco.category_density("ravageur", r, c) for c in range(eco.cols)]
+            for r in range(eco.rows)]
 
 
 def _stability_grid(eco, tile, plants) -> list[list[float]]:
@@ -484,6 +588,9 @@ def _rav_fruit_signal(eco, tile, plants) -> list[list[float]]:
 # ---------------------------------------------------------------------------
 # Canaux _hash_noise dédiés (décorrélés) par guilde pour les positions sprites.
 _SALT_RAVAGEUR      = 0x2A0001
+_SALT_PUCERON       = _SALT_RAVAGEUR   # puceron = héritier du champ ravageur (④b, continuité sprites)
+_SALT_LIMACE        = 0x2A6001
+_SALT_DORYPHORE     = 0x2A7001
 _SALT_AUXILIAIRE    = 0x2A1001
 _SALT_POLLINISATEUR = 0x2A2001   # réutilisé par l'abeille (héritière du champ historique)
 _SALT_VERS          = 0x2A3001
@@ -493,24 +600,45 @@ _SALT_PAPILLON      = 0x2A5001
 
 def build_population_specs() -> list[TrophicSpec]:
     """
-    Construit les specs NON pollinisatrices dans l'ORDRE DE TICK. Le ravageur
-    tick en premier (il lit l'auxiliaire de la semaine PRÉCÉDENTE → décalage),
-    puis l'auxiliaire lit le ravageur fraîchement mis à jour. Le vers de terre est
-    indépendant. Les pollinisateurs (registre §E) sont ajoutés à part par
-    `build_pollinator_specs` (le conteneur concatène) — ils n'ont ni prédateur ni
-    proie ici, donc leur ordre de tick est golden-neutre.
+    Construit les specs NON pollinisatrices dans l'ORDRE DE TICK. Les ravageurs
+    (puceron/limace/doryphore, scindés en ④b) tickent en premier (ils lisent
+    l'auxiliaire de la semaine PRÉCÉDENTE → décalage), puis l'auxiliaire lit
+    l'AGRÉGAT ravageur fraîchement mis à jour (`_ravageur_grid` = category_density).
+    Le vers de terre est indépendant. Les pollinisateurs (registre §E) sont ajoutés
+    à part par `build_pollinator_specs` (le conteneur concatène) — ils n'ont ni
+    prédateur ni proie ici, donc leur ordre de tick est golden-neutre.
+
+    SCISSION ④b (CONCEPTION_FAUNE_DEDIEE §2) : les `predators` listent les VRAIS
+    prédateurs nommés (coccinelle/chrysope/carabe/hérisson), qui n'existent pas
+    encore (scindés en ④c) → `_predator_field` renvoie None → prédation 0 pour eux
+    jusqu'à ④c (la régulation auxiliaire se rebranchera alors). Seul `syrphe_larve`
+    (pont ⑤) est déjà résolu. Transitoirement, l'auxiliaire ne RÉGULE donc plus le
+    ravageur (il le MANGE encore comme ressource) → re-figeage golden attendu.
     """
     return [
         TrophicSpec(
-            name="ravageur", category="ravageur", salt=_SALT_RAVAGEUR,
+            name="puceron", category="ravageur", salt=_SALT_PUCERON,
             resource_fn=_foliage_grid, habitat_fn=_monoculture_grid,
-            # `syrphe_larve` (pont §D, tronçon ⑤) entre comme prédateur SUPPLÉMENTAIRE
-            # du ravageur (réutilise le mécanisme `predators` ; résolu dans les champs
-            # larvaires par EcoFields._predator_field). À syrphe_larve=0 → +0 prédation
-            # → comportement strictement inchangé (invariant golden §D.6).
-            predators=("auxiliaire", "syrphe_larve"),
-            signal_fn=_rav_fruit_signal,   # fruit pourri → charognards (④)
-            daylen_min=10.0, daylen_full=13.0,   # fenêtre estivale (printemps tardif→automne)
+            # Prédateurs nommés (④c) + syrphe_larve (pont ⑤, déjà résolu).
+            predators=("coccinelle", "chrysope", "syrphe_larve"),
+            daylen_min=10.0, daylen_full=13.0,   # fenêtre estivale
+        ),
+        TrophicSpec(
+            name="limace", category="ravageur", salt=_SALT_LIMACE,
+            resource_fn=_limace_food_grid, habitat_fn=_humide_litiere_grid,
+            predators=("carabe", "herisson"),    # ④c (inactifs jusque-là)
+            # Le fruit pourri appelle la limace (détritivore) — porteur TRANSITOIRE
+            # du signal pourri en ④b (doc §3 : « pourri → cloporte + petite part
+            # limace »). En ④d, le signal DOMINANT passe au cloporte, la limace n'en
+            # garde qu'une fraction. Préserve l'attraction pourri→ravageur d'ici là.
+            signal_fn=_rav_fruit_signal,
+            daylen_min=9.0, daylen_full=12.0,    # humide/frais : fenêtre plus large/précoce
+        ),
+        TrophicSpec(
+            name="doryphore", category="ravageur", salt=_SALT_DORYPHORE,
+            resource_fn=_foliage_solanaceae_grid, habitat_fn=_solanaceae_grid,
+            predators=("carabe",),               # ④c (inactif jusque-là)
+            daylen_min=10.0, daylen_full=13.0,   # fenêtre estivale
         ),
         TrophicSpec(
             name="auxiliaire", category="auxiliaire", salt=_SALT_AUXILIAIRE,

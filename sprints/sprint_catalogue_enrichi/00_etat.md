@@ -45,7 +45,7 @@ guildes abstraites à des **espèces NOMMÉES** rattachées aux guildes.
 | ③ | Plantes lot 2 — familles + cycles neufs (carotte, ortie, courgette, mâche, ail) + `_ATTRACT_*` + **vérif `biennial`/`evergreen`** | NEUTRE (hash intact) | ✅ |
 | ④ | Faune nommée — **modèle B, champ dédié par espèce** (RE-DÉCOUPÉ a→e, voir ci-dessous). ~~parfums (A)~~ CADUC | re-figé MAÎTRISÉ large | ⬜ |
 | ④a | Scaffolding catégorie : `TrophicSpec.category` + `category_density` + 6 consommateurs recâblés | **NEUTRE** | ✅ |
-| ④b | Scinder `ravageur` → puceron/limace/doryphore | re-figé #1 | ⬜ |
+| ④b | Scinder `ravageur` → puceron/limace/doryphore | re-figé #1 | ✅ |
 | ④c | Scinder `auxiliaire` → coccinelle/chrysope/carabe/merle/hérisson | re-figé #2 | ⬜ |
 | ④d | Scinder `detritivore` → lombric/cloporte (decomp→lombric, fruit pourri→cloporte) | re-figé #3 | ⬜ |
 | ④e | Encyclopédie (blurb/interconnexions) + tests + stub pont | NEUTRE | ⬜ |
@@ -131,6 +131,43 @@ LOCALISÉS (une catégorie à la fois). ④a pose le filet (`category_density`) 
   (golden `5fddfe54…`, pop-golden `5e6e688f…`, vigueur-traj `e63b9d7f…` inchangés ;
   suites complètes vertes ; `dotnet build` OK).
 
-**Prochain au choix Nico** : ④b (scinder ravageur → puceron/limace/doryphore,
-re-figé #1) ou ⑤ (pollinisateurs B, indépendant). Pas d'enchaînement auto ;
-`/clear` entre tronçons.
+**④b CLOS** le 2026-06-19 — `ravageur` scindé en 3 champs NOMMÉS (modèle B), golden
+**re-figé MAÎTRISÉ #1** :
+- `build_population_specs()` pose 3 specs `category="ravageur"`, triades PROPRES :
+  - **puceron** = ex-triade ravageur intégrale (feuillage + chaleur), fenêtre estivale
+    10/13 ; prédateurs nommés `(coccinelle, chrysope, syrphe_larve)`.
+  - **limace** = DÉTRITIVORE préférentielle : `_limace_food_grid` = litière dominante
+    (`LIMACE_LITTER_W=1.0`) + feuillage tendre secondaire (`LIMACE_FOLIAGE_W=0.3`) ;
+    habitat humide/frais (`_humide_litiere_grid`), fenêtre précoce/large 9/12 ;
+    signal fruit-pourri (`signal_fn=_rav_fruit_signal`) ; prédateurs `(carabe, herisson)`.
+  - **doryphore** = SPÉCIALISTE Solanaceae : ressource/habitat NULS sans Solanaceae
+    (`_foliage_solanaceae_grid` / `_solanaceae_grid`), habitat RÉDUIT par l'ail
+    (`DORY_AIL_REPULSE`, Amaryllidaceae §4.4) ; fenêtre estivale 10/13 ; prédateur `(carabe,)`.
+- La guilde `ravageur` devient une **VUE** : `_ravageur_grid` (ressource auxiliaire C11)
+  et l'herbivorie C1 lisent `category_density("ravageur")` = somme des 3 densités.
+- **Régression transitoire ASSUMÉE (④b→④c)** — décision Nico « noms dès ④b » : les
+  prédateurs nommés n'existent pas encore (④c) → `_predator_field` rend None → prédation
+  0 → ravageurs non régulés → pression herbivore accrue. C'est une cause MAJEURE du
+  re-figeage, attendue, résorbée en ④c.
+- **Re-figeage attribuable** : golden `5fddfe54…` → **`63d50eeb22…`** ;
+  pop-golden `5e6e688f…` → **`1f7dcda831…`** ; vigueur-traj **`e63b9d7f…` INCHANGÉ**
+  (la trajectoire Vigueur joueur ne dépend pas de la régulation des ravageurs).
+- Recâblages : `simserver/actions.py:ecraser` (défaut sprite `ravageur`→`puceron`,
+  le champ `ravageur` n'existe plus — réacheminement `target.espece` = dette ⑥) ;
+  ~10 suites de tests adaptées (clé `ravageur`→`puceron` ou `category_density`).
+- Test neuf : `tests/test_faune_dediee.py` (6 fonctions, 23 checks — existence/triades,
+  agrégat=somme, fenêtres, doryphore Solanaceae+ail, limace litière-dominante). `dotnet build` OK.
+- ⚠️ **Signalements** :
+  1. **`fields/population.py` = 449 LDC pur** (873 total, 310 commentaires) > garde-fou
+     ~350 — DÉJÀ au-dessus avant ④b (~369), +80 par les 3 triades. À **éclater en
+     paquet** `fields/population/` dans un futur sprint refactor (pas dans un tronçon
+     catalogue). À arbitrer avec Nico.
+  2. **Deux échecs PRÉ-EXISTANTS hors périmètre** (prouvés sur HEAD propre via `git stash`,
+     PAS causés par ④b) : `test_senescence` (plante « meurt asphyxié, excès d'eau soutenu »
+     à ~2.7 ans sur terre/hum1.5 — modèle eau) ; `test_sim_server` pommier nouaison
+     (0 fruit @ S52 — chaîne pollinisation gardée au niveau unitaire : test_fruits 24/24,
+     test_ruche 20/20). → dette, à traiter séparément.
+
+**Prochain au choix Nico** : ④c (scinder auxiliaire → coccinelle/chrysope/carabe/
+merle/hérisson — résorbe la régression de prédation, re-figé #2) ou ⑤ (pollinisateurs
+B, indépendant). Pas d'enchaînement auto ; `/clear` entre tronçons.

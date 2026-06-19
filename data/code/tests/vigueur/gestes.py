@@ -137,41 +137,41 @@ def test_ecraser():
     print("\n[A8] ecraser : retire UN quantum de ravageur + multiplicateur d'urgence")
     gs = _minimal_state(); eco = gs["eco"]["T0"]
     st = V.ensure_player(gs, "joueur_1"); st["courante"] = 100.0
-    eco.populations["ravageur"].set(2, 2, 0.30)   # densité ciblée connue
+    eco.populations["puceron"].set(2, 2, 0.30)   # densité ciblée connue
     ok = ACT.ecraser(gs, "joueur_1", eco, 2, 2, urgence=True)
     check("écrasement urgent payé", ok)
     check("coût MODERE × URGENCE débité",
           st["courante"] == 100.0 - ACT.MODERE * ACT.URGENCE_MULT,
           f"courante={st['courante']}")
     check("un quantum de ravageur retiré (exactement)",
-          abs(eco.populations["ravageur"].at_plot(2, 2) - (0.30 - DENSITE_PAR_SPRITE)) < 1e-9,
-          f"densité={eco.populations['ravageur'].at_plot(2, 2)}")
+          abs(eco.populations["puceron"].at_plot(2, 2) - (0.30 - DENSITE_PAR_SPRITE)) < 1e-9,
+          f"densité={eco.populations['puceron'].at_plot(2, 2)}")
     st["courante"] = 100.0
     ACT.ecraser(gs, "joueur_1", eco, 2, 2, urgence=False)
     check("hors urgence = MODERE sec", st["courante"] == 100.0 - ACT.MODERE,
           f"courante={st['courante']}")
     # Échec à vide : binaire — Vigueur insuffisante → AUCUN quantum retiré.
-    eco.populations["ravageur"].set(3, 3, 0.30)
+    eco.populations["puceron"].set(3, 3, 0.30)
     st["courante"] = 5.0
     ok_vide = ACT.ecraser(gs, "joueur_1", eco, 3, 3, urgence=True)
     check("écrasement à vide → échec (binaire)", not ok_vide)
     check("aucun quantum retiré à l'échec",
-          eco.populations["ravageur"].at_plot(3, 3) == 0.30,
-          f"densité={eco.populations['ravageur'].at_plot(3, 3)}")
+          eco.populations["puceron"].at_plot(3, 3) == 0.30,
+          f"densité={eco.populations['puceron'].at_plot(3, 3)}")
     check("Vigueur drainée à 0", st["courante"] == 0.0, f"courante={st['courante']}")
     # Maladresse (retour F5 2026-06-12) : écraser le sprite cliqué QUELLE QUE
     # soit sa guilde — un auxiliaire cliqué meurt, le ravageur n'est PAS touché.
     st["courante"] = 100.0
     eco.populations["auxiliaire"].set(4, 4, 0.30)
-    eco.populations["ravageur"].set(4, 4, 0.20)
+    eco.populations["puceron"].set(4, 4, 0.20)
     ok_aux = ACT.ecraser(gs, "joueur_1", eco, 4, 4, guilde="auxiliaire", urgence=False)
     check("écraser un auxiliaire payé", ok_aux)
     check("un quantum d'auxiliaire retiré",
           abs(eco.populations["auxiliaire"].at_plot(4, 4) - (0.30 - DENSITE_PAR_SPRITE)) < 1e-9,
           f"aux={eco.populations['auxiliaire'].at_plot(4, 4)}")
     check("ravageur co-localisé INTACT (on n'a écrasé QUE l'auxiliaire)",
-          eco.populations["ravageur"].at_plot(4, 4) == 0.20,
-          f"rav={eco.populations['ravageur'].at_plot(4, 4)}")
+          eco.populations["puceron"].at_plot(4, 4) == 0.20,
+          f"rav={eco.populations['puceron'].at_plot(4, 4)}")
     # Guilde inconnue → refus AVANT toute dépense (erreur de protocole).
     st["courante"] = 100.0
     ko = ACT.ecraser(gs, "joueur_1", eco, 4, 4, guilde="licorne", urgence=False)

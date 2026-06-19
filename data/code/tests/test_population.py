@@ -3,8 +3,8 @@ SYMBIOSE — tests/test_population.py
 Filet de non-régression pour la vie macroscopique (D31.1).
 
 Deux garanties :
-  1. GOLDEN DE CHAMP — les densités des 4 champs de population
-     (ravageur/auxiliaire/pollinisateur/vers_de_terre) sont DÉTERMINISTES et
+  1. GOLDEN DE CHAMP — les densités des champs de population (puceron/limace/
+     doryphore/auxiliaire/pollinisateurs/vers_de_terre) sont DÉTERMINISTES et
      reproductibles sur N semaines (hash sha256 contre `population_hash.txt`).
   2. BORNES & PERCEPTION — densité ∈ [0, POP_MAX] partout ; `sample_sprites`
      respecte le cap par plot ; les positions de sprites sont INDÉPENDANTES de
@@ -29,7 +29,8 @@ from sim.engine import Engine
 N_WEEKS = 60
 SEED = 0x5AB1057E
 HASH_FILE = os.path.join(os.path.dirname(__file__), "population_hash.txt")
-GUILDS = ("ravageur", "auxiliaire", "abeille", "syrphe", "papillon", "vers_de_terre")
+GUILDS = ("puceron", "limace", "doryphore", "auxiliaire",
+          "abeille", "syrphe", "papillon", "vers_de_terre")
 
 
 def build_world():
@@ -62,7 +63,7 @@ def _run(tiles, ecos):
 
 
 def population_digest(tiles, ecos) -> str:
-    """Empreinte exacte des densités des 4 champs (round 6 → round-trip)."""
+    """Empreinte exacte des densités de tous les champs (round 6 → round-trip)."""
     lines = []
     for tile in tiles:
         eco = ecos[tile.tile_id]
@@ -129,7 +130,7 @@ def test_saisonnalite_dormance_reveil():
     représente les pollinisateurs : sa ressource = nectar (floraison × attractivite,
     ②) — elle ne décolle que si le jardin fleurit pour de vrai."""
     res = _run_trace()
-    for g in ("ravageur", "auxiliaire", "abeille"):
+    for g in ("puceron", "auxiliaire", "abeille"):
         peak, hiv = res[g]
         assert peak > 0.05, f"{g} ne décolle jamais (pic {peak:.3f})"
         assert hiv < 0.02, f"{g} grouille encore en hiver (max {hiv:.3f})"
@@ -149,13 +150,13 @@ def test_vers_insensibles_photoperiode():
 
 def test_photoperiode_verrouille_redoux():
     """Un REDOUX hivernal (température estivale en plein hiver) ne réveille PAS
-    le ravageur : phenology(wiy=46)=0 annule la cible quelle que soit la chaleur.
+    le puceron : phenology(wiy=46)=0 annule la cible quelle que soit la chaleur.
     Test signature de la valeur ajoutée (lumière ≠ température)."""
     assert daylength(46) < 9.0 < daylength(30), "photopériode hiver/été incohérente"
 
     def _tick_warm(wiy):
         eco = init_eco("R", 6, 8, humidite=1.5, fertilite=1.0, microbiome=0.3)
-        rav = eco.populations["ravageur"]
+        rav = eco.populations["puceron"]
         rav.fill(0.5)
         eco.temperature.fill(20.0)   # redoux : chaud comme en été
         eco.tick_populations(Tile(tile_id="R", soil_type="terre"), [], week_in_year=wiy)
@@ -163,7 +164,7 @@ def test_photoperiode_verrouille_redoux():
 
     hiver = _tick_warm(46)
     ete   = _tick_warm(25)
-    assert hiver < 0.5, "le ravageur ne devrait pas se maintenir au redoux hivernal"
+    assert hiver < 0.5, "le puceron ne devrait pas se maintenir au redoux hivernal"
     assert ete > hiver, "à chaleur égale, l'été doit préserver mieux que l'hiver"
     print(f"[pop] photopériode verrouille le redoux (hiver {hiver:.3f} < été {ete:.3f}) : OK")
 

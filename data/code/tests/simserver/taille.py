@@ -115,9 +115,9 @@ def test_taille_au_segment():
           r["result"]["message"])
     # La guilde animale reste routée par r/c+guilde (non-régression du volet 1).
     r = s8.send(cmd="action", verb="ecraser",
-                target={"tile": "T0", "r": 0, "c": 0, "guilde": "ravageur"})
+                target={"tile": "T0", "r": 0, "c": 0, "guilde": "puceron"})
     check("écraser une guilde par r/c → toujours routé guilde (volet 1 intact)",
-          r["result"]["applied"] is True and "ravageur" in r["result"]["message"],
+          r["result"]["applied"] is True and "puceron" in r["result"]["message"],
           r["result"]["message"])
     s8.send(cmd="quit")
     check("quit écraser-plante → exit 0", s8.close() == 0)

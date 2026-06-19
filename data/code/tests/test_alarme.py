@@ -82,9 +82,9 @@ def test_ecraser():
     # Écraser un NON-pollinisateur : aucune phéromone apienne.
     tile2, eco2 = _eco()
     gs2 = _gs()
-    eco2.populations["ravageur"].fill(0.6)
-    ACT.ecraser(gs2, "joueur_1", eco2, RR, CC, guilde="ravageur")
-    check("écraser un ravageur → AUCUNE alarme (§J.1)", _somme(eco2) == 0.0)
+    eco2.populations["puceron"].fill(0.6)
+    ACT.ecraser(gs2, "joueur_1", eco2, RR, CC, guilde="puceron")
+    check("écraser un puceron → AUCUNE alarme (§J.1)", _somme(eco2) == 0.0)
 
 
 def test_recolte():

@@ -91,6 +91,7 @@ pointeur ci-dessous. Ne plus écrire le contenu des entrées ici.
 - [2026-06-18 — Sprint CATALOGUE ENRICHI · tronçon ② : +5 plantes (thym, lavande, bourrache, consoude, moutarde) familles connues — attractivité héritée gratis, chemin `evergreen` enfin exercé (test_evergreen.py), golden NEUTRE — ② CLOS](journal/61_2026-06-18_sprint-catalogue-enrichi-tronçon-②-plantes-lot1.md)
 - [2026-06-18 — Sprint CATALOGUE ENRICHI · tronçon ③ : +5 plantes (carotte, ortie, courgette, mâche, ail), 5 familles NEUVES + `_ATTRACT_*`, gate `biennial` comblé (rosette an 1 / montaison an 2, `croissance.py`), tests biennial+lot2, golden NEUTRE — ③ CLOS](journal/62_2026-06-18_sprint-catalogue-enrichi-tronçon-③-plantes-lot2.md)
 - [2026-06-19 — Sprint CATALOGUE ENRICHI · tronçon ④a : faune modèle B, filet « catégorie » (`TrophicSpec.category` + `category_density`/`category_fields`), 6 consommateurs recâblés (santé plantes incluse), `_vigueur_categorie`, golden NEUTRE — ④a CLOS](journal/63_2026-06-19_sprint-catalogue-enrichi-tronçon-④a-scaffolding-categorie.md)
+- [2026-06-19 — Sprint CATALOGUE ENRICHI · tronçon ④b : scinder `ravageur` → puceron / limace / doryphore (triades propres, limace détritivore litière-dominante, doryphore spécialiste Solanaceae réduit par l'ail), régression prédation transitoire assumée, golden re-figé MAÎTRISÉ #1 (`63d50eeb`/`1f7dcda8`, vigueur inchangé) — ④b CLOS](journal/64_2026-06-19_sprint-catalogue-enrichi-tronçon-④b-scinder-ravageur.md)
 
 ---
 

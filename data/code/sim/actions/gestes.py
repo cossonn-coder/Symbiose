@@ -274,7 +274,7 @@ def tailler(game_state: dict, player: str, plant, eco, *, cible: str = "apex",
 
 
 def ecraser(game_state: dict, player: str, eco, r: int, c: int,
-            guilde: str = "ravageur", urgence: bool = True) -> bool:
+            guilde: str = "puceron", urgence: bool = True) -> bool:
     """Écraser l'être vivant CLIQUÉ (spec §3.3) — action BINAIRE, RÉELLE (D31.3).
     Le geste suit la souris : on écrase le sprite désigné, QUELLE QUE SOIT sa
     guilde. Le sprite cliqué fournit le plot `(r, c)` ET la guilde (`ravageur`,

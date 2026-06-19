@@ -54,7 +54,7 @@ def test_invariant_zero_adulte():
     # Ressource abondante mais PAS d'adulte : la ponte est ∝ adulte → 0.
     for p in (Basil,):
         tile.add_plant(p, 2, 2)
-    eco.populations["ravageur"].fill(0.8)   # ressource de la syrphe_larve
+    eco.populations["puceron"].fill(0.8)   # ressource de la syrphe_larve
     for _ in range(20):
         eco.tick_lifecycle_bridges(tile, tile.plants, ETE)
     for name, f in eco.larvae.items():
@@ -69,12 +69,12 @@ def test_invariant_herbivorie_chenille_zero():
     tile, eco = _eco()
     plant = tile.add_plant(Basil, 3, 4)
     r, c = plant.position
-    eco.populations["ravageur"].fill(0.5)
+    eco.populations["puceron"].fill(0.5)
     assert _all_zero(eco.larvae["chenille"]), "chenille devrait être nulle au repos"
     # Pression attendue = ravageur·GAIN (chenille=0). On vérifie le SEUIL de
     # déclenchement : à 0.5·0.20=0.10 > 0.005, l'herbivorie s'exprime.
     muts = herbivory_pressure(plant, tile, {}, eco)
-    eco.populations["ravageur"].fill(0.0)
+    eco.populations["puceron"].fill(0.0)
     muts_zero = herbivory_pressure(plant, tile, {}, eco)
     assert muts and not muts_zero, \
         "à chenille=0, l'herbivorie doit suivre le seul ravageur"
@@ -87,7 +87,7 @@ def test_chenille_ajoute_herbivorie():
     tile, eco = _eco()
     plant = tile.add_plant(Basil, 3, 4)
     r, c = plant.position
-    eco.populations["ravageur"].fill(0.0)
+    eco.populations["puceron"].fill(0.0)
     eco.larvae["chenille"].fill(0.6)   # 0.6·0.20 = 0.12 > seuil
     muts = herbivory_pressure(plant, tile, {}, eco)
     assert muts, "une chenille dense doit infliger de l'herbivorie sans ravageur"
@@ -104,13 +104,13 @@ def test_cycle_metamorphose_syrphe():
     (boucle larve→adulte). On pilote ce pont car sa ressource = le champ ravageur,
     directement remplissable (≠ chenille, dont la ressource est le feuillage vivant)."""
     tile, eco = _eco()
-    eco.populations["ravageur"].fill(0.8)   # ressource + lieu de ponte de la larve
+    eco.populations["puceron"].fill(0.8)   # ressource + lieu de ponte de la larve
     eco.populations["syrphe"].fill(0.6)     # adultes présents → ils pondent
     larve_max = 0.0
     metamorphose = False
     for _ in range(40):
         avant = eco.populations["syrphe"].average()
-        eco.populations["ravageur"].fill(0.8)   # maintien de la ressource (isolé du tick guilde)
+        eco.populations["puceron"].fill(0.8)   # maintien de la ressource (isolé du tick guilde)
         eco.tick_lifecycle_bridges(tile, tile.plants, ETE)
         larve_max = max(larve_max, eco.larvae["syrphe_larve"].average())
         # métamorphose détectée si le champ syrphe AUGMENTE (terme-source larvaire)
@@ -162,7 +162,7 @@ def test_determinisme():
         tile.add_plant(Basil, 2, 2)
         eco.populations["papillon"].fill(0.5)
         eco.populations["syrphe"].fill(0.5)
-        eco.populations["ravageur"].fill(0.4)
+        eco.populations["puceron"].fill(0.4)
         for _ in range(12):
             eco.tick_lifecycle_bridges(tile, tile.plants, ETE)
         return _digest(eco)

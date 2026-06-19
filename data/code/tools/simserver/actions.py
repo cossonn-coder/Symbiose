@@ -231,9 +231,11 @@ class ActionsMixin:
             if verb == "ecraser":
                 urgence = bool(params.get("urgence", False))
                 # Guilde du SPRITE cliqué (protocole 0.3.1) : on écrase ce qui
-                # est sous la souris, quelle que soit sa nature. Défaut ravageur
-                # = compat des clients < 0.3.1 (Godot passe désormais la guilde).
-                guilde = target.get("guilde", "ravageur")
+                # est sous la souris, quelle que soit sa nature. Défaut puceron
+                # = compat des clients < 0.3.1 (le champ `ravageur` n'existe plus
+                # depuis ④b — c'est désormais une CATÉGORIE, pas un champ). Le
+                # ré-acheminement par `target.espece` reste de la dette ⑥ (C9/C10).
+                guilde = target.get("guilde", "puceron")
                 if guilde not in eco.populations:
                     return bilan(False, 0.0, 0.0,
                                  f"guilde inconnue : {guilde!r}")

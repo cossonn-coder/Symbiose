@@ -13,7 +13,8 @@ from .harness import check, ServerProc
 
 def test_vie_macro():
     print("[vie macro]")
-    GUILDES = {"ravageur", "auxiliaire", "abeille", "syrphe", "papillon", "vers_de_terre"}
+    GUILDES = {"puceron", "limace", "doryphore", "auxiliaire",
+               "abeille", "syrphe", "papillon", "vers_de_terre"}
     s10 = ServerProc()
     r = s10.send(cmd="init", seed=42)
     snap = s10.send(cmd="snapshot")["snapshot"]
@@ -21,7 +22,7 @@ def test_vie_macro():
     check("bloc sprites présent, indexé par tuile",
           set(spr.keys()) == {t["id"] for t in r["world"]["tiles"]},
           f"tuiles={sorted(spr.keys())}")
-    check("les 6 guildes par tuile (3 trophiques + 3 pollinisateurs)",
+    check("les 8 espèces par tuile (3 ravageurs + auxiliaire + 3 pollinisateurs + ver)",
           all(set(g.keys()) == GUILDES for g in spr.values()))
     check("semaine 1 : aucun sprite (populations à zéro, rien simulé)",
           all(not lst for g in spr.values() for lst in g.values()))
