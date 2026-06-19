@@ -103,8 +103,21 @@ fonctions marquées *(existe)* sont déjà codées ; *(neuf)* = à écrire ; *(s
 | Animal | Nourriture (resource_fn) | Prédateurs | Habitat (habitat_fn) | Fenêtre |
 |---|---|---|---|---|
 | **Puceron** | feuillage tendre `_foliage_grid` *(existe)* | coccinelle, chrysope, **syrphe_larve** | monoculture + jeunes pousses `_monoculture_grid` *(existe)* | estivale |
-| **Limace** | feuillage bas/tendre `_foliage_grid` *(existe, réutilisé)* | carabe, hérisson | sol **humide** + sous-litière `_humide_litiere_grid` *(neuf)* | humide/frais |
+| **Limace** | **litière en décompo (PRÉFÉRENCE) + feuillage tendre (secondaire)** `_limace_food_grid` *(neuf)* | carabe, hérisson | sol **humide** + sous-litière `_humide_litiere_grid` *(neuf)* | humide/frais |
 | **Doryphore** | feuillage **Solanaceae** `_foliage_solanaceae_grid` *(neuf, filtré famille)* | carabe | proximité Solanaceae, **réduit par ail** (Amaryllidaceae §4.4) `_solanaceae_grid` *(neuf)* | estivale |
+
+> **Cas limace — détritivore d'abord, ravageuse ensuite** (correction Nico
+> 2026-06-19, décision **A**). La limace se **nourrit** surtout de matière morte
+> (litière, paillis humide) → sa `resource_fn` est litière-dominante : elle pullule
+> dans le compost/paillis, pas sur les massifs sains. Mais elle **grignote** les
+> jeunes pousses tendres en opportuniste → elle reste `category="ravageur"` pour
+> compter dans la pression herbivore (`category_density("ravageur")`, santé des
+> plantes §4 C1). **Distinction clé du modèle B** : `resource_fn` pilote la
+> *population* (ce qui la nourrit), la *catégorie* pilote le *dégât perçu* (ce
+> qu'elle abîme) — deux choses séparées. Une seule catégorie suffit (pas de
+> double appartenance) ; le rôle détritivore vit dans la ressource + le blurb +
+> l'interconnexion limace↔litière. `_limace_food_grid` = `_litter_grid` (poids
+> fort) + `_foliage_grid` (poids faible).
 
 ### Catégorie `auxiliaire`
 
@@ -153,8 +166,10 @@ fonctions marquées *(existe)* sont déjà codées ; *(neuf)* = à écrire ; *(s
               ▲   ▲
               │   └── proie de MERLE / HÉRISSON (oiseaux & insectivores mangent les vers)
    litière ──► CLOPORTE ──(accélère décompo litière)──► humus
-              ▲
-              └── proie de CARABE / HÉRISSON
+        │     ▲
+        │     └── proie de CARABE / HÉRISSON
+        └────► LIMACE (préférence détritivore — nourrit sa population ;
+                       le dégât sur le vivant est son rôle `ravageur`)
 
    STRUCTURES (piles/bac ⑤) ──habitat──► CARABE, HÉRISSON, CLOPORTE   [faune↔structures]
    PLANTES MELLIFÈRES (rondelle) ──habitat──► COCCINELLE, CHRYSOPE, MERLE  [faune↔plantes]

@@ -15,8 +15,16 @@ plantes (`category_density("ravageur")`, posé en ④a) devient la **somme** des
 | Espèce | Nourriture (resource_fn) | Prédateurs | Habitat (habitat_fn) | Fenêtre |
 |---|---|---|---|---|
 | **puceron** | `_foliage_grid` *(existe)* | coccinelle, chrysope, **syrphe_larve** | `_monoculture_grid` *(existe)* | estivale (daylen 10/13) |
-| **limace** | `_foliage_grid` *(réutilisé)* | carabe, hérisson | `_humide_litiere_grid` *(neuf)* | humide/frais |
+| **limace** | **litière (préférence) + feuillage tendre (secondaire)** `_limace_food_grid` *(neuf)* | carabe, hérisson | `_humide_litiere_grid` *(neuf)* | humide/frais |
 | **doryphore** | `_foliage_solanaceae_grid` *(neuf, filtré famille)* | carabe | `_solanaceae_grid` *(neuf, réduit par ail)* | estivale |
+
+> **Limace = détritivore d'abord** (correction Nico, décision A — doc §2 « Cas
+> limace »). Sa nourriture PRINCIPALE est la matière morte (litière, paillis
+> humide), pas le feuillage vivant → `resource_fn` litière-dominante. Elle reste
+> `category="ravageur"` car elle **abîme** les jeunes pousses (pression herbivore,
+> C1). `resource_fn` pilote la POPULATION ; la catégorie pilote le DÉGÂT — deux
+> choses distinctes (clé du modèle B). Donc `_litter_grid` (prévu pour le cloporte
+> en ④d) est **remonté ici** : la limace en a besoin dès ④b.
 
 > ⚠️ En ④b, coccinelle/chrysope/carabe/hérisson **n'existent pas encore** (ce sont
 > des auxiliaires, scindés en ④c). Donc leurs noms dans `predators` ne résoudront
@@ -39,6 +47,11 @@ du signal pourri → petit re-figeage du fruit pourri, à noter ; alternative : 
 laisser sur `limace` transitoirement → à décider, défaut = retiré, reposé ④d).
 
 **Ressources neuves** (`population.py`) :
+- `_litter_grid` : masse de litière en décompo du plot (`eco.litiere[r][c]`, hors
+  parcelle `fruit`), normalisée. **Remonté de ④d** (la limace en a besoin) ;
+  réutilisé tel quel par le cloporte en ④d.
+- `_limace_food_grid` : ressource MIXTE = `_litter_grid` (poids FORT, préférence)
+  + `_foliage_grid` (poids FAIBLE, grignotage opportuniste). Clampée [0,1].
 - `_foliage_solanaceae_grid` : comme `_foliage_grid` mais ne somme que les plantes
   dont `plant_class.family == "Solanaceae"`.
 - `_solanaceae_grid` : habitat doryphore = présence Solanaceae locale, **réduite**

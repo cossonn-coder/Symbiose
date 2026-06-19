@@ -24,10 +24,11 @@ piloté par le lombric.
 (`category="detritivore"`), salts dédiés. Le **lombric hérite du salt
 `_SALT_VERS`** (continuité du champ historique) si utile, sinon salt neuf.
 
-**Ressource neuve** `_litter_grid` (`population.py`) : somme de la masse de litière
-en décomposition du plot (`eco.litiere[r][c]`, hors parcelle `fruit` déjà gérée par
-le signal), normalisée. Distincte de `_soil_food_grid` (qui lit MO+microbiome du
-sol, pas la litière de surface).
+**Ressource `_litter_grid`** : **déjà créée en ④b** (la limace en avait besoin) —
+masse de litière en décompo du plot (`eco.litiere[r][c]`, hors parcelle `fruit`),
+normalisée. Distincte de `_soil_food_grid` (MO+microbiome du sol, pas la litière de
+surface). Le cloporte la **réutilise telle quelle** (partage la ressource litière
+avec la limace → compétition implicite via la capacité de charge).
 
 **Recâblage** (doc §4) :
 - **C6 `decomp_speed`** (`container.py:383,408`) : `populations["vers_de_terre"]`
