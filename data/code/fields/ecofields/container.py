@@ -97,6 +97,15 @@ class EcoFields:
     # PERSONNE → golden NEUTRE ; les lecteurs (lockout uptake, fenêtres d'espèce,
     # chlorose) arrivent aux tronçons ④/⑤.
     ph:               GridField = field(default=None)
+    # Nutriments N/P/K (sprint physico-chimie ②) — futur éclatement du proxy
+    # `fertilite` pour porter la loi de Liebig (le minimum, pas la somme).
+    # INITIALISÉS PAR HÉRITAGE du `soil_type` (NUTRIENT_INIT_PAR_SOL). Au tronçon
+    # ② POSÉS mais lus/écrits par PERSONNE (`fertilite` reste le seul actif) →
+    # golden NEUTRE ; les lecteurs (uptake Liebig, minéralisation splittée, CEC,
+    # signature) arrivent au tronçon ③.
+    n:                GridField = field(default=None)
+    p:                GridField = field(default=None)
+    k:                GridField = field(default=None)
 
     def __post_init__(self):
         if self.humidite    is None: self.humidite    = GridField(self.rows, self.cols)
@@ -160,6 +169,14 @@ class EcoFields:
             self.ph = GridField(self.rows, self.cols,
                                 initial=PH_PAR_SOL.get(self.soil_type, PH_PAR_SOL["terre"]),
                                 max_val=PH_MAX, min_val=PH_MIN)
+        # Héritage roche-mère des trois nutriments (②) : (N, P, K) tirés de
+        # NUTRIENT_INIT_PAR_SOL selon le `soil_type`, fallback "terre". Inertes au
+        # ② (aucun tick), donc constants à leur valeur d'init.
+        n0, p0, k0 = NUTRIENT_INIT_PAR_SOL.get(self.soil_type,
+                                               NUTRIENT_INIT_PAR_SOL["terre"])
+        if self.n is None: self.n = GridField(self.rows, self.cols, initial=n0, max_val=3.0)
+        if self.p is None: self.p = GridField(self.rows, self.cols, initial=p0, max_val=3.0)
+        if self.k is None: self.k = GridField(self.rows, self.cols, initial=k0, max_val=3.0)
 
     def get_field(self, name: str) -> GridField | None:
         return {
@@ -176,6 +193,9 @@ class EcoFields:
             "temperature":      self.temperature,
             "temperature_sol":  self.temperature_sol,
             "ph":               self.ph,
+            "n":                self.n,
+            "p":                self.p,
+            "k":                self.k,
         }.get(name)
 
     # --- Litière (couche fraîche : parcelles, remplace om_fresh) ---

@@ -261,6 +261,22 @@ ACIDIF_OM    = 0.30          # acidification par matière organique fraîche (li
 ACIDIF_LEACH = 0.20          # acidification par lessivage (climat humide → calcium lavé)
 # (le bloc lockout PH_OPT/PH_WIDTH/CHLOROSE_PH viendra au ④ ; AMEND_PUSH au ⑥.)
 
+# --- Nutriments N/P/K (sprint physico-chimie, tronçon ②) ------------------
+# Le proxy unique `fertilite` sera ÉCLATÉ en trois nutriments distincts —
+# azote (n), phosphore (p), potasse (k) — pour porter la loi du minimum de
+# Liebig (la croissance est plafonnée par le nutriment le plus rare, pas par
+# leur somme). Au tronçon ② les trois champs sont POSÉS mais lus/écrits par
+# PERSONNE (uptake, minéralisation, soil_memory, signatures tournent encore sur
+# `fertilite` intact) → golden NEUTRE, exactement comme le pH au ①. Ils sont
+# INITIALISÉS PAR HÉRITAGE du `soil_type` (roche-mère). Plage [0, 3] (max_val du
+# GridField, comme l'ancien `fertilite`). Valeurs PLACEHOLDER (calibrage post-
+# test), cf. CONCEPTION_SOL_NUTRIMENTS_NPK.md §3. Le retrait de `fertilite`, le
+# split de la minéralisation, Liebig, le lessivage différencié, la CEC et la
+# signature explicite arrivent au tronçon ③ (LE gros re-figé).
+NUTRIENT_INIT_PAR_SOL = {  # (N, P, K) hérités de la roche-mère
+    "terre": (1.0, 0.8, 0.9), "argile": (0.9, 0.9, 1.1),
+    "sable": (0.5, 0.4, 0.4), "roche": (0.4, 0.6, 0.5)}
+
 # Signature sol par famille (laissée après chaque saison)
 SOIL_SIGNATURE = {
     "Fabaceae":   {"microbiome": +0.15, "fertilite": +0.10},

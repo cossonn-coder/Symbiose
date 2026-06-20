@@ -34,7 +34,7 @@ distincts** (`fertilite` supprimé, loi de Liebig) et **structure/compaction**
 | # | Tronçon | Doc | Dérive golden | Statut |
 |---|---------|-----|---------------|--------|
 | ① | pH socle (champ hérité + dérive, aucun lecteur) | pH §2.1 | NEUTRE | ✅ |
-| ② | N/P/K socle (champs posés, uptake lit encore `fertilite`) | NPK §2.1 | NEUTRE | ⬜ |
+| ② | N/P/K socle (champs posés, uptake lit encore `fertilite`) | NPK §2.1 | NEUTRE | ✅ |
 | ③ | Bascule uptake **Liebig** (retrait `fertilite`, lessivage diff., CEC, signature) | NPK §2.3 | **LARGE** | ⬜ |
 | ④ | pH → lockout (cloches dispo + chlorose) | pH §2.2 | maîtrisé | ⬜ |
 | ⑤ | Fenêtres pH par espèce (noyau) + indicatrices acidité | pH §2.3 | ~neutre | ⬜ |
@@ -63,5 +63,25 @@ registre, méthode déléguante). Il était DÉJÀ à 377 avant ① (au-dessus d
 Le calcul est dans `ph.py` (§7 conception respecté). Un éclatement d'`EcoFields`
 serait un chantier à part — à arbitrer avec Nico, hors périmètre du sprint.
 
-**Suite** : lancer `02_npk_socle.md` (champs N/P/K posés, uptake lit encore
-`fertilite` → golden NEUTRE). Cf. `CONCEPTION_SOL_NUTRIMENTS_NPK.md` §2.1.
+**① CLOS** (détail conservé ci-dessus).
+
+**② CLOS le 2026-06-20.** Trois `GridField` `n`/`p`/`k` ajoutés au dataclass
+`EcoFields`, **hérités du `soil_type`** (table `NUTRIENT_INIT_PAR_SOL` dans
+`constants.py` : terre (1.0, 0.8, 0.9) / argile (0.9, 0.9, 1.1) / sable
+(0.5, 0.4, 0.4) / roche (0.4, 0.6, 0.5)), `max_val=3.0` comme l'ancien
+`fertilite`. Init dans `__post_init__` après le bloc `ph`. **Aucun tick, aucun
+lecteur, aucun écrivain** : `fertilite`, l'uptake, la minéralisation, `soil_memory`
+et les signatures restent INTACTS. Exposés dans `get_field` (`"n"`/`"p"`/`"k"`,
+overlay debug gratuit). **Golden NEUTRE, hash inchangé `f7e1a9b4…`**. Vérifié :
+héritage différencié terre≠argile≠sable≠roche, valeurs constantes (pas de dérive).
+
+⚠️ **Taille** : `container.py` passé à **398 ldc** de code (387 → 398, +11 :
+3 champs + bloc d'init + 3 entrées `get_field`). Déjà au-dessus du seuil ~350
+avant ② (cf. ①). Pas de calcul à isoler ce coup-ci (champs inertes). Éclatement
+d'`EcoFields` = chantier à part, à arbitrer avec Nico hors périmètre sprint.
+
+**Suite** : lancer `03_bascule_liebig.md` — **LE gros re-figé LARGE** (retrait
+`fertilite`, minéralisation splittée N/P/K, loi de Liebig, lessivage différencié,
+CEC dérivée, `SOIL_SIGNATURE` explicite, réalim `soil_memory`). Cf.
+`CONCEPTION_SOL_NUTRIMENTS_NPK.md` §2.2→2.8. Annoncer le re-figeage à Nico,
+vérifier la dérive localisée et expliquée.
