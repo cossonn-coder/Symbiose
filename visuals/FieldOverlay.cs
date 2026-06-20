@@ -32,8 +32,8 @@ namespace Symbiose
 		// unique bleu→rouge mentirait — « chaud » n'a pas de sens pour de
 		// l'humidité. Chaque champ porte SES deux pôles (couleur basse →
 		// haute) et SES libellés, affichés en légende quand il est à l'écran.
-		// Les 4 guildes reprennent les teintes des points MacroLife (un seul
-		// langage visuel : la heatmap ravageur double les points sombres).
+		// Les espèces (⑥b) reprennent les teintes des points MacroLife/ForagerLayer
+		// (un seul langage visuel : la heatmap d'une espèce double ses points).
 		//
 		// 📖 Échelle FIXE par champ (t6·C3, retour F5 « rendu binaire ») :
 		// le min/max AUTO étalait le bruit d'un champ quasi uniforme sur
@@ -63,10 +63,31 @@ namespace Symbiose
 			["soil_memory_fast"] = (new Color("c8c8c8"), new Color("6f6fb8"), "jeune", "récent", float.NaN, float.NaN),
 			["soil_memory_deep"] = (new Color("c8c8c8"), new Color("3a3a8f"), "jeune", "profond", float.NaN, float.NaN),
 			["disturbance"]      = (new Color("d8d8d0"), new Color("a83a78"), "calme", "perturbé", 0f, 1f),
-			["ravageur"]         = (new Color("e8e2d4"), new Color("3a2c1e"), "absent", "infesté", 0f, 1f),
-			["auxiliaire"]       = (new Color("e8e2d4"), new Color("3f7a4e"), "absent", "présent", 0f, 1f),
-			["pollinisateur"]    = (new Color("e8e2d4"), new Color("c89a1e"), "absent", "butinant", 0f, 1f),
-			["vers_de_terre"]    = (new Color("e8e2d4"), new Color("6b4a32"), "absent", "fouisseur", 0f, 1f),
+			// Heatmaps PAR ESPÈCE (catalogue enrichi ⑥b) : le registre `fields`
+			// expose désormais une grille par espèce (eco.populations, 15 clés)
+			// au lieu des 3 anciennes guildes. Pôle haut = la couleur du point
+			// MacroLife/ForagerLayer de l'espèce (un seul langage visuel : la
+			// heatmap double les points). Pôle bas = parchemin neutre « absent ».
+			// Densités bornées 0..1 côté moteur → échelle FIXE comparable.
+			// Ravageurs
+			["puceron"]          = (new Color("e8e2d4"), new Color("6f8f3a"), "absent", "infesté", 0f, 1f),
+			["limace"]           = (new Color("e8e2d4"), new Color("7a5a3a"), "absent", "présente", 0f, 1f),
+			["doryphore"]        = (new Color("e8e2d4"), new Color("d8a83a"), "absent", "infesté", 0f, 1f),
+			// Auxiliaires
+			["coccinelle"]       = (new Color("e8e2d4"), new Color("c43a2e"), "absent", "présente", 0f, 1f),
+			["chrysope"]         = (new Color("e8e2d4"), new Color("9fd86e"), "absent", "présente", 0f, 1f),
+			["carabe"]           = (new Color("e8e2d4"), new Color("2e3a44"), "absent", "présent", 0f, 1f),
+			["merle"]            = (new Color("e8e2d4"), new Color("1e1e22"), "absent", "présent", 0f, 1f),
+			["herisson"]         = (new Color("e8e2d4"), new Color("8a6a4a"), "absent", "présent", 0f, 1f),
+			// Détritivores
+			["lombric"]          = (new Color("e8e2d4"), new Color("8a4a3a"), "absent", "fouisseur", 0f, 1f),
+			["cloporte"]         = (new Color("e8e2d4"), new Color("8a8a8a"), "absent", "présent", 0f, 1f),
+			// Pollinisateurs (butineurs ForagerLayer ; heatmap = densité d'ancrage)
+			["abeille"]          = (new Color("e8e2d4"), new Color("e9c83c"), "absent", "butinant", 0f, 1f),
+			["syrphe"]           = (new Color("e8e2d4"), new Color("d98f2e"), "absent", "butinant", 0f, 1f),
+			["papillon"]         = (new Color("e8e2d4"), new Color("dcb4d2"), "absent", "butinant", 0f, 1f),
+			["bourdon"]          = (new Color("e8e2d4"), new Color("d8a020"), "absent", "butinant", 0f, 1f),
+			["osmie"]            = (new Color("e8e2d4"), new Color("b5651d"), "absent", "butinant", 0f, 1f),
 		};
 		// Champ inconnu de la table (futur champ moteur ramassé par
 		// l'introspection) : bleu→rouge générique en échelle auto, jamais un

@@ -60,6 +60,10 @@ namespace Symbiose
 		private PlantRenderer _actionTargetNode;
 		// Rayon de tolérance du clic sur une plante, en cm MONDE (kickoff B·11).
 		private const float PickRadiusCm = 30f;
+		// Rayon (cm MONDE) du test « quel sprite macro sous le curseur » pour
+		// l'écrasement ciblé (⑥b) : plus large que PickRadiusCm car le point
+		// errant peut être à ~20 cm de son ancre (merle/hérisson).
+		private const float MacroPickRadiusCm = 50f;
 		// Rayon du survol (étiquette) : un peu plus généreux que le clic.
 		private const float HoverRadiusCm = 40f;
 		// Tolérance du hit-test de segment (tranche 5), en px ÉCRAN — divisée
@@ -185,8 +189,8 @@ namespace Symbiose
 				case 'x':   // ÉCRASER, geste unifié (retour F5 Nico) : une plante
 					// si elle est sous le curseur, sinon un nuisible au plot. Le
 					// serveur route DÉJÀ par la forme de la cible (x_cm ⇒ plante,
-					// sinon guilde) — la vue n'a qu'à choisir la désignation. Le
-					// verbe reste "ecraser" dans les deux cas.
+					// sinon espèce au plot) — la vue n'a qu'à choisir la
+					// désignation. Le verbe reste "ecraser" dans les deux cas.
 					node = FindPlant(w, PickRadiusCm);
 					if (node != null)
 						target = new GDict
@@ -196,7 +200,16 @@ namespace Symbiose
 							["y_cm"] = node.GetMeta("ly"),
 						};
 					else if (FindPlot(w, out string xTile, out int xr, out int xc))
+					{
+						// ESPÈCE du sprite sous le curseur (protocole ⑥, target.espece) :
+						// on écrase ce qu'on VOIT (puceron, limace…). Sans sprite à
+						// portée → on désigne seulement le plot et le serveur applique
+						// son défaut (puceron). On teste l'ancre des points MacroLife
+						// dans un rayon large couvrant leur errance.
 						target = new GDict { ["tile"] = xTile, ["r"] = xr, ["c"] = xc };
+						string espece = _macroLife?.SpeciesNear(w, MacroPickRadiusCm);
+						if (espece != null) target["espece"] = espece;
+					}
 					else
 					{
 						_lastActionMsg = $"{nom} : aucune plante ni tuile sous le clic";

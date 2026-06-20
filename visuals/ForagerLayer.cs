@@ -61,15 +61,19 @@ namespace Symbiose
 		private const float PollenDotPx = 1.3f;
 		private const float PollenSpreadCm = 2.2f;   // pas de la spirale de points
 
-		// Par guilde : couleur, rayon px du point, période d'un saut (s). Le syrphe
-		// (mouche en vol stationnaire) saute vite et court ; le papillon lent et
-		// large. Le pollen porté = un point ambré sur le dos (cf. _Draw).
+		// Par espèce de butineur : couleur, rayon px du point, période d'un saut
+		// (s). Le syrphe (mouche en vol stationnaire) saute vite et court ; le
+		// papillon lent et large. Le bourdon (⑤) est gros et lourd → gros point,
+		// saut lent ; l'osmie (⑤) plus menue, cuivrée, vive. Le pollen porté = un
+		// point ambré sur le dos (cf. _Draw).
 		private static readonly Dictionary<string,
 			(Color Col, float RadiusPx, float HopSec)> Guilds = new()
 		{
 			["abeille"]  = (new Color("e9c83c"), 2.6f, 2.2f),
 			["syrphe"]   = (new Color("d98f2e"), 2.3f, 1.6f),
 			["papillon"] = (new Color("dcb4d2"), 2.8f, 3.0f),
+			["bourdon"]  = (new Color("d8a020"), 3.0f, 2.6f),
+			["osmie"]    = (new Color("b5651d"), 2.4f, 2.0f),
 		};
 		private static readonly (Color, float, float) GuildeInconnue =
 			(new Color("cccccc"), 2.2f, 2.2f);

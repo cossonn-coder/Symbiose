@@ -64,42 +64,52 @@ namespace Symbiose
 		private const float FocusAmpCm = 4f;
 
 		/// <summary>Champ heatmap affiché (F6) — posé par WorldView. Si c'est
-		/// le nom d'une guilde, SES points resserrent leur errance sur
-		/// l'ancre ; tout autre nom (humidite…) ou null = sans effet.</summary>
+		/// le nom d'une espèce dessinée ici, SES points resserrent leur errance
+		/// sur l'ancre ; tout autre nom (humidite…) ou null = sans effet.</summary>
 		public string FocusGuild { get; set; }
 
-		// Par guilde : couleur, rayon du point en px canvas (0 = tiret du ver),
-		// amplitude d'errance en cm MONDE et pulsation (rad/s). Le pollinisateur
-		// erre plus large (kickoff §5), le ver bouge à peine et lentement.
-		// Pollinisateur : amplitude 120 cm (correctif t6·B2, retour F5 : « ils
-		// devraient se déplacer ») — il déambule sur ~2,5 m autour de son
-		// ancre (fréquences non commensurables → trajectoire de butinage, pas
-		// un cercle), à vitesse contenue (0.9 rad/s ≈ 1 m/s de pointe). Un vrai
-		// vol libre sur toute la carte serait un AGENT (état, trajectoire) —
-		// hors modèle : le sprite reste un quantum de densité locale ancré.
+		// Par ESPÈCE (catalogue enrichi ⑥b) : couleur, rayon du point en px
+		// canvas (0 = tiret du ver), amplitude d'errance en cm MONDE et pulsation
+		// (rad/s). Depuis la scission faune ④b-d le snapshot émet des CLÉS
+		// D'ESPÈCE (puceron…cloporte), plus les 3 anciennes guildes : à chacune
+		// SON placeholder procédural (forme/couleur distincte, PAS de PNG —
+		// décision Nico 2026-06-18, philo du naturaliste : visible, identifiable
+		// seulement à la maîtrise). Couleurs CALÉES sur FieldOverlay (heatmap par
+		// espèce) — un seul langage visuel : le point sombre du carabe = le pôle
+		// haut de sa heatmap. Les OISEAUX/hérisson errent plus large (amplitude
+		// haute), la limace/le cloporte traînent lentement, le ver ne bouge
+		// presque pas (radius 0 → tiret). Un vrai déplacement libre serait un
+		// AGENT (état, trajectoire) — hors modèle : le sprite reste un quantum de
+		// densité locale ancré (les butineurs sont l'exception, cf. ForagerLayer).
 		private static readonly Dictionary<string, (Color Col, float RadiusPx,
-			float AmpCm, float Speed)> Guilds = new()
+			float AmpCm, float Speed)> Especes = new()
 		{
-			["ravageur"]      = (new Color("3a2c1e"), 2.2f, 6f, 2.0f),
-			["auxiliaire"]    = (new Color("ece6d2"), 2.2f, 6f, 2.6f),
-			// Pollinisateur (legacy) : l'ancien champ agrégé d'avant l'éclatement ②.
-			// Les types abeille/syrphe/papillon ne sont PLUS dessinés ici — ce sont
-			// des AGENTS (butineurs fleur-en-fleur, ForagerLayer), pas un nuage de
-			// densité (cf. _NonDessine ci-dessous).
-			["pollinisateur"] = (new Color("e9c83c"), 2.6f, 120f, 0.9f),
-			["vers_de_terre"] = (new Color("6b4a32"), 0f, 1.5f, 0.6f),
+			// Ravageurs (category="ravageur")
+			["puceron"]    = (new Color("6f8f3a"), 2.0f, 6f, 2.0f),
+			["limace"]     = (new Color("7a5a3a"), 2.4f, 4f, 0.8f),
+			["doryphore"]  = (new Color("d8a83a"), 2.3f, 5f, 1.6f),
+			// Auxiliaires (category="auxiliaire")
+			["coccinelle"] = (new Color("c43a2e"), 2.4f, 6f, 2.6f),
+			["chrysope"]   = (new Color("9fd86e"), 2.2f, 7f, 2.4f),
+			["carabe"]     = (new Color("2e3a44"), 2.5f, 6f, 1.8f),
+			["merle"]      = (new Color("1e1e22"), 3.2f, 20f, 1.2f),
+			["herisson"]   = (new Color("8a6a4a"), 3.4f, 14f, 1.0f),
+			// Détritivores (category="detritivore") — lombric = tiret du ver
+			["lombric"]    = (new Color("8a4a3a"), 0f, 1.5f, 0.6f),
+			["cloporte"]   = (new Color("8a8a8a"), 2.2f, 4f, 1.2f),
 		};
-		// Guilde inconnue d'un futur protocole : point gris, pas un crash.
-		private static readonly (Color, float, float, float) GuildeInconnue =
+		// Espèce inconnue d'un futur protocole : point gris, pas un crash.
+		private static readonly (Color, float, float, float) EspeceInconnue =
 			(new Color("999999"), 2.0f, 4f, 2.0f);
 
-		// Guildes IGNORÉES ici (décision Nico 2026-06-18) : les pollinisateurs
-		// typés sont des AGENTS butineurs (vol fleur-en-fleur, ForagerLayer), pas
-		// un nuage de densité ancré. On NE les stocke ni ne les dessine plus dans
-		// MacroLife — sinon double affichage (nuage + butineur) et points gris
-		// GuildeInconnue. MacroLife garde ravageur/auxiliaire/vers_de_terre.
+		// Espèces IGNORÉES ici (décision Nico 2026-06-18) : les pollinisateurs
+		// sont des AGENTS butineurs (vol fleur-en-fleur, ForagerLayer), pas un
+		// nuage de densité ancré. Le snapshot émet pourtant leur densité dans le
+		// bloc `sprites` (eco.populations contient les 5) → on les SAUTE ici,
+		// sinon double affichage (nuage + butineur) et points gris. Les 5 :
+		// abeille/syrphe/papillon (③) + bourdon/osmie (⑤).
 		private static readonly HashSet<string> NonDessine =
-			new() { "abeille", "syrphe", "papillon" };
+			new() { "abeille", "syrphe", "papillon", "bourdon", "osmie" };
 
 		// Un sprite affiché. Position MONDE absolue en cm (origin de la tuile
 		// déjà ajoutée) ; Phase = hash de la clé → déphasages d'errance propres.
@@ -120,6 +130,25 @@ namespace Symbiose
 
 		/// <summary>Nombre de sprites affichés (overlay de perfs F4).</summary>
 		public int Count => _entries.Count;
+
+		/// <summary>Espèce du sprite VIVANT dont l'ANCRE est la plus proche du
+		/// point MONDE (cm), dans `rayonCm`, ou null. Sert l'écrasement ciblé
+		/// (⑥b, target.espece) : on écrase ce qu'on VOIT sous le curseur. On
+		/// teste l'ancre (position snapshot stable) et non la position errante —
+		/// le rayon est assez large pour couvrir l'amplitude d'errance.</summary>
+		public string SpeciesNear(Vector2 wMonde, float rayonCm)
+		{
+			float bestD = rayonCm * rayonCm;
+			string best = null;
+			foreach (var e in _entries.Values)
+			{
+				if (e.DyingAt >= 0f) continue;   // en train de disparaître
+				float dx = e.Wx - wMonde.X, dy = e.Wy - wMonde.Y;
+				float d = dx * dx + dy * dy;
+				if (d < bestD) { bestD = d; best = e.Guild; }
+			}
+			return best;
+		}
 
 		private static float NowSec() => Time.GetTicksMsec() / 1000f;
 
@@ -250,7 +279,7 @@ namespace Symbiose
 				if (!vis.HasPoint(WorldView.WorldToScreen(e.Wx, e.Wy)))
 					continue;   // hors cadre : ni sin/cos ni dessin
 				var (col, radiusPx, ampCm, speed) =
-					Guilds.TryGetValue(e.Guild, out var g) ? g : GuildeInconnue;
+					Especes.TryGetValue(e.Guild, out var g) ? g : EspeceInconnue;
 
 				// Errance : sin/cos déphasés par le hash, amplitude ∝ activité
 				// (plancher 0.3 : même repu, un vivant n'est pas une borne).

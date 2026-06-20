@@ -51,7 +51,7 @@ guildes abstraites à des **espèces NOMMÉES** rattachées aux guildes.
 | ④e | Encyclopédie (blurb/interconnexions) + tests + stub pont | NEUTRE | ✅ |
 | ⑤ | Faune nommée — **nouveaux pollinisateurs** (bourdon, osmie) : registre data-driven | re-figé maîtrisé (pollen/nouaison) | ✅ |
 | ⑥a | Python : encyclopédie 5 pollinisateurs + protocole pont `target.espece` | NEUTRE | ✅ |
-| ⑥b | C# / Godot : table sprite par espèce + butineurs B + heatmaps + bascule client `target.espece` | NEUTRE (vue) | ⬜ |
+| ⑥b | C# / Godot : table sprite par espèce + butineurs B + heatmaps + bascule client `target.espece` | NEUTRE (vue) | ✅ (build ; F5 = Nico) |
 
 ## §REPRISE
 
@@ -331,9 +331,26 @@ protocole sans effet moteur) :
 - ⚠️ Signalement inchangé : `fields/population.py` toujours > garde-fou ~350 LDC →
   éclatement en paquet `fields/population/` dans un sprint refactor dédié.
 
-**Reste : ⑥b (vue Godot, C#)** — clôt le sprint. `MacroLife.cs` mappe encore les 3
-anciennes guildes (`ravageur`/`auxiliaire`/`vers_de_terre`) → les 10 espèces
-nommées tombent en point gris `GuildeInconnue` : étendre la table sprite par espèce
-(placeholders procéduraux). + butineurs bourdon/osmie (`ForagerLayer.cs`), heatmaps
-par catégorie (`FieldOverlay.cs`), émission `target.espece` (`WorldView.Actions.cs`).
-Pas d'enchaînement auto ; `/clear` avant ⑥b.
+**⑥b CLOS (build) le 2026-06-19** — vue Godot/C#, golden **NEUTRE** (100 % vue,
+0 changement moteur Python ; golden `f7e1a9b4…` re-vérifié inchangé, `dotnet build`
+0 erreur). **Reste le F5 visuel = Nico.** Décision heatmaps : **par ESPÈCE** (pas
+par catégorie) — le registre `fields` du serveur expose déjà une grille par espèce
+(`eco.populations`, 15 clés) ; une heatmap par catégorie aurait exigé d'exposer
+`category_density` côté Python (hors périmètre « 100 % vue »). 4 fichiers C# :
+- **`visuals/MacroLife.cs`** : dict `Guilds` (4 guildes) → `Especes` (10 consommateurs :
+  3 ravageurs + 5 auxiliaires + 2 détritivores), couleur/rayon/amplitude/vitesse par
+  espèce ; `lombric` garde le tiret (rayon 0) ; `GuildeInconnue`→`EspeceInconnue` (filet
+  gris). `NonDessine` += `bourdon, osmie` (butineurs → ForagerLayer, sinon gris). NOUVEAU
+  `SpeciesNear(w, r)` = espèce du sprite vivant le plus proche (ancre) pour l'écrasement ciblé.
+- **`visuals/ForagerLayer.cs`** : `Guilds` += `bourdon` (gros, lent) / `osmie` (cuivrée, vive).
+- **`visuals/FieldOverlay.cs`** : `Palettes` += 15 espèces (pôle haut = couleur du point
+  MacroLife/ForagerLayer, un seul langage visuel ; bornes 0..1). Legacy 4 guildes RETIRÉES
+  (le registre ne les émet plus).
+- **`world/WorldView.Actions.cs`** : `ecraser` au plot émet `target["espece"]` =
+  `_macroLife.SpeciesNear(w, MacroPickRadiusCm=50)` si un sprite est sous le curseur
+  (sinon plot seul → défaut serveur `puceron`). Comments `guilde`→`espèce` (Actions + WorldView.cs:361).
+
+**SPRINT TERMINÉ le 2026-06-19** (F5 validé par Nico — « c bon »). Clôture faite :
+journal `journal/70_…⑥b…` + index `journal.md` + mémoire `project_status` à jour ;
+`HANDOFF.md` supprimé. Le repli serveur `guilde` sur `ecraser` (actions.py:240) peut
+être retiré quand on veut (client basculé sur `espece` ; optionnel, compat).

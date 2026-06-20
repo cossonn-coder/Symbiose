@@ -358,8 +358,8 @@ namespace Symbiose
 										  _origins);
 					_fieldsStale = false;
 					// Mode instrument (t6·C3) : si la grille AFFICHÉE est
-					// une guilde, ses points MacroLife se resserrent sur
-					// leur ancre (un nom non-guilde est sans effet là-bas).
+					// une espèce, ses points MacroLife se resserrent sur
+					// leur ancre (un nom non-espèce est sans effet là-bas).
 					if (_macroLife != null)
 						_macroLife.FocusGuild = _fieldOverlay.FieldName;
 					// Témoin console (diag F5) : la grille est bien arrivée.
