@@ -55,11 +55,14 @@ def build_tile(name, soil, rows, cols, ox, oy):
     tile = Tile(tile_id=name, soil_type=soil, grid_rows=rows, grid_cols=cols,
                 origin_x_cm=float(ox), origin_y_cm=float(oy))
     if soil == "sable":
-        eco = init_eco(name, rows, cols, humidite=1.0, fertilite=0.6, microbiome=0.2)
+        eco = init_eco(name, rows, cols, humidite=1.0, fertilite=0.6, microbiome=0.2,
+                       soil_type=soil)
     elif soil == "argile":
-        eco = init_eco(name, rows, cols, humidite=2.0, fertilite=1.2, microbiome=0.3)
+        eco = init_eco(name, rows, cols, humidite=2.0, fertilite=1.2, microbiome=0.3,
+                       soil_type=soil)
     else:
-        eco = init_eco(name, rows, cols, humidite=1.5, fertilite=1.0, microbiome=0.3)
+        eco = init_eco(name, rows, cols, humidite=1.5, fertilite=1.0, microbiome=0.3,
+                       soil_type=soil)
     return tile, eco
 
 

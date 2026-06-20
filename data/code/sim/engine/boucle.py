@@ -183,6 +183,12 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
             #     strict si aucune structure n'est posée → golden NEUTRE.
             eco.tick_structures()
 
+            # 4c. Dérive décennale du pH (sprint physico-chimie ①) — APRÈS la
+            #     décompo (elle lit la litière `om_fresh_at`), AVANT rien de
+            #     critique : au tronçon ① le champ `ph` n'est lu par PERSONNE
+            #     (uptake/croissance/germination l'ignorent) → golden NEUTRE.
+            eco.tick_ph()
+
             # 5. Diffusion spatiale (humidité, fertilité, microbiome)
             eco.tick_diffusion()
 

@@ -245,6 +245,22 @@ UPTAKE = {
     "microbiome":{0: 0.00, 1: 0.01, 2: 0.02, 3: 0.01},
 }
 
+# --- pH du sol (sprint physico-chimie, tronçon ①) -------------------------
+# Le pH est le MAÎTRE-RÉGULATEUR de la chimie du sol : il décide quelle plante
+# pousse où et combien d'un nutriment présent est réellement disponible (lockout,
+# tronçon ④). Champ `ph` par plot, plage [PH_MIN, PH_MAX], INITIALISÉ PAR HÉRITAGE
+# du `soil_type` (roche-mère, table PH_PAR_SOL) et dérivant DÉCENNALEMENT (lerp à
+# très forte inertie, frère de soil_memory_deep) vers une cible acidifiée par la
+# matière organique fraîche (acides humiques) et le lessivage (calcium lavé en
+# climat humide). Au tronçon ① le champ est POSÉ mais lu par PERSONNE → golden
+# NEUTRE. Valeurs PLACEHOLDER (calibrage post-test), cf. CONCEPTION_SOL_PH.md §3.
+PH_MIN, PH_MAX = 4.0, 8.5
+PH_PAR_SOL   = {"terre": 6.8, "argile": 7.0, "sable": 5.8, "roche": 7.6}  # héritage roche-mère
+PH_INERTIA   = 0.02          # dérive décennale (avant amortissement CEC, volet NPK)
+ACIDIF_OM    = 0.30          # acidification par matière organique fraîche (litière)
+ACIDIF_LEACH = 0.20          # acidification par lessivage (climat humide → calcium lavé)
+# (le bloc lockout PH_OPT/PH_WIDTH/CHLOROSE_PH viendra au ④ ; AMEND_PUSH au ⑥.)
+
 # Signature sol par famille (laissée après chaque saison)
 SOIL_SIGNATURE = {
     "Fabaceae":   {"microbiome": +0.15, "fertilite": +0.10},

@@ -25,6 +25,7 @@ from .litiere import *            # Parcelle, Structure, STRUCTURE_ACCEPTE, MATU
 from .litiere import _fusion_parcelle, _lisser_ages   # helpers privés (hors import *)
 from .thermique import tick_thermique as _tick_thermique   # calcul pur T_sol (①)
 from .thermique import snow_next as _snow_next              # manteau neigeux pur (⑦)
+from .ph import tick_ph as _tick_ph                         # dérive pure du pH (physico-chimie ①)
 
 
 @dataclass
@@ -32,6 +33,11 @@ class EcoFields:
     tile_id:    str
     rows:       int
     cols:       int
+    # Type de sol de la tuile porteuse (roche-mère). Sert d'HÉRITAGE au champ `ph`
+    # (sprint physico-chimie ①, table PH_PAR_SOL) et reste disponible pour les
+    # futurs lecteurs de la chimie du sol. Défaut "terre" → compat des appels
+    # historiques qui construisaient EcoFields sans le préciser (tuile terre).
+    soil_type:  str = "terre"
 
     humidite:         GridField = field(default=None)
     fertilite:        GridField = field(default=None)
@@ -85,6 +91,12 @@ class EcoFields:
     # Godot anime la piqûre temps réel ; le moteur n'y réinjecte aucun champ figé →
     # golden NEUTRE (§J.4).
     alarme:           GridField = field(default=None)
+    # pH du sol (sprint physico-chimie ①) — maître-régulateur de la chimie.
+    # INITIALISÉ PAR HÉRITAGE du `soil_type` (PH_PAR_SOL) puis dérive décennale
+    # (`tick_ph`, frère de soil_memory_deep). Au tronçon ① POSÉ mais lu par
+    # PERSONNE → golden NEUTRE ; les lecteurs (lockout uptake, fenêtres d'espèce,
+    # chlorose) arrivent aux tronçons ④/⑤.
+    ph:               GridField = field(default=None)
 
     def __post_init__(self):
         if self.humidite    is None: self.humidite    = GridField(self.rows, self.cols)
@@ -141,6 +153,13 @@ class EcoFields:
             self.foragers = []          # aucun butineur tant que le tick n'a pas tourné
         if self.alarme is None:
             self.alarme = GridField(self.rows, self.cols, max_val=1.0)   # ⑦ §J, à 0 au repos
+        if self.ph is None:
+            # Héritage roche-mère : tout le plot d'une même tuile part au pH de son
+            # `soil_type` (uniforme à l'init ; la dérive per-plot creuse ensuite des
+            # écarts via litière/humidité). Borné [PH_MIN, PH_MAX] par le GridField.
+            self.ph = GridField(self.rows, self.cols,
+                                initial=PH_PAR_SOL.get(self.soil_type, PH_PAR_SOL["terre"]),
+                                max_val=PH_MAX, min_val=PH_MIN)
 
     def get_field(self, name: str) -> GridField | None:
         return {
@@ -156,6 +175,7 @@ class EcoFields:
             "soil_memory_deep": self.soil_memory_deep,
             "temperature":      self.temperature,
             "temperature_sol":  self.temperature_sol,
+            "ph":               self.ph,
         }.get(name)
 
     # --- Litière (couche fraîche : parcelles, remplace om_fresh) ---
@@ -211,6 +231,13 @@ class EcoFields:
         `nebulosite` = scalaire météo du tick (0 = ciel clair). Délègue au helper
         pur `thermique.tick_thermique` (container déjà dense)."""
         _tick_thermique(self, saison, nebulosite)
+
+    def tick_ph(self) -> None:
+        """Fait dériver `ph` (décennal) vers sa cible héritée/acidifiée (physico-
+        chimie ①). Délègue au helper PUR `ph.tick_ph` (container déjà dense). À
+        appeler APRÈS la décompo (il lit la litière `om_fresh_at`). Aucun lecteur
+        de `ph` n'existe au tronçon ① → golden NEUTRE."""
+        _tick_ph(self)
 
     def tick_snow(self, temp_now: float, is_neige: bool) -> None:
         """Met à jour le manteau neigeux `eco.snow` (⑦). Délègue au helper PUR
@@ -690,8 +717,8 @@ class EcoFields:
 
 def init_eco(tile_id: str, rows: int, cols: int,
              humidite: float = 0.0, fertilite: float = 0.0,
-             microbiome: float = 0.0) -> EcoFields:
-    eco = EcoFields(tile_id=tile_id, rows=rows, cols=cols)
+             microbiome: float = 0.0, soil_type: str = "terre") -> EcoFields:
+    eco = EcoFields(tile_id=tile_id, rows=rows, cols=cols, soil_type=soil_type)
     for r in range(rows):
         for c in range(cols):
             eco.humidite.set(r, c, humidite)

@@ -33,7 +33,7 @@ distincts** (`fertilite` supprimé, loi de Liebig) et **structure/compaction**
 
 | # | Tronçon | Doc | Dérive golden | Statut |
 |---|---------|-----|---------------|--------|
-| ① | pH socle (champ hérité + dérive, aucun lecteur) | pH §2.1 | NEUTRE | ⬜ |
+| ① | pH socle (champ hérité + dérive, aucun lecteur) | pH §2.1 | NEUTRE | ✅ |
 | ② | N/P/K socle (champs posés, uptake lit encore `fertilite`) | NPK §2.1 | NEUTRE | ⬜ |
 | ③ | Bascule uptake **Liebig** (retrait `fertilite`, lessivage diff., CEC, signature) | NPK §2.3 | **LARGE** | ⬜ |
 | ④ | pH → lockout (cloches dispo + chlorose) | pH §2.2 | maîtrisé | ⬜ |
@@ -45,5 +45,23 @@ distincts** (`fertilite` supprimé, loi de Liebig) et **structure/compaction**
 
 ## §REPRISE
 
-Sprint non démarré. Conception figée le 2026-06-19, aucun code écrit. Commencer par
-vérifier que git est à jour, créer la branche, puis lancer `01_ph_socle.md`.
+**① CLOS le 2026-06-20.** Champ `ph` (GridField par plot) ajouté à `EcoFields`,
+**hérité du `soil_type`** (table `PH_PAR_SOL` : terre 6.8 / argile 7.0 / sable 5.8
+/ roche 7.6) et dérivant lentement (`tick_ph`, lerp inertie 0.02 ; calcul PUR isolé
+dans `fields/ecofields/ph.py` façon thermique). Acidification par litière (`om_fresh`
+÷ `LITIERE_REF`) + lessivage (humidité÷3, faute de drainage par plot). `cec=0`
+(volet NPK absent). Câblé dans `boucle.py` étape 4c (après décompo). **Aucun lecteur**
+→ **golden NEUTRE, hash inchangé `f7e1a9b4…`**. `soil_type` ajouté au dataclass
+`EcoFields` + param `init_eco` ; câblé dans `test_golden.build_world` et `main.build_tile`
+(simserver hérite via ces fabriques). Exposé dans `get_field` (overlay debug gratuit).
+
+Vérifié : héritage terre≠sable, dérive lente (~0.05 sur 10 ticks), plot avec litière
+s'acidifie plus que le plot nu. `main.py` OK, golden PASS.
+
+⚠️ **Taille** : `container.py` 387 ldc de code (+10 d'orchestration : champ, init,
+registre, méthode déléguante). Il était DÉJÀ à 377 avant ① (au-dessus du seuil ~350).
+Le calcul est dans `ph.py` (§7 conception respecté). Un éclatement d'`EcoFields`
+serait un chantier à part — à arbitrer avec Nico, hors périmètre du sprint.
+
+**Suite** : lancer `02_npk_socle.md` (champs N/P/K posés, uptake lit encore
+`fertilite` → golden NEUTRE). Cf. `CONCEPTION_SOL_NUTRIMENTS_NPK.md` §2.1.

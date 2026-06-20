@@ -65,9 +65,11 @@ def build_world():
         ox, oy = TILE_ORIGINS[i]
         tile = Tile(tile_id=tid, soil_type=soil, origin_x_cm=ox, origin_y_cm=oy)
         if soil == "argile":
-            eco = init_eco(tid, 6, 8, humidite=2.0, fertilite=1.2, microbiome=0.3)
+            eco = init_eco(tid, 6, 8, humidite=2.0, fertilite=1.2, microbiome=0.3,
+                           soil_type=soil)
         else:
-            eco = init_eco(tid, 6, 8, humidite=1.5, fertilite=1.0, microbiome=0.3)
+            eco = init_eco(tid, 6, 8, humidite=1.5, fertilite=1.0, microbiome=0.3,
+                           soil_type=soil)
         # Jardin diversifié de base
         tile.add_plant(Tomato,    2, 2)
         tile.add_plant(Basil,     2, 4)
