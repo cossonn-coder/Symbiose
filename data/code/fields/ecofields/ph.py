@@ -35,15 +35,17 @@ ni germination) → golden NEUTRE : on ajoute un champ qui n'influence aucun cal
 from __future__ import annotations
 
 from .constants import (PH_PAR_SOL, PH_INERTIA, ACIDIF_OM, ACIDIF_LEACH,
-                        LITIERE_REF)
+                        LITIERE_REF, AMEND_PUSH)
 
 
-def tick_ph(eco, cec: float = 0.0) -> None:
+def tick_ph(eco, cec: float = 0.0, amend_dir: int = 0) -> None:
     """Met à jour `eco.ph` (dérive décennale) depuis le `soil_type` hérité de la
     tuile (cible roche-mère), la litière (`om_fresh_at`, acidification organique)
     et l'humidité (`humidite`, proxy de lessivage). `cec` = tampon optionnel du
-    volet NPK (0 = aucun amortissement). Pure : n'écrit QUE `ph`."""
-    base = PH_PAR_SOL.get(eco.soil_type, PH_PAR_SOL["terre"])
+    volet NPK (0 = aucun amortissement). `amend_dir` = direction d'amendement de la
+    tuile (tronçon ⑥) : +1 si une rondelle `chaux` domine, −1 si `soufre`, 0 sinon
+    → pousse la CIBLE de ±AMEND_PUSH (progressif, réversible). Pure : n'écrit QUE `ph`."""
+    base = PH_PAR_SOL.get(eco.soil_type, PH_PAR_SOL["terre"]) + AMEND_PUSH * amend_dir
     damp = PH_INERTIA / (1.0 + cec)
     ph = eco.ph
     for r in range(eco.rows):

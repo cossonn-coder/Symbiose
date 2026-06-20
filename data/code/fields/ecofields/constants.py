@@ -259,6 +259,12 @@ PH_PAR_SOL   = {"terre": 6.8, "argile": 7.0, "sable": 5.8, "roche": 7.6}  # hér
 PH_INERTIA   = 0.02          # dérive décennale (avant amortissement CEC, volet NPK)
 ACIDIF_OM    = 0.30          # acidification par matière organique fraîche (litière)
 ACIDIF_LEACH = 0.20          # acidification par lessivage (climat humide → calcium lavé)
+# Amendement pH (tronçon ⑥) : rondelle `chaux` (signe +, remonte le pH) ou `soufre`
+# (signe −, acidifie) posée sur la tuile pousse la CIBLE de dérive de ±AMEND_PUSH
+# tant qu'elle est présente. Sur la CIBLE, pas sur `ph` directement → progressif sur
+# plusieurs saisons (forte inertie PH_INERTIA), réversible (retrait → cible repart
+# vers l'héritage), event-driven → golden NEUTRE (aucune rondelle dans le smoke).
+AMEND_PUSH   = 0.15          # poussée pH/saison d'un amendement présent (signe selon chaux/soufre)
 
 # --- Lockout : disponibilité en cloche (tronçon ④) ------------------------
 # Le pH DONNE ENFIN du sens à `ph` (inerte au ①) : il module la DISPONIBILITÉ

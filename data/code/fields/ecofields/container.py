@@ -266,12 +266,14 @@ class EcoFields:
         pur `thermique.tick_thermique` (container déjà dense)."""
         _tick_thermique(self, saison, nebulosite)
 
-    def tick_ph(self) -> None:
+    def tick_ph(self, amend_dir: int = 0) -> None:
         """Fait dériver `ph` (décennal) vers sa cible héritée/acidifiée (physico-
         chimie ①). Délègue au helper PUR `ph.tick_ph` (container déjà dense). À
-        appeler APRÈS la décompo (il lit la litière `om_fresh_at`). Aucun lecteur
-        de `ph` n'existe au tronçon ① → golden NEUTRE."""
-        _tick_ph(self)
+        appeler APRÈS la décompo (il lit la litière `om_fresh_at`). `amend_dir`
+        = direction d'amendement de la tuile (⑥ : +1 chaux / −1 soufre / 0 sinon),
+        calculée par la boucle (couche `fields` n'importe pas `world`). 0 par
+        défaut → golden NEUTRE (aucune rondelle chaux/soufre dans le smoke)."""
+        _tick_ph(self, amend_dir=amend_dir)
 
     def tick_snow(self, temp_now: float, is_neige: bool) -> None:
         """Met à jour le manteau neigeux `eco.snow` (⑦). Délègue au helper PUR

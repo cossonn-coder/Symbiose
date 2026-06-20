@@ -13,7 +13,7 @@ from plants.base import PlantInstance, ConflictNotification
 # TIGES ET RONDELLES
 # ---------------------------------------------------------------------------
 
-RONDELLE_TYPES = frozenset(["fertilite", "humidite", "lombric", "maladie", "pollinisateur", "paillage", "auxiliaire"])
+RONDELLE_TYPES = frozenset(["fertilite", "humidite", "lombric", "maladie", "pollinisateur", "paillage", "auxiliaire", "chaux", "soufre"])
 
 @dataclass
 class StakeSlot:

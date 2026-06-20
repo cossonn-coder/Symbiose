@@ -38,7 +38,7 @@ distincts** (`fertilite` supprimé, loi de Liebig) et **structure/compaction**
 | ③ | Bascule uptake **Liebig** (retrait `fertilite`, lessivage diff., CEC, signature) | NPK §2.3 | **LARGE → `87ed27ae…`** | ✅ |
 | ④ | pH → lockout (cloches dispo ; chlorose reportée au ⑤) | pH §2.2 | **maîtrisé → `d8856261…`** | ✅ |
 | ⑤ | Fenêtres pH par espèce (noyau) + chlorose + indicatrices | pH §2.3 | **NEUTRE → `d8856261…` inchangé** | ✅ |
-| ⑥ | Amendements pH (rondelles `chaux`/`soufre`) | pH §2.4 | NEUTRE | ⬜ |
+| ⑥ | Amendements pH (rondelles `chaux`/`soufre`) | pH §2.4 | **NEUTRE → `d8856261…` inchangé** | ✅ |
 | ⑦ | Faim d'azote (bois/BRF + substrat usé champignons) | NPK §2.7 | maîtrisé | ⬜ |
 | ⑧ | Structure `structure_sol` (infiltration/asphyxie/uptake) | structure §2 | maîtrisé | ⬜ |
 | ⑨ | Vue : overlays nouveaux champs + indices visuels (chlorose) | — | NEUTRE (vue) | ⬜ |
@@ -199,9 +199,41 @@ déterministe + 23 suites = la vraie barrière de non-régression).
 ⚠️ **Taille** : `container.py` NON touché ce tronçon (calcul dans `vigueur_plante` /
 `seedbank` / `succession`). Petits +N sur ces fichiers, aucun près du seuil ~350.
 
-**PAS encore committé** (handoff contexte bas). Kickoff suivant **écrit** :
-`06_amendements_ph.md` (rondelles `chaux`/`soufre`, event-driven, `AMEND_PUSH`,
-golden NEUTRE).
+**⑤ CLOS & COMMITTÉ** (`a740df7`).
 
-**Suite** : confirmer `main.py 50 ans`, **commiter** ⑤, puis lancer
-`06_amendements_ph.md`.
+**⑥ CLOS le 2026-06-20 — golden NEUTRE, hash INCHANGÉ `d8856261bbe49787…`.** Deux
+nouvelles `RONDELLE_TYPES` posables : **`chaux`** (remonte le pH) et **`soufre`**
+(acidifie). Modèle : la présence d'une rondelle d'amendement sur la tuile pousse la
+**CIBLE** de dérive du pH de ±`AMEND_PUSH` (=0.15), **jamais `ph` directement** →
+progressif sur saisons (inertie `PH_INERTIA`=0.02), **réversible** (retrait → cible
+repart vers l'héritage), **event-driven** (pose hors tick).
+- `world/tile.py:16` : `"chaux"`,`"soufre"` ajoutés au `frozenset RONDELLE_TYPES`
+  (la pose/validation `StakeSlot.add` les accepte sans autre changement).
+- `constants.py` : `AMEND_PUSH = 0.15` (placeholder calibrage post-test).
+- `ph.py` `tick_ph(eco, cec=0, amend_dir=0)` : `base += AMEND_PUSH*amend_dir` sur la
+  cible roche-mère (helper PUR, reste 14 ldc). `amend_dir ∈ {−1,0,+1}`.
+- `container.tick_ph(self, amend_dir=0)` délègue (signe propagé ; couche `fields`
+  n'importe pas `world`).
+- `boucle.py` étape 4c : `net = count("chaux") − count("soufre")` ;
+  `amend_dir = (net>0)−(net<0)` (présence binaire signée) → `eco.tick_ph(amend_dir)`.
+  Aucune rondelle chaux/soufre au smoke → `amend_dir=0` partout → **golden NEUTRE**.
+
+**Vérifié à la main** (tuile sable 5.8, isolé) : chaux +1 sur 60 sem → pH 5.80→5.86
+(> réf sans amend 5.75) ; soufre −1 → 5.65 (< réf) ; progressif (montée lente semaine
+par semaine) ; **réversible** (retrait après 60 sem → redérive 5.86→5.77 vers réf).
+Effet lent voulu (inertie décennale, « la chaux met un an »). Golden PASS hash
+inchangé ; suites OK (structures 65/65, vigueur 135, croissance 67, planter, eau,
+population, catalogue_lot2). `test_senescence` rouge = **D39 pré-existante** (vérifié
+au `git stash` : échoue à l'identique âge 2.7 ans SANS le ⑥, indépendant).
+
+⚠️ **Taille** : `container.py` **423 ldc** (inchangé vs ④ : seuls doc + param par
+défaut ajoutés, zéro code neuf). `ph.py` 14 ldc, `boucle.py` 213. Rien de neuf au
+seuil. Éclatement d'`EcoFields` = chantier à part hors périmètre sprint (cf. ①–④).
+
+**Kickoff suivant écrit** : `07_faim_azote.md` (immobilisation N par bois/BRF +
+substrat usé de champignons, crochet futur acteur champignon, golden maîtrisé).
+
+`main.py 50 ans` **sauté** (décision Nico 2026-06-20) : golden déterministe + suites
+ciblées = la vraie barrière de non-régression, run long inutile (cf. ⑤).
+
+**Suite** : lancer `07_faim_azote.md`.

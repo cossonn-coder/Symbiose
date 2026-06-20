@@ -184,10 +184,16 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
             eco.tick_structures()
 
             # 4c. Dérive décennale du pH (sprint physico-chimie ①) — APRÈS la
-            #     décompo (elle lit la litière `om_fresh_at`), AVANT rien de
-            #     critique : au tronçon ① le champ `ph` n'est lu par PERSONNE
-            #     (uptake/croissance/germination l'ignorent) → golden NEUTRE.
-            eco.tick_ph()
+            #     décompo (elle lit la litière `om_fresh_at`). ⑥ : la présence
+            #     d'une rondelle d'amendement sur la tuile pousse la cible —
+            #     `chaux` (+) remonte le pH, `soufre` (−) l'acidifie. Présence
+            #     binaire signée {−1,0,+1} (philo : on pousse une cible, le sol
+            #     répond avec inertie). Aucune rondelle chaux/soufre au smoke →
+            #     amend_dir=0 → golden NEUTRE.
+            net_amend = (tile.get_rondelle_count("chaux")
+                         - tile.get_rondelle_count("soufre"))
+            amend_dir = (net_amend > 0) - (net_amend < 0)
+            eco.tick_ph(amend_dir)
 
             # 5. Diffusion spatiale (humidité, fertilité, microbiome)
             eco.tick_diffusion()
