@@ -17,11 +17,11 @@ from sim.weather import weather_state, weather_signs, CALME, T_MOY
 # densité → entités (fields/population.py §3). L'échantillonnage se fait CÔTÉ
 # SERVEUR — la vue n'a pas besoin de _hash_noise (kickoff t6 §4).
 from fields.population import sample_sprites
-# Chlorose alcaline (sprint physico-chimie ⑤, indice visuel ⑨) : mêmes seuils que
-# le prédicat de sim/vigueur_plante.qi_local — on EXPOSE le flag pour que la vue
-# jaunisse le feuillage (Option 1 : moteur = source de vérité, zéro recalcul C#).
-# Lecture pure → golden NEUTRE.
-from fields.ecofields import SEUIL_ACIDOPHILE, CHLOROSE_PH
+# Sémiologie foliaire (D33) : détecteurs PURS des stresseurs chroniques, miroirs
+# fidèles des seuils des mécaniques qui blessent. Remplace le bool `chlorose` du ⑨
+# par la liste `leaf_symptoms`. Recalcul pur côté serveur (moteur = source de
+# vérité, zéro recalcul C#) → golden NEUTRE.
+from sim import semiologie
 # Table « stade reproducteur visible par saison » du prototype SVG (tranche 6,
 # volet A) : import OUTIL → OUTIL (render_structure est un outil, pas le
 # moteur), zéro duplication — la table validée visuellement au sprint
@@ -106,16 +106,15 @@ class SerializeMixin:
                 # ont désormais un vrai état moteur (`fruits`, ③).
                 repro = REPRO_BY_SEASON.get(cls.__name__, DEFAULT_REPRO)
                 base["dead"] = False
-                # Chlorose alcaline (⑨) : acidophile (`ph_opt` bas) sur sol trop
-                # alcalin → lockout du fer → feuillage qui jaunit. MÊME prédicat que
-                # sim/vigueur_plante.qi_local (ph local = moyenne sous l'empreinte
-                # racinaire, repli plot-foyer). La vue n'a qu'à teinter — elle ne
-                # relit ni le pH ni `ph_opt`. Faux pour toute espèce neutre (défaut
-                # 6.8 ≥ SEUIL_ACIDOPHILE) → aucun flag au smoke, golden NEUTRE.
-                ph_plots = p.root_plots or [p.plot_foyer]
-                ph_loc = sum(eco.ph.at_plot(r, c) for (r, c) in ph_plots) / len(ph_plots)
-                base["chlorose"] = (cls.ph_opt < SEUIL_ACIDOPHILE
-                                    and ph_loc > CHLOROSE_PH)
+                # Sémiologie foliaire (D33, tronçon ①) : LISTE triée de symptômes
+                # `[{cause, intensity}]` — généralise le bool `chlorose` du ⑨ à TOUS
+                # les stresseurs chroniques (chlorose/sécheresse/asphyxie/ravageurs/
+                # sénescence). Détecteurs PURS de sim/semiologie : chacun miroir du
+                # SEUIL de la mécanique qui blesse (le signe ne ment pas, §2.4). La vue
+                # teinte/déforme le feuillage ; elle ne relit aucun champ moteur. Liste
+                # vide = plante saine. Lecture pure → golden NEUTRE (espèces neutres du
+                # smoke, sols drainants : aucun symptôme).
+                base["leaf_symptoms"] = semiologie.leaf_symptoms(p, eco, saison)
                 base["foliage_density"] = cls.foliage_density_at(p, saison)
                 base["organ"] = repro.get(saison)
                 base["organ_site"] = cls.organ_site

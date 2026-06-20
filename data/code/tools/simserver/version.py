@@ -115,7 +115,17 @@ from __future__ import annotations
 #       partagé `weather_state` rebranché côté engine (boucle.py étape 1) ET snapshot
 #       → un seul calcul météo, jamais deux qui dérivent (valeurs identiques, golden
 #       inchangé). ⑨ (rendu Godot) + ⑩ (heatmap debug) consommeront ces blocs.
-ENGINE_VERSION = "0.5.0"
+# 0.5.1 (sémiologie foliaire ①, D33) : le bool `chlorose` par plante est RETIRÉ et
+#       fondu dans une LISTE `leaf_symptoms` = `[{cause, intensity}]` triée par
+#       intensité décroissante (départage priorité fixe). Détecteurs CHRONIQUES purs
+#       (sim/semiologie) — chlorose/sécheresse/asphyxie/ravageurs/sénescence —
+#       chacun miroir du SEUIL de la mécanique qui blesse (le signe ne ment pas).
+#       Liste vide = plante saine. Schéma ÉTENDU (chlorose bool → leaf_symptoms) :
+#       PUR recalcul lecture-seule → golden NEUTRE (espèces neutres + sols drainants
+#       du smoke ⇒ aucun symptôme). Champ optionnel côté vue (tolérance pré-0.5.1 ;
+#       la vue consomme encore `chlorose` au ②/③ → retrait C# au tronçon ③). Les
+#       marques ÉVÉNEMENTIELLES (maladie/gel/grele, décroissantes) arrivent au ②.
+ENGINE_VERSION = "0.5.1"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les
