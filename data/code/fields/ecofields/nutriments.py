@@ -32,7 +32,7 @@ from __future__ import annotations
 from math import exp
 
 from .constants import (NPK_RELEASE, LEACHING, CEC_PAR_SOL, CEC_OM_COEF,
-                        PH_OPT, PH_WIDTH)
+                        PH_OPT, PH_WIDTH, FAIM_N_COEF)
 
 
 def bell(ph: float, opt: float, tol: float) -> float:
@@ -55,6 +55,15 @@ def dispo(ph: float, nut: str) -> float:
     disponibilité, jamais un gate de croissance (philo #2). Cas particulier de
     `bell` avec (opt, tol) tabulés par nutriment."""
     return bell(ph, PH_OPT[nut], PH_WIDTH[nut])
+
+
+def immobilise_n(bois_mass: float) -> float:
+    """Azote IMMOBILISÉ par la litière C-riche fraîche d'un plot (faim d'azote ⑦,
+    §2.7) : `FAIM_N_COEF · masse`. Quantité d'azote rendue temporairement NON
+    assimilable tant que le bois/substrat n'a pas mûri. Recalculée chaque tick par
+    l'uptake depuis la masse de bois PRÉSENTE → auto-réversible (bois parti ⇒ 0 ⇒
+    azote de nouveau disponible), pas de stock séparé. Pur, déterministe (philo #3)."""
+    return FAIM_N_COEF * bois_mass
 
 
 def split_miner(tissu: str, amount: float) -> tuple[float, float, float]:

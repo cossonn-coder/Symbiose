@@ -364,6 +364,18 @@ LEACHING = {"N": 0.12, "P": 0.005, "K": 0.05}
 # Argile/humus → CEC élevée (retient) ; sable → CEC basse (tout lessive).
 CEC_PAR_SOL = {"terre": 0.5, "argile": 0.8, "sable": 0.2, "roche": 0.4}
 CEC_OM_COEF = 0.5
+
+# Faim d'azote (tronçon ⑦, §2.7) — une litière C-riche fraîche (bois/BRF + le
+# substrat usé de culture de champignons, crochet vers le futur acteur champignon)
+# pousse les microbes décomposeurs à IMMOBILISER temporairement l'azote du sol
+# pour digérer ce carbone : `immobilise = FAIM_N_COEF · masse_C_fraiche`. C'est un
+# prélèvement RÉVERSIBLE recalculé chaque tick depuis la masse de bois présente
+# (pas de stock d'azote emprunté : tant que le bois est là, N reste bridé ; quand
+# il a mûri, le bridage disparaît tout seul). `FAIM_N_TISSUS` = les tissus qui
+# immobilisent ; `substrat` est INERTE (jamais produit tant que l'acteur champignon
+# n'existe pas — pur crochet, zéro effet sur le smoke). PLACEHOLDER, calibrage post-test.
+FAIM_N_COEF  = 0.20
+FAIM_N_TISSUS = frozenset(("bois", "substrat"))
 # NB : la FIXATION d'azote des Fabaceae (§2.6) n'a PAS besoin de constante dédiée
 # ici — elle EST l'effet famille `inject_field` (familles.py) redirigé vers `n`
 # au tronçon ③ : flux explicite, lisible, déjà dans la boucle d'effets.

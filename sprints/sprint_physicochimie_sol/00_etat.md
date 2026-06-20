@@ -39,7 +39,7 @@ distincts** (`fertilite` supprimé, loi de Liebig) et **structure/compaction**
 | ④ | pH → lockout (cloches dispo ; chlorose reportée au ⑤) | pH §2.2 | **maîtrisé → `d8856261…`** | ✅ |
 | ⑤ | Fenêtres pH par espèce (noyau) + chlorose + indicatrices | pH §2.3 | **NEUTRE → `d8856261…` inchangé** | ✅ |
 | ⑥ | Amendements pH (rondelles `chaux`/`soufre`) | pH §2.4 | **NEUTRE → `d8856261…` inchangé** | ✅ |
-| ⑦ | Faim d'azote (bois/BRF + substrat usé champignons) | NPK §2.7 | maîtrisé | ⬜ |
+| ⑦ | Faim d'azote (bois/BRF + substrat usé champignons) | NPK §2.7 | **NEUTRE → `d8856261…` inchangé** | ✅ |
 | ⑧ | Structure `structure_sol` (infiltration/asphyxie/uptake) | structure §2 | maîtrisé | ⬜ |
 | ⑨ | Vue : overlays nouveaux champs + indices visuels (chlorose) | — | NEUTRE (vue) | ⬜ |
 
@@ -236,4 +236,39 @@ substrat usé de champignons, crochet futur acteur champignon, golden maîtrisé
 `main.py 50 ans` **sauté** (décision Nico 2026-06-20) : golden déterministe + suites
 ciblées = la vraie barrière de non-régression, run long inutile (cf. ⑤).
 
-**Suite** : lancer `07_faim_azote.md`.
+**⑦ CLOS le 2026-06-20 — golden NEUTRE, hash INCHANGÉ `d8856261bbe49787…`.** La litière
+C-riche fraîche (tissus `FAIM_N_TISSUS = {bois, substrat}`) IMMOBILISE de l'azote local :
+`immobilise = FAIM_N_COEF·masse` (helper PUR `nutriments.immobilise_n`, FAIM_N_COEF=0.20).
+Modèle TRANCHÉ = **prélèvement RÉVERSIBLE recalculé chaque tick** (pas de stock d'azote
+emprunté, choix simple du kickoff) : à l'uptake (`plant_uptake`, branche N), la dispo N
+assimilable = `max(0, n − immob)` ; le champ `n` n'est JAMAIS amputé (on ne retire que le
+`real` réellement prélevé) → bois mûri ⇒ immob → 0 ⇒ azote de nouveau disponible. La plante
+ressent via l'uptake Liebig (③) qui plafonne sur ce N réduit → jaunit (faim d'azote). Module
+un FLUX, pas la plante (philo #2). Greffes : `bois_fresh_at(r,c)` (accesseur Σ masses tissus
+immobilisants, `container.py`) + bloc immob inline dans `plant_uptake`. **`substrat` = crochet
+INERTE** (jamais déposé tant que l'acteur champignon n'existe pas → l'accesseur ne voit que
+le `bois` ; pas ajouté à TISSU/NPK_RELEASE = pas d'implémentation d'acteur).
+
+**Golden NEUTRE** : le smoke ne dépose pas de `bois` frais limitant l'azote sur un plot habité
+(aucune levée/uptake flippé) → hash inchangé. **Mécanisme VÉRIFIÉ à la main** (hors smoke) :
+plot habité, n appauvri 0.05, dépôt `bois` 1.0 (immob 0.20 > 0.05) → uptake N = 0 (affamé) ;
+retrait du bois → uptake N = 0.05 RESTAURÉ (réversible, aucun azote détruit). Sur sol riche
+(n=1.0) immob 0.40 ne bride pas le petit besoin/tick (0.06) — la faim d'azote ne « mord »
+que quand N est déjà le limiteur, réaliste.
+
+**Suites** : 23 ciblées PASS (structures, vigueur 135, croissance 67, genetique 20, maitrise
+35, maitrise_detection 20, signes 8, phototropisme 11, ombre 4, competition, planter, eau,
+fruits, lifecycle, population, catalogue_lot2, attraction, ruche 20, evergreen, biennial,
+faune_dediee, alarme 16, auxiliaires). `test_senescence` rouge à âge 2.7 ans = **D39
+pré-existante** (asphyxie pommier, signature identique à ③④⑤⑥, indépendante du ⑦). `main.py
+1 an` EXIT=0 aucun crash (run 50 ans sauté, cf. ⑤⑥).
+
+⚠️ **Taille** : `container.py` **429 ldc** (423 → 429, +6 : accesseur `bois_fresh_at` + bloc
+immob uptake). Toujours au-dessus du seuil ~350 (cf. ①–⑥). Calcul pur isolé dans
+`nutriments.py` (helper `immobilise_n`, 18 ldc total). Éclatement d'`EcoFields` = chantier à
+part hors périmètre sprint.
+
+**Kickoff suivant écrit** : `08_structure_sol.md` (volet structure §2 : champ `structure_sol`
+Option B — infiltration/asphyxie/uptake, dette D30 absorbée).
+
+**Suite** : lancer `08_structure_sol.md` (dernier tronçon moteur ; ⑨ = vue Godot).

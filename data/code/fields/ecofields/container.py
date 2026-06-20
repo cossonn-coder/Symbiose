@@ -26,7 +26,7 @@ from .litiere import _fusion_parcelle, _lisser_ages   # helpers privés (hors im
 from .thermique import tick_thermique as _tick_thermique   # calcul pur T_sol (①)
 from .thermique import snow_next as _snow_next              # manteau neigeux pur (⑦)
 from .ph import tick_ph as _tick_ph                         # dérive pure du pH (physico-chimie ①)
-from .nutriments import split_miner, cec_norm_at, leach_factor, dispo   # chimie N/P/K pure (physico-chimie ③/④)
+from .nutriments import split_miner, cec_norm_at, leach_factor, dispo, immobilise_n   # chimie N/P/K pure (physico-chimie ③/④/⑦)
 
 
 @dataclass
@@ -213,6 +213,13 @@ class EcoFields:
     def om_fresh_at(self, r: int, c: int) -> float:
         """Σ des masses de parcelles du plot = ancien `om_fresh.at_plot(r,c)`."""
         return sum(p.masse for p in self.litiere[r][c])
+
+    def bois_fresh_at(self, r: int, c: int) -> float:
+        """Σ des masses de litière C-riche fraîche d'un plot (tissus `FAIM_N_TISSUS`
+        = `bois`/BRF + `substrat` usé de champignons) — pilote la faim d'azote (⑦,
+        §2.7). `substrat` reste INERTE tant qu'aucun acteur champignon ne le dépose
+        (jamais dans le smoke) → cet accesseur ne voit que le `bois` aujourd'hui."""
+        return sum(p.masse for p in self.litiere[r][c] if p.tissu in FAIM_N_TISSUS)
 
     def om_fresh_average(self) -> float:
         """Moyenne par plot de la litière fraîche = ancien `om_fresh.average()`."""
@@ -693,14 +700,24 @@ class EcoFields:
         # ④ LOCKOUT pH : le besoin est aussi modulé par la cloche dispo(ph, nut) — un
         # nutriment EN STOCK n'est pas forcément ASSIMILABLE (P bloqué hors zone
         # neutre, N peu sensible). Module un FLUX, pas la plante (philo #2).
+        # ⑦ FAIM D'AZOTE : la litière C-riche fraîche (bois/BRF + substrat) immobilise
+        # une part de l'azote LOCAL → seul `n − immob` est assimilable ce tick. Le
+        # champ `n` n'est PAS amputé (on retire seulement le `real` réellement prélevé) :
+        # le bridage est RECALCULÉ chaque tick depuis la masse de bois présente, donc
+        # auto-réversible (bois mûri ⇒ immob → 0 ⇒ azote de nouveau disponible). La
+        # plante ressent via l'uptake Liebig (③) qui plafonne sur ce N réduit → jaunit.
         ph_local = self.ph.at_plot(r, c)
+        immob = immobilise_n(self.bois_fresh_at(r, c))
         for nut, fld in (("N", self.n), ("P", self.p), ("K", self.k)):
             besoin = (BESOIN[nut].get(stage_index, 0.0) * share * asphyxie_factor
                       * (1.0 + micro_norm * UPTAKE_MICRO_BONUS)
                       * dispo(ph_local, nut))
             if besoin <= 0:
                 continue
-            real = min(besoin, fld.at_plot(r, c))
+            dispo_stock = fld.at_plot(r, c)
+            if nut == "N":
+                dispo_stock = max(0.0, dispo_stock - immob)   # part immobilisée non assimilable
+            real = min(besoin, dispo_stock)
             if real > 0:
                 fld.add(r, c, -real)
                 consumed[nut.lower()] = round(real, 3)
