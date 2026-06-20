@@ -16,6 +16,13 @@ from fields import (EXUDATE_BASE, EXUDATE_OM_SHARE, HUM_NOYE, HUM_EXCES,
 from fields.ecofields.constants import T_PLANTE_ALPHA
 from .calendrier import saison_de
 
+# Sémiologie ② (CONCEPTION_SEMIOLOGIE_FOLIAIRE.md §2.5) — facteur de décroissance
+# des marques de symptômes ÉVÉNEMENTIELS par tick de plante. Couplé au gain
+# SYMPTOM_MARK_GAIN (resolution.py) : à 0.8, demi-vie d'une marque ~3 semaines
+# (0.8³≈0.5) → cicatrisation visible en quelques semaines, purge sous epsilon
+# (0.02) ensuite. Knob de calibrage.
+SYMPTOM_DECAY = 0.8
+
 
 def _bolt_stage_index(plant_class) -> int | None:
     """Index du stade de MONTAISON d'une espèce = 1er stade portant un effet
@@ -192,6 +199,11 @@ class CroissanceMixin:
                             if hum > HUM_EXCES else 0.0)
             plant.asphyxie_memory += (exces_stress - plant.asphyxie_memory) * ASPHYXIE_MEMORY_LERP
             plant.asphyxie_memory  = max(0.0, min(1.0, plant.asphyxie_memory))
+            # Marques de symptômes ÉVÉNEMENTIELS (sémiologie ②) : maladie/gel/grêle
+            # s'estompent ici, AVEC les autres mémoires physiologiques (même endroit,
+            # une fois par tick). Pas de gain ici (il vient des ReduceHealth, cf.
+            # resolution.py) — uniquement la décroissance/cicatrisation.
+            plant.decay_symptoms(SYMPTOM_DECAY)
             # Growth factor : la lumière EFFECTIVE module la hauteur (feedback →
             # ombre). Tolérance à l'ombre (Q6) = base d'espèce × gène individuel :
             # un sciaphile garde sa croissance à l'ombre (light_eff relevé, cap 1.0),

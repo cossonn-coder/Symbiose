@@ -28,7 +28,12 @@ class RemoveRondelle:
 
 @dataclass
 class ReduceHealth:
-    plant: PlantInstance; amount: int; reason: str = ""
+    # `reason` = chaîne de LOG humaine, jamais stockée. `cause` = enum CANONIQUE
+    # de symptôme foliaire ("maladie"/"gel"/"grele", "" = aucune marque) consommé
+    # par la sémiologie ② : à la résolution, une cause non vide laisse sur la plante
+    # une `symptom_mark` décroissante (cf. resolution.py / sim.semiologie). Les deux
+    # champs sont DISTINCTS : reason pour l'humain, cause pour la machine.
+    plant: PlantInstance; amount: int; reason: str = ""; cause: str = ""
     def __repr__(self): return f"Santé {self.plant.name}@{self.plant.position} -{self.amount} [{self.reason}]"
 
 @dataclass

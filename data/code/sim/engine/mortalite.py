@@ -250,7 +250,7 @@ class MortaliteMixin:
         return log
 
     def _mediated_damage(self, tile, eco, severity, reason, gene_name=None,
-                         severity_fn=None):
+                         severity_fn=None, cause=""):
         """
         Dégât MÉDIÉ sur le tissu tendre exposé (stade « semis »), conforme à la
         philo #2 (CONCEPTION_METEO.md §2.3) — remplace la voie `health` plate pour
@@ -260,6 +260,9 @@ class MortaliteMixin:
 
         - `gene_name` : gène de rusticité (>1 ⇒ susceptibilité < 1, plus résistant).
           None ⇒ dégât physique pur (grêle : le froid n'aide pas).
+        - `cause` : enum de symptôme foliaire ÉVÉNEMENTIEL (sémiologie ②) — "gel"
+          ou "grele" selon l'appelant (boucle.py). Propagé au ReduceHealth → laisse
+          une marque décroissante sur le feuillage de la plante touchée.
         - `severity_fn` : sévérité LOCALISÉE au plot (gel nocturne ⑥). Si fournie,
           chaque plante reçoit `severity_fn(p)` (calculée depuis T_min_nuit à SON
           plot) au lieu du scalaire `severity` uniforme — un coin paillé/sous-nuages
@@ -292,7 +295,7 @@ class MortaliteMixin:
             effective = sev * suscept * (1.0 - protection)
             lost      = min(p.health, int(effective / DAMAGE_STEP))
             if lost > 0:
-                log += apply_mutations([ReduceHealth(p, lost, reason)], self.game_state)
+                log += apply_mutations([ReduceHealth(p, lost, reason, cause=cause)], self.game_state)
                 if p.health == 0:
                     newly_dead.append(p)
         # Mort → squelette persistant (②B). `deposer_mort` est idempotent : les

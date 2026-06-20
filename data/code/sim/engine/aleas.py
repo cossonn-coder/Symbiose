@@ -64,6 +64,15 @@ WEATHER_ALEA = {
 # ci-dessus). Identique au coup de vent de la Tempête (paillage −1) ; séparé pour
 # que l'Orage = pluie + vent sans dupliquer l'entrée Tempête.
 ORAGE_VENT = Alea("Orage (vent)", "Paillage dispersé.", "paillage", -1, "rondelle")
+
+# Mapping alea.nom → cause CANONIQUE de symptôme foliaire ÉVÉNEMENTIEL (sémiologie ②).
+# Ne mappe QUE les aléas santé à signe foliaire propre. Les aléas santé d'herbivorie
+# (« Limaces », « Chenilles ») sont volontairement ABSENTS → cause "" : ils sont déjà
+# couverts par le détecteur CHRONIQUE `ravageurs` (pas de double comptage). Note : gel
+# et grêle passent désormais par `_mediated_damage` (mortalite.py), pas par la voie
+# `health` ci-dessous — ce mapping reste défensif / forward-compat si un aléa santé
+# gel/grêle réempruntait ce chemin.
+EVENT_CAUSE = {"Gelée tardive": "gel", "Grêle": "grele"}
 ALEAS_RAVAGEURS = [
     Alea("Pucerons",  "Fertilité réduite.", "n",         -0.3, "field"),
     Alea("Limaces",   "Semis grignotés.",   "",          -1.0, "health"),
@@ -109,7 +118,7 @@ def appliquer_alea(alea, tile, eco, game_state):
         # Cible les vrais semis (stade nommé "semis"), pas l'index 0 — sinon le
         # stade perpétuel des pérennes ligneuses ("arbre", index 0) serait frappé
         # comme un semis fragile à chaque saison (D27).
-        muts = [ReduceHealth(p, 1, alea.nom)
+        muts = [ReduceHealth(p, 1, alea.nom, cause=EVENT_CAUSE.get(alea.nom, ""))
                 for p in tile.plants if p.is_alive and p.stage.name == "semis"]
         log += apply_mutations(muts, game_state)
         # Mort éventuelle → squelette persistant (②B, idempotent : skip si déjà morte)

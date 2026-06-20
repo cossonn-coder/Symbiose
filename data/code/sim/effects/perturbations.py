@@ -136,7 +136,7 @@ def fungal_disease(plant: PlantInstance, tile: Tile, eco,
     p = eco.disease_probability(r, c, base_rate=FUNGAL_BASE)
     p *= hum_norm * (0.4 + density) * susc
     if _hash_noise(seed, week * 13, r, c) < p:
-        return [ReduceHealth(plant, 1, reason="maladie fongique")]
+        return [ReduceHealth(plant, 1, reason="maladie fongique", cause="maladie")]
     return []
 
 

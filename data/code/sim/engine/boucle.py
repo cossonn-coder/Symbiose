@@ -117,7 +117,8 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
                 log += self._mediated_damage(tile, eco, 0.0,
                                              "gel (tissu tendre)",
                                              gene_name="rusticite_froid",
-                                             severity_fn=frost_sev)
+                                             severity_fn=frost_sev,
+                                             cause="gel")
 
         if event.kind != "Beau temps":
             log.append(f"  🌤  {event.kind} (T≈{temp_now:.1f}°C, i={event.intensity:.2f})")
@@ -128,7 +129,7 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
                 hail_sev = event.intensity / HAIL_SEVERITY_REF
                 for tile in self.tiles:
                     log += self._mediated_damage(tile, self._eco(tile), hail_sev,
-                                                 "grêle (feuillage)")
+                                                 "grêle (feuillage)", cause="grele")
             elif event.kind not in TEMP_DRIVEN:
                 meteo = WEATHER_ALEA[event.kind]
                 for tile in self.tiles:

@@ -19,8 +19,13 @@ pas avant, pas après. La forme générale est une rampe :
 
     intensité = clamp01((mesure − seuil_apparition) / (seuil_plein − seuil_apparition))
 
-Régime CHRONIQUE seulement ici (état persistant relu). Les marques ÉVÉNEMENTIELLES
-(maladie/gel/grêle, mémorisées et décroissantes) arrivent au tronçon ②.
+Deux régimes (depuis le tronçon ②) :
+- CHRONIQUE : détecteurs PURS recalculés à la volée (état persistant relu).
+- ÉVÉNEMENTIEL : marques maladie/gel/grêle MÉMORISÉES et décroissantes sur la
+  plante (PlantInstance.symptom_marks), écrites par les ReduceHealth à cause typée
+  et estompées au tick. L'agrégateur `leaf_symptoms` FUSIONNE les deux avant le tri.
+Cette fusion ne CHANGE pas le golden : les marques ne sont pas dans _PLANT_ATTRS et
+ne rebouclent jamais sur santé/croissance — pur affichage (cf. §5 conception).
 """
 from __future__ import annotations
 
@@ -153,6 +158,15 @@ def leaf_symptoms(plant, eco, saison) -> list[dict]:
     for cause, detecteur in DETECTEURS:
         i = round(detecteur(plant, eco, saison), 3)
         if i > 0.0:
+            syms.append({"cause": cause, "intensity": i})
+    # Marques ÉVÉNEMENTIELLES (② — maladie/gel/grêle) : mémorisées et décroissantes
+    # sur la plante (PlantInstance.symptom_marks, écrites par les ReduceHealth à
+    # cause typée). On les FUSIONNE ici avec les détecteurs chroniques AVANT le tri.
+    # Causes disjointes des chroniques par construction → pas de doublon ; PRIORITE
+    # les couvre déjà (§2.3). Cause inconnue tolérée (ignorée du tri si absente).
+    for cause, mark in plant.symptom_marks.items():
+        i = round(mark, 3)
+        if i > 0.0 and cause in PRIORITE:
             syms.append({"cause": cause, "intensity": i})
     syms.sort(key=lambda s: (-s["intensity"], PRIORITE[s["cause"]]))
     return syms

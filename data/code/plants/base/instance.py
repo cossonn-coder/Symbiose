@@ -38,6 +38,15 @@ class PlantInstance:
                                     # miroir HAUT de drought_memory (même lerp, anoxie soutenue → santé↓)
     stress_memory: float = 0.0      # intégration des perturbations subies [0-1]
                                     # stress↑ → croissance↓ mais résistance↑
+    # Marques de symptômes ÉVÉNEMENTIELS (sémiologie ②) : maladie/gel/grêle n'ont
+    # PAS d'état persistant relisible (un coup ponctuel), contrairement aux
+    # stresseurs chroniques recalculés à la volée. On les MÉMORISE donc ici, cause
+    # → intensité [0-1], et on les fait DÉCROÎTRE chaque tick (decay_symptoms) :
+    # une plante frappée puis épargnée retrouve son aspect en ~3-4 semaines.
+    # Écrit par la résolution d'un ReduceHealth à cause typée (resolution.py),
+    # lu par sim.semiologie.leaf_symptoms. PUR cosmétique : aucune reboucle sur
+    # santé/croissance ni présence dans _PLANT_ATTRS → golden NEUTRE.
+    symptom_marks: dict = field(default_factory=dict)
     # Vecteur de gènes héréditaire (D22). Vide ⇒ tous neutres (1.0). Rempli à la
     # naissance (semis génétique : succession, renouvellement, semis joueur).
     genes: dict = field(default_factory=dict)
@@ -106,6 +115,21 @@ class PlantInstance:
     def gene(self, name: str) -> float:
         """Facteur génétique pour un gène (1.0 = neutre si absent du vecteur)."""
         return self.genes.get(name, 1.0)
+
+    def decay_symptoms(self, decay: float, epsilon: float = 0.02) -> None:
+        """Estompe les marques de symptômes ÉVÉNEMENTIELS (sémiologie ②).
+        Chaque marque est multipliée par `decay` (<1) à chaque tick ; sous `epsilon`
+        elle est PURGÉE (la plante a cicatrisé). Appelée une fois par tick de plante,
+        à côté des autres mémoires physiologiques (croissance._update_physiology).
+        No-op si aucune marque (cas nominal du smoke → golden NEUTRE)."""
+        if not self.symptom_marks:
+            return
+        for cause in list(self.symptom_marks):
+            v = self.symptom_marks[cause] * decay
+            if v < epsilon:
+                del self.symptom_marks[cause]
+            else:
+                self.symptom_marks[cause] = v
 
     def update_footprint(self) -> None:
         """

@@ -15,12 +15,14 @@
 | # | Titre | Golden | Statut |
 |---|---|---|---|
 | ① | détecteurs chroniques + champ `leaf_symptoms` | NEUTRE | **CLOS** (golden `e209e8d8…` inchangé) |
-| ② | marques événementielles (cause typé + décroissance) | re-figeage annoncé | à faire |
+| ② | marques événementielles (cause typé + décroissance) | **NEUTRE** (cf. ci-dessous) | **CLOS** (golden `e209e8d8…` inchangé) |
 | ③ | vue C# (canal couleur + texture/forme) | — | à faire |
 
 ## REPRISE
-Prochain = **②** (`02_*.md`, à écrire). ① livré : `sim/semiologie.py` (détecteurs
-CHRONIQUES purs) + `leaf_symptoms` au snapshot, bool `chlorose` retiré, pont 0.5.1.
+Prochain = **③** (`03_*.md`, à écrire) : vue C# `PlantRenderer` — canal couleur
+(généralise `Chlorotic`/`SetChlorose`) + canaux texture/forme additifs, retrait du
+bool chlorose côté C#. ① + ② livrés côté moteur : `leaf_symptoms` (chroniques +
+événementiels) est complet au snapshot, pont 0.5.1 (schéma inchangé au ②).
 
 ## Journal de bord (MAJ en fin de chaque tronçon)
 - **① (2026-06-20)** — `sim/semiologie.py` créé : 5 détecteurs chroniques PURS
@@ -39,3 +41,27 @@ CHRONIQUES purs) + `leaf_symptoms` au snapshot, bool `chlorose` retiré, pont 0.
     crash ; retrait C# au ③).
   - NB : `tools/compte_ldc.py` (cité par CLAUDE.md) est ABSENT du dépôt ; module
     158 lignes brutes, ~⅔ commentaires pédago → code pur largement < 350.
+- **② (2026-06-20)** — marques ÉVÉNEMENTIELLES (maladie/gel/grêle) mémorisées et
+  décroissantes. `ReduceHealth` gagne `cause: str` typé (à côté du `reason` de log,
+  mutations.py). `PlantInstance.symptom_marks: dict` + `decay_symptoms(decay)`
+  (instance.py). Résolution : une cause non vide fait `marks[c] += amount·GAIN`
+  (resolution.py, `SYMPTOM_MARK_GAIN=0.5`) ; décroissance `·DECAY` une fois par tick
+  dans `_update_physiology` (croissance.py, `SYMPTOM_DECAY=0.8`, purge sous epsilon
+  0.02 ; demi-vie ~3 sem). `semiologie.leaf_symptoms` FUSIONNE marques + chroniques
+  avant le tri (causes disjointes, PRIORITE déjà complète). Sites annotés :
+  perturbations.py (`maladie`), **mortalite.py `_mediated_damage` + boucle.py
+  (`gel`/`grele`)**, aleas.py (mapping `EVENT_CAUSE`, herbivorie→"").
+  - **ÉCART au kickoff (assumé)** : le kickoff visait `aleas.py:112` pour gel/grêle,
+    mais le dégât réel gel/grêle passe désormais par `_mediated_damage` (refactor
+    météo médiée) — la voie `health` d'aleas ne porte plus que l'herbivorie
+    (Limaces/Chenilles → cause "", déjà couverte par le détecteur chronique). J'ai
+    donc annoté les VRAIS sites (`_mediated_damage`) + gardé un mapping défensif
+    dans aleas. Sans ça, gel/grêle n'auraient jamais marqué.
+  - **Golden NEUTRE** (et non re-figeage) : `e209e8d8…` inchangé. Raison : les
+    marques ne sont PAS dans `_PLANT_ATTRS` (test_golden) et ne rebouclent jamais
+    sur santé/croissance → pur affichage. Le re-figeage anticipé n'a pas lieu d'être.
+  - Vérifs : gain→décroissance→purge validés en inline (gel 0.5 → demi-vie 3 ticks,
+    fusion `leaf_symptoms` OK). `dotnet build` vert. test_golden PASS.
+  - NB échecs PRÉ-EXISTANTS (HEAD propre, hors ②) : test_senescence (Pommier mort
+    « autre » à 34,3 ans) ; test_sim_server 183/185 (`engine_version` attend 0.5.0
+    stale vs 0.5.1 du ① ; nouaison Pommier pré-âgé). À traiter hors sprint.

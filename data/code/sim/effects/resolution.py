@@ -19,6 +19,13 @@ from fields import _hash_noise
 from .mutations import (AddRondelle, RemoveRondelle, ReduceHealth, AddScore,
                         InjectField, PropagateDisease, Notification, Mutation)
 
+# Sémiologie ② (CONCEPTION_SEMIOLOGIE_FOLIAIRE.md §2.5) — gain de marque foliaire :
+# convertit le coup de santé d'un ReduceHealth à cause typée en intensité [0,1]
+# cumulable. Couplé à SYMPTOM_DECAY (croissance.py) : à GAIN 0.5 / DECAY 0.8, un
+# coup unique laisse une marque ~0.5, de demi-vie ~3 semaines (0.8³≈0.5) → la
+# plante soignée s'éclaircit nettement en ~3-4 semaines, purge sous epsilon ensuite.
+SYMPTOM_MARK_GAIN = 0.5
+
 # ---------------------------------------------------------------------------
 # HELPERS
 # ---------------------------------------------------------------------------
@@ -231,6 +238,13 @@ def apply_mutations(mutations: list, game_state: dict) -> list[str]:
 
         elif isinstance(m, ReduceHealth):
             m.plant.health = max(0, m.plant.health - m.amount)
+            # Sémiologie ② : une cause typée (maladie/gel/grêle) laisse une marque
+            # foliaire décroissante. `* SYMPTOM_MARK_GAIN` (knob) convertit le coup de
+            # santé en intensité [0,1] cumulable, plafonnée. Marque PURE cosmétique :
+            # lue par sim.semiologie au snapshot, jamais reboucle sur la santé.
+            if m.cause:
+                marks = m.plant.symptom_marks
+                marks[m.cause] = min(1.0, marks.get(m.cause, 0.0) + m.amount * SYMPTOM_MARK_GAIN)
             status = "meurt" if m.plant.health == 0 else f"santé={m.plant.health}"
             log.append(f"  {'✗' if m.plant.health==0 else '!'} {m} → {status}")
 
