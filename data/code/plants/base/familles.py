@@ -75,6 +75,17 @@ class PlantBase(ABC):
     bloom_daylen_max: float = 16.5    # h de jour : borne haute (estival → au-delà du pic 16 h)
     fungal_susceptibility: float = 0.5   # sensibilité aux maladies fongiques [0-1]
     temp_min_growth: float = 5.0         # °C — seuil de croissance (météo 02) ; en deçà, stagnation. Extensible par espèce.
+    # Fenêtre pH d'espèce (sprint physico-chimie, tronçon ⑤). Cloche d'acidité
+    # `bell(ph, ph_opt, ph_tol)` lue en germination/succession (porte) ET en
+    # croissance/vigueur (façade `vigueur_plante`). DÉFAUT NEUTRE : `ph_tol` LARGE
+    # (≈ 3.0) ⇒ `bell ≈ 1.0` sur toute la plage [4.0, 8.5] → une espèce non
+    # spécifiée est INSENSIBLE au pH (golden ~neutre). Override par espèce (myrtille
+    # acidophile 4.8/0.8, lavande/thym calciphiles 7.4/1.1). La valeur 3.0 est un
+    # LITTÉRAL ici (≡ PH_TOL_DEFAUT de la conception §3) : la couche `plants` est la
+    # plus basse et n'importe JAMAIS `fields` (règle de couches) — pas d'import du
+    # constants.py d'`ecofields`. Cf. CONCEPTION_SOL_PH.md §2.3.
+    ph_opt: float = 6.8                  # pH optimal (défaut ≈ neutre)
+    ph_tol: float = 3.0                  # demi-largeur LARGE → cloche plate → insensible au pH
     # Tolérance à l'ombre de référence (compétition intra-plot, Q6). None ⇒ dérivée
     # de la strate du stade mature (STRATE_SHADE_TOLERANCE) ; override explicite si
     # l'espèce dévie de sa strate (ex. annuelle héliophile en strate basse).
@@ -343,3 +354,18 @@ class Poaceae(PlantBase):
             "description": "Racines fibreuses — compétition hydrique intense"
         }
     ]
+
+
+class Ericaceae(PlantBase):
+    """
+    Famille : Éricacées (myrtille, bruyère, rhododendron).
+    Plantes ACIDOPHILES/calcifuges des landes et sous-bois acides : leur signature
+    n'est PAS un family_effect (aucun flux injecté), elle EST leur fenêtre pH basse
+    (`ph_opt`/`ph_tol` par espèce, tronçon ⑤) — elles ne lèvent ni ne prospèrent sur
+    calcaire, et y subissent la chlorose ferrique (jaunissement). Famille INERTE au
+    repos (pas de family_effects) : la fenêtre fait tout le travail diégétique.
+    """
+    family = "Ericaceae"
+    space_tolerance_weeks = 4
+    fungal_susceptibility = 0.3
+    family_effects = []

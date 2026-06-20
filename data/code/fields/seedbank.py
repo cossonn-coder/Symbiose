@@ -255,7 +255,8 @@ class SeedBank:
                                seed: int, week: int,
                                niche: float,
                                light: float = 0.0,
-                               arch_tolerance: dict | None = None) -> list[str]:
+                               arch_tolerance: dict | None = None,
+                               arch_ph: dict | None = None) -> list[str]:
         """
         Tirage déterministe des archétypes qui germent sur ce plot.
         hash(seed, week, r, c) < niche * seed_density → germination.
@@ -268,6 +269,12 @@ class SeedBank:
         un sciaphile « voit » plus de lumière qu'il n'y en a (lève à l'ombre),
         un héliophile en voit moins (ne lève pas sous canopée). `arch_tolerance`
         absent ⇒ comportement historique (rétro-compatible).
+
+        Fenêtre pH (tronçon ⑤) : si `arch_ph` est fourni (map archétype → cloche
+        `bell(ph_local, ph_opt, ph_tol)` ∈ ]0,1] de l'espèce au pH du plot), la
+        niche est multipliée par ce facteur — une espèce HORS fenêtre ne s'installe
+        pas (porte). Défaut d'espèce NEUTRE (`ph_tol` large) ⇒ facteur ≈ 1.0 ⇒
+        quasi rétro-compatible. `arch_ph` absent ⇒ comportement historique.
         """
         candidates = []
         for archetype in SEED_ARCHETYPES:
@@ -278,6 +285,8 @@ class SeedBank:
             if arch_tolerance and light > 0.0:
                 tol = arch_tolerance.get(archetype, 1.0)
                 niche_eff = niche * (min(1.0, light * tol) / light)
+            if arch_ph:
+                niche_eff *= arch_ph.get(archetype, 1.0)
             threshold = niche_eff * density
             noise = _hash_noise(seed, week * 7 + SEED_ARCHETYPES.index(archetype),
                                 r, c)

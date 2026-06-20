@@ -27,6 +27,8 @@ class Thyme(Lamiaceae):
     """
     genus = "Thymus"
     name = "Thym"
+    ph_opt = 7.4                   # calciphile : prospère sur sol calcaire (garrigue) — fenêtre ⑤
+    ph_tol = 1.1
     resistance_ecrasement  = 0.8   # coussin ligneux : encaisse le piétinement (volet 2 §4)
     stimulation_ecrasement = 0.5
     rarity = "Établie"
@@ -68,6 +70,8 @@ class Lavender(Lamiaceae):
     """
     genus = "Lavandula"
     name = "Lavande"
+    ph_opt = 7.4                   # calciphile : terrain sec et calcaire — fenêtre ⑤
+    ph_tol = 1.1
     resistance_ecrasement  = 0.6   # touffe ligneuse, plie sans casser (volet 2 §4)
     stimulation_ecrasement = 0.4
     rarity = "Établie"

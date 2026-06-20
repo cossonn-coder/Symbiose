@@ -18,4 +18,5 @@ Orientation :
 
 from .constants import *
 from .litiere import *
+from .nutriments import bell, dispo
 from .container import EcoFields, init_eco, inject_patch

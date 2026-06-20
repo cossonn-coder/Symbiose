@@ -16,7 +16,8 @@ Orientation :
   - `aromatiques.py`  — Lamiacées aromatiques persistantes/evergreen (Thym, Lavande)
   - `potageres.py`    — potagères lot 2 à familles NEUVES (Carotte/Apiaceae,
                         Courgette/Cucurbitaceae, Mâche/Caprifoliaceae)
-  - `sauvages.py`     — spontanées non-archétypes (Ortie/Urticaceae)
+  - `sauvages.py`     — spontanées non-archétypes (Ortie/Urticaceae,
+                        Myrtille/Ericaceae acidophile)
 """
 
 from .adventices import BursaPastoris, MedicagoLupulina, PoaAnnua, Taraxacum
@@ -24,12 +25,12 @@ from .cultivees import Tomato, Pepper, Bean, Clover, Sunflower, Basil
 from .compagnes import Yarrow, Phacelia, Borage, Comfrey, Mustard, Garlic
 from .aromatiques import Thyme, Lavender
 from .potageres import Carrot, Zucchini, CornSalad
-from .sauvages import Nettle
+from .sauvages import Nettle, Vaccinium
 
 __all__ = [
     "BursaPastoris", "MedicagoLupulina", "PoaAnnua", "Taraxacum",
     "Tomato", "Pepper", "Bean", "Clover", "Sunflower", "Basil",
     "Yarrow", "Phacelia", "Borage", "Comfrey", "Mustard", "Garlic",
     "Thyme", "Lavender",
-    "Carrot", "Zucchini", "CornSalad", "Nettle",
+    "Carrot", "Zucchini", "CornSalad", "Nettle", "Vaccinium",
 ]

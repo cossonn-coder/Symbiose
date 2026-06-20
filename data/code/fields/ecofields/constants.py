@@ -280,6 +280,26 @@ ACIDIF_LEACH = 0.20          # acidification par lessivage (climat humide → ca
 PH_OPT   = {"N": 6.8, "P": 6.5, "K": 6.5, "micro": 6.8}
 PH_WIDTH = {"N": 2.2, "P": 1.0, "K": 1.8, "micro": 1.6}
 
+# --- Fenêtre pH par espèce + chlorose alcaline (tronçon ⑤) -----------------
+# Le pH cessait de ne moduler QUE les nutriments (④) : chaque espèce reçoit
+# maintenant une FENÊTRE d'acidité (`ph_opt`/`ph_tol`, attributs de classe posés
+# côté `plants/base/familles.py`) lue en cloche `bell(ph, ph_opt, ph_tol)` à deux
+# endroits — germination/succession (porte : on ne s'installe pas hors fenêtre)
+# et croissance/vigueur (on dépérit doucement en bord de fenêtre, façade
+# `vigueur_plante`). Le DÉFAUT d'espèce est NEUTRE (`ph_tol` LARGE, cf.
+# PH_TOL_DEFAUT, défini comme littéral dans `familles.py` car la couche `plants`
+# n'importe jamais `fields` — règle de couches) → `bell ≈ 1.0` sur toute la plage,
+# une espèce non spécifiée est insensible au pH (golden ~neutre).
+#
+# CHLOROSE alcaline (reportée du ④) : une espèce ACIDOPHILE (`ph_opt` bas, sous
+# SEUIL_ACIDOPHILE) sur sol ALCALIN (`ph > CHLOROSE_PH`) subit le lockout du fer
+# → malus de vigueur (CHLOROSE_MALUS). Pas un gate de mort (philo #2) : un facteur
+# qui fait DÉPÉRIR, pas disparaître. L'indice visuel jaunissement = tronçon ⑨ (vue).
+# PLACEHOLDERS, calibrage post-test (CONCEPTION_SOL_PH.md §2.2/§2.3/§3).
+CHLOROSE_PH      = 7.6     # au-dessus, chlorose ferrique des acidophiles
+SEUIL_ACIDOPHILE = 5.5     # ph_opt en deçà duquel l'espèce est dite « acidophile »
+CHLOROSE_MALUS   = 0.5     # facteur de vigueur min à chlorose pleine
+
 # --- Nutriments N/P/K (sprint physico-chimie, tronçon ②) ------------------
 # Le proxy unique `fertilite` sera ÉCLATÉ en trois nutriments distincts —
 # azote (n), phosphore (p), potasse (k) — pour porter la loi du minimum de

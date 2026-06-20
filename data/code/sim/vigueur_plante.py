@@ -30,7 +30,8 @@ from __future__ import annotations
 # Le « puiser » de §4 réutilise les constantes/normalisations de l'EcoField :
 # la même rétroaction rhizosphère que `plant_uptake` (microbiome riche → meilleure
 # assimilation). Pas de nouveau nombre introduit.
-from fields.ecofields import UPTAKE_MICRO_BONUS
+from fields.ecofields import (UPTAKE_MICRO_BONUS, bell,
+                             CHLOROSE_PH, SEUIL_ACIDOPHILE, CHLOROSE_MALUS)
 
 HEALTH_MAX = 3.0   # santé dynamique entière 3..0 de la sénescence (D27)
 FIELD_NORM = 3.0   # normalisation canonique des champs fertilite/microbiome (cf. EcoFields)
@@ -58,15 +59,30 @@ def qi_local(plant, eco) -> float:
     (microbiome riche → meilleure assimilation, bonus borné `UPTAKE_MICRO_BONUS`).
     Moyenne sur l'empreinte, clampée [0, 1]. Empreinte vide ⇒ repli sur le
     plot-foyer. Read-only : aucun `add`, donc aucun prélèvement réel — c'est une
-    lecture, pas l'uptake."""
+    lecture, pas l'uptake.
+
+    Modulé par la FENÊTRE pH d'espèce (tronçon ⑤) : la cloche `bell(ph_local,
+    ph_opt, ph_tol)` réduit le Qi puisé hors fenêtre (une espèce mal placée
+    « puise/croît moins », elle dépérit doucement en bord de fenêtre) ; plus la
+    CHLOROSE alcaline (acidophile sur sol > CHLOROSE_PH → lockout du fer →
+    CHLOROSE_MALUS). Défauts NEUTRES (`ph_tol` large) ⇒ `bell ≈ 1.0`, aucun
+    acidophile ⇒ pas de chlorose : façade inchangée pour les espèces non
+    spécifiées (et le golden ne lit JAMAIS cette façade — cf. en-tête module)."""
     plots = plant.root_plots or [plant.plot_foyer]
     total = 0.0
+    ph_sum = 0.0
     for (r, c) in plots:
         nutri = min(eco.n.at_plot(r, c), eco.p.at_plot(r, c), eco.k.at_plot(r, c))
         fert = min(1.0, nutri / FIELD_NORM)
         micro = min(1.0, eco.microbiome.at_plot(r, c) / FIELD_NORM)
         total += fert * (1.0 + micro * UPTAKE_MICRO_BONUS)
-    return max(0.0, min(1.0, total / len(plots)))
+        ph_sum += eco.ph.at_plot(r, c)
+    ph_local = ph_sum / len(plots)
+    fenetre = bell(ph_local, plant.plant_class.ph_opt, plant.plant_class.ph_tol)
+    chlorose = (CHLOROSE_MALUS
+                if plant.plant_class.ph_opt < SEUIL_ACIDOPHILE and ph_local > CHLOROSE_PH
+                else 1.0)
+    return max(0.0, min(1.0, total / len(plots))) * fenetre * chlorose
 
 
 def vigueur_plante(plant, eco) -> float:

@@ -13,13 +13,13 @@ from plants.base import (
     GrowthStage, Segment, Fruit, MAX_ORGANS, organ_sites,
     PlantInstance, ConflictNotification, PlantBase,
     Solanaceae, Fabaceae, Asteraceae, Lamiaceae, Poaceae,
-    Urticaceae, Amaryllidaceae,
+    Urticaceae, Amaryllidaceae, Ericaceae,
 )
 from plants.species import (
     BursaPastoris, MedicagoLupulina, PoaAnnua, Taraxacum,
     Tomato, Pepper, Bean, Clover, Sunflower, Basil, Yarrow, Phacelia,
     Borage, Comfrey, Mustard, Thyme, Lavender,
-    Carrot, Zucchini, CornSalad, Nettle, Garlic,
+    Carrot, Zucchini, CornSalad, Nettle, Vaccinium, Garlic,
 )
 from plants.perennials import (
     PerennialWoody, Fig, AppleTree, CherryTree, WalnutTree, OakTree,

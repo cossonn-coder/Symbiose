@@ -7,7 +7,7 @@ from __future__ import annotations
 from plants.species import (Tomato, Pepper, Bean, Clover, Sunflower, Basil,
                             Yarrow, Phacelia, Borage, Comfrey, Mustard,
                             Thyme, Lavender,
-                            Carrot, Zucchini, CornSalad, Nettle, Garlic,
+                            Carrot, Zucchini, CornSalad, Nettle, Vaccinium, Garlic,
                             BursaPastoris, MedicagoLupulina, PoaAnnua, Taraxacum)
 from plants.perennials import Fig, AppleTree, CherryTree, WalnutTree, OakTree
 
@@ -36,6 +36,8 @@ PLANT_CATALOGUE: dict[str, type] = {
     # Spontanée non-archétype (Urticaceae) + compagne répulsive bisannuelle (Amaryllidaceae)
     "ortie":     Nettle,
     "ail":       Garlic,
+    # Sous-arbrisseau acidophile (Ericaceae) — démonstrateur fenêtre pH ⑤
+    "myrtille":  Vaccinium,
     # Adventices / succession écologique
     "bourse_pasteur": BursaPastoris,
     "minette":        MedicagoLupulina,

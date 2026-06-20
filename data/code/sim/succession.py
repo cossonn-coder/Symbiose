@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from plants import WEED_CATALOGUE, PLANT_CATALOGUE, PERENNIAL_CATALOGUE
 from fields import SEED_ARCHETYPES, _hash_noise
+from fields.ecofields import bell
 
 
 def choisir_archetype(candidates: list[str],
@@ -95,6 +96,12 @@ def _lever_grains_en_attente(game_state: dict, tile, eco, week: int, seed: int,
         if light > 0.0:
             tol = plant_class.shade_tolerance_base() * grain.genes.get("tolerance_ombre", 1.0)
             niche *= min(1.0, light * tol) / light
+
+        # Porte pH d'espèce (tronçon ⑤) : un grain planté HORS de sa fenêtre
+        # d'acidité ne lève pas (une myrtille ne lève pas sur calcaire). Défaut
+        # d'espèce NEUTRE (`ph_tol` large) ⇒ facteur ≈ 1.0. Chemin event-driven
+        # (grains_en_attente VIDE au golden) → zéro impact golden.
+        niche *= bell(eco.ph.at_plot(r, c), plant_class.ph_opt, plant_class.ph_tol)
 
         if niche < 0.01:
             continue                           # niche trop pauvre → pas encore le bon moment
@@ -182,9 +189,18 @@ def succession(game_state: dict, tile, eco, week: int) -> list[str]:
             if niche < 0.01:
                 continue
 
+            # Fenêtre pH par espèce candidate (tronçon ⑤) : cloche de l'archétype
+            # au pH LOCAL → porte de niche dans germination_candidates. Construite
+            # par plot (le facteur dépend du pH du plot). Défaut NEUTRE (`ph_tol`
+            # large) ⇒ ≈ 1.0 pour les adventices non spécifiées.
+            ph = eco.ph.at_plot(r, c)
+            arch_ph = {a: bell(ph, cls.ph_opt, cls.ph_tol)
+                       for a, cls in WEED_CATALOGUE.items()}
+
             # Priorité écologique : sol pauvre → fixatrice, sinon ordre standard
             candidates = eco.seed_bank.germination_candidates(
-                r, c, seed, week, niche, light=light, arch_tolerance=arch_tolerance
+                r, c, seed, week, niche, light=light,
+                arch_tolerance=arch_tolerance, arch_ph=arch_ph
             )
 
             if not candidates:
@@ -260,9 +276,14 @@ def spring_flush(game_state: dict, tile, eco, week: int) -> list[str]:
             if niche < 0.01:
                 continue
 
+            # Fenêtre pH par espèce candidate (tronçon ⑤) — cf. succession().
+            ph = eco.ph.at_plot(r, c)
+            arch_ph = {a: bell(ph, cls.ph_opt, cls.ph_tol)
+                       for a, cls in WEED_CATALOGUE.items()}
+
             candidates = eco.seed_bank.germination_candidates(
                 r, c, seed, week * 100, niche,   # seed différent du tick normal
-                light=light, arch_tolerance=arch_tolerance
+                light=light, arch_tolerance=arch_tolerance, arch_ph=arch_ph
             )
 
             if not candidates:

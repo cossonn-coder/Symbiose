@@ -35,6 +35,16 @@ from .constants import (NPK_RELEASE, LEACHING, CEC_PAR_SOL, CEC_OM_COEF,
                         PH_OPT, PH_WIDTH)
 
 
+def bell(ph: float, opt: float, tol: float) -> float:
+    """Cloche gaussienne générique `exp(−((ph − opt)/tol)²)` ∈ ]0,1] (tronçon ⑤).
+
+    Forme MÈRE de `dispo` (qui fige opt/tol par nutriment) : ici opt/tol sont des
+    PARAMÈTRES, pour porter la FENÊTRE pH d'une espèce (`ph_opt`/`ph_tol`). Pic à
+    1.0 quand `ph == opt` ; un `tol` LARGE (défaut espèce ≈ 3.0) aplatit la cloche
+    → ≈ 1.0 sur toute la plage (espèce pH-neutre). Pur, déterministe (philo #3)."""
+    return exp(-((ph - opt) / tol) ** 2)
+
+
 def dispo(ph: float, nut: str) -> float:
     """Disponibilité en cloche d'un nutriment (ou de l'activité microbienne) au pH
     local : `exp(−((ph − PH_OPT[nut])/PH_WIDTH[nut])²)` ∈ ]0,1] (tronçon ④, lockout).
@@ -42,8 +52,9 @@ def dispo(ph: float, nut: str) -> float:
     Pic à 1.0 quand `ph == PH_OPT[nut]`, décroît en gaussienne de part et d'autre.
     `nut ∈ {"N","P","K","micro"}`. Le phosphore (width étroite) est bloqué des deux
     côtés ; l'azote (large) reste disponible sur une large plage. C'est un FLUX de
-    disponibilité, jamais un gate de croissance (philo #2)."""
-    return exp(-((ph - PH_OPT[nut]) / PH_WIDTH[nut]) ** 2)
+    disponibilité, jamais un gate de croissance (philo #2). Cas particulier de
+    `bell` avec (opt, tol) tabulés par nutriment."""
+    return bell(ph, PH_OPT[nut], PH_WIDTH[nut])
 
 
 def split_miner(tissu: str, amount: float) -> tuple[float, float, float]:

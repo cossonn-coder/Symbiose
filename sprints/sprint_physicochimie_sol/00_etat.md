@@ -37,7 +37,7 @@ distincts** (`fertilite` supprimé, loi de Liebig) et **structure/compaction**
 | ② | N/P/K socle (champs posés, uptake lit encore `fertilite`) | NPK §2.1 | NEUTRE | ✅ |
 | ③ | Bascule uptake **Liebig** (retrait `fertilite`, lessivage diff., CEC, signature) | NPK §2.3 | **LARGE → `87ed27ae…`** | ✅ |
 | ④ | pH → lockout (cloches dispo ; chlorose reportée au ⑤) | pH §2.2 | **maîtrisé → `d8856261…`** | ✅ |
-| ⑤ | Fenêtres pH par espèce (noyau) + indicatrices acidité | pH §2.3 | ~neutre | ⬜ |
+| ⑤ | Fenêtres pH par espèce (noyau) + chlorose + indicatrices | pH §2.3 | **NEUTRE → `d8856261…` inchangé** | ✅ |
 | ⑥ | Amendements pH (rondelles `chaux`/`soufre`) | pH §2.4 | NEUTRE | ⬜ |
 | ⑦ | Faim d'azote (bois/BRF + substrat usé champignons) | NPK §2.7 | maîtrisé | ⬜ |
 | ⑧ | Structure `structure_sol` (infiltration/asphyxie/uptake) | structure §2 | maîtrisé | ⬜ |
@@ -158,6 +158,50 @@ facteur `dispo` sur le besoin, `micro *= dispo`). Toujours au-dessus du seuil ~3
 (cf. ①②③). Calcul pur isolé dans `nutriments.py` (helper `dispo`, 14 ldc). Éclatement
 d'`EcoFields` = chantier à part, hors périmètre sprint.
 
-**Suite** : lancer `05_fenetres_ph_espece.md` — fenêtres pH par espèce (noyau
-démonstrateur `ph_opt`/`ph_tol`, germination + croissance), indicatrices acidité,
-**+ chlorose alcaline reportée ici**. Cf. `CONCEPTION_SOL_PH.md` §2.3.
+**⑤ CLOS le 2026-06-20 — golden NEUTRE, hash INCHANGÉ `d8856261bbe49787…`.** Chaque
+espèce reçoit une **fenêtre pH** (`ph_opt`/`ph_tol`, attributs de classe `PlantBase`
+dans `plants/base/familles.py`, défauts NEUTRES 6.8/3.0 — `ph_tol` LARGE ⇒ cloche
+plate ⇒ insensible). Helper pur `bell(ph, opt, tol)` ajouté à `nutriments.py` (forme
+MÈRE de `dispo`, qui en devient un cas particulier tabulé) ; ré-exporté par
+`fields/ecofields/__init__`. Branché à **deux portes** :
+- **Croissance/vigueur** (`sim/vigueur_plante.qi_local`) : Qi territorial × `bell(ph_local,
+  ph_opt, ph_tol)` (puise/croît moins hors fenêtre) × facteur **chlorose** alcaline
+  (`ph_opt < SEUIL_ACIDOPHILE` ET `ph_local > CHLOROSE_PH` → `CHLOROSE_MALUS`). `ph_local`
+  = moyenne `eco.ph.at_plot` sur `root_plots` (miroir de la lecture `min(n,p,k)`).
+  **Façade read-only jamais appelée par le tick** (cf. en-tête module) → zéro golden.
+- **Germination/succession** (`fields/seedbank.germination_candidates` nouveau param
+  `arch_ph`) : niche × cloche de l'espèce candidate au pH local — une espèce hors
+  fenêtre ne s'installe pas (porte). `arch_ph` construit PAR PLOT dans `succession()` /
+  `spring_flush()` ; porte aussi posée dans `_lever_grains_en_attente` (chemin planté,
+  VIDE au golden). Sur argile (ph 7.0) les adventices `ph_tol` large → `bell≈0.9956` :
+  **n'a flippé AUCUNE levée** du smoke → hash strictement inchangé (vérifié).
+
+**Constantes** ajoutées à `constants.py` : `CHLOROSE_PH=7.6`, `SEUIL_ACIDOPHILE=5.5`,
+`CHLOROSE_MALUS=0.5`. `PH_TOL_DEFAUT` (≡3.0) posé comme LITTÉRAL dans `familles.py`
+(couche `plants` n'importe jamais `fields` — règle de couches respectée, NOTÉ).
+
+**Noyau démonstrateur** : **Myrtille** AJOUTÉE (`Vaccinium`, nouvelle famille INERTE
+`Ericaceae`, `plants/species/sauvages.py`, acidophile 4.8/0.8, `archetype=None` →
+hors WEED_CATALOGUE, jamais en succession, posée par le joueur ; clé `"myrtille"` au
+PLANT_CATALOGUE) = le démonstrateur roi de la chlorose. **Lavande/Thym** = calciphiles
+7.4/1.1. **Oseille/prêle indicatrices DIFFÉRÉES** (décision périmètre) : même mécanique
+que la myrtille (fenêtre basse), zéro impact smoke, zéro mécanique neuve → enrichissement
+catalogue à part, à arbitrer avec Nico (NOTÉ, pas oublié).
+
+**Vérifs** : golden PASS hash inchangé ; **23 suites ciblées OK** (vigueur, croissance,
+genetique, maitrise(_detection), signes, phototropisme, ombre, competition, planter,
+eau, fruits, lifecycle, population, structures, catalogue_lot2, attraction, ruche,
+evergreen, biennial, faune_dediee, alarme, auxiliaires). `test_senescence` toujours
+rouge = **D39 pré-existante** (asphyxie pommier, indépendante de ⑤). `main.py 1 an`
+= PASS exit 0, aucun crash (monde complet lourd → pas de run long inutile : golden
+déterministe + 23 suites = la vraie barrière de non-régression).
+
+⚠️ **Taille** : `container.py` NON touché ce tronçon (calcul dans `vigueur_plante` /
+`seedbank` / `succession`). Petits +N sur ces fichiers, aucun près du seuil ~350.
+
+**PAS encore committé** (handoff contexte bas). Kickoff suivant **écrit** :
+`06_amendements_ph.md` (rondelles `chaux`/`soufre`, event-driven, `AMEND_PUSH`,
+golden NEUTRE).
+
+**Suite** : confirmer `main.py 50 ans`, **commiter** ⑤, puis lancer
+`06_amendements_ph.md`.
