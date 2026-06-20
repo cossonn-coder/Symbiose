@@ -36,7 +36,7 @@ distincts** (`fertilite` supprimé, loi de Liebig) et **structure/compaction**
 | ① | pH socle (champ hérité + dérive, aucun lecteur) | pH §2.1 | NEUTRE | ✅ |
 | ② | N/P/K socle (champs posés, uptake lit encore `fertilite`) | NPK §2.1 | NEUTRE | ✅ |
 | ③ | Bascule uptake **Liebig** (retrait `fertilite`, lessivage diff., CEC, signature) | NPK §2.3 | **LARGE → `87ed27ae…`** | ✅ |
-| ④ | pH → lockout (cloches dispo + chlorose) | pH §2.2 | maîtrisé | ⬜ |
+| ④ | pH → lockout (cloches dispo ; chlorose reportée au ⑤) | pH §2.2 | **maîtrisé → `d8856261…`** | ✅ |
 | ⑤ | Fenêtres pH par espèce (noyau) + indicatrices acidité | pH §2.3 | ~neutre | ⬜ |
 | ⑥ | Amendements pH (rondelles `chaux`/`soufre`) | pH §2.4 | NEUTRE | ⬜ |
 | ⑦ | Faim d'azote (bois/BRF + substrat usé champignons) | NPK §2.7 | maîtrisé | ⬜ |
@@ -120,5 +120,44 @@ décompo splittée + lessivage CEC + bloc uptake BESOIN + `fertilite_index`).
 Toujours au-dessus du seuil ~350 (cf. ①②). Calcul pur isolé dans `nutriments.py`
 (10 ldc). Éclatement d'`EcoFields` = chantier à part, hors périmètre sprint.
 
-**Suite** : lancer `04_ph_lockout.md` — cloches `dispo_i(ph)` + chlorose alcaline,
-greffe dans `plant_uptake`. Cf. `CONCEPTION_SOL_PH.md` §2.2.
+**④ CLOS le 2026-06-20 — golden RE-FIGÉ MAÎTRISÉ `d8856261bbe49787…`.** Le champ
+`ph` (inerte depuis ①) devient enfin LECTEUR : cloche gaussienne de disponibilité
+`dispo(ph, nut) = exp(−((ph−PH_OPT[nut])/PH_WIDTH[nut])²)` ∈ ]0,1] (helper PUR dans
+`nutriments.py`, 14 ldc) branchée à **deux endroits** :
+- `plant_uptake` : le `besoin` N/P/K (③) est multiplié par `dispo(ph_local, nut)`
+  — un nutriment en STOCK n'est pas forcément ASSIMILABLE (P bridé hors zone neutre,
+  N peu sensible). Module un FLUX, pas la plante (philo #2).
+- `tick_decomposition` : la part BIOLOGIQUE de la vitesse (`micro`) est modulée par
+  `dispo(ph,"micro")` (ph → microbiome → minéralisation). Socle abiotique (0.5) et
+  bioturbation du ver laissés bruts. `decomp_speed` (fragmentation squelette) **non
+  touché** → divergence documentée (fragmentation mécanique/fongique < pH-sensible
+  que la minéralisation bactérienne).
+Constantes `PH_OPT`/`PH_WIDTH` ajoutées dans `constants.py`.
+
+**Chlorose alcaline REPORTÉE au ⑤** (décision Nico 2026-06-20) : elle a besoin de
+la notion « acidophile » par espèce (`ph_opt`/`ph_tol`) qui n'existe pas avant le ⑤
+→ pas de proxy jetable. `CHLOROSE_PH` n'est donc PAS encore posée (viendra au ⑤ avec
+son consommateur).
+
+**Dérive golden inspectée (`git stash` diff) : STRICTEMENT localisée.** Seules les
+2 lignes `ECO` du digest bougent — AUCUNE plante, rondelle, naissance/mort ne change.
+Le **phosphore résiduel monte** (terre p 0.658→0.739 ; tuile 1 p 0.223→0.248) car
+son uptake est bridé (`dispo P` ≈ 0.78 argile / 0.91 terre) → moins prélevé, plus de
+stock. N quasi inchangé (cloche large ≈ 1.0), K et om légèrement décalés (micro argile
+0.984). `dispo` sur les sols du smoke : terre P=0.914/micro=1.0, argile P=0.779/micro=0.984.
+
+**Suites** : toutes PASS (vigueur 135/135, croissance 67, genetique 20, maitrise 35,
+maitrise_detection 20, signes 8, phototropisme 11, ombre 4, + competition/planter/eau/
+fruits/lifecycle/population/structures/catalogue_lot2/attraction/ruche/evergreen/
+biennial/faune_dediee/alarme/auxiliaires). **SAUF `test_senescence`** : rouge à 2.7 ans
+(asphyxie pommier) = **régression PRÉ-EXISTANTE D39**, signature IDENTIQUE à ③,
+indépendante du ④ (vérifié : même cause, non liée à l'uptake NPK/pH).
+
+⚠️ **Taille** : `container.py` **423 ldc** de code (420 → 423, +3 : `ph_local`,
+facteur `dispo` sur le besoin, `micro *= dispo`). Toujours au-dessus du seuil ~350
+(cf. ①②③). Calcul pur isolé dans `nutriments.py` (helper `dispo`, 14 ldc). Éclatement
+d'`EcoFields` = chantier à part, hors périmètre sprint.
+
+**Suite** : lancer `05_fenetres_ph_espece.md` — fenêtres pH par espèce (noyau
+démonstrateur `ph_opt`/`ph_tol`, germination + croissance), indicatrices acidité,
+**+ chlorose alcaline reportée ici**. Cf. `CONCEPTION_SOL_PH.md` §2.3.

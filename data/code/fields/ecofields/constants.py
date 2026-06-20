@@ -259,7 +259,26 @@ PH_PAR_SOL   = {"terre": 6.8, "argile": 7.0, "sable": 5.8, "roche": 7.6}  # hér
 PH_INERTIA   = 0.02          # dérive décennale (avant amortissement CEC, volet NPK)
 ACIDIF_OM    = 0.30          # acidification par matière organique fraîche (litière)
 ACIDIF_LEACH = 0.20          # acidification par lessivage (climat humide → calcium lavé)
-# (le bloc lockout PH_OPT/PH_WIDTH/CHLOROSE_PH viendra au ④ ; AMEND_PUSH au ⑥.)
+
+# --- Lockout : disponibilité en cloche (tronçon ④) ------------------------
+# Le pH DONNE ENFIN du sens à `ph` (inerte au ①) : il module la DISPONIBILITÉ
+# des nutriments présents (un nutriment en stock n'est pas forcément assimilable).
+# Facteur gaussien `dispo_i(ph) = exp(−((ph − PH_OPT_i)/PH_WIDTH_i)²)` ∈ ]0,1],
+# appliqué multiplicativement à l'uptake N/P/K (par BESOIN) ET à l'activité
+# microbienne de la décompo (ph → microbiome → minéralisation, sans champ neuf).
+# Pas un gate de croissance (philo #2 : on module un FLUX, jamais la plante).
+#   - P centré 6.5, ÉTROIT (1.0) : bloqué en acide (fer/alu) ET alcalin (Ca) — le
+#     cas pédagogique roi (« pourquoi mon phosphore ne passe pas »).
+#   - N centré 6.8, LARGE (2.2) : peu sensible.
+#   - K centré 6.5, intermédiaire (1.8).
+#   - micro centré 6.8 (1.6) : activité bactérienne, pilote la vitesse de décompo.
+# Sur les sols du smoke (terre 6.8, argile 7.0) dispo ≈ 0.9+ (proche des optima)
+# → dérive golden faible & localisée. PLACEHOLDERS, calibrage post-test
+# (CONCEPTION_SOL_PH.md §3). La CHLOROSE alcaline (CHLOROSE_PH) est reportée au
+# tronçon ⑤ : elle a besoin de la notion « acidophile » par espèce (ph_opt/ph_tol)
+# qui n'existe pas encore — pas de proxy jetable ici (décision Nico, 2026-06-20).
+PH_OPT   = {"N": 6.8, "P": 6.5, "K": 6.5, "micro": 6.8}
+PH_WIDTH = {"N": 2.2, "P": 1.0, "K": 1.8, "micro": 1.6}
 
 # --- Nutriments N/P/K (sprint physico-chimie, tronçon ②) ------------------
 # Le proxy unique `fertilite` sera ÉCLATÉ en trois nutriments distincts —

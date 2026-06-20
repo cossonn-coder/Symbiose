@@ -26,7 +26,7 @@ from .litiere import _fusion_parcelle, _lisser_ages   # helpers privés (hors im
 from .thermique import tick_thermique as _tick_thermique   # calcul pur T_sol (①)
 from .thermique import snow_next as _snow_next              # manteau neigeux pur (⑦)
 from .ph import tick_ph as _tick_ph                         # dérive pure du pH (physico-chimie ①)
-from .nutriments import split_miner, cec_norm_at, leach_factor   # chimie N/P/K pure (physico-chimie ③)
+from .nutriments import split_miner, cec_norm_at, leach_factor, dispo   # chimie N/P/K pure (physico-chimie ③/④)
 
 
 @dataclass
@@ -456,10 +456,13 @@ class EcoFields:
 
     def decomp_speed(self, r: int, c: int) -> float:
         """Vitesse locale de décomposition (microbiome + bioturbation des vers) —
-        facteur partagé par `tick_decomposition` (inline, golden figé) et la
-        fragmentation des squelettes (`engine._tick_skeletons`, ②B). Même formule
-        que la boucle de décompo → un bois de squelette se fragmente au rythme du
-        sol vivant local."""
+        facteur de la fragmentation des squelettes (`engine._tick_skeletons`, ②B) :
+        un bois de squelette se fragmente au rythme du sol vivant local.
+
+        NB : depuis le ④, `tick_decomposition` (inline) module EN PLUS la part
+        biologique par la cloche pH `dispo(ph,"micro")` ; pas ici — la fragmentation
+        mécanique/fongique du bois mort est moins sensible au pH que la
+        minéralisation bactérienne (divergence assumée, calibrage post-test)."""
         micro = self.microbiome.at_plot(r, c) / 3.0
         speed = 0.5 + micro * 0.5
         worms = self.populations["lombric"] if self.populations else None
@@ -494,6 +497,11 @@ class EcoFields:
         for r in range(self.rows):
             for c in range(self.cols):
                 micro = self.microbiome.at_plot(r, c) / 3.0
+                # ④ LOCKOUT pH : l'activité bactérienne suit une cloche autour du
+                # neutre (ph → microbiome → minéralisation, couplage indirect sans
+                # champ neuf). Module la part BIOLOGIQUE de la vitesse uniquement —
+                # pas le socle abiotique (0.5) ni la bioturbation mécanique du ver.
+                micro *= dispo(self.ph.at_plot(r, c), "micro")
                 speed = 0.5 + micro * 0.5   # sol vivant décompose jusqu'à 2× plus vite
                 # Bioturbation du LOMBRIC (④d : le ver, pas le cloporte, brasse l'humus
                 # du sol) : accélère « un poil » la décompo locale (D31.2, option sobre ;
@@ -679,10 +687,15 @@ class EcoFields:
         # UPTAKE["fertilite"]). Chaque nutriment est plafonné par le champ local
         # (loi de Liebig : un sol carencé limite naturellement le prélèvement, sans
         # gate de croissance neuf — portage fidèle). Microbiome riche → meilleure
-        # assimilation (bonus borné, ex-branche fertilite). pH lockout = 1.0 ici (④).
+        # assimilation (bonus borné, ex-branche fertilite).
+        # ④ LOCKOUT pH : le besoin est aussi modulé par la cloche dispo(ph, nut) — un
+        # nutriment EN STOCK n'est pas forcément ASSIMILABLE (P bloqué hors zone
+        # neutre, N peu sensible). Module un FLUX, pas la plante (philo #2).
+        ph_local = self.ph.at_plot(r, c)
         for nut, fld in (("N", self.n), ("P", self.p), ("K", self.k)):
             besoin = (BESOIN[nut].get(stage_index, 0.0) * share * asphyxie_factor
-                      * (1.0 + micro_norm * UPTAKE_MICRO_BONUS))
+                      * (1.0 + micro_norm * UPTAKE_MICRO_BONUS)
+                      * dispo(ph_local, nut))
             if besoin <= 0:
                 continue
             real = min(besoin, fld.at_plot(r, c))

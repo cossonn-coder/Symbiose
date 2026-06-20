@@ -29,7 +29,21 @@ distinct du `min` instantané que ressent la croissance/Vigueur.
 
 from __future__ import annotations
 
-from .constants import NPK_RELEASE, LEACHING, CEC_PAR_SOL, CEC_OM_COEF
+from math import exp
+
+from .constants import (NPK_RELEASE, LEACHING, CEC_PAR_SOL, CEC_OM_COEF,
+                        PH_OPT, PH_WIDTH)
+
+
+def dispo(ph: float, nut: str) -> float:
+    """Disponibilité en cloche d'un nutriment (ou de l'activité microbienne) au pH
+    local : `exp(−((ph − PH_OPT[nut])/PH_WIDTH[nut])²)` ∈ ]0,1] (tronçon ④, lockout).
+
+    Pic à 1.0 quand `ph == PH_OPT[nut]`, décroît en gaussienne de part et d'autre.
+    `nut ∈ {"N","P","K","micro"}`. Le phosphore (width étroite) est bloqué des deux
+    côtés ; l'azote (large) reste disponible sur une large plage. C'est un FLUX de
+    disponibilité, jamais un gate de croissance (philo #2)."""
+    return exp(-((ph - PH_OPT[nut]) / PH_WIDTH[nut]) ** 2)
 
 
 def split_miner(tissu: str, amount: float) -> tuple[float, float, float]:
