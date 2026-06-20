@@ -175,6 +175,49 @@ def drought_stress_damage(plant: PlantInstance, eco,
     return []
 
 
+# --- Carence lumineuse chronique (voie ombre → santé, miroir de la sécheresse) ---
+# Symétrie réclamée par le terrain (Nico) : une plante laissée trop longtemps à
+# l'ombre ne doit pas SEULEMENT stagner (gate ok_light, croissance.py) — elle doit
+# stagner PUIS MOURIR, comme la sécheresse sévère. `shade_memory` intègre déjà
+# lentement l'ombre vécue (_update_physiology) : seul un déficit lumineux INSTALLÉ
+# franchit le seuil. La susceptibilité est l'INVERSE de la tolérance à l'ombre :
+# un HÉLIOPHILE (tolérance < 1, ex. plante de pleine lumière) dépérit à l'ombre,
+# un SCIAPHILE (> 1) tient. Médiée par le gène `tolerance_ombre` × la base d'espèce
+# → vraie pression de sélection sur la sciaphilie (philo #2/#7), sans bonus direct.
+SHADE_DAMAGE_THRESHOLD = 0.6   # shade_memory au-delà de laquelle le tissu souffre
+SHADE_DAMAGE_RATE      = 0.10  # probabilité de base à mémoire d'ombre saturée
+
+
+def shade_stress_damage(plant: PlantInstance, eco,
+                        seed: int, week: int) -> list[Mutation]:
+    """
+    Dégât de la carence lumineuse chronique (miroir de `drought_stress_damage`).
+
+        sévérité = (shade_memory − seuil) / (1 − seuil)        [0,1] au-delà du seuil
+        suscept. = 1 / (shade_tolerance_base × gene("tolerance_ombre"))
+        effectif = SHADE_DAMAGE_RATE × sévérité × suscept.
+
+    shade_memory intègre lentement le déficit lumineux (_update_physiology, lerp
+    0.10) : une ombre passagère ne tue pas, seule une ombre INSTALLÉE franchit le
+    seuil. Déterministe (_hash_noise, canal week·41, décorrélé des autres tirages).
+    """
+    if not plant.is_alive:
+        return []
+    sm = plant.shade_memory
+    if sm <= SHADE_DAMAGE_THRESHOLD:
+        return []
+    tol = (plant.plant_class.shade_tolerance_base()
+           * plant.gene("tolerance_ombre"))
+    if tol <= 0.0:
+        return []
+    sev = (sm - SHADE_DAMAGE_THRESHOLD) / (1.0 - SHADE_DAMAGE_THRESHOLD)
+    p = SHADE_DAMAGE_RATE * sev / tol
+    r, c = plant.position
+    if _hash_noise(seed, week * 41, r, c) < p:
+        return [ReduceHealth(plant, 1, reason="carence lumineuse")]
+    return []
+
+
 # --- Herbivorie : la pression vient du champ RAVAGEUR visible (D31.2) ---
 # Câblage D31.2 (CONCEPTION_VIE_MACRO.md §1/§2.2) : on referme la boucle vu↔agi.
 # Avant, la pression était reconstruite d'un proxy (biomasse × diversité ×
@@ -341,6 +384,8 @@ def apply_disturbances(tile, eco, game_state: dict,
         all_mutations += fungal_disease(plant, tile, eco, seed, week)
         # Stress hydrique sévère (voie sécheresse → santé, médiée par génotype)
         all_mutations += drought_stress_damage(plant, eco, seed, week)
+        # Carence lumineuse chronique (voie ombre → santé, médiée par tolerance_ombre)
+        all_mutations += shade_stress_damage(plant, eco, seed, week)
         # Mortalité de fond
         all_mutations += background_mortality(plant, eco, seed, week)
 
