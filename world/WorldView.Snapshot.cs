@@ -128,16 +128,19 @@ namespace Symbiose
 				// absente → fondu). stade_mort = "seche"/"couchee".
 				string stadeMort = p.ContainsKey("dead") && p["dead"].AsBool()
 					? p["stade_mort"].AsString() : null;
-				// Chlorose ferrique (⑨) : flag moteur du snapshot (acidophile en sol
-				// alcalin), tolérant à un snapshot pré-⑨ (clé absente → false). La vue
-				// jaunit le feuillage, sans recalculer le pH (Option 1).
-				bool chlorose = p.ContainsKey("chlorose") && p["chlorose"].AsBool();
+				// Sémiologie foliaire (D33, snapshot 0.5.1) : liste de symptômes
+				// {cause, intensité} déjà triée par le moteur (chlorose/sécheresse/
+				// asphyxie/ravageurs/sénescence/maladie/gel/grêle). Tolérant à un
+				// snapshot pré-D33 (clé absente → null → plante saine). La vue teinte
+				// et texture, sans recalculer pH/pression (cf. PlantRenderer).
+				var symptoms = p.ContainsKey("leaf_symptoms")
+					? p["leaf_symptoms"].AsGodotArray() : null;
 
 				if (_plantNodes.TryGetValue(key, out var node))
 				{
 					node.SetStructure(structure);   // la plante a poussé
 					node.SetSkeleton(stadeMort);     // ou vient de mourir / s'est couchée
-					node.SetChlorose(chlorose);      // jaunissement chlorotique (⑨)
+					node.SetSymptoms(symptoms);      // teinte + texture des symptômes (D33)
 					var t = node.GetNodeOrNull<Label>("Tag");
 					if (t != null) t.Text = TagText(p);   // le stade évolue
 					grown++;
@@ -164,7 +167,7 @@ namespace Symbiose
 				_objects.AddChild(renderer);
 				renderer.SetStructure(structure);
 				renderer.SetSkeleton(stadeMort);   // squelette déjà mort au chargement (save)
-				renderer.SetChlorose(chlorose);    // jaunissement chlorotique (⑨)
+				renderer.SetSymptoms(symptoms);    // teinte + texture des symptômes (D33)
 				renderer.AddChild(MakeTag(p));
 				if (fade)
 					renderer.CreateTween()

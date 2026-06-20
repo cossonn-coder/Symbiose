@@ -49,12 +49,31 @@ namespace Symbiose
 		// Surbrillance du segment sous la souris en mode tailler (tranche 5) :
 		// même jaune clair que le flash de geste réussi — un seul langage visuel.
 		private static readonly Color HighlightColor = new Color("ffe66b");
-		// Chlorose ferrique (sprint physico-chimie ⑤/⑨) : jaune pâle vers lequel
-		// tire le TISSU VERT (feuilles + apex + silhouette) d'une acidophile placée
-		// en sol trop alcalin. Le bois brun, lui, ne jaunit pas. Indice diégétique,
-		// pas un chiffre (philo #5).
-		private static readonly Color ChloroseTint = new Color("d8d24a");
-		private const float ChloroseAmount = 0.6f;
+		// Sémiologie foliaire (sprint D33, tronçon ③) : la vue LIT le champ snapshot
+		// `leaf_symptoms` (liste de {cause, intensité} déjà triée par le moteur) et le
+		// rend. Elle ne recalcule RIEN (ni pH, ni pression ravageur) — elle ne fait que
+		// teinter/texturer. DEUX canaux séparés pour que le cumul reste lisible sans
+		// teintes boueuses (conception §3) :
+		//  · COULEUR — le symptôme COLORANT dominant (plus forte intensité) pose la
+		//    teinte du tissu vert (feuilles/apex/silhouette) ∝ son intensité. Le bois
+		//    brun n'est jamais teinté (il ne se décolore pas). Indice diégétique,
+		//    pas un chiffre (philo #5).
+		//  · TEXTURE/FORME — ravageurs/grêle (limbe criblé), gel (bords noircis),
+		//    sécheresse (feuilles tombantes), ADDITIFS et indépendants de la couleur,
+		//    appliqués sur les feuilles (cf. PlantRenderer.Organs.cs).
+		// Teintes des symptômes COLORANTS (= canal couleur). Une plante saine n'a
+		// aucune entrée → identité. Causes inconnues ignorées (forward-compatible §7).
+		private static readonly Dictionary<string, Color> ColorantTints = new()
+		{
+			["chlorose"]   = new Color("d8d24a"), // jaune inter-nervaire (carence ferrique)
+			["asphyxie"]   = new Color("6e6a4a"), // brun-vert terne (anoxie racinaire)
+			["secheresse"] = new Color("b9a87a"), // beige désaturé, flétri
+			["senescence"] = new Color("c4702a"), // jaune-rouge de fin de vie
+			["maladie"]    = new Color("8a6a4a"), // brun tacheté (cryptogamique)
+		};
+		// Teinte appliquée à intensité 1 (≤1 pour garder un fond vert lisible même au
+		// pic). Ex-ChloroseAmount=0.6 ; un poil relevé : l'intensité module désormais.
+		private const float SymptomTintMax = 0.7f;
 
 		// Organes procéduraux (feuilles/fleurs/fruits) : constantes, palettes et
 		// méthodes de dessin → PlantRenderer.Organs.cs (partial, SS⑦).
@@ -111,22 +130,52 @@ namespace Symbiose
 			QueueRedraw();
 		}
 
-		// Flag chlorose poussé par le moteur (snapshot `chlorose`, Option 1) — la
-		// vue ne recalcule NI le pH NI `ph_opt` (cf. sim/vigueur_plante.qi_local) ;
-		// elle ne fait que teinter. Setter early-out comme SetSkeleton.
-		private bool _chlorose;
-		public void SetChlorose(bool chlorose)
+		// Canal COULEUR résolu : teinte du symptôme colorant dominant + force (=
+		// intensité × SymptomTintMax). Canaux TEXTURE/FORME : intensité par cause
+		// (0 = absent), lus par les feuilles (Organs). Poussés par SetSymptoms.
+		private Color _colorTint;
+		private float _colorAmount;       // 0 = aucun colorant → tissu vert intact
+		private float _ravageurs, _gel, _grele, _drought;
+
+		// Reçoit le `leaf_symptoms` du snapshot (liste de dicts {cause, intensity}),
+		// null/absent → plante saine. Sépare le canal couleur (colorant dominant) des
+		// canaux texture. La vue ne recalcule rien : elle traduit la liste en pixels.
+		public void SetSymptoms(Godot.Collections.Array symptoms)
 		{
-			if (_chlorose == chlorose) return;
-			_chlorose = chlorose;
+			_colorTint = default;
+			_colorAmount = 0f;
+			_ravageurs = _gel = _grele = _drought = 0f;
+			if (symptoms != null)
+				foreach (var sv in symptoms)
+				{
+					var d = sv.AsGodotDictionary();
+					string cause = d["cause"].AsString();
+					float it = (float)d["intensity"].AsDouble();
+					// COULEUR : on garde le colorant de plus forte intensité (pas de
+					// mélange). On compare l'intensité brute (SymptomTintMax constant).
+					if (ColorantTints.TryGetValue(cause, out var tint)
+						&& it * SymptomTintMax > _colorAmount)
+					{
+						_colorTint = tint;
+						_colorAmount = it * SymptomTintMax;
+					}
+					// TEXTURE/FORME : additifs, lus par cause. Cause inconnue → ignorée.
+					switch (cause)
+					{
+						case "ravageurs": _ravageurs = it; break;
+						case "gel":       _gel = it; break;
+						case "grele":     _grele = it; break;
+						case "secheresse": _drought = it; break;
+					}
+				}
 			QueueRedraw();
 		}
 
-		// Tire une couleur de tissu vert vers le jaune chlorotique si la plante est
-		// atteinte ; identité sinon. Appliqué aux feuilles, à l'apex et à la
-		// silhouette LOD — jamais au bois (il ne jaunit pas).
-		private Color Chlorotic(Color green) =>
-			_chlorose ? green.Lerp(ChloroseTint, ChloroseAmount) : green;
+		// Tire un tissu vert (feuilles/apex/silhouette) vers la teinte du symptôme
+		// colorant dominant, ∝ son intensité ; identité si aucun colorant. Jamais
+		// appliqué au bois (il ne se décolore pas). Généralise l'ex-Chlorotic().
+		private Color SymptomTint(Color tissue) =>
+			_colorAmount > 0f ? tissue.Lerp(_colorTint, _colorAmount) : tissue;
 
 		public void SetStructure(PlantStructure s)
 		{
@@ -277,7 +326,7 @@ namespace Symbiose
 				// zoom ×N, 1 px logique = N px écran ; l'arrondi entier ici donne un
 				// trait net au palier. min 1 px pour rester visible.
 				float w = Mathf.Max(1f, Mathf.Round(s.ThicknessCm * WorldView.PxPerCmX * 2.2f));
-				Color color = s.IsApex ? Chlorotic(ApexColor) : WoodColor;
+				Color color = s.IsApex ? SymptomTint(ApexColor) : WoodColor;
 
 				DrawLine(p1, p2, color, w, antialiased: false);
 			}
@@ -355,7 +404,7 @@ namespace Symbiose
 				float a = Mathf.Tau * i / n;
 				pts[i] = center + new Vector2(rx * Mathf.Cos(a), ry * Mathf.Sin(a));
 			}
-			DrawColoredPolygon(pts, Chlorotic(CrownColor));
+			DrawColoredPolygon(pts, SymptomTint(CrownColor));
 		}
 	}
 }

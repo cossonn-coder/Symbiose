@@ -22,6 +22,10 @@ namespace Symbiose
 		private const float MaturiteChute = 1.3f;  // miroir MATURITE_CHUTE moteur : sur-mûr → chute
 		// Brun fermenté d'un fruit sur-mûr (④) — vers quoi tire la couleur au-delà du mûr.
 		private static readonly Color FruitRotten = new Color("6b4a2f");
+		// Sémiologie ③ — canaux TEXTURE sur les feuilles (cf. PlantRenderer.cs).
+		private const float DroughtDroopCm = 6f;   // affaissement max d'une feuille flétrie
+		private static readonly Color LeafHoleColor = new Color(0.10f, 0.09f, 0.05f, 0.55f); // morsure sombre
+		private static readonly Color GelEdgeColor = new Color("2a1d14"); // brun-noir brûlé (gel)
 
 		// Palette par espèce (= ORGAN_PALETTE du prototype) : feuille, fleur,
 		// fruit vert, fruit mûr. Espèce inconnue → défaut.
@@ -127,11 +131,17 @@ namespace Symbiose
 						float lx = p.X + perp.X * off * side;
 						float ly = p.Y + perp.Y * off * side;
 						float lz = p.Z + (h2 - 0.5f) * LeafOffsetCm;
+						// Sécheresse (canal FORME) : turgescence perdue → la feuille
+						// s'affaisse, on l'abaisse ∝ intensité (conception §3/§4).
+						lz -= _drought * DroughtDroopCm;
 						Vector2 c = Iso(lx - collet.X, ly - collet.Y, lz);
-						Color col = Chlorotic(LeafColor(pal, season, Hash01(13, i, j)));
+						Color col = SymptomTint(LeafColor(pal, season, Hash01(13, i, j)));
 						col.A = 0.92f;
 						float r = LeafSizeCm * WorldView.PxPerCmX;
 						DrawEllipse(c, r * 1.15f, r * 0.65f, col);
+						// Canaux TEXTURE additifs (sémiologie ③) : criblage ravageurs/
+						// grêle + bords gelés, par-dessus la feuille, stables au hash.
+						DrawLeafDamage(c, r, i, j);
 					}
 				}
 			}
@@ -255,19 +265,58 @@ namespace Symbiose
 			return tips;
 		}
 
-		// Ellipse pleine alignée écran (Godot n'a pas de DrawEllipse natif) :
-		// petit polygone de 10 points — les feuilles se dessinent au SetStructure
-		// seulement, le coût par redraw reste trivial (~10 vertices/feuille).
-		private void DrawEllipse(Vector2 center, float rx, float ry, Color col)
+		// Marques de TEXTURE sur une feuille (canaux additifs, ③), par-dessus le
+		// limbe déjà dessiné. Ravageurs + grêle CRIBLENT le limbe (petits trous
+		// sombres, nombre ∝ intensité) ; gel NOIRCIT les bords (contour brûlé). Les
+		// trous sont placés au hash (i,j,k) → stables inter-frames (philo #3).
+		private void DrawLeafDamage(Vector2 c, float r, int i, int j)
 		{
-			const int n = 10;
+			float bite = Mathf.Min(1f, _ravageurs + _grele); // criblage cumulé
+			if (bite > 0f)
+			{
+				int holes = Mathf.CeilToInt(bite * 4f);   // 1 à 4 morsures
+				for (int k = 0; k < holes; k++)
+				{
+					float a = Hash01(23 + k, i, j) * Mathf.Tau;
+					float rad = (0.3f + 0.55f * Hash01(29 + k, i, j));
+					Vector2 hp = c + new Vector2(Mathf.Cos(a) * rad * r * 1.15f,
+												 Mathf.Sin(a) * rad * r * 0.65f);
+					DrawCircle(hp, r * 0.22f, LeafHoleColor);
+				}
+			}
+			if (_gel > 0f)
+				DrawEllipseOutline(c, r * 1.15f, r * 0.65f, GelEdgeColor,
+								   Mathf.Max(1f, _gel * 2.5f));
+		}
+
+		// Génère les sommets d'une ellipse alignée écran (partagés entre le plein et
+		// le contour) — petit polygone de n points (pixel art, pas de courbe lisse).
+		private static Vector2[] EllipsePoints(Vector2 center, float rx, float ry, int n)
+		{
 			var pts = new Vector2[n];
 			for (int i = 0; i < n; i++)
 			{
 				float a = Mathf.Tau * i / n;
 				pts[i] = center + new Vector2(rx * Mathf.Cos(a), ry * Mathf.Sin(a));
 			}
-			DrawColoredPolygon(pts, col);
+			return pts;
+		}
+
+		// Ellipse pleine alignée écran (Godot n'a pas de DrawEllipse natif) : 10
+		// points — les feuilles se dessinent au SetStructure seulement, le coût par
+		// redraw reste trivial (~10 vertices/feuille).
+		private void DrawEllipse(Vector2 center, float rx, float ry, Color col) =>
+			DrawColoredPolygon(EllipsePoints(center, rx, ry, 10), col);
+
+		// Contour d'ellipse fermé (gel : bords noircis) — polyligne bouclée sur le
+		// premier point.
+		private void DrawEllipseOutline(Vector2 center, float rx, float ry, Color col, float width)
+		{
+			var pts = EllipsePoints(center, rx, ry, 10);
+			var loop = new Vector2[pts.Length + 1];
+			pts.CopyTo(loop, 0);
+			loop[pts.Length] = pts[0];
+			DrawPolyline(loop, col, width, antialiased: false);
 		}
 	}
 }
