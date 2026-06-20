@@ -18,13 +18,14 @@ from .couts import cout_action, OBJETS_TOUCHES
 # les placeholders du kickoff, calibrage post-test). `epandre` puise dans
 # `compost_mur` (borné) et le restitue au plot ciblé en TROIS voies : `om_stable`
 # (structure/rétention/mémoire), `microbiome` (ENSEMENCÉ via `add` borné — pas un
-# `set`, philo #4 : le sol grandit, il ne se télécharge pas), `fertilite`.
+# `set`, philo #4 : le sol grandit, il ne se télécharge pas), `n` (azote).
 # Amendement COMPLET, pas un engrais. Le BAC (tendre) est ≈ équilibré ; la PILE
 # (bois, humus forestier) BIAISE la structure et nourrit peu — pile = bac ×
-# (1.3, 0.5, 0.4) sur (om_stable, microbiome, fertilite).
+# (1.3, 0.5, 0.4) sur (om_stable, microbiome, n). Canal nutritif → `n` (azote =
+# enrichissement générique, ③ : le proxy `fertilite` a disparu).
 EPANDRE_W = {
-    "bac":  {"om_stable": 0.6,  "microbiome": 0.3,  "fertilite": 0.3},
-    "pile": {"om_stable": 0.78, "microbiome": 0.15, "fertilite": 0.12},
+    "bac":  {"om_stable": 0.6,  "microbiome": 0.3,  "n": 0.3},
+    "pile": {"om_stable": 0.78, "microbiome": 0.15, "n": 0.12},
 }
 
 def _ramasser_vers_structure(eco, r: int, c: int, struct: Structure) -> float:
@@ -157,5 +158,5 @@ def epandre(game_state: dict, player: str, eco, r: int, c: int,
     w = EPANDRE_W[struct.kind]
     eco.om_stable.add(r, c, quantite * w["om_stable"])
     eco.microbiome.add(r, c, quantite * w["microbiome"])   # add borné (ensemence, philo #4)
-    eco.fertilite.add(r, c, quantite * w["fertilite"])
+    eco.n.add(r, c, quantite * w["n"])
     return quantite

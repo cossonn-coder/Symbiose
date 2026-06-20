@@ -225,7 +225,7 @@ class Fabaceae(PlantBase):
             "type": "permanent",
             "trigger": "weekly",
             "action": "inject_field",
-            "variable": "fertilite",
+            "variable": "n",
             "amount": 0.03,
             "cible": "local",
             "description": "Fixation N₂ — enrichit la fertilité du sol"
@@ -290,7 +290,7 @@ class Urticaceae(PlantBase):
             "type": "permanent",
             "trigger": "weekly",
             "action": "inject_field",
-            "variable": "fertilite",
+            "variable": "n",
             "amount": 0.03,
             "cible": "local",
             "description": "Biomasse azotée — enrichit la fertilité du sol"

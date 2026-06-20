@@ -53,15 +53,17 @@ def maturite(plant) -> float:
 
 def qi_local(plant, eco) -> float:
     """Qi territorial sous l'empreinte racinaire ∈ [0, 1] (spec §4) — « puiser ».
-    Lit `fertilite`/`microbiome` sur chaque plot de `plant.root_plots` via
-    l'EcoField, en MIROIR de `plant_uptake` (microbiome riche → meilleure
-    assimilation, bonus borné `UPTAKE_MICRO_BONUS`). Moyenne sur l'empreinte,
-    clampée [0, 1]. Empreinte vide ⇒ repli sur le plot-foyer. Read-only : aucun
-    `add`, donc aucun prélèvement réel — c'est une lecture, pas l'uptake."""
+    Lit la nutrition (loi de Liebig : le MINIMUM de N/P/K, ③) et `microbiome` sur
+    chaque plot de `plant.root_plots` via l'EcoField, en MIROIR de `plant_uptake`
+    (microbiome riche → meilleure assimilation, bonus borné `UPTAKE_MICRO_BONUS`).
+    Moyenne sur l'empreinte, clampée [0, 1]. Empreinte vide ⇒ repli sur le
+    plot-foyer. Read-only : aucun `add`, donc aucun prélèvement réel — c'est une
+    lecture, pas l'uptake."""
     plots = plant.root_plots or [plant.plot_foyer]
     total = 0.0
     for (r, c) in plots:
-        fert = min(1.0, eco.fertilite.at_plot(r, c) / FIELD_NORM)
+        nutri = min(eco.n.at_plot(r, c), eco.p.at_plot(r, c), eco.k.at_plot(r, c))
+        fert = min(1.0, nutri / FIELD_NORM)
         micro = min(1.0, eco.microbiome.at_plot(r, c) / FIELD_NORM)
         total += fert * (1.0 + micro * UPTAKE_MICRO_BONUS)
     return max(0.0, min(1.0, total / len(plots)))

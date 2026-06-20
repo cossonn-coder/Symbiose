@@ -26,6 +26,7 @@ from .litiere import _fusion_parcelle, _lisser_ages   # helpers privés (hors im
 from .thermique import tick_thermique as _tick_thermique   # calcul pur T_sol (①)
 from .thermique import snow_next as _snow_next              # manteau neigeux pur (⑦)
 from .ph import tick_ph as _tick_ph                         # dérive pure du pH (physico-chimie ①)
+from .nutriments import split_miner, cec_norm_at, leach_factor   # chimie N/P/K pure (physico-chimie ③)
 
 
 @dataclass
@@ -40,7 +41,6 @@ class EcoFields:
     soil_type:  str = "terre"
 
     humidite:         GridField = field(default=None)
-    fertilite:        GridField = field(default=None)
     microbiome:       GridField = field(default=None)
     lumiere:          LightField = field(default=None)
     soil_memory:      GridField = field(default=None)   # mémoire effective (composite)
@@ -97,19 +97,20 @@ class EcoFields:
     # PERSONNE → golden NEUTRE ; les lecteurs (lockout uptake, fenêtres d'espèce,
     # chlorose) arrivent aux tronçons ④/⑤.
     ph:               GridField = field(default=None)
-    # Nutriments N/P/K (sprint physico-chimie ②) — futur éclatement du proxy
-    # `fertilite` pour porter la loi de Liebig (le minimum, pas la somme).
-    # INITIALISÉS PAR HÉRITAGE du `soil_type` (NUTRIENT_INIT_PAR_SOL). Au tronçon
-    # ② POSÉS mais lus/écrits par PERSONNE (`fertilite` reste le seul actif) →
-    # golden NEUTRE ; les lecteurs (uptake Liebig, minéralisation splittée, CEC,
-    # signature) arrivent au tronçon ③.
+    # Nutriments N/P/K (sprint physico-chimie ②→③) — éclatement du proxy
+    # `fertilite` (SUPPRIMÉ au ③) pour porter la loi de Liebig (le minimum, pas
+    # la somme). INITIALISÉS PAR HÉRITAGE du `soil_type` (NUTRIENT_INIT_PAR_SOL).
+    # Depuis le ③ ils sont ACTIFS : nourris par la minéralisation splittée
+    # (`tick_decomposition`), prélevés par l'uptake (`BESOIN` + Liebig), lessivés
+    # différemment (`leach_factor`, N≫K>P) et fixés par les Fabaceae (effet famille
+    # redirigé vers `n`). Les lecteurs lisent soit le `min` (Liebig, Vigueur) soit
+    # l'index lisse `fertilite_index` (soil_memory/vitalité/succession).
     n:                GridField = field(default=None)
     p:                GridField = field(default=None)
     k:                GridField = field(default=None)
 
     def __post_init__(self):
         if self.humidite    is None: self.humidite    = GridField(self.rows, self.cols)
-        if self.fertilite   is None: self.fertilite   = GridField(self.rows, self.cols)
         if self.microbiome  is None: self.microbiome  = GridField(self.rows, self.cols)
         if self.lumiere     is None: self.lumiere     = LightField(self.rows, self.cols)
         if self.soil_memory is None:
@@ -181,7 +182,6 @@ class EcoFields:
     def get_field(self, name: str) -> GridField | None:
         return {
             "humidite":    self.humidite,
-            "fertilite":   self.fertilite,
             "microbiome":  self.microbiome,
             "lumiere":     self.lumiere,
             "soil_memory": self.soil_memory,
@@ -197,6 +197,16 @@ class EcoFields:
             "p":                self.p,
             "k":                self.k,
         }.get(name)
+
+    def fertilite_index(self, r: int, c: int) -> float:
+        """Index nutritif LISSE dérivé (③) = moyenne des trois champs N/P/K, sur la
+        même échelle [0,3] que l'ancien `fertilite`. Distinct du `min` de Liebig
+        (que ressent la croissance/Vigueur) : c'est une grandeur stable pour les
+        lecteurs qui veulent une fertilité agrégée (soil_memory, vitalité,
+        succession) → seuils/normalisations historiques intacts en FORME."""
+        return (self.n.at_plot(r, c)
+                + self.p.at_plot(r, c)
+                + self.k.at_plot(r, c)) / 3.0
 
     # --- Litière (couche fraîche : parcelles, remplace om_fresh) ---
 
@@ -241,7 +251,11 @@ class EcoFields:
         Microbiome inertie 0.92 → aura progressive des aromatiques.
         """
         self.humidite.diffuse(inertia=HUMIDITY_INERTIA)
-        self.fertilite.diffuse(inertia=FERTILITY_INERTIA)
+        # Les trois nutriments diffusent à la même inertie que l'ancien `fertilite`
+        # (③ : le proxy unique éclaté en N/P/K, dynamique spatiale conservée).
+        self.n.diffuse(inertia=FERTILITY_INERTIA)
+        self.p.diffuse(inertia=FERTILITY_INERTIA)
+        self.k.diffuse(inertia=FERTILITY_INERTIA)
         self.microbiome.diffuse(inertia=MICROBE_INERTIA)
 
     # --- Microclimat de surface (T_sol) ---
@@ -406,7 +420,7 @@ class EcoFields:
         for r in range(self.rows):
             for c in range(self.cols):
                 micro = self.microbiome.at_plot(r, c) / 3.0
-                fert  = min(1.0, self.fertilite.at_plot(r, c) / 3.0)
+                fert  = min(1.0, self.fertilite_index(r, c) / 3.0)
                 om    = min(1.0, (self.om_fresh_at(r, c) +
                                   self.om_active.at_plot(r, c) +
                                   self.om_stable.at_plot(r, c)) / 5.0)
@@ -460,18 +474,21 @@ class EcoFields:
         Chaque compartiment se décompose à son propre rythme, modulé par le
         microbiome (sol vivant = recyclage rapide). La masse décomposée se
         répartit en trois : humification (compartiment suivant), minéralisation
-        (→ fertilite), respiration (CO₂, perte nette). Aucune création de matière.
+        (→ N/P/K SPLITTÉE par tissu, §2.2), respiration (CO₂, perte nette).
+        Aucune création de matière.
 
           fresh  ──décompose──┬─ humifie → active
-                              ├─ minéralise → fertilite
+                              ├─ minéralise → split_miner(tissu) → n/p/k
                               └─ respire (perdu)
           active ──décompose──┬─ humifie → stable
-                              ├─ minéralise → fertilite (∝ microbiome)
+                              ├─ minéralise → split_miner("humus") → n/p/k
                               └─ respire (perdu)
-          stable ──décompose──┬─ minéralise → fertilite
+          stable ──décompose──┬─ minéralise → split_miner("humus") → n/p/k
                               └─ respire (perdu)
 
-        Puis lessivage lent de la fertilité.
+        La litière feuillue nourrit surtout l'azote, le fruit la potasse, le bois
+        peu (immobilisation). Puis lessivage DIFFÉRENCIÉ par nutriment, modulé par
+        la CEC dérivée (texture + humus) : N≫K>P (§2.4/§2.5).
         """
         worms = self.populations["lombric"] if self.populations else None
         for r in range(self.rows):
@@ -496,7 +513,7 @@ class EcoFields:
                 cell = self.litiere[r][c]
                 cell.sort(key=lambda p: TISSU_ORDER.index(p.tissu))
                 fresh_humif = 0.0
-                fresh_miner = 0.0
+                fresh_n = fresh_p = fresh_k = 0.0   # minéral splitté PAR tissu (§2.2)
                 survivors = []
                 for p in cell:
                     decay, humif, miner = TISSU[p.tissu]
@@ -504,7 +521,8 @@ class EcoFields:
                     p.masse  -= d
                     p.age_sem += 1.0
                     fresh_humif += d * humif
-                    fresh_miner += d * miner
+                    dn, dp, dk = split_miner(p.tissu, d * miner)
+                    fresh_n += dn; fresh_p += dp; fresh_k += dk
                     # (le reste est respiré — perte nette)
                     if p.tissu == "diffus" or p.masse > 1e-9:
                         survivors.append(p)   # `diffus` permanente même à masse 0
@@ -517,10 +535,14 @@ class EcoFields:
                 self.om_active.add(r, c, -d_active + fresh_humif)
                 self.om_stable.add(r, c, -d_stable + d_active * OM_ACTIVE_HUMIF)
 
-                released = (fresh_miner +
-                            d_active * OM_ACTIVE_MINER +
-                            d_stable * OM_STABLE_MINER)
-                self.fertilite.add(r, c, released)
+                # Minéral issu des compartiments humifiés (sans tissu propre) :
+                # ratio NPK « humus » moyen (§2.2). Bilan : frais splitté par tissu
+                # + humus splitté → n/p/k (le reste respiré a déjà été ôté).
+                humus_miner = d_active * OM_ACTIVE_MINER + d_stable * OM_STABLE_MINER
+                dn, dp, dk = split_miner("humus", humus_miner)
+                self.n.add(r, c, fresh_n + dn)
+                self.p.add(r, c, fresh_p + dp)
+                self.k.add(r, c, fresh_k + dk)
 
                 # Puits microbien : sans carbone frais, les microbes meurent.
                 # famine ∈ [0,1] : nulle si litière abondante, maximale si épuisée.
@@ -528,8 +550,14 @@ class EcoFields:
                 if famine > 0.0:
                     self.microbiome.data[r][c] *= (1.0 - MICROBE_DECAY_MAX * famine)
 
-                # Lessivage nutriments
-                self.fertilite.data[r][c] *= LEACHING_LOSS
+                # Lessivage DIFFÉRENCIÉ (§2.4) modulé par la CEC dérivée (§2.5) :
+                # texture (CEC_PAR_SOL) + humus stable normalisé /5.0 (même échelle
+                # que vitalité). N très mobile, P quasi nul, K moyen.
+                om_n = min(1.0, self.om_stable.at_plot(r, c) / 5.0)
+                cn = cec_norm_at(self.soil_type, om_n)
+                self.n.data[r][c] *= leach_factor("N", cn)
+                self.p.data[r][c] *= leach_factor("P", cn)
+                self.k.data[r][c] *= leach_factor("K", cn)
 
     def tick_structures(self) -> None:
         """Maturation hebdomadaire du contenu des structures (⑤ phase B, §5.2).
@@ -641,14 +669,26 @@ class EcoFields:
                 amount *= (0.5 + light * 0.5) * shade_factor
                 # Stress hydrique adaptatif (plante économise l'eau)
                 amount *= max(0.5, 1.0 - drought_memory * 0.3)
-            elif var == "fertilite":
-                # Microbiome riche → meilleure assimilation des nutriments
-                amount *= 1.0 + micro_norm * UPTAKE_MICRO_BONUS
             f = self.get_field(var)
             real = min(amount, f.at_plot(r, c))
             if real > 0:
                 f.add(r, c, -real)
                 consumed[var] = round(real, 3)
+
+        # Nutriments N/P/K (③) — prélèvement par BESOIN[stade] (REMPLACE
+        # UPTAKE["fertilite"]). Chaque nutriment est plafonné par le champ local
+        # (loi de Liebig : un sol carencé limite naturellement le prélèvement, sans
+        # gate de croissance neuf — portage fidèle). Microbiome riche → meilleure
+        # assimilation (bonus borné, ex-branche fertilite). pH lockout = 1.0 ici (④).
+        for nut, fld in (("N", self.n), ("P", self.p), ("K", self.k)):
+            besoin = (BESOIN[nut].get(stage_index, 0.0) * share * asphyxie_factor
+                      * (1.0 + micro_norm * UPTAKE_MICRO_BONUS))
+            if besoin <= 0:
+                continue
+            real = min(besoin, fld.at_plot(r, c))
+            if real > 0:
+                fld.add(r, c, -real)
+                consumed[nut.lower()] = round(real, 3)
         return consumed
 
     # --- Probabilité de maladie (hybride probabiliste) ---
@@ -683,7 +723,7 @@ class EcoFields:
         """
         micro     = min(1.0, self.microbiome.at_plot(r, c) / 3.0)
         active    = min(1.0, self.om_active.at_plot(r, c) / 5.0)
-        fert      = min(1.0, self.fertilite.at_plot(r, c) / 3.0)
+        fert      = min(1.0, self.fertilite_index(r, c) / 3.0)
         structure = min(1.0, self.om_stable.at_plot(r, c) / 5.0)
         disturb   = self.disturbance.at_plot(r, c)
         v = (micro     * VIT_W_MICRO +
@@ -709,7 +749,9 @@ class EcoFields:
                     self.om_stable.average())
         return {
             "humidite":    round(self.humidite.average(),         3),
-            "fertilite":   round(self.fertilite.average(),        3),
+            "n":           round(self.n.average(),                3),
+            "p":           round(self.p.average(),                3),
+            "k":           round(self.k.average(),                3),
             "microbiome":  round(self.microbiome.average(),       3),
             "om_fresh":    round(self.om_fresh_average(),         3),
             "om_active":   round(self.om_active.average(),        3),
@@ -726,7 +768,7 @@ class EcoFields:
     def __repr__(self) -> str:
         s = self.summary()
         return (f"EcoFields[{self.tile_id}] "
-                f"hum={s['humidite']} fert={s['fertilite']} "
+                f"hum={s['humidite']} npk={s['n']}/{s['p']}/{s['k']} "
                 f"micro={s['microbiome']} om={s['organic_mat']} "
                 f"soil={s['soil_memory']}")
 
@@ -736,14 +778,20 @@ class EcoFields:
 # ---------------------------------------------------------------------------
 
 def init_eco(tile_id: str, rows: int, cols: int,
-             humidite: float = 0.0, fertilite: float = 0.0,
+             humidite: float = 0.0, fertilite: float = None,
              microbiome: float = 0.0, soil_type: str = "terre") -> EcoFields:
+    """`fertilite` est un PARAM DE COMPAT (③ : le champ unique a disparu). Si fourni,
+    il initialise les trois nutriments à la MÊME valeur uniforme (n=p=k=fertilite) ;
+    si None (défaut), n/p/k gardent leur héritage `soil_type` (NUTRIENT_INIT_PAR_SOL)."""
     eco = EcoFields(tile_id=tile_id, rows=rows, cols=cols, soil_type=soil_type)
     for r in range(rows):
         for c in range(cols):
             eco.humidite.set(r, c, humidite)
-            eco.fertilite.set(r, c, fertilite)
             eco.microbiome.set(r, c, microbiome)
+            if fertilite is not None:
+                eco.n.set(r, c, fertilite)
+                eco.p.set(r, c, fertilite)
+                eco.k.set(r, c, fertilite)
     return eco
 
 

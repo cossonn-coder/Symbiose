@@ -65,7 +65,7 @@ WEATHER_ALEA = {
 # que l'Orage = pluie + vent sans dupliquer l'entrée Tempête.
 ORAGE_VENT = Alea("Orage (vent)", "Paillage dispersé.", "paillage", -1, "rondelle")
 ALEAS_RAVAGEURS = [
-    Alea("Pucerons",  "Fertilité réduite.", "fertilite", -0.3, "field"),
+    Alea("Pucerons",  "Fertilité réduite.", "n",         -0.3, "field"),
     Alea("Limaces",   "Semis grignotés.",   "",          -1.0, "health"),
     Alea("Doryphores","Maladie augmente.",  "maladie",    +1,  "rondelle"),
     Alea("Calme",     "Aucun ravageur.",    "",            0.0, "none"),

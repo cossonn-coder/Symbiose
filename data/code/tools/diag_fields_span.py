@@ -23,7 +23,7 @@ from sim.engine import Engine
 from world.building import House
 
 FIELDS = ("temperature", "humidite", "microbiome", "om_fresh", "om_active",
-          "om_stable", "fertilite", "soil_memory", "soil_memory_fast",
+          "om_stable", "n", "p", "k", "soil_memory", "soil_memory_fast",
           "soil_memory_deep", "disturbance", "lumiere")
 
 

@@ -90,7 +90,7 @@ class MedicagoLupulina(PlantBase):
             effects=[
                 {
                     "type": "permanent", "trigger": "weekly",
-                    "action": "inject_field", "variable": "fertilite",
+                    "action": "inject_field", "variable": "n",
                     "amount": 0.04, "cible": "local",
                     "description": "Fixation N₂ — fertilité"
                 },
@@ -106,7 +106,7 @@ class MedicagoLupulina(PlantBase):
     family_effects = [
         {
             "type": "permanent", "trigger": "weekly",
-            "action": "inject_field", "variable": "fertilite",
+            "action": "inject_field", "variable": "n",
             "amount": 0.03, "cible": "local",
             "description": "Fixation N₂ familiale"
         }
@@ -185,7 +185,7 @@ class Taraxacum(PlantBase):
             effects=[
                 {
                     "type": "permanent", "trigger": "weekly",
-                    "action": "inject_field", "variable": "fertilite",
+                    "action": "inject_field", "variable": "n",
                     "amount": 0.03, "cible": "local",
                     "description": "Accumulatrice — remonte les nutriments profonds"
                 },

@@ -173,7 +173,7 @@ def succession(game_state: dict, tile, eco, week: int) -> list[str]:
             light       = eco.lumiere.at_plot(r, c)
             disturbance = eco.disturbance.at_plot(r, c)
             soil_deep   = eco.soil_memory_deep.at_plot(r, c)
-            fertilite   = eco.fertilite.at_plot(r, c)
+            fertilite   = eco.fertilite_index(r, c)
 
             niche = eco.seed_bank.niche_index(
                 r, c, light, root_density, disturbance, soil_deep
@@ -251,7 +251,7 @@ def spring_flush(game_state: dict, tile, eco, week: int) -> list[str]:
             light       = eco.lumiere.at_plot(r, c)
             disturbance = eco.disturbance.at_plot(r, c)
             soil_deep   = eco.soil_memory_deep.at_plot(r, c)
-            fertilite   = eco.fertilite.at_plot(r, c)
+            fertilite   = eco.fertilite_index(r, c)
 
             niche = eco.seed_bank.niche_index(
                 r, c, light, root_density, disturbance, soil_deep

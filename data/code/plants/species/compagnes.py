@@ -200,7 +200,7 @@ class Comfrey(PlantBase):
             effects=[
                 {
                     "type": "permanent", "trigger": "weekly",
-                    "action": "inject_field", "variable": "fertilite",
+                    "action": "inject_field", "variable": "n",
                     "amount": 0.03, "cible": "local",
                     "description": "Accumulatrice — remonte les nutriments profonds"
                 },

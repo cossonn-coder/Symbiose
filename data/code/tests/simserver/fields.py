@@ -21,7 +21,7 @@ def test_champs_debug():
     r = s11.send(cmd="fields")
     noms = r.get("fields", [])
     check("registre : champs du sol présents",
-          {"microbiome", "humidite", "fertilite", "lumiere",
+          {"microbiome", "humidite", "n", "p", "k", "lumiere",
            "temperature", "disturbance"} <= set(noms),
           f"n={len(noms)}")
     check("registre : les 15 espèces de population présentes", GUILDES <= set(noms))

@@ -238,10 +238,10 @@ FRUIT_MASSE       = 0.15   # masse d'un fruit = litière `fruit` déposée à la
 FRUIT_DMAT        = 0.08   # maturation/semaine : atteint 1.0 (mûr) en ~12-13 sem (été→automne)
 MATURITE_CHUTE    = 1.3    # sur-maturité : au-delà, le fruit non cueilli tombe (fermentation = ④)
 
-# Uptake racinaire par stade
+# Uptake racinaire par stade (hors nutriments N/P/K, gérés à part par BESOIN +
+# loi de Liebig depuis le tronçon ③ — la clé `fertilite` a disparu d'ici).
 UPTAKE = {
     "humidite":  {0: 0.05, 1: 0.10, 2: 0.18, 3: 0.12},
-    "fertilite": {0: 0.02, 1: 0.05, 2: 0.08, 3: 0.05},
     "microbiome":{0: 0.00, 1: 0.01, 2: 0.02, 3: 0.01},
 }
 
@@ -276,6 +276,52 @@ ACIDIF_LEACH = 0.20          # acidification par lessivage (climat humide → ca
 NUTRIENT_INIT_PAR_SOL = {  # (N, P, K) hérités de la roche-mère
     "terre": (1.0, 0.8, 0.9), "argile": (0.9, 0.9, 1.1),
     "sable": (0.5, 0.4, 0.4), "roche": (0.4, 0.6, 0.5)}
+
+# --- Bascule Liebig (tronçon ③, LE re-figé large) -------------------------
+# La minéralisation de la litière ne nourrit plus un proxy unique `fertilite`
+# mais se RÉPARTIT en N/P/K selon le TISSU décomposé (feuille riche en azote,
+# bois pauvre et lent, fruit riche en potasse…). Ratios de partage de la part
+# MINÉRALISÉE (le `miner` de TISSU, déjà ôté de l'humifié/respiré) : somme ≤ 1
+# (le complément à 1 = minéral non capté, perte). `humus` sert aux compartiments
+# om_active/om_stable, mélangés (sans tissu). PLACEHOLDERS, calibrage post-test.
+NPK_RELEASE = {
+    # tissu      N      P      K      (somme)
+    "diffus":  {"N": 0.40, "P": 0.25, "K": 0.35},   # 1.00 — exsudats équilibrés
+    "feuille": {"N": 0.55, "P": 0.20, "K": 0.25},   # 1.00 — feuillage azoté
+    "fleur":   {"N": 0.45, "P": 0.25, "K": 0.30},   # 1.00
+    "herbace": {"N": 0.45, "P": 0.25, "K": 0.30},   # 1.00 — tiges molles
+    "fruit":   {"N": 0.30, "P": 0.25, "K": 0.45},   # 1.00 — potasse de fructification
+    "bois":    {"N": 0.15, "P": 0.25, "K": 0.20},   # 0.60 — ligneux : capte peu (immobilisation)
+    "humus":   {"N": 0.40, "P": 0.30, "K": 0.30},   # 1.00 — om_active/stable mélangés
+}
+
+# Besoin d'uptake par stade ET par nutriment (REMPLACE UPTAKE["fertilite"]).
+# Profils CONTRASTÉS (c'est là que naît la loi du minimum) : N porte le
+# végétatif (pic adulte), P le jeune âge/racines, K la fructification (pic
+# adulte/sénescent). Le prélèvement réel est borné par le stock du plot.
+# PLACEHOLDERS, calibrage post-test.
+BESOIN = {
+    "N": {0: 0.01, 1: 0.04, 2: 0.06, 3: 0.03},
+    "P": {0: 0.02, 1: 0.03, 2: 0.02, 3: 0.02},
+    "K": {0: 0.01, 1: 0.02, 2: 0.05, 3: 0.05},
+}
+
+# Lessivage DIFFÉRENCIÉ par nutriment (fraction lavée/semaine AVANT modulation
+# CEC) : N très mobile (lessive vite), P quasi immobile, K intermédiaire. Le
+# facteur appliqué = 1 − LEACHING[i]·(1 − cec_norm) : un sol à forte CEC
+# (argile/humus) RETIENT, un sable laisse tout filer. Remplace le LEACHING_LOSS
+# unique (0.999). PLACEHOLDERS, calibrage post-test.
+LEACHING = {"N": 0.12, "P": 0.005, "K": 0.05}
+
+# Capacité d'échange cationique (CEC) — facteur DÉRIVÉ (jamais un champ) texture
+# + humus, modulant le lessivage (ici) et plus tard le tampon pH (volet A) :
+#     cec = CEC_PAR_SOL[soil_type] + CEC_OM_COEF · om_stable_norm   (borné [0,1])
+# Argile/humus → CEC élevée (retient) ; sable → CEC basse (tout lessive).
+CEC_PAR_SOL = {"terre": 0.5, "argile": 0.8, "sable": 0.2, "roche": 0.4}
+CEC_OM_COEF = 0.5
+# NB : la FIXATION d'azote des Fabaceae (§2.6) n'a PAS besoin de constante dédiée
+# ici — elle EST l'effet famille `inject_field` (familles.py) redirigé vers `n`
+# au tronçon ③ : flux explicite, lisible, déjà dans la boucle d'effets.
 
 # Signature sol par famille (laissée après chaque saison)
 SOIL_SIGNATURE = {

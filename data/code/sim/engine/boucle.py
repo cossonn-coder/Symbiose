@@ -353,7 +353,7 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
             stress_avg = sum(p.stress_memory for p in alive) / len(alive) if alive else 0
             log.append(
                 f"  → {len(alive)} plante(s) | "
-                f"hum={s['humidite']:.2f} fert={s['fertilite']:.3f} "
+                f"hum={s['humidite']:.2f} npk={s['n']:.2f}/{s['p']:.2f}/{s['k']:.2f} "
                 f"micro={s['microbiome']:.3f} "
                 f"om(f/a/s)={s['om_fresh']:.2f}/{s['om_active']:.2f}/{s['om_stable']:.2f} "
                 f"soil={s['soil_memory']:.3f} vit={s['vitalite']:.3f} "

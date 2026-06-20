@@ -35,7 +35,7 @@ distincts** (`fertilite` supprimé, loi de Liebig) et **structure/compaction**
 |---|---------|-----|---------------|--------|
 | ① | pH socle (champ hérité + dérive, aucun lecteur) | pH §2.1 | NEUTRE | ✅ |
 | ② | N/P/K socle (champs posés, uptake lit encore `fertilite`) | NPK §2.1 | NEUTRE | ✅ |
-| ③ | Bascule uptake **Liebig** (retrait `fertilite`, lessivage diff., CEC, signature) | NPK §2.3 | **LARGE** | ⬜ |
+| ③ | Bascule uptake **Liebig** (retrait `fertilite`, lessivage diff., CEC, signature) | NPK §2.3 | **LARGE → `87ed27ae…`** | ✅ |
 | ④ | pH → lockout (cloches dispo + chlorose) | pH §2.2 | maîtrisé | ⬜ |
 | ⑤ | Fenêtres pH par espèce (noyau) + indicatrices acidité | pH §2.3 | ~neutre | ⬜ |
 | ⑥ | Amendements pH (rondelles `chaux`/`soufre`) | pH §2.4 | NEUTRE | ⬜ |
@@ -80,8 +80,45 @@ héritage différencié terre≠argile≠sable≠roche, valeurs constantes (pas 
 avant ② (cf. ①). Pas de calcul à isoler ce coup-ci (champs inertes). Éclatement
 d'`EcoFields` = chantier à part, à arbitrer avec Nico hors périmètre sprint.
 
-**Suite** : lancer `03_bascule_liebig.md` — **LE gros re-figé LARGE** (retrait
-`fertilite`, minéralisation splittée N/P/K, loi de Liebig, lessivage différencié,
-CEC dérivée, `SOIL_SIGNATURE` explicite, réalim `soil_memory`). Cf.
-`CONCEPTION_SOL_NUTRIMENTS_NPK.md` §2.2→2.8. Annoncer le re-figeage à Nico,
-vérifier la dérive localisée et expliquée.
+**③ CLOS le 2026-06-20 — golden RE-FIGÉ LARGE `87ed27aec24f6ca5…`** (porté
+FIDÈLE : Liebig NE gate PAS `_avancer_stades`, n/p/k reprennent les rôles de
+`fertilite`). `fertilite` **supprimé net** du dataclass / `get_field` /
+`__post_init__` / `summary` / `__repr__`. Bascule dans `container.py` :
+- `fertilite_index(r,c) = (n+p+k)/3` (grandeur lisse dérivée pour les lecteurs).
+- `tick_diffusion` diffuse n/p/k (inertie `FERTILITY_INERTIA`).
+- `tick_decomposition` : minéralisation **splittée par tissu** (`split_miner`,
+  helper pur `nutriments.py`) ; lessivage **différencié par nutriment & CEC**
+  (`leach_factor("N"|"P"|"K", cec)`, `cec_norm_at(soil_type, om_stable/5)`).
+- `plant_uptake` : branche `fertilite` retirée ; bloc **BESOIN N/P/K plafonné
+  par le champ** (= loi du minimum, prélèvement borné par la dispo réelle).
+- `soil_memory`/`vitalite`/`succession` relisent `fertilite_index` (seuils
+  intacts) ; `vigueur_plante.qi_local` lit `min(n,p,k)` (Liebig diégétique).
+- `init_eco(fertilite=…)` conservé en **param de COMPAT** : si fourni, pose
+  n=p=k uniforme ; sinon héritage `soil_type` (tronçon ②).
+Consommateurs redirigés `"fertilite"→"n"` : `compost.EPANDRE_W`, `aleas`
+(Pucerons), `boucle.py` repr, effets `inject_field` (Fabaceae+Urticaceae =
+fixation N §2.6, adventices×3, compagnes), `simserver/fields`, `diag_fields_span`.
+**NON touché** (décision cadrage) : `cultivees.py:205` add_rondelle `"fertilite"`
+(= label de rondelle, pas un champ).
+
+**Dérive golden inspectée & cohérente** (terre 40 sem) : n 1.0→~0.05 (mobile,
+lessive + uptake), p 0.8→~0.73 (quasi immobile, minéralisé → stable), k 0.9→~0.21
+(intermédiaire). Argile (CEC 0.8) retient bien mieux. **N devient le limiteur de
+Liebig = attendu.** `population_hash` INCHANGÉ.
+
+**Suites** : toutes PASS (structures 65/65, vigueur 135, croissance 67, genetique
+20, maitrise 35, signes 8, + competition/planter/eau/fruits/lifecycle/catalogue_lot2/
+population/attraction/ruche/evergreen/biennial/faune_dediee/alarme/auxiliaires).
+**SAUF `test_senescence`** : rouge, mais **régression PRÉ-EXISTANTE** (bisection
+git → commit `4b70032`, thermique ⑦ Neige+Orage : précipitations gorgent le sol →
+pommier isolé asphyxié à 2.7 ans vs 59.8 attendus). **Indépendant de ③** (courbe
+hum/mort identique fertilite-ancien vs NPK-nouveau, vérifié par `git stash`).
+**Tracé en DETTE D39** (décision Nico 2026-06-20 : tracer + clôturer ③).
+
+⚠️ **Taille** : `container.py` **420 ldc** de code (398 → 420, +22 : bascule
+décompo splittée + lessivage CEC + bloc uptake BESOIN + `fertilite_index`).
+Toujours au-dessus du seuil ~350 (cf. ①②). Calcul pur isolé dans `nutriments.py`
+(10 ldc). Éclatement d'`EcoFields` = chantier à part, hors périmètre sprint.
+
+**Suite** : lancer `04_ph_lockout.md` — cloches `dispo_i(ph)` + chlorose alcaline,
+greffe dans `plant_uptake`. Cf. `CONCEPTION_SOL_PH.md` §2.2.

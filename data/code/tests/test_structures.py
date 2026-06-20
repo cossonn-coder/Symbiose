@@ -315,11 +315,11 @@ def test_tick_neutre():
     print("\n[11] tick_structures sans structure : no-op strict (invariant golden)")
     eco = init_eco("T0", 4, 4)
     eco.deposer_litiere(1, 1, "feuille", 2.0)
-    fert_avant = eco.fertilite.data[1][1]
+    fert_avant = eco.n.data[1][1]
     om_avant = eco.om_stable.data[1][1]
     eco.tick_structures()                     # structures == [] → boucle vide
     check("structures toujours vides", eco.structures == [])
-    check("fertilite inchangée", eco.fertilite.data[1][1] == fert_avant)
+    check("n inchangé", eco.n.data[1][1] == fert_avant)
     check("om_stable inchangé", eco.om_stable.data[1][1] == om_avant)
 
 
@@ -350,7 +350,7 @@ def test_determinisme_maturation():
 # ---------------------------------------------------------------------------
 def test_epandre():
     print("\n[13] epandre : borné par compost_mur, trio humus (bac équilibré)")
-    eco = init_eco("T0", 4, 4)
+    eco = init_eco("T0", 4, 4, fertilite=0.0)   # n=p=k=0 → deltas exacts (③)
     bac = Structure(kind="bac", plot=(0, 0))
     eco.structures.append(bac)
     bac.compost_mur = 2.0                     # jauge mûre (posée directement)
@@ -362,9 +362,9 @@ def test_epandre():
     check("om_stable += q×0.6", abs(eco.om_stable.at_plot(3, 3) - 2.0 * w["om_stable"]) < 1e-9)
     check("microbiome ensemencé += q×0.3",
           abs(eco.microbiome.at_plot(3, 3) - 2.0 * w["microbiome"]) < 1e-9)
-    check("fertilite += q×0.3", abs(eco.fertilite.at_plot(3, 3) - 2.0 * w["fertilite"]) < 1e-9)
+    check("n += q×0.3", abs(eco.n.at_plot(3, 3) - 2.0 * w["n"]) < 1e-9)
     check("plot voisin INTACT (épandage local)",
-          eco.om_stable.at_plot(0, 0) == 0.0 and eco.fertilite.at_plot(0, 0) == 0.0)
+          eco.om_stable.at_plot(0, 0) == 0.0 and eco.n.at_plot(0, 0) == 0.0)
 
     # Bornage (piège #5) : demander plus que la jauge → tronqué à la jauge.
     bac.compost_mur = 1.5
@@ -389,8 +389,8 @@ def test_epandre():
 # 14. Biais structure : la pile amende plus de structure, moins de fertilité
 # ---------------------------------------------------------------------------
 def test_pile_biais():
-    print("\n[14] epandre pile : biais structure (om_stable fort, fertilite faible)")
-    eco = init_eco("T0", 4, 4)
+    print("\n[14] epandre pile : biais structure (om_stable fort, n faible)")
+    eco = init_eco("T0", 4, 4, fertilite=0.0)   # n=p=k=0 → comparaison nette (③)
     bac = Structure(kind="bac", plot=(0, 0))
     pile = Structure(kind="pile", plot=(1, 1))
     eco.structures += [bac, pile]
@@ -401,9 +401,9 @@ def test_pile_biais():
     check("pile : om_stable > bac (biais structure)",
           eco.om_stable.at_plot(3, 3) > eco.om_stable.at_plot(0, 0),
           f"pile {eco.om_stable.at_plot(3, 3):.3f} vs bac {eco.om_stable.at_plot(0, 0):.3f}")
-    check("pile : fertilite < bac (nourrit peu)",
-          eco.fertilite.at_plot(3, 3) < eco.fertilite.at_plot(0, 0),
-          f"pile {eco.fertilite.at_plot(3, 3):.3f} vs bac {eco.fertilite.at_plot(0, 0):.3f}")
+    check("pile : n < bac (nourrit peu)",
+          eco.n.at_plot(3, 3) < eco.n.at_plot(0, 0),
+          f"pile {eco.n.at_plot(3, 3):.3f} vs bac {eco.n.at_plot(0, 0):.3f}")
 
 
 # ---------------------------------------------------------------------------
