@@ -49,6 +49,12 @@ namespace Symbiose
 		// Surbrillance du segment sous la souris en mode tailler (tranche 5) :
 		// même jaune clair que le flash de geste réussi — un seul langage visuel.
 		private static readonly Color HighlightColor = new Color("ffe66b");
+		// Chlorose ferrique (sprint physico-chimie ⑤/⑨) : jaune pâle vers lequel
+		// tire le TISSU VERT (feuilles + apex + silhouette) d'une acidophile placée
+		// en sol trop alcalin. Le bois brun, lui, ne jaunit pas. Indice diégétique,
+		// pas un chiffre (philo #5).
+		private static readonly Color ChloroseTint = new Color("d8d24a");
+		private const float ChloroseAmount = 0.6f;
 
 		// Organes procéduraux (feuilles/fleurs/fruits) : constantes, palettes et
 		// méthodes de dessin → PlantRenderer.Organs.cs (partial, SS⑦).
@@ -104,6 +110,23 @@ namespace Symbiose
 			_deadStade = stadeMort;
 			QueueRedraw();
 		}
+
+		// Flag chlorose poussé par le moteur (snapshot `chlorose`, Option 1) — la
+		// vue ne recalcule NI le pH NI `ph_opt` (cf. sim/vigueur_plante.qi_local) ;
+		// elle ne fait que teinter. Setter early-out comme SetSkeleton.
+		private bool _chlorose;
+		public void SetChlorose(bool chlorose)
+		{
+			if (_chlorose == chlorose) return;
+			_chlorose = chlorose;
+			QueueRedraw();
+		}
+
+		// Tire une couleur de tissu vert vers le jaune chlorotique si la plante est
+		// atteinte ; identité sinon. Appliqué aux feuilles, à l'apex et à la
+		// silhouette LOD — jamais au bois (il ne jaunit pas).
+		private Color Chlorotic(Color green) =>
+			_chlorose ? green.Lerp(ChloroseTint, ChloroseAmount) : green;
 
 		public void SetStructure(PlantStructure s)
 		{
@@ -254,7 +277,7 @@ namespace Symbiose
 				// zoom ×N, 1 px logique = N px écran ; l'arrondi entier ici donne un
 				// trait net au palier. min 1 px pour rester visible.
 				float w = Mathf.Max(1f, Mathf.Round(s.ThicknessCm * WorldView.PxPerCmX * 2.2f));
-				Color color = s.IsApex ? ApexColor : WoodColor;
+				Color color = s.IsApex ? Chlorotic(ApexColor) : WoodColor;
 
 				DrawLine(p1, p2, color, w, antialiased: false);
 			}
@@ -332,7 +355,7 @@ namespace Symbiose
 				float a = Mathf.Tau * i / n;
 				pts[i] = center + new Vector2(rx * Mathf.Cos(a), ry * Mathf.Sin(a));
 			}
-			DrawColoredPolygon(pts, CrownColor);
+			DrawColoredPolygon(pts, Chlorotic(CrownColor));
 		}
 	}
 }

@@ -42,8 +42,10 @@ namespace Symbiose
 		// couleur devient comparable d'une semaine à l'autre (une carte
 		// météo, pas un contraste auto). Provenance des bornes :
 		//   temperature −5..35 °C  : temp_norm = 11 ± 7 °C + dérive + gel/canicule ;
-		//   humidite/fertilite/microbiome 0..3 : le moteur normalise par /3.0
-		//     (effects.py, ecofields.py — min(1, x/3)) ;
+		//   humidite/microbiome/n/p/k 0..3 : le moteur normalise par /3.0
+		//     (effects.py, ecofields.py — min(1, x/3) ; n/p/k = max_val 3.0) ;
+		//   ph 4..8.5 : héritage roche-mère 5.8→7.6 + dérive/amendements ;
+		//   structure_sol 0..1 : GridField max_val 1.0 ;
 		//   lumiere/disturbance/guildes 0..1 : _clamp01 et stability = 1 − d.
 		// NaN = pas de bornes naturelles (om_*, soil_memory*) → repli min/max
 		// AUTO de la grille, comme avant.
@@ -54,8 +56,16 @@ namespace Symbiose
 			["temperature"]      = (new Color("3a6fd8"), new Color("d83a3a"), "froid", "chaud", -5f, 35f),
 			["humidite"]         = (new Color("c8a96e"), new Color("2f6fd0"), "sec", "humide", 0f, 3f),
 			["lumiere"]          = (new Color("2e2e38"), new Color("f5e36b"), "ombre", "plein soleil", 0f, 1f),
-			["fertilite"]        = (new Color("d8cfa8"), new Color("2f8f4f"), "pauvre", "fertile", 0f, 3f),
 			["microbiome"]       = (new Color("d8d2c0"), new Color("2f8f8f"), "inerte", "vivant", 0f, 3f),
+			// Chimie du sol (sprint physico-chimie ①→⑧) : pH maître-régulateur
+			// (rouge=acide, convention papier) + N/P/K distincts (loi de Liebig,
+			// `fertilite` supprimé net au ③) + structure (compaction). Bornes
+			// PHYSIQUES figées → couleur comparable de semaine en semaine.
+			["ph"]               = (new Color("d83a3a"), new Color("9b59b6"), "acide", "alcalin", 4.0f, 8.5f),
+			["n"]                = (new Color("d8cfa8"), new Color("2f8f4f"), "pauvre", "riche N", 0f, 3f),
+			["p"]                = (new Color("d8cfa8"), new Color("8f6f2f"), "pauvre", "riche P", 0f, 3f),
+			["k"]                = (new Color("d8cfa8"), new Color("8f2f6f"), "pauvre", "riche K", 0f, 3f),
+			["structure_sol"]    = (new Color("a8744a"), new Color("4f8f4f"), "compacté", "grumeleux", 0f, 1f),
 			["om_fresh"]         = (new Color("e0d6a8"), new Color("8f7a3a"), "sol nu", "litière", float.NaN, float.NaN),
 			["om_active"]        = (new Color("e0d6a8"), new Color("6f5a2a"), "peu", "en digestion", float.NaN, float.NaN),
 			["om_stable"]        = (new Color("e0d6a8"), new Color("5a4630"), "peu", "humus", float.NaN, float.NaN),

@@ -128,7 +128,7 @@ namespace Symbiose
 						float ly = p.Y + perp.Y * off * side;
 						float lz = p.Z + (h2 - 0.5f) * LeafOffsetCm;
 						Vector2 c = Iso(lx - collet.X, ly - collet.Y, lz);
-						Color col = LeafColor(pal, season, Hash01(13, i, j));
+						Color col = Chlorotic(LeafColor(pal, season, Hash01(13, i, j)));
 						col.A = 0.92f;
 						float r = LeafSizeCm * WorldView.PxPerCmX;
 						DrawEllipse(c, r * 1.15f, r * 0.65f, col);

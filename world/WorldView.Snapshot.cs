@@ -128,11 +128,16 @@ namespace Symbiose
 				// absente → fondu). stade_mort = "seche"/"couchee".
 				string stadeMort = p.ContainsKey("dead") && p["dead"].AsBool()
 					? p["stade_mort"].AsString() : null;
+				// Chlorose ferrique (⑨) : flag moteur du snapshot (acidophile en sol
+				// alcalin), tolérant à un snapshot pré-⑨ (clé absente → false). La vue
+				// jaunit le feuillage, sans recalculer le pH (Option 1).
+				bool chlorose = p.ContainsKey("chlorose") && p["chlorose"].AsBool();
 
 				if (_plantNodes.TryGetValue(key, out var node))
 				{
 					node.SetStructure(structure);   // la plante a poussé
 					node.SetSkeleton(stadeMort);     // ou vient de mourir / s'est couchée
+					node.SetChlorose(chlorose);      // jaunissement chlorotique (⑨)
 					var t = node.GetNodeOrNull<Label>("Tag");
 					if (t != null) t.Text = TagText(p);   // le stade évolue
 					grown++;
@@ -159,6 +164,7 @@ namespace Symbiose
 				_objects.AddChild(renderer);
 				renderer.SetStructure(structure);
 				renderer.SetSkeleton(stadeMort);   // squelette déjà mort au chargement (save)
+				renderer.SetChlorose(chlorose);    // jaunissement chlorotique (⑨)
 				renderer.AddChild(MakeTag(p));
 				if (fade)
 					renderer.CreateTween()

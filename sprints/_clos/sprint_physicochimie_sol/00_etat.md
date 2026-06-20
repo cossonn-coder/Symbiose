@@ -41,7 +41,7 @@ distincts** (`fertilite` supprimé, loi de Liebig) et **structure/compaction**
 | ⑥ | Amendements pH (rondelles `chaux`/`soufre`) | pH §2.4 | **NEUTRE → `d8856261…` inchangé** | ✅ |
 | ⑦ | Faim d'azote (bois/BRF + substrat usé champignons) | NPK §2.7 | **NEUTRE → `d8856261…` inchangé** | ✅ |
 | ⑧ | Structure `structure_sol` (infiltration/asphyxie/uptake) | structure §2 | **maîtrisé → `e209e8d8…`** | ✅ |
-| ⑨ | Vue : overlays nouveaux champs + indices visuels (chlorose) | — | NEUTRE (vue) | ⬜ |
+| ⑨ | Vue : overlays nouveaux champs + indices visuels (chlorose) | — | NEUTRE (vue) | ✅ |
 
 ## §REPRISE
 
@@ -320,3 +320,29 @@ au-dessus du seuil ~350 (cf. ①–⑦). Calcul pur isolé dans `structure.py` (
 **SPRINT MOTEUR CLOS.** Reste ⑨ = vue Godot (overlays + indices visuels chlorose) —
 kickoff `09_vue_overlays.md`. Commit ⑧ : `feat(sol) : tronçon ⑧ structure_sol
 (compaction/infiltration/asphyxie/uptake) — dette D30`.
+
+**⑨ CLOS le 2026-06-20 — F5 validé par Nico — build C# vert (0 err/0 warn),
+golden INCHANGÉ `e209e8d8…`. SPRINT PHYSICO-CHIMIE TERMINÉ.**
+Décision chlorose : **Option 1** (flag moteur), retenue par Nico APRÈS qu'Option 2
+ait révélé que la grille `ph` n'arrive au client QUE via l'overlay debug F6
+(`WorldView.cs:376`) → pas d'indice diégétique permanent sans machinerie de cache.
+- **Partie A** (`visuals/FieldOverlay.cs`) : +5 palettes `ph`(4–8.5 rouge→violet)/
+  `n`/`p`/`k`(0–3)/`structure_sol`(0–1) ; entrée morte `fertilite` SUPPRIMÉE
+  (supprimé au ③) ; commentaire bornes MàJ.
+- **Partie B** (Option 1) : `serialize.py:_snapshot` expose `chlorose: bool` par
+  plante vivante (prédicat miroir `vigueur_plante.qi_local` : `ph_opt <
+  SEUIL_ACIDOPHILE and ph_loc > CHLOROSE_PH`, ph_loc = moyenne `eco.ph.at_plot`
+  sous `root_plots`/repli foyer). `PlantRenderer.cs` : flag `_chlorose` + setter
+  early-out + helper `Chlorotic()` (lerp vert→`d8d24a` à 0.6) appliqué apex +
+  silhouette LOD ; `PlantRenderer.Organs.cs` : feuilles. `WorldView.Snapshot.cs` :
+  `SetChlorose` câblé sur les 2 branches (a poussé / nouveau), tolérant pré-⑨.
+- Golden NEUTRE car aucun acidophile (myrtille) au smoke ; snapshot hors hash.
+- **PAS encore commité.** Reste : F5 Nico (overlay F6 lisible sur ph/n/p/k/
+  structure_sol + myrtille acidophile en sol alcalin qui jaunit), puis commit
+  `feat(vue) : tronçon ⑨ overlays ph/npk/structure + indice chlorose`, journal,
+  move `sprints/_clos/`.
+
+**SUITE actée (retour livrable, Nico 2026-06-20)** : généraliser l'indice foliaire
+à TOUS les stresseurs (ravageurs, excès d'humidité, sécheresse…) = **nouveau sprint
+dédié « sémiologie foliaire »**, tracé dans **dette D33** (granularité = vocabulaire
+PAR CAUSE ; chlorose = 1re brique). À CONCEVOIR en conversation, PAS de dev immédiat.
