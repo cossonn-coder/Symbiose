@@ -101,6 +101,8 @@ pointeur ci-dessous. Ne plus écrire le contenu des entrées ici.
 - [2026-06-20 — Sprint PHYSICO-CHIMIE DU SOL · tronçon ⑨ (vue Godot, C#) — SPRINT TERMINÉ : 5 overlays debug F6 (pH/N/P/K/structure_sol, `fertilite` mort retiré) + indice diégétique de chlorose alcaline (Option 1 flag moteur dans le snapshot, `Chlorotic()` lerp vert→jaune sur apex/silhouette/feuilles) ; golden NEUTRE (`e209e8d8…`), `dotnet build` OK, F5 validé — ⑨ CLOS, sprint ①→⑨ TERMINÉ (pH maître + NPK Liebig + structure_sol D30 + faim d'azote + chlorose)](journal/71_2026-06-20_sprint-physicochimie-sol-tronçon-⑨-vue-overlays-chlorose-CLOS-sprint-terminé.md)
 - [2026-06-20 — Sprint SÉMIOLOGIE FOLIAIRE (D33) — ①②③ TOUS CLOS, SPRINT TERMINÉ : `leaf_symptoms` (liste triée `{cause, intensity}`) généralise la chlorose à tout le vocabulaire — ① détecteurs chroniques purs (rampe sur le SEUIL de chaque mécanique), ② marques événementielles gel/grêle/maladie décroissantes (`cause` typé + `symptom_marks`), ③ vue C# 2 canaux (COULEUR colorant dominant `SymptomTint` + TEXTURE criblage/gel/affaissement), bool `chlorose` retiré ; golden NEUTRE (`e209e8d8…`), pont 0.5.1, `dotnet build` OK — D33 clôturée](journal/72_2026-06-20_sprint-semiologie-foliaire-CLOS-sprint-terminé.md)
 
+- [2026-06-20 — Fix dette D39 : régression `test_senescence` (asphyxie chronique par précipitations) — ré-isolation du test via climat de laboratoire (`_meteo_labo` : beau temps constant doux, pas de pluie ni gel), AUCUN fichier moteur touché, golden INTACT `e209e8d8…`, pommier mort de sénescence à 59.8 ans ∈ [49 ; 112] — D39 CLOSE](journal/73_2026-06-20_fix-D39-senescence-asphyxie.md)
+
 ---
 
 > Tout le contenu détaillé est dans les fichiers liés ci-dessus

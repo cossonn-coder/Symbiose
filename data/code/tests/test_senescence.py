@@ -21,8 +21,22 @@ from world import Tile
 from plants import AppleTree
 from fields import init_eco, SENESCENCE_ONSET
 from sim.engine import Engine
+import sim.engine.boucle as _boucle
+from sim.weather import CALME
 
 MAX_YEARS = 110   # garde-fou : longévité 70 ans → mort attendue bien avant
+
+# Climat de LABORATOIRE pour isoler la sénescence (cf. docstring run_*).
+# La météo est GLOBALE (sim.engine.boucle.weather_state) : ses pluies
+# (« Pluies »/« Pluie prolongée »/« Orage », +0.5 humidité chacune) gorgent
+# durablement le sol → asphyxie_memory franchit le seuil et tue le pommier
+# vers ~34 ans, AVANT la sénescence (age-based). On force donc un beau temps
+# constant et doux : pas de précipitation (→ pas d'asphyxie) et 15 °C >
+# TEMP_FROST_DAMAGE=0 (→ pas de gel). nébulosité 0.1 = ciel clair neutre.
+_T_DOUCE = 15.0
+_NEBUL_CLAIR = 0.1
+def _meteo_labo(seed, week):
+    return CALME, _T_DOUCE, _NEBUL_CLAIR
 
 
 def run_until_apple_death():
@@ -35,7 +49,10 @@ def run_until_apple_death():
     par le BAS (sécheresse) ni par le HAUT (asphyxie, modèle eau Session B :
     sur argile gorgée hum→3.0 soutenu, le pommier mourrait asphyxié à ~27 ans,
     bien avant la sénescence). On isole donc la sénescence (age-based) sur un sol
-    drainant à humidité médiane, entre les deux seuils de stress.
+    drainant à humidité médiane, entre les deux seuils de stress. NB : la
+    tuile seule ne suffit pas — la météo GLOBALE arrose périodiquement le sol
+    (+0.5 humidité par pluie) et finit par l'asphyxier vers ~34 ans ; on neutralise
+    donc aussi la météo via _meteo_labo (beau temps doux constant, cf. en-tête).
     Petit monde quand même → test rapide (~20 s) malgré l'horizon ~60 ans."""
     tile = Tile(tile_id="T0", soil_type="terre", grid_rows=6, grid_cols=6)
     eco = init_eco("T0", 6, 6, humidite=1.5, fertilite=1.2, microbiome=0.3)
@@ -51,6 +68,10 @@ def run_until_apple_death():
     # les deux stress hydriques. La compétition, elle, est couverte par
     # tests/test_competition.py.
     eco.seed_bank.germination_candidates = lambda *a, **k: []
+    # Deuxième isolation : climat de laboratoire sans pluie ni gel (cf.
+    # _meteo_labo en tête de module). Surgical — on ne touche que ce double de
+    # test ; le moteur (et donc le golden) reste intact.
+    _boucle.weather_state = _meteo_labo
     apple = tile.add_plant(AppleTree, 3, 3)
     tag = f"{apple.name}@{apple.position}"   # identité exacte dans les logs
     game_state = {
