@@ -27,6 +27,7 @@ from .thermique import tick_thermique as _tick_thermique   # calcul pur T_sol (�
 from .thermique import snow_next as _snow_next              # manteau neigeux pur (⑦)
 from .ph import tick_ph as _tick_ph                         # dérive pure du pH (physico-chimie ①)
 from .nutriments import split_miner, cec_norm_at, leach_factor, dispo, immobilise_n   # chimie N/P/K pure (physico-chimie ③/④/⑦)
+from .structure import tick_structure as _tick_structure   # dérive pure de la structure du sol (physico-chimie ⑧)
 
 
 @dataclass
@@ -108,6 +109,13 @@ class EcoFields:
     n:                GridField = field(default=None)
     p:                GridField = field(default=None)
     k:                GridField = field(default=None)
+    # Structure / compaction du sol (sprint physico-chimie ⑧, dette D30) ∈ [0,1] :
+    # 1 = grumeleux/aéré, 0 = compacté/battant. INITIALISÉ PAR HÉRITAGE du `soil_type`
+    # (STRUCTURE_INIT_PAR_SOL) puis dérive LENTE (`tick_structure`, helper pur) sous
+    # bioturbation (+vers), racines pivots (+) et battance de pluie sur sol nu (−). Trois
+    # LECTEURS : l'infiltration de la pluie de fond (`tick_hydrology`, le reste ruisselle),
+    # l'aggravation de l'asphyxie et la pénétration racinaire (`plant_uptake`).
+    structure_sol:    GridField = field(default=None)
 
     def __post_init__(self):
         if self.humidite    is None: self.humidite    = GridField(self.rows, self.cols)
@@ -178,6 +186,14 @@ class EcoFields:
         if self.n is None: self.n = GridField(self.rows, self.cols, initial=n0, max_val=3.0)
         if self.p is None: self.p = GridField(self.rows, self.cols, initial=p0, max_val=3.0)
         if self.k is None: self.k = GridField(self.rows, self.cols, initial=k0, max_val=3.0)
+        # Structure héritée du `soil_type` (⑧) : init uniforme, bornée [0,1]. La dérive
+        # per-plot (`tick_structure`) creuse ensuite des écarts via vers/pivots/battance.
+        if self.structure_sol is None:
+            self.structure_sol = GridField(
+                self.rows, self.cols,
+                initial=STRUCTURE_INIT_PAR_SOL.get(self.soil_type,
+                                                   STRUCTURE_INIT_PAR_SOL["terre"]),
+                max_val=1.0, min_val=0.0)
 
     def get_field(self, name: str) -> GridField | None:
         return {
@@ -196,6 +212,7 @@ class EcoFields:
             "n":                self.n,
             "p":                self.p,
             "k":                self.k,
+            "structure_sol":    self.structure_sol,
         }.get(name)
 
     def fertilite_index(self, r: int, c: int) -> float:
@@ -282,6 +299,15 @@ class EcoFields:
         défaut → golden NEUTRE (aucune rondelle chaux/soufre dans le smoke)."""
         _tick_ph(self, amend_dir=amend_dir)
 
+    def tick_structure(self, plants, pluie_norm: float = 0.0) -> None:
+        """Fait dériver `structure_sol` (lent) sous bioturbation/pivots/battance
+        (physico-chimie ⑧). Délègue au helper PUR `structure.tick_structure`
+        (container déjà dense). À appeler APRÈS la décompo (il lit la litière
+        `om_fresh_at`). `pluie_norm` = PRECIP_NORM de l'événement météo du tick
+        (0 hors pluie battante), calculé par la boucle. Les gestes becher/grelinette
+        mutent `structure_sol` DIRECTEMENT (hors de ce tick, plein effet)."""
+        _tick_structure(self, plants, pluie_norm=pluie_norm)
+
     def tick_snow(self, temp_now: float, is_neige: bool) -> None:
         """Met à jour le manteau neigeux `eco.snow` (⑦). Délègue au helper PUR
         `thermique.snow_next` (container déjà dense). Accumule si l'événement du
@@ -317,7 +343,11 @@ class EcoFields:
                 if evap < EVAP_MIN:
                     evap = EVAP_MIN
                 h *= evap                                           # 1. évaporation
-                h += BASE_RAIN                                      # 2. pluie de fond
+                # 2. pluie de fond INFILTRÉE ∝ structure (⑧, couplage lecteur §2.3) :
+                # un sol grumeleux absorbe toute la pluie de fond, un sol compacté en
+                # laisse RUISSELER une part (perdue). Lit la structure du tick précédent
+                # (champ lent → OK). structure terre héritée 0.7 < 1.0 → golden re-figé.
+                h += BASE_RAIN * self.structure_sol.at_plot(r, c)   # 2. pluie de fond infiltrée
                 h += self.soil_memory.at_plot(r, c) * SOIL_RETENTION  # 3. rétention
                 h *= drainage                                       # 4. drainage (par sol)
                 self.humidite.set(r, c, h)
@@ -670,10 +700,20 @@ class EcoFields:
         # sol gorgé devient anoxique → les racines boivent mal → l'uptake de TOUT
         # baisse ∝ l'excès courant (≠ mémoire : se lève dès que le sol s'assèche).
         # En dessous du seuil (toute la tuile terre) → facteur 1.0, aucun effet.
+        # ⑧ STRUCTURE (deux couplages lecteurs, §2.3) : un sol compacté (structure
+        # basse) AGGRAVE l'anoxie (l'eau ne s'évacue pas des pores écrasés → la SÉVÉRITÉ
+        # de l'excès est multipliée par (2−structure) ∈ [1,2]) ET freine la PÉNÉTRATION
+        # racinaire (l'uptake résiduel descend jusqu'à STRUCT_UPTAKE_MIN en sol totalement
+        # tassé). On plie les deux dans `asphyxie_factor`, déjà appliqué à l'uptake eau ET
+        # au besoin N/P/K → la modulation se propage partout. structure terre 0.7 < 1.0
+        # → mix < 1 systématique → golden re-figé maîtrisé.
         hum_local = self.humidite.at_plot(r, c)
-        excess_norm = min(1.0, max(0.0, (hum_local - HUM_EXCES) / (3.0 - HUM_EXCES)))
+        structure_local = self.structure_sol.at_plot(r, c)
+        excess_norm = min(1.0, max(0.0, (hum_local - HUM_EXCES) / (3.0 - HUM_EXCES))
+                          * (2.0 - structure_local))
         asphyxie_factor = max(ASPHYXIE_UPTAKE_FLOOR,
                               1.0 - excess_norm * ASPHYXIE_UPTAKE_MALUS)
+        asphyxie_factor *= STRUCT_UPTAKE_MIN + (1.0 - STRUCT_UPTAKE_MIN) * structure_local
         consumed = {}
         for var, by_stage in UPTAKE.items():
             amount = by_stage.get(stage_index, 0.0) * share * asphyxie_factor

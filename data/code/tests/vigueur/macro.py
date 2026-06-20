@@ -90,16 +90,22 @@ def test_becher_vs_grelinette():
     check("microbiome local abaissé (dette différée)",
           abs(eco.microbiome.at_plot(2, 2) - (micro_avant - ACT.BECHAGE_MICROBIOME_MALUS)) < 1e-9,
           f"micro={eco.microbiome.at_plot(2, 2)}")
-    # Grelinette : jumeau qui préserve — ni vers ni microbiome touchés.
+    # Grelinette (⑧) : jumeau qui PRÉSERVE+AÈRE — FAVORISE les vers, ne touche pas le
+    # microbiome, et fait REMONTER la structure du sol de GRELINETTE_GAIN (plein effet).
     vers_avant = eco.populations["lombric"].at_plot(2, 2)
     micro2 = eco.microbiome.at_plot(2, 2)
+    eco.structure_sol.set(2, 2, 0.5)   # valeur mi-course → +GRELINETTE_GAIN sans clamp
+    struct_avant = eco.structure_sol.at_plot(2, 2)
     st["courante"] = 100.0
-    okg = ACT.grelinette(gs, "joueur_1")
+    okg = ACT.grelinette(gs, "joueur_1", eco, 2, 2)
     check("grelinette payée (MODÉRÉ)", okg and st["courante"] == 100.0 - ACT.MODERE,
           f"courante={st['courante']}")
-    check("grelinette NE tue PAS les vers",
-          eco.populations["lombric"].at_plot(2, 2) == vers_avant)
+    check("grelinette FAVORISE les vers (un quantum ajouté)",
+          abs(eco.populations["lombric"].at_plot(2, 2) - (vers_avant + DENSITE_PAR_SPRITE)) < 1e-9)
     check("grelinette préserve le microbiome", eco.microbiome.at_plot(2, 2) == micro2)
+    check("grelinette remonte la structure du sol de GRELINETTE_GAIN",
+          abs(eco.structure_sol.at_plot(2, 2) - (struct_avant + ACT.GRELINETTE_GAIN)) < 1e-9,
+          f"struct={eco.structure_sol.at_plot(2, 2)}")
 
 
 def test_ecraser_pression_revient():

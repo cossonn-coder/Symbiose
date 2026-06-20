@@ -380,6 +380,33 @@ FAIM_N_TISSUS = frozenset(("bois", "substrat"))
 # ici — elle EST l'effet famille `inject_field` (familles.py) redirigé vers `n`
 # au tronçon ③ : flux explicite, lisible, déjà dans la boucle d'effets.
 
+# --- Structure / compaction du sol (sprint physico-chimie ⑧, dette D30) -----
+# Champ `structure_sol ∈ [0,1]` (1 = grumeleux/aéré, 0 = compacté/battant), HÉRITÉ
+# du `soil_type` (STRUCTURE_INIT_PAR_SOL) et dérivant LENTEMENT (STRUCT_INERTIA,
+# frère du pH/soil_memory_deep) sous forces ± : bioturbation des vers (+) et racines
+# pivots décompactantes (+) construisent les grumeaux ; la pluie battante sur sol nu
+# (−) les détruit. Le calcul vit dans `structure.py` (helper PUR, container déjà
+# dense). Trois LECTEURS (CONCEPTION_SOL_STRUCTURE §2.3) : l'infiltration de la pluie
+# de fond (∝ structure, le reste ruisselle), l'aggravation de l'asphyxie (sol tassé +
+# saturé → anoxie pire) et la pénétration racinaire (uptake ↓ en sol tassé). Le champ
+# hérité ≠ 1.0 sur les tuiles du smoke → golden RE-FIGÉ MAÎTRISÉ (§4). PLACEHOLDERS,
+# calibrage post-test (CONCEPTION_SOL_STRUCTURE.md §3).
+STRUCTURE_INIT_PAR_SOL = {"terre": 0.7, "argile": 0.45, "sable": 0.6, "roche": 0.4}
+STRUCT_INERTIA    = 0.05     # dérive lente (saisons) des forces biotiques/abiotiques
+BIOTURB           = 0.30     # construction par les vers (× densité lombric [0,1])
+RACINE_PIVOT      = 0.10     # décompactage par une racine pivot présente sur le plot
+GRELINETTE_GAIN   = 0.15     # gain durable d'un passage de grelinette (geste, plein effet)
+BECHAGE_MALUS     = 0.20     # tassement net d'un bêchage (geste, version sobre §2.2)
+BATTANCE          = 0.15     # dégradation max par pluie battante sur sol totalement nu
+STRUCT_UPTAKE_MIN = 0.5      # uptake racinaire résiduel en sol totalement compacté
+# Pluie BATTANTE par événement météo (§2.1, terme −BATTANCE·pluie_norm·(1−couvert)) —
+# fraction ∈[0,1] de la violence d'impact des gouttes sur le sol nu. Table indexée par
+# `event.kind` (donnée PURE, pas d'import inverse vers `sim`), miroir de NEBULOSITE.
+# Seules les pluies frappantes comptent ; la neige couvre sans taper (0). Défaut 0
+# (Beau temps, Sécheresse, Canicule, Gelée tardive, Redoux, Tempête, Neige) →
+# aucune battance ces semaines-là.
+PRECIP_NORM = {"Pluie prolongée": 1.0, "Orage": 0.9, "Grêle": 0.7}
+
 # Signature sol par famille (laissée après chaque saison)
 SOIL_SIGNATURE = {
     "Fabaceae":   {"microbiome": +0.15, "fertilite": +0.10},

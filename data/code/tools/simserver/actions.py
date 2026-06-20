@@ -272,11 +272,21 @@ class ActionsMixin:
                          else "échec (Vigueur insuffisante ou tiges saturées)")
 
         if verb == "grelinette":
+            tile, eco = tile_cible()
+            if tile is None:
+                return bilan(False, 0.0, 0.0,
+                             f"tuile introuvable : {target.get('tile')!r}")
+            r, c = target.get("r"), target.get("c")
+            if (not isinstance(r, int) or not isinstance(c, int)
+                    or not (0 <= r < tile.grid_rows)
+                    or not (0 <= c < tile.grid_cols)):
+                return bilan(False, 0.0, 0.0,
+                             f"plot hors tuile : r={r!r}, c={c!r}")
             cost = A.cout_action(gs, player, "grelinette",
                                  A.OBJETS_TOUCHES["grelinette"])
-            ok = A.grelinette(gs, player)
+            ok = A.grelinette(gs, player, eco, r, c)
             return bilan(ok, cost, 0.0,
-                         "sol ameubli à la grelinette" if ok
+                         f"sol ameubli à la grelinette en ({r},{c})" if ok
                          else "Vigueur insuffisante")
 
         # Structures posables & compostage (⑤, protocole 0.3.5). Toutes ciblent une

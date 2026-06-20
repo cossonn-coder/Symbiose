@@ -23,7 +23,7 @@ mixins frères (croissance.py / mortalite.py / decompo.py).
 from __future__ import annotations
 from dataclasses import dataclass
 from plants import PLANT_CATALOGUE
-from fields import _hash_noise, ABSCISSION_WEEKS
+from fields import _hash_noise, ABSCISSION_WEEKS, PRECIP_NORM
 from fields.ecofields.thermique import t_min_nuit_at  # gel nocturne localisé (⑥)
 from fields.apiculture import tick_ruches   # ruches : capture essaim + miel (⑥, §H/§I)
 from fields.alarme import tick_alarme       # phéromone d'alarme apienne : décroissance (⑦, §J)
@@ -194,6 +194,14 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
                          - tile.get_rondelle_count("soufre"))
             amend_dir = (net_amend > 0) - (net_amend < 0)
             eco.tick_ph(amend_dir)
+
+            # 4d. Dérive lente de la structure du sol (sprint physico-chimie ⑧) —
+            #     APRÈS la décompo (elle lit la litière `om_fresh_at` pour le couvert
+            #     anti-battance). `pluie_norm` = violence d'impact de l'événement météo
+            #     du tick (PRECIP_NORM ; 0 hors pluie frappante → aucune battance). Les
+            #     gestes becher/grelinette mutent `structure_sol` ailleurs (en direct).
+            pluie_norm = PRECIP_NORM.get(event.kind, 0.0)
+            eco.tick_structure(tile.plants, pluie_norm)
 
             # 5. Diffusion spatiale (humidité, fertilité, microbiome)
             eco.tick_diffusion()

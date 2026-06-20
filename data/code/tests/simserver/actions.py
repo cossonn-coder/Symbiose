@@ -101,7 +101,8 @@ def test_actions_v1():
     # Vigueur insuffisante : drainer à la grelinette (sans cible) jusqu'au refus.
     refus = None
     for _ in range(8):
-        r = s5.send(cmd="action", verb="grelinette")
+        r = s5.send(cmd="action", verb="grelinette",
+                    target={"tile": "T0", "r": 2, "c": 2})
         if r["result"]["applied"] is False:
             refus = r["result"]
             break
@@ -121,7 +122,8 @@ def test_actions_v1():
     snap = s5.send(cmd="snapshot")["snapshot"]
     while snap["week"] <= 14:
         if snap["player"]["vigueur"] > 60.0:    # garder un déficit > régen
-            s5.send(cmd="action", verb="grelinette")
+            s5.send(cmd="action", verb="grelinette",
+                    target={"tile": "T0", "r": 2, "c": 2})
         snap = s5.send(cmd="step_week")["snapshot"]
     check("refill au passage de saison (plein à la semaine 14)",
           snap["player"]["vigueur"] == snap["player"]["vigueur_max"],
@@ -138,7 +140,8 @@ def test_actions_v1():
         p = snap["plants"][0]
         s.send(cmd="action", verb="manger",
                target={"tile": p["tile"], "x_cm": p["x_cm"], "y_cm": p["y_cm"]})
-        s.send(cmd="action", verb="grelinette")
+        s.send(cmd="action", verb="grelinette",
+               target={"tile": "T0", "r": 2, "c": 2})
         s.send(cmd="action", verb="ecraser",
                target={"tile": "T0", "r": 1, "c": 1}, params={"urgence": True})
         s.send(cmd="step_week")

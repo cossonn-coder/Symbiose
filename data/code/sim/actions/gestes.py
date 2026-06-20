@@ -23,6 +23,7 @@ from sim.growth import (atteindre_segment,   # seam de perturbation §F (sim→s
                         f_lignification, INTENSITE_PIED, SEUIL_DEGAT, COUPE_NETTE)  # calibrage écrasement (volet 2)
 from sim.effects import deposer_mort   # mort → squelette persistant (②B), point d'entrée unique
 from fields.ecofields import BOIS_PAR_CM, ECRASER_FRAG_BOOST   # litière `bois` (taille/écimage) + boost fragmentation (②)
+from fields.ecofields import BECHAGE_MALUS, GRELINETTE_GAIN   # deltas structure du sol des gestes (physico-chimie ⑧)
 from fields.population import DENSITE_PAR_SPRITE   # « un geste = un individu = un quantum » (D31.3 §5)
 from fields.alarme import declencher_alarme, ALARME_DEPOT   # phéromone d'alarme apienne (⑦ §J)
 from fields.seedbank import GrainEnAttente          # dépôt de `planter` (germination différée, distinct de la banque-sol)
@@ -419,22 +420,26 @@ def becher(game_state: dict, player: str, eco, r: int, c: int) -> bool:
         return False
     eco.populations["lombric"].add(r, c, -DENSITE_PAR_SPRITE)
     eco.microbiome.add(r, c, -BECHAGE_MICROBIOME_MALUS)
+    eco.structure_sol.add(r, c, -BECHAGE_MALUS)   # semelle de tassement (⑧, version sobre §2.2)
     return True
 
 
-def grelinette(game_state: dict, player: str) -> bool:
+def grelinette(game_state: dict, player: str, eco, r: int, c: int) -> bool:
     """Grelinette — ameublir SANS retourner (spec §3.2, principe no-dig). Action
     BINAIRE, coût MODÉRÉ. Le JUMEAU QUI PRÉSERVE de `becher` : même intention
-    (décompacter) mais ne tue NI vers NI microbiome → no-op écologique côté Python
-    pour l'instant. Livré dès maintenant (point ouvert #2, défaut sobre tranché)
-    pour ancrer le couple pédagogique becher/grelinette : le contraste s'enseigne
-    À L'ŒIL (les sprites de vers disparaissent après bêchage, restent après
-    grelinette), pas par un texte.
+    (décompacter) mais ne tue NI vers NI microbiome.
 
-    Son BÉNÉFICE propre (aération + infiltration ↑) attend le champ
-    structure/compaction du sol → DIFFÉRÉ à D30 (on n'invente pas D30 ici). D'ici
-    là, grelinette ne fait que dépenser la Vigueur du travail du sol sans dette
-    biologique — c'est déjà le bon geste, son gain mécanique viendra.
-    Renvoie True si le geste a été pleinement payé."""
+    Depuis le tronçon ⑧ (dette D30 absorbée) son BÉNÉFICE propre s'inscrit : la
+    `structure_sol` du plot remonte de GRELINETTE_GAIN (gain DURABLE d'un passage,
+    plein effet — pas ×STRUCT_INERTIA, ce n'est pas une force continue mais un geste)
+    ET un quantum de `lombric` est AJOUTÉ (l'aération sans retournement favorise la
+    faune du sol → miroir exact du malus de becher). Le contraste becher/grelinette
+    s'enseigne À L'ŒIL : les vers disparaissent après bêchage, AFFLUENT après
+    grelinette ; le sol se tasse d'un côté, s'aère de l'autre (philo #1/#6, sans sermon).
+    Renvoie True si le geste a été pleinement payé (et donc appliqué)."""
     cost = cout_action(game_state, player, "grelinette", OBJETS_TOUCHES["grelinette"])
-    return spend(game_state, player, cost) >= 1.0
+    if spend(game_state, player, cost) < 1.0:
+        return False
+    eco.structure_sol.add(r, c, GRELINETTE_GAIN)        # aère sans retourner (gain durable)
+    eco.populations["lombric"].add(r, c, DENSITE_PAR_SPRITE)   # ↑vers (effet 2nd, §3 bioturbation)
+    return True

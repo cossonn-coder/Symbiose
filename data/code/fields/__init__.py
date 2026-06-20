@@ -61,4 +61,5 @@ from fields.ecofields import (
     FRUIT_MASSE, FRUIT_DMAT, MATURITE_CHUTE,
     Structure, STRUCTURE_ACCEPTE,
     UPTAKE, SOIL_SIGNATURE,
+    PRECIP_NORM,
 )

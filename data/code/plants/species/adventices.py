@@ -76,6 +76,7 @@ class MedicagoLupulina(PlantBase):
     life_cycle = "perennial"
     winter_strategy = "dormant"
     archetype = "nitrogen_fixer"
+    decompactante = True   # racine pivot de légumineuse : décompacte/aère le sol (⑧, RACINE_PIVOT)
     reproduction_rate = 0.05
     foliage_density = 0.40
     longevity_years = 3    # vivace courte

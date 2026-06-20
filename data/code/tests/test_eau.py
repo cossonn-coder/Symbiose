@@ -152,8 +152,13 @@ def test_asphyxie_uptake():
           f"sain={sain:.4f} excès-plein={noye:.4f}")
     check("réduction GRADUÉE (excès plein < bord de seuil)", noye < bord,
           f"bord={bord:.4f} plein={noye:.4f}")
+    # Tolérance à l'échelle de l'arrondi : `consumed` est arrondi à 3 décimales dans
+    # `plant_uptake`. Depuis ⑧, l'uptake est aussi mis à l'échelle par le mix structure
+    # (≈0.85 en terre) — le ratio physique noye/sain reste au plancher (l'asphyxie est
+    # protégée AVANT le mix, qui s'applique identiquement à sain et noye), mais l'arrondi
+    # des deux valeurs mises à l'échelle peut introduire jusqu'à ~5e-4 d'écart → 1e-3.
     check("plancher d'uptake respecté (jamais 0 : racines réduites, pas mortes)",
-          noye >= sain * ASPHYXIE_UPTAKE_FLOOR - 1e-9)
+          noye >= sain * ASPHYXIE_UPTAKE_FLOOR - 1e-3)
     # réversibilité : assécher restaure l'uptake (effet sur l'excès COURANT, pas mémoire)
     check("RÉVERSIBLE : revenu sous le seuil, uptake = régime sain",
           abs(uptake_eau(HUM_EXCES - 0.3) - sain) < 1e-9)

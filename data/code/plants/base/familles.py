@@ -86,6 +86,11 @@ class PlantBase(ABC):
     # constants.py d'`ecofields`. Cf. CONCEPTION_SOL_PH.md §2.3.
     ph_opt: float = 6.8                  # pH optimal (défaut ≈ neutre)
     ph_tol: float = 3.0                  # demi-largeur LARGE → cloche plate → insensible au pH
+    # Racine PIVOT décompactante (sprint physico-chimie ⑧) : une plante ainsi marquée
+    # fore le sol et l'aère, faisant remonter `structure_sol` sur ses plots (lu par
+    # `structure.tick_structure` via RACINE_PIVOT). Défaut False = NEUTRE (aucune action
+    # sur la structure). Override par espèce (ex. MedicagoLupulina, luzerne lupuline).
+    decompactante: bool = False
     # Tolérance à l'ombre de référence (compétition intra-plot, Q6). None ⇒ dérivée
     # de la strate du stade mature (STRATE_SHADE_TOLERANCE) ; override explicite si
     # l'espèce dévie de sa strate (ex. annuelle héliophile en strate basse).

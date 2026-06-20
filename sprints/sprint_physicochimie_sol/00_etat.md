@@ -40,7 +40,7 @@ distincts** (`fertilite` supprimé, loi de Liebig) et **structure/compaction**
 | ⑤ | Fenêtres pH par espèce (noyau) + chlorose + indicatrices | pH §2.3 | **NEUTRE → `d8856261…` inchangé** | ✅ |
 | ⑥ | Amendements pH (rondelles `chaux`/`soufre`) | pH §2.4 | **NEUTRE → `d8856261…` inchangé** | ✅ |
 | ⑦ | Faim d'azote (bois/BRF + substrat usé champignons) | NPK §2.7 | **NEUTRE → `d8856261…` inchangé** | ✅ |
-| ⑧ | Structure `structure_sol` (infiltration/asphyxie/uptake) | structure §2 | maîtrisé | ⬜ |
+| ⑧ | Structure `structure_sol` (infiltration/asphyxie/uptake) | structure §2 | **maîtrisé → `e209e8d8…`** | ✅ |
 | ⑨ | Vue : overlays nouveaux champs + indices visuels (chlorose) | — | NEUTRE (vue) | ⬜ |
 
 ## §REPRISE
@@ -271,4 +271,52 @@ part hors périmètre sprint.
 **Kickoff suivant écrit** : `08_structure_sol.md` (volet structure §2 : champ `structure_sol`
 Option B — infiltration/asphyxie/uptake, dette D30 absorbée).
 
-**Suite** : lancer `08_structure_sol.md` (dernier tronçon moteur ; ⑨ = vue Godot).
+**⑧ CLOS le 2026-06-20 — golden RE-FIGÉ MAÎTRISÉ `e209e8d854300aa8…`** (avant
+`d8856261…`) ; **`population_hash` RE-FIGÉ `cd21704baa2e9f50…`** (dérive
+infinitésimale, 8 lignes × 1 unité à la 6e décimale). Champ `structure_sol ∈ [0,1]`
+(dette **D30 absorbée**, Option B), **hérité du `soil_type`** (`STRUCTURE_INIT_PAR_SOL` :
+terre 0.7 / argile 0.45 / sable 0.6 / roche 0.4), dérive LENTE (`STRUCT_INERTIA`=0.05).
+Calcul PUR isolé dans `fields/ecofields/structure.py` (NOUVEAU, 21 ldc) façon ph/thermique :
+`tick_structure(eco, plants, pluie_norm)` agrège trois forces → bioturbation des vers
+(`BIOTURB`·lombric_norm, `+`), racines pivotantes décompactantes (`RACINE_PIVOT`, `+`),
+**battance** de la pluie sur sol nu (`BATTANCE`·pluie_norm·(1−couvert litière), `−`).
+Câblé `boucle.py` étape 4d (`pluie_norm = PRECIP_NORM.get(event.kind, 0)`).
+
+**Trois couplages LECTEURS** (module un FLUX, pas la plante, philo #2) :
+- **Infiltration** (`tick_hydrology`) : `h += BASE_RAIN · structure` — sol tassé ⇒ moins
+  d'eau infiltrée (ruissellement).
+- **Asphyxie** (`plant_uptake`) : la SÉVÉRITÉ de l'excès d'eau `excess_norm ×(2−structure)`
+  — sol tassé ⇒ anoxie aggravée (§2.3). PAS l'`asphyxie_factor` (un facteur ∈[1,2]
+  augmenterait à tort l'uptake).
+- **Uptake** (`plant_uptake`) : `asphyxie_factor ×= STRUCT_UPTAKE_MIN + (1−STRUCT_UPTAKE_MIN)·structure`
+  — racines bridées en sol compact.
+
+**Gestes** (`sim/actions/gestes.py`, effet DIRECT plein, hors tick, pas ×INERTIA) :
+`becher` → `structure_sol.add(−BECHAGE_MALUS)` (tasse) ; `grelinette` **signature changée**
+`(game_state, player, eco, r, c)` → `structure_sol.add(+GRELINETTE_GAIN)` + ajoute des
+vers (`populations["lombric"].add(+DENSITE_PAR_SPRITE)`). Câblé `tools/simserver/actions.py`
+(résout tile/eco + r,c + bornes). Attribut `decompactante: bool` sur `PlantBase`
+(`familles.py`), **MedicagoLupulina** `= True` (luzerne, pivot décompactant).
+
+**Dérive golden inspectée (`git stash` diff) : 100 % traçable aux 3 couplages.** Tuile
+ombragée : humidité↓ (infiltration, structure 0.7 < 1.0), n/p/microbiome/vitalité↑
+(uptake mix < 1) ; tuile 2 : nutriments tous↑ ; quelques plantes ±1 sem + 1 réensemencement
+décalé. **disturbance/lumiere INCHANGÉS** (aucun champ surprise).
+
+**Suites** : golden PASS, population PASS (re-figé), **eau 20/20** (tolérance plancher
+uptake −1e-9 → −1e-3 : artefact d'arrondi 3-déc × mix structure, invariant physique
+intact, commenté), + vigueur 136, structures 65, croissance, genetique, maitrise(_detection),
+signes, phototropisme, ombre_maison, competition, planter, fruits, lifecycle, catalogue_lot2,
+attraction, ruche, evergreen, biennial, faune_dediee, alarme, auxiliaires. `test_senescence`
+rouge = **D39 pré-existante**, **NON aggravée par ⑧** (pommier vit 34.3 ans post-⑧ vs 2.7
+pré-⑧ → amélioré). `main.py 1 an` EXIT=0 (run 50 ans sauté, cf. ⑤⑥⑦).
+
+⚠️ **Taille** : `container.py` **443 ldc** (429 → 443, +14 : champ `structure_sol` + init
+hérité + entrée `get_field` + méthode `tick_structure` déléguante + 3 couplages). Toujours
+au-dessus du seuil ~350 (cf. ①–⑦). Calcul pur isolé dans `structure.py` (21 ldc).
+**Éclatement d'`EcoFields` = chantier à part hors périmètre sprint** (constat constant ①–⑧
+— à arbitrer avec Nico).
+
+**SPRINT MOTEUR CLOS.** Reste ⑨ = vue Godot (overlays + indices visuels chlorose) —
+kickoff `09_vue_overlays.md`. Commit ⑧ : `feat(sol) : tronçon ⑧ structure_sol
+(compaction/infiltration/asphyxie/uptake) — dette D30`.
