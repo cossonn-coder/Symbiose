@@ -125,7 +125,13 @@ from __future__ import annotations
 #       du smoke ⇒ aucun symptôme). Champ optionnel côté vue (tolérance pré-0.5.1 ;
 #       la vue consomme encore `chlorose` au ②/③ → retrait C# au tronçon ③). Les
 #       marques ÉVÉNEMENTIELLES (maladie/gel/grele, décroissantes) arrivent au ②.
-ENGINE_VERSION = "0.5.1"
+# 0.5.2 (mort par stress chronique ① + signe ③) : nouvelle cause `ombre` (carence
+#       lumineuse chronique, étiolement) dans la LISTE `leaf_symptoms` — miroir du
+#       dégât `shade_stress_damage` (shade_memory → santé). Extension de DONNÉES
+#       (liste de causes ouverte), pas de schéma : la vue ignore une cause inconnue
+#       (tolérance pré-0.5.2). À FAIRE côté C# : mapping couleur+texture du cas
+#       « ombre » dans PlantRenderer (dette vue, hors moteur Python).
+ENGINE_VERSION = "0.5.2"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

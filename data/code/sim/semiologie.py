@@ -42,7 +42,8 @@ from fields.ecofields import (CHLOROSE_PH, SEUIL_ACIDOPHILE, PH_MAX,
 # Mêmes seuils que la mécanique de DÉGÂT correspondante (sim, même couche) :
 #   DROUGHT_DAMAGE_THRESHOLD — drought_memory au-delà de laquelle le tissu souffre
 #   HERBIVORY_GAIN — gain densité→pression, sert à exprimer le floor du détecteur
-from sim.effects.perturbations import DROUGHT_DAMAGE_THRESHOLD, HERBIVORY_GAIN
+from sim.effects.perturbations import (DROUGHT_DAMAGE_THRESHOLD, HERBIVORY_GAIN,
+                                       SHADE_DAMAGE_THRESHOLD)
 
 # Densité locale `ravageur + chenille` sous laquelle `herbivory_pressure` ne fait
 # RIEN (son garde-fou `if pressure < 0.005`, avec pression = densité·HERBIVORY_GAIN).
@@ -88,6 +89,17 @@ def secheresse(plant, eco, saison) -> float:
     stress INSTALLÉ (pas une semaine sèche isolée) commence à abîmer le tissu.
     Couvre la canicule (qui n'est qu'une chute d'humidité). Plein à mémoire saturée."""
     return _ramp(plant.drought_memory, DROUGHT_DAMAGE_THRESHOLD, 1.0)
+
+
+def ombre(plant, eco, saison) -> float:
+    """Carence lumineuse chronique : étiolement — limbe pâle, tiges filées, port
+    avachi vers le peu de lumière. Miroir de `shade_stress_damage` — même
+    `shade_memory` (intégration lente de l'ombre vécue) et même seuil
+    SHADE_DAMAGE_THRESHOLD : le signe apparaît quand une ombre INSTALLÉE (pas un
+    passage nuageux) commence à abîmer le tissu. Plein à mémoire d'ombre saturée.
+    Un sciaphile n'en souffrant pas dans le moteur, le signe traduit le DÉGÂT réel
+    (suscept. = 1/tolérance) — c'est l'héliophile mal placé qu'on voit s'étioler."""
+    return _ramp(plant.shade_memory, SHADE_DAMAGE_THRESHOLD, 1.0)
 
 
 def asphyxie(plant, eco, saison) -> float:
@@ -137,6 +149,7 @@ DETECTEURS = (
     ("secheresse", secheresse),
     ("asphyxie", asphyxie),
     ("ravageurs", ravageurs),
+    ("ombre", ombre),
     ("senescence", senescence),
 )
 
@@ -145,7 +158,7 @@ DETECTEURS = (
 # ÉVÉNEMENTIELLES (maladie/gel/grele) que le ② viendra fusionner.
 PRIORITE = {
     "asphyxie": 0, "secheresse": 1, "maladie": 2, "ravageurs": 3,
-    "gel": 4, "grele": 5, "chlorose": 6, "senescence": 7,
+    "gel": 4, "grele": 5, "chlorose": 6, "ombre": 7, "senescence": 8,
 }
 
 
