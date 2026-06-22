@@ -70,6 +70,17 @@ EXPR_MAX  = 1.30           # plafond modeste (anti-emballement, < GENE_HARD_MAX)
 TAU_UP    = 0.08           # vitesse d'acclimatation (montée)
 TAU_DOWN  = 0.04           # vitesse de désacclimatation (descente, plus lente)
 
+# Coût croissance/défense (sprint plasticité ③ — compromis growth–defense, philo #2).
+# La SUR-expression (part de chaque expression au-dessus de 1.0) re-route la vigueur
+# vers la défense au lieu de s'y ajouter : durcir ses tolérances coûte de la
+# croissance/reproduction. cout_defense = max(PLANCHER, 1 − DEFENSE_COST × Σ_g
+# max(0, expression[g]−1)). Désexprimer (≤ 1.0) ne coûte JAMAIS. Valeurs de DÉPART
+# (calibrage itératif P6) : modéré → survivre sous stress reste gagnant, mais payant
+# sous abondance (anti-emballement / anti-sélection). PLANCHER > 0 : la défense ne
+# peut jamais annuler la vigueur (une plante blindée croît peu, pas zéro).
+DEFENSE_COST = 0.15        # poids du budget défense mobilisé (par unité de sur-expression)
+DEFENSE_PLANCHER = 0.5     # plancher du facteur coût (vigueur jamais sous la moitié)
+
 
 def clamp_gene(x: float) -> float:
     """Borne un facteur génétique aux limites dures (l'introgression peut sortir

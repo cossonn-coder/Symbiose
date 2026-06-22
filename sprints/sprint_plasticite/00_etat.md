@@ -29,7 +29,7 @@
 |---|---|---|---|
 | ① | substrat (gène asphyxie + 2 mémoires + `expression` + `expressed_gene` + dynamique) | re-figé `f503dc15…` (artefact digest, voir note) | **CLOS** |
 | ② | branchement `expressed_gene` chez tous les consommateurs | re-figé `0549fc35…` (acclimatation active) | **CLOS** |
-| ③ | coût croissance/défense (vigueur) | re-figeage annoncé | à faire |
+| ③ | coût croissance/défense (vigueur) | re-figé `f3635a1d…` (+ `population_hash` `6056713d…`) | **CLOS** |
 | ④ | priming transgénérationnel (`child_genes`) | re-figeage annoncé | à faire |
 | ⑤ | signe d'acclimatation (sémiologie + vue C#) + dette | NEUTRE (lecture) | à faire |
 
@@ -38,11 +38,13 @@
   (post « mort par stress chronique » voie ombre).
 - Après ① : `f503dc15f07800869edb3132a301f8fb0f5a8515e966efe85a7d4401929dcd82`.
 - Après ② : `0549fc35728753d85ba5a0d523e697b9e5757ec02d87a82aca376bb0de1333ca`.
-- Pont actuel : **0.5.2** (inchangé au ① et au ② — aucun schéma de pont touché).
+- Après ③ : `f3635a1d05e74eb788196de0ab1a0d304336985c4f4fa8f19ba716dbc2aa703d`
+  (+ `tests/population_hash.txt` re-figé `cd21704b…`→`6056713d…`, même cause).
+- Pont actuel : **0.5.2** (inchangé aux ①②③ — aucun schéma de pont touché).
 
 ## REPRISE
-② CLOS. Reprendre par `03_cout.md` (coût croissance/défense : la sur-expression
-re-route la vigueur dans `vigueur_plante.py` → le compromis émerge, re-figeage).
+③ CLOS. Reprendre par `04_priming.md` (priming transgénérationnel : la mère
+initialise `child.expression` ≠ 1.0 via `PRIMING_FRAC` dans `child_genes`).
 
 ## Journal de bord (MAJ en fin de chaque tronçon)
 - **① substrat — CLOS (golden re-figé `f503dc15…`).** Posé : gène
@@ -75,3 +77,28 @@ re-route la vigueur dans `vigueur_plante.py` → le compromis émerge, re-figeag
   (`EXPR_MAX=1.30` + `clamp_gene`). Test `test_branchement_acclimatation` :
   neutre = génotype exact (non-régression) ; endurci 21 dégâts < neutre 34 +
   gate ombre relevée. `dotnet build` vert (aucun schéma de pont changé).
+- **③ coût croissance/défense — CLOS (golden re-figé `0549fc35…`→`f3635a1d…`).**
+  Knobs `DEFENSE_COST=0.15` + `DEFENSE_PLANCHER=0.5` (départ, calibrage itératif P6)
+  dans `genetics.py`. `cout_defense()` = méthode sur `PlantInstance` (à côté
+  d'`expressed_gene`, même nature : lecture dérivée de `expression`) :
+  `max(PLANCHER, 1 − DEFENSE_COST × Σ_g max(0, expr[g]−1))` — seule la part > 1
+  ronge, désexprimer est gratuit, jamais sous le plancher.
+  **DÉVIATION DE SPEC ASSUMÉE (validée Nico) :** la conception §2.4 / le kickoff
+  pointaient `vigueur_plante.py:91`, MAIS cette façade est read-only et **le tick
+  ne l'appelle JAMAIS** (seul `gestes.py:89` « manger » la lit) → y appliquer le
+  coût laissait le golden NEUTRE et ne touchait NI croissance NI graines, en
+  contradiction avec l'intention §2.4 (« croît moins, moins de graines ») et la
+  vérif kickoff (« hash change »). Nico a tranché **« croissance réelle (tick) »** :
+  coût multiplié sur les lectures de `gene("vigueur")` DANS le tick —
+  `croissance.py:109` (vitesse d'avancement de stade) + `mortalite.py:89`
+  (convalescence). La façade `vigueur_plante` reste INCHANGÉE.
+  **DÉRIVE GOLDEN attendue & saine** : `cout_defense < 1` partout où une plante a
+  accumulé ombre/sécheresse (expression > 1) → croissance/cicatrisation plus lentes,
+  localisé, monotone, borné (plancher 0.5). `population_hash` re-figé pour la même
+  cause (le monde macro dépend des plantes). **Garde-fou P6 (anti-sélection) OK** :
+  1 gène saturé = −4,5 % croissance, 5 saturés = −22,5 % (> plancher), pendant que
+  l'acclimatation divise les dégâts par ~1.3 → le gain de survie domine le coût,
+  pas d'anti-sélection. Test `test_cout_defense` (neutre=1.0, sur-expression ronge
+  monotone, désexpression gratuite, plancher tenu). Suites ciblées vertes
+  (genetique, vigueur, stress_chronique, eau, croissance, population re-figé) ;
+  `dotnet build` vert.

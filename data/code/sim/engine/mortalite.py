@@ -85,8 +85,10 @@ class MortaliteMixin:
                 hum     = eco.humidite.at_plot(r, c)
                 disturb = eco.disturbance.local(r, c)
                 Q = light * min(1.0, hum) * max(0.0, 1.0 - disturb)
-                # vigueur accélère la convalescence (gène >1 → guérit plus vite).
-                heal = Q * HEAL_RATE * plant.gene("vigueur")
+                # vigueur accélère la convalescence (gène >1 → guérit plus vite) ;
+                # le coût de défense (plasticité ③) la freine : la vigueur re-routée
+                # vers la défense cicatrise moins vite (neutre = 1.0 sans sur-expression).
+                heal = Q * HEAL_RATE * plant.gene("vigueur") * plant.cout_defense()
                 # Coût de robustesse de l'étiolement (Q7) : un héliophile étiolé
                 # convalesce −10 % — la tige grêle est fragile ; s'il n'atteint pas
                 # la lumière (qui lèverait l'étiolement), il se rétablit moins bien

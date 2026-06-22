@@ -11,7 +11,8 @@ import math
 from dataclasses import dataclass, field
 
 from constants import PLOT_CM
-from ..genetics import clamp_gene, ADAPTOGENIC_GENES
+from ..genetics import (clamp_gene, ADAPTOGENIC_GENES,
+                        DEFENSE_COST, DEFENSE_PLANCHER)
 from .empreintes import _plots_in_radius, PROC_ROOT_RATIO
 from .stades import GrowthStage, Segment
 
@@ -138,6 +139,19 @@ class PlantInstance:
         Le produit repasse par clamp_gene → jamais hors des limites physiologiques
         dures. Pour un gène NON adaptogène (absent d'`expression`) : == gene(name)."""
         return clamp_gene(self.gene(name) * self.expression.get(name, 1.0))
+
+    def cout_defense(self) -> float:
+        """Compromis croissance/défense (plasticité ③, conception §2.4 — philo #2).
+        La SUR-expression (part de chaque expression AU-DESSUS de 1.0) re-route la
+        vigueur vers la défense au lieu de s'y ajouter : une plante qui a durci ses
+        tolérances sous stress croît et convalesce plus lentement → moins de graines
+        au final. Facteur ∈ ]0, 1] multiplié sur les lectures de `gene("vigueur")`
+        DANS LE TICK (croissance/convalescence) — PAS la façade read-only
+        `vigueur_plante`. Désexprimer (expression ≤ 1.0) ne coûte JAMAIS ; borné par
+        `DEFENSE_PLANCHER` (> 0) → la défense ne peut pas annuler la vigueur. Neutre
+        (toutes expressions à 1.0) ⇒ 1.0 (non-régression du tick non acclimaté)."""
+        surexpression = sum(max(0.0, e - 1.0) for e in self.expression.values())
+        return max(DEFENSE_PLANCHER, 1.0 - DEFENSE_COST * surexpression)
 
     def decay_symptoms(self, decay: float, epsilon: float = 0.02) -> None:
         """Estompe les marques de symptômes ÉVÉNEMENTIELS (sémiologie ②).

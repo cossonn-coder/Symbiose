@@ -105,8 +105,11 @@ class CroissanceMixin:
             ok_light = light >= 0.2   # trop d'ombre = stagnation
             ok_temp  = temp  >= plant.plant_class.temp_min_growth   # trop froid = stagnation
             can_grow = ok_hum and ok_light and ok_temp
-            # vigueur accélère l'avancement de stade (gène >1 → durée requise réduite).
-            needed = stage.duration_weeks / plant.gene("vigueur")
+            # vigueur accélère l'avancement de stade (gène >1 → durée requise réduite) ;
+            # le coût de défense (plasticité ③) la freine : une plante sur-exprimant
+            # ses tolérances a re-routé sa vigueur → croissance plus lente (compromis
+            # croissance/défense, neutre = 1.0 tant qu'aucune sur-expression).
+            needed = stage.duration_weeks / (plant.gene("vigueur") * plant.cout_defense())
             if plant.age_weeks >= needed and can_grow:
                 if _bolt_bloque(plant):
                     # Bisannuelle an 1 : reste en rosette (ne monte pas à fleur).

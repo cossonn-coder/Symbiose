@@ -29,6 +29,7 @@ import sys
 from world import Tile
 from plants import (Zucchini, clamp_gene,
                     EXPR_GAIN, EXPR_MIN, EXPR_MAX, TAU_UP, TAU_DOWN, GENE_HARD_MAX)
+from plants.genetics import DEFENSE_COST, DEFENSE_PLANCHER, ADAPTOGENIC_GENES
 from fields import init_eco
 from sim.engine import Engine
 from sim.effects.perturbations import drought_stress_damage, DROUGHT_DAMAGE_THRESHOLD
@@ -167,12 +168,44 @@ def test_branchement_acclimatation():
           f"< neutre {n_neutre}, gate ombre relevée")
 
 
+def test_cout_defense():
+    """Tronçon ③ : le coût croissance/défense re-route la vigueur.
+      • NEUTRE (toutes expressions à 1.0) → facteur 1.0 (non-régression du tick) ;
+      • SUR-expression → facteur strictement < 1.0, monotone (plus on durcit, plus
+        ça coûte), jamais sous DEFENSE_PLANCHER ;
+      • DÉSEXPRESSION (expression < 1.0) → AUCUN coût (seule la part > 1 compte) ;
+      • valeur exacte = 1 − DEFENSE_COST × Σ max(0, expr−1)."""
+    _, _, _, p = _lab()
+    # Neutre : toutes les expressions à 1.0 (défaut) → pas de coût
+    assert abs(p.cout_defense() - 1.0) < _EPS, "neutre : coût ≠ 1.0 (régression vigueur)"
+    # Une seule sur-expression → coût exact et < 1
+    p.expression[_GENE] = 1.20                       # surexpression 0.20
+    attendu = 1.0 - DEFENSE_COST * 0.20
+    assert abs(p.cout_defense() - attendu) < _EPS, f"coût mono faux : {p.cout_defense()} ≠ {attendu}"
+    assert p.cout_defense() < 1.0, "sur-expression ne ronge pas la vigueur"
+    # Monotonie : durcir un 2ᵉ gène coûte davantage
+    cout1 = p.cout_defense()
+    p.expression["tolerance_ombre"] = 1.20
+    assert p.cout_defense() < cout1, "durcir un 2ᵉ gène ne coûte pas plus"
+    # Désexpression (< 1.0) : ne compte JAMAIS (max(0, expr−1) = 0)
+    p.expression = {g: 1.0 for g in ADAPTOGENIC_GENES}
+    p.expression[_GENE] = 0.5                        # désexprimé
+    assert abs(p.cout_defense() - 1.0) < _EPS, "désexpression pénalisée à tort"
+    # Plancher : toutes saturées à EXPR_MAX → facteur ≥ DEFENSE_PLANCHER (jamais nul)
+    p.expression = {g: EXPR_MAX for g in ADAPTOGENIC_GENES}
+    assert p.cout_defense() >= DEFENSE_PLANCHER - _EPS, "coût sous le plancher"
+    assert p.cout_defense() > 0.0, "le coût annule la vigueur (interdit)"
+    print(f"[plasticité ③·coût] PASS — neutre=1.0, sur-expression ronge (monotone), "
+          f"désexpression gratuite, plancher {DEFENSE_PLANCHER} tenu")
+
+
 if __name__ == "__main__":
     try:
         test_expressed_gene_math()
         test_acclimatation_vitesse_montee()
         test_hysterese_descente_plus_lente()
         test_branchement_acclimatation()
+        test_cout_defense()
     except AssertionError as e:
         print(f"[plasticité ①] FAIL — {e}")
         sys.exit(1)
