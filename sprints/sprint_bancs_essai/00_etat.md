@@ -63,7 +63,7 @@ une couche partagée.
 |---|---|---|---|
 | ① | infra — paquet `bancs/` + registre + branchement `cmd_init` + `secheresse_sable` bout-en-bout + cadre d'oracle | NEUTRE ✅ | **CLOS** |
 | ② | banc édaphique (chlorose/asphyxie/NPK) + oracles → tri D47-C2/C6 | NEUTRE ✅ | **CLOS** |
-| ③ | banc climatique (acclimatation/ombre dense) + oracles + note rendu `ombre` C# | NEUTRE | À FAIRE |
+| ③ | banc climatique (acclimatation/ombre dense) + oracles + note rendu `ombre` C# | NEUTRE ✅ | **CLOS** |
 | ④ | banc biotique (ravageur/floraison→fruits/semis tempéré) + oracles → tri D47-C3/C4/C5 | NEUTRE | À FAIRE |
 | ⑤ | sélecteur Godot (menu C#) + F5 + bilan D47 (trancher, verser bugs en dette) | NEUTRE | À FAIRE |
 
@@ -74,18 +74,12 @@ une couche partagée.
   protocole est ajouté pour le sélecteur — sinon `init config=<banc>` suffit).
 
 ## REPRISE
-②  CLOS. Prochain : `03_climatique.md` (acclimatation / ombre dense + oracles +
-note rendu `ombre` C#). RÉUTILISER le pattern ①② :
-- Fabriques dans `bancs/climatique.py` (déjà créé au ①, contient `secheresse_sable`),
-  entrées ajoutées à `bancs/__init__.py:BANCS`.
-- Acclimatation : stress DOUX prolongé → sur-expression plastique (`expression > 1`),
-  signe `acclimatation` (déjà observé en co-occurrence au ② sur chlorose/asphyxie —
-  le stress déclenche le priming). Ombre dense : maison HAUTE/PROCHE (cf. `monde(...,
-  house=House(...))`) → `shade_memory` au-delà de SHADE_DAMAGE_THRESHOLD, signe `ombre`.
-- ⚠️ `ombre` : rendu C# manquant (dette 0.5.2) — l'oracle sera vert mais l'écran muet ;
-  c'est le cas-école du tri D47 (bug RENDU, pas carte). NOTER au bilan ⑤.
-- Oracle : nouveau `tests/bancs/test_climatique.py` (existe déjà au ①) — y ajouter
-  `test_acclimatation` / `test_ombre_dense`.
+③  CLOS. Prochain : `04_biotique.md` (infestation ravageur / verger floraison→fruits /
+semis tempéré + oracles → tri D47-C3/C4/C5). RÉUTILISER le pattern ①②③ :
+- Fabriques dans un nouveau `bancs/biotique.py`, entrées ajoutées à `bancs/__init__.py:BANCS`.
+- Oracle : nouveau `tests/bancs/test_biotique.py` (cadre `oracle.py` réutilisé).
+- ⚠️ Rappel pour le bilan ⑤ : la dette **0.5.2** (rendu `ombre` C# manquant) reste à
+  lever — `ombre_dense` est l'oracle vert / écran muet à exhiber au F5 (tri D47).
 
 ## API de lecture des signes (NOTÉE pour ②③④)
 Source UNIQUE = `sim.semiologie.leaf_symptoms(plant, eco, saison)` → liste triée
@@ -130,3 +124,18 @@ et laisser l'environnement composé (sol drainant + humidité basse) la MAINTENI
     Liebig (h 29.5 < témoin 41.0), AUCUNE mort (cohérent D41, mort édaphique bloquée).
   - Observation bonus : `acclimatation` co-apparaît sur chlorose ET asphyxie — le
     stress doux déclenche le priming plastique (attendu, bénin) ; utile au ③.
+- **③ CLOS** (golden NEUTRE `2ab026ad…`) : `bancs/climatique.py` + 2 fabriques —
+  `acclimatation` (basilic, terre peu humide hum 0.30 + `drought_memory` 0.40 SOUS le
+  seuil 0.6 + `expression[tolerance_secheresse]`=1.12 pré-posée → durcissement glauque
+  SANS blesser) · `ombre_dense` (banc ISOLÉ : maison haute 1500 cm collée au flanc nord,
+  tuile oy=350 sous l'ombre installée, light≈0.15, `shade_memory` pré-chargée 0.80 >
+  seuil 0.6 → signe `ombre`). `tests/bancs/test_climatique.py` : **7/7 verts** (oracle
+  acclimatation assertant AUCUN signe de dégât concurrent via `SIGNES_DEGAT`). Serveur :
+  les 2 `init config=<banc>` → `ok:true`, config inconnue liste les 6 bancs ; pont 0.5.3
+  inchangé. Tailles 34/44 LDC pur (≪ 350). Note : `acclimatation` co-occurre sur
+  `ombre_dense` (shade_memory durcit aussi `tolerance_ombre`) — bénin, `ombre` reste le
+  signe de DÉGÂT prioritaire.
+  - **D47 (rendu `ombre` C#, dette 0.5.2)** : `ombre_dense` est l'instrument exact du
+    tri — oracle VERT (moteur émet `ombre`) mais écran MUET au F5 tant que `PlantRenderer`
+    n'a pas son mapping couleur/texture `ombre`. À EXHIBER au F5 du ⑤ → bug RENDU confirmé,
+    pas carte. **Lever la dette 0.5.2 reste à planifier (rappel au bilan ⑤).**
