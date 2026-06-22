@@ -28,7 +28,7 @@ from fields.ecofields.thermique import t_min_nuit_at  # gel nocturne localisé (
 from fields.apiculture import tick_ruches   # ruches : capture essaim + miel (⑥, §H/§I)
 from fields.alarme import tick_alarme       # phéromone d'alarme apienne : décroissance (⑦, §J)
 from sim.effects import resolve_plant_turn, apply_disturbances
-from sim.reproduction import is_seed_bearing
+from sim.reproduction import is_seed_bearing, child_expression
 from sim.seeds import Seed
 from sim.succession import succession, spring_flush
 from sim.weather import weather_state, K_PEST, TEMP_DRIVEN
@@ -267,10 +267,16 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
                         # Pont récolte → banque-joueur (D17) : graines sélectionnées
                         # (génétique préservée). Inerte si aucune banque-joueur
                         # n'est attachée au game_state (ex: main.py).
+                        # Plasticité ④ : la graine récoltée EST un descendant → elle
+                        # emporte le priming maternel (`child_expression`, atténué par
+                        # PRIMING_FRAC). Filtré aux entrées non-neutres → graine d'une
+                        # mère non acclimatée = neutre (save lisible).
                         if player_bank is not None and is_seed_bearing(plant):
                             key = _SPECIES_KEY.get(plant.plant_class)
                             if key:
-                                player_bank.add(Seed(key, dict(plant.genes)))
+                                expr = {g: v for g, v in child_expression(plant).items()
+                                        if abs(v - 1.0) > 1e-9}
+                                player_bank.add(Seed(key, dict(plant.genes), expr))
 
             # 11b. Reproduction génétique (D17+D22) — saison des graines (automne)
             if saison == "automne" and est_phase_recolte(week_in_year, saison):

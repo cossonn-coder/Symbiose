@@ -24,9 +24,15 @@ from plants import neutral_genes, PLANT_CATALOGUE
 
 @dataclass
 class Seed:
-    """Une graine récoltée : espèce (clé catalogue) + vecteur de gènes hérité."""
+    """Une graine récoltée : espèce (clé catalogue) + vecteur de gènes hérité +
+    état d'EXPRESSION primé hérité de la mère (plasticité ④, priming transgéné-
+    rationnel). `expression` = `child_expression(mère)` filtré aux entrées
+    non-neutres ; vide ⇒ graine neutre. Voyage AVEC la graine par tous les canaux
+    (récolte → banque-joueur → `planter` → germination), au même titre que les
+    gènes : toute graine = un descendant qui naît pré-armé si la mère l'était."""
     species: str                       # clé PLANT_CATALOGUE, ex: "tomate"
     genes: dict = field(default_factory=neutral_genes)
+    expression: dict = field(default_factory=dict)
 
     @property
     def plant_class(self):
@@ -66,7 +72,12 @@ class PlayerSeedBank:
     # --- Sérialisation JSON (save lisible, pas binaire) ---
 
     def to_dict(self) -> dict:
-        return {sp: [{"species": s.species, "genes": s.genes} for s in lot]
+        def _seed(s):
+            d = {"species": s.species, "genes": s.genes}
+            if s.expression:                 # omis si neutre (save lisible)
+                d["expression"] = s.expression
+            return d
+        return {sp: [_seed(s) for s in lot]
                 for sp, lot in self.lots.items() if lot}
 
     def to_json(self, indent: int = 2) -> str:
@@ -76,7 +87,8 @@ class PlayerSeedBank:
     def from_dict(cls, d: dict) -> "PlayerSeedBank":
         bank = cls()
         for sp, lot in d.items():
-            bank.lots[sp] = [Seed(species=s["species"], genes=dict(s["genes"]))
+            bank.lots[sp] = [Seed(species=s["species"], genes=dict(s["genes"]),
+                                  expression=dict(s.get("expression", {})))
                              for s in lot]
         return bank
 

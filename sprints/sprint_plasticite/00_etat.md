@@ -117,11 +117,7 @@ durcissement visible + mapping/texture côté `PlantRenderer` C#, lecture seule
   `new_plant.expression.update(…)` aux 2 sites féraux (`succession`/`spring_flush`).
   Recrutement DIRECT des pérennes (mère vivante, `mortalite.py`) : priming posé
   directement depuis `parent`. Vieillissement de l'expression aligné sur celui des
-  gènes (`tick_species_aging`). **PÉRIMÈTRE — canal banque-JOUEUR non câblé :**
-  `Seed`/`GrainEnAttente` ne captent pas encore l'expression maternelle (aucun pont
-  récolte→graine automatique aujourd'hui ; `grains_en_attente` VIDE au golden →
-  zéro impact). Laissé hors sprint pour rester chirurgical (pas de plomberie
-  spéculative) — **angle à confirmer avec Nico** (cf. §⑤/dette).
+  gènes (`tick_species_aging`).
   **DÉRIVE GOLDEN attendue & vérifiée** : sonde du scénario → 11 records de banque-sol
   portent une expression primée >1 (BursaPastoris/Yarrow… `tolerance_ombre`/
   `resistance_pathogene` ~1.03-1.06), transmise aux semis féraux → `expressed_gene`
@@ -131,3 +127,18 @@ durcissement visible + mapping/texture côté `PlantRenderer` C#, lecture seule
   l'enfant sans stress désacclimate (TAU_DOWN). `population_hash` INCHANGÉ. Test
   `test_priming_transgenerationnel` (math mère→enfant, round-trip banque, oubli
   émergent). Suites ciblées vertes ; `dotnet build` vert (aucun schéma de pont).
+- **④bis canal JOUEUR (tous les canaux de graine) — CLOS, golden NEUTRE `2ab026ad…`.**
+  Décision Nico : « on le câble — valide pour TOUS les cas de reproduction (récolte,
+  autonome, mangé par un oiseau…) ». Invariant posé : *toute graine = un descendant
+  portant `child_expression(mère)`*. Câblé sur les canaux CONCRETS : `Seed` gagne un
+  champ `expression` (sérialisé save, OMIS si neutre → save lisible) ; pont récolte
+  auto `boucle.py` dépose `child_expression(plant)` filtré non-neutre dans la
+  banque-joueur ; `planter` copie `seed.expression` → `GrainEnAttente.expression` ;
+  `_lever_grains_en_attente` l'applique à la levée (`new_plant.expression.update`).
+  Une attaque atténue UNE fois (au pont récolte) ; `planter`/germination ne font que
+  RECOPIER (pas de double atténuation). Pas de zoochorie concrète codée aujourd'hui
+  (la « dispersion oiseaux » de `seedbank.py` est un trickle abstrait d'archétypes,
+  sans mère) → tout canal FUTUR héritera de l'invariant. **Golden NEUTRE** (pas de
+  `player_seed_bank` ni de grains au golden → canal inerte). Test
+  `test_priming_canal_joueur` (récolte→Seed→sérialisation→planter→germination
+  pré-armée). `test_planter` 18/18, genetique/competition/vigueur/stress verts.

@@ -127,6 +127,7 @@ def planter(game_state: dict, player: str, tile, eco, species: str,
     seed = bank.take(species)
     tile.grains_en_attente.setdefault((r, c), []).append(
         GrainEnAttente(species=species, genes=dict(seed.genes),
+                       expression=dict(seed.expression),   # priming porté par la graine (④)
                        cultive=True, player=player,
                        semaine_depot=game_state.get("week", 0))
     )

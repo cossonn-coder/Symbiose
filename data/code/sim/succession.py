@@ -117,6 +117,8 @@ def _lever_grains_en_attente(game_state: dict, tile, eco, week: int, seed: int,
             continue
         grains.pop(0)                          # FIFO : la plus ancienne levée
         new_plant.genes = dict(grain.genes)    # gènes PROPRES (≠ sample_genes du féral)
+        if grain.expression:                   # priming hérité (④) : la graine naît pré-armée
+            new_plant.expression.update(grain.expression)
         occupied_roots.update(new_plant.root_plots)
         occupied_roots.add(new_plant.position)
         if grain.cultive:

@@ -48,6 +48,7 @@ class GrainEnAttente:
     """
     species: str
     genes: dict = field(default_factory=dict)   # gènes PROPRES (de la Seed jouée)
+    expression: dict = field(default_factory=dict)  # priming hérité (④) — voyage avec la graine
     cultive: bool = True
     player: str = ""
     semaine_depot: int = 0

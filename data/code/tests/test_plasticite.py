@@ -248,6 +248,51 @@ def test_priming_transgenerationnel():
           f"voyage par la banque, oubli émergent sans stress")
 
 
+def test_priming_canal_joueur():
+    """Tronçon ④ (canal JOUEUR) : le priming voyage par TOUS les canaux de graine,
+    pas seulement la banque-sol autonome. Chaîne récolte → `Seed` (child_expression,
+    filtré non-neutre) → sérialisation save → `planter` (`GrainEnAttente`) →
+    germination : la levée naît pré-armée, exactement comme par le canal féral."""
+    from sim.seeds import Seed, PlayerSeedBank
+    from sim import actions as ACT
+    from sim import vigueur as V
+    from sim.succession import succession
+
+    # Graine récoltée d'une mère acclimatée (expression primée, filtrée non-neutre).
+    e = {"tolerance_ombre": 1.1}
+    bank = PlayerSeedBank()
+    bank.add(Seed(species="tomate", genes={"hauteur": 1.42}, expression=dict(e)))
+
+    # — Sérialisation round-trip (save lisible JSON) : l'expression survit —
+    bank2 = PlayerSeedBank.from_json(bank.to_json())
+    assert bank2.lots["tomate"][0].expression == e, (
+        f"la sérialisation perd l'expression : {bank2.lots['tomate'][0].expression}")
+
+    # — planter → le GrainEnAttente porte l'expression —
+    tile = Tile(tile_id="T0", soil_type="terre", grid_rows=6, grid_cols=8)
+    eco = init_eco("T0", 6, 8, humidite=1.5, fertilite=1.0, microbiome=0.3)
+    eco.lumiere.fill(1.0); eco.disturbance.fill(1.0); eco.soil_memory_deep.fill(0.0)
+    gs = {"tiles": [tile], "eco": {"T0": eco}, "scores": {}, "current_player": "j1",
+          "week": 3, "log": [], "seed": 0x5EED, "player_seed_bank": bank2}
+    V.ensure_player(gs, "j1")
+    assert ACT.planter(gs, "j1", tile, eco, "tomate", 2, 2), "planter a échoué"
+    grain = tile.grains_en_attente[(2, 2)][0]
+    assert grain.expression == e, f"planter ne transmet pas l'expression : {grain.expression}"
+
+    # — germination : la levée naît pré-armée —
+    germ = None
+    for w in range(3, 15):
+        gs["week"] = w
+        succession(gs, tile, eco, w)
+        alive = [p for p in tile.plants if p.is_alive and p.position == (2, 2)]
+        if alive:
+            germ = alive[0]; break
+    assert germ is not None, "la graine plantée n'a pas levé"
+    assert abs(germ.expression["tolerance_ombre"] - 1.1) < _EPS, (
+        f"semis non pré-armé : {germ.expression.get('tolerance_ombre')}")
+    print("[plasticité ④·canal joueur] PASS — récolte→Seed→save→planter→germination pré-armée")
+
+
 if __name__ == "__main__":
     try:
         test_expressed_gene_math()
@@ -256,6 +301,7 @@ if __name__ == "__main__":
         test_branchement_acclimatation()
         test_cout_defense()
         test_priming_transgenerationnel()
+        test_priming_canal_joueur()
     except AssertionError as e:
         print(f"[plasticité ①] FAIL — {e}")
         sys.exit(1)
