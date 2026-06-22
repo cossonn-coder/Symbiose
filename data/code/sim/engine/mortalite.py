@@ -16,7 +16,8 @@ from fields import (_hash_noise, SENESCENCE_ONSET, SEN_RATE, HEAL_RATE,
                     HEAL_SEN_CUTOFF, ASPHYXIE_HEALTH_SEUIL, ASPHYXIE_RATE,
                     RESEED_RADIUS_CM)
 from sim.effects import apply_mutations, ReduceHealth, deposer_mort
-from sim.reproduction import find_father, child_genes, is_seed_bearing
+from sim.reproduction import (find_father, child_genes, child_expression,
+                              is_seed_bearing)
 from sim.growth import est_etiole
 from .aleas import PAILLAGE_PROTECT, DAMAGE_STEP
 
@@ -144,10 +145,14 @@ class MortaliteMixin:
             if _hash_noise(seed, week * 17, pr, pc) >= rate:
                 continue   # le parent ne fructifie pas ce tick
 
-            # 1+2. Héritage biparental → dépôt génétique dans la banque-sol
+            # 1+2. Héritage biparental → dépôt génétique dans la banque-sol.
+            # Priming transgénérationnel (plasticité ④) : l'état d'expression de la
+            # MÈRE voyage avec la graine (`e_child`, déjà atténué par PRIMING_FRAC)
+            # → la lignée éprouvée naît pré-armée à la germination (sample_expression).
             father = find_father(parent, tile.plants, tile, eco, seed, week)
             g_child = child_genes(parent, father, seed, week)
-            eco.seed_bank.add_species(pr, pc, cls, rate, g_child)
+            e_child = child_expression(parent)
+            eco.seed_bank.add_species(pr, pc, cls, rate, g_child, e_child)
 
             # 3. Recrutement direct, domaine ex-M7 uniquement
             is_tree = hasattr(cls, "age_curve")
@@ -165,6 +170,7 @@ class MortaliteMixin:
                 child = tile.add_plant(cls, *best)
                 if child:
                     child.genes = g_child
+                    child.expression.update(e_child)   # priming direct (mère vivante, ④)
                     occupied.add(best)
                     occupied.update(child.root_plots)
                     tag = "auto" if father is None else (

@@ -178,18 +178,28 @@ class SeedBank:
     # --- Couche espèce + génétique (D22) ---
 
     def add_species(self, r: int, c: int, plant_class: type,
-                    density: float, genes: dict) -> None:
+                    density: float, genes: dict, expression: dict | None = None) -> None:
         """
         Dépose des graines d'une espèce (avec leur vecteur de gènes) au plot.
         Met à jour la distribution moyenne+variance de chaque gène, pondérée par
         la densité. C'est le pont « chute / mort → banque-sol » (génétique
         féral conservée au terrain).
+
+        Priming transgénérationnel (plasticité ④) : `expression` porte l'état
+        d'alerte HÉRITÉ de la mère (`child_expression`, déjà atténué par
+        `PRIMING_FRAC`). On l'agrège en MOYENNE pondérée par densité, à côté des
+        gènes (réutilise `GeneStat`, variance ignorée — un état d'expression n'est
+        pas un tirage). C'est ainsi que « l'expression voyage avec la graine » :
+        le plot se souvient du niveau d'endurcissement moyen des mères qui y ont
+        grené (philo #4). Absent (None / mortes d'avant le ④) ⇒ rien stocké ⇒
+        germination au neutre (rétro-compatible).
         """
         cell = self.species[r][c]
         rec = cell.get(plant_class)
         if rec is None:
-            rec = {"density": 0.0, "genes": {}}
+            rec = {"density": 0.0, "genes": {}, "expression": {}}
             cell[plant_class] = rec
+        rec.setdefault("expression", {})       # rec d'avant ④ (save legacy)
         rec["density"] += density
         for g, value in genes.items():
             stat = rec["genes"].get(g)
@@ -197,6 +207,13 @@ class SeedBank:
                 stat = GeneStat()
                 rec["genes"][g] = stat
             stat.add(value, density)
+        if expression:
+            for g, value in expression.items():
+                stat = rec["expression"].get(g)
+                if stat is None:
+                    stat = GeneStat()
+                    rec["expression"][g] = stat
+                stat.add(value, density)
 
     def species_density(self, r: int, c: int, plant_class: type) -> float:
         rec = self.species[r][c].get(plant_class)
@@ -215,6 +232,19 @@ class SeedBank:
         return {g: clamp_gene(stat.sample(seed, week, r, c, k=2 * i))
                 for i, (g, stat) in enumerate(rec["genes"].items())}
 
+    def sample_expression(self, r: int, c: int, plant_class: type) -> dict:
+        """
+        État d'EXPRESSION initial d'un semis spontané (priming transgénérationnel,
+        plasticité ④). Lit la MOYENNE primée stockée par `add_species` — lecture
+        DÉTERMINISTE sans bruit (un priming est un état hérité, pas un tirage
+        génotypique). Pool négligeable ou aucune expression déposée (mères d'avant
+        le ④) ⇒ dict vide ⇒ la plante garde son expression neutre par défaut.
+        """
+        rec = self.species[r][c].get(plant_class)
+        if not rec or rec["density"] < SPECIES_POOL_MIN_DENSITY:
+            return {}
+        return {g: stat.mean for g, stat in rec.get("expression", {}).items()}
+
     def tick_species_aging(self) -> None:
         """Vieillissement du pool génétique (densité), purge des pools épuisés."""
         for r in range(self.rows):
@@ -224,6 +254,8 @@ class SeedBank:
                 for cls, rec in cell.items():
                     rec["density"] *= SPECIES_SEED_VIABILITY_LOSS
                     for stat in rec["genes"].values():
+                        stat.decay(SPECIES_SEED_VIABILITY_LOSS)
+                    for stat in rec.get("expression", {}).values():
                         stat.decay(SPECIES_SEED_VIABILITY_LOSS)
                     if rec["density"] < 1e-4:
                         dead.append(cls)

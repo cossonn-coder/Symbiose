@@ -220,6 +220,9 @@ def succession(game_state: dict, tile, eco, week: int) -> list[str]:
                 g = eco.seed_bank.sample_genes(r, c, plant_class, seed, week)
                 if g:
                     new_plant.genes = g
+                e = eco.seed_bank.sample_expression(r, c, plant_class)
+                if e:
+                    new_plant.expression.update(e)   # priming hérité (④)
                 log.append(
                     f"    🌿 Germination : {plant_class.name} @({r},{c}) "
                     f"[niche={niche:.3f} arch={chosen}]"
@@ -300,6 +303,9 @@ def spring_flush(game_state: dict, tile, eco, week: int) -> list[str]:
                 g = eco.seed_bank.sample_genes(r, c, plant_class, seed, week * 100)
                 if g:
                     new_plant.genes = g
+                e = eco.seed_bank.sample_expression(r, c, plant_class)
+                if e:
+                    new_plant.expression.update(e)   # priming hérité (④)
                 log.append(
                     f"    🌸 Spring flush : {plant_class.name} @({r},{c}) "
                     f"[niche={niche:.3f} arch={chosen}]"

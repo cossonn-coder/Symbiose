@@ -81,6 +81,17 @@ TAU_DOWN  = 0.04           # vitesse de désacclimatation (descente, plus lente)
 DEFENSE_COST = 0.15        # poids du budget défense mobilisé (par unité de sur-expression)
 DEFENSE_PLANCHER = 0.5     # plancher du facteur coût (vigueur jamais sous la moitié)
 
+# Priming transgénérationnel (sprint plasticité ④ — conception §2.5, P2). À la
+# production de graine, l'enfant naît avec une expression INITIALE héritée de la
+# MÈRE SEULE (épigénétique maternelle), pas neutre :
+#   child.expression[g] = 1.0 + PRIMING_FRAC × (mother.expression[g] − 1.0)
+# La fraction (< 1) atténue l'état d'alerte à chaque transmission : c'est l'un des
+# deux ressorts de l'OUBLI ÉMERGENT (l'autre = la désacclimatation intra-vie). Si
+# le stress cesse → la lignée retombe au neutre en 2-3 générations, sans compteur.
+# Si le stress persiste → chaque génération recharge sa mémoire → le priming tient.
+# Valeur de DÉPART (calibrage itératif P2).
+PRIMING_FRAC = 0.4
+
 
 def clamp_gene(x: float) -> float:
     """Borne un facteur génétique aux limites dures (l'introgression peut sortir

@@ -30,7 +30,7 @@
 | ① | substrat (gène asphyxie + 2 mémoires + `expression` + `expressed_gene` + dynamique) | re-figé `f503dc15…` (artefact digest, voir note) | **CLOS** |
 | ② | branchement `expressed_gene` chez tous les consommateurs | re-figé `0549fc35…` (acclimatation active) | **CLOS** |
 | ③ | coût croissance/défense (vigueur) | re-figé `f3635a1d…` (+ `population_hash` `6056713d…`) | **CLOS** |
-| ④ | priming transgénérationnel (`child_genes`) | re-figeage annoncé | à faire |
+| ④ | priming transgénérationnel (`child_expression` + banque-sol) | re-figé `2ab026ad…` (lignées pré-armées) | **CLOS** |
 | ⑤ | signe d'acclimatation (sémiologie + vue C#) + dette | NEUTRE (lecture) | à faire |
 
 ## Golden
@@ -40,11 +40,14 @@
 - Après ② : `0549fc35728753d85ba5a0d523e697b9e5757ec02d87a82aca376bb0de1333ca`.
 - Après ③ : `f3635a1d05e74eb788196de0ab1a0d304336985c4f4fa8f19ba716dbc2aa703d`
   (+ `tests/population_hash.txt` re-figé `cd21704b…`→`6056713d…`, même cause).
-- Pont actuel : **0.5.2** (inchangé aux ①②③ — aucun schéma de pont touché).
+- Après ④ : `2ab026ad2b3f484777a2a29f804e1a4785ecffd6976fc0058fe0a33dd1498646`
+  (`population_hash` `6056713d…` INCHANGÉ — le macro ne dérive pas dans la fenêtre).
+- Pont actuel : **0.5.2** (inchangé aux ①②③④ — aucun schéma de pont touché).
 
 ## REPRISE
-③ CLOS. Reprendre par `04_priming.md` (priming transgénérationnel : la mère
-initialise `child.expression` ≠ 1.0 via `PRIMING_FRAC` dans `child_genes`).
+④ CLOS. Reprendre par `05_signe.md` (signe d'acclimatation : sémiologie d'un
+durcissement visible + mapping/texture côté `PlantRenderer` C#, lecture seule
+→ golden NEUTRE ; clore aussi la dette « Maîtrise → carnet interprétatif »).
 
 ## Journal de bord (MAJ en fin de chaque tronçon)
 - **① substrat — CLOS (golden re-figé `f503dc15…`).** Posé : gène
@@ -102,3 +105,29 @@ initialise `child.expression` ≠ 1.0 via `PRIMING_FRAC` dans `child_genes`).
   monotone, désexpression gratuite, plancher tenu). Suites ciblées vertes
   (genetique, vigueur, stress_chronique, eau, croissance, population re-figé) ;
   `dotnet build` vert.
+- **④ priming transgénérationnel — CLOS (golden re-figé `f3635a1d…`→`2ab026ad…`).**
+  Knob `PRIMING_FRAC=0.4` (genetics.py). Helper `child_expression(mother)` =
+  `{g: 1 + PRIMING_FRAC×(mother.expression[g]−1)}` sur les seuls `ADAPTOGENIC_GENES`
+  (reproduction.py, à côté de `child_genes` mais ORTHOGONAL : génotype ≠ expression).
+  **DÉCISION ACTÉE (Nico : « l'expression voyage avec la graine ») :** porté par la
+  banque-sol, PAS recalculé à la germination. `add_species(…, expression=None)`
+  agrège l'expression héritée en MOYENNE pondérée densité (réutilise `GeneStat`,
+  variance ignorée — un état d'alerte n'est pas un tirage) ; `sample_expression()`
+  la relit DÉTERMINISTE (la moyenne, sans bruit gaussien) à la germination →
+  `new_plant.expression.update(…)` aux 2 sites féraux (`succession`/`spring_flush`).
+  Recrutement DIRECT des pérennes (mère vivante, `mortalite.py`) : priming posé
+  directement depuis `parent`. Vieillissement de l'expression aligné sur celui des
+  gènes (`tick_species_aging`). **PÉRIMÈTRE — canal banque-JOUEUR non câblé :**
+  `Seed`/`GrainEnAttente` ne captent pas encore l'expression maternelle (aucun pont
+  récolte→graine automatique aujourd'hui ; `grains_en_attente` VIDE au golden →
+  zéro impact). Laissé hors sprint pour rester chirurgical (pas de plomberie
+  spéculative) — **angle à confirmer avec Nico** (cf. §⑤/dette).
+  **DÉRIVE GOLDEN attendue & vérifiée** : sonde du scénario → 11 records de banque-sol
+  portent une expression primée >1 (BursaPastoris/Yarrow… `tolerance_ombre`/
+  `resistance_pathogene` ~1.03-1.06), transmise aux semis féraux → `expressed_gene`
+  adoucit dégâts + `cout_defense` ralentit → attrs digérés (health/stade) dérivent.
+  L'expression elle-même reste HORS `_PLANT_ATTRS` (comme ②③). **Oubli émergent
+  PROUVÉ** (pas de compteur) : `PRIMING_FRAC<1` atténue à chaque transmission +
+  l'enfant sans stress désacclimate (TAU_DOWN). `population_hash` INCHANGÉ. Test
+  `test_priming_transgenerationnel` (math mère→enfant, round-trip banque, oubli
+  émergent). Suites ciblées vertes ; `dotnet build` vert (aucun schéma de pont).

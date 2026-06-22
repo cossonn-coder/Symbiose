@@ -21,7 +21,8 @@ Aucun RNG live (règle de design #3).
 """
 from __future__ import annotations
 
-from plants import species_compatible, GENE_NAMES, MUTATION_SIGMA, clamp_gene
+from plants import (species_compatible, GENE_NAMES, MUTATION_SIGMA, clamp_gene,
+                    ADAPTOGENIC_GENES, PRIMING_FRAC)
 from fields import _hash_noise, hash_gauss
 
 # Modulation insecte du rayon de croisement (mode "insect" uniquement).
@@ -126,3 +127,23 @@ def child_genes(mother, father, seed, week) -> dict:
         z = hash_gauss(seed, week * 29 + i, r, c, k=4 * i)
         genes[g] = clamp_gene(base + z * sigma)
     return genes
+
+
+def child_expression(mother) -> dict:
+    """
+    Priming transgénérationnel (sprint plasticité ④ — conception §2.5, P2).
+    L'enfant n'hérite PAS du génotype seul : il naît avec un ÉTAT D'EXPRESSION
+    initial transmis par la MÈRE SEULE (épigénétique maternelle ; le père est
+    souvent None en autofécondation, et la voie maternelle domine chez les
+    plantes). Le génotype reste géré par `child_genes` — ceci est orthogonal.
+
+        child.expression[g] = 1.0 + PRIMING_FRAC × (mother.expression[g] − 1.0)
+
+    `PRIMING_FRAC < 1` atténue l'alerte à chaque transmission → moteur de l'OUBLI
+    ÉMERGENT (cf. §2.5) : sans stress, la lignée retombe au neutre en 2-3
+    générations ; sous stress persistant, chaque génération recharge sa mémoire
+    et le priming tient. Mère neutre (expression toute à 1.0) ⇒ enfant neutre.
+    Ne porte QUE les gènes adaptogènes (les seuls dotés d'une expression plastique).
+    """
+    return {g: 1.0 + PRIMING_FRAC * (mother.expression.get(g, 1.0) - 1.0)
+            for g in ADAPTOGENIC_GENES}

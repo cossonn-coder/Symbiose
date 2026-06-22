@@ -29,9 +29,11 @@ import sys
 from world import Tile
 from plants import (Zucchini, clamp_gene,
                     EXPR_GAIN, EXPR_MIN, EXPR_MAX, TAU_UP, TAU_DOWN, GENE_HARD_MAX)
-from plants.genetics import DEFENSE_COST, DEFENSE_PLANCHER, ADAPTOGENIC_GENES
+from plants.genetics import (DEFENSE_COST, DEFENSE_PLANCHER, ADAPTOGENIC_GENES,
+                             PRIMING_FRAC)
 from fields import init_eco
 from sim.engine import Engine
+from sim.reproduction import child_expression
 from sim.effects.perturbations import drought_stress_damage, DROUGHT_DAMAGE_THRESHOLD
 from sim.growth.phases import shade_tolerance_effective
 
@@ -199,6 +201,53 @@ def test_cout_defense():
           f"désexpression gratuite, plancher {DEFENSE_PLANCHER} tenu")
 
 
+def test_priming_transgenerationnel():
+    """Tronçon ④ : la MÈRE transmet son état d'expression à ses graines, qui voyage
+    avec la graine par la banque-sol ; l'oubli est ÉMERGENT (pas de compteur).
+      • child_expression = 1 + PRIMING_FRAC×(mère−1), mère neutre ⇒ enfant neutre ;
+      • round-trip banque-sol : add_species(expression) → sample_expression rend la
+        valeur héritée déposée (l'expression voyage avec la graine) ;
+      • oubli émergent : un enfant né pré-armé, SANS stress, voit son expression
+        redescendre vers 1.0 (désacclimatation intra-vie) — second ressort de l'oubli
+        avec l'atténuation PRIMING_FRAC<1 à la transmission."""
+    engine, tile, eco, mere = _lab()
+
+    # — Math du priming (mère seule) —
+    mere.expression["tolerance_ombre"] = 1.25
+    mere.expression[_GENE] = 1.0                      # gène resté neutre chez la mère
+    e = child_expression(mere)
+    attendu = 1.0 + PRIMING_FRAC * 0.25
+    assert abs(e["tolerance_ombre"] - attendu) < _EPS, (
+        f"priming faux : {e['tolerance_ombre']:.4f} ≠ {attendu:.4f}")
+    assert abs(e[_GENE] - 1.0) < _EPS, "gène neutre chez la mère ⇒ enfant non neutre"
+    assert e["tolerance_ombre"] < mere.expression["tolerance_ombre"], (
+        "PRIMING_FRAC<1 n'atténue pas l'alerte à la transmission")
+
+    # — Round-trip banque-sol : l'expression voyage AVEC la graine —
+    sb, cls = eco.seed_bank, mere.plant_class
+    sb.add_species(3, 3, cls, density=0.5, genes={"hauteur": 1.0}, expression=e)
+    lu = sb.sample_expression(3, 3, cls)
+    assert abs(lu["tolerance_ombre"] - attendu) < 1e-6, (
+        f"l'expression ne voyage pas par la banque : {lu.get('tolerance_ombre')} ≠ {attendu}")
+    # Dépôt SANS expression (mère d'avant ④) → aucune expression stockée
+    assert sb.sample_expression(0, 0, cls) == {}, "expression fantôme sur plot vierge"
+
+    # — Oubli émergent : enfant né pré-armé, sans stress → redescend vers 1.0 —
+    enfant = tile.add_plant(Zucchini, 1, 1)
+    enfant.expression.update(e)                       # pré-armé à la germination
+    _pin_humidite(eco, 3.0)                           # confort → aucune mémoire ne recharge
+    enfant.drought_memory = enfant.shade_memory = 0.0
+    avant = enfant.expression["tolerance_ombre"]
+    for _ in range(5):
+        enfant.shade_memory = 0.0
+        engine._update_physiology(tile, eco)
+    assert enfant.expression["tolerance_ombre"] < avant, (
+        "l'expression héritée ne s'oublie pas sans stress (oubli non émergent)")
+    assert enfant.expression["tolerance_ombre"] >= EXPR_MIN - _EPS, "sous EXPR_MIN"
+    print(f"[plasticité ④·priming] PASS — mère 1.25→enfant {attendu:.3f} (PRIMING_FRAC), "
+          f"voyage par la banque, oubli émergent sans stress")
+
+
 if __name__ == "__main__":
     try:
         test_expressed_gene_math()
@@ -206,6 +255,7 @@ if __name__ == "__main__":
         test_hysterese_descente_plus_lente()
         test_branchement_acclimatation()
         test_cout_defense()
+        test_priming_transgenerationnel()
     except AssertionError as e:
         print(f"[plasticité ①] FAIL — {e}")
         sys.exit(1)
