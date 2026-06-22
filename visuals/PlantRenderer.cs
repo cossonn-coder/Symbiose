@@ -70,6 +70,12 @@ namespace Symbiose
 			["secheresse"] = new Color("b9a87a"), // beige désaturé, flétri
 			["senescence"] = new Color("c4702a"), // jaune-rouge de fin de vie
 			["maladie"]    = new Color("8a6a4a"), // brun tacheté (cryptogamique)
+			// acclimatation (plasticité ⑤) : pas un dégât mais un DURCISSEMENT —
+			// feuillage coriace/glauque, voile de cire bleu-gris (synthèse bio §4).
+			// Partage le canal COULEUR : un vrai signe de souffrance (intensité plus
+			// forte) le masque, mais sur une plante sans pathologie le glauque RÉVÈLE
+			// qu'elle s'est endurcie (apprenable, philo #5).
+			["acclimatation"] = new Color("9db8b0"), // glauque (cire) bleu-gris
 		};
 		// Teinte appliquée à intensité 1 (≤1 pour garder un fond vert lisible même au
 		// pic). Ex-ChloroseAmount=0.6 ; un poil relevé : l'intensité module désormais.

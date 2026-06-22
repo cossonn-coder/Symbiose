@@ -44,6 +44,10 @@ from fields.ecofields import (CHLOROSE_PH, SEUIL_ACIDOPHILE, PH_MAX,
 #   HERBIVORY_GAIN — gain densité→pression, sert à exprimer le floor du détecteur
 from sim.effects.perturbations import (DROUGHT_DAMAGE_THRESHOLD, HERBIVORY_GAIN,
                                        SHADE_DAMAGE_THRESHOLD)
+# Bornes de la dynamique d'expression plastique (plasticité ①) : le signe
+# d'acclimatation rampe de EXPR_MIN (génotype nu, pas d'endurcissement) à
+# EXPR_MAX (durcissement maximal) — DRY, pas de nombre dupliqué.
+from plants.genetics import ADAPTOGENIC_GENES, EXPR_MIN, EXPR_MAX
 
 # Densité locale `ravageur + chenille` sous laquelle `herbivory_pressure` ne fait
 # RIEN (son garde-fou `if pressure < 0.005`, avec pression = densité·HERBIVORY_GAIN).
@@ -141,6 +145,28 @@ def senescence(plant, eco, saison) -> float:
     return max(0.0, min(1.0, (plant.age_years - SENESCENCE_ONSET * L) / denom))
 
 
+def acclimatation(plant, eco, saison) -> float:
+    """Durcissement plastique VISIBLE (plasticité ⑤, P3 — philo #5/#6). Une plante
+    qui a VÉCU un stress doux sur-exprime ses gènes adaptogènes (`expression` > 1) ;
+    le tissu s'épaissit, la cuticule se charge de cire → feuillage plus CORIACE /
+    GLAUQUE (synthèse bio §4). Ce n'est PAS un dégât mais une RÉPONSE : sémantiquement
+    distinct des signes de souffrance (sécheresse/ombre = « le tissu souffre
+    MAINTENANT ») — ici « la plante s'est ENDURCIE ». Le joueur voit le signe →
+    formule une hypothèse → consulte → comprend l'acclimatation (apprenable, pas
+    magique).
+
+    UN signe générique (pas un par stress) : intensité = la plus forte sur-expression
+    parmi les gènes adaptogènes, en rampe de EXPR_MIN (pas d'acclimatation) à EXPR_MAX
+    (acclimatation maximale). Équivaut au `max_g(expression[g] − 1)` du kickoff, exprimé
+    DRY sur les bornes mêmes de la dynamique d'expression. À la différence des autres
+    détecteurs (miroir du SEUIL d'une mécanique qui blesse), il n'y a pas de seuil de
+    dégât ici — l'acclimatation est continue : la rampe couvre toute la plage utile.
+    Plante au génotype nu (expression = EXPR_MIN partout) ⇒ 0 → aucun signe au smoke
+    (golden NEUTRE)."""
+    expr_max = max(plant.expression.get(g, EXPR_MIN) for g in ADAPTOGENIC_GENES)
+    return _ramp(expr_max, EXPR_MIN, EXPR_MAX)
+
+
 # ───────────────────────────── agrégateur trié ───────────────────────────────
 # Registre des détecteurs chroniques (extensible : carence_n/_k, etiolement…
 # s'ajouteront ici sans toucher le schéma snapshot — §7).
@@ -151,6 +177,7 @@ DETECTEURS = (
     ("ravageurs", ravageurs),
     ("ombre", ombre),
     ("senescence", senescence),
+    ("acclimatation", acclimatation),
 )
 
 # Priorité fixe de DÉPARTAGE à intensité égale (§2.3), du plus aigu/diagnostique
@@ -159,6 +186,10 @@ DETECTEURS = (
 PRIORITE = {
     "asphyxie": 0, "secheresse": 1, "maladie": 2, "ravageurs": 3,
     "gel": 4, "grele": 5, "chlorose": 6, "ombre": 7, "senescence": 8,
+    # L'acclimatation est une RÉPONSE (durcissement), pas une souffrance : à
+    # intensité égale on montre toujours d'abord le signe de DÉGÂT, le durcissement
+    # en dernier (le moins urgent à diagnostiquer).
+    "acclimatation": 9,
 }
 
 

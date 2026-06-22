@@ -31,9 +31,11 @@
 | ② | branchement `expressed_gene` chez tous les consommateurs | re-figé `0549fc35…` (acclimatation active) | **CLOS** |
 | ③ | coût croissance/défense (vigueur) | re-figé `f3635a1d…` (+ `population_hash` `6056713d…`) | **CLOS** |
 | ④ | priming transgénérationnel (`child_expression` + banque-sol) | re-figé `2ab026ad…` (lignées pré-armées) | **CLOS** |
-| ⑤ | signe d'acclimatation (sémiologie + vue C#) + dette | NEUTRE (lecture) | à faire |
+| ⑤ | signe d'acclimatation (sémiologie + vue C#) + dette | NEUTRE `2ab026ad…` | **CLOS — SPRINT TERMINÉ** |
 
 ## Golden
+- Après ⑤ : `2ab026ad…` **INCHANGÉ** (détecteur = lecture pure hors `_PLANT_ATTRS`).
+  Pont **0.5.2 → 0.5.3** (cause `acclimatation` = extension de données).
 - Départ : `3f86bf5310712c6b73e3f74840aa1367d53ea8ad3ca86d21af4bb7fcdafbd29c`
   (post « mort par stress chronique » voie ombre).
 - Après ① : `f503dc15f07800869edb3132a301f8fb0f5a8515e966efe85a7d4401929dcd82`.
@@ -42,12 +44,12 @@
   (+ `tests/population_hash.txt` re-figé `cd21704b…`→`6056713d…`, même cause).
 - Après ④ : `2ab026ad2b3f484777a2a29f804e1a4785ecffd6976fc0058fe0a33dd1498646`
   (`population_hash` `6056713d…` INCHANGÉ — le macro ne dérive pas dans la fenêtre).
-- Pont actuel : **0.5.2** (inchangé aux ①②③④ — aucun schéma de pont touché).
+- Pont actuel : **0.5.3** (inchangé aux ①②③④ ; bumpé au ⑤ pour la cause `acclimatation`).
 
 ## REPRISE
-④ CLOS. Reprendre par `05_signe.md` (signe d'acclimatation : sémiologie d'un
-durcissement visible + mapping/texture côté `PlantRenderer` C#, lecture seule
-→ golden NEUTRE ; clore aussi la dette « Maîtrise → carnet interprétatif »).
+**SPRINT TERMINÉ (①→⑤ tous clos le 2026-06-22).** Rien à reprendre. Golden final
+`2ab026ad…` (NEUTRE en ④bis et ⑤), pont **0.5.3**. Dette D43 créée (Maîtrise →
+carnet interprétatif, P4). Prochain sprint au choix de Nico (voir BACKLOG.md).
 
 ## Journal de bord (MAJ en fin de chaque tronçon)
 - **① substrat — CLOS (golden re-figé `f503dc15…`).** Posé : gène
@@ -142,3 +144,19 @@ durcissement visible + mapping/texture côté `PlantRenderer` C#, lecture seule
   `player_seed_bank` ni de grains au golden → canal inerte). Test
   `test_priming_canal_joueur` (récolte→Seed→sérialisation→planter→germination
   pré-armée). `test_planter` 18/18, genetique/competition/vigueur/stress verts.
+- **⑤ signe d'acclimatation — CLOS, SPRINT TERMINÉ (golden NEUTRE `2ab026ad…`).**
+  **Décision tranchée (kickoff demandait de trancher) : UN signe GÉNÉRIQUE
+  `acclimatation`**, pas un par stress (simplicité, découverte « la plante s'est
+  endurcie » avant la finesse, forward-compatible). Détecteur pur `acclimatation`
+  dans `sim/semiologie.py` : intensité = `_ramp(max_g(expression[g]), EXPR_MIN,
+  EXPR_MAX)` (DRY sur les bornes de la dynamique d'expression) ; ajouté à
+  `DETECTEURS` + `PRIORITE=9` (RÉPONSE, pas dégât → derrière tout signe de
+  souffrance à intensité égale). Pont **0.5.2→0.5.3** (cause = extension de
+  données, vue tolère l'inconnu). Vue C# : teinte glauque `#9db8b0` (cire
+  bleu-gris, §4) dans `ColorantTints` de `PlantRenderer.cs` — réutilise le canal
+  COULEUR `SetSymptoms`/`SymptomTint` du sprint sémiologie ③, zéro plomberie neuve.
+  Test `test_signe_acclimatation` (nue→0, EXPR_MAX→1.0, mi-plage→0.5, tri ombre
+  avant acclim). Golden NEUTRE (détecteur hors `_PLANT_ATTRS`, smoke sans stress
+  vécu) ; `dotnet build` vert. Dette **D43** créée (Maîtrise → carnet
+  interprétatif, P4). Reste F5 visuel = Nico ; mapping C# `ombre` du sprint
+  précédent toujours en attente (hors périmètre ⑤, à signaler).

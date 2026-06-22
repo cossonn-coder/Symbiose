@@ -293,6 +293,41 @@ def test_priming_canal_joueur():
     print("[plasticité ④·canal joueur] PASS — récolte→Seed→save→planter→germination pré-armée")
 
 
+def test_signe_acclimatation():
+    """⑤ Signe diégétique : une plante endurcie (expression > EXPR_MIN) sort bien la
+    cause `acclimatation` dans leaf_symptoms, triée APRÈS un vrai dégât ; une plante
+    au génotype nu n'en sort AUCUNE (lecture pure, golden NEUTRE)."""
+    from sim import semiologie
+    from plants.genetics import EXPR_MIN, EXPR_MAX
+
+    _, _, eco, p = _lab()
+    # Plante neutre : expression au plancher → pas de signe d'acclimatation.
+    for g in ADAPTOGENIC_GENES:
+        p.expression[g] = EXPR_MIN
+    causes = [s["cause"] for s in semiologie.leaf_symptoms(p, eco, "ete")]
+    assert "acclimatation" not in causes, f"signe parasite sur plante nue : {causes}"
+
+    # Acclimatation maximale d'UN gène → intensité = 1.0 (rampe pleine à EXPR_MAX).
+    p.expression["tolerance_secheresse"] = EXPR_MAX
+    i = semiologie.acclimatation(p, eco, "ete")
+    assert abs(i - 1.0) < _EPS, f"rampe non pleine à EXPR_MAX : {i}"
+    # Acclimatation partielle (à mi-plage) → intensité ≈ 0.5.
+    p.expression["tolerance_secheresse"] = EXPR_MIN + 0.5 * (EXPR_MAX - EXPR_MIN)
+    assert abs(semiologie.acclimatation(p, eco, "ete") - 0.5) < _EPS, "rampe non linéaire"
+
+    # Tri : à acclimatation forte + dégât d'ombre PLUS fort, l'ombre passe devant
+    # (le durcissement est le moins urgent à diagnostiquer, priorité 9).
+    p.expression["tolerance_secheresse"] = EXPR_MAX           # acclim intensité 1.0
+    from sim.effects.perturbations import SHADE_DAMAGE_THRESHOLD
+    p.shade_memory = 1.0                                      # ombre saturée → intensité 1.0
+    syms = semiologie.leaf_symptoms(p, eco, "ete")
+    causes = [s["cause"] for s in syms]
+    assert "acclimatation" in causes and "ombre" in causes, f"signes manquants : {causes}"
+    assert causes.index("ombre") < causes.index("acclimatation"), (
+        f"à intensité égale l'ombre (dégât) doit précéder l'acclimatation : {causes}")
+    print("[plasticité ⑤·signe] PASS — acclimatation visible, absente si nue, triée après le dégât")
+
+
 if __name__ == "__main__":
     try:
         test_expressed_gene_math()
@@ -302,6 +337,7 @@ if __name__ == "__main__":
         test_cout_defense()
         test_priming_transgenerationnel()
         test_priming_canal_joueur()
+        test_signe_acclimatation()
     except AssertionError as e:
         print(f"[plasticité ①] FAIL — {e}")
         sys.exit(1)

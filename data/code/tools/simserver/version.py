@@ -131,7 +131,16 @@ from __future__ import annotations
 #       (liste de causes ouverte), pas de schéma : la vue ignore une cause inconnue
 #       (tolérance pré-0.5.2). À FAIRE côté C# : mapping couleur+texture du cas
 #       « ombre » dans PlantRenderer (dette vue, hors moteur Python).
-ENGINE_VERSION = "0.5.2"
+# 0.5.3 (plasticité ⑤, signe d'acclimatation P3) : nouvelle cause `acclimatation`
+#       (durcissement plastique visible — feuillage coriace/glauque/cireux) dans la
+#       LISTE `leaf_symptoms`. RÉPONSE, pas dégât : intensité = la plus forte
+#       sur-expression des gènes adaptogènes, en rampe [EXPR_MIN, EXPR_MAX] de la
+#       dynamique d'expression (sim/semiologie.acclimatation). Extension de DONNÉES
+#       (liste de causes ouverte), pas de schéma : la vue ignore une cause inconnue
+#       (tolérance pré-0.5.3). Détecteur = lecture pure (hors _PLANT_ATTRS du golden)
+#       → golden NEUTRE (espèces du smoke sans stress vécu ⇒ expression = EXPR_MIN ⇒
+#       aucun signe). Côté C# : teinte glauque dans ColorantTints (PlantRenderer).
+ENGINE_VERSION = "0.5.3"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les
