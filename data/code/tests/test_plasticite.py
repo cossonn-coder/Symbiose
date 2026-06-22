@@ -31,6 +31,8 @@ from plants import (Zucchini, clamp_gene,
                     EXPR_GAIN, EXPR_MIN, EXPR_MAX, TAU_UP, TAU_DOWN, GENE_HARD_MAX)
 from fields import init_eco
 from sim.engine import Engine
+from sim.effects.perturbations import drought_stress_damage, DROUGHT_DAMAGE_THRESHOLD
+from sim.growth.phases import shade_tolerance_effective
 
 _GENE = "tolerance_secheresse"   # gène adaptogène ↔ drought_memory (le plus simple à piloter)
 _EPS  = 1e-9
@@ -122,11 +124,55 @@ def test_hysterese_descente_plus_lente():
           f"{frac_montee} (TAU_DOWN<TAU_UP)")
 
 
+def _compte_degats_secheresse(plant, eco, expression: float) -> int:
+    """Nombre de tics où drought_stress_damage tape, sur 300 semaines déterministes,
+    à drought_memory saturée (1.0) et expression `expression` épinglée. Plus l'expression
+    monte, plus expressed_gene monte, plus la proba 1/expressed_gene baisse → moins de
+    dégâts. _hash_noise(seed, week·37, r, c) varie par semaine → échantillonnage sans RNG."""
+    plant.drought_memory = 1.0                      # > seuil → sévérité 1.0
+    plant.expression[_GENE] = expression
+    return sum(1 for wk in range(1, 301)
+               if drought_stress_damage(plant, eco, seed=42, week=wk))
+
+
+def test_branchement_acclimatation():
+    """Tronçon ② : les consommateurs lisent expressed_gene, donc l'acclimatation agit.
+      • NON-RÉGRESSION : à expression neutre (1.0) le point de lecture rend EXACTEMENT
+        le génotype → dégât et gate identiques au comportement d'avant branchement ;
+      • ACCLIMATATION : à expression haute, le dégât (sécheresse) et la gate (ombre)
+        sont MESURABLEMENT plus doux."""
+    _, _, eco, p = _lab()
+    p.genes = {_GENE: 1.0, "tolerance_ombre": 0.8}   # héliophile (tol ombre < 1)
+
+    # — Chemin de DÉGÂT (drought_stress_damage) —
+    assert DROUGHT_DAMAGE_THRESHOLD < 1.0            # garde-fou : mémoire 1.0 franchit le seuil
+    n_neutre = _compte_degats_secheresse(p, eco, 1.0)
+    # Non-régression : à neutre, le point de lecture == génotype brut (expression vient
+    # d'être épinglée à 1.0 par le comptage neutre)
+    assert abs(p.expressed_gene(_GENE) - p.gene(_GENE)) < _EPS, "neutre ≠ génotype au point de lecture"
+    n_endurci = _compte_degats_secheresse(p, eco, EXPR_MAX)
+    assert n_neutre > 0, "le test n'exerce pas le dégât (aucun tic touché)"
+    assert n_endurci < n_neutre, (
+        f"acclimatation n'adoucit pas le dégât : endurci {n_endurci} ≥ neutre {n_neutre}")
+
+    # — GATE (tolérance ombre effective, déterministe) —
+    base = p.plant_class.shade_tolerance_base()
+    p.expression["tolerance_ombre"] = 1.0
+    assert abs(shade_tolerance_effective(p) - base * p.gene("tolerance_ombre")) < _EPS, (
+        "neutre : gate ombre ≠ base×génotype")
+    p.expression["tolerance_ombre"] = EXPR_MAX
+    assert shade_tolerance_effective(p) > base * p.gene("tolerance_ombre"), (
+        "acclimatation n'assouplit pas la gate ombre")
+    print(f"[plasticité ②·branchement] PASS — neutre=génotype ; endurci {n_endurci} dégât(s) "
+          f"< neutre {n_neutre}, gate ombre relevée")
+
+
 if __name__ == "__main__":
     try:
         test_expressed_gene_math()
         test_acclimatation_vitesse_montee()
         test_hysterese_descente_plus_lente()
+        test_branchement_acclimatation()
     except AssertionError as e:
         print(f"[plasticité ①] FAIL — {e}")
         sys.exit(1)

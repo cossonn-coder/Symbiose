@@ -106,8 +106,9 @@ def damping_off(plant: PlantInstance, tile: Tile, eco,
     # Protection microbiome via la logistique existante (disease_probability)
     p = eco.disease_probability(r, c, base_rate=DAMPOFF_BASE)
     p *= excess * (0.3 + density) * saison_factor
-    # resistance_pathogene : un semis au génotype résistant succombe moins (1/gène).
-    p /= plant.gene("resistance_pathogene")
+    # resistance_pathogene : un semis au phénotype résistant succombe moins (1/gène
+    # EXPRIMÉ — un semis dont la lignée a vécu l'infection est primé, plasticité ②).
+    p /= plant.expressed_gene("resistance_pathogene")
     if _hash_noise(seed, week * 11, r, c) < p:
         return [ReduceHealth(plant, plant.health, reason="fonte des semis")]
     return []
@@ -126,10 +127,11 @@ def fungal_disease(plant: PlantInstance, tile: Tile, eco,
     susc = getattr(plant.plant_class, "fungal_susceptibility", 0.5)
     if susc <= 0.0:
         return []
-    # resistance_pathogene (génotype individuel) module la susceptibilité familiale :
-    # gène >1 → moins sensible. Au sein d'une même famille, deux sujets réagissent
-    # différemment → sélection émergente des lignées résistantes (philo #2/#7).
-    susc /= plant.gene("resistance_pathogene")
+    # resistance_pathogene (phénotype individuel = génotype × expression) module la
+    # susceptibilité familiale : gène EXPRIMÉ >1 → moins sensible. Deux sujets de la
+    # même famille réagissent différemment (sélection émergente des lignées
+    # résistantes, philo #2/#7) ET un sujet déjà infecté monte sa SAR (plasticité ②).
+    susc /= plant.expressed_gene("resistance_pathogene")
     r, c = plant.position
     hum_norm = min(1.0, eco.humidite.at_plot(r, c) / 3.0)
     density = _local_density(plant, tile, same_family=True)
@@ -168,7 +170,7 @@ def drought_stress_damage(plant: PlantInstance, eco,
     if dm <= DROUGHT_DAMAGE_THRESHOLD:
         return []
     sev = (dm - DROUGHT_DAMAGE_THRESHOLD) / (1.0 - DROUGHT_DAMAGE_THRESHOLD)
-    p = DROUGHT_DAMAGE_RATE * sev / plant.gene("tolerance_secheresse")
+    p = DROUGHT_DAMAGE_RATE * sev / plant.expressed_gene("tolerance_secheresse")
     r, c = plant.position
     if _hash_noise(seed, week * 37, r, c) < p:
         return [ReduceHealth(plant, 1, reason="stress hydrique sévère")]
@@ -207,7 +209,7 @@ def shade_stress_damage(plant: PlantInstance, eco,
     if sm <= SHADE_DAMAGE_THRESHOLD:
         return []
     tol = (plant.plant_class.shade_tolerance_base()
-           * plant.gene("tolerance_ombre"))
+           * plant.expressed_gene("tolerance_ombre"))
     if tol <= 0.0:
         return []
     sev = (sm - SHADE_DAMAGE_THRESHOLD) / (1.0 - SHADE_DAMAGE_THRESHOLD)

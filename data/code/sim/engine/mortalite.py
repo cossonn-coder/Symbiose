@@ -66,8 +66,12 @@ class MortaliteMixin:
             # déclin sénescent (flux week·7, décorrélé de week·3/·5). Réversible : un
             # assèchement vide la mémoire (§2.3) → la pression retombe. Sous le seuil
             # (terre/sol drainant : asphyxie_memory reste 0) → strictement inerte.
+            # MÉDIÉ par le gène EXPRIMÉ `tolerance_asphyxie` (premier consommateur du
+            # gène créé au ① ; plasticité ②) : phénotype >1 → tissu mieux aéré (racines
+            # adventices/aérenchyme) → pression réduite. Neutre à 1.0 → inchangé.
             if plant.asphyxie_memory > ASPHYXIE_HEALTH_SEUIL:
-                pression = plant.asphyxie_memory - ASPHYXIE_HEALTH_SEUIL
+                pression = ((plant.asphyxie_memory - ASPHYXIE_HEALTH_SEUIL)
+                            / plant.expressed_gene("tolerance_asphyxie"))
                 if _hash_noise(seed, week * 7, r, c) < pression * ASPHYXIE_RATE:
                     plant.health = max(0, plant.health - 1)
                     if not plant.is_alive:
@@ -291,7 +295,7 @@ class MortaliteMixin:
             sev = severity_fn(p) if severity_fn is not None else severity
             if sev <= 0:
                 continue
-            suscept   = (1.0 / p.gene(gene_name)) if gene_name else 1.0
+            suscept   = (1.0 / p.expressed_gene(gene_name)) if gene_name else 1.0
             effective = sev * suscept * (1.0 - protection)
             lost      = min(p.health, int(effective / DAMAGE_STEP))
             if lost > 0:

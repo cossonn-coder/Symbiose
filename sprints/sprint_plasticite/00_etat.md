@@ -28,7 +28,7 @@
 | # | Titre | Golden | Statut |
 |---|---|---|---|
 | ① | substrat (gène asphyxie + 2 mémoires + `expression` + `expressed_gene` + dynamique) | re-figé `f503dc15…` (artefact digest, voir note) | **CLOS** |
-| ② | branchement `expressed_gene` chez tous les consommateurs | re-figeage annoncé | à faire |
+| ② | branchement `expressed_gene` chez tous les consommateurs | re-figé `0549fc35…` (acclimatation active) | **CLOS** |
 | ③ | coût croissance/défense (vigueur) | re-figeage annoncé | à faire |
 | ④ | priming transgénérationnel (`child_genes`) | re-figeage annoncé | à faire |
 | ⑤ | signe d'acclimatation (sémiologie + vue C#) + dette | NEUTRE (lecture) | à faire |
@@ -37,11 +37,12 @@
 - Départ : `3f86bf5310712c6b73e3f74840aa1367d53ea8ad3ca86d21af4bb7fcdafbd29c`
   (post « mort par stress chronique » voie ombre).
 - Après ① : `f503dc15f07800869edb3132a301f8fb0f5a8515e966efe85a7d4401929dcd82`.
-- Pont actuel : **0.5.2** (inchangé au ①).
+- Après ② : `0549fc35728753d85ba5a0d523e697b9e5757ec02d87a82aca376bb0de1333ca`.
+- Pont actuel : **0.5.2** (inchangé au ① et au ② — aucun schéma de pont touché).
 
 ## REPRISE
-① CLOS. Reprendre par `02_branchement.md` (brancher `expressed_gene` chez les
-consommateurs → acclimatation ACTIVE, re-figeage comportemental cette fois).
+② CLOS. Reprendre par `03_cout.md` (coût croissance/défense : la sur-expression
+re-route la vigueur dans `vigueur_plante.py` → le compromis émerge, re-figeage).
 
 ## Journal de bord (MAJ en fin de chaque tronçon)
 - **① substrat — CLOS (golden re-figé `f503dc15…`).** Posé : gène
@@ -59,3 +60,18 @@ consommateurs → acclimatation ACTIVE, re-figeage comportemental cette fois).
   ne lit `expressed_gene` (acclimatation INERTE, branchée au ②). Re-figeage validé
   par Nico (option « re-figer », recommandée). Tous tests ciblés verts
   (genetique, vigueur, population-hash, stress_chronique, eau, croissance…).
+- **② branchement — CLOS (golden re-figé `f503dc15…`→`0549fc35…`).** 9 sites
+  passent `gene(…)`→`expressed_gene(…)`, uniquement les gènes adaptogènes :
+  `perturbations.py` ×4 (damping_off + fungal_disease `resistance_pathogene`,
+  drought_stress_damage `tolerance_secheresse`, shade_stress_damage
+  `tolerance_ombre`) ; `croissance.py` ×2 (gate `ok_hum` sécheresse, growth_factor
+  ombre) ; `phases.py` `shade_tolerance_effective` (étiolement) ; `mortalite.py`
+  `_mediated_damage` (gel `rusticite_froid`) + **asphyxie** (premier consommateur
+  du gène `tolerance_asphyxie`, jusqu'ici non médié). `gene("vigueur"/"hauteur")`
+  laissés intacts (non adaptogènes). **DÉRIVE GOLDEN attendue & plausible** :
+  `EXPR_MIN=1.0` → `expressed_gene ≥ gene` partout → l'acclimatation ne fait
+  qu'ADOUCIR (le coût n'arrive qu'au ③) ; sur 4 ans le monde golden accumule
+  ombre/sécheresse → expression > 1 → dégâts/gates plus doux, monotone et borné
+  (`EXPR_MAX=1.30` + `clamp_gene`). Test `test_branchement_acclimatation` :
+  neutre = génotype exact (non-régression) ; endurci 21 dégâts < neutre 34 +
+  gate ombre relevée. `dotnet build` vert (aucun schéma de pont changé).

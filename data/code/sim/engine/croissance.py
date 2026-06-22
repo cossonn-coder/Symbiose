@@ -100,7 +100,7 @@ class CroissanceMixin:
             # pas excessive par le HAUT (asphyxie « noyé » au-delà de HUM_NOYE,
             # §2.3 b). La borne haute est inerte sous le seuil (toute tuile drainante
             # / terre : hum ≤ HUM_NOYE → ok_hum inchangé, message « sec » conservé).
-            ok_hum   = (hum >= 0.15 / plant.gene("tolerance_secheresse")
+            ok_hum   = (hum >= 0.15 / plant.expressed_gene("tolerance_secheresse")
                         and hum <= HUM_NOYE)
             ok_light = light >= 0.2   # trop d'ombre = stagnation
             ok_temp  = temp  >= plant.plant_class.temp_min_growth   # trop froid = stagnation
@@ -260,7 +260,7 @@ class CroissanceMixin:
             # ombre). Tolérance à l'ombre (Q6) = base d'espèce × gène individuel :
             # un sciaphile garde sa croissance à l'ombre (light_eff relevé, cap 1.0),
             # un héliophile ombragé décroît (et s'étiole — tronçon 3).
-            tol = plant.plant_class.shade_tolerance_base() * plant.gene("tolerance_ombre")
+            tol = plant.plant_class.shade_tolerance_base() * plant.expressed_gene("tolerance_ombre")
             light_eff = min(1.0, light * tol)
             target_g = 0.6 + 0.4 * light_eff
             plant.growth_factor += (target_g - plant.growth_factor) * 0.10

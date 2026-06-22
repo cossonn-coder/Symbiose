@@ -156,8 +156,9 @@ def _season_factor(week: int) -> float:
 # ---------------------------------------------------------------------------
 
 def shade_tolerance_effective(plant) -> float:
-    """Tolérance à l'ombre effective = base d'espèce × gène individuel (Q6)."""
-    return plant.plant_class.shade_tolerance_base() * plant.gene("tolerance_ombre")
+    """Tolérance à l'ombre effective = base d'espèce × gène EXPRIMÉ (Q6 + plasticité ②
+    : une plante acclimatée à l'ombre relève sa tolérance effective de son vivant)."""
+    return plant.plant_class.shade_tolerance_base() * plant.expressed_gene("tolerance_ombre")
 
 
 def est_etiole(plant, light_field) -> bool:
