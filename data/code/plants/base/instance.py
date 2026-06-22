@@ -11,6 +11,7 @@ import math
 from dataclasses import dataclass, field
 
 from constants import PLOT_CM
+from ..genetics import clamp_gene, ADAPTOGENIC_GENES
 from .empreintes import _plots_in_radius, PROC_ROOT_RATIO
 from .stades import GrowthStage, Segment
 
@@ -36,6 +37,12 @@ class PlantInstance:
     drought_memory: float = 0.0     # intégration lente du stress hydrique [0-1]
     asphyxie_memory: float = 0.0    # intégration lente de l'excès d'eau [0-1]
                                     # miroir HAUT de drought_memory (même lerp, anoxie soutenue → santé↓)
+    cold_memory: float = 0.0        # intégration lente du froid sub-létal vécu [0-1]
+                                    # (plasticité ① — cold hardening : signal température < seuil
+                                    #  doux, AU-DELÀ du gel létal). Pilote l'expression de rusticite_froid.
+    infection_memory: float = 0.0   # intégration lente de la pression pathogène vécue [0-1]
+                                    # (plasticité ① — SAR / priming immunitaire). Pilote l'expression
+                                    #  de resistance_pathogene.
     stress_memory: float = 0.0      # intégration des perturbations subies [0-1]
                                     # stress↑ → croissance↓ mais résistance↑
     # Marques de symptômes ÉVÉNEMENTIELS (sémiologie ②) : maladie/gel/grêle n'ont
@@ -50,6 +57,14 @@ class PlantInstance:
     # Vecteur de gènes héréditaire (D22). Vide ⇒ tous neutres (1.0). Rempli à la
     # naissance (semis génétique : succession, renouvellement, semis joueur).
     genes: dict = field(default_factory=dict)
+    # État d'EXPRESSION plastique (sprint plasticité ①, patron `symptom_marks`).
+    # {gène adaptogène: facteur ∈ [EXPR_MIN, EXPR_MAX]}, défaut 1.0 = phénotype =
+    # génotype. Glisse vers une cible pilotée par la mémoire de stress correspondante
+    # (_update_physiology, lerp à hystérèse). Lu via expressed_gene() — INERTE au
+    # tronçon ① (aucun consommateur ne le lit encore → comportement inchangé) ; hors
+    # `_PLANT_ATTRS` du golden. Priming maternel l'initialisera ≠ 1.0 (tronçon ④).
+    expression: dict = field(
+        default_factory=lambda: {g: 1.0 for g in ADAPTOGENIC_GENES})
     # Structure morphologique (croissance procédurale, D29 réorienté, tronçon 1).
     # Vide à la déclaration ⇒ une plante naît avec UN segment apex au collet
     # (cf. __post_init__). INERTE à ce tronçon : poussée par sim/growth.py mais
@@ -115,6 +130,14 @@ class PlantInstance:
     def gene(self, name: str) -> float:
         """Facteur génétique pour un gène (1.0 = neutre si absent du vecteur)."""
         return self.genes.get(name, 1.0)
+
+    def expressed_gene(self, name: str) -> float:
+        """Phénotype EFFECTIF d'un gène adaptogène = génotype × expression plastique
+        (sprint plasticité). `expression[name]` ∈ [EXPR_MIN, EXPR_MAX] traduit le
+        durcissement acquis sous stress vécu ; 1.0 (défaut) ⇒ phénotype = génotype.
+        Le produit repasse par clamp_gene → jamais hors des limites physiologiques
+        dures. Pour un gène NON adaptogène (absent d'`expression`) : == gene(name)."""
+        return clamp_gene(self.gene(name) * self.expression.get(name, 1.0))
 
     def decay_symptoms(self, decay: float, epsilon: float = 0.02) -> None:
         """Estompe les marques de symptômes ÉVÉNEMENTIELS (sémiologie ②).

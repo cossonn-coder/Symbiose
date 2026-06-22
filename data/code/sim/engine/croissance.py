@@ -14,6 +14,7 @@ from __future__ import annotations
 from fields import (EXUDATE_BASE, EXUDATE_OM_SHARE, HUM_NOYE, HUM_EXCES,
                     ASPHYXIE_MEMORY_LERP)
 from fields.ecofields.constants import T_PLANTE_ALPHA
+from plants import EXPR_GAIN, EXPR_MIN, EXPR_MAX, TAU_UP, TAU_DOWN
 from .calendrier import saison_de
 
 # Sémiologie ② (CONCEPTION_SEMIOLOGIE_FOLIAIRE.md §2.5) — facteur de décroissance
@@ -22,6 +23,32 @@ from .calendrier import saison_de
 # (0.8³≈0.5) → cicatrisation visible en quelques semaines, purge sous epsilon
 # (0.02) ensuite. Knob de calibrage.
 SYMPTOM_DECAY = 0.8
+
+# --- Plasticité ① : signaux d'exposition des DEUX mémoires nouvelles ------------
+# cold_memory : froid SUB-LÉTAL (cold hardening). Le gel létal vit ailleurs
+# (boucle.py, t_min_nuit < 0). Ici on intègre l'exposition DOUCE — sous un seuil
+# de fraîcheur, AU-DESSUS de 0 °C — qui déclenche l'acclimatation au froid AVANT
+# le coup dur. Lerp lent (même esprit que les autres mémoires). Knobs P6.
+COLD_HARDENING_SEUIL = 10.0   # °C : sous ce seuil, le froid « compte » (sub-létal)
+COLD_SEVERITY_REF    = 10.0   # °C d'écart sous le seuil donnant une sévérité ≈ 1
+COLD_MEMORY_LERP     = 0.05   # intégration lente (miroir drought/asphyxie)
+# infection_memory : pression pathogène VÉCUE (SAR / priming immunitaire). Proxy
+# déterministe par plot = manque de protection du sol (disease_probability/base ∈
+# [~0.02, 1] : 1 = microbiome mort, sol sans défense) × humidité normalisée (le
+# champignon a besoin d'eau). Pas de tirage : c'est la PRESSION, pas l'événement.
+INFECTION_BASE       = 0.30   # base_rate de référence pour normaliser la pression
+INFECTION_MEMORY_LERP = 0.05  # intégration lente
+
+# Appariement gène adaptogène ↔ mémoire d'exposition (plasticité ①, §2.3). La
+# dynamique d'expression (lerp à hystérèse) glisse expression[g] vers
+# 1 + EXPR_GAIN × mémoire(g). Étendre = ajouter une paire ici + sa mémoire.
+_EXPR_MEMOIRE = {
+    "tolerance_secheresse": "drought_memory",
+    "tolerance_ombre":      "shade_memory",
+    "rusticite_froid":      "cold_memory",
+    "resistance_pathogene": "infection_memory",
+    "tolerance_asphyxie":   "asphyxie_memory",
+}
 
 
 def _bolt_stage_index(plant_class) -> int | None:
@@ -178,12 +205,17 @@ class CroissanceMixin:
         Appelée après l'uptake, chaque semaine.
         shade_memory  = lerp(actuel, 1 - lumiere_locale, 0.10)
         drought_memory = lerp(actuel, stress_hydrique, 0.05)
+        cold_memory / infection_memory = lerp(actuel, signal, 0.05) (plasticité ①)
+        Puis dynamique d'EXPRESSION plastique (lerp à hystérèse vers la cible de
+        chaque gène adaptogène) — INERTE tant qu'aucun consommateur ne lit
+        expressed_gene (tronçon ②).
         """
         for plant in tile.plants:
             if not plant.is_alive: continue
             r, c = plant.position
             light = eco.lumiere.light_received(plant)
             hum   = eco.humidite.at_plot(r, c)
+            t_air = eco.temperature.at_plot(r, c)
             # Shade memory : intégration lente de l'ombre vécue
             plant.shade_memory += (1.0 - light - plant.shade_memory) * 0.10
             plant.shade_memory  = max(0.0, min(1.0, plant.shade_memory))
@@ -199,6 +231,26 @@ class CroissanceMixin:
                             if hum > HUM_EXCES else 0.0)
             plant.asphyxie_memory += (exces_stress - plant.asphyxie_memory) * ASPHYXIE_MEMORY_LERP
             plant.asphyxie_memory  = max(0.0, min(1.0, plant.asphyxie_memory))
+            # Cold memory (plasticité ①) : froid sub-létal intégré (cold hardening).
+            cold_sev = max(0.0, min(1.0, (COLD_HARDENING_SEUIL - t_air) / COLD_SEVERITY_REF))
+            plant.cold_memory += (cold_sev - plant.cold_memory) * COLD_MEMORY_LERP
+            plant.cold_memory  = max(0.0, min(1.0, plant.cold_memory))
+            # Infection memory (plasticité ①) : pression pathogène VÉCUE = manque de
+            # protection du sol × humidité (le champignon a besoin d'eau). Pression
+            # déterministe, pas l'événement aléatoire de fungal_disease.
+            infection_sig = ((eco.disease_probability(r, c, INFECTION_BASE) / INFECTION_BASE)
+                             * min(1.0, hum / 3.0))
+            plant.infection_memory += (infection_sig - plant.infection_memory) * INFECTION_MEMORY_LERP
+            plant.infection_memory  = max(0.0, min(1.0, plant.infection_memory))
+            # Dynamique d'EXPRESSION plastique (§2.3) : chaque gène adaptogène glisse
+            # vers cible = 1 + EXPR_GAIN × mémoire(g), en lerp à HYSTÉRÈSE (montée
+            # TAU_UP rapide, descente TAU_DOWN lente). Borné [EXPR_MIN, EXPR_MAX].
+            # INERTE au ① : lu par PERSONNE (expressed_gene branché au ②).
+            for g, mem in _EXPR_MEMOIRE.items():
+                cible = 1.0 + EXPR_GAIN * getattr(plant, mem)
+                cur   = plant.expression.get(g, 1.0)
+                tau   = TAU_UP if cible > cur else TAU_DOWN
+                plant.expression[g] = max(EXPR_MIN, min(EXPR_MAX, cur + (cible - cur) * tau))
             # Marques de symptômes ÉVÉNEMENTIELS (sémiologie ②) : maladie/gel/grêle
             # s'estompent ici, AVEC les autres mémoires physiologiques (même endroit,
             # une fois par tick). Pas de gain ici (il vient des ReduceHealth, cf.
