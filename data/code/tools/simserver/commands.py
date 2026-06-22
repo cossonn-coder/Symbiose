@@ -18,6 +18,10 @@ from sim.seeds import PlayerSeedBank, Seed  # banque-joueur (source de planter, 
 # commande `fields` se DÉCOUVRE par introspection (tout attribut GridField
 # d'EcoFields) — un champ ajouté au moteur apparaît tout seul dans l'overlay.
 from fields.grids import GridField
+# Registre des bancs d'essai (sprint dédié) : mondes paramétrés montés par
+# `init config="<banc>"` pour forcer/observer un signe. Import au niveau module
+# (paquet `bancs/` au sommet, peut tout importer) ; jamais monté pour smoke/full.
+from bancs import BANCS
 
 from .version import ENGINE_VERSION
 
@@ -47,6 +51,7 @@ class CommandsMixin:
         config = msg.get("config", "smoke")
         if not isinstance(seed, int):
             return {"ok": False, "error": f"seed doit être un entier (reçu {seed!r})"}
+        banque = None   # renseignée par une fabrique de banc ; sinon helper plus bas
         if config == "smoke":
             # Réutilise la fabrique du golden smoke test (2 tuiles terre/argile +
             # maison centrée) — même monde, même déterminisme, zéro duplication.
@@ -71,9 +76,18 @@ class CommandsMixin:
                 for _p in _t.plants:
                     if getattr(_p.plant_class, "fruitier", False):
                         _p.age_years = float(_p.plant_class.maturity_years)
+        elif config in BANCS:
+            # Bancs d'essai (sprint dédié) : mondes paramétrés qui FORCENT une
+            # condition observable (sécheresse, chlorose, ombre dense…) pour le tri
+            # diagnostique des signes (bug rendu C# vs artefact de carte, D47). La
+            # fabrique renvoie le tuple standard (tiles, ecos, house, banque). Branché
+            # APRÈS smoke/full → ces deux configs ne montent jamais un banc, golden
+            # NEUTRE. Banque vide de la fabrique → repli sur la banque smoke (helper).
+            tiles, ecos, house, banque = BANCS[config]()
         else:
             return {"ok": False,
-                    "error": f"config inconnue : {config!r} ('smoke' ou 'full')"}
+                    "error": f"config inconnue : {config!r} "
+                             f"('smoke', 'full' ou un banc : {', '.join(sorted(BANCS))})"}
         game_state = {
             "tiles": tiles, "eco": ecos, "scores": {},
             "current_player": "joueur_1", "week": 1, "log": [],
@@ -86,7 +100,8 @@ class CommandsMixin:
             # Kit de démarrage en config "full" seulement (retour F5 Nico) : 1
             # graine de chaque espèce potagère emblématique pour tester `planter`
             # sans attendre un automne. "smoke" reste à banque vide (cf. helper).
-            "player_seed_bank": _banque_initiale(config),
+            # Un banc peut fournir SA banque (fabrique) ; sinon repli sur le helper.
+            "player_seed_bank": banque if banque is not None else _banque_initiale(config),
         }
         self.engine = Engine(game_state)
         # Brancher la Vigueur joueur (tranche 4) : l'OPT-IN se fait ICI, pas
