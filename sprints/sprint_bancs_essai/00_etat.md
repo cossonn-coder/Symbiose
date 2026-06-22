@@ -62,7 +62,7 @@ une couche partagée.
 | # | Titre | Golden | Statut |
 |---|---|---|---|
 | ① | infra — paquet `bancs/` + registre + branchement `cmd_init` + `secheresse_sable` bout-en-bout + cadre d'oracle | NEUTRE ✅ | **CLOS** |
-| ② | banc édaphique (chlorose/asphyxie/NPK) + oracles → tri D47-C2/C6 | NEUTRE | À FAIRE |
+| ② | banc édaphique (chlorose/asphyxie/NPK) + oracles → tri D47-C2/C6 | NEUTRE ✅ | **CLOS** |
 | ③ | banc climatique (acclimatation/ombre dense) + oracles + note rendu `ombre` C# | NEUTRE | À FAIRE |
 | ④ | banc biotique (ravageur/floraison→fruits/semis tempéré) + oracles → tri D47-C3/C4/C5 | NEUTRE | À FAIRE |
 | ⑤ | sélecteur Godot (menu C#) + F5 + bilan D47 (trancher, verser bugs en dette) | NEUTRE | À FAIRE |
@@ -74,17 +74,18 @@ une couche partagée.
   protocole est ajouté pour le sélecteur — sinon `init config=<banc>` suffit).
 
 ## REPRISE
-① CLOS. Prochain : `02_edaphique.md` (chlorose acidophile / asphyxie argile /
-carence NPK + oracles → tri D47-C2/C6). RÉUTILISER le pattern du ① :
-- Fabriques dans `bancs/edaphique.py`, entrées ajoutées à `bancs/__init__.py:BANCS`.
-- Briques : `build_banc_tile(..., ph=..., n=..., p=..., k=...)` force n'importe
-  quel champ de `EcoFields.get_field` (ph/n/p/k/structure_sol) via `fill`.
-- Pour chlorose : espèce ACIDOPHILE (`ph_opt < SEUIL_ACIDOPHILE`, ex. `myrtille`)
-  sur sol forcé alcalin (`ph` ≈ PH_MAX). Pour asphyxie : argile + `humidite` haute
-  (> HUM_EXCES) — vérifier si une pré-charge `asphyxie_memory` est nécessaire
-  (même piège que la sécheresse : un champ peut décroître via la météo seedée).
-- Oracle : nouveau `tests/bancs/test_edaphique.py` réutilisant `oracle.run_banc` /
-  `signes_du_plot` / `premiere_plante`.
+②  CLOS. Prochain : `03_climatique.md` (acclimatation / ombre dense + oracles +
+note rendu `ombre` C#). RÉUTILISER le pattern ①② :
+- Fabriques dans `bancs/climatique.py` (déjà créé au ①, contient `secheresse_sable`),
+  entrées ajoutées à `bancs/__init__.py:BANCS`.
+- Acclimatation : stress DOUX prolongé → sur-expression plastique (`expression > 1`),
+  signe `acclimatation` (déjà observé en co-occurrence au ② sur chlorose/asphyxie —
+  le stress déclenche le priming). Ombre dense : maison HAUTE/PROCHE (cf. `monde(...,
+  house=House(...))`) → `shade_memory` au-delà de SHADE_DAMAGE_THRESHOLD, signe `ombre`.
+- ⚠️ `ombre` : rendu C# manquant (dette 0.5.2) — l'oracle sera vert mais l'écran muet ;
+  c'est le cas-école du tri D47 (bug RENDU, pas carte). NOTER au bilan ⑤.
+- Oracle : nouveau `tests/bancs/test_climatique.py` (existe déjà au ①) — y ajouter
+  `test_acclimatation` / `test_ombre_dense`.
 
 ## API de lecture des signes (NOTÉE pour ②③④)
 Source UNIQUE = `sim.semiologie.leaf_symptoms(plant, eco, saison)` → liste triée
@@ -111,3 +112,21 @@ et laisser l'environnement composé (sol drainant + humidité basse) la MAINTENI
   golden inchangé, serveur `init config="secheresse_sable"`→step→snapshot émet
   bien `secheresse` dans `leaf_symptoms`, tailles ≤ 34 LDC pur. Pont 0.5.3
   inchangé (pas de champ de protocole ajouté — `init config=<banc>` suffit).
+- **② CLOS** (golden NEUTRE `2ab026ad…`) : `bancs/edaphique.py` (3 fabriques —
+  `chlorose_acidophile` myrtille/pH 8.2 · `asphyxie_argile` basilic/argile gorgée +
+  `asphyxie_memory` pré-chargée · `carence_npk` DEUX tournesols jumeaux
+  carencé/témoin) + entrées `BANCS`. `tests/bancs/test_edaphique.py` : **7/7 verts**.
+  Serveur : les 3 `init config=<banc>` répondent `ok:true` (config inconnue →
+  erreur listant les bancs), pont 0.5.3 inchangé. Tailles 32/47 LDC pur (≪ 350).
+  - **D47-C2 (asphyxie muette) TRANCHÉ** : le MOTEUR émet bien `asphyxie` dès que
+    `asphyxie_memory > ASPHYXIE_HEALTH_SEUIL` (0.10). L'oracle est vert → l'écran muet
+    du F5 n'est PAS un bug moteur ni un artefact de carte. Cause = (a) l'arrosage
+    manuel n'a pas poussé la mémoire au-dessus de 0.10 dans la fenêtre observée
+    (intégration LENTE, `ASPHYXIE_MEMORY_LERP=0.05/sem`, exige plusieurs semaines
+    d'excès SOUTENU sur argile) ET/OU (b) le rendu C# ne mappe pas `asphyxie`. À
+    confirmer au F5 du ⑤ sur CE banc : signe muet à l'écran ⇒ bug RENDU C#.
+  - **D47-C6 (NPK uniformément pauvres) TRANCHÉ** : symptôme NORMAL d'un sol épuisé,
+    pas un bug de carte. Oracle : sol carencé garde `n≈0`, croissance bridée par
+    Liebig (h 29.5 < témoin 41.0), AUCUNE mort (cohérent D41, mort édaphique bloquée).
+  - Observation bonus : `acclimatation` co-apparaît sur chlorose ET asphyxie — le
+    stress doux déclenche le priming plastique (attendu, bénin) ; utile au ③.

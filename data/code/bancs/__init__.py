@@ -9,7 +9,11 @@ golden (les bancs ne sont jamais montés pour smoke/full).
 Les tronçons ②③④ ajoutent leurs entrées ici (édaphique, climatique, biotique).
 """
 from .climatique import secheresse_sable
+from .edaphique import chlorose_acidophile, asphyxie_argile, carence_npk
 
 BANCS = {
     "secheresse_sable": secheresse_sable,
+    "chlorose_acidophile": chlorose_acidophile,
+    "asphyxie_argile": asphyxie_argile,
+    "carence_npk": carence_npk,
 }
