@@ -40,22 +40,10 @@ namespace Symbiose
 			$"{p["tile"].AsString()}|{p["species"].AsString()}"
 			+ $"|{p["x_cm"].AsDouble():F1}|{p["y_cm"].AsDouble():F1}";
 
-		// Étiquette debug « espèce · stade » sous la plante (demande Nico F5
-		// t4), toggle F3. Enfant du PlantRenderer : elle suit position,
-		// rotation de vue et fondu (Modulate) gratuitement. Elle zoome avec le
-		// monde — assumé, c'est un instrument de debug, pas l'UI finale.
-		private Label MakeTag(GDict p)
-		{
-			var tag = new Label { Name = "Tag", Visible = _labelMode == LabelMode.Toutes };
-			tag.AddThemeFontSizeOverride("font_size", 11);
-			tag.AddThemeColorOverride("font_color", new Color(1f, 1f, 1f, 0.85f));
-			tag.AddThemeColorOverride("font_outline_color", Colors.Black);
-			tag.AddThemeConstantOverride("outline_size", 4);
-			tag.Text = TagText(p);
-			tag.Position = new Vector2(-30f, 6f);   // sous le collet, centré à la louche
-			return tag;
-		}
-
+		// Étiquette debug « espèce · stade » (demande Nico F5 t4), toggle F3.
+		// Le TEXTE est stocké en Meta "tag" sur le renderer ; le RENDU se fait
+		// hors SubViewport, net, par WorldView.Etiquettes.cs (SS① : le texte dans
+		// la grille pixel-art était illisible). On ne crée plus de Label enfant.
 		private static string TagText(GDict p) =>
 			$"{p["species"].AsString()} · {p["stage_name"].AsString()}";
 
@@ -141,8 +129,7 @@ namespace Symbiose
 					node.SetStructure(structure);   // la plante a poussé
 					node.SetSkeleton(stadeMort);     // ou vient de mourir / s'est couchée
 					node.SetSymptoms(symptoms);      // teinte + texture des symptômes (D33)
-					var t = node.GetNodeOrNull<Label>("Tag");
-					if (t != null) t.Text = TagText(p);   // le stade évolue
+					node.SetMeta("tag", TagText(p));   // le stade évolue (étiquette nette)
 					grown++;
 					continue;
 				}
@@ -168,7 +155,7 @@ namespace Symbiose
 				renderer.SetStructure(structure);
 				renderer.SetSkeleton(stadeMort);   // squelette déjà mort au chargement (save)
 				renderer.SetSymptoms(symptoms);    // teinte + texture des symptômes (D33)
-				renderer.AddChild(MakeTag(p));
+				renderer.SetMeta("tag", TagText(p));   // texte d'étiquette (rendu net hors grille)
 				if (fade)
 					renderer.CreateTween()
 						.TweenProperty(renderer, "modulate:a", 1f, FadeInSec);

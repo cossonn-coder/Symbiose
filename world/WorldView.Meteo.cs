@@ -27,17 +27,20 @@ namespace Symbiose
 		// du CanvasLayer ambiance, et après _origins pour le manteau / la heatmap).
 		private void BuildMeteoLayers()
 		{
+			// Ambiance = CanvasLayer plein écran → reste dans le viewport PRINCIPAL
+			// (AddChild, pas AddWorld) : un voile de pluie/nuages full-résolution
+			// sur tout l'écran, au-dessus du monde pixellisé et sous le HUD.
 			_weatherLayer = new WeatherLayer { Name = "Weather" };
 			AddChild(_weatherLayer);
 
 			_snowLayer = new SnowLayer { Name = "Snow", ZIndex = 2 };
-			AddChild(_snowLayer);
+			AddWorld(_snowLayer);
 
 			_soilTempOverlay = new SoilTempOverlay
 			{
 				Name = "SoilTempOverlay", ZIndex = 3, Visible = false,
 			};
-			AddChild(_soilTempOverlay);
+			AddWorld(_soilTempOverlay);
 		}
 
 		// Bloc `weather` (lecture tolérante : pré-0.5.0 sans le bloc → ciel neutre).

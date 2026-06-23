@@ -1,10 +1,20 @@
-// SYMBIOSE — WorldView.Projection.cs (partial de WorldView, SS⑥ refactor global)
+// SYMBIOSE — WorldView.Projection.cs (partial de WorldView)
 // LE pipeline de projection monde → écran (et son inverse). Une seule
 // transformation, écrite ici UNE fois, utilisée partout (plots, maison,
 // plantes, ombres). C'est la leçon du bug D2 : deux projections « presque
 // pareilles » ne coïncident jamais. État de la projection = l'orientation
 // (quart de tour) ; les écrivains de cet état sont la caméra (RotateView) et
 // _Ready (remise à zéro).
+//
+// 🎨 RENDU PIXEL-ART (SS①, 2026-06-23) : la PROJECTION reste l'ISO 2:1 d'avant
+// (décision Nico au 1er F5 SS① : le top-down 3/4 ne rendait pas bien, on revient
+// à l'iso — la conception §3 est corrigée en ce sens). Le « pixel-art », lui,
+// vient du SubViewport basse-réso (960×540) agrandi ×2 en Nearest. SEULE la
+// CALIBRATION change vs l'iso historique : les losanges sont calibrés en pixels
+// INTERNES du SubViewport — moitié des cotes plein écran d'avant (39×19,5 au lieu
+// de 78×39), car l'upscale ×2 les redouble → taille à l'écran IDENTIQUE à avant,
+// mais en pixels 2×2. ⚠️ Cohérence à tenir : TileWPx (ici) ↔ stretch_shrink du
+// SubViewportContainer (WorldView.tscn). Résolution interne = fenêtre/shrink.
 
 using Godot;
 
@@ -13,17 +23,19 @@ namespace Symbiose
 	public partial class WorldView : Node2D
 	{
 		// -------------------------------------------------------------------
-		// CALIBRATION (mesurée sur assets/sprites/tiles/tile_terre.png — D2)
-		// Le losange UTILE du sprite fait 78×39 px (iso 2:1 exact) + un socle
-		// d'épaisseur ~15 px que le placeholder ignore. 1 plot = 50 cm.
+		// CALIBRATION (iso 2:1, en pixels INTERNES du SubViewport 960×540 ;
+		// l'upscale ×2 du SubViewportContainer les redouble à l'écran). Le
+		// losange UTILE fait 39×19,5 px internes (= la moitié des 78×39 plein
+		// écran d'avant SS① — l'upscale ×2 rétablit la taille). 1 plot = 50 cm.
 		// -------------------------------------------------------------------
 		public const float PlotCm = 50f;                       // = constants.PLOT_CM
-		public const float TileWPx = 78f;                      // largeur losange
-		public const float TileHPx = 39f;                      // hauteur losange (2:1)
-		public const float PxPerCmX = TileWPx / 2f / PlotCm;   // 0.78 px/cm
-		public const float PxPerCmY = TileHPx / 2f / PlotCm;   // 0.39 px/cm
+		public const float TileWPx = 39f;                      // largeur losange (interne)
+		public const float TileHPx = 19.5f;                    // hauteur losange (2:1)
+		public const float PxPerCmX = TileWPx / 2f / PlotCm;   // 0.39 px/cm
+		public const float PxPerCmY = TileHPx / 2f / PlotCm;   // 0.195 px/cm
 		// Échelle verticale (hauteurs dz) : = PxPerCmX, le standard iso 2:1 qui
-		// ne « tasse » pas les verticales. Un pommier de 350 cm fait ~273 px.
+		// ne « tasse » pas les verticales. Un pommier de 350 cm fait ~137 px
+		// internes (= 273 à l'écran après ×2).
 		public const float PxPerCmZ = PxPerCmX;
 		// Côté du monde : 20 m (échelle actée, cf. CLAUDE.md).
 		public const float WorldCm = 2000f;
@@ -72,10 +84,9 @@ namespace Symbiose
 		/// inversible analytiquement : sx=(x−y)·a, sy=(x+y)·b donne
 		/// x = sx/2a + sy/2b et y = −sx/2a + sy/2b. Puis on défait l'orientation
 		/// — transformations inverses DANS L'ORDRE INVERSE : l'inverse du quart
-		/// de tour (x,y)→(y, W−x) est (u,v)→(W−v, u). GetGlobalMousePosition
-		/// rend la souris déjà en canvas (pan/zoom caméra défaits par Godot) —
-		/// cette fonction est donc le SEUL maillon manquant. Écrite ici, à côté
-		/// de l'aller (leçon D2 : jamais deux projections « presque pareilles »).
+		/// de tour (x,y)→(y, W−x) est (u,v)→(W−v, u). Le « canvas » est ici
+		/// l'espace de la caméra du SubViewport — WorldMouseCanvas (WorldView.cs)
+		/// y amène la souris. Écrite ici, à côté de l'aller (leçon D2).
 		/// </summary>
 		public static Vector2 ScreenToWorld(Vector2 scr)
 		{

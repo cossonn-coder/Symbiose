@@ -30,7 +30,10 @@ namespace Symbiose
 
 		private void FrameCamera()
 		{
-			_camera = GetNodeOrNull<Camera2D>("Camera");
+			// Recherche via _worldVp (le SubViewport) plutôt qu'un chemin absolu
+			// depuis le root : robuste si la scène bouge. La caméra est l'enfant
+			// direct "Camera" du SubViewport (cf. WorldView.tscn).
+			_camera = _worldVp.GetNodeOrNull<Camera2D>("Camera");
 			if (_camera == null) return;
 			// Palier initial = le plus proche du CameraZoom exporté (0.5 cadre
 			// le monde entier) — _zoomIndex et Zoom ne divergent jamais.
@@ -39,10 +42,11 @@ namespace Symbiose
 				if (Mathf.Abs(ZoomSteps[i] - CameraZoom)
 					< Mathf.Abs(ZoomSteps[_zoomIndex] - CameraZoom))
 					_zoomIndex = i;
-			// Centre du monde (1000,1000) cm → écran ; remonté de l'équivalent
-			// d'un demi-toit pour que la maison ne tasse pas le cadrage.
+			// Centre du monde (1000,1000) cm → écran ; remonté d'un demi-toit pour
+			// que la maison ne tasse pas le cadrage (échelle INTERNE du SubViewport,
+			// moitié du plein écran d'avant → ~50 px au lieu de ~100).
 			_camera.Position = WorldToScreen(WorldCm / 2f, WorldCm / 2f)
-				- new Vector2(0f, 100f);
+				- new Vector2(0f, 50f);
 			_camera.Zoom = Vector2.One * ZoomSteps[_zoomIndex];
 			CurrentZoom = ZoomSteps[_zoomIndex];
 			_camera.MakeCurrent();
@@ -68,12 +72,12 @@ namespace Symbiose
 
 		// Borne la caméra à la boîte englobante du monde projeté + marge 10 %
 		// (kickoff A·1 : on ne se perd pas dans le gris). Les 4 coins du carré
-		// 0..2000 cm projettent x ∈ [−1560, 1560], y ∈ [0, 1560] — IDENTIQUE à
+		// 0..2000 cm projettent x ∈ [−halfW, halfW], y ∈ [0, h] — IDENTIQUE à
 		// toute orientation : le quart de tour remappe le carré sur lui-même.
 		private static Vector2 ClampToWorld(Vector2 pos)
 		{
-			float halfW = WorldCm * PxPerCmX;        // 1560 px
-			float h     = WorldCm * PxPerCmY * 2f;   // 1560 px
+			float halfW = WorldCm * PxPerCmX;        // 780 px internes
+			float h     = WorldCm * PxPerCmY * 2f;   // 780 px internes
 			float margin = 0.1f * h;
 			pos.X = Mathf.Clamp(pos.X, -halfW - margin, halfW + margin);
 			pos.Y = Mathf.Clamp(pos.Y, -margin, h + margin);
@@ -89,11 +93,11 @@ namespace Symbiose
 			float newZ = ZoomSteps[idx];
 			_zoomIndex = idx;
 			// Zoom centré souris (kickoff A·2) : le point canvas sous le
-			// curseur doit y RESTER. GetGlobalMousePosition rend la souris déjà
-			// en canvas (pan/zoom défaits par Godot) ; il suffit de glisser la
-			// caméra vers/depuis ce point au ratio des zooms :
+			// curseur doit y RESTER. WorldMouseCanvas rend la souris en canvas du
+			// SubViewport (fenêtre → px internes → caméra défaite) ; il suffit de
+			// glisser la caméra vers/depuis ce point au ratio des zooms :
 			// m = cam + d/oldZ = cam' + d/newZ  ⇒  cam' = m + (cam−m)·oldZ/newZ.
-			Vector2 mouse = GetGlobalMousePosition();
+			Vector2 mouse = WorldMouseCanvas();
 			_camera.Position = ClampToWorld(
 				mouse + (_camera.Position - mouse) * (oldZ / newZ));
 			_camera.Zoom = Vector2.One * newZ;
@@ -128,7 +132,7 @@ namespace Symbiose
 
 			BuildGround(_world);
 			_objects = new Node2D { Name = "Objects", ZIndex = 10, YSortEnabled = true };
-			AddChild(_objects);
+			AddWorld(_objects);
 			BuildHouse(_world);
 			ApplySnapshot(_lastSnap, fade: false);
 			// La heatmap se re-projette au _Draw : un redraw suffit (t6·C).

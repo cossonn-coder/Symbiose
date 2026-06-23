@@ -48,7 +48,7 @@ namespace Symbiose
 				_stingAccum = 0f;
 				return;
 			}
-			Vector2 w = ScreenToWorld(GetGlobalMousePosition());
+			Vector2 w = ScreenToWorld(WorldMouseCanvas());
 			if (!FindPlot(w, out string tile, out int r, out int c))
 			{
 				_stingAccum = 0f;   // curseur hors tuile (chemin/maison)
@@ -79,7 +79,7 @@ namespace Symbiose
 		{
 			_vigueur = System.Math.Max(0.0, _vigueur - CoutPiqure);
 			UpdateActionHud();
-			AddChild(new PiqureFlash
+			AddWorld(new PiqureFlash
 			{
 				Position = WorldToScreen(w.X, w.Y),
 				ZIndex = 20,   // au-dessus des objets (10) — un effet, pas un volume

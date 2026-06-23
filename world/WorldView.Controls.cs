@@ -69,7 +69,7 @@ namespace Symbiose
 				if (mb.ButtonIndex == MouseButton.WheelUp)   StepZoom(+1);
 				if (mb.ButtonIndex == MouseButton.WheelDown) StepZoom(-1);
 				if (mb.ButtonIndex == MouseButton.Left)
-					TryAction(GetGlobalMousePosition(), mb.ShiftPressed);
+					TryAction(WorldMouseCanvas(), mb.ShiftPressed);
 			}
 		}
 
@@ -110,15 +110,10 @@ namespace Symbiose
 
 		private void ToggleLabels()
 		{
-			// Cycle Survol → Toutes → Aucune. En Survol, c'est UpdateHoverTag
-			// (chaque frame) qui allume la seule étiquette sous la souris.
+			// Cycle Survol → Toutes → Aucune. L'affichage est entièrement géré
+			// chaque frame par UpdatePlantLabels (WorldView.Etiquettes.cs) selon
+			// ce mode — rien à basculer ici, juste l'état.
 			_labelMode = (LabelMode)(((int)_labelMode + 1) % 3);
-			bool all = _labelMode == LabelMode.Toutes;
-			foreach (var node in _plantNodes.Values)
-			{
-				var tag = node.GetNodeOrNull<Label>("Tag");
-				if (tag != null) tag.Visible = all;
-			}
 			GD.Print($"[WorldView] F3 → étiquettes : {_labelMode}.");
 		}
 

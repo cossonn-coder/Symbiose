@@ -35,7 +35,7 @@ namespace Symbiose
 		private void BuildLitterLayer()
 		{
 			_litterLayer = new LitterLayer { Name = "Litter", ZIndex = 1 };
-			AddChild(_litterLayer);
+			AddWorld(_litterLayer);
 		}
 
 		// Applique le bloc `litiere` (lecture tolérante : un snapshot pré-0.3.7

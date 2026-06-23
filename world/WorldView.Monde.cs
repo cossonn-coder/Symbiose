@@ -62,7 +62,7 @@ namespace Symbiose
 		private void BuildGround(GDict world)
 		{
 			_ground = new Node2D { Name = "Ground", ZIndex = 0 };
-			AddChild(_ground);
+			AddWorld(_ground);
 			var ground = _ground;
 
 			int nPlots = 0;
@@ -123,7 +123,8 @@ namespace Symbiose
 			_        => SolInconnu,
 		};
 
-		// Losange iso 2:1 d'un plot, centré sur (0,0) : ±39 px en x, ±19.5 en y.
+		// Losange iso 2:1 d'un plot, centré sur (0,0) : ±TileWPx/2 px en x,
+		// ±TileHPx/2 en y (sommets nord/est/sud/ouest).
 		private static Polygon2D MakeLozenge(Color color) => new Polygon2D
 		{
 			Polygon = new[]

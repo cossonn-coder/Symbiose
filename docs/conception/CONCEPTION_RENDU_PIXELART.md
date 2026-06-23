@@ -53,40 +53,40 @@ Python** (`tools/render_structure.py`, validé à l'œil), PUIS se porte en C#. 
 et la vue divergent. Le **golden reste préservé** : le rendu est une vue passive, il ne
 touche pas le moteur ; les prototypes `tools/` ne touchent pas la simulation.
 
-## 3. DÉCISION ACTÉE — Projection top-down 3/4 (abandon de l'iso 2:1)
+## 3. PROJECTION — iso 2:1 CONSERVÉE (le top-down 3/4 a été essayé puis abandonné)
 
-**Décision Nico, 2026-06-23** : basculer de l'**iso 2:1** (losange 78×39) vers une
-**vue top-down 3/4 carrée façon Chrono Trigger** (grille carrée vue de face légèrement
-plongeante, sprites « de face »).
+**Décision Nico, 2026-06-23 (matin)** : tenter de basculer l'**iso 2:1** (losange)
+vers une **vue top-down 3/4 carrée façon Chrono Trigger**. **Implémenté au SS① puis
+REJETÉ le même jour au 1er F5** : la maison et la grille en top-down « ne rendaient
+pas bien ». **On garde donc l'iso 2:1 d'avant.** Chrono Trigger reste la référence
+**chromatique / pixel** (SS②), pas la projection — c'est la *palette*, pas la *forme*,
+qui fait l'identité 16-bit.
 
-**Pourquoi.** Chrono Trigger — la référence esthétique — n'est PAS isométrique : c'est
-du top-down 3/4 sur grille carrée. L'iso losange actuel s'en éloigne fondamentalement.
+**Ce qui est acté techniquement** : la projection (`WorldView.Projection.cs`) reste
+l'**iso 2:1 historique** (`((x−y)·PxX, (x+y)·PxY)`, rotation losange). Le « pixel-art »
+ne vient PAS de la projection mais du **SubViewport basse-réso** (§4). Seule la
+**calibration** a changé : les losanges sont calibrés en pixels **internes** du
+SubViewport (**39×19,5** = moitié du plein écran d'avant), et l'upscale ×2 rétablit la
+taille à l'écran. L'orientation D35 (rotation par quarts de tour) est préservée.
 
-**Impact technique — limité et localisé** (bonne nouvelle) : la projection est
-**centralisée** dans `WorldView.Projection.cs` (leçon D2 : « écrite une fois, utilisée
-partout »). Trois fonctions + constantes à refondre, **tout le reste suit
-automatiquement** car plantes/faune/maison délèguent à `WorldToScreen` /
-`WorldToScreenOffset` / `ScreenToWorld` :
-
-- `WorldToScreen` : de `((x−y)·PxX, (x+y)·PxY)` (rotation losange) → cartésien
-  `(x·PxX, y·PxYoblique)`. Grille carrée, x→droite, y→bas, léger raccourci vertical
-  optionnel pour l'effet « 3/4 ».
-- `ScreenToWorld` : inversion qui redevient triviale (par axe, plus de diagonale).
-- Constantes : `TileWPx`/`TileHPx` (tuiles carrées ou quasi), `PxPerCmY`, `PxPerCmZ`.
-
-**Conséquences à traiter dans le sous-sprint fondation** :
-- `PlantRenderer.Iso()` délègue déjà à `WorldToScreenOffset` → suit, mais l'allure des
-  branches change (plus de tirage diagonal) : revalider F5.
-- Ombre-capsule (`PlantShadow`) et soleil sud (`WorldView.Soleil`) : réadapter la
-  direction/longueur d'ombre au nouveau repère.
-- Caméra/zoom (`WorldView.Camera`) : revérifier le snap pixel-perfect aux paliers.
+> Leçon : la centralisation de la projection (D2, « écrite une fois ») a permis de
+> faire l'aller-retour top-down → iso en quelques fichiers, sans casser plantes /
+> faune / ombres (tout délègue à `WorldToScreen` / `WorldToScreenOffset`).
 
 ## 4. Levier ① — SubViewport basse-résolution + upscale ×N
 
 **Le plus gros impact, transversal.** Dessiner toute la scène dans un `SubViewport` à
-résolution réduite (ex. 480×270), puis l'afficher agrandi ×N en `Nearest`. Chaque
-primitive devient un bloc de pixels carrés homogènes → **look SNES instantané et unifié**
-(sol, plantes, faune, UI partagent la même grille de pixels).
+résolution réduite, puis l'afficher agrandi ×N en `Nearest`. Chaque primitive devient
+un bloc de pixels carrés homogènes → **look SNES instantané et unifié**.
+
+> **ACTÉ au SS① (2026-06-23)** : résolution interne **960×540, upscale ×2**
+> (`stretch_shrink=2`). Le 480×270 ×4 d'abord essayé était **trop pixellisé** au goût
+> de Nico. **Seul le MONDE** passe dans le SubViewport ; **HUD, sélecteur, ambiance
+> météo ET étiquettes des plantes restent plein écran (nets)** — choix assumé : le HUD
+> de debug doit rester lisible, et le texte upscalé est illisible. L'« UI dans la même
+> grille » du SNES est reportée au sprint UI. Piège résolu : le `SubViewportContainer`
+> a un parent `Node2D` → ses ancrages ne s'appliquent pas, sa taille est **forcée en
+> code** à la fenêtre (sinon il retombe à 2×2 et le monde est invisible).
 
 **Pourquoi en premier** : on obtient le « grain » pixel-art **sans réécrire** les `_Draw`
 existants (ils dessinent pareil, dans un canevas qui pixellise). Résout aussi le fait que
@@ -157,10 +157,12 @@ d'espèce à la maîtrise**. La perception progresse avec le savoir.
 Le rendu ne touche pas le moteur → **golden trivialement préservé** à chaque tronçon
 (seuls comptent les revalidations F5 par Nico). Découpage proposé :
 
-1. **SS① Fondation** — refonte projection top-down 3/4 (`WorldView.Projection`) +
-   SubViewport basse-réso ×N (leviers ① + projection ensemble : tous deux touchent
-   WorldView/caméra). Réadapter ombre/soleil/caméra. **F5 = le monde existant en
-   top-down pixellisé.**
+1. **SS① Fondation** — ✅ **FAIT & validé F5 (2026-06-23)**. SubViewport basse-réso
+   **960×540 ×2** (le pixel-art) ; **projection laissée en ISO 2:1** (top-down essayé
+   puis abandonné, cf. §3) ; **étiquettes plantes rendues nettes hors grille**
+   (`WorldView.Etiquettes.cs`). Picking reconverti via le SubViewport
+   (`WorldMouseCanvas`). Golden inchangé. **Reste pour un vrai pixel-art : la palette
+   (SS②) — Nico note au F5 que les couleurs manquent de dégradés/relief.**
 2. **SS② Palette** — rampes + hue-shifting + lumière sud sur les acteurs existants
    (plantes d'abord). **F5 = volume 16-bit.**
 3. **SS③ Sol** — dual-grid autotiling + dithering des champs.
@@ -174,7 +176,8 @@ Le rendu ne touche pas le moteur → **golden trivialement préservé** à chaqu
 
 - **Budget palette** : nombre de couleurs total, partage inter-acteurs — à fixer SS②.
 - **Affichage des champs** : teinter le sol (immersif) vs overlay toggle — à trancher SS③.
-- **Résolution interne du SubViewport** : 480×270 (×4) vs autre — à mesurer SS①.
+- **Résolution interne du SubViewport** : ~~480×270 (×4) vs autre~~ → **TRANCHÉ SS① :
+  960×540, upscale ×2** (le ×4 était trop gros).
 - **Floyd-Steinberg** : meilleure qualité que Bayer mais séquentiel → réserver à la
   génération d'asset hors-ligne, pas au runtime déterministe.
 - **Cache de sprite `PlantRenderer`** : « rendre une fois sur surface puis blitter » si le

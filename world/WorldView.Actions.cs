@@ -451,7 +451,7 @@ namespace Symbiose
 			int seg = -1;
 			if (_gesteIndex >= 0 && Gestes[_gesteIndex].Verb == "tailler"
 				&& _plantNodes.Count > 0)
-				node = FindSegmentGlobal(GetGlobalMousePosition(), out seg);
+				node = FindSegmentGlobal(WorldMouseCanvas(), out seg);
 			if (_highlightNode != null && _highlightNode != node
 				&& IsInstanceValid(_highlightNode))
 				_highlightNode.HighlightSegment = -1;
@@ -459,18 +459,5 @@ namespace Symbiose
 			if (node != null) node.HighlightSegment = seg;
 		}
 
-		// Étiquette au survol (demande Nico 2e F5 t4) : seule la plante la plus
-		// proche de la souris montre la sienne. Premier consommateur du picking
-		// ScreenToWorld — le clic réutilise exactement la même résolution.
-		private void UpdateHoverTag()
-		{
-			if (_labelMode != LabelMode.Survol || _plantNodes.Count == 0) return;
-			var best = FindPlant(ScreenToWorld(GetGlobalMousePosition()), HoverRadiusCm);
-			foreach (var node in _plantNodes.Values)
-			{
-				var tag = node.GetNodeOrNull<Label>("Tag");
-				if (tag != null) tag.Visible = node == best;
-			}
-		}
 	}
 }

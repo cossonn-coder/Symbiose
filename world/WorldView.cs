@@ -90,7 +90,7 @@ namespace Symbiose
 		// droite de l'écran + imprimé en console au lancement : si la version à
 		// l'écran n'est pas celle annoncée par Claude, le circuit VM → sync
 		// Nextcloud → build Godot n'est pas passé (piège connu depuis t3).
-		public const string Build = "thermique ⑩ — heatmap T sol spatialisée (F7) — SPRINT CLOS — 2026-06-18";
+		public const string Build = "pixel-art SS① — iso 2:1 + SubViewport 960×540 ×2 + étiquettes nettes — 2026-06-23";
 
 		// -------------------------------------------------------------------
 		// RÉGLAGES (exportés : ajustables dans l'inspecteur sans recompiler)
@@ -120,6 +120,14 @@ namespace Symbiose
 		[Export] public float FadeOutSec = 0.9f;
 
 		private SimBridge _bridge;
+		// SubViewport basse-réso (SS① pixel-art) : TOUT le contenu MONDE (sol,
+		// objets, plantes, faune, overlays, caméra) y vit, dessiné à 480×270 puis
+		// agrandi ×4 en Nearest par le SubViewportContainer → grain pixel SNES
+		// unifié. Les CanvasLayer (HUD, sélecteur, ambiance météo) restent, eux,
+		// dans le viewport PRINCIPAL (plein 1920×1080) : le HUD de debug doit
+		// rester lisible pour la validation F5 (l'UI rejoindra la grille au sprint
+		// UI). AddWorld() est le SEUL point d'ajout de contenu monde.
+		private SubViewport _worldVp;
 		private Node2D _objects;   // maison + plantes, YSort (cf. en-tête)
 		private Node2D _ground;    // sol — reconstruit à chaque rotation
 		// Vie macro (t6·B) : UN nœud pour tous les points (cf. MacroLife.cs).
@@ -176,7 +184,24 @@ namespace Symbiose
 		public override void _Ready()
 		{
 			GD.Print($"[WorldView] build : {Build}");
+			// Le viewport PRINCIPAL s'efface en gris pierre ; le SubViewport monde
+			// est en transparent_bg → ce gris transparaît entre les tuiles (les
+			// chemins en pierre, gratuits). Cf. WorldView.tscn.
 			RenderingServer.SetDefaultClearColor(FondPierre);
+			// Le SubViewport basse-réso et sa caméra (déclarés dans la scène).
+			_worldVp = GetNode<SubViewport>("WorldViewport/World");
+			// 📖 Pédagogie — forcer la taille du conteneur À LA MAIN : un
+			// SubViewportContainer est un Control, mais son PARENT ici est WorldView
+			// (un Node2D, pas un Control). Les ancrages « plein cadre » d'un Control
+			// ne valent que sous un parent Control/Viewport → sinon il retombe à sa
+			// taille MINIMALE (on a mesuré SubViewport = 2×2, monde invisible). On le
+			// dimensionne donc explicitement à la fenêtre, et on suit ses
+			// redimensionnements. stretch_shrink=4 → le SubViewport fait fenêtre/4
+			// = 480×270 (la résolution interne pixel-art).
+			var container = GetNode<SubViewportContainer>("WorldViewport");
+			container.Size = GetViewport().GetVisibleRect().Size;
+			GetViewport().SizeChanged += () =>
+				container.Size = GetViewport().GetVisibleRect().Size;
 			// Champ STATIQUE (partagé avec PlantRenderer via WorldToScreen) :
 			// toujours repartir « nord en haut » à l'ouverture de la scène.
 			_orientation = 0;
@@ -194,6 +219,30 @@ namespace Symbiose
 			// Tout le reste de la machine (_Process, _UnhandledInput) reste gardé
 			// par `_started` tant qu'on n'a pas lancé. Voir WorldView.Selecteur.cs.
 			BuildSelecteur();
+		}
+
+		// Ajoute un nœud de contenu MONDE dans le SubViewport basse-réso (et non
+		// directement sous WorldView, qui vit dans le viewport principal). Les
+		// CanvasLayer (HUD, sélecteur, ambiance météo) NE passent PAS par ici.
+		private void AddWorld(Node n) => _worldVp.AddChild(n);
+
+		// La souris en coordonnées CANVAS du monde (espace de la caméra du
+		// SubViewport), équivalent de l'ancien GetGlobalMousePosition() d'avant le
+		// SubViewport. 📖 Pédagogie — le picking traverse maintenant DEUX échelles :
+		//  1) fenêtre → px internes du SubViewport : la souris est en px écran
+		//     (1920×1080) ; le SubViewport ne fait que 480×270 (stretch_shrink=4),
+		//     d'où le facteur Size/ContainerSize (= 1/4) ;
+		//  2) px internes → canvas monde : on défait la transform de la caméra
+		//     (zoom + pan) via GetCanvasTransform().AffineInverse().
+		// ScreenToWorld (projection) finit le travail canvas → cm monde. Une seule
+		// fonction, cinq appelants (leçon D2 : jamais deux conversions divergentes).
+		private Vector2 WorldMouseCanvas()
+		{
+			var container = _worldVp.GetParent<SubViewportContainer>();
+			Vector2 scale = (Vector2)_worldVp.Size / container.Size;
+			Vector2 internalPx =
+				(GetViewport().GetMousePosition() - container.GlobalPosition) * scale;
+			return _worldVp.GetCanvasTransform().AffineInverse() * internalPx;
 		}
 
 		// Démarrage EFFECTIF de la simulation, déclenché par le sélecteur (⑤) au
@@ -218,7 +267,7 @@ namespace Symbiose
 			BuildGround(world);
 
 			_objects = new Node2D { Name = "Objects", ZIndex = 10, YSortEnabled = true };
-			AddChild(_objects);
+			AddWorld(_objects);
 			BuildHouse(world);
 
 			// Origins des tuiles en cache : le snapshot donne des positions
@@ -235,20 +284,21 @@ namespace Symbiose
 			BuildLitterLayer();   // litière au sol (③·B) — ZIndex 1, sous la macro
 
 			_macroLife = new MacroLife { Name = "MacroLife", ZIndex = 5 };
-			AddChild(_macroLife);
+			AddWorld(_macroLife);
 
 			_foragerLayer = new ForagerLayer { Name = "ForagerLayer", ZIndex = 11 };
-			AddChild(_foragerLayer);
+			AddWorld(_foragerLayer);
 
 			_fieldOverlay = new FieldOverlay
 			{
 				Name = "FieldOverlay", ZIndex = 3, Visible = false,
 			};
-			AddChild(_fieldOverlay);
+			AddWorld(_fieldOverlay);
 
 			BuildMeteoLayers();   // ambiance écran + manteau neigeux (⑨) — avant le HUD
 
 			BuildHud();
+			BuildPlantLabels();   // couche d'étiquettes NETTE (hors SubViewport, SS①)
 			ApplySnapshot(snap, fade: false);   // monde initial : pas de fondu
 
 			FrameCamera();
@@ -284,9 +334,10 @@ namespace Symbiose
 			// 0) Caméra : pan aux flèches — actif dans TOUTES les phases (la
 			//    caméra n'interagit jamais avec la machine à états).
 			UpdateCameraPan((float)delta);
-			// 0b) Étiquette au survol (volet B) — chaque frame, ~170 distances :
-			//     trivial, pas de cache à inventer.
-			UpdateHoverTag();
+			// 0b) Étiquettes des plantes (nettes, hors SubViewport) — reprojetées
+			//     chaque frame selon le mode (Aucune/Survol/Toutes). Cf.
+			//     WorldView.Etiquettes.cs.
+			UpdatePlantLabels();
 			// 0b') Surbrillance de la branche sous la souris (mode tailler, t5).
 			//      Chaque frame aussi, mais le redraw ne part qu'au CHANGEMENT.
 			UpdateTailleHighlight();
