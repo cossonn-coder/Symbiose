@@ -64,7 +64,7 @@ une couche partagée.
 | ① | infra — paquet `bancs/` + registre + branchement `cmd_init` + `secheresse_sable` bout-en-bout + cadre d'oracle | NEUTRE ✅ | **CLOS** |
 | ② | banc édaphique (chlorose/asphyxie/NPK) + oracles → tri D47-C2/C6 | NEUTRE ✅ | **CLOS** |
 | ③ | banc climatique (acclimatation/ombre dense) + oracles + note rendu `ombre` C# | NEUTRE ✅ | **CLOS** |
-| ④ | banc biotique (ravageur/floraison→fruits/semis tempéré) + oracles → tri D47-C3/C4/C5 | NEUTRE | À FAIRE |
+| ④ | banc biotique (ravageur/floraison→fruits/semis tempéré) + oracles → tri D47-C3/C4/C5 | NEUTRE ✅ | **CLOS** |
 | ⑤ | sélecteur Godot (menu C#) + F5 + bilan D47 (trancher, verser bugs en dette) | NEUTRE | À FAIRE |
 
 ## Golden
@@ -74,12 +74,16 @@ une couche partagée.
   protocole est ajouté pour le sélecteur — sinon `init config=<banc>` suffit).
 
 ## REPRISE
-③  CLOS. Prochain : `04_biotique.md` (infestation ravageur / verger floraison→fruits /
-semis tempéré + oracles → tri D47-C3/C4/C5). RÉUTILISER le pattern ①②③ :
-- Fabriques dans un nouveau `bancs/biotique.py`, entrées ajoutées à `bancs/__init__.py:BANCS`.
-- Oracle : nouveau `tests/bancs/test_biotique.py` (cadre `oracle.py` réutilisé).
-- ⚠️ Rappel pour le bilan ⑤ : la dette **0.5.2** (rendu `ombre` C# manquant) reste à
-  lever — `ombre_dense` est l'oracle vert / écran muet à exhiber au F5 (tri D47).
+④  CLOS. Prochain : `05_selecteur_godot.md` (sélecteur Godot menu C# + F5 + **bilan
+D47** : trancher chaque anomalie, verser les vrais bugs en dette). Au F5, exhiber
+chaque banc et confronter oracle (vert) vs écran :
+- ⚠️ Dette **0.5.2** (rendu `ombre` C# manquant) toujours à lever — `ombre_dense` =
+  oracle vert / écran muet (cas-école du tri D47, bug RENDU confirmé).
+- **D47-C2** (`asphyxie_argile`) : oracle vert → si muet à l'écran = bug RENDU C#.
+- **D47-C3** (`infestation_ravageur` vs témoin) : si le témoin montre AUSSI du criblé
+  = bug RENDU ; sinon le criblage est sincère (floor TRÈS bas, 0.025).
+- **D47-C4/C5** : tranchés MOTEUR (chaîne floraison OK, Solanaceae lèvent) → ce sont
+  des conditions de la carte `full`, pas des bugs. Cf. journal ④.
 
 ## API de lecture des signes (NOTÉE pour ②③④)
 Source UNIQUE = `sim.semiologie.leaf_symptoms(plant, eco, saison)` → liste triée
@@ -139,3 +143,38 @@ et laisser l'environnement composé (sol drainant + humidité basse) la MAINTENI
     tri — oracle VERT (moteur émet `ombre`) mais écran MUET au F5 tant que `PlantRenderer`
     n'a pas son mapping couleur/texture `ombre`. À EXHIBER au F5 du ⑤ → bug RENDU confirmé,
     pas carte. **Lever la dette 0.5.2 reste à planifier (rappel au bilan ⑤).**
+- **④ CLOS** (golden NEUTRE `2ab026ad…`) : `bancs/biotique.py` (3 fabriques) +
+  `base.force_faune` (pré-charge d'un champ de population, symétrique de `force_memoire`).
+  `tests/bancs/test_biotique.py` : **9/9 verts** ; `oracle.run_banc_trace` ajouté (trace
+  par semaine, pour les signes TRANSITOIRES). Serveur : les 3 `init config=<banc>` →
+  `ok:true` + step ok, config inconnue liste les 9 bancs, pont 0.5.3 inchangé. Snapshot
+  serveur de `infestation_ravageur` émet bien `ravageurs` dans `leaf_symptoms` (= la donnée
+  que reçoit la vue). Tailles 50/30 LDC pur (≪ 350).
+  - `infestation_ravageur` : DEUX basilics jumeaux, INFESTE (`puceron` forcé 0.5,
+    microbiome 1.0 → herbivorie NON létale) + TEMOIN. FORÇAGE-PULSE (décroît 0.55/sem en
+    hiver, warmth=0) → oracle à **2 sem** (hôte criblé VIVANT, témoin sain).
+  - `verger_floraison` : 3 pommiers pré-vieillis 6 ans + état floral PRÉ-ARMÉ
+    (`floraison=1.0`/`a_fleuri=True`) + abeilles pré-chargées. La FANAISON réelle (relaxe
+    hors fenêtre photopériodique) déclenche la nouaison entomophile sur le pollen DÉPOSÉ
+    par les butineurs → fruits. Oracle (6 sem) : max **7 butineurs** pendant la floraison,
+    **3 fruits** noués.
+  - `semis_tempere` : banc ISOLÉ. Tueurs neutralisés : MILDIOU (paillage SATURÉ sur toutes
+    les tiges → aucun slot libre → l'aléa ne peut poser de rondelle `maladie`) + FROID
+    (même paillage → protection cap 1.0) ; succession spontanée coupée
+    (`germination_candidates=[]`) ; grains tomate+poivron déposés (la moitié dépôt de
+    `planter`, `cmd_init` n'ayant pas de game_state). Oracle (8 sem) : tomate ET poivron
+    VIVANTS (la porte de `planter` lève bien les Solanaceae).
+  - **D47-C3 (criblage fantôme) TRANCHÉ** : le MOTEUR émet `ravageurs` (criblage de FORME)
+    dès densité > RAVAGEURS_FLOOR (≈0.025, TRÈS bas). Oracle vert + snapshot émet `ravageurs`
+    → pas un bug moteur. Au F5 du ⑤ : si le TÉMOIN montre aussi du criblé ⇒ bug RENDU C# ;
+    sinon le criblage est sincère (le floor sous-perceptif explique le « fantôme »).
+  - **D47-C4 (chaîne floraison muette) TRANCHÉ** : la chaîne complète
+    floraison→pollen→butineurs→nouaison→fruits FONCTIONNE (banc vert). Donc « 0 fruit/0
+    butineur » sur `full` n'est PAS une régression moteur mais des CONDITIONS de carte :
+    la fenêtre photopériodique de floraison n'ouvre que ~sem 15 et la nouaison entomophile
+    exige la FANAISON (~sem 35), ET des pollinisateurs présents (densité saisonnière +
+    habitat/rondelle pollinisateur). Piste F5, pas de correctif moteur.
+  - **D47-C5 (Solanaceae ne lèvent pas) TRANCHÉ** : elles lèvent ET survivent ici → la
+    porte de `planter` est SAINE. Le symptôme de `full` venait de la fragilité Solanaceae
+    (mildiou familial dès une rondelle `maladie` + froid de démarrage) — question de DESIGN
+    (protéger les semis : paillage, semis intérieur), pas un bug.

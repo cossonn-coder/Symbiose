@@ -71,6 +71,20 @@ def force_memoire(plant, nom: str, valeur: float) -> None:
     setattr(plant, nom, float(valeur))
 
 
+def force_faune(eco, espece: str, densite: float) -> None:
+    """ACCÉLÉRATION (volet biotique) : pré-charge UNIFORMÉMENT la densité d'une
+    espèce de faune (`puceron`, `abeille`…) dans son champ de population. Pose une
+    pression/présence DÉJÀ installée sans dérouler les semaines de colonisation —
+    que la porte saisonnière hivernale rendrait d'ailleurs nulles (warmth=0 sous
+    T_COLD_ZERO). Le champ relaxe ensuite vers sa cible écologique au tick : la
+    fenêtre d'observation du banc se lit AVANT que la décrue saisonnière ne le
+    ramène sous le seuil (cf. oracle). Symétrique de `force_memoire` côté plante."""
+    field = eco.populations.get(espece) if eco.populations else None
+    if field is None:
+        raise KeyError(f"espèce de faune inconnue pour le forçage de banc : {espece!r}")
+    field.fill(float(densite))
+
+
 def vieillir(plant, ans: float) -> None:
     """ACCÉLÉRATION : pré-vieillit une plante de `ans` années (âge en années ET en
     semaines, cohérents). Sert aux bancs qui veulent une vivace en fin de longévité

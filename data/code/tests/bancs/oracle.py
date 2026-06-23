@@ -22,8 +22,8 @@ from sim import semiologie
 SEED = 0x5AB1057E
 
 
-def run_banc(nom: str, semaines: int):
-    """Monte le banc `nom`, simule `semaines` ticks, renvoie `(game_state, engine)`.
+def _monter(nom: str):
+    """Monte le banc `nom` et renvoie `(game_state, engine)` AVANT tout tick.
     Reproduit le câblage minimal de `cmd_init` (mêmes clés `game_state`) pour que
     l'état soit bit-identique à celui du serveur."""
     if nom not in BANCS:
@@ -34,11 +34,31 @@ def run_banc(nom: str, semaines: int):
         "current_player": "joueur_1", "week": 1, "log": [],
         "house": house, "seed": SEED, "player_seed_bank": banque,
     }
-    engine = Engine(game_state)
+    return game_state, Engine(game_state)
+
+
+def run_banc(nom: str, semaines: int):
+    """Monte le banc `nom`, simule `semaines` ticks, renvoie `(game_state, engine)`."""
+    game_state, engine = _monter(nom)
     for _ in range(semaines):
         engine.tick_semaine()
         game_state["log"].clear()
     return game_state, engine
+
+
+def run_banc_trace(nom: str, semaines: int, observe):
+    """Comme `run_banc`, mais appelle `observe(game_state, engine)` APRÈS chaque tick
+    et collecte les retours. Indispensable aux signes TRANSITOIRES, qu'un snapshot
+    final raterait : p.ex. les butineurs ne sont présents que pendant la floraison,
+    laquelle est retombée une fois les fruits noués. Renvoie `(game_state, engine,
+    traces)`."""
+    game_state, engine = _monter(nom)
+    traces = []
+    for _ in range(semaines):
+        engine.tick_semaine()
+        game_state["log"].clear()
+        traces.append(observe(game_state, engine))
+    return game_state, engine, traces
 
 
 def signes_du_plot(game_state, plant) -> set[str]:
