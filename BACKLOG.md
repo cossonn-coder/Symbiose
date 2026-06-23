@@ -148,6 +148,25 @@
 - [ ] `LightOverlay.cs` — ombre dynamique maison (Light2D + LightOccluder2D)
 - [ ] Premier test bout-en-bout : 1 tuile + 5 plantes + 1 an simulé visible
 
+### Pistes génération / renouvellement de terrain — issues d'un PDF (2026-06-23)
+> Lecture d'un papier de modélisation procédurale d'arbres 3D (hors-scope à 90 %).
+> Bilan : les mécaniques niche/lumière/succession du papier sont **déjà dans le
+> moteur, souvent en mieux** (`niche_index` n-dim, `bell(pH)`, `shade_tolerance_base`
+> + gène `tolerance_ombre`, `shade_stress_damage`). Le PDF **valide** l'archi. Seuls
+> restent ces angles morts réels (génération INITIALE des champs + renouvellement
+> temporel + dispersion spatiale), à creuser un jour — aucun n'est urgent.
+- [ ] **Prototypes de taches de sol** (self-similarité) — initialiser l'hétérogénéité
+  du microbiome/fertilité par instanciation + perturbation locale d'un petit
+  catalogue de motifs. Sert les 3 écoles de départ et l'hétérogénéité persistante.
+- [ ] **Sénescence de cohorte → gaps** — champ « âge de cohorte » ouvrant des trouées
+  quand une classe d'âge meurt ensemble. Renouvellement spontané du jardin éternel.
+- [ ] **Gradient directionnel sur un champ** — primitive simple de transition douce
+  orientée (ex. humidité plus haute d'un côté du terrain).
+- [ ] **Rayon de dispersion des semis spontanés** — seul vrai écart au papier :
+  `tick_plant_production` dépose les graines sur le plot-foyer du parent
+  (`seedbank.py`), pas via un noyau gaussien de rayon `seeding_radius`. Ajouter un
+  rayon contrôlable donnerait le levier « petit rayon → agrégats / grand → homogène ».
+
 ### Backlog lointain
 - Shop roguelike (inter-run et intra-run)
 - Bilan écologique fin de run (narratif)
