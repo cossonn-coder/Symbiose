@@ -26,7 +26,8 @@ def main() -> int:
                 "step_week": server.cmd_step_week,
                 "snapshot": server.cmd_snapshot,
                 "action": server.cmd_action,
-                "fields": server.cmd_fields}
+                "fields": server.cmd_fields,
+                "list_bancs": server.cmd_list_bancs}
     # 1 ligne lue = 1 réponse écrite. EOF (Godot mort sans quit) → fin de boucle.
     for line in sys.stdin:
         line = line.strip()

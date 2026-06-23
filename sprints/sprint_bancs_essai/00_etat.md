@@ -65,7 +65,7 @@ une couche partagée.
 | ② | banc édaphique (chlorose/asphyxie/NPK) + oracles → tri D47-C2/C6 | NEUTRE ✅ | **CLOS** |
 | ③ | banc climatique (acclimatation/ombre dense) + oracles + note rendu `ombre` C# | NEUTRE ✅ | **CLOS** |
 | ④ | banc biotique (ravageur/floraison→fruits/semis tempéré) + oracles → tri D47-C3/C4/C5 | NEUTRE ✅ | **CLOS** |
-| ⑤ | sélecteur Godot (menu C#) + F5 + bilan D47 (trancher, verser bugs en dette) | NEUTRE | À FAIRE |
+| ⑤ | sélecteur Godot (menu C#) + F5 + bilan D47 (trancher, verser bugs en dette) | NEUTRE ✅ | **CODE CLOS** (reste F5 Nico) |
 
 ## Golden
 - Départ (post-plasticité) : `2ab026ad2b3f484777a2a29f804e1a4785ecffd6976fc0058fe0a33dd1498646`.
@@ -74,9 +74,14 @@ une couche partagée.
   protocole est ajouté pour le sélecteur — sinon `init config=<banc>` suffit).
 
 ## REPRISE
-④  CLOS. Prochain : `05_selecteur_godot.md` (sélecteur Godot menu C# + F5 + **bilan
-D47** : trancher chaque anomalie, verser les vrais bugs en dette). Au F5, exhiber
-chaque banc et confronter oracle (vert) vs écran :
+⑤ CODE CLOS (2026-06-23) — **reste le F5 visuel de Nico, dernier geste avant clôture
+sèche du sprint**. Livré : commande pont `list_bancs` (0.5.4, registre Python source
+unique, appelable avant `init`), `SimBridge.ListBancs()`, sélecteur Godot
+`world/WorldView.Selecteur.cs` (`OptionButton` peuplé du serveur + bouton Lancer ;
+`StartSimulation` extraite de `_Ready` ; garde `_started` sur `_Process`/
+`_UnhandledInput`). `dotnet build` vert, golden NEUTRE `2ab026ad…`, `list_bancs`
+renvoie les 9 bancs. Bilan D47 consolidé dans DETTE.md + BACKLOG.md (l.46 TERMINÉ) +
+journal 75. Au F5, exhiber chaque banc et confronter oracle (vert) vs écran :
 - ⚠️ Dette **0.5.2** (rendu `ombre` C# manquant) toujours à lever — `ombre_dense` =
   oracle vert / écran muet (cas-école du tri D47, bug RENDU confirmé).
 - **D47-C2** (`asphyxie_argile`) : oracle vert → si muet à l'écran = bug RENDU C#.

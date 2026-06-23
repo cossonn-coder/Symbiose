@@ -138,6 +138,10 @@ namespace Symbiose
 
 		private GDict _world;      // réponse de init (tuiles + maison) — pour RebuildWorld
 		private GDict _lastSnap;   // dernier snapshot appliqué — pour RebuildWorld
+		// Faux tant que l'écran de sélection (⑤) n'a pas lancé StartSimulation :
+		// le monde (couches, _objects, _origins…) n'existe pas encore, _Process et
+		// _UnhandledInput court-circuitent pour ne pas déréférencer du vide.
+		private bool _started;
 
 		// --- Boucle hybride (tranche 3) -------------------------------------
 		// Planification = temps figé (défaut), Saison = temps réel, Pause =
@@ -181,7 +185,23 @@ namespace Symbiose
 			if (!_bridge.Start())
 				return;
 
-			var world = _bridge.Init(Seed, Config);
+			// Sélecteur de monde (sprint bancs d'essai ⑤) : au lieu de lancer
+			// directement la `config` de l'Export, on présente un menu — Nico
+			// choisit full / smoke / un banc d'essai À L'ÉCRAN, sans éditer
+			// d'argument. Le moteur ne démarre (StartSimulation) qu'au clic
+			// « Lancer ». Le pont EST déjà ouvert ici (Start ci-dessus) : le menu
+			// peut demander la liste des bancs au serveur (list_bancs) AVANT init.
+			// Tout le reste de la machine (_Process, _UnhandledInput) reste gardé
+			// par `_started` tant qu'on n'a pas lancé. Voir WorldView.Selecteur.cs.
+			BuildSelecteur();
+		}
+
+		// Démarrage EFFECTIF de la simulation, déclenché par le sélecteur (⑤) au
+		// choix d'un monde. Extrait de l'ancien _Ready (sans changer la séquence) :
+		// init → warmup → construction des couches → 1er snapshot → caméra.
+		private void StartSimulation(string config)
+		{
+			var world = _bridge.Init(Seed, config);
 			if (world == null) { _bridge.Quit(); return; }
 			_world = world;
 
@@ -232,6 +252,9 @@ namespace Symbiose
 			ApplySnapshot(snap, fade: false);   // monde initial : pas de fondu
 
 			FrameCamera();
+			// Monde construit → on débloque la boucle (_Process) et les entrées
+			// (_UnhandledInput), gardées par `_started` pendant l'écran de sélection.
+			_started = true;
 			// Le process Python reste OUVERT, au repos en Planification : c'est
 			// le mapping de la boucle hybride. Fermé à _ExitTree.
 		}
@@ -254,6 +277,10 @@ namespace Symbiose
 
 		public override void _Process(double delta)
 		{
+			// Écran de sélection (⑤) : rien à animer tant que le monde n'est pas
+			// construit (StartSimulation pose _started).
+			if (!_started) return;
+
 			// 0) Caméra : pan aux flèches — actif dans TOUTES les phases (la
 			//    caméra n'interagit jamais avec la machine à états).
 			UpdateCameraPan((float)delta);

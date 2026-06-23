@@ -196,6 +196,24 @@ namespace Symbiose
 		}
 
 		/// <summary>
+		/// Liste des bancs d'essai montables (`init config="<nom>"`), DEMANDÉE au
+		/// serveur (commande `list_bancs`, pont 0.5.4) : la source reste le registre
+		/// Python `BANCS` — le C# ne duplique pas les noms (un menu périmé = le piège
+		/// D47). Appelable après Start() SANS Init (lecture du registre, pas du
+		/// moteur). Renvoie [] si le serveur ne répond pas (vieux binaire gelé
+		/// pré-0.5.4) → le sélecteur retombe sur full/smoke.
+		/// </summary>
+		public string[] ListBancs()
+		{
+			var resp = Request(new GDict { ["cmd"] = "list_bancs" });
+			if (resp == null) return System.Array.Empty<string>();
+			var arr = resp["bancs"].AsGodotArray();
+			var noms = new string[arr.Count];
+			for (int i = 0; i < arr.Count; i++) noms[i] = arr[i].AsString();
+			return noms;
+		}
+
+		/// <summary>
 		/// Cœur du pont : écrit 1 ligne JSON, lit 1 ligne JSON (bloquant).
 		/// Retourne le message si ok:true, sinon null (+ erreur en console).
 		/// </summary>

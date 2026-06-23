@@ -19,6 +19,10 @@ namespace Symbiose
 
 		public override void _UnhandledInput(InputEvent ev)
 		{
+			// Écran de sélection (⑤) : aucune commande monde tant que la sim n'est
+			// pas lancée (le menu consomme ses propres clics via _gui_input).
+			if (!_started) return;
+
 			// Clavier provisoire (les vrais bindings/boutons = sprint UI) :
 			// Espace = saison/pause ; PageUp/PageDown = pivoter la vue (touches
 			// univoques en AZERTY).

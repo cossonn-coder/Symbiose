@@ -140,7 +140,14 @@ from __future__ import annotations
 #       (tolérance pré-0.5.3). Détecteur = lecture pure (hors _PLANT_ATTRS du golden)
 #       → golden NEUTRE (espèces du smoke sans stress vécu ⇒ expression = EXPR_MIN ⇒
 #       aucun signe). Côté C# : teinte glauque dans ColorantTints (PlantRenderer).
-ENGINE_VERSION = "0.5.3"
+# 0.5.4 (bancs d'essai ⑤, sélecteur Godot) : commande `list_bancs` → `{bancs:
+#       [...]}` = `sorted(BANCS)`, le registre des bancs d'essai. AUCUN moteur
+#       requis (lecture du registre) → appelable avant `init`, sert à PEUPLER le
+#       menu Godot (le C# ne duplique pas les noms : Python reste source unique,
+#       un menu périmé = le piège D47). Pur ajout de commande lecture-seule →
+#       golden NEUTRE. Un vieux binaire pré-0.5.4 répond « commande inconnue » →
+#       SimBridge.ListBancs() renvoie [] → le sélecteur retombe sur full/smoke.
+ENGINE_VERSION = "0.5.4"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

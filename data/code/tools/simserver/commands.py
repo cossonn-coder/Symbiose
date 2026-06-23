@@ -113,6 +113,15 @@ class CommandsMixin:
         return {"ok": True, "engine_version": ENGINE_VERSION,
                 "world": self._world_static()}
 
+    def cmd_list_bancs(self, msg: dict) -> dict:
+        """Liste des bancs d'essai montables par `init config="<nom>"` (sprint
+        dédié). Source UNIQUE = le registre Python `BANCS` (principe #1 : Python
+        source de vérité) — le sélecteur Godot la LIT au lieu de dupliquer les
+        noms en C#, qui se périmeraient en silence à l'ajout d'un banc (un menu
+        qui ment = le piège même que ce sprint élimine, cf. D47). Lecture du
+        registre, pas du moteur → appelable AVANT `init` (pour peupler le menu)."""
+        return {"ok": True, "bancs": sorted(BANCS)}
+
     def cmd_step_week(self, msg: dict) -> dict:
         if self.engine is None:
             return {"ok": False, "error": "step_week avant init"}
