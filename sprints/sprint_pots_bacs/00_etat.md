@@ -35,7 +35,7 @@ dessous (drainage, racines, microbiome).
 |---|-------|---------|------|
 | ① | Substrat data-driven (registre + 6 recettes + `drainage_override`) | `01_substrat.md` | **FAIT** (golden bit-identique) |
 | ② | Conteneur `EcoFields` miniature + tick chimique isolé + boucle | `02_conteneur.md` | **FAIT** (golden bit-identique) |
-| ③ | Plante en pot + confinement racinaire hybride (effet nain) | `03_confinement.md` | à faire |
+| ③ | Plante en pot + confinement racinaire hybride (effet nain) | `03_confinement.md` | **FAIT** (golden bit-identique) |
 | ④ | Mobilité + bacs N×M immobiles + pont snapshot | `04_mobilite_bacs.md` | à faire |
 | ⑤ | Couplage fond ouvert + lasagnes (arc complet) | `05_couplage_lasagnes.md` | à faire |
 | ⑥ | Vue Godot (pots/bacs/substrats visibles) — **différé** (Option B) | à écrire | différé |
@@ -112,10 +112,47 @@ Couches VÉRIFIÉES : `world→fields` OK, `grep` confirme zéro `import world` 
   test_eau 20/20 ✅ · test_signes 8/8 ✅ · test_sim_server 185/186 (baseline
   inchangée, le check rouge « pommier pré-âgé » préexiste, sans rapport).
 
-## REPRISE (démarrage à froid)
-Tronçons ① + ② **FAITS** (golden bit-identique). Le conteneur existe (`world/
-container.py`), sa chimie isolée ticke, la boucle l'itère (liste vide par défaut).
-Le tissu `substrat` a sa cinétique de décompo (voir décision ci-dessus).
+## Tronçon ③ — état
+**FAIT** (golden bit-identique). Effet nain HYBRIDE livré, philo #2 respectée
+(émergent, AUCUN malus direct sur la plante). Acquis :
+- `world/container.py` (+74 LDC → 152 LDC pur, < 350 ; tool `tools/compte_ldc.py`) :
+  - knobs §3 : `VOLUME_REF=75`, `VOLUME_CONF_MAX=12`, `ROOTBOUND_SEUIL=0.30`,
+    `ROOTBOUND_K=1.20`, `CONF_MIN=0.25` + helper `_clamp`.
+  - `Container.tick(saison, seed, week, *, house, nebulosite)` = `tick_chimie` PUIS
+    uptake + croissance des plantes du conteneur (no-op si `plants==[]` → rétrocompat ②).
+  - `_volume_factor()` (levier 1 = `1/volume_norm` clampé [1, VOLUME_CONF_MAX]),
+    `_confinement(plant)` (levier 3 = root-bound, proxy `current_height`/volume),
+    `_cellules()` (levier 2 = géométrie du mini-sol).
+  - `planter_dans(container, plant_class, *, cell=(0,0))` → ajoute une `PlantInstance`
+    au centre de la cellule, retournée.
+- `world/container.py` imports : `+ from plants.base import PlantInstance`,
+  `+ from sim.growth import grow_plant` — **PAS de cycle** (`sim.growth` n'importe ni
+  `world` ni `sim.effects` ; vérifié `import world` OK).
+- `fields/ecofields/container.py::plant_uptake` → param `volume_factor: float = 1.0`
+  (replié dans `share`). **Défaut 1.0 = bit-identique** (prouvé : non-régression test).
+- `sim/growth/phases.py::grow_plant` → param `confinement: float = 1.0` (multiplie
+  `speed`). **Défaut 1.0 = croissance historique inchangée**.
+- `sim/engine/boucle.py` étape 17b → `ctn.tick(saison, seed, week, …)` (au lieu de
+  `tick_chimie`) ; liste vide par défaut → no-op → golden NEUTRE.
+- `world/__init__.py` → ré-exporte `planter_dans`.
+- `tests/test_confinement.py` (NOUVEAU) — 6/6 OK : gradient nain monotone
+  (5L=19.2 < 75L=51.8 ≤ 200L=61.1 cm), levier 1 (petit pot sec+carencé plus vite),
+  levier 2 (root_plots borné à la cellule), levier 3 (root-bound seuil/CONF_MIN),
+  non-régression `volume_factor=1.0` bit-identique, déterminisme h1==h2.
 
-PROCHAIN : `03_confinement.md` (plante en pot + confinement racinaire hybride =
-effet nain : `volume_factor` sur uptake + plafond racinaire + signal root-bound).
+## Golden re-vérifié après ③ (bit-identique)
+- smoke : `2ab026ad2b3f484777a2a29f804e1a4785ecffd6976fc0058fe0a33dd1498646` ✅
+- population : `6056713d4dd1e2a79964411961909545433f8513a530a2b39151cbe6aabe471b` ✅
+- test_confinement 6/6 ✅ · test_conteneur 7/7 ✅ · test_substrat 17/17 ✅ ·
+  test_eau 20/20 ✅ · test_croissance 67/67 ✅ · test_vigueur 136/136 ✅ ·
+  test_sim_server 185/186 (baseline inchangée, « pommier pré-âgé » préexiste).
+
+## REPRISE (démarrage à froid)
+Tronçons ① + ② + ③ **FAITS** (golden bit-identique). Le conteneur existe, sa chimie
+isolée ticke, et une plante peut y vivre : `planter_dans` la pose, `Container.tick`
+fait sa chimie + uptake + croissance, l'effet nain ÉMERGE des 3 leviers (réservoir
+réduit + plafond racinaire + signal root-bound). La boucle 17b appelle `ctn.tick`
+(liste vide par défaut → golden NEUTRE).
+
+PROCHAIN : `04_mobilite_bacs.md` (mobilité `deplacer_pot` coût Vigueur joueur +
+lumière recalculée à la position + bacs N×M immobiles + pont snapshot conteneurs).

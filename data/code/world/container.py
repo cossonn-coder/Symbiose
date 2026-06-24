@@ -33,6 +33,8 @@ from dataclasses import dataclass, field
 from itertools import count
 
 from fields.ecofields import EcoFields
+from plants.base import PlantInstance
+from sim.growth import grow_plant
 from world.substrat import get_substrat, SubstratRecette
 
 # Compteur d'IDs déterministe (ordre d'appel stable, zéro RNG) pour des
@@ -40,6 +42,37 @@ from world.substrat import get_substrat, SubstratRecette
 # ne sert qu'à tracer/loguer (les champs ne dépendent pas de sa valeur) → ne
 # touche NI le golden NI le déterminisme du calcul écologique.
 _AUTO_ID = count(1)
+
+# ---------------------------------------------------------------------------
+# CONFINEMENT RACINAIRE — effet nain HYBRIDE (CONCEPTION §3, tronçon ③).
+# Trois leviers cumulés, AUCUN n'est un malus direct sur la plante (philo #2) :
+# l'effet nain ÉMERGE d'une contrainte de ressource/volume/géométrie.
+# Knobs de DÉPART (calibrage post-test, philo #3) — lisibles, zéro RNG.
+# ---------------------------------------------------------------------------
+
+# Volume racinaire de RÉFÉRENCE d'un plot de pleine terre (50×50 cm × ~30 cm de
+# profondeur utile ≈ 75 L). `volume_norm = volume_litres / VOLUME_REF` : un pot
+# de 75 L ≈ pleine terre (pas de confinement), un pot de 5 L → volume_norm ≈ 0.07.
+VOLUME_REF = 75.0
+
+# Levier 1 — borne de l'amplification de prélèvement (sécurité). volume_factor =
+# 1/volume_norm, clampé à [1, VOLUME_CONF_MAX] : un grand bac (≥ VOLUME_REF) ne
+# DOPE jamais l'uptake (facteur ≥ 1, jamais < 1 → un grand volume ne fait pas
+# pousser PLUS qu'en pleine terre, il ne CONFINE pas), un pot minuscule sature
+# la borne (pas d'uptake explosif qui viderait le champ en un tick).
+VOLUME_CONF_MAX = 12.0
+
+# Levier 3 — signal root-bound. `occupation = proxy_racinaire / volume_litres`
+# (proxy = hauteur courante en cm, croît avec la plante — `biomass` n'existe pas
+# sur PlantInstance, cf. §3 « proxy volontairement grossier »). Au-delà du seuil,
+# la croissance segmentaire est bridée par `confinement ∈ [CONF_MIN, 1]`.
+ROOTBOUND_SEUIL = 0.30   # occupation (cm/L) à partir de laquelle le pot sature
+ROOTBOUND_K     = 1.20   # raideur du bridage au-delà du seuil
+CONF_MIN        = 0.25   # plancher : un pot saturé ne fige jamais TOTALEMENT la pousse
+
+
+def _clamp(x: float, lo: float, hi: float) -> float:
+    return lo if x < lo else hi if x > hi else x
 
 
 @dataclass
@@ -116,6 +149,96 @@ class Container:
         #    saison : un mini-sol n'a pas de cadence saisonnière propre ici). Liste de
         #    plantes vide en ② → signature nulle.
         eco.tick_soil_memory(self.plants)
+
+    # ------------------------------------------------------------------
+    # CONFINEMENT RACINAIRE — effet nain HYBRIDE (CONCEPTION §3, tronçon ③).
+    # ------------------------------------------------------------------
+
+    def _volume_factor(self) -> float:
+        """Levier 1 (réservoir réduit, ÉMERGENT). Amplificateur de prélèvement
+        rapporté au volume RÉEL du conteneur : `1/volume_norm`, clampé à
+        [1, VOLUME_CONF_MAX]. Petit pot → grand facteur → la plante vide vite le
+        peu d'eau/nutriments du mini-sol → sécheresse/carence émergentes (via les
+        mécanismes EXISTANTS de stress, pas un malus direct — philo #2). Un volume
+        ≥ VOLUME_REF retombe à 1.0 (pas de confinement = pleine terre)."""
+        volume_norm = self.volume_litres / VOLUME_REF
+        if volume_norm <= 0.0:
+            return VOLUME_CONF_MAX
+        return _clamp(1.0 / volume_norm, 1.0, VOLUME_CONF_MAX)
+
+    def _confinement(self, plant: PlantInstance) -> float:
+        """Levier 3 (signal root-bound, EXPLICITE — garantit le bonsaï visible).
+        `occupation = proxy_racinaire / volume_litres` ; proxy = hauteur courante
+        (cm), qui croît avec la plante (`biomass` n'existe pas sur PlantInstance,
+        cf. §3 « proxy volontairement grossier »). Sous le seuil → 1.0 (croissance
+        intacte). Au-delà, la croissance segmentaire est bridée par un facteur
+        ∈ [CONF_MIN, 1]. Ce n'est PAS un malus « parce que c'est un pot » : il ne
+        s'active QUE quand le réservoir racinaire SATURE physiquement — l'effet nain
+        ÉMERGE de la contrainte de volume (philo #2)."""
+        if self.volume_litres <= 0.0:
+            return CONF_MIN
+        occupation = plant.current_height / self.volume_litres
+        if occupation <= ROOTBOUND_SEUIL:
+            return 1.0
+        return _clamp(1.0 - ROOTBOUND_K * (occupation - ROOTBOUND_SEUIL),
+                      CONF_MIN, 1.0)
+
+    def _cellules(self) -> list[tuple]:
+        """Cellules VALIDES du mini-sol (géométrie du conteneur). Pour un pot 1×1
+        → [(0,0)] ; pour un bac N×M → toutes ses cellules."""
+        return [(r, c) for r in range(self.eco.rows) for c in range(self.eco.cols)]
+
+    def tick(self, saison: str, seed: int, week: int, *,
+             house=None, nebulosite: float = 0.0) -> None:
+        """Tick COMPLET d'un conteneur habité (CONCEPTION §3) : la chimie isolée
+        PUIS l'uptake + la croissance des plantes du conteneur, MÊME enchaînement que
+        la boucle tuile (`sim/engine/boucle.py` : uptake → physiologie → croissance)
+        mais BORNÉ à la géométrie du mini-sol (levier 2) et MODULÉ par le volume
+        (leviers 1 & 3). `tick_chimie` reste appelable seul (un conteneur vide ne fait
+        que sa chimie — rétrocompat ②).
+
+        Déterministe (zéro RNG ; ordre d'itération stable plantes×cellules)."""
+        self.tick_chimie(saison, house=house, nebulosite=nebulosite)
+        if not self.plants:
+            return
+        eco = self.eco
+        vfac = self._volume_factor()              # levier 1 (constant pour ce conteneur)
+        cellules = self._cellules()               # levier 2 : plafond géométrique
+        for plant in self.plants:
+            if not plant.is_alive:
+                continue
+            # Levier 2 — l'uptake n'itère QUE sur l'INTERSECTION de l'empreinte
+            # racinaire et des cellules du mini-sol : les racines ne « débordent »
+            # pas dans le vide hors du pot. Repli sur le foyer borné si l'empreinte
+            # ne recoupe rien de valide.
+            roots = [(r, c) for (r, c) in plant.root_plots if (r, c) in cellules]
+            if not roots:
+                roots = [(0, 0)]
+            share = 1.0 / len(roots)
+            for r, c in roots:
+                eco.plant_uptake(r, c, plant.current_stage,
+                                 shade_memory=plant.shade_memory,
+                                 drought_memory=plant.drought_memory,
+                                 share=share, volume_factor=vfac)
+            # Physiologie minimale (drought/shade/growth_factor) — RÉPLIQUE allégée
+            # de `_update_physiology` (côté `sim.engine`, non importable depuis `world`).
+            # Ferme la boucle ressource→stress→croissance : un pot asséché élève la
+            # drought_memory → growth_factor capté par la lumière, et la pénurie d'eau
+            # ralentit la pousse via les mécanismes existants (pas un malus direct).
+            r0, c0 = roots[0]
+            light = eco.lumiere.at_plot(r0, c0)
+            hum = eco.humidite.at_plot(r0, c0)
+            plant.shade_memory += (1.0 - light - plant.shade_memory) * 0.10
+            plant.shade_memory = _clamp(plant.shade_memory, 0.0, 1.0)
+            drought_stress = max(0.0, 1.0 - hum / 0.5) if hum < 0.5 else 0.0
+            plant.drought_memory += (drought_stress - plant.drought_memory) * 0.05
+            plant.drought_memory = _clamp(plant.drought_memory, 0.0, 1.0)
+            target_g = 0.6 + 0.4 * min(1.0, light)
+            plant.growth_factor += (target_g - plant.growth_factor) * 0.10
+            plant.growth_factor = _clamp(plant.growth_factor, 0.3, 1.0)
+            # Levier 3 — croissance segmentaire bridée par le signal root-bound.
+            grow_plant(plant, seed, week, eco.lumiere,
+                       confinement=self._confinement(plant))
 
 
 def _appliquer_recette(eco: EcoFields, recette: SubstratRecette) -> None:
@@ -211,3 +334,25 @@ def make_container(kind: str, substrat: str, volume_litres: float,
         eco=eco, rows=rows, cols=cols,
         mobile=(kind == "pot"),
     )
+
+
+def planter_dans(container: Container, plant_class: type,
+                 *, cell: tuple = (0, 0)) -> PlantInstance:
+    """Plante une `plant_class` DANS un conteneur (CONCEPTION §3.A, tronçon ③).
+
+    La plante naît au CENTRE de la cellule `cell` du mini-sol (un pot 1×1 → (0,0)),
+    en position CONTINUE `(x_cm, y_cm)` — la position continue existe déjà
+    (`PlantInstance.x_cm/y_cm`, embedding cartésien : centre du plot (r,c) =
+    (c·50+25, r·50+25)). Son `position` (plot-foyer) suit la cellule. On l'ajoute à
+    `container.plants` et on la retourne (l'appelant peut la garder). Aucun RNG.
+    """
+    from constants import PLOT_CM   # import local : évite d'alourdir l'en-tête
+    r, c = cell
+    plant = PlantInstance(
+        plant_class=plant_class,
+        position=(r, c),
+        x_cm=c * PLOT_CM + PLOT_CM / 2,
+        y_cm=r * PLOT_CM + PLOT_CM / 2,
+    )
+    container.plants.append(plant)
+    return plant

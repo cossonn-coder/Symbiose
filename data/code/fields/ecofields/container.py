@@ -690,7 +690,8 @@ class EcoFields:
     def plant_uptake(self, r: int, c: int, stage_index: int,
                       shade_memory: float = 0.0,
                       drought_memory: float = 0.0,
-                      share: float = 1.0) -> dict[str, float]:
+                      share: float = 1.0,
+                      volume_factor: float = 1.0) -> dict[str, float]:
         """
         Consommation racinaire modulée par la mémoire physiologique.
 
@@ -699,10 +700,22 @@ class EcoFields:
         share         → fraction prélevée sur CE plot (1/nb plots de l'empreinte
                         racinaire), pour répartir l'uptake sur root_plots sans
                         multiplier la quantité totale (chantier B).
+        volume_factor → AMPLIFICATEUR de prélèvement pour les conteneurs (pots/bacs,
+                        sprint pots/bacs ③, CONCEPTION §3 levier 1). DÉFAUT 1.0 →
+                        comportement HISTORIQUE strictement inchangé (les tuiles
+                        passent toujours 1.0 → uptake bit-identique, golden NEUTRE).
+                        Un petit pot passe `1/volume_norm > 1` : la plante retire,
+                        sur le MÊME stock local, une part plus grande chaque tick →
+                        l'eau et les nutriments du mini-sol chutent vite → sécheresse/
+                        carence ÉMERGENTES via les mécanismes EXISTANTS. On amplifie
+                        un FLUX rapporté au volume réel du réservoir, JAMAIS la plante
+                        (philo #2 : pas de malus direct). Le prélèvement reste plafonné
+                        par le stock local (Liebig / `min(amount, f.at_plot)`).
 
         Rétroaction rhizosphère : un microbiome riche améliore l'assimilation des
         nutriments (bonus borné UPTAKE_MICRO_BONUS) — la boucle vertueuse côté plante.
         """
+        share *= volume_factor   # confinement de réservoir : flux rapporté au volume
         micro_norm = min(1.0, self.microbiome.at_plot(r, c) / 3.0)
         # Asphyxie palier 1 (§2.3 b, doux & RÉVERSIBLE) : au-dessus de HUM_EXCES, le
         # sol gorgé devient anoxique → les racines boivent mal → l'uptake de TOUT

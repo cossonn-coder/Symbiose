@@ -178,7 +178,8 @@ def est_etiole(plant, light_field) -> bool:
 # Point d'entrée — une passe de croissance par plante par tick
 # ---------------------------------------------------------------------------
 
-def grow_plant(plant, seed: int, week: int, light_field=None) -> None:
+def grow_plant(plant, seed: int, week: int, light_field=None,
+               confinement: float = 1.0) -> None:
     """
     Fait pousser la structure de `plant` d'un tick, selon le PROFIL DE SON ESPÈCE
     (plant.plant_class : vitesse, dominance, gabarit, angle… cf. PlantBase §E). Les
@@ -188,6 +189,15 @@ def grow_plant(plant, seed: int, week: int, light_field=None) -> None:
 
     `light_field` (LightField du tick, ou None) : source du gradient pour le
     phototropisme (§D.4). None → apex droit, comportement historique inchangé.
+
+    `confinement` (sprint pots/bacs ③, CONCEPTION §3 levier 3) : facteur ∈ ]0,1]
+    qui bride la VITESSE d'élongation quand le mini-sol d'un conteneur sature de
+    racines (signal root-bound). DÉFAUT 1.0 → croissance HISTORIQUE inchangée (la
+    boucle tuile passe toujours 1.0 → golden NEUTRE). Le calcul de ce facteur (proxy
+    de saturation racinaire rapporté au volume du pot) vit dans `world.container` :
+    ici on ne fait que LIRE un scalaire déjà décidé par la contrainte de volume. Ce
+    n'est pas un malus « parce que c'est un pot » mais une réponse à la saturation
+    physique du réservoir racinaire — l'effet nain ÉMERGE de la contrainte (philo #2).
 
     Tronçon 2 : pour une espèce MIGRÉE (`procedural_growth`), l'empreinte est
     recalculée en fin de passe (update_footprint, §G) → height_at/canopy_radius_at…
@@ -199,7 +209,7 @@ def grow_plant(plant, seed: int, week: int, light_field=None) -> None:
     cls = plant.plant_class
     for s in segs:
         s.age_weeks += 1
-    speed = cls.growth_speed * plant.growth_factor * _season_factor(week)
+    speed = cls.growth_speed * plant.growth_factor * _season_factor(week) * confinement
     # Étiolement (Q7) : un héliophile ombragé file vers la lumière — élongation
     # axiale accrue. Émergent : combiné au phototropisme (_elongate_emit), l'apex
     # grêle peut atteindre une trouée et être sauvé.
