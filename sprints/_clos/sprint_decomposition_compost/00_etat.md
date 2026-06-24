@@ -335,3 +335,19 @@ bac/pile + jauge `compost_mur`, les auxiliaires autour de la pile. Tous les
 **hooks moteur sont posés** : `plant.fruits` au snapshot (`manger` sur
 `target.fruit`), `eco.structures` au snapshot, rondelle `auxiliaire` de la pile
 lue par `_stability_grid`. Le kickoff `06_*.md` reste à écrire.
+
+---
+
+## 🏁 SPRINT DÉCOMPOSITION & COMPOST — CLOS (2026-06-24)
+
+**Moteur ①–⑤ TOUS clos** (golden `908f591bee…` / population `435e6f72…`, jamais
+re-figé depuis ②ɣ ; pont 0.3.5). Le **⑥ vue Godot** n'a jamais été écrit comme
+tronçon séparé : son contenu (squelettes, litière au sol, maturité-fruit, bac/pile
++ jauge `compost_mur`, gestes compost) a été **rattrapé et validé F5** par le
+**sprint VUE** (`sprints/sprint_vue_rattrapage/` 02 fruits+squelettes + **03
+litière+structures+jauge — VALIDÉ F5**). Le ⑥ est donc **fait ailleurs**, ce sprint
+n'a plus de reste propre.
+
+**Résidu tracé en dette `D51`** (DETTE.md) : visibilité explicite des **auxiliaires
+agrégés autour de la pile à bois** (habitat) — à confirmer au prochain F5. Non
+bloquant. Sprint clos en pointant vers D51.
