@@ -317,7 +317,8 @@ class EcoFields:
 
     # --- Hydrologie ---
 
-    def tick_hydrology(self, soil_type: str = "terre") -> None:
+    def tick_hydrology(self, soil_type: str = "terre",
+                       drainage_override: float | None = None) -> None:
         """
         Cycle hydrologique complet. Ordre strict :
           1. Évaporation atmosphérique (couplée à la température : chaud → +)
@@ -329,8 +330,15 @@ class EcoFields:
         `soil_type` (passé par l'engine, qui porte la `Tile`) choisit le drainage
         dans `DRAINAGE_PAR_SOL` ; défaut/inconnu → `DRAINAGE` (terre = 0.993,
         valeur historique) → la tuile terre du golden reste bit-identique.
+
+        `drainage_override` (sprint pots/bacs ①) : si fourni (non `None`), il
+        REMPLACE le drainage choisi par `soil_type`. Un conteneur (mini-sol)
+        passe ainsi le drainage de SON substrat (registre `world.substrat`).
+        Défaut `None` → comportement actuel inchangé : aucun appelant existant ne
+        le passe → les tuiles restent BIT-IDENTIQUES (golden neutre).
         """
-        drainage = DRAINAGE_PAR_SOL.get(soil_type, DRAINAGE)
+        drainage = (drainage_override if drainage_override is not None
+                    else DRAINAGE_PAR_SOL.get(soil_type, DRAINAGE))
         for r in range(self.rows):
             for c in range(self.cols):
                 h = self.humidite.data[r][c]

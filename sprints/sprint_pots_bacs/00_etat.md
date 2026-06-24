@@ -33,7 +33,7 @@ dessous (drainage, racines, microbiome).
 ## Carte des sous-sprints (5, indépendants)
 | # | Sujet | Kickoff | État |
 |---|-------|---------|------|
-| ① | Substrat data-driven (registre + 6 recettes + `drainage_override`) | `01_substrat.md` | à faire |
+| ① | Substrat data-driven (registre + 6 recettes + `drainage_override`) | `01_substrat.md` | **FAIT** (golden bit-identique) |
 | ② | Conteneur `EcoFields` miniature + tick chimique isolé + boucle | `02_conteneur.md` | à faire |
 | ③ | Plante en pot + confinement racinaire hybride (effet nain) | `03_confinement.md` | à faire |
 | ④ | Mobilité + bacs N×M immobiles + pont snapshot | `04_mobilite_bacs.md` | à faire |
@@ -53,13 +53,34 @@ dessous (drainage, racines, microbiome).
 - Tout garder (scripts de mesure inclus). Un fichier à la fois sauf synchro
   cohérente avant commit.
 
-## Hash golden de référence (à renseigner au démarrage de ①)
-- smoke `tests/test_golden.py` : `<à mesurer avant toute modif>`
-- population `tests/test_population.py` : `<à mesurer avant toute modif>`
-> Premier geste de ① : lancer les deux suites, NOTER les hashs ici, puis vérifier
-> qu'ils restent identiques à chaque tronçon.
+## Hash golden de référence (mesurés au démarrage de ①, 2026-06-24)
+- smoke `tests/test_golden.py` : `2ab026ad2b3f484777a2a29f804e1a4785ecffd6976fc0058fe0a33dd1498646`
+- population `tests/test_population.py` : `6056713d4dd1e2a79964411961909545433f8513a530a2b39151cbe6aabe471b`
+> Mesurés AVANT toute modif puis RE-VÉRIFIÉS après ① : les deux restent **bit-identiques**
+> (golden NEUTRE prouvé). À re-vérifier identiques à chaque tronçon suivant.
+>
+> NB suite amont `tests/test_sim_server.py` : **185/186** verts AVANT ① déjà (1 check
+> rouge préexistant « pommier pré-âgé — 0 fruits @ S52 », sans rapport avec le sprint) ;
+> reste 185/186 après ① → AUCUNE régression introduite.
 
 ## REPRISE (démarrage à froid)
-Sprint **non commencé**. Lire le doc de conception puis `01_substrat.md`. Aucun
-code écrit. État du moteur amont : sprint plasticité clos (golden `2ab026ad…`,
-pont 0.5.3) — cf. `journal.md` / mémoire `project_status`.
+Tronçon ① **FAIT** (data pure, golden bit-identique). Acquis :
+- `world/substrat.py` — `SubstratRecette` (`@dataclass(frozen=True)`), registre
+  `SUBSTRATS` (6 recettes EXACTES du §2), `get_substrat` (KeyError explicite),
+  garde-fou `_valide_registre()` à l'import (tissus de pré-charge ∈ tissus connus
+  du moteur). Exporté via `world/__init__.py`.
+- `fields/ecofields/container.py` : `tick_hydrology` gagne `drainage_override=None`
+  (rétrocompatible → tuiles bit-identiques ; le conteneur passera le drainage de
+  son substrat en ②).
+- `tests/test_substrat.py` — 17/17 OK (présence, valeurs, tissus valides,
+  `get_substrat`, override change le drainage, override=DRAINAGE ≡ défaut).
+
+⚠️ **À TRANCHER en ②** (signalé à Nico) : le tissu `substrat` (recette
+`mycelium_use`) est dans `FAIM_N_TISSUS` mais **PAS dans `TISSU`** (ni
+`TISSU_ORDER`). Injecter tel quel une parcelle `substrat` dans un mini-sol qui
+ticke la décompo planterait (`KeyError TISSU["substrat"]`). ① ne fait que déclarer
+la donnée ; ② devra donner une cinétique de décompo à `substrat` OU l'écarter du
+balayage décompo (tout en gardant son effet faim d'azote). Garde-fou de ① accepte
+`substrat` comme tissu CONNU, conformément au §2.
+
+PROCHAIN : `02_conteneur.md` (mini-sol `EcoFields` + tick chimique isolé + boucle).
