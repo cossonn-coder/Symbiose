@@ -38,11 +38,44 @@ namespace Symbiose
 				FruitUnripe = new Color(unripe); FruitRipe = new Color(ripe);
 			}
 		}
+		// Teinte de base par espèce (E3-couleur, doc §3.1). La clé = nom de CLASSE
+		// Python (= snapshot `species`, cf. serialize.py `cls.__name__`), comme les
+		// deux entrées historiques. CONTENU pur : aucun mécanisme nouveau — la teinte
+		// `Leaf` part dans `DrawVolumeEllipse`, qui érige déjà le volume 2 valeurs
+		// (E4 garanti), et `LeafColor` lui applique la saison PAR-DESSUS. Une espèce
+		// non mappée retombe sur `DefaultPalette` (jamais bloquant, on enrichit au fil).
+		// Les 4 couleurs (limbe / fleur / fruit vert / fruit mûr) sont plausibles par
+		// espèce ; fruit vert/mûr ne sert qu'aux espèces dont le moteur émet des fruits.
 		private static readonly System.Collections.Generic.Dictionary<string, OrganPalette>
 			Palettes = new()
 			{
-				["Tomato"] = new OrganPalette("3f9e3a", "e8d24a", "5fae3f", "d8392a"),
-				["AppleTree"] = new OrganPalette("3f8e3a", "f3e0e8", "82ae4f", "cc382e"),
+				// --- Cultivées potagères --------------------------------------------
+				["Tomato"]    = new OrganPalette("3f9e3a", "e8d24a", "5fae3f", "d8392a"), // tomate : vert franc, fleur jaune, fruit rouge
+				["Pepper"]    = new OrganPalette("357f33", "f0ead2", "63ad3c", "d4451f"), // poivron : vert sombre, fleur blanche, fruit rouge-orangé
+				["Bean"]      = new OrganPalette("4aa845", "eef0e8", "6fb24a", "8aa83f"), // haricot : vert tendre clair, fleur blanchâtre, gousse verte
+				["Clover"]    = new OrganPalette("4f9e4b", "d98fb0", "6fb255", "5fa848"), // trèfle : vert vif, fleur rose
+				["Sunflower"] = new OrganPalette("3d7a36", "f2c12e", "63953f", "5a4326"), // tournesol : vert mat, capitule jaune d'or, graines brunes
+				["Carrot"]    = new OrganPalette("4a9b54", "ecefe2", "6fb060", "c87a2e"), // carotte : vert frais bleuté, ombelle blanche
+				["Zucchini"]  = new OrganPalette("3a8c41", "f2cf3a", "5aaa44", "2f7a34"), // courgette : vert profond, fleur jaune, fruit vert sombre
+				["CornSalad"] = new OrganPalette("5aa84f", "eef2e6", "74b85e", "6fae50"), // mâche : vert clair en rosette
+				["Garlic"]    = new OrganPalette("5a9e6a", "ece6f0", "78b07a", "7aa86a"), // ail : vert glauque, hampe pâle
+				// --- Compagnes / mellifères / engrais verts -------------------------
+				["Yarrow"]    = new OrganPalette("4f8a55", "f0efe6", "6fa564", "8a9a66"), // achillée : vert grisé, corymbe blanc
+				["Phacelia"]  = new OrganPalette("4a8e58", "8f7fc4", "6aa860", "7a8a66"), // phacélie : vert moyen, fleur mauve-bleu
+				["Borage"]    = new OrganPalette("4d8a52", "5f7fc8", "6fa55f", "7a9a60"), // bourrache : vert mat, fleur bleu vif
+				["Comfrey"]   = new OrganPalette("3f7d3e", "c47fb0", "5f9a48", "6f9a52"), // consoude : vert sombre poilu, fleur pourpre-rosé
+				["Mustard"]   = new OrganPalette("5aa040", "f0d83a", "72b248", "8aa840"), // moutarde : vert jaunissant, fleur jaune
+				// --- Aromatiques persistantes (Lamiacées evergreen) -----------------
+				["Thyme"]     = new OrganPalette("5a7a4a", "c79fc0", "6f9058", "7a8a55"), // thym : vert-de-gris terne, fleur lilas
+				["Lavender"]  = new OrganPalette("6a8270", "8f7fc8", "7a9070", "8a8fa0"), // lavande : feuillage gris-vert, épi violet
+				// --- Sous-arbrisseau acidophile -------------------------------------
+				["Vaccinium"] = new OrganPalette("3a7a44", "ead8e0", "6f9a55", "30407a"), // myrtille : vert profond, baie bleu-nuit
+				// --- Pérennes ligneuses (vergers) -----------------------------------
+				["AppleTree"]  = new OrganPalette("3f8e3a", "f3e0e8", "82ae4f", "cc382e"), // pommier : vert mat, fleur rosée, pomme rouge
+				["Fig"]        = new OrganPalette("3a7d3c", "e0e6d2", "6f9a48", "5a3a52"), // figuier : grand limbe vert sombre, figue pourpre
+				["CherryTree"] = new OrganPalette("3f8a3e", "f2dde2", "7fae50", "a01f28"), // cerisier : vert franc, fleur rose pâle, cerise rouge profond
+				["WalnutTree"] = new OrganPalette("4a8240", "dfe2cc", "7aa84f", "4a3a22"), // noyer : vert olive, brou brun
+				["OakTree"]    = new OrganPalette("46823c", "d6cf9a", "78a64a", "7a5a2e"), // chêne : vert mat lobé, gland brun
 			};
 		private static readonly OrganPalette DefaultPalette =
 			new OrganPalette("469a3f", "ead85a", "6fae45", "cf3a2e");

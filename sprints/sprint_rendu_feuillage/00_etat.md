@@ -39,7 +39,7 @@ préservé sur TOUS les tronçons** (T5/T6 inclus : transport, pas calcul).
 
 | # | Tronçon | § doc | Couche | Pont | Exigence | Golden | Statut |
 |---|---------|-------|--------|------|----------|--------|--------|
-| ① (T1) | Couleur du limbe par espèce — étendre la table `Palettes` aux cultivées | §3.1 | B pure | — | E3-couleur | NEUTRE | ⏳ |
+| ① (T1) | Couleur du limbe par espèce — étendre la table `Palettes` aux cultivées | §3.1 | B pure | — | E3-couleur | NEUTRE (inchangé `2ab026ad…`) | ✅ |
 | ② (T2) | Forme par espèce — `enum LeafShape`, `LeafProfile`, tracé des 6 archétypes (jitter par hash) | §2 | B pure | — | E3-forme | NEUTRE | ⏳ |
 | ③ (T3) | Nervures = 3ᵉ valeur — topologie par archétype, sens du shift par espèce | §3.2 | B pure | — | E2 | NEUTRE | ⏳ |
 | ④ (T4) | Insertion — verrou « feuille ⟹ vert » + pétiole vert | §5 | B pure | — | E5 | NEUTRE | ⏳ |
@@ -54,4 +54,13 @@ version si faits dans la foulée). ①, ②, ④ indépendants.
 
 ## §REPRISE
 
-**Rien de fait.** Prochain tronçon = **① (T1)** — `sprints/sprint_rendu_feuillage/01_couleur_limbe.md`.
+**① (T1) CLOS** (golden inchangé `2ab026ad…`, build C# vert). La table `Palettes`
+vit dans `visuals/PlantRenderer.Organs.cs` (et **non** `.Palette.cs` comme l'annonçait
+le kickoff — `.Palette.cs` ne porte que le moteur hue-shift/volume). Étendue à 23
+espèces : 9 cultivées potagères, 5 compagnes/mellifères, 2 aromatiques, 1 acidophile,
+5 pérennes ligneuses. Clé = nom de classe Python (`species` du snapshot). Couleurs
+non vérifiées au F5 (validation visuelle à venir).
+
+Prochain tronçon = **② (T2)** Forme par espèce — `sprints/sprint_rendu_feuillage/02_*.md`
+(à écrire ; cf. doc §2). NB : ② introduira `LeafProfiles[species]` en regard de
+`Palettes` (même fichier `Organs.cs`, vigilance taille du fichier).
