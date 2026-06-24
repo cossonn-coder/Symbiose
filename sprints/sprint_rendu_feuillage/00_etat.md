@@ -43,14 +43,14 @@ préservé sur TOUS les tronçons** (T5/T6 inclus : transport, pas calcul).
 | ② (T2) | Forme par espèce — `enum LeafShape`, `LeafProfile`, tracé des 6 archétypes (jitter par hash) | §2 | B pure | — | E3-forme | NEUTRE (inchangé `2ab026ad…`) | ✅ |
 | ③ (T3) | Nervures = 3ᵉ valeur — topologie par archétype, sens du shift par espèce | §3.2 | B pure | — | E2 | NEUTRE (inchangé `2ab026ad…`) | ✅ |
 | ④ (T4) | Insertion — verrou « feuille ⟹ vert » + pétiole vert | §5 | B pure | — | E5 | NEUTRE (inchangé `2ab026ad…`) | ✅ |
-| ⑤ (T5) | Croissance progressive — `age_weeks` au segment (pont), facteur `leafGrowth` | §4 | B + pont | `ENGINE_VERSION`↑ | E1 | NEUTRE (transport) | ⏳ |
+| ⑤ (T5) | Croissance progressive — `age_weeks` au segment (pont), facteur `leafGrowth` | §4 | B + pont | `ENGINE_VERSION` 0.5.4→**0.5.5** | E1 | NEUTRE (inchangé `2ab026ad…`) | ✅ |
 | ⑥ (T6) | Chute + litière — abscission au pétiole, semis de litière typée au sol | §6 | B + pont | `ENGINE_VERSION`↑ | E5bis | NEUTRE (transport) | ⏳ |
 
 **Dépendances** : ③ dépend de ② (topologie de nervure ∝ archétype). ⑤ et ⑥ partagent
 le geste « champ au snapshot + re-bump » → **regrouper le re-bump** (un seul saut de
 version si faits dans la foulée). ①, ②, ④ indépendants.
 
-**Contrat pont au départ** : `ENGINE_VERSION = "0.5.4"`. ⑤/⑥ le bumpent.
+**Contrat pont** : `ENGINE_VERSION = "0.5.5"` depuis ⑤ (0.5.4 au départ). ⑥ le bumpera à 0.5.6.
 
 ## §REPRISE
 
@@ -112,7 +112,38 @@ préparé (commentaire = interpoler `petTip` par le facteur) mais NON pré-impl�
 Taille `Organs.cs` ≈ 260 ldc code pur (`tools/compte_ldc.py`), sous le seuil 350.
 Croissance (⑤) et chute (⑥) intactes. F5 non vérifié (validation visuelle Nico).
 
-Prochain tronçon = **⑤ (T5)** Croissance progressive — `age_weeks` au segment (pont,
-`ENGINE_VERSION`↑), facteur `leafGrowth ∈ [0,1]` qui multiplie le rayon du limbe ET
-allonge le pétiole (branchement préparé en ④), cf. doc §4. B + pont, golden NEUTRE
-(transport pur). ⑤ et ⑥ partagent le re-bump → regrouper si faits dans la foulée.
+**⑤ (T5) CLOS** (golden inchangé `2ab026ad…`, build C# vert, `ENGINE_VERSION` 0.5.4
+→ **0.5.5**). **Premier tronçon au pont — transport PUR confirmé** (golden NEUTRE).
+
+PONT : aucune écriture moteur, et **aucune ligne de sérialisation Python ajoutée** —
+`age_weeks` était DÉJÀ émis par `Segment.to_dict()` (`plants/base/stades.py`) dans
+`structure_to_dict()` (snapshot, `serialize.py`). Le travail pont = (a) bump
+`ENGINE_VERSION` 0.5.5 (commentaire dans `version.py`) ; (b) côté C#, `record struct
+Segment` (`core/PlantStructure.cs`) gagne `int AgeWeeks` + `ParseSegment` le LIT
+TOLÉRAMMENT (`ContainsKey` → 0 par défaut, flux muet géré). Le smoke pont
+`tests/simserver/structures.py` figeait l'attendu de version à `"0.5.0"` (jamais
+re-bumpé depuis !) → corrigé à `"0.5.5"`. NB outil : `tools/export_structure.py`
+(maquette `structure.json`, sœur du pont) construisait le segment À LA MAIN sans
+`age_weeks` → ajouté aussi (sinon feuilles invisibles dans l'aperçu SVG/maquette).
+
+RENDU (couche B, `visuals/PlantRenderer.Organs.cs`) : constante `LeafMaturityWeeks =
+1.5f` + helper `LeafGrowthFactor(s) = clamp(AgeWeeks/maturité,0,1)` adouci en ease-out
+quadratique `t*(2-t)`. Le rayon du limbe `r` est multiplié par `leafGrowth` ; le centre
+`c` du limbe est interpolé `insert.Lerp(c, leafGrowth)` (le limbe colle au rameau à
+l'émergence, s'écarte en grandissant) → le pétiole (④) s'allonge de pair (branchement
+préparé en ④, désormais câblé). Synergie plancher §1 : age≈0 → rayon < plancher → 1
+valeur nue sans nervure ; en grandissant franchit le plancher → volume puis nervures.
+Pas de pop-in (§4.3) : segment établi (age ≥ 2 sem) → leafGrowth = 1, feuilles pleines.
+
+⚠️ Smoke pont = **184/185** : la SEULE rouge restante (« pommier pré-âgé a noué des
+fruits @ S52 », `tests/simserver/morts.py`) **PRÉ-EXISTE** ce tronçon (vérifié par
+`git stash` : déjà rouge sans mes changements) — sans lien avec le transport `age_weeks`,
+à traiter hors ce sprint.
+
+Point F5 (à valider Nico) : la jeune feuille grandit visiblement sur ~1,5 sem sans
+pop-in ; pétiole qui s'allonge avec ; segments établis pleins d'emblée au chargement.
+
+Prochain tronçon = **⑥ (T6)** Chute + litière — abscission au pétiole (point de rupture
+posé en ④), semis de litière typée au sol, cf. doc §6. B + pont (`ENGINE_VERSION` →
+0.5.6, vérifier §6.4 ce qui est déjà émis). Golden NEUTRE (transport). NE PAS oublier
+de re-bumper l'attendu `"0.5.6"` dans `tests/simserver/structures.py`.

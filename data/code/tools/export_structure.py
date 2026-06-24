@@ -64,6 +64,11 @@ def _specimen_dict(plant: PlantInstance, title: str) -> dict:
             "length_cm": _r(s.length_cm),
             "thickness_cm": _r(s.thickness_cm),
             "is_apex": bool(s.is_apex),
+            # Âge du segment (rendu feuillage ⑤, 0.5.5) : transporté comme dans le
+            # snapshot du pont, pour que la maquette structure.json affiche aussi la
+            # croissance progressive des feuilles (sinon age=0 par défaut côté C# →
+            # feuilles naissantes invisibles dans l'aperçu). Donnée déjà calculée.
+            "age_weeks": int(s.age_weeks),
         })
     return {
         "title": title,

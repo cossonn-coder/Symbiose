@@ -27,6 +27,11 @@ namespace Symbiose
 		private const float LeafSpacingCm = 11f;   // une feuille tous les ~11 cm
 		private const float LeafOffsetCm = 7f;     // déport latéral p/r à l'axe
 		private const float LeafSizeCm = 7f;       // demi-grandeur d'une feuille
+		// ⑤ CROISSANCE PROGRESSIVE (doc §4, E1) : une feuille naît petite et grandit
+		// sur ~1,5 semaine. On dérive la taille de l'ÂGE RÉEL du segment porteur
+		// (`AgeWeeks`, proxy déjà calculé par la morphogénèse, exposé au pont 0.5.5) —
+		// pas d'un timer de vue (déterminisme, philo #3 : même âge → même feuille).
+		private const float LeafMaturityWeeks = 1.5f; // âge où la feuille atteint sa taille pleine
 		private const int MaxFruits = 10;          // plafond anti-fouillis (proxy fleurs)
 		private const float MaturiteChute = 1.3f;  // miroir MATURITE_CHUTE moteur : sur-mûr → chute
 		// Brun fermenté d'un fruit sur-mûr (④) — vers quoi tire la couleur au-delà du mûr.
@@ -133,6 +138,17 @@ namespace Symbiose
 		private static bool IsLeafy(Segment s) =>
 			s.IsApex || s.ThicknessCm <= LeafMaxThickCm;
 
+		// ⑤ Facteur de croissance des feuilles d'un segment (doc §4.2) :
+		// `leafGrowth = clamp(AgeWeeks / LeafMaturityWeeks, 0, 1)`, légèrement adouci
+		// par une courbe ease-out (démarrage doux, fin qui se pose — §4.2 « optionnel »).
+		// Proxy = âge du SEGMENT (déjà calculé), pas de chaque feuille. Établi → 1
+		// (feuilles pleines, pas de pop-in au rechargement, §4.3).
+		private static float LeafGrowthFactor(Segment s)
+		{
+			float t = Mathf.Clamp(s.AgeWeeks / LeafMaturityWeeks, 0f, 1f);
+			return t * (2f - t);   // ease-out quadratique : 0→0, 1→1, pente douce en fin
+		}
+
 		// ---------------------------------------------------------------------------
 		// ORGANES — feuilles / fleurs / fruits (t6·A, portage _draw_organs)
 		// ---------------------------------------------------------------------------
@@ -154,6 +170,11 @@ namespace Symbiose
 				{
 					var s = _structure.Segments[i];
 					if (!IsLeafy(s)) continue;
+					// ⑤ Facteur de croissance des feuilles de CE segment (doc §4.2) :
+					// rampe linéaire de l'âge du segment, écrêtée à 1. Un segment établi
+					// (age ≥ maturité) → 1 = feuilles pleines d'emblée (pas de pop-in au
+					// chargement, §4.3) ; seul un segment JEUNE montre la croissance.
+					float leafGrowth = LeafGrowthFactor(s);
 					int n = Mathf.Max(1, (int)(s.LengthCm / LeafSpacingCm));
 					// Perpendiculaire HORIZONTALE à l'axe du rameau (plan sol) —
 					// le déport latéral des feuilles, comme le prototype.
@@ -179,12 +200,22 @@ namespace Symbiose
 						Vector2 c = Iso(lx - collet.X, ly - collet.Y, lz);
 						Color col = SymptomTint(LeafColor(pal, season, Hash01(13, i, j)));
 						col.A = 0.92f;
-						float r = LeafSizeCm * WorldView.PxPerCmX;
+						// ⑤ Le rayon du limbe est MULTIPLIÉ par leafGrowth : sous le
+						// plancher (§1) à l'émergence (1 valeur nue, pas de nervure),
+						// il franchit le plancher en grandissant → volume puis nervures.
+						// La feuille se construit visuellement, gratuitement (DrawLeafShape).
+						float r = LeafSizeCm * WorldView.PxPerCmX * leafGrowth;
 						// ④ PÉTIOLE (doc §5.3) — court trait vert reliant le point
 						// d'insertion sur l'axe (p) au limbe (c). Tracé AVANT le limbe :
 						// le limbe se pose dessus, le pétiole n'affleure qu'à sa base
 						// (l'émergence se lit, la feuille n'est pas « posée dans le vide »).
+						// ⑤ Le limbe s'éloigne du rameau AVEC sa croissance : on déplace
+						// son centre `c` depuis le point d'insertion vers sa position pleine
+						// par leafGrowth (à l'émergence le limbe colle au rameau, il s'écarte
+						// en grandissant). Le pétiole, tracé jusqu'à ce centre, s'allonge donc
+						// de pair (cohérence pétiole↔limbe, doc §4.2).
 						Vector2 insert = Iso(p.X - collet.X, p.Y - collet.Y, p.Z);
+						c = insert.Lerp(c, leafGrowth);
 						DrawPetiole(insert, c, s);
 						// ② FORME PAR ESPÈCE : la silhouette (ellipse/lancéolée/cordée/
 						// lobée/composée/aiguille) est choisie par espèce dans le

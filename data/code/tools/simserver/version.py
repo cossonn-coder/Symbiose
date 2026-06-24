@@ -147,7 +147,17 @@ from __future__ import annotations
 #       un menu périmé = le piège D47). Pur ajout de commande lecture-seule →
 #       golden NEUTRE. Un vieux binaire pré-0.5.4 répond « commande inconnue » →
 #       SimBridge.ListBancs() renvoie [] → le sélecteur retombe sur full/smoke.
-ENGINE_VERSION = "0.5.4"
+# 0.5.5 (rendu feuillage ⑤, croissance progressive — 1er tronçon au pont) : le
+#       miroir C# du segment (`record struct Segment`, core/PlantStructure.cs)
+#       LIT désormais `age_weeks` du snapshot de structure, qui pilote côté vue le
+#       facteur `leafGrowth ∈ [0,1]` (la jeune feuille grandit sur ~1,5 sem, E1).
+#       ⚠️ Aucun changement de sérialisation Python : `age_weeks` est DÉJÀ émis par
+#       `Segment.to_dict()` (plants/base/stades.py) dans `structure_to_dict()` —
+#       on ne fait que le CONSOMMER côté C# (champ jusqu'ici ignoré au parse).
+#       TRANSPORT pur (donnée déjà calculée par la morphogénèse) → golden NEUTRE.
+#       Champ tolérant côté vue (un snapshot pré-0.5.5 émet déjà la clé ; un binaire
+#       plus vieux qui ne l'émettrait pas → leafGrowth = 1 par défaut, pas de pop-in).
+ENGINE_VERSION = "0.5.5"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

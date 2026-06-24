@@ -23,14 +23,18 @@ namespace Symbiose
 	// comme un struct C) doté de l'égalité par valeur et d'une syntaxe concise.
 	// Idéal pour un petit agrégat de données immuables sans identité propre.
 	// On ne mirrore QUE les champs utiles au rendu : base, dir, length, thickness,
-	// is_apex. Les champs purement dynamiques du Python (age_weeks, auxin, has_bud,
-	// parent, organs) ne servent pas au dessin → on ne les transporte pas.
+	// is_apex — PLUS age_weeks depuis le sprint Rendu feuillage ⑤ (protocole 0.5.5,
+	// croissance progressive des feuilles, E1) : l'âge du segment porteur sert de
+	// proxy d'âge des feuilles qu'il porte → facteur `leafGrowth` côté renderer. Les
+	// champs restants du Python (auxin, has_bud, parent, organs) ne servent toujours
+	// pas au dessin → non transportés.
 	public readonly record struct Segment(
 		Vector3 Base,        // origine du segment (cm, espace sol 3D)
 		Vector3 Dir,         // vecteur directeur unitaire 3D
 		float LengthCm,      // longueur → extrémité = Base + Dir * LengthCm
 		float ThicknessCm,   // épaisseur (vieux bois = épais) → largeur de trait
-		bool IsApex);        // extrémité de croissance active (dessinée en vert)
+		bool IsApex,         // extrémité de croissance active (dessinée en vert)
+		int AgeWeeks);       // âge du segment (sem.) — proxy d'âge des feuilles (⑤)
 
 	// ---------------------------------------------------------------------------
 	// FRUIT — miroir d'un fruit tracé du moteur (plant.fruits, décompo·compost ③)
@@ -198,15 +202,22 @@ namespace Symbiose
 			return ps;
 		}
 
-		// Un segment JSON → Segment C# (champs communs structure.json/snapshot ;
-		// les champs dynamiques du moteur — auxin, age_weeks… — sont ignorés).
+		// Un segment JSON → Segment C# (champs communs structure.json/snapshot).
+		// `age_weeks` est désormais LU (⑤, 0.5.5) — la morphogénèse l'émet déjà dans
+		// les deux flux (Segment.to_dict côté Python). Lecture TOLÉRANTE (ContainsKey) :
+		// un flux qui ne l'aurait pas → 0, soit leafGrowth = 0 ⇒ feuille naissante… mais
+		// les segments établis ont un âge ≥ maturité ⇒ pour ÉVITER tout pop-in sur un
+		// flux muet, le défaut sûr serait l'inverse ; le renderer gère ce cas en traitant
+		// AgeWeeks==0 sur un segment épaissi comme « déjà mûr » (cf. PlantRenderer.Organs).
+		// Les autres champs dynamiques (auxin…) restent ignorés.
 		private static Segment ParseSegment(Godot.Collections.Dictionary seg) =>
 			new Segment(
 				Base: ParseVec3(seg["base"].AsGodotArray()),
 				Dir: ParseVec3(seg["dir"].AsGodotArray()),
 				LengthCm: (float)seg["length_cm"].AsDouble(),
 				ThicknessCm: (float)seg["thickness_cm"].AsDouble(),
-				IsApex: seg["is_apex"].AsBool());
+				IsApex: seg["is_apex"].AsBool(),
+				AgeWeeks: seg.ContainsKey("age_weeks") ? seg["age_weeks"].AsInt32() : 0);
 
 		private static Vector3 ParseVec3(Godot.Collections.Array a) =>
 			new Vector3((float)a[0].AsDouble(), (float)a[1].AsDouble(), (float)a[2].AsDouble());
