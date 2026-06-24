@@ -39,16 +39,16 @@ namespace Symbiose
 		// détail segment. TODO: brancher sur le vrai zoom caméra quand il existera.
 		[Export] public int ZoomPalier = 16;
 
-		// Couleurs (identiques à la maquette) : apex vert vif, bois brun.
-		private static readonly Color ApexColor = new Color("5ec46a");
-		private static readonly Color WoodColor = new Color("7a5230");
-		private static readonly Color CrownColor = new Color("3f7a4e"); // silhouette LOD
+		// Couleurs (palette centrale Palette16, T1) : apex vert vif, bois brun.
+		private static readonly Color ApexColor = Palette16.BoisApex;
+		private static readonly Color WoodColor = Palette16.BoisMur;
+		private static readonly Color CrownColor = Palette16.Couronne; // silhouette LOD
 		// Bois MORT (squelette post-mortem, vue·rattrapage 02) : gris-brun éteint,
 		// aucune teinte d'apex — la mort se lit à la couleur dès le premier regard.
-		private static readonly Color DeadWoodColor = new Color("6b5d4f");
+		private static readonly Color DeadWoodColor = Palette16.BoisMort;
 		// Surbrillance du segment sous la souris en mode tailler (tranche 5) :
 		// même jaune clair que le flash de geste réussi — un seul langage visuel.
-		private static readonly Color HighlightColor = new Color("ffe66b");
+		private static readonly Color HighlightColor = Palette16.Surbrillance;
 		// Sémiologie foliaire (sprint D33, tronçon ③) : la vue LIT le champ snapshot
 		// `leaf_symptoms` (liste de {cause, intensité} déjà triée par le moteur) et le
 		// rend. Elle ne recalcule RIEN (ni pH, ni pression ravageur) — elle ne fait que
@@ -65,11 +65,11 @@ namespace Symbiose
 		// aucune entrée → identité. Causes inconnues ignorées (forward-compatible §7).
 		private static readonly Dictionary<string, Color> ColorantTints = new()
 		{
-			["chlorose"]   = new Color("d8d24a"), // jaune inter-nervaire (carence ferrique)
-			["asphyxie"]   = new Color("6e6a4a"), // brun-vert terne (anoxie racinaire)
-			["secheresse"] = new Color("b9a87a"), // beige désaturé, flétri
-			["senescence"] = new Color("c4702a"), // jaune-rouge de fin de vie
-			["maladie"]    = new Color("8a6a4a"), // brun tacheté (cryptogamique)
+			["chlorose"]   = Palette16.SymChlorose,   // jaune inter-nervaire (carence ferrique)
+			["asphyxie"]   = Palette16.SymAsphyxie,   // brun-vert terne (anoxie racinaire)
+			["secheresse"] = Palette16.SymSecheresse, // beige désaturé, flétri
+			["senescence"] = Palette16.SymSenescence, // jaune-rouge de fin de vie
+			["maladie"]    = Palette16.SymMaladie,    // brun tacheté (cryptogamique)
 			// ombre / étiolement (D33 chronique, lève dette 0.5.2) : à l'ombre la
 			// plante s'étiole — feuilles PÂLES et anémiées (moins de chlorophylle).
 			// Vert pâle délavé désaturé. Partage le canal COULEUR (1 dominant) : une
@@ -79,13 +79,13 @@ namespace Symbiose
 			// de bleu). Le délavé d'étiolement frôlait le froid du hue-shift côté nord
 			// (risque de le confondre avec une simple ombre de volume) ; ce léger
 			// réchauffement le re-décale vers le vert-jaune anémié, distinct du bleu.
-			["ombre"]      = new Color("c2c8a0"), // vert pâle délavé désaturé (étiolement)
+			["ombre"]      = Palette16.SymOmbre, // vert pâle délavé désaturé (étiolement)
 			// acclimatation (plasticité ⑤) : pas un dégât mais un DURCISSEMENT —
 			// feuillage coriace/glauque, voile de cire bleu-gris (synthèse bio §4).
 			// Partage le canal COULEUR : un vrai signe de souffrance (intensité plus
 			// forte) le masque, mais sur une plante sans pathologie le glauque RÉVÈLE
 			// qu'elle s'est endurcie (apprenable, philo #5).
-			["acclimatation"] = new Color("9db8b0"), // glauque (cire) bleu-gris
+			["acclimatation"] = Palette16.SymAcclimatation, // glauque (cire) bleu-gris
 		};
 		// Teinte appliquée à intensité 1 (≤1 pour garder un fond vert lisible même au
 		// pic). Ex-ChloroseAmount=0.6 ; un poil relevé : l'intensité module désormais.

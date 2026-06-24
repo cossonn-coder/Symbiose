@@ -13,14 +13,15 @@ namespace Symbiose
 {
 	public partial class WorldView : Node2D
 	{
-		// Palette placeholder — teintes dominantes MESURÉES sur les PNG tuiles.
-		private static readonly Color TerreColor  = new Color("967a64");
-		private static readonly Color ArgileColor = new Color("cd7434");
-		private static readonly Color SableColor  = new Color("f1e9bb");
-		private static readonly Color SolInconnu  = new Color("777777");
+		// Palette placeholder — teintes centralisées dans Palette16 (T1),
+		// dominantes MESURÉES sur les PNG tuiles.
+		private static readonly Color TerreColor  = Palette16.SolTerre;
+		private static readonly Color ArgileColor = Palette16.SolArgile;
+		private static readonly Color SableColor  = Palette16.SolSable;
+		private static readonly Color SolInconnu  = Palette16.SolInconnu;
 		// Chemins en pierre : pas dessinés en t2 — le FOND de la fenêtre fait
 		// office de bandes entre tuiles (gris pierre), gratuit et suffisant.
-		private static readonly Color FondPierre  = new Color("8d8881");
+		private static readonly Color FondPierre  = Palette16.FondPierre;
 		// Maison placeholder : gris calcaire. 📖 Les nuances sont attachées aux
 		// murs du MONDE, pas à l'écran (fix du 1er F5 t4 : peintes « droite
 		// sombre / gauche claire », la maison était identique sous les 4
@@ -29,25 +30,14 @@ namespace Symbiose
 		// sud = la plus claire, nord = la plus sombre, est/ouest intermédiaires
 		// et légèrement distinctes (sinon 0° et 180° se confondent).
 		// Index = mur monde, cycle horaire : 0 nord, 1 est, 2 sud, 3 ouest.
-		private static readonly Color[] FacadeColors =
-		{
-			new Color("837c6f"),   // 0 nord (jamais éclairée)
-			new Color("978f7d"),   // 1 est
-			new Color("b5ac99"),   // 2 sud (plein soleil)
-			new Color("a49b88"),   // 3 ouest
-		};
+		// Teintes centralisées dans Palette16 (T1).
+		private static readonly Color[] FacadeColors = Palette16.Facades;
 		// Toit pyramidal (demande Nico F5 t4) : 4 pans, même éclairement monde.
-		private static readonly Color[] ToitColors =
-		{
-			new Color("a8a294"),   // pan nord
-			new Color("c2bcab"),   // pan est
-			new Color("d6cfbe"),   // pan sud
-			new Color("c9c2b1"),   // pan ouest
-		};
+		private static readonly Color[] ToitColors = Palette16.Toits;
 		// Ombre portée placeholder (maison → nord, pied des plantes : cf.
 		// PlantRenderer). L'ombre EXACTE vit dans le champ lumière Python —
 		// elle arrivera en overlay heatmap (tranche 5), on ne la réinvente pas.
-		private static readonly Color OmbreColor = new Color(0f, 0f, 0f, 0.16f);
+		private static readonly Color OmbreColor = Palette16.Ombre;
 
 		private Node2D _house;     // pour le mode transparent (touche H)
 		// Ombre maison ANIMÉE (volet C) : le polygone est recalculé quand le

@@ -40,7 +40,7 @@ namespace Symbiose
 		private const float DroughtDroopCm = 6f;   // affaissement max d'une feuille flétrie
 		private static readonly Color LeafHoleColor = new Color(0.10f, 0.09f, 0.05f, 0.55f); // morsure sombre
 		private static readonly Color GelEdgeColor = new Color("2a1d14"); // brun-noir brûlé (gel)
-		private static readonly Color LeafSpotColor = new Color("4a3320"); // pustule cryptogamique brun foncé
+		private static readonly Color LeafSpotColor = Palette16.PustuleMaladie; // pustule cryptogamique brun foncé
 
 		// Palette par espèce (= ORGAN_PALETTE du prototype) : feuille, fleur,
 		// fruit vert, fruit mûr. Espèce inconnue → défaut.

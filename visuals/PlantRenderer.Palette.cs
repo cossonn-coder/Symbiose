@@ -66,14 +66,21 @@ namespace Symbiose
 		// --- Rampe de lignification (branches vert → brun) -------------------
 		// Teinte intermédiaire olive : un lerp RGB direct vert→brun passerait par
 		// un gris-kaki mort ; le stop olive garde la rampe vivante (3 valeurs).
-		private static readonly Color WoodOlive = new Color("8a7a38");
-		// Au-delà de cette épaisseur un segment est considéré pleinement ligneux.
-		private const float LignifyFullCm = 3.0f;
+		// Teinte centralisée dans Palette16 (T1) — ApexColor/WoodColor le sont aussi.
+		private static readonly Color WoodOlive = Palette16.BoisOlive;
+		// T1 volet B — index de la rampe sur l'ÂGE du segment, plus son épaisseur.
+		// POURQUOI : la lignification est un processus TEMPOREL. Un jeune rameau,
+		// même fin, reste vert (tendre) tant qu'il est jeune ; un gros apex récent
+		// ne devrait pas brunir. L'épaisseur était un proxy trompeur (un rameau
+		// fin mais vieux ↔ un gros apex jeune). L'âge est le vrai meneur : un
+		// rameau pleinement ligneux en ~LignifyFullWeeks semaines (~2 mois).
+		// Valeur à confirmer au F5.
+		private const float LignifyFullWeeks = 8.0f;
 
 		// Part ligneuse [0,1] d'un segment : un apex (pointe) reste tendre (0),
-		// le bois épaissit vers 1. C'est l'index de la rampe.
+		// le bois brunit avec l'ÂGE (T1 volet B). C'est l'index de la rampe.
 		private static float Lignification(Segment s) =>
-			s.IsApex ? 0f : Mathf.Clamp(s.ThicknessCm / LignifyFullCm, 0f, 1f);
+			s.IsApex ? 0f : Mathf.Clamp(s.AgeWeeks / LignifyFullWeeks, 0f, 1f);
 
 		// Rampe 3 valeurs : vert-tendre (= ApexColor) → olive → brun (= WoodColor).
 		// Deux segments de lerp pour traverser l'olive (et non couper droit).

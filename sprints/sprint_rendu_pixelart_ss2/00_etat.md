@@ -38,9 +38,47 @@ La partie PLANTES de SS② Palette est **déjà faite** (commit `23b5613`,
 
 | Tronçon | Sujet | État |
 |---------|-------|------|
-| T1 | Palette SNES ~24 couleurs centrale + rampe branches sur `AgeWeeks` | ⏳ à faire |
+| T1 | Palette SNES ~24 couleurs centrale + rampe branches sur `AgeWeeks` | ✅ fait |
 | T2 | Texture sol pré-cuite (relief sud + grain, 4 orientations D35) | ⏳ à faire |
 
 ## §REPRISE
 
-(vide — sprint pas encore démarré)
+### T1 — fait (non commité, Nico commit)
+- **`visuals/Palette16.cs` créé** : `internal static class Palette16`, **27 couleurs**
+  nommées par rôle en rampes (bois 4, feuillage 2, symptômes 7, texture 1, sol 5,
+  maison façades[4]+toits[4]+ombre). **AUCUNE fusion** : les 2 seules paires proches
+  (FondPierre↔FaçadeEst d≈13 ; ToitEst↔ToitOuest d≈11) sont des distinctions VOULUES
+  pour la lisibilité de la rotation D35 → fusionner aurait changé l'apparence (interdit).
+  Iso-apparence stricte : mêmes hex, juste nommés/centralisés.
+- **Re-câblés** (littéraux → `Palette16.Xxx`, surgical, logique de rendu intacte) :
+  `PlantRenderer.cs` (Apex/Wood/Crown/DeadWood/Highlight + 7 ColorantTints),
+  `PlantRenderer.Palette.cs` (WoodOlive), `PlantRenderer.Organs.cs` (LeafSpotColor),
+  `WorldView.Monde.cs` (Terre/Argile/Sable/Inconnu/FondPierre + Facades/Toits/Ombre).
+  Les constantes d'ÉCLAIRAGE (hue-shift, planchers calotte) LAISSÉES en place (pas
+  des couleurs de palette). Palettes par espèce (Organs) et autres acteurs (litière,
+  macro, compost, butineurs) NON touchés (hors scope kickoff).
+- **Volet B** : `Lignification(s)` indexée sur **`AgeWeeks / LignifyFullWeeks`** (=8,
+  à régler au F5) au lieu de `ThicknessCm / LignifyFullCm`. `WoodRamp` inchangée.
+  Apex toujours 0. `LignifyFullCm` (3.0) CONSERVÉE — encore utilisée par le seuil
+  feuille `LeafMaxThickCm = LignifyFullCm*0.5` côté Organs (cf. POINTS DE VIGILANCE).
+- **Golden INCHANGÉ** : `2ab026ad…` (couche B pure, moteur Python non touché).
+- **`dotnet build` VERT** : 0 erreur, 0 warning.
+
+### Verdict F5 attendu (Nico)
+Apparence plantes/sol **identique** à avant (rangement invisible), SAUF la
+**lignification des branches qui suit désormais l'âge** : un jeune rameau reste
+vert plus longtemps, le vieux bois brunit. Banc à exhiber : un arbre aux segments
+d'âges variés (jeunes pousses vertes vs charpente brune).
+
+### POINTS DE VIGILANCE (à arbitrer avec Nico, NON traités en T1, hors scope)
+1. **Découplage invariant E5** : `LeafMaxThickCm` (Organs) cale le seuil « feuille ⟹
+   segment vert » sur la bascule vert→olive de la rampe, qui dépendait de l'ÉPAISSEUR
+   (`LignifyFullCm*0.5=1.5 cm`). Depuis volet B la rampe dépend de l'ÂGE → un segment
+   fin (donc feuillu) mais VIEUX (`AgeWeeks≥4`) peut virer olive sous ses feuilles.
+   Le commentaire `DrawPetiole` « JAMAIS brune par construction » n'est plus
+   garanti par construction. À observer au F5 (probablement bénin : fin = jeune en
+   pratique) ; si gênant, ré-aligner le seuil feuille sur l'âge plutôt que l'épaisseur.
+2. **Flux muet `AgeWeeks==0`** : structure.json + snapshot émettent `age_weeks`
+   (0.5.5) → données live OK. Mais un flux qui l'omettrait → `lig=0` (vert apex) sur
+   un tronc épais établi (cf. note PlantStructure.cs:209). Pré-existant, pas aggravé
+   par T1 sur les flux réels.
