@@ -70,6 +70,12 @@ namespace Symbiose
 			["secheresse"] = new Color("b9a87a"), // beige désaturé, flétri
 			["senescence"] = new Color("c4702a"), // jaune-rouge de fin de vie
 			["maladie"]    = new Color("8a6a4a"), // brun tacheté (cryptogamique)
+			// ombre / étiolement (D33 chronique, lève dette 0.5.2) : à l'ombre la
+			// plante s'étiole — feuilles PÂLES et anémiées (moins de chlorophylle).
+			// Vert pâle délavé désaturé. Partage le canal COULEUR (1 dominant) : une
+			// chlorose plus intense le masque, mais une plante seulement ombragée
+			// révèle l'étiolement (apprenable, philo #5).
+			["ombre"]      = new Color("b8c8a0"), // vert pâle délavé désaturé (étiolement)
 			// acclimatation (plasticité ⑤) : pas un dégât mais un DURCISSEMENT —
 			// feuillage coriace/glauque, voile de cire bleu-gris (synthèse bio §4).
 			// Partage le canal COULEUR : un vrai signe de souffrance (intensité plus
@@ -141,7 +147,7 @@ namespace Symbiose
 		// (0 = absent), lus par les feuilles (Organs). Poussés par SetSymptoms.
 		private Color _colorTint;
 		private float _colorAmount;       // 0 = aucun colorant → tissu vert intact
-		private float _ravageurs, _gel, _grele, _drought;
+		private float _ravageurs, _gel, _grele, _drought, _ombre;
 
 		// Reçoit le `leaf_symptoms` du snapshot (liste de dicts {cause, intensity}),
 		// null/absent → plante saine. Sépare le canal couleur (colorant dominant) des
@@ -150,7 +156,7 @@ namespace Symbiose
 		{
 			_colorTint = default;
 			_colorAmount = 0f;
-			_ravageurs = _gel = _grele = _drought = 0f;
+			_ravageurs = _gel = _grele = _drought = _ombre = 0f;
 			if (symptoms != null)
 				foreach (var sv in symptoms)
 				{
@@ -172,6 +178,9 @@ namespace Symbiose
 						case "gel":       _gel = it; break;
 						case "grele":     _grele = it; break;
 						case "secheresse": _drought = it; break;
+						// ombre (étiolement) : limbe chétif → calotte éclairée réduite,
+						// lu côté chemin feuille seulement (cf. PlantRenderer.Organs.cs).
+						case "ombre":     _ombre = it; break;
 					}
 				}
 			QueueRedraw();

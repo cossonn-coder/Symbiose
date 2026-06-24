@@ -166,6 +166,15 @@ namespace Symbiose
 			float density = _structure.FoliageDensity;
 			if (density > 0f)
 			{
+				// Sémiologie `ombre` (T1, étiolement) — DÉCISION DE DESIGN (option a
+				// du kickoff) : on RÉDUIT le facteur de calotte éclairée de
+				// DrawVolumeEllipse pour les FEUILLES SEULEMENT, le temps de cette
+				// boucle. La feuille étiolée a une calotte lumineuse plus petite
+				// (limbe anémié). Plancher LitFactorFloor → jamais d'aplat (E4). Le
+				// toggle est remis à LitFactorDefault après la boucle pour que les
+				// fruits/fleurs (dessinés plus bas) gardent leur calotte normale —
+				// `ombre` ne fuit PAS sur le chemin partagé.
+				_litFactor = Mathf.Lerp(LitFactorDefault, LitFactorFloor, _ombre);
 				for (int i = 0; i < _structure.Segments.Count; i++)
 				{
 					var s = _structure.Segments[i];
@@ -229,6 +238,9 @@ namespace Symbiose
 					}
 				}
 			}
+			// Fin de la fenêtre feuilles : on REMET la calotte par défaut pour que
+			// fleurs/fruits (DrawVolumeCircle, plus bas) ne soient PAS étiolés.
+			_litFactor = LitFactorDefault;
 
 			// --- FLEURS — proxy saisonnier (REPRO_BY_SEASON, kickoff t6) : il
 			// n'y a PAS d'état moteur de fleur, on garde le proxy. "flower" =

@@ -36,7 +36,7 @@ moteur** (détecteurs, champ `leaf_symptoms`, intensités) est déjà figé par 
 
 | Tr | Contenu | § conception | Couche | Statut |
 |----|---------|--------------|--------|--------|
-| **T1** | `ombre` — teinte `b8c8a0` (`ColorantTints`) + canal texture `_ombre` (limbe chétif : calotte éclairée réduite, plancher­née) — **lève dette 0.5.2** | §2 | B pure | ⬜ |
+| **T1** | `ombre` — teinte `b8c8a0` (`ColorantTints`) + canal texture `_ombre` (limbe chétif : calotte éclairée réduite, plancher­née) — **lève dette 0.5.2** | §2 | B pure | ✅ |
 | **T2** | `maladie` — canal texture `_maladie` (semis de taches par hash) distinct de l'asphyxie uniforme | §3 | B pure | ⬜ |
 | **T3** | Cohérence palette SS² (hue-shift froid × symptômes jaunes) + diagnostic F5 C2/C3 | §5, §6 | B pure | ⬜ |
 
@@ -61,5 +61,30 @@ cf. §4 — pas de tronçon.)
 
 ## §REPRISE
 
-(vide — sprint pas encore démarré. Chaque tronçon clos écrit ici : ce qui a été
-fait, le hash golden vérifié, le résultat `dotnet build`, et le verdict F5 attendu.)
+### T1 — signe `ombre` / étiolement ✅ (lève dette 0.5.2)
+
+- **Canal COULEUR** : entrée `ColorantTints["ombre"] = b8c8a0` (vert pâle délavé)
+  ajoutée dans `visuals/PlantRenderer.cs`. Entre automatiquement dans la
+  compétition « colorant dominant » de `SetSymptoms` — aucune autre logique.
+- **Canal TEXTURE** : champ `_ombre` ajouté (à côté de `_ravageurs/_gel/_grele/
+  _drought`), remis à 0 dans `SetSymptoms`, alimenté par `case "ombre"`.
+- **Limbe chétif** : `DrawVolumeEllipse` (`PlantRenderer.Palette.cs`) lit
+  désormais la taille de calotte dans un **champ-toggle `_litFactor`** (défaut
+  `LitFactorDefault = 0.66`). **Option (a) retenue** (toggle, pas surcharge
+  `litScale`) : `DrawVolumeEllipse` est appelée par les 6 archétypes de feuille
+  (`Leaf.cs`) ; propager un paramètre à travers tous serait illisible. Le toggle
+  est posé à l'entrée de la boucle feuilles (`Organs.cs`) à
+  `Mathf.Lerp(0.66, 0.30, _ombre)` puis **remis à 0.66 après la boucle** →
+  fruits/fleurs (`DrawVolumeCircle`, calotte propre codée en dur) intacts.
+- **Plancher E4** : `LitFactorFloor = 0.30` → calotte jamais nulle, jamais
+  d'aplat même à `_ombre = 1` (à ajuster au F5).
+- **Golden** : INCHANGÉ, hash `2ab026ad2b3f484777a2a29f804e1a4785ecffd6976fc0058fe0a33dd1498646` (aucun Python touché).
+- **`dotnet build Symbiose.csproj`** : VERT — 0 erreur, 0 warning.
+- **Fichiers touchés** : `visuals/PlantRenderer.cs`, `PlantRenderer.Palette.cs`,
+  `PlantRenderer.Organs.cs`.
+- **Verdict F5 attendu (Nico)** : exhiber le banc **`ombre_dense`** (Godot pas
+  sur la VM, lancement via le sélecteur). Une plante héliophile sous couvert
+  dense doit montrer un feuillage **délavé `b8c8a0`** + des feuilles à **calotte
+  lumineuse réduite** (aspect chétif), SANS aplat (plancher tient). Comparer à un
+  témoin éclairé. ⚠️ Risque palette à confirmer en T3 (§5) : côté nord le
+  hue-shift froid peut rapprocher `b8c8a0` du bleu.
