@@ -138,7 +138,9 @@ namespace Symbiose
 						Color col = SymptomTint(LeafColor(pal, season, Hash01(13, i, j)));
 						col.A = 0.92f;
 						float r = LeafSizeCm * WorldView.PxPerCmX;
-						DrawEllipse(c, r * 1.15f, r * 0.65f, col);
+						// SS② : feuille en 2 valeurs (ombre froide + face sud éclairée)
+						// au lieu d'un aplat — volume sans toucher la silhouette.
+						DrawVolumeEllipse(c, r * 1.15f, r * 0.65f, col);
 						// Canaux TEXTURE additifs (sémiologie ③) : criblage ravageurs/
 						// grêle + bords gelés, par-dessus la feuille, stables au hash.
 						DrawLeafDamage(c, r, i, j);
@@ -166,8 +168,9 @@ namespace Symbiose
 			for (int p = 0; p < 5; p++)
 			{
 				float a = Mathf.Tau * p / 5f;
-				DrawCircle(c + new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * 3.6f,
-						   2.6f, pal.Flower);
+				// SS② : pétale en 2 valeurs (volume) au lieu d'un disque plat.
+				DrawVolumeCircle(c + new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * 3.6f,
+								 2.6f, pal.Flower);
 			}
 			DrawCircle(c, 2f, FlowerHeart);
 		}
@@ -183,7 +186,9 @@ namespace Symbiose
 				Vector2 c = Iso(p3.X - collet.X, p3.Y - collet.Y, p3.Z);
 				// masse → rayon (FRUIT_MASSE=0.15 côté moteur → ~4.5 px ; borné).
 				float rad = 3.0f + Mathf.Min(f.Masse, 0.3f) * 10f;
-				DrawCircle(c, rad, FruitColor(pal, f.Maturite));
+				// SS② : globe en 2 valeurs (croissant d'ombre froide côté nord +
+				// face sud éclairée), PUIS le reflet spéculaire blanc d'avant.
+				DrawVolumeCircle(c, rad, FruitColor(pal, f.Maturite));
 				DrawCircle(c - new Vector2(rad * 0.3f, rad * 0.3f),
 						   rad * 0.3f, new Color(1f, 1f, 1f, 0.45f));
 			}

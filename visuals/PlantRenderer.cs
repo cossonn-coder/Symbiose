@@ -332,9 +332,14 @@ namespace Symbiose
 				// zoom ×N, 1 px logique = N px écran ; l'arrondi entier ici donne un
 				// trait net au palier. min 1 px pour rester visible.
 				float w = Mathf.Max(1f, Mathf.Round(s.ThicknessCm * WorldView.PxPerCmX * 2.2f));
-				Color color = s.IsApex ? SymptomTint(ApexColor) : WoodColor;
+				// SS② : rampe de lignification vert-tendre → brun (∝ épaisseur), au
+				// lieu du binaire apex/bois. Les symptômes colorants ne teintent que
+				// la part VIVANTE (verte) : le bois mûr (lig→1) ne se décolore pas.
+				float lig = Lignification(s);
+				Color baseCol = WoodRamp(lig);
+				Color col = baseCol.Lerp(SymptomTint(baseCol), 1f - lig);
 
-				DrawLine(p1, p2, color, w, antialiased: false);
+				DrawBranch(p1, p2, col, w);
 			}
 
 			// Organes (tranche 6·A) : feuilles puis fleurs/fruits, PAR-DESSUS le
@@ -403,14 +408,22 @@ namespace Symbiose
 			float rx = cr * WorldView.PxPerCmX;        // largeur ~ rayon couronne projeté
 			float ry = cr * WorldView.PxPerCmX * 0.8f; // couronne légèrement aplatie
 
+			// SS② : masse de couronne en 2 valeurs — base ombrée + calotte
+			// éclairée décalée sud (même volume 16-bit que les organes).
+			Color baseC = SymptomTint(CrownColor);
+			Vector2 lit = center + SouthDir() * (ry * 0.45f);
 			const int n = 24;
-			var pts = new Vector2[n];
+			var shadePts = new Vector2[n];
+			var litPts = new Vector2[n];
 			for (int i = 0; i < n; i++)
 			{
 				float a = Mathf.Tau * i / n;
-				pts[i] = center + new Vector2(rx * Mathf.Cos(a), ry * Mathf.Sin(a));
+				Vector2 u = new Vector2(Mathf.Cos(a), Mathf.Sin(a));
+				shadePts[i] = center + new Vector2(rx * u.X, ry * u.Y);
+				litPts[i] = lit + new Vector2(rx * 0.6f * u.X, ry * 0.6f * u.Y);
 			}
-			DrawColoredPolygon(pts, SymptomTint(CrownColor));
+			DrawColoredPolygon(shadePts, HueShift(baseC, -OrganShade));
+			DrawColoredPolygon(litPts, HueShift(baseC, OrganLit));
 		}
 	}
 }
