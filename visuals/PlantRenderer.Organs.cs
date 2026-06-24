@@ -176,6 +176,12 @@ namespace Symbiose
 				// fruits/fleurs (dessinés plus bas) gardent leur calotte normale —
 				// `ombre` ne fuit PAS sur le chemin partagé.
 				_litFactor = Mathf.Lerp(LitFactorDefault, LitFactorFloor, _ombre);
+				// Repli palette T3 (§5) : sur le limbe SEULEMENT, on borne l'amplitude
+				// du hue-shift FROID ∝ force du colorant dominant (`_colorAmount`). Un
+				// symptôme jaune (chlorose/sénescence) ne reverdira/bleuira plus au
+				// point de devenir illisible côté nord. Sain (`_colorAmount=0`) → 1
+				// (SS² plein). Remis à 1 après la boucle (branches/fruits/fleurs intacts).
+				_coolShiftScale = Mathf.Lerp(1f, ColorCoolShiftFloor, _colorAmount);
 				for (int i = 0; i < _structure.Segments.Count; i++)
 				{
 					var s = _structure.Segments[i];
@@ -242,6 +248,8 @@ namespace Symbiose
 			// Fin de la fenêtre feuilles : on REMET la calotte par défaut pour que
 			// fleurs/fruits (DrawVolumeCircle, plus bas) ne soient PAS étiolés.
 			_litFactor = LitFactorDefault;
+			// … et le froid PLEIN pour fruits/fleurs/silhouette (repli T3 limbe-only).
+			_coolShiftScale = 1f;
 
 			// --- FLEURS — proxy saisonnier (REPRO_BY_SEASON, kickoff t6) : il
 			// n'y a PAS d'état moteur de fleur, on garde le proxy. "flower" =

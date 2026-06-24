@@ -50,6 +50,19 @@ namespace Symbiose
 		// feuilles, remis à LitFactorDefault juste après — fruits/fleurs intacts.
 		private float _litFactor = LitFactorDefault;
 
+		// --- Repli palette T3 (§5) : froid atténué sous symptôme colorant -----
+		// Plancher du facteur d'amplitude du shift FROID quand un symptôme colore
+		// le limbe à FOND (`_colorAmount=1`). À `_colorAmount=0` (sain) le facteur
+		// vaut 1 → hue-shift SS² PLEIN, aucune régression. K=0.5 (à régler au F5) :
+		// on garde la moitié du froid au pic de coloration — assez de volume pour
+		// que la feuille ne s'aplatisse pas, pas assez pour noyer un jaune sous le
+		// bleu côté nord. Même mécanisme de toggle que `_litFactor` (cf. Organs.cs).
+		private const float ColorCoolShiftFloor = 0.5f;
+		// Facteur courant d'amplitude du shift FROID (1 = plein, hors symptôme).
+		// Posé à Lerp(1, ColorCoolShiftFloor, _colorAmount) avant la boucle
+		// feuilles, remis à 1 juste après — lu par HueShift pour lum<0 seulement.
+		private float _coolShiftScale = 1f;
+
 		// --- Rampe de lignification (branches vert → brun) -------------------
 		// Teinte intermédiaire olive : un lerp RGB direct vert→brun passerait par
 		// un gris-kaki mort ; le stop olive garde la rampe vivante (3 valeurs).
@@ -73,11 +86,24 @@ namespace Symbiose
 		// Décale une couleur vers la lumière (lum>0 : + clair, + chaud) ou
 		// l'ombre (lum<0 : + sombre, + froid, + saturé). Travaille en HSV car
 		// la teinte y est une coordonnée directe. L'alpha d'entrée est préservé.
-		private static Color HueShift(Color c, float lum)
+		//
+		// Repli palette T3 (§5) : seule l'amplitude du shift de TEINTE FROIDE
+		// (lum<0, vers le bleu) est multipliée par `_coolShiftScale` (1 = plein,
+		// SS² inchangé). Sur un limbe que le symptôme colore franchement
+		// (`_colorAmount` élevé), `_coolShiftScale` < 1 empêche le froid de
+		// reverdir/bleuir le jaune (chlorose/sénescence) au point de le rendre
+		// illisible côté nord. La VALEUR (clarté) et la SATURATION ne sont PAS
+		// touchées (le volume reste lisible) — on borne juste la dérive de teinte.
+		// `_coolShiftScale` ne vaut < 1 QUE pendant la boucle feuilles (toggle posé
+		// dans Organs.cs) : branches, fruits, fleurs, silhouette gardent le froid
+		// plein. Tissu sain (`_colorAmount=0` → `_coolShiftScale=1`) = zéro régression.
+		private Color HueShift(Color c, float lum)
 		{
 			float h = c.H, s = c.S, v = c.V;
 			float target = lum >= 0f ? WarmHue : CoolHue;
-			h = HueTowards(h, target, Mathf.Abs(lum) * HueShiftStrength);
+			float hueAmt = Mathf.Abs(lum) * HueShiftStrength
+				* (lum < 0f ? _coolShiftScale : 1f);
+			h = HueTowards(h, target, hueAmt);
 			v = Mathf.Clamp(v + lum * ValueStrength, 0f, 1f);
 			// Seules les ombres (lum<0) gagnent en saturation (couleur plus dense).
 			s = Mathf.Clamp(s + Mathf.Max(0f, -lum) * SatStrength, 0f, 1f);

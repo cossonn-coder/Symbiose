@@ -1,5 +1,11 @@
 # SPRINT SÉMIOLOGIE VISUELLE — état partagé
 
+> ## 🏁 SPRINT SÉMIOLOGIE VISUELLE — CLOS (2026-06-24)
+> T1 `ombre` (`a07702c`), T2 `maladie` (`213c97b`), T3 palette + diagnostic
+> C2/C3 — tous couche B pure C#, golden INCHANGÉ `2ab026ad…`, build vert.
+> **Dette 0.5.2 levée** (mapping `ombre`, T1) + **D48 levée**. D47 : C2/C3
+> instrumentés (mémo ci-dessous), reste à exécuter le protocole au F5 (Nico).
+
 > **Kickoff autosuffisant** (démarrage à froid). Lire CE fichier + le `0N_*.md`
 > du tronçon courant suffit à reprendre sans contexte préalable.
 >
@@ -38,7 +44,7 @@ moteur** (détecteurs, champ `leaf_symptoms`, intensités) est déjà figé par 
 |----|---------|--------------|--------|--------|
 | **T1** | `ombre` — teinte `b8c8a0` (`ColorantTints`) + canal texture `_ombre` (limbe chétif : calotte éclairée réduite, plancher­née) — **lève dette 0.5.2** | §2 | B pure | ✅ |
 | **T2** | `maladie` — canal texture `_maladie` (semis de taches par hash) distinct de l'asphyxie uniforme | §3 | B pure | ✅ |
-| **T3** | Cohérence palette SS² (hue-shift froid × symptômes jaunes) + diagnostic F5 C2/C3 | §5, §6 | B pure | ⬜ |
+| **T3** | Cohérence palette SS² (hue-shift froid × symptômes jaunes) + diagnostic F5 C2/C3 | §5, §6 | B pure | ✅ |
 
 (L'affaissement sécheresse est DÉJÀ fait — `Organs.cs` `lz -= _drought * DroughtDroopCm`,
 cf. §4 — pas de tronçon.)
@@ -110,8 +116,46 @@ cf. §4 — pas de tronçon.)
   DISTINCT du brun-vert UNIFORME de l'asphyxie (qui reste un aplat — vérifier
   qu'elle n'a PAS régressé). Exhiber un banc avec pathogène si disponible.
 
-### §REPRISE — PROCHAIN = T3
+### T3 — cohérence palette SS² + diagnostic C2/C3 ✅ (CLÔT le sprint)
 
-Lire `00_etat.md` (invariants + entrées T1/T2) + `03_palette.md`. T3 = cohérence
-palette SS² (hue-shift froid × symptômes jaunes) + diagnostic F5 C2/C3. Couche B
-pure C#, golden trivialement préservé (`2ab026ad…`), build C# vert exigé.
+- **(A) Repli palette §5** : l'amplitude du hue-shift **FROID** (lum<0, vers le
+  bleu) est multipliée par un facteur `_coolShiftScale` lu dans `HueShift`
+  (`PlantRenderer.Palette.cs`, méthode rendue **instance**). Seule la dérive de
+  TEINTE est bornée — VALEUR (clarté) et SATURATION inchangées (le volume reste
+  lisible). `_coolShiftScale = Mathf.Lerp(1f, ColorCoolShiftFloor, _colorAmount)`
+  avec **K = `ColorCoolShiftFloor` = 0.5** (retenu, à régler au F5). Posé comme
+  TOGGLE à l'entrée de la boucle feuilles (`Organs.cs`, à côté de `_litFactor`),
+  **remis à 1 juste après** → branches, fruits, fleurs, silhouette gardent le
+  froid PLEIN. **Tissu SAIN** (`_colorAmount = 0` → `_coolShiftScale = 1`) =
+  hue-shift SS² PLEIN, **zéro régression** (invariant vérifié par relecture).
+- **(B) Chaleur `ombre`** : teinte délavée relevée **`b8c8a0` → `c2c8a0`**
+  (`ColorantTints["ombre"]`, `PlantRenderer.cs`) — un poil plus chaude pour
+  rester DISTINCTE du froid du hue-shift côté nord (risque noté en T1).
+- **Golden** : INCHANGÉ `2ab026ad2b3f484777a2a29f804e1a4785ecffd6976fc0058fe0a33dd1498646`
+  (aucun Python touché). **`dotnet build`** : VERT — 0 erreur, 0 warning.
+- **Fichiers touchés** : `visuals/PlantRenderer.Palette.cs` (`HueShift` instance
+  + atténuation froid + champ/const `_coolShiftScale`/`ColorCoolShiftFloor`),
+  `visuals/PlantRenderer.Organs.cs` (toggle posé/remis), `visuals/PlantRenderer.cs`
+  (teinte `ombre`).
+- **Verdict F5 attendu (Nico)** : parcourir `ombre_dense`, `asphyxie_argile`,
+  `infestation_ravageur`. Côté NORD, chaque symptôme reste lisible (un jaune
+  chlorose/sénescence ne reverdit/bleuit plus jusqu'à l'illisible) ; le délavé
+  `ombre` `c2c8a0` se distingue d'une simple ombre de volume ; une plante SAINE
+  est inchangée vs SS² (même volume, même froid de profondeur). Régler K si le
+  froid est encore trop fort (baisser) ou si le volume s'aplatit (remonter).
+
+### §Mémo de protocole de diagnostic F5 — C2/C3 (T3, instrumente D47)
+
+But : trancher un **suspect rendu C#** (oracle moteur vert ↔ écran muet ⇒ bug
+de mapping `PlantRenderer`). Chaque banc a un oracle Python qui asserte le signe
+au plot/semaine (source `sim/semiologie.py`, le MÊME endroit que la vue lit).
+**Aucune mécanique à coder ici** — c'est une grille d'observation pour le F5.
+
+| Cas | Cause moteur | Banc d'essai | Attendu écran | Verdict |
+|-----|--------------|--------------|----------------|---------|
+| **C2** asphyxie | `asphyxie_memory > 0.10` (intégration lente 0.05/sem) → `leaf_symptoms` cause `asphyxie`, intensité en rampe ; canal COULEUR `ColorantTints["asphyxie"]=6e6a4a` (brun-vert), APLAT uniforme (pas de texture). | `asphyxie_argile` (sol argileux gorgé, plusieurs sem d'excès d'eau soutenu). | Le limbe vire **brun-vert terne `6e6a4a` proportionnellement** à l'intensité (faible = à peine teinté, fort = bien brun) — **gradué, pas binaire**. Reste UN APLAT (≠ taches de `maladie`). | **OK** si la teinte se lit ET module avec l'intensité. **BUG rendu** si muet malgré l'oracle vert (→ vérifier `SetSymptoms`/`SymptomTint`, dette ciblée). |
+| **C3** ravageurs | densité ravageur > ~0.025 (floor TRÈS bas) → cause `ravageurs`, canal TEXTURE `_ravageurs` → criblage (`DrawLeafDamage`, 1-4 trous sombres ∝ intensité). | `infestation_ravageur` **vs un TÉMOIN sain** (même espèce, sans pression). | L'infesté porte un **criblage VISIBLEMENT plus dense** que le témoin. Le témoin doit être **propre** (pas de trous). | **OK** (criblage sincère) si témoin propre + infesté criblé. **BUG rendu** (criblage FANTÔME) si le TÉMOIN montre AUSSI des trous → distinguer du rendu normal des feuilles (nervures/points), dette ciblée. |
+
+Note : `ombre` (le 3ᵉ suspect D47) est LEVÉ depuis T1 (mapping couleur `c2c8a0`
++ texture limbe chétif) — il n'a plus besoin de protocole, juste de la
+confirmation `ombre_dense` du verdict F5 ci-dessus.

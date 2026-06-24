@@ -75,7 +75,11 @@ namespace Symbiose
 			// Vert pâle délavé désaturé. Partage le canal COULEUR (1 dominant) : une
 			// chlorose plus intense le masque, mais une plante seulement ombragée
 			// révèle l'étiolement (apprenable, philo #5).
-			["ombre"]      = new Color("b8c8a0"), // vert pâle délavé désaturé (étiolement)
+			// T3 (§5) : chaleur relevée b8c8a0 → c2c8a0 (un poil plus de rouge, moins
+			// de bleu). Le délavé d'étiolement frôlait le froid du hue-shift côté nord
+			// (risque de le confondre avec une simple ombre de volume) ; ce léger
+			// réchauffement le re-décale vers le vert-jaune anémié, distinct du bleu.
+			["ombre"]      = new Color("c2c8a0"), // vert pâle délavé désaturé (étiolement)
 			// acclimatation (plasticité ⑤) : pas un dégât mais un DURCISSEMENT —
 			// feuillage coriace/glauque, voile de cire bleu-gris (synthèse bio §4).
 			// Partage le canal COULEUR : un vrai signe de souffrance (intensité plus
