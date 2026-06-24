@@ -109,7 +109,32 @@ le froid** (hue-shift) plutôt que vers le noir. C'est *la* signature 16-bit, et
 direction de lumière est déjà disponible.
 
 **Budget palette** : viser une palette globale limitée (~16-32 couleurs, esprit SNES),
-partagée entre acteurs pour la cohérence. À fixer au sous-sprint palette.
+partagée entre acteurs pour la cohérence.
+
+> **FIGÉ SS② (2026-06-24)** : budget arrêté à **~24 couleurs SNES**, regroupées en
+> rampes nommées partagées (sol / bois / feuillage / symptômes), comme **contrainte
+> de cohérence** et **livrable** du sprint. Aujourd'hui les teintes sont des hex
+> ÉPARS (`ApexColor`, `WoodColor`, `WoodOlive`, `ColorantTints`, `TerreColor`…) ;
+> on les regroupe dans une palette centrale documentée. Le hue-shift (§5) reste le
+> mécanisme d'éclairage par-dessus ces couleurs de base — on ne le refait pas.
+
+**Relief du SOL — texture pré-cuite (FIGÉ SS², 2026-06-24).** Le sol est le **dernier
+aplat** : `WorldView.Monde.cs` pose un losange `Polygon2D` d'**une seule couleur** par
+plot (`SoilColor`, + damier ±5 %). On le remplace par une **texture cuite en C# à
+l'init** (une `Image`/`ImageTexture` par type de sol, filtre Nearest), portant **deux
+choses en une passe** :
+- **Relief bombé lumière-sud** : moitié sud du losange éclaircie, moitié nord
+  assombrie + **refroidie** (même hue-shift que les organes) → le sol n'est plus plat.
+- **Grain dithering 3 valeurs** au pixel, **déterministe au hash** (`Hash01`) → micro-
+  texture de terre, pas un aplat lisse.
+
+⚠️ **Rotation D35** : le monde tourne par quarts de tour et le gradient doit suivre le
+**sud-monde** (comme les façades de la maison, `FacadeColors`/`ToitColors` indexées par
+mur monde). → **4 orientations cuites** (cap lumineuse vers S/E/N/O du losange selon
+l'orientation). Pas de shader (pré-cuisson C#, cohérent Nearest + déterminisme).
+Le **damier ±5 %** (alternance par plot) ne peut pas vivre dans une texture partagée :
+il reste un `modulate`/`self_modulate` léger par plot. Cuisson une seule passe →
+relief + grain ne sont **pas** deux tronçons séparés.
 
 ## 6. Acteur par acteur
 
@@ -163,9 +188,22 @@ Le rendu ne touche pas le moteur → **golden trivialement préservé** à chaqu
    (`WorldView.Etiquettes.cs`). Picking reconverti via le SubViewport
    (`WorldMouseCanvas`). Golden inchangé. **Reste pour un vrai pixel-art : la palette
    (SS②) — Nico note au F5 que les couleurs manquent de dégradés/relief.**
-2. **SS② Palette** — rampes + hue-shifting + lumière sud sur les acteurs existants
-   (plantes d'abord). **F5 = volume 16-bit.**
-3. **SS③ Sol** — dual-grid autotiling + dithering des champs.
+2. **SS② Palette** — rampes + hue-shifting + lumière sud. **Partie PLANTES FAITE**
+   (commit `23b5613`, `PlantRenderer.Palette.cs` : rampe lignification `WoodRamp`
+   vert→olive→brun + `DrawBranch`/`DrawVolumeEllipse` hue-shift sud, déjà csblées
+   `PlantRenderer.cs:356-360`). **Recentré (2026-06-24)** sur les **2 résiduels** :
+   - **T1** — figer la **palette SNES ~24 couleurs** (palette centrale documentée,
+     hex épars regroupés) + **ré-indexer la rampe de branches sur `AgeWeeks`** (au
+     lieu de `ThicknessCm`, `core/PlantStructure.cs:37`) → lignification ∝ âge.
+   - **T2** — **sol** : texture pré-cuite relief lumière-sud + grain dithering, **4
+     orientations D35** (cf. §5). C'est le **dernier aplat**. **F5 = sol qui respire.**
+   > ⚠️ Correction d'une erreur de cadrage : on a un temps cru les BRANCHES encore
+   > « binaires aplat » — FAUX, elles ont déjà rampe + volume depuis `23b5613`. Le
+   > seul vrai aplat restant était le SOL ; les branches ne reçoivent qu'un raffinage
+   > d'index (T1).
+3. **SS③ Sol (transitions)** — dual-grid autotiling **entre types de sol** + dithering
+   des **champs** (humidité/fertilité). Distinct de SS²-T2 (qui fait le relief/grain
+   INTRA-losange) : SS③ traite les **frontières** entre tuiles et la lecture des champs.
 4. **SS④ Plantes/organes** — lignification branches + feuilles par famille (réf. Runions)
    + volume fleurs/fruits. Prototype SVG Python d'abord.
 5. **SS⑤ Champignons** — sprites procéduraux reliés à la décomposition.
@@ -174,7 +212,8 @@ Le rendu ne touche pas le moteur → **golden trivialement préservé** à chaqu
 
 ## 8. Décisions ouvertes & références
 
-- **Budget palette** : nombre de couleurs total, partage inter-acteurs — à fixer SS②.
+- **Budget palette** : ~~à fixer SS②~~ → **TRANCHÉ SS² (2026-06-24) : ~24 couleurs
+  SNES**, rampes nommées partagées, palette centrale = livrable de SS²-T1 (cf. §5).
 - **Affichage des champs** : teinter le sol (immersif) vs overlay toggle — à trancher SS③.
 - **Résolution interne du SubViewport** : ~~480×270 (×4) vs autre~~ → **TRANCHÉ SS① :
   960×540, upscale ×2** (le ×4 était trop gros).
