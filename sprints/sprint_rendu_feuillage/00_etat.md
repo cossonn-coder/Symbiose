@@ -44,7 +44,7 @@ préservé sur TOUS les tronçons** (T5/T6 inclus : transport, pas calcul).
 | ③ (T3) | Nervures = 3ᵉ valeur — topologie par archétype, sens du shift par espèce | §3.2 | B pure | — | E2 | NEUTRE (inchangé `2ab026ad…`) | ✅ |
 | ④ (T4) | Insertion — verrou « feuille ⟹ vert » + pétiole vert | §5 | B pure | — | E5 | NEUTRE (inchangé `2ab026ad…`) | ✅ |
 | ⑤ (T5) | Croissance progressive — `age_weeks` au segment (pont), facteur `leafGrowth` | §4 | B + pont | `ENGINE_VERSION` 0.5.4→**0.5.5** | E1 | NEUTRE (inchangé `2ab026ad…`) | ✅ |
-| ⑥ (T6) | Chute + litière — abscission au pétiole, semis de litière typée au sol | §6 | B + pont | `ENGINE_VERSION`↑ | E5bis | NEUTRE (transport) | ⏳ |
+| ⑥ (T6) | Chute + litière — abscission au pétiole, semis de litière de feuilles au sol | §6 | B + pont | `ENGINE_VERSION` 0.5.5→**0.5.6** | E5bis | NEUTRE (inchangé `2ab026ad…`) | ✅ |
 
 **Dépendances** : ③ dépend de ② (topologie de nervure ∝ archétype). ⑤ et ⑥ partagent
 le geste « champ au snapshot + re-bump » → **regrouper le re-bump** (un seul saut de
@@ -143,7 +143,86 @@ fruits @ S52 », `tests/simserver/morts.py`) **PRÉ-EXISTE** ce tronçon (vérif
 Point F5 (à valider Nico) : la jeune feuille grandit visiblement sur ~1,5 sem sans
 pop-in ; pétiole qui s'allonge avec ; segments établis pleins d'emblée au chargement.
 
-Prochain tronçon = **⑥ (T6)** Chute + litière — abscission au pétiole (point de rupture
-posé en ④), semis de litière typée au sol, cf. doc §6. B + pont (`ENGINE_VERSION` →
-0.5.6, vérifier §6.4 ce qui est déjà émis). Golden NEUTRE (transport). NE PAS oublier
-de re-bumper l'attendu `"0.5.6"` dans `tests/simserver/structures.py`.
+**⑥ (T6) CLOS** (golden inchangé `2ab026ad…`, build C# vert, smoke pont 185/186 —
+seule rouge = pommier @S52 préexistante, hors périmètre ; `ENGINE_VERSION` 0.5.5 →
+**0.5.6**). **Dernier tronçon du sprint — transport PUR confirmé** (golden NEUTRE).
+
+PONT (déjà posé par le sous-agent précédent, conservé) : `tools/simserver/serialize.py`
+— le bloc `litiere` par plot gagne un 5ᵉ champ → `[r, c, tissu_dominant, masse,
+age_sem]`. `age_sem` = âge moyen pondéré par la masse des parcelles de SURFACE (proxy
+d'état de décompo, donnée déjà calculée `Parcelle.age_sem`) → TRANSPORT pur. `version.py`
+bumpé 0.5.6 (+ doc). Tests `tests/simserver/litiere.py` + `structures.py` (attendu
+version `"0.5.6"`) ajustés.
+
+PRIMITIVE DE RENDU (déjà posée, conservée) : `visuals/PlantRenderer.Leaf.cs` — méthode
+PUBLIQUE `DrawLitterLeaf(species, c, rx, ry, col, seed)` + refactor `DrawShapeBySpecies`
+(cœur commun feuille vivante + litière). L'espèce d'origine N'EST PAS traçable côté
+moteur → repli `Elliptique` assumé (§6.3).
+
+CALQUE MONDE (NEUF, ce qui MANQUAIT) : **`visuals/LeafLitterLayer.cs`** — calque batché
+qui AFFICHE la litière de feuilles. Choix de conception : le calque **HÉRITE de
+`PlantRenderer`** et s'en sert comme « stylo » (les primitives de tracé d'une feuille
+sont des méthodes d'instance de CanvasItem, valides seulement dans `_Draw`). On
+neutralise les deux gestes « plante vivante » du parent : `_Ready` (ombre-capsule) →
+no-op, `_Draw` (exige `_structure`) → remplacé par le semis de litière. `_structure`
+reste null (jamais lu : `DrawLitterLeaf` prend l'espèce en argument). Le calque lit le
+bloc `litiere`, ne retient QUE le tissu dominant `"feuille"` (les autres restent à
+`LitterLayer`), pose un semis déterministe (hash djb2 du plot, zéro Random) de
+silhouettes : **POSE À PLAT** (ry = rx × 0.45, calotte aplatie, ≥ 2 valeurs §1),
+**TEINTE morte** brun-roux `FreshLeaf` → **dérive vers l'humus** `HumusLeaf` ∝
+`age_sem` (Lerp sur `AgeFullDecompSem=12 sem`), **QUANTITÉ bornée** ∝ masse (1→6
+feuilles, `MasseRef=2.5`). LOD `MinZoom=2` (aligné LitterLayer). Lecture TOLÉRANTE du
+5ᵉ champ (snapshot pré-0.5.6 → âge 0).
+
+CÂBLAGE `WorldView` : `world/WorldView.Compost.cs` — champ `_leafLitterLayer`,
+instancié dans `BuildLitterLayer` (APRÈS LitterLayer, même bande ZIndex 1 → feuilles
+par-dessus les amas terreux), nourri dans `ApplyLitiere` (les deux layers lisent le
+MÊME bloc).
+
+CASSURE AU PÉTIOLE (§6.2) — **vérifié OK, rien à implémenter** : le pétiole vert (④)
+est dessiné UNIQUEMENT dans la boucle feuilles de `Organs.cs` ; une feuille qui
+disparaît de `_structure` (feuillage baissé) emporte son pétiole avec elle. Et la
+teinte du pétiole = `WoodRamp(Lignification)` est verte par l'invariant (a) de ④
+(`LeafMaxThickCm = LignifyFullCm·0.5`) → **jamais de moignon brun proéminent**. La
+matière « réapparaît » au sol via le bloc `litiere` (conservation moteur), pas une
+trajectoire (§6.1).
+
+Point F5 ⑥ (à valider Nico) : feuilles mortes brun-roux semées au sol sur les
+parcelles à litière de feuilles, posées à plat, qui s'assombrissent/désaturent vers
+l'humus à mesure que `age_sem` monte ; cassure nette au pétiole (pas de moignon brun) ;
+densité ∝ masse de litière. Repli Elliptique assumé (pas de silhouette d'espèce, le
+moteur ne trace pas l'espèce de la nécromasse).
+
+Point F5 ⑤ (toujours à valider Nico) : la jeune feuille grandit visiblement sur
+~1,5 sem sans pop-in ; pétiole qui s'allonge avec ; segments établis pleins d'emblée.
+
+---
+
+## ✅ SPRINT RENDU FEUILLAGE — CLOS le 2026-06-24
+
+**6 tronçons ①→⑥ tous CLOS.** Le rendu des feuilles par espèce est complet : forme,
+couleur, nervures, croissance, insertion, chute + litière.
+
+- **Golden** : inchangé `2ab026ad2b3f484777a2a29f804e1a4785ecffd6976fc0058fe0a33dd1498646`
+  sur TOUT le sprint (couche B = vue passive ; ⑤ et ⑥ = transport pont pur).
+- **Pont** : `ENGINE_VERSION` 0.5.4 → **0.5.6** (deux entorses couche B, transport de
+  données déjà calculées) : ⑤ `age_weeks` au segment (0.5.5), ⑥ `age_sem` au bloc
+  `litiere` (0.5.6, 5ᵉ champ).
+- **Smoke pont** : 185/186 (seule rouge = « pommier pré-âgé noue des fruits @ S52 »,
+  `tests/simserver/morts.py`, PRÉEXISTANTE et hors périmètre).
+- **Build C#** : vert (0 avertissement, 0 erreur).
+- **Knobs F5** (couche B, ajustables à la validation visuelle Nico) :
+  - ① `Palettes` (Organs.cs) — couleurs du limbe par espèce (23 espèces).
+  - ② `LeafProfiles` (Leaf.cs) — forme par espèce ; `LeafFloorRadiusPx=3`,
+    `LeafShapeMinZoom=4`.
+  - ③ `VeinShift=0.22` — amplitude de teinte des nervures.
+  - ④ `LeafMaxThickCm=1.5` (= `LignifyFullCm·0.5`) — seuil feuille⟹vert + pétiole.
+  - ⑤ `LeafMaturityWeeks=1.5` — durée de croissance d'une jeune feuille.
+  - ⑥ `LeafRadiusPx=5`, `FlatRatio=0.45`, `AgeFullDecompSem=12`, `MasseRef=2.5`,
+    `Min/MaxLeaves=1/6`, `FreshLeaf/HumusLeaf`, `MinZoom=2` (LeafLitterLayer.cs).
+- **E6 (vrilles grimpantes)** : DIFFÉRÉ, dette **D49** (sprint moteur séparé) — hors
+  périmètre, seul le contrat de rendu est pré-cadré (doc §7).
+- **Fichiers du sprint** : `visuals/PlantRenderer.Leaf.cs` (②③⑥-primitive),
+  `visuals/PlantRenderer.Organs.cs` (①④⑤), `visuals/LeafLitterLayer.cs` (⑥-calque NEUF),
+  `world/WorldView.Compost.cs` (⑥-câblage), `tools/simserver/serialize.py` +
+  `version.py` (⑤⑥-pont), `tests/simserver/{litiere,structures}.py` (⑤⑥-attendus).

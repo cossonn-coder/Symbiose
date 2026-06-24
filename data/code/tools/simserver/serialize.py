@@ -185,10 +185,16 @@ class SerializeMixin:
             # permanent, masse souvent > 0 via croissance) n'est PAS de la litière
             # de surface : on l'écarte du tissu dominant ET du total. Format
             # COMPACT (cf. `sprites`) : par plot non vide `[r, c, tissu_dominant,
-            # masse]` — dominant = parcelle de plus grande masse hors `diffus`,
-            # masse = Σ des parcelles de surface (densité ∝ masse côté vue). Les
-            # plots sans litière de surface sont OMIS (liste creuse). PURE lecture
-            # (`eco.litiere` est déjà rempli par le tick) → golden NEUTRE.
+            # masse, age_sem]` — dominant = parcelle de plus grande masse hors
+            # `diffus`, masse = Σ des parcelles de surface (densité ∝ masse côté
+            # vue). Les plots sans litière de surface sont OMIS (liste creuse).
+            # `age_sem` (rendu feuillage ⑥, 0.5.6) = ÂGE MOYEN pondéré par la masse
+            # des parcelles de surface : proxy d'ÉTAT DE DÉCOMPO déjà calculé par le
+            # moteur (`Parcelle.age_sem`, semaines depuis dépôt) — la vue assombrit/
+            # désature la litière de feuilles à mesure qu'elle vieillit (dérive vers
+            # l'humus, §6.3). TRANSPORT pur (donnée existante, aucun calcul moteur
+            # nouveau) → golden NEUTRE. PURE lecture (`eco.litiere` déjà rempli par
+            # le tick).
             plots = []
             for r in range(eco.rows):
                 for c in range(eco.cols):
@@ -198,7 +204,12 @@ class SerializeMixin:
                         continue
                     dominant = max(surface, key=lambda p: p.masse)
                     total = sum(p.masse for p in surface)
-                    plots.append([r, c, dominant.tissu, round(total, 4)])
+                    # Âge moyen pondéré par la masse (total > 0 garanti : surface
+                    # ne retient que les parcelles masse > 0). Litière fraîche
+                    # (age ≈ 0) = brun-roux vif ; vieillie, elle fond dans le sol.
+                    age_moy = sum(p.age_sem * p.masse for p in surface) / total
+                    plots.append([r, c, dominant.tissu,
+                                  round(total, 4), round(age_moy, 3)])
             litiere[tile.tile_id] = plots
             # Phéromone d'alarme apienne (⑦, §J, 0.4.1) : liste CREUSE des plots en
             # alarme `[r, c, intensite]` (foyers > 0 seulement). Godot lit l'intensité

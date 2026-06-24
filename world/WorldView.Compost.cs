@@ -25,23 +25,39 @@ namespace Symbiose
 		// sous la vie macro (5) et les plantes (10).
 		private LitterLayer _litterLayer;
 
+		// Litière de FEUILLES au sol (rendu feuillage ⑥·B) : silhouettes de feuilles
+		// MORTES posées à plat, ≠ amas abstraits de LitterLayer. Même bande ZIndex 1
+		// (au-dessus du sol, sous macro/plantes) ; ajouté APRÈS LitterLayer → ses
+		// feuilles se peignent par-dessus les amas terreux du même plot. Lit le MÊME
+		// bloc snapshot `litiere`, mais ne retient que le tissu dominant `feuille`.
+		private LeafLitterLayer _leafLitterLayer;
+
 		// Structures posées affichées (③·C). On garde l'INDEX dans la liste de la
 		// tuile (= `target.structure` attendu par le serveur, qui indexe
 		// eco.structures de CETTE tuile) pour la désignation des gestes (③·D).
 		private readonly List<(string Tile, int R, int C, string Kind,
 							   int Index, CompostStructure Node)> _structs = new();
 
-		// Crée le layer litière (appelé une fois en _Ready, avant le 1er snapshot).
+		// Crée les layers litière (appelés une fois en _Ready, avant le 1er snapshot).
+		// LitterLayer d'abord (amas terreux), LeafLitterLayer ensuite (feuilles
+		// mortes par-dessus, même bande ZIndex 1 → ordre d'ajout = ordre de dessin).
 		private void BuildLitterLayer()
 		{
 			_litterLayer = new LitterLayer { Name = "Litter", ZIndex = 1 };
 			AddWorld(_litterLayer);
+			_leafLitterLayer = new LeafLitterLayer { Name = "LeafLitter", ZIndex = 1 };
+			AddWorld(_leafLitterLayer);
 		}
 
 		// Applique le bloc `litiere` (lecture tolérante : un snapshot pré-0.3.7
-		// n'a pas la clé → pas de litière dessinée, jamais de crash).
-		private void ApplyLitiere(GDict litiere) =>
+		// n'a pas la clé → pas de litière dessinée, jamais de crash). Les deux
+		// layers lisent le MÊME bloc : LitterLayer pose tous les tissus en amas,
+		// LeafLitterLayer ne retient que `feuille` et en fait des silhouettes (⑥).
+		private void ApplyLitiere(GDict litiere)
+		{
 			_litterLayer?.SetLitiere(litiere, _origins);
+			_leafLitterLayer?.SetLitiere(litiere, _origins);
+		}
 
 		// Applique le bloc `structures` : reconstruction pleine. Les anciens nœuds
 		// sont libérés (sauf après RebuildWorld, qui a déjà vidé _objects ET

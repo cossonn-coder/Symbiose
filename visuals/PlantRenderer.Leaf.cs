@@ -97,11 +97,41 @@ namespace Symbiose
 		private const float LeafShapeMinZoom = 4f;
 
 		// ---------------------------------------------------------------------
+		// LITIÈRE AU SOL (⑥, doc §6.3) — silhouette de feuille MORTE posée à plat.
+		// Réutilise EXACTEMENT le dispatch de forme par espèce (DrawShapeBySpecies)
+		// pour que la litière de pommier ait des feuilles de pommier — repli
+		// Elliptique si l'espèce est inconnue (ce qui est le cas en pratique : le
+		// moteur ne trace pas l'espèce d'origine d'une parcelle, §6.3). Trois
+		// différences avec une feuille vivante :
+		//  • POSE À PLAT : le caller passe déjà un (rx,ry) APLATI (calotte réduite) ;
+		//  • VOLUME ≥ 2 valeurs conservé (invariant §1) → DrawVolumeEllipse sous-jacent ;
+		//  • pas de pétiole, pas de croissance (la feuille est détachée et inerte).
+		// PUBLIQUE : appelée par LeafLitterLayer, qui se sert d'un PlantRenderer comme
+		// STYLO (les primitives de dessin sont des méthodes d'instance de CanvasItem).
+		// `species` est passé en paramètre (≠ feuille vivante qui lit _structure) :
+		// la litière n'a pas de structure, juste une espèce présumée.
+		public void DrawLitterLeaf(string species, Vector2 c, float rx, float ry, Color col, int seed)
+		{
+			// (i,j) = graine de jitter : on dérive deux canaux du seed du plot+rang
+			// pour que deux feuilles d'un même amas diffèrent, stable inter-frames.
+			DrawShapeBySpecies(species, c, rx, ry, col, seed & 0xffff, (seed >> 16) & 0xffff);
+		}
+
+		// ---------------------------------------------------------------------
 		// TRACÉ — dispatch par archétype. `c` = centre écran, (rx,ry) = demi-axes
 		// du volume global déjà calculés par Organs.cs (rx = grand axe sud-est).
 		// (i,j) = identité (segment, feuille) → graine déterministe du jitter.
 		// ---------------------------------------------------------------------
 		private void DrawLeafShape(Vector2 c, float rx, float ry, Color col, int i, int j)
+		{
+			// Une feuille VIVANTE lit son espèce dans _structure ; la litière la
+			// passe en argument (DrawLitterLeaf). On factorise le tracé commun.
+			DrawShapeBySpecies(_structure.SpeciesName, c, rx, ry, col, i, j);
+		}
+
+		// Cœur commun du tracé (vivant + litière) : choix d'archétype par espèce,
+		// plancher de rayon, repli LOD, volume, nervures. `species` explicite.
+		private void DrawShapeBySpecies(string species, Vector2 c, float rx, float ry, Color col, int i, int j)
 		{
 			// Plancher de rayon : feuille trop petite → 1 ellipse 1 valeur nue.
 			if (rx < LeafFloorRadiusPx)
@@ -110,7 +140,7 @@ namespace Symbiose
 				return;
 			}
 
-			if (!LeafProfiles.TryGetValue(_structure.SpeciesName, out var prof))
+			if (!LeafProfiles.TryGetValue(species, out var prof))
 				prof = DefaultLeaf;
 
 			// Repli LOD : au dézoom, tout redevient une ellipse volumée simple.

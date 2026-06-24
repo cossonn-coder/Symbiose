@@ -58,8 +58,8 @@ def test_litiere():
     check("la litière du plot du pommier apparaît (1 plot non vide)",
           len(lit) == 1, lit)
     entry = lit[0] if lit else None
-    check("format compact [r, c, tissu, masse]",
-          entry is not None and len(entry) == 4, entry)
+    check("format compact [r, c, tissu, masse, age_sem] (0.5.6)",
+          entry is not None and len(entry) == 5, entry)
     check("le plot exposé = plot-foyer du pommier",
           entry is not None and entry[0] == pr and entry[1] == pc,
           entry and f"exposé={entry[:2]} attendu=[{pr}, {pc}]")
@@ -67,6 +67,11 @@ def test_litiere():
           entry is not None and entry[2] == "feuille", entry and entry[2])
     check("masse de surface > 0", entry is not None and entry[3] > 0.0,
           entry and entry[3])
+    # age_sem (0.5.6) = état de décompo. Litière tout juste déposée → âge 0
+    # (dépôt au tick courant, pas encore vieilli) ; la vue dérive la teinte ∝.
+    check("age_sem présent et ≥ 0 (état de décompo, dérive de teinte côté vue)",
+          entry is not None and isinstance(entry[4], (int, float))
+          and entry[4] >= 0.0, entry and entry[4])
 
     # Les autres tuiles n'ont reçu aucune nécromasse → restent vides (creux).
     autres = {t: v for t, v in snap1["litiere"].items() if t != tree["tile"]}

@@ -157,7 +157,21 @@ from __future__ import annotations
 #       TRANSPORT pur (donnée déjà calculée par la morphogénèse) → golden NEUTRE.
 #       Champ tolérant côté vue (un snapshot pré-0.5.5 émet déjà la clé ; un binaire
 #       plus vieux qui ne l'émettrait pas → leafGrowth = 1 par défaut, pas de pop-in).
-ENGINE_VERSION = "0.5.5"
+# 0.5.6 (rendu feuillage ⑥, chute + litière — DERNIER tronçon du sprint) : le bloc
+#       `litiere` par tuile gagne un 5ᵉ champ par plot → `[r, c, tissu_dominant,
+#       masse, age_sem]`. `age_sem` = ÂGE MOYEN pondéré par la masse des parcelles
+#       de SURFACE (état de décompo, semaines depuis dépôt), donnée DÉJÀ calculée
+#       par le moteur (`Parcelle.age_sem`) → simple TRANSPORT, golden NEUTRE. La vue
+#       rend la litière de FEUILLES (tissu `feuille`) en SILHOUETTES d'espèce
+#       (LeafLitterLayer, repli Elliptique car l'espèce d'origine N'EST PAS traçable
+#       côté moteur — la Parcelle est typée par tissu, pas par espèce, §6.3) et
+#       DÉRIVE leur teinte morte/sèche vers le sol ∝ age_sem (assombrir/désaturer
+#       jusqu'à fondre dans l'humus). L'abscission « casse au pétiole » = pur fait de
+#       rendu (la feuille cesse d'être peinte sur la plante, pas de moignon brun) ;
+#       aucun champ neuf requis pour ça. Schéma ÉTENDU (4 → 5 éléments) : un binaire
+#       pré-0.5.6 émet 4 éléments → la vue retombe sur age_sem = 0 (litière fraîche,
+#       lecture tolérante). Champ optionnel côté vue.
+ENGINE_VERSION = "0.5.6"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les
