@@ -171,9 +171,12 @@ namespace Symbiose
 						Color col = SymptomTint(LeafColor(pal, season, Hash01(13, i, j)));
 						col.A = 0.92f;
 						float r = LeafSizeCm * WorldView.PxPerCmX;
-						// SS② : feuille en 2 valeurs (ombre froide + face sud éclairée)
-						// au lieu d'un aplat — volume sans toucher la silhouette.
-						DrawVolumeEllipse(c, r * 1.15f, r * 0.65f, col);
+						// ② FORME PAR ESPÈCE : la silhouette (ellipse/lancéolée/cordée/
+						// lobée/composée/aiguille) est choisie par espèce dans le
+						// catalogue fermé `LeafProfiles` (PlantRenderer.Leaf.cs). Chaque
+						// sous-élément reste un volume 2 valeurs (E4) ; plancher de rayon
+						// et repli LOD gérés dans DrawLeafShape.
+						DrawLeafShape(c, r * 1.15f, r * 0.65f, col, i, j);
 						// Canaux TEXTURE additifs (sémiologie ③) : criblage ravageurs/
 						// grêle + bords gelés, par-dessus la feuille, stables au hash.
 						DrawLeafDamage(c, r, i, j);

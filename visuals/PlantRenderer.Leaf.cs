@@ -1,0 +1,213 @@
+// SYMBIOSE — PlantRenderer.Leaf.cs (partial de PlantRenderer)
+// FORME DE FEUILLE PAR ESPÈCE (tronçon ②, conception RENDU_FEUILLAGE §2, E3-forme).
+//
+// Trou comblé : jusqu'ici TOUTE feuille était une ellipse générique unique
+// (`DrawVolumeEllipse`, cf. Organs.cs). Ici on choisit une SILHOUETTE par espèce
+// dans un catalogue FERMÉ de 6 archétypes (doc §2.1), dessinée directement en C#
+// (dérogation actée à D10 — la forme de feuille est un fait de RENDU, sans
+// équivalent moteur).
+//
+// Invariants (doc §1, NON négociables) :
+//  • Jamais d'aplat (E4) : chaque sous-élément passe par `DrawVolumeEllipse`
+//    (volume 2 valeurs) — SAUF sous le plancher de rayon, où une mini-feuille
+//    naissante est peinte en 1 valeur nue (le croissant d'ombre serait illisible).
+//  • Déterminisme total : ZÉRO Random. Tout jitter (angle/longueur des lobes et
+//    folioles) dérive du `Hash01(canal, i, j)` stable défini dans Organs.cs.
+//  • Le bois n'est pas teinté par le feuillage : on ne touche que le limbe.
+//
+// Couche B PURE : zéro Python, zéro pont. Seule la FORME (ni nervure ③, ni
+// pétiole ④, ni croissance ⑤). `VeinLighter` est DÉCLARÉ ici mais EXPLOITÉ en ③.
+
+using Godot;
+
+namespace Symbiose
+{
+	public partial class PlantRenderer : Node2D
+	{
+		// --- Catalogue fermé d'archétypes (doc §2.1) -------------------------
+		// Du plus simple au plus composé. Une espèce non mappée → Elliptique.
+		private enum LeafShape
+		{
+			Elliptique, // ellipse actuelle (défaut)              — générique, basilic
+			Lanceolee,  // ellipse très élancée (ratio long/large ↑) — saule, graminées
+			Cordee,     // ellipse + échancrure basale (cœur)     — haricot, lierre
+			Lobee,      // 3-5 lobes = ellipses fusionnées         — vigne, érable, courge
+			Composee,   // N folioles le long d'un rachis          — tomate, frêne, rosier
+			Aciculaire, // trait court épais (aiguille)            — conifères
+		}
+
+		// --- Descripteur de feuille par espèce (doc §2.2) --------------------
+		// Aspect = élancement longueur/largeur (1 = rond, 3 = très étiré).
+		// Count  = nb de lobes (Lobee) ou de folioles (Composee), sinon 0.
+		// VeinLighter = sens du shift de la nervure (③) : DÉCLARÉ ici, PAS encore
+		//               exploité ; ② ne dessine aucune nervure.
+		private readonly record struct LeafProfile(
+			LeafShape Shape, float Aspect, int Count, bool VeinLighter);
+
+		// Table per-espèce EN REGARD de `Palettes` (Organs.cs). Même clé = nom de
+		// CLASSE Python (`species` du snapshot). Mappage initial ; défaut Elliptique
+		// partout ailleurs (jamais bloquant, on enrichit au fil).
+		private static readonly System.Collections.Generic.Dictionary<string, LeafProfile>
+			LeafProfiles = new()
+			{
+				// --- Cultivées potagères --------------------------------------
+				["Tomato"]    = new(LeafShape.Composee,  1.6f, 5, true),  // feuille composée pennée
+				["Pepper"]    = new(LeafShape.Elliptique, 1.7f, 0, true), // limbe simple ovale-lancéolé
+				["Bean"]      = new(LeafShape.Cordee,    1.2f, 3, true),  // foliole large en cœur
+				["Clover"]    = new(LeafShape.Cordee,    1.0f, 3, false), // folioles arrondies (rendu cordé)
+				["Sunflower"] = new(LeafShape.Cordee,    1.2f, 0, false), // grand limbe cordé rugueux
+				["Carrot"]    = new(LeafShape.Composee,  1.4f, 5, true),  // feuillage très découpé
+				["Zucchini"]  = new(LeafShape.Lobee,     1.0f, 5, true),  // grande feuille palmilobée
+				["CornSalad"] = new(LeafShape.Elliptique, 1.6f, 0, true), // rosette de spatules
+				["Garlic"]    = new(LeafShape.Lanceolee, 3.2f, 0, false), // long ruban dressé
+				// --- Compagnes / mellifères / engrais verts -------------------
+				["Yarrow"]    = new(LeafShape.Composee,  1.3f, 5, false), // feuillage plumeux finement divisé
+				["Phacelia"]  = new(LeafShape.Composee,  1.4f, 5, false), // feuille pennatiséquée
+				["Borage"]    = new(LeafShape.Elliptique, 1.5f, 0, false), // grande feuille ovale poilue
+				["Comfrey"]   = new(LeafShape.Lanceolee, 2.4f, 0, false), // grande feuille lancéolée
+				["Mustard"]   = new(LeafShape.Lobee,     1.5f, 3, true),  // feuille lyrée (lobe terminal large)
+				// --- Aromatiques persistantes (Lamiacées evergreen) ----------
+				["Thyme"]     = new(LeafShape.Aciculaire, 3.0f, 0, false), // micro-feuilles linéaires
+				["Lavender"]  = new(LeafShape.Lanceolee, 3.5f, 0, false),  // feuilles étroites gris-vert
+				// --- Sous-arbrisseau acidophile ------------------------------
+				["Vaccinium"] = new(LeafShape.Elliptique, 1.6f, 0, false), // petit limbe ovale
+				// --- Pérennes ligneuses (vergers) ----------------------------
+				["AppleTree"]  = new(LeafShape.Elliptique, 1.5f, 0, true), // limbe ovale denté
+				["Fig"]        = new(LeafShape.Lobee,     1.0f, 5, true),  // grande feuille palmilobée
+				["CherryTree"] = new(LeafShape.Elliptique, 1.9f, 0, true), // limbe ovale-lancéolé
+				["WalnutTree"] = new(LeafShape.Composee,  1.7f, 5, false), // feuille composée pennée
+				["OakTree"]    = new(LeafShape.Lobee,     1.6f, 5, false), // limbe lobé caractéristique
+			};
+		private static readonly LeafProfile DefaultLeaf =
+			new(LeafShape.Elliptique, 1.15f / 0.65f, 0, true); // = proportions de l'ellipse historique
+
+		// Plancher de rayon (doc §1) : sous ce demi-grand-axe ÉCRAN, on retombe sur
+		// UNE ellipse 1 valeur, quelle que soit la forme (lobes/folioles illisibles
+		// à cette taille — mini-feuille naissante). Synergie future avec ⑤.
+		private const float LeafFloorRadiusPx = 3f;
+		// Repli LOD (doc §2.3 encadré) : au-dessous de ce zoom, toute forme retombe
+		// sur Elliptique (la silhouette fine est invisible de loin). Aligné sur le
+		// MinZoom des autres couches détail (MacroLife, LitterLayer).
+		private const float LeafShapeMinZoom = 4f;
+
+		// ---------------------------------------------------------------------
+		// TRACÉ — dispatch par archétype. `c` = centre écran, (rx,ry) = demi-axes
+		// du volume global déjà calculés par Organs.cs (rx = grand axe sud-est).
+		// (i,j) = identité (segment, feuille) → graine déterministe du jitter.
+		// ---------------------------------------------------------------------
+		private void DrawLeafShape(Vector2 c, float rx, float ry, Color col, int i, int j)
+		{
+			// Plancher de rayon : feuille trop petite → 1 ellipse 1 valeur nue.
+			if (rx < LeafFloorRadiusPx)
+			{
+				DrawEllipse(c, rx, ry, col);
+				return;
+			}
+
+			if (!LeafProfiles.TryGetValue(_structure.SpeciesName, out var prof))
+				prof = DefaultLeaf;
+
+			// Repli LOD : au dézoom, tout redevient une ellipse volumée simple.
+			LeafShape shape = WorldView.CurrentZoom < LeafShapeMinZoom
+				? LeafShape.Elliptique : prof.Shape;
+
+			switch (shape)
+			{
+				case LeafShape.Lanceolee:  DrawLanceolee(c, rx, ry, col, prof); break;
+				case LeafShape.Cordee:     DrawCordee(c, rx, ry, col, prof); break;
+				case LeafShape.Lobee:      DrawLobee(c, rx, ry, col, prof, i, j); break;
+				case LeafShape.Composee:   DrawComposee(c, rx, ry, col, prof, i, j); break;
+				case LeafShape.Aciculaire: DrawAciculaire(c, rx, ry, col, prof); break;
+				default:                   DrawVolumeEllipse(c, rx, ry, col); break; // Elliptique
+			}
+		}
+
+		// L'AXE de la feuille à l'écran : on étire la silhouette selon SouthDir()
+		// (même convention d'éclairage/projection que les volumes, Palette.cs) →
+		// la feuille « pointe » vers le sud-projeté, cohérent inter-frames/rotation.
+		private static (Vector2 axis, Vector2 cross) LeafFrame()
+		{
+			Vector2 axis = SouthDir();                       // direction du grand axe
+			Vector2 cross = new Vector2(-axis.Y, axis.X);    // largeur (perpendiculaire)
+			return (axis, cross);
+		}
+
+		// --- Lancéolée : ellipse très élancée (Aspect élevé) -----------------
+		// On ré-amincit le volume historique selon l'Aspect du profil (limbe étroit).
+		private void DrawLanceolee(Vector2 c, float rx, float ry, Color col, LeafProfile p)
+		{
+			float narrow = Mathf.Clamp(1.7f / Mathf.Max(1f, p.Aspect), 0.25f, 1f);
+			DrawVolumeEllipse(c, rx, ry * narrow, col);
+		}
+
+		// --- Cordée : limbe + lobes basaux qui figurent l'échancrure en cœur --
+		// Le limbe principal (volume) + deux petites calottes à la base, écartées
+		// de l'axe → silhouette de cœur. Déterministe, sans hash (forme fixe).
+		private void DrawCordee(Vector2 c, float rx, float ry, Color col, LeafProfile p)
+		{
+			var (axis, cross) = LeafFrame();
+			// Le limbe est un peu raccourci au sommet pour laisser place aux oreilles.
+			DrawVolumeEllipse(c + axis * (ry * 0.15f), rx, ry * 0.9f, col);
+			float ear = ry * 0.5f;
+			Vector2 baseP = c - axis * (ry * 0.45f);          // vers la base (nord)
+			DrawVolumeEllipse(baseP + cross * (rx * 0.35f), ear, ear * 0.8f, col);
+			DrawVolumeEllipse(baseP - cross * (rx * 0.35f), ear, ear * 0.8f, col);
+		}
+
+		// --- Lobée : Count lobes = ellipses fusionnées rayonnant du centre -----
+		// Jitter d'angle/longueur par HASH (canaux 31/37) → stable, pas deux
+		// feuilles identiques mais reproductibles (doc §2.3, philo #3).
+		private void DrawLobee(Vector2 c, float rx, float ry, Color col, LeafProfile p, int i, int j)
+		{
+			var (axis, cross) = LeafFrame();
+			int n = Mathf.Clamp(p.Count, 3, 5);
+			float span = Mathf.Pi * 0.9f;                     // éventail ~160°, ouvert vers le sud
+			float lobeR = rx * 0.55f;                         // chaque lobe ~ moitié du rayon
+			for (int k = 0; k < n; k++)
+			{
+				// angle réparti dans l'éventail + jitter borné au hash
+				float frac = n > 1 ? (float)k / (n - 1) : 0.5f;
+				float ja = (Hash01(31, i, j + k) - 0.5f) * (span / n) * 0.6f;
+				float ang = (frac - 0.5f) * span + ja;
+				Vector2 dir = axis * Mathf.Cos(ang) + cross * Mathf.Sin(ang);
+				float len = lobeR * (0.8f + 0.4f * Hash01(37, i, j + k)); // longueur jittée
+				Vector2 lc = c + dir * len;
+				DrawVolumeEllipse(lc, lobeR * 0.6f, lobeR * 0.45f, col);
+			}
+			// Petit volume central qui soude les lobes (évite la silhouette « étoile »).
+			DrawVolumeEllipse(c, rx * 0.45f, ry * 0.45f, col);
+		}
+
+		// --- Composée : Count folioles = petites ellipses le long d'un rachis --
+		// Le rachis suit l'axe ; les folioles s'opposent par paires, jitter au hash.
+		private void DrawComposee(Vector2 c, float rx, float ry, Color col, LeafProfile p, int i, int j)
+		{
+			var (axis, cross) = LeafFrame();
+			int n = Mathf.Clamp(p.Count, 3, 5);
+			float folR = rx * 0.40f;                          // petite foliole
+			float sideOff = ry * 0.55f;                       // écart latéral au rachis
+			Vector2 baseP = c - axis * (rx * 0.7f);           // pied du rachis (nord)
+			for (int k = 0; k < n; k++)
+			{
+				float frac = (k + 0.5f) / n;
+				Vector2 along = baseP + axis * (rx * 1.4f * frac);
+				float jit = (Hash01(41, i, j + k) - 0.5f) * sideOff * 0.4f;
+				// folioles opposées (gauche/droite), rétrécissant vers le sommet
+				float taper = 1f - 0.35f * frac;
+				DrawVolumeEllipse(along + cross * (sideOff + jit), folR * taper, folR * 0.55f * taper, col);
+				DrawVolumeEllipse(along - cross * (sideOff - jit), folR * taper, folR * 0.55f * taper, col);
+			}
+			// Foliole terminale au bout du rachis.
+			DrawVolumeEllipse(baseP + axis * (rx * 1.45f), folR, folR * 0.6f, col);
+		}
+
+		// --- Aciculaire : trait court épais (aiguille) — 1 valeur tolérée car
+		// trop fine pour un croissant lisible, mais on garde 2 valeurs via le
+		// volume étiré. Aspect élevé → très étroite.
+		private void DrawAciculaire(Vector2 c, float rx, float ry, Color col, LeafProfile p)
+		{
+			float thin = Mathf.Clamp(1.4f / Mathf.Max(1f, p.Aspect), 0.2f, 0.5f);
+			DrawVolumeEllipse(c, rx * 0.85f, ry * thin, col);
+		}
+	}
+}

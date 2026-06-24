@@ -40,7 +40,7 @@ préservé sur TOUS les tronçons** (T5/T6 inclus : transport, pas calcul).
 | # | Tronçon | § doc | Couche | Pont | Exigence | Golden | Statut |
 |---|---------|-------|--------|------|----------|--------|--------|
 | ① (T1) | Couleur du limbe par espèce — étendre la table `Palettes` aux cultivées | §3.1 | B pure | — | E3-couleur | NEUTRE (inchangé `2ab026ad…`) | ✅ |
-| ② (T2) | Forme par espèce — `enum LeafShape`, `LeafProfile`, tracé des 6 archétypes (jitter par hash) | §2 | B pure | — | E3-forme | NEUTRE | ⏳ |
+| ② (T2) | Forme par espèce — `enum LeafShape`, `LeafProfile`, tracé des 6 archétypes (jitter par hash) | §2 | B pure | — | E3-forme | NEUTRE (inchangé `2ab026ad…`) | ✅ |
 | ③ (T3) | Nervures = 3ᵉ valeur — topologie par archétype, sens du shift par espèce | §3.2 | B pure | — | E2 | NEUTRE | ⏳ |
 | ④ (T4) | Insertion — verrou « feuille ⟹ vert » + pétiole vert | §5 | B pure | — | E5 | NEUTRE | ⏳ |
 | ⑤ (T5) | Croissance progressive — `age_weeks` au segment (pont), facteur `leafGrowth` | §4 | B + pont | `ENGINE_VERSION`↑ | E1 | NEUTRE (transport) | ⏳ |
@@ -61,6 +61,21 @@ espèces : 9 cultivées potagères, 5 compagnes/mellifères, 2 aromatiques, 1 ac
 5 pérennes ligneuses. Clé = nom de classe Python (`species` du snapshot). Couleurs
 non vérifiées au F5 (validation visuelle à venir).
 
-Prochain tronçon = **② (T2)** Forme par espèce — `sprints/sprint_rendu_feuillage/02_*.md`
-(à écrire ; cf. doc §2). NB : ② introduira `LeafProfiles[species]` en regard de
-`Palettes` (même fichier `Organs.cs`, vigilance taille du fichier).
+**② (T2) CLOS** (golden inchangé `2ab026ad…`, build C# vert). `enum LeafShape`
+(6 archétypes), `readonly record struct LeafProfile(Shape, Aspect, Count, VeinLighter)`
+et la table `LeafProfiles[species]` (22 espèces) vivent dans un **partial dédié
+`visuals/PlantRenderer.Leaf.cs`** (et **non** dans `Organs.cs` ni `.Palette.cs` :
+`Organs.cs` était déjà à ~250 ldc avec `Palettes`, ajouter forme + tracé l'aurait
+poussé hors seuil → partial autonome, namespace Symbiose). Tracé déterministe des
+6 archétypes par composition de `DrawVolumeEllipse` (jitter d'angle/longueur des
+lobes/folioles par `Hash01` canaux 31/37/41 → zéro Random). Plancher de rayon
+`LeafFloorRadiusPx=3` (1 ellipse 1 valeur sous le seuil) + repli LOD
+`CurrentZoom<4` → `Elliptique`. `Organs.cs` : l'unique `DrawVolumeEllipse` de la
+boucle feuilles remplacé par `DrawLeafShape(c, rx, ry, col, i, j)`. `VeinLighter`
+DÉCLARÉ, pas exploité (réservé ③). Silhouettes lobées/composées non vérifiées au F5.
+
+Prochain tronçon = **③ (T3)** Nervures = 3ᵉ valeur — topologie par archétype, sens
+du shift par espèce (`LeafProfile.VeinLighter` déjà en place), cf. doc §3.2. B pure,
+golden NEUTRE attendu. La topologie de nervure dépend de l'archétype de ② (penninerve
+pour Elliptique/Lanceolee/Cordee, palmée pour Lobee, médiane/foliole pour Composee,
+aucune pour Aciculaire).
