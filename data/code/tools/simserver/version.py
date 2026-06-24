@@ -171,7 +171,22 @@ from __future__ import annotations
 #       aucun champ neuf requis pour ça. Schéma ÉTENDU (4 → 5 éléments) : un binaire
 #       pré-0.5.6 émet 4 éléments → la vue retombe sur age_sem = 0 (litière fraîche,
 #       lecture tolérante). Champ optionnel côté vue.
-ENGINE_VERSION = "0.5.6"
+# 0.5.7 (pots/bacs ④, mobilité + snapshot conteneurs) : nouveau bloc `containers`
+#       au snapshot — liste des pots/bacs posés par le joueur (index implicite =
+#       `target.container`). Par conteneur : id/kind/substrat/volume/mobile/
+#       fond_ouvert/rows/cols, position monde x_cm·y_cm (que `deplacer_pot` change),
+#       `plants` (forme compacte espèce/position/structure/fruits/symptômes pour la
+#       future vue ⑥) et `eco_summary` (scalaires HUD du mini-sol au plot 0,0). Plus
+#       3 verbes de la commande `action` : `poser_pot` / `poser_bac_culture` (pose
+#       par POSITION monde, coût MODÉRÉ — le bac de CULTURE est distinct du bac à
+#       COMPOST `poser_bac` de ⑤), `deplacer_pot` (déplace un pot par index, coût
+#       Vigueur JOUEUR seule, refus si immobile/bac, AUCUN choc plante — philo #2) et
+#       `planter_conteneur` (place une plante du banc-graines DANS un conteneur). PURE
+#       extension de DONNÉES (bloc neuf) + commandes neuves → golden NEUTRE : le smoke
+#       ne pose AUCUN conteneur → `containers: []`. Un binaire pré-0.5.7 ignore le
+#       bloc et répond « verbe inconnu » aux 3 gestes (tolérance pré-0.5.7). VUE C#
+#       différée (tronçon ⑥, Option B) : seul le moteur Python est branché ici.
+ENGINE_VERSION = "0.5.7"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

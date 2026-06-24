@@ -36,7 +36,7 @@ dessous (drainage, racines, microbiome).
 | ① | Substrat data-driven (registre + 6 recettes + `drainage_override`) | `01_substrat.md` | **FAIT** (golden bit-identique) |
 | ② | Conteneur `EcoFields` miniature + tick chimique isolé + boucle | `02_conteneur.md` | **FAIT** (golden bit-identique) |
 | ③ | Plante en pot + confinement racinaire hybride (effet nain) | `03_confinement.md` | **FAIT** (golden bit-identique) |
-| ④ | Mobilité + bacs N×M immobiles + pont snapshot | `04_mobilite_bacs.md` | à faire |
+| ④ | Mobilité + bacs N×M immobiles + pont snapshot | `04_mobilite_bacs.md` | **FAIT** (golden bit-identique, pont 0.5.7) |
 | ⑤ | Couplage fond ouvert + lasagnes (arc complet) | `05_couplage_lasagnes.md` | à faire |
 | ⑥ | Vue Godot (pots/bacs/substrats visibles) — **différé** (Option B) | à écrire | différé |
 
@@ -147,12 +147,76 @@ Couches VÉRIFIÉES : `world→fields` OK, `grep` confirme zéro `import world` 
   test_eau 20/20 ✅ · test_croissance 67/67 ✅ · test_vigueur 136/136 ✅ ·
   test_sim_server 185/186 (baseline inchangée, « pommier pré-âgé » préexiste).
 
-## REPRISE (démarrage à froid)
-Tronçons ① + ② + ③ **FAITS** (golden bit-identique). Le conteneur existe, sa chimie
-isolée ticke, et une plante peut y vivre : `planter_dans` la pose, `Container.tick`
-fait sa chimie + uptake + croissance, l'effet nain ÉMERGE des 3 leviers (réservoir
-réduit + plafond racinaire + signal root-bound). La boucle 17b appelle `ctn.tick`
-(liste vide par défaut → golden NEUTRE).
+## DÉCISION TRANCHÉE en ④ — collision de noms `poser_bac`
+Le geste `poser_bac` EXISTE DÉJÀ (sim/actions/compost.py, décompo ⑤) = poser un
+**bac à COMPOST** (structure de tuile). Le kickoff ④ demandait `poser_pot`/`poser_bac`
+pour les **conteneurs de CULTURE**. Pour ne RIEN casser :
+- façades Python : `poser_pot`, **`poser_bac`** (dans le NOUVEAU `sim/actions/conteneurs.py`),
+  `deplacer_pot`. Ré-exportées par `sim/actions/__init__.py` ; le bac de culture sous
+  l'alias **`poser_bac_culture`** pour ne pas écraser `compost.poser_bac` dans `ACT.*`.
+- verbes du pont : `poser_pot`, **`poser_bac_culture`**, `deplacer_pot`,
+  `planter_conteneur` (≠ `poser_bac` qui reste le bac à compost).
+- clés `COUTS`/`OBJETS_TOUCHES` : `poser_pot`, `poser_bac_culture`, `deplacer_pot`
+  (MODÉRÉ, concept `jardinage_hors_sol` → atténuation neutre 1.0).
 
-PROCHAIN : `04_mobilite_bacs.md` (mobilité `deplacer_pot` coût Vigueur joueur +
-lumière recalculée à la position + bacs N×M immobiles + pont snapshot conteneurs).
+## DÉCISION TRANCHÉE en ④ — version de protocole 0.5.7 (≠ 0.5.4 du kickoff)
+Le kickoff disait « 0.5.3 → 0.5.4 ». Le sprint a AVANCÉ depuis : `ENGINE_VERSION`
+était à **0.5.6** (0.5.4 = bancs d'essai, 0.5.5/0.5.6 = rendu feuillage). On
+incrémente donc à **0.5.7** (prochaine libre). Le test `engine_version` (simserver/
+structures.py) est mis à jour 0.5.6 → 0.5.7.
+
+## Tronçon ④ — état
+**FAIT** (golden bit-identique, pont 0.5.7). Mobilité + bacs N×M + snapshot conteneurs.
+Acquis :
+- `sim/actions/conteneurs.py` (NOUVEAU, 40 LDC) — façades joueur `poser_pot` /
+  `poser_bac` (bac de culture, N×M, immobile, `fond_ouvert` stocké pour ⑤) /
+  `deplacer_pot`. Toutes binaires (coût payé → effet). `deplacer_pot` : refus EN
+  AMONT si `not mobile` (AUCUNE Vigueur), sinon met à jour `x_cm,y_cm` SEULEMENT
+  (philo #2 : zéro écriture plante → lumière recalculée au prochain `tick_chimie`).
+  Liste monde via `game_state.setdefault("containers", [])`.
+- `sim/actions/couts.py` — 3 clés (`poser_pot`/`poser_bac_culture`/`deplacer_pot`,
+  MODÉRÉ) + `OBJETS_TOUCHES` (concept `jardinage_hors_sol`, neutre 1.0).
+- `sim/actions/__init__.py` — ré-exporte `poser_pot`, `poser_bac_culture`
+  (alias de `conteneurs.poser_bac`), `deplacer_pot`. **PAS de cycle** (sim.actions
+  importe `world`, qui importait déjà `sim.growth` ; vérifié `import sim.actions` OK
+  et `compost.poser_bac` préservé).
+- `tools/simserver/serialize.py` — bloc `containers` au snapshot (méthode
+  `_containers_snapshot`) : id/kind/substrat/volume/mobile/fond_ouvert/rows/cols +
+  position monde + `plants` (forme compacte) + `eco_summary` (scalaires plot 0,0).
+  PURE lecture, liste VIDE au smoke → golden NEUTRE.
+- `tools/simserver/conteneurs_route.py` (NOUVEAU, 76 LDC) — routage des 4 verbes
+  conteneurs (extrait de actions.py pour le garder < 350 : actions.py = 328 LDC).
+  Validation bornes (substrat/volume/position/index/espèce) → refus SANS coût.
+  `planter_conteneur` place DIRECTEMENT (pas de succession en pot) via `planter_dans`,
+  consomme la banque-joueur (symétrie `planter` tuile).
+- `tools/simserver/actions.py` — délègue à `route_conteneur`.
+- `tools/simserver/version.py` — `ENGINE_VERSION = "0.5.7"` + note de schéma.
+- `tests/test_mobilite.py` (NOUVEAU) — 7/7 : poser_pot débite Vigueur, bac immobile
+  N×M, deplacer_pot recalcule la lumière (soleil 1.0 → ombre maison 0.617), philo #2
+  (Vigueur joueur débitée + état plante IDENTIQUE avant/après), bac refuse (0 Vigueur),
+  Vigueur insuffisante (pot non déplacé), déterminisme.
+- `tests/simserver/conteneurs.py` (NOUVEAU, section 17) — 20 checks : snapshot
+  `containers` vide à l'init, pose pot/bac (Vigueur + snapshot), refus substrat/volume/
+  index/espèce sans coût, deplacer_pot (position au snapshot), bac refuse, serveur
+  survivant. Câblé dans `tests/test_sim_server.py`.
+
+## Golden re-vérifié après ④ (bit-identique)
+- smoke : `2ab026ad2b3f484777a2a29f804e1a4785ecffd6976fc0058fe0a33dd1498646` ✅
+- population : `6056713d4dd1e2a79964411961909545433f8513a530a2b39151cbe6aabe471b` ✅
+- test_mobilite 7/7 ✅ · test_confinement 6/6 ✅ · test_conteneur 7/7 ✅ ·
+  test_substrat 17/17 ✅ · test_vigueur 136/136 ✅ · test_croissance 67/67 ✅ ·
+  test_sim_server **205/206** (baseline +20 checks conteneurs verts ; le SEUL rouge
+  reste « pommier pré-âgé », préexistant, sans rapport). C# **non concerné** (aucun
+  fichier C# touché : vue différée ⑥, le bloc `containers` est optionnel côté vue).
+
+## REPRISE (démarrage à froid)
+Tronçons ① + ② + ③ + ④ **FAITS** (golden bit-identique, pont 0.5.7). Le joueur peut
+maintenant POSER un pot/bac rempli d'un substrat (`poser_pot`/`poser_bac`, coût
+Vigueur), DÉPLACER un pot (`deplacer_pot`, Vigueur joueur seule, lumière recalculée,
+AUCUN choc plante — philo #2), et les conteneurs sont EXPOSÉS au pont (`containers`
+au snapshot, 4 verbes routés). Les bacs sont immobiles. La liste monde reste VIDE au
+smoke → golden NEUTRE.
+
+PROCHAIN : `05_couplage_lasagnes.md` (bac à FOND OUVERT → couplage tuile dessous :
+drainage→tuile, racines qui descendent lèvent le nain, microbiome/om diffusent ;
++ arc complet lasagnes = litière pré-chargée → décompo confinée → plante nourrie).

@@ -55,6 +55,9 @@ COUTS = {
     "epandre":              FAIBLE,            # restitue le compost mûr au sol → trio humus (§5.3, canal vertueux)
     "poser_ruche":          MODERE,            # pose une ruche (phase planification, ⑥ §H.1)
     "recolter_miel":        HARVEST_VIGUEUR_COST,  # canal récolte (miel → Vigueur, ⑥ §I.2)
+    "poser_pot":            MODERE,            # pose un POT mobile rempli (pots/bacs ④ §4)
+    "poser_bac_culture":    MODERE,            # pose un BAC immobile N×M rempli (pots/bacs ④ §4)
+    "deplacer_pot":         MODERE,            # déplace un pot — effort joueur SEUL (pots/bacs ④ §4)
 }
 
 # Objets STATIQUES touchés par chaque geste (§10.4, terme 2 : technique + outil/
@@ -83,6 +86,9 @@ OBJETS_TOUCHES = {
     "epandre":              ("compostage", "amendement"),
     "poser_ruche":          ("apiculture", "ruche"),
     "recolter_miel":        ("apiculture", "équipement-apicole"),
+    "poser_pot":            ("jardinage_hors_sol", "pot"),     # concept sans état moteur → atténuation neutre 1.0
+    "poser_bac_culture":    ("jardinage_hors_sol", "bac"),
+    "deplacer_pot":         ("jardinage_hors_sol",),
 }
 
 # Atténuations maximales — PLACEHOLDERS NOMMÉS, *calibrage D12.4*. Bornées < 1 pour

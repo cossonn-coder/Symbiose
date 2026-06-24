@@ -281,4 +281,50 @@ class SerializeMixin:
                            "seeds": seeds},
                 "plants": plants, "sprites": sprites, "foragers": foragers,
                 "structures": structures, "litiere": litiere, "alarme": alarme,
-                "weather": weather, "temperature": temperature}
+                "weather": weather, "temperature": temperature,
+                "containers": self._containers_snapshot(gs, saison)}
+
+    def _containers_snapshot(self, gs: dict, saison: str) -> list:
+        """Conteneurs posés par le joueur (pots/bacs ④, 0.5.7). Index implicite =
+        position dans la liste = `target.container` des gestes. Format par conteneur :
+        identité (id/kind/substrat/mobile/fond_ouvert), position monde (x_cm/y_cm,
+        que `deplacer_pot` change → la vue replace le pot), géométrie (rows/cols,
+        volume — pilote l'effet nain) ; `plants` = la/les plante(s) du mini-sol en
+        forme COMPACTE (espèce/position/structure/fruits/symptômes — assez pour la
+        future vue ⑥) ; `eco_summary` = scalaires HUD au plot (0,0) du mini-sol
+        (humidité/NPK/pH/microbiome/structure). PURE lecture (`gs["containers"]` déjà
+        tické par la boucle 17b) → golden NEUTRE : le smoke ne pose aucun conteneur,
+        la liste est VIDE → bloc `[]`. Index = `target.container` (cf. routeur)."""
+        out = []
+        for ctn in gs.get("containers", []):
+            eco = ctn.eco
+            cplants = []
+            for p in ctn.plants:
+                pd = {"species": p.plant_class.__name__, "name": p.name,
+                      "x_cm": p.x_cm, "y_cm": p.y_cm,
+                      "stage": p.current_stage, "stage_name": p.stage.name,
+                      "height_cm": p.current_height,
+                      "dead": not p.is_alive,
+                      "segments": p.structure_to_dict()}
+                if p.is_alive:
+                    pd["leaf_symptoms"] = semiologie.leaf_symptoms(p, eco, saison)
+                    pd["fruits"] = [{"segment": f.segment_id, "maturite": f.maturite,
+                                     "masse": f.masse} for f in p.fruits]
+                cplants.append(pd)
+            out.append({
+                "id": ctn.container_id, "kind": ctn.kind,
+                "substrat": ctn.substrat, "volume": ctn.volume_litres,
+                "x_cm": ctn.x_cm, "y_cm": ctn.y_cm,
+                "mobile": ctn.mobile, "fond_ouvert": ctn.fond_ouvert,
+                "rows": ctn.rows, "cols": ctn.cols,
+                "plants": cplants,
+                "eco_summary": {
+                    "humidite": round(eco.humidite.at_plot(0, 0), 4),
+                    "n": round(eco.n.at_plot(0, 0), 4),
+                    "p": round(eco.p.at_plot(0, 0), 4),
+                    "k": round(eco.k.at_plot(0, 0), 4),
+                    "ph": round(eco.ph.at_plot(0, 0), 4),
+                    "microbiome": round(eco.microbiome.at_plot(0, 0), 4),
+                    "structure": round(eco.structure_sol.at_plot(0, 0), 4)},
+            })
+        return out

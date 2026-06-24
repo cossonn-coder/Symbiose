@@ -20,6 +20,7 @@ from sim import actions as A      # les 10 gestes joueur (façades, sprint Vigue
 from sim import vigueur as V      # état Vigueur joueur (ensure/spend/gain, D11)
 
 from .version import PLANT_EPSILON_CM
+from .conteneurs_route import route_conteneur, VERBES as CONTENEUR_VERBES
 
 
 class ActionsMixin:
@@ -396,6 +397,12 @@ class ActionsMixin:
                          f"compost épandu en ({r},{c}) : {epandu:.2f} "
                          f"(jauge restante {struct.compost_mur:.2f})" if epandu > 0.0
                          else "rien épandu (jauge vide ou Vigueur insuffisante)")
+
+        # Conteneurs (pots/bacs ④, protocole 0.5.7) : routage délégué au module
+        # `conteneurs_route` (garde ce routeur court). Pots/bacs vivent dans la liste
+        # MONDE `gs["containers"]` ; pose par POSITION, déplace/plante par INDEX.
+        if verb in CONTENEUR_VERBES:
+            return route_conteneur(gs, player, verb, target, params, bilan)
 
         return bilan(False, 0.0, 0.0, f"verbe inconnu : {verb!r}")
 

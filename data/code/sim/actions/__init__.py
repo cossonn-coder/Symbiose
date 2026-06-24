@@ -42,6 +42,12 @@ from .ruche import (
     CONCEPT_ABEILLES, SEUIL_EQUIPEMENT, MIEL_VIGUEUR_RATIO, RECOLTE_SANS_EQUIP,
     poser_ruche, equipe, recolter_miel,
 )
+# Conteneurs (pots/bacs ④) : la façade `conteneurs.poser_bac` (BAC DE CULTURE) est
+# ré-exportée sous `poser_bac_culture` pour ne PAS écraser `compost.poser_bac` (BAC
+# À COMPOST) — deux objets distincts, un seul espace de noms `ACT.*`.
+from .conteneurs import (
+    poser_pot, poser_bac as poser_bac_culture, deplacer_pot,
+)
 
 __all__ = [
     "maturite",
@@ -57,4 +63,5 @@ __all__ = [
     "retourner", "epandre",
     "CONCEPT_ABEILLES", "SEUIL_EQUIPEMENT", "MIEL_VIGUEUR_RATIO", "RECOLTE_SANS_EQUIP",
     "poser_ruche", "equipe", "recolter_miel",
+    "poser_pot", "poser_bac_culture", "deplacer_pot",
 ]
