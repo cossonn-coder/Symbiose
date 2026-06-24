@@ -15,8 +15,14 @@
 //    folioles) dérive du `Hash01(canal, i, j)` stable défini dans Organs.cs.
 //  • Le bois n'est pas teinté par le feuillage : on ne touche que le limbe.
 //
-// Couche B PURE : zéro Python, zéro pont. Seule la FORME (ni nervure ③, ni
-// pétiole ④, ni croissance ⑤). `VeinLighter` est DÉCLARÉ ici mais EXPLOITÉ en ③.
+// Couche B PURE : zéro Python, zéro pont. La FORME (②) et les NERVURES (③, doc
+// §3.2) — la 3ᵉ valeur posée APRÈS le volume. Ni pétiole (④), ni croissance (⑤).
+//
+// NERVURES (③) : ce partial gagne la nervation. Choix de localisation — ③ ajoute
+// ~100 ldc (teinte + dispatch + 3 topologies), total ≈ 240 ldc code pur, SOUS le
+// seuil ~350 ; et nervure ∝ archétype (même `LeafProfile`, même `LeafFrame`) →
+// responsabilité cohérente « silhouette + nervation de la feuille ». Pas de
+// partial supplémentaire.
 
 using Godot;
 
@@ -108,8 +114,8 @@ namespace Symbiose
 				prof = DefaultLeaf;
 
 			// Repli LOD : au dézoom, tout redevient une ellipse volumée simple.
-			LeafShape shape = WorldView.CurrentZoom < LeafShapeMinZoom
-				? LeafShape.Elliptique : prof.Shape;
+			bool lod = WorldView.CurrentZoom < LeafShapeMinZoom;
+			LeafShape shape = lod ? LeafShape.Elliptique : prof.Shape;
 
 			switch (shape)
 			{
@@ -119,6 +125,115 @@ namespace Symbiose
 				case LeafShape.Composee:   DrawComposee(c, rx, ry, col, prof, i, j); break;
 				case LeafShape.Aciculaire: DrawAciculaire(c, rx, ry, col, prof); break;
 				default:                   DrawVolumeEllipse(c, rx, ry, col); break; // Elliptique
+			}
+
+			// ③ NERVURES — 3ᵉ valeur posée APRÈS le volume (se lit par-dessus
+			// ombre+lumière). Pas au repli LOD : la silhouette fine est invisible
+			// de loin, une ligne 1 px y serait illisible/du bruit.
+			if (!lod)
+				DrawLeafVeins(c, rx, ry, col, shape, prof, i, j);
+		}
+
+		// ---------------------------------------------------------------------
+		// NERVURES (③, doc §3.2) — la 3ᵉ valeur. Teinte = HueShift LÉGER du limbe
+		// (jamais sa couleur exacte, E2), sens donné par `LeafProfile.VeinLighter`
+		// (true = plus claire) et amplitude par `VeinShift`. Tracé = fines lignes
+		// 1 px NON antialiasées (cohérent pixel-art). Topologie ∝ archétype.
+		// ---------------------------------------------------------------------
+
+		// Amplitude du décalage de teinte de la nervure (lum passé à HueShift).
+		// Léger : la nervure se devine, elle ne barre pas le limbe. Ajustable F5.
+		private const float VeinShift = 0.22f;
+
+		private void DrawLeafVeins(
+			Vector2 c, float rx, float ry, Color limbe, LeafShape shape, LeafProfile p, int i, int j)
+		{
+			// Sens du shift : plus claire (lum>0, vers le chaud) ou plus sombre
+			// (lum<0, vers le froid) — HueShift garde le pixel-art (jamais gris).
+			float lum = p.VeinLighter ? VeinShift : -VeinShift;
+			Color vein = HueShift(limbe, lum);
+
+			switch (shape)
+			{
+				case LeafShape.Lobee:      DrawPalmateVeins(c, rx, ry, vein, p, i, j); break;
+				case LeafShape.Composee:   DrawComposeeVeins(c, rx, ry, vein, p, i, j); break;
+				case LeafShape.Aciculaire: break; // aucune (trop fin, illisible au pixel)
+				default:                   DrawPennateVeins(c, rx, ry, vein, p, i, j); break;
+			}
+		}
+
+		// Une fine ligne 1 px NON antialiasée (le geste de base de toute nervure).
+		private void DrawVein(Vector2 a, Vector2 b, Color col) =>
+			DrawLine(a, b, col, 1f, antialiased: false);
+
+		// --- Penninerve (Elliptique / Lanceolee / Cordee) --------------------
+		// 1 médiane qui suit l'axe + 2-4 latérales obliques par paires opposées,
+		// écartées au HASH (canal 43, zéro Random). Les latérales partent de la
+		// médiane et filent vers le bord, inclinées vers le sommet (sud).
+		private void DrawPennateVeins(Vector2 c, float rx, float ry, Color col, LeafProfile p, int i, int j)
+		{
+			var (axis, cross) = LeafFrame();
+			Vector2 tipS = c + axis * ry;   // sommet (sud)
+			Vector2 tipN = c - axis * ry;   // base   (nord)
+			DrawVein(tipN, tipS, col);      // médiane
+
+			int pairs = 1 + (int)(Hash01(43, i, j) * 2.99f); // 1 à 3 paires → 2-6 latérales
+			for (int k = 1; k <= pairs; k++)
+			{
+				// position le long de la médiane, de la base vers le sommet
+				float t = (float)k / (pairs + 1);            // 0..1
+				Vector2 anchor = tipN.Lerp(tipS, t);
+				// longueur oblique décroissante vers le sommet, jittée au hash
+				float reach = rx * (0.9f - 0.4f * t) * (0.8f + 0.3f * Hash01(47, i, j + k));
+				// oblique : composante latérale + remontée vers le sommet
+				Vector2 obl = (cross + axis * 0.6f);
+				obl = obl.LengthSquared() > 1e-6f ? obl.Normalized() : cross;
+				DrawVein(anchor, anchor + obl * reach, col);
+				DrawVein(anchor, anchor - (cross - axis * 0.6f).Normalized() * reach, col);
+			}
+		}
+
+		// --- Palmée (Lobee) : une nervure par lobe, rayonnant de la BASE -------
+		// Même éventail que `DrawLobee` (span/axe), mais on trace un rayon plein
+		// de la base de la feuille (nord) vers chaque lobe — pas de jitter croisé.
+		private void DrawPalmateVeins(Vector2 c, float rx, float ry, Color col, LeafProfile p, int i, int j)
+		{
+			var (axis, cross) = LeafFrame();
+			int n = Mathf.Clamp(p.Count, 3, 5);
+			float span = Mathf.Pi * 0.9f;                    // = éventail de DrawLobee
+			Vector2 baseP = c - axis * (ry * 0.6f);          // base commune (nord)
+			for (int k = 0; k < n; k++)
+			{
+				float frac = n > 1 ? (float)k / (n - 1) : 0.5f;
+				float ja = (Hash01(31, i, j + k) - 0.5f) * (span / n) * 0.6f; // = jitter de DrawLobee
+				float ang = (frac - 0.5f) * span + ja;
+				Vector2 dir = axis * Mathf.Cos(ang) + cross * Mathf.Sin(ang);
+				DrawVein(baseP, baseP + dir * (rx * 1.05f), col);
+			}
+		}
+
+		// --- Composée : une médiane par foliole (le long du rachis, doc §3.2) --
+		// On reprend la disposition de `DrawComposee` (rachis sur l'axe, folioles
+		// opposées + terminale) et on trace la médiane de chaque foliole.
+		private void DrawComposeeVeins(Vector2 c, float rx, float ry, Color col, LeafProfile p, int i, int j)
+		{
+			var (axis, cross) = LeafFrame();
+			int n = Mathf.Clamp(p.Count, 3, 5);
+			float folR = rx * 0.40f;
+			float sideOff = ry * 0.55f;
+			Vector2 baseP = c - axis * (rx * 0.7f);
+			DrawVein(baseP, baseP + axis * (rx * 1.45f), col); // rachis (nervure centrale)
+			for (int k = 0; k < n; k++)
+			{
+				float frac = (k + 0.5f) / n;
+				Vector2 along = baseP + axis * (rx * 1.4f * frac);
+				float jit = (Hash01(41, i, j + k) - 0.5f) * sideOff * 0.4f; // = jitter de DrawComposee
+				float taper = 1f - 0.35f * frac;
+				Vector2 gC = along + cross * (sideOff + jit);  // centre foliole droite
+				Vector2 dC = along - cross * (sideOff - jit);  // centre foliole gauche
+				// médiane de chaque foliole, orientée du rachis vers son centre.
+				DrawVein(along, gC + (gC - along).Normalized() * folR * taper, col);
+				DrawVein(along, dC + (dC - along).Normalized() * folR * taper, col);
 			}
 		}
 

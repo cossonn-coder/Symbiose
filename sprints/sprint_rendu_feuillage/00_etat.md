@@ -41,7 +41,7 @@ préservé sur TOUS les tronçons** (T5/T6 inclus : transport, pas calcul).
 |---|---------|-------|--------|------|----------|--------|--------|
 | ① (T1) | Couleur du limbe par espèce — étendre la table `Palettes` aux cultivées | §3.1 | B pure | — | E3-couleur | NEUTRE (inchangé `2ab026ad…`) | ✅ |
 | ② (T2) | Forme par espèce — `enum LeafShape`, `LeafProfile`, tracé des 6 archétypes (jitter par hash) | §2 | B pure | — | E3-forme | NEUTRE (inchangé `2ab026ad…`) | ✅ |
-| ③ (T3) | Nervures = 3ᵉ valeur — topologie par archétype, sens du shift par espèce | §3.2 | B pure | — | E2 | NEUTRE | ⏳ |
+| ③ (T3) | Nervures = 3ᵉ valeur — topologie par archétype, sens du shift par espèce | §3.2 | B pure | — | E2 | NEUTRE (inchangé `2ab026ad…`) | ✅ |
 | ④ (T4) | Insertion — verrou « feuille ⟹ vert » + pétiole vert | §5 | B pure | — | E5 | NEUTRE | ⏳ |
 | ⑤ (T5) | Croissance progressive — `age_weeks` au segment (pont), facteur `leafGrowth` | §4 | B + pont | `ENGINE_VERSION`↑ | E1 | NEUTRE (transport) | ⏳ |
 | ⑥ (T6) | Chute + litière — abscission au pétiole, semis de litière typée au sol | §6 | B + pont | `ENGINE_VERSION`↑ | E5bis | NEUTRE (transport) | ⏳ |
@@ -74,8 +74,20 @@ lobes/folioles par `Hash01` canaux 31/37/41 → zéro Random). Plancher de rayon
 boucle feuilles remplacé par `DrawLeafShape(c, rx, ry, col, i, j)`. `VeinLighter`
 DÉCLARÉ, pas exploité (réservé ③). Silhouettes lobées/composées non vérifiées au F5.
 
-Prochain tronçon = **③ (T3)** Nervures = 3ᵉ valeur — topologie par archétype, sens
-du shift par espèce (`LeafProfile.VeinLighter` déjà en place), cf. doc §3.2. B pure,
-golden NEUTRE attendu. La topologie de nervure dépend de l'archétype de ② (penninerve
-pour Elliptique/Lanceolee/Cordee, palmée pour Lobee, médiane/foliole pour Composee,
-aucune pour Aciculaire).
+**③ (T3) CLOS** (golden inchangé `2ab026ad…`, build C# vert). Les nervures vivent
+dans le **même partial `visuals/PlantRenderer.Leaf.cs`** (choix signalé : +~100 ldc →
+201 ldc code pur mesuré par `tools/compte_ldc.py`, SOUS le seuil 350 ; responsabilité
+cohérente « silhouette + nervation »). 3ᵉ valeur posée APRÈS le volume : teinte =
+`HueShift(limbe, ±VeinShift)` selon `LeafProfile.VeinLighter` (true=plus claire),
+constante `VeinShift=0.22f` (ajustable F5). Tracé = `DrawVein` (lignes 1 px,
+`antialiased: false`). Topologie par archétype : penninerve (médiane + 1-3 paires
+latérales obliques, écartement au hash canal 43/47) pour Elliptique/Lanceolee/Cordee ;
+palmée (rayons de la base, mêmes angles/jitter que `DrawLobee` canal 31) pour Lobee ;
+rachis + médiane par foliole (mêmes positions que `DrawComposee` canal 41) pour
+Composee ; AUCUNE pour Aciculaire. Plancher respecté : `DrawLeafShape` retourne avant
+les nervures sous `LeafFloorRadiusPx`, et repli LOD (`CurrentZoom<4`) → pas de nervure
+(ligne 1 px illisible de loin). `VeinLighter` enfin exploité. Pétiole (④), croissance
+(⑤) intacts.
+
+Prochain tronçon = **④ (T4)** Insertion — verrou « feuille ⟹ vert » + pétiole vert,
+cf. doc §5. B pure, golden NEUTRE attendu.
