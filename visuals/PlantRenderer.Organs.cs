@@ -14,7 +14,16 @@ namespace Symbiose
 {
 	public partial class PlantRenderer : Node2D
 	{
-		private const float LeafMaxThickCm = 1.6f; // au-delà = bois structurel, nu
+		// VERROU « feuille ⟹ segment rendu vert » (④, doc §5.2). Ce seuil DOIT rester
+		// ≤ au point de bascule vert→olive de la rampe de lignification (Palette.cs) :
+		// `WoodRamp` quitte le vert-tendre quand `Lignification = ThicknessCm /
+		// LignifyFullCm` atteint 0.5, soit ThicknessCm = LignifyFullCm * 0.5 = 1.5 cm.
+		// Au-delà de 1.5 cm un segment commence à virer olive — il ne serait PLUS vert.
+		// On cale donc LeafMaxThickCm = 1.5 (et non l'ancien 1.6, qui laissait la bande
+		// [1.5, 1.6] feuillue alors qu'elle commençait à olivir : violation discrète de
+		// l'invariant E5). Apex toujours vert pur (Lignification=0). Si LignifyFullCm
+		// bouge un jour, ré-aligner ce seuil sur LignifyFullCm * 0.5.
+		private const float LeafMaxThickCm = 1.5f; // au-delà = bois structurel, nu
 		private const float LeafSpacingCm = 11f;   // une feuille tous les ~11 cm
 		private const float LeafOffsetCm = 7f;     // déport latéral p/r à l'axe
 		private const float LeafSizeCm = 7f;       // demi-grandeur d'une feuille
@@ -171,6 +180,12 @@ namespace Symbiose
 						Color col = SymptomTint(LeafColor(pal, season, Hash01(13, i, j)));
 						col.A = 0.92f;
 						float r = LeafSizeCm * WorldView.PxPerCmX;
+						// ④ PÉTIOLE (doc §5.3) — court trait vert reliant le point
+						// d'insertion sur l'axe (p) au limbe (c). Tracé AVANT le limbe :
+						// le limbe se pose dessus, le pétiole n'affleure qu'à sa base
+						// (l'émergence se lit, la feuille n'est pas « posée dans le vide »).
+						Vector2 insert = Iso(p.X - collet.X, p.Y - collet.Y, p.Z);
+						DrawPetiole(insert, c, s);
 						// ② FORME PAR ESPÈCE : la silhouette (ellipse/lancéolée/cordée/
 						// lobée/composée/aiguille) est choisie par espèce dans le
 						// catalogue fermé `LeafProfiles` (PlantRenderer.Leaf.cs). Chaque
@@ -304,6 +319,32 @@ namespace Symbiose
 				return sampled;
 			}
 			return tips;
+		}
+
+		// ④ PÉTIOLE (doc §5.3) — court trait de 1-2 px reliant le point d'insertion
+		// (`insert`, sur l'axe du rameau) au limbe (`leaf`). COULEUR = teinte verte du
+		// RAMEAU LOCAL via la rampe au point d'insertion : `WoodRamp(Lignification(s))`.
+		// JAMAIS brune par construction — l'invariant ④ garantit que tout segment
+		// feuillu reste sous le point de bascule vert→olive (LeafMaxThickCm ≤
+		// LignifyFullCm*0.5), donc cette teinte est vert-tendre→olive, pas brune.
+		// ORIENTATION = celle déjà calculée (déport `LeafOffsetCm`, axe rameau →
+		// extérieur) : c'est exactement le vecteur insert→leaf. C'est aussi le futur
+		// POINT DE RUPTURE de l'abscission (⑥, doc §6.2) : la feuille tombée casse ici.
+		//
+		// Pleine taille en attendant ⑤ : le facteur de croissance `leafGrowth` (§4)
+		// arrivera en ⑤ et allongera le pétiole AVEC la feuille. Le branchement est
+		// prêt — il suffira d'interpoler `petTip` sur le segment insert→leaf par
+		// `leafGrowth`. Ici on relie pleinement (rendu cohérent sans pré-implémenter ⑤).
+		private void DrawPetiole(Vector2 insert, Vector2 leaf, Segment s)
+		{
+			Color green = WoodRamp(Lignification(s)); // vert local, jamais brun (invariant ④)
+			green.A = 0.95f;
+			// Largeur 1-2 px selon le zoom (pixel-art : entier, jamais antialiasé).
+			float w = WorldView.CurrentZoom >= LeafShapeMinZoom ? 2f : 1f;
+			// On s'arrête un peu avant le centre du limbe : le limbe (dessiné juste
+			// après) recouvre la jonction, seule la base du pétiole reste visible.
+			Vector2 petTip = insert.Lerp(leaf, 0.75f);
+			DrawLine(insert, petTip, green, w, antialiased: false);
 		}
 
 		// Marques de TEXTURE sur une feuille (canaux additifs, ③), par-dessus le

@@ -42,7 +42,7 @@ préservé sur TOUS les tronçons** (T5/T6 inclus : transport, pas calcul).
 | ① (T1) | Couleur du limbe par espèce — étendre la table `Palettes` aux cultivées | §3.1 | B pure | — | E3-couleur | NEUTRE (inchangé `2ab026ad…`) | ✅ |
 | ② (T2) | Forme par espèce — `enum LeafShape`, `LeafProfile`, tracé des 6 archétypes (jitter par hash) | §2 | B pure | — | E3-forme | NEUTRE (inchangé `2ab026ad…`) | ✅ |
 | ③ (T3) | Nervures = 3ᵉ valeur — topologie par archétype, sens du shift par espèce | §3.2 | B pure | — | E2 | NEUTRE (inchangé `2ab026ad…`) | ✅ |
-| ④ (T4) | Insertion — verrou « feuille ⟹ vert » + pétiole vert | §5 | B pure | — | E5 | NEUTRE | ⏳ |
+| ④ (T4) | Insertion — verrou « feuille ⟹ vert » + pétiole vert | §5 | B pure | — | E5 | NEUTRE (inchangé `2ab026ad…`) | ✅ |
 | ⑤ (T5) | Croissance progressive — `age_weeks` au segment (pont), facteur `leafGrowth` | §4 | B + pont | `ENGINE_VERSION`↑ | E1 | NEUTRE (transport) | ⏳ |
 | ⑥ (T6) | Chute + litière — abscission au pétiole, semis de litière typée au sol | §6 | B + pont | `ENGINE_VERSION`↑ | E5bis | NEUTRE (transport) | ⏳ |
 
@@ -89,5 +89,30 @@ les nervures sous `LeafFloorRadiusPx`, et repli LOD (`CurrentZoom<4`) → pas de
 (ligne 1 px illisible de loin). `VeinLighter` enfin exploité. Pétiole (④), croissance
 (⑤) intacts.
 
-Prochain tronçon = **④ (T4)** Insertion — verrou « feuille ⟹ vert » + pétiole vert,
-cf. doc §5. B pure, golden NEUTRE attendu.
+**④ (T4) CLOS** (golden inchangé `2ab026ad…`, build C# vert). Deux gestes, couche B
+pure dans `visuals/PlantRenderer.Organs.cs`.
+
+(a) **VERROU « feuille ⟹ vert »** : les deux seuils n'étaient **PAS strictement
+cohérents** avant. `IsLeafy` testait `ThicknessCm ≤ LeafMaxThickCm = 1.6` ; or la
+rampe `WoodRamp` (Palette.cs) quitte le vert-tendre dès `Lignification = ThicknessCm
+/ LignifyFullCm = 0.5`, soit **1.5 cm**. La bande [1.5, 1.6] cm était donc feuillue
+tout en commençant à olivir — violation discrète d'E5. Resserré `LeafMaxThickCm =
+1.5f` (= `LignifyFullCm * 0.5`), avec commentaire WHY au cœur du code (règle de
+ré-alignement si `LignifyFullCm` bouge). Apex toujours vert pur (Lignification=0).
+
+(b) **PÉTIOLE vert** : nouvelle méthode `DrawPetiole(insert, leaf, s)` appelée dans
+la boucle feuilles, AVANT le tracé du limbe (le limbe recouvre la jonction). Couleur
+= `WoodRamp(Lignification(s))` = teinte verte du rameau LOCAL au point d'insertion,
+**jamais brune** par l'invariant (a). Orientation = vecteur insert→leaf (= déport
+`LeafOffsetCm`, axe rameau → extérieur). Largeur 1 px (<zoom 4) ou 2 px (≥4), non
+antialiasé. Trait jusqu'à 75 % vers le limbe (la base reste visible). **Point de
+rupture de l'abscission (⑥)**. Pleine taille en attendant ⑤ : branchement `leafGrowth`
+préparé (commentaire = interpoler `petTip` par le facteur) mais NON pré-implémenté.
+
+Taille `Organs.cs` ≈ 260 ldc code pur (`tools/compte_ldc.py`), sous le seuil 350.
+Croissance (⑤) et chute (⑥) intactes. F5 non vérifié (validation visuelle Nico).
+
+Prochain tronçon = **⑤ (T5)** Croissance progressive — `age_weeks` au segment (pont,
+`ENGINE_VERSION`↑), facteur `leafGrowth ∈ [0,1]` qui multiplie le rayon du limbe ET
+allonge le pétiole (branchement préparé en ④), cf. doc §4. B + pont, golden NEUTRE
+(transport pur). ⑤ et ⑥ partagent le re-bump → regrouper si faits dans la foulée.
