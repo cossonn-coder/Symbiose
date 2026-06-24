@@ -1,4 +1,4 @@
-# SS² Rendu pixel-art — Palette + Sol (état partagé)
+# 🏁 SS² RENDU PIXEL-ART — CLOS (Palette + Sol)
 
 > Sous-sprint **②** du cap rendu pixel-art 16-bit (Chrono Trigger).
 > Conception figée : `docs/conception/CONCEPTION_RENDU_PIXELART.md` §5/§7/§8.
@@ -39,9 +39,54 @@ La partie PLANTES de SS② Palette est **déjà faite** (commit `23b5613`,
 | Tronçon | Sujet | État |
 |---------|-------|------|
 | T1 | Palette SNES ~24 couleurs centrale + rampe branches sur `AgeWeeks` | ✅ fait |
-| T2 | Texture sol pré-cuite (relief sud + grain, 4 orientations D35) | ⏳ à faire |
+| T2 | Texture sol pré-cuite (relief sud + grain, 4 orientations D35) | ✅ fait |
 
 ## §REPRISE
+
+### T2 — fait (non commité, Nico commit) — CLÔT LE SPRINT
+- **`world/SolTexture.cs` créé** : `internal static class SolTexture`, cuit le
+  losange de sol en UNE passe via `BakeLozenge(Color soil, int orientation)` →
+  `ImageTexture` ~39×20 px. Contenu : (1) **relief lumière-sud** — `lum` ∝
+  projection signée du pixel sur l'axe nord→sud-MONDE, passée à un **`HueShift`
+  HSV répliqué** de `PlantRenderer.Palette.cs` (mêmes `WarmHue`/`CoolHue` et
+  forces → cohérence chromatique sol↔plantes) ; sud = chaud/clair, nord =
+  froid/sombre. (2) **grain dithering 3 valeurs** — `Hash01(2,x,y)` quantifié
+  −1/0/+1 (même mix xorshift que `PlantRenderer.Hash01`, **zéro Random**),
+  faible amplitude. Hors losange (`|x/hw|+|y/hh|>1`) → **alpha 0**.
+- **Amplitudes (à régler F5)** : `ReliefAmp=0.22`, `GrainStep=0.05`.
+- **Méthode grain RETENUE = hash pixel** (pas Bayer 4×4) : sur 39×20 px un Bayer
+  régulier quadrillerait visiblement ; le hash donne un grain désordonné mais
+  rejouable. À arbitrer F5 si Bayer préféré (commenté dans le fichier).
+- **4 orientations D35** : `SolTexture.SouthDir(orientation)` rejoue le quart de
+  tour linéaire `(dx,dy)→(dy,−dx)` + projection iso SANS muter l'orientation
+  globale de la vue (effet de bord écarté). Le bombé suit donc le sud du JARDIN.
+- **Approche nœud RETENUE = `Sprite2D` par plot** (pas Polygon2D texturé) :
+  centrage auto sur la Position, aucun UV losange à mapper → le plus direct.
+  `TextureFilter = Nearest` sur chaque sprite (invariant).
+- **Cuisson CACHÉE** : `WorldView.Monde.cs` ajoute `_soilTexCache` (clé
+  `(soil, _orientation)`) + helper `GroundTexture(soil)` → ≤ 4 sols × 4 orient =
+  16 cuissons sur toute la session, jamais une par plot ni recuite à chaque
+  rotation. Cache = champ d'instance → survit à `RebuildWorld`.
+- **`BuildGround` recâblé** (surgical) : `MakeLozenge` remplacé par un `Sprite2D`
+  portant `GroundTexture(soilName)`, positionné comme avant (`WorldToScreen`).
+  **Damier ±5 % conservé** via `Modulate` par plot (texture partagée). Boussole,
+  cardinaux, maison, ombre : INCHANGÉS. `MakeLozenge` conservé (code non jeté,
+  désormais inutilisé, **0 warning** au build — la SDK Godot ne le signale pas).
+- **Golden INCHANGÉ** : `2ab026ad…` (couche B pure, moteur Python non touché).
+- **`dotnet build` VERT** : 0 erreur, 0 warning.
+
+### Verdict F5 attendu (Nico) — T2
+Le sol n'est plus un aplat : chaque plot montre un **léger bombé** (sud plus
+clair/chaud, nord plus sombre/froid) ET un **grain** de terre. Au quart-de-tour
+(D35) le bombé **suit le sud du jardin** (comme la maison), il ne reste pas collé
+à l'écran. Les 3 types de sol restent distincts ; pas de carré opaque hors
+losange. À régler éventuellement : `ReliefAmp`/`GrainStep` (amplitudes), choix
+hash vs Bayer pour le grain. Verser tout défaut en dette ciblée.
+
+### Reste à faire à la CLÔTURE (Nico, au commit)
+- Journal : entrée `journal/NN_2026-…_sprint-rendu-pixelart-ss2-CLOS.md` + index.
+- Mémoire : MAJ `project_rendu_pixelart.md` (SS² CLOS : sol + palette).
+- Commit (ex. `feat(rendu) : T2 sol texturé relief+grain 4 orientations — SS² CLOS`).
 
 ### T1 — fait (non commité, Nico commit)
 - **`visuals/Palette16.cs` créé** : `internal static class Palette16`, **27 couleurs**

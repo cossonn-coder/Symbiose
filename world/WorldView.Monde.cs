@@ -39,6 +39,14 @@ namespace Symbiose
 		// elle arrivera en overlay heatmap (tranche 5), on ne la réinvente pas.
 		private static readonly Color OmbreColor = Palette16.Ombre;
 
+		// Cache des textures de sol cuites (T2) : clé = (type de sol, orientation
+		// D35). Rempli paresseusement par GroundTexture et réutilisé par tous les
+		// plots ⇒ ≤ 4 sols × 4 orient = 16 cuissons au total sur toute la session,
+		// jamais une par plot ni par rotation. Persiste à travers RebuildWorld
+		// (champ d'instance, non re-créé par la reconstruction du sol).
+		private readonly System.Collections.Generic.Dictionary<(string, int), ImageTexture>
+			_soilTexCache = new();
+
 		private Node2D _house;     // pour le mode transparent (touche H)
 		// Ombre maison ANIMÉE (volet C) : le polygone est recalculé quand le
 		// soleil bouge — paramètres gardés en champs pour ne pas relire le GDict.
@@ -63,20 +71,35 @@ namespace Symbiose
 				float oy = (float)t["origin_y_cm"].AsDouble();
 				int rows = t["rows"].AsInt32();
 				int cols = t["cols"].AsInt32();
-				Color soil = SoilColor(t["soil"].AsString());
+				string soilName = t["soil"].AsString();
+				// Texture cuite (relief sud + grain), PARTAGÉE par tous les plots
+				// de ce type sous l'orientation courante (T2). Cuisson paresseuse
+				// et CACHÉE : ≤ 4 sols × 4 orient = 16 textures au total, jamais
+				// recuites à chaque rotation (cf. GroundTexture).
+				ImageTexture tex = GroundTexture(soilName);
 
 				for (int r = 0; r < rows; r++)
 					for (int c = 0; c < cols; c++)
 					{
-						// Centre du plot en cm monde → centre du losange écran.
+						// Centre du plot en cm monde → centre du sprite écran.
 						float cx = ox + (c + 0.5f) * PlotCm;
 						float cy = oy + (r + 0.5f) * PlotCm;
-						// Damier subtil (±5 %) : rend la grille lisible sans
-						// dessiner de bordures (pixel art sobre).
-						var poly = MakeLozenge((r + c) % 2 == 0
-							? soil : soil.Darkened(0.05f));
-						poly.Position = WorldToScreen(cx, cy);
-						ground.AddChild(poly);
+						// Sprite2D plutôt que Polygon2D texturé (T2) : centrage
+						// automatique sur la Position, pas d'UV à mapper sur le
+						// losange — le plus direct pour poser la texture cuite.
+						var sp = new Sprite2D
+						{
+							Texture = tex,
+							TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+							Position = WorldToScreen(cx, cy),
+							// Damier subtil (±5 %) appliqué par plot via Modulate :
+							// la texture reste partagée (pixel art sobre, sans
+							// bordures). L'effet d'avant (Darkened 0.05) conservé.
+							Modulate = (r + c) % 2 == 0
+								? Colors.White
+								: new Color(0.95f, 0.95f, 0.95f, 1f),
+						};
+						ground.AddChild(sp);
 						nPlots++;
 					}
 			}
@@ -112,6 +135,23 @@ namespace Symbiose
 			"sable"  => SableColor,
 			_        => SolInconnu,
 		};
+
+		// Texture de sol cuite (relief sud + grain) pour un type de sol sous
+		// l'orientation D35 COURANTE (_orientation). Cachée par (sol, orient) :
+		// la 1ʳᵉ demande d'un couple cuit l'image, les suivantes la réutilisent —
+		// la rotation rappelle BuildGround mais ne recuit que les couples encore
+		// absents du cache. La direction « sud » du relief dépend de l'orientation
+		// (cf. SolTexture.SouthDir) : le bombé suit le sud du jardin, pas l'écran.
+		private ImageTexture GroundTexture(string soil)
+		{
+			var key = (soil, _orientation);
+			if (!_soilTexCache.TryGetValue(key, out var tex))
+			{
+				tex = SolTexture.BakeLozenge(SoilColor(soil), _orientation);
+				_soilTexCache[key] = tex;
+			}
+			return tex;
+		}
 
 		// Losange iso 2:1 d'un plot, centré sur (0,0) : ±TileWPx/2 px en x,
 		// ±TileHPx/2 en y (sommets nord/est/sud/ouest).
