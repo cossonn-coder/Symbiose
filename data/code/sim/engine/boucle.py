@@ -381,6 +381,19 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
                 f"stress={stress_avg:.3f}"
             )
 
+        # 17b. Conteneurs (sprint pots/bacs ②) — pots/bacs posés par le joueur,
+        # chacun un mini-sol `EcoFields` qui ticke SA chimie ISOLÉE (drainage du
+        # substrat, décompo de la litière pré-chargée, pH/structure/soil_memory,
+        # lumière à sa position). APRÈS la boucle des tuiles (la maison du monde et
+        # la météo du tick sont prêtes), AVANT la couche Vigueur joueur / snapshot.
+        # **No-op STRICT si la liste est vide** (le smoke ne pose AUCUN conteneur) :
+        # `for` sur `[]` → zéro écriture → golden NEUTRE. Déterministe : ordre
+        # d'insertion de la liste, zéro RNG.
+        for ctn in self.game_state.get("containers", []):
+            ctn.tick_chimie(saison,
+                            house=self.game_state.get("house"),
+                            nebulosite=nebul)
+
         sc = self.game_state.get("scores", {})
         if any(sum(v.values()) > 0 for v in sc.values()):
             for pid, s in sc.items():

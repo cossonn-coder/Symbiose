@@ -161,10 +161,20 @@ TISSU = {
     "herbace": (0.15,           0.35,           0.35),
     "fruit":   (0.28,           0.20,           0.50),
     "bois":    (0.02,           0.55,           0.10),
+    # `substrat` usé de culture de champignons (sprint pots/bacs ②, substrat
+    # `mycelium_use`) : C-riche pré-digéré par le mycélium → décompo LENTE (entre
+    # le bois et l'herbacé) mais déjà bien humifiée. Membre de `FAIM_N_TISSUS`
+    # → immobilise l'azote tant qu'il est frais (faim d'azote initiale), PUIS se
+    # minéralise lentement (§2 : « faim d'azote initiale forte PUIS libération »).
+    # AJOUT golden-NEUTRE : aucune parcelle `substrat` n'existe dans le smoke
+    # (seul un conteneur `mycelium_use` en pose, et le smoke n'en pose aucun).
+    "substrat": (0.04,          0.45,           0.20),
 }
 # Ordre d'itération STABLE (déterminisme philo #3 : jamais dépendre de l'ordre
-# d'insertion des dépôts). La fusion par tissu garantit ≤ 6 parcelles/plot.
-TISSU_ORDER = ("diffus", "feuille", "fleur", "herbace", "fruit", "bois")
+# d'insertion des dépôts). La fusion par tissu garantit ≤ 7 parcelles/plot.
+# `substrat` placé EN FIN (après `bois`) : il n'apparaît que dans les mini-sols de
+# conteneur, jamais sur une tuile → l'ordre des tissus tuile est inchangé (golden).
+TISSU_ORDER = ("diffus", "feuille", "fleur", "herbace", "fruit", "bois", "substrat")
 
 LEACHING_LOSS    = 0.999   # lessivage nutriments (perte fertilite/semaine)
 BIOMASS_EXPORT   = 0.20    # fraction exportée à la récolte (le reste = nécromasse)
@@ -337,6 +347,7 @@ NPK_RELEASE = {
     "herbace": {"N": 0.45, "P": 0.25, "K": 0.30},   # 1.00 — tiges molles
     "fruit":   {"N": 0.30, "P": 0.25, "K": 0.45},   # 1.00 — potasse de fructification
     "bois":    {"N": 0.15, "P": 0.25, "K": 0.20},   # 0.60 — ligneux : capte peu (immobilisation)
+    "substrat":{"N": 0.20, "P": 0.25, "K": 0.25},   # 0.70 — substrat usé : pauvre, capte peu (faim d'azote)
     "humus":   {"N": 0.40, "P": 0.30, "K": 0.30},   # 1.00 — om_active/stable mélangés
 }
 

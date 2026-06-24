@@ -34,7 +34,7 @@ dessous (drainage, racines, microbiome).
 | # | Sujet | Kickoff | État |
 |---|-------|---------|------|
 | ① | Substrat data-driven (registre + 6 recettes + `drainage_override`) | `01_substrat.md` | **FAIT** (golden bit-identique) |
-| ② | Conteneur `EcoFields` miniature + tick chimique isolé + boucle | `02_conteneur.md` | à faire |
+| ② | Conteneur `EcoFields` miniature + tick chimique isolé + boucle | `02_conteneur.md` | **FAIT** (golden bit-identique) |
 | ③ | Plante en pot + confinement racinaire hybride (effet nain) | `03_confinement.md` | à faire |
 | ④ | Mobilité + bacs N×M immobiles + pont snapshot | `04_mobilite_bacs.md` | à faire |
 | ⑤ | Couplage fond ouvert + lasagnes (arc complet) | `05_couplage_lasagnes.md` | à faire |
@@ -63,24 +63,59 @@ dessous (drainage, racines, microbiome).
 > rouge préexistant « pommier pré-âgé — 0 fruits @ S52 », sans rapport avec le sprint) ;
 > reste 185/186 après ① → AUCUNE régression introduite.
 
+## DÉCISION TRANCHÉE en ② — cinétique du tissu `substrat`
+Le tissu `substrat` (recette `mycelium_use`) était dans `FAIM_N_TISSUS` mais ABSENT
+de `TISSU`/`TISSU_ORDER` → un mini-sol qui ticke la décompo aurait planté
+(`ValueError TISSU_ORDER.index` + `KeyError TISSU["substrat"]`).
+
+**Choix : on lui DONNE une cinétique de décompo** (option « décompose », pas
+« écarté »). Justification — le §2 dit explicitement « faim d'azote initiale forte
+**PUIS libération** » : pour se libérer, `substrat` DOIT se minéraliser, donc il lui
+faut une cinétique. L'écarter du balayage l'aurait laissé inerte → faim d'azote
+éternelle, en contradiction avec le §2.
+
+Implémentation (3 ajouts dans `fields/ecofields/constants.py`) :
+- `TISSU["substrat"] = (0.04, 0.45, 0.20)` — C-riche pré-digéré : décompo LENTE
+  (entre bois 0.02 et herbacé 0.15), déjà bien humifiée.
+- `TISSU_ORDER` += `"substrat"` **EN FIN** (après `bois`) — n'apparaît que dans les
+  mini-sols de conteneur, jamais sur une tuile → ordre des tissus tuile inchangé.
+- `NPK_RELEASE["substrat"] = {N:0.20,P:0.25,K:0.25}` — pauvre (somme 0.70, capte
+  peu, cohérent avec la faim d'azote).
+**Golden NEUTRE garanti** : aucune parcelle `substrat` n'existe dans le smoke (seul
+un conteneur `mycelium_use` en pose, et le smoke n'en pose aucun) → hash inchangé.
+
+## Tronçon ② — état
+**FAIT** (golden bit-identique). Acquis :
+- `world/container.py` (NOUVEAU, 83 LDC) — `@dataclass Container` (champs §1 +
+  méthode `tick_chimie`), fabrique `make_container(kind, substrat, volume, x, y, *,
+  rows, cols, tile_eco, tile_rc, container_id)`, helpers `_appliquer_recette`
+  (remplit struct/ph/npk/micro + dépose `litiere_precharge`) et `_heriter_tuile`
+  (copie PROFONDE du plot tuile pour `terre_jardin`, isolation des `Parcelle`).
+  `tick_chimie` = ordre boucle ALLÉGÉ (lumière à la position+ombre maison →
+  thermique → hydrologie `drainage_override=recette.drainage` → décompo → structures
+  no-op → pH(0) → structure → diffusion → soil_memory). PAS d'uptake/plante (③).
+- `world/__init__.py` — ré-exporte `Container, make_container`.
+- `sim/engine/boucle.py` — étape 17b « tick conteneurs » : itère
+  `game_state.get("containers", [])` (DÉFAUT `[]` → no-op strict → golden NEUTRE),
+  après la boucle tuiles, avant Vigueur/snapshot ; passe `house` + `nebul` du tick.
+- `tests/test_conteneur.py` — 7/7 OK (init recette, bac immobile N×M, lasagnes se
+  décompose [om_fresh↓, om_active↑, NPK libéré au pic], mycelium faim d'azote levée,
+  terre_jardin copie profonde, drainage drainant<terreau, déterminisme h1==h2).
+
+Couches VÉRIFIÉES : `world→fields` OK, `grep` confirme zéro `import world` dans
+`fields/` → pas de cycle.
+
+## Golden re-vérifié après ② (bit-identique)
+- smoke : `2ab026ad2b3f484777a2a29f804e1a4785ecffd6976fc0058fe0a33dd1498646` ✅
+- population : `6056713d4dd1e2a79964411961909545433f8513a530a2b39151cbe6aabe471b` ✅
+- test_substrat 17/17 ✅ · test_structures 65/65 ✅ · test_fruits 24/24 ✅ ·
+  test_eau 20/20 ✅ · test_signes 8/8 ✅ · test_sim_server 185/186 (baseline
+  inchangée, le check rouge « pommier pré-âgé » préexiste, sans rapport).
+
 ## REPRISE (démarrage à froid)
-Tronçon ① **FAIT** (data pure, golden bit-identique). Acquis :
-- `world/substrat.py` — `SubstratRecette` (`@dataclass(frozen=True)`), registre
-  `SUBSTRATS` (6 recettes EXACTES du §2), `get_substrat` (KeyError explicite),
-  garde-fou `_valide_registre()` à l'import (tissus de pré-charge ∈ tissus connus
-  du moteur). Exporté via `world/__init__.py`.
-- `fields/ecofields/container.py` : `tick_hydrology` gagne `drainage_override=None`
-  (rétrocompatible → tuiles bit-identiques ; le conteneur passera le drainage de
-  son substrat en ②).
-- `tests/test_substrat.py` — 17/17 OK (présence, valeurs, tissus valides,
-  `get_substrat`, override change le drainage, override=DRAINAGE ≡ défaut).
+Tronçons ① + ② **FAITS** (golden bit-identique). Le conteneur existe (`world/
+container.py`), sa chimie isolée ticke, la boucle l'itère (liste vide par défaut).
+Le tissu `substrat` a sa cinétique de décompo (voir décision ci-dessus).
 
-⚠️ **À TRANCHER en ②** (signalé à Nico) : le tissu `substrat` (recette
-`mycelium_use`) est dans `FAIM_N_TISSUS` mais **PAS dans `TISSU`** (ni
-`TISSU_ORDER`). Injecter tel quel une parcelle `substrat` dans un mini-sol qui
-ticke la décompo planterait (`KeyError TISSU["substrat"]`). ① ne fait que déclarer
-la donnée ; ② devra donner une cinétique de décompo à `substrat` OU l'écarter du
-balayage décompo (tout en gardant son effet faim d'azote). Garde-fou de ① accepte
-`substrat` comme tissu CONNU, conformément au §2.
-
-PROCHAIN : `02_conteneur.md` (mini-sol `EcoFields` + tick chimique isolé + boucle).
+PROCHAIN : `03_confinement.md` (plante en pot + confinement racinaire hybride =
+effet nain : `volume_factor` sur uptake + plafond racinaire + signal root-bound).
