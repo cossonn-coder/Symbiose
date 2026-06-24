@@ -37,7 +37,7 @@ moteur** (détecteurs, champ `leaf_symptoms`, intensités) est déjà figé par 
 | Tr | Contenu | § conception | Couche | Statut |
 |----|---------|--------------|--------|--------|
 | **T1** | `ombre` — teinte `b8c8a0` (`ColorantTints`) + canal texture `_ombre` (limbe chétif : calotte éclairée réduite, plancher­née) — **lève dette 0.5.2** | §2 | B pure | ✅ |
-| **T2** | `maladie` — canal texture `_maladie` (semis de taches par hash) distinct de l'asphyxie uniforme | §3 | B pure | ⬜ |
+| **T2** | `maladie` — canal texture `_maladie` (semis de taches par hash) distinct de l'asphyxie uniforme | §3 | B pure | ✅ |
 | **T3** | Cohérence palette SS² (hue-shift froid × symptômes jaunes) + diagnostic F5 C2/C3 | §5, §6 | B pure | ⬜ |
 
 (L'affaissement sécheresse est DÉJÀ fait — `Organs.cs` `lz -= _drought * DroughtDroopCm`,
@@ -88,3 +88,30 @@ cf. §4 — pas de tronçon.)
   lumineuse réduite** (aspect chétif), SANS aplat (plancher tient). Comparer à un
   témoin éclairé. ⚠️ Risque palette à confirmer en T3 (§5) : côté nord le
   hue-shift froid peut rapprocher `b8c8a0` du bleu.
+
+### T2 — signe `maladie` / taches cryptogamiques ✅
+
+- **Canal COULEUR inchangé** : `ColorantTints["maladie"] = 8a6a4a` (brun) RESTE —
+  les deux canaux coexistent (D33), la teinte n'est PAS retirée.
+- **Canal TEXTURE** : champ `_maladie` ajouté à côté de `_ombre` dans
+  `visuals/PlantRenderer.cs`, remis à 0 dans `SetSymptoms`, alimenté par
+  `case "maladie": _maladie = it; break;`.
+- **Semis de taches** (`DrawLeafDamage`, `PlantRenderer.Organs.cs`) : si
+  `_maladie > 0`, `Mathf.CeilToInt(_maladie * 5f)` taches (1 à 5), posées au
+  **hash salt NEUF 37/41** (≠ criblage 23/29 → pas de superposition exacte),
+  rayon `r * 0.12f` (vs criblage `r * 0.22f` → pustules ponctuées plus petites),
+  couleur dédiée `LeafSpotColor = 4a3320` (brun foncé). Additif, indépendant du
+  criblage/bords gelés.
+- **Golden** : INCHANGÉ, hash `2ab026ad2b3f484777a2a29f804e1a4785ecffd6976fc0058fe0a33dd1498646` (aucun Python touché).
+- **`dotnet build Symbiose.csproj`** : VERT — 0 erreur, 0 warning.
+- **Fichiers touchés** : `visuals/PlantRenderer.cs`, `visuals/PlantRenderer.Organs.cs`.
+- **Verdict F5 attendu (Nico)** : sur une plante malade, le limbe brun doit
+  désormais porter un **semis de petites taches sombres ponctuées**, visuellement
+  DISTINCT du brun-vert UNIFORME de l'asphyxie (qui reste un aplat — vérifier
+  qu'elle n'a PAS régressé). Exhiber un banc avec pathogène si disponible.
+
+### §REPRISE — PROCHAIN = T3
+
+Lire `00_etat.md` (invariants + entrées T1/T2) + `03_palette.md`. T3 = cohérence
+palette SS² (hue-shift froid × symptômes jaunes) + diagnostic F5 C2/C3. Couche B
+pure C#, golden trivialement préservé (`2ab026ad…`), build C# vert exigé.

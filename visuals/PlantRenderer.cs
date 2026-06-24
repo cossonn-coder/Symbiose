@@ -147,7 +147,7 @@ namespace Symbiose
 		// (0 = absent), lus par les feuilles (Organs). Poussés par SetSymptoms.
 		private Color _colorTint;
 		private float _colorAmount;       // 0 = aucun colorant → tissu vert intact
-		private float _ravageurs, _gel, _grele, _drought, _ombre;
+		private float _ravageurs, _gel, _grele, _drought, _ombre, _maladie;
 
 		// Reçoit le `leaf_symptoms` du snapshot (liste de dicts {cause, intensity}),
 		// null/absent → plante saine. Sépare le canal couleur (colorant dominant) des
@@ -156,7 +156,7 @@ namespace Symbiose
 		{
 			_colorTint = default;
 			_colorAmount = 0f;
-			_ravageurs = _gel = _grele = _drought = _ombre = 0f;
+			_ravageurs = _gel = _grele = _drought = _ombre = _maladie = 0f;
 			if (symptoms != null)
 				foreach (var sv in symptoms)
 				{
@@ -181,6 +181,11 @@ namespace Symbiose
 						// ombre (étiolement) : limbe chétif → calotte éclairée réduite,
 						// lu côté chemin feuille seulement (cf. PlantRenderer.Organs.cs).
 						case "ombre":     _ombre = it; break;
+						// maladie (cryptogames) : EN PLUS de la teinte brune (canal
+						// COULEUR, ColorantTints), un semis de petites taches ponctuées
+						// sur le limbe → distingue le ponctué de l'asphyxie uniforme
+						// (cf. DrawLeafDamage, PlantRenderer.Organs.cs).
+						case "maladie":   _maladie = it; break;
 					}
 				}
 			QueueRedraw();

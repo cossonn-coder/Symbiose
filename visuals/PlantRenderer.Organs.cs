@@ -40,6 +40,7 @@ namespace Symbiose
 		private const float DroughtDroopCm = 6f;   // affaissement max d'une feuille flétrie
 		private static readonly Color LeafHoleColor = new Color(0.10f, 0.09f, 0.05f, 0.55f); // morsure sombre
 		private static readonly Color GelEdgeColor = new Color("2a1d14"); // brun-noir brûlé (gel)
+		private static readonly Color LeafSpotColor = new Color("4a3320"); // pustule cryptogamique brun foncé
 
 		// Palette par espèce (= ORGAN_PALETTE du prototype) : feuille, fleur,
 		// fruit vert, fruit mûr. Espèce inconnue → défaut.
@@ -412,6 +413,22 @@ namespace Symbiose
 			if (_gel > 0f)
 				DrawEllipseOutline(c, r * 1.15f, r * 0.65f, GelEdgeColor,
 								   Mathf.Max(1f, _gel * 2.5f));
+			// maladie : semis de petites taches brun foncé (pustules cryptogamiques),
+			// nombre ∝ intensité. Salt NEUF (37/41) ≠ criblage (23/29) → les taches ne
+			// se superposent jamais exactement aux trous ; rayon r*0.12 << r*0.22 du
+			// criblage (ponctuation, pas morsure). Canal additif indépendant (D33).
+			if (_maladie > 0f)
+			{
+				int spots = Mathf.CeilToInt(_maladie * 5f);   // 1 à 5 taches
+				for (int k = 0; k < spots; k++)
+				{
+					float a = Hash01(37 + k, i, j) * Mathf.Tau;
+					float rad = (0.2f + 0.65f * Hash01(41 + k, i, j));
+					Vector2 sp = c + new Vector2(Mathf.Cos(a) * rad * r * 1.15f,
+												 Mathf.Sin(a) * rad * r * 0.65f);
+					DrawCircle(sp, r * 0.12f, LeafSpotColor);
+				}
+			}
 		}
 
 		// Génère les sommets d'une ellipse alignée écran (partagés entre le plein et
