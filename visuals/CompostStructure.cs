@@ -56,18 +56,27 @@ namespace Symbiose
 		private static readonly Color MielCol   = new Color("e6a92a");
 		private static readonly Color AbeilleCol = new Color("e9c83c");
 
+		// Voile fongique (mycélium ⑥, §3.3) : filaments blancs/mycéliens à la surface
+		// du tas colonisé, densité ∝ colonisation. Teinte blanc cassé légèrement
+		// bleuté (mycélium au sol, pas une moisissure verte de pathogène — distinct).
+		private static readonly Color VoileCol = new Color("e6e9e0");
+		private const int VoileBrins = 9;       // filaments à pleine colonisation
+
 		private readonly string _kind;   // "bac" | "pile" | "ruche"
 		private readonly float _masse;   // contenu + compost_mur (saturé à MasseRef)
 		private readonly float _essaim;  // [0,1] peuplement de la ruche (⑥)
 		private readonly float _miel;    // [0, MIEL_MAX] réserve de miel (⑥)
+		private readonly float _colonisation;  // [0,1] habitation fongique (⑥, voile)
 
 		public CompostStructure(string kind, float compostMur, float contenu,
-								float essaim = 0f, float miel = 0f)
+								float essaim = 0f, float miel = 0f,
+								float colonisation = 0f)
 		{
 			_kind = kind;
 			_masse = compostMur + contenu;   // remplissage = matière TOTALE présente
 			_essaim = essaim;
 			_miel = miel;
+			_colonisation = colonisation;
 		}
 
 		// Les 4 coins de l'empreinte, projetés en OFFSET (vecteur) autour du
@@ -87,8 +96,41 @@ namespace Symbiose
 		{
 			if (_kind == "ruche") { DrawRuche(); return; }
 			float sat = Mathf.Clamp(_masse / MasseRef, 0f, 1f);
-			if (_kind == "pile") DrawPile(sat);
-			else DrawBac(sat);
+			float half;
+			if (_kind == "pile") { DrawPile(sat); half = PileHalfCm; }
+			else { DrawBac(sat); half = BacHalfCm; }
+			// Voile fongique PAR-DESSUS le tas (mycélium ⑥, §3.3) : on voit le
+			// réseau HABITER la structure (indice diégétique direct, philo #5).
+			if (_colonisation > 0.01f) DrawVoile(half);
+		}
+
+		// VOILE FONGIQUE : des brins blancs mycéliens posés sur le dessus du tas,
+		// densité/longueur ∝ colonisation. Déterministe (positions par index, zéro
+		// Random — comme MacroLife) : le même tas porte toujours le même voile. Les
+		// brins partent du centre du plot et rayonnent ; ils s'allongent et se
+		// densifient à mesure que le réseau s'installe. Posés en OFFSET monde
+		// (WorldToScreenOffset) → ils tournent avec la vue comme l'empreinte.
+		private void DrawVoile(float halfCm)
+		{
+			float col = Mathf.Clamp(_colonisation, 0f, 1f);
+			int n = Mathf.RoundToInt(VoileBrins * col);
+			if (n <= 0) return;
+			// Le voile « monte » un peu au-dessus de l'assise du tas (sa croûte
+			// fongique de surface) — léger lift vertical écran.
+			Vector2 lift = new Vector2(0f, -6f * WorldView.PxPerCmZ);
+			var c = VoileCol; c.A = 0.35f + 0.45f * col;
+			for (int i = 0; i < n; i++)
+			{
+				// Angle réparti + longueur ∝ colonisation, dans l'empreinte.
+				float a = i * 2.39996f;                 // angle d'or → étalement régulier
+				float len = halfCm * (0.35f + 0.55f * col);
+				Vector2 dir = WorldView.WorldToScreenOffset(
+					Mathf.Cos(a) * len, Mathf.Sin(a) * len);
+				Vector2 baseP = lift;
+				DrawLine(baseP, baseP + dir, c, 1.2f);
+				// Petit point au bout = jeune carpophore naissant sur la croûte.
+				DrawCircle(baseP + dir, 1.0f, c);
+			}
 		}
 
 		// RUCHE : une pile de 3 hausses vue en iso (mêmes 2 faces avant + dessus

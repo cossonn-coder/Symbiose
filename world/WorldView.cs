@@ -139,6 +139,10 @@ namespace Symbiose
 		// MacroLife. ZIndex 11 = AU-DESSUS des plantes/objets (10) — l'abeille se
 		// pose sur la corolle, on doit la voir par-dessus. Survit à RebuildWorld.
 		private ForagerLayer _foragerLayer;
+		// Carpophores (mycélium ④/⑥) : champignons VISIBLES échantillonnés du champ
+		// `mycelium` (perception pure). ZIndex 4 = au ras du sol, sous la macro (5)
+		// et les plantes (10) — ils poussent au sol. Survit à RebuildWorld.
+		private CarpophoreLayer _carpophoreLayer;
 		// Index plantes-par-NOM-FR (Phacélie…) → positions MONDE (cm), reconstruit
 		// à chaque snapshot. Sert les fleurs de saut des butineurs (le `target` est
 		// le nom FR, qui matche `name`, pas `species`/anglais).
@@ -288,6 +292,11 @@ namespace Symbiose
 
 			_foragerLayer = new ForagerLayer { Name = "ForagerLayer", ZIndex = 11 };
 			AddWorld(_foragerLayer);
+
+			// Carpophores (mycélium ④/⑥) : champignons au ras du sol (ZIndex 4,
+			// sous la macro 5 et les plantes 10). Lit le bloc `carpophores` (0.5.8).
+			_carpophoreLayer = new CarpophoreLayer { Name = "Carpophores", ZIndex = 4 };
+			AddWorld(_carpophoreLayer);
 
 			_fieldOverlay = new FieldOverlay
 			{

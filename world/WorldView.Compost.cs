@@ -92,9 +92,15 @@ namespace Symbiose
 						? (float)st["essaim"].AsDouble() : 0f;
 					float miel = st.ContainsKey("miel")
 						? (float)st["miel"].AsDouble() : 0f;
+					// Colonisation fongique (mycélium ⑥, 0.5.9) : [0,1], absente d'un
+					// snapshot pré-0.5.9 → 0 (lecture tolérante → pas de voile). Pilote
+					// le VOILE de filaments blancs sur le bac/pile (tas habité = vivant).
+					float colonisation = st.ContainsKey("colonisation")
+						? (float)st["colonisation"].AsDouble() : 0f;
 					float cx = o.X + (c + 0.5f) * PlotCm;
 					float cy = o.Y + (r + 0.5f) * PlotCm;
-					var node = new CompostStructure(kind, mur, contenu, essaim, miel)
+					var node = new CompostStructure(kind, mur, contenu, essaim, miel,
+													colonisation)
 					{
 						Position = WorldToScreen(cx, cy),
 						Name = $"struct_{tileId}_{r}_{c}_{kind}",
@@ -129,6 +135,35 @@ namespace Symbiose
 					if (s.Tile == tile && s.R == r && s.C == c)
 						return s.Index;
 			return fallback;
+		}
+
+		/// <summary>
+		/// Bac/pile le PLUS PROCHE (cm MONDE) du point cliqué, dans `radiusCm` — sert
+		/// le 1er temps d'`epandre` à 2 clics (mycélium ⑥). Renvoie l'index DANS sa
+		/// tuile (= `target.structure`) + l'id de tuile + son plot (r,c) ; -1 si aucun
+		/// tas à portée. La ruche est EXCLUE (on n'épand pas une ruche). Distance =
+		/// centre du plot d'ancrage en monde (origin tuile + plot), pas l'écran : la
+		/// désignation reste juste sous toute orientation/zoom. Recherche linéaire
+		/// (une poignée de structures), comme FindNearestContainer.
+		/// </summary>
+		private int FindNearestStructureWorld(Vector2 w, float radiusCm,
+			out string tile, out int r, out int c)
+		{
+			tile = null; r = c = 0;
+			int best = -1;
+			float bestD = radiusCm * radiusCm;
+			foreach (var s in _structs)
+			{
+				if (s.Kind == "ruche") continue;            // pas d'épandage d'une ruche
+				if (!_origins.TryGetValue(s.Tile, out Vector2 o)) continue;
+				float cx = o.X + (s.C + 0.5f) * PlotCm;
+				float cy = o.Y + (s.R + 0.5f) * PlotCm;
+				float dx = cx - w.X, dy = cy - w.Y;
+				float d = dx * dx + dy * dy;
+				if (d < bestD)
+				{ bestD = d; best = s.Index; tile = s.Tile; r = s.R; c = s.C; }
+			}
+			return best;
 		}
 
 		/// <summary>

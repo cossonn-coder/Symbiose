@@ -40,7 +40,10 @@ namespace Symbiose
 			("composter",            "composter",      's'),   // litière tendre → bac
 			("empiler_bois",         "empiler bois",   's'),   // bois → pile
 			("retourner",            "retourner",      's'),   // accélère la maturation
-			("epandre",              "épandre",        's'),   // compost mûr → sol
+			// Épandre = geste à 2 temps (mycélium ⑥, §3.2) : 1er clic sur le BAC
+			// (source) → 2e clic sur le PLOT cible. Kind 'E' (≠ 's', qui clique
+			// la structure et épand sur son propre plot). Patron `deplacer_pot`.
+			("epandre",              "épandre",        'E'),   // compost mûr → sol (2 clics)
 			// Conteneurs (pots/bacs ⑥b, protocole 0.5.7). Kind P = POSER un
 			// conteneur au point MONDE du clic (le serveur lit target.x_cm/y_cm
 			// comme position monde absolue, cf. conteneurs_route.py) ; le substrat
@@ -80,6 +83,12 @@ namespace Symbiose
 		// le POSER au nouveau point monde. -1 = aucun pot saisi (en attente du 1er
 		// clic). Réinitialisé si on change de geste.
 		private int _grabbedContainer = -1;
+		// Geste ÉPANDRE à 2 temps (mycélium ⑥, §3.2), même modèle : 1er clic =
+		// SAISIR le bac/pile source (mémorise son index DANS sa tuile + l'id de
+		// tuile, car `epandre` écrit le sol de CETTE tuile) ; 2e clic = le plot
+		// cible. -1 = aucun tas saisi. Réinitialisé si on change de geste.
+		private int _grabbedBac = -1;
+		private string _grabbedBacTile;
 		// Rayon de désignation d'un conteneur au clic (cm MONDE) : un peu large,
 		// un pot occupe ~1 plot (50 cm) et son centre peut être loin du bord cliqué.
 		private const float ContainerPickRadiusCm = 60f;
@@ -122,10 +131,11 @@ namespace Symbiose
 		{
 			_gesteIndex = idx;
 			_lastActionMsg = "";
-			// Changer de geste ANNULE une saisie de pot en cours (geste déplacer
-			// à 2 temps) — sinon un 1er clic « saisir » resterait actif sous un
-			// autre outil, source de confusion.
+			// Changer de geste ANNULE une saisie en cours (gestes à 2 temps :
+			// déplacer pot, épandre) — sinon un 1er clic « saisir » resterait actif
+			// sous un autre outil, source de confusion.
 			_grabbedContainer = -1;
+			_grabbedBac = -1;
 			GD.Print($"[WorldView] geste : {Gestes[idx].Nom} [{idx + 1}].");
 			UpdateActionHud();
 		}
@@ -343,14 +353,15 @@ namespace Symbiose
 					target = new GDict { ["tile"] = qTile, ["r"] = qr, ["c"] = qc };
 					break;
 
-				case 's':   // compost ⑤ : composter/empiler/retourner/épandre.
+				case 's':   // compost ⑤ : composter/empiler/retourner.
 					// DEUX désignations selon le geste (retour F5 Nico) :
 					//  · composter / empiler_bois = on clique la LITIÈRE au sol (comme
 					//    tailler/cueillir) ; la vue route vers le bac/pile le plus
 					//    proche de la MÊME tuile (target.structure) en joignant le plot
 					//    cliqué comme SOURCE (target.r/c). Le moteur composte la litière
 					//    d'un plot indépendant du plot de la structure (actions/compost).
-					//  · retourner / épandre = on clique la STRUCTURE elle-même.
+					//  · retourner = on clique la STRUCTURE elle-même.
+					// (épandre est passé en kind 'E' à 2 temps, cf. ci-dessous.)
 					if (!FindPlot(w, out string sTile, out int sr, out int sc))
 					{
 						_lastActionMsg = $"{nom} : aucune tuile ici (chemin/maison)";
@@ -372,7 +383,7 @@ namespace Symbiose
 						target = new GDict { ["tile"] = sTile, ["structure"] = near,
 											 ["r"] = sr, ["c"] = sc };
 					}
-					else   // retourner / épandre : clic sur la structure du plot
+					else   // retourner : clic sur la structure du plot
 					{
 						int sIdx = FindStructureIndex(verb, sTile, sr, sc);
 						if (sIdx < 0)
@@ -382,13 +393,48 @@ namespace Symbiose
 							return;
 						}
 						target = new GDict { ["tile"] = sTile, ["structure"] = sIdx };
-						if (verb != "retourner")   // épandre cible le plot (r,c)
-						{
-							target["r"] = sr;
-							target["c"] = sc;
-						}
-						// épandre : params.q omis ⇒ le serveur épand TOUT le disponible.
 					}
+					break;
+
+				case 'E':   // ÉPANDRE à 2 temps (mycélium ⑥, §3.2) : 1er clic =
+					// SAISIR le bac/pile source (mémorise tuile + index) ; 2e clic =
+					// le PLOT cible OÙ restituer le compost mûr. Le moteur écrit le
+					// trio humus au plot (r,c) de la tuile DU BAC — donc la cible doit
+					// être sur la MÊME tuile que la source (le serveur résout un seul
+					// `eco`). On le vérifie côté vue pour un message clair. Patron
+					// exact du `deplacer_pot` 2 temps. params.q omis ⇒ tout le mûr.
+					if (_grabbedBac < 0)
+					{
+						int near = FindNearestStructureWorld(w, ContainerPickRadiusCm,
+							out string bTile, out int br, out int bc);
+						if (near < 0)
+						{
+							_lastActionMsg = "épandre : aucun tas ici (cliquez un bac ou une pile)";
+							UpdateActionHud(); FlashActionLabel();
+							return;
+						}
+						_grabbedBac = near;
+						_grabbedBacTile = bTile;
+						_lastActionMsg = $"tas #{near} saisi — cliquez le plot à amender";
+						UpdateActionHud();
+						return;   // on attend le 2e clic, aucune action envoyée
+					}
+					// 2e clic : destination = plot cliqué, exigé sur la tuile du bac.
+					if (!FindPlot(w, out string eTile, out int er, out int ec))
+					{
+						_lastActionMsg = "épandre : aucune tuile ici (chemin/maison)";
+						UpdateActionHud(); FlashActionLabel();
+						return;
+					}
+					if (eTile != _grabbedBacTile)
+					{
+						_lastActionMsg = "épandre : la cible doit être sur la tuile du tas saisi";
+						UpdateActionHud(); FlashActionLabel();
+						return;
+					}
+					target = new GDict { ["tile"] = eTile, ["structure"] = _grabbedBac,
+										 ["r"] = er, ["c"] = ec };
+					_grabbedBac = -1;   // saisie consommée
 					break;
 
 				case 'P':   // POSER un conteneur (pot/bac ⑥b) au point MONDE du clic.

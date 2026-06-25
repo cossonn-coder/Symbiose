@@ -204,6 +204,13 @@ namespace Symbiose
 				_foragerLayer?.SetForagers(snap["foragers"].AsGodotDictionary(),
 										   _origins, _plantsByName, fade);
 
+			// Carpophores (mycélium ④/⑥, 0.5.8, lecture seule) : champignons
+			// échantillonnés du champ `mycelium` (perception pure). Lecture
+			// TOLÉRANTE : un snapshot pré-0.5.8 sans le bloc → aucun champignon.
+			if (snap.ContainsKey("carpophores"))
+				_carpophoreLayer?.SetCarpophores(
+					snap["carpophores"].AsGodotDictionary(), _origins, fade);
+
 			// Décompo·compost (③, lecture seule, protocole 0.3.7/0.3.5) : litière
 			// au sol (layer batché) + structures bac/pile (nœuds YSort). Lecture
 			// TOLÉRANTE : un snapshot ancien sans ces blocs → rien dessiné.

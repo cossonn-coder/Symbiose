@@ -198,7 +198,16 @@ from __future__ import annotations
 #       — interconnexion champignon ↔ faune (§1.1), terme ADDITIF, mycelium=0 ⇒
 #       neutre. Re-figeage MAÎTRISÉ du golden de POPULATION (faune touchée), pas du
 #       smoke écologique (la faune n'entre pas dans son hash). VUE C# différée (⑥).
-ENGINE_VERSION = "0.5.8"
+# 0.5.9 (mycélium ⑥, vue : tas colonisé) : chaque structure du bloc `structures`
+#       gagne `colonisation` ∈ [0,1] (degré d'habitation fongique du tas, 0 pour la
+#       ruche), à côté de `compost_mur`/`contenu`/`essaim`/`miel`. La vue ⑥ en tire le
+#       VOILE FONGIQUE (filaments blancs) sur le bac/pile (§3.3). État DÉJÀ tické par
+#       `tick_structures` (⑤) → simple TRANSPORT lecture-seule, golden NEUTRE (le smoke
+#       ne pose aucune structure → bloc inchangé). Champ optionnel côté vue (tolérance
+#       pré-0.5.9 → 0 = pas de voile). `epandre` 2 clics (UX source→cible) N'EST PAS un
+#       incrément de protocole : le verbe accepte DÉJÀ {tile, structure, r, c} (0.3.5),
+#       seule la VUE change (2 temps de désignation). Aucun autre champ ne bouge.
+ENGINE_VERSION = "0.5.9"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

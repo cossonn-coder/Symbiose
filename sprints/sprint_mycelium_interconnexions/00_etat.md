@@ -42,7 +42,7 @@ le préserve.
 | ③ | Mycorhize (boost `p` borné dans `plant_uptake` + miroir `qi_local`) | `03_mycorhize.md` | ✅ FAIT (golden RE-FIGÉ maîtrisé `00c1984a…`) |
 | ④ | Faune fongivore + carpophores échantillonnés | `04_faune_carpophores.md` | ✅ FAIT (golden smoke RE-FIGÉ maîtrisé `db5e7c66…` ; population RE-FIGÉE `9ba39ab7…` ; carpophores NEUTRES) |
 | ⑤ | Structures niveau tuile + colonisation fongique + bêchage event-driven | `05_structures_tuile.md` | ✅ FAIT (golden + population INCHANGÉS `db5e7c66…`/`9ba39ab7…` — event-driven + structures-vides) |
-| ⑥ | `epandre` 2 clics + vue Godot (carpophores, tas colonisé, overlay) | `06_epandre_vue.md` | À FAIRE (Godot différé) |
+| ⑥ | `epandre` 2 clics + vue Godot (carpophores, tas colonisé, overlay) | `06_epandre_vue.md` | ✅ FAIT (golden + population INCHANGÉS `db5e7c66…`/`9ba39ab7…` ; pont **0.5.9** = `colonisation` au snapshot ; C# build VERT ; **reste F5 Nico**) |
 
 ## Conventions
 - Source de vérité = Python `data/code/`. Lancement depuis `data/code/`
@@ -108,7 +108,49 @@ le préserve.
 > — 0 fruits @ S52 »), sans rapport avec ce sprint — baseline, pas une régression.
 
 ## REPRISE (démarrage à froid)
-**①②③④⑤ FAITS — SPRINT MOTEUR CLOS. Reste ⑥ (vue Godot, différé).**
+**①②③④⑤⑥ FAITS — SPRINT MYCÉLIUM CLOS (moteur + vue). Reste UNIQUEMENT le F5
+visuel de Nico (Godot pas sur la VM).**
+
+### Points à VALIDER au F5 (Nico) — ⑥
+Tout le C# compile (`dotnet build` VERT) mais n'a JAMAIS tourné dans Godot (VM
+sans F5). À éprouver visuellement, dans l'ordre d'impact :
+1. **`epandre` 2 temps (ergonomie)** : geste « épandre » sélectionné → 1er clic
+   sur un bac/pile = « tas #N saisi — cliquez le plot à amender » (HUD) ; 2e clic
+   sur un plot = épandage. Vérifier : (a) le 1er clic SAISIT bien le tas le plus
+   proche (rayon 60 cm) ; (b) un 2e clic HORS de la tuile du tas est REFUSÉ avec
+   message clair (« la cible doit être sur la tuile du tas saisi ») — contrainte
+   moteur réelle (`epandre` écrit le sol de la tuile du bac, un seul `eco`) ;
+   (c) changer de geste pendant la saisie l'ANNULE proprement. ⚠️ Si Nico veut
+   épandre vers une AUTRE tuile, c'est une évolution MOTEUR (hors ⑥).
+2. **Carpophores (lisibilité)** : champignons au sol en AUTOMNE, sol humide,
+   réseau mycélien dense (bac colonisé, vieux bois non bêché). Vérifier qu'ils
+   apparaissent/fanent en fondu, taille ∝ densité, et restent DISCRETS (LOD ×4 :
+   invisibles dézoomé). Carte de démo neutre → en POSER : composter du bois dans
+   un bac, attendre l'automne. Placeholder procédural (pied crème + chapeau brun).
+3. **Tas colonisé (voile fongique)** : sur un bac/pile colonisé (`colonisation`
+   > 0), des filaments blancs/mycéliens rayonnent sur le dessus, densité ∝
+   colonisation. Vérifier qu'ils se LISENT comme « le tas est habité » et ne se
+   confondent pas avec une moisissure pathogène (teinte blanc bleuté).
+4. **Overlay `mycelium` (F6)** : ouvrir l'overlay debug, cycler jusqu'au champ
+   `mycelium` → heatmap parchemin → blanc mycélien, légende « sol nu / réseau
+   dense », échelle FIXE 0..1. Vérifier que le réseau souterrain se visualise
+   bien (seul moyen de VOIR le réseau hors carpophores).
+
+> **⑥ (vue) :** A. `epandre` 2 clics = kind `E` neuf (patron `deplacer_pot`),
+> `_grabbedBac`/`_grabbedBacTile` (WorldView.Actions.cs) + helper
+> `FindNearestStructureWorld` (WorldView.Compost.cs) ; le verbe accepte DÉJÀ
+> {tile,structure,r,c} → AUCUN changement moteur de routage. B. Carpophores =
+> `CarpophoreLayer.cs` NEUF (batché, patron MacroLife, ZIndex 4) lit le bloc
+> `carpophores` (0.5.8) ; câblé dans WorldView.cs (build) + WorldView.Snapshot.cs
+> (apply). C. Voile fongique = `colonisation` ajouté au snapshot `structures`
+> (pont **0.5.9**, golden NEUTRE) + `DrawVoile` dans CompostStructure.cs. D.
+> Palette `mycelium` ajoutée à FieldOverlay.cs (champ auto-exposé par
+> introspection). Golden smoke + population BIT-IDENTIQUES `db5e7c66…`/`9ba39ab7…`
+> (vue + transport pur). `test_sim_server` 205/206 (206e = baseline pommier
+> pré-âgé, hors sprint) ; 2 assertions de version mises à `0.5.9` (structures.py,
+> conteneurs.py). `dotnet build Symbiose.csproj` VERT (0 err, 0 avert).
+
+**①②③④⑤ FAITS — SPRINT MOTEUR CLOS.**
 - **①** : champ `mycelium` (`fields/ecofields/mycelium.py`, `tick_mycelium` pur) déclaré
   dans `container.py`, tické dans `sim/engine/boucle.py` (après `tick_structure`, avant
   diffusion), knobs dans `constants.py`. Golden bit-identique `2ab026ad…`.
@@ -163,6 +205,9 @@ le préserve.
   (section N bêchage), `test_structures.py` 80/80 (16 un-par-tuile, 17 colonisation,
   18 déterminisme). `test_sim_server.py` 205/206 (206e = baseline pommier pré-âgé, hors
   sprint). C# NON concerné (kickoff ⑤ Python pur, vue au ⑥). **SPRINT MOTEUR ①→⑤ CLOS.**
-**Prochain : `06_epandre_vue.md`** (`epandre` 2 clics protocole pont + vue Godot :
-carpophores, tas colonisé, palette overlay `mycelium`) — **Godot différé** (Option B,
-intégration en pause). Seul tronçon restant du sprint.
+- **⑥** : `epandre` 2 clics + vue Godot (carpophores, tas colonisé, overlay) —
+  détail dans §REPRISE en tête. Pont **0.5.9** (`colonisation` au snapshot, golden
+  NEUTRE). C# build VERT. **SPRINT MYCÉLIUM CLOS — reste UNIQUEMENT le F5 de Nico**
+  (liste des points à valider en tête de §REPRISE).
+**Sprint mycélium CLOS (①→⑥). Plus de tronçon. Seul reste le F5 visuel (Godot pas
+sur la VM) — voir « Points à VALIDER au F5 » en tête de §REPRISE.**

@@ -184,10 +184,16 @@ class SerializeMixin:
             # compostage (avant maturation) et se vider à l'épandage. PURE lecture.
             # Ruche (⑥, 0.4.0) : `essaim`/`miel` (0 pour bac/pile) → la vue dessine le
             # peuplement et la réserve de miel. PURE ajout de sérialisation.
+            # Colonisation fongique (mycélium ⑤/⑥, 0.5.9) : `colonisation` ∈ [0,1]
+            # = degré d'habitation du tas par le réseau (0 = tas neuf, 1 = pleinement
+            # colonisé), 0 pour la ruche. La vue ⑥ en tire le VOILE FONGIQUE sur le
+            # bac/pile (§3.3). État DÉJÀ tické par `tick_structures` (⑤) → simple
+            # TRANSPORT, golden NEUTRE (le smoke ne pose aucune structure).
             structures[tile.tile_id] = [
                 {"kind": st.kind, "plot": list(st.plot),
                  "compost_mur": round(st.compost_mur, 4),
                  "contenu": round(sum(p.masse for p in st.contenu), 4),
+                 "colonisation": round(st.colonisation, 4),
                  "essaim": round(st.essaim, 4), "miel": round(st.miel, 4)}
                 for st in eco.structures]
             # Litière typée par plot (décompo·compost ①, rendue par la vue en

@@ -73,6 +73,13 @@ namespace Symbiose
 			["soil_memory_fast"] = (new Color("c8c8c8"), new Color("6f6fb8"), "jeune", "récent", float.NaN, float.NaN),
 			["soil_memory_deep"] = (new Color("c8c8c8"), new Color("3a3a8f"), "jeune", "profond", float.NaN, float.NaN),
 			["disturbance"]      = (new Color("d8d8d0"), new Color("a83a78"), "calme", "perturbé", 0f, 1f),
+			// Réseau mycélien (sprint mycélium ①→⑥) : le champ souterrain `mycelium`
+			// (GridField max_val 1.0) auto-découvert par l'introspection `fields`.
+			// Visible UNIQUEMENT en mode technique F6 (le réseau reste souterrain en
+			// jeu — seuls les carpophores le trahissent en surface). Pôle haut = blanc
+			// cassé mycélien (calé sur le voile fongique CompostStructure), bas =
+			// parchemin « sol nu ». Bornes physiques 0..1 → échelle comparable.
+			["mycelium"]         = (new Color("e0d8c4"), new Color("e6e9e0"), "sol nu", "réseau dense", 0f, 1f),
 			// Heatmaps PAR ESPÈCE (catalogue enrichi ⑥b) : le registre `fields`
 			// expose désormais une grille par espèce (eco.populations, 15 clés)
 			// au lieu des 3 anciennes guildes. Pôle haut = la couleur du point
