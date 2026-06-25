@@ -122,5 +122,26 @@ namespace Symbiose
 			}
 			return nodes;
 		}
+
+		/// <summary>
+		/// INDEX snapshot (= `target.container`) du conteneur dont le CENTRE MONDE
+		/// est le plus proche du point `w` (cm) sous `radiusCm`, ou -1. Calqué sur
+		/// FindPlant/FindNearestStructure : recherche linéaire (une poignée de
+		/// conteneurs → pas de quadtree à inventer). Premier index gagne à égalité
+		/// (déterministe). Sert la désignation des gestes ⑥b (déplacer / planter
+		/// dans un conteneur) : la vue DÉSIGNE par index, le serveur juge.
+		/// </summary>
+		private int FindNearestContainer(Vector2 w, float radiusCm)
+		{
+			int best = -1;
+			float bestD = radiusCm * radiusCm;
+			foreach (var c in _containers)
+			{
+				float dx = c.XCm - w.X, dy = c.YCm - w.Y;
+				float d = dx * dx + dy * dy;
+				if (d < bestD) { bestD = d; best = c.Index; }
+			}
+			return best;
+		}
 	}
 }

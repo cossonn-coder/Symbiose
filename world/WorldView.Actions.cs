@@ -41,6 +41,15 @@ namespace Symbiose
 			("empiler_bois",         "empiler bois",   's'),   // bois → pile
 			("retourner",            "retourner",      's'),   // accélère la maturation
 			("epandre",              "épandre",        's'),   // compost mûr → sol
+			// Conteneurs (pots/bacs ⑥b, protocole 0.5.7). Kind P = POSER un
+			// conteneur au point MONDE du clic (le serveur lit target.x_cm/y_cm
+			// comme position monde absolue, cf. conteneurs_route.py) ; le substrat
+			// vient du cycle B, volume/grille de knobs. Kind C = désigner un
+			// conteneur EXISTANT par index (déplacer = 2 temps ; planter = graine S).
+			("poser_pot",          "poser pot",      'P'),
+			("poser_bac_culture",  "poser bac",      'P'),
+			("deplacer_pot",       "déplacer pot",   'C'),
+			("planter_conteneur",  "planter (pot)",  'C'),
 		};
 		private int _gesteIndex = -1;              // aucun geste sélectionné
 		// Graines plantables du snapshot (player.seeds, lots non vides), triées
@@ -48,6 +57,33 @@ namespace Symbiose
 		// de params.species à `planter`. Le serveur reste juge (catalogue + banque).
 		private readonly List<(string Key, int Count)> _seeds = new();
 		private int _seedIndex;
+
+		// --- Conteneurs (pots/bacs ⑥b) -------------------------------------
+		// Substrat choisi à la POSE (cycle touche B), modèle exact = CycleSeed.
+		// Les 5 substrats POSABLES PAR LE PONT (registre world/substrat.py) :
+		// `terre_jardin` est EXCLU car le pont le refuse (il faut pointer un plot
+		// source de tuile, non désignable en ④ — cf. conteneurs_route.py). On NE
+		// re-substrate PAS un conteneur existant (décision sprint) : le choix ne
+		// sert qu'à poser_pot / poser_bac_culture.
+		private static readonly string[] Substrats =
+			{ "terreau", "compost", "drainant_mineral", "lasagnes", "mycelium_use" };
+		private int _substratIndex;
+		// Knobs de pose (placeholders, calibrage F5). Volume pot = VOLUME_REF du
+		// moteur (75 L → confinement neutre). Bac 2×2 fond ouvert, volume large
+		// (peu/pas de nain, couplé à la tuile dessous).
+		private const float PotVolumeL = 75f;
+		private const float BacVolumeL = 200f;
+		private const int BacRows = 2, BacCols = 2;
+		private const bool BacFondOuvert = true;
+		// Geste DÉPLACER à 2 temps (décision Nico : outil + clic, pas de drag) :
+		// 1er clic = SAISIR le pot le plus proche (mémorise son index), 2e clic =
+		// le POSER au nouveau point monde. -1 = aucun pot saisi (en attente du 1er
+		// clic). Réinitialisé si on change de geste.
+		private int _grabbedContainer = -1;
+		// Rayon de désignation d'un conteneur au clic (cm MONDE) : un peu large,
+		// un pot occupe ~1 plot (50 cm) et son centre peut être loin du bord cliqué.
+		private const float ContainerPickRadiusCm = 60f;
+
 		private Task<GDict> _pendingAction;        // action en vol (ou null)
 		// File d'UNE intention (retour F5 Nico : en Turbo le pipe ne désemplit
 		// jamais → tout clic était ignoré). Si une requête est en vol, le clic
@@ -86,6 +122,10 @@ namespace Symbiose
 		{
 			_gesteIndex = idx;
 			_lastActionMsg = "";
+			// Changer de geste ANNULE une saisie de pot en cours (geste déplacer
+			// à 2 temps) — sinon un 1er clic « saisir » resterait actif sous un
+			// autre outil, source de confusion.
+			_grabbedContainer = -1;
 			GD.Print($"[WorldView] geste : {Gestes[idx].Nom} [{idx + 1}].");
 			UpdateActionHud();
 		}
@@ -112,6 +152,15 @@ namespace Symbiose
 			}
 			_seedIndex = (_seedIndex + 1) % _seeds.Count;
 			GD.Print($"[WorldView] graine : {_seeds[_seedIndex].Key} (×{_seeds[_seedIndex].Count}).");
+			UpdateActionHud();
+		}
+
+		// Substrat courant pour poser_pot / poser_bac_culture (touche B). Cycle
+		// sur la liste fixe des substrats posables — modèle exact de CycleSeed.
+		private void CycleSubstrat()
+		{
+			_substratIndex = (_substratIndex + 1) % Substrats.Length;
+			GD.Print($"[WorldView] substrat : {Substrats[_substratIndex]}.");
 			UpdateActionHud();
 		}
 
@@ -340,6 +389,80 @@ namespace Symbiose
 						}
 						// épandre : params.q omis ⇒ le serveur épand TOUT le disponible.
 					}
+					break;
+
+				case 'P':   // POSER un conteneur (pot/bac ⑥b) au point MONDE du clic.
+					// ⚠ Repère : le serveur lit target.x_cm/y_cm comme position MONDE
+					// ABSOLUE (≠ Kind 'm' qui envoie un point LOCAL tuile). On exige
+					// quand même que le clic tombe sur une TUILE (pas chemin/maison) —
+					// un conteneur posé hors sol n'a pas d'assise de couplage.
+					if (!FindPlot(w, out _, out _, out _))
+					{
+						_lastActionMsg = $"{nom} : aucune tuile ici (chemin/maison)";
+						UpdateActionHud(); FlashActionLabel();
+						return;
+					}
+					target = new GDict { ["x_cm"] = w.X, ["y_cm"] = w.Y };
+					prms["substrat"] = Substrats[_substratIndex];
+					if (verb == "poser_pot")
+						prms["volume"] = PotVolumeL;
+					else   // poser_bac_culture : grille N×M + fond ouvert
+					{
+						prms["volume"] = BacVolumeL;
+						prms["rows"] = BacRows;
+						prms["cols"] = BacCols;
+						prms["fond_ouvert"] = BacFondOuvert;
+					}
+					break;
+
+				case 'C':   // CONTENEUR existant désigné par INDEX (déplacer/planter).
+					if (verb == "deplacer_pot")
+					{
+						// Geste à 2 temps (décision Nico : outil+clic, pas de drag).
+						// 1er clic = SAISIR le pot le plus proche ; 2e clic = le POSER
+						// au point MONDE cliqué. Le refus « immobile » (bac) est rendu
+						// par le serveur — on relaie son message.
+						if (_grabbedContainer < 0)
+						{
+							int near = FindNearestContainer(w, ContainerPickRadiusCm);
+							if (near < 0)
+							{
+								_lastActionMsg = "déplacer : aucun conteneur ici (cliquez un pot)";
+								UpdateActionHud(); FlashActionLabel();
+								return;
+							}
+							_grabbedContainer = near;
+							_lastActionMsg = $"pot #{near} saisi — cliquez la destination";
+							UpdateActionHud();
+							return;   // on attend le 2e clic, aucune action envoyée
+						}
+						// 2e clic : destination = point MONDE du clic.
+						target = new GDict
+						{
+							["container"] = _grabbedContainer,
+							["x_cm"] = w.X,
+							["y_cm"] = w.Y,
+						};
+						_grabbedContainer = -1;   // saisie consommée
+						break;
+					}
+					// planter_conteneur : 1 clic = désigner le conteneur + graine du
+					// cycle S (symétrie avec `planter` sur tuile).
+					if (_seeds.Count == 0)
+					{
+						_lastActionMsg = "planter (pot) : aucune graine en banque (récoltez en automne)";
+						UpdateActionHud(); FlashActionLabel();
+						return;
+					}
+					int nearP = FindNearestContainer(w, ContainerPickRadiusCm);
+					if (nearP < 0)
+					{
+						_lastActionMsg = "planter (pot) : aucun conteneur ici (posez-en un)";
+						UpdateActionHud(); FlashActionLabel();
+						return;
+					}
+					target = new GDict { ["container"] = nearP };
+					prms["species"] = _seeds[_seedIndex].Key;
 					break;
 
 				// '-' : grelinette, pas de cible.

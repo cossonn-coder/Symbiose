@@ -45,6 +45,7 @@ namespace Symbiose
 				{
 					case Key.Space:    TogglePhase();  break;
 					case Key.S:        CycleSeed();    break;   // espèce pour planter
+					case Key.B:        CycleSubstrat(); break;  // substrat (poser pot/bac)
 					// Monde anti-horaire = la CAMÉRA orbite vers la droite
 					// (ressenti validé par Nico au 1er F5 t4).
 					case Key.Pageup:   RotateView(+1); break;

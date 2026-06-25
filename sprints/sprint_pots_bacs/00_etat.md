@@ -39,7 +39,7 @@ dessous (drainage, racines, microbiome).
 | ④ | Mobilité + bacs N×M immobiles + pont snapshot | `04_mobilite_bacs.md` | **FAIT** (golden bit-identique, pont 0.5.7) |
 | ⑤ | Couplage fond ouvert + lasagnes (arc complet) | `05_couplage_lasagnes.md` | **FAIT** (golden bit-identique) — **sprint moteur CLOS** |
 | ⑥a | Vue Godot — rendu statique conteneur + substrat (lecture seule) | `06a_rendu_conteneur.md` | **FAIT** (build C# vert, golden NEUTRE inchangé) |
-| ⑥b | Vue Godot — interaction poser/déplacer/planter (outil + clic) | `06b_interaction.md` | kickoff écrit |
+| ⑥b | Vue Godot — interaction poser/déplacer/planter (outil + clic) | `06b_interaction.md` | **FAIT** (build C# vert, golden NEUTRE inchangé) |
 | ⑥c | Vue Godot — indices visuels du couplage (fond ouvert, nain, substrat) | `06c_indices_couplage.md` | kickoff écrit |
 
 ## Conventions
@@ -303,14 +303,55 @@ Acquis (C#, lecture seule du bloc `containers` du snapshot 0.5.7) :
 Tailles : `ContainerStructure.cs` 186 l. / `WorldView.Conteneurs.cs` 126 l. (brut,
 majorité de commentaires pédagogiques) — bien < 350 LDC pur.
 
-## REPRISE (démarrage à froid) — ⑥a FAIT, RESTE ⑥b/⑥c
-Moteur ①→⑤ CLOS (golden NEUTRE `2ab026ad…`, pont 0.5.7). Vue ⑥a FAITE : pots/bacs +
-substrat + plantes se DESSINENT en lecture seule (placeholder iso, à VALIDER F5). RESTE :
-**⑥b interaction** (poser/déplacer/planter via `TryAction`, outil + clic ; les 4 verbes
-du pont existent : `poser_pot`/`poser_bac_culture`/`deplacer_pot`/`planter_conteneur` ;
-`_containers` porte déjà index + position MONDE pour le picking) puis **⑥c indices du
-couplage** (fond ouvert/nain/substrat, lit `eco_summary` du snapshot, étiquettes). Lancer
-`06b_interaction.md`. La vue ne touche AUCUN fichier Python → golden trivialement NEUTRE.
+## Tronçon ⑥b — état
+**FAIT** (vue Godot, AUCUN fichier Python touché → golden trivialement NEUTRE,
+inchangé `2ab026ad…`). Build `dotnet build Symbiose.csproj` **vert** (0 avert., 0 err.).
+Interaction poser/déplacer/planter par le pattern **outil + clic** (homogène `TryAction`,
+décision Nico : pas de drag&drop). Acquis (C#, 4 verbes du pont 0.5.7 déjà routés depuis ④) :
+- `world/WorldView.Actions.cs` :
+  - 4 entrées `Gestes` : `poser_pot`/`poser_bac_culture` (Kind `'P'`), `deplacer_pot`/
+    `planter_conteneur` (Kind `'C'`). Atteignables par **Tab** (>9 gestes) ou 1..9.
+  - **Kind `'P'` POSER** : exige une TUILE sous le clic (`FindPlot`), envoie la position
+    **MONDE absolue** `target.x_cm/y_cm` (⚠ le routeur Python lit ces clés comme monde,
+    ≠ Kind `'m'` local tuile) + `params.substrat` (cycle B) + `volume` (pot 75 L / bac
+    200 L) + bac : `rows`/`cols`/`fond_ouvert`.
+  - **Kind `'C'` CONTENEUR par index** : `deplacer_pot` = geste **à 2 temps** (1er clic
+    = saisir le pot le plus proche `_grabbedContainer`, 2e = destination MONDE) ;
+    `planter_conteneur` = 1 clic + graine du cycle S. Refus mobile/bornes relayés du serveur.
+  - Cycle de substrat `CycleSubstrat` (touche B, modèle `CycleSeed`) sur les **5 substrats
+    posables par le pont** : terreau/compost/drainant_mineral/lasagnes/mycelium_use
+    (`terre_jardin` EXCLU — le pont le refuse en ④). Knobs `const` de pose (calibrage F5).
+    `SelectGeste` réinitialise `_grabbedContainer` (annule une saisie au changement de geste).
+- `world/WorldView.Conteneurs.cs` — `FindNearestContainer(w, radiusCm)` (parcourt
+  `_containers`, renvoie l'INDEX snapshot du conteneur le plus proche, ou -1 ; linéaire,
+  calqué sur `FindPlant`/`FindNearestStructure`).
+- `world/WorldView.Controls.cs` — touche **B** → `CycleSubstrat`.
+- `world/WorldView.Hud.cs` — `UpdateActionHud` affiche substrat courant (poser), graine
+  (planter pot), état de saisie (déplacer) ; légende + « B substrat ».
+
+## Golden re-vérifié après ⑥b (bit-identique)
+- smoke : `2ab026ad2b3f484777a2a29f804e1a4785ecffd6976fc0058fe0a33dd1498646` ✅ (aucun
+  fichier Python touché → golden trivialement NEUTRE). Build C# **vert**.
+
+## Points à VALIDER au F5 (Nico) — ⑥b
+- **Ergonomie du déplacement à 2 temps** : 1er clic saisit (HUD « pot #N saisi → cliquez
+  la destination »), 2e clic pose. Changer de geste annule la saisie. Confortable ?
+- **Knobs de pose par défaut** (`const` dans `WorldView.Actions.cs`) : pot 75 L,
+  bac 2×2 / 200 L / fond ouvert. À calibrer si « trop gros/petit » ou si on veut un cycle
+  de volume/grille plutôt qu'un défaut figé.
+- **Cycle de substrat (touche B)** : 5 substrats lisibles au HUD ; `terre_jardin` absent
+  (refusé par le pont en ④) — à brancher plus tard si Nico le veut (faudrait pointer un
+  plot source).
+- Pose **réussie** : pot/bac apparaît (⑥a le dessine), Vigueur débitée, bac refuse le
+  déplacement (message relayé), plante en pot pousse (effet nain si petit volume).
+- `ContainerPickRadiusCm = 60` cm : assez généreux pour saisir un pot au clic ?
+
+## REPRISE (démarrage à froid) — ⑥a/⑥b FAITS, RESTE ⑥c
+Moteur ①→⑤ CLOS (golden NEUTRE `2ab026ad…`, pont 0.5.7). Vue ⑥a FAITE (rendu statique
+pots/bacs/substrat/plantes, à VALIDER F5) ; ⑥b FAITE (poser/déplacer/planter via
+`TryAction` outil+clic, build C# vert, golden inchangé). RESTE : **⑥c indices du couplage**
+(fond ouvert/nain/substrat, lit `eco_summary` du snapshot, étiquettes). Lancer
+`06c_indices_couplage.md`. La vue ne touche AUCUN fichier Python → golden trivialement NEUTRE.
 
 ## Points à VALIDER au F5 (Nico) — ⑥a
 - Forme/échelle du POT (tronc-cône) et du BAC (caisse N×M) : knobs `const` de
