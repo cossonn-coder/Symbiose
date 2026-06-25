@@ -41,7 +41,7 @@ le préserve.
 | ② | Saprophyte (décompo `bois`) + liant (`om_stable`) | `02_saprophyte_liant.md` | ✅ FAIT (golden RE-FIGÉ maîtrisé `9d13d4a7…`) |
 | ③ | Mycorhize (boost `p` borné dans `plant_uptake` + miroir `qi_local`) | `03_mycorhize.md` | ✅ FAIT (golden RE-FIGÉ maîtrisé `00c1984a…`) |
 | ④ | Faune fongivore + carpophores échantillonnés | `04_faune_carpophores.md` | ✅ FAIT (golden smoke RE-FIGÉ maîtrisé `db5e7c66…` ; population RE-FIGÉE `9ba39ab7…` ; carpophores NEUTRES) |
-| ⑤ | Structures niveau tuile + colonisation fongique + bêchage event-driven | `05_structures_tuile.md` | À FAIRE |
+| ⑤ | Structures niveau tuile + colonisation fongique + bêchage event-driven | `05_structures_tuile.md` | ✅ FAIT (golden + population INCHANGÉS `db5e7c66…`/`9ba39ab7…` — event-driven + structures-vides) |
 | ⑥ | `epandre` 2 clics + vue Godot (carpophores, tas colonisé, overlay) | `06_epandre_vue.md` | À FAIRE (Godot différé) |
 
 ## Conventions
@@ -96,13 +96,19 @@ le préserve.
   > Dérive **localisée à 2 guildes** sur les 210 lignes : `T1/lombric` (la cible directe
   > du signal fongivore) + `T0/merle` (son prédateur, propagation boom-bust attendue).
   > Aucune autre guilde ne bouge. Isolation : `FONGIVORE_GAIN=0` ⇒ rien ne change.
+  > ⑤ INCHANGÉ (smoke `db5e7c66…` + population `9ba39ab7…` BIT-IDENTIQUES). Tout ⑤ est
+  > EVENT-DRIVEN (bêchage au geste) OU confiné aux structures posées. Le smoke et le test
+  > population ne POSENT AUCUNE structure → `tick_structures` reste no-op STRICT (boucle
+  > vide, invariant préservé) ⇒ la colonisation/maturation/ensemencement mycélien ne
+  > tourne jamais hors d'un bac/pile joueur. Le malus `becher` sur `mycelium` n'entre pas
+  > dans le tick (geste). Donc AUCUNE dérive — pas de re-figeage.
 > Mesurés AVANT toute modif. ① bit-identique (mycélium nul au repos) ; ②③ RE-FIGÉS
-> (cf. supra) ; ④ RE-FIGÉS (smoke + population, cf. supra). ⑤ ~intact.
+> (cf. supra) ; ④ RE-FIGÉS (smoke + population, cf. supra). ⑤ INCHANGÉ (event-driven).
 > NB : 1 check rouge PRÉEXISTANT dans `tests/test_sim_server.py` (« pommier pré-âgé
 > — 0 fruits @ S52 »), sans rapport avec ce sprint — baseline, pas une régression.
 
 ## REPRISE (démarrage à froid)
-**①②③④ FAITS.**
+**①②③④⑤ FAITS — SPRINT MOTEUR CLOS. Reste ⑥ (vue Godot, différé).**
 - **①** : champ `mycelium` (`fields/ecofields/mycelium.py`, `tick_mycelium` pur) déclaré
   dans `container.py`, tické dans `sim/engine/boucle.py` (après `tick_structure`, avant
   diffusion), knobs dans `constants.py`. Golden bit-identique `2ab026ad…`.
@@ -136,5 +142,27 @@ le préserve.
   30/30 (11 checks ④, sections L faune + M carpophores). `test_structures.py` 65/65,
   `test_sim_server.py` 205/206 (le 206e = baseline pommier pré-âgé, hors sprint).
   **VUE C# différée au ⑥** (Option B) : seul le moteur Python est branché.
-**Prochain : `05_structures_tuile.md`** (structures niveau tuile + colonisation fongique
-du tas + bêchage EVENT-DRIVEN ; golden ~intact attendu, event-driven).
+- **⑤** : structures au niveau TUILE + colonisation fongique + bêchage event-driven.
+  (A) `Structure` rattachée à la TUILE : `poser_bac`/`poser_pile` refusent EN AMONT un
+  2ᵉ du même kind (au plus UN bac + UNE pile par tuile, `compost.py`) ; helper
+  `structure_de_tuile(eco, kind)` (ré-exporté `ACT.*`) résout l'unique structure ;
+  `composter`/`empiler` acceptent déjà N'IMPORTE QUEL plot de la tuile (plot = simple
+  ancrage rendu). (B/C) `Structure.colonisation ∈ [0,1]` (champ neuf sur la dataclass)
+  croît au `tick_structures` tant qu'il reste du contenu (`COLONISATION_K`), MODULE la
+  maturation (`mult ×= 1 + COLONISATION_MATUR·colonisation`, voie fongique §3.3) ET
+  ENSEMENCE `eco.mycelium` au plot d'ancrage (`COLONISATION_SEED`) → la faune fongivore
+  ④ (`_mycelium_signal`→lombric) + les carpophores s'installent sur le BAC (§3.4, MÊME
+  patron qu'④, zéro terme de faune neuf) ; décline à vide. (D) `becher` retire un quantum
+  `BECHAGE_MYCELIUM_MALUS` de `mycelium` au plot (`gestes.py`, EVENT-DRIVEN, miroir EXACT
+  de ses malus lombric/microbiome/structure_sol ; clampé ≥0, no-op si réseau nul) ;
+  `grelinette` NE TOUCHE PAS `mycelium` (préserve, double peine pédagogique). PAS le champ
+  `disturbance` (environnemental, ≠ travail joueur). Knobs `COLONISATION_K=0.10`/
+  `COLONISATION_MATUR=1.0`/`COLONISATION_SEED=0.05`/`BECHAGE_MYCELIUM_MALUS=0.5` dans
+  `constants.py` (PLACEHOLDERS). Golden smoke + population BIT-IDENTIQUES `db5e7c66…`/
+  `9ba39ab7…` (event-driven + structures-vides au smoke). `test_mycelium.py` 34/34
+  (section N bêchage), `test_structures.py` 80/80 (16 un-par-tuile, 17 colonisation,
+  18 déterminisme). `test_sim_server.py` 205/206 (206e = baseline pommier pré-âgé, hors
+  sprint). C# NON concerné (kickoff ⑤ Python pur, vue au ⑥). **SPRINT MOTEUR ①→⑤ CLOS.**
+**Prochain : `06_epandre_vue.md`** (`epandre` 2 clics protocole pont + vue Godot :
+carpophores, tas colonisé, palette overlay `mycelium`) — **Godot différé** (Option B,
+intégration en pause). Seul tronçon restant du sprint.

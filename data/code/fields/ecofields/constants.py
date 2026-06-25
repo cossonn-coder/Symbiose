@@ -473,6 +473,32 @@ LIANT_K            = 0.0005 # apport glomaline à `om_stable`/sem à mycelium=1 
 # Patron `UPTAKE_MICRO_BONUS=0.40`. PLACEHOLDER, calibrage post-test (CONCEPTION §2.2).
 MYCO_P_BONUS       = 0.40   # bonus max de prélèvement de P à réseau fongique saturé
 
+# --- COLONISATION FONGIQUE DU TAS + bêchage (tronçon ⑤, §3.3/§1.2) ----------
+# Le bac/pile est un habitat fongique de choix (humide, riche en bois) → il se fait
+# COLONISER par le réseau : `Structure.colonisation ∈ [0,1]` croît au tick tant qu'il
+# reste du contenu à digérer, puis MODULE la maturation (le compost colonisé mûrit
+# plus vite — voie fongique du §3.3) et ENSEMENCE `eco.mycelium` au plot d'ancrage
+# (le tas vivant rayonne du réseau → la faune fongivore ④ et les carpophores s'y
+# installent : c'est ainsi que la faune arrive sur le bac, §3.4, par le MÊME patron
+# qu'④, sans terme neuf). PLACEHOLDERS, calibrage post-test.
+#   - COLONISATION_K  : vitesse de colonisation du tas (par sem, tend vers 1).
+#   - COLONISATION_MATUR : poids de la colonisation dans le boost de maturation
+#     (`mult ×= 1 + COLONISATION_MATUR·colonisation`) — colonisé ⇒ mûrit plus vite.
+#   - COLONISATION_SEED : fraction de la colonisation reversée au champ `mycelium`
+#     au plot d'ancrage chaque tick (le tas ensemence le sol autour).
+# Ces termes ne touchent QUE des structures posées : `eco.structures == []` au smoke
+# golden/population ⇒ tick_structures no-op ⇒ golden NEUTRE (event-driven du joueur).
+COLONISATION_K       = 0.10   # croissance hebdo de la colonisation fongique du tas
+COLONISATION_MATUR   = 1.0    # un tas pleinement colonisé mûrit ×2 (voie fongique §3.3)
+COLONISATION_SEED    = 0.05   # part de colonisation ensemencée dans `mycelium`/sem
+
+# Quantum de `mycelium` retiré par un coup de BÊCHE (tronçon ⑤, §1.2, event-driven).
+# MIROIR du malus microbiome/lombric/structure_sol de `becher` (gestes.py) : bêcher
+# casse aussi le réseau fongique (double peine pédagogique), là où `grelinette`
+# PRÉSERVE (ne touche pas `mycelium`). Add d'un négatif clampé à 0 par le GridField →
+# no-op si le réseau est déjà nul. PLACEHOLDER, calibrage post-test (§1.2).
+BECHAGE_MYCELIUM_MALUS = 0.5
+
 # Signature sol par famille (laissée après chaque saison)
 SOIL_SIGNATURE = {
     "Fabaceae":   {"microbiome": +0.15, "fertilite": +0.10},

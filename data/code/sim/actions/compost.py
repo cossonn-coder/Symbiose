@@ -28,6 +28,19 @@ EPANDRE_W = {
     "pile": {"om_stable": 0.78, "microbiome": 0.15, "n": 0.12},
 }
 
+def structure_de_tuile(eco, kind: str) -> Structure | None:
+    """La structure de type `kind` (`bac`/`pile`/`ruche`) de CETTE tuile, ou None
+    (mycélium ⑤ §3.1 : bac/pile sont rattachés à la TUILE, plus à un plot). Comme
+    `eco` est par tuile, « la structure de la tuile » = la première (et unique, cf.
+    l'invariant des `poser_*`) `Structure` de ce `kind` dans `eco.structures`.
+    Déterministe (ordre d'insertion). Sert au routage pont (composter depuis tout
+    plot → cette structure) et au garde-fou d'unicité des `poser_*`."""
+    for struct in eco.structures:
+        if struct.kind == kind:
+            return struct
+    return None
+
+
 def _ramasser_vers_structure(eco, r: int, c: int, struct: Structure) -> float:
     """Déplace du plot (r,c) vers `struct` toutes les parcelles que la structure
     ACCEPTE (§5) : retire de la litière, fusionne dans le contenu. **Conserve la
@@ -49,10 +62,16 @@ def _ramasser_vers_structure(eco, r: int, c: int, struct: Structure) -> float:
 
 def poser_bac(game_state: dict, player: str, eco, r: int, c: int) -> Structure | None:
     """Poser un bac à compost (§5.1) au plot (r,c) — phase PLANIFICATION, coût
-    MODÉRÉ. Crée une structure VIDE et l'ajoute à `eco.structures`. Binaire (modèle
-    `deraciner`/`planter`) : la structure n'est posée QUE si le coût est
-    intégralement payé — un geste à vide draine la Vigueur sans rien poser.
-    Renvoie la `Structure` posée, ou None si la Vigueur est insuffisante."""
+    MODÉRÉ. Crée une structure VIDE et l'ajoute à `eco.structures`. Le plot (r,c)
+    reste l'ANCRAGE (rendu + ensemencement mycélien §3.3), mais l'APPARTENANCE est la
+    TUILE (mycélium ⑤ §3.1) : **au plus UN bac par tuile** (lisible) → refus EN AMONT
+    de toute dépense si la tuile en porte déjà un (ce n'est pas une maladresse de jeu,
+    on ne pose pas un 2ᵉ bac). Binaire (modèle `deraciner`/`planter`) : sinon la
+    structure n'est posée QUE si le coût est intégralement payé — un geste à vide
+    draine la Vigueur sans rien poser.
+    Renvoie la `Structure` posée, ou None (Vigueur insuffisante OU bac déjà présent)."""
+    if structure_de_tuile(eco, "bac") is not None:
+        return None                           # déjà un bac sur la tuile (§3.1) — rien dépensé
     cost = cout_action(game_state, player, "poser_bac", OBJETS_TOUCHES["poser_bac"])
     if spend(game_state, player, cost) < 1.0:
         return None
@@ -74,7 +93,12 @@ def poser_pile(game_state: dict, player: str, eco, tile, r: int, c: int) -> Stru
     Binaire : la pile n'est posée QUE si le coût est intégralement payé. La rondelle
     est un BONUS best-effort — si toutes les tiges sont saturées (cas-bord), la pile
     est tout de même posée (sa raison d'être reste de recevoir du bois).
-    Renvoie la `Structure` posée, ou None si la Vigueur est insuffisante."""
+    **Au plus UNE pile par tuile** (§3.1, comme le bac) → refus EN AMONT si la tuile
+    en porte déjà une (rien dépensé). L'habitat `auxiliaire` (rondelle) était DÉJÀ au
+    niveau tuile → le bac s'aligne désormais dessus (mycélium ⑤ §3.1).
+    Renvoie la `Structure` posée, ou None (Vigueur insuffisante OU pile déjà présente)."""
+    if structure_de_tuile(eco, "pile") is not None:
+        return None                           # déjà une pile sur la tuile (§3.1) — rien dépensé
     cost = cout_action(game_state, player, "poser_pile", OBJETS_TOUCHES["poser_pile"])
     if spend(game_state, player, cost) < 1.0:
         return None
@@ -89,7 +113,10 @@ def poser_pile(game_state: dict, player: str, eco, tile, r: int, c: int) -> Stru
 def composter(game_state: dict, player: str, eco, r: int, c: int,
               struct: Structure) -> bool:
     """Composter (§5.1) — ramasser la litière de SURFACE tendre du plot (r,c) vers
-    le bac `struct`. Action sur le MILIEU, canal vertueux bon marché (philo #1) :
+    le bac `struct` de la TUILE. Le plot (r,c) est N'IMPORTE QUEL plot de la tuile
+    (mycélium ⑤ §3.1 : le bac est rattaché à la tuile, pas à son plot d'ancrage) ; on
+    verse dans l'unique bac de la tuile (résolu par le routage via `structure_de_tuile`).
+    Action sur le MILIEU, canal vertueux bon marché (philo #1) :
     coût FAIBLE. Binaire : le transfert n'a lieu que si le coût est payé. La parcelle
     `diffus` reste au sol (décision ⑤A) ; le bac refuse aussi le `bois`. No-op
     silencieux si rien à ramasser (plot propre) — on paie le geste, comme `becher`.
@@ -104,7 +131,9 @@ def composter(game_state: dict, player: str, eco, r: int, c: int,
 def empiler_bois(game_state: dict, player: str, eco, r: int, c: int,
                  struct: Structure) -> bool:
     """Empiler du bois (§5.1) — déplacer les parcelles `bois` du plot (r,c) vers la
-    pile `struct`. Jumeau de `composter` pour la matière ligneuse (BRF / hügelkultur).
+    pile `struct` de la TUILE. (r,c) est N'IMPORTE QUEL plot de la tuile (§3.1 : la
+    pile est rattachée à la tuile). Jumeau de `composter` pour la matière ligneuse
+    (BRF / hügelkultur).
     Coût FAIBLE, binaire, philo #1. La pile n'accepte QUE le `bois` (§5).
     Renvoie True si le geste a été pleinement payé (et donc appliqué)."""
     cost = cout_action(game_state, player, "empiler_bois", OBJETS_TOUCHES["empiler_bois"])

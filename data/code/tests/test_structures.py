@@ -428,9 +428,110 @@ def test_pile_habitat():
           tile2.get_rondelle_count("auxiliaire") == 0)
 
 
+# ---------------------------------------------------------------------------
+# 16. (mycélium ⑤ §3.1) Appartenance TUILE : au plus UN bac et UNE pile par tuile ;
+#     poser un 2ᵉ du même kind est refusé EN AMONT (rien dépensé). composter depuis
+#     N'IMPORTE QUEL plot de la tuile verse dans l'unique bac (résolu par helper).
+# ---------------------------------------------------------------------------
+def test_un_par_tuile():
+    print("\n[16] niveau tuile : au plus un bac + une pile, composter depuis tout plot")
+    eco = init_eco("T0", 4, 4)
+    tile = _tile()
+    gs = _gs()
+    b1 = ACT.poser_bac(gs, "joueur_1", eco, 0, 0)
+    check("1er bac posé", b1 is not None)
+    avant = gs["vigueur"]["joueur_1"]["courante"]
+    b2 = ACT.poser_bac(gs, "joueur_1", eco, 3, 3)
+    apres = gs["vigueur"]["joueur_1"]["courante"]
+    check("2ᵉ bac REFUSÉ (None) — un seul par tuile", b2 is None)
+    check("2ᵉ bac refusé EN AMONT → aucune Vigueur dépensée",
+          abs(apres - avant) < 1e-9, f"{avant:.2f}→{apres:.2f}")
+    p1 = ACT.poser_pile(gs, "joueur_1", eco, tile, 1, 1)
+    check("1ʳᵉ pile posée (kind différent → OK)", p1 is not None)
+    p2 = ACT.poser_pile(gs, "joueur_1", eco, tile, 2, 2)
+    check("2ᵉ pile REFUSÉE (None)", p2 is None)
+    # Helper de résolution : la structure de la tuile est l'unique de son kind.
+    check("structure_de_tuile('bac') == l'unique bac",
+          ACT.structure_de_tuile(eco, "bac") is b1)
+    check("structure_de_tuile('pile') == l'unique pile",
+          ACT.structure_de_tuile(eco, "pile") is p1)
+    # composter depuis un plot ≠ ancrage (bac ancré (0,0)) verse bien dans CE bac.
+    eco.deposer_litiere(3, 2, "feuille", 2.0)
+    bac = ACT.structure_de_tuile(eco, "bac")
+    ACT.composter(gs, "joueur_1", eco, 3, 2, bac)
+    check("composter depuis (3,2) ≠ ancrage (0,0) → versé dans le bac de la tuile",
+          _masse(bac.contenu, "feuille") == 2.0 and _masse(eco.litiere[3][2]) == 0.0)
+
+
+# ---------------------------------------------------------------------------
+# 17. (mycélium ⑤ §3.3/§3.4) Colonisation fongique du tas : croît tant qu'il y a du
+#     contenu, ACCÉLÈRE la maturation, ENSEMENCE `mycelium` au plot d'ancrage (→ la
+#     faune fongivore ④ et les carpophores s'installent sur le bac), DÉCLINE à vide.
+# ---------------------------------------------------------------------------
+def test_colonisation_fongique():
+    print("\n[17] colonisation fongique : croît, accélère la maturation, ensemence mycélium")
+    eco = init_eco("T0", 4, 4)
+    bac = Structure(kind="bac", plot=(2, 2))
+    eco.structures.append(bac)
+    eco.deposer_dans_structure(bac, "feuille", 5.0)
+    check("colonisation initiale = 0 (tas neuf)", bac.colonisation == 0.0)
+    myc_avant = eco.mycelium.at_plot(2, 2)
+    for _ in range(5):
+        eco.tick_structures()
+    check("colonisation a crû (> 0)", bac.colonisation > 0.0, f"{bac.colonisation:.4f}")
+    check("colonisation bornée ≤ 1", bac.colonisation <= 1.0)
+    check("mycélium ENSEMENCÉ au plot d'ancrage (faune/carpophores ④ §3.4)",
+          eco.mycelium.at_plot(2, 2) > myc_avant,
+          f"{myc_avant:.4f}→{eco.mycelium.at_plot(2, 2):.4f}")
+
+    # Maturation ACCÉLÉRÉE par la colonisation : un tas qu'on garde colonisé mûrit
+    # plus que le même tas SANS colonisation (témoin figé à 0 chaque tick).
+    eco2 = init_eco("T0", 4, 4)
+    bac_c = Structure(kind="bac", plot=(0, 0))   # colonisé librement
+    bac_t = Structure(kind="bac", plot=(3, 3))   # témoin : colonisation forcée à 0
+    eco2.structures += [bac_c, bac_t]
+    for b in (bac_c, bac_t):
+        eco2.deposer_dans_structure(b, "feuille", 5.0)
+    for _ in range(6):
+        eco2.tick_structures()
+        bac_t.colonisation = 0.0                 # neutralise la voie fongique sur le témoin
+    check("tas colonisé mûrit PLUS que le témoin non colonisé",
+          bac_c.compost_mur > bac_t.compost_mur,
+          f"colonisé {bac_c.compost_mur:.4f} vs témoin {bac_t.compost_mur:.4f}")
+
+    # Déclin à vide : un tas dont le contenu est épuisé voit sa colonisation refluer.
+    eco3 = init_eco("T0", 4, 4)
+    bac_v = Structure(kind="bac", plot=(1, 1), colonisation=0.8)   # déjà colonisé, contenu VIDE
+    eco3.structures.append(bac_v)
+    eco3.tick_structures()
+    check("colonisation DÉCLINE quand le tas est vide (rien à digérer)",
+          bac_v.colonisation < 0.8, f"{bac_v.colonisation:.4f}")
+
+
+# ---------------------------------------------------------------------------
+# 18. Déterminisme de la colonisation (zéro RNG)
+# ---------------------------------------------------------------------------
+def _scenario_colonisation():
+    eco = init_eco("T0", 4, 4)
+    bac = Structure(kind="bac", plot=(2, 2))
+    eco.structures.append(bac)
+    eco.deposer_dans_structure(bac, "feuille", 3.0)
+    for _ in range(7):
+        eco.tick_structures()
+    return (round(bac.colonisation, 9), round(bac.compost_mur, 9),
+            round(eco.mycelium.at_plot(2, 2), 9))
+
+
+def test_determinisme_colonisation():
+    print("\n[18] déterminisme : colonisation reproductible (h1 == h2)")
+    a = _scenario_colonisation()
+    b = _scenario_colonisation()
+    check("colonisation reproductible", a == b, f"{a}")
+
+
 def main():
     print("=" * 60)
-    print("TEST STRUCTURES POSABLES (décompo·compost ⑤ phases A+B+C)")
+    print("TEST STRUCTURES POSABLES (décompo·compost ⑤ phases A+B+C + mycélium ⑤)")
     print("=" * 60)
     test_poser()
     test_acceptation()
@@ -447,6 +548,9 @@ def main():
     test_epandre()
     test_pile_biais()
     test_pile_habitat()
+    test_un_par_tuile()
+    test_colonisation_fongique()
+    test_determinisme_colonisation()
 
     print("\n" + "=" * 60)
     total = len(_results)

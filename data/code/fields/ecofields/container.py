@@ -657,7 +657,8 @@ class EcoFields:
                 self.k.data[r][c] *= leach_factor("K", cn)
 
     def tick_structures(self) -> None:
-        """Maturation hebdomadaire du contenu des structures (⑤ phase B, §5.2).
+        """Maturation hebdomadaire du contenu des structures (⑤ phase B, §5.2)
+        + COLONISATION FONGIQUE du tas (mycélium ⑤, §3.3/§3.4).
 
         Décompo CONFINÉE, miroir de `tick_decomposition` : chaque parcelle du
         contenu mûrit à la cinétique de son tissu (`TISSU[tissu]`), la fraction
@@ -667,16 +668,42 @@ class EcoFields:
         lentement (`bois`). `retourner` (drapeau `retourne_restant`) MULTIPLIE la
         vitesse et LISSE les âges du contenu pendant `RETOURNE_DUREE` semaines.
 
-        Aucun champ du sol n'est touché (philo #2) : la maturation reste confinée
-        à la structure ; c'est `epandre` (phase C) qui restitue au sol. **No-op
-        STRICT si `structures == []`** (invariant golden ⑤ : boucle vide → zéro
-        écriture). Déterministe : structures dans l'ordre d'insertion, contenu
-        trié `TISSU_ORDER`, zéro RNG.
+        COLONISATION (⑤, §3.3) : un tas qui contient de la matière à digérer se fait
+        coloniser par le réseau (`struct.colonisation → 1`, knob `COLONISATION_K`) ;
+        elle DÉCLINE à vide (tas épuisé/épandu). La colonisation MODULE la vitesse de
+        maturation (`mult ×= 1 + COLONISATION_MATUR·colonisation` — voie fongique : la
+        pile à bois mûrit SURTOUT par le champignon) et ENSEMENCE le champ `mycelium`
+        au plot d'ancrage (`COLONISATION_SEED·colonisation`) → le tas vivant rayonne
+        du réseau, et la faune fongivore ④ (`lombric` via `_mycelium_signal`) + les
+        carpophores s'y installent (§3.4, le bac est ENFIN habité, par le MÊME patron
+        qu'④, sans terme de faune neuf).
+
+        Hors la colonisation, aucun champ du sol n'est touché (philo #2) : la
+        maturation reste confinée à la structure ; c'est `epandre` (phase C) qui
+        restitue au sol. **No-op STRICT si `structures == []`** (invariant golden ⑤ :
+        boucle vide → zéro écriture, le smoke/population ne posent aucune structure).
+        Déterministe : structures dans l'ordre d'insertion, contenu trié `TISSU_ORDER`,
+        zéro RNG.
         """
         for struct in self.structures:
+            # Colonisation fongique du tas (§3.3) : croît tant qu'il reste du contenu
+            # à digérer (substrat humide riche en bois), décline à vide. Bornée [0,1].
+            a_digerer = any(p.masse > 1e-9 for p in struct.contenu)
+            if a_digerer:
+                struct.colonisation += COLONISATION_K * (1.0 - struct.colonisation)
+            else:
+                struct.colonisation -= COLONISATION_K * struct.colonisation
+            struct.colonisation = max(0.0, min(1.0, struct.colonisation))
+            # Le tas colonisé ensemence le sol autour (plot d'ancrage) → faune ④ +
+            # carpophores s'installent (§3.4). add borné [0,1] par le GridField.
+            if struct.colonisation > 0.0:
+                r0, c0 = struct.plot
+                self.mycelium.add(r0, c0, COLONISATION_SEED * struct.colonisation)
+
             base = MATUR_BAC if struct.kind == "bac" else MATUR_PILE
             retourne = struct.retourne_restant > 0.0
             mult = MATUR_RETOURNE_MULT if retourne else 1.0
+            mult *= 1.0 + COLONISATION_MATUR * struct.colonisation   # voie fongique (§3.3)
             struct.contenu.sort(key=lambda p: TISSU_ORDER.index(p.tissu))
             survivors = []
             for p in struct.contenu:

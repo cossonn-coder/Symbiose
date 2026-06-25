@@ -106,6 +106,13 @@ class Structure:
     contenu:         list  = field(default_factory=list)  # list[Parcelle]
     compost_mur:     float = 0.0
     retourne_restant: float = 0.0                       # semaines d'accélération restantes (⑤B, `retourner`)
+    # Colonisation fongique du tas (mycélium ⑤, §3.3) ∈ [0,1] : 0 = tas neuf non
+    # colonisé, 1 = tas pleinement habité par le réseau. Croît au `tick_structures`
+    # tant qu'il reste du contenu à digérer (le tas humide riche en bois = habitat
+    # fongique de choix), MODULE la vitesse de maturation (voie fongique) et ENSEMENCE
+    # `eco.mycelium` autour (→ faune fongivore ④ + carpophores sur le bac, §3.4).
+    # INUTILISÉ par la `ruche` (reste 0.0). Posée à 0.0 (tas neuf vierge).
+    colonisation:    float = 0.0
     # Apiculture (⑥, §H/§I) — état d'une `ruche`, INUTILISÉ par bac/pile (restent 0.0,
     # pas de régression). `essaim` ∈ [0,1] = peuplement capturé (tick_ruches), `miel`
     # ∈ [0, MIEL_MAX] = réserve produite (intégrale du nectar mellifère butiné).

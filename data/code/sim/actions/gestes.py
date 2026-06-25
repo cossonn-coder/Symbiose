@@ -24,6 +24,7 @@ from sim.growth import (atteindre_segment,   # seam de perturbation §F (sim→s
 from sim.effects import deposer_mort   # mort → squelette persistant (②B), point d'entrée unique
 from fields.ecofields import BOIS_PAR_CM, ECRASER_FRAG_BOOST   # litière `bois` (taille/écimage) + boost fragmentation (②)
 from fields.ecofields import BECHAGE_MALUS, GRELINETTE_GAIN   # deltas structure du sol des gestes (physico-chimie ⑧)
+from fields.ecofields import BECHAGE_MYCELIUM_MALUS   # quantum de réseau fongique cassé par le bêchage (mycélium ⑤, event-driven)
 from fields.population import DENSITE_PAR_SPRITE   # « un geste = un individu = un quantum » (D31.3 §5)
 from fields.alarme import declencher_alarme, ALARME_DEPOT   # phéromone d'alarme apienne (⑦ §J)
 from fields.seedbank import GrainEnAttente          # dépôt de `planter` (germination différée, distinct de la banque-sol)
@@ -407,14 +408,19 @@ def favoriser_auxiliaire(game_state: dict, player: str, tile) -> bool:
 def becher(game_state: dict, player: str, eco, r: int, c: int) -> bool:
     """Biner / bêcher — retourner la terre (spec §3.2). Action BINAIRE, coût FAIBLE
     (geste rapide, « fausse bonne idée »). Effet : tue la faune du sol → retire un
-    quantum de `lombric` (④d ; ex-`vers_de_terre`) ET abaisse le `microbiome` local
-    de `BECHAGE_MICROBIOME_MALUS`. Tout-ou-rien : appliqué seulement si payé.
+    quantum de `lombric` (④d ; ex-`vers_de_terre`), abaisse le `microbiome` local de
+    `BECHAGE_MICROBIOME_MALUS`, tasse la `structure_sol` ET **casse le réseau
+    fongique** → retire un quantum `BECHAGE_MYCELIUM_MALUS` de `mycelium` (mycélium ⑤,
+    §1.2, EVENT-DRIVEN). Tout-ou-rien : appliqué seulement si payé.
 
     Pédagogie « visuel AVANT santé » (CONCEPTION_VIE_MACRO §5) : la chute de
     `lombric` fait DISPARAÎTRE des sprites de vers — feedback viscéral immédiat —
     *avant* la dette différée `microbiome ↓ → uptake ↓ → vigueur ↓` des plantes. Le
-    joueur découvre le bon outil par la conséquence (philo #1/#6, sans sermon). Le
-    jumeau qui PRÉSERVE est `grelinette`.
+    réseau cassé enlève AUSSI le boost saprophyte/mycorhize/liant (les carpophores
+    régressent) → DOUBLE peine pédagogique vs `grelinette` qui, lui, PRÉSERVE
+    `mycelium` (réseau intact). Le mycélium est EVENT-DRIVEN ici, jamais via le champ
+    `disturbance` (bruit de succession environnemental, ≠ travail joueur, §1.2). Le
+    joueur découvre le bon outil par la conséquence (philo #1/#6, sans sermon).
     Renvoie True si le geste a été pleinement payé (et donc appliqué)."""
     cost = cout_action(game_state, player, "becher", OBJETS_TOUCHES["becher"])
     if spend(game_state, player, cost) < 1.0:
@@ -422,13 +428,15 @@ def becher(game_state: dict, player: str, eco, r: int, c: int) -> bool:
     eco.populations["lombric"].add(r, c, -DENSITE_PAR_SPRITE)
     eco.microbiome.add(r, c, -BECHAGE_MICROBIOME_MALUS)
     eco.structure_sol.add(r, c, -BECHAGE_MALUS)   # semelle de tassement (⑧, version sobre §2.2)
+    eco.mycelium.add(r, c, -BECHAGE_MYCELIUM_MALUS)   # casse le réseau fongique (⑤, miroir des malus ci-dessus)
     return True
 
 
 def grelinette(game_state: dict, player: str, eco, r: int, c: int) -> bool:
     """Grelinette — ameublir SANS retourner (spec §3.2, principe no-dig). Action
     BINAIRE, coût MODÉRÉ. Le JUMEAU QUI PRÉSERVE de `becher` : même intention
-    (décompacter) mais ne tue NI vers NI microbiome.
+    (décompacter) mais ne tue NI vers NI microbiome NI réseau fongique — il NE TOUCHE
+    PAS `mycelium` (le no-dig préserve le wood-wide-web, mycélium ⑤ §1.2).
 
     Depuis le tronçon ⑧ (dette D30 absorbée) son BÉNÉFICE propre s'inscrit : la
     `structure_sol` du plot remonte de GRELINETTE_GAIN (gain DURABLE d'un passage,

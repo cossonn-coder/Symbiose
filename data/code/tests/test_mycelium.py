@@ -299,6 +299,45 @@ check("CARPOPHORES : positions indépendantes de la semaine (slot stable)",
       pos_a == pos_b)
 
 
+# --- N. BÊCHAGE EVENT-DRIVEN (⑤ §1.2) : `becher` casse le réseau (retire un quantum
+#        `mycelium`), `grelinette` le PRÉSERVE (ne le touche pas). Miroir EXACT des
+#        autres malus de `becher` ; jamais via le champ `disturbance`. ----
+from sim import actions as ACT
+from sim import vigueur as V
+from fields.ecofields import BECHAGE_MYCELIUM_MALUS
+
+
+def _gs_plein():
+    gs = {"current_player": "joueur_1", "week": 1, "log": []}
+    V.ensure_player(gs, "joueur_1")
+    return gs
+
+
+# Bêcher RETIRE BECHAGE_MYCELIUM_MALUS au plot bêché (réseau préexistant 0.7).
+e_b = init_eco("becher", 3, 3)
+e_b.mycelium.set(1, 1, 0.7)
+ACT.becher(_gs_plein(), "joueur_1", e_b, 1, 1)
+check("BÊCHAGE : `becher` RETIRE un quantum de mycélium au plot",
+      abs(e_b.mycelium.at_plot(1, 1) - (0.7 - BECHAGE_MYCELIUM_MALUS)) < 1e-9,
+      f"{e_b.mycelium.at_plot(1, 1):.4f}")
+check("BÊCHAGE : `becher` ne touche QUE le plot ciblé (voisin intact)",
+      e_b.mycelium.at_plot(0, 0) == 0.0)
+
+# Bêcher sur réseau NUL → clampé à 0, pas de plantage (piège kickoff).
+e_b0 = init_eco("becher0", 2, 2)
+ok_nul = ACT.becher(_gs_plein(), "joueur_1", e_b0, 0, 0)
+check("BÊCHAGE : `becher` sur mycélium nul → 0 (clampé, ne plante pas)",
+      ok_nul and e_b0.mycelium.at_plot(0, 0) == 0.0)
+
+# Grelinette PRÉSERVE le réseau (ne touche pas `mycelium`).
+e_g = init_eco("grelinette", 3, 3)
+e_g.mycelium.set(1, 1, 0.7)
+ACT.grelinette(_gs_plein(), "joueur_1", e_g, 1, 1)
+check("BÊCHAGE : `grelinette` PRÉSERVE le mycélium (réseau intact)",
+      e_g.mycelium.at_plot(1, 1) == 0.7,
+      f"{e_g.mycelium.at_plot(1, 1):.4f}")
+
+
 # --- Bilan ---
 fails = [n for n, ok in _results if not ok]
 if fails:
