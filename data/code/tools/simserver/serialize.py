@@ -16,7 +16,7 @@ from sim.weather import weather_state, weather_signs, CALME, T_MOY
 # Échantillonneur de vie macro (tranche 6·B) : fonction PURE et déterministe
 # densité → entités (fields/population.py §3). L'échantillonnage se fait CÔTÉ
 # SERVEUR — la vue n'a pas besoin de _hash_noise (kickoff t6 §4).
-from fields.population import sample_sprites
+from fields.population import sample_sprites, sample_carpophores
 # Sémiologie foliaire (D33) : détecteurs PURS des stresseurs chroniques, miroirs
 # fidèles des seuils des mécaniques qui blessent. Remplace le bool `chlorose` du ⑨
 # par la liste `leaf_symptoms`. Recalcul pur côté serveur (moteur = source de
@@ -143,6 +143,7 @@ class SerializeMixin:
         # Arrondis : x/y_frac 3 déc. (= 0,05 cm dans le plot), activite 2 —
         # et round() est déterministe, la clé de diff côté vue reste stable.
         sprites = {}
+        carpophores = {}
         foragers = {}
         structures = {}
         litiere = {}
@@ -156,6 +157,16 @@ class SerializeMixin:
                      round(s.activite, 2)]
                     for s in sample_sprites(f, gs["seed"])]
                 for f in eco.populations.values()}
+            # Carpophores (sprint mycélium ④, §1.1) : champignons VISIBLES
+            # échantillonnés du champ `mycelium` — PERCEPTION PURE (aucun état
+            # moteur, dérivés du champ comme les sprites macro). Format COMPACT par
+            # tuile : `[r, c, x_frac, y_frac, densite]`. Apparaissent en automne, sol
+            # humide, réseau dense → liste VIDE hors saison / mycélium nul → pont
+            # neutre. PURE lecture (sample_carpophores ne modifie rien) → golden NEUTRE.
+            carpophores[tile.tile_id] = [
+                [k.row, k.col, round(k.x_frac, 3), round(k.y_frac, 3),
+                 round(k.densite, 3)]
+                for k in sample_carpophores(eco, gs["seed"], week_in_year)]
             # Butineurs déterministes (arc pollinisation §F, 0.3.9) : agents
             # échantillonnés/marchés par engine._tick_butineurs (eco.foragers, déjà
             # rempli par le tick). Format COMPACT (cf. `sprites`) par tuile :
@@ -280,6 +291,7 @@ class SerializeMixin:
                            "vigueur_max": V.vigueur_max(gs, player),
                            "seeds": seeds},
                 "plants": plants, "sprites": sprites, "foragers": foragers,
+                "carpophores": carpophores,
                 "structures": structures, "litiere": litiere, "alarme": alarme,
                 "weather": weather, "temperature": temperature,
                 "containers": self._containers_snapshot(gs, saison)}

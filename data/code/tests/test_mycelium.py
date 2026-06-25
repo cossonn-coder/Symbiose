@@ -202,6 +202,103 @@ check("MYCORHIZE : mycélium nul ⇒ P prélevé = repos (facteur ×1.0)",
 check("déterminisme ③ : deux uptakes identiques → identique", _uptake(0.7) == _uptake(0.7))
 
 
+# --- L. FAUNE FONGIVORE (④) : sous un réseau, le détritivore du sol (lombric)
+#        gonfle vs mycélium NUL (terme additif `_mycelium_signal`). ----
+from world import Tile
+from fields import POP_MAX
+
+
+def _lombric_apres_tick(mycel_init):
+    """Densité `lombric` au plot (3,4) après UN tick de populations, à mycélium
+    figé. On laisse une densité de départ pour exercer la relaxation vers la cible
+    (la capacité additive du signal fongivore monte la cible)."""
+    e = init_eco("fong", 6, 8, humidite=2.0, fertilite=1.0, microbiome=0.5)
+    e.mycelium.fill(mycel_init)               # réseau uniforme
+    e.temperature.fill(20.0)                  # chaud → survie non nulle
+    e.populations["lombric"].fill(0.2)        # densité de départ
+    e.tick_populations(Tile(tile_id="fong", soil_type="terre"), [], week_in_year=25)
+    return e.populations["lombric"].at_plot(3, 4)
+
+
+fong_nul  = _lombric_apres_tick(0.0)
+fong_fort = _lombric_apres_tick(1.0)
+check("FAUNE FONGIVORE : lombric MONTE sous un réseau dense",
+      fong_fort > fong_nul, detail=f"nul={fong_nul:.5f} < fort={fong_fort:.5f}")
+check("FAUNE FONGIVORE : densité bornée par POP_MAX",
+      fong_fort <= POP_MAX, detail=f"{fong_fort:.5f} ≤ {POP_MAX}")
+
+# Non-régression : mycélium NUL ⇒ détritivore strictement INCHANGÉ (signal = 0).
+e_ref_f = init_eco("fongref", 6, 8, humidite=2.0, fertilite=1.0, microbiome=0.5)
+e_ref_f.mycelium.fill(0.0)
+e_ref_f.temperature.fill(20.0)
+e_ref_f.populations["lombric"].fill(0.2)
+e_nomyc = init_eco("nomyc", 6, 8, humidite=2.0, fertilite=1.0, microbiome=0.5)
+e_nomyc.temperature.fill(20.0)
+e_nomyc.populations["lombric"].fill(0.2)
+tile_f = Tile(tile_id="x", soil_type="terre")
+e_ref_f.tick_populations(tile_f, [], week_in_year=25)
+e_nomyc.tick_populations(tile_f, [], week_in_year=25)
+check("FAUNE FONGIVORE : mycélium nul ⇒ lombric = repos (signal ×0)",
+      e_ref_f.populations["lombric"].at_plot(3, 4)
+      == e_nomyc.populations["lombric"].at_plot(3, 4))
+
+
+# --- M. CARPOPHORES (④) : perception PURE échantillonnée du champ `mycelium`. ----
+from fields import sample_carpophores
+from fields.population import (CARPO_MYCEL_MIN, CARPO_HUMIDE_MIN, _CARPO_AUTOMNE)
+
+_WIY_AUTOMNE = _CARPO_AUTOMNE.start            # une semaine d'automne valide
+_WIY_ETE = 25                                  # hors fenêtre de fructification
+_SEED_C = 0x5AB1057E
+
+
+def _eco_carpo(mycel, humidite):
+    e = init_eco("carpo", 4, 4, humidite=humidite)
+    e.mycelium.fill(mycel)
+    return e
+
+
+# Réseau dense + sol humide + automne → carpophores PRÉSENTS.
+e_dense = _eco_carpo(0.8, 2.5)
+carpos = sample_carpophores(e_dense, _SEED_C, _WIY_AUTOMNE)
+check("CARPOPHORES : présents (réseau dense + humide + automne)",
+      len(carpos) > 0, detail=f"{len(carpos)} carpophores")
+check("CARPOPHORES : positions ∈ [0,1] (frac dans le plot)",
+      all(0.0 <= k.x_frac <= 1.0 and 0.0 <= k.y_frac <= 1.0 for k in carpos))
+
+# Déterminisme : deux échantillonnages du MÊME état → identiques (zéro RNG).
+c1 = sample_carpophores(e_dense, _SEED_C, _WIY_AUTOMNE)
+c2 = sample_carpophores(e_dense, _SEED_C, _WIY_AUTOMNE)
+check("CARPOPHORES : déterministes (h1 == h2, mêmes positions)",
+      [(k.row, k.col, k.slot, k.x_frac, k.y_frac) for k in c1]
+      == [(k.row, k.col, k.slot, k.x_frac, k.y_frac) for k in c2])
+
+# Mycélium NUL → liste VIDE (golden/pont neutres).
+check("CARPOPHORES : VIDE si mycélium nul",
+      sample_carpophores(_eco_carpo(0.0, 2.5), _SEED_C, _WIY_AUTOMNE) == [])
+# Sous le seuil de densité → VIDE.
+check("CARPOPHORES : VIDE si réseau trop ténu (< seuil)",
+      sample_carpophores(_eco_carpo(CARPO_MYCEL_MIN - 0.05, 2.5),
+                         _SEED_C, _WIY_AUTOMNE) == [])
+# Sol sec → VIDE (pas de fructification sans pluie).
+check("CARPOPHORES : VIDE si sol sec (< seuil humidité)",
+      sample_carpophores(_eco_carpo(0.8, CARPO_HUMIDE_MIN - 0.2),
+                         _SEED_C, _WIY_AUTOMNE) == [])
+# Hors automne → VIDE (saison non favorable).
+check("CARPOPHORES : VIDE hors automne (saison défavorable)",
+      sample_carpophores(e_dense, _SEED_C, _WIY_ETE) == [])
+
+# Indépendance position/semaine : un slot occupe le MÊME point quel que soit
+# `week_in_year` (positions par hash de seed/position/slot, pas de la semaine).
+e_dense2 = _eco_carpo(0.8, 2.5)
+pos_a = {(k.row, k.col, k.slot): (k.x_frac, k.y_frac)
+         for k in sample_carpophores(e_dense2, _SEED_C, _WIY_AUTOMNE)}
+pos_b = {(k.row, k.col, k.slot): (k.x_frac, k.y_frac)
+         for k in sample_carpophores(e_dense2, _SEED_C, _CARPO_AUTOMNE.stop - 1)}
+check("CARPOPHORES : positions indépendantes de la semaine (slot stable)",
+      pos_a == pos_b)
+
+
 # --- Bilan ---
 fails = [n for n, ok in _results if not ok]
 if fails:

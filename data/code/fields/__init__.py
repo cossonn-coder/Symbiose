@@ -35,6 +35,7 @@ from fields.population import (
     PopulationField, TrophicSpec, PollinatorSpec, SpriteSample,
     build_population_specs, build_pollinator_registry, build_lifecycle_bridges,
     POLLINATOR_NAMES, sample_sprites, daylength,
+    Carpophore, sample_carpophores,
     POP_MAX, POP_INERTIA, DENSITE_PAR_SPRITE, SPRITES_PAR_PLOT_MAX,
 )
 from fields.faune_encyclo import FAUNE_ENCYCLO, encyclo_meta

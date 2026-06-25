@@ -40,7 +40,7 @@ le préserve.
 | ① | Champ `mycelium` + dynamique (effets §2 DÉBRANCHÉS, repos neutre) | `01_champ_mycelium.md` | ✅ FAIT (golden BIT-IDENTIQUE) |
 | ② | Saprophyte (décompo `bois`) + liant (`om_stable`) | `02_saprophyte_liant.md` | ✅ FAIT (golden RE-FIGÉ maîtrisé `9d13d4a7…`) |
 | ③ | Mycorhize (boost `p` borné dans `plant_uptake` + miroir `qi_local`) | `03_mycorhize.md` | ✅ FAIT (golden RE-FIGÉ maîtrisé `00c1984a…`) |
-| ④ | Faune fongivore + carpophores échantillonnés | `04_faune_carpophores.md` | À FAIRE |
+| ④ | Faune fongivore + carpophores échantillonnés | `04_faune_carpophores.md` | ✅ FAIT (golden smoke RE-FIGÉ maîtrisé `db5e7c66…` ; population RE-FIGÉE `9ba39ab7…` ; carpophores NEUTRES) |
 | ⑤ | Structures niveau tuile + colonisation fongique + bêchage event-driven | `05_structures_tuile.md` | À FAIRE |
 | ⑥ | `epandre` 2 clics + vue Godot (carpophores, tas colonisé, overlay) | `06_epandre_vue.md` | À FAIRE (Godot différé) |
 
@@ -78,15 +78,31 @@ le préserve.
   > retrouve EXACTEMENT `9d13d4a7…` → toute la dérive vient du seul boost P, rien d'autre.
   > Philo #2 respectée (on amplifie un flux que le sol REND DISPONIBLE, pas la plante ;
   > Liebig `min(besoin,stock)` + fenêtre pH `dispo(ph,"P")` restent limitants).
+  > ④ RE-FIGÉ MAÎTRISÉ : `00c1984a…` (③) → `db5e7c660f040e4b084d0fbc76350d25b0dbd169edf15699619c5de9b3ce207f` (④).
+  > Le smoke A dérivé (contrairement au « viser inchangé » optimiste du kickoff, qui
+  > prévoyait le cas « sinon re-figer, expliqué »). CAUSE : le terme fongivore gonfle
+  > le `lombric` (détritivore du sol) là où `mycelium` > 0 ; or `lombric` est lu par la
+  > BIOTURBATION du sol (`structure.py`/`container.py` ④d, déjà branché) → un poil plus
+  > de décompo de la MO. Dérive **localisée** : sur les 60 lignes ECO, SEULES 2 changent,
+  > UNIQUEMENT om_active/om_fresh/organic_mat (T0 om_active 0.527→0.526 ; T1 k 0.219→0.218,
+  > om_fresh 0.311→0.310), ampleur ~0.001 (niveau d'arrondi). AUCUN attribut de plante,
+  > aucun autre champ. Preuve d'isolation : `FONGIVORE_GAIN=0` ⇒ on RETROUVE EXACTEMENT
+  > `00c1984a…` → toute la dérive vient du seul terme fongivore (via lombric→sol), rien
+  > d'autre. Philo #2 respectée : flux (mycélium→faune) → biologie (bioturbation), pas un
+  > bonus direct. Les CARPOPHORES sont NEUTRES (perception pure, hors digest smoke).
 - population `tests/test_population.py` : `6056713d4dd1e2a79964411961909545433f8513a530a2b39151cbe6aabe471b`
   (INCHANGÉ au ②③ — rien ne touche la faune).
+  > ④ RE-FIGÉ MAÎTRISÉ : `6056713d…` → `9ba39ab7cf4757b662285f2fd4611d6fe38bf3ebc9d4c3ee5302f4cd3df22876`.
+  > Dérive **localisée à 2 guildes** sur les 210 lignes : `T1/lombric` (la cible directe
+  > du signal fongivore) + `T0/merle` (son prédateur, propagation boom-bust attendue).
+  > Aucune autre guilde ne bouge. Isolation : `FONGIVORE_GAIN=0` ⇒ rien ne change.
 > Mesurés AVANT toute modif. ① bit-identique (mycélium nul au repos) ; ②③ RE-FIGÉS
-> (cf. supra) ; ④ re-fige de façon maîtrisée (noter chaque transition ici). ⑤ ~intact.
+> (cf. supra) ; ④ RE-FIGÉS (smoke + population, cf. supra). ⑤ ~intact.
 > NB : 1 check rouge PRÉEXISTANT dans `tests/test_sim_server.py` (« pommier pré-âgé
 > — 0 fruits @ S52 »), sans rapport avec ce sprint — baseline, pas une régression.
 
 ## REPRISE (démarrage à froid)
-**①②③ FAITS.**
+**①②③④ FAITS.**
 - **①** : champ `mycelium` (`fields/ecofields/mycelium.py`, `tick_mycelium` pur) déclaré
   dans `container.py`, tické dans `sim/engine/boucle.py` (après `tick_structure`, avant
   diffusion), knobs dans `constants.py`. Golden bit-identique `2ab026ad…`.
@@ -106,5 +122,19 @@ le préserve.
   (via `from .constants import *`). Golden **RE-FIGÉ MAÎTRISÉ** `9d13d4a7…` → `00c1984a…`
   (dérive = seul champ `p` qui baisse, cf. §Hash ; isolation `MYCO_P_BONUS=0` ⇒ `9d13d4a7…`).
   Population inchangé `6056713d…`. `test_mycelium.py` 19/19 (6 checks ③ ajoutés, section K).
-**Prochain : `04_faune_carpophores.md`** (faune fongivore + carpophores échantillonnés ;
-re-figeage golden maîtrisé attendu — population/faune touchée).
+- **④** : faune fongivore + carpophores. FAUNE = terme ADDITIF `signal_fn=_mycelium_signal`
+  (knob `FONGIVORE_GAIN=0.35`, PLACEHOLDER) sur la capacité du `lombric` (détritivore du
+  sol, collemboles fongivores) dans `fields/population.py` — patron de l'attraction fruit
+  (`_aux_fruit_signal`) ; mycelium=0 ⇒ signal nul. CARPOPHORES = `sample_carpophores(eco,
+  seed, week_in_year)` (perception PURE, AUCUN état moteur, `@dataclass Carpophore`),
+  échantillonnés du champ `mycelium` quand réseau dense (≥0.30) + sol humide (≥1.5) +
+  AUTOMNE (range 27-39, dupliqué pour ne pas importer `sim`) ; zéro RNG (`_hash_noise`,
+  salt `0x2AF001`). Exposés au pont (`serialize.py`, bloc `carpophores` CREUX par tuile,
+  protocole **0.5.8**). Golden smoke RE-FIGÉ MAÎTRISÉ `00c1984a…` → `db5e7c66…` (dérive
+  via lombric→bioturbation, 2 lignes ECO, cf. §Hash) ; population RE-FIGÉE `6056713d…` →
+  `9ba39ab7…` (lombric+merle, cf. §Hash). Carpophores NEUTRES (perception). `test_mycelium.py`
+  30/30 (11 checks ④, sections L faune + M carpophores). `test_structures.py` 65/65,
+  `test_sim_server.py` 205/206 (le 206e = baseline pommier pré-âgé, hors sprint).
+  **VUE C# différée au ⑥** (Option B) : seul le moteur Python est branché.
+**Prochain : `05_structures_tuile.md`** (structures niveau tuile + colonisation fongique
+du tas + bêchage EVENT-DRIVEN ; golden ~intact attendu, event-driven).

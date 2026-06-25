@@ -114,6 +114,36 @@ FRAC_AUX_POURRI  = 0.25  # part du signal pourri qui va AUSSI à l'auxiliaire (d
 
 
 # ---------------------------------------------------------------------------
+# ATTRACTION FONGIVORE PAR LE MYCÉLIUM (sprint mycélium ④, CONCEPTION §1.1)
+# ---------------------------------------------------------------------------
+# Le champ `mycelium ∈ [0,1]` (réseau fongique, acteur ① du sprint) NOURRIT une
+# fraction de la faune fongivore (collemboles/détritivores qui broutent les
+# hyphes) : terme ADDITIF à la capacité de charge du `lombric` (détritivore du
+# sol, là où vit le réseau), via `signal_fn` — exactement le patron du fruit
+# tombé (`_aux_fruit_signal`), pas un retour de la faune sur le champ (philo #2).
+# Invariant golden : `mycelium = 0` partout (repos du smoke) ⇒ signal nul ⇒
+# capacité strictement inchangée → golden de champ NEUTRE hors mycélium réel.
+# Knob CONSERVATIF (un réseau saturé ne dépasse pas le boost du fruit frais),
+# calibrage post-test.
+FONGIVORE_GAIN = 0.35    # boost max de capacité `detritivore` d'un réseau plein
+
+
+def _mycelium_signal(eco, tile, plants) -> list[list[float]]:
+    """Attraction fongivore : le réseau `mycelium` dense gonfle la capacité du
+    détritivore du sol (collemboles brouteurs d'hyphes). Borné par FONGIVORE_GAIN.
+    Lecture PURE du champ (la faune ne touche pas le mycélium — c'est le CHAMP qui
+    fait tout, piège du kickoff §pièges)."""
+    mycel = getattr(eco, "mycelium", None)
+    if mycel is None:                       # robustesse pré-① (jamais en prod)
+        return _zero_grid(eco.rows, eco.cols)
+    g = _zero_grid(eco.rows, eco.cols)
+    for r in range(eco.rows):
+        for c in range(eco.cols):
+            g[r][c] = FONGIVORE_GAIN * mycel.at_plot(r, c)
+    return g
+
+
+# ---------------------------------------------------------------------------
 # CONSTANTES DE SCISSION DU RAVAGEUR (faune nommée ④b, CONCEPTION_FAUNE_DEDIEE §2)
 # ---------------------------------------------------------------------------
 # Le champ unique `ravageur` se scinde en puceron / limace / doryphore. Chacun a
@@ -772,6 +802,10 @@ def build_population_specs() -> list[TrophicSpec]:
             name="lombric", category="detritivore", salt=_SALT_LOMBRIC,
             resource_fn=_soil_food_grid, habitat_fn=_undisturbed_grid,
             predators=("merle", "herisson"),     # ④d : le ver n'est plus un puits isolé
+            # Attraction fongivore (sprint mycélium ④) : le réseau mycélien dense
+            # gonfle le détritivore du sol (collemboles brouteurs d'hyphes) — terme
+            # ADDITIF, mycelium=0 ⇒ neutre. Interconnexion champignon ↔ faune (§1.1).
+            signal_fn=_mycelium_signal,
             daylen_min=8.5, daylen_full=10.0,    # LARGE : sol tamponné, quasi toute l'année
             **encyclo_meta("lombric"),
         ),
@@ -1079,3 +1113,69 @@ def sample_sprites(field: PopulationField, seed: int,
                     x_frac=x, y_frac=y, activite=act,
                 ))
     return sprites
+
+
+# ---------------------------------------------------------------------------
+# PERCEPTION — carpophores échantillonnés (sprint mycélium ④, CONCEPTION §1.1)
+# ---------------------------------------------------------------------------
+# Les carpophores (champignons VISIBLES) sont de la PERCEPTION PURE, dérivée du
+# champ `mycelium` — AUCUN état propre, recalculés à chaque snapshot (comme la vie
+# macro). Ils apparaissent là où le réseau est DENSE + le sol HUMIDE (après pluie)
+# + en SAISON favorable (automne). Zéro RNG (hash spatial déterministe), zéro
+# retour sur la simulation → golden-NEUTRES (le CHAMP fait tout, le carpophore ne
+# nourrit ni ne décompose — piège du kickoff §pièges).
+
+_SALT_CARPOPHORE = 0x2AF001       # canal _hash_noise dédié (décorrélé des guildes)
+CARPO_MYCEL_MIN  = 0.30           # seuil de densité mycélienne sous lequel rien ne fructifie
+CARPO_HUMIDE_MIN = 1.5            # humidité (échelle [0,3]) sous laquelle pas de fructification
+CARPO_PAR_PLOT   = 3              # nb max de carpophores par plot (saturation visuelle)
+CARPO_DENS_REF   = 0.70           # densité mycélienne au-delà de laquelle le plot est plein
+# Fenêtre AUTOMNE (semaines dans l'année) — dupliquée ici plutôt qu'importée de
+# `sim.engine.calendrier` (couche `fields` n'importe JAMAIS `sim`, règle de couches).
+# Miroir de SAISONS["automne"] = range(27, 40) ; constante simple, pas de cycle.
+_CARPO_AUTOMNE = range(27, 40)
+
+
+@dataclass(frozen=True)
+class Carpophore:
+    """Un carpophore échantillonné — donnée de RENDU pure (aucun état moteur)."""
+    row: int
+    col: int
+    slot: int          # index dans le plot (0..n-1)
+    x_frac: float      # position dans le plot ∈ [0,1], INDÉPENDANTE de la semaine
+    y_frac: float
+    densite: float     # densité mycélienne locale [0,1] (pilote la taille du sprite)
+
+
+def sample_carpophores(eco, seed: int, week_in_year: int) -> list[Carpophore]:
+    """
+    Échantillonne les carpophores VISIBLES du champ `mycelium` (perception §1.1).
+    PURE & déterministe : lecture seule du champ, positions par hash spatial
+    indépendant de la semaine → golden-NEUTRE.
+
+    Conditions de fructification, par plot :
+      - réseau DENSE          : mycelium ≥ CARPO_MYCEL_MIN ;
+      - sol HUMIDE (pluie)    : humidite ≥ CARPO_HUMIDE_MIN ;
+      - SAISON favorable      : automne (saison_de(week_in_year) == "automne").
+    Nombre de carpophores = floor(CARPO_PAR_PLOT × min(1, mycelium / CARPO_DENS_REF)).
+    Liste VIDE si mycélium nul / sol sec / hors automne → pont neutre.
+    """
+    mycel = getattr(eco, "mycelium", None)
+    # Saison non favorable ou pas de champ → aucun carpophore (perception muette).
+    if mycel is None or week_in_year not in _CARPO_AUTOMNE:
+        return []
+    carpos: list[Carpophore] = []
+    for r in range(eco.rows):
+        for c in range(eco.cols):
+            d = mycel.at_plot(r, c)
+            if d < CARPO_MYCEL_MIN:
+                continue
+            if eco.humidite.at_plot(r, c) < CARPO_HUMIDE_MIN:
+                continue
+            n = int(CARPO_PAR_PLOT * min(1.0, d / CARPO_DENS_REF))
+            for slot in range(n):
+                x = _hash_noise(seed, _SALT_CARPOPHORE + slot, r, c)
+                y = _hash_noise(seed, _SALT_CARPOPHORE + _SLOT_Y_OFFSET + slot, r, c)
+                carpos.append(Carpophore(
+                    row=r, col=c, slot=slot, x_frac=x, y_frac=y, densite=d))
+    return carpos

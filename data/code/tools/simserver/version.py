@@ -186,7 +186,19 @@ from __future__ import annotations
 #       ne pose AUCUN conteneur → `containers: []`. Un binaire pré-0.5.7 ignore le
 #       bloc et répond « verbe inconnu » aux 3 gestes (tolérance pré-0.5.7). VUE C#
 #       différée (tronçon ⑥, Option B) : seul le moteur Python est branché ici.
-ENGINE_VERSION = "0.5.7"
+# 0.5.8 (mycélium ④, faune fongivore + carpophores) : nouveau bloc `carpophores`
+#       au snapshot — liste CREUSE par tuile des champignons VISIBLES `[[r, c,
+#       x_frac, y_frac, densite], …]`, échantillonnés du champ `mycelium` par
+#       `sample_carpophores` (PERCEPTION pure, aucun état moteur, comme les sprites
+#       macro). Apparaissent en automne, sol humide, réseau dense → liste VIDE hors
+#       saison / mycélium nul. PUR ajout lecture-seule → golden NEUTRE (les
+#       carpophores ne touchent AUCUN champ). En PARALLÈLE, côté moteur (hors pont) :
+#       le champ `mycelium` gonfle une fraction du détritivore du sol (`lombric`,
+#       collemboles fongivores) via `signal_fn=_mycelium_signal` (knob FONGIVORE_GAIN)
+#       — interconnexion champignon ↔ faune (§1.1), terme ADDITIF, mycelium=0 ⇒
+#       neutre. Re-figeage MAÎTRISÉ du golden de POPULATION (faune touchée), pas du
+#       smoke écologique (la faune n'entre pas dans son hash). VUE C# différée (⑥).
+ENGINE_VERSION = "0.5.8"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les
