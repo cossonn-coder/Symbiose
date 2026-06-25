@@ -418,6 +418,31 @@ STRUCT_UPTAKE_MIN = 0.5      # uptake racinaire résiduel en sol totalement comp
 # aucune battance ces semaines-là.
 PRECIP_NORM = {"Pluie prolongée": 1.0, "Orage": 0.9, "Grêle": 0.7}
 
+# --- Mycélium — réseau fongique (sprint mycélium & interconnexions, tronçon ①) --
+# Acteur NEUF (CONCEPTION_MYCELIUM_INTERCONNEXIONS §1). Un champ scalaire `mycelium`
+# ∈ [0,1] (`GridField max_val=1.0`, granularité plot, zéro RNG) qui CROÎT sur le bois
+# humide non travaillé et DÉCLINE au sec / quand le substrat s'épuise. Dynamique pure
+# par tick (helper `mycelium.tick_mycelium`) :
+#     croissance = MYCEL_K_G · substrat · humidite_norm · fenetre_temp
+#     declin     = MYCEL_K_D · mycelium · (secheresse + epuisement_substrat)
+#     mycelium  += croissance − declin                  (clampé [0,1] par le GridField)
+# Au tronçon ① les TROIS rôles §2 (saprophyte/mycorhize/faune) sont DÉBRANCHÉS : le
+# champ existe et tique, mais personne ne le LIT → aucun effet écologique en retour.
+# Comme `mycelium = 0` partout au repos et que le smoke ne pose pas de bois colonisable
+# notable, le golden vise BIT-IDENTIQUE (§1.3, garde-fou ①). PLACEHOLDERS, calibrage
+# post-test (cf. CONCEPTION §1.2 + annexe knobs).
+#   - `substrat` = carbone pondéré BOIS : litière C-riche (`bois_fresh_at`) + `om_active`,
+#     normalisé par MYCEL_SUBSTRAT_REF ; `epuisement = 1 − min(1, substrat/REF)`.
+#   - `humidite_norm` = humidité /3 (échelle [0,3]) ; `secheresse = 1 − humidite_norm`.
+#   - `fenetre_temp` = cloche douce `bell(T_sol, OPT, TOL)` : le réseau ralentit au gel
+#     et à la canicule, large (TOL grand → ≈1 sur la plage tempérée du smoke).
+MYCEL_K_G          = 0.10   # gain de croissance hebdomadaire à conditions pleines
+MYCEL_K_D          = 0.08   # taux de déclin hebdomadaire (sec + substrat épuisé)
+MYCEL_SUBSTRAT_REF = 2.0    # masse C (bois+om_active) au-dessus de laquelle le substrat sature
+MYCEL_OM_POIDS     = 0.5    # poids de `om_active` dans le substrat (le bois compte 1.0, sa spécialité)
+MYCEL_TEMP_OPT     = 18.0   # °C — optimum thermique du réseau fongique
+MYCEL_TEMP_TOL     = 12.0   # °C — largeur de la cloche (large → tempéré ≈ plein régime)
+
 # Signature sol par famille (laissée après chaque saison)
 SOIL_SIGNATURE = {
     "Fabaceae":   {"microbiome": +0.15, "fertilite": +0.10},

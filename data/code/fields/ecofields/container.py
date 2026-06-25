@@ -28,6 +28,7 @@ from .thermique import snow_next as _snow_next              # manteau neigeux pu
 from .ph import tick_ph as _tick_ph                         # dérive pure du pH (physico-chimie ①)
 from .nutriments import split_miner, cec_norm_at, leach_factor, dispo, immobilise_n   # chimie N/P/K pure (physico-chimie ③/④/⑦)
 from .structure import tick_structure as _tick_structure   # dérive pure de la structure du sol (physico-chimie ⑧)
+from .mycelium import tick_mycelium as _tick_mycelium       # dynamique pure du réseau fongique (mycélium ①)
 
 
 @dataclass
@@ -116,6 +117,15 @@ class EcoFields:
     # LECTEURS : l'infiltration de la pluie de fond (`tick_hydrology`, le reste ruisselle),
     # l'aggravation de l'asphyxie et la pénétration racinaire (`plant_uptake`).
     structure_sol:    GridField = field(default=None)
+    # Réseau fongique (sprint mycélium & interconnexions ①) ∈ [0,1] : 1 = sol
+    # densément colonisé, 0 = sans réseau. Acteur NEUF (CONCEPTION_MYCELIUM §1) à
+    # côté de `microbiome` (il est SESSILE, lié au substrat → PAS une 5ᵉ guilde de
+    # PopulationField). Croît sur le bois humide non travaillé, décline au sec /
+    # substrat épuisé (`tick_mycelium`, helper pur). NUL partout au repos. Au tronçon
+    # ① POSÉ + dynamique propre mais lu par PERSONNE → golden NEUTRE (effets §2 —
+    # saprophyte/mycorhize/faune — branchés aux tronçons ②③④). Exposé AUTO à la vue
+    # F6/au pont par le registre `get_field` (palette overlay côté Godot = ⑥).
+    mycelium:         GridField = field(default=None)
 
     def __post_init__(self):
         if self.humidite    is None: self.humidite    = GridField(self.rows, self.cols)
@@ -194,6 +204,10 @@ class EcoFields:
                 initial=STRUCTURE_INIT_PAR_SOL.get(self.soil_type,
                                                    STRUCTURE_INIT_PAR_SOL["terre"]),
                 max_val=1.0, min_val=0.0)
+        # Réseau fongique (①) — NUL partout au départ (initial=0.0 par défaut),
+        # borné [0,1]. Le repos NEUTRE garantit l'invariant golden (§1.3).
+        if self.mycelium is None:
+            self.mycelium = GridField(self.rows, self.cols, max_val=1.0)
 
     def get_field(self, name: str) -> GridField | None:
         return {
@@ -213,6 +227,7 @@ class EcoFields:
             "p":                self.p,
             "k":                self.k,
             "structure_sol":    self.structure_sol,
+            "mycelium":         self.mycelium,
         }.get(name)
 
     def fertilite_index(self, r: int, c: int) -> float:
@@ -307,6 +322,14 @@ class EcoFields:
         (0 hors pluie battante), calculé par la boucle. Les gestes becher/grelinette
         mutent `structure_sol` DIRECTEMENT (hors de ce tick, plein effet)."""
         _tick_structure(self, plants, pluie_norm=pluie_norm)
+
+    def tick_mycelium(self) -> None:
+        """Fait croître/décliner le réseau fongique `mycelium` (sprint mycélium ①).
+        Délègue au helper PUR `mycelium.tick_mycelium` (container déjà dense). À
+        appeler APRÈS `tick_structure` (litière/humidité/T_sol à jour ce tick) et
+        AVANT `tick_diffusion`. Au tronçon ① le champ est calculé mais lu par
+        PERSONNE (effets §2 débranchés) → golden NEUTRE (mycélium nul au repos)."""
+        _tick_mycelium(self)
 
     def tick_snow(self, temp_now: float, is_neige: bool) -> None:
         """Met à jour le manteau neigeux `eco.snow` (⑦). Délègue au helper PUR

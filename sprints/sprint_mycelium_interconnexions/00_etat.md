@@ -37,7 +37,7 @@ le préserve.
 ## Carte des sous-sprints (6, ordre = impact golden croissant)
 | # | Sujet | Kickoff | État |
 |---|-------|---------|------|
-| ① | Champ `mycelium` + dynamique (effets §2 DÉBRANCHÉS, repos neutre) | `01_champ_mycelium.md` | À FAIRE |
+| ① | Champ `mycelium` + dynamique (effets §2 DÉBRANCHÉS, repos neutre) | `01_champ_mycelium.md` | ✅ FAIT (golden BIT-IDENTIQUE) |
 | ② | Saprophyte (décompo `bois`) + liant (`om_stable`) | `02_saprophyte_liant.md` | À FAIRE |
 | ③ | Mycorhize (boost `p` borné dans `plant_uptake` + miroir `qi_local`) | `03_mycorhize.md` | À FAIRE |
 | ④ | Faune fongivore + carpophores échantillonnés | `04_faune_carpophores.md` | À FAIRE |
@@ -67,7 +67,10 @@ le préserve.
 > — 0 fruits @ S52 »), sans rapport avec ce sprint — baseline, pas une régression.
 
 ## REPRISE (démarrage à froid)
-Rien de fait. Lancer `01_champ_mycelium.md`. Tout le moteur édaphique existe déjà
-(`EcoFields` = `fields/ecofields/container.py`, boucle = `sim/engine/boucle.py`).
-Le sprint AJOUTE un champ et le branche progressivement, en re-figeant le golden de
-façon maîtrisée à chaque rôle.
+**① FAIT** : champ `mycelium` (`fields/ecofields/mycelium.py`, `tick_mycelium` pur)
+déclaré dans `container.py`, tické dans `sim/engine/boucle.py` (après `tick_structure`,
+avant diffusion), knobs dans `constants.py`. Effets §2 DÉBRANCHÉS (personne ne lit le
+champ encore). Golden **bit-identique** `2ab026ad…`, population inchangé `6056713d…`,
+test dédié `tests/test_mycelium.py` 9/9. **Prochain : `02_saprophyte_liant.md`** (brancher
+le terme fongique sur la décompo `bois` + le liant `om_stable` → re-figeage golden LARGE
+MAÎTRISÉ attendu).

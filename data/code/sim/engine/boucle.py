@@ -204,6 +204,15 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
             pluie_norm = PRECIP_NORM.get(event.kind, 0.0)
             eco.tick_structure(tile.plants, pluie_norm)
 
+            # 4e. Réseau fongique (sprint mycélium & interconnexions ①) — APRÈS la
+            #     structure (le champ lit une litière `bois_fresh_at`/humidité/T_sol
+            #     déjà à jour ce tick), AVANT la diffusion. Croissance sur le bois
+            #     humide non travaillé, déclin au sec/substrat épuisé. Au tronçon ①
+            #     les rôles §2 (saprophyte/mycorhize/faune) sont DÉBRANCHÉS : personne
+            #     ne lit `mycelium` → aucun effet en retour. Mycélium nul au repos +
+            #     pas de bois colonisable notable dans le smoke → golden NEUTRE.
+            eco.tick_mycelium()
+
             # 5. Diffusion spatiale (humidité, fertilité, microbiome)
             eco.tick_diffusion()
 
