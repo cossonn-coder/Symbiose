@@ -212,6 +212,13 @@ namespace Symbiose
 			if (snap.ContainsKey("structures"))
 				ApplyStructures(snap["structures"].AsGodotDictionary());
 
+			// Conteneurs de culture (pots/bacs ④, snapshot 0.5.7, lecture seule) :
+			// placeholders ContainerStructure + plantes du mini-sol (PlantRenderer).
+			// Lecture TOLÉRANTE : un snapshot pré-0.5.7 sans le bloc → aucun
+			// conteneur dessiné, jamais de crash (cf. WorldView.Conteneurs.cs).
+			if (snap.ContainsKey("containers"))
+				ApplyContainers(snap["containers"].AsGodotArray());
+
 			// Alarme apienne (⑦ §J, 0.4.1, lecture seule) : foyers de phéromone par
 			// plot, consommés par la piqûre temps réel. Lecture TOLÉRANTE : un
 			// snapshot pré-0.4.1 n'a pas le bloc → aucun foyer, aucune piqûre.

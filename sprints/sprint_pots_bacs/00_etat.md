@@ -38,7 +38,7 @@ dessous (drainage, racines, microbiome).
 | ③ | Plante en pot + confinement racinaire hybride (effet nain) | `03_confinement.md` | **FAIT** (golden bit-identique) |
 | ④ | Mobilité + bacs N×M immobiles + pont snapshot | `04_mobilite_bacs.md` | **FAIT** (golden bit-identique, pont 0.5.7) |
 | ⑤ | Couplage fond ouvert + lasagnes (arc complet) | `05_couplage_lasagnes.md` | **FAIT** (golden bit-identique) — **sprint moteur CLOS** |
-| ⑥a | Vue Godot — rendu statique conteneur + substrat (lecture seule) | `06a_rendu_conteneur.md` | kickoff écrit |
+| ⑥a | Vue Godot — rendu statique conteneur + substrat (lecture seule) | `06a_rendu_conteneur.md` | **FAIT** (build C# vert, golden NEUTRE inchangé) |
 | ⑥b | Vue Godot — interaction poser/déplacer/planter (outil + clic) | `06b_interaction.md` | kickoff écrit |
 | ⑥c | Vue Godot — indices visuels du couplage (fond ouvert, nain, substrat) | `06c_indices_couplage.md` | kickoff écrit |
 
@@ -270,6 +270,59 @@ prêt côté moteur — le snapshot `containers` (0.5.7) et les 4 verbes du pont
 depuis ④. Pattern de rendu à réutiliser : `visuals/CompostStructure.cs` +
 `world/WorldView.Compost.cs` (placeholder iso procédural, un Node2D par objet en
 couche YSort `_objects`, reconstruction pleine à chaque snapshot).
+
+## Tronçon ⑥a — état
+**FAIT** (vue Godot, AUCUN fichier Python touché → golden trivialement NEUTRE,
+inchangé `2ab026ad…`). Build `dotnet build Symbiose.csproj` **vert** (0 erreur).
+Acquis (C#, lecture seule du bloc `containers` du snapshot 0.5.7) :
+- `visuals/ContainerStructure.cs` (NOUVEAU) — placeholder procédural iso, calqué
+  sur `CompostStructure.cs`. **POT** = tronc-cône évasé (base étroite → lèvre large,
+  hauteur ∝ √(volume/75 L), empreinte 1 plot) ; **BAC** = caisse N×M (un caisson
+  par cellule du mini-sol, faces avant + dessus, tri loin→proche au sein du nœud).
+  **SUBSTRAT** = teinte de la SURFACE (dessus du conteneur), `Dictionary` 6 recettes
+  → couleur (terreau/compost/drainant/lasagnes/terre_jardin via `Palette16.SolTerre`/
+  mycelium_use), repli neutre `Palette16.SolInconnu` si clé inconnue. Empreintes en
+  OFFSET (`WorldToScreenOffset`) → cohérent sous les 4 orientations ; hauteur en Z
+  vertical. Knobs `const` (calibrage post-F5).
+- `world/WorldView.Conteneurs.cs` (NOUVEAU partial) — câblage lecture, calqué sur
+  `WorldView.Compost.cs`. Liste `_containers` (index `target.container` ⑥b + position
+  MONDE pour le picking ⑥b + nœuds). `ApplyContainers(GArray)` : reconstruction pleine
+  (QueueFree anciens conteneurs + plantes, recrée), un `ContainerStructure` par conteneur
+  positionné à `WorldToScreen(x_cm, y_cm)` (MONDE absolu, **pas** d'origine de tuile)
+  dans `_objects` (YSort). `BuildContainerPlants` : un `PlantRenderer` par plante du
+  mini-sol (même chemin que les plantes du monde, `StructureLoader.FromSnapshot` lit le
+  format compact), ancré au centre du conteneur + offset cellule (local `c·50+25` −
+  demi-grille, en `WorldToScreenOffset`). Squelette si `dead` (mode "seche", le snapshot
+  conteneur n'expose pas `stade_mort`), symptômes foliaires si présents. Lecture TOLÉRANTE
+  (snapshot sans `containers` → rien dessiné).
+- `world/WorldView.Snapshot.cs` — dispatch `ApplyContainers(snap["containers"])` à côté
+  de `ApplyStructures` (lecture tolérante `ContainsKey`).
+- `world/WorldView.Camera.cs::RebuildWorld` — `_containers.Clear()` à la rotation
+  (nœuds libérés avec `_objects`, `ApplyContainers` recrée — comme `_structs`).
+
+Tailles : `ContainerStructure.cs` 186 l. / `WorldView.Conteneurs.cs` 126 l. (brut,
+majorité de commentaires pédagogiques) — bien < 350 LDC pur.
+
+## REPRISE (démarrage à froid) — ⑥a FAIT, RESTE ⑥b/⑥c
+Moteur ①→⑤ CLOS (golden NEUTRE `2ab026ad…`, pont 0.5.7). Vue ⑥a FAITE : pots/bacs +
+substrat + plantes se DESSINENT en lecture seule (placeholder iso, à VALIDER F5). RESTE :
+**⑥b interaction** (poser/déplacer/planter via `TryAction`, outil + clic ; les 4 verbes
+du pont existent : `poser_pot`/`poser_bac_culture`/`deplacer_pot`/`planter_conteneur` ;
+`_containers` porte déjà index + position MONDE pour le picking) puis **⑥c indices du
+couplage** (fond ouvert/nain/substrat, lit `eco_summary` du snapshot, étiquettes). Lancer
+`06b_interaction.md`. La vue ne touche AUCUN fichier Python → golden trivialement NEUTRE.
+
+## Points à VALIDER au F5 (Nico) — ⑥a
+- Forme/échelle du POT (tronc-cône) et du BAC (caisse N×M) : knobs `const` de
+  `ContainerStructure.cs` (`PotHalfCm`, `PotHeightRefCm`, `BacCellHalfCm`, `BacWallCm`)
+  → calibrer si « trop gros/petit/plat ».
+- Teintes de substrat (6 recettes) lisibles d'un coup d'œil les unes des autres ?
+- Plante en pot bien CENTRÉE sur le conteneur, occultation YSort correcte avec maison/
+  plantes du sol, et cohérente sous les 4 orientations (touche de rotation D35).
+- Conteneur posé via ⑥b à venir (aucun conteneur dans la carte de démo) : le F5 ⑥a se
+  fait donc en posant un pot à la main une fois ⑥b livré, OU en injectant un conteneur
+  de test. À signaler : **⑥a n'est observable qu'avec un conteneur présent dans le
+  snapshot** (la carte de démo n'en pose aucun → écran identique au repos).
 
 ## Décisions ⑥ tranchées (AskUserQuestion, Nico, 2026-06-25)
 1. **Rendu** = placeholder procédural pixel-art (pas de PNG sur la VM, cohérent

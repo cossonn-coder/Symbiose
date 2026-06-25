@@ -129,6 +129,7 @@ namespace Symbiose
 			_objects.QueueFree();   // emporte maison, plantes, structures et fondus
 			_plantNodes.Clear();
 			_structs.Clear();       // nœuds libérés avec _objects → ApplyStructures recrée
+			_containers.Clear();    // idem → ApplyContainers recrée (conteneurs ⑥a)
 
 			BuildGround(_world);
 			_objects = new Node2D { Name = "Objects", ZIndex = 10, YSortEnabled = true };
