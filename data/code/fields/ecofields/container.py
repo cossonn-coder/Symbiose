@@ -815,6 +815,16 @@ class EcoFields:
             besoin = (BESOIN[nut].get(stage_index, 0.0) * share * asphyxie_factor
                       * (1.0 + micro_norm * UPTAKE_MICRO_BONUS)
                       * dispo(ph_local, nut))
+            # ③ MYCORHIZE (§2.2) : le réseau fongique relie ses hyphes aux racines et
+            # fait passer le PHOSPHORE — P SEULEMENT (jamais N/K, décision figée ii).
+            # Là où `mycelium` touche cette racine vivante, le FLUX prélevable de P est
+            # amplifié ∝ réseau, plafonné par MYCO_P_BONUS. On modifie ce que le sol
+            # REND DISPONIBLE, pas la plante (philo #2) ; le `min(besoin, dispo_stock)`
+            # ci-dessous garde le bornage Liebig (sol pauvre en P ⇒ pas de miracle) et
+            # `dispo(ph,"P")` reste limitant (le réseau ne déverrouille pas la fenêtre
+            # pH). mycelium=0 ⇒ ×1.0 ⇒ uptake bit-identique à AVANT.
+            if nut == "P":
+                besoin *= 1.0 + MYCO_P_BONUS * self.mycelium.at_plot(r, c)
             if besoin <= 0:
                 continue
             dispo_stock = fld.at_plot(r, c)

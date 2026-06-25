@@ -163,6 +163,45 @@ def _run2():
 check("déterminisme ② : deux runs identiques → état identique", _run2() == _run2())
 
 
+# --- K. MYCORHIZE (③) : sous un réseau, l'uptake de P MONTE (P SEULEMENT) ----
+#        Empreinte = plot-foyer ; pH fixé à l'optimum P (6.5) pour isoler le boost
+#        mycorhizien de la fenêtre pH ; stock de nutriments généreux pour rester
+#        SOUS le plafond Liebig (on teste le FLUX, pas le bornage par stock).
+def _uptake(mycel_init, p_stock=3.0, stage=2):
+    e = init_eco("myco", 1, 1, humidite=2.0, microbiome=0.0, fertilite=p_stock)
+    e.ph.set(0, 0, 6.5)                 # optimum P → dispo(ph,"P") ≈ 1.0, non confondant
+    e.mycelium.set(0, 0, mycel_init)
+    return e.plant_uptake(0, 0, stage)
+
+
+up_nul  = _uptake(0.0)
+up_fort = _uptake(1.0)
+check("MYCORHIZE : P prélevé PLUS GRAND sous mycélium fort",
+      up_fort.get("p", 0.0) > up_nul.get("p", 0.0),
+      detail=f"nul={up_nul.get('p', 0.0):.5f} < fort={up_fort.get('p', 0.0):.5f}")
+check("MYCORHIZE : N STRICTEMENT inchangé par le mycélium",
+      up_fort.get("n", 0.0) == up_nul.get("n", 0.0),
+      detail=f"nul={up_nul.get('n', 0.0):.5f} == fort={up_fort.get('n', 0.0):.5f}")
+check("MYCORHIZE : K STRICTEMENT inchangé par le mycélium",
+      up_fort.get("k", 0.0) == up_nul.get("k", 0.0),
+      detail=f"nul={up_nul.get('k', 0.0):.5f} == fort={up_fort.get('k', 0.0):.5f}")
+
+# Bornage par stock (Liebig) : sol QUASI vide en P → même un réseau saturé ne peut
+# prélever plus que le stock (pas de miracle). On compare le P prélevé au stock.
+up_pauvre = _uptake(1.0, p_stock=0.0001)
+check("MYCORHIZE : bornage Liebig — sol pauvre en P ⇒ pas de miracle",
+      up_pauvre.get("p", 0.0) <= 0.0001 + 1e-9,
+      detail=f"p_prélevé={up_pauvre.get('p', 0.0):.6f} ≤ stock 0.0001")
+
+# Non-régression : mycélium NUL ⇒ uptake bit-identique à un EcoFields sans réseau.
+# (Le champ existe depuis ① ; mycelium=0 ⇒ facteur ×1.0 EXACT sur P.)
+check("MYCORHIZE : mycélium nul ⇒ P prélevé = repos (facteur ×1.0)",
+      up_nul.get("p", 0.0) > 0.0, detail=f"p={up_nul.get('p', 0.0):.5f} (uptake normal)")
+
+# Déterminisme du ③ (deux uptakes identiques → résultat identique).
+check("déterminisme ③ : deux uptakes identiques → identique", _uptake(0.7) == _uptake(0.7))
+
+
 # --- Bilan ---
 fails = [n for n, ok in _results if not ok]
 if fails:

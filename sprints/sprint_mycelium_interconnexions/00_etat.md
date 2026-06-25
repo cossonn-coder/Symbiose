@@ -39,7 +39,7 @@ le préserve.
 |---|-------|---------|------|
 | ① | Champ `mycelium` + dynamique (effets §2 DÉBRANCHÉS, repos neutre) | `01_champ_mycelium.md` | ✅ FAIT (golden BIT-IDENTIQUE) |
 | ② | Saprophyte (décompo `bois`) + liant (`om_stable`) | `02_saprophyte_liant.md` | ✅ FAIT (golden RE-FIGÉ maîtrisé `9d13d4a7…`) |
-| ③ | Mycorhize (boost `p` borné dans `plant_uptake` + miroir `qi_local`) | `03_mycorhize.md` | À FAIRE |
+| ③ | Mycorhize (boost `p` borné dans `plant_uptake` + miroir `qi_local`) | `03_mycorhize.md` | ✅ FAIT (golden RE-FIGÉ maîtrisé `00c1984a…`) |
 | ④ | Faune fongivore + carpophores échantillonnés | `04_faune_carpophores.md` | À FAIRE |
 | ⑤ | Structures niveau tuile + colonisation fongique + bêchage event-driven | `05_structures_tuile.md` | À FAIRE |
 | ⑥ | `epandre` 2 clics + vue Godot (carpophores, tas colonisé, overlay) | `06_epandre_vue.md` | À FAIRE (Godot différé) |
@@ -68,15 +68,25 @@ le préserve.
   > Ampleur : `om_stable` moyenne +0.001 (max local 0.40-0.47), mycélium s'installe
   > réellement dans le smoke (max 0.74 sur T1, là où bois humide + om_active). Aucun
   > autre tissu/champ touché.
+  > ③ RE-FIGÉ MAÎTRISÉ : `9d13d4a7…` (②) → `00c1984a6bdff1c711fd5f5bdca5e1ffed8aaca14f8aa78c2c7999c60a2c6ea0` (③).
+  > Dérive **localisée au phosphore prélevé** : la mycorhize amplifie le FLUX de `p`
+  > (P SEULEMENT) sous l'empreinte racinaire là où `mycelium` > 0 → la plante puise
+  > un peu plus de P → le STOCK résiduel `p` baisse légèrement. Sur les 60 lignes du
+  > digest final, SEULES 2 changent, et UNIQUEMENT le champ `p` : T0 0.32→0.312,
+  > T1 0.864→0.856. AUCUN autre champ (N, K, microbiome, om_*, soil_memory, vitalité)
+  > ni AUCUN attribut de plante ne bouge. Preuve d'isolation : `MYCO_P_BONUS=0` ⇒ on
+  > retrouve EXACTEMENT `9d13d4a7…` → toute la dérive vient du seul boost P, rien d'autre.
+  > Philo #2 respectée (on amplifie un flux que le sol REND DISPONIBLE, pas la plante ;
+  > Liebig `min(besoin,stock)` + fenêtre pH `dispo(ph,"P")` restent limitants).
 - population `tests/test_population.py` : `6056713d4dd1e2a79964411961909545433f8513a530a2b39151cbe6aabe471b`
-  (INCHANGÉ au ② — rien ne touche la faune).
-> Mesurés AVANT toute modif. ① bit-identique (mycélium nul au repos) ; ② RE-FIGÉ
-> (cf. supra) ; ③④ re-figent de façon maîtrisée (noter chaque transition ici). ⑤ ~intact.
+  (INCHANGÉ au ②③ — rien ne touche la faune).
+> Mesurés AVANT toute modif. ① bit-identique (mycélium nul au repos) ; ②③ RE-FIGÉS
+> (cf. supra) ; ④ re-fige de façon maîtrisée (noter chaque transition ici). ⑤ ~intact.
 > NB : 1 check rouge PRÉEXISTANT dans `tests/test_sim_server.py` (« pommier pré-âgé
 > — 0 fruits @ S52 »), sans rapport avec ce sprint — baseline, pas une régression.
 
 ## REPRISE (démarrage à froid)
-**①② FAITS.**
+**①②③ FAITS.**
 - **①** : champ `mycelium` (`fields/ecofields/mycelium.py`, `tick_mycelium` pur) déclaré
   dans `container.py`, tické dans `sim/engine/boucle.py` (après `tick_structure`, avant
   diffusion), knobs dans `constants.py`. Golden bit-identique `2ab026ad…`.
@@ -87,5 +97,14 @@ le préserve.
   (PLACEHOLDERS). Golden **RE-FIGÉ MAÎTRISÉ** `2ab026ad…` → `9d13d4a7…` (dérive isolée
   aux deux termes, cf. §Hash). Population inchangé `6056713d…`. `test_mycelium.py` 13/13,
   `test_structures.py` 65/65.
-**Prochain : `03_mycorhize.md`** (boost `p` borné dans `plant_uptake` + miroir `qi_local` ;
-re-figeage golden maîtrisé attendu — l'uptake P là où le réseau touche des racines vivantes).
+- **③** : 2e rôle BRANCHÉ. MYCORHIZE = boost du FLUX prélevable de `p` (P SEULEMENT,
+  jamais N/K) dans `plant_uptake` (`container.py`, boucle N/P/K) : `besoin *= 1 +
+  MYCO_P_BONUS·mycelium.at_plot(r,c)` quand `nut == "P"`, AVANT le `min(besoin,stock)`
+  Liebig. MIROIR read-only dans `qi_local` (`sim/vigueur_plante.py`) : même boost P
+  appliqué à `eco.p` avant le `min(n,p,k)`. Knob `MYCO_P_BONUS=0.40` dans `constants.py`
+  (PLACEHOLDER, patron `UPTAKE_MICRO_BONUS`), exporté par `fields/ecofields/__init__.py`
+  (via `from .constants import *`). Golden **RE-FIGÉ MAÎTRISÉ** `9d13d4a7…` → `00c1984a…`
+  (dérive = seul champ `p` qui baisse, cf. §Hash ; isolation `MYCO_P_BONUS=0` ⇒ `9d13d4a7…`).
+  Population inchangé `6056713d…`. `test_mycelium.py` 19/19 (6 checks ③ ajoutés, section K).
+**Prochain : `04_faune_carpophores.md`** (faune fongivore + carpophores échantillonnés ;
+re-figeage golden maîtrisé attendu — population/faune touchée).

@@ -459,6 +459,20 @@ MYCEL_TEMP_TOL     = 12.0   # °C — largeur de la cloche (large → tempéré 
 ALPHA_SAPRO        = 1.5    # accélération max de la décompo `bois` à réseau saturé (×2.5)
 LIANT_K            = 0.0005 # apport glomaline à `om_stable`/sem à mycelium=1 (très lent)
 
+# --- Rôle MYCORHIZE (tronçon ③, §2/§2.2) ----------------------------------
+# Second rôle BRANCHÉ : le réseau relie ses hyphes aux racines vivantes (wood-wide-
+# web) et leur FAIT PASSER le phosphore — le nutriment le plus immobile du sol, que
+# les racines nues atteignent mal. Là où `mycelium` est présent sous l'empreinte
+# racinaire, le FLUX prélevable de `p` (P SEULEMENT, jamais N/K — décision figée ii)
+# est multiplié par `(1 + MYCO_P_BONUS·mycelium)` dans `plant_uptake`.
+# Philo #2 : on amplifie ce que le SOL REND DISPONIBLE (un flux), JAMAIS la plante.
+# Le `min(besoin, dispo_stock)` qui suit garde le bornage par le stock (Liebig) → un
+# sol pauvre en P ne fait pas de miracle. La fenêtre pH `dispo(ph,"P")` reste un
+# facteur SÉPARÉ et limitant (le réseau aide à puiser, il ne déverrouille pas un pH
+# défavorable). mycelium=0 ⇒ facteur 1.0 ⇒ uptake bit-identique à AVANT.
+# Patron `UPTAKE_MICRO_BONUS=0.40`. PLACEHOLDER, calibrage post-test (CONCEPTION §2.2).
+MYCO_P_BONUS       = 0.40   # bonus max de prélèvement de P à réseau fongique saturé
+
 # Signature sol par famille (laissée après chaque saison)
 SOIL_SIGNATURE = {
     "Fabaceae":   {"microbiome": +0.15, "fertilite": +0.10},

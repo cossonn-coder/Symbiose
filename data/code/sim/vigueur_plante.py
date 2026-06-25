@@ -30,7 +30,7 @@ from __future__ import annotations
 # Le « puiser » de §4 réutilise les constantes/normalisations de l'EcoField :
 # la même rétroaction rhizosphère que `plant_uptake` (microbiome riche → meilleure
 # assimilation). Pas de nouveau nombre introduit.
-from fields.ecofields import (UPTAKE_MICRO_BONUS, bell,
+from fields.ecofields import (UPTAKE_MICRO_BONUS, MYCO_P_BONUS, bell,
                              CHLOROSE_PH, SEUIL_ACIDOPHILE, CHLOROSE_MALUS)
 
 HEALTH_MAX = 3.0   # santé dynamique entière 3..0 de la sénescence (D27)
@@ -72,7 +72,12 @@ def qi_local(plant, eco) -> float:
     total = 0.0
     ph_sum = 0.0
     for (r, c) in plots:
-        nutri = min(eco.n.at_plot(r, c), eco.p.at_plot(r, c), eco.k.at_plot(r, c))
+        # ③ MYCORHIZE (miroir de `plant_uptake`) : là où le réseau touche la racine,
+        # le P EFFECTIVEMENT prélevable est amplifié (P SEULEMENT). La façade doit
+        # suivre l'uptake réel sinon la vigueur perçue ment — mais c'est une LECTURE,
+        # aucune mutation de champ (read-only, cf. en-tête module).
+        p_eff = eco.p.at_plot(r, c) * (1.0 + MYCO_P_BONUS * eco.mycelium.at_plot(r, c))
+        nutri = min(eco.n.at_plot(r, c), p_eff, eco.k.at_plot(r, c))
         fert = min(1.0, nutri / FIELD_NORM)
         micro = min(1.0, eco.microbiome.at_plot(r, c) / FIELD_NORM)
         total += fert * (1.0 + micro * UPTAKE_MICRO_BONUS)
