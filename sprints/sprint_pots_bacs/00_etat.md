@@ -38,7 +38,9 @@ dessous (drainage, racines, microbiome).
 | ③ | Plante en pot + confinement racinaire hybride (effet nain) | `03_confinement.md` | **FAIT** (golden bit-identique) |
 | ④ | Mobilité + bacs N×M immobiles + pont snapshot | `04_mobilite_bacs.md` | **FAIT** (golden bit-identique, pont 0.5.7) |
 | ⑤ | Couplage fond ouvert + lasagnes (arc complet) | `05_couplage_lasagnes.md` | **FAIT** (golden bit-identique) — **sprint moteur CLOS** |
-| ⑥ | Vue Godot (pots/bacs/substrats visibles) — **différé** (Option B) | à écrire | différé |
+| ⑥a | Vue Godot — rendu statique conteneur + substrat (lecture seule) | `06a_rendu_conteneur.md` | kickoff écrit |
+| ⑥b | Vue Godot — interaction poser/déplacer/planter (outil + clic) | `06b_interaction.md` | kickoff écrit |
+| ⑥c | Vue Godot — indices visuels du couplage (fond ouvert, nain, substrat) | `06c_indices_couplage.md` | kickoff écrit |
 
 ## Conventions
 - Source de vérité = Python `data/code/`. Lancement depuis `data/code/`
@@ -255,6 +257,25 @@ plante en petit volume (effet nain hybride émergent), déplacer un pot (Vigueur
 seule), exposer les conteneurs au pont, et COUPLER un bac fond ouvert à la tuile dessous
 (drainage + racines qui lèvent le nain + diffusion microbiome). Arc lasagnes validé.
 
-**RESTE** : tronçon **⑥ vue Godot DIFFÉRÉ** (Option B — rendre pots/bacs/substrats
-visibles côté C#). Kickoff à écrire quand la vue reprendra. Aucun re-figeage golden
-sur tout le sprint.
+**RESTE** : la **vue Godot ⑥** (Option B — rendre pots/bacs/substrats visibles
+côté C#), découpée en **3 sous-tronçons** (kickoffs écrits le 2026-06-25) :
+⑥a rendu statique → ⑥b interaction → ⑥c indices du couplage. Aucun re-figeage
+golden sur tout le sprint moteur. **La vue ne touche AUCUN fichier Python** (tout
+est déjà exposé au pont 0.5.7) → golden **trivialement NEUTRE** sur ⑥ ; le filet
+est `dotnet build Symbiose.csproj`, le **F5 visuel reste à Nico**.
+
+**Reprise vue (démarrage à froid)** : lancer `06a_rendu_conteneur.md`. Tout est
+prêt côté moteur — le snapshot `containers` (0.5.7) et les 4 verbes du pont
+(`poser_pot`/`poser_bac_culture`/`deplacer_pot`/`planter_conteneur`) existent
+depuis ④. Pattern de rendu à réutiliser : `visuals/CompostStructure.cs` +
+`world/WorldView.Compost.cs` (placeholder iso procédural, un Node2D par objet en
+couche YSort `_objects`, reconstruction pleine à chaque snapshot).
+
+## Décisions ⑥ tranchées (AskUserQuestion, Nico, 2026-06-25)
+1. **Rendu** = placeholder procédural pixel-art (pas de PNG sur la VM, cohérent
+   SS²/D34) ; substrat = teinte de la surface (`Palette16`). (sprites dédiés écartés)
+2. **Interaction** = outil + clic, homogène avec tous les gestes via `TryAction`
+   (`world/WorldView.Actions.cs`) ; substrat choisi par cycle à la pose.
+   (drag&drop reporté à un sprint ultérieur)
+3. **Découpe** = 3 sous-tronçons ⑥a/⑥b/⑥c (chacun F5-able seul, `/clear` entre
+   chaque). (kickoff unique écarté)
