@@ -37,7 +37,7 @@ dessous (drainage, racines, microbiome).
 | ② | Conteneur `EcoFields` miniature + tick chimique isolé + boucle | `02_conteneur.md` | **FAIT** (golden bit-identique) |
 | ③ | Plante en pot + confinement racinaire hybride (effet nain) | `03_confinement.md` | **FAIT** (golden bit-identique) |
 | ④ | Mobilité + bacs N×M immobiles + pont snapshot | `04_mobilite_bacs.md` | **FAIT** (golden bit-identique, pont 0.5.7) |
-| ⑤ | Couplage fond ouvert + lasagnes (arc complet) | `05_couplage_lasagnes.md` | à faire |
+| ⑤ | Couplage fond ouvert + lasagnes (arc complet) | `05_couplage_lasagnes.md` | **FAIT** (golden bit-identique) — **sprint moteur CLOS** |
 | ⑥ | Vue Godot (pots/bacs/substrats visibles) — **différé** (Option B) | à écrire | différé |
 
 ## Conventions
@@ -209,14 +209,52 @@ Acquis :
   reste « pommier pré-âgé », préexistant, sans rapport). C# **non concerné** (aucun
   fichier C# touché : vue différée ⑥, le bloc `containers` est optionnel côté vue).
 
-## REPRISE (démarrage à froid)
-Tronçons ① + ② + ③ + ④ **FAITS** (golden bit-identique, pont 0.5.7). Le joueur peut
-maintenant POSER un pot/bac rempli d'un substrat (`poser_pot`/`poser_bac`, coût
-Vigueur), DÉPLACER un pot (`deplacer_pot`, Vigueur joueur seule, lumière recalculée,
-AUCUN choc plante — philo #2), et les conteneurs sont EXPOSÉS au pont (`containers`
-au snapshot, 4 verbes routés). Les bacs sont immobiles. La liste monde reste VIDE au
-smoke → golden NEUTRE.
+## Tronçon ⑤ — état
+**FAIT** (golden bit-identique). Couplage fond ouvert + arc lasagnes complet, philo #2
+respectée (tout passe par un FLUX de matière, aucun bonus direct sur la plante).
+Acquis :
+- `fields/ecofields/container.py::tick_hydrology` → **RETOURNE** désormais les pertes
+  de drainage par cellule `[(r, c, h·(1−drainage)), …]` (au lieu de les jeter). Aucun
+  appelant existant ne lit ce retour → **strictement rétrocompatible, golden NEUTRE**.
+  Approche recommandée par le kickoff (« retour propre, ne pas dupliquer la boucle
+  hydrologique »).
+- `world/container.py` (+ ~90 LDC) — couplage conteneur↔tuile d'assise (§5) :
+  - nouveaux champs `tile_eco`/`tile_rc` (l'`EcoFields` + le plot `(r,c)` sous le
+    conteneur), renseignés à la pose ; `None` → conteneur DÉTACHÉ (hors-sol pur),
+    aucun pont → golden NEUTRE, rétrocompat ②/③/④.
+  - **point 1 drainage→tuile** (`_drainer_vers_tuile`) : l'eau du fond est INJECTÉE
+    dans l'humidité du plot de tuile (bilan d'eau conservé). Vaut pour POT et BAC.
+  - **point 2 racines→tuile** (dans `tick`) : quand le bac `fond_ouvert` est root-bound
+    (`_confinement < 1.0`), les racines DESCENDENT → uptake AUSSI sur `tile_eco` au plot
+    d'assise (`volume_factor=1.0`, sol profond non confiné) → l'effet nain est LEVÉ
+    (confinement forcé à 1.0). Émergent : on ouvre un réservoir, on n'efface aucun malus.
+  - **point 3 microbiome/om→tuile** (`_diffuser_vers_tuile`, bac `fond_ouvert` SEUL) :
+    diffusion LENTE BIDIRECTIONNELLE (`COUPLAGE_DIFFUSION=0.04`) microbiome/om_active/
+    om_stable entre cellule d'assise et tuile, masse conservée. Pot fond fermé : pas
+    de diffusion (seul le drainage point 1 s'écoule).
+- `make_container` mémorise `tile_eco`/`tile_rc` (assise §5) ; `terre_jardin` les exige
+  toujours (héritage §6), OPTIONNELS sinon (assise de couplage ou conteneur détaché).
+- `tests/test_couplage.py` (NOUVEAU) — 8/8 : drainage→tuile (humidité plot monte),
+  conteneur détaché (no-op), racines→tuile (couplé 40 cm > confiné 12.9 cm = nain levé),
+  microbiome bac↔tuile (diffusion bidirectionnelle), pot fond fermé (drainage OUI,
+  microbiome inchangé), lasagnes (ΣNPK 1.30→pic 1.75 libération > pauvre 0.27, bois
+  consommé), déterminisme, retour `tick_hydrology` sans effet sur les tuiles (bit-id).
+- Pont : `fond_ouvert` était DÉJÀ exposé au snapshot depuis ④ → rien à toucher, protocole
+  reste **0.5.7** (kickoff : « exposer si utile, sinon laisser à ⑥ » — déjà fait).
 
-PROCHAIN : `05_couplage_lasagnes.md` (bac à FOND OUVERT → couplage tuile dessous :
-drainage→tuile, racines qui descendent lèvent le nain, microbiome/om diffusent ;
-+ arc complet lasagnes = litière pré-chargée → décompo confinée → plante nourrie).
+## Golden re-vérifié après ⑤ (bit-identique)
+- smoke : `2ab026ad2b3f484777a2a29f804e1a4785ecffd6976fc0058fe0a33dd1498646` ✅
+- population : `6056713d4dd1e2a79964411961909545433f8513a530a2b39151cbe6aabe471b` ✅
+- test_couplage 8/8 ✅. C# **non concerné** (aucun fichier C# touché).
+
+## REPRISE (démarrage à froid) — SPRINT MOTEUR CLOS
+Tronçons ① → ⑤ **TOUS FAITS** (golden NEUTRE bit-identique sur tout le sprint, pont
+0.5.7). Le moteur Python sait : composer un conteneur (pot mobile / bac N×M immobile)
+avec un substrat data-driven (6 recettes), tiquer sa chimie isolée, rapetisser la
+plante en petit volume (effet nain hybride émergent), déplacer un pot (Vigueur joueur
+seule), exposer les conteneurs au pont, et COUPLER un bac fond ouvert à la tuile dessous
+(drainage + racines qui lèvent le nain + diffusion microbiome). Arc lasagnes validé.
+
+**RESTE** : tronçon **⑥ vue Godot DIFFÉRÉ** (Option B — rendre pots/bacs/substrats
+visibles côté C#). Kickoff à écrire quand la vue reprendra. Aucun re-figeage golden
+sur tout le sprint.

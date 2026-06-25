@@ -318,7 +318,7 @@ class EcoFields:
     # --- Hydrologie ---
 
     def tick_hydrology(self, soil_type: str = "terre",
-                       drainage_override: float | None = None) -> None:
+                       drainage_override: float | None = None) -> list:
         """
         Cycle hydrologique complet. Ordre strict :
           1. Évaporation atmosphérique (couplée à la température : chaud → +)
@@ -336,9 +336,18 @@ class EcoFields:
         passe ainsi le drainage de SON substrat (registre `world.substrat`).
         Défaut `None` → comportement actuel inchangé : aucun appelant existant ne
         le passe → les tuiles restent BIT-IDENTIQUES (golden neutre).
+
+        RETOUR (sprint pots/bacs ⑤) : la PERTE de drainage par cellule, sous forme
+        `[(r, c, perte), …]` (perte = `h_avant_drainage · (1 − drainage)`, l'eau
+        qui s'écoule du fond). Une tuile la JETTE (aucun appelant existant ne lit
+        le retour → strictement rétrocompatible, golden bit-identique). Un conteneur
+        à FOND OUVERT/percé l'INJECTE dans l'humidité de la tuile sous lui (pont
+        matière §5). On RETOURNE la perte plutôt que de dupliquer la boucle
+        hydrologique côté `world` (piège du kickoff : ne pas la ré-implémenter).
         """
         drainage = (drainage_override if drainage_override is not None
                     else DRAINAGE_PAR_SOL.get(soil_type, DRAINAGE))
+        pertes: list = []
         for r in range(self.rows):
             for c in range(self.cols):
                 h = self.humidite.data[r][c]
@@ -357,8 +366,10 @@ class EcoFields:
                 # (champ lent → OK). structure terre héritée 0.7 < 1.0 → golden re-figé.
                 h += BASE_RAIN * self.structure_sol.at_plot(r, c)   # 2. pluie de fond infiltrée
                 h += self.soil_memory.at_plot(r, c) * SOIL_RETENTION  # 3. rétention
+                pertes.append((r, c, h * (1.0 - drainage)))         # eau du fond (⑤)
                 h *= drainage                                       # 4. drainage (par sol)
                 self.humidite.set(r, c, h)
+        return pertes
 
     # --- Lumière ---
 

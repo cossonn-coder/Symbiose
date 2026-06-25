@@ -70,6 +70,19 @@ ROOTBOUND_SEUIL = 0.30   # occupation (cm/L) à partir de laquelle le pot sature
 ROOTBOUND_K     = 1.20   # raideur du bridage au-delà du seuil
 CONF_MIN        = 0.25   # plancher : un pot saturé ne fige jamais TOTALEMENT la pousse
 
+# ---------------------------------------------------------------------------
+# COUPLAGE FOND OUVERT — pont conteneur↔tuile dessous (CONCEPTION §5, tronçon ⑤).
+# Un bac à fond ouvert COMMUNIQUE avec le plot de tuile sous lui (interconnexion
+# des acteurs). AUCUN effet n'est un bonus direct sur la plante (philo #2) : tout
+# passe par un flux de matière (eau, racines, microbiome/om) entre deux EcoFields.
+# Knobs de DÉPART (calibrage post-test, philo #3) — zéro RNG.
+# ---------------------------------------------------------------------------
+
+# Diffusion LENTE bidirectionnelle microbiome/om entre la cellule d'assise du bac
+# et le plot de tuile dessous (colonisation par le bas). Échange = part de l'écart
+# transférée chaque tick — faible (l'inoculation prend des saisons, pas un tick).
+COUPLAGE_DIFFUSION = 0.04
+
 
 def _clamp(x: float, lo: float, hi: float) -> float:
     return lo if x < lo else hi if x > hi else x
@@ -96,6 +109,14 @@ class Container:
     mobile:        bool = True        # pot True / bac False (déduit du kind à la fabrique)
     fond_ouvert:   bool = False       # bac couplé à la tuile dessous (§5, branché au ⑤)
     plants:        list = field(default_factory=list)   # plante(s) en pot (③)
+    # Assise sur le jardin (§5, tronçon ⑤). `tile_eco` = l'`EcoFields` de la tuile
+    # qui PORTE le conteneur, `tile_rc` = le plot (r, c) sous lui. Renseignés à la
+    # pose. Un POT (fond fermé/percé) n'a besoin que d'eux pour évacuer son drainage
+    # vers la tuile (point 1) ; un BAC `fond_ouvert` ouvre EN PLUS racines (point 2)
+    # et diffusion microbiome/om (point 3). À `None` → conteneur DÉTACHÉ (hors-sol
+    # pur, ex. pot sur une terrasse) : aucun pont (rétrocompat ②/③/④ + golden NEUTRE).
+    tile_eco:      object = None
+    tile_rc:       tuple = None
 
     def tick_chimie(self, saison: str, *,
                     house=None, nebulosite: float = 0.0) -> None:
@@ -129,7 +150,12 @@ class Container:
         # 2b. Microclimat T_sol (lit la lumière, précède l'hydrologie).
         eco.tick_thermique(saison, nebulosite)
         # 3. Hydrologie avec le DRAINAGE DU SUBSTRAT (override §2) au lieu du soil_type.
-        eco.tick_hydrology(drainage_override=recette.drainage)
+        #    L'eau qui s'écoule du fond (perte de drainage, retournée par tick_hydrology)
+        #    n'est plus JETÉE quand le conteneur est posé sur une tuile : on l'INJECTE
+        #    dans l'humidité du plot d'assise (pont matière §5, point 1 — vaut pour POT
+        #    comme pour BAC : tout conteneur posé a un trou/fond par où l'eau descend).
+        pertes = eco.tick_hydrology(drainage_override=recette.drainage)
+        self._drainer_vers_tuile(pertes)
         # 4. Décomposition confinée — libère la litière pré-chargée (lasagnes/mycélium)
         #    dans la cascade om_fresh→active→stable→NPK. La faim d'azote du bois/substrat
         #    frais bride l'azote au départ puis se lève à mesure que la litière mûrit.
@@ -149,6 +175,9 @@ class Container:
         #    saison : un mini-sol n'a pas de cadence saisonnière propre ici). Liste de
         #    plantes vide en ② → signature nulle.
         eco.tick_soil_memory(self.plants)
+        # 10. Diffusion microbiome/om ↔ tuile (§5, point 3) — UNIQUEMENT pour un bac à
+        #     fond ouvert : la vie du sol colonise le mini-sol par le bas (et vice-versa).
+        self._diffuser_vers_tuile()
 
     # ------------------------------------------------------------------
     # CONFINEMENT RACINAIRE — effet nain HYBRIDE (CONCEPTION §3, tronçon ③).
@@ -188,6 +217,44 @@ class Container:
         → [(0,0)] ; pour un bac N×M → toutes ses cellules."""
         return [(r, c) for r in range(self.eco.rows) for c in range(self.eco.cols)]
 
+    # ------------------------------------------------------------------
+    # COUPLAGE FOND OUVERT — ponts conteneur↔tuile (CONCEPTION §5, tronçon ⑤).
+    # Trois flux de matière, AUCUN bonus direct sur la plante (philo #2).
+    # No-op STRICT quand `tile_eco is None` (conteneur détaché) → golden NEUTRE.
+    # ------------------------------------------------------------------
+
+    def _drainer_vers_tuile(self, pertes: list) -> None:
+        """§5 point 1 — DRAINAGE → TUILE. L'eau évacuée par le fond du conteneur
+        (perte de drainage par cellule, retournée par `tick_hydrology`) n'est plus
+        perdue : elle est INJECTÉE dans l'humidité du plot de tuile d'assise. Pont
+        matière (bilan d'eau conservé : ce que le mini-sol perd, le sol gagne). Vaut
+        pour POT comme pour BAC (tout conteneur posé évacue par un trou). No-op si
+        DÉTACHÉ. Déterministe : on cumule la perte de toutes les cellules en UN add."""
+        if self.tile_eco is None or self.tile_rc is None:
+            return
+        tr, tc = self.tile_rc
+        total = sum(perte for _r, _c, perte in pertes)
+        if total > 0.0:
+            self.tile_eco.humidite.add(tr, tc, total)
+
+    def _diffuser_vers_tuile(self) -> None:
+        """§5 point 3 — MICROBIOME/OM → TUILE (bac fond ouvert SEUL). Diffusion LENTE
+        BIDIRECTIONNELLE entre la cellule d'assise du mini-sol et le plot de tuile
+        dessous : la vie du sol colonise le bac par le bas (et le compost du bac
+        ensemence le sol). Échange = `COUPLAGE_DIFFUSION · écart` sur microbiome,
+        om_active et om_stable. Conserve la masse (ce qui sort d'un champ entre dans
+        l'autre). Pas pour un pot (fond fermé). Déterministe, zéro RNG."""
+        if not self.fond_ouvert or self.tile_eco is None or self.tile_rc is None:
+            return
+        tr, tc = self.tile_rc
+        cr, cc = 0, 0   # cellule d'assise du bac (le bac N×M s'appuie par (0,0))
+        for champ in ("microbiome", "om_active", "om_stable"):
+            ici  = self.eco.get_field(champ)
+            la   = self.tile_eco.get_field(champ)
+            flux = (la.at_plot(tr, tc) - ici.at_plot(cr, cc)) * COUPLAGE_DIFFUSION
+            ici.add(cr, cc, flux)        # le sol vivant migre vers le bac…
+            la.add(tr, tc, -flux)        # …prélevé sur la tuile (masse conservée)
+
     def tick(self, saison: str, seed: int, week: int, *,
              house=None, nebulosite: float = 0.0) -> None:
         """Tick COMPLET d'un conteneur habité (CONCEPTION §3) : la chimie isolée
@@ -214,12 +281,31 @@ class Container:
             roots = [(r, c) for (r, c) in plant.root_plots if (r, c) in cellules]
             if not roots:
                 roots = [(0, 0)]
-            share = 1.0 / len(roots)
+            # §5 point 2 — RACINES → TUILE (bac fond ouvert SEUL) : une fois le
+            # root-bound atteint (le mini-sol SATURE), les racines DESCENDENT dans le
+            # plot de tuile dessous → uptake AUSSI là-bas → la plante puise enfin dans
+            # le sol profond, ce qui LÈVE l'effet nain (elle n'est plus confinée). C'est
+            # le couplage qui rend le bac fond ouvert ≈ pleine terre une fois colonisé.
+            # ÉMERGENT (philo #2) : on n'efface aucun malus, on OUVRE un réservoir.
+            descend = (self.fond_ouvert and self.tile_eco is not None
+                       and self.tile_rc is not None
+                       and self._confinement(plant) < 1.0)
+            n_sites = len(roots) + (1 if descend else 0)
+            share = 1.0 / n_sites
             for r, c in roots:
                 eco.plant_uptake(r, c, plant.current_stage,
                                  shade_memory=plant.shade_memory,
                                  drought_memory=plant.drought_memory,
                                  share=share, volume_factor=vfac)
+            if descend:
+                # Uptake dans la TUILE (réservoir profond) — `volume_factor=1.0` (le
+                # sol n'est pas confiné) : la concentration n'y chute pas vite → la
+                # plante respire. Repère du root-bound levé pour le levier 3 ci-dessous.
+                tr, tc = self.tile_rc
+                self.tile_eco.plant_uptake(tr, tc, plant.current_stage,
+                                           shade_memory=plant.shade_memory,
+                                           drought_memory=plant.drought_memory,
+                                           share=share, volume_factor=1.0)
             # Physiologie minimale (drought/shade/growth_factor) — RÉPLIQUE allégée
             # de `_update_physiology` (côté `sim.engine`, non importable depuis `world`).
             # Ferme la boucle ressource→stress→croissance : un pot asséché élève la
@@ -236,9 +322,13 @@ class Container:
             target_g = 0.6 + 0.4 * min(1.0, light)
             plant.growth_factor += (target_g - plant.growth_factor) * 0.10
             plant.growth_factor = _clamp(plant.growth_factor, 0.3, 1.0)
-            # Levier 3 — croissance segmentaire bridée par le signal root-bound.
-            grow_plant(plant, seed, week, eco.lumiere,
-                       confinement=self._confinement(plant))
+            # Levier 3 — croissance segmentaire bridée par le signal root-bound, SAUF
+            # si les racines ont DESCENDU dans la tuile (bac fond ouvert root-bound) :
+            # le confinement est alors LEVÉ (la plante n'est plus à l'étroit, elle a
+            # trouvé le sol profond). Émergent : on ne « débloque » pas un malus, c'est
+            # l'ouverture d'un nouveau réservoir racinaire qui rend le bridage caduc.
+            conf = 1.0 if descend else self._confinement(plant)
+            grow_plant(plant, seed, week, eco.lumiere, confinement=conf)
 
 
 def _appliquer_recette(eco: EcoFields, recette: SubstratRecette) -> None:
@@ -302,17 +392,21 @@ def make_container(kind: str, substrat: str, volume_litres: float,
                    tile_eco: EcoFields | None = None,
                    tile_rc: tuple | None = None,
                    container_id: str | None = None) -> Container:
-    """Fabrique un conteneur REMPLI (CONCEPTION §1, §2).
+    """Fabrique un conteneur REMPLI (CONCEPTION §1, §2, §5).
 
     1. construit `eco = EcoFields(tile_id, rows, cols)` (mini-sol) ;
     2. applique la recette `get_substrat(substrat)` : champs initiaux + litière
        pré-chargée — SAUF si `herite_tuile` (terre du jardin), auquel cas on COPIE
        le plot de tuile `tile_rc` de `tile_eco` (pont §6) ;
-    3. `mobile = (kind == "pot")`.
+    3. `mobile = (kind == "pot")` ;
+    4. MÉMORISE l'assise `tile_eco`/`tile_rc` sur le conteneur (pont §5, ⑤) : tout
+       conteneur POSÉ sur une tuile la connaît → son drainage retourne au sol, et un
+       bac fond ouvert ouvre racines + diffusion. À `None` → conteneur DÉTACHÉ
+       (hors-sol pur), aucun pont (golden NEUTRE, rétrocompat ②/③/④).
 
-    `tile_eco`/`tile_rc` ne sont REQUIS que pour le substrat `terre_jardin`
-    (`herite_tuile=True`) — absents pour tout autre substrat (ValueError franc si
-    manquants, échec tôt plutôt qu'un mini-sol vide silencieux).
+    `tile_eco`/`tile_rc` sont REQUIS pour le substrat `terre_jardin`
+    (`herite_tuile=True`, on copie le plot) ; OPTIONNELS sinon (s'ils sont fournis,
+    ils servent juste d'assise de couplage §5 ; absents → conteneur détaché).
     """
     recette = get_substrat(substrat)
     cid = container_id if container_id is not None else f"{kind}{next(_AUTO_ID)}"
@@ -333,6 +427,7 @@ def make_container(kind: str, substrat: str, volume_litres: float,
         volume_litres=volume_litres, x_cm=x_cm, y_cm=y_cm,
         eco=eco, rows=rows, cols=cols,
         mobile=(kind == "pot"),
+        tile_eco=tile_eco, tile_rc=tile_rc,
     )
 
 
