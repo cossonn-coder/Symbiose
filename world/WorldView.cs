@@ -338,6 +338,9 @@ namespace Symbiose
 			//     chaque frame selon le mode (Aucune/Survol/Toutes). Cf.
 			//     WorldView.Etiquettes.cs.
 			UpdatePlantLabels();
+			// 0b'') Étiquette de survol d'un CONTENEUR (substrat/volume + état
+			//       qualitatif du mini-sol, ⑥c) — même couche nette, mots seuls.
+			UpdateContainerLabel();
 			// 0b') Surbrillance de la branche sous la souris (mode tailler, t5).
 			//      Chaque frame aussi, mais le redraw ne part qu'au CHANGEMENT.
 			UpdateTailleHighlight();

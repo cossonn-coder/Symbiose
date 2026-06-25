@@ -32,11 +32,71 @@ namespace Symbiose
 	{
 		// Conteneurs affichés. On garde l'INDEX dans la liste du snapshot (=
 		// `target.container` attendu par le serveur pour la désignation des gestes
-		// ⑥b) + la position MONDE (pour le picking ⑥b) + les nœuds (conteneur et
-		// ses plantes) pour les libérer à la reconstruction.
+		// ⑥b) + la position MONDE (pour le picking ⑥b/⑥c) + les nœuds (conteneur et
+		// ses plantes) pour les libérer à la reconstruction. ⑥c ajoute l'identité
+		// affichable (substrat/volume/kind/fondOuvert) et l'`eco_summary` du
+		// mini-sol pour l'étiquette QUALITATIVE au survol (mots, pas chiffres).
 		private readonly List<(int Index, string Id, float XCm, float YCm,
-							   ContainerStructure Node, List<PlantRenderer> Plants)>
+							   ContainerStructure Node, List<PlantRenderer> Plants,
+							   ContainerInfo Info)>
 			_containers = new();
+
+		// Identité + état lisible d'un conteneur, figés à l'ApplyContainers et
+		// relus par l'étiquette de survol (⑥c.C). Pure lecture du snapshot.
+		private readonly struct ContainerInfo
+		{
+			public readonly string Kind, Substrat;
+			public readonly float Volume;
+			public readonly bool FondOuvert;
+			public readonly float Humidite, N, P, K, Ph, Microbiome;
+			public ContainerInfo(string kind, string substrat, float volume,
+								 bool fondOuvert, float humidite, float n, float p,
+								 float k, float ph, float microbiome)
+			{
+				Kind = kind; Substrat = substrat; Volume = volume;
+				FondOuvert = fondOuvert; Humidite = humidite;
+				N = n; P = p; K = k; Ph = ph; Microbiome = microbiome;
+			}
+		}
+
+		// Seuil de volume (litres) en deçà duquel un conteneur fond fermé est
+		// considéré confiné pour l'INDICE de nain (⑥c.B). Aligné qualitativement
+		// sur le moteur (world/container.py VOLUME_REF=75 : la plante d'un pot
+		// nettement sous la pleine terre est rapetissée). Const = calibrage F5.
+		private const float NainVolumeSeuilL = 60f;
+
+		// Lit `eco_summary` (scalaires plot 0,0 du mini-sol) en ContainerInfo pour
+		// l'étiquette de survol. Tolérant : valeurs neutres si le bloc manque.
+		private ContainerInfo ReadInfo(GDict ct, string kind, string substrat,
+									   float volume, bool fondOuvert)
+		{
+			float h = 0.5f, n = 0.5f, p = 0.5f, k = 0.5f, ph = 7f, mic = 0.5f;
+			if (ct.ContainsKey("eco_summary"))
+			{
+				var e = ct["eco_summary"].AsGodotDictionary();
+				h = (float)e["humidite"].AsDouble();
+				n = (float)e["n"].AsDouble();
+				p = (float)e["p"].AsDouble();
+				k = (float)e["k"].AsDouble();
+				ph = (float)e["ph"].AsDouble();
+				mic = (float)e["microbiome"].AsDouble();
+			}
+			return new ContainerInfo(kind, substrat, volume, fondOuvert,
+									 h, n, p, k, ph, mic);
+		}
+
+		// Vrai si le conteneur abrite au moins une plante VIVANTE (sert l'indice de
+		// nain ⑥c.B : sans plante à confiner, pas de racines tassées à montrer).
+		private static bool HasLivingPlant(GDict ct)
+		{
+			if (!ct.ContainsKey("plants")) return false;
+			foreach (var pv in ct["plants"].AsGodotArray())
+			{
+				var p = pv.AsGodotDictionary();
+				if (!(p.ContainsKey("dead") && p["dead"].AsBool())) return true;
+			}
+			return false;
+		}
 
 		// Applique le bloc `containers` (lecture tolérante : un snapshot pré-0.5.7
 		// n'a pas la clé → aucun conteneur dessiné, jamais de crash, comme
@@ -63,8 +123,20 @@ namespace Symbiose
 				float cx = (float)ct["x_cm"].AsDouble();   // position MONDE absolue
 				float cy = (float)ct["y_cm"].AsDouble();
 				string id = ct["id"].AsString();
+				bool fondOuvert = ct.ContainsKey("fond_ouvert")
+					&& ct["fond_ouvert"].AsBool();
 
-				var node = new ContainerStructure(kind, substrat, volume, rows, cols)
+				// ⑥c.B — root-bound (effet nain NON levé) : VUE PURE, on ne recalcule
+				// pas l'effet (height_cm vient du moteur), on DÉDUIT seulement quand
+				// dessiner l'indice de cause. Conditions = petit volume confiné, fond
+				// FERMÉ (un bac couplé lève le nain, ⑤) ET au moins une plante vivante
+				// (sinon rien à confiner). Seuil aligné sur le moteur (VOLUME_REF=75).
+				bool rootBound = !fondOuvert
+					&& volume <= NainVolumeSeuilL
+					&& HasLivingPlant(ct);
+
+				var node = new ContainerStructure(kind, substrat, volume, rows, cols,
+												  fondOuvert, rootBound)
 				{
 					Position = WorldToScreen(cx, cy),
 					Name = $"container_{id}",
@@ -75,7 +147,8 @@ namespace Symbiose
 				// conteneur (offset local − demi-grille, projeté en OFFSET → tourne
 				// avec la vue). On réutilise le diff/rendu PlantRenderer standard.
 				var plantNodes = BuildContainerPlants(ct, cx, cy, rows, cols);
-				_containers.Add((idx, id, cx, cy, node, plantNodes));
+				_containers.Add((idx, id, cx, cy, node, plantNodes,
+								 ReadInfo(ct, kind, substrat, volume, fondOuvert)));
 				idx++;
 			}
 		}

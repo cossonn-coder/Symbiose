@@ -15,9 +15,21 @@
 // plantes) ; l'empreinte au sol, elle, tourne avec la vue (WorldToScreenOffset)
 // → le placeholder reste cohérent sous les 4 orientations.
 //
-// Ce tronçon ⑥a est de la VUE PURE : aucune logique métier (effet nain, couplage
-// fond ouvert…) n'est ici — le moteur Python l'a déjà résolue (height_cm réduit
-// arrive dans le snapshot). On ne fait que LIRE et DESSINER.
+// Ce placeholder est de la VUE PURE : aucune logique métier (effet nain, couplage
+// fond ouvert…) n'est CALCULÉE ici — le moteur Python l'a déjà résolue (height_cm
+// réduit, drainage, couplage arrivent dans le snapshot). On ne fait que LIRE et
+// DESSINER.
+//
+// 📖 Pédagogie ⑥c — INDICES DIÉGÉTIQUES du couplage (philo #5 : indices visuels,
+// pas de chiffres). Deux faits écologiques que le moteur simule déjà reçoivent
+// une marque DISCRÈTE sur le placeholder (aucun recalcul, on SIGNALE la cause) :
+//  · A. FOND OUVERT vs FERMÉ — un bac `fond_ouvert` communique avec le sol (⑤) :
+//    on dessine de fines RACINES qui débordent sous la caisse vers la tuile.
+//    Le pot (ou un bac fermé) reçoit un FOND PLEIN (liseré d'arête bas continu).
+//  · B. EFFET NAIN — un petit volume confiné (root-bound, calculé en amont par
+//    la vue à partir de volume + fond_ouvert + présence de plante) reçoit des
+//    RACINES TASSÉES affleurant la lèvre du pot. Grand volume / bac couplé (nain
+//    levé) → pas de marque. L'indice suggère la cause, il ne l'explique pas (#6).
 
 using Godot;
 using System.Collections.Generic;
@@ -46,6 +58,10 @@ namespace Symbiose
 		private static readonly Color BacBoisClair  = new Color("9a6f44"); // planches (≡ compost)
 		private static readonly Color BacBoisOmbre  = new Color("6f4d2c");
 		private static readonly Color BacArete      = new Color("523619");
+		// Racines de l'indice de couplage : pâle (débordent du fond, ⑥c.A) et
+		// brun-roux tassées (root-bound au bord du pot, ⑥c.B).
+		private static readonly Color RacineFond   = new Color("c9b48a"); // chevelu pâle vers le sol
+		private static readonly Color RacineTassee = new Color("a07a4a"); // racines serrées au bord
 
 		// --- Teinte de SUBSTRAT (surface) par recette (CONCEPTION §2) -------------
 		// Une couleur de surface par clé de substrat du registre Python
@@ -55,7 +71,9 @@ namespace Symbiose
 		{
 			["terreau"]      = new Color("4a3526"), // terreau brun foncé, riche
 			["compost"]      = new Color("3c2c1c"), // compost très sombre, humifié
-			["drainant"]     = new Color("9a9486"), // mélange drainant gris clair (sable/pouzzolane)
+			// ⑥c — clé alignée sur le registre moteur (world/substrat.py :
+			// "drainant_mineral", pas "drainant") → la teinte s'applique vraiment.
+			["drainant_mineral"] = new Color("9a9486"), // mélange drainant gris clair (sable/pouzzolane)
 			["lasagnes"]     = new Color("5b4a2e"), // strates brun-olive (litière en couches)
 			["terre_jardin"] = Palette16.SolTerre,  // terre du jardin (même teinte que le sol)
 			["mycelium_use"] = new Color("c8bda6"), // substrat de champignon clair (paille colonisée)
@@ -65,15 +83,20 @@ namespace Symbiose
 		private readonly string _substrat; // clé de recette
 		private readonly float _volume;    // litres (pilote la hauteur du pot)
 		private readonly int _rows, _cols; // géométrie du mini-sol (bac N×M)
+		private readonly bool _fondOuvert; // ⑥c.A : communique avec la tuile dessous
+		private readonly bool _rootBound;  // ⑥c.B : nain non levé (petit volume confiné)
 
 		public ContainerStructure(string kind, string substrat, float volume,
-								  int rows, int cols)
+								  int rows, int cols,
+								  bool fondOuvert = false, bool rootBound = false)
 		{
 			_kind = kind;
 			_substrat = substrat;
 			_volume = volume;
 			_rows = Mathf.Max(1, rows);
 			_cols = Mathf.Max(1, cols);
+			_fondOuvert = fondOuvert;
+			_rootBound = rootBound;
 		}
 
 		// Teinte de surface du substrat (repli neutre si clé inconnue).
@@ -135,6 +158,25 @@ namespace Symbiose
 			DrawColoredPolygon(lipR, Surface());
 			DrawPolyline(new[] { lipR[0], lipR[1], lipR[2], lipR[3], lipR[0] },
 						 PotArete, 1.5f);
+
+			// ⑥c.B — indice « effet nain » : si la plante est root-bound (petit
+			// volume, fond fermé), de courtes racines TASSÉES affleurent la lèvre
+			// avant. Le pot est toujours fond FERMÉ → pas de racine vers le sol.
+			if (_rootBound)
+				DrawRootBoundFringe(new[] { lipR[front], lipR[(front + 1) % 4] });
+		}
+
+		// Racines tassées (⑥c.B) : un court chevelu vertical le long de l'arête
+		// avant de la lèvre, signe d'un système racinaire à l'étroit (root-bound).
+		// Discret : 3 brins de 5 cm vers le bas, brun-roux.
+		private void DrawRootBoundFringe(Vector2[] frontEdge)
+		{
+			Vector2 down = new Vector2(0f, 5f * WorldView.PxPerCmZ);
+			for (int i = 0; i <= 3; i++)
+			{
+				Vector2 a = frontEdge[0].Lerp(frontEdge[1], i / 3f);
+				DrawLine(a, a + down, RacineTassee, 1.2f);
+			}
 		}
 
 		// BAC : caisse N×M iso. On dessine chaque cellule du mini-sol comme un
@@ -159,6 +201,7 @@ namespace Symbiose
 				}
 			cells.Sort((a, b) => a.Center.Y.CompareTo(b.Center.Y)); // loin → proche
 
+			Vector2[] frontEdge = null;   // arête basse avant de la cellule la PLUS proche
 			foreach (var (r, c, center) in cells)
 			{
 				Vector2[] g = Footprint(center, BacCellHalfCm);
@@ -180,7 +223,38 @@ namespace Symbiose
 				}
 				DrawPolyline(new[] { top[0], top[1], top[2], top[3], top[0] },
 							 BacArete, 1.5f);
+				// La dernière cellule peinte (tri loin→proche) est la plus AVANT :
+				// on retient son arête basse pour l'indice de fond (⑥c.A).
+				frontEdge = new[] { g[(front + 3) % 4], g[front], g[(front + 1) % 4] };
 			}
+
+			// ⑥c.A — indice « fond ouvert / fermé » sur l'arête avant la plus proche.
+			if (frontEdge != null)
+			{
+				if (_fondOuvert) DrawOpenBottomRoots(frontEdge);
+				else DrawClosedBottom(frontEdge);
+			}
+		}
+
+		// ⑥c.A — FOND OUVERT : de fines racines pâles débordent sous l'arête avant
+		// du bac vers la tuile (le bac couplé communique avec le sol, ⑤). Quelques
+		// brins de longueurs irrégulières (déterministes : modulés par l'index).
+		private void DrawOpenBottomRoots(Vector2[] frontEdge)
+		{
+			for (int i = 0; i <= 6; i++)
+			{
+				Vector2 a = frontEdge[0].Lerp(frontEdge[2], i / 6f);
+				float len = 6f + (i % 3) * 3f;   // 6/9/12 cm, motif déterministe
+				DrawLine(a, a + new Vector2(0f, len * WorldView.PxPerCmZ),
+						 RacineFond, 1.1f);
+			}
+		}
+
+		// ⑥c.A — FOND FERMÉ : un liseré d'arête bas PLEIN et continu (le pot/bac
+		// fermé retient — aucune racine ne descend vers le sol).
+		private void DrawClosedBottom(Vector2[] frontEdge)
+		{
+			DrawPolyline(frontEdge, BacArete, 2.4f);
 		}
 	}
 }

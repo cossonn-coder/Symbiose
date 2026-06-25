@@ -40,7 +40,7 @@ dessous (drainage, racines, microbiome).
 | ⑤ | Couplage fond ouvert + lasagnes (arc complet) | `05_couplage_lasagnes.md` | **FAIT** (golden bit-identique) — **sprint moteur CLOS** |
 | ⑥a | Vue Godot — rendu statique conteneur + substrat (lecture seule) | `06a_rendu_conteneur.md` | **FAIT** (build C# vert, golden NEUTRE inchangé) |
 | ⑥b | Vue Godot — interaction poser/déplacer/planter (outil + clic) | `06b_interaction.md` | **FAIT** (build C# vert, golden NEUTRE inchangé) |
-| ⑥c | Vue Godot — indices visuels du couplage (fond ouvert, nain, substrat) | `06c_indices_couplage.md` | kickoff écrit |
+| ⑥c | Vue Godot — indices visuels du couplage (fond ouvert, nain, substrat) | `06c_indices_couplage.md` | **FAIT** (build C# vert, golden NEUTRE inchangé) — **SPRINT pots/bacs CLOS (vue comprise)** |
 
 ## Conventions
 - Source de vérité = Python `data/code/`. Lancement depuis `data/code/`
@@ -333,6 +333,51 @@ décision Nico : pas de drag&drop). Acquis (C#, 4 verbes du pont 0.5.7 déjà ro
 - smoke : `2ab026ad2b3f484777a2a29f804e1a4785ecffd6976fc0058fe0a33dd1498646` ✅ (aucun
   fichier Python touché → golden trivialement NEUTRE). Build C# **vert**.
 
+## Tronçon ⑥c — état (DERNIER tronçon — SPRINT VUE ⑥ COMPLET)
+**FAIT** (vue Godot, AUCUN fichier Python touché → golden trivialement NEUTRE,
+inchangé `2ab026ad…`). Build `dotnet build Symbiose.csproj` **vert** (0 avert., 0 err.).
+Indices diégétiques du couplage (philo #5, lecture seule du snapshot 0.5.7) :
+- `visuals/ContainerStructure.cs` :
+  - constructeur étendu (`fondOuvert`, `rootBound`) — VUE PURE, on ne recalcule rien.
+  - **⑥c.A fond ouvert/fermé** : bac `fond_ouvert` → fines racines pâles débordent
+    sous l'arête avant vers la tuile (`DrawOpenBottomRoots`) ; pot/bac fermé →
+    liseré d'arête bas PLEIN continu (`DrawClosedBottom`). Le pot est toujours fermé.
+  - **⑥c.B effet nain** : pot root-bound → court chevelu de racines TASSÉES à la
+    lèvre avant (`DrawRootBoundFringe`) ; grand volume / bac couplé (nain levé ⑤)
+    → pas de marque.
+  - **Fix d'alignement de clé** : `SubstratTeinte` avait `"drainant"` (≠ registre
+    moteur `"drainant_mineral"`) → la teinte de surface du mélange drainant tombait
+    sur `SolInconnu` (gris) au lieu de sa couleur. Corrigé sur la clé canonique
+    Python (bug d'⑥a, signalé, load-bearing pour « substrat reflété »).
+- `world/WorldView.Conteneurs.cs` : `_containers` porte désormais un `ContainerInfo`
+  (kind/substrat/volume/fond_ouvert + scalaires `eco_summary`) pour l'étiquette.
+  `ReadInfo` (lit `eco_summary`, tolérant), `HasLivingPlant`, calcul `rootBound`
+  (volume ≤ `NainVolumeSeuilL=60` L, fond FERMÉ, ≥1 plante vivante) à l'ApplyContainers.
+- `world/WorldView.ConteneursEtiquette.cs` (NOUVEAU partial) — **⑥c.C étiquette de
+  survol** : Label dédié NET sur la couche `PlantLabels` (hors SubViewport), reprojeté
+  `WorldToWindow`, mots SEULS (philo #5) : substrat lisible + taille (petit/grand pot,
+  bac) + fond ouvert/fermé + humidité (sec/frais/humide) + fertilité (pauvre/moyen/
+  riche, nutriment LIMITANT de Liebig). Survol via `FindNearestContainer` (⑥b),
+  `UpdateContainerLabel` appelé chaque frame dans `_Process` après les étiquettes plantes.
+- `world/WorldView.cs::_Process` — câble `UpdateContainerLabel()`.
+
+## Golden re-vérifié après ⑥c (bit-identique)
+- smoke : `2ab026ad2b3f484777a2a29f804e1a4785ecffd6976fc0058fe0a33dd1498646` ✅ (aucun
+  fichier Python touché → golden trivialement NEUTRE). Build C# **vert**.
+
+## Points à VALIDER au F5 (Nico) — ⑥c
+- **Lisibilité des indices** : racines pâles sous un bac fond ouvert vs liseré plein
+  d'un pot fermé — distinguables d'un coup d'œil ? Racines tassées (root-bound) d'un
+  petit pot visibles sans surcharger ?
+- **Seuils qualitatifs de l'étiquette** (`const` dans `ConteneursEtiquette.cs`) :
+  humidité (0.30/0.65), fertilité (0.30/0.65), `NainVolumeSeuilL=60` L — à calibrer
+  si les mots ne collent pas au ressenti.
+- **Position/contenu de l'étiquette** : 2 lignes au-dessus du conteneur survolé,
+  rayon `ContainerHoverRadiusCm=45` cm. Confortable ? Concurrence-t-elle l'étiquette
+  de plante quand un pot abrite une plante (les deux peuvent s'afficher) ?
+- **Substrat reflété** : la teinte de surface (⑥a) + le mot (⑥c) concordent-ils ?
+  (le fix de clé `drainant_mineral` rend enfin la teinte du mélange drainant).
+
 ## Points à VALIDER au F5 (Nico) — ⑥b
 - **Ergonomie du déplacement à 2 temps** : 1er clic saisit (HUD « pot #N saisi → cliquez
   la destination »), 2e clic pose. Changer de geste annule la saisie. Confortable ?
@@ -346,12 +391,17 @@ décision Nico : pas de drag&drop). Acquis (C#, 4 verbes du pont 0.5.7 déjà ro
   déplacement (message relayé), plante en pot pousse (effet nain si petit volume).
 - `ContainerPickRadiusCm = 60` cm : assez généreux pour saisir un pot au clic ?
 
-## REPRISE (démarrage à froid) — ⑥a/⑥b FAITS, RESTE ⑥c
-Moteur ①→⑤ CLOS (golden NEUTRE `2ab026ad…`, pont 0.5.7). Vue ⑥a FAITE (rendu statique
-pots/bacs/substrat/plantes, à VALIDER F5) ; ⑥b FAITE (poser/déplacer/planter via
-`TryAction` outil+clic, build C# vert, golden inchangé). RESTE : **⑥c indices du couplage**
-(fond ouvert/nain/substrat, lit `eco_summary` du snapshot, étiquettes). Lancer
-`06c_indices_couplage.md`. La vue ne touche AUCUN fichier Python → golden trivialement NEUTRE.
+## REPRISE (démarrage à froid) — SPRINT pots/bacs/substrats CLOS (moteur + vue)
+**TOUT FAIT** : moteur ①→⑤ (golden NEUTRE `2ab026ad…`, pont 0.5.7) + vue ⑥a/⑥b/⑥c.
+- ⑥a rendu statique (pots/bacs/substrat-teinte/plantes), ⑥b interaction (poser/
+  déplacer/planter via `TryAction` outil+clic), ⑥c indices diégétiques du couplage
+  (fond ouvert/fermé, effet nain, étiquette de survol qualitative `eco_summary`).
+- Golden NEUTRE bit-identique sur TOUT le sprint (aucun re-figeage). La vue n'a
+  touché AUCUN fichier Python. Build C# **vert** à chaque tronçon vue.
+**RESTE uniquement** : la VALIDATION F5 par Nico des 3 sous-tronçons vue ensemble
+(le `dotnet build` est le seul filet sur la VM, le F5 visuel reste à Nico). Voir les
+sections « Points à VALIDER au F5 » de ⑥a/⑥b/⑥c ci-dessus. La carte de démo ne pose
+aucun conteneur → poser un pot/bac à la main (geste ⑥b) pour OBSERVER.
 
 ## Points à VALIDER au F5 (Nico) — ⑥a
 - Forme/échelle du POT (tronc-cône) et du BAC (caisse N×M) : knobs `const` de
