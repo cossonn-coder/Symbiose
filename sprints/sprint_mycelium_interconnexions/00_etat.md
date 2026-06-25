@@ -38,7 +38,7 @@ le préserve.
 | # | Sujet | Kickoff | État |
 |---|-------|---------|------|
 | ① | Champ `mycelium` + dynamique (effets §2 DÉBRANCHÉS, repos neutre) | `01_champ_mycelium.md` | ✅ FAIT (golden BIT-IDENTIQUE) |
-| ② | Saprophyte (décompo `bois`) + liant (`om_stable`) | `02_saprophyte_liant.md` | À FAIRE |
+| ② | Saprophyte (décompo `bois`) + liant (`om_stable`) | `02_saprophyte_liant.md` | ✅ FAIT (golden RE-FIGÉ maîtrisé `9d13d4a7…`) |
 | ③ | Mycorhize (boost `p` borné dans `plant_uptake` + miroir `qi_local`) | `03_mycorhize.md` | À FAIRE |
 | ④ | Faune fongivore + carpophores échantillonnés | `04_faune_carpophores.md` | À FAIRE |
 | ⑤ | Structures niveau tuile + colonisation fongique + bêchage event-driven | `05_structures_tuile.md` | À FAIRE |
@@ -59,18 +59,33 @@ le préserve.
   cohérente avant commit.
 
 ## Hash golden de référence (mesurés au démarrage, 2026-06-25)
-- smoke `tests/test_golden.py` : `2ab026ad2b3f484777a2a29f804e1a4785ecffd6976fc0058fe0a33dd1498646`
+- smoke `tests/test_golden.py` : `9d13d4a7b88855e6e710dcf5fb22c6471b88a0f30f83d6f40e40b8eb6c8219d4`
+  > ② RE-FIGÉ MAÎTRISÉ : `2ab026ad…` (①, bit-identique) → `9d13d4a7…` (②). Dérive
+  > **localisée et bornée** : branchement saprophyte (terme `×(1+ALPHA_SAPRO·mycelium)`
+  > sur la décompo du SEUL `bois`) + liant (apport TRÈS LENT `LIANT_K·mycelium` à
+  > `om_stable`). Preuve d'isolation : `ALPHA_SAPRO=0` & `LIANT_K=0` ⇒ on retrouve
+  > EXACTEMENT `2ab026ad…` → toute la dérive vient des deux termes du ②, rien d'autre.
+  > Ampleur : `om_stable` moyenne +0.001 (max local 0.40-0.47), mycélium s'installe
+  > réellement dans le smoke (max 0.74 sur T1, là où bois humide + om_active). Aucun
+  > autre tissu/champ touché.
 - population `tests/test_population.py` : `6056713d4dd1e2a79964411961909545433f8513a530a2b39151cbe6aabe471b`
-> Mesurés AVANT toute modif. ① vise idéalement bit-identique (mycélium nul au repos) ;
-> ②③④ re-figent de façon maîtrisée (noter chaque transition ici). ⑤ ~intact.
+  (INCHANGÉ au ② — rien ne touche la faune).
+> Mesurés AVANT toute modif. ① bit-identique (mycélium nul au repos) ; ② RE-FIGÉ
+> (cf. supra) ; ③④ re-figent de façon maîtrisée (noter chaque transition ici). ⑤ ~intact.
 > NB : 1 check rouge PRÉEXISTANT dans `tests/test_sim_server.py` (« pommier pré-âgé
 > — 0 fruits @ S52 »), sans rapport avec ce sprint — baseline, pas une régression.
 
 ## REPRISE (démarrage à froid)
-**① FAIT** : champ `mycelium` (`fields/ecofields/mycelium.py`, `tick_mycelium` pur)
-déclaré dans `container.py`, tické dans `sim/engine/boucle.py` (après `tick_structure`,
-avant diffusion), knobs dans `constants.py`. Effets §2 DÉBRANCHÉS (personne ne lit le
-champ encore). Golden **bit-identique** `2ab026ad…`, population inchangé `6056713d…`,
-test dédié `tests/test_mycelium.py` 9/9. **Prochain : `02_saprophyte_liant.md`** (brancher
-le terme fongique sur la décompo `bois` + le liant `om_stable` → re-figeage golden LARGE
-MAÎTRISÉ attendu).
+**①② FAITS.**
+- **①** : champ `mycelium` (`fields/ecofields/mycelium.py`, `tick_mycelium` pur) déclaré
+  dans `container.py`, tické dans `sim/engine/boucle.py` (après `tick_structure`, avant
+  diffusion), knobs dans `constants.py`. Golden bit-identique `2ab026ad…`.
+- **②** : 1er rôle BRANCHÉ. SAPROPHYTE = terme `d *= 1 + ALPHA_SAPRO·mycelium` sur la
+  décompo du SEUL tissu `bois` dans `tick_decomposition` (`container.py`, boucle
+  parcelles) ; LIANT = apport TRÈS LENT `LIANT_K·mycelium` à `om_stable` en fin de
+  `tick_mycelium`. Knobs `ALPHA_SAPRO=1.5` / `LIANT_K=0.0005` dans `constants.py`
+  (PLACEHOLDERS). Golden **RE-FIGÉ MAÎTRISÉ** `2ab026ad…` → `9d13d4a7…` (dérive isolée
+  aux deux termes, cf. §Hash). Population inchangé `6056713d…`. `test_mycelium.py` 13/13,
+  `test_structures.py` 65/65.
+**Prochain : `03_mycorhize.md`** (boost `p` borné dans `plant_uptake` + miroir `qi_local` ;
+re-figeage golden maîtrisé attendu — l'uptake P là où le réseau touche des racines vivantes).

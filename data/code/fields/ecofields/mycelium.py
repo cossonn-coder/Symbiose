@@ -37,15 +37,16 @@ PAS lu ici (≠ travail joueur, piège du kickoff §1.2).
 from __future__ import annotations
 
 from .constants import (MYCEL_K_G, MYCEL_K_D, MYCEL_SUBSTRAT_REF, MYCEL_OM_POIDS,
-                        MYCEL_TEMP_OPT, MYCEL_TEMP_TOL)
+                        MYCEL_TEMP_OPT, MYCEL_TEMP_TOL, LIANT_K)
 from .nutriments import bell
 
 
 def tick_mycelium(eco) -> None:
     """Met à jour `eco.mycelium` (croissance/déclin) depuis la litière C-riche
-    (`bois_fresh_at`), l'`om_active`, l'`humidite` et la `temperature_sol`. Pure :
-    n'écrit QUE `mycelium`. À appeler APRÈS `tick_structure` (litière/humidité/T_sol
-    déjà à jour ce tick) et AVANT `tick_diffusion`."""
+    (`bois_fresh_at`), l'`om_active`, l'`humidite` et la `temperature_sol`. Écrit
+    `mycelium` ET, au tronçon ②, ajoute LENTEMENT à `om_stable` (rôle LIANT :
+    glomaline du réseau qui structure l'humus). À appeler APRÈS `tick_structure`
+    (litière/humidité/T_sol déjà à jour ce tick) et AVANT `tick_diffusion`."""
     mycel = eco.mycelium
     for r in range(eco.rows):
         for c in range(eco.cols):
@@ -60,3 +61,11 @@ def tick_mycelium(eco) -> None:
             croissance = MYCEL_K_G * substrat_norm * humidite_norm * fenetre_temp
             declin = MYCEL_K_D * mycel.at_plot(r, c) * (secheresse + epuisement)
             mycel.set(r, c, mycel.data[r][c] + croissance - declin)  # clampe [0,1]
+
+            # Rôle LIANT (②, §2.1) : la glomaline sécrétée par le réseau agrège
+            # les particules → un petit apport TRÈS LENT à `om_stable` (mémoire du
+            # sol), proportionnel au réseau MIS À JOUR ce tick. LIANT_K minuscule
+            # (om_stable se décompose à 0.0006/sem) → la mémoire ne dérive pas
+            # au-delà du bois. mycelium=0 ⇒ apport nul ⇒ sol non colonisé inchangé.
+            if mycel.data[r][c] > 0.0:
+                eco.om_stable.add(r, c, LIANT_K * mycel.data[r][c])

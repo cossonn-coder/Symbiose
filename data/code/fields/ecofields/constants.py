@@ -443,6 +443,22 @@ MYCEL_OM_POIDS     = 0.5    # poids de `om_active` dans le substrat (le bois com
 MYCEL_TEMP_OPT     = 18.0   # °C — optimum thermique du réseau fongique
 MYCEL_TEMP_TOL     = 12.0   # °C — largeur de la cloche (large → tempéré ≈ plein régime)
 
+# --- Rôle SAPROPHYTE + LIANT (tronçon ②, §2/§2.1) -------------------------
+# Premier rôle BRANCHÉ du mycélium : le champignon lignivore DIGÈRE le bois et
+# LIE le sol. Effets émergents, jamais directs (philo #2), zéro RNG (philo #3).
+#   - ALPHA_SAPRO : terme fongique sur la décompo du SEUL tissu `bois`
+#     (`d *= 1 + ALPHA_SAPRO·mycelium`) — là où le réseau est installé, le bois
+#     se minéralise/humifie plus vite ; sans réseau, décompo `bois` INCHANGÉE
+#     (mycelium=0 ⇒ facteur 1.0 ⇒ bit-identique à AVANT). AUCUN autre tissu touché
+#     (le champignon est spécialiste du ligneux). Re-figeage golden MAÎTRISÉ attendu.
+#   - LIANT_K : glomaline / liant du sol — un petit ajout LENT à `om_stable`
+#     ∝ mycelium, agrégé dans `tick_mycelium` (c'est le réseau qui structure
+#     l'humus). TRÈS petit pour ne pas dériver la mémoire du sol au-delà du bois
+#     (om_stable se décompose à 0.0006/sem : un apport trop fort exploserait l'humus).
+# PLACEHOLDERS, calibrage post-test (CONCEPTION §2/§2.1).
+ALPHA_SAPRO        = 1.5    # accélération max de la décompo `bois` à réseau saturé (×2.5)
+LIANT_K            = 0.0005 # apport glomaline à `om_stable`/sem à mycelium=1 (très lent)
+
 # Signature sol par famille (laissée après chaque saison)
 SOIL_SIGNATURE = {
     "Fabaceae":   {"microbiome": +0.15, "fertilite": +0.10},

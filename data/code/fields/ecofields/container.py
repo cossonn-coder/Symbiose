@@ -607,6 +607,14 @@ class EcoFields:
                 for p in cell:
                     decay, humif, miner = TISSU[p.tissu]
                     d = p.masse * decay * speed
+                    # Terme SAPROPHYTE (mycélium ②) : le champignon lignivore
+                    # accélère la décompo du SEUL `bois` là où le réseau est
+                    # installé (`×(1+ALPHA_SAPRO·mycelium)`). mycelium=0 ⇒ ×1.0
+                    # ⇒ bois non colonisé strictement INCHANGÉ ; aucun autre tissu
+                    # touché (spécialiste du ligneux). Flux → décompo, jamais la
+                    # plante (philo #2). at_plot ∈ [0,1], zéro RNG (philo #3).
+                    if p.tissu == "bois":
+                        d *= 1.0 + ALPHA_SAPRO * self.mycelium.at_plot(r, c)
                     p.masse  -= d
                     p.age_sem += 1.0
                     fresh_humif += d * humif

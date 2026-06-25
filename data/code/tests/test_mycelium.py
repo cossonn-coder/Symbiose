@@ -100,6 +100,69 @@ check("repos sans substrat ni réseau préexistant → reste 0",
       detail=f"{eco_neutre.mycelium.data[0][0]:.6f}")
 
 
+# --- G. SAPROPHYTE (②) : à mycélium FORT, une parcelle `bois` décompose plus
+#        vite qu'à mycélium NUL (même état initial). ---
+def _bois_restant(mycel_init, ticks=3):
+    e = init_eco("sapro", 1, 1, humidite=2.0)
+    e.temperature_sol.set(0, 0, MYCEL_TEMP_OPT)
+    e.deposer_litiere(0, 0, "bois", 1.0)
+    e.mycelium.set(0, 0, mycel_init)
+    for _ in range(ticks):
+        # fige le mycélium à sa consigne (on isole le TERME saprophyte de la
+        # dynamique de croissance) : on ne tique QUE la décompo.
+        e.mycelium.set(0, 0, mycel_init)
+        e.tick_decomposition()
+    return sum(p.masse for p in e.litiere[0][0] if p.tissu == "bois")
+
+
+bois_nul  = _bois_restant(0.0)
+bois_fort = _bois_restant(1.0)
+check("SAPROPHYTE : bois décompose PLUS vite sous mycélium fort",
+      bois_fort < bois_nul, detail=f"nul={bois_nul:.5f} > fort={bois_fort:.5f}")
+
+# --- H. Non-régression : mycélium NUL ⇒ décompo `bois` strictement INCHANGÉE.
+#        (On reconstruit la décompo `bois` sans aucun mycélium déclaré n'est pas
+#        possible — le champ existe ① — mais mycelium=0 ⇒ facteur ×1.0 exact.) ---
+e_ref = init_eco("ref", 1, 1, humidite=2.0)
+e_ref.temperature_sol.set(0, 0, MYCEL_TEMP_OPT)
+e_ref.deposer_litiere(0, 0, "bois", 1.0)
+# masse attendue après 1 tick SANS mycélium = masse·decay·speed retiré.
+m0 = next(p.masse for p in e_ref.litiere[0][0] if p.tissu == "bois")
+e_ref.mycelium.set(0, 0, 0.0)
+e_ref.tick_decomposition()
+m1 = next(p.masse for p in e_ref.litiere[0][0] if p.tissu == "bois")
+check("non-régression : mycélium nul ⇒ bois décompose (facteur ×1.0, pas figé)",
+      m1 < m0, detail=f"{m0:.5f} → {m1:.5f}")
+
+# --- I. LIANT : sous un réseau présent, `om_stable` MONTE lentement. ---
+e_liant = init_eco("liant", 1, 1, humidite=2.0)
+e_liant.temperature_sol.set(0, 0, MYCEL_TEMP_OPT)
+e_liant.deposer_litiere(0, 0, "bois", MYCEL_SUBSTRAT_REF)
+e_liant.mycelium.set(0, 0, 0.8)
+om_before = e_liant.om_stable.data[0][0]
+for _ in range(5):
+    e_liant.tick_mycelium()
+om_after = e_liant.om_stable.data[0][0]
+check("LIANT : om_stable monte lentement sous un réseau",
+      om_after > om_before, detail=f"{om_before:.6f} → {om_after:.6f}")
+
+# --- J. Déterminisme du ② (décompo + liant, deux runs identiques) ---
+def _run2():
+    e = init_eco("det2", 2, 2, humidite=2.0)
+    for r in range(2):
+        for c in range(2):
+            e.temperature_sol.set(r, c, MYCEL_TEMP_OPT - 2.0 * (r + c))
+            e.deposer_litiere(r, c, "bois", 1.0 + 0.2 * (r + c))
+            e.mycelium.set(r, c, 0.5 + 0.1 * (r + c))
+    for _ in range(4):
+        e.tick_mycelium()
+        e.tick_decomposition()
+    return tuple(e.om_stable.data[r][c] for r in range(2) for c in range(2))
+
+
+check("déterminisme ② : deux runs identiques → état identique", _run2() == _run2())
+
+
 # --- Bilan ---
 fails = [n for n, ok in _results if not ok]
 if fails:
