@@ -63,15 +63,22 @@ def _bolt_stage_index(plant_class) -> int | None:
 
 def _bolt_bloque(plant) -> bool:
     """Gate annuel des BISANNUELLES (catalogue enrichi ③). Une bisannuelle ne
-    franchit PAS son stade de montaison tant que `age_years < 1.0` : rosette
-    l'an 1, montaison/floraison l'an 2 (puis mort monocarpique, mortalite.py).
-    Bloque le passage VERS le stade de montaison (et au-delà) avant 1 an.
+    franchit PAS son stade de montaison tant qu'elle est dans son an 1 : rosette
+    pendant TOUTE l'an 1 (52 semaines), montaison/floraison à partir de l'an 2
+    (puis mort monocarpique, mortalite.py).
+
+    `age_years` accumule `1/52` par tick, donc à la semaine 52 il vaut ~1.0 au
+    bruit flottant près (en pratique `1.0000000000000002`). On ouvre le gate avec
+    une marge d'un demi-tick (`ANNEE_1`) : la semaine 52 reste rosette, la montaison
+    ne devient possible qu'en semaine 53 (an 2 sans ambiguïté). Sans cette marge,
+    « rosette l'an 1 » fuirait d'un tick sur la frontière (off-by-one).
 
     N'a d'effet QUE pour `life_cycle == "biennial"` → AUCUNE espèce du smoke n'est
     bisannuelle ⇒ golden NEUTRE. Si ce gate déplaçait le hash golden, c'est qu'il
     fuit sur une espèce non bisannuelle (BUG, pas un re-figeage)."""
+    ANNEE_1 = 1.0 + 0.5 / 52.0   # frontière an1/an2 robuste au bruit flottant
     cls = plant.plant_class
-    if cls.life_cycle != "biennial" or plant.age_years >= 1.0:
+    if cls.life_cycle != "biennial" or plant.age_years > ANNEE_1:
         return False
     bolt = _bolt_stage_index(cls)
     return bolt is not None and plant.current_stage + 1 >= bolt
