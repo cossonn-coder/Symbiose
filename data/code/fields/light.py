@@ -263,30 +263,72 @@ class LightField(GridField):
             self.received[id(p)] = acc / total_w
 
         # --- Lumière-sol par plot (ombres plantes + maison + albédo + plancher) ---
-        for r in range(self.rows):
-            cy = r * PLOT_CM + PLOT_CM / 2
-            wy = cy + oy
-            for c in range(self.cols):
-                cx = c * PLOT_CM + PLOT_CM / 2
-                wx = cx + ox
-                acc = 0.0
-                for sdx, sdy, inv_tan, w in slices:
+        # SCATTER (D32) — au lieu de tester chaque plot contre chaque plante
+        # (gather, aucun élagage), chaque ombre ne VISITE que les plots de sa
+        # bounding-box de capsule. Un plot hors bbox renvoie de toute façon False
+        # dans `_point_in_capsule` → l'élaguer est BIT-IDENTIQUE (golden intact).
+        #
+        # Pour chaque tranche, on accumule par plot l'atténuation MULTIPLICATIVE
+        # des plantes (init 1.0), en parcourant `infos` dans l'ordre EXACT de la
+        # version gather (produit de facteurs (1-qd) dans le même ordre par plot →
+        # mêmes flottants bit à bit). Maison (ombre pleine), albédo et plancher
+        # restent des termes PAR-PLOT indépendants des plantes → passe finale.
+        rows, cols = self.rows, self.cols
+        acc_grid = [[0.0] * cols for _ in range(rows)]
+        for sdx, sdy, inv_tan, w in slices:
+            # Produit des ombres-plantes par plot (1.0 = plein soleil).
+            att_grid = [[1.0] * cols for _ in range(rows)]
+            for q, qx, qy, qh, qr, qd in infos:
+                if qd <= 0.0:
+                    continue
+                length = qh * inv_tan
+                factor = 1.0 - qd
+                bx = qx + sdx * length            # extrémité de la capsule
+                by = qy + sdy * length
+                xmin = (qx if qx < bx else bx) - qr   # bbox = sur-ensemble strict
+                xmax = (qx if qx > bx else bx) + qr   # (marge ±qr sur x ET y)
+                ymin = (qy if qy < by else by) - qr
+                ymax = (qy if qy > by else by) + qr
+                c0 = int(xmin // PLOT_CM); c1 = int(xmax // PLOT_CM)
+                r0 = int(ymin // PLOT_CM); r1 = int(ymax // PLOT_CM)
+                if c0 < 0: c0 = 0
+                if r0 < 0: r0 = 0
+                if c1 > cols - 1: c1 = cols - 1
+                if r1 > rows - 1: r1 = rows - 1
+                for r in range(r0, r1 + 1):
+                    cy = r * PLOT_CM + PLOT_CM / 2
+                    row_att = att_grid[r]
+                    for c in range(c0, c1 + 1):
+                        cx = c * PLOT_CM + PLOT_CM / 2
+                        if _point_in_capsule(cx, cy, qx, qy, sdx, sdy, length, qr):
+                            row_att[c] *= factor
+            # Passe par-plot : maison (ombre pleine AVANT le produit plantes →
+            # un plot sous la maison ignore les capsules), albédo, pondération.
+            h_len = h_height * inv_tan
+            for r in range(rows):
+                cy = r * PLOT_CM + PLOT_CM / 2
+                wy = cy + oy
+                row_att = att_grid[r]
+                row_acc = acc_grid[r]
+                for c in range(cols):
                     if house is not None and _point_in_swept_rect(
-                            wx, wy, hx0, hy0, hx1, hy1, sdx, sdy, h_height * inv_tan):
+                            c * PLOT_CM + PLOT_CM / 2 + ox, wy,
+                            hx0, hy0, hx1, hy1, sdx, sdy, h_len):
                         att = 0.0            # sous la maison : ombre pleine
                     else:
-                        att = 1.0
-                        for q, qx, qy, qh, qr, qd in infos:
-                            if qd <= 0.0:
-                                continue
-                            if _point_in_capsule(cx, cy, qx, qy, sdx, sdy, qh * inv_tan, qr):
-                                att *= (1.0 - qd)
+                        att = row_att[c]
                     if house is not None and wall_albedo > 0.0:
-                        att += _wall_albedo_bonus(wx, wy, hx0, hy0, hx1, hy1,
-                                                  wall_albedo, WALL_ALBEDO_RADIUS_CM,
-                                                  -sdx, -sdy)
-                    acc += att * w
-                # Plafond [LIGHT_FLOOR, 1.0] : préserve le contrat [0,1] de la
-                # lumière-sol (no-op sans maison, acc/total_w ≤ 1).
-                self.data[r][c] = min(1.0, max(LIGHT_FLOOR, acc / total_w))
+                        att += _wall_albedo_bonus(
+                            c * PLOT_CM + PLOT_CM / 2 + ox, wy,
+                            hx0, hy0, hx1, hy1,
+                            wall_albedo, WALL_ALBEDO_RADIUS_CM, -sdx, -sdy)
+                    row_acc[c] += att * w
+        # Plafond [LIGHT_FLOOR, 1.0] : préserve le contrat [0,1] de la lumière-sol
+        # (no-op sans maison, acc/total_w ≤ 1).
+        for r in range(rows):
+            row_acc = acc_grid[r]
+            dst = self.data[r]
+            for c in range(cols):
+                v = row_acc[c] / total_w
+                dst[c] = 1.0 if v > 1.0 else (LIGHT_FLOOR if v < LIGHT_FLOOR else v)
         return []

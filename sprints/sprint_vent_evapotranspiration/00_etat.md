@@ -26,7 +26,7 @@ l'évaporation** (rayonnement + vent) pour rééquilibrer la rosée → résout 
 ## Carte des tronçons
 | # | Fichier | Coût | Golden | Statut |
 |---|---------|------|--------|--------|
-| ⓪ | [`t0_reference_perf_scatter.md`](t0_reference_perf_scatter.md) | mesure+gain | **INTACT** | ⏳ à faire |
+| ⓪ | [`t0_reference_perf_scatter.md`](t0_reference_perf_scatter.md) | mesure+gain | **INTACT** `11eceeb9…` | ✅ fait |
 | ① | [`t1_vent_masse_air.md`](t1_vent_masse_air.md) | O(1) | neutre | ⏳ |
 | ② | [`t2_evapotranspiration.md`](t2_evapotranspiration.md) | marginal | **re-fige LARGE** → D39 vert | ⏳ |
 | ③ | [`t3_abri_spatial.md`](t3_abri_spatial.md) | **À BUDGÉTER** | re-fige | ⏳ |
@@ -34,6 +34,22 @@ l'évaporation** (rayonnement + vent) pour rééquilibrer la rosée → résout 
 | ⑤ | [`t5_pollinisation_dispersion.md`](t5_pollinisation_dispersion.md) | négligeable | re-fige | ⏳ |
 | ⑥ | [`t6_maladies_fongiques.md`](t6_maladies_fongiques.md) | négligeable | re-fige | ⏳ |
 | ⑦ | [`t7_transport_voix.md`](t7_transport_voix.md) | amorti | re-fige | ⏳ |
+
+## Référence perf + scatter (tronçon ⓪, 2026-06-29 — D32 SOLDÉE)
+- **Base mesurée** (`tools/profile_tick.py`, monde smoke 2 tuiles/96 plots/51
+  plantes, 52 sem échauffement) AVANT : tick **59.2 ms**, `LightField.compute`
+  **34.1 ms** (57.6 %). APRÈS scatter : tick **52.3 ms**, `compute` **25.8 ms**
+  (49.4 %). Boucle lumière-sol seule : **×6.0 plancher** (`diag_light_coverage`,
+  monde dense 79 % ombré = pire cas ; le monde réel 1600 plots est ~20× plus
+  clairsemé → gain réel >> ×6).
+- **Golden INTACT** `11eceeb9e80aec108dd46907c7e530e96d6040b486150944c4090c1c90b11ba0`
+  (optim pure, bit-à-bit). Verrou : `tests/test_scatter_lumiere_sol.py` (PASS).
+  Non-régression : `test_phototropisme`, `test_ombre_maison`, `test_sim_server`
+  (207/207) verts.
+- **Budget X fixé** : ce tronçon a **baissé** le tick (−12 %). Règle pour ①→⑦ :
+  aucun tronçon n'ajoute plus de **~+10 %** au tick complet (≈ +5 ms sur la base
+  52 ms) sans justification ; ③ (abri spatial) seul à risque → mesurer seul,
+  réutiliser la même bbox/scatter que la lumière (levier 2, mutualisation).
 
 ## Boucle de travail (rappel CLAUDE.md)
 Lancer `tN` → coder → **mesurer ms/tick avant/après** (budget §7B) → golden (intact
@@ -45,6 +61,7 @@ ou re-figeage annoncé) → MAJ ce fichier → commit → `/clear` → lancer `t
 - Supprimer `HANDOFF.md` (devenu obsolète).
 
 ## REPRISE (démarrage à froid)
-« lis `sprints/sprint_vent_evapotranspiration/00_etat.md` puis le `tN_*.md` du
-tronçon ⏳ le plus haut » → exécuter ce tronçon, garder/re-figer le golden comme
-indiqué, respecter le budget perf.
+« lis `sprints/sprint_vent_evapotranspiration/00_etat.md` puis
+`t1_vent_masse_air.md` » → exécuter le tronçon ① (vent masse d'air, scalaires
+O(1), golden neutre), respecter le budget perf (~+10 % max/tronçon, cf. ci-dessus).
+Tronçon ⓪ (réf perf + scatter D32) = ✅ fait, golden intact `11eceeb9…`.
