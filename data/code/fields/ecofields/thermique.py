@@ -37,10 +37,14 @@ seuls couvert (litière) et nébulosité protègent du rayonnement vers le ciel 
 
 from __future__ import annotations
 
+import math
+
 from .constants import (GAIN_SOLAIRE, THERMAL_INERTIA, INTENSITE_SAISON,
                         REFROID_EVAP, ISOLATION_COUVERT, LITIERE_REF,
                         K_NEBUL_DIURNE, RAYONNEMENT_NOCTURNE,
-                        SNOW_ACCUM, SNOW_MELT_BASE, SNOW_MELT_WARM)
+                        SNOW_ACCUM, SNOW_MELT_BASE, SNOW_MELT_WARM,
+                        MICROBE_T_OPT, MICROBE_T_TOL, MICROBE_HUM_OPT,
+                        MICROBE_HUM_SAT_FLOOR, MICROBE_CLIM_FLOOR)
 
 
 def tick_thermique(eco, saison: str, nebulosite: float = 0.0) -> None:
@@ -89,6 +93,37 @@ def t_min_nuit_at(eco, r: int, c: int, t_air: float, nebulosite: float) -> float
     Pure, zéro RNG, zéro effet de bord (philo #3 — lit `eco.snow`, ne l'écrit pas)."""
     couvert = min(1.0, eco.om_fresh_at(r, c) / LITIERE_REF + eco.snow)
     return t_air - RAYONNEMENT_NOCTURNE * (1.0 - couvert) * (1.0 - nebulosite)
+
+
+def microbe_clim_factor(t_sol: float, hum_norm: float) -> float:
+    """Facteur CLIMATIQUE de l'activité microbienne ∈ [MICROBE_CLIM_FLOOR, 1]
+    (sprint météo→champs ④, CONCEPTION_METEO_CHAMPS §5). Terme MULTIPLICATIF, PAS
+    un champ neuf : `tick_decomposition` le pose sur la vitesse de décompo, donc sur
+    le recyclage ET (indirectement) sur le microbiome. Pur, zéro RNG, zéro effet de
+    bord — calcul isolé ici comme `t_min_nuit_at` (couche `fields`).
+
+        f_clim = max(FLOOR, f_temp · f_hum)
+
+    - `f_temp` : CLOCHE gaussienne centrée sur `MICROBE_T_OPT` (~20 °C), de demi-
+      largeur `MICROBE_T_TOL`. = 1 à l'optimum, → 0 au gel (dormance) ET à la
+      canicule (stress thermique). `exp(−((T_sol − OPT)/TOL)²)`.
+    - `f_hum` : nul au sol SEC (microbes dormants), monte LINÉAIREMENT jusqu'à 1 au
+      sol FRAIS (`hum_norm = MICROBE_HUM_OPT`), puis REDESCEND vers
+      `MICROBE_HUM_SAT_FLOOR` à saturation (`hum_norm = 1`) — l'anoxie freine un peu
+      l'aérobie (le « léger ↓ » de la Pluie prolongée, §5).
+
+    `hum_norm` = `min(1, humidite/3)` (MÊME échelle que `tick_thermique`). Le plancher
+    `MICROBE_CLIM_FLOOR` évite un f_clim nul DUR (la décompo abiotique/fongique ne
+    s'arrête jamais tout à fait). À f_clim ≈ 1 (sol doux et frais), décompo INCHANGÉE."""
+    f_temp = math.exp(-(((t_sol - MICROBE_T_OPT) / MICROBE_T_TOL) ** 2))
+    if hum_norm <= MICROBE_HUM_OPT:
+        # Branche SÈCHE → OPTIMUM : 0 au sec, 1 au sol frais (montée linéaire).
+        f_hum = hum_norm / MICROBE_HUM_OPT if MICROBE_HUM_OPT > 0.0 else 1.0
+    else:
+        # Branche OPTIMUM → SATURATION : redescend de 1 vers le plancher d'anoxie.
+        t = (hum_norm - MICROBE_HUM_OPT) / (1.0 - MICROBE_HUM_OPT)
+        f_hum = 1.0 - t * (1.0 - MICROBE_HUM_SAT_FLOOR)
+    return max(MICROBE_CLIM_FLOOR, f_temp * f_hum)
 
 
 def snow_next(snow: float, temp_now: float, is_neige: bool) -> float:

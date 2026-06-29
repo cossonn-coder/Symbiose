@@ -39,7 +39,7 @@ agisse sur **tous** les champs qu'il influence réellement.
 | ① | Humidité médiée (retrait deltas plats + `PLUIE_APPORT`) | `01_humidite_mediee.md` | ✅ FAIT (golden+pop re-figés) |
 | ② | Rosée & gelée blanche (`tick_rosee`, point de rosée, continuum) | `02_rosee_gelee_blanche.md` | ✅ FAIT (golden+pop re-figés) |
 | ③ | Lessivage NPK par la pluie | `03_lessivage_npk.md` | ✅ FAIT (golden re-figé, pop INCHANGÉE) |
-| ④ | Microbiome climatique | `04_microbiome_climatique.md` | ⬜ À FAIRE |
+| ④ | Microbiome climatique | `04_microbiome_climatique.md` | ✅ FAIT (golden+pop re-figés) |
 | ⑤ | Interconnexions vivantes + voix + pont snapshot | `05_interconnexions_voix.md` | ⬜ À FAIRE |
 
 Dépendances : ① fonde l'hydrique propre ; ② dépend de ① (point de rosée lit l'humidité
@@ -66,6 +66,57 @@ Valeurs définitives = F5 / bancs d'essai.
 - Calibrage numérique des constantes = F5 / bancs d'essai.
 
 ## Avancement / REPRISE
+
+### ④ Microbiome climatique — FAIT (2026-06-29)
+**Ce qui a été fait** : ajout d'un **terme MULTIPLICATIF** `f_clim = f_temp · f_hum`
+sur l'activité microbienne dans `tick_decomposition` — **PAS de champ neuf** (on module
+le champ `microbiome` existant via la part biologique de la vitesse de décompo). Calcul
+PUR isolé dans `fields/ecofields/thermique.py::microbe_clim_factor(t_sol, hum_norm)`
+(miroir de `t_min_nuit_at`, zéro RNG, zéro effet de bord). `f_temp` = CLOCHE gaussienne
+`exp(−((T_sol−MICROBE_T_OPT)/MICROBE_T_TOL)²)` (1 à ~20 °C, → 0 au gel ET à la canicule) ;
+`f_hum` = 0 au sol SEC → 1 au sol frais (`MICROBE_HUM_OPT`) → redescend à
+`MICROBE_HUM_SAT_FLOOR` en saturation (anoxie, « léger ↓ » de la Pluie prolongée).
+Plancher `MICROBE_CLIM_FLOOR` (décompo abiotique jamais nulle). Branché sur la MÊME part
+biologique `micro` que le lockout pH (se **COMBINE** avec pH/famine, ne les remplace pas) :
+`micro *= dispo(ph) ; micro *= f_clim` → `speed = 0.5 + micro·0.5`. **Option (i) sobre du
+kickoff retenue** (moduler la vitesse de décompo) ; pas de terme de déclin climatique
+ajouté au puits microbien (le ralentissement de la minéralisation suffit à l'effet voulu,
+le microbiome dérive indirectement). À **f_clim=1** (sol doux et frais) → décompo
+**strictement INCHANGÉE** (test 5/golden-safe).
+
+**Fichiers touchés** : `fields/ecofields/constants.py` (5 constantes neuves :
+`MICROBE_T_OPT=20.0`, `MICROBE_T_TOL=12.0`, `MICROBE_HUM_OPT=0.55`,
+`MICROBE_HUM_SAT_FLOOR=0.7`, `MICROBE_CLIM_FLOOR=0.05` — placeholders calibrage F5),
+`fields/ecofields/thermique.py` (helper pur `microbe_clim_factor` + import `math`),
+`fields/ecofields/container.py` (import du helper, application inline dans
+`tick_decomposition` après le lockout pH ; note dans le docstring de `decomp_speed`),
+`tests/test_microbiome_clim.py` (NOUVEAU, 12/12).
+
+**Golden RE-FIGÉ (annoncé)** :
+- `tests/golden_hash.txt` : `18ef4f04…` → **`8f8b67412eeaec7045d1d41589fd007a233b8f3d47ff7916fb713ebfa5ef11b6`**
+- `tests/population_hash.txt` : `239766b6…` → **`1d89da0a4b0924da724fe795239d77061726ae9fefab4a32f9559343c97866ba`**
+  (les champs population LISENT le microbiome/la litière que ④ a décalés ; checks
+  behavioral tous PASS, seul le hash bouge).
+
+**Dérive — LOCALISÉE et EXPLIQUÉE (recyclage ralenti par le climat, sens attendu §5)** :
+comparaison f_clim désactivé (=état ③) → activé, état final du smoke (2 ans × 2 tuiles) :
+**organic_mat ↑** (T0 0.844→0.881, T1 1.002→1.043) — la litière s'accumule davantage,
+le climat normand (hivers froids, épisodes secs/saturés) bride la décompo = l'effet
+émergent VOULU. **N légèrement ↓/stable** (T1 0.042→0.041, T0 0.024=) — minéralisation
+freinée par l'activité microbienne climato-limitée. **microbiome légèrement ↑** (T0
+0.327→0.332, T1 0.398→0.402) — moins de décompo garde le carbone frais plus longtemps →
+famine moindre (rétroaction secondaire cohérente). **humidité quasi inchangée**, **50/50
+plantes vivantes** (aucune mort spurieuse). AUCUN re-figeage aveugle.
+
+**Tests** : `test_microbiome_clim` 12/12 (cloche T optimum>gel&canicule ; gelé→litière
+s'accumule ; sec→ralenti ; saturation→léger ↓ mais >sec ; f_clim=1→identique ;
+minéralisation N optimum>gel ; déterminisme), `test_golden` PASS (re-figé), `test_population`
+PASS (behavioral + re-figé), `test_biennial` PASS, suites field vertes (test_lessivage 7/7,
+test_rosee 10/10, test_eau 20/20, test_conteneur, test_substrat 17/17, test_signes 8/8 —
+rétrocompat : à conditions douces/fraîches f_clim≈1 ⇒ comportement antérieur préservé).
+Interaction avec ③ vérifiée : pas d'emballement (azote ne s'effondre pas, N reste >0).
+
+**Build C#** : non concerné (aucun fichier C# touché).
 
 ### ① Humidité médiée — FAIT (2026-06-29)
 **Fichiers touchés** : `fields/ecofields/constants.py` (table `PLUIE_APPORT`),

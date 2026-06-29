@@ -25,6 +25,7 @@ from .litiere import *            # Parcelle, Structure, STRUCTURE_ACCEPTE, MATU
 from .litiere import _fusion_parcelle, _lisser_ages   # helpers privés (hors import *)
 from .thermique import tick_thermique as _tick_thermique   # calcul pur T_sol (①)
 from .thermique import snow_next as _snow_next              # manteau neigeux pur (⑦)
+from .thermique import microbe_clim_factor as _microbe_clim_factor  # cloche T × humidité (météo→champs ④)
 from .ph import tick_ph as _tick_ph                         # dérive pure du pH (physico-chimie ①)
 from .nutriments import split_miner, cec_norm_at, leach_factor, dispo, immobilise_n   # chimie N/P/K pure (physico-chimie ③/④/⑦)
 from .structure import tick_structure as _tick_structure   # dérive pure de la structure du sol (physico-chimie ⑧)
@@ -597,9 +598,10 @@ class EcoFields:
         un bois de squelette se fragmente au rythme du sol vivant local.
 
         NB : depuis le ④, `tick_decomposition` (inline) module EN PLUS la part
-        biologique par la cloche pH `dispo(ph,"micro")` ; pas ici — la fragmentation
-        mécanique/fongique du bois mort est moins sensible au pH que la
-        minéralisation bactérienne (divergence assumée, calibrage post-test)."""
+        biologique par la cloche pH `dispo(ph,"micro")` ET la cloche climatique
+        `microbe_clim_factor(T_sol, humidité)` (météo→champs ④) ; pas ici — la
+        fragmentation mécanique/fongique du bois mort est moins sensible au pH/climat
+        que la minéralisation bactérienne (divergence assumée, calibrage post-test)."""
         micro = self.microbiome.at_plot(r, c) / 3.0
         speed = 0.5 + micro * 0.5
         worms = self.populations["lombric"] if self.populations else None
@@ -639,6 +641,16 @@ class EcoFields:
                 # champ neuf). Module la part BIOLOGIQUE de la vitesse uniquement —
                 # pas le socle abiotique (0.5) ni la bioturbation mécanique du ver.
                 micro *= dispo(self.ph.at_plot(r, c), "micro")
+                # MICROBIOME CLIMATIQUE (sprint météo→champs ④, §5) : l'activité suit
+                # une CLOCHE de température et chute au SEC comme au gel. Terme
+                # MULTIPLICATIF (pas de champ neuf), posé sur la MÊME part biologique
+                # `micro` (se COMBINE avec pH/famine, ne les remplace pas, §Pièges).
+                # f_clim=1 (sol doux et frais) ⇒ décompo strictement INCHANGÉE. Lit la
+                # T_sol et l'humidité DÉJÀ calculées ce tick (thermique 2b, hydro 3
+                # AVANT la décompo 4). Émergent : litière qui s'accumule l'hiver/en
+                # sécheresse, recyclage qui repart au réchauffement/à la pluie.
+                hum_norm = min(1.0, self.humidite.at_plot(r, c) / 3.0)
+                micro *= _microbe_clim_factor(self.temperature_sol.at_plot(r, c), hum_norm)
                 speed = 0.5 + micro * 0.5   # sol vivant décompose jusqu'à 2× plus vite
                 # Bioturbation du LOMBRIC (④d : le ver, pas le cloporte, brasse l'humus
                 # du sol) : accélère « un poil » la décompo locale (D31.2, option sobre ;

@@ -236,6 +236,27 @@ BIOMASS_EXPORT   = 0.20    # fraction exportée à la récolte (le reste = nécr
 MICROBE_FOOD_REF  = 1.0    # om_fresh au-dessus duquel les microbes sont rassasiés
 MICROBE_DECAY_MAX = 0.006  # déclin hebdomadaire max du microbiome à famine totale
 
+# --- Microbiome CLIMATIQUE (sprint météo→champs ④, CONCEPTION_METEO_CHAMPS §5) ---
+# L'activité microbienne ne dépend pas que de la nourriture (famine) et du pH
+# (lockout) : elle suit aussi le CLIMAT. Terme MULTIPLICATIF `f_clim = f_temp · f_hum`
+# (PAS de champ neuf — on module le champ `microbiome` existant via la vitesse de
+# décompo) calculé PUREMENT dans `thermique.py::microbe_clim_factor`. À f_clim=1
+# (sol doux et frais), comportement strictement INCHANGÉ.
+#
+# - f_temp : CLOCHE gaussienne centrée sur l'optimum. Tombe vers 0 au gel (dormance)
+#   ET à la canicule (stress thermique). exp(−((T_sol−OPT)/TOL)²).
+# - f_hum  : ~0 au sol SEC (dormance des microbes), monte à 1 au sol FRAIS optimal,
+#   puis REDESCEND un peu en saturation (anoxie → « léger ↓ » de la Pluie prolongée).
+#   Échelle hum_norm = min(1, humidite/3), IDENTIQUE à `tick_thermique`.
+# Conséquence émergente : sol chaud+humide recycle vite ; sol gelé/desséché stocke la
+# litière sans la digérer (accumulation hivernale/sécheresse — voulu, pas un bug).
+# Valeurs = PLACEHOLDERS calibrage F5 / bancs d'essai.
+MICROBE_T_OPT      = 20.0   # °C — optimum d'activité microbienne (sommet de la cloche)
+MICROBE_T_TOL      = 12.0   # °C — demi-largeur de la cloche (gel/canicule → f_temp → 0)
+MICROBE_HUM_OPT    = 0.55   # hum_norm de l'optimum (sol frais) ; en deçà = sec → dormance
+MICROBE_HUM_SAT_FLOOR = 0.7  # f_hum résiduel en SATURATION (hum_norm=1) — anoxie, léger ↓
+MICROBE_CLIM_FLOOR = 0.05   # plancher de f_clim (jamais 0 dur : décompo abiotique persiste)
+
 # Boucle rhizosphère — exsudats racinaires (chantier A)
 EXUDATE_BASE     = 0.060   # dépôt total à pleine photosynthèse (microbiome + om_fresh)
 EXUDATE_OM_SHARE = 0.15    # part de l'exsudat versée à om_fresh (le reste → microbiome)
