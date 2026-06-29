@@ -41,7 +41,7 @@ partagé** (`sim/journal.py`), lui-même alimenté **hors tick** par le driver �
 | ② | Ledger `sim/journal.py` + `consigner` + câblage driver | `02_journal.md` | ✅ FAIT |
 | ③ | Carnet (`carnet_lire`, `CONCEPT_DE`, gabarits 2 registres) + D43 | `03_carnet.md` | ✅ FAIT |
 | ④ | Encyclopédie (`encyclopedie_index`/`_lire`, fiche tronquée) | `04_encyclopedie.md` | ✅ FAIT |
-| ⑤ | Pages secrètes (`pages_trouvees`/`reveler_page`, 3 robinets) | `05_pages.md` | ⬜ à faire |
+| ⑤ | Pages secrètes (`pages_trouvees`/`reveler_page`, 3 robinets) | `05_pages.md` | ✅ FAIT |
 | ⑥ | Magazine (`magazine_offres`/`acheter_au_magazine`) | `06_magazine.md` | ⬜ à faire |
 
 Dépendances : ① avant tout ; ② dépend de ① ; ③④⑤⑥ dépendent de ② mais sont
@@ -170,6 +170,39 @@ activer la progression de maîtrise en F5.
   `9ba39ab7…`), `test_maitrise_detection` 20/20, `test_carnet` 19/19 (régression voisine).
   **C# non concerné** (aucun `.cs`, protocole pont inchangé — exposition Godot = D24).
 
-**PROCHAIN = ⑤** (`05_pages.md`) : pages secrètes (`pages_trouvees`/`reveler_page`,
-`gs["pages"][player] = set`, 3 robinets §2.3, corpus §7 20 pages, ordre par
-`palier_thème`, épuisable, ZÉRO effet mécanique). Event-driven hors tick. Golden INTACT.
+**⑤ FAIT** (pages secrètes, lore pur ZÉRO effet mécanique, golden INTACT) :
+- Découpage DONNÉE / LOGIQUE (un fichier = une responsabilité) :
+  - Créé `data/code/sim/pages_corpus.py` (DONNÉE pure, aucun import moteur) :
+    `PAGES[id] = {id, titre, voix, concept, palier_theme, robinet, texte}` — **20
+    pages P01..P20** recopiées VERBATIM du doc §7 (5 voix A→E, pastiche en style).
+    + `ORDRE` (ids dans l'ordre du corpus, tri stable). Titres extraits dans `_TITRES`.
+  - Créé `data/code/sim/pages.py` (LOGIQUE pure) : `ensure_player` opt-in (set vide),
+    `pages_trouvees(gs, player) -> set` (lecture pure, ne crée aucune clé →
+    no-op golden), `reveler_page(gs, player, robinet, contexte) -> id|None` — **3
+    robinets** : *récompense* (`contexte["concept"]` → 1ʳᵉ page DUE de ce concept),
+    *fouille* (1ʳᵉ page due GLOBALE), *hasard* (`_hash_noise(seed, semaine, _SALT_PAGE,
+    0)` ∈ [0,1] → index dans le pool des dues, DÉTERMINISTE). « Due » = non trouvées
+    triées `palier_theme` croissant (stable sur `ORDRE`). Épuisable → `None`.
+    Robinet inconnu → `None` (jamais de crash). SEULE écriture = ajout au set.
+- **Décisions/écarts assumés** (signalés) : (a) signature réelle `_hash_noise(seed,
+  week, r, c)` prend 4 ENTIERS ; le doc écrit `_hash_noise(seed, semaine, "page")` —
+  la chaîne `"page"` devient un SALT constant `_SALT_PAGE=0x9A6E5` (canal dédié,
+  décorrélé des guildes/carpophores, miroir de `_SALT_CARPOPHORE`). (b) `contexte`
+  porte `{"concept": …}` (récompense) ou `{"seed": …, "semaine": …}` (hasard) ;
+  ignoré pour *fouille*. (c) Sérialisation `set ↔ list` au save JSON = TODO D24 (save
+  pas encore câblé, juste documenté). (d) Robinet *hasard* tire dans le pool des
+  DUES (trié) → même seed+semaine+même état ⟹ même page (philo #3). PAS branché au
+  driver/serveur (ni *récompense* via `detecter`, ni *fouille* via action grenier) :
+  c'est event-driven, le câblage = D24 / décision Nico (cf. note `detecter` non
+  câblé du ②). Aucun appel ⇒ aucune clé `pages` ⇒ golden no-op.
+- Tests : `tests/test_pages.py` NOUVEAU (47/47 — sans joueur→set()/aucune clé,
+  récompense par concept + ordre palier_theme + épuisé→None, fouille globale +
+  épuise 20, hasard DÉTERMINISTE + épuisable, jamais de re-révélation, ZÉRO effet
+  mécanique vérifié sur gs jouet, corpus 20 entrées champs complets). `test_golden`
+  + `test_population` bit-identiques (`db5e7c66…` / `9ba39ab7…`), `test_maitrise_detection`
+  20/20. **C# non concerné** (aucun `.cs`, protocole pont inchangé — exposition Godot = D24).
+
+**PROCHAIN = ⑥** (`06_magazine.md`) : magazine de botanique (`magazine_offres`/
+`acheter_au_magazine`, sœurs au palier 3 famille décision C, numéro saisonnier,
+`vigueur.spend(COUT_MAGAZINE)` → `PlayerSeedBank.add`). Event-driven hors tick.
+Golden INTACT.
