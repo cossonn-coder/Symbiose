@@ -293,6 +293,98 @@ def test_priming_canal_joueur():
     print("[plasticité ④·canal joueur] PASS — récolte→Seed→save→planter→germination pré-armée")
 
 
+def _pin_vent(eco, force: float):
+    """Épingle le vent local lu partout (eco.vent.at_plot) → wind_memory pilotée.
+    Crée le champ `vent` au besoin (les pots/outils le laissent None)."""
+    from fields.grids import GridField
+    if eco.vent is None:
+        eco.vent = GridField(eco.rows, eco.cols)
+    eco.vent.at_plot = lambda r, c, _f=force: _f
+
+
+def test_thigmo_wind_memory():
+    """Tronçon ④ (vent) : l'exposition mécanique (eco.vent) PILOTE `port_trapu` par
+    `wind_memory`, EXACTEMENT comme drought→tolerance_secheresse.
+      • semis EXPOSÉ (vent local installé) → wind_memory monte → port_trapu glisse vers
+        1+EXPR_GAIN à la vitesse TAU_UP ;
+      • semis À L'ABRI (vent local 0) → wind_memory reste 0 → port_trapu redescend à
+        TAU_DOWN (hystérèse) → fragile à la transplantation."""
+    from sim.engine.croissance import WIND_MEMORY_REF
+    engine, tile, eco, p = _lab()
+    _G = "port_trapu"
+
+    # — EXPOSITION : un vent local saturant (≥ REF) → wind_memory → 1.0, port_trapu ↑ —
+    _pin_vent(eco, WIND_MEMORY_REF)        # signal d'exposition saturé (sig=1.0)
+    p.wind_memory = 1.0                    # épinglé (le vent le maintient)
+    p.expression[_G] = 1.0
+    engine._update_physiology(tile, eco)
+    attendu = 1.0 + (1.0 + EXPR_GAIN - 1.0) * TAU_UP
+    assert abs(p.expression[_G] - attendu) < 1e-6, (
+        f"montée port_trapu fausse : {p.expression[_G]:.6f} ≠ {attendu:.6f}")
+    for _ in range(500):
+        p.wind_memory = 1.0
+        engine._update_physiology(tile, eco)
+    assert abs(p.expression[_G] - (1.0 + EXPR_GAIN)) < 1e-3, "n'asymptote pas (trapu)"
+
+    # — ABRI : vent local 0 → wind_memory s'efface → port_trapu redescend (hystérèse) —
+    _pin_vent(eco, 0.0)
+    avant = p.expression[_G]
+    p.wind_memory = 0.0
+    engine._update_physiology(tile, eco)
+    assert p.expression[_G] < avant, "à l'abri, port_trapu ne se relâche pas (pas d'oubli)"
+    print(f"[vent ④·thigmo] PASS — exposé→port_trapu {p.expression[_G]:.3f} ; abri→relâche")
+
+
+def _compte_degats_vent(plant, tile, eco, expression: float, gust_peak: float) -> int:
+    """Santé perdue par `_wind_damage` à port_trapu `expression` épinglé, sur un coup
+    de vent unique. On démarre haut (santé non bornante) pour mesurer la SUSCEPTIBILITÉ
+    (amplitude du dégât médié), pas un simple compte de tics (déterministe → 0 ou tout).
+    `_wind_damage` est pur : un appel suffit, la restauration borne la mesure."""
+    plant.expression["port_trapu"] = expression
+    plant.health = 9
+    engine_wind(plant, tile, eco, gust_peak)
+    return 9 - plant.health
+
+
+def engine_wind(plant, tile, eco, gust_peak):
+    """Helper : un appel isolé à _wind_damage via l'Engine du lab."""
+    return tile._engine._wind_damage(tile, eco, gust_peak)
+
+
+def test_thigmo_degat_etiole():
+    """Tronçon ④ (vent) : le dégât MÉCANIQUE casse le semis ÉTIOLÉ de serre, le semis
+    ENDURCI (port_trapu exprimé) encaisse → la boucle plasticité se referme.
+      • un semis étiolé non trapu (port_trapu neutre) subit le dégât d'un coup de vent ;
+      • le MÊME semis avec port_trapu exprimé (endurci) subit STRICTEMENT MOINS ;
+      • vent calme (gust faible) → aucun dégât (no-op, golden NEUTRE)."""
+    engine, tile, eco, p = _lab()
+    tile._engine = engine
+    # Héliophile à l'ombre = étiolé (tolerance_ombre < 1 + lumière basse). On épingle
+    # la lumière REÇUE par la plante (cache `received`, peuplé par compute()) bas.
+    p.genes = {"tolerance_ombre": 0.7, "port_trapu": 1.0}
+    eco.lumiere.received[id(p)] = 0.1      # ombre → est_etiole vrai (héliophile)
+    from sim.growth import est_etiole
+    # On force le stade « semis » (tissu tendre visé par _wind_damage).
+    while p.stage.name != "semis" and p.current_stage > 0:
+        p.current_stage -= 1
+    assert p.stage.name == "semis", "le lab ne démarre pas en semis"
+    assert est_etiole(p, eco.lumiere), "le semis héliophile ombragé n'est pas étiolé"
+
+    _pin_vent(eco, 1.2)                     # coup de vent local soutenu
+    n_fragile = _compte_degats_vent(p, tile, eco, 1.0, gust_peak=1.8)   # non trapu
+    n_endurci = _compte_degats_vent(p, tile, eco, EXPR_MAX, gust_peak=1.8)  # trapu
+    assert n_fragile > 0, "le coup de vent n'abîme aucun semis (test inerte)"
+    assert n_endurci < n_fragile, (
+        f"le port trapu ne protège pas : endurci {n_endurci} ≥ fragile {n_fragile}")
+
+    # Vent calme (gust faible) → produit sous le seuil → aucun dégât.
+    _pin_vent(eco, 0.2)
+    p.health = 3
+    engine._wind_damage(tile, eco, gust_peak=1.0)
+    assert p.health == 3, "une brise abîme un semis (seuil non respecté)"
+    print(f"[vent ④·dégât] PASS — fragile {n_fragile} > endurci {n_endurci}, brise inoffensive")
+
+
 def test_signe_acclimatation():
     """⑤ Signe diégétique : une plante endurcie (expression > EXPR_MIN) sort bien la
     cause `acclimatation` dans leaf_symptoms, triée APRÈS un vrai dégât ; une plante
@@ -337,6 +429,8 @@ if __name__ == "__main__":
         test_cout_defense()
         test_priming_transgenerationnel()
         test_priming_canal_joueur()
+        test_thigmo_wind_memory()
+        test_thigmo_degat_etiole()
         test_signe_acclimatation()
     except AssertionError as e:
         print(f"[plasticité ①] FAIL — {e}")

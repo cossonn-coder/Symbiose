@@ -30,7 +30,7 @@ l'évaporation** (rayonnement + vent) pour rééquilibrer la rosée → résout 
 | ① | [`t1_vent_masse_air.md`](t1_vent_masse_air.md) | O(1) | **neutre** `11eceeb9…` | ✅ fait |
 | ② | [`t2_evapotranspiration.md`](t2_evapotranspiration.md) | marginal | **re-figé LARGE** `4a3cfe03…` → D39 vert | ✅ fait |
 | ③ | [`t3_abri_spatial.md`](t3_abri_spatial.md) | **+0 % (caché)** | **re-figé** `4ce4ae3c…` | ✅ fait |
-| ④ | [`t4_thigmomorphogenese.md`](t4_thigmomorphogenese.md) | négligeable | re-fige | ⏳ |
+| ④ | [`t4_thigmomorphogenese.md`](t4_thigmomorphogenese.md) | négligeable | **re-figé** `d948f648…` | ✅ fait |
 | ⑤ | [`t5_pollinisation_dispersion.md`](t5_pollinisation_dispersion.md) | négligeable | re-fige | ⏳ |
 | ⑥ | [`t6_maladies_fongiques.md`](t6_maladies_fongiques.md) | négligeable | re-fige | ⏳ |
 | ⑦ | [`t7_transport_voix.md`](t7_transport_voix.md) | amorti | re-fige | ⏳ |
@@ -118,6 +118,34 @@ l'évaporation** (rayonnement + vent) pour rééquilibrer la rosée → résout 
   (dans le bruit). Le **cache + scatter mutualisé** annulent le coût en régime
   permanent → **PAS d'off-ramp**, ③ implémenté en entier (pas reporté en dette).
 
+## Thigmomorphogénèse (tronçon ④, 2026-06-29 — golden RE-FIGÉ, perf NEUTRE)
+- **Gène neuf `port_trapu`** ajouté EN FIN de `GENE_NAMES`/`ADAPTOGENIC_GENES`
+  (`plants/genetics.py`) → canal de hash en queue, **gènes existants intacts**.
+  Attribut `wind_memory` (`plants/base/instance.py`) = mémoire d'exposition mécanique.
+- **Paire plastique `"port_trapu": "wind_memory"`** dans `_EXPR_MEMOIRE`
+  (`sim/engine/croissance.py`) : `_update_physiology` intègre `eco.vent.at_plot` en
+  `wind_memory` (lerp `WIND_MEMORY_LERP`, ref `WIND_MEMORY_REF`) → `expressed_gene
+  ("port_trapu")` glisse vers `1+EXPR_GAIN·wind_memory` (hystérèse TAU_UP/DOWN).
+  Semis extérieur endurci, semis intérieur fragile à la transplantation ; priming
+  transgénérationnel via `child_expression` existant.
+- **Réponse trapu** : `phases.py` divise le gain d'étiolement par `port_trapu`
+  (port trapu = entre-nœuds courts, s'étiole moins) → golden NEUTRE à 1.0.
+- **Dégât MÉCANIQUE médié** (`_wind_damage`, `sim/engine/mortalite.py`, calqué sur
+  `_mediated_damage`) : `sév(vent_local·risée − SEUIL) × (étiolement/port_trapu) ×
+  (1−paillage)`. Constantes `WIND_DAMAGE_SEUIL=0.7`, `WIND_SEVERITY_REF=0.8`,
+  `WIND_ETIOLE_SUSCEPT=1.5` (`aleas.py`). Câblé `boucle.py` 9b-bis avec
+  `gust_peak=max(gust_profile(...))`. Seul le tissu « semis » est visé.
+- **Transpiration foliaire (§3)** : dans `_update_physiology`, le vent local amplifie
+  `drought_stress ∝ surface foliaire` (`WIND_TRANSPI_COEF=0.25`) → une grande feuille
+  au vent souffre plus de la soif.
+- **Golden RE-FIGÉ** `d948f648a94be4d5a8227cb28b530ae6be104cf4558bd721431b83f8c5a0440f`
+  (re-figeage **prévu** : 2 rejetons portent `port_trapu` + transpiration/dégât/
+  étiolement bougent santé & structure). Suites : `test_sim_server` 207/207,
+  `test_senescence` PASS (pommier 59.8 ans, **D39 vert**), `test_croissance` 67/67,
+  `test_plasticite` (+`test_thigmo_wind_memory`/`test_thigmo_degat_etiole`).
+- **PERF** : tick **54.75 ms** (vs ③ ~51-54) = dans le bruit, effets par-plante
+  négligeables. Budget +10 % tenu.
+
 ## Boucle de travail (rappel CLAUDE.md)
 Lancer `tN` → coder → **mesurer ms/tick avant/après** (budget §7B) → golden (intact
 ou re-figeage annoncé) → MAJ ce fichier → commit → `/clear` → lancer `tN+1`.
@@ -129,11 +157,12 @@ ou re-figeage annoncé) → MAJ ce fichier → commit → `/clear` → lancer `t
 
 ## REPRISE (démarrage à froid)
 « lis `sprints/sprint_vent_evapotranspiration/00_etat.md` puis
-`t4_thigmomorphogenese.md` » → exécuter le tronçon ④ (thigmomorphogénèse : paire
-`port_trapu↔wind_memory`, dégât étiolées médié, transpiration foliaire,
-endurcissement semis ; lit `eco.vent[r,c]` posé au ③ — coût par-PLANTE négligeable).
+`t5_pollinisation_dispersion.md` » → exécuter le tronçon ⑤ (pollinisation &
+dispersion par le vent ; lit `eco.vent[r,c]` posé au ③).
 Tronçons ⓪ (réf perf + scatter D32, golden `11eceeb9…`), ① (masse d'air
 `sim/wind.py`, golden neutre `11eceeb9…`), ② (évapotranspiration enrichie +
-nébulosité dynamique, golden re-figé LARGE `4a3cfe03…`, D39 vert) et ③ (abri spatial
+nébulosité dynamique, golden re-figé LARGE `4a3cfe03…`, D39 vert), ③ (abri spatial
 `fields/abri.py` + wind chill, golden re-figé `4ce4ae3c…`, **perf +0 % grâce au
-cache**, PAS d'off-ramp) = ✅ faits.
+cache**, PAS d'off-ramp) et ④ (thigmomorphogénèse : paire `port_trapu↔wind_memory`,
+dégât mécanique médié `_wind_damage`, transpiration foliaire, golden re-figé
+`d948f648…`, perf neutre) = ✅ faits.

@@ -213,8 +213,13 @@ def grow_plant(plant, seed: int, week: int, light_field=None,
     # Étiolement (Q7) : un héliophile ombragé file vers la lumière — élongation
     # axiale accrue. Émergent : combiné au phototropisme (_elongate_emit), l'apex
     # grêle peut atteindre une trouée et être sauvé.
+    # Thigmomorphogénèse (vent ④, §5.1) : un port TRAPU (expressed_gene("port_trapu")
+    # >1, induit par l'exposition au vent) RÉDUIT cet emballement axial — entre-nœuds
+    # courts, tige trapue qui s'étiole moins. On divise le gain par le phénotype trapu
+    # (neutre 1.0 ⇒ gain inchangé, golden NEUTRE tant que le vent n'a rien exprimé).
     if est_etiole(plant, light_field):
-        speed *= (1.0 + ETIOLEMENT_GAIN)
+        gain = ETIOLEMENT_GAIN / plant.expressed_gene("port_trapu")
+        speed *= (1.0 + gain)
     _update_auxin(segs, cls.apical_dominance_base)
     _elongate_emit(plant, speed, cls.max_height_cm, cls.max_extent_cm,
                    cls.emit_length_cm, light_field, cls.phototropism_strength)

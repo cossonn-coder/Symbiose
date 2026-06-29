@@ -109,6 +109,20 @@ HAIL_SEVERITY_REF  = 1.45   # intensité (σ) de grêle donnant une sévérité 
 PAILLAGE_PROTECT   = 0.25   # chaque rondelle paillage retire 25 % du dégât (cap 1)
 DAMAGE_STEP        = 0.55   # dégât effectif → points de santé perdus (floor)
 
+# --- Dégât MÉCANIQUE du vent (thigmomorphogénèse, sprint VENT ④, §5.2) -------
+# Le vent CASSE le tissu tendre exposé, MÉDIÉ par l'étiolement et le port trapu :
+#     dégât = sévérité_vent(vent_local, risée) × (étiolement / port_trapu) × (1−paillage)
+# - `vent_local` (eco.vent[r,c]) intègre DÉJÀ la protection d'abri (un coin abrité
+#   reçoit un vent réduit) ; la risée (pic intra-jour, gust_profile) aggrave le pic.
+# - une tige ÉTIOLÉE (grêle, non sollicitée — `est_etiole`) est un bras de levier
+#   fragile (susceptibilité ↑) ; un port TRAPU (port_trapu exprimé) encaisse (↓). La
+#   boucle plasticité se referme : le semis endurci protège, le semis de serre casse.
+# Le seuil élevé (WIND_DAMAGE_SEUIL) fait que SEULS les coups de vent (Tempête/Orage,
+# risée) frappent — une brise n'abîme rien. Knobs P4, calibrage post-test.
+WIND_DAMAGE_SEUIL  = 0.7    # vent_local·risée sous ce seuil → aucun dégât mécanique
+WIND_SEVERITY_REF  = 0.8    # surcroît de vent_local·risée au-dessus du seuil → sév ≈ 1
+WIND_ETIOLE_SUSCEPT = 1.5   # susceptibilité d'un tissu ÉTIOLÉ (vs 1.0 pour un tissu sain)
+
 
 def appliquer_alea(alea, tile, eco, game_state):
     log = []

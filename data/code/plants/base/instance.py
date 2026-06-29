@@ -44,6 +44,11 @@ class PlantInstance:
     infection_memory: float = 0.0   # intégration lente de la pression pathogène vécue [0-1]
                                     # (plasticité ① — SAR / priming immunitaire). Pilote l'expression
                                     #  de resistance_pathogene.
+    wind_memory: float = 0.0        # intégration lente de l'exposition mécanique au vent [0-1]
+                                    # (thigmomorphogénèse — sprint VENT & ÉVAPOTRANSPIRATION ④).
+                                    #  Intégrée depuis `vent_local` au plot (eco.vent) ; pilote
+                                    #  l'expression de `port_trapu` (semis exposé tôt → trapu/robuste,
+                                    #  semis élevé à l'abri → wind_memory=0 → choc à la transplantation).
     stress_memory: float = 0.0      # intégration des perturbations subies [0-1]
                                     # stress↑ → croissance↓ mais résistance↑
     # Marques de symptômes ÉVÉNEMENTIELS (sémiologie ②) : maladie/gel/grêle n'ont

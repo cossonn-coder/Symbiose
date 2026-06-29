@@ -32,7 +32,7 @@ from sim.reproduction import is_seed_bearing, child_expression
 from sim.seeds import Seed
 from sim.succession import succession, spring_flush
 from sim.weather import weather_state, K_PEST, TEMP_DRIVEN
-from sim.wind import wind_at
+from sim.wind import wind_at, gust_profile
 from sim.vigueur import tick_player_vigueur, refill_saison
 from sim.growth import grow_plant
 from .calendrier import (SAISONS, saison_de, est_debut_saison, est_fin_saison,
@@ -96,6 +96,10 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
         wind          = wind_at(seed, week)
         vent_force    = wind.force
         vent_dir      = wind.direction
+        # Pic de RISÉE intra-journalière (④, §5.2) : la rafale qui CASSE le tissu
+        # étiolé (≠ la perte hydrique moyenne du ②). Scalaire uniforme par tick comme
+        # le reste de la masse d'air ; multiplie le vent LOCAL dans `_wind_damage`.
+        gust_peak     = max(gust_profile(seed, week))
         is_neige      = (event.kind == "Neige")            # ⑦ : pilote l'accumulation du manteau
         # Apport d'eau météo MÉDIÉ (sprint météo→champs ①, §2.2). Uniforme par tuile
         # (dépend du seul `event.kind`), infiltré ∝ structure dans tick_hydrology ci-
@@ -285,6 +289,13 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
 
             # 9b. Mortalité réaliste — sénescence + santé dynamique (D27)
             log += self._tick_senescence_health(tile, eco)
+
+            # 9b-bis. Dégât MÉCANIQUE du vent (thigmomorphogénèse, vent ④, §5.2) —
+            #     APRÈS la croissance (l'étiolement et le port_trapu du tick sont à
+            #     jour) et la sénescence. Lit `eco.vent` (champ d'abri ③) × la risée :
+            #     un coup de vent casse le semis ÉTIOLÉ de serre, le semis endurci
+            #     (port trapu) encaisse. No-op les semaines calmes → golden NEUTRE.
+            log += self._wind_damage(tile, eco, gust_peak)
 
             # 9d. Floraison RÉELLE (phénologie, arc pollinisation ①). Double porte
             # GDD + photopériode → état floral scalaire `floraison`. INERTE : n'écrit

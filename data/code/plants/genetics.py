@@ -34,9 +34,15 @@ dessus sans créer de cycle (notamment fields/seedbank.py qui importe clamp_gene
 #    existants : `child_genes`/`sample_genes` indexent le bruit par POSITION, un
 #    ajout en queue ne décale donc aucun gène antérieur (golden-neutre attendu —
 #    tant qu'aucun site ne le lit, branché au ②).
+#  - `port_trapu`     : THIGMOMORPHOGÉNÈSE (sprint VENT & ÉVAPOTRANSPIRATION ④).
+#    Gène ADAPTOGÈNE dont l'EXPRESSION est induite par l'exposition mécanique au
+#    vent (`wind_memory` ↔ `vent_local` au plot). Phénotype >1 = port TRAPU/robuste
+#    (entre-nœuds courts → étiolement réduit, tige sollicitée → susceptibilité au
+#    dégât de vent abaissée). Neutre 1.0 (génotype = port standard). AJOUTÉ EN QUEUE
+#    (même garde-fou de canal de hash que `tolerance_asphyxie`).
 GENE_NAMES = ("hauteur", "rusticite_froid", "vigueur",
               "resistance_pathogene", "tolerance_secheresse",
-              "tolerance_ombre", "tolerance_asphyxie")
+              "tolerance_ombre", "tolerance_asphyxie", "port_trapu")
 
 # Plage « normale » du vecteur de gènes — gaussienne centrée 1.0, σ initial 0.10.
 # L'introgression inter-espèces peut pousser HORS de [GENE_MIN, GENE_MAX]
@@ -57,7 +63,8 @@ ADAPTOGENIC_GENES = ("tolerance_secheresse",   # ↔ drought_memory   (existe)
                      "tolerance_ombre",         # ↔ shade_memory     (existe)
                      "rusticite_froid",         # ↔ cold_memory      (①, à créer)
                      "resistance_pathogene",    # ↔ infection_memory (①, à créer)
-                     "tolerance_asphyxie")       # ↔ asphyxie_memory  (existe)
+                     "tolerance_asphyxie",       # ↔ asphyxie_memory  (existe)
+                     "port_trapu")               # ↔ wind_memory      (vent ④, à créer)
 
 # Dynamique d'expression (valeurs de DÉPART — calibrage itératif P6). cible(g) =
 # 1.0 + EXPR_GAIN × mémoire(g) ; l'expression glisse vers la cible en lerp lent à

@@ -19,7 +19,8 @@ from sim.effects import apply_mutations, ReduceHealth, deposer_mort
 from sim.reproduction import (find_father, child_genes, child_expression,
                               is_seed_bearing)
 from sim.growth import est_etiole
-from .aleas import PAILLAGE_PROTECT, DAMAGE_STEP
+from .aleas import (PAILLAGE_PROTECT, DAMAGE_STEP, WIND_DAMAGE_SEUIL,
+                    WIND_SEVERITY_REF, WIND_ETIOLE_SUSCEPT)
 
 
 class MortaliteMixin:
@@ -312,6 +313,52 @@ class MortaliteMixin:
                     newly_dead.append(p)
         # Mort → squelette persistant (②B). `deposer_mort` est idempotent : les
         # morts antérieures encore présentes (squelettes) ne sont pas re-déposées.
+        for p in newly_dead:
+            deposer_mort(p, eco)
+        return log
+
+    def _wind_damage(self, tile, eco, gust_peak):
+        """
+        Dégât MÉCANIQUE du vent sur le tissu tendre étiolé (thigmomorphogénèse, vent ④,
+        §5.2) — frère de `_mediated_damage`, mais lit le VENT LOCAL spatialisé
+        (`eco.vent[r,c]`, champ d'abri du ③) et MÉDIE par l'étiolement :
+
+            sév     = max(0, vent_local·risée − SEUIL) / SEVERITY_REF
+            suscept = (étiolé ? WIND_ETIOLE_SUSCEPT : 1.0) / expressed_gene("port_trapu")
+            effectif = sév × suscept × (1 − paillage)
+
+        - `gust_peak` (pic de risée du tick, `max(gust_profile)`) amplifie le vent local
+          → c'est la RAFALE qui casse, pas la brise moyenne. À `eco.vent` nul (calme /
+          aucun obstacle / pots) → sév 0 partout → no-op (golden NEUTRE les semaines
+          calmes ; re-figeage localisé aux semaines de coup de vent sur semis étiolés).
+        - une tige ÉTIOLÉE (`est_etiole`, bras de levier grêle) est PLUS susceptible ;
+          un port TRAPU (`port_trapu` exprimé par le vent vécu) encaisse → la boucle
+          plasticité se referme (le semis endurci protège réellement).
+        - vise le vrai stade « semis » (tissu tendre), même garde-fou que
+          `_mediated_damage` (on n'abîme pas le stade perpétuel des pérennes ligneuses).
+        """
+        log = []
+        vent = getattr(eco, "vent", None)
+        if vent is None or gust_peak <= 0.0:
+            return log
+        protection = min(1.0, tile.get_rondelle_count("paillage") * PAILLAGE_PROTECT)
+        newly_dead = []
+        for p in tile.plants:
+            if not p.is_alive or p.stage.name != "semis":
+                continue
+            vent_local = vent.at_plot(*p.position) * gust_peak
+            sev = max(0.0, vent_local - WIND_DAMAGE_SEUIL) / WIND_SEVERITY_REF
+            if sev <= 0.0:
+                continue
+            fragilite = WIND_ETIOLE_SUSCEPT if est_etiole(p, eco.lumiere) else 1.0
+            suscept   = fragilite / p.expressed_gene("port_trapu")
+            effective = sev * suscept * (1.0 - protection)
+            lost      = min(p.health, int(effective / DAMAGE_STEP))
+            if lost > 0:
+                log += apply_mutations([ReduceHealth(p, lost,
+                                        "vent (tige cassée)", cause="")], self.game_state)
+                if p.health == 0:
+                    newly_dead.append(p)
         for p in newly_dead:
             deposer_mort(p, eco)
         return log

@@ -39,6 +39,19 @@ COLD_MEMORY_LERP     = 0.05   # intégration lente (miroir drought/asphyxie)
 # champignon a besoin d'eau). Pas de tirage : c'est la PRESSION, pas l'événement.
 INFECTION_BASE       = 0.30   # base_rate de référence pour normaliser la pression
 INFECTION_MEMORY_LERP = 0.05  # intégration lente
+# wind_memory : exposition mécanique au vent VÉCUE (thigmomorphogénèse, vent ④).
+# Signal = `vent_local` au plot (eco.vent ∈ [0,1+], champ d'abri spatialisé du ③),
+# normalisé à [0,1] (au-delà de WIND_MEMORY_REF la sollicitation sature). Intégration
+# LENTE (miroir des autres mémoires) → un semis exposé tôt accumule de la mémoire et
+# durcit son port (`port_trapu`), un semis élevé à l'abri reste à 0 (fragile à la
+# transplantation). Knobs P4.
+WIND_MEMORY_REF  = 0.6    # vent local saturant le signal d'exposition (sév ≈ 1)
+WIND_MEMORY_LERP = 0.05   # intégration lente (miroir drought/asphyxie)
+# Transpiration foliaire (§3) : le vent amplifie la demande évapotranspiratoire de la
+# plante exposée → renforce le stress hydrique foliaire des GRANDES feuilles par grand
+# vent. On MAJORE le `drought_stress` du tick ∝ (vent_local × surface foliaire), borné.
+# Effet additif sobre, neutre à vent nul (golden NEUTRE pour cette part). Knob P4.
+WIND_TRANSPI_COEF = 0.25  # surcroît max de stress hydrique à vent plein × grande canopée
 
 # Appariement gène adaptogène ↔ mémoire d'exposition (plasticité ①, §2.3). La
 # dynamique d'expression (lerp à hystérèse) glisse expression[g] vers
@@ -49,6 +62,7 @@ _EXPR_MEMOIRE = {
     "rusticite_froid":      "cold_memory",
     "resistance_pathogene": "infection_memory",
     "tolerance_asphyxie":   "asphyxie_memory",
+    "port_trapu":           "wind_memory",
 }
 
 
@@ -227,6 +241,10 @@ class CroissanceMixin:
             light = eco.lumiere.light_received(plant)
             hum   = eco.humidite.at_plot(r, c)
             t_air = eco.temperature.at_plot(r, c)
+            # Vent LOCAL au plot (champ d'abri spatialisé du ③). None (pots/bacs,
+            # outils sans abri) → 0.0 : aucune sollicitation mécanique ni transpiration
+            # éolienne → wind_memory/port_trapu au repos, golden NEUTRE pour ces sites.
+            vent_local = eco.vent.at_plot(r, c) if getattr(eco, "vent", None) else 0.0
             # Shade memory : intégration lente de l'ombre vécue
             plant.shade_memory += (1.0 - light - plant.shade_memory) * 0.10
             plant.shade_memory  = max(0.0, min(1.0, plant.shade_memory))
@@ -246,6 +264,14 @@ class CroissanceMixin:
                 capte /= len(plant.foliar_plots)            # rosée MOYENNE sur la canopée
                 relief = ROSEE_FOLIAIRE_MAX * min(1.0, capte / ROSEE_SURFACE_REF)
                 drought_stress = max(0.0, drought_stress * (1.0 - relief))
+            # Transpiration foliaire (vent ④, §3) : le vent assèche aussi la PLANTE
+            # (demande évapotranspiratoire), pas que le sol. Une GRANDE canopée exposée
+            # au vent perd plus d'eau → on MAJORE le stress hydrique du tick ∝ (vent_local
+            # × surface foliaire). Borné [0,1]. Vent nul ⇒ terme nul (golden NEUTRE).
+            if drought_stress > 0.0 and vent_local > 0.0 and plant.foliar_plots:
+                leaf_factor = min(1.0, len(plant.foliar_plots) / 5.0)
+                transpi = WIND_TRANSPI_COEF * min(1.0, vent_local) * leaf_factor
+                drought_stress = min(1.0, drought_stress * (1.0 + transpi))
             plant.drought_memory += (drought_stress - plant.drought_memory) * 0.05
             plant.drought_memory  = max(0.0, min(1.0, plant.drought_memory))
             # Asphyxie memory : MIROIR haut de la sécheresse — stress d'excès quand
@@ -267,6 +293,13 @@ class CroissanceMixin:
                              * min(1.0, hum / 3.0))
             plant.infection_memory += (infection_sig - plant.infection_memory) * INFECTION_MEMORY_LERP
             plant.infection_memory  = max(0.0, min(1.0, plant.infection_memory))
+            # Wind memory (thigmomorphogénèse, vent ④) : exposition mécanique VÉCUE,
+            # intégrée lentement depuis `vent_local` (normalisé par WIND_MEMORY_REF). Un
+            # semis exposé tôt l'accumule → port_trapu monte (robuste) ; un semis élevé à
+            # l'abri (vent_local≈0) reste à 0 → choc à la transplantation (hardening off).
+            wind_sig = min(1.0, vent_local / WIND_MEMORY_REF)
+            plant.wind_memory += (wind_sig - plant.wind_memory) * WIND_MEMORY_LERP
+            plant.wind_memory  = max(0.0, min(1.0, plant.wind_memory))
             # Dynamique d'EXPRESSION plastique (§2.3) : chaque gène adaptogène glisse
             # vers cible = 1 + EXPR_GAIN × mémoire(g), en lerp à HYSTÉRÈSE (montée
             # TAU_UP rapide, descente TAU_DOWN lente). Borné [EXPR_MIN, EXPR_MAX].
