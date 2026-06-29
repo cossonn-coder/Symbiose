@@ -39,7 +39,7 @@ partagé** (`sim/journal.py`), lui-même alimenté **hors tick** par le driver �
 |---|-------|---------|------|
 | ① | Extraire `sim/evenements.py` (refactor pur) + élargir le parseur | `01_evenements.md` | ✅ FAIT |
 | ② | Ledger `sim/journal.py` + `consigner` + câblage driver | `02_journal.md` | ✅ FAIT |
-| ③ | Carnet (`carnet_lire`, `CONCEPT_DE`, gabarits 2 registres) + D43 | `03_carnet.md` | ⬜ à faire |
+| ③ | Carnet (`carnet_lire`, `CONCEPT_DE`, gabarits 2 registres) + D43 | `03_carnet.md` | ✅ FAIT |
 | ④ | Encyclopédie (`encyclopedie_index`/`_lire`, fiche tronquée) | `04_encyclopedie.md` | ⬜ à faire |
 | ⑤ | Pages secrètes (`pages_trouvees`/`reveler_page`, 3 robinets) | `05_pages.md` | ⬜ à faire |
 | ⑥ | Magazine (`magazine_offres`/`acheter_au_magazine`) | `06_magazine.md` | ⬜ à faire |
@@ -121,5 +121,34 @@ que Nico doit prendre sciemment, pas un effet de bord du tronçon « ledger ». 
 n'est pas concerné (tourne hors serveur), donc rien ne presse. À trancher quand Nico veut
 activer la progression de maîtrise en F5.
 
-**PROCHAIN = ③** (`03_carnet.md`) : carnet (`carnet_lire`, `CONCEPT_DE`, gabarits 2
-registres §5) + D43. Lecteur read-only par-dessus le ledger ②.
+**③ FAIT** (carnet, lecteur read-only, golden INTACT) :
+- Créé `data/code/sim/carnet.py` (niveau `sim`, 128 ldc) : `carnet_lire(gs, player,
+  filtre=None)` → liste d'entrées `{semaine, zone, concept, registre, texte}` dans
+  l'ordre du ledger. PUR (lecture `journal` ② + `maitrise.palier` D12, aucun RNG,
+  aucun champ écolo). Sans tranche journal → `[]` (golden-safe).
+- Tables recopiées VERBATIM du doc §5 : `CONCEPT_DE[(kind, cause)]` (§5.0, incl.
+  D43 `acclimatation→adaptation`) + `GABARIT[(kind, cause, registre)]` (§5.1, les
+  2 colonnes descriptif/interprétatif). Knobs en tête : `SEUIL_CARNET=3`,
+  `SEUIL_ANTICIPE=1` (D12.4).
+- **Registre = palier du CONCEPT** (pas de l'espèce, décision B), recalculé À LA
+  CONSULTATION (révélation rétroactive). Réglage d'aide « interprétatif anticipé »
+  lu via flag OPTIONNEL `gs["options"][player]["carnet_anticipe"]` (défaut NON,
+  TODO(options) pour le menu réel).
+- **Décisions/écarts assumés** (signalés) : (a) cas spécial « levée (reprise) » →
+  concept = SA cause (`_CONCEPT_LEVEE`, doc §5.0 « = cause levée ») ; reproduction
+  (3 causes auto/biparental/introgr.) → même concept+gabarit (cause neutralisée).
+  (b) Slot `{l}` = libellé FACTUEL « sur T0 en (r,c) » dérivé de la zone, PAS un
+  « coin nord-est » (géométrie tuile hors périmètre ③, l'UI Godot D24 enjolivera).
+  (c) Paire (kind,cause) hors table → `CONCEPT_FALLBACK="observation"` + gabarit
+  générique (jamais de crash, kickoff « Pièges »). (d) `acclimatation`/`floraison`
+  jamais émis par le parseur ① (signe de rendu / header sans @pos) → gabarits
+  présents mais déclenchés par injection directe dans les tests (corpus éditorial
+  complet, prêt si le moteur émet un jour ces marqueurs).
+- Tests : `tests/test_carnet.py` NOUVEAU (19/19 — sans joueur→[], bascule registre
+  au palier 3 du concept, espèce≠concept, réglage anticipé, D43, filtre concept/
+  zone/saison). `test_golden` + `test_population` bit-identiques (`db5e7c66…` /
+  `9ba39ab7…`), `test_maitrise_detection` 20/20. C# non concerné.
+
+**PROCHAIN = ④** (`04_encyclopedie.md`) : encyclopédie (`encyclopedie_index`/
+`encyclopedie_lire`, fiche tronquée à `min(palier,3)`, corpus §6 28 fiches × 3
+niveaux). Lecteur read-only du palier d'ESPÈCE (`maitrise.palier`). Golden INTACT.
