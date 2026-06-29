@@ -36,7 +36,7 @@ agisse sur **tous** les champs qu'il influence réellement.
 ## Carte des sous-sprints (5, ordre = dépendances)
 | # | Sujet | Kickoff | État |
 |---|-------|---------|------|
-| ① | Humidité médiée (retrait deltas plats + `PLUIE_APPORT`) | `01_humidite_mediee.md` | ⬜ À FAIRE |
+| ① | Humidité médiée (retrait deltas plats + `PLUIE_APPORT`) | `01_humidite_mediee.md` | ✅ FAIT (golden+pop re-figés) |
 | ② | Rosée & gelée blanche (`tick_rosee`, point de rosée, continuum) | `02_rosee_gelee_blanche.md` | ⬜ À FAIRE |
 | ③ | Lessivage NPK par la pluie | `03_lessivage_npk.md` | ⬜ À FAIRE |
 | ④ | Microbiome climatique | `04_microbiome_climatique.md` | ⬜ À FAIRE |
@@ -66,4 +66,42 @@ Valeurs définitives = F5 / bancs d'essai.
 - Calibrage numérique des constantes = F5 / bancs d'essai.
 
 ## Avancement / REPRISE
-(rien encore — démarrer par `01_humidite_mediee.md`)
+
+### ① Humidité médiée — FAIT (2026-06-29)
+**Fichiers touchés** : `fields/ecofields/constants.py` (table `PLUIE_APPORT`),
+`fields/ecofields/container.py` (`tick_hydrology(pluie_event=0.0)` + infiltration
+∝ structure, bornée ≥ 0), `sim/engine/aleas.py` (`WEATHER_ALEA` : entrées humidité
+Canicule/Sécheresse/Pluie prolongée/Orage neutralisées en `mode="none"`, originaux
+conservés en commentaire ; vent/gel/grêle intacts), `sim/engine/boucle.py`
+(`pluie_event = PLUIE_APPORT.get(event.kind, 0.0)` passé à `tick_hydrology`),
+`fields/__init__.py` (ré-export `PLUIE_APPORT`).
+
+**Golden RE-FIGÉ (annoncé)** :
+- `tests/golden_hash.txt` : `db5e7c66…` → **`b2a8993288318b98936e3625dc0e68b119f39fef351ebfa49e2942a7c0d46d65`**
+- `tests/population_hash.txt` : `9ba39ab7…` → **`cd15346047b53fdcecbb7acb55b10b41fe0977a302fda25e31c4edcf0674edd1`**
+
+**Dérive — LOCALISÉE et EXPLIQUÉE (humidité, sens attendu)** : l'humidité finale du
+smoke CHUTE fortement (T0 0.87→0.105, T1 0.82→0.013). Les anciens deltas plats
+étaient nets POSITIFS (Pluie +0.5, Orage +0.5 ≫ Canicule/Sécheresse −0.4) et
+gonflaient artificiellement l'humidité ; le nouveau flux (BASE_RAIN + PLUIE_APPORT
+infiltré ∝ structure terre 0.7, puis évaporation∝T_sol + drainage 0.993) produit un
+sol réaliste, beaucoup plus sec — exactement le « plus sec et spatial » voulu §2.1.
+Dérive secondaire cohérente : microbiome ↑ (T0 0.076→0.323, sol plus sec change la
+dynamique famine), NPK légèrement décalés (uptake/lessivage lisent l'humidité),
+champs population (vers/détritivores) re-figés (lisent l'humidité). AUCUN re-figeage
+aveugle. Suites hydro vertes : test_eau, test_conteneur, test_substrat,
+test_confinement, test_couplage (rétrocompat `pluie_event=0` ⇒ conteneurs bit-identiques).
+
+**⚠ FINDING à arbitrer par Nico (hors périmètre ①, NON corrigé)** :
+`tests/test_biennial.py` PASSAIT avant, FAIL maintenant. Ce n'est PAS un bug de ①
+mais un **off-by-one** exposé par l'humidité réaliste. Le gate `_bolt_bloque`
+(`croissance.py:74`) libère la montaison dès `age_years >= 1.0`, ce qui est VRAI
+exactement au tick 52 (52/52=1.0) → la carotte monte à fleur à w52. Or le test
+compte w52 comme « an 1 » (`w <= 52`) → assertion `y1_max_stage < bolt` échoue.
+Avant ①, le test ne passait QUE PAR CHANCE : la tuile-test inondée par les deltas
+plats atteignait `hum=2.617 > HUM_NOYE(2.6)` pile à w52 → stagnation « noyé » →
+montaison retardée à w53. Question de design à trancher (w52 = fin an 1 ou début
+an 2 ?) → corriger soit la borne du gate, soit la fenêtre du test. Laissé ROUGE
+volontairement (retour sur livrable = arbitrage Nico, pas de patch silencieux).
+
+**Build C#** : non concerné (aucun fichier C# touché).

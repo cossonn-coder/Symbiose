@@ -341,7 +341,8 @@ class EcoFields:
     # --- Hydrologie ---
 
     def tick_hydrology(self, soil_type: str = "terre",
-                       drainage_override: float | None = None) -> list:
+                       drainage_override: float | None = None,
+                       pluie_event: float = 0.0) -> list:
         """
         Cycle hydrologique complet. Ordre strict :
           1. Évaporation atmosphérique (couplée à la température : chaud → +)
@@ -360,6 +361,14 @@ class EcoFields:
         Défaut `None` → comportement actuel inchangé : aucun appelant existant ne
         le passe → les tuiles restent BIT-IDENTIQUES (golden neutre).
 
+        `pluie_event` (sprint météo→champs ①, §2.2) : apport d'eau de l'événement
+        météo du tick (`PLUIE_APPORT[event.kind]`, positif=pluie, négatif=pluie de
+        fond tarie en sécheresse). Ajouté à `BASE_RAIN` PUIS infiltré ∝ structure du
+        sol (étape 2) — l'apport météo suit le MÊME canal que la pluie de fond, donc
+        un sol battu en laisse ruisseler une part. Borné `BASE_RAIN + pluie_event ≥ 0`
+        (on ne soustrait jamais d'eau arbitrairement : l'évaporation s'en charge).
+        Défaut 0 → appelants existants (conteneurs pots/bacs) strictement inchangés.
+
         RETOUR (sprint pots/bacs ⑤) : la PERTE de drainage par cellule, sous forme
         `[(r, c, perte), …]` (perte = `h_avant_drainage · (1 − drainage)`, l'eau
         qui s'écoule du fond). Une tuile la JETTE (aucun appelant existant ne lit
@@ -370,6 +379,9 @@ class EcoFields:
         """
         drainage = (drainage_override if drainage_override is not None
                     else DRAINAGE_PAR_SOL.get(soil_type, DRAINAGE))
+        # Apport total de la pluie de fond + météo, borné ≥ 0 (on ne retire jamais
+        # d'eau ; en sécheresse l'apport négatif tarit la pluie de fond, sans plus).
+        apport = max(0.0, BASE_RAIN + pluie_event)
         pertes: list = []
         for r in range(self.rows):
             for c in range(self.cols):
@@ -387,7 +399,7 @@ class EcoFields:
                 # un sol grumeleux absorbe toute la pluie de fond, un sol compacté en
                 # laisse RUISSELER une part (perdue). Lit la structure du tick précédent
                 # (champ lent → OK). structure terre héritée 0.7 < 1.0 → golden re-figé.
-                h += BASE_RAIN * self.structure_sol.at_plot(r, c)   # 2. pluie de fond infiltrée
+                h += apport * self.structure_sol.at_plot(r, c)      # 2. pluie (fond+météo) infiltrée
                 h += self.soil_memory.at_plot(r, c) * SOIL_RETENTION  # 3. rétention
                 pertes.append((r, c, h * (1.0 - drainage)))         # eau du fond (⑤)
                 h *= drainage                                       # 4. drainage (par sol)

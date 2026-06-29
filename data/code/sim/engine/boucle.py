@@ -23,7 +23,7 @@ mixins frères (croissance.py / mortalite.py / decompo.py).
 from __future__ import annotations
 from dataclasses import dataclass
 from plants import PLANT_CATALOGUE
-from fields import _hash_noise, ABSCISSION_WEEKS, PRECIP_NORM
+from fields import _hash_noise, ABSCISSION_WEEKS, PRECIP_NORM, PLUIE_APPORT
 from fields.ecofields.thermique import t_min_nuit_at  # gel nocturne localisé (⑥)
 from fields.apiculture import tick_ruches   # ruches : capture essaim + miel (⑥, §H/§I)
 from fields.alarme import tick_alarme       # phéromone d'alarme apienne : décroissance (⑦, §J)
@@ -87,6 +87,11 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
         # dérivent. T_air = normale saisonnière + delta transitoire ; nébulosité ④.
         event, temp_now, nebul = weather_state(seed, week)
         is_neige      = (event.kind == "Neige")            # ⑦ : pilote l'accumulation du manteau
+        # Apport d'eau météo MÉDIÉ (sprint météo→champs ①, §2.2). Uniforme par tuile
+        # (dépend du seul `event.kind`), infiltré ∝ structure dans tick_hydrology ci-
+        # dessous. Remplace les deltas plats humidité retirés de WEATHER_ALEA. 0 hors
+        # pluie/sécheresse → ces semaines-là l'hydrologie est inchangée.
+        pluie_event   = PLUIE_APPORT.get(event.kind, 0.0)
         for tile in self.tiles:
             eco = self._eco(tile)
             eco.temperature.fill(temp_now)
@@ -175,8 +180,9 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
             eco.tick_thermique(saison, nebul)
 
             # 3. Hydrologie : évaporation → pluie de fond → rétention → drainage
-            #    (le drainage dépend du type de sol de la tuile, §2.3 a).
-            eco.tick_hydrology(tile.soil_type)
+            #    (le drainage dépend du type de sol de la tuile, §2.3 a). L'apport
+            #    météo `pluie_event` (①, §2.2) y est infiltré ∝ structure du sol.
+            eco.tick_hydrology(tile.soil_type, pluie_event=pluie_event)
 
             # 4. Décomposition biogéochimique (OM → fertilite, pertes C)
             eco.tick_decomposition()

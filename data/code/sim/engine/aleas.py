@@ -40,24 +40,37 @@ ALEAS_METEO = [
 # catalogue §1.3 mappent sur le même effet faute de mieux (Sécheresse≈Canicule,
 # Grêle≈dégât santé, Redoux=neutre) : la température (02) et les réponses médiées
 # par gène (03) remplaceront ces mappings approximatifs.
+# Humidité MÉDIÉE (sprint météo→champs ①, §2) : les deltas plats humidité sont RETIRÉS
+# de cette table (Canicule, Sécheresse, Pluie prolongée, Orage) — un nombre uniforme et
+# instantané posé sur un champ est l'antithèse de la philo #2. Ils passent désormais par
+# un FLUX : la pluie via `PLUIE_APPORT` infiltrée ∝ structure dans tick_hydrology, et
+# l'assèchement de la canicule/sécheresse via l'évaporation∝T_sol DÉJÀ en place. Les
+# entrées humidité d'origine sont conservées en commentaire (CLAUDE.md « ne jamais jeter »):
+#   "Canicule":  Alea("Canicule",  "Humidité chute.", "humidite", -0.4, "field"),
+#   "Sécheresse":Alea("Sécheresse","Humidité chute.", "humidite", -0.4, "field"),
+#   "Pluie prolongée": Alea("Pluie prolongée","Humidité monte.","humidite",+0.5,"field"),
+#   "Orage":     Alea("Orage",     "Pluie battante.", "humidite", +0.5, "field"),
+# Restent câblés : Tempête/Orage VENT (paillage), Gelée (→ gel médié), Grêle (→ médié).
 WEATHER_ALEA = {
     "Beau temps":      Alea("Beau temps",      "Aucun effet.",       "",         0.0, "none"),
     "Gelée tardive":   Alea("Gelée tardive",   "Semis touchés.",     "",        -1.0, "health"),
-    "Canicule":        Alea("Canicule",        "Humidité chute.",    "humidite", -0.4, "field"),
-    "Sécheresse":      Alea("Sécheresse",      "Humidité chute.",    "humidite", -0.4, "field"),
+    # Canicule/Sécheresse : assèchement ÉMERGENT (évaporation∝T_sol). Plus de delta plat.
+    "Canicule":        Alea("Canicule",        "Sol qui s'assèche.", "",         0.0, "none"),
+    "Sécheresse":      Alea("Sécheresse",      "Pluie de fond tarie.","",        0.0, "none"),
     "Tempête":         Alea("Tempête",         "Paillage dispersé.", "paillage", -1,   "rondelle"),
     # Grêle : SUPPLANTÉ (sous-sprint 03). Ne passe plus par la voie `health` plate ;
     # routé via _mediated_damage (impact physique × exposition × protection). Entrée
     # conservée pour mémoire — n'est plus consultée par tick_semaine (cf. CLAUDE.md
     # « ne jamais jeter de code »).
     "Grêle":           Alea("Grêle",           "Feuillage abîmé.",   "",        -1.0, "health"),
-    "Pluie prolongée": Alea("Pluie prolongée", "Humidité monte.",    "humidite", +0.5, "field"),
+    # Pluie prolongée : apport d'eau MÉDIÉ (PLUIE_APPORT infiltré ∝ structure). Plus de delta plat.
+    "Pluie prolongée": Alea("Pluie prolongée", "Pluie infiltrée.",   "",         0.0, "none"),
     "Redoux":          Alea("Redoux",          "Aucun effet.",       "",         0.0, "none"),
-    # Orage (⑦) = composite pluie battante + vent. La table ne porte qu'UN effet
-    # par kind → on y met la PLUIE (humidité ↑) ; le VENT (paillage dispersé) est
-    # appliqué EN SÉQUENCE par boucle.py via ORAGE_VENT ci-dessous (option (b) du
-    # kickoff : 2 aléas enchaînés, plus lisible qu'un champ `extra` sur Alea).
-    "Orage":           Alea("Orage",           "Pluie battante.",    "humidite", +0.5, "field"),
+    # Orage (⑦) = composite pluie battante + vent. Sa PLUIE est désormais médiée
+    # (PLUIE_APPORT) ; il ne conserve ici que le VENT (paillage dispersé), appliqué
+    # EN SÉQUENCE par boucle.py via ORAGE_VENT ci-dessous (option (b) du kickoff :
+    # 2 aléas enchaînés, plus lisible qu'un champ `extra` sur Alea).
+    "Orage":           Alea("Orage",           "Pluie battante.",    "",         0.0, "none"),
 }
 
 # Volet VENT de l'Orage (⑦), appliqué en séquence après la pluie (cf. WEATHER_ALEA

@@ -418,6 +418,26 @@ STRUCT_UPTAKE_MIN = 0.5      # uptake racinaire résiduel en sol totalement comp
 # aucune battance ces semaines-là.
 PRECIP_NORM = {"Pluie prolongée": 1.0, "Orage": 0.9, "Grêle": 0.7}
 
+# Apport d'eau météo par événement (sprint météo→champs ①, §2.2) — donnée PURE,
+# pas d'import inverse vers `sim`, miroir de PRECIP_NORM/NEBULOSITE. Remplace les
+# deltas plats humidité de WEATHER_ALEA (Canicule/Sécheresse/Pluie/Orage) par un
+# flux : l'apport est ajouté à BASE_RAIN puis INFILTRÉ ∝ structure du sol dans
+# `tick_hydrology` (un sol grumeleux boit la pluie, un sol battu la laisse filer).
+# Positif = pluie qui tombe ; négatif (Sécheresse) = pluie de FOND TARIE (on réduit
+# l'apport, on ne retire JAMAIS d'eau arbitrairement — l'évaporation∝T_sol fait le
+# reste). Borné côté hydrologie pour que BASE_RAIN + apport ≥ 0. Canicule absente
+# (apport 0) : son assèchement ÉMERGE de l'évaporation montée par la T_sol chaude.
+# Événements non listés (Beau temps, Gelée, Redoux, Tempête, Grêle, Neige) → 0 :
+# aucun apport d'eau ces semaines-là. PLACEHOLDERS, calibrage F5 / bancs d'essai.
+PLUIE_APPORT = {
+    "Pluie prolongée": +0.012,
+    "Orage":           +0.010,
+    "Tempête":         +0.004,
+    "Grêle":           +0.003,
+    "Sécheresse":      -0.012,   # < −BASE_RAIN (0.015) en valeur absolue → apport net
+                                 # encore positif, jamais d'eau soustraite (cf. borne)
+}
+
 # --- Mycélium — réseau fongique (sprint mycélium & interconnexions, tronçon ①) --
 # Acteur NEUF (CONCEPTION_MYCELIUM_INTERCONNEXIONS §1). Un champ scalaire `mycelium`
 # ∈ [0,1] (`GridField max_val=1.0`, granularité plot, zéro RNG) qui CROÎT sur le bois
