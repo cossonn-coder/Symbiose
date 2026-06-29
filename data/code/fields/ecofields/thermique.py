@@ -41,7 +41,7 @@ import math
 
 from .constants import (GAIN_SOLAIRE, THERMAL_INERTIA, INTENSITE_SAISON,
                         REFROID_EVAP, ISOLATION_COUVERT, LITIERE_REF,
-                        K_NEBUL_DIURNE, RAYONNEMENT_NOCTURNE,
+                        K_NEBUL_DIURNE, RAYONNEMENT_NOCTURNE, WINDCHILL_COEF,
                         SNOW_ACCUM, SNOW_MELT_BASE, SNOW_MELT_WARM,
                         MICROBE_T_OPT, MICROBE_T_TOL, MICROBE_HUM_OPT,
                         MICROBE_HUM_SAT_FLOOR, MICROBE_CLIM_FLOOR)
@@ -90,9 +90,17 @@ def t_min_nuit_at(eco, r: int, c: int, t_air: float, nebulosite: float) -> float
     - `(1 − nébulosité)` : un ciel couvert renvoie l'IR → peu de gel. Les gelées
       arrivent par nuit CLAIRE et calme.
 
-    Pure, zéro RNG, zéro effet de bord (philo #3 — lit `eco.snow`, ne l'écrit pas)."""
+    WIND CHILL (sprint VENT & ÉVAPOTRANSPIRATION ③, §5.5) : le vent LOCAL abaisse
+    encore la T_min ressentie (`−WINDCHILL_COEF·eco.vent[r,c]`) — un coin ABRITÉ
+    (vent local faible) garde sa chaleur, cohérent avec le brise-vent §4. Lit le
+    champ d'abri SPATIALISÉ (③) ; à `eco.vent` nul (calme / pas de tick d'abri) le
+    terme est NUL → comportement ②/historique inchangé.
+
+    Pure, zéro RNG, zéro effet de bord (philo #3 — lit `eco.snow`/`eco.vent`, ne les
+    écrit pas)."""
     couvert = min(1.0, eco.om_fresh_at(r, c) / LITIERE_REF + eco.snow)
-    return t_air - RAYONNEMENT_NOCTURNE * (1.0 - couvert) * (1.0 - nebulosite)
+    t_min = t_air - RAYONNEMENT_NOCTURNE * (1.0 - couvert) * (1.0 - nebulosite)
+    return t_min - WINDCHILL_COEF * eco.vent.at_plot(r, c)
 
 
 def microbe_clim_factor(t_sol: float, hum_norm: float) -> float:

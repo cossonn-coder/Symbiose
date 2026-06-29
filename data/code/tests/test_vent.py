@@ -125,13 +125,56 @@ def test_cable_evapotranspiration():
           "vent_masse_air=" in src_b)
 
 
+# --- F. Champ d'abri spatial (tronçon ③) -----------------------------------
+def test_abri_spatial():
+    """`eco.vent` spatialisé (§4) : un obstacle (la maison) réduit le vent dans son
+    SILLAGE sous le vent, et le sillage SUIT la direction du vent. CACHE : à
+    (obstacles, direction) inchangés, pas de recalcul (signature stable)."""
+    from fields.ecofields import init_eco
+    from world.building import House
+    from fields.abri import compute_abri, _signature, _obstacles
+
+    eco = init_eco("t", 40, 40)            # tuile assez large pour loger un sillage
+    house = House()
+    force = 0.8
+
+    # Vent venant du NORD (direction ≈ 0 dans le repère `wind_at`/`_direction_at`).
+    compute_abri(eco, [], house, (0.0, 0.0), 0.0, force)
+    vals_nord = [eco.vent.at_plot(r, c) for r in range(40) for c in range(40)]
+    n_abrite_nord = sum(1 for v in vals_nord if v < force - 1e-9)
+    check("un obstacle abrite des plots (vent < masse d'air)", n_abrite_nord > 0,
+          f"{n_abrite_nord} plots abrités")
+    check("le vent reste borné ≥ 0", all(v >= 0.0 for v in vals_nord))
+    # Venturi : certains plots dépassent la masse d'air (goulet en frange de sillage).
+    check("venturi : des plots accélérés (> masse d'air)",
+          any(v > force + 1e-9 for v in vals_nord))
+
+    # Le sillage SUIT la direction : tourner le vent change la carte d'abri.
+    compute_abri(eco, [], house, (0.0, 0.0), math.pi / 2.0, force)
+    vals_est = [eco.vent.at_plot(r, c) for r in range(40) for c in range(40)]
+    check("changer la direction déplace le sillage", vals_nord != vals_est)
+
+    # Cache : même signature à direction quasi identique (sous le pas angulaire).
+    obs = _obstacles([], house, (0.0, 0.0))
+    check("cache stable sous le pas angulaire",
+          _signature(obs, 0.0) == _signature(obs, 0.05))
+    check("cache invalidé au-delà du pas angulaire",
+          _signature(obs, 0.0) != _signature(obs, 1.0))
+
+    # Force nulle (calme) → champ NUL partout (golden-safe : évaporation inchangée).
+    compute_abri(eco, [], house, (0.0, 0.0), 0.0, 0.0)
+    check("vent calme → champ nul",
+          all(eco.vent.at_plot(r, c) == 0.0 for r in range(40) for c in range(40)))
+
+
 def main():
-    print("=== test_vent (tronçon ① masse d'air) ===")
+    print("=== test_vent (① masse d'air + ③ abri spatial) ===")
     test_determinisme()
     test_bornes()
     test_saisonnalite()
     test_evenement_venteux()
     test_cable_evapotranspiration()
+    test_abri_spatial()
     passed = sum(1 for _, ok in _results if ok)
     total = len(_results)
     print(f"\n[test_vent] {passed}/{total} OK")

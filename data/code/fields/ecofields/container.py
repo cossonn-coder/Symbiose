@@ -151,6 +151,14 @@ class EcoFields:
     # NULLE au repos / nuit douce-couverte → golden NEUTRE pour ces termes ; la rosée du
     # smoke en pose → golden léger ANNONCÉ. Hors `summary()` (transient, comme drainage_last).
     rosee_last:       GridField = field(default=None)
+    # Champ de VENT spatialisé (sprint VENT & ÉVAPOTRANSPIRATION ③, §2.4/§4) — force
+    # LOCALE du vent par plot ∈ [0,1+] : la masse d'air uniforme (`wind_at` ①) MODULÉE
+    # par la géométrie d'abri (sillage sous le vent des obstacles, venturi des goulets).
+    # Recalculé chaque tick par `tick_abri` (helper PUR `fields.abri`) AVEC CACHE sur
+    # (obstacles, direction) — coût ≈ 0 en régime permanent (§7B). Lu par l'évaporation
+    # (③ remplace la masse d'air uniforme du ②) et le wind chill (`t_min_nuit_at`, §5.5).
+    # À 0 au repos (aucun vent/obstacle) → golden NEUTRE tant que `tick_abri` n'écrit pas.
+    vent:             GridField = field(default=None)
 
     def __post_init__(self):
         if self.humidite    is None: self.humidite    = GridField(self.rows, self.cols)
@@ -246,6 +254,12 @@ class EcoFields:
         # lue par les interconnexions vivantes du matin (faune abreuvée + captation foliaire).
         if self.rosee_last is None:
             self.rosee_last = GridField(self.rows, self.cols)
+        # Vent spatialisé (③) — NUL au repos (aucun tick d'abri encore appelé), écrit
+        # par `tick_abri`. `_abri_cache` mémorise (signature, grille de facteur) pour ne
+        # recalculer la géométrie que sur Δdirection/obstacle (§7B levier 2). None = froid.
+        if self.vent is None:
+            self.vent = GridField(self.rows, self.cols)
+        self._abri_cache = None
 
     def get_field(self, name: str) -> GridField | None:
         return {
@@ -392,7 +406,8 @@ class EcoFields:
                        drainage_override: float | None = None,
                        pluie_event: float = 0.0,
                        nebulosite: float = 1.0,
-                       vent_masse_air: float = 0.0) -> list:
+                       vent_masse_air: float = 0.0,
+                       vent_field: "GridField | None" = None) -> list:
         """
         Cycle hydrologique complet. Ordre strict :
           1. Évaporation atmosphérique (couplée à la température : chaud → +)
@@ -463,7 +478,11 @@ class EcoFields:
                 # lui faisait monter l'humidité jusqu'à l'asphyxie (D39). Le vent balaie
                 # la couche limite humide → évaporation ↑ (uniforme au ②, spatialisé ③).
                 evap -= EVAP_RAD_COEF * (1.0 - nebulosite)
-                evap -= EVAP_WIND_COEF * vent_masse_air
+                # VENT : champ d'abri SPATIALISÉ si fourni (③ : `eco.vent[r,c]` — un
+                # coin abrité s'assèche moins, un goulet venturi plus), sinon masse
+                # d'air UNIFORME (②, fallback rétro-compatible pour pots/bacs).
+                vloc = vent_field.data[r][c] if vent_field is not None else vent_masse_air
+                evap -= EVAP_WIND_COEF * vloc
                 if evap < EVAP_MIN:
                     evap = EVAP_MIN
                 h *= evap                                           # 1. évaporation
@@ -491,6 +510,20 @@ class EcoFields:
         si `house` est fournie ; `tile_origin` = offset monde de la tuile)."""
         return self.lumiere.compute(plants, saison,
                                     house=house, tile_origin=tile_origin)
+
+    # --- Vent spatialisé (champ d'abri) ---
+
+    def tick_abri(self, plants: list, wind_dir: float, wind_force: float,
+                  house=None, tile_origin: tuple = (0.0, 0.0)) -> None:
+        """Recalcule `eco.vent` (force LOCALE par plot, ③) depuis la masse d'air
+        (`wind_dir`/`wind_force`, `sim.wind.wind_at` ①) MODULÉE par la géométrie
+        d'abri. Délègue au helper PUR `fields.abri.compute_abri` (container déjà
+        dense) qui porte la mutualisation capsule + le CACHE directionnel (§7B).
+        À appeler APRÈS la lumière (les obstacles/hauteurs sont à jour), AVANT
+        l'hydrologie (qui lit `eco.vent`). À `wind_force=0` (calme) → champ NUL →
+        évaporation/wind chill inchangés."""
+        from fields.abri import compute_abri   # import local (évite un cycle au load)
+        compute_abri(self, plants, house, tile_origin, wind_dir, wind_force)
 
     # --- Perturbations ---
 

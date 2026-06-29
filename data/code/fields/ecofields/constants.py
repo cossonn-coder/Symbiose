@@ -73,6 +73,26 @@ EVAP_MIN       = 0.975   # borne basse du multiplicateur (n'assèche jamais brut
 EVAP_RAD_COEF  = 0.0042  # perte supplémentaire à ciel TOTALEMENT clair (nébulosité=0)
 EVAP_WIND_COEF = 0.0035  # perte supplémentaire à vent de masse d'air force 1
 
+# --- Champ d'abri spatial (sprint VENT & ÉVAPOTRANSPIRATION ③, §4/§2.4) ---
+# `eco.vent` spatialise la masse d'air uniforme (②) : un obstacle (mur de maison,
+# plante haute) projette une zone abritée SOUS LE VENT, force réduite, portée ∝
+# hauteur. Les knobs ci-dessous gouvernent la géométrie (helper PUR `fields.abri`).
+# Seule la MAISON et les plantes HAUTES comptent comme obstacles → tant que le smoke
+# n'a pas de plante ≥ seuil, seul l'abri de la maison structure le champ (re-figeage
+# golden MAÎTRISÉ, localisé au sillage de la maison).
+ABRI_HAUTEUR_MIN_CM = 80.0    # une plante n'abrite qu'au-dessus de ce port (haie utile)
+ABRI_PORTEE_HAUTEUR = 10.0    # longueur du sillage abrité = 10× la hauteur (règle réelle)
+ABRI_REDUCTION_MAX  = 0.6     # part max de vent coupée juste sous l'obstacle (∈ [0,1[)
+ABRI_RAYON_FRAC     = 0.5     # rayon mini de capsule-plante en fraction de PLOT_CM
+ABRI_ANGULAR_STEP   = 0.262   # ~15° — grain du cache directionnel (recalcul si franchi)
+ABRI_VENTURI_BOOST  = 0.15    # surcroît de vent dans le goulet en frange de sillage
+
+# Refroidissement éolien — wind chill (sprint VENT & ÉVAPOTRANSPIRATION ③, §5.5) :
+# le vent abaisse la température RESSENTIE nocturne (un abri RÉCHAUFFE la nuit,
+# cohérent avec le brise-vent §4). Terme `−WINDCHILL_COEF·vent_local` ajouté à
+# `t_min_nuit_at`. Lit `eco.vent[r,c]` spatialisé → un coin abrité gèle moins.
+WINDCHILL_COEF = 0.6     # °C retirés à la T_min nocturne par unité de vent local
+
 # --- Microclimat de surface T_sol (sprint thermique-microclimat, tronçon ①) ---
 # Le champ `temperature_sol` (par plot) spatialise la thermique : un plot au soleil
 # surchauffe au-dessus de T_air, un plot à l'ombre (maison/canopée) reste frais. La

@@ -87,12 +87,15 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
         # partagé avec le snapshot (serialize §A) — un seul calcul, jamais deux qui
         # dérivent. T_air = normale saisonnière + delta transitoire ; nébulosité ④.
         event, temp_now, nebul = weather_state(seed, week)
-        # Vent de MASSE D'AIR de la semaine (sprint VENT & ÉVAPOTRANSPIRATION ①/②).
+        # Vent de MASSE D'AIR de la semaine (sprint VENT & ÉVAPOTRANSPIRATION ①/②/③).
         # Scalaire uniforme sur le monde (comme T_air/nébulosité), fonction PURE O(1).
-        # Au tronçon ② il pilote l'évaporation enrichie (§3, balayage de la couche
-        # limite humide) ; le champ d'abri spatial par plot arrive au ③. La force LOCALE
-        # par plot restera `vent_force` partout tant que ③ n'a pas posé `eco.vent`.
-        vent_force    = wind_at(seed, week).force
+        # `force` pilote l'évaporation (②) ; `direction` oriente le sillage d'abri (③).
+        # Au ③ le champ d'abri `eco.vent` SPATIALISE cette masse d'air par plot (sillage
+        # sous le vent des obstacles, venturi) → l'évaporation et le wind chill lisent
+        # désormais `eco.vent[r,c]` au lieu du scalaire uniforme.
+        wind          = wind_at(seed, week)
+        vent_force    = wind.force
+        vent_dir      = wind.direction
         is_neige      = (event.kind == "Neige")            # ⑦ : pilote l'accumulation du manteau
         # Apport d'eau météo MÉDIÉ (sprint météo→champs ①, §2.2). Uniforme par tuile
         # (dépend du seul `event.kind`), infiltré ∝ structure dans tick_hydrology ci-
@@ -179,6 +182,17 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
                                      tile_origin=(tile.origin_x_cm, tile.origin_y_cm))
             log += lum_log
 
+            # 2a. Champ d'abri spatial (sprint VENT & ÉVAPOTRANSPIRATION ③, §4) —
+            #     APRÈS la lumière (les obstacles/hauteurs sont à jour), AVANT la
+            #     thermique/l'hydrologie (qui lisent `eco.vent`). Spatialise la masse
+            #     d'air uniforme : un obstacle (maison, plante haute) abrite son sillage
+            #     sous le vent, un goulet accélère (venturi). CACHE sur (obstacles,
+            #     direction discrétisée) → coût ≈ 0 en régime permanent (§7B). À
+            #     `vent_force=0` → champ NUL → évaporation/wind chill inchangés.
+            eco.tick_abri(tile.plants, vent_dir, vent_force,
+                          house=self.game_state.get("house"),
+                          tile_origin=(tile.origin_x_cm, tile.origin_y_cm))
+
             # 2b. Microclimat de surface T_sol (sprint thermique ①) — APRÈS la
             #     lumière (il la lit), AVANT l'hydrologie (qui lit T_sol). Surchauffe
             #     solaire par plot + inertie ; T_air (champ `temperature`) inchangé →
@@ -201,7 +215,8 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
             #    (le drainage dépend du type de sol de la tuile, §2.3 a). L'apport
             #    météo `pluie_event` (①, §2.2) y est infiltré ∝ structure du sol.
             eco.tick_hydrology(tile.soil_type, pluie_event=pluie_event,
-                               nebulosite=nebul, vent_masse_air=vent_force)
+                               nebulosite=nebul, vent_masse_air=vent_force,
+                               vent_field=eco.vent)
 
             # 4. Décomposition biogéochimique (OM → fertilite, pertes C)
             eco.tick_decomposition()

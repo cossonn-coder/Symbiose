@@ -29,7 +29,7 @@ l'évaporation** (rayonnement + vent) pour rééquilibrer la rosée → résout 
 | ⓪ | [`t0_reference_perf_scatter.md`](t0_reference_perf_scatter.md) | mesure+gain | **INTACT** `11eceeb9…` | ✅ fait |
 | ① | [`t1_vent_masse_air.md`](t1_vent_masse_air.md) | O(1) | **neutre** `11eceeb9…` | ✅ fait |
 | ② | [`t2_evapotranspiration.md`](t2_evapotranspiration.md) | marginal | **re-figé LARGE** `4a3cfe03…` → D39 vert | ✅ fait |
-| ③ | [`t3_abri_spatial.md`](t3_abri_spatial.md) | **À BUDGÉTER** | re-fige | ⏳ |
+| ③ | [`t3_abri_spatial.md`](t3_abri_spatial.md) | **+0 % (caché)** | **re-figé** `4ce4ae3c…` | ✅ fait |
 | ④ | [`t4_thigmomorphogenese.md`](t4_thigmomorphogenese.md) | négligeable | re-fige | ⏳ |
 | ⑤ | [`t5_pollinisation_dispersion.md`](t5_pollinisation_dispersion.md) | négligeable | re-fige | ⏳ |
 | ⑥ | [`t6_maladies_fongiques.md`](t6_maladies_fongiques.md) | négligeable | re-fige | ⏳ |
@@ -93,6 +93,31 @@ l'évaporation** (rayonnement + vent) pour rééquilibrer la rosée → résout 
 - **Perf** : +2 lectures/plot dans une boucle existante (marginal). D39 re-rouvert
   puis re-résolu PAR LE FOND dans `DETTE.md`.
 
+## Champ d'abri spatial (tronçon ③, 2026-06-29 — golden RE-FIGÉ MAÎTRISÉ, perf NEUTRE)
+- **Nouveau module `fields/abri.py`** (94 LDC pur) : `compute_abri` spatialise la
+  masse d'air en `eco.vent` (GridField par plot). Obstacles = MAISON + plantes
+  hautes (≥ `ABRI_HAUTEUR_MIN_CM`=80 cm → haie = brise-vent émergent, philo #1).
+  Chaque obstacle projette une **capsule SOUS LE VENT** (`_point_in_capsule` de
+  `light.py` RÉUTILISÉE + scatter par bbox D32), réduction dégressive le long du
+  sillage (`ABRI_REDUCTION_MAX`=0.6, portée 10× hauteur) ; **venturi** (+0.15) en
+  frange (passe voisinage 4-conn). **CACHE** sur (obstacles, direction discrétisée
+  ~15°) → en régime permanent on ne RE-CALCULE PAS la géométrie, juste la mise à
+  l'échelle par `wind_force`.
+- **Câblage** : `boucle.py` 2a appelle `eco.tick_abri(...)` (après lumière, avant
+  thermique/hydro) ; `tick_hydrology` lit `vent_field=eco.vent[r,c]` (vent local au
+  lieu de la masse d'air uniforme du ②) ; `t_min_nuit_at` ajoute le **wind chill**
+  `−WINDCHILL_COEF·eco.vent` (un abri réchauffe la nuit, §5.5). Défauts rétro-compat
+  → pots/bacs bit-identiques.
+- **Golden RE-FIGÉ MAÎTRISÉ** `4ce4ae3cdf77bb79860dcebac5c7cfac9959511227f89eea770e59a2449bfd25`
+  (évaporation par plot + wind chill bougent humidité/T_min — re-figeage **prévu** par
+  le kickoff). **D39 toujours VERT** : `test_senescence` PASS (pommier 59.8 ans).
+  Suites : `test_sim_server` 207/207, `test_eau` 20/20, `test_rosee` 10/10,
+  `test_croissance` 67/67, `test_stress_chronique` PASS, `test_vent` **26/26**
+  (+7 checks abri spatial : sillage, venturi, direction, cache, calme→nul).
+- **PERF (point clé §7B)** : tick **51.3 ms AVANT → 50.9-54 ms APRÈS** = **≈ +0 %**
+  (dans le bruit). Le **cache + scatter mutualisé** annulent le coût en régime
+  permanent → **PAS d'off-ramp**, ③ implémenté en entier (pas reporté en dette).
+
 ## Boucle de travail (rappel CLAUDE.md)
 Lancer `tN` → coder → **mesurer ms/tick avant/après** (budget §7B) → golden (intact
 ou re-figeage annoncé) → MAJ ce fichier → commit → `/clear` → lancer `tN+1`.
@@ -104,10 +129,11 @@ ou re-figeage annoncé) → MAJ ce fichier → commit → `/clear` → lancer `t
 
 ## REPRISE (démarrage à froid)
 « lis `sprints/sprint_vent_evapotranspiration/00_etat.md` puis
-`t3_abri_spatial.md` » → exécuter le tronçon ③ (abri spatial = champ d'abri par
-plot, géométrie de balayage sous le vent, **seul morceau cher** : mesurer SEUL,
-mutualiser la bbox/scatter de la lumière, off-ramp report en dette si budget perf
-explosé) — **re-figeage golden attendu**.
+`t4_thigmomorphogenese.md` » → exécuter le tronçon ④ (thigmomorphogénèse : paire
+`port_trapu↔wind_memory`, dégât étiolées médié, transpiration foliaire,
+endurcissement semis ; lit `eco.vent[r,c]` posé au ③ — coût par-PLANTE négligeable).
 Tronçons ⓪ (réf perf + scatter D32, golden `11eceeb9…`), ① (masse d'air
-`sim/wind.py`, golden neutre `11eceeb9…`) et ② (évapotranspiration enrichie +
-nébulosité dynamique, golden re-figé LARGE `4a3cfe03…`, D39 vert) = ✅ faits.
+`sim/wind.py`, golden neutre `11eceeb9…`), ② (évapotranspiration enrichie +
+nébulosité dynamique, golden re-figé LARGE `4a3cfe03…`, D39 vert) et ③ (abri spatial
+`fields/abri.py` + wind chill, golden re-figé `4ce4ae3c…`, **perf +0 % grâce au
+cache**, PAS d'off-ramp) = ✅ faits.
