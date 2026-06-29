@@ -314,6 +314,18 @@ historiques.
 - **Arbo cible** : conception dans `docs/conception/`, journal éclaté par entrée
   dans `journal/` (+ `journal_archive/` 01-12 avant refactor structurel) indexé
   par `journal.md` ; sprints clos sous `sprints/_clos/`.
+- **Le catalogue grandit avec les idées** (règle de conception, 2026-06-29).
+  Quand une conception serait mieux **incarnée** par une plante absente du
+  catalogue, **ajouter cette/ces plante(s)** au catalogue pour illustrer la
+  conception — ne pas se contraindre aux espèces existantes. L'espèce sert l'idée.
+- **Toute plante ajoutée = toutes ses voix** (règle de conception, 2026-06-29).
+  L'ajout d'une espèce au catalogue n'est complet qu'avec ses entrées dans les
+  cinq dispositifs narratifs (cf. `docs/conception/CONCEPTION_VOIX_NARRATIVES.md`) :
+  **encyclopédie** (fiche 3 niveaux §6), **carnet** (concepts/causes que l'espèce
+  illustre, via `CONCEPT_DE` §5), **pages secrètes** (une page de lore *si* l'espèce
+  en porte un §7 — optionnel), **magazine** (rattachement famille/offre §2.4),
+  **événements** (marqueurs de cycle de vie consignés au ledger §1). Une plante
+  sans ses voix est une fiche muette — à éviter.
 - **Avant tout sprint**, vérifier que git est à jour. Nextcloud a déjà
   perdu transitoirement des fichiers le 2026-05-29.
 - **Max 3 questions à la fois.**
