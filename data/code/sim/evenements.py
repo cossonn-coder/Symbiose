@@ -169,6 +169,15 @@ def evenements(log: list[str]) -> list[Evenement]:
         if "❄" in line and "gelée blanche" in line:
             out.append(Evenement("gelee_blanche", tile_id, None, None, None))
             continue
+        # Transport éolien de la litière (sprint VENT ⑦, §5.6) : marqueur de TUILE
+        # 🍃 émis par `transport.tick_transport` les semaines de vent fort, SANS @pos
+        # ni espèce (un phénomène de milieu, comme la rosée). On le teste AVANT le
+        # `❄`-stagnation déjà passé ; 🍃 est polysémique (Abscission/Chute fruit en
+        # portent un AVEC @pos) → on exige le mot « charrie » (jamais dans les autres
+        # lignes 🍃) pour ne capter QUE le transport. Voix : concept « décomposition ».
+        if "🍃" in line and "charrie" in line:
+            out.append(Evenement("transport_litiere", tile_id, None, None, None))
+            continue
 
         m_pos = _POS.search(line)
         if not m_pos:

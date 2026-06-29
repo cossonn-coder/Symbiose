@@ -30,6 +30,7 @@ from .ph import tick_ph as _tick_ph                         # dérive pure du pH
 from .nutriments import split_miner, cec_norm_at, leach_factor, dispo, immobilise_n   # chimie N/P/K pure (physico-chimie ③/④/⑦)
 from .structure import tick_structure as _tick_structure   # dérive pure de la structure du sol (physico-chimie ⑧)
 from .mycelium import tick_mycelium as _tick_mycelium       # dynamique pure du réseau fongique (mycélium ①)
+from .transport import tick_transport as _tick_transport    # transport éolien pur de la litière (vent ⑦)
 from .rosee import tick_rosee as _tick_rosee                 # rosée & gelée blanche nocturnes (météo→champs ②)
 
 
@@ -325,6 +326,25 @@ class EcoFields:
             return
         _fusion_parcelle(self.litiere[r][c], tissu, masse)
 
+    def retirer_litiere(self, r: int, c: int, tissu: str, masse: float) -> float:
+        """Retire (au plus) `masse` de litière du `tissu` donné d'un plot — miroir
+        de `deposer_litiere`, utilisé par le transport éolien (⑦, §5.6) qui DÉPLACE
+        la litière d'un plot à l'autre. Cherche la parcelle du tissu, en soustrait
+        `min(masse, parcelle.masse)`, supprime la parcelle si vidée (sauf `diffus`,
+        permanente comme dans la décompo). No-op si `masse ≤ 0` ou tissu absent.
+        Renvoie la masse RÉELLEMENT retirée (conservation : l'appelant la redépose)."""
+        if masse <= 0.0:
+            return 0.0
+        cell = self.litiere[r][c]
+        for p in cell:
+            if p.tissu == tissu:
+                pris = min(masse, p.masse)
+                p.masse -= pris
+                if p.masse <= 1e-9 and p.tissu != "diffus":
+                    cell.remove(p)
+                return pris
+        return 0.0
+
     def deposer_dans_structure(self, struct: "Structure",
                                tissu: str, masse: float) -> None:
         """Ajoute de la matière au `contenu` d'une structure (miroir de
@@ -524,6 +544,17 @@ class EcoFields:
         évaporation/wind chill inchangés."""
         from fields.abri import compute_abri   # import local (évite un cycle au load)
         compute_abri(self, plants, house, tile_origin, wind_dir, wind_force)
+
+    def tick_transport(self, wind_dir: float, wind_force: float) -> list:
+        """Transport ÉOLIEN de la litière légère sous le vent (⑦, §5.6). Délègue au
+        helper PUR `transport.tick_transport` : il lit `eco.vent` (champ d'abri ③) et
+        DÉPLACE une fraction de la litière transportable (feuille/herbace) des plots
+        exposés vers leur voisin plus abrité sous le vent. PASSE CONDITIONNELLE
+        (sautée si `wind_force < TRANSPORT_SEUIL`, levier perf §7B) → coût nul les
+        jours calmes. Renvoie les marqueurs diégétiques 🍃 (consommés HORS tick par le
+        ledger des voix). À appeler APRÈS la décompo (litière à jour), dans la zone
+        décompo/transport de la boucle."""
+        return _tick_transport(self, wind_dir, wind_force)
 
     # --- Perturbations ---
 

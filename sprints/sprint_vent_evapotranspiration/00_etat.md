@@ -33,7 +33,7 @@ l'évaporation** (rayonnement + vent) pour rééquilibrer la rosée → résout 
 | ④ | [`t4_thigmomorphogenese.md`](t4_thigmomorphogenese.md) | négligeable | **re-figé** `d948f648…` | ✅ fait |
 | ⑤ | [`t5_pollinisation_dispersion.md`](t5_pollinisation_dispersion.md) | négligeable | **INTACT** `d948f648…` | ✅ fait |
 | ⑥ | [`t6_maladies_fongiques.md`](t6_maladies_fongiques.md) | négligeable | **INTACT** `d948f648…` | ✅ fait |
-| ⑦ | [`t7_transport_voix.md`](t7_transport_voix.md) | amorti | re-fige | ⏳ |
+| ⑦ | [`t7_transport_voix.md`](t7_transport_voix.md) | amorti | **re-figé MAÎTRISÉ** `0d3ca606…` | ✅ fait |
 
 ## Référence perf + scatter (tronçon ⓪, 2026-06-29 — D32 SOLDÉE)
 - **Base mesurée** (`tools/profile_tick.py`, monde smoke 2 tuiles/96 plots/51
@@ -207,6 +207,49 @@ l'évaporation** (rayonnement + vent) pour rééquilibrer la rosée → résout 
 - **Perf** : tick **51.55 ms** (vs ⑤ ~53.5) = dans le bruit. `_spore_load` ne scanne
   que le voisinage 1-conn existant et ne s'active qu'autour d'un foyer infecté →
   négligeable. Budget +10 % tenu.
+
+## Transport éolien de la litière & voix (tronçon ⑦, 2026-06-30 — golden RE-FIGÉ MAÎTRISÉ, perf neutre)
+- **Nouveau module pur `fields/ecofields/transport.py`** (≈55 LDC pur,
+  `tick_transport`) : charrie la litière LÉGÈRE (`TRANSPORT_TISSUS=("feuille",
+  "herbace")`) des plots EXPOSÉS vers leur voisin SOUS LE VENT **SI ce voisin est
+  plus abrité** (`vent[d] > vent[a]`, §5.6) → la matière s'amasse derrière un
+  brise-vent comme une congère (philo #2 : flux vent → contrainte → hétérogénéité
+  du sol émergente). Bois/fruits/`diffus` (lourds) restent au sol.
+  - **DÉTERMINISME (philo #3, zéro RNG)** : SNAPSHOT des masses donneuses AVANT
+    mutation (double buffer comme `GridField.diffuse`) → ordre de parcours
+    indifférent. Direction discrétisée en **un** voisin cartésien (`_aval`).
+    **Conservation stricte** : on redépose exactement la masse retirée (`pris`).
+  - **PASSE CONDITIONNELLE (perf, levier 5 §7B)** : no-op strict (liste vide) tant
+    que `wind_force < TRANSPORT_SEUIL`=0.35 → **coût NUL les jours calmes**. Quand
+    elle tourne = une seule passe O(plots), LIT `eco.vent` (③) sans capsule ni
+    scatter cher. Émet le signe `🍃` si la masse nette charriée ≥ `TRANSPORT_LOG_SEUIL`=0.05.
+  - Constantes `TRANSPORT_SEUIL/FRAC/TISSUS/LOG_SEUIL` (`constants.py`, ré-exportées
+    via `import *`). Helpers conteneur : `retirer_litiere` (retrait par tissu,
+    conservation) + `tick_transport` (délégation). Câblé `boucle.py` 15d (APRÈS tous
+    les dépôts de litière du tick, avant transition hivernale).
+- **Voix narratives** (read-only, HORS tick) : nouvel événement `transport_litiere`
+  parsé du marqueur `🍃` (`sim/evenements.py`) → carnet (`sim/carnet.py`,
+  `CONCEPT_DE`/gabarit : « les feuilles s'amassent le long de l'abri » descriptif →
+  interprétatif « là où le vent ralentit, la matière s'amasse et nourrira ce coin »
+  au seuil de maîtrise décompo). Le signe `🍃` est diégétique, pas de narrateur
+  omniscient. Le sign « le vent tourne » (Tempête, `weather.py`) couvre déjà le
+  préavis météo.
+- **Golden RE-FIGÉ MAÎTRISÉ** `0d3ca606c815c9efb99e8e438a2e7c47bf7abd4d17dade8de0f51b892be1d6ad`
+  (re-figeage **prévu** par le kickoff). Divergence **localisée et bénigne** : sur
+  les 41 lignes de digest qui bougent, le SEUL champ modifié est `drought_memory`
+  (4ᵉ–6ᵉ décimale) — la litière déplacée change la matière organique de surface par
+  plot → micro-variation de la rétention d'humidité locale → dérive infime de la
+  mémoire de soif. **Aucun** changement structurel (plante, stade, santé, position,
+  gènes intacts). Transport fire 13× dans le smoke. Voix = read-only → n'ont pas
+  touché le golden.
+- **Tests** : `test_vent` **54/54** (+12 ⑦ : feuille charriée/bois immobile/masse
+  conservée/marqueur émis/passe calme sautée/pas de remontée amont/déterminisme +
+  voix parsée → carnet descriptif→interprétatif). Suites : `test_sim_server`
+  207/207, `test_senescence` PASS (pommier 59.8 ans, **D39 vert**), `test_journal`
+  15/15, `test_carnet` 19/19, `test_structures` 80/80.
+- **Perf** : tick **54.1 ms AVEC transport vs 51.9 ms SANS** = **+2.2 ms (+4.2 %)**
+  dans le pire cas (smoke riche en litière, vent fréquent) ; les jours calmes la
+  passe est SAUTÉE (coût nul). Budget +10 % tenu.
 
 ## Boucle de travail (rappel CLAUDE.md)
 Lancer `tN` → coder → **mesurer ms/tick avant/après** (budget §7B) → golden (intact

@@ -318,8 +318,99 @@ def test_assechement_protecteur():
           vente < confine, f"venté={vente} < confiné={confine}")
 
 
+def test_transport_litiere():
+    """⑦ §5.6 — le vent CHARRIE la litière légère du plot EXPOSÉ vers son voisin
+    plus ABRITÉ sous le vent, conservation de masse, et SAUTE la passe les jours
+    calmes (`wind_force < TRANSPORT_SEUIL` → coût nul, perf §7B)."""
+    from fields.ecofields import init_eco
+    from fields.ecofields.constants import TRANSPORT_SEUIL
+
+    def _setup():
+        # Grille 1 ligne × 3 colonnes : on impose la géométrie d'abri à la main
+        # (vent FORT en c0, ABRITÉ en c1). Vent venant de l'OUEST (dir=π/2 → aval = +c).
+        eco = init_eco("V", 1, 3)
+        eco.vent.set(0, 0, 1.0)   # plot exposé (donneur)
+        eco.vent.set(0, 1, 0.2)   # plot abrité sous le vent (receveur)
+        eco.vent.set(0, 2, 0.2)
+        eco.deposer_litiere(0, 0, "feuille", 1.0)   # tas de feuilles mortes exposé
+        eco.deposer_litiere(0, 0, "bois", 1.0)      # bois : NE doit PAS voler (lourd)
+        return eco
+
+    wind_ouest = math.pi / 2.0   # d'où vient le vent = ouest → va vers l'est (+colonne)
+
+    # Vent FORT : la litière légère migre du plot exposé vers le plot abrité.
+    eco = _setup()
+    masse_avant = eco.om_fresh_at(0, 0)
+    masse_voisin_avant = eco.om_fresh_at(0, 1)
+    log = eco.tick_transport(wind_ouest, 0.9)
+    feuille_donneur = sum(p.masse for p in eco.litiere[0][0] if p.tissu == "feuille")
+    feuille_recev = sum(p.masse for p in eco.litiere[0][1] if p.tissu == "feuille")
+    bois_donneur = sum(p.masse for p in eco.litiere[0][0] if p.tissu == "bois")
+    check("⑦ transport : la feuille quitte le plot exposé",
+          feuille_donneur < 1.0 - 1e-9, f"reste {feuille_donneur:.3f}")
+    check("⑦ transport : la feuille arrive sur le plot abrité (sous le vent)",
+          feuille_recev > 1e-9, f"reçu {feuille_recev:.3f}")
+    check("⑦ transport : le bois (lourd) NE vole pas",
+          abs(bois_donneur - 1.0) < 1e-9, f"bois {bois_donneur:.3f}")
+    # Conservation de la masse totale de litière (déplacement, pas création/perte).
+    total_avant = masse_avant + masse_voisin_avant
+    total_apres = eco.om_fresh_at(0, 0) + eco.om_fresh_at(0, 1)
+    check("⑦ transport : masse conservée (déplacement net)",
+          abs(total_avant - total_apres) < 1e-9,
+          f"{total_avant:.3f} → {total_apres:.3f}")
+    check("⑦ transport : marqueur diégétique 🍃 émis", any("🍃" in l for l in log))
+
+    # Jour CALME (sous le seuil) : passe SAUTÉE, aucun mouvement (perf §7B).
+    eco = _setup()
+    avant = eco.om_fresh_at(0, 0)
+    log = eco.tick_transport(wind_ouest, TRANSPORT_SEUIL - 0.01)
+    check("⑦ calme : passe sautée (litière inchangée)",
+          eco.om_fresh_at(0, 0) == avant and not log)
+
+    # Sens INVERSE : vent d'EST (aval = −colonne) → rien ne quitte c0 (c0 est en
+    # AMONT, son voisin aval c−1 n'existe pas) : pas de remontée contre le vent.
+    eco = _setup()
+    eco.tick_transport(3.0 * math.pi / 2.0, 0.9)   # vent d'est
+    feuille_c0 = sum(p.masse for p in eco.litiere[0][0] if p.tissu == "feuille")
+    check("⑦ pas de remontée contre le vent (plot amont conservé)",
+          abs(feuille_c0 - 1.0) < 1e-9, f"reste {feuille_c0:.3f}")
+
+    # Déterminisme : deux exécutions identiques (zéro RNG).
+    e1 = _setup(); e1.tick_transport(wind_ouest, 0.9)
+    e2 = _setup(); e2.tick_transport(wind_ouest, 0.9)
+    check("⑦ transport déterministe",
+          [p.masse for p in e1.litiere[0][1]] == [p.masse for p in e2.litiere[0][1]])
+
+
+def test_voix_transport():
+    """⑦ voix — le marqueur 🍃 du tick est CONSIGNÉ au ledger (hors tick) et le carnet
+    en tire une note de concept « décomposition » (descriptif/interprétatif)."""
+    from sim import journal, carnet, maitrise
+    from sim.evenements import evenements
+
+    log = ["[T0]", "    🍃 Le vent charrie la litière vers l'abri (+0.40 sous le vent)"]
+    evs = evenements(log)
+    check("⑦ voix : 🍃 parsé en transport_litiere",
+          len(evs) == 1 and evs[0].kind == "transport_litiere" and evs[0].espece is None)
+
+    gs = {}
+    journal.consigner(gs, "j", log, semaine=5)
+    notes = carnet.carnet_lire(gs, "j")
+    check("⑦ voix : une note de carnet est produite", len(notes) == 1, f"{notes}")
+    check("⑦ voix : concept = décomposition (descriptif par défaut)",
+          notes and notes[0]["concept"] == "décomposition"
+          and notes[0]["registre"] == "descriptif")
+    # Au seuil de maîtrise « décomposition » → bascule interprétative (révélation).
+    st = maitrise.ensure_player_maitrise(gs, "j")
+    st["objets"]["décomposition"] = {"palier": carnet.SEUIL_CARNET, "preuves": 0}
+    notes_i = carnet.carnet_lire(gs, "j")
+    check("⑦ voix : note bascule en interprétatif au seuil",
+          notes_i and notes_i[0]["registre"] == "interprétatif",
+          notes_i[0]["texte"] if notes_i else "")
+
+
 def main():
-    print("=== test_vent (① masse d'air + ③ abri + ⑤ pollin./dispersion + ⑥ maladies) ===")
+    print("=== test_vent (① masse d'air + ③ abri + ⑤ pollin./dispersion + ⑥ maladies + ⑦ transport/voix) ===")
     test_determinisme()
     test_bornes()
     test_saisonnalite()
@@ -331,6 +422,8 @@ def main():
     test_anemochorie_sous_le_vent()
     test_spores_sous_le_vent()
     test_assechement_protecteur()
+    test_transport_litiere()
+    test_voix_transport()
     passed = sum(1 for _, ok in _results if ok)
     total = len(_results)
     print(f"\n[test_vent] {passed}/{total} OK")

@@ -427,6 +427,18 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
             flog = self._tick_fruits(tile, eco, week_in_year)
             if flog: log += flog
 
+            # 15d. Transport ÉOLIEN de la litière (sprint VENT ⑦, §5.6) — APRÈS tous
+            # les dépôts de litière du tick (décompo 4, abscission 15b, fruits 15c) :
+            # le vent CHARRIE la litière légère (feuille/herbace) des plots exposés
+            # vers leur voisin plus abrité SOUS LE VENT (`eco.vent` ③ + `vent_dir` ①)
+            # → un coin de brise-vent accumule la matière (philo #2 : flux → contrainte
+            # → hétérogénéité du sol). PASSE CONDITIONNELLE : sautée les semaines calmes
+            # (`vent_force < TRANSPORT_SEUIL`) → coût nul (levier perf §7B). Re-figeage
+            # MAÎTRISÉ ANNONCÉ (la litière de surface se redistribue). Émet 🍃 (signe
+            # diégétique consommé HORS tick par le ledger des voix).
+            tlog = eco.tick_transport(vent_dir, vent_force)
+            if tlog: log += tlog
+
             # 16. Transition hivernale (semaines 48-52)
             if saison == "hiver" and week_in_year in SAISONS["hiver"] and (week_in_year - SAISONS["hiver"].start) >= 9:
                 wlog = self._winter_transition(tile, eco, week)

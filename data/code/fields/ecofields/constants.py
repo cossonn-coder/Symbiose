@@ -154,6 +154,27 @@ SNOW_ACCUM     = 0.5     # accumulation par semaine de Neige (manteau plein en ~
 SNOW_MELT_BASE = 0.05    # fonte de fond hebdomadaire, même au froid (sublimation/tassement)
 SNOW_MELT_WARM = 0.03    # fonte supplémentaire par °C au-dessus de 0 (dégel)
 
+# --- Transport éolien de la litière (sprint VENT & ÉVAPOTRANSPIRATION ⑦, §5.6) ---
+# Le vent CHARRIE la litière LÉGÈRE de surface et la dépose SOUS LE VENT, là où le
+# flux ralentit (zone abritée, faible `eco.vent`). Émergence : un coin au pied d'un
+# brise-vent s'enrichit en matière organique (congère de feuilles). Helper PUR
+# `fields/ecofields/transport.py`, passe CONDITIONNELLE (sautée les jours calmes).
+#  - TRANSPORT_SEUIL : force de masse d'air (`wind_at`) sous laquelle la passe est
+#    SAUTÉE (jour calme → coût nul, levier perf §7B). Sert AUSSI de seuil de masse
+#    nette au-dessus duquel on émet le marqueur diégétique 🍃 (signe perçu).
+#  - TRANSPORT_FRAC : fraction de litière transportable déplacée par unité de
+#    DIFFÉRENTIEL de vent (vent[exposé] − vent[abrité]) vers le voisin sous le vent.
+#    Petit : le vent EFFRITE le tas exposé, il ne le balaye pas d'un coup.
+#  - TRANSPORT_TISSUS : seuls les tissus LÉGERS volent (feuilles mortes, brins
+#    secs) ; bois/fruits/exsudats (`diffus`) restent au sol.
+# Au smoke, le vent peut transporter de la litière abscission/herbacée → re-figeage
+# golden MAÎTRISÉ ANNONCÉ (la litière de surface se redistribue par plot).
+# PLACEHOLDERS, calibrage F5 / bancs d'essai.
+TRANSPORT_SEUIL  = 0.35   # force de masse d'air sous laquelle on ne transporte rien (jour calme)
+TRANSPORT_FRAC   = 0.20   # part de litière légère déplacée par unité de différentiel de vent
+TRANSPORT_TISSUS = ("feuille", "herbace")   # tissus assez légers pour être charriés
+TRANSPORT_LOG_SEUIL = 0.05   # masse nette charriée au-delà de laquelle on émet le signe 🍃
+
 # --- Rosée & gelée blanche (sprint météo→champs ②, §3) ---------------------
 # Face DOUCE du gel nocturne : on relit le MÊME thermomètre `t_min_nuit_at` (helper
 # `rosee.tick_rosee`). Un point de rosée local est dérivé de l'humidité du SOL (pas

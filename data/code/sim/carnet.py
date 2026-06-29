@@ -74,6 +74,11 @@ CONCEPT_DE: dict[tuple[str, str | None], str] = {
     # météo (D12), exactement comme le froid/gel (cohérent §6 du doc de conception).
     ("rosee", None):              "météo",
     ("gelee_blanche", None):      "météo",
+    # Transport éolien de la litière (sprint VENT ⑦, §5.6) : le vent charrie la
+    # matière de surface et la dépose sous le vent → un fait de DÉCOMPOSITION (la
+    # litière qui s'amasse au pied d'un abri amorce l'humus de demain), gaté par le
+    # concept « décomposition » comme l'abscission.
+    ("transport_litiere", None):  "décomposition",
 }
 
 # Concept de la « levée (reprise) » : doc §5.0 dit « = la cause (eau / lumière /
@@ -151,6 +156,13 @@ GABARIT: dict[tuple[str, str | None, str], str] = {
     ("rosee", None, _I): "Rosée {l} — la nuit claire a fait condenser l'air sur le sol froid ; cette eau du matin freine la soif et abreuve la petite faune.",
     ("gelee_blanche", None, _D): "Une fine pellicule de givre blanc couvrait le sol {l} ce matin.",
     ("gelee_blanche", None, _I): "Gelée blanche {l} : sous le ciel dégagé le sol a gelé sa rosée ; le givre fondra et rendra son eau au réchauffement.",
+
+    # Transport éolien de la litière (sprint VENT ⑦) — phénomène de tuile, sans
+    # espèce ({e} = « le couvert »). Descriptif = ce qu'on VOIT après le coup de vent
+    # (philo #5) ; interprétatif = la cause comprise au seuil décomposition (l'abri
+    # piège la matière, qui s'y décompose et enrichit le coin).
+    ("transport_litiere", None, _D): "Après le coup de vent {l}, les feuilles mortes s'étaient amassées le long de l'abri.",
+    ("transport_litiere", None, _I): "Le vent {l} a charrié la litière jusqu'à l'abri : là où il ralentit, la matière s'amasse et nourrira ce coin de terre.",
 }
 
 # Gabarit générique quand la paire (kind, cause) n'a pas de texte dédié (§5.0 ne
