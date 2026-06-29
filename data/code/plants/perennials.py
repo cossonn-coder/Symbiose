@@ -171,6 +171,17 @@ class AppleTree(PerennialWoody):
     foliage_halfwidth     = 50.0      # couronne non nulle + racines viables (cf. ci-dessus)
     organ_site            = "lateral" # fructification latérale (lu au tronçon 5)
     fruitier              = True      # porte des fruits traçables (③ ; 1re fructif. à maturity_years=5)
+    # Seuil GDD de floraison abaissé 200→130 (défaut familles.py = 200). Sous la
+    # météo seed 42 re-figée au sprint THERMIQUE (printemps refroidi), l'accumulation
+    # GDD ne franchissait 200 qu'à la SEMAINE 34 — dernière semaine de la fenêtre
+    # photopériode (13.5–16.5 h, ouverte S16→S34). Les deux portes ne coïncidaient
+    # qu'UNE semaine → un seul pas de montée (0.35) < SEUIL_FLEURI=0.5 → `a_fleuri`
+    # jamais armé → 0 nouaison. À 130, la porte chaleur s'ouvre ~S29 (milieu de
+    # fenêtre) → ~5 semaines de chevauchement → floraison atteint ~0.95 → nouaison
+    # entomophile normale. Golden-NEUTRE (le pommier du golden a <5 ans donc
+    # is_seed_bearing=False → floraison reste 0 quel que soit ce seuil ; hash vérifié
+    # inchangé). Calibration ciblée du pommier, pas du défaut global.
+    gdd_floraison         = 130.0
 
 
 class CherryTree(PerennialWoody):
