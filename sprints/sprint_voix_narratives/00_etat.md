@@ -38,7 +38,7 @@ partagé** (`sim/journal.py`), lui-même alimenté **hors tick** par le driver �
 | # | Sujet | Kickoff | État |
 |---|-------|---------|------|
 | ① | Extraire `sim/evenements.py` (refactor pur) + élargir le parseur | `01_evenements.md` | ✅ FAIT |
-| ② | Ledger `sim/journal.py` + `consigner` + câblage driver | `02_journal.md` | ⬜ à faire |
+| ② | Ledger `sim/journal.py` + `consigner` + câblage driver | `02_journal.md` | ✅ FAIT |
 | ③ | Carnet (`carnet_lire`, `CONCEPT_DE`, gabarits 2 registres) + D43 | `03_carnet.md` | ⬜ à faire |
 | ④ | Encyclopédie (`encyclopedie_index`/`_lire`, fiche tronquée) | `04_encyclopedie.md` | ⬜ à faire |
 | ⑤ | Pages secrètes (`pages_trouvees`/`reveler_page`, 3 robinets) | `05_pages.md` | ⬜ à faire |
@@ -94,14 +94,32 @@ vent (robinet *hasard* s'ancre provisoirement sur `_hash_noise` au passage de sa
   kinds élargis + disambiguation). `test_maitrise_detection` 20/20 vert.
   **Golden `db5e7c66…` + population `9ba39ab7…` bit-identiques** (inchangés).
 
-**PROCHAIN = ②** (`02_journal.md`) : ledger `sim/journal.py` + `consigner` +
-câblage driver. Consomme `evenements()` (l'API élargie).
+**② FAIT** (ledger hors tick, golden INTACT) :
+- Créé `data/code/sim/journal.py` (module niveau `sim`, ~50 ldc) : `JOURNAL_MAX=200`
+  (knob D12.4 en tête), `ensure_player(gs, player)` OPT-IN (miroir de
+  `maitrise.ensure_player_maitrise`), `consigner(gs, player, log, semaine)` qui lit
+  `evenements.evenements(log)` (① élargi) et appende des entrées
+  `{semaine, zone, kind, cause, espece}`. `zone = (tile_id, r, c)` ou `(tile_id,)` si
+  l'événement n'a pas de pos (ravageur de saison). Bornage `_appender` : au-delà de
+  `JOURNAL_MAX`, la plus ancienne se replie dans `resume[(kind, cause)] += 1` (FIFO).
+  PUR : aucun RNG, aucun champ écolo touché.
+- Câblage driver `tools/simserver/commands.py::cmd_step_week` : import
+  `from sim import journal as J` ; appel `J.consigner(gs, gs["current_player"],
+  gs["log"], gs["week"] - 1)` APRÈS `tick_semaine()` et AVANT `gs["log"].clear()`.
+  `week` est déjà incrémenté par le tick (boucle.py:422) → la semaine simulée est
+  `week - 1`. Le serveur a déjà un joueur (`current_player="joueur_1"`) → ledger se
+  remplit en jeu réel ; golden hors serveur → aucune clé `journal` → intact.
+- Tests : `tests/test_journal.py` NOUVEAU (15/15 — opt-in no-op, accumulation datée +
+  isolation par avatar, bornage→resume). `test_evenements` 18/18, `test_maitrise_detection`
+  20/20 verts. **Golden `db5e7c66…` + population `9ba39ab7…` bit-identiques** (inchangés).
 
-## Dépendance connue à signaler
-La **détection de maîtrise** (`maitrise_detection.detecter`) n'est **pas encore câblée**
-dans la boucle serveur (elle existe + est testée en isolation). Sans elle, les paliers
-ne progressent pas en jeu réel → carnet/magazine restent en mode initial. Le câblage de
-`detecter` (symétrique de `consigner`) est du ressort de **D12**, pas de ce sprint —
-mais comme les deux hooks sont jumeaux et vont au même endroit (après le tick, avant le
-vidage du log), **② peut les câbler ensemble** si trivial. À signaler à Nico, ne pas
-forcer (ça ne touche pas le golden, qui tourne hors serveur).
+**DÉCISION `detecter` : NON câblé** (choix assumé, signalé à Nico). `maitrise_detection.detecter`
+a la même signature que `consigner` et irait au même endroit (trivial à brancher), MAIS
+ce n'est PAS neutre côté gameplay : il crédite des preuves et fait progresser les paliers
+en jeu réel, ce qui pilote ensuite carnet/encyclopédie/magazine. C'est une décision D12
+que Nico doit prendre sciemment, pas un effet de bord du tronçon « ledger ». Le golden
+n'est pas concerné (tourne hors serveur), donc rien ne presse. À trancher quand Nico veut
+activer la progression de maîtrise en F5.
+
+**PROCHAIN = ③** (`03_carnet.md`) : carnet (`carnet_lire`, `CONCEPT_DE`, gabarits 2
+registres §5) + D43. Lecteur read-only par-dessus le ledger ②.

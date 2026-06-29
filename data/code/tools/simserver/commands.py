@@ -13,6 +13,7 @@ import sys
 from world import House
 from sim.engine import Engine
 from sim import vigueur as V      # état Vigueur joueur (ensure/spend/gain, D11)
+from sim import journal as J      # ledger d'événements hors tick (voix narratives ②)
 from sim.seeds import PlayerSeedBank, Seed  # banque-joueur (source de planter, remplie à la récolte)
 # Type de base des champs écologiques (tranche 6·C) : le registre de la
 # commande `fields` se DÉCOUVRE par introspection (tout attribut GridField
@@ -130,7 +131,17 @@ class CommandsMixin:
         # évolution future du moteur en déviant tout print vers stderr.
         with contextlib.redirect_stdout(sys.stderr):
             self.engine.tick_semaine()
-        self.engine.game_state["log"].clear()   # borne la mémoire (cf. golden)
+        # Voix narratives ② : consigner le `log` du tick au ledger AVANT de le
+        # vider — hors tick, après la simulation, exactement comme un hook
+        # `detecter()`/`tick_player_vigueur()`. L'OPT-IN se fait ici (le serveur
+        # a un joueur) ; le golden tourne hors serveur → aucune clé `journal` →
+        # no-op strict, golden intact (miroir du câblage Vigueur de cmd_init).
+        gs = self.engine.game_state
+        # `week` est DÉJÀ incrémenté par tick_semaine() (boucle.py:422) → la
+        # semaine qu'on vient de simuler est `week - 1` ; le log consigné lui
+        # appartient.
+        J.consigner(gs, gs["current_player"], gs["log"], gs["week"] - 1)
+        gs["log"].clear()   # borne la mémoire (cf. golden)
         return {"ok": True, "snapshot": self._snapshot()}
 
     def cmd_snapshot(self, msg: dict) -> dict:
