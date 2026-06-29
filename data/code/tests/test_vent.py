@@ -251,8 +251,75 @@ def test_anemochorie_sous_le_vent():
           getattr(AppleTree, "seed_dispersal", "barochore") == "barochore")
 
 
+def test_spores_sous_le_vent():
+    """⑥ §5.4 — dispersion des spores : `_spore_load` capte l'inoculum d'un FOYER
+    infecté placé AU VENT (au-delà de FUNGAL_INOC_SEUIL), pas d'un foyer sous le
+    vent, et rien au calme (wind_vec nul → golden-safe)."""
+    from world import Tile
+    from plants import AppleTree
+    from sim.effects.perturbations import _spore_load, FUNGAL_INOC_SEUIL
+
+    tile = Tile(tile_id="S", soil_type="terre", grid_rows=6, grid_cols=6)
+    cible = tile.add_plant(AppleTree, 2, 2)
+    amont = tile.add_plant(AppleTree, 2, 1)   # colonne plus petite = plus au nord
+    aval  = tile.add_plant(AppleTree, 2, 3)
+    amont.infection_memory = 0.8              # foyer actif
+    aval.infection_memory = 0.8
+    # Vent du NORD (direction 0) → vecteur source = (cos0, sin0) = (+1, 0) en x.
+    # x_cm croît avec la colonne (plot 50 cm) → `amont` (col 1) a x < cible (col 2)
+    # → (amont − cible)·(1,0) < 0… on prend la direction qui rend `amont` au vent.
+    wx, wy = (-1.0, 0.0)                       # source à l'OUEST/col décroissante
+    load = _spore_load(cible, tile, (wx, wy))
+    check("⑥ spore : un foyer au vent transmet de l'inoculum", load > 0.0,
+          f"load={load:.2f}")
+    # Inverser le vent → `aval` devient le foyer au vent, `amont` ne compte plus.
+    load_rev = _spore_load(cible, tile, (1.0, 0.0))
+    check("⑥ spore : inverser le vent inverse la source d'inoculum",
+          load_rev > 0.0 and abs(load_rev - load) < 1e-9, f"rev={load_rev:.2f}")
+    # Un foyer SOUS le seuil n'émet pas.
+    amont.infection_memory = FUNGAL_INOC_SEUIL - 0.05
+    aval.infection_memory = FUNGAL_INOC_SEUIL - 0.05
+    check("⑥ spore : sous le seuil de foyer → aucun inoculum",
+          _spore_load(cible, tile, (-1.0, 0.0)) == 0.0)
+    # Calme (wind_vec nul) → court-circuit immédiat → 0 (golden-safe).
+    amont.infection_memory = 0.8
+    check("⑥ spore : calme (vecteur nul) → aucun transport",
+          _spore_load(cible, tile, (0.0, 0.0)) == 0.0)
+
+
+def test_assechement_protecteur():
+    """⑥ §5.4 — la ventilation est un REMÈDE : sur de nombreux tirages déterministes,
+    un sujet bien VENTÉ subit MOINS d'infections fongiques qu'un sujet confiné, à
+    humidité/densité égales (assèchement protecteur, pédagogie aération)."""
+    from world import Tile
+    from plants import Tomato
+    from fields import init_eco
+    from sim.effects.perturbations import fungal_disease
+
+    def _infections(vent_local):
+        tile = Tile(tile_id="V", soil_type="terre", grid_rows=6, grid_cols=6)
+        eco = init_eco("V", 6, 6, humidite=3.0, microbiome=0.1)  # humide + sol pauvre
+        n = 0
+        for r in range(6):
+            for c in range(6):
+                p = tile.add_plant(Tomato, r, c)   # Solanacée = susc. max
+                p.age_weeks = 20; p.current_stage = 3
+                for week in range(1, 60):
+                    if fungal_disease(p, tile, eco, 7, week, vent_local, (0.0, 0.0)):
+                        n += 1
+                tile.plants.clear()
+        return n
+
+    confine = _infections(0.0)
+    vente   = _infections(1.0)
+    check("⑥ assèchement : un milieu confiné voit des infections", confine > 0,
+          f"confiné={confine}")
+    check("⑥ assèchement : la ventilation réduit la pression fongique",
+          vente < confine, f"venté={vente} < confiné={confine}")
+
+
 def main():
-    print("=== test_vent (① masse d'air + ③ abri spatial + ⑤ pollinisation/dispersion) ===")
+    print("=== test_vent (① masse d'air + ③ abri + ⑤ pollin./dispersion + ⑥ maladies) ===")
     test_determinisme()
     test_bornes()
     test_saisonnalite()
@@ -262,6 +329,8 @@ def main():
     test_anemophilie_noue_sans_butineur()
     test_butineurs_cloues()
     test_anemochorie_sous_le_vent()
+    test_spores_sous_le_vent()
+    test_assechement_protecteur()
     passed = sum(1 for _, ok in _results if ok)
     total = len(_results)
     print(f"\n[test_vent] {passed}/{total} OK")

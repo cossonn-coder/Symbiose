@@ -15,8 +15,11 @@ from __future__ import annotations
 
 from plants import PlantInstance
 from world import Tile
+import math
+
 from fields import (_hash_noise, MORTALITY_RATE, climate_stress,
                     DAMPOFF_BASE, DAMPOFF_HUM_SEUIL, FUNGAL_BASE,
+                    FUNGAL_VENT_DRY, FUNGAL_SPORE_GAIN, FUNGAL_INOC_SEUIL,
                     NECROMASS_PER_CM, FRAC_BOIS_MORT)
 from .mutations import ReduceHealth, Mutation
 from .resolution import apply_mutations
@@ -114,13 +117,53 @@ def damping_off(plant: PlantInstance, tile: Tile, eco,
     return []
 
 
+def _spore_load(plant: PlantInstance, tile: Tile, wind_vec: tuple[float, float]) -> float:
+    """Inoculum fongique reçu d'un FOYER infecté placé AU VENT (sprint VENT ⑥, §5.4).
+
+    Le vent disperse les spores : une plante capte l'inoculum des voisins infectés
+    situés DANS LA DIRECTION D'OÙ VIENT LE VENT (`wind_vec` = vecteur unitaire vers
+    la source, convention `anemophilie._wind_from_vector`). Un voisin est « au vent »
+    de la cible si (voisin − cible)·wind_vec > 0 → ses spores voyagent SOUS LE VENT
+    jusqu'à la cible. On somme `infection_memory` (la charge pathogène VÉCUE = foyer
+    actif) des voisins au-delà de `FUNGAL_INOC_SEUIL`, dans le MÊME voisinage 1-conn
+    déjà calculé par `_local_density` (zéro nouvelle passe spatiale, garde-fou perf).
+
+    À vent nul / aucun foyer au vent → 0.0 → pression fongique inchangée (rétro-compat
+    golden : sans direction de vent passée, `wind_vec`=(0,0) annule tout terme)."""
+    wx, wy = wind_vec
+    if wx == 0.0 and wy == 0.0:
+        return 0.0
+    r, c = plant.position
+    load = 0.0
+    for p in tile.plants:
+        if (not p.is_alive or p is plant
+                or p.infection_memory < FUNGAL_INOC_SEUIL
+                or p.position not in tile.plots_within_radius(r, c, 1)):
+            continue
+        dx, dy = p.x_cm - plant.x_cm, p.y_cm - plant.y_cm
+        if dx * wx + dy * wy > 0.0:        # le foyer p est AU VENT de la cible
+            load += p.infection_memory
+    return load
+
+
 def fungal_disease(plant: PlantInstance, tile: Tile, eco,
-                   seed: int, week: int) -> list[Mutation]:
+                   seed: int, week: int,
+                   vent_local: float = 0.0,
+                   wind_vec: tuple[float, float] = (0.0, 0.0)) -> list[Mutation]:
     """
     Maladies fongiques généralisées (M5) — pression ∝ humidité × densité de la
     MÊME famille (la monoculture propage) × susceptibilité familiale, atténuée
     par le microbiome. Le mildiou Solanacées (rondelle) reste un cas à part :
     ces familles ont juste la susceptibilité la plus élevée.
+
+    Vent (sprint VENT ⑥, §5.4) — double tranchant, philo #2 (flux → contrainte) :
+      • ASSÈCHEMENT protecteur : un feuillage bien venté sèche → pression × (1 −
+        FUNGAL_VENT_DRY·vent_local). La ventilation (espacement, taille, brise-vent
+        ajouré) devient un REMÈDE émergent → pédagogie aération permaculture.
+      • DISPERSION des spores : un foyer infecté AU VENT (`_spore_load`) ajoute de
+        l'inoculum → pression × (1 + FUNGAL_SPORE_GAIN·spore_load). Le mal voyage
+        SOUS LE VENT (direction !).
+    Défauts neutres (vent_local=0, wind_vec=(0,0)) → bit-identique à l'avant-⑥.
     """
     if not plant.is_alive or plant.stage.name == "semis":
         return []
@@ -137,6 +180,11 @@ def fungal_disease(plant: PlantInstance, tile: Tile, eco,
     density = _local_density(plant, tile, same_family=True)
     p = eco.disease_probability(r, c, base_rate=FUNGAL_BASE)
     p *= hum_norm * (0.4 + density) * susc
+    # Vent (⑥) : assèchement protecteur PUIS apport de spores du foyer au vent.
+    p *= max(0.0, 1.0 - FUNGAL_VENT_DRY * min(1.0, vent_local))
+    spore = _spore_load(plant, tile, wind_vec)
+    if spore > 0.0:
+        p *= 1.0 + FUNGAL_SPORE_GAIN * spore
     if _hash_noise(seed, week * 13, r, c) < p:
         return [ReduceHealth(plant, 1, reason="maladie fongique", cause="maladie")]
     return []
@@ -352,7 +400,9 @@ def background_mortality(plant: PlantInstance, eco,
 
 def apply_disturbances(tile, eco, game_state: dict,
                        seed: int, week: int,
-                       year_fraction: float, saison: str = "") -> list[str]:
+                       year_fraction: float, saison: str = "",
+                       vent_dir: float = 0.0,
+                       vent_force: float = 0.0) -> list[str]:
     """
     Applique toutes les perturbations de fond pour un tick.
     Appelée après la croissance et les effets biotiques.
@@ -374,6 +424,13 @@ def apply_disturbances(tile, eco, game_state: dict,
         log.append(f"    🌡 Oscillation climatique : {c_stress:+.3f} "
                    f"(croissance {sign})")
 
+    # Vecteur de vent (⑥, §5.4) : unité vers la SOURCE du vent (convention
+    # anemophilie._wind_from_vector), utilisé par fungal_disease pour repérer le
+    # foyer infecté AU VENT. Vent nul → (0,0) → aucun transport de spores → la
+    # maladie fongique reste strictement à l'avant-⑥ (assèchement = 0 aussi).
+    wind_vec = ((math.cos(vent_dir), math.sin(vent_dir))
+                if vent_force > 0.0 else (0.0, 0.0))
+
     # 2 & 3. Perturbations par plante
     all_mutations = []
     for plant in list(tile.plants):
@@ -381,9 +438,10 @@ def apply_disturbances(tile, eco, game_state: dict,
             continue
         # Herbivorie + ravageurs létaux
         all_mutations += herbivory_pressure(plant, tile, game_state, eco)
-        # Fonte des semis + maladies fongiques
+        # Fonte des semis + maladies fongiques (vent : assèchement ⑥ + spores au vent)
         all_mutations += damping_off(plant, tile, eco, seed, week, saison)
-        all_mutations += fungal_disease(plant, tile, eco, seed, week)
+        vl = eco.vent.at_plot(*plant.position) if eco and eco.vent else 0.0
+        all_mutations += fungal_disease(plant, tile, eco, seed, week, vl, wind_vec)
         # Stress hydrique sévère (voie sécheresse → santé, médiée par génotype)
         all_mutations += drought_stress_damage(plant, eco, seed, week)
         # Carence lumineuse chronique (voie ombre → santé, médiée par tolerance_ombre)

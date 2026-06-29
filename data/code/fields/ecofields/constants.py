@@ -339,6 +339,14 @@ HEAL_SEN_CUTOFF  = 0.50   # au-delà de cette sénescence, la guérison se coupe
 DAMPOFF_BASE      = 0.08   # fonte des semis (damping-off), base avant modulation
 DAMPOFF_HUM_SEUIL = 0.50   # humidité normalisée au-delà de laquelle la fonte démarre
 FUNGAL_BASE       = 0.04   # maladies fongiques adultes, base avant modulation
+# Vent × maladies fongiques (sprint VENT & ÉVAPOTRANSPIRATION ⑥, §5.4). Double
+# tranchant : (1) le vent ASSÈCHE le feuillage → réduit la pression locale (le
+# champignon a besoin d'eau ; la ventilation est un remède, pédagogie aération) ;
+# (2) le vent DISPERSE les spores → une plante SOUS LE VENT d'un foyer infecté
+# reçoit de l'inoculum (transport contaminant). Net = arbitrage local.
+FUNGAL_VENT_DRY   = 0.7    # fraction max de pression fongique retirée par un feuillage bien venté
+FUNGAL_SPORE_GAIN = 0.8    # gain de pression par unité d'inoculum reçu sous le vent
+FUNGAL_INOC_SEUIL = 0.4    # infection_memory d'un voisin au-delà de laquelle il est un FOYER émetteur
 RESEED_RADIUS_CM  = 150.0  # rayon de dispersion du renouvellement (M7)
 NECROMASS_PER_CM  = 0.03   # nécromasse déposée par cm de hauteur à la mort
 

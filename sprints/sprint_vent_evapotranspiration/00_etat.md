@@ -32,7 +32,7 @@ l'évaporation** (rayonnement + vent) pour rééquilibrer la rosée → résout 
 | ③ | [`t3_abri_spatial.md`](t3_abri_spatial.md) | **+0 % (caché)** | **re-figé** `4ce4ae3c…` | ✅ fait |
 | ④ | [`t4_thigmomorphogenese.md`](t4_thigmomorphogenese.md) | négligeable | **re-figé** `d948f648…` | ✅ fait |
 | ⑤ | [`t5_pollinisation_dispersion.md`](t5_pollinisation_dispersion.md) | négligeable | **INTACT** `d948f648…` | ✅ fait |
-| ⑥ | [`t6_maladies_fongiques.md`](t6_maladies_fongiques.md) | négligeable | re-fige | ⏳ |
+| ⑥ | [`t6_maladies_fongiques.md`](t6_maladies_fongiques.md) | négligeable | **INTACT** `d948f648…` | ✅ fait |
 | ⑦ | [`t7_transport_voix.md`](t7_transport_voix.md) | amorti | re-fige | ⏳ |
 
 ## Référence perf + scatter (tronçon ⓪, 2026-06-29 — D32 SOLDÉE)
@@ -174,6 +174,40 @@ l'évaporation** (rayonnement + vent) pour rééquilibrer la rosée → résout 
 - **Perf** : tick **53.5 ms** (vs ④ ~54.75) = dans le bruit. Effets O(fleurs²)/espèce
   anémophile en fleur — quelques unités par tuile, négligeable. Budget +10 % tenu.
 
+## Vent × maladies fongiques (tronçon ⑥, 2026-06-30 — golden INTACT, perf neutre)
+- **Double tranchant greffé sur `fungal_disease`** (`sim/effects/perturbations.py`),
+  philo #2 (flux vent → contrainte → pression fongique émergente), sans bonus/malus
+  direct sur la plante :
+  1. **Assèchement protecteur** : `p *= max(0, 1 − FUNGAL_VENT_DRY·min(1,vent_local))`
+     — un feuillage bien venté (`eco.vent[r,c]` du ③) sèche, le champignon manque
+     d'eau → **la ventilation est un remède** (espacement/taille/brise-vent ajouré),
+     pédagogie aération permaculture.
+  2. **Dispersion des spores** : nouveau helper `_spore_load` somme l'`infection_memory`
+     (foyer ≥ `FUNGAL_INOC_SEUIL`=0.4) des voisins placés **AU VENT** (projection > 0
+     sur `wind_vec`, convention `_wind_from_vector`), dans le **voisinage 1-conn DÉJÀ
+     calculé** (`plots_within_radius` réutilisé — zéro passe spatiale neuve, garde-fou
+     perf). `p *= 1 + FUNGAL_SPORE_GAIN·spore` → l'inoculum voyage **sous le vent**.
+  - Constantes `FUNGAL_VENT_DRY=0.7`, `FUNGAL_SPORE_GAIN=0.8`, `FUNGAL_INOC_SEUIL=0.4`
+    (`constants.py`, ré-exportées `fields/__init__.py`). **Défauts neutres**
+    (`vent_local=0`, `wind_vec=(0,0)`) → bit-identique à l'avant-⑥.
+  - **Câblage** : `apply_disturbances(... vent_dir, vent_force)` calcule `wind_vec`
+    une fois et lit `eco.vent.at_plot` par plante ; `boucle.py` passe `vent_dir`/
+    `vent_force` (①) au site d'appel.
+- **Golden INTACT** `d948f648a94be4d5a8227cb28b530ae6be104cf4558bd721431b83f8c5a0440f`
+  (re-figeage **prévu mais non survenu**, comme au ⑤). Mécanisme bien EXERCÉ dans le
+  smoke (`vent_local` atteint 1.24, `infection_memory` 0.44 > seuil, 6 plant-événements
+  avec inoculum sous le vent) mais **aucun flip discret** du tirage `_hash_noise < p`
+  → digest bit-identique. Neutre-mais-actif, sûr.
+- **Tests** : `test_vent` **42/42** (+6 ⑥ : foyer au vent transmet l'inoculum,
+  inversion du vent inverse la source, sous-seuil/calme → 0 ; **assèchement** : 38
+  infections confiné → 13 venté = −66 %, ≈ `FUNGAL_VENT_DRY`). Suites :
+  `test_sim_server` 207/207, `test_senescence` PASS (pommier 59.8 ans, **D39 vert**),
+  `test_croissance` 67/67, `test_rosee` 10/10, `test_eau` 20/20,
+  `test_stress_chronique` PASS.
+- **Perf** : tick **51.55 ms** (vs ⑤ ~53.5) = dans le bruit. `_spore_load` ne scanne
+  que le voisinage 1-conn existant et ne s'active qu'autour d'un foyer infecté →
+  négligeable. Budget +10 % tenu.
+
 ## Boucle de travail (rappel CLAUDE.md)
 Lancer `tN` → coder → **mesurer ms/tick avant/après** (budget §7B) → golden (intact
 ou re-figeage annoncé) → MAJ ce fichier → commit → `/clear` → lancer `tN+1`.
@@ -185,15 +219,16 @@ ou re-figeage annoncé) → MAJ ce fichier → commit → `/clear` → lancer `t
 
 ## REPRISE (démarrage à froid)
 « lis `sprints/sprint_vent_evapotranspiration/00_etat.md` puis
-`t6_maladies_fongiques.md` » → exécuter le tronçon ⑥ (vent × maladies fongiques :
-assèchement protecteur vs dispersion des spores sous le vent ; lit `eco.vent[r,c]`
-posé au ③ + direction du vent).
+`t7_transport_voix.md` » → exécuter le tronçon ⑦ (transport de litière & neige sous
+le vent §5.6 + voix narratives du vent ; lit `eco.vent[r,c]` posé au ③ + direction).
 Tronçons ⓪ (réf perf + scatter D32, golden `11eceeb9…`), ① (masse d'air
 `sim/wind.py`, golden neutre `11eceeb9…`), ② (évapotranspiration enrichie +
 nébulosité dynamique, golden re-figé LARGE `4a3cfe03…`, D39 vert), ③ (abri spatial
 `fields/abri.py` + wind chill, golden re-figé `4ce4ae3c…`, **perf +0 % grâce au
 cache**, PAS d'off-ramp), ④ (thigmomorphogénèse : paire `port_trapu↔wind_memory`,
 dégât mécanique médié `_wind_damage`, transpiration foliaire, golden re-figé
-`d948f648…`, perf neutre) et ⑤ (pollinisation & dispersion anémophiles :
+`d948f648…`, perf neutre), ⑤ (pollinisation & dispersion anémophiles :
 `sim/engine/anemophilie.py`, butineurs cloués, trait `seed_dispersal`/anémochorie,
-golden **INTACT** `d948f648…`, perf neutre) = ✅ faits.
+golden **INTACT** `d948f648…`, perf neutre) et ⑥ (vent × maladies fongiques :
+`fungal_disease` enrichie — assèchement protecteur + dispersion des spores sous le
+vent `_spore_load`, golden **INTACT** `d948f648…`, perf neutre) = ✅ faits.

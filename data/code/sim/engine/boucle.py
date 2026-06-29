@@ -354,8 +354,12 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
             seed = self.game_state.get("seed", 42)
             year_fraction = (week - 1) / 52.0
             eco.tick_disturbance(seed, week)
+            # vent_dir/vent_force (①) : la maladie fongique (⑥, §5.4) module sa
+            # pression par le vent LOCAL (assèchement protecteur, eco.vent ③) et
+            # disperse l'inoculum SOUS LE VENT depuis les foyers infectés au vent.
             dlog = apply_disturbances(tile, eco, self.game_state,
-                                      seed, week, year_fraction, saison)
+                                      seed, week, year_fraction, saison,
+                                      vent_dir, vent_force)
             if dlog: log += dlog
 
             # 13b. Vie macroscopique (D31.1) — champs de population (ravageur,
