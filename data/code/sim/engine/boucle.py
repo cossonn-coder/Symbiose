@@ -179,6 +179,17 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
             #     ④ : la nébulosité de l'événement du tick bride le gain solaire.
             eco.tick_thermique(saison, nebul)
 
+            # 2c. Rosée & gelée blanche nocturnes (sprint météo→champs ②, §3) —
+            #     ENTRE la thermique (2b) et l'hydrologie (3). Relit le thermomètre
+            #     nocturne `t_min_nuit_at` + l'humidité du sol pour déposer la rosée
+            #     (>0 °C → `humidite +`) ou accumuler/fondre le givre (≤0 °C → carte
+            #     `eco.givre`, fonte différée au réchauffement). Le dépôt est ensuite
+            #     drainé/diffusé normalement par l'hydrologie. Émet 💧/❄ (signe
+            #     diégétique, philo #5). No-op si aucune condensation → golden-safe ;
+            #     les nuits claires/froides du smoke (hiver) en produisent → re-figeage
+            #     MAÎTRISÉ (humidité matinale en hausse).
+            log += eco.tick_rosee(temp_now, nebul)
+
             # 3. Hydrologie : évaporation → pluie de fond → rétention → drainage
             #    (le drainage dépend du type de sol de la tuile, §2.3 a). L'apport
             #    météo `pluie_event` (①, §2.2) y est infiltré ∝ structure du sol.

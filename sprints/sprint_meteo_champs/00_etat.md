@@ -37,7 +37,7 @@ agisse sur **tous** les champs qu'il influence réellement.
 | # | Sujet | Kickoff | État |
 |---|-------|---------|------|
 | ① | Humidité médiée (retrait deltas plats + `PLUIE_APPORT`) | `01_humidite_mediee.md` | ✅ FAIT (golden+pop re-figés) |
-| ② | Rosée & gelée blanche (`tick_rosee`, point de rosée, continuum) | `02_rosee_gelee_blanche.md` | ⬜ À FAIRE |
+| ② | Rosée & gelée blanche (`tick_rosee`, point de rosée, continuum) | `02_rosee_gelee_blanche.md` | ✅ FAIT (golden+pop re-figés) |
 | ③ | Lessivage NPK par la pluie | `03_lessivage_npk.md` | ⬜ À FAIRE |
 | ④ | Microbiome climatique | `04_microbiome_climatique.md` | ⬜ À FAIRE |
 | ⑤ | Interconnexions vivantes + voix + pont snapshot | `05_interconnexions_voix.md` | ⬜ À FAIRE |
@@ -103,5 +103,49 @@ plats atteignait `hum=2.617 > HUM_NOYE(2.6)` pile à w52 → stagnation « noyé
 montaison retardée à w53. Question de design à trancher (w52 = fin an 1 ou début
 an 2 ?) → corriger soit la borne du gate, soit la fenêtre du test. Laissé ROUGE
 volontairement (retour sur livrable = arbitrage Nico, pas de patch silencieux).
+
+**Build C#** : non concerné (aucun fichier C# touché).
+
+### ② Rosée & gelée blanche — FAIT (2026-06-29)
+**Ce qui a été fait** : helper PUR `fields/ecofields/rosee.py` (`tick_rosee`, miroir de
+`thermique.py`) — relit le thermomètre nocturne `t_min_nuit_at`, dérive un point de rosée
+local de l'humidité du SOL (`t_rosee = T_air − ECART_ROSEE_SEC + GAIN_HUM_ROSEE·hum_norm`),
+dépose la condensation `cond = max(0, t_rosee − t_min)·ROSEE_PAR_DEGRE` selon le continuum :
+**rosée liquide** (`t_min > 0` → `humidite +`) ou **gelée blanche** (`t_min ≤ 0` → carte
+`eco.givre` + **fonte différée** quand T repasse > 0). Émet `💧 rosée` / `❄ gelée blanche`
+au-dessus de `ROSEE_LOG_SEUIL` (signe diégétique, capté par le ledger en ⑤).
+
+**Choix de design (consigné)** : socle **B seul (dépôt + fonte)**. Le **dégât foliaire**
+(§3.5, option « riche ») est **DIFFÉRÉ en dette** : `_mediated_damage` cible aujourd'hui le
+SEUL stade « semis » (mortalite.py:301) ; viser le feuillage établi exigerait d'élargir son
+sélecteur de stade = changement transverse hors socle ②. Le kickoff autorise explicitement
+B seul. Constante `GIVRE_SEVERITY_REF` RÉSERVÉE en tête de `constants.py` (note en fin de
+`rosee.py`). À rebrancher plus tard si un sprint élargit `_mediated_damage`.
+
+**Fichiers touchés** : `fields/ecofields/rosee.py` (NOUVEAU, helper pur),
+`fields/ecofields/constants.py` (5 constantes : `ECART_ROSEE_SEC`, `GAIN_HUM_ROSEE`,
+`ROSEE_PAR_DEGRE`, `ROSEE_LOG_SEUIL`, `GIVRE_SEVERITY_REF`),
+`fields/ecofields/container.py` (champ `givre: GridField` + init + fine méthode déléguée
+`tick_rosee`, HORS `summary()`), `sim/engine/boucle.py` (étape 2c : `log += eco.tick_rosee(
+temp_now, nebul)` ENTRE thermique 2b et hydrologie 3), `tests/test_rosee.py` (NOUVEAU, 10/10).
+
+**Golden RE-FIGÉ (annoncé)** :
+- `tests/golden_hash.txt` : `b2a89932…` → **`bf3c5c95097c81b772bebc8a9ed37cb835c96f8c364ed9c90a617fdd1a9f0abb`**
+- `tests/population_hash.txt` : `cd153460…` → **`239766b6288c2184b0273167b896515214023f9359b41955ac764fc2eb4dbaa2`**
+
+**Dérive — LOCALISÉE et EXPLIQUÉE (humidité nocturne, sens attendu)** : 114 marqueurs
+`💧 rosée` + 12 `❄ gelée blanche` sur les 104 semaines du smoke (nuits claires/froides
+d'hiver). Comparaison rosée OFF→ON (état final) : **T1 (sud)** humidité **0.026 → 0.105**
+(+0.079 : le sol nu/sud, grand capteur du matin sous ciel clair, gagne nettement la rosée,
+§3.6) ; **T0 (nord, ombragée maison)** 0.054 → 0.045 (−0.009, marginal : rétroaction non
+linéaire humidité→T_sol→évaporation à humidité quasi nulle). Dérive secondaire cohérente :
+microbiome/NPK/champs population décalés (ils LISENT l'humidité). **50/50 plantes vivantes**
+(aucune mort spurieuse). AUCUN re-figeage aveugle.
+
+**Tests** : `test_rosee` 10/10, `test_golden` PASS (re-figé), `test_population` PASS
+(behavioral + re-figé), `test_biennial` PASS, `test_signes` 8/8 PASS, suites hydro vertes
+(test_eau, test_conteneur, test_substrat — rétrocompat : `tick_rosee` no-op si nuit douce/
+couverte). `test_biennial` repasse au VERT (l'off-by-one du finding ① n'apparaît plus avec
+l'humidité de ② — non investigué plus loin, hors périmètre).
 
 **Build C#** : non concerné (aucun fichier C# touché).

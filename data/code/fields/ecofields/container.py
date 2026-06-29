@@ -29,6 +29,7 @@ from .ph import tick_ph as _tick_ph                         # dérive pure du pH
 from .nutriments import split_miner, cec_norm_at, leach_factor, dispo, immobilise_n   # chimie N/P/K pure (physico-chimie ③/④/⑦)
 from .structure import tick_structure as _tick_structure   # dérive pure de la structure du sol (physico-chimie ⑧)
 from .mycelium import tick_mycelium as _tick_mycelium       # dynamique pure du réseau fongique (mycélium ①)
+from .rosee import tick_rosee as _tick_rosee                 # rosée & gelée blanche nocturnes (météo→champs ②)
 
 
 @dataclass
@@ -66,6 +67,14 @@ class EcoFields:
     # tant que le smoke ne neige pas, mais le catalogue météo décale les tirages → ⑦
     # re-fige LARGE par ailleurs).
     snow:             float = 0.0
+    # Givre déposé par la gelée blanche (sprint météo→champs ②, §3.4) — carte PAR
+    # PLOT ∈ [0,1] (≠ scalaire `snow` : le givre suit le thermomètre nocturne LOCAL,
+    # un coin nu/clair givre quand un coin paillé reste au-dessus de 0). Accumule la
+    # condensation gelée des nuits ≤ 0 °C (`rosee.tick_rosee`) et la RESTITUE à
+    # `humidite` quand T repasse > 0 (FONTE DIFFÉRÉE, couplage hydrique sûr). À 0 au
+    # repos (golden NEUTRE tant qu'aucune nuit givrante ; le smoke en a en hiver → ②
+    # re-fige MAÎTRISÉ). Hors `summary()` (état transient, ne change pas le digest).
+    givre:            GridField = field(default=None)
     # Vie macroscopique observable (D31.1) — champs de population déterministes,
     # NOMMÉS par espèce (scission ④b/c/d) regroupés en catégories : ravageur
     # (puceron/limace/doryphore), auxiliaire (coccinelle/chrysope/carabe/merle/
@@ -208,6 +217,10 @@ class EcoFields:
         # borné [0,1]. Le repos NEUTRE garantit l'invariant golden (§1.3).
         if self.mycelium is None:
             self.mycelium = GridField(self.rows, self.cols, max_val=1.0)
+        # Givre (②) — NUL partout au départ, borné [0,1]. Repos NEUTRE → golden
+        # inchangé tant qu'aucune nuit givrante (smoke : hiver en pose, ② re-fige).
+        if self.givre is None:
+            self.givre = GridField(self.rows, self.cols, max_val=1.0)
 
     def get_field(self, name: str) -> GridField | None:
         return {
@@ -337,6 +350,16 @@ class EcoFields:
         tick est `Neige`, fond sinon (∝ température). À appeler AVANT le gel
         nocturne (qui lit `snow` via `t_min_nuit_at`)."""
         self.snow = _snow_next(self.snow, temp_now, is_neige)
+
+    def tick_rosee(self, t_air: float, nebulosite: float) -> list:
+        """Dépose la rosée / accumule-fond le givre nocturne (②). Délègue au helper
+        PUR `rosee.tick_rosee` (container déjà dense) : il lit le thermomètre nocturne
+        `t_min_nuit_at` + l'humidité du sol, écrit `humidite` (rosée + fonte différée)
+        et `eco.givre` (dépôt gelé). À appeler ENTRE la thermique (2b) et l'hydrologie
+        (3) : la rosée lit l'humidité de fin du tick précédent, son dépôt est ensuite
+        drainé/diffusé. Renvoie les marqueurs de log diégétiques (💧/❄). No-op (liste
+        vide, golden-safe) si aucune condensation nulle part."""
+        return _tick_rosee(self, t_air, nebulosite)
 
     # --- Hydrologie ---
 

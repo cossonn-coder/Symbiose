@@ -118,6 +118,34 @@ SNOW_ACCUM     = 0.5     # accumulation par semaine de Neige (manteau plein en ~
 SNOW_MELT_BASE = 0.05    # fonte de fond hebdomadaire, même au froid (sublimation/tassement)
 SNOW_MELT_WARM = 0.03    # fonte supplémentaire par °C au-dessus de 0 (dégel)
 
+# --- Rosée & gelée blanche (sprint météo→champs ②, §3) ---------------------
+# Face DOUCE du gel nocturne : on relit le MÊME thermomètre `t_min_nuit_at` (helper
+# `rosee.tick_rosee`). Un point de rosée local est dérivé de l'humidité du SOL (pas
+# de champ « humidité de l'air » dédié) ; la condensation déposée est de l'eau liquide
+# (>0 °C → `humidite +`) ou du givre (≤0 °C → carte `eco.givre`, fonte DIFFÉRÉE quand
+# T repasse > 0). Le sol nu + un peu humide + nuit claire est le grand capteur du
+# matin → la rosée FREINE la spirale de dessèchement sans ressusciter un désert (§3.6).
+#   t_rosée = T_air − ECART_ROSEE_SEC + GAIN_HUM_ROSEE · min(1, humidite/3)
+#   cond    = max(0, t_rosée − t_min_nuit) · ROSEE_PAR_DEGRE
+# - ECART_ROSEE_SEC : écart air↔point-de-rosée d'un sol totalement SEC (grand → peu de
+#   rosée sur sol sec, point de rosée bas, §3.6).
+# - GAIN_HUM_ROSEE : remontée du point de rosée avec l'humidité du sol ; à hum_norm=1
+#   le point de rosée n'est plus qu'à (ECART_ROSEE_SEC − GAIN_HUM_ROSEE) sous T_air →
+#   rosée FACILE sur sol frais.
+# - ROSEE_PAR_DEGRE : eau condensée par °C SOUS le point de rosée (PETIT : un levier de
+#   survie, pas une fontaine — calibrer pour que ce soit sensible sans noyer l'eau).
+# - ROSEE_LOG_SEUIL : condensation/fonte totale par tuile au-dessus de laquelle on émet
+#   le marqueur de log diégétique (filtre le bruit ; signe perçu le matin, philo #5).
+# - GIVRE_SEVERITY_REF : RÉSERVÉE pour l'OPTION dégât foliaire (§3.5), DIFFÉRÉE au ②
+#   (cf. note en fin de `rosee.py` — le socle ② = dépôt + fonte, sûr). Sévérité FAIBLE
+#   (réf élevée → dégât plancher) si on la branche un jour.
+# PLACEHOLDERS, calibrage F5 / bancs d'essai.
+ECART_ROSEE_SEC   = 6.0     # °C — écart air↔point de rosée sur sol totalement sec
+GAIN_HUM_ROSEE    = 5.0     # °C — remontée du point de rosée à humidité de sol pleine
+ROSEE_PAR_DEGRE   = 0.010   # humidité déposée par °C sous le point de rosée
+ROSEE_LOG_SEUIL   = 0.02    # condensation/fonte cumulée/tuile pour émettre un marqueur
+GIVRE_SEVERITY_REF = 8.0    # réf de sévérité du dégât foliaire de givre (option §3.5, différée)
+
 # Cycle biogéochimique — OM v4 tri-compartiment (cascade fresh → active → stable)
 # Taux de décomposition hebdomadaire par compartiment (avant modulation microbiome).
 OM_FRESH_DECAY   = 0.080   # débris récents / sucres : rapide (semaines)
