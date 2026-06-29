@@ -42,7 +42,7 @@ partagé** (`sim/journal.py`), lui-même alimenté **hors tick** par le driver �
 | ③ | Carnet (`carnet_lire`, `CONCEPT_DE`, gabarits 2 registres) + D43 | `03_carnet.md` | ✅ FAIT |
 | ④ | Encyclopédie (`encyclopedie_index`/`_lire`, fiche tronquée) | `04_encyclopedie.md` | ✅ FAIT |
 | ⑤ | Pages secrètes (`pages_trouvees`/`reveler_page`, 3 robinets) | `05_pages.md` | ✅ FAIT |
-| ⑥ | Magazine (`magazine_offres`/`acheter_au_magazine`) | `06_magazine.md` | ⬜ à faire |
+| ⑥ | Magazine (`magazine_offres`/`acheter_au_magazine`) | `06_magazine.md` | ✅ FAIT |
 
 Dépendances : ① avant tout ; ② dépend de ① ; ③④⑤⑥ dépendent de ② mais sont
 indépendants entre eux (déroulés en série pour un golden vérifié à chaque cran).
@@ -202,7 +202,49 @@ activer la progression de maîtrise en F5.
   + `test_population` bit-identiques (`db5e7c66…` / `9ba39ab7…`), `test_maitrise_detection`
   20/20. **C# non concerné** (aucun `.cs`, protocole pont inchangé — exposition Godot = D24).
 
-**PROCHAIN = ⑥** (`06_magazine.md`) : magazine de botanique (`magazine_offres`/
-`acheter_au_magazine`, sœurs au palier 3 famille décision C, numéro saisonnier,
-`vigueur.spend(COUT_MAGAZINE)` → `PlayerSeedBank.add`). Event-driven hors tick.
-Golden INTACT.
+**⑥ FAIT** (magazine de botanique, event-driven hors tick, golden INTACT) :
+- Créé `data/code/sim/magazine.py` (niveau `sim`, ~131 ldc docstrings inclus, code
+  pur < seuil) : knobs en tête `COUT_MAGAZINE=120.0` (D12.4, élevé/ponctuel),
+  `SEUIL_MAGAZINE=3` (décision C), `NIVEAU_FICHE_PRODUIT=min(2,NIVEAU_MAX)`.
+  - `magazine_offres(gs, player, saison=None) -> list[espèce]` : LECTURE pure. Une
+    famille s'ouvre dès qu'un de ses membres du catalogue MAÎTRE
+    (`PLANT_CATALOGUE`+`PERENNIAL_CATALOGUE`, = pool de `maitrise.famille_de`) est au
+    palier ≥ 3 ; offre = sœurs de ces familles **absentes de la banque joueur**. Tri
+    stable = ordre du catalogue. Sans palier 3 → `[]`. Ne crée AUCUNE clé (no-op golden).
+  - `acheter_au_magazine(gs, player, espèce, saison=None) -> bool` : ÉCRITURE bornée
+    à l'état JOUEUR. Séquence ordonnée pour ne JAMAIS débiter sans livrer : gate strict
+    (re-vérifie `magazine_offres`) → banque présente → `vigueur.spend(COUT_MAGAZINE)`
+    payé en entier (ratio 1.0) → `PlayerSeedBank.add(Seed(species=espèce))`. Hors offre
+    / pas de banque → `False` sans toucher la Vigueur.
+  - `magazine_fiche(espèce)` : fiche PRODUIT « lire avant d'acheter » (doc §2.1),
+    RÉUTILISE le corpus de ④ (`FICHES`) tronqué niveau ≤ 2 — pas de second corpus.
+- **Banque de graines / Vigueur joueur — stockage VÉRIFIÉ** : la `PlayerSeedBank` vit
+  sous `gs["player_seed_bank"]` (cf. `main.py:185`, `tools/simserver`) — UNE banque par
+  game_state (elle suit l'avatar). La Vigueur vit sous `gs["vigueur"][player]`
+  (`courante`/`max_base`). `acheter` n'écrit QUE via `vigueur.spend` + `bank.add` (APIs
+  existantes) ; **zéro champ écolo touché, zéro RNG, hors tick**.
+- **Décisions/écarts assumés** (signalés) : (a) **filtre saison = TODO(catalogue)** : le
+  doc §2.4 prévoit un numéro saisonnier filtré par fenêtre de semis, MAIS aucune classe
+  de `plants/` ne porte de fenêtre de semis (vérifié) → paramètre `saison` accepté pour
+  figer la signature du doc mais INACTIF (kickoff « ne pas inventer / ne pas fabriquer un
+  calendrier »). (b) Cas limite : un membre maîtrisé mais ABSENT de la banque reste
+  offrable (on l'a appris au terrain sans en ranger la graine) — la banque est le seul
+  filtre « déjà acquis ». (c) `magazine_fiche` ignore le palier du joueur (la sœur est au
+  palier 0 → `encyclopedie_lire` renverrait `None`) : c'est l'argument de vente de
+  l'éditeur, pas la fiche du joueur. (d) Lot acheté = graine NEUTRE (produit catalogue,
+  pas un cultivar sélectionné).
+- Tests : `tests/test_magazine.py` NOUVEAU (23/23 — sans palier 3→[], sœurs offertes +
+  retrait des espèces en banque, achat valide→Vigueur débitée+lot, hors offre/fonds
+  insuffisants/pas de banque→False sans effet indu, fiche produit ≤ 2, filtre saison
+  stable = TODO, couverture corpus). **Golden `db5e7c66…` + population `9ba39ab7…`
+  bit-identiques** (inchangés), `test_maitrise_detection` 20/20. **C# non concerné**
+  (aucun `.cs`, protocole pont inchangé — exposition Godot = D24).
+
+## SPRINT TERMINÉ ✅ (carte ①→⑥ toute verte)
+Les 4 voix narratives sont implémentées en Python pur par-dessus le ledger partagé,
+toutes event-driven hors tick, golden écolo JAMAIS re-figé (`db5e7c66…` /
+`9ba39ab7…` d'un bout à l'autre). **Reste en dette D24** : UI Godot des 4 voix
+(coffret grenier, kiosque magazine, pages du carnet) + protocole pont/commandes
+serveur pour exposer ces lectures/achats à Godot + sérialisation save (`pages` set↔list,
+journal). **Décisions Nico en attente** : câblage `detecter()` (progression de maîtrise
+en jeu réel, cf. note ②) et câblage des robinets pages (récompense/fouille/hasard).
