@@ -40,7 +40,7 @@ partagé** (`sim/journal.py`), lui-même alimenté **hors tick** par le driver �
 | ① | Extraire `sim/evenements.py` (refactor pur) + élargir le parseur | `01_evenements.md` | ✅ FAIT |
 | ② | Ledger `sim/journal.py` + `consigner` + câblage driver | `02_journal.md` | ✅ FAIT |
 | ③ | Carnet (`carnet_lire`, `CONCEPT_DE`, gabarits 2 registres) + D43 | `03_carnet.md` | ✅ FAIT |
-| ④ | Encyclopédie (`encyclopedie_index`/`_lire`, fiche tronquée) | `04_encyclopedie.md` | ⬜ à faire |
+| ④ | Encyclopédie (`encyclopedie_index`/`_lire`, fiche tronquée) | `04_encyclopedie.md` | ✅ FAIT |
 | ⑤ | Pages secrètes (`pages_trouvees`/`reveler_page`, 3 robinets) | `05_pages.md` | ⬜ à faire |
 | ⑥ | Magazine (`magazine_offres`/`acheter_au_magazine`) | `06_magazine.md` | ⬜ à faire |
 
@@ -149,6 +149,27 @@ activer la progression de maîtrise en F5.
   zone/saison). `test_golden` + `test_population` bit-identiques (`db5e7c66…` /
   `9ba39ab7…`), `test_maitrise_detection` 20/20. C# non concerné.
 
-**PROCHAIN = ④** (`04_encyclopedie.md`) : encyclopédie (`encyclopedie_index`/
-`encyclopedie_lire`, fiche tronquée à `min(palier,3)`, corpus §6 28 fiches × 3
-niveaux). Lecteur read-only du palier d'ESPÈCE (`maitrise.palier`). Golden INTACT.
+**④ FAIT** (encyclopédie, lecteur read-only, golden INTACT) :
+- Découpage DONNÉE / LOGIQUE (un fichier = une responsabilité) :
+  - Créé `data/code/sim/encyclopedie_corpus.py` (DONNÉE pure, 200 ldc, aucun import
+    moteur) : `FICHES[espèce] = {1: N1, 2: N2, 3: N3}` — **28 fiches × 3 niveaux**
+    recopiées VERBATIM du doc §6 (N1 silhouette / N2 biologie / N3 écosystémique).
+    Dépassement éventuel du seuil toléré car corpus éditorial (CLAUDE.md « garde-fou,
+    pas dogme ») — ici 200 < 350 de toute façon.
+  - Créé `data/code/sim/encyclopedie.py` (LOGIQUE, 18 ldc pur) : `encyclopedie_index(
+    gs, player) -> list[espèce]` (palier ≥ 1, tri stable = ordre du corpus) +
+    `encyclopedie_lire(gs, player, espèce) -> {espece, niveau_max, niveaux}` tronquée
+    à `min(palier, NIVEAU_MAX=3)` (décision A figée : paliers 4/5 NE débloquent PAS de
+    N4). Palier 0 → `None` ; sans joueur/maîtrise → `[]`/`None`. PUR (lit
+    `maitrise.palier` D12, n'écrit RIEN, aucun RNG, aucune clé créée → no-op golden).
+- **Alignement des clés VÉRIFIÉ** : les 28 clés du corpus = EXACTEMENT les 28 espèces
+  catalogue (`PLANT_CATALOGUE` 23 + `PERENNIAL_CATALOGUE` 5), bijection testée.
+- Tests : `tests/test_encyclopedie.py` NOUVEAU (18/18 — sans joueur→[]/None, troncature
+  1/2/3 + plafond 4/5→3, palier 0 absent/None, bijection clés↔catalogue, 3 niveaux non
+  vides par fiche). `test_golden` + `test_population` bit-identiques (`db5e7c66…` /
+  `9ba39ab7…`), `test_maitrise_detection` 20/20, `test_carnet` 19/19 (régression voisine).
+  **C# non concerné** (aucun `.cs`, protocole pont inchangé — exposition Godot = D24).
+
+**PROCHAIN = ⑤** (`05_pages.md`) : pages secrètes (`pages_trouvees`/`reveler_page`,
+`gs["pages"][player] = set`, 3 robinets §2.3, corpus §7 20 pages, ordre par
+`palier_thème`, épuisable, ZÉRO effet mécanique). Event-driven hors tick. Golden INTACT.
