@@ -37,7 +37,7 @@ partagé** (`sim/journal.py`), lui-même alimenté **hors tick** par le driver �
 ## Carte des sous-sprints (6, ordre = dépendances)
 | # | Sujet | Kickoff | État |
 |---|-------|---------|------|
-| ① | Extraire `sim/evenements.py` (refactor pur) + élargir le parseur | `01_evenements.md` | ⬜ à faire |
+| ① | Extraire `sim/evenements.py` (refactor pur) + élargir le parseur | `01_evenements.md` | ✅ FAIT |
 | ② | Ledger `sim/journal.py` + `consigner` + câblage driver | `02_journal.md` | ⬜ à faire |
 | ③ | Carnet (`carnet_lire`, `CONCEPT_DE`, gabarits 2 registres) + D43 | `03_carnet.md` | ⬜ à faire |
 | ④ | Encyclopédie (`encyclopedie_index`/`_lire`, fiche tronquée) | `04_encyclopedie.md` | ⬜ à faire |
@@ -65,6 +65,37 @@ UI Godot des 4 voix (coffret grenier, kiosque magazine, pages du carnet) = **det
 D24** ; protocole pont/commandes serveur pour exposer ces lectures à Godot = D24 aussi ;
 D15 (extension terrain) ; calibrage numérique D12.4 ; marqueurs rares bouture/oiseau/
 vent (robinet *hasard* s'ancre provisoirement sur `_hash_noise` au passage de saison).
+
+## Avancement / REPRISE
+
+**① FAIT** (refactor pur, golden INTACT) :
+- Créé `data/code/sim/evenements.py` (module PUR, niveau `sim`, 119 ldc) : type
+  partagé `Evenement(kind, tile_id, pos, espece, cause)` + **deux API** :
+  - `_evenements(log)` — déplacé TEL QUEL depuis `maitrise_detection` (kinds
+    `avance/stagne/repro`), ré-importé par `maitrise_detection` → comportement
+    inchangé (choix : NE PAS renommer les kinds historiques, sinon `detecter()` +
+    `test_maitrise_detection[8]` cassent ; refactor strictement pur).
+  - `evenements(log) -> list[Evenement]` — NOUVEAU, élargi pour le carnet ② :
+    kinds `germination/stagnation/reproduction/mort/nouaison/abscission/ravageur`.
+- `maitrise_detection.py` : regex/`_CLE_DE_NOM`/`_raison_stagnation`/`_evenements`
+  RETIRÉS (déplacés), réimport `from sim.evenements import _evenements`.
+  `_CLE_DE_CLASSE` reste (naturalisation férale).
+- Élargissements parseur : **`🌊 noyé`** (stagnation, absente de l'ancien parseur),
+  morts `🪦` (sénescence/asphyxie) + `✗` (conflit), `🍎 Nouaison`, `🍂 Abscission`,
+  `🐛` ravageur (aléa sans pos/espèce). **Disambiguation** 🍂 (Abscission ≠
+  Nécromasse/Chute fruit), 🍎 (Nouaison ≠ header Récolte), ❄ (stagne froid ≠
+  header gel).
+- **TODO nommés** (pas de marqueur source dans le log → non parsés, conforme
+  kickoff) : `floraison` (header `🌸` seul, pas de ligne per-plante), `acclimatation`
+  (signe de rendu `sim/semiologie.py`, jamais émis au log), mort `gel`/annual/
+  monocarpie (cause non distinguable proprement). À brancher si le moteur émet
+  un jour ces marqueurs.
+- Tests : `tests/test_evenements.py` NOUVEAU (18/18 — parité historique +
+  kinds élargis + disambiguation). `test_maitrise_detection` 20/20 vert.
+  **Golden `db5e7c66…` + population `9ba39ab7…` bit-identiques** (inchangés).
+
+**PROCHAIN = ②** (`02_journal.md`) : ledger `sim/journal.py` + `consigner` +
+câblage driver. Consomme `evenements()` (l'API élargie).
 
 ## Dépendance connue à signaler
 La **détection de maîtrise** (`maitrise_detection.detecter`) n'est **pas encore câblée**

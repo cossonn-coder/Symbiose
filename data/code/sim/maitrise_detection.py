@@ -36,10 +36,13 @@ Architecture (décisions i4, documentées dans `00_etat.md`) :
 """
 from __future__ import annotations
 
-import re
-
 from plants.catalogue import PLANT_CATALOGUE, PERENNIAL_CATALOGUE
 from sim import maitrise as M
+# Le parsing du log a été EXTRAIT dans `sim/evenements.py` (sprint Voix
+# narratives, tronçon ① — refactor pur). `_evenements` y est déplacé TEL QUEL et
+# ré-importé ici : la détection le consomme à l'identique (golden joueur
+# inchangé). Le module commun expose AUSSI `evenements()` (élargi) pour le carnet.
+from sim.evenements import _evenements
 
 # --- Placeholders nommés — *calibrage D12.4 post-test* ----------------------
 # Largeur de la fenêtre d'imputation (§9.6) : un geste joueur en semaine t peut
@@ -61,65 +64,11 @@ CONCEPT_PAR_STAGNATION = {"sec": "eau", "ombre": "lumière", "froid": "météo"}
 #   3→4 optimiser en pleine santé · 4→5 conjonction (§9.4).
 NATURE_REQUISE = {1: "stagnation", 2: "reproduction", 3: "optimisation", 4: "conjonction"}
 
-# --- Reverse mappings, DÉRIVÉS des catalogues moteur (jamais dupliqués) -------
+# --- Reverse mapping objet → clé, DÉRIVÉ des catalogues (jamais dupliqué) -----
+# (`_CLE_DE_NOM` log → clé vit désormais dans `sim/evenements.py` avec le parsing ;
+# ici on n'a plus besoin que du sens objet → clé, pour la naturalisation férale.)
 _CATALOGUE = {**PLANT_CATALOGUE, **PERENNIAL_CATALOGUE}
-_CLE_DE_NOM = {cls.name: cle for cle, cls in _CATALOGUE.items()}     # log → clé
 _CLE_DE_CLASSE = {cls: cle for cle, cls in _CATALOGUE.items()}       # objet → clé
-
-# --- Parsing du log (les marqueurs que le tick émet déjà, §9.1) --------------
-_POS = re.compile(r"@\((\d+),\s*(\d+)\)")           # @(r, c) — advance/stagnation/repro
-_RE_TILE = re.compile(r"^\[([^\]]+)\]$")            # ligne d'en-tête de tuile : [T0]
-_RE_AVANCE = re.compile(r"🌱\s+(.+?)@")             # 🌱 <nom>@(r, c) → [...]
-_RE_STAGNE = re.compile(r"(?:⏸|🌑|❄)\s+(.+?)@")     # ⏸/🌑/❄ <nom>@(r, c) stagne (...)
-_RE_REPRO = re.compile(r"Reproduction\s*:\s*(.+?)\s+@")   # 🌰 Reproduction : <nom> @(r, c) [...]
-_RE_TAG = re.compile(r"\b(auto|biparental|introgr\.)\b")  # tag de reproduction
-
-
-def _raison_stagnation(line: str) -> str | None:
-    """Cause d'une stagnation (`sec`/`ombre`/`froid`) lue dans la ligne de log, ou
-    None si la ligne n'est pas une stagnation reconnue."""
-    if "stagne (sec" in line:
-        return "sec"
-    if "stagne (ombre" in line:
-        return "ombre"
-    if "stagne (froid" in line:
-        return "froid"
-    return None
-
-
-def _evenements(log: list[str]):
-    """Génère les transitions §9.1 lues dans le `log` d'UN tick, en suivant la
-    tuile courante (lignes d'en-tête `[T0]`). Chaque événement est un tuple
-    `(kind, tile_id, (r, c), payload)` — `kind ∈ {avance, stagne, repro}`.
-    Lecture PURE (aucun effet de bord) : la détection consomme ce flux."""
-    tile_id = None
-    for line in log:
-        stripped = line.strip()
-        m_tile = _RE_TILE.match(stripped)
-        if m_tile:
-            tile_id = m_tile.group(1)
-            continue
-        m_pos = _POS.search(line)
-        if not m_pos:
-            continue
-        pos = (int(m_pos.group(1)), int(m_pos.group(2)))
-        if "🌱" in line:
-            m = _RE_AVANCE.search(line)
-            if m:
-                yield ("avance", tile_id, pos, _CLE_DE_NOM.get(m.group(1).strip()))
-        elif "🌰" in line:
-            m = _RE_REPRO.search(line)
-            tag = _RE_TAG.search(line)
-            if m:
-                yield ("repro", tile_id, pos,
-                       (_CLE_DE_NOM.get(m.group(1).strip()),
-                        tag.group(1) if tag else None))
-        else:
-            raison = _raison_stagnation(line)
-            if raison:
-                m = _RE_STAGNE.search(line)
-                if m:
-                    yield ("stagne", tile_id, pos, raison)
 
 
 # --- État gameplay de la détection (§9.6) — par avatar, au-dessus du tick -----
