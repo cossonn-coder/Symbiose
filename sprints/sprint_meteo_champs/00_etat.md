@@ -38,7 +38,7 @@ agisse sur **tous** les champs qu'il influence réellement.
 |---|-------|---------|------|
 | ① | Humidité médiée (retrait deltas plats + `PLUIE_APPORT`) | `01_humidite_mediee.md` | ✅ FAIT (golden+pop re-figés) |
 | ② | Rosée & gelée blanche (`tick_rosee`, point de rosée, continuum) | `02_rosee_gelee_blanche.md` | ✅ FAIT (golden+pop re-figés) |
-| ③ | Lessivage NPK par la pluie | `03_lessivage_npk.md` | ⬜ À FAIRE |
+| ③ | Lessivage NPK par la pluie | `03_lessivage_npk.md` | ✅ FAIT (golden re-figé, pop INCHANGÉE) |
 | ④ | Microbiome climatique | `04_microbiome_climatique.md` | ⬜ À FAIRE |
 | ⑤ | Interconnexions vivantes + voix + pont snapshot | `05_interconnexions_voix.md` | ⬜ À FAIRE |
 
@@ -103,6 +103,47 @@ plats atteignait `hum=2.617 > HUM_NOYE(2.6)` pile à w52 → stagnation « noyé
 montaison retardée à w53. Question de design à trancher (w52 = fin an 1 ou début
 an 2 ?) → corriger soit la borne du gate, soit la fenêtre du test. Laissé ROUGE
 volontairement (retour sur livrable = arbitrage Nico, pas de patch silencieux).
+
+**Build C#** : non concerné (aucun fichier C# touché).
+
+### ③ Lessivage NPK par la pluie — FAIT (2026-06-29)
+**Ce qui a été fait** : on AMPLIFIE le lessivage NPK qui existe DÉJÀ (`tick_decomposition`
+~L685, `champ *= leach_factor(...)`, rétention modulée par la CEC), on NE LE RECRÉE PAS.
+Crochet : `tick_hydrology` mémorise désormais sa perte de drainage par plot (déjà calculée
+et retournée `h·(1−drainage)`, jusque-là jetée) dans une carte transiente `eco.drainage_last`.
+`tick_decomposition` la LIT (ordre garanti : hydro 3 AVANT décompo 4 dans `boucle.py`) et
+élève le facteur de rétention à la puissance `facteur_pluie = 1 + LESSIVAGE_PLUIE_K·drainage_norm`
+(`drainage_norm = min(1, perte/DRAINAGE_PERTE_REF)`, capé à `FACTEUR_PLUIE_CAP`). Hiérarchie
+de mobilité **N≫K>P** respectée : N pleine puissance, K atténué (`LESSIVAGE_K_ATTENUATION=0.4`),
+**P ÉPARGNÉ** (puissance 1, jamais amplifié). Interconnexion CEC : un sol drainant (CEC basse,
+sable) lessive plus qu'un sol retenteur (argile/humus) à drainage égal. Aucun RNG neuf, aucune
+duplication de la boucle hydrologique (piège du kickoff évité : on lit la perte, on ne la
+recalcule pas).
+
+**Fichiers touchés** : `fields/ecofields/constants.py` (4 constantes neuves : `LESSIVAGE_PLUIE_K=1.5`,
+`DRAINAGE_PERTE_REF=0.02`, `FACTEUR_PLUIE_CAP=3.0`, `LESSIVAGE_K_ATTENUATION=0.4` — placeholders
+calibrage F5), `fields/ecofields/container.py` (champ `drainage_last: GridField` + init, écriture
+dans `tick_hydrology`, amplification du lessivage dans `tick_decomposition`), `tests/test_lessivage.py`
+(NOUVEAU, 7/7).
+
+**Golden RE-FIGÉ (annoncé)** :
+- `tests/golden_hash.txt` : `bf3c5c95…` → **`18ef4f04f821d0b3f12e8e14360b2f548758c083b6985a1a548e9a62554c22a4`**
+- `tests/population_hash.txt` : **INCHANGÉ** (`239766b6…`) — le lessivage NPK ne perturbe pas
+  assez les champs population pour décaler leur hash ; `test_population` reste behavioral+golden PASS.
+
+**Dérive — LOCALISÉE et EXPLIQUÉE (NPK en baisse les semaines drainantes, sens attendu §4)** :
+comparé à l'état ② (`LESSIVAGE_PLUIE_K` désactivé), l'état final du smoke montre exactement la
+signature voulue sur la tuile T1 (sud, drainée) : **N 0.054 → 0.042**, **K 0.092 → 0.067** (les
+ions mobiles emportés par l'eau de drainage), **P 0.739 → 0.739 INCHANGÉ** (phosphore épargné,
+puissance 1). Dérive secondaire cohérente : `drought_memory` des plantes décale au 4ᵉ-5ᵉ chiffre
+(elles lisent l'azote disponible via uptake/vigueur → croissance), `soil_fast`/`soil_memory` au
+millième. **50/50 plantes vivantes** (aucune mort spurieuse). AUCUN re-figeage aveugle.
+
+**Tests** : `test_lessivage` 7/7 (N chute ∝ pluie ; P épargné ; hiérarchie N>K>P ; CEC sable<argile ;
+cap ; drainage=0 ⇒ lessivage passif ① ; déterminisme), `test_golden` PASS (re-figé), `test_population`
+PASS (behavioral + hash inchangé), `test_biennial` PASS, suites hydro/décompo vertes (test_eau 20/20,
+test_conteneur, test_substrat 17/17, test_rosee 10/10, test_signes 8/8 — rétrocompat : `drainage_last`
+nul ou `LESSIVAGE_PLUIE_K=0` ⇒ comportement ① bit-identique).
 
 **Build C#** : non concerné (aucun fichier C# touché).
 

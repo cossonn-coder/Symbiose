@@ -146,6 +146,29 @@ ROSEE_PAR_DEGRE   = 0.010   # humidité déposée par °C sous le point de rosé
 ROSEE_LOG_SEUIL   = 0.02    # condensation/fonte cumulée/tuile pour émettre un marqueur
 GIVRE_SEVERITY_REF = 8.0    # réf de sévérité du dégât foliaire de givre (option §3.5, différée)
 
+# --- Lessivage NPK AMPLIFIÉ par la pluie (sprint météo→champs ③, §4) ---
+# Le lessivage passif existe DÉJÀ (`tick_decomposition` : `champ *= leach_factor(...)`,
+# rétention modulée par la CEC = texture + humus). Ce tronçon NE LE RECRÉE PAS : il
+# l'AMPLIFIE ∝ l'eau qui DRAINE réellement ce tick (la pluie qui s'écoule au fond
+# emporte les ions mobiles). `tick_hydrology` retourne déjà la perte de drainage par
+# plot ; on la mémorise (`_drainage_last`), on la normalise, et on élève le facteur de
+# rétention à la puissance `facteur_pluie = 1 + LESSIVAGE_PLUIE_K · drainage_norm` :
+#   facteur_pluie = 1   → leach_factor inchangé (= comportement ①, lessivage passif)
+#   facteur_pluie > 1   → rétention^p < rétention → ON LESSIVE PLUS (orage drainant)
+# Hiérarchie de mobilité N≫K>P (§2.4) : N pleine puissance, K atténué, P ÉPARGNÉ
+# (puissance 1, jamais amplifié — le phosphore est quasi immobile).
+# - DRAINAGE_PERTE_REF : perte de drainage (unités d'humidité) jugée « forte pluie qui
+#   s'écoule » → normalise `drainage_norm = min(1, perte / réf)`. Réf basse car la
+#   perte de fond d'un sol terre est petite (h·(1−0.993) ≈ 0.007·h).
+# - FACTEUR_PLUIE_CAP : plafond DUR du facteur (un orage ne doit JAMAIS vider l'azote
+#   en un seul tick — garde-fou du kickoff §B/Pièges).
+# À LESSIVAGE_PLUIE_K=0 → comportement ① strictement inchangé (utile pour isoler la
+# dérive golden). PLACEHOLDERS, calibrage F5 / bancs d'essai.
+LESSIVAGE_PLUIE_K  = 1.5     # ampleur de l'amplification du lessivage par drainage
+DRAINAGE_PERTE_REF = 0.02    # perte de drainage (unité humidité) → drainage_norm = 1
+FACTEUR_PLUIE_CAP  = 3.0     # plafond dur du facteur_pluie (anti-vidage en un tick)
+LESSIVAGE_K_ATTENUATION = 0.4  # part de l'amplification reçue par K (N=1, P=0)
+
 # Cycle biogéochimique — OM v4 tri-compartiment (cascade fresh → active → stable)
 # Taux de décomposition hebdomadaire par compartiment (avant modulation microbiome).
 OM_FRESH_DECAY   = 0.080   # débris récents / sucres : rapide (semaines)

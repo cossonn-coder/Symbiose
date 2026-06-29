@@ -135,6 +135,13 @@ class EcoFields:
     # saprophyte/mycorhize/faune — branchés aux tronçons ②③④). Exposé AUTO à la vue
     # F6/au pont par le registre `get_field` (palette overlay côté Godot = ⑥).
     mycelium:         GridField = field(default=None)
+    # Perte de drainage du DERNIER tick d'hydrologie (sprint météo→champs ③, §4) :
+    # `tick_hydrology` écrit ici l'eau qui s'est écoulée au fond par plot (= la perte
+    # qu'il retournait déjà, jusqu'ici jetée par la tuile). `tick_decomposition` la LIT
+    # pour AMPLIFIER le lessivage NPK ∝ l'eau qui draine (la pluie qui s'écoule emporte
+    # les ions mobiles, N≫K>P). État TRANSIENT par tick, à 0 au repos → golden NEUTRE
+    # tant que `LESSIVAGE_PLUIE_K=0` ou aucune eau ne draine. Hors `summary()` (transient).
+    drainage_last:    GridField = field(default=None)
 
     def __post_init__(self):
         if self.humidite    is None: self.humidite    = GridField(self.rows, self.cols)
@@ -221,6 +228,11 @@ class EcoFields:
         # inchangé tant qu'aucune nuit givrante (smoke : hiver en pose, ② re-fige).
         if self.givre is None:
             self.givre = GridField(self.rows, self.cols, max_val=1.0)
+        # Perte de drainage du dernier tick (③) — NULLE au repos, écrite chaque tick
+        # par `tick_hydrology`, lue par `tick_decomposition`. Pas de max_val borné
+        # (perte d'humidité brute, petite pour un sol terre).
+        if self.drainage_last is None:
+            self.drainage_last = GridField(self.rows, self.cols)
 
     def get_field(self, name: str) -> GridField | None:
         return {
@@ -399,6 +411,10 @@ class EcoFields:
         à FOND OUVERT/percé l'INJECTE dans l'humidité de la tuile sous lui (pont
         matière §5). On RETOURNE la perte plutôt que de dupliquer la boucle
         hydrologique côté `world` (piège du kickoff : ne pas la ré-implémenter).
+
+        EFFET DE BORD (sprint météo→champs ③, §4) : la perte de drainage par plot est
+        AUSSI écrite dans `self.drainage_last` (carte transiente du tick), que
+        `tick_decomposition` lit pour AMPLIFIER le lessivage NPK ∝ l'eau qui draine.
         """
         drainage = (drainage_override if drainage_override is not None
                     else DRAINAGE_PAR_SOL.get(soil_type, DRAINAGE))
@@ -424,7 +440,12 @@ class EcoFields:
                 # (champ lent → OK). structure terre héritée 0.7 < 1.0 → golden re-figé.
                 h += apport * self.structure_sol.at_plot(r, c)      # 2. pluie (fond+météo) infiltrée
                 h += self.soil_memory.at_plot(r, c) * SOIL_RETENTION  # 3. rétention
-                pertes.append((r, c, h * (1.0 - drainage)))         # eau du fond (⑤)
+                perte = h * (1.0 - drainage)
+                pertes.append((r, c, perte))                        # eau du fond (⑤)
+                # On MÉMORISE la perte par plot (③) pour le lessivage amplifié de
+                # `tick_decomposition` — on lit le flux déjà calculé, on ne RE-CALCULE
+                # PAS l'hydrologie ailleurs (piège du kickoff, cf. sprint pots/bacs).
+                self.drainage_last.set(r, c, perte)
                 h *= drainage                                       # 4. drainage (par sol)
                 self.humidite.set(r, c, h)
         return pertes
@@ -687,9 +708,21 @@ class EcoFields:
                 # que vitalité). N très mobile, P quasi nul, K moyen.
                 om_n = min(1.0, self.om_stable.at_plot(r, c) / 5.0)
                 cn = cec_norm_at(self.soil_type, om_n)
-                self.n.data[r][c] *= leach_factor("N", cn)
+                # AMPLIFICATION PAR LA PLUIE (sprint météo→champs ③, §4) : on ne RECRÉE
+                # pas le lessivage, on l'amplifie ∝ l'eau qui a DRAINÉ ce tick (lue dans
+                # `drainage_last`, écrite par `tick_hydrology` AVANT nous, ordre §Pièges).
+                # `facteur_pluie ≥ 1` : à 1 → leach_factor inchangé (= comportement ①) ;
+                # > 1 → rétention^p < rétention → on lessive PLUS. Capé (anti-vidage).
+                drainage_norm = min(1.0, self.drainage_last.at_plot(r, c) / DRAINAGE_PERTE_REF)
+                facteur_pluie = 1.0 + LESSIVAGE_PLUIE_K * drainage_norm
+                if facteur_pluie > FACTEUR_PLUIE_CAP:
+                    facteur_pluie = FACTEUR_PLUIE_CAP
+                # Hiérarchie de mobilité N≫K>P : N pleine amplification, K atténué, P
+                # ÉPARGNÉ (puissance 1 — le phosphore est quasi immobile, §2.4).
+                facteur_k = 1.0 + (facteur_pluie - 1.0) * LESSIVAGE_K_ATTENUATION
+                self.n.data[r][c] *= leach_factor("N", cn) ** facteur_pluie
                 self.p.data[r][c] *= leach_factor("P", cn)
-                self.k.data[r][c] *= leach_factor("K", cn)
+                self.k.data[r][c] *= leach_factor("K", cn) ** facteur_k
 
     def tick_structures(self) -> None:
         """Maturation hebdomadaire du contenu des structures (⑤ phase B, §5.2)
