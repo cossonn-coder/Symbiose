@@ -28,7 +28,7 @@ l'évaporation** (rayonnement + vent) pour rééquilibrer la rosée → résout 
 |---|---------|------|--------|--------|
 | ⓪ | [`t0_reference_perf_scatter.md`](t0_reference_perf_scatter.md) | mesure+gain | **INTACT** `11eceeb9…` | ✅ fait |
 | ① | [`t1_vent_masse_air.md`](t1_vent_masse_air.md) | O(1) | **neutre** `11eceeb9…` | ✅ fait |
-| ② | [`t2_evapotranspiration.md`](t2_evapotranspiration.md) | marginal | **re-fige LARGE** → D39 vert | ⏳ |
+| ② | [`t2_evapotranspiration.md`](t2_evapotranspiration.md) | marginal | **re-figé LARGE** `4a3cfe03…` → D39 vert | ✅ fait |
 | ③ | [`t3_abri_spatial.md`](t3_abri_spatial.md) | **À BUDGÉTER** | re-fige | ⏳ |
 | ④ | [`t4_thigmomorphogenese.md`](t4_thigmomorphogenese.md) | négligeable | re-fige | ⏳ |
 | ⑤ | [`t5_pollinisation_dispersion.md`](t5_pollinisation_dispersion.md) | négligeable | re-fige | ⏳ |
@@ -70,6 +70,29 @@ l'évaporation** (rayonnement + vent) pour rééquilibrer la rosée → résout 
 - **Perf** : `wind_at` ~24 µs/call, **plat** quelle que soit la semaine (O(1)) →
   ~0.05 % d'un tick 52 ms même appelé chaque tick au ②. Budget +10 % très tenu.
 
+## Évapotranspiration enrichie (tronçon ②, 2026-06-29 — golden RE-FIGÉ LARGE, D39 vert)
+- **Deux pilotes neufs de l'évaporation** greffés dans `tick_hydrology`
+  (`fields/ecofields/container.py`, **zéro nouvelle traversée**) : RAYONNEMENT
+  `−EVAP_RAD_COEF·(1−nébulosité)` (ciel clair = contre-flux exact de la rosée) +
+  VENT `−EVAP_WIND_COEF·vent_masse_air` (balayage de la couche limite). Coefs
+  `EVAP_RAD_COEF=0.0042`, `EVAP_WIND_COEF=0.0035` (`constants.py`). Défauts
+  rétro-compatibles `nebulosite=1.0`/`vent_masse_air=0.0` → conteneurs pots/bacs
+  **bit-identiques**.
+- **Nébulosité DYNAMIQUE** : `weather_state` (`sim/weather.py`) lit désormais
+  `sim.wind.nebulosite_dynamique(seed, week)` (import local, évite le cycle
+  weather↔wind) au lieu de la table figée `NEBULOSITE[kind]` → tout le bloc
+  lumière/rosée/thermique bouge ensemble (cœur du re-figeage LARGE).
+- **Câblage** : `boucle.py` calcule `vent_force = wind_at(seed, week).force` et le
+  passe (+ `nebul`) à `tick_hydrology`.
+- **Golden RE-FIGÉ** `4a3cfe030562680bf5af2cc88e01629bee22eba6129909524ae22a5a822729fb`
+  (re-figeage LARGE **prévu** par le kickoff). **D39 VERT** : `test_senescence`
+  PASS (pommier mort de **sénescence à 59.8 ans**, plus asphyxié à 19,5). Garde-fou
+  anti-sécheresse OK : `test_rosee` 10/10, `test_eau` 20/20, `test_croissance`
+  67/67, `test_stress_chronique` PASS, `test_sim_server` 207/207, `test_vent`
+  19/19 (câblage vérifié).
+- **Perf** : +2 lectures/plot dans une boucle existante (marginal). D39 re-rouvert
+  puis re-résolu PAR LE FOND dans `DETTE.md`.
+
 ## Boucle de travail (rappel CLAUDE.md)
 Lancer `tN` → coder → **mesurer ms/tick avant/après** (budget §7B) → golden (intact
 ou re-figeage annoncé) → MAJ ce fichier → commit → `/clear` → lancer `tN+1`.
@@ -81,9 +104,10 @@ ou re-figeage annoncé) → MAJ ce fichier → commit → `/clear` → lancer `t
 
 ## REPRISE (démarrage à froid)
 « lis `sprints/sprint_vent_evapotranspiration/00_etat.md` puis
-`t2_evapotranspiration.md` » → exécuter le tronçon ② (évapotranspiration enrichie
-+ branchement de la nébulosité dynamique `sim/wind.py::nebulosite_dynamique` dans
-`weather_state`, débloque D39) — **re-figeage golden LARGE attendu et annoncé**.
-Penser à lire `sim/wind.py` (déjà écrit au ①, fonctions pures prêtes à câbler).
-Tronçons ⓪ (réf perf + scatter D32) et ① (masse d'air `sim/wind.py`) = ✅ faits,
-golden intact `11eceeb9…`.
+`t3_abri_spatial.md` » → exécuter le tronçon ③ (abri spatial = champ d'abri par
+plot, géométrie de balayage sous le vent, **seul morceau cher** : mesurer SEUL,
+mutualiser la bbox/scatter de la lumière, off-ramp report en dette si budget perf
+explosé) — **re-figeage golden attendu**.
+Tronçons ⓪ (réf perf + scatter D32, golden `11eceeb9…`), ① (masse d'air
+`sim/wind.py`, golden neutre `11eceeb9…`) et ② (évapotranspiration enrichie +
+nébulosité dynamique, golden re-figé LARGE `4a3cfe03…`, D39 vert) = ✅ faits.

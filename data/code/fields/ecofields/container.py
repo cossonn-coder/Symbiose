@@ -390,7 +390,9 @@ class EcoFields:
 
     def tick_hydrology(self, soil_type: str = "terre",
                        drainage_override: float | None = None,
-                       pluie_event: float = 0.0) -> list:
+                       pluie_event: float = 0.0,
+                       nebulosite: float = 1.0,
+                       vent_masse_air: float = 0.0) -> list:
         """
         Cycle hydrologique complet. Ordre strict :
           1. Évaporation atmosphérique (couplée à la température : chaud → +)
@@ -428,6 +430,17 @@ class EcoFields:
         EFFET DE BORD (sprint météo→champs ③, §4) : la perte de drainage par plot est
         AUSSI écrite dans `self.drainage_last` (carte transiente du tick), que
         `tick_decomposition` lit pour AMPLIFIER le lessivage NPK ∝ l'eau qui draine.
+
+        `nebulosite` ∈ [0,1] et `vent_masse_air` ∈ [0,1+] (sprint VENT &
+        ÉVAPOTRANSPIRATION ②, §3) : les DEUX pilotes neufs de l'évaporation, scalaires
+        PAR TICK (météo uniforme sur la tuile, comme T_air — pas des champs par plot).
+        Ciel clair (`nebulosite→0`) ET vent fort assèchent en plus de la chaleur.
+        Calculés par la boucle (`weather_state` ④ + `wind_at` ① — la couche `fields`
+        n'importe pas `sim`, donc on les reçoit en argument). DÉFAUTS `nebulosite=1.0`
+        (ciel couvert → terme rayonnement NUL) et `vent_masse_air=0.0` (calme → terme
+        vent NUL) : tout appelant existant qui ne les passe pas (conteneurs pots/bacs)
+        reste BIT-IDENTIQUE. La boucle, elle, passe les vraies valeurs → re-figeage
+        golden LARGE ANNONCÉ (l'évaporation réagit enfin au ciel clair et au vent).
         """
         drainage = (drainage_override if drainage_override is not None
                     else DRAINAGE_PAR_SOL.get(soil_type, DRAINAGE))
@@ -444,6 +457,13 @@ class EcoFields:
                 # plot ensoleillé surchauffe et s'assèche, un plot ombragé reste frais.
                 temp = self.temperature_sol.data[r][c]
                 evap = EVAPORATION - EVAP_TEMP_COEF * max(0.0, temp - EVAP_TEMP_REF)
+                # RAYONNEMENT + VENT (sprint VENT & ÉVAPOTRANSPIRATION ②, §3) : deux
+                # pertes ADDITIVES de plus. Ciel clair (1−nébulosité→1) assèche le jour
+                # — c'est le contre-flux exact de la rosée des nuits claires, qui sans
+                # lui faisait monter l'humidité jusqu'à l'asphyxie (D39). Le vent balaie
+                # la couche limite humide → évaporation ↑ (uniforme au ②, spatialisé ③).
+                evap -= EVAP_RAD_COEF * (1.0 - nebulosite)
+                evap -= EVAP_WIND_COEF * vent_masse_air
                 if evap < EVAP_MIN:
                     evap = EVAP_MIN
                 h *= evap                                           # 1. évaporation

@@ -32,6 +32,7 @@ from sim.reproduction import is_seed_bearing, child_expression
 from sim.seeds import Seed
 from sim.succession import succession, spring_flush
 from sim.weather import weather_state, K_PEST, TEMP_DRIVEN
+from sim.wind import wind_at
 from sim.vigueur import tick_player_vigueur, refill_saison
 from sim.growth import grow_plant
 from .calendrier import (SAISONS, saison_de, est_debut_saison, est_fin_saison,
@@ -86,6 +87,12 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
         # partagé avec le snapshot (serialize §A) — un seul calcul, jamais deux qui
         # dérivent. T_air = normale saisonnière + delta transitoire ; nébulosité ④.
         event, temp_now, nebul = weather_state(seed, week)
+        # Vent de MASSE D'AIR de la semaine (sprint VENT & ÉVAPOTRANSPIRATION ①/②).
+        # Scalaire uniforme sur le monde (comme T_air/nébulosité), fonction PURE O(1).
+        # Au tronçon ② il pilote l'évaporation enrichie (§3, balayage de la couche
+        # limite humide) ; le champ d'abri spatial par plot arrive au ③. La force LOCALE
+        # par plot restera `vent_force` partout tant que ③ n'a pas posé `eco.vent`.
+        vent_force    = wind_at(seed, week).force
         is_neige      = (event.kind == "Neige")            # ⑦ : pilote l'accumulation du manteau
         # Apport d'eau météo MÉDIÉ (sprint météo→champs ①, §2.2). Uniforme par tuile
         # (dépend du seul `event.kind`), infiltré ∝ structure dans tick_hydrology ci-
@@ -193,7 +200,8 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
             # 3. Hydrologie : évaporation → pluie de fond → rétention → drainage
             #    (le drainage dépend du type de sol de la tuile, §2.3 a). L'apport
             #    météo `pluie_event` (①, §2.2) y est infiltré ∝ structure du sol.
-            eco.tick_hydrology(tile.soil_type, pluie_event=pluie_event)
+            eco.tick_hydrology(tile.soil_type, pluie_event=pluie_event,
+                               nebulosite=nebul, vent_masse_air=vent_force)
 
             # 4. Décomposition biogéochimique (OM → fertilite, pertes C)
             eco.tick_decomposition()

@@ -56,6 +56,22 @@ TEMP_MAX       = 45.0    # plafond physique
 EVAP_TEMP_REF  = 11.0    # °C — référence (aucun surplus d'évaporation en dessous)
 EVAP_TEMP_COEF = 0.0008  # perte d'humidité supplémentaire par °C au-dessus de la réf
 EVAP_MIN       = 0.975   # borne basse du multiplicateur (n'assèche jamais brutalement)
+# Évapotranspiration enrichie (sprint VENT & ÉVAPOTRANSPIRATION ②, §3) : on donne à
+# l'évaporation les DEUX pilotes qui lui manquaient — le rayonnement (ciel clair) et
+# le vent — sans quoi la rosée (apport des nuits claires) montait de façon monotone
+# jusqu'à l'asphyxie (D39, pommier asphyxié à 19,5 ans). Termes ADDITIFS à la perte,
+# greffés dans `tick_hydrology` (zéro nouvelle traversée).
+#  • RAYONNEMENT : ciel clair (nébulosité→0) ⇒ forte évaporation diurne. C'est le
+#    CONTRE-FLUX EXACT de la rosée — le même ciel clair qui condense la nuit assèche
+#    le jour. C'est le terme dominant du rééquilibrage (le climat labo de
+#    `test_senescence` est clair → ce terme y porte presque toute la correction).
+#  • VENT : la masse d'air (uniforme, `wind_at` ①) balaie la couche limite humide au
+#    ras du sol → évaporation ↑ (effet « dessèchement » de D37). Au tronçon ② c'est la
+#    force de masse d'air uniforme ; le champ d'abri spatial par plot arrive au ③.
+# Knobs post-test (calibrés pour faire repasser `test_senescence` au vert SANS
+# assécher le jardin — `EVAP_MIN` reste le garde-fou anti-assèchement brutal).
+EVAP_RAD_COEF  = 0.0042  # perte supplémentaire à ciel TOTALEMENT clair (nébulosité=0)
+EVAP_WIND_COEF = 0.0035  # perte supplémentaire à vent de masse d'air force 1
 
 # --- Microclimat de surface T_sol (sprint thermique-microclimat, tronçon ①) ---
 # Le champ `temperature_sol` (par plot) spatialise la thermique : un plot au soleil

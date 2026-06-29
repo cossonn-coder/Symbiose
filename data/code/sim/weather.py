@@ -175,15 +175,27 @@ def weather_state(seed: int, week: int) -> tuple[WeatherEvent, float, float]:
     qu'ils ne divergent jamais. PURE et déterministe (aucun état moteur lu).
 
     `T_air` = normale saisonnière (avec dérive interannuelle, `phase` dérivée du
-    seed = « caractère d'année ») + delta transitoire de l'événement. `nébulosité`
-    = table NEBULOSITE indexée par le type d'événement (défaut ciel ≈ clair).
+    seed = « caractère d'année ») + delta transitoire de l'événement.
+
+    `nébulosité` — sprint VENT & ÉVAPOTRANSPIRATION ② (§2.3) : la couverture nuageuse
+    n'est plus la table figée `NEBULOSITE[kind]`, elle est DYNAMIQUE sous le vent. La
+    table donne le POINT DE DÉPART (couverture de référence de l'événement), le vent
+    la CHASSE : un vent fort disperse la couche (`nebulosite_dynamique` ①). C'est le
+    couplage le plus structurant du sprint — la nébulosité gouverne ensuite la lumière,
+    la rosée et la thermique. Vent nul → couverture figée inchangée (golden re-figé
+    LARGE annoncé : tout le bloc lumière/rosée/thermique bouge ensemble).
+
+    Import LOCAL de `wind` : `wind.py` importe déjà `weather_at`/`CALME` de ce module
+    → un import au niveau module créerait un cycle. L'import différé (au 1er appel)
+    le résout sans dupliquer le catalogue de nébulosité.
     """
+    from sim.wind import nebulosite_dynamique   # local : évite le cycle weather↔wind
     week_in_year  = ((week - 1) % 52) + 1
     event         = weather_at(seed, week)
     year_fraction = (week - 1) / 52.0
     phase         = (seed & 0xFFFF) / 0xFFFF * 2.0 * math.pi
     t_air         = temp_norm(week_in_year, year_fraction, phase) + temperature_delta(event)
-    nebul         = NEBULOSITE.get(event.kind, 0.10)
+    nebul         = nebulosite_dynamique(seed, week)
     return event, t_air, nebul
 
 

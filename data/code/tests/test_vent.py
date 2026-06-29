@@ -11,8 +11,10 @@ Vérifie que `sim/wind.py` est :
   C. SAISONNIER    — la force moyenne de l'HIVER > celle de l'ÉTÉ (automne/hiver
                      plus venteux, §2.1) ;
   D. RÉACTIF À LA MÉTÉO — une Tempête force une force HAUTE ;
-  E. GOLDEN-NEUTRE — aucun symbole de `sim.wind` n'est lu par l'engine/boucle
-                     (preuve que le calcul est isolé, non câblé).
+  E. CÂBLÉ (tronçon ②) — la boucle lit `wind_at` et injecte la masse d'air dans
+                     l'évaporation enrichie (`tick_hydrology`). Au ① ce test
+                     vérifiait l'ISOLEMENT (module non câblé, golden neutre) ; le ②
+                     câble le vent → re-figeage golden LARGE annoncé.
 
 Déterminisme total (fonctions pures, aucun RNG live).
 Usage (depuis data/code/) :
@@ -109,13 +111,18 @@ def test_evenement_venteux():
         check("Tempête → force haute (> 0.7)", f > 0.7, f"force={f:.3f}")
 
 
-# --- E. Golden-neutre : module non câblé -----------------------------------
-def test_non_cable():
-    # Preuve d'isolement : ni la boucle moteur (qui porte l'hydrologie) ni le
-    # sérialiseur de snapshot (qui lit weather_state) n'importent sim.wind.
+# --- E. Câblage du vent dans l'évaporation (tronçon ②) ---------------------
+def test_cable_evapotranspiration():
+    # Au tronçon ① le module était GOLDEN-NEUTRE (preuve d'isolement : la boucle
+    # n'importait pas sim.wind). Le tronçon ② le CÂBLE : la masse d'air pilote
+    # désormais l'évaporation enrichie (§3) → ce test bascule de « non câblé » à
+    # « câblé » (le golden re-fige LARGE, annoncé). On vérifie que la boucle lit
+    # bien la force de masse d'air et l'injecte dans l'hydrologie.
     import sim.engine.boucle as boucle
     src_b = open(boucle.__file__).read()
-    check("boucle.py (hydrologie) n'importe pas sim.wind", "sim.wind" not in src_b)
+    check("boucle.py câble wind_at (masse d'air)", "wind_at" in src_b)
+    check("boucle.py passe vent_masse_air à tick_hydrology",
+          "vent_masse_air=" in src_b)
 
 
 def main():
@@ -124,7 +131,7 @@ def main():
     test_bornes()
     test_saisonnalite()
     test_evenement_venteux()
-    test_non_cable()
+    test_cable_evapotranspiration()
     passed = sum(1 for _, ok in _results if ok)
     total = len(_results)
     print(f"\n[test_vent] {passed}/{total} OK")
