@@ -10,7 +10,7 @@ vit — un thème qu'il commence à maîtriser — et récompensent l'exploratio
 voix éditoriales (pastiche en STYLE, jamais de citation réelle longue → §7).
 
 Chaque entrée :
-  - `id`            : identifiant stable (P01..P20), clé du set `gs["pages"]`.
+  - `id`            : identifiant stable (P01..P22), clé du set `gs["pages"]`.
   - `voix`          : registre éditorial (A maraîcher · B jardinière · C savoirs
                       paysans · D herbiers · E sorcières) — purement informatif.
   - `concept`       : résonance thématique, sert au robinet *récompense* (la page
@@ -143,6 +143,20 @@ _ENTREES = [
      "voisine. Le dernier sortilège n'est pas de plier la nature à ta volonté — c'est "
      "de désirer ce qu'elle fait déjà. Alors le jardin se garde tout seul, et tu es "
      "libre."),
+
+    # --- Pages de la ROSÉE (sprint météo→champs ⑤, §6) — lore pur, zéro effet ---
+    ("P21", "E", "météo", 3, "récompense",
+     "On disait que la rosée de la nuit de la Saint-Jean n'était pas une eau "
+     "ordinaire. Les filles s'en lavaient le visage avant l'aube pour garder le teint "
+     "frais l'année durant ; les anciens y trempaient un linge pour soigner les yeux. "
+     "Je n'en sais rien — mais j'ai vu que le jardin qui porte la rosée du matin "
+     "traverse mieux les jours secs que celui qu'on a couvert trop tôt."),
+    ("P22", "D", "météo", 2, "fouille",
+     "Note d'herbier, page jaunie : « La gelée blanche n'est point la mort du jardin, "
+     "mais sa rosée durcie. Au soleil revenu, le givre se résout en eau et désaltère "
+     "la terre qu'il semblait mordre. Observe au matin clair d'hiver le sol nu qui "
+     "blanchit le premier : c'est lui qui rend le plus à la nuit ce qu'il lui a "
+     "emprunté. »"),
 ]
 
 # Titres recopiés du doc §7 (gras de chaque entrée), indexés par id — gardés à
@@ -168,6 +182,8 @@ _TITRES = {
     "P18": "Le purin qui réveille la terre",
     "P19": "Décoction de prêle contre les fièvres du feuillage",
     "P20": "Le pacte du jardin",
+    "P21": "La rosée de la Saint-Jean",
+    "P22": "La gelée blanche n'est pas la mort",
 }
 
 # `PAGES` = dict id → fiche complète. `ORDRE` = ids dans l'ordre du corpus (tri

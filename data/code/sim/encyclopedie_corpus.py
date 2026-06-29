@@ -251,3 +251,38 @@ FICHES: dict[str, dict[int, str]] = {
            "lisière.",
     },
 }
+
+
+# --- Concepts TRANSVERSAUX × 3 niveaux (sprint météo→champs ⑤, §6) ------------
+# La rosée / la gelée blanche ne sont pas des ESPÈCES : ce sont des PHÉNOMÈNES
+# climatiques. Elles ont leur entrée d'encyclopédie dans un dictionnaire SÉPARÉ
+# de `FICHES` (qui reste strictement les 28 espèces, alignées au catalogue et
+# verrouillées par `test_encyclopedie`). Même structure 3 niveaux, même voix
+# « naturaliste qui observe ». DONNÉE PURE : aucun import moteur, read-only, golden
+# NEUTRE. Clés = un identifiant de concept (≠ clé de catalogue, pas de collision).
+#   N1 = ce qu'on VOIT ; N2 = le MÉCANISME physique ; N3 = le RÔLE écosystémique.
+CONCEPTS: dict[str, dict[int, str]] = {
+    "rosee": {
+        1: "Au petit matin, des gouttes d'eau perlent sur les feuilles et les toiles "
+           "d'araignées, scintillant au premier soleil.",
+        2: "Condensation de la vapeur de l'air sur les surfaces refroidies pendant une "
+           "nuit claire : le sol et le feuillage, en rayonnant leur chaleur vers un ciel "
+           "dégagé, descendent sous le point de rosée et l'humidité de l'air s'y dépose "
+           "en eau liquide. Maximale sur sol nu, frais et découvert.",
+        3: "Micro-cycle de l'eau du jardinier sec : la rosée freine la spirale de "
+           "dessèchement d'un sol vivant, hydrate le feuillage qui l'intercepte et "
+           "abreuve la petite faune du matin (limaces, détritivores). Un paillis isole "
+           "le sol et réduit la rosée — mais il retenait déjà son eau : pas de double "
+           "peine. Lire la rosée, c'est lire le terrain.",
+    },
+    "gelee_blanche": {
+        1: "Un matin d'hiver, une fine pellicule de cristaux blancs givre l'herbe et le "
+           "sol nu, là où la nuit a été la plus claire.",
+        2: "Même phénomène que la rosée, mais sous 0 °C : la vapeur se dépose "
+           "directement en givre au lieu d'eau liquide. Le sol découvert, qui rayonne "
+           "le plus, gèle quand un coin paillé ou couvert reste au-dessus de zéro.",
+        3: "L'eau gelée du matin n'est pas perdue : le givre fond au réchauffement et "
+           "restitue son eau au sol (fonte différée). C'est le visage hivernal de la "
+           "rosée — un dépôt nocturne d'eau, simplement passé par la phase solide.",
+    },
+}

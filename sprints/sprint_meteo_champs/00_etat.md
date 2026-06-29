@@ -40,7 +40,7 @@ agisse sur **tous** les champs qu'il influence réellement.
 | ② | Rosée & gelée blanche (`tick_rosee`, point de rosée, continuum) | `02_rosee_gelee_blanche.md` | ✅ FAIT (golden+pop re-figés) |
 | ③ | Lessivage NPK par la pluie | `03_lessivage_npk.md` | ✅ FAIT (golden re-figé, pop INCHANGÉE) |
 | ④ | Microbiome climatique | `04_microbiome_climatique.md` | ✅ FAIT (golden+pop re-figés) |
-| ⑤ | Interconnexions vivantes + voix + pont snapshot | `05_interconnexions_voix.md` | ⬜ À FAIRE |
+| ⑤ | Interconnexions vivantes + voix + pont snapshot | `05_interconnexions_voix.md` | ✅ FAIT (golden+pop re-figés) — **SPRINT CLOS** |
 
 Dépendances : ① fonde l'hydrique propre ; ② dépend de ① (point de rosée lit l'humidité
 médiée) ; ③④ dépendent de ① mais sont indépendants entre eux ; ⑤ dépend de ② (rosée à
@@ -66,6 +66,71 @@ Valeurs définitives = F5 / bancs d'essai.
 - Calibrage numérique des constantes = F5 / bancs d'essai.
 
 ## Avancement / REPRISE
+
+### ⑤ Interconnexions vivantes + voix + pont snapshot — FAIT (2026-06-29) — **SPRINT CLOS**
+**Ce qui a été fait** (4 volets du kickoff) :
+- **(A) Faune abreuvée par la rosée** : la carte transiente `eco.rosee_last` (miroir de
+  `drainage_last`) est écrite par `tick_rosee` au régime LIQUIDE (>0 °C) — seule la rosée
+  déposée (`cond`), pas la fonte. Les habitats limace/cloporte (`PopulationField`) la lisent
+  via un helper neuf `_rosee_humide_litiere_grid` (reprise de `_humide_litiere_grid` + terme
+  `ROSEE_FAUNE_HABITAT_W·min(1, rosée/ROSEE_SURFACE_REF)`). La faune matinale prospère mieux
+  les semaines de rosée. **Constantes faune dans `population.py`** (pas dans `ecofields/` :
+  `fields/population.py` n'importe JAMAIS `ecofields`, cycle de couches interdit) ; lecture
+  robuste par `getattr(eco,"rosee_last",None)`.
+- **(B) Captation foliaire** : dans `_update_physiology` (`croissance.py`), le couvert qui a du
+  `drought_stress` capte la rosée déposée sur ses `foliar_plots` → `relief = ROSEE_FOLIAIRE_MAX·
+  min(1, capté/ROSEE_SURFACE_REF)`, `drought_stress *= (1 − relief)`. SEULE source de la dérive
+  golden (la rosée matinale soulage marginalement le stress hydrique → `drought_memory` ↑ infime).
+- **(C) Voix narratives** (read-only, hors tick) : parsing `💧 rosée`/`❄ gelée blanche` dans
+  `sim/evenements.py` (testés AVANT le `@pos`, désambiguïsés du `❄` froid par le texte « gelée
+  blanche ») → `Evenement("rosee")`/`("gelee_blanche")`. Concept « météo » dans `carnet.py`
+  (CONCEPT_DE + gabarits descriptif/interprétatif), fiches 3 niveaux dans le dict SÉPARÉ
+  `CONCEPTS` de `encyclopedie_corpus.py` (FICHES reste 28 espèces, test rigide), 2 pages
+  secrètes P21 (rosée Saint-Jean, récompense) + P22 (herbier gelée blanche, fouille) dans
+  `pages_corpus.py`.
+- **(D) Pont snapshot** : bloc `condensation` (sparse `[r,c,rosée,givre]` par plot non nul, par
+  tuile) dans `tools/simserver/serialize.py` ; protocole **0.5.9 → 0.5.10** (`version.py`).
+  Rendu C# des gouttes/givre = **dette D24** (hors périmètre, Godot est une vue).
+
+**Fichiers touchés** : `fields/ecofields/constants.py` (`ROSEE_SURFACE_REF`, `ROSEE_FOLIAIRE_MAX`),
+`fields/ecofields/container.py` (champ `rosee_last` + init), `fields/ecofields/rosee.py`
+(écriture `rosee_last`), `fields/population.py` (constantes faune + helper `_rosee_humide_litiere_grid`
++ habitats limace/cloporte), `sim/engine/croissance.py` (captation foliaire), `sim/evenements.py`
+(parsing rosée/gelée), `sim/carnet.py` (concept météo), `sim/encyclopedie_corpus.py` (CONCEPTS),
+`sim/pages_corpus.py` (P21/P22), `tools/simserver/serialize.py` (bloc condensation),
+`tools/simserver/version.py` (0.5.10). Tests synchronisés : `tests/test_pages.py` (20→22),
+`tests/simserver/conteneurs.py` + `tests/simserver/structures.py` (0.5.9→0.5.10).
+
+**Golden RE-FIGÉ (annoncé, léger — prévu par le kickoff)** :
+- `tests/golden_hash.txt` : `8f8b6741…` → **`11eceeb9e80aec108dd46907c7e530e96d6040b486150944c4090c1c90b11ba0`**
+- `tests/population_hash.txt` : `1d89da0a…` → **`ef5d62aaecf51b5b650eeab5a0f6b7705566d9c97e5f99329aeb0488f715cdb4`**
+
+**Dérive — LOCALISÉE et EXPLIQUÉE** : comparaison A/B OFF (`ROSEE_FOLIAIRE_MAX=0`,
+`ROSEE_FAUNE_HABITAT_W=0`) → ON, état final du smoke : la SEULE valeur du digest qui bouge est
+`drought_memory` (décalages INFIMES vers le HAUT, ex. Haricot 0.5998301→0.5998384, Tournesol
+0.7350836→0.7350871) — la rosée matinale captée par le couvert soulage marginalement le stress
+hydrique intégré (effet B, sens attendu). A (faune) ne touche PAS le digest golden (les densités
+de population n'entrent pas dans `summary()`) mais décale le `population_hash` (limace/cloporte
+lisent `rosee_last`) — re-figé, checks behavioral tous PASS. **50/50 plantes vivantes**, AUCUN
+re-figeage aveugle.
+
+**Tests** : `test_rosee` 10/10, `test_evenements` 18/18, `test_carnet` 19/19, `test_encyclopedie`
+18/18, `test_pages` 49/49 (compte 20→22 synchronisé), `test_journal` 15/15, `test_magazine` 23/23,
+`test_signes` 8/8, `test_biennial` PASS, `test_population` PASS (behavioral + re-figé), `test_golden`
+PASS (re-figé), `test_sim_server` **205/206** (seule rouge = pommier pré-âgé PRÉ-EXISTANTE ; bloc
+`condensation` exposé VERT pour les 2 tuiles, version 0.5.10 VERTE).
+
+**Build C#** : non concerné (aucun fichier C# touché ; rendu condensation = dette D24).
+
+---
+
+## ⛳ SPRINT MÉTÉO → CHAMPS — CLOS (2026-06-29)
+Les 5 tronçons (①→⑤) sont FAITS. Le couplage météo→champs provisoire (deltas plats) est
+remplacé par des flux médiés (philo #2) ; rosée/gelée blanche, lessivage NPK, microbiome
+climatique sont en place, reliés au vivant (faune + couvert) et exposés aux voix + au pont.
+**Golden final** : `11eceeb9…` ; **population** : `ef5d62aa…` ; **pont** : 0.5.10.
+**Reste en dette** : D24 (rendu C# gouttes/givre + UI voix), calibrage F5 des constantes,
+dégât foliaire du givre (§3.5, `GIVRE_SEVERITY_REF` réservée), pH par la pluie (dette mineure).
 
 ### ④ Microbiome climatique — FAIT (2026-06-29)
 **Ce qui a été fait** : ajout d'un **terme MULTIPLICATIF** `f_clim = f_temp · f_hum`

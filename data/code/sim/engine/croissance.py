@@ -13,7 +13,8 @@ résolues sur l'instance Engine. Comportement identique à l'ancien `engine.py`.
 from __future__ import annotations
 from fields import (EXUDATE_BASE, EXUDATE_OM_SHARE, HUM_NOYE, HUM_EXCES,
                     ASPHYXIE_MEMORY_LERP)
-from fields.ecofields.constants import T_PLANTE_ALPHA
+from fields.ecofields.constants import (T_PLANTE_ALPHA, ROSEE_SURFACE_REF,
+                                        ROSEE_FOLIAIRE_MAX)
 from plants import EXPR_GAIN, EXPR_MIN, EXPR_MAX, TAU_UP, TAU_DOWN
 from .calendrier import saison_de
 
@@ -231,6 +232,20 @@ class CroissanceMixin:
             plant.shade_memory  = max(0.0, min(1.0, plant.shade_memory))
             # Drought memory : stress quand humidité < 0.5
             drought_stress = max(0.0, 1.0 - hum / 0.5) if hum < 0.5 else 0.0
+            # Captation foliaire de la rosée (sprint météo→champs ⑤, §6) : une CANOPÉE
+            # intercepte la rosée du matin → le feuillage hydraté ALLÈGE le stress
+            # hydrique (interconnexion « tout coexiste »). On RABOTE le drought_stress
+            # ∝ la rosée moyenne déposée sur l'empreinte foliaire de la plante
+            # (`eco.rosee_last`), borné par ROSEE_FOLIAIRE_MAX. Effet marginal mais réel
+            # (un LEVIER, pas une pluie) : à rosée nulle → terme nul → comportement
+            # antérieur (golden NEUTRE pour cette part). Lecture PURE de `rosee_last`.
+            rosee = getattr(eco, "rosee_last", None)
+            if rosee is not None and drought_stress > 0.0 and plant.foliar_plots:
+                capte = sum(rosee.at_plot(fr, fc) for (fr, fc) in plant.foliar_plots
+                            if 0 <= fr < eco.rows and 0 <= fc < eco.cols)
+                capte /= len(plant.foliar_plots)            # rosée MOYENNE sur la canopée
+                relief = ROSEE_FOLIAIRE_MAX * min(1.0, capte / ROSEE_SURFACE_REF)
+                drought_stress = max(0.0, drought_stress * (1.0 - relief))
             plant.drought_memory += (drought_stress - plant.drought_memory) * 0.05
             plant.drought_memory  = max(0.0, min(1.0, plant.drought_memory))
             # Asphyxie memory : MIROIR haut de la sécheresse — stress d'excès quand

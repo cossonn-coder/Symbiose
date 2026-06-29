@@ -57,12 +57,19 @@ def tick_rosee(eco, t_air: float, nebulosite: float) -> list[str]:
     Renvoie une liste de marqueurs de log AGRÉGÉS PAR TUILE (`💧 rosée` /
     `❄ gelée blanche`) émis seulement si la condensation/fonte totale dépasse
     `ROSEE_LOG_SEUIL` (signe diégétique notable, philo #5 — capté par le ledger
-    d'événements en ⑤). Aucune condensation nulle part → liste vide (golden-safe)."""
+    d'événements en ⑤). Aucune condensation nulle part → liste vide (golden-safe).
+
+    Écrit AUSSI `eco.rosee_last` (carte transiente ⑤, REMISE À PLAT chaque tick) :
+    l'eau LIQUIDE déposée par plot (régime > 0 °C — pas le givre). Lue par les
+    interconnexions vivantes du matin (faune abreuvée + captation foliaire, §6)."""
     total_rosee = 0.0   # eau liquide déposée (régime > 0 °C) sur la tuile
     total_givre = 0.0    # eau gelée nouvellement déposée (régime ≤ 0 °C)
     total_fonte = 0.0    # givre restitué à l'humidité (réchauffement)
+    rosee_last = getattr(eco, "rosee_last", None)   # robustesse pré-⑤ (jamais en prod)
     for r in range(eco.rows):
         for c in range(eco.cols):
+            if rosee_last is not None:
+                rosee_last.set(r, c, 0.0)   # transiente : on repart à plat ce tick
             t_min    = t_min_nuit_at(eco, r, c, t_air, nebulosite)
             hum_norm = min(1.0, eco.humidite.at_plot(r, c) / 3.0)
             t_rosee  = t_air - ECART_ROSEE_SEC + GAIN_HUM_ROSEE * hum_norm
@@ -70,9 +77,13 @@ def tick_rosee(eco, t_air: float, nebulosite: float) -> list[str]:
             if t_min > 0.0:
                 # Régime LIQUIDE : la condensation du matin hydrate le sol, ET le
                 # givre éventuellement accumulé les nuits froides précédentes FOND
-                # (fonte différée §3.4). Le givre est remis à 0 ensuite.
+                # (fonte différée §3.4). Le givre est remis à 0 ensuite. On MÉMORISE
+                # l'eau liquide DÉPOSÉE (cond seule, pas la fonte) dans `rosee_last` :
+                # c'est la rosée du matin, l'abreuvoir de la faune + le film foliaire (⑤).
                 gel = eco.givre.at_plot(r, c)
                 eco.humidite.add(r, c, cond + gel)
+                if rosee_last is not None and cond > 0.0:
+                    rosee_last.set(r, c, cond)
                 if gel > 0.0:
                     eco.givre.set(r, c, 0.0)
                     total_fonte += gel

@@ -207,7 +207,20 @@ from __future__ import annotations
 #       pré-0.5.9 → 0 = pas de voile). `epandre` 2 clics (UX source→cible) N'EST PAS un
 #       incrément de protocole : le verbe accepte DÉJÀ {tile, structure, r, c} (0.3.5),
 #       seule la VUE change (2 temps de désignation). Aucun autre champ ne bouge.
-ENGINE_VERSION = "0.5.9"
+# 0.5.10 (météo→champs ⑤, interconnexions + voix + pont) : nouveau bloc
+#       `condensation` au snapshot — liste CREUSE par tuile `[[r, c, rosee, givre],
+#       …]` des plots ayant porté de la rosée LIQUIDE ce matin (`eco.rosee_last`) ou
+#       du GIVRE accumulé (`eco.givre`, gelée blanche). La vue Godot en tire les
+#       gouttes scintillantes / le givre blanc (rendu C# = dette D24). Plots secs OMIS
+#       (liste creuse comme `litiere`/`alarme`). PUR ajout lecture-seule → golden
+#       NEUTRE pour le pont (le pont ne réinjecte rien). En PARALLÈLE, côté moteur
+#       (hors pont, golden léger ANNONCÉ) : la rosée RELIE le vivant — la faune du
+#       matin (limace/cloporte) est ABREUVÉE (bump d'habitat ∝ rosée, `population.py`)
+#       et une canopée CAPTE la rosée → allège le stress hydrique foliaire
+#       (`croissance.py::_update_physiology`). Voix : encyclopédie (concepts `rosee`/
+#       `gelee_blanche`), carnet (CONCEPT_DE → météo), pages secrètes (P21/P22). Champ
+#       optionnel côté vue (tolérance pré-0.5.10).
+ENGINE_VERSION = "0.5.10"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

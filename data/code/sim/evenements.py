@@ -157,6 +157,19 @@ def evenements(log: list[str]) -> list[Evenement]:
             out.append(Evenement("ravageur", tile_id, None, None, None))
             continue
 
+        # Rosée / gelée blanche (sprint météo→champs ⑤) : marqueurs nocturnes de
+        # TUILE émis par `rosee.tick_rosee` (💧 rosée / ❄ gelée blanche), SANS @pos
+        # ni espèce (un aléa climatique, comme le ravageur de saison). On les teste
+        # AVANT le `❄`-stagnation (le `❄` est polysémique : gel/stagnation/mort
+        # hivernale) en exigeant le texte explicite « gelée blanche » → pas de
+        # collision avec `stagne (froid)` (qui ne contient pas ce mot).
+        if "💧" in line and "rosée" in line:
+            out.append(Evenement("rosee", tile_id, None, None, None))
+            continue
+        if "❄" in line and "gelée blanche" in line:
+            out.append(Evenement("gelee_blanche", tile_id, None, None, None))
+            continue
+
         m_pos = _POS.search(line)
         if not m_pos:
             # TODO(voix): floraison — `🌸 Floraison :` n'est qu'un HEADER de

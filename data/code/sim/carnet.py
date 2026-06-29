@@ -69,6 +69,11 @@ CONCEPT_DE: dict[tuple[str, str | None], str] = {
     ("ravageur", None):           "ravageurs",
     ("abscission", None):         "décomposition",
     ("acclimatation", None):      "adaptation",          # D43 (doc §5.1 dernière ligne)
+    # Rosée & gelée blanche (sprint météo→champs ⑤) : aléas CLIMATIQUES nocturnes,
+    # gatés par le concept « météo » → le carnet bascule en interprétatif au seuil
+    # météo (D12), exactement comme le froid/gel (cohérent §6 du doc de conception).
+    ("rosee", None):              "météo",
+    ("gelee_blanche", None):      "météo",
 }
 
 # Concept de la « levée (reprise) » : doc §5.0 dit « = la cause (eau / lumière /
@@ -138,6 +143,14 @@ GABARIT: dict[tuple[str, str | None, str], str] = {
 
     ("acclimatation", None, _D): "Le feuillage de {e} {l} a pris un éclat cireux, glauque.",
     ("acclimatation", None, _I): "{e} {l} s'est acclimatée — et ses descendants naîtront pré-armés contre ce stress.",
+
+    # Rosée & gelée blanche (sprint météo→champs ⑤) — aléas de tuile, sans espèce
+    # ({e} = « le couvert »). Descriptif = ce qu'on VOIT le matin (philo #5) ;
+    # interprétatif = la cause comprise au seuil météo (le sol nu/clair condense).
+    ("rosee", None, _D): "Au matin {l}, le couvert perlait de gouttes scintillantes.",
+    ("rosee", None, _I): "Rosée {l} — la nuit claire a fait condenser l'air sur le sol froid ; cette eau du matin freine la soif et abreuve la petite faune.",
+    ("gelee_blanche", None, _D): "Une fine pellicule de givre blanc couvrait le sol {l} ce matin.",
+    ("gelee_blanche", None, _I): "Gelée blanche {l} : sous le ciel dégagé le sol a gelé sa rosée ; le givre fondra et rendra son eau au réchauffement.",
 }
 
 # Gabarit générique quand la paire (kind, cause) n'a pas de texte dédié (§5.0 ne

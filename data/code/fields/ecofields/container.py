@@ -143,6 +143,14 @@ class EcoFields:
     # les ions mobiles, N≫K>P). État TRANSIENT par tick, à 0 au repos → golden NEUTRE
     # tant que `LESSIVAGE_PLUIE_K=0` ou aucune eau ne draine. Hors `summary()` (transient).
     drainage_last:    GridField = field(default=None)
+    # Eau liquide de rosée déposée au DERNIER tick nocturne (sprint météo→champs ⑤, §6) :
+    # `tick_rosee` y écrit la condensation LIQUIDE par plot (régime > 0 °C — pas le givre,
+    # qui va dans `eco.givre`). Carte transiente lue par les INTERCONNEXIONS vivantes du
+    # matin : (A) habitat des détritivores de surface (limace/cloporte abreuvés) et (B)
+    # captation foliaire (le feuillage hydraté allège le stress hydrique de la plante).
+    # NULLE au repos / nuit douce-couverte → golden NEUTRE pour ces termes ; la rosée du
+    # smoke en pose → golden léger ANNONCÉ. Hors `summary()` (transient, comme drainage_last).
+    rosee_last:       GridField = field(default=None)
 
     def __post_init__(self):
         if self.humidite    is None: self.humidite    = GridField(self.rows, self.cols)
@@ -234,6 +242,10 @@ class EcoFields:
         # (perte d'humidité brute, petite pour un sol terre).
         if self.drainage_last is None:
             self.drainage_last = GridField(self.rows, self.cols)
+        # Rosée liquide du dernier tick (⑤) — NULLE au repos, écrite par `tick_rosee`,
+        # lue par les interconnexions vivantes du matin (faune abreuvée + captation foliaire).
+        if self.rosee_last is None:
+            self.rosee_last = GridField(self.rows, self.cols)
 
     def get_field(self, name: str) -> GridField | None:
         return {

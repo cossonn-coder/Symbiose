@@ -149,6 +149,7 @@ class SerializeMixin:
         litiere = {}
         alarme = {}
         temperature = {}
+        condensation_by_tile = {}
         for tile in gs["tiles"]:
             eco = gs["eco"][tile.tile_id]
             sprites[tile.tile_id] = {
@@ -256,6 +257,28 @@ class SerializeMixin:
                 "t_sol": [[round(eco.temperature_sol.data[r][c], 2)
                            for c in range(eco.cols)] for r in range(eco.rows)],
             }
+            # Carte de CONDENSATION par tuile (sprint météo→champs ⑤, §6, 0.5.10) :
+            # liste CREUSE des plots `[r, c, rosee, givre]` où il y a eu rosée
+            # liquide ce matin (`eco.rosee_last`, écrite par `tick_rosee`) ou du givre
+            # accumulé (`eco.givre`, gelée blanche non encore fondue). La vue Godot en
+            # tire les GOUTTES scintillantes (rosee > 0, été/printemps) et le GIVRE
+            # blanc (givre > 0, hiver) — rendu C# = dette D24, ⑤ n'expose que la donnée.
+            # Plots secs/sans dépôt OMIS (liste creuse, comme `litiere`/`alarme`).
+            # PURE lecture (champs remplis par le tick) → golden NEUTRE pour le pont ;
+            # le smoke en pose (nuits claires) mais le pont ne RÉINJECTE rien. Champ
+            # optionnel côté vue (tolérance pré-0.5.10).
+            rl = getattr(eco, "rosee_last", None)
+            gv = getattr(eco, "givre", None)
+            condensation = []
+            if rl is not None and gv is not None:
+                for r in range(eco.rows):
+                    for c in range(eco.cols):
+                        rosee = rl.data[r][c]
+                        givre = gv.data[r][c]
+                        if rosee > 0.0 or givre > 0.0:
+                            condensation.append(
+                                [r, c, round(rosee, 4), round(givre, 4)])
+            condensation_by_tile[tile.tile_id] = condensation
         # Météo scalaire GLOBALE du tick (sprint thermique ⑧, §A) : la météo qui a
         # produit l'état COURANT est celle de la semaine DÉJÀ simulée = `week − 1`
         # (`week` = prochaine à simuler). `weather_state` étant PURE, on la RECALCULE
@@ -300,6 +323,7 @@ class SerializeMixin:
                 "carpophores": carpophores,
                 "structures": structures, "litiere": litiere, "alarme": alarme,
                 "weather": weather, "temperature": temperature,
+                "condensation": condensation_by_tile,
                 "containers": self._containers_snapshot(gs, saison)}
 
     def _containers_snapshot(self, gs: dict, saison: str) -> list:

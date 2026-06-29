@@ -128,6 +128,21 @@ FRAC_AUX_POURRI  = 0.25  # part du signal pourri qui va AUSSI à l'auxiliaire (d
 FONGIVORE_GAIN = 0.35    # boost max de capacité `detritivore` d'un réseau plein
 
 
+# ---------------------------------------------------------------------------
+# FAUNE ABREUVÉE PAR LA ROSÉE (sprint météo→champs ⑤, §6)
+# ---------------------------------------------------------------------------
+# Interconnexion « tout coexiste » : la faune du MATIN (limace/cloporte, détritivores
+# de surface) gagne un PLANCHER d'habitat les semaines à forte rosée — l'eau de surface
+# du matin est leur abreuvoir. Terme ADDITIF à leur habitat ∝ la rosée liquide DÉPOSÉE
+# ce tick (`eco.rosee_last`, écrite par `tick_rosee`), normalisée par ROSEE_SURFACE_REF,
+# borné par ROSEE_FAUNE_HABITAT_W. Lecture PURE (la faune ne touche pas la rosée — c'est
+# le CHAMP qui fait tout, philo #2). Les constantes vivent ICI (la couche `fields/
+# population` n'importe PAS `ecofields` — pas de cycle). Sans rosée → terme nul → golden
+# NEUTRE pour cette part. Placeholders, calibrage post-test.
+ROSEE_SURFACE_REF     = 0.03   # eau liquide/plot saturant le signal de surface [→1]
+ROSEE_FAUNE_HABITAT_W = 0.25   # bump max d'habitat des détritivores du matin
+
+
 def _mycelium_signal(eco, tile, plants) -> list[list[float]]:
     """Attraction fongivore : le réseau `mycelium` dense gonfle la capacité du
     détritivore du sol (collemboles brouteurs d'hyphes). Borné par FONGIVORE_GAIN.
@@ -472,6 +487,26 @@ def _humide_litiere_grid(eco, tile, plants) -> list[list[float]]:
     return g
 
 
+def _rosee_humide_litiere_grid(eco, tile, plants) -> list[list[float]]:
+    """Habitat des détritivores du MATIN (limace ④b, cloporte ④d) ABREUVÉS par la
+    rosée (sprint météo→champs ⑤, §6 — interconnexion « tout coexiste »). Reprend
+    `_humide_litiere_grid` (sol humide + sous-litière) et lui AJOUTE un plancher ∝ la
+    rosée liquide DÉPOSÉE ce matin (`eco.rosee_last`, normalisée par ROSEE_SURFACE_REF),
+    borné par ROSEE_FAUNE_HABITAT_W : l'eau de surface du matin est leur abreuvoir, les
+    semaines à forte rosée la faune du matin prospère un peu mieux. Lecture PURE (la
+    faune ne touche pas la rosée — c'est le CHAMP qui fait tout, philo #2). Sans rosée
+    (`rosee_last` nul) → identique à `_humide_litiere_grid` → golden NEUTRE pour ce terme."""
+    g = _humide_litiere_grid(eco, tile, plants)
+    rosee = getattr(eco, "rosee_last", None)
+    if rosee is None:                       # robustesse pré-⑤ (jamais en prod)
+        return g
+    for r in range(eco.rows):
+        for c in range(eco.cols):
+            sig = min(1.0, rosee.at_plot(r, c) / ROSEE_SURFACE_REF)
+            g[r][c] = _clamp01(g[r][c] + ROSEE_FAUNE_HABITAT_W * sig)
+    return g
+
+
 def _foliage_solanaceae_grid(eco, tile, plants) -> list[list[float]]:
     """Feuillage des seules Solanaceae (ressource du doryphore, ④b) — `_foliage_grid`
     filtré par famille : la pression doryphore est NULLE là où aucune Solanaceae ne
@@ -778,8 +813,8 @@ def build_population_specs() -> list[TrophicSpec]:
         ),
         TrophicSpec(
             name="limace", category="ravageur", salt=_SALT_LIMACE,
-            resource_fn=_limace_food_grid, habitat_fn=_humide_litiere_grid,
-            predators=("carabe", "herisson"),    # ④c
+            resource_fn=_limace_food_grid, habitat_fn=_rosee_humide_litiere_grid,
+            predators=("carabe", "herisson"),    # ④c (habitat abreuvé par la rosée ⑤)
             # ④d : le signal fruit pourri (`_rav_fruit_signal`), porté TRANSITOIREMENT
             # par la limace en ④b, passe au CLOPORTE (détritivore dédié, doc §C13,
             # défaut « cloporte seul »). La limace n'a plus de terme-source fruit.
@@ -814,8 +849,8 @@ def build_population_specs() -> list[TrophicSpec]:
             # Partage la ressource litière avec la limace (compétition implicite) et
             # son habitat humide. Reçoit le signal fruit POURRI (charognard, doc §C13).
             name="cloporte", category="detritivore", salt=_SALT_CLOPORTE,
-            resource_fn=_litter_grid, habitat_fn=_humide_litiere_grid,
-            predators=("carabe", "herisson"),    # ④d
+            resource_fn=_litter_grid, habitat_fn=_rosee_humide_litiere_grid,
+            predators=("carabe", "herisson"),    # ④d (habitat abreuvé par la rosée ⑤)
             signal_fn=_rav_fruit_signal,         # fruit pourri → cloporte (repris de la limace)
             daylen_min=9.0, daylen_full=12.0,    # humide : fenêtre large/précoce (comme la limace)
             **encyclo_meta("cloporte"),

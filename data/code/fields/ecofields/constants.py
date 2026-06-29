@@ -146,6 +146,26 @@ ROSEE_PAR_DEGRE   = 0.010   # humidité déposée par °C sous le point de rosé
 ROSEE_LOG_SEUIL   = 0.02    # condensation/fonte cumulée/tuile pour émettre un marqueur
 GIVRE_SEVERITY_REF = 8.0    # réf de sévérité du dégât foliaire de givre (option §3.5, différée)
 
+# --- Interconnexions vivantes de la rosée (sprint météo→champs ⑤, §6) ---
+# La rosée du matin RELIE le vivant (règle « tout coexiste », 2026-06-16). Deux
+# couplages SOBRES, bornés, déterministes, branchés sur la carte transiente
+# `eco.rosee_last` (eau liquide déposée ce tick par `tick_rosee`, normalisée par
+# ROSEE_SURFACE_REF) :
+#  (A) FAUNE ABREUVÉE — la faune du MATIN (limace/cloporte) gagne un plancher
+#      d'habitat les semaines à forte rosée (cf. `fields/population.py`, où vivent ses
+#      constantes propres : la couche `fields/population` n'importe pas `ecofields`).
+#  (B) CAPTATION FOLIAIRE — une canopée intercepte la rosée → le feuillage hydraté
+#      ALLÈGE le stress hydrique de la plante (`_update_physiology`, sim/engine). On
+#      RABOTE le `drought_stress` du tick ∝ rosée déposée sur l'empreinte foliaire,
+#      normalisée par ROSEE_SURFACE_REF, borné par ROSEE_FOLIAIRE_MAX (effet marginal
+#      mais réel, cohérent avec le poids « significatif » de la rosée sur le sol, §3.6).
+#      Reste un LEVIER, pas une pluie.
+# Invariant : `rosee_last` NUL partout (nuit douce/couverte) ⇒ aucun terme ne joue →
+# comportement antérieur. La rosée DU SMOKE en pose → golden léger ANNONCÉ.
+# PLACEHOLDERS, calibrage F5 / bancs d'essai.
+ROSEE_SURFACE_REF     = 0.03   # eau liquide/plot saturant le signal de surface [→1]
+ROSEE_FOLIAIRE_MAX    = 0.35   # raboteur max du stress hydrique foliaire (B), ∝ canopée
+
 # --- Lessivage NPK AMPLIFIÉ par la pluie (sprint météo→champs ③, §4) ---
 # Le lessivage passif existe DÉJÀ (`tick_decomposition` : `champ *= leach_factor(...)`,
 # rétention modulée par la CEC = texture + humus). Ce tronçon NE LE RECRÉE PAS : il
