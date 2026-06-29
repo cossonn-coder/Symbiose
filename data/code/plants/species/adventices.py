@@ -132,6 +132,7 @@ class PoaAnnua(PlantBase):
     winter_strategy = "dormant"
     archetype = "grass"
     reproduction_rate = 0.06
+    seed_dispersal = "anemochore"   # caryopse léger de graminée — graines au vent (⑤, §5.3)
     foliage_density = 0.35     # graminée fine, ombre légère
     longevity_years = 3        # vivace courte
     growth_stages = [
@@ -172,6 +173,7 @@ class Taraxacum(PlantBase):
     winter_strategy = "dormant"
     archetype = "competitor"
     reproduction_rate = 0.04
+    seed_dispersal = "anemochore"   # aigrette plumée (pappus) — graines au vent (⑤, §5.3)
     foliage_density = 0.50
     longevity_years = 8    # vivace longue
     growth_stages = [

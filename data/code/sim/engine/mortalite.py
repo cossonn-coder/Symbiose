@@ -22,6 +22,26 @@ from sim.growth import est_etiole
 from .aleas import (PAILLAGE_PROTECT, DAMAGE_STEP, WIND_DAMAGE_SEUIL,
                     WIND_SEVERITY_REF, WIND_ETIOLE_SUSCEPT)
 
+# Anémochorie (sprint VENT ⑤, §5.3) : portée de dépôt SOUS LE VENT d'une graine
+# ailée/plumée (`seed_dispersal == "anemochore"`), en PLOTS, à force de vent 1.
+# Le dépôt génétique de `_reproduction` glisse de `ANEMOCHORIE_PORTEE_PLOTS × force`
+# plots dans la direction du vent (clamp à la tuile) → la lignée féral migre sous le
+# vent, élargit/oriente la succession (philo #2 : flux vent → où s'installe la suite).
+ANEMOCHORIE_PORTEE_PLOTS = 4.0
+
+
+def _plot_sous_le_vent(pr: int, pc: int, wind_dir: float, wind_force: float) -> tuple:
+    """Plot d'atterrissage d'une graine anémochore lâchée en (pr, pc) : décalé SOUS
+    LE VENT (opposé à `wind_dir`, qui est la direction d'OÙ vient le vent) d'une
+    distance ∝ `wind_force`, exprimée directement en PLOTS. Vent nul → (pr, pc)
+    inchangé (golden NEUTRE : dépôt au pied, comme une barochore)."""
+    dist = ANEMOCHORIE_PORTEE_PLOTS * wind_force
+    # Sous le vent = -(vecteur d'origine) : le vent vient de `wind_dir`, le pollen/la
+    # graine part dans le sens opposé.
+    dr = -dist * math.sin(wind_dir)
+    dc = -dist * math.cos(wind_dir)
+    return (pr + round(dr), pc + round(dc))
+
 
 class MortaliteMixin:
     def _tick_senescence_health(self, tile, eco):
@@ -106,7 +126,8 @@ class MortaliteMixin:
         # _tick_skeletons une fois son bois épuisé (herbacée → dès ce tick).
         return log
 
-    def _reproduction(self, tile, eco, week):
+    def _reproduction(self, tile, eco, week, wind_dir: float = 0.0,
+                      wind_force: float = 0.0):
         """
         Reproduction génétique (D17 + D22) — REMPLACE le renouvellement provisoire
         M7. Pour chaque parent en âge de porter des graines qui fructifie ce tick
@@ -117,7 +138,12 @@ class MortaliteMixin:
              (moyenne parents + mutation ; autofécondation à défaut ; introgression
              inter-espèces décalant les gènes sans changer d'espèce).
           2. Pont « chute → banque-sol » : les graines (gènes hérités) entrent
-             dans le pool génétique du plot (succession féral future).
+             dans le pool génétique du plot (succession féral future). ANÉMOCHORIE
+             (⑤, §5.3) : une espèce à graine ailée/plumée (`seed_dispersal ==
+             "anemochore"` : pissenlit, graminée, ortie) dépose ce pool SOUS LE
+             VENT (`_plot_sous_le_vent`, décalage ∝ `wind_force`) au lieu d'au pied
+             → la lignée féral migre dans la direction du vent, orientant la
+             succession future. Barochore (défaut) ou vent nul → dépôt au pied.
           3. Recrutement direct : seulement pour ce que la succession par archétype
              ne germe PAS (vivaces/arbres SANS archétype, ex-domaine de M7). Les
              archétypes se ressèment via _succession, qui échantillonne le pool.
@@ -153,7 +179,14 @@ class MortaliteMixin:
             father = find_father(parent, tile.plants, tile, eco, seed, week)
             g_child = child_genes(parent, father, seed, week)
             e_child = child_expression(parent)
-            eco.seed_bank.add_species(pr, pc, cls, rate, g_child, e_child)
+            # Anémochorie (⑤) : graine ailée → pool déposé SOUS LE VENT (clampé à la
+            # tuile) ; barochore ou calme → au pied (dr, dc) = (pr, pc).
+            dr, dc = pr, pc
+            if getattr(cls, "seed_dispersal", "barochore") == "anemochore" and wind_force > 0.0:
+                tr, tc = _plot_sous_le_vent(pr, pc, wind_dir, wind_force)
+                if tile.is_valid_plot(tr, tc):
+                    dr, dc = tr, tc
+            eco.seed_bank.add_species(dr, dc, cls, rate, g_child, e_child)
 
             # 3. Recrutement direct, domaine ex-M7 uniquement
             is_tree = hasattr(cls, "age_curve")

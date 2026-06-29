@@ -33,6 +33,7 @@ class Nettle(Urticaceae):
     life_cycle = "perennial"
     winter_strategy = "dormant"
     archetype = None               # PAS une adventice de succession (hors WEED_CATALOGUE)
+    seed_dispersal = "anemochore"  # akène léger d'ortie — graines au vent (⑤, §5.3)
     foliage_density = 0.50
     longevity_years = 8
     reproduction_rate = 0.10

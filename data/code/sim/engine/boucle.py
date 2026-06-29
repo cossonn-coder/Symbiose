@@ -44,6 +44,7 @@ from .mortalite import MortaliteMixin
 from .decompo import DecompoMixin
 from .floraison import FloraisonMixin
 from .butineurs import ButineurMixin
+from .anemophilie import AnemophilieMixin
 
 # Pont récolte → banque-joueur (D17) : classe → clé catalogue (inverse).
 _SPECIES_KEY = {cls: key for key, cls in PLANT_CATALOGUE.items()}
@@ -51,7 +52,7 @@ _SPECIES_KEY = {cls: key for key, cls in PLANT_CATALOGUE.items()}
 
 @dataclass
 class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
-             ButineurMixin):
+             ButineurMixin, AnemophilieMixin):
     game_state: dict
 
     def __post_init__(self):
@@ -338,9 +339,11 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
                                         if abs(v - 1.0) > 1e-9}
                                 player_bank.add(Seed(key, dict(plant.genes), expr))
 
-            # 11b. Reproduction génétique (D17+D22) — saison des graines (automne)
+            # 11b. Reproduction génétique (D17+D22) — saison des graines (automne).
+            # Anémochorie (⑤, §5.3) : `vent_dir`/`vent_force` décalent le dépôt
+            # génétique des espèces à graine ailée SOUS LE VENT (graine voyage).
             if saison == "automne" and est_phase_recolte(week_in_year, saison):
-                rlog = self._reproduction(tile, eco, week)
+                rlog = self._reproduction(tile, eco, week, vent_dir, vent_force)
                 if rlog: log += rlog
 
             # 12. Conflits
@@ -369,6 +372,15 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
             # pollen_recu (hors digest) + eco.foragers (transient), aucun log →
             # golden NEUTRE. À 0 pollinisateur (0 agent), pollen_recu reste 0.
             self._tick_butineurs(tile, eco, seed, week_in_year)
+
+            # 13c-bis. Pollinisation ANÉMOPHILE (sprint VENT ⑤, §5.3) — APRÈS les
+            # butineurs (voie entomophile), à côté d'eux : le vent dépose du
+            # `pollen_recu` sur les fleurs `wind` ∝ vent local × congénères en
+            # AMONT (direction du vent). Voie de nouaison PARALLÈLE, sans insecte.
+            # Lit `eco.vent` (champ d'abri ③) et `vent_dir` (masse d'air ①). N'écrit
+            # que `pollen_recu` (hors digest), aucun log → golden NEUTRE (aucun
+            # fruitier anémophile mûr dans le smoke). Calme → no-op strict.
+            self._tick_anemophilie(tile, eco, vent_dir, vent_force)
 
             # 13d. Ponts de cycle de vie (arc pollinisation §D, tronçon ⑤) — APRÈS
             # les guildes (13b) et les butineurs (13c), ordre §K.2. Ponte/maturation/

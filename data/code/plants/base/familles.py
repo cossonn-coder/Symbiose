@@ -55,6 +55,11 @@ class PlantBase(ABC):
     # Pollinisation (D22) — pilote l'appariement biparental (reproduction.py)
     pollination_mode: str = "insect"     # "wind" | "insect" | "self"
     pollination_radius_cm: float = 150.0 # portée de croisement (distance euclidienne)
+    # Dispersion des GRAINES (sprint VENT ⑤, §5.3 — orthogonal à la POLLINISATION).
+    # "barochore" : la graine tombe au pied (gravité, défaut). "anemochore" : graine
+    # ailée/plumée (samare, aigrette) emportée SOUS LE VENT → le dépôt génétique de
+    # _reproduction se décale dans la direction du vent ∝ sa force (anémochorie).
+    seed_dispersal: str = "barochore"    # "barochore" | "anemochore"
     foliage_density: float | None = None # opacité d'ombre [0-1] ; None ⇒ défaut strate
     # Mortalité réaliste (D27) — longévité + âge de fructification
     longevity_years: float | None = None # longévité (ans) ; None ⇒ défaut par life_cycle

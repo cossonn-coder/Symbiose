@@ -97,10 +97,11 @@ class DecompoMixin:
              global FRUIT_NOUAISON_WEEK) : une fruitière mûre s'arme quand sa
              `floraison` dépasse SEUIL_FLEURI puis NOUE quand sa floraison
              retombe sous SEUIL_NOUAISON (fleurs fanées). La fraction de sites
-             qui nouent dépend du MODE de pollinisation : `self`/`wind` court-
-             circuitent (frac=1, nouaison pleine sans insectes) ; `insect` lit la
-             dose `pollen_recu` déposée par les butineurs (§F) via g() — SANS
-             plancher (0 butineur → 0 fruit, §B.2). On pose un fruit vert
+             qui nouent dépend du MODE de pollinisation : `self` court-circuite
+             (frac=1, nouaison pleine sans vecteur) ; `insect` lit la dose
+             `pollen_recu` des butineurs (§F), `wind` celle du panache anémophile
+             (⑤, §5.3) — les deux via g() SANS plancher (0 dose → 0 fruit, §B.2).
+             On pose un fruit vert
              (maturité 0) sur les `round(frac × |sites|)` premiers sites
              reproducteurs (`organ_sites`, borné MAX_ORGANS) ; `pollen_recu` est
              remis à 0 (cohorte suivante repart de zéro). Les fruits non récoltés
@@ -131,9 +132,12 @@ class DecompoMixin:
                 for f in plant.fruits:          # cohorte précédente non récoltée
                     eco.deposer_litiere(r, c, "fruit", f.masse)
                 # Fraction nouée selon le mode (philo #2 : flux de pollinisation →
-                # contrainte → fruits ; self/wind nouent toujours pleinement).
-                frac = (frac_nouaison(plant.pollen_recu)
-                        if cls.pollination_mode == "insect" else 1.0)
+                # contrainte → fruits). `insect` lit la dose des butineurs (§F),
+                # `wind` lit la dose ANÉMOPHILE déposée par le vent (⑤, §5.3) — les
+                # deux via g() SANS plancher (0 dose → 0 fruit). Seule l'autogamie
+                # (`self`) court-circuite (frac=1, nouaison pleine sans vecteur).
+                frac = (1.0 if cls.pollination_mode == "self"
+                        else frac_nouaison(plant.pollen_recu))
                 sites = organ_sites(plant)
                 n = round(frac * len(sites))
                 plant.fruits = [Fruit(seg_id, 0.0, FRUIT_MASSE)

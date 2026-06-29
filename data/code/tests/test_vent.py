@@ -167,14 +167,101 @@ def test_abri_spatial():
           all(eco.vent.at_plot(r, c) == 0.0 for r in range(40) for c in range(40)))
 
 
+# --- G. Pollinisation & dispersion anémophiles (tronçon ⑤, §5.3) -----------
+def test_anemophilie_noue_sans_butineur():
+    """Une espèce ANÉMOPHILE en fleur reçoit du `pollen_recu` du VENT (sans aucun
+    insecte) ∝ vent local × congénères en amont → elle NOUE. Calme → pas de pollen
+    → pas de fruit (le vent EST le vecteur)."""
+    from world import Tile
+    from plants import AppleTree, organ_sites
+    from plants.base import Segment
+    from fields import init_eco
+    from sim.engine import Engine
+
+    def _monde_anemo(force):
+        tile = Tile(tile_id="A", soil_type="terre", grid_rows=6, grid_cols=6)
+        eco = init_eco("A", 6, 6, humidite=1.5, fertilite=1.2, microbiome=0.3)
+        eco.seed_bank.germination_candidates = lambda *a, **k: []
+        eco.vent.fill(force)                      # vent local uniforme
+        # Deux pommiers conspécifiques (émetteur + cible) en mode anémophile.
+        mere = tile.add_plant(AppleTree, 2, 2)
+        pere = tile.add_plant(AppleTree, 2, 4)
+        for p in (mere, pere):
+            p.age_years = 6.0
+            p.segments = [Segment(parent=None, base=(0,0,100+30*i), dir=(0,0,1),
+                                  length_cm=50, thickness_cm=2, age_weeks=10,
+                                  auxin=0.5, is_apex=True) for i in range(3)]
+        gs = {"tiles": [tile], "eco": {"A": eco}, "scores": {},
+              "current_player": "j", "week": 1, "log": []}
+        eng = Engine(gs)
+        return tile, eco, mere, eng
+
+    orig = AppleTree.pollination_mode
+    try:
+        AppleTree.pollination_mode = "wind"
+        # Vent présent : la cible reçoit du pollen → noue.
+        tile, eco, mere, eng = _monde_anemo(0.6)
+        mere.floraison = 1.0; pere = tile.plants[1]; pere.floraison = 1.0
+        eng._tick_anemophilie(tile, eco, 0.0, 0.6)   # vent du nord, force 0.6
+        check("anémophile ventée : pollen_recu > 0 (sans butineur)",
+              mere.pollen_recu > 0.0, f"pollen={mere.pollen_recu:.2f}")
+        # Nouaison réelle en fin de floraison.
+        eng._tick_fruits(tile, eco, 1)               # arme a_fleuri
+        mere.floraison = 0.0
+        eng._tick_fruits(tile, eco, 1)               # fanaison → nouaison
+        check("anémophile ventée : noue des fruits sans insecte",
+              len(mere.fruits) > 0, f"{len(mere.fruits)} fruits")
+        # Calme : aucun pollen anémophile → aucun fruit (sans plancher).
+        tile, eco, mere, eng = _monde_anemo(0.0)
+        mere.floraison = 1.0; tile.plants[1].floraison = 1.0
+        eng._tick_anemophilie(tile, eco, 0.0, 0.0)
+        check("anémophile au calme : aucun pollen (vent = vecteur)",
+              mere.pollen_recu == 0.0)
+    finally:
+        AppleTree.pollination_mode = orig
+
+
+def test_butineurs_cloues():
+    """Le facteur d'activité butineuse décroît avec le vent local : grand vent →
+    moins de pollen déposé → l'ENTOMOPHILE noue moins (§5.3, butineurs cloués)."""
+    from sim.engine.butineurs import _forager_wind_factor, FORAGER_WIND_FLOOR
+    f_calme = _forager_wind_factor(0.0)
+    f_brise = _forager_wind_factor(0.3)
+    f_tempete = _forager_wind_factor(1.5)
+    check("calme : butineurs à pleine activité (facteur 1)", f_calme == 1.0)
+    check("le facteur décroît avec le vent", f_calme > f_brise > f_tempete,
+          f"{f_calme:.2f} > {f_brise:.2f} > {f_tempete:.2f}")
+    check("plancher d'activité résiduelle respecté", f_tempete >= FORAGER_WIND_FLOOR)
+
+
+def test_anemochorie_sous_le_vent():
+    """Une graine ANÉMOCHORE (pissenlit) dépose son pool génétique SOUS LE VENT
+    (décalé dans la direction du vent ∝ force), pas au pied ; une BAROCHORE reste
+    au pied. Calme → au pied dans les deux cas (golden-safe)."""
+    from sim.engine.mortalite import _plot_sous_le_vent
+    from plants import Taraxacum, AppleTree
+    # Direction 0 = vent du NORD → graine part vers le SUD (c décroît dans le repère).
+    au_pied = _plot_sous_le_vent(5, 5, 0.0, 0.0)
+    sous_vent = _plot_sous_le_vent(5, 5, 0.0, 1.0)
+    check("calme : dépôt anémochore au pied (golden-safe)", au_pied == (5, 5))
+    check("vent : dépôt anémochore décalé sous le vent", sous_vent != (5, 5),
+          f"{au_pied} → {sous_vent}")
+    check("pissenlit est anémochore", Taraxacum.seed_dispersal == "anemochore")
+    check("pommier est barochore (défaut)",
+          getattr(AppleTree, "seed_dispersal", "barochore") == "barochore")
+
+
 def main():
-    print("=== test_vent (① masse d'air + ③ abri spatial) ===")
+    print("=== test_vent (① masse d'air + ③ abri spatial + ⑤ pollinisation/dispersion) ===")
     test_determinisme()
     test_bornes()
     test_saisonnalite()
     test_evenement_venteux()
     test_cable_evapotranspiration()
     test_abri_spatial()
+    test_anemophilie_noue_sans_butineur()
+    test_butineurs_cloues()
+    test_anemochorie_sous_le_vent()
     passed = sum(1 for _, ok in _results if ok)
     total = len(_results)
     print(f"\n[test_vent] {passed}/{total} OK")
