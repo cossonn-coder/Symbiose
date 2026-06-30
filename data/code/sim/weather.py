@@ -67,9 +67,23 @@ TEMP_DELTA_BASE = {
     "Canicule":      +7.0,   # été brûlant → évaporation accrue (couplage hydrologie)
     "Redoux":        +5.0,   # hiver doux → réveil prématuré (vulnérabilité émergente)
     "Neige":         -6.0,   # ⑦ : tombe sous 0 → entre dans TEMP_DRIVEN, déclenche le gel ET dépose le manteau neigeux (effet igloo, cf. thermique.t_min_nuit_at)
+    # Sprint germination thermique ① — correctif amont : une averse REFROIDIT l'air
+    # (couche nuageuse + évaporation des gouttes), trou vérifié (le delta était 0.0 →
+    # l'air restait aussi chaud sous la pluie). Delta froid MODÉRÉ : la pluie n'est PAS
+    # un événement piloté par la température (elle garde son effet milieu humidité via
+    # WEATHER_ALEA), donc elle reste HORS de TEMP_DRIVEN — `temperature_delta` se contente
+    # d'AJOUTER ce froid à t_air, sans débrancher WEATHER_ALEA. Placeholder, calibrage ⑥.
+    "Pluie prolongée": -3.0,
+    "Orage":           -2.0,
 }
 # Événements pilotés par la température (pas d'effet WEATHER_ALEA en plus).
-TEMP_DRIVEN = frozenset(TEMP_DELTA_BASE)
+# La pluie (Pluie prolongée / Orage) porte un delta froid MAIS reste pilotée par le
+# milieu : son effet humidité passe par WEATHER_ALEA (engine, branche `not in
+# TEMP_DRIVEN`). On l'EXCLUT donc explicitement de cet ensemble — le froid s'ajoute à
+# t_air SANS court-circuiter l'apport d'eau. Sinon `frozenset(TEMP_DELTA_BASE)` les
+# happerait et débrancherait leur humidité (régression silencieuse).
+_TEMP_PLUIE = frozenset({"Pluie prolongée", "Orage"})
+TEMP_DRIVEN = frozenset(TEMP_DELTA_BASE) - _TEMP_PLUIE
 
 
 @dataclass(frozen=True)

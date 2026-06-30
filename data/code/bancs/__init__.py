@@ -8,7 +8,7 @@ golden (les bancs ne sont jamais montés pour smoke/full).
 
 Les tronçons ②③④ ajoutent leurs entrées ici (édaphique, climatique, biotique).
 """
-from .climatique import secheresse_sable, acclimatation, ombre_dense
+from .climatique import secheresse_sable, acclimatation, ombre_dense, pluie_thermique
 from .edaphique import chlorose_acidophile, asphyxie_argile, carence_npk
 from .biotique import infestation_ravageur, verger_floraison, semis_tempere
 
@@ -16,6 +16,7 @@ BANCS = {
     "secheresse_sable": secheresse_sable,
     "acclimatation": acclimatation,
     "ombre_dense": ombre_dense,
+    "pluie_thermique": pluie_thermique,
     "chlorose_acidophile": chlorose_acidophile,
     "asphyxie_argile": asphyxie_argile,
     "carence_npk": carence_npk,

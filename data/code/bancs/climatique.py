@@ -111,3 +111,33 @@ def ombre_dense():
     plante = tile.add_plant(Basil, 4, 4)
     force_memoire(plante, "shade_memory", SHADE_PRECHARGE)
     return monde([tile], {tile.tile_id: eco}, house=HOUSE_OMBRE)
+
+
+# ─────────────────────── 4. pluie thermique (couplage amont, ①) ───────────────
+# Banc-SONDE du correctif amont du sprint germination thermique ① : prouver la
+# chaîne pluie → air → sol. Avant le correctif, `temperature_delta` rendait 0.0
+# pour `Pluie prolongée`/`Orage` → une averse laissait l'air aussi chaud (trou). On
+# a alimenté `TEMP_DELTA_BASE` d'un delta froid ; ce banc l'OBSERVE. À la différence
+# des bancs foliaires (signes lus par la vue), celui-ci s'observe par les CHAMPS
+# (T_air, T_sol, humidité) : son oracle lit `eco.temperature`/`temperature_sol`/
+# `humidite`, pas `leaf_symptoms`. Aucune mécanique nouvelle — il COMPOSE un monde et
+# laisse la météo SEEDÉE du serveur (déterministe) faire tomber l'averse ; l'oracle
+# trace la fenêtre où le seed pose une `Pluie prolongée` (cf. tests/bancs).
+# Humidité de terre MODÉRÉE : assez basse pour que la pluie de fond saisonnière ne
+# sature pas (le freinage de la baisse sous averse reste visible), assez haute pour un
+# microclimat réaliste. Un basilic au centre = sujet présent (cohérence visuelle F5) ;
+# l'observation porte sur le SOL, pas sur son feuillage.
+HUM_PLUIE = 0.6
+
+
+def pluie_thermique():
+    """Banc « couplage pluie → air → sol » : une tuile de terre sous le climat
+    seedé du serveur, observée à travers la fenêtre où tombe une averse-état
+    (`Pluie prolongée`). Le delta froid amont (correctif ①) refroidit l'air ; le
+    sol suit (inertie). L'oracle (tests/bancs/test_climatique.py) asserte le SENS
+    des couplages : T_air plus bas sous averse, T_sol qui baisse, baisse d'humidité
+    FREINÉE par l'apport d'eau. Tendances/bornes, pas d'égalité fragile."""
+    tile, eco = build_banc_tile("PLUIE", "terre", 8, 8,
+                                humidite=HUM_PLUIE, fertilite=0.8, microbiome=0.2)
+    tile.add_plant(Basil, 4, 4)
+    return monde([tile], {tile.tile_id: eco})

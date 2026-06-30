@@ -87,3 +87,18 @@ def _eco_de(game_state, plant):
         if plant in tile.plants:
             return game_state["eco"][tile.tile_id]
     raise AssertionError("plante introuvable dans les tuiles du banc")
+
+
+def champs_climat(game_state) -> dict:
+    """Lecture MOYENNE des champs de microclimat de la 1ʳᵉ tuile : `temperature_air`,
+    `temperature_sol`, `humidite`. Pour les bancs-SONDE qui s'observent par le SOL
+    (couplages météo→champs) plutôt que par les signes foliaires. Lit `eco.temperature`
+    (T_air, rempli uniforme par l'engine), `eco.temperature_sol` (microclimat) et
+    `eco.humidite` — les mêmes champs que le snapshot et la thermique. Read-only."""
+    tile = game_state["tiles"][0]
+    eco = game_state["eco"][tile.tile_id]
+    return {
+        "temperature_air": eco.temperature.average(),
+        "temperature_sol": eco.temperature_sol.average(),
+        "humidite": eco.humidite.average(),
+    }
