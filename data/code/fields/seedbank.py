@@ -289,7 +289,8 @@ class SeedBank:
                                niche: float,
                                light: float = 0.0,
                                arch_tolerance: dict | None = None,
-                               arch_ph: dict | None = None) -> list[str]:
+                               arch_ph: dict | None = None,
+                               arch_temp: dict | None = None) -> list[str]:
         """
         Tirage déterministe des archétypes qui germent sur ce plot.
         hash(seed, week, r, c) < niche * seed_density → germination.
@@ -308,6 +309,12 @@ class SeedBank:
         niche est multipliée par ce facteur — une espèce HORS fenêtre ne s'installe
         pas (porte). Défaut d'espèce NEUTRE (`ph_tol` large) ⇒ facteur ≈ 1.0 ⇒
         quasi rétro-compatible. `arch_ph` absent ⇒ comportement historique.
+
+        Fenêtre thermique (tronçon ②) : si `arch_temp` est fourni (map archétype →
+        cloche `bell(T_sol_local, t_germ_opt, t_germ_tol)` ∈ ]0,1] de l'espèce), la niche
+        est multipliée par ce facteur — patron symétrique à `arch_ph`. Défaut d'espèce
+        NEUTRE (`t_germ_tol` large) ⇒ facteur ≈ 1.0 ⇒ golden INTACT au ②. Absent ⇒
+        comportement historique.
         """
         candidates = []
         for archetype in SEED_ARCHETYPES:
@@ -320,6 +327,8 @@ class SeedBank:
                 niche_eff = niche * (min(1.0, light * tol) / light)
             if arch_ph:
                 niche_eff *= arch_ph.get(archetype, 1.0)
+            if arch_temp:
+                niche_eff *= arch_temp.get(archetype, 1.0)
             threshold = niche_eff * density
             noise = _hash_noise(seed, week * 7 + SEED_ARCHETYPES.index(archetype),
                                 r, c)

@@ -91,6 +91,20 @@ class PlantBase(ABC):
     # constants.py d'`ecofields`. Cf. CONCEPTION_SOL_PH.md §2.3.
     ph_opt: float = 6.8                  # pH optimal (défaut ≈ neutre)
     ph_tol: float = 3.0                  # demi-largeur LARGE → cloche plate → insensible au pH
+    # Fenêtre thermique de LEVÉE (sprint germination thermique, tronçon ②). Cloche
+    # `bell(T_sol, t_germ_opt, t_germ_tol)` lue aux 3 points de germination (porte de
+    # niche dans succession). MÊME patron que le pH ci-dessus. DÉFAUT NEUTRE : `t_germ_tol`
+    # TRÈS LARGE (300.0) ⇒ `bell ≈ 1.0` (0.996–0.997) sur toute la plage de T_sol
+    # rencontrée au golden (≈ −1 à +33 °C, swing ±18 °C autour de l'opt) → une espèce
+    # non typée est INSENSIBLE à la température de germination (golden INTACT au ②). Le
+    # littéral 30.0 du kickoff ② était trop étroit face à ce swing (bell ≈ 0.67–0.77 →
+    # flips de germination) : 300.0 est la plus petite demi-largeur qui garde le golden
+    # intact (cf. §REPRISE du 00_etat). Le typage qui rend la porte mordante (et le
+    # plancher froid `T_GERM_FLOOR`) vient au ③. Littéraux ici (≡ patron pH) : la couche
+    # `plants` est la plus basse et n'importe JAMAIS `fields` (règle de couches).
+    # Cf. CONCEPTION_GERMINATION_THERMIQUE.md §1.
+    t_germ_opt: float = 18.0             # T_sol optimale de levée (°C)
+    t_germ_tol: float = 300.0            # demi-largeur TRÈS LARGE → cloche plate → neutre au départ
     # Racine PIVOT décompactante (sprint physico-chimie ⑧) : une plante ainsi marquée
     # fore le sol et l'aère, faisant remonter `structure_sol` sur ses plots (lu par
     # `structure.tick_structure` via RACINE_PIVOT). Défaut False = NEUTRE (aucune action

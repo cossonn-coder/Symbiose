@@ -103,6 +103,12 @@ def _lever_grains_en_attente(game_state: dict, tile, eco, week: int, seed: int,
         # (grains_en_attente VIDE au golden) → zéro impact golden.
         niche *= bell(eco.ph.at_plot(r, c), plant_class.ph_opt, plant_class.ph_tol)
 
+        # Porte thermique de levée (tronçon ②) : un grain ne lève pas si la T_sol est
+        # hors de sa fenêtre de germination. Défaut d'espèce NEUTRE (`t_germ_tol` large)
+        # ⇒ cloche ≈ 1.0 → zéro impact golden ; le typage qui la rend mordante vient au ③.
+        niche *= bell(eco.temperature_sol.at_plot(r, c),
+                      plant_class.t_germ_opt, plant_class.t_germ_tol)
+
         if niche < 0.01:
             continue                           # niche trop pauvre → pas encore le bon moment
 
@@ -199,10 +205,18 @@ def succession(game_state: dict, tile, eco, week: int) -> list[str]:
             arch_ph = {a: bell(ph, cls.ph_opt, cls.ph_tol)
                        for a, cls in WEED_CATALOGUE.items()}
 
+            # Fenêtre thermique par espèce candidate (tronçon ②) : cloche de l'archétype
+            # à la T_sol LOCALE → porte de niche dans germination_candidates. Patron
+            # symétrique à arch_ph. Défaut NEUTRE (`t_germ_tol` large) ⇒ ≈ 1.0 → golden
+            # INTACT au ② ; le typage qui rend la porte mordante vient au ③.
+            t_sol = eco.temperature_sol.at_plot(r, c)
+            arch_temp = {a: bell(t_sol, cls.t_germ_opt, cls.t_germ_tol)
+                         for a, cls in WEED_CATALOGUE.items()}
+
             # Priorité écologique : sol pauvre → fixatrice, sinon ordre standard
             candidates = eco.seed_bank.germination_candidates(
                 r, c, seed, week, niche, light=light,
-                arch_tolerance=arch_tolerance, arch_ph=arch_ph
+                arch_tolerance=arch_tolerance, arch_ph=arch_ph, arch_temp=arch_temp
             )
 
             if not candidates:
