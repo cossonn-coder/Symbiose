@@ -45,6 +45,8 @@ class Carrot(PlantBase):
     space_tolerance_weeks = 3
     life_cycle = "biennial"        # PREMIER porteur du cycle bisannuel exercé (gate ③)
     winter_strategy = "dormant"    # survit à l'hiver de l'an 1 en rosette
+    t_germ_opt = 13.0              # rustique : lève au frais du printemps précoce (fenêtre ③)
+    t_germ_tol = 10.0              # tolérante
     foliage_density = 0.40
     longevity_years = 2
     reproduction_rate = 0.06
@@ -106,6 +108,8 @@ class Zucchini(PlantBase):
     space_tolerance_weeks = 3
     life_cycle = "annual"
     winter_strategy = "die"
+    t_germ_opt = 22.0              # FRILEUSE (Cucurbitaceae) : exige un sol chaud, lève tard (③)
+    t_germ_tol = 7.0               # étroite → pourrit en terre froide
     foliage_density = 0.60
     reproduction_rate = 0.05
     fruitier = True                # porte des fruits traçables (maturity_years=0 → dès l'année)
@@ -162,6 +166,8 @@ class CornSalad(PlantBase):
     foliage_density = 0.30
     reproduction_rate = 0.05
     temp_min_growth = 2.0          # pousse au froid — couvre-sol d'hiver
+    t_germ_opt = 10.0              # RUSTIQUE FROIDE : lève en sol frais (germination d'arrière-saison) (③)
+    t_germ_tol = 12.0              # large vers le bas — germe quand tout stagne
     growth_stages = [
         GrowthStage(
             name="semis", duration_weeks=2, strate="sol",

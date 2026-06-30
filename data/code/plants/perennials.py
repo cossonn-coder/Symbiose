@@ -35,6 +35,15 @@ class PerennialWoody(PlantBase):
     root_ratio = 1.0
     age_curve: list[tuple] = []   # [(age_years, height_cm, canopy_radius_cm), ...]
 
+    # Fenêtre thermique de levée (sprint germination thermique ③) : défaut LIGNEUX
+    # TEMPÉRÉ — un arbre de climat tempéré (pommier, cerisier, noyer, chêne) lève sur
+    # sol frais de printemps. Le figuier méditerranéen surcharge vers plus chaud.
+    # NB : les arbres ont `archetype=None` → ils ne sont PAS tirés par la succession
+    # spontanée (WEED_CATALOGUE) ; cette fenêtre type le catalogue (③ « type TOUT »)
+    # et servira la levée d'un grain planté/disséminé, pas un chemin du golden.
+    t_germ_opt = 14.0             # ligneux tempéré : lève au frais du printemps
+    t_germ_tol = 11.0             # large
+
     # --- Réponse à l'écrasement (volet 2, CONCEPTION_ECRASEMENT §4, Q4) ---
     # NB calibrage : la table §4 notait « base 0.1 × âge » pour les arbres, mais avec
     # la formule FIGÉE `intensité = INTENSITE_PIED·(1 − resistance·f_lignification(âge))`
@@ -111,6 +120,8 @@ class Fig(PerennialWoody):
     name   = "Figuier"
     rarity = "Établie"
     keywords = ["Fruitier", "Jardin", "Ombre dense"]
+    t_germ_opt = 20.0             # MÉDITERRANÉEN : exige un sol chaud (≠ ligneux tempéré) (③)
+    t_germ_tol = 8.0              # moyenne
     foliage_density = 0.75
     reproduction_rate = 0.15   # dispersion (M7) — gated par la lumière
     longevity_years = 80

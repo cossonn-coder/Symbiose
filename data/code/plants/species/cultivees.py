@@ -14,6 +14,8 @@ from plants.base import (GrowthStage,
 class Tomato(Solanaceae):
     genus = "Solanum"
     name = "Tomate"
+    t_germ_opt = 22.0              # FRILEUSE : exige un sol bien chaud, lève tard (fenêtre ③)
+    t_germ_tol = 7.0               # étroite → ne lève pas sur sol frais de printemps
     resistance_ecrasement  = 0.35  # tige cassante, repart un peu (volet 2 §4)
     stimulation_ecrasement = 0.4
     rarity = "Établie"
@@ -86,6 +88,8 @@ class Tomato(Solanaceae):
 class Pepper(Solanaceae):
     genus = "Capsicum"
     name = "Poivron"
+    t_germ_opt = 24.0              # la PLUS frileuse : tropicale, lève très tard (fenêtre ③)
+    t_germ_tol = 6.0               # la plus étroite des cultivées chaudes
     resistance_ecrasement  = 0.35  # buissonnant cassant, repart un peu (volet 2 §4)
     stimulation_ecrasement = 0.4
     rarity = "Établie"
@@ -132,6 +136,8 @@ class Pepper(Solanaceae):
 class Bean(Fabaceae):
     genus = "Phaseolus"
     name = "Haricot"
+    t_germ_opt = 20.0              # FRILEUSE : sème « quand le sol est chaud au toucher » (③)
+    t_germ_tol = 7.0               # étroite → pourrit en terre froide
     resistance_ecrasement  = 0.3   # tige volubile fragile (volet 2 §4)
     stimulation_ecrasement = 0.2
     rarity = "Pionnière"
@@ -181,6 +187,8 @@ class Bean(Fabaceae):
 class Clover(Fabaceae):
     genus = "Trifolium"
     name = "Trèfle"
+    t_germ_opt = 16.0              # tempérée : couvre-sol qui lève au mitan du printemps (③)
+    t_germ_tol = 10.0              # tolérante (germe printemps comme arrière-saison)
     resistance_ecrasement  = 0.85  # couvre-sol piétinable, ramifie (volet 2 §4)
     stimulation_ecrasement = 0.8
     rarity = "Pionnière"
@@ -223,6 +231,8 @@ class Clover(Fabaceae):
 class Sunflower(Asteraceae):
     genus = "Helianthus"
     name = "Tournesol"
+    t_germ_opt = 20.0              # FRILEUSE (origine prairie chaude) : lève au sol réchauffé (③)
+    t_germ_tol = 8.0               # étroite-moyenne
     resistance_ecrasement  = 0.15  # flèche unique : écimé = décapité, ne repart pas (volet 2 §4)
     stimulation_ecrasement = 0.05
     rarity = "Établie"
@@ -287,6 +297,8 @@ class Sunflower(Asteraceae):
 class Basil(Lamiaceae):
     genus = "Ocimum"
     name = "Basilic"
+    t_germ_opt = 22.0              # FRILEUSE tropicale : exige la chaleur, lève tard (fenêtre ③)
+    t_germ_tol = 6.0               # étroite → noircit au moindre coup de froid
     resistance_ecrasement  = 0.4   # écimé facilement MAIS repart buissonnant = le pincement (volet 2 §4)
     stimulation_ecrasement = 0.85
     rarity = "Pionnière"

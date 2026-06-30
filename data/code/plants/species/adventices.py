@@ -25,6 +25,8 @@ class BursaPastoris(PlantBase):
     life_cycle = "annual"
     winter_strategy = "die"
     archetype = "pioneer"
+    t_germ_opt = 11.0          # pionnière rustique : lève tôt sur sol nu frais (fenêtre ③)
+    t_germ_tol = 13.0          # large → colonise dès le réchauffement de sortie d'hiver
     reproduction_rate = 0.08   # forte production graines
     foliage_density = 0.35     # feuillage léger
     fungal_susceptibility = 0.6
@@ -76,6 +78,8 @@ class MedicagoLupulina(PlantBase):
     life_cycle = "perennial"
     winter_strategy = "dormant"
     archetype = "nitrogen_fixer"
+    t_germ_opt = 13.0          # légumineuse spontanée des sols pauvres : lève au frais (fenêtre ③)
+    t_germ_tol = 12.0          # large
     decompactante = True   # racine pivot de légumineuse : décompacte/aère le sol (⑧, RACINE_PIVOT)
     reproduction_rate = 0.05
     foliage_density = 0.40
@@ -131,6 +135,8 @@ class PoaAnnua(PlantBase):
     life_cycle = "perennial"
     winter_strategy = "dormant"
     archetype = "grass"
+    t_germ_opt = 12.0          # graminée pionnière : lève tôt et tard, fenêtre permissive (③)
+    t_germ_tol = 13.0          # large → banque permanente, germe sur une longue saison
     reproduction_rate = 0.06
     seed_dispersal = "anemochore"   # caryopse léger de graminée — graines au vent (⑤, §5.3)
     foliage_density = 0.35     # graminée fine, ombre légère
@@ -172,6 +178,8 @@ class Taraxacum(PlantBase):
     life_cycle = "perennial"
     winter_strategy = "dormant"
     archetype = "competitor"
+    t_germ_opt = 12.0          # pissenlit ultra-rustique : germe sur une très large plage (③)
+    t_germ_tol = 14.0          # la plus large du catalogue — opportuniste tous azimuts
     reproduction_rate = 0.04
     seed_dispersal = "anemochore"   # aigrette plumée (pappus) — graines au vent (⑤, §5.3)
     foliage_density = 0.50

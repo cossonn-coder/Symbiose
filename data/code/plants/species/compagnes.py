@@ -33,6 +33,8 @@ class Yarrow(Asteraceae):
     space_tolerance_weeks = 5
     life_cycle = "perennial"
     winter_strategy = "dormant"
+    t_germ_opt = 14.0              # vivace rustique des prés : lève au frais (fenêtre ③)
+    t_germ_tol = 12.0              # large
     foliage_density = 0.40
     longevity_years = 6
     reproduction_rate = 0.30   # ressemis (M7) — vivace sans archétype
@@ -74,6 +76,8 @@ class Phacelia(PlantBase):
     space_tolerance_weeks = 4
     life_cycle = "annual"
     winter_strategy = "die"
+    t_germ_opt = 13.0              # engrais vert rustique : lève vite au frais (fenêtre ③)
+    t_germ_tol = 11.0              # large
     foliage_density = 0.45
     reproduction_rate = 0.06
     fungal_susceptibility = 0.3
@@ -132,6 +136,8 @@ class Borage(PlantBase):
     space_tolerance_weeks = 4
     life_cycle = "annual"
     winter_strategy = "die"
+    t_germ_opt = 16.0              # tempérée : lève au mitan du printemps (fenêtre ③)
+    t_germ_tol = 10.0              # tolérante (ressemis spontané sur une large saison)
     foliage_density = 0.45
     reproduction_rate = 0.06
     fungal_susceptibility = 0.3
@@ -184,6 +190,8 @@ class Comfrey(PlantBase):
     space_tolerance_weeks = 5
     life_cycle = "perennial"
     winter_strategy = "dormant"
+    t_germ_opt = 15.0              # vivace tempérée : lève au printemps établi (fenêtre ③)
+    t_germ_tol = 11.0              # large
     foliage_density = 0.55
     longevity_years = 10
     reproduction_rate = 0.04
@@ -235,6 +243,8 @@ class Mustard(PlantBase):
     life_cycle = "annual"
     winter_strategy = "die"
     archetype = None               # cultivée compagne, PAS une adventice de succession
+    t_germ_opt = 12.0              # engrais vert rustique : lève vite au frais, même tardif (③)
+    t_germ_tol = 12.0              # large
     foliage_density = 0.40
     reproduction_rate = 0.07
     fungal_susceptibility = 0.5
@@ -293,6 +303,8 @@ class Garlic(Amaryllidaceae):
     space_tolerance_weeks = 4
     life_cycle = "biennial"
     winter_strategy = "dormant"
+    t_germ_opt = 12.0              # rustique : démarre au frais (planté en sol refroidi) (③)
+    t_germ_tol = 10.0              # tolérante
     foliage_density = 0.20         # feuilles étroites, ombre faible
     longevity_years = 2
     reproduction_rate = 0.03

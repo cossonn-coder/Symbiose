@@ -99,6 +99,15 @@ WINDCHILL_COEF = 0.6     # °C retirés à la T_min nocturne par unité de vent 
 # cible thermique est lissée temporellement (inertie du sol) vers laquelle T_sol
 # converge tick après tick. Les termes refroidissement évaporatif (②), isolation par
 # le couvert (③) et nébulosité (④) viendront s'ajouter à la cible aux tronçons suivants.
+# Plancher froid de GERMINATION (sprint germination thermique, tronçon ③). Sous ce
+# seuil de T_sol, AUCUNE graine ne lève, quelle que soit l'espèce : c'est le « zéro de
+# végétation » (sous ~5 °C l'eau circule mal, les enzymes dorment). Porte BINAIRE
+# multiplicative AVANT la cloche `bell(T_sol, t_germ_opt, t_germ_tol)` (cf.
+# succession.py) — court-circuit dur qui empêche même une espèce à `tol` large de
+# lever l'hiver. Lecteur côté `sim` (succession), pas `plants` (règle de couches : les
+# `t_germ_opt/tol` restent littéraux sur PlantBase). Nommage cohérent avec
+# `temp_min_growth=5.0` (familles.py). PLACEHOLDER, calibrage au banc ⑥.
+T_GERM_FLOOR    = 5.0    # °C — sous ce seuil de T_sol, aucune germination (zéro de végétation)
 GAIN_SOLAIRE    = 15.0   # °C — surchauffe max d'un plot en plein soleil d'été (lum=1, été)
 THERMAL_INERTIA = 0.5    # lissage temporel de T_sol vers sa cible (1 = pas d'inertie ; petit = sol très tamponné)
 # Fraction du rayonnement d'été par saison : un soleil d'hiver chauffe moins le sol.

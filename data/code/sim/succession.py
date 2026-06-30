@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from plants import WEED_CATALOGUE, PLANT_CATALOGUE, PERENNIAL_CATALOGUE
 from fields import SEED_ARCHETYPES, _hash_noise
-from fields.ecofields import bell
+from fields.ecofields import bell, T_GERM_FLOOR
 
 
 def choisir_archetype(candidates: list[str],
@@ -103,11 +103,15 @@ def _lever_grains_en_attente(game_state: dict, tile, eco, week: int, seed: int,
         # (grains_en_attente VIDE au golden) → zéro impact golden.
         niche *= bell(eco.ph.at_plot(r, c), plant_class.ph_opt, plant_class.ph_tol)
 
-        # Porte thermique de levée (tronçon ②) : un grain ne lève pas si la T_sol est
-        # hors de sa fenêtre de germination. Défaut d'espèce NEUTRE (`t_germ_tol` large)
-        # ⇒ cloche ≈ 1.0 → zéro impact golden ; le typage qui la rend mordante vient au ③.
-        niche *= bell(eco.temperature_sol.at_plot(r, c),
-                      plant_class.t_germ_opt, plant_class.t_germ_tol)
+        # Porte thermique de levée (tronçon ②, typée au ③) : un grain ne lève pas si la
+        # T_sol est hors de sa fenêtre de germination. Plancher froid `T_GERM_FLOOR` (③)
+        # AVANT la cloche : sous ~5 °C, court-circuit dur — aucune levée même pour une
+        # espèce à `tol` large (zéro de végétation, pas de germination hivernale). Au-
+        # dessus, cloche `bell(T_sol, t_germ_opt, t_germ_tol)` mordante selon le typage.
+        t_sol = eco.temperature_sol.at_plot(r, c)
+        if t_sol < T_GERM_FLOOR:
+            continue                           # trop froid → la graine PATIENTE (FIFO conservé)
+        niche *= bell(t_sol, plant_class.t_germ_opt, plant_class.t_germ_tol)
 
         if niche < 0.01:
             continue                           # niche trop pauvre → pas encore le bon moment
@@ -205,13 +209,17 @@ def succession(game_state: dict, tile, eco, week: int) -> list[str]:
             arch_ph = {a: bell(ph, cls.ph_opt, cls.ph_tol)
                        for a, cls in WEED_CATALOGUE.items()}
 
-            # Fenêtre thermique par espèce candidate (tronçon ②) : cloche de l'archétype
-            # à la T_sol LOCALE → porte de niche dans germination_candidates. Patron
-            # symétrique à arch_ph. Défaut NEUTRE (`t_germ_tol` large) ⇒ ≈ 1.0 → golden
-            # INTACT au ② ; le typage qui rend la porte mordante vient au ③.
+            # Fenêtre thermique par espèce candidate (tronçon ②, typée au ③) : cloche de
+            # l'archétype à la T_sol LOCALE → porte de niche dans germination_candidates.
+            # Patron symétrique à arch_ph. Plancher froid `T_GERM_FLOOR` (③) : sous ~5 °C,
+            # TOUS les archétypes à 0.0 (court-circuit dur, aucune levée férale hivernale) ;
+            # au-dessus, cloche mordante selon le typage du catalogue.
             t_sol = eco.temperature_sol.at_plot(r, c)
-            arch_temp = {a: bell(t_sol, cls.t_germ_opt, cls.t_germ_tol)
-                         for a, cls in WEED_CATALOGUE.items()}
+            if t_sol < T_GERM_FLOOR:
+                arch_temp = {a: 0.0 for a in WEED_CATALOGUE}
+            else:
+                arch_temp = {a: bell(t_sol, cls.t_germ_opt, cls.t_germ_tol)
+                             for a, cls in WEED_CATALOGUE.items()}
 
             # Priorité écologique : sol pauvre → fixatrice, sinon ordre standard
             candidates = eco.seed_bank.germination_candidates(

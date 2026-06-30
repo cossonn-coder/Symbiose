@@ -34,6 +34,8 @@ class Nettle(Urticaceae):
     winter_strategy = "dormant"
     archetype = None               # PAS une adventice de succession (hors WEED_CATALOGUE)
     seed_dispersal = "anemochore"  # akène léger d'ortie — graines au vent (⑤, §5.3)
+    t_germ_opt = 14.0              # vivace robuste tempérée : lève au frais (fenêtre ③)
+    t_germ_tol = 13.0              # large → opportuniste des sols riches
     foliage_density = 0.50
     longevity_years = 8
     reproduction_rate = 0.10
@@ -68,6 +70,8 @@ class Vaccinium(Ericaceae):
     name = "Myrtille"
     ph_opt = 4.8                   # acidophile strict — fenêtre étroite (calcifuge)
     ph_tol = 0.8
+    t_germ_opt = 13.0              # lande/sous-bois frais : lève au frais (fenêtre ③)
+    t_germ_tol = 9.0               # moyenne
     resistance_ecrasement  = 0.5
     stimulation_ecrasement = 0.3
     rarity = "Établie"

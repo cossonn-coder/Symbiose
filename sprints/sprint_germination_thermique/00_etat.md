@@ -37,18 +37,38 @@ réchauffement — supprimer l'artefact calendaire `spring_flush`, avec gène
       `t_germ_tol=30.0` prévu faisait DÉRIVER le golden (`bell` ≈ 0.67–0.77 sur la plage
       T_sol réelle −1→+33 °C → flips de germination) ; sweep → **300.0** = plus petite
       demi-largeur qui garde le golden INTACT (`bell` ≈ 0.996–0.997). Build C# non concerné.
-- [ ] ③ `T_GERM_FLOOR` + typage de tout le catalogue — RE-FIGÉ
+- [x] ③ `T_GERM_FLOOR` + typage de TOUT le catalogue — RE-FIGÉ MAÎTRISÉ
+      (golden `f4a652e05511ec8c1fc4239c377f8775a3148ef03e58c99e79a3a32c38f7485e`,
+      ex-`2d9b9de1…`). Constante `T_GERM_FLOOR=5.0 °C` posée dans
+      `fields/ecofields/constants.py` (à côté des constantes thermiques, exportée par
+      `import *`). Plancher BINAIRE multiplicatif AVANT la cloche aux 2 points actifs de
+      `succession.py` (T_sol < FLOOR → `continue` au point 1 / `arch_temp={a:0.0}` au
+      point 2 ; `spring_flush` n'a jamais reçu la porte, supprimé au ⑤). **27 espèces
+      typées** `t_germ_opt`/`t_germ_tol` (littéraux) : frileuses opt 20–24/tol 6–8
+      (Tomate, Poivron, Haricot, Tournesol, Basilic, Courgette, Figuier méditerranéen),
+      rustiques opt 10–13/tol 10–14 (Mâche, Carotte, Moutarde + 4 adventices), reste
+      interpolé (vivaces tempérées 14–16, myrtille 13/9). Défaut ligneux tempéré 14/11 sur
+      `PerennialWoody`. Dérive golden COHÉRENTE & localisée à la germination FÉRALE :
+      198→145 levées/2 ans, 50→46 plantes, jardin VIVANT, 4 archétypes germent toujours
+      (le froid hivernal + le typage mordent, pas d'effondrement). Suites connexes vertes
+      (planter, competition, catalogue_lot2, lifecycle, biennial, evergreen, encyclopedie,
+      signes). Build C# non concerné. LDC OK (cultivees 320 code-pur, jaune mono-responsabilité).
 - [ ] ④ Gène `germination_thermique` — RE-FIGÉ
 - [ ] ⑤ Suppression `spring_flush` (flush émergent) — RE-FIGÉ
 - [ ] ⑥ Banc multifacteur `germination_multifacteur` + oracles — NEUTRE
 - [ ] ⑦ Voix narratives (encyclopédie + carnet) — NEUTRE
 
 ## §REPRISE
-Tronçons ①② CLOS (non commités — Nico commit). Golden INTACT `2d9b9de1…`.
-La plomberie thermique est posée et NEUTRE (`bell(T_sol,…)` aux 2 points actifs ;
-`spring_flush` reste sur ⑤). **Note pour ③** : `t_germ_tol` par défaut a dû être
-porté à **300.0** (pas 30.0 — voir écart au ②) pour la neutralité ; au ③, le typage
-par espèce DOIT donner des `t_germ_tol` BIEN plus étroits (ordre 5–15 °C) pour que
-la porte morde, sinon aucune sélection thermique. Prochain : ③ « `T_GERM_FLOOR` +
-typage du catalogue » — RE-FIGÉ maîtrisé attendu. Lire `CLAUDE.md` + ce fichier +
-`03_*.md`, lancer `python3 -m tests.test_golden` AVANT (doit afficher `2d9b9de1…`).
+Tronçons ①②③ CLOS (non commités — Nico commit). Golden RE-FIGÉ MAÎTRISÉ au ③
+`f4a652e05511ec8c1fc4239c377f8775a3148ef03e58c99e79a3a32c38f7485e` (ex-`2d9b9de1…`).
+La porte thermique MORD maintenant : plancher froid `T_GERM_FLOOR=5.0` (binaire, avant
+la cloche) + 27 espèces typées (frileuses tol 6–8, rustiques tol 10–14). Dérive
+cohérente (germination férale réduite ~27 %, jardin vivant, 4 archétypes OK).
+**Note pour ④** : le gène `germination_thermique` s'ajoute EN QUEUE de `GENE_NAMES`
+(`plants/genetics.py`, préserve les canaux de hash) ; décale l'optimum effectif
+`t_opt_eff = t_germ_opt − GERM_GENE_SHIFT·(gene−1.0)` aux 2 points actifs de
+`succession.py` (grain propre `grain.genes` + pool féral `GeneStat.mean`).
+`GERM_GENE_SHIFT` = nouvelle constante `fields`/`sim` (~3–4 °C). RE-FIGÉ maîtrisé
+attendu (l'héritage neutre 1.0 ne décale rien, mais l'échantillonnage du pool peut
+bouger). Lire `CLAUDE.md` + ce fichier + `04_*.md`, lancer `python3 -m tests.test_golden`
+AVANT (doit afficher `f4a652e0…`).

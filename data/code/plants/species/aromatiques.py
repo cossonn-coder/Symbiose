@@ -29,6 +29,8 @@ class Thyme(Lamiaceae):
     name = "Thym"
     ph_opt = 7.4                   # calciphile : prospère sur sol calcaire (garrigue) — fenêtre ⑤
     ph_tol = 1.1
+    t_germ_opt = 18.0              # méditerranéenne : lève sur sol réchauffé de la garrigue (③)
+    t_germ_tol = 8.0               # moyenne
     resistance_ecrasement  = 0.8   # coussin ligneux : encaisse le piétinement (volet 2 §4)
     stimulation_ecrasement = 0.5
     rarity = "Établie"
@@ -72,6 +74,8 @@ class Lavender(Lamiaceae):
     name = "Lavande"
     ph_opt = 7.4                   # calciphile : terrain sec et calcaire — fenêtre ⑤
     ph_tol = 1.1
+    t_germ_opt = 18.0              # méditerranéenne : lève sur sol chaud et sec (③)
+    t_germ_tol = 8.0               # moyenne
     resistance_ecrasement  = 0.6   # touffe ligneuse, plie sans casser (volet 2 §4)
     stimulation_ecrasement = 0.4
     rarity = "Établie"
