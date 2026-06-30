@@ -101,13 +101,21 @@ jamais `git add -A` aveugle (ajoute les fichiers du tronçon nommément).
 
 ## 3. Fin de sprint (tous les tronçons clos)
 
-1. Mets à jour `journal.md` (index de pointeurs) + l'entrée détaillée dans
+1. **Passe refactor auto-léger** — avant de clôturer, résorbe la dette de taille
+   que le sprint vient de créer : invoque le skill **`/refactor`** (sans argument,
+   mode auto-léger). Il ne traite que les fichiers que **ce sprint** a fait passer
+   en zone rouge (> 400 LDC pur), golden **inchangé** obligatoire. Si rien n'a
+   dépassé, il ne fait rien. S'il bute sur un découpage non trivial, il le signale
+   en dette **sans** casser la clôture. But : la dette de taille ne s'accumule pas
+   d'un sprint à l'autre.
+2. Mets à jour `journal.md` (index de pointeurs) + l'entrée détaillée dans
    `journal/` selon la convention du projet.
-2. Mets à jour la mémoire auto si des **décisions de design / feedback notables**
+3. Mets à jour la mémoire auto si des **décisions de design / feedback notables**
    ont émergé (sinon, rien — pas de bruit).
-3. Supprime `HANDOFF.md` s'il existe et est devenu obsolète.
-4. **Rapport final à Nico** : tronçons faits, hash golden final, **liste précise
-   des points F5 à valider**, ce qui reste éventuellement.
+4. Supprime `HANDOFF.md` s'il existe et est devenu obsolète.
+5. **Rapport final à Nico** : tronçons faits, hash golden final, **scissions
+   refactor éventuelles**, **liste précise des points F5 à valider**, ce qui reste
+   éventuellement.
 
 ## 4. Échec bloquant = la seule cause d'arrêt anticipé
 

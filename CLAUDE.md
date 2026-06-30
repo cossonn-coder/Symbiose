@@ -301,16 +301,25 @@ historiques.
   est suspendue quand une synchro cohérente multi-fichiers est explicitement
   demandée — typiquement avant un commit).
 - **Taille des fichiers — garde-fou, pas dogme** (gravé au refactor global
-  SS⑦, 2026-06-16). Règle réelle : **un fichier = une responsabilité cohérente**
-  (une classe / un concept), court pour relire vite. Seuil chiffré :
-  **aucun fichier > ~350 lignes de CODE PUR** (max empirique mesuré sur le
-  dépôt refactoré = **337**, `data/code/fields/ecofields/container.py`).
-  Comptage = `tools/compte_ldc.py` (commentaires pédagogiques EXCLUS du décompte
-  et **exigés au cœur des fichiers**, jamais sacrifiés pour gagner des lignes).
-  Dépassement toléré uniquement s'il est **signalé + justifié** à Nico.
-  Python éclaté → paquet avec `__init__.py` ré-exportant l'API publique (imports
-  appelants intacts) ; C# multi-classes → un fichier par classe, ou `partial`
-  quand le découpage par concept garde un état fortement partagé.
+  SS⑦, 2026-06-16 ; bande recalibrée le 2026-06-30). Règle réelle : **un fichier
+  = une responsabilité cohérente** (une classe / un concept), court pour relire
+  vite. Le seuil **doit rester bas — c'est un capteur de dette de refactor** :
+  quand un fichier gonfle, on **scinde**, on ne relève pas la barre. Bande
+  chiffrée (LDC pur, via `tools/compte_ldc.py`) :
+  - **≤ 300** = 🟢 norme confortable ;
+  - **300–400** = 🟡 vigilance, toléré **uniquement** si une seule responsabilité
+    (à signaler) ;
+  - **> 400** = 🔴 **découpage requis**, sauf justification forte **et signalée**
+    à Nico.
+  Ancrage : la responsabilité unique (SRP) est la vraie règle, la taille en est le
+  proxy ; sous ~300 lignes un fichier se relit/édite d'un regard (humain comme
+  agent à froid). Comptage = `tools/compte_ldc.py` (défaut **400** ; commentaires
+  pédagogiques EXCLUS du décompte et **exigés au cœur des fichiers**, jamais
+  sacrifiés pour gagner des lignes). Résorption = skill **`/refactor`** (scinde
+  golden-gaté, lancé en fin de `/sprint-auto` + à la demande). Python éclaté →
+  paquet avec `__init__.py` ré-exportant l'API publique (imports appelants
+  intacts) ; C# multi-classes → un fichier par classe, ou `partial` quand le
+  découpage par concept garde un état fortement partagé.
 - **Arbo cible** : conception dans `docs/conception/`, journal éclaté par entrée
   dans `journal/` (+ `journal_archive/` 01-12 avant refactor structurel) indexé
   par `journal.md` ; sprints clos sous `sprints/_clos/`.

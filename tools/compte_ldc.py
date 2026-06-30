@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """compte_ldc — compteur de Lignes De Code pur.
 
-Outil *du dépôt* (pas du moteur) : il sert d'instrument de mesure au
-Sprint refactor global. La règle de Nico est « ~500 lignes de CODE PUR par
-fichier », où *code pur* exclut explicitement :
+Outil *du dépôt* (pas du moteur) : il sert d'instrument de mesure au garde-fou
+de taille. La bande de Nico (recalibrée 2026-06-30) : ≤300 LDC pur = norme,
+300–400 = vigilance (responsabilité unique justifiée), >400 = découpage requis.
+Défaut du seuil d'alerte = **400**. *code pur* exclut explicitement :
   - les lignes vides,
   - les lignes de commentaire,
   - les docstrings / lignes dont le seul contenu est une chaîne littérale.
@@ -16,7 +17,7 @@ l'est *par sa pédagogie* et non par sa logique.
 Usage :
     python3 tools/compte_ldc.py <fichier…>
     python3 tools/compte_ldc.py data/code/sim/*.py
-    python3 tools/compte_ldc.py --seuil 500 data/code/**/*.py
+    python3 tools/compte_ldc.py --seuil 400 data/code/**/*.py
 
 Sortie : un tableau « fichier | total | code | comment. », trié par *code*
 décroissant, avec un repère ⚠ sur les fichiers qui dépassent le seuil.
@@ -175,7 +176,7 @@ def compte(chemin):
 
 def main(argv):
     args = list(argv)
-    seuil = 500
+    seuil = 400
     if "--seuil" in args:
         i = args.index("--seuil")
         seuil = int(args[i + 1])
