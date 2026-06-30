@@ -21,7 +21,7 @@ def mesure():
         "house": House(),
     }
     engine = Engine(game_state)
-    compte = {"germination": 0, "spring_flush": 0, "leve_plante": 0}
+    compte = {"germination": 0, "leve_plante": 0}
     pic_vivantes = 0
     for _ in range(N_YEARS):
         for _ in range(52):
@@ -29,8 +29,6 @@ def mesure():
             for line in log:
                 if "🌿 Germination" in line:
                     compte["germination"] += 1
-                elif "🌸 Spring flush" in line:
-                    compte["spring_flush"] += 1
                 elif "🌱 Levée (planté)" in line:
                     compte["leve_plante"] += 1
             vivantes = sum(sum(1 for p in t.plants if p.is_alive) for t in tiles)
@@ -40,7 +38,6 @@ def mesure():
     total_inst = sum(len(t.plants) for t in tiles)
     print("=== MESURE compétition intra-plot ===")
     print(f"germinations (succession)   : {compte['germination']}")
-    print(f"germinations (spring flush) : {compte['spring_flush']}")
     print(f"levées (graines plantées)   : {compte['leve_plante']}")
     print(f"pic plantes vivantes        : {pic_vivantes}")
     print(f"plantes vivantes (fin)      : {vivantes_fin}")

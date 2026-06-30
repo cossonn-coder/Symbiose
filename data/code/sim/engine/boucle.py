@@ -30,7 +30,7 @@ from fields.alarme import tick_alarme       # phéromone d'alarme apienne : déc
 from sim.effects import resolve_plant_turn, apply_disturbances
 from sim.reproduction import is_seed_bearing, child_expression
 from sim.seeds import Seed
-from sim.succession import succession, spring_flush
+from sim.succession import succession
 from sim.weather import weather_state, K_PEST, TEMP_DRIVEN
 from sim.wind import wind_at, gust_profile
 from sim.vigueur import tick_player_vigueur, refill_saison
@@ -167,13 +167,6 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
             log.append(f"  🐛  {ravageur.nom} : {ravageur.description}")
             for tile in self.tiles:
                 log += appliquer_alea(ravageur, tile, self._eco(tile), self.game_state)
-
-        # Spring flush — première semaine du printemps
-        if week_in_year == SAISONS["printemps"].start:
-            for tile in self.tiles:
-                eco = self._eco(tile)
-                slog = spring_flush(self.game_state, tile, eco, week)
-                if slog: log += slog
 
         for tile in self.tiles:
             eco = self._eco(tile)

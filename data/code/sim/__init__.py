@@ -15,5 +15,5 @@ from sim.seeds import Seed, PlayerSeedBank
 from sim.reproduction import (
     find_father, child_genes, child_expression, is_seed_bearing, pollinator_reach,
 )
-from sim.succession import choisir_archetype, succession, spring_flush
+from sim.succession import choisir_archetype, succession
 from sim.engine import Engine, saison_de

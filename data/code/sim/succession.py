@@ -1,11 +1,13 @@
 """
 SYMBIOSE — sim/succession.py
 Succession écologique : choix d'archétype ∝ maturité du sol, germination des
-adventices sur niches libres, pulse de germination printanière (spring flush).
+adventices sur niches libres. La vague de printemps ÉMERGE désormais du
+réchauffement du sol via la porte thermique (tronçons ②③④) — l'ancien pulse
+calendaire printanier (×2.5 en semaine 1) a été supprimé au tronçon ⑤.
 
-Extrait d'engine.py (Sprint refactor structurel) — les méthodes Engine
-`_succession`/`_spring_flush` sont devenues des fonctions prenant explicitement
-`game_state` (seul attribut de `self` qu'elles lisaient). Comportement inchangé.
+Extrait d'engine.py (Sprint refactor structurel) — la méthode Engine
+`_succession` est devenue une fonction prenant explicitement `game_state`
+(seul attribut de `self` qu'elle lisait). Comportement inchangé.
 """
 
 from __future__ import annotations
@@ -283,90 +285,4 @@ def succession(game_state: dict, tile, eco, week: int) -> list[str]:
                     f"[niche={niche:.3f} arch={chosen}]"
                 )
 
-    return log
-
-
-def spring_flush(game_state: dict, tile, eco, week: int) -> list[str]:
-    """
-    Pulse de germination printanière — semaine 1 de chaque année.
-    Multiplicateur ×2.5 sur le niche index.
-    Simule : lumière ↑ + sols ouverts + banque de graines accumulée.
-    """
-    log = []
-    seed = game_state.get("seed", 42)
-
-    arch_tolerance = {a: cls.shade_tolerance_base()
-                      for a, cls in WEED_CATALOGUE.items()}
-
-    occupied_roots: set[tuple] = set()
-    for p in tile.plants:
-        if p.is_alive:
-            occupied_roots.update(p.root_plots)
-            occupied_roots.add(p.position)
-
-    # Levée des graines plantées (même priorité qu'en succession normale), avec le
-    # boost printanier ×2.5 sur la niche — le printemps est un bon moment pour lever.
-    log += _lever_grains_en_attente(game_state, tile, eco, week, seed,
-                                    occupied_roots, niche_mult=2.5,
-                                    hash_canal=week * 100 + 50)
-
-    germinations = 0
-    for r in range(tile.grid_rows):
-        for c in range(tile.grid_cols):
-            # Verrou d'occupation LEVÉ (Q1) — cf. succession().
-            if not tile.is_valid_plot(r, c):
-                continue
-
-            neighbors = tile.neighbors(r, c)
-            root_density = sum(
-                1 for nr, nc in neighbors if (nr, nc) in occupied_roots
-            ) / max(len(neighbors), 1)
-
-            light       = eco.lumiere.at_plot(r, c)
-            disturbance = eco.disturbance.at_plot(r, c)
-            soil_deep   = eco.soil_memory_deep.at_plot(r, c)
-            fertilite   = eco.fertilite_index(r, c)
-
-            niche = eco.seed_bank.niche_index(
-                r, c, light, root_density, disturbance, soil_deep
-            ) * 2.5   # spring flush multiplier
-
-            if niche < 0.01:
-                continue
-
-            # Fenêtre pH par espèce candidate (tronçon ⑤) — cf. succession().
-            ph = eco.ph.at_plot(r, c)
-            arch_ph = {a: bell(ph, cls.ph_opt, cls.ph_tol)
-                       for a, cls in WEED_CATALOGUE.items()}
-
-            candidates = eco.seed_bank.germination_candidates(
-                r, c, seed, week * 100, niche,   # seed différent du tick normal
-                light=light, arch_tolerance=arch_tolerance, arch_ph=arch_ph
-            )
-
-            if not candidates:
-                continue
-
-            chosen = choisir_archetype(candidates, soil_deep, fertilite)
-
-            plant_class = WEED_CATALOGUE.get(chosen)
-            if not plant_class:
-                continue
-
-            new_plant = tile.add_plant(plant_class, r, c)
-            if new_plant:
-                g = eco.seed_bank.sample_genes(r, c, plant_class, seed, week * 100)
-                if g:
-                    new_plant.genes = g
-                e = eco.seed_bank.sample_expression(r, c, plant_class)
-                if e:
-                    new_plant.expression.update(e)   # priming hérité (④)
-                log.append(
-                    f"    🌸 Spring flush : {plant_class.name} @({r},{c}) "
-                    f"[niche={niche:.3f} arch={chosen}]"
-                )
-                germinations += 1
-
-    if germinations > 0:
-        log.insert(0, f"  🌱 Spring flush — {germinations} germination(s)")
     return log

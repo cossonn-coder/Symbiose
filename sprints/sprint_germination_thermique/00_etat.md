@@ -72,7 +72,22 @@ réchauffement — supprimer l'artefact calendaire `spring_flush`, avec gène
       (`4928300b…`) était DÉJÀ périmé sur l'état git propre du ③ (échouait avant ④,
       obtenu `95be03f6…` identique avec/sans mon gène) → à re-figer côté sprint
       population, pas ici. Build C# non concerné. LDC succession.py 202 code-pur (🟢).
-- [ ] ⑤ Suppression `spring_flush` (flush émergent) — RE-FIGÉ
+- [x] ⑤ Suppression `spring_flush` (flush émergent) — RE-FIGÉ MAÎTRISÉ
+      (golden `ae445d3fa2df9b8d95b45f663552f75de113eb540ed9066e81eb8d034b1a8e3c`,
+      ex-`2b99457b…`). Fonction `spring_flush` ENTIÈRE supprimée de `sim/succession.py`
+      (le ×2.5 calendaire de semaine 1) ; appel + bloc `if week_in_year ==
+      SAISONS["printemps"].start` retirés de `sim/engine/boucle.py:171-176` (import
+      `succession` nettoyé ligne 33 ; `SAISONS` CONSERVÉ, encore utilisé l.436) ;
+      export retiré de `sim/__init__.py:18`. Orphelins de mesure nettoyés dans
+      `tests/_mesure_competition.py` (compteur + print « spring flush » morts).
+      `grep -rn spring_flush data/code/` = VIDE. **Dérive golden COHÉRENTE** : la
+      vague de printemps n'est plus dopée par un proxy calendaire, elle ÉMERGE de la
+      porte thermique (②③④). Vérif de sens OK — germinations par saison (2 ans) :
+      hiver 27 / printemps 37 / été 41 / automne 36 → levées concentrées aux saisons
+      chaudes (plancher `T_GERM_FLOOR` freine l'hiver), pas d'effondrement. 48 plantes
+      vivantes (vs 46 au ④), jardin VIVANT. Suites connexes vertes (planter 18/18,
+      competition 14/14, biennial, evergreen, encyclopedie 18/18, signes 8/8). Build C#
+      non concerné. LDC succession.py 142 code-pur (🟢, ex-202).
 - [ ] ⑥ Banc multifacteur `germination_multifacteur` + oracles — NEUTRE
 - [ ] ⑦ Voix narratives (encyclopédie + carnet) — NEUTRE
 
