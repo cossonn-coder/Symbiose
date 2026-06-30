@@ -12,7 +12,23 @@ from __future__ import annotations
 
 from plants import WEED_CATALOGUE, PLANT_CATALOGUE, PERENNIAL_CATALOGUE
 from fields import SEED_ARCHETYPES, _hash_noise
-from fields.ecofields import bell, T_GERM_FLOOR
+from fields.ecofields import bell, T_GERM_FLOOR, GERM_GENE_SHIFT
+
+
+def _germ_gene_mean(eco, r: int, c: int, plant_class: type) -> float:
+    """Moyenne du gène `germination_thermique` dans le pool-sol féral du plot pour
+    cette espèce (`GeneStat.mean`). DÉFAUT 1.0 (neutre) si le plot n'a pas encore de
+    pool de l'espèce ou si le gène n'y est pas tracé — chemin du golden au démarrage
+    (pool vide ⇒ aucun décalage). Lecture pure, déterministe, sans RNG.
+
+    C'est le pont SÉLECTION : le réensemencement (`add_species`, fields/seedbank)
+    écrit déjà la valeur du gène des plantes qui grènent dans `GeneStat` — ici on la
+    relit pour décaler l'optimum, donc le pool se durcit là où le froid mord."""
+    rec = eco.seed_bank.species[r][c].get(plant_class)
+    if not rec:
+        return 1.0
+    stat = rec["genes"].get("germination_thermique")
+    return stat.mean if stat is not None else 1.0
 
 
 def choisir_archetype(candidates: list[str],
@@ -108,10 +124,15 @@ def _lever_grains_en_attente(game_state: dict, tile, eco, week: int, seed: int,
         # AVANT la cloche : sous ~5 °C, court-circuit dur — aucune levée même pour une
         # espèce à `tol` large (zéro de végétation, pas de germination hivernale). Au-
         # dessus, cloche `bell(T_sol, t_germ_opt, t_germ_tol)` mordante selon le typage.
+        # Gène `germination_thermique` (tronçon ④) : DÉCALE l'optimum effectif du
+        # grain PROPRE (gène > 1 → optimum abaissé → lève plus au froid). Neutre 1.0
+        # ⇒ `t_opt_eff == t_germ_opt` (chemin event-driven, grain absent au golden).
         t_sol = eco.temperature_sol.at_plot(r, c)
         if t_sol < T_GERM_FLOOR:
             continue                           # trop froid → la graine PATIENTE (FIFO conservé)
-        niche *= bell(t_sol, plant_class.t_germ_opt, plant_class.t_germ_tol)
+        gene = grain.genes.get("germination_thermique", 1.0)
+        t_opt_eff = plant_class.t_germ_opt - GERM_GENE_SHIFT * (gene - 1.0)
+        niche *= bell(t_sol, t_opt_eff, plant_class.t_germ_tol)
 
         if niche < 0.01:
             continue                           # niche trop pauvre → pas encore le bon moment
@@ -214,12 +235,22 @@ def succession(game_state: dict, tile, eco, week: int) -> list[str]:
             # Patron symétrique à arch_ph. Plancher froid `T_GERM_FLOOR` (③) : sous ~5 °C,
             # TOUS les archétypes à 0.0 (court-circuit dur, aucune levée férale hivernale) ;
             # au-dessus, cloche mordante selon le typage du catalogue.
+            # Gène `germination_thermique` du POOL FÉRAL (tronçon ④) : l'optimum
+            # effectif de chaque archétype candidat est décalé par la MOYENNE du
+            # gène dans la banque-sol locale (`GeneStat.mean`, défaut 1.0 si le pool
+            # / la clé est absent — pool féral encore neutre). C'est ce qui fait
+            # ÉMERGER la sélection : un plot froid voit son pool dériver vers les
+            # lève-tôt (gène > 1), donc son `t_opt_eff` s'abaisse saison après saison.
             t_sol = eco.temperature_sol.at_plot(r, c)
             if t_sol < T_GERM_FLOOR:
                 arch_temp = {a: 0.0 for a in WEED_CATALOGUE}
             else:
-                arch_temp = {a: bell(t_sol, cls.t_germ_opt, cls.t_germ_tol)
-                             for a, cls in WEED_CATALOGUE.items()}
+                arch_temp = {
+                    a: bell(t_sol,
+                            cls.t_germ_opt - GERM_GENE_SHIFT
+                            * (_germ_gene_mean(eco, r, c, cls) - 1.0),
+                            cls.t_germ_tol)
+                    for a, cls in WEED_CATALOGUE.items()}
 
             # Priorité écologique : sol pauvre → fixatrice, sinon ordre standard
             candidates = eco.seed_bank.germination_candidates(

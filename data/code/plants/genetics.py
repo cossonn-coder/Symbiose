@@ -27,6 +27,16 @@ dessus sans créer de cycle (notamment fields/seedbank.py qui importe clamp_gene
 #    fait dériver l'individu (variation + sélection naturelle de la sciaphilie,
 #    compétition intra-plot). Lu en germination (lumière effective) et en
 #    croissance (growth_factor sur lumière corrigée).
+#  - `germination_thermique` : VARIABILITÉ intra-espèce de la fenêtre de levée
+#    thermique (sprint germination thermique ④). >1 = lève PLUS TÔT au froid →
+#    l'optimum effectif de germination est ABAISSÉ de `GERM_GENE_SHIFT·(gène−1)`
+#    (cf. succession.py). Neutre 1.0 (la plante prend `t_germ_opt` brut). C'est le
+#    support de la SÉLECTION DARWINIENNE ÉMERGENTE : sur un plot froid, les lignées
+#    « lève-tôt » dominent le pool-sol au fil des saisons, sans code de sélection
+#    dédié (reproduction + héritage + réensemencement déjà en place). AJOUTÉ EN
+#    QUEUE (même garde-fou de canal de hash que `tolerance_asphyxie`/`port_trapu` :
+#    `child_genes`/`sample_genes` indexent le bruit par POSITION → un ajout en queue
+#    ne décale aucun gène antérieur).
 #  - `tolerance_asphyxie`   : tolérance à l'hypoxie racinaire (excès d'eau soutenu).
 #    >1 = racines plus tolérantes à l'anoxie → moins de dégât quand le sol reste
 #    gorgé (miroir haut de `tolerance_secheresse`). Neutre 1.0. AJOUTÉ EN FIN du
@@ -42,7 +52,8 @@ dessus sans créer de cycle (notamment fields/seedbank.py qui importe clamp_gene
 #    (même garde-fou de canal de hash que `tolerance_asphyxie`).
 GENE_NAMES = ("hauteur", "rusticite_froid", "vigueur",
               "resistance_pathogene", "tolerance_secheresse",
-              "tolerance_ombre", "tolerance_asphyxie", "port_trapu")
+              "tolerance_ombre", "tolerance_asphyxie", "port_trapu",
+              "germination_thermique")
 
 # Plage « normale » du vecteur de gènes — gaussienne centrée 1.0, σ initial 0.10.
 # L'introgression inter-espèces peut pousser HORS de [GENE_MIN, GENE_MAX]

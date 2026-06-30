@@ -53,22 +53,40 @@ réchauffement — supprimer l'artefact calendaire `spring_flush`, avec gène
       (le froid hivernal + le typage mordent, pas d'effondrement). Suites connexes vertes
       (planter, competition, catalogue_lot2, lifecycle, biennial, evergreen, encyclopedie,
       signes). Build C# non concerné. LDC OK (cultivees 320 code-pur, jaune mono-responsabilité).
-- [ ] ④ Gène `germination_thermique` — RE-FIGÉ
+- [x] ④ Gène `germination_thermique` — RE-FIGÉ MAÎTRISÉ
+      (golden `2b99457b71a1382afd8f171d644d843525a1f99c1a8a00322f77de553ba984d3`,
+      ex-`f4a652e0…`). Gène ajouté EN QUEUE de `GENE_NAMES` (`plants/genetics.py`,
+      canaux de hash préservés) ; `clamp_gene`[0.40,1.60]/`neutral_genes`=1.0 le
+      gèrent déjà ; héritage AUTO via `child_genes` (zéro code ajouté). Constante
+      `GERM_GENE_SHIFT=3.5 °C` posée à côté de `T_GERM_FLOOR` (`fields/ecofields/
+      constants.py`). Décalage `t_opt_eff = t_germ_opt − GERM_GENE_SHIFT·(gène−1)`
+      injecté aux 2 points actifs de `succession.py` : grain PROPRE
+      (`grain.genes.get`) + pool FÉRAL (helper `_germ_gene_mean`, `GeneStat.mean`,
+      défaut 1.0 propre). Sélection darwinienne ÉMERGENTE (zéro code dédié).
+      **Dérive golden = clé de gène ajoutée au vecteur sérialisé UNIQUEMENT** :
+      prouvé par `GERM_GENE_SHIFT=0` ⇒ MÊME hash `2b99457b…` (comportement de sim
+      STRICTEMENT inchangé au démarrage, le pool féral neutre 1.0 ne décale rien sur
+      2 ans de smoke ; la sélection émerge plus tard). 46 plantes (= ③). Suites
+      connexes vertes (planter, competition, catalogue_lot2, biennial, evergreen,
+      encyclopedie, signes). **test_population HORS périmètre** : son `population_hash`
+      (`4928300b…`) était DÉJÀ périmé sur l'état git propre du ③ (échouait avant ④,
+      obtenu `95be03f6…` identique avec/sans mon gène) → à re-figer côté sprint
+      population, pas ici. Build C# non concerné. LDC succession.py 202 code-pur (🟢).
 - [ ] ⑤ Suppression `spring_flush` (flush émergent) — RE-FIGÉ
 - [ ] ⑥ Banc multifacteur `germination_multifacteur` + oracles — NEUTRE
 - [ ] ⑦ Voix narratives (encyclopédie + carnet) — NEUTRE
 
 ## §REPRISE
-Tronçons ①②③ CLOS (non commités — Nico commit). Golden RE-FIGÉ MAÎTRISÉ au ③
-`f4a652e05511ec8c1fc4239c377f8775a3148ef03e58c99e79a3a32c38f7485e` (ex-`2d9b9de1…`).
-La porte thermique MORD maintenant : plancher froid `T_GERM_FLOOR=5.0` (binaire, avant
-la cloche) + 27 espèces typées (frileuses tol 6–8, rustiques tol 10–14). Dérive
-cohérente (germination férale réduite ~27 %, jardin vivant, 4 archétypes OK).
-**Note pour ④** : le gène `germination_thermique` s'ajoute EN QUEUE de `GENE_NAMES`
-(`plants/genetics.py`, préserve les canaux de hash) ; décale l'optimum effectif
-`t_opt_eff = t_germ_opt − GERM_GENE_SHIFT·(gene−1.0)` aux 2 points actifs de
-`succession.py` (grain propre `grain.genes` + pool féral `GeneStat.mean`).
-`GERM_GENE_SHIFT` = nouvelle constante `fields`/`sim` (~3–4 °C). RE-FIGÉ maîtrisé
-attendu (l'héritage neutre 1.0 ne décale rien, mais l'échantillonnage du pool peut
-bouger). Lire `CLAUDE.md` + ce fichier + `04_*.md`, lancer `python3 -m tests.test_golden`
-AVANT (doit afficher `f4a652e0…`).
+Tronçons ①②③④ CLOS (non commités — Nico commit). Golden RE-FIGÉ MAÎTRISÉ au ④
+`2b99457b71a1382afd8f171d644d843525a1f99c1a8a00322f77de553ba984d3` (ex-`f4a652e0…`).
+Le gène `germination_thermique` est en place (queue de `GENE_NAMES`, décalage
+d'optimum aux 2 points de germination, sélection darwinienne ÉMERGENTE). Dérive
+golden = SEULE clé de gène ajoutée au digest (comportement sim inchangé, prouvé par
+shift=0 ⇒ même hash). Fichiers ④ : `plants/genetics.py`, `fields/ecofields/
+constants.py`, `sim/succession.py`, `tests/golden_hash.txt`.
+**À signaler à Nico** : `tests/test_population.py` a un `population_hash` (`4928300b…`)
+PÉRIMÉ depuis le ③ (échoue déjà sur git propre, indépendant de ④) → re-figer à
+`95be03f6…` quand Nico jugera (hors périmètre de ce sprint thermique).
+**Note pour ⑤** (suppression `spring_flush`) : RE-FIGÉ prévu. Lire `CLAUDE.md` + ce
+fichier + `05_*.md`, lancer `python3 -m tests.test_golden` AVANT (doit afficher
+`2b99457b…`).

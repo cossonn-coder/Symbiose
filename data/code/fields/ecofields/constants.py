@@ -108,6 +108,16 @@ WINDCHILL_COEF = 0.6     # °C retirés à la T_min nocturne par unité de vent 
 # `t_germ_opt/tol` restent littéraux sur PlantBase). Nommage cohérent avec
 # `temp_min_growth=5.0` (familles.py). PLACEHOLDER, calibrage au banc ⑥.
 T_GERM_FLOOR    = 5.0    # °C — sous ce seuil de T_sol, aucune germination (zéro de végétation)
+# Décalage d'optimum thermique de germination par le gène `germination_thermique`
+# (sprint germination thermique, tronçon ④). Le gène donne une VARIABILITÉ
+# intra-espèce à la fenêtre de levée : `t_opt_eff = t_germ_opt − GERM_GENE_SHIFT·
+# (gène − 1)`. Un gène > 1 abaisse l'optimum → la lignée lève plus au froid ; < 1
+# le relève → lève plus tard. Neutre 1.0 ⇒ aucun décalage. C'est le ressort de la
+# SÉLECTION DARWINIENNE ÉMERGENTE (zéro code dédié) : sur un plot froid, les
+# lève-tôt grènent plus → le pool-sol dérive vers le froid au fil des saisons. Lu
+# côté `sim` (succession), comme T_GERM_FLOOR (les `t_germ_opt/tol` restent
+# littéraux sur PlantBase — règle de couches). PLACEHOLDER, calibrage au banc ⑥.
+GERM_GENE_SHIFT = 3.5    # °C — abaissement d'optimum de germination par unité de gène
 GAIN_SOLAIRE    = 15.0   # °C — surchauffe max d'un plot en plein soleil d'été (lum=1, été)
 THERMAL_INERTIA = 0.5    # lissage temporel de T_sol vers sa cible (1 = pas d'inertie ; petit = sol très tamponné)
 # Fraction du rayonnement d'été par saison : un soleil d'hiver chauffe moins le sol.
