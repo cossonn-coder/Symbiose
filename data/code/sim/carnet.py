@@ -110,7 +110,7 @@ _D = "descriptif"
 _I = "interprétatif"
 GABARIT: dict[tuple[str, str | None, str], str] = {
     ("germination", None, _D): "Une pousse de {e} a levé {l}.",
-    ("germination", None, _I): "{e} a germé {l} : chaleur et humidité réunies, le sol y était prêt.",
+    ("germination", None, _I): "{e} a germé {l} : le sol a enfin atteint sa chaleur de réveil — et mes lignées semblent lever un peu plus tôt chaque année.",
 
     ("stagnation", "sec", _D): "Le plant de {e} {l} fait grise mine, feuilles molles.",
     ("stagnation", "sec", _I): "Encore la soif {l} — ce sol draine trop vite pour {e}, je le sais maintenant.",

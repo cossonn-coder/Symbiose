@@ -32,8 +32,9 @@ FICHES: dict[str, dict[int, str]] = {
     "tomate": {
         1: "Plante herbacée dressée, feuilles découpées odorantes, fruits charnus rouges.",
         2: "Annuelle gélive, thermophile — ne démarre qu'au-dessus de ~12 °C, "
-           "fructifie tout l'été. Gourmande en eau et en azote. Sensible au mildiou "
-           "(familial Solanaceae).",
+           "fructifie tout l'été. Sa graine ne lève que lorsque le sol est franchement "
+           "chaud au toucher : semée tôt en terre froide, elle attend, parfois en vain. "
+           "Gourmande en eau et en azote. Sensible au mildiou (familial Solanaceae).",
         3: "S'associe au basilic et aux Astéracées qui attirent ses auxiliaires ; à "
            "éloigner des autres Solanaceae (partage les mêmes maladies). Gros "
            "consommateur → épuise le sol, à faire suivre d'une légumineuse.",
@@ -41,10 +42,13 @@ FICHES: dict[str, dict[int, str]] = {
     "poivron": {
         1: "Buisson compact, feuilles lisses, fruits creux verts puis colorés.",
         2: "Annuelle très thermophile, encore plus frileuse que la tomate ; cycle long, "
-           "a besoin d'une saison chaude pleine pour mûrir. Même fragilité fongique "
-           "familiale.",
+           "a besoin d'une saison chaude pleine pour mûrir. Sa levée est la plus "
+           "tardive du potager : il lui faut un sol durablement chaud, sinon la graine "
+           "patiente sans germer. Même fragilité fongique familiale.",
         3: "Même clan que tomate/aubergine — rotation et distance de rigueur. Profite "
-           "des fleurs compagnes qui soutiennent prédateurs de pucerons.",
+           "des fleurs compagnes qui soutiennent prédateurs de pucerons. Levant après "
+           "les rustiques, elle s'inscrit dans la deuxième vague de la saison, quand la "
+           "chaleur est bien installée.",
     },
     "haricot": {
         1: "Tige volubile ou naine, feuilles trifoliées, gousses pendantes.",
@@ -73,7 +77,8 @@ FICHES: dict[str, dict[int, str]] = {
     "basilic": {
         1: "Petit buisson de feuilles tendres très parfumées.",
         2: "Annuelle gélive thermophile ; floraison en épis à supprimer pour prolonger "
-           "le feuillage. Aime chaleur et arrosages réguliers.",
+           "le feuillage. Aime chaleur et arrosages réguliers. Sa levée réclame un sol "
+           "chaud : il ne sert à rien de le semer tant que la terre reste fraîche.",
         3: "Compagnon classique de la tomate (brouille les ravageurs par son parfum, "
            "partage le même microclimat chaud) ; ses fleurs nourrissent les petits "
            "pollinisateurs.",
@@ -136,7 +141,8 @@ FICHES: dict[str, dict[int, str]] = {
     "carotte": {
         1: "Rosette de feuilles plumeuses finement divisées, racine pivot orange.",
         2: "Bisannuelle cultivée en annuelle ; la 2ᵉ année monte en ombelle blanche. "
-           "Aime un sol meuble et frais.",
+           "Aime un sol meuble et frais. Rustique, sa graine lève dès que le sol s'est "
+           "un peu radouci, sans attendre les fortes chaleurs.",
         3: "En fleur, son ombelle nourrit syrphes et micro-guêpes ; associée à "
            "l'oignon/poireau qui déroutent mutuellement leurs mouches respectives.",
     },
@@ -144,16 +150,21 @@ FICHES: dict[str, dict[int, str]] = {
         1: "Grosses feuilles larges sur tige étalée, grandes fleurs jaunes, fruits "
            "allongés.",
         2: "Annuelle thermophile, monoïque (fleurs mâles et femelles séparées) → dépend "
-           "des pollinisateurs pour nouer. Très gourmande en eau et matière organique.",
+           "des pollinisateurs pour nouer. Très gourmande en eau et matière organique. "
+           "Sa graine attend un sol bien réchauffé pour lever — semée trop tôt, elle "
+           "pourrit plus qu'elle ne germe.",
         3: "Son feuillage couvre et ombre le sol (couvre-sol des « trois sœurs ») ; pas "
            "de butineurs = pas de courgettes — indicateur vivant de la santé "
            "pollinisatrice.",
     },
     "mache": {
         1: "Petites rosettes tendres au ras du sol.",
-        2: "Annuelle très rustique au froid, cycle d'hiver ; se ressème spontanément.",
+        2: "Annuelle très rustique au froid, cycle d'hiver ; se ressème spontanément. "
+           "Sa graine lève en sol seulement frais, bien avant les frileuses du potager.",
         3: "Couvre-sol hivernal qui occupe le terrain quand tout dort, limite le sol nu "
-           "et le lessivage ; salade de soudure entre deux saisons.",
+           "et le lessivage ; salade de soudure entre deux saisons. Levant au frais, "
+           "elle fait partie des premières à ouvrir la saison, avant la grande vague de "
+           "chaleur.",
     },
     "ortie": {
         1: "Tige carrée, feuilles dentées urticantes, fleurs verdâtres en grappes.",
@@ -185,7 +196,9 @@ FICHES: dict[str, dict[int, str]] = {
         2: "Annuelle pionnière à cycle ultra-court, plusieurs générations par an ; "
            "comestible.",
         3: "Indicatrice de sol remué/cultivé ; couvre fugace le sol nu. Tête de pont de "
-           "la succession après une perturbation.",
+           "la succession après une perturbation. Rustique, elle lève dès le sol à "
+           "peine radouci — souvent la première levée de l'année, bien avant les "
+           "cultures frileuses.",
     },
     "minette": {
         1: "Petit trèfle rampant à fleurs jaunes en têtes serrées.",
@@ -197,7 +210,8 @@ FICHES: dict[str, dict[int, str]] = {
     "paturin": {
         1: "Petite graminée touffue, épillets verts clairs.",
         2: "Graminée annuelle ultra-pionnière, germe et grenaille en continu ; colonise "
-           "tout sol nu.",
+           "tout sol nu. Fenêtre de levée très large : dès que le sol n'est plus gelé, "
+           "elle lève, du frais du printemps jusqu'à l'automne.",
         3: "Premier tapis qui fixe la surface après mise à nu ; transition vers un gazon "
            "pérenne. Omniprésent, indicateur de sol travaillé/piétiné.",
     },
@@ -215,7 +229,9 @@ FICHES: dict[str, dict[int, str]] = {
         1: "Petit arbre à grandes feuilles lobées, écorce grise lisse, figues "
            "vertes/violettes.",
         2: "Pérenne caduc méditerranéen, résistant à la sécheresse une fois établi ; "
-           "aime la chaleur réverbérée d'un mur.",
+           "aime la chaleur réverbérée d'un mur. Méridional, il ne lève spontanément de "
+           "graine que sur sol bien chaud — contrairement aux ligneux tempérés qui "
+           "germent au frais du printemps.",
         3: "Idéal en espalier sud (microclimat chaud, albédo du mur) ; figues = manne "
            "pour oiseaux et insectes en fin d'été. Ombre dense estivale.",
     },
@@ -284,5 +300,30 @@ CONCEPTS: dict[str, dict[int, str]] = {
         3: "L'eau gelée du matin n'est pas perdue : le givre fond au réchauffement et "
            "restitue son eau au sol (fonte différée). C'est le visage hivernal de la "
            "rosée — un dépôt nocturne d'eau, simplement passé par la phase solide.",
+    },
+    # Germination thermique (sprint germination thermique ⑦) : la levée n'est pas
+    # déclenchée par le calendrier mais par la CHALEUR DU SOL. PHÉNOMÈNE écologique
+    # transversal (≠ espèce) → entrée dans `CONCEPTS`, même structure 3 niveaux,
+    # même voix naturaliste. C'est la voix qui rend lisible la succession TEMPORELLE
+    # émergente (pionnières au frais → frileuses à la chaleur) et la sélection
+    # darwinienne (lignées qui lèvent un peu plus tôt chaque année). Aucun chiffre en
+    # HUD primaire (philo #5) : la fenêtre est décrite au toucher, pas mesurée.
+    "germination_thermique": {
+        1: "Au sortir de l'hiver, rien ne lève encore. Puis, le sol se réchauffant, "
+           "les premières pousses percent — d'abord les sauvages, plus tard les "
+           "cultures frileuses, chacune à son heure.",
+        2: "Une graine ne germe pas à une date : elle attend que la terre atteigne sa "
+           "chaleur de réveil. Sous un plancher de froid, aucune ne bouge, quelle que "
+           "soit l'espèce. Chaque plante a sa fenêtre : les rustiques (mâche, carotte, "
+           "adventices) lèvent dès que le sol est seulement frais ; les thermophiles "
+           "(tomate, poivron, courgette, basilic, figuier) exigent un sol franchement "
+           "chaud au toucher et tardent d'autant.",
+        3: "De ces fenêtres décalées naît la VAGUE DE PRINTEMPS, sans aucun calendrier : "
+           "les pionnières ouvrent la saison sur sol encore frais, occupent l'espace, "
+           "puis les frileuses prennent le relais quand la chaleur s'installe — une "
+           "succession qui s'organise toute seule au fil du réchauffement. Et le sol "
+           "garde mémoire : génération après génération, les lignées qui lèvent un peu "
+           "plus tôt prennent l'avantage et essaiment ; insensiblement, le jardin "
+           "apprend à démarrer plus vite.",
     },
 }

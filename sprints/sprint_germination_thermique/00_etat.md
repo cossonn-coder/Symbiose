@@ -108,7 +108,26 @@ réchauffement — supprimer l'artefact calendaire `spring_flush`, avec gène
       (1 tick). Pure composition → golden NEUTRE (vérifié `ae445d3f…`). Suite
       climatique 20/20. Build C# non concerné. LDC : climatique.py 75 code-pur
       🟢, test 105 🟢. (semis_tempere « poivron » FAIL pré-existant, hors périmètre.)
-- [ ] ⑦ Voix narratives (encyclopédie + carnet) — NEUTRE
+- [x] ⑦ Voix narratives (encyclopédie + carnet) — NEUTRE
+      (golden `ae445d3f…` INCHANGÉ, corpus/carnet read-only hors tick). **Encyclopédie**
+      (`sim/encyclopedie_corpus.py`) : concept TRANSVERSAL NEUF `germination_thermique`
+      dans `CONCEPTS` (≠ espèce, comme `rosee`/`gelee_blanche`) — N1 « rien ne lève
+      encore puis ça perce, chacune à son heure », N2 fenêtre de réveil + plancher froid
+      + rustiques vs thermophiles (sans chiffre HUD, philo #5), N3 vague de printemps
+      ÉMERGENTE (pionnières au frais → frileuses à la chaleur) + sélection darwinienne
+      (lignées qui lèvent plus tôt). Plus, fenêtre thermique de levée ajoutée au N2 (et
+      succession au N3) des espèces typées saillantes : tomate, poivron, courgette,
+      basilic, figuier (frileuses) ; mâche, carotte, bourse_pasteur, paturin (rustiques).
+      Texte botanique existant NON réécrit (ajout d'une phrase ciblée). **Carnet**
+      (`sim/carnet.py`) : gabarit INTERPRÉTATIF de `germination` enrichi (« le sol a
+      enfin atteint sa chaleur de réveil — mes lignées lèvent plus tôt chaque année »),
+      descriptif intact. Mapping `germination → succession` figé (doc §5.0) NON touché ;
+      `stagnation/froid → météo` couvre déjà « le froid retient ». DÉCISION : pas
+      d'entrée carnet « non-levée » — une graine qui ne lève PAS n'émet aucun marqueur
+      au ledger, donc rien à tabuler sans toucher le moteur (interdit, golden neutre) ;
+      ces descriptifs « rien ne lève encore » sont portés par l'encyclopédie. Golden
+      `ae445d3f…` inchangé ; suites vertes : encyclopedie 18/18, carnet 19/19, journal
+      15/15, pages 49/49. Build C# NON concerné. LDC corpus 227🟢 / carnet 137🟢.
 
 ## §REPRISE
 Tronçons ①②③④⑤⑥ CLOS (non commités — Nico commit). Golden STABLE depuis ⑤
