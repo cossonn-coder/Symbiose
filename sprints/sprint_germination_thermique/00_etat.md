@@ -88,20 +88,43 @@ réchauffement — supprimer l'artefact calendaire `spring_flush`, avec gène
       vivantes (vs 46 au ④), jardin VIVANT. Suites connexes vertes (planter 18/18,
       competition 14/14, biennial, evergreen, encyclopedie 18/18, signes 8/8). Build C#
       non concerné. LDC succession.py 142 code-pur (🟢, ex-202).
-- [ ] ⑥ Banc multifacteur `germination_multifacteur` + oracles — NEUTRE
+- [x] ⑥ Banc multifacteur `germination_multifacteur` + oracle — NEUTRE
+      (golden `ae445d3f…` INCHANGÉ). Banc dans `bancs/climatique.py` (thème
+      thermique) : DAMIER de tuiles 12×12 (144 grains/tuile) identiques sauf UN
+      facteur balayé. Deux balayages — T_sol ∈ {0,5,8,11,14,18,22,26,30} °C ×
+      {tomate FRILEUSE opt22/tol7, carotte RUSTIQUE opt13/tol10}, et pH ∈
+      {4,5,6,6.8,7.5,8.5} × carotte (à T_sol 18 °C). Helper `_gmf_tile` (niche
+      ouverte + succession férale COUPÉE + grain sur chaque plot). Enregistré dans
+      `BANCS`. Oracle `test_germination_multifacteur` (tests/bancs/
+      test_climatique.py) : 9 checks en TENDANCE/BORNE, tous OK — levée NULLE sous
+      `T_GERM_FLOOR` (0 °C), carotte croît 5→14 puis décroît 18→30, tomate croît
+      11→26, carotte > tomate au frais (11 °C : 0.68 vs 0.13), cloche pH (6.8 >
+      4.0 ET > 8.5), niche ∝ lumière. **DÉCISION DE DESIGN (fenêtre = 1 TICK)** :
+      T_sol forcée RELAXE vers l'équilibre air-piloté (THERMAL_INERTIA 0.5,
+      ~6 sem) → le gradient n'est NET qu'au 1er tick ; `eco.lumiere` est
+      ENTIÈREMENT recalculée par `tick_light` chaque tick (un forçage de champ est
+      écrasé) → la sensibilité lumière est assertée par LECTURE DIRECTE de
+      `niche_index` (pure), pas par balayage engine. pH/T_sol passent par l'engine
+      (1 tick). Pure composition → golden NEUTRE (vérifié `ae445d3f…`). Suite
+      climatique 20/20. Build C# non concerné. LDC : climatique.py 75 code-pur
+      🟢, test 105 🟢. (semis_tempere « poivron » FAIL pré-existant, hors périmètre.)
 - [ ] ⑦ Voix narratives (encyclopédie + carnet) — NEUTRE
 
 ## §REPRISE
-Tronçons ①②③④ CLOS (non commités — Nico commit). Golden RE-FIGÉ MAÎTRISÉ au ④
-`2b99457b71a1382afd8f171d644d843525a1f99c1a8a00322f77de553ba984d3` (ex-`f4a652e0…`).
-Le gène `germination_thermique` est en place (queue de `GENE_NAMES`, décalage
-d'optimum aux 2 points de germination, sélection darwinienne ÉMERGENTE). Dérive
-golden = SEULE clé de gène ajoutée au digest (comportement sim inchangé, prouvé par
-shift=0 ⇒ même hash). Fichiers ④ : `plants/genetics.py`, `fields/ecofields/
-constants.py`, `sim/succession.py`, `tests/golden_hash.txt`.
-**À signaler à Nico** : `tests/test_population.py` a un `population_hash` (`4928300b…`)
-PÉRIMÉ depuis le ③ (échoue déjà sur git propre, indépendant de ④) → re-figer à
-`95be03f6…` quand Nico jugera (hors périmètre de ce sprint thermique).
-**Note pour ⑤** (suppression `spring_flush`) : RE-FIGÉ prévu. Lire `CLAUDE.md` + ce
-fichier + `05_*.md`, lancer `python3 -m tests.test_golden` AVANT (doit afficher
-`2b99457b…`).
+Tronçons ①②③④⑤⑥ CLOS (non commités — Nico commit). Golden STABLE depuis ⑤
+`ae445d3fa2df9b8d95b45f663552f75de113eb540ed9066e81eb8d034b1a8e3c` — le ⑥ est
+NEUTRE (banc/oracle pur, jamais monté au smoke/full), golden VÉRIFIÉ inchangé.
+Le banc `germination_multifacteur` (registre `BANCS`) outille le calibrage des
+portes de germination (T_sol, pH, frileuse vs rustique, lumière) ; son oracle
+(`tests/bancs/test_climatique.py::test_germination_multifacteur`, 9 checks en
+tendance/borne, 20/20 sur la suite climatique) valide le SENS des portes ②③④⑤.
+Fenêtre d'observation = 1 tick (T_sol forcée relaxe ensuite ; lumière recalculée
+par l'engine donc assertée par lecture directe de `niche_index`). Fichiers ⑥ :
+`bancs/climatique.py`, `bancs/__init__.py`, `tests/bancs/test_climatique.py`.
+**À signaler à Nico** : (a) `tests/test_population.py` a un `population_hash`
+(`4928300b…`) PÉRIMÉ depuis le ③ — re-figer à `95be03f6…` quand Nico jugera
+(hors périmètre thermique) ; (b) banc `semis_tempere` « poivron » FAIL
+PRÉ-EXISTANT (sur git propre, indépendant de ⑥) — calibrage à voir hors sprint.
+**Note pour ⑦** (voix narratives encyclopédie+carnet) : NEUTRE prévu. Lire
+`CLAUDE.md` + ce fichier + `07_*.md`, lancer `python3 -m tests.test_golden` AVANT
+(doit afficher `ae445d3f…`).
