@@ -70,7 +70,12 @@ namespace Symbiose
 				if (mb.ButtonIndex == MouseButton.WheelUp)   StepZoom(+1);
 				if (mb.ButtonIndex == MouseButton.WheelDown) StepZoom(-1);
 				if (mb.ButtonIndex == MouseButton.Left)
-					TryAction(WorldMouseCanvas(), mb.ShiftPressed);
+				{
+					// Clic sur la maison = ouvrir le HUB (voix), pas un geste sol.
+					var canvas = WorldMouseCanvas();
+					if (ClicSurMaison(canvas)) OuvrirHubMaison();
+					else TryAction(canvas, mb.ShiftPressed);
+				}
 			}
 		}
 

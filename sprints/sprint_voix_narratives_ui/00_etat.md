@@ -54,12 +54,36 @@ filtre par clé exacte).
 | # | Sujet | Kickoff | État |
 |---|-------|---------|------|
 | ① | Pont : 3 hooks maîtrise + révélation page palier + 4 commandes read-only + verbe `acheter_magazine` | `01_pont.md` | ✅ fait (pont `0.5.11`, golden intact) |
-| ② | `SimBridge` C# (1 méthode/commande) + nœud `VoicePanel` + hub-maison cliquable (non-voix grisées) | `02_ossature_ui.md` | ⬜ à faire |
+| ② | `SimBridge` C# (1 méthode/commande) + nœud `VoicePanel` + hub-maison cliquable (non-voix grisées) | `02_ossature_ui.md` | ✅ fait (`dotnet build` vert, golden intact) |
 | ③ | Panneau Carnet (filtrable par concept) + panneau Encyclopédie (index → fiche N1/N2/N3) | `03_carnet_encyclopedie.md` | ⬜ à faire |
 | ④ | Panneau Pages (coffret grenier) + panneau Magazine (offres → fiche → achat bout-en-bout) | `04_pages_magazine.md` | ⬜ à faire |
 | F5 | Validation visuelle Godot (hub, 4 panneaux, achat) | — | ⬜ Nico |
 
 ## §REPRISE
+**② CLOS** (C# pur, couche vue). Livré :
+- `core/SimBridge.cs` : **une méthode par commande voix** — `Carnet(filtreConcept)`,
+  `Encyclopedie(espece)`, `Pages()`, `MagazineOffres()`, `MagazineFiche(espece)`,
+  `AcheterMagazine(espece)` (passe par `Action("acheter_magazine", …)`, chemin
+  Vigueur unique Q3). Verbatim, zéro reformulation (194 LDC = 🟢).
+- `world/VoicePanel.cs` : nœud réutilisable, `CanvasLayer` plein écran,
+  **pause-aware** (mémorise `GetTree().Paused`, restaure à la fermeture),
+  `ProcessMode=Always`, squelette titre + zone défilante `Contenu` + bouton
+  Fermer. Contenu vide (« à venir ») — ③④ le peupleront.
+- `world/WorldView.Hub.cs` (partial) : maison cliquable (`ClicSurMaison` teste
+  l'empreinte via `ScreenToWorld`) → menu **5 fonctions** ; Carnet / Encyclopédie /
+  Magazine / **Pages du grenier** actives (ouvrent un `VoicePanel` titré) ;
+  Atelier / Semis intérieur / Foyer **grisés « (à venir) »** (D54). Un seul menu /
+  un seul panneau à la fois.
+- `world/WorldView.Controls.cs` : clic gauche teste la maison AVANT `TryAction`.
+
+`dotnet build Symbiose.csproj` = **vert** (0 err / 0 warn). Golden `ae445d3f…`
+**INTACT** (aucun Python touché). F5 visuel = Nico (Godot pas sur la VM).
+
+**PROCHAIN = ③** (`03_carnet_encyclopedie.md`) : panneau Carnet (liste filtrable
+par concept) + panneau Encyclopédie (index → fiche N1/N2/N3). Lire `CLAUDE.md` +
+ce fichier + `03_carnet_encyclopedie.md` ; `dotnet build` = filet C#.
+
+---
 **① CLOS** (pont `0.5.11`, golden `ae445d3f…` INTACT, 219/219 pont + toutes suites
 vertes). Ce qui a été livré côté Python (`tools/simserver/`) :
 - **Chaîne de maîtrise** dans un module dédié `maitrise_pont.py` : hook A
@@ -80,10 +104,6 @@ coûts. 5 assertions de coût ABSOLU des suites pont (actions/taille/planter) on
 rendues ROBUSTES (débit = `cost` annoncé, ratio urgence 1.5, régen « ≥ +10 »).
 `actions.py` = **359 LDC** (bande 🟡 vigilance, une seule responsabilité) — scission
 possible plus tard (extraire le helper hook-C).
-
-**PROCHAIN = ②** (`02_ossature_ui.md`) : `SimBridge` C# (1 méthode/commande voix) +
-nœud `VoicePanel` + hub-maison cliquable (non-voix grisées). Lire `CLAUDE.md` +
-ce fichier + `02_ossature_ui.md` ; `dotnet build Symbiose.csproj` = filet C#.
 
 Reliquats HORS sprint = **D54** (HUD primaire philo #5, page d'accueil pictos,
 notifs temps réel, robinets pages hasard/fouille + marqueurs bouture/oiseau/vent,

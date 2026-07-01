@@ -195,6 +195,78 @@ namespace Symbiose
 			return Request(msg);
 		}
 
+		// -------------------------------------------------------------------
+		// VOIX NARRATIVES (sprint UI voix, tronçon ②) — commandes READ-ONLY du
+		// pont (0.5.11). INVARIANT « Godot bête » : chaque méthode envoie la
+		// requête et renvoie la réponse désérialisée TELLE QUELLE. Aucun tri,
+		// aucune concaténation, aucun texte fabriqué ici — le corpus verbatim
+		// vit en Python (cf. tools/simserver/voix.py). L'appelant (les panneaux
+		// ③④) lit les clés du dict renvoyé et se contente de METTRE EN PAGE.
+		// -------------------------------------------------------------------
+
+		/// <summary>
+		/// Carnet auto du joueur courant. `filtreConcept` non-null → filtre
+		/// `{concept}` transmis tel quel. Renvoie la liste d'entrées
+		/// (`entrees` = list de {semaine, zone, concept, registre, texte}), ou []
+		/// si le pont ne répond pas.
+		/// </summary>
+		public Godot.Collections.Array Carnet(string filtreConcept = null)
+		{
+			var msg = new GDict { ["cmd"] = "carnet" };
+			if (filtreConcept != null)
+				msg["filtre"] = new GDict { ["concept"] = filtreConcept };
+			var resp = Request(msg);
+			return resp?["entrees"].AsGodotArray() ?? new Godot.Collections.Array();
+		}
+
+		/// <summary>
+		/// Encyclopédie du joueur courant. Sans `espece` → l'INDEX (`index` =
+		/// liste d'espèces découvertes). Avec `espece` → la fiche tronquée au
+		/// palier (`fiche` = {espece, niveau_max, niveaux}) ou `null`. L'appelant
+		/// distingue par la clé présente. Renvoie la réponse COMPLÈTE, ou null.
+		/// </summary>
+		public GDict Encyclopedie(string espece = null)
+		{
+			var msg = new GDict { ["cmd"] = "encyclopedie" };
+			if (espece != null) msg["espece"] = espece;
+			return Request(msg);
+		}
+
+		/// <summary>
+		/// Pages secrètes TROUVÉES (coffret grenier). Renvoie la réponse complète
+		/// (`ids` = liste ordonnée, `pages` = list de {id, voix, concept, texte}),
+		/// ou null. Read-only pur.
+		/// </summary>
+		public GDict Pages() => Request(new GDict { ["cmd"] = "pages" });
+
+		/// <summary>
+		/// Offres du magazine (sœurs des familles maîtrisées, hors banque) :
+		/// `offres` = liste d'espèces. Renvoie [] si le pont ne répond pas.
+		/// </summary>
+		public Godot.Collections.Array MagazineOffres()
+		{
+			var resp = Request(new GDict { ["cmd"] = "magazine" });
+			return resp?["offres"].AsGodotArray() ?? new Godot.Collections.Array();
+		}
+
+		/// <summary>
+		/// Fiche PRODUIT d'une espèce du magazine (argument de vente, indépendant
+		/// du palier joueur) : `fiche` = {espece, niveau_max, niveaux} ou `null`.
+		/// Renvoie la réponse complète, ou null.
+		/// </summary>
+		public GDict MagazineFiche(string espece)
+			=> Request(new GDict { ["cmd"] = "magazine", ["espece"] = espece });
+
+		/// <summary>
+		/// Achat au magazine (Q3) : passe par le verbe `cmd_action`
+		/// `acheter_magazine` (chemin Vigueur UNIQUE, cohérent avec tous les
+		/// gestes joueur). Renvoie la réponse complète (`result.achete` =
+		/// succès/échec métier, `snapshot` = bilan Vigueur rafraîchi), ou null.
+		/// La vue ne pré-valide RIEN : Python possède la règle d'achat.
+		/// </summary>
+		public GDict AcheterMagazine(string espece)
+			=> Action("acheter_magazine", prms: new GDict { ["espece"] = espece });
+
 		/// <summary>
 		/// Liste des bancs d'essai montables (`init config="<nom>"`), DEMANDÉE au
 		/// serveur (commande `list_bancs`, pont 0.5.4) : la source reste le registre

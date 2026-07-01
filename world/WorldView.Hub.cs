@@ -1,0 +1,150 @@
+// SYMBIOSE — WorldView.Hub.cs (partial de WorldView, sprint UI voix ②)
+// La MAISON NORMANDE comme HUB VIVANT cliquable (décision Q2). Un clic sur
+// l'empreinte de la maison ouvre un petit menu des 5 fonctions du hub :
+// Atelier · Semis intérieur · Magazine · Carnet · Foyer (CLAUDE.md). Ici, 4
+// entrées VOIX (Carnet / Encyclopédie / Magazine / Pages du grenier) ouvrent un
+// VoicePanel ; les 3 entrées non-voix (Atelier / Semis intérieur / Foyer) sont
+// affichées mais GRISÉES « à venir » (micro-décision A → dette D54). On
+// n'invente pas leur comportement.
+//
+// 📖 Pédagogie Godot/C# :
+//  - Détection du clic maison : on convertit la souris (espace caméra du
+//    SubViewport, via WorldMouseCanvas) en cm MONDE (ScreenToWorld), puis on
+//    teste l'appartenance au rectangle d'empreinte [_hx0,_hy0]→[_hx1,_hy1]. Pas
+//    besoin d'Area2D/collision : l'empreinte est un simple rectangle au sol.
+//  - Le menu est un CanvasLayer éphémère (comme le sélecteur ⑤) : il se libère
+//    au clic d'une entrée ou en cliquant à côté.
+//  - Button.Disabled = true grise le bouton ET l'inerte (aucun signal émis) —
+//    la façon native de dire « à venir » sans câbler de comportement.
+//
+// INVARIANT « Godot bête » : ce partial ne fabrique aucun texte de voix. Il
+// route seulement vers le bon VoicePanel ; le contenu viendra du pont en ③④.
+
+using Godot;
+
+namespace Symbiose
+{
+	public partial class WorldView : Node2D
+	{
+		// Un seul menu / un seul panneau voix actifs à la fois (le clic maison
+		// route vers le bon contenu). Champs pour pouvoir les fermer/remplacer.
+		private CanvasLayer _hubMenu;
+		private VoicePanel _voicePanel;
+
+		// -------------------------------------------------------------------
+		// DÉTECTION DU CLIC MAISON
+		// -------------------------------------------------------------------
+
+		/// <summary>
+		/// La souris (clic gauche) tombe-t-elle sur l'empreinte au sol de la
+		/// maison ? Appelé AVANT TryAction : un clic sur la maison ouvre le hub
+		/// au lieu d'exécuter un geste sur le sol.
+		/// </summary>
+		private bool ClicSurMaison(Vector2 mouseCanvas)
+		{
+			// _house n'existe qu'une fois le monde construit (BuildHouse).
+			if (_house == null) return false;
+			Vector2 monde = ScreenToWorld(mouseCanvas);
+			return monde.X >= _hx0 && monde.X <= _hx1
+				&& monde.Y >= _hy0 && monde.Y <= _hy1;
+		}
+
+		// -------------------------------------------------------------------
+		// MENU HUB — 5 fonctions (4 voix actives + Foyer/Atelier/Semis grisés)
+		// -------------------------------------------------------------------
+
+		private void OuvrirHubMaison()
+		{
+			FermerHubMenu();   // jamais deux menus superposés
+
+			_hubMenu = new CanvasLayer { Name = "HubMenu", Layer = 8 };
+			AddChild(_hubMenu);
+
+			// Voile qui referme le menu si on clique à côté (hors du panneau).
+			var voile = new ColorRect
+			{
+				Color = new Color(0f, 0f, 0f, 0.25f),
+				MouseFilter = Control.MouseFilterEnum.Stop,
+			};
+			voile.SetAnchorsPreset(Control.LayoutPreset.FullRect);
+			voile.GuiInput += ev =>
+			{
+				if (ev is InputEventMouseButton mb && mb.Pressed
+					&& mb.ButtonIndex == MouseButton.Left)
+					FermerHubMenu();
+			};
+			_hubMenu.AddChild(voile);
+
+			var panneau = new PanelContainer();
+			panneau.SetAnchorsPreset(Control.LayoutPreset.Center);
+			panneau.CustomMinimumSize = new Vector2(280, 0);
+			_hubMenu.AddChild(panneau);
+
+			var vbox = new VBoxContainer();
+			panneau.AddChild(vbox);
+
+			vbox.AddChild(new Label
+			{
+				Text = "Maison",
+				HorizontalAlignment = HorizontalAlignment.Center,
+			});
+
+			// Entrées VOIX (actives) — chacune ouvre le VoicePanel titré. Le
+			// contenu reste vide jusqu'aux tronçons ③④ (ossature seulement).
+			AjouterEntreeVoix(vbox, "Carnet",       "Carnet");
+			AjouterEntreeVoix(vbox, "Encyclopédie", "Encyclopédie");
+			AjouterEntreeVoix(vbox, "Magazine",     "Magazine de botanique");
+			AjouterEntreeVoix(vbox, "Pages du grenier", "Pages du grenier");
+
+			// Entrées NON-VOIX (grisées « à venir » → dette D54). Visibles pour
+			// signaler les 5 fonctions du hub, mais inertes.
+			AjouterEntreeGrisee(vbox, "Atelier");
+			AjouterEntreeGrisee(vbox, "Semis intérieur");
+			AjouterEntreeGrisee(vbox, "Foyer");
+
+			GD.Print("[WorldView] hub-maison ouvert (5 fonctions, 4 voix actives).");
+		}
+
+		// Une entrée active : clic → ferme le menu, ouvre le VoicePanel titré.
+		private void AjouterEntreeVoix(VBoxContainer parent, string libelle, string titre)
+		{
+			var b = new Button { Text = libelle };
+			b.Pressed += () =>
+			{
+				FermerHubMenu();
+				OuvrirVoicePanel(titre);
+			};
+			parent.AddChild(b);
+		}
+
+		// Une entrée grisée : visible, inerte (aucun signal). « à venir » (D54).
+		private void AjouterEntreeGrisee(VBoxContainer parent, string libelle)
+		{
+			parent.AddChild(new Button
+			{
+				Text = $"{libelle}  (à venir)",
+				Disabled = true,
+			});
+		}
+
+		private void FermerHubMenu()
+		{
+			if (_hubMenu == null) return;
+			_hubMenu.QueueFree();
+			_hubMenu = null;
+		}
+
+		// -------------------------------------------------------------------
+		// VOICE PANEL — un seul actif à la fois
+		// -------------------------------------------------------------------
+
+		private void OuvrirVoicePanel(string titre)
+		{
+			if (_voicePanel != null && IsInstanceValid(_voicePanel))
+				_voicePanel.Fermer();
+			_voicePanel = new VoicePanel();
+			AddChild(_voicePanel);
+			_voicePanel.Ouvrir(titre, onFerme: () => _voicePanel = null);
+		}
+	}
+}
