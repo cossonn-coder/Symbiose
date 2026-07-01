@@ -36,17 +36,38 @@ namespace Symbiose
 		// -------------------------------------------------------------------
 
 		/// <summary>
-		/// La souris (clic gauche) tombe-t-elle sur l'empreinte au sol de la
-		/// maison ? Appelé AVANT TryAction : un clic sur la maison ouvre le hub
-		/// au lieu d'exécuter un geste sur le sol.
+		/// La souris (clic gauche) tombe-t-elle sur la maison ? Appelé AVANT
+		/// TryAction : un clic sur la maison ouvre le hub au lieu d'exécuter un
+		/// geste sur le sol.
 		/// </summary>
 		private bool ClicSurMaison(Vector2 mouseCanvas)
 		{
 			// _house n'existe qu'une fois le monde construit (BuildHouse).
 			if (_house == null) return false;
-			Vector2 monde = ScreenToWorld(mouseCanvas);
-			return monde.X >= _hx0 && monde.X <= _hx1
-				&& monde.Y >= _hy0 && monde.Y <= _hy1;
+
+			// 📖 Picking iso : la maison est DESSINÉE comme un volume (empreinte
+			// au sol + murs qui montent + toit jusqu'au faîte, cf. BuildHouse).
+			// Tester l'empreinte au sol via ScreenToWorld(z=0) raterait tout clic
+			// sur les façades/toit (ils se reprojettent au sol PLUS AU NORD que
+			// l'empreinte → hors rectangle). On teste donc la SILHOUETTE ÉCRAN
+			// complète : enveloppe convexe des 4 coins au sol + leurs hauts de
+			// murs + le faîte. WorldToScreen applique déjà l'orientation → le
+			// test suit la rotation de vue (D35) sans effort. Généreux aux
+			// avant-toits, ce qui aide la visée.
+			Vector2 up   = new(0f, -_hWallCm * PxPerCmZ);
+			Vector2 apex = WorldToScreen((_hx0 + _hx1) / 2f, (_hy0 + _hy1) / 2f)
+						 - new Vector2(0f, _hHeightCm * PxPerCmZ);
+			Vector2[] b =
+			{
+				WorldToScreen(_hx0, _hy0), WorldToScreen(_hx1, _hy0),
+				WorldToScreen(_hx1, _hy1), WorldToScreen(_hx0, _hy1),
+			};
+			Vector2[] silhouette = Geometry2D.ConvexHull(new[]
+			{
+				b[0], b[1], b[2], b[3],
+				b[0] + up, b[1] + up, b[2] + up, b[3] + up, apex,
+			});
+			return Geometry2D.IsPointInPolygon(mouseCanvas, silhouette);
 		}
 
 		// -------------------------------------------------------------------
