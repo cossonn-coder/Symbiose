@@ -84,9 +84,14 @@ def test_planter_arroser():
     r = s12.send(cmd="action", verb="planter",
                  target={"tile": "T0", "x_cm": 25.0, "y_cm": 25.0},
                  params={"species": espece})
-    check("planter une graine en banque → applied:true, coût FAIBLE (5)",
-          r["result"]["applied"] is True and vig_av - r["result"]["vigueur"] == 5.0,
-          f"Δvigueur={vig_av - r['result']['vigueur']} ({r['result']['message']})")
+    # Maîtrise (voix ①) : le coût nominal (planter FAIBLE=5) est remisé par le
+    # palier ⇒ Vigueur débitée = le `cost` annoncé (≤ 5), pas la constante d'antan.
+    check("planter une graine en banque → applied:true, coût FAIBLE (≤ 5) = cost",
+          r["result"]["applied"] is True
+          and 0.0 < r["result"]["cost"] <= 5.0
+          and abs((vig_av - r["result"]["vigueur"]) - r["result"]["cost"]) < 1e-6,
+          f"Δvigueur={vig_av - r['result']['vigueur']} (cost {r['result']['cost']}, "
+          f"{r['result']['message']})")
     seeds_ap = r["snapshot"]["player"]["seeds"]
     check("le lot de l'espèce plantée a décru de 1 (graine sortie de la banque)",
           seeds_ap.get(espece, 0) == seeds_av[espece] - 1,

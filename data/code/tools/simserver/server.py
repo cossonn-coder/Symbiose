@@ -11,9 +11,10 @@ import sys
 from .commands import CommandsMixin
 from .actions import ActionsMixin
 from .serialize import SerializeMixin
+from .voix import VoixMixin
 
 
-class SimServer(CommandsMixin, ActionsMixin, SerializeMixin):
+class SimServer(CommandsMixin, ActionsMixin, SerializeMixin, VoixMixin):
     """État du serveur : un Engine (ou None avant `init`). Dispatch des commandes."""
 
     def __init__(self):
@@ -27,7 +28,13 @@ def main() -> int:
                 "snapshot": server.cmd_snapshot,
                 "action": server.cmd_action,
                 "fields": server.cmd_fields,
-                "list_bancs": server.cmd_list_bancs}
+                "list_bancs": server.cmd_list_bancs,
+                # Voix narratives (read-only, sprint UI voix ①) : consultation des
+                # 4 dispositifs. LECTURE seule — l'achat magazine passe par `action`.
+                "carnet": server.cmd_carnet,
+                "encyclopedie": server.cmd_encyclopedie,
+                "pages": server.cmd_pages,
+                "magazine": server.cmd_magazine}
     # 1 ligne lue = 1 réponse écrite. EOF (Godot mort sans quit) → fin de boucle.
     for line in sys.stdin:
         line = line.strip()

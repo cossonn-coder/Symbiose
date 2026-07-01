@@ -18,9 +18,11 @@ from constants import PLOT_CM     # échelle plot (position continue → plot-fo
 from plants import PLANT_CATALOGUE  # validation d'espèce plantable (planter)
 from sim import actions as A      # les 10 gestes joueur (façades, sprint Vigueur/D31.3)
 from sim import vigueur as V      # état Vigueur joueur (ensure/spend/gain, D11)
+from sim.magazine import acheter_au_magazine  # achat magazine (voix ①, verbe Q3)
 
 from .version import PLANT_EPSILON_CM
 from .conteneurs_route import route_conteneur, VERBES as CONTENEUR_VERBES
+from .maitrise_pont import noter_geste_pont  # hook C (imputation, voix ①)
 
 
 class ActionsMixin:
@@ -36,6 +38,12 @@ class ActionsMixin:
         params = msg.get("params") or {}
         if not isinstance(target, dict) or not isinstance(params, dict):
             return {"ok": False, "error": "target/params doivent être des objets"}
+        # Hook C (imputation §2, voix ①) : si le geste porte sur un PLOT résoluble,
+        # on l'enregistre dans la fenêtre d'imputation de la maîtrise AVANT de le
+        # résoudre — pour que `detecter` (aux ticks suivants) impute au joueur la
+        # levée de stagnation / la reproduction que son geste aura provoquées.
+        # Opt-in joueur (hors golden). Zone (tile_id, r, c) au foyer du plot agi.
+        self._noter_geste_maitrise(verb, target)
         result = self._do_action(verb, target, params)
         # Snapshot frais TOUJOURS joint : l'effet (plante disparue, etc.) est
         # visible en un seul aller-retour — pas de 2e requête à inventer.
@@ -53,6 +61,23 @@ class ActionsMixin:
                     "vigueur": st["courante"],
                     "vigueur_max": V.vigueur_max(gs, player),
                     "message": message}
+
+        # Achat au magazine (voix ①, décision Q3) : chemin Vigueur UNIQUE, aucune
+        # tuile/plot — l'espèce vient de `params.espece`. `acheter_au_magazine`
+        # gate l'offre + débite la Vigueur + dépose la graine (bool, jamais
+        # d'exception : refus si offre fermée ou fonds insuffisants). Le `bilan`
+        # rafraîchit vigueur/vigueur_max (banque exposée au snapshot joint).
+        if verb == "acheter_magazine":
+            espece = params.get("espece")
+            if not isinstance(espece, str):
+                return bilan(False, 0.0, 0.0, f"espèce non fournie : {espece!r}")
+            achete = acheter_au_magazine(gs, player, espece)
+            b = bilan(achete, 0.0, 0.0,
+                      f"acheté au magazine : {espece} (graine ajoutée à la banque)"
+                      if achete
+                      else f"achat refusé : {espece} (hors offre ou Vigueur insuffisante)")
+            b["achete"] = achete
+            return b
 
         # --- résolution de la cible, selon la famille du verbe ------------
         tiles = {t.tile_id: t for t in gs["tiles"]}
@@ -405,6 +430,30 @@ class ActionsMixin:
             return route_conteneur(gs, player, verb, target, params, bilan)
 
         return bilan(False, 0.0, 0.0, f"verbe inconnu : {verb!r}")
+
+    def _noter_geste_maitrise(self, verb, target: dict) -> None:
+        """Hook C (voix ①) : enregistre le geste sur son PLOT (zone (tile_id, r, c))
+        dans la fenêtre d'imputation de la maîtrise. Le plot se résout depuis le
+        `target` — soit {r, c} direct (gestes sur plot), soit {x_cm, y_cm} continu
+        (planter/arroser/plante-par-position), via `_plot_at` (canon plot-foyer).
+        Geste sans tuile ni plot résoluble (ex. `acheter_magazine`) → no-op : rien
+        à imputer à une zone. PUR (lecture du target + écriture état joueur)."""
+        gs = self.engine.game_state
+        tiles = {t.tile_id: t for t in gs["tiles"]}
+        tile = tiles.get(target.get("tile"))
+        if tile is None:
+            return
+        r, c = target.get("r"), target.get("c")
+        if (isinstance(r, int) and not isinstance(r, bool)
+                and isinstance(c, int) and not isinstance(c, bool)
+                and 0 <= r < tile.grid_rows and 0 <= c < tile.grid_cols):
+            rc = (r, c)
+        else:
+            rc = self._plot_at(tile, target.get("x_cm"), target.get("y_cm"))
+        if rc is None:
+            return
+        noter_geste_pont(gs, gs["current_player"], gs["week"] - 1,
+                         (tile.tile_id, rc[0], rc[1]))
 
     @staticmethod
     def _plant_at(tile, x_cm, y_cm, eps: float = PLANT_EPSILON_CM):

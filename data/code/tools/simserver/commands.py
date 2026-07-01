@@ -25,6 +25,7 @@ from fields.grids import GridField
 from bancs import BANCS
 
 from .version import ENGINE_VERSION
+from .maitrise_pont import observer_apres_tick  # chaîne de maîtrise après tick (voix ①)
 
 # Kit de démarrage déposé dans la banque-joueur, UNIQUEMENT en config "full" (le
 # monde de jeu réel, celui du F5) : une graine de chaque, pour tester `planter`
@@ -141,6 +142,12 @@ class CommandsMixin:
         # semaine qu'on vient de simuler est `week - 1` ; le log consigné lui
         # appartient.
         J.consigner(gs, gs["current_player"], gs["log"], gs["week"] - 1)
+        # Chaîne de MAÎTRISE (sprint UI voix ①) : hooks A (observer, découverte) +
+        # B (detecter, crédit de palier) + révélation d'une page au palier 3. Lit
+        # le MÊME `log` en lecture seule (ordre indifférent vs `consigner`), AVANT
+        # de le vider. Opt-in joueur ici (même principe que `consigner`/Vigueur) →
+        # golden intact (le moteur tourne sans serveur, ces hooks jamais appelés).
+        observer_apres_tick(gs, gs["current_player"], gs["log"])
         gs["log"].clear()   # borne la mémoire (cf. golden)
         return {"ok": True, "snapshot": self._snapshot()}
 

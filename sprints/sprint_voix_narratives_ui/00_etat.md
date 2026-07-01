@@ -53,15 +53,38 @@ filtre par clé exacte).
 ## Carte des sous-sprints (4 + F5, ordre = dépendance)
 | # | Sujet | Kickoff | État |
 |---|-------|---------|------|
-| ① | Pont : 3 hooks maîtrise + révélation page palier + 4 commandes read-only + verbe `acheter_magazine` | `01_pont.md` | ⬜ à faire |
+| ① | Pont : 3 hooks maîtrise + révélation page palier + 4 commandes read-only + verbe `acheter_magazine` | `01_pont.md` | ✅ fait (pont `0.5.11`, golden intact) |
 | ② | `SimBridge` C# (1 méthode/commande) + nœud `VoicePanel` + hub-maison cliquable (non-voix grisées) | `02_ossature_ui.md` | ⬜ à faire |
 | ③ | Panneau Carnet (filtrable par concept) + panneau Encyclopédie (index → fiche N1/N2/N3) | `03_carnet_encyclopedie.md` | ⬜ à faire |
 | ④ | Panneau Pages (coffret grenier) + panneau Magazine (offres → fiche → achat bout-en-bout) | `04_pages_magazine.md` | ⬜ à faire |
 | F5 | Validation visuelle Godot (hub, 4 panneaux, achat) | — | ⬜ Nico |
 
 ## §REPRISE
-Sprint NON commencé. Lire `CLAUDE.md` + ce fichier + `01_pont.md`, lancer
-`python3 -m tests.test_golden` AVANT (doit afficher `ae445d3f…`), puis coder ①.
+**① CLOS** (pont `0.5.11`, golden `ae445d3f…` INTACT, 219/219 pont + toutes suites
+vertes). Ce qui a été livré côté Python (`tools/simserver/`) :
+- **Chaîne de maîtrise** dans un module dédié `maitrise_pont.py` : hook A
+  `observer` (espèces vivantes post-tick + concepts eau/lumière/météo/pollinisation
+  lus du log via `evenements`), hook B `detecter` (crédit de palier), révélation
+  page « récompense » au palier 3. Branchée dans `cmd_step_week` après `consigner`,
+  avant `log.clear()`. Hook C `noter_geste` dans `cmd_action` (`_noter_geste_maitrise`,
+  résout la zone (tile,r,c) depuis {r,c} ou {x_cm,y_cm}).
+- **4 commandes read-only** dans `VoixMixin` (`voix.py`) : `carnet`/`encyclopedie`/
+  `pages`/`magazine`, ajoutées au dispatch de `server.py`. Verbatim, zéro synthèse.
+- **Verbe `acheter_magazine`** dans `_do_action` (chemin Vigueur unique,
+  `result.achete` + bilan rafraîchi).
+- Test = section 18 `tests/simserver/voix.py` (registrée dans `test_sim_server.py`).
+
+⚠️ **Effet de bord ANNONCÉ** (design correct, pas un bug) : la chaîne crédite de
+VRAIS paliers ⇒ `vigueur_max` monte (palier_bonus) et `cout_action` remise les
+coûts. 5 assertions de coût ABSOLU des suites pont (actions/taille/planter) ont été
+rendues ROBUSTES (débit = `cost` annoncé, ratio urgence 1.5, régen « ≥ +10 »).
+`actions.py` = **359 LDC** (bande 🟡 vigilance, une seule responsabilité) — scission
+possible plus tard (extraire le helper hook-C).
+
+**PROCHAIN = ②** (`02_ossature_ui.md`) : `SimBridge` C# (1 méthode/commande voix) +
+nœud `VoicePanel` + hub-maison cliquable (non-voix grisées). Lire `CLAUDE.md` +
+ce fichier + `02_ossature_ui.md` ; `dotnet build Symbiose.csproj` = filet C#.
+
 Reliquats HORS sprint = **D54** (HUD primaire philo #5, page d'accueil pictos,
 notifs temps réel, robinets pages hasard/fouille + marqueurs bouture/oiseau/vent,
 entrées hub Atelier/Semis/Foyer, corpus encyclo paliers 4-5).

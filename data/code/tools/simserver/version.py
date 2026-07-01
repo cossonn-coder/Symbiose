@@ -220,7 +220,23 @@ from __future__ import annotations
 #       (`croissance.py::_update_physiology`). Voix : encyclopédie (concepts `rosee`/
 #       `gelee_blanche`), carnet (CONCEPT_DE → météo), pages secrètes (P21/P22). Champ
 #       optionnel côté vue (tolérance pré-0.5.10).
-ENGINE_VERSION = "0.5.10"
+# 0.5.11 (UI voix narratives ①, chaîne de maîtrise + 4 voix au pont) : QUATRE
+#       commandes READ-ONLY neuves (`carnet`/`encyclopedie`/`pages`/`magazine`) qui
+#       relaient VERBATIM le corpus des voix (invariant « Godot bête ») — `carnet`
+#       ({filtre} optionnel), `encyclopedie` ({espece}→fiche N1/N2/N3 sinon index),
+#       `pages` (ids trouvées + texte, ordre du corpus), `magazine` ({espece}→fiche
+#       produit sinon offres). PLUS le verbe `acheter_magazine` de la commande
+#       `action` (params.espece, chemin Vigueur unique : gate offre → débit
+#       COUT_MAGAZINE → graine en banque ; `result.achete` bool + `bilan`
+#       rafraîchi). Enfin la CHAÎNE DE MAÎTRISE qui alimente les voix, 3 hooks HORS
+#       tick dans le pont (golden intact) : A `observer` après tick (espèces
+#       vivantes + concepts eau/lumière/météo/pollinisation du log), B `detecter`
+#       (crédit de palier), C `noter_geste` dans `cmd_action` (imputation du geste à
+#       son plot). Palier 3 atteint → révélation d'une page « récompense ». PUR
+#       ajout de commandes/verbe + hooks opt-in joueur → golden NEUTRE (le moteur
+#       tourne sans serveur). Un binaire pré-0.5.11 répond « commande inconnue » aux
+#       4 lectures et « verbe inconnu » à l'achat (tolérance côté vue).
+ENGINE_VERSION = "0.5.11"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

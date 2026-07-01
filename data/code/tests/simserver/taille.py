@@ -101,8 +101,13 @@ def test_taille_au_segment():
           r["result"]["applied"] is True, msg)
     check("message nomme la plante + issue émergente (déformée/écimée/meurt)",
           ("déformée" in msg or "écimée" in msg or "meurt" in msg), msg)
-    check("coût = base tailler (MODÉRÉ) débité",
-          vig0 - r["result"]["vigueur"] == 15.0, f"Δvigueur={vig0 - r['result']['vigueur']}")
+    # Maîtrise (voix ①) : le coût nominal (tailler MODÉRÉ=15) est remisé par le
+    # palier ⇒ on vérifie que la Vigueur débitée = le `cost` annoncé (≤ 15), pas la
+    # constante d'antan (le champ `cost` reste la source de vérité du geste).
+    check("coût tailler (MODÉRÉ) débité = cost annoncé (≤ 15)",
+          0.0 < r["result"]["cost"] <= 15.0
+          and abs((vig0 - r["result"]["vigueur"]) - r["result"]["cost"]) < 1e-6,
+          f"Δvigueur={vig0 - r['result']['vigueur']} (cost {r['result']['cost']})")
     # Le collet (segment 0) est une cible VALIDE pour écraser (≠ tailler qui le refuse).
     r = s8.send(cmd="action", verb="ecraser", target={**pos, "segment": 0})
     check("écraser le collet (segment 0) → applied:true (cible valide, Q2)",

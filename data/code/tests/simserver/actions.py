@@ -45,10 +45,16 @@ def test_actions_v1():
           and r["result"]["gain"] >= 0.0)
     vig_avant = r["result"]["vigueur"]
     r = s5.send(cmd="action", verb="deraciner", target=pos)
-    check("deraciner → applied:true, Vigueur débitée (coût ÉLEVÉ)",
+    # Depuis la chaîne de maîtrise (voix ①), le pont crédite de VRAIS paliers ⇒
+    # `cout_action` applique une remise de maîtrise : le coût n'est plus la valeur
+    # nominale figée (ÉLEVÉ=30) mais un débit ≤ 30 (remise croissante). On vérifie
+    # donc la RELATION (Vigueur débitée d'exactement le `cost` annoncé), pas la
+    # constante — le champ `cost` reste la source de vérité du geste.
+    check("deraciner → applied:true, Vigueur débitée du cost annoncé (≤ ÉLEVÉ)",
           r["result"]["applied"] is True
-          and r["result"]["vigueur"] == vig_avant - 30.0,
-          f"vigueur {vig_avant} → {r['result']['vigueur']}")
+          and 0.0 < r["result"]["cost"] <= 30.0
+          and abs(r["result"]["vigueur"] - (vig_avant - r["result"]["cost"])) < 1e-6,
+          f"vigueur {vig_avant} → {r['result']['vigueur']} (cost {r['result']['cost']})")
     # Depuis 0.3.6 (vue·rattrapage 02), le snapshot N'EFFACE PLUS les morts : une
     # plante déracinée devient un SQUELETTE exposé (`dead=true`) au lieu de
     # « disparaître » (l'ancien `if not is_alive: continue` la masquait alors
@@ -73,8 +79,12 @@ def test_actions_v1():
     r = s5.send(cmd="action", verb="ecraser",
                 target={"tile": "T0", "r": 0, "c": 0}, params={"urgence": True})
     cout_urgence = v1 - r["result"]["vigueur"]
-    check("ecraser en urgence coûte URGENCE_MULT × le calme",
-          cout_calme == 15.0 and cout_urgence == 22.5,
+    # Maîtrise (voix ①) : les coûts nominaux (MODÉRÉ=15 calme, ×1.5=22.5 urgence)
+    # sont remisés par le palier ⇒ on vérifie le RATIO URGENCE_MULT (=1.5), stable
+    # quel que soit le niveau de remise, plutôt que les valeurs absolues d'antan.
+    check("ecraser en urgence coûte URGENCE_MULT × le calme (ratio 1.5)",
+          cout_calme > 0.0
+          and abs(cout_urgence - cout_calme * 1.5) < 1e-6,
           f"calme={cout_calme}, urgence={cout_urgence}")
 
     # Maladresse (protocole ⑥, `target.espece`) : on écrase le SPRITE cliqué, espèce
@@ -114,8 +124,12 @@ def test_actions_v1():
     v_avant = refus["vigueur"]
     r = s5.send(cmd="step_week")
     v_apres = r["snapshot"]["player"]["vigueur"]
-    check("step_week régénère (+10/sem via le tick moteur)",
-          v_apres == v_avant + 10.0, f"{v_avant} → {v_apres}")
+    # +10/sem de régen de base, MAIS le step_week déclenche aussi la chaîne de
+    # maîtrise (voix ①) : une NOUVELLE découverte cette semaine crédite en plus
+    # GAIN_DECOUVERTE. On vérifie donc « au moins +10 » (régen garantie), le
+    # surplus éventuel étant la motivation de découverte (borné par vigueur_max).
+    check("step_week régénère (≥ +10/sem via le tick moteur, + découverte éventuelle)",
+          v_apres >= v_avant + 10.0 - 1e-6, f"{v_avant} → {v_apres}")
 
     # Refill au passage de saison : la semaine 14 (début été) remet à PLEIN —
     # la régen seule n'expliquerait pas le saut (10/sem ne suffit pas).
