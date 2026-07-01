@@ -117,6 +117,13 @@ def semis_tempere():
     LÈVENT et la plantule SURVIT. Tranche si « les Solanaceae ne lèvent pas » vient
     de la porte de `planter` (ce banc le réfute) ou de la fragilité de la carte
     `full`. Oracle : tests/bancs/test_biotique.py."""
+    # Depuis la germination thermique (③), la levée exige un SOL CHAUD (le poivron,
+    # t_germ_opt=24, est la Solanaceae la plus thermophile). C'est une porte à part
+    # entière que ce banc ne cherche PAS à tester : il l'ouvre en se faisant OBSERVER
+    # en plein été — l'oracle monte le banc à un `week_depart` estival (cf.
+    # tests/bancs/test_biotique.py), où la T_air chaude tient la T_sol dans la fenêtre
+    # de levée. Forcer `temperature_sol` à l'init ne servirait à rien : l'inertie
+    # thermique la relaxe vers T_air dès le 1er tick (d'où le démarrage saisonnier).
     tile, eco = build_banc_tile("SEMIS", "terre", 8, 8,
                                 humidite=1.3, fertilite=1.2, microbiome=0.5)
     eco.lumiere.fill(1.0)            # pleine lumière → niche de germination ouverte

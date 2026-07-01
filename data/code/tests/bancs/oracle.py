@@ -22,24 +22,31 @@ from sim import semiologie
 SEED = 0x5AB1057E
 
 
-def _monter(nom: str):
+def _monter(nom: str, week_depart: int = 1):
     """Monte le banc `nom` et renvoie `(game_state, engine)` AVANT tout tick.
     Reproduit le câblage minimal de `cmd_init` (mêmes clés `game_state`) pour que
-    l'état soit bit-identique à celui du serveur."""
+    l'état soit bit-identique à celui du serveur.
+
+    `week_depart` (défaut 1 = hiver, comme `cmd_init` — aucun banc existant impacté)
+    choisit la SAISON d'observation : certains phénomènes n'ont de fenêtre qu'à une
+    saison donnée (p.ex. la levée thermique du semis potager, qui exige un sol chaud
+    → observation en plein été). C'est la couche oracle qui décide QUAND observer, le
+    banc ne décrivant qu'un monde statique."""
     if nom not in BANCS:
         raise KeyError(f"banc inconnu : {nom!r} (connus : {', '.join(sorted(BANCS))})")
     tiles, ecos, house, banque = BANCS[nom]()
     game_state = {
         "tiles": tiles, "eco": ecos, "scores": {},
-        "current_player": "joueur_1", "week": 1, "log": [],
+        "current_player": "joueur_1", "week": week_depart, "log": [],
         "house": house, "seed": SEED, "player_seed_bank": banque,
     }
     return game_state, Engine(game_state)
 
 
-def run_banc(nom: str, semaines: int):
-    """Monte le banc `nom`, simule `semaines` ticks, renvoie `(game_state, engine)`."""
-    game_state, engine = _monter(nom)
+def run_banc(nom: str, semaines: int, week_depart: int = 1):
+    """Monte le banc `nom`, simule `semaines` ticks, renvoie `(game_state, engine)`.
+    `week_depart` (défaut 1) fixe la semaine/saison de départ (cf. `_monter`)."""
+    game_state, engine = _monter(nom, week_depart)
     for _ in range(semaines):
         engine.tick_semaine()
         game_state["log"].clear()

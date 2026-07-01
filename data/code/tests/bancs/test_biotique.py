@@ -67,8 +67,12 @@ def test_semis_tempere():
     """Tomate ET poivron plantés sur une tuile paillée à niche favorable : mildiou
     familial et froid neutralisés (paillage saturé), succession isolée → les grains
     lèvent et survivent. Tranche D47-C5 : « les Solanaceae ne lèvent pas » ne vient
-    PAS de la porte de `planter` (elles lèvent ici), mais de la carte `full`."""
-    game_state, _ = run_banc("semis_tempere", semaines=8)
+    PAS de la porte de `planter` (elles lèvent ici), mais de la carte `full`.
+
+    Observé en PLEIN ÉTÉ (`week_depart=20`, cœur de `SAISONS["ete"]`=14..26) : depuis
+    la germination thermique, la levée exige un sol chaud, et c'est la saison qui la
+    fournit (T_air chaude → T_sol dans la fenêtre du poivron, t_germ_opt=24)."""
+    game_state, _ = run_banc("semis_tempere", semaines=8, week_depart=20)
     vivantes = [p.plant_class.name for p in game_state["tiles"][0].plants if p.is_alive]
     check("semis — au moins 1 tomate vivante", "Tomate" in vivantes,
           f"vivantes={vivantes}")
