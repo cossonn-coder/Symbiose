@@ -147,13 +147,14 @@ namespace Symbiose
 				_voicePanel.Fermer();
 
 			// Une voix = une spécialisation de VoicePanel (③ : Carnet /
-			// Encyclopédie). Magazine / Pages restent le panneau de base « à
-			// venir » jusqu'au ④. Le pont est injecté AVANT Ouvrir (les
-			// spécialisations lisent leur voix dès le peuplement).
+			// Encyclopédie ; ④ : Magazine / Pages). Le pont est injecté AVANT
+			// Ouvrir (les spécialisations lisent leur voix dès le peuplement).
 			_voicePanel = fonction switch
 			{
 				"carnet"       => new CarnetPanel(),
 				"encyclopedie" => new EncyclopediePanel(),
+				"magazine"     => new MagazinePanel(),
+				"pages"        => new PagesPanel(),
 				_              => new VoicePanel(),
 			};
 			_voicePanel.InjecterPont(_bridge);

@@ -56,10 +56,34 @@ filtre par clé exacte).
 | ① | Pont : 3 hooks maîtrise + révélation page palier + 4 commandes read-only + verbe `acheter_magazine` | `01_pont.md` | ✅ fait (pont `0.5.11`, golden intact) |
 | ② | `SimBridge` C# (1 méthode/commande) + nœud `VoicePanel` + hub-maison cliquable (non-voix grisées) | `02_ossature_ui.md` | ✅ fait (`dotnet build` vert, golden intact) |
 | ③ | Panneau Carnet (filtrable par concept) + panneau Encyclopédie (index → fiche N1/N2/N3) | `03_carnet_encyclopedie.md` | ✅ fait (`dotnet build` vert, golden intact) |
-| ④ | Panneau Pages (coffret grenier) + panneau Magazine (offres → fiche → achat bout-en-bout) | `04_pages_magazine.md` | ⬜ à faire |
+| ④ | Panneau Pages (coffret grenier) + panneau Magazine (offres → fiche → achat bout-en-bout) | `04_pages_magazine.md` | ✅ fait (`dotnet build` vert, golden intact) |
 | F5 | Validation visuelle Godot (hub, 4 panneaux, achat) | — | ⬜ Nico |
 
 ## §REPRISE
+**SPRINT MOTEUR/UI TERMINÉ — reste F5 Nico.** Tous les tronçons ①→④ sont clos ;
+la seule case restante est la validation visuelle Godot (F5), que Nico seul peut
+faire (Godot n'est pas sur la VM).
+
+**④ CLOS** (C# pur, couche vue). Livré :
+- `world/PagesPanel.cs` : spécialisation Pages — lecteur PUR du coffret grenier
+  (`Bridge.Pages()` → `pages` = list {id, voix, concept, texte} dans l'ORDRE du
+  corpus). En-tête « voix · concept » (registre éditorial), corps VERBATIM en
+  italique (crochets échappés `[`→`[lb]`). Aucune révélation déclenchée (robinet
+  « récompense » au palier = côté pont ①). Vide → message neutre. 42 LDC 🟢.
+- `world/MagazinePanel.cs` : spécialisation Magazine — offres (`MagazineOffres()`)
+  ↔ fiche produit (`MagazineFiche` = {espece, niveau_max, niveaux}, VERBATIM) ↔
+  ACHAT bout-en-bout via `AcheterMagazine` (verbe `acheter_magazine`, chemin
+  Vigueur unique Q3). Le pont gate offre + fonds : succès → offre retirée +
+  Vigueur du bilan rafraîchie + feedback ; refus → message sobre, aucune mutation.
+  La vue ne pré-valide RIEN. Bandeau Vigueur affiché après le 1er achat (info
+  primaire = HUD, D54). 139 LDC 🟢.
+- `world/WorldView.Hub.cs` : switch `OuvrirVoicePanel` étendu (`magazine`→
+  `MagazinePanel`, `pages`→`PagesPanel`).
+
+`dotnet build Symbiose.csproj` (racine) = **vert** (0 err / 0 warn). Golden
+`ae445d3f…` **INTACT** (aucun Python touché). F5 = Nico.
+
+---
 **③ CLOS** (C# pur, couche vue). Livré :
 - `world/VoicePanel.cs` : point d'extension `Remplir()` (virtual, appelé en fin
   d'`Ouvrir`) + `Bridge` (protected) injecté par `InjecterPont()`. Le panneau de
@@ -81,10 +105,7 @@ filtre par clé exacte).
 `dotnet build Symbiose.csproj` = **vert** (0 err / 0 warn). Golden `ae445d3f…`
 **INTACT** (aucun Python touché). Fichiers ③ tous 🟢 (70-93 LDC). F5 = Nico.
 
-**PROCHAIN = ④** (`04_pages_magazine.md`) : panneau Pages (coffret grenier, voix
-multiples verbatim) + panneau Magazine (offres → fiche → achat bout-en-bout via
-`acheter_magazine`, Vigueur débitée + graine banque + bilan rafraîchi). Lire
-`CLAUDE.md` + ce fichier + `04_pages_magazine.md` ; `dotnet build` = filet C#.
+**④ FAIT** (voir §REPRISE en tête) — plus de tronçon restant, reste F5 Nico.
 
 ---
 **② CLOS** (C# pur, couche vue). Livré :
