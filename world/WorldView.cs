@@ -90,7 +90,7 @@ namespace Symbiose
 		// droite de l'écran + imprimé en console au lancement : si la version à
 		// l'écran n'est pas celle annoncée par Claude, le circuit VM → sync
 		// Nextcloud → build Godot n'est pas passé (piège connu depuis t3).
-		public const string Build = "pixel-art SS① — iso 2:1 + SubViewport 960×540 ×2 + étiquettes nettes — 2026-06-23";
+		public const string Build = "UI voix ①→④ · hub-maison — iso 2:1 · SubViewport 960×540 ×2 — pont 0.5.11 — 2026-07-01";
 
 		// -------------------------------------------------------------------
 		// RÉGLAGES (exportés : ajustables dans l'inspecteur sans recompiler)

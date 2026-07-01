@@ -73,7 +73,11 @@ namespace Symbiose
 				{
 					// Clic sur la maison = ouvrir le HUB (voix), pas un geste sol.
 					var canvas = WorldMouseCanvas();
-					if (ClicSurMaison(canvas)) OuvrirHubMaison();
+					bool surMaison = ClicSurMaison(canvas);
+					// TRACE TEMPORAIRE (diagnostic F5 clic maison) : à retirer une
+					// fois le picking confirmé. Dit si le clic touche la silhouette.
+					GD.Print($"[WorldView] clic gauche canvas={canvas} → surMaison={surMaison}");
+					if (surMaison) OuvrirHubMaison();
 					else TryAction(canvas, mb.ShiftPressed);
 				}
 			}
