@@ -31,11 +31,23 @@ namespace Symbiose
 		private bool _pauseAvant;
 
 		// Zone de contenu défilante, exposée aux spécialisations ③④ (elles y
-		// ajouteront leurs listes/fiches). Vide dans ce tronçon.
+		// ajouteront leurs listes/fiches). Vide dans le panneau de base.
 		protected VBoxContainer Contenu { get; private set; }
+
+		// Pont vers le moteur Python, injecté par le hub AVANT Ouvrir. Les
+		// spécialisations ③④ lisent leurs voix par ce pont (read-only) et se
+		// contentent de mettre en page — INVARIANT « Godot bête ». Le panneau de
+		// base ne l'utilise pas (il reste vide).
+		protected SimBridge Bridge { get; set; }
 
 		// Rappelé à la fermeture (pour que le hub réactive la maison, etc.).
 		private System.Action _onFerme;
+
+		/// <summary>
+		/// Injecte le pont Python AVANT `Ouvrir` (le hub le fournit). Les
+		/// spécialisations ③④ lisent leur voix par ce pont dès le peuplement.
+		/// </summary>
+		public void InjecterPont(SimBridge bridge) => Bridge = bridge;
 
 		/// <summary>
 		/// Construit l'ossature : fond assombri plein écran, titre, zone
@@ -102,11 +114,23 @@ namespace Symbiose
 			};
 			scroll.AddChild(Contenu);
 
-			// Placeholder « à venir » — retiré par ③④ quand ils remplissent
-			// `Contenu`. Marque clairement qu'aucun texte n'est encore branché.
-			Contenu.AddChild(new Label { Text = "(contenu à venir)" });
+			// Point d'extension : une spécialisation (③④) peuple `Contenu` en
+			// surchargeant Remplir(). Le panneau de base ne surcharge rien →
+			// placeholder « à venir » (aucune voix branchée).
+			Remplir();
 
 			GD.Print($"[VoicePanel] ouvert : « {titre} » (simulation en pause).");
+		}
+
+		/// <summary>
+		/// Peuplement de `Contenu`, appelé en fin d'`Ouvrir`. Le panneau de base
+		/// pose un placeholder ; les spécialisations ③④ (Carnet, Encyclopédie…)
+		/// le surchargent pour afficher le texte VERBATIM lu via `Bridge`. Aucun
+		/// texte de voix n'est fabriqué ici — mise en page seulement.
+		/// </summary>
+		protected virtual void Remplir()
+		{
+			Contenu.AddChild(new Label { Text = "(contenu à venir)" });
 		}
 
 		/// <summary>Ferme le panneau et restaure l'état de pause précédent.</summary>

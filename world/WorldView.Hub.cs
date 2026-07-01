@@ -89,12 +89,13 @@ namespace Symbiose
 				HorizontalAlignment = HorizontalAlignment.Center,
 			});
 
-			// Entrées VOIX (actives) — chacune ouvre le VoicePanel titré. Le
-			// contenu reste vide jusqu'aux tronçons ③④ (ossature seulement).
-			AjouterEntreeVoix(vbox, "Carnet",       "Carnet");
-			AjouterEntreeVoix(vbox, "Encyclopédie", "Encyclopédie");
-			AjouterEntreeVoix(vbox, "Magazine",     "Magazine de botanique");
-			AjouterEntreeVoix(vbox, "Pages du grenier", "Pages du grenier");
+			// Entrées VOIX (actives) — chacune ouvre le VoicePanel adéquat. ③ a
+			// branché Carnet et Encyclopédie sur le pont ; Magazine / Pages
+			// restent des VoicePanel de base (« à venir ») jusqu'au tronçon ④.
+			AjouterEntreeVoix(vbox, "Carnet",       "Carnet",       "carnet");
+			AjouterEntreeVoix(vbox, "Encyclopédie", "Encyclopédie", "encyclopedie");
+			AjouterEntreeVoix(vbox, "Magazine",     "Magazine de botanique", "magazine");
+			AjouterEntreeVoix(vbox, "Pages du grenier", "Pages du grenier", "pages");
 
 			// Entrées NON-VOIX (grisées « à venir » → dette D54). Visibles pour
 			// signaler les 5 fonctions du hub, mais inertes.
@@ -105,14 +106,16 @@ namespace Symbiose
 			GD.Print("[WorldView] hub-maison ouvert (5 fonctions, 4 voix actives).");
 		}
 
-		// Une entrée active : clic → ferme le menu, ouvre le VoicePanel titré.
-		private void AjouterEntreeVoix(VBoxContainer parent, string libelle, string titre)
+		// Une entrée active : clic → ferme le menu, ouvre le VoicePanel de la
+		// voix (`fonction` sélectionne la spécialisation ; titre = libellé affiché).
+		private void AjouterEntreeVoix(VBoxContainer parent, string libelle,
+			string titre, string fonction)
 		{
 			var b = new Button { Text = libelle };
 			b.Pressed += () =>
 			{
 				FermerHubMenu();
-				OuvrirVoicePanel(titre);
+				OuvrirVoicePanel(titre, fonction);
 			};
 			parent.AddChild(b);
 		}
@@ -138,11 +141,22 @@ namespace Symbiose
 		// VOICE PANEL — un seul actif à la fois
 		// -------------------------------------------------------------------
 
-		private void OuvrirVoicePanel(string titre)
+		private void OuvrirVoicePanel(string titre, string fonction)
 		{
 			if (_voicePanel != null && IsInstanceValid(_voicePanel))
 				_voicePanel.Fermer();
-			_voicePanel = new VoicePanel();
+
+			// Une voix = une spécialisation de VoicePanel (③ : Carnet /
+			// Encyclopédie). Magazine / Pages restent le panneau de base « à
+			// venir » jusqu'au ④. Le pont est injecté AVANT Ouvrir (les
+			// spécialisations lisent leur voix dès le peuplement).
+			_voicePanel = fonction switch
+			{
+				"carnet"       => new CarnetPanel(),
+				"encyclopedie" => new EncyclopediePanel(),
+				_              => new VoicePanel(),
+			};
+			_voicePanel.InjecterPont(_bridge);
 			AddChild(_voicePanel);
 			_voicePanel.Ouvrir(titre, onFerme: () => _voicePanel = null);
 		}

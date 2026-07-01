@@ -55,11 +55,38 @@ filtre par clé exacte).
 |---|-------|---------|------|
 | ① | Pont : 3 hooks maîtrise + révélation page palier + 4 commandes read-only + verbe `acheter_magazine` | `01_pont.md` | ✅ fait (pont `0.5.11`, golden intact) |
 | ② | `SimBridge` C# (1 méthode/commande) + nœud `VoicePanel` + hub-maison cliquable (non-voix grisées) | `02_ossature_ui.md` | ✅ fait (`dotnet build` vert, golden intact) |
-| ③ | Panneau Carnet (filtrable par concept) + panneau Encyclopédie (index → fiche N1/N2/N3) | `03_carnet_encyclopedie.md` | ⬜ à faire |
+| ③ | Panneau Carnet (filtrable par concept) + panneau Encyclopédie (index → fiche N1/N2/N3) | `03_carnet_encyclopedie.md` | ✅ fait (`dotnet build` vert, golden intact) |
 | ④ | Panneau Pages (coffret grenier) + panneau Magazine (offres → fiche → achat bout-en-bout) | `04_pages_magazine.md` | ⬜ à faire |
 | F5 | Validation visuelle Godot (hub, 4 panneaux, achat) | — | ⬜ Nico |
 
 ## §REPRISE
+**③ CLOS** (C# pur, couche vue). Livré :
+- `world/VoicePanel.cs` : point d'extension `Remplir()` (virtual, appelé en fin
+  d'`Ouvrir`) + `Bridge` (protected) injecté par `InjecterPont()`. Le panneau de
+  base garde son placeholder « à venir » (Magazine/Pages, jusqu'au ④).
+- `world/CarnetPanel.cs` : spécialisation Carnet — sélecteur de concept
+  (`OptionButton`, liste = concepts présents lus du carnet complet, ordre ledger
+  préservé + « (tous) ») → re-appelle `Bridge.Carnet(filtreConcept)` (le PONT
+  filtre). Entrées VERBATIM ; registre `interprétatif` → italique BBCode
+  (crochets du verbatim échappés `[`→`[lb]`, aucun texte modifié).
+- `world/EncyclopediePanel.cs` : spécialisation Encyclopédie — index (`index` du
+  pont, un bouton/espèce) ↔ fiche (`fiche` = {espece, niveau_max, niveaux}),
+  niveaux 1..niveau_max VERBATIM (clés JSON "1"/"2"/"3"), titres de rubrique
+  N1/N2/N3 = étiquettes de mise en page (pas des voix). `fiche=null` → message
+  neutre, pas de crash. Bouton « ◀ Retour à l'index ».
+- `world/WorldView.Hub.cs` : `OuvrirVoicePanel(titre, fonction)` instancie la
+  spécialisation (`carnet`→`CarnetPanel`, `encyclopedie`→`EncyclopediePanel`,
+  autres→`VoicePanel` base), injecte `_bridge` avant `Ouvrir`.
+
+`dotnet build Symbiose.csproj` = **vert** (0 err / 0 warn). Golden `ae445d3f…`
+**INTACT** (aucun Python touché). Fichiers ③ tous 🟢 (70-93 LDC). F5 = Nico.
+
+**PROCHAIN = ④** (`04_pages_magazine.md`) : panneau Pages (coffret grenier, voix
+multiples verbatim) + panneau Magazine (offres → fiche → achat bout-en-bout via
+`acheter_magazine`, Vigueur débitée + graine banque + bilan rafraîchi). Lire
+`CLAUDE.md` + ce fichier + `04_pages_magazine.md` ; `dotnet build` = filet C#.
+
+---
 **② CLOS** (C# pur, couche vue). Livré :
 - `core/SimBridge.cs` : **une méthode par commande voix** — `Carnet(filtreConcept)`,
   `Encyclopedie(espece)`, `Pages()`, `MagazineOffres()`, `MagazineFiche(espece)`,
