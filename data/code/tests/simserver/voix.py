@@ -17,16 +17,30 @@ def test_voix():
     print("[voix narratives — pont ①]")
     s = ServerProc()
     init = s.send(cmd="init", config="full", seed=7)
-    check("protocole bumpé à 0.5.11 (commandes voix)",
-          init["engine_version"] == "0.5.11", init.get("engine_version"))
+    check("protocole bumpé à 0.5.12 (observer survol + debug)",
+          init["engine_version"] == "0.5.12", init.get("engine_version"))
 
-    # Avancer : le hook A (observer) découvre les espèces vivantes du monde full à
-    # chaque step_week → l'index encyclopédie se peuple sans geste du joueur.
+    # Retour F5 : une plante n'est PLUS observée parce qu'elle pousse — seulement au
+    # SURVOL souris. Après quelques semaines SANS survol, l'index reste VIDE.
+    snap = None
     for _ in range(6):
-        s.send(cmd="step_week")
+        snap = s.send(cmd="step_week")["snapshot"]
+    vide = s.send(cmd="encyclopedie")
+    check("encyclopedie index VIDE sans survol (observation = souris)",
+          vide["ok"] and len(vide["index"]) == 0, f"index={vide.get('index')}")
+
+    # Observer par SURVOL : le C# envoie le NOM DE CLASSE de la plante survolée ;
+    # on le prend d'une plante vivante du snapshot (serialize `species`=__name__).
+    nom_classe = snap["plants"][0]["species"]
+    obs = s.send(cmd="observer", species=nom_classe)
+    check("observer (survol) découvre une espèce → observed:true",
+          obs["ok"] and obs["observed"] is True, obs)
+    obs2 = s.send(cmd="observer", species=nom_classe)
+    check("ré-observer la même espèce → observed:false (idempotent)",
+          obs2["ok"] and obs2["observed"] is False, obs2)
 
     enc = s.send(cmd="encyclopedie")
-    check("encyclopedie index NON vide (espèces vivantes observées, hook A)",
+    check("encyclopedie index NON vide APRÈS survol",
           enc["ok"] and len(enc["index"]) > 0, f"index={enc.get('index')}")
     espece = enc["index"][0]
     fiche = s.send(cmd="encyclopedie", espece=espece)
@@ -54,6 +68,22 @@ def test_voix():
     mfiche = s.send(cmd="magazine", espece=espece)
     check("magazine fiche produit d'une espèce du corpus non nulle",
           mfiche["ok"] and mfiche["fiche"] is not None, mfiche.get("fiche"))
+
+    # --- raccourcis DEBUG (retour F5 : tester magazine/pages sans jouer) -------
+    check("magazine sans maîtrise palier 3 → offres vides",
+          len(s.send(cmd="magazine")["offres"]) == 0)
+    dbg = s.send(cmd="debug", op="palier3")
+    check("debug palier3 → ok + objets crédités", dbg["ok"] and dbg["objets"] > 0, dbg)
+    check("debug palier3 → magazine offres NON vides",
+          len(s.send(cmd="magazine")["offres"]) > 0)
+    check("debug palier3 → pages révélées", len(s.send(cmd="pages")["ids"]) > 0)
+    check("debug observer_tout → ok", s.send(cmd="debug", op="observer_tout")["ok"])
+    s.send(cmd="debug", op="reset")
+    check("debug reset → magazine muet + index vide",
+          len(s.send(cmd="magazine")["offres"]) == 0
+          and len(s.send(cmd="encyclopedie")["index"]) == 0)
+    check("debug op inconnue → ok:false, serveur survit",
+          s.send(cmd="debug", op="_inconnu_")["ok"] is False)
 
     s.send(cmd="quit")
     check("quit voix → exit 0", s.close() == 0)

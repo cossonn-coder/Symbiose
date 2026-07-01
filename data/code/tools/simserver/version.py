@@ -236,7 +236,18 @@ from __future__ import annotations
 #       ajout de commandes/verbe + hooks opt-in joueur → golden NEUTRE (le moteur
 #       tourne sans serveur). Un binaire pré-0.5.11 répond « commande inconnue » aux
 #       4 lectures et « verbe inconnu » à l'achat (tolérance côté vue).
-ENGINE_VERSION = "0.5.11"
+# 0.5.12 (UI voix, retours F5 Nico) : l'OBSERVATION d'une espèce passe du balayage
+#       automatique post-tick (toute plante vivante) au SURVOL souris — une plante
+#       n'est apprise que si on passe la souris dessus (posture naturaliste). Hook A
+#       espèces retiré de `observer_apres_tick` ; NOUVELLE commande `observer`
+#       ({species}=nom de classe du snapshot → clé catalogue résolue côté Python,
+#       découverte idempotente). Les CONCEPTS (eau/lumière/météo/pollinisation)
+#       restent découverts par le vécu (log). PLUS commande `debug` ({op}) pour le
+#       F5 : `palier3` (force palier 3 partout → magazine+pages+interprétatif),
+#       `observer_tout` (découvre les espèces présentes), `reset` (maîtrise+pages à
+#       zéro). Ajout de commandes opt-in joueur → golden NEUTRE. Un binaire
+#       pré-0.5.12 répond « commande inconnue » à `observer`/`debug` (tolérance vue).
+ENGINE_VERSION = "0.5.12"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

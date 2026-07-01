@@ -30,11 +30,18 @@ from sim import pages
 from sim.evenements import evenements
 
 # Reverse mapping classe → clé de catalogue (objet → clé), DÉRIVÉ des catalogues
-# moteur (jamais dupliqué) : sert à retrouver la clé d'espèce d'une plante vivante
-# du monde post-tick pour la DÉCOUVRIR (hook A). Même construction que
+# moteur (jamais dupliqué) : sert à retrouver la clé d'espèce d'une plante du monde
+# (survol, ou balayage debug). Même construction que
 # `maitrise_detection._CLE_DE_CLASSE`.
 _CLE_DE_CLASSE = {cls: cle
                   for cle, cls in {**PLANT_CATALOGUE, **PERENNIAL_CATALOGUE}.items()}
+
+# Nom de CLASSE (str) → clé de catalogue. Le snapshot sérialise l'espèce d'une
+# plante en `cls.__name__` (serialize.py) ; le C# renvoie donc ce nom au survol.
+# La résolution nom → clé vit ICI (Python source de vérité, « Godot bête ») :
+# le C# ne connaît jamais les clés catalogue.
+_CLE_DE_NOM = {cls.__name__: cle
+               for cle, cls in {**PLANT_CATALOGUE, **PERENNIAL_CATALOGUE}.items()}
 
 # Concept transversal DÉCOUVERT à la 1ʳᵉ observation d'une reproduction biparentale
 # (§2, hook A) : voir un croisement à deux parents fait naître l'idée de
@@ -71,24 +78,24 @@ def noter_geste_pont(game_state: dict, player: str, semaine: int, zone) -> None:
     MD.noter_geste(game_state, player, semaine, zone)
 
 
-def _observer(game_state: dict, player: str, log: list[str]) -> None:
-    """Hook A (découverte, §2). DEUX sources, chacune dédupliquée par
-    l'idempotence d'`observer` (ré-observer un objet connu ne re-crédite rien) :
+def observer_espece(game_state: dict, player: str, nom_classe: str) -> bool:
+    """Hook A par SURVOL (retour F5 Nico) : une plante n'est observée que quand le
+    joueur PASSE LA SOURIS dessus (voir son nom) — pas parce qu'elle pousse dans le
+    jardin. Le C# envoie le NOM DE CLASSE de la plante survolée ; on le résout en
+    clé catalogue et on DÉCOUVRE (idempotent : ré-observer ne re-crédite rien).
+    Renvoie True ssi nouvelle découverte (nom inconnu → False, no-op)."""
+    cle = _CLE_DE_NOM.get(nom_classe)
+    if cle is None:
+        return False
+    return observer(game_state, player, cle)
 
-      - ESPÈCES : chaque espèce d'une plante VIVANTE du monde post-tick → débloque
-        la fiche encyclopédie niveau 1.
-      - CONCEPTS : à la 1ʳᵉ occurrence dans le log du tick — stagnation
-        sec→eau / ombre→lumière / froid→météo (mapping canonique) ;
-        reproduction biparentale → pollinisation."""
-    # Espèces vivantes du monde post-tick.
-    for tile in game_state.get("tiles", []):
-        for p in tile.plants:
-            if not p.is_alive:
-                continue
-            cle = _CLE_DE_CLASSE.get(p.plant_class)
-            if cle:
-                observer(game_state, player, cle)
-    # Concepts lus dans le log de la semaine écoulée.
+
+def _observer(game_state: dict, player: str, log: list[str]) -> None:
+    """Hook A — volet CONCEPTS (les ESPÈCES passent désormais par le SURVOL,
+    `observer_espece`, retour F5 : voir une plante ≠ l'observer). Découvre les
+    concepts transversaux lus dans le log du tick, à leur 1ʳᵉ occurrence
+    (idempotence d'`observer`) : stagnation sec→eau / ombre→lumière / froid→météo
+    (mapping canonique) ; reproduction biparentale → pollinisation."""
     for ev in evenements(log):
         if ev.kind == "stagnation":
             concept = MD.CONCEPT_PAR_STAGNATION.get(ev.cause)

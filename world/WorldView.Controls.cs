@@ -6,12 +6,14 @@
 // heatmap au HUD — _UnhandledInput ne fait qu'aiguiller (partial = même classe).
 
 using Godot;
+using GDict = Godot.Collections.Dictionary;
 
 namespace Symbiose
 {
 	public partial class WorldView : Node2D
 	{
 		private bool _houseGhost;             // maison transparente (H)
+		private const int DebugSkipWeeks = 10; // touche T : semaines sautées d'un coup (debug)
 
 		// -------------------------------------------------------------------
 		// BOUCLE HYBRIDE — entrées (tranche 3)
@@ -61,6 +63,13 @@ namespace Symbiose
 						else ToggleFieldOverlay();
 						break;
 					case Key.F7:       ToggleSoilTemp();   break;
+					// --- Raccourcis DEBUG voix (retour F5, pont 0.5.12) : forcer la
+					//     maîtrise pour tester magazine/pages/carnet sans jouer. ---
+					case Key.F8:       DebugMaitrise("palier3");      break;
+					case Key.F9:       DebugMaitrise("observer_tout"); break;
+					case Key.F10:      DebugMaitrise("reset");        break;
+					// T = « temps » : sauter DebugSkipWeeks semaines d'un coup (debug).
+					case Key.T:        SkipWeeks(DebugSkipWeeks);     break;
 				}
 			}
 			// Molette = paliers de zoom (décision Nico 2026-06-10 : molette,
@@ -160,6 +169,37 @@ namespace Symbiose
 		{
 			if (_house != null)
 				_house.Modulate = new Color(1f, 1f, 1f, _houseGhost ? 0.15f : 1f);
+		}
+
+		// --- Raccourcis DEBUG (retour F5 voix, pont 0.5.12) --------------------
+
+		// F8/F9/F10 : force la maîtrise via le pont (palier3 / observer_tout /
+		// reset) pour tester magazine/pages/carnet sans jouer jusqu'au palier 3.
+		// Les panneaux de voix se rafraîchissent à leur prochaine ouverture.
+		private void DebugMaitrise(string op)
+		{
+			if (_bridge == null) return;
+			_bridge.Debug(op);
+			GD.Print($"[WorldView] DEBUG maîtrise : {op}.");
+		}
+
+		// Touche T : avance N semaines d'un coup, SYNCHRONE (petit gel assumé ~N
+		// ticks) — uniquement si le pipe est libre (pas de step/action en vol),
+		// pour ne pas court-circuiter la boucle async. Applique le dernier snapshot.
+		private void SkipWeeks(int n)
+		{
+			if (!PipeFree) { GD.Print("[WorldView] skip ignoré (pipe occupé)."); return; }
+			GDict snap = null;
+			for (int i = 0; i < n; i++)
+			{
+				snap = _bridge.StepWeek();
+				if (snap == null) { GD.PrintErr("[WorldView] skip interrompu (step nul)."); break; }
+			}
+			if (snap != null)
+			{
+				ApplySnapshot(snap, fade: false);
+				GD.Print($"[WorldView] DEBUG saut de {n} semaines.");
+			}
 		}
 	}
 }

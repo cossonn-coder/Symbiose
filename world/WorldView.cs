@@ -90,7 +90,7 @@ namespace Symbiose
 		// droite de l'écran + imprimé en console au lancement : si la version à
 		// l'écran n'est pas celle annoncée par Claude, le circuit VM → sync
 		// Nextcloud → build Godot n'est pas passé (piège connu depuis t3).
-		public const string Build = "UI voix ①→④ · hub-maison — iso 2:1 · SubViewport 960×540 ×2 — pont 0.5.11 — 2026-07-01";
+		public const string Build = "UI voix : observ. survol + debug F8/F9/F10/T — pont 0.5.12 — 2026-07-01";
 
 		// -------------------------------------------------------------------
 		// RÉGLAGES (exportés : ajustables dans l'inspecteur sans recompiler)
@@ -347,6 +347,9 @@ namespace Symbiose
 			//     chaque frame selon le mode (Aucune/Survol/Toutes). Cf.
 			//     WorldView.Etiquettes.cs.
 			UpdatePlantLabels();
+			// 0b·bis) Observation par SURVOL (0.5.12) : regarder une plante = l'apprendre
+			//     (fiche encyclopédie N1). Dédupliqué par espèce. Cf. Observation.cs.
+			ObserveHoveredPlant();
 			// 0b'') Étiquette de survol d'un CONTENEUR (substrat/volume + état
 			//       qualitatif du mini-sol, ⑥c) — même couche nette, mots seuls.
 			UpdateContainerLabel();

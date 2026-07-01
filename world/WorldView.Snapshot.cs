@@ -150,6 +150,9 @@ namespace Symbiose
 				renderer.SetMeta("tile", p["tile"]);
 				renderer.SetMeta("lx", p["x_cm"]);
 				renderer.SetMeta("ly", p["y_cm"]);
+				// Espèce = NOM DE CLASSE (cls.__name__ du snapshot) : envoyé au pont
+				// à l'observation par survol (0.5.12). Python résout la clé catalogue.
+				renderer.SetMeta("species", p["species"]);
 				if (fade) renderer.Modulate = new Color(1f, 1f, 1f, 0f);
 				_objects.AddChild(renderer);
 				renderer.SetStructure(structure);

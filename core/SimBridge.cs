@@ -268,6 +268,24 @@ namespace Symbiose
 			=> Action("acheter_magazine", prms: new GDict { ["espece"] = espece });
 
 		/// <summary>
+		/// Observation par SURVOL (0.5.12, retour F5) : une plante n'est apprise
+		/// que si le joueur passe la souris dessus. On envoie le NOM DE CLASSE de
+		/// la plante (Meta "species" du renderer, = `cls.__name__` du snapshot) ;
+		/// Python résout la clé catalogue et découvre. Idempotent — appelable en
+		/// continu (l'appelant déduplique déjà par espèce pour ne pas spammer).
+		/// </summary>
+		public void Observer(string species)
+			=> Request(new GDict { ["cmd"] = "observer", ["species"] = species });
+
+		/// <summary>
+		/// Raccourci DEBUG (0.5.12, retour F5) : `op` ∈ {"palier3", "observer_tout",
+		/// "reset"}. Force la maîtrise pour tester magazine/pages/carnet sans jouer
+		/// jusqu'au palier 3. Hors golden (pont opt-in). Étiqueté debug côté vue.
+		/// </summary>
+		public void Debug(string op)
+			=> Request(new GDict { ["cmd"] = "debug", ["op"] = op });
+
+		/// <summary>
 		/// Liste des bancs d'essai montables (`init config="<nom>"`), DEMANDÉE au
 		/// serveur (commande `list_bancs`, pont 0.5.4) : la source reste le registre
 		/// Python `BANCS` — le C# ne duplique pas les noms (un menu périmé = le piège
