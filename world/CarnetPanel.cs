@@ -118,6 +118,10 @@ namespace Symbiose
 			foreach (Node enfant in _liste.GetChildren())
 				enfant.QueueFree();
 
+			// Bloc AIDE (debug) : visible seulement quand une espèce est choisie —
+			// « quoi faire pour l'aider » (retour F5). Au-dessus des notes.
+			if (_filtreEspece != null) AjouterAideDebug(_filtreEspece);
+
 			var entrees = Bridge.Carnet(_filtreConcept, _filtreEspece);
 			if (entrees.Count == 0)
 			{
@@ -127,6 +131,39 @@ namespace Symbiose
 
 			foreach (var ev in entrees)
 				AjouterEntree(ev.AsGodotDictionary());
+		}
+
+		// Bloc AIDE (debug, retour F5) : pour l'espèce sélectionnée, les remèdes de
+		// ses problèmes récents. Le TEXTE du remède vient de Python (« Godot bête ») ;
+		// le C# ne fait que la mise en page. En debug on montre TOUT : un cadenas
+		// signale un remède encore gaté par la maîtrise (le gating deviendra le
+		// filtre réel en mode jeu — cf. sim/aide.py).
+		private void AjouterAideDebug(string espece)
+		{
+			var aide = Bridge.Aide(espece);
+			var titre = new Label { Text = $"— Aide (debug) — {espece} —" };
+			titre.AddThemeColorOverride("font_color", new Color(1f, 0.85f, 0.4f));
+			_liste.AddChild(titre);
+			if (aide.Count == 0)
+			{
+				_liste.AddChild(new Label { Text = "(aucun problème récent consigné)" });
+			}
+			else
+			{
+				foreach (var it in aide)
+				{
+					var d = it.AsGodotDictionary();
+					string cadenas = d["debloque"].AsBool() ? "•" : "🔒";
+					var corps = new RichTextLabel
+					{
+						FitContent = true,
+						SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+					};
+					corps.Text = $"{cadenas} [{d["concept"].AsString()}] {d["remede"].AsString()}";
+					_liste.AddChild(corps);
+				}
+			}
+			_liste.AddChild(new HSeparator());
 		}
 
 		// Une entrée = deux lignes : en-tête « semaine · concept », puis le texte

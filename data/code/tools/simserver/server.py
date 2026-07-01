@@ -37,6 +37,9 @@ def main() -> int:
                 "encyclopedie": server.cmd_encyclopedie,
                 "pages": server.cmd_pages,
                 "magazine": server.cmd_magazine,
+                # Aide au jardinier (retour F5, debug d'abord) : remèdes des
+                # problèmes récents d'une espèce, gatables par la maîtrise.
+                "aide": server.cmd_aide,
                 # Observation par SURVOL (retour F5 : voir une plante ≠ l'observer)
                 # + raccourcis DEBUG (forcer palier / observer tout / reset).
                 "observer": server.cmd_observer,

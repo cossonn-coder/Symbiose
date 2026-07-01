@@ -24,6 +24,7 @@ from sim.encyclopedie import encyclopedie_index, encyclopedie_lire
 from sim.magazine import magazine_offres, magazine_fiche
 from sim.pages import pages_trouvees
 from sim.pages_corpus import PAGES, ORDRE
+from sim.aide import aide_espece
 
 
 class VoixMixin:
@@ -81,3 +82,15 @@ class VoixMixin:
         if espece:
             return {"ok": True, "fiche": magazine_fiche(espece)}
         return {"ok": True, "offres": magazine_offres(gs, player)}
+
+    def cmd_aide(self, msg: dict) -> dict:
+        """Aide (retour F5, « debug d'abord ») : `msg.espece` → remèdes des
+        problèmes récents de l'espèce (corpus Python), chacun avec son `concept`
+        et `debloque` (concept maîtrisé). Read-only (ledger + maîtrise)."""
+        if self.engine is None:
+            return {"ok": False, "error": "aide avant init"}
+        espece = msg.get("espece")
+        if not espece:
+            return {"ok": False, "error": "aide sans espece"}
+        gs = self.engine.game_state
+        return {"ok": True, "aide": aide_espece(gs, gs["current_player"], espece)}

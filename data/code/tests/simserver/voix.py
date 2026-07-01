@@ -17,8 +17,8 @@ def test_voix():
     print("[voix narratives — pont ①]")
     s = ServerProc()
     init = s.send(cmd="init", config="full", seed=7)
-    check("protocole bumpé à 0.5.12 (observer survol + debug)",
-          init["engine_version"] == "0.5.12", init.get("engine_version"))
+    check("protocole bumpé à 0.5.13 (carnet filtre espèce + aide)",
+          init["engine_version"] == "0.5.13", init.get("engine_version"))
 
     # Retour F5 : une plante n'est PLUS observée parce qu'elle pousse — seulement au
     # SURVOL souris. Après quelques semaines SANS survol, l'index reste VIDE.
@@ -63,6 +63,16 @@ def test_voix():
     c_bog = s.send(cmd="carnet", filtre={"espece": "_inconnue_"})
     check("carnet filtre espèce inconnue → vide",
           c_bog["ok"] and len(c_bog["entrees"]) == 0)
+
+    # Aide (retour F5, debug d'abord) : liste de remèdes {concept, remede, debloque}
+    # pour les problèmes récents d'une espèce ; espèce inconnue → vide.
+    aide = s.send(cmd="aide", espece=espece)
+    check("aide répond une liste (clé `aide`)",
+          aide["ok"] and isinstance(aide["aide"], list))
+    check("aide items bien formés (concept/remede/debloque)",
+          all({"concept", "remede", "debloque"} <= set(it) for it in aide["aide"]))
+    check("aide espèce inconnue → vide",
+          len(s.send(cmd="aide", espece="_inconnue_")["aide"]) == 0)
 
     pages = s.send(cmd="pages")
     check("pages répond (ids + textes, listes cohérentes)",

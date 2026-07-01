@@ -225,6 +225,19 @@ namespace Symbiose
 		}
 
 		/// <summary>
+		/// Aide au jardinier (0.5.13, retour F5 « debug d'abord ») : pour une
+		/// espèce, les remèdes de ses problèmes récents — `aide` = liste de
+		/// {concept, remede, debloque}. Le texte du remède vient de Python
+		/// (corpus, « Godot bête ») ; `debloque` = concept maîtrisé (gating futur).
+		/// Renvoie [] si le pont ne répond pas.
+		/// </summary>
+		public Godot.Collections.Array Aide(string espece)
+		{
+			var resp = Request(new GDict { ["cmd"] = "aide", ["espece"] = espece });
+			return resp?["aide"].AsGodotArray() ?? new Godot.Collections.Array();
+		}
+
+		/// <summary>
 		/// Encyclopédie du joueur courant. Sans `espece` → l'INDEX (`index` =
 		/// liste d'espèces découvertes). Avec `espece` → la fiche tronquée au
 		/// palier (`fiche` = {espece, niveau_max, niveaux}) ou `null`. L'appelant

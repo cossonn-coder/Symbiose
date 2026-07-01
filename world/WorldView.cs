@@ -90,7 +90,7 @@ namespace Symbiose
 		// droite de l'écran + imprimé en console au lancement : si la version à
 		// l'écran n'est pas celle annoncée par Claude, le circuit VM → sync
 		// Nextcloud → build Godot n'est pas passé (piège connu depuis t3).
-		public const string Build = "UI voix : survol + carnet filtre espèce + debug F8/F9/F10/T — pont 0.5.12 — 2026-07-01";
+		public const string Build = "UI voix : survol + carnet filtre espèce + aide debug — pont 0.5.13 — 2026-07-01";
 
 		// -------------------------------------------------------------------
 		// RÉGLAGES (exportés : ajustables dans l'inspecteur sans recompiler)

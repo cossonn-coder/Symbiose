@@ -247,7 +247,14 @@ from __future__ import annotations
 #       `observer_tout` (découvre les espèces présentes), `reset` (maîtrise+pages à
 #       zéro). Ajout de commandes opt-in joueur → golden NEUTRE. Un binaire
 #       pré-0.5.12 répond « commande inconnue » à `observer`/`debug` (tolérance vue).
-ENGINE_VERSION = "0.5.12"
+# 0.5.13 (UI voix, retour F5) : filtre CARNET par espèce (`carnet` accepte
+#       `filtre.espece`, clé catalogue) + commande `aide` ({espece} → remèdes des
+#       problèmes récents de l'espèce, chacun avec `concept` + `debloque` = concept
+#       maîtrisé ≥ seuil ; corpus `sim/aide.py`, « debug d'abord » structuré pour un
+#       gating de jeu futur). Ajouts read-only opt-in joueur → golden NEUTRE. Un
+#       binaire pré-0.5.13 ignore `filtre.espece` et répond « commande inconnue » à
+#       `aide` (tolérance côté vue).
+ENGINE_VERSION = "0.5.13"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les
