@@ -210,11 +210,16 @@ namespace Symbiose
 		/// (`entrees` = list de {semaine, zone, concept, registre, texte}), ou []
 		/// si le pont ne répond pas.
 		/// </summary>
-		public Godot.Collections.Array Carnet(string filtreConcept = null)
+		public Godot.Collections.Array Carnet(string concept = null, string espece = null)
 		{
 			var msg = new GDict { ["cmd"] = "carnet" };
-			if (filtreConcept != null)
-				msg["filtre"] = new GDict { ["concept"] = filtreConcept };
+			if (concept != null || espece != null)
+			{
+				var f = new GDict();
+				if (concept != null) f["concept"] = concept;   // filtre ET-combiné
+				if (espece != null) f["espece"] = espece;       // clé catalogue (F5)
+				msg["filtre"] = f;
+			}
 			var resp = Request(msg);
 			return resp?["entrees"].AsGodotArray() ?? new Godot.Collections.Array();
 		}

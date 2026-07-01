@@ -55,6 +55,14 @@ def test_voix():
     check("carnet répond une liste d'entrées (clé `entrees`)",
           carnet["ok"] and isinstance(carnet["entrees"], list),
           f"n={len(carnet.get('entrees', []))}")
+    # Filtre par ESPÈCE (retour F5) : sous-ensemble du carnet complet ; une espèce
+    # inconnue ne renvoie rien (le filtre est ET-combiné, clé catalogue).
+    c_sp = s.send(cmd="carnet", filtre={"espece": espece})
+    check("carnet filtre par espèce → sous-ensemble",
+          c_sp["ok"] and len(c_sp["entrees"]) <= len(carnet["entrees"]))
+    c_bog = s.send(cmd="carnet", filtre={"espece": "_inconnue_"})
+    check("carnet filtre espèce inconnue → vide",
+          c_bog["ok"] and len(c_bog["entrees"]) == 0)
 
     pages = s.send(cmd="pages")
     check("pages répond (ids + textes, listes cohérentes)",

@@ -242,6 +242,8 @@ def carnet_lire(game_state: dict, player: str, filtre: dict | None = None) -> li
 
     `filtre` optionnel (indexation §2.1), tout champ est ET-combiné :
       - `{"concept": "eau"}`     → seulement les notes du concept donné ;
+      - `{"espece": "tomate"}`   → seulement les notes d'une espèce (clé catalogue,
+                                    retour F5 : suivre une espèce découverte) ;
       - `{"zone": (tid, r, c)}`  → seulement une zone ;
       - `{"saison": s}`          → seulement une semaine (slot {s})."""
     journal = game_state.get("journal")
@@ -274,6 +276,8 @@ def _passe_filtre(entree: dict, concept: str, filtre: dict | None) -> bool:
     if not filtre:
         return True
     if "concept" in filtre and concept != filtre["concept"]:
+        return False
+    if "espece" in filtre and entree["espece"] != filtre["espece"]:
         return False
     if "zone" in filtre and entree["zone"] != filtre["zone"]:
         return False

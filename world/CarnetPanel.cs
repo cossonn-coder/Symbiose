@@ -22,13 +22,16 @@ namespace Symbiose
 {
 	public partial class CarnetPanel : VoicePanel
 	{
-		// Filtre courant : null = toutes les entrées. La valeur exacte est un
-		// libellé de concept transmis TEL QUEL au pont.
+		// Filtres courants : null = pas de filtre. Concept ET espèce sont
+		// ET-combinés côté pont (le C# ne filtre rien lui-même). L'espèce est une
+		// clé catalogue, prise parmi les espèces DÉCOUVERTES (index encyclopédie).
 		private string _filtreConcept;
+		private string _filtreEspece;
 
-		// Conteneurs séparés : le sélecteur reste en tête, seule la liste des
-		// entrées est reconstruite quand le filtre change.
+		// Conteneurs séparés : les sélecteurs restent en tête, seule la liste des
+		// entrées est reconstruite quand un filtre change.
 		private OptionButton _selecteur;
+		private OptionButton _selecteurEspece;
 		private VBoxContainer _liste;
 
 		protected override void Remplir()
@@ -45,6 +48,16 @@ namespace Symbiose
 			foreach (string concept in ConceptsPresents())
 				_selecteur.AddItem(concept);
 			_selecteur.ItemSelected += OnConceptChoisi;
+
+			// Sélecteur d'ESPÈCE (retour F5) : suivre une espèce DÉCOUVERTE. La
+			// liste = index encyclopédie (source Python, uniquement le découvert).
+			entete.AddChild(new Label { Text = "   Espèce :" });
+			_selecteurEspece = new OptionButton();
+			entete.AddChild(_selecteurEspece);
+			_selecteurEspece.AddItem("(toutes)");         // index 0 → filtre null
+			foreach (string sp in EspecesDecouvertes())
+				_selecteurEspece.AddItem(sp);
+			_selecteurEspece.ItemSelected += OnEspeceChoisie;
 
 			// La liste défilante des entrées, reconstruite à chaque filtre.
 			_liste = new VBoxContainer
@@ -72,10 +85,29 @@ namespace Symbiose
 			return ordre;
 		}
 
+		// Espèces DÉCOUVERTES = index de l'encyclopédie (source Python : uniquement
+		// ce que le joueur a observé). On préserve l'ordre du corpus (pas de tri).
+		private System.Collections.Generic.List<string> EspecesDecouvertes()
+		{
+			var ordre = new System.Collections.Generic.List<string>();
+			var enc = Bridge.Encyclopedie();          // sans espèce → l'index
+			if (enc != null && enc.ContainsKey("index"))
+				foreach (var sp in enc["index"].AsGodotArray())
+					ordre.Add(sp.AsString());
+			return ordre;
+		}
+
 		private void OnConceptChoisi(long index)
 		{
 			// Index 0 = « (tous) » → pas de filtre ; sinon le libellé exact.
 			_filtreConcept = index == 0 ? null : _selecteur.GetItemText((int)index);
+			ReconstruireListe();
+		}
+
+		private void OnEspeceChoisie(long index)
+		{
+			// Index 0 = « (toutes) » → pas de filtre ; sinon la clé catalogue exacte.
+			_filtreEspece = index == 0 ? null : _selecteurEspece.GetItemText((int)index);
 			ReconstruireListe();
 		}
 
@@ -86,7 +118,7 @@ namespace Symbiose
 			foreach (Node enfant in _liste.GetChildren())
 				enfant.QueueFree();
 
-			var entrees = Bridge.Carnet(_filtreConcept);
+			var entrees = Bridge.Carnet(_filtreConcept, _filtreEspece);
 			if (entrees.Count == 0)
 			{
 				_liste.AddChild(new Label { Text = "(aucune note pour ce filtre)" });
