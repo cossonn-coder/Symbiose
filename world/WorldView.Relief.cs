@@ -26,11 +26,13 @@ namespace Symbiose
 {
 	public partial class WorldView : Node2D
 	{
-		// Facteur d'exagération visuelle du relief (F5-tunable). 1.0 = échelle
-		// physique (1 cm de sol → PxPerCmZ px) ; >1 pour rendre lisibles les
-		// premiers millimètres d'humus. Un sol mûr (~20 cm, EPAISSEUR_NORM_REF)
-		// fait alors ~20·PxPerCmZ·facteur px de relief.
-		private const float ReliefExaggeration = 2.0f;
+		// Facteur d'exagération visuelle du relief (F5-tunable EN LIVE via
+		// l'inspecteur Godot — [Export]). 1.0 = échelle physique (1 cm de sol →
+		// PxPerCmZ px) ; un sol mûr (~20 cm, EPAISSEUR_NORM_REF) fait alors
+		// ~20·PxPerCmZ·facteur px de relief. À 0.5 (défaut), 20 cm ≈ 4 px internes
+		// (~8 à l'écran) — discret. ⚠️ L'effet ne se voit qu'au PROCHAIN snapshot
+		// (avance d'une semaine / mode Turbo) : UpdateRelief relit la valeur alors.
+		[Export] public float ReliefExaggeration = 0.5f;
 
 		// Un plot du relief : le losange « dessus » (déjà créé par BuildGround),
 		// son flanc vertical, sa position écran de BASE (niveau sol 0) et son
