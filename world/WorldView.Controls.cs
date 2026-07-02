@@ -63,11 +63,13 @@ namespace Symbiose
 						else ToggleFieldOverlay();
 						break;
 					case Key.F7:       ToggleSoilTemp();   break;
-					// --- Raccourcis DEBUG voix (retour F5, pont 0.5.12) : forcer la
-					//     maîtrise pour tester magazine/pages/carnet sans jouer. ---
-					case Key.F8:       DebugMaitrise("palier3");      break;
-					case Key.F9:       DebugMaitrise("observer_tout"); break;
-					case Key.F10:      DebugMaitrise("reset");        break;
+					// --- Raccourcis DEBUG voix (pont 0.5.12) : forcer la maîtrise
+					//     pour tester magazine/pages/carnet sans jouer. LETTRES libres
+					//     (⚠️ F5=Run, F8=Stop sont réservés par l'éditeur Godot et
+					//     ferment/relancent le jeu — retour F5 Nico). ---
+					case Key.P:        DebugMaitrise("palier3");       break;  // Palier 3
+					case Key.V:        DebugMaitrise("observer_tout"); break;  // Voir tout
+					case Key.R:        DebugMaitrise("reset");         break;  // Reset maîtrise
 					// T = « temps » : sauter DebugSkipWeeks semaines d'un coup (debug).
 					case Key.T:        SkipWeeks(DebugSkipWeeks);     break;
 				}
