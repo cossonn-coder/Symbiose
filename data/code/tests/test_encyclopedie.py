@@ -12,6 +12,12 @@ Propriétés exigées (« Définition de done » du kickoff) :
      corpus couvre EXACTEMENT les 28 espèces (PLANT + PERENNIAL).
   E. CHAQUE FICHE a bien ses 3 niveaux non vides.
 
+D60 (tronçon ① — encyclopédie multi-règnes) ajoute :
+  F. TYPE_DE couvre toutes les clés attendues, SANS collision (priorité stable).
+  G. INDEX TAGUÉ — chaque entrée = `{cle, type, titre}` ; filtre par type.
+  H. DISPATCH MONO-NIVEAU — animal + champignon → 1 niveau (blurb + graphe),
+     plafonnés palier 1 même à palier supérieur.
+
 Le palier de l'ESPÈCE est posé directement (raccourci de test, comme test_carnet).
 Lecture pure → déterminisme total.
 
@@ -21,6 +27,9 @@ Usage (depuis data/code/) :
 from sim import encyclopedie
 from sim.encyclopedie_corpus import FICHES
 from sim import maitrise
+from sim import encyclopedie_types as ET
+from sim.champignon_encyclo import CLE_CHAMPIGNON
+from fields.faune_encyclo import FAUNE_ENCYCLO
 from plants.catalogue import PLANT_CATALOGUE, PERENNIAL_CATALOGUE
 
 _results = []
@@ -93,16 +102,17 @@ def test_non_decouvert():
     gs = {}
     _poser_palier(gs, "j1", "tomate", 2)        # une seule espèce découverte
     idx = encyclopedie.encyclopedie_index(gs, "j1")
-    check("index = [tomate] seule découverte", idx == ["tomate"], f"{idx}")
-    check("basilic (palier 0) absent de l'index", "basilic" not in idx)
+    cles = [e["cle"] for e in idx]
+    check("index = [tomate] seule découverte", cles == ["tomate"], f"{cles}")
+    check("basilic (palier 0) absent de l'index", "basilic" not in cles)
     check("lire basilic (palier 0) → None",
           encyclopedie.encyclopedie_lire(gs, "j1", "basilic") is None)
     # index trié dans l'ordre stable du corpus
     _poser_palier(gs, "j1", "haricot", 1)       # haricot vient après poivron au §6
     _poser_palier(gs, "j1", "poivron", 1)
-    idx2 = encyclopedie.encyclopedie_index(gs, "j1")
+    cles2 = [e["cle"] for e in encyclopedie.encyclopedie_index(gs, "j1")]
     ordre_corpus = [e for e in FICHES if e in {"tomate", "poivron", "haricot"}]
-    check("index trié dans l'ordre du corpus", idx2 == ordre_corpus, f"{idx2}")
+    check("index trié dans l'ordre du corpus", cles2 == ordre_corpus, f"{cles2}")
 
 
 # ---------------------------------------------------------------------------
@@ -131,6 +141,96 @@ def test_fiches_completes():
           incompletes == [], f"incomplètes : {incompletes}")
 
 
+# ---------------------------------------------------------------------------
+# F. type_de couvre les clés attendues, sans collision (D60 ①)
+# ---------------------------------------------------------------------------
+
+def test_type_de():
+    # chaque catégorie est bien taguée par son type
+    check("tomate → plante", ET.type_de("tomate") == "plante")
+    check("chene (pérenne) → plante", ET.type_de("chene") == "plante")
+    check("puceron → animal", ET.type_de("puceron") == "animal")
+    check("champignon → champignon", ET.type_de(CLE_CHAMPIGNON) == "champignon")
+    check("eau → concept", ET.type_de("eau") == "concept")
+    check("pollinisation → concept", ET.type_de("pollinisation") == "concept")
+    check("arrosage → technique", ET.type_de("arrosage") == "technique")
+    check("arrosoir → outil", ET.type_de("arrosoir") == "outil")
+    check("planter → geste", ET.type_de("planter") == "geste")
+    check("clé inconnue → None", ET.type_de("zorglub") is None)
+    # Une SEULE clé multi-catégories aujourd'hui : `grelinette` est à la fois un
+    # geste (verbe de `COUTS`) ET un outil (le même mot dans `OBJETS_TOUCHES`).
+    # L'ordre de priorité déterministe (outil AVANT geste) la range en OUTIL —
+    # cohérent avec l'énumération outils du kickoff. Toute AUTRE clé doit tomber
+    # dans son unique type (aucune ambiguïté imprévue ne doit apparaître).
+    ensembles = {"plante": ET.PLANTES, "animal": ET.ANIMAUX,
+                 "champignon": {CLE_CHAMPIGNON}, "concept": ET.CONCEPTS,
+                 "technique": ET.TECHNIQUES, "outil": ET.OUTILS, "geste": ET.GESTES}
+    COLLISIONS_CONNUES = {"grelinette"}
+    collisions = []
+    for nom_type, membres in ensembles.items():
+        for cle in membres:
+            if cle in COLLISIONS_CONNUES:
+                continue
+            if ET.type_de(cle) != nom_type:
+                collisions.append((cle, nom_type, ET.type_de(cle)))
+    check("aucune collision de classification imprévue", collisions == [], f"{collisions}")
+    check("grelinette (collision connue) → outil (priorité)",
+          ET.type_de("grelinette") == "outil")
+    # technique et outil sont disjoints, tous deux couvrent OBJETS_TOUCHES
+    check("technique ∩ outil = ∅", not (ET.TECHNIQUES & ET.OUTILS))
+
+
+# ---------------------------------------------------------------------------
+# G. Index tagué + filtre par type (D60 ①)
+# ---------------------------------------------------------------------------
+
+def test_index_tague():
+    gs = {}
+    _poser_palier(gs, "j1", "tomate", 2)
+    maitrise.decouvrir(gs, "j1", "puceron")      # animal découvert
+    idx = encyclopedie.encyclopedie_index(gs, "j1")
+    formes = all(set(e) == {"cle", "type", "titre"} for e in idx)
+    check("chaque entrée = {cle, type, titre}", formes, f"{idx}")
+    types = {e["cle"]: e["type"] for e in idx}
+    check("tomate taguée plante", types.get("tomate") == "plante")
+    check("puceron tagué animal", types.get("puceron") == "animal")
+    # filtre par type
+    idx_pl = encyclopedie.encyclopedie_index(gs, "j1", "plante")
+    check("filtre plante → que des plantes",
+          all(e["type"] == "plante" for e in idx_pl) and idx_pl, f"{idx_pl}")
+    idx_an = encyclopedie.encyclopedie_index(gs, "j1", "animal")
+    check("filtre animal → [puceron]",
+          [e["cle"] for e in idx_an] == ["puceron"], f"{idx_an}")
+
+
+# ---------------------------------------------------------------------------
+# H. Dispatch mono-niveau : animal + champignon (D60 ①)
+# ---------------------------------------------------------------------------
+
+def test_dispatch_mono():
+    gs = {}
+    _poser_palier(gs, "j1", "puceron", 4)        # palier haut : doit rester capé à 1
+    f = encyclopedie.encyclopedie_lire(gs, "j1", "puceron")
+    check("animal → type animal, niveau_max=1",
+          f["type"] == "animal" and f["niveau_max"] == 1, f"{f}")
+    check("animal → blurb = faune_encyclo",
+          f["niveaux"][1] == FAUNE_ENCYCLO["puceron"][0])
+    check("animal → interconnexions présentes",
+          list(f["interconnexions"]) == list(FAUNE_ENCYCLO["puceron"][1]))
+
+    _poser_palier(gs, "j1", CLE_CHAMPIGNON, 3)
+    fc = encyclopedie.encyclopedie_lire(gs, "j1", CLE_CHAMPIGNON)
+    check("champignon → type champignon, niveau_max=1",
+          fc["type"] == "champignon" and fc["niveau_max"] == 1, f"{fc}")
+    check("champignon → blurb + graphe non vides",
+          fc["niveaux"][1].strip() and fc["interconnexions"])
+
+    # concept/geste sans corpus (④⑤ pas encore là) → None propre
+    _poser_palier(gs, "j1", "eau", 2)
+    check("concept sans corpus → None (point d'extension)",
+          encyclopedie.encyclopedie_lire(gs, "j1", "eau") is None)
+
+
 if __name__ == "__main__":
     print("=" * 60)
     print("SYMBIOSE — Encyclopédie (Voix narratives ④)")
@@ -140,6 +240,9 @@ if __name__ == "__main__":
     test_non_decouvert()
     test_alignement_cles()
     test_fiches_completes()
+    test_type_de()
+    test_index_tague()
+    test_dispatch_mono()
 
     print("\n" + "=" * 60)
     passed = sum(1 for _, ok in _results if ok)

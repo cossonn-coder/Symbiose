@@ -42,7 +42,11 @@ def test_voix():
     enc = s.send(cmd="encyclopedie")
     check("encyclopedie index NON vide APRÈS survol",
           enc["ok"] and len(enc["index"]) > 0, f"index={enc.get('index')}")
-    espece = enc["index"][0]
+    # D60 ① : l'index rend des entrées TAGUÉES `{cle, type, titre}` (multi-règnes).
+    entree = enc["index"][0]
+    check("entrée d'index taguée {cle,type,titre}",
+          set(entree) == {"cle", "type", "titre"}, f"{entree}")
+    espece = entree["cle"]
     fiche = s.send(cmd="encyclopedie", espece=espece)
     check("encyclopedie fiche d'une espèce découverte : niveau_max ≥ 1",
           fiche["ok"] and fiche["fiche"] is not None

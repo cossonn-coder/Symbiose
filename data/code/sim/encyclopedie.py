@@ -32,6 +32,9 @@ from __future__ import annotations
 
 from sim import maitrise
 from sim.encyclopedie_corpus import FICHES
+from sim.encyclopedie_types import type_de
+from sim.champignon_encyclo import CLE_CHAMPIGNON, encyclo_meta as _champignon_meta
+from fields.faune_encyclo import FAUNE_ENCYCLO, encyclo_meta as _faune_meta
 
 # --- Calibrage (décision A, doc §0 — figée, pas un knob de tuning) ------------
 # Niveau de fiche maximum : l'encyclopédie n'a que 3 niveaux (basique / bio /
@@ -39,46 +42,123 @@ from sim.encyclopedie_corpus import FICHES
 # ne révèle pas de 4ᵉ niveau (corpus paliers 4-5 = enrichissement futur, doc §8.3).
 NIVEAU_MAX = 3
 
+# Point d'extension (D60 §5) : registre des corpus 3-niveaux des types NEUFS
+# (concept · technique · outil · geste). VIDE ici (① pose la plomberie, pas le
+# texte) ; ④⑤ le rempliront avec `{cle: {1:…, 2:…, 3:…}}`. Le dispatch consulte ce
+# registre pour ces types ; tant qu'un type/clé n'y est pas, on renvoie `None`
+# proprement (pas de crash). Structure : `{type: {cle: {1,2,3}}}`.
+CORPUS_PAR_TYPE: dict[str, dict[str, dict[int, str]]] = {
+    "concept":   {},
+    "technique": {},
+    "outil":     {},
+    "geste":     {},
+}
 
-def _decouverte(game_state: dict, player: str, espece: str) -> bool:
-    """Une espèce est « découverte » (donc a une fiche) SSI son palier de maîtrise
+
+def _decouverte(game_state: dict, player: str, cle: str) -> bool:
+    """Une clé est « découverte » (donc a une entrée) SSI son palier de maîtrise
     est ≥ 1 (kickoff : « pas d'état neuf, palier ≥ 1 ⇒ fiche »). Lecture pure de
     `maitrise.palier` (ne crée AUCUNE clé → no-op golden)."""
-    return maitrise.palier(game_state, player, espece) >= 1
+    return maitrise.palier(game_state, player, cle) >= 1
 
 
-def encyclopedie_index(game_state: dict, player: str) -> list[str]:
-    """Liste des espèces DÉCOUVERTES par ce joueur (palier ≥ 1), dans l'ordre
-    STABLE du corpus (= ordre du catalogue recopié au §6). Sans couche maîtrise ni
-    joueur → `[]` (golden-safe). PUR : aucune écriture, aucun RNG.
-
-    On itère `FICHES` (et non la tranche maîtrise) pour garantir un tri stable et
-    indépendant de l'ordre d'insertion des découvertes dans `game_state` ; toute
-    espèce maîtrisée hors corpus (ne devrait pas arriver, l'alignement des clés est
-    testé) est simplement ignorée à l'affichage — pas de fiche, pas de crash."""
-    return [esp for esp in FICHES if _decouverte(game_state, player, esp)]
+# Ordre STABLE d'énumération de l'index : d'abord par type (ordre des onglets),
+# puis, à l'intérieur d'un type, l'ordre de son corpus source. Les plantes gardent
+# l'ordre de `FICHES`, la faune celui de `FAUNE_ENCYCLO`, etc.
+_ORDRE_TYPES = ("plante", "animal", "champignon", "concept", "technique", "outil", "geste")
 
 
-def encyclopedie_lire(game_state: dict, player: str, espece: str) -> dict | None:
-    """Fiche d'une espèce, TRONQUÉE au niveau `min(palier, NIVEAU_MAX)` (doc §2.2).
-    Renvoie `None` si l'espèce n'est pas découverte (palier 0) — elle n'a pas
-    encore d'entrée. Structure de retour :
+def _cles_du_type(nom_type: str) -> list[str]:
+    """Clés d'un type dans l'ordre de son corpus source (stable, déterministe).
+    Concept/technique/outil/geste tirent leur ordre de `CORPUS_PAR_TYPE` (vide
+    d'ici ④⑤) → aucune entrée servie tant que le corpus n'existe pas."""
+    if nom_type == "plante":
+        return list(FICHES)
+    if nom_type == "animal":
+        return list(FAUNE_ENCYCLO)
+    if nom_type == "champignon":
+        return [CLE_CHAMPIGNON]
+    return list(CORPUS_PAR_TYPE.get(nom_type, {}))
 
-        {
-          "espece":      "tomate",
-          "niveau_max":  2,                 # = min(palier, 3) ∈ {1, 2, 3}
-          "niveaux":     {1: "…N1…", 2: "…N2…"},   # 1..niveau_max, du corpus §6
-        }
 
-    PUR : lit `maitrise.palier` (D12) + le corpus, n'écrit RIEN. Espèce absente du
-    corpus (clé inconnue) → `None` (jamais de KeyError ; l'alignement clés/catalogue
-    est garanti par `tests/test_encyclopedie.py`)."""
-    p = maitrise.palier(game_state, player, espece)
+def encyclopedie_index(game_state: dict, player: str,
+                       type_filtre: str | None = None) -> list[dict]:
+    """Index des entrées DÉCOUVERTES (palier ≥ 1), TAGUÉES par type (D60 §5) :
+    liste de `{cle, type, titre}`. `type_filtre` optionnel restreint à un onglet
+    (les 7 types) — sinon toutes les entrées, dans l'ordre stable des types puis
+    des corpus. Sans couche maîtrise ni joueur → `[]` (golden-safe). PUR.
+
+    `titre` = la clé lisible (le joli libellé viendra du corpus au ④⑤ ; ici la clé
+    suffit — l'UI ⑥ affichera le titre). Une clé découverte hors corpus (type
+    `None`) est ignorée (pas de crash)."""
+    entrees: list[dict] = []
+    for nom_type in _ORDRE_TYPES:
+        if type_filtre is not None and nom_type != type_filtre:
+            continue
+        for cle in _cles_du_type(nom_type):
+            if _decouverte(game_state, player, cle):
+                entrees.append({"cle": cle, "type": nom_type, "titre": cle})
+    return entrees
+
+
+def _lire_plante(cle: str, palier: int) -> dict | None:
+    """Fiche PLANTE (comportement inchangé) : tronquée à `min(palier, 3)`, corpus
+    `FICHES`. Clé hors corpus → `None`."""
+    fiche = FICHES.get(cle)
+    if fiche is None:
+        return None
+    niveau_max = min(palier, NIVEAU_MAX)
+    niveaux = {n: fiche[n] for n in range(1, niveau_max + 1)}
+    return {"cle": cle, "type": "plante", "niveau_max": niveau_max, "niveaux": niveaux}
+
+
+def _lire_mono(cle: str, nom_type: str, meta: dict) -> dict:
+    """Fiche MONO-niveau (animal, champignon) : blurb + graphe d'interconnexions,
+    plafonnée à palier 1 (la détection ne les crédite pas). `meta` = `{blurb,
+    interconnexions}` de la source (`faune_encyclo` / `champignon_encyclo`)."""
+    return {
+        "cle": cle, "type": nom_type, "niveau_max": 1,
+        "niveaux": {1: meta["blurb"]},
+        "interconnexions": list(meta["interconnexions"]),
+    }
+
+
+def _lire_corpus_3n(cle: str, nom_type: str, palier: int) -> dict | None:
+    """Fiche 3-niveaux d'un type NEUF (concept/technique/outil/geste), lue dans
+    `CORPUS_PAR_TYPE`. VIDE d'ici ④⑤ → `None` propre (point d'extension posé)."""
+    fiche = CORPUS_PAR_TYPE.get(nom_type, {}).get(cle)
+    if fiche is None:
+        return None
+    niveau_max = min(palier, NIVEAU_MAX)
+    niveaux = {n: fiche[n] for n in range(1, niveau_max + 1)}
+    return {"cle": cle, "type": nom_type, "niveau_max": niveau_max, "niveaux": niveaux}
+
+
+def encyclopedie_lire(game_state: dict, player: str, cle: str) -> dict | None:
+    """Fiche d'une clé, DISPATCHÉE par `type_de(cle)` (D60 §5). Renvoie `None` si
+    la clé n'est pas découverte (palier 0) ou si son type n'a pas (encore) de
+    corpus. Structure de retour (miroir plante enrichi d'un `type`) :
+
+        {"cle": …, "type": …, "niveau_max": …, "niveaux": {1:…, …},
+         "interconnexions": [...]}   # présent seulement pour animal/champignon
+
+    - plante                      → 3 niveaux, `min(palier, 3)` (inchangé) ;
+    - animal / champignon         → mono-niveau (blurb + graphe), cap palier 1 ;
+    - concept/technique/outil/geste → corpus 3-niveaux quand il existe (④⑤), sinon
+      `None` proprement.
+
+    PUR : lit `maitrise.palier` + les corpus, n'écrit RIEN. Clé de type inconnu
+    (`type_de` → `None`) → `None` (jamais de crash)."""
+    p = maitrise.palier(game_state, player, cle)
     if p < 1:
         return None
-    fiche = FICHES.get(espece)
-    if fiche is None:                       # clé hors corpus : pas de fiche à servir
-        return None
-    niveau_max = min(p, NIVEAU_MAX)
-    niveaux = {n: fiche[n] for n in range(1, niveau_max + 1)}
-    return {"espece": espece, "niveau_max": niveau_max, "niveaux": niveaux}
+    nom_type = type_de(cle)
+    if nom_type == "plante":
+        return _lire_plante(cle, p)
+    if nom_type == "animal":
+        return _lire_mono(cle, "animal", _faune_meta(cle))
+    if nom_type == "champignon":
+        return _lire_mono(cle, "champignon", _champignon_meta())
+    if nom_type in CORPUS_PAR_TYPE:
+        return _lire_corpus_3n(cle, nom_type, p)
+    return None

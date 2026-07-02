@@ -5,8 +5,21 @@
 > `0N` du tronçon courant. Conception FIGÉE (Nico « oui » 2026-07-02).
 
 ## Où on en est
-Conception **figée**, 6 kickoffs autosuffisants écrits, prêt pour `/sprint-auto`.
-Aucun tronçon implémenté encore.
+Conception **figée**, 6 kickoffs autosuffisants écrits.
+**① CLOS** (2026-07-02) : backend encyclo unifié multi-règnes. Créé
+`sim/encyclopedie_types.py` (table de classification string→type, 7 types,
+priorité déterministe) + `sim/champignon_encyclo.py` (fiche générique mono-niveau).
+`sim/encyclopedie.py` dispatche par `type_de` (plante 3n inchangé, animal/champignon
+mono-niveau, registre `CORPUS_PAR_TYPE` VIDE pour concept/technique/outil/geste →
+`None` propre d'ici ④⑤) ; `encyclopedie_index` renvoie des dicts `{cle,type,titre}`
++ filtre par type. `cmd_encyclopedie` accepte `msg.type` (filtre) + `msg.cle`
+(alias hérité `msg.espece`). Golden INCHANGÉ (`a6c2f651…`). Tests :
+`test_encyclopedie` 42/42, `test_sim_server` 235/235.
+**COLLISION SIGNALÉE** : `grelinette` est à la fois geste (verbe `COUTS`) et outil
+(`OBJETS_TOUCHES`) — priorité déterministe la range en OUTIL (cohérent kickoff). Seule
+clé multi-catégories ; documentée dans le test.
+
+Reste ②→⑥.
 
 ## Sujet (D60, Nico 2026-07-02, F5 — S9, étend D31)
 La vie macro est un amas de cercles indistincts. Objectif : **survol → nom + entrée
@@ -27,7 +40,7 @@ Détail complet : `docs/conception/CONCEPTION_VIE_MACRO_IDENTIFIABLE.md`.
 ## Carte des tronçons
 | # | Kickoff | Cœur | Golden | F5 |
 |---|---------|------|--------|----|
-| ① | `01_backend_encyclo_unifiee.md` | Corpus taggué + `type_de` + dispatch + fiche champignon | NEUTRE | non |
+| ✅ ① | `01_backend_encyclo_unifiee.md` | Corpus taggué + `type_de` + dispatch + fiche champignon | NEUTRE ✓ | non |
 | ② | `02_survol_vie_macro.md` | `observer_espece` multi-règnes + survol C# vie macro | NEUTRE | **oui** |
 | ③ | `03_progression_geste_outil.md` | Progression combinée usage+succès + découverte à l'usage | NEUTRE | non |
 | ④ | `04_corpus_concept_technique.md` | Fiches 3 niv. concept + technique | NEUTRE | non |
@@ -64,8 +77,10 @@ peut casser à `dotnet build` entre ① et ⑥ — c'est PRÉVU, ⑥ répare la 
 Boucle `/sprint-auto` : lancer le kickoff `0N` → implémenter → vérifier
 `python3 -m tests.test_golden` (attendu INCHANGÉ, golden NEUTRE) + tests ciblés du
 tronçon + `dotnet build Symbiose.csproj` pour les tronçons C# (②⑥) → mettre à jour
-CE fichier (cocher le tronçon) → commit → `/clear` → tronçon suivant. Commencer par
-**①** (`01_backend_encyclo_unifiee.md`). F5 groupés à la fin (② et ⑥).
+CE fichier (cocher le tronçon) → commit → `/clear` → tronçon suivant. **① CLOS** ;
+reprendre à **②** (`02_survol_vie_macro.md` — `observer_espece` multi-règnes +
+survol C# vie macro ; **point F5**, tronçon C# → `dotnet build` requis). F5 groupés
+à la fin (② et ⑥).
 
 ## NB git
 À l'ouverture de la conception, l'arbre était SALE (`sprint_epaisseur_sol` non

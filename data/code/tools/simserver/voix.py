@@ -40,17 +40,20 @@ class VoixMixin:
         return {"ok": True, "entrees": carnet_lire(gs, player, filtre=msg.get("filtre"))}
 
     def cmd_encyclopedie(self, msg: dict) -> dict:
-        """Encyclopédie du joueur courant (§3) : `msg.espece` → la fiche tronquée
-        au palier (N1/N2/N3) ou `null` si non découverte ; sinon l'INDEX des
-        espèces découvertes (ordre du corpus)."""
+        """Encyclopédie multi-règnes du joueur courant (D60 §5) : `msg.cle` (ou son
+        alias hérité `msg.espece`) → la fiche DISPATCHÉE par type (plante N1/N2/N3,
+        animal/champignon mono-niveau, …) ou `null` si non découverte ; sinon
+        l'INDEX des entrées découvertes, TAGUÉES par type, éventuellement restreint
+        à `msg.type` (un des 7 onglets). Le pont relaie, ne classe pas (la
+        classification vit en Python source de vérité)."""
         if self.engine is None:
             return {"ok": False, "error": "encyclopedie avant init"}
         gs = self.engine.game_state
         player = gs["current_player"]
-        espece = msg.get("espece")
-        if espece:
-            return {"ok": True, "fiche": encyclopedie_lire(gs, player, espece)}
-        return {"ok": True, "index": encyclopedie_index(gs, player)}
+        cle = msg.get("cle") or msg.get("espece")   # `espece` = repli client C# existant
+        if cle:
+            return {"ok": True, "fiche": encyclopedie_lire(gs, player, cle)}
+        return {"ok": True, "index": encyclopedie_index(gs, player, msg.get("type"))}
 
     def cmd_pages(self, msg: dict) -> dict:
         """Pages secrètes TROUVÉES par le joueur courant (§3) : les ids (ordre du
