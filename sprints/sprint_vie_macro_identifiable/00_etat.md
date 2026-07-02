@@ -50,7 +50,25 @@ fenêtre, pas `detecter` ; pont étendu plutôt que fichier neuf (< 300 LDC). Go
 au 1ᵉ usage pollue le delta Vigueur net, on assied désormais l'assertion sur le champ
 `cost` (source de vérité du geste) ; orphelins nettoyés. Batterie complète verte.
 
-Reste ④→⑥.
+**④ CLOS** (2026-07-02) : corpus encyclopédie 3 niveaux concept + technique.
+Créé `sim/concept_corpus.py` (`FICHES_CONCEPT`, 4 clés = `eau`/`lumière`/`météo`/
+`pollinisation`) + `sim/technique_corpus.py` (`FICHES_TECHNIQUE`, 11 clés alignées
+sur `encyclopedie_types.TECHNIQUES`). Branchés dans `CORPUS_PAR_TYPE` de
+`sim/encyclopedie.py` (types `concept`+`technique`) ; `outil`+`geste` restent VIDES
+(⑤). Voix naturaliste 3ᵉ pers., N1 observation → N2 mécanisme → N3 rôle écosystémique,
+interconnexions tissées, contreparties nommées (philo #1). Golden INCHANGÉ
+(`a6c2f651…`, NEUTRE). Tests : `test_encyclopedie` 54/54 (+ section I : alignement
+corpus↔classification sans trou/surplus, complétude 3 niveaux, dispatch+troncature
+concept/technique, index filtré ; test H `eau` → `planter` car concept a désormais
+un corpus). `test_sim_server` 240/240. **`dotnet build` : NON CONCERNÉ** (Python pur).
+**BEHAVIOR SURFACÉ** : les CONCEPTS s'auto-créditent aux événements écolo (ex.
+`météo` via signal `froid`) → apparaissent à l'index SANS survol. `tests/simserver/
+voix.py` adapté : l'assertion « index vide sans survol » vise désormais les ESPÈCES
+(plante/animal/champignon), pas les concepts ; grab de l'entrée plante rendu robuste.
+Pas une régression (crédit concept préexistant à ④ ; ④ ne fait que le rendre visible,
+golden intact).
+
+Reste ⑤⑥.
 
 ## Sujet (D60, Nico 2026-07-02, F5 — S9, étend D31)
 La vie macro est un amas de cercles indistincts. Objectif : **survol → nom + entrée
@@ -74,7 +92,7 @@ Détail complet : `docs/conception/CONCEPTION_VIE_MACRO_IDENTIFIABLE.md`.
 | ✅ ① | `01_backend_encyclo_unifiee.md` | Corpus taggué + `type_de` + dispatch + fiche champignon | NEUTRE ✓ | non |
 | ✅ ② | `02_survol_vie_macro.md` | `observer_espece` multi-règnes + survol C# vie macro | NEUTRE ✓ | **oui** |
 | ✅ ③ | `03_progression_geste_outil.md` | Progression combinée usage+succès + découverte à l'usage | NEUTRE ✓ | non |
-| ④ | `04_corpus_concept_technique.md` | Fiches 3 niv. concept + technique | NEUTRE | non |
+| ✅ ④ | `04_corpus_concept_technique.md` | Fiches 3 niv. concept + technique | NEUTRE ✓ | non |
 | ⑤ | `05_corpus_geste_outil.md` | Fiches 3 niv. geste + outil | NEUTRE | non |
 | ⑥ | `06_ui_godot_7_onglets.md` | UI 7 onglets + fiches mono/graphe + hover carpophore | NEUTRE | **oui** |
 
@@ -108,10 +126,11 @@ peut casser à `dotnet build` entre ① et ⑥ — c'est PRÉVU, ⑥ répare la 
 Boucle `/sprint-auto` : lancer le kickoff `0N` → implémenter → vérifier
 `python3 -m tests.test_golden` (attendu INCHANGÉ, golden NEUTRE) + tests ciblés du
 tronçon + `dotnet build Symbiose.csproj` pour les tronçons C# (②⑥) → mettre à jour
-CE fichier (cocher le tronçon) → commit → `/clear` → tronçon suivant. **①②③ CLOS** ;
-reprendre à **④** (`04_corpus_concept_technique.md` — fiches encyclopédie 3 niveaux
-concept + technique, branche le registre `CORPUS_PAR_TYPE` laissé VIDE au ① ; tronçon
-Python pur, **pas F5**, golden NEUTRE). F5 groupés à la fin (② faite — à valider ; et ⑥).
+CE fichier (cocher le tronçon) → commit → `/clear` → tronçon suivant. **①②③④ CLOS** ;
+reprendre à **⑤** (`05_corpus_geste_outil.md` — fiches encyclopédie 3 niveaux geste +
+outil, branche `CORPUS_PAR_TYPE["outil"]`+`["geste"]` laissés VIDES ; ⑤ suppose ③ pour
+rendre N2/N3 atteignables ; tronçon Python pur, **pas F5**, golden NEUTRE). F5 groupés
+à la fin (② faite — à valider ; et ⑥).
 
 ## NB git
 À l'ouverture de la conception, l'arbre était SALE (`sprint_epaisseur_sol` non

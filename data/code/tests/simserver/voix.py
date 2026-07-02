@@ -21,13 +21,19 @@ def test_voix():
           init["engine_version"] == "0.5.15", init.get("engine_version"))
 
     # Retour F5 : une plante n'est PLUS observée parce qu'elle pousse — seulement au
-    # SURVOL souris. Après quelques semaines SANS survol, l'index reste VIDE.
+    # SURVOL souris. Après quelques semaines SANS survol, aucune ESPÈCE (plante /
+    # animal / champignon) n'entre à l'index. (D60 ④ : les CONCEPTS transversaux
+    # — eau/lumière/météo — se créditent seuls aux événements écologiques et
+    # PEUVENT apparaître sans survol ; on les exclut du contrôle, qui vise le canal
+    # d'observation à la souris.)
     snap = None
     for _ in range(6):
         snap = s.send(cmd="step_week")["snapshot"]
     vide = s.send(cmd="encyclopedie")
-    check("encyclopedie index VIDE sans survol (observation = souris)",
-          vide["ok"] and len(vide["index"]) == 0, f"index={vide.get('index')}")
+    especes = [e for e in vide["index"]
+               if e["type"] in ("plante", "animal", "champignon")]
+    check("aucune ESPÈCE à l'index sans survol (observation = souris)",
+          vide["ok"] and especes == [], f"espèces={especes}")
 
     # Observer par SURVOL : le C# envoie le NOM DE CLASSE de la plante survolée ;
     # on le prend d'une plante vivante du snapshot (serialize `species`=__name__).
@@ -43,7 +49,8 @@ def test_voix():
     check("encyclopedie index NON vide APRÈS survol",
           enc["ok"] and len(enc["index"]) > 0, f"index={enc.get('index')}")
     # D60 ① : l'index rend des entrées TAGUÉES `{cle, type, titre}` (multi-règnes).
-    entree = enc["index"][0]
+    # On cible l'entrée PLANTE survolée (des concepts auto-crédités peuvent coexister).
+    entree = next(e for e in enc["index"] if e["type"] == "plante")
     check("entrée d'index taguée {cle,type,titre}",
           set(entree) == {"cle", "type", "titre"}, f"{entree}")
     espece = entree["cle"]

@@ -34,6 +34,8 @@ from sim import maitrise
 from sim.encyclopedie_corpus import FICHES
 from sim.encyclopedie_types import type_de
 from sim.champignon_encyclo import CLE_CHAMPIGNON, encyclo_meta as _champignon_meta
+from sim.concept_corpus import FICHES_CONCEPT
+from sim.technique_corpus import FICHES_TECHNIQUE
 from fields.faune_encyclo import FAUNE_ENCYCLO, encyclo_meta as _faune_meta
 
 # --- Calibrage (décision A, doc §0 — figée, pas un knob de tuning) ------------
@@ -42,14 +44,14 @@ from fields.faune_encyclo import FAUNE_ENCYCLO, encyclo_meta as _faune_meta
 # ne révèle pas de 4ᵉ niveau (corpus paliers 4-5 = enrichissement futur, doc §8.3).
 NIVEAU_MAX = 3
 
-# Point d'extension (D60 §5) : registre des corpus 3-niveaux des types NEUFS
-# (concept · technique · outil · geste). VIDE ici (① pose la plomberie, pas le
-# texte) ; ④⑤ le rempliront avec `{cle: {1:…, 2:…, 3:…}}`. Le dispatch consulte ce
-# registre pour ces types ; tant qu'un type/clé n'y est pas, on renvoie `None`
-# proprement (pas de crash). Structure : `{type: {cle: {1,2,3}}}`.
+# Registre (D60 §5) des corpus 3-niveaux des types NEUFS (concept · technique ·
+# outil · geste). Le dispatch consulte ce registre pour ces types ; tant qu'un
+# type/clé n'y est pas, on renvoie `None` proprement (pas de crash). Structure :
+# `{type: {cle: {1,2,3}}}`. ④ branche concept + technique ; ⑤ branchera outil +
+# geste (encore vides ici). L'alignement clé↔classification est vérifié par le test.
 CORPUS_PAR_TYPE: dict[str, dict[str, dict[int, str]]] = {
-    "concept":   {},
-    "technique": {},
+    "concept":   FICHES_CONCEPT,
+    "technique": FICHES_TECHNIQUE,
     "outil":     {},
     "geste":     {},
 }

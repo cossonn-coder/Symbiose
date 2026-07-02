@@ -225,10 +225,64 @@ def test_dispatch_mono():
     check("champignon → blurb + graphe non vides",
           fc["niveaux"][1].strip() and fc["interconnexions"])
 
-    # concept/geste sans corpus (④⑤ pas encore là) → None propre
-    _poser_palier(gs, "j1", "eau", 2)
-    check("concept sans corpus → None (point d'extension)",
-          encyclopedie.encyclopedie_lire(gs, "j1", "eau") is None)
+    # geste sans corpus (⑤ pas encore là) → None propre (point d'extension)
+    _poser_palier(gs, "j1", "planter", 2)
+    check("geste sans corpus → None (point d'extension ⑤)",
+          encyclopedie.encyclopedie_lire(gs, "j1", "planter") is None)
+
+
+# ---------------------------------------------------------------------------
+# I. Corpus concept + technique 3 niveaux (D60 ④)
+# ---------------------------------------------------------------------------
+
+def test_corpus_concept_technique():
+    from sim.concept_corpus import FICHES_CONCEPT
+    from sim.technique_corpus import FICHES_TECHNIQUE
+
+    # I.1 alignement clés corpus ⟷ classification `encyclopedie_types` (ni trou,
+    # ni surplus) : une fiche sans clé de maîtrise est morte, une clé sans fiche
+    # est muette.
+    for nom, corpus, cles_types in (
+        ("concept", FICHES_CONCEPT, ET.CONCEPTS),
+        ("technique", FICHES_TECHNIQUE, ET.TECHNIQUES),
+    ):
+        sans_fiche = sorted(cles_types - set(corpus))
+        surplus = sorted(set(corpus) - cles_types)
+        check(f"{nom} : toute clé classée a une fiche", sans_fiche == [],
+              f"muettes : {sans_fiche}")
+        check(f"{nom} : aucune fiche hors classification", surplus == [],
+              f"orphelines : {surplus}")
+        # I.2 chaque fiche = 3 niveaux non vides
+        incompletes = [k for k, f in corpus.items()
+                       if set(f) != {1, 2, 3} or not all(f[n].strip() for n in (1, 2, 3))]
+        check(f"{nom} : chaque fiche = 3 niveaux non vides", incompletes == [],
+              f"incomplètes : {incompletes}")
+
+    # I.3 dispatch + troncature au palier (concept `eau`)
+    gs = {}
+    _poser_palier(gs, "j1", "eau", 1)
+    f1 = encyclopedie.encyclopedie_lire(gs, "j1", "eau")
+    check("concept palier 1 → type concept, niveau_max=1",
+          f1["type"] == "concept" and f1["niveau_max"] == 1, f"{f1}")
+    check("concept palier 1 → N1 = corpus", f1["niveaux"][1] == FICHES_CONCEPT["eau"][1])
+    _poser_palier(gs, "j1", "eau", 5)
+    f5 = encyclopedie.encyclopedie_lire(gs, "j1", "eau")
+    check("concept palier 5 → plafond niveau_max=3, 3 niveaux",
+          f5["niveau_max"] == 3 and set(f5["niveaux"]) == {1, 2, 3}, f"{f5['niveaux'].keys()}")
+
+    # I.4 dispatch + troncature au palier (technique `arrosage`)
+    _poser_palier(gs, "j1", "arrosage", 2)
+    ft = encyclopedie.encyclopedie_lire(gs, "j1", "arrosage")
+    check("technique palier 2 → type technique, niveaux {1,2}",
+          ft["type"] == "technique" and set(ft["niveaux"]) == {1, 2}, f"{ft}")
+
+    # I.5 index tagué + filtre par onglet
+    idx_c = encyclopedie.encyclopedie_index(gs, "j1", "concept")
+    check("filtre concept → que des concepts",
+          all(e["type"] == "concept" for e in idx_c) and idx_c, f"{idx_c}")
+    idx_t = encyclopedie.encyclopedie_index(gs, "j1", "technique")
+    check("filtre technique → [arrosage]",
+          [e["cle"] for e in idx_t] == ["arrosage"], f"{idx_t}")
 
 
 if __name__ == "__main__":
@@ -243,6 +297,7 @@ if __name__ == "__main__":
     test_type_de()
     test_index_tague()
     test_dispatch_mono()
+    test_corpus_concept_technique()
 
     print("\n" + "=" * 60)
     passed = sum(1 for _, ok in _results if ok)
