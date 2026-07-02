@@ -12,6 +12,7 @@ from .climatique import (secheresse_sable, acclimatation, ombre_dense,
                          pluie_thermique, germination_multifacteur)
 from .edaphique import chlorose_acidophile, asphyxie_argile, carence_npk
 from .biotique import infestation_ravageur, verger_floraison, semis_tempere
+from .succession import succession_bascule
 
 BANCS = {
     "secheresse_sable": secheresse_sable,
@@ -25,4 +26,5 @@ BANCS = {
     "infestation_ravageur": infestation_ravageur,
     "verger_floraison": verger_floraison,
     "semis_tempere": semis_tempere,
+    "succession_bascule": succession_bascule,
 }

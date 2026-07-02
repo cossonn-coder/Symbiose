@@ -19,9 +19,28 @@ SEED_ARCHETYPES = ["pioneer", "nitrogen_fixer", "grass", "competitor"]
 
 SEED_VIABILITY_LOSS = 0.998   # vieillissement hebdomadaire des graines
 SEED_DISTURBANCE_GAIN = 0.002 # enrichissement par perturbation (pioneer surtout)
-SEED_LATE_GAIN = 0.0008       # propagules vivaces tardives ∝ maturité (dispersion lente)
-SEED_LATE_MIN_MATURITY = 0.2  # pas de propagules tardives sur sol jeune
-SEED_COMPETITOR_MATURITY = 0.4 # competitor (le plus tardif) : sol déjà bien établi
+
+# --- Facilitation OM des tardifs (tronçon ②, déverrouillage S3) --------------
+# Les propagules vivaces tardives (fixatrice/graminée/competitor) n'entraient en
+# banque QUE via un gate `soil_memory_deep ≥ 0.2` (dynamique DÉCENNALE, jamais
+# atteinte avant ~15 ans) → seul pioneer alimentait la banque → monoculture
+# Capsella qui « bloque la germination » (S3). On remplace ce gate par un indice
+# de matière organique RÉACTIF, réellement bâti par les pionnières (humus + MO
+# active), qui monte en QUELQUES saisons. C'est la facilitation écologique
+# (philo #2 : flux OM → contrainte → réponse), pas un script de bascule.
+#
+#   om_index = clamp((om_active + om_stable) / OM_FACILITATION_REF, 0, 1)
+#
+# REF = 2.0 : om_active+om_stable démarre ~0.15 (humus de fond D56) → om_index
+# ~0.075 (>SEED_OM_FIXER_GRASS_MIN dès le départ sur la plupart des plots, plus
+# tard sur les secteurs pauvres — hétérogénéité D56, philo #7) ; il atteint ~0.55
+# en 2 ans sous couvert → om_index ~0.27 (>SEED_OM_COMPETITOR_MIN) et jusqu'à
+# 2-4 sur les plots riches (plafond 1.0). Calibré pour une bascule en ~5-15 ans
+# selon le secteur (placeholder, calibrage F5/banc `succession_bascule`).
+SEED_LATE_GAIN = 0.01         # apport vivaces tardives ∝ om_index (accumulation réelle)
+SEED_OM_FACILITATION_REF = 2.0 # dénominateur de l'indice OM (échelle om_active+om_stable)
+SEED_OM_FIXER_GRASS_MIN = 0.05 # om_index minimal pour amorcer fixatrice + graminée
+SEED_OM_COMPETITOR_MIN = 0.20  # om_index minimal pour amorcer competitor (le plus tardif)
 
 # Pool génétique par espèce (D22) — couche posée PAR-DESSUS les archétypes.
 SPECIES_SEED_VIABILITY_LOSS = 0.997   # vieillissement (densité) du pool génétique
@@ -132,36 +151,50 @@ class SeedBank:
                     self.data[r][c][a] *= SEED_VIABILITY_LOSS
 
     def tick_disturbance_enrichment(self,
-                                    disturbance_field: "DisturbanceField") -> None:
-        """Sol perturbé → enrichissement en graines pionnières."""
+                                    disturbance_field: "DisturbanceField",
+                                    om_index_field: "GridField") -> None:
+        """Sol perturbé → enrichissement en graines pionnières, BRIDÉ par la
+        maturité OM du plot (tronçon ②, fix (b) de S3).
+
+            pioneer_gain = disturbance · SEED_DISTURBANCE_GAIN · (1 − om_index)
+
+        Sur sol nu (`om_index ≈ 0`) le pioneer afflue comme avant ; sur sol bâti
+        par les pionnières (`om_index → 1`) il se tarit → le tapis Capsella cesse
+        de se sur-alimenter et laisse la place aux tardifs. La bascule ÉMERGE de
+        ce flux OM (philo #2), rien n'est scripté."""
         for r in range(self.rows):
             for c in range(self.cols):
                 d = disturbance_field.at_plot(r, c)
+                om = om_index_field.at_plot(r, c)
                 self.add(r, c, "pioneer",
-                         d * SEED_DISTURBANCE_GAIN)
+                         d * SEED_DISTURBANCE_GAIN * max(0.0, 1.0 - om))
 
     def tick_late_succession_enrichment(self,
-                                        soil_deep_field: "GridField") -> None:
+                                        om_index_field: "GridField") -> None:
         """
-        Sol mûr → arrivée lente de propagules vivaces (dispersion vent/oiseaux
-        qui n'aboutit que quand le milieu est prêt). Symétrique de
+        Sol bâti → arrivée de propagules vivaces (dispersion vent/oiseaux qui
+        n'aboutit que quand le milieu est prêt). Symétrique de
         tick_disturbance_enrichment (qui n'amorce que pioneer).
 
-        Trickle faible ∝ maturité (soil_memory_deep) :
-          - fixatrice + graminée dès qu'un sol commence à s'établir
-          - competitor (archétype le plus tardif) seulement sur sol bien mûr
+        Facilitation écologique (tronçon ②, fix (a) de S3) : l'amorçage suit un
+        indice de MATIÈRE ORGANIQUE réactif (`om_index`, bâti en quelques saisons
+        par les pionnières), et non plus `soil_memory_deep` (décennal, jamais
+        atteint → verrou). Apport ∝ om_index (les tardifs affluent d'autant plus
+        que le sol est riche) :
+          - fixatrice + graminée dès `om_index ≥ SEED_OM_FIXER_GRASS_MIN` ;
+          - competitor (le plus tardif) dès `om_index ≥ SEED_OM_COMPETITOR_MIN`.
         Sans cet amorçage, les vivaces n'ont aucune source de départ dans la
-        banque et le gradient de choix n'a rien à choisir.
+        banque et le gradient de choix n'a rien à choisir (cf. S3).
         """
         for r in range(self.rows):
             for c in range(self.cols):
-                m = soil_deep_field.at_plot(r, c)
-                if m < SEED_LATE_MIN_MATURITY:
+                om = om_index_field.at_plot(r, c)
+                if om < SEED_OM_FIXER_GRASS_MIN:
                     continue
-                self.add(r, c, "nitrogen_fixer", m * SEED_LATE_GAIN)
-                self.add(r, c, "grass",          m * SEED_LATE_GAIN)
-                self.add(r, c, "competitor",
-                         max(0.0, m - SEED_COMPETITOR_MATURITY) * SEED_LATE_GAIN)
+                self.add(r, c, "nitrogen_fixer", om * SEED_LATE_GAIN)
+                self.add(r, c, "grass",          om * SEED_LATE_GAIN)
+                if om >= SEED_OM_COMPETITOR_MIN:
+                    self.add(r, c, "competitor", om * SEED_LATE_GAIN)
 
     def tick_plant_production(self, plants: list) -> None:
         """Plantes matures → production de graines dans la banque locale."""

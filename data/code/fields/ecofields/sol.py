@@ -12,7 +12,30 @@ déjà dense). Aucun état propre : opère sur `self`. Comportement bit-identiqu
 from __future__ import annotations
 import math
 
+from fields.seedbank import SEED_OM_FACILITATION_REF
 from .constants import *          # SOIL_SIGNATURE, SOIL_*_RATE, VIT_W_*…
+
+
+class _OmIndexField:
+    """Vue LECTURE SEULE de l'indice de matière organique par plot, exposant la
+    même interface `at_plot(r, c)` qu'un `GridField` — pour que la banque-sol
+    (`tick_disturbance_enrichment` / `tick_late_succession_enrichment`) le lise
+    comme n'importe quel champ, sans allouer une grille à chaque tick.
+
+        om_index = clamp((om_active + om_stable) / SEED_OM_FACILITATION_REF, 0, 1)
+
+    Signal de la facilitation écologique (tronçon ②) : la MO réactive bâtie par
+    les pionnières, qui amorce les tardifs et bride le pioneer (cf. seedbank.py).
+    """
+    __slots__ = ("_active", "_stable")
+
+    def __init__(self, om_active, om_stable):
+        self._active = om_active
+        self._stable = om_stable
+
+    def at_plot(self, r: int, c: int) -> float:
+        om = self._active.at_plot(r, c) + self._stable.at_plot(r, c)
+        return min(1.0, max(0.0, om / SEED_OM_FACILITATION_REF))
 
 
 class SolMixin:
@@ -24,8 +47,9 @@ class SolMixin:
         """Mise à jour hebdomadaire de la banque de graines."""
         self.seed_bank.tick_aging()
         self.seed_bank.tick_species_aging()
-        self.seed_bank.tick_disturbance_enrichment(self.disturbance)
-        self.seed_bank.tick_late_succession_enrichment(self.soil_memory_deep)
+        om_index = _OmIndexField(self.om_active, self.om_stable)
+        self.seed_bank.tick_disturbance_enrichment(self.disturbance, om_index)
+        self.seed_bank.tick_late_succession_enrichment(om_index)
         self.seed_bank.tick_plant_production(plants)
 
     # --- Soil memory ---

@@ -10,8 +10,9 @@
   germination »** : monoculture pionnière qui verrouille la succession.
 
 ## Phase courante
-**EN COURS** — tronçon ① (D56) LIVRÉ le 2026-07-02 (moteur touché, golden re-figé,
-non commité). Reste ②③④. Doc : `docs/conception/CONCEPTION_BUGS_EMERGENCE.md`.
+**EN COURS** — tronçons ① (D56) + ② (D25) LIVRÉS le 2026-07-02 (moteur touché,
+golden re-figé, NON commité — Nico commit). Reste ③④. Doc :
+`docs/conception/CONCEPTION_BUGS_EMERGENCE.md`.
 
 ## Décisions figées (arbitrage Nico)
 - **Périmètre** : UN sprint, 2 volets (S2 floraison + S3 succession).
@@ -28,7 +29,18 @@ non commité). Reste ②③④. Doc : `docs/conception/CONCEPTION_BUGS_EMERGENCE
   `om_stable` hérité, non nul et HÉTÉROGÈNE par plot → la cascade OM/CEC/
   soil_memory dérive légèrement sur le smoke 2 tuiles × 4 ans.
 - **② `02_reequilibrage_banque.md`** — facilitation OM des tardifs + bride
-  pioneer (déverrouille S3) + banc bascule. Golden RE-FIGÉ (but du tronçon).
+  pioneer (déverrouille S3) + banc bascule. **LIVRÉ 2026-07-02.** Golden RE-FIGÉ
+  `98bdf772457eb9aef5b9a382dd80cae627d4d6a67b2112c6707f357d8c94a788` (ancien
+  `ea135bf1…`) + `test_population` RE-FIGÉ
+  `e7f1cf19d54d9562e10469d0a8b0377f1dd2a6e7188837f5cf0248f4ceee955c` (ancien
+  `95be03f6…`). Raison : l'amorçage des tardifs suit désormais l'`om_index`
+  (MO réactive) au lieu du gate `soil_deep` décennal → la banque-sol se garnit
+  en fixatrice/graminée/competitor dès l'an 1 (smoke : sbFix/sbGra ~0.17,
+  sbCmp ~0.10 après 2 ans, vs ~0.008 avant) et le pioneer est bridé par
+  `(1−om_index)` → la trajectoire de succession CHANGE (but du tronçon).
+  Cascade population : les signaux de sol décalés modifient la vie macro
+  (patron connu T_sol→vie macro). `test_vigueur` INCHANGÉ. Dérive COHÉRENTE
+  (sens du déverrouillage), toutes suites vertes.
 - **③ `03_gene_phenologie_florale.md`** — gène `phenologie_florale` + décalage
   GDD par individu (désynchronise S2). Golden re-figé MAÎTRISÉ (ajout clé).
 - **④ `04_voix_et_bancs.md`** — voix (concepts succession/phénologie) + bancs
@@ -162,9 +174,37 @@ banque-sol + champs moyens par an). Run lancé, sortie bufferisée.
   (`test_epandre` idem). SUITE COMPLÈTE VERTE (44 suites + golden re-figé ; hashes
   population/vigueur INCHANGÉS).
 
+## Avancement tronçon ② (D25) — livré 2026-07-02
+- `fields/seedbank.py` : constantes `SEED_OM_FACILITATION_REF=2.0`,
+  `SEED_OM_FIXER_GRASS_MIN=0.05`, `SEED_OM_COMPETITOR_MIN=0.20`,
+  `SEED_LATE_GAIN=0.0008→0.01` (les tardifs ACCUMULENT vraiment) ; suppression de
+  `SEED_LATE_MIN_MATURITY`/`SEED_COMPETITOR_MATURITY` (gate `soil_deep` remplacé).
+  - `tick_late_succession_enrichment(om_index_field)` — amorce fixatrice/graminée
+    dès `om_index ≥ 0.05`, competitor dès `≥ 0.20`, apport ∝ `om_index`.
+  - `tick_disturbance_enrichment(disturbance, om_index_field)` — pioneer bridé par
+    `(1−om_index)` : afflue sur sol nu, se tarit sur sol bâti.
+- `fields/ecofields/sol.py` : classe `_OmIndexField` (vue lecture seule `at_plot`
+  sans allouer de grille/tick), `tick_seed_bank` la construit sur `om_active`/
+  `om_stable` et la passe aux deux ticks.
+- `fields/__init__.py` : exports recalés (nouvelles constantes).
+- `bancs/succession.py` + entrée `succession_bascule` dans `bancs/__init__.py` :
+  friche pionnière 12×12, disturbance 0.6, sol jeune. `tests/bancs/test_succession.py`
+  (oracle EN TENDANCE, 15 ans) → **6/6 vert** : pioneer culmine an 5 (42) puis
+  reflue (16), tardifs 92 % du couvert, banque-sol tardifs garnie (sbFix/Gra/Cmp=1.0).
+- **DÉCISION de design** : `om_index` calculé sur `om_active+om_stable` (pas
+  `soil_memory`) — c'est la MO réellement bâtie par les pionnières, le plus
+  proche du sens biologique « facilitation », et le levier posé par D56 (①).
+- Diag comparatif (`/tmp/diag_symbiose.py`, monde complet) : AVANT pioneer
+  152→318→601→838→979 (monotone, cultivées=0 an 5) ; APRÈS pioneer 111→…→311
+  (pic an 4-5) puis 248→221→199, tardifs 65→571/64→447/41→416, banque déverrouillée.
+- LDC (compte_ldc) : seedbank 194, sol 70, banc 13, test 83 → tous 🟢.
+
 ## §REPRISE
-TRONÇON ① (D56) LIVRÉ & vérifié (golden re-figé `ea135bf1…`, toutes suites vertes,
-NON commité — Nico commit). **Prochain : tronçon ② `02_reequilibrage_banque.md`**
-(facilitation OM des tardifs via `om_index` = `(om_active+om_stable)/OM_FACILITATION_REF`
-+ bride pioneer ∝ `(1−om_index)` — le socle `om_stable` hétérogène est en place).
-Diagnostic S2/S3 clos (cf. ci-dessus) ; reproductible via `/tmp/diag_symbiose.py`.
+TRONÇONS ① (D56) + ② (D25) LIVRÉS & vérifiés (golden re-figé `98bdf772…`,
+population re-figé `e7f1cf19…`, vigueur INCHANGÉ, TOUTES suites vertes + 4 oracles
+bancs, NON commité — Nico commit). **Prochain : tronçon ③
+`03_gene_phenologie_florale.md`** (gène `phenologie_florale` en queue de
+`GENE_NAMES` + décalage GDD par individu dans `sim/engine/floraison.py` pour
+désynchroniser S2 ; golden re-figé MAÎTRISÉ = ajout de clé sérialisée, SHIFT=0 ⇒
+sim identique au démarrage). Diagnostic S2/S3 clos ; reproductible via
+`/tmp/diag_symbiose.py`.
