@@ -9,8 +9,10 @@ description: >-
   perf-first préservant le golden, et remonte les arbitrages à Nico. Ne fige
   RIEN sans accord. Une fois figé : écrit les kickoffs autosuffisants
   (00_etat.md + 0N_*.md), commit, et donne le message exact pour /sprint-auto.
-  C'est le maillon AMONT de /sprint-auto (concevoir → figer), jamais l'exécution.
-  Usage : /conception <doc ou sujet>  (ex. /conception CONCEPTION_VENT)
+  Tient un état autosuffisant sur disque EN CONTINU (00_etat.md dès le 1er
+  échange) → reprise à froid sans compact ni HANDOFF manuels, sans intervention
+  de Nico. C'est le maillon AMONT de /sprint-auto (concevoir → figer), jamais
+  l'exécution. Usage : /conception <doc ou sujet>  (ex. /conception CONCEPTION_VENT)
 ---
 
 # /conception — durcir une conception puis la figer en sprint
@@ -22,8 +24,38 @@ autosuffisants**. L'exécution des tronçons, elle, est le métier de
 
 Règle cardinale du projet : **« concevoir en conversation d'abord, ne créer un
 fichier que sur OK »**. Toute la phase A (challenge) est un **dialogue** ; tu
-n'écris le moindre doc ou kickoff qu'en phase B, **après l'accord explicite de
-Nico** sur la conception.
+n'écris ni le **doc de conception final** ni les **kickoffs** avant la phase B,
+**après l'accord explicite de Nico** sur la conception. La **seule** exception
+est le **carnet de bord** `00_etat.md` (voir §0bis) — persister ce qui a déjà
+été tranché n'est pas figer.
+
+## 0bis. État autosuffisant EN CONTINU — autonomie contexte (fin du compact manuel)
+
+Une conception longue fait gonfler le contexte. **Tu ne demandes JAMAIS à Nico
+de lancer un `/compact` ni de « lire `HANDOFF.md` ».** À la place, **dès le
+premier échange** tu tiens un **état vivant sur disque**, autosuffisant, mis à
+jour à **CHAQUE décision arrêtée** : `sprints/sprint_<nom>/00_etat.md` (crée le
+dossier tôt, choisis un `<nom>` de sprint provisoire dès que le sujet est cerné).
+
+- Cet `00_etat.md` est le **handoff permanent** : phase courante, **décisions
+  arrêtées** (une ligne + rationale courte chacune), **questions ouvertes /
+  options en balance**, coût perf estimé, **§REPRISE** (quoi lire + prochaine
+  étape précise). Il grandit avec le dialogue et sert de mémoire reconstructible.
+- **Reprise à froid** (après auto-compaction ou `/clear`) : tu lis `CLAUDE.md` +
+  ce `00_etat.md` et tu **continues sans perte, sans intervention de Nico**.
+  L'auto-compaction du harness devient un simple **filet sans conséquence**
+  (l'état vit sur disque). Ceci **remplace**, pour le travail de conception, le
+  protocole `HANDOFF.md` générique du `CLAUDE.md` global : pas de HANDOFF, pas de
+  message « contexte bas », pas d'attente d'une action de Nico.
+- **Nuance** avec « ne créer un fichier que sur OK » : `00_etat.md` est un
+  **carnet de bord** (il persiste ce qui a DÉJÀ été discuté/tranché), PAS
+  l'artefact figé. Le doc `CONCEPTION_*.md` final et les kickoffs `0N` restent la
+  **phase B**, après accord global. Écrire l'état en continu est la règle, pas
+  une entorse.
+- **Flux cible** (demande Nico) : `/conception <sujet>` → on tranche le design
+  ensemble (l'`00_etat.md` enregistre au fil de l'eau) → **tu finis seul** la
+  conception une fois les grands arbitrages faits → tu rédiges les kickoffs `0N`
+  autosuffisants → prêt pour `/sprint-auto`.
 
 ## 0. Argument
 
@@ -78,7 +110,9 @@ questions à trancher — **produis un court doc à étudier** (les mécanismes,
 options, ta reco), puis laisse-le décider en connaissance de cause.
 
 Remonte les arbitrages par lots de **3 questions maximum**. Itère jusqu'à ce que
-la conception soit **arbitrée et stable**.
+la conception soit **arbitrée et stable**. À **chaque** arbitrage tranché,
+**reporte-le aussitôt dans `00_etat.md`** (§0bis) : l'état doit rester
+reconstructible à tout instant, sans dépendre de ce fil de conversation.
 
 ## 3. Phase B — figer (UNIQUEMENT après accord explicite)
 
@@ -96,8 +130,10 @@ Quand Nico a validé la conception (« OK », « vas-y », « lets go »), maté
    le **re-fige de façon maîtrisée et annoncée** (dérive localisée + expliquée +
    prévue par le kickoff — `/sprint-auto` refuse tout re-figeage non prévu).
 3. **Ossature du sprint** sous `sprints/sprint_<nom>/` :
-   - `00_etat.md` — état partagé léger (~20 lignes : où on en est, décisions
-     clés, ce qui reste, **§REPRISE**), mis à jour par chaque tronçon.
+   - `00_etat.md` — **déjà vivant depuis la phase A** (§0bis) : tu le
+     **finalises** en état de sprint (~20 lignes : où on en est, décisions clés,
+     carte des tronçons, ce qui reste, **§REPRISE**), désormais mis à jour par
+     chaque tronçon d'exécution.
    - `01_*.md`, `02_*.md`… — **kickoffs autosuffisants**. Test décisif : un
      sous-agent qui démarre **à froid** (il ne sait RIEN de cette conversation)
      doit pouvoir implémenter le tronçon en lisant seulement `CLAUDE.md` +
