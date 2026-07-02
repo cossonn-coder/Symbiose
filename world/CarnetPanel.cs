@@ -90,10 +90,13 @@ namespace Symbiose
 		private System.Collections.Generic.List<string> EspecesDecouvertes()
 		{
 			var ordre = new System.Collections.Generic.List<string>();
-			var enc = Bridge.Encyclopedie();          // sans espèce → l'index
+			// Filtre par PLANTE : le carnet filtre sur une clé catalogue d'espèce
+			// végétale (→ Bridge.Carnet/Aide). L'index est multi-règnes taggué (D60) ;
+			// on demande au pont l'onglet `plante` et on lit le champ `cle`.
+			var enc = Bridge.Encyclopedie(type: "plante");
 			if (enc != null && enc.ContainsKey("index"))
 				foreach (var sp in enc["index"].AsGodotArray())
-					ordre.Add(sp.AsString());
+					ordre.Add(sp.AsGodotDictionary()["cle"].AsString());
 			return ordre;
 		}
 

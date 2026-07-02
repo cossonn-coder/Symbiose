@@ -238,15 +238,22 @@ namespace Symbiose
 		}
 
 		/// <summary>
-		/// Encyclopédie du joueur courant. Sans `espece` → l'INDEX (`index` =
-		/// liste d'espèces découvertes). Avec `espece` → la fiche tronquée au
-		/// palier (`fiche` = {espece, niveau_max, niveaux}) ou `null`. L'appelant
-		/// distingue par la clé présente. Renvoie la réponse COMPLÈTE, ou null.
+		/// Encyclopédie multi-règnes du joueur courant (D60). Sans `cle` → l'INDEX
+		/// des entrées découvertes, TAGUÉES par type (`index` = liste de
+		/// {cle, type, titre}), éventuellement restreint à un `type` (un des 7
+		/// onglets : plante · animal · champignon · concept · technique · outil ·
+		/// geste). Avec `cle` → la fiche DISPATCHÉE par type (`fiche` = {cle, type,
+		/// niveau_max, niveaux, interconnexions?}) ou `null`. L'appelant distingue
+		/// par la clé présente. Renvoie la réponse COMPLÈTE, ou null.
+		///
+		/// `cle` part sous l'ancien nom de champ protocole `espece` (alias hérité
+		/// accepté par `cmd_encyclopedie`) — compat pont, la vue raisonne en « clé ».
 		/// </summary>
-		public GDict Encyclopedie(string espece = null)
+		public GDict Encyclopedie(string cle = null, string type = null)
 		{
 			var msg = new GDict { ["cmd"] = "encyclopedie" };
-			if (espece != null) msg["espece"] = espece;
+			if (cle != null) msg["espece"] = cle;   // alias hérité côté pont
+			if (type != null) msg["type"] = type;   // filtre d'onglet (index)
 			return Request(msg);
 		}
 

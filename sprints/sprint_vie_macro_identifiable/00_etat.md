@@ -87,7 +87,29 @@ retourne désormais sa fiche geste au lieu de `None` — point d'extension ⑤ c
 `test_sim_server` 240/240, `test_progression_geste` 15/15. `dotnet build` : NON
 CONCERNÉ (Python pur).
 
-Reste ⑥ (UI Godot 7 onglets — F5).
+**⑥ CLOS** (2026-07-02) : UI Godot encyclopédie 7 onglets + réparation post-①.
+`world/EncyclopediePanel.cs` réécrit (135 LDC pur, 🟢) : barre de **7 onglets**
+(plante · animal · champignon · concept · technique · outil · geste, ordre figé),
+onglet actif = bouton `Disabled` (surbrillance), défaut = plante. Index demandé
+FILTRÉ au pont (`Bridge.Encyclopedie(type: …)`, « Godot bête ») ; boutons libellés
+par `titre` ; vide → « (rien de découvert dans cette catégorie) ». Fiche dispatchée
+par présence du champ `interconnexions` : 3-niveaux (plante/concept/technique/outil/
+geste, rubriques N1/N2/N3) OU **mono-niveau** (animal/champignon : blurb N1 + section
+« Interconnexions » = graphe verbatim). `core/SimBridge.cs:Encyclopedie` gagne un
+2ᵉ param optionnel `type` (filtre index) ; la clé part sous l'alias hérité `espece`
+(compat pont). **Bug ① réparé aussi dans `world/CarnetPanel.cs`** : `EspecesDecouvertes`
+lisait `sp.AsString()` sur l'index (devenu dicts taggués → clé illisible pour le
+filtre carnet/aide) → corrigé en `Encyclopedie(type: "plante")` + lecture du champ
+`cle`. **hover carpophore = DÉJÀ FAIT en ②** (`ObserveHoveredMacroLife` émet
+`Observer("champignon")`) — rien à ajouter. Golden INCHANGÉ (`a6c2f651…`, NEUTRE).
+`dotnet build` VERT (0 err/0 warn). Tests : `test_sim_server` 240/240,
+`test_encyclopedie` 68/68, `test_progression_geste` 15/15.
+**Point F5 Nico** : ouvrir l'encyclo (hub maison) → 7 onglets ; survoler puceron/
+coccinelle/abeille (zoom ≥ ×4) → onglet Animaux (blurb + interconnexions) ; survoler
+un carpophore → onglet Champignons (fiche générique) ; gestes répétés → onglets
+Gestes/Outils/Techniques avec N2/N3 progressifs ; onglet non découvert → message neutre.
+
+**SPRINT TERMINÉ** — tous les tronçons ①→⑥ CLOS.
 
 ## Sujet (D60, Nico 2026-07-02, F5 — S9, étend D31)
 La vie macro est un amas de cercles indistincts. Objectif : **survol → nom + entrée
@@ -113,7 +135,7 @@ Détail complet : `docs/conception/CONCEPTION_VIE_MACRO_IDENTIFIABLE.md`.
 | ✅ ③ | `03_progression_geste_outil.md` | Progression combinée usage+succès + découverte à l'usage | NEUTRE ✓ | non |
 | ✅ ④ | `04_corpus_concept_technique.md` | Fiches 3 niv. concept + technique | NEUTRE ✓ | non |
 | ✅ ⑤ | `05_corpus_geste_outil.md` | Fiches 3 niv. geste + outil | NEUTRE ✓ | non |
-| ⑥ | `06_ui_godot_7_onglets.md` | UI 7 onglets + fiches mono/graphe + hover carpophore | NEUTRE | **oui** |
+| ✅ ⑥ | `06_ui_godot_7_onglets.md` | UI 7 onglets + fiches mono/graphe + hover carpophore | NEUTRE ✓ | **oui** |
 
 Dépendances : ② dépend de ① ; ③ dépend de ① ; ④⑤ dépendent de ① (branchent le
 registre `CORPUS_PAR_TYPE`) ; ⑤ suppose ③ (rend N2/N3 atteignables) ; ⑥ dépend de
@@ -145,13 +167,11 @@ peut casser à `dotnet build` entre ① et ⑥ — c'est PRÉVU, ⑥ répare la 
 Boucle `/sprint-auto` : lancer le kickoff `0N` → implémenter → vérifier
 `python3 -m tests.test_golden` (attendu INCHANGÉ, golden NEUTRE) + tests ciblés du
 tronçon + `dotnet build Symbiose.csproj` pour les tronçons C# (②⑥) → mettre à jour
-CE fichier (cocher le tronçon) → commit → `/clear` → tronçon suivant. **①②③④⑤ CLOS** ;
-reprendre à **⑥** (`06_ui_godot_7_onglets.md` — UI 7 onglets + fiches mono/graphe +
-hover carpophore ; **tronçon C# → `dotnet build Symbiose.csproj` requis**, F5). ⑥
-dépend de ①–⑤ ; ⚠️ ① a changé la forme de l'index (strings → dicts taggués) — ⑥
-répare/adapte `EncyclopediePanel` (le build est resté vert depuis ②, mais l'UF des
-onglets reste à câbler). Golden NEUTRE attendu. F5 groupés à la fin (② faite — à
-valider ; et ⑥).
+CE fichier (cocher le tronçon) → commit → `/clear` → tronçon suivant.
+**SPRINT TERMINÉ — ①②③④⑤⑥ TOUS CLOS.** Golden final INCHANGÉ (`a6c2f651…`, NEUTRE
+de bout en bout, jamais re-figé). Reste uniquement la **validation F5 de Nico**
+(non commitée par l'agent) : gestes ② + ⑥ (cf. « Point F5 Nico » des tronçons ②
+et ⑥). Le code n'est PAS commité (Nico commit).
 
 ## NB git
 À l'ouverture de la conception, l'arbre était SALE (`sprint_epaisseur_sol` non
