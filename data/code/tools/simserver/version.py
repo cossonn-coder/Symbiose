@@ -278,7 +278,15 @@ from __future__ import annotations
 #       RE-FIGÉ ANNONCÉ (deux flux neufs) ; dérive localisée aux plots épais, bornée
 #       (test 500 ans anti-emballement : convergence vérifiée). Pas de sérialisation
 #       snapshot neuve (l'exposition au pont = tronçon ②, relief extrudé).
-ENGINE_VERSION = "0.5.15"
+# 0.5.16 (épaisseur de sol ②, D57) : le champ `epaisseur_sol` (①a) est enfin EXPOSÉ
+#       au snapshot — nouveau bloc `epaisseur` par tuile = grille 2D dense rows×cols
+#       en cm (patron `temperature.t_sol`). La vue en extrude un RELIEF iso (le dessus
+#       de chaque plot remonte de `epaisseur_cm × PxPerCmZ`) → on VOIT le sol monter
+#       (humus qui s'accumule) et descendre (décompo/tassement/érosion), et les objets
+#       posés (plantes/litière/macro/structures) sont recalés d'autant. PURE lecture
+#       (champ déjà tické par 13b-bis) → golden NEUTRE. Champ optionnel côté vue
+#       (tolérance pré-0.5.16 → relief plat). VUE C# = parties B/C de ce tronçon.
+ENGINE_VERSION = "0.5.16"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

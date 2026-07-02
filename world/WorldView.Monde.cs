@@ -62,11 +62,13 @@ namespace Symbiose
 			_ground = new Node2D { Name = "Ground", ZIndex = 0 };
 			AddWorld(_ground);
 			var ground = _ground;
+			ResetRelief();   // D57 ② : le sol est reconstruit (rotation) → repartir à vide
 
 			int nPlots = 0;
 			foreach (var tv in world["tiles"].AsGodotArray())
 			{
 				var t = tv.AsGodotDictionary();
+				string tileId = t["id"].AsString();   // pour lire l'épaisseur au plot
 				float ox = (float)t["origin_x_cm"].AsDouble();
 				float oy = (float)t["origin_y_cm"].AsDouble();
 				int rows = t["rows"].AsInt32();
@@ -84,6 +86,7 @@ namespace Symbiose
 						// Centre du plot en cm monde → centre du sprite écran.
 						float cx = ox + (c + 0.5f) * PlotCm;
 						float cy = oy + (r + 0.5f) * PlotCm;
+						Vector2 screenCenter = WorldToScreen(cx, cy);
 						// Sprite2D plutôt que Polygon2D texturé (T2) : centrage
 						// automatique sur la Position, pas d'UV à mapper sur le
 						// losange — le plus direct pour poser la texture cuite.
@@ -91,7 +94,7 @@ namespace Symbiose
 						{
 							Texture = tex,
 							TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
-							Position = WorldToScreen(cx, cy),
+							Position = screenCenter,
 							// Damier subtil (±5 %) appliqué par plot via Modulate :
 							// la texture reste partagée (pixel art sobre, sans
 							// bordures). L'effet d'avant (Darkened 0.05) conservé.
@@ -99,6 +102,9 @@ namespace Symbiose
 								? Colors.White
 								: new Color(0.95f, 0.95f, 0.95f, 1f),
 						};
+						// D57 ② : le FLANC du relief (ajouté à `ground` ici) doit
+						// passer SOUS le dessus → on l'enregistre AVANT d'ajouter sp.
+						RegisterReliefPlot(ground, soilName, tileId, r, c, screenCenter, sp);
 						ground.AddChild(sp);
 						nPlots++;
 					}

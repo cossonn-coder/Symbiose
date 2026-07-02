@@ -93,6 +93,14 @@ namespace Symbiose
 			string season = snap["season"].AsString();
 			CurrentSeason = season;   // AVANT les SetStructure (couleur feuilles t6·A)
 
+			// Épaisseur de sol (D57 ②, snapshot 0.5.16, lecture seule) : relief
+			// extrudé par plot ∝ `epaisseur_sol` (le sol monte/descend). AVANT la
+			// boucle des plantes : leur recalage vertical (ReliefRisePx) lit
+			// l'épaisseur courante → elles restent plantées dans la terre, pas
+			// suspendues. Lecture TOLÉRANTE : bloc absent (pré-0.5.16) → relief plat.
+			if (snap.ContainsKey("epaisseur"))
+				ApplyEpaisseur(snap["epaisseur"].AsGodotDictionary());
+
 			int born = 0, grown = 0, empty = 0, nSegs = 0;
 			var seen = new HashSet<string>();
 			_plantsByName.Clear();   // index des fleurs de saut des butineurs
@@ -109,6 +117,18 @@ namespace Symbiose
 				string key = PlantKey(p);
 				seen.Add(key);
 				IndexPlantByName(p);   // fleurs cibles des butineurs (vivantes only)
+
+				// Position écran de la plante, RECALÉE sur le relief (D57 ②) : le
+				// collet suit la surface du sol → remonté de l'épaisseur au plot.
+				// Calculé une fois, appliqué à la naissance ET à la croissance (le
+				// sol monte/descend au fil des saisons → la plante suit).
+				string tile = p["tile"].AsString();
+				float lx = (float)p["x_cm"].AsDouble();
+				float ly = (float)p["y_cm"].AsDouble();
+				Vector2 o = _origins[tile];
+				float wx = o.X + lx, wy = o.Y + ly;
+				Vector2 screenPos =
+					WorldToScreen(wx, wy) - new Vector2(0f, ReliefRisePx(tile, lx, ly));
 
 				// Squelette (0.3.6) : `dead` → mode bois nu. Le mort GARDE sa clé
 				// (même tile|species|x|y) → il n'est pas fondu sortant ; il bascule
@@ -130,15 +150,13 @@ namespace Symbiose
 					node.SetSkeleton(stadeMort);     // ou vient de mourir / s'est couchée
 					node.SetSymptoms(symptoms);      // teinte + texture des symptômes (D33)
 					node.SetMeta("tag", TagText(p));   // le stade évolue (étiquette nette)
+					node.Position = screenPos;         // suit le relief du sol (D57 ②)
 					grown++;
 					continue;
 				}
-				Vector2 o = _origins[p["tile"].AsString()];
-				float wx = o.X + (float)p["x_cm"].AsDouble();
-				float wy = o.Y + (float)p["y_cm"].AsDouble();
 				var renderer = new PlantRenderer
 				{
-					Position = WorldToScreen(wx, wy),
+					Position = screenPos,
 					Name = $"{p["tile"].AsString()}_{p["species"].AsString()}_{_plantSeq++}",
 				};
 				// Métadonnées de picking (volet B) : position MONDE pour la

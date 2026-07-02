@@ -48,9 +48,20 @@ tranchés (voir décisions ci-dessous). Aucun tronçon encore exécuté.
   l'épaisseur du tick PRÉCÉDENT (décalage 1 tick uniforme ①a). `ENGINE_VERSION` 0.5.14
   →0.5.15. Test 500 ans anti-emballement écrit (`tests/test_epaisseur_500ans.py`).
   → `01b_effets_ecolo.md`.
-- **② rendu** — relief extrudé `PxPerCmZ` + expo snapshot (patron `t_sol`,
-  re-bump pont) + recalage objets posés. **Pur-vue, golden NEUTRE**, points F5.
-  → `02_rendu_relief.md`.
+- **② rendu** — ✅ **FAIT** (code ; F5 visuel = Nico). Golden **INCHANGÉ**
+  `a6c2f651…` (pur-vue). **A** : bloc `epaisseur` par tuile au snapshot (grille 2D
+  dense cm, patron `t_sol`), pont **0.5.15→0.5.16** ; `test_sim_server` **242/242**
+  (2 checks neufs). **B** : relief extrudé dans le partial NEUF
+  `world/WorldView.Relief.cs` (79 LDC) — dessus du plot remonté de
+  `epaisseur_cm × PxPerCmZ × ReliefExaggeration` + flanc sombre, mis à jour par
+  snapshot (`ApplyEpaisseur`/`UpdateRelief`), reconstruit sur rotation
+  (`BuildGround` capture les plots). **C** : helper UNIQUE
+  `ReliefRisePx(tile,lx,ly)` — les PLANTES suivent le relief (recalées à la
+  naissance ET à la croissance, `WorldView.Snapshot.cs`). `dotnet build` **vert**.
+  **Reste F5 Nico** : calibrer `ReliefExaggeration` (défaut 2.0) ; recalage des
+  AUTRES couches (litière/macro/structures/carpophores/conteneurs) laissé au F5
+  (voie incrémentale du kickoff « relief d'abord, recalage ensuite »), extension
+  mécanique via `ReliefRisePx`. → `02_rendu_relief.md`.
 
 ## Couplages dette
 D40 (vitesse décompo module la cible), D31 (faune = puits), D41 (accès NPK à
@@ -77,6 +88,11 @@ de fond est hétérogène par tile_id depuis ①a, la rétention ①b la lit). N
 (hydrologie 36, uptake 53). Suites : golden re-figé, sim_server 234/234,
 eau/lessivage/confinement/substrat/conteneur verts.
 
-**PROCHAIN = ② rendu** (relief extrudé `PxPerCmZ` + expo snapshot patron `t_sol` +
-recalage objets posés, pur-vue golden NEUTRE, points F5). → `02_rendu_relief.md`.
-Lancer `/sprint-auto sprint_epaisseur_sol` (reprend à ②).
+**② rendu FAIT le 2026-07-03** (code ; F5 visuel = Nico). Pont **0.5.16**, golden
+INCHANGÉ `a6c2f651…`, `sim_server` **242/242**, `dotnet build` vert. Fichiers :
+`tools/simserver/serialize.py` (bloc `epaisseur`) + `version.py` (0.5.16),
+tests `simserver/{conteneurs,structures,voix}.py` (assert 0.5.16 + présence bloc),
+NEUF `world/WorldView.Relief.cs`, `world/WorldView.{Monde,Snapshot}.cs`.
+**SPRINT TERMINÉ côté code** — reste F5 Nico : calibrer `ReliefExaggeration`
+(défaut 2.0) et, si désiré, étendre le recalage aux couches litière/macro/
+structures/carpophores/conteneurs via `ReliefRisePx` (helper unique déjà en place).

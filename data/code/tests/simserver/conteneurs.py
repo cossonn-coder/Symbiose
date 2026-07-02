@@ -15,11 +15,24 @@ def test_conteneurs():
     s = ServerProc()
     # "full" : monde réel (maison → ombre) + banque de départ (planter_conteneur).
     init = s.send(cmd="init", config="full", seed=42)
-    check("engine_version 0.5.15", init.get("engine_version") == "0.5.15",
+    check("engine_version 0.5.16", init.get("engine_version") == "0.5.16",
           init.get("engine_version"))
     snap0 = s.send(cmd="snapshot")["snapshot"]
     check("snapshot expose `containers` VIDE à l'init (golden neutre)",
           snap0.get("containers") == [], snap0.get("containers"))
+    # Épaisseur de sol (D57 ②, 0.5.16) : bloc `epaisseur` = grille 2D dense par
+    # tuile (cm). Présent dès l'init, valeurs finies ≥ 0 (init AU REPOS sur l'humus
+    # de fond D56, donc hétérogène mais non nul). Le relief C# l'extrude.
+    ep = snap0.get("epaisseur")
+    check("snapshot expose `epaisseur` (grille par tuile)",
+          isinstance(ep, dict) and len(ep) > 0, type(ep).__name__)
+    if isinstance(ep, dict) and ep:
+        grid0 = next(iter(ep.values()))
+        flat = [v for row in grid0 for v in row]
+        check("épaisseur : grille 2D dense de valeurs ≥ 0",
+              bool(flat) and all(isinstance(v, (int, float)) and v >= 0.0
+                                 for v in flat),
+              f"{len(grid0)}×{len(grid0[0]) if grid0 else 0}")
 
     # --- poser_pot par position monde --------------------------------------
     rp = s.send(cmd="action", verb="poser_pot",
