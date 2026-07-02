@@ -286,7 +286,18 @@ from __future__ import annotations
 #       posés (plantes/litière/macro/structures) sont recalés d'autant. PURE lecture
 #       (champ déjà tické par 13b-bis) → golden NEUTRE. Champ optionnel côté vue
 #       (tolérance pré-0.5.16 → relief plat). VUE C# = parties B/C de ce tronçon.
-ENGINE_VERSION = "0.5.16"
+# 0.5.17 (hydrologie & marécages ①, altitude) : nouveau champ STOCKÉ `altitude` par
+#       plot (cm de micro-relief TOPOGRAPHIQUE du terrain, ≠ `epaisseur_sol` = humus)
+#       + son EXPOSITION au snapshot — nouveau bloc `altitude` par tuile = grille 2D
+#       dense rows×cols en cm (patron `epaisseur`). Socle géométrique FIXE (aucun tick
+#       ne l'écrit ; seuls les gestes creuser/drainer de ⑦ le modifieront), initialisé
+#       HÉTÉROGÈNE par `init_eco` sur un canal de hash DÉCORRÉLÉ de l'humus (relief et
+#       fertilité ne coïncident pas, philo #3/#7). Support de l'ÉCOULEMENT de l'eau (②,
+#       du haut vers le bas) et du relief du terrain (⑧). Lu par PERSONNE ce tronçon
+#       (aucun tick, aucun effet) → golden NEUTRE. Champ exposé au registre `get_field`
+#       (overlay debug F6) + au snapshot. Champ optionnel côté vue (tolérance
+#       pré-0.5.17 → terrain plat). VUE C# (relief altitude) = tronçon ⑧.
+ENGINE_VERSION = "0.5.17"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

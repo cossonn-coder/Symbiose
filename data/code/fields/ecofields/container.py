@@ -183,6 +183,17 @@ class EcoFields(MatiereOrganiqueMixin, HydrologieMixin, UptakeMixin,
     # d'eau + accès NPK) arrivent au ①b, le relief extrudé au ② (rendu). Exposé AUTO
     # au registre `get_field` (overlay debug F6 / pont ②).
     epaisseur_sol:    GridField = field(default=None)
+    # Micro-relief topographique (sprint hydrologie & marécages ①) — cm d'altitude
+    # du terrain PAR PLOT, au-dessus d'une référence arbitraire. Socle géométrique
+    # FIXE (aucun tick ne l'écrit) qui portera l'ÉCOULEMENT de l'eau (②, du haut vers
+    # le bas). À NE PAS confondre avec `epaisseur_sol` (humus foisonnant ≠ topographie).
+    # Créé PLAT (0) ici — construction DIRECTE `EcoFields()`, ex. mini-sol de conteneur,
+    # qui n'a pas de topographie et ne ruisselle pas → reste 0, inoffensif. Le chemin
+    # monde `init_eco` le POSE hétérogène sur un canal de hash DÉCORRÉLÉ de l'humus
+    # (relief et fertilité ne coïncident pas, philo #7). Au tronçon ① lu par PERSONNE
+    # (aucun tick, aucun effet) → golden NEUTRE. Exposé AUTO au registre `get_field`
+    # (overlay debug F6 / pont ①).
+    altitude:         GridField = field(default=None)
 
     def __post_init__(self):
         if self.humidite    is None: self.humidite    = GridField(self.rows, self.cols)
@@ -290,6 +301,13 @@ class EcoFields(MatiereOrganiqueMixin, HydrologieMixin, UptakeMixin,
         # APRÈS l'hétérogénéité → pas de transitoire de montée au tick 0.
         if self.epaisseur_sol is None:
             self.epaisseur_sol = GridField(self.rows, self.cols, max_val=EPAISSEUR_MAX)
+        # Altitude (①) — bornée [0, ALT_MAX]. Créée PLATE (0) ici (construction directe
+        # `EcoFields()` = mini-sol de conteneur, sans topographie → reste 0, inoffensif).
+        # Le chemin monde `init_eco` la POSE hétérogène (canal de hash décorrélé de
+        # l'humus). Repos NEUTRE d'une construction directe → déterminisme préservé.
+        if self.altitude is None:
+            self.altitude = GridField(self.rows, self.cols,
+                                      max_val=ALT_BASE + 2.0 * ALT_AMPLITUDE)
         self._abri_cache = None
 
     def _init_heterogene(self, grid: GridField, plancher: float) -> None:
@@ -326,6 +344,7 @@ class EcoFields(MatiereOrganiqueMixin, HydrologieMixin, UptakeMixin,
             "structure_sol":    self.structure_sol,
             "mycelium":         self.mycelium,
             "epaisseur_sol":    self.epaisseur_sol,
+            "altitude":         self.altitude,
         }.get(name)
 
     def fertilite_index(self, r: int, c: int) -> float:
@@ -425,6 +444,18 @@ def init_eco(tile_id: str, rows: int, cols: int,
     for r in range(rows):
         for c in range(cols):
             eco.epaisseur_sol.set(r, c, eco._cible_epaisseur(r, c))
+    # Altitude — micro-relief topographique FIXE (sprint hydrologie & marécages ①).
+    # Posée sur un canal de hash DÉCORRÉLÉ de l'humus (`_init_heterogene` sème sur
+    # `stable_str_hash(tile_id)` ; ici on sème sur `tile_id + "_alt"` → motif de relief
+    # INDÉPENDANT de la fertilité, deux terrains jamais identiques, philo #3/#7). Le
+    # facteur de bruit ∈ [0,1] est recentré en [−1,1] → `ALT_BASE ± ALT_AMPLITUDE`,
+    # borné ≥ 0 par le GridField. Aucun tick ne l'écrit (seuls les gestes ⑦ le
+    # modifieront) → lu par PERSONNE ce tronçon → golden inchangé.
+    seed_alt = stable_str_hash(tile_id + "_alt")
+    for r in range(rows):
+        for c in range(cols):
+            bruit = _hash_noise(seed_alt, 0, r, c)              # [0,1]
+            eco.altitude.set(r, c, ALT_BASE + ALT_AMPLITUDE * (2.0 * bruit - 1.0))
     return eco
 
 

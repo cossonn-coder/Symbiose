@@ -151,6 +151,7 @@ class SerializeMixin:
         temperature = {}
         condensation_by_tile = {}
         epaisseur_by_tile = {}
+        altitude_by_tile = {}
         for tile in gs["tiles"]:
             eco = gs["eco"][tile.tile_id]
             sprites[tile.tile_id] = {
@@ -290,6 +291,16 @@ class SerializeMixin:
             epaisseur_by_tile[tile.tile_id] = [
                 [round(eco.epaisseur_sol.data[r][c], 2)
                  for c in range(eco.cols)] for r in range(eco.rows)]
+            # Carte d'ALTITUDE par tuile (sprint hydrologie & marécages ①, §1) :
+            # grille 2D dense rows×cols du MICRO-RELIEF topographique `eco.altitude`
+            # en cm (socle géométrique FIXE, initialisé hétérogène par `init_eco`,
+            # DÉCORRÉLÉ de l'humus). La vue en tire le relief du terrain (⑧) et
+            # portera l'écoulement visible (②). À NE PAS confondre avec `epaisseur`
+            # (humus foisonnant). PURE lecture (champ jamais tické) → golden NEUTRE.
+            # Champ optionnel côté vue (tolérance pré-0.5.17 → terrain plat).
+            altitude_by_tile[tile.tile_id] = [
+                [round(eco.altitude.data[r][c], 2)
+                 for c in range(eco.cols)] for r in range(eco.rows)]
         # Météo scalaire GLOBALE du tick (sprint thermique ⑧, §A) : la météo qui a
         # produit l'état COURANT est celle de la semaine DÉJÀ simulée = `week − 1`
         # (`week` = prochaine à simuler). `weather_state` étant PURE, on la RECALCULE
@@ -336,6 +347,7 @@ class SerializeMixin:
                 "weather": weather, "temperature": temperature,
                 "condensation": condensation_by_tile,
                 "epaisseur": epaisseur_by_tile,
+                "altitude": altitude_by_tile,
                 "containers": self._containers_snapshot(gs, saison)}
 
     def _containers_snapshot(self, gs: dict, saison: str) -> list:

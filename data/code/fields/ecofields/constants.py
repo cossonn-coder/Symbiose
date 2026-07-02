@@ -775,6 +775,26 @@ EPAISSEUR_NORM_REF   = 20.0   # cm — épaisseur où les effets SATURENT (ep_n 
 EPAISSEUR_RETENTION  = 0.006  # rétention d'eau max/sem d'un sol pleinement épais (× compo)
 EPAISSEUR_NPK_BONUS  = 0.30   # amplification max de la fraction de stock N/P/K à l'uptake
 
+# --- Altitude — micro-relief topographique (sprint hydrologie & marécages ①) ---
+# Champ `altitude` par plot (cm de micro-relief du TERRAIN au-dessus d'une référence
+# arbitraire). C'est la TOPOGRAPHIE du sol — à NE PAS confondre avec `epaisseur_sol`
+# (D57), qui mesure l'HUMUS foisonnant : un sol épais est riche en matière organique,
+# pas forcément « haut » au sens hydraulique. L'altitude, elle, est un socle
+# géométrique FIXE (aucun tick ne l'écrit ; seuls les gestes `creuser`/`drainer` de
+# ⑦ la modifieront, event-driven). Elle est initialisée HÉTÉROGÈNE par un bruit
+# spatial déterministe (`init_eco`, canal de hash DÉCORRÉLÉ de l'humus → relief et
+# fertilité ne coïncident pas) → deux terrains n'ont jamais le même micro-relief
+# (philo #3/#7). Au tronçon ① elle est POSÉE mais lue par PERSONNE (aucun tick, aucun
+# effet) → golden NEUTRE. C'est le support de l'ÉCOULEMENT (②, l'eau ruisselle du haut
+# vers le bas) et de la surface hydraulique visible au relief (⑦/⑧). PLACEHOLDERS,
+# calibrage F5 (dénivelé de jardin plausible ~0–40 cm, à l'œil sur le relief extrudé).
+#   - ALT_BASE : altitude de référence (cm) — plancher autour duquel oscille le relief.
+#   - ALT_AMPLITUDE : amplitude ± du micro-relief (cm) ; le facteur de bruit ∈ [−1,1]
+#     module ALT_BASE de ±ALT_AMPLITUDE → dénivelé total ≈ 2·ALT_AMPLITUDE. Borné ≥ 0
+#     par le GridField (un facteur extrême ne descend jamais sous le niveau zéro).
+ALT_BASE      = 20.0   # cm — altitude de référence (mi-hauteur du micro-relief)
+ALT_AMPLITUDE = 20.0   # cm — amplitude ± du micro-relief (dénivelé jardin ~0–40 cm)
+
 # Signature sol par famille (laissée après chaque saison)
 SOIL_SIGNATURE = {
     "Fabaceae":   {"microbiome": +0.15, "fertilite": +0.10},

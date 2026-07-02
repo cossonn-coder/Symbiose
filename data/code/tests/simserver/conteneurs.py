@@ -15,7 +15,7 @@ def test_conteneurs():
     s = ServerProc()
     # "full" : monde réel (maison → ombre) + banque de départ (planter_conteneur).
     init = s.send(cmd="init", config="full", seed=42)
-    check("engine_version 0.5.16", init.get("engine_version") == "0.5.16",
+    check("engine_version 0.5.17", init.get("engine_version") == "0.5.17",
           init.get("engine_version"))
     snap0 = s.send(cmd="snapshot")["snapshot"]
     check("snapshot expose `containers` VIDE à l'init (golden neutre)",
@@ -33,6 +33,20 @@ def test_conteneurs():
               bool(flat) and all(isinstance(v, (int, float)) and v >= 0.0
                                  for v in flat),
               f"{len(grid0)}×{len(grid0[0]) if grid0 else 0}")
+    # Altitude (hydrologie & marécages ①, 0.5.17) : bloc `altitude` = grille 2D dense
+    # par tuile (cm de micro-relief). Présent dès l'init, valeurs finies ≥ 0 (posée
+    # hétérogène par `init_eco` sur un canal de hash décorrélé de l'humus). Le relief
+    # C# l'extrude ; ce tronçon ne fait que la POSER + l'exposer (aucun tick, golden neutre).
+    alt = snap0.get("altitude")
+    check("snapshot expose `altitude` (grille par tuile)",
+          isinstance(alt, dict) and len(alt) > 0, type(alt).__name__)
+    if isinstance(alt, dict) and alt:
+        grid_a = next(iter(alt.values()))
+        flat_a = [v for row in grid_a for v in row]
+        check("altitude : grille 2D dense de valeurs ≥ 0",
+              bool(flat_a) and all(isinstance(v, (int, float)) and v >= 0.0
+                                   for v in flat_a),
+              f"{len(grid_a)}×{len(grid_a[0]) if grid_a else 0}")
 
     # --- poser_pot par position monde --------------------------------------
     rp = s.send(cmd="action", verb="poser_pot",
