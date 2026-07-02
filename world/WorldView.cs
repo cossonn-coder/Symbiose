@@ -350,6 +350,9 @@ namespace Symbiose
 			// 0b·bis) Observation par SURVOL (0.5.12) : regarder une plante = l'apprendre
 			//     (fiche encyclopédie N1). Dédupliqué par espèce. Cf. Observation.cs.
 			ObserveHoveredPlant();
+			// 0b·ter) Observation de la VIE MACRO au survol (D60 ②) : animal (nuage
+			//     ou butineur) / carpophore → champignon. Gaté au zoom ≥ ×4 (visible).
+			ObserveHoveredMacroLife();
 			// 0b'') Étiquette de survol d'un CONTENEUR (substrat/volume + état
 			//       qualitatif du mini-sol, ⑥c) — même couche nette, mots seuls.
 			UpdateContainerLabel();

@@ -24,6 +24,8 @@ incrémenté la semaine ; le log qu'on lit appartient à la semaine écoulée).
 from __future__ import annotations
 
 from plants.catalogue import PLANT_CATALOGUE, PERENNIAL_CATALOGUE
+from fields.faune_encyclo import FAUNE_ENCYCLO
+from sim.champignon_encyclo import CLE_CHAMPIGNON
 from sim.actions import observer
 from sim import maitrise_detection as MD
 from sim import pages
@@ -78,13 +80,26 @@ def noter_geste_pont(game_state: dict, player: str, semaine: int, zone) -> None:
     MD.noter_geste(game_state, player, semaine, zone)
 
 
-def observer_espece(game_state: dict, player: str, nom_classe: str) -> bool:
-    """Hook A par SURVOL (retour F5 Nico) : une plante n'est observée que quand le
-    joueur PASSE LA SOURIS dessus (voir son nom) — pas parce qu'elle pousse dans le
-    jardin. Le C# envoie le NOM DE CLASSE de la plante survolée ; on le résout en
-    clé catalogue et on DÉCOUVRE (idempotent : ré-observer ne re-crédite rien).
-    Renvoie True ssi nouvelle découverte (nom inconnu → False, no-op)."""
-    cle = _CLE_DE_NOM.get(nom_classe)
+def observer_espece(game_state: dict, player: str, nom: str) -> bool:
+    """Hook A par SURVOL (retour F5 Nico), MULTI-RÈGNES (D60 ②). Une entité n'est
+    observée que quand le joueur PASSE LA SOURIS dessus (voir son nom) — pas parce
+    qu'elle vit dans le jardin. On résout `nom` en clé de maîtrise puis on DÉCOUVRE
+    (idempotent : ré-observer ne re-crédite rien). Résolution par règne, dans un
+    ordre déterministe :
+
+      1. NOM DE CLASSE de plante (`_CLE_DE_NOM`, `cls.__name__` du snapshot) → clé
+         catalogue (inchangé : le survol PLANTE envoie le nom de classe) ;
+      2. CLÉ ANIMALE connue (`FAUNE_ENCYCLO`) → cette clé telle quelle. La vie macro
+         (`MacroLife`/`ForagerLayer`) connaît déjà les clés d'espèce (`puceron`,
+         `abeille`…) et les envoie directement — pas de reverse-map (kickoff ②) ;
+      3. CLÉ CHAMPIGNON générique (`CLE_CHAMPIGNON` = `"champignon"`, survol d'un
+         carpophore) → cette clé ;
+      4. sinon `None` → no-op (nom inconnu : aucune fausse découverte).
+
+    Renvoie True ssi nouvelle découverte."""
+    cle = _CLE_DE_NOM.get(nom)
+    if cle is None and (nom in FAUNE_ENCYCLO or nom == CLE_CHAMPIGNON):
+        cle = nom
     if cle is None:
         return False
     return observer(game_state, player, cle)

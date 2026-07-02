@@ -123,6 +123,26 @@ namespace Symbiose
 			return sum;
 		}
 
+		/// <summary>Espèce du butineur VIVANT dont l'ANCRE est la plus proche du
+		/// point MONDE (cm), dans `rayonCm`, ou null (D60 ② : survol → observation).
+		/// Miroir de `MacroLife.SpeciesNear` pour les butineurs (rendus ici, pas dans
+		/// MacroLife) : on teste l'ancre (position snapshot stable) et non la position
+		/// de vol errante — le rayon couvre l'amplitude du saut. Lecture des données
+		/// en mémoire, aucune requête pipe.</summary>
+		public string SpeciesNear(Vector2 wMonde, float rayonCm)
+		{
+			float bestD = rayonCm * rayonCm;
+			string best = null;
+			foreach (var e in _entries.Values)
+			{
+				if (e.DyingAt >= 0f) continue;   // en train de disparaître
+				float dx = e.Hx - wMonde.X, dy = e.Hy - wMonde.Y;
+				float d = dx * dx + dy * dy;
+				if (d < bestD) { bestD = d; best = e.Guild; }
+			}
+			return best;
+		}
+
 		private static float NowSec() => Time.GetTicksMsec() / 1000f;
 
 		private static uint HashKey(string s)

@@ -54,6 +54,23 @@ namespace Symbiose
 		// x/y de façon déterministe, la clé survit aux semaines).
 		private readonly Dictionary<string, Entry> _entries = new();
 
+		/// <summary>Vrai si un carpophore VIVANT a son ANCRE dans `rayonCm` du point
+		/// MONDE (cm) (D60 ② : survol → observation du champignon). Un seul règne
+		/// fongique générique → un booléen suffit (pas d'espèce à distinguer, Q2) :
+		/// le survol d'un chapeau découvre la fiche unique « champignon ». On teste
+		/// l'ancre (position snapshot stable, les chapeaux sont sessiles).</summary>
+		public bool HasNear(Vector2 wMonde, float rayonCm)
+		{
+			float r2 = rayonCm * rayonCm;
+			foreach (var e in _entries.Values)
+			{
+				if (e.DyingAt >= 0f) continue;
+				float dx = e.Wx - wMonde.X, dy = e.Wy - wMonde.Y;
+				if (dx * dx + dy * dy <= r2) return true;
+			}
+			return false;
+		}
+
 		private static float NowSec() => Time.GetTicksMsec() / 1000f;
 
 		// Hash djb2-xor (déterministe inter-sessions — jamais GetHashCode pour du

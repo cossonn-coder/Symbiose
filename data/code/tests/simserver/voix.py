@@ -55,6 +55,25 @@ def test_voix():
     check("encyclopedie espèce non découverte → fiche null",
           absente["ok"] and absente["fiche"] is None)
 
+    # D60 ② : le survol de la VIE MACRO est aussi une observation. Le C# envoie
+    # directement la CLÉ d'espèce (animale) ou "champignon" (carpophore) dans
+    # `species` — `observer_espece` est multi-règnes.
+    obs_faune = s.send(cmd="observer", species="puceron")
+    check("observer (survol) une clé animale connue → observed:true",
+          obs_faune["ok"] and obs_faune["observed"] is True, obs_faune)
+    check("ré-observer la même clé animale → observed:false (idempotent)",
+          s.send(cmd="observer", species="puceron")["observed"] is False)
+    obs_champi = s.send(cmd="observer", species="champignon")
+    check("observer (survol) un carpophore → champignon découvert (observed:true)",
+          obs_champi["ok"] and obs_champi["observed"] is True, obs_champi)
+    obs_bog = s.send(cmd="observer", species="_pas_une_espece_")
+    check("observer un nom inconnu (règne inconnu) → observed:false, no-op",
+          obs_bog["ok"] and obs_bog["observed"] is False, obs_bog)
+    # L'index gagne bien une entrée animale ET une entrée champignon, TAGUÉES.
+    idx_types = {e["type"] for e in s.send(cmd="encyclopedie")["index"]}
+    check("index contient désormais les types animal + champignon",
+          "animal" in idx_types and "champignon" in idx_types, idx_types)
+
     carnet = s.send(cmd="carnet")
     check("carnet répond une liste d'entrées (clé `entrees`)",
           carnet["ok"] and isinstance(carnet["entrees"], list),

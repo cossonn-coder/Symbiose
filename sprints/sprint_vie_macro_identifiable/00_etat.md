@@ -19,7 +19,20 @@ mono-niveau, registre `CORPUS_PAR_TYPE` VIDE pour concept/technique/outil/geste 
 (`OBJETS_TOUCHES`) — priorité déterministe la range en OUTIL (cohérent kickoff). Seule
 clé multi-catégories ; documentée dans le test.
 
-Reste ②→⑥.
+**② CLOS** (2026-07-02) : découverte de la vie macro au survol.
+`tools/simserver/maitrise_pont.py:observer_espece` rendu MULTI-RÈGNES (plante par
+nom de classe inchangé → animal `FAUNE_ENCYCLO` → `CLE_CHAMPIGNON` → None). Côté C# :
+`ForagerLayer.SpeciesNear` + `CarpophoreLayer.HasNear` (miroirs de
+`MacroLife.SpeciesNear`) ; `WorldView.Observation.cs:ObserveHoveredMacroLife`
+(nuage → butineur → carpophore→"champignon", dédup `_especesMacroObservees`, gaté
+zoom ≥ ×4), appelée depuis `WorldView._Process`. Golden INCHANGÉ (`a6c2f651…`).
+Tests : `test_sim_server` 240/240 (+5 checks vie macro dans `simserver/voix.py`),
+`test_encyclopedie` 42/42. **`dotnet build` VERT** (0 err/0 warn) — le risque
+`EncyclopediePanel` (index strings→dicts) ne s'est PAS matérialisé, build propre.
+**Point F5 Nico** : survoler un puceron/butineur/carpophore au zoom ≥ ×4 →
+log `[WorldView] survol → vie macro observée : …` + entrée dans l'encyclo.
+
+Reste ③→⑥.
 
 ## Sujet (D60, Nico 2026-07-02, F5 — S9, étend D31)
 La vie macro est un amas de cercles indistincts. Objectif : **survol → nom + entrée
@@ -41,7 +54,7 @@ Détail complet : `docs/conception/CONCEPTION_VIE_MACRO_IDENTIFIABLE.md`.
 | # | Kickoff | Cœur | Golden | F5 |
 |---|---------|------|--------|----|
 | ✅ ① | `01_backend_encyclo_unifiee.md` | Corpus taggué + `type_de` + dispatch + fiche champignon | NEUTRE ✓ | non |
-| ② | `02_survol_vie_macro.md` | `observer_espece` multi-règnes + survol C# vie macro | NEUTRE | **oui** |
+| ✅ ② | `02_survol_vie_macro.md` | `observer_espece` multi-règnes + survol C# vie macro | NEUTRE ✓ | **oui** |
 | ③ | `03_progression_geste_outil.md` | Progression combinée usage+succès + découverte à l'usage | NEUTRE | non |
 | ④ | `04_corpus_concept_technique.md` | Fiches 3 niv. concept + technique | NEUTRE | non |
 | ⑤ | `05_corpus_geste_outil.md` | Fiches 3 niv. geste + outil | NEUTRE | non |
@@ -77,10 +90,11 @@ peut casser à `dotnet build` entre ① et ⑥ — c'est PRÉVU, ⑥ répare la 
 Boucle `/sprint-auto` : lancer le kickoff `0N` → implémenter → vérifier
 `python3 -m tests.test_golden` (attendu INCHANGÉ, golden NEUTRE) + tests ciblés du
 tronçon + `dotnet build Symbiose.csproj` pour les tronçons C# (②⑥) → mettre à jour
-CE fichier (cocher le tronçon) → commit → `/clear` → tronçon suivant. **① CLOS** ;
-reprendre à **②** (`02_survol_vie_macro.md` — `observer_espece` multi-règnes +
-survol C# vie macro ; **point F5**, tronçon C# → `dotnet build` requis). F5 groupés
-à la fin (② et ⑥).
+CE fichier (cocher le tronçon) → commit → `/clear` → tronçon suivant. **①② CLOS** ;
+reprendre à **③** (`03_progression_geste_outil.md` — progression combinée usage +
+succès écologique + découverte à l'usage + table de classification outil/technique/
+geste ; tronçon Python pur, **pas F5**, golden NEUTRE). F5 groupés à la fin (② faite
+— à valider ; et ⑥).
 
 ## NB git
 À l'ouverture de la conception, l'arbre était SALE (`sprint_epaisseur_sol` non
