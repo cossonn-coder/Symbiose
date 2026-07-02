@@ -30,10 +30,14 @@ tranchés (voir décisions ci-dessous). Aucun tronçon encore exécuté.
   d'eau (greffe `tick_hydrology:109`) + accès NPK (borné vs D41).
 
 ## Carte des tronçons
-- **①a champ + dynamique** — `GridField epaisseur_sol` stocké + `tick_epaisseur`
-  (relaxation, foisonnement age_sem, érosion) + save + bump engine_version.
-  Golden **RE-FIGÉ ANNONCÉ** (dérive attendue ~nulle : aucun effet en retour).
-  → `01a_champ_dynamique.md`.
+- **①a champ + dynamique** — ✅ **FAIT** (golden **INCHANGÉ** `98bdf772…`, aucun
+  effet en retour comme prévu). `GridField epaisseur_sol` stocké (borné [0,60])
+  + `tick_epaisseur` (relaxation vers cible bulk-density `E_FRESH·foisonnement(age)
+  + E_ACTIVE·om_active + E_STABLE·om_stable`, inertie asym. montée/descente, érosion)
+  + init AU REPOS dans `init_eco` (cible sur om_stable de fond D56) + `get_field`
+  + bump `ENGINE_VERSION` 0.5.13→0.5.14. **Save disque = DIFFÉRÉ** : aucun save
+  disque n'existe encore (backlog save global) → rien à sérialiser ; le champ est
+  exposé au registre `get_field`/`fields` par introspection. → `01a_champ_dynamique.md`.
 - **①b effets écolo** — rétention eau (modulée soil_type) + accès NPK (borné vs
   D41). Golden **RE-FIGÉ ANNONCÉ**. **Test 500 ans** anti-emballement.
   → `01b_effets_ecolo.md`.
@@ -48,7 +52,17 @@ D39 (asphyxie = revers non bridé), D56 (fond om_stable hétérogène = plancher
 **Nouvelle dette** ouverte : priming rhizosphérique (plantes puits indirect).
 
 ## §REPRISE
-Conception figée, rien exécuté. `ENGINE_VERSION` de départ = `0.5.13`.
-Lancer `/sprint-auto sprint_epaisseur_sol` : il exécute ①a → ①b → ② dans l'ordre,
-golden re-figé annoncé aux tronçons ①a et ①b, neutre au ②. Détails de code
-(chemins, lignes, patrons vérifiés) dans chaque kickoff `0N`.
+①a **FAIT** (non commité — Nico commit). `ENGINE_VERSION` = `0.5.14`.
+Golden **INCHANGÉ** `98bdf772…` (aucun lecteur ce tronçon, exactement comme prévu).
+Fichiers touchés : `fields/ecofields/constants.py` (constantes E_FRESH/E_ACTIVE/
+E_STABLE/K_TASSE/TAUX_*/EPAISSEUR_EROSION/EPAISSEUR_MAX), `matiere_organique.py`
+(`_cible_epaisseur` + `tick_epaisseur`), `container.py` (champ + `__post_init__`
++ `get_field` + init repos dans `init_eco`), `sim/engine/boucle.py` (branchement
+step 13b-bis après `tick_populations`), `tools/simserver/version.py` (bump + changelog),
+tests `simserver/{structures,conteneurs,voix}.py` (assert version 0.5.13→0.5.14).
+Suite complète 45/45 PASS. LDC pur OK (matiere_organique 151, container 224).
+
+**PROCHAIN = ①b effets écolo** (rétention eau greffe `tick_hydrology` + accès NPK
+borné vs D41, golden RE-FIGÉ ANNONCÉ, test 500 ans anti-emballement). L'hydro lira
+`epaisseur_sol` du tick PRÉCÉDENT (décalage 1 tick déjà en place, déterministe).
+→ `01b_effets_ecolo.md`. Lancer `/sprint-auto sprint_epaisseur_sol` (reprend à ①b).

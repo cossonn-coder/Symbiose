@@ -714,6 +714,41 @@ BECHAGE_MYCELIUM_MALUS = 0.5
 OM_STABLE_INIT = 0.15   # humus de fond hérité (matière organique stabilisée de départ)
 INIT_AMPLITUDE = 0.30   # amplitude de l'hétérogénéité spatiale des champs initiaux
 
+# --- Épaisseur de sol visible (D57, sprint épaisseur de sol ①a) -------------
+# Champ `epaisseur_sol` par plot (cm de sol foisonnant au-dessus de la roche-mère).
+# La MO qui tombe ÉPAISSIT le sol (litière fraîche foisonnante), le tassement + la
+# décompo la rognent, l'humus stable persiste et l'exhausse sur les ans → le sol
+# MONTE/DESCEND visiblement (②, rendu). Modèle à RELAXATION vers une cible bulk-
+# density dérivée des `om_*`, PAS un accumulateur (l'inertie asymétrique EST le seul
+# état stocké → satisfait la règle « pas d'état superflu », philo #4) :
+#   foisonnement_fresh = Σ_parcelles( masse · foisonnement(age_sem) )
+#   cible = E_FRESH·foisonnement_fresh + E_ACTIVE·om_active + E_STABLE·om_stable
+#   epaisseur += (cible − epaisseur)·taux_asym  − EPAISSEUR_EROSION   (borné ≥ 0)
+# La litière JEUNE foisonne (matelas aéré) ; en vieillissant elle se PLAQUE
+# (tassement, décompo) → `foisonnement(age) = 1/(1 + K_TASSE·age_sem)` décroît. La
+# consommation (faune/mycélium/minéralisation) fait baisser `om_*` → la cible baisse
+# → l'épaisseur SUIT (elle ne consomme RIEN : anti-double-comptage). Asymétrie :
+# monte VITE (apport foisonnant), descend LENT (tassement/érosion progressifs).
+# AUCUN effet en retour ce tronçon (eau + accès NPK = ①b) : le champ est POSÉ et
+# tické, lu par PERSONNE → golden NEUTRE. PLACEHOLDERS, calibrage F5 / bancs d'essai.
+#   - E_FRESH > E_ACTIVE > E_STABLE : la litière fraîche foisonne le plus (volume par
+#     unité de masse), l'humus stable le moins (dense, tassé) mais PERSISTE.
+#   - K_TASSE : vitesse de plaquage de la litière avec l'âge (grand → se plaque vite).
+#   - TAUX_MONTEE > TAUX_DESCENTE (∈ ]0,1[) : inertie asymétrique (monte vite,
+#     descend lentement — un sol se construit plus vite qu'il ne s'érode sous couvert).
+#   - EPAISSEUR_EROSION : rognage naturel/semaine (pluie, minéralisation, tassement de
+#     fond) — petit, ramène vers le plancher minéral en l'absence d'apport.
+# EPAISSEUR_MAX : plafond physique du champ (borne du GridField) — un sol ne monte pas
+# indéfiniment ; ①b vérifiera l'anti-emballement sur 500 ans.
+E_FRESH           = 8.0    # cm d'épaisseur par unité de litière fraîche PLEINEMENT foisonnante
+E_ACTIVE          = 4.0    # cm par unité de MO active (partiellement digérée, mi-tassée)
+E_STABLE          = 2.0    # cm par unité d'humus stable (dense mais durable — le socle)
+K_TASSE           = 0.08   # plaquage de la litière avec l'âge (foisonnement = 1/(1+K·age_sem))
+TAUX_MONTEE       = 0.30   # part de l'écart à la cible comblée/sem quand le sol MONTE
+TAUX_DESCENTE     = 0.05   # part comblée/sem quand il DESCEND (bien plus lent — asymétrie)
+EPAISSEUR_EROSION = 0.02   # cm rognés/sem (voies naturelles : pluie, tassement de fond)
+EPAISSEUR_MAX     = 60.0   # cm — plafond physique du champ (borne GridField, anti-emballement)
+
 # Signature sol par famille (laissée après chaque saison)
 SOIL_SIGNATURE = {
     "Fabaceae":   {"microbiome": +0.15, "fertilite": +0.10},

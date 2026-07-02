@@ -254,7 +254,18 @@ from __future__ import annotations
 #       gating de jeu futur). Ajouts read-only opt-in joueur → golden NEUTRE. Un
 #       binaire pré-0.5.13 ignore `filtre.espece` et répond « commande inconnue » à
 #       `aide` (tolérance côté vue).
-ENGINE_VERSION = "0.5.13"
+# 0.5.14 (épaisseur de sol ①a, D57) : nouveau champ STOCKÉ `epaisseur_sol` par plot
+#       (cm de sol foisonnant au-dessus de la roche-mère) + tick `tick_epaisseur`
+#       (relaxation vers une cible bulk-density dérivée des `om_*`, foisonnement de la
+#       litière fraîche ∝ 1/(1+K·age_sem), inertie asymétrique monte-vite/descend-lent,
+#       érosion). C'est l'expression PHYSIQUE du cycle MO (la matière qui tombe épaissit
+#       le sol, tassement/décompo la rognent, humus l'exhausse). Initialisé AU REPOS
+#       (`init_eco` : cible sur l'om_stable de fond D56). AUCUN effet en retour ce
+#       tronçon (eau/NPK = ①b, relief extrudé = ②) → lu par PERSONNE → golden NEUTRE.
+#       Champ exposé au registre `get_field` (overlay debug F6 `fields`) ; pas de
+#       nouvelle sérialisation snapshot (l'exposition au pont = tronçon ②). Le save
+#       disque du champ suivra le sprint save global (aucun save disque n'existe encore).
+ENGINE_VERSION = "0.5.14"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

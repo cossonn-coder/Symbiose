@@ -227,6 +227,42 @@ class MatiereOrganiqueMixin:
                 self.p.data[r][c] *= leach_factor("P", cn)
                 self.k.data[r][c] *= leach_factor("K", cn) ** facteur_k
 
+    # --- Épaisseur de sol visible (D57, ①a) ---
+
+    def _cible_epaisseur(self, r: int, c: int) -> float:
+        """Cible bulk-density de l'épaisseur d'un plot (cm), dérivée des `om_*`.
+
+        La litière FRAÎCHE foisonne d'autant plus qu'elle est JEUNE : chaque
+        parcelle pèse `masse · 1/(1 + K_TASSE·age_sem)` (matelas aéré neuf →
+        plaqué en vieillissant). L'humus active/stable est ajouté à densité
+        décroissante (E_FRESH > E_ACTIVE > E_STABLE). Fonction PURE des champs MO
+        (aucune mutation) → l'épaisseur SUIT la MO, elle ne la consomme pas
+        (anti-double-comptage). Zéro RNG (philo #3)."""
+        foisonnement_fresh = sum(
+            p.masse / (1.0 + K_TASSE * p.age_sem) for p in self.litiere[r][c]
+        )
+        return (E_FRESH  * foisonnement_fresh
+                + E_ACTIVE * self.om_active.data[r][c]
+                + E_STABLE * self.om_stable.data[r][c])
+
+    def tick_epaisseur(self) -> None:
+        """Relaxation hebdomadaire de `epaisseur_sol` vers sa cible bulk-density.
+
+        Un seul balayage O(plots × parcelles). Inertie ASYMÉTRIQUE : le sol monte
+        vite sous un apport foisonnant (`TAUX_MONTEE`), descend lentement quand la
+        MO se minéralise/se tasse (`TAUX_DESCENTE`) — un sol se construit plus vite
+        qu'il ne s'érode sous couvert. Rognage naturel `EPAISSEUR_EROSION` chaque
+        semaine (pluie, tassement de fond), plancher minéral 0 assuré par le
+        GridField. AUCUN champ n'est lu en retour ce tronçon (eau/NPK = ①b) → golden
+        NEUTRE (le champ n'entre dans aucune grandeur du digest). Déterministe."""
+        for r in range(self.rows):
+            for c in range(self.cols):
+                cible = self._cible_epaisseur(r, c)
+                actuel = self.epaisseur_sol.data[r][c]
+                taux = TAUX_MONTEE if cible > actuel else TAUX_DESCENTE
+                nouveau = actuel + (cible - actuel) * taux - EPAISSEUR_EROSION
+                self.epaisseur_sol.set(r, c, nouveau)   # borné [0, EPAISSEUR_MAX]
+
     def tick_structures(self) -> None:
         """Maturation hebdomadaire du contenu des structures (⑤ phase B, §5.2)
         + COLONISATION FONGIQUE du tas (mycélium ⑤, §3.3/§3.4).

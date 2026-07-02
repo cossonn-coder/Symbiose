@@ -170,6 +170,19 @@ class EcoFields(MatiereOrganiqueMixin, HydrologieMixin, UptakeMixin,
     # (③ remplace la masse d'air uniforme du ②) et le wind chill (`t_min_nuit_at`, §5.5).
     # À 0 au repos (aucun vent/obstacle) → golden NEUTRE tant que `tick_abri` n'écrit pas.
     vent:             GridField = field(default=None)
+    # Épaisseur de sol visible (D57, sprint épaisseur de sol ①a) — cm de sol
+    # foisonnant au-dessus de la roche-mère, PAR PLOT. Champ STOCKÉ (persisté) qui
+    # RELAXE vers une cible bulk-density dérivée des `om_*` (litière fraîche
+    # foisonnante + active + humus stable), avec inertie asymétrique (monte vite,
+    # descend lent) et érosion (`tick_epaisseur`). C'est l'expression PHYSIQUE du
+    # cycle de la MO : la matière qui tombe épaissit le sol, le tassement/la décompo
+    # la rognent, l'humus persiste et l'exhausse sur les ans. INITIALISÉ AU REPOS
+    # (`init_eco` : cible calculée sur l'`om_stable` de fond hérité D56) pour partir
+    # déjà au niveau d'équilibre, sans transitoire de montée au tick 0. Au tronçon ①a
+    # POSÉ + tické mais lu par PERSONNE → golden NEUTRE ; les effets écolo (rétention
+    # d'eau + accès NPK) arrivent au ①b, le relief extrudé au ② (rendu). Exposé AUTO
+    # au registre `get_field` (overlay debug F6 / pont ②).
+    epaisseur_sol:    GridField = field(default=None)
 
     def __post_init__(self):
         if self.humidite    is None: self.humidite    = GridField(self.rows, self.cols)
@@ -270,6 +283,13 @@ class EcoFields(MatiereOrganiqueMixin, HydrologieMixin, UptakeMixin,
         # recalculer la géométrie que sur Δdirection/obstacle (§7B levier 2). None = froid.
         if self.vent is None:
             self.vent = GridField(self.rows, self.cols)
+        # Épaisseur de sol (①a) — bornée [0, EPAISSEUR_MAX]. Créée à 0 ici (repos
+        # NEUTRE d'une construction DIRECTE `EcoFields()`, ex. mini-sol de conteneur
+        # qui ne ticke PAS l'épaisseur → reste 0, inoffensif). Le chemin monde
+        # `init_eco` la POSE au niveau de REPOS (cible sur l'om_stable de fond D56)
+        # APRÈS l'hétérogénéité → pas de transitoire de montée au tick 0.
+        if self.epaisseur_sol is None:
+            self.epaisseur_sol = GridField(self.rows, self.cols, max_val=EPAISSEUR_MAX)
         self._abri_cache = None
 
     def _init_heterogene(self, grid: GridField, plancher: float) -> None:
@@ -305,6 +325,7 @@ class EcoFields(MatiereOrganiqueMixin, HydrologieMixin, UptakeMixin,
             "k":                self.k,
             "structure_sol":    self.structure_sol,
             "mycelium":         self.mycelium,
+            "epaisseur_sol":    self.epaisseur_sol,
         }.get(name)
 
     def fertilite_index(self, r: int, c: int) -> float:
@@ -396,6 +417,14 @@ def init_eco(tile_id: str, rows: int, cols: int,
                 eco.n.set(r, c, fertilite)
                 eco.p.set(r, c, fertilite)
                 eco.k.set(r, c, fertilite)
+    # Épaisseur de sol AU REPOS (D57 ①a) : APRÈS l'humus de fond hétérogène (l'om_stable
+    # ci-dessus est posé) → cible calculée sur cet état de départ (litière vide + active
+    # 0 + stable hérité). Le sol part donc déjà au niveau d'équilibre correspondant à
+    # son humus de fond, sans transitoire de montée au tick 0. Suit ensuite la MO
+    # (`tick_epaisseur`). Lu par PERSONNE ce tronçon → golden inchangé.
+    for r in range(rows):
+        for c in range(cols):
+            eco.epaisseur_sol.set(r, c, eco._cible_epaisseur(r, c))
     return eco
 
 

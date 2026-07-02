@@ -362,6 +362,16 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
             # → golden INTACT.
             eco.tick_populations(tile, tile.plants, week_in_year)
 
+            # 13b-bis. Épaisseur de sol visible (D57, ①a) — APRÈS tous les
+            # consommateurs de MO du tick (décompo 4, structures 4b, mycélium 4e,
+            # populations 13b) : la cible bulk-density reflète ainsi la consommation
+            # de la SEMAINE ENTIÈRE (l'épaisseur SUIT la MO, ne la consomme pas). Un
+            # éventuel lecteur en retour (l'hydrologie ①b) lira l'épaisseur du tick
+            # PRÉCÉDENT → décalage d'1 tick uniforme et déterministe, sans boucle
+            # instantanée (préparé pour ①b). Lu par PERSONNE ce tronçon → golden
+            # NEUTRE (le champ n'entre dans aucune grandeur du digest/summary).
+            eco.tick_epaisseur()
+
             # 13c. Butineurs déterministes (arc pollinisation §F, tronçon ③) —
             # échantillonnés sur les champs pollinisateurs FRAÎCHEMENT mis à jour,
             # ils marchent de fleur en fleur et déposent le pollen conspécifique
