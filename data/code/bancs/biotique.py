@@ -16,7 +16,8 @@ même endroit que la vue Godot.
 """
 from __future__ import annotations
 
-from plants import Basil, AppleTree
+from plants import Basil, AppleTree, Phacelia
+from plants.genetics import clamp_gene
 from fields.seedbank import GrainEnAttente
 from sim.seeds import PlayerSeedBank, Seed
 from .base import build_banc_tile, monde, force_faune, vieillir
@@ -139,3 +140,56 @@ def semis_tempere():
         tile.grains_en_attente.setdefault((r, c), []).append(
             GrainEnAttente(species=espece, cultive=True, player="joueur_1"))
     return monde([tile], {tile.tile_id: eco}, banque=banque)
+
+
+# ─────────────────────── 4. étalement de floraison (S2) ───────────────────────
+# Banc de la DÉSYNCHRONISATION florale (sprint bugs d'émergence, S2). Il prouve que
+# le gène `phenologie_florale` (tronçon ③) ÉTALE les dates de floraison au lieu d'un
+# créneau synchrone unique — le trou S2 (« toutes les plantes fleurissent la même
+# semaine ») fermé par une VARIABILITÉ intra-espèce, pure sélection/héritage (philo
+# #2), sans mécanique nouvelle. Comme `verger_floraison`, il compose un monde et
+# LAISSE le moteur (`_tick_floraison`) convertir chaque gène en un seuil de forçage
+# floral propre (`gdd_eff = gdd_floraison − FLORA_GENE_SHIFT·(gène−1)`) → l'individu
+# « lève-tôt » franchit la porte florale AVANT le « lève-tard ». Golden NEUTRE.
+#
+# Monde MONO-ESPÈCE DENSE : un tapis de phacélie (engrais vert annuel très
+# mellifère, cycle éclair, floraison à jour long ∈ [13.5, 16.5] h). Chaque pied
+# reçoit un `phenologie_florale` ÉTALÉ déterministiquement sur [ETAL_GENE_LO,
+# ETAL_GENE_HI] (un damier de lignées, comme un pool-sol à variance réelle, sans
+# dépendre d'un tirage). Deux ACCÉLÉRATIONS sanctionnées (cf. base.py), qui posent
+# le phénomène « prêt à s'ouvrir » sans dérouler la montée entière :
+#   • `gdd_accum` PRÉ-CHARGÉ près du seuil (ETAL_GDD_PRECHARGE) → l'ouverture tombe
+#     DANS la fenêtre photopériodique estivale au lieu de la rater à l'automne (à
+#     seuil brut, l'accumulation naturelle n'atteint 200 GDD qu'après la fermeture
+#     du jour long — piège de calibration, cf. /tmp/proto) ;
+#   • plants posés au stade seed-bearing (gate de maturité franchi d'emblée).
+# La phacélie est déjà au catalogue et à l'encyclopédie (concept `phenologie_florale`
+# ajouté au ④) → aucune espèce neuve (règle catalogue/voix respectée).
+ETAL_ROWS = ETAL_COLS = 8       # 64 pieds : échantillon statistique stable des dates
+ETAL_GENE_LO = 0.55            # lignées « lève-tard » (seuil floral relevé)
+ETAL_GENE_HI = 1.45            # lignées « lève-tôt » (seuil floral abaissé)
+ETAL_GDD_PRECHARGE = 100.0     # forçage floral pré-armé sous le seuil (200) → ouverture estivale
+
+
+def etalement_floraison():
+    """Banc « étalement de floraison » (S2) : un tapis dense de phacélies d'une
+    même espèce, mais dont les lignées portent un `phenologie_florale` ÉTALÉ. Le
+    moteur ouvre chaque fleur à sa propre semaine → les dates de franchissement de
+    `floraison > 0.5` se RÉPARTISSENT sur plusieurs semaines (variance non nulle),
+    jamais un créneau unique. Oracle : tests/bancs/test_biotique.py (en tendance :
+    ≥ 3 semaines de franchissement distinctes, variance > 0 — pas de hash figé)."""
+    tile, eco = build_banc_tile("ETALEMENT", "terre", ETAL_ROWS, ETAL_COLS,
+                                humidite=1.4, fertilite=1.2, microbiome=0.5)
+    total = ETAL_ROWS * ETAL_COLS
+    k = 0
+    for r in range(ETAL_ROWS):
+        for c in range(ETAL_COLS):
+            plante = tile.add_plant(Phacelia, r, c)
+            # Gène ÉTALÉ déterministiquement (damier de lignées) : la fraction couvre
+            # [LO, HI] de bout en bout → variance de dates garantie sans RNG (philo #3).
+            frac = (k + 0.5) / total
+            gene = clamp_gene(ETAL_GENE_LO + (ETAL_GENE_HI - ETAL_GENE_LO) * frac)
+            plante.genes = {"phenologie_florale": gene}
+            plante.gdd_accum = ETAL_GDD_PRECHARGE   # forçage pré-armé (accélération)
+            k += 1
+    return monde([tile], {tile.tile_id: eco})

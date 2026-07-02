@@ -11,7 +11,8 @@ Les tronçons ②③④ ajoutent leurs entrées ici (édaphique, climatique, bio
 from .climatique import (secheresse_sable, acclimatation, ombre_dense,
                          pluie_thermique, germination_multifacteur)
 from .edaphique import chlorose_acidophile, asphyxie_argile, carence_npk
-from .biotique import infestation_ravageur, verger_floraison, semis_tempere
+from .biotique import (infestation_ravageur, verger_floraison, semis_tempere,
+                       etalement_floraison)
 from .succession import succession_bascule
 
 BANCS = {
@@ -26,5 +27,6 @@ BANCS = {
     "infestation_ravageur": infestation_ravageur,
     "verger_floraison": verger_floraison,
     "semis_tempere": semis_tempere,
+    "etalement_floraison": etalement_floraison,
     "succession_bascule": succession_bascule,
 }

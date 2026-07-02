@@ -10,9 +10,24 @@
   germination »** : monoculture pionnière qui verrouille la succession.
 
 ## Phase courante
-**EN COURS** — tronçons ① (D56) + ② (D25) + ③ (gène phénologie) LIVRÉS le
-2026-07-02 (moteur touché, NON commité — Nico commit). Reste ④. Doc :
-`docs/conception/CONCEPTION_BUGS_EMERGENCE.md`.
+**SPRINT CLOS** — tronçons ① (D56) + ② (D25) + ③ (gène phénologie) + ④ (voix +
+bancs) TOUS LIVRÉS le 2026-07-02 (NON commité — Nico commit + clôture globale
+journal/DETTE). Doc : `docs/conception/CONCEPTION_BUGS_EMERGENCE.md`.
+
+### Bilan de clôture (cascade golden ①→③, ④ NEUTRE)
+| Tronçon | Golden après | Neutre ? |
+|---|---|---|
+| ① D56 champs initiaux | `ea135bf181a21fcb621658c13a92cc6d28de9101ba34fca14acb0e4889365f8f` | re-figé maîtrisé |
+| ② D25 déverrouillage banque | `98bdf772457eb9aef5b9a382dd80cae627d4d6a67b2112c6707f357d8c94a788` (+ pop `e7f1cf19d54d9562e10469d0a8b0377f1dd2a6e7188837f5cf0248f4ceee955c`) | re-figé maîtrisé |
+| ③ gène phénologie florale | `98bdf772…` INCHANGÉ | neutre (genes={} au smoke) |
+| ④ voix + bancs | `98bdf772…` INCHANGÉ | **neutre par construction** |
+- **Golden FINAL du sprint = `98bdf772…`** (pop `e7f1cf19…`, vigueur INCHANGÉ).
+- S2 (floraison synchronisée) : FERMÉ — gène `phenologie_florale` étale les dates,
+  prouvé par le banc `etalement_floraison` (44 franchissements sur 4 semaines,
+  variance 0.973).
+- S3 (invasion Capsella / verrou de succession) : FERMÉ — facilitation OM +
+  bride pioneer + champs initiaux riches, prouvé par `succession_bascule` (pioneer
+  culmine an 5 puis reflue à 7,6 %, tardifs 92 % du couvert).
 
 ## Décisions figées (arbitrage Nico)
 - **Périmètre** : UN sprint, 2 volets (S2 floraison + S3 succession).
@@ -227,10 +242,31 @@ banque-sol + champs moyens par an). Run lancé, sortie bufferisée.
   `sample_genes`/`child_genes`), hors du périmètre du smoke 2 tuiles × 4 ans.
 - Suite complète VERTE. Pas de C# (Python only).
 
+## Avancement tronçon ④ (voix + bancs) — livré 2026-07-02
+- **Voix** : `sim/encyclopedie_corpus.py` (`CONCEPTS`) enrichi de deux concepts
+  transversaux × 3 niveaux, voix « naturaliste qui observe » (≠ le « je » du carnet) :
+  - `succession` (N1 = ce qu'on voit ; N2 = les vagues pionnières ; N3 = la
+    FACILITATION cachée : l'humus des pionnières amorce les tardives dans la
+    banque-sol → bascule prairie ; un sol verrouillé = pont d'humus manquant).
+  - `phenologie_florale` (N1 = l'étalement observé ; N2 = seuil de chaleur florale
+    hérité, variabilité de lignée ; N3 = nectar soutenu vs pic synchrone + tri
+    darwinien de la phénologie).
+- **Carnet** : `sim/carnet.py` déjà branché sur `succession` (`germination`→succession)
+  et gabarit interprétatif de `germination` enrichi pour évoquer le lever-plus-tôt
+  (mémoire de lignée) — cohérent avec les fixes ②③ (« brancher si pertinent »).
+  Pas de nouvelle espèce → pas de « 5 voix », seulement les concepts touchés.
+- **Bancs** : `bancs/biotique.py` + `bancs/__init__.py` — banc `etalement_floraison`
+  (tapis mono-espèce de 64 phacélies, `phenologie_florale` étalé déterministiquement
+  sur [0.55, 1.45], `gdd_accum` pré-chargé). Oracle `tests/bancs/test_biotique.py`
+  EN TENDANCE (≥ 3 semaines de franchissement distinctes, variance > 0, pas de hash).
+- **Vérifs finales** : golden `98bdf772…` STRICTEMENT INCHANGÉ ; population
+  `e7f1cf19…` ; bancs biotiques **12/12** (dont étalement 3/3 : 44 franchissements
+  sur 4 semaines, variance 0.973) ; `succession_bascule` **6/6** (toujours vert).
+  Aucun re-figeage (tronçon neutre par construction). Pas de C#.
+
 ## §REPRISE
-TRONÇONS ① (D56) + ② (D25) + ③ (gène `phenologie_florale`) LIVRÉS & vérifiés
-(golden `98bdf772…` INCHANGÉ au ③, population `e7f1cf19…`, vigueur INCHANGÉ,
-TOUTES suites vertes + 4 oracles bancs, NON commité — Nico commit). **Prochain :
-tronçon ④ `04_voix_et_bancs.md`** (voix concepts succession/phénologie + bancs
-d'acceptation ; golden NEUTRE attendu). Diagnostic S2/S3 clos ; reproductible via
-`/tmp/diag_symbiose.py`.
+**SPRINT CLOS.** Les 4 tronçons ①→④ sont LIVRÉS & vérifiés (golden FINAL
+`98bdf772…`, population `e7f1cf19…`, vigueur INCHANGÉ, TOUTES suites vertes + 5
+oracles bancs). S2 et S3 FERMÉS. NON commité — **Nico commit la cascade + clôt
+journal.md / DETTE.md** (D56 livré, S2/S3 résolus) en tant qu'orchestrateur.
+Diagnostic reproductible via `/tmp/diag_symbiose.py`.

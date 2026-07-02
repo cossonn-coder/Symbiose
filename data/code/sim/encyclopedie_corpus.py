@@ -326,4 +326,47 @@ CONCEPTS: dict[str, dict[int, str]] = {
            "plus tôt prennent l'avantage et essaiment ; insensiblement, le jardin "
            "apprend à démarrer plus vite.",
     },
+    # Succession (sprint bugs d'émergence, S3) : le sol nu ne reste jamais nu. La
+    # bascule pionnier → prairie est une TRAJECTOIRE dans le temps, pas un état ; sa
+    # voix rend lisible pourquoi une friche de bourse-à-pasteur finit par céder la
+    # place aux légumineuses et graminées. N3 dévoile le moteur caché : la FACILITATION
+    # (les pionnières bâtissent l'humus qui amorce les tardives dans la banque-sol).
+    "succession": {
+        1: "Sur une terre remuée et nue, une même herbe menue lève partout et couvre "
+           "vite le sol. Les saisons passant, d'autres plantes plus denses, plus hautes, "
+           "s'installent parmi elles, puis les débordent.",
+        2: "Un sol dénudé se recolonise par vagues successives. Les PIONNIÈRES (bourse-"
+           "à-pasteur, pâturin, minette) germent d'abord : à cycle éclair, tolérant le "
+           "sol pauvre et remué, elles verdissent la surface en une saison. Mais leur "
+           "règne est provisoire — elles préparent le terrain sans l'occuper durablement.",
+        3: "Chaque vague FACILITE la suivante : en poussant, en mourant, les pionnières "
+           "laissent litière et racines qui bâtissent l'humus. C'est cet humus, et non "
+           "le calendrier, qui réveille dans la banque-sol les graines des tardives — "
+           "légumineuses fixatrices d'azote, graminées, puis les plus exigeantes. Quand "
+           "le sol est assez riche, elles lèvent, dépassent les pionnières et les "
+           "brident. La friche bascule alors en prairie. Un sol nu qui reste nu, ou une "
+           "seule espèce qui verrouille tout, signale une succession bloquée : il manque "
+           "le pont d'humus qui ouvre la porte aux suivantes.",
+    },
+    # Phénologie florale (sprint bugs d'émergence, S2) : pourquoi les fleurs d'une même
+    # espèce ne s'ouvrent pas toutes la même semaine. La voix qui rend lisible l'ÉTALEMENT
+    # des dates de floraison et sa cause génétique (variabilité de lignée, sélection). N3
+    # relie l'étalement à la ressource pollinisatrice (nectar soutenu vs pic unique).
+    "phenologie_florale": {
+        1: "Dans un même massif d'une même plante, les fleurs ne s'ouvrent pas toutes "
+           "ensemble : quelques-unes en avance, la plupart au cœur de la vague, quelques "
+           "traînardes après. La floraison s'étale sur plusieurs semaines.",
+        2: "Une fleur n'ouvre pas à une date, mais quand la plante a cumulé assez de "
+           "chaleur ET que les jours sont assez longs. Or, au sein d'une espèce, chaque "
+           "lignée porte un seuil de chaleur florale un peu différent, hérité de ses "
+           "parents : certaines fleurissent tôt, d'autres tard. De cette variabilité "
+           "naît l'étalement — jamais un créneau unique.",
+        3: "Cet étalement n'est pas un défaut : c'est la santé du jardin. Un pic "
+           "synchrone unique gorge les pollinisateurs un instant puis les affame ; une "
+           "floraison ÉTALÉE tient une table de nectar soutenue sur des semaines, "
+           "nourrissant abeilles et syrphes sans à-coup — d'où plus de brassage, plus de "
+           "graines. Et le sol trie : les lignées dont la date de floraison colle le "
+           "mieux à la saison et aux butineurs essaiment davantage. Génération après "
+           "génération, la phénologie du massif s'ajuste toute seule au climat du lieu.",
+    },
 }

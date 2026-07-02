@@ -10,9 +10,23 @@ soit les SIGNES foliaires comme la vue (`signes_du_plot`), soit l'état moteur r
 
 Usage (depuis data/code/) : python3 -m tests.bancs.test_biotique
 """
-from .oracle import run_banc, run_banc_trace, signes_du_plot
+import statistics
+
+from bancs import BANCS
+from sim.engine import Engine
+from .oracle import run_banc, run_banc_trace, signes_du_plot, SEED
 
 _results = []
+
+# Fenêtre d'observation du banc d'étalement floral : on démarre en fin de printemps
+# (semaine 16), quand la porte PHOTOPÉRIODIQUE de la phacélie s'ouvre (jour ≥ 13.5 h),
+# et on suit 16 semaines d'été — le temps que les lignées franchissent chacune leur
+# seuil de forçage floral. Départ hors saison = fleurs jamais ouvertes (jour trop
+# court), d'où ce démarrage estival (l'oracle décide QUAND observer).
+ETAL_WEEK_DEPART = 16
+ETAL_SEMAINES = 16
+ETAL_SEUIL_OUVERTURE = 0.5      # `floraison > 0.5` = fleur franchement ouverte
+ETAL_MIN_SEMAINES = 3          # étalement RÉEL : ≥ 3 semaines de franchissement distinctes
 
 
 def check(name, cond, detail=""):
@@ -80,6 +94,48 @@ def test_semis_tempere():
           f"vivantes={vivantes}")
 
 
+def _dates_de_floraison():
+    """Monte `etalement_floraison` en plein été et relève, pour CHAQUE pied, la
+    PREMIÈRE semaine où `floraison > 0.5` (franchissement d'ouverture). Renvoie la
+    liste triée de ces semaines de franchissement. Reproduit le câblage `cmd_init`
+    (mêmes clés `game_state`, seed serveur) pour un état bit-identique à Godot."""
+    tiles, ecos, house, banque = BANCS["etalement_floraison"]()
+    game_state = {
+        "tiles": tiles, "eco": ecos, "scores": {},
+        "current_player": "joueur_1", "week": ETAL_WEEK_DEPART, "log": [],
+        "house": house, "seed": SEED, "player_seed_bank": banque,
+    }
+    engine = Engine(game_state)
+    plants = [p for tile in tiles for p in tile.plants]
+    franchissement = {}
+    for w in range(ETAL_SEMAINES):
+        engine.tick_semaine()
+        game_state["log"].clear()
+        for i, p in enumerate(plants):
+            if i not in franchissement and p.is_alive \
+                    and p.floraison > ETAL_SEUIL_OUVERTURE:
+                franchissement[i] = ETAL_WEEK_DEPART + w
+    return sorted(franchissement.values())
+
+
+def test_etalement_floraison():
+    """Tapis mono-espèce de phacélies aux lignées `phenologie_florale` étalées : les
+    dates de franchissement de floraison se RÉPARTISSENT sur plusieurs semaines (S2
+    fermé). Tranche « floraison synchronisée » : sans le gène, tous ouvriraient la
+    MÊME semaine (créneau unique, variance nulle) ; avec, l'étalement ÉMERGE du seuil
+    de forçage floral propre à chaque lignée. Tendances/bornes, pas de hash figé."""
+    dates = _dates_de_floraison()
+    check("étalement — au moins un pied fleurit dans la fenêtre", len(dates) > 0,
+          f"n_franchissements={len(dates)}")
+    semaines_distinctes = sorted(set(dates))
+    check("étalement — franchissements RÉPARTIS sur ≥ 3 semaines (pas un créneau)",
+          len(semaines_distinctes) >= ETAL_MIN_SEMAINES,
+          f"semaines={semaines_distinctes}")
+    variance = statistics.pvariance(dates) if len(dates) > 1 else 0.0
+    check("étalement — variance des dates NON NULLE (désynchronisation)",
+          variance > 0.0, f"variance={variance:.3f}, étendue={max(dates)-min(dates)}")
+
+
 if __name__ == "__main__":
     print("=" * 60)
     print("SYMBIOSE — Oracles bancs biotiques (tronçon ④)")
@@ -87,6 +143,7 @@ if __name__ == "__main__":
     test_infestation_ravageur()
     test_verger_floraison()
     test_semis_tempere()
+    test_etalement_floraison()
     print("\n" + "=" * 60)
     passed = sum(1 for _, ok in _results if ok)
     total = len(_results)
