@@ -95,8 +95,12 @@ check("override 0.90 assèche davantage que le défaut", h_ovr < h_def,
       detail=f"h_def={h_def:.4f} h_ovr={h_ovr:.4f}")
 
 # Et l'override None reproduit EXACTEMENT le drainage terre historique : un 3e
-# mini-sol avec override=DRAINAGE explicite doit coïncider avec le défaut.
-eco_eq = init_eco("jouet_eq", 1, 1, humidite=HUM0)
+# mini-sol avec override=DRAINAGE explicite doit coïncider avec le défaut. MÊME
+# tile_id que `eco_def` : depuis ①a l'`om_stable`/`epaisseur_sol` de fond est
+# HÉTÉROGÈNE par `tile_id` (D56, hash), et depuis ①b la rétention d'épaisseur les
+# LIT (`tick_hydrology` step 3b) — deux tuiles de tile_id ≠ ne sont donc plus bit-
+# identiques. Ce test isole la SEULE variable drainage_override → même tile_id.
+eco_eq = init_eco("jouet_def", 1, 1, humidite=HUM0)
 eco_eq.tick_hydrology(drainage_override=DRAINAGE)
 check("override=DRAINAGE ≡ défaut (rétrocompat)",
       eco_eq.humidite.data[0][0] == h_def,

@@ -12,6 +12,7 @@ déjà dense). Aucun état propre : opère sur `self`. Comportement bit-identiqu
 from __future__ import annotations
 
 from .constants import *          # BASE_RAIN, EVAP_*, DRAINAGE*, SOIL_RETENTION…
+from .nutriments import cec_norm_at   # module la rétention d'épaisseur par la composition (①b)
 
 
 class HydrologieMixin:
@@ -107,6 +108,19 @@ class HydrologieMixin:
                 # (champ lent → OK). structure terre héritée 0.7 < 1.0 → golden re-figé.
                 h += apport * self.structure_sol.at_plot(r, c)      # 2. pluie (fond+météo) infiltrée
                 h += self.soil_memory.at_plot(r, c) * SOIL_RETENTION  # 3. rétention
+                # 3b. RÉTENTION D'ÉPAISSEUR (D57 ①b) : miroir de la rétention (3),
+                # un sol PROFOND garde l'eau. Lit `epaisseur_sol` du tick PRÉCÉDENT
+                # (l'hydro tourne AVANT `tick_epaisseur` 13b-bis — décalage 1 tick
+                # uniforme, déterministe, voulu ①a), normalisée par une borne plausible.
+                # MODULÉE PAR LA COMPOSITION (`cec_norm_at`, patron nutriments) : l'humus
+                # profond compte PLUS sur sable pauvre/drainant que sur argile déjà
+                # rétentrice — effet émergent, jamais direct sur la plante (philo #2). Le
+                # revers asphyxie (D39, sol gorgé) n'est PAS bridé (conséquence assumée).
+                # epaisseur=0 (mini-sol de conteneur qui ne ticke pas l'épaisseur) ⇒ terme
+                # nul ⇒ bit-identique pour eux.
+                ep_n = min(1.0, self.epaisseur_sol.at_plot(r, c) / EPAISSEUR_NORM_REF)
+                om_n = min(1.0, self.om_stable.at_plot(r, c) / 5.0)
+                h += ep_n * EPAISSEUR_RETENTION * cec_norm_at(soil_type, om_n)  # 3b. épaisseur
                 perte = h * (1.0 - drainage)
                 pertes.append((r, c, perte))                        # eau du fond (⑤)
                 # On MÉMORISE la perte par plot (③) pour le lessivage amplifié de

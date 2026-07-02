@@ -38,8 +38,15 @@ tranchés (voir décisions ci-dessous). Aucun tronçon encore exécuté.
   + bump `ENGINE_VERSION` 0.5.13→0.5.14. **Save disque = DIFFÉRÉ** : aucun save
   disque n'existe encore (backlog save global) → rien à sérialiser ; le champ est
   exposé au registre `get_field`/`fields` par introspection. → `01a_champ_dynamique.md`.
-- **①b effets écolo** — rétention eau (modulée soil_type) + accès NPK (borné vs
-  D41). Golden **RE-FIGÉ ANNONCÉ**. **Test 500 ans** anti-emballement.
+- **①b effets écolo** — ✅ **FAIT** (non commité — Nico commit). Golden **RE-FIGÉ**
+  `a6c2f651…` (raison : deux flux neufs lisent enfin `epaisseur_sol`). Rétention d'eau
+  greffée dans `tick_hydrology` (terme miroir de la rétention soil_memory, `ep_n·
+  EPAISSEUR_RETENTION·cec_norm_at(soil_type,om_n)` — plus fort sur sable pauvre que
+  sur argile déjà rétentrice) + accès NPK dans `plant_uptake` (amplificateur BORNÉ du
+  BESOIN `×(1+EPAISSEUR_NPK_BONUS·ep_n)`, patron MYCO_P_BONUS → à épaisseur=0 facteur
+  1.0 ⇒ **D41 PRÉSERVÉE**, Liebig plafonne toujours par le stock réel). Les deux lisent
+  l'épaisseur du tick PRÉCÉDENT (décalage 1 tick uniforme ①a). `ENGINE_VERSION` 0.5.14
+  →0.5.15. Test 500 ans anti-emballement écrit (`tests/test_epaisseur_500ans.py`).
   → `01b_effets_ecolo.md`.
 - **② rendu** — relief extrudé `PxPerCmZ` + expo snapshot (patron `t_sol`,
   re-bump pont) + recalage objets posés. **Pur-vue, golden NEUTRE**, points F5.
@@ -52,17 +59,24 @@ D39 (asphyxie = revers non bridé), D56 (fond om_stable hétérogène = plancher
 **Nouvelle dette** ouverte : priming rhizosphérique (plantes puits indirect).
 
 ## §REPRISE
-①a **FAIT** (non commité — Nico commit). `ENGINE_VERSION` = `0.5.14`.
-Golden **INCHANGÉ** `98bdf772…` (aucun lecteur ce tronçon, exactement comme prévu).
-Fichiers touchés : `fields/ecofields/constants.py` (constantes E_FRESH/E_ACTIVE/
-E_STABLE/K_TASSE/TAUX_*/EPAISSEUR_EROSION/EPAISSEUR_MAX), `matiere_organique.py`
-(`_cible_epaisseur` + `tick_epaisseur`), `container.py` (champ + `__post_init__`
-+ `get_field` + init repos dans `init_eco`), `sim/engine/boucle.py` (branchement
-step 13b-bis après `tick_populations`), `tools/simserver/version.py` (bump + changelog),
-tests `simserver/{structures,conteneurs,voix}.py` (assert version 0.5.13→0.5.14).
-Suite complète 45/45 PASS. LDC pur OK (matiere_organique 151, container 224).
+①a + ①b **FAITS** (non commités — Nico commit). `ENGINE_VERSION` = `0.5.15`.
+Golden **RE-FIGÉ** `a6c2f651d4289295474918ad25d060c9c7b27f5e2389f9c7806015ad92118209`
+(raison : ①b, deux flux neufs lisent `epaisseur_sol`). Dérive PETITE, localisée,
+cohérente : sur 4 ans terre hum 0.071→0.079 (+eau retenue), n 0.095→0.087 /
+k 0.012→0.011 (uptake un peu plus grand) ; argile hum inchangée 0.008 (déjà
+rétentrice → cec module l'effet à la baisse, comme voulu). Pas d'emballement.
 
-**PROCHAIN = ①b effets écolo** (rétention eau greffe `tick_hydrology` + accès NPK
-borné vs D41, golden RE-FIGÉ ANNONCÉ, test 500 ans anti-emballement). L'hydro lira
-`epaisseur_sol` du tick PRÉCÉDENT (décalage 1 tick déjà en place, déterministe).
-→ `01b_effets_ecolo.md`. Lancer `/sprint-auto sprint_epaisseur_sol` (reprend à ①b).
+Fichiers touchés ①b : `fields/ecofields/constants.py` (EPAISSEUR_NORM_REF /
+EPAISSEUR_RETENTION / EPAISSEUR_NPK_BONUS), `hydrologie.py` (import `cec_norm_at`
++ terme rétention step 3b), `uptake.py` (amplificateur `ep_uptake` sur le BESOIN
+N/P/K, patron MYCO_P_BONUS), `tools/simserver/version.py` (0.5.14→0.5.15 + changelog),
+tests `simserver/{structures,conteneurs,voix}.py` (assert 0.5.15), `test_substrat.py`
+(rétrocompat drainage : même tile_id pour isoler la variable — l'om_stable/epaisseur
+de fond est hétérogène par tile_id depuis ①a, la rétention ①b la lit). NOUVEAU
+`tests/test_epaisseur_500ans.py` (anti-emballement, conservé). LDC pur OK
+(hydrologie 36, uptake 53). Suites : golden re-figé, sim_server 234/234,
+eau/lessivage/confinement/substrat/conteneur verts.
+
+**PROCHAIN = ② rendu** (relief extrudé `PxPerCmZ` + expo snapshot patron `t_sol` +
+recalage objets posés, pur-vue golden NEUTRE, points F5). → `02_rendu_relief.md`.
+Lancer `/sprint-auto sprint_epaisseur_sol` (reprend à ②).

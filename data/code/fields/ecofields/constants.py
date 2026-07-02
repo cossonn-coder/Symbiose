@@ -749,6 +749,32 @@ TAUX_DESCENTE     = 0.05   # part comblée/sem quand il DESCEND (bien plus lent 
 EPAISSEUR_EROSION = 0.02   # cm rognés/sem (voies naturelles : pluie, tassement de fond)
 EPAISSEUR_MAX     = 60.0   # cm — plafond physique du champ (borne GridField, anti-emballement)
 
+# --- Effets écologiques en retour de l'épaisseur (D57, sprint épaisseur ①b) ---
+# L'épaisseur AGIT sur l'écologie via DEUX flux du sol (jamais un bonus direct sur
+# la plante — philo #2 : la plante répond émergemment à un sol plus/moins profond).
+# Les deux lisent l'épaisseur du tick PRÉCÉDENT (hydro/uptake tournent AVANT
+# `tick_epaisseur`, 13b-bis) → décalage 1 tick UNIFORME, déterministe (voulu, ①a).
+#  - EPAISSEUR_NORM_REF : borne haute PLAUSIBLE (cm) qui normalise le champ vers
+#    [0,1] pour les deux effets (`ep_n = min(1, epaisseur / réf)`). ≪ EPAISSEUR_MAX
+#    (60, plafond physique) : un sol de jardin foisonnant tourne autour de quelques cm
+#    à ~20 cm, pas 60 → la réf est le point où l'effet SATURE, pas la borne dure.
+#  - EPAISSEUR_RETENTION : rétention d'eau supplémentaire max (à ep_n=1) ajoutée dans
+#    `tick_hydrology`, MODULÉE par la composition via `cec_norm_at` (patron nutriments) :
+#    effet PLUS FORT sur sable pauvre/drainant que sur argile déjà rétentrice. MODÉRÉ :
+#    un sol épais TAMPONNE la sécheresse, il ne la rend pas impossible. Le revers
+#    asphyxie (D39, sol gorgé) n'est PAS bridé — conséquence émergente assumée.
+#  - EPAISSEUR_NPK_BONUS : amplificateur MAX (à ep_n=1) de la FRACTION du stock N/P/K
+#    mise à l'uptake dans `plant_uptake` (`dispo_stock ×= 1 + bonus·ep_n`, patron
+#    MYCO_P_BONUS). Un sol épais met une plus grande part du stock à disposition.
+#    ⚠️ CROISE D41 (famine édaphique VOULUE) : à ep_n=0 le facteur vaut EXACTEMENT 1.0
+#    → jamais PIRE que le baseline D41, l'effet ne fait qu'ATTÉNUER la carence sur sol
+#    épais/humifère, il ne la SUPPRIME jamais (l'amplification est petite et bornée, et
+#    le `min(besoin, dispo_stock)` de Liebig plafonne toujours par le stock réel : un sol
+#    pauvre en N ne fait pas de miracle même épais). PLACEHOLDERS, calibrage F5 / bancs.
+EPAISSEUR_NORM_REF   = 20.0   # cm — épaisseur où les effets SATURENT (ep_n = 1)
+EPAISSEUR_RETENTION  = 0.006  # rétention d'eau max/sem d'un sol pleinement épais (× compo)
+EPAISSEUR_NPK_BONUS  = 0.30   # amplification max de la fraction de stock N/P/K à l'uptake
+
 # Signature sol par famille (laissée après chaque saison)
 SOIL_SIGNATURE = {
     "Fabaceae":   {"microbiome": +0.15, "fertilite": +0.10},

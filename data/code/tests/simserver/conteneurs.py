@@ -15,7 +15,7 @@ def test_conteneurs():
     s = ServerProc()
     # "full" : monde réel (maison → ombre) + banque de départ (planter_conteneur).
     init = s.send(cmd="init", config="full", seed=42)
-    check("engine_version 0.5.14", init.get("engine_version") == "0.5.14",
+    check("engine_version 0.5.15", init.get("engine_version") == "0.5.15",
           init.get("engine_version"))
     snap0 = s.send(cmd="snapshot")["snapshot"]
     check("snapshot expose `containers` VIDE à l'init (golden neutre)",

@@ -265,7 +265,20 @@ from __future__ import annotations
 #       Champ exposé au registre `get_field` (overlay debug F6 `fields`) ; pas de
 #       nouvelle sérialisation snapshot (l'exposition au pont = tronçon ②). Le save
 #       disque du champ suivra le sprint save global (aucun save disque n'existe encore).
-ENGINE_VERSION = "0.5.14"
+# 0.5.15 (épaisseur de sol ①b, D57) : le champ `epaisseur_sol` (①a) AGIT enfin sur
+#       l'écologie via DEUX flux du sol (jamais un bonus direct sur la plante, philo #2).
+#       (1) RÉTENTION D'EAU (`tick_hydrology`, terme miroir de la rétention soil_memory) :
+#       un sol profond garde l'eau, MODULÉ par la composition (`cec_norm_at`) — l'humus
+#       compte plus sur sable pauvre que sur argile déjà rétentrice ; asphyxie D39 NON
+#       bridée. (2) ACCÈS NPK (`plant_uptake`) : un sol profond met une plus grande part
+#       du stock N/P/K à disposition (amplificateur BORNÉ du besoin, patron MYCO_P_BONUS ;
+#       à epaisseur=0 → ×1.0 ⇒ jamais pire que le baseline → D41 famine PRÉSERVÉE, Liebig
+#       plafonne toujours par le stock réel). Les deux lisent l'épaisseur du tick PRÉCÉDENT
+#       (hydro/uptake AVANT `tick_epaisseur` 13b-bis — décalage 1 tick uniforme). Golden
+#       RE-FIGÉ ANNONCÉ (deux flux neufs) ; dérive localisée aux plots épais, bornée
+#       (test 500 ans anti-emballement : convergence vérifiée). Pas de sérialisation
+#       snapshot neuve (l'exposition au pont = tronçon ②, relief extrudé).
+ENGINE_VERSION = "0.5.15"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

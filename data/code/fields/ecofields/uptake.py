@@ -100,10 +100,25 @@ class UptakeMixin:
         # plante ressent via l'uptake Liebig (③) qui plafonne sur ce N réduit → jaunit.
         ph_local = self.ph.at_plot(r, c)
         immob = immobilise_n(self.bois_fresh_at(r, c))
+        # ACCÈS NPK PAR L'ÉPAISSEUR (D57 ①b) : un sol PROFOND met une plus grande PART
+        # de son stock N/P/K à disposition (plus de volume de sol prospecté par les
+        # racines). Lit `epaisseur_sol` du tick PRÉCÉDENT (uptake étape 8 AVANT
+        # `tick_epaisseur` 13b-bis — même décalage 1 tick que l'hydro, déterministe).
+        # Amplificateur BORNÉ appliqué comme MYCO_P_BONUS : sur le BESOIN, pas sur le
+        # stock (le stock physique reste borné par le champ ; amplifier le besoin puis
+        # `min(besoin, dispo_stock)` garantit qu'on ne prélève JAMAIS plus que présent →
+        # aucun champ négatif, invariant conservé). ⚠️ D41 (famine édaphique VOULUE) : à
+        # epaisseur=0 le facteur vaut EXACTEMENT 1.0 → jamais PIRE que le baseline ; la
+        # famine reste possible sur sol maigre car le `min(besoin, dispo_stock)` de Liebig
+        # plafonne par le STOCK réel (un sol pauvre ne fait pas de miracle même épais).
+        # L'épaisseur ATTÉNUE la carence sur sol humifère profond, elle ne la SUPPRIME
+        # pas. Flux du sol, pas la plante (philo #2). PLAFONNÉ, jamais infini.
+        ep_uptake = 1.0 + EPAISSEUR_NPK_BONUS * min(
+            1.0, self.epaisseur_sol.at_plot(r, c) / EPAISSEUR_NORM_REF)
         for nut, fld in (("N", self.n), ("P", self.p), ("K", self.k)):
             besoin = (BESOIN[nut].get(stage_index, 0.0) * share * asphyxie_factor
                       * (1.0 + micro_norm * UPTAKE_MICRO_BONUS)
-                      * dispo(ph_local, nut))
+                      * dispo(ph_local, nut) * ep_uptake)   # épaisseur : accès NPK (①b)
             # ③ MYCORHIZE (§2.2) : le réseau fongique relie ses hyphes aux racines et
             # fait passer le PHOSPHORE — P SEULEMENT (jamais N/K, décision figée ii).
             # Là où `mycelium` touche cette racine vivante, le FLUX prélevable de P est
