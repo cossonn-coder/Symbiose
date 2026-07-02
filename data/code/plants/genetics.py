@@ -50,10 +50,21 @@ dessus sans créer de cycle (notamment fields/seedbank.py qui importe clamp_gene
 #    (entre-nœuds courts → étiolement réduit, tige sollicitée → susceptibilité au
 #    dégât de vent abaissée). Neutre 1.0 (génotype = port standard). AJOUTÉ EN QUEUE
 #    (même garde-fou de canal de hash que `tolerance_asphyxie`).
+#  - `phenologie_florale` : VARIABILITÉ intra-espèce de la DATE de floraison (sprint
+#    bugs d'émergence ③, S2). >1 = fleurit PLUS TÔT → le seuil de forçage thermique
+#    floral effectif est ABAISSÉ de `FLORA_GENE_SHIFT·(gène−1)` (cf. floraison.py) ;
+#    < 1 = fleurit plus tard. Neutre 1.0 (la plante prend `gdd_floraison` brut).
+#    C'est le support de la SÉLECTION DARWINIENNE ÉMERGENTE qui DÉSYNCHRONISE la
+#    floraison : le pool-sol porte une variance de dates → nectar SOUTENU (au lieu
+#    d'un pic synchrone unique) → dynamique des pollinisateurs saine, sans code de
+#    sélection dédié (reproduction + héritage + réensemencement déjà en place).
+#    AJOUTÉ EN QUEUE (même garde-fou de canal de hash que `germination_thermique` :
+#    `child_genes`/`sample_genes` indexent le bruit par POSITION → un ajout en queue
+#    ne décale aucun gène antérieur).
 GENE_NAMES = ("hauteur", "rusticite_froid", "vigueur",
               "resistance_pathogene", "tolerance_secheresse",
               "tolerance_ombre", "tolerance_asphyxie", "port_trapu",
-              "germination_thermique")
+              "germination_thermique", "phenologie_florale")
 
 # Plage « normale » du vecteur de gènes — gaussienne centrée 1.0, σ initial 0.10.
 # L'introgression inter-espèces peut pousser HORS de [GENE_MIN, GENE_MAX]

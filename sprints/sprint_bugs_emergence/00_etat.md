@@ -10,8 +10,8 @@
   germination »** : monoculture pionnière qui verrouille la succession.
 
 ## Phase courante
-**EN COURS** — tronçons ① (D56) + ② (D25) LIVRÉS le 2026-07-02 (moteur touché,
-golden re-figé, NON commité — Nico commit). Reste ③④. Doc :
+**EN COURS** — tronçons ① (D56) + ② (D25) + ③ (gène phénologie) LIVRÉS le
+2026-07-02 (moteur touché, NON commité — Nico commit). Reste ④. Doc :
 `docs/conception/CONCEPTION_BUGS_EMERGENCE.md`.
 
 ## Décisions figées (arbitrage Nico)
@@ -42,7 +42,14 @@ golden re-figé, NON commité — Nico commit). Reste ③④. Doc :
   (patron connu T_sol→vie macro). `test_vigueur` INCHANGÉ. Dérive COHÉRENTE
   (sens du déverrouillage), toutes suites vertes.
 - **③ `03_gene_phenologie_florale.md`** — gène `phenologie_florale` + décalage
-  GDD par individu (désynchronise S2). Golden re-figé MAÎTRISÉ (ajout clé).
+  GDD par individu (désynchronise S2). **LIVRÉ 2026-07-02.** Golden **INCHANGÉ**
+  `98bdf772…` (RE-FIGEAGE PRÉVU MAIS NON NÉCESSAIRE — voir §Avancement ③) :
+  les plantes du golden naissent avec `genes={}` (défaut `add_plant`), le vecteur
+  de gènes N'EST donc PAS sérialisé pour elles → ajouter une clé à `GENE_NAMES`
+  ne les touche pas. `plant.gene("phenologie_florale")` renvoie 1.0 (absent) →
+  seuil floral inchangé. population `e7f1cf19…` + vigueur INCHANGÉS. Toutes suites
+  vertes. L'étalement des dates ÉMERGE des grains féraux/hérités (qui, eux,
+  portent le vecteur avec variance) — hors périmètre du smoke 2 tuiles.
 - **④ `04_voix_et_bancs.md`** — voix (concepts succession/phénologie) + bancs
   d'acceptation. Golden NEUTRE.
 
@@ -199,12 +206,31 @@ banque-sol + champs moyens par an). Run lancé, sortie bufferisée.
   (pic an 4-5) puis 248→221→199, tardifs 65→571/64→447/41→416, banque déverrouillée.
 - LDC (compte_ldc) : seedbank 194, sol 70, banc 13, test 83 → tous 🟢.
 
+## Avancement tronçon ③ (gène phénologie florale) — livré 2026-07-02
+- `plants/genetics.py` : ajout `"phenologie_florale"` EN QUEUE de `GENE_NAMES`
+  (canaux de hash préservés — `child_genes`/`sample_genes` indexent par POSITION,
+  garde-fou identique à `germination_thermique`). Docstring du gène ajoutée.
+- `sim/engine/floraison.py` : constante `FLORA_GENE_SHIFT = 40.0` (unités GDD,
+  miroir de `GERM_GENE_SHIFT`) + décalage par individu dans `_tick_floraison` :
+  `gdd_eff = cls.gdd_floraison − FLORA_GENE_SHIFT·(gene − 1.0)`, gène lu via
+  `plant.gene("phenologie_florale")` (neutre 1.0 si absent). Photopériode et
+  maturité INTOUCHÉES.
+- **DÉCISION imprévue vs kickoff** : le RE-FIGEAGE MAÎTRISÉ PRÉVU N'EST PAS
+  NÉCESSAIRE. Le golden sérialise `p.genes` (test_golden.py L99) mais les plantes
+  du smoke naissent via `add_plant` → `genes={}` (défaut `PlantInstance`), donc
+  leur vecteur est VIDE et n'est jamais sérialisé. Ajouter une clé à `GENE_NAMES`
+  ne les affecte pas ; `gene()` renvoie 1.0 pour la clé absente → porte florale
+  inchangée à SHIFT=40 comme à SHIFT=0. Golden `98bdf772…` INCHANGÉ, population
+  `e7f1cf19…` + vigueur INCHANGÉS. C'est le même comportement que l'ajout de
+  `germination_thermique` (golden-neutre pour la même raison). L'étalement floral
+  émerge des grains FÉRAUX/HÉRITÉS (qui portent le vecteur avec variance via
+  `sample_genes`/`child_genes`), hors du périmètre du smoke 2 tuiles × 4 ans.
+- Suite complète VERTE. Pas de C# (Python only).
+
 ## §REPRISE
-TRONÇONS ① (D56) + ② (D25) LIVRÉS & vérifiés (golden re-figé `98bdf772…`,
-population re-figé `e7f1cf19…`, vigueur INCHANGÉ, TOUTES suites vertes + 4 oracles
-bancs, NON commité — Nico commit). **Prochain : tronçon ③
-`03_gene_phenologie_florale.md`** (gène `phenologie_florale` en queue de
-`GENE_NAMES` + décalage GDD par individu dans `sim/engine/floraison.py` pour
-désynchroniser S2 ; golden re-figé MAÎTRISÉ = ajout de clé sérialisée, SHIFT=0 ⇒
-sim identique au démarrage). Diagnostic S2/S3 clos ; reproductible via
+TRONÇONS ① (D56) + ② (D25) + ③ (gène `phenologie_florale`) LIVRÉS & vérifiés
+(golden `98bdf772…` INCHANGÉ au ③, population `e7f1cf19…`, vigueur INCHANGÉ,
+TOUTES suites vertes + 4 oracles bancs, NON commité — Nico commit). **Prochain :
+tronçon ④ `04_voix_et_bancs.md`** (voix concepts succession/phénologie + bancs
+d'acceptation ; golden NEUTRE attendu). Diagnostic S2/S3 clos ; reproductible via
 `/tmp/diag_symbiose.py`.

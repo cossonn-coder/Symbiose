@@ -40,6 +40,18 @@ T_BASE_FLORAISON = 6.0
 # la descente (fanaison plus vive) — knobs de calibrage (CONCEPTION §A.3).
 FLORAISON_MONTEE   = 0.35
 FLORAISON_DESCENTE = 0.50
+# Décalage du seuil de forçage thermique floral par le gène `phenologie_florale`
+# (sprint bugs d'émergence ③, S2 — désynchronise la floraison). Miroir EXACT de
+# `GERM_GENE_SHIFT` (germination) mais sur la porte FLORALE : le seuil effectif de
+# GDD floral est `gdd_floraison − FLORA_GENE_SHIFT·(gène − 1)`. Un gène > 1 abaisse
+# le seuil → l'individu fleurit PLUS TÔT ; < 1 le relève → plus tard. Neutre 1.0 ⇒
+# aucun décalage (à SHIFT=0 comme à gène=1.0, la sim est STRICTEMENT identique au
+# démarrage — seule la clé s'ajoute au vecteur sérialisé). L'étalement des dates
+# ÉMERGE ensuite du pool-sol (variance à la levée férale + héritage) → nectar
+# soutenu, SÉLECTION DARWINIENNE sans code dédié. Déterministe (philo #3) : le gène
+# est tiré/hérité par des canaux de hash existants, pas de RNG vivant. PLACEHOLDER
+# de calibrage (analogue GERM_GENE_SHIFT=3.5, ici en unités de GDD).
+FLORA_GENE_SHIFT   = 40.0
 
 
 class FloraisonMixin:
@@ -59,8 +71,13 @@ class FloraisonMixin:
             if week_in_year == 1:
                 plant.gdd_accum = 0.0
             plant.gdd_accum += max(0.0, temp - T_BASE_FLORAISON)
-            # Double porte + maturité.
-            porte_chaleur = plant.gdd_accum >= cls.gdd_floraison
+            # Double porte + maturité. Gène `phenologie_florale` (③) : DÉCALE le
+            # seuil de forçage floral PROPRE à l'individu (gène > 1 → seuil abaissé
+            # → fleurit plus tôt). Neutre 1.0 ⇒ `gdd_eff == cls.gdd_floraison`
+            # (miroir exact de `germination_thermique` en succession).
+            gene = plant.gene("phenologie_florale")
+            gdd_eff = cls.gdd_floraison - FLORA_GENE_SHIFT * (gene - 1.0)
+            porte_chaleur = plant.gdd_accum >= gdd_eff
             porte_jour    = cls.bloom_daylen_min <= jour <= cls.bloom_daylen_max
             cible = 1.0 if (porte_chaleur and porte_jour
                             and is_seed_bearing(plant)) else 0.0
