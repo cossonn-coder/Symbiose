@@ -36,6 +36,8 @@ from sim.encyclopedie_types import type_de
 from sim.champignon_encyclo import CLE_CHAMPIGNON, encyclo_meta as _champignon_meta
 from sim.concept_corpus import FICHES_CONCEPT
 from sim.technique_corpus import FICHES_TECHNIQUE
+from sim.geste_corpus import FICHES_GESTE
+from sim.outil_corpus import FICHES_OUTIL
 from fields.faune_encyclo import FAUNE_ENCYCLO, encyclo_meta as _faune_meta
 
 # --- Calibrage (décision A, doc §0 — figée, pas un knob de tuning) ------------
@@ -47,13 +49,14 @@ NIVEAU_MAX = 3
 # Registre (D60 §5) des corpus 3-niveaux des types NEUFS (concept · technique ·
 # outil · geste). Le dispatch consulte ce registre pour ces types ; tant qu'un
 # type/clé n'y est pas, on renvoie `None` proprement (pas de crash). Structure :
-# `{type: {cle: {1,2,3}}}`. ④ branche concept + technique ; ⑤ branchera outil +
-# geste (encore vides ici). L'alignement clé↔classification est vérifié par le test.
+# `{type: {cle: {1,2,3}}}`. ④ a branché concept + technique ; ⑤ branche outil +
+# geste. Les 4 types NEUFS ont désormais leur corpus 3-niveaux. L'alignement
+# clé↔classification (zéro trou, zéro surplus) est vérifié par le test.
 CORPUS_PAR_TYPE: dict[str, dict[str, dict[int, str]]] = {
     "concept":   FICHES_CONCEPT,
     "technique": FICHES_TECHNIQUE,
-    "outil":     {},
-    "geste":     {},
+    "outil":     FICHES_OUTIL,
+    "geste":     FICHES_GESTE,
 }
 
 

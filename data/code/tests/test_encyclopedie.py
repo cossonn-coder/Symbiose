@@ -225,10 +225,11 @@ def test_dispatch_mono():
     check("champignon → blurb + graphe non vides",
           fc["niveaux"][1].strip() and fc["interconnexions"])
 
-    # geste sans corpus (⑤ pas encore là) → None propre (point d'extension)
+    # geste : depuis ⑤ le corpus geste existe → fiche 3-niveaux (plus de None).
     _poser_palier(gs, "j1", "planter", 2)
-    check("geste sans corpus → None (point d'extension ⑤)",
-          encyclopedie.encyclopedie_lire(gs, "j1", "planter") is None)
+    fg = encyclopedie.encyclopedie_lire(gs, "j1", "planter")
+    check("geste avec corpus (⑤) → fiche geste, niveaux {1,2}",
+          fg["type"] == "geste" and set(fg["niveaux"]) == {1, 2}, f"{fg}")
 
 
 # ---------------------------------------------------------------------------
@@ -285,6 +286,94 @@ def test_corpus_concept_technique():
           [e["cle"] for e in idx_t] == ["arrosage"], f"{idx_t}")
 
 
+# ---------------------------------------------------------------------------
+# J. Corpus geste + outil 3 niveaux (D60 ⑤)
+# ---------------------------------------------------------------------------
+
+def test_corpus_geste_outil():
+    from sim.geste_corpus import FICHES_GESTE
+    from sim.outil_corpus import FICHES_OUTIL
+
+    # J.1 alignement clés corpus ⟷ classification `encyclopedie_types` (ni trou,
+    # ni surplus). La source de vérité des clés = ce que `type_de` classe, pas les
+    # ensembles bruts GESTES/OUTILS (grelinette ∈ GESTES ET OUTILS, tranché outil).
+    gestes_classes = {c for c in ET.GESTES if ET.type_de(c) == "geste"}
+    outils_classes = {c for c in ET.OUTILS if ET.type_de(c) == "outil"}
+    for nom, corpus, cles_types in (
+        ("geste", FICHES_GESTE, gestes_classes),
+        ("outil", FICHES_OUTIL, outils_classes),
+    ):
+        sans_fiche = sorted(cles_types - set(corpus))
+        surplus = sorted(set(corpus) - cles_types)
+        check(f"{nom} : toute clé classée a une fiche", sans_fiche == [],
+              f"muettes : {sans_fiche}")
+        check(f"{nom} : aucune fiche hors classification", surplus == [],
+              f"orphelines : {surplus}")
+        # J.2 chaque fiche = 3 niveaux non vides
+        incompletes = [k for k, f in corpus.items()
+                       if set(f) != {1, 2, 3} or not all(f[n].strip() for n in (1, 2, 3))]
+        check(f"{nom} : chaque fiche = 3 niveaux non vides", incompletes == [],
+              f"incomplètes : {incompletes}")
+
+    # J.3 grelinette : classé OUTIL (collision ①), fiche dans FICHES_OUTIL, pas geste
+    check("grelinette → outil, fiche dans outil_corpus",
+          ET.type_de("grelinette") == "outil" and "grelinette" in FICHES_OUTIL
+          and "grelinette" not in FICHES_GESTE)
+
+    # J.4 dispatch + troncature au palier (geste `becher`)
+    gs = {}
+    _poser_palier(gs, "j1", "becher", 1)
+    fg1 = encyclopedie.encyclopedie_lire(gs, "j1", "becher")
+    check("geste palier 1 → type geste, niveau_max=1",
+          fg1["type"] == "geste" and fg1["niveau_max"] == 1, f"{fg1}")
+    check("geste palier 1 → N1 = corpus", fg1["niveaux"][1] == FICHES_GESTE["becher"][1])
+    _poser_palier(gs, "j1", "becher", 5)
+    fg5 = encyclopedie.encyclopedie_lire(gs, "j1", "becher")
+    check("geste palier 5 → plafond niveau_max=3, 3 niveaux",
+          fg5["niveau_max"] == 3 and set(fg5["niveaux"]) == {1, 2, 3},
+          f"{fg5['niveaux'].keys()}")
+
+    # J.5 dispatch + troncature au palier (outil `sécateur`)
+    _poser_palier(gs, "j1", "sécateur", 2)
+    fo = encyclopedie.encyclopedie_lire(gs, "j1", "sécateur")
+    check("outil palier 2 → type outil, niveaux {1,2}",
+          fo["type"] == "outil" and set(fo["niveaux"]) == {1, 2}, f"{fo}")
+
+    # J.6 index tagué + filtre par onglet
+    idx_g = encyclopedie.encyclopedie_index(gs, "j1", "geste")
+    check("filtre geste → [becher]", [e["cle"] for e in idx_g] == ["becher"], f"{idx_g}")
+    idx_o = encyclopedie.encyclopedie_index(gs, "j1", "outil")
+    check("filtre outil → [sécateur]", [e["cle"] for e in idx_o] == ["sécateur"], f"{idx_o}")
+
+
+# ---------------------------------------------------------------------------
+# K. Complétude GLOBALE (après ④+⑤) : tout objet classé par `type_de` a une
+#    source de fiche (kickoff ⑤ « un test global peut vérifier que TOUT objet
+#    classé a une source de fiche »).
+# ---------------------------------------------------------------------------
+
+def test_completude_globale():
+    # Toutes les clés que `type_de` sait ranger dans un des 7 onglets.
+    toutes = (set(ET.PLANTES) | set(ET.ANIMAUX) | {CLE_CHAMPIGNON}
+              | set(ET.CONCEPTS) | set(ET.TECHNIQUES) | set(ET.OUTILS) | set(ET.GESTES))
+    sources = {
+        "plante":     set(FICHES),
+        "animal":     set(FAUNE_ENCYCLO),
+        "champignon": {CLE_CHAMPIGNON},
+        "concept":    set(encyclopedie.CORPUS_PAR_TYPE["concept"]),
+        "technique":  set(encyclopedie.CORPUS_PAR_TYPE["technique"]),
+        "outil":      set(encyclopedie.CORPUS_PAR_TYPE["outil"]),
+        "geste":      set(encyclopedie.CORPUS_PAR_TYPE["geste"]),
+    }
+    muettes = []
+    for cle in sorted(toutes):
+        t = ET.type_de(cle)
+        if t is None or cle not in sources.get(t, set()):
+            muettes.append((cle, t))
+    check("tout objet classé a une source de fiche", muettes == [],
+          f"muettes : {muettes}")
+
+
 if __name__ == "__main__":
     print("=" * 60)
     print("SYMBIOSE — Encyclopédie (Voix narratives ④)")
@@ -298,6 +387,8 @@ if __name__ == "__main__":
     test_index_tague()
     test_dispatch_mono()
     test_corpus_concept_technique()
+    test_corpus_geste_outil()
+    test_completude_globale()
 
     print("\n" + "=" * 60)
     passed = sum(1 for _, ok in _results if ok)

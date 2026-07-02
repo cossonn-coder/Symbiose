@@ -68,7 +68,26 @@ voix.py` adapté : l'assertion « index vide sans survol » vise désormais les 
 Pas une régression (crédit concept préexistant à ④ ; ④ ne fait que le rendre visible,
 golden intact).
 
-Reste ⑤⑥.
+**⑤ CLOS** (2026-07-02) : corpus encyclopédie 3 niveaux geste + outil.
+Créé `sim/geste_corpus.py` (`FICHES_GESTE`, 20 clés = les `COUTS` classées `geste`
+par `type_de`) + `sim/outil_corpus.py` (`FICHES_OUTIL`, 12 clés = `OBJETS_TOUCHES`
+− `TECHNIQUES`). Branchés dans `CORPUS_PAR_TYPE` (types `geste`+`outil`) → les 4
+types NEUFS ont désormais leur corpus. Voix naturaliste 3ᵉ pers. : geste N1 acte
+visible → N2 mécanique écolo → N3 rôle+effets de bord ; outil N1 objet → N2 usage
+juste → N3 quand s'en passer (non-action, philo transcendant). Contreparties nommées
+(déraciner rouvre la banque-sol, bêche casse le mycélium, philo #1), interconnexions
+geste↔technique↔outil↔concept tissées. **`grelinette` rangé OUTIL** (collision ①,
+priorité déterministe) → fiche dans `outil_corpus`, PAS `geste_corpus` ; couverture
+alignée sur `type_de`, pas sur les ensembles bruts. LDC pur : geste 161, outil 97
+(🟢). Golden INCHANGÉ (`a6c2f651…`, NEUTRE). Tests : `test_encyclopedie` 68/68
+(+ section J geste/outil : alignement corpus↔classif sans trou/surplus, complétude
+3 niv., dispatch+troncature, filtre index, cas grelinette ; + section K complétude
+GLOBALE = tout objet classé par `type_de` a une source de fiche ; test H `planter`
+retourne désormais sa fiche geste au lieu de `None` — point d'extension ⑤ consommé).
+`test_sim_server` 240/240, `test_progression_geste` 15/15. `dotnet build` : NON
+CONCERNÉ (Python pur).
+
+Reste ⑥ (UI Godot 7 onglets — F5).
 
 ## Sujet (D60, Nico 2026-07-02, F5 — S9, étend D31)
 La vie macro est un amas de cercles indistincts. Objectif : **survol → nom + entrée
@@ -93,7 +112,7 @@ Détail complet : `docs/conception/CONCEPTION_VIE_MACRO_IDENTIFIABLE.md`.
 | ✅ ② | `02_survol_vie_macro.md` | `observer_espece` multi-règnes + survol C# vie macro | NEUTRE ✓ | **oui** |
 | ✅ ③ | `03_progression_geste_outil.md` | Progression combinée usage+succès + découverte à l'usage | NEUTRE ✓ | non |
 | ✅ ④ | `04_corpus_concept_technique.md` | Fiches 3 niv. concept + technique | NEUTRE ✓ | non |
-| ⑤ | `05_corpus_geste_outil.md` | Fiches 3 niv. geste + outil | NEUTRE | non |
+| ✅ ⑤ | `05_corpus_geste_outil.md` | Fiches 3 niv. geste + outil | NEUTRE ✓ | non |
 | ⑥ | `06_ui_godot_7_onglets.md` | UI 7 onglets + fiches mono/graphe + hover carpophore | NEUTRE | **oui** |
 
 Dépendances : ② dépend de ① ; ③ dépend de ① ; ④⑤ dépendent de ① (branchent le
@@ -126,11 +145,13 @@ peut casser à `dotnet build` entre ① et ⑥ — c'est PRÉVU, ⑥ répare la 
 Boucle `/sprint-auto` : lancer le kickoff `0N` → implémenter → vérifier
 `python3 -m tests.test_golden` (attendu INCHANGÉ, golden NEUTRE) + tests ciblés du
 tronçon + `dotnet build Symbiose.csproj` pour les tronçons C# (②⑥) → mettre à jour
-CE fichier (cocher le tronçon) → commit → `/clear` → tronçon suivant. **①②③④ CLOS** ;
-reprendre à **⑤** (`05_corpus_geste_outil.md` — fiches encyclopédie 3 niveaux geste +
-outil, branche `CORPUS_PAR_TYPE["outil"]`+`["geste"]` laissés VIDES ; ⑤ suppose ③ pour
-rendre N2/N3 atteignables ; tronçon Python pur, **pas F5**, golden NEUTRE). F5 groupés
-à la fin (② faite — à valider ; et ⑥).
+CE fichier (cocher le tronçon) → commit → `/clear` → tronçon suivant. **①②③④⑤ CLOS** ;
+reprendre à **⑥** (`06_ui_godot_7_onglets.md` — UI 7 onglets + fiches mono/graphe +
+hover carpophore ; **tronçon C# → `dotnet build Symbiose.csproj` requis**, F5). ⑥
+dépend de ①–⑤ ; ⚠️ ① a changé la forme de l'index (strings → dicts taggués) — ⑥
+répare/adapte `EncyclopediePanel` (le build est resté vert depuis ②, mais l'UF des
+onglets reste à câbler). Golden NEUTRE attendu. F5 groupés à la fin (② faite — à
+valider ; et ⑥).
 
 ## NB git
 À l'ouverture de la conception, l'arbre était SALE (`sprint_epaisseur_sol` non
