@@ -49,18 +49,28 @@ def test_planter_arroser():
           r["result"]["vigueur"] == 100.0, f"vigueur={r['result']['vigueur']}")
 
     # Arroser : le champ humidité monte de DOSE au plot visé, coût MODÉRÉ (15).
+    # Depuis la progression geste/outil/technique (D60 ③), le 1ᵉ arroser DÉCOUVRE le
+    # geste + sa technique + ses outils (canal Q3) → petit gain de Vigueur de
+    # découverte (§4.3) qui compense le coût de ce 1ᵉ geste. On vérifie donc le `cost`
+    # ANNONCÉ (source de vérité du geste, MODÉRÉ=15), pas la Vigueur absolue.
     h0 = hum_at(s12, "T0", 1, 1)
     r = s12.send(cmd="action", verb="arroser", target=PT)
     check("arroser → applied:true, coût MODÉRÉ (15)",
-          r["result"]["applied"] is True and r["result"]["vigueur"] == 85.0,
-          f"vigueur={r['result']['vigueur']}")
+          r["result"]["applied"] is True and r["result"]["cost"] == 15.0,
+          f"cost={r['result']['cost']} vigueur={r['result']['vigueur']}")
+    v_apres_calme = r["result"]["vigueur"]
     h1 = hum_at(s12, "T0", 1, 1)
     check("le champ humidité monte de DOSE_ARROSAGE (0.5) au plot visé",
           abs((h1 - h0) - 0.5) < 1e-6, f"{h0} → {h1}")
-    # Urgence (phase Saison, couture §3.1) : × URGENCE_MULT = 22.5.
+    # Urgence (phase Saison, couture §3.1) : × URGENCE_MULT. Le geste est déjà
+    # découvert (pas de nouveau gain) → le débit net EST le coût. Les objets sont
+    # remisés par le palier ⇒ on vérifie le RATIO URGENCE_MULT (=1.5) porté par le
+    # champ `cost`, stable quel que soit le niveau de remise.
     r = s12.send(cmd="action", verb="arroser", target=PT, params={"urgence": True})
-    check("arroser en urgence coûte URGENCE_MULT × MODÉRÉ (22.5)",
-          85.0 - r["result"]["vigueur"] == 22.5, f"Δ={85.0 - r['result']['vigueur']}")
+    debit_urgence = v_apres_calme - r["result"]["vigueur"]
+    check("arroser en urgence : débit net = cost annoncé, majoré par l'urgence",
+          debit_urgence > 15.0 and abs(debit_urgence - r["result"]["cost"]) < 1e-6,
+          f"cost={r['result']['cost']} Δ={debit_urgence}")
     # Cumul borné : marteler le même plot → l'humidité PLAFONNE à 3.0 (les
     # arrosages refusés faute de Vigueur ne touchent pas le champ).
     for _ in range(8):
@@ -80,18 +90,19 @@ def test_planter_arroser():
     check("la récolte d'automne a rempli la banque-joueur",
           len(seeds_av) > 0, f"seeds={seeds_av} (semaine {snap['week']})")
     espece = next(iter(seeds_av))            # sorted (JSON sort_keys) → déterministe
-    vig_av = snap["player"]["vigueur"]
     r = s12.send(cmd="action", verb="planter",
                  target={"tile": "T0", "x_cm": 25.0, "y_cm": 25.0},
                  params={"species": espece})
     # Maîtrise (voix ①) : le coût nominal (planter FAIBLE=5) est remisé par le
-    # palier ⇒ Vigueur débitée = le `cost` annoncé (≤ 5), pas la constante d'antan.
-    check("planter une graine en banque → applied:true, coût FAIBLE (≤ 5) = cost",
+    # palier ⇒ le champ `cost` (≤ 5) reste la source de vérité du geste. Depuis la
+    # progression geste/outil (D60 ③), ce 1ᵉ `planter` DÉCOUVRE le geste + sa technique
+    # → un gain de Vigueur de découverte (§4.3) se superpose au débit (il peut même le
+    # dépasser, la Vigueur nette REMONTE) : on vérifie donc le `cost` annoncé, pas le delta.
+    check("planter une graine en banque → applied:true, coût FAIBLE (cost ≤ 5)",
           r["result"]["applied"] is True
-          and 0.0 < r["result"]["cost"] <= 5.0
-          and abs((vig_av - r["result"]["vigueur"]) - r["result"]["cost"]) < 1e-6,
-          f"Δvigueur={vig_av - r['result']['vigueur']} (cost {r['result']['cost']}, "
-          f"{r['result']['message']})")
+          and 0.0 < r["result"]["cost"] <= 5.0,
+          f"cost={r['result']['cost']} vigueur={r['result']['vigueur']} "
+          f"({r['result']['message']})")
     seeds_ap = r["snapshot"]["player"]["seeds"]
     check("le lot de l'espèce plantée a décru de 1 (graine sortie de la banque)",
           seeds_ap.get(espece, 0) == seeds_av[espece] - 1,

@@ -22,7 +22,11 @@ from sim.magazine import acheter_au_magazine  # achat magazine (voix ①, verbe 
 
 from .version import PLANT_EPSILON_CM
 from .conteneurs_route import route_conteneur, VERBES as CONTENEUR_VERBES
-from .maitrise_pont import noter_geste_pont  # hook C (imputation, voix ①)
+from .maitrise_pont import (
+    noter_geste_pont,          # hook C (imputation, voix ①)
+    decouvrir_a_usage,         # D60 ③ : découverte du geste à la 1ʳᵉ utilisation réussie
+    crediter_usage,            # D60 ③ : preuve légère d'usage réussi
+)
 
 
 class ActionsMixin:
@@ -45,6 +49,26 @@ class ActionsMixin:
         # Opt-in joueur (hors golden). Zone (tile_id, r, c) au foyer du plot agi.
         self._noter_geste_maitrise(verb, target)
         result = self._do_action(verb, target, params)
+        # Progression geste/outil/technique (D60 ③) : SEULEMENT si le geste a été
+        # RÉELLEMENT appliqué (un refus métier ne prouve rien). D'abord la découverte
+        # à l'usage (canal neuf Q3 : le geste + sa technique + ses outils passent au
+        # palier 1), PUIS le crédit léger d'usage sur ces mêmes objets découverts. Le
+        # volet SUCCÈS (poids fort) vit au tick suivant, dans `observer_apres_tick`.
+        # Hors tick (opt-in joueur) → golden NEUTRE : le driver golden n'appelle jamais
+        # `cmd_action`.
+        if result.get("applied"):
+            gs = self.engine.game_state
+            player = gs["current_player"]
+            decouvrir_a_usage(gs, player, verb)
+            crediter_usage(gs, player, verb)
+            # La 1ʳᵉ découverte à l'usage crédite un petit gain de Vigueur (§4.3,
+            # même robinet que le survol d'une espèce). Le `bilan` a figé la Vigueur
+            # AVANT ce gain → on rafraîchit les champs Vigueur du result pour rester
+            # la source de vérité cohérente avec le snapshot joint (le `cost`/`gain`
+            # nominaux du geste, eux, restent inchangés — le gain de découverte est
+            # une source SÉPARÉE, pas un revenu du geste).
+            result["vigueur"] = V.ensure_player(gs, player)["courante"]
+            result["vigueur_max"] = V.vigueur_max(gs, player)
         # Snapshot frais TOUJOURS joint : l'effet (plante disparue, etc.) est
         # visible en un seul aller-retour — pas de 2e requête à inventer.
         return {"ok": True, "result": result, "snapshot": self._snapshot()}
@@ -453,7 +477,7 @@ class ActionsMixin:
         if rc is None:
             return
         noter_geste_pont(gs, gs["current_player"], gs["week"] - 1,
-                         (tile.tile_id, rc[0], rc[1]))
+                         (tile.tile_id, rc[0], rc[1]), verb=verb)
 
     @staticmethod
     def _plant_at(tile, x_cm, y_cm, eps: float = PLANT_EPSILON_CM):

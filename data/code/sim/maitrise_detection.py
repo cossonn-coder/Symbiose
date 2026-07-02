@@ -79,7 +79,11 @@ def _detection(game_state: dict, player: str) -> dict:
     maîtrise si besoin : l'opt-in vaut pour le driver, jamais pour le golden écolo
     (qui n'appelle JAMAIS ce module).
 
-    - `gestes`     : journal des gestes récents `[(semaine, zone)]` (fenêtre §9.6).
+    - `gestes`     : journal des gestes récents `[(semaine, zone, verb)]` (fenêtre
+                     §9.6). `verb` (str|None) est le VERBE du geste (D60 ③) : il
+                     permet au pont de créditer le geste lui-même en poids fort
+                     quand son imputation produit une amélioration. Additif :
+                     rétro-compatible (verb=None pour les appels sans verbe).
     - `stagnations`: zone → `(semaine, raison)` — la dernière stagnation vue, en
                      attente d'être levée dans la fenêtre.
     - `replante`   : ensemble des zones plantées PAR LE JOUEUR (§9.6(i)). Tout ce
@@ -95,15 +99,20 @@ def _detection(game_state: dict, player: str) -> dict:
 
 
 # --- API d'enregistrement des gestes joueur (appelée par le driver/UI) -------
-def noter_geste(game_state: dict, player: str, semaine: int, zone) -> None:
+def noter_geste(game_state: dict, player: str, semaine: int, zone,
+                verb: str | None = None) -> None:
     """Enregistre un geste joueur dans la fenêtre d'imputation (§9.6(ii)). `zone`
     = `(tile_id, r, c)` du plot agi (la détection impute l'amélioration de ce plot
     au geste). Le DRIVER appelle ceci quand le joueur agit (symétrique : il appelle
     `detecter` après chaque tick). On NE câble PAS `actions.py` ici — la détection
     est event-driven *par tick*, les gestes *par clic* : le driver relie les deux
-    (découplage acté). Élague la fenêtre au passage."""
+    (découplage acté). Élague la fenêtre au passage.
+
+    `verb` (optionnel, D60 ③) : le verbe du geste, mémorisé pour que la progression
+    geste/outil/technique retrouve QUEL geste a produit une amélioration (poids fort).
+    Défaut None = rétro-compatible (les appels historiques sans verbe restent valides)."""
     det = _detection(game_state, player)
-    det["gestes"].append((semaine, tuple(zone)))
+    det["gestes"].append((semaine, tuple(zone), verb))
     _elaguer(det, semaine)
 
 
@@ -119,7 +128,7 @@ def _elaguer(det: dict, semaine: int) -> None:
     """Oublie gestes et stagnations sortis de la fenêtre `[semaine-N, semaine]` —
     borne la mémoire et empêche d'imputer du hasard trop ancien (§9.6)."""
     limite = semaine - FENETRE_IMPUTATION
-    det["gestes"] = [(s, z) for (s, z) in det["gestes"] if s >= limite]
+    det["gestes"] = [(s, z, v) for (s, z, v) in det["gestes"] if s >= limite]
     det["stagnations"] = {z: (s, r) for z, (s, r) in det["stagnations"].items()
                           if s >= limite}
 
@@ -129,7 +138,22 @@ def _geste_impute(det: dict, zone, semaine: int, depuis: int) -> bool:
     la stagnation) et `semaine` (de l'amélioration), dans la fenêtre ? C'est le
     cœur de §9.0 : sans geste, l'amélioration est ÉMERGENTE (« ça pousse tout
     seul ») et ne crédite RIEN."""
-    return any(z == zone and depuis <= s <= semaine for (s, z) in det["gestes"])
+    return any(z == zone and depuis <= s <= semaine for (s, z, _v) in det["gestes"])
+
+
+def verbes_imputables(game_state: dict, player: str, zone, semaine: int,
+                      depuis: int) -> list[str]:
+    """Les VERBES des gestes imputables à `zone` dans la fenêtre `[depuis, semaine]`
+    (D60 ③, volet succès). Sert au pont : quand `detecter` a crédité une amélioration
+    sur une zone où un geste était imputé, le pont crédite ces verbes en poids fort.
+    Ignore les gestes sans verbe (appels historiques). Ordre du journal (déterministe),
+    dédupliqué. Lecture pure."""
+    det = _detection(game_state, player)
+    vus: list[str] = []
+    for (s, z, v) in det["gestes"]:
+        if v is not None and z == tuple(zone) and depuis <= s <= semaine and v not in vus:
+            vus.append(v)
+    return vus
 
 
 def _crediter(game_state: dict, player: str, objet: str, natures: set[str]) -> int | None:
@@ -150,11 +174,19 @@ def _crediter(game_state: dict, player: str, objet: str, natures: set[str]) -> i
 
 
 # --- Le détecteur principal -------------------------------------------------
-def detecter(game_state: dict, player: str, log: list[str], semaine: int) -> list[tuple]:
+def detecter(game_state: dict, player: str, log: list[str], semaine: int,
+             zones_creditees: list | None = None) -> list[tuple]:
     """Lit les signaux d'UN tick (`log` retourné par `tick_semaine` + état post-tick
     `game_state["tiles"]`) et crédite les preuves correspondantes. Appelé par le
     driver APRÈS chaque tick. Renvoie la liste des `(objet, palier_après)` crédités
     (matière du pont Vigueur §4.3 et des notifications, branchés au driver/D14).
+
+    `zones_creditees` (optionnel, D60 ③) : si une liste est passée, `detecter` y
+    APPEND chaque `(zone, depuis)` où un GESTE imputable a produit un crédit — la
+    matière pour que le pont retrouve le(s) verbe(s) (`verbes_imputables`) et les
+    crédite en poids fort. Sortie SÉPARÉE de la valeur de retour (rétro-compatible :
+    l'appelant qui l'ignore garde le comportement historique). `depuis` = semaine de
+    départ de la fenêtre effective, pour retrouver les mêmes gestes.
 
     Pur au sens golden : observe, ne fait jamais avancer la simulation."""
     det = _detection(game_state, player)
@@ -164,6 +196,10 @@ def detecter(game_state: dict, player: str, log: list[str], semaine: int) -> lis
         pal = _crediter(game_state, player, objet, natures)
         if pal is not None:
             credits.append((objet, pal))
+
+    def signaler_zone(zone, depuis):
+        if zones_creditees is not None:
+            zones_creditees.append((tuple(zone), depuis))
 
     for kind, tile_id, pos, payload in _evenements(log):
         zone = (tile_id, *pos)
@@ -179,6 +215,7 @@ def detecter(game_state: dict, player: str, log: list[str], semaine: int) -> lis
                 if espece:
                     crediter(espece, {"stagnation"})
                 crediter(CONCEPT_PAR_STAGNATION[stag[1]], {"stagnation"})
+                signaler_zone(zone, stag[0])                # geste imputé → poids fort (③)
                 del det["stagnations"][zone]                # consommée (pas de re-crédit)
 
         elif kind == "repro":
@@ -193,6 +230,7 @@ def detecter(game_state: dict, player: str, log: list[str], semaine: int) -> lis
                     det["experte"].add(espece)              # composante (a) du §9.4
                 if tag == "biparental":
                     crediter("pollinisation", {"reproduction"})
+                signaler_zone(zone, semaine - FENETRE_IMPUTATION)   # geste imputé (③)
 
     # Naturalisation férale (§9.4(b)) + conjonction palier 5 : balayage de l'état
     # post-tick. Une recrue FÉRALE (zone non `replante`) qui s'établit (stade ≥

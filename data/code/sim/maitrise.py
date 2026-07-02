@@ -131,12 +131,19 @@ def _facteur_spillover(slice_joueur: dict, objet: str) -> float:
     return 1.0 + SPILLOVER_RATE * soeurs
 
 
-def enregistrer_preuve(game_state: dict, player: str, objet: str) -> int:
+def enregistrer_preuve(game_state: dict, player: str, objet: str,
+                       poids: float = 1.0) -> int:
     """Le cœur. Crédite une preuve à l'objet — pondérée par le SPILLOVER famille
     (§3.1) : sur une espèce dont les sœurs sont maîtrisées, une preuve « compte
     pour plus » — puis franchit autant de paliers que le crédit le permet
     (consommation CUMULATIVE : le reliquat reste au crédit du palier suivant).
     Renvoie le palier courant après mise à jour.
+
+    `poids` (défaut 1.0 = comportement historique, tous les appels existants et le
+    golden restent identiques) module la FORCE d'une preuve : un crédit fractionnaire
+    (usage répété, D60 ③, poids < 1) vaut moins qu'un crédit fort (succès écologique
+    imputé, poids ≥ 1). Le poids se multiplie AU spillover — l'un et l'autre agissent
+    sur la même preuve avant consommation.
 
     Auto-découverte (défaut acté §i1) : enregistrer une preuve sur un objet
     inconnu le découvre d'abord (0→1) — une preuve implique qu'on l'a observé.
@@ -148,7 +155,7 @@ def enregistrer_preuve(game_state: dict, player: str, objet: str) -> int:
     if o is None:                           # auto-découverte (0→1) puis crédit
         o = {"palier": 1, "preuves": 0}
         st["objets"][objet] = o
-    o["preuves"] += _facteur_spillover(st, objet)
+    o["preuves"] += poids * _facteur_spillover(st, objet)
     while o["palier"] < PALIER_MAX and o["preuves"] >= preuves_requises(o["palier"]):
         o["preuves"] -= preuves_requises(o["palier"])
         o["palier"] += 1

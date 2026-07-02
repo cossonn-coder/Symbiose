@@ -46,14 +46,14 @@ def test_actions_v1():
     vig_avant = r["result"]["vigueur"]
     r = s5.send(cmd="action", verb="deraciner", target=pos)
     # Depuis la chaîne de maîtrise (voix ①), le pont crédite de VRAIS paliers ⇒
-    # `cout_action` applique une remise de maîtrise : le coût n'est plus la valeur
-    # nominale figée (ÉLEVÉ=30) mais un débit ≤ 30 (remise croissante). On vérifie
-    # donc la RELATION (Vigueur débitée d'exactement le `cost` annoncé), pas la
-    # constante — le champ `cost` reste la source de vérité du geste.
-    check("deraciner → applied:true, Vigueur débitée du cost annoncé (≤ ÉLEVÉ)",
+    # `cout_action` applique une remise de maîtrise : le `cost` annoncé (≤ ÉLEVÉ=30)
+    # reste la source de vérité du geste. Depuis la progression geste/outil (D60 ③),
+    # ce 1ᵉ `deraciner` DÉCOUVRE le geste + ses outils → un gain de Vigueur de
+    # découverte (§4.3) se superpose au débit : le delta Vigueur net n'est PLUS le
+    # coût. On vérifie donc le `cost` annoncé, pas le delta.
+    check("deraciner → applied:true, coût ÉLEVÉ annoncé (cost ≤ 30)",
           r["result"]["applied"] is True
-          and 0.0 < r["result"]["cost"] <= 30.0
-          and abs(r["result"]["vigueur"] - (vig_avant - r["result"]["cost"])) < 1e-6,
+          and 0.0 < r["result"]["cost"] <= 30.0,
           f"vigueur {vig_avant} → {r['result']['vigueur']} (cost {r['result']['cost']})")
     # Depuis 0.3.6 (vue·rattrapage 02), le snapshot N'EFFACE PLUS les morts : une
     # plante déracinée devient un SQUELETTE exposé (`dead=true`) au lieu de
@@ -70,22 +70,22 @@ def test_actions_v1():
     check("re-deraciner la même position → applied:false (plus personne)",
           r["result"]["applied"] is False)
 
-    # URGENCE_MULT (la couture préparation/réaction §3.1) : 15 vs 22.5.
-    v0 = r["result"]["vigueur"]
+    # URGENCE_MULT (la couture préparation/réaction §3.1) : ×1.5.
     r = s5.send(cmd="action", verb="ecraser",
                 target={"tile": "T0", "r": 0, "c": 0}, params={"urgence": False})
-    cout_calme = v0 - r["result"]["vigueur"]
-    v1 = r["result"]["vigueur"]
+    cost_calme = r["result"]["cost"]
     r = s5.send(cmd="action", verb="ecraser",
                 target={"tile": "T0", "r": 0, "c": 0}, params={"urgence": True})
-    cout_urgence = v1 - r["result"]["vigueur"]
-    # Maîtrise (voix ①) : les coûts nominaux (MODÉRÉ=15 calme, ×1.5=22.5 urgence)
-    # sont remisés par le palier ⇒ on vérifie le RATIO URGENCE_MULT (=1.5), stable
-    # quel que soit le niveau de remise, plutôt que les valeurs absolues d'antan.
+    cost_urgence = r["result"]["cost"]
+    # Maîtrise (voix ①) : les coûts nominaux (MODÉRÉ=15 calme, ×1.5 urgence) sont
+    # remisés par le palier ⇒ on vérifie le RATIO URGENCE_MULT (=1.5) porté par le
+    # champ `cost` (source de vérité), stable quel que soit le niveau de remise. On ne
+    # mesure PLUS le delta Vigueur net : depuis D60 ③, le 1ᵉ `ecraser` reçoit un gain
+    # de découverte (§4.3) qui le pollue.
     check("ecraser en urgence coûte URGENCE_MULT × le calme (ratio 1.5)",
-          cout_calme > 0.0
-          and abs(cout_urgence - cout_calme * 1.5) < 1e-6,
-          f"calme={cout_calme}, urgence={cout_urgence}")
+          cost_calme > 0.0
+          and abs(cost_urgence - cost_calme * 1.5) < 1e-6,
+          f"calme={cost_calme}, urgence={cost_urgence}")
 
     # Maladresse (protocole ⑥, `target.espece`) : on écrase le SPRITE cliqué, espèce
     # comprise — pas seulement le ravageur. Espèce inconnue → refus PUR (rien dépensé).

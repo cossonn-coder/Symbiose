@@ -32,7 +32,25 @@ Tests : `test_sim_server` 240/240 (+5 checks vie macro dans `simserver/voix.py`)
 **Point F5 Nico** : survoler un puceron/butineur/carpophore au zoom ≥ ×4 →
 log `[WorldView] survol → vie macro observée : …` + entrée dans l'encyclo.
 
-Reste ③→⑥.
+**③ CLOS** (2026-07-02) : progression geste/outil/technique combinée usage+succès.
+`sim/maitrise.py:enregistrer_preuve` gagne `poids: float = 1.0` (défaut = comportement
+historique, golden intact). `sim/maitrise_detection.py` : `noter_geste` mémorise le
+`verb` (fenêtre `(sem, zone, verb)`, rétro-compatible None), nouvelle `verbes_imputables`,
+`detecter` remplit une sortie optionnelle `zones_creditees` (les zones où un geste a
+produit un crédit). Côté PONT (`tools/simserver/maitrise_pont.py`, étendu — LDC pur 61,
+🟢) : `decouvrir_a_usage` (canal Q3, découvre geste+technique+outils à la 1ʳᵉ utilisation
+réussie, avec petit gain de Vigueur §4.3), `crediter_usage` (preuve LÉGÈRE `PREUVE_USAGE_LEGER=0.34`),
+`_crediter_succes_gestes` (preuve FORTE `PREUVE_SUCCES_FORT=1.0` sur le verbe imputé) ;
+poids = placeholders calibrage **D12.4**. `cmd_action` appelle découverte+crédit APRÈS un
+geste `applied` (hors tick → golden neutre) et rafraîchit `result[vigueur/vigueur_max]`.
+**Décision retenue** (kickoff §5 option préférée) : le pont retrouve le verbe via la
+fenêtre, pas `detecter` ; pont étendu plutôt que fichier neuf (< 300 LDC). Golden INCHANGÉ
+(`a6c2f651…`, NEUTRE). Tests : nouveau `test_progression_geste` 15/15 ; `test_sim_server`
+240/240 — **5 checks adaptés** (`actions/planter/taille/conteneurs`) : le gain de découverte
+au 1ᵉ usage pollue le delta Vigueur net, on assied désormais l'assertion sur le champ
+`cost` (source de vérité du geste) ; orphelins nettoyés. Batterie complète verte.
+
+Reste ④→⑥.
 
 ## Sujet (D60, Nico 2026-07-02, F5 — S9, étend D31)
 La vie macro est un amas de cercles indistincts. Objectif : **survol → nom + entrée
@@ -55,7 +73,7 @@ Détail complet : `docs/conception/CONCEPTION_VIE_MACRO_IDENTIFIABLE.md`.
 |---|---------|------|--------|----|
 | ✅ ① | `01_backend_encyclo_unifiee.md` | Corpus taggué + `type_de` + dispatch + fiche champignon | NEUTRE ✓ | non |
 | ✅ ② | `02_survol_vie_macro.md` | `observer_espece` multi-règnes + survol C# vie macro | NEUTRE ✓ | **oui** |
-| ③ | `03_progression_geste_outil.md` | Progression combinée usage+succès + découverte à l'usage | NEUTRE | non |
+| ✅ ③ | `03_progression_geste_outil.md` | Progression combinée usage+succès + découverte à l'usage | NEUTRE ✓ | non |
 | ④ | `04_corpus_concept_technique.md` | Fiches 3 niv. concept + technique | NEUTRE | non |
 | ⑤ | `05_corpus_geste_outil.md` | Fiches 3 niv. geste + outil | NEUTRE | non |
 | ⑥ | `06_ui_godot_7_onglets.md` | UI 7 onglets + fiches mono/graphe + hover carpophore | NEUTRE | **oui** |
@@ -90,11 +108,10 @@ peut casser à `dotnet build` entre ① et ⑥ — c'est PRÉVU, ⑥ répare la 
 Boucle `/sprint-auto` : lancer le kickoff `0N` → implémenter → vérifier
 `python3 -m tests.test_golden` (attendu INCHANGÉ, golden NEUTRE) + tests ciblés du
 tronçon + `dotnet build Symbiose.csproj` pour les tronçons C# (②⑥) → mettre à jour
-CE fichier (cocher le tronçon) → commit → `/clear` → tronçon suivant. **①② CLOS** ;
-reprendre à **③** (`03_progression_geste_outil.md` — progression combinée usage +
-succès écologique + découverte à l'usage + table de classification outil/technique/
-geste ; tronçon Python pur, **pas F5**, golden NEUTRE). F5 groupés à la fin (② faite
-— à valider ; et ⑥).
+CE fichier (cocher le tronçon) → commit → `/clear` → tronçon suivant. **①②③ CLOS** ;
+reprendre à **④** (`04_corpus_concept_technique.md` — fiches encyclopédie 3 niveaux
+concept + technique, branche le registre `CORPUS_PAR_TYPE` laissé VIDE au ① ; tronçon
+Python pur, **pas F5**, golden NEUTRE). F5 groupés à la fin (② faite — à valider ; et ⑥).
 
 ## NB git
 À l'ouverture de la conception, l'arbre était SALE (`sprint_epaisseur_sol` non

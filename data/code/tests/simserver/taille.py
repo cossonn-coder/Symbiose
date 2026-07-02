@@ -93,7 +93,6 @@ def test_taille_au_segment():
     check("une plante à ≥ 2 segments existe", proie is not None,
           proie and f"{proie['species']}, {len(proie['segments'])} segments")
     pos = {"tile": proie["tile"], "x_cm": proie["x_cm"], "y_cm": proie["y_cm"]}
-    vig0 = s8.send(cmd="snapshot")["snapshot"]["player"]["vigueur"]
     # Écraser par POSITION (ni guilde ni r/c) → routé PLANTE, coût = tailler (MODÉRÉ).
     r = s8.send(cmd="action", verb="ecraser", target=pos)
     msg = r["result"]["message"]
@@ -102,12 +101,13 @@ def test_taille_au_segment():
     check("message nomme la plante + issue émergente (déformée/écimée/meurt)",
           ("déformée" in msg or "écimée" in msg or "meurt" in msg), msg)
     # Maîtrise (voix ①) : le coût nominal (tailler MODÉRÉ=15) est remisé par le
-    # palier ⇒ on vérifie que la Vigueur débitée = le `cost` annoncé (≤ 15), pas la
-    # constante d'antan (le champ `cost` reste la source de vérité du geste).
-    check("coût tailler (MODÉRÉ) débité = cost annoncé (≤ 15)",
-          0.0 < r["result"]["cost"] <= 15.0
-          and abs((vig0 - r["result"]["vigueur"]) - r["result"]["cost"]) < 1e-6,
-          f"Δvigueur={vig0 - r['result']['vigueur']} (cost {r['result']['cost']})")
+    # palier ⇒ le champ `cost` (≤ 15) reste la source de vérité du geste. Depuis la
+    # progression geste/outil (D60 ③), ce 1ᵉ `ecraser` DÉCOUVRE le geste → un gain de
+    # Vigueur de découverte (§4.3) se superpose au débit : le delta net n'est plus le
+    # coût. On vérifie donc le `cost` annoncé, pas le delta.
+    check("coût tailler (MODÉRÉ) : cost annoncé ≤ 15",
+          0.0 < r["result"]["cost"] <= 15.0,
+          f"cost={r['result']['cost']} vigueur={r['result']['vigueur']}")
     # Le collet (segment 0) est une cible VALIDE pour écraser (≠ tailler qui le refuse).
     r = s8.send(cmd="action", verb="ecraser", target={**pos, "segment": 0})
     check("écraser le collet (segment 0) → applied:true (cible valide, Q2)",

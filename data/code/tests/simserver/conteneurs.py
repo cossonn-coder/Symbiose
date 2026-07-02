@@ -22,14 +22,20 @@ def test_conteneurs():
           snap0.get("containers") == [], snap0.get("containers"))
 
     # --- poser_pot par position monde --------------------------------------
-    v_avant = snap0["player"]["vigueur"]
     rp = s.send(cmd="action", verb="poser_pot",
                 target={"x_cm": 1000.0, "y_cm": 400.0},
                 params={"substrat": "terreau", "volume": 10.0})
     check("poser_pot → applied + coût > 0",
           rp["result"]["applied"] and rp["result"]["cost"] > 0.0)
-    check("Vigueur débitée par poser_pot",
-          rp["result"]["vigueur"] < v_avant, (v_avant, rp["result"]["vigueur"]))
+    # Le `cost` (> 0, ci-dessus) reste la source de vérité du geste. Depuis la
+    # progression geste/outil (D60 ③), ce 1ᵉ `poser_pot` DÉCOUVRE le geste + sa
+    # technique + son outil → un gain de Vigueur de découverte (§4.3) compense le débit
+    # (voire le plafonne à la Vigueur max) : le delta net n'est plus le coût. On vérifie
+    # à la place que le pont a bien RAFRAÎCHI la Vigueur du result après ce gain — elle
+    # doit coïncider avec celle du snapshot joint (invariant que touche ③).
+    check("Vigueur cohérente result ↔ snapshot (gain de découverte D60 ③ inclus)",
+          rp["result"]["vigueur"] == rp["snapshot"]["player"]["vigueur"],
+          (rp["result"]["vigueur"], rp["snapshot"]["player"]["vigueur"]))
     cont = rp["snapshot"]["containers"]
     check("snapshot expose le pot (kind/substrat/mobile/eco_summary)",
           len(cont) == 1 and cont[0]["kind"] == "pot"
