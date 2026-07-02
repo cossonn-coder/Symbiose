@@ -26,6 +26,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from fields.grids import GridField, DisturbanceField
+from fields.noise import _hash_noise, stable_str_hash
 from fields.light import LightField
 from fields.seedbank import SeedBank
 from fields.population import (PopulationField, build_population_specs,
@@ -271,6 +272,20 @@ class EcoFields(MatiereOrganiqueMixin, HydrologieMixin, UptakeMixin,
             self.vent = GridField(self.rows, self.cols)
         self._abri_cache = None
 
+    def _init_heterogene(self, grid: GridField, plancher: float) -> None:
+        """Pose `plancher` sur `grid` avec une HÉTÉROGÉNÉITÉ spatiale déterministe
+        par plot (D56, ①). Facteur ∈ [1−INIT_AMPLITUDE, 1+INIT_AMPLITUDE] tiré du
+        bruit `_hash_noise(seed_tuile, 0, r, c)` où `seed_tuile = stable_str_hash
+        (tile_id)` → motif propre à chaque tuile, REPRODUCTIBLE (zéro RNG, philo #3).
+        La borne ≥ 0 du GridField écrête les rares facteurs négatifs. Un plancher 0
+        reste 0 (multiplication) → no-op sûr."""
+        seed_tuile = stable_str_hash(self.tile_id)
+        for r in range(self.rows):
+            for c in range(self.cols):
+                bruit = _hash_noise(seed_tuile, 0, r, c)       # [0,1]
+                facteur = 1.0 + INIT_AMPLITUDE * (2.0 * bruit - 1.0)
+                grid.set(r, c, plancher * facteur)
+
     def get_field(self, name: str) -> GridField | None:
         return {
             "humidite":    self.humidite,
@@ -357,8 +372,22 @@ def init_eco(tile_id: str, rows: int, cols: int,
              microbiome: float = 0.0, soil_type: str = "terre") -> EcoFields:
     """`fertilite` est un PARAM DE COMPAT (③ : le champ unique a disparu). Si fourni,
     il initialise les trois nutriments à la MÊME valeur uniforme (n=p=k=fertilite) ;
-    si None (défaut), n/p/k gardent leur héritage `soil_type` (NUTRIENT_INIT_PAR_SOL)."""
+    si None (défaut), n/p/k gardent leur héritage `soil_type` (NUTRIENT_INIT_PAR_SOL).
+
+    D56 (①) : `init_eco` est le chemin de construction des TUILES du monde (le golden
+    et `main.py` passent par ici ; les mini-sols de conteneur, eux, appellent
+    `EcoFields(...)` directement + une recette → PAS touchés, ce qui préserve leur
+    déterminisme). C'est donc ici — et NON dans `__post_init__` — qu'on pose l'humus de
+    fond `om_stable` HÉTÉROGÈNE (`_init_heterogene`, plancher OM_STABLE_INIT modulé par
+    plot). Le sol vivant ne part jamais de zéro absolu ; certains secteurs partent plus
+    humifères → ils amorcent plus tôt la facilitation des tardifs (`om_index` lu au
+    tronçon ②) → succession hétérogène (philo #7), deux jardins jamais identiques.
+    Les champs explicitement fournis (humidité/microbiome/NPK) restent UNIFORMES à la
+    valeur demandée — l'hétérogénéité passe par le SEUL `om_stable`, ce qui garde le
+    contrôle du re-figeage (kickoff §Modèle) et n'invalide aucun test unitaire qui
+    contrôle un champ forcé plot à plot (test_eau/lessivage/substrat/mycelium)."""
     eco = EcoFields(tile_id=tile_id, rows=rows, cols=cols, soil_type=soil_type)
+    eco._init_heterogene(eco.om_stable, OM_STABLE_INIT)
     for r in range(rows):
         for c in range(cols):
             eco.humidite.set(r, c, humidite)

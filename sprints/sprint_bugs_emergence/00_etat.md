@@ -10,9 +10,8 @@
   germination »** : monoculture pionnière qui verrouille la succession.
 
 ## Phase courante
-**FIGÉ le 2026-07-02** — conception validée par Nico, kickoffs écrits, prêt pour
-`/sprint-auto`. Diagnostic clos, arbitrages tranchés. Aucun fichier moteur touché
-(seulement docs/kickoffs). Doc : `docs/conception/CONCEPTION_BUGS_EMERGENCE.md`.
+**EN COURS** — tronçon ① (D56) LIVRÉ le 2026-07-02 (moteur touché, golden re-figé,
+non commité). Reste ②③④. Doc : `docs/conception/CONCEPTION_BUGS_EMERGENCE.md`.
 
 ## Décisions figées (arbitrage Nico)
 - **Périmètre** : UN sprint, 2 volets (S2 floraison + S3 succession).
@@ -23,7 +22,11 @@
 
 ## Carte des tronçons (4, perf-first, golden en cascade maîtrisée)
 - **① `01_champs_initiaux.md`** — D56 : champs initiaux riches & hétérogènes
-  (fondation). Golden re-figé si touche le build golden.
+  (fondation). **LIVRÉ 2026-07-02.** Golden RE-FIGÉ maîtrisé
+  `ea135bf181a21fcb621658c13a92cc6d28de9101ba34fca14acb0e4889365f8f`
+  (ancien `ae445d3f…`). Raison : les TUILES démarrent avec un humus de fond
+  `om_stable` hérité, non nul et HÉTÉROGÈNE par plot → la cascade OM/CEC/
+  soil_memory dérive légèrement sur le smoke 2 tuiles × 4 ans.
 - **② `02_reequilibrage_banque.md`** — facilitation OM des tardifs + bride
   pioneer (déverrouille S3) + banc bascule. Golden RE-FIGÉ (but du tronçon).
 - **③ `03_gene_phenologie_florale.md`** — gène `phenologie_florale` + décalage
@@ -134,9 +137,34 @@ banque-sol + champs moyens par an). Run lancé, sortie bufferisée.
 3. S2 : gène de phénologie (émergent) vs jitter non-génétique (plus léger) ?
    [reco : gène]
 
+## Avancement tronçon ① (D56) — livré 2026-07-02
+- `fields/noise.py` : ajout `stable_str_hash(text)` (FNV-1a 32 bits DÉTERMINISTE,
+  ≠ `hash()` natif randomisé) → canal de bruit propre à chaque tuile depuis son
+  `tile_id`, reproductible d'un run à l'autre (philo #3).
+- `fields/ecofields/constants.py` : `OM_STABLE_INIT = 0.15` (humus de fond hérité)
+  et `INIT_AMPLITUDE = 0.30` (amplitude de l'hétérogénéité spatiale par plot).
+- `fields/ecofields/container.py` : helper `_init_heterogene(grid, plancher)`
+  (pose `plancher · (1 + INIT_AMPLITUDE·(2·bruit−1))` par plot) ; appelé sur
+  `om_stable` DEPUIS `init_eco` (chemin des TUILES), PAS depuis `__post_init__`.
+- **DÉCISION de design imprévue** : l'hétérogénéité ne porte QUE sur `om_stable`,
+  pas sur humidité/microbiome/NPK. Motif : (1) `om_stable` est le levier exact de
+  la facilitation S3 (`om_index` du tronçon ②) ; (2) l'appliquer aux champs forcés
+  par `init_eco` cassait 4 suites unitaires (test_eau/lessivage/substrat/mycelium)
+  qui contrôlent l'humidité/NPK plot à plot. Choix conforme au kickoff §Modèle
+  (« garder le contrôle du re-figeage »).
+- **DÉCISION #2** : humus posé dans `init_eco` et NON `__post_init__` — sinon les
+  mini-sols de conteneur (tile_id auto-incrémenté `pot:potN`) recevaient un humus
+  dépendant de leur ID → `test_conteneur::test_determinisme` cassait (deux
+  conteneurs « identiques » divergaient). Les conteneurs appellent `EcoFields(...)`
+  direct + recette → restent à om_stable=0, déterminisme intact.
+- Tests recalés (baseline humus=0, hors périmètre du levier D56) : `test_lessivage`
+  (`_eco` remet om_stable à 0 pour ses égalités math exactes) et `test_structures`
+  (`test_epandre` idem). SUITE COMPLÈTE VERTE (44 suites + golden re-figé ; hashes
+  population/vigueur INCHANGÉS).
+
 ## §REPRISE
-DIAGNOSTIC CLOS (causes S2 & S3 confirmées, cf. ci-dessus). Phase A : EN ATTENTE
-des réponses de Nico aux 3 questions d'arbitrage. Ne RIEN figer avant OK. Une
-fois tranché : durcir la conception (doc `CONCEPTION_*`), découper en tronçons
-perf-first, écrire les kickoffs `0N`. Le diagnostic est reproductible via
-`/tmp/diag_symbiose.py <ans>` (jetable, monde complet an par an).
+TRONÇON ① (D56) LIVRÉ & vérifié (golden re-figé `ea135bf1…`, toutes suites vertes,
+NON commité — Nico commit). **Prochain : tronçon ② `02_reequilibrage_banque.md`**
+(facilitation OM des tardifs via `om_index` = `(om_active+om_stable)/OM_FACILITATION_REF`
++ bride pioneer ∝ `(1−om_index)` — le socle `om_stable` hétérogène est en place).
+Diagnostic S2/S3 clos (cf. ci-dessus) ; reproductible via `/tmp/diag_symbiose.py`.

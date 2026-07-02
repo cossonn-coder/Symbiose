@@ -351,6 +351,8 @@ def test_determinisme_maturation():
 def test_epandre():
     print("\n[13] epandre : borné par compost_mur, trio humus (bac équilibré)")
     eco = init_eco("T0", 4, 4, fertilite=0.0)   # n=p=k=0 → deltas exacts (③)
+    eco.om_stable.fill(0.0)                      # humus de fond D56 remis à 0 → deltas
+                                                 # d'épandage exacts (baseline propre, ①)
     bac = Structure(kind="bac", plot=(0, 0))
     eco.structures.append(bac)
     bac.compost_mur = 2.0                     # jauge mûre (posée directement)

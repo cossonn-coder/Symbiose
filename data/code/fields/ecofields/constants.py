@@ -695,6 +695,25 @@ COLONISATION_SEED    = 0.05   # part de colonisation ensemencée dans `mycelium`
 # no-op si le réseau est déjà nul. PLACEHOLDER, calibrage post-test (§1.2).
 BECHAGE_MYCELIUM_MALUS = 0.5
 
+# --- Conditions initiales riches & hétérogènes (D56, sprint bugs d'émergence ①) ---
+# Aujourd'hui le sol part de zéro absolu pour l'humus (`om_stable=0`) et d'un plancher
+# nul/uniforme pour les champs vivants — monde « fade » au F5 (S4). D56 enrichit les
+# valeurs de DÉPART et leur donne une HÉTÉROGÉNÉITÉ SPATIALE déterministe par plot :
+# certains secteurs partent avec un peu plus d'humus/nutriments → ils amorcent la
+# succession des tardifs plus tôt (fondation du déverrouillage S3, tronçon ②) → deux
+# jardins jamais identiques (philo #7). ZÉRO RNG : l'hétérogénéité dérive du `seed`
+# GLOBAL + du hash du `tile_id` via `fields.noise._hash_noise(seed_tuile, 0, r, c)`
+# (philo #3, terrain reproductible à seed fixe). PLACEHOLDERS, calibrage F5 / bancs.
+#
+# - OM_STABLE_INIT : humus de fond hérité (le sol vivant n'est jamais parti de zéro
+#   absolu ; une friche porte déjà un peu de matière organique stabilisée). Petit
+#   devant la cascade OM (om_stable se décompose à 0.0006/sem → apport durable, lent).
+# - INIT_AMPLITUDE : amplitude de la modulation spatiale ∈ [0,1[. Chaque champ initial
+#   est multiplié par `1 + INIT_AMPLITUDE·(2·bruit − 1)` (∈ [1−A, 1+A]), borné ≥ 0
+#   par le GridField. À 0.30, un plot va de −30 % à +30 % de sa valeur de plancher.
+OM_STABLE_INIT = 0.15   # humus de fond hérité (matière organique stabilisée de départ)
+INIT_AMPLITUDE = 0.30   # amplitude de l'hétérogénéité spatiale des champs initiaux
+
 # Signature sol par famille (laissée après chaque saison)
 SOIL_SIGNATURE = {
     "Fabaceae":   {"microbiome": +0.15, "fertilite": +0.10},

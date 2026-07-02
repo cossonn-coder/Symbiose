@@ -42,6 +42,11 @@ def _eco(soil_type="terre", npk=1.0):
     """Mini-sol 3×3 à N/P/K uniformes, sans litière vivante (litière `diffus` à 0)
     ni microbiome → la minéralisation n'ajoute rien : on isole le lessivage."""
     eco = init_eco("L", 3, 3, humidite=1.0, microbiome=0.0, soil_type=soil_type)
+    # Humus de fond REMIS À 0 (D56, ① : `om_stable` part désormais hétérogène
+    # ≈ OM_STABLE_INIT). Ce test ISOLE le lessivage — comme il annule déjà litière et
+    # microbiome, on annule aussi l'humus de fond pour que la CEC de référence soit
+    # exactement `cec_norm(om_stable=0)` et que les égalités math (bornes 5/6) tiennent.
+    eco.om_stable.fill(0.0)
     for r in range(3):
         for c in range(3):
             eco.n.set(r, c, npk)
@@ -101,7 +106,7 @@ def run():
     #    donc la borne vient de la saturation drainage_norm ; le cap reste un garde-fou
     #    si K est relevé. On vérifie que N ne descend pas SOUS le facteur effectif max.
     eco_cap = _eco(); _set_drainage(eco_cap, FORTE_PLUIE * 1000.0); eco_cap.tick_decomposition()
-    cn = cec_norm_at("terre", min(1.0, 0.0 / 5.0))   # om_stable=0 sur sol neuf
+    cn = cec_norm_at("terre", min(1.0, 0.0 / 5.0))   # `_eco` annule l'humus de fond (D56)
     facteur_eff_max = min(1.0 + LESSIVAGE_PLUIE_K * 1.0, FACTEUR_PLUIE_CAP)
     n_borne = 1.0 * leach_factor("N", cn) ** facteur_eff_max
     check("5. facteur_pluie borné (saturation + cap dur)",

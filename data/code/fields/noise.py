@@ -26,6 +26,17 @@ def _hash_noise(seed: int, week: int, r: int, c: int) -> float:
     return (h & 0x7FFFFFFF) / 0x7FFFFFFF
 
 
+def stable_str_hash(text: str) -> int:
+    """Hash entier DÉTERMINISTE d'une chaîne (≠ `hash()` natif, randomisé par
+    PYTHONHASHSEED d'un run à l'autre). Sert à dériver un canal de bruit propre à
+    chaque tuile depuis son `tile_id` (D56) → chaque tuile a son motif spatial, le
+    même à seed global fixe (philo #3). FNV-1a 32 bits, aucun RNG."""
+    h = 0x811c9dc5
+    for ch in text:
+        h = ((h ^ ord(ch)) * 0x01000193) & 0xFFFFFFFF
+    return h
+
+
 def hash_gauss(seed: int, week: int, r: int, c: int, k: int = 0) -> float:
     """
     Échantillon N(0,1) déterministe — Box-Muller sur deux tirages _hash_noise
