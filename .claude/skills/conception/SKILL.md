@@ -129,6 +129,11 @@ Quand Nico a validé la conception (« OK », « vas-y », « lets go »), maté
    golden** OU
    le **re-fige de façon maîtrisée et annoncée** (dérive localisée + expliquée +
    prévue par le kickoff — `/sprint-auto` refuse tout re-figeage non prévu).
+   **RÈGLE PERMANENTE (Nico 2026-07-03)** : le découpage se termine TOUJOURS par
+   un **tronçon vue Godot** (rendu + pont si besoin + éventuel banc d'observation
+   F5), golden intact. On ne diffère plus le rendu C# en dette séparée ; rattacher
+   au passage toute dette de vue Godot pertinente au sujet. Un sprint sans son
+   tronçon vue est incomplet (cf. mémoire `feedback_vue_godot_toujours`).
 3. **Ossature du sprint** sous `sprints/sprint_<nom>/` :
    - `00_etat.md` — **déjà vivant depuis la phase A** (§0bis) : tu le
      **finalises** en état de sprint (~20 lignes : où on en est, décisions clés,
