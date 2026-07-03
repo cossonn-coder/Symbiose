@@ -83,9 +83,13 @@ moteur sans son tronçon vue est incomplet.
   grimpe (`GRIMPE_Z` + branche accroché de `_apex_z_floor`). Golden **NEUTRE**
   (`a6c2f651…` inchangé) — haricot=vrille_volubile, mur nu refusé, aucun support
   posé dans le smoke.
-- ③ plante-hôte vivante comme support + détachement à la mort de l'hôte +
-  étranglement émergent → golden NEUTRE (Bean(4,2) : aucune haute à portée ;
-  Sunflower en (0,1) hors rayon — vérifié).
+- ③ **CLOS** (2026-07-03) plante-hôte vivante comme support (`world/support.py` :
+  sentinelle `HOTE` + compat crampon/vrille_volubile ; `sim/grimpe.py` :
+  `_hote_candidats` scan des voisines vivantes plus hautes + `_maj_ou_detache_hote`
+  entretien avant filtre perf = relit `current_height` chaque tick / détache à la
+  mort ou disparition de l'hôte) + étranglement ÉMERGENT (LightField, aucune règle
+  dédiée). Golden **NEUTRE** (`a6c2f651…` inchangé). Suite `tests/test_grimpe.py`
+  NEUVE (7 tests : accroche/suivi/détachement×2/rayon/seuil/étranglement).
 - ④ gestes joueur (`poser_tuteur/treillis/pergola`, `palisser`) + maîtrise
   (outil `tuteur`, technique `palissage`) + résistance verse → event-driven,
   golden INTACT.
@@ -148,8 +152,28 @@ support reste libre ; avec un tuteur à 10 cm → accroche (persistante, non
 re-scannée) ; un crampon fictif près du bord du mur maison → accroche mur
 (hauteur d'appui 600).
 
-**PROCHAINE ÉTAPE → ③ `03_hote_vivant.md`** : plante-hôte vivante comme support
-(hauteur d'appui = hauteur de l'hôte, relue chaque tick) + détachement à la mort
-de l'hôte + étranglement émergent par ombre du LightField. Golden attendu NEUTRE
-(Bean(4,2) : aucune haute à portée ; Sunflower en (0,1) hors rayon — vérifié).
-Golden : ①② resté NEUTRE, NEUTRE/INTACT ③→⑥.
+**③ CLOS 2026-07-03.** Fait : sentinelle `HOTE` dans `world/support.py`
+(compat crampon + vrille_volubile, PAS sarmenteux — une tige vivante offre une
+prise) + ré-export `world/__init__.py`. `sim/grimpe.py` étendu :
+`_hote_candidats(plant, tile, mode)` scanne les voisines VIVANTES plus hautes que
+`hauteur_autoportante` dans le rayon (clé de départage = `id(other)`, déterministe
+intra-tick) ; `_maj_ou_detache_hote(plant, tile)` appelé AVANT le filtre perf =
+relit `hote.current_height` chaque tick (suivi) ou détache (`support=None`) si
+l'hôte est mort/parti (`_est_hote` = duck-typing sur `is_alive`/`current_height`).
+Étranglement NON codé : ÉMERGE du `LightField` (tri hauteur-décroissante, aucune
+exclusion entre plantes distinctes proches — VÉRIFIÉ : `light.py:253` ne saute que
+l'auto-ombrage via `qh <= ph: break`).
+
+**GOLDEN NEUTRE — `a6c2f651…` inchangé** (Bean(4,2) sans voisine haute à portée ;
+Sunflower en (0,1) hors rayon). `test_golden` PASS hash identique. `test_sim_server`
+**VERT 244/244**. Suite NEUVE `tests/test_grimpe.py` (7 tests VERTS) : accroche hôte
+vivant, suivi de croissance, détachement à la mort, détachement si l'hôte disparaît,
+hors-rayon refusé, hôte trop court ignoré, étranglement émergent (hôte 180 cm sous
+grimpante 200 cm → lumière 0.80 vs 1.0 isolé). Suites vertes : croissance,
+phototropisme 11/11, sénescence, signes, structures, conteneur. C# **non concerné**
+(③ Python pur, vue en ⑥). LDC : grimpe.py 73, support.py 20 (≤300 🟢).
+
+**PROCHAINE ÉTAPE → ④ `04_gestes_maitrise.md`** : gestes joueur
+(`poser_tuteur/treillis/pergola`, `palisser`) + maîtrise (outil `tuteur`, technique
+`palissage`) + résistance verse → event-driven, golden attendu INTACT.
+Golden : ①②③ resté NEUTRE, NEUTRE/INTACT ④→⑥.

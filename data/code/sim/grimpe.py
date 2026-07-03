@@ -7,6 +7,14 @@ l'engine JUSTE AVANT la croissance : une grimpante LIBRE, plus haute que sa
 accroche. L'accroche est un ÉTAT PERSISTANT (`plant.support`) → une accrochée
 n'est plus jamais scannée (réflexe perf D32 : on élague, on ne balaie pas).
 
+Supports possibles : structures posées (tuteur/treillis/pergola, ②), mur maison
+(②) et — tronçon ③ — une PLANTE-HÔTE VIVANTE voisine plus haute. L'hôte vivant
+est le SEUL support mouvant : sa hauteur d'appui est RELUE chaque tick (l'hôte
+grandit → la grimpante suit) et l'accroche se DÉTACHE quand l'hôte meurt ou quitte
+la tuile. L'ÉTRANGLEMENT (la grimpante finit par ombrager l'hôte quand elle le
+dépasse) n'est PAS codé ici : il ÉMERGE du `LightField` (canopée haute → ombre
+projetée sur l'hôte plus bas), philo #2 (flux → contrainte → réponse), zéro malus.
+
 Déterministe, ZÉRO RNG (philo #3) : départage distance PUIS identité stable.
 Le biais de grimpe lui-même (relèvement du plancher d'apex quand accroché) vit
 dans `sim/growth/geometrie.py` (`_apex_z_floor`), déjà en place depuis ①.
@@ -16,7 +24,7 @@ from __future__ import annotations
 import math
 
 from constants import PLOT_CM
-from world import support_compatible, MUR
+from world import support_compatible, MUR, HOTE
 
 # Rayon de recherche d'accroche : plot-foyer + son voisinage immédiat (§4, ~50 cm).
 # 1.5 plot couvre le foyer et déborde sur les plots adjacents où un support proche
@@ -43,6 +51,57 @@ def _mur_appui(plant, house, tile_origin) -> tuple | None:
     return (d, house.height_cm, cx, cy)
 
 
+def _est_hote(ref) -> bool:
+    """Vrai si la référence d'accroche est une PLANTE-HÔTE vivante (③) plutôt qu'un
+    `Support` inerte ou une sentinelle `MUR`/`HOTE`. Duck-typing : seule une
+    `PlantInstance` porte `is_alive`/`current_height` (les supports posés n'en ont
+    pas). Aucun import de `PlantInstance` ici (couche `sim` n'importe pas `plants`
+    pour ça — on reste sur l'attribut)."""
+    return hasattr(ref, "is_alive") and hasattr(ref, "current_height")
+
+
+def _maj_ou_detache_hote(plant, tile) -> bool:
+    """Entretien de l'accroche à un hôte VIVANT, appelé AVANT le filtre perf. Si
+    `plant.support` référence une plante :
+      • hôte mort ou disparu de la tuile → DÉTACHE (`support = None`) : la grimpante
+        redevient libre et retombe (①) ou re-cherche au tick suivant ;
+      • hôte encore vivant → RELIT sa hauteur (`height_appui = hote.current_height`)
+        pour que la grimpante suive sa croissance.
+    Renvoie True si l'accroche a été détachée (l'appelant doit alors laisser le scan
+    reprendre). No-op (False) pour tout support non-hôte (structure/mur, figé)."""
+    sup = plant.support
+    if sup is None or not _est_hote(sup[0]):
+        return False
+    hote = sup[0]
+    if (not hote.is_alive) or (hote not in tile.plants):
+        plant.support = None
+        return True
+    plant.support = (hote, hote.current_height)     # suit la croissance de l'hôte
+    return False
+
+
+def _hote_candidats(plant, tile, mode) -> list:
+    """Voisines VIVANTES plus hautes que la hauteur autoportante de `plant`, dans le
+    rayon d'accroche, compatibles comme hôtes. Renvoie des tuples de candidats au
+    même format que `chercher_support` : (distance, clé_stable, ref, height_appui).
+    Clé stable = `id(other)` (déterministe intra-tick, départage sans RNG à distance
+    strictement égale). L'hôte lui-même est exclu (`other is not plant`)."""
+    out: list[tuple] = []
+    if not support_compatible(mode, HOTE):
+        return out
+    hp = plant.plant_class.hauteur_autoportante
+    for other in tile.plants:
+        if other is plant or not other.is_alive:
+            continue
+        h = other.current_height
+        if h <= hp:                                 # pas assez haute pour porter
+            continue
+        d = math.hypot(plant.x_cm - other.x_cm, plant.y_cm - other.y_cm)
+        if d <= RAYON_ACCROCHE_CM:
+            out.append((d, id(other), other, h))
+    return out
+
+
 def chercher_support(plant, tile, house=None) -> None:
     """Tente d'accrocher `plant` à un support proche (structures de la tuile + mur
     maison). No-op sauf pour une grimpante LIBRE au-dessus de sa hauteur
@@ -56,6 +115,11 @@ def chercher_support(plant, tile, house=None) -> None:
     cls = plant.plant_class
     mode = cls.mode_grimpe
     hp = cls.hauteur_autoportante
+    # Entretien de l'accroche à un hôte VIVANT (③) AVANT le filtre perf : relit sa
+    # hauteur (l'hôte grandit) ou détache si l'hôte est mort/parti (→ scan repris).
+    # No-op pour un support inerte (structure/mur) et pour toute non-grimpante.
+    if mode is not None and hp is not None:
+        _maj_ou_detache_hote(plant, tile)
     # Filtre perf : seules les grimpantes LIBRES et déjà trop hautes pour se tenir
     # seules cherchent un appui. Tout le reste (non-grimpantes, accrochées, encore
     # courtes) sort immédiatement → aucun scan.
@@ -76,6 +140,11 @@ def chercher_support(plant, tile, house=None) -> None:
         d = math.hypot(plant.x_cm - sup.x_cm, plant.y_cm - sup.y_cm)
         if d <= RAYON_ACCROCHE_CM:
             candidats.append((d, i, sup, sup.height_cm))
+
+    # Plantes-hôtes VIVANTES voisines (③) : mêmes tuples (distance, id, ref, height).
+    # La hauteur d'appui = la hauteur COURANTE de l'hôte, relue ensuite chaque tick
+    # par `_maj_ou_detache_hote` tant que l'accroche tient.
+    candidats.extend(_hote_candidats(plant, tile, mode))
 
     # Mur maison : comparé en repère MONDE (on passe l'offset de la tuile). Ajouté
     # aux candidats avec la clé stable -1 (prioritaire au départage strictement
