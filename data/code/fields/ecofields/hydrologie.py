@@ -128,5 +128,15 @@ class HydrologieMixin:
                 # PAS l'hydrologie ailleurs (piège du kickoff, cf. sprint pots/bacs).
                 self.drainage_last.set(r, c, perte)
                 h *= drainage                                       # 4. drainage (par sol)
+                # 5. CAPTURE DU SURPLUS (sprint hydrologie & marécages ②) : les pores
+                # ne stockent pas au-delà de HUM_CAP. L'excédent `h − HUM_CAP` ne se
+                # jette plus (écrêtage silencieux du GridField) mais part en LAME DE
+                # SURFACE `eau_surface`, qui ruisselle ensuite (`tick_ruissellement`).
+                # h ≤ HUM_CAP dans l'immense majorité des cas (drainage+évap) ⇒ terme
+                # NUL ⇒ eau_surface reste 0 ⇒ golden NEUTRE tant qu'aucun plot ne gorge ;
+                # les plots saturés du smoke en produisent → re-figeage LARGE ANNONCÉ.
+                if h > HUM_CAP:
+                    self.eau_surface.add(r, c, h - HUM_CAP)
+                    h = HUM_CAP
                 self.humidite.set(r, c, h)
         return pertes

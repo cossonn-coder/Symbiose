@@ -17,6 +17,9 @@ from sim.weather import weather_state, weather_signs, CALME, T_MOY
 # densité → entités (fields/population.py §3). L'échantillonnage se fait CÔTÉ
 # SERVEUR — la vue n'a pas besoin de _hash_noise (kickoff t6 §4).
 from fields.population import sample_sprites, sample_carpophores
+# Seuil de perception d'une flaque (sprint hydrologie & marécages ②) : la liste
+# creuse `eau_surface` ne consigne que les plots dont la lame le dépasse.
+from fields.ecofields.constants import SEUIL_FLAQUE
 # Sémiologie foliaire (D33) : détecteurs PURS des stresseurs chroniques, miroirs
 # fidèles des seuils des mécaniques qui blessent. Remplace le bool `chlorose` du ⑨
 # par la liste `leaf_symptoms`. Recalcul pur côté serveur (moteur = source de
@@ -152,6 +155,7 @@ class SerializeMixin:
         condensation_by_tile = {}
         epaisseur_by_tile = {}
         altitude_by_tile = {}
+        eau_surface_by_tile = {}
         for tile in gs["tiles"]:
             eco = gs["eco"][tile.tile_id]
             sprites[tile.tile_id] = {
@@ -301,6 +305,16 @@ class SerializeMixin:
             altitude_by_tile[tile.tile_id] = [
                 [round(eco.altitude.data[r][c], 2)
                  for c in range(eco.cols)] for r in range(eco.rows)]
+            # Lame d'EAU DE SURFACE par tuile (sprint hydrologie & marécages ②, §2) :
+            # liste CREUSE `[[r, c, lame], …]` des plots portant une lame > SEUIL_FLAQUE
+            # (la plupart des plots sont SECS → liste courte, patron `litiere`/`alarme`).
+            # La vue en tire les FLAQUES (lame translucide bleutée ∝ profondeur, ⑧).
+            # PURE lecture (champ déjà tické par `tick_ruissellement`) → aucun impact
+            # golden. Champ optionnel côté vue (tolérance pré-0.5.18 → pas de flaque).
+            eau_surface_by_tile[tile.tile_id] = [
+                [r, c, round(eco.eau_surface.data[r][c], 3)]
+                for r in range(eco.rows) for c in range(eco.cols)
+                if eco.eau_surface.data[r][c] > SEUIL_FLAQUE]
         # Météo scalaire GLOBALE du tick (sprint thermique ⑧, §A) : la météo qui a
         # produit l'état COURANT est celle de la semaine DÉJÀ simulée = `week − 1`
         # (`week` = prochaine à simuler). `weather_state` étant PURE, on la RECALCULE

@@ -37,6 +37,7 @@ from .litiere import Parcelle     # parcelle de litière (couche fraîche, __pos
 
 from .matiere_organique import MatiereOrganiqueMixin
 from .hydrologie import HydrologieMixin
+from .ruissellement import RuissellementMixin
 from .uptake import UptakeMixin
 from .vie_macro import VieMacroMixin
 from .sol import SolMixin
@@ -44,8 +45,8 @@ from .ticks import TicksMixin
 
 
 @dataclass
-class EcoFields(MatiereOrganiqueMixin, HydrologieMixin, UptakeMixin,
-                VieMacroMixin, SolMixin, TicksMixin):
+class EcoFields(MatiereOrganiqueMixin, HydrologieMixin, RuissellementMixin,
+                UptakeMixin, VieMacroMixin, SolMixin, TicksMixin):
     tile_id:    str
     rows:       int
     cols:       int
@@ -194,6 +195,17 @@ class EcoFields(MatiereOrganiqueMixin, HydrologieMixin, UptakeMixin,
     # (aucun tick, aucun effet) → golden NEUTRE. Exposé AUTO au registre `get_field`
     # (overlay debug F6 / pont ①).
     altitude:         GridField = field(default=None)
+    # Lame d'eau de SURFACE (sprint hydrologie & marécages ②) — cm d'eau STAGNANTE
+    # au-dessus du plot, DISTINCTE de `humidite` (eau des pores). Reçoit le surplus
+    # de saturation capturé par `tick_hydrology` (au lieu de l'écrêter), RUISSELLE
+    # vers les plots plus bas (`tick_ruissellement`, double buffer, lit `altitude`+
+    # `epaisseur_sol`), s'infiltre si le sol peut boire, s'évapore. `eau_surface >
+    # SEUIL_FLAQUE` = FLAQUE (perçue à la vue ⑧, alimentera `marais_memory` au ③).
+    # NULLE au repos (aucune saturation dépassée) → golden NEUTRE tant qu'aucun plot
+    # ne déborde ; les plots gorgés du smoke en produisent → re-figeage LARGE ANNONCÉ
+    # (l'eau circule enfin, le bilan hydrique par plot change). Exposée AUTO au
+    # registre `get_field` (overlay debug F6) + au snapshot (bloc `eau_surface` ②).
+    eau_surface:      GridField = field(default=None)
 
     def __post_init__(self):
         if self.humidite    is None: self.humidite    = GridField(self.rows, self.cols)
@@ -308,6 +320,12 @@ class EcoFields(MatiereOrganiqueMixin, HydrologieMixin, UptakeMixin,
         if self.altitude is None:
             self.altitude = GridField(self.rows, self.cols,
                                       max_val=ALT_BASE + 2.0 * ALT_AMPLITUDE)
+        # Eau de surface (②) — NULLE au repos, bornée [0, HUM_CAP] (une lame ne dépasse
+        # pas la profondeur d'un plot saturé). Écrite par `tick_hydrology` (capture du
+        # surplus) puis rebrassée par `tick_ruissellement`. Repos NEUTRE (aucune
+        # saturation) → déterminisme préservé pour une construction directe (conteneur).
+        if self.eau_surface is None:
+            self.eau_surface = GridField(self.rows, self.cols, max_val=HUM_CAP)
         self._abri_cache = None
 
     def _init_heterogene(self, grid: GridField, plancher: float) -> None:
@@ -345,6 +363,7 @@ class EcoFields(MatiereOrganiqueMixin, HydrologieMixin, UptakeMixin,
             "mycelium":         self.mycelium,
             "epaisseur_sol":    self.epaisseur_sol,
             "altitude":         self.altitude,
+            "eau_surface":      self.eau_surface,
         }.get(name)
 
     def fertilite_index(self, r: int, c: int) -> float:

@@ -215,6 +215,13 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
             eco.tick_hydrology(tile.soil_type, pluie_event=pluie_event,
                                nebulosite=nebul, vent_masse_air=vent_force,
                                vent_field=eco.vent)
+            # 3b. Ruissellement latéral (sprint hydrologie & marécages ②) : la lame
+            #     d'eau de surface capturée à l'étape 3 (surplus de saturation) dévale
+            #     la surface hydraulique (altitude + épaisseur) vers les plots plus bas,
+            #     s'infiltre, s'évapore. Double buffer → déterministe. No-op strict tant
+            #     qu'aucun plot ne déborde (eau_surface nulle). Re-figeage LARGE ANNONCÉ
+            #     (l'eau circule enfin → bilan hydrique par plot modifié aux cuvettes).
+            eco.tick_ruissellement()
 
             # 4. Décomposition biogéochimique (OM → fertilite, pertes C)
             eco.tick_decomposition()

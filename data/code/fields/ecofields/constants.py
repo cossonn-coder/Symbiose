@@ -795,6 +795,36 @@ EPAISSEUR_NPK_BONUS  = 0.30   # amplification max de la fraction de stock N/P/K 
 ALT_BASE      = 20.0   # cm — altitude de référence (mi-hauteur du micro-relief)
 ALT_AMPLITUDE = 20.0   # cm — amplitude ± du micro-relief (dénivelé jardin ~0–40 cm)
 
+# --- Eau de surface & ruissellement (sprint hydrologie & marécages ②) --------
+# Une LAME D'EAU de surface `eau_surface` (NEUF), DISTINCTE de `humidite` (eau des
+# PORES, ce que boivent les racines). C'est elle qui RUISSELLE (du haut vers le bas
+# sur la surface hydraulique `altitude + epaisseur_sol`) et fait la FLAQUE. Découplage
+# physiquement juste : les pores saturent (≤ HUM_CAP), le surplus reste EN SURFACE.
+#  - HUM_CAP : capacité des pores = plafond de `humidite` (3.0, borne actuelle du
+#    GridField). Au-delà, `tick_hydrology` CAPTURE l'excédent `h − HUM_CAP` dans
+#    `eau_surface` au lieu de le laisser écrêter silencieusement par le GridField
+#    (= l'eau qu'on jetait jusqu'ici). Aligné sur la borne réelle du champ humidité.
+#  - RUISSELLEMENT_FRACTION : part de la lame d'un plot qui S'ÉCOULE vers ses voisins
+#    DESCENDANTS par tick (répartie ∝ la pente, multiple-flow-direction). < 1 : l'eau
+#    met plusieurs ticks à dévaler une longue pente (inertie du ruissellement lent).
+#  - INFILTRATION_SURFACE : eau de la lame qui REDESCEND dans `humidite` par tick, si
+#    le sol peut encore boire (`humidite < HUM_CAP`) — MODULÉE par la structure du sol
+#    (un sol grumeleux réabsorbe la flaque, un sol battu/argileux la garde en surface).
+#    Borne par tick (une flaque profonde ne s'infiltre pas d'un coup).
+#  - EVAP_SURFACE : fraction de la lame ÉVAPORÉE par tick (lame libre → évapore plus
+#    vite que l'eau des pores ; couplage simple, pas de nouvelle traversée météo).
+#  - SEUIL_FLAQUE : lame au-dessus de laquelle le plot AFFICHE une flaque (vue §7 / ⑧)
+#    et, au ③, alimente `marais_memory`. Ici PUR seuil de perception (pas d'effet moteur).
+# Aux BORDS du monde, l'eau qui ruisselle au-delà du dernier plot est PERDUE (exutoire
+# implicite — pas de tuile voisine simulée). Conservation de masse À L'INTÉRIEUR : ce
+# qui sort d'un plot entre chez ses voisins (double buffer → indépendant de l'ordre de
+# balayage, déterminisme philo #3, zéro RNG). PLACEHOLDERS, calibrage F5 / banc ③.
+HUM_CAP               = 3.0    # capacité des pores (= plafond humidité) ; surplus → eau_surface
+RUISSELLEMENT_FRACTION = 0.5   # part de la lame écoulée/tick vers les voisins plus bas
+INFILTRATION_SURFACE  = 0.15   # eau de surface réabsorbée/tick par le sol (× structure)
+EVAP_SURFACE          = 0.20   # fraction de la lame évaporée/tick (lame libre)
+SEUIL_FLAQUE          = 0.10   # lame au-dessus de laquelle on perçoit une flaque (vue)
+
 # Signature sol par famille (laissée après chaque saison)
 SOIL_SIGNATURE = {
     "Fabaceae":   {"microbiome": +0.15, "fertilite": +0.10},
