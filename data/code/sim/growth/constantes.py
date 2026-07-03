@@ -44,6 +44,14 @@ MIN_APEX_Z            = 0.30                 # composante verticale plancher de 
 # clampée). Placeholder de calibrage (maquette ⑥). Une non-grimpante garde MIN_APEX_Z.
 DROOP_Z               = -0.10                # composante z visée quand l'apex retombe
 
+# Plancher de verticalité RENFORCÉ d'une grimpante ACCROCHÉE (②) tant qu'elle n'a
+# pas atteint le sommet de son appui : l'apex vise fort vers le haut (l'axe du
+# support) → la structure MONTE le long du tuteur/treillis/mur. Plus haut que
+# MIN_APEX_Z (montée franche, pas la simple verticalité « jamais à plat »). Une
+# fois au sommet de l'appui, on repasse à MIN_APEX_Z (la plante tient, ne force
+# plus la montée). Placeholder de calibrage (maquette ⑥).
+GRIMPE_Z              = 0.85                  # composante z visée en montée accrochée
+
 # --- Étiolement (compétition intra-plot, Q7 — « filer vers la lumière ») -----
 # Un HÉLIOPHILE (tolérance à l'ombre effective < 1) ombragé (lumière effective
 # sous le seuil) ALLONGE plus vite en axial (tige grêle, entre-nœuds longs) :

@@ -8,6 +8,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from plants.base import PlantInstance, ConflictNotification
+from world.support import Support
 
 # ---------------------------------------------------------------------------
 # TIGES ET RONDELLES
@@ -81,6 +82,10 @@ class Tile:
     stakes: list[StakeSlot] = field(
         default_factory=lambda: [StakeSlot(i) for i in range(10)]
     )
+    # Supports de GRIMPE posés sur la tuile (D49 volet A, §4). VIDE au repos → le
+    # tick golden n'en lit aucun ; les gestes joueur (`poser_tuteur`…, tronçon ④)
+    # ou le banc d'essai les déposent. ≠ `stakes` (porte-rondelles MTG).
+    supports: list[Support] = field(default_factory=list)
     conflicts: list[ConflictNotification] = field(default_factory=list)
 
     # --- Accès aux rondelles ---

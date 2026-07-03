@@ -35,6 +35,7 @@ from sim.weather import weather_state, K_PEST, TEMP_DRIVEN
 from sim.wind import wind_at, gust_profile
 from sim.vigueur import tick_player_vigueur, refill_saison
 from sim.growth import grow_plant
+from sim.grimpe import chercher_support
 from .calendrier import (SAISONS, saison_de, est_debut_saison, est_fin_saison,
                         est_phase_floraison, est_phase_recolte)
 from .aleas import (appliquer_alea, ALEAS_RAVAGEURS, WEATHER_ALEA, ORAGE_VENT,
@@ -284,8 +285,16 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
             # lumière-sol du tick (eco.lumiere, déjà recalculée à l'étape 2). Pour
             # une espèce procédurale (Tomato, AppleTree) la structure biaisée nourrit
             # l'empreinte → re-figeage maîtrisé du golden ; les autres restent INERTES.
+            # 9c-bis. Accroche des grimpantes (D49 volet A, tronçon ②) — JUSTE avant
+            # la croissance : une grimpante libre au-dessus de sa hauteur
+            # autoportante cherche un support proche (structures de la tuile + mur
+            # maison) et s'y accroche (état persistant). No-op sans grimpante libre
+            # concernée ni support compatible → golden NEUTRE (le haricot du smoke
+            # est `vrille_volubile`, aucun support posé, mur nu refusé).
+            house = self.game_state.get("house")
             for plant in tile.plants:
                 if plant.is_alive:
+                    chercher_support(plant, tile, house)
                     grow_plant(plant, seed, week, eco.lumiere)
 
             # 9b. Mortalité réaliste — sénescence + santé dynamique (D27)

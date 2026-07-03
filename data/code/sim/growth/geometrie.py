@@ -9,7 +9,7 @@ from __future__ import annotations
 import math
 
 from constants import PLOT_CM
-from .constantes import MAX_PHOTOTROPISM_TILT, MIN_APEX_Z, DROOP_Z
+from .constantes import MAX_PHOTOTROPISM_TILT, MIN_APEX_Z, DROOP_Z, GRIMPE_Z
 
 # ---------------------------------------------------------------------------
 # Géométrie 3D (pure)
@@ -96,7 +96,12 @@ def _apex_z_floor(plant, max_z_courant: float) -> float:
     if cls.mode_grimpe is None or hp is None:
         return MIN_APEX_Z                          # non-grimpante : inchangé
     if plant.support is not None:
-        return MIN_APEX_Z                          # accroché (②) : monte le long du support
+        # Accroché (②) : `support` = (ref, height_appui). Tant qu'on est SOUS le
+        # sommet de l'appui, plancher RENFORCÉ (GRIMPE_Z) → l'apex monte franc le
+        # long du support. Au sommet atteint, MIN_APEX_Z → la plante tient sans
+        # forcer davantage (elle n'a plus de support au-dessus).
+        _, height_appui = plant.support
+        return GRIMPE_Z if max_z_courant < height_appui else MIN_APEX_Z
     if max_z_courant <= hp:
         return MIN_APEX_Z                          # encore courte : se tient droite
     return DROOP_Z                                 # libre & trop longue : RETOMBE (affalement)

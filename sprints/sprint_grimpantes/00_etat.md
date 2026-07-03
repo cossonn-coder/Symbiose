@@ -76,9 +76,13 @@ moteur sans son tronçon vue est incomplet.
   (`a6c2f651…` inchangé) — cf. §REPRISE : la dérive prévue ne se matérialise pas
   dans le digest (le droop est réel sur la géométrie du haricot mais n'atteint pas
   les `_PLANT_ATTRS` trackés). Aucun re-figeage effectué (illégitime sans dérive).
-- ② structures-support posables (tuteur/treillis/pergola) + mur + recherche
-  d'accroche bornée + grimpe → golden NEUTRE vs ① (haricot=vrille_volubile ne
-  peut PAS s'accrocher au mur nu, aucun tuteur posé dans le golden).
+- ② **CLOS** (2026-07-03) structures-support posables (`world/support.py` :
+  `Support` + table `support_compatible` + sentinelle `MUR`, champ `Tile.supports`)
+  + mur maison + recherche d'accroche bornée (`sim/grimpe.py:chercher_support`,
+  rayon 1.5 plot, câblée dans `boucle.py` juste avant `grow_plant`) + biais de
+  grimpe (`GRIMPE_Z` + branche accroché de `_apex_z_floor`). Golden **NEUTRE**
+  (`a6c2f651…` inchangé) — haricot=vrille_volubile, mur nu refusé, aucun support
+  posé dans le smoke.
 - ③ plante-hôte vivante comme support + détachement à la mort de l'hôte +
   étranglement émergent → golden NEUTRE (Bean(4,2) : aucune haute à portée ;
   Sunflower en (0,1) hors rayon — vérifié).
@@ -118,8 +122,34 @@ Suites vertes (golden, croissance 67/67, phototropisme 11/11, senescence, vigueu
 ROUGE mais PRÉ-EXISTANT (KeyError 'plants' dû au WIP hydrologie non commité sur
 `serialize.py`, reproduit sans mes changements) — hors périmètre ①.
 
-**PROCHAINE ÉTAPE → ② `02_supports_accroche.md`** : structures-support posables
-(tuteur/treillis/pergola) + mur + recherche d'accroche bornée + grimpe (relève le
-plancher via `support != None`, déjà géré par `_apex_z_floor`). Golden attendu
-NEUTRE vs ①.
-Golden : ① resté NEUTRE (dérive prévue non matérialisée, expliqué), NEUTRE/INTACT ②→⑥.
+**② CLOS 2026-07-03.** Fait : `world/support.py` NEUF (dataclass `Support`
+type/x_cm/y_cm/height_cm/finesse + helper pur `support_compatible` : crampon→tout,
+vrille_volubile→tout sauf mur nu, sarmenteux→rien auto ; sentinelle `MUR`),
+champ `Tile.supports=[]`, ré-export `world/__init__.py`. `sim/grimpe.py` NEUF :
+`chercher_support(plant, tile, house)` — no-op sauf grimpante LIBRE au-dessus de
+`hauteur_autoportante` ; scan borné (rayon 1.5 plot) des `Tile.supports` + point
+d'appui du mur maison (repère monde via `tile_origin`) ; retient le compatible le
+plus proche, départage déterministe (distance puis clé stable, zéro RNG) ; pose
+`plant.support=(ref, height_appui)`. Câblé dans `boucle.py` (étape 9c-bis, juste
+avant `grow_plant`, house depuis `game_state`). Loi d'apex complétée : constante
+`GRIMPE_Z=0.85`, branche accroché de `_apex_z_floor` → plancher renforcé tant que
+`max_z < height_appui`, MIN_APEX_Z au sommet atteint.
+
+**GOLDEN NEUTRE — `a6c2f651…` inchangé** (haricot=vrille_volubile, mur nu refusé,
+aucun `Support` posé dans le smoke → aucune accroche ne se déclenche). `test_golden`
+PASS hash identique. `test_sim_server` **VERT 244/244** (était rouge au ① à cause
+du WIP hydrologie non commité ; désormais vert). Suites vertes : croissance 67/67,
+phototropisme 11/11, senescence, signes 8/8, structures 80/80, plasticité,
+conteneur. C# **non concerné** (② Python pur). LDC : support.py 19, grimpe.py 43
+(≤300 🟢).
+
+Sanity manuel hors golden (accroche RÉELLE prouvée) : haricot forcé >35 cm sans
+support reste libre ; avec un tuteur à 10 cm → accroche (persistante, non
+re-scannée) ; un crampon fictif près du bord du mur maison → accroche mur
+(hauteur d'appui 600).
+
+**PROCHAINE ÉTAPE → ③ `03_hote_vivant.md`** : plante-hôte vivante comme support
+(hauteur d'appui = hauteur de l'hôte, relue chaque tick) + détachement à la mort
+de l'hôte + étranglement émergent par ombre du LightField. Golden attendu NEUTRE
+(Bean(4,2) : aucune haute à portée ; Sunflower en (0,1) hors rayon — vérifié).
+Golden : ①② resté NEUTRE, NEUTRE/INTACT ③→⑥.
