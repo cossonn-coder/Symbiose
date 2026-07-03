@@ -117,6 +117,13 @@ class PlantInstance:
     # arme la cohorte suivante. Remplace le rendez-vous global FRUIT_NOUAISON_WEEK.
     # Hors `_PLANT_ATTRS` du golden → golden NEUTRE.
     a_fleuri: bool = False
+    # Support de grimpe accroché (D49 volet A, CONCEPTION_GRIMPANTES §3). None =
+    # grimpante LIBRE (non accrochée) ou non-grimpante → au-delà de sa
+    # `hauteur_autoportante` l'apex retombe (affalement, tronçon ①). L'accroche à
+    # un tuteur/mur/hôte (tronçon ②/③) relèvera à nouveau le plancher d'apex → grimpe.
+    # TOUJOURS None à ce tronçon (aucun support n'existe encore). Hors `_PLANT_ATTRS`
+    # du golden.
+    support: object | None = None
 
     def __post_init__(self):
         if self.x_cm is None or self.y_cm is None:

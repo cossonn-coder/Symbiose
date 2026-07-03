@@ -17,7 +17,8 @@ from .constantes import (AUXIN_PROD_FLOOR, AUXIN_RELEASE_SCALE, AUXIN_DECAY,
                          AUXIN_INHIB_THRESHOLD, THICKEN_RATE, THICKNESS_INIT,
                          JITTER_RAD, ETIOLEMENT_LIGHT_SEUIL, ETIOLEMENT_GAIN)
 from .geometrie import (_tip, _horiz, _lateral_dir, _phototropic_bias,
-                        _depths, _children, _subtree, _apex_in_subtree, _rebuild)
+                        _apex_z_floor, _depths, _children, _subtree,
+                        _apex_in_subtree, _rebuild)
 
 
 # ---------------------------------------------------------------------------
@@ -54,6 +55,12 @@ def _elongate_emit(plant, speed: float, max_height: float, max_extent: float,
     `light_field=None` ou `strength=0` → direction axiale droite (ancien comportement)."""
     segs = plant.segments
     collet = segs[0].base
+    # Plancher de verticalité de l'apex, CONTEXTUEL (grimpe, D49 ①). Dépend de la
+    # hauteur courante max(z) de la structure : au-delà de la hauteur autoportante,
+    # une grimpante libre voit son plancher s'effondrer → elle s'affale (§3). Pour
+    # une non-grimpante → MIN_APEX_Z (comportement historique inchangé).
+    max_z = max((_tip(s)[2] for s in segs), default=0.0)
+    z_floor = _apex_z_floor(plant, max_z)
     new_segs = []
     for i, s in enumerate(list(segs)):  # snapshot : indices stables (on append)
         if not s.is_apex:
@@ -68,8 +75,9 @@ def _elongate_emit(plant, speed: float, max_height: float, max_extent: float,
             s.length_cm = emit_length             # cap → le segment devient du bois
             s.is_apex = False
             tip = _tip(s)
-            new_dir = _phototropic_bias(s.dir, tip[0], tip[1], light_field, strength)
-            new_segs.append(_mk(i, tip, new_dir, s.auxin))  # apex penché vers la lumière
+            new_dir = _phototropic_bias(s.dir, tip[0], tip[1], light_field,
+                                        strength, z_floor)
+            new_segs.append(_mk(i, tip, new_dir, s.auxin))  # apex penché / affalé selon le plancher
     segs.extend(new_segs)
 
 

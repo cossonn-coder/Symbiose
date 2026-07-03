@@ -36,6 +36,14 @@ PHOTOTROPISM_STRENGTH = 0.30                # ↳ défaut PlantBase.phototropism
 MAX_PHOTOTROPISM_TILT = math.radians(12.0)  # déviation max d'azimut par segment émis (borné)
 MIN_APEX_Z            = 0.30                 # composante verticale plancher de l'apex (jamais à plat)
 
+# --- Port grimpant (D49 volet A, CONCEPTION_GRIMPANTES §3 — affalement) ------
+# Plancher de verticalité EFFONDRÉ d'une grimpante LIBRE (non accrochée) qui a
+# dépassé sa `hauteur_autoportante` : son apex ne se tient plus, il retombe
+# (biais gravitaire léger vers le bas). max_z plafonne ~hauteur_autoportante et
+# les segments suivants s'étalent → port affalé ÉMERGENT (philo #2, aucune hauteur
+# clampée). Placeholder de calibrage (maquette ⑥). Une non-grimpante garde MIN_APEX_Z.
+DROOP_Z               = -0.10                # composante z visée quand l'apex retombe
+
 # --- Étiolement (compétition intra-plot, Q7 — « filer vers la lumière ») -----
 # Un HÉLIOPHILE (tolérance à l'ombre effective < 1) ombragé (lumière effective
 # sous le seuil) ALLONGE plus vite en axial (tige grêle, entre-nœuds longs) :

@@ -140,6 +140,9 @@ class Bean(Fabaceae):
     t_germ_tol = 7.0               # étroite → pourrit en terre froide
     resistance_ecrasement  = 0.3   # tige volubile fragile (volet 2 §4)
     stimulation_ecrasement = 0.2
+    hauteur_autoportante   = 35.0  # cm tenus debout sans appui (D49 ①) : au-delà,
+                                   # libre → l'apex retombe (affalement émergent)
+    mode_grimpe            = "vrille_volubile"  # cherche à s'enrouler (support valide en ②)
     rarity = "Pionnière"
     keywords = ["Fixatrice N₂", "Grimpante", "Compagne"]
     space_tolerance_weeks = 3

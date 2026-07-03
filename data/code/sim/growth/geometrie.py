@@ -9,7 +9,7 @@ from __future__ import annotations
 import math
 
 from constants import PLOT_CM
-from .constantes import MAX_PHOTOTROPISM_TILT, MIN_APEX_Z
+from .constantes import MAX_PHOTOTROPISM_TILT, MIN_APEX_Z, DROOP_Z
 
 # ---------------------------------------------------------------------------
 # Géométrie 3D (pure)
@@ -85,18 +85,51 @@ def _light_gradient(tx: float, ty: float, lf) -> tuple:
     return (gx, gy)
 
 
-def _phototropic_bias(d: tuple, tx: float, ty: float, lf, strength: float) -> tuple:
+def _apex_z_floor(plant, max_z_courant: float) -> float:
+    """Plancher de verticalité CONTEXTUEL de l'apex (D49 volet A, §3). Remplace le
+    plancher constant MIN_APEX_Z. Pour une non-grimpante : MIN_APEX_Z inchangé. Pour
+    une grimpante LIBRE (non accrochée) trop longue pour se tenir seule : plancher
+    EFFONDRÉ (DROOP_Z < 0) → l'apex retombe, port affalé émergent (aucune hauteur
+    clampée, on façonne la vraie géométrie — §1.3). Déterministe, pure."""
+    cls = plant.plant_class
+    hp = cls.hauteur_autoportante
+    if cls.mode_grimpe is None or hp is None:
+        return MIN_APEX_Z                          # non-grimpante : inchangé
+    if plant.support is not None:
+        return MIN_APEX_Z                          # accroché (②) : monte le long du support
+    if max_z_courant <= hp:
+        return MIN_APEX_Z                          # encore courte : se tient droite
+    return DROOP_Z                                 # libre & trop longue : RETOMBE (affalement)
+
+
+def _clamp_apex_z(d: tuple, z_floor: float) -> tuple:
+    """Rabat la composante verticale de `d` au niveau de `z_floor` si elle passe en
+    dessous, en re-normalisant l'horizontale (norme conservée). z_floor ≥ 0 → plancher
+    « jamais à plat » classique ; z_floor < 0 → l'apex vise le bas (affalement)."""
+    if d[2] >= z_floor:
+        return d
+    h = math.hypot(d[0], d[1])
+    if h <= 1e-9:
+        return d
+    k = math.sqrt(max(0.0, 1.0 - z_floor * z_floor)) / h
+    return (d[0] * k, d[1] * k, z_floor)
+
+
+def _phototropic_bias(d: tuple, tx: float, ty: float, lf, strength: float,
+                      z_floor: float = MIN_APEX_Z) -> tuple:
     """Direction de l'apex `d` biaisée vers le gradient de lumière (§D.4). Rotation
     de `d` vers le gradient horizontal, d'un angle BORNÉ (≤ MAX_PHOTOTROPISM_TILT par
-    émission, ∝ gradient × strength) et avec un PLANCHER de verticalité (MIN_APEX_Z :
-    l'apex ne se couche jamais à plat — la verticalité reste l'attracteur, la lumière
-    la dévie). Déterministe, zéro RNG. strength≤0 ou lumière uniforme → `d` inchangé."""
+    émission, ∝ gradient × strength) puis rabattue sur un PLANCHER de verticalité
+    `z_floor` (contextuel — MIN_APEX_Z hors grimpe, DROOP_Z pour une grimpante libre
+    affalée : cf. `_apex_z_floor`). Le plancher s'applique TOUJOURS, y compris quand
+    aucun biais lumineux ne joue (une grimpante libre s'affale même en lumière
+    uniforme). Déterministe, zéro RNG."""
     if strength <= 0.0 or lf is None:
-        return d
+        return _clamp_apex_z(d, z_floor)
     gx, gy = _light_gradient(tx, ty, lf)
     gmag = math.hypot(gx, gy)
     if gmag < 1e-9:
-        return d                                   # éclairement uniforme : pas de biais
+        return _clamp_apex_z(d, z_floor)           # éclairement uniforme : pas de biais lumineux
     tilt = min(MAX_PHOTOTROPISM_TILT, strength * gmag)
     gh = (gx / gmag, gy / gmag, 0.0)               # direction unitaire vers le clair (horizontale)
     dot = d[0] * gh[0] + d[1] * gh[1]              # gh[2] = 0
@@ -104,16 +137,11 @@ def _phototropic_bias(d: tuple, tx: float, ty: float, lf, strength: float) -> tu
     perp = (gh[0] - dot * d[0], gh[1] - dot * d[1], -dot * d[2])
     pm = math.sqrt(perp[0]**2 + perp[1]**2 + perp[2]**2)
     if pm < 1e-9:
-        return d                                   # apex déjà aligné sur le gradient
+        return _clamp_apex_z(d, z_floor)           # apex déjà aligné sur le gradient
     perp = (perp[0]/pm, perp[1]/pm, perp[2]/pm)
     ct, st = math.cos(tilt), math.sin(tilt)
     nd = _norm((ct*d[0] + st*perp[0], ct*d[1] + st*perp[1], ct*d[2] + st*perp[2]))
-    if nd[2] < MIN_APEX_Z:                          # plancher : jamais à plat
-        h = math.hypot(nd[0], nd[1])
-        if h > 1e-9:
-            k = math.sqrt(max(0.0, 1.0 - MIN_APEX_Z * MIN_APEX_Z)) / h
-            nd = (nd[0] * k, nd[1] * k, MIN_APEX_Z)
-    return nd
+    return _clamp_apex_z(nd, z_floor)
 
 
 # ---------------------------------------------------------------------------

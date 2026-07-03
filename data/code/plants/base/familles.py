@@ -137,6 +137,16 @@ class PlantBase(ABC):
     # défaut : l'espèce garde l'ancien chemin (stades). True = migrée (ici : Tomato).
     procedural_growth:     bool  = False
 
+    # --- Port grimpant (D49 volet A, CONCEPTION_GRIMPANTES §2/§3) ---
+    # DÉFAUTS INERTES : None → non-grimpante, mécanique de grimpe éteinte (golden
+    # intact pour toutes les espèces qui ne les règlent pas). Une grimpante libre
+    # (sans support) au-delà de `hauteur_autoportante` VOIT son plancher d'apex
+    # s'effondrer → elle retombe (port affalé ÉMERGENT de la géométrie, philo #2 :
+    # aucune hauteur clampée, c'est la vraie structure qui se couche). L'accroche à
+    # un support (tronçon ②) relèvera à nouveau le plancher → grimpe.
+    hauteur_autoportante:  float | None = None  # cm tenus debout SANS appui ; None = non-grimpante
+    mode_grimpe:           str | None   = None  # None|"crampon"|"vrille_volubile"|"sarmenteux" — gouverne (②) quels supports sont valides
+
     # --- Réponse à l'écrasement (volet 2, CONCEPTION_ECRASEMENT §5) ---
     # DEUX axes indépendants, LUS UNIQUEMENT par sim.actions.ecraser_plante (geste
     # joueur event-driven, hors tick) → défauts NEUTRES = golden intact (au repos

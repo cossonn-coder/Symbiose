@@ -71,9 +71,11 @@ tous les prochains). Gravée en mémoire + skill `/conception` (phase B). Un spr
 moteur sans son tronçon vue est incomplet.
 
 ## Découpage FIGÉ (6 tronçons, perf-first)
-- ① traits (`hauteur_autoportante`, `mode_grimpe`, état `support`) + affalement
-  géométrique SANS support → **golden RE-FIGÉ maîtrisé** : le haricot s'affale
-  (`growth_factor`/`shade_memory` bougent), `a6c2f651…` → nouveau hash annoncé.
+- ① **CLOS** (2026-07-03) traits (`hauteur_autoportante`, `mode_grimpe`, état
+  `support`) + affalement géométrique SANS support. Golden **RESTÉ NEUTRE**
+  (`a6c2f651…` inchangé) — cf. §REPRISE : la dérive prévue ne se matérialise pas
+  dans le digest (le droop est réel sur la géométrie du haricot mais n'atteint pas
+  les `_PLANT_ATTRS` trackés). Aucun re-figeage effectué (illégitime sans dérive).
 - ② structures-support posables (tuteur/treillis/pergola) + mur + recherche
   d'accroche bornée + grimpe → golden NEUTRE vs ① (haricot=vrille_volubile ne
   peut PAS s'accrocher au mur nu, aucun tuteur posé dans le golden).
@@ -92,5 +94,32 @@ moteur sans son tronçon vue est incomplet.
 
 ## §REPRISE
 CONCEPTION FIGÉE 2026-07-03. Doc = `docs/conception/CONCEPTION_GRIMPANTES.md`.
-6 kickoffs `01→06` écrits. Prêt pour `/sprint-auto sprint_grimpantes`.
-Golden : re-figé au ① SEUL (annoncé), NEUTRE/INTACT ②→⑥.
+6 kickoffs `01→06` écrits.
+
+**① CLOS 2026-07-03.** Fait : 2 traits inertes sur `PlantBase`
+(`hauteur_autoportante`/`mode_grimpe`), état `support=None` sur `PlantInstance`,
+Bean réglé (35 cm / `vrille_volubile`), constante `DROOP_Z=-0.10`, plancher d'apex
+CONTEXTUEL `_apex_z_floor(plant, max_z)` + `_clamp_apex_z` dans `growth/geometrie.py`,
+câblés dans `_elongate_emit` (`growth/phases.py`) via un `z_floor` calculé une fois
+par passe. Non-grimpantes strictement inchangées (défauts `None`).
+
+**GOLDEN NON RE-FIGÉ — resté NEUTRE `a6c2f651…`.** Le kickoff ① prévoyait une
+dérive maîtrisée (haricot affalé → `growth_factor`/`shade_memory`). Vérifié
+empiriquement : le droop S'ACTIVE bien (Bean T1 dépasse 35 cm, plancher effondré
+167×, 45 apex émis sous MIN_APEX_Z), la géométrie DIFFÈRE (max_horiz +0,6 cm sous
+gradient fort) MAIS l'écart ne remonte pas jusqu'aux `_PLANT_ATTRS` trackés (canopée
+quantifiée au plot + haricot annuel qui meurt/reset). Un re-figeage aurait été
+illégitime (pas de dérive réelle). Mécanique correcte, juste plus douce que prévu au
+digest. À revoir en ⑥ (F5) : si l'affalement doit se VOIR davantage, calibrer
+`DROOP_Z` / la tolérance de tilt — décision Nico à la maquette.
+
+Suites vertes (golden, croissance 67/67, phototropisme 11/11, senescence, vigueur
+136/136, population, maitrise, plasticite + suite complète). `test_sim_server`
+ROUGE mais PRÉ-EXISTANT (KeyError 'plants' dû au WIP hydrologie non commité sur
+`serialize.py`, reproduit sans mes changements) — hors périmètre ①.
+
+**PROCHAINE ÉTAPE → ② `02_supports_accroche.md`** : structures-support posables
+(tuteur/treillis/pergola) + mur + recherche d'accroche bornée + grimpe (relève le
+plancher via `support != None`, déjà géré par `_apex_z_floor`). Golden attendu
+NEUTRE vs ①.
+Golden : ① resté NEUTRE (dérive prévue non matérialisée, expliqué), NEUTRE/INTACT ②→⑥.
