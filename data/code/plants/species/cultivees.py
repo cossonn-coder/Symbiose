@@ -201,6 +201,11 @@ class Clover(Fabaceae):
     winter_strategy = "dormant"
     foliage_density = 0.40
     reproduction_rate = 0.35   # ressemis (M7) — vivace sans archétype
+    # Couvre-sol stolonifère réel (sprint LUXURIANCE ②) : le trèfle tapisse par ramets
+    # (stolons rampants) autant que par graine → arbitrage émergent graines ↔ ramets.
+    # `stolon` = besoin de lumière au sol pour s'établir (le stolon ne prend pas sous
+    # une canopée fermée) → auto-limitation. Cf. `sim/clonal.py`, table D65 §2.2.
+    clonal_mode = "stolon"
     growth_stages = [
         GrowthStage(
             name="semis", duration_weeks=2, strate="sol",

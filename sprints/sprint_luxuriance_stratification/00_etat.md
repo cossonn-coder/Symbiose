@@ -100,9 +100,44 @@ nombre de ramets → protège le LightField d'une explosion de plantes. Budget �
     déterminisme du champ densité glisse). `test_epaisseur_500ans` (test manuel
     long anti-emballement) NON relancé — jugé inutile par Nico pour ce tronçon.
 
+- **T2 ✅ FAIT (2026-07-04)** — Mécanique clonale (ramets déterministes).
+  - Traits sur `PlantBase` (`plants/base/familles.py`) : `clonal_mode ∈ {none,
+    stolon, rhizome, drageon}` (défaut `none` = neutre) + `clonal_radius_cm` (60)
+    + `clonal_interval` (4). UNE mécanique paramétrée (D4), pas 3 chemins.
+  - Nouveau `sim/clonal.py::emettre_ramets(tile, eco, seed, week)` : pour chaque
+    plante VIVANTE, MATURE, `clonal_mode != none`, dans sa fenêtre de cadence
+    (porte hashée `week*41`) ET assez vigoureuse (`vigueur_plante ≥ SEUIL`) —
+    tire un offset hashé (angle `week*31`, distance `sqrt(u)` `week*37`, ≤ radius),
+    teste le GATE d'établissement (`_peut_etablir` : plot valide + `couverture_sol
+    < COUVERTURE_SATURATION=0.85` + lumière au sol `≥ 0.30` pour stolon/drageon,
+    rhizome exempté → envahissant émergent), et pose un ramet = clone (gènes +
+    expression COPIÉS). Coût sur la MÈRE = bouffée `stress_memory += 0.06`
+    (arbitrage émergent graines ↔ ramets). 1 ramet max/mère/tick. Zéro RNG live.
+  - Câblé `sim/engine/boucle.py` étape **9e** (après croissance/vigueur/sénescence
+    /floraison, `seed` déjà en scope). Clover → `clonal_mode="stolon"`.
+  - **CALIBRAGE** : `CLONAL_VIGUEUR_SEUIL` posé à **0.02** (pas 0.08). La façade
+    `vigueur_plante ≈ qi_local` sur un couvre-sol sain, et le qi_local d'un plot
+    réel plafonne ~0.05 (le trèfle du golden ombragé par la maison culmine à
+    ~0.048) → un seuil trop haut n'émettait JAMAIS (golden inchangé = bug de gate).
+    0.02 laisse cloner une mère mature bien portante, coupe net une mère mourante
+    (santé→0 annule la façade). **Point à valider F5 : la densité/vitesse de
+    tapissage du trèfle.**
+  - **Golden RE-FIGÉ** (annoncé) : `d26432d3…` → **`061934db09ad646a01f19b8f4d0b677f13438e87bce2f8531527be425e7c22a8`**.
+    Raison : Clover (stolon, tuile 0) émet des ramets de trèfle → +2 plantes trèfle
+    + `stress_memory` de la mère (∈ `_PLANT_ATTRS`) → cascade. Dérive BORNÉE et
+    cohérente : colonie trèfle 1→3 sur le smoke (2 ans), aucune explosion (bound
+    12 ans : trèfle culmine à 8 puis reflue à 0 par succession, total plantes
+    stabilisé ~100-130, PAS de runaway — le gate couverture EST le cap). Suite
+    complète **47/47 tests verts** (dont test_competition 14/14, test_senescence).
+  - **`test_population` INCHANGÉ** (hash `5a1873db…` identique) : son scénario ne
+    contient pas de clonale → non impacté. Pas de re-figeage.
+  - LDC (code pur) : clonal 59 / familles 213 / boucle 244 = 🟢 ; cultivees 323
+    🟡 (pré-existant, catalogue = une responsabilité, +5 lignes seulement).
+  - C# NON concerné (T2 Python pur, aucun `dotnet build`).
+
 ## §REPRISE
-**T1 CLOS.** Prochain : **T2 = mécanique clonale** (kickoff `02_*.md`), RE-FIGÉ
-annoncé (ramets de trèfle sur le golden). Puis T3 empreinte (NEUTRE), T4/T5
-catalogue (NEUTRE), T6 vue Godot (INTACT). Conception FIGÉE
+**T2 CLOS.** Prochain : **T3 = empreinte/silhouette par espèce** (kickoff `03_*.md`),
+NEUTRE (overrides hors golden + descripteur `silhouette`). Puis T4/T5 catalogue
+clonal (NEUTRE), T6 vue Godot (INTACT). Conception FIGÉE
 `docs/conception/CONCEPTION_LUXURIANCE_STRATIFICATION.md`. À la clôture du sprint :
 fermer D62 (absorbée), MAJ DETTE/BACKLOG/journal/mémoire.

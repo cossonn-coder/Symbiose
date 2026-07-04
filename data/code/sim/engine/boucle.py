@@ -36,6 +36,7 @@ from sim.wind import wind_at, gust_profile
 from sim.vigueur import tick_player_vigueur, refill_saison
 from sim.growth import grow_plant
 from sim.grimpe import chercher_support
+from sim.clonal import emettre_ramets
 from .calendrier import (SAISONS, saison_de, est_debut_saison, est_fin_saison,
                         est_phase_floraison, est_phase_recolte)
 from .aleas import (appliquer_alea, ALEAS_RAVAGEURS, WEATHER_ALEA, ORAGE_VENT,
@@ -323,6 +324,14 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
             # liront `floraison` aux tronçons suivants (la « phase floraison » proxy
             # ci-dessous, étape 10, reste en place jusqu'à la reconnexion ②/③).
             self._tick_floraison(tile, eco, week_in_year)
+
+            # 9e. Densification clonale (D65 §2.2, tronçon ②) — APRÈS croissance/
+            # vigueur/sénescence (maturité et santé du tick à jour) et le recalcul
+            # du champ `couverture_sol` (étape 2d). Une clonale mature émet un ramet
+            # (clone génétique) borné par le gate de couverture (auto-limitation +
+            # cap perf) et le gate de lumière au sol (stolon/drageon). Déterministe.
+            # NEUTRE hors trèfle stolonifère du smoke → golden RE-FIGÉ maîtrisé.
+            log += emettre_ramets(tile, eco, seed, week)
 
             # 10. Floraison
             if est_phase_floraison(week_in_year, saison):

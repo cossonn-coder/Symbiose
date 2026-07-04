@@ -114,6 +114,17 @@ class PlantBase(ABC):
     # de la strate du stade mature (STRATE_SHADE_TOLERANCE) ; override explicite si
     # l'espèce dévie de sa strate (ex. annuelle héliophile en strate basse).
     shade_tolerance: float | None = None
+    # Densification clonale (sprint LUXURIANCE, tronçon ②, D65 §2.2 — absorbe D62).
+    # UNE mécanique paramétrée (pas 3 chemins de code, décision D4) : une plante mature
+    # de `clonal_mode != "none"` émet des RAMETS (clones génétiques) dans son voisinage
+    # → tapissage + colonies ÉMERGENTS (lu par `sim/clonal.py`). Le mode ne module que
+    # portée/gate/cadence ; le caractère « envahissant » du rhizome ÉMERGE (portée longue
+    # + tolérance ombre), pas d'un flag. DÉFAUTS NEUTRES (`none`) ⇒ aucune espèce non
+    # marquée n'émet → golden inchangé hors trèfle stolonifère. Couche `plants` la plus
+    # basse : littéraux seuls, aucun import de `fields`/`sim` (règle de couches).
+    clonal_mode: str = "none"            # "none" | "stolon" | "rhizome" | "drageon"
+    clonal_radius_cm: float = 60.0       # portée d'un ramet (offset ≤ ce rayon)
+    clonal_interval: int = 4             # cadence : 1 chance d'émission toutes N semaines
 
     # --- Profil de croissance procédurale (D29 réorienté, tronçon 2) ---
     # Leviers PAR ESPÈCE lus par sim/growth.py (CONCEPTION_CROISSANCE §E.1). Les
