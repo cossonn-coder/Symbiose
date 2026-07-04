@@ -215,24 +215,51 @@ class MortaliteMixin:
         return log
 
     def _resoudre_conflits(self, tile, eco):
+        """
+        Conflit spatial = NOTIFICATION diégétique, PAS un verdict de mort (①
+        sprint usure/létalité ; aligne le code sur CONCEPTION_COMPETITION_INTRAPLOT
+        §Q3 : « la mort du perdant ÉMERGE du déclin de santé — jamais de mortalité
+        verdict »). La détection reste (le joueur voit deux plantes se disputer un
+        plot) mais la résolution n'inflige PLUS rien : plus de `loser.regress()`
+        (qui, au stade 0, mettait `health = 0` = mort sèche d'une plante saine),
+        plus de dépôt de nécromasse par ce chemin. Le dominé décline via les voies
+        continues DÉJÀ en place (ombrage LightField → `shade_stress_damage`, ponction
+        racinaire partagée, sénescence) — usure progressive, pas punition (philo #6).
+
+        Seule tâche restante : borner la liste `tile.conflicts` en marquant
+        `resolved` les conflits PÉRIMÉS (une plante morte, ou chevauchement disparu)
+        pour qu'ils soient élaguables. `resolved` ne scelle plus aucune mort — il
+        signale juste un conflit caduc. Le pruning ne touche QUE `conflicts`, jamais
+        l'état des plantes (golden re-figé = suppression des morts par conflit, rien
+        d'autre ne bouge).
+        """
         log = []
         for c in tile.detect_conflicts():
             log.append(f"    ⚠ Conflit : {c}")
         for c in tile.conflicts:
-            if c.resolved: continue
+            if c.resolved:
+                continue
             c.tick()
-            loser = c.loser()
-            if c.weeks_active >= loser.plant_class.space_tolerance_weeks:
-                mort = loser.regress()
-                if mort:
-                    log.append(f"    ✗ {loser.name}@{loser.position} meurt (conflit).")
-                    deposited = deposer_mort(loser, eco)
-                    log.append(f"    🍂 Nécromasse +{deposited:.2f} OM @{loser.position}")
-                else:
-                    log.append(f"    ↓ {loser.name}@{loser.position} → [{loser.stage.name}] (conflit).")
+            if self._conflit_perime(tile, c):
                 c.resolved = True
-        # Pas de retrait ici (②B) : squelette → _tick_skeletons.
+        # Pas de mortalité, pas de retrait : la mort du dominé émerge du stress/
+        # sénescence (_tick_senescence_health + voies continues).
         return log
+
+    @staticmethod
+    def _conflit_perime(tile, c) -> bool:
+        """Un conflit est périmé (élaguable) dès qu'une de ses plantes est morte OU
+        que le chevauchement litigieux a disparu (les plots ne sont plus co-occupés
+        dans la couche du conflit). Lecture seule — ne modifie aucune plante."""
+        if any(not p.is_alive for p in c.plants):
+            return True
+        get_plots = ((lambda p: p.foliar_plots) if c.conflict_type == "foliar"
+                     else (lambda p: p.root_plots))
+        for plot in c.plots:
+            occupants = sum(1 for p in c.plants if plot in get_plots(p))
+            if occupants >= 2:
+                return False   # au moins un plot litigieux reste co-occupé
+        return True
 
     def _winter_transition(self, tile, eco, week: int) -> list[str]:
         """

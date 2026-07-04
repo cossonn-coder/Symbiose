@@ -10,7 +10,27 @@ Doc : `docs/conception/CONCEPTION_USURE_LETALITE.md`. Tronçons :
 
 ## Carte des tronçons (golden)
 - **① Conflit non-létal** (`sim/engine/mortalite.py::_resoudre_conflits`) —
-  golden **RE-FIGÉ** `a6c2f651…` → `a1c9c51f61c60fd6edf2500663ebcecfb9eac9d02a1120670f7ecf3fecd434cf` (mesuré).
+  **FAIT (code)** le 2026-07-04. Résolution non-létale : conflit = notification
+  pure (`detect_conflicts` + log `⚠ Conflit`), plus AUCUN verdict — `regress()`,
+  `resolved`-mort et `deposer_mort(loser,…)` retirés de ce chemin. `resolved` ne
+  sert plus qu'à ÉLAGUER un conflit périmé (plante morte OU chevauchement disparu),
+  via nouvelle statique `_conflit_perime` (lecture seule, ne touche aucune plante).
+  Repro OK : Tournesol@(2,2) du banc `grimpantes` (départ w14, +30 sem) SURVIT
+  (mature, plus de mort w12) ; Haricot décline émergent, aucun zombie.
+  `test_competition` 14/14, `test_senescence` PASS.
+  - **✅ GOLDEN RE-FIGÉ `007be1393f5c544ba6c6c5aaf1f21ec0f0d47cf6d0956b01439c6b58749b714c`**
+    (2026-07-04, orchestrateur `/sprint-auto`). Divergence avec le hash pré-mesuré
+    du kickoff `a1c9c51f…` **investiguée et tranchée par PREUVE** : reconstruit le
+    variant de l'auteur du kickoff (garder la ligne de log `↓ … (conflit)` sans le
+    `regress()`) → il redonne **exactement `a1c9c51f…`**. Donc le digest d'état des
+    plantes est **IDENTIQUE** entre les deux (les deux suppriment le seul geste qui
+    mutait l'état, le regress-kill) ; la seule différence est **une ligne de log
+    fantôme** (le golden hashe log+digest, cf. `test_golden.py`). `a1c9c51f…`
+    laissait un log annonçant une régression qui n'a plus lieu (mensonger, contre la
+    prose du kickoff). `007be139…` est la version **honnête et fidèle** → figée.
+    La condition STOP du kickoff (« hash différent ⇒ effet de bord sur l'état ») est
+    donc FALSIFIÉE : aucun effet de bord, log seul. `regress()` désormais INUTILISÉ
+    (conservé, règle « ne jamais jeter de code »).
 - **② Cap létalité chronique** (`sim/effects/perturbations.py::apply_disturbances`)
   — cumul voies de fond borné à −1/tick ; golden neutre attendu, re-figeage
   localisé pré-autorisé.
@@ -99,9 +119,11 @@ Diagnostic seul pour l'instant. Toute option reste O(plantes) local, sans
 nouvelle passe spatiale globale → budget ≤ +10 %/tick tenable.
 
 ## §REPRISE
-**Conception FIGÉE et commitée (2026-07-04).** Rien à décider : lancer
-`/sprint-auto sprint_usure_letalite`. Il exécute ① (golden re-figé `a1c9c51f…`,
-valeur pré-mesurée dans `01_*.md`) → ② (cap chronique, golden neutre attendu,
+**① CLOS et commité (2026-07-04).** `_resoudre_conflits` non-létal, golden re-figé
+`007be139…` (divergence avec `a1c9c51f…` du kickoff tranchée par preuve : log
+fantôme seul, état plantes identique — cf. Carte des tronçons). Suites ciblées
+vertes, repro banc OK. **Reprendre à ②** (cap létalité chronique
+`sim/effects/perturbations.py::apply_disturbances`, golden neutre attendu,
 re-figeage localisé pré-autorisé) → ③ (vue Godot/F5, golden intact). Après clôture :
 **F5 Nico** sur le banc `grimpantes` (hôte survit, dominé s'ombre lentement).
 Doc de référence : `docs/conception/CONCEPTION_USURE_LETALITE.md`. Suite (séparée) :
