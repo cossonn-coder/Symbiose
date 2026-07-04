@@ -14,7 +14,8 @@ from __future__ import annotations
 
 from plants import WEED_CATALOGUE, PLANT_CATALOGUE, PERENNIAL_CATALOGUE
 from fields import SEED_ARCHETYPES, _hash_noise
-from fields.ecofields import bell, T_GERM_FLOOR, GERM_GENE_SHIFT
+from fields.ecofields import (bell, T_GERM_FLOOR, GERM_GENE_SHIFT,
+                              COUVERTURE_ADVENTICE_SEUIL)
 
 
 def _germ_gene_mean(eco, r: int, c: int, plant_class: type) -> float:
@@ -204,6 +205,16 @@ def succession(game_state: dict, tile, eco, week: int) -> list[str]:
             # Le frein vient des champs réels (lumière-sol ombragée + sol établi
             # déjà dans niche_index) — pas d'un terme « occupation » artificiel.
             if not tile.is_valid_plot(r, c):
+                continue
+
+            # Gate COUVERTURE DU SOL (sprint LUXURIANCE ①, D65 §2.1) : un plot déjà
+            # densément tapissé par un couvre-sol ÉTOUFFE la levée SPONTANÉE des
+            # adventices — bénéfice permacole réel (le couvert supprime la concurrence
+            # pionnière). Déterministe (seuil dur, zéro RNG). Ne s'applique QU'À la
+            # germination férale : les grains PLANTÉS (geste délibéré du joueur, levés
+            # plus haut) ne sont pas concernés. Couverture nulle/faible (golden au
+            # démarrage, plots nus) → jamais franchi → germination inchangée.
+            if eco.couverture_sol.at_plot(r, c) >= COUVERTURE_ADVENTICE_SEUIL:
                 continue
 
             # Densité racinaire voisine normalisée

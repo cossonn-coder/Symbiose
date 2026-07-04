@@ -42,11 +42,12 @@ from .uptake import UptakeMixin
 from .vie_macro import VieMacroMixin
 from .sol import SolMixin
 from .ticks import TicksMixin
+from .couverture import CouvertureMixin
 
 
 @dataclass
 class EcoFields(MatiereOrganiqueMixin, HydrologieMixin, RuissellementMixin,
-                UptakeMixin, VieMacroMixin, SolMixin, TicksMixin):
+                UptakeMixin, VieMacroMixin, SolMixin, TicksMixin, CouvertureMixin):
     tile_id:    str
     rows:       int
     cols:       int
@@ -206,6 +207,13 @@ class EcoFields(MatiereOrganiqueMixin, HydrologieMixin, RuissellementMixin,
     # (l'eau circule enfin, le bilan hydrique par plot change). Exposée AUTO au
     # registre `get_field` (overlay debug F6) + au snapshot (bloc `eau_surface` ②).
     eau_surface:      GridField = field(default=None)
+    # Couverture du sol (sprint LUXURIANCE ①, D65 §2.1) — fraction ∈ [0,1] du plot
+    # couverte par le feuillage des strates BASSES (sol+basse), RECALCULÉE chaque tick
+    # par SCATTER (`tick_couverture`, mixin `CouvertureMixin`). NULLE au repos (aucune
+    # plante basse) → lecteurs (évaporation, germination) neutres → construction directe
+    # (mini-sol de conteneur qui ne ticke pas la couverture) bit-identique. Bornée
+    # [0,1] par le GridField. Exposée AUTO au registre `get_field` (overlay debug F6).
+    couverture_sol:   GridField = field(default=None)
 
     def __post_init__(self):
         if self.humidite    is None: self.humidite    = GridField(self.rows, self.cols)
@@ -326,6 +334,10 @@ class EcoFields(MatiereOrganiqueMixin, HydrologieMixin, RuissellementMixin,
         # saturation) → déterminisme préservé pour une construction directe (conteneur).
         if self.eau_surface is None:
             self.eau_surface = GridField(self.rows, self.cols, max_val=HUM_CAP)
+        # Couverture du sol (sprint LUXURIANCE ①) — NULLE au repos, bornée [0,1],
+        # écrite chaque tick par `tick_couverture` (scatter des empreintes basses).
+        if self.couverture_sol is None:
+            self.couverture_sol = GridField(self.rows, self.cols, max_val=1.0)
         self._abri_cache = None
 
     def _init_heterogene(self, grid: GridField, plancher: float) -> None:
@@ -364,6 +376,7 @@ class EcoFields(MatiereOrganiqueMixin, HydrologieMixin, RuissellementMixin,
             "epaisseur_sol":    self.epaisseur_sol,
             "altitude":         self.altitude,
             "eau_surface":      self.eau_surface,
+            "couverture_sol":   self.couverture_sol,
         }.get(name)
 
     def fertilite_index(self, r: int, c: int) -> float:

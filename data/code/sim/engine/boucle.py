@@ -210,6 +210,16 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
             #     MAÎTRISÉ (humidité matinale en hausse).
             log += eco.tick_rosee(temp_now, nebul)
 
+            # 2d. Couverture du sol (sprint LUXURIANCE ①, D65 §2.1) — SCATTER des
+            #     empreintes des plantes BASSES (sol+basse) vers le champ scalaire
+            #     `couverture_sol`. Placé ICI, AVANT ses deux lecteurs : l'évaporation
+            #     (étape 3 — sol couvert perd moins d'eau) et la germination férale
+            #     (succession, étape 13 — couvert dense étouffe les adventices). Un
+            #     seul balayage des plantes/tick (jamais un sweep de grille). Tuile
+            #     sans plante basse → champ nul → lecteurs neutres. La tuile 2 du golden
+            #     porte du Clover → couverture > 0 → RE-FIGEAGE MAÎTRISÉ ANNONCÉ.
+            eco.tick_couverture(tile.plants, saison)
+
             # 3. Hydrologie : évaporation → pluie de fond → rétention → drainage
             #    (le drainage dépend du type de sol de la tuile, §2.3 a). L'apport
             #    météo `pluie_event` (①, §2.2) y est infiltré ∝ structure du sol.

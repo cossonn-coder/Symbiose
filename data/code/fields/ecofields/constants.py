@@ -278,6 +278,24 @@ OM_STABLE_DECAY  = 0.0006  # humus : très lent (décennies)
 # léger pour ne pas inventer D30 ici (cf. kickoff #4, CONCEPTION_VIE_MACRO.md §7).
 WORM_DECOMP_BONUS = 0.25   # densité ver [0,1] → bonus additif à `speed` (knob, D31.2)
 
+# --- Couverture du sol (sprint LUXURIANCE PAR STRATIFICATION ①, D65 §2.1) -----
+# Champ scalaire `couverture_sol` ∈ [0,1] par plot = FRACTION du sol couverte par le
+# feuillage des strates BASSES (sol + basse). Alimenté par SCATTER (stamp d'empreinte
+# des plantes basses, cf. `couverture.py`), jamais par un sweep de grille. Socle du
+# tronçon ② (gate d'établissement du clonal). Deux consommateurs écologiques ici
+# (philo #2 : flux → contrainte, jamais de malus direct plante) :
+#  (a) ÉVAPORATION — un sol couvert perd MOINS d'eau (l'eau reste sous le tapis).
+#      `tick_hydrology` rapproche le multiplicateur d'évaporation de 1.0 (rétention)
+#      ∝ couverture : `evap += (1−evap)·COUVERTURE_EVAP_FRAC·couverture`. La tuile 2
+#      du golden porte du Clover (strate basse) → couverture > 0 → RE-FIGEAGE ANNONCÉ.
+#  (b) GERMINATION D'ADVENTICES — au-dessus de COUVERTURE_ADVENTICE_SEUIL, le couvre-sol
+#      ÉTOUFFE la levée spontanée des pionnières (`succession`) : bénéfice permacole réel.
+#      Gate DÉTERMINISTE (pas de RNG) sur la seule germination férale (pas les grains
+#      plantés, qui restent un geste délibéré du joueur).
+# PLACEHOLDERS, calibrage F5 / bancs d'essai.
+COUVERTURE_EVAP_FRAC     = 0.4   # part du chemin evap→1.0 (rétention) à couverture pleine
+COUVERTURE_ADVENTICE_SEUIL = 0.6  # couverture au-delà de laquelle la germination férale est étouffée
+
 # Devenir de la masse décomposée de chaque compartiment.
 # Trois destinations : humification (→ compartiment suivant), minéralisation
 # (→ fertilite), respiration (→ CO₂, perte nette). Les trois somment à 1.0 :

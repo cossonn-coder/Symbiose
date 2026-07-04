@@ -99,6 +99,16 @@ class HydrologieMixin:
                 # d'air UNIFORME (②, fallback rétro-compatible pour pots/bacs).
                 vloc = vent_field.data[r][c] if vent_field is not None else vent_masse_air
                 evap -= EVAP_WIND_COEF * vloc
+                # COUVERTURE DU SOL (sprint LUXURIANCE ①, D65 §2.1) : un sol couvert par
+                # un tapis bas (couvre-sol) perd MOINS d'eau — l'eau reste piégée sous le
+                # feuillage. On rapproche le multiplicateur d'évaporation de 1.0 (rétention
+                # pure) ∝ la couverture : `evap += (1−evap)·FRAC·couverture`. C'est un FLUX
+                # (l'eau du plot est conservée), jamais un bonus sur la plante (philo #2).
+                # Couverture NULLE (aucune plante basse) → terme nul → évaporation
+                # inchangée. La tuile 2 du golden porte du Clover (strate basse) → terme
+                # actif → RE-FIGEAGE MAÎTRISÉ ANNONCÉ (humidité un peu plus haute sous couvert).
+                cov = self.couverture_sol.data[r][c]
+                evap += (1.0 - evap) * COUVERTURE_EVAP_FRAC * cov
                 if evap < EVAP_MIN:
                     evap = EVAP_MIN
                 h *= evap                                           # 1. évaporation

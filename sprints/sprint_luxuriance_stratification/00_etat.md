@@ -73,9 +73,36 @@ nombre de ramets → protège le LightField d'une explosion de plantes. Budget �
 6. Vue Godot : empilement multi-strates visible + couverture rendue + silhouettes
    + colonies clonales + pont + banc F5 `luxuriance` — INTACT.
 
+## Avancement
+- **T1 ✅ FAIT (2026-07-04)** — Champ `couverture_sol` + 2 hooks écologiques.
+  - Champ scalaire `couverture_sol` ∈ [0,1] par plot (nouveau `GridField` dans
+    `container.py`, exposé `get_field` → overlay F6), recalculé chaque tick par
+    SCATTER dans le mixin neuf `fields/ecofields/couverture.py::CouvertureMixin.
+    tick_couverture(plants, saison)` (stamp des empreintes des plantes de strate
+    sol+basse, densité×canopée, écrêté [0,1] par le champ). Câblé dans
+    `sim/engine/boucle.py` étape **2d**, AVANT hydrologie (3) et succession (13).
+  - Hook (a) évaporation : `hydrologie.py` rapproche `evap` de 1.0 (rétention)
+    ∝ couverture (`COUVERTURE_EVAP_FRAC=0.4`). Vérifié : per-tick, plot couvert
+    RETIENT plus d'eau (1.4972 > 1.4954 sur banc isolé) — sens correct.
+  - Hook (b) germination : `sim/succession.py` gate la germination FÉRALE (pas
+    les grains plantés) si `couverture_sol ≥ COUVERTURE_ADVENTICE_SEUIL=0.6`.
+  - Constantes dans `fields/ecofields/constants.py`.
+  - **Golden RE-FIGÉ** (annoncé) : `15073be1…` → **`d26432d3c236543234b1176c0290ffbd7df3f2740488b8e7caea1704a6e95143`**.
+    Raison : Clover (strate basse) sur tuiles paires du golden → couverture > 0 →
+    évaporation modifiée + germination férale gatée → cascade humidité/population.
+    Dérive LOCALISÉE et bornée (cov ∈ [0,1], cov_max ~0.8 ; humidité plausible
+    0.01–1.0, aucune explosion ni effondrement). Suites ciblées vertes (golden +
+    éco/hydro/succession du bloc rapide).
+  - LDC (code pur) : couverture 20 / hydrologie 41 / succession 145 / container 244 — tous 🟢.
+  - **Suite `test_population` RE-FIGÉE** (hash externe `population_hash.txt`) :
+    `e7f1cf19…` → `5a1873db…`. Même cascade humidité→population que le golden
+    (toutes les assertions COMPORTEMENTALES passent inchangées, seul le hash de
+    déterminisme du champ densité glisse). `test_epaisseur_500ans` (test manuel
+    long anti-emballement) NON relancé — jugé inutile par Nico pour ce tronçon.
+
 ## §REPRISE
-**Conception FIGÉE (2026-07-04).** Doc `docs/conception/CONCEPTION_LUXURIANCE_STRATIFICATION.md`
-écrit, kickoffs 01→06 écrits, prêt pour `/sprint-auto sprint_luxuriance_stratification`.
-Exécuter les tronçons dans l'ordre (T1 socle couverture → T2 clonal → T3 empreinte
-→ T4/T5 catalogue → T6 vue). Golden : RE-FIGÉ à T1 et T2 (annoncé), NEUTRE T3-T5,
-INTACT T6. À la clôture : fermer D62 (absorbée), MAJ DETTE/BACKLOG/journal/mémoire.
+**T1 CLOS.** Prochain : **T2 = mécanique clonale** (kickoff `02_*.md`), RE-FIGÉ
+annoncé (ramets de trèfle sur le golden). Puis T3 empreinte (NEUTRE), T4/T5
+catalogue (NEUTRE), T6 vue Godot (INTACT). Conception FIGÉE
+`docs/conception/CONCEPTION_LUXURIANCE_STRATIFICATION.md`. À la clôture du sprint :
+fermer D62 (absorbée), MAJ DETTE/BACKLOG/journal/mémoire.
