@@ -398,6 +398,28 @@ def background_mortality(plant: PlantInstance, eco,
     return []
 
 
+def _cap_chronique(chronic_muts: list[Mutation]) -> list[Mutation]:
+    """Borne à −1 santé/tick/plante le cumul des voies de fond CHRONIQUES
+    (② sprint « usure, pas punition », philo #6).
+
+    Sur l'échelle santé entière 0-3, plusieurs `ReduceHealth` indépendants
+    empilés dans un même tick pouvaient passer 3→0 (mort-éclair). Ici, pour
+    chaque plante, on ne garde QU'UN seul `ReduceHealth` d'`amount=1` — le
+    premier de la plante, en PRIVILÉGIANT un coup porteur de `cause` non vide
+    (pour préserver la marque foliaire de la sémiologie ②). L'ordre de la liste
+    est préservé (déterminisme, zéro RNG). Les voies aiguës (fonte des semis)
+    ne passent PAS par ici → restent décisives."""
+    retenu: dict[int, ReduceHealth] = {}       # id(plante) → coup conservé
+    for m in chronic_muts:
+        pid = id(m.plant)
+        garde = retenu.get(pid)
+        # Premier coup de la plante, OU premier coup à `cause` non vide qui
+        # remplace un coup sans cause déjà retenu (préserve la sémiologie).
+        if garde is None or (not garde.cause and m.cause):
+            retenu[pid] = ReduceHealth(m.plant, 1, reason=m.reason, cause=m.cause)
+    return list(retenu.values())
+
+
 def apply_disturbances(tile, eco, game_state: dict,
                        seed: int, week: int,
                        year_fraction: float, saison: str = "",
@@ -432,24 +454,33 @@ def apply_disturbances(tile, eco, game_state: dict,
                 if vent_force > 0.0 else (0.0, 0.0))
 
     # 2 & 3. Perturbations par plante
-    all_mutations = []
+    # Deux flux SÉPARÉS (② cap létalité chronique, sprint « usure, pas punition ») :
+    #   • AIGU (fonte des semis) → passe INTACT, une fonte peut emporter un semis ;
+    #   • CHRONIQUE (herbivorie, fongique, sécheresse, ombre, mortalité de fond) →
+    #     borné à −1 santé/tick/plante (cf. `_cap_chronique`) → une plante saine
+    #     (health 3) tient ≥ 3 ticks de fond avant de mourir = usure (philo #6),
+    #     jamais 3→0 d'un coup. L'ordre d'APPEL des fonctions est INCHANGÉ (les
+    #     tirages `_hash_noise` restent corrélés au golden) : seule la VENTILATION
+    #     des mutations produites dans deux listes change.
+    acute_muts = []
+    chronic_muts = []
     for plant in list(tile.plants):
         if not plant.is_alive:
             continue
-        # Herbivorie + ravageurs létaux
-        all_mutations += herbivory_pressure(plant, tile, game_state, eco)
-        # Fonte des semis + maladies fongiques (vent : assèchement ⑥ + spores au vent)
-        all_mutations += damping_off(plant, tile, eco, seed, week, saison)
+        # Herbivorie + ravageurs létaux (chronique)
+        chronic_muts += herbivory_pressure(plant, tile, game_state, eco)
+        # Fonte des semis (AIGU, non capé) + maladies fongiques (chronique)
+        acute_muts += damping_off(plant, tile, eco, seed, week, saison)
         vl = eco.vent.at_plot(*plant.position) if eco and eco.vent else 0.0
-        all_mutations += fungal_disease(plant, tile, eco, seed, week, vl, wind_vec)
+        chronic_muts += fungal_disease(plant, tile, eco, seed, week, vl, wind_vec)
         # Stress hydrique sévère (voie sécheresse → santé, médiée par génotype)
-        all_mutations += drought_stress_damage(plant, eco, seed, week)
+        chronic_muts += drought_stress_damage(plant, eco, seed, week)
         # Carence lumineuse chronique (voie ombre → santé, médiée par tolerance_ombre)
-        all_mutations += shade_stress_damage(plant, eco, seed, week)
-        # Mortalité de fond
-        all_mutations += background_mortality(plant, eco, seed, week)
+        chronic_muts += shade_stress_damage(plant, eco, seed, week)
+        # Mortalité de fond (chronique)
+        chronic_muts += background_mortality(plant, eco, seed, week)
 
-    log += apply_mutations(all_mutations, game_state)
+    log += apply_mutations(acute_muts + _cap_chronique(chronic_muts), game_state)
 
     # 4. Mise à jour stress_memory (intégration lente)
     for plant in tile.plants:

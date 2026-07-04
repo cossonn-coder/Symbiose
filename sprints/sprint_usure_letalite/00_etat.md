@@ -32,8 +32,28 @@ Doc : `docs/conception/CONCEPTION_USURE_LETALITE.md`. Tronçons :
     donc FALSIFIÉE : aucun effet de bord, log seul. `regress()` désormais INUTILISÉ
     (conservé, règle « ne jamais jeter de code »).
 - **② Cap létalité chronique** (`sim/effects/perturbations.py::apply_disturbances`)
-  — cumul voies de fond borné à −1/tick ; golden neutre attendu, re-figeage
-  localisé pré-autorisé.
+  — **FAIT (code)** le 2026-07-04. Ventilation des mutations en DEUX flux :
+  `acute_muts` (fonte des semis, INTACT) vs `chronic_muts` (herbivorie + fongique +
+  sécheresse + ombre + mortalité de fond). Nouvelle statique `_cap_chronique` :
+  pour chaque plante, ne garde QU'UN `ReduceHealth` d'`amount=1` (le premier, en
+  privilégiant un coup à `cause` non vide → marque foliaire préservée). Ordre
+  d'appel des fonctions INCHANGÉ (tirages `_hash_noise` corrélés) ; seule la
+  ventilation change. Une plante saine (health 3) tient ≥ 3 ticks de fond → usure
+  (philo #6). Aigu (fonte) reste décisif. Zéro RNG. Fichier 219 LDC pur (🟢).
+  Suites : `test_competition` 14/14, `test_senescence` PASS.
+  - **✅ GOLDEN RE-FIGÉ `15073be1a80bb2aedd686bdf09fe96e96b3979fa093fa494628f3ce4de8d6d62`**
+    (2026-07-04). Divergence **LOCALISÉE et EXPLIQUÉE** (re-figeage pré-autorisé par
+    le kickoff § « re-figeage LOCALISÉ »). Preuve par diff baseline↔capé
+    (`_cap_chronique` = identité vs actif) : TOUTES les divergences dérivent de
+    coups chroniques dépassant −1/tick — (a) bites herbivorie LÉTALE `−2` ramenées
+    à `−1` (ex. Bourse-à-pasteur@(1,6), Pissenlit@(4,2), Minette@(3,3)) ; (b) deux
+    voies chroniques empilées dans un tick `−1`+`−1`=`−2` ramenées à `−1` (ex.
+    Minette@(2,4) herbivorie+carence lumineuse). Le reste = CASCADE aval (des
+    adventices annuelles qui survivent un peu plus, meurent ensuite de sénescence
+    annuelle/vent/sécheresse à d'autres semaines ; comptes de plantes 11→12,
+    om_fresh/exsudats/humidité décalés de quelques millièmes). AUCUN système hors
+    périmètre ne diverge, jamais le cœur du jardin ni les pérennes. Exactement le
+    mort-éclair visé (philo #6).
 - **③ Vue Godot & F5** (`grimpantes`, rendu `ombre` déjà en place) — golden intact.
 
 ## Le vrai bug (confirmé par repro, banc `grimpantes`, seed 42)
@@ -122,9 +142,17 @@ nouvelle passe spatiale globale → budget ≤ +10 %/tick tenable.
 **① CLOS et commité (2026-07-04).** `_resoudre_conflits` non-létal, golden re-figé
 `007be139…` (divergence avec `a1c9c51f…` du kickoff tranchée par preuve : log
 fantôme seul, état plantes identique — cf. Carte des tronçons). Suites ciblées
-vertes, repro banc OK. **Reprendre à ②** (cap létalité chronique
-`sim/effects/perturbations.py::apply_disturbances`, golden neutre attendu,
-re-figeage localisé pré-autorisé) → ③ (vue Godot/F5, golden intact). Après clôture :
-**F5 Nico** sur le banc `grimpantes` (hôte survit, dominé s'ombre lentement).
+vertes, repro banc OK.
+**② FAIT (code, PAS ENCORE COMMITÉ — Nico commit) (2026-07-04).** Cap létalité
+chronique dans `sim/effects/perturbations.py` (`_cap_chronique` + ventilation
+aigu/chronique). Golden **re-figé** `15073be1a80bb2aedd686bdf09fe96e96b3979fa093fa494628f3ce4de8d6d62`
+(divergence localisée/expliquée = bites `−2`→`−1` et cumuls chroniques `−2`→`−1`,
++ cascade aval sur adventices ; preuve par diff baseline↔capé). `test_competition`
+14/14, `test_senescence` PASS. C# non concerné.
+**Reprendre à ③** (vue Godot/F5, golden intact — signe de dépérissement progressif /
+étranglement + lisibilité auxiliaires volet (b) D64 + mapping couleur/texture `ombre`
+côté `PlantRenderer` C# reporté du sprint stress chronique + banc `grimpantes`
+rejoué F5). Après clôture : **F5 Nico** sur le banc `grimpantes` (hôte survit,
+dominé s'ombre lentement, plus de mort-éclair).
 Doc de référence : `docs/conception/CONCEPTION_USURE_LETALITE.md`. Suite (séparée) :
 ouvrir une `/conception` pour **D65 luxuriance/stratification**.
