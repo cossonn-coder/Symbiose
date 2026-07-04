@@ -97,11 +97,7 @@ moteur sans son tronçon vue est incomplet.
   mellifère parfumé) dans `plants/species/grimpantes.py` NEUF (familles neuves
   sans base class, patron potagères) + exports + catalogue + SOIL_SIGNATURE
   (Araliaceae/Oleaceae) + 5 voix chacune. Golden **NEUTRE** (`a6c2f651…`).
-- ⑥ **vue Godot** : rendu supports + accroche + vrilles (§7 feuillage) + pont
-  (supports au snapshot, bump ENGINE_VERSION) + **banc d'essai `grimpantes`**
-  (Nico 2026-07-03 : haricot À CÔTÉ du tournesol pour la grimpe sur hôte, champ
-  tomates/basilic/poivrons au sud, départ début printemps=automatique wiy1) →
-  golden INTACT (vue pure + banc jamais monté pour smoke/full).
+- ⑥ **CLOS** (2026-07-04) vue Godot + pont + banc. Golden **INTACT** (`a6c2f651…`).
 
 ## §REPRISE
 CONCEPTION FIGÉE 2026-07-03. Doc = `docs/conception/CONCEPTION_GRIMPANTES.md`.
@@ -238,7 +234,33 @@ COMPLET des 48 suites = **0 échec** (golden, encyclopedie 68/68, pages 51/51, g
 magazine 23/23, carnet 19/19, evergreen, sim_server 244/244…). `main.py 30` ans =
 exit 0. C# **non concerné** (⑤ Python pur, vue en ⑥).
 
-**PROCHAINE ÉTAPE → ⑥ `06_vue_godot.md`** : rendu supports + accroche + vrilles
-(§7 feuillage) + pont (supports au snapshot, bump ENGINE_VERSION) + banc d'essai
-`grimpantes`. Golden attendu INTACT (vue pure + banc jamais monté pour smoke).
-Golden : ①②③ NEUTRE, ④ INTACT, ⑤ NEUTRE, INTACT ⑥.
+**⑥ CLOS 2026-07-04 — SPRINT TERMINÉ.** Fait, en 3 blocs :
+- **Pont (0.5.18)** : `serialize.py` expose au snapshot (1) le bloc `supports` par
+  tuile `[{type, x_cm, y_cm, height_cm, finesse}]` (`tile.supports`) et (2) l'état
+  `support` `{type, height_cm}` par grimpante accrochée (duck-typing local str=mur /
+  `support_type`=Support posé / sinon=hôte, aucun import de sim/grimpe). `version.py`
+  bumpé 0.5.17→**0.5.18** + changelog. Asserts recalés (conteneurs/structures/voix) +
+  check de présence du bloc `supports` (vide au smoke) dans `structures.py`.
+- **Vue C#** : `visuals/SupportRenderer.cs` NEUF (placeholder procédural pieu/grille/
+  portique, patron `CompostStructure`) + `world/WorldView.Support.cs` NEUF
+  (`ApplySupports`, reconstruction pleine YSort) câblé dans `Snapshot.cs` + nettoyage
+  `_supportNodes.Clear()` dans `Camera.cs`. Vrilles : `PlantRenderer.SetSupport` +
+  `DrawTendrils` (spirale discrète au tip le plus haut de l'accrochée, rendu différé
+  §7/E6 débloqué) + câblage `support` par plante (2 branches). La grimpe elle-même =
+  GRATUITE (géométrie du snapshot, décision A). `dotnet build` **VERT** (0 warn/0 err).
+- **Banc `grimpantes`** (`bancs/biotique.py` + registre) : 3 tuiles — GRIMPE (haricot↔
+  tournesol hôte ÉMERGENT + haricot pré-attaché tuteur + jasmin pré-palissé treillis),
+  MUR_SUD (lierre crampon pré-collé au mur sud), POTAGER_SUD (Solanaceae au sud).
+  `init config="grimpantes"` monte le banc, supports + 3 accroches vérifiés au snapshot.
+
+**GOLDEN INTACT — `a6c2f651…` inchangé** (vue+pont ne touchent pas le digest ; banc
+jamais monté pour smoke/full). Tests VERTS : golden, grimpe 10/10, `test_sim_server`
+**245/245** (+1 check supports). LDC pur 🟢 (serialize 234, biotique 104,
+SupportRenderer 75, WorldView.Support 37). Golden : ①②③ NEUTRE, ④ INTACT, ⑤ NEUTRE,
+⑥ INTACT → **jamais re-figé sur tout le sprint**.
+
+**Signalé à Nico** : `serialize.py` calcule `eau_surface_by_tile` mais ne l'inclut PAS
+dans le `return` (WIP hydrologie ② non branché, pré-existant à ce sprint — non touché).
+
+**RESTE = F5 Nico** (`06_vue_godot.md` §F5) : calibrage à l'œil (hauteurs supports,
+allure des vrilles, affalement `DROOP_Z` cf. §REPRISE ① si trop doux au digest).

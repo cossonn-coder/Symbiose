@@ -143,12 +143,18 @@ namespace Symbiose
 				// et texture, sans recalculer pH/pression (cf. PlantRenderer).
 				var symptoms = p.ContainsKey("leaf_symptoms")
 					? p["leaf_symptoms"].AsGodotArray() : null;
+				// Accroche de grimpe (grimpantes ⑥, 0.5.18) : type d'appui accroché
+				// (tuteur/mur/hote…) ou null. Tolérant à un snapshot pré-0.5.18 (clé
+				// absente → plante libre → pas de vrille). Pilote la vrille (indice ⑥).
+				string supportKind = p.ContainsKey("support")
+					? p["support"].AsGodotDictionary()["type"].AsString() : null;
 
 				if (_plantNodes.TryGetValue(key, out var node))
 				{
 					node.SetStructure(structure);   // la plante a poussé
 					node.SetSkeleton(stadeMort);     // ou vient de mourir / s'est couchée
 					node.SetSymptoms(symptoms);      // teinte + texture des symptômes (D33)
+					node.SetSupport(supportKind);    // vrille d'accroche (grimpantes ⑥)
 					node.SetMeta("tag", TagText(p));   // le stade évolue (étiquette nette)
 					node.Position = screenPos;         // suit le relief du sol (D57 ②)
 					grown++;
@@ -176,6 +182,7 @@ namespace Symbiose
 				renderer.SetStructure(structure);
 				renderer.SetSkeleton(stadeMort);   // squelette déjà mort au chargement (save)
 				renderer.SetSymptoms(symptoms);    // teinte + texture des symptômes (D33)
+				renderer.SetSupport(supportKind);  // vrille d'accroche (grimpantes ⑥)
 				renderer.SetMeta("tag", TagText(p));   // texte d'étiquette (rendu net hors grille)
 				if (fade)
 					renderer.CreateTween()
@@ -239,6 +246,12 @@ namespace Symbiose
 				ApplyLitiere(snap["litiere"].AsGodotDictionary());
 			if (snap.ContainsKey("structures"))
 				ApplyStructures(snap["structures"].AsGodotDictionary());
+
+			// Supports de grimpe posables (grimpantes ⑥, 0.5.18, lecture seule) :
+			// placeholders tuteur/treillis/pergola. Lecture TOLÉRANTE : un snapshot
+			// pré-0.5.18 sans le bloc → aucun support dessiné, jamais de crash.
+			if (snap.ContainsKey("supports"))
+				ApplySupports(snap["supports"].AsGodotDictionary());
 
 			// Conteneurs de culture (pots/bacs ④, snapshot 0.5.7, lecture seule) :
 			// placeholders ContainerStructure + plantes du mini-sol (PlantRenderer).

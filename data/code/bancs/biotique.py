@@ -16,10 +16,12 @@ même endroit que la vue Godot.
 """
 from __future__ import annotations
 
-from plants import Basil, AppleTree, Phacelia
+from plants import (Basil, AppleTree, Phacelia, Bean, Sunflower, Ivy, Jasmine,
+                    Tomato, Pepper)
 from plants.genetics import clamp_gene
 from fields.seedbank import GrainEnAttente
 from sim.seeds import PlayerSeedBank, Seed
+from world import House, Support, MUR
 from .base import build_banc_tile, monde, force_faune, vieillir
 
 # ─────────────────────────── 1. infestation ravageur ─────────────────────────
@@ -193,3 +195,81 @@ def etalement_floraison():
             plante.gdd_accum = ETAL_GDD_PRECHARGE   # forçage pré-armé (accélération)
             k += 1
     return monde([tile], {tile.tile_id: eco})
+
+
+# ─────────────────────────── 5. grimpantes (D49 volet A) ──────────────────────
+# Banc D'OBSERVATION de la grimpe (sprint grimpantes ⑥) — instrument pour voir au
+# F5 les QUATRE voies d'accroche à côté d'un champ potager frileux. À la différence
+# des bancs à seuil (qui forcent UN signe), c'est un jardin composé où la grimpe
+# ÉMERGE de la géométrie sur la saison (décision A : hauteur = vraie max_z des
+# segments, pas un scalaire) — Nico calibre à l'œil (hauteurs de supports, vrilles).
+#
+# Trois accroches sont PRÉ-ARMÉES (comme les autres bancs posent l'état « déjà
+# installé ») pour être lisibles TÔT sans dérouler des semaines de croissance :
+#   • un haricot pré-attaché à un TUTEUR posé (vrille_volubile → tuteur, ④) ;
+#   • un jasmin PALISSÉ sur un treillis (sarmenteux : seule accroche = le geste, ④) ;
+#   • un lierre COLLÉ au mur sud de la maison (crampon → MUR, espalier, ②).
+# La 4ᵉ voie — grimpe sur HÔTE VIVANT (③) — est laissée ÉMERGENTE : un haricot planté
+# JUSTE À CÔTÉ d'un tournesol l'enroulera quand le tournesol dépassera sa hauteur
+# autoportante (35 cm), puis l'ombragera en le dépassant (étranglement émergent,
+# LightField, philo #2). C'est le cœur observable du banc → non pré-armé exprès.
+# Pure COMPOSITION de l'état moteur (plantes + `tile.supports` + `plant.support`) —
+# AUCUNE mécanique nouvelle → golden NEUTRE (jamais monté pour smoke/full).
+SOLANACEAE_SUD = [(Tomato, 2, 2), (Basil, 2, 4), (Pepper, 4, 3), (Tomato, 4, 5)]
+
+
+def grimpantes():
+    """Banc « grimpantes » (sprint D49 ⑥, observation F5) : les 4 voies d'accroche
+    (tuteur, treillis palissé, mur maison, hôte vivant) réunies sur une tuile, plus
+    un champ de Solanaceae au sud (ensoleillé/chaud). Trois accroches pré-armées, la
+    grimpe sur hôte laissée émergente (haricot ↔ tournesol). Instrument d'observation,
+    pas d'oracle à seuil : on REGARDE la géométrie monter/s'affaler au F5."""
+    house = House()                                  # maison par défaut, centrée (600–1400)
+    # Tuile principale : les 4 voies de grimpe côte à côte. Humidité haute (le
+    # haricot procédural boit ; on veut de la croissance, pas un stress hydrique).
+    grimpe, eco_g = build_banc_tile("GRIMPE", "terre", 8, 8,
+                                    humidite=1.6, fertilite=1.2, microbiome=0.5)
+    eco_g.lumiere.fill(1.0)                          # plein soleil → grimpe vers la lumière
+
+    # (a) HÔTE VIVANT (③, émergent) : haricot JUSTE À CÔTÉ d'un tournesol. Le haricot
+    # l'enroulera dès que le tournesol dépassera 35 cm — puis l'ombragera (étranglement).
+    grimpe.add_plant(Sunflower, 2, 2)
+    grimpe.add_plant(Bean, 2, 3)
+
+    # (b) TUTEUR (②, pré-armé) : un haricot au pied d'un pieu, accroche déjà posée.
+    bean_t = grimpe.add_plant(Bean, 5, 2)
+    tuteur = Support(support_type="tuteur", x_cm=2 * 50 + 25, y_cm=5 * 50 + 25,
+                     height_cm=200.0, finesse="fin")
+    grimpe.supports.append(tuteur)
+    bean_t.support = (tuteur, tuteur.height_cm)       # vrille_volubile → tuteur (④)
+
+    # (c) TREILLIS PALISSÉ (④, pré-armé) : jasmin sarmenteux attaché à la main (son
+    # SEUL canal d'accroche — aucune saisie automatique).
+    jasmin = grimpe.add_plant(Jasmine, 5, 5)
+    treillis = Support(support_type="treillis", x_cm=5 * 50 + 25, y_cm=5 * 50 + 25,
+                       height_cm=180.0, finesse="surface")
+    grimpe.supports.append(treillis)
+    jasmin.support = (treillis, treillis.height_cm)   # palissage (④)
+
+    # (d) MUR MAISON (②, pré-armé) : tuile plaquée contre le mur SUD (y=1400), un
+    # lierre crampon en espalier. Origine choisie pour que le pied du lierre tombe
+    # dans le rayon d'accroche du rectangle-empreinte (clamp du point le plus proche).
+    mur_tile, eco_m = build_banc_tile("MUR_SUD", "terre", 8, 8,
+                                      ox=600.0, oy=1400.0,
+                                      humidite=1.4, fertilite=1.0, microbiome=0.5)
+    lierre = mur_tile.add_plant(Ivy, 0, 1)            # près du mur, plein sud
+    lierre.support = (MUR, house.height_cm)           # crampon → mur (espalier)
+
+    # Champ de Solanaceae au SUD (origin_y grand) : secteur ensoleillé/chaud, frileuses
+    # favorisées (ambiance du banc, pas de grimpe). Plein soleil + humidité potagère.
+    sud, eco_s = build_banc_tile("POTAGER_SUD", "terre", 8, 8,
+                                 ox=1000.0, oy=1600.0,
+                                 humidite=1.5, fertilite=1.3, microbiome=0.5)
+    eco_s.lumiere.fill(1.0)
+    for cls, r, c in SOLANACEAE_SUD:
+        sud.add_plant(cls, r, c)
+
+    return monde([grimpe, mur_tile, sud],
+                 {grimpe.tile_id: eco_g, mur_tile.tile_id: eco_m,
+                  sud.tile_id: eco_s},
+                 house=house)

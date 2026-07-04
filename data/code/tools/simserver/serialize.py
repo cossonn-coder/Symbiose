@@ -132,6 +132,25 @@ class SerializeMixin:
                      "masse": f.masse}
                     for f in p.fruits
                 ]
+                # Accroche de grimpe (D49 volet A, 0.5.18) : état `support` de la
+                # plante — absent (libre / non-grimpante) ou {type, height_cm}.
+                # `plant.support = (ref, height_appui)` où `ref` est un Support posé
+                # (→ son `support_type`), la sentinelle MUR (str → "mur") ou une
+                # PlantInstance HÔTE vivante (③ → "hote"). Duck-typing LOCAL (pas
+                # d'import de sim/grimpe) : str = mur ; possède `support_type` = Support
+                # posé ; sinon = hôte vivant. La vue en tire l'indice d'accroche + les
+                # vrilles (⑥). PURE lecture → golden NEUTRE (aucune grimpante accrochée
+                # dans le smoke → clé absente).
+                if p.support is not None:
+                    ref, h_appui = p.support
+                    if isinstance(ref, str):
+                        sup_type = "mur"
+                    elif hasattr(ref, "support_type"):
+                        sup_type = ref.support_type
+                    else:
+                        sup_type = "hote"
+                    base["support"] = {"type": sup_type,
+                                       "height_cm": round(h_appui, 2)}
                 plants.append(base)
         # Vie macro (tranche 6·B, kickoff §4) : sprites échantillonnés depuis
         # les champs de population — PURE lecture (sample_sprites ne modifie
@@ -149,6 +168,7 @@ class SerializeMixin:
         carpophores = {}
         foragers = {}
         structures = {}
+        supports = {}
         litiere = {}
         alarme = {}
         temperature = {}
@@ -203,6 +223,20 @@ class SerializeMixin:
                  "colonisation": round(st.colonisation, 4),
                  "essaim": round(st.essaim, 4), "miel": round(st.miel, 4)}
                 for st in eco.structures]
+            # Supports de grimpe posés dans la tuile (D49 volet A, 0.5.18) :
+            # structures NEUVES (tuteur/treillis/pergola, world/support.py) auxquelles
+            # une grimpante compatible s'accroche pour monter (§4). Format par support
+            # `{type, x_cm, y_cm, height_cm, finesse}`, repère TUILE-local (cm) comme
+            # les plantes. La vue en dessine le placeholder procédural (pieu/grille/
+            # portique, ⑥). PURE lecture (`tile.supports`, rempli par les gestes
+            # poser_tuteur/treillis/pergola ④) → golden NEUTRE : le smoke n'en pose
+            # aucun → liste vide. Le MUR maison n'est PAS ici (il vit dans le bloc
+            # `house` statique) ; seuls les supports POSABLES transitent par le snapshot.
+            supports[tile.tile_id] = [
+                {"type": s.support_type, "x_cm": round(s.x_cm, 2),
+                 "y_cm": round(s.y_cm, 2), "height_cm": round(s.height_cm, 2),
+                 "finesse": s.finesse}
+                for s in tile.supports]
             # Litière typée par plot (décompo·compost ①, rendue par la vue en
             # 03·B) : la couche fraîche de nécromasse au sol. On n'expose QUE ce
             # qui se dessine — la parcelle `diffus` (exsudats racinaires, humus
@@ -357,7 +391,8 @@ class SerializeMixin:
                            "seeds": seeds},
                 "plants": plants, "sprites": sprites, "foragers": foragers,
                 "carpophores": carpophores,
-                "structures": structures, "litiere": litiere, "alarme": alarme,
+                "structures": structures, "supports": supports,
+                "litiere": litiere, "alarme": alarme,
                 "weather": weather, "temperature": temperature,
                 "condensation": condensation_by_tile,
                 "epaisseur": epaisseur_by_tile,

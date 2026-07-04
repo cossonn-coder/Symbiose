@@ -297,7 +297,21 @@ from __future__ import annotations
 #       (aucun tick, aucun effet) → golden NEUTRE. Champ exposé au registre `get_field`
 #       (overlay debug F6) + au snapshot. Champ optionnel côté vue (tolérance
 #       pré-0.5.17 → terrain plat). VUE C# (relief altitude) = tronçon ⑧.
-ENGINE_VERSION = "0.5.17"
+# 0.5.18 (grimpantes ⑥, D49 volet A — supports + accroche au pont) : DEUX ajouts
+#       lecture-seule. (1) nouveau bloc `supports` par tuile = liste des supports de
+#       grimpe POSABLES `[{type ("tuteur"/"treillis"/"pergola"), x_cm, y_cm,
+#       height_cm, finesse}, …]` (repère tuile-local, `tile.supports` rempli par les
+#       gestes poser_* ④) → la vue en dessine le placeholder procédural (pieu/grille/
+#       portique). (2) chaque plante grimpante ACCROCHÉE gagne `support` =
+#       `{type, height_cm}` (type ∈ tuteur/treillis/pergola/mur/hote) → la vue en tire
+#       l'indice d'accroche + les vrilles (rendu différé RENDU_FEUILLAGE §7/E6, débloqué
+#       par la mécanique ①→④). La grimpe elle-même est GRATUITE côté vue : les segments
+#       montent/s'affalent déjà dans le snapshot (décision A géométrique) → PlantRenderer
+#       les dessine sans code neuf. PURE extension de DONNÉES (blocs/champs neufs) →
+#       golden NEUTRE : le smoke ne pose aucun support et n'accroche aucune grimpante
+#       → `supports: {tuile: []}` et aucune clé `support` par plante. Un binaire
+#       pré-0.5.18 ignore le bloc/champ (tolérance côté vue, comme les bumps précédents).
+ENGINE_VERSION = "0.5.18"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

@@ -14,11 +14,16 @@ def test_structures():
     print("\n[13] structures posables : poser/composter/retourner/epandre + snapshot")
     s13 = ServerProc()
     init13 = s13.send(cmd="init", seed=42)
-    check("engine_version 0.5.17", init13.get("engine_version") == "0.5.17",
+    check("engine_version 0.5.18", init13.get("engine_version") == "0.5.18",
           init13.get("engine_version"))
     rb = s13.send(cmd="action", verb="poser_bac",
                   target={"tile": "T0", "r": 1, "c": 1})
     check("poser_bac → applied", rb["result"]["applied"])
+    # Bloc `supports` de grimpe présent au snapshot (0.5.18) : keyé par tuile,
+    # VIDE tant qu'aucun support n'est posé (le smoke n'en pose aucun → golden NEUTRE).
+    sup = rb["snapshot"]["supports"]
+    check("snapshot expose le bloc supports (vide au départ)",
+          "T0" in sup and sup["T0"] == [], sup)
     st = rb["snapshot"]["structures"]["T0"]
     check("snapshot expose le bac (kind/plot/compost_mur/contenu)",
           len(st) == 1 and st[0]["kind"] == "bac" and st[0]["plot"] == [1, 1]

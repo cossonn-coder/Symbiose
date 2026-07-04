@@ -42,6 +42,50 @@ namespace Symbiose
 		private static readonly Color GelEdgeColor = new Color("2a1d14"); // brun-noir brûlé (gel)
 		private static readonly Color LeafSpotColor = Palette16.PustuleMaladie; // pustule cryptogamique brun foncé
 
+		// --- Vrilles / indice d'accroche (grimpantes ⑥) --------------------------
+		private string _supportKind;    // null = libre ; sinon type d'appui accroché
+		private static readonly Color TendrilColor = new Color("6fb24a"); // vert vrille
+
+		// Reçoit l'état `support` du snapshot (0.5.18) : le TYPE d'appui accroché
+		// (tuteur/treillis/pergola/mur/hote), ou null si la plante est libre (non
+		// accrochée / non-grimpante). Ne pilote qu'un DÉTAIL de vue (la vrille) ; la
+		// grimpe elle-même vient de la géométrie des segments (décision A). Early-out
+		// si inchangé (comme SetSkeleton) : pas de redraw inutile.
+		public void SetSupport(string kind)
+		{
+			if (_supportKind == kind) return;
+			_supportKind = kind;
+			QueueRedraw();
+		}
+
+		// Une petite VRILLE en spirale au sommet de la grimpante accrochée : l'organe
+		// d'accroche qui « tient » le support. Déterministe (spirale paramétrique,
+		// zéro RNG → même tête, même vrille). Posée au tip le PLUS HAUT de la structure
+		// (la tête de la grimpe, là où elle saisit). Discrète : ~2 tours, ≈ 6 px.
+		private void DrawTendrils(Vector3 collet)
+		{
+			if (string.IsNullOrEmpty(_supportKind) || _structure == null) return;
+			Vector3 top = collet; float maxZ = float.NegativeInfinity;
+			foreach (var s in _structure.Segments)
+			{
+				Vector3 tip = s.Base + s.Dir * s.LengthCm;
+				if (tip.Z > maxZ) { maxZ = tip.Z; top = tip; }
+			}
+			Vector2 head = Iso(top.X - collet.X, top.Y - collet.Y, top.Z);
+			const int N = 14;
+			Vector2 prev = head;
+			for (int i = 1; i <= N; i++)
+			{
+				float t = i / (float)N;
+				float a = t * Mathf.Tau * 2f;                 // 2 tours d'enroulement
+				float rad = 1.5f + 4f * t;                    // rayon croissant
+				Vector2 p = head + new Vector2(Mathf.Cos(a) * rad, Mathf.Sin(a) * rad)
+							- new Vector2(0f, t * 6f);        // léger tirage vers le haut
+				DrawLine(prev, p, TendrilColor, 1.2f);
+				prev = p;
+			}
+		}
+
 		// Palette par espèce (= ORGAN_PALETTE du prototype) : feuille, fleur,
 		// fruit vert, fruit mûr. Espèce inconnue → défaut.
 		private readonly struct OrganPalette
