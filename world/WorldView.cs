@@ -285,6 +285,13 @@ namespace Symbiose
 					(float)t["origin_y_cm"].AsDouble());
 			}
 
+			// Tapis de COUVERTURE au sol (luxuriance ⑥, D65) — ZIndex 0 (juste
+			// au ras du sol), SOUS la litière (1), la macro (5) et les plantes (10) :
+			// le couvre-sol tapisse la terre, tout se dessine par-dessus. Enfant
+			// direct de WorldView (survit à RebuildWorld, il se re-projette seul).
+			_couvertureLayer = new CouvertureLayer { Name = "Couverture", ZIndex = 0 };
+			AddWorld(_couvertureLayer);
+
 			BuildLitterLayer();   // litière au sol (③·B) — ZIndex 1, sous la macro
 
 			_macroLife = new MacroLife { Name = "MacroLife", ZIndex = 5 };

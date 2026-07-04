@@ -14,6 +14,7 @@ from .edaphique import chlorose_acidophile, asphyxie_argile, carence_npk
 from .biotique import (infestation_ravageur, verger_floraison, semis_tempere,
                        etalement_floraison, grimpantes)
 from .succession import succession_bascule
+from .luxuriance import luxuriance
 
 BANCS = {
     "secheresse_sable": secheresse_sable,
@@ -30,6 +31,7 @@ BANCS = {
     "etalement_floraison": etalement_floraison,
     "grimpantes": grimpantes,
     "succession_bascule": succession_bascule,
+    "luxuriance": luxuriance,
 }
 
 # Semaine de départ par banc (retour F5 Nico 2026-07-04). La plupart démarrent à
@@ -38,4 +40,4 @@ BANCS = {
 # (~5 °C) pendant des semaines : on le décale à MI-PRINTEMPS (T ~6 °C) pour voir la
 # grimpe tout de suite. Lu par `cmd_init` (banc absent → 1 → comportement inchangé,
 # golden NEUTRE : smoke/full ne sont pas des bancs).
-BANC_WEEK_DEPART = {"grimpantes": 9}
+BANC_WEEK_DEPART = {"grimpantes": 9, "luxuriance": 9}

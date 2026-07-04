@@ -295,6 +295,11 @@ WORM_DECOMP_BONUS = 0.25   # densité ver [0,1] → bonus additif à `speed` (kn
 # PLACEHOLDERS, calibrage F5 / bancs d'essai.
 COUVERTURE_EVAP_FRAC     = 0.4   # part du chemin evap→1.0 (rétention) à couverture pleine
 COUVERTURE_ADVENTICE_SEUIL = 0.6  # couverture au-delà de laquelle la germination férale est étouffée
+# Seuil de PERCEPTION du tapis pour la vue (sprint LUXURIANCE ⑥, exposition au pont) :
+# le bloc creux `couverture` du snapshot n'inscrit que les plots dont la couverture
+# dépasse ce plancher (sous quoi le tapis est invisible à l'œil). Purement cosmétique
+# (aucun tick ne le lit) — comme SEUIL_FLAQUE pour l'eau de surface.
+COUVERTURE_RENDU_SEUIL   = 0.05
 
 # Devenir de la masse décomposée de chaque compartiment.
 # Trois destinations : humification (→ compartiment suivant), minéralisation

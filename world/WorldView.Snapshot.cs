@@ -148,6 +148,14 @@ namespace Symbiose
 				// absente → plante libre → pas de vrille). Pilote la vrille (indice ⑥).
 				string supportKind = p.ContainsKey("support")
 					? p["support"].AsGodotDictionary()["type"].AsString() : null;
+				// Luxuriance (⑥, 0.5.19) : strate du stade COURANT (ordre de dessin par
+				// strate) + silhouette d'espèce (forme au LOD couronne). Tolérant à un
+				// snapshot pré-0.5.19 (clés absentes → strate neutre "moyenne", silhouette
+				// par défaut). La strate évolue au fil des stades (sol→basse→…) → on la
+				// relit à chaque snapshot pour recaler le ZIndex, comme la position.
+				string strate = p.ContainsKey("strate") ? p["strate"].AsString() : null;
+				string silhouette = p.ContainsKey("silhouette")
+					? p["silhouette"].AsString() : null;
 
 				if (_plantNodes.TryGetValue(key, out var node))
 				{
@@ -155,6 +163,8 @@ namespace Symbiose
 					node.SetSkeleton(stadeMort);     // ou vient de mourir / s'est couchée
 					node.SetSymptoms(symptoms);      // teinte + texture des symptômes (D33)
 					node.SetSupport(supportKind);    // vrille d'accroche (grimpantes ⑥)
+					node.SetSilhouette(silhouette);  // forme au LOD couronne (luxuriance ⑥)
+					node.ZIndex = PlantZIndex(strate);  // empilement par strate (luxuriance ⑥)
 					node.SetMeta("tag", TagText(p));   // le stade évolue (étiquette nette)
 					node.Position = screenPos;         // suit le relief du sol (D57 ②)
 					grown++;
@@ -163,6 +173,10 @@ namespace Symbiose
 				var renderer = new PlantRenderer
 				{
 					Position = screenPos,
+					// Empilement multi-strates (luxuriance ⑥) : biais de ZIndex par
+					// strate → le couvre-sol passe sous la potagère/grimpante. À strate
+					// égale, le y-sort du parent "Objects" départage (intra-strate).
+					ZIndex = PlantZIndex(strate),
 					Name = $"{p["tile"].AsString()}_{p["species"].AsString()}_{_plantSeq++}",
 				};
 				// Métadonnées de picking (volet B) : position MONDE pour la
@@ -183,6 +197,7 @@ namespace Symbiose
 				renderer.SetSkeleton(stadeMort);   // squelette déjà mort au chargement (save)
 				renderer.SetSymptoms(symptoms);    // teinte + texture des symptômes (D33)
 				renderer.SetSupport(supportKind);  // vrille d'accroche (grimpantes ⑥)
+				renderer.SetSilhouette(silhouette);  // forme au LOD couronne (luxuriance ⑥)
 				renderer.SetMeta("tag", TagText(p));   // texte d'étiquette (rendu net hors grille)
 				if (fade)
 					renderer.CreateTween()
@@ -242,6 +257,12 @@ namespace Symbiose
 			// Décompo·compost (③, lecture seule, protocole 0.3.7/0.3.5) : litière
 			// au sol (layer batché) + structures bac/pile (nœuds YSort). Lecture
 			// TOLÉRANTE : un snapshot ancien sans ces blocs → rien dessiné.
+			// Tapis de couverture au sol (luxuriance ⑥, 0.5.19, lecture seule) : le
+			// champ `couverture_sol` scatté par les empreintes. Lecture TOLÉRANTE : un
+			// snapshot pré-0.5.19 sans le bloc → pas de tapis dessiné, jamais de crash.
+			if (snap.ContainsKey("couverture"))
+				ApplyCouverture(snap["couverture"].AsGodotDictionary());
+
 			if (snap.ContainsKey("litiere"))
 				ApplyLitiere(snap["litiere"].AsGodotDictionary());
 			if (snap.ContainsKey("structures"))

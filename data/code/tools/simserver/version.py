@@ -311,7 +311,21 @@ from __future__ import annotations
 #       golden NEUTRE : le smoke ne pose aucun support et n'accroche aucune grimpante
 #       → `supports: {tuile: []}` et aucune clé `support` par plante. Un binaire
 #       pré-0.5.18 ignore le bloc/champ (tolérance côté vue, comme les bumps précédents).
-ENGINE_VERSION = "0.5.18"
+# 0.5.19 (luxuriance par stratification ⑥, D65 — vue Godot au pont) : TROIS ajouts
+#       lecture-seule pour rendre la LUXURIANCE visible. (1) chaque plante gagne
+#       `strate` (sol/basse/moyenne/haute/grimpante, strate du stade COURANT),
+#       `silhouette` (tapis/rosette/touffe/étalée/dressée/buisson, silhouette_base ③)
+#       et `clonal_mode` (none/stolon/rhizome/drageon) — pilotent l'ordre de dessin
+#       par strate (couvre-sol SOUS potagère SOUS grimpante), la FORME de la silhouette
+#       et l'indice de colonie clonale. (2) nouveau bloc `couverture` par tuile = liste
+#       CREUSE `[[r, c, cov], …]` du champ `couverture_sol` (①) au-dessus de
+#       COUVERTURE_RENDU_SEUIL → la vue en tire le TAPIS au sol (densité ∝ cov, indice
+#       diégétique philo #5). Tous DÉRIVÉS d'un état déjà calculé (strate du stade,
+#       descripteur data, champ tické), HORS _PLANT_ATTRS du golden → golden INTACT
+#       (le pont ne réinjecte rien). Un binaire pré-0.5.19 n'émet ni ces clés plante ni
+#       le bloc `couverture` → la vue retombe sur l'ordre Y-sort seul, silhouette par
+#       défaut, pas de tapis (lecture TOLÉRANTE, comme tous les bumps précédents).
+ENGINE_VERSION = "0.5.19"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

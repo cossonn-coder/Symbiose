@@ -19,7 +19,7 @@ from sim.weather import weather_state, weather_signs, CALME, T_MOY
 from fields.population import sample_sprites, sample_carpophores
 # Seuil de perception d'une flaque (sprint hydrologie & marécages ②) : la liste
 # creuse `eau_surface` ne consigne que les plots dont la lame le dépasse.
-from fields.ecofields.constants import SEUIL_FLAQUE
+from fields.ecofields.constants import SEUIL_FLAQUE, COUVERTURE_RENDU_SEUIL
 # Sémiologie foliaire (D33) : détecteurs PURS des stresseurs chroniques, miroirs
 # fidèles des seuils des mécaniques qui blessent. Remplace le bool `chlorose` du ⑨
 # par la liste `leaf_symptoms`. Recalcul pur côté serveur (moteur = source de
@@ -85,6 +85,21 @@ class SerializeMixin:
                     "stage_name": p.stage.name,
                     "height_cm": p.current_height,
                     "segments": p.structure_to_dict(),
+                    # Luxuriance par stratification (D65, sprint LUXURIANCE ⑥) —
+                    # trois descripteurs PUR RENDU, lecture seule (hors _PLANT_ATTRS
+                    # du golden → golden INTACT). Tous dérivés d'un état déjà calculé :
+                    #  · `strate` = strate du stade COURANT (sol/basse/moyenne/haute/
+                    #    grimpante) — pilote l'ORDRE DE DESSIN par strate côté vue
+                    #    (couvre-sol SOUS potagère SOUS grimpante). Source de vérité
+                    #    Python : la vue ne la recalcule pas, elle la LIT.
+                    #  · `silhouette` = descripteur data d'espèce (tronçon ③,
+                    #    silhouette_base : tapis/rosette/touffe/étalée/dressée/buisson) —
+                    #    la vue choisit la FORME à dessiner.
+                    #  · `clonal_mode` = mode de multiplication végétative
+                    #    (none/stolon/rhizome/drageon) — indice de colonie clonale.
+                    "strate": p.stage.strate,
+                    "silhouette": cls.silhouette_base(),
+                    "clonal_mode": cls.clonal_mode,
                 }
                 # SQUELETTES post-mortem (décompo·compost ②B) : la mort ne retire
                 # plus la plante — `engine._tick_skeletons` la garde TANT QU'il
@@ -176,6 +191,7 @@ class SerializeMixin:
         epaisseur_by_tile = {}
         altitude_by_tile = {}
         eau_surface_by_tile = {}
+        couverture_by_tile = {}
         for tile in gs["tiles"]:
             eco = gs["eco"][tile.tile_id]
             sprites[tile.tile_id] = {
@@ -349,6 +365,22 @@ class SerializeMixin:
                 [r, c, round(eco.eau_surface.data[r][c], 3)]
                 for r in range(eco.rows) for c in range(eco.cols)
                 if eco.eau_surface.data[r][c] > SEUIL_FLAQUE]
+            # Carte de COUVERTURE DU SOL par tuile (sprint LUXURIANCE ①, D65 §2.1,
+            # exposée au pont au ⑥) : liste CREUSE `[[r, c, cov], …]` des plots
+            # tapissés (cov > SEUIL) — fraction du sol couverte par les strates
+            # basses (sol+basse), scattée par `tick_couverture`. La vue en tire le
+            # TAPIS (densité de rendu au sol ∝ cov, indice diégétique philo #5) : sol
+            # nu ↔ sol tapissé se distingue à l'œil, sans chiffre. Liste creuse (patron
+            # `litiere`/`eau_surface`) : la plupart des plots sont nus au démarrage.
+            # PURE lecture (champ déjà tické par la boucle) → golden NEUTRE (le pont ne
+            # réinjecte rien). Champ optionnel côté vue (tolérance pré-0.5.19 → pas de
+            # tapis). `couverture_sol` peut être None sur un vieil eco (défaut lazy) →
+            # garde-fou getattr.
+            cov = getattr(eco, "couverture_sol", None)
+            couverture_by_tile[tile.tile_id] = [
+                [r, c, round(cov.data[r][c], 3)]
+                for r in range(eco.rows) for c in range(eco.cols)
+                if cov is not None and cov.data[r][c] > COUVERTURE_RENDU_SEUIL]
         # Météo scalaire GLOBALE du tick (sprint thermique ⑧, §A) : la météo qui a
         # produit l'état COURANT est celle de la semaine DÉJÀ simulée = `week − 1`
         # (`week` = prochaine à simuler). `weather_state` étant PURE, on la RECALCULE
@@ -397,6 +429,7 @@ class SerializeMixin:
                 "condensation": condensation_by_tile,
                 "epaisseur": epaisseur_by_tile,
                 "altitude": altitude_by_tile,
+                "couverture": couverture_by_tile,
                 "containers": self._containers_snapshot(gs, saison)}
 
     def _containers_snapshot(self, gs: dict, saison: str) -> list:

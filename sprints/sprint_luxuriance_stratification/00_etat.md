@@ -233,9 +233,54 @@ nombre de ramets → protège le LightField d'une explosion de plantes. Budget �
     data) / pages_corpus 105 — tous 🟢.
   - C# NON concerné (T5 Python pur ; rendu silhouettes/colonies = T6).
 
+- **T6 ✅ FAIT (2026-07-04)** — Vue Godot : empilement multi-strates + tapis de
+  couverture + silhouettes + colonies clonales + pont + banc F5 (INTACT).
+  - **Pont (Python, read-only, protocole → 0.5.19)** : `tools/simserver/serialize.py`
+    expose par plante `strate` (stade courant), `silhouette` (`silhouette_base()` ③)
+    et `clonal_mode` — tous HORS `_PLANT_ATTRS` → **golden INTACT**. Nouveau bloc
+    `couverture` par tuile = liste CREUSE `[[r,c,cov],…]` du champ `couverture_sol`
+    (①) au-dessus de `COUVERTURE_RENDU_SEUIL=0.05` (nouvelle constante dans
+    `fields/ecofields/constants.py`, perception pure façon `SEUIL_FLAQUE`). Version
+    bumpée 0.5.18→**0.5.19** + changelog (`tools/simserver/version.py`).
+  - **Rendu C#** : (a) ordre de dessin PAR STRATE — `world/WorldView.Luxuriance.cs`
+    (partial neuf) : biais de ZIndex par strate (sol=10 … grimpante=14, base objets
+    10) ; à strate ÉGALE le y-sort du parent départage → couvre-sol SOUS potagère
+    SOUS grimpante, sans casser la projection iso. Câblé dans `WorldView.Snapshot.cs`
+    (`node.ZIndex = PlantZIndex(strate)` à la naissance ET à la croissance, tolérant
+    pré-0.5.19 → « moyenne » neutre). (b) TAPIS DE COUVERTURE — `visuals/CouvertureLayer.cs`
+    (neuf, patron `LitterLayer` : semis vert semi-transparent jitteré hash, densité+
+    alpha ∝ cov, ZIndex 0 au ras du sol, LOD MinZoom, philo #5) ; instancié dans
+    `WorldView.cs`, appliqué via `ApplyCouverture`. (c) SILHOUETTE — `PlantRenderer`
+    gagne `SetSilhouette` + `SilhouetteShape` : au LOD couronne, tapis=ras&large,
+    dressée=étroit&haut, étalée=large&bas, buisson=rond, rosette=disque plaqué
+    (détail segment au zoom fort INCHANGÉ). (d) COLONIES CLONALES = ramets = plantes
+    normales du snapshot → se dessinent déjà (rien de spécial).
+  - **Banc F5 `luxuriance`** : `bancs/luxuriance.py` (neuf) + enregistré dans
+    `bancs/__init__.py` (BANCS + `BANC_WEEK_DEPART["luxuriance"]=9`, frileuses).
+    Une tuile isolée+paillée : couvre-sol clonal clairsemé (trèfle+violette) +
+    potagère (courge étalée+tournesol dressé) + framboisier drageonnant pré-vieilli
+    + haricot grimpant. But : Nico ouvre le banc et JUGE la luxuriance (tapissage,
+    empilement, silhouettes). Espèces résolues par CLÉ CATALOGUE (violette/framboisier
+    non ré-exportées par `plants`).
+  - **Golden INTACT** (`061934db09ad646a01f19b8f4d0b677f13438e87bce2f8531527be425e7c22a8`)
+    — pont read-only, aucune modif du tick. `test_sim_server` **245/245 vert** (3
+    assertions de version mises à jour 0.5.18→0.5.19 : simserver/conteneurs, voix,
+    structures). Snapshot `full` round-trip JSON OK, `couverture` présent, banc monte
+    et tapisse (11 plots à w+8). Bancs edaphique 6/7 = échec `carence_npk`
+    PRÉ-EXISTANT (vérifié en stashant mes constantes), hors périmètre.
+  - **`dotnet build Symbiose.csproj` VERT** (0 erreur, 0 avertissement).
+  - LDC (code pur) : serialize 244 / PlantRenderer 237 / Snapshot 204 / CouvertureLayer
+    88 / Luxuriance 27 / banc 27 — tous 🟢.
+
 ## §REPRISE
-**T5 CLOS.** Prochain : **T6 = vue Godot** (INTACT — consommera `silhouette` +
-colonies clonales + couverture via le pont ; empilement multi-strates visible + banc
-F5 `luxuriance`). Conception FIGÉE
-`docs/conception/CONCEPTION_LUXURIANCE_STRATIFICATION.md`. À la clôture du sprint :
-fermer D62 (absorbée), MAJ DETTE/BACKLOG/journal/mémoire.
+**T6 CLOS → SPRINT LUXURIANCE (D65) TERMINÉ côté moteur+pont+vue.** Golden INTACT
+`061934db…`, pont 0.5.19, build C# vert. **Reste F5 Nico** (tronçon visuel) :
+1. Ouvrir le banc `luxuriance` (menu bancs) et JUGER — le tapis de couverture se
+   voit-il se densifier ? l'empilement couvre-sol/potagère/grimpante est-il lisible ?
+   les silhouettes distinguent-elles tapis/étalée/dressée/buisson à l'œil ?
+2. Densité/vitesse de tapissage du trèfle & de la violette (calibrage clonal T2).
+3. Seuils de LOD (CouvertureLayer.MinZoom=1, PlantRenderer LOD couronne ≤4) et
+   teinte/opacité du tapis (`TapisColor`, AlphaFloor/Span) — cosmétique, ajustable.
+À la clôture du sprint (après verdict F5 favorable) : **fermer D62 (absorbée)**,
+MAJ `DETTE.md` (D65 ✅) + `BACKLOG.md` + `journal/` (entrée de clôture) + mémoire
+projet. Conception FIGÉE `docs/conception/CONCEPTION_LUXURIANCE_STRATIFICATION.md`.

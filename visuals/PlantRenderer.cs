@@ -201,6 +201,19 @@ namespace Symbiose
 		private Color SymptomTint(Color tissue) =>
 			_colorAmount > 0f ? tissue.Lerp(_colorTint, _colorAmount) : tissue;
 
+		// Silhouette d'espèce (luxuriance ⑥, descripteur data du moteur ③ : tapis/
+		// rosette/touffe/étalée/dressée/buisson). Lue au snapshot (0.5.19), pilote la
+		// FORME de la silhouette de couronne au LOD faible (§B). null/absent → défaut
+		// « touffe » (comportement d'avant). Pur RENDU : aucun état moteur, aucune
+		// géométrie de segment touchée (le détail segment reste inchangé au zoom fort).
+		private string _silhouette;
+		public void SetSilhouette(string silhouette)
+		{
+			if (_silhouette == silhouette) return;   // early-out : pas de redraw inutile
+			_silhouette = silhouette;
+			QueueRedraw();
+		}
+
 		public void SetStructure(PlantStructure s)
 		{
 			_structure = s;
@@ -428,9 +441,14 @@ namespace Symbiose
 		private void DrawCanopySilhouette()
 		{
 			float cr = _structure.CanopyRadiusCm;
-			Vector2 center = Iso(0f, 0f, _structure.HeightCm * 0.55f);
-			float rx = cr * WorldView.PxPerCmX;        // largeur ~ rayon couronne projeté
-			float ry = cr * WorldView.PxPerCmX * 0.8f; // couronne légèrement aplatie
+			// Forme selon la silhouette d'espèce (luxuriance ⑥) : (largeur, hauteur,
+			// centre vertical) relatifs. Le couvre-sol (tapis) est LARGE, PLAT et RAS ;
+			// la dressée est ÉTROITE et HAUTE ; l'étalée large et basse ; le buisson
+			// rond ; la rosette un disque plaqué. Défaut « touffe » (comportement d'avant).
+			(float wf, float hf, float yf) = SilhouetteShape(_silhouette);
+			Vector2 center = Iso(0f, 0f, _structure.HeightCm * yf);
+			float rx = cr * WorldView.PxPerCmX * wf;   // largeur ~ rayon couronne projeté
+			float ry = cr * WorldView.PxPerCmX * hf;   // hauteur de la calotte
 
 			// SS② : masse de couronne en 2 valeurs — base ombrée + calotte
 			// éclairée décalée sud (même volume 16-bit que les organes).
@@ -449,5 +467,27 @@ namespace Symbiose
 			DrawColoredPolygon(shadePts, HueShift(baseC, -OrganShade));
 			DrawColoredPolygon(litPts, HueShift(baseC, OrganLit));
 		}
+
+		// Forme de la silhouette de couronne selon le descripteur data d'espèce
+		// (luxuriance ⑥) → (facteur largeur, facteur hauteur de calotte, fraction de
+		// hauteur du centre). Purement visuel : de quoi DISTINGUER à l'œil un tapis ras
+		// d'un port dressé au LOD couronne, sans prétendre à un rendu fin (le zoom fort
+		// garde le détail segment inchangé). Descripteur inconnu/null → « touffe ».
+		private static (float w, float h, float y) SilhouetteShape(string silhouette) =>
+			silhouette switch
+			{
+				// tapis : couvre-sol RAS et LARGE, plaqué au sol (centre bas).
+				"tapis"   => (1.35f, 0.35f, 0.18f),
+				// rosette : disque plat plaqué au sol, un peu moins large que le tapis.
+				"rosette" => (1.15f, 0.30f, 0.15f),
+				// étalée : large mais un peu de volume (courge qui rampe).
+				"étalée"  => (1.45f, 0.55f, 0.30f),
+				// dressée : ÉTROITE et HAUTE (tige montante, centre haut).
+				"dressée" => (0.65f, 1.05f, 0.62f),
+				// buisson : rond et dense, centré à mi-hauteur.
+				"buisson" => (1.05f, 0.95f, 0.50f),
+				// touffe (défaut) : couronne légèrement aplatie, ~ comportement d'avant.
+				_         => (1.0f, 0.8f, 0.55f),
+			};
 	}
 }
