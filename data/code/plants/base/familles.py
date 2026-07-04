@@ -20,7 +20,7 @@ from __future__ import annotations
 import math
 from abc import ABC
 
-from .empreintes import STRATE_DEFAULTS, STRATE_SHADE_TOLERANCE
+from .empreintes import STRATE_DEFAULTS, STRATE_SHADE_TOLERANCE, STRATE_SILHOUETTE
 from .stades import GrowthStage
 
 # ---------------------------------------------------------------------------
@@ -125,6 +125,13 @@ class PlantBase(ABC):
     clonal_mode: str = "none"            # "none" | "stolon" | "rhizome" | "drageon"
     clonal_radius_cm: float = 60.0       # portée d'un ramet (offset ≤ ce rayon)
     clonal_interval: int = 4             # cadence : 1 chance d'émission toutes N semaines
+    # Silhouette de RENDU (sprint LUXURIANCE ③, D65 §2.4 (a)). PUR DESCRIPTEUR data :
+    # AUCUN effet moteur ici — le renderer C# le lira au tronçon ⑥ (via le pont) pour
+    # dessiner la bonne forme au sol. None ⇒ dérivée de la strate du stade MATURE
+    # (STRATE_SILHOUETTE) ; override explicite par espèce quand la forme dévie du défaut
+    # (courge basse-mais-ÉTALÉE, rosette plaquée…). Palette : touffe · rosette · étalée ·
+    # dressée · tapis · buisson. Golden NEUTRE (rien ne lit ce champ dans le moteur).
+    silhouette: str | None = None        # None ⇒ défaut par strate mature
 
     # --- Profil de croissance procédurale (D29 réorienté, tronçon 2) ---
     # Leviers PAR ESPÈCE lus par sim/growth.py (CONCEPTION_CROISSANCE §E.1). Les
@@ -218,6 +225,17 @@ class PlantBase(ABC):
             return cls.shade_tolerance
         strate = cls.growth_stages[-1].strate if cls.growth_stages else "moyenne"
         return STRATE_SHADE_TOLERANCE.get(strate, 1.0)
+
+    @classmethod
+    def silhouette_base(cls) -> str:
+        """Silhouette de RENDU de l'espèce (pur descripteur, tronçon ③). Override
+        explicite via `silhouette`, sinon dérivée de la strate du stade MATURE
+        (dernier `growth_stages`) via STRATE_SILHOUETTE. Lu par le renderer C# (⑥),
+        AUCUN effet moteur → golden neutre. Même patron que shade_tolerance_base."""
+        if cls.silhouette is not None:
+            return cls.silhouette
+        strate = cls.growth_stages[-1].strate if cls.growth_stages else "moyenne"
+        return STRATE_SILHOUETTE.get(strate, "touffe")
 
     @classmethod
     def longevity(cls) -> float:

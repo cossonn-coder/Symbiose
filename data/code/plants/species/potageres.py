@@ -42,6 +42,7 @@ class Carrot(PlantBase):
     stimulation_ecrasement = 0.3
     rarity = "Établie"
     keywords = ["Comestible", "Mellifère", "Bisannuelle", "Hôte"]
+    silhouette = "rosette"         # rosette de feuilles découpées l'an 1 (luxuriance ③) ; HORS golden → neutre
     space_tolerance_weeks = 3
     life_cycle = "biennial"        # PREMIER porteur du cycle bisannuel exercé (gate ③)
     winter_strategy = "dormant"    # survit à l'hiver de l'an 1 en rosette
@@ -108,6 +109,12 @@ class Zucchini(PlantBase):
     space_tolerance_weeks = 3
     life_cycle = "annual"
     winter_strategy = "die"
+    # Silhouette ÉTALÉE (luxuriance ③, D65 §2.4) : la courge est strate `basse` mais
+    # RAMPE au sol → override du défaut de strate (`touffe`) vers `étalée`. L'empreinte
+    # au sol élargie est DÉJÀ portée par ses stades (canopy_radius=60 ≫ défaut basse=30) :
+    # c'est l'override d'empreinte CIBLÉ (b) là où le défaut de strate ment. Espèce HORS
+    # golden → dérive NEUTRE. Pur descripteur pour le rendu ⑥, aucun effet moteur.
+    silhouette = "étalée"
     t_germ_opt = 22.0              # FRILEUSE (Cucurbitaceae) : exige un sol chaud, lève tard (③)
     t_germ_tol = 7.0               # étroite → pourrit en terre froide
     foliage_density = 0.60
@@ -160,6 +167,7 @@ class CornSalad(PlantBase):
     stimulation_ecrasement = 0.3
     rarity = "Établie"
     keywords = ["Comestible", "Couvre-sol", "Rustique"]
+    silhouette = "rosette"         # petite rosette plaquée comestible (luxuriance ③) ; HORS golden → neutre
     space_tolerance_weeks = 4
     life_cycle = "annual"
     winter_strategy = "die"

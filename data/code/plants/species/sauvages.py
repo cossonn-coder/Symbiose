@@ -76,6 +76,7 @@ class Vaccinium(Ericaceae):
     stimulation_ecrasement = 0.3
     rarity = "Établie"
     keywords = ["Acidophile", "Comestible", "Mellifère", "Indicatrice"]
+    silhouette = "buisson"         # sous-arbrisseau ligneux ramifié (luxuriance ③) — dévie du défaut `touffe` de la strate basse ; HORS golden → neutre
     space_tolerance_weeks = 4
     life_cycle = "perennial"
     winter_strategy = "dormant"

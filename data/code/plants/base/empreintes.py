@@ -77,6 +77,21 @@ STRATE_SHADE_TOLERANCE = {
     "grimpante": 1.00,
 }
 
+# Silhouette de RENDU par défaut selon la strate du stade MATURE (sprint LUXURIANCE
+# tronçon ③, D65 §2.4 (a)). PUR DESCRIPTEUR : aucun effet moteur — le renderer C#
+# le consommera au tronçon ⑥ (exposé via le pont) pour dessiner la bonne forme au
+# sol (tapis ras ↔ touffe ↔ port dressé). Une espèce hérite GRATUITEMENT de ce défaut
+# via sa strate ; elle ne pose un override explicite (`silhouette` de classe) que là où
+# sa forme dévie du défaut (courge basse-mais-ÉTALÉE, rosette plaquée…). Palette :
+# touffe · rosette · étalée · dressée · tapis · buisson (cf. PlantBase.silhouette_base).
+STRATE_SILHOUETTE = {
+    "sol":       "tapis",     # couvre-sol ras qui tapisse
+    "basse":     "touffe",    # touffe compacte au sol
+    "moyenne":   "touffe",    # touffe plus haute
+    "haute":     "dressée",   # port dressé, tige haute
+    "grimpante": "dressée",   # grimpe/s'élève (support géré ailleurs)
+}
+
 # Empreinte procédurale (D29 réorienté, tronçon 2) — rayon racinaire dérivé de la
 # couronne (§G, §8 acté : pas de structure souterraine). k calibré : la tomate
 # veut root ≈ canopy (drip-line). Module-level (1 espèce migrée) → per-espèce plus tard.

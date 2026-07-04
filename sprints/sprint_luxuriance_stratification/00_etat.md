@@ -135,9 +135,33 @@ nombre de ramets → protège le LightField d'une explosion de plantes. Budget �
     🟡 (pré-existant, catalogue = une responsabilité, +5 lignes seulement).
   - C# NON concerné (T2 Python pur, aucun `dotnet build`).
 
+- **T3 ✅ FAIT (2026-07-04)** — Empreinte/silhouette par espèce (NEUTRE).
+  - **Descripteur `silhouette`** (pur data, AUCUN effet moteur) : nouveau champ de
+    classe `silhouette: str | None = None` sur `PlantBase` (`plants/base/familles.py`)
+    + classmethod `silhouette_base()` (patron `shade_tolerance_base`) : override
+    explicite sinon dérivé de la strate du stade MATURE via la table neuve
+    `STRATE_SILHOUETTE` (`plants/base/empreintes.py` : sol→tapis, basse→touffe,
+    moyenne→touffe, haute→dressée, grimpante→dressée). Palette : touffe · rosette ·
+    étalée · dressée · tapis · buisson. Lu par le renderer C# au **T6** (via pont),
+    pas ici.
+  - **Overrides silhouette CIBLÉS, tous HORS golden** (défaut de strate qui ment) :
+    Courgette `"étalée"` (basse-mais-rampante), Carotte + Mâche + Pissenlit
+    `"rosette"` (rosettes plaquées, défaut `touffe`), Myrtille `"buisson"`
+    (sous-arbrisseau ligneux). Aucune espèce du golden touchée → défauts de strate
+    (Clover→tapis, Sunflower→dressée, Tomato→touffe) inchangés.
+  - **Override d'empreinte au sol (b)** : la courge portait DÉJÀ son empreinte
+    élargie via ses stades (`canopy_radius=60` ≫ défaut basse=30) — l'override ciblé
+    (b) est donc déjà en place ; T3 ne fait qu'y adjoindre la `silhouette="étalée"`
+    documentée. Pas de nouveau champ écologique (D3 respecté : `canopy_r` pilote seul).
+  - **Golden INCHANGÉ** (`061934db09ad646a01f19b8f4d0b677f13438e87bce2f8531527be425e7c22a8`)
+    — tronçon NEUTRE confirmé. **`test_population` INCHANGÉ** (`5a1873db…`).
+  - LDC (code pur) : familles 220 / empreintes 41 / potageres 146 / adventices 185
+    / sauvages 70 — tous 🟢.
+  - C# NON concerné (T3 Python pur ; le RENDU de la silhouette est T6).
+
 ## §REPRISE
-**T2 CLOS.** Prochain : **T3 = empreinte/silhouette par espèce** (kickoff `03_*.md`),
-NEUTRE (overrides hors golden + descripteur `silhouette`). Puis T4/T5 catalogue
-clonal (NEUTRE), T6 vue Godot (INTACT). Conception FIGÉE
-`docs/conception/CONCEPTION_LUXURIANCE_STRATIFICATION.md`. À la clôture du sprint :
-fermer D62 (absorbée), MAJ DETTE/BACKLOG/journal/mémoire.
+**T3 CLOS.** Prochain : **T4 = catalogue clonal ① (fraisier + menthe + trèfle
+stolonifère) + 5 voix** (kickoff `04_*.md`), NEUTRE. Puis T5 catalogue clonal ②
+(NEUTRE), T6 vue Godot (INTACT — consommera `silhouette` via le pont). Conception
+FIGÉE `docs/conception/CONCEPTION_LUXURIANCE_STRATIFICATION.md`. À la clôture du
+sprint : fermer D62 (absorbée), MAJ DETTE/BACKLOG/journal/mémoire.

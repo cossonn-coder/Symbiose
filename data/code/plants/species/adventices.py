@@ -182,6 +182,7 @@ class Taraxacum(PlantBase):
     t_germ_tol = 14.0          # la plus large du catalogue — opportuniste tous azimuts
     reproduction_rate = 0.04
     seed_dispersal = "anemochore"   # aigrette plumée (pappus) — graines au vent (⑤, §5.3)
+    silhouette = "rosette"          # rosette plaquée large (luxuriance ③) — dévie du défaut `touffe` de la strate basse ; HORS golden → neutre
     foliage_density = 0.50
     longevity_years = 8    # vivace longue
     growth_stages = [
