@@ -90,9 +90,8 @@ moteur sans son tronçon vue est incomplet.
   mort ou disparition de l'hôte) + étranglement ÉMERGENT (LightField, aucune règle
   dédiée). Golden **NEUTRE** (`a6c2f651…` inchangé). Suite `tests/test_grimpe.py`
   NEUVE (7 tests : accroche/suivi/détachement×2/rayon/seuil/étranglement).
-- ④ gestes joueur (`poser_tuteur/treillis/pergola`, `palisser`) + maîtrise
-  (outil `tuteur`, technique `palissage`) + résistance verse → event-driven,
-  golden INTACT.
+- ④ **CLOS** (2026-07-04) gestes joueur (`sim/actions/supports.py` NEUF) + maîtrise
+  DÉCLARÉE data-driven + 5 voix + exemption verse. Golden **INTACT** (`a6c2f651…`).
 - ⑤ catalogue lierre + jasmin + 5 voix chacune + SOIL_SIGNATURE → golden NEUTRE.
 - ⑥ **vue Godot** : rendu supports + accroche + vrilles (§7 feuillage) + pont
   (supports au snapshot, bump ENGINE_VERSION) + **banc d'essai `grimpantes`**
@@ -173,7 +172,35 @@ grimpante 200 cm → lumière 0.80 vs 1.0 isolé). Suites vertes : croissance,
 phototropisme 11/11, sénescence, signes, structures, conteneur. C# **non concerné**
 (③ Python pur, vue en ⑥). LDC : grimpe.py 73, support.py 20 (≤300 🟢).
 
-**PROCHAINE ÉTAPE → ④ `04_gestes_maitrise.md`** : gestes joueur
-(`poser_tuteur/treillis/pergola`, `palisser`) + maîtrise (outil `tuteur`, technique
-`palissage`) + résistance verse → event-driven, golden attendu INTACT.
-Golden : ①②③ resté NEUTRE, NEUTRE/INTACT ④→⑥.
+**④ CLOS 2026-07-04.** Fait, TOUT event-driven (hors tick du golden) :
+- `sim/actions/supports.py` NEUF : `poser_tuteur/treillis/pergola` (cœur commun
+  `_poser_support` → instancie un `Support` ② et l'append à `tile.supports` ; phase
+  planification, coût MODÉRÉ, binaire modèle `poser_bac` ; PAS d'unicité par tuile =
+  rangée de tuteurs) + `palisser` (attache un SARMENTEUX au `Support` posé le plus
+  proche via `_support_a_portee`, rayon `RAYON_PALISSAGE_CM`=1.5 plot ; SEUL canal
+  d'accroche du sarmenteux ; refus EN AMONT sans dépense si non-sarmenteux / déjà
+  accroché / rien à portée ; binaire sinon). Ré-export `sim/actions/__init__.py`.
+- Coûts : 4 entrées MODERE dans `COUTS` + `OBJETS_TOUCHES` (`couts.py`) — technique
+  `palissage` + outils `tuteur/treillis/pergola`.
+- Maîtrise DÉCLARÉE data-driven (aucun câblage tick) : `palissage` ajouté au set
+  `TECHNIQUES` (`encyclopedie_types.py`) ; les 3 outils DÉRIVENT d'`OBJETS_TOUCHES`
+  (→ `OUTILS = _MEMBRES_OBJETS − TECHNIQUES`). Sans état moteur → atténuation neutre
+  1.0 (dégradation gracieuse, comme `compostage`).
+- 5 voix des 4 gestes + 3 outils + technique : `geste_corpus.py`, `outil_corpus.py`,
+  `technique_corpus.py` (3 niveaux chacun).
+- Exemption VERSE : `_wind_damage` (`sim/engine/mortalite.py`) saute désormais une
+  plante `support is not None` (le support la porte, §6 ; le tuteur ne casse pas).
+
+**GOLDEN INTACT — `a6c2f651…` inchangé** (le smoke ne pose aucun support, ne palisse
+rien, et n'a aucune grimpante accrochée en coup de vent → l'exemption ne peut fuir).
+`test_golden` PASS hash identique, `test_sim_server` VERT 244/244. `tests/test_grimpe.py`
+étendu 7→**10 tests VERTS** (+ pose arme l'accroche, palissage + refus binaires sans
+dépense, verse exempte l'accrochée : libre 0 pv vs accrochée 3 pv). Suites vertes :
+croissance 67/67, maitrise 35/35, vigueur 136/136, structures, signes 8/8, senescence,
+plasticite, vent 54/54, conteneur, progression_geste 15/15. C# **non concerné** (④
+Python pur, vue en ⑥). LDC pur : supports.py 52, grimpe.py 73 (≤300 🟢).
+
+**PROCHAINE ÉTAPE → ⑤ `05_catalogue_lierre_jasmin.md`** : catalogue LIERRE (crampon,
+monte au mur nu) + JASMIN (sarmenteux, démontre `palisser`) + 5 voix chacune +
+SOIL_SIGNATURE → golden attendu NEUTRE.
+Golden : ①②③ resté NEUTRE, ④ INTACT, NEUTRE/INTACT ⑤→⑥.

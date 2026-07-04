@@ -196,4 +196,45 @@ FICHES_OUTIL: dict[str, dict[int, str]] = {
            "litière tombe et se recycle sur place, le sol s'amende presque seul — "
            "l'apport n'est plus qu'un coup de pouce ponctuel.",
     },
+
+    "tuteur": {
+        1: "Un pieu fin planté à la verticale, à côté d'une plante qui a besoin de "
+           "s'appuyer. Simple, discret, réutilisable d'une saison à l'autre.",
+        2: "Le tuteur sert le PALISSAGE : sa tige mince est l'appui idéal des "
+           "grimpantes à vrilles, qui l'enroulent d'elles-mêmes, et de tout pied "
+           "élancé qui verse sous son poids ou le vent. On y noue aussi les cannes "
+           "sans organe d'accroche. Il offre la verticale sans faire d'ombre.",
+        3: "Le tuteur est l'appui minimal : juste assez pour tenir droit, sans "
+           "encombrer. Une plante bien nourrie, endurcie par le vent qu'on l'a laissée "
+           "affronter, développe un port trapu qui se passe souvent de béquille. Le "
+           "tuteur soutient le temps que la plante s'affermisse — puis on l'oublie.",
+    },
+
+    "treillis": {
+        1: "Une grille verticale, lattes de bois croisées ou fil tendu, dressée pour "
+           "qu'une plante s'y étale à plat en montant.",
+        2: "Le treillis sert le PALISSAGE des grimpantes sur une surface : ses "
+           "mailles multiplient les prises pour les vrilles et reçoivent les tiges "
+           "qu'on y noue. Étaler une plante contre lui l'expose au soleil et à l'air, "
+           "aère son feuillage contre les maladies et met les fruits à hauteur d'œil.",
+        3: "Le treillis organise l'espace vertical : contre un mur il crée un espalier, "
+           "en clôture il fait écran vivant et brise-vent. Bien orienté, il gagne de la "
+           "lumière sans voler celle des cultures basses. Mal placé, il devient le "
+           "perchoir d'une grimpante qui étouffe tout le reste — l'appui range ou "
+           "déchaîne selon la main qui l'installe.",
+    },
+
+    "pergola": {
+        1: "Une structure haute, poteaux et traverses, sous laquelle on passe et sur "
+           "laquelle une grimpante court en hauteur, formant une voûte de feuillage.",
+        2: "La pergola sert le PALISSAGE en hauteur : elle porte une grimpante "
+           "vigoureuse jusqu'au-dessus des têtes, où elle déploie une ombre fraîche "
+           "l'été. Vrilles enroulées, cannes nouées, la plante y grimpe le long des "
+           "montants puis s'étale sur le toit ajouré.",
+        3: "La pergola fabrique un microclimat : l'ombre portée en été protège du "
+           "dessèchement ce qui pousse dessous, tandis qu'une grimpante caduque laisse "
+           "revenir le soleil d'hiver une fois ses feuilles tombées. Généreuse en "
+           "appui, elle appelle l'exubérance — la voûte qu'on désire l'été peut, non "
+           "conduite, condamner à l'ombre perpétuelle tout ce qui l'entoure.",
+    },
 }

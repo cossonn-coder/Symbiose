@@ -57,7 +57,7 @@ CONCEPTS: frozenset[str] = frozenset(CONCEPT_PAR_STAGNATION.values()) | {"pollin
 TECHNIQUES: frozenset[str] = frozenset({
     "semis", "arrosage", "récolte", "arrachage", "bêchage", "ameublissement",
     "taille", "compostage", "apiculture", "jardinage_hors_sol",
-    "aménagement-habitat",
+    "aménagement-habitat", "palissage",
 })
 
 # Tous les membres statiques touchés par un geste (union des tuples), puis les

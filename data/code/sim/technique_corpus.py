@@ -192,4 +192,21 @@ FICHES_TECHNIQUE: dict[str, dict[int, str]] = {
            "diversité de services. C'est l'inverse exact de la solution facile : on "
            "construit le milieu pour n'avoir plus à agir.",
     },
+
+    "palissage": {
+        1: "Guider une grimpante le long d'un appui et, s'il le faut, l'y attacher. "
+           "La tige, au lieu de ramper au sol, s'élève et s'étale contre le support.",
+        2: "Palisser, c'est donner à une plante volubile ou sarmenteuse la verticale "
+           "qui lui manque : sans appui, une tige grêle ne se tient pas droite au-delà "
+           "de sa hauteur autoportante et retombe. Certaines s'agrippent seules — "
+           "vrilles qui enroulent, crampons qui adhèrent ; d'autres, sans organe "
+           "d'accroche, doivent être nouées à la main à un tuteur, un treillis, une "
+           "pergola. Attachée, la plante gagne la lumière du haut et résiste au vent.",
+        3: "Le palissage discipline la lumière et l'air : étaler une grimpante contre "
+           "un mur ou sur une pergola l'expose au soleil sans qu'elle étouffe ses "
+           "voisines, aère son feuillage contre les maladies et met les fruits à "
+           "portée. Mais un appui trop généreux invite l'exubérance — une vigoureuse "
+           "palissée finit par ombrager tout ce qu'elle domine. L'appui bien placé "
+           "range la croissance ; mal placé, il la déchaîne.",
+    },
 }

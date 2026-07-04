@@ -379,6 +379,12 @@ class MortaliteMixin:
         for p in tile.plants:
             if not p.is_alive or p.stage.name != "semis":
                 continue
+            # Grimpante accrochée/palissée : le support la PORTE → exempte de la
+            # casse mécanique du vent (grimpantes ④, §6 ; le tuteur ne casse pas,
+            # écarté). Golden INTACT (aucun support posé dans le smoke → personne
+            # n'est exempté ; l'exemption ne peut fuir vers une plante libre).
+            if getattr(p, "support", None) is not None:
+                continue
             vent_local = vent.at_plot(*p.position) * gust_peak
             sev = max(0.0, vent_local - WIND_DAMAGE_SEUIL) / WIND_SEVERITY_REF
             if sev <= 0.0:

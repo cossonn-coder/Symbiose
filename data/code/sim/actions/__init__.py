@@ -49,6 +49,10 @@ from .ruche import (
 from .conteneurs import (
     poser_pot, poser_bac as poser_bac_culture, deplacer_pot,
 )
+# Supports de grimpe (grimpantes ④) : pose de structures + palissage manuel.
+from .supports import (
+    poser_tuteur, poser_treillis, poser_pergola, palisser,
+)
 
 __all__ = [
     "maturite",
@@ -65,4 +69,5 @@ __all__ = [
     "CONCEPT_ABEILLES", "SEUIL_EQUIPEMENT", "MIEL_VIGUEUR_RATIO", "RECOLTE_SANS_EQUIP",
     "poser_ruche", "equipe", "recolter_miel",
     "poser_pot", "poser_bac_culture", "deplacer_pot",
+    "poser_tuteur", "poser_treillis", "poser_pergola", "palisser",
 ]

@@ -313,4 +313,57 @@ FICHES_GESTE: dict[str, dict[int, str]] = {
            "aromates près du foyer. Cette liberté a pour prix la dépendance du pot — "
            "coupé du grand cycle, il vit de ce qu'on lui apporte.",
     },
+
+    "poser_tuteur": {
+        1: "Planter un pieu fin à la verticale, à côté d'une plante qui a besoin de "
+           "s'appuyer pour monter ou pour tenir droit.",
+        2: "Poser un tuteur, c'est offrir la verticale à une grimpante à vrilles ou à "
+           "un pied élancé : au-delà de sa hauteur autoportante, une tige grêle "
+           "retombe faute d'appui. Le pieu lui rend la lumière du haut et l'ancre "
+           "contre le vent. La plante s'y accroche ensuite d'elle-même, ou on l'y noue.",
+        3: "Le tuteur est l'appui juste — le minimum pour tenir, sans faire d'ombre. "
+           "Bien nourrie et endurcie par le vent qu'on l'a laissée affronter, une "
+           "plante forge un port trapu qui se passe de béquille. On tuteure le temps "
+           "de l'établissement, puis le geste devient inutile.",
+    },
+
+    "poser_treillis": {
+        1: "Dresser une grille verticale contre laquelle une grimpante s'étalera à "
+           "plat en montant.",
+        2: "Poser un treillis multiplie les prises d'une surface verticale : les "
+           "vrilles y trouvent des mailles à enrouler, les tiges nues s'y nouent. "
+           "Étaler la plante contre lui l'expose au soleil et à l'air, aère son "
+           "feuillage et met ses fruits à portée.",
+        3: "Le treillis organise l'espace vertical du jardin : espalier contre un mur, "
+           "écran vivant en clôture, brise-vent. Bien orienté, il gagne de la lumière "
+           "sans voler celle des cultures basses ; mal placé, il devient le perchoir "
+           "d'une grimpante qui étouffe le reste.",
+    },
+
+    "poser_pergola": {
+        1: "Monter une structure haute — poteaux et traverses — sur laquelle une "
+           "grimpante courra en hauteur, formant une voûte de feuillage.",
+        2: "Poser une pergola porte une grimpante vigoureuse au-dessus des têtes, où "
+           "elle déploie une ombre fraîche l'été. La plante grimpe le long des "
+           "montants, s'accroche ou se noue, puis s'étale sur le toit ajouré — un "
+           "microclimat ombragé naît dessous.",
+        3: "La pergola fabrique un microclimat durable : ombre estivale qui protège du "
+           "dessèchement, soleil d'hiver rendu par une grimpante caduque défeuillée. "
+           "Généreuse en appui, elle appelle l'exubérance — non conduite, la voûte "
+           "désirée l'été condamne à l'ombre perpétuelle ce qu'elle recouvre.",
+    },
+
+    "palisser": {
+        1: "Nouer à la main la tige d'une grimpante à un support voisin, là où elle "
+           "ne sait pas s'accrocher seule. La plante, attachée, se met à monter.",
+        2: "Palisser attache une sarmenteuse — longues cannes sans vrille ni crampon — "
+           "à un tuteur, un treillis ou une pergola : c'est le seul moyen pour elle de "
+           "gagner la verticale. Nouée, elle s'élève vers la lumière du haut et le "
+           "support la porte contre le vent, là où libre elle resterait prostrée.",
+        3: "Le palissage discipline la lumière et l'air d'une plante qui, autrement, "
+           "s'affalerait : on l'étale où on la veut, on aère son feuillage contre les "
+           "maladies, on range sa croissance. Mais l'appui bien placé range quand "
+           "l'appui mal placé déchaîne — une vigoureuse palissée finit par dominer et "
+           "ombrager tout ce qui l'entoure.",
+    },
 }
