@@ -4,8 +4,9 @@
 > lire `CLAUDE.md` + ce fichier suffit à reprendre sans le fil de conversation.
 
 ## Phase courante
-**TRONÇONS ①②③ FAITS — SPRINT PRÊT À CLORE.** Reste à Nico : commit du bundle ②+③
-+ F5 de validation (cf. §F5 et §REPRISE). Golden final INTACT `15073be1…`.
+**SPRINT CLOS (2026-07-04, `/sprint-auto`).** ①②③ faits et commités (532e50c,
+9a7973c, 7c07788) ; journal 98, DETTE D64 ✅, BACKLOG à jour. Golden final
+`15073be1…`. Reste à Nico : **F5 de validation** (cf. §F5 et §REPRISE).
 Doc : `docs/conception/CONCEPTION_USURE_LETALITE.md`. Tronçons :
 `01_conflit_non_letal.md`, `02_cap_letalite_chronique.md`, `03_vue_godot.md`.
 
