@@ -31,3 +31,11 @@ BANCS = {
     "grimpantes": grimpantes,
     "succession_bascule": succession_bascule,
 }
+
+# Semaine de départ par banc (retour F5 Nico 2026-07-04). La plupart démarrent à
+# `week=1` (début printemps) — repli par défaut. `grimpantes` observe des FRILEUSES
+# (haricot/jasmin) qu'un départ début printemps fige sous le seuil de croissance
+# (~5 °C) pendant des semaines : on le décale à MI-PRINTEMPS (T ~6 °C) pour voir la
+# grimpe tout de suite. Lu par `cmd_init` (banc absent → 1 → comportement inchangé,
+# golden NEUTRE : smoke/full ne sont pas des bancs).
+BANC_WEEK_DEPART = {"grimpantes": 9}

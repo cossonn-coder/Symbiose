@@ -228,7 +228,7 @@ def grimpantes():
     # Tuile principale : les 4 voies de grimpe côte à côte. Humidité haute (le
     # haricot procédural boit ; on veut de la croissance, pas un stress hydrique).
     grimpe, eco_g = build_banc_tile("GRIMPE", "terre", 8, 8,
-                                    humidite=1.6, fertilite=1.2, microbiome=0.5)
+                                    humidite=1.6, fertilite=1.2, microbiome=0.7)
     eco_g.lumiere.fill(1.0)                          # plein soleil → grimpe vers la lumière
 
     # (a) HÔTE VIVANT (③, émergent) : haricot JUSTE À CÔTÉ d'un tournesol. Le haricot
@@ -256,7 +256,7 @@ def grimpantes():
     # dans le rayon d'accroche du rectangle-empreinte (clamp du point le plus proche).
     mur_tile, eco_m = build_banc_tile("MUR_SUD", "terre", 8, 8,
                                       ox=600.0, oy=1400.0,
-                                      humidite=1.4, fertilite=1.0, microbiome=0.5)
+                                      humidite=1.4, fertilite=1.0, microbiome=0.7)
     lierre = mur_tile.add_plant(Ivy, 0, 1)            # près du mur, plein sud
     lierre.support = (MUR, house.height_cm)           # crampon → mur (espalier)
 
@@ -264,10 +264,31 @@ def grimpantes():
     # favorisées (ambiance du banc, pas de grimpe). Plein soleil + humidité potagère.
     sud, eco_s = build_banc_tile("POTAGER_SUD", "terre", 8, 8,
                                  ox=1000.0, oy=1600.0,
-                                 humidite=1.5, fertilite=1.3, microbiome=0.5)
+                                 humidite=1.5, fertilite=1.3, microbiome=0.7)
     eco_s.lumiere.fill(1.0)
     for cls, r, c in SOLANACEAE_SUD:
         sud.add_plant(cls, r, c)
+
+    # Banc ISOLÉ + anti-gel (retour F5 Nico, 2026-07-04). C'est un INSTRUMENT
+    # d'observation de la grimpe, pas un jardin de succession :
+    #   • succession spontanée COUPÉE — sinon des pionnières lèvent de la SeedBank-sol
+    #     et évincent les plantes de démo par compétition intra-plot (le jasmin (5,5)
+    #     « cède la place au plus vigoureux ») ;
+    #   • paillage SATURÉ — protège du gel : les gelées tardives de printemps rabattent
+    #     sinon le haricot frileux au collet à répétition (28 cm → 5 cm).
+    # Patron `semis_tempere`. Le froid de DÉMARRAGE (T<5 °C, sous le seuil de croissance)
+    # est traité en amont par un départ MI-PRINTEMPS (`BANC_WEEK_DEPART["grimpantes"]`,
+    # cf. `cmd_init`) — le paillage protège du gel mais ne réchauffe pas la croissance.
+    # Microbiome tenu à 0.7 (≥ 0.6) sur les 3 tuiles : `micro_norm = 0.7/3 ≈ 0.23 >
+    # HERBIVORY_LETHAL_MICRO (0.20)` désarme la bascule LÉTALE de l'herbivorie (patron
+    # `infestation_ravageur`). Mitigation PARTIELLE seulement : l'hôte tournesol meurt
+    # encore d'une mort‑éclair à faible densité de ravageurs → problème SYSTÉMIQUE
+    # (létalité trop brutale), suivi en dette D64, hors périmètre du banc.
+    for tuile, eco in ((grimpe, eco_g), (mur_tile, eco_m), (sud, eco_s)):
+        eco.seed_bank.germination_candidates = lambda *a, **k: []   # banc ISOLÉ
+        for stake in tuile.stakes:                                  # paillage → anti-gel
+            while stake.add("paillage"):
+                pass
 
     return monde([grimpe, mur_tile, sud],
                  {grimpe.tile_id: eco_g, mur_tile.tile_id: eco_m,

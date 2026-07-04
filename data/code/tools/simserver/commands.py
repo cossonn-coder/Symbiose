@@ -22,7 +22,7 @@ from fields.grids import GridField
 # Registre des bancs d'essai (sprint dédié) : mondes paramétrés montés par
 # `init config="<banc>"` pour forcer/observer un signe. Import au niveau module
 # (paquet `bancs/` au sommet, peut tout importer) ; jamais monté pour smoke/full.
-from bancs import BANCS
+from bancs import BANCS, BANC_WEEK_DEPART
 
 from .version import ENGINE_VERSION
 from .maitrise_pont import observer_apres_tick  # chaîne de maîtrise après tick (voix ①)
@@ -90,9 +90,14 @@ class CommandsMixin:
             return {"ok": False,
                     "error": f"config inconnue : {config!r} "
                              f"('smoke', 'full' ou un banc : {', '.join(sorted(BANCS))})"}
+        # Semaine de départ : `week=1` par défaut (début printemps). Un banc peut
+        # démarrer plus tard via `BANC_WEEK_DEPART` (retour F5 : `grimpantes` observe
+        # des frileuses → départ mi-printemps). Override explicite `msg["week"]`
+        # prioritaire (oracle/tests). smoke/full absents du registre → 1 (inchangé).
+        start_week = msg.get("week", BANC_WEEK_DEPART.get(config, 1))
         game_state = {
             "tiles": tiles, "eco": ecos, "scores": {},
-            "current_player": "joueur_1", "week": 1, "log": [],
+            "current_player": "joueur_1", "week": start_week, "log": [],
             "house": house, "seed": seed,
             # Banque-joueur (sprint planter·arroser) : source des graines de
             # `planter`. Le tick de récolte (engine.py, gardé par
