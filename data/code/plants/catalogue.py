@@ -8,6 +8,7 @@ from plants.species import (Tomato, Pepper, Bean, Clover, Sunflower, Basil,
                             Yarrow, Phacelia, Borage, Comfrey, Mustard,
                             Thyme, Lavender,
                             Carrot, Zucchini, CornSalad, Nettle, Vaccinium, Garlic,
+                            Ivy, Jasmine,
                             BursaPastoris, MedicagoLupulina, PoaAnnua, Taraxacum)
 from plants.perennials import Fig, AppleTree, CherryTree, WalnutTree, OakTree
 
@@ -38,6 +39,10 @@ PLANT_CATALOGUE: dict[str, type] = {
     "ail":       Garlic,
     # Sous-arbrisseau acidophile (Ericaceae) — démonstrateur fenêtre pH ⑤
     "myrtille":  Vaccinium,
+    # Grimpantes à familles neuves (sprint Grimpantes ⑤) — Lierre (Araliaceae,
+    # crampon, monte au mur nu) + Jasmin (Oleaceae, sarmenteux, se palisse)
+    "lierre":    Ivy,
+    "jasmin":    Jasmine,
     # Adventices / succession écologique
     "bourse_pasteur": BursaPastoris,
     "minette":        MedicagoLupulina,

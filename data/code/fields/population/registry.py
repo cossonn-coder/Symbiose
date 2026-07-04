@@ -181,6 +181,7 @@ _ATTRACT_ABEILLE = {      # mellifères profondes / nectarifères
     "Cucurbitaceae": 0.70, "Asteraceae": 0.60, "Brassicaceae": 0.50,
     "Apiaceae": 0.45, "Solanaceae": 0.40, "Caprifoliaceae": 0.40,
     "Amaryllidaceae": 0.30, "Urticaceae": 0.0,
+    "Araliaceae": 0.75, "Oleaceae": 0.60,   # lierre = manne tardive ; jasmin mellifère (⑤)
     "Poaceae": 0.0, "Fagaceae": 0.10, "Juglandaceae": 0.10,
 }
 _ATTRACT_SYRPHE = {       # fleurs ouvertes (composées, ombellifères)
@@ -188,6 +189,7 @@ _ATTRACT_SYRPHE = {       # fleurs ouvertes (composées, ombellifères)
     "Rosaceae": 0.60, "Caprifoliaceae": 0.50, "Lamiaceae": 0.40,
     "Cucurbitaceae": 0.40, "Fabaceae": 0.30, "Solanaceae": 0.30,
     "Amaryllidaceae": 0.20, "Urticaceae": 0.0,
+    "Araliaceae": 0.80, "Oleaceae": 0.25,   # lierre ombelle ouverte ; jasmin tubulaire (⑤)
     "Poaceae": 0.0, "Fagaceae": 0.0, "Juglandaceae": 0.0,
 }
 _ATTRACT_PAPILLON = {     # fleurs tubulaires / composées riches en nectar
@@ -195,6 +197,7 @@ _ATTRACT_PAPILLON = {     # fleurs tubulaires / composées riches en nectar
     "Fabaceae": 0.50, "Cucurbitaceae": 0.40, "Rosaceae": 0.40,
     "Brassicaceae": 0.30, "Solanaceae": 0.30, "Caprifoliaceae": 0.30,
     "Amaryllidaceae": 0.20, "Urticaceae": 0.0,
+    "Araliaceae": 0.40, "Oleaceae": 0.90,   # jasmin tubulaire parfumé = table du papillon (⑤)
     "Poaceae": 0.0, "Fagaceae": 0.0, "Juglandaceae": 0.0,
 }
 _ATTRACT_BOURDON = {      # langue longue : Fabacées/Lamiacées + BUZZ Solanacées (⑤)
@@ -202,6 +205,7 @@ _ATTRACT_BOURDON = {      # langue longue : Fabacées/Lamiacées + BUZZ Solanac�
     "Cucurbitaceae": 0.70, "Solanaceae": 0.65, "Asteraceae": 0.55,
     "Brassicaceae": 0.45, "Apiaceae": 0.40, "Caprifoliaceae": 0.40,
     "Amaryllidaceae": 0.30, "Urticaceae": 0.0,
+    "Araliaceae": 0.50, "Oleaceae": 0.55,   # langue longue → jasmin tubulaire (⑤)
     "Poaceae": 0.0, "Fagaceae": 0.10, "Juglandaceae": 0.10,
 }
 _ATTRACT_OSMIE = {        # abeille des vergers : Rosacées (arbres fruitiers) + Apiacées (⑤)
@@ -209,6 +213,7 @@ _ATTRACT_OSMIE = {        # abeille des vergers : Rosacées (arbres fruitiers) +
     "Fabaceae": 0.55, "Lamiaceae": 0.50, "Asteraceae": 0.50,
     "Cucurbitaceae": 0.40, "Caprifoliaceae": 0.40, "Solanaceae": 0.35,
     "Amaryllidaceae": 0.25, "Urticaceae": 0.0,
+    "Araliaceae": 0.40, "Oleaceae": 0.35,   # grimpantes ⑤
     "Poaceae": 0.0, "Fagaceae": 0.10, "Juglandaceae": 0.10,
 }
 

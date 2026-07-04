@@ -22,6 +22,7 @@ from plants.species import (
     Tomato, Pepper, Bean, Clover, Sunflower, Basil, Yarrow, Phacelia,
     Borage, Comfrey, Mustard, Thyme, Lavender,
     Carrot, Zucchini, CornSalad, Nettle, Vaccinium, Garlic,
+    Ivy, Jasmine,
 )
 from plants.perennials import (
     PerennialWoody, Fig, AppleTree, CherryTree, WalnutTree, OakTree,

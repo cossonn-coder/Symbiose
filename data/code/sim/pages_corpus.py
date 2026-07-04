@@ -10,7 +10,7 @@ vit — un thème qu'il commence à maîtriser — et récompensent l'exploratio
 voix éditoriales (pastiche en STYLE, jamais de citation réelle longue → §7).
 
 Chaque entrée :
-  - `id`            : identifiant stable (P01..P22), clé du set `gs["pages"]`.
+  - `id`            : identifiant stable (P01..P24), clé du set `gs["pages"]`.
   - `voix`          : registre éditorial (A maraîcher · B jardinière · C savoirs
                       paysans · D herbiers · E sorcières) — purement informatif.
   - `concept`       : résonance thématique, sert au robinet *récompense* (la page
@@ -28,7 +28,7 @@ c'est un corpus de texte, pas du code (CLAUDE.md « garde-fou, pas dogme »).
 """
 from __future__ import annotations
 
-# --- Liste ordonnée des 20 entrées (recopiée VERBATIM du doc §7) --------------
+# --- Liste ordonnée des 24 entrées (doc §7 + sprint Grimpantes ⑤) -------------
 # Format : (id, voix, concept, palier_theme, robinet, texte). On construit ensuite
 # `PAGES` (dict id → champs) ET `ORDRE` (ids dans l'ordre du corpus) pour des
 # itérations stables et déterministes.
@@ -157,6 +157,22 @@ _ENTREES = [
      "la terre qu'il semblait mordre. Observe au matin clair d'hiver le sol nu qui "
      "blanchit le premier : c'est lui qui rend le plus à la nuit ce qu'il lui a "
      "emprunté. »"),
+
+    # --- Pages des GRIMPANTES (sprint Grimpantes ⑤) — lore pur, zéro effet ---
+    ("P23", "E", "lumière", 3, "fouille",
+     "On dit le lierre traître parce qu'il monte sur le mur d'autrui. Sottise. Le "
+     "lierre ne prend rien à qui le porte : il ne s'accroche qu'à ce qui ne lui "
+     "sert plus, la vieille pierre, l'arbre mort, la ruine. Il ne vole pas la "
+     "lumière — il va la chercher là où personne ne l'attendait, tout en haut, par "
+     "des mille petites mains. Ce que tu abandonnes, lui le fait reverdir, et "
+     "l'hiver, quand tout est nu, c'est chez lui seul que l'oiseau trouve un toit."),
+    ("P24", "B", "pollinisation", 2, "récompense",
+     "Le jasmin ne s'agrippe pas ; il faut lui tendre la main. Attache-le, guide-le "
+     "le long du fil, et il te rendra ta patience au centuple — mais seulement le "
+     "soir. Le parfum du jasmin est une horloge : il attend que le soleil tombe "
+     "pour s'ouvrir et appeler les papillons de nuit. Plante-le sous une fenêtre "
+     "qu'on ouvre l'été, jamais au fond du jardin : ce qu'il offre, il l'offre à "
+     "l'heure où l'on ne jardine plus, où l'on ne fait que respirer."),
 ]
 
 # Titres recopiés du doc §7 (gras de chaque entrée), indexés par id — gardés à
@@ -184,6 +200,8 @@ _TITRES = {
     "P20": "Le pacte du jardin",
     "P21": "La rosée de la Saint-Jean",
     "P22": "La gelée blanche n'est pas la mort",
+    "P23": "Le lierre ne prend rien",
+    "P24": "L'horloge du jasmin",
 }
 
 # `PAGES` = dict id → fiche complète. `ORDRE` = ids dans l'ordre du corpus (tri

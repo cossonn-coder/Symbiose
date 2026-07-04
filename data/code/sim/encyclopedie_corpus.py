@@ -7,7 +7,7 @@ Spec de référence : `docs/conception/CONCEPTION_VOIX_NARRATIVES.md` §6.
 Ce module ne contient QUE de la donnée (aucune logique, aucun import du moteur).
 Il est séparé de `sim/encyclopedie.py` (la logique) pour respecter la règle « un
 fichier = une responsabilité » : ici, c'est l'OUVRAGE ; là-bas, le LECTEUR. Le
-corpus dépasse forcément le seuil ~350 ldc de code pur (28 fiches × 3 niveaux),
+corpus dépasse forcément le seuil ~350 ldc de code pur (30 fiches × 3 niveaux),
 mais c'est de la DONNÉE recopiée FIDÈLEMENT du doc §6 — pas du code à relire vite
 (dépassement signalé + justifié, cf. CLAUDE.md « garde-fou, pas dogme »).
 
@@ -25,7 +25,7 @@ côté code.
 """
 from __future__ import annotations
 
-# --- Les 28 fiches × 3 niveaux (doc §6, VERBATIM) ----------------------------
+# --- Les 30 fiches × 3 niveaux (doc §6 + sprint Grimpantes ⑤) -----------------
 FICHES: dict[str, dict[int, str]] = {
 
     # === Annuelles & potagères cultivées ===
@@ -188,6 +188,31 @@ FICHES: dict[str, dict[int, str]] = {
         3: "Indicatrice/exigeante de terre de bruyère ; ses baies nourrissent les "
            "oiseaux (dispersion). Hors de son pH, elle dépérit — révèle l'acidité du "
            "sol.",
+    },
+
+    # === Grimpantes (sprint Grimpantes ⑤) ===
+    "lierre": {
+        1: "Liane à feuilles luisantes palmées, tiges hérissées de crampons, baies "
+           "noires en boules.",
+        2: "Vivace ligneuse sempervirente, sciaphile — prospère à l'ombre où les "
+           "autres calent. Ses crampons adhésifs lui font escalader murs et troncs "
+           "sans qu'on l'y aide. Floraison très tardive, à l'automne. Sans appui, "
+           "elle rampe au sol.",
+        3: "Tapisse le sol nu et les parois au nord ; son feuillage d'hiver et son "
+           "ombre dense abritent oiseaux et insectes. Sa floraison d'arrière-saison "
+           "est l'une des dernières tables des abeilles ; ses baies nourrissent la "
+           "faune quand tout est fané.",
+    },
+    "jasmin": {
+        1: "Grimpante aux tiges souples arquées, feuilles composées, fleurs blanches "
+           "étoilées très parfumées.",
+        2: "Vivace sarmenteuse : ses tiges ne s'agrippent pas seules — il faut les "
+           "palisser sur un support, sinon elles s'étalent sans monter. Floraison "
+           "estivale abondante, embaumant surtout le soir. Semi-caduque, elle dort "
+           "l'hiver.",
+        3: "Sur un treillis ou une pergola, elle habille et parfume l'espace ; son "
+           "nectar nourrit abeilles et papillons, en particulier au crépuscule. Se "
+           "conduit par palissage — c'est la main du jardinier qui l'élève.",
     },
 
     # === Adventices pionnières & indicatrices ===

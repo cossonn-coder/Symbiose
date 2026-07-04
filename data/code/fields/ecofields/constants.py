@@ -831,4 +831,8 @@ SOIL_SIGNATURE = {
     "Solanaceae": {"microbiome": -0.05},
     "Asteraceae": {"microbiome": +0.05, "fertilite": +0.05},
     "Lamiaceae":  {"microbiome": +0.08},
+    # Grimpantes (sprint Grimpantes ⑤, placeholders) : litière persistante du
+    # lierre qui abrite la microfaune ; apport modéré du jasmin.
+    "Araliaceae": {"microbiome": +0.06},
+    "Oleaceae":   {"microbiome": +0.04},
 }

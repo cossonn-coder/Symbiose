@@ -92,7 +92,11 @@ moteur sans son tronçon vue est incomplet.
   NEUVE (7 tests : accroche/suivi/détachement×2/rayon/seuil/étranglement).
 - ④ **CLOS** (2026-07-04) gestes joueur (`sim/actions/supports.py` NEUF) + maîtrise
   DÉCLARÉE data-driven + 5 voix + exemption verse. Golden **INTACT** (`a6c2f651…`).
-- ⑤ catalogue lierre + jasmin + 5 voix chacune + SOIL_SIGNATURE → golden NEUTRE.
+- ⑤ **CLOS** (2026-07-04) catalogue LIERRE (Araliaceae, crampon, sciaphile
+  sempervirent, monte au mur nu) + JASMIN (Oleaceae, sarmenteux, palissage,
+  mellifère parfumé) dans `plants/species/grimpantes.py` NEUF (familles neuves
+  sans base class, patron potagères) + exports + catalogue + SOIL_SIGNATURE
+  (Araliaceae/Oleaceae) + 5 voix chacune. Golden **NEUTRE** (`a6c2f651…`).
 - ⑥ **vue Godot** : rendu supports + accroche + vrilles (§7 feuillage) + pont
   (supports au snapshot, bump ENGINE_VERSION) + **banc d'essai `grimpantes`**
   (Nico 2026-07-03 : haricot À CÔTÉ du tournesol pour la grimpe sur hôte, champ
@@ -200,7 +204,41 @@ croissance 67/67, maitrise 35/35, vigueur 136/136, structures, signes 8/8, senes
 plasticite, vent 54/54, conteneur, progression_geste 15/15. C# **non concerné** (④
 Python pur, vue en ⑥). LDC pur : supports.py 52, grimpe.py 73 (≤300 🟢).
 
-**PROCHAINE ÉTAPE → ⑤ `05_catalogue_lierre_jasmin.md`** : catalogue LIERRE (crampon,
-monte au mur nu) + JASMIN (sarmenteux, démontre `palisser`) + 5 voix chacune +
-SOIL_SIGNATURE → golden attendu NEUTRE.
-Golden : ①②③ resté NEUTRE, ④ INTACT, NEUTRE/INTACT ⑤→⑥.
+**⑤ CLOS 2026-07-04.** Fait : `plants/species/grimpantes.py` NEUF (115 LDC 🟢) —
+`Ivy` (Hedera, Araliaceae, `crampon`, `hauteur_autoportante=15`, `shade_tolerance=1.4`
+sciaphile, `winter_strategy="evergreen"`, floraison d'automne mellifère) + `Jasmine`
+(Jasminum, Oleaceae, `sarmenteux`, `hauteur_autoportante=25`, semi-caduc, floraison
+estivale parfumée), toutes deux `procedural_growth=True` (grimpe géométrique ①②) et
+`archetype=None` (hors succession spontanée). Familles Araliaceae/Oleaceae SANS base
+class (patron potagères : simple attribut `family`, aucun family_effect). Exports
+(`plants/species/__init__.py`, `plants/__init__.py`), catalogue (`lierre`/`jasmin`),
+`SOIL_SIGNATURE` (Araliaceae +0.06 / Oleaceae +0.04, placeholders microbiome).
+
+**5 VOIX de chaque espèce :**
+- **Encyclopédie** : 2 fiches × 3 niveaux (`encyclopedie_corpus.py`), compteur test
+  28→**30** (`test_encyclopedie` 68/68).
+- **Carnet** + **Événements** : AUTOMATIQUES (dérivés du catalogue — le parseur
+  `evenements.py` résout le nom → clé, le carnet gate via concepts existants
+  `lumière`/`compétition`/`pollinisation` ; l'avantage de grimpe ÉMERGE de la
+  compétition lumière, pas de concept neuf). Aucun code ajouté (aurait été orphelin
+  sans marqueur `accroche` au log — non émis par ②③④).
+- **Pages secrètes** : P23 « Le lierre ne prend rien » (voix E, concept `lumière`)
+  + P24 « L'horloge du jasmin » (voix B, concept `pollinisation`) ; compteur test
+  22→**24** (`test_pages` 51/51).
+- **Magazine** : AUTOMATIQUE (data-driven — sœurs offertes dès qu'un membre
+  Araliaceae/Oleaceae atteint palier 3, fiche produit = corpus encyclopédie).
+- **Pollinisateurs** (rattachement mellifère) : Araliaceae/Oleaceae ajoutées aux 5
+  tables `_ATTRACT_*` (`population/registry.py`) — lierre = manne tardive abeille/
+  syrphe, jasmin = table du papillon (tubulaire parfumé).
+
+**GOLDEN NEUTRE — `a6c2f651…` inchangé** (aucune des 2 espèces n'est semée dans le
+smoke ; catalogue élargi + corpus n'affectent aucune grandeur du digest). Balayage
+COMPLET des 48 suites = **0 échec** (golden, encyclopedie 68/68, pages 51/51, grimpe
+10/10, maitrise 35/35, vigueur 136/136, croissance 67/67, vent 54/54, population,
+magazine 23/23, carnet 19/19, evergreen, sim_server 244/244…). `main.py 30` ans =
+exit 0. C# **non concerné** (⑤ Python pur, vue en ⑥).
+
+**PROCHAINE ÉTAPE → ⑥ `06_vue_godot.md`** : rendu supports + accroche + vrilles
+(§7 feuillage) + pont (supports au snapshot, bump ENGINE_VERSION) + banc d'essai
+`grimpantes`. Golden attendu INTACT (vue pure + banc jamais monté pour smoke).
+Golden : ①②③ NEUTRE, ④ INTACT, ⑤ NEUTRE, INTACT ⑥.

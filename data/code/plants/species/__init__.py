@@ -18,6 +18,8 @@ Orientation :
                         Courgette/Cucurbitaceae, Mâche/Caprifoliaceae)
   - `sauvages.py`     — spontanées non-archétypes (Ortie/Urticaceae,
                         Myrtille/Ericaceae acidophile)
+  - `grimpantes.py`   — grimpantes à familles NEUVES (Lierre/Araliaceae crampon,
+                        Jasmin/Oleaceae sarmenteux — sprint Grimpantes ⑤)
 """
 
 from .adventices import BursaPastoris, MedicagoLupulina, PoaAnnua, Taraxacum
@@ -26,6 +28,7 @@ from .compagnes import Yarrow, Phacelia, Borage, Comfrey, Mustard, Garlic
 from .aromatiques import Thyme, Lavender
 from .potageres import Carrot, Zucchini, CornSalad
 from .sauvages import Nettle, Vaccinium
+from .grimpantes import Ivy, Jasmine
 
 __all__ = [
     "BursaPastoris", "MedicagoLupulina", "PoaAnnua", "Taraxacum",
@@ -33,4 +36,5 @@ __all__ = [
     "Yarrow", "Phacelia", "Borage", "Comfrey", "Mustard", "Garlic",
     "Thyme", "Lavender",
     "Carrot", "Zucchini", "CornSalad", "Nettle", "Vaccinium",
+    "Ivy", "Jasmine",
 ]
