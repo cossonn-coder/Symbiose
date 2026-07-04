@@ -18,6 +18,60 @@ from __future__ import annotations
 from plants.base import GrowthStage, Lamiaceae
 
 
+class Mint(Lamiaceae):
+    """
+    Mentha sp. — Menthe (Lamiaceae).
+    Aromatique vivace à RHIZOME ENVAHISSANT : loin de tapisser doucement comme le
+    trèfle, elle lance des rhizomes traçants qui colonisent vite et loin. Illustre
+    le REVERS du clonal (sprint LUXURIANCE ④, absorbe D62) : `clonal_mode="rhizome"`
+    tolère l'ombre (réserve souterraine → gate lumière IGNORÉ dans sim/clonal.py) et
+    porte loin (`clonal_radius_cm` élevé) à cadence rapide → son caractère
+    « envahissant à surveiller » ÉMERGE de la mécanique, sans aucun drapeau. Mellifère
+    à la floraison, elle nourrit l'abeille comme ses sœurs Lamiacées. HORS golden.
+    """
+    genus = "Mentha"
+    name = "Menthe"
+    t_germ_opt = 15.0              # tempérée : lève au frais du printemps (fenêtre ③)
+    t_germ_tol = 10.0              # tolérante
+    resistance_ecrasement  = 0.7   # touffe basse qui repart du rhizome après piétinement
+    stimulation_ecrasement = 0.5
+    rarity = "Établie"
+    keywords = ["Aromatique", "Mellifère", "Couvre-sol", "Envahissante"]
+    silhouette = "touffe"          # touffe dressée feuillue ; HORS golden → neutre
+    space_tolerance_weeks = 5      # très tolérante, robuste
+    life_cycle = "perennial"
+    winter_strategy = "dormant"    # disparaît en surface l'hiver, repart du rhizome
+    foliage_density = 0.45
+    longevity_years = 10
+    reproduction_rate = 0.10       # se ressème peu — elle mise sur le rhizome
+    fungal_susceptibility = 0.2
+    # Rhizome ENVAHISSANT (sprint LUXURIANCE ④) : portée LONGUE, cadence RAPIDE, et
+    # gate lumière IGNORÉ (rhizome → réserve souterraine, tolère l'ombre, cf.
+    # sim/clonal.py) → la colonie court vite et loin, y compris sous canopée. C'est
+    # de là qu'émerge le caractère envahissant, pas d'un flag. Cf. table D65 §2.2.
+    clonal_mode = "rhizome"
+    clonal_radius_cm = 90.0        # porte loin (défaut 60) — le rhizome file
+    clonal_interval = 3            # cadence soutenue (défaut 4) — colonise vite
+    growth_stages = [
+        GrowthStage(
+            name="semis", duration_weeks=3, strate="sol",
+            vigueur_cost=0, effects=[], canopy_height=3,
+        ),
+        GrowthStage(
+            name="adulte", duration_weeks=0, strate="basse",  # vivace
+            vigueur_cost=1, canopy_height=30, canopy_radius=22,
+            effects=[
+                {
+                    "type": "floraison",
+                    "action": "add_rondelle", "variable": "pollinisateur",
+                    "amount": 1,
+                    "description": "Floraison mellifère — nourrit l'abeille"
+                },
+            ],
+        ),
+    ]
+
+
 class Thyme(Lamiaceae):
     """
     Thymus vulgaris — Thym (Lamiaceae).

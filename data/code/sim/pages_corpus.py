@@ -28,7 +28,7 @@ c'est un corpus de texte, pas du code (CLAUDE.md « garde-fou, pas dogme »).
 """
 from __future__ import annotations
 
-# --- Liste ordonnée des 24 entrées (doc §7 + sprint Grimpantes ⑤) -------------
+# --- Liste ordonnée des 26 entrées (doc §7 + Grimpantes ⑤ + Luxuriance ④) -----
 # Format : (id, voix, concept, palier_theme, robinet, texte). On construit ensuite
 # `PAGES` (dict id → champs) ET `ORDRE` (ids dans l'ordre du corpus) pour des
 # itérations stables et déterministes.
@@ -173,6 +173,22 @@ _ENTREES = [
      "pour s'ouvrir et appeler les papillons de nuit. Plante-le sous une fenêtre "
      "qu'on ouvre l'été, jamais au fond du jardin : ce qu'il offre, il l'offre à "
      "l'heure où l'on ne jardine plus, où l'on ne fait que respirer."),
+
+    # --- Pages du CLONAL (sprint LUXURIANCE ④) — lore pur, zéro effet ---
+    ("P25", "C", "succession", 3, "fouille",
+     "Le fraisier des bois ne se sème pas, il marche. Chaque printemps il lance ses "
+     "coulants comme autant de bras qui tâtent le sol, et là où la lumière tombe "
+     "encore, une fille prend racine et s'affranchit de la mère. Là où l'ombre a "
+     "gagné, le coulant sèche sans prendre : la plante sait s'arrêter d'elle-même. "
+     "Laisse-lui un coin clair et reviens dans trois ans : tu trouveras un tapis que "
+     "tu n'auras pas planté."),
+    ("P26", "E", "compagnonnage", 4, "récompense",
+     "Prends garde à la menthe. On la met en terre pour une tisane et l'on se "
+     "retrouve, trois étés plus tard, avec une planche qu'elle a tout entière "
+     "conquise par-dessous. Elle ne fait pas de graine ; elle rampe sous la terre, "
+     "aveugle et patiente, et ressort où on ne l'attend pas, même sous les grands. "
+     "Les anciennes la plantaient dans un vieux seau percé, enterré au ras du sol : "
+     "on ne la garde qu'en lui posant des murs."),
 ]
 
 # Titres recopiés du doc §7 (gras de chaque entrée), indexés par id — gardés à
@@ -202,6 +218,8 @@ _TITRES = {
     "P22": "La gelée blanche n'est pas la mort",
     "P23": "Le lierre ne prend rien",
     "P24": "L'horloge du jasmin",
+    "P25": "Le fraisier qui marche",
+    "P26": "La menthe qu'on garde en cage",
 }
 
 # `PAGES` = dict id → fiche complète. `ORDRE` = ids dans l'ordre du corpus (tri

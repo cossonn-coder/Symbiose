@@ -84,6 +84,11 @@ def _l_ravageur():
     return "  🐛  Doryphore : larves voraces sur le feuillage"
 
 
+def _l_ramet(mode, nom, r, c, rm, cm):
+    # Format EXACT émis par sim/clonal.py::emettre_ramets (luxuriance ②/④).
+    return f"    🌿 Ramet ({mode}) : {nom} @({r}, {c}) [clone de @({rm}, {cm})]"
+
+
 # ---------------------------------------------------------------------------
 # A. Parité de l'API historique (refactor pur)
 # ---------------------------------------------------------------------------
@@ -172,6 +177,18 @@ def test_disambiguation_emojis():
           len(stag) == 1 and stag[0].cause == "froid", f"stag={stag}")
 
 
+def test_ramet_clonal():
+    print("\n[B4] evenements() — émission clonale (🌿 Ramet) par mode (luxuriance ④)")
+    log = [_entete("T0"),
+           _l_ramet("stolon", "Fraisier", 2, 3, 1, 4),
+           _l_ramet("rhizome", "Menthe", 5, 5, 4, 4)]
+    out = evenements(log)
+    check("ramet stolon → cause = mode, espèce = clé catalogue",
+          Evenement("ramet", "T0", (2, 3), "fraisier", "stolon") in out, f"{out}")
+    check("ramet rhizome (menthe) reconnu",
+          Evenement("ramet", "T0", (5, 5), "menthe", "rhizome") in out, f"{out}")
+
+
 def test_floraison_acclimatation_absentes():
     print("\n[B3] floraison (header seul) et acclimatation (pas de marqueur) → rien")
     log = [_entete(), "  🌸 Floraison :"]
@@ -186,6 +203,7 @@ if __name__ == "__main__":
     test_parite_historique()
     test_kinds_elargis()
     test_disambiguation_emojis()
+    test_ramet_clonal()
     test_floraison_acclimatation_absentes()
 
     print("\n" + "=" * 60)

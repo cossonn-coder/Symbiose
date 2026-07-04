@@ -6,8 +6,9 @@ Catalogues d'espèces : cultivées + adventices (succession) + pérennes ligneus
 from __future__ import annotations
 from plants.species import (Tomato, Pepper, Bean, Clover, Sunflower, Basil,
                             Yarrow, Phacelia, Borage, Comfrey, Mustard,
-                            Thyme, Lavender,
-                            Carrot, Zucchini, CornSalad, Nettle, Vaccinium, Garlic,
+                            Thyme, Lavender, Mint,
+                            Carrot, Zucchini, CornSalad, Strawberry, Nettle,
+                            Vaccinium, Garlic,
                             Ivy, Jasmine,
                             BursaPastoris, MedicagoLupulina, PoaAnnua, Taraxacum)
 from plants.perennials import Fig, AppleTree, CherryTree, WalnutTree, OakTree
@@ -26,6 +27,8 @@ PLANT_CATALOGUE: dict[str, type] = {
     # Aromatiques persistantes (Lamiacées evergreen)
     "thym":      Thyme,
     "lavande":   Lavender,
+    # Menthe (Lamiacée) — rhizome envahissant (sprint LUXURIANCE ④, absorbe D62)
+    "menthe":    Mint,
     # Mellifères / engrais verts compagnons
     "bourrache": Borage,
     "consoude":  Comfrey,
@@ -34,6 +37,8 @@ PLANT_CATALOGUE: dict[str, type] = {
     "carotte":   Carrot,
     "courgette": Zucchini,
     "mache":     CornSalad,
+    # Fraisier (Rosaceae) — couvre-sol stolonifère (sprint LUXURIANCE ④, absorbe D62)
+    "fraisier":  Strawberry,
     # Spontanée non-archétype (Urticaceae) + compagne répulsive bisannuelle (Amaryllidaceae)
     "ortie":     Nettle,
     "ail":       Garlic,

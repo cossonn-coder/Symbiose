@@ -62,6 +62,13 @@ CONCEPT_DE: dict[tuple[str, str | None], str] = {
     ("reproduction", "biparental"):  "reproduction",
     ("reproduction", "introgr."):    "reproduction",
     ("reproduction", None):          "reproduction",
+    # Émission clonale (sprint LUXURIANCE ②/④) : la colonie perpétue la lignée SANS
+    # graine (clone). Cause = le MODE (stolon/rhizome/drageon) → même concept
+    # « reproduction », mais le gabarit distingue le tapissage doux (stolon) de la
+    # colonie qui court (rhizome, « envahissante à surveiller »).
+    ("ramet", "stolon"):             "reproduction",
+    ("ramet", "rhizome"):            "reproduction",
+    ("ramet", "drageon"):            "reproduction",
     ("mort", "sénescence"):       "sénescence",
     ("mort", "asphyxie"):         "eau",
     ("mort", "gel"):              "météo",
@@ -131,6 +138,15 @@ GABARIT: dict[tuple[str, str | None, str], str] = {
 
     ("reproduction", None, _D): "{e} a essaimé alentour {l}.",
     ("reproduction", None, _I): "{e} se ressème {l} : la lignée se perpétue, le brassage a eu lieu.",
+
+    # Émission clonale (sprint LUXURIANCE ②/④) : gabarits PAR MODE — le stolon
+    # tapisse doucement (auto-limité par la lumière), le rhizome COURT (à surveiller).
+    ("ramet", "stolon", _D): "{e} {l} a poussé un coulant : une jeune pousse s'y enracine.",
+    ("ramet", "stolon", _I): "{e} tapisse {l} par stolons — un clone de la mère, tant que la lumière atteint le sol ; le couvert se densifie tout seul.",
+    ("ramet", "drageon", _D): "Un rejet de {e} a percé le sol tout près {l}.",
+    ("ramet", "drageon", _I): "{e} drageonne {l} : la souche relance des clones à ses pieds, la touffe s'épaissit.",
+    ("ramet", "rhizome", _D): "{e} {l} a ressurgi un peu plus loin, hors de la touffe mère.",
+    ("ramet", "rhizome", _I): "{e} court {l} par ses rhizomes — un clone loin de la mère, même à l'ombre : à surveiller, la colonie gagne vite.",
 
     ("mort", "sénescence", _D): "Le vieux pied de {e} {l} s'est éteint.",
     ("mort", "sénescence", _I): "{e} {l} a bouclé son cycle — la sénescence, pas un accident ; sa nécromasse nourrit déjà le sol.",

@@ -153,6 +153,75 @@ class Zucchini(PlantBase):
     ]
 
 
+class Strawberry(PlantBase):
+    """
+    Fragaria vesca — Fraisier des bois (Rosaceae).
+    Couvre-sol vivace STOLONIFÈRE : au lieu de rester en touffe, il lance des
+    stolons rampants au bout desquels s'enracine une plante-fille — le tapissage
+    du couvre-sol du sprint LUXURIANCE ④ (absorbe D62). `clonal_mode="stolon"` :
+    le stolon exige de la LUMIÈRE AU SOL pour prendre (gate sim/clonal.py) → il ne
+    tapisse PAS sous une canopée fermée, d'où une auto-limitation émergente (≠ la
+    menthe au rhizome qui ignore l'ombre). Rosette basse plaquée (`silhouette=
+    "rosette"`), fleurs blanches mellifères, puis FRUITS traçables (`fruitier`) très
+    attractifs pour la faune à maturité. Famille Rosaceae (comme le pommier).
+    HORS scénario golden (jamais semé) → dérive NEUTRE.
+    """
+    family = "Rosaceae"
+    genus = "Fragaria"
+    name = "Fraisier"
+    resistance_ecrasement  = 0.7   # rosette basse plaquée, encaisse le piétinement
+    stimulation_ecrasement = 0.4
+    rarity = "Établie"
+    keywords = ["Comestible", "Fruitier", "Couvre-sol", "Mellifère"]
+    silhouette = "rosette"         # rosette basse plaquée de folioles ; HORS golden → neutre
+    space_tolerance_weeks = 4
+    life_cycle = "perennial"
+    winter_strategy = "dormant"    # persiste en rosette, repart au printemps
+    t_germ_opt = 16.0              # tempéré : lève au mitan du printemps (fenêtre ③)
+    t_germ_tol = 9.0               # moyenne
+    foliage_density = 0.35
+    longevity_years = 4
+    reproduction_rate = 0.10       # se ressème peu — il mise sur les stolons
+    fruitier = True                # fraises traçables (maturity_years=0 → dès l'année)
+    # Couvre-sol STOLONIFÈRE (sprint LUXURIANCE ④) : portée COURTE (la plante-fille
+    # s'enracine près de la mère, au bout du stolon), gate LUMIÈRE au sol (ne prend
+    # pas à l'ombre fermée → auto-limitation, cf. sim/clonal.py). Cadence par défaut.
+    # Cf. table D65 §2.2 — même mode que le trèfle, portée plus courte.
+    clonal_mode = "stolon"
+    clonal_radius_cm = 45.0        # stolon court (défaut 60) — la fille s'enracine près
+    growth_stages = [
+        GrowthStage(
+            name="semis", duration_weeks=3, strate="sol",
+            vigueur_cost=0, effects=[], canopy_height=3,
+        ),
+        # Rosette basse fleurie : 1er stade fleuri → table pour les butineurs.
+        GrowthStage(
+            name="adulte", duration_weeks=5, strate="basse",
+            vigueur_cost=1, canopy_height=15, canopy_radius=18,
+            root_radius=20,
+            effects=[
+                {
+                    "type": "floraison",
+                    "action": "add_rondelle", "variable": "pollinisateur",
+                    "amount": 1,
+                    "description": "Fleurs blanches — nourrit l'abeille"
+                },
+            ],
+        ),
+        GrowthStage(
+            name="mature", duration_weeks=4, strate="basse",
+            vigueur_cost=0, canopy_height=15, canopy_radius=18,
+            effects=[
+                {
+                    "type": "recolte",
+                    "action": "score", "axis": "recolte", "amount": 2,
+                    "description": "Récolte de fraises"
+                },
+            ],
+        ),
+    ]
+
+
 class CornSalad(PlantBase):
     """
     Valerianella locusta — Mâche (Caprifoliaceae).

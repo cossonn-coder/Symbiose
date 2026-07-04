@@ -7,7 +7,7 @@ Spec de référence : `docs/conception/CONCEPTION_VOIX_NARRATIVES.md` §6.
 Ce module ne contient QUE de la donnée (aucune logique, aucun import du moteur).
 Il est séparé de `sim/encyclopedie.py` (la logique) pour respecter la règle « un
 fichier = une responsabilité » : ici, c'est l'OUVRAGE ; là-bas, le LECTEUR. Le
-corpus dépasse forcément le seuil ~350 ldc de code pur (30 fiches × 3 niveaux),
+corpus dépasse forcément le seuil ~350 ldc de code pur (32 fiches × 3 niveaux),
 mais c'est de la DONNÉE recopiée FIDÈLEMENT du doc §6 — pas du code à relire vite
 (dépassement signalé + justifié, cf. CLAUDE.md « garde-fou, pas dogme »).
 
@@ -25,7 +25,7 @@ côté code.
 """
 from __future__ import annotations
 
-# --- Les 30 fiches × 3 niveaux (doc §6 + sprint Grimpantes ⑤) -----------------
+# --- Les 32 fiches × 3 niveaux (doc §6 + sprint Grimpantes ⑤ + Luxuriance ④) --
 FICHES: dict[str, dict[int, str]] = {
 
     # === Annuelles & potagères cultivées ===
@@ -113,6 +113,18 @@ FICHES: dict[str, dict[int, str]] = {
         3: "Bordure mellifère majeure (abeilles, papillons) ; réputée éloigner mites et "
            "pucerons des voisines. Structure pérenne du jardin sec.",
     },
+    "menthe": {
+        1: "Touffe dressée de feuilles gaufrées très odorantes, petites fleurs en épis.",
+        2: "Aromatique vivace qui disparaît en surface l'hiver et repart au printemps. "
+           "Sous terre, elle file des RHIZOMES traçants au bout desquels lèvent des "
+           "pousses-filles : elle gagne du terrain sans faire de graine, et tolère "
+           "l'ombre — d'où sa réputation d'envahissante.",
+        3: "Couvre-sol mellifère mais accapareur : ses rhizomes courent vite et loin, "
+           "y compris sous une canopée où d'autres couvre-sols caleraient. À contenir "
+           "(bordure enterrée, bac) sous peine de coloniser toute une planche. Ses "
+           "fleurs nourrissent abeilles et syrphes ; son parfum déroute certains "
+           "ravageurs au voisinage (répulsion familiale des Lamiacées).",
+    },
     "bourrache": {
         1: "Plante velue rude, fleurs bleues en étoile retombantes.",
         2: "Annuelle vigoureuse qui se ressème seule ; accumulatrice de potassium ; "
@@ -156,6 +168,19 @@ FICHES: dict[str, dict[int, str]] = {
         3: "Son feuillage couvre et ombre le sol (couvre-sol des « trois sœurs ») ; pas "
            "de butineurs = pas de courgettes — indicateur vivant de la santé "
            "pollinisatrice.",
+    },
+    "fraisier": {
+        1: "Rosette basse de folioles dentées par trois, fleurs blanches à cœur jaune, "
+           "puis fruits rouges parfumés.",
+        2: "Couvre-sol vivace qui se multiplie par STOLONS : de longs coulants rampent "
+           "au sol et s'enracinent au bout en une plante-fille identique à la mère. "
+           "Mais le stolon n'ancre sa fille qu'à la lumière du sol — sous une canopée "
+           "fermée, il ne prend pas. Fleurs mellifères, fruits appréciés de la faune.",
+        3: "Tapis vivant qui protège le sol nu et se densifie de lui-même par ses "
+           "coulants, tant que la lumière parvient au sol — un couvre-sol qui "
+           "s'auto-limite là où l'ombre gagne. Ses fleurs nourrissent les butineurs, "
+           "ses fraises attirent oiseaux et petits mammifères qui dispersent ses "
+           "graines. Bonne compagne de la bourrache, qui appelle ses pollinisateurs.",
     },
     "mache": {
         1: "Petites rosettes tendres au ras du sol.",

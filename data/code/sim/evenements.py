@@ -61,6 +61,10 @@ _RE_MORT = re.compile(r"🪦\s+(.+?)@")               # 🪦 <nom>@(r, c) meurt 
 _RE_CONFLIT = re.compile(r"✗\s+(.+?)@")             # ✗ <nom>@(r, c) meurt (conflit)
 _RE_NOUAISON = re.compile(r"🍎\s+Nouaison\s+(.+?)@")  # 🍎 Nouaison <nom>@(r, c) …
 _RE_ABSCISSION = re.compile(r"🍂\s+Abscission\s+(.+?)@")  # 🍂 Abscission <nom>@(r, c) …
+# Émission clonale (sprint LUXURIANCE ②/④) : 🌿 Ramet (<mode>) : <nom> @(r, c) …
+# La cause de l'événement = le MODE clonal (stolon/rhizome/drageon) → le carnet
+# distingue le tapissage stolonifère de la colonie rhizomateuse.
+_RE_RAMET = re.compile(r"🌿\s+Ramet\s+\((\w+)\)\s*:\s*(.+?)\s+@")
 
 
 def _raison_stagnation(line: str) -> str | None:
@@ -227,6 +231,14 @@ def evenements(log: list[str]) -> list[Evenement]:
             if m:
                 out.append(Evenement("abscission", tile_id, pos,
                                      _CLE_DE_NOM.get(m.group(1).strip()), None))
+        elif "🌿" in line and "Ramet" in line:
+            # Émission clonale (luxuriance ②/④) : espèce = groupe 2, cause = mode
+            # clonal (groupe 1). Le carnet gate ce fait sous le concept
+            # « reproduction » (la colonie perpétue la lignée sans graine).
+            m = _RE_RAMET.search(line)
+            if m:
+                out.append(Evenement("ramet", tile_id, pos,
+                                     _CLE_DE_NOM.get(m.group(2).strip()), m.group(1)))
         else:
             raison = _raison_stagnation(line)
             if raison:

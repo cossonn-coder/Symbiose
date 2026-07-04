@@ -159,9 +159,43 @@ nombre de ramets → protège le LightField d'une explosion de plantes. Budget �
     / sauvages 70 — tous 🟢.
   - C# NON concerné (T3 Python pur ; le RENDU de la silhouette est T6).
 
+- **T4 ✅ FAIT (2026-07-04)** — Catalogue clonal ① : fraisier + menthe + 5 voix (NEUTRE).
+  - **2 espèces neuves** (le trèfle porte DÉJÀ `clonal_mode="stolon"` depuis T2 →
+    « réglage stolonifère du trèfle » sans objet, rien à changer) :
+    - **Fraisier** (`Strawberry`, Rosaceae) dans `plants/species/potageres.py` :
+      vivace couvre-sol `clonal_mode="stolon"`, `clonal_radius_cm=45` (stolon court),
+      `silhouette="rosette"`, `fruitier=True`, strate sol→basse, clé catalogue `fraisier`.
+    - **Menthe** (`Mint`, Lamiaceae) dans `plants/species/aromatiques.py` : vivace
+      `clonal_mode="rhizome"`, `clonal_radius_cm=90` + `clonal_interval=3` (porte loin,
+      cadence rapide → envahissement ÉMERGENT via le gate rhizome qui ignore l'ombre),
+      `silhouette="touffe"`, mellifère, clé catalogue `menthe`. Réutilise la mécanique
+      clonale figée au T2 (`sim/clonal.py`) — AUCUNE modif du moteur clonal.
+  - **Les 5 voix, chacune** :
+    1. Encyclopédie ✅ — 2 fiches × 3 niveaux (`sim/encyclopedie_corpus.py`) ; count
+       corpus 30→32 (test + docstrings mis à jour).
+    2. Carnet ✅ — nouvel événement `ramet` mappé au concept `reproduction`
+       (`CONCEPT_DE`) + 3 paires de gabarits PAR MODE (stolon doux / rhizome « à
+       surveiller » / drageon) dans `sim/carnet.py`.
+    3. Pages secrètes ✅ (optionnel, mais porté) — P25 « Le fraisier qui marche »
+       (concept succession) + P26 « La menthe qu'on garde en cage » (compagnonnage)
+       dans `sim/pages_corpus.py` ; count 24→26 (test + docstring).
+    4. Magazine ✅ — automatique : l'offre dérive de `cls.family` + fiche produit lit
+       `FICHES` → présence encyclo + famille suffit (Rosaceae/Lamiaceae déjà connues).
+    5. Événements ✅ — marqueur `🌿 Ramet (mode) : nom @pos` (émis par `sim/clonal.py`
+       depuis T2) désormais PARSÉ en `Evenement("ramet", …, cause=mode)` dans
+       `sim/evenements.py` (regex `_RE_RAMET`). Test dédié `test_ramet_clonal`.
+  - **Golden INCHANGÉ** (`061934db…`) — NEUTRE confirmé (ni fraisier ni menthe semés
+    dans le scénario). **`test_population` INCHANGÉ** (`5a1873db…`).
+  - Suites voix vertes+adaptées : encyclopedie 68/68, pages 53/53, evenements 20/20,
+    carnet 19/19, magazine 23/23, catalogue_lot2 16/16. LDC 🟢 (potageres 196,
+    aromatiques 114, carnet 148, evenements 134).
+  - C# NON concerné (T4 Python pur ; rendu des silhouettes/colonies = T6).
+
 ## §REPRISE
-**T3 CLOS.** Prochain : **T4 = catalogue clonal ① (fraisier + menthe + trèfle
-stolonifère) + 5 voix** (kickoff `04_*.md`), NEUTRE. Puis T5 catalogue clonal ②
-(NEUTRE), T6 vue Godot (INTACT — consommera `silhouette` via le pont). Conception
-FIGÉE `docs/conception/CONCEPTION_LUXURIANCE_STRATIFICATION.md`. À la clôture du
-sprint : fermer D62 (absorbée), MAJ DETTE/BACKLOG/journal/mémoire.
+**T4 CLOS.** Prochain : **T5 = catalogue clonal ② (framboisier + bambou traçant +
+violettes odorantes) + 5 voix chacune** (kickoff `05_*.md`), NEUTRE — même patron
+que T4 (réutiliser `clonal_mode` : drageon framboisier, rhizome bambou/violettes ;
+bump des counts corpus/pages + test). Puis T6 vue Godot (INTACT — consommera
+`silhouette` + colonies via le pont). Conception FIGÉE
+`docs/conception/CONCEPTION_LUXURIANCE_STRATIFICATION.md`. À la clôture du sprint :
+fermer D62 (absorbée), MAJ DETTE/BACKLOG/journal/mémoire.

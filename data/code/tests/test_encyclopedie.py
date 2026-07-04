@@ -9,7 +9,7 @@ Propriétés exigées (« Définition de done » du kickoff) :
   B. TRONCATURE — palier 1/2/3 → fiche au BON niveau ; palier 4/5 → plafonné à 3.
   C. NON DÉCOUVERT (palier 0) → ABSENT de l'index ET lecture → `None`.
   D. ALIGNEMENT DES CLÉS — toutes les clés du corpus existent au catalogue, et le
-     corpus couvre EXACTEMENT les 28 espèces (PLANT + PERENNIAL).
+     corpus couvre EXACTEMENT les 32 espèces (PLANT + PERENNIAL).
   E. CHAQUE FICHE a bien ses 3 niveaux non vides.
 
 D60 (tronçon ① — encyclopédie multi-règnes) ajoute :
@@ -127,7 +127,7 @@ def test_alignement_cles():
     sans_fiche = [k for k in cat if k not in FICHES]
     check("toutes les espèces catalogue ont une fiche",
           sans_fiche == [], f"muettes : {sans_fiche}")
-    check("corpus = 30 fiches", len(FICHES) == 30, f"{len(FICHES)}")
+    check("corpus = 32 fiches", len(FICHES) == 32, f"{len(FICHES)}")
 
 
 # ---------------------------------------------------------------------------

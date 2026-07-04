@@ -14,8 +14,10 @@ Orientation :
   - `compagnes.py`    — attire-auxiliaires + mellifères + engrais verts (Achillée,
                         Phacélie, Bourrache, Consoude, Moutarde)
   - `aromatiques.py`  — Lamiacées aromatiques persistantes/evergreen (Thym, Lavande)
+                        + Menthe (rhizome envahissant, luxuriance ④)
   - `potageres.py`    — potagères lot 2 à familles NEUVES (Carotte/Apiaceae,
-                        Courgette/Cucurbitaceae, Mâche/Caprifoliaceae)
+                        Courgette/Cucurbitaceae, Mâche/Caprifoliaceae) + Fraisier
+                        (Rosaceae, couvre-sol stolonifère, luxuriance ④)
   - `sauvages.py`     — spontanées non-archétypes (Ortie/Urticaceae,
                         Myrtille/Ericaceae acidophile)
   - `grimpantes.py`   — grimpantes à familles NEUVES (Lierre/Araliaceae crampon,
@@ -25,8 +27,8 @@ Orientation :
 from .adventices import BursaPastoris, MedicagoLupulina, PoaAnnua, Taraxacum
 from .cultivees import Tomato, Pepper, Bean, Clover, Sunflower, Basil
 from .compagnes import Yarrow, Phacelia, Borage, Comfrey, Mustard, Garlic
-from .aromatiques import Thyme, Lavender
-from .potageres import Carrot, Zucchini, CornSalad
+from .aromatiques import Thyme, Lavender, Mint
+from .potageres import Carrot, Zucchini, CornSalad, Strawberry
 from .sauvages import Nettle, Vaccinium
 from .grimpantes import Ivy, Jasmine
 
@@ -34,7 +36,7 @@ __all__ = [
     "BursaPastoris", "MedicagoLupulina", "PoaAnnua", "Taraxacum",
     "Tomato", "Pepper", "Bean", "Clover", "Sunflower", "Basil",
     "Yarrow", "Phacelia", "Borage", "Comfrey", "Mustard", "Garlic",
-    "Thyme", "Lavender",
-    "Carrot", "Zucchini", "CornSalad", "Nettle", "Vaccinium",
+    "Thyme", "Lavender", "Mint",
+    "Carrot", "Zucchini", "CornSalad", "Strawberry", "Nettle", "Vaccinium",
     "Ivy", "Jasmine",
 ]
