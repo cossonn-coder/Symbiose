@@ -19,7 +19,9 @@ Orientation :
                         Courgette/Cucurbitaceae, Mâche/Caprifoliaceae) + Fraisier
                         (Rosaceae, couvre-sol stolonifère, luxuriance ④)
   - `sauvages.py`     — spontanées non-archétypes (Ortie/Urticaceae,
-                        Myrtille/Ericaceae acidophile)
+                        Myrtille/Ericaceae acidophile) + trio clonal luxuriance ⑤
+                        (Framboisier/Rosaceae drageon, Bambou traçant/Poaceae
+                        rhizome, Violette odorante/Violaceae stolon d'ombre)
   - `grimpantes.py`   — grimpantes à familles NEUVES (Lierre/Araliaceae crampon,
                         Jasmin/Oleaceae sarmenteux — sprint Grimpantes ⑤)
 """
@@ -29,7 +31,7 @@ from .cultivees import Tomato, Pepper, Bean, Clover, Sunflower, Basil
 from .compagnes import Yarrow, Phacelia, Borage, Comfrey, Mustard, Garlic
 from .aromatiques import Thyme, Lavender, Mint
 from .potageres import Carrot, Zucchini, CornSalad, Strawberry
-from .sauvages import Nettle, Vaccinium
+from .sauvages import Nettle, Vaccinium, Raspberry, RunningBamboo, SweetViolet
 from .grimpantes import Ivy, Jasmine
 
 __all__ = [
@@ -38,5 +40,6 @@ __all__ = [
     "Yarrow", "Phacelia", "Borage", "Comfrey", "Mustard", "Garlic",
     "Thyme", "Lavender", "Mint",
     "Carrot", "Zucchini", "CornSalad", "Strawberry", "Nettle", "Vaccinium",
+    "Raspberry", "RunningBamboo", "SweetViolet",
     "Ivy", "Jasmine",
 ]

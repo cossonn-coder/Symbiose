@@ -432,3 +432,19 @@ class Ericaceae(PlantBase):
     space_tolerance_weeks = 4
     fungal_susceptibility = 0.3
     family_effects = []
+
+
+class Violaceae(PlantBase):
+    """
+    Famille : Violacées (violettes, pensées).
+    Petits couvre-sols de sous-bois et de lisière (sprint LUXURIANCE ⑤, absorbe D62).
+    Famille INERTE au repos (aucun family_effect, aucun flux injecté) : sa signature
+    est écologique (couvre-sol d'ombre stolonifère, mellifère précoce), portée au
+    niveau ESPÈCE (silhouette, clonal_mode, fenêtre thermique) — pas un effet familial.
+    Sciaphiles : elles prospèrent SOUS la canopée là où les héliophiles calent, ce qui
+    ÉMERGE de la tolérance à l'ombre de leur strate `sol`, pas d'un drapeau familial.
+    """
+    family = "Violaceae"
+    space_tolerance_weeks = 4
+    fungal_susceptibility = 0.3
+    family_effects = []

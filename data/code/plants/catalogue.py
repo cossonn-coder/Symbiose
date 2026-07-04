@@ -8,7 +8,7 @@ from plants.species import (Tomato, Pepper, Bean, Clover, Sunflower, Basil,
                             Yarrow, Phacelia, Borage, Comfrey, Mustard,
                             Thyme, Lavender, Mint,
                             Carrot, Zucchini, CornSalad, Strawberry, Nettle,
-                            Vaccinium, Garlic,
+                            Vaccinium, Raspberry, RunningBamboo, SweetViolet, Garlic,
                             Ivy, Jasmine,
                             BursaPastoris, MedicagoLupulina, PoaAnnua, Taraxacum)
 from plants.perennials import Fig, AppleTree, CherryTree, WalnutTree, OakTree
@@ -44,6 +44,12 @@ PLANT_CATALOGUE: dict[str, type] = {
     "ail":       Garlic,
     # Sous-arbrisseau acidophile (Ericaceae) — démonstrateur fenêtre pH ⑤
     "myrtille":  Vaccinium,
+    # Trio clonal luxuriance ⑤ (absorbe D62) : Framboisier (Rosaceae, drageon →
+    # fourré resserré) + Bambou traçant (Poaceae, rhizome envahissant, borné par
+    # le gate couverture ①) + Violette odorante (Violaceae NEUVE, stolon d'ombre)
+    "framboisier": Raspberry,
+    "bambou":      RunningBamboo,
+    "violette":    SweetViolet,
     # Grimpantes à familles neuves (sprint Grimpantes ⑤) — Lierre (Araliaceae,
     # crampon, monte au mur nu) + Jasmin (Oleaceae, sarmenteux, se palisse)
     "lierre":    Ivy,

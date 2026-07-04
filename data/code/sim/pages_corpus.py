@@ -10,7 +10,7 @@ vit — un thème qu'il commence à maîtriser — et récompensent l'exploratio
 voix éditoriales (pastiche en STYLE, jamais de citation réelle longue → §7).
 
 Chaque entrée :
-  - `id`            : identifiant stable (P01..P24), clé du set `gs["pages"]`.
+  - `id`            : identifiant stable (P01..P29), clé du set `gs["pages"]`.
   - `voix`          : registre éditorial (A maraîcher · B jardinière · C savoirs
                       paysans · D herbiers · E sorcières) — purement informatif.
   - `concept`       : résonance thématique, sert au robinet *récompense* (la page
@@ -28,7 +28,7 @@ c'est un corpus de texte, pas du code (CLAUDE.md « garde-fou, pas dogme »).
 """
 from __future__ import annotations
 
-# --- Liste ordonnée des 26 entrées (doc §7 + Grimpantes ⑤ + Luxuriance ④) -----
+# --- Liste ordonnée des 29 entrées (doc §7 + Grimpantes ⑤ + Luxuriance ④/⑤) ---
 # Format : (id, voix, concept, palier_theme, robinet, texte). On construit ensuite
 # `PAGES` (dict id → champs) ET `ORDRE` (ids dans l'ordre du corpus) pour des
 # itérations stables et déterministes.
@@ -189,6 +189,31 @@ _ENTREES = [
      "aveugle et patiente, et ressort où on ne l'attend pas, même sous les grands. "
      "Les anciennes la plantaient dans un vieux seau percé, enterré au ras du sol : "
      "on ne la garde qu'en lui posant des murs."),
+
+    # --- Pages du TRIO CLONAL (sprint LUXURIANCE ⑤) — lore pur, zéro effet ---
+    ("P27", "C", "succession", 3, "hasard",
+     "La ronce et la framboise, c'est la même engeance : elles avancent par en "
+     "dessous, à petits pas. Un rejet cette année, trois l'an prochain, et te voilà "
+     "avec un fourré. Mais la framboise est honnête : elle ne sort ses rejets qu'au "
+     "clair, jamais sous l'ombre épaisse. Qui veut des framboises sans corvée lui "
+     "laisse un carré de lumière et la regarde s'y épaissir toute seule ; qui la "
+     "néglige la retrouve trois rangs plus loin."),
+    ("P28", "C", "compagnonnage", 4, "fouille",
+     "On m'a donné trois brins de bambou dans un pot. J'ai cru faire un rideau vert "
+     "au bout du potager. Cinq étés plus tard, c'est le potager qui était au bout du "
+     "bambou. Il ne monte pas en graine, il ne fleurit pour ainsi dire jamais : il "
+     "marche sous la terre, aveugle, et ressort où il veut, à l'ombre comme au soleil. "
+     "La seule chose qui l'arrête, c'est un sol déjà pris — ou une tôle enfoncée "
+     "droit, plus profond qu'on ne croit. Ne le plante jamais sans lui creuser sa "
+     "prison d'abord."),
+    ("P29", "E", "floraison", 2, "récompense",
+     "La violette fleurit quand il n'y a rien d'autre, au sortir du froid, quand le "
+     "bourdon sort de terre affamé. C'est pour cela qu'on l'aimait aux pieds des "
+     "haies : non pour son parfum seul, mais parce qu'elle ouvre la table la "
+     "première. Elle vit à l'ombre et s'y plaît, mais ses coulants ne s'enracinent "
+     "qu'aux trouées de lumière — alors elle borde les clairières sans jamais "
+     "étouffer le sous-bois. Une plante qui sait où s'arrêter est une plante de "
+     "sage."),
 ]
 
 # Titres recopiés du doc §7 (gras de chaque entrée), indexés par id — gardés à
@@ -220,6 +245,9 @@ _TITRES = {
     "P24": "L'horloge du jasmin",
     "P25": "Le fraisier qui marche",
     "P26": "La menthe qu'on garde en cage",
+    "P27": "Le fourré qui avance",
+    "P28": "La prison du bambou",
+    "P29": "La première table de l'année",
 }
 
 # `PAGES` = dict id → fiche complète. `ORDRE` = ids dans l'ordre du corpus (tri

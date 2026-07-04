@@ -191,11 +191,51 @@ nombre de ramets → protège le LightField d'une explosion de plantes. Budget �
     aromatiques 114, carnet 148, evenements 134).
   - C# NON concerné (T4 Python pur ; rendu des silhouettes/colonies = T6).
 
+- **T5 ✅ FAIT (2026-07-04)** — Catalogue clonal ② : framboisier + bambou traçant +
+  violette odorante + 5 voix (NEUTRE).
+  - **3 espèces neuves** dans `plants/species/sauvages.py` (spontanées non-archétypes,
+    `archetype=None` → hors WEED_CATALOGUE) ; réutilisent la mécanique clonale figée
+    au T2 (`sim/clonal.py`) — AUCUNE modif du moteur :
+    - **Framboisier** (`Raspberry`, Rosaceae) — `clonal_mode="drageon"`, portée TRÈS
+      courte (`clonal_radius_cm=40` → fourré resserré près de la mère), strate
+      moyenne→haute, `silhouette="buisson"`, `fruitier=True`. Clé `framboisier`.
+      Démonstrateur du DRAGEON.
+    - **Bambou traçant** (`RunningBamboo`, Poaceae) — `clonal_mode="rhizome"`, portée
+      LONGUE (`clonal_radius_cm=120`) + `clonal_interval=3` (rapide) + gate lumière
+      IGNORÉ (rhizome) → envahissement EXTRÊME émergent, BORNÉ par le gate couverture
+      (T1). Strate haute, `silhouette="dressée"`, evergreen, anémophile (hérite compét.
+      hydrique Poaceae). Clé `bambou`. Démonstrateur extrême de l'envahissement.
+    - **Violette odorante** (`SweetViolet`, **Violaceae — FAMILLE NEUVE**) — couvre-sol
+      d'ombre `clonal_mode="stolon"` (portée 45), `shade_tolerance=1.6` (SCIAPHILE),
+      strate sol, `silhouette="tapis"`, mellifère précoce. Clé `violette`. Nouvelle
+      classe `Violaceae` (INERTE, `family_effects=[]`) dans `plants/base/familles.py`,
+      exportée par `plants/base/__init__.py` + `plants/__init__.py`.
+  - **Les 5 voix, chacune** :
+    1. Encyclopédie ✅ — 3 fiches × 3 niveaux (`encyclopedie_corpus.py`) ; count corpus
+       32→**35** (test + docstrings MAJ).
+    2. Carnet ✅ — AUCUNE modif nécessaire : `CONCEPT_DE` + gabarits sont déjà
+       mode-génériques (stolon/rhizome/drageon → concept `reproduction`) depuis T4.
+    3. Pages secrètes ✅ — P27 « Le fourré qui avance » (succession, framboisier),
+       P28 « La prison du bambou » (compagnonnage — PAS non-action, sinon casse
+       l'invariant du test), P29 « La première table de l'année » (floraison,
+       violette) ; count 26→**29** (test + docstring MAJ).
+    4. Magazine ✅ — automatique (offre dérive de `cls.family` + `FICHES`) :
+       Rosaceae/Poaceae déjà connues, Violaceae neuve suffit. AUCUNE modif.
+    5. Événements ✅ — le marqueur `🌿 Ramet (mode)` est déjà parsé data-driven
+       (`_CLE_DE_NOM` dérive du catalogue) → les 3 espèces sont reconnues sans modif.
+  - **Golden INCHANGÉ** (`061934db09ad646a01f19b8f4d0b677f13438e87bce2f8531527be425e7c22a8`)
+    — NEUTRE confirmé (aucune des 3 semée au golden). **`test_population` INCHANGÉ**
+    (`5a1873db…`).
+  - Suites vertes : golden, population, encyclopedie 68/68, pages **56/56**,
+    evenements 20/20, carnet 19/19, magazine 23/23, catalogue_lot2 16/16 + **suite
+    complète (tous les test_*.py hors test_epaisseur_500ans) verte** (`fail=0`).
+  - LDC (code pur) : sauvages 191 / familles 225 / encyclopedie_corpus 298 (corpus
+    data) / pages_corpus 105 — tous 🟢.
+  - C# NON concerné (T5 Python pur ; rendu silhouettes/colonies = T6).
+
 ## §REPRISE
-**T4 CLOS.** Prochain : **T5 = catalogue clonal ② (framboisier + bambou traçant +
-violettes odorantes) + 5 voix chacune** (kickoff `05_*.md`), NEUTRE — même patron
-que T4 (réutiliser `clonal_mode` : drageon framboisier, rhizome bambou/violettes ;
-bump des counts corpus/pages + test). Puis T6 vue Godot (INTACT — consommera
-`silhouette` + colonies via le pont). Conception FIGÉE
+**T5 CLOS.** Prochain : **T6 = vue Godot** (INTACT — consommera `silhouette` +
+colonies clonales + couverture via le pont ; empilement multi-strates visible + banc
+F5 `luxuriance`). Conception FIGÉE
 `docs/conception/CONCEPTION_LUXURIANCE_STRATIFICATION.md`. À la clôture du sprint :
 fermer D62 (absorbée), MAJ DETTE/BACKLOG/journal/mémoire.

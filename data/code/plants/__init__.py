@@ -15,7 +15,7 @@ from plants.base import (
     GrowthStage, Segment, Fruit, MAX_ORGANS, organ_sites,
     PlantInstance, ConflictNotification, PlantBase,
     Solanaceae, Fabaceae, Asteraceae, Lamiaceae, Poaceae,
-    Urticaceae, Amaryllidaceae, Ericaceae,
+    Urticaceae, Amaryllidaceae, Ericaceae, Violaceae,
 )
 from plants.species import (
     BursaPastoris, MedicagoLupulina, PoaAnnua, Taraxacum,

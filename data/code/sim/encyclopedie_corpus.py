@@ -8,8 +8,9 @@ Ce module ne contient QUE de la donnée (aucune logique, aucun import du moteur)
 Il est séparé de `sim/encyclopedie.py` (la logique) pour respecter la règle « un
 fichier = une responsabilité » : ici, c'est l'OUVRAGE ; là-bas, le LECTEUR. Le
 corpus dépasse forcément le seuil ~350 ldc de code pur (32 fiches × 3 niveaux),
-mais c'est de la DONNÉE recopiée FIDÈLEMENT du doc §6 — pas du code à relire vite
-(dépassement signalé + justifié, cf. CLAUDE.md « garde-fou, pas dogme »).
+mais c'est de la DONNÉE recopiée FIDÈLEMENT du doc §6 (35 fiches × 3 niveaux) —
+pas du code à relire vite (dépassement signalé + justifié, cf. CLAUDE.md
+« garde-fou, pas dogme »).
 
 `FICHES[espèce] = {1: "…N1…", 2: "…N2…", 3: "…N3…"}`
   - N1 (palier 1, découverte)     = ce qu'on VOIT : silhouette, organes.
@@ -25,7 +26,7 @@ côté code.
 """
 from __future__ import annotations
 
-# --- Les 32 fiches × 3 niveaux (doc §6 + sprint Grimpantes ⑤ + Luxuriance ④) --
+# --- Les 35 fiches × 3 niveaux (doc §6 + Grimpantes ⑤ + Luxuriance ④/⑤) -------
 FICHES: dict[str, dict[int, str]] = {
 
     # === Annuelles & potagères cultivées ===
@@ -213,6 +214,54 @@ FICHES: dict[str, dict[int, str]] = {
         3: "Indicatrice/exigeante de terre de bruyère ; ses baies nourrissent les "
            "oiseaux (dispersion). Hors de son pH, elle dépérit — révèle l'acidité du "
            "sol.",
+    },
+
+    # === Trio clonal (sprint LUXURIANCE ⑤) ===
+    "framboisier": {
+        1: "Touffe de cannes dressées épineuses, feuilles composées vert clair, "
+           "fleurs blanches puis framboises rouges.",
+        2: "Sous-arbrisseau vivace qui s'étend par DRAGEONS : de courts rejets "
+           "percent le sol tout près de la souche mère et forment peu à peu un "
+           "fourré serré. Le rejet ne prend qu'à la lumière du sol — la touffe "
+           "s'épaissit sur place sans coloniser tout le terrain. Fleurs mellifères, "
+           "fruits fondants appréciés de la faune.",
+        3: "Fourré nourricier qui se densifie de lui-même par drageonnage tant que "
+           "la lumière atteint son pied : un massif fruitier qui s'entretient seul, "
+           "resserré autour de la mère (≠ le rhizome qui file loin). Ses fleurs "
+           "nourrissent les butineurs, ses framboises oiseaux et petits mammifères "
+           "qui dispersent ses graines. Bon brise-vue caduc en lisière ; à contenir "
+           "en bordure pour l'empêcher de gagner la planche voisine.",
+    },
+    "bambou": {
+        1: "Chaumes verts dressés et cannelés en bosquet dense, feuillage léger "
+           "bruissant, persistant l'hiver.",
+        2: "Graminée géante vivace qui gagne du terrain par RHIZOMES TRAÇANTS : sous "
+           "terre, des tiges courent VITE et LOIN, hors de la touffe, et relèvent des "
+           "chaumes à distance — y compris sous l'ombre, car le rhizome porte sa "
+           "réserve. Il ne fait presque jamais de graine : tout se joue sous la "
+           "surface. C'est le champion de l'expansion clonale.",
+        3: "Brise-vent et écran persistants remarquables, mais colonisateur "
+           "REDOUTABLE : ses rhizomes traversent une planche en une saison, sous "
+           "l'ombre comme au soleil, là où les autres traçantes caleraient. Rien ne "
+           "l'arrête sinon la place elle-même — un sol déjà couvert le freine. À "
+           "cloisonner absolument (barrière anti-rhizome enterrée, bac) sous peine de "
+           "voir le bosquet avaler le jardin. Ses racines fibreuses assèchent le sol "
+           "au voisinage (compétition hydrique des graminées).",
+    },
+    "violette": {
+        1: "Tapis ras de petites feuilles en cœur, fleurs violettes parfumées "
+           "portées bas, très précoces au printemps.",
+        2: "Couvre-sol vivace de sous-bois, SCIAPHILE — elle prospère à l'ombre où "
+           "les héliophiles calent. Elle tapisse par courts STOLONS, mais le stolon "
+           "réclame un peu de lumière au sol pour enraciner sa fille : elle garnit "
+           "surtout les clairières et lisières, moins le cœur le plus sombre. "
+           "Floraison mellifère parmi les toutes premières de l'année.",
+        3: "Tapis d'ombre précieux : il habille le pied des arbres et des haies, "
+           "limite le sol nu là où peu de plantes tiennent, et offre l'une des "
+           "premières tables de nectar au sortir de l'hiver (bourdons fondateurs, "
+           "abeilles précoces). Son tapissage stolonifère s'auto-limite aux zones "
+           "assez claires — un couvre-sol discret qui ne verrouille jamais tout. "
+           "Comestible et médicinale (fleurs).",
     },
 
     # === Grimpantes (sprint Grimpantes ⑤) ===
