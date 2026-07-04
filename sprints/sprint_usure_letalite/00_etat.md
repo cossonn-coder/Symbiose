@@ -4,7 +4,8 @@
 > lire `CLAUDE.md` + ce fichier suffit à reprendre sans le fil de conversation.
 
 ## Phase courante
-**FIGÉ — prêt pour `/sprint-auto`.** Conception arbitrée + doc + 3 kickoffs écrits.
+**TRONÇONS ①②③ FAITS — SPRINT PRÊT À CLORE.** Reste à Nico : commit du bundle ②+③
++ F5 de validation (cf. §F5 et §REPRISE). Golden final INTACT `15073be1…`.
 Doc : `docs/conception/CONCEPTION_USURE_LETALITE.md`. Tronçons :
 `01_conflit_non_letal.md`, `02_cap_letalite_chronique.md`, `03_vue_godot.md`.
 
@@ -54,7 +55,23 @@ Doc : `docs/conception/CONCEPTION_USURE_LETALITE.md`. Tronçons :
     om_fresh/exsudats/humidité décalés de quelques millièmes). AUCUN système hors
     périmètre ne diverge, jamais le cœur du jardin ni les pérennes. Exactement le
     mort-éclair visé (philo #6).
-- **③ Vue Godot & F5** (`grimpantes`, rendu `ombre` déjà en place) — golden intact.
+- **③ Vue Godot & F5** (`grimpantes`, rendu `ombre` déjà en place) — **FAIT (vérif +
+  aucune modif)** le 2026-07-04. Chaîne de données VÉRIFIÉE de bout en bout sur
+  `grimpantes` (seed `0x5AB1057E`, départ w9, +44 sem) via le serializer RÉEL du pont
+  (`SerializeMixin._snapshot`) : le **tournesol-hôte@(2,2) SURVIT** (dead=False toute
+  l'année, atteint 225 cm → il gagne la lumière) et le **haricot@(2,3) porte un
+  `leaf_symptoms` `cause="ombre"` d'intensité CROISSANTE** (apparaît ~w37 à 0.038,
+  monte régulièrement → 0.17 à w53). Plus AUCUNE mort-éclair w12. C'est l'usure
+  lisible visée (philo #6). Mapping C# VÉRIFIÉ complet en lecture : `PlantRenderer.cs`
+  (`SetSymptoms`/`ColorantTints`) et `PlantRenderer.Organs.cs` mappent DÉJÀ `ombre`
+  (teinte `SymOmbre` + réduction calotte `_ombre`), `senescence` (`SymSenescence`),
+  `secheresse` (teinte + affaissement `_drought`) — **aucune cause de dépérissement
+  lent n'est orpheline** → conformément au kickoff (« aucun changement si tout est
+  déjà mappé ») **ZÉRO C# touché**. Volet (b) D64 (lisibilité auxiliaires) : DÉJÀ
+  noté « subsumé par D60 » dans la ligne D64 de DETTE.md → rien à ajouter.
+  - **✅ GOLDEN INTACT `15073be1a80bb2aedd686bdf09fe96e96b3979fa093fa494628f3ce4de8d6d62`**
+    (tranche VUE / lecture pure, aucun moteur touché — confirmé par `python3 -m
+    tests.test_golden` PASS).
 
 ## Le vrai bug (confirmé par repro, banc `grimpantes`, seed 42)
 Le tournesol-hôte de la démo ③ ne meurt PAS d'herbivorie ni de mortalité de fond
@@ -138,7 +155,40 @@ dans `_local_density`). Hors périmètre ici (mesure = pas d'embouteillage).
 Diagnostic seul pour l'instant. Toute option reste O(plantes) local, sans
 nouvelle passe spatiale globale → budget ≤ +10 %/tick tenable.
 
+## §F5 — protocole d'observation pour Nico (banc `grimpantes`)
+Objectif : VOIR à l'écran que « l'usure remplace la punition » sur le banc.
+1. Lancer Godot (F5), sélecteur de banc → `grimpantes` (= `init config="grimpantes"`,
+   départ mi-printemps w9 câblé par `BANC_WEEK_DEPART`). Seed par défaut du pont.
+2. Laisser tourner ~1 an simulé (jusqu'à ~w52). Cibler la tuile GRIMPE, coin haut-
+   gauche : le **tournesol@(2,2)** et le **haricot@(2,3)** collés l'un à l'autre.
+3. À VÉRIFIER (ce que la VM a déjà prouvé côté données) :
+   - **Le tournesol-hôte reste VIVANT toute l'année** et monte haut (~225 cm),
+     coiffant le haricot. **PLUS de disparition brutale vers w12** (l'ancienne
+     mort-éclair de conflit spatial est corrigée par ① — c'est LE point de non-
+     régression du sprint).
+   - **Le haricot voisin JAUNIT/DÉLAVE lentement** sous l'ombre du tournesol en
+     fin de saison (limbe pâle anémié `SymOmbre` + feuillage un peu plus terne au
+     nord, calotte éclairée réduite). Dépérissement PROGRESSIF, jamais une mort
+     sèche instantanée. L'intensité `ombre` reste modérée (~0.17 à w52) : le signe
+     est SUBTIL — regarder de près, comparer au haricot palissé (5,2) resté en
+     pleine lumière. Si Nico juge le signe trop faible pour être lu, c'est un
+     réglage de calibrage (seuil/amplitude), PAS un bug de chaîne (les données
+     sont bien là) → à verser en dette, pas à corriger dans ce sprint.
+4. Les 3 autres accroches (tuteur 5,2 / treillis 5,5 / mur lierre) et le potager sud
+   restent des témoins de contexte — rien de neuf à valider dessus ici.
+
 ## §REPRISE
+**SPRINT PRÊT À CLORE (2026-07-04).** Les 3 tronçons ①②③ sont FAITS côté VM.
+① (conflit non-létal, golden `007be139…`) commité. ② (cap létalité chronique,
+golden re-figé `15073be1…`) fait code. ③ (vue) = **vérification pure, ZÉRO code
+touché** : chaîne de données prouvée de bout en bout (hôte survit + `ombre`
+croissant sur le dominé), mapping C# déjà complet, golden **INTACT** `15073be1…`.
+**Reste à Nico** : (a) commit du bundle ②+③ non commité ; (b) **F5 de validation**
+sur le banc `grimpantes` selon §F5 ci-dessus (hôte survit, dominé s'ombre lentement,
+plus de mort-éclair). Rien d'autre à faire en dev sur ce sprint.
+Suite (séparée) : ouvrir une `/conception` pour **D65 luxuriance/stratification**.
+
+--- (historique tronçons ①② ci-dessous) ---
 **① CLOS et commité (2026-07-04).** `_resoudre_conflits` non-létal, golden re-figé
 `007be139…` (divergence avec `a1c9c51f…` du kickoff tranchée par preuve : log
 fantôme seul, état plantes identique — cf. Carte des tronçons). Suites ciblées
