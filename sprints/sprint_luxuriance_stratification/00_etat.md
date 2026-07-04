@@ -284,3 +284,9 @@ nombre de ramets → protège le LightField d'une explosion de plantes. Budget �
 À la clôture du sprint (après verdict F5 favorable) : **fermer D62 (absorbée)**,
 MAJ `DETTE.md` (D65 ✅) + `BACKLOG.md` + `journal/` (entrée de clôture) + mémoire
 projet. Conception FIGÉE `docs/conception/CONCEPTION_LUXURIANCE_STRATIFICATION.md`.
+
+**CLÔTURE DOCUMENTAIRE FAITE (2026-07-04, orchestrateur `/sprint-auto`)** :
+D62 ✅ FERMÉE + D65 ✅ FAIT dans `DETTE.md` ; `BACKLOG.md` marqué TERMINÉ ;
+`journal/100_2026-07-04_sprint-luxuriance-stratification-CLOS-sprint-terminé.md`
+écrit + pointeur `journal.md` ; mémoire projet à jour + feedback « plus de
+test_epaisseur_500ans » gravé. **Il ne reste que le F5 de Nico** (ci-dessus).
