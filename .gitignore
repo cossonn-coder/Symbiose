@@ -2,6 +2,16 @@
 .godot/
 /android/
 
+# UID sidecars Godot (D63) : générés localement par l'éditeur (F5 Windows) et
+# JAMAIS par la VM aveugle → source de friction git (pull « untracked would be
+# overwritten »). On n'en suit QUE ceux réellement référencés par uid:// :
+#   - core/SpriteLoader.cs.uid  → autoload project.godot (uid SEUL, sans path)
+#   - world/WorldView.cs.uid    → ext_resource de WorldView.tscn
+# Tous les autres sont régénérables librement par Godot → ignorés.
+*.uid
+!core/SpriteLoader.cs.uid
+!world/WorldView.cs.uid
+
 # Claude Code — permissions locales par utilisateur + verrou runtime
 .claude/settings.local.json
 .claude/scheduled_tasks.lock

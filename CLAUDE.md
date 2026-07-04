@@ -65,6 +65,16 @@ n'importent jamais les hautes). Imports absolus ; lancement depuis `data/code/`
 - Zoom par paliers entiers ×4 / ×8 / ×16 / ×32 — jamais de fraction
 - **Boucle hybride** : phase planification en temps figé ↔ phase saison
   de 15 minutes en temps réel (1 semaine = 60 secondes)
+- **Fichiers `.uid` Godot — politique git (D63, 2026-07-04)** : les sidecars
+  `.uid` sont générés par l'éditeur (F5 côté Windows) et **jamais par la VM
+  aveugle** → source de friction (`pull` « untracked would be overwritten »).
+  Règle : `*.uid` est **ignoré** (`.gitignore`), **sauf** ceux réellement
+  référencés par `uid://` — aujourd'hui **2 seulement** :
+  `core/SpriteLoader.cs.uid` (autoload `project.godot`, uid SEUL sans fallback
+  path) et `world/WorldView.cs.uid` (ext_resource de `WorldView.tscn`). Godot
+  régénère librement tous les autres. **Si un futur script devient référencé
+  par `uid://`** (nouvel autoload, ext_resource de scène), ajouter son `.uid`
+  en exception `!…` dans `.gitignore` et le committer.
 
 ## Philosophie de design — NE JAMAIS DÉRIVER
 
