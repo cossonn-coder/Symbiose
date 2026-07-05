@@ -102,10 +102,33 @@ port intégral.
 - numpy vectorisation du scatter grille.
 - Décimation macro (déjà pop-bornée, foragers n_max) — marge faible.
 
+## Tronçon ① — RÉSULTAT (profileur mémoire, 2026-07-05)
+Profileur FINALISÉ et EXÉCUTÉ (`tools/profile_memoire.py`, 128 LDC pur).
+- **Modifs** : RSS mesuré via `resource.getrusage(RUSAGE_SELF).ru_maxrss` (au lieu de
+  `tracemalloc`, overhead ~10× qui tuait le profil >240 s). Comptages par catégorie
+  inchangés. Log purgé chaque tick (comme le serveur `commands.py:156`) → RSS reflète
+  le jeu réel. Diagnostic durci : critère = **intensité PAR PLANTE (`catégorie/N`)** qui
+  grimpe (immune au départ à 0), plus le ratio de facteurs cassé.
+- **Échelle réellement exécutée : 8 tuiles × 4 ans** (1188 plots), 262 s. Suffisant pour
+  voir la tendance (N ×2,4 sur la fenêtre).
+- **VERDICT : AUCUNE fuite indépendante de N.** N_vivantes 534→1277 (×2,39), RSS 25→62 Mo
+  **en lockstep avec N**. Intensité/plante PLATE ou DÉCROISSANTE pour TOUT :
+  `sb_species/N` 0,125→0,104, `grilles`/`cellules_grille` **constants en absolu** (328
+  grilles, 48708 cellules — jamais alloués par tick), `journal` = 0 (FIFO borné), `log`
+  purgé. Le suspect nommé `SeedBank.species[r][c]` est **DÉJÀ purgé** par
+  `tick_species_aging` (`fields/seedbank.py:294-297`, `del cell[cls]` si densité < 1e-4,
+  appelé chaque semaine via `tick_seed_bank`) → self-bornant, réfuté par le code ET la
+  mesure. `data[r][c]` = 4 archétypes/plot fixes.
+- **COLMATAGE : AUCUN** (rien à borner — pas de fuite inerte). Le RSS SUIT N → **le
+  tronçon ③ (borner N) résout aussi la mémoire**. C'est la population non bornée (M1), pas
+  une fuite, qui fait planter le monde complet.
+- **Golden INTACT** : `061934db09ad646a01f19b8f4d0b677f13438e87bce2f8531527be425e7c22a8`
+  (outil lecture seule, aucun colmatage). Confirmé `python3 -m tests.test_golden` → PASS.
+
 ## §REPRISE
-Phase B (figeage). Arbitrages tranchés (A/C/départ ci-dessus). Reste à écrire :
-`docs/conception/CONCEPTION_PERF_RUN_ETERNEL.md` (dont le volet bio « capacité de charge /
-self-thinning » à ÉTUDIER par Nico), puis kickoffs `01`→`04`, puis commit + maj
-DETTE/BACKLOG/journal, puis message /clear + `/sprint-auto sprint_perf_run_eternel`.
-Golden actuel = smoke 2 tuiles × 4 ans (hash dans `tests/test_golden.py`). Tronçons ①②④
-golden INTACT ; ③ re-figeage MAÎTRISÉ annoncé.
+Tronçon ① CLOS (verdict : pas de fuite indépendante de N, RSS suit N, golden intact).
+**Prochain = tronçon ②** : `sprints/sprint_perf_run_eternel/02_*.md` — Spatial LOD
+LightField bit-identique + cache géométrique temps figé (`fields/light.py`), golden
+attendu INTACT. Puis ③ (capacité de charge émergente + backstop, re-figeage maîtrisé
+annoncé — c'est CE tronçon qui borne N et donc aussi la mémoire) puis ④ (vue Godot banc
+perf). Golden actuel = smoke 2 tuiles × 4 ans, hash ci-dessus dans `tests/test_golden.py`.
