@@ -234,8 +234,20 @@ def drought_stress_damage(plant: PlantInstance, eco,
 # un HÉLIOPHILE (tolérance < 1, ex. plante de pleine lumière) dépérit à l'ombre,
 # un SCIAPHILE (> 1) tient. Médiée par le gène `tolerance_ombre` × la base d'espèce
 # → vraie pression de sélection sur la sciaphilie (philo #2/#7), sans bonus direct.
-SHADE_DAMAGE_THRESHOLD = 0.6   # shade_memory au-delà de laquelle le tissu souffre
-SHADE_DAMAGE_RATE      = 0.10  # probabilité de base à mémoire d'ombre saturée
+# RESSERRÉ au sprint PERF ③ (vis B, self-thinning) : l'auto-éclaircie concourt au
+# plafonnement de N (§4.1, loi de Yoda). Seuil LÉGÈREMENT abaissé (0.6→0.55 : un
+# dominé entre en souffrance un peu plus tôt sous une ombre installée). Le TAUX
+# reste 0.10, BORNÉ PAR HAUT par un invariant de design (test_stress_chronique) :
+# un SCIAPHILE (tolérance à l'ombre haute) doit SURVIVRE à l'ombre profonde tandis
+# qu'un héliophile y meurt (sélection émergente #7). Toute hausse du taux tue AUSSI
+# le sciaphile (marge nulle mesurée au ③) → on n'y touche pas. AUCUN comptage de
+# voisins : c'est la lumière reçue (déjà baissée par les dominantes via l'ombre
+# LightField) qui porte la contrainte — flux → contrainte → réponse (philo #2). Les
+# adventices férales sont d'ailleurs SCIAPHILES (base 1.25) → la vis B mord peu sur
+# elles : le gros du plafonnement vient de la vis A (couverture→germination graduée),
+# pas d'ici. On n'avance le curseur d'onset que dans la marge que l'invariant tolère.
+SHADE_DAMAGE_THRESHOLD = 0.55  # shade_memory au-delà de laquelle le tissu souffre
+SHADE_DAMAGE_RATE      = 0.10  # probabilité de base (plafonnée par l'invariant sciaphile, §test_stress_chronique)
 
 
 def shade_stress_damage(plant: PlantInstance, eco,

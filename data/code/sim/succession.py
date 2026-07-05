@@ -16,6 +16,18 @@ from plants import WEED_CATALOGUE, PLANT_CATALOGUE, PERENNIAL_CATALOGUE
 from fields import SEED_ARCHETYPES, _hash_noise
 from fields.ecofields import (bell, T_GERM_FLOOR, GERM_GENE_SHIFT,
                               COUVERTURE_ADVENTICE_SEUIL)
+from sim.capacite import recrutement_bloque
+
+# Vis A (sprint PERF ③) — raideur de la réponse graduée « couverture → germination
+# férale ». Le facteur appliqué à `niche` est (1 − couverture)**COUVERTURE_GERM_EXP :
+# exposant 1 = décroissance linéaire ; > 1 = fenêtre qui se ferme PLUS VITE dès que
+# le tapis s'épaissit (le couvert étouffe plus tôt). CALIBRÉ au ③ (sweeps 2 tuiles ×
+# 10-14 ans) : exposant 4 + seuil dur abaissé à 0.5 amènent N à un PLATEAU stable
+# (~190 pour 2 tuiles, oscillation saisonnière ~15 %, non croissante) là où
+# exposant 2 laissait N dériver vers le haut. Le plateau VARIE par tuile
+# (NO ~100 / N ~80 : fertilité/lumière → #7 préservée). Plot nu (couverture=0) →
+# facteur 1.0 quel que soit l'exposant → golden neutre au démarrage.
+COUVERTURE_GERM_EXP = 4.0
 
 
 def _germ_gene_mean(eco, r: int, c: int, plant_class: type) -> float:
@@ -193,6 +205,14 @@ def succession(game_state: dict, tile, eco, week: int) -> list[str]:
             occupied_roots.update(p.root_plots)
             occupied_roots.add(p.position)
 
+    # Backstop PUR-perf (sprint PERF ③) : si la tuile a atteint le cap dur, on gèle
+    # TOUT recrutement de ce tick (grains plantés + adventices férales). Disjoncteur
+    # anti-pathologie, jamais atteint en jeu normal (cf. sim/capacite.py) → en
+    # régime calibré ce court-circuit ne se prend pas, golden neutre.
+    if recrutement_bloque(tile):
+        log.append(f"    ⚠ cap perf tuile {tile.tile_id} atteint (recrutement gelé)")
+        return log
+
     # Levée des graines plantées (event-driven) AVANT les adventices : un grain
     # déposé a priorité sur la germination spontanée du plot.
     log += _lever_grains_en_attente(game_state, tile, eco, week, seed,
@@ -207,14 +227,21 @@ def succession(game_state: dict, tile, eco, week: int) -> list[str]:
             if not tile.is_valid_plot(r, c):
                 continue
 
-            # Gate COUVERTURE DU SOL (sprint LUXURIANCE ①, D65 §2.1) : un plot déjà
-            # densément tapissé par un couvre-sol ÉTOUFFE la levée SPONTANÉE des
-            # adventices — bénéfice permacole réel (le couvert supprime la concurrence
-            # pionnière). Déterministe (seuil dur, zéro RNG). Ne s'applique QU'À la
-            # germination férale : les grains PLANTÉS (geste délibéré du joueur, levés
-            # plus haut) ne sont pas concernés. Couverture nulle/faible (golden au
-            # démarrage, plots nus) → jamais franchi → germination inchangée.
-            if eco.couverture_sol.at_plot(r, c) >= COUVERTURE_ADVENTICE_SEUIL:
+            # Gate COUVERTURE DU SOL (sprint LUXURIANCE ①, D65 §2.1 ; RESSERRÉ au
+            # sprint PERF ③, vis A). Un plot tapissé par un couvre-sol ÉTOUFFE la
+            # levée SPONTANÉE des adventices — bénéfice permacole réel (le couvert
+            # supprime la concurrence pionnière) ET frein de recrutement qui borne N
+            # (arbitrage A). La réponse est désormais GRADUÉE (philo #2 : le flux
+            # « ombre au sol du couvert » → la contrainte « fenêtre de germination
+            # rétrécie » de façon continue, non plus un seuil binaire) : au-dessus du
+            # seuil la levée reste totalement étouffée (cutoff dur conservé) ; EN
+            # DESSOUS, `niche` est atténuée par (1 − couverture) → plus le tapis se
+            # ferme, plus la fenêtre se resserre, jusqu'à l'extinction au seuil.
+            # Déterministe (zéro RNG). N'affecte QUE la germination férale (les grains
+            # PLANTÉS, geste délibéré, sont levés plus haut). Couverture nulle (golden
+            # au démarrage, plots nus) → facteur 1.0 → germination inchangée.
+            couverture = eco.couverture_sol.at_plot(r, c)
+            if couverture >= COUVERTURE_ADVENTICE_SEUIL:
                 continue
 
             # Densité racinaire voisine normalisée
@@ -231,6 +258,13 @@ def succession(game_state: dict, tile, eco, week: int) -> list[str]:
             niche = eco.seed_bank.niche_index(
                 r, c, light, root_density, disturbance, soil_deep
             )
+
+            # Vis A — frein de recrutement GRADUÉ par la couverture (sprint PERF ③) :
+            # sous le seuil dur, la fenêtre de germination férale rétrécit avec le
+            # couvert établi, en (1 − couverture)**COUVERTURE_GERM_EXP (raideur
+            # calibrée). Plot nu (couverture=0) → ×1.0 (golden neutre au démarrage) ;
+            # tapis dense → fenêtre quasi fermée bien avant le seuil dur.
+            niche *= (1.0 - couverture) ** COUVERTURE_GERM_EXP
 
             if niche < 0.01:
                 continue

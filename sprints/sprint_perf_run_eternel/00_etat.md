@@ -155,12 +155,69 @@ Deux leviers livrés, tous deux BIT-IDENTIQUES (golden intact) :
   `fields/light_index.py` (31 LDC). Imports intacts. Pas de C#.
 - **NON COMMITTÉ** (consigne : orchestrateur commit).
 
+## Tronçon ③ — RÉSULTAT (capacité de charge émergente + backstop, 2026-07-05)
+Population BORNÉE par deux freins écologiques resserrés + un disjoncteur perf. N(t)
+PLAFONNE désormais au lieu de croître sans fin (cause racine M1 traitée → borne aussi
+la mémoire, cf. ①).
+
+- **Vis A — couverture→germination GRADUÉE** (`sim/succession.py`,
+  `fields/ecofields/constants.py`). La réponse binaire est devenue continue : le
+  facteur `(1 − couverture)**COUVERTURE_GERM_EXP` multiplie `niche` sous le seuil dur,
+  fenêtre de germination férale qui se ferme d'autant plus vite que le tapis
+  s'épaissit (philo #2 : flux couvert → contrainte fenêtre → réponse). **Réglages
+  retenus : `COUVERTURE_GERM_EXP = 4.0` (succession.py) + `COUVERTURE_ADVENTICE_SEUIL`
+  abaissé 0.6→0.5 (constants.py)**. Les grains PLANTÉS (geste joueur) ne sont pas
+  concernés. Reproduction férale (`_reproduction`) grène dans la banque-sol → lève via
+  `succession` → subit le MÊME frein ; ramets clonaux gardent leur gate couverture
+  (`COUVERTURE_SATURATION=0.85`, `sim/clonal.py`).
+- **Vis B — self-thinning** (`sim/effects/perturbations.py`, `shade_stress_damage`) :
+  seuil abaissé **0.6→0.55** (souffrance un peu plus tôt). **Le taux reste 0.10** :
+  BORNÉ PAR HAUT par l'invariant `test_stress_chronique` (un sciaphile doit SURVIVRE à
+  l'ombre profonde) — toute hausse tue aussi le sciaphile (marge nulle mesurée). Les
+  adventices férales sont sciaphiles (base 1.25) → la vis B mord peu sur elles ; **le
+  gros du plafonnement vient de la vis A**.
+- **Backstop PUR-perf** (`sim/capacite.py` NOUVEAU, 4 LDC pur) : `CAP_PERF_TUILE = 800`,
+  `recrutement_bloque(tile)` gèle levée férale + grains + reproduction + ramets quand
+  `len(alive) ≥ cap`, logge `⚠ cap perf tuile T atteint`. Importé par `succession`,
+  `clonal`, `mortalite`. Disjoncteur : ~4-5× le plus grand plateau plausible, **ne fire
+  JAMAIS** en jeu normal (vérifié : cap=30 forcé borne bien N, cap=800 jamais atteint au
+  smoke).
+- **PLATEAU observé** (échelle testée : 2 tuiles × 14 ans, `tools/profile_capacite.py`,
+  sweeps via importlib) : trajectoire N `13 136 146 161 165 183 191 206 184 205 178 218
+  192 204 201` → **stable band ~178-218 (moyenne ~197, ±10 %) à partir de l'an 6, SANS
+  tendance haussière sur 8 ans** (an6=183 → an14=201, plat). Plateaux **par tuile
+  différents** : NO ~105, N ~96 → **#7 préservé**. Baseline avant ③ : N grimpait sans
+  borne (188→214→...→446 sur 3 tuiles). Comparatif exposant : exp=2 laissait N dériver
+  vers le haut (271, croissant), exp=4 stabilise.
+- **Golden RE-FIGÉ MAÎTRISÉ ANNONCÉ** : ancien
+  `061934db09ad646a01f19b8f4d0b677f13438e87bce2f8531527be425e7c22a8` →
+  **nouveau `84d359834f7b22d6a072e5c14def5c5326ecb9d4e7d3dafdb0a27d10caab5f54`**.
+  Justification : *frein de recrutement resserré (vis A graduée seuil 0.5/exp 4) + onset
+  self-thinning avancé (vis B seuil 0.55) → dérive LOCALISÉE (44→42 plantes vivantes au
+  smoke, 2 germinations férales tardives supprimées), 0 NaN/inf, ordre déterministe
+  intact, cap PUR-perf jamais firé*. Suites ciblées OK : `test_stress_chronique` (invariant
+  sciaphile), competition, population, signes, planter, couplage, lifecycle, mycelium,
+  vent, substrat, conteneur.
+- **Fichiers** : `sim/succession.py` (+ import + exposant + frein gradué + guard cap),
+  `fields/ecofields/constants.py` (seuil 0.5), `sim/effects/perturbations.py` (vis B),
+  `sim/clonal.py` (+ guard cap), `sim/engine/mortalite.py` (+ guard cap), NOUVEAU
+  `sim/capacite.py`, NOUVEAU `tools/profile_capacite.py` (harness calibrage per-tile).
+  Pas de C#. **NON COMMITTÉ** (orchestrateur commit).
+- **Digest satellite `test_population` re-figé (même cause, extension du re-figeage
+  annoncé)** : le hash interne de `tests/test_population.py` (60 semaines, densités de
+  vie macro pucerons/limaces/pollinisateurs/lombrics) dépend de la végétation présente ;
+  ③ change la végétation (moins de levées férales, self-thinning avancé) → ce digest
+  dérive pour la MÊME cause que le golden principal. Les 6 invariants STRUCTURELS de la
+  suite passent (dormance, photopériode, bornes densité ∈[0,POP_MAX], cap sprites,
+  stabilité des positions) → dérive localisée, pas un bug. `population_hash.txt` re-figé
+  `5a1873db…` → `c2b4a01d…`, re-vérifié PASS. Reste de la suite (46 suites hors 500 ans) VERT.
+
 ## §REPRISE
-Tronçons ① et ② CLOS (① : pas de fuite indépendante de N ; ② : spatial hash + cache
-géométrique bit-identiques, LightField −57 %, golden intact). **Prochain = tronçon ③** :
-`sprints/sprint_perf_run_eternel/03_*.md` — capacité de charge émergente
-(couverture→germination `sim/succession.py` + self-thinning voie `shade_stress_damage`)
-+ backstop cap dur par tuile ; c'est CE tronçon qui borne N (donc aussi la mémoire) et
-qui **re-fige le golden de façon MAÎTRISÉE et ANNONCÉE**. Puis ④ (vue Godot banc perf,
-golden intact). Golden actuel = smoke 2 tuiles × 4 ans, hash ci-dessus dans
-`tests/test_golden.py`.
+Tronçons ①②③ CLOS (① pas de fuite indépendante de N ; ② spatial hash + cache
+bit-identiques −57 % ; ③ **N BORNÉ = plateau émergent ~197/2 tuiles + backstop cap 800**,
+golden re-figé maîtrisé `84d35983…`). **Prochain = tronçon ④** :
+`sprints/sprint_perf_run_eternel/04_*.md` — vue Godot banc d'observation perf (compteur
+debug ms/tick + N plantes + RSS, banc F5 longue durée de la stabilisation). Golden INTACT
+attendu (④ ne touche pas le moteur). Golden actuel = smoke 2 tuiles × 2 ans, hash
+`84d359834f7b22d6a072e5c14def5c5326ecb9d4e7d3dafdb0a27d10caab5f54` dans
+`tests/golden_hash.txt`.

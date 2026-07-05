@@ -294,7 +294,7 @@ WORM_DECOMP_BONUS = 0.25   # densité ver [0,1] → bonus additif à `speed` (kn
 #      plantés, qui restent un geste délibéré du joueur).
 # PLACEHOLDERS, calibrage F5 / bancs d'essai.
 COUVERTURE_EVAP_FRAC     = 0.4   # part du chemin evap→1.0 (rétention) à couverture pleine
-COUVERTURE_ADVENTICE_SEUIL = 0.6  # couverture au-delà de laquelle la germination férale est étouffée
+COUVERTURE_ADVENTICE_SEUIL = 0.5  # couverture au-delà de laquelle la germination férale est ÉTOUFFÉE (cutoff dur). ABAISSÉ 0.6→0.5 au sprint PERF ③ (vis A) : combiné à la réponse graduée (1−couverture)**COUVERTURE_GERM_EXP de `succession`, resserre le recrutement jusqu'au plateau de N (capacité de charge émergente, cf. sim/succession)
 # Seuil de PERCEPTION du tapis pour la vue (sprint LUXURIANCE ⑥, exposition au pont) :
 # le bloc creux `couverture` du snapshot n'inscrit que les plots dont la couverture
 # dépasse ce plancher (sous quoi le tapis est invisible à l'œil). Purement cosmétique

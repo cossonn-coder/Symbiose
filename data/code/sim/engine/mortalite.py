@@ -18,6 +18,7 @@ from fields import (_hash_noise, SENESCENCE_ONSET, SEN_RATE, HEAL_RATE,
 from sim.effects import apply_mutations, ReduceHealth, deposer_mort
 from sim.reproduction import (find_father, child_genes, child_expression,
                               is_seed_bearing)
+from sim.capacite import recrutement_bloque
 from sim.growth import est_etiole
 from .aleas import (PAILLAGE_PROTECT, DAMAGE_STEP, WIND_DAMAGE_SEUIL,
                     WIND_SEVERITY_REF, WIND_ETIOLE_SUSCEPT)
@@ -153,6 +154,11 @@ class MortaliteMixin:
         Déterministe (_hash_noise / hash_gauss).
         """
         log = []
+        # Backstop PUR-perf (sprint PERF ③) : tuile au cap dur → aucune reproduction
+        # (ni dépôt banque-sol, ni recrutement direct) ce tick. Disjoncteur jamais
+        # atteint en jeu normal (cf. sim/capacite.py) → golden neutre en régime calibré.
+        if recrutement_bloque(tile):
+            return [f"    ⚠ cap perf tuile {tile.tile_id} atteint (reproduction gelée)"]
         seed = self.game_state.get("seed", 42)
         occupied: set[tuple] = set()
         for p in tile.plants:

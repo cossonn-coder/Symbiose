@@ -34,6 +34,7 @@ import math
 from constants import PLOT_CM
 from fields import _hash_noise
 from sim.vigueur_plante import vigueur_plante
+from sim.capacite import recrutement_bloque
 
 # --- Constantes (près du module, pas dans plants — règle de couches) ---
 # Gate de couverture : au-delà de cette fraction couverte, le plot cible est
@@ -115,6 +116,10 @@ def emettre_ramets(tile, eco, seed: int, week: int) -> list[str]:
     Déterministe (philo #3). No-op si aucune clonale mature → golden NEUTRE hors
     trèfle stolonifère du smoke. Renvoie les lignes de log (diégétiques)."""
     log = []
+    # Backstop PUR-perf (sprint PERF ③) : tuile au cap dur → aucun ramet ce tick.
+    # Disjoncteur jamais atteint en jeu normal (cf. sim/capacite.py).
+    if recrutement_bloque(tile):
+        return log
     for mother in list(tile.plants):
         if not mother.is_alive:
             continue
