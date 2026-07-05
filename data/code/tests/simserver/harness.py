@@ -25,6 +25,29 @@ SERVER_CMD = [SERVER_BIN] if SERVER_BIN else [sys.executable, SERVER]
 
 _results = []
 
+# Champs perf VOLATILS (durée du tick, RSS du process) ajoutés au snapshot en
+# D66④ (bloc `perf`) : instruments de debug non déterministes PAR NATURE (chrono
+# et mémoire varient d'un process à l'autre). On les NEUTRALISE avant toute
+# comparaison byte-à-byte de déterminisme — sinon les 6 tests « byte-identiques »
+# échouent à tort alors que la SIMULATION, elle, est parfaitement déterministe.
+# `n_plants` (déterministe) est conservé : seuls chrono/mémoire sont volatils.
+_PERF_VOLATILE = ("ms_tick", "rss_mo")
+
+
+def _scrub(line: str) -> str:
+    """Réponse normalisée pour le déterminisme : met à None les champs perf
+    volatils du `snapshot` (présents dans les réponses step_week/snapshot/action)
+    et re-sérialise en clés triées. Une ligne non-JSON revient inchangée."""
+    try:
+        obj = json.loads(line)
+    except (json.JSONDecodeError, TypeError):
+        return line
+    snap = obj.get("snapshot") if isinstance(obj, dict) else None
+    if isinstance(snap, dict) and isinstance(snap.get("perf"), dict):
+        for k in _PERF_VOLATILE:
+            snap["perf"][k] = None
+    return json.dumps(obj, sort_keys=True)
+
 
 def check(name, cond, detail=""):
     _results.append((name, bool(cond)))
@@ -40,15 +63,16 @@ class ServerProc:
             SERVER_CMD, cwd=CODE_DIR,
             stdin=subprocess.PIPE, stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL, text=True)
-        self.raw_lines = []          # réponses brutes (pour le déterminisme)
+        self.raw_lines = []          # réponses NORMALISÉES (perf volatile neutralisé),
+        #                              seul usage = la comparaison de déterminisme
 
     def send_raw(self, line: str) -> str:
         """Écrit une ligne brute, lit UNE ligne de réponse (protocole 1↔1)."""
         self.proc.stdin.write(line + "\n")
         self.proc.stdin.flush()
         resp = self.proc.stdout.readline().rstrip("\n")
-        self.raw_lines.append(resp)
-        return resp
+        self.raw_lines.append(_scrub(resp))   # normalisé : perf volatile neutralisé
+        return resp                            # brut pour l'appelant (json.loads)
 
     def send(self, **msg) -> dict:
         return json.loads(self.send_raw(json.dumps(msg)))

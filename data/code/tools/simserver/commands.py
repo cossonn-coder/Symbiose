@@ -27,6 +27,7 @@ from bancs import BANCS, BANC_WEEK_DEPART
 
 from .version import ENGINE_VERSION
 from .maitrise_pont import observer_apres_tick  # chaîne de maîtrise après tick (voix ①)
+from . import perf   # capture des pires ticks + dump diagnostique (demande Nico 2026-07-05)
 
 # Kit de démarrage déposé dans la banque-joueur, UNIQUEMENT en config "full" (le
 # monde de jeu réel, celui du F5) : une graine de chaque, pour tester `planter`
@@ -112,6 +113,9 @@ class CommandsMixin:
             "player_seed_bank": banque if banque is not None else _banque_initiale(config),
         }
         self.engine = Engine(game_state)
+        # Traqueur des pires ticks (demande Nico) : mémoire des K ticks les plus
+        # longs + dump diagnostique sur disque au record. Neuf à chaque init.
+        self._worst = perf.WorstTicks()
         # Brancher la Vigueur joueur (tranche 4) : l'OPT-IN se fait ICI, pas
         # dans le moteur. Dès que la clé `vigueur` existe, le tick existant
         # (engine.py, gardé par `if "vigueur" in game_state`) fait seul la
@@ -148,6 +152,10 @@ class CommandsMixin:
         with contextlib.redirect_stdout(sys.stderr):
             self.engine.tick_semaine()
         self._last_ms_tick = (time.perf_counter() - _t0) * 1000.0
+        # Capture des pires ticks (demande Nico) : soumet la durée mesurée ; le
+        # traqueur ne construit un dump QUE si ce tick entre dans le top-K → coût
+        # nul sur les ticks ordinaires. Hors tick moteur → golden intact.
+        self._worst.consider(self._last_ms_tick, self.engine)
         # Voix narratives ② : consigner le `log` du tick au ledger AVANT de le
         # vider — hors tick, après la simulation, exactement comme un hook
         # `detecter()`/`tick_player_vigueur()`. L'OPT-IN se fait ici (le serveur
@@ -171,6 +179,18 @@ class CommandsMixin:
         if self.engine is None:
             return {"ok": False, "error": "snapshot avant init"}
         return {"ok": True, "snapshot": self._snapshot()}
+
+    def cmd_perf_report(self, msg: dict) -> dict:
+        """Rapport perf enrichi (demande Nico) : les K pires ticks accumulés (avec
+        leur dump : répartition par tuile / par espèce / segments) + l'état
+        courant. Lu par le presse-papier Godot (touche C). PURE lecture d'un état
+        déjà traqué → golden NEUTRE."""
+        if self.engine is None:
+            return {"ok": False, "error": "perf_report avant init"}
+        return {"ok": True,
+                "worst": self._worst.dumps,
+                "current": perf.diagnostic(
+                    self.engine, getattr(self, "_last_ms_tick", None) or 0.0)}
 
     def cmd_fields(self, msg: dict) -> dict:
         """Mode debug champs écologiques (tranche 6·C, kickoff §8). Sans

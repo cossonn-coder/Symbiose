@@ -50,6 +50,17 @@ namespace Symbiose
 
 		private Process _proc;
 
+		// Verrou d'I/O du pipe : le pont est appelé depuis DEUX mondes — le thread
+		// principal (voix/init/skip, appels SYNCHRONES) et les threads du pool
+		// (Task.Run step/action/fields). Le garde `PipeFree` côté WorldView ne
+		// coordonne que les lancements async ENTRE EUX ; il n'empêche pas un appel
+		// synchrone du thread principal de chevaucher une Task déjà en vol. Sans
+		// verrou, deux threads font WriteLine+ReadLine en même temps → les lignes
+		// JSON s'entrelacent → « Réponse non-JSON » puis désync permanente du tube.
+		// Ce lock rend chaque échange write→read ATOMIQUE : c'est le « maître/esclave
+		// strict » que l'en-tête promet, enfin garanti quel que soit l'appelant.
+		private readonly object _ioLock = new object();
+
 		public bool IsAlive => _proc != null && !_proc.HasExited;
 
 		// -------------------------------------------------------------------
@@ -164,6 +175,14 @@ namespace Symbiose
 			var resp = Request(new GDict { ["cmd"] = "snapshot" });
 			return resp?["snapshot"].AsGodotDictionary();
 		}
+
+		/// <summary>
+		/// Rapport perf enrichi (demande Nico) : `worst` = liste des K pires ticks
+		/// (dump par tuile/espèce/segments) + `current` = état courant. Read-only,
+		/// lu par le presse-papier (touche C). Synchrone — le verrou d'I/O rend
+		/// l'appel sûr même si une Task step/fields est en vol. Null si pas de moteur.
+		/// </summary>
+		public GDict PerfReport() => Request(new GDict { ["cmd"] = "perf_report" });
 
 		/// <summary>
 		/// Geste joueur (protocole v1, tranche 4) : verbe + cible + params.
@@ -339,10 +358,17 @@ namespace Symbiose
 				GD.PrintErr("[SimBridge] Requête sur un moteur non démarré/mort.");
 				return null;
 			}
-			_proc.StandardInput.WriteLine(Json.Stringify(msg));
-			_proc.StandardInput.Flush();         // symétrique du flush=True Python
-
-			string line = _proc.StandardOutput.ReadLine();
+			// Write→read SOUS VERROU (cf. _ioLock) : l'échange doit être atomique
+			// pour que deux threads ne s'entrelacent jamais sur le pipe. Le parse
+			// (coûteux, mais local) se fait APRÈS, hors verrou — inutile de le
+			// sérialiser, seul l'accès au tube l'exige.
+			string line;
+			lock (_ioLock)
+			{
+				_proc.StandardInput.WriteLine(Json.Stringify(msg));
+				_proc.StandardInput.Flush();     // symétrique du flush=True Python
+				line = _proc.StandardOutput.ReadLine();
+			}
 			if (line == null)                    // EOF = le serveur est mort
 			{
 				GD.PrintErr("[SimBridge] Le moteur Python s'est arrêté (EOF).");

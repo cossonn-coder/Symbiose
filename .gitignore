@@ -33,3 +33,6 @@ sim_server.exe
 # pas des sources). Sorties du suivi au Sprint refactor global (SS①).
 data/code/tools/*.svg
 data/code/tools/*.svg.import
+
+# Dumps runtime des pires ticks (capture perf, demande Nico 2026-07-05)
+perf_dumps/

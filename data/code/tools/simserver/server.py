@@ -28,6 +28,9 @@ def main() -> int:
     dispatch = {"init": server.cmd_init,
                 "step_week": server.cmd_step_week,
                 "snapshot": server.cmd_snapshot,
+                # Rapport perf enrichi (demande Nico) : top-K pires ticks + état
+                # courant, lu par le presse-papier Godot (touche C). Read-only.
+                "perf_report": server.cmd_perf_report,
                 "action": server.cmd_action,
                 "fields": server.cmd_fields,
                 "list_bancs": server.cmd_list_bancs,

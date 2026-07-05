@@ -55,6 +55,7 @@ namespace Symbiose
 					case Key.M:        CycleSimMode();    break;
 					case Key.F3:       ToggleLabels();    break;
 					case Key.F4:       TogglePerf();      break;
+					case Key.C:        CopyPerfReport();  break;  // presse-papier perf
 					case Key.H:        ToggleHouseGhost(); break;
 					case Key.O:        ToggleShadows();   break;
 					case Key.I:        ToggleMacroLife(); break;
