@@ -9,6 +9,7 @@ le moteur exactement comme main.py et tests/test_golden.py → golden intact.
 from __future__ import annotations
 import contextlib
 import sys
+import time
 
 from world import House
 from sim.engine import Engine
@@ -135,8 +136,18 @@ class CommandsMixin:
         # stdout est RÉSERVÉ au protocole : tick_semaine() ne print pas (vérifié
         # — seul run_years(verbose=True) le fait), mais on blinde contre une
         # évolution future du moteur en déviant tout print vers stderr.
+        #
+        # Banc d'observation perf (sprint « run éternel » ④) : on chronomètre
+        # AUTOUR du tick, jamais DEDANS — le moteur n'est pas instrumenté, on
+        # mesure ce que le serveur voit (règle d'or : on ajoute au SNAPSHOT, pas
+        # au tick → golden intact par construction). `perf_counter` = horloge
+        # monotone haute résolution, immune aux sauts d'heure système. La valeur
+        # est simplement STOCKÉE sur self ; `_snapshot()` (serialize.py) la
+        # relit pour composer le bloc `perf`. Aucune écriture moteur.
+        _t0 = time.perf_counter()
         with contextlib.redirect_stdout(sys.stderr):
             self.engine.tick_semaine()
+        self._last_ms_tick = (time.perf_counter() - _t0) * 1000.0
         # Voix narratives ② : consigner le `log` du tick au ledger AVANT de le
         # vider — hors tick, après la simulation, exactement comme un hook
         # `detecter()`/`tick_player_vigueur()`. L'OPT-IN se fait ici (le serveur

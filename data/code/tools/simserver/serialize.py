@@ -8,6 +8,7 @@ met en forme — c'est ce qui garantit que le golden reste intact.
 from __future__ import annotations
 
 from sim.engine import saison_de
+from .perf import perf_block   # banc d'observation perf (④) : RSS + assemblage
 from sim import vigueur as V      # état Vigueur joueur (ensure/spend/gain, D11)
 # Météo PURE (sprint thermique ⑧) : helper consolidé partagé avec l'engine
 # (boucle.py étape 1) + signes diégétiques + cas calme. Recalculés ici car le
@@ -416,11 +417,21 @@ class SerializeMixin:
         bank = gs.get("player_seed_bank")
         seeds = {sp: len(lot) for sp, lot in bank.lots.items()
                  if lot} if bank is not None else {}
+        # Banc d'observation perf (sprint « run éternel » ④) : bloc LECTURE SEULE
+        # pour l'overlay debug F4 côté Godot — `ms_tick` (durée du dernier tick,
+        # mesurée AUTOUR de tick_semaine() dans commands.py, None si rien encore
+        # simulé), `n_plants` (VIVANTES du snapshot, l'axe qui doit plafonner),
+        # `rss_mo` (RSS du process serveur, la mémoire qui doit se stabiliser
+        # avec N). Le tout dérive d'un état déjà calculé → golden NEUTRE : le
+        # golden tourne hors serveur, ce bloc n'existe jamais pour lui.
+        n_plants = sum(1 for p in plants if not p.get("dead"))
+        perf = perf_block(getattr(self, "_last_ms_tick", None), n_plants)
         return {"week": week, "week_in_year": week_in_year,
                 "year": (week - 1) // 52 + 1, "season": saison,
                 "player": {"vigueur": st["courante"],
                            "vigueur_max": V.vigueur_max(gs, player),
                            "seeds": seeds},
+                "perf": perf,
                 "plants": plants, "sprites": sprites, "foragers": foragers,
                 "carpophores": carpophores,
                 "structures": structures, "supports": supports,

@@ -45,6 +45,17 @@ namespace Symbiose
 		private int _nSegments;                // segments dessinés (snapshot)
 		private int _nPousses;                 // plantes sans segments
 
+		// --- Banc d'observation perf (sprint « run éternel » ④) --------------
+		// Mesures CÔTÉ SERVEUR lues dans le bloc `perf` du snapshot (serialize.py) :
+		// `ms/tick` chronométré AUTOUR de tick_semaine() (≠ tick CLIENT ci-dessus,
+		// qui inclut pipe+parse — les deux se comparent), N plantes VIVANTES et RSS
+		// du process moteur. Le VRAI banc de la stabilisation : en turbo longue durée
+		// sur le monde complet, `N plantes` doit PLAFONNER (③) et `tick moteur` cesser
+		// de doubler d'année en année. -1 = pas encore reçu (tolérance pré-perf).
+		private double _srvMsTick = -1;        // ms du dernier tick_semaine() (serveur)
+		private int _srvNPlants = -1;          // plantes vivantes (snapshot serveur)
+		private double _srvRssMo = -1;         // RSS process serveur (Mo)
+
 		// -------------------------------------------------------------------
 		// HUD PROVISOIRE — horloge + état, instrument de validation de la
 		// tranche 3. Le HUD définitif (philo #5 : pas de chiffres en HUD
@@ -237,8 +248,16 @@ namespace Symbiose
 			string tick = _lastTickMs < 0 ? "—" : $"{_lastTickMs:F0} ms";
 			string cad = _lastWeekGapSec <= 0 ? "—"
 				: $"{_lastWeekGapSec:F1} s/sem ({7.0 / _lastWeekGapSec:F1} j/s)";
+			// Banc d'observation perf (④) — ligne SERVEUR : les 3 observables du
+			// snapshot `perf` (mesurés côté moteur, cf. serialize.py). C'est CETTE
+			// ligne qu'on lit en turbo longue durée : `N` doit plafonner, `moteur`
+			// cesser de dériver. Le `tick` client au-dessus inclut pipe+parse ; ici
+			// c'est le tick_semaine() PUR — les comparer isole le coût du pont.
+			string srvTick = _srvMsTick < 0 ? "—" : $"{_srvMsTick:F1} ms";
+			string srvRss = _srvRssMo < 0 ? "—" : $"{_srvRssMo:F0} Mo";
+			string srvN = _srvNPlants < 0 ? "—" : _srvNPlants.ToString();
 			_perfLabel.Text =
-				$"FPS {Engine.GetFramesPerSecond():F0} · tick {tick} · cadence {cad}\n"
+				$"[debug] FPS {Engine.GetFramesPerSecond():F0} · tick {tick} · cadence {cad}\n"
 				+ $"plantes {_plantNodes.Count} (+{_nPousses} pousses) · "
 				+ $"segments {_nSegments} · vie macro "
 				+ (_macroLife == null ? "—"
@@ -247,7 +266,9 @@ namespace Symbiose
 					: _macroLife.Count.ToString()) + " · "
 				+ $"butineurs {(_foragerLayer == null ? "—" : _foragerLayer.Count.ToString())} · "
 				+ $"ombres {(ShadowsOn ? "ON" : "OFF")} · "
-				+ $"zoom ×{ZoomSteps[_zoomIndex]}";
+				+ $"zoom ×{ZoomSteps[_zoomIndex]}\n"
+				+ $"serveur (banc perf) — tick moteur {srvTick} · "
+				+ $"N plantes {srvN} · RSS {srvRss}";
 		}
 
 		// Refus métier → flash rouge de la 2e ligne (kickoff B·12 : pas de

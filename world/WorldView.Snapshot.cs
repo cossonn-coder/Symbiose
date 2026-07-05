@@ -228,6 +228,21 @@ namespace Symbiose
 
 			_nSegments = nSegs;
 			_nPousses = empty;
+
+			// Banc d'observation perf (sprint « run éternel » ④) : bloc `perf` du
+			// snapshot (serialize.py), mesures côté MOTEUR. Lecture TOLÉRANTE : un
+			// snapshot pré-perf n'a pas le bloc → l'overlay F4 garde ses tirets. La
+			// vue OBSERVE, elle ne décide rien (Option B). `ms_tick` est null au
+			// snapshot post-init (rien encore simulé) → on retombe sur -1.
+			if (snap.ContainsKey("perf"))
+			{
+				var perf = snap["perf"].AsGodotDictionary();
+				var mt = perf["ms_tick"];
+				_srvMsTick = mt.VariantType == Variant.Type.Nil ? -1 : mt.AsDouble();
+				_srvNPlants = perf["n_plants"].AsInt32();
+				var rss = perf["rss_mo"];
+				_srvRssMo = rss.VariantType == Variant.Type.Nil ? -1 : rss.AsDouble();
+			}
 			GD.Print($"[WorldView] {season} an {_year}, semaine {_weekInSeason}/13 : "
 					 + $"{_plantNodes.Count} plantes (+{born} −{dead.Count}, "
 					 + $"{grown} maj, {empty} sans segments).");

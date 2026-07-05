@@ -212,12 +212,54 @@ la mémoire, cf. ①).
   stabilité des positions) → dérive localisée, pas un bug. `population_hash.txt` re-figé
   `5a1873db…` → `c2b4a01d…`, re-vérifié PASS. Reste de la suite (46 suites hors 500 ans) VERT.
 
+## Tronçon ④ — RÉSULTAT (vue Godot — banc d'observation perf, 2026-07-05)
+Compteur perf debug livré, MESURÉ CÔTÉ MOTEUR (snapshot lecture seule) + affiché
+dans l'overlay F4 existant. Golden INTACT (bloc `perf` neutre par construction).
+
+- **Champ snapshot `perf`** (côté serveur, PUR-LECTURE) : bloc
+  `{ms_tick, n_plants, rss_mo}` ajouté au SNAPSHOT (jamais au tick — règle d'or).
+  - `ms_tick` chronométré AUTOUR de `tick_semaine()` dans `commands.py`
+    (`time.perf_counter()` avant/après, valeur stockée sur `self._last_ms_tick`) —
+    le moteur n'est PAS instrumenté. `None` au snapshot post-init (rien simulé).
+  - `n_plants` = plantes VIVANTES du snapshot (comptées dans `_snapshot`).
+  - `rss_mo` = pic RSS du process serveur via `resource.getrusage(RUSAGE_SELF).
+    ru_maxrss` (même source que le profileur ①), None si plateforme non-POSIX.
+  - Assemblage dans NOUVEAU `tools/simserver/perf.py` (16 LDC pur) ;
+    `serialize.py` l'importe et injecte `"perf": perf` dans le dict de retour.
+- **Overlay Godot** : toggle réutilisé = **F4** (déjà le toggle perfs debug ;
+  F7 est pris par la carte T sol). Nouvelle 3e ligne « serveur (banc perf) — tick
+  moteur X ms · N plantes N · RSS Y Mo » sous les lignes client existantes. Lecture
+  TOLÉRANTE du bloc `perf` dans `ApplySnapshot` (snapshot pré-perf → tirets).
+  Étiquette `[debug]` préfixée (philo #5 : opt-in, hors HUD primaire).
+- **Vérif round-trip** : smoke → post-init `{ms_tick:None, n_plants:14, rss:21.8}`,
+  post-step `{24.6, 14, 22.3}` ; full → `{216.0, 54, 20.5}`. Bloc bien présent.
+- **Golden INTACT** : `84d359834f7b22d6a072e5c14def5c5326ecb9d4e7d3dafdb0a27d10caab5f54`
+  (`python3 -m tests.test_golden` → PASS ; observation pure, aucun changement moteur).
+- **Build C# VERT** : `dotnet build Symbiose.csproj` → 0 avertissement, 0 erreur.
+- **Fichiers** : NOUVEAU `data/code/tools/simserver/perf.py` ;
+  `data/code/tools/simserver/commands.py` (+import time, +chrono autour du tick) ;
+  `data/code/tools/simserver/serialize.py` (+import perf, +bloc `perf`) ;
+  `world/WorldView.Hud.cs` (+3 champs serveur, +3e ligne UpdatePerf) ;
+  `world/WorldView.Snapshot.cs` (+lecture tolérante du bloc `perf`). Tailles LDC
+  toutes ≤ bande (serialize 248, Hud 247, commands 96, perf 16). **NON COMMITTÉ**.
+- **Points F5 pour Nico** :
+  1. Lancer config `full` (monde 8 tuiles + maison), taper **F4** → 3e ligne
+     « serveur (banc perf) » visible (tick moteur / N plantes / RSS Mo).
+  2. Passer en **Turbo** (M), lancer la saison (Espace), laisser courir ~10-15 ans
+     (touche **T** = saut de 10 semaines pour accélérer). VALIDATION du sprint :
+     `N plantes` doit **PLAFONNER** (ne plus croître sans fin) et `tick moteur`
+     **cesser de doubler d'année en année** ; RSS doit se stabiliser AVEC N.
+  3. Si un `⚠ cap perf tuile T atteint` apparaît en console/stderr en jeu normal →
+     le backstop ③ (`CAP_PERF_TUILE=800`) est réglé trop bas : le signaler.
+
 ## §REPRISE
-Tronçons ①②③ CLOS (① pas de fuite indépendante de N ; ② spatial hash + cache
-bit-identiques −57 % ; ③ **N BORNÉ = plateau émergent ~197/2 tuiles + backstop cap 800**,
-golden re-figé maîtrisé `84d35983…`). **Prochain = tronçon ④** :
-`sprints/sprint_perf_run_eternel/04_*.md` — vue Godot banc d'observation perf (compteur
-debug ms/tick + N plantes + RSS, banc F5 longue durée de la stabilisation). Golden INTACT
-attendu (④ ne touche pas le moteur). Golden actuel = smoke 2 tuiles × 2 ans, hash
+Tronçons ①②③④ CLOS — **sprint « stabilisation perf en run éternel » terminé côté
+implémentation, reste le F5 de Nico** (validation visuelle du plafonnement de N et
+de la non-dérive du tick, cf. points F5 du ④). Récap : ① pas de fuite indépendante
+de N ; ② spatial hash + cache bit-identiques −57 % ; ③ **N BORNÉ = plateau émergent
+~197/2 tuiles + backstop cap 800**, golden re-figé maîtrisé `84d35983…` ; ④ compteur
+perf debug (bloc snapshot `perf` {ms_tick, n_plants, rss_mo} + overlay F4), golden
+INTACT. Golden actuel = smoke 2 tuiles × 2 ans, hash
 `84d359834f7b22d6a072e5c14def5c5326ecb9d4e7d3dafdb0a27d10caab5f54` dans
-`tests/golden_hash.txt`.
+`tests/golden_hash.txt`. RIEN de committé (orchestrateur commit). Après F5 validé :
+clôturer le sprint (journal.md + BACKLOG.md + DETTE.md), déplacer sous `sprints/_clos/`.
