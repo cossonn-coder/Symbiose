@@ -125,10 +125,42 @@ Profileur FINALISÉ et EXÉCUTÉ (`tools/profile_memoire.py`, 128 LDC pur).
 - **Golden INTACT** : `061934db09ad646a01f19b8f4d0b677f13438e87bce2f8531527be425e7c22a8`
   (outil lecture seule, aucun colmatage). Confirmé `python3 -m tests.test_golden` → PASS.
 
+## Tronçon ② — RÉSULTAT (spatial LOD LightField + cache, 2026-07-05)
+Deux leviers livrés, tous deux BIT-IDENTIQUES (golden intact) :
+- **Spatial hash** de la boucle « lumière reçue par plante » (`fields/light_index.py`,
+  NOUVEAU, `ObstacleIndex`, 31 LDC). Buckets de plots (pas PLOT_CM) indexant les
+  obstacles par CENTRE de canopée + rang dans `order`. Pour chaque échantillon, on
+  ne collecte que les candidats dont le centre est dans un carré de portée
+  `max_height·inv_tan + max_radius` (sur-ensemble strict des couvrants), puis on les
+  RE-TRIE par rang = ordre EXACT de `order` (hauteur décroissante, départages
+  identiques) avant d'appliquer les facteurs `(1-qd)` → produit `att` bit-à-bit. Le
+  `break qh<=ph` original devient un `continue` sur candidats triés = strictement
+  équivalent. L'index n'élague que des obstacles qui renvoyaient déjà False (facteur
+  1.0 neutre), comme D32 gather→scatter.
+- **Cache géométrique** (`light.py`, `self._geom_key`) : empreinte PURE de l'état
+  (saison, house, tile_origin, tuple (x,y,h,r,d) par obstacle — pas de `id()`, ordre
+  déterministe de `infos`, squelettes secs inclus). Clé identique → `return []`
+  immédiat, `self.data`/`self.received` réutilisés (temps figé). Croissance hebdo →
+  MISS → recompute → golden neutre. HIT/MISS vérifiés à la main (HIT ne recalcule
+  pas, plante déplacée → recompute).
+- **Golden INTACT** : `061934db09ad646a01f19b8f4d0b677f13438e87bce2f8531527be425e7c22a8`
+  (`python3 -m tests.test_golden` → PASS).
+- **Gain mesuré** (`profile_tick 52 20`, 2 tuiles, 49 plantes, mesure ISOLÉE
+  `LightField.compute`, moyenne 3 runs) : **~19,0 ms → ~8,2 ms** (−57 %), part du
+  tick 29,5 % → 8,0 %. Le gain O(N²) mord surtout à haute densité (8 tuiles) non
+  mesurée ici (profile_tick = 2 tuiles) ; à 2 tuiles/faible N le gain est DÉJÀ net
+  (moins d'obstacles visités par échantillon). Le « tick complet » affiché varie
+  (bruit machine), seule la mesure isolée est fiable.
+- **Fichiers** : `fields/light.py` (222 LDC pur, norme verte ≤300) + NOUVEAU
+  `fields/light_index.py` (31 LDC). Imports intacts. Pas de C#.
+- **NON COMMITTÉ** (consigne : orchestrateur commit).
+
 ## §REPRISE
-Tronçon ① CLOS (verdict : pas de fuite indépendante de N, RSS suit N, golden intact).
-**Prochain = tronçon ②** : `sprints/sprint_perf_run_eternel/02_*.md` — Spatial LOD
-LightField bit-identique + cache géométrique temps figé (`fields/light.py`), golden
-attendu INTACT. Puis ③ (capacité de charge émergente + backstop, re-figeage maîtrisé
-annoncé — c'est CE tronçon qui borne N et donc aussi la mémoire) puis ④ (vue Godot banc
-perf). Golden actuel = smoke 2 tuiles × 4 ans, hash ci-dessus dans `tests/test_golden.py`.
+Tronçons ① et ② CLOS (① : pas de fuite indépendante de N ; ② : spatial hash + cache
+géométrique bit-identiques, LightField −57 %, golden intact). **Prochain = tronçon ③** :
+`sprints/sprint_perf_run_eternel/03_*.md` — capacité de charge émergente
+(couverture→germination `sim/succession.py` + self-thinning voie `shade_stress_damage`)
++ backstop cap dur par tuile ; c'est CE tronçon qui borne N (donc aussi la mémoire) et
+qui **re-fige le golden de façon MAÎTRISÉE et ANNONCÉE**. Puis ④ (vue Godot banc perf,
+golden intact). Golden actuel = smoke 2 tuiles × 4 ans, hash ci-dessus dans
+`tests/test_golden.py`.

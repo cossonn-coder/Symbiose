@@ -10,6 +10,7 @@ import math
 
 from constants import PLOT_CM
 from fields.grids import GridField
+from fields.light_index import ObstacleIndex
 
 # --- Éclairement astronomique (LightField v2 — ombres-capsules analytiques) ---
 LATITUDE_DEG = 49.0          # ~Normandie / 49°N
@@ -171,6 +172,7 @@ class LightField(GridField):
         super().__init__(rows, cols, initial=1.0, max_val=1.0)
         self.received: dict[int, float] = {}
         self._sun_cache: dict[str, list] = {}
+        self._geom_key = None            # empreinte géométrique du dernier compute
 
     def _sun_slices(self, saison: str) -> list:
         """Tranches éclairées (cachées) pour la saison : liste de
@@ -224,6 +226,19 @@ class LightField(GridField):
             h_height    = house.height_cm
             wall_albedo = house.wall_albedo
 
+        # --- Cache géométrique (temps figé) ---
+        # Empreinte PURE de l'état géométrique : saison, maison, offset de tuile,
+        # et pour chaque obstacle (x, y, hauteur, rayon, densité — flottants bruts
+        # reproductibles, ORDRE de `infos` déterministe). Pas de `id()`. En temps
+        # figé (planification) rien ne bouge → HIT → on réutilise self.data /
+        # self.received tels quels. En saison la croissance change la géométrie
+        # chaque semaine → MISS → recompute → golden neutre par construction.
+        geom_key = (saison, ox, oy, hx0, hy0, hx1, hy1, h_height, wall_albedo,
+                    tuple((x, y, h, r, d) for _, x, y, h, r, d in infos))
+        if geom_key == self._geom_key:
+            return []                        # géométrie inchangée : champ réutilisé
+        self._geom_key = geom_key
+
         self.received = {}
         if not slices:                       # nuit polaire théorique : plancher partout
             for r in range(self.rows):
@@ -236,23 +251,34 @@ class LightField(GridField):
         total_w = sum(w for _, _, _, w in slices)
 
         # --- Lumière reçue par plante (ombres des voisins plus hauts + maison) ---
+        # SPATIAL HASH (tronçon ②) — au lieu de faire parcourir à CHAQUE
+        # échantillon TOUS les obstacles de `order` (O(N²)), on interroge un index
+        # spatial qui ne rend que les candidats dont la capsule PEUT couvrir
+        # l'échantillon, puis on les re-trie dans l'ORDRE EXACT de `order` (par
+        # rang) avant d'appliquer les facteurs → produit `att` bit-identique
+        # (l'index n'élague que des obstacles qui renvoyaient déjà False, cf. D32).
         order = sorted(infos, key=lambda t: t[3], reverse=True)  # plus haut → plus bas
+        index = ObstacleIndex(order)
         for p, px, py, ph, pr, pd in infos:
             d = pr * CANOPY_SAMPLE_FRAC
             samples = ((px, py), (px + d, py), (px - d, py), (px, py + d), (px, py - d))
             acc = 0.0
             for sdx, sdy, inv_tan, w in slices:
                 h_len = h_height * inv_tan
+                max_len = index.max_height * inv_tan     # ombre la plus longue de la tranche
                 att_sum = 0.0
                 for sx, sy in samples:
                     # Maison opaque (seul obstacle global) : test en coords monde.
                     if house is not None and _point_in_swept_rect(
                             sx + ox, sy + oy, hx0, hy0, hx1, hy1, sdx, sdy, h_len):
                         continue             # plein ombre (att=0) → plancher après moyenne
+                    # Candidats couvrants ré-triés par rang = ordre de `order`.
+                    cands = index.covering(sx, sy, max_len)
+                    cands.sort(key=lambda rc: rc[0])
                     att = 1.0
-                    for q, qx, qy, qh, qr, qd in order:
+                    for _rank, (q, qx, qy, qh, qr, qd) in cands:
                         if qh <= ph:
-                            break            # le reste est plus court ou égal → pas d'ombre
+                            continue         # plus court/égal → pas d'ombre (auto-ombrage exclu)
                         if qd <= 0.0:
                             continue
                         if _point_in_capsule(sx, sy, qx, qy, sdx, sdy, qh * inv_tan, qr):
