@@ -219,6 +219,14 @@ def succession(game_state: dict, tile, eco, week: int) -> list[str]:
                                     occupied_roots, niche_mult=1.0,
                                     hash_canal=week * 7 + 50)
 
+    # Banc « monde propre » (sprint équilibre invasion ①, D69) : coupe la
+    # germination férale SPONTANÉE. Les grains PLANTÉS ont déjà levé ci-dessus —
+    # seule la vague férale du plot est gelée. Flag posé UNIQUEMENT par le preset
+    # `config="propre"` du serveur ; ABSENT en smoke/full/bancs → `False` →
+    # aucun court-circuit → golden inchangé (le moteur golden tourne hors serveur).
+    if game_state.get("feral_off"):
+        return log
+
     for r in range(tile.grid_rows):
         for c in range(tile.grid_cols):
             # Verrou d'occupation LEVÉ (Q1) : on ne saute plus les plots occupés.

@@ -37,6 +37,19 @@ from . import perf   # capture des pires ticks + dump diagnostique (demande Nico
 BANQUE_DEPART = ("tournesol", "tomate", "basilic")
 
 
+def _vider_seedbank_ferale(sb) -> None:
+    """Vide la banque de graines FÉRALE d'un `EcoField` (banc « monde propre », ①).
+    Met à 0 les densités d'archétypes de chaque plot ET purge le pool espèce/
+    génétique (D22) — plus aucune graine spontanée en réserve. On ne touche PAS
+    aux `grains_en_attente` de la tuile (graines PLANTÉES, qui doivent lever).
+    Hors tick (init) → aucun impact sur le golden (jamais appelé pour smoke/full)."""
+    for r in range(sb.rows):
+        for c in range(sb.cols):
+            for a in sb.data[r][c]:
+                sb.data[r][c][a] = 0.0
+            sb.species[r][c].clear()
+
+
 def _banque_initiale(config: str) -> PlayerSeedBank:
     bank = PlayerSeedBank()
     if config == "full":
@@ -80,6 +93,26 @@ class CommandsMixin:
                 for _p in _t.plants:
                     if getattr(_p.plant_class, "fruitier", False):
                         _p.age_years = float(_p.plant_class.maturity_years)
+        elif config == "propre":
+            # Banc « monde propre » (sprint équilibre invasion ①, D69) : MÊME monde
+            # que "full" (mêmes 8 tuiles + maison + cultivées + pré-vieillissement
+            # des fruitiers), MAIS sans pression férale — pour observer les cultivées
+            # SEULES (F5) et isoler la perf à N maîtrisé (mesure onset/plateau ②).
+            # Deux coupures, toutes deux HORS TICK (config d'init) :
+            #   1. seedbank férale VIDÉE (densités d'archétypes + pool espèce à 0) →
+            #      plus aucune graine spontanée en réserve ;
+            #   2. flag `feral_off` posé dans game_state → `sim/succession.py` coupe
+            #      la germination férale ET l'auto-enrichissement de la banque, tout
+            #      en laissant lever les grains PLANTÉS.
+            # "full"/"smoke"/bancs n'ont pas le flag (absent → False) → intacts.
+            from main import build_world_full
+            tiles, ecos, _aux_tiles, house = build_world_full()
+            for _t in tiles:
+                for _p in _t.plants:
+                    if getattr(_p.plant_class, "fruitier", False):
+                        _p.age_years = float(_p.plant_class.maturity_years)
+            for _eco in ecos.values():
+                _vider_seedbank_ferale(_eco.seed_bank)
         elif config in BANCS:
             # Bancs d'essai (sprint dédié) : mondes paramétrés qui FORCENT une
             # condition observable (sécheresse, chlorose, ombre dense…) pour le tri
@@ -91,7 +124,7 @@ class CommandsMixin:
         else:
             return {"ok": False,
                     "error": f"config inconnue : {config!r} "
-                             f"('smoke', 'full' ou un banc : {', '.join(sorted(BANCS))})"}
+                             f"('smoke', 'full', 'propre' ou un banc : {', '.join(sorted(BANCS))})"}
         # Semaine de départ : `week=1` par défaut (début printemps). Un banc peut
         # démarrer plus tard via `BANC_WEEK_DEPART` (retour F5 : `grimpantes` observe
         # des frileuses → départ mi-printemps). Override explicite `msg["week"]`
@@ -112,6 +145,12 @@ class CommandsMixin:
             # Un banc peut fournir SA banque (fabrique) ; sinon repli sur le helper.
             "player_seed_bank": banque if banque is not None else _banque_initiale(config),
         }
+        # Banc « monde propre » (①) : coupe la germination férale spontanée et
+        # l'auto-enrichissement de la banque au tick (lu par sim/succession.py).
+        # Clé posée UNIQUEMENT en config "propre" → absente ailleurs → False →
+        # comportement inchangé pour smoke/full/bancs (golden intact).
+        if config == "propre":
+            game_state["feral_off"] = True
         self.engine = Engine(game_state)
         # Traqueur des pires ticks (demande Nico) : mémoire des K ticks les plus
         # longs + dump diagnostique sur disque au record. Neuf à chaque init.

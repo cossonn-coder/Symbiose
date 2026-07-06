@@ -6,7 +6,7 @@
 > doc + kickoffs 01-08 écrits. **PRÊT pour `/sprint-auto sprint_equilibre_invasion`.**
 
 ## Carte des tronçons (un seul sprint, perf-first, vue en dernier)
-- **01** banc `config="propre"` + `tools/diag_population.py` [golden INTACT]
+- **01** banc `config="propre"` + `tools/diag_population.py` [golden INTACT] ✅ FAIT 2026-07-06
 - **02** recalibrage freins férals — onset ~2-3 saisons, N~650/8 tuiles [golden RE-FIGÉ, seul]
 - **03** paillage moteur — champ + geste `pailler` + germ↓/ET↓/graines↑/→OM [INTACT]
 - **04** matériau — `broyer`→BRF + récolte paille → stock + 3 natures [INTACT]
@@ -140,8 +140,26 @@ revenir à la perf pure (D67/LightField) après ce sprint.
 - Recalibrage : change des constantes → neutre en coût, mais **re-fige golden**.
 - Banc : hors tick (config d'init) → neutre.
 
-## §REPRISE
-Prochaine étape : remonter à Nico la critique Phase A + les 3 arbitrages
-ci-dessus (via AskUserQuestion). Puis itérer, consigner chaque arbitrage ici,
-et ne figer (phase B : doc `CONCEPTION_*` + kickoffs) qu'après accord global.
-Le découpage se terminera par un **tronçon vue Godot** (règle projet).
+## §REPRISE — EXÉCUTION
+**Tronçon ① FAIT (2026-07-06)** — golden INTACT (`84d35983…`), test_population
+INTACT (`c2b4a01d…`). Livré :
+- `tools/simserver/commands.py` : preset `config="propre"` dans `cmd_init` (monte
+  `build_world_full`, vide la seedbank férale via helper `_vider_seedbank_ferale`,
+  pose `game_state["feral_off"]=True`).
+- `sim/succession.py` : `if game_state.get("feral_off"): return log` APRÈS la levée
+  des grains plantés (germination férale spontanée coupée, grains plantés préservés).
+- `tools/diag_population.py` créé (trajectoire N, top-6 espèces, tuile_max, tous les
+  26 ticks ; `--config full|propre`).
+
+Vérif : `--config full` s26 → N=336 avec les 4 adventices (invasion réelle) ;
+`--config propre` s26 → N=127 SANS aucune adventice férale (Poa/Bursa/Medicago/
+Taraxacum absentes). NOTE : en `propre`, N monte quand même (~421 à l'an 3) via
+la **propagation stolonifère du Clover** (`_reproduction`, cultivée plantée par
+`build_world_full`) — ce n'est PAS de l'invasion férale, et le kickoff demande de
+ne garder QUE les cultivées de `build_world_full` (Clover en est une). Coupure
+férale conforme au spec ; si Nico veut un banc « N strictement plat » il faudra
+aussi geler la repro végétative (hors scope ①).
+
+**Prochain : tronçon ② (recalibrage freins férals, SEUL re-figeage golden du
+sprint).** Message /clear : « lis `sprints/sprint_equilibre_invasion/00_etat.md`
+puis `02_*.md` ».
