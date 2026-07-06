@@ -81,6 +81,17 @@ class PlantInstance:
     # fois par tick en fin de grow_plant pour les espèces `procedural_growth`. Les
     # classmethods d'empreinte le lisent ; repli à la volée si None (update_footprint).
     footprint: dict | None = None
+    # Cache mémoïsé des empreintes-plots (perf, 2026-07-06). `foliar_plots`/`root_plots`
+    # sont accédés ~15×/tick/plante (croissance, population, mortalité, uptake, succession…)
+    # mais la géométrie ne change qu'à la CROISSANCE ou au DÉPLACEMENT. On mémoïse par clé
+    # (x_cm, y_cm, rayon) → recalcul du disque SEULEMENT si la clé bouge : AUTO-INVALIDANT et
+    # bit-identique (mémoïsation pure d'une fonction pure) → golden INTACT. Hors `_PLANT_ATTRS`.
+    # Listes renvoyées EN LECTURE SEULE (vérifié : aucun appelant ne les mute, tout est `in` /
+    # compréhension / `.update()`). `init=False, compare=False` → invisibles au constructeur et à `==`.
+    _foliar_key: tuple | None = field(default=None, init=False, compare=False, repr=False)
+    _foliar_cache: list = field(default_factory=list, init=False, compare=False, repr=False)
+    _root_key: tuple | None = field(default=None, init=False, compare=False, repr=False)
+    _root_cache: list = field(default_factory=list, init=False, compare=False, repr=False)
     # État post-mortem (décompo·compost ②, phase B). Defaults → plante vivante
     # strictement inchangée (golden de structure intact). À la mort, le sujet n'est
     # plus retiré : `sim.effects.deposer_mort` le marque squelette, puis
@@ -260,15 +271,23 @@ class PlantInstance:
 
     @property
     def foliar_plots(self) -> list[tuple]:
-        """Plots occupés en aérien — dérivés du rayon de canopée."""
-        return _plots_in_radius(self.x_cm, self.y_cm,
-                                self.plant_class.canopy_radius_at(self))
+        """Plots occupés en aérien — dérivés du rayon de canopée (mémoïsé, cf. `_foliar_key`)."""
+        r = self.plant_class.canopy_radius_at(self)
+        key = (self.x_cm, self.y_cm, r)
+        if key != self._foliar_key:
+            self._foliar_key = key
+            self._foliar_cache = _plots_in_radius(self.x_cm, self.y_cm, r)
+        return self._foliar_cache
 
     @property
     def root_plots(self) -> list[tuple]:
-        """Plots exploités en souterrain — dérivés du rayon racinaire."""
-        return _plots_in_radius(self.x_cm, self.y_cm,
-                                self.plant_class.root_radius_at(self))
+        """Plots exploités en souterrain — dérivés du rayon racinaire (mémoïsé, cf. `_root_key`)."""
+        r = self.plant_class.root_radius_at(self)
+        key = (self.x_cm, self.y_cm, r)
+        if key != self._root_key:
+            self._root_key = key
+            self._root_cache = _plots_in_radius(self.x_cm, self.y_cm, r)
+        return self._root_cache
 
     @property
     def is_alive(self) -> bool:
