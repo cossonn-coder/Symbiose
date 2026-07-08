@@ -8,7 +8,7 @@
 ## Carte des tronçons (un seul sprint, perf-first, vue en dernier)
 - **01** banc `config="propre"` + `tools/diag_population.py` [golden INTACT] ✅ FAIT 2026-07-06
 - **02** recalibrage freins férals — onset ~2-3 saisons, N~650/8 tuiles [golden RE-FIGÉ, seul] ✅ FAIT 2026-07-08 (N an6=613, knob `GERM_PRESSION_FERALE=0.30`)
-- **03** paillage moteur — champ + geste `pailler` + germ↓/ET↓/graines↑/→OM [INTACT]
+- **03** paillage moteur — champ + geste `pailler` + germ↓/ET↓/graines↑/→OM [golden INTACT] ✅ FAIT 2026-07-08 (champ `paillage`, geste `pailler`, 4 effets, golden `33c0ea6f…` inchangé)
 - **04** matériau — `broyer`→BRF + récolte paille → stock + 3 natures [INTACT]
 - **05** catalogue blé/chanvre/sapin + 5 voix [INTACT]
 - **06** paillage ↔ vie macro (abri) [INTACT]
@@ -190,7 +190,41 @@ laisse le temps d'agir). Enveloppe hiver monte encore doucement (417→613 sur 5
 ans) mais PLAFONNE ~600 au lieu de diverger. Aucun buff des cultivées (#2).
 Suite verte hors `test_epaisseur_500ans` (INTERDIT).
 
-**Prochain : tronçon ③ (paillage moteur — champ `paillage` par plot + geste
-`pailler` + effets germ↓/vieillissement graines↑/ET↓/humidité↑/→om_stable,
-golden INTACT car paillage=0 au repos).** Message /clear : « lis
-`sprints/sprint_equilibre_invasion/00_etat.md` puis `03_*.md` ».
+**Tronçon ③ FAIT (2026-07-08)** — golden INTACT (`33c0ea6f…`, hash post-②
+inchangé : le champ naît à 0, le smoke n'appelle jamais `pailler` → tous les
+facteurs ×1). test_population INTACT. Livré :
+- `fields/ecofields/paillage.py` (créé) — `PaillageMixin` : champ `paillage`
+  ∈[0,1] par plot + `tick_paillage()` (décroissance `PAILLAGE_DECAY` → reversée à
+  `om_stable` via `PAILLAGE_OM_W`). Nul au repos → no-op strict.
+- `fields/ecofields/container.py` — mixin branché, champ déclaré+init dans
+  `__post_init__`, exposé au registre `get_field` (overlay F6/pont).
+- `fields/ecofields/constants.py` — `PAILLAGE_DECAY/OM_W/GERM_SEUIL/AGING_BOOST/
+  EVAP_FRAC/DOSE` (placeholders, calibrage F5).
+- `sim/succession.py` — germination férale : cutoff dur si `paillage ≥
+  PAILLAGE_GERM_SEUIL`, sinon `niche *= (1 − paillage)` (frein gradué). Paillage=0
+  → ×1.0.
+- `fields/ecofields/hydrologie.py` — évaporation : terme `+(1−evap)·
+  PAILLAGE_EVAP_FRAC·paillage` (barrière, patron couverture). Paillage=0 → neutre.
+- `fields/seedbank.py` — `tick_aging(paillage_field=None)` : sous mulch,
+  `SEED_VIABILITY_LOSS ** (1 + SEED_AGING_BOOST·paillage)` (banque épuisée plus
+  vite). Champ absent/nul → exposant 1 → inchangé. Câblé depuis `sol.py`.
+- `sim/actions/gestes.py` + `couts.py` + `__init__.py` — geste `pailler(...,
+  nature="paille", stock=None)` binaire (patron `arroser`), coût MODÉRÉ. `nature`/
+  `stock` POSÉS mais INERTES (④ = matériau).
+- `sim/engine/boucle.py` — `eco.tick_paillage()` en 15e (après les lecteurs).
+- `sim/geste_corpus.py` + `outil_corpus.py` — fiches encyclopédie `pailler`
+  (geste) + `paillage` (outil), 3 niveaux (garde-fou voix : toute clé classée a une
+  fiche — sinon `test_encyclopedie` rouge).
+- `tests/test_paillage.py` (créé) — 17 checks verts (geste, germ étouffée, décompo→
+  om, ET freinée, aging accéléré, invariant repos).
+- `tests/simserver/morts.py` — FIX d'un test FLAKY PRÉEXISTANT (indépendant de ③,
+  vérifié sur checkout propre : 3/8 succès) : la compa déterminisme post-déracinage
+  lisait le snapshot BRUT incluant `rss_mo` (RSS OS du sous-process, non
+  déterministe) ; on neutralise `_PERF_VOLATILE` avant la compa (même filtre que le
+  harness). ③ a juste nudgé la mémoire → révélé le flake.
+
+NON concerné : C# (③ moteur Python pur, aucun build). F5 : rien à valider ce
+tronçon (vue = ⑧). Reste ④ (matériau : `broyer`→BRF, récolte paille → stock, natures).
+
+**Prochain : tronçon ④.** Message /clear : « lis
+`sprints/sprint_equilibre_invasion/00_etat.md` puis `04_*.md` ».

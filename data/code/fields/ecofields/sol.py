@@ -45,7 +45,10 @@ class SolMixin:
 
     def tick_seed_bank(self, plants: list, seed: int = 0, week: int = 0) -> None:
         """Mise à jour hebdomadaire de la banque de graines."""
-        self.seed_bank.tick_aging()
+        # Le paillage (③, D69) accélère le vieillissement des graines ENFOUIES sous le
+        # mulch → épuisement durable de la banque locale. Champ NUL au repos (golden) →
+        # vieillissement inchangé (cf. `SeedBank.tick_aging`).
+        self.seed_bank.tick_aging(self.paillage)
         self.seed_bank.tick_species_aging()
         om_index = _OmIndexField(self.om_active, self.om_stable)
         self.seed_bank.tick_disturbance_enrichment(self.disturbance, om_index)

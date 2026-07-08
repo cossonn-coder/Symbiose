@@ -132,6 +132,21 @@ FICHES_GESTE: dict[str, dict[int, str]] = {
            "Bêcher a un coût que le sol paie longtemps.",
     },
 
+    "pailler": {
+        1: "Étaler une couche de matière au sol — paille, feuilles, broyat — autour "
+           "des plantes. La terre nue disparaît sous un tapis protecteur.",
+        2: "Le paillage couvre le sol : les graines d'adventices, privées de lumière "
+           "et de terre nue, lèvent beaucoup moins, et l'eau s'évapore plus lentement "
+           "sous le tapis qui coupe le soleil et le vent. La couche se décompose peu à "
+           "peu et nourrit l'humus — ce qui protège finit par enrichir.",
+        3: "Le paillage est le levier discret de la permaculture contre l'invasion : "
+           "il n'arrache aucune adventice, il rend leur levée impossible et ÉPUISE peu "
+           "à peu la banque de graines enfouies sous lui. Il tempère le sol, retient "
+           "l'humidité, abrite la petite faune et se change en terre. Mais rien n'est "
+           "gratuit : le mulch se décompose, il faut le renouveler — un sol qu'on couvre "
+           "reste jeune tant qu'on l'entretient. C'est l'inverse du désherbage répété.",
+    },
+
     "tailler": {
         1: "Couper des rameaux ou des tiges d'une plante ligneuse ou touffue. Sa "
            "silhouette se rééquilibre, la lumière entre.",

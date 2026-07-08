@@ -109,6 +109,15 @@ class HydrologieMixin:
                 # actif → RE-FIGEAGE MAÎTRISÉ ANNONCÉ (humidité un peu plus haute sous couvert).
                 cov = self.couverture_sol.data[r][c]
                 evap += (1.0 - evap) * COUVERTURE_EVAP_FRAC * cov
+                # PAILLAGE (sprint équilibre invasion ③, D69) : le mulch est une
+                # BARRIÈRE d'évaporation — la paille/le BRF coupe le sol du soleil et
+                # du vent, l'eau reste piégée dessous. MÊME patron que la couverture
+                # (on rapproche le multiplicateur d'évaporation de 1.0 = rétention pure,
+                # ∝ profondeur de mulch) : c'est un FLUX (l'eau du plot est conservée),
+                # jamais un bonus sur la plante (philo #2). Paillage NUL (golden, aucun
+                # geste `pailler`) → terme nul → évaporation inchangée → golden INTACT.
+                mulch = self.paillage.data[r][c]
+                evap += (1.0 - evap) * PAILLAGE_EVAP_FRAC * mulch
                 if evap < EVAP_MIN:
                     evap = EVAP_MIN
                 h *= evap                                           # 1. évaporation

@@ -25,6 +25,7 @@ from sim.effects import deposer_mort   # mort → squelette persistant (②B), p
 from fields.ecofields import BOIS_PAR_CM, ECRASER_FRAG_BOOST   # litière `bois` (taille/écimage) + boost fragmentation (②)
 from fields.ecofields import BECHAGE_MALUS, GRELINETTE_GAIN   # deltas structure du sol des gestes (physico-chimie ⑧)
 from fields.ecofields import BECHAGE_MYCELIUM_MALUS   # quantum de réseau fongique cassé par le bêchage (mycélium ⑤, event-driven)
+from fields.ecofields import PAILLAGE_DOSE   # dose de mulch d'un geste `pailler` (équilibre invasion ③)
 from fields.population import DENSITE_PAR_SPRITE   # « un geste = un individu = un quantum » (D31.3 §5)
 from fields.alarme import declencher_alarme, ALARME_DEPOT   # phéromone d'alarme apienne (⑦ §J)
 from fields.seedbank import GrainEnAttente          # dépôt de `planter` (germination différée, distinct de la banque-sol)
@@ -451,4 +452,34 @@ def grelinette(game_state: dict, player: str, eco, r: int, c: int) -> bool:
         return False
     eco.structure_sol.add(r, c, GRELINETTE_GAIN)        # aère sans retourner (gain durable)
     eco.populations["lombric"].add(r, c, DENSITE_PAR_SPRITE)   # ↑vers (effet 2nd, §3 bioturbation)
+    return True
+
+
+def pailler(game_state: dict, player: str, eco, r: int, c: int, *,
+            nature: str = "paille", stock=None) -> bool:
+    """Pailler — déposer du mulch au sol (sprint équilibre invasion ③, D69) — geste sur
+    le MILIEU, canal VERTUEUX (philo #1), le LEVIER PERMACOLE central contre l'invasion
+    d'adventices. Canon philo #2 : on écrit UNIQUEMENT le champ `eco.paillage` au plot
+    cliqué (`+PAILLAGE_DOSE`, cap 1.0, CUMULATIF) — RIEN d'autre. Les effets (levée
+    férale étouffée, banque de graines épuisée, sol plus frais/humide, humus nourri)
+    ÉMERGENT au tick suivant depuis les lecteurs du champ (succession, seedbank,
+    hydrologie, `tick_paillage`) — jamais un bonus DIRECT sur une plante.
+
+    Transitoire par construction : `tick_paillage` fait DÉCROÎTRE le mulch (~0.03/sem →
+    ~1 saison) en le reversant à l'humus → RE-pailler COÛTE = l'usure de la solution
+    facile (philo #1). Ré-pailler par-dessus épaissit jusqu'au plafond 1.0.
+
+    Coût MODÉRÉ, phase planification. Binaire tout-ou-rien (modèle `arroser`) : le champ
+    n'est mulché QUE si le coût est intégralement payé — forcer le geste à vide draine
+    la Vigueur sans rien pailler.
+
+    `nature` et `stock` sont POSÉS mais INERTES en ③ (tronçon ④ = matériau du paillage) :
+    la nature du mulch (paille/BRF/aiguilles → propriétés distinctes) et la consommation
+    d'un stock de matière seront câblées au ④. En ③, une seule profondeur générique.
+    Renvoie True si le geste a été pleinement payé (et donc appliqué)."""
+    cost = cout_action(game_state, player, "pailler", OBJETS_TOUCHES["pailler"])
+    if spend(game_state, player, cost) < 1.0:
+        return False                          # Vigueur insuffisante → champ intact
+    depth = eco.paillage.at_plot(r, c)
+    eco.paillage.set(r, c, min(1.0, depth + PAILLAGE_DOSE))
     return True

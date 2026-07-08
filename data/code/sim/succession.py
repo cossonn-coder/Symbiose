@@ -15,7 +15,7 @@ from __future__ import annotations
 from plants import WEED_CATALOGUE, PLANT_CATALOGUE, PERENNIAL_CATALOGUE
 from fields import SEED_ARCHETYPES, _hash_noise
 from fields.ecofields import (bell, T_GERM_FLOOR, GERM_GENE_SHIFT,
-                              COUVERTURE_ADVENTICE_SEUIL)
+                              COUVERTURE_ADVENTICE_SEUIL, PAILLAGE_GERM_SEUIL)
 from sim.capacite import recrutement_bloque
 
 # Vis A (sprint PERF ③) — raideur de la réponse graduée « couverture → germination
@@ -266,6 +266,19 @@ def succession(game_state: dict, tile, eco, week: int) -> list[str]:
             if couverture >= COUVERTURE_ADVENTICE_SEUIL:
                 continue
 
+            # Gate PAILLAGE (sprint équilibre invasion ③, D69) — le LEVIER PERMACOLE
+            # posé par le joueur : un plot MULCHÉ étouffe la levée férale (la graine
+            # ne trouve ni lumière ni sol nu sous la couche de paille/BRF). Même patron
+            # que la couverture (flux `paillage` → contrainte « fenêtre de germination
+            # fermée », philo #2) : au-delà de PAILLAGE_GERM_SEUIL, cutoff DUR ; en
+            # dessous, `niche` atténuée graduellement par (1 − paillage) plus bas. NE
+            # touche QUE la germination férale (les grains PLANTÉS, geste délibéré, sont
+            # levés plus haut). Paillage NUL (golden, aucun geste `pailler`) → passe →
+            # facteur 1.0 → germination inchangée.
+            paillage = eco.paillage.at_plot(r, c)
+            if paillage >= PAILLAGE_GERM_SEUIL:
+                continue
+
             # Densité racinaire voisine normalisée
             neighbors = tile.neighbors(r, c)
             root_density = sum(
@@ -288,6 +301,12 @@ def succession(game_state: dict, tile, eco, week: int) -> list[str]:
             # tapis dense → fenêtre quasi fermée bien avant le seuil dur.
             niche *= (1.0 - couverture) ** COUVERTURE_GERM_EXP
             niche *= GERM_PRESSION_FERALE   # base de la vague férale (②, D69)
+            # Frein GRADUÉ du paillage (③, D69) — sous le seuil dur, la fenêtre de
+            # germination férale rétrécit ∝ (1 − paillage) : plus le mulch est épais,
+            # moins la graine férale lève, jusqu'à l'extinction au seuil. Paillage=0
+            # (golden) → ×1.0. Le geste `pailler` du joueur borne ainsi l'invasion en
+            # agissant sur le MILIEU (philo #1/#2), sans buffer les cultivées.
+            niche *= (1.0 - paillage)
 
             if niche < 0.01:
                 continue

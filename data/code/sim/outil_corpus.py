@@ -86,6 +86,21 @@ FICHES_OUTIL: dict[str, dict[int, str]] = {
            "ponctuelle à la reprise, pas un rituel de saison.",
     },
 
+    "paillage": {
+        1: "La matière qu'on étale au sol pour le couvrir : paille, feuilles mortes, "
+           "broyat de bois, aiguilles. Un tapis posé sur la terre nue.",
+        2: "Le paillage est à la fois la couche et son effet : il ombre le sol (les "
+           "adventices lèvent moins), freine l'évaporation (l'humidité reste piégée "
+           "dessous) et se décompose lentement en humus. Sa NATURE compte — paille "
+           "tendre, broyat ligneux, aiguilles acides n'ont ni la même durée ni les "
+           "mêmes effets sur la faune et le sol.",
+        3: "Un sol couvert est un sol vivant : le paillage imite la litière de la forêt "
+           "— rien n'y reste nu. Il épuise la banque de graines enfouies, tempère les "
+           "écarts de chaleur, nourrit les vers et le réseau fongique, et finit en terre. "
+           "Le jardinier de sol vivant ne laisse jamais la terre à nu ; il l'habille et "
+           "laisse la matière faire le travail du désherbage et de l'arrosage à sa place.",
+    },
+
     "fourche": {
         1: "Une fourche à dents, pour piquer, soulever et brasser des matières en vrac.",
         2: "Au compost, la fourche sert à RETOURNER le tas : elle le brasse et y "

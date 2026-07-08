@@ -12,7 +12,7 @@ snapshot : le squelette est observé frais (seche, semaines_mort=0).
 """
 import json
 
-from .harness import check, ServerProc
+from .harness import check, ServerProc, _PERF_VOLATILE
 
 
 def _appletree(snap):
@@ -80,7 +80,22 @@ def test_morts():
     # rejoué au même seed doit produire le MÊME squelette, octet pour octet.
     s2, _, _, _, snap1b = _run(42)
     s2.send(cmd="quit"); s2.close()
-    dump = lambda sn: json.dumps(sn, sort_keys=True, separators=(",", ":"))
+    # Neutralise les champs perf VOLATILS (ms_tick, rss_mo) AVANT la comparaison :
+    # `_run` lit le snapshot BRUT (`ServerProc.send`), qui porte le RSS OS du
+    # sous-process — intrinsèquement non déterministe. Le harness scrube déjà ces
+    # champs pour les autres comparaisons de déterminisme (`_PERF_VOLATILE`) ; on
+    # applique le même filtre ici, sinon ce test est flaky (le RSS des deux runs
+    # diffère au gré de l'allocateur). N'affecte QUE la comparaison, pas les checks
+    # écologiques ci-dessus.
+    def _sans_perf_volatile(sn):
+        sn = dict(sn)
+        perf = dict(sn.get("perf", {}))
+        for k in _PERF_VOLATILE:
+            perf[k] = None
+        sn["perf"] = perf
+        return sn
+    dump = lambda sn: json.dumps(_sans_perf_volatile(sn), sort_keys=True,
+                                 separators=(",", ":"))
     check("2 runs même seed → snapshot post-déracinage byte-identique",
           dump(snap1) == dump(snap1b))
 

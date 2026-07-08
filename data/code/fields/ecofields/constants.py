@@ -848,6 +848,37 @@ INFILTRATION_SURFACE  = 0.15   # eau de surface réabsorbée/tick par le sol (×
 EVAP_SURFACE          = 0.20   # fraction de la lame évaporée/tick (lame libre)
 SEUIL_FLAQUE          = 0.10   # lame au-dessus de laquelle on perçoit une flaque (vue)
 
+# --- Paillage — champ `paillage` par plot (sprint équilibre invasion ③, D69) ---
+# Le LEVIER PERMACOLE central contre l'invasion d'adventices : un champ scalaire
+# `paillage` ∈ [0,1] (profondeur/densité du mulch) posé par le geste `pailler`, qui
+# 1) FREINE la germination férale (succession), 2) ÉPUISE la banque de graines
+# enfouies (vieillissement accéléré, seedbank), 3) RÉDUIT l'évapotranspiration
+# (hydrologie, rétention d'humidité), 4) SE DÉCOMPOSE en humus (`om_stable`). NUL
+# partout au repos → tous les lecteurs neutres → golden INTACT (le smoke ne paille
+# jamais). C'est un FLUX (philo #2) : le mulch change le MILIEU, la réponse
+# biologique (moins de levée, sol plus frais) ÉMERGE ; jamais un bonus direct sur
+# une plante. Déterministe, zéro RNG (philo #3). PLACEHOLDERS, calibrage F5 / bancs.
+#  - PAILLAGE_DECAY : décroissance hebdomadaire du champ (le mulch se décompose /
+#    s'incorpore). ~0.03/sem → un mulch plein s'efface en ~1 saison (demi-vie ~23 sem)
+#    → il faut RE-pailler pour tenir l'effet (usure de la solution, philo #1).
+#  - PAILLAGE_OM_W : part de la profondeur décomposée reversée à `om_stable` (le mulch
+#    qui disparaît nourrit l'humus). PETIT (om_stable se décompose à 0.0006/sem : un
+#    apport trop fort exploserait la mémoire du sol).
+#  - PAILLAGE_GERM_SEUIL : profondeur de mulch au-delà de laquelle la levée férale est
+#    TOTALEMENT étouffée (cutoff dur, patron COUVERTURE_ADVENTICE_SEUIL) ; en dessous,
+#    la fenêtre de germination est atténuée graduellement par (1 − paillage).
+#  - PAILLAGE_AGING_BOOST : accélérateur du vieillissement des graines sous mulch
+#    (`SEED_VIABILITY_LOSS ** (1 + boost·paillage)`). paillage=0 → exposant 1 →
+#    vieillissement inchangé ; mulch plein → banque enfouie épuisée plus vite.
+PAILLAGE_DECAY        = 0.03    # décroissance hebdo du champ (mulch dure ~1 saison)
+PAILLAGE_OM_W         = 0.10    # part de la profondeur décomposée reversée à om_stable
+PAILLAGE_GERM_SEUIL   = 0.5     # profondeur au-delà de laquelle la germination férale est étouffée (cutoff dur)
+PAILLAGE_AGING_BOOST  = 1.0     # accélération du vieillissement des graines enfouies à mulch plein
+PAILLAGE_EVAP_FRAC    = 0.5     # part du chemin evap→1.0 (rétention) à mulch plein (barrière d'évaporation, patron COUVERTURE_EVAP_FRAC)
+# Dose de mulch déposée par un geste `pailler` (échelle [0,1], CUMULATIVE, cap 1.0).
+# Un geste = un bon paillage local ; ré-pailler par-dessus épaissit jusqu'au plafond.
+PAILLAGE_DOSE         = 0.6
+
 # Signature sol par famille (laissée après chaque saison)
 SOIL_SIGNATURE = {
     "Fabaceae":   {"microbiome": +0.15, "fertilite": +0.10},

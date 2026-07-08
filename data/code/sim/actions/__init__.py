@@ -31,9 +31,9 @@ from .couts import (
 from .progression import GAIN_DECOUVERTE, GAIN_SUCCES, observer, crediter_succes
 from .gestes import (
     DOSE_ARROSAGE, BECHAGE_MICROBIOME_MALUS, HARVEST_GAIN_FULL, GAIN_TAILLE_RATIO,
-    BECHAGE_MALUS, GRELINETTE_GAIN,
+    BECHAGE_MALUS, GRELINETTE_GAIN, PAILLAGE_DOSE,
     manger, planter, arroser, recolter, deraciner, tailler,
-    ecraser, ecraser_plante, favoriser_auxiliaire, becher, grelinette,
+    ecraser, ecraser_plante, favoriser_auxiliaire, becher, grelinette, pailler,
 )
 from .compost import (
     EPANDRE_W, structure_de_tuile, poser_bac, poser_pile,
@@ -61,9 +61,9 @@ __all__ = [
     "_cle_espece", "_objets_action", "f_globale", "f_objets", "cout_action",
     "GAIN_DECOUVERTE", "GAIN_SUCCES", "observer", "crediter_succes",
     "DOSE_ARROSAGE", "BECHAGE_MICROBIOME_MALUS", "HARVEST_GAIN_FULL", "GAIN_TAILLE_RATIO",
-    "BECHAGE_MALUS", "GRELINETTE_GAIN",
+    "BECHAGE_MALUS", "GRELINETTE_GAIN", "PAILLAGE_DOSE",
     "manger", "planter", "arroser", "recolter", "deraciner", "tailler",
-    "ecraser", "ecraser_plante", "favoriser_auxiliaire", "becher", "grelinette",
+    "ecraser", "ecraser_plante", "favoriser_auxiliaire", "becher", "grelinette", "pailler",
     "EPANDRE_W", "structure_de_tuile", "poser_bac", "poser_pile",
     "composter", "empiler_bois", "retourner", "epandre",
     "CONCEPT_ABEILLES", "SEUIL_EQUIPEMENT", "MIEL_VIGUEUR_RATIO", "RECOLTE_SANS_EQUIP",

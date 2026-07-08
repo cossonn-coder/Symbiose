@@ -20,6 +20,16 @@ SEED_ARCHETYPES = ["pioneer", "nitrogen_fixer", "grass", "competitor"]
 SEED_VIABILITY_LOSS = 0.998   # vieillissement hebdomadaire des graines
 SEED_DISTURBANCE_GAIN = 0.002 # enrichissement par perturbation (pioneer surtout)
 
+# Accélération du vieillissement des graines ENFOUIES sous le mulch (sprint
+# équilibre invasion ③, D69). Miroir de `PAILLAGE_AGING_BOOST` d'ecofields, mais
+# défini ICI en littéral : la couche `fields/seedbank` n'importe pas `fields.ecofields`
+# (règle de couches — c'est ecofields qui importe seedbank). Sous un mulch plein, la
+# viabilité chute selon `SEED_VIABILITY_LOSS ** (1 + SEED_AGING_BOOST · paillage)` →
+# épuisement DURABLE de la banque locale (mulcher longtemps vide le stock enfoui,
+# philo #2 : flux mulch → contrainte → moins de recrutement féral). Paillage=0
+# (golden) → exposant 1 → vieillissement STRICTEMENT inchangé. PLACEHOLDER, calibrage.
+SEED_AGING_BOOST = 1.0
+
 # --- Facilitation OM des tardifs (tronçon ②, déverrouillage S3) --------------
 # Les propagules vivaces tardives (fixatrice/graminée/competitor) n'entraient en
 # banque QUE via un gate `soil_memory_deep ≥ 0.2` (dynamique DÉCENNALE, jamais
@@ -143,12 +153,24 @@ class SeedBank:
     def total_density(self, r: int, c: int) -> float:
         return sum(self.data[r][c].values())
 
-    def tick_aging(self) -> None:
-        """Vieillissement hebdomadaire — perte lente de viabilité."""
+    def tick_aging(self, paillage_field: "GridField | None" = None) -> None:
+        """Vieillissement hebdomadaire — perte lente de viabilité.
+
+        `paillage_field` (sprint équilibre invasion ③, D69) : si fourni, le mulch du
+        plot ACCÉLÈRE le vieillissement des graines enfouies — la banque locale
+        s'épuise là où l'on maintient un paillage (`SEED_VIABILITY_LOSS ** (1 +
+        SEED_AGING_BOOST · paillage)`). Paillage=0 (ou champ absent, appels legacy) →
+        exposant 1 → vieillissement STRICTEMENT inchangé → golden INTACT. On ne calcule
+        l'exposant que sur les plots RÉELLEMENT mulchés (court-circuit au repos)."""
         for r in range(self.rows):
             for c in range(self.cols):
+                loss = SEED_VIABILITY_LOSS
+                if paillage_field is not None:
+                    mulch = paillage_field.at_plot(r, c)
+                    if mulch > 0.0:
+                        loss = SEED_VIABILITY_LOSS ** (1.0 + SEED_AGING_BOOST * mulch)
                 for a in SEED_ARCHETYPES:
-                    self.data[r][c][a] *= SEED_VIABILITY_LOSS
+                    self.data[r][c][a] *= loss
 
     def tick_disturbance_enrichment(self,
                                     disturbance_field: "DisturbanceField",

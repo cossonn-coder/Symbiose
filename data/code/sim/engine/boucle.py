@@ -477,6 +477,15 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
             tlog = eco.tick_transport(vent_dir, vent_force)
             if tlog: log += tlog
 
+            # 15e. Paillage (sprint équilibre invasion ③, D69) — DÉCROISSANCE du mulch
+            #      posé par le geste `pailler`, reversée à l'humus `om_stable`. Placé
+            #      APRÈS ses lecteurs de la semaine (évaporation étape 3, vieillissement
+            #      de banque étape 14, germination férale étape 15) : ceux-ci voient la
+            #      profondeur que le joueur a déposée AVANT ce tick, puis le mulch se
+            #      décompose d'un cran. Champ NUL au repos (le smoke ne paille jamais) →
+            #      no-op strict (décompo=0, rien reversé) → golden INTACT.
+            eco.tick_paillage()
+
             # 16. Transition hivernale (semaines 48-52)
             if saison == "hiver" and week_in_year in SAISONS["hiver"] and (week_in_year - SAISONS["hiver"].start) >= 9:
                 wlog = self._winter_transition(tile, eco, week)

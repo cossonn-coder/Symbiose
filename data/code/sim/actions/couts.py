@@ -45,6 +45,7 @@ COUTS = {
     "favoriser_auxiliaire": MODERE,
     "becher":               FAIBLE,
     "grelinette":           MODERE,
+    "pailler":              MODERE,            # dépose du mulch au sol (phase planification, équilibre invasion ③ §2)
     "tailler":              MODERE,            # geste direct sur le vivant (philo #1) — coût modéré
     "manger":               NUL,               # coût NUL → cout_action renvoie 0 sans rien lire (§10.5)
     "poser_bac":            MODERE,            # pose une structure (phase planification, ⑤ §5.1)
@@ -80,6 +81,8 @@ OBJETS_TOUCHES = {
     "favoriser_auxiliaire": ("aménagement-habitat",),
     "becher":               ("bêchage", "bêche"),
     "grelinette":           ("ameublissement", "grelinette"),
+    "pailler":              ("paillage",),       # technique ; on écrit un CHAMP, pas de cible vivante — sans état moteur → atténuation neutre 1.0
+
     "tailler":              ("taille", "sécateur"),
     "manger":               (),                          # coût NUL → terme 2 vide (§10.5)
     "poser_bac":            ("compostage", "bac-à-compost"),
