@@ -899,18 +899,23 @@ PAILLAGE_DOSE         = 0.6
 #    nourrit les saprophytes) — l'interconnexion « ferme la boucle » sans code neuf.
 #  - `fongique`  : marqueur (hook mycélium) — informatif, lu par la vue/le pont (⑧) ;
 #    l'effet fongique RÉEL passe déjà par `vers_bois` (litière bois → substrat).
+#  - `abri_w`    : qualité d'ABRI pour la faune ombrophile (sprint équilibre invasion
+#    ⑥, D11) — un mulch VOLUMINEUX offre un meilleur refuge. Le BRF (copeaux, cavités)
+#    abrite mieux que la paille (couche plane). Lu par la couche `fields/population`
+#    via `eco.nature_at` (pas d'import inverse) pour gonfler l'habitat des guildes de
+#    sol. Repos (nature "") → NATURE_NEUTRE.abri_w = 0 → habitat inchangé → golden INTACT.
 # Valeurs PLACEHOLDER, calibrage F5 / bancs. NUL au repos (nature "" → tous les
 # multiplicateurs valent 1.0, aucun terme extra) → golden INTACT.
 NATURES_MULCH = {
-    #             decay  humidite_w  allelo  ph_shift  vers_bois  fongique
-    "paille":    {"decay": 1.0, "humidite_w": 1.2, "allelo": 0.0,  "ph_shift":  0.0,  "vers_bois": 0.0,  "fongique": False},
-    "brf":       {"decay": 0.5, "humidite_w": 0.9, "allelo": 0.0,  "ph_shift":  0.0,  "vers_bois": 1.0,  "fongique": True},
-    "aiguilles": {"decay": 0.5, "humidite_w": 0.9, "allelo": 0.3,  "ph_shift": -0.10, "vers_bois": 0.0,  "fongique": False},
+    #             decay  humidite_w  allelo  ph_shift  vers_bois  fongique  abri_w
+    "paille":    {"decay": 1.0, "humidite_w": 1.2, "allelo": 0.0,  "ph_shift":  0.0,  "vers_bois": 0.0,  "fongique": False, "abri_w": 0.7},
+    "brf":       {"decay": 0.5, "humidite_w": 0.9, "allelo": 0.0,  "ph_shift":  0.0,  "vers_bois": 1.0,  "fongique": True,  "abri_w": 1.0},
+    "aiguilles": {"decay": 0.5, "humidite_w": 0.9, "allelo": 0.3,  "ph_shift": -0.10, "vers_bois": 0.0,  "fongique": False, "abri_w": 0.6},
 }
 # Nature NEUTRE (plot non mulché) : tous les multiplicateurs à l'identité, aucun
 # terme extra → lecteurs strictement inchangés (garde-fou golden au repos).
 NATURE_NEUTRE = {"decay": 1.0, "humidite_w": 1.0, "allelo": 0.0,
-                 "ph_shift": 0.0, "vers_bois": 0.0, "fongique": False}
+                 "ph_shift": 0.0, "vers_bois": 0.0, "fongique": False, "abri_w": 0.0}
 
 # Rendement de matière par SOURCE (sprint équilibre invasion ④, §3.1). Convertit une
 # masse physique (bois broyé, biomasse récoltée) en unités de STOCK de mulch (mêmes

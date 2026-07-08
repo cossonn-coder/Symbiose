@@ -18,7 +18,7 @@ from fields.population.resources import (
     _mycelium_signal, _litter_grid, _rav_fruit_signal, _espece_grid, _stability_grid,
     _auxiliaire_habitat_grid, _undisturbed_structure_grid, _merle_food_grid,
     _base_habitat_grid, _pile_grid, _ravageur_grid, _abeille_habitat_grid,
-    _pollinisateur_habitat_grid, _osmie_habitat_grid,
+    _pollinisateur_habitat_grid, _osmie_habitat_grid, _avec_abri_paillage,
 )
 
 
@@ -76,7 +76,8 @@ def build_population_specs() -> list[TrophicSpec]:
         ),
         TrophicSpec(
             name="limace", category="ravageur", salt=_SALT_LIMACE,
-            resource_fn=_limace_food_grid, habitat_fn=_rosee_humide_litiere_grid,
+            resource_fn=_limace_food_grid,
+            habitat_fn=_avec_abri_paillage(_rosee_humide_litiere_grid),   # ombrophile : s'abrite sous le mulch (⑥)
             predators=("carabe", "herisson"),    # ④c (habitat abreuvé par la rosée ⑤)
             # ④d : le signal fruit pourri (`_rav_fruit_signal`), porté TRANSITOIREMENT
             # par la limace en ④b, passe au CLOPORTE (détritivore dédié, doc §C13,
@@ -98,7 +99,8 @@ def build_population_specs() -> list[TrophicSpec]:
             # lombric = héritier du champ `vers_de_terre` (salt identique → continuité
             # sprites) ; ressource = MO+microbiome du sol (pas la litière de surface).
             name="lombric", category="detritivore", salt=_SALT_LOMBRIC,
-            resource_fn=_soil_food_grid, habitat_fn=_undisturbed_grid,
+            resource_fn=_soil_food_grid,
+            habitat_fn=_avec_abri_paillage(_undisturbed_grid),   # ombrophile : le mulch nourrit/abrite le ver (⑥)
             predators=("merle", "herisson"),     # ④d : le ver n'est plus un puits isolé
             # Attraction fongivore (sprint mycélium ④) : le réseau mycélien dense
             # gonfle le détritivore du sol (collemboles brouteurs d'hyphes) — terme
@@ -112,7 +114,8 @@ def build_population_specs() -> list[TrophicSpec]:
             # Partage la ressource litière avec la limace (compétition implicite) et
             # son habitat humide. Reçoit le signal fruit POURRI (charognard, doc §C13).
             name="cloporte", category="detritivore", salt=_SALT_CLOPORTE,
-            resource_fn=_litter_grid, habitat_fn=_rosee_humide_litiere_grid,
+            resource_fn=_litter_grid,
+            habitat_fn=_avec_abri_paillage(_rosee_humide_litiere_grid),   # ombrophile : sous-mulch humide et sombre (⑥)
             predators=("carabe", "herisson"),    # ④d (habitat abreuvé par la rosée ⑤)
             signal_fn=_rav_fruit_signal,         # fruit pourri → cloporte (repris de la limace)
             daylen_min=9.0, daylen_full=12.0,    # humide : fenêtre large/précoce (comme la limace)
@@ -139,7 +142,8 @@ def build_population_specs() -> list[TrophicSpec]:
         ),
         TrophicSpec(
             name="carabe", category="auxiliaire", salt=_SALT_CARABE,
-            resource_fn=_espece_grid("limace"), habitat_fn=_undisturbed_structure_grid,
+            resource_fn=_espece_grid("limace"),
+            habitat_fn=_avec_abri_paillage(_undisturbed_structure_grid),   # ombrophile : se réfugie sous le mulch (⑥)
             predators=(),
             daylen_min=9.0, daylen_full=12.0,    # nocturne→large (élargie comme la limace, sa proie)
             **encyclo_meta("carabe"),
@@ -153,7 +157,8 @@ def build_population_specs() -> list[TrophicSpec]:
         ),
         TrophicSpec(
             name="herisson", category="auxiliaire", salt=_SALT_HERISSON,
-            resource_fn=_espece_grid("limace"), habitat_fn=_pile_grid,
+            resource_fn=_espece_grid("limace"),
+            habitat_fn=_avec_abri_paillage(_pile_grid),   # ombrophile : niche sous le mulch/les piles (⑥)
             predators=(),
             daylen_min=9.0, daylen_full=12.0,    # nocturne→large
             **encyclo_meta("herisson"),

@@ -11,7 +11,7 @@
 - **03** paillage moteur — champ + geste `pailler` + germ↓/ET↓/graines↑/→OM [golden INTACT] ✅ FAIT 2026-07-08 (champ `paillage`, geste `pailler`, 4 effets, golden `33c0ea6f…` inchangé)
 - **04** matériau — `broyer`→BRF + récolte paille → stock + 3 natures [INTACT] ✅ FAIT 2026-07-08 (golden `33c0ea6f…` inchangé)
 - **05** catalogue blé/chanvre/sapin + 5 voix [INTACT] ✅ FAIT 2026-07-08 (golden `33c0ea6f…` inchangé)
-- **06** paillage ↔ vie macro (abri) [INTACT]
+- **06** paillage ↔ vie macro (abri) [golden INTACT] ✅ FAIT 2026-07-08 (golden `33c0ea6f…` + population_hash `1aa4997d…` INCHANGÉS)
 - **07** planter+pailler par maîtrise (auto-paillage) [INTACT]
 - **08** vue Godot (pailler/broyer + rendu mulch + abri) + démo sud [INTACT]
 
@@ -304,5 +304,31 @@ NON concerné : C# (⑤ moteur Python pur ; le pont sérialise le catalogue → 
 `test_sim_server`, mais aucun build C# nécessaire ; rendu = ⑧). F5 : rien à valider ce
 tronçon (assets/rendu des 3 espèces = ⑧).
 
-**Prochain : tronçon ⑥ (paillage ↔ vie macro / abri).** Message /clear : « lis
-`sprints/sprint_equilibre_invasion/00_etat.md` puis `06_*.md` ».
+**Tronçon ⑥ FAIT (2026-07-08)** — golden INTACT (`33c0ea6f…`, hash post-② inchangé)
+ET **population_hash INTACT** (`1aa4997d…`) : le couplage naît neutre (paillage=0 au
+repos → terme d'abri nul → habitat bit-identique). Suite ENTIÈRE verte hors
+`test_epaisseur_500ans` (INTERDIT). Le mulch devient un ABRI (D11) : les guildes
+OMBROPHILES du sol colonisent les zones paillées. Livré :
+- `fields/ecofields/constants.py` — nouvelle colonne `abri_w` dans `NATURES_MULCH`
+  (BRF 1.0 > paille 0.7 > aiguilles 0.6 : un mulch volumineux abrite mieux) +
+  `NATURE_NEUTRE.abri_w=0.0` (garde-fou golden au repos).
+- `fields/population/resources.py` — constante `PAILLAGE_ABRI_W=0.5` + décorateur
+  `_avec_abri_paillage(base_fn)` : `habitat += PAILLAGE_ABRI_W·abri_w(nature)·paillage`,
+  borné [0,1]. Lit `eco.paillage`/`eco.nature_at` À TRAVERS `eco` (aucun import inverse
+  `fields.population → ecofields` — pas de cycle de couche). Robuste pré-③ (`getattr`).
+- `fields/population/registry.py` — 5 guildes ombrophiles décorées : `limace`,
+  `lombric`, `cloporte`, `carabe`, `herisson` (habitat_fn wrappée). Import du décorateur.
+- `tests/test_paillage.py` — section [8] (abri : habitat ombrophile ↑ sous mulch,
+  BRF>paille, plot non paillé inchangé, invariant repos bit-identique) → 39/39 OK.
+- DÉCALAGE : la population ticke AVANT `tick_paillage` (boucle L398 vs L487) → elle lit
+  le paillage de la SEMAINE PRÉCÉDENTE (décalage uniforme, déterministe, pas de RNG).
+- Tailles LDC pur : resources 270, registry 233 (bande verte ≤300).
+
+NON concerné : C# (⑥ moteur Python pur ; rendu abri = ⑧). F5 : rien à valider ce
+tronçon (visuel faune sous mulch = ⑧). Décision de design : liste ombrophile =
+faune de SOL (carabe/lombric/cloporte/hérisson/limace) ; les pollinisateurs/oiseaux
+volants NON décorés (pas de refuge de sol). Le décorateur est LOCAL au plot mulché
+(les plots nus restent bit-identiques).
+
+**Prochain : tronçon ⑦ (planter+pailler par maîtrise / auto-paillage).** Message
+/clear : « lis `sprints/sprint_equilibre_invasion/00_etat.md` puis `07_*.md` ».

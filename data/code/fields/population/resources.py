@@ -63,6 +63,47 @@ ROSEE_SURFACE_REF     = 0.03   # eau liquide/plot saturant le signal de surface 
 ROSEE_FAUNE_HABITAT_W = 0.25   # bump max d'habitat des détritivores du matin
 
 
+# ---------------------------------------------------------------------------
+# PAILLAGE = ABRI POUR LA FAUNE OMBROPHILE (sprint équilibre invasion ⑥, D11)
+# ---------------------------------------------------------------------------
+# Le mulch (`eco.paillage ∈ [0,1]` par plot, posé au geste `pailler`) est un
+# HABITAT : les guildes OMBROPHILES du sol (carabe, lombric, cloporte, hérisson,
+# limace) — qui redoutent le plein soleil sans couvert — colonisent les zones
+# paillées. Terme AJOUTÉ à leur terme d'habitat existant, borné [0,1] :
+#     habitat(r,c) += PAILLAGE_ABRI_W · abri_w(nature) · paillage(r,c)
+# La QUALITÉ d'abri dépend de la nature (`abri_w` du dict NATURES_MULCH, tronçon
+# ④ — le BRF volumineux abrite mieux que la paille), lue via `eco.nature_at`
+# (aucun import inverse `fields.population → ecofields` : on lit à travers `eco`).
+# Lecture PURE (la faune ne touche pas le mulch — c'est le CHAMP qui fait tout,
+# philo #2). La population ticke AVANT `tick_paillage` dans la boucle → elle lit
+# le paillage de la semaine PRÉCÉDENTE (décalage uniforme, déterministe, pas de
+# RNG neuf). Invariant golden : `paillage = 0` partout (repos du smoke — jamais de
+# `pailler`) ⇒ terme nul ⇒ habitat bit-identique → `population_hash` INCHANGÉ.
+# PLACEHOLDER, calibrage F5.
+PAILLAGE_ABRI_W = 0.5   # bump max d'habitat sous un mulch plein de meilleure nature
+
+
+def _avec_abri_paillage(base_fn: Callable) -> Callable:
+    """Décore une habitat_fn d'une guilde OMBROPHILE : ajoute le refuge offert par
+    le mulch à son terme d'habitat de base (borné [0,1]). Sans mulch → base_fn nue
+    (golden neutre). Un seul point de couplage → data-driven, pas de branche
+    dispersée par guilde (patron des wrappers `_rosee_*`)."""
+    def _grid(eco, tile, plants) -> list[list[float]]:
+        g = base_fn(eco, tile, plants)
+        paillage = getattr(eco, "paillage", None)
+        if paillage is None:                    # robustesse pré-③ (jamais en prod)
+            return g
+        for r in range(eco.rows):
+            for c in range(eco.cols):
+                depth = paillage.at_plot(r, c)
+                if depth <= 0.0:
+                    continue
+                abri = eco.nature_at(r, c)["abri_w"]
+                g[r][c] = _clamp01(g[r][c] + PAILLAGE_ABRI_W * abri * depth)
+        return g
+    return _grid
+
+
 def _mycelium_signal(eco, tile, plants) -> list[list[float]]:
     """Attraction fongivore : le réseau `mycelium` dense gonfle la capacité du
     détritivore du sol (collemboles brouteurs d'hyphes). Borné par FONGIVORE_GAIN.

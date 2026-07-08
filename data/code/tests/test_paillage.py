@@ -281,6 +281,49 @@ def test_materiau():
     check("mulch effacé → nature oubliée ('')", ecoN.paillage_nature[0][0] == "")
 
 
+# ---------------------------------------------------------------------------
+# 8. Paillage ↔ vie macro : ABRI pour la faune ombrophile (⑥)
+# ---------------------------------------------------------------------------
+def _habitat_guilde(name: str, eco, tile):
+    """Grille d'habitat d'une guilde nommée (via sa spec du registre)."""
+    from fields.population.registry import build_population_specs
+    spec = next(s for s in build_population_specs() if s.name == name)
+    return spec.habitat_fn(eco, tile, [])
+
+
+def test_abri_paillage():
+    print("\n[8] abri : mulch → habitat des guildes ombrophiles ↑ (paillage=0 neutre)")
+    OMBROPHILES = ("carabe", "lombric", "cloporte", "herisson", "limace")
+    tile = Tile(tile_id="AB", soil_type="terre", grid_rows=4, grid_cols=4)
+
+    # sans mulch : habitat de RÉFÉRENCE ; avec BRF plein au plot (1,1) : habitat ↑
+    for name in OMBROPHILES:
+        eco_nu = init_eco("AB", 4, 4, humidite=1.0)
+        eco_ml = init_eco("AB", 4, 4, humidite=1.0)
+        eco_ml.poser_mulch(1, 1, "brf", 1.0)          # BRF = meilleur abri (abri_w=1.0)
+        h_nu = _habitat_guilde(name, eco_nu, tile)
+        h_ml = _habitat_guilde(name, eco_ml, tile)
+        check(f"{name} : habitat ↑ sous le mulch", h_ml[1][1] > h_nu[1][1],
+              f"{h_nu[1][1]:.4f} → {h_ml[1][1]:.4f}")
+        # plot NON paillé : bit-identique (le couplage est LOCAL au plot mulché)
+        check(f"{name} : plot non paillé inchangé", h_ml[0][0] == h_nu[0][0])
+
+    # BRF abrite MIEUX que la paille (abri_w 1.0 > 0.7)
+    eco_brf = init_eco("AB", 4, 4, humidite=1.0); eco_brf.poser_mulch(2, 2, "brf", 1.0)
+    eco_paille = init_eco("AB", 4, 4, humidite=1.0); eco_paille.poser_mulch(2, 2, "paille", 1.0)
+    hb = _habitat_guilde("cloporte", eco_brf, tile)   # base non saturée → l'écart abri_w est visible
+    hp = _habitat_guilde("cloporte", eco_paille, tile)
+    check("BRF abrite mieux que la paille (abri_w)", hb[2][2] > hp[2][2],
+          f"paille={hp[2][2]:.4f} < brf={hb[2][2]:.4f}")
+
+    # invariant repos : paillage=0 partout → habitat bit-identique à la base nue
+    from fields.population.resources import _undisturbed_grid, _avec_abri_paillage
+    eco_z = init_eco("AB", 4, 4, humidite=1.0)
+    base = _undisturbed_grid(eco_z, tile, [])
+    avec = _avec_abri_paillage(_undisturbed_grid)(eco_z, tile, [])
+    check("paillage=0 → habitat bit-identique (golden neutre)", base == avec)
+
+
 def main():
     test_geste_pailler()
     test_germination_etouffee()
@@ -289,6 +332,7 @@ def main():
     test_aging_accelere()
     test_invariant_repos()
     test_materiau()
+    test_abri_paillage()
     n_ok = sum(1 for _, ok in _results if ok)
     print(f"\n=== {n_ok}/{len(_results)} OK ===")
     if n_ok != len(_results):
