@@ -13,6 +13,11 @@ namespace Symbiose
 	public partial class WorldView : Node2D
 	{
 		private bool _houseGhost;             // maison transparente (H)
+		// Overlay debug LOD des émetteurs d'ombre (D67, F9) : quand ON, les plantes
+		// NON-émettrices (semis sous-seuil que le LOD écarte des boucles d'ombre) se
+		// teintent — on VOIT qui le LOD retire. Statique : PlantRenderer.ApplyLodTint
+		// le lit sans référence au nœud parent. OFF par défaut (« affichage technique »).
+		public static bool LodDebugOn { get; private set; }
 		private const int DebugSkipWeeks = 10; // touche T : semaines sautées d'un coup (debug)
 
 		// -------------------------------------------------------------------
@@ -65,6 +70,7 @@ namespace Symbiose
 						else ToggleFieldOverlay();
 						break;
 					case Key.F7:       ToggleSoilTemp();   break;
+					case Key.F9:       ToggleLodDebug();   break;  // LOD émetteurs d'ombre (D67)
 					// --- Raccourcis DEBUG voix (pont 0.5.12) : forcer la maîtrise
 					//     pour tester magazine/pages/carnet sans jouer. LETTRES libres
 					//     (⚠️ F5=Run, F8=Stop sont réservés par l'éditeur Godot et
@@ -163,6 +169,18 @@ namespace Symbiose
 			if (_macroLife == null) return;
 			_macroLife.Visible = !_macroLife.Visible;
 			GD.Print($"[WorldView] I → vie macro {(_macroLife.Visible ? "ON" : "OFF")}.");
+		}
+
+		// Touche F9 (LOD émetteurs d'ombre, D67) : teinte les plantes NON-émettrices
+		// (semis sous-seuil écartés des boucles d'ombre par le LOD). On rebalaie tous
+		// les nœuds pour (re)poser/retirer la teinte — coût trivial (~150 nœuds, un
+		// SelfModulate chacun). « Affichage technique déconseillé en découverte »,
+		// même esprit que les heatmaps F6/F7 (philo #5).
+		private void ToggleLodDebug()
+		{
+			LodDebugOn = !LodDebugOn;
+			foreach (var node in _plantNodes.Values) node.ApplyLodTint();
+			GD.Print($"[WorldView] F9 → overlay LOD émetteurs {(LodDebugOn ? "ON" : "OFF")}.");
 		}
 
 		// Modulate = teinte × alpha appliquée au nœud ET ses enfants : un seul

@@ -18,6 +18,11 @@ from sim.weather import weather_state, weather_signs, CALME, T_MOY
 # densité → entités (fields/population.py §3). L'échantillonnage se fait CÔTÉ
 # SERVEUR — la vue n'a pas besoin de _hash_noise (kickoff t6 §4).
 from fields.population import sample_sprites, sample_carpophores
+# LOD des émetteurs d'ombre (D67, sprint perf-lod-ombre ③) : on relit le SEUIL de
+# pouvoir ombrageant pour DÉRIVER, par plante, si elle émet une ombre (miroir exact
+# de la métrique de fields/light.py:compute). Lecture pure d'une constante de module
+# → golden NEUTRE. La vue teinte les NON-émettrices sous le toggle debug.
+from fields import light
 # Seuil de perception d'une flaque (sprint hydrologie & marécages ②) : la liste
 # creuse `eau_surface` ne consigne que les plots dont la lame le dépasse.
 from fields.ecofields.constants import SEUIL_FLAQUE, COUVERTURE_RENDU_SEUIL
@@ -134,7 +139,17 @@ class SerializeMixin:
                 # vide = plante saine. Lecture pure → golden NEUTRE (espèces neutres du
                 # smoke, sols drainants : aucun symptôme).
                 base["leaf_symptoms"] = semiologie.leaf_symptoms(p, eco, saison)
-                base["foliage_density"] = cls.foliage_density_at(p, saison)
+                foliage_density = cls.foliage_density_at(p, saison)
+                base["foliage_density"] = foliage_density
+                # ÉMETTEUR d'ombre (LOD D67, ③) : miroir EXACT de la métrique de
+                # fields/light.py:compute — pouvoir = hauteur × rayon canopée ×
+                # densité foliaire, émettrice ssi ≥ SHADING_POWER_MIN. On réutilise la
+                # densité déjà calculée (pas de recalcul). Lecture pure d'un DÉRIVÉ
+                # (pas un état moteur neuf) → golden NEUTRE. La vue teinte les
+                # NON-émettrices sous le toggle debug (semis sous-seuil que le LOD
+                # écarte des boucles géométriques).
+                pouvoir = p.current_height * cls.canopy_radius_at(p) * foliage_density
+                base["emitteur"] = pouvoir >= light.SHADING_POWER_MIN
                 base["organ"] = repro.get(saison)
                 base["organ_site"] = cls.organ_site
                 # Fruits traçables (③, D19) : VRAI état moteur (≠ proxy `organ`).

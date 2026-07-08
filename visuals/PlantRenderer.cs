@@ -214,6 +214,33 @@ namespace Symbiose
 			QueueRedraw();
 		}
 
+		// LOD des émetteurs d'ombre (D67, snapshot 0.5.21) : `emitteur` dérivé du
+		// pouvoir ombrageant côté MOTEUR (hauteur × rayon × densité ≥ seuil). false =
+		// semis sous-seuil que le LOD écarte des boucles d'ombre — reçoit toujours la
+		// lumière, n'ombre plus. Pur INDICE technique : on ne change rien au rendu du
+		// bois, on POSE seulement une teinte (SelfModulate) quand l'overlay debug est
+		// actif, pour VOIR qui le LOD retire (posture « affichage technique »). Défaut
+		// true (émetteur) → un snapshot pré-0.5.21 ne teinte jamais rien.
+		private bool _isEmitter = true;
+		// Teinte de repérage des NON-émetteurs sous l'overlay : bleu-gris translucide
+		// (distinct des teintes de symptômes, canal SelfModulate ≠ Modulate des fondus).
+		private static readonly Color LodDimTint = new(0.45f, 0.6f, 0.95f, 0.6f);
+
+		public void SetEmitter(bool emitteur)
+		{
+			if (_isEmitter == emitteur) return;   // early-out
+			_isEmitter = emitteur;
+			ApplyLodTint();
+		}
+
+		// (Ré)applique la teinte de l'overlay LOD selon l'état global + le drapeau
+		// émetteur de CETTE plante. SelfModulate ne touche QUE le dessin propre du nœud
+		// (branches + organes), pas les fondus d'apparition/mort (Modulate:a) ni l'ombre
+		// (nœud enfant). Overlay OFF ou plante émettrice → identité (blanc opaque).
+		public void ApplyLodTint() =>
+			SelfModulate = (WorldView.LodDebugOn && !_isEmitter)
+				? LodDimTint : Colors.White;
+
 		public void SetStructure(PlantStructure s)
 		{
 			_structure = s;

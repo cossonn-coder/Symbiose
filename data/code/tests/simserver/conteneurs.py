@@ -15,11 +15,22 @@ def test_conteneurs():
     s = ServerProc()
     # "full" : monde réel (maison → ombre) + banque de départ (planter_conteneur).
     init = s.send(cmd="init", config="full", seed=42)
-    check("engine_version 0.5.20", init.get("engine_version") == "0.5.20",
+    check("engine_version 0.5.21", init.get("engine_version") == "0.5.21",
           init.get("engine_version"))
     snap0 = s.send(cmd="snapshot")["snapshot"]
     check("snapshot expose `containers` VIDE à l'init (golden neutre)",
           snap0.get("containers") == [], snap0.get("containers"))
+    # LOD émetteurs d'ombre (D67, 0.5.21) : chaque plante VIVANTE porte `emitteur`
+    # (bool dérivé du pouvoir ombrageant). En config full à l'init on a un mélange de
+    # semis sous-seuil (emitteur false) et de plantes plus vigoureuses (true).
+    vivantes = [p for p in snap0.get("plants", []) if not p.get("dead")]
+    check("chaque plante vivante porte `emitteur` (bool)",
+          vivantes and all(isinstance(p.get("emitteur"), bool) for p in vivantes),
+          [p.get("emitteur") for p in vivantes[:5]])
+    check("le LOD sépare émetteurs et non-émetteurs (au moins un de chaque)",
+          any(p["emitteur"] for p in vivantes)
+          and any(not p["emitteur"] for p in vivantes),
+          {p["name"]: p["emitteur"] for p in vivantes})
     # Épaisseur de sol (D57 ②, 0.5.16) : bloc `epaisseur` = grille 2D dense par
     # tuile (cm). Présent dès l'init, valeurs finies ≥ 0 (init AU REPOS sur l'humus
     # de fond D56, donc hétérogène mais non nul). Le relief C# l'extrude.

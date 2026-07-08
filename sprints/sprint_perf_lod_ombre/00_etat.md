@@ -128,13 +128,36 @@ sous-seuil → couper leur ombre = couper le gros du volume d'obstacles. Gain ne
     n'exerce pas la dérive LOD → contrairement à l'anticipation du kickoff, RIEN à
     re-figer côté population. Golden = seul hash bougé.
   - Suites lumière vertes (golden, lod_ombre, ombre_maison, phototropisme, scatter).
-- **③ Vue Godot — À FAIRE** (kickoff `03_*.md`).
+- **③ Vue Godot — FAIT (2026-07-08).** Golden **INTACT** `24ec11e7…`. Protocole
+  pont bumpé **0.5.21** (additif). Livré :
+  - **Python (pont)** : `tools/simserver/serialize.py::_snapshot` expose, par plante
+    VIVANTE, `emitteur: bool` = DÉRIVÉ du pouvoir ombrageant `current_height ×
+    canopy_radius_at × foliage_density_at ≥ light.SHADING_POWER_MIN` (miroir EXACT de
+    `fields/light.py:compute`, densité réutilisée de `foliage_density`, aucun recalcul).
+    Lecture pure → golden NEUTRE. `tools/simserver/version.py` : `ENGINE_VERSION =
+    "0.5.21"` + ligne doc.
+  - **C# (vue)** : `WorldView.Snapshot.cs` lit `emitteur` (défaut `true` si absent =
+    compat pré-0.5.21) et le pousse aux renderers (born + grown). `WorldView.Controls.cs`
+    : toggle debug **F9** (`ToggleLodDebug`, `LodDebugOn` statique) — touche LIBRE
+    (F3/F4/F6/F7 déjà prises, F5/F8 réservées éditeur). `PlantRenderer.cs` :
+    `SetEmitter`/`ApplyLodTint` teintent les NON-émettrices via `SelfModulate`
+    (bleu-gris translucide, n'interfère ni avec les fondus `Modulate:a` ni avec les
+    teintes de symptômes). `dotnet build` **vert** (0 erreur, 0 avert).
+  - **Tests** : `tests/simserver/{conteneurs,structures,voix}.py` : version → 0.5.21 ;
+    `conteneurs.py` : 2 checks neufs (`emitteur` bool par vivante + LOD sépare
+    émetteurs/non-émetteurs). `test_sim_server` 247/247 vert.
+
+## Points F5 pour Nico (③)
+- **F4 (perf)** : le ms/tick doit BAISSER au fil des années vs avant D67 (~+18 %
+  mesuré au ② à l'équilibre propre). Rien à coder — juste vérifier le chiffre.
+- **F9 (overlay LOD, NEUF)** : bascule la teinte des plantes NON-émettrices (les semis
+  sous-seuil que le LOD écarte des boucles d'ombre) → bleu-gris translucide. On VOIT
+  qui le LOD retire. « Affichage technique déconseillé en découverte » (comme F6/F7).
 
 ## §REPRISE
 Lire `CLAUDE.md` + ce fichier. Décisions D1-D7 arrêtées, découpage figé (3 tronçons).
-Tronçons ① et ② CLOS. Golden actif = **`24ec11e7…`** (LOD `SHADING_POWER_MIN=37.5`),
-population `1aa4997d…` inchangé. **Reprendre au tronçon ③** (vue Godot) : snapshot
-`emitteur` par plante (`serialize.py`), bump `ENGINE_VERSION` 0.5.21, lecture C# +
-toggle debug teinte des non-émettrices (`WorldView.Snapshot/Controls`, `PlantRenderer`),
-golden INTACT, `dotnet build` vert. Puis clôture : DETTE D67 → implémenté + BACKLOG +
-journal + refactor auto-léger.
+**Les 3 tronçons ①②③ CLOS.** Golden actif = **`24ec11e7…`** (LOD `SHADING_POWER_MIN=37.5`),
+population `1aa4997d…` inchangé. Pont **0.5.21** (`emitteur` par plante, additif).
+Build C# vert. **Sprint PRÊT À CLÔTURER** : reste maj DETTE (D67 → implémenté : gain
++18 %, dérive `light_received` moy 0.68 %, nouveaux hash) + BACKLOG + `journal.md`
+(entrée de clôture) + refactor auto-léger si un fichier a franchi la bande.

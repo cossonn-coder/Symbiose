@@ -338,7 +338,17 @@ from __future__ import annotations
 #       BRF au stock). Ces gestes ÉTAIENT déjà dans le moteur (③/④) ; ⑧ les BRANCHE au
 #       pont. Un binaire pré-0.5.20 ignore le bloc `paillage` et répond « verbe inconnu »
 #       aux 2 gestes (tolérance côté vue, comme tous les bumps précédents).
-ENGINE_VERSION = "0.5.20"
+# 0.5.21 (perf LOD des émetteurs d'ombre ③, D67 — vue Godot au pont) : chaque plante
+#       VIVANTE du snapshot gagne `emitteur` ∈ {true, false} = DÉRIVÉ du pouvoir
+#       ombrageant (hauteur × rayon canopée × densité foliaire ≥ SHADING_POWER_MIN),
+#       miroir EXACT de la métrique de `fields/light.py:compute`. false = semis
+#       sous-seuil que le LOD écarte des deux boucles géométriques (reçoit toujours la
+#       lumière, n'ÉMET plus d'ombre). La vue teinte ces NON-émettrices sous un toggle
+#       debug (F7) → on VOIT qui le LOD retire. PURE lecture d'un dérivé (aucun état
+#       moteur neuf, la densité est déjà calculée pour `foliage_density`) → golden
+#       NEUTRE. Un binaire pré-0.5.21 n'émet pas la clé → la vue retombe sur `true`
+#       (défaut = émettrice, aucune plante teintée ; tolérance comme tous les bumps).
+ENGINE_VERSION = "0.5.21"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

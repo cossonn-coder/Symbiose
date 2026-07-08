@@ -156,6 +156,11 @@ namespace Symbiose
 				string strate = p.ContainsKey("strate") ? p["strate"].AsString() : null;
 				string silhouette = p.ContainsKey("silhouette")
 					? p["silhouette"].AsString() : null;
+				// LOD émetteurs d'ombre (D67, snapshot 0.5.21) : `emitteur` dérivé du
+				// pouvoir ombrageant côté MOTEUR (miroir de fields/light.py). Tolérant à
+				// un snapshot pré-0.5.21 (clé absente → true = émettrice, aucune teinte).
+				// Pilote la seule teinte de l'overlay debug F9, jamais le rendu normal.
+				bool emitteur = !p.ContainsKey("emitteur") || p["emitteur"].AsBool();
 
 				if (_plantNodes.TryGetValue(key, out var node))
 				{
@@ -164,6 +169,7 @@ namespace Symbiose
 					node.SetSymptoms(symptoms);      // teinte + texture des symptômes (D33)
 					node.SetSupport(supportKind);    // vrille d'accroche (grimpantes ⑥)
 					node.SetSilhouette(silhouette);  // forme au LOD couronne (luxuriance ⑥)
+					node.SetEmitter(emitteur);       // teinte overlay LOD F9 (D67)
 					node.ZIndex = PlantZIndex(strate);  // empilement par strate (luxuriance ⑥)
 					node.SetMeta("tag", TagText(p));   // le stade évolue (étiquette nette)
 					node.Position = screenPos;         // suit le relief du sol (D57 ②)
@@ -198,6 +204,7 @@ namespace Symbiose
 				renderer.SetSymptoms(symptoms);    // teinte + texture des symptômes (D33)
 				renderer.SetSupport(supportKind);  // vrille d'accroche (grimpantes ⑥)
 				renderer.SetSilhouette(silhouette);  // forme au LOD couronne (luxuriance ⑥)
+				renderer.SetEmitter(emitteur);     // teinte overlay LOD F9 (D67)
 				renderer.SetMeta("tag", TagText(p));   // texte d'étiquette (rendu net hors grille)
 				if (fade)
 					renderer.CreateTween()
