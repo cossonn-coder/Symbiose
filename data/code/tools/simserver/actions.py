@@ -1,9 +1,10 @@
 """
 SYMBIOSE — tools/simserver/actions.py
 Routeur des gestes joueur : la commande `action` et son aiguillage `_do_action`
-(résolution de la cible tile/plot/plante-par-position + traduction JSON), plus
-les deux résolveurs `_plant_at` / `_plot_at`. Mixin de `SimServer` (Sprint
-refactor global, SS⑤).
+(aiguillage par famille de verbe + traduction JSON). La résolution des cibles
+(`_plant_at` / `_skeleton_at` / `_plot_at` / `_noter_geste_maitrise`) vit dans
+`actions_cibles.py` (`CiblesMixin`), scindée au refactor de taille du sprint
+équilibre-invasion. Mixin de `SimServer` (Sprint refactor global, SS⑤).
 
 Le serveur APPELLE les façades de sim/actions.py (sprint Vigueur + D31.3) — il
 ne réimplémente AUCUNE règle : validité, coût (maîtrise × urgence), effet et
@@ -14,16 +15,13 @@ n'écrit dans le moteur.
 """
 from __future__ import annotations
 
-from constants import PLOT_CM     # échelle plot (position continue → plot-foyer)
 from plants import PLANT_CATALOGUE  # validation d'espèce plantable (planter)
 from sim import actions as A      # les 10 gestes joueur (façades, sprint Vigueur/D31.3)
 from sim import vigueur as V      # état Vigueur joueur (ensure/spend/gain, D11)
 from sim.magazine import acheter_au_magazine  # achat magazine (voix ①, verbe Q3)
 
-from .version import PLANT_EPSILON_CM
 from .conteneurs_route import route_conteneur, VERBES as CONTENEUR_VERBES
 from .maitrise_pont import (
-    noter_geste_pont,          # hook C (imputation, voix ①)
     decouvrir_a_usage,         # D60 ③ : découverte du geste à la 1ʳᵉ utilisation réussie
     crediter_usage,            # D60 ③ : preuve légère d'usage réussi
 )
@@ -505,71 +503,3 @@ class ActionsMixin:
             return route_conteneur(gs, player, verb, target, params, bilan)
 
         return bilan(False, 0.0, 0.0, f"verbe inconnu : {verb!r}")
-
-    def _noter_geste_maitrise(self, verb, target: dict) -> None:
-        """Hook C (voix ①) : enregistre le geste sur son PLOT (zone (tile_id, r, c))
-        dans la fenêtre d'imputation de la maîtrise. Le plot se résout depuis le
-        `target` — soit {r, c} direct (gestes sur plot), soit {x_cm, y_cm} continu
-        (planter/arroser/plante-par-position), via `_plot_at` (canon plot-foyer).
-        Geste sans tuile ni plot résoluble (ex. `acheter_magazine`) → no-op : rien
-        à imputer à une zone. PUR (lecture du target + écriture état joueur)."""
-        gs = self.engine.game_state
-        tiles = {t.tile_id: t for t in gs["tiles"]}
-        tile = tiles.get(target.get("tile"))
-        if tile is None:
-            return
-        r, c = target.get("r"), target.get("c")
-        if (isinstance(r, int) and not isinstance(r, bool)
-                and isinstance(c, int) and not isinstance(c, bool)
-                and 0 <= r < tile.grid_rows and 0 <= c < tile.grid_cols):
-            rc = (r, c)
-        else:
-            rc = self._plot_at(tile, target.get("x_cm"), target.get("y_cm"))
-        if rc is None:
-            return
-        noter_geste_pont(gs, gs["current_player"], gs["week"] - 1,
-                         (tile.tile_id, rc[0], rc[1]), verb=verb)
-
-    @staticmethod
-    def _plant_at(tile, x_cm, y_cm, eps: float = PLANT_EPSILON_CM):
-        """La plante VIVANTE de la tuile à ±eps de (x_cm, y_cm) locale, ou None.
-        La position est l'identité (kickoff §8) : pas d'id inventé."""
-        if not isinstance(x_cm, (int, float)) or not isinstance(y_cm, (int, float)):
-            return None
-        for p in tile.plants:
-            if (p.is_alive and p.x_cm is not None
-                    and abs(p.x_cm - x_cm) <= eps
-                    and abs(p.y_cm - y_cm) <= eps):
-                return p
-        return None
-
-    @staticmethod
-    def _skeleton_at(tile, x_cm, y_cm, eps: float = PLANT_EPSILON_CM):
-        """Le SQUELETTE (plante MORTE avec `bois_restant > 0`) de la tuile à ±eps de
-        (x_cm, y_cm) locale, ou None. Miroir de `_plant_at` pour la cible de `broyer`
-        (les morts persistent au snapshot avec `dead=true`, cf. serialize) : `_plant_at`
-        ne retient que les VIVANTES, il faut donc un résolveur dédié au bois à broyer."""
-        if not isinstance(x_cm, (int, float)) or not isinstance(y_cm, (int, float)):
-            return None
-        for p in tile.plants:
-            if (not p.is_alive and getattr(p, "bois_restant", 0.0) > 0.0
-                    and p.x_cm is not None
-                    and abs(p.x_cm - x_cm) <= eps
-                    and abs(p.y_cm - y_cm) <= eps):
-                return p
-        return None
-
-    @staticmethod
-    def _plot_at(tile, x_cm, y_cm):
-        """Le plot-foyer (r, c) d'une position LOCALE continue, ou None si hors
-        tuile. Même convention que `PlantInstance.plot_foyer` (canon moteur) :
-        `(int(y // PLOT_CM), int(x // PLOT_CM))` — y→ligne, x→colonne. Sert aux
-        gestes de milieu désignés par point (planter·arroser). NB : bool est un
-        sous-type d'int → exclu (un `true` JSON n'est pas une coordonnée)."""
-        if (not isinstance(x_cm, (int, float)) or isinstance(x_cm, bool)
-                or not isinstance(y_cm, (int, float)) or isinstance(y_cm, bool)):
-            return None
-        r, c = int(y_cm // PLOT_CM), int(x_cm // PLOT_CM)
-        if 0 <= r < tile.grid_rows and 0 <= c < tile.grid_cols:
-            return (r, c)
-        return None

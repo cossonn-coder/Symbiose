@@ -10,12 +10,13 @@ import sys
 
 from .commands import CommandsMixin
 from .actions import ActionsMixin
+from .actions_cibles import CiblesMixin
 from .serialize import SerializeMixin
 from .voix import VoixMixin
 from .maitrise_cmds import MaitriseCmdsMixin
 
 
-class SimServer(CommandsMixin, ActionsMixin, SerializeMixin, VoixMixin,
+class SimServer(CommandsMixin, ActionsMixin, CiblesMixin, SerializeMixin, VoixMixin,
                 MaitriseCmdsMixin):
     """État du serveur : un Engine (ou None avant `init`). Dispatch des commandes."""
 
