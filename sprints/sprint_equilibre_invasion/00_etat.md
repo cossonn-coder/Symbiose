@@ -7,7 +7,7 @@
 
 ## Carte des tronçons (un seul sprint, perf-first, vue en dernier)
 - **01** banc `config="propre"` + `tools/diag_population.py` [golden INTACT] ✅ FAIT 2026-07-06
-- **02** recalibrage freins férals — onset ~2-3 saisons, N~650/8 tuiles [golden RE-FIGÉ, seul]
+- **02** recalibrage freins férals — onset ~2-3 saisons, N~650/8 tuiles [golden RE-FIGÉ, seul] ✅ FAIT 2026-07-08 (N an6=613, knob `GERM_PRESSION_FERALE=0.30`)
 - **03** paillage moteur — champ + geste `pailler` + germ↓/ET↓/graines↑/→OM [INTACT]
 - **04** matériau — `broyer`→BRF + récolte paille → stock + 3 natures [INTACT]
 - **05** catalogue blé/chanvre/sapin + 5 voix [INTACT]
@@ -160,6 +160,37 @@ ne garder QUE les cultivées de `build_world_full` (Clover en est une). Coupure
 férale conforme au spec ; si Nico veut un banc « N strictement plat » il faudra
 aussi geler la repro végétative (hors scope ①).
 
-**Prochain : tronçon ② (recalibrage freins férals, SEUL re-figeage golden du
-sprint).** Message /clear : « lis `sprints/sprint_equilibre_invasion/00_etat.md`
-puis `02_*.md` ».
+**Tronçon ② FAIT (2026-07-08)** — golden RE-FIGÉ (annoncé, seul re-figeage du
+sprint), test_population RE-FIGÉ (même cause : moins de vie férale). Livré :
+- `sim/succession.py` : nouveau scalaire GLOBAL `GERM_PRESSION_FERALE = 0.30`
+  appliqué à la levée férale (`niche *= GERM_PRESSION_FERALE` après la vis A
+  couverture). C'est le VRAI knob de plateau : la banque férale SATURE sur sol
+  mûr → la germination est bornée par la NICHE, pas par les `SEED_*_GAIN` (d'où
+  leur insensibilité) ni par la vis A seule (qui ne mord que sur les plots
+  moyennement couverts). Baisser ce scalaire réduit UNIFORMÉMENT la pression
+  férale. `COUVERTURE_ADVENTICE_SEUIL` (cutoff dur) et `capacite.py` intacts.
+- `tests/golden_hash.txt` : `84d35983…` → `33c0ea6f…` (re-figé).
+- `tests/population_hash.txt` : `c2b4a01d…` → `1aa4997d…` (re-figé même cause).
+
+Trajectoire mesurée (`diag_population --config full`, seed serveur) — cible
+atteinte (N plateau ∈ [600,700] à l'an6, onset ~2 saisons, pas < 1) :
+
+| semaine        | AVANT (baseline) | APRÈS (0.30) |
+|----------------|------------------|--------------|
+| s26  (an1 été) | 336              | 225          |
+| s78  (an2 été) | 603              | 565          |
+| s130 (an3 été) | 807              | 424          |
+| s234 (an5 été) | ~                | 485          |
+| s260 (an5 hiv) | 1043             | 596          |
+| s262 (an6 pri) | (non borné, ↗)   | **613**      |
+
+Cultivées de `build_world_full` persistent nettement plus longtemps (Bean→s104,
+Sunflower→s262) → onset ralenti conforme (philo #6 : la friche revient, mais on
+laisse le temps d'agir). Enveloppe hiver monte encore doucement (417→613 sur 5
+ans) mais PLAFONNE ~600 au lieu de diverger. Aucun buff des cultivées (#2).
+Suite verte hors `test_epaisseur_500ans` (INTERDIT).
+
+**Prochain : tronçon ③ (paillage moteur — champ `paillage` par plot + geste
+`pailler` + effets germ↓/vieillissement graines↑/ET↓/humidité↑/→om_stable,
+golden INTACT car paillage=0 au repos).** Message /clear : « lis
+`sprints/sprint_equilibre_invasion/00_etat.md` puis `03_*.md` ».

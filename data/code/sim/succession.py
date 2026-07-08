@@ -29,6 +29,20 @@ from sim.capacite import recrutement_bloque
 # facteur 1.0 quel que soit l'exposant → golden neutre au démarrage.
 COUVERTURE_GERM_EXP = 4.0
 
+# Pression férale de base (sprint équilibre invasion ②, D69) — scalaire GLOBAL
+# multipliant la probabilité de levée férale (`niche` → seuil de germination). La
+# vis A (exposant couverture) ne mord que sur les plots MOYENNEMENT couverts ; la
+# banque féral SATURE (density ≈ 1 sur sol mûr) donc la germination est limitée par
+# la NICHE, pas par les taux d'enrichissement — d'où l'insensibilité des SEED_*_GAIN.
+# Ce scalaire est le VRAI knob de plateau (« base de la vague de printemps ») : le
+# baisser sous 1 réduit UNIFORMÉMENT la pression férale → onset plus lent (friche en
+# ~2-3 saisons, pas < 1) ET plateau de N borné à l'échelle réelle 8 tuiles (~650 vs
+# 1043+), SANS toucher le cutoff dur ni buffer les cultivées (philo #2 : on borne la
+# PRESSION férale, flux → contrainte, pas de bonus direct sur les plantes). Calibré
+# 8 tuiles (tools/diag_population + _mesure) → voir CONCEPTION_EQUILIBRE_INVASION §7.
+# 1.0 = comportement historique (2 tuiles) ; < 1 = pression réduite.
+GERM_PRESSION_FERALE = 0.30
+
 
 def _germ_gene_mean(eco, r: int, c: int, plant_class: type) -> float:
     """Moyenne du gène `germination_thermique` dans le pool-sol féral du plot pour
@@ -273,6 +287,7 @@ def succession(game_state: dict, tile, eco, week: int) -> list[str]:
             # calibrée). Plot nu (couverture=0) → ×1.0 (golden neutre au démarrage) ;
             # tapis dense → fenêtre quasi fermée bien avant le seuil dur.
             niche *= (1.0 - couverture) ** COUVERTURE_GERM_EXP
+            niche *= GERM_PRESSION_FERALE   # base de la vague férale (②, D69)
 
             if niche < 0.01:
                 continue
