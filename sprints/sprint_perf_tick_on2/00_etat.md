@@ -30,17 +30,26 @@ grandi → 595 plantes ≈ pic an 2). Décompo : mémoire `perf_profile_simulati
 - Verrou modèle : `tests/test_scatter_lumiere_sol.py` (équivalence gather==scatter bit-à-bit).
 
 ## Carte des tronçons
-- **01 — Scatter de la boucle reçue** : `light_index.py` (`ReceiverIndex`),
-  `light.py` (récriture boucle reçue), `tests/test_scatter_lumiere_recue.py` (verrou).
-  Golden INCHANGÉ. → `01_scatter_recue.md`.
+- **01 — Scatter de la boucle reçue** ✅ CLOS 2026-07-09 : `light_index.py`
+  (`ReceiverIndex` + `in_bbox`), `light.py` (boucle reçue récrite en scatter
+  émetteur→échantillons, `ObstacleIndex` retiré de la reçue),
+  `tests/test_scatter_lumiere_recue.py` (verrou bit-à-bit calqué sur le sol).
+  Golden INCHANGÉ `24ec11e7…`. Toutes suites lumière/ombre vertes.
+  LDC : light.py 242🟢 / light_index.py 54🟢. → `01_scatter_recue.md`.
 - **02 — Validation perf + F5** : mesure `profile_monde.py --week 104`,
   non-régression, checklist F5 pour Nico. → `02_validation_f5.md`.
 
 ## Mesure (à remplir par les tronçons)
 - Avant ② (audit) : bloc 4 ticks à 595 plantes = 20,5 s cProfile ; `covering` = 40 % du tick.
-- Après ② : _(tronçon 02 à consigner)_
+- Après 01 (`profile_monde --week 104`) : **`covering` a DISPARU du profil**
+  (gather reçue supprimé) ; remplacé par `light_index.in_bbox` = 0,044 s tottime
+  (4362 appels). `light.compute` tombé à 0,178 s tottime, sorti du top perf ;
+  `_point_in_capsule` = 0,091 s. Mesure indicative (profil `profile_monde`
+  standard, à confirmer par 02 sur le vrai bloc 4 ticks / week 104). La mesure
+  formelle avant/après + F5 reste au tronçon 02.
 
 ## §REPRISE
-Lancer `/sprint-auto sprint_perf_tick_on2`. Commencer par `01_scatter_recue.md`.
-Golden doit rester `24ec11e7…` à CHAQUE tronçon (bit-identité) — s'il bouge, le
-scatter a un bug d'indexation, NE PAS re-figer.
+Tronçon **01 CLOS** (scatter reçue bit-identique, golden `24ec11e7…` intact,
+NON COMMITÉ — Nico commit). Prochain : `02_validation_f5.md` (mesure perf
+formelle + checklist F5, aucun code moteur). Golden doit rester `24ec11e7…` à
+CHAQUE tronçon (bit-identité) — s'il bouge, bug d'indexation, NE PAS re-figer.

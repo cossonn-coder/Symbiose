@@ -68,3 +68,53 @@ class ObstacleIndex:
                 if b is not None:
                     out.extend(b)
         return out
+
+
+class ReceiverIndex:
+    """Buckets de plots (pas = PLOT_CM) indexant les ÉCHANTILLONS de lumière
+    reçue par leur cellule. Miroir de `ObstacleIndex` mais côté RÉCEPTEUR : c'est
+    le SCATTER de la boucle reçue (chaque émetteur ne visite que la bbox de sa
+    capsule au lieu que chaque échantillon parcoure tous les émetteurs).
+
+    Chaque échantillon stocké = `(ph, ref, sx, sy)` :
+      • `ph`  = hauteur du récepteur (pour le test d'auto-ombrage `qh > ph`) ;
+      • `ref` = clé du récepteur (identité de la plante réceptrice) ;
+      • `(sx, sy)` = position continue de l'échantillon dans le repère tuile.
+
+    BIT-IDENTITÉ : l'index ne fait qu'ÉLAGUER des couples (émetteur, échantillon)
+    dont l'échantillon est hors de la bbox de la capsule → `_point_in_capsule`
+    renvoyait déjà False (facteur neutre). En itérant les émetteurs dans l'ORDRE
+    EXACT de `order` (hauteur décroissante) et en n'appliquant `att *= (1-qd)`
+    qu'aux échantillons réellement couverts, le produit flottant accumule les
+    mêmes facteurs dans le même ordre par échantillon → résultat inchangé.
+    """
+
+    def __init__(self, samples: list, cell_cm: float = PLOT_CM):
+        self.cell = cell_cm
+        self._buckets: dict[tuple[int, int], list[tuple]] = {}
+        for s in samples:
+            _ph, _ref, sx, sy = s
+            cx = int(sx // cell_cm)
+            cy = int(sy // cell_cm)
+            self._buckets.setdefault((cx, cy), []).append(s)
+
+    def in_bbox(self, xmin: float, xmax: float,
+                ymin: float, ymax: float) -> list[tuple]:
+        """Échantillons dont la cellule tombe dans la bbox [xmin,xmax]×[ymin,ymax].
+
+        Sur-ensemble strict : on scanne les cellules de la bbox et on renvoie tous
+        les échantillons qui y logent. Un échantillon dont la cellule est hors bbox
+        est forcément hors de la capsule → l'élaguer est neutre (il renvoyait
+        `_point_in_capsule == False`)."""
+        c_lo = int(xmin // self.cell)
+        c_hi = int(xmax // self.cell)
+        r_lo = int(ymin // self.cell)
+        r_hi = int(ymax // self.cell)
+        out: list[tuple] = []
+        buckets = self._buckets
+        for cx in range(c_lo, c_hi + 1):
+            for cy in range(r_lo, r_hi + 1):
+                b = buckets.get((cx, cy))
+                if b is not None:
+                    out.extend(b)
+        return out

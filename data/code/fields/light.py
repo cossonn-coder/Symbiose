@@ -10,7 +10,7 @@ import math
 
 from constants import PLOT_CM
 from fields.grids import GridField
-from fields.light_index import ObstacleIndex
+from fields.light_index import ReceiverIndex
 
 # --- Éclairement astronomique (LightField v2 — ombres-capsules analytiques) ---
 LATITUDE_DEG = 49.0          # ~Normandie / 49°N
@@ -240,8 +240,8 @@ class LightField(GridField):
         # `receivers` = TOUTES les plantes (la réception ne change jamais) ;
         # `emitters` = celles dont le pouvoir ombrageant (h × rayon × densité) atteint
         # le seuil (préserve l'ORDRE de `infos`). Seuls les émetteurs projettent une
-        # ombre : l'`ObstacleIndex` de la boucle reçue et le scatter sol itèrent
-        # `emitters`, la boucle reçue itère `receivers`. À SHADING_POWER_MIN = 0.0,
+        # ombre : les scatters (boucle reçue et lumière-sol) itèrent `emitters`,
+        # la boucle reçue applique à `receivers`. À SHADING_POWER_MIN = 0.0,
         # `emitters == infos` dans l'ordre exact → bit-identique (invariant D3).
         receivers = infos
         emitters = [t for t in infos if t[3] * t[4] * t[5] >= SHADING_POWER_MIN]
@@ -279,42 +279,72 @@ class LightField(GridField):
         total_w = sum(w for _, _, _, w in slices)
 
         # --- Lumière reçue par plante (ombres des voisins plus hauts + maison) ---
-        # SPATIAL HASH (tronçon ②) — au lieu de faire parcourir à CHAQUE
-        # échantillon TOUS les obstacles de `order` (O(N²)), on interroge un index
-        # spatial qui ne rend que les candidats dont la capsule PEUT couvrir
-        # l'échantillon, puis on les re-trie dans l'ORDRE EXACT de `order` (par
-        # rang) avant d'appliquer les facteurs → produit `att` bit-identique
-        # (l'index n'élague que des obstacles qui renvoyaient déjà False, cf. D32).
+        # SCATTER (tronçon ②, miroir de la lumière-sol D32) — au lieu de faire
+        # parcourir à CHAQUE échantillon TOUS les émetteurs plus hauts (gather,
+        # O(N²)), chaque émetteur ne VISITE que les échantillons de la bbox de sa
+        # capsule, via un `ReceiverIndex` construit sur les échantillons ACTIFS de
+        # la tranche. Un échantillon hors bbox renvoyait de toute façon
+        # `_point_in_capsule == False` → l'élaguer est BIT-IDENTIQUE (golden intact).
+        #
+        # Ordre des facteurs : on itère `order` (hauteur décroissante) tel quel,
+        # donc chaque échantillon accumule ses (1-qd) dans l'ORDRE EXACT du gather
+        # (qui re-triait les candidats par rang de `order`) → produit `att` inchangé.
         order = sorted(emitters, key=lambda t: t[3], reverse=True)  # plus haut → plus bas
-        index = ObstacleIndex(order)
+
+        # Pré-calcul des 5 échantillons de chaque récepteur (une seule fois).
+        # `rec_samples[ref] = (ph, [(sx0,sy0), … 5 points])`.
+        rec_samples = {}
         for p, px, py, ph, pr, pd in receivers:
             d = pr * CANOPY_SAMPLE_FRAC
-            samples = ((px, py), (px + d, py), (px - d, py), (px, py + d), (px, py - d))
-            acc = 0.0
-            for sdx, sdy, inv_tan, w in slices:
-                h_len = h_height * inv_tan
-                max_len = index.max_height * inv_tan     # ombre la plus longue de la tranche
-                att_sum = 0.0
-                for sx, sy in samples:
-                    # Maison opaque (seul obstacle global) : test en coords monde.
+            rec_samples[id(p)] = (ph, (
+                (px, py), (px + d, py), (px - d, py), (px, py + d), (px, py - d)))
+
+        acc = {ref: 0.0 for ref in rec_samples}
+        for sdx, sdy, inv_tan, w in slices:
+            h_len = h_height * inv_tan
+            # 1+2. Échantillons ACTIFS = non masqués par la maison. `att[(ref,k)]`
+            # init 1.0 uniquement pour les actifs (les masqués comptent comme 0,
+            # exclus de la somme → répliquent le `continue` du gather).
+            att = {}
+            index_samples = []
+            for ref, (ph, samples) in rec_samples.items():
+                for k in range(5):
+                    sx, sy = samples[k]
                     if house is not None and _point_in_swept_rect(
                             sx + ox, sy + oy, hx0, hy0, hx1, hy1, sdx, sdy, h_len):
-                        continue             # plein ombre (att=0) → plancher après moyenne
-                    # Candidats couvrants ré-triés par rang = ordre de `order`.
-                    cands = index.covering(sx, sy, max_len)
-                    cands.sort(key=lambda rc: rc[0])
-                    att = 1.0
-                    for _rank, (q, qx, qy, qh, qr, qd) in cands:
-                        if qh <= ph:
-                            continue         # plus court/égal → pas d'ombre (auto-ombrage exclu)
-                        if qd <= 0.0:
-                            continue
-                        if _point_in_capsule(sx, sy, qx, qy, sdx, sdy, qh * inv_tan, qr):
-                            att *= (1.0 - qd)
-                    att_sum += att
-                light_slice = max(LIGHT_FLOOR, att_sum / len(samples))
-                acc += light_slice * w
-            self.received[id(p)] = acc / total_w
+                        continue             # masqué → att=0 (hors somme)
+                    att[(ref, k)] = 1.0
+                    index_samples.append((ph, (ref, k), sx, sy))
+            rindex = ReceiverIndex(index_samples)
+            # 3. Chaque émetteur (déjà hauteur décroissante) atténue les
+            # échantillons couverts par sa capsule.
+            for q, qx, qy, qh, qr, qd in order:
+                if qd <= 0.0:
+                    continue
+                length = qh * inv_tan
+                bx = qx + sdx * length
+                by = qy + sdy * length
+                xmin = (qx if qx < bx else bx) - qr
+                xmax = (qx if qx > bx else bx) + qr
+                ymin = (qy if qy < by else by) - qr
+                ymax = (qy if qy > by else by) + qr
+                factor = 1.0 - qd
+                for ph, key, sx, sy in rindex.in_bbox(xmin, xmax, ymin, ymax):
+                    if qh <= ph:
+                        continue             # auto-ombrage exclu (même test que gather)
+                    if _point_in_capsule(sx, sy, qx, qy, sdx, sdy, length, qr):
+                        att[key] *= factor
+            # 4. Moyenne par récepteur : somme des att actifs / 5 (les masqués
+            # comptent 0 → division par 5, PAS par le nombre d'actifs).
+            for ref in rec_samples:
+                att_sum = 0.0
+                for k in range(5):
+                    v = att.get((ref, k))
+                    if v is not None:
+                        att_sum += v
+                acc[ref] += max(LIGHT_FLOOR, att_sum / 5) * w
+        for ref in rec_samples:
+            self.received[ref] = acc[ref] / total_w
 
         # --- Lumière-sol par plot (ombres plantes + maison + albédo + plancher) ---
         # SCATTER (D32) — au lieu de tester chaque plot contre chaque plante
