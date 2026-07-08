@@ -22,10 +22,10 @@ from plants.species import (
     Tomato, Pepper, Bean, Clover, Sunflower, Basil, Yarrow, Phacelia,
     Borage, Comfrey, Mustard, Thyme, Lavender,
     Carrot, Zucchini, CornSalad, Nettle, Vaccinium, Garlic,
-    Ivy, Jasmine,
+    Ivy, Jasmine, Wheat, Hemp,
 )
 from plants.perennials import (
-    PerennialWoody, Fig, AppleTree, CherryTree, WalnutTree, OakTree,
+    PerennialWoody, Fig, AppleTree, CherryTree, WalnutTree, OakTree, FirTree,
 )
 from plants.catalogue import (
     PLANT_CATALOGUE, WEED_CATALOGUE, PERENNIAL_CATALOGUE,

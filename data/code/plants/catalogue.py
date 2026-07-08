@@ -9,9 +9,9 @@ from plants.species import (Tomato, Pepper, Bean, Clover, Sunflower, Basil,
                             Thyme, Lavender, Mint,
                             Carrot, Zucchini, CornSalad, Strawberry, Nettle,
                             Vaccinium, Raspberry, RunningBamboo, SweetViolet, Garlic,
-                            Ivy, Jasmine,
+                            Ivy, Jasmine, Wheat, Hemp,
                             BursaPastoris, MedicagoLupulina, PoaAnnua, Taraxacum)
-from plants.perennials import Fig, AppleTree, CherryTree, WalnutTree, OakTree
+from plants.perennials import Fig, AppleTree, CherryTree, WalnutTree, OakTree, FirTree
 
 
 PLANT_CATALOGUE: dict[str, type] = {
@@ -54,6 +54,10 @@ PLANT_CATALOGUE: dict[str, type] = {
     # crampon, monte au mur nu) + Jasmin (Oleaceae, sarmenteux, se palisse)
     "lierre":    Ivy,
     "jasmin":    Jasmine,
+    # Sources de mulch annuelles (sprint équilibre invasion ⑤) — Blé (Poaceae) +
+    # Chanvre (Cannabaceae NEUVE), toutes deux → paille à la récolte (④/⑤)
+    "ble":       Wheat,
+    "chanvre":   Hemp,
     # Adventices / succession écologique
     "bourse_pasteur": BursaPastoris,
     "minette":        MedicagoLupulina,
@@ -75,4 +79,7 @@ PERENNIAL_CATALOGUE: dict[str, type] = {
     "cerisier": CherryTree,
     "noyer":    WalnutTree,
     "chene":    OakTree,
+    # Conifère persistant (sprint équilibre invasion ⑤) — aiguilles acidifiantes
+    # (récolte) + BRF (broyage) ; ombre projetée toute l'année (non caduc)
+    "sapin":    FirTree,
 }

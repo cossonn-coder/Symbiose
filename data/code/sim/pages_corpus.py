@@ -10,7 +10,7 @@ vit — un thème qu'il commence à maîtriser — et récompensent l'exploratio
 voix éditoriales (pastiche en STYLE, jamais de citation réelle longue → §7).
 
 Chaque entrée :
-  - `id`            : identifiant stable (P01..P29), clé du set `gs["pages"]`.
+  - `id`            : identifiant stable (P01..P31), clé du set `gs["pages"]`.
   - `voix`          : registre éditorial (A maraîcher · B jardinière · C savoirs
                       paysans · D herbiers · E sorcières) — purement informatif.
   - `concept`       : résonance thématique, sert au robinet *récompense* (la page
@@ -28,7 +28,8 @@ c'est un corpus de texte, pas du code (CLAUDE.md « garde-fou, pas dogme »).
 """
 from __future__ import annotations
 
-# --- Liste ordonnée des 29 entrées (doc §7 + Grimpantes ⑤ + Luxuriance ④/⑤) ---
+# --- Liste ordonnée des 31 entrées (doc §7 + Grimpantes ⑤ + Luxuriance ④/⑤ +
+#     sources de mulch équilibre invasion ⑤) ------------------------------------
 # Format : (id, voix, concept, palier_theme, robinet, texte). On construit ensuite
 # `PAGES` (dict id → champs) ET `ORDRE` (ids dans l'ordre du corpus) pour des
 # itérations stables et déterministes.
@@ -214,6 +215,22 @@ _ENTREES = [
      "qu'aux trouées de lumière — alors elle borde les clairières sans jamais "
      "étouffer le sous-bois. Une plante qui sait où s'arrêter est une plante de "
      "sage."),
+
+    # --- Pages des SOURCES DE MULCH (sprint équilibre invasion ⑤) — lore pur ---
+    ("P30", "A", "paillage", 3, "récompense",
+     "Le chanvre, je ne le sème pas pour le récolter : je le sème pour qu'il "
+     "travaille à ma place. En un été il monte plus haut qu'un homme et fait sous "
+     "lui une ombre si épaisse que pas une herbe folle n'y lève. Quand je le couche "
+     "à l'automne, sa tige donne une paille qui tient tout l'hiver là où celle du "
+     "blé aurait fondu. Certaines plantes se cultivent pour la table ; celle-ci se "
+     "cultive pour la terre, et la terre s'en souvient."),
+    ("P31", "C", "sol", 2, "fouille",
+     "Ne mets pas les aiguilles de sapin partout, disaient les anciens : elles "
+     "aigrissent la terre. Longtemps j'ai cru à une superstition, jusqu'à voir "
+     "dépérir mes salades au pied du conifère et prospérer, au même endroit, la "
+     "myrtille et la bruyère. Ce que le sapin acidifie n'est pas perdu pour tout le "
+     "monde : garde son tapis d'aiguilles pour les plantes de terre de bruyère, et "
+     "porte ailleurs le reste. Chaque litière a son sol."),
 ]
 
 # Titres recopiés du doc §7 (gras de chaque entrée), indexés par id — gardés à
@@ -248,6 +265,8 @@ _TITRES = {
     "P27": "Le fourré qui avance",
     "P28": "La prison du bambou",
     "P29": "La première table de l'année",
+    "P30": "Le chanvre qui travaille pour moi",
+    "P31": "Chaque litière a son sol",
 }
 
 # `PAGES` = dict id → fiche complète. `ORDRE` = ids dans l'ordre du corpus (tri

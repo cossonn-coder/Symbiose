@@ -26,7 +26,8 @@ côté code.
 """
 from __future__ import annotations
 
-# --- Les 35 fiches × 3 niveaux (doc §6 + Grimpantes ⑤ + Luxuriance ④/⑤) -------
+# --- Les 38 fiches × 3 niveaux (doc §6 + Grimpantes ⑤ + Luxuriance ④/⑤ +
+#     sources de mulch équilibre invasion ⑤ : blé/chanvre/sapin) --------------
 FICHES: dict[str, dict[int, str]] = {
 
     # === Annuelles & potagères cultivées ===
@@ -262,6 +263,46 @@ FICHES: dict[str, dict[int, str]] = {
            "abeilles précoces). Son tapissage stolonifère s'auto-limite aux zones "
            "assez claires — un couvre-sol discret qui ne verrouille jamais tout. "
            "Comestible et médicinale (fleurs).",
+    },
+
+    # === Sources de mulch (sprint équilibre invasion ⑤) ===
+    "ble": {
+        1: "Touffe d'herbe dressée aux longues feuilles rubanées, puis épis barbus "
+           "qui dorent et se courbent à maturité.",
+        2: "Céréale annuelle rustique : sa graine lève dès que le sol s'est un peu "
+           "radouci, sans attendre la chaleur. Elle talle (se multiplie en tiges), "
+           "monte en chaume puis en épi. Anémophile — son pollen voyage au vent, "
+           "elle ne nourrit aucun butineur. Racines fibreuses assoiffées (graminée).",
+        3: "Après la moisson du grain, sa PAILLE — le chaume sec — est le paillis de "
+           "référence du maraîcher : léger, aéré, il couvre le sol nu, étouffe les "
+           "levées d'adventices, garde l'humidité et se décompose vite en humus. La "
+           "cultiver, c'est produire sa propre couverture de sol pour l'an prochain.",
+    },
+    "chanvre": {
+        1: "Grande tige unique dressée, feuilles palmées à folioles dentées, "
+           "silhouette élancée qui dépasse tout le potager en une saison.",
+        2: "Annuelle à croissance fulgurante et fibre très robuste ; dioïque et "
+           "anémophile (pieds mâles et femelles séparés, pollen au vent). Son "
+           "feuillage dense ombre fortement le sol sous lui. Levée au mitan du "
+           "printemps, sur sol réchauffé.",
+        3: "Plante-service étouffe-adventices : par sa vitesse et son ombrage dense, "
+           "elle couvre le sol nu et prive de lumière les herbes indésirables — un "
+           "couvert vivant avant d'être un couvert mort. Sa tige rouie donne une "
+           "PAILLE de fibre durable, plus lente à se décomposer que celle des "
+           "céréales — un paillis de longue tenue.",
+    },
+    "sapin": {
+        1: "Conifère au houppier conique sombre, aiguilles plates persistantes, "
+           "cônes dressés ; vert en toute saison, même sous la neige.",
+        2: "Pérenne PERSISTANT (jamais nu) à croissance lente et longévité "
+           "séculaire ; anémophile (cônes). Contrairement aux fruitiers caducs, il "
+           "projette son ombre TOUTE l'année — utile au nord, gênant au sud. Aime "
+           "les sols plutôt ACIDES ; sa litière d'aiguilles acidifie le sol sous lui.",
+        3: "Deux ressources pour le sol : ses AIGUILLES tombées font un paillis "
+           "ACIDIFIANT, légèrement allélopathique — à réserver au pied des "
+           "acidophiles (myrtille), à éviter ailleurs ; ses rameaux ligneux broyés "
+           "donnent un BRF qui nourrit les champignons du sol. Brise-vent persistant "
+           "et abri hivernal pour la faune quand tout le reste est nu.",
     },
 
     # === Grimpantes (sprint Grimpantes ⑤) ===

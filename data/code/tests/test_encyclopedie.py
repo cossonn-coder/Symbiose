@@ -127,7 +127,7 @@ def test_alignement_cles():
     sans_fiche = [k for k in cat if k not in FICHES]
     check("toutes les espèces catalogue ont une fiche",
           sans_fiche == [], f"muettes : {sans_fiche}")
-    check("corpus = 35 fiches", len(FICHES) == 35, f"{len(FICHES)}")
+    check("corpus = 38 fiches", len(FICHES) == 38, f"{len(FICHES)}")
 
 
 # ---------------------------------------------------------------------------

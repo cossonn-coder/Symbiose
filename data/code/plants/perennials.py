@@ -239,3 +239,41 @@ class OakTree(PerennialWoody):
     maturity_years = 25
     age_curve = [(0, 30, 20), (5, 200, 150), (10, 400, 300),
                  (20, 700, 450), (50, 1500, 800), (100, 3000, 1200)]
+
+
+# ---------------------------------------------------------------------------
+# CONIFÈRE PERSISTANT (sprint équilibre invasion ⑤, D10) — source de BRF/aiguilles
+# ---------------------------------------------------------------------------
+
+class FirTree(PerennialWoody):
+    """
+    Abies alba — Sapin (Pinaceae, famille NEUVE déclarée à l'espèce).
+    Conifère PERSISTANT (`deciduous=False` → il projette son ombre même l'hiver,
+    ≠ les fruitiers caducs : levier d'ombrage permanent au nord) à croissance lente
+    et longévité séculaire. Deux sources de mulch :
+      • ses AIGUILLES tombées, récoltées (`mulch_source="aiguilles"`), font un mulch
+        ACIDIFIANT (nature "aiguilles" : `ph_shift=-0.10`, `allelo=0.3` — il freine
+        la levée férale ET fait baisser le pH, à réserver aux acidophiles type
+        myrtille, cf. interconnexion avec la fenêtre pH) ;
+      • ses rameaux ligneux BROYÉS (geste `broyer` sur son squelette) donnent du BRF.
+    Anémophile (cônes mâles au vent). Sa fenêtre pH tire vers l'acide (`ph_opt=5.5`)
+    — un conifère de sol acide, cohérent avec sa litière. HORS golden → NEUTRE.
+    """
+    family = "Pinaceae"
+    genus  = "Abies"
+    name   = "Sapin"
+    rarity = "Établie"
+    keywords = ["Conifère", "Persistant", "Aiguilles", "Brise-vent"]
+    deciduous = False                # PERSISTANT : ombre projetée toute l'année
+    winter_strategy = "evergreen"
+    foliage_density = 0.70           # houppier dense et sombre
+    pollination_mode = "wind"        # cônes anémophiles
+    pollination_radius_cm = 600.0
+    reproduction_rate = 0.06         # cônes irréguliers
+    ph_opt = 5.5                     # tire vers l'acide (conifère de sol acide)
+    ph_tol = 1.3
+    mulch_source = "aiguilles"       # récolté → stock aiguilles (④/⑤)
+    longevity_years = 250
+    maturity_years = 20
+    age_curve = [(0, 30, 15), (5, 200, 80), (10, 400, 130),
+                 (20, 800, 200), (50, 1800, 350), (100, 3000, 500)]

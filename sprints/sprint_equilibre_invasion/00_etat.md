@@ -10,7 +10,7 @@
 - **02** recalibrage freins férals — onset ~2-3 saisons, N~650/8 tuiles [golden RE-FIGÉ, seul] ✅ FAIT 2026-07-08 (N an6=613, knob `GERM_PRESSION_FERALE=0.30`)
 - **03** paillage moteur — champ + geste `pailler` + germ↓/ET↓/graines↑/→OM [golden INTACT] ✅ FAIT 2026-07-08 (champ `paillage`, geste `pailler`, 4 effets, golden `33c0ea6f…` inchangé)
 - **04** matériau — `broyer`→BRF + récolte paille → stock + 3 natures [INTACT] ✅ FAIT 2026-07-08 (golden `33c0ea6f…` inchangé)
-- **05** catalogue blé/chanvre/sapin + 5 voix [INTACT]
+- **05** catalogue blé/chanvre/sapin + 5 voix [INTACT] ✅ FAIT 2026-07-08 (golden `33c0ea6f…` inchangé)
 - **06** paillage ↔ vie macro (abri) [INTACT]
 - **07** planter+pailler par maîtrise (auto-paillage) [INTACT]
 - **08** vue Godot (pailler/broyer + rendu mulch + abri) + démo sud [INTACT]
@@ -265,5 +265,44 @@ d'azote (`FAIM_N_TISSUS`) ET nourrit le mycélium (`bois_fresh_at`) — intercon
 les lecteurs existants, aucun code de couplage neuf. `NATURES_MULCH["brf"].fongique`
 reste un simple marqueur informatif (l'effet fongique réel passe par `vers_bois`).
 
-**Prochain : tronçon ⑤ (catalogue blé/chanvre/sapin + 5 voix).** Message /clear : « lis
-`sprints/sprint_equilibre_invasion/00_etat.md` puis `05_*.md` ».
+**Tronçon ⑤ FAIT (2026-07-08)** — golden INTACT (`33c0ea6f…`, hash post-② inchangé :
+les 3 espèces sont HORS smoke 2 tuiles → jamais instanciées au golden). Suite ENTIÈRE
+verte hors `test_epaisseur_500ans` (INTERDIT), dont `test_sim_server` 245/245 (le pont
+voit les 3 espèces). Livré — 3 espèces, chacune COMPLÈTE (« l'espèce sert l'idée » +
+« toutes ses voix ») :
+- `plants/species/mulch_sources.py` (créé, 105 LDC) — **Blé** (`Wheat`, Poaceae,
+  annuelle, `mulch_source="paille"`) + **Chanvre** (`Hemp`, Cannabaceae NEUVE déclarée à
+  l'espèce, annuelle haute étouffe-adventice, `mulch_source="paille"`). Anémophiles
+  (pas de retombée butineurs), stades semis→…→mature, HORS golden → NEUTRE.
+- `plants/perennials.py` — **Sapin** (`FirTree`, Pinaceae NEUVE, conifère PERSISTANT
+  `deciduous=False`/`evergreen`, `ph_opt=5.5` acidophile, `mulch_source="aiguilles"`,
+  `age_curve` conifère lent 250 ans). Ombre projetée toute l'année (levier nord).
+  Ligneux → sa mort réserve `bois_restant` → `broyer` → BRF (interconnexion ④, zéro
+  code neuf).
+- `plants/species/__init__.py` + `plants/__init__.py` + `plants/catalogue.py` —
+  ré-exports + clés `ble`/`chanvre` (PLANT) et `sapin` (PERENNIAL).
+- **5 voix** : (1) **encyclopédie** — 3 fiches 3-niveaux `sim/encyclopedie_corpus.py`
+  (`test_encyclopedie` 68/68, `len(FICHES)` 35→**38**) ; (2) **carnet** — événements de
+  cycle (germination/floraison/récolte/mort) mappés génériquement par `CONCEPT_DE`
+  (aucun code par espèce, patron de TOUTES les espèces) ; (3) **pages secrètes** —
+  P30 (chanvre plante-service, concept `paillage`) + P31 (sapin & sol acide, concept
+  `sol`) dans `sim/pages_corpus.py` (`test_pages` 58/58, corpus 29→**31**, P01..P31) ;
+  (4) **magazine** — offre famille DÉRIVÉE du catalogue (aucune entrée par espèce ;
+  `test_magazine` 23/23) ; (5) **événements** — marqueurs de ledger génériques
+  (`test_evenements` 20/20) via les stades semis/floraison/récolte.
+- `tests/test_catalogue_mulch.py` (créé, 20/20) — présence catalogue + germination,
+  nature de mulch, récolte→stock paille/aiguilles, sapin mort→BRF par broyage, voix
+  encyclopédie. `tests/test_encyclopedie.py` (35→38) + `tests/test_pages.py` (29→31,
+  range de sur-tirage 30→40) recalibrés.
+
+Décision imprévue : la nature du mulch du modèle ④ n'a que 3 valeurs (paille/brf/
+aiguilles). Le chanvre donne une paille de FIBRE plus durable que la céréale — nuance
+rangée sous "paille" (pas de 4ᵉ nature dédiée), la durabilité reste DIÉGÉTIQUE
+(encyclopédie N3), pas mécanique. Signalé.
+
+NON concerné : C# (⑤ moteur Python pur ; le pont sérialise le catalogue → vu par
+`test_sim_server`, mais aucun build C# nécessaire ; rendu = ⑧). F5 : rien à valider ce
+tronçon (assets/rendu des 3 espèces = ⑧).
+
+**Prochain : tronçon ⑥ (paillage ↔ vie macro / abri).** Message /clear : « lis
+`sprints/sprint_equilibre_invasion/00_etat.md` puis `06_*.md` ».

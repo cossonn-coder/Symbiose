@@ -24,6 +24,8 @@ Orientation :
                         rhizome, Violette odorante/Violaceae stolon d'ombre)
   - `grimpantes.py`   — grimpantes à familles NEUVES (Lierre/Araliaceae crampon,
                         Jasmin/Oleaceae sarmenteux — sprint Grimpantes ⑤)
+  - `mulch_sources.py`— sources de mulch annuelles (Blé/Poaceae, Chanvre/Cannabaceae
+                        NEUVE) → paille (sprint équilibre invasion ⑤)
 """
 
 from .adventices import BursaPastoris, MedicagoLupulina, PoaAnnua, Taraxacum
@@ -33,6 +35,7 @@ from .aromatiques import Thyme, Lavender, Mint
 from .potageres import Carrot, Zucchini, CornSalad, Strawberry
 from .sauvages import Nettle, Vaccinium, Raspberry, RunningBamboo, SweetViolet
 from .grimpantes import Ivy, Jasmine
+from .mulch_sources import Wheat, Hemp
 
 __all__ = [
     "BursaPastoris", "MedicagoLupulina", "PoaAnnua", "Taraxacum",
@@ -42,4 +45,5 @@ __all__ = [
     "Carrot", "Zucchini", "CornSalad", "Strawberry", "Nettle", "Vaccinium",
     "Raspberry", "RunningBamboo", "SweetViolet",
     "Ivy", "Jasmine",
+    "Wheat", "Hemp",
 ]
