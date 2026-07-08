@@ -79,9 +79,14 @@ def deposer_mort(plant: PlantInstance, eco) -> float:
 def _local_density(plant: PlantInstance, tile: Tile, same_family: bool = False) -> float:
     """Densité de plantes vivantes voisines [0,1] (option : même famille seulement)."""
     r, c = plant.position
+    # Voisinage 1-connexe calculé UNE fois (set → appartenance O(1)). Avant, la
+    # comprehension ré-exécutait la BFS `plots_within_radius` à CHAQUE plante testée
+    # (recalcul dans le tick + `in` sur une liste) → O(N²) sur une tuile dense. Le
+    # set préserve l'ensemble ET l'ordre de `nearby` → résultat bit-identique.
+    voisinage = set(tile.plots_within_radius(r, c, 1))
     nearby = [p for p in tile.plants
               if p.is_alive and p is not plant
-              and p.position in tile.plots_within_radius(r, c, 1)]
+              and p.position in voisinage]
     if same_family:
         n = sum(1 for p in nearby
                 if p.plant_class.family == plant.plant_class.family)
@@ -134,11 +139,15 @@ def _spore_load(plant: PlantInstance, tile: Tile, wind_vec: tuple[float, float])
     if wx == 0.0 and wy == 0.0:
         return 0.0
     r, c = plant.position
+    # Même voisinage 1-connexe que `_local_density`, calculé UNE fois (set → O(1)) :
+    # avant, la BFS était ré-exécutée à chaque plante de la boucle (recalcul dans le
+    # tick). Ensemble et parcours inchangés → charge d'inoculum bit-identique.
+    voisinage = set(tile.plots_within_radius(r, c, 1))
     load = 0.0
     for p in tile.plants:
         if (not p.is_alive or p is plant
                 or p.infection_memory < FUNGAL_INOC_SEUIL
-                or p.position not in tile.plots_within_radius(r, c, 1)):
+                or p.position not in voisinage):
             continue
         dx, dy = p.x_cm - plant.x_cm, p.y_cm - plant.y_cm
         if dx * wx + dy * wy > 0.0:        # le foyer p est AU VENT de la cible
