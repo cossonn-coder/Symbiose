@@ -37,6 +37,16 @@ WALL_ALBEDO_RADIUS_CM = 250.0
 # dans ecofields) pour respecter les couches : ecofields importe light, pas l'inverse.
 SILHOUETTE_SECHE = 0.30
 
+# --- LOD des émetteurs d'ombre (D67) ---
+# Seuil de POUVOIR OMBRAGEANT sous lequel une plante REÇOIT toujours la lumière mais
+# n'ÉMET plus d'ombre (retirée des deux boucles géométriques de `compute`). Pouvoir =
+# hauteur × rayon canopée × densité foliaire (les 3 déjà dans `infos`, zéro état neuf,
+# déterministe). DÉFAUT 0.0 = LOD DORMANT : `emitters == infos` dans l'ordre exact →
+# comportement bit-identique à l'historique → golden INTACT (invariant D3). L'activation
+# (seuil > 0) est le tronçon ②. Global de module : le banc `tools/diag_lod_ombre.py` le
+# monkeypatche (`light.SHADING_POWER_MIN = …`) → il est relu à CHAQUE `compute`.
+SHADING_POWER_MIN = 0.0
+
 
 def solar_slice(decl_deg: float, hour_angle_deg: float,
                 lat_deg: float = LATITUDE_DEG):
@@ -218,6 +228,16 @@ class LightField(GridField):
                 infos.append((p, p.x_cm, p.y_cm, p.current_height,
                               cls.canopy_radius_at(p), SILHOUETTE_SECHE))
 
+        # --- LOD émetteur/récepteur (D67) ---
+        # `receivers` = TOUTES les plantes (la réception ne change jamais) ;
+        # `emitters` = celles dont le pouvoir ombrageant (h × rayon × densité) atteint
+        # le seuil (préserve l'ORDRE de `infos`). Seuls les émetteurs projettent une
+        # ombre : l'`ObstacleIndex` de la boucle reçue et le scatter sol itèrent
+        # `emitters`, la boucle reçue itère `receivers`. À SHADING_POWER_MIN = 0.0,
+        # `emitters == infos` dans l'ordre exact → bit-identique (invariant D3).
+        receivers = infos
+        emitters = [t for t in infos if t[3] * t[4] * t[5] >= SHADING_POWER_MIN]
+
         # --- Géométrie maison (espace MONDE), si présente ---
         ox, oy = tile_origin
         hx0 = hy0 = hx1 = hy1 = h_height = wall_albedo = 0.0
@@ -244,7 +264,7 @@ class LightField(GridField):
             for r in range(self.rows):
                 for c in range(self.cols):
                     self.data[r][c] = LIGHT_FLOOR
-            for p, *_ in infos:
+            for p, *_ in receivers:
                 self.received[id(p)] = LIGHT_FLOOR
             return []
 
@@ -257,9 +277,9 @@ class LightField(GridField):
         # l'échantillon, puis on les re-trie dans l'ORDRE EXACT de `order` (par
         # rang) avant d'appliquer les facteurs → produit `att` bit-identique
         # (l'index n'élague que des obstacles qui renvoyaient déjà False, cf. D32).
-        order = sorted(infos, key=lambda t: t[3], reverse=True)  # plus haut → plus bas
+        order = sorted(emitters, key=lambda t: t[3], reverse=True)  # plus haut → plus bas
         index = ObstacleIndex(order)
-        for p, px, py, ph, pr, pd in infos:
+        for p, px, py, ph, pr, pd in receivers:
             d = pr * CANOPY_SAMPLE_FRAC
             samples = ((px, py), (px + d, py), (px - d, py), (px, py + d), (px, py - d))
             acc = 0.0
@@ -304,7 +324,7 @@ class LightField(GridField):
         for sdx, sdy, inv_tan, w in slices:
             # Produit des ombres-plantes par plot (1.0 = plein soleil).
             att_grid = [[1.0] * cols for _ in range(rows)]
-            for q, qx, qy, qh, qr, qd in infos:
+            for q, qx, qy, qh, qr, qd in emitters:
                 if qd <= 0.0:
                     continue
                 length = qh * inv_tan

@@ -95,8 +95,29 @@ profile_monde). N dominé par des SEMIS (Clover×85, PoaAnnua×65…) = émetteu
 sous-seuil → couper leur ombre = couper le gros du volume d'obstacles. Gain net
 à chiffrer par le bras perf avec/sans LOD.
 
+## Avancement (exécution `/sprint-auto`)
+- **① Bras fidélité + découplage dormant — FAIT (2026-07-08).** Golden **INTACT**
+  `33c0ea6f…`. Livré :
+  - `fields/light.py` : constante `SHADING_POWER_MIN = 0.0` (dormant) + découplage
+    `receivers` (toutes vivantes, réception inchangée) / `emitters` (pouvoir
+    `h×rayon×densité ≥ seuil`) dans `compute` — boucle reçue itère `receivers`,
+    `order`/`ObstacleIndex` + scatter sol itèrent `emitters`, cache géom laissé sur
+    `infos`. Invariant D3 respecté (seuil 0 ⇒ bit-identique).
+  - `tools/diag_lod_ombre.py` : banc fidélité 5 critères (trajectoire N + bande D5,
+    dérive `light_received` à monde figé, coups vis B carence lumineuse, gain ms/tick,
+    nouvelles plantes/saison). Sanity `--seuil 0` : off≡on (dérive 0.000 %, N Δ=0).
+  - `tests/test_lod_ombre.py` : invariant dormant (0.0 ≡ 1e-9 bit-à-bit) + mécanisme
+    actif GLOBAL (seuil élevé ⇒ emitters<receivers ⇒ reçue↑ ET sol↑ sur la scène).
+    Note : l'assertion « reçue↑ » est agrégée sur la scène (sur une tuile donnée,
+    3 semis coupés peuvent n'ombrer que le sol).
+  - Suites ombre/lumière vertes (ombre_maison, phototropisme, scatter).
+- **② Calibrage + activation — À FAIRE** (kickoff `02_*.md`).
+- **③ Vue Godot — À FAIRE** (kickoff `03_*.md`).
+
 ## §REPRISE
 Lire `CLAUDE.md` + ce fichier. Décisions D1-D7 arrêtées, découpage figé (3 tronçons).
-Reste à écrire (phase B, en cours) : `docs/conception/CONCEPTION_PERF_LOD_OMBRE.md`,
-puis kickoffs `01_*.md`, `02_*.md`, `03_*.md`, puis commit + maj DETTE (D67 → conçu)
-+ journal. Ensuite prêt pour `/sprint-auto sprint_perf_lod_ombre`.
+Tronçon ① CLOS (golden intact `33c0ea6f…`, banc + test livrés). **Reprendre au
+tronçon ②** : lancer `python3 -m tools.diag_lod_ombre --seuil S` pour plusieurs S,
+choisir le plus grand S tenant N dans [521, 705] avec dérive faible, l'activer par
+défaut dans `fields/light.py`, RE-FIGER golden + `population_hash` (maîtrisé, annoncé),
+consigner gain net + dérive. Puis tronçon ③ (vue Godot). DETTE D67 + journal en clôture.
