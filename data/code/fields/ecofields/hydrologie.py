@@ -117,7 +117,10 @@ class HydrologieMixin:
                 # jamais un bonus sur la plante (philo #2). Paillage NUL (golden, aucun
                 # geste `pailler`) → terme nul → évaporation inchangée → golden INTACT.
                 mulch = self.paillage.data[r][c]
-                evap += (1.0 - evap) * PAILLAGE_EVAP_FRAC * mulch
+                # Nature du mulch (④) : la paille RETIENT plus (fibres creuses), le BRF/
+                # les aiguilles un peu moins (`humidite_w`). Repos (nature "") → ×1.0.
+                humidite_w = self.nature_at(r, c)["humidite_w"] if mulch > 0.0 else 1.0
+                evap += (1.0 - evap) * PAILLAGE_EVAP_FRAC * mulch * humidite_w
                 if evap < EVAP_MIN:
                     evap = EVAP_MIN
                 h *= evap                                           # 1. évaporation

@@ -42,6 +42,20 @@ FICHES_TECHNIQUE: dict[str, dict[int, str]] = {
            "à venir.",
     },
 
+    "broyage": {
+        1: "Fragmenter du bois mort en copeaux. Le tas de branches devient un tas de "
+           "broyat, prêt à couvrir le sol.",
+        2: "Broyer le bois, c'est fabriquer sa propre matière de paillage à partir des "
+           "déchets ligneux du jardin (tailles, arbres tombés). Le broyat de bois jeune "
+           "(le BRF) est riche en carbone : posé au sol, il se décompose lentement et "
+           "réveille les champignons décomposeurs plutôt que les bactéries.",
+        3: "Le broyage boucle le cycle du carbone ligneux sans rien exporter : le bois "
+           "qui aurait brûlé ou pourri en tas devient couverture nourricière. Frais, le "
+           "BRF immobilise un temps l'azote de surface (les décomposeurs le réquisitionnent "
+           "pour attaquer la lignine) — d'où l'intérêt de le laisser mûrir ou de l'associer "
+           "à une source d'azote. Puis il rend tout, en humus stable et en réseau fongique.",
+    },
+
     "arrosage": {
         1: "Apporter de l'eau à une plante ou à une parcelle. La terre fonce, le "
            "feuillage affaissé se redresse.",

@@ -176,6 +176,13 @@ class PlantBase(ABC):
                                           # ÉPARGNE la santé en régime NET (basilic 0.85
                                           # → écimé mais repart ; tournesol 0.05 → décapité).
 
+    # --- Source de mulch (sprint équilibre invasion ④, D9/D10) ---
+    # NATURE de mulch produite quand on RÉCOLTE cette espèce (blé/chanvre → "paille",
+    # sapin → "aiguilles", tronçon ⑤ ; None = pas une plante à paille → récolte
+    # inchangée). LU UNIQUEMENT par `sim.actions.paillage.recolter_paille` (geste joueur
+    # event-driven, hors tick) → défaut None = golden intact (au repos rien ne le lit).
+    mulch_source: str | None = None
+
     # --- Interface lumière (polymorphe) ---
 
     @classmethod

@@ -879,6 +879,48 @@ PAILLAGE_EVAP_FRAC    = 0.5     # part du chemin evap→1.0 (rétention) à mulc
 # Un geste = un bon paillage local ; ré-pailler par-dessus épaissit jusqu'au plafond.
 PAILLAGE_DOSE         = 0.6
 
+# --- Nature du mulch (sprint équilibre invasion ④, D9/§3.2) ----------------
+# Le mulch n'est plus abstrait : il VIENT d'une source (broyage de bois → BRF,
+# récolte de plantes à paille → paille/aiguilles) et sa NATURE lui donne des
+# propriétés distinctes. `NATURES_MULCH` est un dict data-driven (une ligne par
+# nature) de MULTIPLICATEURS/termes appliqués aux effets génériques du champ
+# `paillage` (③), selon la nature DOMINANTE du plot (`eco.paillage_nature`).
+# Chaque propriété se branche sur un couplage EXISTANT (aucune machinerie neuve),
+# philo #2 (flux → contrainte, jamais un bonus direct plante) :
+#  - `decay`     : ×PAILLAGE_DECAY (BRF/aiguilles = lents ; paille = moyen).
+#  - `humidite_w`: ×PAILLAGE_EVAP_FRAC (rétention d'humidité — paille = forte).
+#  - `allelo`    : frein GRADUÉ SUPPLÉMENTAIRE à la germination férale
+#    (`niche *= 1 − allelo·paillage`), aiguilles seulement (allélopathie conifère).
+#  - `ph_shift`  : poussée pH/sem tant que le mulch est là (aiguilles acidifient) —
+#    écrit la CIBLE de pH comme un amendement (patron AMEND_PUSH), réversible.
+#  - `vers_bois` : part de la décompo reversée en litière `bois` (au lieu d'`om_stable`)
+#    → BRF C-riche. Route DEUX couplages existants d'un coup : la FAIM D'AZOTE
+#    (`bois` ∈ FAIM_N_TISSUS → immobilise N en surface) ET le MYCÉLIUM (`bois_fresh_at`
+#    nourrit les saprophytes) — l'interconnexion « ferme la boucle » sans code neuf.
+#  - `fongique`  : marqueur (hook mycélium) — informatif, lu par la vue/le pont (⑧) ;
+#    l'effet fongique RÉEL passe déjà par `vers_bois` (litière bois → substrat).
+# Valeurs PLACEHOLDER, calibrage F5 / bancs. NUL au repos (nature "" → tous les
+# multiplicateurs valent 1.0, aucun terme extra) → golden INTACT.
+NATURES_MULCH = {
+    #             decay  humidite_w  allelo  ph_shift  vers_bois  fongique
+    "paille":    {"decay": 1.0, "humidite_w": 1.2, "allelo": 0.0,  "ph_shift":  0.0,  "vers_bois": 0.0,  "fongique": False},
+    "brf":       {"decay": 0.5, "humidite_w": 0.9, "allelo": 0.0,  "ph_shift":  0.0,  "vers_bois": 1.0,  "fongique": True},
+    "aiguilles": {"decay": 0.5, "humidite_w": 0.9, "allelo": 0.3,  "ph_shift": -0.10, "vers_bois": 0.0,  "fongique": False},
+}
+# Nature NEUTRE (plot non mulché) : tous les multiplicateurs à l'identité, aucun
+# terme extra → lecteurs strictement inchangés (garde-fou golden au repos).
+NATURE_NEUTRE = {"decay": 1.0, "humidite_w": 1.0, "allelo": 0.0,
+                 "ph_shift": 0.0, "vers_bois": 0.0, "fongique": False}
+
+# Rendement de matière par SOURCE (sprint équilibre invasion ④, §3.1). Convertit une
+# masse physique (bois broyé, biomasse récoltée) en unités de STOCK de mulch (mêmes
+# unités que PAILLAGE_DOSE : un geste `pailler` consomme PAILLAGE_DOSE du stock).
+#  - BROYAGE_RENDEMENT : unités de BRF par unité de `bois_restant` broyée.
+#  - RECOLTE_MULCH_RENDEMENT : unités de mulch par unité de biomasse récoltée d'une
+#    plante à paille (blé/chanvre → paille, sapin → aiguilles — attribut d'espèce ⑤).
+BROYAGE_RENDEMENT        = 2.0
+RECOLTE_MULCH_RENDEMENT  = 1.5
+
 # Signature sol par famille (laissée après chaque saison)
 SOIL_SIGNATURE = {
     "Fabaceae":   {"microbiome": +0.15, "fertilite": +0.10},

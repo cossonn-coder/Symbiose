@@ -30,6 +30,7 @@ from fields.population import DENSITE_PAR_SPRITE   # « un geste = un individu =
 from fields.alarme import declencher_alarme, ALARME_DEPOT   # phéromone d'alarme apienne (⑦ §J)
 from fields.seedbank import GrainEnAttente          # dépôt de `planter` (germination différée, distinct de la banque-sol)
 from .couts import cout_action, _objets_action, OBJETS_TOUCHES, URGENCE_MULT
+from .paillage import stock_disponible, prelever_stock   # matériau du mulch (④) : stock par nature
 
 # Dose d'humidité d'un arrosage (CONCEPTION_PLANTER_ARROSER §4, Q9), échelle [0,3].
 # Calée sur l'aléa « Pluies » (`+0.5`) : un geste = une bonne pluie locale. Cap 3.0
@@ -473,13 +474,20 @@ def pailler(game_state: dict, player: str, eco, r: int, c: int, *,
     n'est mulché QUE si le coût est intégralement payé — forcer le geste à vide draine
     la Vigueur sans rien pailler.
 
-    `nature` et `stock` sont POSÉS mais INERTES en ③ (tronçon ④ = matériau du paillage) :
-    la nature du mulch (paille/BRF/aiguilles → propriétés distinctes) et la consommation
-    d'un stock de matière seront câblées au ④. En ③, une seule profondeur générique.
+    MATÉRIAU (tronçon ④, D9) : `pailler` CONSOMME désormais un STOCK de mulch de la
+    `nature` demandée (`game_state["mulch_stock"]`, alimenté par `broyer`/récolte de
+    paille, cf. `sim/actions/paillage.py`). **Refus EN AMONT** si le stock de cette
+    nature est insuffisant (< `PAILLAGE_DOSE`) — aucune Vigueur dépensée, aucun champ
+    écrit (patron `planter`/lot vide). La nature du mulch (paille/BRF/aiguilles) est
+    inscrite sur le plot (`poser_mulch`) → propriétés distinctes lues au tick
+    (décompo/germination/évaporation nature-aware). Le paramètre `stock` legacy (③) est
+    ignoré : la source de vérité est `mulch_stock(game_state)`.
     Renvoie True si le geste a été pleinement payé (et donc appliqué)."""
+    if not stock_disponible(game_state, nature, PAILLAGE_DOSE):
+        return False                          # stock de cette nature insuffisant → rien dépensé
     cost = cout_action(game_state, player, "pailler", OBJETS_TOUCHES["pailler"])
     if spend(game_state, player, cost) < 1.0:
-        return False                          # Vigueur insuffisante → champ intact
-    depth = eco.paillage.at_plot(r, c)
-    eco.paillage.set(r, c, min(1.0, depth + PAILLAGE_DOSE))
+        return False                          # Vigueur insuffisante → champ ET stock intacts
+    prelever_stock(game_state, nature, PAILLAGE_DOSE)   # débité seulement après paiement complet
+    eco.poser_mulch(r, c, nature, PAILLAGE_DOSE)
     return True

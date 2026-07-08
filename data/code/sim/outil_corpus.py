@@ -101,6 +101,19 @@ FICHES_OUTIL: dict[str, dict[int, str]] = {
            "laisse la matière faire le travail du désherbage et de l'arrosage à sa place.",
     },
 
+    "broyeur": {
+        1: "Une machine à lames ou à rouleaux qui avale des branches et recrache des "
+           "copeaux. Le bois brut en ressort en menus fragments.",
+        2: "Le broyeur sert le BROYAGE : il réduit le bois de taille en broyat (BRF) "
+           "utilisable comme paillage. Il traite ce qu'un sécateur laisse au sol — les "
+           "rameaux, les squelettes ligneux — et les rend au jardin en couverture au lieu "
+           "de les évacuer.",
+        3: "Le broyeur ferme la boucle du bois : sans lui, la matière ligneuse s'entasse "
+           "ou brûle ; avec lui, elle devient mulch et humus forestier. C'est l'outil qui "
+           "relie la taille au paillage, le déchet à la ressource — l'esprit permacole fait "
+           "machine. Le BRF qu'il produit nourrit d'abord les champignons, puis la terre.",
+    },
+
     "fourche": {
         1: "Une fourche à dents, pour piquer, soulever et brasser des matières en vrac.",
         2: "Au compost, la fourche sert à RETOURNER le tas : elle le brasse et y "

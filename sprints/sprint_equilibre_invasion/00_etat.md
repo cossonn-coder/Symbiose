@@ -9,7 +9,7 @@
 - **01** banc `config="propre"` + `tools/diag_population.py` [golden INTACT] ✅ FAIT 2026-07-06
 - **02** recalibrage freins férals — onset ~2-3 saisons, N~650/8 tuiles [golden RE-FIGÉ, seul] ✅ FAIT 2026-07-08 (N an6=613, knob `GERM_PRESSION_FERALE=0.30`)
 - **03** paillage moteur — champ + geste `pailler` + germ↓/ET↓/graines↑/→OM [golden INTACT] ✅ FAIT 2026-07-08 (champ `paillage`, geste `pailler`, 4 effets, golden `33c0ea6f…` inchangé)
-- **04** matériau — `broyer`→BRF + récolte paille → stock + 3 natures [INTACT]
+- **04** matériau — `broyer`→BRF + récolte paille → stock + 3 natures [INTACT] ✅ FAIT 2026-07-08 (golden `33c0ea6f…` inchangé)
 - **05** catalogue blé/chanvre/sapin + 5 voix [INTACT]
 - **06** paillage ↔ vie macro (abri) [INTACT]
 - **07** planter+pailler par maîtrise (auto-paillage) [INTACT]
@@ -226,5 +226,44 @@ facteurs ×1). test_population INTACT. Livré :
 NON concerné : C# (③ moteur Python pur, aucun build). F5 : rien à valider ce
 tronçon (vue = ⑧). Reste ④ (matériau : `broyer`→BRF, récolte paille → stock, natures).
 
-**Prochain : tronçon ④.** Message /clear : « lis
-`sprints/sprint_equilibre_invasion/00_etat.md` puis `04_*.md` ».
+**Tronçon ④ FAIT (2026-07-08)** — golden INTACT (`33c0ea6f…`, hash post-② inchangé :
+tout est event-driven, nature "" au repos → NATURE_NEUTRE → lecteurs bit-identiques).
+Suite ENTIÈRE verte hors `test_epaisseur_500ans` (INTERDIT). Livré :
+- `fields/ecofields/constants.py` — `NATURES_MULCH` (paille/brf/aiguilles data-driven :
+  decay/humidite_w/allelo/ph_shift/vers_bois/fongique), `NATURE_NEUTRE`,
+  `BROYAGE_RENDEMENT`, `RECOLTE_MULCH_RENDEMENT`.
+- `fields/ecofields/paillage.py` — `nature_at` (bounds-safe, repos → NEUTRE),
+  `poser_mulch` (dose + nature du plot), `tick_paillage` nature-aware : décompo ∝ decay ;
+  reversement SELON nature — BRF → litière `bois` (route la FAIM D'AZOTE `FAIM_N_TISSUS`
+  + le MYCÉLIUM `bois_fresh_at`, zéro code neuf), paille/aiguilles → `om_stable` ;
+  aiguilles → poussée pH↓ (patron amendement) ; mulch effacé → nature oubliée.
+- `fields/ecofields/container.py` — grille `paillage_nature` (chaînes, "" au repos).
+- `fields/ecofields/hydrologie.py` — rétention d'évaporation × `humidite_w`.
+- `sim/succession.py` — frein allélopathique extra `niche *= 1 − allelo·paillage` (aiguilles).
+- `sim/actions/paillage.py` (créé) — `mulch_stock` (jauge par nature dans `game_state`),
+  `stock_disponible`/`prelever_stock`, `broyer` (bois_restant squelette → stock brf,
+  gradué), `recolter_paille` (espèce `mulch_source` → stock paille/aiguilles ; None → 0).
+- `sim/actions/gestes.py` — `pailler` CONSOMME le stock de la nature (refus amont si vide,
+  débité APRÈS paiement complet) + `poser_mulch`. Import de `.paillage`.
+- `sim/actions/{couts,__init__}.py` — geste `broyer` (MODÉRÉ, objets broyage/broyeur) +
+  ré-exports (mulch_stock/stock_disponible/prelever_stock/broyer/recolter_paille).
+- `plants/base/familles.py` — attribut de classe `mulch_source` (défaut None ; blé/chanvre/
+  sapin le posent au ⑤). LU seulement par recolter_paille (event-driven) → golden neutre.
+- Voix encyclopédie (garde-fou `test_encyclopedie` 68/68) : geste `broyer`
+  (`geste_corpus`), technique `broyage` (`technique_corpus` + set TECHNIQUES), outil
+  `broyeur` (`outil_corpus`).
+- `tests/test_paillage.py` — section [1] adaptée (stock requis) + section [7] matériau
+  (broyer/recolter_paille/BRF→bois/aiguilles→pH/paille→humus/oubli nature) → 27/27 OK.
+- FIX collatéral : `test_eau` cassait (IndexError) car `nature_at` indexait la grille
+  brute alors que la succession itère les plots de la TUILE (≥ eco) ; `nature_at` est
+  maintenant bounds-safe comme `GridField.at_plot` (hors grille → NEUTRE).
+
+NON concerné : C# (④ moteur Python pur, pont/vue = ⑧). F5 : rien à valider ce tronçon.
+Décision de design imprévue : au lieu d'un couplage neuf « BRF → retire du N »,
+la décompo du BRF DÉPOSE de la litière `bois`, ce qui active AUTOMATIQUEMENT la faim
+d'azote (`FAIM_N_TISSUS`) ET nourrit le mycélium (`bois_fresh_at`) — interconnexion via
+les lecteurs existants, aucun code de couplage neuf. `NATURES_MULCH["brf"].fongique`
+reste un simple marqueur informatif (l'effet fongique réel passe par `vers_bois`).
+
+**Prochain : tronçon ⑤ (catalogue blé/chanvre/sapin + 5 voix).** Message /clear : « lis
+`sprints/sprint_equilibre_invasion/00_etat.md` puis `05_*.md` ».

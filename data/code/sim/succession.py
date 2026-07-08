@@ -307,6 +307,11 @@ def succession(game_state: dict, tile, eco, week: int) -> list[str]:
             # (golden) → ×1.0. Le geste `pailler` du joueur borne ainsi l'invasion en
             # agissant sur le MILIEU (philo #1/#2), sans buffer les cultivées.
             niche *= (1.0 - paillage)
+            # Frein ALLÉLOPATHIQUE de la nature (④, D9) — les aiguilles de conifère
+            # libèrent des composés qui inhibent la levée EN PLUS de la barrière
+            # physique : `niche *= 1 − allelo·paillage`. Paille/BRF → allelo 0 → ×1.0 ;
+            # repos (nature "") → NATURE_NEUTRE → ×1.0 → golden INTACT.
+            niche *= (1.0 - eco.nature_at(r, c)["allelo"] * paillage)
 
             if niche < 0.01:
                 continue

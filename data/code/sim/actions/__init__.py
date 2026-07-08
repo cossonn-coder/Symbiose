@@ -39,6 +39,11 @@ from .compost import (
     EPANDRE_W, structure_de_tuile, poser_bac, poser_pile,
     composter, empiler_bois, retourner, epandre,
 )
+# Matériau du paillage (équilibre invasion ④) : stock de mulch par nature +
+# approvisionnement (broyer bois → BRF, récolte de plantes à paille).
+from .paillage import (
+    mulch_stock, stock_disponible, prelever_stock, broyer, recolter_paille,
+)
 from .ruche import (
     CONCEPT_ABEILLES, SEUIL_EQUIPEMENT, MIEL_VIGUEUR_RATIO, RECOLTE_SANS_EQUIP,
     poser_ruche, equipe, recolter_miel,
@@ -66,6 +71,7 @@ __all__ = [
     "ecraser", "ecraser_plante", "favoriser_auxiliaire", "becher", "grelinette", "pailler",
     "EPANDRE_W", "structure_de_tuile", "poser_bac", "poser_pile",
     "composter", "empiler_bois", "retourner", "epandre",
+    "mulch_stock", "stock_disponible", "prelever_stock", "broyer", "recolter_paille",
     "CONCEPT_ABEILLES", "SEUIL_EQUIPEMENT", "MIEL_VIGUEUR_RATIO", "RECOLTE_SANS_EQUIP",
     "poser_ruche", "equipe", "recolter_miel",
     "poser_pot", "poser_bac_culture", "deplacer_pot",

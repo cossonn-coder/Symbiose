@@ -225,6 +225,13 @@ class EcoFields(MatiereOrganiqueMixin, HydrologieMixin, RuissellementMixin,
     # (mini-sol de conteneur qui ne paille pas) bit-identique, golden INTACT. Exposée
     # AUTO au registre `get_field` (overlay debug F6 / pont).
     paillage:         GridField = field(default=None)
+    # Nature du mulch par plot (sprint équilibre invasion ④, D9) — grille de chaînes
+    # ("" = plot non paillé, sinon "paille"/"brf"/"aiguilles"). PAS un GridField (donnée
+    # catégorielle, pas scalaire ; patron `litiere`). Fixée par `poser_mulch` (geste
+    # `pailler`), réinitialisée à "" quand le mulch se décompose (`tick_paillage`). Lue
+    # via `nature_at` par la germination/l'évaporation/la décompo → propriétés distinctes
+    # par nature (`NATURES_MULCH`). "" partout au repos → NATURE_NEUTRE → golden INTACT.
+    paillage_nature:  list = field(default=None)
 
     def __post_init__(self):
         if self.humidite    is None: self.humidite    = GridField(self.rows, self.cols)
@@ -354,6 +361,11 @@ class EcoFields(MatiereOrganiqueMixin, HydrologieMixin, RuissellementMixin,
         # NEUTRE (aucun geste) → lecteurs neutres → golden INTACT.
         if self.paillage is None:
             self.paillage = GridField(self.rows, self.cols, max_val=1.0)
+        # Nature du mulch (④) — "" partout au repos (aucun plot paillé) → NATURE_NEUTRE
+        # → lecteurs bit-identiques → golden INTACT. Une grille de chaînes propre.
+        if self.paillage_nature is None:
+            self.paillage_nature = [["" for _ in range(self.cols)]
+                                    for _ in range(self.rows)]
         self._abri_cache = None
 
     def _init_heterogene(self, grid: GridField, plancher: float) -> None:

@@ -147,6 +147,20 @@ FICHES_GESTE: dict[str, dict[int, str]] = {
            "reste jeune tant qu'on l'entretient. C'est l'inverse du désherbage répété.",
     },
 
+    "broyer": {
+        1: "Réduire du bois mort — branches, rameaux, squelette d'une plante ligneuse "
+           "au sol — en menus fragments. Un tas de copeaux remplace le bois brut.",
+        2: "Le broyage transforme le bois du jardin en Bois Raméal Fragmenté (BRF), une "
+           "matière de paillage à part : riche en carbone, elle se décompose lentement "
+           "et nourrit d'abord les champignons du sol. Le bois mort ne s'évacue pas, il "
+           "se recycle en couverture de sol.",
+        3: "Broyer ferme une boucle : le bois d'une taille, d'un arbre tombé ou d'une "
+           "pile devient le mulch de demain. Le BRF est le préféré des champignons "
+           "saprophytes qui digèrent la lignine ; jeune, il capte un peu d'azote au sol "
+           "(la faim d'azote), le temps que le réseau fongique l'installe — puis il "
+           "restitue tout, en humus forestier. Rien ne se perd, tout se transforme.",
+    },
+
     "tailler": {
         1: "Couper des rameaux ou des tiges d'une plante ligneuse ou touffue. Sa "
            "silhouette se rééquilibre, la lumière entre.",

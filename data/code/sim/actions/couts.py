@@ -46,6 +46,7 @@ COUTS = {
     "becher":               FAIBLE,
     "grelinette":           MODERE,
     "pailler":              MODERE,            # dépose du mulch au sol (phase planification, équilibre invasion ③ §2)
+    "broyer":               MODERE,            # broie du bois → BRF (phase planification, équilibre invasion ④ §3.1)
     "tailler":              MODERE,            # geste direct sur le vivant (philo #1) — coût modéré
     "manger":               NUL,               # coût NUL → cout_action renvoie 0 sans rien lire (§10.5)
     "poser_bac":            MODERE,            # pose une structure (phase planification, ⑤ §5.1)
@@ -82,6 +83,7 @@ OBJETS_TOUCHES = {
     "becher":               ("bêchage", "bêche"),
     "grelinette":           ("ameublissement", "grelinette"),
     "pailler":              ("paillage",),       # technique ; on écrit un CHAMP, pas de cible vivante — sans état moteur → atténuation neutre 1.0
+    "broyer":               ("broyage", "broyeur"),   # technique + outil (BRF, équilibre invasion ④) — sans état moteur → atténuation neutre 1.0
 
     "tailler":              ("taille", "sécateur"),
     "manger":               (),                          # coût NUL → terme 2 vide (§10.5)
