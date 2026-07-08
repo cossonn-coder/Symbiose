@@ -193,6 +193,7 @@ class SerializeMixin:
         altitude_by_tile = {}
         eau_surface_by_tile = {}
         couverture_by_tile = {}
+        paillage_by_tile = {}
         for tile in gs["tiles"]:
             eco = gs["eco"][tile.tile_id]
             sprites[tile.tile_id] = {
@@ -382,6 +383,23 @@ class SerializeMixin:
                 [r, c, round(cov.data[r][c], 3)]
                 for r in range(eco.rows) for c in range(eco.cols)
                 if cov is not None and cov.data[r][c] > COUVERTURE_RENDU_SEUIL]
+            # Carte de PAILLAGE par tuile (sprint équilibre invasion ⑧, D69) : liste
+            # CREUSE `[[r, c, profondeur, nature], …]` des plots mulchés (profondeur
+            # > 0). `profondeur` ∈ [0,1] = densité du mulch au sol (champ `eco.paillage`,
+            # posé par le geste `pailler`, décru par `tick_paillage`) ; `nature` ∈
+            # {paille, brf, aiguilles} = matériau du mulch (`nature_at`, ④) → la vue
+            # teinte/texture par matériau ET module l'opacité par profondeur. Liste
+            # creuse (patron `litiere`/`couverture`) : la plupart des plots sont NUS.
+            # PURE lecture (champ déjà tické par `tick_paillage`) → golden NEUTRE : le
+            # smoke ne paille jamais → paillage=0 partout → liste vide. Champ optionnel
+            # côté vue (tolérance pré-0.5.20 → pas de mulch dessiné). `paillage` peut
+            # être None sur un vieil eco (défaut lazy) → garde-fou getattr.
+            pai = getattr(eco, "paillage", None)
+            nat = getattr(eco, "paillage_nature", None)
+            paillage_by_tile[tile.tile_id] = [
+                [r, c, round(pai.data[r][c], 3), (nat[r][c] or "paille")]
+                for r in range(eco.rows) for c in range(eco.cols)
+                if pai is not None and pai.data[r][c] > 0.0]
         # Météo scalaire GLOBALE du tick (sprint thermique ⑧, §A) : la météo qui a
         # produit l'état COURANT est celle de la semaine DÉJÀ simulée = `week − 1`
         # (`week` = prochaine à simuler). `weather_state` étant PURE, on la RECALCULE
@@ -441,6 +459,7 @@ class SerializeMixin:
                 "epaisseur": epaisseur_by_tile,
                 "altitude": altitude_by_tile,
                 "couverture": couverture_by_tile,
+                "paillage": paillage_by_tile,
                 "containers": self._containers_snapshot(gs, saison)}
 
     def _containers_snapshot(self, gs: dict, saison: str) -> list:

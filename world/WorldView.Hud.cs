@@ -162,7 +162,7 @@ namespace Symbiose
 				+ " · molette zoom · PageUp/PageDown pivoter\n"
 				+ "F3 étiquettes · F4 perfs · C copier perfs · H maison transparente · F6 heatmap debug (Maj+F6 champ)"
 				+ " · F7 carte T sol · I vie macro · O ombres · M mode simu\n"
-				+ "Tab geste suivant · 1..9 gestes directs · S graine (planter) · B substrat (poser pot/bac) · clic gauche = agir"
+				+ "Tab geste suivant · 1..9 gestes directs · S graine (planter) · B substrat (poser pot/bac) · N nature (pailler) · clic gauche = agir"
 				+ " — geste courant affiché en haut à gauche";
 			hud.AddChild(legend);
 			AddChild(hud);
@@ -225,6 +225,9 @@ namespace Symbiose
 				// poser pot/bac : substrat courant (cycle B) joint à la pose.
 				else if (g.Verb == "poser_pot" || g.Verb == "poser_bac_culture")
 					geste += $" : {Substrats[_substratIndex]} (B)";
+				// pailler : nature de mulch courante (cycle N) déposée au plot.
+				else if (g.Verb == "pailler")
+					geste += $" : {Natures[_natureIndex]} (N)";
 				// planter dans un pot : même espèce que le cycle S.
 				else if (g.Verb == "planter_conteneur")
 					geste += _seeds.Count == 0 ? " : aucune graine (S)"

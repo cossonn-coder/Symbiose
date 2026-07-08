@@ -325,7 +325,20 @@ from __future__ import annotations
 #       (le pont ne réinjecte rien). Un binaire pré-0.5.19 n'émet ni ces clés plante ni
 #       le bloc `couverture` → la vue retombe sur l'ordre Y-sort seul, silhouette par
 #       défaut, pas de tapis (lecture TOLÉRANTE, comme tous les bumps précédents).
-ENGINE_VERSION = "0.5.19"
+# 0.5.20 (équilibre invasion ⑧, D69 — vue Godot du paillage) : DEUX ajouts. (1) le
+#       snapshot expose `paillage` par tuile = liste CREUSE `[[r, c, profondeur,
+#       nature], …]` des plots mulchés (profondeur > 0 ; nature ∈ paille/brf/aiguilles).
+#       La vue en tire le TAPIS de mulch au sol (teinte/texture par matériau, opacité ∝
+#       profondeur, MulchLayer). PURE lecture (`eco.paillage`/`eco.paillage_nature` déjà
+#       tickés par `tick_paillage`) → golden NEUTRE : le smoke ne paille jamais →
+#       paillage=0 partout → liste vide. (2) DEUX verbes neufs au routeur `action` :
+#       `pailler` (target plot {tile, r, c}, `params.nature` — dépose du mulch, consomme
+#       le stock de la nature, refus en amont si stock vide) et `broyer` (target par
+#       POSITION continue {tile, x_cm, y_cm} sur un SQUELETTE — fragmente son bois en
+#       BRF au stock). Ces gestes ÉTAIENT déjà dans le moteur (③/④) ; ⑧ les BRANCHE au
+#       pont. Un binaire pré-0.5.20 ignore le bloc `paillage` et répond « verbe inconnu »
+#       aux 2 gestes (tolérance côté vue, comme tous les bumps précédents).
+ENGINE_VERSION = "0.5.20"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

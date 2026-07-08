@@ -53,7 +53,19 @@ namespace Symbiose
 			("poser_bac_culture",  "poser bac",      'P'),
 			("deplacer_pot",       "déplacer pot",   'C'),
 			("planter_conteneur",  "planter (pot)",  'C'),
+			// Paillage (équilibre invasion ⑧, protocole 0.5.20). Kind U = pailler un
+			// PLOT {tile, r, c} avec la NATURE courante (cycle touche N) — dépose du
+			// mulch, consomme le stock de cette nature (le serveur refuse si vide).
+			// Kind D = broyer un SQUELETTE par POSITION (comme un geste plante) : son
+			// bois → BRF au stock. Approvisionner (broyer / récolter) précède pailler.
+			("pailler",            "pailler",        'U'),   // mulch au plot (nature N)
+			("broyer",             "broyer bois",    'D'),   // squelette → BRF
 		};
+		// Nature de mulch courante pour `pailler` (touche N). Cycle sur les 3 natures
+		// du moteur (NATURES_MULCH) — le stock de la nature choisie doit être alimenté
+		// (broyer → brf ; récolter blé/chanvre → paille ; sapin → aiguilles).
+		private static readonly string[] Natures = { "paille", "brf", "aiguilles" };
+		private int _natureIndex;
 		private int _gesteIndex = -1;              // aucun geste sélectionné
 		// Graines plantables du snapshot (player.seeds, lots non vides), triées
 		// par clé pour un ordre de cycle STABLE ; l'espèce courante (S cycle) sert
@@ -171,6 +183,15 @@ namespace Symbiose
 		{
 			_substratIndex = (_substratIndex + 1) % Substrats.Length;
 			GD.Print($"[WorldView] substrat : {Substrats[_substratIndex]}.");
+			UpdateActionHud();
+		}
+
+		// Nature courante pour `pailler` (touche N). Cycle sur la liste fixe des
+		// natures de mulch — modèle exact de CycleSubstrat/CycleSeed.
+		private void CycleNature()
+		{
+			_natureIndex = (_natureIndex + 1) % Natures.Length;
+			GD.Print($"[WorldView] nature de mulch : {Natures[_natureIndex]}.");
 			UpdateActionHud();
 		}
 
@@ -509,6 +530,39 @@ namespace Symbiose
 					}
 					target = new GDict { ["container"] = nearP };
 					prms["species"] = _seeds[_seedIndex].Key;
+					break;
+
+				case 'U':   // PAILLER un plot {tile, r, c} avec la nature courante (⑧).
+					// Geste sur le MILIEU au plot cliqué ; params.nature = matériau du
+					// cycle N. Le serveur consomme le stock de cette nature et refuse en
+					// amont s'il est vide (on relaie son message).
+					if (!FindPlot(w, out string uTile, out int ur, out int uc))
+					{
+						_lastActionMsg = $"{nom} : aucune tuile ici (chemin/maison)";
+						UpdateActionHud(); FlashActionLabel();
+						return;
+					}
+					target = new GDict { ["tile"] = uTile, ["r"] = ur, ["c"] = uc };
+					prms["nature"] = Natures[_natureIndex];
+					break;
+
+				case 'D':   // BROYER un SQUELETTE désigné par POSITION (⑧). Comme un geste
+					// plante (x_cm/y_cm), mais la cible est une plante MORTE ligneuse : le
+					// serveur (_skeleton_at) ne retient que les morts porteurs de bois. On
+					// désigne le nœud le plus proche (les squelettes sont dans _plantNodes).
+					node = FindPlant(w, PickRadiusCm);
+					if (node == null)
+					{
+						_lastActionMsg = $"{nom} : aucun bois à broyer ici (visez un squelette)";
+						UpdateActionHud(); FlashActionLabel();
+						return;
+					}
+					target = new GDict
+					{
+						["tile"] = node.GetMeta("tile"),
+						["x_cm"] = node.GetMeta("lx"),
+						["y_cm"] = node.GetMeta("ly"),
+					};
 					break;
 
 				// '-' : grelinette, pas de cible.

@@ -280,6 +280,11 @@ namespace Symbiose
 
 			if (snap.ContainsKey("litiere"))
 				ApplyLitiere(snap["litiere"].AsGodotDictionary());
+			// Tapis de mulch au sol (équilibre invasion ⑧, 0.5.20, lecture seule) : le
+			// champ `paillage` posé par le geste `pailler`. Lecture TOLÉRANTE : un
+			// snapshot pré-0.5.20 sans le bloc → pas de mulch dessiné, jamais de crash.
+			if (snap.ContainsKey("paillage"))
+				ApplyPaillage(snap["paillage"].AsGodotDictionary());
 			if (snap.ContainsKey("structures"))
 				ApplyStructures(snap["structures"].AsGodotDictionary());
 

@@ -33,6 +33,7 @@ from world import Tile, House
 from plants import (Tomato, Basil, Sunflower, Bean, Clover, Pepper,
                     Yarrow, Phacelia, AppleTree, PLANT_CATALOGUE)
 from fields import init_eco
+from fields.ecofields.constants import PAILLAGE_DOSE   # dose du mulch de la démo paillée sud (⑧)
 from sim.engine import Engine
 from sim import actions as ACT, vigueur as VIG
 from sim.seeds import PlayerSeedBank, Seed
@@ -96,6 +97,22 @@ def build_world_full():
     # sénescence (~70 ans) demande « python3 main.py 100 » (cf. tests/test_senescence).
     tiles_by_id = {t.tile_id: t for t in tiles}
     tiles_by_id["S"].add_plant(AppleTree, 0, 7)
+
+    # Démo « planche paillée plein sud » (sprint équilibre invasion ⑧, D7/D69) :
+    # démonstrateur VIVANT du levier paillage au F5. La tuile "S" (terre, plein sud)
+    # reçoit une bande de tomate/basilic/poivron/tournesol — JUSTEMENT les cultures
+    # qui mouraient balayées par l'invasion — sur des plots PRÉ-MULCHÉS de paille. Le
+    # mulch étouffe la levée férale sous la planche (comparer à une planche nue) et
+    # tempère le sol. Init-time (hors tick, hors golden smoke) : on plante par
+    # `add_plant` (convention démo de `plant_garden`) et on pose le mulch directement
+    # via `poser_mulch` (le geste `pailler` consomme un stock, non pertinent ici — on
+    # amorce l'état du monde). Colonnes 9..15 libres (plant_garden n'occupe que 0..6).
+    s_tile, s_eco = tiles_by_id["S"], ecos["S"]
+    for i, crop in enumerate(POTAGER_CROPS):
+        col = 9 + i                          # bande 9,10,11,12 (tuile 11×16)
+        for r in range(2, 9):                # 7 plots par culture, lignes 2..8
+            s_tile.add_plant(PLANT_CATALOGUE[crop], r, col)
+            s_eco.poser_mulch(r, col, "paille", PAILLAGE_DOSE)
 
     house = House()   # défauts : centrée (1000,1000), 8×8×6 m, calcaire 0.35
     return tiles, ecos, aux_tiles, house

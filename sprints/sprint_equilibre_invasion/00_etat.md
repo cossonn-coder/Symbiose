@@ -13,7 +13,7 @@
 - **05** catalogue blé/chanvre/sapin + 5 voix [INTACT] ✅ FAIT 2026-07-08 (golden `33c0ea6f…` inchangé)
 - **06** paillage ↔ vie macro (abri) [golden INTACT] ✅ FAIT 2026-07-08 (golden `33c0ea6f…` + population_hash `1aa4997d…` INCHANGÉS)
 - **07** planter+pailler par maîtrise (auto-paillage) [INTACT] ✅ FAIT 2026-07-08 (golden `33c0ea6f…` + population_hash `1aa4997d…` INCHANGÉS)
-- **08** vue Godot (pailler/broyer + rendu mulch + abri) + démo sud [INTACT]
+- **08** vue Godot (pailler/broyer + rendu mulch + abri) + démo sud [golden INTACT] ✅ FAIT 2026-07-08 (golden `33c0ea6f…` + population_hash `1aa4997d…` INCHANGÉS, pont 0.5.20, build C# vert)
 
 ## Sujet
 Rendre l'invasion d'adventices **infléchissable par le joueur via le milieu**
@@ -360,5 +360,54 @@ l'en-tête `autopaillage.py` et la docstring de `planter`.
 NON concerné : C# (⑦ moteur Python pur, pont/vue = ⑧). F5 : rien à valider ce tronçon
 (le visuel « mulch qui apparaît en plantant » = ⑧).
 
-**Prochain : tronçon ⑧ (vue Godot pailler/broyer + rendu mulch + abri + démo sud).**
-Message /clear : « lis `sprints/sprint_equilibre_invasion/00_etat.md` puis `08_*.md` ».
+**Tronçon ⑧ FAIT (2026-07-08)** — golden INTACT (`33c0ea6f…`, hash post-② inchangé :
+serialize/commands = pont hors tick, `build_world_full` hors golden smoke) ET
+population_hash INTACT (`1aa4997d…`). Suite ENTIÈRE verte hors `test_epaisseur_500ans`
+(INTERDIT), dont `test_sim_server` 245/245. Build C# `dotnet build Symbiose.csproj`
+VERT (0 warning, 0 erreur). La vue Godot rend le paillage JOUABLE + OBSERVABLE. Livré :
+- **Python** — `tools/simserver/serialize.py` : nouveau bloc `paillage` par tuile =
+  liste CREUSE `[[r, c, profondeur, nature], …]` des plots mulchés (profondeur > 0),
+  lu de `eco.paillage`/`eco.paillage_nature` (getattr garde-fous). `tools/simserver/
+  actions.py` : DEUX verbes neufs au routeur — `pailler` (target plot {tile,r,c},
+  `params.nature` ∈ paille/brf/aiguilles, relaie le refus « stock vide » de la façade)
+  + `broyer` (target par POSITION {tile,x_cm,y_cm} sur un SQUELETTE via nouveau résolveur
+  `_skeleton_at`, mort porteur de `bois_restant`). `version.py` : bump `ENGINE_VERSION`
+  0.5.19 → **0.5.20** (+ entrée doc). `main.py::build_world_full` : DÉMO « planche
+  paillée plein sud » (D7) — tuile S, cols 9..12 × lignes 2..8 = 28 plots de tomate/
+  basilic/poivron/tournesol PRÉ-MULCHÉS paille (`poser_mulch`, init hors tick).
+- **C#** — `visuals/MulchLayer.cs` (NEUF, patron `LitterLayer`) : tapis de mulch batché,
+  teinte par nature (paille doré / BRF brun / aiguilles brun-vert), brins ∝ profondeur,
+  jitter déterministe (zéro Random). `world/WorldView.Paillage.cs` (NEUF, partial) :
+  `_mulchLayer` + `ApplyPaillage`. `WorldView.cs` : instanciation ZIndex 1.
+  `WorldView.Snapshot.cs` : `ApplyPaillage(snap["paillage"])` (lecture tolérante).
+  `WorldView.Actions.cs` : gestes `pailler` (kind 'U', cycle nature) + `broyer` (kind 'D',
+  squelette) + cycle `CycleNature`. `WorldView.Controls.cs` : touche **N** = nature.
+  `WorldView.Hud.cs` : nature courante au HUD + légende. `WorldView.Selecteur.cs` :
+  option **`propre`** ajoutée (banc « monde propre » sélectionnable au F5).
+- **Tests** — `tests/simserver/base.py` (53→81 plantes, cause démo sud), `conteneurs.py`/
+  `voix.py`/`structures.py` (bump 0.5.19→0.5.20), `test_sim_server.py` (docstring).
+
+**ABRI faune (item 3 du kickoff)** : DÉJÀ rendu sans code neuf — le moteur (⑥) fait
+émerger plus de faune ombrophile sur les plots mulchés (le champ population lit
+`paillage`), densité qui arrive au bloc `sprites` déjà dessiné par `MacroLife`. Le
+MulchLayer (dessous) + MacroLife (dessus) racontent l'abri ensemble (documenté dans
+`WorldView.Paillage.cs`).
+
+**F5 Nico (à valider)** : (1) `config="full"` → planche sud paillée visible (tapis doré
+sur la tuile S) ; (2) geste `pailler` (touche pour le sélectionner + N pour la nature)
+au clic dépose du mulch — MAIS le stock démarre VIDE, il faut d'abord `broyer` un
+squelette OU récolter blé/chanvre/sapin (message serveur « stock vide » sinon) ;
+(3) `broyer` sur un squelette ligneux crédite du BRF ; (4) comparer une planche paillée
+à une nue (adventices étouffées sous le mulch) ; (5) `config="propre"` (nouveau au
+sélecteur) pour observer les cultivées seules ; (6) calibrage visuel du MulchLayer
+(couleurs/densité/LOD MinZoom, placeholders).
+
+**Décision de design imprévue** : le stock de mulch de la démo démarre VIDE (le geste
+`pailler` consomme un stock, ④). La planche sud est PRÉ-mulchée à l'init (`poser_mulch`
+direct, pas via le stock) pour le démonstrateur, mais pour pailler DE NOUVEAU au F5 il
+faut approvisionner (broyer/récolter). C'est fidèle à ④ (pas de mulch magique) ; à
+surveiller au F5 si Nico veut un stock de départ pour tester `pailler` sans détour.
+
+**SPRINT ÉQUILIBRE INVASION CLOS** (①→⑧ tous FAITS). Reste hors sprint : maj `DETTE.md`
+(D69 → implémenté) + `journal.md`. NE PAS OUBLIER : revenir à la perf pure (D67/
+LightField) après ce sprint.

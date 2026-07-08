@@ -15,7 +15,8 @@ protocole v0 par les pipes. Couvre les contrats du kickoff 01_pont_minimal.md :
   5. arrêt propre — EOF sur stdin (Godot mort sans quit) → le process meurt ;
   6. monde full   — init(config="full") (tranche 2) : layout 3×3 de main.py
                     (8 tuiles SECTORS, sols variés, origins distincts, maison
-                    [600,600]→[1400,1400], 53 plantes), config inconnue refusée ;
+                    [600,600]→[1400,1400], 81 plantes dont la démo paillée sud),
+                    config inconnue refusée ;
   7. actions v1   — (tranche 4) bloc `player` au snapshot, régen + refill de
                     saison via le tick moteur, manger/deraciner par POSITION,
                     URGENCE_MULT visible sur ecraser, refus métier

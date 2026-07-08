@@ -321,6 +321,57 @@ class ActionsMixin:
                          f"habitat auxiliaire posé sur {tile.tile_id}" if ok
                          else "échec (Vigueur insuffisante ou tiges saturées)")
 
+        # Pailler (sprint équilibre invasion ③/⑧, D69) : geste sur le MILIEU au PLOT
+        # {tile, r, c}, `params.nature` ∈ {paille, brf, aiguilles} (défaut "paille").
+        # La façade REFUSE en amont si le stock de mulch de cette nature est vide
+        # (aucune Vigueur dépensée) — on relaie son verdict, jamais de pré-validation
+        # côté vue (Python possède la règle : stock, coût, cap du champ).
+        if verb == "pailler":
+            tile, eco = tile_cible()
+            if tile is None:
+                return bilan(False, 0.0, 0.0,
+                             f"tuile introuvable : {target.get('tile')!r}")
+            r, c = target.get("r"), target.get("c")
+            if (not isinstance(r, int) or isinstance(r, bool)
+                    or not isinstance(c, int) or isinstance(c, bool)
+                    or not (0 <= r < tile.grid_rows)
+                    or not (0 <= c < tile.grid_cols)):
+                return bilan(False, 0.0, 0.0,
+                             f"plot hors tuile : r={r!r}, c={c!r}")
+            nature = params.get("nature", "paille")
+            if not isinstance(nature, str):
+                return bilan(False, 0.0, 0.0, f"nature non textuelle : {nature!r}")
+            cost = A.cout_action(gs, player, "pailler", A.OBJETS_TOUCHES["pailler"])
+            avant = eco.paillage.at_plot(r, c)
+            ok = A.pailler(gs, player, eco, r, c, nature=nature)
+            apres = eco.paillage.at_plot(r, c)
+            return bilan(ok, cost, 0.0,
+                         f"paillé ({r},{c}) en {nature} : "
+                         f"profondeur {avant:.2f} → {apres:.2f}" if ok
+                         else f"rien paillé (stock de {nature} vide ou "
+                              "Vigueur insuffisante)")
+
+        # Broyer du bois en BRF (sprint équilibre invasion ④/⑧, D69) : geste sur le
+        # MILIEU désigné par POSITION continue, comme les autres gestes sur plante — mais
+        # la CIBLE est un SQUELETTE (plante MORTE avec du bois à fragmenter). `_plant_at`
+        # ne retient que les VIVANTES ; on résout donc le mort par position ici. Le stock
+        # `brf` produit alimente `pailler`. Façade GRADUÉE (broie une fraction du bois à
+        # Vigueur partielle) + refus en amont si aucune réserve → on relaie le verdict.
+        if verb == "broyer":
+            tile, eco = tile_cible()
+            if tile is None:
+                return bilan(False, 0.0, 0.0,
+                             f"tuile introuvable : {target.get('tile')!r}")
+            plant = self._skeleton_at(tile, target.get("x_cm"), target.get("y_cm"))
+            if plant is None:
+                return bilan(False, 0.0, 0.0,
+                             "aucun bois à broyer ici (visez un squelette de plante ligneuse)")
+            cost = A.cout_action(gs, player, "broyer", A.OBJETS_TOUCHES["broyer"])
+            credit = A.broyer(gs, player, plant, eco)
+            return bilan(credit > 0.0, cost, 0.0,
+                         f"bois broyé : +{credit:.2f} BRF au stock de mulch" if credit > 0.0
+                         else "rien broyé (plus de bois ou Vigueur insuffisante)")
+
         if verb == "grelinette":
             tile, eco = tile_cible()
             if tile is None:
@@ -487,6 +538,22 @@ class ActionsMixin:
             return None
         for p in tile.plants:
             if (p.is_alive and p.x_cm is not None
+                    and abs(p.x_cm - x_cm) <= eps
+                    and abs(p.y_cm - y_cm) <= eps):
+                return p
+        return None
+
+    @staticmethod
+    def _skeleton_at(tile, x_cm, y_cm, eps: float = PLANT_EPSILON_CM):
+        """Le SQUELETTE (plante MORTE avec `bois_restant > 0`) de la tuile à ±eps de
+        (x_cm, y_cm) locale, ou None. Miroir de `_plant_at` pour la cible de `broyer`
+        (les morts persistent au snapshot avec `dead=true`, cf. serialize) : `_plant_at`
+        ne retient que les VIVANTES, il faut donc un résolveur dédié au bois à broyer."""
+        if not isinstance(x_cm, (int, float)) or not isinstance(y_cm, (int, float)):
+            return None
+        for p in tile.plants:
+            if (not p.is_alive and getattr(p, "bois_restant", 0.0) > 0.0
+                    and p.x_cm is not None
                     and abs(p.x_cm - x_cm) <= eps
                     and abs(p.y_cm - y_cm) <= eps):
                 return p

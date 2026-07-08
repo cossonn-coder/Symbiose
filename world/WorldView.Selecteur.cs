@@ -53,6 +53,11 @@ namespace Symbiose
 			// puis les bancs d'essai dans l'ordre du registre Python (source unique).
 			liste.AddItem("full");
 			liste.AddItem("smoke");
+			// « propre » = banc « monde propre » (équilibre invasion ①/⑧, D69) : mêmes
+			// tuiles + cultivées + démo paillée sud, mais succession férale COUPÉE →
+			// observer les cultivées seules (levier paillage lisible sans l'invasion).
+			// Config d'init côté serveur (pas un banc du registre) → ajoutée à la main.
+			liste.AddItem("propre");
 			foreach (string nom in _bridge.ListBancs())
 				liste.AddItem(nom);
 			// Présélection = la `config` de l'Export (défaut « full ») si elle est

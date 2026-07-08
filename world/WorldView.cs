@@ -294,6 +294,13 @@ namespace Symbiose
 
 			BuildLitterLayer();   // litière au sol (③·B) — ZIndex 1, sous la macro
 
+			// Tapis de MULCH au sol (équilibre invasion ⑧, D69) — ZIndex 1 comme la
+			// litière (au-dessus du sol/couverture, sous la macro/plantes). Ajouté
+			// APRÈS la litière → le mulch DÉLIBÉRÉ (geste) se pose par-dessus la
+			// nécromasse spontanée. Lit le bloc `paillage` (0.5.20).
+			_mulchLayer = new MulchLayer { Name = "Mulch", ZIndex = 1 };
+			AddWorld(_mulchLayer);
+
 			_macroLife = new MacroLife { Name = "MacroLife", ZIndex = 5 };
 			AddWorld(_macroLife);
 
