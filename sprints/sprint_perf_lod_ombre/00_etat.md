@@ -79,6 +79,16 @@ autonome + carte blanche). Reste : doc `CONCEPTION_PERF_LOD_OMBRE.md` + kickoffs
   vs récepteurs » (teinte des plantes sous-seuil), snapshot `emitteur` par plante,
   bump protocole mineur. Golden INTACT. Points F5 Nico.
 
+## Donnée terrain (F5 Nico, 2026-07-08) → `_rapport_terrain_20260708.md`
+Mesure in-game archivée avant lancement. 2 signaux :
+- **Cible D67 confirmée** : ~480/522 plantes = semis sous-seuil (Clover×220,
+  PoaAnnua×67, BursaPastoris×76…) ; grosses canopées concentrées tuiles S/NO.
+- **Pic ≠ géométrie** : pires ticks fin an 1 (s48-s52, jusqu'à 6240 ms) à PEU de
+  segments (1224) ; an 2 plus rapide (2540 ms) à 4× plus de segments (4974). ⇒
+  pic saisonnier probable germination/repro fin d'été, pas ombre. **Au ②** :
+  calibrer en visant AUSSI s48-s52 dans `diag_lod_ombre.py` (D6 critères c+e,
+  risque : LOD ↑ lumière-sol ↑ germination). Conception INCHANGÉE (D5/D6 couvrent).
+
 ## Coût perf estimé
 Gain attendu sur les 2 boucles géométriques (~½ du tick à l'an 6, cf. table
 profile_monde). N dominé par des SEMIS (Clover×85, PoaAnnua×65…) = émetteurs
