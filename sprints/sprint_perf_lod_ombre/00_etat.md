@@ -111,13 +111,30 @@ sous-seuil → couper leur ombre = couper le gros du volume d'obstacles. Gain ne
     Note : l'assertion « reçue↑ » est agrégée sur la scène (sur une tuile donnée,
     3 semis coupés peuvent n'ombrer que le sol).
   - Suites ombre/lumière vertes (ombre_maison, phototropisme, scatter).
-- **② Calibrage + activation — À FAIRE** (kickoff `02_*.md`).
+- **② Calibrage + activation — FAIT (2026-07-08).** `SHADING_POWER_MIN = 37.5`
+  activé dans `fields/light.py`. Golden **RE-FIGÉ maîtrisé** `24ec11e7…`
+  (ex-`33c0ea6f…`, dérive localisée = ombres des semis sous-seuil retirées).
+  - **Calibrage piloté par `diag_lod_ombre`** (script batch jetable /tmp, grandit OFF
+    une fois + balaye 4 seuils an 6). Distribution du pouvoir à l'an 6 : falaise nette
+    p80=37.4 (semis, ~80 % des plantes) → p90=262 (structurantes). 37.5 = plus grand
+    seuil coupant TOUT le cluster de semis sans mordre sur les structurantes.
+  - **Mesures @ S=37.5** : N plateau off 587 → **on 689** (bande D5 [521, 704] → DANS) ;
+    gain **+17.9 % ms/tick** (567 → ~465 ms net à l'équilibre propre) ; dérive
+    `light_received` **moy 0.68 %** (négligeable), max 131 % = 1 seule plante de
+    sous-étage sensible (dérive localisée) ; vis B préservée (139 vs 112 off, non
+    effondrée). S=299 écarté (+6 % de gain mais ×3 dérive + vis B ÷2 → mord les
+    structurantes).
+  - **`population_hash` INCHANGÉ** (`1aa4997d…`) : le scénario du test population
+    n'exerce pas la dérive LOD → contrairement à l'anticipation du kickoff, RIEN à
+    re-figer côté population. Golden = seul hash bougé.
+  - Suites lumière vertes (golden, lod_ombre, ombre_maison, phototropisme, scatter).
 - **③ Vue Godot — À FAIRE** (kickoff `03_*.md`).
 
 ## §REPRISE
 Lire `CLAUDE.md` + ce fichier. Décisions D1-D7 arrêtées, découpage figé (3 tronçons).
-Tronçon ① CLOS (golden intact `33c0ea6f…`, banc + test livrés). **Reprendre au
-tronçon ②** : lancer `python3 -m tools.diag_lod_ombre --seuil S` pour plusieurs S,
-choisir le plus grand S tenant N dans [521, 705] avec dérive faible, l'activer par
-défaut dans `fields/light.py`, RE-FIGER golden + `population_hash` (maîtrisé, annoncé),
-consigner gain net + dérive. Puis tronçon ③ (vue Godot). DETTE D67 + journal en clôture.
+Tronçons ① et ② CLOS. Golden actif = **`24ec11e7…`** (LOD `SHADING_POWER_MIN=37.5`),
+population `1aa4997d…` inchangé. **Reprendre au tronçon ③** (vue Godot) : snapshot
+`emitteur` par plante (`serialize.py`), bump `ENGINE_VERSION` 0.5.21, lecture C# +
+toggle debug teinte des non-émettrices (`WorldView.Snapshot/Controls`, `PlantRenderer`),
+golden INTACT, `dotnet build` vert. Puis clôture : DETTE D67 → implémenté + BACKLOG +
+journal + refactor auto-léger.

@@ -41,11 +41,19 @@ SILHOUETTE_SECHE = 0.30
 # Seuil de POUVOIR OMBRAGEANT sous lequel une plante REÇOIT toujours la lumière mais
 # n'ÉMET plus d'ombre (retirée des deux boucles géométriques de `compute`). Pouvoir =
 # hauteur × rayon canopée × densité foliaire (les 3 déjà dans `infos`, zéro état neuf,
-# déterministe). DÉFAUT 0.0 = LOD DORMANT : `emitters == infos` dans l'ordre exact →
-# comportement bit-identique à l'historique → golden INTACT (invariant D3). L'activation
-# (seuil > 0) est le tronçon ②. Global de module : le banc `tools/diag_lod_ombre.py` le
-# monkeypatche (`light.SHADING_POWER_MIN = …`) → il est relu à CHAQUE `compute`.
-SHADING_POWER_MIN = 0.0
+# déterministe). À 0.0 le LOD est DORMANT (`emitters == infos` ordre exact → bit-identique,
+# invariant D3 verrouillé par `tests/test_lod_ombre`). Global de module : le banc
+# `tools/diag_lod_ombre.py` le monkeypatche (relu à CHAQUE `compute`).
+#
+# VALEUR ACTIVE = 37.5 (calibrée au tronçon ②, 2026-07-08, `diag_lod_ombre`). La
+# distribution du pouvoir à l'an 6 (config=full) montre une falaise nette : ~80 % des
+# plantes sont des semis (pouvoir ~26-37, p80=37.4), les structurantes sont ≥ 262 (p90).
+# 37.5 coupe TOUT le cluster de semis sans mordre sur les plantes structurantes → gain
+# ~+18 % ms/tick, dérive `light_received` moyenne 0.68 % (négligeable), vis B préservée
+# (self-thinning intact), N plateau 689 dans la bande D5 [521, 704]. Un seuil plus haut
+# (ex. 299) gagne peu de plus mais triple la dérive et divise la vis B par 2 (coupe des
+# structurantes) → écarté. Golden RE-FIGÉ ici (dérive localisée, cf. tronçon ②).
+SHADING_POWER_MIN = 37.5
 
 
 def solar_slice(decl_deg: float, hour_angle_deg: float,
