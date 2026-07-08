@@ -44,6 +44,11 @@ from .compost import (
 from .paillage import (
     mulch_stock, stock_disponible, prelever_stock, broyer, recolter_paille,
 )
+# Couplage planter+pailler par maîtrise (équilibre invasion ⑦) : auto-paillage à la
+# plantation au-dessus du palier, nature du mulch selon l'espèce.
+from .autopaillage import (
+    SEUIL_AUTOPAILLAGE, nature_autopaillage, auto_pailler,
+)
 from .ruche import (
     CONCEPT_ABEILLES, SEUIL_EQUIPEMENT, MIEL_VIGUEUR_RATIO, RECOLTE_SANS_EQUIP,
     poser_ruche, equipe, recolter_miel,
@@ -72,6 +77,7 @@ __all__ = [
     "EPANDRE_W", "structure_de_tuile", "poser_bac", "poser_pile",
     "composter", "empiler_bois", "retourner", "epandre",
     "mulch_stock", "stock_disponible", "prelever_stock", "broyer", "recolter_paille",
+    "SEUIL_AUTOPAILLAGE", "nature_autopaillage", "auto_pailler",
     "CONCEPT_ABEILLES", "SEUIL_EQUIPEMENT", "MIEL_VIGUEUR_RATIO", "RECOLTE_SANS_EQUIP",
     "poser_ruche", "equipe", "recolter_miel",
     "poser_pot", "poser_bac_culture", "deplacer_pot",

@@ -324,6 +324,77 @@ def test_abri_paillage():
     check("paillage=0 → habitat bit-identique (golden neutre)", base == avec)
 
 
+# ---------------------------------------------------------------------------
+# 9. Couplage planter + pailler par MAÎTRISE (tronçon ⑦)
+# ---------------------------------------------------------------------------
+def test_autopaillage_maitrise():
+    print("\n[9] auto-paillage : planter maîtrisé paille d'instinct (nature selon la plante)")
+    from world import Tile
+    from sim.seeds import Seed, PlayerSeedBank
+    from sim import maitrise as M
+
+    def _state(species):
+        tile = Tile(tile_id="T0", soil_type="terre", grid_rows=6, grid_cols=6)
+        eco = init_eco("T0", 6, 6, humidite=1.5)
+        bank = PlayerSeedBank()
+        bank.add(Seed(species=species, genes={"hauteur": 1.0}))
+        gs = {"tiles": [tile], "eco": {"T0": eco}, "scores": {},
+              "current_player": "joueur_1", "week": 3, "log": [], "seed": SEED,
+              "player_seed_bank": bank}
+        V.ensure_player(gs, "joueur_1")
+        return gs, tile, eco, bank
+
+    # (a) mapping nature : arbre → BRF, potagère → paille, source déclarée honorée
+    check("nature(tomate) = paille", ACT.nature_autopaillage("tomate") == "paille")
+    check("nature(pommier) = brf (arbre ligneux)", ACT.nature_autopaillage("pommier") == "brf")
+    check("nature(sapin) = aiguilles (mulch_source)", ACT.nature_autopaillage("sapin") == "aiguilles")
+    check("nature(ble) = paille (mulch_source)", ACT.nature_autopaillage("ble") == "paille")
+
+    # (b) basse maîtrise (palier 0) → PAS d'auto-paillage même avec du stock
+    gs, tile, eco, bank = _state("tomate")
+    ACT.mulch_stock(gs)["paille"] = 10.0
+    ACT.planter(gs, "joueur_1", tile, eco, "tomate", 2, 2)
+    check("palier 0 → plot NON paillé (plantation nue)", eco.paillage.at_plot(2, 2) == 0.0)
+    check("palier 0 → stock intact", ACT.mulch_stock(gs)["paille"] == 10.0)
+    check("graine tout de même déposée", len(tile.grains_en_attente.get((2, 2), [])) == 1)
+
+    # (c) maîtrise ≥ seuil + stock → plot auto-paillé de la bonne nature, stock débité
+    gs, tile, eco, bank = _state("tomate")
+    M.ensure_player_maitrise(gs, "joueur_1")["objets"]["tomate"] = {
+        "palier": ACT.SEUIL_AUTOPAILLAGE, "preuves": 0}
+    ACT.mulch_stock(gs)["paille"] = 10.0
+    ok = ACT.planter(gs, "joueur_1", tile, eco, "tomate", 2, 2)
+    check("planter renvoie True (maîtrisé)", ok)
+    check("plot auto-paillé (paille)",
+          abs(eco.paillage.at_plot(2, 2) - PAILLAGE_DOSE) < 1e-9,
+          f"paillage={eco.paillage.at_plot(2, 2):.3f}")
+    check("nature du plot = paille", eco.paillage_nature[2][2] == "paille")
+    check("stock paille débité de PAILLAGE_DOSE",
+          abs(ACT.mulch_stock(gs)["paille"] - (10.0 - PAILLAGE_DOSE)) < 1e-9)
+
+    # (d) maîtrise mais STOCK VIDE → plantation nue, aucune friction, aucun mulch magique
+    gs, tile, eco, bank = _state("tomate")
+    M.ensure_player_maitrise(gs, "joueur_1")["objets"]["tomate"] = {
+        "palier": ACT.SEUIL_AUTOPAILLAGE, "preuves": 0}
+    # stock paille = 0 par défaut
+    ok = ACT.planter(gs, "joueur_1", tile, eco, "tomate", 2, 2)
+    check("maîtrisé mais sans stock → planté quand même", ok)
+    check("maîtrisé mais sans stock → PAS de mulch (pas de matière magique)",
+          eco.paillage.at_plot(2, 2) == 0.0)
+
+    # (e) arbre maîtrisé → nature BRF prélevée du bon stock
+    gs, tile, eco, bank = _state("pommier")
+    M.ensure_player_maitrise(gs, "joueur_1")["objets"]["pommier"] = {
+        "palier": ACT.SEUIL_AUTOPAILLAGE, "preuves": 0}
+    ACT.mulch_stock(gs)["brf"] = 10.0
+    ACT.mulch_stock(gs)["paille"] = 10.0
+    ACT.planter(gs, "joueur_1", tile, eco, "pommier", 3, 3)
+    check("arbre maîtrisé → nature du plot = brf", eco.paillage_nature[3][3] == "brf")
+    check("arbre → stock brf débité, paille intacte",
+          abs(ACT.mulch_stock(gs)["brf"] - (10.0 - PAILLAGE_DOSE)) < 1e-9
+          and ACT.mulch_stock(gs)["paille"] == 10.0)
+
+
 def main():
     test_geste_pailler()
     test_germination_etouffee()
@@ -333,6 +404,7 @@ def main():
     test_invariant_repos()
     test_materiau()
     test_abri_paillage()
+    test_autopaillage_maitrise()
     n_ok = sum(1 for _, ok in _results if ok)
     print(f"\n=== {n_ok}/{len(_results)} OK ===")
     if n_ok != len(_results):

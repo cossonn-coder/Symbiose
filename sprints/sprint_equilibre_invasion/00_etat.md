@@ -12,7 +12,7 @@
 - **04** matériau — `broyer`→BRF + récolte paille → stock + 3 natures [INTACT] ✅ FAIT 2026-07-08 (golden `33c0ea6f…` inchangé)
 - **05** catalogue blé/chanvre/sapin + 5 voix [INTACT] ✅ FAIT 2026-07-08 (golden `33c0ea6f…` inchangé)
 - **06** paillage ↔ vie macro (abri) [golden INTACT] ✅ FAIT 2026-07-08 (golden `33c0ea6f…` + population_hash `1aa4997d…` INCHANGÉS)
-- **07** planter+pailler par maîtrise (auto-paillage) [INTACT]
+- **07** planter+pailler par maîtrise (auto-paillage) [INTACT] ✅ FAIT 2026-07-08 (golden `33c0ea6f…` + population_hash `1aa4997d…` INCHANGÉS)
 - **08** vue Godot (pailler/broyer + rendu mulch + abri) + démo sud [INTACT]
 
 ## Sujet
@@ -330,5 +330,35 @@ faune de SOL (carabe/lombric/cloporte/hérisson/limace) ; les pollinisateurs/ois
 volants NON décorés (pas de refuge de sol). Le décorateur est LOCAL au plot mulché
 (les plots nus restent bit-identiques).
 
-**Prochain : tronçon ⑦ (planter+pailler par maîtrise / auto-paillage).** Message
-/clear : « lis `sprints/sprint_equilibre_invasion/00_etat.md` puis `07_*.md` ».
+**Tronçon ⑦ FAIT (2026-07-08)** — golden INTACT (`33c0ea6f…`, hash post-② inchangé :
+le smoke n'a aucune maîtrise → palier 0 < seuil → `auto_pailler` no-op strict) ET
+population_hash INTACT (`1aa4997d…`, aucun chemin nouveau au tick). Suite verte hors
+`test_epaisseur_500ans` (INTERDIT) : test_paillage 54/54, test_planter PASS,
+test_maitrise 35/35, test_maitrise_detection 20/20, test_vigueur 136/136,
+test_population PASS, test_sim_server 245/245. Le geste `planter`, une fois l'espèce
+MAÎTRISÉE, paille le plot d'instinct (D12). Livré :
+- `sim/actions/autopaillage.py` (créé, 25 LDC pur) — `SEUIL_AUTOPAILLAGE=3`
+  (= palier « maîtrise » découverte1→invest2→**maîtrise3**→expert4→transcend5),
+  `nature_autopaillage(species)` (mapping DÉRIVÉ du catalogue : `mulch_source`
+  déclarée honorée → sinon arbre de `PERENNIAL_CATALOGUE` → "brf" → sinon "paille"),
+  `auto_pailler(...)` (no-op si palier < seuil OU stock vide ; sinon consomme le
+  stock + `poser_mulch`).
+- `sim/actions/gestes.py::planter` — appelle `auto_pailler(...)` APRÈS le dépôt réussi
+  du grain (+ docstring). Import de `.autopaillage`.
+- `sim/actions/__init__.py` — ré-exports `SEUIL_AUTOPAILLAGE`/`nature_autopaillage`/
+  `auto_pailler` (+ `__all__`).
+- `tests/test_paillage.py` — section [9] (mapping nature, palier 0 → nue, maîtrisé+
+  stock → paillé bonne nature+stock débité, maîtrisé sans stock → nue sans friction,
+  arbre → BRF du bon stock) → 54/54.
+
+Décision de tarif TRANCHÉE (kickoff ⑦ le laissait ouvert) : l'auto-paillage CONSOMME
+le stock (respect ④, pas de mulch magique) mais NE facture AUCUNE Vigueur en plus —
+c'est un RÉFLEXE fondu dans le geste de plantation du jardinier qui maîtrise, pas un
+second geste à payer. Sans stock : plantation nue, aucune friction. Documenté dans
+l'en-tête `autopaillage.py` et la docstring de `planter`.
+
+NON concerné : C# (⑦ moteur Python pur, pont/vue = ⑧). F5 : rien à valider ce tronçon
+(le visuel « mulch qui apparaît en plantant » = ⑧).
+
+**Prochain : tronçon ⑧ (vue Godot pailler/broyer + rendu mulch + abri + démo sud).**
+Message /clear : « lis `sprints/sprint_equilibre_invasion/00_etat.md` puis `08_*.md` ».

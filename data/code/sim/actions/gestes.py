@@ -31,6 +31,7 @@ from fields.alarme import declencher_alarme, ALARME_DEPOT   # phéromone d'alarm
 from fields.seedbank import GrainEnAttente          # dépôt de `planter` (germination différée, distinct de la banque-sol)
 from .couts import cout_action, _objets_action, OBJETS_TOUCHES, URGENCE_MULT
 from .paillage import stock_disponible, prelever_stock   # matériau du mulch (④) : stock par nature
+from .autopaillage import auto_pailler   # couplage planter+pailler par maîtrise (⑦, D12)
 
 # Dose d'humidité d'un arrosage (CONCEPTION_PLANTER_ARROSER §4, Q9), échelle [0,3].
 # Calée sur l'aléa « Pluies » (`+0.5`) : un geste = une bonne pluie locale. Cap 3.0
@@ -118,8 +119,17 @@ def planter(game_state: dict, player: str, tile, eco, species: str,
     intégralement payé — forcer le geste à vide draine la Vigueur sans rien
     déposer, et la graine est conservée. **Empilement autorisé** (Q4) : on ne
     refuse JAMAIS un plot occupé ; la graine **patiente** (la succession ne lève
-    que sur plot libre). `eco` est réservé (cohérence avec la famille des gestes +
-    routage du pont) : le dépôt n'écrit aucun champ écolo.
+    que sur plot libre).
+
+    AUTO-PAILLAGE par maîtrise (tronçon ⑦, D12) : une fois la graine déposée, SI le
+    joueur MAÎTRISE l'espèce (palier ≥ `SEUIL_AUTOPAILLAGE`) ET dispose du stock de
+    mulch idoine, `planter` paille le plot d'instinct (`auto_pailler` : nature selon
+    la plante — arbre → BRF, potagère → paille, ⑤ → sa matière ; consomme le stock,
+    ne facture PAS de Vigueur en plus — réflexe fondu dans le geste). Sans maîtrise
+    OU sans stock : plantation nue, aucune friction. **Golden INTACT** : le smoke
+    n'a aucune maîtrise (palier 0 < seuil) → `auto_pailler` est un no-op. `eco` sert
+    désormais à `auto_pailler` (pose du mulch) ; le dépôt de graine lui-même n'écrit
+    toujours aucun champ écolo.
     Renvoie True si la graine a été déposée."""
     bank = game_state.get("player_seed_bank")
     if bank is None or bank.count(species) == 0:
@@ -134,6 +144,7 @@ def planter(game_state: dict, player: str, tile, eco, species: str,
                        cultive=True, player=player,
                        semaine_depot=game_state.get("week", 0))
     )
+    auto_pailler(game_state, player, eco, species, r, c)   # ⑦ : mulch réflexe si maîtrisé + stock (no-op au golden)
     return True
 
 
