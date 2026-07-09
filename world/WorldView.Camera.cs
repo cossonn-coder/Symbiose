@@ -68,6 +68,9 @@ namespace Symbiose
 			// → diviser par le zoom donne un ressenti identique à tout palier.
 			_camera.Position = ClampToWorld(_camera.Position
 				+ dir.Normalized() * (PanSpeedPx / _camera.Zoom.X) * delta);
+			// Culling préventif (tronçon ②) : la caméra a réellement bougé (early-out
+			// plus haut si aucune flèche) → réévaluer quelles plantes cadre le viewport.
+			CullPlants();
 		}
 
 		// Borne la caméra à la boîte englobante du monde projeté + marge 10 %
@@ -109,7 +112,44 @@ namespace Symbiose
 			// en segments RESTERAIT en segments après un dézoom. ~500 QueueRedraw,
 			// ponctuel (un cran de molette), invisible.
 			RedrawAllPlants();
+			// Culling préventif (tronçon ②) : le zoom change l'étendue visible → une
+			// plante peut sortir/entrer du cadre. Réévalué au même cran de molette.
+			CullPlants();
 			GD.Print($"[WorldView] zoom ×{newZ}.");
+		}
+
+		// Culling préventif des plantes (sprint PERF rendu plantes, tronçon ②).
+		// Une plante dont l'emprise projetée est ENTIÈREMENT hors viewport ne doit
+		// rien coûter : Visible=false la sort du dessin ET du YSort du SubViewport.
+		// C'est une CEINTURE — Godot 4 cull déjà les canvas items hors-écran ; le
+		// vrai levier perf du tronçon est le LOD organes. Réévalué au move/zoom
+		// caméra et après chaque snapshot (des plantes naissent hors champ), jamais
+		// chaque frame. ~500 nœuds, balayage linéaire trivial (mesurer avant
+		// d'optimiser : pas de quadtree). Ne touche PAS au picking : FindSegmentGlobal
+		// itère _plantNodes indépendamment de Visible, et une plante hors-écran n'est
+		// de toute façon pas sous le curseur.
+		private void CullPlants()
+		{
+			if (_camera == null) return;
+			// Marge = étendue max d'une grande plante (~grand arbre) en px canvas :
+			// on teste le CENTRE du nœud (node.Position, déjà en canvas), la marge
+			// couvre la couronne qui déborde du centre. 400 cm × PxPerCmX.
+			float margin = 400f * PxPerCmX;
+			Rect2 grown = VisibleCanvasRect().Grow(margin);
+			foreach (var node in _plantNodes.Values)
+				if (IsInstanceValid(node))
+					node.Visible = grown.HasPoint(node.Position);
+		}
+
+		// Rectangle du viewport interne en coordonnées CANVAS (l'espace où vivent
+		// les Position des _plantNodes). Centre = position caméra ; demi-taille =
+		// (taille du SubViewport / 2) / zoom (diviser les px internes par le zoom
+		// donne l'étendue canvas cadrée). Miroir de la transform inversée que
+		// WorldMouseCanvas applique à la souris, ici pour le rectangle plein.
+		private Rect2 VisibleCanvasRect()
+		{
+			Vector2 half = ((Vector2)_worldVp.Size / 2f) / _camera.Zoom;
+			return new Rect2(_camera.Position - half, half * 2f);
 		}
 
 		private void RotateView(int dir)

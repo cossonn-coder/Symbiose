@@ -374,6 +374,12 @@ namespace Symbiose
 			}
 			_season = season;
 			UpdateClock();
+
+			// Culling préventif (tronçon ②) : de nouvelles plantes ont pu naître
+			// hors du cadre (ou d'anciennes changer de place au diff) → réévaluer
+			// leur Visible d'après le viewport courant. Sans quoi une plante née
+			// hors champ resterait dessinée jusqu'au prochain pan/zoom.
+			CullPlants();
 		}
 	}
 }

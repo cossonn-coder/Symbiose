@@ -43,6 +43,16 @@ namespace Symbiose
 		// au franchissement de palier est dans WorldView.Camera.StepZoom.
 		private const float SegmentDetailMinZoom = 4f;
 
+		// LOD organes intermédiaire (sprint PERF rendu plantes, tronçon ②) : entre
+		// ×4 et ×8 on dessine la STRUCTURE de bois mais on SAUTE le feuillage. Les
+		// organes (feuilles par segment × lobes/folioles + nervures, fleurs, fruits)
+		// dominent le décompte de primitives rejouées/frame, or à cette distance leur
+		// détail est illisible — gain visuel nul, coût GPU maximal. À partir de ×8 le
+		// feuillage revient. La pompe RedrawAllPlants (tronçon ①, appelée à chaque
+		// StepZoom) couvre déjà le franchissement de ce seuil : rien à ajouter côté
+		// redraw.
+		private const float OrganDetailMinZoom = 8f;
+
 		// Couleurs (palette centrale Palette16, T1) : apex vert vif, bois brun.
 		private static readonly Color ApexColor = Palette16.BoisApex;
 		private static readonly Color WoodColor = Palette16.BoisMur;
@@ -414,7 +424,10 @@ namespace Symbiose
 			// bois (ordre du prototype). Redessinés UNIQUEMENT avec la plante
 			// (SetStructure à chaque snapshot) — jamais par frame ni au balayage
 			// du soleil (leçon perf C2 : l'ombre seule vit dans un nœud séparé).
-			DrawOrgans(collet);
+			// LOD organes (tronçon ②) : sous ×8, on garde le bois mais on saute le
+			// feuillage (le gros du décompte de primitives, illisible à distance).
+			if (WorldView.CurrentZoom >= OrganDetailMinZoom)
+				DrawOrgans(collet);
 
 			// Surbrillance (tranche 5) : le segment sous la souris en mode
 			// tailler se redessine PAR-DESSUS, après tout le bois.
