@@ -490,6 +490,23 @@ namespace Symbiose
 		// (empreinte §G). Volontairement simple — placeholder LOD, pas un rendu fin.
 		// Silhouette vivante : couleur de couronne, teintée par le symptôme colorant
 		// dominant (canal COULEUR). Le squelette appelle la surcharge avec le bois mort.
+		/// <summary>Le curseur (canvas) touche-t-il le corps visible de la plante ?
+		/// Test de l'ellipse de silhouette de couronne (même géométrie que
+		/// DrawCanopySilhouette) → forgiving, cohérent à tout zoom. Sert la priorité
+		/// de clic plante > maison (WorldView.PointeUnePlante).</summary>
+		public bool ContientCurseur(Vector2 canvasPos)
+		{
+			if (_structure == null) return false;
+			Vector2 local = ToLocal(canvasPos);
+			(float wf, float hf, float yf) = SilhouetteShape(_silhouette);
+			Vector2 center = Iso(0f, 0f, _structure.HeightCm * yf);
+			float rx = _structure.CanopyRadiusCm * WorldView.PxPerCmX * wf;
+			float ry = _structure.CanopyRadiusCm * WorldView.PxPerCmX * hf;
+			if (rx <= 0f || ry <= 0f) return false;
+			Vector2 d = local - center;
+			return d.X * d.X / (rx * rx) + d.Y * d.Y / (ry * ry) <= 1f;  // dans l'ellipse
+		}
+
 		private void DrawCanopySilhouette() =>
 			DrawCanopySilhouette(SymptomTint(CrownColor));
 

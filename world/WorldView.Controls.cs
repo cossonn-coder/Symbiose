@@ -90,12 +90,28 @@ namespace Symbiose
 				if (mb.ButtonIndex == MouseButton.WheelDown) StepZoom(-1);
 				if (mb.ButtonIndex == MouseButton.Left)
 				{
-					// Clic sur la maison = ouvrir le HUB (voix), pas un geste sol.
 					var canvas = WorldMouseCanvas();
-					if (ClicSurMaison(canvas)) OuvrirHubMaison();
-					else TryAction(canvas, mb.ShiftPressed);
+					// Priorité de clic plante > maison : cliquer le corps visible d'une
+					// plante exécute le geste, jamais le hub — même si la maison est
+					// devant/derrière la plante. Le hub ne s'ouvre que sur un clic maison
+					// SANS plante sous le curseur.
+					if (!PointeUnePlante(canvas) && ClicSurMaison(canvas))
+						OuvrirHubMaison();
+					else
+						TryAction(canvas, mb.ShiftPressed);
 				}
 			}
+		}
+
+		/// <summary>Une plante est-elle sous le curseur (corps visible) ? Sert la
+		/// priorité de clic plante > maison. ~500 nœuds, balayage linéaire.</summary>
+		private bool PointeUnePlante(Vector2 canvasMouse)
+		{
+			foreach (var node in _plantNodes.Values)
+				if (IsInstanceValid(node) && node.Visible
+					&& node.ContientCurseur(canvasMouse))
+					return true;
+			return false;
 		}
 
 		private void TogglePhase()

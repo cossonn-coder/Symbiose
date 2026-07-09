@@ -129,19 +129,32 @@ Doc de conception : `docs/conception/CONCEPTION_PERF_RENDU_PLANTES.md`.
   Golden **INCHANGÉ** (`24ec11e7…`, rendu C# pur). `dotnet build` **VERT** (0 warn).
   Reste : **F5 Nico** (fluidité ×4 jardin dense sans feuillage ; retour feuillage
   ×8 ; pan zoom fort sans saccade ; plantes hors-écran réapparaissant au cadre).
-- ③ Clic plante > maison — À FAIRE (`03_clic_plante_prioritaire.md`).
+- **③ Clic plante > maison — FAIT (2026-07-09, non commité)**.
+  `visuals/PlantRenderer.cs` : méthode publique `ContientCurseur(Vector2)` —
+  test d'appartenance à l'ellipse de silhouette de couronne (même géométrie que
+  `DrawCanopySilhouette` : `SilhouetteShape`, `Iso`, `CanopyRadiusCm`, `HeightCm`,
+  `ToLocal`), forgiving, cohérent à tout zoom ; `null`/rayons nuls → false.
+  `world/WorldView.Controls.cs` : ajout `PointeUnePlante(Vector2)` (balayage
+  linéaire `_plantNodes`, filtre `IsInstanceValid` + `Visible` → respecte le
+  culling ②) ; routage clic gauche ré-ordonné : hub ouvert SEULEMENT si
+  `!PointeUnePlante(canvas) && ClicSurMaison(canvas)`, sinon `TryAction`.
+  `ClicSurMaison`/`OuvrirHubMaison`/`TryAction`/picking taille INTOUCHÉS.
+  Golden **INCHANGÉ** (`24ec11e7…`, rendu/UI C# pur). `dotnet build` **VERT**
+  (0 warn, 0 erreur). Reste : **F5 Nico** (planter contre la maison devant ET
+  derrière → clic plante = geste ; clic maison hors plante = hub, pas de
+  régression du hub).
 
 ## §REPRISE
 
-Tronçons ① et ② CLOS côté VM (build vert + golden intact `24ec11e7…`), **non
-commités** (Nico commit). Tous les tronçons sont **rendu/vue C# pur** → golden
-INTACT par construction, aucun test moteur, aucune touche `data/code/`. Filet
-compil VM : `dotnet build Symbiose.csproj`. Validation finale = **F5 de Nico**
-(Godot pas sur la VM).
+Tronçons ①, ② ET ③ CLOS côté VM (build vert + golden intact `24ec11e7…`), **non
+commités** (Nico commit). **Sprint TERMINÉ** (3/3 tronçons). Tous les tronçons
+sont **rendu/vue C# pur** → golden INTACT par construction, aucun test moteur,
+aucune touche `data/code/`. Filet compil VM : `dotnet build Symbiose.csproj`.
+Validation finale = **F5 de Nico** (Godot pas sur la VM).
 
-Prochaine étape : ③ (`/sprint-auto sprint_perf_rendu_plantes` reprend au tronçon
-restant), ou commit + push de ①+② pour un F5 intermédiaire de Nico.
-Après le sprint : push GitHub (canal `infra_canal_git`) pour que Nico pull + F5.
+Prochaine étape : commit + push GitHub (canal `infra_canal_git`) pour que Nico
+pull + F5 le sprint complet. Reste ensuite maj `BACKLOG.md` + `journal.md`
+(clôture du sprint).
 Fichiers cœur : `visuals/PlantRenderer.cs`, `world/WorldView.Camera.cs`,
 `world/WorldView.Snapshot.cs`, `world/WorldView.Actions.cs`,
 `world/WorldView.Controls.cs`.
