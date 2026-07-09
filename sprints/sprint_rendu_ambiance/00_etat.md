@@ -227,9 +227,30 @@ Ordre imposé : T1 avant T5 (noms d'essences), T4 avant T5 (zones). T6 indépend
   touché. **Golden INCHANGÉ** `24ec11e7983595e71c4587fce8f558a1bec9eb5ec8511bf69ad76e9fdc2b6e91`.
   `dotnet build` VERT (0 avert/0 err). LDC Organs.cs 313 (sous 400). NON committé.
 
+- **T3 — Maison normande : FAIT (2026-07-09).** Rendu procédural granite+ardoise
+  (réf. Nico Cotentin). Nouveau nœud dédié VUE `visuals/HouseNode.cs` (233 ldc,
+  `Node2D` à `_Draw`) : murs = moellons de granite 2-3 valeurs + variété rousse
+  au hash + joints chaux + chaînages d'angle (granite clair) + encadrements de
+  baies à larmier ; **pignon ouest essenté d'ardoise** (écailles) ; **toit 2 pans
+  pentus + croupe** en ardoise (rangs d'écailles pureau serré, faîtage) ; **lucarne
+  à bâtière** sur le pan sud (dessinée seulement si sud visible → propre en
+  rotation) ; ouvertures (porte sud + fenêtres à petits carreaux, menuiserie
+  sombre) ; **souche de cheminée brique orangée** (PAS de fumée, différée D72).
+  Éclairement par MUR-MONDE (D35 conservé) modulant la valeur du matériau, zéro
+  Random (Hash01 partagé). Extraction : tout le rendu maison sorti de
+  `WorldView.Monde.cs` → nouveau partial `world/WorldView.Maison.cs` (60 ldc,
+  calcule la géométrie coins/faîte/segment + ombre portée animée inchangée + ghost
+  H) ; Monde.cs allégé 155→96 ldc. `Palette16.cs` étendu (bloc MAISON NORMANDE :
+  granite mur/clair/roux, joint chaux, ardoise 3 valeurs, brique cuite/ombre,
+  menuiserie/vitre). Couche B pure, aucun moteur touché. **Golden INCHANGÉ**
+  `24ec11e7983595e71c4587fce8f558a1bec9eb5ec8511bf69ad76e9fdc2b6e91`. `dotnet build`
+  VERT (0 avert/0 err). LDC tous < 300. NON committé.
+
 ## §REPRISE
-Sprint FIGÉ. **T1 + T2 FAITS** (voir Avancement). Prochain = **T3 maison normande**
-(vue, extraire `WorldView.Maison.cs`, granite+ardoise+pignon essenté+lucarne+
-cheminée brique, Palette16 étendu), kickoff `03_maison_normande.md`. Chaque tronçon
+Sprint FIGÉ. **T1 + T2 + T3 FAITS** (voir Avancement). Prochain = **T4 décor
+ossature** (vue, `visuals/DecorLayer.cs` : zones organiques par seed + chemins
+enherbés + `SurroundingsProfile`), kickoff `04_decor_ossature.md`. Chaque tronçon
 restant : golden inchangé + `dotnet build` vert + F5 Nico. Dettes en parallèle :
 **D72 vent**, **D73 terraforming** (dans DETTE.md).
+Note : `MakeLozenge` (Monde.cs) est du code mort PRÉEXISTANT (référencé seulement
+en commentaires) — laissé en place (hors périmètre T3), à signaler.

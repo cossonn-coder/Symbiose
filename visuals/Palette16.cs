@@ -16,11 +16,15 @@
 // acteurs (litière, vie macro, compost, butineurs) restent chez eux : T1 ne
 // touche QUE les teintes listées au kickoff (bois/plante, symptômes, sol/maison).
 //
-// DÉCOMPTE : 27 couleurs nommées (cible « ~24 SNES »). Aucune fusion appliquée —
-// les deux seules paires proches (FondPierre↔FacadeEst d≈13 ; ToitEst↔ToitOuest
-// d≈11) sont des DISTINCTIONS VOULUES (lisibilité de la rotation D35 du décor,
-// cf. commentaires d'origine) : fusionner casserait l'apparence, ce que le
-// kickoff interdit sans signalement. On reste donc à 27, proche de la cible.
+// DÉCOMPTE : ~27 couleurs de base + le vocabulaire MATÉRIAU de la maison normande
+// (granite/ardoise/brique, T3 RENDU AMBIANCE). Ce dernier est un bloc à part,
+// justifié : le rendu détaillé pierre+ardoise exige ses propres 2-valeurs par
+// matériau (moellon clair/médian, ardoise claire/médiane/sombre, brique cuite/
+// ombre). L'éclairement par mur-monde (D35) MODULE ces teintes à l'usage plutôt
+// que de les dupliquer par orientation. Les paires historiques proches
+// (FondPierre↔FacadeEst d≈13 ; ToitEst↔ToitOuest d≈11) restent des DISTINCTIONS
+// VOULUES (lisibilité de la rotation D35 du décor) : fusionner casserait
+// l'apparence, ce que le kickoff interdit sans signalement.
 //
 // Tout est statique/déterministe (zéro Random, philo #3). Déclaratif : aucune
 // logique — un fichier = une responsabilité (le vocabulaire chromatique).
@@ -82,5 +86,27 @@ namespace Symbiose
 		};
 		// Ombre portée (maison) : noir translucide, non opaque (assombrit le sol).
 		public static readonly Color Ombre = new Color(0f, 0f, 0f, 0.16f);
+
+		// === MAISON NORMANDE — granite + ardoise (T3 RENDU AMBIANCE) ==========
+		// Réf. Nico (maçon-couvreur, Cotentin/Montmartin-sur-Mer). PAS de
+		// colombages/chaume : maison de PIERRE et d'ARDOISE. Chaque teinte est
+		// une COULEUR DE MATÉRIAU en plein jour (référence sud) ; l'éclairement
+		// par mur-monde (D35) est appliqué à l'usage par un facteur de valeur —
+		// on ne dédouble donc pas la rampe par orientation, on la module.
+		// Granite gris-bleu à reflets roux : 2 valeurs de moellon + joint chaux.
+		public static readonly Color GraniteMur      = new Color("7d8188"); // moellon gris-bleu (valeur médiane)
+		public static readonly Color GraniteMurClair = new Color("969aa0"); // moellon éclairé (facette au soleil)
+		public static readonly Color GraniteRoux     = new Color("8a7d70"); // moellon à reflet roux (variété)
+		public static readonly Color GraniteClair    = new Color("b8b2a4"); // granite clair : chaînages, encadrements de baies
+		public static readonly Color JointChaux      = new Color("cec7b6"); // joints de chaux clairs beurrés
+		// Ardoise gris-bleu foncé : 2 valeurs d'écaille + le rang de recouvrement.
+		public static readonly Color Ardoise         = new Color("454b55"); // écaille d'ardoise (valeur médiane)
+		public static readonly Color ArdoiseClair    = new Color("5c636e"); // écaille éclairée (reflet bleuté)
+		public static readonly Color ArdoiseSombre   = new Color("353a42"); // recouvrement / rang d'ombre
+		// Brique orangée de la souche de cheminée + menuiseries sombres.
+		public static readonly Color BriqueOrange    = new Color("a85f3c"); // brique cuite (souche cheminée)
+		public static readonly Color BriqueSombre    = new Color("7c4529"); // joint / ombre de brique
+		public static readonly Color MenuiserieSombre = new Color("3a2f26"); // dormant sombre (portes, fenêtres)
+		public static readonly Color VitreSombre     = new Color("2b3238"); // verre à petits carreaux (fond)
 	}
 }
