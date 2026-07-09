@@ -297,10 +297,20 @@ namespace Symbiose
 
 			// --- FLEURS — proxy saisonnier (REPRO_BY_SEASON, kickoff t6) : il
 			// n'y a PAS d'état moteur de fleur, on garde le proxy. "flower" =
-			// floraison de la saison, dessinée aux sites reproducteurs.
+			// floraison de la saison, dessinée aux sites reproducteurs. Depuis T2
+			// (RENDU AMBIANCE) la SILHOUETTE est par FAMILLE (DrawFlowerShape,
+			// PlantRenderer.Flower.cs) et non plus 5 pétales génériques ; l'index
+			// de site + un canal fixe sèment le jitter déterministe (philo #3).
 			if (_structure.Organ == "flower")
-				foreach (Vector3 site in OrganSites())
-					DrawFlower(Iso(site.X - collet.X, site.Y - collet.Y, site.Z), pal);
+			{
+				var sites = OrganSites();
+				for (int k = 0; k < sites.Count; k++)
+				{
+					Vector3 site = sites[k];
+					DrawFlowerShape(Iso(site.X - collet.X, site.Y - collet.Y, site.Z),
+									pal, 71, k);
+				}
+			}
 
 			// --- FRUITS — VRAI état moteur (plant.fruits, ③), plus le proxy : la
 			// maturité (vert→mûr→brun) et la déplétion par `manger` deviennent
@@ -309,18 +319,8 @@ namespace Symbiose
 			DrawFruits(collet, pal);
 		}
 
-		// Corolle de fleur = 5 pétales clairs + cœur (tailles px du prototype).
-		private void DrawFlower(Vector2 c, OrganPalette pal)
-		{
-			for (int p = 0; p < 5; p++)
-			{
-				float a = Mathf.Tau * p / 5f;
-				// SS② : pétale en 2 valeurs (volume) au lieu d'un disque plat.
-				DrawVolumeCircle(c + new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * 3.6f,
-								 2.6f, pal.Flower);
-			}
-			DrawCircle(c, 2f, FlowerHeart);
-		}
+		// (La corolle générique 5 pétales a migré vers PlantRenderer.Flower.cs
+		// sous le nom DrawSimple — un des 6 archétypes de famille, T2.)
 
 		// Fruits tracés : un disque par entrée de `_structure.Fruits`, ancré au
 		// bout de son segment porteur, COULEUR ∝ maturité, TAILLE ∝ masse. Reflet

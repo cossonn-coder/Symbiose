@@ -213,8 +213,23 @@ Ordre imposé : T1 avant T5 (noms d'essences), T4 avant T5 (zones). T6 indépend
   Suites vertes : golden, encyclopedie (68/68), magazine (23/23), genetique (20/20),
   carnet, pages, catalogue_mulch. NON committé (Nico commit).
 
+- **T2 — Fleurs par famille : FAIT (2026-07-09).** Nouveau partial VUE
+  `visuals/PlantRenderer.Flower.cs` (132 ldc) : `enum FlowerShape` (6 archétypes
+  Simple/Ombelle/Capitule/Papilionacee/Epi/Clochette) + `record FlowerProfile`
+  + table `FlowerProfiles[species]` (mappage par famille, défaut Simple) +
+  dispatch `DrawFlowerShape` avec plancher de rayon (`FlowerFloorRadiusPx`) et
+  repli LOD (`FlowerShapeMinZoom=4`, aligné feuilles). Chaque sous-corolle passe
+  par `DrawVolumeCircle`/`DrawVolumeEllipse` (volume 2 valeurs, E4) ; jitter par
+  `Hash01` (canaux 53/59/61 neufs, zéro Random). Couleur INCHANGÉE
+  (`OrganPalette.Flower`). `PlantRenderer.Organs.cs` : ancien `DrawFlower`
+  (5 pétales génériques) SUPPRIMÉ → migré en `DrawSimple` ; boucle fleurs appelle
+  `DrawFlowerShape` avec index de site (déterminisme). Couche B pure, aucun moteur
+  touché. **Golden INCHANGÉ** `24ec11e7983595e71c4587fce8f558a1bec9eb5ec8511bf69ad76e9fdc2b6e91`.
+  `dotnet build` VERT (0 avert/0 err). LDC Organs.cs 313 (sous 400). NON committé.
+
 ## §REPRISE
-Sprint FIGÉ. **T1 FAIT** (voir Avancement). Prochain = **T2 fleurs par famille**
-(vue, `PlantRenderer.Flower.cs`), kickoff `02_fleurs_famille.md`. Chaque tronçon
+Sprint FIGÉ. **T1 + T2 FAITS** (voir Avancement). Prochain = **T3 maison normande**
+(vue, extraire `WorldView.Maison.cs`, granite+ardoise+pignon essenté+lucarne+
+cheminée brique, Palette16 étendu), kickoff `03_maison_normande.md`. Chaque tronçon
 restant : golden inchangé + `dotnet build` vert + F5 Nico. Dettes en parallèle :
 **D72 vent**, **D73 terraforming** (dans DETTE.md).
