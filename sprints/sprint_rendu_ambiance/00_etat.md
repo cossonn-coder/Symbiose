@@ -198,8 +198,23 @@ satisfaite. F5 Nico à chaque tronçon. À figer aussi : **DETTE neuve terraform
 - `06_feuilles_fideles.md` — T6 [vue, indépendant]
 Ordre imposé : T1 avant T5 (noms d'essences), T4 avant T5 (zones). T6 indépendant.
 
+## Avancement
+- **T1 — Essences forestières au catalogue : FAIT (2026-07-09).** Ajout des 3
+  classes `PerennialWoody` (gabarit `OakTree`, contenu pur, aucune mécanique
+  neuve) : `BeechTree` (Hêtre, Fagaceae, ombre dense), `BirchTree` (Bouleau,
+  Betulaceae NEUVE, pionnier léger), `HornbeamTree` (Charme, Betulaceae, bocage)
+  dans `plants/perennials.py` ; inscrites `hetre`/`bouleau`/`charme` dans
+  `PERENNIAL_CATALOGUE` (`plants/catalogue.py`). Voix : **encyclopédie** 3 niveaux
+  chacune (`sim/encyclopedie_corpus.py`, 38→41 fiches, assertion `test_encyclopedie`
+  ajustée). **Magazine** = data-driven (dérive familles du catalogue → offre
+  automatique, Fagaceae/Betulaceae, aucun code touché). Carnet (`CONCEPT_DE` keyé
+  par événement, pas par espèce) et pages (lore optionnel) = pas d'entrée requise.
+  **Golden NEUTRE — hash INCHANGÉ** `24ec11e7983595e71c4587fce8f558a1bec9eb5ec8511bf69ad76e9fdc2b6e91`.
+  Suites vertes : golden, encyclopedie (68/68), magazine (23/23), genetique (20/20),
+  carnet, pages, catalogue_mulch. NON committé (Nico commit).
+
 ## §REPRISE
-Sprint FIGÉ. Lancer `/sprint-auto sprint_rendu_ambiance`. Chaque tronçon :
-golden vérifié (T1 NEUTRE, T2-T6 inchangé) + `dotnet build` vert (T2-T6) + F5
-Nico. Dettes ouvertes en parallèle : **D72 vent**, **D73 terraforming** (dans
-DETTE.md). Rien d'autre en attente.
+Sprint FIGÉ. **T1 FAIT** (voir Avancement). Prochain = **T2 fleurs par famille**
+(vue, `PlantRenderer.Flower.cs`), kickoff `02_fleurs_famille.md`. Chaque tronçon
+restant : golden inchangé + `dotnet build` vert + F5 Nico. Dettes en parallèle :
+**D72 vent**, **D73 terraforming** (dans DETTE.md).

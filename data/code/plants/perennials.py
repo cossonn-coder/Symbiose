@@ -242,6 +242,79 @@ class OakTree(PerennialWoody):
 
 
 # ---------------------------------------------------------------------------
+# 3 ESSENCES FORESTIÈRES NORMANDES (sprint RENDU AMBIANCE T1, D58) — silhouettes
+# du décor (T5) + acquisition future canal #3 (friche). CONTENU pur : pas de
+# mécanique neuve, gabarit = OakTree. HORS scénario smoke → golden NEUTRE.
+# ---------------------------------------------------------------------------
+
+class BeechTree(PerennialWoody):
+    """
+    Fagus sylvatica — Hêtre (Fagaceae, comme le chêne). Grand arbre de la hêtraie
+    cathédrale : port OVOÏDE dense, houppier haut et fermé qui fait une ombre
+    profonde (foliage_density élevée). Anémophile. Stature grande mais un peu en
+    deçà du chêne (adulte ~2500-3000 cm), longévité séculaire.
+    """
+    family = "Fagaceae"
+    genus  = "Fagus"
+    name   = "Hêtre"
+    rarity = "Climacique"
+    keywords = ["Lisière", "Ombre dense", "Structurant"]
+    foliage_density = 0.85            # houppier fermé → ombre profonde de hêtraie
+    pollination_mode = "wind"        # anémophile (chatons)
+    pollination_radius_cm = 700.0
+    reproduction_rate = 0.08         # faînée (mast) irrégulière
+    longevity_years = 300
+    maturity_years = 30
+    age_curve = [(0, 30, 18), (5, 200, 130), (10, 400, 260),
+                 (20, 700, 400), (50, 1500, 650), (100, 2800, 950)]
+
+
+class BirchTree(PerennialWoody):
+    """
+    Betula pendula — Bouleau (Betulaceae, famille NEUVE déclarée à l'espèce comme
+    l'a fait FirTree pour Pinaceae). PIONNIER de lisière : croissance rapide,
+    stature moyenne (~1500-2000 cm), houppier LÉGER et clairsemé (foliage_density
+    faible → ombre légère, sous-bois clair), écorce blanche, port élancé pleureur.
+    Vie brève pour un arbre.
+    """
+    family = "Betulaceae"
+    genus  = "Betula"
+    name   = "Bouleau"
+    rarity = "Établie"
+    keywords = ["Pionnière", "Lisière", "Ombre légère"]
+    foliage_density = 0.45           # houppier léger → sous-bois clair
+    pollination_mode = "wind"        # anémophile (chatons)
+    pollination_radius_cm = 600.0
+    reproduction_rate = 0.20         # graines ailées abondantes, dispersion large
+    longevity_years = 90
+    maturity_years = 10
+    age_curve = [(0, 40, 15), (5, 400, 120), (10, 800, 200),
+                 (20, 1300, 300), (50, 1800, 420), (90, 2000, 480)]
+
+
+class HornbeamTree(PerennialWoody):
+    """
+    Carpinus betulus — Charme (Betulaceae, comme le bouleau). Arbre du BOCAGE au
+    bois très dur, tronc CANNELÉ sinueux (« musclé »). Stature moyenne, houppier
+    de densité moyenne, longévité intermédiaire. Supporte bien la taille (haies
+    bocagères, charmilles) — mais ici, contenu de catalogue, pas de mécanique.
+    """
+    family = "Betulaceae"
+    genus  = "Carpinus"
+    name   = "Charme"
+    rarity = "Établie"
+    keywords = ["Bocage", "Haie", "Structurant"]
+    foliage_density = 0.65           # houppier moyen
+    pollination_mode = "wind"        # anémophile (chatons)
+    pollination_radius_cm = 550.0
+    reproduction_rate = 0.12         # samares en grappes
+    longevity_years = 150
+    maturity_years = 15
+    age_curve = [(0, 40, 20), (5, 250, 120), (10, 500, 220),
+                 (20, 900, 340), (50, 1500, 520), (100, 2000, 650)]
+
+
+# ---------------------------------------------------------------------------
 # CONIFÈRE PERSISTANT (sprint équilibre invasion ⑤, D10) — source de BRF/aiguilles
 # ---------------------------------------------------------------------------
 

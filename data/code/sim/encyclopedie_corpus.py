@@ -26,8 +26,9 @@ côté code.
 """
 from __future__ import annotations
 
-# --- Les 38 fiches × 3 niveaux (doc §6 + Grimpantes ⑤ + Luxuriance ④/⑤ +
-#     sources de mulch équilibre invasion ⑤ : blé/chanvre/sapin) --------------
+# --- Les 41 fiches × 3 niveaux (doc §6 + Grimpantes ⑤ + Luxuriance ④/⑤ +
+#     sources de mulch équilibre invasion ⑤ : blé/chanvre/sapin + essences
+#     forestières RENDU AMBIANCE T1 : hêtre/bouleau/charme) --------------------
 FICHES: dict[str, dict[int, str]] = {
 
     # === Annuelles & potagères cultivées ===
@@ -405,6 +406,44 @@ FICHES: dict[str, dict[int, str]] = {
         3: "Espèce clé de voûte : héberge une biodiversité immense (insectes, oiseaux, "
            "champignons) ; glands = ressource majeure ; pivot du wood-wide-web de la "
            "lisière.",
+    },
+    # Essences forestières normandes (sprint RENDU AMBIANCE T1, D58)
+    "hetre": {
+        1: "Grand arbre au houppier ovoïde très dense, écorce lisse gris argenté, "
+           "feuilles ovales luisantes bordées de cils, faînes en bogue hérissée.",
+        2: "Pérenne caduc de grande taille, croissance lente et longévité séculaire ; "
+           "anémophile (chatons). Son houppier fermé projette une ombre profonde : "
+           "peu de choses poussent sous une hêtraie. Aime les sols frais et bien "
+           "drainés ; marcescent, il garde souvent ses feuilles rousses tout l'hiver.",
+        3: "Bâtisseur de la « hêtraie cathédrale » : son ombre dense trie la flore du "
+           "sous-bois (sciaphiles strictes) et étouffe la concurrence. Ses faînes "
+           "nourrissent la faune les années de fainée ; sa litière lente et son réseau "
+           "ectomycorhizien tissent un humus forestier profond — climax de nos forêts.",
+    },
+    "bouleau": {
+        1: "Arbre élancé à écorce blanche se détachant en lambeaux, houppier léger et "
+           "retombant, petites feuilles triangulaires qui frémissent au moindre vent.",
+        2: "Pérenne caduc PIONNIER à croissance rapide et vie brève (pour un arbre) ; "
+           "anémophile. Ses graines ailées, produites en masse, colonisent au loin les "
+           "sols nus et remués. Houppier clairsemé → ombre légère, sous-bois lumineux. "
+           "Rustique, frugal, il s'installe là où rien d'autre ne tient encore.",
+        3: "Éclaireur de la succession forestière : premier arbre à gagner une friche "
+           "ou une trouée, il abrite et ombrage légèrement les essences climaciques "
+           "(chêne, hêtre) qui le remplaceront. Son couvert clair, sa litière rapide à "
+           "se décomposer et ses nombreux hôtes (insectes, champignons) amorcent le "
+           "sol forestier. Arbre de lisière par excellence.",
+    },
+    "charme": {
+        1: "Arbre moyen au tronc CANNELÉ, sinueux et « musclé », écorce grise lisse, "
+           "feuilles ovales plissées et doublement dentées, fruits en grappes d'ailettes.",
+        2: "Pérenne caduc du bocage, à bois très dur et dense ; anémophile. Houppier de "
+           "densité moyenne, ombre modérée. Supporte remarquablement la taille répétée — "
+           "d'où son emploi ancestral en haies et charmilles. Marcescent comme le hêtre. "
+           "Croissance moyenne, longévité intermédiaire.",
+        3: "Charpente vivante du bocage normand : conduit en haie ou en têtard, il "
+           "structure le paysage, brise le vent et abrite une faune dense (oiseaux "
+           "nicheurs, auxiliaires). Compagnon fréquent du chêne dans la chênaie-charmaie. "
+           "Son bois dur fut le bois de feu et d'outil des campagnes.",
     },
 }
 

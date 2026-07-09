@@ -11,7 +11,8 @@ from plants.species import (Tomato, Pepper, Bean, Clover, Sunflower, Basil,
                             Vaccinium, Raspberry, RunningBamboo, SweetViolet, Garlic,
                             Ivy, Jasmine, Wheat, Hemp,
                             BursaPastoris, MedicagoLupulina, PoaAnnua, Taraxacum)
-from plants.perennials import Fig, AppleTree, CherryTree, WalnutTree, OakTree, FirTree
+from plants.perennials import (Fig, AppleTree, CherryTree, WalnutTree, OakTree,
+                               FirTree, BeechTree, BirchTree, HornbeamTree)
 
 
 PLANT_CATALOGUE: dict[str, type] = {
@@ -82,4 +83,9 @@ PERENNIAL_CATALOGUE: dict[str, type] = {
     # Conifère persistant (sprint équilibre invasion ⑤) — aiguilles acidifiantes
     # (récolte) + BRF (broyage) ; ombre projetée toute l'année (non caduc)
     "sapin":    FirTree,
+    # Essences forestières normandes (sprint RENDU AMBIANCE T1, D58) — silhouettes
+    # du décor (T5) + acquisition future canal #3 (friche). Hors scénario smoke.
+    "hetre":    BeechTree,     # Fagaceae, hêtraie cathédrale (ombre dense)
+    "bouleau":  BirchTree,     # Betulaceae (famille neuve), pionnier de lisière
+    "charme":   HornbeamTree,  # Betulaceae, bocage (tronc cannelé)
 }
