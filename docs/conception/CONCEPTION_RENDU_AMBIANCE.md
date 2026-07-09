@@ -11,8 +11,13 @@
 D58 (« rendu graphique attractif », écrite le 2026-07-02) est **déjà à moitié
 résorbée** par les sprints de rendu suivants, vérifié dans le code :
 
-- **Feuilles par espèce = FAIT** — `PlantRenderer.Leaf.cs` : `enum LeafShape`
-  (6 archétypes), nervures, croissance progressive, litière typée.
+- **Feuilles par espèce = PARTIEL** — `PlantRenderer.Leaf.cs` a bien 6 archétypes
+  + nervures + croissance + litière, MAIS chaque feuille est **synthétisée par
+  amas d'ellipses fusionnées** (un chêne « lobé » = petites ellipses autour d'un
+  centre) → au pixel ça reste des **taches ovales**, pas la silhouette réelle de
+  l'espèce. **Nico (2026-07-09) rouvre l'exigence** : chaque feuille doit être
+  **fidèle à son modèle botanique réel** → **contours authorés par espèce**
+  (T6, §3bis), les ellipses fusionnées devenant le **repli LOD intermédiaire**.
 - **Couleur physiologique = FAIT** — D33 sémiologie foliaire (`SetSymptoms`).
 - **Palette + relief du sol = FAIT** — SS② pixel-art (`Palette16`, `SolTexture`).
 - **Champignons / faune / vrilles = FAITS** — `CarpophoreLayer`, `MacroLife`,
@@ -130,6 +135,65 @@ ou déduite par table C# — cf. kickoff).
   plafond d'organes existant `MaxFruits`, proxy fleurs). **LOD** : au dézoom /
   sous le palier organes (`OrganDetailMinZoom`, déjà en place), retour à `Simple`
   ou rien. Aucune régression du sprint perf.
+
+## 3bis. Chantier — Feuilles fidèles au modèle réel (T6, vue)
+
+Réf. Nico (2026-07-09) : « enlever les rendus simplistes de feuille en ovale, que
+chaque feuille représentée soit fidèle à son modèle réel. » L'existant
+(`PlantRenderer.Leaf.cs`) compose les feuilles à partir d'**ellipses fusionnées**
+→ lecture en taches. On remplace, **au zoom rapproché**, par un **vrai contour de
+silhouette authoré par espèce**.
+
+### 3bis.1 — Physique du pixel & LOD (attente honnête)
+
+À zoom d'ensemble (×4/×8) une feuille couvre 2-5 px : **aucune** silhouette n'y
+est distinguable d'une tache. La fidélité ne « paie » qu'au **zoom rapproché**
+(×16/×32), où une feuille couvre assez de pixels. On livre donc **3 paliers LOD** :
+
+- **≥ `LeafOutlineMinZoom` (≈ ×16)** : **contour fidèle authoré** + volume + nervures.
+- **[×4, ×16[** : **amas d'ellipses actuel** (les 6 archétypes) = repli intermédiaire.
+- **< ×4** : tache/silhouette simple (existant, perf).
+
+C'est la seule cible réaliste au pixel-art — annoncé avant F5.
+
+### 3bis.2 — Contour authoré par espèce
+
+- **`LeafOutline`** = contour **fermé** défini par une **liste de points normalisés**
+  dans le repère feuille (axe = longueur, cross = largeur, ≈ [-1,1]), **façonné à
+  la main par espèce** d'après sa feuille réelle. Le contour **encode la marge** :
+  marge entière = bord lisse ; **dentée/serretée** = petites dents ; **lobée** =
+  sinus profonds ; **composée** = rachis + N **folioles** (chacune un petit
+  contour denté), traitées à part (feuille composée ≠ un seul limbe).
+- Table `LeafOutlines[species]` (en regard de `LeafProfiles`). Les ~27 espèces du
+  catalogue reçoivent leur contour ; espèce non mappée → repli archétype/ellipse.
+  Exemples de fidélité visée : chêne (lobes arrondis + sinus), figuier (main
+  palmée 3-5 lobes profonds), érable/courgette (palmatilobée), pommier/cerisier
+  (ovale à marge **dentée**), tomate/carotte/achillée (composée pennée à folioles
+  découpées), ail/lavande (ruban linéaire), trèfle (3 folioles obcordées).
+- **Dérogation D10 assumée** (déjà actée pour la forme de feuille) : le contour est
+  un fait de **rendu**, codé directement en C#, sans maquette SVG Python.
+
+### 3bis.3 — Tracé, volume, nervures (invariants conservés)
+
+1. Transformer les points normalisés → écran via `LeafFrame` (axe/cross) × (rx,ry).
+2. **Remplir le polygone** en teinte ombrée, puis re-remplir une **copie réduite
+   décalée au sud** en teinte éclairée (calotte lit) → **≥ 2 valeurs** garanties
+   (invariant E4 « jamais d'aplat », même logique que `DrawVolumeEllipse`).
+3. **Nervures** par-dessus (3ᵉ valeur) : réutiliser les topologies existantes
+   (penninerve / palmée / composée) adaptées au contour.
+4. **Déterminisme** : contour statique par espèce ; léger jitter d'inclinaison/
+   taille par **hash** (comme aujourd'hui). Zéro `Random`.
+
+### 3bis.4 — Perf
+
+- Contour = **un polygone rempli** (+ copie ombrée + nervures) par feuille,
+  **uniquement au palier ×16+** où peu de plantes sont à l'écran (culling actif,
+  sprint perf du 2026-07-09 préservé). En dessous, on reste sur l'archétype/ellipse.
+- **Repli** si lourd au F5 : cuire **un sprite de feuille par espèce** à taille
+  fixe (comme `SolTexture`) et le blitter par feuille. À signaler si activé.
+- Nouveau partial `visuals/PlantRenderer.LeafOutline.cs` (les contours + le tracé
+  polygone) — `PlantRenderer.Leaf.cs` (358 LDC) garde les archétypes/repli ;
+  un fichier = un concept (garde-fou taille).
 
 ## 4. Chantier — Maison normande = granite + ardoise (T3, vue)
 
@@ -250,7 +314,7 @@ hauts et mûrs au démarrage » **par construction** (aucun âge, aucune croissa
   cullables ; **repli** si nécessaire : cuire la zone forêt en **une texture
   unique** (comme `SolTexture`) et la blitter.
 
-## 6. Tronçonnage (5 tronçons — golden préservé partout)
+## 6. Tronçonnage (6 tronçons — golden préservé partout)
 
 | Tr | Contenu | Couche | Fichiers | Golden |
 |----|---------|--------|----------|--------|
@@ -259,16 +323,19 @@ hauts et mûrs au démarrage » **par construction** (aucun âge, aucune croissa
 | **T3** | Maison normande (granite + ardoise + pignon + lucarne + cheminée) | vue | `world/WorldView.Maison.cs` (extrait de `.Monde.cs`), `visuals/Palette16.cs` | inchangé |
 | **T4** | Décor : ossature (zones par seed, sinueux, prairie défaut, chemins enherbés, `SurroundingsProfile`) | vue | `visuals/DecorLayer.cs`, `world/WorldView` (câblage), `Palette16.cs` | inchangé |
 | **T5** | Décor : forêt (`TreeSilhouette` adultes + lisière) + rivière/falaise couplées + reflets | vue | `visuals/DecorLayer.cs` (+ partial arbres) | inchangé |
+| **T6** | **Feuilles fidèles** — contour authoré par espèce (~27), volume + nervures, palier LOD ×16, repli archétype | vue | `visuals/PlantRenderer.LeafOutline.cs` (neuf), `PlantRenderer.Leaf.cs` (branchement LOD) | inchangé |
 
-**Ordre** : moteur d'abord (T1), puis vue (T2→T5). La règle « **le sprint se
-termine par un tronçon vue Godot** » est satisfaite (T2→T5 sont tous de la vue).
+**Ordre** : moteur d'abord (T1), puis vue (T2→T6). La règle « **le sprint se
+termine par un tronçon vue Godot** » est satisfaite (T2→T6 sont tous de la vue).
+T6 est **indépendant** (organes végétaux) — peut être fait dès après T1/T2.
 
 **Filet de compilation** : `dotnet build Symbiose.csproj` sur la VM après chaque
 tronçon C#. Le **F5 visuel reste à Nico** à chaque tronçon.
 
 **Dépendances** : T5 dépend de T1 (noms d'espèces = clés `TreeSilhouette`) et de
-T4 (zones où poser la forêt). T2, T3 indépendants. T3 et T4 étendent tous deux
-`Palette16` — regrouper si faits dans la foulée.
+T4 (zones où poser la forêt). T2, T3, T6 indépendants. T3 et T4 étendent tous
+deux `Palette16` — regrouper si faits dans la foulée. T6 partage la philosophie
+LOD et le voisinage fichier de T2 (organes de `PlantRenderer`).
 
 ## 7. Renvois en dette
 

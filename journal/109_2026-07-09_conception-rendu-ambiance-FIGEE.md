@@ -28,10 +28,20 @@ sol (SS²) sont **tous faits**. Restaient 4 chantiers hétérogènes.
   backdrop statique cullé). Gradient de lisière (bouleau clairsemé → chêne/hêtre
   dense).
 
+## Ajout post-figeage — Feuilles fidèles (T6, même jour)
+Nico signale que les feuilles restent « ovales ». Vérifié : `PlantRenderer.Leaf.cs`
+synthétise chaque feuille par **amas d'ellipses fusionnées** → lecture en taches.
+Décision (arbitrage) : **contours authorés par espèce** (~27) fidèles au modèle
+botanique réel (chêne lobé, figuier palmé, tomate composée…), l'amas d'ellipses
+devenant le **repli LOD intermédiaire**. Attente honnête posée : fidélité livrée
+au **zoom rapproché ×16+** (à ×4/×8 une feuille = 2-5 px, indistinguable). 3
+paliers LOD. Nouveau partial `PlantRenderer.LeafOutline.cs`. Couche B, golden
+inchangé. → tronçon **T6**, kickoff `06_feuilles_fideles.md`.
+
 ## Livrables
-- Doc : `docs/conception/CONCEPTION_RENDU_AMBIANCE.md`.
-- Sprint : `sprints/sprint_rendu_ambiance/` — `00_etat.md` + kickoffs `01`→`05`.
-- **5 tronçons**, golden préservé partout : T1 essences (moteur, NEUTRE) → T2
-  fleurs → T3 maison → T4 décor ossature → T5 décor motifs (vue pure). Vue Godot
-  = T2→T5. Dettes ouvertes : **D72 vent**, **D73 terraforming**.
+- Doc : `docs/conception/CONCEPTION_RENDU_AMBIANCE.md` (§3bis = feuilles fidèles).
+- Sprint : `sprints/sprint_rendu_ambiance/` — `00_etat.md` + kickoffs `01`→`06`.
+- **6 tronçons**, golden préservé partout : T1 essences (moteur, NEUTRE) → T2
+  fleurs → T3 maison → T4 décor ossature → T5 décor motifs → T6 feuilles fidèles
+  (vue pure). Vue Godot = T2→T6. Dettes ouvertes : **D72 vent**, **D73 terraforming**.
 - Prêt pour `/sprint-auto sprint_rendu_ambiance`.

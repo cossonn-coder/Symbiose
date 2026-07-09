@@ -10,8 +10,8 @@ des plantes** (addendum Nico).
 
 ## Phase courante
 **FIGÉ (2026-07-09) — prêt pour `/sprint-auto`.** Conception :
-`docs/conception/CONCEPTION_RENDU_AMBIANCE.md`. 5 kickoffs `01`→`05` présents.
-Golden préservé partout (T1 moteur NEUTRE, T2-T5 vue pure).
+`docs/conception/CONCEPTION_RENDU_AMBIANCE.md`. 6 kickoffs `01`→`06` présents.
+Golden préservé partout (T1 moteur NEUTRE, T2-T6 vue pure).
 
 ## Constat de cadrage (VÉRIFIÉ dans le code, 2026-07-09)
 D58 date du 2026-07-02 et est **en partie déjà résorbée** depuis :
@@ -55,7 +55,15 @@ D58 date du 2026-07-02 et est **en partie déjà résorbée** depuis :
   code (Nico/artiste produit les PNG, l'agent ne câble que le chargement).
 
 ## Décisions arrêtées (Nico, 2026-07-09)
-- **Périmètre = 3 chantiers : fleurs-famille + maison normande + décor.**
+- **AJOUT 2026-07-09 (post-figeage) — Feuilles fidèles au modèle réel (T6).**
+  Nico : les feuilles restent « ovales ». Vérifié : `PlantRenderer.Leaf.cs`
+  synthétise par **amas d'ellipses** → taches. Décision = **contours authorés par
+  espèce** (~27), l'amas d'ellipses devenant le **repli LOD intermédiaire**.
+  Fidélité livrée **au zoom rapproché ×16+** (physique du pixel : 2-5 px à ×4/×8,
+  indistinguable). 3 paliers LOD. Nouveau partial `PlantRenderer.LeafOutline.cs`.
+  Couche B pure, golden inchangé. → tronçon **T6**, kickoff `06_feuilles_fideles.md`.
+- **Périmètre = 3 chantiers : fleurs-famille + maison normande + décor** (+ T6
+  feuilles fidèles, ajouté ci-dessus).
   **Vent EXCLU** de ce sprint → reste ouvert (dette, à concevoir à part vu son
   enjeu perf/paradigme d'animation).
 - **Décor = cosmétique MAINTENANT, extensible plus tard.** Backdrop 2D livré
@@ -162,7 +170,7 @@ au démarrage » PAR CONSTRUCTION (aucun âge, aucune croissance) :
   DERRIÈRE le jardin. **Perf** : quelques milliers de primitives statiques dessinées
   une fois, cullables ; repli = cuire la zone forêt en texture unique si besoin.
 
-## Découpage pressenti (5 tronçons, tous golden préservé)
+## Découpage (6 tronçons, tous golden préservé)
 - **T1 — Essences forestières au catalogue** [MOTEUR, golden NEUTRE] : Hêtre,
   Bouleau, Charme (`plants/perennials.py` + `catalogue.py` + 5 voix chacune).
 - **T2 — Fleurs par famille** [vue] (`PlantRenderer.Flower.cs`, `FlowerShape`+profils).
@@ -174,7 +182,10 @@ au démarrage » PAR CONSTRUCTION (aucun âge, aucune croissance) :
 - **T5 — Décor : forêt + rivière/falaise détaillés** [vue] (silhouettes d'arbres
   adultes par essence `TreeSilhouette` + lisière→profond ; rivière+falaise
   couplées, pente variable + reflets/dithering ; table décor ↔ essences T1).
-Ordre : moteur d'abord (T1), puis vue (T2→T5). Règle « vue Godot en dernier »
+- **T6 — Feuilles fidèles au modèle réel** [vue] (`PlantRenderer.LeafOutline.cs` :
+  contours authorés par espèce ~27, volume + nervures, palier LOD ×16, repli
+  archétype ellipses ; indépendant, dès après T1/T2).
+Ordre : moteur d'abord (T1), puis vue (T2→T6). Règle « vue Godot en dernier »
 satisfaite. F5 Nico à chaque tronçon. À figer aussi : **DETTE neuve terraforming**
 + **vent** (renvoyé) en dette.
 
@@ -184,10 +195,11 @@ satisfaite. F5 Nico à chaque tronçon. À figer aussi : **DETTE neuve terraform
 - `03_maison_normande.md` — T3 [vue]
 - `04_decor_ossature.md` — T4 [vue]
 - `05_decor_motifs.md` — T5 [vue]
-Ordre imposé : T1 avant T5 (noms d'essences), T4 avant T5 (zones).
+- `06_feuilles_fideles.md` — T6 [vue, indépendant]
+Ordre imposé : T1 avant T5 (noms d'essences), T4 avant T5 (zones). T6 indépendant.
 
 ## §REPRISE
 Sprint FIGÉ. Lancer `/sprint-auto sprint_rendu_ambiance`. Chaque tronçon :
-golden vérifié (T1 NEUTRE, T2-T5 inchangé) + `dotnet build` vert (T2-T5) + F5
+golden vérifié (T1 NEUTRE, T2-T6 inchangé) + `dotnet build` vert (T2-T6) + F5
 Nico. Dettes ouvertes en parallèle : **D72 vent**, **D73 terraforming** (dans
 DETTE.md). Rien d'autre en attente.
