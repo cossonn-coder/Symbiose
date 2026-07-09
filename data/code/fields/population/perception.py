@@ -5,6 +5,7 @@ Perception PURE & déterministe : échantillonnage des sprites de faune
 avec leurs constantes propres. Extrait de `population.py` (scission /refactor
 2026-06-30).
 """
+import heapq
 from dataclasses import dataclass
 
 from fields.noise import _hash_noise
@@ -21,6 +22,16 @@ from fields.population.field import PopulationField
 # estivale (0→4 sur la saison) et disparaître l'hiver. Knob de calibrage (§8).
 DENSITE_PAR_SPRITE = 0.06
 SPRITES_PAR_PLOT_MAX = 4    # cap par plot (les sprites saturent, le champ garde le vrai nombre)
+
+# Cap GLOBAL du monde (toutes tuiles × toutes espèces confondues). Le cap par
+# plot ci-dessus borne la SATURATION LOCALE ; celui-ci borne la CHARGE TOTALE de
+# rendu/pont/diff : avec 10 espèces × ~1188 plots, le total grimpe à ~14 000
+# sprites (le catalogue faune enrichi a multiplié les émetteurs), inutilement
+# lourd à sérialiser/transférer/différencier à chaque snapshot. Au-delà de ce
+# plafond, `cap_sprites_global` ne garde que les plus DENSES (les hotspots restent
+# fournis, les zones éparses s'effacent d'abord). Knob de calibrage : monter la
+# valeur si le jardin paraît trop vide de faune au zoom serré (§8).
+SPRITES_MONDE_MAX = 5000
 
 # Décalage du canal _hash_noise pour la coordonnée Y (décorrèle X et Y).
 _SLOT_Y_OFFSET = 0x40
@@ -40,6 +51,7 @@ class SpriteSample:
     x_frac: float      # position dans le plot ∈ [0,1], INDÉPENDANTE de la semaine
     y_frac: float
     activite: float    # vitesse d'animation / errance (pur rendu)
+    densite: float     # densité locale du plot — priorité du cap global (§ cap)
 
 
 def sample_sprites(field: PopulationField, seed: int,
@@ -70,9 +82,34 @@ def sample_sprites(field: PopulationField, seed: int,
                 y = _hash_noise(seed, spec.salt + _SLOT_Y_OFFSET + slot, r, c)
                 sprites.append(SpriteSample(
                     guild=spec.name, row=r, col=c, slot=slot,
-                    x_frac=x, y_frac=y, activite=act,
+                    x_frac=x, y_frac=y, activite=act, densite=d,
                 ))
     return sprites
+
+
+def cap_sprites_global(candidats, cap: int = SPRITES_MONDE_MAX):
+    """
+    Borne le NOMBRE TOTAL de sprites du monde à `cap`, en gardant les plus DENSES
+    (perception §cap). PURE & déterministe → golden-NEUTRE (aucune lecture par la
+    sim, aucun RNG).
+
+      candidats : itérable de tuples `(porteur, SpriteSample)` — `porteur` est
+                  opaque ici (côté serveur = `(tile_id, espèce)`), simplement
+                  transporté ; la sélection ne regarde QUE le `SpriteSample`.
+      priorité  : (densité locale, x_frac) décroissante. La densité fait remonter
+                  les hotspots ; `x_frac` (déjà un hash spatial déterministe,
+                  indépendant de la semaine) départage → sélection STABLE dans le
+                  temps (deux plots de même densité ne clignotent pas d'une semaine
+                  à l'autre).
+
+    Sous le plafond : renvoie tout tel quel (ordre préservé). Au-dessus : les `cap`
+    meilleurs. `heapq.nlargest` = O(n·log cap), négligeable sur ~14 000 candidats.
+    """
+    candidats = list(candidats)
+    if len(candidats) <= cap:
+        return candidats
+    return heapq.nlargest(
+        cap, candidats, key=lambda pc: (pc[1].densite, pc[1].x_frac))
 
 
 # ---------------------------------------------------------------------------

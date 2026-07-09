@@ -72,10 +72,15 @@ def test_vie_macro():
     check("positions stables d'une semaine à l'autre (slots ancrés)", stable)
 
     # Lecture sans effet de bord : 2 snapshots consécutifs sans step sont
-    # identiques (sample_sprites est PURE — elle n'avance aucun RNG vivant).
+    # identiques (sample_sprites est PURE — elle n'avance aucun RNG vivant). On
+    # neutralise le bloc `perf` (ms_tick/rss_mo VOLATILS par nature, cf.
+    # harness._PERF_VOLATILE) : l'invariant testé est la pureté de
+    # l'ÉCHANTILLONNAGE, pas la stabilité du RSS entre deux appels.
+    def _no_perf(sn):
+        sn = dict(sn); sn.pop("perf", None); return sn
     check("2 snapshots sans step → identiques (échantillonnage pur)",
-          s10.send(cmd="snapshot")["snapshot"]
-          == s10.send(cmd="snapshot")["snapshot"])
+          _no_perf(s10.send(cmd="snapshot")["snapshot"])
+          == _no_perf(s10.send(cmd="snapshot")["snapshot"]))
     # Mesure du surcoût sprites (kickoff §4 : mesurer, noter dans 00_etat.md).
     size = len(json.dumps(snap, sort_keys=True, separators=(",", ":")))
     print(f"  📏 taille snapshot semaine {snap['week']} avec sprites : {size} "
