@@ -26,6 +26,16 @@ namespace Symbiose
 		// du diff naissance/mort entre deux snapshots.
 		private readonly Dictionary<string, PlantRenderer> _plantNodes = new();
 		private int _plantSeq;                     // noms de nœuds uniques
+
+		// Pompe de redraw du LOD plantes (sprint PERF, tronçon ①) : appelée par
+		// StepZoom au franchissement d'un palier. PlantRenderer._Draw ne tourne que
+		// sur QueueRedraw ; sans cette pompe, une plante ne rebasculerait pas entre
+		// silhouette et segments en (dé)zoomant. Ponctuel (~500 QueueRedraw par cran).
+		private void RedrawAllPlants()
+		{
+			foreach (var node in _plantNodes.Values)
+				if (IsInstanceValid(node)) node.QueueRedraw();
+		}
 		// Phéromone d'alarme apienne (⑦ §J, snapshot 0.4.1) : par tuile, les plots
 		// en alarme → intensité. Liste CREUSE côté serveur (foyers > 0) ; ici un
 		// dict par plot pour un lookup O(1) au curseur (piqûre temps réel). Vide au

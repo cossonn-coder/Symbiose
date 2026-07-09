@@ -34,10 +34,14 @@ namespace Symbiose
 		// couronnes). L'ancienne démo TileGrid affichera donc ses spécimens plus
 		// grands qu'avant — elle n'est plus la scène principale, assumé.
 
-		// Palier de zoom STUBÉ (la caméra/zoom n'est pas encore câblée — beaucoup de
-		// C# est stub). Pilote le LOD (§H.3) : ≤4 → silhouette de couronne ; ≥8 →
-		// détail segment. TODO: brancher sur le vrai zoom caméra quand il existera.
-		[Export] public int ZoomPalier = 16;
+		// Seuil du LOD silhouette (sprint PERF rendu plantes, tronçon ①) : sous ×4
+		// on est en VUE D'ENSEMBLE — la vie macro y est elle aussi éteinte
+		// (MacroLife.MinZoom = 4). On ne rastérise alors pas chaque brindille +
+		// organe (le gros du décompte de primitives rejouées/frame = le 5 FPS),
+		// chaque plante se résume à sa silhouette de couronne (2 polygones). Le
+		// zoom réel vit dans WorldView.CurrentZoom (static) ; la pompe de redraw
+		// au franchissement de palier est dans WorldView.Camera.StepZoom.
+		private const float SegmentDetailMinZoom = 4f;
 
 		// Couleurs (palette centrale Palette16, T1) : apex vert vif, bois brun.
 		private static readonly Color ApexColor = Palette16.BoisApex;
@@ -354,13 +358,19 @@ namespace Symbiose
 			// l'aplatissement. Court-circuite tout le rendu vivant.
 			if (!string.IsNullOrEmpty(_deadStade))
 			{
-				DrawSkeleton();
+				// LOD (tronçon ①) : sous le seuil, le squelette lui aussi se résume
+				// à une silhouette — mais en BOIS MORT (jamais teintée par un
+				// symptôme vivant : une plante morte n'a plus de symptôme).
+				if (WorldView.CurrentZoom < SegmentDetailMinZoom)
+					DrawCanopySilhouette(DeadWoodColor);
+				else
+					DrawSkeleton();
 				return;
 			}
 
-			// LOD §H.3 : zoom faible → on ne rastérise pas chaque brindille, on
-			// dessine la silhouette de couronne dérivée de l'empreinte (§G).
-			if (ZoomPalier <= 4)
+			// LOD (tronçon ①) : zoom faible → on ne rastérise pas chaque brindille,
+			// on dessine la silhouette de couronne dérivée de l'empreinte (§G).
+			if (WorldView.CurrentZoom < SegmentDetailMinZoom)
 			{
 				DrawCanopySilhouette();
 				return;
@@ -465,7 +475,12 @@ namespace Symbiose
 		// Silhouette grossière de couronne pour le LOD faible : une ellipse pleine
 		// centrée à mi-hauteur de la plante, dimensionnée par le rayon de couronne
 		// (empreinte §G). Volontairement simple — placeholder LOD, pas un rendu fin.
-		private void DrawCanopySilhouette()
+		// Silhouette vivante : couleur de couronne, teintée par le symptôme colorant
+		// dominant (canal COULEUR). Le squelette appelle la surcharge avec le bois mort.
+		private void DrawCanopySilhouette() =>
+			DrawCanopySilhouette(SymptomTint(CrownColor));
+
+		private void DrawCanopySilhouette(Color baseC)
 		{
 			float cr = _structure.CanopyRadiusCm;
 			// Forme selon la silhouette d'espèce (luxuriance ⑥) : (largeur, hauteur,
@@ -478,8 +493,9 @@ namespace Symbiose
 			float ry = cr * WorldView.PxPerCmX * hf;   // hauteur de la calotte
 
 			// SS② : masse de couronne en 2 valeurs — base ombrée + calotte
-			// éclairée décalée sud (même volume 16-bit que les organes).
-			Color baseC = SymptomTint(CrownColor);
+			// éclairée décalée sud (même volume 16-bit que les organes). La couleur
+			// de base est reçue en paramètre : couronne vivante teintée par symptôme,
+			// ou bois mort pour un squelette (tronçon ① LOD).
 			Vector2 lit = center + SouthDir() * (ry * 0.45f);
 			const int n = 24;
 			var shadePts = new Vector2[n];

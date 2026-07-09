@@ -102,6 +102,13 @@ namespace Symbiose
 				mouse + (_camera.Position - mouse) * (oldZ / newZ));
 			_camera.Zoom = Vector2.One * newZ;
 			CurrentZoom = newZ;
+			// LOD plantes (sprint PERF, tronçon ①) : franchir un palier peut changer
+			// la REPRÉSENTATION de chaque plante (silhouette ⟷ segments). Comme
+			// PlantRenderer._Draw ne tourne que sur QueueRedraw, on force un redraw de
+			// toutes les plantes au changement de palier — sans quoi une plante dessinée
+			// en segments RESTERAIT en segments après un dézoom. ~500 QueueRedraw,
+			// ponctuel (un cran de molette), invisible.
+			RedrawAllPlants();
 			GD.Print($"[WorldView] zoom ×{newZ}.");
 		}
 

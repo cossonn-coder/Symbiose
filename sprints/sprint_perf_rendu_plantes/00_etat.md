@@ -103,14 +103,31 @@ Golden : **INTACT par construction** (rendu C# pur, zéro touche à `data/code/`
 
 Doc de conception : `docs/conception/CONCEPTION_PERF_RENDU_PLANTES.md`.
 
+## Avancement
+
+- **① LOD silhouette — FAIT (2026-07-09, non commité)**. `PlantRenderer.cs` :
+  stub `[Export] ZoomPalier` SUPPRIMÉ, constante `SegmentDetailMinZoom = 4f`,
+  `_Draw` bascule silhouette ⟷ segments sur `WorldView.CurrentZoom < 4`
+  (vivant ET squelette). Surcharge `DrawCanopySilhouette(Color baseC)` :
+  vivant = `SymptomTint(CrownColor)`, squelette = `DeadWoodColor` (jamais
+  teinté par un symptôme vivant). Pompe `RedrawAllPlants()` posée dans
+  `WorldView.Snapshot.cs`, appelée par `StepZoom` (WorldView.Camera.cs) au
+  franchissement de palier. `grep ZoomPalier` = vide.
+  Golden **INCHANGÉ** (`24ec11e7…`, rendu C# pur). `dotnet build` **VERT**.
+  Reste : **F5 Nico** (fluidité ×1, lisibilité silhouettes, retour détail ×8).
+- ② LOD organes + culling — À FAIRE (`02_lod_organes_culling.md`).
+- ③ Clic plante > maison — À FAIRE (`03_clic_plante_prioritaire.md`).
+
 ## §REPRISE
 
-Conception FIGÉE, sprint prêt. Tous les tronçons sont **rendu/vue C# pur** →
-golden INTACT par construction, aucun test moteur, aucune touche `data/code/`.
-Filet compil VM : `dotnet build Symbiose.csproj`. Validation finale = **F5 de
-Nico** (Godot pas sur la VM).
+Tronçon ① CLOS côté VM (build vert + golden intact `24ec11e7…`), **non commité**
+(Nico commit). Tous les tronçons sont **rendu/vue C# pur** → golden INTACT par
+construction, aucun test moteur, aucune touche `data/code/`. Filet compil VM :
+`dotnet build Symbiose.csproj`. Validation finale = **F5 de Nico** (Godot pas
+sur la VM).
 
-Prochaine étape : `/sprint-auto sprint_perf_rendu_plantes` (exécute ①→②→③).
+Prochaine étape : ② puis ③ (`/sprint-auto sprint_perf_rendu_plantes` reprend au
+tronçon restant), ou commit + push de ① pour un F5 intermédiaire de Nico.
 Après le sprint : push GitHub (canal `infra_canal_git`) pour que Nico pull + F5.
 Fichiers cœur : `visuals/PlantRenderer.cs`, `world/WorldView.Camera.cs`,
 `world/WorldView.Snapshot.cs`, `world/WorldView.Actions.cs`,
