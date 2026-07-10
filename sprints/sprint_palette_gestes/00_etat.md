@@ -1,0 +1,157 @@
+# Sprint PALETTE DE GESTES PERSONNALISABLE — carnet de conception (00_etat)
+
+> Carnet VIVANT (`/conception`, §0bis) — mis à jour à chaque décision.
+> Reprise à froid : lire `CLAUDE.md` + ce fichier. Phase actuelle = **A (challenge)**.
+
+## Sujet
+Palette de gestes **personnalisable façon palette de peinture** : le joueur
+compose lui-même son jeu d'outils à portée de main — une **sélection choisie**
+de gestes (et de **combinaisons de gestes**), puisée dans un **catalogue de base**
++ des gestes **débloqués**. Remplace l'actuel accès « touches 1..9 + Tab cyclique »
+devenu ingérable.
+
+## Existant (relevé à froid, 2026-07-10)
+- **24 gestes** codés en dur dans `world/WorldView.Actions.cs` (`Gestes[]`),
+  ordre = table `sim/actions/couts.COUTS`. Kinds de cible : p/q/t/m/x/a/s/E/P/C/U/D.
+- Accès : **touches 1..9** (ne couvrent QUE les 9 premiers) + **Tab** cycle TOUTE
+  la palette + modificateurs **S** (graine), **B** (substrat), **N** (nature mulch).
+- Gestes à **2 temps** existants : `deplacer_pot`, `epandre` (saisir → poser).
+- **AUCUN gating** aujourd'hui : les 24 gestes sont tous disponibles dès le départ.
+- Corpus narratif des gestes : `sim/geste_corpus.py` (fiche 3 niveaux/geste, encyclopédie).
+- HUD actuel = **provisoire/debug** (`WorldView.Hud.cs`), la légende reconnaît que
+  la liste des gestes « débordait » → confirme le besoin.
+- Maîtrise (D12) : état Python `game_state["maitrise"][player]`, paliers 0..5 par
+  objet (famille/concept/**technique/outil**). Débloque déjà : terrain, magazine,
+  carnet interprétatif, Vigueur max. **Ne débloque PAS de gestes aujourd'hui.**
+- Philo cadre : #5 (pas de chiffres HUD primaire, indices VISUELS → palette d'icônes OK),
+  #6 (pas de tutoriel imposé, apprentissage diffus → gating dur = tension à arbitrer),
+  #1 (action directe coûteuse → une combinaison ne doit pas gommer l'usure).
+- CLAUDE.md : page d'accueil = 5 pictogrammes « gestes de base » (cliquer, planter,
+  observer, méditer, manger) → notion de « base » déjà posée.
+
+## Décisions arrêtées
+- **D1 — Combinaisons = macros joueur enregistrées** (choix Nico). Le joueur
+  compose ses propres outils (esprit « paint »). Modalité exacte (séquence
+  temporelle vs pinceau composite ; cible unique vs zone balayée) = QO1.
+- **D2 — Déblocage hybride, toujours SOFT/diégétique** (Nico) : deux voies —
+  (a) **par connaissance/maîtrise** (techniques savantes : bouture, greffe… se
+  révèlent au palier concerné), (b) **par action réalisée** (faire/poser X ouvre
+  le geste Y). Jamais de gating dur type skill-tree (respecte philo #6).
+- **D3 — L'état de déblocage vit côté Python** (`game_state`, par avatar, comme
+  maîtrise/encyclopédie) car il doit PERSISTER dans la save JSON. La palette
+  Godot le LIT dans le snapshot. → périmètre = **vue + données Python légères**
+  (à confirmer QO2), golden intact (données/état, pas de logique sim).
+- **D4 — Le cadre accueille des gestes FUTURS** (bouture, greffe n'existent pas
+  dans les 24 actuels) — règle « le catalogue grandit avec les idées ». Ce sprint
+  pose le CADRE d'accès/déblocage ; l'implémentation des nouveaux gestes eux-mêmes
+  peut être un sprint à part (arbitrage de périmètre à trancher).
+
+- **D5 — Macros = séquence sur la cible cliquée** (Nico, QO1). 1 slot macro =
+  suite de gestes rejouée sur le MÊME point/cible au clic (planter→pailler→arroser
+  ici). Chaque sous-geste paie sa Vigueur (philo #1 préservée). Pas de pinceau
+  balayé (écarté : viderait la Vigueur d'un coup, gommerait l'usure du geste).
+- **D6 — Périmètre = vue + état/données Python** (Nico, QO2). `game_state` porte
+  `gestes_debloques` (par avatar, persisté) + table `GESTE_UNLOCK` data-driven ;
+  exposé au pont ; palette = C#. Golden intact (état/données, pas de logique sim).
+- **D7 — Bouture ET greffe IMPLÉMENTÉES dans ce sprint** (Nico, QO3), moteur
+  complet + voix. → GROS sprint, découpage 5 tronçons (voir ci-dessous).
+
+## Acquis moteur réutilisables (vérifiés à froid)
+- `sim/clonal.py` : clonage exact pour la BOUTURE (copie `genes`+`expression`,
+  `tile.add_plant`, coût = bouffée `stress_memory` sur la mère). Modèle prêt.
+- `plants/genetics.species_compatible(a,b)` = même famille → GATE de la GREFFE.
+- `GENE_NAMES` : 10 gènes ; scinder aérien/racinaire pour la greffe (voir design).
+- Golden = smoke 2 tuiles×4 ans, N'INVOQUE AUCUN geste → ajouts moteur NEUTRES.
+
+## Design proposé (à valider — Phase A)
+Voir le message de conception à l'écran. Découpage pressenti (perf-first, vue en dernier) :
+- **① Déblocage (Python)** : `game_state["gestes_debloques"]`, table `GESTE_UNLOCK`
+  (par maîtrise / par action), hook d'évaluation + notif diégétique, expo snapshot.
+  Set de BASE = gestes toujours dispo. Golden NEUTRE.
+- **② Bouture (moteur + voix)** : geste `bouturer` 2 temps (mère bouturable → plot),
+  clone génétique (réutilise clonal), flag espèce `bouturable`, coût/échec
+  déterministes ; fiche geste + technique + concept carnet. Golden NEUTRE.
+- **③ Greffe (moteur + voix)** : geste `greffer` 2 temps (greffon → porte-greffe),
+  gate `species_compatible`, modèle aérien(scion)/racinaire(porte-greffe) ; voix.
+  Golden NEUTRE.
+- **④ Palette UI (C#)** : remplace touches 1..9/Tab ; slots curables façon paint,
+  lit `gestes_debloques` du snapshot, câble tous les gestes existants + bouture/greffe.
+- **⑤ Macros + banc F5** : enregistrement + rejeu séquence sur cible ; persistance
+  layout palette ; banc d'observation F5. Vue finale.
+
+- **D8 — Greffe = modèle aérien/racinaire** (Nico). Le porte-greffe adopte
+  `plant_class` + gènes AÉRIENS du greffon (`hauteur`, `phenologie_florale`,
+  `resistance_pathogene`, + ce qui régit fleur/fruit) ; conserve ses gènes
+  RACINAIRES (`tolerance_secheresse`, `tolerance_asphyxie`, `tolerance_ombre`,
+  `vigueur`) + son établissement (âge/racines → démarrage rapide). Gate =
+  `species_compatible` (même famille).
+- **D9 — Gestes de BASE** (Nico) : planter, arroser, recolter, manger, tailler,
+  ecraser, becher (ameublir), favoriser_auxiliaire. GATED : compost (poser_bac/
+  poser_pile/composter/empiler_bois/retourner/epandre), conteneurs (poser_pot/
+  poser_bac_culture/deplacer_pot/planter_conteneur), supports (poser_tuteur/
+  poser_treillis/poser_pergola/palisser), paillage (pailler/broyer), ruche
+  (poser_ruche/recolter_miel), bouture, greffe. (Calibrage F5, ajustable.)
+- **D10 — Layout palette persisté** (Nico) : `game_state["palette"][player]` =
+  slots curés + macros, par avatar, un seul save (règle projet).
+- **D11 — Disposition palette = COLONNE À GAUCHE, une ICÔNE par geste** (Nico,
+  2026-07-10). La palette s'affiche en colonne verticale sur le bord GAUCHE de
+  l'écran (remplace le HUD debug de la liste 1..9/Tab). Chaque geste a sa propre
+  icône (pictogramme muet, philo #5 : pas de texte en HUD primaire). Les gestes
+  débloqués apparaissent, les verrouillés non (ou grisés — calibrage F5). Tronçon ④.
+
+- **D12 — Chaînes de déblocage diégétiques en CASCADE + 3ᵉ voie émergente**
+  (Nico, 2026-07-10). Le déblocage n'est pas une table plate : c'est une
+  ARBORESCENCE narrative où **outil → geste rudimentaire → palier → geste
+  savant**. Exemple canonique donné par Nico :
+  - posséder/utiliser le **sécateur** (outil) débloque **`couper`** (geste
+    rudimentaire) ;
+  - **couper une branche** (action réalisée) débloque **`tailler`** (nouvelle
+    action, plus fine) ET ouvre un **palier de maîtrise** « taille » ;
+  - **`tailler` niveau 2** ET **`planter` niveau 2** (deux paliers) débloquent
+    **`bouturer`** OU d'abord une **PAGE SECRÈTE** qui explique la bouture ;
+  - **3ᵉ VOIE — découverte par EXPÉRIMENTATION émergente** : si le joueur
+    **plante une branche taillée** et la **garde humide longtemps** jusqu'à ce
+    qu'elle **s'enracine**, il débloque **`bouturer`** par la pratique (il a
+    reproduit le phénomène → il en a la maîtrise). C'est la méthode scientifique
+    (philo #6) : observer → tenter → réussir → comprendre.
+  Conséquences de modèle : (a) `GESTE_UNLOCK` doit supporter des conditions
+  **COMPOSÉES** (ET de plusieurs paliers) et des conditions d'**événement
+  écologique émergent** (une bouture spontanée réussie = un marqueur au ledger),
+  pas seulement palier/action simple ; (b) un déblocage peut passer par une PAGE
+  SECRÈTE intermédiaire (lien avec les voix narratives) ; (c) `couper` est un
+  geste rudimentaire NEUF, ancêtre de `tailler` (à distinguer : `couper` = brut,
+  `tailler` = savant/ciblé). ✅ INTÉGRÉ : doc §3.2/§3.4/§3.5 + kickoffs ①
+  (grammaire `GESTE_UNLOCK` étendue : `et`/`ou`/`evenement` + chaîne
+  sécateur→couper→tailler→bouturer, `couper` geste neuf, `tailler` passe GATED)
+  et ② (marqueur `bouture_spontanee`).
+
+## CONCEPTION FIGÉE (2026-07-10) — prête pour /sprint-auto
+Arbitrages D1→D11 tranchés. Doc maître :
+`docs/conception/CONCEPTION_PALETTE_GESTES.md`. Découpage figé (perf-first, vue
+en dernier), golden NEUTRE/INTACT partout (référence
+`452b5256de4f6ff23df825b99596efdfde4e6ac87e8035f6b8da809f4dc000b4`) :
+
+- **① Déblocage Python** (`01_deblocage_python.md`) — `gestes_debloques[player]`
+  + table `GESTE_UNLOCK` (maîtrise / action) + hook `evaluer_deblocages` + expo
+  snapshot. Set de BASE (D9). Pont → 0.5.23. Golden NEUTRE.
+- **② Bouture** (`02_bouture.md`) — geste `bouturer` 2 temps, flag `bouturable`,
+  réutilise `sim/clonal.py` (clone génétique + stress mère). Voix. Pont → 0.5.24.
+- **③ Greffe** (`03_greffe.md`) — geste `greffer` 2 temps, gate
+  `species_compatible`, modèle aérien(greffon)/racinaire(porte-greffe) D8. Voix.
+  Pont → 0.5.25.
+- **④ Palette UI** (`04_palette_ui.md`) — C# : colonne GAUCHE + 1 icône/geste
+  (D11), lit `gestes_debloques`, câble tous les gestes + bouture/greffe. Golden
+  intact.
+- **⑤ Macros + banc F5** (`05_macros_banc.md`) — séquence rejouée sur la cible
+  (chaque sous-geste paie sa Vigueur, D5), layout persisté `palette[player]`
+  (D10), banc d'observation. Pont → 0.5.26. Golden intact.
+
+## §REPRISE
+Conception FIGÉE. Prochaine étape = exécution : `/sprint-auto sprint_palette_gestes`.
+Boucle : lire `0N` → bosser → golden → MAJ ce fichier → commit → tronçon suivant.
+À froid : `CLAUDE.md` + ce fichier + le kickoff `0N` du tronçon courant suffisent.
+
+## Coût perf estimé
+Négligeable (couche vue/UX + état persisté). Hook déblocage event-driven (hors
+tick) ; une macro = N appels pont séquencés, aucun calcul sim par tick ;
+bouture/greffe event-driven comme tous les gestes.
