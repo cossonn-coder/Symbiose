@@ -23,7 +23,7 @@ from fields.grids import GridField
 # Registre des bancs d'essai (sprint dédié) : mondes paramétrés montés par
 # `init config="<banc>"` pour forcer/observer un signe. Import au niveau module
 # (paquet `bancs/` au sommet, peut tout importer) ; jamais monté pour smoke/full.
-from bancs import BANCS, BANC_WEEK_DEPART
+from bancs import BANCS, BANC_WEEK_DEPART, BANC_POST_INIT
 
 from .version import ENGINE_VERSION
 from .maitrise_pont import observer_apres_tick  # chaîne de maîtrise après tick (voix ①)
@@ -161,6 +161,14 @@ class CommandsMixin:
         # régen hebdo + le plein au passage de saison — rien d'autre à câbler.
         # Le golden écolo reste intact : il n'init jamais via ce serveur.
         V.ensure_player(game_state, game_state["current_player"])
+        # Hook POST-INIT du banc (palette de gestes ⑤) : APRÈS l'opt-in Vigueur —
+        # premier moment où l'état JOUEUR existe. Le banc « palette » y ouvre d'emblée
+        # les gestes savants (bouturer/greffer) en forçant la maîtrise (la fabrique ne
+        # renvoie que le monde, pas game_state). Banc sans hook → absent → sauté.
+        # smoke/full ne sont pas des bancs → jamais de hook → golden intact.
+        post = BANC_POST_INIT.get(config)
+        if post is not None:
+            post(game_state, game_state["current_player"])
         return {"ok": True, "engine_version": ENGINE_VERSION,
                 "world": self._world_static()}
 

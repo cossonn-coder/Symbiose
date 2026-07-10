@@ -79,6 +79,13 @@ from .bouture import (
 from .greffe import (
     GENES_AERIENS, GENES_RACINAIRES, peut_greffer, greffer,
 )
+# Palette de gestes ⑤ : LAYOUT curé + MACROS par avatar (D1/D5/D10). ÉTAT/DONNÉES
+# pur (slots + séquences validées en cohérence de cible) — aucune logique de sim,
+# la vue REJOUE la macro comme N gestes normaux. Opt-in → golden NEUTRE.
+from .palette import (
+    FAMILLE_CIBLE, famille_cible, macro_coherente,
+    init_palette, palette_layout, definir_palette,
+)
 
 __all__ = [
     "maturite",
@@ -102,4 +109,6 @@ __all__ = [
     "marquer_action", "marquer_evenement", "evaluer_deblocages", "gestes_debloques",
     "BOUTURE_STRESS_COST", "BOUTURE_VIGUEUR_SEUIL", "peut_bouturer", "bouturer",
     "GENES_AERIENS", "GENES_RACINAIRES", "peut_greffer", "greffer",
+    "FAMILLE_CIBLE", "famille_cible", "macro_coherente",
+    "init_palette", "palette_layout", "definir_palette",
 ]

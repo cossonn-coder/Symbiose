@@ -16,6 +16,7 @@ from .biotique import (infestation_ravageur, verger_floraison, semis_tempere,
 from .succession import succession_bascule
 from .luxuriance import luxuriance
 from .diversite import diversite_fondatrice
+from . import palette_gestes as _palette_gestes
 
 BANCS = {
     "secheresse_sable": secheresse_sable,
@@ -34,7 +35,17 @@ BANCS = {
     "succession_bascule": succession_bascule,
     "luxuriance": luxuriance,
     "diversite_fondatrice": diversite_fondatrice,
+    "palette_gestes": _palette_gestes.palette_gestes,
 }
+
+# Hook POST-INIT par banc (palette de gestes ⑤) : callback OPTIONNEL `(game_state,
+# player) -> None` appelé par `cmd_init` APRÈS la construction du moteur ET l'opt-in
+# Vigueur — le SEUL point où l'état JOUEUR (maîtrise, gestes débloqués) existe (la
+# fabrique de banc ne renvoie que le monde, pas le game_state). Le banc « palette »
+# s'en sert pour OUVRIR d'emblée les gestes savants (bouturer/greffer) sans jouer
+# jusqu'à la maîtrise réelle. Banc sans hook → absent → cmd_init ne fait rien de plus
+# (comportement inchangé, golden NEUTRE : smoke/full ne sont pas des bancs).
+BANC_POST_INIT = {"palette_gestes": _palette_gestes.post_init}
 
 # Semaine de départ par banc (retour F5 Nico 2026-07-04). La plupart démarrent à
 # `week=1` (début printemps) — repli par défaut. `grimpantes` observe des FRILEUSES

@@ -72,6 +72,11 @@ namespace Symbiose
 					case Key.F7:       ToggleSoilTemp();   break;
 					case Key.F9:       ToggleLodDebug();   break;  // LOD émetteurs d'ombre (D67)
 					case Key.G:        ToggleGenesHover(); break;  // survol gènes debug (diversité fondatrice ③)
+					// Macros de gestes (⑤, palette perso) : K enregistre une
+					// séquence (re-K pour finir + persister) ; J arme le rejeu de
+					// la macro au prochain clic (mêmes gestes, même point).
+					case Key.K:        ToggleMacroRecord(); break;
+					case Key.J:        ArmerMacro();        break;
 					// --- Raccourcis DEBUG voix (pont 0.5.12) : forcer la maîtrise
 					//     pour tester magazine/pages/carnet sans jouer. LETTRES libres
 					//     (⚠️ F5=Run, F8=Stop sont réservés par l'éditeur Godot et
@@ -92,6 +97,10 @@ namespace Symbiose
 				if (mb.ButtonIndex == MouseButton.Left)
 				{
 					var canvas = WorldMouseCanvas();
+					// Macro armée (⑤, touche J) : le clic capture le point et enfile
+					// le rejeu — priorité sur tout le reste (ni hub, ni geste simple).
+					if (LancerMacroSiArmee(canvas, mb.ShiftPressed))
+						return;
 					// Priorité de clic plante > maison : cliquer le corps visible d'une
 					// plante exécute le geste, jamais le hub — même si la maison est
 					// devant/derrière la plante. Le hub ne s'ouvre que sur un clic maison

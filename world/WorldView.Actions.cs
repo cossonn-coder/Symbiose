@@ -157,6 +157,10 @@ namespace Symbiose
 
 		private void SelectGeste(int idx)
 		{
+			// Macro en enregistrement (⑤) : sélectionner un geste l'AJOUTE à la
+			// séquence au lieu de l'activer. RecordGesteSiEnCours consomme l'appel.
+			if (RecordGesteSiEnCours(idx)) return;
+			ResetMacroState();   // choisir un geste normal annule un rejeu armé
 			_gesteIndex = idx;
 			_lastActionMsg = "";
 			// Changer de geste ANNULE une saisie en cours (gestes à 2 temps :

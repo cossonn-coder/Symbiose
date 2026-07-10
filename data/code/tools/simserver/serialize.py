@@ -35,6 +35,9 @@ from sim import semiologie
 # Déblocage des gestes (palette de gestes ①) : expo au snapshot des gestes ouverts
 # pour l'avatar courant. Lecture pure d'un état joueur (opt-in) → golden NEUTRE.
 from sim.actions import deblocage as DEBL
+# Palette de gestes ⑤ (0.5.26) : expo au snapshot du LAYOUT curé + MACROS de
+# l'avatar courant. Lecture pure d'un état joueur (opt-in) → golden NEUTRE.
+from sim.actions import palette as PAL
 # Table « stade reproducteur visible par saison » du prototype SVG (tranche 6,
 # volet A) : import OUTIL → OUTIL (render_structure est un outil, pas le
 # moteur), zéro duplication — la table validée visuellement au sprint
@@ -488,6 +491,12 @@ class SerializeMixin:
         # état joueur (opt-in) → golden NEUTRE (le golden tourne hors serveur).
         gestes_ouverts = DEBL.gestes_debloques(gs, player)
         recents = gs.get("gestes_debloques_recents", {}).pop(player, [])
+        # Palette de gestes ⑤ (0.5.26) : le LAYOUT de l'avatar courant — `slots`
+        # curés (ordre/sélection des gestes à portée, vide = « tout ouvert » côté
+        # vue) + `macros` (séquences ordonnées rejouées sur la MÊME cible cliquée,
+        # D1/D5). Persisté PAR AVATAR (D10) dans la save. Lecture PURE (opt-in) :
+        # un avatar sans palette retombe sur le défaut SANS écrire → golden NEUTRE.
+        palette_layout = PAL.palette_layout(gs, player)
         # Banc d'observation perf (sprint « run éternel » ④) : bloc LECTURE SEULE
         # pour l'overlay debug F4 côté Godot — `ms_tick` (durée du dernier tick,
         # mesurée AUTOUR de tick_semaine() dans commands.py, None si rien encore
@@ -503,7 +512,8 @@ class SerializeMixin:
                            "vigueur_max": V.vigueur_max(gs, player),
                            "seeds": seeds,
                            "gestes_debloques": gestes_ouverts,
-                           "debloques_recents": recents},
+                           "debloques_recents": recents,
+                           "palette": palette_layout},
                 "perf": perf,
                 "plants": plants, "sprites": sprites, "foragers": foragers,
                 "carpophores": carpophores,

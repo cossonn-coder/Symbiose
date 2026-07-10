@@ -257,6 +257,12 @@ namespace Symbiose
 						? " : greffon saisi → cliquez le porte-greffe"
 						: " (cliquez le greffon, puis le porte-greffe)";
 			}
+			// État macro (⑤) : préfixe discret quand on enregistre ou qu'une
+			// macro est armée pour le prochain clic (K enregistre, J arme).
+			if (_recording)
+				geste = $"● REC macro ({_macroRec.Count}) — {geste}";
+			else if (_macroArmed)
+				geste = $"▶ macro armée — {geste}";
 			string msg = string.IsNullOrEmpty(_lastActionMsg) ? ""
 				: $"   ·   {_lastActionMsg}";
 			_actionLabel.Text = $"{vig} — geste : {geste}{msg}";

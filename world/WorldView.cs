@@ -460,6 +460,11 @@ namespace Symbiose
 				LaunchAction(it.Verb, it.Target, it.Prms, it.Node);
 			}
 
+			// 1c-bis) Rejeu de macro (⑤) : dépile le sous-geste suivant AU MÊME
+			//     point cliqué dès que le pipe est libre (chaque geste paie sa
+			//     Vigueur, philo #1). No-op si aucune macro n'est en cours de rejeu.
+			DrainMacro();
+
 			// 1d) Consommer une réponse `fields` (t6·C) : registre (liste de
 			//     noms) ou grilles — distingués par la clé présente.
 			if (_pendingFields != null && _pendingFields.IsCompleted)

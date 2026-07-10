@@ -14,10 +14,11 @@ from .actions_cibles import CiblesMixin
 from .serialize import SerializeMixin
 from .voix import VoixMixin
 from .maitrise_cmds import MaitriseCmdsMixin
+from .palette_cmd import PaletteCmdMixin
 
 
 class SimServer(CommandsMixin, ActionsMixin, CiblesMixin, SerializeMixin, VoixMixin,
-                MaitriseCmdsMixin):
+                MaitriseCmdsMixin, PaletteCmdMixin):
     """État du serveur : un Engine (ou None avant `init`). Dispatch des commandes."""
 
     def __init__(self):
@@ -47,6 +48,9 @@ def main() -> int:
                 # Observation par SURVOL (retour F5 : voir une plante ≠ l'observer)
                 # + raccourcis DEBUG (forcer palier / observer tout / reset).
                 "observer": server.cmd_observer,
+                # Palette de gestes ⑤ (write) : persiste le layout curé + les
+                # macros de l'avatar (bornée à l'état joueur, opt-in → golden intact).
+                "palette": server.cmd_palette,
                 "debug": server.cmd_debug}
     # 1 ligne lue = 1 réponse écrite. EOF (Godot mort sans quit) → fin de boucle.
     for line in sys.stdin:

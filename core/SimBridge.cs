@@ -330,6 +330,25 @@ namespace Symbiose
 			=> Request(new GDict { ["cmd"] = "debug", ["op"] = op });
 
 		/// <summary>
+		/// Persiste le LAYOUT de palette du joueur (palette de gestes ⑤, 0.5.26) :
+		/// `slots` = verbes curés (colonne ④), `macros` = liste de {nom, sequence}
+		/// (D1/D5). Chaque argument non-null REMPLACE la clé (curation complète — la
+		/// vue possède le layout et le renvoie entier). Python VALIDE la cohérence de
+		/// cible des macros AVANT d'écrire (refus en bloc, transaction) : une macro
+		/// mixte revient `ok:false` et RIEN n'est modifié. « Godot bête » : on envoie
+		/// ce que le joueur a curé, la règle vit en Python. Renvoie la réponse complète
+		/// (`palette` = layout écrit en miroir), ou null (refus/erreur, loggé par Request).
+		/// </summary>
+		public GDict Palette(Godot.Collections.Array slots = null,
+							  Godot.Collections.Array macros = null)
+		{
+			var msg = new GDict { ["cmd"] = "palette" };
+			if (slots != null) msg["slots"] = slots;
+			if (macros != null) msg["macros"] = macros;
+			return Request(msg);
+		}
+
+		/// <summary>
 		/// Liste des bancs d'essai montables (`init config="<nom>"`), DEMANDÉE au
 		/// serveur (commande `list_bancs`, pont 0.5.4) : la source reste le registre
 		/// Python `BANCS` — le C# ne duplique pas les noms (un menu périmé = le piège

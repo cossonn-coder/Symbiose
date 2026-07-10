@@ -369,6 +369,11 @@ namespace Symbiose
 						? pl["gestes_debloques"].AsGodotArray() : null,
 					pl.ContainsKey("debloques_recents")
 						? pl["debloques_recents"].AsGodotArray() : null);
+				// Palette persistée (macros ⑤, 0.5.26) : bloc player.palette =
+				// {slots, macros}. Lecture TOLÉRANTE : un binaire pré-0.5.26 n'émet
+				// pas la clé → ApplyPalette(null) vide les macros (aucun rejeu).
+				ApplyPalette(pl.ContainsKey("palette")
+					? pl["palette"].AsGodotDictionary() : null);
 			}
 			UpdateActionHud();
 

@@ -406,7 +406,21 @@ from __future__ import annotations
 #       event-driven hors tick, flag NEUTRE par défaut) → golden NEUTRE (le smoke
 #       n'invoque aucun geste, aucune espèce greffable n'est greffée par lui). Un binaire
 #       pré-0.5.25 répond « verbe inconnu » à `greffer` (tolérance comme tous les bumps).
-ENGINE_VERSION = "0.5.25"
+# 0.5.26 (palette de gestes ⑤ — macros + persistance du layout) : le bloc `player`
+#       du snapshot porte désormais `palette` = {slots, macros} de l'avatar courant
+#       (LAYOUT curé + MACROS D1/D5/D10, lecture pure d'un état joueur opt-in). NOUVELLE
+#       commande `palette` (write, bornée à l'état joueur comme `observer`/`debug`) :
+#       PERSISTE un changement de layout envoyé par la VUE — `msg.slots` (liste de
+#       verbes curés, remplace) et/ou `msg.macros` (liste de {nom, sequence}, remplace).
+#       La façade `sim.actions.definir_palette` fait foi : chaque macro est VALIDÉE en
+#       cohérence de cible (tous les sous-gestes partagent la MÊME famille de cible via
+#       `FAMILLE_CIBLE` — un clic unique doit tous les alimenter) AVANT écriture (refus
+#       en bloc, transaction). Le MOTEUR ne « connaît » pas les macros : la vue REJOUE
+#       la séquence comme N gestes `action` normaux sur la même cible (chacun paie sa
+#       Vigueur, philo #1). PURE extension (état joueur opt-in, hors tick, aucun RNG) →
+#       golden NEUTRE (le golden tourne hors serveur, aucune clé `palette` créée). Un
+#       binaire pré-0.5.26 répond « commande inconnue » à `palette` (tolérance côté vue).
+ENGINE_VERSION = "0.5.26"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

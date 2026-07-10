@@ -270,13 +270,62 @@ en dernier), golden NEUTRE/INTACT partout (référence
     greffon→porte-greffe) ; (d) flash vert d'un geste fraîchement débloqué ;
     (e) arbitrer masquer VS griser les verrouillés (aujourd'hui : grisé).
     NB : mémoire des 2 clics côté Godot OK (serveur stateless).
-- Reste : **⑤** (macros + persistance layout + banc F5).
+- **⑤ Macros + persistance layout + banc F5 — FAIT (2026-07-11)**. Golden
+  INCHANGÉ (`452b5256de4f6ff23df825b99596efdfde4e6ac87e8035f6b8da809f4dc000b4`).
+  Pont bumpé **0.5.25 → 0.5.26**. `dotnet build` VERT. Livré :
+  - **Python (données/pont, golden NEUTRE)** :
+    - **Nouveau** `sim/actions/palette.py` (60 LDC) : `FAMILLE_CIBLE`/`famille_cible`
+      (dérive la famille de cible d'un verbe depuis les Kinds), `macro_coherente`
+      (une macro = gestes de MÊME famille → un clic les nourrit tous),
+      `init_palette`/`palette_layout` (lecture pure `{slots, macros}` par avatar),
+      `definir_palette` (valide cohérence PUIS écrit transactionnellement, refus en
+      bloc si macro mixte). Ré-exporté par `sim/actions/__init__.py`.
+    - **Pont** : commande NEUVE `palette` (`tools/simserver/palette_cmd.py`
+      `PaletteCmdMixin` + dispatch `server.py`) qui appelle `definir_palette` et
+      renvoie le layout ou un `ok:false` + message (transaction). `serialize.py` :
+      bloc `player` gagne `palette` (= `{slots, macros}` de l'avatar). Version
+      0.5.26 (`version.py`) + commentaire.
+    - **Nouveau banc** `bancs/palette_gestes.py` (33 LDC) : tuile « PALETTE » 6×6,
+      6 Lavender mûres (bouturables) + AppleTree/CherryTree mûrs (greffables
+      Rosaceae), banque de graines ; hook `post_init` NEUF `BANC_POST_INIT`
+      (`bancs/__init__.py`) qui force maîtrise `taille`/`semis`/`greffe` puis
+      `evaluer_deblocages` → bouturer+greffer OUVERTS. `cmd_init` (`commands.py`)
+      appelle le hook après `ensure_player`. **Jamais monté en smoke/full** → golden
+      intact.
+    - **Tests** : `tests/test_palette.py` (22/22 : familles, défaut, persistance,
+      transaction/refus incohérent, forme, lecture pure, no-op golden),
+      `tests/simserver/palette.py` (`test_palette_pont` : banc monté, palette défaut
+      exposée, bouturer/greffer ouverts, macro cohérente persistée + relue au
+      snapshot, macro incohérente refusée sans écrasement), câblé section 21 dans
+      `test_sim_server.py` (**269/269**). Assertions de version 0.5.25→0.5.26 dans
+      conteneurs/structures/voix.
+  - **C# (vue, Option B, `dotnet build` vert)** :
+    - **Nouveau** `world/WorldView.Macros.cs` (138 LDC, partial) : `ApplyPalette`
+      (lit `player.palette.macros` du snapshot, TOLÉRANT clé absente),
+      ENREGISTREMENT (touche **K** bascule `_recording` ; sélectionner un geste
+      l'AJOUTE via `RecordGesteSiEnCours` ; re-K → `PersistMacro` envoie
+      `SimBridge.Palette(macros:…)`), REJEU (touche **J** arme ; le clic capture le
+      POINT + Maj et enfile les indices ; `DrainMacro` dépile un sous-geste par
+      frame dès que le pipe est libre, via `TryAction` → chaque geste PAIE sa
+      Vigueur, philo #1).
+    - `WorldView.Actions.cs` : `SelectGeste` route vers l'enregistrement si
+      `_recording`, sinon `ResetMacroState`. `WorldView.Snapshot.cs` : appelle
+      `ApplyPalette`. `WorldView.Controls.cs` : touches K/J + clic prioritaire
+      `LancerMacroSiArmee`. `WorldView.cs` : `DrainMacro()` dans `_Process` (après
+      la file d'intention). `WorldView.Hud.cs` : préfixe HUD ● REC / ▶ macro armée.
+    - **Nouveau** `core/SimBridge.cs` `Palette(slots, macros)` (envoi cmd `palette`).
+  - **F5 Nico** : (a) monter le banc (`init config="palette_gestes"`) pour tester ;
+    (b) K enregistre une séquence cohérente (ex. planter→arroser), re-K persiste,
+    J + clic la rejoue au point ; (c) vérifier que chaque sous-geste débite la
+    Vigueur ; (d) une macro incohérente (familles mêlées) est refusée par le pont
+    (message HUD) ; (e) calibrage : un seul slot macro rejoué (le n°1) — sélecteur
+    multi-macro à ajouter si souhaité.
 
 ## §REPRISE
-Tronçon ④ FAIT (golden intact `452b5256…`, `dotnet build` vert, pur vue C#).
-Prochaine étape = **⑤ Macros + banc F5** : lire `05_macros_banc.md`. Boucle :
-lire `0N` → bosser → golden → MAJ ce fichier → commit → tronçon suivant. À froid :
-`CLAUDE.md` + ce fichier + le kickoff `0N`.
+**SPRINT TERMINÉ (2026-07-11).** Tous les tronçons ①→⑤ FAITS. Golden intact
+`452b5256de4f6ff23df825b99596efdfde4e6ac87e8035f6b8da809f4dc000b4`, pont 0.5.26,
+suite pont 269/269, `dotnet build` vert. Reste = **F5 Nico** (recette ci-dessus
+par tronçon) + calibrages notés. Aucune reprise de dev nécessaire.
 
 ## Coût perf estimé
 Négligeable (couche vue/UX + état persisté). Hook déblocage event-driven (hors
