@@ -58,6 +58,7 @@ TECHNIQUES: frozenset[str] = frozenset({
     "semis", "arrosage", "récolte", "arrachage", "bêchage", "ameublissement",
     "taille", "compostage", "apiculture", "jardinage_hors_sol",
     "aménagement-habitat", "palissage", "broyage",
+    "bouture",   # multiplication végétative (palette de gestes ②)
 })
 
 # Tous les membres statiques touchés par un geste (union des tuples), puis les

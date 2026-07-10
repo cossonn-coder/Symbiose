@@ -126,6 +126,7 @@ class Fig(PerennialWoody):
     reproduction_rate = 0.15   # dispersion (M7) — gated par la lumière
     longevity_years = 80
     maturity_years = 5
+    bouturable = True          # ligneux à bouture proverbiale : un rameau piqué reprend (palette ②)
     age_curve = [(0, 30, 20), (5, 200, 150), (10, 400, 250), (20, 500, 300)]
 
 

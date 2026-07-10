@@ -69,6 +69,12 @@ CONCEPT_DE: dict[tuple[str, str | None], str] = {
     ("ramet", "stolon"):             "reproduction",
     ("ramet", "rhizome"):            "reproduction",
     ("ramet", "drageon"):            "reproduction",
+    # Bouture PAR LE JOUEUR (sprint PALETTE DE GESTES ②) : multiplication végétative
+    # DÉLIBÉRÉE — le greffon prélevé est un clone, comme le ramet spontané, mais
+    # l'acte est volontaire. Même concept « reproduction » → le carnet bascule en
+    # interprétatif au seuil du concept (§6). Câblé ici pour quand le pont journalise
+    # une bouture réussie au ledger ; texte via le gabarit générique (gracieux).
+    ("bouture", None):               "reproduction",
     ("mort", "sénescence"):       "sénescence",
     ("mort", "asphyxie"):         "eau",
     ("mort", "gel"):              "météo",

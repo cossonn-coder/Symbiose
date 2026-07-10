@@ -145,6 +145,24 @@ FICHES_TECHNIQUE: dict[str, dict[int, str]] = {
            "plutôt que de la forcer.",
     },
 
+    "bouture": {
+        1: "Séparer un fragment d'une plante — un bout de tige, de racine, une canne — "
+           "et l'aider à faire ses propres racines pour former un pied entier.",
+        2: "Bouturer, c'est exploiter le pouvoir de certaines plantes à se régénérer "
+           "d'un morceau : maintenu au frais et à l'humide, le fragment referme sa "
+           "plaie et émet des racines adventives. Le nouveau pied est un CLONE — pas "
+           "un enfant issu de graine — identique à la mère, sans le hasard des "
+           "croisements. Chaque espèce a ses aptitudes : les ligneuses souples et les "
+           "aromatiques reprennent facilement, d'autres presque jamais.",
+        3: "La bouture est l'outil de la FIDÉLITÉ : elle fixe et répand un individu "
+           "qui plaît — une variété savoureuse, un port heureux, un pied bien adapté "
+           "au lieu — là où la graine rebattrait les cartes. Mais elle a deux "
+           "contreparties. Prélever un greffon puise dans les réserves de la mère et "
+           "la fatigue. Et un jardin de clones perd la diversité qui le protège : "
+           "partageant le même patrimoine, tous portent la même faiblesse. La bouture "
+           "sert la constance ; c'est la graine qui sert l'adaptation.",
+    },
+
     "compostage": {
         1: "Rassembler des déchets végétaux en tas ou en bac. Avec le temps, ils "
            "s'affaissent, chauffent, foncent et deviennent une terre sombre et "

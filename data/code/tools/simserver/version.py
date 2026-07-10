@@ -371,7 +371,23 @@ from __future__ import annotations
 #       JOUEUR opt-in (hors tick) → golden NEUTRE (le golden tourne sans serveur, ces
 #       clés ne naissent jamais). Un binaire pré-0.5.23 n'émet pas ces clés → la vue
 #       retombe sur « tout dispo » (tronçon ④, tolérance comme tous les bumps).
-ENGINE_VERSION = "0.5.23"
+# 0.5.24 (palette de gestes ② — bouture au pont) : nouveau verbe `bouturer` à la
+#       commande `action` — geste à 2 TEMPS côté VUE (mémoire des 2 clics dans Godot,
+#       serveur STATELESS comme `epandre`/`deplacer_pot`). Un seul appel porte la MÈRE
+#       par position continue (`target.x_cm`/`y_cm`, comme tailler) ET le plot cible
+#       par `params.r`/`params.c` (2e clic). La façade `sim.actions.bouturer` fait foi :
+#       gate d'espèce (`plant_class.bouturable`, flag NEUF défaut False), maturité +
+#       vigueur de la mère, coût MODÉRÉ, pose d'un CLONE génétique (patron `clonal.py`,
+#       gènes copiés + priming hérité), bouffée de `stress_memory` sur la mère (philo
+#       #1/#2). Une bouture réussie pose le marqueur écologique `bouture_spontanee`
+#       (voie expérimentale émergente D12 → ouvre `bouturer` par `("evenement", …)`).
+#       Nouveau geste `bouturer` au catalogue de coûts + technique `bouture` + fiches
+#       encyclopédie (geste + technique) + concept carnet `bouture`→reproduction.
+#       PURE extension (geste event-driven hors tick, flag NEUTRE par défaut) → golden
+#       NEUTRE (le smoke n'invoque aucun geste, aucune espèce bouturable n'est semée
+#       par lui). Un binaire pré-0.5.24 répond « verbe inconnu » à `bouturer`
+#       (tolérance comme tous les bumps).
+ENGINE_VERSION = "0.5.24"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

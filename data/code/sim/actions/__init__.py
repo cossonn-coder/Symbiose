@@ -69,6 +69,11 @@ from .deblocage import (
     GESTES_BASE, GESTE_UNLOCK, DECLENCHEURS, init_gestes_debloques, est_debloque,
     marquer_action, marquer_evenement, evaluer_deblocages, gestes_debloques,
 )
+# Bouture (palette de gestes ②) : geste `bouturer` — clone génétique event-driven,
+# réutilise le patron de `sim/clonal.py`. Pose le marqueur `bouture_spontanee` (③ voie).
+from .bouture import (
+    BOUTURE_STRESS_COST, BOUTURE_VIGUEUR_SEUIL, peut_bouturer, bouturer,
+)
 
 __all__ = [
     "maturite",
@@ -90,4 +95,5 @@ __all__ = [
     "poser_tuteur", "poser_treillis", "poser_pergola", "palisser",
     "GESTES_BASE", "GESTE_UNLOCK", "DECLENCHEURS", "init_gestes_debloques", "est_debloque",
     "marquer_action", "marquer_evenement", "evaluer_deblocages", "gestes_debloques",
+    "BOUTURE_STRESS_COST", "BOUTURE_VIGUEUR_SEUIL", "peut_bouturer", "bouturer",
 ]

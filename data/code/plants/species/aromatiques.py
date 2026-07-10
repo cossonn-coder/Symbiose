@@ -52,6 +52,7 @@ class Mint(Lamiaceae):
     clonal_mode = "rhizome"
     clonal_radius_cm = 90.0        # porte loin (défaut 60) — le rhizome file
     clonal_interval = 3            # cadence soutenue (défaut 4) — colonise vite
+    bouturable = True              # bouture en eau proverbiale : un brin repart tout seul (palette ②)
     growth_stages = [
         GrowthStage(
             name="semis", duration_weeks=3, strate="sol",
@@ -94,6 +95,7 @@ class Thyme(Lamiaceae):
     winter_strategy = "evergreen"  # PREMIER porteur de ce chemin — feuillage gardé l'hiver
     deciduous = False              # evergreen ⇒ ombre non nulle même en hiver
     foliage_density = 0.35
+    bouturable = True              # sous-arbrisseau : bouture de tige semi-ligneuse (palette ②)
     longevity_years = 8
     reproduction_rate = 0.10
     fungal_susceptibility = 0.2    # aromatique — peu sensible
@@ -142,6 +144,7 @@ class Lavender(Lamiaceae):
     longevity_years = 12
     reproduction_rate = 0.08
     fungal_susceptibility = 0.2
+    bouturable = True              # bouture d'aoûtement classique du jardinier (palette ②)
     growth_stages = [
         GrowthStage(
             name="semis", duration_weeks=3, strate="sol",

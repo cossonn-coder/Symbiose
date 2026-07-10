@@ -172,11 +172,36 @@ en dernier), golden NEUTRE/INTACT partout (référence
     mémoire) → rien à câbler ; l'état est déjà JSON-sérialisable (sets → futur write).
   - **F5 Nico** : câbler la palette ④ ; calibrage des conditions/BASE ; `posseder_secateur`
     reste un marqueur d'outil à poser par le futur flux d'acquisition d'outils.
-- Reste : **②③④⑤**.
+- **② Bouture (moteur + voix) — FAIT (2026-07-10)**. Golden INCHANGÉ
+  (`452b5256de4f6ff23df825b99596efdfde4e6ac87e8035f6b8da809f4dc000b4`). Pont
+  bumpé **0.5.23 → 0.5.24**. Livré :
+  - **Nouveau** `data/code/sim/actions/bouture.py` (30 LDC pur) : `peut_bouturer`
+    (gate = flag espèce `bouturable` ET vivante ET mûre ET Vigueur-plante ≥ seuil,
+    réutilise `sim/clonal.py`), `bouturer` (clone exact `genes`+`expression` via
+    `tile.add_plant`, coût Vigueur joueur binaire tout-ou-rien, bouffée
+    `stress_memory` sur la mère, marqueur `bouture_spontanee` au ledger D12).
+  - **Flag `bouturable`** (défaut False → golden NEUTRE) sur `PlantBase`, posé True
+    sur 8 espèces du catalogue existant : Mint, Thyme, Lavender, Comfrey, Raspberry,
+    Fig, Ivy, Jasmine (littéraux seuls, règle de couche `plants` respectée).
+  - **Voix** : `couts.py` (`bouturer`=MODERE, objets `("bouture","sécateur")`),
+    `geste_corpus.py` (fiche geste 3 niveaux), `technique_corpus.py` (fiche technique
+    `bouture` 3 niveaux), `encyclopedie_types.py` (`bouture` ∈ TECHNIQUES),
+    `carnet.py` (`("bouture", None)` → concept `reproduction`).
+  - `sim/actions/__init__.py` : ré-export de l'API bouture.
+  - **Pont** : `simserver/actions.py` route `bouturer` à 2 temps (mère par
+    `target.x_cm/y_cm`, plot par `params.r/c`, serveur STATELESS) ; version bumpée
+    0.5.24 + commentaire.
+  - **Tests** : `tests/test_bouture.py` (27/27 : clone, refus non-bouturable/jeune/
+    morte/Vigueur, flag défaut, type_de), `tests/simserver/bouture.py` (routage +
+    refus de désignation sans coût), câblé section 19 dans `test_sim_server.py`
+    (253/253). test_encyclopedie/deblocage/carnet/maitrise/genetique verts.
+  - **F5 Nico** : mémoire des 2 clics côté Godot (serveur stateless) ; palette ④
+    câblera l'icône `bouturer` ; calibrage des espèces bouturables.
+- Reste : **③④⑤**.
 
 ## §REPRISE
-Tronçon ① FAIT (golden intact, pont 0.5.23). Prochaine étape = **② Bouture** :
-lire `02_bouture.md`. Boucle : lire `0N` → bosser → golden → MAJ ce fichier →
+Tronçon ② FAIT (golden intact, pont 0.5.24). Prochaine étape = **③ Greffe** :
+lire `03_greffe.md`. Boucle : lire `0N` → bosser → golden → MAJ ce fichier →
 commit → tronçon suivant. À froid : `CLAUDE.md` + ce fichier + le kickoff `0N`.
 
 ## Coût perf estimé

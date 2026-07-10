@@ -125,6 +125,16 @@ class PlantBase(ABC):
     clonal_mode: str = "none"            # "none" | "stolon" | "rhizome" | "drageon"
     clonal_radius_cm: float = 60.0       # portée d'un ramet (offset ≤ ce rayon)
     clonal_interval: int = 4             # cadence : 1 chance d'émission toutes N semaines
+    # BOUTURE (sprint PALETTE DE GESTES ②) — multiplication végétative PAR LE JOUEUR :
+    # `bouturable=True` marque les espèces qui reprennent réellement d'un fragment
+    # (ligneuses souples, aromatiques : saule/menthe/lavande/figuier/framboisier…) →
+    # `sim.actions.bouture.bouturer` accepte d'en prélever un greffon clone. DÉFAUT
+    # False = espèce NON bouturable (la plupart : arbre à pivot, annuelle éphémère,
+    # carotte…) → le geste refuse EN AMONT sans dépense. Distinct du clonal spontané
+    # (`clonal_mode`, émission autonome au tick) : la bouture est un ACTE joueur,
+    # event-driven au-dessus du tick → défaut neutre ⇒ golden inchangé. Littéral seul,
+    # aucun import (règle de couches : `plants` est la couche la plus basse).
+    bouturable: bool = False
     # Silhouette de RENDU (sprint LUXURIANCE ③, D65 §2.4 (a)). PUR DESCRIPTEUR data :
     # AUCUN effet moteur ici — le renderer C# le lira au tronçon ⑥ (via le pont) pour
     # dessiner la bonne forme au sol. None ⇒ dérivée de la strate du stade MATURE

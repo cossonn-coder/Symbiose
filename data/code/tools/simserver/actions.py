@@ -203,6 +203,42 @@ class ActionsMixin:
                          f"taillé ({quoi}) : {plant.name}" if ok
                          else "Vigueur insuffisante — rien taillé")
 
+        # Bouturer (palette de gestes ②, protocole 0.5.24) — geste à 2 TEMPS côté
+        # VUE (comme `epandre`/`deplacer_pot` : la mémoire des 2 clics vit dans Godot,
+        # le serveur reste STATELESS). Un seul appel porte les DEUX cibles déjà
+        # résolues : la MÈRE par position continue (`x_cm`/`y_cm`, comme tailler) et
+        # le PLOT cible par `params.r`/`params.c` (le 2e clic). La façade `A.bouturer`
+        # fait foi (gate bouturable/maturité/vigueur, coût, clone, stress mère). Refus
+        # de désignation (mère introuvable / plot hors tuile) → ne coûte rien.
+        if verb == "bouturer":
+            tile, eco = tile_cible()
+            if tile is None:
+                return bilan(False, 0.0, 0.0,
+                             f"tuile introuvable : {target.get('tile')!r}")
+            mother = self._plant_at(tile, target.get("x_cm"), target.get("y_cm"))
+            if mother is None:
+                return bilan(False, 0.0, 0.0,
+                             "aucune plante-mère vivante à cette position")
+            r, c = params.get("r"), params.get("c")
+            if (not isinstance(r, int) or isinstance(r, bool)
+                    or not isinstance(c, int) or isinstance(c, bool)
+                    or not (0 <= r < tile.grid_rows)
+                    or not (0 <= c < tile.grid_cols)):
+                return bilan(False, 0.0, 0.0,
+                             f"plot cible hors tuile : r={r!r}, c={c!r}")
+            # Gate d'espèce lu EN AMONT pour un message clair (distinct de la Vigueur
+            # insuffisante), sans dépense — la façade retesterait de toute façon.
+            if not getattr(mother.plant_class, "bouturable", False):
+                return bilan(False, 0.0, 0.0,
+                             f"{mother.name} ne se bouture pas")
+            cost = A.cout_action(gs, player, "bouturer",
+                                 A._objets_action("bouturer", mother))
+            ok = A.bouturer(gs, player, mother, tile, eco, r, c)
+            return bilan(ok, cost, 0.0,
+                         f"bouture de {mother.name} enracinée en ({r},{c})" if ok
+                         else f"rien bouturé ({mother.name} trop jeune/épuisée "
+                              "ou Vigueur insuffisante)")
+
         # Gestes sur le MILIEU désignés par POSITION continue (planter·arroser,
         # protocole 0.3.3). La cible est un POINT (x_cm/y_cm) ; on le résout en
         # plot-foyer (`_plot_at`, floor(/PLOT_CM)) car les façades écrivent au

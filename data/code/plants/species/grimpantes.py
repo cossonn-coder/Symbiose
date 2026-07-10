@@ -58,6 +58,7 @@ class Ivy(PlantBase):
     longevity_years = 40                 # liane pérenne très longue
     reproduction_rate = 0.05
     fungal_susceptibility = 0.25
+    bouturable = True                    # liane ligneuse : un fragment reprend aisément (palette ②)
     # --- Profil de croissance procédurale (grimpe géométrique ①②) ---
     # PLACEHOLDERS : le lierre monte haut sur un mur mais reste étroit (canopée
     # plaquée). Gabarit calibré à la maquette (⑥).
@@ -131,6 +132,7 @@ class Jasmine(PlantBase):
     longevity_years = 20
     reproduction_rate = 0.06
     fungal_susceptibility = 0.3
+    bouturable = True                      # sarment souple : bouture de tige d'été (palette ②)
     # --- Profil de croissance procédurale (grimpe géométrique ①②) ---
     # PLACEHOLDERS : sarments longs et souples qui s'étalent large SANS palissage
     # (max_extent élevé) et montent une fois palissés.

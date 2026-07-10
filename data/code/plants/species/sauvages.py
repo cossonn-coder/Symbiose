@@ -150,6 +150,7 @@ class Raspberry(PlantBase):
     # Cf. table D65 §2.2.
     clonal_mode = "drageon"
     clonal_radius_cm = 40.0        # rejet TRÈS court (défaut 60) — le fourré reste dense
+    bouturable = True              # bouture de canne ligneuse en hiver (palette ②)
     growth_stages = [
         GrowthStage(
             name="semis", duration_weeks=3, strate="sol",

@@ -190,6 +190,25 @@ FICHES_GESTE: dict[str, dict[int, str]] = {
            "passe du geste brut au geste juste.",
     },
 
+    "bouturer": {
+        1: "Prélever un fragment sur une plante et le mettre en terre ailleurs. "
+           "Après un temps, le morceau reprend racine et devient une nouvelle plante, "
+           "en tout point semblable à celle dont il vient.",
+        2: "Bouturer multiplie une plante SANS graine : le greffon n'est pas un "
+           "enfant issu de deux parents, c'est un CLONE — il porte exactement le même "
+           "patrimoine que la mère, et jusqu'à l'état d'acclimatation qu'elle avait "
+           "acquis. Aucun brassage, aucune surprise : la lignée se recopie à "
+           "l'identique. Toutes les plantes ne s'y prêtent pas — seules les ligneuses "
+           "souples et les aromatiques repartent aisément d'un fragment.",
+        3: "La bouture fige un individu heureux et le répand : un pied vigoureux, bien "
+           "adapté au lieu, se démultiplie tel quel. C'est le moyen de fixer un "
+           "caractère qu'une graine dissoudrait dans le hasard des croisements. Mais "
+           "prélever un greffon est une plaie pour la mère — elle y puise, se fatigue "
+           "et se ressème d'autant moins. Et cloner, c'est renoncer à la diversité : "
+           "un rang de clones partage la même faille et tombe ensemble devant la même "
+           "maladie. Le geste sert la fidélité, jamais l'adaptation.",
+    },
+
     "manger": {
         1: "Consommer un organe de plante — feuille, fleur, fruit. Le jardinier "
            "reprend des forces là, sur place.",

@@ -196,6 +196,7 @@ class Comfrey(PlantBase):
     longevity_years = 10
     reproduction_rate = 0.04
     fungal_susceptibility = 0.3
+    bouturable = True              # bouture de tronçon de racine charnue (palette ②)
     growth_stages = [
         GrowthStage(
             name="semis", duration_weeks=3, strate="sol",
