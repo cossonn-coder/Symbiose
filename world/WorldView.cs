@@ -143,6 +143,12 @@ namespace Symbiose
 		// `mycelium` (perception pure). ZIndex 4 = au ras du sol, sous la macro (5)
 		// et les plantes (10) — ils poussent au sol. Survit à RebuildWorld.
 		private CarpophoreLayer _carpophoreLayer;
+		// Décor d'ambiance (T4 RENDU AMBIANCE) : le backdrop cosmétique AUTOUR du
+		// jardin (forêt/rivière/falaise/prairie par seed). ZIndex négatif = DERRIÈRE
+		// le sol (0). Enfant direct du SubViewport (AddWorld) → il SURVIT à
+		// RebuildWorld ; on le re-Build à la rotation pour re-projeter au nouvel
+		// orient. Node2D inerte, sans input → hors picking (le jardin garde ses clics).
+		private DecorLayer _decorLayer;
 		// Index plantes-par-NOM-FR (Phacélie…) → positions MONDE (cm), reconstruit
 		// à chaque snapshot. Sert les fleurs de saut des butineurs (le `target` est
 		// le nom FR, qui matche `name`, pas `species`/anglais).
@@ -188,10 +194,10 @@ namespace Symbiose
 		public override void _Ready()
 		{
 			GD.Print($"[WorldView] build : {Build}");
-			// Le viewport PRINCIPAL s'efface en gris pierre ; le SubViewport monde
-			// est en transparent_bg → ce gris transparaît entre les tuiles (les
-			// chemins en pierre, gratuits). Cf. WorldView.tscn.
-			RenderingServer.SetDefaultClearColor(FondPierre);
+			// Le viewport PRINCIPAL s'efface en vert gazon ; le SubViewport monde
+			// est en transparent_bg → ce vert transparaît entre les tuiles (les
+			// chemins enherbés, gratuits, T4). Cf. WorldView.tscn.
+			RenderingServer.SetDefaultClearColor(FondChemin);
 			// Le SubViewport basse-réso et sa caméra (déclarés dans la scène).
 			_worldVp = GetNode<SubViewport>("WorldViewport/World");
 			// 📖 Pédagogie — forcer la taille du conteneur À LA MAIN : un
@@ -267,6 +273,12 @@ namespace Symbiose
 			GD.Print($"[WorldView] warmup {WarmupWeeks} semaines en "
 					 + $"{Time.GetTicksMsec() - t0} ms — semaine {snap["week"].AsInt32()}, "
 					 + $"{snap["season"].AsString()}.");
+
+			// Décor AVANT le sol : ZIndex -5 le pose derrière tout, mais on l'ajoute
+			// tôt pour qu'il existe au 1er dessin. Build depuis le SEED du terrain.
+			_decorLayer = new DecorLayer { Name = "Decor", ZIndex = -5 };
+			AddWorld(_decorLayer);
+			_decorLayer.Build(Seed);
 
 			BuildGround(world);
 

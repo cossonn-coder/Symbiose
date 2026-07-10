@@ -19,9 +19,10 @@ namespace Symbiose
 		private static readonly Color ArgileColor = Palette16.SolArgile;
 		private static readonly Color SableColor  = Palette16.SolSable;
 		private static readonly Color SolInconnu  = Palette16.SolInconnu;
-		// Chemins en pierre : pas dessinés en t2 — le FOND de la fenêtre fait
-		// office de bandes entre tuiles (gris pierre), gratuit et suffisant.
-		private static readonly Color FondPierre  = Palette16.FondPierre;
+		// Chemins ENHERBÉS (T4 RENDU AMBIANCE) : le FOND de la fenêtre fait office
+		// de bandes entre tuiles ; il bascule du gris pierre au vert gazon (le jardin
+		// est ourlé d'herbe, pas de dalles), gratuit et suffisant.
+		private static readonly Color FondChemin  = Palette16.GazonChemin;
 		// 📖 La MAISON (état, géométrie, ombre portée) est extraite dans le partial
 		// WorldView.Maison.cs (T3 RENDU AMBIANCE) — Monde.cs ne garde que le SOL.
 

@@ -108,5 +108,47 @@ namespace Symbiose
 		public static readonly Color BriqueSombre    = new Color("7c4529"); // joint / ombre de brique
 		public static readonly Color MenuiserieSombre = new Color("3a2f26"); // dormant sombre (portes, fenêtres)
 		public static readonly Color VitreSombre     = new Color("2b3238"); // verre à petits carreaux (fond)
+
+		// === DÉCOR D'AMBIANCE — ossature (T4 RENDU AMBIANCE) ==================
+		// Teintes de BASE des zones hors-jardin (backdrop cosmétique, §5.1).
+		// Chaque motif = 2 valeurs (lisière claire / fond) pour le volume pixel-
+		// art ; le DÉTAIL (arbres, reflets, redans) est peint par-dessus en T5.
+		public static readonly Color DecorPrairie       = new Color("6e9a4a"); // prairie fleurie (fond)
+		public static readonly Color DecorPrairieClair  = new Color("83af58"); // prairie éclairée (lisière)
+		public static readonly Color DecorForetFond     = new Color("2f5738"); // forêt profonde (vert sombre)
+		public static readonly Color DecorForetLisiere  = new Color("46764a"); // lisière (vert moyen)
+		public static readonly Color DecorEau           = new Color("3f6f8e"); // rivière (bleu-gris)
+		public static readonly Color DecorEauBerge      = new Color("6f9a86"); // berge herbeuse (vert-eau)
+		public static readonly Color DecorRoche         = new Color("8a8073"); // falaise (gris-brun)
+		public static readonly Color DecorRocheHaut     = new Color("a39a8b"); // sommet végétalisé clair
+		// === CHEMINS ENHERBÉS (gazon inter-tuiles, T4) =======================
+		// Le gris pierre FondPierre du fond de fenêtre bascule en vert gazon.
+		public static readonly Color GazonChemin        = new Color("6f9350"); // gazon des chemins (grain léger)
+
+		// === DÉCOR D'AMBIANCE — motifs détaillés (T5 RENDU AMBIANCE) ==========
+		// Silhouettes d'arbres adultes par essence, eau + reflets, roche étagée,
+		// prairie fleurie. Chaque feuillage a SA valeur médiane ; le volume 2
+		// valeurs (calotte éclairée) est fabriqué à l'usage par hue-shift, pas
+		// dupliqué ici (cohérent avec le rendu des plantes, philo pixel-art).
+		// -- Feuillages par essence (houppiers du décor) --
+		public static readonly Color FeuillageChene    = new Color("3d6b3c"); // chêne : vert moyen dense
+		public static readonly Color FeuillageHetre    = new Color("2c5730"); // hêtre : vert profond de hêtraie
+		public static readonly Color FeuillageBouleau  = new Color("6f9a4c"); // bouleau : vert clair léger
+		public static readonly Color FeuillageCharme   = new Color("47713e"); // charme : vert moyen bocager
+		public static readonly Color FeuillageSapin    = new Color("2c4d47"); // sapin : vert-bleu sombre
+		// -- Écorces (troncs du décor) --
+		public static readonly Color EcorceBrune       = new Color("5a4632"); // tronc brun (chêne/hêtre/charme/sapin)
+		public static readonly Color EcorceBouleau     = new Color("d3d0c6"); // écorce blanche du bouleau
+		public static readonly Color EcorceLenticelle  = new Color("35322c"); // chevrons sombres du bouleau
+		// -- Eau de rivière (2 teintes pour le dithering des reflets) --
+		public static readonly Color EauProfonde       = new Color("35617f"); // eau profonde (bleu-gris sombre)
+		public static readonly Color EauReflet         = new Color("6fa6bf"); // reflet de ciel (bleu clair, dithering)
+		// -- Roche de falaise (3 valeurs de redans étagés) --
+		public static readonly Color RocheClair        = new Color("9c9182"); // redan éclairé
+		public static readonly Color RocheMedian        = new Color("7c7264"); // pan médian
+		public static readonly Color RocheOmbre        = new Color("5c5449"); // redan d'ombre / faille
+		// -- Petites fleurs de la prairie (semis déterministe) --
+		public static readonly Color FleurPrairieBlanc = new Color("e7e3d2"); // marguerites (points clairs)
+		public static readonly Color FleurPrairieJaune = new Color("e6c24a"); // boutons-d'or (points jaunes)
 	}
 }

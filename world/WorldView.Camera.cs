@@ -179,6 +179,11 @@ namespace Symbiose
 			_supportNodes.Clear();  // idem → ApplySupports recrée (supports de grimpe ⑥)
 			_containers.Clear();    // idem → ApplyContainers recrée (conteneurs ⑥a)
 
+			// Le décor SURVIT à RebuildWorld (enfant direct du SubViewport, non
+			// libéré) mais il est INERTE : on le re-Build pour re-projeter au nouvel
+			// orient (positions en cm monde → WorldToScreen suit la rotation D35).
+			_decorLayer?.Build(Seed);
+
 			BuildGround(_world);
 			_objects = new Node2D { Name = "Objects", ZIndex = 10, YSortEnabled = true };
 			AddWorld(_objects);
