@@ -66,6 +66,12 @@ namespace Symbiose
 			["p"]                = (new Color("d8cfa8"), new Color("8f6f2f"), "pauvre", "riche P", 0f, 3f),
 			["k"]                = (new Color("d8cfa8"), new Color("8f2f6f"), "pauvre", "riche K", 0f, 3f),
 			["structure_sol"]    = (new Color("a8744a"), new Color("4f8f4f"), "compacté", "grumeleux", 0f, 1f),
+			// Micro-relief topographique (hydrologie ①, catena ②) : lire l'altitude
+			// est la CLÉ de lecture de la catena (sprint DIVERSITÉ FONDATRICE ③) — le
+			// gradient édaphique (NPK/microbiome riches EN BAS) SUIT cette pente. Bornes
+			// physiques ALT_BASE ± ALT_AMPLITUDE = 20 ± 20 → [0, 40] cm (fields/ecofields/
+			// constants.py). Bas de pente foncé (creux humide), haut clair (butte sèche).
+			["altitude"]         = (new Color("4a3a2a"), new Color("d8c8a8"), "creux", "butte", 0f, 40f),
 			["om_fresh"]         = (new Color("e0d6a8"), new Color("8f7a3a"), "sol nu", "litière", float.NaN, float.NaN),
 			["om_active"]        = (new Color("e0d6a8"), new Color("6f5a2a"), "peu", "en digestion", float.NaN, float.NaN),
 			["om_stable"]        = (new Color("e0d6a8"), new Color("5a4630"), "peu", "humus", float.NaN, float.NaN),

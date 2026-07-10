@@ -207,6 +207,12 @@ namespace Symbiose
 				// Espèce = NOM DE CLASSE (cls.__name__ du snapshot) : envoyé au pont
 				// à l'observation par survol (0.5.12). Python résout la clé catalogue.
 				renderer.SetMeta("species", p["species"]);
+				// Patrimoine génétique (DIVERSITÉ FONDATRICE ③) : le dict de gènes
+				// exposé par le snapshot, stocké tel quel en Meta → l'affichage debug
+				// de survol (WorldView.Genes.cs) le relit sans re-requêter. Tolérant à
+				// un snapshot pré-③ (clé absente → dict vide → survol muet).
+				if (p.ContainsKey("genes"))
+					renderer.SetMeta("genes", p["genes"]);
 				if (fade) renderer.Modulate = new Color(1f, 1f, 1f, 0f);
 				_objects.AddChild(renderer);
 				renderer.SetStructure(structure);

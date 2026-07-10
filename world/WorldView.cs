@@ -390,6 +390,9 @@ namespace Symbiose
 			UpdateSun();
 			// 0d) Overlay de perfs (F4) — toutes phases.
 			if (_perfVisible) UpdatePerf();
+			// 0d·bis) Survol gènes debug (diversité fondatrice ③, touche G) : affiche
+			//     les gènes de rythme de la plante pointée. Early-out interne si OFF.
+			UpdateGenesHover();
 
 			// 1) Consommer un step terminé — TOUJOURS, même en pause : la
 			//    semaine était déjà engagée côté moteur, son résultat est dû.

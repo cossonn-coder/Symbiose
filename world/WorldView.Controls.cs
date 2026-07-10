@@ -71,6 +71,7 @@ namespace Symbiose
 						break;
 					case Key.F7:       ToggleSoilTemp();   break;
 					case Key.F9:       ToggleLodDebug();   break;  // LOD émetteurs d'ombre (D67)
+					case Key.G:        ToggleGenesHover(); break;  // survol gènes debug (diversité fondatrice ③)
 					// --- Raccourcis DEBUG voix (pont 0.5.12) : forcer la maîtrise
 					//     pour tester magazine/pages/carnet sans jouer. LETTRES libres
 					//     (⚠️ F5=Run, F8=Stop sont réservés par l'éditeur Godot et

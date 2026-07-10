@@ -190,10 +190,34 @@ Le moteur génétique est déjà à ~90 % en place :
     amplitudes petites, AUCUNE mortalité de masse (peuplement dense sain, tous
     `alive=True`, health 1-3). Tests ciblés uniformes (défaut False) INTACTS (51 verts).
 
+- **③ Vue Godot : banc d'observation — CLOSE (2026-07-10).** Implémenté :
+  - `bancs/diversite.py` (NEUF) : banc `diversite_fondatrice` — 64 tournesols d'une
+    même espèce semés côte à côte via `semer_fondateur` (patrimoine fondateur propre,
+    seed banc-local `DIV_SEED`), tuile `heterogene=True` (catena) ; AUCUN champ forcé
+    à la main (hétérogénéité naturelle). Enregistré dans `bancs/__init__.py` (`BANCS`
+    + `BANC_WEEK_DEPART=9`, mi-printemps car tournesol `t_germ_opt=20`). Monte + ticke
+    6 sem. sans crash ; variance de rythme confirmée (stdev genes ~0.10).
+  - `tools/simserver/serialize.py` : chaque plante VIVANTE gagne `genes` (dict, arrondi
+    3 déc.) au snapshot — lecture pure de `p.genes`, golden NEUTRE. Pont **0.5.22**.
+  - `visuals/FieldOverlay.cs` : palette `altitude` ajoutée (bornes 0..40 cm, creux→butte)
+    → la catena se LIT en heatmap F6 (n/p/k/microbiome/altitude tous exposés par
+    introspection `cmd_fields`).
+  - `world/WorldView.Genes.cs` (NEUF, 39 LDC) : survol gènes debug (touche **G**) —
+    affiche les gènes de rythme (`vigueur`/`germination_thermique`/`phenologie_florale`)
+    de la plante pointée (relit la Meta `genes`, zéro requête). Câblé : `_Process`
+    (WorldView.cs), case `Key.G` (Controls), label dans BuildHud (Hud.cs), hint légende.
+  - **Golden INTACT** (`452b5256…`, inchangé depuis ②) — vérifié. **Build C# VERT**
+    (0 err/0 warn). LDC neufs sous norme (diversite.py 13, Genes.cs 39).
+  - **Garde-fou `diag_population --config full` re-passé** : plateau **N=641 à l'an 6**
+    (dans la cible invasion [600,700], réf. ~613), onset ~1-2 saisons, tuile_max borné
+    (~99-130 en régime). **OK — la variance fondatrice n'a PAS re-déséquilibré** le
+    peuplement (mémoire invasion préservée). Aucune espèce n'explose/s'effondre.
+
 ## §REPRISE
-**① CLOSE + ② CLOSE** (moteur catena + re-figeage golden ECO `452b5256…`). PROCHAIN =
-**③ `03_vue_godot.md`** (banc d'observation F5 : rythmes désynchronisés + heatmaps
-catena `FieldOverlay` F6 + survol gènes debug + re-passage `diag_population` garde-fou ;
-golden INTACT ; dernier tronçon = clôture sprint + màj DETTE/BACKLOG/journal).
-Exécution à froid : lire `CLAUDE.md` + ce fichier + `03_*.md`, `/clear` entre tronçons.
-Ordre restant : ③ seul.
+**SPRINT TERMINÉ (①②③ CLOSES).** Moteur : variance génétique fondatrice (①) + catena
+topographique (②, golden ECO `452b5256…`). Vue : banc `diversite_fondatrice` + heatmap
+altitude + survol gènes G + snapshot `genes` (③, pont 0.5.22, golden INTACT). Garde-fou
+`diag_population` OK (N=641/an6, pas de re-déséquilibrage). **RESTE côté Nico** :
+validation **F5** du banc (`init config="diversite_fondatrice"` → voir rythmes
+désynchronisés + heatmaps catena F6 + survol G) ; puis clôture définitive (màj
+DETTE/BACKLOG/journal) + commit — laissés à Nico (le sous-agent ne commit pas).

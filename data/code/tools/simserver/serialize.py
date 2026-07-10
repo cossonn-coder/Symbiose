@@ -131,6 +131,15 @@ class SerializeMixin:
                 # ont désormais un vrai état moteur (`fruits`, ③).
                 repro = REPRO_BY_SEASON.get(cls.__name__, DEFAULT_REPRO)
                 base["dead"] = False
+                # Patrimoine génétique (sprint DIVERSITÉ FONDATRICE ③) : le vecteur
+                # de gènes de l'individu, exposé en DEBUG pour le survol (WorldView
+                # affiche les gènes de rythme de la plante pointée → corréler « ce
+                # pied est en avance » ↔ « ses gènes »). Dict clé→valeur, arrondi 3
+                # déc. (déterministe, léger). PURE lecture d'un état déjà porté par
+                # l'instance (`p.genes`, tiré au founder ①/hérité) : aucune écriture
+                # moteur → golden NEUTRE (le snapshot n'est pas figé par test_golden).
+                # `p.genes` est {} pour une plante neutre (pré-①) → dict vide toléré.
+                base["genes"] = {g: round(v, 3) for g, v in p.genes.items()}
                 # Sémiologie foliaire (D33, tronçon ①) : LISTE triée de symptômes
                 # `[{cause, intensity}]` — généralise le bool `chlorose` du ⑨ à TOUS
                 # les stresseurs chroniques (chlorose/sécheresse/asphyxie/ravageurs/

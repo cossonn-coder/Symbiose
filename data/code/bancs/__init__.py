@@ -15,6 +15,7 @@ from .biotique import (infestation_ravageur, verger_floraison, semis_tempere,
                        etalement_floraison, grimpantes)
 from .succession import succession_bascule
 from .luxuriance import luxuriance
+from .diversite import diversite_fondatrice
 
 BANCS = {
     "secheresse_sable": secheresse_sable,
@@ -32,6 +33,7 @@ BANCS = {
     "grimpantes": grimpantes,
     "succession_bascule": succession_bascule,
     "luxuriance": luxuriance,
+    "diversite_fondatrice": diversite_fondatrice,
 }
 
 # Semaine de départ par banc (retour F5 Nico 2026-07-04). La plupart démarrent à
@@ -40,4 +42,7 @@ BANCS = {
 # (~5 °C) pendant des semaines : on le décale à MI-PRINTEMPS (T ~6 °C) pour voir la
 # grimpe tout de suite. Lu par `cmd_init` (banc absent → 1 → comportement inchangé,
 # golden NEUTRE : smoke/full ne sont pas des bancs).
-BANC_WEEK_DEPART = {"grimpantes": 9, "luxuriance": 9}
+# `diversite_fondatrice` sème du TOURNESOL (t_germ_opt=20, sol chaud requis) : un
+# départ début printemps fige la levée sous le seuil thermique pendant des semaines.
+# Décalé MI-PRINTEMPS pour voir la désynchronisation des rythmes tout de suite.
+BANC_WEEK_DEPART = {"grimpantes": 9, "luxuriance": 9, "diversite_fondatrice": 9}

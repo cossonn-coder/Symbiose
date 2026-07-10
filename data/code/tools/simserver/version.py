@@ -348,7 +348,17 @@ from __future__ import annotations
 #       moteur neuf, la densité est déjà calculée pour `foliage_density`) → golden
 #       NEUTRE. Un binaire pré-0.5.21 n'émet pas la clé → la vue retombe sur `true`
 #       (défaut = émettrice, aucune plante teintée ; tolérance comme tous les bumps).
-ENGINE_VERSION = "0.5.21"
+# 0.5.22 (diversité fondatrice ③ — banc d'observation au pont) : chaque plante VIVANTE
+#       du snapshot gagne `genes` = dict clé→valeur (arrondi 3 déc.) de son patrimoine
+#       génétique (tiré au founder ①/hérité). Sert le SURVOL GÈNES debug (WorldView.
+#       Genes.cs, touche G) : la vue relit les gènes de rythme (`vigueur`,
+#       `germination_thermique`, `phenologie_florale`) de la plante pointée. PURE
+#       lecture d'un état déjà porté par l'instance (`p.genes`) → golden NEUTRE (le
+#       snapshot n'est pas figé par test_golden). Nouveau banc montable `init
+#       config="diversite_fondatrice"` (64 tournesols à patrimoine propre sur sol
+#       catena) — jamais monté pour smoke/full. Un binaire pré-0.5.22 ignore la clé
+#       `genes` (dict vide → survol muet ; tolérance comme tous les bumps).
+ENGINE_VERSION = "0.5.22"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

@@ -118,6 +118,16 @@ namespace Symbiose
 			_perfLabel.AddThemeConstantOverride("outline_size", 5);
 			hud.AddChild(_perfLabel);
 
+			// Survol gènes (DIVERSITÉ FONDATRICE ③) : sous l'overlay de perfs, caché
+			// par défaut, toggle F7. Instrument d'observation (philo #5 : chiffres
+			// tolérés en HUD debug, hors HUD final). Cf. WorldView.Genes.cs.
+			_genesLabel = new Label { Position = new Vector2(16f, 300f), Visible = false };
+			_genesLabel.AddThemeFontSizeOverride("font_size", 16);
+			_genesLabel.AddThemeColorOverride("font_color", new Color(0.8f, 1f, 0.85f));
+			_genesLabel.AddThemeColorOverride("font_outline_color", Colors.Black);
+			_genesLabel.AddThemeConstantOverride("outline_size", 5);
+			hud.AddChild(_genesLabel);
+
 			// Témoin de build (coin haut-droit) : LA réponse à « est-ce que je
 			// fais tourner la bonne version ? ». Discret mais toujours visible.
 			var build = new Label
@@ -160,7 +170,7 @@ namespace Symbiose
 			legend.Text = "Espace lancer/pause · flèches déplacer"
 				+ " · molette zoom · PageUp/PageDown pivoter\n"
 				+ "F3 étiquettes · F4 perfs · C copier perfs · H maison transparente · F6 heatmap debug (Maj+F6 champ)"
-				+ " · F7 carte T sol · I vie macro · O ombres · M mode simu\n"
+				+ " · F7 carte T sol · G survol gènes · I vie macro · O ombres · M mode simu\n"
 				+ "Tab geste suivant · 1..9 gestes directs · S graine (planter) · B substrat (poser pot/bac) · N nature (pailler) · clic gauche = agir"
 				+ " — geste courant affiché en haut à gauche";
 			hud.AddChild(legend);
