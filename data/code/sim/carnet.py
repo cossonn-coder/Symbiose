@@ -75,6 +75,13 @@ CONCEPT_DE: dict[tuple[str, str | None], str] = {
     # interprétatif au seuil du concept (§6). Câblé ici pour quand le pont journalise
     # une bouture réussie au ledger ; texte via le gabarit générique (gracieux).
     ("bouture", None):               "reproduction",
+    # Greffe PAR LE JOUEUR (sprint PALETTE DE GESTES ③) : soudure aérien/racinaire —
+    # le porte-greffe adopte l'identité aérienne du greffon (D8). Comme la bouture,
+    # c'est une multiplication VÉGÉTATIVE délibérée (pas de graine, pas de brassage)
+    # → même concept « reproduction ». Le carnet bascule en interprétatif au seuil du
+    # concept (§6) ; texte via un gabarit dédié ci-dessous (le découplage aérien/
+    # racinaire mérite sa note distincte du clonage à l'identique de la bouture).
+    ("greffe", None):                "reproduction",
     ("mort", "sénescence"):       "sénescence",
     ("mort", "asphyxie"):         "eau",
     ("mort", "gel"):              "météo",
@@ -153,6 +160,12 @@ GABARIT: dict[tuple[str, str | None, str], str] = {
     ("ramet", "drageon", _I): "{e} drageonne {l} : la souche relance des clones à ses pieds, la touffe s'épaissit.",
     ("ramet", "rhizome", _D): "{e} {l} a ressurgi un peu plus loin, hors de la touffe mère.",
     ("ramet", "rhizome", _I): "{e} court {l} par ses rhizomes — un clone loin de la mère, même à l'ombre : à surveiller, la colonie gagne vite.",
+
+    # Greffe PAR LE JOUEUR (sprint PALETTE DE GESTES ③) : soudure aérien/racinaire.
+    # Descriptif = ce qu'on VOIT (la reprise, philo #5) ; interprétatif = le découplage
+    # compris au seuil du concept reproduction (racines de l'un, couronne de l'autre).
+    ("greffe", None, _D): "La greffe de {e} {l} a pris : le rameau soudé repart.",
+    ("greffe", None, _I): "{e} greffé {l} : les racines de l'hôte portent désormais une autre couronne — j'ai marié deux plantes en une, ce que la graine ne sait pas faire.",
 
     ("mort", "sénescence", _D): "Le vieux pied de {e} {l} s'est éteint.",
     ("mort", "sénescence", _I): "{e} {l} a bouclé son cycle — la sénescence, pas un accident ; sa nécromasse nourrit déjà le sol.",

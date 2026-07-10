@@ -163,6 +163,25 @@ FICHES_TECHNIQUE: dict[str, dict[int, str]] = {
            "sert la constance ; c'est la graine qui sert l'adaptation.",
     },
 
+    "greffe": {
+        1: "Assembler deux plantes en soudant un rameau de l'une — le greffon — sur "
+           "le tronc ou une branche de l'autre. Bien liées, elles cicatrisent "
+           "ensemble et ne forment plus qu'un seul pied.",
+        2: "Greffer, c'est exploiter la capacité des tissus de deux plantes proches à "
+           "se ressouder : cambium contre cambium, la sève passe et la greffe reprend. "
+           "Le porte-greffe fournit le SYSTÈME RACINAIRE et l'ancrage ; le greffon "
+           "fournit la COURONNE — feuilles, fleurs, fruits. La compatibilité tient à "
+           "la parenté botanique : même famille, la soudure prend ; trop éloignées, "
+           "les tissus se rejettent.",
+        3: "La greffe est l'outil du DÉCOUPLAGE : elle sépare le destin des racines de "
+           "celui de la couronne, pour associer les qualités de deux plantes qu'un "
+           "semis mêlerait au hasard — un porte-greffe vigoureux ou sobre en eau sous "
+           "un fruit de choix. Elle offre aussi la précocité : sur un pied déjà "
+           "établi, le greffon fructifie sans attendre. Mais chaque greffe est une "
+           "double plaie à refermer, un geste précis, et la barrière de famille reste "
+           "un mur : on ne greffe que dans une même lignée.",
+    },
+
     "compostage": {
         1: "Rassembler des déchets végétaux en tas ou en bac. Avec le temps, ils "
            "s'affaissent, chauffent, foncent et deviennent une terre sombre et "

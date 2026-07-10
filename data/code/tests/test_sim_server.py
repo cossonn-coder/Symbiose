@@ -90,6 +90,7 @@ from tests.simserver.meteo import test_meteo
 from tests.simserver.conteneurs import test_conteneurs
 from tests.simserver.voix import test_voix
 from tests.simserver.bouture import test_bouture_pont
+from tests.simserver.greffe import test_greffe_pont
 
 
 def main() -> int:
@@ -109,6 +110,7 @@ def main() -> int:
     test_conteneurs()        # section 17 : conteneurs pots/bacs au pont (0.5.7)
     test_voix()              # section 18 : voix narratives au pont (0.5.11)
     test_bouture_pont()      # section 19 : bouturer au pont (0.5.24)
+    test_greffe_pont()       # section 20 : greffer au pont (0.5.25)
 
     # --- bilan ----------------------------------------------------------------
     n_fail = sum(1 for _, ok in harness._results if not ok)

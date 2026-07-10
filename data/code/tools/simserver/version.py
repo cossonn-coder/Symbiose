@@ -387,7 +387,26 @@ from __future__ import annotations
 #       NEUTRE (le smoke n'invoque aucun geste, aucune espèce bouturable n'est semée
 #       par lui). Un binaire pré-0.5.24 répond « verbe inconnu » à `bouturer`
 #       (tolérance comme tous les bumps).
-ENGINE_VERSION = "0.5.24"
+# 0.5.25 (palette de gestes ③ — greffe au pont) : nouveau verbe `greffer` à la
+#       commande `action` — geste à 2 TEMPS côté VUE (mémoire des 2 clics dans Godot,
+#       serveur STATELESS comme `bouturer`). Un seul appel porte le PORTE-GREFFE par
+#       position continue (`target.x_cm`/`y_cm`, cible primaire — il RESTE) ET le
+#       GREFFON par `params.scion_x_cm`/`scion_y_cm` (1er clic, MÊME tuile). La façade
+#       `sim.actions.greffer` fait foi : gate `peut_greffer` (les deux VIVANTS +
+#       `plant_class.greffable` — flag NEUF défaut False, ligneuses fruitières — +
+#       même FAMILLE botanique via `species_compatible`), coût ÉLEVÉ, RECOMPOSITION
+#       aérien/racinaire (D8 : le porte-greffe adopte la `plant_class` du greffon + ses
+#       gènes AÉRIENS, garde ses gènes RACINAIRES + son établissement âge/stade/racines
+#       → précocité), greffon CONSOMMÉ (santé 0 + `morte`). DÉTERMINISTE (philo #3 : la
+#       reprise est ACQUISE si le gate passe, zéro RNG). Nouveau geste `greffer` au
+#       catalogue de coûts (`ELEVE`, objets `greffe`/`greffoir`) + technique `greffe`
+#       (dans TECHNIQUES) + fiches encyclopédie (geste `greffer` + technique `greffe`)
+#       + concept carnet `greffe`→reproduction (gabarit dédié). Câblé à la voie savoir
+#       `("maitrise", "greffe", 1)` de ① (clé posée en ①). PURE extension (geste
+#       event-driven hors tick, flag NEUTRE par défaut) → golden NEUTRE (le smoke
+#       n'invoque aucun geste, aucune espèce greffable n'est greffée par lui). Un binaire
+#       pré-0.5.25 répond « verbe inconnu » à `greffer` (tolérance comme tous les bumps).
+ENGINE_VERSION = "0.5.25"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

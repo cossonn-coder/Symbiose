@@ -135,6 +135,17 @@ class PlantBase(ABC):
     # event-driven au-dessus du tick → défaut neutre ⇒ golden inchangé. Littéral seul,
     # aucun import (règle de couches : `plants` est la couche la plus basse).
     bouturable: bool = False
+    # GREFFE (sprint PALETTE DE GESTES ③) — greffe PAR LE JOUEUR : `greffable=True`
+    # marque les espèces LIGNEUSES FRUITIÈRES sur lesquelles la greffe se pratique
+    # (pommier, cerisier, figuier, framboisier…). Le geste `sim.actions.greffe.greffer`
+    # exige que le greffon ET le porte-greffe soient tous deux greffables (au-delà du
+    # gate de FAMILLE `species_compatible`) → une plante non ligneuse (annuelle,
+    # aromatique herbacée…) refuse EN AMONT sans dépense. DÉFAUT False = NON greffable
+    # (la plupart : annuelles, herbacées) → geste refusé, golden inchangé (aucune
+    # espèce greffable n'est semée par le smoke). Distinct de `bouturable` : la bouture
+    # multiplie un CLONE entier ; la greffe SOUDE l'aérien d'un greffon sur le
+    # racinaire d'un porte-greffe (D8). Littéral seul, aucun import (règle de couches).
+    greffable: bool = False
     # Silhouette de RENDU (sprint LUXURIANCE ③, D65 §2.4 (a)). PUR DESCRIPTEUR data :
     # AUCUN effet moteur ici — le renderer C# le lira au tronçon ⑥ (via le pont) pour
     # dessiner la bonne forme au sol. None ⇒ dérivée de la strate du stade MATURE

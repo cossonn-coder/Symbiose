@@ -209,6 +209,26 @@ FICHES_GESTE: dict[str, dict[int, str]] = {
            "maladie. Le geste sert la fidélité, jamais l'adaptation.",
     },
 
+    "greffer": {
+        1: "Souder un rameau prélevé sur une plante — le greffon — à une autre plante "
+           "déjà en place. Passé la reprise, ce sont les feuilles, les fleurs et les "
+           "fruits du greffon qui poussent, portés par les racines de l'hôte.",
+        2: "Greffer marie deux plantes en une : le porte-greffe garde ses RACINES et "
+           "son établissement — son âge, son ancrage, son système déjà en place — "
+           "tandis que le greffon lui impose son identité AÉRIENNE, sa couronne et ses "
+           "fruits. La soudure ne prend qu'entre plantes assez proches, de la même "
+           "FAMILLE botanique ; hors famille, les tissus ne se reconnaissent pas et "
+           "rien ne se lie.",
+        3: "La greffe fige un aérien choisi sur un pied déjà établi : c'est la "
+           "PRÉCOCITÉ — là où un semis mettrait des années à faire ses racines, le "
+           "greffon fructifie sur un système racinaire adulte dès la reprise. Elle "
+           "sépare ce qui se passe sous terre de ce qui se passe au-dessus : un "
+           "porte-greffe rustique et sobre en eau peut porter une couronne délicate. "
+           "Mais c'est un geste savant et coûteux, une double plaie ; le greffon "
+           "prélevé, lui, est consommé. La barrière de famille est infranchissable — "
+           "elle borne ce qu'on peut oser.",
+    },
+
     "manger": {
         1: "Consommer un organe de plante — feuille, fleur, fruit. Le jardinier "
            "reprend des forces là, sur place.",

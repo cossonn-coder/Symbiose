@@ -197,11 +197,45 @@ en dernier), golden NEUTRE/INTACT partout (référence
     (253/253). test_encyclopedie/deblocage/carnet/maitrise/genetique verts.
   - **F5 Nico** : mémoire des 2 clics côté Godot (serveur stateless) ; palette ④
     câblera l'icône `bouturer` ; calibrage des espèces bouturables.
-- Reste : **③④⑤**.
+- **③ Greffe (moteur + voix) — FAIT (2026-07-11)**. Golden INCHANGÉ
+  (`452b5256de4f6ff23df825b99596efdfde4e6ac87e8035f6b8da809f4dc000b4`). Pont
+  bumpé **0.5.24 → 0.5.25**. Livré :
+  - **Nouveau** `data/code/sim/actions/greffe.py` (35 LDC pur) : partition D8
+    `GENES_AERIENS` (`hauteur`, `phenologie_florale`, `resistance_pathogene`,
+    `rusticite_froid`, `port_trapu`) / `GENES_RACINAIRES` (= reste de `GENE_NAMES`,
+    dérivé — un gène neuf tombe côté racinaire, choix conservateur) ; `peut_greffer`
+    (gate = les deux VIVANTS + `plant_class.greffable` + même FAMILLE via
+    `species_compatible`) ; `greffer` (coût Vigueur ÉLEVÉ binaire tout-ou-rien →
+    recomposition : `plant_class` + gènes aériens du greffon, gènes racinaires +
+    établissement âge/stade/racines du porte-greffe INCHANGÉS → précocité ; greffon
+    CONSOMMÉ `health=0`+`morte`). DÉTERMINISTE, zéro RNG (philo #3).
+  - **Flag `greffable`** (défaut False → golden NEUTRE) sur `PlantBase`, posé True
+    sur 4 ligneuses fruitières : Fig (Moraceae), AppleTree, CherryTree, Raspberry
+    (Rosaceae → paires greffables intra-famille).
+  - **Voix** : `couts.py` (`greffer`=ELEVE, objets `("greffe","greffoir")`),
+    `geste_corpus.py` (fiche geste `greffer` 3 niveaux), `technique_corpus.py` (fiche
+    technique `greffe` 3 niveaux), `outil_corpus.py` (fiche outil `greffoir` 3
+    niveaux — outil NEUF dérivé), `encyclopedie_types.py` (`greffe` ∈ TECHNIQUES,
+    `greffoir` auto-dérivé outil), `carnet.py` (`("greffe", None)` → concept
+    `reproduction` + gabarit dédié descriptif/interprétatif).
+  - `sim/actions/__init__.py` : ré-export de l'API greffe.
+  - **Pont** : `simserver/actions.py` route `greffer` à 2 temps (porte-greffe par
+    `target.x_cm/y_cm` = cible primaire, greffon par `params.scion_x_cm/scion_y_cm`,
+    même tuile, serveur STATELESS) ; version bumpée 0.5.25 + commentaire. Gate lu en
+    amont pour message clair, refus de même-plante.
+  - **Tests** : `tests/test_greffe.py` (31/31 : recomposition aérien/racinaire,
+    établissement conservé, refus familles≠/non-greffable/mort/Vigueur, flag défaut,
+    type_de geste/technique/outil, partition disjointe), `tests/simserver/greffe.py`
+    (routage + refus de désignation sans coût), câblé section 20 dans
+    `test_sim_server.py` (**259/259**). Golden + encyclopedie (68/68) + bouture +
+    deblocage + carnet verts.
+  - **F5 Nico** : mémoire des 2 clics côté Godot (serveur stateless) ; palette ④
+    câblera l'icône `greffer` ; calibrage des espèces greffables + coût ÉLEVÉ.
+- Reste : **④⑤** (vue C#).
 
 ## §REPRISE
-Tronçon ② FAIT (golden intact, pont 0.5.24). Prochaine étape = **③ Greffe** :
-lire `03_greffe.md`. Boucle : lire `0N` → bosser → golden → MAJ ce fichier →
+Tronçon ③ FAIT (golden intact, pont 0.5.25). Prochaine étape = **④ Palette UI (C#)** :
+lire `04_palette_ui.md`. Boucle : lire `0N` → bosser → golden → MAJ ce fichier →
 commit → tronçon suivant. À froid : `CLAUDE.md` + ce fichier + le kickoff `0N`.
 
 ## Coût perf estimé

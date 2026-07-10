@@ -59,6 +59,7 @@ TECHNIQUES: frozenset[str] = frozenset({
     "taille", "compostage", "apiculture", "jardinage_hors_sol",
     "aménagement-habitat", "palissage", "broyage",
     "bouture",   # multiplication végétative (palette de gestes ②)
+    "greffe",    # soudure aérien/racinaire (palette de gestes ③)
 })
 
 # Tous les membres statiques touchés par un geste (union des tuples), puis les

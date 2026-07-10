@@ -58,6 +58,21 @@ FICHES_OUTIL: dict[str, dict[int, str]] = {
            "repose.",
     },
 
+    "greffoir": {
+        1: "Un couteau fin à lame très affûtée, parfois pourvu d'une spatule, pour "
+           "tailler net greffon et porte-greffe et les assembler.",
+        2: "Le greffoir sert la GREFFE : il ouvre une entaille propre dans le "
+           "porte-greffe et biseaute le greffon pour que leurs tissus vivants — les "
+           "cambiums — se touchent et se soudent. Une coupe lisse et juste conditionne "
+           "la reprise : une plaie déchirée cicatrise mal et la greffe échoue.",
+        3: "Le greffoir est l'outil du jardinier savant : il permet d'associer sous une "
+           "seule plante les racines de l'une et la couronne de l'autre, pour la "
+           "précocité ou la rusticité. Mais il n'abolit pas la barrière de famille — "
+           "deux plantes trop éloignées ne se ressoudent jamais, si franche soit la "
+           "coupe. Un outil de patience et de précision, réservé aux ligneuses "
+           "fruitières.",
+    },
+
     "bêche": {
         1: "Une lame plate emmanchée, qu'on enfonce au pied pour trancher et retourner "
            "la terre.",

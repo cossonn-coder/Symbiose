@@ -127,6 +127,7 @@ class Fig(PerennialWoody):
     longevity_years = 80
     maturity_years = 5
     bouturable = True          # ligneux à bouture proverbiale : un rameau piqué reprend (palette ②)
+    greffable = True           # ligneux fruitier : porte-greffe/greffon de greffe (palette ③, D8)
     age_curve = [(0, 30, 20), (5, 200, 150), (10, 400, 250), (20, 500, 300)]
 
 
@@ -140,6 +141,7 @@ class AppleTree(PerennialWoody):
     reproduction_rate = 0.15
     longevity_years = 70
     maturity_years = 5
+    greffable = True           # ligneux fruitier greffé par excellence (palette ③, D8) ; même famille Rosaceae que cerisier/framboisier
     age_curve = [(0, 30, 20), (5, 200, 120), (10, 350, 200),
                  (20, 500, 280), (50, 700, 350)]
     # --- Profil de croissance procédurale (tronçon 3bis) ---
@@ -206,6 +208,7 @@ class CherryTree(PerennialWoody):
     reproduction_rate = 0.15
     longevity_years = 60
     maturity_years = 5
+    greffable = True           # ligneux fruitier greffé (palette ③, D8) ; Rosaceae → compatible pommier/framboisier
     age_curve = [(0, 40, 25), (5, 250, 150), (10, 500, 280),
                  (20, 700, 380), (50, 900, 450), (100, 1000, 500)]
 

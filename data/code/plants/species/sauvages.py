@@ -145,6 +145,7 @@ class Raspberry(PlantBase):
     longevity_years = 10
     reproduction_rate = 0.06       # se ressème peu — il mise sur les drageons
     fruitier = True                # framboises traçables (maturity_years=0 → dès l'année)
+    greffable = True               # ligneux fruitier (cannes) greffable (palette ③, D8) ; Rosaceae → compatible pommier/cerisier
     # Drageon (sprint LUXURIANCE ⑤) : portée TRÈS COURTE (le rejet naît près de la
     # mère → fourré resserré), gate LUMIÈRE au sol (mode héliophile, cf. sim/clonal.py).
     # Cf. table D65 §2.2.

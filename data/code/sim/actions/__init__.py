@@ -74,6 +74,11 @@ from .deblocage import (
 from .bouture import (
     BOUTURE_STRESS_COST, BOUTURE_VIGUEUR_SEUIL, peut_bouturer, bouturer,
 )
+# Greffe (palette de gestes ③) : geste `greffer` — soudure aérien/racinaire (D8),
+# le porte-greffe adopte l'identité aérienne du greffon et garde son établissement.
+from .greffe import (
+    GENES_AERIENS, GENES_RACINAIRES, peut_greffer, greffer,
+)
 
 __all__ = [
     "maturite",
@@ -96,4 +101,5 @@ __all__ = [
     "GESTES_BASE", "GESTE_UNLOCK", "DECLENCHEURS", "init_gestes_debloques", "est_debloque",
     "marquer_action", "marquer_evenement", "evaluer_deblocages", "gestes_debloques",
     "BOUTURE_STRESS_COST", "BOUTURE_VIGUEUR_SEUIL", "peut_bouturer", "bouturer",
+    "GENES_AERIENS", "GENES_RACINAIRES", "peut_greffer", "greffer",
 ]

@@ -239,6 +239,46 @@ class ActionsMixin:
                          else f"rien bouturé ({mother.name} trop jeune/épuisée "
                               "ou Vigueur insuffisante)")
 
+        # Greffer (palette de gestes ③, protocole 0.5.25) — geste à 2 TEMPS côté VUE
+        # (comme `bouturer` : la mémoire des 2 clics vit dans Godot, le serveur reste
+        # STATELESS). Un seul appel porte les DEUX plantes déjà résolues : le
+        # PORTE-GREFFE par position continue (`target.x_cm`/`y_cm`, comme tailler — c'est
+        # lui qui RESTE, cible primaire) et le GREFFON par `params.scion_x_cm`/
+        # `scion_y_cm` (le 1er clic, sur la MÊME tuile). La façade `A.greffer` fait foi
+        # (gate greffable/famille, coût ÉLEVÉ, recomposition aérien/racinaire D8, greffon
+        # consommé). Refus de désignation (plante introuvable) → ne coûte rien.
+        if verb == "greffer":
+            tile, eco = tile_cible()
+            if tile is None:
+                return bilan(False, 0.0, 0.0,
+                             f"tuile introuvable : {target.get('tile')!r}")
+            rootstock = self._plant_at(tile, target.get("x_cm"), target.get("y_cm"))
+            if rootstock is None:
+                return bilan(False, 0.0, 0.0,
+                             "aucun porte-greffe vivant à cette position")
+            scion = self._plant_at(tile, params.get("scion_x_cm"),
+                                   params.get("scion_y_cm"))
+            if scion is None:
+                return bilan(False, 0.0, 0.0,
+                             "aucun greffon vivant à cette position")
+            if scion is rootstock:
+                return bilan(False, 0.0, 0.0,
+                             "greffon et porte-greffe sont la même plante")
+            # Gate lu EN AMONT pour un message clair (distinct de la Vigueur
+            # insuffisante), sans dépense — la façade retesterait de toute façon.
+            if not A.peut_greffer(scion, rootstock):
+                return bilan(False, 0.0, 0.0,
+                             f"greffe impossible : {scion.name} et {rootstock.name} "
+                             "non greffables ou de familles différentes")
+            cost = A.cout_action(gs, player, "greffer",
+                                 A._objets_action("greffer", rootstock))
+            nom_greffon = scion.name           # lu AVANT la greffe (scion consommé après)
+            ok = A.greffer(gs, player, scion, rootstock, eco)
+            return bilan(ok, cost, 0.0,
+                         f"greffe prise : {nom_greffon} soudé sur {rootstock.name} "
+                         "(couronne du greffon, racines du porte-greffe)" if ok
+                         else "Vigueur insuffisante — greffe non faite")
+
         # Gestes sur le MILIEU désignés par POSITION continue (planter·arroser,
         # protocole 0.3.3). La cible est un POINT (x_cm/y_cm) ; on le résout en
         # plot-foyer (`_plot_at`, floor(/PLOT_CM)) car les façades écrivent au
