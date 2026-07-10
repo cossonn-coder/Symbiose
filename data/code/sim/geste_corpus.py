@@ -176,6 +176,20 @@ FICHES_GESTE: dict[str, dict[int, str]] = {
            "forcer.",
     },
 
+    "couper": {
+        1: "Sectionner d'un coup un rameau ou une tige avec un sécateur. La branche "
+           "tombe, la plaie reste nette là où la lame a passé.",
+        2: "Couper est le geste BRUT de la coupe : on retranche une branche sans "
+           "viser un point précis. C'est le premier pas — savoir manier l'outil, "
+           "ouvrir une plaie franche — avant d'apprendre OÙ couper. La plante répond "
+           "en reportant sa poussée sur les rameaux qui restent.",
+        3: "Couper est l'apprentissage rudimentaire d'où naîtra la TAILLE, geste plus "
+           "fin et ciblé. Manier la lame apprend le respect de la plaie : une coupe "
+           "franche cicatrise mieux qu'un arrachage. Mais couper sans discernement "
+           "épuise ou déséquilibre la plante — c'est en observant sa réponse qu'on "
+           "passe du geste brut au geste juste.",
+    },
+
     "manger": {
         1: "Consommer un organe de plante — feuille, fleur, fruit. Le jardinier "
            "reprend des forces là, sur place.",

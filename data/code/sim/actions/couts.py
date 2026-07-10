@@ -48,6 +48,7 @@ COUTS = {
     "pailler":              MODERE,            # dépose du mulch au sol (phase planification, équilibre invasion ③ §2)
     "broyer":               MODERE,            # broie du bois → BRF (phase planification, équilibre invasion ④ §3.1)
     "tailler":              MODERE,            # geste direct sur le vivant (philo #1) — coût modéré
+    "couper":               MODERE,            # geste BRUT ancêtre de tailler (palette D12) — même coût, sans choix de segment
     "manger":               NUL,               # coût NUL → cout_action renvoie 0 sans rien lire (§10.5)
     "poser_bac":            MODERE,            # pose une structure (phase planification, ⑤ §5.1)
     "poser_pile":           MODERE,
@@ -86,6 +87,7 @@ OBJETS_TOUCHES = {
     "broyer":               ("broyage", "broyeur"),   # technique + outil (BRF, équilibre invasion ④) — sans état moteur → atténuation neutre 1.0
 
     "tailler":              ("taille", "sécateur"),
+    "couper":               ("taille", "sécateur"),   # geste brut D12 : même technique/outil que tailler
     "manger":               (),                          # coût NUL → terme 2 vide (§10.5)
     "poser_bac":            ("compostage", "bac-à-compost"),
     "poser_pile":           ("compostage", "pile-à-bois"),

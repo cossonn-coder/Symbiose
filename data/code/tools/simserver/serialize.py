@@ -32,6 +32,9 @@ from fields.ecofields.constants import SEUIL_FLAQUE, COUVERTURE_RENDU_SEUIL
 # par la liste `leaf_symptoms`. Recalcul pur côté serveur (moteur = source de
 # vérité, zéro recalcul C#) → golden NEUTRE.
 from sim import semiologie
+# Déblocage des gestes (palette de gestes ①) : expo au snapshot des gestes ouverts
+# pour l'avatar courant. Lecture pure d'un état joueur (opt-in) → golden NEUTRE.
+from sim.actions import deblocage as DEBL
 # Table « stade reproducteur visible par saison » du prototype SVG (tranche 6,
 # volet A) : import OUTIL → OUTIL (render_structure est un outil, pas le
 # moteur), zéro duplication — la table validée visuellement au sprint
@@ -477,6 +480,14 @@ class SerializeMixin:
         bank = gs.get("player_seed_bank")
         seeds = {sp: len(lot) for sp, lot in bank.lots.items()
                  if lot} if bank is not None else {}
+        # Palette de gestes ① (0.5.23) : la liste TRIÉE des gestes OUVERTS pour
+        # l'avatar courant (BASE ∪ débloqués) — la palette Godot n'affiche QUE
+        # l'ouvert (colonne gauche, D11). `debloques_recents` = verbes ouverts au
+        # DERNIER tick (voie savoir), pour la notification diégétique ; consommé à
+        # la lecture (on le vide pour ne le signaler qu'une fois). Lecture d'un
+        # état joueur (opt-in) → golden NEUTRE (le golden tourne hors serveur).
+        gestes_ouverts = DEBL.gestes_debloques(gs, player)
+        recents = gs.get("gestes_debloques_recents", {}).pop(player, [])
         # Banc d'observation perf (sprint « run éternel » ④) : bloc LECTURE SEULE
         # pour l'overlay debug F4 côté Godot — `ms_tick` (durée du dernier tick,
         # mesurée AUTOUR de tick_semaine() dans commands.py, None si rien encore
@@ -490,7 +501,9 @@ class SerializeMixin:
                 "year": (week - 1) // 52 + 1, "season": saison,
                 "player": {"vigueur": st["courante"],
                            "vigueur_max": V.vigueur_max(gs, player),
-                           "seeds": seeds},
+                           "seeds": seeds,
+                           "gestes_debloques": gestes_ouverts,
+                           "debloques_recents": recents},
                 "perf": perf,
                 "plants": plants, "sprites": sprites, "foragers": foragers,
                 "carpophores": carpophores,

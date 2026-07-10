@@ -25,6 +25,9 @@ from .maitrise_pont import (
     decouvrir_a_usage,         # D60 ③ : découverte du geste à la 1ʳᵉ utilisation réussie
     crediter_usage,            # D60 ③ : preuve légère d'usage réussi
 )
+from sim.actions.deblocage import (   # palette de gestes ① : déblocage event-driven
+    DECLENCHEURS, marquer_action, evaluer_deblocages,
+)
 
 
 class ActionsMixin:
@@ -67,6 +70,17 @@ class ActionsMixin:
             # une source SÉPARÉE, pas un revenu du geste).
             result["vigueur"] = V.ensure_player(gs, player)["courante"]
             result["vigueur_max"] = V.vigueur_max(gs, player)
+            # Déblocage des gestes (palette ①, D12 voie action §3.2·b) : un geste
+            # DÉCLENCHEUR réussi (poser_bac/poser_pile/poser_pot/poser_tuteur/
+            # poser_ruche/couper) ouvre son/ses successeur(s). On MARQUE l'action
+            # PUIS on réévalue les déblocages (event-driven, hors tick). Les verbes
+            # NOUVELLEMENT ouverts partent au result → notification diégétique côté
+            # vue. Opt-in joueur → golden intact (cmd_action jamais appelé au golden).
+            if verb in DECLENCHEURS:
+                marquer_action(gs, player, verb)
+            nouveaux = evaluer_deblocages(gs, player)
+            if nouveaux:
+                result["debloques"] = nouveaux
         # Snapshot frais TOUJOURS joint : l'effet (plante disparue, etc.) est
         # visible en un seul aller-retour — pas de 2e requête à inventer.
         return {"ok": True, "result": result, "snapshot": self._snapshot()}
@@ -108,7 +122,7 @@ class ActionsMixin:
             tile = tiles.get(target.get("tile"))
             return tile, (None if tile is None else gs["eco"][tile.tile_id])
 
-        if verb in ("manger", "recolter", "deraciner", "tailler"):
+        if verb in ("manger", "recolter", "deraciner", "tailler", "couper"):
             tile, eco = tile_cible()
             if tile is None:
                 return bilan(False, 0.0, 0.0,
@@ -150,6 +164,19 @@ class ActionsMixin:
                 return bilan(ok, cost, 0.0,
                              "déraciné : " + plant.name if ok
                              else "Vigueur insuffisante — rien déraciné")
+            # couper (geste BRUT, D12 — ancêtre de tailler) : coupe SANS choisir le
+            # segment (pas de `target.segment`). Réutilise le seam `tailler` avec la
+            # cible par défaut (apex) → façade fait foi (validité/coût/effet). Coût
+            # propre `couper` (= tailler). Marque l'action (ouvre `tailler` par la
+            # chaîne sécateur→couper→tailler) + réévalue les déblocages.
+            if verb == "couper":
+                cost = A.cout_action(gs, player, "couper",
+                                     A._objets_action("couper", plant))
+                ok = A.tailler(gs, player, plant, eco, cible="apex", segment_id=None)
+                return bilan(ok, cost, 0.0,
+                             f"branche coupée : {plant.name}" if ok
+                             else "Vigueur insuffisante — rien coupé")
+
             # tailler
             cible = params.get("cible", "apex")
             if cible not in ("apex", "branche"):

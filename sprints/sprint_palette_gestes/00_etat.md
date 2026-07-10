@@ -146,10 +146,38 @@ en dernier), golden NEUTRE/INTACT partout (référence
   (chaque sous-geste paie sa Vigueur, D5), layout persisté `palette[player]`
   (D10), banc d'observation. Pont → 0.5.26. Golden intact.
 
+## Avancement
+- **① Déblocage Python — FAIT (2026-07-10)**. Golden INCHANGÉ
+  (`452b5256de4f6ff23df825b99596efdfde4e6ac87e8035f6b8da809f4dc000b4`). Pont
+  bumpé **0.5.22 → 0.5.23**. Livré :
+  - **Nouveau** `data/code/sim/actions/deblocage.py` (94 LDC pur) : `GESTES_BASE`
+    (frozenset), table data-driven `GESTE_UNLOCK` (grammaire D12 : `maitrise`/
+    `action`/`et`/`evenement`, liste = OU), `DECLENCHEURS` (dérivé), état par avatar
+    `init_gestes_debloques`/`est_debloque`/`marquer_action`/`marquer_evenement`,
+    évaluateur récursif `_cond_remplie`, hook `evaluer_deblocages` (renvoie les
+    verbes nouvellement ouverts, triés), expo `gestes_debloques`.
+  - `couts.py` + `geste_corpus.py` : geste BRUT NEUF **`couper`** (ancêtre de
+    `tailler`, D12) — coût MODERE, objets `("taille","sécateur")`, fiche 3 niveaux.
+    `tailler` reste GATED (chaîne sécateur→couper→tailler). `type_de("couper")=geste`
+    (dérivé de COUTS) → test_encyclopedie 68/68.
+  - `sim/actions/__init__.py` : ré-export de l'API déblocage.
+  - **Pont** : `actions.py` route `couper` (alias brut de `tailler`, segment_id=None)
+    + après tout geste appliqué, marque le déclencheur + `evaluer_deblocages`
+    (`result["debloques"]`). `maitrise_pont.observer_apres_tick` : voie savoir après
+    les crédits de palier (`gestes_debloques_recents`). `serialize.py` : bloc
+    `player` gagne `gestes_debloques` (liste triée) + `debloques_recents`.
+  - **Test** `tests/test_deblocage.py` (24/24) : BASE, voie savoir/action/événement,
+    chaîne D12, condition composée, idempotence, no-op golden.
+  - **Save JSON** : pas de couche save (de)sérialisation à ce jour (game_state en
+    mémoire) → rien à câbler ; l'état est déjà JSON-sérialisable (sets → futur write).
+  - **F5 Nico** : câbler la palette ④ ; calibrage des conditions/BASE ; `posseder_secateur`
+    reste un marqueur d'outil à poser par le futur flux d'acquisition d'outils.
+- Reste : **②③④⑤**.
+
 ## §REPRISE
-Conception FIGÉE. Prochaine étape = exécution : `/sprint-auto sprint_palette_gestes`.
-Boucle : lire `0N` → bosser → golden → MAJ ce fichier → commit → tronçon suivant.
-À froid : `CLAUDE.md` + ce fichier + le kickoff `0N` du tronçon courant suffisent.
+Tronçon ① FAIT (golden intact, pont 0.5.23). Prochaine étape = **② Bouture** :
+lire `02_bouture.md`. Boucle : lire `0N` → bosser → golden → MAJ ce fichier →
+commit → tronçon suivant. À froid : `CLAUDE.md` + ce fichier + le kickoff `0N`.
 
 ## Coût perf estimé
 Négligeable (couche vue/UX + état persisté). Hook déblocage event-driven (hors

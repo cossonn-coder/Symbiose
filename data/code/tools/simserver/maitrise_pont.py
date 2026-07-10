@@ -31,6 +31,7 @@ from sim import maitrise as M
 from sim import maitrise_detection as MD
 from sim import pages
 from sim.evenements import evenements
+from sim.actions.deblocage import evaluer_deblocages   # palette ① : voie savoir
 
 # Reverse mapping classe → clé de catalogue (objet → clé), DÉRIVÉ des catalogues
 # moteur (jamais dupliqué) : sert à retrouver la clé d'espèce d'une plante du monde
@@ -84,6 +85,14 @@ def observer_apres_tick(game_state: dict, player: str, log: list[str]) -> None:
             pages.reveler_page(game_state, player, robinet="récompense",
                                contexte={"concept": objet})
     _crediter_succes_gestes(game_state, player, semaine, zones_creditees)  # ③ volet 2
+    # Déblocage des gestes (palette ①, D12 voie savoir §3.2·a) : les crédits de
+    # palier ci-dessus peuvent avoir franchi le seuil d'un geste GATED (ex.
+    # `bouturer` = taille niv.2 ET semis niv.2). On réévalue APRÈS coup ; les
+    # verbes nouvellement ouverts sont stockés sur le game_state pour la
+    # notification diégétique au prochain snapshot (opt-in joueur → golden intact).
+    nouveaux = evaluer_deblocages(game_state, player)
+    if nouveaux:
+        game_state.setdefault("gestes_debloques_recents", {})[player] = nouveaux
 
 
 def _objets_du_geste(verb: str) -> list[str]:

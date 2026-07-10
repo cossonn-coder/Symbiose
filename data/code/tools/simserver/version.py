@@ -358,7 +358,20 @@ from __future__ import annotations
 #       config="diversite_fondatrice"` (64 tournesols à patrimoine propre sur sol
 #       catena) — jamais monté pour smoke/full. Un binaire pré-0.5.22 ignore la clé
 #       `genes` (dict vide → survol muet ; tolérance comme tous les bumps).
-ENGINE_VERSION = "0.5.22"
+# 0.5.23 (palette de gestes ① — déblocage au pont) : le bloc `player` du snapshot
+#       gagne DEUX clés. `gestes_debloques` = liste TRIÉE des verbes OUVERTS pour
+#       l'avatar (set de BASE ∪ ce que la maîtrise/les actions ont débloqué, table
+#       `sim/actions/deblocage.GESTE_UNLOCK`) → la palette Godot (tronçon ④, colonne
+#       gauche D11) n'affiche QUE l'ouvert. `debloques_recents` = verbes ouverts au
+#       DERNIER tick par la voie savoir (franchissement de palier), consommé à la
+#       lecture → notification diégétique unique. La commande `action` gagne un champ
+#       `debloques` (verbes ouverts par un geste DÉCLENCHEUR réussi : poser_bac ouvre
+#       composter…). Nouveau geste BRUT `couper` (ancêtre de `tailler`, D12) au
+#       catalogue de coûts + sa fiche encyclopédie. PURE lecture/écriture d'un état
+#       JOUEUR opt-in (hors tick) → golden NEUTRE (le golden tourne sans serveur, ces
+#       clés ne naissent jamais). Un binaire pré-0.5.23 n'émet pas ces clés → la vue
+#       retombe sur « tout dispo » (tronçon ④, tolérance comme tous les bumps).
+ENGINE_VERSION = "0.5.23"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

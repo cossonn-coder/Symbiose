@@ -63,6 +63,12 @@ from .conteneurs import (
 from .supports import (
     poser_tuteur, poser_treillis, poser_pergola, palisser,
 )
+# Déblocage des gestes (palette de gestes ①) : ÉTAT/DONNÉES par avatar (BASE +
+# table `GESTE_UNLOCK` + hook `evaluer_deblocages`) — aucune logique de sim.
+from .deblocage import (
+    GESTES_BASE, GESTE_UNLOCK, DECLENCHEURS, init_gestes_debloques, est_debloque,
+    marquer_action, marquer_evenement, evaluer_deblocages, gestes_debloques,
+)
 
 __all__ = [
     "maturite",
@@ -82,4 +88,6 @@ __all__ = [
     "poser_ruche", "equipe", "recolter_miel",
     "poser_pot", "poser_bac_culture", "deplacer_pot",
     "poser_tuteur", "poser_treillis", "poser_pergola", "palisser",
+    "GESTES_BASE", "GESTE_UNLOCK", "DECLENCHEURS", "init_gestes_debloques", "est_debloque",
+    "marquer_action", "marquer_evenement", "evaluer_deblocages", "gestes_debloques",
 ]
