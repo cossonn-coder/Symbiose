@@ -8,8 +8,8 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 
-from fields.noise import _hash_noise, hash_gauss
-from plants.genetics import clamp_gene
+from fields.noise import _hash_noise, hash_gauss, stable_str_hash
+from plants.genetics import clamp_gene, GENE_NAMES, GENE_INIT_SIGMA
 
 # ---------------------------------------------------------------------------
 # CONSTANTES — archétypes & pool génétique
@@ -55,6 +55,41 @@ SEED_OM_COMPETITOR_MIN = 0.20  # om_index minimal pour amorcer competitor (le pl
 # Pool génétique par espèce (D22) — couche posée PAR-DESSUS les archétypes.
 SPECIES_SEED_VIABILITY_LOSS = 0.997   # vieillissement (densité) du pool génétique
 SPECIES_POOL_MIN_DENSITY    = 0.005   # en-deçà : pool négligeable → gènes neutres
+
+# Densité d'ensemencement du pool FONDATEUR (sprint DIVERSITÉ FONDATRICE ①). Posée
+# à l'init des tuiles-monde (`seed_founder_pool`) pour chaque espèce d'adventice ×
+# plot : un peu AU-DESSUS de SPECIES_POOL_MIN_DENSITY → `sample_genes` mord dès le
+# départ (une vraie banque de graines du sol n'est jamais génétiquement uniforme,
+# philo #4). La `var` posée (= GENE_INIT_SIGMA²) donne à la sélection darwinienne
+# (germ. thermique, désynchro florale) de quoi dériver sans attendre N générations.
+FOUNDER_POOL_DENSITY = 0.02
+
+
+def founder_genes(plant_class: type, seed: int, week: int,
+                  r: int, c: int, x_cm: float, y_cm: float) -> dict:
+    """
+    Vecteur de gènes FONDATEUR d'une plante née SANS lignée (semis direct de démo,
+    graine `planter` sans hérédité, germination férale sur pool vide) — sprint
+    DIVERSITÉ FONDATRICE ①. Active enfin `GENE_INIT_SIGMA` (défini mais jamais
+    utilisé) : chaque gène est tiré ~ N(1.0, GENE_INIT_SIGMA²) de façon DÉTERMINISTE
+    (philo #3, zéro RNG), de sorte que deux plantes fondatrices ne soient plus des
+    CLONES neutres. La mutation par génération (`sim.reproduction.child_genes`)
+    prend ensuite le relais — on ne touche pas à celle-ci.
+
+    Canal de hash DÉCORRÉLÉ par (espèce, gène, POSITION CONTINUE, semaine) : le nom
+    de classe (`stable_str_hash`) sépare deux espèces au même plot ; `x_cm/y_cm`
+    séparent deux individus de MÊME espèce partageant un plot (compétition
+    intra-plot, positions continues — correctif B) ; l'index de gène et `week`
+    décorrèlent gènes et cohortes. Vit en couche `fields` (accès `hash_gauss`), pas
+    en `genetics.py` (fondation pure, sans accès au bruit).
+    """
+    base = stable_str_hash(plant_class.__name__)
+    genes = {}
+    for i, g in enumerate(GENE_NAMES):
+        z = hash_gauss(seed, week * 31 + i, r, c,
+                       k=base + i * 7 + int(x_cm) + int(y_cm) * 13)
+        genes[g] = clamp_gene(1.0 + z * GENE_INIT_SIGMA)
+    return genes
 
 
 @dataclass
@@ -270,6 +305,31 @@ class SeedBank:
                     stat = GeneStat()
                     rec["expression"][g] = stat
                 stat.add(value, density)
+
+    def seed_founder_pool(self, r: int, c: int, plant_class: type,
+                          sigma: float, density: float) -> None:
+        """
+        ENSEMENCE la banque-sol fondatrice (sprint DIVERSITÉ FONDATRICE ①, option A)
+        d'une espèce sur un plot : pose directement, pour CHAQUE gène de GENE_NAMES,
+        un `GeneStat(mean=1.0, var=sigma², weight=density)`. Aucune moyenne à faire
+        (banque vierge) → on écrit la distribution voulue en une passe.
+
+        Effet : dès le tick 0, `sample_genes` tire avec une VARIANCE immédiate
+        (`density > SPECIES_POOL_MIN_DENSITY`) — la germination férale n'est plus
+        clonale, et la sélection darwinienne (`_germ_gene_mean`) a de quoi mordre
+        sans attendre N générations. `mean=1.0` : le pool part CENTRÉ (pas de biais),
+        seule la variance est fondatrice. Idempotent au sens où deux appels
+        cumuleraient la densité (on n'appelle qu'une fois, à l'init).
+        """
+        cell = self.species[r][c]
+        rec = cell.get(plant_class)
+        if rec is None:
+            rec = {"density": 0.0, "genes": {}, "expression": {}}
+            cell[plant_class] = rec
+        rec["density"] += density
+        var = sigma * sigma
+        for g in GENE_NAMES:
+            rec["genes"][g] = GeneStat(mean=1.0, var=var, weight=density)
 
     def species_density(self, r: int, c: int, plant_class: type) -> float:
         rec = self.species[r][c].get(plant_class)

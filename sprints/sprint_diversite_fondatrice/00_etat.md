@@ -145,11 +145,36 @@ Le moteur génétique est déjà à ~90 % en place :
   heatmaps catena `FieldOverlay` (F6) + survol gènes debug + re-passage
   `diag_population` (garde-fou). **Golden INTACT.** Dernier tronçon = clôture sprint.
 
+## Avancement
+- **① Génétique fondatrice — CLOSE (2026-07-10).** Implémenté :
+  - `fields/seedbank.py` : `founder_genes(cls, seed, week, r, c, x_cm, y_cm)`
+    (tirage N(1.0, GENE_INIT_SIGMA²), canal décorrélé espèce+gène+position
+    continue+semaine, déterministe) + `SeedBank.seed_founder_pool(r,c,cls,sigma,
+    density)` (ensemence GeneStat mean=1.0/var=σ²/weight) + const
+    `FOUNDER_POOL_DENSITY=0.02`. Exportés dans `fields/__init__.py`.
+  - `fields/ecofields/container.py` : `init_eco(..., heterogene=False)` ; sous flag,
+    ensemence le pool fondateur par plot × WEED_CATALOGUE (import local, couche).
+  - `sim/succession.py` : féral → fallback `founder_genes` si `sample_genes` vide ;
+    levée grain `planter` → `founder_genes` si `grain.genes` vide.
+  - `sim/seeds.py` : `Seed.genes` défaut passé de `neutral_genes()` à `{}` (une
+    graine SANS lignée route vers founder ; récoltée = gènes hérités présents) +
+    helper `semer_fondateur(tile, cls, r, c, seed, week=0)`.
+  - Sites monde-réel `heterogene=True` + semis fondateurs : `tests/test_golden.py`,
+    `main.py` (build_tile/plant_garden/build_world_full + bande sud), `bancs/base.py`.
+    Le pont (`sim_server`) réutilise `build_world`/`build_world_full` → couvert.
+  - **Golden RE-FIGÉ LARGE (GENES)** — déterministe (vérifié 2×). Nouveau hash :
+    `a63e388c0311b5580d7fccf32adb13f5e0fd67dbcb19dd762c2881d23d0a5cd0`
+    (ancien : `24ec11e7…`). Variance saine ∈ [0.73,1.33], pas d'explosion.
+  - Tests ciblés (défaut heterogene=False) INTACTS (genetique/planter/competition/
+    plasticite/substrat/eau/mycelium/lessivage/stress_chronique/lifecycle/ruche…).
+  - **RESTE ① :** test neuf `tests/test_diversite_fondatrice.py` (déterminisme +
+    diversité inter-position + pool ensemencé non vide) — cf. §REPRISE.
+
 ## §REPRISE
-Conception FIGÉE le 2026-07-10 (phase B). Livrables écrits :
-`docs/conception/CONCEPTION_DIVERSITE_FONDATRICE.md` + `01/02/03_*.md`. Reste
-(phase C, en cours) : màj DETTE.md/BACKLOG.md/journal.md + commit. **Ne RIEN
-implémenter dans `data/code/`** (métier de /sprint-auto). Exécution à froid :
-lire `CLAUDE.md` + ce fichier + le kickoff `0N` du tronçon, dans l'ordre ①→②→③,
-`/clear` entre chaque. Message à Nico après commit : `/sprint-auto
-sprint_diversite_fondatrice`.
+**① CLOSE** (moteur + re-figeage golden). PROCHAIN = **② `02_champs_catena.md`**
+(hétérogénéité fondatrice des champs de sol, réutilise le flag `heterogene` déjà
+introduit ici). Exécution à froid : lire `CLAUDE.md` + ce fichier + `02_*.md`,
+`/clear` entre tronçons. Ordre restant : ②→③.
+NB : le test neuf `tests/test_diversite_fondatrice.py` prévu au ① n'a pas encore
+été écrit (à créer en tête du ② ou en complément) — le comportement est couvert
+par le golden re-figé + les vérifications manuelles consignées ci-dessus.

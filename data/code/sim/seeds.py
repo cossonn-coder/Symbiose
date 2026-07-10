@@ -19,19 +19,25 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass, field
 
-from plants import neutral_genes, PLANT_CATALOGUE
+from plants import PLANT_CATALOGUE
 
 
 @dataclass
 class Seed:
-    """Une graine récoltée : espèce (clé catalogue) + vecteur de gènes hérité +
-    état d'EXPRESSION primé hérité de la mère (plasticité ④, priming transgéné-
-    rationnel). `expression` = `child_expression(mère)` filtré aux entrées
-    non-neutres ; vide ⇒ graine neutre. Voyage AVEC la graine par tous les canaux
-    (récolte → banque-joueur → `planter` → germination), au même titre que les
-    gènes : toute graine = un descendant qui naît pré-armé si la mère l'était."""
+    """Une graine : espèce (clé catalogue) + vecteur de gènes hérité + état
+    d'EXPRESSION primé hérité de la mère (plasticité ④, priming transgénérationnel).
+    `expression` = `child_expression(mère)` filtré aux entrées non-neutres ; vide ⇒
+    graine neutre. Voyage AVEC la graine par tous les canaux (récolte →
+    banque-joueur → `planter` → germination), au même titre que les gènes : toute
+    graine = un descendant qui naît pré-armé si la mère l'était.
+
+    `genes` VIDE par défaut (sprint DIVERSITÉ FONDATRICE ①) : une graine SANS lignée
+    — sachet magazine, graine de démo — ne porte AUCUN gène ⇒ la levée lui tire un
+    patrimoine FONDATEUR propre (`founder_genes`, plus un clone neutre). Une graine
+    RÉCOLTÉE reçoit explicitement `dict(plant.genes)` (hérédité réelle) → non vide →
+    conservée telle quelle."""
     species: str                       # clé PLANT_CATALOGUE, ex: "tomate"
-    genes: dict = field(default_factory=neutral_genes)
+    genes: dict = field(default_factory=dict)
     expression: dict = field(default_factory=dict)
 
     @property
@@ -99,3 +105,19 @@ class PlayerSeedBank:
     def __repr__(self) -> str:
         parts = " ".join(f"{sp}×{len(lot)}" for sp, lot in self.lots.items() if lot)
         return f"PlayerSeedBank[{parts or 'vide'}]"
+
+
+def semer_fondateur(tile, plant_class: type, r: int, c: int,
+                    seed: int, week: int = 0):
+    """Semis DIRECT naturalisé (sprint DIVERSITÉ FONDATRICE ①) : plante l'espèce
+    (`tile.add_plant`) PUIS lui pose un patrimoine génétique FONDATEUR propre
+    (`founder_genes`, tiré sur la position continue de l'instance) au lieu du vecteur
+    neutre. Remplace les `add_plant` bruts des BANCS D'ESSAI monde-réel (golden,
+    main.py) → les 8 cultivées de démo ne sont plus des clones parfaits, comme la
+    germination férale. `seed` = seed global du terrain (déterminisme, philo #3).
+    Renvoie l'instance créée (ou None si le plot est invalide, comme `add_plant`)."""
+    from fields import founder_genes            # couche : sim ← fields
+    p = tile.add_plant(plant_class, r, c)
+    if p is not None:
+        p.genes = founder_genes(plant_class, seed, week, r, c, p.x_cm, p.y_cm)
+    return p

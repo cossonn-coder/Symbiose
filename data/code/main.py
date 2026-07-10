@@ -36,7 +36,11 @@ from fields import init_eco
 from fields.ecofields.constants import PAILLAGE_DOSE   # dose du mulch de la démo paillée sud (⑧)
 from sim.engine import Engine
 from sim import actions as ACT, vigueur as VIG
-from sim.seeds import PlayerSeedBank, Seed
+from sim.seeds import PlayerSeedBank, Seed, semer_fondateur
+
+# Seed global du terrain (déterminisme, philo #3) — celui que l'Engine prend par
+# défaut. Partagé par les semis directs FONDATEURS (sprint DIVERSITÉ FONDATRICE ①).
+SEED = 42
 
 # Layout 3×3 : (nom, soil, rows, cols, origin_x_cm, origin_y_cm, attire_aux).
 # rows = hauteur en plots (y), cols = largeur en plots (x). Le centre (600,600,
@@ -57,27 +61,28 @@ def build_tile(name, soil, rows, cols, ox, oy):
                 origin_x_cm=float(ox), origin_y_cm=float(oy))
     if soil == "sable":
         eco = init_eco(name, rows, cols, humidite=1.0, fertilite=0.6, microbiome=0.2,
-                       soil_type=soil)
+                       soil_type=soil, heterogene=True)
     elif soil == "argile":
         eco = init_eco(name, rows, cols, humidite=2.0, fertilite=1.2, microbiome=0.3,
-                       soil_type=soil)
+                       soil_type=soil, heterogene=True)
     else:
         eco = init_eco(name, rows, cols, humidite=1.5, fertilite=1.0, microbiome=0.3,
-                       soil_type=soil)
+                       soil_type=soil, heterogene=True)
     return tile, eco
 
 
 def plant_garden(tile, with_auxiliaries: bool):
-    """Jardin diversifié de base (positions valides dans 11×11) ; +attire-aux."""
-    tile.add_plant(Tomato,    2, 2)
-    tile.add_plant(Basil,     2, 4)
-    tile.add_plant(Bean,      4, 2)
-    tile.add_plant(Sunflower, 0, 1)
-    tile.add_plant(Pepper,    4, 6)
+    """Jardin diversifié de base (positions valides dans 11×11) ; +attire-aux.
+    Semis FONDATEURS (variance génétique propre, sprint DIVERSITÉ FONDATRICE ①)."""
+    semer_fondateur(tile, Tomato,    2, 2, SEED)
+    semer_fondateur(tile, Basil,     2, 4, SEED)
+    semer_fondateur(tile, Bean,      4, 2, SEED)
+    semer_fondateur(tile, Sunflower, 0, 1, SEED)
+    semer_fondateur(tile, Pepper,    4, 6, SEED)
     if with_auxiliaries:
-        tile.add_plant(Yarrow,   3, 5)   # achillée (vivace attire-auxiliaires)
-        tile.add_plant(Phacelia, 1, 6)   # phacélie (annuelle attire-auxiliaires)
-        tile.add_plant(Clover,   5, 4)
+        semer_fondateur(tile, Yarrow,   3, 5, SEED)   # achillée (vivace attire-auxiliaires)
+        semer_fondateur(tile, Phacelia, 1, 6, SEED)   # phacélie (annuelle attire-auxiliaires)
+        semer_fondateur(tile, Clover,   5, 4, SEED)
 
 
 def build_world_full():
@@ -96,7 +101,7 @@ def build_world_full():
     # Pommier sur la tuile S (plein soleil — futur verger), en coin. Observer la
     # sénescence (~70 ans) demande « python3 main.py 100 » (cf. tests/test_senescence).
     tiles_by_id = {t.tile_id: t for t in tiles}
-    tiles_by_id["S"].add_plant(AppleTree, 0, 7)
+    semer_fondateur(tiles_by_id["S"], AppleTree, 0, 7, SEED)
 
     # Démo « planche paillée plein sud » (sprint équilibre invasion ⑧, D7/D69) :
     # démonstrateur VIVANT du levier paillage au F5. La tuile "S" (terre, plein sud)
@@ -111,7 +116,7 @@ def build_world_full():
     for i, crop in enumerate(POTAGER_CROPS):
         col = 9 + i                          # bande 9,10,11,12 (tuile 11×16)
         for r in range(2, 9):                # 7 plots par culture, lignes 2..8
-            s_tile.add_plant(PLANT_CATALOGUE[crop], r, col)
+            semer_fondateur(s_tile, PLANT_CATALOGUE[crop], r, col, SEED)
             s_eco.poser_mulch(r, col, "paille", PAILLAGE_DOSE)
 
     house = House()   # défauts : centrée (1000,1000), 8×8×6 m, calcaire 0.35

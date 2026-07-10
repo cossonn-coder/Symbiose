@@ -28,7 +28,8 @@ from dataclasses import dataclass, field
 from fields.grids import GridField, DisturbanceField
 from fields.noise import _hash_noise, stable_str_hash
 from fields.light import LightField
-from fields.seedbank import SeedBank
+from fields.seedbank import SeedBank, FOUNDER_POOL_DENSITY
+from plants.genetics import GENE_INIT_SIGMA
 from fields.population import (PopulationField, build_population_specs,
                                build_pollinator_specs, build_lifecycle_bridges)
 from fields.lifecycle import larval_field_names
@@ -470,7 +471,8 @@ class EcoFields(MatiereOrganiqueMixin, HydrologieMixin, RuissellementMixin,
 
 def init_eco(tile_id: str, rows: int, cols: int,
              humidite: float = 0.0, fertilite: float = None,
-             microbiome: float = 0.0, soil_type: str = "terre") -> EcoFields:
+             microbiome: float = 0.0, soil_type: str = "terre",
+             heterogene: bool = False) -> EcoFields:
     """`fertilite` est un PARAM DE COMPAT (③ : le champ unique a disparu). Si fourni,
     il initialise les trois nutriments à la MÊME valeur uniforme (n=p=k=fertilite) ;
     si None (défaut), n/p/k gardent leur héritage `soil_type` (NUTRIENT_INIT_PAR_SOL).
@@ -486,7 +488,14 @@ def init_eco(tile_id: str, rows: int, cols: int,
     Les champs explicitement fournis (humidité/microbiome/NPK) restent UNIFORMES à la
     valeur demandée — l'hétérogénéité passe par le SEUL `om_stable`, ce qui garde le
     contrôle du re-figeage (kickoff §Modèle) et n'invalide aucun test unitaire qui
-    contrôle un champ forcé plot à plot (test_eau/lessivage/substrat/mycelium)."""
+    contrôle un champ forcé plot à plot (test_eau/lessivage/substrat/mycelium).
+
+    `heterogene` (sprint DIVERSITÉ FONDATRICE ①, défaut False) : quand True, ENSEMENCE
+    en plus la banque-sol génétique FONDATRICE (`seed_founder_pool` par plot × espèce
+    d'adventice) → la germination férale part avec une variance immédiate (fin des
+    clones neutres). Posé True par les seuls sites monde-réel (golden, main, pont,
+    bancs) ; les tests unitaires ciblés gardent le défaut False → INTACTS. Le flag
+    portera AUSSI l'hétérogénéité des champs de sol au tronçon ②."""
     eco = EcoFields(tile_id=tile_id, rows=rows, cols=cols, soil_type=soil_type)
     eco._init_heterogene(eco.om_stable, OM_STABLE_INIT)
     for r in range(rows):
@@ -517,6 +526,23 @@ def init_eco(tile_id: str, rows: int, cols: int,
         for c in range(cols):
             bruit = _hash_noise(seed_alt, 0, r, c)              # [0,1]
             eco.altitude.set(r, c, ALT_BASE + ALT_AMPLITUDE * (2.0 * bruit - 1.0))
+    # Banque-sol FONDATRICE (sprint DIVERSITÉ FONDATRICE ①, option A) — SOUS le flag
+    # `heterogene` (posé par les sites monde-réel : golden, main, pont, bancs). Pour
+    # chaque plot × chaque adventice de WEED_CATALOGUE, on ENSEMENCE le pool
+    # génétique (`seed_founder_pool` : mean=1.0, var=GENE_INIT_SIGMA², densité
+    # FOUNDER_POOL_DENSITY). Une vraie banque de graines du sol n'est JAMAIS
+    # génétiquement uniforme (philo #4) → dès le tick 0, `sample_genes` tire la
+    # germination férale avec une variance immédiate, et la sélection darwinienne a
+    # de quoi mordre sans attendre N générations. Import LOCAL de WEED_CATALOGUE
+    # (couche : `fields` ne dépend pas de `plants.catalogue` en tête de module ;
+    # exécuté uniquement sur le chemin monde, jamais pour un mini-sol de conteneur).
+    if heterogene:
+        from plants import WEED_CATALOGUE
+        for r in range(rows):
+            for c in range(cols):
+                for cls in WEED_CATALOGUE.values():
+                    eco.seed_bank.seed_founder_pool(
+                        r, c, cls, GENE_INIT_SIGMA, FOUNDER_POOL_DENSITY)
     return eco
 
 

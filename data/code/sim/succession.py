@@ -13,7 +13,7 @@ Extrait d'engine.py (Sprint refactor structurel) — la méthode Engine
 from __future__ import annotations
 
 from plants import WEED_CATALOGUE, PLANT_CATALOGUE, PERENNIAL_CATALOGUE
-from fields import SEED_ARCHETYPES, _hash_noise
+from fields import SEED_ARCHETYPES, _hash_noise, founder_genes
 from fields.ecofields import (bell, T_GERM_FLOOR, GERM_GENE_SHIFT,
                               COUVERTURE_ADVENTICE_SEUIL, PAILLAGE_GERM_SEUIL)
 from sim.capacite import recrutement_bloque
@@ -176,7 +176,14 @@ def _lever_grains_en_attente(game_state: dict, tile, eco, week: int, seed: int,
         if new_plant is None:
             continue
         grains.pop(0)                          # FIFO : la plus ancienne levée
-        new_plant.genes = dict(grain.genes)    # gènes PROPRES (≠ sample_genes du féral)
+        if grain.genes:
+            new_plant.genes = dict(grain.genes)  # gènes PROPRES (≠ sample_genes du féral)
+        else:
+            # Graine SANS lignée (sachet magazine / démo) → tirage FONDATEUR (sprint
+            # DIVERSITÉ FONDATRICE ①), plus un clone neutre. Une graine RÉCOLTÉE
+            # (gènes hérités présents) garde les siens (branche ci-dessus).
+            new_plant.genes = founder_genes(plant_class, seed, week, r, c,
+                                            new_plant.x_cm, new_plant.y_cm)
         if grain.expression:                   # priming hérité (④) : la graine naît pré-armée
             new_plant.expression.update(grain.expression)
         occupied_roots.update(new_plant.root_plots)
@@ -363,12 +370,17 @@ def succession(game_state: dict, tile, eco, week: int) -> list[str]:
                 continue
 
             # Germination — gènes échantillonnés du pool génétique du plot
-            # (banque-sol féral). Pool vide → gènes neutres (rétro-compatible).
+            # (banque-sol féral). Pool vide → tirage FONDATEUR (sprint DIVERSITÉ
+            # FONDATRICE ①) : la plante née sans lignée n'est plus un clone neutre,
+            # elle reçoit sa variance propre déterministe (position continue,
+            # philo #3). La mutation par génération prend ensuite le relais.
             new_plant = tile.add_plant(plant_class, r, c)
             if new_plant:
                 g = eco.seed_bank.sample_genes(r, c, plant_class, seed, week)
-                if g:
-                    new_plant.genes = g
+                if not g:
+                    g = founder_genes(plant_class, seed, week, r, c,
+                                      new_plant.x_cm, new_plant.y_cm)
+                new_plant.genes = g
                 e = eco.seed_bank.sample_expression(r, c, plant_class)
                 if e:
                     new_plant.expression.update(e)   # priming hérité (④)

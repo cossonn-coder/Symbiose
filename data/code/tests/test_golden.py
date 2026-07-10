@@ -32,6 +32,13 @@ from plants import (Tomato, Basil, Sunflower, Bean, Clover, Pepper,
                     Yarrow, Phacelia, AppleTree)
 from fields import init_eco
 from sim.engine import Engine
+from sim.seeds import semer_fondateur
+
+# Seed global du terrain (déterminisme, philo #3) — celui que l'Engine prend par
+# défaut (`game_state.get("seed", 42)`). Partagé par les semis directs FONDATEURS
+# (`semer_fondateur`, sprint DIVERSITÉ FONDATRICE ①) pour que leur variance
+# génétique dérive du MÊME canal que le reste de la simulation.
+SEED = 42
 
 # Smoke test : 2 sols contrastés, 2 ans (raccourci au sous-sprint ① décompo —
 # assez pour succession + automne ×2 + hiver ×2 + croissance du pommier ; pas
@@ -66,24 +73,25 @@ def build_world():
         tile = Tile(tile_id=tid, soil_type=soil, origin_x_cm=ox, origin_y_cm=oy)
         if soil == "argile":
             eco = init_eco(tid, 6, 8, humidite=2.0, fertilite=1.2, microbiome=0.3,
-                           soil_type=soil)
+                           soil_type=soil, heterogene=True)
         else:
             eco = init_eco(tid, 6, 8, humidite=1.5, fertilite=1.0, microbiome=0.3,
-                           soil_type=soil)
-        # Jardin diversifié de base
-        tile.add_plant(Tomato,    2, 2)
-        tile.add_plant(Basil,     2, 4)
-        tile.add_plant(Bean,      4, 2)
-        tile.add_plant(Sunflower, 0, 1)
-        tile.add_plant(Pepper,    4, 6)
+                           soil_type=soil, heterogene=True)
+        # Jardin diversifié de base — semis FONDATEURS (variance génétique propre,
+        # sprint DIVERSITÉ FONDATRICE ① : plus de clones neutres au démarrage).
+        semer_fondateur(tile, Tomato,    2, 2, SEED)
+        semer_fondateur(tile, Basil,     2, 4, SEED)
+        semer_fondateur(tile, Bean,      4, 2, SEED)
+        semer_fondateur(tile, Sunflower, 0, 1, SEED)
+        semer_fondateur(tile, Pepper,    4, 6, SEED)
         if i % 2 == 0:  # attire-auxiliaires sur les tuiles paires
-            tile.add_plant(Yarrow,   3, 5)
-            tile.add_plant(Phacelia, 1, 6)
-            tile.add_plant(Clover,   5, 4)
+            semer_fondateur(tile, Yarrow,   3, 5, SEED)
+            semer_fondateur(tile, Phacelia, 1, 6, SEED)
+            semer_fondateur(tile, Clover,   5, 4, SEED)
         tiles.append(tile)
         ecos[tid] = eco
     # Pommier sur la tuile 0 (exerce les pérennes : dormance hivernale, age_curve)
-    tiles[0].add_plant(AppleTree, 0, 7)
+    semer_fondateur(tiles[0], AppleTree, 0, 7, SEED)
     return tiles, ecos
 
 

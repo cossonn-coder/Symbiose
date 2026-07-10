@@ -20,11 +20,12 @@ from fields.light import (
     CANOPY_SAMPLE_FRAC,
 )
 from fields.seedbank import (
-    SeedBank, GeneStat, GrainEnAttente,
+    SeedBank, GeneStat, GrainEnAttente, founder_genes,
     SEED_ARCHETYPES, SEED_VIABILITY_LOSS, SEED_DISTURBANCE_GAIN,
     SEED_LATE_GAIN, SEED_OM_FACILITATION_REF,
     SEED_OM_FIXER_GRASS_MIN, SEED_OM_COMPETITOR_MIN,
     SPECIES_SEED_VIABILITY_LOSS, SPECIES_POOL_MIN_DENSITY,
+    FOUNDER_POOL_DENSITY,
 )
 from fields.foragers import (
     ForagerParams, ForagerAgent, sample_foragers,

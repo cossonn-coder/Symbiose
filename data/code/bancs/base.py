@@ -44,7 +44,7 @@ def build_banc_tile(name: str, soil: str, rows: int, cols: int,
     tile = Tile(tile_id=name, soil_type=soil, grid_rows=rows, grid_cols=cols,
                 origin_x_cm=float(ox), origin_y_cm=float(oy))
     eco = init_eco(name, rows, cols, humidite=humidite, fertilite=fertilite,
-                   microbiome=microbiome, soil_type=soil)
+                   microbiome=microbiome, soil_type=soil, heterogene=True)
     for nom, valeur in champs.items():
         field = eco.get_field(nom)
         if field is None:
