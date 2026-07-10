@@ -143,6 +143,16 @@ namespace Symbiose
 			if (!LeafProfiles.TryGetValue(species, out var prof))
 				prof = DefaultLeaf;
 
+			// T6 — PALIER HAUT (×16+) : contour FIDÈLE authoré par espèce (volume +
+			// nervures) au lieu de l'amas d'ellipses. Si l'espèce n'a pas de contour
+			// mappé, TryDrawLeafOutline retourne false → on retombe proprement sur
+			// l'archétype ci-dessous (repli intermédiaire inchangé). Ne se déclenche
+			// qu'au zoom rapproché : en dessous la silhouette fine est invisible et
+			// le contour coûterait pour rien (perf, sprint plantes du 2026-07-09).
+			if (WorldView.CurrentZoom >= LeafOutlineMinZoom
+				&& TryDrawLeafOutline(species, c, rx, ry, col, i, j))
+				return;
+
 			// Repli LOD : au dézoom, tout redevient une ellipse volumée simple.
 			bool lod = WorldView.CurrentZoom < LeafShapeMinZoom;
 			LeafShape shape = lod ? LeafShape.Elliptique : prof.Shape;

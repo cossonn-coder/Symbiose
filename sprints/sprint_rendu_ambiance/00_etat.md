@@ -246,11 +246,72 @@ Ordre imposé : T1 avant T5 (noms d'essences), T4 avant T5 (zones). T6 indépend
   `24ec11e7983595e71c4587fce8f558a1bec9eb5ec8511bf69ad76e9fdc2b6e91`. `dotnet build`
   VERT (0 avert/0 err). LDC tous < 300. NON committé.
 
+- **T4 — Décor ossature : FAIT (2026-07-10).** Nouveau Node2D VUE
+  `visuals/DecorLayer.cs` (146 ldc) : `SurroundingsProfile` (couture d'extensibilité,
+  point d'entrée unique `BuildProfile(seed)`), 4 secteurs cardinaux tirés du seed
+  (prairie défaut / forêt / rivière), couplage rivière↔falaise + pente figée,
+  frontières SINUEUSES (bruit déterministe 3-sinus, zéro Random), aplats volumés
+  2 valeurs (lisière/fond) ; ZIndex −5 (derrière le sol), LOD `MaxZoom=4` (visible
+  au dézoom), inerte (redraw au build + bascule LOD). **Branchement** dans
+  `WorldView.cs` : champ `_decorLayer`, instancié+`Build(Seed)` dans `StartSimulation`
+  (AddWorld → SubViewport, survit à RebuildWorld), re-`Build(Seed)` dans
+  `RebuildWorld` (`WorldView.Camera.cs`) pour re-projeter à la rotation D35. Node2D
+  inerte sans input → hors picking (jardin garde ses clics). **Chemins enherbés** :
+  fond gris `FondPierre`→`GazonChemin` (`WorldView.Monde.cs` champ `FondChemin`,
+  clear color `WorldView.cs`). Palette16 déjà étendu (bloc DÉCOR + `GazonChemin`).
+  Couche B pure, aucun moteur touché. **Golden INCHANGÉ**
+  `24ec11e7983595e71c4587fce8f558a1bec9eb5ec8511bf69ad76e9fdc2b6e91`. `dotnet build`
+  VERT (0 avert/0 err). NON committé. Note : `Palette16.FondPierre` devient une
+  couleur nommée non utilisée en code (catalogue palette conservé, réf. en commentaire).
+
+- **T5 — Décor motifs : FAIT (2026-07-10).** Motifs détaillés peints par-dessus
+  l'assise T4. Nouveau partial VUE `visuals/DecorLayer.Arbres.cs` (143 ldc) :
+  `enum TreePort` (Etale/Ovoide/Elance/Sinueux/Conique) + `struct TreeSilhouette`
+  + table `Silhouettes[species]` (clé nom d'espèce, contrat T1 : chêne/hêtre/
+  bouleau/charme/sapin/noyer, port + feuillage + écorce + rayon houppier ADULTE +
+  fût). `DrawForet` = scatter sur grille (u×depth) avec **gradient de lisière**
+  (proba 0.25→0.92 vers le fond, `PickEssence` bouleau-pionnier au bord → chêne/
+  hêtre au cœur, sapin/charme accents ~20 %), tri par Y écran (peintre). Arbre =
+  tronc fuselé (chevrons bouleau) + houppier « nuage » d'ellipses volumées 2 valeurs
+  (`DrawVolumeBlob` local static, réplique l'invariant pixel-art) par port. Dans
+  `DecorLayer.cs` (226 ldc) : `_Draw` en 2 passes (assise puis `DrawMotif`),
+  `DrawRiviere` (lit sinueux médian + reflets dithering ordonné 2 teintes),
+  `DrawFalaise` (redans étagés 3 valeurs, nb de gradins = pente du profil),
+  `DrawPrairie` (semis fleurs blanc/jaune par hash). `Palette16.cs` (77 ldc)
+  étendu (bloc T5 : 5 feuillages, 3 écorces, 2 eaux, 3 roches, 2 fleurs). Tout
+  statique/déterministe (zéro Random, hash `HashKey`/`Ondulation`), cullé par le
+  LOD global. Couche B pure, aucun moteur touché. **Golden INCHANGÉ**
+  `24ec11e7983595e71c4587fce8f558a1bec9eb5ec8511bf69ad76e9fdc2b6e91`. `dotnet build`
+  VERT (0 avert/0 err). LDC tous < 300. NON committé.
+
+- **T6 — Feuilles fidèles au modèle réel : FAIT (2026-07-10).** Nouveau partial
+  VUE `visuals/PlantRenderer.LeafOutline.cs` (166 ldc) : contour de silhouette
+  AUTHORÉ par espèce, tracé au **palier haut ×16+** UNIQUEMENT. `enum LeafMargin`
+  (Entiere/Dentee/Lobee) + `record OutlineSpec` (Aspect/Marge/Lobes/LobeCut/Tip/
+  BaseCut/Compound) + table `LeafOutlines[species]` couvrant **37 espèces**
+  (toutes les feuillues du catalogue, clé = nom de classe Python). Contour
+  SYNTHÉTISÉ depuis le descripteur compact réglé à la main (fidèle : chêne lobes
+  arrondis+sinus, figuier palmatilobé, tomate/carotte/frêne composées pennées,
+  pommier/cerisier ovale denté, pissenlit runciné, ortie cordée dentée…).
+  `BuildLeafPolygon` = demi-limbe elliptique modulé par la marge (dents = sinus
+  18 périodes + micro-jitter hash ; lobes = festons profonds), effilement du
+  sommet (Tip), échancrure basale (BaseCut), refermé en miroir. `DrawVolumePolygon`
+  = **E4 sur contour libre** : polygone ombré plein + copie réduite 0,8 décalée
+  au SUD éclairée (croissant nord conservé, réplique `DrawVolumeEllipse`).
+  `DrawCompoundOutline` = rachis + N folioles opposées obliques + terminale, chaque
+  foliole un contour volumé. Nervures réutilisent `DrawLeafVeins` (penninerve/
+  palmée/composée selon la topologie). **LOD 3 paliers** : dispatch branché dans
+  `DrawShapeBySpecies` (`Leaf.cs`) — ×16+ contour fidèle (repli archétype si espèce
+  non mappée), [4,16[ archétype d'ellipses inchangé, <4 tache. Zéro Random (hash
+  canaux 41/51). Couche B pure, aucun moteur touché. **Golden INCHANGÉ**
+  `24ec11e7983595e71c4587fce8f558a1bec9eb5ec8511bf69ad76e9fdc2b6e91`. `dotnet build`
+  VERT (0 avert/0 err). LDC LeafOutline.cs 166, Leaf.cs 212 (tous < 300). NON committé.
+
 ## §REPRISE
-Sprint FIGÉ. **T1 + T2 + T3 FAITS** (voir Avancement). Prochain = **T4 décor
-ossature** (vue, `visuals/DecorLayer.cs` : zones organiques par seed + chemins
-enherbés + `SurroundingsProfile`), kickoff `04_decor_ossature.md`. Chaque tronçon
-restant : golden inchangé + `dotnet build` vert + F5 Nico. Dettes en parallèle :
-**D72 vent**, **D73 terraforming** (dans DETTE.md).
-Note : `MakeLozenge` (Monde.cs) est du code mort PRÉEXISTANT (référencé seulement
-en commentaires) — laissé en place (hors périmètre T3), à signaler.
+Sprint FIGÉ — **TERMINÉ**. **T1 + T2 + T3 + T4 + T5 + T6 TOUS FAITS** (voir
+Avancement). Tous couche B (sauf T1 moteur NEUTRE), golden INCHANGÉ partout
+`24ec11e7983595e71c4587fce8f558a1bec9eb5ec8511bf69ad76e9fdc2b6e91`, `dotnet build`
+vert. Reste : **commits** (T4/T5/T6 + décor NON committés) et **F5 Nico** (recette
+par tronçon). Dettes ouvertes en parallèle : **D72 vent**, **D73 terraforming**
+(dans DETTE.md). Note : `MakeLozenge` (Monde.cs) est du code mort PRÉEXISTANT
+(référencé seulement en commentaires) — laissé en place, à signaler.
