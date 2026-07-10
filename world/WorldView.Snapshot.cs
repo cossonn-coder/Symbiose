@@ -358,6 +358,17 @@ namespace Symbiose
 				// Lecture tolérante : un snapshot pré-0.3.3 n'a pas la clé.
 				if (pl.ContainsKey("seeds"))
 					ApplySeeds(pl["seeds"].AsGodotDictionary());
+				// Gestes débloqués (palette ④, 0.5.23) : liste des verbes OUVERTS
+				// pour l'avatar → la palette gauche n'affiche QUE ceux-là (D11).
+				// Lecture TOLÉRANTE : un binaire pré-0.5.23 n'émet pas la clé →
+				// ApplyGestesDebloques(null) retombe sur « tout dispo » (tous les
+				// Verbs de Gestes[]). `debloques_recents` = verbes ouverts au dernier
+				// tick (voie savoir) → notification diégétique, consommé à la lecture.
+				ApplyGestesDebloques(
+					pl.ContainsKey("gestes_debloques")
+						? pl["gestes_debloques"].AsGodotArray() : null,
+					pl.ContainsKey("debloques_recents")
+						? pl["debloques_recents"].AsGodotArray() : null);
 			}
 			UpdateActionHud();
 

@@ -60,6 +60,15 @@ namespace Symbiose
 			// bois → BRF au stock. Approvisionner (broyer / récolter) précède pailler.
 			("pailler",            "pailler",        'U'),   // mulch au plot (nature N)
 			("broyer",             "broyer bois",    'D'),   // squelette → BRF
+			// Gestes savants de la palette (tronçons ②③) — 2 TEMPS côté vue, le
+			// serveur reste STATELESS (patron `epandre`/`deplacer_pot`) :
+			//  · Kind 'b' BOUTURER : 1er clic = la MÈRE (position continue), 2e clic
+			//    = le PLOT cible {r,c} de la MÊME tuile → params.r/c (cf. actions.py).
+			//  · Kind 'g' GREFFER : 1er clic = le GREFFON (position continue) mémorisé
+			//    en params.scion_x_cm/y_cm, 2e clic = le PORTE-GREFFE (cible primaire
+			//    target.x_cm/y_cm), MÊME tuile. La façade Python fait foi (gates).
+			("bouturer",           "bouturer",       'b'),   // mère → plot (2 clics)
+			("greffer",            "greffer",        'g'),   // greffon → porte-greffe (2 clics)
 		};
 		// Nature de mulch courante pour `pailler` (touche N). Cycle sur les 3 natures
 		// du moteur (NATURES_MULCH) — le stock de la nature choisie doit être alimenté
@@ -101,6 +110,13 @@ namespace Symbiose
 		// cible. -1 = aucun tas saisi. Réinitialisé si on change de geste.
 		private int _grabbedBac = -1;
 		private string _grabbedBacTile;
+		// Bouturer/greffer à 2 temps (tronçons ②③, palette ④), même patron : le 1er
+		// clic MÉMORISE la plante-mère / le greffon (position monde + tuile), le 2e
+		// clic la CIBLE. -1 = aucune saisie en cours. Réinitialisés au changement de
+		// geste (SelectGeste). La mémoire des 2 clics vit ici, le serveur est stateless.
+		private PlantRenderer _grabbedMother;      // bouturer : plante-mère saisie
+		private PlantRenderer _grabbedScion;       // greffer : greffon saisi
+		private string _grabbedScionTile;          // tuile du greffon (greffe = même tuile)
 		// Rayon de désignation d'un conteneur au clic (cm MONDE) : un peu large,
 		// un pot occupe ~1 plot (50 cm) et son centre peut être loin du bord cliqué.
 		private const float ContainerPickRadiusCm = 60f;
@@ -148,8 +164,11 @@ namespace Symbiose
 			// sous un autre outil, source de confusion.
 			_grabbedContainer = -1;
 			_grabbedBac = -1;
+			_grabbedMother = null;
+			_grabbedScion = null;
 			GD.Print($"[WorldView] geste : {Gestes[idx].Nom} [{idx + 1}].");
 			UpdateActionHud();
+			UpdatePaletteSelection();   // met à jour l'entrée active de la palette gauche
 		}
 
 		// Sélection cyclique sur TOUTE la palette (touche Tab, cf. Controls) :
@@ -563,6 +582,92 @@ namespace Symbiose
 						["x_cm"] = node.GetMeta("lx"),
 						["y_cm"] = node.GetMeta("ly"),
 					};
+					break;
+
+				case 'b':   // BOUTURER à 2 temps (②) : 1er clic = plante-mère (position
+					// continue), 2e clic = PLOT cible {r,c} de la MÊME tuile. Le serveur
+					// route la mère par target.x_cm/y_cm et la cible par params.r/c.
+					if (_grabbedMother == null)
+					{
+						node = FindPlant(w, PickRadiusCm);
+						if (node == null)
+						{
+							_lastActionMsg = "bouturer : aucune plante-mère à portée du clic";
+							UpdateActionHud(); FlashActionLabel();
+							return;
+						}
+						_grabbedMother = node;
+						_lastActionMsg = "mère saisie — cliquez le plot où enraciner la bouture";
+						UpdateActionHud();
+						return;   // on attend le 2e clic, aucune action envoyée
+					}
+					// 2e clic : plot cible, exigé sur la MÊME tuile que la mère (le
+					// moteur enracine le clone dans l'eco de la tuile de la mère).
+					if (!FindPlot(w, out string cutTile, out int cutR, out int cutC))
+					{
+						_lastActionMsg = "bouturer : aucune tuile ici (chemin/maison)";
+						UpdateActionHud(); FlashActionLabel();
+						return;
+					}
+					if (cutTile != _grabbedMother.GetMeta("tile").AsString())
+					{
+						_lastActionMsg = "bouturer : le plot doit être sur la tuile de la mère";
+						UpdateActionHud(); FlashActionLabel();
+						return;
+					}
+					target = new GDict
+					{
+						["tile"] = _grabbedMother.GetMeta("tile"),
+						["x_cm"] = _grabbedMother.GetMeta("lx"),
+						["y_cm"] = _grabbedMother.GetMeta("ly"),
+					};
+					prms["r"] = cutR;
+					prms["c"] = cutC;
+					node = _grabbedMother;
+					_grabbedMother = null;   // saisie consommée
+					break;
+
+				case 'g':   // GREFFER à 2 temps (③) : 1er clic = GREFFON (mémorisé en
+					// params.scion_x_cm/y_cm), 2e clic = PORTE-GREFFE (cible primaire
+					// target.x_cm/y_cm). Même tuile : le serveur résout un seul `eco`.
+					if (_grabbedScion == null)
+					{
+						node = FindPlant(w, PickRadiusCm);
+						if (node == null)
+						{
+							_lastActionMsg = "greffer : aucun greffon à portée du clic";
+							UpdateActionHud(); FlashActionLabel();
+							return;
+						}
+						_grabbedScion = node;
+						_grabbedScionTile = node.GetMeta("tile").AsString();
+						_lastActionMsg = "greffon saisi — cliquez le porte-greffe (même tuile)";
+						UpdateActionHud();
+						return;   // on attend le 2e clic, aucune action envoyée
+					}
+					// 2e clic : porte-greffe = plante sous le curseur, même tuile.
+					node = FindPlant(w, PickRadiusCm);
+					if (node == null)
+					{
+						_lastActionMsg = "greffer : aucun porte-greffe à portée du clic";
+						UpdateActionHud(); FlashActionLabel();
+						return;
+					}
+					if (node.GetMeta("tile").AsString() != _grabbedScionTile)
+					{
+						_lastActionMsg = "greffer : porte-greffe et greffon doivent être sur la même tuile";
+						UpdateActionHud(); FlashActionLabel();
+						return;
+					}
+					target = new GDict
+					{
+						["tile"] = node.GetMeta("tile"),
+						["x_cm"] = node.GetMeta("lx"),
+						["y_cm"] = node.GetMeta("ly"),
+					};
+					prms["scion_x_cm"] = _grabbedScion.GetMeta("lx");
+					prms["scion_y_cm"] = _grabbedScion.GetMeta("ly");
+					_grabbedScion = null;   // saisie consommée
 					break;
 
 				// '-' : grelinette, pas de cible.

@@ -231,12 +231,52 @@ en dernier), golden NEUTRE/INTACT partout (référence
     deblocage + carnet verts.
   - **F5 Nico** : mémoire des 2 clics côté Godot (serveur stateless) ; palette ④
     câblera l'icône `greffer` ; calibrage des espèces greffables + coût ÉLEVÉ.
-- Reste : **④⑤** (vue C#).
+- **④ Palette UI (C#) — FAIT (2026-07-11)**. Golden INCHANGÉ
+  (`452b5256de4f6ff23df825b99596efdfde4e6ac87e8035f6b8da809f4dc000b4`). Aucun
+  fichier moteur touché (pur vue, Option B). `dotnet build` VERT. Livré :
+  - **Nouveau** `world/GesteIcon.cs` (197 LDC) : icône MUETTE procédurale par
+    geste (hérite de `Button` → clic/focus/tooltip gratuits, fond natif effacé,
+    pictogramme peint dans `_Draw`). ~16 pictogrammes primitifs par famille
+    (goutte/ciseaux/pousse/fruit/tas/pot/treillis/ruche/bouture-tige/greffe-T…)
+    + couleur par famille. États `Actif` (cadre lumineux) / `Verrouille` (grisé +
+    `Disabled` inerte). Libellé au SURVOL seulement (`TooltipText`, philo #5).
+  - **Nouveau** `world/WorldView.Palette.cs` (88 LDC, partial) : colonne
+    verticale gauche (`CanvasLayer` + `VBoxContainer`, y=150 sous l'horloge),
+    une `GesteIcon` par entrée de `Gestes[]` (ordre inchangé, index aligné sur
+    `_gesteIndex`). `ApplyGestesDebloques(ouverts, recents)` lit
+    `player.gestes_debloques` du snapshot (TOLÉRANT : clé absente → tout ouvert),
+    reconstruit la visibilité SEULEMENT au changement d'empreinte triée
+    (event-driven). Verrouillés = visibles+grisés+inertes (calibrage F5).
+    `debloques_recents` → flash vert de l'icône (notif diégétique, philo #6,
+    pas de pop-up). `UpdatePaletteSelection` synchronise l'entrée active
+    (source de vérité = `_gesteIndex`, câblée depuis `SelectGeste`).
+  - `WorldView.Actions.cs` : 2 gestes AJOUTÉS à `Gestes[]` — `bouturer` (Kind
+    `'b'`, 2 temps : mère position continue → plot `params.r/c` même tuile) et
+    `greffer` (Kind `'g'`, 2 temps : greffon `params.scion_x_cm/y_cm` →
+    porte-greffe cible primaire, même tuile). État de saisie `_grabbedMother`/
+    `_grabbedScion` (réinitialisés dans `SelectGeste`). Routage conforme au pont
+    (`simserver/actions.py` §bouturer/greffer, 0.5.24/0.5.25).
+  - `WorldView.Snapshot.cs` : bloc `player` lit `gestes_debloques` +
+    `debloques_recents` → `ApplyGestesDebloques`.
+  - `WorldView.cs` : `BuildPalette()` appelée dans `_Ready` (après `BuildHud`,
+    avant le 1er `ApplySnapshot`).
+  - `WorldView.Hud.cs` : HUD action rappelle l'état de saisie bouturer/greffer ;
+    légende debug corrigée (palette gauche = source de vérité, Tab/1..9 =
+    accélérateurs). Le HUD debug ne LISTE plus les gestes (la palette les montre).
+  - **F5 Nico** : (a) valider la colonne gauche cliquable + lisibilité des 26
+    pictogrammes procéduraux (calibrage possible sprites dédiés) ; (b) filtrage
+    par déblocage (gestes GATED masqués/grisés selon `gestes_debloques`) ;
+    (c) `bouturer`/`greffer` sélectionnables + gestes 2 temps (mère→plot,
+    greffon→porte-greffe) ; (d) flash vert d'un geste fraîchement débloqué ;
+    (e) arbitrer masquer VS griser les verrouillés (aujourd'hui : grisé).
+    NB : mémoire des 2 clics côté Godot OK (serveur stateless).
+- Reste : **⑤** (macros + persistance layout + banc F5).
 
 ## §REPRISE
-Tronçon ③ FAIT (golden intact, pont 0.5.25). Prochaine étape = **④ Palette UI (C#)** :
-lire `04_palette_ui.md`. Boucle : lire `0N` → bosser → golden → MAJ ce fichier →
-commit → tronçon suivant. À froid : `CLAUDE.md` + ce fichier + le kickoff `0N`.
+Tronçon ④ FAIT (golden intact `452b5256…`, `dotnet build` vert, pur vue C#).
+Prochaine étape = **⑤ Macros + banc F5** : lire `05_macros_banc.md`. Boucle :
+lire `0N` → bosser → golden → MAJ ce fichier → commit → tronçon suivant. À froid :
+`CLAUDE.md` + ce fichier + le kickoff `0N`.
 
 ## Coût perf estimé
 Négligeable (couche vue/UX + état persisté). Hook déblocage event-driven (hors

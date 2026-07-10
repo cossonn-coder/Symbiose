@@ -171,7 +171,7 @@ namespace Symbiose
 				+ " · molette zoom · PageUp/PageDown pivoter\n"
 				+ "F3 étiquettes · F4 perfs · C copier perfs · H maison transparente · F6 heatmap debug (Maj+F6 champ)"
 				+ " · F7 carte T sol · G survol gènes · I vie macro · O ombres · M mode simu\n"
-				+ "Tab geste suivant · 1..9 gestes directs · S graine (planter) · B substrat (poser pot/bac) · N nature (pailler) · clic gauche = agir"
+				+ "palette de gestes = colonne d'icônes à GAUCHE (clic) · Tab/1..9 accélérateurs · S graine (planter) · B substrat (poser pot/bac) · N nature (pailler) · clic gauche = agir"
 				+ " — geste courant affiché en haut à gauche";
 			hud.AddChild(legend);
 			AddChild(hud);
@@ -246,6 +246,16 @@ namespace Symbiose
 					geste += _grabbedContainer >= 0
 						? $" : pot #{_grabbedContainer} saisi → cliquez la destination"
 						: " (cliquez un pot, puis sa destination)";
+				// bouturer / greffer : gestes à 2 temps (palette ④), rappel de l'état
+				// de saisie (mère/greffon saisi → cliquez la cible).
+				else if (g.Verb == "bouturer")
+					geste += _grabbedMother != null
+						? " : mère saisie → cliquez le plot cible"
+						: " (cliquez la mère, puis le plot cible)";
+				else if (g.Verb == "greffer")
+					geste += _grabbedScion != null
+						? " : greffon saisi → cliquez le porte-greffe"
+						: " (cliquez le greffon, puis le porte-greffe)";
 			}
 			string msg = string.IsNullOrEmpty(_lastActionMsg) ? ""
 				: $"   ·   {_lastActionMsg}";

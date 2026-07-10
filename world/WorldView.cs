@@ -333,6 +333,7 @@ namespace Symbiose
 			BuildMeteoLayers();   // ambiance écran + manteau neigeux (⑨) — avant le HUD
 
 			BuildHud();
+			BuildPalette();       // palette de gestes en colonne gauche (④, D11)
 			BuildPlantLabels();   // couche d'étiquettes NETTE (hors SubViewport, SS①)
 			ApplySnapshot(snap, fade: false);   // monde initial : pas de fondu
 
