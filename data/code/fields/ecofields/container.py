@@ -383,6 +383,29 @@ class EcoFields(MatiereOrganiqueMixin, HydrologieMixin, RuissellementMixin,
                 facteur = 1.0 + INIT_AMPLITUDE * (2.0 * bruit - 1.0)
                 grid.set(r, c, plancher * facteur)
 
+    def _init_catena(self, grid: GridField, base: float, amplitude: float,
+                     canal_suffixe: str, poids_topo: float, sens_topo: float) -> None:
+        """Hétérogénéise `grid` autour de `base` par une CATENA topographique
+        déterministe (sprint DIVERSITÉ FONDATRICE ②). Chaque plot est multiplié par
+        `1 + amplitude·(poids_topo·topo + (1−poids_topo)·bruit)` où :
+          - `topo` LIT l'altitude déjà posée (`self.altitude`), recentrée depuis
+            [ALT_BASE−ALT_AMPLITUDE, ALT_BASE+ALT_AMPLITUDE] vers [−1,1] et signée par
+            `sens_topo` (−1 = riche en bas, +1 = plus fort en haut) → gradient LISIBLE ;
+          - `bruit` dérive d'un canal de hash DÉCORRÉLÉ (`tile_id + canal_suffixe`) →
+            pas de corrélation « plot riche partout », deux champs diffèrent plot-à-plot.
+        Zéro RNG (philo #3). `GridField.set` borne déjà (portes pH/NPK) → facteurs
+        extrêmes écrêtés. REQUIERT une altitude déjà posée (appelé APRÈS dans init_eco).
+        Un `base` de 0 reste 0 (multiplication) → no-op sûr."""
+        seed_c = stable_str_hash(self.tile_id + canal_suffixe)
+        for r in range(self.rows):
+            for c in range(self.cols):
+                # Recentre l'altitude sur [−1,1] autour d'ALT_BASE (2·ALT_AMPLITUDE = pleine échelle).
+                alt = self.altitude.at_plot(r, c)
+                topo = sens_topo * ((alt - ALT_BASE) / ALT_AMPLITUDE)   # ≈ [−1,1]
+                bruit = 2.0 * _hash_noise(seed_c, 0, r, c) - 1.0        # [−1,1] décorrélé
+                facteur = 1.0 + amplitude * (poids_topo * topo + (1.0 - poids_topo) * bruit)
+                grid.set(r, c, base * facteur)
+
     def get_field(self, name: str) -> GridField | None:
         return {
             "humidite":    self.humidite,
@@ -526,6 +549,33 @@ def init_eco(tile_id: str, rows: int, cols: int,
         for c in range(cols):
             bruit = _hash_noise(seed_alt, 0, r, c)              # [0,1]
             eco.altitude.set(r, c, ALT_BASE + ALT_AMPLITUDE * (2.0 * bruit - 1.0))
+    # Catena topographique des champs édaphiques (sprint DIVERSITÉ FONDATRICE ②) —
+    # SOUS le flag `heterogene`, et APRÈS l'altitude (la catena la LIT). Les champs de
+    # sol STATIQUE non nuls (ph/n/p/k/structure_sol/microbiome) partent HÉTÉROGÈNES,
+    # structurés par le relief : fond riche, versant pauvre mais mieux structuré (philo
+    # #5/#6/#7). `base` = valeur uniforme héritée du plot (avant catena) — on la lit sur
+    # le plot [0][0] (uniforme à ce stade : héritage roche-mère + éventuel `fertilite`/
+    # `microbiome` forcés ci-dessus). `humidite` EXCLUE (le ruissellement la creuse déjà
+    # depuis l'altitude → hétérogénéité redondante) ; `om_stable`/`altitude` non retouchés.
+    # Amplitudes PETITES pour pH (portes `bell`, faim d'azote, mort carence D41) → jamais
+    # de plot hors-fenêtre catastrophique (le GridField borne en plus).
+    if heterogene:
+        eco._init_catena(eco.ph, eco.ph.at_plot(0, 0), PH_INIT_AMPLITUDE,
+                         "_ph", CATENA_POIDS_TOPO["ph"], CATENA_SENS_TOPO["ph"])
+        eco._init_catena(eco.n, eco.n.at_plot(0, 0), NPK_INIT_AMPLITUDE,
+                         "_n", CATENA_POIDS_TOPO["n"], CATENA_SENS_TOPO["n"])
+        eco._init_catena(eco.p, eco.p.at_plot(0, 0), NPK_INIT_AMPLITUDE,
+                         "_p", CATENA_POIDS_TOPO["p"], CATENA_SENS_TOPO["p"])
+        eco._init_catena(eco.k, eco.k.at_plot(0, 0), NPK_INIT_AMPLITUDE,
+                         "_k", CATENA_POIDS_TOPO["k"], CATENA_SENS_TOPO["k"])
+        eco._init_catena(eco.structure_sol, eco.structure_sol.at_plot(0, 0),
+                         STRUCTURE_INIT_AMPLITUDE, "_struct",
+                         CATENA_POIDS_TOPO["structure_sol"],
+                         CATENA_SENS_TOPO["structure_sol"])
+        eco._init_catena(eco.microbiome, eco.microbiome.at_plot(0, 0),
+                         MICROBIOME_INIT_AMPLITUDE, "_micro",
+                         CATENA_POIDS_TOPO["microbiome"],
+                         CATENA_SENS_TOPO["microbiome"])
     # Banque-sol FONDATRICE (sprint DIVERSITÉ FONDATRICE ①, option A) — SOUS le flag
     # `heterogene` (posé par les sites monde-réel : golden, main, pont, bancs). Pour
     # chaque plot × chaque adventice de WEED_CATALOGUE, on ENSEMENCE le pool

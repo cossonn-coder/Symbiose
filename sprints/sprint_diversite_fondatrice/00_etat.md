@@ -167,14 +167,33 @@ Le moteur génétique est déjà à ~90 % en place :
     (ancien : `24ec11e7…`). Variance saine ∈ [0.73,1.33], pas d'explosion.
   - Tests ciblés (défaut heterogene=False) INTACTS (genetique/planter/competition/
     plasticite/substrat/eau/mycelium/lessivage/stress_chronique/lifecycle/ruche…).
-  - **RESTE ① :** test neuf `tests/test_diversite_fondatrice.py` (déterminisme +
-    diversité inter-position + pool ensemencé non vide) — cf. §REPRISE.
+  - Test neuf `tests/test_diversite_fondatrice.py` ① écrit (déterminisme + diversité
+    inter-position + variance bornée + pool ensemencé) — 10/10 verts.
+
+- **② Champs : catena topographique — CLOSE (2026-07-10).** Implémenté :
+  - `fields/ecofields/constants.py` : amplitudes propres `PH_INIT_AMPLITUDE=0.03`
+    (PETITE, portes bell), `NPK_INIT_AMPLITUDE=0.20`, `STRUCTURE_INIT_AMPLITUDE=0.10`,
+    `MICROBIOME_INIT_AMPLITUDE=0.20` + tables `CATENA_POIDS_TOPO` / `CATENA_SENS_TOPO`
+    (sens topo : NPK/microbiome −1 riches en bas, structure +1, pH poids-topo bas).
+  - `fields/ecofields/container.py` : méthode `EcoFields._init_catena(grid, base,
+    amplitude, canal_suffixe, poids_topo, sens_topo)` — facteur = 1 + amplitude·
+    (poids_topo·topo + (1−poids_topo)·bruit), topo LIT l'altitude recentrée [−1,1],
+    bruit sur canal de hash décorrélé (`tile_id+suffixe`), zéro RNG. Bloc catena dans
+    `init_eco` sous `if heterogene:` APRÈS l'altitude, sur ph/n/p/k/structure_sol/
+    microbiome. `humidite`/`om_stable`/`altitude`/`temperature*` NON touchés.
+  - `tests/test_diversite_fondatrice.py` : 3 tests ② ajoutés (hétérogène vs uniforme
+    non-régression, décorrélation n≠k, déterminisme catena) — 22/22 verts au total.
+  - **Golden RE-FIGÉ (ECO)** — déterministe (PASS 2×). Nouveau hash :
+    `452b5256de4f6ff23df825b99596efdfde4e6ac87e8035f6b8da809f4dc000b4`
+    (ancien : `a63e388c…`). Cause : le harnais passe `heterogene=True` → champs
+    édaphiques hétérogènes → germination pH/thermique + NPK/Liebig dérivent. Vérifié :
+    amplitudes petites, AUCUNE mortalité de masse (peuplement dense sain, tous
+    `alive=True`, health 1-3). Tests ciblés uniformes (défaut False) INTACTS (51 verts).
 
 ## §REPRISE
-**① CLOSE** (moteur + re-figeage golden). PROCHAIN = **② `02_champs_catena.md`**
-(hétérogénéité fondatrice des champs de sol, réutilise le flag `heterogene` déjà
-introduit ici). Exécution à froid : lire `CLAUDE.md` + ce fichier + `02_*.md`,
-`/clear` entre tronçons. Ordre restant : ②→③.
-NB : le test neuf `tests/test_diversite_fondatrice.py` prévu au ① n'a pas encore
-été écrit (à créer en tête du ② ou en complément) — le comportement est couvert
-par le golden re-figé + les vérifications manuelles consignées ci-dessus.
+**① CLOSE + ② CLOSE** (moteur catena + re-figeage golden ECO `452b5256…`). PROCHAIN =
+**③ `03_vue_godot.md`** (banc d'observation F5 : rythmes désynchronisés + heatmaps
+catena `FieldOverlay` F6 + survol gènes debug + re-passage `diag_population` garde-fou ;
+golden INTACT ; dernier tronçon = clôture sprint + màj DETTE/BACKLOG/journal).
+Exécution à froid : lire `CLAUDE.md` + ce fichier + `03_*.md`, `/clear` entre tronçons.
+Ordre restant : ③ seul.

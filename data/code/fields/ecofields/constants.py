@@ -818,6 +818,40 @@ EPAISSEUR_NPK_BONUS  = 0.30   # amplification max de la fraction de stock N/P/K 
 ALT_BASE      = 20.0   # cm — altitude de référence (mi-hauteur du micro-relief)
 ALT_AMPLITUDE = 20.0   # cm — amplitude ± du micro-relief (dénivelé jardin ~0–40 cm)
 
+# --- Catena topographique des champs édaphiques (sprint DIVERSITÉ FONDATRICE ②) ---
+# Sous le flag `heterogene` (sites monde-réel : golden, main, pont, bancs), les champs
+# de SOL STATIQUE non nuls (ph, n, p, k, structure_sol, microbiome) démarrent
+# HÉTÉROGÈNES, structurés par la TOPOGRAPHIE déjà posée (`altitude`) : une CATENA. Le
+# fond (altitude basse) concentre l'eau, la matière et les nutriments lessivés du haut
+# → riche ; le versant (altitude haute) draine, se lessive, s'appauvrit mais se
+# structure mieux (moins de battance). Le paysage devient LISIBLE (philo #5/#6) et
+# jamais identique (philo #7). Zéro RNG (philo #3) : la part topo LIT l'altitude, la
+# part bruit propre dérive d'un canal de hash DÉCORRÉLÉ par champ (`tile_id + suffixe`).
+#   facteur = 1 + amplitude·(poids_topo·topo + (1−poids_topo)·bruit)
+#   topo    = sens_topo · recentre(altitude ∈ [ALT_BASE±ALT_AMPLITUDE] → [−1,1])
+#   bruit   = 2·_hash_noise(canal_champ, 0, r, c) − 1   ∈ [−1,1]
+# `GridField.set` BORNE déjà chaque champ (min/max, portes pH/NPK) → les facteurs
+# extrêmes sont écrêtés, jamais de plot hors-fenêtre catastrophique. `humidite` est
+# EXCLUE (le ruissellement la creuse déjà depuis l'altitude → redondant) ; `om_stable`
+# et `altitude` NON retouchés (déjà hétérogènes, D56 calibré).
+#  - amplitude PROPRE par champ : pH PETITE (portes `bell` dures, faim d'azote,
+#    mort carence D41 → hors-fenêtre si trop fort) ; NPK/microbiome plus larges ;
+#    structure intermédiaire.
+#  - poids_topo : part du facteur pilotée par le relief (le reste = bruit décorrélé).
+#    Grand → gradient de catena bien lisible ; petit → surtout mosaïque de bruit.
+#  - sens_topo : −1 = riche EN BAS (altitude basse ; NPK/microbiome, eau/matière
+#    concentrées au fond) ; +1 = plus fort EN HAUT (structure : versant mieux drainé,
+#    moins battu). Le pH varie surtout par roche-mère → poids_topo BAS.
+# PLACEHOLDERS, calibrage F5 / bancs d'essai. Ne PAS relever « pour voir » (portes dures).
+PH_INIT_AMPLITUDE        = 0.03   # PETITE — le pH ne doit pas sortir des fenêtres d'espèce
+NPK_INIT_AMPLITUDE       = 0.20   # N/P/K : mosaïque édaphique bien marquée (faune variée)
+STRUCTURE_INIT_AMPLITUDE = 0.10   # structure du sol : gradient modéré
+MICROBIOME_INIT_AMPLITUDE = 0.20  # microbiome : suit la richesse du fond
+CATENA_POIDS_TOPO = {  # part du facteur pilotée par l'altitude (le reste = bruit propre)
+    "ph": 0.2, "n": 0.6, "p": 0.6, "k": 0.6, "structure_sol": 0.4, "microbiome": 0.6}
+CATENA_SENS_TOPO = {   # signe du gradient topo : −1 = riche en bas, +1 = plus fort en haut
+    "ph": -1.0, "n": -1.0, "p": -1.0, "k": -1.0, "structure_sol": 1.0, "microbiome": -1.0}
+
 # --- Eau de surface & ruissellement (sprint hydrologie & marécages ②) --------
 # Une LAME D'EAU de surface `eau_surface` (NEUF), DISTINCTE de `humidite` (eau des
 # PORES, ce que boivent les racines). C'est elle qui RUISSELLE (du haut vers le bas
