@@ -41,6 +41,23 @@ LIGNEUX_JEUNE_CM  = 250.0  # hauteur au-delà de laquelle l'écorce est trop ép
 
 
 # ---------------------------------------------------------------------------
+# RESSOURCE & HABITAT DES SUPER-PRÉDATEURS (sommet trophique ②, CONCEPTION §2.2)
+# ---------------------------------------------------------------------------
+# Rapace (aérien) et couleuvre (terrestre) vivent de la DENSITÉ de leurs proies
+# (campagnol/merle pour le rapace, campagnol/limace pour la couleuvre) — pas d'une
+# ressource végétale : leur `resource_fn` LIT les champs de population déjà mis à
+# jour ce tick (les proies tickent AVANT, cf. registry). `_proies_grid(noms)`
+# généralise `_espece_grid` à PLUSIEURS proies : somme normalisée des densités.
+# Le rapace chasse à vue au-dessus du TERRAIN OUVERT (peu de canopée le gêne) et
+# se poste sur un PERCHOIR haut (ligneux mûr) → `_rapace_habitat_grid`.
+PROIES_REF        = 1.5   # somme de densité de proies saturant la ressource du prédateur
+PERCHOIR_H_CM     = 200.0  # hauteur au-delà de laquelle un ligneux fait perchoir de chasse
+RAPACE_OUVERT_W   = 0.6   # part de huntabilité = terrain dégagé (chasse à vue sur sol nu)
+RAPACE_PERCHOIR_W = 0.4   # part de huntabilité = présence d'un poste d'affût haut
+RAPACE_HUNT_FLOOR = 0.35  # huntabilité PLANCHER : même en zone fermée le rapace chasse un peu
+
+
+# ---------------------------------------------------------------------------
 # ATTRACTION ANIMALE PAR LE FRUIT TOMBÉ (décompo·compost ④, CONCEPTION §4)
 # ---------------------------------------------------------------------------
 # Une parcelle `fruit` (déposée par engine._tick_fruits à la chute des sur-mûrs)
@@ -415,6 +432,74 @@ def _espece_grid(name: str) -> Callable:
         return [[f.at_plot(r, c) for c in range(eco.cols)]
                 for r in range(eco.rows)]
     return _grid
+
+
+def _proies_grid(noms: tuple[str, ...], habitat_fn: Callable | None = None) -> Callable:
+    """Fabrique la resource_fn d'un SUPER-PRÉDATEUR (②) : somme des densités des
+    champs de population `noms` (ses proies), normalisée par PROIES_REF (généralise
+    `_espece_grid` de 1 à N proies). Les proies tickent AVANT le prédateur (registry)
+    → il les lit FRAÎCHES → décalage d'inertie proie↔prédateur = boom-bust.
+
+    Le sommet est piloté PAR LE BAS : à proie absente (champ nul), la grille est nulle
+    → densité prédateur nulle. Le terrain (`habitat_fn` : dégagé+perchoir pour le
+    rapace, cache pour la couleuvre) ne CRÉE pas de capacité (un prédateur sans proie
+    ne s'installe pas) : il MODULE (multiplie) la proie perçue — le prédateur chasse
+    mieux là où le terrain lui est favorable. C'est pourquoi les specs super_predateur
+    portent `habitat_w=0` : toute la capacité vient de la proie modulée ici."""
+    def _grid(eco, tile, plants) -> list[list[float]]:
+        g = _zero_grid(eco.rows, eco.cols)
+        for nom in noms:
+            f = eco.populations.get(nom)
+            if f is None:                       # proie pas encore scindée → 0
+                continue
+            for r in range(eco.rows):
+                for c in range(eco.cols):
+                    g[r][c] += f.at_plot(r, c)
+        hab = habitat_fn(eco, tile, plants) if habitat_fn else None
+        for r in range(eco.rows):
+            for c in range(eco.cols):
+                v = min(1.0, g[r][c] / PROIES_REF)
+                g[r][c] = v * hab[r][c] if hab else v
+        return g
+    return _grid
+
+
+def _rapace_habitat_grid(eco, tile, plants) -> list[list[float]]:
+    """HUNTABILITÉ du rapace (②), modulateur ∈ [FLOOR, 1] de la proie perçue (pas une
+    capacité indépendante — cf. `_proies_grid`) : terrain OUVERT (chasse à vue sur sol
+    dégagé, rogné par la canopée dense qui masque les proies) + PERCHOIR d'affût
+    (présence d'un ligneux mûr et haut, poste de guet). Un PLANCHER `RAPACE_HUNT_FLOOR`
+    garantit que le rapace chasse un peu partout où il y a une proie (jamais zéro même
+    en zone fermée) → il n'est jamais annulé par la seule fermeture du couvert."""
+    canopee = _zero_grid(eco.rows, eco.cols)
+    perchoir = _zero_grid(eco.rows, eco.cols)
+    for p in plants:
+        if not p.is_alive or p.current_stage < 1:
+            continue
+        for (r, c) in p.foliar_plots:
+            if 0 <= r < eco.rows and 0 <= c < eco.cols:
+                canopee[r][c] += p.health / 3.0
+        # Un ligneux haut fait poste d'affût sur son empreinte foliaire.
+        if (getattr(p.plant_class, "age_curve", None)
+                and p.current_height >= PERCHOIR_H_CM):
+            for (r, c) in p.foliar_plots:
+                if 0 <= r < eco.rows and 0 <= c < eco.cols:
+                    perchoir[r][c] = 1.0
+    g = _zero_grid(eco.rows, eco.cols)
+    for r in range(eco.rows):
+        for c in range(eco.cols):
+            ouvert = 1.0 - min(1.0, canopee[r][c] / FOLIAGE_REF)
+            hunt = RAPACE_OUVERT_W * ouvert + RAPACE_PERCHOIR_W * perchoir[r][c]
+            g[r][c] = _clamp01(max(RAPACE_HUNT_FLOOR, hunt))
+    return g
+
+
+def _habitat_nul_grid(eco, tile, plants) -> list[list[float]]:
+    """Habitat-source NUL (grille de zéros). Sert aux SUPER-PRÉDATEURS (②) dont la
+    capacité vient ENTIÈREMENT de la proie modulée par la huntabilité (`_proies_grid`
+    avec `habitat_fn`), avec `habitat_w=0` : ce terme additif ne doit rien apporter
+    (un prédateur sans proie ne s'installe pas). Callable propre plutôt qu'un lambda."""
+    return _zero_grid(eco.rows, eco.cols)
 
 
 def _stability_grid(eco, tile, plants) -> list[list[float]]:

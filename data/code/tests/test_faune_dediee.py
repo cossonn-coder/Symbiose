@@ -46,7 +46,7 @@ from fields.population import (
     _limace_food_grid, _litter_grid, _foliage_grid,
     _espece_grid, _undisturbed_structure_grid, _pile_grid, _undisturbed_grid,
     _base_habitat_grid, _merle_food_grid, _osmie_habitat_grid,
-    _pollinisateur_habitat_grid,
+    _pollinisateur_habitat_grid, _proies_grid,
     daylength, _smoothstep, build_lifecycle_bridges,
     build_pollinator_registry, build_pollinator_specs, POLLINATOR_NAMES,
     LIMACE_LITTER_W, LIMACE_FOLIAGE_W, DORY_AIL_REPULSE,
@@ -62,14 +62,20 @@ DETRITIVORES = ("lombric", "cloporte")
 # (`predators=()` ici) → il est HORS du sous-graphe symétrique tant qu'ils n'existent
 # pas ; on l'exclut donc des vérifs de réciprocité (elles n'itèrent que ESPECES_QUATRE).
 HERBIVORES_VERTEBRES = ("campagnol",)
+# Super-prédateurs (sommet trophique ②) : catégorie NEUVE `super_predateur`. Ils
+# ferment la chaîne par le haut (rapace→campagnol/merle, couleuvre→campagnol/limace).
+# `predators=()` (ce sont les sommets) mais ils SONT dans le sous-graphe symétrique :
+# leurs interconnexions listent leurs proies, réciproques des liens campagnol/merle/
+# limace → la symétrie s'étend désormais à eux (ils ne sont plus forward-declarés).
+SUPER_PREDATEURS = ("rapace", "couleuvre")
 ESPECES_QUATRE = RAVAGEURS + AUXILIAIRES + DETRITIVORES   # les 10 espèces de ④
-ESPECES = ESPECES_QUATRE + HERBIVORES_VERTEBRES           # + campagnol (①) = 11
-CATEGORIES = ("ravageur", "auxiliaire", "detritivore", "herbivore_vertebre")
+# Toutes les espèces trophiques consommatrices : ④ (10) + campagnol (①) + sommet (②) = 13
+ESPECES = ESPECES_QUATRE + HERBIVORES_VERTEBRES + SUPER_PREDATEURS
+CATEGORIES = ("ravageur", "auxiliaire", "detritivore",
+              "herbivore_vertebre", "super_predateur")
 # Tokens du graphe §3 qui ne sont PAS des espèces trophiques nommées (éléments du
-# milieu + champ larvaire du pont ⑤ + super-prédateurs à venir en ②) — admis dans
-# `interconnexions`. `rapace`/`couleuvre` sont déclarés ICI (encyclopédie de ①) mais
-# n'existent comme champs qu'en ② : forward-declaration tolérée du graphe relationnel.
-_MILIEU_TOKENS = {"fruit", "pile", "ail", "rapace", "couleuvre"}
+# milieu + champ larvaire du pont ⑤) — admis dans `interconnexions`.
+_MILIEU_TOKENS = {"fruit", "pile", "ail"}
 
 
 def _eco(plants_specs=()):
@@ -399,6 +405,59 @@ def test_graphe_symetrique():
 
 
 # ---------------------------------------------------------------------------
+# 8bis. SUPER-PRÉDATEURS (②) — rapace + couleuvre, sommet trophique
+# ---------------------------------------------------------------------------
+
+def test_super_predateurs_nommes():
+    # Deux specs de catégorie NEUVE `super_predateur`, SANS prédateur (sommets),
+    # tickés EN DERNIER (après toutes les proies) → boom-bust top-down.
+    specs = build_population_specs()
+    smap = {s.name: s for s in specs}
+    for nom in SUPER_PREDATEURS:
+        _check(nom in smap, f"le super-prédateur `{nom}` existe comme spec")
+        _check(smap[nom].category == "super_predateur",
+               f"`{nom}` rattaché à la catégorie super_predateur")
+        _check(smap[nom].predators == (), f"`{nom}` est un sommet (predators vides)")
+    # Ordre de tick : rapace/couleuvre APRÈS toutes leurs proies (position en fin).
+    ordre = [s.name for s in specs]
+    for proie in ("campagnol", "merle", "limace"):
+        for pred in SUPER_PREDATEURS:
+            _check(ordre.index(pred) > ordre.index(proie),
+                   f"`{pred}` ticke après sa proie `{proie}` (lit frais)")
+    # Salts distincts de TOUT le reste (positions sprites décorrélées).
+    salts = {s.salt for s in specs}
+    _check(len(salts) == len(ESPECES), "salts tous distincts (rapace/couleuvre inclus)")
+
+
+def test_super_predateurs_puits_cables():
+    # Les puits top-down sont posés sur les PROIES (§2.4) : campagnol régulé par les
+    # deux, merle par le rapace, limace par la couleuvre.
+    smap = {s.name: s for s in build_population_specs()}
+    _check(set(smap["campagnol"].predators) == {"rapace", "couleuvre"},
+           "campagnol : régulé par rapace + couleuvre")
+    _check("rapace" in smap["merle"].predators, "merle : le rapace est un puits")
+    _check("couleuvre" in smap["limace"].predators, "limace : la couleuvre est un puits")
+
+
+def test_super_predateurs_ressource_proies():
+    # `_proies_grid` = somme normalisée des densités des proies. Sans proie → nulle ;
+    # proies posées → la ressource s'allume à leurs plots (le prédateur les lit frais).
+    tile, eco = _eco()
+    res_rap = _proies_grid(("campagnol", "merle"))
+    r0 = res_rap(eco, tile, tile.plants)
+    _check(not _grid_nonzero(r0), "rapace : ressource nulle sans proie (densité nulle → 0)")
+    eco.populations["campagnol"].set(2, 2, 0.60)
+    eco.populations["merle"].set(4, 5, 0.30)
+    r1 = res_rap(eco, tile, tile.plants)
+    _check(r1[2][2] > 0.0 and r1[4][5] > 0.0,
+           "rapace : ressource allumée aux plots de ses proies (campagnol + merle)")
+    # La couleuvre ne lit PAS le merle (proies = campagnol + limace).
+    r_coul = _proies_grid(("campagnol", "limace"))(eco, tile, tile.plants)
+    _check(abs(r_coul[4][5]) < 1e-9,
+           "couleuvre : ne chasse pas le merle (proies = campagnol + limace)")
+
+
+# ---------------------------------------------------------------------------
 # 9. POLLINISATEURS B (⑤) — bourdon & osmie, registre data-driven
 # ---------------------------------------------------------------------------
 
@@ -531,6 +590,9 @@ def main():
     test_phenologie_hivernale()
     test_metadata_encyclo()
     test_graphe_symetrique()
+    test_super_predateurs_nommes()
+    test_super_predateurs_puits_cables()
+    test_super_predateurs_ressource_proies()
     test_cinq_pollinisateurs_nommes()
     test_attractivite_bourdon_osmie()
     test_fenetres_pollinisateurs_b()

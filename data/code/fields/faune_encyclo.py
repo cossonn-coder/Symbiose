@@ -38,7 +38,7 @@ FAUNE_ENCYCLO: dict[str, tuple[str, tuple[str, ...]]] = {
     "limace": (
         "Brouteuse nocturne des matières molles et de la litière humide ; on la "
         "trouve d'abord dans le paillis, parfois sur un semis tendre.",
-        ("carabe", "herisson", "cloporte"),
+        ("carabe", "herisson", "cloporte", "couleuvre"),
     ),
     "doryphore": (
         "Coléoptère rayé inféodé aux Solanacées ; absent là où ne pousse ni "
@@ -63,8 +63,9 @@ FAUNE_ENCYCLO: dict[str, tuple[str, tuple[str, ...]]] = {
     ),
     "merle": (
         "Oiseau résident omnivore : il sonde la terre pour en tirer les vers et "
-        "picore volontiers les fruits tombés.",
-        ("lombric", "fruit"),
+        "picore volontiers les fruits tombés ; guette pourtant le ciel, où plane "
+        "plus grand que lui.",
+        ("lombric", "fruit", "rapace"),
     ),
     "herisson": (
         "Insectivore nocturne friand de limaces, de cloportes et de vers ; ne "
@@ -92,6 +93,23 @@ FAUNE_ENCYCLO: dict[str, tuple[str, tuple[str, ...]]] = {
         "monticules de terre fraîche et, çà et là, une plante qui flétrit sans "
         "raison apparente, racine ou collet rongés au ras du sol.",
         ("rapace", "couleuvre"),
+    ),
+    # --- catégorie super_predateur (sommet trophique ②) ---------------------
+    # Ferment la chaîne PAR LE HAUT : leurs `predators` sont vides (ce sont les
+    # sommets), mais leurs interconnexions listent leurs PROIES — réciproques des
+    # liens posés côté campagnol/merle/limace (invariant de symétrie du graphe §3).
+    "rapace": (
+        "Silhouette en croix haut dans le ciel, immobile face au vent puis piqué "
+        "foudroyant : il fond sur ce qui court à découvert, rongeur au ras du sol "
+        "comme oiseau imprudent. Sa seule ombre fige le jardin.",
+        ("campagnol", "merle"),
+    ),
+    "couleuvre": (
+        "Longue et lustrée, elle se love au soleil sur une pierre chaude ou près "
+        "d'un tas de bois, immobile des heures ; à la fraîche, elle glisse traquer "
+        "le rongeur dans sa galerie et la limace sous la litière. Inoffensive pour "
+        "qui la laisse filer.",
+        ("campagnol", "limace"),
     ),
     # --- pollinisateurs (catalogue enrichi ⑤/⑥) ------------------------------
     # Liés à la FLORAISON qu'ils fécondent (→ `fruit`, nouaison), et selon le

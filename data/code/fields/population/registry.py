@@ -19,7 +19,7 @@ from fields.population.resources import (
     _auxiliaire_habitat_grid, _undisturbed_structure_grid, _merle_food_grid,
     _base_habitat_grid, _pile_grid, _ravageur_grid, _abeille_habitat_grid,
     _pollinisateur_habitat_grid, _osmie_habitat_grid, _avec_abri_paillage,
-    _racine_grid,
+    _racine_grid, _proies_grid, _rapace_habitat_grid, _habitat_nul_grid,
 )
 
 
@@ -46,6 +46,8 @@ _SALT_PAPILLON      = 0x2A5001
 _SALT_BOURDON       = 0x2AD001   # pollinisateur B précoce/frais (⑤ catalogue enrichi)
 _SALT_OSMIE         = 0x2AE001   # abeille solitaire niche-bois (⑤ catalogue enrichi)
 _SALT_CAMPAGNOL     = 0x2AF001   # herbivore vertébré racinaire (sommet trophique ①)
+_SALT_RAPACE        = 0x2B0001   # super-prédateur aérien (sommet trophique ②)
+_SALT_COULEUVRE     = 0x2B1001   # super-prédateur terrestre (sommet trophique ②)
 
 
 def build_population_specs() -> list[TrophicSpec]:
@@ -80,7 +82,7 @@ def build_population_specs() -> list[TrophicSpec]:
             name="limace", category="ravageur", salt=_SALT_LIMACE,
             resource_fn=_limace_food_grid,
             habitat_fn=_avec_abri_paillage(_rosee_humide_litiere_grid),   # ombrophile : s'abrite sous le mulch (⑥)
-            predators=("carabe", "herisson"),    # ④c (habitat abreuvé par la rosée ⑤)
+            predators=("carabe", "herisson", "couleuvre"),   # ④c + ② (la couleuvre gobe aussi la limace)
             # ④d : le signal fruit pourri (`_rav_fruit_signal`), porté TRANSITOIREMENT
             # par la limace en ④b, passe au CLOPORTE (détritivore dédié, doc §C13,
             # défaut « cloporte seul »). La limace n'a plus de terme-source fruit.
@@ -137,7 +139,7 @@ def build_population_specs() -> list[TrophicSpec]:
             name="campagnol", category="herbivore_vertebre", salt=_SALT_CAMPAGNOL,
             resource_fn=_racine_grid,
             habitat_fn=_avec_abri_paillage(_undisturbed_grid),   # galeries : sol non remué + couvert
-            predators=(),                        # rapace/couleuvre câblés en ②
+            predators=("rapace", "couleuvre"),   # ② : régulé PAR LE HAUT (2 super-prédateurs)
             daylen_min=8.5, daylen_full=10.0,    # LARGE : quasi toute l'année (comme le lombric)
             **encyclo_meta("campagnol"),
         ),
@@ -171,7 +173,7 @@ def build_population_specs() -> list[TrophicSpec]:
         TrophicSpec(
             name="merle", category="auxiliaire", salt=_SALT_MERLE,
             resource_fn=_merle_food_grid, habitat_fn=_base_habitat_grid,
-            predators=(),
+            predators=("rapace",),               # ② : le rapace fond sur l'oiseau à découvert
             daylen_min=8.5, daylen_full=10.0,    # toute saison (oiseau résident, fenêtre LARGE)
             **encyclo_meta("merle"),
         ),
@@ -182,6 +184,35 @@ def build_population_specs() -> list[TrophicSpec]:
             predators=(),
             daylen_min=9.0, daylen_full=12.0,    # nocturne→large
             **encyclo_meta("herisson"),
+        ),
+        # --- Catégorie NEUVE `super_predateur` : rapace + couleuvre (sommet ②) ---
+        # Insérés en TOUTE FIN d'ordre de tick : ils lisent toutes leurs proies
+        # (campagnol/merle/limace) FRAÎCHEMENT mises à jour ce tick, et les proies
+        # lisent LEUR densité de la semaine PRÉCÉDENTE (les puits tickent après) →
+        # décalage d'inertie proie↔prédateur qui referme la chaîne par le HAUT
+        # (boom-bust top-down, philo #1/#2 : un puits sur un champ, jamais un malus
+        # scripté). `predators=()` : ce sont les sommets. `resource_fn=_proies_grid`
+        # (somme normalisée des densités de proies) — pas de ressource végétale.
+        # Capacité PILOTÉE PAR LA PROIE : `resource_fn = _proies_grid(proies, huntabilité)`
+        # = densité de proies MODULÉE par le terrain de chasse (ouvert+perchoir pour le
+        # rapace, sol non remué+cache pour la couleuvre). `habitat_w=0` (habitat NUL) :
+        # aucune capacité ne naît d'un terrain vide → un sommet SANS proie ne s'installe
+        # jamais (philo #2 : c'est le BAS de la chaîne qui le nourrit).
+        TrophicSpec(
+            name="rapace", category="super_predateur", salt=_SALT_RAPACE,
+            resource_fn=_proies_grid(("campagnol", "merle"), _rapace_habitat_grid),
+            habitat_fn=_habitat_nul_grid, habitat_w=0.0,
+            predators=(),
+            daylen_min=9.0, daylen_full=11.0,    # LARGE : chasseur résident quasi toute l'année
+            **encyclo_meta("rapace"),
+        ),
+        TrophicSpec(
+            name="couleuvre", category="super_predateur", salt=_SALT_COULEUVRE,
+            resource_fn=_proies_grid(("campagnol", "limace"), _undisturbed_structure_grid),
+            habitat_fn=_habitat_nul_grid, habitat_w=0.0,
+            predators=(),
+            daylen_min=11.0, daylen_full=13.0,   # HÉLIOPHILE : n'émerge qu'aux beaux jours d'été
+            **encyclo_meta("couleuvre"),
         ),
     ]
 

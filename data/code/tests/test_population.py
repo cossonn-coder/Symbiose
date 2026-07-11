@@ -32,7 +32,7 @@ HASH_FILE = os.path.join(os.path.dirname(__file__), "population_hash.txt")
 GUILDS = ("puceron", "limace", "doryphore",
           "coccinelle", "chrysope", "carabe", "merle", "herisson",
           "abeille", "syrphe", "papillon", "bourdon", "osmie",
-          "lombric", "cloporte", "campagnol")
+          "lombric", "cloporte", "campagnol", "rapace", "couleuvre")
 
 
 def build_world():
@@ -284,6 +284,78 @@ def test_campagnol_ressource_racinaire():
           f"(nu {nu:.3f} < ail {ail:.3f}) : OK")
 
 
+# ---------------------------------------------------------------------------
+# 5. SUPER-PRÉDATEURS — rapace + couleuvre, sommet trophique (②)
+# ---------------------------------------------------------------------------
+
+def test_super_predateurs_presents():
+    """Rapace et couleuvre sont des champs de catégorie NEUVE `super_predateur`."""
+    tiles, ecos = _run(*build_world())
+    eco = ecos["T0"]
+    for nom in ("rapace", "couleuvre"):
+        assert nom in eco.populations, f"champ {nom} absent"
+        assert eco.populations[nom].spec.category == "super_predateur"
+    print("[pop] rapace + couleuvre présents (catégorie super_predateur) : OK")
+
+
+def test_super_predateur_nul_sans_proie():
+    """Sans proie, le rapace ne décolle pas : sa capacité vient ENTIÈREMENT de la
+    densité de proies (`habitat_w=0`). On ticke le SEUL champ rapace (proies à ZÉRO,
+    jamais reconstruites) → il reste nul, quel que soit le terrain. Prouve que le
+    sommet est piloté par le bas (philo #2), pas par un habitat vide."""
+    eco = init_eco("R", 6, 8, humidite=1.5, fertilite=1.0, microbiome=0.3)
+    tile = Tile(tile_id="R", soil_type="terre")
+    eco.temperature.fill(20.0)
+    rap = eco.populations["rapace"]
+    eco.populations["campagnol"].fill(0.0)
+    eco.populations["merle"].fill(0.0)
+    for _ in range(20):                          # on ne ticke QUE le rapace : proies figées à 0
+        rap.tick(eco, tile, [], [], week_in_year=25)
+    m = max(rap.at_plot(r, c) for r in range(rap.rows) for c in range(rap.cols))
+    assert m < 1e-6, f"rapace décolle sans proie (max {m:.4f})"
+    print("[pop] rapace nul sans proie (piloté par le bas, habitat_w=0) : OK")
+
+
+def test_super_predateur_monte_avec_proie():
+    """Le rapace MONTE là où sa proie (campagnol) abonde. On injecte du campagnol
+    frais à chaque tick (source constante) et on vérifie que le rapace s'installe."""
+    eco = init_eco("R", 6, 8, humidite=1.5, fertilite=1.0, microbiome=0.3)
+    tile = Tile(tile_id="R", soil_type="terre")
+    eco.temperature.fill(20.0)
+    camp, rap = eco.populations["campagnol"], eco.populations["rapace"]
+    for _ in range(30):
+        camp.fill(0.8)                       # proie maintenue abondante (source externe)
+        eco.tick_populations(tile, [], week_in_year=25)
+    m = max(rap.at_plot(r, c) for r in range(rap.rows) for c in range(rap.cols))
+    assert m > 0.05, f"rapace ne s'installe pas malgré une proie abondante (max {m:.3f})"
+    print(f"[pop] rapace s'installe sur une proie abondante (max {m:.3f}) : OK")
+
+
+def test_super_predateur_puits_top_down():
+    """Puits TOP-DOWN (boom-bust) : à campagnol/rapace ÉGAUX, la survie du campagnol
+    est RABOTÉE par la prédation → sa cible est plus basse AVEC rapace que sans. On
+    compare un tick de campagnol avec et sans champ prédateur présent."""
+    def _campagnol_cible(avec_rapace: bool) -> float:
+        eco = init_eco("R", 6, 8, humidite=1.5, fertilite=1.0, microbiome=0.3)
+        tile = Tile(tile_id="R", soil_type="terre")
+        eco.temperature.fill(20.0)
+        from plants import Garlic
+        tile.add_plant(Garlic, 3, 3)         # ressource racinaire → cible non nulle
+        eco.populations["campagnol"].fill(0.3)
+        if avec_rapace:
+            eco.populations["rapace"].fill(0.5)
+        eco.tick_populations(tile, tile.plants, week_in_year=25)
+        f = eco.populations["campagnol"]
+        return max(f.at_plot(r, c) for r in range(f.rows) for c in range(f.cols))
+
+    sans = _campagnol_cible(False)
+    avec = _campagnol_cible(True)
+    assert avec < sans, \
+        f"le rapace ne régule pas le campagnol (avec {avec:.3f} ≥ sans {sans:.3f})"
+    print(f"[pop] puits top-down : campagnol raboté par le rapace "
+          f"(avec {avec:.3f} < sans {sans:.3f}) : OK")
+
+
 def test_determinisme_golden():
     """Le hash des densités doit être stable (deux runs identiques)."""
     h1 = compute_hash()
@@ -310,6 +382,10 @@ def main():
     test_positions_independantes_semaine()
     test_campagnol_present_et_categorie()
     test_campagnol_ressource_racinaire()
+    test_super_predateurs_presents()
+    test_super_predateur_nul_sans_proie()
+    test_super_predateur_monte_avec_proie()
+    test_super_predateur_puits_top_down()
     test_determinisme_golden()
     print("[pop] TOUS LES TESTS PASSENT")
     return 0

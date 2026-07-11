@@ -33,6 +33,7 @@ from fields.population.field import PopulationField
 from fields.population.resources import (
     _foliage_grid, _foliage_solanaceae_grid, _solanaceae_grid, _limace_food_grid,
     _litter_grid, _espece_grid, _undisturbed_grid, _undisturbed_structure_grid,
+    _proies_grid, _rapace_habitat_grid, _habitat_nul_grid,
     _pile_grid, _base_habitat_grid, _merle_food_grid, _osmie_habitat_grid,
     _pollinisateur_habitat_grid, _abeille_habitat_grid,
     _aux_fruit_signal, _rav_fruit_signal,

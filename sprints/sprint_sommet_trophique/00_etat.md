@@ -118,7 +118,62 @@ racine. Budget ≤ +10 %/tronçon respecté (à confirmer au chiffrage ②).
 - **Reste F5 Nico** : rien à ①. Les sprites campagnol côté vue + mapping signe
   `rongeur_racinaire` dans `PlantRenderer` sont le tronçon ③.
 
+### ② super-prédateurs (rapace + couleuvre) — FAIT (2026-07-11)
+- **2 TrophicSpec NEUVES** cat. NEUVE `super_predateur`, insérées en TOUTE FIN
+  d'ordre de tick (après toutes les proies → elles les lisent FRAÎCHES = boom-bust) :
+  - `rapace` salt `0x2B0001`, fenêtre LARGE 9.0/11.0 (chasseur résident) ;
+  - `couleuvre` salt `0x2B1001`, fenêtre héliophile estivale 11.0/13.0.
+- **Capacité PILOTÉE PAR LE BAS** (décision de design, cf. blocage ci-dessous) :
+  `resource_fn=_proies_grid(proies, huntabilité)` = densité de proies (somme
+  normalisée `PROIES_REF=1.5`) MULTIPLIÉE par le terrain de chasse ; `habitat_w=0`
+  (habitat NUL) → **aucune capacité ne naît d'un terrain vide** : un sommet sans
+  proie ne s'installe jamais (philo #2). Rapace = proies (campagnol+merle) × huntabilité
+  `_rapace_habitat_grid` (terrain ouvert 0.6 + perchoir ligneux ≥200 cm 0.4, plancher
+  `RAPACE_HUNT_FLOOR=0.35`). Couleuvre = proies (campagnol+limace) × cache
+  `_undisturbed_structure_grid` (sol non remué + piles).
+- **Puits top-down câblés** (§2.4) : `campagnol.predators=("rapace","couleuvre")`,
+  `merle.predators=("rapace",)`, `limace.predators=("carabe","herisson","couleuvre")`.
+- **Voix** : encyclopédie `faune_encyclo.py` — blurbs rapace (« silhouette en croix…
+  sa seule ombre fige le jardin ») + couleuvre (« lovée au soleil… inoffensive pour
+  qui la laisse filer ») ; interconnexions RÉCIPROQUES posées (rapace↔campagnol/merle,
+  couleuvre↔campagnol/limace) → **sous-graphe trophique SYMÉTRIQUE** (invariant testé,
+  vérifié). Carnet : la régulation top-down reste gatée par le concept `ravageurs`
+  déjà mappé en ① (le moteur n'émet PAS de ledger de prédation → pas de nouveau
+  mapping). Événements « arrivée d'un super-prédateur » : PAS de mécanisme d'arrivée
+  d'espèce au ledger aujourd'hui (① n'en a pas créé pour le campagnol non plus) →
+  différé, hors périmètre golden-gaté. Pages : lore optionnel (§7), non ajouté
+  (aligné sur ①). Magazine : n/a (kickoff).
+- **Golden RE-FIGÉ #2** (prévu au kickoff — boom-bust top-down sur la chaîne) :
+  `eb46b49deef4590f0b5f44ce0309c0c09bbbd3d9f536aa039ba80108bc25dd5c`.
+  Légitimité PROUVÉE : en retirant les SEULS puits (rapace/couleuvre ôtés des
+  predators de campagnol/merle/limace), le hash retombe EXACTEMENT sur le golden ①
+  `817cd77298…` → la dérive vient UNIQUEMENT de la régulation top-down voulue (les
+  nouveaux champs super_predateur sont golden-neutres au digest ; tout le delta est
+  le rabotage de survie merle/limace/campagnol).
+- **population_hash re-capturé** (2 champs ajoutés à GUILDS + puits) :
+  `2431b6b1531183cd3068d9c2b5b83c32e5f02ab630ce612722faedbfe101be80`.
+- **Tests** : golden PASS · population PASS (nul-sans-proie, montée-avec-proie,
+  puits top-down avec 0.223 < sans 0.303, présence) · faune_dediee PASS (13 espèces,
+  symétrie étendue rapace/couleuvre, ressource proies) · sim_server 269/269
+  (18 espèces/tuile) · encyclopedie 68/68 · carnet 19/19 · evenements 20/20 ·
+  signes 8/8 · maitrise 35/35 · stress_chronique · attraction · mycelium — verts.
+- **Taille** : `resources.py` 304→**349 LDC** = 🟡 vigilance (responsabilité unique :
+  grilles-ressources du champ population). Toléré/signalé, PAS de split. Autres verts
+  (registry 261, faune_encyclo 78).
+- **C#** : NON concerné (tronçon Python pur — aucun fichier .cs touché).
+- **Blocage/décision imprévue** : le modèle générique fait capacité = res + hab
+  (ADDITIF). Un habitat de super-prédateur (terrain ouvert = ~1.0 partout SANS
+  plantes) aurait fait DÉCOLLER le prédateur sans aucune proie — anti-écologique et
+  contraire à « nul sans proie » (kickoff). Décision : le terrain devient un
+  MODULATEUR MULTIPLICATIF de la proie (`_proies_grid(noms, habitat_fn)`) avec
+  `habitat_w=0` → le sommet est strictement piloté par le bas. Conserve la préférence
+  de terrain (huntabilité) sans créer de capacité fantôme.
+- **Reste F5 Nico** : rien à ② (Python pur). Sprites rapace/couleuvre côté vue +
+  reflux visible des proies = tronçon ③.
+
 ## §REPRISE
-① CLOS (non commité — l'orchestrateur commite). PROCHAIN : `/clear` puis
-`02_super_predateurs.md` (rapace + couleuvre cat. `super_predateur`, câblage
-puits campagnol/merle/limace, tickés en DERNIER, **golden re-figé #2**).
+② CLOS (non commité — l'orchestrateur commite). Golden re-figé #2
+`eb46b49deef4…`, population_hash `2431b6b153…`, prouvé localisé (retombe sur ①
+si puits ôtés). PROCHAIN : `/clear` puis `03_vue_godot.md` (sprites C# par espèce
+campagnol/rapace/couleuvre + mapping signe `rongeur_racinaire` dans `PlantRenderer`,
+pont déjà par espèce → **golden intact**, tronçon C#/F5).
