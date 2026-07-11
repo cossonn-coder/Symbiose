@@ -57,11 +57,19 @@ ROWS, COLS = 6, 8
 RAVAGEURS = ("puceron", "limace", "doryphore")
 AUXILIAIRES = ("coccinelle", "chrysope", "carabe", "merle", "herisson")
 DETRITIVORES = ("lombric", "cloporte")
-ESPECES = RAVAGEURS + AUXILIAIRES + DETRITIVORES   # les 10 espèces de ④
-CATEGORIES = ("ravageur", "auxiliaire", "detritivore")
+# Herbivore vertébré (sommet trophique ①) : 11ᵉ espèce trophique, catégorie NEUVE
+# `herbivore_vertebre`. Ses prédateurs (rapace/couleuvre) arrivent au tronçon ②
+# (`predators=()` ici) → il est HORS du sous-graphe symétrique tant qu'ils n'existent
+# pas ; on l'exclut donc des vérifs de réciprocité (elles n'itèrent que ESPECES_QUATRE).
+HERBIVORES_VERTEBRES = ("campagnol",)
+ESPECES_QUATRE = RAVAGEURS + AUXILIAIRES + DETRITIVORES   # les 10 espèces de ④
+ESPECES = ESPECES_QUATRE + HERBIVORES_VERTEBRES           # + campagnol (①) = 11
+CATEGORIES = ("ravageur", "auxiliaire", "detritivore", "herbivore_vertebre")
 # Tokens du graphe §3 qui ne sont PAS des espèces trophiques nommées (éléments du
-# milieu + champ larvaire du pont ⑤) — admis dans `interconnexions`.
-_MILIEU_TOKENS = {"fruit", "pile", "ail"}
+# milieu + champ larvaire du pont ⑤ + super-prédateurs à venir en ②) — admis dans
+# `interconnexions`. `rapace`/`couleuvre` sont déclarés ICI (encyclopédie de ①) mais
+# n'existent comme champs qu'en ② : forward-declaration tolérée du graphe relationnel.
+_MILIEU_TOKENS = {"fruit", "pile", "ail", "rapace", "couleuvre"}
 
 
 def _eco(plants_specs=()):
@@ -312,8 +320,10 @@ def test_decomp_speed_suit_le_lombric():
 def test_couverture_dix_especes():
     specs = build_population_specs()
     noms = {s.name for s in specs}
-    _check(len(specs) == 10, f"exactement 10 espèces trophiques (vu {len(specs)})")
-    _check(noms == set(ESPECES), f"les 10 espèces attendues (vu {sorted(noms)})")
+    _check(len(specs) == len(ESPECES),
+           f"exactement {len(ESPECES)} espèces trophiques (vu {len(specs)})")
+    _check(noms == set(ESPECES),
+           f"les {len(ESPECES)} espèces attendues (vu {sorted(noms)})")
     # Catégories valides + chacune peuplée.
     for s in specs:
         _check(s.category in CATEGORIES, f"`{s.name}` : catégorie valide ({s.category})")
@@ -334,7 +344,8 @@ def test_triade_et_salts():
             _check(pred in known,
                    f"`{s.name}` : prédateur `{pred}` est une espèce/larve connue")
         salts.add(s.salt)
-    _check(len(salts) == 10, f"les 10 salts sont distincts (vu {len(salts)})")
+    _check(len(salts) == len(ESPECES),
+           f"les {len(ESPECES)} salts sont distincts (vu {len(salts)})")
 
 
 def test_phenologie_hivernale():

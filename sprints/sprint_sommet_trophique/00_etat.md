@@ -77,8 +77,48 @@ racine. Budget ≤ +10 %/tronçon respecté (à confirmer au chiffrage ②).
 - **③ `03_vue_godot.md`** — sprites C# par espèce (pont déjà par espèce, rien à
   changer côté Python) + mapping signe racinaire. **Golden intact.**
 
+## Avancement d'exécution
+### ① campagnol + dégât racinaire — FAIT (2026-07-11)
+- **TrophicSpec `campagnol`** cat. NEUVE `herbivore_vertebre`, salt `0x2AF001`,
+  `predators=()` (les puits arrivent au ②), fenêtre 8.5/10.0 (large/précoce).
+  - `resource_fn=_racine_grid` : Σ plantes vivantes stade≥1 de
+    `(health/3)·palatabilité_racine` distribuée sur `root_plots`, normalisée
+    `ROOT_REF=2.0`. Palatabilité par famille (`Amaryllidaceae` 1.0 → `Poaceae`
+    0.20) + bonus ligneux jeune (annélation du collet).
+  - `habitat_fn=_avec_abri_paillage(_undisturbed_grid)` : galeries = sol non remué.
+- **Perturbation `root_herbivory`** (`sim/effects/perturbations.py`, boucle
+  CHRONIQUE) : `pressure = category_density("herbivore_vertebre")·0.16` ;
+  < plancher 0.008 → aucun dégât ; ligneux jeune (≤250 cm) & dens ≥ 0.55 →
+  LÉTAL −2 (annélation) ; sinon **morsure probabiliste −1** décidée par
+  `_hash_noise(seed, week·43, r, c) < pressure` (déterministe, miroir sécheresse/
+  ombre). Cappée −1/tick/plante par `_cap_chronique`.
+- **Signe `rongeur_racinaire`** (`sim/semiologie.py`, priorité 3.5) : rampe sur
+  `category_density`, plancher DRY = `FLOOR/GAIN ≈ 0.05`. Carnet : concept
+  `("ravageur","rongeur_racinaire") → "ravageurs"`.
+- **5 voix** : encyclopédie `fields/faune_encyclo.py` (blurb + interconnexions
+  `rapace`/`couleuvre` en forward-declaration) ; carnet ci-dessus.
+- **Golden RE-FIGÉ #1** (prévu au kickoff — apparition de l'herbivorie édaphique) :
+  `817cd77298678302516e0632ac97d8145482bd6d239b47de2ef824a784dd0f09`.
+  Légitimité PROUVÉE : en neutralisant `root_herbivory` (→ []) le hash retombe
+  EXACTEMENT sur l'ancien golden → la dérive vient UNIQUEMENT du dégât voulu
+  (éparpillement de morsures −1 sur les plantes appétées : Minette/Fabaceae,
+  Pissenlit/Asteraceae, Pâturin/Poaceae, Bourse-à-pasteur/Brassicaceae ;
+  pic densité campagnol 0.136 sur T0, le jeune pommier SURVIT).
+- **population_hash re-capturé** :
+  `96efac284a2425ff198bc485b66645886873a16e302c5a123a1e6da04c8e2239`.
+- **Tests** : golden PASS · population PASS · faune_dediee (11 espèces) PASS ·
+  stress_chronique PASS (`root_herbivory` neutralisé en labo, confond isolé) ·
+  sim_server 269/269 (16 espèces/tuile) · maitrise 35/35 · maitrise_detection
+  20/20 · signes · carnet · encyclopedie · mycelium · attraction · evenements —
+  tous verts.
+- **Taille** : tous fichiers ≤ green sauf `fields/population/resources.py`
+  270→**304 LDC** = 🟡 vigilance (une seule responsabilité : grilles-ressources
+  du champ population, une fn par guilde). Toléré/signalé, PAS de split.
+- **C#** : non concerné (tronçon Python pur).
+- **Reste F5 Nico** : rien à ①. Les sprites campagnol côté vue + mapping signe
+  `rongeur_racinaire` dans `PlantRenderer` sont le tronçon ③.
+
 ## §REPRISE
-Conception FIGÉE. Livré : `docs/conception/CONCEPTION_SOMMET_TROPHIQUE.md` +
-kickoffs 01/02/03 + ce fichier. Reste : commit (doc + kickoffs + maj DETTE/journal),
-puis `/sprint-auto sprint_sommet_trophique`. Chaque tronçon d'exécution met à jour
-CE fichier (hash golden re-figé consigné à ① et ②).
+① CLOS (non commité — l'orchestrateur commite). PROCHAIN : `/clear` puis
+`02_super_predateurs.md` (rapace + couleuvre cat. `super_predateur`, câblage
+puits campagnol/merle/limace, tickés en DERNIER, **golden re-figé #2**).

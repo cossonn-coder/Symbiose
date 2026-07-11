@@ -82,6 +82,17 @@ FAUNE_ENCYCLO: dict[str, tuple[str, tuple[str, ...]]] = {
         "fruits pourris ; fuit la sécheresse et le plein soleil.",
         ("carabe", "herisson", "limace", "fruit"),
     ),
+    # --- catégorie herbivore_vertebre (sommet trophique ①) ------------------
+    # Le campagnol est la PROIE du sprint : ses prédateurs (rapace/couleuvre)
+    # arrivent en ②, mais on POSE déjà le lien vers eux dans le graphe
+    # relationnel (donnée pure, encyclopédie — la réciproque côté rapace/couleuvre
+    # est ajoutée en ②, où la symétrie du sous-graphe sera vérifiée).
+    "campagnol": (
+        "Petit rongeur invisible qui vit sous terre : on ne voit de lui que ses "
+        "monticules de terre fraîche et, çà et là, une plante qui flétrit sans "
+        "raison apparente, racine ou collet rongés au ras du sol.",
+        ("rapace", "couleuvre"),
+    ),
     # --- pollinisateurs (catalogue enrichi ⑤/⑥) ------------------------------
     # Liés à la FLORAISON qu'ils fécondent (→ `fruit`, nouaison), et selon le
     # type à un stade larvaire (pont ⑤ : `chenille`, `syrphe_larve`), une niche

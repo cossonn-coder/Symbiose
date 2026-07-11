@@ -32,7 +32,7 @@ HASH_FILE = os.path.join(os.path.dirname(__file__), "population_hash.txt")
 GUILDS = ("puceron", "limace", "doryphore",
           "coccinelle", "chrysope", "carabe", "merle", "herisson",
           "abeille", "syrphe", "papillon", "bourdon", "osmie",
-          "lombric", "cloporte")
+          "lombric", "cloporte", "campagnol")
 
 
 def build_world():
@@ -229,6 +229,61 @@ def test_positions_independantes_semaine():
     print("[pop] positions indépendantes de la semaine : OK")
 
 
+# ---------------------------------------------------------------------------
+# 4. CAMPAGNOL — herbivore vertébré racinaire (sommet trophique ①)
+# ---------------------------------------------------------------------------
+
+def test_campagnol_present_et_categorie():
+    """Le campagnol est un champ de population de catégorie NEUVE
+    `herbivore_vertebre`, agrégée par `category_density`."""
+    tiles, ecos = _run(*build_world())
+    eco = ecos["T0"]
+    assert "campagnol" in eco.populations, "champ campagnol absent"
+    assert eco.populations["campagnol"].spec.category == "herbivore_vertebre"
+    # L'agrégat de catégorie == le champ tant qu'il n'a qu'un membre.
+    f = eco.populations["campagnol"]
+    for r in range(f.rows):
+        for c in range(f.cols):
+            assert abs(eco.category_density("herbivore_vertebre", r, c)
+                       - f.at_plot(r, c)) < 1e-9
+    print("[pop] campagnol présent, catégorie herbivore_vertebre agrégée : OK")
+
+
+def _campagnol_peak(plants_at, weeks=30):
+    """Simule un petit monde peuplé de `plants_at` = [(cls, r, c), ...] et rend le pic
+    de densité campagnol atteint. Sol non remué → habitat de galeries présent, mais
+    c'est la RESSOURCE racinaire (bulbes/racines) qui concentre le rongeur."""
+    eco = init_eco("R", 6, 8, humidite=1.5, fertilite=1.0, microbiome=0.3)
+    tile = Tile(tile_id="R", soil_type="terre")
+    for (cls, r, c) in plants_at:
+        tile.add_plant(cls, r, c)
+    gs = {"tiles": [tile], "eco": {"R": eco}, "scores": {},
+          "current_player": "j", "week": 1, "log": [], "seed": SEED}
+    eng = Engine(gs)
+    peak = 0.0
+    f = eco.populations["campagnol"]
+    for _ in range(weeks):
+        eng.tick_semaine(); gs["log"].clear()
+        peak = max(peak, max(f.at_plot(r, c)
+                             for r in range(f.rows) for c in range(f.cols)))
+    return peak
+
+
+def test_campagnol_ressource_racinaire():
+    """La RESSOURCE du campagnol est racinaire (§2.1) : un plot RICHE en bulbes appétés
+    (ail = Amaryllidaceae, préférence 1.0) porte une densité NETTEMENT plus haute qu'un
+    sol nu (où seul le plancher d'habitat = galeries en sol non remué subsiste). Prouve
+    que la ressource lit `root_plots`, pas le feuillage."""
+    from plants import Garlic
+    nu = _campagnol_peak([])
+    ail = _campagnol_peak([(Garlic, r, c) for (r, c) in
+                           ((2, 2), (2, 3), (3, 2), (3, 3))])
+    assert ail > nu + 0.05, \
+        f"les bulbes n'attirent pas le campagnol (nu {nu:.3f} vs ail {ail:.3f})"
+    print(f"[pop] campagnol concentré par les racines appétées "
+          f"(nu {nu:.3f} < ail {ail:.3f}) : OK")
+
+
 def test_determinisme_golden():
     """Le hash des densités doit être stable (deux runs identiques)."""
     h1 = compute_hash()
@@ -253,6 +308,8 @@ def main():
     test_bornes_densite()
     test_cap_sprites()
     test_positions_independantes_semaine()
+    test_campagnol_present_et_categorie()
+    test_campagnol_ressource_racinaire()
     test_determinisme_golden()
     print("[pop] TOUS LES TESTS PASSENT")
     return 0

@@ -379,6 +379,59 @@ def herbivory_pressure(plant: PlantInstance, tile: Tile,
     return mutations
 
 
+# --- Herbivorie RACINAIRE : le champ herbivore_vertebre (campagnol) ronge sous terre ---
+# Canal DÉDIÉ (sommet trophique ①, Q3), distinct de `herbivory_pressure` : le
+# campagnol broute racines/bulbes/écorce, PAS le feuillage. Sa pression lit la
+# catégorie `herbivore_vertebre` (agrégée comme `ravageur`) sur l'empreinte du plot
+# de la plante. MODESTE (le campagnol est d'abord une PROIE) : ronge le collet →
+# `ReduceHealth` faible quand la densité locale est haute ; bascule LÉTALE réservée
+# au jeune ligneux annelé (écorce tendre — cf. `_root_palatability`). Signe visible
+# propre : `rongeur_racinaire` (semiologie), jamais le criblage foliaire du ravageur.
+# À densité `herbivore_vertebre` nulle (aucun campagnol) → pression nulle → +0 →
+# golden neutre pour ce terme. Placeholders, calibrage post-test.
+ROOT_HERBIVORY_GAIN   = 0.16  # densité campagnol [0,1] → pression racinaire (modeste, < HERBIVORY_GAIN)
+ROOT_HERBIVORY_FLOOR  = 0.008 # sous cette pression, aucune morsure (bruit ignoré)
+ROOT_HERBIVORY_LETHAL = 0.55  # densité campagnol au-delà de laquelle un JEUNE ligneux annelé peut mourir
+LIGNEUX_ANNELE_CM     = 250.0 # hauteur en deçà de laquelle l'écorce est annelable (miroir LIGNEUX_JEUNE_CM)
+
+
+def root_herbivory(plant: PlantInstance, tile: Tile,
+                   game_state: dict, eco, seed: int, week: int) -> list[Mutation]:
+    """Pression d'herbivorie RACINAIRE du campagnol (sommet trophique ①, §3).
+
+        pression = category_density("herbivore_vertebre", r, c) · ROOT_HERBIVORY_GAIN
+
+    Miroir léger de `herbivory_pressure` mais sur le canal souterrain DÉDIÉ. Le champ
+    campagnol intègre déjà sa régulation par ses prédateurs (câblés en ②) → lire sa
+    densité, c'est lire une pression déjà régulée.
+
+    Deux régimes (comme drought/shade — probabiliste DÉTERMINISTE, `_hash_noise` canal
+    week·43, décorrélé) :
+      • CHRONIQUE (MODESTE) : morsure −1 santé avec probabilité = pression. À densité
+        modérée (le campagnol est d'abord une PROIE), la morsure est RARE → usure lente,
+        pas punition (philo #6). Un foyer DENSE et durable finit par éroder la plante.
+      • LÉTAL : jeune ligneux (écorce annelable) sous forte densité (≥ LETHAL) → le
+        collet rongé tout autour coupe la sève → −2 (bascule certaine, hors tirage).
+    Flux respecté (#1/#2) : campagnol → contrainte racinaire → réponse de la plante."""
+    if not plant.is_alive or eco is None:
+        return []
+    r, c = plant.position
+    dens = eco.category_density("herbivore_vertebre", r, c)
+    pressure = dens * ROOT_HERBIVORY_GAIN
+    if pressure < ROOT_HERBIVORY_FLOOR:
+        return []
+    # Annélation létale : jeune ligneux (écorce tendre) sous forte densité — certaine.
+    jeune_ligneux = (getattr(plant.plant_class, "age_curve", None)
+                     and plant.current_height <= LIGNEUX_ANNELE_CM)
+    if jeune_ligneux and dens >= ROOT_HERBIVORY_LETHAL:
+        return [ReduceHealth(plant, 2, reason=f"annélation racinaire d={dens:.3f}")]
+    # Morsure chronique modeste : rare tant que la densité reste basse (tirage
+    # déterministe ∝ pression).
+    if _hash_noise(seed, week * 43, r, c) < pressure:
+        return [ReduceHealth(plant, 1, reason=f"herbivorie racinaire d={dens:.3f}")]
+    return []
+
+
 def background_mortality(plant: PlantInstance, eco,
                          seed: int, week: int) -> list[Mutation]:
     """
@@ -490,6 +543,9 @@ def apply_disturbances(tile, eco, game_state: dict,
             continue
         # Herbivorie + ravageurs létaux (chronique)
         chronic_muts += herbivory_pressure(plant, tile, game_state, eco)
+        # Herbivorie RACINAIRE (campagnol, canal dédié ① — chronique). À densité
+        # `herbivore_vertebre` nulle → aucun coup → invariant golden pour ce terme.
+        chronic_muts += root_herbivory(plant, tile, game_state, eco, seed, week)
         # Fonte des semis (AIGU, non capé) + maladies fongiques (chronique)
         acute_muts += damping_off(plant, tile, eco, seed, week, saison)
         vl = eco.vent.at_plot(*plant.position) if eco and eco.vent else 0.0

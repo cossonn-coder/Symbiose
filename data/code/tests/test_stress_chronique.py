@@ -32,6 +32,7 @@ from plants import Zucchini
 from fields import init_eco
 from sim.engine import Engine
 import sim.engine.boucle as _boucle
+import sim.effects.perturbations as _pert
 from sim.weather import CALME
 
 MAX_WEEKS = 46   # < 49 : on s'arrête AVANT la mort hivernale de l'annuelle
@@ -53,6 +54,11 @@ def _lab_tile():
     _boucle.weather_state = _meteo_labo
     _boucle.ALEAS_RAVAGEURS = [a for a in _boucle.ALEAS_RAVAGEURS
                                if a.nom == "Calme"] or _boucle.ALEAS_RAVAGEURS[:1]
+    # Neutralise l'herbivorie RACINAIRE du campagnol (sommet trophique ①) : sur un
+    # sol non remué le rongeur s'installe même sur une plante isolée (habitat de
+    # galeries) et rognerait la santé → confond la voie testée. On l'écarte comme les
+    # aléas ravageurs, pour ISOLER le facteur (ombre/édaphique). Idempotent.
+    _pert.root_herbivory = lambda *a, **k: []
     return tile, eco
 
 

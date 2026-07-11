@@ -87,6 +87,11 @@ CONCEPT_DE: dict[tuple[str, str | None], str] = {
     ("mort", "gel"):              "météo",
     ("mort", "conflit"):          "compétition",
     ("ravageur", None):           "ravageurs",
+    # Herbivorie RACINAIRE du campagnol (sommet trophique ①) : même concept de
+    # maîtrise « ravageurs » que le nuisible de saison — le joueur y apprend la
+    # régulation top-down (le super-prédateur ② en fera une boucle). Le carnet
+    # bascule en interprétatif au seuil du concept « ravageurs » (§6).
+    ("ravageur", "rongeur_racinaire"): "ravageurs",
     ("abscission", None):         "décomposition",
     ("acclimatation", None):      "adaptation",          # D43 (doc §5.1 dernière ligne)
     # Rosée & gelée blanche (sprint météo→champs ⑤) : aléas CLIMATIQUES nocturnes,

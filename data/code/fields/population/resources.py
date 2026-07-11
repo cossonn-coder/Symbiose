@@ -14,6 +14,33 @@ from fields.population.constants import (
 
 
 # ---------------------------------------------------------------------------
+# RESSOURCE RACINAIRE DU CAMPAGNOL (sommet trophique ①, CONCEPTION §2.1)
+# ---------------------------------------------------------------------------
+# L'herbivore vertébré (campagnol) ne broute PAS le feuillage : il ronge les
+# ORGANES SOUTERRAINS (racines, bulbes, tubercules) et la jeune écorce ligneuse au
+# collet. Sa ressource se lit donc sur l'empreinte RACINAIRE des plantes
+# (`p.root_plots`, mémoïsée) — pas foliaire —, pondérée par la PALATABILITÉ de
+# l'organe selon la famille : les bulbes (Amaryllidaceae) et les racines charnues
+# sont les mets de choix, le jeune ligneux (écorce tendre) est rongé au collet, le
+# reste (herbe, feuillage) compte peu en souterrain. Placeholders, calibrage
+# post-test (comme les autres guildes, §5.6). Normalisé par ROOT_REF.
+ROOT_REF          = 2.0   # somme de biomasse racinaire perçue saturant la ressource
+ROOT_PREF_DEFAUT  = 0.30  # palatabilité racinaire d'une famille non listée (racines fines)
+# Familles à organe souterrain charnu très appété (bulbe / tubercule / racine
+# pivotante) — le campagnol y creuse en priorité (§2.1).
+ROOT_PREF_FAMILLE = {
+    "Amaryllidaceae": 1.0,   # bulbes (ail, oignon) — mets de choix
+    "Solanaceae": 0.85,      # tubercule (pomme de terre) + racines charnues
+    "Fabaceae": 0.55,        # nodosités + racines tendres
+    "Asteraceae": 0.50,      # racines pivotantes (pissenlit, topinambour)
+    "Brassicaceae": 0.60,    # racines charnues (navet, radis)
+    "Poaceae": 0.20,         # racines fibreuses fines — peu appété
+}
+ROOT_PREF_LIGNEUX = 0.65  # jeune écorce ligneuse annelée au collet (arbustes/arbres jeunes)
+LIGNEUX_JEUNE_CM  = 250.0  # hauteur au-delà de laquelle l'écorce est trop épaisse pour être rongée
+
+
+# ---------------------------------------------------------------------------
 # ATTRACTION ANIMALE PAR LE FRUIT TOMBÉ (décompo·compost ④, CONCEPTION §4)
 # ---------------------------------------------------------------------------
 # Une parcelle `fruit` (déposée par engine._tick_fruits à la chute des sur-mûrs)
@@ -212,6 +239,44 @@ def _soil_food_grid(eco, tile, plants) -> list[list[float]]:
             om = min(1.0, (eco.om_fresh_at(r, c)
                            + eco.om_active.at_plot(r, c)) / OM_REF)
             g[r][c] = _clamp01(0.5 * micro + 0.5 * om)
+    return g
+
+
+def _root_palatability(plant) -> float:
+    """Palatabilité racinaire d'une plante pour le campagnol (§2.1) : préférence de
+    famille (bulbe/tubercule/racine charnue) OU écorce d'un JEUNE ligneux, en gardant
+    le maximum des deux. Un jeune arbre d'une famille peu appétée reste rongé au collet
+    (écorce tendre) ; un vieux ligneux (écorce épaisse) retombe sur sa préférence de
+    famille. Placeholder, calibrage post-test."""
+    fam = plant.plant_class.family
+    pref = ROOT_PREF_FAMILLE.get(fam, ROOT_PREF_DEFAUT)
+    # Jeune ligneux (reconnu comme la nécromasse ligneuse, `age_curve`) à écorce
+    # encore tendre → cible du collet ; au-delà de LIGNEUX_JEUNE_CM l'écorce durcit.
+    if (getattr(plant.plant_class, "age_curve", None)
+            and plant.current_height <= LIGNEUX_JEUNE_CM):
+        pref = max(pref, ROOT_PREF_LIGNEUX)
+    return pref
+
+
+def _racine_grid(eco, tile, plants) -> list[list[float]]:
+    """Ressource du campagnol (herbivore vertébré, ①) = biomasse racinaire perçue
+    sous l'empreinte SOUTERRAINE (`p.root_plots`, mémoïsée) des plantes vivantes,
+    pondérée santé × palatabilité de l'organe (`_root_palatability`), normalisée par
+    ROOT_REF. Distincte du feuillage (`_foliage_grid`) : le rongeur creuse là où il y
+    a des racines charnues/bulbes/écorce, pas là où il y a des feuilles."""
+    g = _zero_grid(eco.rows, eco.cols)
+    for p in plants:
+        if not p.is_alive or p.current_stage < 1:
+            continue
+        w = (p.health / 3.0) * _root_palatability(p)
+        if w <= 0.0:
+            continue
+        for (r, c) in p.root_plots:
+            if 0 <= r < eco.rows and 0 <= c < eco.cols:
+                g[r][c] += w
+    for r in range(eco.rows):
+        for c in range(eco.cols):
+            g[r][c] = min(1.0, g[r][c] / ROOT_REF)
     return g
 
 

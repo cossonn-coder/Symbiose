@@ -19,6 +19,7 @@ from fields.population.resources import (
     _auxiliaire_habitat_grid, _undisturbed_structure_grid, _merle_food_grid,
     _base_habitat_grid, _pile_grid, _ravageur_grid, _abeille_habitat_grid,
     _pollinisateur_habitat_grid, _osmie_habitat_grid, _avec_abri_paillage,
+    _racine_grid,
 )
 
 
@@ -44,6 +45,7 @@ _SALT_SYRPHE        = 0x2A4001
 _SALT_PAPILLON      = 0x2A5001
 _SALT_BOURDON       = 0x2AD001   # pollinisateur B précoce/frais (⑤ catalogue enrichi)
 _SALT_OSMIE         = 0x2AE001   # abeille solitaire niche-bois (⑤ catalogue enrichi)
+_SALT_CAMPAGNOL     = 0x2AF001   # herbivore vertébré racinaire (sommet trophique ①)
 
 
 def build_population_specs() -> list[TrophicSpec]:
@@ -120,6 +122,24 @@ def build_population_specs() -> list[TrophicSpec]:
             signal_fn=_rav_fruit_signal,         # fruit pourri → cloporte (repris de la limace)
             daylen_min=9.0, daylen_full=12.0,    # humide : fenêtre large/précoce (comme la limace)
             **encyclo_meta("cloporte"),
+        ),
+        # --- Catégorie NEUVE `herbivore_vertebre` : campagnol (sommet trophique ①) --
+        # PROIE du sprint (le super-prédateur ② en vit) → position PROIE (avant les
+        # auxiliaires) pour que rapace/couleuvre le lisent frais en ②. Canal DÉDIÉ,
+        # distinct de `ravageur` (Q3) : il ronge racines/bulbes/écorce, pas le
+        # feuillage → signe propre (`rongeur_racinaire`, semiologie), pas le criblage
+        # foliaire. `predators=()` ici (ses puits arrivent en ②). Fenêtre LARGE (actif
+        # quasi toute l'année, dortoir en galerie l'hiver — comme le lombric §2.1).
+        # `interconnexions` DÉJÀ posées vers rapace/couleuvre (encyclo, ⑥ symétrie) :
+        # elles ne sont jamais lues par le tick (donnée pure) → golden neutre pour ça,
+        # et le test de symétrie n'itère QUE sur les 10 espèces ④ (campagnol hors set).
+        TrophicSpec(
+            name="campagnol", category="herbivore_vertebre", salt=_SALT_CAMPAGNOL,
+            resource_fn=_racine_grid,
+            habitat_fn=_avec_abri_paillage(_undisturbed_grid),   # galeries : sol non remué + couvert
+            predators=(),                        # rapace/couleuvre câblés en ②
+            daylen_min=8.5, daylen_full=10.0,    # LARGE : quasi toute l'année (comme le lombric)
+            **encyclo_meta("campagnol"),
         ),
         # --- Catégorie `auxiliaire` : 5 espèces nommées (scission ④c, doc §2) ----
         # Chacune chasse SA proie nommée (`_espece_grid`) avec SON habitat propre.

@@ -43,7 +43,8 @@ from fields.ecofields import (CHLOROSE_PH, SEUIL_ACIDOPHILE, PH_MAX,
 #   DROUGHT_DAMAGE_THRESHOLD — drought_memory au-delà de laquelle le tissu souffre
 #   HERBIVORY_GAIN — gain densité→pression, sert à exprimer le floor du détecteur
 from sim.effects.perturbations import (DROUGHT_DAMAGE_THRESHOLD, HERBIVORY_GAIN,
-                                       SHADE_DAMAGE_THRESHOLD)
+                                       SHADE_DAMAGE_THRESHOLD,
+                                       ROOT_HERBIVORY_GAIN, ROOT_HERBIVORY_FLOOR)
 # Bornes de la dynamique d'expression plastique (plasticité ①) : le signe
 # d'acclimatation rampe de EXPR_MIN (génotype nu, pas d'endurcissement) à
 # EXPR_MAX (durcissement maximal) — DRY, pas de nombre dupliqué.
@@ -54,6 +55,11 @@ from plants.genetics import ADAPTOGENIC_GENES, EXPR_MIN, EXPR_MAX
 # On exprime ce floor à partir du gain pour rester DRY : le signe ravageurs
 # apparaît exactement au seuil où la morsure commence à compter.
 RAVAGEURS_FLOOR = 0.005 / HERBIVORY_GAIN   # ≈ 0.025
+
+# Densité `herbivore_vertebre` (campagnol) sous laquelle `root_herbivory` ne fait
+# RIEN (garde-fou `pressure < ROOT_HERBIVORY_FLOOR`, pression = densité·gain). DRY :
+# le signe racinaire apparaît EXACTEMENT au seuil où la morsure souterraine compte.
+RONGEUR_RACINAIRE_FLOOR = ROOT_HERBIVORY_FLOOR / ROOT_HERBIVORY_GAIN   # ≈ 0.05
 
 
 def _ramp(mesure: float, apparition: float, plein: float) -> float:
@@ -128,6 +134,19 @@ def ravageurs(plant, eco, saison) -> float:
     return _ramp(rav + chen, RAVAGEURS_FLOOR, 1.0)
 
 
+def rongeur_racinaire(plant, eco, saison) -> float:
+    """Herbivorie RACINAIRE (campagnol, sommet trophique ①) : signe de FORME au
+    RAS DU SOL — la plante jaunit/flétrit par la BASE sans cause foliaire, jeune tige
+    écorcée/annelée au collet, racine rongée. Miroir de `root_herbivory` : MÊME densité
+    locale lue (`herbivore_vertebre`, agrégée comme le ravageur). Distinct du criblage
+    foliaire du ravageur (la cause est SOUTERRAINE, on l'infère — indice #5/#6).
+    Apparition au floor du mécanisme, plein à champ saturé. À densité nulle (aucun
+    campagnol) ⇒ 0 → aucun signe au smoke (golden NEUTRE pour ce détecteur)."""
+    r, c = plant.position
+    dens = eco.category_density("herbivore_vertebre", r, c) if eco else 0.0
+    return _ramp(dens, RONGEUR_RACINAIRE_FLOOR, 1.0)
+
+
 def senescence(plant, eco, saison) -> float:
     """Sénescence : jaunissement-rougissement de FIN DE VIE (à distinguer du
     rougeoiement saisonnier d'automne, géré ailleurs par la couleur de saison).
@@ -175,6 +194,7 @@ DETECTEURS = (
     ("secheresse", secheresse),
     ("asphyxie", asphyxie),
     ("ravageurs", ravageurs),
+    ("rongeur_racinaire", rongeur_racinaire),
     ("ombre", ombre),
     ("senescence", senescence),
     ("acclimatation", acclimatation),
@@ -185,6 +205,10 @@ DETECTEURS = (
 # ÉVÉNEMENTIELLES (maladie/gel/grele) que le ② viendra fusionner.
 PRIORITE = {
     "asphyxie": 0, "secheresse": 1, "maladie": 2, "ravageurs": 3,
+    # L'herbivorie racinaire est un dégât AIGU (collet rongé) mais dont la cause est
+    # cachée : juste après le ravageur foliaire (même famille de morsure), avant les
+    # carences lentes (chlorose/ombre/sénescence).
+    "rongeur_racinaire": 3.5,
     "gel": 4, "grele": 5, "chlorose": 6, "ombre": 7, "senescence": 8,
     # L'acclimatation est une RÉPONSE (durcissement), pas une souffrance : à
     # intensité égale on montre toujours d'abord le signe de DÉGÂT, le durcissement
