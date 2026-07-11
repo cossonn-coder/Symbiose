@@ -56,6 +56,12 @@ namespace Symbiose
 		public static readonly Color SymMaladie     = new Color("8a6a4a"); // brun tacheté (cryptogamique)
 		public static readonly Color SymOmbre       = new Color("c2c8a0"); // vert pâle délavé (étiolement)
 		public static readonly Color SymAcclimatation = new Color("9db8b0"); // glauque bleu-gris (durcissement)
+		// Herbivorie RACINAIRE (campagnol, sommet trophique ③) : flétrissure par la
+		// BASE — la plante jaunit-brunit d'un jaune SALE, cause souterraine (collet
+		// rongé/écorcé). Distinct du beige sec de la sécheresse (plus chaud, teinté de
+		// brun de collet blessé) et du jaune franc de la chlorose : le tissu se meurt
+		// par manque de sève montante, pas par carence assimilable.
+		public static readonly Color SymRongeurRacinaire = new Color("b39244"); // jaune-brun sale (flétri par le collet)
 
 		// === TEXTURE FOLIAIRE =================================================
 		public static readonly Color PustuleMaladie = new Color("4a3320"); // tache brun foncé (semis cryptogamique)

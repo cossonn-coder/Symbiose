@@ -111,6 +111,11 @@ namespace Symbiose
 			["papillon"]         = (new Color("e8e2d4"), new Color("dcb4d2"), "absent", "butinant", 0f, 1f),
 			["bourdon"]          = (new Color("e8e2d4"), new Color("d8a020"), "absent", "butinant", 0f, 1f),
 			["osmie"]            = (new Color("e8e2d4"), new Color("b5651d"), "absent", "butinant", 0f, 1f),
+			// Herbivore vertébré (category="herbivore_vertebre") — sommet trophique ③
+			["campagnol"]        = (new Color("e8e2d4"), new Color("9a6a3a"), "absent", "galeries", 0f, 1f),
+			// Super-prédateurs (category="super_predateur") — ferment le sommet
+			["rapace"]           = (new Color("e8e2d4"), new Color("b58a4a"), "absent", "en chasse", 0f, 1f),
+			["couleuvre"]        = (new Color("e8e2d4"), new Color("5a7a3a"), "absent", "au soleil", 0f, 1f),
 		};
 		// Champ inconnu de la table (futur champ moteur ramassé par
 		// l'introspection) : bleu→rouge générique en échelle auto, jamais un

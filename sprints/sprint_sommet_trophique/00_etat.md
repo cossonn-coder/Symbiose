@@ -171,9 +171,51 @@ racine. Budget ≤ +10 %/tronçon respecté (à confirmer au chiffrage ②).
 - **Reste F5 Nico** : rien à ② (Python pur). Sprites rapace/couleuvre côté vue +
   reflux visible des proies = tronçon ③.
 
+### ③ vue Godot (sprites + signe racinaire) — FAIT (2026-07-11)
+- **MacroLife.cs** : 3 espèces ajoutées à la table `Especes` (patron ⑥b, clé =
+  nom d'espèce reçu du pont, déjà émis par `sprites[tile]={f.spec.name:…}` — RIEN
+  à changer côté Python) :
+  - `campagnol` (herbivore_vertebre) : rongeur brun-roux `9a6a3a`, point moyen
+    3.0 px, errance COURTE/lente (8 cm, 1.2 rad/s) — sort de galerie, grignote,
+    replonge ;
+  - `rapace` (super_predateur) : brun-fauve `b58a4a`, point le plus GRAND 4.2 px,
+    errance LARGE/rapide (26 cm, 1.6) — silhouette aérienne qui patrouille ;
+  - `couleuvre` (super_predateur) : vert-olive `5a7a3a`, 2.6 px, errance moyenne,
+    ondulation LENTE (10 cm, 0.7) — rampe près des piles.
+- **FieldOverlay.cs** : mêmes 3 espèces à la heatmap par espèce (F6), pôle haut =
+  la couleur du point MacroLife (un seul langage visuel : la heatmap double les
+  points), labels « galeries »/« en chasse »/« au soleil ».
+- **Signe `rongeur_racinaire`** mappé côté C# : nouvelle teinte
+  `Palette16.SymRongeurRacinaire` (`b39244`, jaune-brun sale = flétri par le collet)
+  + entrée dans `PlantRenderer.ColorantTints`. CANAL COULEUR (colorant, comme
+  ombre/chlorose) — distinct du criblage foliaire `ravageurs` (canal TEXTURE, trous
+  dans le limbe) : le flétrissement basal traduit la cause souterraine (indices
+  #5/#6). Le `switch` texture ignore la cause inconnue (forward-compatible) → pas de
+  criblage foliaire parasite.
+- **Encyclopédie** : AUCUN code C# neuf — `EncyclopediePanel` est data-driven
+  (`Bridge.Encyclopedie(type:"animal")` → index+fiches VERBATIM du pont). Les 3
+  espèces (blurbs + interconnexions posés en ①② dans `faune_encyclo.py`)
+  apparaissent AUTOMATIQUEMENT dans l'onglet Animaux dès découverte (patron ⑥).
+- **Protocole** : PAS de bump (reste 0.5.26). Le bloc `sprites` est par espèce
+  depuis 0.2.3 (schéma inchangé) ; `rongeur_racinaire` est une cause de plus dans
+  la liste ouverte `leaf_symptoms` (extension de DONNÉES tolérante, comme
+  `ombre`/`acclimatation` — la vue ignore une cause inconnue). Aligné sur ①② qui
+  n'ont pas bumpé. Le kickoff autorise (« bump seulement si l'ajout d'espèces le
+  justifie, sinon laisser »).
+- **Golden INTACT** : `eb46b49deef4590f0b5f44ce0309c0c09bbbd3d9f536aa039ba80108bc25dd5c`
+  (identique au ② — aucune écriture moteur, tronçon C# pur).
+- **Build C#** : `dotnet build Symbiose.csproj` VERT (0 avertissement, 0 erreur).
+- **Fichiers touchés** : `visuals/MacroLife.cs`, `visuals/FieldOverlay.cs`,
+  `visuals/Palette16.cs`, `visuals/PlantRenderer.cs`. Tous ≤ green (aucun split).
+- **Reste F5 Nico** : campagnol au sol sur zones à racines, rapace en vol au-dessus,
+  couleuvre près des piles au soleil ; plante rongée au collet lisible (jaune-brun
+  sale par la base) et distincte du criblage foliaire ; boom-bust visible dans la
+  durée. Verser tout écart en dette ciblée.
+
 ## §REPRISE
-② CLOS (non commité — l'orchestrateur commite). Golden re-figé #2
-`eb46b49deef4…`, population_hash `2431b6b153…`, prouvé localisé (retombe sur ①
-si puits ôtés). PROCHAIN : `/clear` puis `03_vue_godot.md` (sprites C# par espèce
-campagnol/rapace/couleuvre + mapping signe `rongeur_racinaire` dans `PlantRenderer`,
-pont déjà par espèce → **golden intact**, tronçon C#/F5).
+**SPRINT SOMMET TROPHIQUE TERMINÉ** (①②③ tous FAITS, non commités —
+l'orchestrateur commite). ③ = vue C# pure, **golden INTACT** `eb46b49deef4…`
+(inchangé depuis ②), build C# VERT. Maintenance D61 restante (hors code, à faire
+au commit/après) : `CONCEPTION_COMPLETUDE_ECOSYSTEME.md` T1(D1)+T7(B4) ⚠️→✅
+« Incarné par » rapace/couleuvre/campagnol ; `DETTE.md` (D61) + `BACKLOG.md` +
+`journal.md` ; `/audit-projet ecosysteme`.

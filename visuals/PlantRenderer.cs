@@ -94,6 +94,14 @@ namespace Symbiose
 			// (risque de le confondre avec une simple ombre de volume) ; ce léger
 			// réchauffement le re-décale vers le vert-jaune anémié, distinct du bleu.
 			["ombre"]      = Palette16.SymOmbre, // vert pâle délavé désaturé (étiolement)
+			// rongeur_racinaire (sommet trophique ①, campagnol) : herbivorie SOUTERRAINE
+			// — collet rongé/écorcé, racine coupée → la sève ne monte plus, la plante se
+			// fane par la BASE en jaune-brun sale. Canal COULEUR (comme les autres
+			// carences chroniques) : un dégât plus aigu (asphyxie/sécheresse) le masque,
+			// mais une plante seulement rongée au collet RÉVÈLE le flétrissement basal.
+			// Distinct du criblage foliaire du ravageur (canal TEXTURE, trous dans le
+			// limbe) : ici la cause est cachée sous terre — on l'INFÈRE (indices #5/#6).
+			["rongeur_racinaire"] = Palette16.SymRongeurRacinaire, // jaune-brun sale (flétri par le collet)
 			// acclimatation (plasticité ⑤) : pas un dégât mais un DURCISSEMENT —
 			// feuillage coriace/glauque, voile de cire bleu-gris (synthèse bio §4).
 			// Partage le canal COULEUR : un vrai signe de souffrance (intensité plus

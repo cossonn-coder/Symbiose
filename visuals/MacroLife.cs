@@ -97,6 +97,18 @@ namespace Symbiose
 			// Détritivores (category="detritivore") — lombric = tiret du ver
 			["lombric"]    = (new Color("8a4a3a"), 0f, 1.5f, 0.6f),
 			["cloporte"]   = (new Color("8a8a8a"), 2.2f, 4f, 1.2f),
+			// Herbivore vertébré (category="herbivore_vertebre", sommet trophique ③) :
+			// campagnol = rongeur brun-roux BAS AU SOL sur ses monticules à racines. Point
+			// moyen (plus gros qu'un insecte, plus petit qu'un oiseau), errance courte et
+			// lente (il sort de sa galerie, grignote au collet, replonge).
+			["campagnol"]  = (new Color("9a6a3a"), 3.0f, 8f, 1.2f),
+			// Super-prédateurs (category="super_predateur") — ferment le sommet.
+			// rapace = silhouette AÉRIENNE : point plus GRAND (le plus visible), errance
+			// LARGE et rapide (il patrouille en vol, plane haut au-dessus du jardin).
+			["rapace"]     = (new Color("b58a4a"), 4.2f, 26f, 1.6f),
+			// couleuvre = serpent vert-olive ONDULÉ au sol près des piles au soleil.
+			// Errance moyenne, ondulation LENTE (elle rampe, se love, file à découvert).
+			["couleuvre"]  = (new Color("5a7a3a"), 2.6f, 10f, 0.7f),
 		};
 		// Espèce inconnue d'un futur protocole : point gris, pas un crash.
 		private static readonly (Color, float, float, float) EspeceInconnue =
