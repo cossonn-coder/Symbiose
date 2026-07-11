@@ -86,6 +86,19 @@ Source : `data/code/` (Python, vérité), les `.cs` (C#, vue), `tools/`.
 - **Voix narratives des espèces** — règle « toute plante = ses 5 voix »
   (encyclopédie / carnet / pages / magazine / événements). Repère une espèce du
   catalogue qui serait muette = 🟡.
+- **Complétude de l'écosystème (D61)** — référentiel =
+  `docs/conception/CONCEPTION_COMPLETUDE_ECOSYSTEME.md` (matrice fonctionnelle
+  téléonomique : chaque flux a source ET puits). Lecture croisée référentiel ↔
+  catalogues réels (`plants/catalogue.py`, `fields/population/registry.py`, le
+  mycélium). Signale : **(a) fonctions orphelines** = lignes ⚠️ encore ouvertes
+  de la matrice §2 (priorisées §3) → reco « ouvrir `/conception <sujet>` » ;
+  **(b) espèces conçues-non-implémentées** = 🔵 du pipeline §4 dont le doc source
+  est marqué implémenté (statut à passer ✅) ou qui traîne ; **(c) espèce hors-sol
+  téléonomique** = présente au catalogue mais rattachée à AUCUNE fonction §2 →
+  le référentiel doit être mis à jour (garde-fou anti-dérive). Croise le contrôle
+  « 5 voix » ci-dessus (fonction bouchée par une fiche muette = 🟡). Priorité au
+  bouclage trophique (une boucle ouverte au sommet, ex. super-prédateur absent,
+  = 🔴). Ciblable via l'argument `ecosysteme`.
 - **Code mort / orphelin** — signale-le, **ne le supprime pas** (garde-fou projet
   « ne jamais jeter de code »).
 - **Performance par fonctionnalité** — chaque mécanique a un budget. Profile
