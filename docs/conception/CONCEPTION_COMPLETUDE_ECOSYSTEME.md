@@ -81,7 +81,7 @@ Colonne « bouclage » = ce qui prouve que le flux a source ET puits.
 | B1 Suceur de phloème | plante→puceron→prédateur | ✅ | puceron |
 | B2 Folivore broyeur (insecte) | feuille→larve→prédateur/métamorphose | ✅ | doryphore, chenille |
 | B3 Mollusque herbivore | plante→limace→prédateur | ✅ | limace |
-| B4 Herbivore VERTÉBRÉ | racine/écorce→rongeur→super-prédateur | ⚠️ **T7** | — (campagnol, lapin) |
+| B4 Herbivore VERTÉBRÉ | racine/écorce→rongeur→super-prédateur | ✅ (T7, 2026-07-11) | campagnol (cat. `herbivore_vertebre`, dégât racinaire dédié) |
 | B5 Larve aquatique (mare) | détritus mare→larve→prédateur aérien | 🔵 | **moustique** 🔵 (hydrologie) |
 
 ### C. Consommateurs secondaires (prédateurs / auxiliaires)
@@ -97,7 +97,7 @@ Colonne « bouclage » = ce qui prouve que le flux a source ET puits.
 ### D. Consommateurs tertiaires (super-prédateurs, niveau 3)
 | Fonction | Bouclage | Statut | Incarné par |
 |---|---|---|---|
-| D1 **Super-prédateur** (ferme le sommet) | auxiliaires/rongeurs→couleuvre/belette/rapace | ⚠️ **T1** | — |
+| D1 **Super-prédateur** (ferme le sommet) | auxiliaires/rongeurs→couleuvre/belette/rapace | ✅ (T1, 2026-07-11) | rapace (aérien : campagnol+merle), couleuvre (terrestre : campagnol+limace) |
 
 > **Boucle ouverte la plus grave** : aujourd'hui hérisson, merle, carabe,
 > coccinelle n'ont **aucun puits** → leur population n'est régulée que par la
@@ -167,13 +167,13 @@ Priorité = gravité de la boucle ouverte × cohérence permaculturelle.
 
 | # | Trou | Fonction | Priorité | Espèce(s) candidate(s) | Boucle fermée par l'ajout |
 |---|---|---|---|---|---|
-| **T1** | Super-prédateur (sommet trophique) | D1 | 🔴 **haute** | couleuvre, belette, rapace (buse/chouette) | régule hérisson/merle/rongeurs (top-down) |
+| ~~T1~~ ✅ | Super-prédateur (sommet trophique) | D1 | 🔴 **haute** | **rapace + couleuvre** (implémentés 2026-07-11) | régule merle/limace/campagnol (top-down) |
 | **T2** | Parasitoïde | C4 | 🔴 **haute** | guêpe aphidius / ichneumon | régule puceron/chenille de l'intérieur (clé permaculture) |
 | **T3** | Pathogène fongique en ACTEUR | G1 | 🟡 moyenne-haute | acteur « rouille/mildiou » spatialisé + fongivore | ferme le flux maladie (source spores ↔ puits) |
 | **T4** | Endozoochorie | H3 | 🟡 moyenne | (merle existant, ajouter le transport de graine) | fruit→oiseau→colonisation d'un plot lointain |
 | **T5** | Pollinisateur nocturne + fleur nocturne | E4 + A6 | 🟡 moyenne | sphinx/noctuelle **+** onagre/chèvrefeuille | niche pollinisation nuit (paire indissociable) |
 | **T6** | Nectar de soudure (fin hiver) | A5 | 🟡 moyenne (facile) | perce-neige, crocus, noisetier (chatons) | nourrit les pollinisateurs au réveil (`daylength` déjà là) |
-| **T7** | Herbivore vertébré | B4 | 🟢 basse-moyenne | campagnol, lapin | proie du super-prédateur T1 (couple à T1) |
+| ~~T7~~ ✅ | Herbivore vertébré | B4 | 🟢 basse-moyenne | **campagnol** (implémenté 2026-07-11) | proie du super-prédateur T1 (couple à T1) |
 | **T8** | Plante parasite/hémiparasite | A9 | 🟢 basse | gui (arbre), rhinanthe (gramin.) | régulation de densité par ponction |
 | **T9** | Myrmécochorie / fourmi | H4 | 🟡 moyenne | fourmi (la violette a DÉJÀ l'élaïosome) | dispersion des graines à élaïosome |
 
