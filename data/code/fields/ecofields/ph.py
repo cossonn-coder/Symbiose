@@ -35,7 +35,7 @@ ni germination) → golden NEUTRE : on ajoute un champ qui n'influence aucun cal
 from __future__ import annotations
 
 from .constants import (PH_PAR_SOL, PH_INERTIA, ACIDIF_OM, ACIDIF_LEACH,
-                        LITIERE_REF, AMEND_PUSH)
+                        LITIERE_REF, AMEND_PUSH, PH_TOURBE, PH_MARAIS_LERP)
 
 
 def tick_ph(eco, cec: float = 0.0, amend_dir: int = 0) -> None:
@@ -53,5 +53,12 @@ def tick_ph(eco, cec: float = 0.0, amend_dir: int = 0) -> None:
             om_norm    = min(1.0, eco.om_fresh_at(r, c) / LITIERE_REF)
             leach_norm = min(1.0, eco.humidite.at_plot(r, c) / 3.0)
             cible = base - ACIDIF_OM * om_norm - ACIDIF_LEACH * leach_norm
+            # ACIDIFICATION DU MARÉCAGE (sprint hydrologie & marécages ③) : un plot en
+            # marais (`marais_memory` → 1) tire sa cible de pH vers PH_TOURBE (tourbière
+            # acide) ∝ la mémoire — terme d'INTERPOLATION borné (jamais sous PH_TOURBE).
+            # marais_memory=0 (repos) ⇒ +0 ⇒ dérive de pH strictement INCHANGÉE (golden).
+            marais = eco.marais_memory.at_plot(r, c)
+            if marais > 0.0:
+                cible += PH_MARAIS_LERP * marais * (PH_TOURBE - cible)
             cur   = ph.data[r][c]
             ph.set(r, c, cur + (cible - cur) * damp)   # GridField clampe [PH_MIN, PH_MAX]

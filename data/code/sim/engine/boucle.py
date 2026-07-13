@@ -234,6 +234,12 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
             #     qu'aucun plot ne déborde (eau_surface nulle). Re-figeage LARGE ANNONCÉ
             #     (l'eau circule enfin → bilan hydrique par plot modifié aux cuvettes).
             eco.tick_ruissellement()
+            # 3c. Marécage (sprint hydrologie & marécages ③) : une flaque qui DURE
+            #     intègre `marais_memory` vers 1 (hystérèse d'état). APRÈS le
+            #     ruissellement (qui pose la lame de surface) et AVANT décompo/pH,
+            #     qui LISENT la mémoire du tick (anaérobie → tourbe, acidification).
+            #     No-op strict tant qu'aucune flaque ne dure → golden NEUTRE hors banc.
+            eco.tick_marais()
 
             # 4. Décomposition biogéochimique (OM → fertilite, pertes C)
             eco.tick_decomposition()

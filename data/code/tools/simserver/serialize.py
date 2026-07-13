@@ -26,7 +26,8 @@ from fields.population import (
 from fields import light
 # Seuil de perception d'une flaque (sprint hydrologie & marécages ②) : la liste
 # creuse `eau_surface` ne consigne que les plots dont la lame le dépasse.
-from fields.ecofields.constants import SEUIL_FLAQUE, COUVERTURE_RENDU_SEUIL
+from fields.ecofields.constants import (SEUIL_FLAQUE, COUVERTURE_RENDU_SEUIL,
+                                         MARAIS_OFF)
 # Sémiologie foliaire (D33) : détecteurs PURS des stresseurs chroniques, miroirs
 # fidèles des seuils des mécaniques qui blessent. Remplace le bool `chlorose` du ⑨
 # par la liste `leaf_symptoms`. Recalcul pur côté serveur (moteur = source de
@@ -229,6 +230,7 @@ class SerializeMixin:
         epaisseur_by_tile = {}
         altitude_by_tile = {}
         eau_surface_by_tile = {}
+        marais_by_tile = {}
         couverture_by_tile = {}
         paillage_by_tile = {}
         for tile in gs["tiles"]:
@@ -405,6 +407,18 @@ class SerializeMixin:
                 [r, c, round(eco.eau_surface.data[r][c], 3)]
                 for r in range(eco.rows) for c in range(eco.cols)
                 if eco.eau_surface.data[r][c] > SEUIL_FLAQUE]
+            # Carte de MARÉCAGE par tuile (sprint hydrologie & marécages ③) : liste
+            # CREUSE `[[r, c, marais, etat], …]` des plots où `marais_memory > MARAIS_OFF`
+            # (marais naissant ou installé). `marais` ∈ [0,1] = intensité (la vue
+            # « noircit » le sol ∝ mémoire, philo #5) ; `etat` = booléen d'hystérèse
+            # (`est_marais`). La plupart des plots sont SECS → liste courte (patron
+            # `eau_surface`). PURE lecture (champ déjà tické par `tick_marais`) → aucun
+            # impact golden. Champ optionnel côté vue (tolérance pré-0.5.27 → pas de marais).
+            mmem = getattr(eco, "marais_memory", None)
+            marais_by_tile[tile.tile_id] = [
+                [r, c, round(mmem.data[r][c], 3), eco.est_marais(r, c)]
+                for r in range(eco.rows) for c in range(eco.cols)
+                if mmem is not None and mmem.data[r][c] > MARAIS_OFF]
             # Carte de COUVERTURE DU SOL par tuile (sprint LUXURIANCE ①, D65 §2.1,
             # exposée au pont au ⑥) : liste CREUSE `[[r, c, cov], …]` des plots
             # tapissés (cov > SEUIL) — fraction du sol couverte par les strates
@@ -523,6 +537,7 @@ class SerializeMixin:
                 "condensation": condensation_by_tile,
                 "epaisseur": epaisseur_by_tile,
                 "altitude": altitude_by_tile,
+                "marais": marais_by_tile,
                 "couverture": couverture_by_tile,
                 "paillage": paillage_by_tile,
                 "containers": self._containers_snapshot(gs, saison)}

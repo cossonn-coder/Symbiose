@@ -98,6 +98,10 @@ class MatiereOrganiqueMixin:
         worms = self.populations["lombric"] if self.populations else None
         if worms is not None:
             speed += WORM_DECOMP_BONUS * worms.at_plot(r, c)
+        # ANAÉROBIE DU MARÉCAGE (③) : le bois mort d'un plot gorgé se fragmente aussi
+        # moins vite (même flux ralenti que la minéralisation ci-dessus). marais=0 ⇒
+        # ×1.0 ⇒ fragmentation des squelettes strictement INCHANGÉE au repos (golden).
+        speed *= (1.0 - MARAIS_DECOMP_MALUS * self.marais_memory.at_plot(r, c))
         return speed
 
     def tick_decomposition(self) -> None:
@@ -148,6 +152,13 @@ class MatiereOrganiqueMixin:
                 # structure/aération = D30 différé). Cloporte = litière (dette si littéral).
                 if worms is not None:
                     speed += WORM_DECOMP_BONUS * worms.at_plot(r, c)
+                # ANAÉROBIE DU MARÉCAGE (sprint hydrologie & marécages ③) : un plot
+                # gorgé en permanence (`marais_memory` → 1) manque d'oxygène → la
+                # décompo se BLOQUE (`× (1 − MARAIS_DECOMP_MALUS · marais_memory)`).
+                # La litière s'accumule sans se minéraliser → l'épaisseur monte via
+                # `tick_epaisseur` = TOURBE émergente (aucun code neuf, couple D40).
+                # marais_memory=0 (repos) ⇒ ×1.0 ⇒ décompo strictement INCHANGÉE.
+                speed *= (1.0 - MARAIS_DECOMP_MALUS * self.marais_memory.at_plot(r, c))
 
                 # Lectures AVANT toute mutation (ordre historique : d_active se
                 # calcule sur l'active d'AVANT l'humification du frais → équivalence).

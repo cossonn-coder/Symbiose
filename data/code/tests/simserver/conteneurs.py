@@ -15,7 +15,7 @@ def test_conteneurs():
     s = ServerProc()
     # "full" : monde réel (maison → ombre) + banque de départ (planter_conteneur).
     init = s.send(cmd="init", config="full", seed=42)
-    check("engine_version 0.5.26", init.get("engine_version") == "0.5.26",
+    check("engine_version 0.5.27", init.get("engine_version") == "0.5.27",
           init.get("engine_version"))
     snap0 = s.send(cmd="snapshot")["snapshot"]
     check("snapshot expose `containers` VIDE à l'init (golden neutre)",
@@ -58,6 +58,16 @@ def test_conteneurs():
               bool(flat_a) and all(isinstance(v, (int, float)) and v >= 0.0
                                    for v in flat_a),
               f"{len(grid_a)}×{len(grid_a[0]) if grid_a else 0}")
+    # Marais (hydrologie & marécages ③, 0.5.27) : bloc `marais` = liste CREUSE par
+    # tuile des plots dont `marais_memory > MARAIS_OFF`. VIDE à l'init (aucune flaque
+    # durable) → golden neutre. La vue « noircit » le sol ∝ intensité (philo #5).
+    marais = snap0.get("marais")
+    check("snapshot expose `marais` (bloc par tuile)",
+          isinstance(marais, dict) and len(marais) > 0, type(marais).__name__)
+    check("marais : liste creuse VIDE à l'init (aucune flaque durable)",
+          isinstance(marais, dict)
+          and all(v == [] for v in marais.values()),
+          {k: len(v) for k, v in (marais or {}).items()})
 
     # --- poser_pot par position monde --------------------------------------
     rp = s.send(cmd="action", verb="poser_pot",

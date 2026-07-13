@@ -420,7 +420,17 @@ from __future__ import annotations
 #       Vigueur, philo #1). PURE extension (état joueur opt-in, hors tick, aucun RNG) →
 #       golden NEUTRE (le golden tourne hors serveur, aucune clé `palette` créée). Un
 #       binaire pré-0.5.26 répond « commande inconnue » à `palette` (tolérance côté vue).
-ENGINE_VERSION = "0.5.26"
+# 0.5.27 (hydrologie & marécages ③, marécage) : nouveau champ STOCKÉ `marais_memory`
+#       par plot ∈ [0,1] (intégration lente d'une flaque qui dure, hystérèse d'état
+#       `est_marais`) — EFFETS moteur : décompo anaérobie ralentie (→ tourbe émergente)
+#       + acidification du pH vers PH_TOURBE. EXPOSITION au snapshot : nouveau bloc
+#       `marais` par tuile = liste CREUSE `[[r, c, marais, etat], …]` des plots où la
+#       mémoire dépasse MARAIS_OFF (la vue « noircit » le sol ∝ intensité, philo #5).
+#       `marais_memory` exposé AUSSI au registre `get_field` (overlay F6). Effets NULS
+#       au repos (aucune flaque durable ⇒ marais_memory=0 ⇒ facteurs ×1.0/+0.0) →
+#       golden NEUTRE hors banc. Un binaire pré-0.5.27 ignore le bloc `marais` (tolérance
+#       côté vue, comme les bumps précédents). VUE C# (sol de marais) = tronçon ⑧.
+ENGINE_VERSION = "0.5.27"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

@@ -82,7 +82,7 @@ Kickoffs `01`→`08` écrits, autosuffisants. Prêt pour `/sprint-auto`.
 |---|---------|------|--------|
 | ① | `01_altitude.md` | Champ `altitude` déterministe + expo snapshot | NEUTRE ✅ FAIT |
 | ② | `02_eau_surface_ruissellement.md` | `eau_surface` + `tick_ruissellement` (double-buffer) | RE-FIGÉ LARGE ✅ FAIT (`284a3dc`) + test `284a3dc`… golden courant `eb46b49d…` |
-| ③ | `03_marecage.md` | `marais_memory` + hystérèse + effets décompo/pH + banc `tourbiere` | NEUTRE hors banc |
+| ③ | `03_marecage.md` | `marais_memory` + hystérèse + effets décompo/pH + banc `tourbiere` | NEUTRE ✅ FAIT (golden `eb46b49d…` INTACT, pont 0.5.27) |
 | ④ | `04_faune_de_mare.md` | Moustique + libellule (data-driven) + 5 voix | pop NEUTRE/maîtrisé annoncé |
 | ⑤ | `05_aulne_sphaigne.md` | Aulne (Betulaceae fixe-N) + Sphaigne (ingénieur) + voix | NEUTRE hors smoke |
 | ⑥ | `06_carnivore.md` | Drosera + PUITS→`moustique` (1er végétal-prédateur) + voix | NEUTRE hors smoke |
@@ -157,7 +157,58 @@ humidité) pour éviter le biais d'ordre de parcours (sinon direction privilégi
 - **Fichiers touchés ce session** : `tests/test_ruissellement.py` (NEUF) +
   `sprints/sprint_hydrologie_marecage/00_etat.md`. Non commit (Nico commit).
 
+## Avancement ③ (marécage : marais_memory + hystérèse + effets) — FAIT le 2026-07-13
+- Champ STOCKÉ `marais_memory: GridField(max_val=1.0)` (init 0) + grille d'état
+  `marais_etat` (bool) déclarés dans `container.py`, init au repos NEUTRE, exposés
+  au registre `get_field` (overlay F6) — `marais_memory` seul (l'état bool n'est pas
+  un GridField).
+- Mixin NEUF `fields/ecofields/marais.py` (`MaraisMixin`, 20 LDC) : `tick_marais()`
+  intègre `marais_memory += (cible − mem)·MARAIS_LERP` (cible=1 si `eau_surface >
+  SEUIL_FLAQUE`, sinon 0) PUIS met à jour `marais_etat` par HYSTÉRÈSE (entrée
+  MARAIS_ON=0.60, sortie MARAIS_OFF=0.30, zone morte = conserve l'état). Helper
+  `est_marais(r,c)` lit l'état. Zéro RNG, no-op strict au repos.
+- EFFETS émergents (facteur neutre à marais=0) : décompo `speed *= (1 −
+  MARAIS_DECOMP_MALUS·marais_memory)` dans `tick_decomposition` ET `decomp_speed`
+  (anaérobie → litière s'accumule → tourbe via `tick_epaisseur`, aucun code neuf) ;
+  pH tiré vers `PH_TOURBE=4.5` ∝ `marais_memory` dans `ph.py` (interpolation bornée).
+- Câblage boucle : `eco.tick_marais()` en 3c, APRÈS `tick_ruissellement`, AVANT
+  `tick_decomposition`/`tick_ph` (qui lisent la mémoire du tick).
+- Constantes (`constants.py`) : `MARAIS_LERP=0.05`, `MARAIS_ON=0.60`,
+  `MARAIS_OFF=0.30`, `MARAIS_DECOMP_MALUS=0.6`, `PH_TOURBE=4.5`, `PH_MARAIS_LERP=1.0`
+  (PLACEHOLDERS, calibrage F5).
+- Snapshot : bloc CREUX `marais` par tuile `[[r,c,marais,etat],…]` (plots où
+  `marais_memory > MARAIS_OFF`), inséré au dict de sortie. Pont bumpé **0.5.27**.
+- Banc `tourbiere` (`bancs/hydrologie.py`) : cuvette gorgée (altitude basse, sol
+  saturé, flaque, marais pré-installé) vs témoin sec → registre `BANCS`. Oracle
+  `tests/bancs/test_hydrologie.py` (5/5 : marais persiste, décompo ralentie, pH
+  acidifié vs témoin).
+- **Golden INCHANGÉ** `eb46b49d…` (marais=0 au smoke ⇒ tous facteurs neutres). Test
+  dédié `tests/test_marais.py` 13/13 (entrée/hystérèse/lenteur/repos neutre/décompo/
+  pH). Pont **271/271** (3 asserts version recalés 0.5.26→0.5.27 + 2 checks présence
+  bloc `marais` en conteneurs). Bancs climatique 20/20, succession 6/6.
+- **Non-régression** : `test_senescence` reste ROUGE CONNU (pommier mort 4.5 ans,
+  cause « autre » — préexistant, orthogonal). Banc édaphique 6/7 = FAIL `carence`
+  (163.7 vs 147.5) PRÉEXISTANT (vérifié `git stash` : identique sans mes changements),
+  indépendant de ③. `test_epaisseur_500ans` NON lancé (interdit).
+- **Fichiers touchés** : `fields/ecofields/{constants.py, container.py,
+  matiere_organique.py, ph.py}`, `fields/ecofields/marais.py` (NEUF), `sim/engine/
+  boucle.py`, `bancs/{__init__.py, hydrologie.py (NEUF)}`, `tools/simserver/
+  {serialize.py, version.py}`, `tests/{test_marais.py (NEUF), bancs/test_hydrologie.py
+  (NEUF), simserver/{voix.py, structures.py, conteneurs.py}}`. NON commit (Nico commit).
+- C# non touché (vue marais = ⑧).
+
 ## §REPRISE
+**① CLOS** (altitude). **③ CLOS** (marécage : `marais_memory` + hystérèse `est_marais`
++ effets décompo anaérobie/pH tourbeux, banc `tourbiere`, pont 0.5.27, golden INTACT
+`eb46b49d…`, tests 13/13 + oracle 5/5). **PROCHAIN = ④** (`04_faune_de_mare.md`) —
+guilde `moustique` (proie, prolifère sur `eau_surface`/marais) + `libellule`
+(auxiliaire prédateur), data-driven + 5 voix ; pop NEUTRE/maîtrisé annoncé. ④ avant
+⑥ (carnivore-puits lit le champ moustique). ⑤→⑦ visent NEUTRE, ⑧ pur-vue.
+**⚠️ Bugs préexistants NON traités ici** : `test_senescence` rouge + banc édaphique
+`carence` FAIL — orthogonaux à l'hydrologie, à trancher avec Nico hors sprint.
+Tout re-figeage NON annoncé par un kickoff = bug (`/sprint-auto` refuse).
+
+## §REPRISE_ANCIENNE (②)
 **① CLOS** (altitude). **② CLOS** — cœur déjà committé en `284a3dc` (`eau_surface` +
 `tick_ruissellement` double-buffer lisant `altitude`+`epaisseur_sol`, capture du
 surplus, boucle, snapshot, pont), golden RE-FIGÉ LARGE au moment du commit puis

@@ -882,6 +882,35 @@ INFILTRATION_SURFACE  = 0.15   # eau de surface réabsorbée/tick par le sol (×
 EVAP_SURFACE          = 0.20   # fraction de la lame évaporée/tick (lame libre)
 SEUIL_FLAQUE          = 0.10   # lame au-dessus de laquelle on perçoit une flaque (vue)
 
+# --- Marécage : mémoire + hystérèse (sprint hydrologie & marécages ③) ---------
+# Une FLAQUE qui DURE fait basculer le plot en MARÉCAGE — un état PERSISTANT du
+# milieu (philo #4), pas un type de sol scripté (philo #2/#6). On INTÈGRE une
+# mémoire lente `marais_memory` ∈ [0,1] vers 1 tant que le plot porte une flaque
+# (`eau_surface > SEUIL_FLAQUE`), vers 0 sinon ; puis une HYSTÉRÈSE (entrée haute
+# `MARAIS_ON`, sortie basse `MARAIS_OFF`) décide de l'état `est_marais` — sans quoi
+# un plot au seuil clignoterait à chaque oscillation de la lame (marais/pas-marais).
+#   cible          = 1.0 if eau_surface > SEUIL_FLAQUE else 0.0
+#   marais_memory += (cible − marais_memory) · MARAIS_LERP        (LENT, semaines)
+#   est_marais     = mémoire franchit MARAIS_ON (entrée) puis reste jusqu'à MARAIS_OFF
+# EFFETS du marécage (émergents, jamais scriptés) :
+#  - DÉCOMPO ANAÉROBIE : la vitesse de décomposition est rabotée
+#    `× (1 − MARAIS_DECOMP_MALUS · marais_memory)` → la litière s'accumule sans se
+#    minéraliser → l'épaisseur monte = TOURBE (aucun code neuf : l'épaisseur SUIT
+#    déjà la MO via `tick_epaisseur`). Couple D40.
+#  - ACIDIFICATION : la cible de dérive du pH est poussée vers `PH_TOURBE` ∝
+#    `marais_memory` (terme additif borné, dans `tick_ph`) → tourbière acide.
+# MARAIS_LERP est LENT (bascule en ~une saison de flaque continue) : un marais ne
+# naît pas d'une averse. L'écart ON/OFF garantit qu'un assèchement passager ne le
+# fait pas ressortir aussitôt (persistance). `marais_memory` NULLE au repos (aucune
+# flaque durable) → tous les termes neutres (×1.0, +0.0) → golden NEUTRE hors banc.
+# PLACEHOLDERS, calibrage F5 / banc `tourbiere`.
+MARAIS_LERP         = 0.05   # intégration lente de la mémoire de marais (semaines → bascule ~saison)
+MARAIS_ON           = 0.60   # seuil HAUT d'entrée en marais (hystérèse)
+MARAIS_OFF          = 0.30   # seuil BAS de sortie de marais (hystérèse, < MARAIS_ON)
+MARAIS_DECOMP_MALUS = 0.6    # part max de vitesse de décompo rabotée à marais plein (anaérobie)
+PH_TOURBE           = 4.5    # pH cible d'une tourbière acide (marais plein pousse la cible du pH ici)
+PH_MARAIS_LERP      = 1.0    # poids du terme marais dans la cible de dérive du pH (∝ marais_memory)
+
 # --- Paillage — champ `paillage` par plot (sprint équilibre invasion ③, D69) ---
 # Le LEVIER PERMACOLE central contre l'invasion d'adventices : un champ scalaire
 # `paillage` ∈ [0,1] (profondeur/densité du mulch) posé par le geste `pailler`, qui

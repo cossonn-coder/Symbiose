@@ -39,6 +39,7 @@ from .litiere import Parcelle     # parcelle de litière (couche fraîche, __pos
 from .matiere_organique import MatiereOrganiqueMixin
 from .hydrologie import HydrologieMixin
 from .ruissellement import RuissellementMixin
+from .marais import MaraisMixin
 from .uptake import UptakeMixin
 from .vie_macro import VieMacroMixin
 from .sol import SolMixin
@@ -49,8 +50,8 @@ from .paillage import PaillageMixin
 
 @dataclass
 class EcoFields(MatiereOrganiqueMixin, HydrologieMixin, RuissellementMixin,
-                UptakeMixin, VieMacroMixin, SolMixin, TicksMixin, CouvertureMixin,
-                PaillageMixin):
+                MaraisMixin, UptakeMixin, VieMacroMixin, SolMixin, TicksMixin,
+                CouvertureMixin, PaillageMixin):
     tile_id:    str
     rows:       int
     cols:       int
@@ -210,6 +211,22 @@ class EcoFields(MatiereOrganiqueMixin, HydrologieMixin, RuissellementMixin,
     # (l'eau circule enfin, le bilan hydrique par plot change). Exposée AUTO au
     # registre `get_field` (overlay debug F6) + au snapshot (bloc `eau_surface` ②).
     eau_surface:      GridField = field(default=None)
+    # Mémoire de MARÉCAGE (sprint hydrologie & marécages ③) — état PERSISTANT ∈ [0,1]
+    # par plot, INTÉGRÉ lentement (`tick_marais`) vers 1 tant qu'une flaque dure
+    # (`eau_surface > SEUIL_FLAQUE`), vers 0 sinon. Une flaque qui DURE fait « noircir »
+    # le plot en marais : décompo anaérobie ralentie (litière qui s'accumule = tourbe
+    # émergente, lue par `tick_decomposition`) + pH poussé vers l'acide (`tick_ph`) +
+    # niche humide/acide ouverte aux espèces marécageuses (⑤⑥). N'est PAS un type de
+    # sol scripté : état ÉMU (mémoire + seuil, philo #2/#6). NULLE au repos (aucune
+    # flaque durable) → décompo/pH neutres → construction directe (mini-sol de conteneur
+    # qui ne ruisselle pas) bit-identique, golden NEUTRE hors banc. Exposée AUTO au
+    # registre `get_field` (overlay debug F6 / pont) + au snapshot (bloc `marais` ③).
+    marais_memory:    GridField = field(default=None)
+    # État binaire de marais par plot (grille de bool) — dérivé de `marais_memory` par
+    # HYSTÉRÈSE (entrée MARAIS_ON, sortie MARAIS_OFF ; anti-clignotement au seuil),
+    # entretenu par `tick_marais`, lu par `est_marais`. Sépare l'ÉTAT (niche, vue) du
+    # DOSAGE des flux (décompo/pH lisent la mémoire continue). False partout au repos.
+    marais_etat:      list = field(default=None)
     # Couverture du sol (sprint LUXURIANCE ①, D65 §2.1) — fraction ∈ [0,1] du plot
     # couverte par le feuillage des strates BASSES (sol+basse), RECALCULÉE chaque tick
     # par SCATTER (`tick_couverture`, mixin `CouvertureMixin`). NULLE au repos (aucune
@@ -353,6 +370,14 @@ class EcoFields(MatiereOrganiqueMixin, HydrologieMixin, RuissellementMixin,
         # saturation) → déterminisme préservé pour une construction directe (conteneur).
         if self.eau_surface is None:
             self.eau_surface = GridField(self.rows, self.cols, max_val=HUM_CAP)
+        # Mémoire de marais (③) — NULLE au repos, bornée [0,1], intégrée par
+        # `tick_marais`. Repos NEUTRE (aucune flaque durable) → lecteurs décompo/pH
+        # neutres → déterminisme préservé pour une construction directe (conteneur).
+        if self.marais_memory is None:
+            self.marais_memory = GridField(self.rows, self.cols, max_val=1.0)
+        # État de marais (③) — False partout au repos (mémoire nulle < MARAIS_OFF).
+        if self.marais_etat is None:
+            self.marais_etat = [[False] * self.cols for _ in range(self.rows)]
         # Couverture du sol (sprint LUXURIANCE ①) — NULLE au repos, bornée [0,1],
         # écrite chaque tick par `tick_couverture` (scatter des empreintes basses).
         if self.couverture_sol is None:
@@ -428,6 +453,7 @@ class EcoFields(MatiereOrganiqueMixin, HydrologieMixin, RuissellementMixin,
             "epaisseur_sol":    self.epaisseur_sol,
             "altitude":         self.altitude,
             "eau_surface":      self.eau_surface,
+            "marais_memory":    self.marais_memory,
             "couverture_sol":   self.couverture_sol,
             "paillage":         self.paillage,
         }.get(name)
