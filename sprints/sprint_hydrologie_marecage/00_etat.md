@@ -81,7 +81,7 @@ Kickoffs `01`→`08` écrits, autosuffisants. Prêt pour `/sprint-auto`.
 | # | Kickoff | Cœur | Golden |
 |---|---------|------|--------|
 | ① | `01_altitude.md` | Champ `altitude` déterministe + expo snapshot | NEUTRE ✅ FAIT |
-| ② | `02_eau_surface_ruissellement.md` | `eau_surface` + `tick_ruissellement` (double-buffer) | **RE-FIGÉ LARGE annoncé** |
+| ② | `02_eau_surface_ruissellement.md` | `eau_surface` + `tick_ruissellement` (double-buffer) | RE-FIGÉ LARGE ✅ FAIT (`284a3dc`) + test `284a3dc`… golden courant `eb46b49d…` |
 | ③ | `03_marecage.md` | `marais_memory` + hystérèse + effets décompo/pH + banc `tourbiere` | NEUTRE hors banc |
 | ④ | `04_faune_de_mare.md` | Moustique + libellule (data-driven) + 5 voix | pop NEUTRE/maîtrisé annoncé |
 | ⑤ | `05_aulne_sphaigne.md` | Aulne (Betulaceae fixe-N) + Sphaigne (ingénieur) + voix | NEUTRE hors smoke |
@@ -117,9 +117,53 @@ humidité) pour éviter le biais d'ordre de parcours (sinon direction privilégi
   `tests/simserver/{structures,voix,conteneurs}.py`.
 - **NON commit** (Nico commit). C# non touché (relief altitude = vue ⑧).
 
+## Avancement ② (eau_surface + ruissellement) — FAIT
+- **⚠️ ÉTAT RÉEL rattrapé le 2026-07-13.** Le cœur de ② était DÉJÀ implémenté et
+  committé en `284a3dc` « feat(hydrologie) : ruissellement latéral + lame d'eau de
+  surface (②) », lancé par un `/sprint-auto` antérieur — pas repéré ici car
+  `00_etat.md` n'avait pas été mis à jour. Déjà en place et committé :
+  - champ `eau_surface: GridField` (`container.py`, borné [0, HUM_CAP]) + registre
+    `get_field` + init au repos NEUTRE ;
+  - capture du surplus dans `tick_hydrology` (si `h > HUM_CAP` → `eau_surface +=
+    h−HUM_CAP`, `h = HUM_CAP`) ;
+  - mixin NEUF `fields/ecofields/ruissellement.py` (`RuissellementMixin.
+    tick_ruissellement`) : double-buffer `src`/`dst`, redistribution multiple-flow
+    ∝ pente von Neumann sur `S = altitude + epaisseur_sol`, exutoire aux bords,
+    infiltration ∝ `structure_sol` bornée par `HUM_CAP − humidite`, évaporation de
+    surface. Zéro RNG, déterministe (philo #3) ;
+  - constantes `HUM_CAP=3.0`, `RUISSELLEMENT_FRACTION=0.5`, `INFILTRATION_SURFACE=
+    0.15`, `EVAP_SURFACE=0.20`, `SEUIL_FLAQUE=0.10` (`constants.py`) ;
+  - appel `eco.tick_ruissellement()` dans `boucle.py` (l.236) APRÈS `tick_hydrology`,
+    AVANT `tick_decomposition` ;
+  - bloc creux `eau_surface` (liste `[r,c,lame]`, filtré `> SEUIL_FLAQUE`) au
+    snapshot (`serialize.py`) ; pont bumpé (ENGINE_VERSION `0.5.26` aujourd'hui).
+  - **Golden RE-FIGÉ LARGE au moment de `284a3dc`** (l'eau circule → bilan hydrique
+    par plot changé, cuvettes gorgées / bosses sèches). Depuis, plusieurs sprints
+    ont fait évoluer le golden ; hash COURANT = `eb46b49d…` (PASSE).
+- **CE SESSION (2026-07-13)** : SEUL livrable ② manquant = le test dédié. Ajouté
+  `tests/test_ruissellement.py` (12 checks, PASS) — conservation de masse (cuvette
+  fermée + sol saturé → seule l'évaporation ôte), déterminisme double-buffer
+  (symétrie par transposition), cuvette à minimum INTÉRIEUR accumule / bosse
+  s'assèche / flaque > SEUIL_FLAQUE, repos NEUTRE (lame nulle = no-op), infiltration
+  (sol non saturé boit ∝ structure), anti-emballement 2000 ticks (lame bornée
+  [0,HUM_CAP], aucun NaN/inf).
+- **Golden INCHANGÉ ce session** `eb46b49d…` (ajout d'un fichier de TEST seul,
+  aucune touche moteur). Pont 269/269 vert. C# non concerné (relief = vue ⑧).
+- **Non-régression** : `test_senescence` **ÉCHOUE DÉJÀ sur HEAD `e7c015d`** (pommier
+  meurt à 4.5 ans, cause « autre », pas sénescence ~59.8 ans) — vérifié par
+  `git stash` : régression PRÉEXISTANTE, introduite par un sprint intercalaire,
+  **INDÉPENDANTE de ②**. À investiguer hors de ce sprint (signaler à Nico).
+  `test_epaisseur_500ans` NON lancé (interdit).
+- **Fichiers touchés ce session** : `tests/test_ruissellement.py` (NEUF) +
+  `sprints/sprint_hydrologie_marecage/00_etat.md`. Non commit (Nico commit).
+
 ## §REPRISE
-**① CLOS** (altitude posée + exposée, golden NEUTRE `a6c2f651…`, pont 0.5.17, non
-commit). **PROCHAIN = ②** (`02_eau_surface_ruissellement.md`) — `eau_surface` +
-`tick_ruissellement` double-buffer lisant `altitude`. **② = seul re-figeage LARGE
-annoncé du sprint.** ③→⑦ visent NEUTRE, ⑧ pur-vue. Tout re-figeage NON annoncé par un
-kickoff = bug (`/sprint-auto` refuse).
+**① CLOS** (altitude). **② CLOS** — cœur déjà committé en `284a3dc` (`eau_surface` +
+`tick_ruissellement` double-buffer lisant `altitude`+`epaisseur_sol`, capture du
+surplus, boucle, snapshot, pont), golden RE-FIGÉ LARGE au moment du commit puis
+évolué à `eb46b49d…` ; test dédié `tests/test_ruissellement.py` ajouté ce session
+(12/12 PASS). **PROCHAIN = ③** (`03_marecage.md`) — `marais_memory` + hystérèse +
+effets décompo/pH, lit `eau_surface > SEUIL_FLAQUE`. ③→⑦ visent NEUTRE, ⑧ pur-vue.
+**⚠️ AVANT ③ : élucider l'échec préexistant de `test_senescence` (pommier mort à
+4.5 ans) — non causé par ce sprint, mais à trancher avec Nico.** Tout re-figeage NON
+annoncé par un kickoff = bug (`/sprint-auto` refuse).
