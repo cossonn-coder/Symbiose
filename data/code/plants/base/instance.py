@@ -61,6 +61,13 @@ class PlantInstance:
                                     #  Intégrée depuis `vent_local` au plot (eco.vent) ; pilote
                                     #  l'expression de `port_trapu` (semis exposé tôt → trapu/robuste,
                                     #  semis élevé à l'abri → wind_memory=0 → choc à la transplantation).
+    root_herbivory_memory: float = 0.0  # intégration lente de l'herbivorie racinaire vécue [0-1]
+                                    # (sprint santé & résilience ③ — campagnol qui ronge le chevelu
+                                    #  racinaire). Intégrée depuis la densité `herbivore_vertebre` au
+                                    #  plot ; réduit l'uptake effectif (eau + N/P/K) dans `plant_uptake`
+                                    #  → la plante s'affame par les voies EXISTANTES (philo #2), pas par
+                                    #  un malus direct. Compensée par la mycorhize, modulée par la niche
+                                    #  d'espèce `root_loss_tolerance_base`. Densité nulle → reste 0.
     stress_memory: float = 0.0      # intégration des perturbations subies [0-1]
                                     # stress↑ → croissance↓ mais résistance↑
     # Marques de symptômes ÉVÉNEMENTIELS (sémiologie ②) : maladie/gel/grêle n'ont

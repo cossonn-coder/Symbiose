@@ -699,6 +699,27 @@ LIANT_K            = 0.0005 # apport glomaline à `om_stable`/sem à mycelium=1 
 # Patron `UPTAKE_MICRO_BONUS=0.40`. PLACEHOLDER, calibrage post-test (CONCEPTION §2.2).
 MYCO_P_BONUS       = 0.40   # bonus max de prélèvement de P à réseau fongique saturé
 
+# --- Herbivorie RACINAIRE du campagnol → perte d'UPTAKE (sprint santé & résilience ③, §3) ---
+# Le campagnol ronge racines/bulbes/collet → moins de chevelu racinaire fonctionnel →
+# la plante prélève MOINS d'eau et de N/P/K (philo #2 : le campagnol n'inflige AUCUN
+# malus direct de santé — hors annélation mécanique ; il AFFAME la plante par un FLUX
+# d'uptake réduit, la souffrance émerge des voies eau/azote EXISTANTES). Trois leviers :
+#   • `root_herbivory_memory` (état d'instance, lerp lent ∝ densité campagnol) intègre
+#     l'exposition ; ROOT_HERBIVORY_MEMORY_LERP = miroir des autres mémoires (0.05).
+#   • perte d'uptake ∝ mémoire, capée à ROOT_HERBIVORY_UPTAKE_MALUS (−50 % max), jamais
+#     sous ROOT_UPTAKE_FLOOR (une plante rongée boit encore un minimum : racines
+#     réduites, pas anéanties).
+#   • la niche d'espèce `root_loss_tolerance_base` (racines profondes/mycorhizo-
+#     dépendantes tolèrent mieux) DIVISE la perte, et la MYCORHIZE la compense
+#     (MYCO_ROOT_COMPENS : le réseau touchant la racine relaie l'eau/les nutriments
+#     que les racines rongées n'atteignent plus — même champ `mycelium` déjà lu pour P).
+# À densité `herbivore_vertebre` nulle → mémoire 0 → root_factor = 1.0 → uptake
+# bit-identique. PLACEHOLDERS, calibrage post-test (CONCEPTION §3).
+ROOT_HERBIVORY_MEMORY_LERP  = 0.05   # intégration lente de la pression campagnol (miroir des autres mémoires)
+ROOT_HERBIVORY_UPTAKE_MALUS = 0.5    # mémoire saturée → −50 % d'uptake max (avant tolérance/mycorhize)
+ROOT_UPTAKE_FLOOR           = 0.3    # plancher du facteur d'uptake racinaire (jamais 0 : racines rongées, pas mortes)
+MYCO_ROOT_COMPENS           = 0.5    # réseau mycorhizien saturé → compense la moitié de la perte racinaire
+
 # --- COLONISATION FONGIQUE DU TAS + bêchage (tronçon ⑤, §3.3/§1.2) ----------
 # Le bac/pile est un habitat fongique de choix (humide, riche en bois) → il se fait
 # COLONISER par le réseau : `Structure.colonisation ∈ [0,1]` croît au tick tant qu'il

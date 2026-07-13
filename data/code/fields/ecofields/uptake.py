@@ -21,6 +21,8 @@ class UptakeMixin:
     def plant_uptake(self, r: int, c: int, stage_index: int,
                       shade_memory: float = 0.0,
                       drought_memory: float = 0.0,
+                      root_herbivory_memory: float = 0.0,
+                      root_loss_tolerance: float = 1.0,
                       share: float = 1.0,
                       volume_factor: float = 1.0) -> dict[str, float]:
         """
@@ -28,6 +30,17 @@ class UptakeMixin:
 
         shade_memory  → réduit la transpiration (plante étiolée, moins de surface foliaire)
         drought_memory → réduit la consommation d'eau (racines adaptées, stomates fermés)
+        root_herbivory_memory → herbivorie racinaire vécue (campagnol, sprint santé &
+                        résilience ③) : le chevelu racinaire rongé prélève MOINS →
+                        réduit l'uptake de TOUT (eau + N/P/K), comme l'asphyxie. La
+                        plante s'affame par les voies EXISTANTES (philo #2), pas par un
+                        malus direct. Compensé par la mycorhize (le réseau relaie ce que
+                        les racines n'atteignent plus) et divisé par la niche d'espèce
+                        `root_loss_tolerance`. À 0.0 → root_factor = 1.0 → uptake
+                        bit-identique (golden NEUTRE au smoke, densité campagnol = 0).
+        root_loss_tolerance → capacité D'ESPÈCE à encaisser la perte de racines
+                        (`root_loss_tolerance_base`, >1 racines profondes/mycorhizées,
+                        <1 bulbeuses superficielles). DÉFAUT 1.0 = neutre.
         share         → fraction prélevée sur CE plot (1/nb plots de l'empreinte
                         racinaire), pour répartir l'uptake sur root_plots sans
                         multiplier la quantité totale (chantier B).
@@ -66,6 +79,21 @@ class UptakeMixin:
         asphyxie_factor = max(ASPHYXIE_UPTAKE_FLOOR,
                               1.0 - excess_norm * ASPHYXIE_UPTAKE_MALUS)
         asphyxie_factor *= STRUCT_UPTAKE_MIN + (1.0 - STRUCT_UPTAKE_MIN) * structure_local
+        # HERBIVORIE RACINAIRE (campagnol, sprint santé & résilience ③, §3) : le chevelu
+        # rongé prélève moins → on RABOTE l'uptake comme l'asphyxie (facteur multiplicatif
+        # replié dans `asphyxie_factor`, donc propagé à l'eau ET au N/P/K). Trois couches :
+        #   1. perte = mémoire / tolérance d'espèce (racines profondes encaissent mieux) ;
+        #   2. la MYCORHIZE la compense (le réseau touchant la racine relaie eau/nutriments
+        #      que les racines rongées n'atteignent plus) — `mycelium.at_plot` DÉJÀ lu plus
+        #      bas pour le bonus P → zéro coût de lecture neuf ;
+        #   3. root_factor = 1 − perte·MALUS, jamais sous ROOT_UPTAKE_FLOOR (une plante
+        #      rongée boit encore un minimum). mémoire = 0 (aucun campagnol) ⇒ root_factor
+        #      = 1.0 ⇒ uptake bit-identique ⇒ golden NEUTRE. Philo #2 : on module un FLUX
+        #      du sol vers la racine, jamais la plante.
+        root_loss = root_herbivory_memory / max(1e-6, root_loss_tolerance)
+        root_loss *= max(0.0, 1.0 - MYCO_ROOT_COMPENS * self.mycelium.at_plot(r, c))
+        root_factor = max(ROOT_UPTAKE_FLOOR, 1.0 - root_loss * ROOT_HERBIVORY_UPTAKE_MALUS)
+        asphyxie_factor *= root_factor
         consumed = {}
         for var, by_stage in UPTAKE.items():
             amount = by_stage.get(stage_index, 0.0) * share * asphyxie_factor

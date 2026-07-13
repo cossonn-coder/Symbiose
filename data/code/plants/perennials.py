@@ -38,6 +38,10 @@ class PerennialWoody(PlantBase):
     # une annuelle CASSE. Base commune aux 9 arbres du catalogue (un coup encaissé
     # est divisé par 1.25 dans `erode`) ; aucun arbre ne reste au défaut silencieux.
     resilience_base = 1.25
+    # Niche herbivorie racinaire (③) : pivots profonds + fort partenariat mycorhizien
+    # → le campagnol ronge le chevelu de surface mais l'arbre garde des racines
+    # d'ancrage hors d'atteinte → il ENCAISSE mieux la perte d'uptake (÷1.3).
+    root_loss_tolerance_base = 1.3
     age_curve: list[tuple] = []   # [(age_years, height_cm, canopy_radius_cm), ...]
 
     # Fenêtre thermique de levée (sprint germination thermique ③) : défaut LIGNEUX

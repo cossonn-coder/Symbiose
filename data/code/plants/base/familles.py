@@ -102,6 +102,15 @@ class PlantBase(ABC):
     # qui se déchirent. Défaut 1.0 = neutre acceptable (la grêle est rare et locale) →
     # pas de table exhaustive requise, seuls quelques profils marqués suffisent.
     hail_resistance_base: float = 1.0
+    # `root_loss_tolerance_base` (couche 1 — niche herbivorie racinaire, campagnol,
+    # sprint santé & résilience ③) : capacité D'ESPÈCE à ENCAISSER la perte de chevelu
+    # racinaire sans effondrer son uptake. DIVISE la perte dans `plant_uptake`. >1 =
+    # racines profondes / fort partenariat mycorhizien / système fasciculé redondant
+    # (l'arbre garde des pivots hors d'atteinte, le trèfle refait vite du chevelu) ;
+    # <1 = bulbeuses & racines superficielles concentrées (l'ail/l'oignon perd son
+    # organe de réserve d'un coup). Défaut 1.0 = neutre acceptable (le campagnol est
+    # local et rare) → pas de table exhaustive requise, seuls quelques profils marqués.
+    root_loss_tolerance_base: float = 1.0
     temp_min_growth: float = 5.0         # °C — seuil de croissance (météo 02) ; en deçà, stagnation. Extensible par espèce.
     # Fenêtre pH d'espèce (sprint physico-chimie, tronçon ⑤). Cloche d'acidité
     # `bell(ph, ph_opt, ph_tol)` lue en germination/succession (porte) ET en

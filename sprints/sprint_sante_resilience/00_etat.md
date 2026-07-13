@@ -18,7 +18,9 @@ mycorhize, annélation létale conservée).
 - **② `02_constitution_niche.md`** — `resilience_base` COMPLET par espèce +
   `hail_resistance_base` (niche grêle). Golden **RE-FIGÉ #2**. ✅ **FAIT** (voir §② ci-dessous).
 - **③ `03_campagnol_uptake.md`** — `root_herbivory_memory`→uptake, mycorhize,
-  `root_loss_tolerance_base`, annélation létale conservée. Golden **NEUTRE**.
+  `root_loss_tolerance_base`, annélation létale conservée. ✅ **FAIT** (voir §③).
+  ⚠️ Golden **RE-FIGÉ, PAS neutre** (kickoff se trompait : campagnols présents au
+  smoke) → décision de re-figeage à Nico, NON figé.
 - **④ `04_vue_godot.md`** — pont `vitalite`/`etat` (0.5.28) + `PlantRenderer`
   dégradé continu. Golden **INTACT**.
 
@@ -249,9 +251,64 @@ Livré exactement selon `02_constitution_niche.md`. Résumé :
 - `main.py` : tourne sans traceback (démo longue → coupée à 60 s sur timeout,
   pas un crash) ; le golden smoke est le juge comportemental de référence.
 
+## ③ CANAL CAMPAGNOL → UPTAKE — FAIT (2026-07-13) — ⚠️ GOLDEN NON NEUTRE (DÉCISION NICO REQUISE)
+Livré selon `03_campagnol_uptake.md`. Résumé :
+- **`fields/ecofields/constants.py`** : 4 constantes `ROOT_HERBIVORY_MEMORY_LERP=0.05`,
+  `ROOT_HERBIVORY_UPTAKE_MALUS=0.5`, `ROOT_UPTAKE_FLOOR=0.3`, `MYCO_ROOT_COMPENS=0.5`.
+- **`plants/base/instance.py`** : état `root_herbivory_memory: float = 0.0`.
+- **`plants/base/familles.py`** : attribut de classe `root_loss_tolerance_base = 1.0`
+  (couche 1, niche). Overrides : `PerennialWoody=1.3` (perennials.py), `Comfrey=1.4`,
+  `Garlic=0.7` (compagnes.py).
+- **`sim/engine/croissance.py`** : lerp `root_herbivory_memory ← category_density
+  ("herbivore_vertebre")` dans `_update_physiology` (miroir des autres mémoires) ;
+  `_apply_uptake` passe `root_herbivory_memory` + `root_loss_tolerance` à `plant_uptake`.
+- **`fields/ecofields/uptake.py`** : `root_factor = max(FLOOR, 1 − perte·MALUS)` avec
+  `perte = mémoire/tolérance × (1 − COMPENS·mycelium)` ; plié dans `asphyxie_factor`
+  → propagé eau + N/P/K. `plant_uptake` gagne 2 params (défauts neutres).
+- **`sim/effects/perturbations.py` `root_herbivory`** : SUPPRIMÉ le `ReduceHealth`
+  chronique plat (+ constantes `ROOT_HERBIVORY_GAIN/FLOOR` orphelines) ; annélation
+  létale → mort MÉCANIQUE directe `plant.vitalite = 0` (bypass `erode`), déposée par
+  le balayage `deposer_mort` de fin de tick. Ne renvoie plus de mutation.
+- **`sim/semiologie.py`** (orphelin de MON retrait — nettoyé, règle #3) :
+  `RONGEUR_RACINAIRE_FLOOR` ne dérive plus de `ROOT_HERBIVORY_GAIN/FLOOR` supprimés
+  → littéral `0.05` INCHANGÉ (sémiologie bit-identique). Import corrigé.
+- **`tests/test_campagnol_uptake.py`** (NEUF) : 4 invariants (neutralité mémoire=0,
+  famine eau+N, niche atténue, mycorhize compense) → 4/4 OK.
+
+### ⚠️ GOLDEN — RE-FIGÉ, PAS NEUTRE (contredit la prédiction du kickoff)
+- **La prémisse du kickoff « densité `herbivore_vertebre` = 0 au smoke » est FAUSSE** :
+  vérifié, la densité atteint **0.347 sur des plantes vivantes** pendant le smoke
+  4 ans. Sur HEAD (avant ③), l'ancien `root_herbivory` émettait **23 morsures
+  chroniques** `−1 santé` (Basilic tué, Trèfle/Tournesol/Bourse érodés).
+- Mon ③ supprime CORRECTEMENT cette usure plate (philo #2) et la remplace par la
+  famine d'uptake → le smoke DÉVIE. Nouveau hash test_golden =
+  **`ebe04b445054bf3ad942eff5f0342ff2305822d6608c0c46a1101dc0c35b869a`**.
+  Dérive PROUVÉE localisée aux plantes en plot infesté + effets aval (Basilic/Phacélie
+  survivent ; Trèfle vitalité 0.47→0.73 ; microbiome 0.14→0.34). **CE N'EST PAS UN
+  BUG** : c'est le comportement voulu par la conception, mais le kickoff attendait à
+  tort la neutralité.
+- **NON figé** : `tests/golden_hash.txt` laissé à `f0865d68…` (test_golden FAIL
+  volontaire) → **décision de re-figeage à Nico** (règle : re-fig maîtrisé + annoncé).
+- Le test dédié `test_campagnol_uptake` prouve la NEUTRALITÉ bit-identique de la voie
+  uptake à mémoire=0 : la dérive vient UNIQUEMENT du retrait du `ReduceHealth` plat +
+  de l'uptake réduit là où il y a des campagnols, pas d'une fuite à densité nulle.
+
+### Suites vérifiées
+- test_golden FAIL (re-fig annoncé, non figé). test_vigueur 136/136 (traj `e63b9d7f…`
+  intacte, `gestes.py` migré). test_stress_chronique / test_croissance /
+  test_maitrise_detection / test_eau / test_grimpe / test_bouture / test_greffe /
+  test_deblocage / test_structures / test_mobilite / test_progression_geste /
+  test_plasticite / test_sim_server / test_campagnol_uptake : **PASS**.
+- **test_senescence** : PASSE désormais (était en échec pré-existant sur HEAD ① / ②).
+- **test_population** : FAIL — mais **échec PRÉ-EXISTANT sur HEAD** (hash de champ
+  `b7a8d70…` ≠ `8f27b6b…` déjà sur baseline, hors ce tronçon).
+- LDC : perturbations.py 235 (↓, code retiré), sous la bande.
+- main.py : tourne sans traceback (démo longue coupée sur timeout, pas un crash).
+
 ## §REPRISE
-Tronçons ① et ② CLOS (non commités — Nico commit). Prochain = **③
-`03_campagnol_uptake.md`** : `root_herbivory_memory`→uptake, mycorhize,
-`root_loss_tolerance_base`, annélation létale conservée. Golden **NEUTRE**
-attendu (densité `herbivore_vertebre` = 0 au smoke). Golden courant à préserver :
-`f0865d68…` (test_golden) + `8f27b6b…` (population). Rien à trancher côté conception.
+Tronçons ① et ② CLOS + ③ FAIT (non commités — Nico commit). **⚠️ AVANT DE
+COMMITER ③ : Nico doit trancher le RE-FIGEAGE du golden** (`f0865d68…` →
+`ebe04b44…`, dérive design-intended, pas un bug — cf. §③ ci-dessus). Une fois
+tranché : écrire le nouveau hash dans `tests/golden_hash.txt`. Prochain tronçon =
+**④ `04_vue_godot.md`** (pont `vitalite`/`etat` 0.5.28 + `PlantRenderer` dégradé,
+golden INTACT). Rien à trancher côté conception pour ③.

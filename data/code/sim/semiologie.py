@@ -43,8 +43,7 @@ from fields.ecofields import (CHLOROSE_PH, SEUIL_ACIDOPHILE, PH_MAX,
 #   DROUGHT_DAMAGE_THRESHOLD — drought_memory au-delà de laquelle le tissu souffre
 #   HERBIVORY_GAIN — gain densité→pression, sert à exprimer le floor du détecteur
 from sim.effects.perturbations import (DROUGHT_DAMAGE_THRESHOLD, HERBIVORY_GAIN,
-                                       SHADE_DAMAGE_THRESHOLD,
-                                       ROOT_HERBIVORY_GAIN, ROOT_HERBIVORY_FLOOR)
+                                       SHADE_DAMAGE_THRESHOLD)
 # Bornes de la dynamique d'expression plastique (plasticité ①) : le signe
 # d'acclimatation rampe de EXPR_MIN (génotype nu, pas d'endurcissement) à
 # EXPR_MAX (durcissement maximal) — DRY, pas de nombre dupliqué.
@@ -56,10 +55,13 @@ from plants.genetics import ADAPTOGENIC_GENES, EXPR_MIN, EXPR_MAX
 # apparaît exactement au seuil où la morsure commence à compter.
 RAVAGEURS_FLOOR = 0.005 / HERBIVORY_GAIN   # ≈ 0.025
 
-# Densité `herbivore_vertebre` (campagnol) sous laquelle `root_herbivory` ne fait
-# RIEN (garde-fou `pressure < ROOT_HERBIVORY_FLOOR`, pression = densité·gain). DRY :
-# le signe racinaire apparaît EXACTEMENT au seuil où la morsure souterraine compte.
-RONGEUR_RACINAIRE_FLOOR = ROOT_HERBIVORY_FLOOR / ROOT_HERBIVORY_GAIN   # ≈ 0.05
+# Densité `herbivore_vertebre` (campagnol) sous laquelle le signe racinaire ne
+# s'affiche PAS (plancher de PERCEPTION du symptôme souterrain). Depuis le sprint
+# santé & résilience ③, `root_herbivory` ne gate plus l'usure par une pression
+# discrète (le canal chronique est replié sur l'UPTAKE, continu ∝ densité) : ce seuil
+# ne dérive donc plus d'un couple gain/floor supprimé, il devient un plancher de
+# perception PROPRE au signe. Valeur INCHANGÉE (0.05) → sémiologie bit-identique.
+RONGEUR_RACINAIRE_FLOOR = 0.05
 
 
 def _ramp(mesure: float, apparition: float, plein: float) -> float:

@@ -187,6 +187,7 @@ class Comfrey(PlantBase):
     genus = "Symphytum"
     name = "Consoude"
     resilience_base = 1.25         # S — vivace pionnière à pivot profond, quasi indestructible
+    root_loss_tolerance_base = 1.4 # niche campagnol (③) : pivot charnu profond → le chevelu rongé se refait, l'uptake tient
     resistance_ecrasement  = 0.65  # rosette charnue, repart du pivot (volet 2 §4)
     stimulation_ecrasement = 0.4
     rarity = "Établie"
@@ -303,6 +304,7 @@ class Garlic(Amaryllidaceae):
     genus = "Allium"
     name = "Ail"
     resilience_base = 1.0          # intermédiaire — bisannuelle bulbeuse, tenue moyenne
+    root_loss_tolerance_base = 0.7 # niche campagnol (③) : bulbe & racines superficielles concentrés → le rongeur emporte l'organe de réserve d'un coup
     resistance_ecrasement  = 0.4   # hampe tendre, casse ; le bulbe survit sous terre
     stimulation_ecrasement = 0.2
     rarity = "Établie"

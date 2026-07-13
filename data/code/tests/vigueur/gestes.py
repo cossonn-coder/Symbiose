@@ -224,8 +224,13 @@ def test_ecraser_plante():
     ok = ACT.ecraser_plante(gs, "joueur_1", sun, eco, segment_id=vise)
     check("NET : écimage (le sous-arbre ciblé a disparu)", len(sun.segments) < n_av,
           f"{n_av} → {len(sun.segments)}")
-    check("NET + stimulation basse (tournesol 0.05) → santé entamée (−1/3)",
-          abs(sun.vitalite - (sante_av - VITALITE_STEP)) < 1e-9,
+    # L'écimage NET érode via `plant.erode(VITALITE_STEP)` (① routing) → le coup est
+    # divisé par la CONSTITUTION d'espèce `resilience_base` (② : tournesol fragile
+    # 0.8 → il encaisse PLUS que la marche nominale 1/3). L'attendu suit donc la
+    # constitution, plus le pas brut (sinon on re-figerait une magnitude pré-②).
+    erosion_attendue = VITALITE_STEP / sun.plant_class.resilience_base
+    check("NET + stimulation basse (tournesol 0.05) → santé entamée (constitution 0.8)",
+          abs(sun.vitalite - (sante_av - erosion_attendue)) < 1e-9,
           f"vitalité {sante_av:.3f} → {sun.vitalite:.3f}")
 
     # (c) NET — basilic (résistance 0.4) ÉPARGNÉ : écimé MAIS santé intacte car il

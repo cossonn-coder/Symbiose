@@ -14,7 +14,7 @@ from __future__ import annotations
 from fields import (EXUDATE_BASE, EXUDATE_OM_SHARE, HUM_NOYE, HUM_EXCES,
                     ASPHYXIE_MEMORY_LERP)
 from fields.ecofields.constants import (T_PLANTE_ALPHA, ROSEE_SURFACE_REF,
-                                        ROSEE_FOLIAIRE_MAX)
+                                        ROSEE_FOLIAIRE_MAX, ROOT_HERBIVORY_MEMORY_LERP)
 from plants import EXPR_GAIN, EXPR_MIN, EXPR_MAX, TAU_UP, TAU_DOWN
 from .calendrier import saison_de
 
@@ -172,6 +172,8 @@ class CroissanceMixin:
                 consumed = eco.plant_uptake(r, c, plant.current_stage,
                                             shade_memory=plant.shade_memory,
                                             drought_memory=plant.drought_memory,
+                                            root_herbivory_memory=plant.root_herbivory_memory,
+                                            root_loss_tolerance=plant.plant_class.root_loss_tolerance_base,
                                             share=share)
                 for k, v in consumed.items():
                     total[k] = round(total.get(k, 0.0) + v, 3)
@@ -300,6 +302,15 @@ class CroissanceMixin:
             wind_sig = min(1.0, vent_local / WIND_MEMORY_REF)
             plant.wind_memory += (wind_sig - plant.wind_memory) * WIND_MEMORY_LERP
             plant.wind_memory  = max(0.0, min(1.0, plant.wind_memory))
+            # Root herbivory memory (campagnol, sprint santé & résilience ③) : intégration
+            # lente de la densité `herbivore_vertebre` locale = pression du rongeur sur le
+            # chevelu racinaire. Miroir des autres mémoires (même lerp). Lue par
+            # `plant_uptake` (via `_apply_uptake`) où elle réduit l'uptake effectif → la
+            # plante s'affame par les voies EXISTANTES (philo #2). Densité nulle (smoke) →
+            # signal 0 → mémoire reste 0 → uptake bit-identique → golden NEUTRE.
+            rong = eco.category_density("herbivore_vertebre", r, c)
+            plant.root_herbivory_memory += (rong - plant.root_herbivory_memory) * ROOT_HERBIVORY_MEMORY_LERP
+            plant.root_herbivory_memory  = max(0.0, min(1.0, plant.root_herbivory_memory))
             # Dynamique d'EXPRESSION plastique (§2.3) : chaque gène adaptogène glisse
             # vers cible = 1 + EXPR_GAIN × mémoire(g), en lerp à HYSTÉRÈSE (montée
             # TAU_UP rapide, descente TAU_DOWN lente). Borné [EXPR_MIN, EXPR_MAX].
