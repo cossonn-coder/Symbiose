@@ -33,6 +33,7 @@ class Nettle(Urticaceae):
     """
     genus = "Urtica"
     name = "Ortie"
+    resilience_base = 1.25         # S — pionnière nitrophile robuste, quasi increvable
     resistance_ecrasement  = 0.6   # touffe dressée, repart de la souche
     stimulation_ecrasement = 0.4
     rarity = "Établie"
@@ -76,6 +77,7 @@ class Vaccinium(Ericaceae):
     """
     genus = "Vaccinium"
     name = "Myrtille"
+    resilience_base = 1.25         # S — sous-arbrisseau ligneux de lande acide, lent et coriace
     ph_opt = 4.8                   # acidophile strict — fenêtre étroite (calcifuge)
     ph_tol = 0.8
     t_germ_opt = 13.0              # lande/sous-bois frais : lève au frais (fenêtre ③)
@@ -131,6 +133,7 @@ class Raspberry(PlantBase):
     family = "Rosaceae"
     genus = "Rubus"
     name = "Framboisier"
+    resilience_base = 1.25         # S — ronce ligneuse drageonnante, repart du réseau souterrain
     resistance_ecrasement  = 0.4   # cannes ligneuses mais cassantes
     stimulation_ecrasement = 0.3
     rarity = "Établie"
@@ -255,6 +258,7 @@ class SweetViolet(Violaceae):
     """
     genus = "Viola"
     name = "Violette odorante"
+    resilience_base = 1.0          # intermédiaire — petit couvre-sol d'ombre vivace, tenue moyenne
     resistance_ecrasement  = 0.7   # rosette basse plaquée, encaisse le piétinement
     stimulation_ecrasement = 0.4
     rarity = "Établie"

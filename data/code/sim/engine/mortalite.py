@@ -341,7 +341,7 @@ class MortaliteMixin:
         return log
 
     def _mediated_damage(self, tile, eco, severity, reason, gene_name=None,
-                         severity_fn=None, cause=""):
+                         severity_fn=None, cause="", species_base=None):
         """
         Dégât MÉDIÉ sur le tissu tendre exposé (stade « semis »), conforme à la
         philo #2 (CONCEPTION_METEO.md §2.3) — remplace la voie `health` plate pour
@@ -350,7 +350,14 @@ class MortaliteMixin:
             effectif = sévérité × susceptibilité_gène × (1 − protection_paillage)
 
         - `gene_name` : gène de rusticité (>1 ⇒ susceptibilité < 1, plus résistant).
-          None ⇒ dégât physique pur (grêle : le froid n'aide pas).
+          None ⇒ dégât physique pur médié par la NICHE d'espèce (cf. `species_base`).
+        - `species_base` : nom d'un attribut de classe de NICHE (couche 1, base
+          d'ESPÈCE, PAS un gène) qui médie la source quand aucun gène ne s'applique
+          — aujourd'hui `hail_resistance_base` pour la grêle (>1 ⇒ feuillage coriace
+          → susceptibilité < 1). Lu uniquement si `gene_name is None`. Se compose
+          proprement avec la CONSTITUTION `resilience_base` (couche 2, appliquée EN
+          AVAL par `erode` dans la résolution du ReduceHealth) : la niche filtre la
+          SOURCE (grêle), la constitution amortit la MAGNITUDE → pas de double-compte.
         - `cause` : enum de symptôme foliaire ÉVÉNEMENTIEL (sémiologie ②) — "gel"
           ou "grele" selon l'appelant (boucle.py). Propagé au ReduceHealth → laisse
           une marque décroissante sur le feuillage de la plante touchée.
@@ -382,7 +389,13 @@ class MortaliteMixin:
             sev = severity_fn(p) if severity_fn is not None else severity
             if sev <= 0:
                 continue
-            suscept   = (1.0 / p.expressed_gene(gene_name)) if gene_name else 1.0
+            if gene_name:
+                suscept = 1.0 / p.expressed_gene(gene_name)
+            elif species_base:
+                # Niche d'espèce (grêle) : coriace (>1) ⇒ susceptibilité < 1.
+                suscept = 1.0 / getattr(p.plant_class, species_base, 1.0)
+            else:
+                suscept = 1.0
             effective = sev * suscept * (1.0 - protection)
             # Amount CONTINU (plus de plancher entier `int()` : l'érosion
             # fractionnaire est fidèle à la sévérité). La résolution applique

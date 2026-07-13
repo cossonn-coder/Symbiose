@@ -33,6 +33,11 @@ class PerennialWoody(PlantBase):
     winter_strategy = "dormant"
     deciduous = True
     root_ratio = 1.0
+    # Constitution S (sprint SANTÉ & RÉSILIENCE ②) : les ligneuses établies sont
+    # l'archétype slow-tough — bois pérenne, réserves profondes, elles PLIENT là où
+    # une annuelle CASSE. Base commune aux 9 arbres du catalogue (un coup encaissé
+    # est divisé par 1.25 dans `erode`) ; aucun arbre ne reste au défaut silencieux.
+    resilience_base = 1.25
     age_curve: list[tuple] = []   # [(age_years, height_cm, canopy_radius_cm), ...]
 
     # Fenêtre thermique de levée (sprint germination thermique ③) : défaut LIGNEUX

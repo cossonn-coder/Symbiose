@@ -17,6 +17,7 @@ class BursaPastoris(PlantBase):
     family = "Brassicaceae"
     genus  = "Capsella"
     name   = "Bourse-à-pasteur"
+    resilience_base = 1.25         # S — pionnière rustique r-stratège, la rosette encaisse tout
     resistance_ecrasement  = 0.55  # hampe cassable, rosette survit (volet 2 §4)
     stimulation_ecrasement = 0.2
     rarity = "Pionnière"
@@ -70,6 +71,7 @@ class MedicagoLupulina(PlantBase):
     family = "Fabaceae"
     genus  = "Medicago"
     name   = "Minette"
+    resilience_base = 1.25         # S — légumineuse pionnière rampante des sols pauvres, rustique
     resistance_ecrasement  = 0.7   # port bas rampant, encaisse (volet 2 §4)
     stimulation_ecrasement = 0.5
     rarity = "Pionnière"
@@ -127,6 +129,10 @@ class PoaAnnua(PlantBase):
     family = "Poaceae"
     genus  = "Poa"
     name   = "Pâturin annuel"
+    resilience_base = 1.25         # S — graminée fibreuse pionnière, coriace (elle hérite de
+                                   # PlantBase et non de la classe Poaceae : valeur posée en
+                                   # explicite pour éviter le défaut silencieux 1.0)
+    hail_resistance_base = 1.4     # feuilles étroites de graminée — la grêle glisse (≡ Poaceae)
     resistance_ecrasement  = 0.9   # graminée : talle, PROFITE du piétinement (volet 2 §4)
     stimulation_ecrasement = 0.9
     rarity = "Pionnière"
@@ -170,6 +176,7 @@ class Taraxacum(PlantBase):
     family = "Asteraceae"
     genus  = "Taraxacum"
     name   = "Pissenlit"
+    resilience_base = 1.25         # S — pivot profond, rosette plaquée : repart de la racine
     resistance_ecrasement  = 0.8   # rosette plaquée, encaisse, repart mou (volet 2 §4)
     stimulation_ecrasement = 0.4
     rarity = "Établie"

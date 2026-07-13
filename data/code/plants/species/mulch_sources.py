@@ -95,6 +95,7 @@ class Hemp(PlantBase):
     family = "Cannabaceae"
     genus = "Cannabis"
     name = "Chanvre"
+    resilience_base = 1.0          # intermédiaire — annuelle vigoureuse à tige fibreuse mais tendre jeune
     rarity = "Établie"
     keywords = ["Fibre", "Paille", "Étouffe-adventice", "Structurante"]
     t_germ_opt = 16.0              # tempéré : lève au mitan du printemps (③)

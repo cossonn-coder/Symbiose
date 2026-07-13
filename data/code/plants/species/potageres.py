@@ -38,6 +38,7 @@ class Carrot(PlantBase):
     family = "Apiaceae"
     genus = "Daucus"
     name = "Carotte"
+    resilience_base = 0.8          # R — potagère bisannuelle exigeante, feuillage fin fragile
     resistance_ecrasement  = 0.6   # rosette plaquée, encaisse mais la racine compte
     stimulation_ecrasement = 0.3
     rarity = "Établie"
@@ -102,6 +103,8 @@ class Zucchini(PlantBase):
     family = "Cucurbitaceae"
     genus = "Cucurbita"
     name = "Courgette"
+    resilience_base = 0.8          # R — annuelle gourmande à grandes feuilles molles
+    hail_resistance_base = 0.6     # immenses limbes tendres exposés — la grêle les hache
     resistance_ecrasement  = 0.35  # tige creuse charnue, casse net
     stimulation_ecrasement = 0.2
     rarity = "Établie"
@@ -169,6 +172,7 @@ class Strawberry(PlantBase):
     family = "Rosaceae"
     genus = "Fragaria"
     name = "Fraisier"
+    resilience_base = 1.0          # intermédiaire — vivace couvre-sol stolonifère, tenue moyenne
     resistance_ecrasement  = 0.7   # rosette basse plaquée, encaisse le piétinement
     stimulation_ecrasement = 0.4
     rarity = "Établie"
@@ -232,6 +236,7 @@ class CornSalad(PlantBase):
     family = "Caprifoliaceae"
     genus = "Valerianella"
     name = "Mâche"
+    resilience_base = 0.8          # R — petite annuelle en rosette tendre de mi-saison
     resistance_ecrasement  = 0.7   # rosette basse plaquée, encaisse le piétinement
     stimulation_ecrasement = 0.3
     rarity = "Établie"

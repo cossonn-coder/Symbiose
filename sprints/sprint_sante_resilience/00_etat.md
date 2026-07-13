@@ -16,7 +16,7 @@ mycorhize, annélation létale conservée).
 - **① `01_socle_vitalite.md`** — `health→vitalite [0,1]`, `etat`, `erode()` no-op,
   migration lecteurs/écrivains. Golden **RE-FIGÉ #1**. ✅ **FAIT** (voir §① ci-dessous).
 - **② `02_constitution_niche.md`** — `resilience_base` COMPLET par espèce +
-  `hail_resistance_base` (niche grêle). Golden **RE-FIGÉ #2**.
+  `hail_resistance_base` (niche grêle). Golden **RE-FIGÉ #2**. ✅ **FAIT** (voir §② ci-dessous).
 - **③ `03_campagnol_uptake.md`** — `root_herbivory_memory`→uptake, mycorhize,
   `root_loss_tolerance_base`, annélation létale conservée. Golden **NEUTRE**.
 - **④ `04_vue_godot.md`** — pont `vitalite`/`etat` (0.5.28) + `PlantRenderer`
@@ -203,9 +203,55 @@ pour ISOLER la voie ombre. Test au vert (héliophile mort S37 sm0.88, sciaphile 
 sujet** : `test_senescence` échoue AUSSI sur baseline (pommier mort « autre » à 4.5
 ans) — non causé par ce tronçon.
 
+## ② CONSTITUTION + NICHE GRÊLE — FAIT (2026-07-13)
+Livré exactement selon `02_constitution_niche.md`. Résumé :
+- **Partie A — `resilience_base` (constitution, couche 2, AUCUN gène)** : table
+  COMPLÈTE, une valeur CSR explicite pour CHACUNE des 41 classes du catalogue
+  (vérifié par script sur PLANT/PERENNIAL/WEED_CATALOGUE) → **ZÉRO défaut
+  silencieux**. Bases de FAMILLE : `Solanaceae=0.8` (R), `Poaceae=1.25` (S),
+  `PerennialWoody=1.25` (S, couvre les 9 arbres). Overrides d'ESPÈCE partout
+  ailleurs (S=1.25 pionnières rustiques/ligneuses/vivaces coriaces ; 1.0
+  intermédiaires ; 0.8=R annuelles tendres/Solanacées/potagères exigeantes).
+  Commentaire pédagogique CSR posé sur `PlantBase.resilience_base` (familles.py).
+- **Cas rattrapé (décision mineure)** : `PoaAnnua` (Pâturin annuel) hérite de
+  `PlantBase` et NON de la classe `Poaceae` → elle serait restée au défaut
+  silencieux 1.0. Valeur explicite posée `resilience_base=1.25` (+
+  `hail_resistance_base=1.4`, ≡ Poaceae), cohérent avec Wheat/RunningBamboo.
+- **Partie B — `hail_resistance_base` (niche grêle, couche 1)** : attribut de
+  classe posé sur `PlantBase` (défaut 1.0 neutre) + `Poaceae=1.4`, quelques
+  profils marqués (Thym/Lavande 1.3, Pâturin 1.4 ; Tournesol 0.7, Courgette 0.6).
+  Branché dans `_mediated_damage` (mortalite.py) via nouveau param optionnel
+  `species_base` : quand `gene_name is None` ET `species_base` fourni →
+  `suscept = 1/getattr(plant_class, species_base, 1.0)`. `boucle.py:153` passe
+  `species_base="hail_resistance_base"` sur la grêle. Le gel (`gene_name`) est
+  INCHANGÉ. Compose proprement avec `resilience_base` (source × aval, pas de
+  double-compte).
+
+### Golden — RE-FIGÉ #2 (test_golden seul)
+- Nouveau hash = **`f0865d68fb71e04f83e5fb87ee6d0955970eb825dd2a1f91cecfcc23a22ba229`**
+  (écrit dans `tests/golden_hash.txt`). test_golden PASS.
+- **Localisation PROUVÉE** : neutraliser `resilience_base=1.0` +
+  `hail_resistance_base=1.0` sur TOUTES les classes du catalogue → le digest
+  retombe EXACTEMENT sur le hash ① `e594916…`. Donc la dérive est causée
+  UNIQUEMENT par les valeurs du ②, et seulement sur les plantes qui SUBISSENT
+  un dégât (érosion divisée par la constitution / grêle médiée par la niche).
+  Aucune plante jamais blessée ne dévie → pas de bug d'échelle.
+- **`population_hash.txt` INCHANGÉ** (test_population PASS, canal campagnol/grêle
+  neutre au smoke population).
+
+### Suites vérifiées
+- test_golden PASS (`f0865d68…`) · test_population PASS · test_stress_chronique
+  PASS. `tools/compte_ldc.py` : familles.py 233 LDC, mortalite.py 237 LDC — sous
+  la bande, aucun découpage requis.
+- **Pré-existant HORS sujet** : `test_senescence` échoue AUSSI sur HEAD (① commité,
+  pommier mort « autre » à 4.5 ans) — non causé par ce tronçon (au ② le pommier
+  meurt « autre » à 4.7 ans : même échec, âge décalé par sa constitution 1.25).
+- `main.py` : tourne sans traceback (démo longue → coupée à 60 s sur timeout,
+  pas un crash) ; le golden smoke est le juge comportemental de référence.
+
 ## §REPRISE
-Tronçon ① CLOS (non commité — Nico commit). Prochain = **②
-`02_constitution_niche.md`** : table COMPLÈTE `resilience_base` par espèce +
-`hail_resistance_base`. `erode()` cessera d'être no-op → golden **RE-FIGÉ #2**
-annoncé. Golden ① courant à préserver jusque-là : `e594916…` (+ population
-`8f27b6b…`). Rien à trancher côté conception.
+Tronçons ① et ② CLOS (non commités — Nico commit). Prochain = **③
+`03_campagnol_uptake.md`** : `root_herbivory_memory`→uptake, mycorhize,
+`root_loss_tolerance_base`, annélation létale conservée. Golden **NEUTRE**
+attendu (densité `herbivore_vertebre` = 0 au smoke). Golden courant à préserver :
+`f0865d68…` (test_golden) + `8f27b6b…` (population). Rien à trancher côté conception.

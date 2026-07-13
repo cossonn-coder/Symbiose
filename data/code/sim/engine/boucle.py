@@ -151,7 +151,8 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
                 hail_sev = event.intensity / HAIL_SEVERITY_REF
                 for tile in self.tiles:
                     log += self._mediated_damage(tile, self._eco(tile), hail_sev,
-                                                 "grêle (feuillage)", cause="grele")
+                                                 "grêle (feuillage)", cause="grele",
+                                                 species_base="hail_resistance_base")
             elif event.kind not in TEMP_DRIVEN:
                 meteo = WEATHER_ALEA[event.kind]
                 for tile in self.tiles:

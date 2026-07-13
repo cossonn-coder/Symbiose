@@ -79,6 +79,29 @@ class PlantBase(ABC):
     bloom_daylen_min: float = 13.5    # h de jour : borne basse de la fenêtre photopériodique
     bloom_daylen_max: float = 16.5    # h de jour : borne haute (estival → au-delà du pic 16 h)
     fungal_susceptibility: float = 0.5   # sensibilité aux maladies fongiques [0-1]
+    # --- Constitution d'espèce (sprint SANTÉ & RÉSILIENCE ②, couche 2) ---
+    # `resilience_base` = « quand un coup PASSE, à quel point je plie plutôt que je
+    # casse ». Tampon de MAGNITUDE générique, appliqué EN AVAL dans `erode()`
+    # (instance.py) : `vitalite -= amount / resilience_base`. ORTHOGONAL à la niche
+    # (tolérances par stresseur, qui filtrent la SOURCE en amont) → aucun double-compte
+    # (source ≠ magnitude, points différents du pipeline). Axe CSR de Grime :
+    #   • S (stress-tolérantes, slow-tough) → 1.25 : ligneuses établies, coriaces
+    #     lentes, pionnières rustiques (ortie/consoude), graminées fibreuses ;
+    #   • intermédiaires → 1.0 : vivaces herbacées, aromatiques, compagnes ;
+    #   • R (rudérales, fast-fragile) → 0.8 : annuelles tendres, Solanacées, semis
+    #     exigeants qui encaissent mal mais poussent vite.
+    # Table COMPLÈTE exigée (Nico) : CHAQUE espèce du catalogue reçoit une valeur
+    # explicite — soit une base de FAMILLE ci-dessous (Solanaceae 0.8, Poaceae 1.25),
+    # soit un override d'ESPÈCE (species.py/perennials.py). Le défaut 1.0 ci-dessous
+    # ne doit rester atteint QUE par une classe nue de test (jamais par le catalogue).
+    resilience_base: float = 1.0
+    # `hail_resistance_base` (couche 1 — niche grêle) : susceptibilité D'ESPÈCE à
+    # l'impact de grêle, médiée EN AMONT dans `_mediated_damage` (mortalite.py, quand
+    # `gene_name is None`). >1 = feuillage coriace/petit (graminée, aromatique
+    # ligneuse) qui résiste ; <1 = grandes feuilles tendres exposées (courge, potagère)
+    # qui se déchirent. Défaut 1.0 = neutre acceptable (la grêle est rare et locale) →
+    # pas de table exhaustive requise, seuls quelques profils marqués suffisent.
+    hail_resistance_base: float = 1.0
     temp_min_growth: float = 5.0         # °C — seuil de croissance (météo 02) ; en deçà, stagnation. Extensible par espèce.
     # Fenêtre pH d'espèce (sprint physico-chimie, tronçon ⑤). Cloche d'acidité
     # `bell(ph, ph_opt, ph_tol)` lue en germination/succession (porte) ET en
@@ -300,6 +323,7 @@ class Solanaceae(PlantBase):
     family = "Solanaceae"
     space_tolerance_weeks = 2  # réagissent vite à la compétition
     fungal_susceptibility = 1.0  # mildiou — la plus sensible
+    resilience_base = 0.8  # R — annuelles tendres, encaissent mal (tomate/poivron)
     family_effects = [
         {
             "type": "permanent",
@@ -432,6 +456,8 @@ class Poaceae(PlantBase):
     family = "Poaceae"
     space_tolerance_weeks = 6   # très tolérantes à la compétition
     fungal_susceptibility = 0.4
+    resilience_base = 1.25       # S — graminées fibreuses, coriaces (paturin/blé/bambou)
+    hail_resistance_base = 1.4   # feuilles étroites/souples — la grêle glisse dessus
     pollination_mode = "wind"        # graminées anémophiles
     pollination_radius_cm = 300.0    # le pollen voyage loin au vent
     family_effects = [

@@ -136,6 +136,7 @@ class Pepper(Solanaceae):
 class Bean(Fabaceae):
     genus = "Phaseolus"
     name = "Haricot"
+    resilience_base = 0.8          # R — annuelle tendre à tige volubile fragile
     t_germ_opt = 20.0              # FRILEUSE : sème « quand le sol est chaud au toucher » (③)
     t_germ_tol = 7.0               # étroite → pourrit en terre froide
     resistance_ecrasement  = 0.3   # tige volubile fragile (volet 2 §4)
@@ -190,6 +191,7 @@ class Bean(Fabaceae):
 class Clover(Fabaceae):
     genus = "Trifolium"
     name = "Trèfle"
+    resilience_base = 1.25         # S — couvre-sol vivace piétinable, repart du stolon
     t_germ_opt = 16.0              # tempérée : couvre-sol qui lève au mitan du printemps (③)
     t_germ_tol = 10.0              # tolérante (germe printemps comme arrière-saison)
     resistance_ecrasement  = 0.85  # couvre-sol piétinable, ramifie (volet 2 §4)
@@ -239,6 +241,8 @@ class Clover(Fabaceae):
 class Sunflower(Asteraceae):
     genus = "Helianthus"
     name = "Tournesol"
+    resilience_base = 0.8          # R — flèche unique annuelle, grandes feuilles tendres
+    hail_resistance_base = 0.7     # larges limbes exposés — la grêle les déchire
     t_germ_opt = 20.0              # FRILEUSE (origine prairie chaude) : lève au sol réchauffé (③)
     t_germ_tol = 8.0               # étroite-moyenne
     resistance_ecrasement  = 0.15  # flèche unique : écimé = décapité, ne repart pas (volet 2 §4)
@@ -305,6 +309,7 @@ class Sunflower(Asteraceae):
 class Basil(Lamiaceae):
     genus = "Ocimum"
     name = "Basilic"
+    resilience_base = 0.8          # R — annuelle tendre frileuse, noircit au moindre stress
     t_germ_opt = 22.0              # FRILEUSE tropicale : exige la chaleur, lève tard (fenêtre ③)
     t_germ_tol = 6.0               # étroite → noircit au moindre coup de froid
     resistance_ecrasement  = 0.4   # écimé facilement MAIS repart buissonnant = le pincement (volet 2 §4)

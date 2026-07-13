@@ -26,6 +26,7 @@ class Yarrow(Asteraceae):
     """
     genus = "Achillea"
     name = "Achillée millefeuille"
+    resilience_base = 1.25         # S — vivace rustique stolonifère, très encaissante
     resistance_ecrasement  = 0.75  # stolons, repart (volet 2 §4)
     stimulation_ecrasement = 0.6
     rarity = "Établie"
@@ -69,6 +70,7 @@ class Phacelia(PlantBase):
     family = "Boraginaceae"
     genus = "Phacelia"
     name = "Phacélie"
+    resilience_base = 0.8          # R — engrais vert annuel à tige tendre, cycle court
     resistance_ecrasement  = 0.45  # tige tendre dressée, déformée (volet 2 §4)
     stimulation_ecrasement = 0.2
     rarity = "Établie"
@@ -129,6 +131,7 @@ class Borage(PlantBase):
     family = "Boraginaceae"
     genus = "Borago"
     name = "Bourrache"
+    resilience_base = 1.0          # intermédiaire — annuelle vigoureuse mais charnue/cassante
     resistance_ecrasement  = 0.4   # tige creuse charnue, casse net (volet 2 §4)
     stimulation_ecrasement = 0.2
     rarity = "Établie"
@@ -183,6 +186,7 @@ class Comfrey(PlantBase):
     family = "Boraginaceae"
     genus = "Symphytum"
     name = "Consoude"
+    resilience_base = 1.25         # S — vivace pionnière à pivot profond, quasi indestructible
     resistance_ecrasement  = 0.65  # rosette charnue, repart du pivot (volet 2 §4)
     stimulation_ecrasement = 0.4
     rarity = "Établie"
@@ -236,6 +240,7 @@ class Mustard(PlantBase):
     family = "Brassicaceae"
     genus = "Sinapis"
     name = "Moutarde"
+    resilience_base = 0.8          # R — engrais vert annuel à croissance éclair, tendre
     resistance_ecrasement  = 0.45  # hampe tendre, casse (volet 2 §4)
     stimulation_ecrasement = 0.2
     rarity = "Établie"
@@ -297,6 +302,7 @@ class Garlic(Amaryllidaceae):
     """
     genus = "Allium"
     name = "Ail"
+    resilience_base = 1.0          # intermédiaire — bisannuelle bulbeuse, tenue moyenne
     resistance_ecrasement  = 0.4   # hampe tendre, casse ; le bulbe survit sous terre
     stimulation_ecrasement = 0.2
     rarity = "Établie"
