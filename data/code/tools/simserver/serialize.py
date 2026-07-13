@@ -138,6 +138,18 @@ class SerializeMixin:
                 # ont désormais un vrai état moteur (`fruits`, ③).
                 repro = REPRO_BY_SEASON.get(cls.__name__, DEFAULT_REPRO)
                 base["dead"] = False
+                # Vitalité continue (sprint SANTÉ & RÉSILIENCE ④, 0.5.28) :
+                # `vitalite` ∈ [0,1] (1.0 = sain neuf) + `etat` discrétisé
+                # ("sain"/"affaibli"/"malade"/"mort"). C'est un DESCRIPTEUR GLOBAL de
+                # l'usure de la plante (érosion des stresseurs, convalescence) qui
+                # COMPLÈTE les `leaf_symptoms` localisés : la vue teinte/désature le
+                # feuillage ∝ vitalité (fond continu, philo #5) et compose avec les
+                # marques de symptômes. PURE lecture d'un état déjà porté par
+                # l'instance (`p.vitalite`/`p.etat`, portés par ①) — hors _PLANT_ATTRS
+                # du golden → golden INTACT. Champs OPTIONNELS côté vue (tolérance
+                # pré-0.5.28 → la vue retombe sur le mapping par symptômes seul).
+                base["vitalite"] = round(p.vitalite, 3)
+                base["etat"] = p.etat
                 # Patrimoine génétique (sprint DIVERSITÉ FONDATRICE ③) : le vecteur
                 # de gènes de l'individu, exposé en DEBUG pour le survol (WorldView
                 # affiche les gènes de rythme de la plante pointée → corréler « ce
@@ -565,6 +577,10 @@ class SerializeMixin:
                       "dead": not p.is_alive,
                       "segments": p.structure_to_dict()}
                 if p.is_alive:
+                    # Vitalité continue (0.5.28, miroir du vivant en pleine terre) :
+                    # même descripteur global d'usure pour la plante d'un conteneur.
+                    pd["vitalite"] = round(p.vitalite, 3)
+                    pd["etat"] = p.etat
                     pd["leaf_symptoms"] = semiologie.leaf_symptoms(p, eco, saison)
                     pd["fruits"] = [{"segment": f.segment_id, "maturite": f.maturite,
                                      "masse": f.masse} for f in p.fruits]

@@ -191,6 +191,10 @@ namespace Symbiose
 				renderer.SetSkeleton(stadeMort);
 				if (p.ContainsKey("leaf_symptoms"))
 					renderer.SetSymptoms(p["leaf_symptoms"].AsGodotArray());
+				// Vitalité continue (santé ④, 0.5.28) : même fond d'usure que le
+				// vivant en pleine terre. Tolérant à un snapshot pré-0.5.28 (→ 1.0).
+				if (p.ContainsKey("vitalite"))
+					renderer.SetVitality((float)p["vitalite"].AsDouble());
 				nodes.Add(renderer);
 			}
 			return nodes;

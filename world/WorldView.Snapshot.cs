@@ -153,6 +153,13 @@ namespace Symbiose
 				// et texture, sans recalculer pH/pression (cf. PlantRenderer).
 				var symptoms = p.ContainsKey("leaf_symptoms")
 					? p["leaf_symptoms"].AsGodotArray() : null;
+				// Vitalité continue (santé & résilience ④, snapshot 0.5.28) : fond
+				// global d'usure ∈ [0,1] (1.0 = sain neuf), complète les symptômes
+				// localisés. Tolérant à un snapshot pré-0.5.28 (clé absente → 1.0 →
+				// plante rendue pleine). `etat` est aussi émis (sain/affaibli/malade/
+				// mort) mais la vue consomme le CONTINU (dégradé, pas de palier).
+				float vitalite = p.ContainsKey("vitalite")
+					? (float)p["vitalite"].AsDouble() : 1f;
 				// Accroche de grimpe (grimpantes ⑥, 0.5.18) : type d'appui accroché
 				// (tuteur/mur/hote…) ou null. Tolérant à un snapshot pré-0.5.18 (clé
 				// absente → plante libre → pas de vrille). Pilote la vrille (indice ⑥).
@@ -177,6 +184,7 @@ namespace Symbiose
 					node.SetStructure(structure);   // la plante a poussé
 					node.SetSkeleton(stadeMort);     // ou vient de mourir / s'est couchée
 					node.SetSymptoms(symptoms);      // teinte + texture des symptômes (D33)
+					node.SetVitality(vitalite);      // fond global d'usure (santé ④, 0.5.28)
 					node.SetSupport(supportKind);    // vrille d'accroche (grimpantes ⑥)
 					node.SetSilhouette(silhouette);  // forme au LOD couronne (luxuriance ⑥)
 					node.SetEmitter(emitteur);       // teinte overlay LOD F9 (D67)
@@ -218,6 +226,7 @@ namespace Symbiose
 				renderer.SetStructure(structure);
 				renderer.SetSkeleton(stadeMort);   // squelette déjà mort au chargement (save)
 				renderer.SetSymptoms(symptoms);    // teinte + texture des symptômes (D33)
+				renderer.SetVitality(vitalite);    // fond global d'usure (santé ④, 0.5.28)
 				renderer.SetSupport(supportKind);  // vrille d'accroche (grimpantes ⑥)
 				renderer.SetSilhouette(silhouette);  // forme au LOD couronne (luxuriance ⑥)
 				renderer.SetEmitter(emitteur);     // teinte overlay LOD F9 (D67)

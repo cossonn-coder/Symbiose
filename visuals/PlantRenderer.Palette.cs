@@ -89,6 +89,41 @@ namespace Symbiose
 				? ApexColor.Lerp(WoodOlive, lig * 2f)
 				: WoodOlive.Lerp(WoodColor, (lig - 0.5f) * 2f);
 
+		// --- Fond de vitalité (santé & résilience ④) -------------------------
+		// La vitalité continue [0,1] du snapshot ternit le tissu vert ∝ son manque
+		// (1 − vitalité). DEUX gestes chromatiques, en HSV pour rester dans l'esprit
+		// palette (pas d'interpolation RGB libre) :
+		//  · DÉSATURATION — la chlorophylle s'épuise : le vert perd son éclat, tire
+		//    vers le terne. C'est le signal dominant (un feuillage sain est SATURÉ).
+		//  · LÉGER ASSOMBRISSEMENT — le port se fane, la valeur baisse un peu.
+		// PLANCHERS (à régler au F5) : même à vitalité 0 on GARDE de la saturation
+		// (VitFloorSat) et de la valeur (VitFloorVal) → le tissu reste lisible et
+		// vert-terne, jamais un aplat gris mort. La MORT (vitalité 0 → `etat` "mort")
+		// est portée par le squelette (SetSkeleton), pas par cette teinte : ici on
+		// peint l'AFFAIBLISSEMENT du vivant, philo #5 (indice, pas chiffre).
+		// Un `manque` léger (vitalité 0.9) donne un tissu à peine terni — le dégradé
+		// est CONTINU, pas un palier (l'observateur lit l'usure progressive, ①).
+		private const float VitDesatStrength = 0.55f; // combien le manque désature
+		private const float VitDimStrength   = 0.22f; // combien le manque assombrit
+		private const float VitFloorSat = 0.25f;      // saturation plancher (jamais gris)
+		private const float VitFloorVal = 0.55f;      // valeur plancher (jamais noir)
+
+		private Color ApplyVitality(Color tissue)
+		{
+			if (_vitalite >= 0.999f) return tissue;   // plante saine → identité stricte
+			float manque = 1f - _vitalite;
+			float h = tissue.H, s = tissue.S, v = tissue.V;
+			// Désature (chlorophylle qui s'épuise) : on rabote la saturation ∝ manque,
+			// puis on tient le plancher VitFloorSat (jamais un vert-gris illisible).
+			s = Mathf.Max(s * (1f - manque * VitDesatStrength), s * VitFloorSat);
+			// Assombrit un peu (port qui se fane) : valeur rabotée ∝ manque, tenue au
+			// plancher VitFloorVal (relatif à la valeur d'origine → jamais noir).
+			v = Mathf.Max(v * (1f - manque * VitDimStrength), v * VitFloorVal);
+			var outc = Color.FromHsv(h, s, v);
+			outc.A = tissue.A;
+			return outc;
+		}
+
 		// --- Hue-shifting -----------------------------------------------------
 		// Décale une couleur vers la lumière (lum>0 : + clair, + chaud) ou
 		// l'ombre (lum<0 : + sombre, + froid, + saturé). Travaille en HSV car

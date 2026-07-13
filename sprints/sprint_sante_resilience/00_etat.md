@@ -22,7 +22,7 @@ mycorhize, annélation létale conservée).
   ⚠️ Golden **RE-FIGÉ, PAS neutre** (kickoff se trompait : campagnols présents au
   smoke) → décision de re-figeage à Nico, NON figé.
 - **④ `04_vue_godot.md`** — pont `vitalite`/`etat` (0.5.28) + `PlantRenderer`
-  dégradé continu. Golden **INTACT**.
+  dégradé continu. Golden **INTACT**. ✅ **FAIT** (voir §④ ci-dessous).
 
 ## État des lieux du modèle actuel (lecture faite)
 - `plants/base/instance.py:30` : `health: int = 3` (3 sain / 2 affaibli / 1 malade / 0 mort).
@@ -305,10 +305,43 @@ Livré selon `03_campagnol_uptake.md`. Résumé :
 - LDC : perturbations.py 235 (↓, code retiré), sous la bande.
 - main.py : tourne sans traceback (démo longue coupée sur timeout, pas un crash).
 
+## ④ VUE GODOT — FAIT (2026-07-13) — GOLDEN INTACT
+Livré selon `04_vue_godot.md`. Résumé :
+- **Pont (Python), version → 0.5.28** :
+  - `tools/simserver/serialize.py` : chaque plante VIVANTE (pleine terre `_snapshot`
+    ET conteneur `_containers_snapshot`) gagne `vitalite = round(p.vitalite, 3)` +
+    `etat = p.etat`. LECTURE PURE d'un état déjà porté par l'instance (①) → hors
+    `_PLANT_ATTRS` → golden NEUTRE.
+  - `tools/simserver/version.py` : `ENGINE_VERSION = "0.5.28"` + entrée changelog.
+- **Vue (C#)** :
+  - `visuals/PlantRenderer.cs` : champ `_vitalite` (défaut 1.0, tolérance pré-0.5.28)
+    + setter `SetVitality(float)` (clamp + early-out redraw). `SymptomTint` compose
+    désormais : `ApplyVitality(tissu)` d'abord (FOND global), PUIS la marque du
+    symptôme dominant → la vitalité n'écrase jamais un symptôme franc.
+  - `visuals/PlantRenderer.Palette.cs` : `ApplyVitality(Color)` = désaturation +
+    léger assombrissement en HSV ∝ (1 − vitalité), plancherés (VitFloorSat 0.25 /
+    VitFloorVal 0.55) → jamais un aplat gris mort (la mort = squelette). Dégradé
+    CONTINU, dans l'esprit palette (HSV, pas de RGB libre). Constantes à régler au F5.
+  - `world/WorldView.Snapshot.cs` : lit `vitalite` (défaut 1.0) → `SetVitality` sur
+    node existant ET neuf.
+  - `world/WorldView.Conteneurs.cs` : idem pour les plantes de conteneur.
+- **Golden : INTACT** — `python3 -m tests.test_golden` → `ebe04b445054bf3ad942eff5f0342ff2305822d6608c0c46a1101dc0c35b869a` (inchangé, = ③).
+- **Build C# : VERT** — `dotnet build Symbiose.csproj` : 0 erreur, 0 avertissement.
+- **Tests** : `test_sim_server` 271/271 PASS (3 assertions de version pinnées
+  `0.5.27` → `0.5.28` mises à jour : `tests/simserver/{structures,conteneurs,voix}.py`).
+  Snapshot réel (full, 12 ticks) : `vitalite`/`etat` présents sur les 111 vivantes,
+  dégradé sain/affaibli/malade cohérent (min 0.167 sur Basil/Pepper malades).
+- **Point F5 pour Nico** : vérifier que le dégradé de vitalité est LISIBLE et
+  cohérent avec les `leaf_symptoms` (feuillage terni/désaturé sur les pieds affaiblis,
+  vert plein sur les sains) sans écraser les marques de symptômes. Régler au besoin
+  les constantes `VitDesatStrength`/`VitDimStrength`/`VitFloorSat`/`VitFloorVal`
+  (PlantRenderer.Palette.cs).
+
 ## §REPRISE
-Tronçons ① et ② CLOS + ③ FAIT (non commités — Nico commit). **⚠️ AVANT DE
-COMMITER ③ : Nico doit trancher le RE-FIGEAGE du golden** (`f0865d68…` →
-`ebe04b44…`, dérive design-intended, pas un bug — cf. §③ ci-dessus). Une fois
-tranché : écrire le nouveau hash dans `tests/golden_hash.txt`. Prochain tronçon =
-**④ `04_vue_godot.md`** (pont `vitalite`/`etat` 0.5.28 + `PlantRenderer` dégradé,
-golden INTACT). Rien à trancher côté conception pour ③.
+Sprint SANTÉ & RÉSILIENCE : tronçons ①②③④ TOUS FAITS (non commités — Nico commit).
+**⚠️ AVANT DE COMMITER : Nico doit trancher le RE-FIGEAGE du golden de ③**
+(`f0865d68…` → `ebe04b44…`, dérive design-intended, pas un bug — cf. §③). Le ④ ne
+touche PAS le golden (`ebe04b44…` inchangé — c'est déjà le hash cible de ③, donc
+`tests/golden_hash.txt` porte déjà `ebe04b44…` d'après ③ et test_golden PASSE ici).
+Version pont = **0.5.28**. Plus rien à faire côté conception/moteur pour ce sprint ;
+reste le F5 visuel de Nico (dégradé de vitalité).

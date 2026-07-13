@@ -217,11 +217,37 @@ namespace Symbiose
 			QueueRedraw();
 		}
 
+		// Vitalité continue (santé & résilience ④, snapshot 0.5.28) : `vitalite` ∈
+		// [0,1] du snapshot, 1.0 = plante saine neuve. C'est un DESCRIPTEUR GLOBAL de
+		// l'usure (érosion des stresseurs / convalescence côté moteur), distinct des
+		// `leaf_symptoms` LOCALISÉS : la vitalité ternit/désature le FOND vert de tout
+		// le feuillage (chlorophylle qui s'épuise, port qui se fane), les symptômes
+		// posent leurs MARQUES par-dessus. La vue LIT — elle ne recalcule aucune
+		// santé (moteur = source de vérité). Défaut 1.0 → snapshot pré-0.5.28 rend
+		// la plante pleine (tolérance, aucune régression). Cf. ApplyVitality (Palette).
+		private float _vitalite = 1f;
+		public void SetVitality(float v)
+		{
+			v = Mathf.Clamp(v, 0f, 1f);
+			if (Mathf.IsEqualApprox(v, _vitalite)) return;   // early-out : pas de redraw
+			_vitalite = v;
+			QueueRedraw();
+		}
+
 		// Tire un tissu vert (feuilles/apex/silhouette) vers la teinte du symptôme
 		// colorant dominant, ∝ son intensité ; identité si aucun colorant. Jamais
 		// appliqué au bois (il ne se décolore pas). Généralise l'ex-Chlorotic().
-		private Color SymptomTint(Color tissue) =>
-			_colorAmount > 0f ? tissue.Lerp(_colorTint, _colorAmount) : tissue;
+		// COMPOSITION vitalité (④) : on applique d'abord le FOND global de vitalité
+		// (ApplyVitality — ternissure/désaturation continue), PUIS la marque du
+		// symptôme dominant par-dessus. Ordre volontaire : la vitalité ne doit pas
+		// écraser un symptôme franc (chlorose/maladie garde sa teinte vive), elle
+		// habille le tissu en amont. Plante saine (vitalité 1, aucun colorant) =
+		// identité stricte → zéro régression.
+		private Color SymptomTint(Color tissue)
+		{
+			Color bg = ApplyVitality(tissue);
+			return _colorAmount > 0f ? bg.Lerp(_colorTint, _colorAmount) : bg;
+		}
 
 		// Silhouette d'espèce (luxuriance ⑥, descripteur data du moteur ③ : tapis/
 		// rosette/touffe/étalée/dressée/buisson). Lue au snapshot (0.5.19), pilote la

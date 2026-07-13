@@ -430,7 +430,21 @@ from __future__ import annotations
 #       au repos (aucune flaque durable ⇒ marais_memory=0 ⇒ facteurs ×1.0/+0.0) →
 #       golden NEUTRE hors banc. Un binaire pré-0.5.27 ignore le bloc `marais` (tolérance
 #       côté vue, comme les bumps précédents). VUE C# (sol de marais) = tronçon ⑧.
-ENGINE_VERSION = "0.5.27"
+# 0.5.28 (santé & résilience ④, vitalité continue au pont + vue) : chaque plante
+#       VIVANTE (en pleine terre ET en conteneur) gagne DEUX clés lecture-seule au
+#       snapshot — `vitalite` ∈ [0,1] (float arrondi 3 déc., 1.0 = sain neuf) et
+#       `etat` (str discrétisé : "sain"/"affaibli"/"malade"/"mort", seuils de ①).
+#       C'est le DESCRIPTEUR GLOBAL de l'usure de la plante (érosion des stresseurs
+#       via `erode()` divisée par la constitution `resilience_base`, convalescence
+#       modulée par la vigueur) qui COMPLÈTE les `leaf_symptoms` localisés : la vue
+#       C# module la teinte/saturation du feuillage ∝ vitalité (sain = vert plein →
+#       affaibli = terne/désaturé → malade = jauni) dans la palette pixel-art
+#       (Palette16), en composant avec les symptômes (fond global + marques). PURE
+#       lecture d'un état déjà porté par l'instance (`p.vitalite`/`p.etat`, ①) —
+#       hors _PLANT_ATTRS du golden → golden INTACT. Un binaire pré-0.5.28 n'émet
+#       pas ces clés → la vue retombe sur le mapping par `leaf_symptoms` seul
+#       (tolérance côté vue, comme tous les bumps précédents).
+ENGINE_VERSION = "0.5.28"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les
