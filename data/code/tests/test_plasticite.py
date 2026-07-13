@@ -335,15 +335,16 @@ def test_thigmo_wind_memory():
     print(f"[vent ④·thigmo] PASS — exposé→port_trapu {p.expression[_G]:.3f} ; abri→relâche")
 
 
-def _compte_degats_vent(plant, tile, eco, expression: float, gust_peak: float) -> int:
-    """Santé perdue par `_wind_damage` à port_trapu `expression` épinglé, sur un coup
-    de vent unique. On démarre haut (santé non bornante) pour mesurer la SUSCEPTIBILITÉ
-    (amplitude du dégât médié), pas un simple compte de tics (déterministe → 0 ou tout).
-    `_wind_damage` est pur : un appel suffit, la restauration borne la mesure."""
+def _compte_degats_vent(plant, tile, eco, expression: float, gust_peak: float) -> float:
+    """Vitalité perdue par `_wind_damage` à port_trapu `expression` épinglé, sur un
+    coup de vent unique. On démarre haut (vitalité non bornante à 9.0, hors plage
+    usuelle) pour mesurer la SUSCEPTIBILITÉ (amplitude du dégât médié CONTINU), pas un
+    simple compte de tics. `_wind_damage` est pur : un appel suffit, la restauration
+    borne la mesure."""
     plant.expression["port_trapu"] = expression
-    plant.health = 9
+    plant.vitalite = 9.0
     engine_wind(plant, tile, eco, gust_peak)
-    return 9 - plant.health
+    return 9.0 - plant.vitalite
 
 
 def engine_wind(plant, tile, eco, gust_peak):
@@ -379,9 +380,9 @@ def test_thigmo_degat_etiole():
 
     # Vent calme (gust faible) → produit sous le seuil → aucun dégât.
     _pin_vent(eco, 0.2)
-    p.health = 3
+    p.vitalite = 1.0
     engine._wind_damage(tile, eco, gust_peak=1.0)
-    assert p.health == 3, "une brise abîme un semis (seuil non respecté)"
+    assert p.vitalite == 1.0, "une brise abîme un semis (seuil non respecté)"
     print(f"[vent ④·dégât] PASS — fragile {n_fragile} > endurci {n_endurci}, brise inoffensive")
 
 

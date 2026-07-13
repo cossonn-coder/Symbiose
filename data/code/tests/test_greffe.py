@@ -112,7 +112,7 @@ def test_refus_non_greffable():
 def test_refus_mort():
     print("\n[4] greffon ou porte-greffe mort → refus sans dépense")
     gs, tile, eco, scion, rootstock = _monde(AppleTree, CherryTree)
-    scion.health = 0   # greffon mort
+    scion.vitalite = 0.0   # greffon mort
     v_avant = V.ensure_player(gs, "j1")["courante"]
     classe_avant = rootstock.plant_class
     ok = A.greffer(gs, "j1", scion, rootstock, eco)

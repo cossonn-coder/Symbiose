@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from plants import PlantInstance, EFFECT_REGISTRY, register_effect
 from world import Tile
-from fields import _hash_noise
+from fields import _hash_noise, VITALITE_STEP
 from .mutations import (AddRondelle, RemoveRondelle, ReduceHealth, AddScore,
                         InjectField, PropagateDisease, Notification, Mutation)
 
@@ -237,7 +237,10 @@ def apply_mutations(mutations: list, game_state: dict) -> list[str]:
             if removed: log.append(f"  ✓ {m}")
 
         elif isinstance(m, ReduceHealth):
-            m.plant.health = max(0, m.plant.health - m.amount)
+            # `m.amount` reste exprimé à l'échelle ENTIÈRE d'antan (1 = un cran) ;
+            # on le convertit en érosion de vitalité continue via VITALITE_STEP,
+            # puis `erode` le divise par la constitution d'espèce (no-op au ①).
+            m.plant.erode(m.amount * VITALITE_STEP)
             # Sémiologie ② : une cause typée (maladie/gel/grêle) laisse une marque
             # foliaire décroissante. `* SYMPTOM_MARK_GAIN` (knob) convertit le coup de
             # santé en intensité [0,1] cumulable, plafonnée. Marque PURE cosmétique :
@@ -245,8 +248,8 @@ def apply_mutations(mutations: list, game_state: dict) -> list[str]:
             if m.cause:
                 marks = m.plant.symptom_marks
                 marks[m.cause] = min(1.0, marks.get(m.cause, 0.0) + m.amount * SYMPTOM_MARK_GAIN)
-            status = "meurt" if m.plant.health == 0 else f"santé={m.plant.health}"
-            log.append(f"  {'✗' if m.plant.health==0 else '!'} {m} → {status}")
+            status = "meurt" if not m.plant.is_alive else f"vitalité={m.plant.vitalite:.2f}"
+            log.append(f"  {'✗' if not m.plant.is_alive else '!'} {m} → {status}")
 
         elif isinstance(m, AddScore):
             scores = game_state.setdefault("scores", {})
@@ -289,7 +292,7 @@ def apply_mutations(mutations: list, game_state: dict) -> list[str]:
             week = game_state.get("week", 0)
             tr, tc = m.target_plant.position
             if _hash_noise(seed, week * 29, tr, tc) <= m.probability:
-                m.target_plant.health = max(0, m.target_plant.health - 1)
+                m.target_plant.erode(VITALITE_STEP)
                 log.append(f"  ✓ {m}")
             else:
                 log.append(f"  ○ {m} (bloqué par microbiome)")

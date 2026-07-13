@@ -242,7 +242,7 @@ def detecter(game_state: dict, player: str, log: list[str], semaine: int,
             zone = (tile.tile_id, *p.position)
             if zone in det["replante"]:
                 continue                                     # planté → pas féral
-            if p.current_stage >= STAGE_NATURALISATION and p.health == 3:
+            if p.current_stage >= STAGE_NATURALISATION and p.etat == "sain":
                 cle = _CLE_DE_CLASSE.get(p.plant_class)
                 if cle:
                     det["naturalise"].add(cle)

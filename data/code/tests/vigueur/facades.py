@@ -19,24 +19,24 @@ def test_facade_purete():
     eco = gs["eco"]["T0"]
     plant = _mature(gs["tiles"][0].plants[0])
     eco_avant = eco.summary()
-    sante_av, stage_av, health_av = plant.health, plant.current_stage, plant.health
+    sante_av, stage_av, health_av = plant.vitalite, plant.current_stage, plant.vitalite
     v1 = VP.vigueur_plante(plant, eco)
     v2 = VP.vigueur_plante(plant, eco)
     check("déterministe (même entrée → même sortie)", v1 == v2, f"{v1}=={v2}")
     check("aucune mutation de l'état écolo", eco.summary() == eco_avant)
     check("aucune mutation de la plante",
-          (plant.health, plant.current_stage) == (health_av, stage_av))
+          (plant.vitalite, plant.current_stage) == (health_av, stage_av))
 
 
 def test_facade_sante():
-    print("\n[C2] facteur santé : health 3..0 normalisé, mort → Vigueur nulle")
+    print("\n[C2] facteur santé : vitalite [0,1], mort → Vigueur nulle")
     gs = _minimal_state()
     eco = gs["eco"]["T0"]
     plant = _mature(gs["tiles"][0].plants[0])
-    plant.health = 3
+    plant.vitalite = 1.0
     check("santé pleine → 1.0", VP.sante(plant) == 1.0)
     v_sain = VP.vigueur_plante(plant, eco)
-    plant.health = 0
+    plant.vitalite = 0.0
     check("santé nulle → 0.0", VP.sante(plant) == 0.0)
     check("plante morte → Vigueur dérivée nulle",
           VP.vigueur_plante(plant, eco) == 0.0)

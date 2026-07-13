@@ -18,7 +18,7 @@ def test_manger_gain_organe():
     print("\n[D1] manger : gain = HARVEST_GAIN_FULL × vigueur_plante, coût NUL")
     gs = _minimal_state()
     eco = gs["eco"]["T0"]
-    plant = _mature(gs["tiles"][0].plants[0]); plant.health = 3
+    plant = _mature(gs["tiles"][0].plants[0]); plant.vitalite = 1.0
     st = V.ensure_player(gs, "joueur_1"); st["max_base"] = 1000.0; st["courante"] = 100.0
     vp = VP.vigueur_plante(plant, eco)
     gagne = ACT.manger(gs, "joueur_1", plant, eco)
@@ -33,7 +33,7 @@ def test_manger_modulation_facade():
     print("\n[D2] manger : la façade pilote la valeur (éclatant > chétif)")
     # Même espèce mûre et saine, deux sols opposés → seule la façade change.
     tile = Tile(tile_id="T0", soil_type="terre"); tile.add_plant(Tomato, 2, 2)
-    plant = _mature(tile.plants[0]); plant.health = 3
+    plant = _mature(tile.plants[0]); plant.vitalite = 1.0
     pauvre = init_eco("T0", 6, 8, fertilite=1.0, microbiome=0.3)
     riche = init_eco("T0", 6, 8, fertilite=3.0, microbiome=3.0)
     gs = {}

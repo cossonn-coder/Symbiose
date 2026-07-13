@@ -111,7 +111,7 @@ def test_becher_vs_grelinette():
 def test_ecraser_pression_revient():
     print("\n[E6] écraser : la pression REVIENT depuis la ressource (philo #1)")
     gs = _minimal_state(); eco = gs["eco"]["T0"]; tile = gs["tiles"][0]
-    _mature(gs["tiles"][0].plants[0]).health = 3   # feuillage-hôte du ravageur
+    _mature(gs["tiles"][0].plants[0]).vitalite = 1.0   # feuillage-hôte du ravageur
     plants = tile.plants
     # Laisse le ravageur s'installer sur le feuillage (relaxation déterministe).
     for _ in range(12):

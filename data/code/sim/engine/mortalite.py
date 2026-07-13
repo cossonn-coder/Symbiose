@@ -14,7 +14,7 @@ from __future__ import annotations
 import math
 from fields import (_hash_noise, SENESCENCE_ONSET, SEN_RATE, HEAL_RATE,
                     HEAL_SEN_CUTOFF, ASPHYXIE_HEALTH_SEUIL, ASPHYXIE_RATE,
-                    RESEED_RADIUS_CM)
+                    RESEED_RADIUS_CM, VITALITE_STEP)
 from sim.effects import apply_mutations, ReduceHealth, deposer_mort
 from sim.reproduction import (find_father, child_genes, child_expression,
                               is_seed_bearing)
@@ -77,7 +77,13 @@ class MortaliteMixin:
                     sen = max(0.0, min(1.0,
                               (plant.age_years - SENESCENCE_ONSET * L) / denom))
                 if sen > 0.0 and _hash_noise(seed, week * 3, r, c) < sen * SEN_RATE:
-                    plant.health = max(0, plant.health - 1)
+                    # Sénescence = horloge INTERNE de vieillissement (pas un stress
+                    # subi) → décrément DIRECT, hors `erode`/résilience (décision D5).
+                    # Snap anti-poussière (comme `erode`) : 1.0 − 3×(1/3) ≠ 0 en
+                    # flottant ; sans lui une plante « morte de vieillesse » lingérerait
+                    # à ~1e-16 (is_alive vrai). La vieillesse qui atteint le fond TUE.
+                    v = plant.vitalite - VITALITE_STEP
+                    plant.vitalite = v if v > 1e-9 else 0.0
                     if not plant.is_alive:
                         deaths.append(plant)
                         log.append(f"    🪦 {plant.name}@{plant.position} meurt de "
@@ -96,14 +102,16 @@ class MortaliteMixin:
                 pression = ((plant.asphyxie_memory - ASPHYXIE_HEALTH_SEUIL)
                             / plant.expressed_gene("tolerance_asphyxie"))
                 if _hash_noise(seed, week * 7, r, c) < pression * ASPHYXIE_RATE:
-                    plant.health = max(0, plant.health - 1)
+                    # Insulte EXTERNE (excès d'eau) → passe par `erode` (la médiation
+                    # `tolerance_asphyxie` reste en amont sur la PRESSION ci-dessus).
+                    plant.erode(VITALITE_STEP)
                     if not plant.is_alive:
                         deaths.append(plant)
                         log.append(f"    🪦 {plant.name}@{plant.position} meurt "
                                    f"asphyxié (excès d'eau soutenu)")
                         continue
             # Guérison (convalescence) — coupée en fin de vie
-            if plant.health < 3 and sen < HEAL_SEN_CUTOFF:
+            if plant.etat != "sain" and sen < HEAL_SEN_CUTOFF:
                 light   = eco.lumiere.light_received(plant)
                 hum     = eco.humidite.at_plot(r, c)
                 disturb = eco.disturbance.local(r, c)
@@ -119,7 +127,11 @@ class MortaliteMixin:
                 if est_etiole(plant, eco.lumiere):
                     heal *= 0.90
                 if _hash_noise(seed, week * 5, r, c) < heal:
-                    plant.health = min(3, plant.health + 1)
+                    # GAIN par pas 1/3 (décision ① : on garde le pas d'antan pour la
+                    # neutralité d'échelle — la finesse continue vient des dégâts
+                    # médiés, pas de la convalescence). Récupération pilotée par la
+                    # vigueur (dans `heal` ci-dessus), pas par la constitution.
+                    plant.vitalite = min(1.0, plant.vitalite + VITALITE_STEP)
         for plant in deaths:
             deposited = deposer_mort(plant, eco)
             log.append(f"    🍂 Nécromasse +{deposited:.2f} OM @{plant.position}")
@@ -372,10 +384,13 @@ class MortaliteMixin:
                 continue
             suscept   = (1.0 / p.expressed_gene(gene_name)) if gene_name else 1.0
             effective = sev * suscept * (1.0 - protection)
-            lost      = min(p.health, int(effective / DAMAGE_STEP))
-            if lost > 0:
-                log += apply_mutations([ReduceHealth(p, lost, reason, cause=cause)], self.game_state)
-                if p.health == 0:
+            # Amount CONTINU (plus de plancher entier `int()` : l'érosion
+            # fractionnaire est fidèle à la sévérité). La résolution applique
+            # `amount * VITALITE_STEP` et `erode` borne à 0 → pas de `min(p.health…)`.
+            amount = effective / DAMAGE_STEP
+            if amount > 0:
+                log += apply_mutations([ReduceHealth(p, amount, reason, cause=cause)], self.game_state)
+                if not p.is_alive:
                     newly_dead.append(p)
         # Mort → squelette persistant (②B). `deposer_mort` est idempotent : les
         # morts antérieures encore présentes (squelettes) ne sont pas re-déposées.
@@ -425,11 +440,12 @@ class MortaliteMixin:
             fragilite = WIND_ETIOLE_SUSCEPT if est_etiole(p, eco.lumiere) else 1.0
             suscept   = fragilite / p.expressed_gene("port_trapu")
             effective = sev * suscept * (1.0 - protection)
-            lost      = min(p.health, int(effective / DAMAGE_STEP))
-            if lost > 0:
-                log += apply_mutations([ReduceHealth(p, lost,
+            # Amount CONTINU (cf. `_mediated_damage`) : plus de plancher entier.
+            amount = effective / DAMAGE_STEP
+            if amount > 0:
+                log += apply_mutations([ReduceHealth(p, amount,
                                         "vent (tige cassée)", cause="")], self.game_state)
-                if p.health == 0:
+                if not p.is_alive:
                     newly_dead.append(p)
         for p in newly_dead:
             deposer_mort(p, eco)

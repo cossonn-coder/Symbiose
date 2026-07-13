@@ -23,6 +23,7 @@ from sim.growth import (atteindre_segment,   # seam de perturbation §F (sim→s
                         f_lignification, INTENSITE_PIED, SEUIL_DEGAT, COUPE_NETTE)  # calibrage écrasement (volet 2)
 from sim.effects import deposer_mort   # mort → squelette persistant (②B), point d'entrée unique
 from fields.ecofields import BOIS_PAR_CM, ECRASER_FRAG_BOOST   # litière `bois` (taille/écimage) + boost fragmentation (②)
+from fields.ecofields import VITALITE_STEP   # pas d'érosion de vitalité (écimage NET, sprint santé ①)
 from fields.ecofields import BECHAGE_MALUS, GRELINETTE_GAIN   # deltas structure du sol des gestes (physico-chimie ⑧)
 from fields.ecofields import BECHAGE_MYCELIUM_MALUS   # quantum de réseau fongique cassé par le bêchage (mycélium ⑤, event-driven)
 from fields.ecofields import PAILLAGE_DOSE   # dose de mulch d'un geste `pailler` (équilibre invasion ③)
@@ -206,7 +207,7 @@ def deraciner(game_state: dict, player: str, plant, eco) -> bool:
     ratio = spend(game_state, player, cost)
     if ratio < 1.0:
         return False
-    plant.health = 0
+    plant.vitalite = 0.0
     deposer_mort(plant, eco)   # squelette persistant (②B), point d'entrée unique
     return True
 
@@ -383,7 +384,7 @@ def ecraser_plante(game_state: dict, player: str, plant, eco, *,
     masse_bois = sum(s.length_cm for s in removed) * BOIS_PAR_CM
     eco.deposer_litiere(*plant.position, "bois", masse_bois)   # no-op si masse_bois ≤ 0
     if intensite >= COUPE_NETTE and (1.0 - cls.stimulation_ecrasement) >= SEUIL_DEGAT:
-        plant.health -= 1                       # NET sur une espèce qui n'en profite pas → sentier
+        plant.erode(VITALITE_STEP)              # NET sur une espèce qui n'en profite pas → sentier
     return True
 
 

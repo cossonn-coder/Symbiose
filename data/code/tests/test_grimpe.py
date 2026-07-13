@@ -101,7 +101,7 @@ def test_detachement_mort_hote():
     b = _grimpante_dressee(t, 4, 4, 60.0)
     chercher_support(b, t, None)
     assert b.support is not None
-    hote.health = 0                            # l'hôte meurt (is_alive → False)
+    hote.vitalite = 0.0                        # l'hôte meurt (is_alive → False)
     chercher_support(b, t, None)
     print("  [détachement] hôte mort → grimpante libre ✓")
     assert b.support is None, "la grimpante doit se détacher à la mort de l'hôte"
@@ -254,9 +254,9 @@ def test_verse_exempte_accrochee():
     t2, eco2, tenue = _semis_dans_la_tempete()
     tenue.support = ("tuteur_fictif", 180.0)       # accrochée : le support la porte
     moteur._wind_damage(t2, eco2, gust_peak=2.0)
-    print(f"  [verse] libre {libre.health} pv vs accrochée {tenue.health} pv")
-    assert libre.health < 3, "la grimpante LIBRE doit perdre de la santé (tige cassée)"
-    assert tenue.health == 3, "la grimpante ACCROCHÉE est portée → aucune casse"
+    print(f"  [verse] libre {libre.vitalite:.2f} vs accrochée {tenue.vitalite:.2f}")
+    assert libre.vitalite < 1.0, "la grimpante LIBRE doit perdre de la vitalité (tige cassée)"
+    assert tenue.vitalite == 1.0, "la grimpante ACCROCHÉE est portée → aucune casse"
 
 
 def main() -> int:

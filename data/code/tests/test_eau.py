@@ -172,12 +172,12 @@ def test_asphyxie_sante():
     from sim.engine import Engine
     gs, tile, eco = _state(humidite=2.95)     # engorgement net et constant
     plant = tile.add_plant(Tomato, 1, 1)
-    plant.health = 3
+    plant.vitalite = 1.0
     eng = Engine(gs)
 
     # on force l'humidité à rester très haute chaque semaine (sol gorgé soutenu),
     # et on ticke ~40 semaines : la mémoire monte (lerp 0.05) → santé finit par chuter.
-    sante_initiale = plant.health
+    sante_initiale = plant.vitalite
     morte_ou_affaiblie = False
     mem_pic = 0.0
     for w in range(10, 60):
@@ -185,13 +185,13 @@ def test_asphyxie_sante():
         eco.humidite.fill(2.95)               # maintient l'engorgement
         eng.tick_semaine()
         mem_pic = max(mem_pic, plant.asphyxie_memory)
-        if plant.health < sante_initiale:
+        if plant.vitalite < sante_initiale:
             morte_ou_affaiblie = True
             break
     check("asphyxie_memory monte sous engorgement soutenu", mem_pic > 0.0,
           f"mem_pic={mem_pic:.3f}")
     check("santé chute après un engorgement soutenu (palier 2)", morte_ou_affaiblie,
-          f"santé={plant.health}/{sante_initiale} mem={plant.asphyxie_memory:.3f}")
+          f"vitalité={plant.vitalite:.3f}/{sante_initiale:.3f} mem={plant.asphyxie_memory:.3f}")
 
     # réversibilité de la mémoire : assécher la fait retomber
     if plant.is_alive:

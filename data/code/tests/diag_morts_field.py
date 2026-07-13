@@ -11,8 +11,8 @@ CLAMPÉ à sa valeur extrême AVANT chaque tick, puis on lit la cause + la semai
 + l'âge de la mort de NOTRE plante (3,3).
 
 Subtilité de détection : une mort « squelette » (hiver annuel, conflit) met
-`plant.morte=True` SANS mettre `health=0` ; `is_alive` ne teste que la santé. On
-détecte donc la mort par `plant.morte or plant.health <= 0`.
+`plant.morte=True` SANS mettre `vitalite=0` ; `is_alive` ne teste que la vitalité.
+On détecte donc la mort par `plant.morte or plant.vitalite <= 0`.
 
 Leçon attendue : seuls l'EAU (excès/défaut), le FROID et la PRESSION BIOTIQUE
 tuent directement ; NPK / pH / structure / lumière agissent sur la CROISSANCE,
@@ -43,8 +43,8 @@ def _make_meteo(temp):
 def _mort(plant) -> bool:
     """Vrai dès que la plante est morte, quelle que soit la VOIE : santé à 0
     (fonte, gel, herbivorie, sécheresse, asphyxie…) OU drapeau squelette `morte`
-    (hiver annuel, conflit, qui ne passent pas par health=0)."""
-    return plant.morte or plant.health <= 0
+    (hiver annuel, conflit, qui ne passent pas par vitalite=0)."""
+    return plant.morte or plant.vitalite <= 0
 
 
 def _classify(log, tag):

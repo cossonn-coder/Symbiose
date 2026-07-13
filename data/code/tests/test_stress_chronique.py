@@ -59,12 +59,19 @@ def _lab_tile():
     # galeries) et rognerait la santé → confond la voie testée. On l'écarte comme les
     # aléas ravageurs, pour ISOLER le facteur (ombre/édaphique). Idempotent.
     _pert.root_herbivory = lambda *a, **k: []
+    # Neutralise la casse MÉCANIQUE du vent (`_wind_damage`) : depuis la vitalité
+    # continue (sprint SANTÉ & RÉSILIENCE ①), le dégât de vent a perdu son plancher
+    # entier `int()` → une RISÉE de fond (gust_profile) sur un semis ÉTIOLÉ (héliophile
+    # à l'ombre) érode désormais fractionnairement la vitalité et TUE avant que la
+    # carence lumineuse testée ne s'installe. On calme la risée (gust nul → `_wind_damage`
+    # no-op) pour ISOLER la voie ombre, comme germination/ravageurs/campagnol ci-dessus.
+    _boucle.gust_profile = lambda *a, **k: [0.0]
     return tile, eco
 
 
 def _mort(plant) -> bool:
-    """Morte quelle que soit la voie (santé à 0 OU drapeau squelette `morte`)."""
-    return plant.morte or plant.health <= 0
+    """Morte quelle que soit la voie (vitalité à 0 OU drapeau squelette `morte`)."""
+    return plant.morte or plant.vitalite <= 0
 
 
 def run_shade(tol_ombre: float, light: float = 0.1, weeks: int = MAX_WEEKS):
@@ -84,9 +91,9 @@ def run_shade(tol_ombre: float, light: float = 0.1, weeks: int = MAX_WEEKS):
         eco.lumiere.light_received = lambda p, _l=light: _l
         engine.tick_semaine()
         if _mort(plant):
-            return wk + 1, plant.health, plant.shade_memory
+            return wk + 1, plant.vitalite, plant.shade_memory
         gs["log"].clear()
-    return None, plant.health, plant.shade_memory
+    return None, plant.vitalite, plant.shade_memory
 
 
 def test_shade_kills_heliophile_spares_sciaphile():

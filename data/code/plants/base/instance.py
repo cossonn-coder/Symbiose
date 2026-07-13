@@ -17,6 +17,17 @@ from .empreintes import _plots_in_radius, PROC_ROOT_RATIO
 from .stades import GrowthStage, Segment
 
 # ---------------------------------------------------------------------------
+# SEUILS DE VITALITÉ (sprint SANTÉ & RÉSILIENCE ①) — discrétisation de la
+# vitalité continue [0,1] en quatre états lisibles, MIROIR de l'ancienne échelle
+# entière `health` 0-3. Seuils placés aux frontières k/3 : sain > 2.5/3 (≈ 0.833),
+# affaibli dans (1.5/3, 2.5/3], malade dans (0, 1.5/3], mort ≤ 0. Ainsi une plante
+# neuve (1.0) est « sain », et les anciens paliers 3/2/1/0 tombent sur les mêmes
+# étiquettes qu'avant. Constantes de module (les seuils ne dépendent d'aucun
+# import `fields` — règle de couches : `plants` reste bas niveau).
+SEUIL_SAIN     = 2.5 / 3.0   # au-dessus = sain (ancien health == 3)
+SEUIL_AFFAIBLI = 1.5 / 3.0   # au-dessus = affaibli, en dessous = malade
+
+# ---------------------------------------------------------------------------
 # INSTANCE DE PLANTE (avant PlantBase pour la forward ref)
 # ---------------------------------------------------------------------------
 
@@ -27,7 +38,8 @@ class PlantInstance:
     current_stage: int = 0          # index dans plant_class.growth_stages
     age_weeks: int = 0              # âge dans le stade courant
     age_years: float = 0.0         # âge total (pérennes ligneuses : courbe d'âge)
-    health: int = 3                 # 3=sain, 2=affaibli, 1=malade, 0=mort
+    vitalite: float = 1.0           # santé continue [0,1] : 1.0=sain neuf, 0.0=mort
+                                    # (remplace l'ancien `health` entier 0-3 ; cf. `etat`)
     growth_factor: float = 1.0      # intégration de la lumière reçue → module la hauteur
     # Position continue (cadrage hybride : lue par le LightField). Initialisée au
     # centre du plot-foyer si non fournie (cf. __post_init__).
@@ -291,7 +303,36 @@ class PlantInstance:
 
     @property
     def is_alive(self) -> bool:
-        return self.health > 0
+        return self.vitalite > 0
+
+    @property
+    def etat(self) -> str:
+        """Discrétise `vitalite` en état lisible (miroir de l'ancienne échelle
+        entière) : "sain" / "affaibli" / "malade" / "mort". Sert aux lecteurs qui
+        raisonnaient par paliers (détection de naturalisation, sémiologie)."""
+        if self.vitalite <= 0.0:
+            return "mort"
+        if self.vitalite > SEUIL_SAIN:
+            return "sain"
+        if self.vitalite > SEUIL_AFFAIBLI:
+            return "affaibli"
+        return "malade"
+
+    def erode(self, amount: float) -> None:
+        """Primitive d'ÉROSION unique de la vitalité par une insulte EXTERNE.
+        Le dégât reçu est divisé par la CONSTITUTION d'espèce `resilience_base`
+        (« combien un coup qui passe me terrasse ») : une constitution robuste
+        encaisse mieux. Au tronçon ① aucune espèce ne définit `resilience_base`
+        → `getattr` renvoie 1.0 (no-op strict) ; le tronçon ② pose la table
+        complète et la division différencie enfin les espèces. Les décréments
+        DIRECTS (sénescence, gestes joueur) ne passent PAS par ici."""
+        resilience = getattr(self.plant_class, "resilience_base", 1.0)
+        v = self.vitalite - amount / resilience
+        # Snap anti-poussière flottante : N coups d'un pas exact 1/3 doivent
+        # TERMINER à 0 (mort), pas laisser une vitalité fantôme ~1e-16 qui
+        # garderait `is_alive` vrai (1.0 − 3×(1/3) ≠ 0 en flottant). Sous ce seuil
+        # la plante est morte — le résidu n'est pas une vitalité résiduelle réelle.
+        self.vitalite = v if v > 1e-9 else 0.0
 
     def regress(self) -> bool:
         """
@@ -303,7 +344,7 @@ class PlantInstance:
             self.age_weeks = 0
             return False
         else:
-            self.health = 0
+            self.vitalite = 0.0
             return True  # mort
 
     def advance_stage(self) -> bool:
@@ -321,7 +362,7 @@ class PlantInstance:
     def __repr__(self) -> str:
         return (
             f"{self.name}@{self.position} "
-            f"[{self.stage.name}] age={self.age_weeks}w santé={self.health}/3"
+            f"[{self.stage.name}] age={self.age_weeks}w vitalité={self.vitalite:.2f}"
         )
 
 # ---------------------------------------------------------------------------

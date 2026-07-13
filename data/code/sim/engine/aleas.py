@@ -150,6 +150,6 @@ def appliquer_alea(alea, tile, eco, game_state):
         log += apply_mutations(muts, game_state)
         # Mort éventuelle → squelette persistant (②B, idempotent : skip si déjà morte)
         for p in tile.plants:
-            if p.health == 0:
+            if not p.is_alive:
                 deposer_mort(p, eco)
     return log

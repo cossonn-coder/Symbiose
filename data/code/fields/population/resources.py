@@ -194,7 +194,7 @@ def _foliage_grid(eco, tile, plants) -> list[list[float]]:
     for p in plants:
         if not p.is_alive or p.current_stage < 1:
             continue
-        w = p.health / 3.0
+        w = p.vitalite
         for (r, c) in p.foliar_plots:
             if 0 <= r < eco.rows and 0 <= c < eco.cols:
                 g[r][c] += w
@@ -234,7 +234,7 @@ def _flower_grid(eco, tile, plants) -> list[list[float]]:
     for p in plants:
         if not p.is_alive or p.current_stage < 2:
             continue
-        w = p.health / 3.0
+        w = p.vitalite
         for (r, c) in p.foliar_plots:
             if 0 <= r < eco.rows and 0 <= c < eco.cols:
                 g[r][c] += w
@@ -285,7 +285,7 @@ def _racine_grid(eco, tile, plants) -> list[list[float]]:
     for p in plants:
         if not p.is_alive or p.current_stage < 1:
             continue
-        w = (p.health / 3.0) * _root_palatability(p)
+        w = p.vitalite * _root_palatability(p)
         if w <= 0.0:
             continue
         for (r, c) in p.root_plots:
@@ -369,7 +369,7 @@ def _foliage_solanaceae_grid(eco, tile, plants) -> list[list[float]]:
             continue
         if p.plant_class.family != "Solanaceae":
             continue
-        w = p.health / 3.0
+        w = p.vitalite
         for (r, c) in p.foliar_plots:
             if 0 <= r < eco.rows and 0 <= c < eco.cols:
                 g[r][c] += w
@@ -396,7 +396,7 @@ def _solanaceae_grid(eco, tile, plants) -> list[list[float]]:
             continue
         for (r, c) in p.foliar_plots:
             if 0 <= r < eco.rows and 0 <= c < eco.cols:
-                cible[r][c] += p.health / 3.0
+                cible[r][c] += p.vitalite
     g = _zero_grid(eco.rows, eco.cols)
     for r in range(eco.rows):
         for c in range(eco.cols):
@@ -478,7 +478,7 @@ def _rapace_habitat_grid(eco, tile, plants) -> list[list[float]]:
             continue
         for (r, c) in p.foliar_plots:
             if 0 <= r < eco.rows and 0 <= c < eco.cols:
-                canopee[r][c] += p.health / 3.0
+                canopee[r][c] += p.vitalite
         # Un ligneux haut fait poste d'affût sur son empreinte foliaire.
         if (getattr(p.plant_class, "age_curve", None)
                 and p.current_height >= PERCHOIR_H_CM):

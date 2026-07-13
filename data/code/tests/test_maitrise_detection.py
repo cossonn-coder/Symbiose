@@ -215,7 +215,7 @@ def test_naturalisation_ferale():
     tile = Tile(tile_id="T0", soil_type="terre")
     p = tile.add_plant(Tomato, 2, 2)
     p.current_stage = D.STAGE_NATURALISATION   # établie (≥ seuil jeune/adulte)
-    p.health = 3                               # pleine santé
+    p.vitalite = 1.0                           # pleine santé (etat == "sain")
     gs = {"tiles": [tile]}
     M.decouvrir(gs, "j", "tomate")
     D.detecter(gs, "j", [], semaine=1)         # log vide : seul le balayage d'état joue
@@ -227,7 +227,7 @@ def test_naturalisation_ferale():
     tile2 = Tile(tile_id="T1", soil_type="terre")
     p2 = tile2.add_plant(Tomato, 1, 1)
     p2.current_stage = D.STAGE_NATURALISATION
-    p2.health = 3
+    p2.vitalite = 1.0
     gs2 = {"tiles": [tile2]}
     M.decouvrir(gs2, "j", "tomate")
     D.marquer_replante(gs2, "j", "T1", 1, 1)

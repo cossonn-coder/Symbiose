@@ -106,7 +106,7 @@ def test_refus_trop_jeune():
 def test_refus_morte():
     print("\n[4] mère morte → refus sans dépense")
     gs, tile, eco, mother = _monde(Mint)
-    mother.health = 0
+    mother.vitalite = 0.0
     v_avant = V.ensure_player(gs, "j1")["courante"]
     n_avant = len(tile.plants)
     ok = A.bouturer(gs, "j1", mother, tile, eco, 5, 5)

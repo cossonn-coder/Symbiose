@@ -48,7 +48,7 @@ SOILS = ["terre", "argile"]
 HASH_FILE = os.path.join(os.path.dirname(__file__), "golden_hash.txt")
 
 # Attributs d'instance capturés dans le digest (ordre fixe).
-_PLANT_ATTRS = ("current_stage", "age_weeks", "age_years", "health",
+_PLANT_ATTRS = ("current_stage", "age_weeks", "age_years", "vitalite",
                 "growth_factor", "x_cm", "y_cm",
                 "shade_memory", "drought_memory", "stress_memory")
 _RONDELLES = ("fertilite", "humidite", "lombric", "maladie",

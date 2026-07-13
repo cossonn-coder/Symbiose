@@ -5,7 +5,7 @@ Le snapshot n'ignore plus les squelettes (décompo·compost ②B) : il les expos
 LECTURE avec `dead=true` + {stade_mort, bois_restant, semaines_mort} pour que la
 vue dessine la silhouette sèche/couchée. Les vivantes portent `dead=false`.
 
-Levier déterministe : `deraciner` met `health=0` puis `deposer_mort` → squelette
+Levier déterministe : `deraciner` met `vitalite=0` puis `deposer_mort` → squelette
 persistant pour une vivace LIGNEUSE (l'AppleTree de la config full ; une herbacée,
 bois=0, serait retirée au tick et jamais vue). Aucun step entre le déracinage et le
 snapshot : le squelette est observé frais (seche, semaines_mort=0).

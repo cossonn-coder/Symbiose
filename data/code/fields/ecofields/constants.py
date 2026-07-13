@@ -392,6 +392,13 @@ VIT_W_DISTURB   = 0.15     # pénalité (soustraite)
 SOIL_FAST_RATE   = 0.15    # intégration rapide (annuelle)
 SOIL_DEEP_RATE   = 0.02    # intégration lente (décennale)
 
+# Vitalité continue (sprint SANTÉ & RÉSILIENCE ①) — remplace l'ancienne santé
+# entière `health` 0-3 par `vitalite ∈ [0,1]`. Pas de conversion : chaque ancien
+# décrément/gain entier `±1` devient `±VITALITE_STEP`, si bien qu'à résilience
+# neutre la vitalité SUIT exactement `health/3` d'antan (golden préservé sauf sur
+# les voies où l'ancien `int()` arrondissait — cf. dégâts médiés).
+VITALITE_STEP = 1.0 / 3.0
+
 # Mortalité réaliste (D27) — sénescence + santé dynamique
 SENESCENCE_ONSET = 0.70   # début du déclin (× longévité)
 SEN_RATE         = 0.04   # pente de la pression de sénescence (proba/sem à sen=1)

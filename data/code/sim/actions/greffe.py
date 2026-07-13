@@ -139,6 +139,6 @@ def greffer(game_state: dict, player: str, scion, rootstock, eco) -> bool:
     # vivant au prochain balayage de la tuile (le tick le retire). Le pont, qui tient
     # la tuile du greffon, peut aussi le retirer immédiatement (`remove_plant`) pour un
     # retour visuel instantané. On NE dépose PAS de squelette (un rameau, pas un tronc).
-    scion.health = 0
+    scion.vitalite = 0.0
     scion.morte = True
     return True

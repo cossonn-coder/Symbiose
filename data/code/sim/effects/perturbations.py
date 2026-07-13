@@ -20,7 +20,7 @@ import math
 from fields import (_hash_noise, MORTALITY_RATE, climate_stress,
                     DAMPOFF_BASE, DAMPOFF_HUM_SEUIL, FUNGAL_BASE,
                     FUNGAL_VENT_DRY, FUNGAL_SPORE_GAIN, FUNGAL_INOC_SEUIL,
-                    NECROMASS_PER_CM, FRAC_BOIS_MORT)
+                    NECROMASS_PER_CM, FRAC_BOIS_MORT, VITALITE_STEP)
 from .mutations import ReduceHealth, Mutation
 from .resolution import apply_mutations
 
@@ -118,7 +118,9 @@ def damping_off(plant: PlantInstance, tile: Tile, eco,
     # EXPRIMÉ — un semis dont la lignée a vécu l'infection est primé, plasticité ②).
     p /= plant.expressed_gene("resistance_pathogene")
     if _hash_noise(seed, week * 11, r, c) < p:
-        return [ReduceHealth(plant, plant.health, reason="fonte des semis")]
+        # Fonte = voie AIGÜE : tue net. L'amount (échelle entière) est calé pour que
+        # `× VITALITE_STEP` en résolution retire toute la vitalité restante → mort.
+        return [ReduceHealth(plant, plant.vitalite / VITALITE_STEP, reason="fonte des semis")]
     return []
 
 
@@ -459,14 +461,15 @@ def background_mortality(plant: PlantInstance, eco,
                      * (1.0 - 0.8 * establishment))
 
     if noise < adjusted_rate:
-        # Affaiblissement déterministe. Plancher levé (D27) : sur une plante déjà
-        # à health=1, le coup peut atteindre 0 → mort. Reste rare (modulé par
-        # stress_memory) et ne touche en pratique que les sujets déjà affaiblis.
-        new_health = int(plant.health * 0.7)
-        if new_health < plant.health:
+        # Affaiblissement déterministe : ancien effet ×0.7 sur la santé → on retire
+        # 30 % de la vitalité courante. Amount à l'échelle entière (÷ VITALITE_STEP)
+        # pour que la résolution le reconvertisse. Plus de plancher `int()` : l'usure
+        # est fractionnaire (une plante déjà basse peut passer à 0 → mort, comme avant).
+        perte = plant.vitalite * 0.3 / VITALITE_STEP
+        if perte > 0:
             return [ReduceHealth(
                 plant,
-                plant.health - new_health,
+                perte,
                 reason=f"mortalité de fond (noise={noise:.3f})"
             )]
     return []

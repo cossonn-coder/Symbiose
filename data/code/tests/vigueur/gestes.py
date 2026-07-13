@@ -6,7 +6,7 @@ hors tick ». Le golden ÉCOLO est testé à part (`tests/test_golden.py`) : ici
 vérifie les CONTRATS Vigueur (coût/binaire/gain) et la réponse émergente.
 """
 from plants import Basil, Bean, Sunflower, PoaAnnua
-from fields import DENSITE_PAR_SPRITE
+from fields import DENSITE_PAR_SPRITE, VITALITE_STEP
 from sim.growth import grow_plant, f_lignification, COUPE_NETTE, SEUIL_DEGAT
 from sim import vigueur as V
 from sim import actions as ACT
@@ -199,7 +199,7 @@ def test_ecraser_plante():
     grow_plant(poa, SEED, 1)                       # donne une auxine réelle au collet
     for s in poa.segments:
         s.age_weeks = 60                           # établi → f_lignification ≈ 1
-    aux_av, n_av, sante_av = poa.segments[0].auxin, len(poa.segments), poa.health
+    aux_av, n_av, sante_av = poa.segments[0].auxin, len(poa.segments), poa.vitalite
     intensite_poa = 1.0 * (1.0 - 0.9 * f_lignification(60))
     check("pâturin établi → régime DOUX (intensité < COUPE_NETTE)",
           intensite_poa < COUPE_NETTE, f"intensité={intensite_poa:.3f}")
@@ -208,7 +208,7 @@ def test_ecraser_plante():
     check("DOUX : structure intacte (rien d'écimé)", len(poa.segments) == n_av)
     check("DOUX : auxine du collet baissée (déformation → ramification émergente)",
           poa.segments[0].auxin < aux_av, f"{aux_av:.3f} → {poa.segments[0].auxin:.3f}")
-    check("DOUX : santé NON touchée", poa.health == sante_av)
+    check("DOUX : santé NON touchée", poa.vitalite == sante_av)
 
     # (b) NET — tournesol jeune (résistance 0.15) avec une chaîne de segments :
     #     écimage du sous-arbre ciblé ET santé entamée (stimulation 0.05 < épargne).
@@ -216,7 +216,7 @@ def test_ecraser_plante():
     check("tournesol a une chaîne de segments (≥ 2)", len(sun.segments) >= 2,
           f"{len(sun.segments)} segments")
     vise = next(i for i, s in enumerate(sun.segments) if s.parent is not None)
-    n_av, sante_av = len(sun.segments), sun.health
+    n_av, sante_av = len(sun.segments), sun.vitalite
     age_sun = max(s.age_weeks for s in sun.segments)
     intensite_sun = 1.0 * (1.0 - 0.15 * f_lignification(age_sun))
     check("tournesol jeune → régime NET (intensité ≥ COUPE_NETTE)",
@@ -224,8 +224,9 @@ def test_ecraser_plante():
     ok = ACT.ecraser_plante(gs, "joueur_1", sun, eco, segment_id=vise)
     check("NET : écimage (le sous-arbre ciblé a disparu)", len(sun.segments) < n_av,
           f"{n_av} → {len(sun.segments)}")
-    check("NET + stimulation basse (tournesol 0.05) → santé entamée (−1)",
-          sun.health == sante_av - 1, f"santé {sante_av} → {sun.health}")
+    check("NET + stimulation basse (tournesol 0.05) → santé entamée (−1/3)",
+          abs(sun.vitalite - (sante_av - VITALITE_STEP)) < 1e-9,
+          f"vitalité {sante_av:.3f} → {sun.vitalite:.3f}")
 
     # (c) NET — basilic (résistance 0.4) ÉPARGNÉ : écimé MAIS santé intacte car il
     #     PROFITE (stimulation 0.85 ≥ seuil d'épargne) → le pincement.
@@ -233,11 +234,11 @@ def test_ecraser_plante():
     check("(1 − stim basilic) sous le seuil de dégât (épargné)",
           (1.0 - 0.85) < SEUIL_DEGAT)
     vise_b = next(i for i, s in enumerate(bas.segments) if s.parent is not None)
-    n_av, sante_av = len(bas.segments), bas.health
+    n_av, sante_av = len(bas.segments), bas.vitalite
     ok = ACT.ecraser_plante(gs, "joueur_1", bas, eco, segment_id=vise_b)
     check("basilic écimé (NET)", len(bas.segments) < n_av, f"{n_av} → {len(bas.segments)}")
     check("basilic ÉPARGNÉ : santé intacte (repart buissonnant = pincement)",
-          bas.health == sante_av, f"santé={bas.health}")
+          bas.vitalite == sante_av, f"vitalité={bas.vitalite}")
 
     # (d) SENTIER (Q3) — semis fragile (tournesol non poussé : réduit au collet) :
     #     3 écrasements du COLLET → santé 3→0 → mort. Le collet est PROTÉGÉ (jamais
@@ -247,8 +248,8 @@ def test_ecraser_plante():
     n_seg0 = len(semis.segments)
     for i in range(3):
         ACT.ecraser_plante(gs, "joueur_1", semis, eco)   # cible défaut = collet
-    check("semis : 3 écrasements du collet → santé tombée à 0", semis.health == 0,
-          f"santé={semis.health}")
+    check("semis : 3 écrasements du collet → vitalité tombée à ~0",
+          semis.vitalite < 1e-9, f"vitalité={semis.vitalite}")
     check("semis : mort émergente (is_alive False)", not semis.is_alive)
     check("collet protégé : structure JAMAIS retirée (mort par santé, pas structure)",
           len(semis.segments) == n_seg0, f"{n_seg0} → {len(semis.segments)}")
@@ -262,11 +263,11 @@ def test_ecraser_plante():
     check("coût nominal = base tailler (MODÉRÉ, sans maîtrise)",
           cout_nominal == ACT.MODERE, f"coût={cout_nominal}")
     st2["courante"] = cout_nominal - 1.0            # insuffisant
-    n_av, sante_av = len(plant2.segments), plant2.health
+    n_av, sante_av = len(plant2.segments), plant2.vitalite
     ok_vide = ACT.ecraser_plante(gs2, "joueur_1", plant2, eco2)
     check("écraser à vide → échec (binaire)", not ok_vide)
     check("échec : structure ET santé inchangées",
-          len(plant2.segments) == n_av and plant2.health == sante_av)
+          len(plant2.segments) == n_av and plant2.vitalite == sante_av)
     check("échec binaire : Vigueur drainée à 0", st2["courante"] == 0.0,
           f"courante={st2['courante']}")
     st2["courante"] = 1000.0

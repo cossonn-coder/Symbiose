@@ -33,14 +33,14 @@ from __future__ import annotations
 from fields.ecofields import (UPTAKE_MICRO_BONUS, MYCO_P_BONUS, bell,
                              CHLOROSE_PH, SEUIL_ACIDOPHILE, CHLOROSE_MALUS)
 
-HEALTH_MAX = 3.0   # santé dynamique entière 3..0 de la sénescence (D27)
 FIELD_NORM = 3.0   # normalisation canonique des champs fertilite/microbiome (cf. EcoFields)
 
 
 def sante(plant) -> float:
-    """Santé dynamique normalisée ∈ [0, 1] — lit l'attribut `health` 3..0 géré
-    par la sénescence (D27). Une plante morte (0) a une Vigueur nulle."""
-    return plant.health / HEALTH_MAX
+    """Santé dynamique normalisée ∈ [0, 1] — lit désormais `vitalite` (continue,
+    sprint SANTÉ & RÉSILIENCE ① ; ex-`health/3`). Une plante morte (0) a une
+    Vigueur nulle."""
+    return plant.vitalite
 
 
 def maturite(plant) -> float:

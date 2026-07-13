@@ -201,7 +201,7 @@ class CroissanceMixin:
             # Photosynthèse : lumière reçue (canopée, auto-ombrage exclu) × surface × santé
             light = eco.lumiere.light_received(plant)
             leaf_factor = min(1.0, len(plant.foliar_plots) / 5.0)
-            health_factor = plant.health / 3.0
+            health_factor = plant.vitalite
             photo = light * leaf_factor * health_factor
             if photo <= 0.0:
                 continue

@@ -14,7 +14,7 @@ mycorhize, annélation létale conservée).
 
 ## Carte des tronçons (figée)
 - **① `01_socle_vitalite.md`** — `health→vitalite [0,1]`, `etat`, `erode()` no-op,
-  migration lecteurs/écrivains. Golden **RE-FIGÉ #1**.
+  migration lecteurs/écrivains. Golden **RE-FIGÉ #1**. ✅ **FAIT** (voir §① ci-dessous).
 - **② `02_constitution_niche.md`** — `resilience_base` COMPLET par espèce +
   `hail_resistance_base` (niche grêle). Golden **RE-FIGÉ #2**.
 - **③ `03_campagnol_uptake.md`** — `root_herbivory_memory`→uptake, mycorhize,
@@ -146,8 +146,66 @@ convalescence), les sorties numériques du smoke bougent. Dérive localisée aux
 plantes qui subissent/guérissent ; le canal campagnol reste NEUTRE au smoke
 (densité `herbivore_vertebre` = 0).
 
+## ① SOCLE VITALITÉ — FAIT (2026-07-13)
+Livré exactement selon `01_socle_vitalite.md`. Résumé :
+- **`plants/base/instance.py`** : champ `health:int=3` → `vitalite:float=1.0` ;
+  property `etat` ("sain/affaibli/malade/mort", seuils SEUIL_SAIN=2.5/3,
+  SEUIL_AFFAIBLI=1.5/3) ; méthode **`erode(amount)`** (÷ `resilience_base`, no-op
+  au ① via getattr défaut 1.0) ; `is_alive`/`regress`/`__repr__` migrés. **AUCUN
+  gène ajouté** (`GENE_NAMES` intact).
+- **Constante `VITALITE_STEP = 1/3`** posée dans `fields/ecofields/constants.py`
+  (à côté de SEN_RATE/HEAL_RATE), ré-exportée par `fields/__init__.py`.
+- **Snap anti-poussière flottante** (décision imprévue, cf. §DÉCISION ci-dessous)
+  dans `erode()` ET dans le décrément de sénescence : `v if v>1e-9 else 0.0`.
+  Sans lui, `1.0 − 3×(1/3) = 1.11e-16` laissait des plantes MORTES `is_alive`.
+- Migrations lecteurs/écrivains : `resolution.py` (ReduceHealth→`erode(amount×STEP)`,
+  PropagateDisease→`erode(STEP)`), `mortalite.py` (sénescence directe, asphyxie
+  `erode`, guérison pas 1/3, `_mediated_damage`/`_wind_damage` amount CONTINU sans
+  `int()`), `perturbations.py` (damping_off `vitalite/STEP`, background `×0.3/STEP`,
+  `_cap_chronique` amount=1 inchangé), `vigueur_plante.sante()`→`plant.vitalite`
+  (HEALTH_MAX retiré, orphelin), `croissance.py` photosynthèse, `resources.py` (6×),
+  `maitrise_detection.py` (`etat=="sain"`), `gestes.py` (déraciner + écimage NET
+  `erode`), `greffe.py`, `aleas.py`.
+- **`resilience_base` : ABSENT (tronçon ②).** `erode` reste no-op strict.
+
+### Golden — RE-FIGÉ #1 (deux hashes, même cause)
+- `tests/test_golden.py` : `_PLANT_ATTRS` `health`→`vitalite`. Nouveau hash =
+  **`e594916ec24b423cd5ba59cb4eb2fb9716d6702a9552840658593fcfe4e48540`**.
+- `tests/population_hash.txt` (golden de champ de `test_population`) re-figé aussi :
+  **`8f27b6b292c748b2cd1727996ba6581f874a96cda1944380cae50eb80187a806`** — même
+  cause (les champs de population lisent le poids `vitalite` ex-`health/3`).
+- **Dérive PROUVÉE localisée** : sur le smoke, seules 4-5 plantes dévient d'un
+  multiple exact de 1/3 (Tournesol/Trèfle/Haricot/2× Bourse-à-pasteur) — toutes
+  ayant subi un **dégât MÉDIÉ** (gel/grêle/vent) qui perd son ancien plancher
+  `int()`. Les ~29 autres suivent `vitalite == ancien_health/3`. Le diff du digest
+  population = 20 lignes, écarts au 4e-6e décimale. AUCUNE plante jamais blessée ne
+  dévie → pas de bug d'échelle.
+
+### DÉCISION IMPRÉVUE (à valider par Nico) — snap dust 1e-9
+Le kickoff prescrivait `vitalite = max(0.0, v − STEP)` pour sénescence/erode. Mais
+`1/3` n'étant pas représentable, N pas exacts laissent une **vitalité fantôme
+~1e-16** → `is_alive` reste vrai → une plante censée mourir (3 coups médiés, ou
+vieillesse) ne mourait PAS. J'ai ajouté un snap `v if v>1e-9 else 0.0` dans `erode`
+et dans le décrément de sénescence. Impact golden : c'est CE snap qui a produit le
+hash final `e594916…` (sans lui : `b11a956…`, avec 2 plantes undead à 1e-16).
+Décision correcte (mort = mort) mais NON prévue au kickoff → signalée.
+
+### Tests adaptés (migration health→vitalite/etat/erode)
+`test_grimpe`, `test_bouture`, `test_greffe`, `test_maitrise_detection`, `test_eau`,
+`test_stress_chronique`, `test_plasticite`, `diag_morts_field`, `simserver/morts`,
+`vigueur/{facades,gestes,manger,macro}`. **Cas notable** : `test_stress_chronique`
+tuait la courgette par le VENT (risée de fond `gust_profile` sur semis étiolé, dégât
+désormais fractionnaire) AVANT que l'ombre testée ne s'installe → j'ai neutralisé
+`gust_profile` dans `_lab_tile` (comme germination/ravageurs/campagnol déjà stubés),
+pour ISOLER la voie ombre. Test au vert (héliophile mort S37 sm0.88, sciaphile survit).
+**Suites vertes** : golden, population, vigueur (136/136 + traj hash intact
+`e63b9d7f…`), sim_server (271/271), + ~45 autres suites batch. **Pré-existant HORS
+sujet** : `test_senescence` échoue AUSSI sur baseline (pommier mort « autre » à 4.5
+ans) — non causé par ce tronçon.
+
 ## §REPRISE
-CONCEPTION FIGÉE. Prochaine étape = **exécution** : `/sprint-auto
-sprint_sante_resilience`. Ordre ①→②→③→④, chacun re-figeage golden annoncé
-(① et ② uniquement) ou neutre/intact (③, ④). L'orchestrateur met à jour ce
-fichier (hash re-figés) au fil des tronçons. Rien à trancher côté conception.
+Tronçon ① CLOS (non commité — Nico commit). Prochain = **②
+`02_constitution_niche.md`** : table COMPLÈTE `resilience_base` par espèce +
+`hail_resistance_base`. `erode()` cessera d'être no-op → golden **RE-FIGÉ #2**
+annoncé. Golden ① courant à préserver jusque-là : `e594916…` (+ population
+`8f27b6b…`). Rien à trancher côté conception.
