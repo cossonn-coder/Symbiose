@@ -144,6 +144,13 @@ namespace Symbiose
 			new Color("b8902f"), new Color("9c5a22"),
 		};
 		private static readonly Color FlowerHeart = new Color("e8c63a");
+		// Seuil du scalaire moteur `floraison` (désync ②→③) au-delà duquel la plante
+		// est jugée FLEURIE côté vue. Remplace le proxy season-gated `Organ=="flower"`
+		// (qui faisait fleurir tout le jardin au passage de saison) : chaque pied
+		// franchit ce seuil à SA semaine propre, dispersée par son gène `phenologie_florale`.
+		// Seuil binaire volontairement sobre (kickoff §B « ne pas sur-concevoir ») :
+		// il suffit à casser la synchronie, la silhouette de fleur reste par famille.
+		private const float FloraisonSeuil = 0.5f;
 
 		// Hash entier → [0,1) déterministe (mix multiplicatif xorshift). Remplace
 		// le _hash_noise(SEED, canal, i, j) du prototype : mêmes ENTRÉES (canal,
@@ -159,24 +166,26 @@ namespace Symbiose
 			return (h & 0xFFFFFF) / 16777216f;
 		}
 
-		// Couleur d'une feuille (= _leaf_color) : palette espèce + décalage
-		// saisonnier — printemps clair (×1.25), été plein, automne tiré dans la
-		// palette chaude au hash, hiver foncé (×0.7, atteint seulement si la
-		// densité saisonnière n'est pas nulle, donc persistant).
-		private static Color LeafColor(OrganPalette pal, string season, float h)
+		// Couleur d'une feuille (= _leaf_color). DÉSYNC ③ : le décalage automnal n'est
+		// PLUS piloté par la SAISON GLOBALE (`WorldView.CurrentSeason`, qui faisait
+		// rougir tout le jardin d'un coup au passage de saison) mais par le scalaire
+		// moteur `automne ∈ [0,1]` PAR-PLANTE (② `_structure.Automne`) — chaque caduc
+		// se colore à SA semaine propre, dispersée par son gène tempo. On interpole
+		// continûment la teinte d'été (`pal.Leaf`) vers une teinte automnale piochée
+		// dans la palette chaude AU HASH par-feuille (variété inter-limbes conservée) :
+		//  · automne = 0 → été plein (identité, comportement estival d'avant) ;
+		//  · automne monte → rougissement PROGRESSIF et étalé entre individus ;
+		//  · automne = 1 → pleinement automnal, juste avant que FoliageDensity ne
+		//    fasse tomber la feuille (l'hiver caduc = densité 0, géré en amont, indep.).
+		// Le printemps clair (×1.25) et l'hiver foncé (×0.7) sont abandonnés côté vue :
+		// c'étaient des flips saisonniers globaux (la cause du bug) ; le persistant
+		// garde simplement sa teinte d'été toute l'année (sobriété, kickoff §C).
+		private static Color LeafColor(OrganPalette pal, float automne, float h)
 		{
-			switch (season)
-			{
-				case "printemps": return Scaled(pal.Leaf, 1.25f);
-				case "automne": return AutumnLeaves[(int)(h * AutumnLeaves.Length) % AutumnLeaves.Length];
-				case "hiver": return Scaled(pal.Leaf, 0.7f);
-				default: return pal.Leaf;   // été
-			}
+			if (automne <= 0f) return pal.Leaf;   // été (défaut/persistants)
+			Color autumn = AutumnLeaves[(int)(h * AutumnLeaves.Length) % AutumnLeaves.Length];
+			return pal.Leaf.Lerp(autumn, Mathf.Clamp(automne, 0f, 1f));
 		}
-
-		private static Color Scaled(Color c, float f) =>
-			new Color(Mathf.Clamp(c.R * f, 0f, 1f), Mathf.Clamp(c.G * f, 0f, 1f),
-					  Mathf.Clamp(c.B * f, 0f, 1f), c.A);
 
 		// Un segment porte des feuilles s'il est jeune/fin (rameau) ou un apex —
 		// le bois épais (tronc/charpente) reste nu (= _is_leafy).
@@ -200,7 +209,9 @@ namespace Symbiose
 
 		private void DrawOrgans(Vector3 collet)
 		{
-			string season = WorldView.CurrentSeason;
+			// Teinte automnale PAR-PLANTE (désync ③) : plus de saison globale, on lit
+			// le scalaire moteur `automne` du snapshot (② `_structure.Automne`).
+			float automne = _structure.Automne;
 			if (!Palettes.TryGetValue(_structure.SpeciesName, out var pal))
 				pal = DefaultPalette;
 
@@ -258,7 +269,7 @@ namespace Symbiose
 						// s'affaisse, on l'abaisse ∝ intensité (conception §3/§4).
 						lz -= _drought * DroughtDroopCm;
 						Vector2 c = Iso(lx - collet.X, ly - collet.Y, lz);
-						Color col = SymptomTint(LeafColor(pal, season, Hash01(13, i, j)));
+						Color col = SymptomTint(LeafColor(pal, automne, Hash01(13, i, j)));
 						col.A = 0.92f;
 						// ⑤ Le rayon du limbe est MULTIPLIÉ par leafGrowth : sous le
 						// plancher (§1) à l'émergence (1 valeur nue, pas de nervure),
@@ -295,13 +306,15 @@ namespace Symbiose
 			// … et le froid PLEIN pour fruits/fleurs/silhouette (repli T3 limbe-only).
 			_coolShiftScale = 1f;
 
-			// --- FLEURS — proxy saisonnier (REPRO_BY_SEASON, kickoff t6) : il
-			// n'y a PAS d'état moteur de fleur, on garde le proxy. "flower" =
-			// floraison de la saison, dessinée aux sites reproducteurs. Depuis T2
-			// (RENDU AMBIANCE) la SILHOUETTE est par FAMILLE (DrawFlowerShape,
-			// PlantRenderer.Flower.cs) et non plus 5 pétales génériques ; l'index
-			// de site + un canal fixe sèment le jitter déterministe (philo #3).
-			if (_structure.Organ == "flower")
+			// --- FLEURS — VRAI état moteur (désync ③) : le scalaire `floraison`
+			// par-plante (② `_structure.Floraison`) REMPLACE le proxy season-gated
+			// `Organ == "flower"` (qui faisait fleurir tout le jardin d'un coup au
+			// passage de saison). Au-delà de FloraisonSeuil la plante est fleurie, à
+			// SA semaine propre dispersée par son gène tempo → floraisons étalées.
+			// REPLI : un snapshot pré-② n'a pas la clé (`Floraison` = 0) → aucune fleur ;
+			// le proxy `Organ` n'est plus consulté (② est le prérequis, un seul chemin).
+			// La SILHOUETTE reste par FAMILLE (DrawFlowerShape, PlantRenderer.Flower.cs).
+			if (_structure.Floraison >= FloraisonSeuil)
 			{
 				var sites = OrganSites();
 				for (int k = 0; k < sites.Count; k++)

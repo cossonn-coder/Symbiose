@@ -99,13 +99,44 @@
   intermédiaire (AppleTree caduc précoce : 0.5 @w32 → 1.0 @w37, clampé). Déterministe.
 - **Reste F5 Nico** : rien pour ② (Python pur, pas de C#). Effet visible = tronçon ③.
 
-## §REPRISE — exécution (`/sprint-auto sprint_desync_phenologie`)
-Conception CLOSE. 3 kickoffs autosuffisants écrits. Enchaîner :
-1. **① `01_desync_moteur.md`** — FAIT (non commité). Golden `240f1021…`. Voir §① ci-dessus.
-2. **② `02_pont_signaux.md`** — FAIT (non commité). Export `floraison` + `automne`
-   par-plante. Golden **INCHANGÉ** `240f1021…`. Voir §② ci-dessus.
-3. **③ `03_vue_godot.md`** — fleurs ∝ `floraison`, teinte ∝ `automne`, LOD →×1
-   (C#). Golden intact, `dotnet build` vert, **points F5 à consigner pour Nico**.
-   Les deux hints sont exportés (③ les consomme, remplace le proxy saison global).
+## ③ FAIT (non commité) — vue Godot : fleurs & teinte automnale par-plante + détail dès ×1
+- **DTO** : deux champs `Floraison`/`Automne` (float, [0,1]) ajoutés à `PlantStructure`
+  + lecture TOLÉRANTE (`ContainsKey`, défaut 0f) dans `FromSnapshot`
+  (`core/PlantStructure.cs`). Snapshot pré-② → 0f = été neutre, aucune fleur.
+- **Fleurs** : porte `_structure.Organ == "flower"` (proxy season-gated global)
+  REMPLACÉE par `_structure.Floraison >= FloraisonSeuil` (=0.5, nouvelle constante).
+  Chaque pied fleurit à SA semaine propre (gène tempo). Silhouette famille inchangée.
+  Un seul chemin : le proxy `Organ` n'est plus consulté pour les fleurs (② prérequis).
+- **Teinte automnale** : `LeafColor` — le `switch (season)` global (flip printemps/
+  été/automne/hiver) REMPLACÉ par un mélange CONTINU `pal.Leaf.Lerp(autumn, automne)`
+  piloté par `_structure.Automne` par-plante ; teinte automnale toujours piochée au
+  HASH par-feuille dans `AutumnLeaves` (variété inter-limbes conservée). `automne=0`
+  → été plein (identité). Printemps clair (×1.25) & hiver foncé (×0.7) ABANDONNÉS
+  côté vue (c'étaient les flips globaux, cause du bug ; l'hiver caduc = densité 0,
+  géré par `FoliageDensity`, indépendant). `SymptomTint`/repli T3 intacts (composés
+  APRÈS la teinte de base, ordre préservé). `DrawOrgans` lit `float automne` au lieu
+  de `string season`. Helper `Scaled` (orphelin de mon changement) retiré.
+- **LOD** : `SegmentDetailMinZoom 4→1`, `OrganDetailMinZoom 8→1`
+  (`visuals/PlantRenderer.cs`). Détail complet (segments + organes) dès ×1 ; seul
+  ×0.5 garde la silhouette de couronne. `MacroLife.MinZoom` et `CullPlants` NON touchés.
+- **Fichiers touchés** : `core/PlantStructure.cs`, `visuals/PlantRenderer.Organs.cs`,
+  `visuals/PlantRenderer.cs`. 100 % C# — moteur Python NON touché.
+- **`dotnet build Symbiose.csproj`** : **VERT** (0 avertissement, 0 erreur).
+- **Golden INCHANGÉ** : `240f10219e59119ee0f7a4af8d41f4cfe29b280dec4d32b76013ae6f43a80d87`
+  (③ = C# pur, ne touche pas le moteur).
+- **Reste F5 Nico** (à valider, NON auto-validé) : (1) détail lisible dès ×1 sur aire
+  large × plantes minuscules — sinon remonter un seuil d'un cran ; (2) FPS tenu à ×1
+  sur scène chargée (culling = filet) ; (3) désync VISIBLE = fleurs qui sortent à des
+  semaines différentes selon les pieds, feuillage qui rougit/tombe étalé ; (4) PLUS de
+  flip de tout le jardin au tick du passage de saison.
 
-Statut : ① ✅ (non commité) · ② ✅ (non commité) · ③ ⏳.
+## §REPRISE — exécution (`/sprint-auto sprint_desync_phenologie`)
+Sprint **TERMINÉ côté implémentation** (①②③ tous FAITS, non commités). Enchaîner :
+1. **① `01_desync_moteur.md`** — FAIT (non commité). Golden re-figé `240f1021…`. Voir §①.
+2. **② `02_pont_signaux.md`** — FAIT (non commité). Export `floraison` + `automne`
+   par-plante. Golden **INCHANGÉ** `240f1021…`. Voir §②.
+3. **③ `03_vue_godot.md`** — FAIT (non commité). Fleurs ∝ `floraison`, teinte ∝
+   `automne`, LOD →×1 (C#). Golden intact `240f1021…`, `dotnet build` VERT. Voir §③.
+
+Statut : ① ✅ (non commité) · ② ✅ (non commité) · ③ ✅ (non commité).
+**Reste : commit (Nico) + vérif F5 (points §③).**

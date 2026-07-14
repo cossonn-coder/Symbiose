@@ -41,7 +41,9 @@ namespace Symbiose
 		// chaque plante se résume à sa silhouette de couronne (2 polygones). Le
 		// zoom réel vit dans WorldView.CurrentZoom (static) ; la pompe de redraw
 		// au franchissement de palier est dans WorldView.Camera.StepZoom.
-		private const float SegmentDetailMinZoom = 4f;
+		// DÉSYNC ③ (doc §3, Q3) : abaissé 4→1 — segments rastérisés dès ×1. Seul le
+		// palier ×0.5 (« monde entier ») garde désormais la silhouette de couronne.
+		private const float SegmentDetailMinZoom = 1f;
 
 		// LOD organes intermédiaire (sprint PERF rendu plantes, tronçon ②) : entre
 		// ×4 et ×8 on dessine la STRUCTURE de bois mais on SAUTE le feuillage. Les
@@ -51,7 +53,11 @@ namespace Symbiose
 		// feuillage revient. La pompe RedrawAllPlants (tronçon ①, appelée à chaque
 		// StepZoom) couvre déjà le franchissement de ce seuil : rien à ajouter côté
 		// redraw.
-		private const float OrganDetailMinZoom = 8f;
+		// DÉSYNC ③ (doc §3, Q3) : abaissé 8→1 — feuilles/fleurs/fruits visibles dès ×1
+		// (le détail complet apparaît au même palier que les segments). Culling
+		// (WorldView.Camera.CullPlants) reste le filet perf. À VÉRIFIER F5 (lisibilité +
+		// FPS à ×1 sur scène chargée) : escape hatch = remonter ce seuil d'un cran.
+		private const float OrganDetailMinZoom = 1f;
 
 		// Couleurs (palette centrale Palette16, T1) : apex vert vif, bois brun.
 		private static readonly Color ApexColor = Palette16.BoisApex;

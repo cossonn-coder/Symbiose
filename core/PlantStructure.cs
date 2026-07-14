@@ -77,6 +77,16 @@ namespace Symbiose
 		// les FRUITS basculent ici (maturité visible, déplétion par `manger`).
 		// Ordre = ordre du snapshot = index moteur (clé du geste `manger` ciblé).
 		public List<FruitData> Fruits = new();
+
+		// --- Signaux phénologiques PAR-PLANTE (désync phénologie ②, tronçon ③) ---
+		// Exportés par le pont (tools/simserver/serialize.py) : VRAI état moteur,
+		// désynchronisé d'un individu à l'autre par le gène `phenologie_florale`.
+		// Ils remplacent en vue les proxies SAISON GLOBALE (fleurs season-gated,
+		// teinte automnale par `WorldView.CurrentSeason`) qui re-synchronisaient tout
+		// le jardin au tick du passage de saison. La vue LIT ces scalaires, elle ne
+		// recalcule AUCUNE phénologie (moteur = source de vérité, philo #3).
+		public float Floraison;  // 0..1, scalaire moteur — pilote la densité de fleurs
+		public float Automne;    // 0..1, phénophase de coloration foliaire (caducs)
 	}
 
 	// ---------------------------------------------------------------------------
@@ -184,6 +194,13 @@ namespace Symbiose
 				ps.Organ = plant["organ"].AsString();
 			if (plant.ContainsKey("organ_site"))
 				ps.OrganSite = plant["organ_site"].AsString();
+			// Signaux phénologiques par-plante (désync ②) : lecture TOLÉRANTE — un
+			// snapshot pré-② n'a pas les clés → 0f (aucune fleur, aucune coloration
+			// automnale = comportement d'été neutre). La vue ne recalcule rien.
+			if (plant.ContainsKey("floraison"))
+				ps.Floraison = (float)plant["floraison"].AsDouble();
+			if (plant.ContainsKey("automne"))
+				ps.Automne = (float)plant["automne"].AsDouble();
 			// Fruits tracés (③, 0.3.4) : lecture tolérante (un snapshot pré-0.3.4
 			// ou une plante morte n'a pas la clé → liste vide, rien à dessiner).
 			if (plant.ContainsKey("fruits"))
