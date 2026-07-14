@@ -401,6 +401,14 @@ VITALITE_STEP = 1.0 / 3.0
 
 # Mortalité réaliste (D27) — sénescence + santé dynamique
 SENESCENCE_ONSET = 0.70   # début du déclin (× longévité)
+# Désynchronisation de l'ONSET de sénescence par le gène `phenologie_florale`
+# (sprint DÉSYNC PHÉNOLOGIE ①). Même tempo de vie que la floraison/l'abscission :
+# l'onset propre est `clamp(SENESCENCE_ONSET − SEN_ONSET_JITTER·(gène − 1), 0.05,
+# 0.95)`. Un gène > 1 (individu PRÉCOCE) abaisse l'onset → il sénesce plus tôt ;
+# < 1 le relève → plus tard. Neutre 1.0 ⇒ onset == SENESCENCE_ONSET (aucun
+# décalage). ±σ(0.10) sur le gène ⇒ ±0.05 de fraction de longévité. Déterministe
+# (le gène dérive d'un hash de position, aucun RNG vivant). Départ de calibrage.
+SEN_ONSET_JITTER = 0.5
 SEN_RATE         = 0.04   # pente de la pression de sénescence (proba/sem à sen=1)
 HEAL_RATE        = 0.06   # proba de remontée de santé/sem en bon milieu (Q=1)
 HEAL_SEN_CUTOFF  = 0.50   # au-delà de cette sénescence, la guérison se coupe
@@ -442,8 +450,18 @@ ECRASER_FRAG_BOOST = 0.50  # part de `bois_restant` libérée d'un coup quand on
 # --- Abscission d'automne (décompo·compost ②, phase C) ---------------------
 # Les caducs (deciduous, PerennialWoody) larguent leur feuillage en fin d'automne
 # → litière `feuille`. Événement léger, borné, déterministe (aucun RNG).
-ABSCISSION_WEEKS  = (38, 39)   # 2 dernières semaines d'automne (saison = 27..39)
-ABSCISSION_FRAC   = 0.15       # part de la nécromasse-hauteur larguée par semaine d'abscission
+# Sprint DÉSYNC PHÉNOLOGIE ① : le largage n'est plus un rendez-vous GLOBAL ; chaque
+# caduc largue à SA propre semaine, dérivée du gène-tempo `phenologie_florale` :
+# `w = round(ABSCISSION_BASE − ABSCISSION_JITTER·(gène − 1))`, bornée à
+# [ABSCISSION_MIN, ABSCISSION_MAX]. Un gène > 1 (précoce) largue plus tôt. Dépôt
+# UNIQUE annuel (au lieu de 2 semaines) → l'ordre de grandeur du total reste
+# proche. ABSCISSION_WEEKS conservé (non utilisé par le nouveau chemin, gardé pour
+# l'import public). Déterministe : le gène vient d'un hash, aucun RNG.
+ABSCISSION_WEEKS  = (38, 39)   # (héritage) 2 dernières semaines d'automne (saison = 27..39)
+ABSCISSION_FRAC   = 0.15       # part de la nécromasse-hauteur larguée à l'abscission
+ABSCISSION_BASE   = 38         # semaine-pivot du largage (dans l'automne 27..39)
+ABSCISSION_JITTER = 15.0       # ±σ(0.10) sur le gène ⇒ ±1.5 sem de décalage
+ABSCISSION_MIN, ABSCISSION_MAX = 34, 39   # fenêtre d'automne bornée du largage
 
 # --- Organes-fruits traçables (décompo·compost ③, absorbe D19) --------------
 # Un fruit devient un état moteur : il NOUE (une fois/an, début d'été), MÛRIT

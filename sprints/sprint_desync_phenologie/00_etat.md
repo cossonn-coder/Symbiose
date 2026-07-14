@@ -58,13 +58,34 @@
 ## Coût perf
 - Sim/pont : ~nul. Rendu ×1 : à mesurer F5, culling = filet déjà présent.
 
+## ① FAIT (non commité) — désync moteur des 3 horloges
+- **Floraison** : `FLORA_GENE_SHIFT 40→200` (`sim/engine/floraison.py`).
+- **Abscission** : semaine par-individu `semaine_abscission(plant)` (helper factorisé
+  dans `sim/engine/decompo.py`, réutilisable par ② pour la rampe `automne`) ;
+  constantes `ABSCISSION_BASE/JITTER/MIN/MAX` (`fields/ecofields/constants.py`) ;
+  garde `boucle.py` = fenêtre complète [34,39] + passe `week_in_year` ; dépôt UNIQUE
+  annuel. `ABSCISSION_WEEKS` conservé (import public), retiré de `boucle.py`.
+- **Sénescence** : onset par-individu `clamp(0.70−0.5·(g−1),0.05,0.95)` dans
+  `mortalite.py` + **MIROIR EXACT** dans `sim/semiologie.py::senescence` ; constante
+  `SEN_ONSET_JITTER=0.5`. Neutre à g=1.0 (redonne les valeurs de base).
+- **Golden RE-FIGÉ** (attendu/annoncé) : `da2729c5…` → **`240f10219e59119ee0f7a4af8d41f4cfe29b280dec4d32b76013ae6f43a80d87`**.
+  Raison : le seul caduc du smoke (Pommier, gène 1.199 = précoce) largue désormais
+  à sa semaine propre (w36 au lieu du RDV global 38-39, dépôt unique) + digest haché
+  (litière/eco/vitalité). Dérive cohérente : plante g=1.0 (test_senescence, onset 49)
+  INCHANGÉE.
+- **Test d'étalement** : `tests/test_desync_phenologie.py` (7/7) — σ>0 sur les 3
+  horloges (seuil floraison σ=20 GDD, abscission σ=1.2 sem, onset σ=0.05) +
+  neutralité g=1. Régressions vérifiées : signes/fruits/senescence/evenements/
+  evergreen/lifecycle/diversite/plasticite/biennial tous OK. `main.py` tourne (long).
+- **Reste F5 Nico** : rien pour ① (moteur pur, pas de C#). Effet visible = tronçons ②③.
+
 ## §REPRISE — exécution (`/sprint-auto sprint_desync_phenologie`)
-Conception CLOSE. 3 kickoffs autosuffisants écrits, aucun implémenté. Enchaîner :
-1. **① `01_desync_moteur.md`** — désync des 3 horloges (MOTEUR). Golden re-figé
-   LARGE **attendu/annoncé** → noter le nouveau hash ici + test d'étalement.
+Conception CLOSE. 3 kickoffs autosuffisants écrits. Enchaîner :
+1. **① `01_desync_moteur.md`** — FAIT (non commité). Golden `240f1021…`. Voir §① ci-dessus.
 2. **② `02_pont_signaux.md`** — export `floraison` + `automne` par-plante (PONT).
-   Golden **INTACT** (hints hors `_PLANT_ATTRS`). Factorise `semaine_abscission`.
+   Golden **INTACT** (hints hors `_PLANT_ATTRS`). Réutiliser `semaine_abscission`
+   (déjà factorisé dans `decompo.py` par ①).
 3. **③ `03_vue_godot.md`** — fleurs ∝ `floraison`, teinte ∝ `automne`, LOD →×1
    (C#). Golden intact, `dotnet build` vert, **points F5 à consigner pour Nico**.
 
-Statut : ① ⏳ · ② ⏳ · ③ ⏳ (aucun commité).
+Statut : ① ✅ (non commité) · ② ⏳ · ③ ⏳.

@@ -12,7 +12,8 @@ Comportement identique à l'ancien engine.py.
 from __future__ import annotations
 from plants import Fruit, organ_sites
 from fields import (T_SECHE, FRAG_RATE, NECROMASS_PER_CM, ABSCISSION_FRAC,
-                    FRUIT_MASSE, FRUIT_DMAT, MATURITE_CHUTE)
+                    ABSCISSION_BASE, ABSCISSION_JITTER, ABSCISSION_MIN,
+                    ABSCISSION_MAX, FRUIT_MASSE, FRUIT_DMAT, MATURITE_CHUTE)
 
 # Nouaison « en fin de floraison, par plante » (arc pollinisation ④ — §B.2).
 # `floraison` (état floral ∈[0,1], écrit par engine._tick_floraison) monte vers 1
@@ -25,6 +26,18 @@ SEUIL_NOUAISON = 0.2
 # ∈ [0,1[ (Monod) : dose faible → quelques fruits, dose forte → nouaison ≈ pleine,
 # JAMAIS de plancher (0 pollen → 0 fruit). Knob de calibrage (post-test, §B.2).
 POLLEN_DEMI    = 2.0
+
+
+def semaine_abscission(plant) -> int:
+    """Semaine de largage PROPRE à un caduc, dérivée de son gène-tempo
+    `phenologie_florale` (sprint DÉSYNC PHÉNOLOGIE ①). Convention partagée avec la
+    floraison/la sénescence : gène > 1 (individu PRÉCOCE) → largue plus tôt. Bornée
+    à la fenêtre d'automne [ABSCISSION_MIN, ABSCISSION_MAX]. Déterministe (le gène
+    vient d'un hash, aucun RNG). Factorisé ici pour que le pont (② `serialize.py`)
+    calcule la MÊME rampe `automne` sans dupliquer la formule."""
+    g = plant.gene("phenologie_florale")
+    w = round(ABSCISSION_BASE - ABSCISSION_JITTER * (g - 1.0))
+    return max(ABSCISSION_MIN, min(ABSCISSION_MAX, w))
 
 
 def frac_nouaison(pollen_recu: float) -> float:
@@ -72,14 +85,19 @@ class DecompoMixin:
                        if p.is_alive or (p.morte and p.bois_restant > 1e-9)]
         return log
 
-    def _abscission(self, tile, eco):
-        """Abscission d'automne (décompo·compost ②, phase C.1) : les caducs VIVANTS
-        (deciduous, PerennialWoody) larguent leur feuillage en fin d'automne →
+    def _abscission(self, tile, eco, week_in_year):
+        """Abscission d'automne (décompo·compost ②, phase C.1 ; DÉSYNC PHÉNOLOGIE ①) :
+        les caducs VIVANTS (deciduous, PerennialWoody) larguent leur feuillage →
         litière `feuille` (∝ nécromasse-hauteur). Événement léger, borné, sans RNG.
-        Appelé seulement aux ABSCISSION_WEEKS. Persistants : rien."""
+        Appelé sur TOUTE la fenêtre d'automne [ABSCISSION_MIN, ABSCISSION_MAX], mais
+        chaque plante ne largue qu'à SA semaine propre (`semaine_abscission`, dérivée
+        du gène-tempo) → largages DÉSYNCHRONISÉS entre individus. Dépôt UNIQUE annuel
+        (∝ ABSCISSION_FRAC). Persistants : rien."""
         log = []
         for plant in tile.plants:
             if not plant.is_alive or not plant.plant_class.deciduous:
+                continue
+            if week_in_year != semaine_abscission(plant):
                 continue
             r, c = plant.position
             masse = plant.current_height * NECROMASS_PER_CM * ABSCISSION_FRAC

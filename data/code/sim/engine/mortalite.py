@@ -12,9 +12,9 @@ dans `_tick_skeletons` (decompo.py). Comportement identique à l'ancien engine.p
 
 from __future__ import annotations
 import math
-from fields import (_hash_noise, SENESCENCE_ONSET, SEN_RATE, HEAL_RATE,
-                    HEAL_SEN_CUTOFF, ASPHYXIE_HEALTH_SEUIL, ASPHYXIE_RATE,
-                    RESEED_RADIUS_CM, VITALITE_STEP)
+from fields import (_hash_noise, SENESCENCE_ONSET, SEN_ONSET_JITTER, SEN_RATE,
+                    HEAL_RATE, HEAL_SEN_CUTOFF, ASPHYXIE_HEALTH_SEUIL,
+                    ASPHYXIE_RATE, RESEED_RADIUS_CM, VITALITE_STEP)
 from sim.effects import apply_mutations, ReduceHealth, deposer_mort
 from sim.reproduction import (find_father, child_genes, child_expression,
                               is_seed_bearing)
@@ -69,13 +69,19 @@ class MortaliteMixin:
                 continue
             r, c = plant.position
             L = plant.plant_class.longevity()
-            # Sénescence par âge
+            # Sénescence par âge. Onset PROPRE à l'individu (DÉSYNC PHÉNOLOGIE ①) :
+            # le gène-tempo `phenologie_florale` décale le début du déclin (gène > 1
+            # = précoce → sénesce plus tôt). Neutre 1.0 ⇒ onset == SENESCENCE_ONSET.
+            # MIROIR EXACT dans semiologie.senescence (même gène, même formule).
             sen = 0.0
             if L != math.inf:
-                denom = (1.0 - SENESCENCE_ONSET) * L
+                g = plant.gene("phenologie_florale")
+                onset = max(0.05, min(0.95,
+                            SENESCENCE_ONSET - SEN_ONSET_JITTER * (g - 1.0)))
+                denom = (1.0 - onset) * L
                 if denom > 0:
                     sen = max(0.0, min(1.0,
-                              (plant.age_years - SENESCENCE_ONSET * L) / denom))
+                              (plant.age_years - onset * L) / denom))
                 if sen > 0.0 and _hash_noise(seed, week * 3, r, c) < sen * SEN_RATE:
                     # Sénescence = horloge INTERNE de vieillissement (pas un stress
                     # subi) → décrément DIRECT, hors `erode`/résilience (décision D5).

@@ -49,9 +49,11 @@ FLORAISON_DESCENTE = 0.50
 # démarrage — seule la clé s'ajoute au vecteur sérialisé). L'étalement des dates
 # ÉMERGE ensuite du pool-sol (variance à la levée férale + héritage) → nectar
 # soutenu, SÉLECTION DARWINIENNE sans code dédié. Déterministe (philo #3) : le gène
-# est tiré/hérité par des canaux de hash existants, pas de RNG vivant. PLACEHOLDER
-# de calibrage (analogue GERM_GENE_SHIFT=3.5, ici en unités de GDD).
-FLORA_GENE_SHIFT   = 40.0
+# est tiré/hérité par des canaux de hash existants, pas de RNG vivant.
+# CALIBRAGE (sprint DÉSYNC PHÉNOLOGIE ①) : la valeur 40 mordait imperceptiblement
+# (±0.3 sem à ±σ, floraison quasi synchrone) ; ~200 GDD donne ±~1.6 sem à ±σ →
+# étalement des dates de floraison VISIBLE (nectar soutenu, sélection darwinienne).
+FLORA_GENE_SHIFT   = 200.0
 
 
 class FloraisonMixin:

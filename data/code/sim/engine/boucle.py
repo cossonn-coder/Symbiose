@@ -23,7 +23,8 @@ mixins frères (croissance.py / mortalite.py / decompo.py).
 from __future__ import annotations
 from dataclasses import dataclass
 from plants import PLANT_CATALOGUE
-from fields import _hash_noise, ABSCISSION_WEEKS, PRECIP_NORM, PLUIE_APPORT
+from fields import (_hash_noise, ABSCISSION_MIN, ABSCISSION_MAX,
+                    PRECIP_NORM, PLUIE_APPORT)
 from fields.ecofields.thermique import t_min_nuit_at  # gel nocturne localisé (⑥)
 from fields.apiculture import tick_ruches   # ruches : capture essaim + miel (⑥, §H/§I)
 from fields.alarme import tick_alarme       # phéromone d'alarme apienne : décroissance (⑦, §J)
@@ -468,9 +469,11 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
             slog = succession(self.game_state, tile, eco, week)
             if slog: log += slog
 
-            # 15b. Abscission d'automne (②C.1) — caducs vivants → litière feuille.
-            if saison == "automne" and week_in_year in ABSCISSION_WEEKS:
-                alog = self._abscission(tile, eco)
+            # 15b. Abscission d'automne (②C.1 ; DÉSYNC PHÉNOLOGIE ①) — caducs
+            # vivants → litière feuille. Fenêtre d'automne complète : chaque plante
+            # largue à SA semaine propre (gène-tempo), pas au rendez-vous global.
+            if saison == "automne" and ABSCISSION_MIN <= week_in_year <= ABSCISSION_MAX:
+                alog = self._abscission(tile, eco, week_in_year)
                 if alog: log += alog
 
             # 15c. Organes-fruits (③ + nouaison pollinisée ④) — nouaison EN FIN DE
