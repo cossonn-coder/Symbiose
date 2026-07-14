@@ -26,6 +26,13 @@ def _hash_noise(seed: int, week: int, r: int, c: int) -> float:
     return (h & 0x7FFFFFFF) / 0x7FFFFFFF
 
 
+def form_seed_at(seed: int, x_cm: float, y_cm: float, week: int) -> int:
+    """Identité morphologique déterministe, ENTIÈRE et NON NULLE (0 = 'non posé').
+    Sert de graine au patron de branches ; héritée telle quelle par les clones."""
+    u = _hash_noise(seed, week, int(x_cm), int(y_cm))
+    return int(u * 1_000_003) + 1
+
+
 def stable_str_hash(text: str) -> int:
     """Hash entier DÉTERMINISTE d'une chaîne (≠ `hash()` natif, randomisé par
     PYTHONHASHSEED d'un run à l'autre). Sert à dériver un canal de bruit propre à

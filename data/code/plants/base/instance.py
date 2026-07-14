@@ -90,6 +90,14 @@ class PlantInstance:
     # `_PLANT_ATTRS` du golden. Priming maternel l'initialisera ≠ 1.0 (tronçon ④).
     expression: dict = field(
         default_factory=lambda: {g: 1.0 for g in ADAPTOGENIC_GENES})
+    # Identité morphologique héritable (② MODÈLE SPATIAL). Posée 1× à la naissance
+    # (hash position+semaine, cf. sim/succession.py) puis COPIÉE au clone → un ramet
+    # partage le patron de branches de sa mère (air de famille). `branch_count` =
+    # ordinal monotone des branches émises : indexe le patron indépendamment du
+    # calendrier (la k-ième branche tire le même angle chez mère et clone). Hors
+    # `_PLANT_ATTRS` du golden : agissent via les `segments`, déjà comparés.
+    form_seed: int = 0        # identité morphologique héritable ; 0 = non posé (repli)
+    branch_count: int = 0     # ordinal monotone de branches émises (index stable du patron)
     # Structure morphologique (croissance procédurale, D29 réorienté, tronçon 1).
     # Vide à la déclaration ⇒ une plante naît avec UN segment apex au collet
     # (cf. __post_init__). INERTE à ce tronçon : poussée par sim/growth.py mais

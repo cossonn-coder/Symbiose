@@ -147,6 +147,9 @@ def emettre_ramets(tile, eco, seed: int, week: int) -> list[str]:
         # dans l'état d'acclimatation de la mère.
         ramet.genes = dict(mother.genes)
         ramet.expression.update(mother.expression)
+        ramet.form_seed = mother.form_seed      # air de famille : même patron de branches
+        # branch_count reste 0 : le ramet REJOUE la séquence de débourrement depuis le
+        # début → sa k-ième branche tire le même angle que la k-ième de la mère.
         # Position continue = le point d'enracinement réel du stolon/rhizome.
         ramet.x_cm, ramet.y_cm = tx, ty
         # Coût sur la MÈRE : bouffée de stress physiologique (puise l'énergie propre

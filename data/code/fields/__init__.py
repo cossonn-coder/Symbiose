@@ -8,7 +8,7 @@ surface de l'ancien module plat `fields.py` (les sites d'appel font
 from constants import PLOT_CM
 
 from fields.noise import (
-    _hash_noise, hash_gauss, climate_stress, CLIMATE_AMPLITUDE,
+    _hash_noise, hash_gauss, climate_stress, CLIMATE_AMPLITUDE, form_seed_at,
 )
 from fields.grids import (
     GridField, DisturbanceField,

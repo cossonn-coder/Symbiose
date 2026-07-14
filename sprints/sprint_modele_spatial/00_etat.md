@@ -95,8 +95,10 @@ Doc : `docs/conception/CONCEPTION_MODELE_SPATIAL.md`. Kickoffs autosuffisants :
 - `03_banc_vue.md` — banc d'observation + F5. Golden INTACT.
 
 ## Carte des tronçons
-①→② re-figent le golden (chacun une cause unique annoncée) ; ③ neutre. Ordre
-imposé : ① avant ② (positions uniques avant dérivation du form_seed).
+① re-fige le golden (positions férales) ; ② prévu re-figé mais s'est révélé
+NEUTRE (le digest ne capture pas les angles de branche — silhouettes reseed mais
+scalaires captés inchangés) ; ③ neutre. Ordre imposé : ① avant ② (positions
+uniques avant dérivation du form_seed).
 
 ## §REPRISE (pour /sprint-auto)
 - **① CLOSE** (2026-07-14) — placement sous-plot : pixel cliqué (joueur, golden
@@ -104,7 +106,29 @@ imposé : ① avant ② (positions uniques avant dérivation du form_seed).
   inchangé). Golden RE-FIGÉ par le cas féral (prévu). Empreinte : **4f6c4f31e0…**.
   Fichiers : fields/seedbank.py, sim/actions/gestes.py, sim/succession.py,
   tools/simserver/actions.py, tests/golden_hash.txt.
-- ⏳ **② form_seed** — prochain. Golden RE-FIGÉ prévu (silhouettes reseed).
+- **② CLOSE** (2026-07-14) — identité morphologique héritable `form_seed`. Champs
+  `form_seed`/`branch_count` sur PlantInstance (hors `_PLANT_ATTRS`), fabrique
+  `form_seed_at` dans fields/noise.py (exportée), posée aux 2 sites de levée
+  (succession.py), COPIÉE au clone (clonal.py), `_debourrement` amorcé par
+  `form_seed`+`branch_count` (ordinal stable) au lieu de position+semaine.
+  **Golden INCHANGÉ : 4f6c4f31e0…** — contre l'attente du kickoff. Raison : le
+  digest golden ne capture QUE les scalaires `_PLANT_ATTRS` + logs, PAS les
+  segments/angles de branche. La reseed CHANGE bien les silhouettes (footprint
+  hash b929…→67f1…, vérifié) mais l'écart ne franchit aucun seuil de quantif des
+  scalaires captés sur la fenêtre 2 tuiles × 2 ans → aucun re-figeage nécessaire.
+  Le changement est bien exercé (27/42 plantes branchent, form_seed posé sur les
+  26 férales ; les fondatrices semées direct via `semer_fondateur` gardent
+  form_seed=0 → repli robuste dans `_debourrement`). form_seed HÉRITÉ vérifié sur
+  les ramets Minette (mère & clones même form_seed). Fichiers : plants/base/
+  instance.py, fields/noise.py, fields/__init__.py, sim/succession.py,
+  sim/clonal.py, sim/growth/phases.py.
+  ⚠️ **test_population et test_sim_server ÉCHOUENT** — mais IDENTIQUEMENT à la
+  baseline (avant ce tronçon) → **hérités du re-figeage ① non propagé** à ces 2
+  suites, PAS causés ni affectés par ② (hashes identiques avec/sans ②). À traiter
+  hors ② (concerne ①).
+  📝 Aparté save (futur) : `branch_count` devra être sérialisé avec la structure
+  (sinon plante rechargée re-tire ses branches sur compteur remis à 0). Save
+  inexistant → aucune action.
 - ⏳ **③ banc + vue Godot** — golden INTACT.
 
 Chaque tronçon lit `CLAUDE.md` + ce fichier + son `0N_*.md`. Après chaque

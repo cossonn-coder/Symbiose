@@ -12,7 +12,7 @@ l'engine (coût de robustesse côté convalescence).
 from __future__ import annotations
 import math
 
-from fields import _hash_noise
+from fields import _hash_noise, form_seed_at
 from .constantes import (AUXIN_PROD_FLOOR, AUXIN_RELEASE_SCALE, AUXIN_DECAY,
                          AUXIN_INHIB_THRESHOLD, THICKEN_RATE, THICKNESS_INIT,
                          JITTER_RAD, ETIOLEMENT_LIGHT_SEUIL, ETIOLEMENT_GAIN)
@@ -85,15 +85,25 @@ def _debourrement(plant, seed: int, week: int, branch_angle: float,
                   dominance: float) -> None:
     """§D.3 — un bourgeon sous le seuil d'auxine naît latéral (devient apex).
     `branch_angle` (radians, profil espèce) = angle d'insertion ; `dominance` =
-    auxine de production du nouvel apex (= apical_dominance_base)."""
+    auxine de production du nouvel apex (= apical_dominance_base).
+    ② MODÈLE SPATIAL — l'aléa de branche est amorcé par l'IDENTITÉ morphologique
+    (`plant.form_seed`) + un ORDINAL stable (`plant.branch_count`), plus par la
+    position+semaine. C'est ce qui donne l'air de famille clonal : le ramet copie
+    `form_seed` et rejoue la séquence, sa k-ième branche tire le même angle que la
+    k-ième de la mère. Divergence fine ensuite via la lumière/phototropisme
+    (§D.2/D.4, hors de cette fonction — NE PAS y toucher).
+    `seed`/`week` deviennent inutilisés ici : conservés pour ne pas changer la
+    signature attendue par le caller `grow_plant`."""
     segs = plant.segments
+    fs = plant.form_seed or form_seed_at(0, plant.x_cm, plant.y_cm, 0)   # repli robuste
     new_segs = []
     for i, s in enumerate(list(segs)):
         if s.is_apex or not s.has_bud or s.auxin >= AUXIN_INHIB_THRESHOLD:
             continue
-        bx, by = int(s.base[0]), int(s.base[1])
-        phi   = _hash_noise(seed, week, bx + i, by) * 2.0 * math.pi
-        jit   = (_hash_noise(seed, week, bx, by + i) - 0.5) * JITTER_RAD
+        k = plant.branch_count            # ordinal STABLE, pas la semaine
+        plant.branch_count += 1
+        phi   = _hash_noise(fs, 0, k, 0) * 2.0 * math.pi
+        jit   = (_hash_noise(fs, 0, k, 1) - 0.5) * JITTER_RAD
         ldir  = _lateral_dir(s.dir, branch_angle + jit, phi)
         s.has_bud = False                         # bourgeon consommé
         new_segs.append(_mk(i, _tip(s), ldir, dominance))

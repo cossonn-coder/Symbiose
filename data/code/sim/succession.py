@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from constants import PLOT_CM
 from plants import WEED_CATALOGUE, PLANT_CATALOGUE, PERENNIAL_CATALOGUE
-from fields import SEED_ARCHETYPES, _hash_noise, founder_genes
+from fields import SEED_ARCHETYPES, _hash_noise, founder_genes, form_seed_at
 from fields.ecofields import (bell, T_GERM_FLOOR, GERM_GENE_SHIFT,
                               COUVERTURE_ADVENTICE_SEUIL, PAILLAGE_GERM_SEUIL,
                               ALLELO_GERM_K)
@@ -243,6 +243,9 @@ def _lever_grains_en_attente(game_state: dict, tile, eco, week: int, seed: int,
             new_plant.x_cm, new_plant.y_cm = grain.x_cm, grain.y_cm   # pixel cliqué exact
         else:
             _offset_subplot(new_plant, seed, week)                    # grain sans pixel → féral
+        # Identité morphologique (② MODÈLE SPATIAL) : posée dès que la position est
+        # connue → un clone de cette plante héritera de ce patron de branches.
+        new_plant.form_seed = form_seed_at(seed, new_plant.x_cm, new_plant.y_cm, week)
         if grain.genes:
             new_plant.genes = dict(grain.genes)  # gènes PROPRES (≠ sample_genes du féral)
         else:
@@ -463,6 +466,10 @@ def succession(game_state: dict, tile, eco, week: int) -> list[str]:
                 # (qui LIT x_cm/y_cm) : la lignée fondatrice suit la position RÉELLE,
                 # pas la position centrée. Plot-foyer inchangé (offset borné).
                 _offset_subplot(new_plant, seed, week)
+                # Identité morphologique héritable (② MODÈLE SPATIAL) — après la
+                # position férale, avant la génétique (indépendantes).
+                new_plant.form_seed = form_seed_at(seed, new_plant.x_cm,
+                                                   new_plant.y_cm, week)
                 g = eco.seed_bank.sample_genes(r, c, plant_class, seed, week)
                 if not g:
                     g = founder_genes(plant_class, seed, week, r, c,
