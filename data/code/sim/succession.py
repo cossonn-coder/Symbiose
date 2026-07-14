@@ -185,11 +185,14 @@ def _lever_grains_en_attente(game_state: dict, tile, eco, week: int, seed: int,
 
         # Inhibition ALLÉLOPATHIQUE de la levée (tronçon ②) : un grain planté dans un
         # sol chargé d'allélochimiques (voisinage d'un noyer/armoise…) voit sa niche
-        # escomptée par sa sensibilité d'espèce (rampe douce Monod). Champ nul (golden,
-        # aucun émetteur avant le ⑤) ⇒ f_allelo=1 ⇒ inchangé ; chemin event-driven de
-        # toute façon (grains_en_attente vide au golden). Philo #2 : c'est le MILIEU
-        # (le champ de sol) qui bride la levée, jamais un malus direct sur la plante.
-        niche *= _f_allelo(eco.allelopathie.at_plot(r, c),
+        # escomptée par sa sensibilité d'espèce (rampe douce Monod). L'allélopathie
+        # EFFECTIVE (④) = ambiant + AUTOTOXICITÉ du plot SI ce grain est de l'espèce
+        # fatigante récurrente (la monoculture s'auto-inhibe la levée). Champ nul
+        # (golden, aucun émetteur avant le ⑤ → autotox jamais armé) ⇒ f_allelo=1 ⇒
+        # inchangé ; chemin event-driven de toute façon (grains_en_attente vide au
+        # golden). Philo #2 : c'est le MILIEU (le champ de sol) qui bride la levée,
+        # jamais un malus direct sur la plante.
+        niche *= _f_allelo(eco.allelo_effectif(r, c, plant_class),
                            plant_class.allelopathie_sensibilite)
 
         if niche < 0.01:
@@ -382,16 +385,19 @@ def succession(game_state: dict, tile, eco, week: int) -> list[str]:
                             cls.t_germ_tol)
                     for a, cls in WEED_CATALOGUE.items()}
 
-            # Inhibition ALLÉLOPATHIQUE par espèce candidate (tronçon ②) : escompte
-            # de niche `f_allelo = 1 − sensibilité · rampe(allelopathie[plot])` (rampe
+            # Inhibition ALLÉLOPATHIQUE par espèce candidate (tronçon ②, EFFECTIVE au
+            # ④) : escompte de niche `f_allelo = 1 − sensibilité · rampe(allelo)` (rampe
             # douce Monod, cf. _f_allelo) → porte dans germination_candidates, patron
-            # symétrique à arch_ph/arch_temp. Le champ `allelopathie` est LU une fois
-            # par plot ; défaut de sensibilité NEUTRE (1.0) pour toutes les adventices
-            # à ce tronçon (calibrage ⑤). Champ nul (golden, aucun émetteur) ⇒ f=1.0
-            # pour tous ⇒ germination férale STRICTEMENT inchangée. Philo #2 : le champ
-            # de sol referme la niche, pas de malus direct sur la plante.
-            allelo = eco.allelopathie.at_plot(r, c)
-            arch_allelo = {a: _f_allelo(allelo, cls.allelopathie_sensibilite)
+            # symétrique à arch_ph/arch_temp. L'allélopathie EFFECTIVE est lue PAR
+            # ESPÈCE (`allelo_effectif`, ④) = ambiant + AUTOTOXICITÉ du plot si le
+            # candidat EST l'espèce fatigante récurrente (une adventice émettrice qui
+            # squatte le plot depuis des saisons voit SA propre levée bridée, pas celle
+            # des autres). Défaut de sensibilité NEUTRE (1.0) à ce tronçon (calibrage
+            # ⑤). Champ nul (golden, aucun émetteur → autotox jamais armé) ⇒ f=1.0 pour
+            # tous ⇒ germination férale STRICTEMENT inchangée. Philo #2 : le champ de sol
+            # referme la niche, pas de malus direct sur la plante.
+            arch_allelo = {a: _f_allelo(eco.allelo_effectif(r, c, cls),
+                                        cls.allelopathie_sensibilite)
                            for a, cls in WEED_CATALOGUE.items()}
 
             # Priorité écologique : sol pauvre → fixatrice, sinon ordre standard

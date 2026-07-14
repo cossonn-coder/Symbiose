@@ -1068,6 +1068,33 @@ ALLELO_GERM_K       = 1.0     # demi-saturation de la rampe Monod d'inhibition d
 # STRICTEMENT inchangée. PLACEHOLDER — calibrage F5 / bancs.
 ALLELO_GROWTH_ESC_MAX = 0.6   # escompte max du GAIN de croissance (borné < 1)
 
+# --- Autotoxicité / fatigue du sol (sprint ALLÉLOPATHIE ④, D3) --------------
+# La pépite pédagogique permaculture : une MONOCULTURE répétée s'empoisonne. Un
+# accumulateur `autotox` par plot MONTE quand la MÊME espèce émettrice (celle qui
+# a `allelopathie_emission > 0`) ré-occupe le plot saison après saison sans
+# rotation — l'allélochimique s'accumule faute de diversité microbienne pour le
+# dégrader. `autotox` s'AJOUTE à l'allélopathie EFFECTIVE vue par cette SEULE
+# espèce (spécificité de la fatigue : la rotation ou le sol nu font retomber
+# `autotox` → le sol « se repose »). `soil_memory` ne trace PAS l'espèce (mémoire
+# de fertilité) → un TRACEUR d'identité séparé (`autotox_espece`, clé espèce par
+# plot) porte la mémoire de la culture récurrente. Résorption ACCÉLÉRÉE par le
+# microbiome (sol vivant détoxifie, cohérent §A.3 / la décroissance labile ①).
+# INVARIANT GOLDEN : tant qu'AUCUNE espèce n'émet (`allelopathie_emission=0`
+# partout avant le ⑤), le traceur ne s'arme jamais → `autotox=0` partout → la
+# lecture EFFECTIVE `allelo_effectif == allelopathie` → germination ET croissance
+# STRICTEMENT identiques au pré-④ (toute dérive serait attribuable au SEUL
+# traceur, cf. kickoff §Golden). Cadence SAISONNIÈRE (montée par saison de
+# ré-occupation) → le ressort est lent, lisible sur plusieurs années.
+# PLACEHOLDERS — calibrage F5 / bancs.
+#  - AUTOTOX_MONTEE  : incrément par SAISON de ré-occupation par la même espèce.
+#  - AUTOTOX_REPOS   : redescente fractionnelle spontanée quand le plot est libéré
+#    ou occupé par une AUTRE espèce (rotation = échappatoire).
+#  - AUTOTOX_MICROBE : redescente SUPPLÉMENTAIRE ∝ microbiome (sol vivant détoxifie).
+AUTOTOX_MAX     = 3.0    # borne du GridField autotox (≡ échelle allelopathie / n/p/k)
+AUTOTOX_MONTEE  = 0.25   # accumulation par saison de monoculture de l'espèce émettrice
+AUTOTOX_REPOS   = 0.15   # redescente fractionnelle spontanée à la rotation / sol nu
+AUTOTOX_MICROBE = 0.10   # redescente fractionnelle supplémentaire ∝ microbiome normalisé [0,1]
+
 # Signature sol par famille (laissée après chaque saison)
 SOIL_SIGNATURE = {
     "Fabaceae":   {"microbiome": +0.15, "fertilite": +0.10},

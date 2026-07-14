@@ -354,19 +354,23 @@ class CroissanceMixin:
             tol = plant.plant_class.shade_tolerance_base() * plant.expressed_gene("tolerance_ombre")
             light_eff = min(1.0, light * tol)
             target_g = 0.6 + 0.4 * light_eff
-            # Escompte ALLÉLOPATHIQUE de croissance (sprint ALLÉLOPATHIE ③) : une plante
-            # sensible dont les racines explorent des plots chargés en `allelopathie`
-            # voit son GAIN de croissance escompté (jamais sa santé décrémentée — philo
-            # #2). On lit la concentration MOYENNE de `allelopathie` sur l'empreinte
-            # RACINAIRE déjà dérivée (`plant.root_plots`, la même que l'uptake — RÉUTILISÉE,
-            # pas recalculée) et on rabote la cible du growth_factor par f_croissance ∈
-            # [1−ESC_MAX, 1]. Le facteur EST stateful via le lerp (growth_factor converge,
-            # ne compound pas). Champ nul au repos (aucun émetteur avant ⑤) ⇒ moyenne 0 ⇒
-            # f_croissance=1 ⇒ target_g inchangé ⇒ golden NEUTRE. Court-circuité si
-            # l'empreinte ne touche que du sol propre (rampe 0 → 1.0).
+            # Escompte ALLÉLOPATHIQUE de croissance (sprint ALLÉLOPATHIE ③, EFFECTIVE au
+            # ④) : une plante sensible dont les racines explorent des plots chargés voit
+            # son GAIN de croissance escompté (jamais sa santé décrémentée — philo #2).
+            # On lit la concentration MOYENNE de l'allélopathie EFFECTIVE de CETTE espèce
+            # (`allelo_effectif` = ambiant + AUTOTOXICITÉ si la plante EST l'émetteur
+            # récurrent du plot — la monoculture fatigue SA propre croissance) sur
+            # l'empreinte RACINAIRE déjà dérivée (`plant.root_plots`, la même que
+            # l'uptake — RÉUTILISÉE, pas recalculée) et on rabote la cible du
+            # growth_factor par f_croissance ∈ [1−ESC_MAX, 1]. Le facteur EST stateful
+            # via le lerp (growth_factor converge, ne compound pas). Champ nul au repos
+            # (aucun émetteur avant ⑤ → autotox jamais armé) ⇒ moyenne 0 ⇒ f_croissance=1
+            # ⇒ target_g inchangé ⇒ golden NEUTRE. Court-circuité si l'empreinte ne
+            # touche que du sol propre (rampe 0 → 1.0).
             roots = [(rr, cc) for (rr, cc) in plant.root_plots
                      if 0 <= rr < eco.rows and 0 <= cc < eco.cols] or [(r, c)]
-            allelo_rac = sum(eco.allelopathie.at_plot(rr, cc) for (rr, cc) in roots) / len(roots)
+            allelo_rac = sum(eco.allelo_effectif(rr, cc, plant.plant_class)
+                             for (rr, cc) in roots) / len(roots)
             target_g *= _f_croissance_allelo(allelo_rac,
                                              plant.plant_class.allelopathie_sensibilite)
             plant.growth_factor += (target_g - plant.growth_factor) * 0.10

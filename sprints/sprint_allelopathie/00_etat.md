@@ -141,13 +141,47 @@ Un champ de sol de plus = O(plots) par tick (injection + décroissance), néglig
   saturé → growth_factor tombe à ~0.56 vs 1.0 sur sol propre, espèce sensible).
   Aucun C# (pont/overlay = ⑥). LDC croissance.py = 189 pur (🟢). NON committé.
 
+- **④ AUTOTOXICITÉ / fatigue du sol — FAIT (2026-07-14).** Golden **INCHANGÉ**
+  (`ebe04b445054…`). ⚠️ Le kickoff PRÉVOYAIT un « RE-FIGÉ MAÎTRISÉ ANNONCÉ », mais
+  la dérive s'est révélée **NULLE** : l'invariant du kickoff (autotox=0 ⇒ identique
+  au pré-④) est SATISFAIT dans le cas fort, car la montée d'`autotox` est
+  CONDITIONNÉE à un occupant ÉMETTEUR (`allelopathie_emission > 0`) — or AUCUNE
+  espèce n'émet avant le ⑤ → le traceur `autotox_espece` ne s'arme jamais → `autotox`
+  reste nul partout → `allelo_effectif == allelopathie` → ②/③ bit-identiques. C'est
+  la meilleure issue possible (dérive isolée à 0, prouvée par le hash). Le re-figeage
+  ANNONCÉ interviendra au ⑤ quand noyer/armoise/tournesol chargeront le champ.
+  Ajouts : champ `autotox` (GridField [0, AUTOTOX_MAX]) + traceur léger d'identité
+  `autotox_espece` (grille de `plant_class` ou None, une réf/plot — garde-fou RAM)
+  déclarés/init dans `container.py`, exposés `get_field` (overlay ⑥) ; méthode
+  `allelo_effectif(r,c,plant_class) = allelopathie + autotox SI cette espèce est
+  l'émetteur récurrent traceé du plot` (spécificité de la fatigue, D3) ; helper PUR
+  `autotoxicite.py` (`emetteur_du_plot` + `tick_autotoxicite` : montée `+AUTOTOX_MONTEE`
+  par saison de ré-occupation par la MÊME espèce émettrice, redescente
+  `*(1−AUTOTOX_REPOS−détox)` à la rotation/sol nu, détox ∝ microbiome) wrappé par
+  `ticks.tick_autotoxicite`, appelé EN FIN DE SAISON dans `boucle.py` §17a (cadence
+  pluriannuelle, avec `tick_soil_memory`) ; constantes `AUTOTOX_MAX/MONTEE/REPOS/MICROBE`
+  (`constants.py`, réexportées via `import *`). Les DEUX lecteurs ②/③ lisent désormais
+  `eco.allelo_effectif(...)` au lieu du raw `allelopathie.at_plot` (succession :
+  grain planté + dict `arch_allelo` féral par candidat ; croissance : moyenne sur
+  l'empreinte racinaire). Tests ad hoc : monoculture → autotox monte monotone ;
+  spécifique à l'espèce (autre espèce voit 0) ; rotation vers culture de repos / sol
+  nu → autotox retombe (détox) ; bascule vers un AUTRE émetteur → repos 1 tick puis
+  fatigue DE cette espèce ; invariant émetteur-nul (emission=0 → autotox jamais armé) ;
+  intégration ②/③ (autotox=1.75 → f_germ 0.36 / f_crois 0.62 pour l'espèce fatiguée,
+  1.0 pour toute autre). Aucun C# (pont/overlay = ⑥). LDC pur : autotoxicite.py 27
+  (🟢), container.py 315 (🟡 vigilance, +5 code pré-④, single-responsibility état),
+  succession.py 179, croissance.py 190 (🟢). NON committé (Nico commit).
+
 ## §REPRISE
 
 Phase B **FIGÉE** (OK Nico 2026-07-13). Doc de référence :
 `docs/conception/CONCEPTION_ALLELOPATHIE.md`. Kickoffs autosuffisants écrits :
-`01_champ_injection.md` … `06_vue_godot.md`. **①②③ FAITS ; prochain = ④**
-(autotoxicité / fatigue du sol, `04_autotoxicite.md` — golden RE-FIGÉ MAÎTRISÉ
-ANNONCÉ, invariant autotox=0 ⇒ identique au pré-④).
+`01_champ_injection.md` … `06_vue_godot.md`. **①②③④ FAITS ; prochain = ⑤**
+(espèces émettrices + voix, `05_especes_voix.md` — traits noyer/tournesol/aulx +
+AJOUT armoise & seigle avec leurs 5 voix ; golden NEUTRE visé, re-figeage MESURÉ/
+ANNONCÉ si noyer|tournesol chargent le champ au smoke). NOTE : c'est au ⑤ que le
+re-figeage ANNONCÉ du ④ se matérialise réellement (émetteurs enfin actifs →
+`autotox`/`allelopathie` non nuls → ②/③ mordent).
 
 Découpe = **6 tronçons** (chacun son kickoff) :
 - **① champ `allelopathie` + injection (`inject_field`) + décroissance modulée
@@ -159,8 +193,10 @@ Découpe = **6 tronçons** (chacun son kickoff) :
   gain via `growth_factor` dans `sim/engine/croissance.py`, empreinte racinaire
   réutilisée) — **FAIT, golden inchangé `ebe04b44…`** (neutre tant que ⑤ pas fait).
 - **④ AUTOTOXICITÉ / fatigue du sol** (`04_autotoxicite.md` — champ `autotox` +
-  traceur d'espèce récurrente, alimente l'inhibition de la même espèce) — golden
-  **RE-FIGÉ MAÎTRISÉ ANNONCÉ** (invariant : autotox=0 ⇒ identique au pré-④).
+  traceur d'espèce récurrente `autotox_espece`, lu par ②/③ via `allelo_effectif`) —
+  **FAIT, golden INCHANGÉ `ebe04b44…`** (re-figeage ANNONCÉ resté NUL : montée
+  conditionnée à un émetteur, aucun avant le ⑤ → autotox jamais armé → invariant
+  autotox=0 satisfait de fait ; re-figeage réel décalé au ⑤).
 - **⑤ espèces émettrices + voix** (`05_especes_voix.md` — traits noyer(fort)/
   tournesol(modéré)/aulx-aromatiques(léger, lève TODO `familles.py:440`) + AJOUT
   armoise & seigle avec leurs **5 voix**) — golden **neutre visé**, mesuré/annoncé

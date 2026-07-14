@@ -21,6 +21,7 @@ from .mycelium import tick_mycelium as _tick_mycelium       # dynamique pure du 
 from .transport import tick_transport as _tick_transport    # transport éolien pur de la litière (vent ⑦)
 from .rosee import tick_rosee as _tick_rosee                 # rosée & gelée blanche nocturnes (météo→champs ②)
 from .allelopathie import tick_allelopathie as _tick_allelopathie  # décroissance labile de l'allélopathie (allélopathie ①)
+from .autotoxicite import tick_autotoxicite as _tick_autotoxicite  # montée/redescente saisonnière de l'autotoxicité (allélopathie ④)
 
 
 class TicksMixin:
@@ -85,6 +86,18 @@ class TicksMixin:
         décliner. Au tronçon ① champ nul au repos + aucun émetteur + lu par personne
         → golden NEUTRE (germination ②, croissance ③ branchées plus tard)."""
         _tick_allelopathie(self)
+
+    def tick_autotoxicite(self, plants: list) -> None:
+        """Fait monter/redescendre l'autotoxicité `autotox` (sprint ALLÉLOPATHIE ④,
+        fatigue du sol de la monoculture) et met à jour le traceur d'espèce
+        `autotox_espece`. Délègue au helper PUR `autotoxicite.tick_autotoxicite`
+        (container déjà dense). À appeler EN FIN DE SAISON (cadence lente, avec
+        `tick_soil_memory`) : la fatigue est un ressort pluriannuel, pas hebdo. Le
+        champ MONTE sur un plot ré-occupé par la même espèce ÉMETTRICE
+        (`allelopathie_emission > 0`), redescend à la rotation / sol nu (détox ∝
+        microbiome). Lu par la SEULE espèce traceée via `allelo_effectif`. Aucun
+        émetteur au repos (avant le ⑤) → champ nul reste nul → golden NEUTRE."""
+        _tick_autotoxicite(self, plants)
 
     def tick_snow(self, temp_now: float, is_neige: bool) -> None:
         """Met à jour le manteau neigeux `eco.snow` (⑦). Délègue au helper PUR

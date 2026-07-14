@@ -261,6 +261,26 @@ class EcoFields(MatiereOrganiqueMixin, HydrologieMixin, RuissellementMixin,
     # → construction directe (mini-sol de conteneur) bit-identique, golden NEUTRE.
     # Exposé AUTO au registre `get_field` (overlay debug F6 / pont ⑥).
     allelopathie:     GridField = field(default=None)
+    # Autotoxicité / fatigue du sol (sprint ALLÉLOPATHIE ④, D3) — accumulateur
+    # d'allélochimiques de la MÊME espèce émettrice qui ré-occupe un plot sans
+    # rotation, borné [0, AUTOTOX_MAX]. Monte par SAISON de monoculture, redescend
+    # à la rotation / sol nu (détox ∝ microbiome) : la monoculture s'empoisonne, la
+    # diversité soigne (pépite pédagogique permaculture). LU par la SEULE espèce
+    # traceée via `allelo_effectif` (allelopathie + autotox si la plante EST
+    # l'émetteur récurrent du plot) → spécificité de la fatigue. `soil_memory` ne
+    # trace PAS l'espèce → le traceur d'identité `autotox_espece` (ci-dessous) porte
+    # la mémoire de la culture récurrente. NUL au repos + aucun émetteur avant le ⑤
+    # → `allelo_effectif == allelopathie` → germination ② / croissance ③ inchangées
+    # → golden NEUTRE. Exposé AUTO au registre `get_field` (overlay debug F6 / pont).
+    autotox:          GridField = field(default=None)
+    # Traceur d'identité d'espèce ÉMETTRICE récurrente par plot (sprint ALLÉLOPATHIE
+    # ④) — grille de `plant_class` (le type, clé stable/hashable) ou None. Léger : une
+    # référence par plot (garde-fou RAM du kickoff : PAS de structure lourde). Fixé en
+    # fin de saison par `tick_autotoxicite` : si l'occupant émetteur du plot est le
+    # MÊME qu'à la saison précédente, `autotox` monte ; sinon il redescend. None
+    # partout au repos (aucun émetteur avant le ⑤) → aucune montée → golden NEUTRE.
+    # Hors `summary()` (état d'identité, ne change pas le digest écologique).
+    autotox_espece:   list = field(default=None)
 
     def __post_init__(self):
         if self.humidite    is None: self.humidite    = GridField(self.rows, self.cols)
@@ -408,6 +428,14 @@ class EcoFields(MatiereOrganiqueMixin, HydrologieMixin, RuissellementMixin,
         # Repos NEUTRE (aucun émetteur, personne ne lit) → déterminisme préservé.
         if self.allelopathie is None:
             self.allelopathie = GridField(self.rows, self.cols, max_val=ALLELO_MAX)
+        # Autotoxicité (sprint ALLÉLOPATHIE ④) — NULLE au repos, bornée [0, AUTOTOX_MAX],
+        # montée/redescente saisonnière par `tick_autotoxicite`. Traceur d'identité à
+        # None partout (aucune espèce émettrice au repos) → aucune montée → lecteurs
+        # ②/③ voient `allelo_effectif == allelopathie` → déterminisme préservé.
+        if self.autotox is None:
+            self.autotox = GridField(self.rows, self.cols, max_val=AUTOTOX_MAX)
+        if self.autotox_espece is None:
+            self.autotox_espece = [[None] * self.cols for _ in range(self.rows)]
         self._abri_cache = None
 
     def _init_heterogene(self, grid: GridField, plancher: float) -> None:
@@ -473,7 +501,28 @@ class EcoFields(MatiereOrganiqueMixin, HydrologieMixin, RuissellementMixin,
             "couverture_sol":   self.couverture_sol,
             "paillage":         self.paillage,
             "allelopathie":     self.allelopathie,
+            "autotox":          self.autotox,
         }.get(name)
+
+    def allelo_effectif(self, r: int, c: int, plant_class) -> float:
+        """Allélopathie EFFECTIVE ressentie par `plant_class` au plot `(r, c)`
+        (sprint ALLÉLOPATHIE ④) = allélopathie AMBIANTE (champ `allelopathie`, tous
+        émetteurs confondus, tronçons ②/③) PLUS l'autotoxicité `autotox` du plot SI
+        cette espèce EST l'émetteur récurrent traceé ici (`autotox_espece`). La
+        fatigue du sol ne frappe donc QUE l'espèce fatigante — une AUTRE espèce (ou
+        la même sur un plot reposé) ne lit que l'ambiant, la rotation reste
+        l'échappatoire lisible (D3). Lu par la germination (② succession) et la
+        croissance (③ engine) à la place du raw `allelopathie.at_plot`.
+
+        INVARIANT GOLDEN : `autotox` NUL partout (aucun émetteur avant le ⑤, le
+        traceur ne s'arme jamais) ⇒ renvoie EXACTEMENT `allelopathie.at_plot(r, c)`
+        ⇒ ②/③ bit-identiques au pré-④. Court-circuit rapide quand le plot n'est pas
+        fatigué (cas du repos). Pure lecture, zéro RNG."""
+        ambiant = self.allelopathie.at_plot(r, c)
+        auto = self.autotox.at_plot(r, c)
+        if auto > 0.0 and self.autotox_espece[r][c] is plant_class:
+            return ambiant + auto
+        return ambiant
 
     def fertilite_index(self, r: int, c: int) -> float:
         """Index nutritif LISSE dérivé (③) = moyenne des trois champs N/P/K, sur la

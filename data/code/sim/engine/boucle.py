@@ -516,6 +516,14 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
             # 17. Soil memory (fin de saison)
             if est_fin_saison(week_in_year):
                 eco.tick_soil_memory(tile.plants)
+                # 17a. Autotoxicité / fatigue du sol (sprint ALLÉLOPATHIE ④) — cadence
+                #      SAISONNIÈRE (le ressort est pluriannuel, pas hebdo) : la même
+                #      espèce émettrice qui ré-occupe un plot fait monter `autotox`, la
+                #      rotation le fait redescendre (détox ∝ microbiome). Lu par la SEULE
+                #      espèce traceée via `allelo_effectif` (②/③). Aucune espèce n'émet
+                #      encore (`allelopathie_emission=0` avant le ⑤) → le traceur ne
+                #      s'arme jamais → `autotox` reste nul → golden NEUTRE.
+                eco.tick_autotoxicite(tile.plants)
                 s = eco.summary()
                 log.append(f"  🌍 Soil memory updated → {s['soil_memory']:.3f}")
 
