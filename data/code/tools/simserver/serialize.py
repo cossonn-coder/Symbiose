@@ -27,7 +27,11 @@ from fields import light
 # Seuil de perception d'une flaque (sprint hydrologie & marécages ②) : la liste
 # creuse `eau_surface` ne consigne que les plots dont la lame le dépasse.
 from fields.ecofields.constants import (SEUIL_FLAQUE, COUVERTURE_RENDU_SEUIL,
-                                         MARAIS_OFF, ALLELO_FLOOR)
+                                         MARAIS_OFF, ALLELO_FLOOR, AUTOMNE_RAMP)
+# Semaine d'abscission PROPRE à un caduc (sprint DÉSYNC PHÉNOLOGIE ①, factorisée
+# dans l'engine) : le pont la RÉUTILISE — pas de duplication de formule — pour
+# tracer la rampe `automne` par-plante vers son largage. Fonction PURE.
+from sim.engine.decompo import semaine_abscission
 # Sémiologie foliaire (D33) : détecteurs PURS des stresseurs chroniques, miroirs
 # fidèles des seuils des mécaniques qui blessent. Remplace le bool `chlorose` du ⑨
 # par la liste `leaf_symptoms`. Recalcul pur côté serveur (moteur = source de
@@ -181,6 +185,29 @@ class SerializeMixin:
                 base["emitteur"] = pouvoir >= light.SHADING_POWER_MIN
                 base["organ"] = repro.get(saison)
                 base["organ_site"] = cls.organ_site
+                # Signaux phénologiques PAR-PLANTE (sprint DÉSYNC PHÉNOLOGIE ②) :
+                # deux hints PUR RENDU qui débranchent fleurs et teinte automnale de
+                # la SAISON GLOBALE (③ recale la vue sur eux). Hors _PLANT_ATTRS du
+                # golden (comme organ/fruits/leaf_symptoms) → golden INTACT.
+                #  · `floraison` = scalaire moteur `p.floraison ∈ [0,1]` (déjà porté
+                #    par l'instance, écrit par engine._tick_floraison) : ③ dessine les
+                #    fleurs ∝ ce scalaire, chaque pied fleurissant à SON tempo gène,
+                #    au lieu du proxy saisonnier `base["organ"]`. Lecture pure.
+                #  · `automne` = phénophase de coloration ∈ [0,1] : rampe montante sur
+                #    les AUTOMNE_RAMP semaines qui précèdent la semaine d'abscission
+                #    PROPRE du caduc (semaine_abscission, même tempo gène que ① — pas
+                #    de duplication). 0 tout l'été (vert), 1 juste avant le largage ;
+                #    ensuite foliage_density chute et la feuille disparaît. Ne concerne
+                #    QUE les caducs (un persistant ne rougit pas → 0). DÉTERMINISTE
+                #    (gène + week_in_year, zéro RNG). On NE touche PAS foliage_density_at
+                #    (il sert la sim / fields/light.py) : on ne fait qu'ajouter un hint.
+                base["floraison"] = round(p.floraison, 3)
+                if cls.deciduous:
+                    w = semaine_abscission(p)
+                    automne = (week_in_year - (w - AUTOMNE_RAMP)) / AUTOMNE_RAMP
+                    base["automne"] = round(max(0.0, min(1.0, automne)), 3)
+                else:
+                    base["automne"] = 0.0
                 # Fruits traçables (③, D19) : VRAI état moteur (≠ proxy `organ`).
                 # Index implicite = position dans la liste (clé du geste `manger`
                 # ciblé). `segment` = ancrage structurel pour que la vue place le

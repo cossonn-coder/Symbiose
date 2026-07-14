@@ -79,13 +79,33 @@
   evergreen/lifecycle/diversite/plasticite/biennial tous OK. `main.py` tourne (long).
 - **Reste F5 Nico** : rien pour ① (moteur pur, pas de C#). Effet visible = tronçons ②③.
 
+## ② FAIT (non commité) — pont : signaux phénologiques par-plante
+- **Export `floraison`** : `base["floraison"] = round(p.floraison, 3)` (scalaire moteur
+  déjà porté par l'instance) dans le bloc par-plante de `tools/simserver/serialize.py`,
+  après `base["organ_site"]`. Hint PUR RENDU (③ dessinera les fleurs ∝ ce scalaire).
+- **Export `automne`** : phénophase de coloration ∈ [0,1] par-plante = rampe montante
+  sur `AUTOMNE_RAMP` (=6) semaines avant la semaine d'abscission PROPRE du caduc. Ne
+  concerne QUE les caducs (`cls.deciduous`) ; persistants → 0.0. **Réutilise
+  `semaine_abscission(plant)`** (helper ①, importé de `sim.engine.decompo`) — ZÉRO
+  duplication de formule. Signature réelle du helper = `(plant)`, pas `(g)` comme
+  esquissé dans le kickoff §A/§C (je me suis aligné sur le code livré par ①).
+- **Constante** `AUTOMNE_RAMP = 6` posée dans `fields/ecofields/constants.py` près des
+  `ABSCISSION_*`, importée dans `serialize.py`.
+- `foliage_density_at` **NON touché** (sert `fields/light.py`).
+- **Golden INCHANGÉ** : `240f10219e59119ee0f7a4af8d41f4cfe29b280dec4d32b76013ae6f43a80d87`
+  (hints hors `_PLANT_ATTRS`, snapshot non figé). ② golden-NEUTRE par construction.
+- **Vérif snapshot vivant** (banc démo, automne) : `floraison ∈ [0,1]` par pied
+  (Phacelia 0.087, Clover 0.144…) ; `automne` = 0 en été/persistants, rampe réelle
+  intermédiaire (AppleTree caduc précoce : 0.5 @w32 → 1.0 @w37, clampé). Déterministe.
+- **Reste F5 Nico** : rien pour ② (Python pur, pas de C#). Effet visible = tronçon ③.
+
 ## §REPRISE — exécution (`/sprint-auto sprint_desync_phenologie`)
 Conception CLOSE. 3 kickoffs autosuffisants écrits. Enchaîner :
 1. **① `01_desync_moteur.md`** — FAIT (non commité). Golden `240f1021…`. Voir §① ci-dessus.
-2. **② `02_pont_signaux.md`** — export `floraison` + `automne` par-plante (PONT).
-   Golden **INTACT** (hints hors `_PLANT_ATTRS`). Réutiliser `semaine_abscission`
-   (déjà factorisé dans `decompo.py` par ①).
+2. **② `02_pont_signaux.md`** — FAIT (non commité). Export `floraison` + `automne`
+   par-plante. Golden **INCHANGÉ** `240f1021…`. Voir §② ci-dessus.
 3. **③ `03_vue_godot.md`** — fleurs ∝ `floraison`, teinte ∝ `automne`, LOD →×1
    (C#). Golden intact, `dotnet build` vert, **points F5 à consigner pour Nico**.
+   Les deux hints sont exportés (③ les consomme, remplace le proxy saison global).
 
-Statut : ① ✅ (non commité) · ② ⏳ · ③ ⏳.
+Statut : ① ✅ (non commité) · ② ✅ (non commité) · ③ ⏳.

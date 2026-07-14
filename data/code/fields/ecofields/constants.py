@@ -462,6 +462,12 @@ ABSCISSION_FRAC   = 0.15       # part de la nécromasse-hauteur larguée à l'ab
 ABSCISSION_BASE   = 38         # semaine-pivot du largage (dans l'automne 27..39)
 ABSCISSION_JITTER = 15.0       # ±σ(0.10) sur le gène ⇒ ±1.5 sem de décalage
 ABSCISSION_MIN, ABSCISSION_MAX = 34, 39   # fenêtre d'automne bornée du largage
+# Sprint DÉSYNC PHÉNOLOGIE ② (pont) : rampe de COLORATION automnale par-plante,
+# hint PUR RENDU exporté par le snapshot (serialize.py). `automne ∈ [0,1]` monte
+# linéairement sur les AUTOMNE_RAMP semaines qui PRÉCÈDENT la semaine d'abscission
+# propre du caduc (semaine_abscission), atteint 1 juste avant le largage. Zéro
+# effet moteur (la vue seule la lit) → golden NEUTRE.
+AUTOMNE_RAMP      = 6           # semaines de virage foliaire avant l'abscission
 
 # --- Organes-fruits traçables (décompo·compost ③, absorbe D19) --------------
 # Un fruit devient un état moteur : il NOUE (une fois/an, début d'été), MÛRIT
