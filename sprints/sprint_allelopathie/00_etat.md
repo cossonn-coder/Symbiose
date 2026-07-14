@@ -201,16 +201,40 @@ Un champ de sol de plus = O(plots) par tick (injection + décroissance), néglig
   single-responsibility), tous les autres 🟢. Aucun C# (pont/overlay = ⑥). NON
   committé (Nico commit).
 
+- **⑥ VUE GODOT — FAIT (2026-07-14).** Golden **INTACT** (`da2729c5…`, inchangé
+  depuis le ⑤ — aucune ligne moteur touchée : que la vue + l'export snapshot en
+  lecture seule). Build C# **VERT** (`dotnet build Symbiose.csproj` : 0 erreur,
+  0 avertissement). **Pont** (`serialize.py` + `version.py` → protocole **0.5.29**) :
+  nouveau bloc `allelopathie` au snapshot = liste CREUSE par tuile `[[r, c, conc],
+  …]` des plots > `ALLELO_FLOOR` (patron `alarme`/`couverture`, lecture directe
+  `eco.allelopathie`). Vérifié au pont : le smoke émet 4 foyers (tournesol + basilic
+  du ⑤). Les champs `allelopathie` ET `autotox` (GridField ①/④) sont DÉJÀ exposés au
+  registre `get_field` par introspection → **aucune commande neuve** (vérifié :
+  registry contient les deux). **Overlay F6** (`FieldOverlay.cs`) : 2 palettes fixes
+  0..3 (≡ ALLELO_MAX) — `allelopathie` (parchemin→brun-violacé « inhibé »), `autotox`
+  (parchemin→rouge « fatigué »). **Indice DIÉGÉTIQUE** (philo #5, pas de chiffre) :
+  NOUVEAU layer batché `visuals/AllelopathieLayer.cs` (90 LDC 🟢, miroir exact de
+  `CouvertureLayer` — pendant NÉGATIF : halo de sol PELÉ ∝ charge, jitter hash
+  déterministe, LOD zoom, culling), câblé ZIndex 0 (`WorldView.cs`) + `_allelopathieLayer`
+  / `ApplyAllelopathie` (`WorldView.Luxuriance.cs`) + dispatch tolérant
+  (`WorldView.Snapshot.cs`). Fichiers : `serialize.py`, `version.py`,
+  `FieldOverlay.cs`, `AllelopathieLayer.cs` (neuf), `WorldView.cs`,
+  `WorldView.Luxuriance.cs`, `WorldView.Snapshot.cs`. **F5 = Nico** (overlay F6
+  `allelopathie`/`autotox` + halo de sol nu sous tournesol/basilic). NON committé.
+
 ## §REPRISE
 
 Phase B **FIGÉE** (OK Nico 2026-07-13). Doc de référence :
 `docs/conception/CONCEPTION_ALLELOPATHIE.md`. Kickoffs autosuffisants écrits :
-`01_champ_injection.md` … `06_vue_godot.md`. **①②③④⑤ FAITS ; prochain = ⑥**
-(vue Godot, `06_vue_godot.md` — overlay F6 `allelopathie`/`autotox` + indices
-diégétiques sol nu + pont snapshot liste creuse ; golden INTACT visé, F5 = Nico).
-NOTE : le re-figeage ANNONCÉ (④ puis ⑤) s'est matérialisé au ⑤ comme prévu —
-golden désormais `da2729c5…` (tournesol + basilic chargent le champ au smoke),
-dérive prouvée localisée aux émetteurs.
+`01_champ_injection.md` … `06_vue_godot.md`. **①②③④⑤⑥ TOUS FAITS → SPRINT
+TERMINÉ (2026-07-14).** Golden final `da2729c5…` (re-figé au ⑤, INTACT au ⑥),
+pont protocole **0.5.29**, build C# vert. Il RESTE (hors sprint) : **verdict F5
+de Nico** sur la vue ⑥ (overlay F6 `allelopathie`/`autotox` + halo de sol pelé
+diégétique sous les émetteurs) — à consigner ici. Clôture doc à faire par Nico :
+`DETTE.md` / `BACKLOG.md` / `journal.md` (mémoire du sprint). Changements NON
+committés (Nico commit). NOTE : le re-figeage ANNONCÉ (④ puis ⑤) s'est matérialisé
+au ⑤ comme prévu — golden `da2729c5…` (tournesol + basilic chargent le champ au
+smoke), dérive prouvée localisée aux émetteurs.
 
 Découpe = **6 tronçons** (chacun son kickoff) :
 - **① champ `allelopathie` + injection (`inject_field`) + décroissance modulée
@@ -230,9 +254,10 @@ Découpe = **6 tronçons** (chacun son kickoff) :
   tournesol(modéré)/aulx-aromatiques(léger, lève TODO `familles.py:440`) + AJOUT
   armoise & seigle avec leurs **5 voix**) — **FAIT, golden RE-FIGÉ MAÎTRISÉ ANNONCÉ
   `da2729c5…`** (dérive prouvée localisée aux émetteurs du smoke : tournesol + basilic).
-- **⑥ vue Godot** (`06_vue_godot.md` — overlay F6 + indices diégétiques sol nu +
-  pont snapshot liste creuse) — golden **intact**, F5 = Nico.
+- **⑥ vue Godot** (`06_vue_godot.md` — overlay F6 `allelopathie`/`autotox` +
+  indice diégétique halo de sol pelé `AllelopathieLayer.cs` + pont snapshot liste
+  creuse 0.5.29) — **FAIT, golden INTACT `da2729c5…`, build C# vert** ; F5 = Nico.
 
-Ordre ①→⑥ (neutre d'abord, re-figeage isolé au ⑤). Reprise à froid = lire CLAUDE.md
-+ ce fichier + le kickoff `0N`. Prochaine action Nico : `/clear` puis
-`/sprint-auto sprint_allelopathie`.
+Ordre ①→⑥ (neutre d'abord, re-figeage isolé au ⑤) — **TOUS FAITS, sprint TERMINÉ**.
+Reprise à froid = lire CLAUDE.md + ce fichier. Prochaine action Nico : verdict F5
++ commit + clôture `DETTE.md`/`BACKLOG.md`/`journal.md`.

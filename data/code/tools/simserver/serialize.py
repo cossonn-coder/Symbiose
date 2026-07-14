@@ -27,7 +27,7 @@ from fields import light
 # Seuil de perception d'une flaque (sprint hydrologie & marécages ②) : la liste
 # creuse `eau_surface` ne consigne que les plots dont la lame le dépasse.
 from fields.ecofields.constants import (SEUIL_FLAQUE, COUVERTURE_RENDU_SEUIL,
-                                         MARAIS_OFF)
+                                         MARAIS_OFF, ALLELO_FLOOR)
 # Sémiologie foliaire (D33) : détecteurs PURS des stresseurs chroniques, miroirs
 # fidèles des seuils des mécaniques qui blessent. Remplace le bool `chlorose` du ⑨
 # par la liste `leaf_symptoms`. Recalcul pur côté serveur (moteur = source de
@@ -245,6 +245,7 @@ class SerializeMixin:
         marais_by_tile = {}
         couverture_by_tile = {}
         paillage_by_tile = {}
+        allelopathie_by_tile = {}
         for tile in gs["tiles"]:
             eco = gs["eco"][tile.tile_id]
             # Toutes les espèces TOUJOURS présentes (listes vides) — invariant du
@@ -464,6 +465,26 @@ class SerializeMixin:
                 [r, c, round(pai.data[r][c], 3), (nat[r][c] or "paille")]
                 for r in range(eco.rows) for c in range(eco.cols)
                 if pai is not None and pai.data[r][c] > 0.0]
+            # Carte d'ALLÉLOPATHIE par tuile (sprint ALLÉLOPATHIE ⑥, kickoff §Pont) :
+            # liste CREUSE `[[r, c, concentration], …]` des plots chargés en
+            # allélochimiques (au-dessus du plancher de snap-à-0 ALLELO_FLOOR — la
+            # plupart des plots sont propres → liste courte, patron `alarme`/
+            # `couverture`). On expose `allelo_effectif` (allélopathie AMBIANTE +
+            # autotoxicité du plot), MAIS sans espèce de référence → seul le champ
+            # ambiant sort ici (l'autotox ④ est spécifique-espèce ; la vue F6 la lit
+            # via son propre registre `get_field` "autotox"). Concrètement =
+            # `allelopathie.at_plot`. La vue en tire l'indice DIÉGÉTIQUE de sol
+            # PELÉ/nu sous un émetteur fort (halo sans levée autour du noyer/armoise,
+            # philo #5 : pas de chiffre) et l'overlay F6 double la lecture technique.
+            # PURE lecture (`eco.allelopathie` déjà tické par `tick_allelopathie` ①)
+            # → golden NEUTRE : le pont ne réinjecte rien. Champ optionnel côté vue
+            # (tolérance pré-0.5.29 → pas de halo). `allelopathie` peut être None sur
+            # un vieil eco (défaut lazy) → garde-fou getattr.
+            al = getattr(eco, "allelopathie", None)
+            allelopathie_by_tile[tile.tile_id] = [
+                [r, c, round(al.data[r][c], 4)]
+                for r in range(eco.rows) for c in range(eco.cols)
+                if al is not None and al.data[r][c] > ALLELO_FLOOR]
         # Cap GLOBAL de la vie macro (perception pure, golden-neutre) : une fois TOUS
         # les candidats collectés, on ne garde que les SPRITES_MONDE_MAX plus denses,
         # puis on regroupe au format compact `{tuile: {espèce: [[r,c,x,y,act], …]}}`
@@ -552,6 +573,7 @@ class SerializeMixin:
                 "marais": marais_by_tile,
                 "couverture": couverture_by_tile,
                 "paillage": paillage_by_tile,
+                "allelopathie": allelopathie_by_tile,
                 "containers": self._containers_snapshot(gs, saison)}
 
     def _containers_snapshot(self, gs: dict, saison: str) -> list:

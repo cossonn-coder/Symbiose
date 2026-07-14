@@ -304,6 +304,13 @@ namespace Symbiose
 			_couvertureLayer = new CouvertureLayer { Name = "Couverture", ZIndex = 0 };
 			AddWorld(_couvertureLayer);
 
+			// Halo de SOL PELÉ de l'allélopathie (⑥) — ZIndex 0 comme la couverture
+			// (au ras du sol), son pendant NÉGATIF : là où le champ `allelopathie` est
+			// chargé, la terre reste nue. Enfant direct de WorldView (survit à
+			// RebuildWorld, se re-projette seul). Lit le bloc `allelopathie` (0.5.29).
+			_allelopathieLayer = new AllelopathieLayer { Name = "Allelopathie", ZIndex = 0 };
+			AddWorld(_allelopathieLayer);
+
 			BuildLitterLayer();   // litière au sol (③·B) — ZIndex 1, sous la macro
 
 			// Tapis de MULCH au sol (équilibre invasion ⑧, D69) — ZIndex 1 comme la

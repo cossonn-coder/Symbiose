@@ -444,7 +444,21 @@ from __future__ import annotations
 #       hors _PLANT_ATTRS du golden → golden INTACT. Un binaire pré-0.5.28 n'émet
 #       pas ces clés → la vue retombe sur le mapping par `leaf_symptoms` seul
 #       (tolérance côté vue, comme tous les bumps précédents).
-ENGINE_VERSION = "0.5.28"
+# 0.5.29 (allélopathie ⑥, vue : champ au snapshot + indice diégétique) : nouveau
+#       bloc `allelopathie` au snapshot — liste CREUSE par tuile `[[r, c,
+#       concentration], …]` des plots chargés en allélochimiques (au-dessus du
+#       plancher ALLELO_FLOOR de snap-à-0 ; la plupart des plots sont propres →
+#       liste courte, patron `alarme`/`couverture`). Lecture DIRECTE de
+#       `eco.allelopathie` (champ AMBIANT tous émetteurs confondus, tické par
+#       `tick_allelopathie` ①) : la vue en tire l'indice DIÉGÉTIQUE de sol PELÉ
+#       sous un émetteur fort (halo sans levée autour du noyer/armoise, philo #5,
+#       pas de chiffre). Les champs `allelopathie` ET `autotox` (GridField déclarés
+#       aux ① et ④) sont DÉJÀ exposés au registre `get_field` (overlay debug F6
+#       `fields`) par l'introspection — aucun ajout de commande. PURE lecture d'un
+#       état déjà tické → golden INTACT (le pont ne réinjecte rien ; le golden
+#       tourne hors serveur). Un binaire pré-0.5.29 ignore le bloc `allelopathie`
+#       (tolérance côté vue, comme tous les bumps précédents).
+ENGINE_VERSION = "0.5.29"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

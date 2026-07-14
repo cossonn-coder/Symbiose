@@ -86,6 +86,19 @@ namespace Symbiose
 			// cassé mycélien (calé sur le voile fongique CompostStructure), bas =
 			// parchemin « sol nu ». Bornes physiques 0..1 → échelle comparable.
 			["mycelium"]         = (new Color("e0d8c4"), new Color("e6e9e0"), "sol nu", "réseau dense", 0f, 1f),
+			// Allélopathie racinaire (sprint ALLÉLOPATHIE ①→⑥) : champ souterrain
+			// `allelopathie` = concentration d'allélochimiques exsudés par les
+			// racines (juglone du noyer, artémisinine de l'armoise…) qui inhibent
+			// germination ② et croissance ③ des voisines sensibles. Bornes
+			// PHYSIQUES 0..ALLELO_MAX(=3, ≡ échelle n/p/k côté moteur) → couleur
+			// comparable de semaine en semaine. Pôle bas = parchemin « sol propre »,
+			// pôle haut = brun-violacé toxique (la « zone morte » sous le noyer).
+			// `autotox` = la MÊME chimie accumulée par MONOCULTURE (④, fatigue du sol
+			// spécifique à l'espèce récurrente) : même palette, teinte plus rouge
+			// (auto-empoisonnement, la pépite pédagogique de la rotation). Les deux
+			// champs sont auto-découverts par l'introspection `fields` (GridField).
+			["allelopathie"]     = (new Color("d8cfc0"), new Color("6f3a5a"), "sol propre", "inhibé", 0f, 3f),
+			["autotox"]          = (new Color("d8cfc0"), new Color("8f2f2f"), "sol propre", "fatigué", 0f, 3f),
 			// Heatmaps PAR ESPÈCE (catalogue enrichi ⑥b) : le registre `fields`
 			// expose désormais une grille par espèce (eco.populations, 15 clés)
 			// au lieu des 3 anciennes guildes. Pôle haut = la couleur du point

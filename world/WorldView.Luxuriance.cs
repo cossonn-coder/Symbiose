@@ -28,6 +28,12 @@ namespace Symbiose
 		// au ras du sol, sous tout le reste (cf. instanciation dans WorldView.cs).
 		private CouvertureLayer _couvertureLayer;
 
+		// Halo de sol pelé de l'allélopathie (sprint ALLÉLOPATHIE ⑥, 0.5.29) : le
+		// pendant NÉGATIF du tapis de couverture — même famille d'indice de sol
+		// diégétique (philo #5), enfant direct de WorldView (survit à RebuildWorld).
+		// Lit le bloc `allelopathie` (foyers > ALLELO_FLOOR côté serveur).
+		private AllelopathieLayer _allelopathieLayer;
+
 		// Biais de ZIndex par strate : rang 0..4 dans l'ordre arrière→avant. Le nœud
 		// "Objects" est en ZIndex 10 ; on décale chaque plante de son rang (10..14)
 		// pour que le couvre-sol (sol=10) passe SOUS la potagère (basse/moyenne) et la
@@ -58,6 +64,14 @@ namespace Symbiose
 		private void ApplyCouverture(GDict couverture)
 		{
 			_couvertureLayer?.SetCouverture(couverture, _origins);
+		}
+
+		// Applique le bloc `allelopathie` (lecture tolérante : un snapshot pré-0.5.29
+		// n'a pas la clé → pas de halo dessiné, jamais de crash). Reconstruction pleine
+		// (le halo est inerte entre deux semaines, pas de fondu à tenir).
+		private void ApplyAllelopathie(GDict allelo)
+		{
+			_allelopathieLayer?.SetAllelopathie(allelo, _origins);
 		}
 	}
 }

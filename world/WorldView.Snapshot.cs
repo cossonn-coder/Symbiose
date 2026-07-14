@@ -310,6 +310,12 @@ namespace Symbiose
 			if (snap.ContainsKey("couverture"))
 				ApplyCouverture(snap["couverture"].AsGodotDictionary());
 
+			// Halo de sol pelé de l'allélopathie (⑥, 0.5.29, lecture seule) : le champ
+			// `allelopathie` (allélochimiques racinaires) exposé en foyers > seuil. Lecture
+			// TOLÉRANTE : un snapshot pré-0.5.29 sans le bloc → pas de halo, jamais de crash.
+			if (snap.ContainsKey("allelopathie"))
+				ApplyAllelopathie(snap["allelopathie"].AsGodotDictionary());
+
 			if (snap.ContainsKey("litiere"))
 				ApplyLitiere(snap["litiere"].AsGodotDictionary());
 			// Tapis de mulch au sol (équilibre invasion ⑧, 0.5.20, lecture seule) : le
