@@ -1,8 +1,8 @@
 # 00_etat — Sprint MODÈLE SPATIAL (nom provisoire) — carnet de bord vivant
 
-> Statut : **PHASE A (challenge/dialogue)**, RIEN de figé. Ce fichier est le
-> handoff permanent (skill /conception §0bis). Reprise à froid = lire `CLAUDE.md`
-> + ce fichier, puis continuer sans Nico.
+> Statut : **SPRINT TERMINÉ** (①②③ CLOSE, 2026-07-14) — golden 4f6c4f31e0…,
+> reste F5 côté Nico (checklist §REPRISE). Ce fichier est le handoff permanent
+> (skill /conception §0bis). Reprise à froid = lire `CLAUDE.md` + ce fichier.
 
 ## Sujet (mots de Nico)
 1. « les plots sont trop restrictifs, ils devraient avoir une taille variable
@@ -129,7 +129,30 @@ uniques avant dérivation du form_seed).
   📝 Aparté save (futur) : `branch_count` devra être sérialisé avec la structure
   (sinon plante rechargée re-tire ses branches sur compteur remis à 0). Save
   inexistant → aucune action.
-- ⏳ **③ banc + vue Godot** — golden INTACT.
+- **③ CLOSE** (2026-07-14) — banc d'observation + vue Godot. AUCUN changement
+  moteur. **Golden INTACT : 4f6c4f31e0…** (confirmé). Nouveau banc
+  `bancs/modele_spatial.py` (58 LDC pur) enregistré dans `bancs/__init__.py`
+  (registre `BANCS["modele_spatial"]`). Le banc COMPOSE l'état existant : un
+  framboisier mature pré-vieilli (drageon) qui essaime des ramets à l'air de
+  famille (② `form_seed` copié) + un trio de trèfles au MÊME plot (2,2) posés à
+  des positions sous-plot distinctes (① placement sous-plot). Runner de vérif
+  `python3 -m bancs.modele_spatial` : ASSERTE positions du trio distinctes + une
+  lignée clonale de framboisiers partageant un `form_seed` (mère + ramets). PASS.
+  Fichiers : bancs/modele_spatial.py (neuf), bancs/__init__.py.
+  **SPRINT TERMINÉ** — reste F5 côté Nico (checklist ci-dessous).
+
+## Checklist F5 (Nico — vue Godot)
+Lancer le banc côté Godot (F5) : `init config="modele_spatial"` (via `SimBridge` /
+`cmd_init` du serveur — même canal que les autres bancs, cf. `BANCS`). Observer,
+laisser tourner quelques saisons (le clonal émet au fil des ticks) :
+- les plantes ne sont **plus alignées au centre** de la grille (positions
+  sous-plot variées) ;
+- le **trio de trèfles** au même plot **ne se superpose plus** (3 pieds décalés
+  de quelques cm, lisibles séparément) ;
+- le **framboisier** essaime des **drageons qui RESSEMBLENT à la mère** (même
+  port/patron de branches) mais **plus JEUNES** (juvéniles, pas de head-start) ;
+- (option) `planter` à un pixel précis → la plante lève **pile à l'endroit
+  cliqué** (cas joueur du tronçon ①).
 
 Chaque tronçon lit `CLAUDE.md` + ce fichier + son `0N_*.md`. Après chaque
 tronçon : golden vérifié/re-figé selon le kickoff, empreinte notée ICI, commit,

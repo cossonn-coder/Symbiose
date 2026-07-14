@@ -17,6 +17,7 @@ from .biotique import (infestation_ravageur, verger_floraison, semis_tempere,
 from .succession import succession_bascule
 from .luxuriance import luxuriance
 from .diversite import diversite_fondatrice
+from .modele_spatial import modele_spatial
 from . import palette_gestes as _palette_gestes
 
 BANCS = {
@@ -37,6 +38,7 @@ BANCS = {
     "succession_bascule": succession_bascule,
     "luxuriance": luxuriance,
     "diversite_fondatrice": diversite_fondatrice,
+    "modele_spatial": modele_spatial,
     "palette_gestes": _palette_gestes.palette_gestes,
 }
 
