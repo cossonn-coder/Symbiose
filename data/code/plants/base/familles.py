@@ -247,6 +247,21 @@ class PlantBase(ABC):
     # germination ② / croissance ③ arrive après). Littéral seul, aucun import (règle de
     # couches : `plants` est la couche la plus basse, n'importe jamais `fields`).
     allelopathie_emission: float = 0.0
+    # SENSIBILITÉ de l'espèce à l'allélopathie (sprint ALLÉLOPATHIE ②, D2). Facteur
+    # ∈ [0,1] qui module l'escompte de niche à la GERMINATION lu par la succession :
+    # `f_allelo = 1 − allelopathie_sensibilite · rampe(allelopathie[plot])` (rampe
+    # Monod continue, cf. ALLELO_GERM_K). 1.0 = sensible STANDARD (une graine ne lève
+    # pas dans un sol chargé) ; 0.0 = TOLÉRANT/insensible (lève quand même). Sert aussi
+    # l'AUTO-TOLÉRANCE de l'émetteur (D2) : au tronçon ⑤, un émetteur reçoit une
+    # sensibilité BASSE à sa propre molécule (le noyer ne s'auto-inhibe pas — champ
+    # unique D4, on approxime l'auto-tolérance par la sensibilité, pas d'auto-exclusion
+    # du champ, choix surgical du kickoff ②). DÉFAUT 1.0 partout ICI : aucune valeur
+    # marquante n'est posée à ce tronçon (calibrage des sensibilités emblématiques =
+    # tronçon ⑤). INVARIANT GOLDEN : le champ `allelopathie` étant nul au repos
+    # (aucun émetteur avant le ⑤), `rampe(0)=0` ⇒ `f_allelo=1` quelle que soit la
+    # sensibilité ⇒ germination inchangée. Littéral seul, aucun import (règle de
+    # couches : `plants` est la couche la plus basse, n'importe jamais `fields`).
+    allelopathie_sensibilite: float = 1.0
 
     # --- Interface lumière (polymorphe) ---
 

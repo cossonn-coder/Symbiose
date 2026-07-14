@@ -15,7 +15,8 @@ from __future__ import annotations
 from plants import WEED_CATALOGUE, PLANT_CATALOGUE, PERENNIAL_CATALOGUE
 from fields import SEED_ARCHETYPES, _hash_noise, founder_genes
 from fields.ecofields import (bell, T_GERM_FLOOR, GERM_GENE_SHIFT,
-                              COUVERTURE_ADVENTICE_SEUIL, PAILLAGE_GERM_SEUIL)
+                              COUVERTURE_ADVENTICE_SEUIL, PAILLAGE_GERM_SEUIL,
+                              ALLELO_GERM_K)
 from sim.capacite import recrutement_bloque
 
 # Vis A (sprint PERF ③) — raideur de la réponse graduée « couverture → germination
@@ -42,6 +43,25 @@ COUVERTURE_GERM_EXP = 4.0
 # 8 tuiles (tools/diag_population + _mesure) → voir CONCEPTION_EQUILIBRE_INVASION §7.
 # 1.0 = comportement historique (2 tuiles) ; < 1 = pression réduite.
 GERM_PRESSION_FERALE = 0.30
+
+
+def _f_allelo(allelo: float, sensibilite: float) -> float:
+    """Facteur d'escompte de niche à la germination sous allélopathie (sprint
+    ALLÉLOPATHIE ②, D2/D6). RAMPE DOUCE continue, pas de seuil dur :
+
+        rampe(x) = x / (x + ALLELO_GERM_K)          (Monod, saturante)
+        f_allelo = 1 − sensibilite · rampe(allelo)  (borné [0,1])
+
+    `allelo` = concentration du plot (`eco.allelopathie`), `sensibilite` = trait
+    d'espèce `allelopathie_sensibilite` (1 = sensible standard, 0 = tolérant).
+    INVARIANT GOLDEN : `allelo = 0` ⇒ `rampe(0) = 0` ⇒ `f_allelo = 1` ⇒ niche
+    STRICTEMENT inchangée quelle que soit la sensibilité (K>0, aucun /0). Pur,
+    déterministe, zéro RNG (philo #3). Court-circuit à 1.0 si le plot est propre
+    (chemin du golden au repos) → aucun calcul superflu."""
+    if allelo <= 0.0:
+        return 1.0
+    rampe = allelo / (allelo + ALLELO_GERM_K)
+    return max(0.0, 1.0 - sensibilite * rampe)
 
 
 def _germ_gene_mean(eco, r: int, c: int, plant_class: type) -> float:
@@ -162,6 +182,15 @@ def _lever_grains_en_attente(game_state: dict, tile, eco, week: int, seed: int,
         gene = grain.genes.get("germination_thermique", 1.0)
         t_opt_eff = plant_class.t_germ_opt - GERM_GENE_SHIFT * (gene - 1.0)
         niche *= bell(t_sol, t_opt_eff, plant_class.t_germ_tol)
+
+        # Inhibition ALLÉLOPATHIQUE de la levée (tronçon ②) : un grain planté dans un
+        # sol chargé d'allélochimiques (voisinage d'un noyer/armoise…) voit sa niche
+        # escomptée par sa sensibilité d'espèce (rampe douce Monod). Champ nul (golden,
+        # aucun émetteur avant le ⑤) ⇒ f_allelo=1 ⇒ inchangé ; chemin event-driven de
+        # toute façon (grains_en_attente vide au golden). Philo #2 : c'est le MILIEU
+        # (le champ de sol) qui bride la levée, jamais un malus direct sur la plante.
+        niche *= _f_allelo(eco.allelopathie.at_plot(r, c),
+                           plant_class.allelopathie_sensibilite)
 
         if niche < 0.01:
             continue                           # niche trop pauvre → pas encore le bon moment
@@ -353,10 +382,23 @@ def succession(game_state: dict, tile, eco, week: int) -> list[str]:
                             cls.t_germ_tol)
                     for a, cls in WEED_CATALOGUE.items()}
 
+            # Inhibition ALLÉLOPATHIQUE par espèce candidate (tronçon ②) : escompte
+            # de niche `f_allelo = 1 − sensibilité · rampe(allelopathie[plot])` (rampe
+            # douce Monod, cf. _f_allelo) → porte dans germination_candidates, patron
+            # symétrique à arch_ph/arch_temp. Le champ `allelopathie` est LU une fois
+            # par plot ; défaut de sensibilité NEUTRE (1.0) pour toutes les adventices
+            # à ce tronçon (calibrage ⑤). Champ nul (golden, aucun émetteur) ⇒ f=1.0
+            # pour tous ⇒ germination férale STRICTEMENT inchangée. Philo #2 : le champ
+            # de sol referme la niche, pas de malus direct sur la plante.
+            allelo = eco.allelopathie.at_plot(r, c)
+            arch_allelo = {a: _f_allelo(allelo, cls.allelopathie_sensibilite)
+                           for a, cls in WEED_CATALOGUE.items()}
+
             # Priorité écologique : sol pauvre → fixatrice, sinon ordre standard
             candidates = eco.seed_bank.germination_candidates(
                 r, c, seed, week, niche, light=light,
-                arch_tolerance=arch_tolerance, arch_ph=arch_ph, arch_temp=arch_temp
+                arch_tolerance=arch_tolerance, arch_ph=arch_ph, arch_temp=arch_temp,
+                arch_allelo=arch_allelo
             )
 
             if not candidates:

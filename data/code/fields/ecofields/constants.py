@@ -1041,6 +1041,18 @@ ALLELO_MAX          = 3.0     # concentration max/plot (borne GridField, ≡ éc
 ALLELO_DECAY_BASE   = 0.08    # perte spontanée hebdo (hydrolyse/lessivage)
 ALLELO_DECAY_MICROBE = 0.05   # détox hebdo ∝ microbiome normalisé [0,1] (sol vivant)
 ALLELO_FLOOR        = 1e-4    # sous ce seuil, on snap à 0 (fin de traîne)
+# Constante de demi-saturation de la RAMPE DOUCE d'inhibition de germination
+# (sprint ALLÉLOPATHIE ②, D6). L'escompte de niche d'un candidat sensible est
+# `f_allelo = 1 − SENS · rampe(allelopathie[plot])` avec `rampe(x) = x/(x+K)`
+# (Monod : continue, saturante, PAS de seuil dur — cohérent avec `niche_index`
+# continu). K = concentration à laquelle la rampe vaut 0.5 : plus K est GRAND,
+# plus il faut d'allélochimiques pour brider une levée. K = 1.0 (≈ 1/3 de
+# ALLELO_MAX) → une charge modérée mord déjà, une charge forte (proche de 3)
+# referme presque la niche des espèces pleinement sensibles (rampe ≈ 0.75).
+# INVARIANT GOLDEN : `allelopathie = 0` ⇒ `rampe(0) = 0` ⇒ `f_allelo = 1` ⇒
+# germination STRICTEMENT inchangée (K>0 garantit le zéro exact, pas de /0).
+# PLACEHOLDER — calibrage F5 / bancs.
+ALLELO_GERM_K       = 1.0     # demi-saturation de la rampe Monod d'inhibition de levée
 
 # Signature sol par famille (laissée après chaque saison)
 SOIL_SIGNATURE = {

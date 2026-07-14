@@ -103,19 +103,38 @@ Un champ de sol de plus = O(plots) par tick (injection + décroissance), néglig
   monotone vers 0, plus rapide à microbiome élevé, voisins intacts. Aucun C#
   (pont/overlay = ⑥). NON committé (Nico commit).
 
+- **② lecture GERMINATION — FAIT (2026-07-14).** Golden **INCHANGÉ**
+  (`ebe04b445054…`, neutre comme visé — invariant `allelopathie=0 ⇒ rampe(0)=0 ⇒
+  f_allelo=1`). Ajouts : trait `allelopathie_sensibilite: float = 1.0` sur
+  `PlantBase` (défaut neutre partout, calibrage ⑤) ; constante `ALLELO_GERM_K=1.0`
+  (demi-saturation de la rampe Monod, `constants.py`, réexportée via `import *`) ;
+  helper PUR `_f_allelo(allelo, sensibilite) = 1 − sens·(x/(x+K))` dans
+  `succession.py` (rampe douce D6, court-circuit à 1.0 si plot propre). Lecture
+  branchée aux DEUX chemins de levée : (a) grains PLANTÉS (`_lever_grains_en_attente`,
+  escompte niche après la porte thermique) ; (b) adventices férales (`arch_allelo`
+  dict par plot passé à `germination_candidates`, patron symétrique à
+  `arch_ph`/`arch_temp` — nouveau paramètre optionnel `arch_allelo` dans
+  `seedbank.germination_candidates`, défaut absent = rétro-compatible).
+  Auto-tolérance (D2) approximée par sensibilité basse de l'émetteur (posée au ⑤),
+  PAS d'auto-exclusion du champ (choix surgical du kickoff). Tests ad hoc :
+  invariant f=1 à champ nul ; sensible→niche effondrée à forte charge ;
+  tolérant(0)→intacte ; rampe monotone continue ; demi-saturation à x=K ;
+  intégration `germination_candidates` (f=0 coupe la levée, f=1 identique au
+  baseline). Aucun C# (pont/overlay = ⑥). NON committé (Nico commit).
+
 ## §REPRISE
 
 Phase B **FIGÉE** (OK Nico 2026-07-13). Doc de référence :
 `docs/conception/CONCEPTION_ALLELOPATHIE.md`. Kickoffs autosuffisants écrits :
-`01_champ_injection.md` … `06_vue_godot.md`. **① FAIT ; prochain = ②** (lecture
-GERMINATION, `02_lecture_germination.md`).
+`01_champ_injection.md` … `06_vue_godot.md`. **①② FAITS ; prochain = ③**
+(escompte CROISSANCE/vigueur, `03_escompte_croissance.md`).
 
 Découpe = **6 tronçons** (chacun son kickoff) :
 - **① champ `allelopathie` + injection (`inject_field`) + décroissance modulée
   microbiome** (`01_champ_injection.md`) — **FAIT, golden inchangé `ebe04b44…`**.
 - **② lecture GERMINATION** (`02_lecture_germination.md` — `seedbank.niche_index`,
   rampe douce Monod, trait `allelopathie_sensibilite`, auto-tolérance = sensibilité
-  propre basse) — golden **probable neutre** (invariant champ=0 ⇒ inchangé).
+  propre basse) — **FAIT, golden inchangé `ebe04b44…`** (invariant champ=0 ⇒ inchangé).
 - **③ escompte CROISSANCE/vigueur** (`03_escompte_croissance.md`, `sim/growth.py`,
   facteur borné sur le gain, empreinte racinaire) — golden **re-figeage à évaluer**,
   isolé (probable neutre tant que ⑤ pas fait).

@@ -405,7 +405,8 @@ class SeedBank:
                                light: float = 0.0,
                                arch_tolerance: dict | None = None,
                                arch_ph: dict | None = None,
-                               arch_temp: dict | None = None) -> list[str]:
+                               arch_temp: dict | None = None,
+                               arch_allelo: dict | None = None) -> list[str]:
         """
         Tirage déterministe des archétypes qui germent sur ce plot.
         hash(seed, week, r, c) < niche * seed_density → germination.
@@ -430,6 +431,14 @@ class SeedBank:
         est multipliée par ce facteur — patron symétrique à `arch_ph`. Défaut d'espèce
         NEUTRE (`t_germ_tol` large) ⇒ facteur ≈ 1.0 ⇒ golden INTACT au ②. Absent ⇒
         comportement historique.
+
+        Inhibition ALLÉLOPATHIQUE (sprint ALLÉLOPATHIE ②) : si `arch_allelo` est fourni
+        (map archétype → `f_allelo ∈ [0,1]` de l'espèce, = `1 − sensibilité · rampe`
+        déjà calculé côté appelant à partir de la concentration `allelopathie` du plot),
+        la niche est multipliée par ce facteur — patron symétrique à `arch_ph`/`arch_temp`.
+        Un fort chargement d'allélochimiques referme la niche des candidats sensibles
+        (pas de levée) ; champ nul ⇒ `f_allelo = 1` (rampe(0)=0) ⇒ golden INTACT tant
+        qu'aucun émetteur ne charge le champ (tronçon ⑤). Absent ⇒ comportement historique.
         """
         candidates = []
         for archetype in SEED_ARCHETYPES:
@@ -444,6 +453,8 @@ class SeedBank:
                 niche_eff *= arch_ph.get(archetype, 1.0)
             if arch_temp:
                 niche_eff *= arch_temp.get(archetype, 1.0)
+            if arch_allelo:
+                niche_eff *= arch_allelo.get(archetype, 1.0)
             threshold = niche_eff * density
             noise = _hash_noise(seed, week * 7 + SEED_ARCHETYPES.index(archetype),
                                 r, c)
