@@ -277,6 +277,15 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
             #     pas de bois colonisable notable dans le smoke → golden NEUTRE.
             eco.tick_mycelium()
 
+            # 4f. Allélopathie racinaire (sprint ALLÉLOPATHIE ①) — décroissance
+            #     LABILE du champ `allelopathie` (perte spontanée + détox ∝ microbiome),
+            #     APRÈS le mycélium, AVANT la diffusion. Le champ est ALIMENTÉ par les
+            #     émetteurs via `inject_field` (effets weekly, plus bas). Au tronçon ①
+            #     les rôles (germination ②, croissance ③) sont DÉBRANCHÉS : personne ne
+            #     lit `allelopathie` → aucun effet en retour. Champ nul au repos + aucune
+            #     espèce ne l'émet encore (tronçon ⑤) → golden NEUTRE.
+            eco.tick_allelopathie()
+
             # 5. Diffusion spatiale (humidité, fertilité, microbiome)
             eco.tick_diffusion()
 

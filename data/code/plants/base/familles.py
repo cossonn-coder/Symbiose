@@ -236,6 +236,18 @@ class PlantBase(ABC):
     # event-driven, hors tick) → défaut None = golden intact (au repos rien ne le lit).
     mulch_source: str | None = None
 
+    # --- Allélopathie racinaire (sprint ALLÉLOPATHIE ①, D4/D5) ---
+    # Quantité d'allélochimiques qu'un ÉMETTEUR dépose par tick dans le champ de sol
+    # `allelopathie` sur son empreinte RACINAIRE (via un family_effect `inject_field
+    # variable="allelopathie" cible="local"`, route générique — même chemin que l'azote
+    # de l'ortie). DÉFAUT 0.0 = espèce NON allélopathique (la plupart) → n'injecte rien
+    # → champ nul → golden inchangé. Les VALEURS par espèce (noyer fort, tournesol
+    # modéré, aulx/aromatiques léger, armoise, seigle) sont posées au tronçon ⑤ ; ici le
+    # trait est seulement DÉCLARÉ (0 partout). Lu par PERSONNE ce tronçon (l'inhibition
+    # germination ② / croissance ③ arrive après). Littéral seul, aucun import (règle de
+    # couches : `plants` est la couche la plus basse, n'importe jamais `fields`).
+    allelopathie_emission: float = 0.0
+
     # --- Interface lumière (polymorphe) ---
 
     @classmethod

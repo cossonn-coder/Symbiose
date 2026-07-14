@@ -250,6 +250,17 @@ class EcoFields(MatiereOrganiqueMixin, HydrologieMixin, RuissellementMixin,
     # via `nature_at` par la germination/l'évaporation/la décompo → propriétés distinctes
     # par nature (`NATURES_MULCH`). "" partout au repos → NATURE_NEUTRE → golden INTACT.
     paillage_nature:  list = field(default=None)
+    # Allélopathie racinaire (sprint ALLÉLOPATHIE ①, D4) — concentration agrégée
+    # d'allélochimiques par plot, bornée [0, ALLELO_MAX]. Champ de sol UNIQUE (D4 :
+    # pas un dict par molécule). ALIMENTÉ par les émetteurs via `inject_field
+    # variable="allelopathie" cible="local"` (route générique `get_field`, dépôt sur
+    # l'empreinte RACINAIRE — même chemin que l'azote de l'ortie) ; DÉCLINÉ chaque
+    # tick (`tick_allelopathie`, helper pur : perte spontanée + détox ∝ microbiome).
+    # NUL partout au repos (aucune espèce n'a `allelopathie_emission > 0` avant le ⑤)
+    # → lu par PERSONNE ce tronçon (germination ②, croissance ③ branchées plus tard)
+    # → construction directe (mini-sol de conteneur) bit-identique, golden NEUTRE.
+    # Exposé AUTO au registre `get_field` (overlay debug F6 / pont ⑥).
+    allelopathie:     GridField = field(default=None)
 
     def __post_init__(self):
         if self.humidite    is None: self.humidite    = GridField(self.rows, self.cols)
@@ -392,6 +403,11 @@ class EcoFields(MatiereOrganiqueMixin, HydrologieMixin, RuissellementMixin,
         if self.paillage_nature is None:
             self.paillage_nature = [["" for _ in range(self.cols)]
                                     for _ in range(self.rows)]
+        # Allélopathie (sprint ALLÉLOPATHIE ①) — NULLE au repos, bornée [0, ALLELO_MAX],
+        # alimentée par `inject_field` (route générique) et déclinée par `tick_allelopathie`.
+        # Repos NEUTRE (aucun émetteur, personne ne lit) → déterminisme préservé.
+        if self.allelopathie is None:
+            self.allelopathie = GridField(self.rows, self.cols, max_val=ALLELO_MAX)
         self._abri_cache = None
 
     def _init_heterogene(self, grid: GridField, plancher: float) -> None:
@@ -456,6 +472,7 @@ class EcoFields(MatiereOrganiqueMixin, HydrologieMixin, RuissellementMixin,
             "marais_memory":    self.marais_memory,
             "couverture_sol":   self.couverture_sol,
             "paillage":         self.paillage,
+            "allelopathie":     self.allelopathie,
         }.get(name)
 
     def fertilite_index(self, r: int, c: int) -> float:

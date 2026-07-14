@@ -1017,6 +1017,31 @@ NATURE_NEUTRE = {"decay": 1.0, "humidite_w": 1.0, "allelo": 0.0,
 BROYAGE_RENDEMENT        = 2.0
 RECOLTE_MULCH_RENDEMENT  = 1.5
 
+# --- Allélopathie racinaire (sprint ALLÉLOPATHIE ①, D4) --------------------
+# Champ de sol UNIQUE `allelopathie` = concentration agrégée d'allélochimiques
+# (exsudats/juglone/lactones…) par plot. ALIMENTÉ par les émetteurs via
+# `inject_field variable="allelopathie" cible="local"` (déposé sur l'empreinte
+# RACINAIRE, comme l'azote de l'ortie) — au tronçon ① aucune espèce n'émet
+# encore (`allelopathie_emission=0` partout, tronçon ⑤). DÉCROÎT chaque tick,
+# LABILE : perte spontanée + DÉTOX par le sol vivant (microbiome). RÉGIME
+# labile pur ici (l'accumulation autotoxique = tronçon ④). PERSONNE ne le LIT
+# ce tronçon (germination ②, croissance ③) → golden NEUTRE (champ nul au repos,
+# aucun émetteur). C'est un FLUX (philo #2) : la molécule change le MILIEU, la
+# réponse biologique (levée bridée, voisine qui plie) ÉMERGERA aux ②/③, jamais
+# un malus direct sur la plante. Déterministe, zéro RNG (philo #3).
+# PLACEHOLDERS — calibrage F5 / bancs.
+#  - ALLELO_DECAY_BASE   : perte spontanée hebdo (hydrolyse/lessivage minimal).
+#    ~0.08/sem → une charge unique s'estompe en ~1 saison sur sol pauvre.
+#  - ALLELO_DECAY_MICROBE: détox SUPPLÉMENTAIRE ∝ microbiome (échelle [0,3]) — un
+#    sol vivant dégrade plus vite les allélochimiques (interconnexion). À
+#    microbiome plein (3), la détox ajoute ~0.15/sem au-dessus de la base.
+#  - ALLELO_FLOOR        : plancher de snap-à-0 (évite une traîne asymptotique
+#    infinitésimale qui pollue le déterminisme des lecteurs futurs).
+ALLELO_MAX          = 3.0     # concentration max/plot (borne GridField, ≡ échelle n/p/k)
+ALLELO_DECAY_BASE   = 0.08    # perte spontanée hebdo (hydrolyse/lessivage)
+ALLELO_DECAY_MICROBE = 0.05   # détox hebdo ∝ microbiome normalisé [0,1] (sol vivant)
+ALLELO_FLOOR        = 1e-4    # sous ce seuil, on snap à 0 (fin de traîne)
+
 # Signature sol par famille (laissée après chaque saison)
 SOIL_SIGNATURE = {
     "Fabaceae":   {"microbiome": +0.15, "fertilite": +0.10},

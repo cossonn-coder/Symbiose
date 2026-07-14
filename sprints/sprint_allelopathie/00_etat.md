@@ -90,15 +90,29 @@ Un champ de sol de plus = O(plots) par tick (injection + décroissance), néglig
 (cf. les ~20 champs existants). L'injection réutilise le pattern `inject_field`
 (scatter local borné par le rayon racinaire), pas de balayage O(N²). À confirmer.
 
+## Avancement
+
+- **① champ `allelopathie` + injection + décroissance — FAIT (2026-07-14).**
+  Golden **INCHANGÉ** (`ebe04b44…`, neutre comme visé). Champ de sol UNIQUE (D4)
+  déclaré/init dans `container.py`, exposé dans `get_field` (→ `inject_field
+  variable="allelopathie"` route générique, aucune modif de `resolution.py`) ;
+  décroissance labile (perte spontanée + détox ∝ microbiome) dans un helper PUR
+  `allelopathie.py`, wrappé par `ticks.tick_allelopathie`, appelé en `boucle.py`
+  (§4f, après mycélium, avant diffusion) ; trait `allelopathie_emission=0.0`
+  DÉCLARÉ sur `PlantBase` (non renseigné → tronçon ⑤). Test ad hoc : décroissance
+  monotone vers 0, plus rapide à microbiome élevé, voisins intacts. Aucun C#
+  (pont/overlay = ⑥). NON committé (Nico commit).
+
 ## §REPRISE
 
 Phase B **FIGÉE** (OK Nico 2026-07-13). Doc de référence :
 `docs/conception/CONCEPTION_ALLELOPATHIE.md`. Kickoffs autosuffisants écrits :
-`01_champ_injection.md` … `06_vue_godot.md`. **Prêt pour `/sprint-auto`.**
+`01_champ_injection.md` … `06_vue_godot.md`. **① FAIT ; prochain = ②** (lecture
+GERMINATION, `02_lecture_germination.md`).
 
 Découpe = **6 tronçons** (chacun son kickoff) :
 - **① champ `allelopathie` + injection (`inject_field`) + décroissance modulée
-  microbiome** (`01_champ_injection.md`) — lu par personne → golden **NEUTRE visé**.
+  microbiome** (`01_champ_injection.md`) — **FAIT, golden inchangé `ebe04b44…`**.
 - **② lecture GERMINATION** (`02_lecture_germination.md` — `seedbank.niche_index`,
   rampe douce Monod, trait `allelopathie_sensibilite`, auto-tolérance = sensibilité
   propre basse) — golden **probable neutre** (invariant champ=0 ⇒ inchangé).

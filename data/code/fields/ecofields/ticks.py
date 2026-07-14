@@ -20,6 +20,7 @@ from .structure import tick_structure as _tick_structure   # dérive pure de la 
 from .mycelium import tick_mycelium as _tick_mycelium       # dynamique pure du réseau fongique (mycélium ①)
 from .transport import tick_transport as _tick_transport    # transport éolien pur de la litière (vent ⑦)
 from .rosee import tick_rosee as _tick_rosee                 # rosée & gelée blanche nocturnes (météo→champs ②)
+from .allelopathie import tick_allelopathie as _tick_allelopathie  # décroissance labile de l'allélopathie (allélopathie ①)
 
 
 class TicksMixin:
@@ -74,6 +75,16 @@ class TicksMixin:
         AVANT `tick_diffusion`. Au tronçon ① le champ est calculé mais lu par
         PERSONNE (effets §2 débranchés) → golden NEUTRE (mycélium nul au repos)."""
         _tick_mycelium(self)
+
+    def tick_allelopathie(self) -> None:
+        """Décline le champ d'allélopathie racinaire `allelopathie` (sprint
+        ALLÉLOPATHIE ①) : perte spontanée + détox ∝ microbiome. Délègue au helper
+        PUR `allelopathie.tick_allelopathie` (container déjà dense). À appeler dans
+        la zone décompo/sol (après `tick_mycelium`, avant `tick_diffusion`). Le champ
+        est ALIMENTÉ ailleurs (`inject_field`, route générique) ; ici on ne fait que
+        décliner. Au tronçon ① champ nul au repos + aucun émetteur + lu par personne
+        → golden NEUTRE (germination ②, croissance ③ branchées plus tard)."""
+        _tick_allelopathie(self)
 
     def tick_snow(self, temp_now: float, is_neige: bool) -> None:
         """Met à jour le manteau neigeux `eco.snow` (⑦). Délègue au helper PUR
