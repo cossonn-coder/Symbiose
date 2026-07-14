@@ -245,7 +245,11 @@ class ActionsMixin:
                                  f"lot vide — aucune graine de {species} en banque")
                 cost = A.cout_action(gs, player, "planter",
                                      A._objets_action("planter"))
-                ok = A.planter(gs, player, tile, eco, species, r, c)
+                # Placement sous-plot (① MODÈLE SPATIAL) : on transmet le PIXEL
+                # CLIQUÉ tuile-local — la plante germera PILE là, pas au centre du
+                # plot. `(r, c)` reste la clé de niche/FIFO (dérivé par `_plot_at`).
+                ok = A.planter(gs, player, tile, eco, species, r, c,
+                               x_cm=target.get("x_cm"), y_cm=target.get("y_cm"))
                 return bilan(ok, cost, 0.0,
                              f"graine déposée ({species}) en ({r},{c}) — "
                              "germera au bon moment" if ok

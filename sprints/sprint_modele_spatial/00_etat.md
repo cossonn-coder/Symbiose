@@ -99,8 +99,16 @@ Doc : `docs/conception/CONCEPTION_MODELE_SPATIAL.md`. Kickoffs autosuffisants :
 imposé : ① avant ② (positions uniques avant dérivation du form_seed).
 
 ## §REPRISE (pour /sprint-auto)
-Prochaine étape : lancer `/sprint-auto sprint_modele_spatial`. Chaque tronçon lit
-`CLAUDE.md` + ce fichier + son `0N_*.md`. Après chaque tronçon : golden vérifié/
-re-figé selon le kickoff, empreinte notée ICI, commit, /clear, tronçon suivant.
-Golden de départ : 240f10219e… (désync phéno). NOTER ici les nouvelles empreintes
-après ① et ②. Penser à MAJ DETTE.md + BACKLOG.md + journal.md à la clôture.
+- **① CLOSE** (2026-07-14) — placement sous-plot : pixel cliqué (joueur, golden
+  NEUTRE event-driven) + offset féral déterministe borné [10, 40] cm (plot-foyer
+  inchangé). Golden RE-FIGÉ par le cas féral (prévu). Empreinte : **4f6c4f31e0…**.
+  Fichiers : fields/seedbank.py, sim/actions/gestes.py, sim/succession.py,
+  tools/simserver/actions.py, tests/golden_hash.txt.
+- ⏳ **② form_seed** — prochain. Golden RE-FIGÉ prévu (silhouettes reseed).
+- ⏳ **③ banc + vue Godot** — golden INTACT.
+
+Chaque tronçon lit `CLAUDE.md` + ce fichier + son `0N_*.md`. Après chaque
+tronçon : golden vérifié/re-figé selon le kickoff, empreinte notée ICI, commit,
+/clear, tronçon suivant. Golden de départ : 240f10219e… (désync phéno) → ① :
+4f6c4f31e0…. NOTER ici l'empreinte après ②. Penser à MAJ DETTE.md + BACKLOG.md +
+journal.md à la clôture.

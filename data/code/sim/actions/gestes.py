@@ -97,7 +97,8 @@ def manger(game_state: dict, player: str, plant, eco, *, fruit_index=None) -> fl
 
 
 def planter(game_state: dict, player: str, tile, eco, species: str,
-            r: int, c: int) -> bool:
+            r: int, c: int, x_cm: float | None = None,
+            y_cm: float | None = None) -> bool:
     """Planter (spec §3.2 / CONCEPTION_PLANTER_ARROSER §2.1, Q1) — geste sur le
     MILIEU, canal VERTUEUX (philo #1). Le geste **ne fait PAS pousser** une plante :
     il DÉPOSE une graine (`GrainEnAttente`) qui germera plus tard via la
@@ -131,6 +132,13 @@ def planter(game_state: dict, player: str, tile, eco, species: str,
     n'a aucune maîtrise (palier 0 < seuil) → `auto_pailler` est un no-op. `eco` sert
     désormais à `auto_pailler` (pose du mulch) ; le dépôt de graine lui-même n'écrit
     toujours aucun champ écolo.
+
+    PLACEMENT SOUS-PLOT (sprint MODÈLE SPATIAL ①) : `x_cm`/`y_cm` portent le PIXEL
+    CLIQUÉ EXACT (repère tuile-local), passés par le pont. Ils voyagent DANS le
+    grain (`GrainEnAttente`) et la levée place la plante PILE là (fini le centrage
+    systématique). `None` (bancs, tests, appels sans pont) → la levée retombe sur
+    l'offset féral déterministe. Le couple `(r, c)` reste la clé de niche/FIFO —
+    on ne le dérive pas d'ici.
     Renvoie True si la graine a été déposée."""
     bank = game_state.get("player_seed_bank")
     if bank is None or bank.count(species) == 0:
@@ -143,7 +151,8 @@ def planter(game_state: dict, player: str, tile, eco, species: str,
         GrainEnAttente(species=species, genes=dict(seed.genes),
                        expression=dict(seed.expression),   # priming porté par la graine (④)
                        cultive=True, player=player,
-                       semaine_depot=game_state.get("week", 0))
+                       semaine_depot=game_state.get("week", 0),
+                       x_cm=x_cm, y_cm=y_cm)   # pixel cliqué exact (① placement sous-plot)
     )
     auto_pailler(game_state, player, eco, species, r, c)   # ⑦ : mulch réflexe si maîtrisé + stock (no-op au golden)
     return True

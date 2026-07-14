@@ -12,6 +12,7 @@ Extrait d'engine.py (Sprint refactor structurel) — la méthode Engine
 
 from __future__ import annotations
 
+from constants import PLOT_CM
 from plants import WEED_CATALOGUE, PLANT_CATALOGUE, PERENNIAL_CATALOGUE
 from fields import SEED_ARCHETYPES, _hash_noise, founder_genes
 from fields.ecofields import (bell, T_GERM_FLOOR, GERM_GENE_SHIFT,
@@ -43,6 +44,31 @@ COUVERTURE_GERM_EXP = 4.0
 # 8 tuiles (tools/diag_population + _mesure) → voir CONCEPTION_EQUILIBRE_INVASION §7.
 # 1.0 = comportement historique (2 tuiles) ; < 1 = pression réduite.
 GERM_PRESSION_FERALE = 0.30
+
+# Placement sous-plot des germinations FÉRALES (sprint MODÈLE SPATIAL ①). Marge en
+# cm garantissant que le plot-foyer reste inchangé : l'offset est borné à
+# [OFFSET_MIN, PLOT_CM − OFFSET_MIN] → `floor(pos / PLOT_CM)` = plot d'origine → la
+# CHIMIE du sol échantillonnée à 50 cm ne bouge pas. Fini le centrage systématique
+# des semis spontanés (chantier A du sprint).
+OFFSET_MIN = 10.0
+
+
+def _offset_subplot(plant, seed: int, week: int) -> None:
+    """Décale une plante DANS son plot-foyer, de façon DÉTERMINISTE (philo #3,
+    zéro RNG). Positions bornées [OFFSET_MIN, PLOT_CM − OFFSET_MIN] dans chaque axe
+    → `floor(pos / PLOT_CM)` reste le plot d'origine → chimie du sol stable (la
+    position exacte raffine seulement QUELS plots la racine touche, gratuitement).
+
+    Deux canaux de hash DÉDIÉS (`week × 53` / `week × 59`) décorrélés des autres
+    usages de `_hash_noise` dans la succession (germination : `week × 7 + arch` ;
+    grains : `hash_canal`) → l'offset ne biaise aucun autre tirage. `_hash_noise`
+    renvoie ∈ [0, 1) → position ∈ [OFFSET_MIN, PLOT_CM − OFFSET_MIN)."""
+    r, c = plant.position
+    span = PLOT_CM - 2.0 * OFFSET_MIN
+    u1 = _hash_noise(seed, week * 53, r, c)
+    u2 = _hash_noise(seed, week * 59, r, c)
+    plant.x_cm = c * PLOT_CM + OFFSET_MIN + u1 * span
+    plant.y_cm = r * PLOT_CM + OFFSET_MIN + u2 * span
 
 
 def _f_allelo(allelo: float, sensibilite: float) -> float:
@@ -208,6 +234,15 @@ def _lever_grains_en_attente(game_state: dict, tile, eco, week: int, seed: int,
         if new_plant is None:
             continue
         grains.pop(0)                          # FIFO : la plus ancienne levée
+        # Placement sous-plot (① MODÈLE SPATIAL) — AVANT toute lecture de
+        # root_plots/foliar_plots (mémoïsés sur (x_cm, y_cm, rayon) : écrire la
+        # position ici invalide le cache par changement de clé). Un grain PLANTÉ
+        # porte le pixel cliqué → on l'y place PILE ; un grain de test (sans pixel)
+        # retombe sur l'offset féral déterministe.
+        if grain.x_cm is not None and grain.y_cm is not None:
+            new_plant.x_cm, new_plant.y_cm = grain.x_cm, grain.y_cm   # pixel cliqué exact
+        else:
+            _offset_subplot(new_plant, seed, week)                    # grain sans pixel → féral
         if grain.genes:
             new_plant.genes = dict(grain.genes)  # gènes PROPRES (≠ sample_genes du féral)
         else:
@@ -424,6 +459,10 @@ def succession(game_state: dict, tile, eco, week: int) -> list[str]:
             # philo #3). La mutation par génération prend ensuite le relais.
             new_plant = tile.add_plant(plant_class, r, c)
             if new_plant:
+                # Placement sous-plot féral (① MODÈLE SPATIAL) — AVANT founder_genes
+                # (qui LIT x_cm/y_cm) : la lignée fondatrice suit la position RÉELLE,
+                # pas la position centrée. Plot-foyer inchangé (offset borné).
+                _offset_subplot(new_plant, seed, week)
                 g = eco.seed_bank.sample_genes(r, c, plant_class, seed, week)
                 if not g:
                     g = founder_genes(plant_class, seed, week, r, c,

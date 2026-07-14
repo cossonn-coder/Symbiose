@@ -109,6 +109,10 @@ class GrainEnAttente:
     - `player`  : l'avatar qui a planté — la détection « replanté » est PAR
       AVATAR ; le grain porte son auteur pour créditer le bon joueur à la levée.
     - `semaine_depot` : trace du dépôt (FIFO sur plot : on lève le plus ancien).
+    - `x_cm`/`y_cm` : PIXEL CLIQUÉ EXACT porté depuis `planter` (sprint MODÈLE
+      SPATIAL ①) — position sous-plot où la plante germera PILE, plutôt qu'au
+      centre du plot. `None` = pas de pixel (dépôts de test/banc, appels sans
+      pont) → la levée retombe sur l'offset féral déterministe (`_offset_subplot`).
     """
     species: str
     genes: dict = field(default_factory=dict)   # gènes PROPRES (de la Seed jouée)
@@ -116,6 +120,8 @@ class GrainEnAttente:
     cultive: bool = True
     player: str = ""
     semaine_depot: int = 0
+    x_cm: float | None = None                   # pixel cliqué exact (① placement sous-plot)
+    y_cm: float | None = None
 
 
 class GeneStat:
