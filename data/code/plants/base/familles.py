@@ -418,11 +418,21 @@ class Asteraceae(PlantBase):
 class Lamiaceae(PlantBase):
     """
     Famille : Lamiacées (aromatiques).
-    Répulsion naturelle des nuisibles pour les plantes adjacentes.
+    Répulsion naturelle des nuisibles pour les plantes adjacentes + légère
+    allélopathie racinaire (sprint ALLÉLOPATHIE ⑤). Les huiles essentielles des
+    aromatiques (thymol, menthol…) sont notoirement inhibitrices : elles freinent
+    DOUCEMENT la levée des adventices au voisinage — la vraie base biologique du
+    « bon compagnonnage » aromatique. Émission LÉGÈRE (≪ noyer/armoise).
+
+    Les DEUX effets coexistent car ils portent sur des cibles DISJOINTES : le
+    `adjacency_bonus` protège la SANTÉ des voisines des nuisibles (ravageurs, champ
+    `ravageur`), l'`inject_field allelopathie` inhibe la GERMINATION/croissance des
+    voisines (champ `allelopathie`, lu par ②③). Doublon assumé, pas redondant.
     """
     family = "Lamiaceae"
     space_tolerance_weeks = 4  # très tolérantes
     fungal_susceptibility = 0.2  # aromatiques — peu sensibles
+    allelopathie_emission = 0.02   # LÉGÈRE (huiles essentielles) — arme l'autotox ④
     family_effects = [
         {
             "type": "permanent",
@@ -431,6 +441,15 @@ class Lamiaceae(PlantBase):
             "bonus": "reduce_maladie_rondelle",
             "amount": 1,
             "description": "Aromatiques — répulsion naturelle des nuisibles au voisinage"
+        },
+        {
+            "type": "permanent",
+            "trigger": "weekly",
+            "action": "inject_field",
+            "variable": "allelopathie",
+            "amount": 0.02,
+            "cible": "local",
+            "description": "Huiles essentielles — légère allélopathie de germination"
         }
     ]
 
@@ -463,15 +482,24 @@ class Urticaceae(PlantBase):
 class Amaryllidaceae(PlantBase):
     """
     Famille : Amaryllidacées (aulx, oignons).
-    Répulsif familial : les composés soufrés éloignent les nuisibles du
-    voisinage. Faute d'action moteur qui injecte du NÉGATIF dans le champ
-    `ravageur` (cf. note ③), on réutilise le levier défensif data-pur des
-    Lamiacées (adjacency_bonus → protège la santé des voisines). Une vraie
-    baisse du champ `ravageur` resterait une action moteur à créer (dette).
+    Répulsif familial : les composés SOUFRÉS (allicine, disulfures) éloignent les
+    nuisibles ET inhibent la levée des voisines au voisinage.
+
+    TODO LEVÉ (sprint ALLÉLOPATHIE ⑤, ex-`familles.py:440`) : le champ de sol
+    `allelopathie` (①) et la lecture germination/croissance (②③) FOURNISSENT enfin
+    l'injection NÉGATIVE qui manquait — on n'a plus à « tricher » avec le seul
+    `adjacency_bonus`. Émission LÉGÈRE (≪ noyer/armoise) via `inject_field
+    variable="allelopathie"`.
+
+    On CONSERVE l'`adjacency_bonus` (doublon assumé, cibles DISJOINTES) : il protège
+    la SANTÉ des voisines des ravageurs (champ `ravageur`), tandis que l'allélopathie
+    inhibe leur GERMINATION/croissance (champ `allelopathie`). Deux effets réels du
+    soufre, deux canaux moteur distincts.
     """
     family = "Amaryllidaceae"
     space_tolerance_weeks = 4
     fungal_susceptibility = 0.3
+    allelopathie_emission = 0.02   # LÉGÈRE (composés soufrés) — arme l'autotox ④
     family_effects = [
         {
             "type": "permanent",
@@ -480,6 +508,15 @@ class Amaryllidaceae(PlantBase):
             "bonus": "reduce_maladie_rondelle",
             "amount": 1,
             "description": "Répulsif soufré — protège les voisines au voisinage"
+        },
+        {
+            "type": "permanent",
+            "trigger": "weekly",
+            "action": "inject_field",
+            "variable": "allelopathie",
+            "amount": 0.02,
+            "cible": "local",
+            "description": "Composés soufrés — légère allélopathie de germination"
         }
     ]
 
@@ -492,6 +529,11 @@ class Poaceae(PlantBase):
     family = "Poaceae"
     space_tolerance_weeks = 6   # très tolérantes à la compétition
     fungal_susceptibility = 0.4
+    # Graminées TOLÉRANTES à l'allélopathie (sprint ALLÉLOPATHIE ⑤) : leurs racines
+    # fibreuses encaissent les allélochimiques — d'où l'usage du seigle en couvert
+    # nettoyant (il étouffe les dicotylédones sans se gêner lui-même). < 1 = niche/
+    # croissance moins escomptées sous charge (borné [0,1] par la rampe ②③).
+    allelopathie_sensibilite = 0.4
     resilience_base = 1.25       # S — graminées fibreuses, coriaces (paturin/blé/bambou)
     hail_resistance_base = 1.4   # feuilles étroites/souples — la grêle glisse dessus
     pollination_mode = "wind"        # graminées anémophiles

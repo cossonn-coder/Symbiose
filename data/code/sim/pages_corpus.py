@@ -10,7 +10,7 @@ vit — un thème qu'il commence à maîtriser — et récompensent l'exploratio
 voix éditoriales (pastiche en STYLE, jamais de citation réelle longue → §7).
 
 Chaque entrée :
-  - `id`            : identifiant stable (P01..P31), clé du set `gs["pages"]`.
+  - `id`            : identifiant stable (P01..P33), clé du set `gs["pages"]`.
   - `voix`          : registre éditorial (A maraîcher · B jardinière · C savoirs
                       paysans · D herbiers · E sorcières) — purement informatif.
   - `concept`       : résonance thématique, sert au robinet *récompense* (la page
@@ -28,8 +28,8 @@ c'est un corpus de texte, pas du code (CLAUDE.md « garde-fou, pas dogme »).
 """
 from __future__ import annotations
 
-# --- Liste ordonnée des 31 entrées (doc §7 + Grimpantes ⑤ + Luxuriance ④/⑤ +
-#     sources de mulch équilibre invasion ⑤) ------------------------------------
+# --- Liste ordonnée des 33 entrées (doc §7 + Grimpantes ⑤ + Luxuriance ④/⑤ +
+#     sources de mulch équilibre invasion ⑤ + émetteurs allélopathie ⑤) ----------
 # Format : (id, voix, concept, palier_theme, robinet, texte). On construit ensuite
 # `PAGES` (dict id → champs) ET `ORDRE` (ids dans l'ordre du corpus) pour des
 # itérations stables et déterministes.
@@ -231,6 +231,24 @@ _ENTREES = [
      "myrtille et la bruyère. Ce que le sapin acidifie n'est pas perdu pour tout le "
      "monde : garde son tapis d'aiguilles pour les plantes de terre de bruyère, et "
      "porte ailleurs le reste. Chaque litière a son sol."),
+
+    # --- Pages des ÉMETTEURS ALLÉLOPATHIQUES (sprint ALLÉLOPATHIE ⑤) — lore pur ---
+    ("P32", "E", "allélopathie", 3, "fouille",
+     "L'armoise, on la cueillait à la Saint-Jean pour en ceindre les reins et "
+     "passer l'année sans fatigue ; on la brûlait pour chasser les mauvais esprits, "
+     "on la pendait aux portes. Mais le jardinier sait l'autre face de sa vertu : là "
+     "où l'armoise s'installe, plus rien ne lève. Elle empoisonne patiemment la "
+     "terre autour d'elle pour n'y régner que seule. Herbe de sorcière, oui — mais "
+     "sorcière jalouse, qui ne partage sa tache avec personne. Plante-la loin de ce "
+     "que tu aimes, ou fais d'elle la gardienne d'une bordure que tu veux nue."),
+    ("P33", "C", "allélopathie", 2, "récompense",
+     "Sème le seigle épais quand les jours raccourcissent, disait le vieux, et ne "
+     "touche plus à rien de l'hiver. Au printemps, couche-le sous ton pied et plante "
+     "à travers son tapis : tu verras tes salades prospérer là où l'herbe folle ne "
+     "reviendra pas. Ce n'est pas seulement l'ombre qui étouffe l'intruse, c'est le "
+     "seigle lui-même qui empoisonne le sol contre elle — sans se nuire, car le grain "
+     "ne craint pas son propre poison. Le meilleur désherbage est celui qu'une plante "
+     "fait à ta place pendant que tu dors."),
 ]
 
 # Titres recopiés du doc §7 (gras de chaque entrée), indexés par id — gardés à
@@ -267,6 +285,8 @@ _TITRES = {
     "P29": "La première table de l'année",
     "P30": "Le chanvre qui travaille pour moi",
     "P31": "Chaque litière a son sol",
+    "P32": "L'herbe jalouse de la Saint-Jean",
+    "P33": "Le seigle qui désherbe en dormant",
 }
 
 # `PAGES` = dict id → fiche complète. `ORDRE` = ids dans l'ordre du corpus (tri

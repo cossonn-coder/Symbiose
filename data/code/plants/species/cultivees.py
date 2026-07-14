@@ -14,6 +14,10 @@ from plants.base import (GrowthStage,
 class Tomato(Solanaceae):
     genus = "Solanum"
     name = "Tomate"
+    # Sensibilité EMBLÉMATIQUE à la juglone (sprint ALLÉLOPATHIE ⑤) : la tomate est
+    # le cas d'école du dépérissement sous noyer. > 1 = plus sensible que le standard
+    # (borné [0,1] par la rampe → une forte charge effondre sa niche/croissance).
+    allelopathie_sensibilite = 1.5
     t_germ_opt = 22.0              # FRILEUSE : exige un sol bien chaud, lève tard (fenêtre ③)
     t_germ_tol = 7.0               # étroite → ne lève pas sur sol frais de printemps
     resistance_ecrasement  = 0.35  # tige cassante, repart un peu (volet 2 §4)
@@ -241,6 +245,33 @@ class Clover(Fabaceae):
 class Sunflower(Asteraceae):
     genus = "Helianthus"
     name = "Tournesol"
+    # --- Allélopathie racinaire (sprint ALLÉLOPATHIE ⑤) ---
+    # Émission MODÉRÉE : le tournesol est notoirement allélopathique (composés
+    # phénoliques des racines et feuilles) — il « espace » ses voisines sensibles.
+    # On surcharge `family_effects` pour AJOUTER l'injection SANS perdre la floraison
+    # mellifère familiale (Asteraceae) → on la RE-DÉCLARE ici (l'override remplace la
+    # liste héritée, pas de fusion). Le trait `allelopathie_emission` arme aussi
+    # l'autotoxicité ④ (la monoculture de tournesol fatigue son sol).
+    allelopathie_emission = 0.08   # MODÉRÉ (phénols) — entre l'aromatique et le noyer
+    family_effects = [
+        {
+            "type": "floraison",
+            "action": "add_rondelle",
+            "variable": "pollinisateur",
+            "amount": 1,
+            "max": 3,
+            "description": "Floraison mellifère familiale"
+        },
+        {
+            "type": "permanent",
+            "trigger": "weekly",
+            "action": "inject_field",
+            "variable": "allelopathie",
+            "amount": 0.08,
+            "cible": "local",
+            "description": "Phénols racinaires — allélopathie modérée"
+        },
+    ]
     resilience_base = 0.8          # R — flèche unique annuelle, grandes feuilles tendres
     hail_resistance_base = 0.7     # larges limbes exposés — la grêle les déchire
     t_germ_opt = 20.0              # FRILEUSE (origine prairie chaude) : lève au sol réchauffé (③)

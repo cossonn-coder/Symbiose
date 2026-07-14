@@ -172,16 +172,45 @@ Un champ de sol de plus = O(plots) par tick (injection + décroissance), néglig
   (🟢), container.py 315 (🟡 vigilance, +5 code pré-④, single-responsibility état),
   succession.py 179, croissance.py 190 (🟢). NON committé (Nico commit).
 
+- **⑤ ESPÈCES ÉMETTRICES + VOIX — FAIT (2026-07-14).** Golden **RE-FIGÉ MAÎTRISÉ
+  ANNONCÉ** : `ebe04b44…` → **`da2729c5962d2f61c106c8ec9d766e52f75fc72e09bb5914595e33f4461898b7`**.
+  C'est le re-figeage PRÉVU par le kickoff (et décalé du ④) : les émetteurs sont
+  enfin actifs au smoke, donc `allelopathie` non nul → ②/③ mordent. **Dérive PROUVÉE
+  localisée** : un script neutralisant EXACTEMENT les injections tournesol (Asteraceae)
+  + basilic (Lamiaceae) + la sensibilité tomate a ramené le hash au baseline pré-⑤
+  bit-identique `ebe04b44…` → 100 % de la dérive vient des émetteurs du smoke.
+  Diff observé = décalage de niche à la germination férale (ex. plot (2,3) :
+  Achillée+Pâturin → Achillée déplacée + Trèfle + Pâturin, vitalité moindre) +
+  micro-variations ECO (microbiome 0.34→0.344, n 0.024→0.026, k 0.006→0.005) — le
+  comportement voulu « l'émetteur espace ses voisines ». Aucun noyer/armoise/seigle
+  au smoke (2 tuiles), la dérive vient donc de tournesol + basilic présents.
+  Ajouts DATA (aucune mécanique neuve) : traits d'émission + `family_effects
+  inject_field allelopathie` posés sur **noyer** (0.20, FORT/juglone),
+  **tournesol** (0.08, MODÉRÉ), **basilic/aulx** Lamiaceae/Amaryllidaceae (0.02,
+  LÉGER — lève le TODO `familles.py:440`) ; sensibilité **tomate** 1.5 (emblème
+  juglone), **Poaceae** 0.4 (graminées tolérantes). DEUX espèces NEUVES complètes :
+  **armoise** (`Mugwort`/Artemisia vulgaris, vivace, émission 0.18) et **seigle**
+  (`Rye`/Secale cereale, engrais vert annuel, émission 0.08, `mulch_source=paille`),
+  chacune avec ses **5 voix** : fiche encyclopédie 3 niveaux (`encyclopedie_corpus.py`,
+  41→43 fiches), page secrète (`pages_corpus.py` P32 armoise / P33 seigle, 31→33),
+  magazine (auto-dérivé de la fiche + palier famille), carnet (flux d'événements
+  existant, PAS de concept maîtrise neuf — hors scope data+voix), événements
+  (growth_stages → ledger). Catalogue : `armoise`/`seigle` ajoutés (`catalogue.py`,
+  `species/__init__.py`, `plants/__init__.py`). Tests structurels re-calés
+  (encyclopédie 43, pages 33) — tous VERTS. LDC pur : cultivees.py 349 (🟡 vigilance,
+  single-responsibility), tous les autres 🟢. Aucun C# (pont/overlay = ⑥). NON
+  committé (Nico commit).
+
 ## §REPRISE
 
 Phase B **FIGÉE** (OK Nico 2026-07-13). Doc de référence :
 `docs/conception/CONCEPTION_ALLELOPATHIE.md`. Kickoffs autosuffisants écrits :
-`01_champ_injection.md` … `06_vue_godot.md`. **①②③④ FAITS ; prochain = ⑤**
-(espèces émettrices + voix, `05_especes_voix.md` — traits noyer/tournesol/aulx +
-AJOUT armoise & seigle avec leurs 5 voix ; golden NEUTRE visé, re-figeage MESURÉ/
-ANNONCÉ si noyer|tournesol chargent le champ au smoke). NOTE : c'est au ⑤ que le
-re-figeage ANNONCÉ du ④ se matérialise réellement (émetteurs enfin actifs →
-`autotox`/`allelopathie` non nuls → ②/③ mordent).
+`01_champ_injection.md` … `06_vue_godot.md`. **①②③④⑤ FAITS ; prochain = ⑥**
+(vue Godot, `06_vue_godot.md` — overlay F6 `allelopathie`/`autotox` + indices
+diégétiques sol nu + pont snapshot liste creuse ; golden INTACT visé, F5 = Nico).
+NOTE : le re-figeage ANNONCÉ (④ puis ⑤) s'est matérialisé au ⑤ comme prévu —
+golden désormais `da2729c5…` (tournesol + basilic chargent le champ au smoke),
+dérive prouvée localisée aux émetteurs.
 
 Découpe = **6 tronçons** (chacun son kickoff) :
 - **① champ `allelopathie` + injection (`inject_field`) + décroissance modulée
@@ -199,11 +228,11 @@ Découpe = **6 tronçons** (chacun son kickoff) :
   autotox=0 satisfait de fait ; re-figeage réel décalé au ⑤).
 - **⑤ espèces émettrices + voix** (`05_especes_voix.md` — traits noyer(fort)/
   tournesol(modéré)/aulx-aromatiques(léger, lève TODO `familles.py:440`) + AJOUT
-  armoise & seigle avec leurs **5 voix**) — golden **neutre visé**, mesuré/annoncé
-  si noyer|tournesol chargent le champ au smoke.
+  armoise & seigle avec leurs **5 voix**) — **FAIT, golden RE-FIGÉ MAÎTRISÉ ANNONCÉ
+  `da2729c5…`** (dérive prouvée localisée aux émetteurs du smoke : tournesol + basilic).
 - **⑥ vue Godot** (`06_vue_godot.md` — overlay F6 + indices diégétiques sol nu +
   pont snapshot liste creuse) — golden **intact**, F5 = Nico.
 
-Ordre ①→⑥ (neutre d'abord, re-figeage isolé au ④). Reprise à froid = lire CLAUDE.md
+Ordre ①→⑥ (neutre d'abord, re-figeage isolé au ⑤). Reprise à froid = lire CLAUDE.md
 + ce fichier + le kickoff `0N`. Prochaine action Nico : `/clear` puis
 `/sprint-auto sprint_allelopathie`.

@@ -9,7 +9,7 @@ from plants.species import (Tomato, Pepper, Bean, Clover, Sunflower, Basil,
                             Thyme, Lavender, Mint,
                             Carrot, Zucchini, CornSalad, Strawberry, Nettle,
                             Vaccinium, Raspberry, RunningBamboo, SweetViolet, Garlic,
-                            Ivy, Jasmine, Wheat, Hemp,
+                            Ivy, Jasmine, Wheat, Hemp, Rye, Mugwort,
                             BursaPastoris, MedicagoLupulina, PoaAnnua, Taraxacum)
 from plants.perennials import (Fig, AppleTree, CherryTree, WalnutTree, OakTree,
                                FirTree, BeechTree, BirchTree, HornbeamTree)
@@ -59,6 +59,11 @@ PLANT_CATALOGUE: dict[str, type] = {
     # Chanvre (Cannabaceae NEUVE), toutes deux → paille à la récolte (④/⑤)
     "ble":       Wheat,
     "chanvre":   Hemp,
+    # Émetteurs allélopathiques NEUFS (sprint ALLÉLOPATHIE ⑤) — Armoise (Asteraceae,
+    # vivace toxique qui « fait le vide ») + Seigle (Poaceae, engrais vert /
+    # couvert nettoyant qui étouffe chimiquement les adventices puis se fauche)
+    "armoise":   Mugwort,
+    "seigle":    Rye,
     # Adventices / succession écologique
     "bourse_pasteur": BursaPastoris,
     "minette":        MedicagoLupulina,

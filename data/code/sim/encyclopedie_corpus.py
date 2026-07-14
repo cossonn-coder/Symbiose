@@ -26,9 +26,10 @@ côté code.
 """
 from __future__ import annotations
 
-# --- Les 41 fiches × 3 niveaux (doc §6 + Grimpantes ⑤ + Luxuriance ④/⑤ +
+# --- Les 43 fiches × 3 niveaux (doc §6 + Grimpantes ⑤ + Luxuriance ④/⑤ +
 #     sources de mulch équilibre invasion ⑤ : blé/chanvre/sapin + essences
-#     forestières RENDU AMBIANCE T1 : hêtre/bouleau/charme) --------------------
+#     forestières RENDU AMBIANCE T1 : hêtre/bouleau/charme + émetteurs
+#     allélopathiques ⑤ : armoise/seigle) --------------------------------------
 FICHES: dict[str, dict[int, str]] = {
 
     # === Annuelles & potagères cultivées ===
@@ -40,7 +41,9 @@ FICHES: dict[str, dict[int, str]] = {
            "Gourmande en eau et en azote. Sensible au mildiou (familial Solanaceae).",
         3: "S'associe au basilic et aux Astéracées qui attirent ses auxiliaires ; à "
            "éloigner des autres Solanaceae (partage les mêmes maladies). Gros "
-           "consommateur → épuise le sol, à faire suivre d'une légumineuse.",
+           "consommateur → épuise le sol, à faire suivre d'une légumineuse. TRÈS "
+           "sensible à la juglone : dépérit sous un noyer ou à son voisinage — le cas "
+           "d'école du poison racinaire.",
     },
     "poivron": {
         1: "Buisson compact, feuilles lisses, fruits creux verts puis colorés.",
@@ -73,7 +76,9 @@ FICHES: dict[str, dict[int, str]] = {
         2: "Annuelle héliotrope géante, croissance très rapide ; racine pivotante "
            "profonde. Graines riches recherchées des oiseaux.",
         3: "Brise-vent éphémère et perchoir ; capitule = garde-manger pollinisateurs "
-           "puis oiseaux. Légèrement allélopathique — espace ses voisines sensibles.",
+           "puis oiseaux. Allélopathique modéré — ses racines chargent le sol de "
+           "composés qui espacent les voisines sensibles (à ne pas serrer contre un "
+           "semis délicat) ; en monoculture répétée, il finit par fatiguer son propre sol.",
     },
 
     # === Aromatiques & compagnes ===
@@ -264,6 +269,36 @@ FICHES: dict[str, dict[int, str]] = {
            "abeilles précoces). Son tapissage stolonifère s'auto-limite aux zones "
            "assez claires — un couvre-sol discret qui ne verrouille jamais tout. "
            "Comestible et médicinale (fleurs).",
+    },
+
+    # === Émetteurs allélopathiques (sprint ALLÉLOPATHIE ⑤) ===
+    "armoise": {
+        1: "Grande touffe dressée aux feuilles découpées vert sombre dessus, "
+           "argentées dessous, dégageant une odeur camphrée quand on les froisse.",
+        2: "Vivace rustique presque increvable des friches et bords de chemin, "
+           "anémophile (capitules verdâtres discrets, pollen au vent — aucun nectar). "
+           "Aromatique et médicinale ancienne. Elle repart chaque printemps d'une "
+           "souche ligneuse et supporte tout : sécheresse, sols pauvres, piétinement.",
+        3: "PUISSAMMENT ALLÉLOPATHE : ses racines et son feuillage libèrent des "
+           "composés qui inhibent la levée et la croissance des plantes autour d'elle "
+           "— elle « fait le vide » et règne seule sur sa tache. À tenir à distance du "
+           "potager (peu de voisines la supportent) ; utile en revanche pour tenir "
+           "propre une bordure ou décourager une adventice tenace. Elle-même y est "
+           "insensible. Le sol garde longtemps sa mémoire chimique là où elle a régné.",
+    },
+    "seigle": {
+        1: "Touffe d'herbe dressée aux longues feuilles bleutées, puis épis fins "
+           "barbus portés haut sur des chaumes souples.",
+        2: "Céréale annuelle LA PLUS RUSTIQUE : semée dense à l'automne, sa graine "
+           "lève au froid quand rien d'autre ne démarre, et le couvert protège le sol "
+           "nu tout l'hiver. Anémophile (pollen au vent). Racines fibreuses "
+           "assoiffées, comme toutes les graminées — mais tolérante à l'allélopathie.",
+        3: "ENGRAIS VERT ALLÉLOPATHIQUE — le couvert nettoyant du permaculteur : ses "
+           "racines exsudent des composés qui ÉTOUFFENT chimiquement la levée des "
+           "adventices dicotylédones, SANS le gêner lui-même (les graminées "
+           "encaissent). On le FAUCHE au printemps : sa paille couvre le sol et "
+           "l'effet résiduel garde la planche nette quelques semaines — on plante "
+           "DANS le mulch de seigle. Cultivé non pour la table mais pour la terre.",
     },
 
     # === Sources de mulch (sprint équilibre invasion ⑤) ===

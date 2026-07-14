@@ -1,9 +1,10 @@
 """
 SYMBIOSE — plants/species/mulch_sources.py
 Espèces SOURCES DE MULCH annuelles (sprint équilibre invasion ⑤, D10) : Blé
-(Poaceae) et Chanvre (Cannabaceae NEUVE). Toutes deux produisent de la PAILLE à
-la récolte (`mulch_source="paille"`, lu par `sim.actions.paillage.recolter_paille`
-au geste joueur — event-driven, golden NEUTRE au repos).
+(Poaceae), Chanvre (Cannabaceae NEUVE) et Seigle (Poaceae, sprint ALLÉLOPATHIE ⑤
+— engrais vert allélopathique). Toutes produisent de la PAILLE à la récolte
+(`mulch_source="paille"`, lu par `sim.actions.paillage.recolter_paille` au geste
+joueur — event-driven, golden NEUTRE au repos).
 
 Elles INCARNENT le levier permacole du sprint : « l'espèce sert l'idée » (règle
 catalogue). On les cultive pour COUVRIR le sol — la récolte n'alimente pas
@@ -75,6 +76,96 @@ class Wheat(Poaceae):
                     "axis": "recolte",
                     "amount": 1,
                     "description": "Moisson — grain récolté, la paille reste à couvrir le sol"
+                },
+            ],
+        ),
+    ]
+
+
+class Rye(Poaceae):
+    """
+    Secale cereale — Seigle (Poaceae). ENGRAIS VERT ALLÉLOPATHIQUE (sprint
+    ALLÉLOPATHIE ⑤) : la facette « couvert stratégique permaculture », opposée à la
+    vivace toxique (armoise). Semé DENSE à l'automne, il couvre le sol tout l'hiver,
+    puis ses racines exsudent des allélochimiques (acides benzoxazinoïdes, DIBOA/BOA)
+    qui ÉTOUFFENT chimiquement la levée des adventices dicotylédones — sans se gêner
+    lui-même (graminée TOLÉRANTE, cf. `Poaceae.allelopathie_sensibilite=0.4`). On le
+    FAUCHE au printemps : sa paille couvre le sol (`mulch_source="paille"`) et l'effet
+    résiduel garde la planche nette quelques semaines (le maraîcher plante DANS le
+    mulch de seigle). Émission MODÉRÉE. Anémophile (Poaceae). `mulch_source="paille"`.
+
+    On surcharge `family_effects` pour AJOUTER l'injection allélopathique SANS perdre
+    la compétition hydrique fibreuse familiale (Poaceae) → on la RE-DÉCLARE ici (un
+    override remplace la liste héritée, pas de fusion). HORS golden (jamais semé) →
+    dérive NEUTRE.
+    """
+    genus = "Secale"
+    name = "Seigle"
+    rarity = "Établie"
+    keywords = ["Céréale", "Engrais vert", "Allélopathe", "Couvre-sol"]
+    t_germ_opt = 10.0              # TRÈS rustique : lève au froid (semé à l'automne) (③)
+    t_germ_tol = 12.0              # très large — la plus rustique des céréales
+    resistance_ecrasement  = 0.6   # chaume souple, plie et repart de la touffe
+    stimulation_ecrasement = 0.3
+    space_tolerance_weeks = 5
+    life_cycle = "annual"
+    winter_strategy = "die"
+    foliage_density = 0.50         # couvert dense — étouffe la lumière au sol
+    mulch_source = "paille"        # fauché → stock paille (④/⑤)
+    allelopathie_emission = 0.08   # MODÉRÉ (benzoxazinoïdes) — couvert nettoyant ; arme l'autotox ④
+    family_effects = [
+        {
+            "type": "permanent",
+            "trigger": "weekly",
+            "action": "inject_field",
+            "variable": "humidite",
+            "amount": -0.06,
+            "cible": "local",
+            "description": "Racines fibreuses — compétition hydrique intense"
+        },
+        {
+            "type": "permanent",
+            "trigger": "weekly",
+            "action": "inject_field",
+            "variable": "allelopathie",
+            "amount": 0.08,
+            "cible": "local",
+            "description": "Benzoxazinoïdes — allélopathie de couvert nettoyant"
+        },
+    ]
+    growth_stages = [
+        GrowthStage(
+            name="semis", duration_weeks=2, strate="sol",
+            vigueur_cost=0, effects=[], canopy_height=6,
+        ),
+        GrowthStage(
+            name="tallage", duration_weeks=5, strate="basse",
+            vigueur_cost=1, effects=[], canopy_height=40,
+        ),
+        # Épiaison : chaume dressé. Anémophile → PAS d'effet floraison-pollinisateur.
+        GrowthStage(
+            name="épiaison", duration_weeks=5, strate="moyenne",
+            vigueur_cost=2, canopy_height=140, canopy_radius=15,
+            effects=[
+                {
+                    "type": "floraison",
+                    "action": "score",
+                    "axis": "biodiversite",
+                    "amount": 1,
+                    "description": "Épiaison — le seigle monte en grain"
+                },
+            ],
+        ),
+        GrowthStage(
+            name="mature", duration_weeks=3, strate="moyenne",
+            vigueur_cost=0, canopy_height=160, canopy_radius=15,
+            effects=[
+                {
+                    "type": "recolte",
+                    "action": "score",
+                    "axis": "recolte",
+                    "amount": 1,
+                    "description": "Fauche — le couvert se couche, la paille reste à nettoyer le sol"
                 },
             ],
         ),

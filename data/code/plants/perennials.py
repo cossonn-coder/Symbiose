@@ -223,17 +223,39 @@ class CherryTree(PerennialWoody):
 
 
 class WalnutTree(PerennialWoody):
+    """
+    Juglans regia — Noyer (Juglandaceae). EMBLÈME de l'allélopathie (sprint
+    ALLÉLOPATHIE ⑤) : ses racines et sa litière libèrent la JUGLONE, un puissant
+    inhibiteur qui « fait le vide » sous sa couronne (proverbe paysan : « rien ne
+    pousse sous le noyer »). Émission FORTE via `inject_field variable="allelopathie"`.
+    AUTO-TOLÉRANT (D2) : `allelopathie_sensibilite ≈ 0` — le noyer ne s'auto-inhibe
+    pas (champ unique D4, l'auto-tolérance s'approxime par la sensibilité, choix
+    surgical du kickoff ②).
+    """
     family = "Juglandaceae"
     genus  = "Juglans"
     name   = "Noyer"
     rarity = "Climacique"
-    keywords = ["Lisière", "Ombre dense", "Structurant"]
+    keywords = ["Lisière", "Ombre dense", "Structurant", "Allélopathe"]
     foliage_density = 0.80
     pollination_mode = "wind"        # anémophile (chatons)
     pollination_radius_cm = 600.0
     reproduction_rate = 0.10   # glandée (mast) plus rare
     longevity_years = 200
     maturity_years = 15
+    allelopathie_emission = 0.20     # FORT (juglone) — emblème ; arme l'autotox ④
+    allelopathie_sensibilite = 0.05  # AUTO-TOLÉRANT : ne s'auto-inhibe pas (D2)
+    family_effects = [
+        {
+            "type": "permanent",
+            "trigger": "weekly",
+            "action": "inject_field",
+            "variable": "allelopathie",
+            "amount": 0.20,
+            "cible": "local",
+            "description": "Juglone — forte allélopathie racinaire (rien ne pousse sous le noyer)"
+        }
+    ]
     age_curve = [(0, 40, 25), (5, 300, 200), (10, 600, 350),
                  (20, 1000, 550), (50, 1500, 750), (100, 2500, 1000)]
 

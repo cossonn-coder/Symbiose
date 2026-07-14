@@ -19,7 +19,7 @@ Toutes HORS scénario golden (jamais semées) → dérive NEUTRE.
 
 from __future__ import annotations
 from plants.base import (GrowthStage, Urticaceae, Ericaceae, Poaceae,
-                         Violaceae, PlantBase)
+                         Violaceae, Asteraceae, PlantBase)
 
 
 class Nettle(Urticaceae):
@@ -295,5 +295,67 @@ class SweetViolet(Violaceae):
                     "description": "Fleurs violettes parfumées, précoces — nourrit l'abeille"
                 },
             ],
+        ),
+    ]
+
+
+class Mugwort(Asteraceae):
+    """
+    Artemisia vulgaris — Armoise commune (Asteraceae).
+    VIVACE inhibitrice PUISSANTE (sprint ALLÉLOPATHIE ⑤) : la facette « vivace
+    toxique » de l'allélopathie. Ses racines et son feuillage libèrent des lactones
+    et terpènes (dont l'absinthine du genre Artemisia) qui « FONT LE VIDE » autour
+    d'elle — peu de plantes lèvent à son pied. Émission FORTE (proche du noyer),
+    AUTO-TOLÉRANTE (`allelopathie_sensibilite` bas). Anémophile (fleurs verdâtres
+    discrètes au vent → aucune retombée butineurs, on N'hérite PAS de la floraison
+    mellifère d'Asteraceae : `family_effects` surchargé par la seule injection).
+    `archetype=None` → hors WEED_CATALOGUE (posée par le joueur / acquise). Plante
+    aromatique médicinale ancienne (« herbe aux cent goûts », veillées de la
+    Saint-Jean). HORS scénario golden (jamais semée) → dérive NEUTRE.
+    """
+    genus = "Artemisia"
+    name = "Armoise"
+    resilience_base = 1.25         # S — vivace rustique quasi-increvable, souche ligneuse
+    resistance_ecrasement  = 0.6   # touffe dressée, repart de la souche
+    stimulation_ecrasement = 0.4
+    rarity = "Établie"
+    keywords = ["Allélopathe", "Vivace", "Aromatique", "Rudérale"]
+    space_tolerance_weeks = 5      # robuste, encaisse la compétition
+    life_cycle = "perennial"
+    winter_strategy = "dormant"
+    archetype = None               # PAS une adventice de succession (hors WEED_CATALOGUE)
+    pollination_mode = "wind"      # anémophile — capitules verdâtres discrets
+    pollination_radius_cm = 300.0
+    seed_dispersal = "anemochore"  # akènes légers au vent
+    t_germ_opt = 15.0              # rudérale tempérée : lève au frais (fenêtre ③)
+    t_germ_tol = 12.0              # large → opportuniste des sols remués
+    foliage_density = 0.55
+    longevity_years = 10
+    reproduction_rate = 0.08
+    allelopathie_emission = 0.18     # FORT (lactones/terpènes) — « fait le vide » ; arme l'autotox ④
+    allelopathie_sensibilite = 0.05  # AUTO-TOLÉRANTE : ne s'auto-inhibe pas (D2)
+    family_effects = [
+        {
+            "type": "permanent",
+            "trigger": "weekly",
+            "action": "inject_field",
+            "variable": "allelopathie",
+            "amount": 0.18,
+            "cible": "local",
+            "description": "Lactones/terpènes — forte allélopathie (fait le vide)"
+        }
+    ]
+    growth_stages = [
+        GrowthStage(
+            name="semis", duration_weeks=3, strate="sol",
+            vigueur_cost=0, effects=[], canopy_height=4,
+        ),
+        # Vivace : touffe adulte dressée (duration 0). Anémophile → PAS d'effet
+        # floraison-pollinisateur. L'allélopathie vient du family_effects ci-dessus.
+        GrowthStage(
+            name="adulte", duration_weeks=0, strate="moyenne",
+            vigueur_cost=1, canopy_height=110, canopy_radius=35,
+            root_radius=45,
+            effects=[],
         ),
     ]

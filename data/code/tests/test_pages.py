@@ -84,8 +84,8 @@ def test_fouille_globale():
     trouvees = pages.pages_trouvees(gs, "j1")
     while pages.reveler_page(gs, "j1", "fouille", {}) is not None:
         pass
-    check("fouille épuise tout le corpus (31 pages)",
-          len(pages.pages_trouvees(gs, "j1")) == 31,
+    check("fouille épuise tout le corpus (33 pages)",
+          len(pages.pages_trouvees(gs, "j1")) == 33,
           f"{len(pages.pages_trouvees(gs, 'j1'))}")
     check("fouille corpus épuisé → None",
           pages.reveler_page(gs, "j1", "fouille", {}) is None)
@@ -110,8 +110,8 @@ def test_hasard_deterministe():
     s, w = 1, 0
     while pages.reveler_page(gs, "j1", "hasard", {"seed": s, "semaine": w}) is not None:
         w += 1
-    check("hasard épuise tout le corpus (31 pages)",
-          len(pages.pages_trouvees(gs, "j1")) == 31,
+    check("hasard épuise tout le corpus (33 pages)",
+          len(pages.pages_trouvees(gs, "j1")) == 33,
           f"{len(pages.pages_trouvees(gs, 'j1'))}")
     check("hasard corpus épuisé → None",
           pages.reveler_page(gs, "j1", "hasard", {"seed": s, "semaine": w + 1}) is None)
@@ -124,13 +124,13 @@ def test_hasard_deterministe():
 def test_jamais_re_revelation():
     gs = {}
     vues = set()
-    for _ in range(40):                       # > 31 : sur-tire volontairement
+    for _ in range(45):                       # > 33 : sur-tire volontairement
         p = pages.reveler_page(gs, "j1", "fouille", {})
         if p is None:
             break
         check(f"page {p} jamais re-révélée", p not in vues, f"déjà vue : {p}")
         vues.add(p)
-    check("exactement 31 pages distinctes révélées", len(vues) == 31, f"{len(vues)}")
+    check("exactement 33 pages distinctes révélées", len(vues) == 33, f"{len(vues)}")
     # robinet inconnu → toujours None (jamais de crash)
     check("robinet inconnu → None",
           pages.reveler_page({}, "j1", "zzz", {}) is None)
@@ -162,9 +162,9 @@ def test_zero_effet_mecanique():
 # ---------------------------------------------------------------------------
 
 def test_corpus():
-    check("corpus = 31 pages", len(PAGES) == 31, f"{len(PAGES)}")
+    check("corpus = 33 pages", len(PAGES) == 33, f"{len(PAGES)}")
     ids = sorted(PAGES)
-    check("ids = P01..P31", ids == [f"P{i:02d}" for i in range(1, 32)], f"{ids}")
+    check("ids = P01..P33", ids == [f"P{i:02d}" for i in range(1, 34)], f"{ids}")
     champs = {"id", "titre", "voix", "concept", "palier_theme", "robinet", "texte"}
     incomplets = [pid for pid, f in PAGES.items()
                   if set(f) != champs or not f["texte"].strip()]
@@ -174,7 +174,7 @@ def test_corpus():
     check("tous les robinets ∈ {hasard, récompense, fouille}", robinets_ok)
     voix_ok = all(PAGES[p]["voix"] in {"A", "B", "C", "D", "E"} for p in PAGES)
     check("toutes les voix ∈ {A..E}", voix_ok)
-    check("ORDRE = 31 ids alignés sur PAGES", len(ORDRE) == 31 and set(ORDRE) == set(PAGES))
+    check("ORDRE = 33 ids alignés sur PAGES", len(ORDRE) == 33 and set(ORDRE) == set(PAGES))
 
 
 if __name__ == "__main__":

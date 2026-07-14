@@ -33,9 +33,10 @@ from .cultivees import Tomato, Pepper, Bean, Clover, Sunflower, Basil
 from .compagnes import Yarrow, Phacelia, Borage, Comfrey, Mustard, Garlic
 from .aromatiques import Thyme, Lavender, Mint
 from .potageres import Carrot, Zucchini, CornSalad, Strawberry
-from .sauvages import Nettle, Vaccinium, Raspberry, RunningBamboo, SweetViolet
+from .sauvages import (Nettle, Vaccinium, Raspberry, RunningBamboo, SweetViolet,
+                       Mugwort)
 from .grimpantes import Ivy, Jasmine
-from .mulch_sources import Wheat, Hemp
+from .mulch_sources import Wheat, Hemp, Rye
 
 __all__ = [
     "BursaPastoris", "MedicagoLupulina", "PoaAnnua", "Taraxacum",
@@ -43,7 +44,7 @@ __all__ = [
     "Yarrow", "Phacelia", "Borage", "Comfrey", "Mustard", "Garlic",
     "Thyme", "Lavender", "Mint",
     "Carrot", "Zucchini", "CornSalad", "Strawberry", "Nettle", "Vaccinium",
-    "Raspberry", "RunningBamboo", "SweetViolet",
+    "Raspberry", "RunningBamboo", "SweetViolet", "Mugwort",
     "Ivy", "Jasmine",
-    "Wheat", "Hemp",
+    "Wheat", "Hemp", "Rye",
 ]
