@@ -122,12 +122,32 @@ Un champ de sol de plus = O(plots) par tick (injection + décroissance), néglig
   intégration `germination_candidates` (f=0 coupe la levée, f=1 identique au
   baseline). Aucun C# (pont/overlay = ⑥). NON committé (Nico commit).
 
+- **③ escompte CROISSANCE/vigueur — FAIT (2026-07-14).** Golden **INCHANGÉ**
+  (`ebe04b445054…`, neutre comme visé — invariant `allelopathie=0 ⇒ moyenne 0 ⇒
+  f_croissance=1 ⇒ target_g inchangé`). Ajouts : constante `ALLELO_GROWTH_ESC_MAX
+  =0.6` (escompte MAX borné <1, `constants.py` près d'`ALLELO_GERM_K`, réexportée
+  via `import *`) ; helper PUR module `_f_croissance_allelo(allelo, sensibilite) =
+  1 − ESC_MAX·sens·rampe(x)` dans `sim/engine/croissance.py` (MÊME rampe Monod
+  `x/(x+ALLELO_GERM_K)` qu'au ②, court-circuit à 1.0 sur sol propre). Application
+  dans `_update_physiology` : lecture de la concentration MOYENNE de `allelopathie`
+  sur l'empreinte RACINAIRE déjà dérivée (`plant.root_plots`, RÉUTILISÉE — pas
+  recalculée, règle projet) → rabotage MULTIPLICATIF de `target_g` (la cible du
+  `growth_factor` lissé, donc pas de compounding) par `f_croissance`, borné par le
+  clamp existant [0.3,1.0]. Escompte le GAIN, JAMAIS `vitalite` (philo #2 :
+  dépérissement ÉMERGENT via ombre/ravageurs). Traits `allelopathie_emission` encore
+  0 partout (⑤) → champ nul au smoke → golden neutre. Tests ad hoc : invariant f=1 à
+  champ nul (toute sensibilité) ; tolérant(sens=0)→1.0 même saturé ; monotone
+  décroissant ; demi-saturation à x=K ; jamais annulé ; intégration engine (sol
+  saturé → growth_factor tombe à ~0.56 vs 1.0 sur sol propre, espèce sensible).
+  Aucun C# (pont/overlay = ⑥). LDC croissance.py = 189 pur (🟢). NON committé.
+
 ## §REPRISE
 
 Phase B **FIGÉE** (OK Nico 2026-07-13). Doc de référence :
 `docs/conception/CONCEPTION_ALLELOPATHIE.md`. Kickoffs autosuffisants écrits :
-`01_champ_injection.md` … `06_vue_godot.md`. **①② FAITS ; prochain = ③**
-(escompte CROISSANCE/vigueur, `03_escompte_croissance.md`).
+`01_champ_injection.md` … `06_vue_godot.md`. **①②③ FAITS ; prochain = ④**
+(autotoxicité / fatigue du sol, `04_autotoxicite.md` — golden RE-FIGÉ MAÎTRISÉ
+ANNONCÉ, invariant autotox=0 ⇒ identique au pré-④).
 
 Découpe = **6 tronçons** (chacun son kickoff) :
 - **① champ `allelopathie` + injection (`inject_field`) + décroissance modulée
@@ -135,9 +155,9 @@ Découpe = **6 tronçons** (chacun son kickoff) :
 - **② lecture GERMINATION** (`02_lecture_germination.md` — `seedbank.niche_index`,
   rampe douce Monod, trait `allelopathie_sensibilite`, auto-tolérance = sensibilité
   propre basse) — **FAIT, golden inchangé `ebe04b44…`** (invariant champ=0 ⇒ inchangé).
-- **③ escompte CROISSANCE/vigueur** (`03_escompte_croissance.md`, `sim/growth.py`,
-  facteur borné sur le gain, empreinte racinaire) — golden **re-figeage à évaluer**,
-  isolé (probable neutre tant que ⑤ pas fait).
+- **③ escompte CROISSANCE/vigueur** (`03_escompte_croissance.md`, escompte borné du
+  gain via `growth_factor` dans `sim/engine/croissance.py`, empreinte racinaire
+  réutilisée) — **FAIT, golden inchangé `ebe04b44…`** (neutre tant que ⑤ pas fait).
 - **④ AUTOTOXICITÉ / fatigue du sol** (`04_autotoxicite.md` — champ `autotox` +
   traceur d'espèce récurrente, alimente l'inhibition de la même espèce) — golden
   **RE-FIGÉ MAÎTRISÉ ANNONCÉ** (invariant : autotox=0 ⇒ identique au pré-④).

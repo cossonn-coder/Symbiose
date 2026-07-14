@@ -14,7 +14,8 @@ from __future__ import annotations
 from fields import (EXUDATE_BASE, EXUDATE_OM_SHARE, HUM_NOYE, HUM_EXCES,
                     ASPHYXIE_MEMORY_LERP)
 from fields.ecofields.constants import (T_PLANTE_ALPHA, ROSEE_SURFACE_REF,
-                                        ROSEE_FOLIAIRE_MAX, ROOT_HERBIVORY_MEMORY_LERP)
+                                        ROSEE_FOLIAIRE_MAX, ROOT_HERBIVORY_MEMORY_LERP,
+                                        ALLELO_GERM_K, ALLELO_GROWTH_ESC_MAX)
 from plants import EXPR_GAIN, EXPR_MIN, EXPR_MAX, TAU_UP, TAU_DOWN
 from .calendrier import saison_de
 
@@ -97,6 +98,27 @@ def _bolt_bloque(plant) -> bool:
         return False
     bolt = _bolt_stage_index(cls)
     return bolt is not None and plant.current_stage + 1 >= bolt
+
+
+def _f_croissance_allelo(allelo: float, sensibilite: float) -> float:
+    """Facteur d'ESCOMPTE du gain de croissance sous allélopathie racinaire (sprint
+    ALLÉLOPATHIE ③, D1/D6). Même RAMPE DOUCE Monod qu'à la germination (②, `_f_allelo`
+    dans succession.py — cohérence), mais bornée par ALLELO_GROWTH_ESC_MAX :
+
+        rampe(x)     = x / (x + ALLELO_GERM_K)                     (Monod, saturante)
+        f_croissance = 1 − ALLELO_GROWTH_ESC_MAX · sens · rampe(x) (borné < 1)
+
+    `allelo` = concentration MOYENNE de `allelopathie` sur l'empreinte racinaire ;
+    `sensibilite` = trait d'espèce `allelopathie_sensibilite` (1 = sensible standard,
+    0 = tolérant). N'escompte JAMAIS totalement la croissance (ESC_MAX < 1) : la
+    plante affaiblie PLIE, l'écosystème fait le reste (philo #2, dépérissement
+    émergent). INVARIANT GOLDEN : `allelo = 0` ⇒ `rampe(0) = 0` ⇒ `f_croissance = 1`
+    ⇒ gain STRICTEMENT inchangé (K>0, aucun /0). Court-circuit à 1.0 sur sol propre
+    (chemin du golden au repos). Pur, déterministe, zéro RNG (philo #3)."""
+    if allelo <= 0.0:
+        return 1.0
+    rampe = allelo / (allelo + ALLELO_GERM_K)
+    return max(0.0, 1.0 - ALLELO_GROWTH_ESC_MAX * sensibilite * rampe)
 
 
 class CroissanceMixin:
@@ -332,5 +354,20 @@ class CroissanceMixin:
             tol = plant.plant_class.shade_tolerance_base() * plant.expressed_gene("tolerance_ombre")
             light_eff = min(1.0, light * tol)
             target_g = 0.6 + 0.4 * light_eff
+            # Escompte ALLÉLOPATHIQUE de croissance (sprint ALLÉLOPATHIE ③) : une plante
+            # sensible dont les racines explorent des plots chargés en `allelopathie`
+            # voit son GAIN de croissance escompté (jamais sa santé décrémentée — philo
+            # #2). On lit la concentration MOYENNE de `allelopathie` sur l'empreinte
+            # RACINAIRE déjà dérivée (`plant.root_plots`, la même que l'uptake — RÉUTILISÉE,
+            # pas recalculée) et on rabote la cible du growth_factor par f_croissance ∈
+            # [1−ESC_MAX, 1]. Le facteur EST stateful via le lerp (growth_factor converge,
+            # ne compound pas). Champ nul au repos (aucun émetteur avant ⑤) ⇒ moyenne 0 ⇒
+            # f_croissance=1 ⇒ target_g inchangé ⇒ golden NEUTRE. Court-circuité si
+            # l'empreinte ne touche que du sol propre (rampe 0 → 1.0).
+            roots = [(rr, cc) for (rr, cc) in plant.root_plots
+                     if 0 <= rr < eco.rows and 0 <= cc < eco.cols] or [(r, c)]
+            allelo_rac = sum(eco.allelopathie.at_plot(rr, cc) for (rr, cc) in roots) / len(roots)
+            target_g *= _f_croissance_allelo(allelo_rac,
+                                             plant.plant_class.allelopathie_sensibilite)
             plant.growth_factor += (target_g - plant.growth_factor) * 0.10
             plant.growth_factor  = max(0.3, min(1.0, plant.growth_factor))

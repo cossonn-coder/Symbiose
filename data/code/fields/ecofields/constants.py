@@ -1053,6 +1053,20 @@ ALLELO_FLOOR        = 1e-4    # sous ce seuil, on snap à 0 (fin de traîne)
 # germination STRICTEMENT inchangée (K>0 garantit le zéro exact, pas de /0).
 # PLACEHOLDER — calibrage F5 / bancs.
 ALLELO_GERM_K       = 1.0     # demi-saturation de la rampe Monod d'inhibition de levée
+# Escompte MAXIMAL de croissance/vigueur sous allélopathie racinaire (sprint
+# ALLÉLOPATHIE ③, D1/D6). Une plante DÉJÀ levée dont les racines explorent des
+# plots chargés voit son GAIN de croissance escompté (jamais sa santé décrémentée
+# directement — philo #2) :
+#   f_croissance = 1 − ALLELO_GROWTH_ESC_MAX · SENS · rampe(allelo_racinaire)
+# avec la MÊME rampe Monod `x/(x+ALLELO_GERM_K)` qu'à la germination (②, cohérence)
+# et `allelo_racinaire` = concentration MOYENNE de `allelopathie` sur l'empreinte
+# racinaire (même empreinte que l'uptake — RÉUTILISÉE, pas recalculée). Borné < 1
+# pour ne JAMAIS annuler la croissance d'un coup (la voisine plie, elle ne meurt pas
+# net : dépérissement ÉMERGENT via ombre/ravageurs/sécheresse). À 0.6, une plante
+# pleinement sensible (SENS=1) sur sol saturé (rampe→0.75) retombe à ~0.55 de gain.
+# INVARIANT GOLDEN : `allelo = 0` ⇒ `rampe(0) = 0` ⇒ `f_croissance = 1` ⇒ croissance
+# STRICTEMENT inchangée. PLACEHOLDER — calibrage F5 / bancs.
+ALLELO_GROWTH_ESC_MAX = 0.6   # escompte max du GAIN de croissance (borné < 1)
 
 # Signature sol par famille (laissée après chaque saison)
 SOIL_SIGNATURE = {
