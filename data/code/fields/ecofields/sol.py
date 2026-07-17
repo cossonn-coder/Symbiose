@@ -133,8 +133,8 @@ class SolMixin:
         fertilité (om_active + fertilite), structure (humus), moins la perturbation.
         Bornée [0, 1]. Préfigure la Vigueur (D11) que plantes et joueur puiseront.
         """
-        micro     = min(1.0, self.microbiome.at_plot(r, c) / 3.0)
-        active    = min(1.0, self.om_active.at_plot(r, c) / 5.0)
+        micro     = min(1.0, self.microbiome.at_plot(r, c) / MICROBE_EFFECT_REF)
+        active    = min(1.0, self.om_active.at_plot(r, c) / OM_ACTIVE_REF)
         fert      = min(1.0, self.fertilite_index(r, c) / 3.0)
         structure = min(1.0, self.om_stable.at_plot(r, c) / 5.0)
         disturb   = self.disturbance.at_plot(r, c)

@@ -381,12 +381,38 @@ EXUDATE_BASE     = 0.060   # dépôt total à pleine photosynthèse (microbiome 
 EXUDATE_OM_SHARE = 0.15    # part de l'exsudat versée à om_fresh (le reste → microbiome)
 UPTAKE_MICRO_BONUS = 0.40  # bonus d'uptake fertilité à microbiome saturé (rétroaction)
 
-# Vitalité dérivée — pondérations (cf. vitalite()), somme des positifs = 1.0
-VIT_W_MICRO     = 0.35
-VIT_W_ACTIVE    = 0.25
-VIT_W_FERT      = 0.20
-VIT_W_STRUCTURE = 0.20
-VIT_W_DISTURB   = 0.15     # pénalité (soustraite)
+# Références d'EFFET « plein régime » du sol vivant (sprint CALIBRATION RÉALISTE ①).
+# La métrique de vitalité SOL divisait le microbiome par 3.0 et l'om_active par 5.0 —
+# des dénominateurs hérités de la SATURATION du champ (borne anti-emballement), PAS de
+# sa plage d'OPÉRATION réelle. Résultat : même un plot au pic lisait « mort » (~0.01).
+# On sépare ici l'échelle d'EFFET (lue par la VUE) de l'échelle de SATURATION (dynamique
+# du champ, inchangée) — cf. 00_etat.md « Séparer deux références homonymes ».
+#  • MICROBE_EFFECT_REF : microbiome « plein effet ». Plage réelle : équilibre moy ~0.05,
+#    plot riche ~0.3-0.5 → un plot riche rend ≈0.7 d'effet à cette réf.
+#  • OM_ACTIVE_REF : om_active « plein effet ». Plafond réel mesuré ~0.67 (÷5 l'écrasait).
+# om_stable reste sur /5.0 (accumulateur centennal, jeune sol lit bas = VOULU, philo #7).
+MICROBE_EFFECT_REF = 0.6
+OM_ACTIVE_REF      = 1.0
+
+# Vitalité dérivée — pondérations (cf. vitalite()), somme des positifs = 1.0.
+# RÉÉQUILIBRÉ au sprint CALIBRATION RÉALISTE ① (ancien 0.35/0.25/0.20/0.20, disturb
+# 0.15). Deux pathologies mesurées au banc justifiaient la dérive (kickoff §D, autorisé
+# quand disturbance écrase la bande) :
+#  (1) le microbiome (ex-poids DOMINANT 0.35) suit le flux de carbone et RELAXE vers son
+#      équilibre bas (~0.03) : lourdement pondéré, il faisait lire un sol MÛR plus BAS
+#      qu'un sol JEUNE (inversion — la métrique n'discriminait plus la maturité) ;
+#  (2) `disturbance` sur ce monde reste ~0.5 CONSTANT (jeune comme mûr, dense comme
+#      lâche) : à 0.15 c'était une taxe PLATE mangeant >40 % du signal, aplatissant tout.
+# On transfère le poids vers les ACCUMULATEURS qui, eux, croissent avec la richesse du
+# sol : om_active (signal dominant, humus actif qui nourrit) + om_stable (humus
+# centennal, récompense le sol âgé). Résultat au banc : bande monotone et lisible
+# (dense jeune ~0.12 → dense mûr ~0.26 → lâche dégradé ~0.04 ; grimpe encore avec
+# l'accumulateur om_stable sur les décennies, philo #7 « jeune sol lit bas »).
+VIT_W_MICRO     = 0.15
+VIT_W_ACTIVE    = 0.45
+VIT_W_FERT      = 0.15
+VIT_W_STRUCTURE = 0.25
+VIT_W_DISTURB   = 0.08     # pénalité (soustraite) — abaissée : taxe plate non discriminante
 
 # Soil memory
 SOIL_FAST_RATE   = 0.15    # intégration rapide (annuelle)

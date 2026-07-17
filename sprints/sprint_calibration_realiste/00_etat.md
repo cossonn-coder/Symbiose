@@ -6,8 +6,9 @@ Source : `BRIEF_CHAMPS_CONCEPTION.md` P1 (verdicts 1 + 5) + `audit_champs.md`.
 Date d'ouverture : 2026-07-17.
 
 ## Carte des tronçons
-- **① 01_banc_metrique_vitalite_vue.md** — `tools/banc_calibration.py` + réaligne la
-  métrique vitalité SOL (VUE seule). Golden re-figé LOCALISÉ (champ "vitalite" ECO).
+- **① 01_banc_metrique_vitalite_vue.md** — ✅ FAIT (2026-07-17). `tools/banc_calibration.py`
+  créé + métrique vitalité SOL réalignée (VUE seule). Golden re-figé LOCALISÉ (SEUL le
+  champ "vitalite" des 2 lignes ECO a bougé, diff vérifié). Nouveau hash + poids ci-dessous.
 - **② 02_normalisateurs_effet_tick.md** — uptake + maladie + qi (terme microbiome).
   Golden re-figé LARGE annoncé (rétroaction rhizosphère rouverte).
 - **③ 03_vue_godot_overlay_banc.md** — overlay F6 microbiome (FixMax 3→0.6) + overlay
@@ -87,11 +88,42 @@ Mesuré sur monde smoke DENSE (2×6×8) ET monde LÂCHE (2×12×16, même nb de 
 - **③ Vue Godot** : overlay F6 vitalité à la nouvelle échelle + snapshot C# +
   banc d'observation F5 (« sol vivant lisible »). Golden intact.
 
+## Tronçon ① — RÉSULTATS (2026-07-17)
+- **Fichiers touchés** : `tools/banc_calibration.py` (NEW, outil versionné, banc
+  dense 2×6×8 + lâche 2×12×16, `python3 -m tools.banc_calibration [annees]`) ;
+  `fields/ecofields/constants.py` (constantes + poids) ; `fields/ecofields/sol.py`
+  (méthode `vitalite`) ; `tests/golden_hash.txt` (re-figé).
+- **Nouveau hash golden** : `e9a4340058c35c019d657236d6629662bdf540acf2d4ab439de037f940c12ac5`
+  (ancien `4f6c4f31…`). Diff VÉRIFIÉ : SEUL le champ `vitalite=` des 2 lignes ECO
+  change (T0 0.017→0.178, T1 0.036→0.238) — aucun attribut plante, aucun autre champ
+  ECO, aucun log ne bouge. Métrique sans lecteur tick → aucun effet de bord.
+- **Constantes ajoutées** (`constants.py`) : `MICROBE_EFFECT_REF = 0.6`,
+  `OM_ACTIVE_REF = 1.0`. `sol.py::vitalite` : microbiome/3.0→/MICROBE_EFFECT_REF,
+  om_active/5.0→/OM_ACTIVE_REF ; om_stable/5.0 et fertilite_index/3.0 INCHANGÉS.
+- **POIDS VIT_W_* RÉÉQUILIBRÉS** (dérive autorisée §D, documentée) :
+  ancien 0.35/0.25/0.20/0.20 + disturb 0.15 →
+  **VIT_W_MICRO 0.15 · VIT_W_ACTIVE 0.45 · VIT_W_FERT 0.15 · VIT_W_STRUCTURE 0.25**
+  (somme positifs = 1.0) · **VIT_W_DISTURB 0.08** (pénalité, abaissée de 0.15).
+  Motif mesuré au banc : (1) microbiome (ex-poids dominant 0.35) relaxe vers son
+  équilibre bas → un sol MÛR lisait plus BAS qu'un sol JEUNE (inversion) ; (2)
+  `disturbance` reste ~0.5 CONSTANT partout → taxe plate qui écrasait toute la bande.
+  Poids transféré vers les accumulateurs qui croissent avec la richesse (om_active,
+  om_stable).
+- **Ancres atteintes** (banc 10 ans, seed 42) : bande MONOTONE et discriminante —
+  DENSE jeune ~0.12 (an1) → DENSE mûr ~0.24 (an9, grimpe encore) ; LÂCHE dégradé
+  ~0.06 (proche de l'ancre ~0.05). DENSE ≫ LÂCHE (discrimine la densité). Le
+  « mûr/riche ~0.5+ » est un palier de PLUS LONG terme (om_stable = accumulateur
+  centennal, /5.0 inchangé, philo #7 « jeune sol lit bas »).
+- **Suites ciblées** : PASS (génétique, croissance, maîtrise, vigueur, sénescence,
+  signes, ombre maison, phototropisme, scatter…). ⚠ `test_population` FAIL mais
+  PRÉ-EXISTANT (échoue IDENTIQUEMENT sur le code d'avant ce tronçon, hash obtenu
+  inchangé `8290c6a4…` vs attendu stale `8f27b6b2…`) → NON causé par ①, hors
+  périmètre. À traiter séparément.
+
 ## §REPRISE
-Conception FIGÉE — exécution par `/sprint-auto sprint_calibration_realiste`.
-Lire : `CLAUDE.md` + ce fichier + `docs/conception/CONCEPTION_CALIBRATION_REALISTE.md`
-+ le kickoff du tronçon courant. Ordre : ① → ② → ③. Chaque tronçon : bosser →
-golden (voir kickoff) → maj ce fichier (hash + décisions) → commit → tronçon suivant.
-Bancs de mesure de conception (jetables, dans le scratchpad de session) à
-formaliser en `data/code/tools/banc_calibration.py` au tronçon ①.
-Hash golden : baseline actuel `tests/golden_hash.txt` (à re-capturer au ① puis ②).
+Tronçon ① CLOS (non commité — Nico commit). PROCHAIN = **② 02_normalisateurs_effet_tick.md**
+(uptake:63 + maladie sol:121 + qi_local + om_active FIELD_NORM ; golden re-figé LARGE
+annoncé). Lire : `CLAUDE.md` + ce fichier + `docs/conception/CONCEPTION_CALIBRATION_REALISTE.md`
++ `02_*.md`. Ordre : ① ✅ → ② → ③. Chaque tronçon : bosser → golden (voir kickoff) →
+maj ce fichier (hash + décisions) → commit → tronçon suivant.
+Hash golden courant : `e9a4340058c35c019d657236d6629662bdf540acf2d4ab439de037f940c12ac5`.
