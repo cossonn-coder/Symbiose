@@ -60,7 +60,7 @@ class UptakeMixin:
         nutriments (bonus borné UPTAKE_MICRO_BONUS) — la boucle vertueuse côté plante.
         """
         share *= volume_factor   # confinement de réservoir : flux rapporté au volume
-        micro_norm = min(1.0, self.microbiome.at_plot(r, c) / 3.0)
+        micro_norm = min(1.0, self.microbiome.at_plot(r, c) / MICROBE_EFFECT_REF)
         # Asphyxie palier 1 (§2.3 b, doux & RÉVERSIBLE) : au-dessus de HUM_EXCES, le
         # sol gorgé devient anoxique → les racines boivent mal → l'uptake de TOUT
         # baisse ∝ l'excès courant (≠ mémoire : se lève dès que le sol s'assèche).

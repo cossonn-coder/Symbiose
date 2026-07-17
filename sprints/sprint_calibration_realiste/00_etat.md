@@ -9,8 +9,9 @@ Date d'ouverture : 2026-07-17.
 - **① 01_banc_metrique_vitalite_vue.md** — ✅ FAIT (2026-07-17). `tools/banc_calibration.py`
   créé + métrique vitalité SOL réalignée (VUE seule). Golden re-figé LOCALISÉ (SEUL le
   champ "vitalite" des 2 lignes ECO a bougé, diff vérifié). Nouveau hash + poids ci-dessous.
-- **② 02_normalisateurs_effet_tick.md** — uptake + maladie + qi (terme microbiome).
-  Golden re-figé LARGE annoncé (rétroaction rhizosphère rouverte).
+- **② 02_normalisateurs_effet_tick.md** — ✅ FAIT (2026-07-17). uptake:63 + maladie
+  sol:121 + qi_local microbiome (vigueur_plante:82) réalignés `/3.0`→`/MICROBE_EFFECT_REF`.
+  Golden re-figé LARGE (rétroaction rhizosphère rouverte). Nouveau hash + note ci-dessous.
 - **③ 03_vue_godot_overlay_banc.md** — overlay F6 microbiome (FixMax 3→0.6) + overlay
   vitalité sol + banc F5. Golden INTACT.
 
@@ -120,10 +121,39 @@ Mesuré sur monde smoke DENSE (2×6×8) ET monde LÂCHE (2×12×16, même nb de 
   inchangé `8290c6a4…` vs attendu stale `8f27b6b2…`) → NON causé par ①, hors
   périmètre. À traiter séparément.
 
+## Tronçon ② — RÉSULTATS (2026-07-17)
+- **Fichiers touchés** : `fields/ecofields/uptake.py` (l.63 `/3.0`→`/MICROBE_EFFECT_REF`,
+  constante déjà visible via `from .constants import *`) ; `fields/ecofields/sol.py`
+  (l.121 protection maladie, idem) ; `sim/vigueur_plante.py` (import `MICROBE_EFFECT_REF`
+  depuis `fields.ecofields` + l.82 terme microbiome de `qi_local` ; ligne 81 `fert`
+  nutriments INCHANGÉE sur `FIELD_NORM=3.0`, P2) ; `tests/golden_hash.txt` (re-figé).
+- **INTOUCHÉS confirmés** : `croissance.py:241` (SATURATION-ref), modulateurs de rythme
+  (matiere_organique :96/:133, sol:71, resources:255, allelopathie:43, perturbations:364),
+  om_stable/5.0, nutriments/fertilite_index.
+- **Nouveau hash golden** : `3076c154dc3d5fbff8a4e32414be6d7ed4ad30b6970cd2c3114d49717b515253`
+  (ancien `e9a43400…`). Dérive LARGE = réalignement de l'EFFET microbiome dans le tick
+  (uptake→NPK→croissance→exsudats→microbiome). **Sens vérifié** (dump digest avant/après) :
+  vitalité plante TOTALE ↑ (20.88→21.47) malgré 2 plantes de moins (reshuffle repro
+  mineur, aucune mort de masse, 0 alive=False) ; plusieurs plantes s'améliorent nettement
+  là où le microbiome est présent (Bourse-à-pasteur 0.267→0.733, Trèfle 0.733→1.0) ;
+  stocks N/P/K du sol BAISSENT (plantes assimilent plus) ; microbiome MONTE (boucle
+  vertueuse exsudats). Pas de régression aberrante.
+- **Banc (`tools.banc_calibration 10`)** : effet uptake désormais VISIBLE. Bonus
+  d'assimilation `(1 + micro_norm·0.40)` à microbiome 0.4 : AVANT ×1.05 → APRÈS ×1.27 ;
+  à saturation (≥0.6) ×1.08 → ×1.40 (plein effet). Le microbiome, jusqu'ici inerte
+  (~4 % même sain), est enfin mécaniquement utile.
+- **Suites ciblées (11)** : PASS — génétique 20/20, croissance 67/67, maîtrise 35/35,
+  vigueur 136/136, ombre maison, phototropisme 11/11, sénescence, signes 8/8,
+  scatter_sol, scatter_reçue. ⚠ `test_population` FAIL (pré-existant, dette hors périmètre) :
+  attendu stale `8f27b6b2…` inchangé, mais **hash obtenu passé de `8290c6a4…` (①) à
+  `5ab68dca…`** — ATTENDU : la suite lance un sim moteur complet qui traverse l'uptake
+  réaligné, son digest interne bouge donc légitimement. NON re-capturé (hors périmètre,
+  pas de masquage) — à traiter avec la dette test_population.
+
 ## §REPRISE
-Tronçon ① CLOS (non commité — Nico commit). PROCHAIN = **② 02_normalisateurs_effet_tick.md**
-(uptake:63 + maladie sol:121 + qi_local + om_active FIELD_NORM ; golden re-figé LARGE
-annoncé). Lire : `CLAUDE.md` + ce fichier + `docs/conception/CONCEPTION_CALIBRATION_REALISTE.md`
-+ `02_*.md`. Ordre : ① ✅ → ② → ③. Chaque tronçon : bosser → golden (voir kickoff) →
+Tronçon ② CLOS (non commité — Nico commit). PROCHAIN = **③ 03_vue_godot_overlay_banc.md**
+(overlay F6 microbiome FixMax 3→0.6 + overlay vitalité sol + banc F5 ; golden INTACT,
+C#). Lire : `CLAUDE.md` + ce fichier + `docs/conception/CONCEPTION_CALIBRATION_REALISTE.md`
++ `03_*.md`. Ordre : ① ✅ → ② ✅ → ③. Chaque tronçon : bosser → golden (voir kickoff) →
 maj ce fichier (hash + décisions) → commit → tronçon suivant.
-Hash golden courant : `e9a4340058c35c019d657236d6629662bdf540acf2d4ab439de037f940c12ac5`.
+Hash golden courant : `3076c154dc3d5fbff8a4e32414be6d7ed4ad30b6970cd2c3114d49717b515253`.

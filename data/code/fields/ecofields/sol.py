@@ -118,7 +118,7 @@ class SolMixin:
         protection = logistic(microbiome_normalisé)
         p = base_rate * (1 - protection)
         """
-        micro_norm = min(1.0, self.microbiome.at_plot(r, c) / 3.0)
+        micro_norm = min(1.0, self.microbiome.at_plot(r, c) / MICROBE_EFFECT_REF)
         protection = 1.0 / (1.0 + math.exp(-6.0 * (micro_norm - 0.5)))
         return base_rate * max(0.02, 1.0 - protection)
 

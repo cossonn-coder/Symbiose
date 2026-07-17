@@ -31,7 +31,8 @@ from __future__ import annotations
 # la même rétroaction rhizosphère que `plant_uptake` (microbiome riche → meilleure
 # assimilation). Pas de nouveau nombre introduit.
 from fields.ecofields import (UPTAKE_MICRO_BONUS, MYCO_P_BONUS, bell,
-                             CHLOROSE_PH, SEUIL_ACIDOPHILE, CHLOROSE_MALUS)
+                             CHLOROSE_PH, SEUIL_ACIDOPHILE, CHLOROSE_MALUS,
+                             MICROBE_EFFECT_REF)
 
 FIELD_NORM = 3.0   # normalisation canonique des champs fertilite/microbiome (cf. EcoFields)
 
@@ -79,7 +80,7 @@ def qi_local(plant, eco) -> float:
         p_eff = eco.p.at_plot(r, c) * (1.0 + MYCO_P_BONUS * eco.mycelium.at_plot(r, c))
         nutri = min(eco.n.at_plot(r, c), p_eff, eco.k.at_plot(r, c))
         fert = min(1.0, nutri / FIELD_NORM)
-        micro = min(1.0, eco.microbiome.at_plot(r, c) / FIELD_NORM)
+        micro = min(1.0, eco.microbiome.at_plot(r, c) / MICROBE_EFFECT_REF)
         total += fert * (1.0 + micro * UPTAKE_MICRO_BONUS)
         ph_sum += eco.ph.at_plot(r, c)
     ph_local = ph_sum / len(plots)
