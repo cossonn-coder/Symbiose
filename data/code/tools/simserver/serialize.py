@@ -580,7 +580,7 @@ class SerializeMixin:
         # golden tourne hors serveur, ce bloc n'existe jamais pour lui.
         n_plants = sum(1 for p in plants if not p.get("dead"))
         perf = perf_block(getattr(self, "_last_ms_tick", None), n_plants)
-        return {"week": week, "week_in_year": week_in_year,
+        snap = {"week": week, "week_in_year": week_in_year,
                 "year": (week - 1) // 52 + 1, "season": saison,
                 "player": {"vigueur": st["courante"],
                            "vigueur_max": V.vigueur_max(gs, player),
@@ -602,6 +602,13 @@ class SerializeMixin:
                 "paillage": paillage_by_tile,
                 "allelopathie": allelopathie_by_tile,
                 "containers": self._containers_snapshot(gs, saison)}
+        # Jardinier automate (sprint jardinier_auto ⑥) : bloc OPT-IN. Présent UNIQUEMENT
+        # quand un automate est actif → un snapshot F5 ordinaire (sans automate) est
+        # bit-pour-bit inchangé (la vue existante ne voit jamais la clé). PURE lecture
+        # de la trace/objectifs déjà écrits par la boucle (hors tick) → golden NEUTRE.
+        if getattr(self, "_automate", None) is not None:
+            snap["automate"] = self.automate_block(gs)
+        return snap
 
     def _containers_snapshot(self, gs: dict, saison: str) -> list:
         """Conteneurs posés par le joueur (pots/bacs ④, 0.5.7). Index implicite =

@@ -86,6 +86,13 @@ namespace Symbiose
 					case Key.R:        DebugMaitrise("reset");         break;  // Reset maîtrise
 					// T = « temps » : sauter DebugSkipWeeks semaines d'un coup (debug).
 					case Key.T:        SkipWeeks(DebugSkipWeeks);     break;
+					// A = jardinier automate F5 (⑥) : brancher/débrancher l'automate
+					// (panneau journal/impasses + onglet objectifs). Maj+A = pousser
+					// un objectif démo (récolter 5 tomate) pour valider l'onglet.
+					case Key.A:
+						if (k.ShiftPressed) InjecterObjectifDemo();
+						else ToggleAutomate();
+						break;
 				}
 			}
 			// Molette = paliers de zoom (décision Nico 2026-06-10 : molette,

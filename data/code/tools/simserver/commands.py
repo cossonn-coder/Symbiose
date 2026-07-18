@@ -152,6 +152,10 @@ class CommandsMixin:
         if config == "propre":
             game_state["feral_off"] = True
         self.engine = Engine(game_state)
+        # Un nouvel `init` repart d'un monde neuf : tout automate actif d'une
+        # session précédente pointait l'ancien engine → on le démonte (opt-in :
+        # la vue le ré-arme via `automate on` si elle le veut). Golden intact.
+        self._automate = None
         # Traqueur des pires ticks (demande Nico) : mémoire des K ticks les plus
         # longs + dump diagnostique sur disque au record. Neuf à chaque init.
         self._worst = perf.WorstTicks()
@@ -220,6 +224,13 @@ class CommandsMixin:
         # golden intact (le moteur tourne sans serveur, ces hooks jamais appelés).
         observer_apres_tick(gs, gs["current_player"], gs["log"])
         gs["log"].clear()   # borne la mémoire (cf. golden)
+        # Jardinier automate (sprint jardinier_auto ⑥) : SI actif, il joue ICI, APRÈS
+        # le tick, côté APPELANT — invariant H2 (jamais dans tick_semaine). Opt-in
+        # strict (`self._automate` None par défaut) → no-op, golden intact. Ses gestes
+        # passent par les MÊMES façades `sim.actions` que le joueur (aucune API
+        # privilégiée, philo #2) ; leur effet est visible au snapshot ci-dessous.
+        if self._automate is not None:
+            self._automate.jouer_tick(self.engine)
         return {"ok": True, "snapshot": self._snapshot()}
 
     def cmd_snapshot(self, msg: dict) -> dict:

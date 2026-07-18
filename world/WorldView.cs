@@ -90,7 +90,7 @@ namespace Symbiose
 		// droite de l'écran + imprimé en console au lancement : si la version à
 		// l'écran n'est pas celle annoncée par Claude, le circuit VM → sync
 		// Nextcloud → build Godot n'est pas passé (piège connu depuis t3).
-		public const string Build = "UI voix : survol + carnet filtre espèce + aide debug (P/V/R/T) — pont 0.5.13 — 2026-07-02";
+		public const string Build = "Jardinier automate F5 (A brancher · Maj+A objectif démo) — pont 0.5.30 — 2026-07-18";
 
 		// -------------------------------------------------------------------
 		// RÉGLAGES (exportés : ajustables dans l'inspecteur sans recompiler)
@@ -340,6 +340,7 @@ namespace Symbiose
 			BuildMeteoLayers();   // ambiance écran + manteau neigeux (⑨) — avant le HUD
 
 			BuildHud();
+			BuildAutomatePanel(); // panneau jardinier automate F5 (touche A, ⑥)
 			BuildPalette();       // palette de gestes en colonne gauche (④, D11)
 			BuildPlantLabels();   // couche d'étiquettes NETTE (hors SubViewport, SS①)
 			ApplySnapshot(snap, fade: false);   // monde initial : pas de fondu

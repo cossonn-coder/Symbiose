@@ -392,6 +392,13 @@ namespace Symbiose
 			}
 			UpdateActionHud();
 
+			// Jardinier automate (sprint jardinier_auto ⑥, snapshot 0.5.30) : bloc
+			// OPT-IN, présent UNIQUEMENT quand l'automate est branché (touche A).
+			// Lecture TOLÉRANTE : absent (automate off, ou binaire pré-0.5.30) →
+			// le panneau garde son dernier texte, aucun crash.
+			if (snap.ContainsKey("automate"))
+				ApplyAutomate(snap["automate"].AsGodotDictionary());
+
 			// Fin de saison : retour AUTOMATIQUE en planification (boucle
 			// hybride) + hook auto-save. Détection = le nom de saison change.
 			// En mode Continu/Turbo, on n'arrête PAS (demande Nico F5 t4) —

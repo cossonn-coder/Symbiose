@@ -366,6 +366,47 @@ namespace Symbiose
 			return noms;
 		}
 
+		// -------------------------------------------------------------------
+		// JARDINIER AUTOMATE (sprint jardinier_auto ⑥, pont 0.5.30) — commandes
+		// de CONTRÔLE de l'automate déterministe branché en OPTION F5. « Godot
+		// bête » : la vue envoie l'intention (activer/régler/pousser un objectif),
+		// toute la logique (tutelle, table facteur→geste, comptabilité) vit en
+		// Python. L'automate joue ENTRE deux ticks côté serveur (invariant H2) ;
+		// la vue LIT ensuite le bloc `automate` du snapshot (trace + objectifs).
+		// -------------------------------------------------------------------
+
+		/// <summary>
+		/// Active/désactive l'automate. `on=true` le monte avec `profil` (dict, défaut
+		/// preset LIBRE côté Python) et DÉCLARE le jardin courant cultivé (tutelle) ;
+		/// `on=false` le démonte (la trace reste lisible côté vue). Renvoie la réponse
+		/// (`actif`, `profil`, `cultivees`), ou null. Un binaire pré-0.5.30 renvoie
+		/// null (commande inconnue) → l'appelant garde son état « pas d'automate ».
+		/// </summary>
+		public GDict Automate(bool on, GDict profil = null)
+		{
+			var msg = new GDict { ["cmd"] = "automate", ["op"] = on ? "on" : "off" };
+			if (on && profil != null) msg["profil"] = profil;
+			return Request(msg);
+		}
+
+		/// <summary>
+		/// Pousse un OBJECTIF (geste+quantité+cible) à l'automate en planification
+		/// (injectable à tout moment). `cible` = clé d'espèce du catalogue ; `id` =
+		/// identifiant stable (défaut = cible côté Python). Renvoie la réponse
+		/// (`id`), ou null. Le suivi de progression apparaît au bloc `automate` du
+		/// snapshot suivant (onglet objectifs).
+		/// </summary>
+		public GDict AutomateObjectif(string geste, int quantite, string cible, string id = null)
+		{
+			var msg = new GDict
+			{
+				["cmd"] = "automate", ["op"] = "objectif",
+				["geste"] = geste, ["quantite"] = quantite, ["cible"] = cible,
+			};
+			if (id != null) msg["id"] = id;
+			return Request(msg);
+		}
+
 		/// <summary>
 		/// Cœur du pont : écrit 1 ligne JSON, lit 1 ligne JSON (bloquant).
 		/// Retourne le message si ok:true, sinon null (+ erreur en console).

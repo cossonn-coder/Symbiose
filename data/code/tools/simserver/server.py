@@ -15,14 +15,18 @@ from .serialize import SerializeMixin
 from .voix import VoixMixin
 from .maitrise_cmds import MaitriseCmdsMixin
 from .palette_cmd import PaletteCmdMixin
+from .automate_cmd import AutomateCmdMixin
 
 
 class SimServer(CommandsMixin, ActionsMixin, CiblesMixin, SerializeMixin, VoixMixin,
-                MaitriseCmdsMixin, PaletteCmdMixin):
+                MaitriseCmdsMixin, PaletteCmdMixin, AutomateCmdMixin):
     """État du serveur : un Engine (ou None avant `init`). Dispatch des commandes."""
 
     def __init__(self):
         self.engine = None
+        # Jardinier automate (sprint jardinier_auto ⑥) : None tant qu'on ne l'a pas
+        # activé (`automate on`). Opt-in strict → F5 par défaut inchangé.
+        self._automate = None
 
 
 def main() -> int:
@@ -51,6 +55,11 @@ def main() -> int:
                 # Palette de gestes ⑤ (write) : persiste le layout curé + les
                 # macros de l'avatar (bornée à l'état joueur, opt-in → golden intact).
                 "palette": server.cmd_palette,
+                # Jardinier automate (sprint jardinier_auto ⑥) : monte/démonte
+                # l'automate en OPTION F5 + pousse des objectifs (planification).
+                # La boucle joue dans step_week (hors tick, H2) ; ceci ne fait que
+                # le contrôle. Opt-in → golden intact.
+                "automate": server.cmd_automate,
                 "debug": server.cmd_debug}
     # 1 ligne lue = 1 réponse écrite. EOF (Godot mort sans quit) → fin de boucle.
     for line in sys.stdin:

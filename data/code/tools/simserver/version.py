@@ -458,7 +458,22 @@ from __future__ import annotations
 #       état déjà tické → golden INTACT (le pont ne réinjecte rien ; le golden
 #       tourne hors serveur). Un binaire pré-0.5.29 ignore le bloc `allelopathie`
 #       (tolérance côté vue, comme tous les bumps précédents).
-ENGINE_VERSION = "0.5.29"
+# 0.5.30 (jardinier automate ⑥, vue Godot) : nouvelle commande `automate`
+#       (op ∈ {on, off, objectif, status}) qui MONTE/DÉMONTE le jardinier automate
+#       déterministe (paquet `tools.jardinier_auto`) en OPTION F5 et lui pousse des
+#       objectifs (geste+quantité+cible) en planification. Quand un automate est
+#       actif, il joue ENTRE deux ticks dans `cmd_step_week` (APRÈS tick_semaine,
+#       invariant H2 — jamais dans le tick) via les MÊMES façades `sim.actions` que
+#       le joueur (philo #2), et le snapshot gagne un bloc OPT-IN `automate` =
+#       {actif, profil, trace (N dernières entrées : gestes/impasses/conséquences),
+#       objectifs (id/geste/quantité/cible/progression/accompli)}. La vue en tire le
+#       journal/impasses + l'onglet objectifs (filtre trace par `objectif_id`).
+#       Opt-in STRICT : sans `automate on`, `self._automate` est None → aucun bloc
+#       émis, snapshot inchangé, aucun geste joué → golden INTACT (le golden tourne
+#       hors serveur ; ce chemin n'existe jamais pour lui). Un binaire pré-0.5.30
+#       ignore la commande (erreur pont non fatale) et n'émet pas le bloc → la vue
+#       retombe sur « pas d'automate » (tolérance, comme tous les bumps précédents).
+ENGINE_VERSION = "0.5.30"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

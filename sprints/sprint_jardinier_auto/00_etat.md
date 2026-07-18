@@ -7,10 +7,42 @@
 >
 > Carte des tronçons : ① socle · ② table+budget+impasses · ③ comptabilité+trace ·
 > ④ objectifs+onglet · ⑤ banc jardin tenu · ⑥ vue Godot · ⑦ semiologique (opt).
-> **Golden INTACT partout** (H2 : automate hors tick). **①②③④⑤ FAITS**
-> (2026-07-18). Reste **⑥ vue Godot** (dernier tronçon).
+> **Golden INTACT partout** (H2 : automate hors tick). **①②③④⑤⑥ FAITS**
+> (2026-07-18) — CHAÎNE OBLIGATOIRE CLOSE. Reste **⑦ sémiologique (OPTIONNEL,
+> hors chaîne)**, seulement à la demande de Nico.
 
 ## Avancement
+- **⑥ Vue Godot — automate en OPTION F5 + journal/impasses + onglet objectifs —
+  FAIT (2026-07-18).** Dernier tronçon de la chaîne obligatoire (règle permanente).
+  **Golden INCHANGÉ** (`3076c154dc3d5fbf…`, bit-identique — H2 tenu, automate hors
+  tick). Déterminisme 3/3, tronçon2 9/9. **Build C# VERT** (`dotnet build
+  Symbiose.csproj` : 0 avertissement, 0 erreur).
+  - **Pont Python** (pont **0.5.30**) : nouveau `tools/simserver/automate_cmd.py`
+    (57 LDC 🟢, `AutomateCmdMixin`) — commande `automate` op ∈ {on, off, objectif,
+    status}. `on` monte `JardinierAutomate(profil)` (profil dict, défaut LIBRE +
+    désherbage curatif) et appelle `marquer_jardin_cultive` (tutelle=cultivées, hors
+    tick). Le HOOK réel vit dans `commands.py cmd_step_week` : SI `self._automate`
+    actif, `jouer_tick(engine)` APRÈS `tick_semaine` (invariant H2). `cmd_init` remet
+    `self._automate=None` (monde neuf). `serialize.py` : bloc OPT-IN `automate` =
+    {actif, profil, trace (60 dernières entrées gestes/impasses/conséquences),
+    objectifs (id/geste/quantité/cible/progression/accompli)} — présent UNIQUEMENT si
+    automate actif → snapshot F5 ordinaire bit-identique. `server.py` : mixin +
+    dispatch. `version.py` bump 0.5.30 (commenté).
+  - **Vue C#** (namespace `Symbiose`, GDScript nul) : `core/SimBridge.cs` +2 méthodes
+    (`Automate(on, profil)`, `AutomateObjectif(...)`). Nouveau partial
+    `world/WorldView.Automate.cs` (125 LDC 🟢) : touche **A** branche/débranche
+    l'automate (panneau texte à droite = profil + objectifs/progression + onglet du
+    1er objectif actif + journal récent, impasses en ROUGE) ; **Maj+A** pousse un
+    objectif démo (récolter 5 tomate) pour valider l'onglet en F5. Hooks : `_Ready`
+    (BuildAutomatePanel), `ApplySnapshot` (ApplyAutomate, tolérant), `Controls` (case
+    Key.A), légende HUD + témoin `Build` MAJ.
+  - **Retour visuel des gestes = v1 « ligne de log défilante »** (kickoff : « confort
+    de débogage, pas un chef-d'œuvre » ; le marqueur au plot viendra à la demande).
+  - **Vérif de sortie CONFIRMÉE** (smoke serveur `full`, 6 sem, `SimServer` direct) :
+    bloc absent sans `automate on` (opt-in) ; après `on` → 81 cultivées sous tutelle ;
+    trace = gestes (tailler/ombrage `ok`…) + impasses (`sol_nu → ravitaillement_
+    manquant`, le trou de gameplay du ②/⑤ qui SAUTE aux yeux) ; objectif suivi
+    (`recolter tomate 0/3`) ; bloc disparu après `off`.
 - **⑤ Banc « jardin tenu vs abandonné » + rapport d'impasses agrégé — FAIT
   (2026-07-18).** Le LIVRABLE DE MESURE. Deux fichiers CRÉÉS, aucune machinerie
   moteur neuve, `sim/` intact :
@@ -276,16 +308,26 @@ Emplacement gestes = **paquet** `sim/actions/` (ré-exporté via `sim.actions`).
 - **Q8 retour F5** : fusionné dans le tronçon ⑤ (vue Godot obligatoire).
 
 ## §REPRISE
-**⑤ FAIT et vérifié (golden intact `3076c154…`, déterminisme 3/3, troncon2 9/9,
-banc `jardin_tenu` tourne, verdict Q9 = coût comparable, rapport d'impasses
-agrégé OK).** Banc de mesure tenu vs abandonné + `rapport_impasses` livrés, `sim/`
-intact, deux fichiers 🟢. Prochaine étape = **tronçon ⑥** : lire `06_*.md` → **vue
-Godot** (RÈGLE PERMANENTE, dernier tronçon de chaîne) : automate branché dans
-`sim_server` (option F5) + retour visuel des gestes + journal/impasses + onglet
-objectifs. C# namespace `Symbiose`, GDScript interdit, `dotnet build Symbiose.csproj`
-= filet de compil (F5 visuel = Nico). Neutre côté golden. Chaque tronçon : lire
-`0N` → bosser → golden intact → maj CE fichier → commit → tronçon suivant.
+**⑥ FAIT et vérifié — CHAÎNE OBLIGATOIRE CLOSE** (golden intact `3076c154…`,
+déterminisme 3/3, troncon2 9/9, build C# VERT, pont 0.5.30). L'automate est
+observable en F5 (touche A) : journal/impasses + onglet objectifs, opt-in strict
+(snapshot ordinaire inchangé). Reste **⑦ SÉMIOLOGIQUE (OPTIONNEL, hors chaîne)** :
+profil `semiologique` mesurant l'écart omniscient↔sémiologique (qualité de la
+sémiologie du jeu) — coûteux (recenser les signes émis), à faire seulement si Nico
+le demande. Kickoff `07_*.md` si présent.
+**POINTS À VALIDER EN F5 PAR NICO** (le F5 visuel reste à lui) :
+1. Touche **A** : l'automate tient-il visiblement le jardin (arrosage/paillage/
+   récolte/taille visibles dans le monde) et le panneau s'ouvre-t-il à droite ?
+2. Le journal et les **impasses** (rouge) sont-ils lisibles ? Le trou `sol_nu →
+   ravitaillement_manquant` du monde `full` (pas de chaîne de mulch) doit crever
+   l'écran.
+3. **Maj+A** puis observer l'onglet : l'objectif démo (récolter 5 tomate)
+   progresse-t-il ? (la tomate meurt tôt en démo — cf. mémoire `tomate_mort_precoce`
+   — l'onglet peut donc rester à 0/5 : c'est un fait de sim, pas un bug ; tester
+   éventuellement une cible plus robuste via un objectif custom).
+4. **Perf F5** en régime tenu acceptable (lien verdict Q9 du banc ⑤ = coût comparable) ?
 DETTE : **D78** (ce sprint, « conçu, prêt à implémenter ») ; **D79** (système de
 quêtes complet, hors scope). Défauts figés : `part_recoltee=1.0`,
 `desherbage=curatif`. Rappel gestes réels : voir « Faits code établis » ci-dessus
-(pailler consomme un stock de mulch ; drainer/creuser n'existent pas).
+(pailler consomme un stock de mulch ; drainer/creuser n'existent pas). **NE PAS
+COMMIT sans l'aval de Nico** (règle du prompt d'exécution ⑥).
