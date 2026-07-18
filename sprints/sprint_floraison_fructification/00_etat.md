@@ -5,8 +5,62 @@
 > n'est figé, pas de code moteur.** Préalable biologique à D87.
 
 ## Phase courante
-**TRONÇONS ① ET ② IMPLÉMENTÉS le 2026-07-18** (floraison retypée + nouaison calibrée).
-Reste ③ (vue Godot + banc F5). Voir §AVANCEMENT ①/② et §REPRISE.
+**SPRINT CLOS le 2026-07-18** — tronçons ① ② ③ TOUS FAITS (non commités, Nico commit).
+① floraison retypée (forçage thermique événementiel) + ② nouaison calibrée
+(`POLLEN_DEMI`=1.0) + ③ vue Godot vérifiée + banc F5 `floraison_saisons` + diagnostic
+annuel `mesure_floraison.py`. Golden INTACT `f3239042…`, `dotnet build` VERT.
+Voir §AVANCEMENT ①/②/③ et §POINTS F5 À VALIDER.
+
+## AVANCEMENT ③ — vue Godot + banc F5 — FAIT
+- **Câblage vue INTACT** (désync ②③ déjà en place) : `PlantRenderer.Organs.cs` dessine
+  les fleurs sur `Floraison≥0.5`, `serialize.py` exporte `floraison` — vérifié, AUCUN
+  re-câblage nécessaire après ①/②.
+- **Palettes (C#, vue seule)** : 3 espèces dont la floraison est devenue observable et
+  qui retombaient sur le défaut jaune → entrées ajoutées.
+  `PlantRenderer.Organs.cs` (`Palettes`) : `Strawberry` (fleur blanche/fruit rouge),
+  `SweetViolet` (fleur violette), `Mugwort` (capitules jaune-verdâtre ternes).
+  `PlantRenderer.Flower.cs` (`FlowerProfiles`) : Strawberry/SweetViolet → Simple 5
+  pétales (Rosaceae/Violaceae), Mugwort → Capitule 6 (Asteraceae). Silhouettes par
+  famille déjà correctes pour les autres — rien réécrit.
+- **Banc F5 NEUF `floraison_saisons`** (`bancs/biotique.py` §6, registré dans
+  `bancs/__init__.py`) : 1 tuile ensoleillée, pommier mûr (printemps + fruit), violette
+  (printemps très précoce), bourrache + tournesol (été), armoise (automne). AUCUNE
+  floraison pré-armée (≠ `verger_floraison`) → placement saisonnier NATUREL observable.
+  Pollinisateurs laissés ÉMERGENTS (non pré-chargés) → **le décalage phénologique est
+  exposé** (butineurs quasi nuls au printemps, pic en été). Banc isolé + anti-gel
+  (patron `grimpantes`). Apparaît automatiquement dans le sélecteur F5 Godot (liste
+  dynamique `SimBridge` bancs).
+- **Diagnostic annuel NEUF `bancs/mesure_floraison.py`** (hors registre, sœur de
+  `mesure_nouaison.py`) : `python3 -m bancs.mesure_floraison` imprime, semaine par
+  semaine, la `floraison` de chaque espèce ET la densité des 5 pollinisateurs sur la
+  tuile → RECOUVREMENT lisible en une table. Marque `*` les semaines « fleur ouverte
+  mais butineurs < 0.05 » (fenêtres de recouvrement manquées). **Sortie confirmée** :
+  violette S15-18 + pommier S16-18 (butineurs ~0.00-0.002 = manqué `*`), bourrache/
+  tournesol S22-31 (pic butineurs ~0.008-0.012), armoise S35-39 (butineurs retombés).
+  Chaque floraison DURE 5-6 sem (plus de flash). = matériau pour la décision design de
+  Nico sur le décalage.
+
+### Golden ③ — INTACT
+- `tests/golden_hash.txt` INCHANGÉ = `f3239042…` (tronçon de vue + bancs/diagnostics
+  hors registre smoke/full → NEUTRE). `dotnet build Symbiose.csproj` VERT (0 err/0 warn).
+  `test_biotique` 12/12 (le nouveau banc ne casse aucun oracle existant).
+
+## POINTS F5 À VALIDER PAR NICO
+**Mode d'emploi** : au lancement Godot (F5), choisir la config **`floraison_saisons`**
+dans le sélecteur (menu de démarrage `WorldView`). En parallèle sur la VM, lancer
+`cd data/code && python3 -m bancs.mesure_floraison` pour la table annuelle.
+1. Le **pommier fleurit au printemps** (~S14-18), plus « début automne ».
+2. Les **fleurs durent** plusieurs semaines (~5-6), plus de flash à S33-34.
+3. **Chaque espèce à sa saison** : violette (printemps très précoce), bourrache/
+   tournesol (été), armoise (automne) — étalées entre pieds par le gène-tempo.
+4. Le pommier **noue des fruits** quand des butineurs passent (calibrage ②).
+5. Un pied **à l'ombre** de la maison fleurit **plus tard** (forçage thermique plus lent).
+6. **DÉCALAGE PHÉNOLOGIQUE À OBSERVER** (remonté au ②, **décision design réservée à
+   Nico**, NON corrigé) : via `mesure_floraison.py` (ou les butineurs à l'écran), voir
+   que les pollinisateurs culminent en ÉTÉ alors que pommier/violette fleurissent au
+   PRINTEMPS précoce → recouvrement faible/nul au printemps (marqué `*`). À trancher :
+   décaler la floraison printanière, réchauffer la porte pollinisatrice de printemps,
+   ou accepter la fructification en régime pluriannuel.
 
 > Historique : **FIGÉ (phase B) le 2026-07-18** — conception validée par Nico +
 > 3 kickoffs autosuffisants. Aucune écriture moteur faite par la conception.
@@ -256,8 +310,11 @@ floraison += (cible − floraison)·(MONTEE si cible>flor sinon DESCENTE)
    floraison→pollinisation→nouaison→fruit sur l'année, F5 Nico. Golden intact.
 
 ## §REPRISE
-**Tronçons ① ET ② FAITS** (non commités — Nico commit). Prochaine action = **tronçon ③
-`03_vue_godot_banc.md`** (vue Godot + banc F5, dernier tronçon, golden intact).
+**SPRINT CLOS — ① ② ③ FAITS** (non commités, Nico commit). Plus rien à reprendre.
+Livrables ③ : palettes C# (Strawberry/SweetViolet/Mugwort), banc `floraison_saisons`,
+diagnostic `mesure_floraison.py`. Golden INTACT `f3239042…`, `dotnet build` VERT.
+DÉCISION DESIGN EN ATTENTE (Nico) : décalage phénologie florale ↔ pollinisateurs
+(cf. §POINTS F5 point 6). D84 + D86 → résolus (reste F5 + décision décalage).
 
 État ② : `POLLEN_DEMI` calibré 2.0→1.0 (`sim/engine/decompo.py`), banc de mesure
 `bancs/mesure_nouaison.py` posé, golden + population INCHANGÉS, tous les tests ciblés

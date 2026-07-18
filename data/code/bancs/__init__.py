@@ -13,7 +13,7 @@ from .climatique import (secheresse_sable, acclimatation, ombre_dense,
 from .edaphique import chlorose_acidophile, asphyxie_argile, carence_npk
 from .hydrologie import tourbiere
 from .biotique import (infestation_ravageur, verger_floraison, semis_tempere,
-                       etalement_floraison, grimpantes)
+                       etalement_floraison, grimpantes, floraison_saisons)
 from .succession import succession_bascule
 from .luxuriance import luxuriance
 from .diversite import diversite_fondatrice
@@ -34,6 +34,7 @@ BANCS = {
     "verger_floraison": verger_floraison,
     "semis_tempere": semis_tempere,
     "etalement_floraison": etalement_floraison,
+    "floraison_saisons": floraison_saisons,
     "grimpantes": grimpantes,
     "succession_bascule": succession_bascule,
     "luxuriance": luxuriance,

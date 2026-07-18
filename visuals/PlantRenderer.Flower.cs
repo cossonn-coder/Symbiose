@@ -52,12 +52,15 @@ namespace Symbiose
 				// --- Rosaceae + bourrache → Simple (5 pétales) ----------------
 				["AppleTree"]  = new(FlowerShape.Simple, 5, 1.0f), // fleur de pommier rosée
 				["CherryTree"] = new(FlowerShape.Simple, 5, 1.0f), // fleur de cerisier
+				["Strawberry"] = new(FlowerShape.Simple, 5, 1.0f), // fraisier : 5 pétales blancs (Rosaceae)
+				["SweetViolet"] = new(FlowerShape.Simple, 5, 1.0f), // violette : corolle à 5 pétales (rendu simple)
 				["Borage"]     = new(FlowerShape.Simple, 5, 1.0f), // étoile bleue à 5 pétales
 				// --- Apiaceae → Ombelle ---------------------------------------
 				["Carrot"]     = new(FlowerShape.Ombelle, 9, 1.0f), // ombelle blanche
 				// --- Asteraceae → Capitule (disque + rayons) ------------------
 				["Sunflower"]  = new(FlowerShape.Capitule, 14, 1.0f), // grand capitule d'or
 				["Yarrow"]     = new(FlowerShape.Capitule, 8, 1.0f),  // corymbe de petits capitules
+				["Mugwort"]    = new(FlowerShape.Capitule, 6, 1.0f),  // armoise : menus capitules ternes (Asteraceae)
 				// --- Fabaceae → Papilionacée ----------------------------------
 				["Bean"]       = new(FlowerShape.Papilionacee, 0, 1.2f), // fleur en papillon
 				["Clover"]     = new(FlowerShape.Papilionacee, 0, 1.1f), // capitule papilionacé (rendu simple)

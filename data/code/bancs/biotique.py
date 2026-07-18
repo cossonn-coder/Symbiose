@@ -17,7 +17,8 @@ même endroit que la vue Godot.
 from __future__ import annotations
 
 from plants import (Basil, AppleTree, Phacelia, Bean, Sunflower, Ivy, Jasmine,
-                    Tomato, Pepper)
+                    Tomato, Pepper, Borage, Mugwort)
+from plants.species.sauvages import SweetViolet
 from plants.genetics import clamp_gene
 from fields.seedbank import GrainEnAttente
 from sim.seeds import PlayerSeedBank, Seed
@@ -302,3 +303,66 @@ def grimpantes():
                  {grimpe.tile_id: eco_g, mur_tile.tile_id: eco_m,
                   sud.tile_id: eco_s},
                  house=house)
+
+
+# ─────────────────── 6. floraison des saisons (sprint FLORAISON ③) ─────────────
+# Banc D'OBSERVATION de la floraison RETYPÉE (forçage thermique événementiel, ①) —
+# instrument pour VOIR au F5 que chaque espèce fleurit dans SA saison, que la fleur
+# DURE (plus de flash S33-34), et que le pommier fructifie. À la différence des
+# bancs à seuil, on ne FORCE aucune floraison (pas de `floraison=1.0` pré-armé
+# comme `verger_floraison`) : chaque pied atteint son seuil de forçage `bloom_forcing_gdd`
+# à SA semaine, sous la météo réelle → on OBSERVE le placement saisonnier naturel.
+#
+# Quatre saisons de floraison réunies sur une tuile ensoleillée :
+#   • PRINTEMPS TRÈS précoce — violette (`bloom_forcing_gdd`=6, ~S14) ;
+#   • PRINTEMPS — pommier mûr (=8, ~S14-15) qui fleurit PUIS fructifie ;
+#   • ÉTÉ — tournesol (=55, ~S22) + bourrache (=45, ~S21) mellifères ;
+#   • AUTOMNE — armoise (=180, ~S33, jour-court approximé §2.5).
+# Les herbacées sont posées au stade seed-bearing (comme `etalement_floraison`) →
+# le gate de MATURITÉ est franchi d'emblée, si bien que c'est le SEUIL THERMIQUE
+# par espèce qui devient la contrainte bindante (= le placement saisonnier observé).
+# Le pommier est pré-vieilli (fruitier → is_seed_bearing + gate d'âge nouaison).
+#
+# DÉCALAGE PHÉNOLOGIQUE À OBSERVER (remonté au tronçon ②, décision design réservée
+# à Nico) : les pollinisateurs ne sont PAS pré-chargés → leur densité ÉMERGE de la
+# météo (warmth) + du nectar. On voit alors que les butineurs culminent en ÉTÉ
+# alors que le pommier/la violette fleurissent au PRINTEMPS PRÉCOCE → peu/pas de
+# butineurs sur les fleurs printanières (recouvrement faible), beaucoup en été.
+# C'est le phénomène à trancher — le banc l'EXPOSE, il ne le corrige pas.
+# Pure COMPOSITION de l'état moteur → golden NEUTRE (jamais monté pour smoke/full).
+FLORAISON_SAISONS = [
+    (SweetViolet, 1, 1),   # printemps très précoce (~S14)
+    (Borage,      1, 5),   # été (~S21), mellifère
+    (Sunflower,   5, 1),   # été (~S22), grand capitule
+    (Mugwort,     5, 5),   # automne (~S33), jour-court approximé
+]
+VERGER_OBS_AGE = 6.0       # pommier > maturity_years (5) → seed-bearing + nouaison
+
+
+def floraison_saisons():
+    """Banc « floraison des saisons » (sprint FLORAISON ③, observation F5) : un
+    pommier mûr + une violette (printemps), une bourrache + un tournesol (été) et
+    une armoise (automne) sur une tuile ensoleillée. AUCUNE floraison pré-armée :
+    chaque pied franchit son seuil de forçage à sa saison → placement saisonnier
+    OBSERVABLE sur l'année. Pollinisateurs laissés ÉMERGENTS (non pré-chargés) pour
+    exposer le décalage phénologie florale ↔ activité pollinisatrice (② ; décision
+    design réservée à Nico). Instrument d'observation, pas d'oracle à seuil."""
+    tile, eco = build_banc_tile("FLORAISON", "terre", 8, 8,
+                                humidite=1.8, fertilite=1.4, microbiome=0.7)
+    eco.lumiere.fill(1.0)                         # plein soleil → forçage thermique franc
+    pommier = tile.add_plant(AppleTree, 3, 3)
+    vieillir(pommier, VERGER_OBS_AGE)             # mûr → fleurit ET noue cette année
+    for cls, r, c in FLORAISON_SAISONS:
+        plante = tile.add_plant(cls, r, c)
+        # Stade mature d'emblée → seed-bearing : le gate de maturité est franchi, le
+        # SEUIL de forçage thermique par espèce devient la contrainte bindante (=
+        # placement saisonnier). Cf. `etalement_floraison`.
+        plante.current_stage = len(cls.growth_stages) - 1
+    # Banc ISOLÉ + anti-gel (patron `grimpantes`/`semis_tempere`) : instrument de
+    # floraison, pas jardin de succession. Succession coupée (pas de pionnière qui
+    # évince la démo) ; paillage saturé (gelées tardives n'amputent pas les tiges).
+    eco.seed_bank.germination_candidates = lambda *a, **k: []
+    for stake in tile.stakes:
+        while stake.add("paillage"):
+            pass
+    return monde([tile], {tile.tile_id: eco})

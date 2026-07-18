@@ -118,6 +118,10 @@ namespace Symbiose
 				["Zucchini"]  = new OrganPalette("3a8c41", "f2cf3a", "5aaa44", "2f7a34"), // courgette : vert profond, fleur jaune, fruit vert sombre
 				["CornSalad"] = new OrganPalette("5aa84f", "eef2e6", "74b85e", "6fae50"), // mâche : vert clair en rosette
 				["Garlic"]    = new OrganPalette("5a9e6a", "ece6f0", "78b07a", "7aa86a"), // ail : vert glauque, hampe pâle
+				["Strawberry"] = new OrganPalette("3f9e4a", "eef0e8", "6fb04f", "d8342a"), // fraisier : vert franc, fleur blanche à cœur jaune, fruit rouge
+				// --- Sauvages fleuries (sprint FLORAISON ③ : leur saison est devenue observable) --
+				["SweetViolet"] = new OrganPalette("3f7a44", "7a54a8", "6f9a55", "5a4a80"), // violette : feuille cordée sombre, fleur violette (printemps précoce)
+				["Mugwort"]    = new OrganPalette("7a8a6a", "b7b06a", "8a9a66", "7a7a4a"), // armoise : feuillage gris-vert argenté, capitules jaune-verdâtre ternes (automne)
 				// --- Compagnes / mellifères / engrais verts -------------------------
 				["Yarrow"]    = new OrganPalette("4f8a55", "f0efe6", "6fa564", "8a9a66"), // achillée : vert grisé, corymbe blanc
 				["Phacelia"]  = new OrganPalette("4a8e58", "8f7fc4", "6aa860", "7a8a66"), // phacélie : vert moyen, fleur mauve-bleu
