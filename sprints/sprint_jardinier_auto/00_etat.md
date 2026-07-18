@@ -10,6 +10,27 @@
 > **Golden INTACT partout** (H2 : automate hors tick). **①② FAITS** (2026-07-18).
 
 ## Avancement
+- **③ Comptabilité commutable + trace des conséquences — FAIT (2026-07-18).**
+  Nouveau `comptabilite.py` (responsabilité unique : Vigueur, gating, conséquences) :
+  `assurer_solde_libre` (mode `paie_vigueur=False` → solde sentinelle `1e9`, ne
+  noie plus le journal d'`arroser echec`), `separer_verrouilles` (mode payé →
+  gestes hors `gestes_debloques` écartés → impasse `geste_verrouille`),
+  `snapshot_paliers`/`snapshot_vivantes` + `consequences_maitrise`
+  (`evaluer_deblocages` + diff paliers) + `consequences_morts` (diff vivantes
+  avant/après gestes, corrèle un `deraciner`). `boucle.py` : étape 4bis (gating +
+  budget OU solde libre) + étape 6 (consigne les conséquences). `trace.py` :
+  catégorie `consequence` (`entree_consequence`). `automate_demo.py` : flags
+  `--credite-maitrise` + `--amorce-maitrise OBJET` (dev only, `M.decouvrir`) +
+  affichage des conséquences.
+  - **Golden INCHANGÉ** (`3076c154dc3d5fbf…`, bit-identique — H2 tenu). Déterminisme
+    3/3, tronçon2 9/9. Banc BRIDE (`--paie-vigueur --credite-maitrise
+    --amorce-maitrise paillage`, 12 sem) : Vigueur consommée, `ombrage →
+    geste_verrouille ×100` (tailler gated), `deblocage pailler`+`deblocage broyer`
+    consignés → **3 éléments de la Vérif de sortie confirmés**.
+  - **DÉVIATION de design assumée** : le kickoff plaçait le gating dans
+    `execution.py` ; il vit dans `comptabilite.py` (`separer_verrouilles` appelé
+    par `boucle.py`) pour garder « comptabilité = une responsabilité isolée ».
+    `execution.py` n'a PAS été touché. Golden intact, comportement conforme.
 - **② Table + budget + impasses — FAIT (2026-07-18).** Table `regles.py` COMPLÈTE
   (7 facteurs : hydrique/exces_eau/ombrage/concurrence_ferale/sol_compacte/sol_nu/
   organe_mur ; règles multiples par facteur, chaîne de repli). Nouveaux fichiers :
@@ -195,13 +216,14 @@ Emplacement gestes = **paquet** `sim/actions/` (ré-exporté via `sim.actions`).
 - **Q8 retour F5** : fusionné dans le tronçon ⑤ (vue Godot obligatoire).
 
 ## §REPRISE
-**② FAIT et vérifié (golden intact `3076c154…`, déterminisme 3/3, troncon2 9/9),
-NON COMMITÉ** (Nico commit). Tutelle=cultivées câblée. Prochaine étape = **tronçon
-③** : lire `03_*.md` → comptabilité commutable (flags `paie_vigueur` déjà
-partiellement câblé au budget ② / `credite_maitrise`), respect de
-`gestes_debloques`, **trace des CONSÉQUENCES** (déverrouillages via
-`evaluer_deblocages`, morts, paliers). Chaque tronçon : lire `0N` → bosser →
-golden intact → maj CE fichier → commit → tronçon suivant.
+**③ FAIT et vérifié (golden intact `3076c154…`, déterminisme 3/3, troncon2 9/9,
+banc BRIDE OK).** Comptabilité commutable + trace des conséquences câblées.
+Prochaine étape = **tronçon ④** : lire `04_*.md` → OBJECTIFS `(geste, quantité,
+cible)` injectables début/planification, biais de priorisation + comptage de
+progression, **onglet** = trace scopée + événements monde, objectif inatteignable
+→ impasse. Réutilise le journal de ③ (aucune machinerie neuve). SCOPE = cœur
+mécanique seulement (système de quêtes complet = DETTE D79). Chaque tronçon : lire
+`0N` → bosser → golden intact → maj CE fichier → commit → tronçon suivant.
 DETTE : **D78** (ce sprint, « conçu, prêt à implémenter ») ; **D79** (système de
 quêtes complet, hors scope). Défauts figés : `part_recoltee=1.0`,
 `desherbage=curatif`. Rappel gestes réels : voir « Faits code établis » ci-dessus

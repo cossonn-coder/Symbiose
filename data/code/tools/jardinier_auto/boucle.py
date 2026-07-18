@@ -22,10 +22,11 @@ from sim import vigueur as V
 from .perception import percevoir
 from .diagnostic import facteur_limitant
 from .proposition import proposer
-from .impasses import Impasse
+from .impasses import Impasse, GESTE_VERROUILLE
 from .execution import executer
-from .trace import consigner, entree, entree_impasse
+from .trace import consigner, entree, entree_impasse, entree_consequence
 from .tutelle import zones_cultivees, sous_tutelle
+from . import comptabilite as CPT
 
 # Verbes dont la clé de coût diffère du nom (budget) : `recolter_paille` est tarifé
 # comme `recolter`. Tous les autres verbes SONT des clés de `COUTS`.
@@ -100,12 +101,24 @@ class JardinierAutomate:
         semaine = engine.week
         cultivees = zones_cultivees(gs, player)
 
+        # Comptabilité ③ — références AVANT gestes (pour diff des conséquences).
+        vivantes_avant = CPT.snapshot_vivantes(engine)
+        paliers_avant = (CPT.snapshot_paliers(gs, player)
+                         if self.profil.credite_maitrise else {})
+
         plans, impasses = self._collecter(engine, cultivees)
         plans = self._appliquer_part_recoltee(plans)
         # Étape 4 — prioriser : priorité DÉCROISSANTE, puis clé de départage totale.
         plans.sort(key=lambda p: (-p[4].priorite, p[0]))
+        # Étape 4bis — comptabilité (§4). Mode payé : écarter les gestes VERROUILLÉS
+        # (→ impasses) avant de couper au budget de Vigueur. Mode libre : garantir un
+        # solde non borné pour ne pas noyer le journal d'échecs par épuisement.
+        verrous = []
         if self.profil.paie_vigueur:
+            plans, verrous = CPT.separer_verrouilles(gs, player, plans)
             plans = self._couper_au_budget(gs, player, plans)
+        else:
+            CPT.assurer_solde_libre(gs, player)
 
         # Étape 5 — exécuter + consigner les gestes.
         for _cle, tile, eco, plant, plan in plans:
@@ -118,3 +131,18 @@ class JardinierAutomate:
         for _cle, tile_id, imp in sorted(impasses, key=lambda x: x[0]):
             consigner(gs, entree_impasse(semaine, tile_id, imp.cible,
                                          imp.facteur, imp.cause))
+        # Impasses de GESTE VERROUILLÉ (mode payé) — même journal, ordre stable.
+        for _cle, tile, _eco, plant, plan in sorted(verrous, key=lambda p: p[0]):
+            cible = f"{plant.name}@{plant.position}"
+            consigner(gs, entree_impasse(semaine, tile.tile_id, cible,
+                                         plan.facteur, GESTE_VERROUILLE))
+
+        # Étape 6 (③) — consigner les CONSÉQUENCES du tick (§6). Déblocages/paliers
+        # seulement si `credite_maitrise` (sinon on ne mute PAS la maîtrise) ; morts
+        # toujours (diff des vivantes avant/après les gestes, corrèle un deraciner).
+        conseq = []
+        if self.profil.credite_maitrise:
+            conseq += CPT.consequences_maitrise(gs, player, paliers_avant)
+        conseq += CPT.consequences_morts(vivantes_avant, CPT.snapshot_vivantes(engine))
+        for type_, detail in conseq:
+            consigner(gs, entree_consequence(semaine, type_, detail))

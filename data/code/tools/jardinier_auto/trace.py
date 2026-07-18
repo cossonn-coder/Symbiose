@@ -49,6 +49,19 @@ def entree_impasse(semaine: int, tile_id: str, cible: str, facteur: str,
     }
 
 
+def entree_consequence(semaine: int, type_: str, detail: str) -> dict:
+    """Construit une entrée de journal pour une CONSÉQUENCE d'un geste (§6, tronçon
+    ③) : `type ∈ {deblocage, palier, mort}` ; `detail` = le verbe ouvert, le
+    franchissement `objet:avant->après`, ou l'identité de la plante morte.
+    `categorie="consequence"` la sépare des gestes et des impasses au même journal."""
+    return {
+        "categorie": "consequence",
+        "semaine": semaine,
+        "type": type_,
+        "detail": detail,
+    }
+
+
 def consigner(game_state: dict, entry: dict) -> None:
     """Ajoute une entrée au journal (append → ordre chronologique déterministe)."""
     journal(game_state).append(entry)
