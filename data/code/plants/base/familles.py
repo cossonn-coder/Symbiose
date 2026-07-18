@@ -70,14 +70,17 @@ class PlantBase(ABC):
     # Gate complet (engine._tick_fruits) = `fruitier ET age_years >= maturity_years`
     # → un jeune plant (pommier < 5 ans) ne fructifie pas. Défaut False = inerte.
     fruitier: bool = False
-    # Phénologie florale (arc pollinisation, tronçon ① — CONCEPTION_POLLINISATION §A.4).
-    # Fenêtre de floraison PAR ESPÈCE : double porte GDD (« la plante est prête »)
-    # + photopériode (« c'est la saison »). Défauts ESTIVAUX (jours longs) ; calibrage
-    # post-test. Une stratégie jours-courts (automne) = un seul couple de seuils à
-    # régler. INERTE à ce tronçon (rien ne lit `floraison` → golden NEUTRE).
-    gdd_floraison:    float = 200.0   # degrés-jours cumulés requis (base T_BASE_FLORAISON)
-    bloom_daylen_min: float = 13.5    # h de jour : borne basse de la fenêtre photopériodique
-    bloom_daylen_max: float = 16.5    # h de jour : borne haute (estival → au-delà du pic 16 h)
+    # Phénologie florale (sprint FLORAISON & FRUCTIFICATION ① — CONCEPTION §2).
+    # FORÇAGE THERMIQUE ÉVÉNEMENTIEL : la floraison est ARMÉE au franchissement d'un
+    # seuil de chaleur cumulée `bloom_forcing_gdd` propre à l'espèce (bas → franchi
+    # tôt = PRINTEMPS ; haut → franchi tard = AUTOMNE), puis dure `bloom_duration`
+    # semaines et fane (durée BORNÉE). Remplace l'ancienne DOUBLE PORTE (GDD +
+    # photopériode `bloom_daylen_min/max`) : c'est la porte photopériode qui créait
+    # le recouvrement nul de S34 (D84/D86). Le placement saisonnier vient désormais
+    # du SEUL seuil de forçage. Défaut MI-ÉTÉ (franchit ~S22-23). La sonde §2.4
+    # tabule GDD→semaine : 6→S14, 13→S16, 40→S20, 60→S22, 130→S29, 180→S33.
+    bloom_forcing_gdd: float = 60.0   # seuil de forçage (bas→printemps … haut→automne)
+    bloom_duration:    int   = 6      # durée de floraison, en semaines, FIXE par espèce
     fungal_susceptibility: float = 0.5   # sensibilité aux maladies fongiques [0-1]
     # --- Constitution d'espèce (sprint SANTÉ & RÉSILIENCE ②, couche 2) ---
     # `resilience_base` = « quand un coup PASSE, à quel point je plie plutôt que je

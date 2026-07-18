@@ -20,6 +20,8 @@ class Tomato(Solanaceae):
     allelopathie_sensibilite = 1.5
     t_germ_opt = 22.0              # FRILEUSE : exige un sol bien chaud, lève tard (fenêtre ③)
     t_germ_tol = 7.0               # étroite → ne lève pas sur sol frais de printemps
+    bloom_forcing_gdd = 40.0       # ÉTÉ (~S20) : fleurit dès l'installation estivale (①)
+    bloom_duration = 6
     resistance_ecrasement  = 0.35  # tige cassante, repart un peu (volet 2 §4)
     stimulation_ecrasement = 0.4
     rarity = "Établie"
@@ -276,6 +278,8 @@ class Sunflower(Asteraceae):
     hail_resistance_base = 0.7     # larges limbes exposés — la grêle les déchire
     t_germ_opt = 20.0              # FRILEUSE (origine prairie chaude) : lève au sol réchauffé (③)
     t_germ_tol = 8.0               # étroite-moyenne
+    bloom_forcing_gdd = 55.0       # ÉTÉ (~S22) : grande floraison estivale, longue (①)
+    bloom_duration = 8             # tournesol : floraison longue
     resistance_ecrasement  = 0.15  # flèche unique : écimé = décapité, ne repart pas (volet 2 §4)
     stimulation_ecrasement = 0.05
     rarity = "Établie"

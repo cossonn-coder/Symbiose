@@ -80,6 +80,8 @@ class Phacelia(PlantBase):
     winter_strategy = "die"
     t_germ_opt = 13.0              # engrais vert rustique : lève vite au frais (fenêtre ③)
     t_germ_tol = 11.0              # large
+    bloom_forcing_gdd = 38.0       # ÉTÉ précoce (~S20) : engrais vert à cycle éclair, fleurit vite (①)
+    bloom_duration = 6
     foliage_density = 0.45
     reproduction_rate = 0.06
     fungal_susceptibility = 0.3
@@ -141,6 +143,8 @@ class Borage(PlantBase):
     winter_strategy = "die"
     t_germ_opt = 16.0              # tempérée : lève au mitan du printemps (fenêtre ③)
     t_germ_tol = 10.0              # tolérante (ressemis spontané sur une large saison)
+    bloom_forcing_gdd = 45.0       # ÉTÉ (~S21) : mellifère majeure de plein été (①)
+    bloom_duration = 7
     foliage_density = 0.45
     reproduction_rate = 0.06
     fungal_susceptibility = 0.3
@@ -197,6 +201,8 @@ class Comfrey(PlantBase):
     winter_strategy = "dormant"
     t_germ_opt = 15.0              # vivace tempérée : lève au printemps établi (fenêtre ③)
     t_germ_tol = 11.0              # large
+    bloom_forcing_gdd = 50.0       # ÉTÉ (~S21) : mellifère de plein été, longue (①)
+    bloom_duration = 8
     foliage_density = 0.55
     longevity_years = 10
     reproduction_rate = 0.04

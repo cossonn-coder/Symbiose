@@ -5,9 +5,69 @@
 > n'est figé, pas de code moteur.** Préalable biologique à D87.
 
 ## Phase courante
-**FIGÉ (phase B faite) le 2026-07-18.** Conception validée par Nico + 3 kickoffs
-autosuffisants écrits. **Prêt pour `/sprint-auto sprint_floraison_fructification`.**
-Aucune écriture moteur faite par la conception.
+**TRONÇON ① IMPLÉMENTÉ le 2026-07-18** (moteur floraison retypée). Reste ② (nouaison
+calibrée) + ③ (vue Godot + banc F5). Voir §AVANCEMENT ① et §REPRISE.
+
+> Historique : **FIGÉ (phase B) le 2026-07-18** — conception validée par Nico +
+> 3 kickoffs autosuffisants. Aucune écriture moteur faite par la conception.
+
+## AVANCEMENT ① — moteur floraison (forçage thermique événementiel) — FAIT
+
+**Implémenté** (Python pur, pas de C#) :
+- `plants/base/instance.py` : état neuf `bloom_week: int = -1` (semaine de
+  franchissement, reset annuel), hors `_PLANT_ATTRS`.
+- `plants/base/familles.py` : `gdd_floraison`/`bloom_daylen_min`/`bloom_daylen_max`
+  RETIRÉS → `bloom_forcing_gdd: float = 60.0` + `bloom_duration: int = 6`.
+- `sim/engine/floraison.py` : `_tick_floraison` réécrit (forçage ÉVÉNEMENTIEL :
+  armement `bloom_week` au franchissement, fenêtre `[bloom_week, +bloom_duration)`,
+  porte photopériode + `daylength` SUPPRIMÉES). **`FLORA_GENE_SHIFT` recalibré
+  200 → 20** (à seuils bas, 200 rendait un pied précoce négatif). `T_BASE_FLORAISON`,
+  montée/descente, `is_seed_bearing`, gène-tempo : conservés.
+- `plants/perennials.py` : AppleTree patch `gdd_floraison=130` RETIRÉ → `bloom_forcing_gdd
+  =8` / `duration=3` (printemps S14) ; CherryTree 12/3 ; Fig 40/4 (méditerranéen, été).
+- `plants/species/*` : Sunflower 55/8, Tomato 40/6, Zucchini 50/8, Strawberry 10/4,
+  Phacelia 38/6, Borage 45/7, Comfrey 50/8, SweetViolet 6/4 (printemps très précoce),
+  Mugwort 180/5 (automne, jour-court approximé §2.5).
+- `bancs/biotique.py` (`etalement_floraison`) : ADAPTÉ (référençait l'ancien modèle) —
+  plants posés au stade mature + `ETAL_GDD_PRECHARGE 100 → 20` (juste sous le plus bas
+  seuil) pour que le seuil par lignée redevienne la contrainte bindante → étalement OK.
+- Tests : `test_desync_phenologie` adapté (`gdd_floraison`→`bloom_forcing_gdd`, comm.
+  SHIFT 200→20) ; **test neuf `tests/test_floraison_forcage.py`** (placement/étalement/
+  neutralité, 9/9).
+
+**Décisions de calibrage retenues** : voir table ci-dessus. Placement vérifié sous la
+météo réelle : pommier arme **S14** (printemps), tournesol **S22** (été), armoise **S34**
+(automne). Étalement cohorte σ>0, neutralité g=1 exacte.
+
+### Golden — RE-FIGÉ MAÎTRISÉ ×2 (cause floraison UNIQUE, confirmée par diff)
+- **`tests/golden_hash.txt`** : `3076c154…` → **`f3239042ed405102a2369245adbbc4a3f3dec216a7e9fc5ac01861ffa539da1a`**.
+  Cause : le **DIGEST d'état final est bit-identique** ; seules **6 lignes de LOG**
+  diffèrent — un décalage de ~0.003 de la proba `herbivorie p=` sur une Bourse-à-pasteur
+  déjà mourante. Chaîne : la floraison monte désormais réellement (le fix) → le champ
+  ressource pollinisateur `Σ(floraison×préférence)` (nul avant car rien ne fleurissait)
+  s'active → la vie macro ondule → proba campagnol décalée. AUCUN fruit ne noue dans le
+  smoke (litière `fruit`=0). Dérive 100 % floraison, état inchangé.
+- **`tests/population_hash.txt`** : `8f27b6b2…` → **`ccd448bd3d7cc6018e563cf0f08c95351db9af47ce6f9e358be7a34acc59cd03`**.
+  Cause : golden de CHAMP des densités macro ; diff par-guilde = **`papillon` seul**
+  (−0.018), tous les autres guildes bit-identiques. Densité papillon = nectar =
+  `Σ(floraison×préférence)` → décalage de timing floral. Dérive 100 % floraison.
+
+### Tests ciblés — état
+VERTS : `test_golden` (re-figé), `test_population` (re-figé), `test_desync_phenologie`
+(7/7), `test_fruits` (24/24), `test_floraison_forcage` (9/9, NEUF), `bancs.test_biotique`
+(12/12, étalement réparé), + sweep complet de la suite (croissance, vigueur, senescence,
+catalogue, encyclopédie, vent, ruche, marais, mycelium… tous verts).
+**test_epaisseur_500ans NON lancé** (interdit).
+
+ROUGE — `test_sim_server::test_pommier_fruite` : le pommier « full » noue **0 fruit @ S52**
+(baseline : 1 fruit @ S38). **Attendu et documenté** : la floraison pommier est replacée
+au PRINTEMPS (S14) ; l'entomophilie SANS PLANCHER (philo #2) ne noue pas faute de
+pollinisateurs assez denses si tôt → c'est **exactement la D86-secondaire (dose nouaison)
+que le tronçon ② doit calibrer** (`POLLEN_DEMI`/débit butineurs). Le kickoff ① interdit de
+toucher la nouaison. NON corrigé ici — à résoudre au ②.
+> `test_sim_server` porte aussi **3 échecs PRÉ-EXISTANTS** sans rapport (attend
+> `engine_version 0.5.28`, le code est déjà `0.5.30` — dette de test d'un sprint
+> antérieur, non touchée).
 
 ## Carte des tronçons
 - **① `01_moteur_floraison.md`** — forçage thermique événementiel (retype
@@ -143,10 +203,16 @@ floraison += (cible − floraison)·(MONTEE si cible>flor sinon DESCENTE)
    floraison→pollinisation→nouaison→fruit sur l'année, F5 Nico. Golden intact.
 
 ## §REPRISE
-**Conception FIGÉE.** Doc `docs/conception/CONCEPTION_FLORAISON_FRUCTIFICATION.md`
-+ kickoffs `01/02/03` écrits. Prochaine action = **exécution** via
-`/sprint-auto sprint_floraison_fructification` (les kickoffs sont autosuffisants ;
-un sous-agent à froid lit `CLAUDE.md` + ce fichier + son kickoff). Pour reprendre
-la CONCEPTION si besoin : le doc + `sim/engine/floraison.py` +
-`sim/engine/decompo.py` + `plants/base/familles.py` (défauts bloom) +
-`plants/perennials.py:197-207` (patch pommier à retirer).
+**Tronçon ① FAIT** (moteur floraison retypée, non commité — Nico commit). Prochaine
+action = **tronçon ② `02_nouaison_calibrage.md`** : calibrer la dose de nouaison
+(`sim/engine/decompo.py` `frac_nouaison`/`POLLEN_DEMI` + `sim/engine/butineurs.py`
+débit / `sim/reproduction.py`), invariant « sans plancher » préservé. Point de départ
+concret pour ② : le pommier « full » fleurit bien au printemps (S14) mais **ne noue
+plus** (`test_sim_server::test_pommier_fruite` = 0 fruit @ S52 vs 1 @ S38 baseline) —
+c'est le symptôme D86-secondaire à résoudre en mesurant `pollen_recu` d'un pommier mûr
+sur floraison saine et en tunant la dose. Le golden bougera peut-être (fruits dans le
+smoke) — re-figeage maîtrisé prévu au ②.
+
+Pour reprendre : `CONCEPTION_FLORAISON_FRUCTIFICATION.md` §3 + `sim/engine/decompo.py`
+(`_tick_fruits`, `frac_nouaison`, `POLLEN_DEMI`, `SEUIL_FLEURI`/`SEUIL_NOUAISON`) +
+`sim/engine/butineurs.py`. Moteur floraison ① = `sim/engine/floraison.py` (référence).

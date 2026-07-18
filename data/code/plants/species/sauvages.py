@@ -270,6 +270,8 @@ class SweetViolet(Violaceae):
     winter_strategy = "dormant"    # persiste en rosette, repart tôt au printemps
     t_germ_opt = 12.0              # sous-bois frais : lève au frais précoce (fenêtre ③)
     t_germ_tol = 9.0               # moyenne
+    bloom_forcing_gdd = 6.0        # PRINTEMPS TRÈS précoce (~S14) : une des 1res tables de nectar (①)
+    bloom_duration = 4
     foliage_density = 0.35
     longevity_years = 6
     reproduction_rate = 0.08       # se ressème modérément — complète le tapissage clonal
@@ -329,6 +331,8 @@ class Mugwort(Asteraceae):
     seed_dispersal = "anemochore"  # akènes légers au vent
     t_germ_opt = 15.0              # rudérale tempérée : lève au frais (fenêtre ③)
     t_germ_tol = 12.0              # large → opportuniste des sols remués
+    bloom_forcing_gdd = 180.0      # AUTOMNE (~S33) : jour-court APPROXIMÉ par seuil élevé (①, §2.5)
+    bloom_duration = 5
     foliage_density = 0.55
     longevity_years = 10
     reproduction_rate = 0.08

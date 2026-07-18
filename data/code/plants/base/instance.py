@@ -137,10 +137,16 @@ class PlantInstance:
     # `floraison` = intensité de floraison ∈ [0,1] (l'« assiette » que liront la
     # ressource des champs pollinisateurs §C, les butineurs §F et la dose de pollen
     # §B) ; `gdd_accum` = degrés-jours cumulés (forçage thermique, reset annuel).
-    # INERTES à ce tronçon : écrits par engine._tick_floraison mais lus par PERSONNE
-    # (B/C/F branchés ensuite) → golden NEUTRE. Hors `_PLANT_ATTRS` du golden.
+    # Hors `_PLANT_ATTRS` du golden.
     floraison: float = 0.0
     gdd_accum: float = 0.0
+    # Semaine de FRANCHISSEMENT du forçage thermique floral (sprint FLORAISON &
+    # FRUCTIFICATION ①, forçage thermique ÉVÉNEMENTIEL). Reset annuel à -1 (pas
+    # encore fleuri cette année) ; passe à `week_in_year` le tick où `gdd_accum`
+    # franchit le seuil individuel `gdd_eff` → la plante fleurit ensuite pendant
+    # `bloom_duration` semaines puis fane (durée BORNÉE, ≠ ancien état permanent
+    # « GDD ≥ seuil » qui durait tout l'été). Petit int, hors `_PLANT_ATTRS`.
+    bloom_week: int = -1
     # Dose de pollen conspécifique reçue (arc pollinisation, tronçon ③ — §B.1/§F.4).
     # Accumulateur PAR plante : incrémenté à CHAQUE dépôt d'un butineur (§F)
     # transportant du pollen de la MÊME espèce (constance florale mécanique), non

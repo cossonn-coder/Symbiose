@@ -155,22 +155,27 @@ def semis_tempere():
 # « lève-tôt » franchit la porte florale AVANT le « lève-tard ». Golden NEUTRE.
 #
 # Monde MONO-ESPÈCE DENSE : un tapis de phacélie (engrais vert annuel très
-# mellifère, cycle éclair, floraison à jour long ∈ [13.5, 16.5] h). Chaque pied
-# reçoit un `phenologie_florale` ÉTALÉ déterministiquement sur [ETAL_GENE_LO,
-# ETAL_GENE_HI] (un damier de lignées, comme un pool-sol à variance réelle, sans
-# dépendre d'un tirage). Deux ACCÉLÉRATIONS sanctionnées (cf. base.py), qui posent
-# le phénomène « prêt à s'ouvrir » sans dérouler la montée entière :
-#   • `gdd_accum` PRÉ-CHARGÉ près du seuil (ETAL_GDD_PRECHARGE) → l'ouverture tombe
-#     DANS la fenêtre photopériodique estivale au lieu de la rater à l'automne (à
-#     seuil brut, l'accumulation naturelle n'atteint 200 GDD qu'après la fermeture
-#     du jour long — piège de calibration, cf. /tmp/proto) ;
-#   • plants posés au stade seed-bearing (gate de maturité franchi d'emblée).
+# mellifère, cycle éclair). Chaque pied reçoit un `phenologie_florale` ÉTALÉ
+# déterministiquement sur [ETAL_GENE_LO, ETAL_GENE_HI] (un damier de lignées, comme
+# un pool-sol à variance réelle, sans dépendre d'un tirage). Deux ACCÉLÉRATIONS
+# sanctionnées (cf. base.py), qui posent le phénomène « prêt à s'ouvrir » sans
+# dérouler la montée entière :
+#   • plants posés d'emblée au stade seed-bearing (`current_stage` = mature) → le
+#     gate de MATURITÉ est franchi dès le 1er tick, si bien que c'est le SEUIL DE
+#     FORÇAGE thermique par lignée (`gdd_eff`) qui devient la contrainte BINDANTE ;
+#   • `gdd_accum` PRÉ-CHARGÉ JUSTE SOUS le plus bas des seuils (ETAL_GDD_PRECHARGE)
+#     → l'accumulation naturelle balaie ensuite la plage des seuils par lignée
+#     `gdd_eff = bloom_forcing_gdd − FLORA_GENE_SHIFT·(gène−1)` (Phacelia : ~29→47
+#     pour genes 1.45→0.55) sur plusieurs semaines → l'individu « lève-tôt » (seuil
+#     abaissé) FRANCHIT AVANT le « lève-tard » → étalement des dates. Recalibré au
+#     sprint FLORAISON & FRUCTIFICATION ① (forçage événementiel : plus de porte
+#     photopériode, seuils BAS → l'ancien précharge 100 overshootait tout).
 # La phacélie est déjà au catalogue et à l'encyclopédie (concept `phenologie_florale`
 # ajouté au ④) → aucune espèce neuve (règle catalogue/voix respectée).
 ETAL_ROWS = ETAL_COLS = 8       # 64 pieds : échantillon statistique stable des dates
 ETAL_GENE_LO = 0.55            # lignées « lève-tard » (seuil floral relevé)
 ETAL_GENE_HI = 1.45            # lignées « lève-tôt » (seuil floral abaissé)
-ETAL_GDD_PRECHARGE = 100.0     # forçage floral pré-armé sous le seuil (200) → ouverture estivale
+ETAL_GDD_PRECHARGE = 20.0      # forçage pré-armé JUSTE SOUS le plus bas seuil (~29) → balayage progressif
 
 
 def etalement_floraison():
@@ -187,6 +192,9 @@ def etalement_floraison():
     for r in range(ETAL_ROWS):
         for c in range(ETAL_COLS):
             plante = tile.add_plant(Phacelia, r, c)
+            # Stade mature d'emblée → seed-bearing (gate de maturité franchi), pour que
+            # le SEUIL de forçage par lignée soit la contrainte bindante (cf. en-tête).
+            plante.current_stage = len(Phacelia.growth_stages) - 1
             # Gène ÉTALÉ déterministiquement (damier de lignées) : la fraction couvre
             # [LO, HI] de bout en bout → variance de dates garantie sans RNG (philo #3).
             frac = (k + 0.5) / total

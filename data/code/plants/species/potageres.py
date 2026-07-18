@@ -120,6 +120,8 @@ class Zucchini(PlantBase):
     silhouette = "étalée"
     t_germ_opt = 22.0              # FRILEUSE (Cucurbitaceae) : exige un sol chaud, lève tard (③)
     t_germ_tol = 7.0               # étroite → pourrit en terre froide
+    bloom_forcing_gdd = 50.0       # ÉTÉ (~S21) : grosses fleurs jaunes en pleine chaleur (①)
+    bloom_duration = 8             # floraison étalée (nouaison en continu)
     foliage_density = 0.60
     reproduction_rate = 0.05
     fruitier = True                # porte des fruits traçables (maturity_years=0 → dès l'année)
@@ -183,6 +185,8 @@ class Strawberry(PlantBase):
     winter_strategy = "dormant"    # persiste en rosette, repart au printemps
     t_germ_opt = 16.0              # tempéré : lève au mitan du printemps (fenêtre ③)
     t_germ_tol = 9.0               # moyenne
+    bloom_forcing_gdd = 10.0       # PRINTEMPS précoce (~S15) : fraisier des bois fleurit tôt (①)
+    bloom_duration = 4
     foliage_density = 0.35
     longevity_years = 4
     reproduction_rate = 0.10       # se ressème peu — il mise sur les stolons

@@ -137,6 +137,8 @@ class Fig(PerennialWoody):
     maturity_years = 5
     bouturable = True          # ligneux à bouture proverbiale : un rameau piqué reprend (palette ②)
     greffable = True           # ligneux fruitier : porte-greffe/greffon de greffe (palette ③, D8)
+    bloom_forcing_gdd = 40.0   # figuier MÉDITERRANÉEN : fleurit plus tard que le pommier, en début d'été (~S20) (①)
+    bloom_duration = 4
     age_curve = [(0, 30, 20), (5, 200, 150), (10, 400, 250), (20, 500, 300)]
 
 
@@ -194,17 +196,15 @@ class AppleTree(PerennialWoody):
     foliage_halfwidth     = 50.0      # couronne non nulle + racines viables (cf. ci-dessus)
     organ_site            = "lateral" # fructification latérale (lu au tronçon 5)
     fruitier              = True      # porte des fruits traçables (③ ; 1re fructif. à maturity_years=5)
-    # Seuil GDD de floraison abaissé 200→130 (défaut familles.py = 200). Sous la
-    # météo seed 42 re-figée au sprint THERMIQUE (printemps refroidi), l'accumulation
-    # GDD ne franchissait 200 qu'à la SEMAINE 34 — dernière semaine de la fenêtre
-    # photopériode (13.5–16.5 h, ouverte S16→S34). Les deux portes ne coïncidaient
-    # qu'UNE semaine → un seul pas de montée (0.35) < SEUIL_FLEURI=0.5 → `a_fleuri`
-    # jamais armé → 0 nouaison. À 130, la porte chaleur s'ouvre ~S29 (milieu de
-    # fenêtre) → ~5 semaines de chevauchement → floraison atteint ~0.95 → nouaison
-    # entomophile normale. Golden-NEUTRE (le pommier du golden a <5 ans donc
-    # is_seed_bearing=False → floraison reste 0 quel que soit ce seuil ; hash vérifié
-    # inchangé). Calibration ciblée du pommier, pas du défaut global.
-    gdd_floraison         = 130.0
+    # Floraison PRINTANIÈRE (sprint FLORAISON & FRUCTIFICATION ①). L'ancien patch
+    # `gdd_floraison=130` (qui plaçait la floraison en début d'automne, D84) est
+    # ANNULÉ : avec le forçage thermique événementiel, un seuil BAS `bloom_forcing_
+    # gdd=8` est franchi tôt (~S14-15) → le pommier fleurit au PRINTEMPS, comme dans
+    # la vraie vie. `bloom_duration=3` : floraison courte (les pétales tombent vite).
+    # Golden : le pommier du smoke a < 5 ans (maturity_years=5) → is_seed_bearing
+    # False → floraison reste 0 quel que soit le seuil.
+    bloom_forcing_gdd     = 8.0       # printemps précoce (~S14-15)
+    bloom_duration        = 3         # floraison courte
 
 
 class CherryTree(PerennialWoody):
@@ -218,6 +218,8 @@ class CherryTree(PerennialWoody):
     longevity_years = 60
     maturity_years = 5
     greffable = True           # ligneux fruitier greffé (palette ③, D8) ; Rosaceae → compatible pommier/framboisier
+    bloom_forcing_gdd = 12.0   # printemps (~S16) — floraison de cerisier légèrement après le pommier (①)
+    bloom_duration = 3         # floraison courte
     age_curve = [(0, 40, 25), (5, 250, 150), (10, 500, 280),
                  (20, 700, 380), (50, 900, 450), (100, 1000, 500)]
 

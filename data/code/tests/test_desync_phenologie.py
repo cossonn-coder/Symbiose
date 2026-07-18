@@ -12,7 +12,8 @@ synchronisation = étalement nul).
 
 Les trois horloges dérivent du MÊME gène-tempo `phenologie_florale` (g > 1 =
 individu précoce partout), via des formules ∝ (g − 1) :
-  - floraison : seuil effectif `gdd_floraison − FLORA_GENE_SHIFT·(g − 1)` ;
+  - floraison : seuil effectif `bloom_forcing_gdd − FLORA_GENE_SHIFT·(g − 1)`
+    (forçage thermique événementiel, sprint FLORAISON & FRUCTIFICATION ①) ;
   - abscission : semaine `round(ABSCISSION_BASE − ABSCISSION_JITTER·(g − 1))`
     bornée [ABSCISSION_MIN, ABSCISSION_MAX] (= `semaine_abscission`) ;
   - sénescence : onset `clamp(SENESCENCE_ONSET − SEN_ONSET_JITTER·(g − 1), …)`.
@@ -77,11 +78,12 @@ def test_variance_gene_tempo():
 
 def test_spread_floraison():
     """Étalement de la floraison : le seuil GDD EFFECTIF de floraison
-    (`gdd_floraison − FLORA_GENE_SHIFT·(g − 1)`) est DISTINCT entre individus → ils
-    ne fleurissent pas la même semaine (c'est le knob FLORA_GENE_SHIFT recalibré à
-    200 qui rend l'écart perceptible)."""
+    (`bloom_forcing_gdd − FLORA_GENE_SHIFT·(g − 1)`) est DISTINCT entre individus →
+    ils ne fleurissent pas la même semaine (c'est le knob FLORA_GENE_SHIFT, recalibré
+    à 20 au sprint FLORAISON & FRUCTIFICATION ① — seuils bas — qui garde l'écart
+    perceptible sans rendre un pied précoce négatif)."""
     plants = _cohorte(Sunflower)
-    base = Sunflower.gdd_floraison
+    base = Sunflower.bloom_forcing_gdd
     seuils = [base - FLORA_GENE_SHIFT * (p.gene("phenologie_florale") - 1.0)
               for p in plants]
     sd = st.pstdev(seuils)
@@ -116,9 +118,9 @@ def test_neutralite_gene_1():
     """À g = 1.0, les trois horloges redonnent EXACTEMENT leur valeur de base
     (aucun décalage) — garantit qu'un individu neutre n'est pas perturbé."""
     g = 1.0
-    seuil = Sunflower.gdd_floraison - FLORA_GENE_SHIFT * (g - 1.0)
+    seuil = Sunflower.bloom_forcing_gdd - FLORA_GENE_SHIFT * (g - 1.0)
     onset = max(0.05, min(0.95, SENESCENCE_ONSET - SEN_ONSET_JITTER * (g - 1.0)))
-    check("floraison neutre à g=1", seuil == Sunflower.gdd_floraison)
+    check("floraison neutre à g=1", seuil == Sunflower.bloom_forcing_gdd)
     check("onset neutre à g=1", onset == SENESCENCE_ONSET)
 
 
