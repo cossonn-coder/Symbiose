@@ -19,7 +19,7 @@
 
 from __future__ import annotations
 
-from .perception import Perception
+from .perception import Perception, PerceptionSemio
 
 # Humidité de sol [0,3] : sous ce seuil = déficit hydrique ; au-dessus de HAUTE =
 # excès d'eau (asphyxie racinaire). 0.8 / 2.7 = repères provisoires (sol franc).
@@ -39,13 +39,21 @@ PAILLAGE_BAS = 0.15
 MATURITE_MUR = 0.95
 
 
-def facteur_limitant(percept: Perception) -> str | None:
+def facteur_limitant(percept) -> str | None:
     """Renvoie le nom du facteur limitant dominant, ou None si rien à faire.
+    DISPATCH sur le type de perception : la version SÉMIOLOGIQUE (⑦) est forcément
+    plus grossière (elle n'a que des signes). Fonction PURE (aucun effet de bord)."""
+    if isinstance(percept, PerceptionSemio):
+        return facteur_limitant_semio(percept)
+    return _facteur_limitant_omni(percept)
+
+
+def _facteur_limitant_omni(percept: Perception) -> str | None:
+    """Diagnostic OMNISCIENT : lit les champs continus.
     Ordre de dominance (Liebig, §5) : l'eau (déficit ou excès) bride la croissance
     en premier ; vient ensuite la lumière (ombrage), puis la concurrence, puis
     l'état du sol (compaction, couverture), et enfin l'OPPORTUNITÉ de récolte —
-    une plante saine et mûre bascule sur `organe_mur`. Fonction PURE d'une
-    perception (aucun effet de bord, aucun accès au monde)."""
+    une plante saine et mûre bascule sur `organe_mur`."""
     if percept.humidite < HUMIDITE_BASSE:
         return "hydrique"
     if percept.humidite > HUMIDITE_HAUTE:
@@ -58,6 +66,37 @@ def facteur_limitant(percept: Perception) -> str | None:
         return "sol_compacte"
     if percept.paillage < PAILLAGE_BAS:
         return "sol_nu"
+    if percept.maturite >= MATURITE_MUR:
+        return "organe_mur"
+    return None
+
+
+def facteur_limitant_semio(percept: PerceptionSemio) -> str | None:
+    """Diagnostic SÉMIOLOGIQUE (⑦) — dérivé des SEULS signes visibles, dans le même
+    ordre de dominance de Liebig. Volontairement plus PAUVRE que l'omniscient :
+
+      - `hydrique`   ← signe foliaire `secheresse` (turgescence perdue) ;
+      - `exces_eau`  ← signe foliaire `asphyxie` (feuillage terne d'engorgement) ;
+      - `ombrage`    ← signe `ombre` (étiolement) ET voisin dominant VISIBLE ;
+      - `concurrence_ferale` ← adventices VISIBLES dans l'empreinte racinaire ;
+      - `organe_mur` ← fruit MÛR visible (seuil de maturité).
+
+    ABSENTS À DESSEIN — `sol_compacte` et `sol_nu` n'ont AUCUN signe foliaire : la
+    compaction et la nudité du sol ne se lisent pas sur la plante. Le profil
+    sémiologique ne peut donc PAS les diagnostiquer → il n'agit pas. Ce n'est pas un
+    bug : c'est le DÉFAUT DE SÉMIOLOGIE #5 rendu mesurable (cf. impasses.FACTEURS_
+    INVISIBLES et le banc `semiologie_ecart`). De plus, les signes hydriques/ombre
+    n'apparaissent qu'une fois le DÉGÂT installé (miroir des seuils moteur) : le
+    diagnostic sémiologique est donc aussi plus TARDIF que l'omniscient — l'écart
+    chiffre la qualité de la sémiologie."""
+    if "secheresse" in percept.signes:
+        return "hydrique"
+    if "asphyxie" in percept.signes:
+        return "exces_eau"
+    if "ombre" in percept.signes and percept.voisin_ombrageant is not None:
+        return "ombrage"
+    if percept.ferale_cible is not None:
+        return "concurrence_ferale"
     if percept.maturite >= MATURITE_MUR:
         return "organe_mur"
     return None

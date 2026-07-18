@@ -7,11 +7,66 @@
 >
 > Carte des tronçons : ① socle · ② table+budget+impasses · ③ comptabilité+trace ·
 > ④ objectifs+onglet · ⑤ banc jardin tenu · ⑥ vue Godot · ⑦ semiologique (opt).
-> **Golden INTACT partout** (H2 : automate hors tick). **①②③④⑤⑥ FAITS**
-> (2026-07-18) — CHAÎNE OBLIGATOIRE CLOSE. Reste **⑦ sémiologique (OPTIONNEL,
-> hors chaîne)**, seulement à la demande de Nico.
+> **Golden INTACT partout** (H2 : automate hors tick). **①②③④⑤⑥⑦ FAITS**
+> (2026-07-18) — SPRINT CLOS (chaîne obligatoire + tronçon optionnel ⑦).
+
+## RECENSEMENT DES SIGNES DIÉGÉTIQUES (préalable ⑦) — ce que le joueur PEUT voir
+Sources réelles côté moteur, relues (jamais écrites) par le profil `semiologique` :
+- **`plant.etat`** — état DISCRET {sain/affaibli/malade/mort} (`plants/base/instance.py`,
+  discrétise `vitalite`) → couleur/texture à l'écran.
+- **`sim.semiologie.leaf_symptoms(plant, eco, saison)`** — LA liste de symptômes
+  FOLIAIRES que la vue affiche (identique au snapshot F5). Détecteurs : `chlorose`,
+  `secheresse`, `asphyxie`, `ravageurs`, `rongeur_racinaire`, `ombre`, `senescence`,
+  `acclimatation` + marques événementielles (maladie/gel/grêle). Chaque signe = miroir
+  DRY du seuil de la mécanique qui blesse → il n'apparaît qu'une fois le DÉGÂT installé.
+- **Sprites visibles** : adventices dans le rang, voisin manifestement dominant, fruit
+  MÛR — perçus par les mêmes helpers géométriques que l'omniscient (ce sont des sprites).
+- **INVISIBLES** (aucun rendu direct) : `humidite`/`structure_sol`/`paillage`/`qi`/
+  `vitalite` continus → les facteurs `sol_compacte` et `sol_nu` n'ont AUCUN signe.
+
+**Mapping facteur→signe** (câblé dans `diagnostic.facteur_limitant_semio`) :
+`hydrique`←secheresse · `exces_eau`←asphyxie · `ombrage`←ombre+voisin visible ·
+`concurrence_ferale`←adventices visibles · `organe_mur`←fruit mûr. `sol_compacte`/
+`sol_nu` = **non diagnosticables** (INVISIBLES, `impasses.FACTEURS_INVISIBLES`).
 
 ## Avancement
+- **⑦ Profil `semiologique` + banc de mesure de l'écart — FAIT (2026-07-18, OPTIONNEL).**
+  L'automate a désormais un second regard : `perception="semiologique"` ne lit QUE les
+  signes visibles (`leaf_symptoms` + `etat` + sprites), jamais un champ continu. Le
+  stub `NotImplementedError` du ① est remplacé. Nouveaux/touchés (tous 🟢, code pur) :
+  - `perception.py` (74 LDC) : dataclass `PerceptionSemio` + `_percevoir_semio` +
+    dispatch dans `percevoir(..., saison=None)`. Importe `sim.semiologie.leaf_symptoms`.
+  - `diagnostic.py` (40 LDC) : `facteur_limitant` devient POLYMORPHE (isinstance) →
+    `_facteur_limitant_omni` (inchangé) OU `facteur_limitant_semio` (dérivé des seuls
+    signes, plus grossier ET plus tardif ; `sol_compacte`/`sol_nu` absents = invisibles).
+  - `impasses.py` (19 LDC) : cause `FACTEUR_INVISIBLE` + set `FACTEURS_INVISIBLES`
+    ({sol_compacte, sol_nu}) — trou de sémiologie remonté, JAMAIS bouché (kickoff).
+  - `boucle.py` : `_collecter` calcule `saison_de(engine.week)` et le passe à
+    `percevoir` (leaf_symptoms l'exige). Omniscient inchangé (saison ignorée).
+  - **NOUVEAU banc** `tools/bancs/semiologie_ecart.py` (90 LDC) : rejoue UN monde
+    abandonné (les plantes souffrent → les signes sortent), calcule les DEUX perceptions
+    par tick/plante, imprime la table de recensement + la MATRICE DE CONFUSION des
+    décisions + la CÉCITÉ par facteur + un CHIFFRE de qualité sémiologique.
+  - **Golden INCHANGÉ** (`3076c154dc3d5fbf…`, bit-identique — H2 tenu, chemin omniscient
+    intact). Déterminisme 3/3, tronçon2 9/9. Aucun C# (⑦ = mesure Python pure).
+  - **VÉRIF DE SORTIE CONFIRMÉE** (banc `full`, 1 an, 3742 obs plante×tick) : la boucle
+    `jouer_tick` tourne aussi sous profil semio (smoke 8 sem : recolter/deraciner, pas de
+    crash). **RÉSULTAT CLÉ mesuré : qualité sémiologique ≈ 16 %** — l'omniscient et le
+    joueur diffèrent massivement. Deux causes chiffrées : (a) **signes TARDIFS** —
+    l'omniscient déclenche `hydrique` dès humidite<0.8 mais le signe `secheresse` n'arrive
+    qu'après dégât installé (miroir du seuil moteur) → 1201 obs « omni=hydrique / semio=
+    organe_mur » + cécité hydrique×58, ombrage×125 ; (b) **INVISIBLE structurel** —
+    `sol_nu` vu 865+438 fois par l'omniscient, **jamais** par le joueur (aucun signe SUR
+    LA PLANTE). C'est un DÉFAUT DE DESIGN #5 chiffré pour la 1re fois, PAS un bug de
+    l'automate — à verser en réflexion conception (voir §DÉCISION IMPRÉVUE).
+  - **DÉCISION IMPRÉVUE (design, à remonter à Nico — RIEN implémenté)** : le chiffre bas
+    dit deux choses réelles du jeu, pas de l'automate — (1) les seuils du diagnostic
+    OMNISCIENT sont bien plus précoces que les seuils d'APPARITION des signes (calibrage
+    volontaire des signes = « miroir du dégât installé ») ; (2) `sol_nu`/`sol_compacte`
+    n'ont aucun signe foliaire — un vrai trou de sémiologie. **Piste conception** (hors
+    scope, à trancher par Nico) : signe de sol nu/compacté au niveau du PLOT (pas de la
+    plante) ou signe hydrique plus précoce (feuillage qui pique du nez avant le dégât).
+    Non tranché ici : le kickoff interdit d'ajouter un signe pour « boucher le trou ».
 - **⑥ Vue Godot — automate en OPTION F5 + journal/impasses + onglet objectifs —
   FAIT (2026-07-18).** Dernier tronçon de la chaîne obligatoire (règle permanente).
   **Golden INCHANGÉ** (`3076c154dc3d5fbf…`, bit-identique — H2 tenu, automate hors
@@ -308,13 +363,15 @@ Emplacement gestes = **paquet** `sim/actions/` (ré-exporté via `sim.actions`).
 - **Q8 retour F5** : fusionné dans le tronçon ⑤ (vue Godot obligatoire).
 
 ## §REPRISE
-**⑥ FAIT et vérifié — CHAÎNE OBLIGATOIRE CLOSE** (golden intact `3076c154…`,
-déterminisme 3/3, troncon2 9/9, build C# VERT, pont 0.5.30). L'automate est
-observable en F5 (touche A) : journal/impasses + onglet objectifs, opt-in strict
-(snapshot ordinaire inchangé). Reste **⑦ SÉMIOLOGIQUE (OPTIONNEL, hors chaîne)** :
-profil `semiologique` mesurant l'écart omniscient↔sémiologique (qualité de la
-sémiologie du jeu) — coûteux (recenser les signes émis), à faire seulement si Nico
-le demande. Kickoff `07_*.md` si présent.
+**SPRINT CLOS — ⑦ FAIT (optionnel), tous les tronçons livrés** (golden intact
+`3076c154…`, déterminisme 3/3, troncon2 9/9, pont 0.5.30, build C# VERT au ⑥). Le
+profil `semiologique` est câblé (perception par signes seuls) et un banc de mesure
+`tools/bancs/semiologie_ecart.py` chiffre l'écart de décision omniscient↔semio :
+**qualité sémiologique ≈ 16 %** sur `full`/1 an → deux trous de sémiologie mesurés
+(signes hydriques/ombre TARDIFS ; `sol_nu`/`sol_compacte` INVISIBLES). Ce chiffre est
+un RÉSULTAT DE DESIGN #5, pas un bug — piste conception consignée à l'⑦ (§Avancement),
+non tranchée (le kickoff interdit d'ajouter un signe pour boucher le trou). Aucune
+suite obligatoire ; toute correction de sémiologie = sprint de conception à part.
 **POINTS À VALIDER EN F5 PAR NICO** (le F5 visuel reste à lui) :
 1. Touche **A** : l'automate tient-il visiblement le jardin (arrosage/paillage/
    récolte/taille visibles dans le monde) et le panneau s'ouvre-t-il à droite ?

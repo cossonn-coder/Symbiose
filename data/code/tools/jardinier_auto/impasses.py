@@ -12,11 +12,19 @@
 from __future__ import annotations
 from dataclasses import dataclass
 
-# Les quatre types d'impasse du §7.
+# Les types d'impasse du §7.
 GESTE_INEXISTANT = "geste_inexistant"          # le facteur n'a aucune ligne dans la table
 GESTE_VERROUILLE = "geste_verrouille"          # règle GATED non débloquée (mode payé, ③)
 RAVITAILLEMENT_MANQUANT = "ravitaillement_manquant"  # pailler sans mulch ni moyen d'en produire
 OBJECTIF_INATTEIGNABLE = "objectif_inatteignable"    # cible absente ET sans moyen de l'obtenir (④, §8)
+FACTEUR_INVISIBLE = "facteur_invisible"        # facteur RÉEL sans signe diégétique (⑦, défaut #5)
+
+# Facteurs limitants qui n'émettent AUCUN signe foliaire → INVISIBLES au profil
+# semiologique (§9, ⑦). Un joueur humain ne peut pas les diagnostiquer non plus : ce
+# sont des « trous de sémiologie » à remonter (philo #5), pas à masquer en ajoutant un
+# signe au moteur (kickoff : « NE PAS boucher le trou »). Le banc `semiologie_ecart`
+# les compte : là où l'omniscient voit CE facteur et le semiologique ne voit RIEN.
+FACTEURS_INVISIBLES = frozenset({"sol_compacte", "sol_nu"})
 
 
 @dataclass(frozen=True)

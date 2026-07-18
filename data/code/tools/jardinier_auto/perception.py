@@ -17,6 +17,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from sim.vigueur_plante import maturite, qi_local
+from sim.semiologie import leaf_symptoms
 from .tutelle import est_ferale
 
 
@@ -35,6 +36,30 @@ class Perception:
     structure: float     # structure du sol au plot-foyer [0,1] (bas = compacté)
     ferale_cible: object     # férale à arracher (concurrence diagnostiquée) | None
     voisin_ombrageant: object  # voisin plus haut qui ombrage la plante | None
+
+
+@dataclass(frozen=True)
+class PerceptionSemio:
+    """Instantané SÉMIOLOGIQUE (§9, tronçon ⑦) : ce qu'un JOUEUR humain voit à
+    l'écran, rien de plus. AUCUNE valeur continue de santé/humidité/Qi/structure —
+    seulement les SIGNES diégétiques réellement émis par le moteur :
+      - `etat`  : l'état discret {sain/affaibli/malade/mort} (couleur/texture) ;
+      - `signes`: l'ensemble des causes de symptômes FOLIAIRES visibles (la même
+        liste `leaf_symptoms` que la vue affiche : secheresse/ombre/asphyxie…) ;
+      - `ferale_cible` / `voisin_ombrageant` : entités VISIBLES à l'écran (sprites
+        d'adventices dans le rang, voisin manifestement plus haut) — mêmes helpers
+        que l'omniscient (une mauvaise herbe et un voisin dominant SE VOIENT) ;
+      - `maturite` : proxy du seul fait visible « il y a un organe MÛR » (le fruit
+        apparaît sur la plante) — le diagnostic n'en lit que le seuil, pas la valeur.
+    Volontairement plus PAUVRE que l'omniscient : un facteur sans signe (sol nu, sol
+    compacté) est INVISIBLE → non diagnosticable → défaut de sémiologie #5 mesurable."""
+
+    position: tuple             # (row, col) plot-foyer
+    etat: str                   # "sain" | "affaibli" | "malade" | "mort"
+    signes: frozenset           # causes de symptômes foliaires visibles (leaf_symptoms)
+    maturite: float             # avancement du cycle — proxy du fruit mûr VISIBLE
+    ferale_cible: object        # adventice visible à arracher | None
+    voisin_ombrageant: object   # voisin dominant visible | None
 
 
 def _ferale_cible(plant, voisins, tile_id, cultivees, seuil):
@@ -69,14 +94,34 @@ def _voisin_ombrageant(plant, voisins):
     return max(candidats, key=lambda v: (v.current_height, -v.y_cm, -v.x_cm))
 
 
-def percevoir(plant, eco, profil, voisins, tile_id, cultivees) -> Perception:
+def _percevoir_semio(plant, eco, voisins, tile_id, cultivees, seuil, saison):
+    """Perception SÉMIOLOGIQUE (§9) : ne lit QUE les signes visibles. Les symptômes
+    foliaires passent par `sim.semiologie.leaf_symptoms` — EXACTEMENT la liste que la
+    vue Godot affiche sur le feuillage (ombre/secheresse/asphyxie…). On n'en garde
+    que l'ENSEMBLE des causes présentes (le joueur voit QUE ça souffre, pas de combien).
+    Le voisinage visible (adventice, voisin dominant) réutilise les helpers omniscients
+    — ce sont des SPRITES à l'écran, donc légitimement perçus. Aucune lecture de
+    vitalité/Qi/humidité/structure : ces champs n'ont pas de rendu direct."""
+    r, c = plant.position
+    signes = frozenset(s["cause"] for s in leaf_symptoms(plant, eco, saison))
+    return PerceptionSemio(
+        position=(r, c),
+        etat=plant.etat,
+        signes=signes,
+        maturite=maturite(plant),
+        ferale_cible=_ferale_cible(plant, voisins, tile_id, cultivees, seuil),
+        voisin_ombrageant=_voisin_ombrageant(plant, voisins),
+    )
+
+
+def percevoir(plant, eco, profil, voisins, tile_id, cultivees, saison=None):
     """Construit la perception d'une `plant` cultivée selon le `profil`, en incluant
     son voisinage (`voisins` = plantes de la même tuile, `cultivees` = zones
-    cultivées). `omniscient` : lecture directe. `semiologique` : non câblé (⑦) →
-    refuse explicitement plutôt que de mentir sur ce qui est perçu."""
+    cultivées). `omniscient` : lecture directe des champs continus. `semiologique`
+    (⑦) : ne lit que les signes visibles (`saison` requis pour `leaf_symptoms`)."""
     if profil.perception == "semiologique":
-        raise NotImplementedError(
-            "perception 'semiologique' câblée au tronçon ⑦ (optionnel)")
+        return _percevoir_semio(plant, eco, voisins, tile_id, cultivees,
+                                profil.seuil_concurrence(), saison)
     r, c = plant.position
     return Perception(
         position=(r, c),

@@ -18,6 +18,7 @@ from __future__ import annotations
 
 from sim.actions.couts import cout_action
 from sim import vigueur as V
+from sim.engine.calendrier import saison_de
 
 from .perception import percevoir
 from .diagnostic import facteur_limitant
@@ -49,6 +50,7 @@ class JardinierAutomate:
           - impasses: `(cle_tri, tile_id, Impasse)` — trous de gameplay (§7)."""
         plans, impasses = [], []
         gs = engine.game_state
+        saison = saison_de(engine.week)   # requis par la perception semiologique (⑦)
         for tile in engine.tiles:
             eco = engine._eco(tile)
             voisins = tile.plants                      # voisinage LOCAL (même tuile)
@@ -56,7 +58,7 @@ class JardinierAutomate:
                 if not sous_tutelle(plant, tile.tile_id, cultivees):
                     continue
                 percept = percevoir(plant, eco, self.profil, voisins,
-                                    tile.tile_id, cultivees)
+                                    tile.tile_id, cultivees, saison)
                 facteur = facteur_limitant(percept)
                 if facteur is None:
                     continue
