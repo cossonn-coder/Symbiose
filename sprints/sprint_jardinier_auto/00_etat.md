@@ -7,7 +7,26 @@
 >
 > Carte des tronçons : ① socle · ② table+budget+impasses · ③ comptabilité+trace ·
 > ④ objectifs+onglet · ⑤ banc jardin tenu · ⑥ vue Godot · ⑦ semiologique (opt).
-> **Golden INTACT partout** (H2 : automate hors tick). AUCUN tronçon fait encore.
+> **Golden INTACT partout** (H2 : automate hors tick). **① FAIT** (2026-07-18).
+
+## Avancement
+- **① Socle — FAIT (2026-07-18).** Paquet `tools/jardinier_auto/` (profil,
+  perception, diagnostic, regles, execution, trace, boucle) + banc
+  `tools/bancs/automate_demo.py` + `tests/test_automate_determinisme.py`.
+  Boucle 5 étapes câblée, gestes `arroser`+`recolter` seulement, perception
+  `omniscient`, profil `LIBRE`. **Golden INCHANGÉ** (`3076c154dc3d5fbf…`,
+  bit-identique — H2 vérifié). Déterminisme : 3/3 (rejeu identique, opt-in strict,
+  automate OFF = golden). Aucun C# touché. Tous fichiers ≤ 39 LDC code (bande 🟢).
+  - **POINT À DURCIR au ② (tutelle)** : `PlantInstance` n'a AUCUN attribut
+    `cultive` — la distinction cultivé/féral vit dans le dict de détection de
+    maîtrise comme un set de ZONES `(tile_id, r, c)` (`marquer_replante`), pas un
+    champ de plante. Conformément au kickoff (« ne PAS inventer d'attribut »), la
+    tutelle ① = **toutes les plantes vivantes** (`sous_tutelle` dans `boucle.py`).
+    Effet visible au banc : l'automate arrose aussi les FÉRALES (Pissenlit,
+    Minette, Pâturin…) → Vigueur épuisée → flot d'`arroser echec`. Au ② : croiser
+    avec le set `replante` par plot-foyer pour ne soigner que les cultivées.
+  - Observations banc (104 sem, LIBRE) : `recolter ok ×11496`, `arroser ok ×573`,
+    `arroser echec ×38753` (épuisement Vigueur, attendu en LIBRE non borné au ①).
 
 ## Sujet
 Un **jardinier automate** déterministe qui joue le jardin à la place du testeur
@@ -148,8 +167,12 @@ Emplacement gestes = **paquet** `sim/actions/` (ré-exporté via `sim.actions`).
 - **Q8 retour F5** : fusionné dans le tronçon ⑤ (vue Godot obligatoire).
 
 ## §REPRISE
-**Conception FIGÉE et commitée.** Prochaine étape = exécution :
-`/sprint-auto sprint_jardinier_auto` (démarre au tronçon ①). Chaque tronçon :
+**① FAIT et vérifié (golden intact, déterminisme 3/3), NON COMMITÉ** (Nico
+commit). Prochaine étape = **tronçon ②** : lire `02_*.md` → table `regles.py`
+complète + priorisation par budget + chaînage `broyer→pailler` +
+`tailler`/`deraciner` (désherbage `curatif`/`aucun`/`systematique`) +
+`part_recoltee` + **détecteur d'impasses**. **Câbler la tutelle=cultivées** au ②
+(croiser le set `replante` — voir POINT À DURCIR ci-dessus). Chaque tronçon :
 lire `0N` → bosser → golden intact → maj CE fichier → commit → tronçon suivant.
 DETTE : **D78** (ce sprint, « conçu, prêt à implémenter ») ; **D79** (système de
 quêtes complet, hors scope). Défauts figés : `part_recoltee=1.0`,

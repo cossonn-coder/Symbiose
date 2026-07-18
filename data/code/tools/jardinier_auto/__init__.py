@@ -1,0 +1,26 @@
+# SYMBIOSE — tools/jardinier_auto (paquet)
+# Le JARDINIER AUTOMATE : un agent DÉTERMINISTE qui joue le jardin à la place du
+# testeur pendant les phases de test accélérées (2,5 J/s). Ce n'est PAS une IA
+# (ni apprentissage, ni RNG — philo #3) et PAS une fonctionnalité de jeu (ni PNJ,
+# ni tutoriel — philo #6) : c'est un INSTRUMENT DE DÉVELOPPEMENT, du même statut
+# que l'overlay debug F6. Conception : docs/conception/CONCEPTION_JARDINIER_AUTOMATE.md.
+#
+# Invariant central (H2) : l'automate s'intercale ENTRE deux ticks, côté appelant,
+# jamais dans `tick_semaine`. Le moteur ne change pas d'une ligne → golden INTACT.
+#
+# Découpage (un fichier = une responsabilité) :
+#   - profil       : ProfilAutomate (dataclass gelée) + presets LIBRE/BRIDE
+#   - perception   : « que sais-je de cette plante ? » (omniscient câblé)
+#   - diagnostic   : facteur limitant dominant (loi de Liebig)
+#   - regles       : table facteur→geste priorisée
+#   - execution    : traduction geste → appel sim.actions
+#   - trace        : journal déterministe (game_state["automate_journal"])
+#   - boucle       : JardinierAutomate.jouer_tick (5 étapes)
+#
+# L'API publique est ré-exportée ici → `from tools.jardinier_auto import
+# JardinierAutomate, LIBRE`.
+
+from .profil import ProfilAutomate, LIBRE, BRIDE
+from .boucle import JardinierAutomate
+
+__all__ = ["ProfilAutomate", "LIBRE", "BRIDE", "JardinierAutomate"]
