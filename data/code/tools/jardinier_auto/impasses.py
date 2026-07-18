@@ -12,10 +12,11 @@
 from __future__ import annotations
 from dataclasses import dataclass
 
-# Les trois types d'impasse du §7 (le 4e, `objectif_inatteignable`, arrive au ④).
+# Les quatre types d'impasse du §7.
 GESTE_INEXISTANT = "geste_inexistant"          # le facteur n'a aucune ligne dans la table
 GESTE_VERROUILLE = "geste_verrouille"          # règle GATED non débloquée (mode payé, ③)
 RAVITAILLEMENT_MANQUANT = "ravitaillement_manquant"  # pailler sans mulch ni moyen d'en produire
+OBJECTIF_INATTEIGNABLE = "objectif_inatteignable"    # cible absente ET sans moyen de l'obtenir (④, §8)
 
 
 @dataclass(frozen=True)

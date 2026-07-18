@@ -23,7 +23,8 @@ from __future__ import annotations
 import argparse
 from dataclasses import replace
 
-from tools.jardinier_auto import JardinierAutomate, LIBRE, marquer_jardin_cultive
+from tools.jardinier_auto import (JardinierAutomate, LIBRE, marquer_jardin_cultive,
+                                  Objectif, ajouter_objectif, onglet)
 from tools.jardinier_auto.trace import journal
 
 
@@ -59,6 +60,9 @@ def main() -> int:
     ap.add_argument("--amorce-maitrise", metavar="OBJET", default=None,
                     help="accorde le palier 1 d'un concept (dev only) pour démontrer un "
                          "déverrouillage — ex. 'paillage' ouvre pailler/broyer")
+    ap.add_argument("--objectif", metavar="GESTE:QTE:CIBLE", action="append", default=[],
+                    help="objectif injecté au début (④) — ex. 'recolter:3:tomate' ; "
+                         "répétable. L'onglet de chaque objectif est imprimé en fin.")
     args = ap.parse_args()
 
     profil = replace(LIBRE, desherbage=args.desherbage,
@@ -80,6 +84,15 @@ def main() -> int:
         from sim import maitrise as M
         M.decouvrir(engine.game_state, player, args.amorce_maitrise)
         print(f"  maîtrise amorcée : {args.amorce_maitrise} (palier 1) — dev only.")
+    # Objectifs (④) — injectés AVANT la boucle (« début de sim »). Format
+    # GESTE:QTE:CIBLE ; l'id = la chaîne brute (stable, filtre de l'onglet).
+    objectif_ids = []
+    for spec in args.objectif:
+        geste, qte, cible = spec.split(":")
+        obj = Objectif(geste=geste, quantite=int(qte), cible=cible, id=spec)
+        ajouter_objectif(engine.game_state, obj)
+        objectif_ids.append(spec)
+        print(f"  objectif injecté : {geste} ×{qte} {cible} (id={spec}).")
     automate = JardinierAutomate(profil)
 
     for _ in range(args.weeks):
@@ -115,6 +128,19 @@ def main() -> int:
             ccompo[(e["type"], e["detail"])] = ccompo.get((e["type"], e["detail"]), 0) + 1
         for (type_, detail), n in sorted(ccompo.items()):
             print(f"    {type_:<10} {detail:<28} ×{n}")
+    # Onglet de chaque objectif (④) — projection scopée : progression + gestes servis
+    # + volume d'événements du monde de la fenêtre active (échantillon).
+    for oid in objectif_ids:
+        vue = onglet(engine.game_state, oid)
+        o = vue["objectif"]
+        etat = "ACCOMPLI" if vue["accompli"] else "en cours"
+        print(f"  ── onglet objectif '{oid}' [{etat}] : "
+              f"{vue['progression']}/{o['quantite']} {o['geste']} {o['cible']} "
+              f"(sem {vue['semaine_debut']}→{vue['semaine_fin']}) ──")
+        print(f"    {len(vue['gestes'])} gestes servis, "
+              f"{len(vue['evenements'])} lignes d'événements dans la fenêtre.")
+        for e in vue["gestes"][:5]:
+            print(f"      S{e['semaine']:<3} {e['geste']:<10} {e['cible']:<24} {e['resultat']}")
     return 0
 
 

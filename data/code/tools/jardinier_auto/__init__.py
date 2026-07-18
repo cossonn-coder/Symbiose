@@ -15,6 +15,8 @@
 #   - regles       : table facteur→geste priorisée
 #   - execution    : traduction geste → appel sim.actions
 #   - trace        : journal déterministe (game_state["automate_journal"])
+#   - objectifs    : objectifs (geste, quantité, cible) + biais/comptage (④)
+#   - onglet       : projection scopée du journal + log sur un objectif (④)
 #   - boucle       : JardinierAutomate.jouer_tick (5 étapes)
 #
 # L'API publique est ré-exportée ici → `from tools.jardinier_auto import
@@ -23,6 +25,9 @@
 from .profil import ProfilAutomate, LIBRE, BRIDE
 from .boucle import JardinierAutomate
 from .tutelle import marquer_jardin_cultive
+from .objectifs import Objectif, ajouter_objectif, objectifs_actifs
+from .onglet import onglet
 
 __all__ = ["ProfilAutomate", "LIBRE", "BRIDE", "JardinierAutomate",
-           "marquer_jardin_cultive"]
+           "marquer_jardin_cultive", "Objectif", "ajouter_objectif",
+           "objectifs_actifs", "onglet"]

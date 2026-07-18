@@ -20,9 +20,11 @@ def journal(game_state: dict) -> list:
 
 
 def entree(semaine: int, tile_id: str, cible: str, facteur: str,
-           geste: str, resultat: str) -> dict:
+           geste: str, resultat: str, objectif_id: str | None = None) -> dict:
     """Construit une entrée de journal pour un GESTE (dict JSON-sérialisable, ordre
-    stable). `categorie="geste"` distingue les gestes des impasses au même journal."""
+    stable). `categorie="geste"` distingue les gestes des impasses au même journal.
+    `objectif_id` (④, §8) : l'identifiant de l'objectif servi par ce geste, ou None
+    — c'est la clé de filtrage de l'onglet (onglet.py)."""
     return {
         "categorie": "geste",
         "semaine": semaine,
@@ -31,6 +33,7 @@ def entree(semaine: int, tile_id: str, cible: str, facteur: str,
         "facteur_limitant": facteur,
         "geste": geste,
         "resultat": resultat,
+        "objectif_id": objectif_id,
     }
 
 

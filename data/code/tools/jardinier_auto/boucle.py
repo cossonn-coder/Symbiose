@@ -22,11 +22,12 @@ from sim import vigueur as V
 from .perception import percevoir
 from .diagnostic import facteur_limitant
 from .proposition import proposer
-from .impasses import Impasse, GESTE_VERROUILLE
+from .impasses import Impasse, GESTE_VERROUILLE, OBJECTIF_INATTEIGNABLE
 from .execution import executer
 from .trace import consigner, entree, entree_impasse, entree_consequence
 from .tutelle import zones_cultivees, sous_tutelle
 from . import comptabilite as CPT
+from . import objectifs as OBJ
 
 # Verbes dont la clé de coût diffère du nom (budget) : `recolter_paille` est tarifé
 # comme `recolter`. Tous les autres verbes SONT des clés de `COUTS`.
@@ -106,10 +107,19 @@ class JardinierAutomate:
         paliers_avant = (CPT.snapshot_paliers(gs, player)
                          if self.profil.credite_maitrise else {})
 
+        # Objectifs actifs (④, §8) : snapshot AVANT gestes → biais de priorisation +
+        # comptage. Liste vide (défaut opt-in) ⇒ bonus nul ⇒ comportement ①-③ intact.
+        actifs = OBJ.objectifs_actifs(gs)
+
         plans, impasses = self._collecter(engine, cultivees)
         plans = self._appliquer_part_recoltee(plans)
-        # Étape 4 — prioriser : priorité DÉCROISSANTE, puis clé de départage totale.
-        plans.sort(key=lambda p: (-p[4].priorite, p[0]))
+        # Étape 4 — prioriser : priorité DÉCROISSANTE, puis clé de départage totale. Un
+        # geste servant un objectif actif reçoit BONUS_OBJECTIF (biais, pas exclusivité :
+        # le tri reste stable, les autres soins passent ensuite).
+        def _prio(p):
+            bonus = OBJ.BONUS_OBJECTIF if OBJ.objectifs_servis(actifs, p[4].verbe, p[3]) else 0
+            return (-(p[4].priorite + bonus), p[0])
+        plans.sort(key=_prio)
         # Étape 4bis — comptabilité (§4). Mode payé : écarter les gestes VERROUILLÉS
         # (→ impasses) avant de couper au budget de Vigueur. Mode libre : garantir un
         # solde non borné pour ne pas noyer le journal d'échecs par épuisement.
@@ -120,12 +130,22 @@ class JardinierAutomate:
         else:
             CPT.assurer_solde_libre(gs, player)
 
-        # Étape 5 — exécuter + consigner les gestes.
+        # Étape 5 — exécuter + consigner les gestes. Un geste servant un objectif porte
+        # son `objectif_id` (clé de l'onglet) et, s'il RÉUSSIT, incrémente la
+        # progression de tous les objectifs qu'il sert (④, §8). `resultat != "echec"` :
+        # un geste tronqué (récolte graduée) a tout de même produit → il compte.
         for _cle, tile, eco, plant, plan in plans:
             cible = f"{plant.name}@{plant.position}"
             resultat = executer(gs, player, eco, plant, plan)
+            servis = OBJ.objectifs_servis(actifs, plan.verbe, plant)
+            oid = servis[0].id if servis else None
             consigner(gs, entree(semaine, tile.tile_id, cible, plan.facteur,
-                                 plan.verbe, resultat))
+                                 plan.verbe, resultat, oid))
+            if resultat != "echec":
+                for o in servis:
+                    if OBJ.incrementer(gs, o.id):
+                        consigner(gs, entree_consequence(semaine, "objectif",
+                                                         f"{o.id}:accompli"))
         # Consigner les IMPASSES (signalement — n'interrompt jamais la boucle, §7),
         # dans l'ordre stable de la clé de départage.
         for _cle, tile_id, imp in sorted(impasses, key=lambda x: x[0]):
@@ -136,6 +156,13 @@ class JardinierAutomate:
             cible = f"{plant.name}@{plant.position}"
             consigner(gs, entree_impasse(semaine, tile.tile_id, cible,
                                          plan.facteur, GESTE_VERROUILLE))
+        # Impasse OBJECTIF INATTEIGNABLE (④, §8) : cible absente ET sans moyen de
+        # l'obtenir → signalée UNE fois (ordre stable = actifs déjà trié par id).
+        for o in actifs:
+            if (not OBJ.est_atteignable(gs, o)
+                    and OBJ.marquer_inatteignable_signale(gs, o.id)):
+                consigner(gs, entree_impasse(semaine, "-", f"{o.cible}#{o.id}",
+                                             o.geste, OBJECTIF_INATTEIGNABLE))
 
         # Étape 6 (③) — consigner les CONSÉQUENCES du tick (§6). Déblocages/paliers
         # seulement si `credite_maitrise` (sinon on ne mute PAS la maîtrise) ; morts

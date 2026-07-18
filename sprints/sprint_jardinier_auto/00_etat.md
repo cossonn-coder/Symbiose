@@ -10,6 +10,34 @@
 > **Golden INTACT partout** (H2 : automate hors tick). **①② FAITS** (2026-07-18).
 
 ## Avancement
+- **④ Objectifs (cœur mécanique) + onglet — FAIT (2026-07-18).** Nouveaux fichiers :
+  `objectifs.py` (dataclass `Objectif(geste, quantite, cible, id)` + état opt-in
+  `game_state["automate_objectifs"]` = `{id: {objectif, progression, semaine_debut,
+  semaine_fin}}` ; API `ajouter_objectif`/`objectifs_actifs`/`incrementer`/
+  `est_accompli`/`sert`/`objectifs_servis`/`est_atteignable`/`marquer_inatteignable_
+  signale` + `BONUS_OBJECTIF=100`) et `onglet.py` (`onglet(gs, obj_id)` = journal
+  filtré sur `objectif_id` + événements du `log` de la FENÊTRE active, parsés par
+  en-tête `S{wiy}/Y{annee}`). `boucle.py` : snapshot `actifs` en tête de tick →
+  biais de priorisation (bonus dans la clé de tri, biais PAS exclusivité) + comptage
+  (incrément par geste-cible `resultat != echec`, conséquence `objectif:<id>:accompli`)
+  + détection `objectif_inatteignable` (une fois par objectif, §7). `trace.entree`
+  porte désormais `objectif_id` (clé de l'onglet). `impasses.py` : 4ᵉ type
+  `OBJECTIF_INATTEIGNABLE`. Banc : flag `--objectif GESTE:QTE:CIBLE` (répétable) +
+  impression de l'onglet.
+  - **Golden INCHANGÉ** (`3076c154dc3d5fbf…`, bit-identique — H2 tenu, automate hors
+    tick). Déterminisme 3/3 (rejeu 4015 entrées identiques), tronçon2 9/9.
+  - **Vérif de sortie CONFIRMÉE** (banc 104 sem) : `recolter:3:basilic` → ACCOMPLI
+    3/3 (sem 1→12), onglet liste les 3 gestes + fenêtre d'événements ; conséquence
+    `objectif B:accompli` consignée ; `recolter:1:kiwi` (hors catalogue) → impasse
+    `objectif_inatteignable ×1` (semaine 2, signalée une seule fois). Aucun geste
+    quand la cible est absente/verrouillée (biais nul ⇒ comportement ①-③ intact).
+  - **CHOIX de sémantique documentés** : (a) comptage = +1 par geste-cible non-échec
+    (récolte tronquée comprise) ; (b) `est_accompli(gs, obj_id)` prend `gs` (déviation
+    assumée de la signature `est_accompli(obj)` du kickoff — la progression ne peut
+    vivre sur un `Objectif` frozen) ; (c) un geste servant plusieurs objectifs même
+    cible n'est tagué `objectif_id` que du min-id (mais incrémente TOUS) — l'onglet du
+    2ᵉ ne le montre pas (edge case dev, complet = D79). Fichiers 🟢 (objectifs 68,
+    onglet 38, boucle 104 LDC). Aucun C# touché (vue Godot = ⑥).
 - **③ Comptabilité commutable + trace des conséquences — FAIT (2026-07-18).**
   Nouveau `comptabilite.py` (responsabilité unique : Vigueur, gating, conséquences) :
   `assurer_solde_libre` (mode `paie_vigueur=False` → solde sentinelle `1e9`, ne
@@ -216,14 +244,15 @@ Emplacement gestes = **paquet** `sim/actions/` (ré-exporté via `sim.actions`).
 - **Q8 retour F5** : fusionné dans le tronçon ⑤ (vue Godot obligatoire).
 
 ## §REPRISE
-**③ FAIT et vérifié (golden intact `3076c154…`, déterminisme 3/3, troncon2 9/9,
-banc BRIDE OK).** Comptabilité commutable + trace des conséquences câblées.
-Prochaine étape = **tronçon ④** : lire `04_*.md` → OBJECTIFS `(geste, quantité,
-cible)` injectables début/planification, biais de priorisation + comptage de
-progression, **onglet** = trace scopée + événements monde, objectif inatteignable
-→ impasse. Réutilise le journal de ③ (aucune machinerie neuve). SCOPE = cœur
-mécanique seulement (système de quêtes complet = DETTE D79). Chaque tronçon : lire
-`0N` → bosser → golden intact → maj CE fichier → commit → tronçon suivant.
+**④ FAIT et vérifié (golden intact `3076c154…`, déterminisme 3/3, troncon2 9/9,
+banc objectif accompli + impasse inatteignable OK).** Objectifs `(geste, quantité,
+cible)` injectables + biais/comptage + onglet + détecteur `objectif_inatteignable`
+câblés. Prochaine étape = **tronçon ⑤** : lire `05_*.md` → banc « jardin tenu »
+(tenu vs abandonné : démographie, couverture sol, **perf LightField** §2.7/Q9) +
+**rapport d'impasses agrégé** (le livrable « trous de gameplay »). C'est le livrable
+de MESURE. Réutilise le journal (gestes/impasses/conséquences/objectifs) — aucune
+machinerie neuve. Chaque tronçon : lire `0N` → bosser → golden intact → maj CE
+fichier → commit → tronçon suivant.
 DETTE : **D78** (ce sprint, « conçu, prêt à implémenter ») ; **D79** (système de
 quêtes complet, hors scope). Défauts figés : `part_recoltee=1.0`,
 `desherbage=curatif`. Rappel gestes réels : voir « Faits code établis » ci-dessus
