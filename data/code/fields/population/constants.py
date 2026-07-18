@@ -22,8 +22,15 @@ POP_INERTIA_DECAY = 0.55
 # Couplage température → vitalité de la guilde (chaud = naissances, froid = mort).
 # C'est le signal d'INTENSITÉ (« combien » la guilde prospère quand elle est
 # active), distinct de la porte saisonnière `phenology` (« quand », ci-dessous).
-T_COLD_ZERO = 6.0      # °C : en dessous, plus aucune chaleur utile (warmth = 0)
-T_WARM_FULL = 24.0     # °C : au-dessus, chaleur maximale (warmth = 1)
+# Recalibré 2026-07-18 (D86 suite, choix Nico) : les pollinisateurs précoces
+# (osmie « abeille des vergers », reines de bourdon) butinent les vergers dès la
+# sortie de l'hiver, à 8-12 °C — l'ancienne rampe 6→24 °C (warmth≈0.08 au
+# printemps frais) les rendait quasi absents quand pommier/cerisier fleurissent.
+# Rampe abaissée à 3→15 °C : la faune est pleinement active dès la belle saison
+# fraîche (warmth sature à 15 °C). Global à TOUTES les guildes (décision tranchée
+# — cf. journal) : élargit la saison active de toute la vie macro.
+T_COLD_ZERO = 3.0      # °C : en dessous, plus aucune chaleur utile (warmth = 0)
+T_WARM_FULL = 15.0     # °C : au-dessus, chaleur maximale (warmth = 1)
 
 # --- Saisonnalité photopériodique (CONCEPTION_SAISONNALITE_VIE_MACRO.md §2-3) ---
 # La DORMANCE/le RÉVEIL des guildes se pilotent par la LONGUEUR DU JOUR, pas par

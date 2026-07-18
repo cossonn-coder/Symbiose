@@ -81,3 +81,35 @@ D84 + D86 → ✅ RÉSOLUS (reste F5 Nico + décision décalage). Golden `f32390
 `sim/engine/decompo.py`, `bancs/{biotique,mesure_nouaison,mesure_floraison}.py`,
 `bancs/__init__.py`, `tests/{golden_hash,population_hash}.txt`, `tests/test_floraison_forcage.py`,
 `visuals/PlantRenderer.{Organs,Flower}.cs`. Points F5 : `sprints/sprint_floraison_fructification/00_etat.md §POINTS F5`.
+
+## Post-scriptum — décalage phénologique TRANCHÉ (Nico, même jour)
+
+Sur le décalage résiduel du §précédent, Nico tranche : **réchauffer la porte
+d'activité des pollinisateurs, GLOBAL à toutes les guildes** (« au printemps ils
+sont actifs, les pruniers/cerisiers sont butinés dès la sortie de l'hiver »).
+
+**Diagnostic affiné (code + banc)** : la porte PHOTOPÉRIODIQUE des pollinisateurs
+précoces est DÉJÀ ouverte au printemps — osmie « abeille des vergers »
+(`daylen_min/full 10/12.5`) et bourdon (`9.5/12`) atteignent leur pleine
+phénologie dès S13-14 (jour ≈ 13 h). Le vrai verrou est la porte THERMIQUE de
+`PopulationField.tick` : `warmth = (temp−T_COLD_ZERO)/(T_WARM_FULL−T_COLD_ZERO)`
+avec `6/24 °C` → au printemps frais (~7-8 °C) `warmth ≈ 0.08`, ce qui écrase la
+`survie = phenology·warmth·…` **même** photopériode ouverte et fleurs présentes.
+
+**Correctif** (`fields/population/constants.py`) : `T_COLD_ZERO 6→3 °C`,
+`T_WARM_FULL 24→15 °C`. `warmth` sature désormais dès 15 °C → toute la faune est
+pleinement active sur la belle saison fraîche. **Global** (choix Nico) : ne
+concerne pas que les pollinisateurs — campagnol, limace, coccinelle, lombric…
+voient aussi leur saison active élargie.
+
+**Mesure** (banc `mesure_floraison`) : osmie/bourdon pendant la floraison du
+pommier (S15-18) passent de `~0.001-0.002` à `0.002-0.006` (×2-3) ; la courbe
+annuelle entière monte (été : syrphe `0.012→0.019`). En absolu la densité reste
+modeste sur ce banc (petite tuile, moyenne sur plots vides — la densité LOCALE
+aux plots fleuris est plus haute) → **magnitude à confirmer au F5**.
+
+**Golden re-figé maîtrisé (autorisé par le choix explicite de Nico)** :
+`golden_hash f3239042… → 57c166d8…` et `population_hash ccd448bd… → 5824ee3f…`
+(faune plus dense → herbivorie modifiée, chaîne déterministe traçable au seul
+changement des 2 constantes thermiques). Tests verts : fruits 24/24, floraison
+9/9, desync 7/7, vent 54/54, population (invariants + hash).
