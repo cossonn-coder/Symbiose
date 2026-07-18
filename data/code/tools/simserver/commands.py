@@ -253,11 +253,23 @@ class CommandsMixin:
         if field is None:
             direct = sorted(k for k, v in vars(eco0).items()
                             if isinstance(v, GridField))
+            # "vitalite" : synthèse DÉRIVÉE (méthode, pas un GridField) — ajoutée
+            # explicitement au registre pour que l'overlay F6 la propose (§7③).
             return {"ok": True,
-                    "fields": direct + list(eco0.populations.keys())}
+                    "fields": direct + list(eco0.populations.keys())
+                              + ["vitalite"]}
         tiles_out = {}
         for tile in gs["tiles"]:
             eco = gs["eco"][tile.tile_id]
+            if field == "vitalite":
+                # Cas spécial : materialise la métrique dérivée en grille
+                # row-major, à la demande. PURE lecture, aucun état stocké.
+                tiles_out[tile.tile_id] = {
+                    "rows": eco.rows, "cols": eco.cols,
+                    "values": [round(eco.vitalite(r, c), 4)
+                               for r in range(eco.rows)
+                               for c in range(eco.cols)]}
+                continue
             obj = vars(eco).get(field)
             if not isinstance(obj, GridField):
                 obj = eco.populations.get(field) if isinstance(field, str) else None

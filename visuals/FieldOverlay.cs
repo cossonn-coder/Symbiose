@@ -56,7 +56,10 @@ namespace Symbiose
 			["temperature"]      = (new Color("3a6fd8"), new Color("d83a3a"), "froid", "chaud", -5f, 35f),
 			["humidite"]         = (new Color("c8a96e"), new Color("2f6fd0"), "sec", "humide", 0f, 3f),
 			["lumiere"]          = (new Color("2e2e38"), new Color("f5e36b"), "ombre", "plein soleil", 0f, 1f),
-			["microbiome"]       = (new Color("d8d2c0"), new Color("2f8f8f"), "inerte", "vivant", 0f, 3f),
+			// Borne HAUTE recalibrée 3f→0.6f (sprint calibration réaliste ①/②) :
+			// le microbiome opère réellement en [0, ~0.5] (MICROBE_EFFECT_REF=0.6
+			// côté moteur), l'ancienne borne 3f aplatissait tout à « inerte ».
+			["microbiome"]       = (new Color("d8d2c0"), new Color("2f8f8f"), "inerte", "vivant", 0f, 0.6f),
 			// Chimie du sol (sprint physico-chimie ①→⑧) : pH maître-régulateur
 			// (rouge=acide, convention papier) + N/P/K distincts (loi de Liebig,
 			// `fertilite` supprimé net au ③) + structure (compaction). Bornes
@@ -79,6 +82,12 @@ namespace Symbiose
 			["soil_memory_fast"] = (new Color("c8c8c8"), new Color("6f6fb8"), "jeune", "récent", float.NaN, float.NaN),
 			["soil_memory_deep"] = (new Color("c8c8c8"), new Color("3a3a8f"), "jeune", "profond", float.NaN, float.NaN),
 			["disturbance"]      = (new Color("d8d8d0"), new Color("a83a78"), "calme", "perturbé", 0f, 1f),
+			// Vitalité du SOL (sprint calibration réaliste ③) : synthèse DÉRIVÉE
+			// (méthode moteur eco.vitalite, matérialisée à la demande par le pont),
+			// jamais un GridField. Borne HAUTE 0.8f = plage recalibrée au ① (jeune
+			// ~0.1-0.2, mûr riche ~0.5+ ; un vieux sol humifère grimpe encore) :
+			// on veut que « sol vivant » colore franc sans saturer d'emblée.
+			["vitalite"]         = (new Color("d8d2c0"), new Color("2f6f3a"), "pauvre", "vivant", 0f, 0.8f),
 			// Réseau mycélien (sprint mycélium ①→⑥) : le champ souterrain `mycelium`
 			// (GridField max_val 1.0) auto-découvert par l'introspection `fields`.
 			// Visible UNIQUEMENT en mode technique F6 (le réseau reste souterrain en

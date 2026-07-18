@@ -150,10 +150,38 @@ Mesuré sur monde smoke DENSE (2×6×8) ET monde LÂCHE (2×12×16, même nb de 
   réaligné, son digest interne bouge donc légitimement. NON re-capturé (hors périmètre,
   pas de masquage) — à traiter avec la dette test_population.
 
+## Tronçon ③ — RÉSULTATS (2026-07-18)
+- **Fichiers touchés** : `tools/simserver/commands.py` (cmd_fields : `"vitalite"`
+  ajouté au registre + cas spécial grille dérivée row-major) ; `visuals/FieldOverlay.cs`
+  (palette `microbiome` FixMax `3f`→`0.6f` + nouvelle entrée `"vitalite"`).
+- **Golden INTACT** : `3076c154…` inchangé (rendu/pont pur, aucun tick, `summary()`
+  intact). Vérifié VERT après coup.
+- **Build C#** : `dotnet build Symbiose.csproj` VERT (0 avertissement, 0 erreur).
+- **Smoke pont** (SimServer, seed 42) : registre `fields` contient bien `"vitalite"` ;
+  `cmd_fields{field:"vitalite"}` matérialise une grille 6×8 = 48 valeurs row-major,
+  plage à l'init 0.109–0.145 (lecture cohérente avec l'échelle recalibrée du ①).
+- **Palettes** : microbiome borné [0, 0.6] (= MICROBE_EFFECT_REF, occupe la bande
+  couleur au lieu d'être aplati) ; vitalité sol [0, 0.8] parchemin→vert profond,
+  libellés « pauvre »/« vivant ».
+- **NOTE** : sous-agent ③ coupé par limite de session (cause externe) ; tronçon
+  terminé directement par l'orchestrateur, périmètre identique au kickoff.
+
+## Checklist F5 (Nico — Godot pas sur la VM)
+1. Lancer le jeu, activer le **mode technique F6** (overlays champs écologiques).
+2. **Cycler** les overlays jusqu'à `microbiome` : la heatmap ne doit plus paraître
+   uniformément « inerte » — un coin de sol vivant (sous canopée jeune, litière)
+   doit colorer vers le pôle « vivant » (teal `2f8f8f`).
+3. Cycler jusqu'à `vitalite` (nouvel overlay) : un coin de sol riche/mûr doit se
+   distinguer NETTEMENT d'un coin pauvre (parchemin `d8d2c0` → vert `2f6f3a`).
+4. But du sprint : **« le sol vivant se lit »**. Si la carte de démo actuelle ne
+   montre pas un contraste franc (sol trop jeune/homogène), c'est une limite de la
+   CARTE, pas de l'échelle — noté en dette (cf. D44-D47 bancs d'essai, verdict F5
+   2026-06-22), à couvrir par le sprint « bancs d'essai » à concevoir. Ne pas bloquer.
+
 ## §REPRISE
-Tronçon ② CLOS (non commité — Nico commit). PROCHAIN = **③ 03_vue_godot_overlay_banc.md**
-(overlay F6 microbiome FixMax 3→0.6 + overlay vitalité sol + banc F5 ; golden INTACT,
-C#). Lire : `CLAUDE.md` + ce fichier + `docs/conception/CONCEPTION_CALIBRATION_REALISTE.md`
-+ `03_*.md`. Ordre : ① ✅ → ② ✅ → ③. Chaque tronçon : bosser → golden (voir kickoff) →
-maj ce fichier (hash + décisions) → commit → tronçon suivant.
-Hash golden courant : `3076c154dc3d5fbff8a4e32414be6d7ed4ad30b6970cd2c3114d49717b515253`.
+**SPRINT CLOS (2026-07-18).** Tronçons ① ✅ → ② ✅ → ③ ✅ tous commités.
+Hash golden final : `3076c154dc3d5fbff8a4e32414be6d7ed4ad30b6970cd2c3114d49717b515253`.
+Reste : **F5 de Nico** (checklist ci-dessus) — la VUE Godot n'est pas testable sur la VM.
+Dette ouverte : **D-cal** (calibration des modulateurs de RYTHME MO/décompo restés
+sur /3.0, §6 du doc) ; **test_population** à re-figer (hash interne périmé, déplacé
+par le réalignement uptake du ② — dette pré-existante hors périmètre de ce sprint).
