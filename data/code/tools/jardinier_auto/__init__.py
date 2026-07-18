@@ -27,7 +27,8 @@ from .boucle import JardinierAutomate
 from .tutelle import marquer_jardin_cultive
 from .objectifs import Objectif, ajouter_objectif, objectifs_actifs
 from .onglet import onglet
+from .rapport import rapport_impasses
 
 __all__ = ["ProfilAutomate", "LIBRE", "BRIDE", "JardinierAutomate",
            "marquer_jardin_cultive", "Objectif", "ajouter_objectif",
-           "objectifs_actifs", "onglet"]
+           "objectifs_actifs", "onglet", "rapport_impasses"]

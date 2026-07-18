@@ -7,9 +7,41 @@
 >
 > Carte des tronçons : ① socle · ② table+budget+impasses · ③ comptabilité+trace ·
 > ④ objectifs+onglet · ⑤ banc jardin tenu · ⑥ vue Godot · ⑦ semiologique (opt).
-> **Golden INTACT partout** (H2 : automate hors tick). **①② FAITS** (2026-07-18).
+> **Golden INTACT partout** (H2 : automate hors tick). **①②③④⑤ FAITS**
+> (2026-07-18). Reste **⑥ vue Godot** (dernier tronçon).
 
 ## Avancement
+- **⑤ Banc « jardin tenu vs abandonné » + rapport d'impasses agrégé — FAIT
+  (2026-07-18).** Le LIVRABLE DE MESURE. Deux fichiers CRÉÉS, aucune machinerie
+  moteur neuve, `sim/` intact :
+  - `tools/jardinier_auto/rapport.py` (35 LDC 🟢) — `rapport_impasses(gs) -> str`
+    (+ `agreger_impasses` testable) : relit `automate_journal`, agrège les entrées
+    `impasse` par (cause, facteur, tuile) en résumé texte groupé par cause. Pure
+    lecture, ré-exporté par `__init__.py`.
+  - `tools/bancs/jardin_tenu.py` (124 LDC 🟢) — monte DEUX mondes déterministes
+    identiques (même config/seed), joue l'un avec `JardinierAutomate` (tenu) et
+    l'autre sans (abandonné), N ans (défaut **2**, `--years`), imprime le
+    comparatif (démographie cultivées/férales, couverture paillage, **perf
+    LightField**) + rapport d'impasses. Perf : `perf_counter` autour de
+    `tick_semaine` (ms/tick moteur) + cProfile 2 ticks → part `tick_light`.
+  - **Golden INCHANGÉ** (`3076c154dc3d5fbf…`, bit-identique — H2 tenu, automate
+    hors tick). Déterminisme 3/3, tronçon2 9/9.
+  - **VERDICT PERF Q9 (résultat clé, banc `full`, 2 ans, LIBRE)** : **le régime
+    tenu N'EST PAS plus cher** — ms/tick moteur ≈ **794 (tenu) vs 800 (abandonné)**,
+    surcoût **−0,8 % → coût comparable**. L'hypothèse « jardin tenu → plus de
+    biomasse → LightField plus cher » n'est **PAS confirmée** à 2 ans : au contraire
+    l'automate désherbe les férales (démographie tenu vs abandonné : cultivées
+    **64 vs 56**, N total 640 vs 598 — le tenu porte un peu plus de plantes MAIS
+    mieux réparties). Part `tick_light` mesurée **~10-12 %** (≠ 53-62 % de la
+    mémoire perf : ici an 2 non mûr + light caché + échantillon 2 ticks cProfile
+    → SOUS-représentation, caveat consigné dans le fichier). **Rien à recalibrer**
+    (le kickoff l'interdit) — résultat consigné, pas de chantier.
+  - **TROU DE GAMEPLAY confirmé et AGRÉGÉ** (le livrable) : `sol_nu →
+    ravitaillement_manquant` **×3541 en 2 ans** (monde `full` sans aucune chaîne de
+    mulch — 0 squelette ligneux, 0 `mulch_source`). C'est la découverte du ② désormais
+    QUANTIFIÉE par tuile (S×1025, E×527…). À traiter hors sprint (semer/poser une
+    source de mulch dans `build_world_full`, ou geste `recolter_paille` sur une
+    prairie) → note DETTE. Temps mur banc 2 ans ≈ 180 s (perf OK, jamais 500 ans).
 - **④ Objectifs (cœur mécanique) + onglet — FAIT (2026-07-18).** Nouveaux fichiers :
   `objectifs.py` (dataclass `Objectif(geste, quantite, cible, id)` + état opt-in
   `game_state["automate_objectifs"]` = `{id: {objectif, progression, semaine_debut,
@@ -244,15 +276,15 @@ Emplacement gestes = **paquet** `sim/actions/` (ré-exporté via `sim.actions`).
 - **Q8 retour F5** : fusionné dans le tronçon ⑤ (vue Godot obligatoire).
 
 ## §REPRISE
-**④ FAIT et vérifié (golden intact `3076c154…`, déterminisme 3/3, troncon2 9/9,
-banc objectif accompli + impasse inatteignable OK).** Objectifs `(geste, quantité,
-cible)` injectables + biais/comptage + onglet + détecteur `objectif_inatteignable`
-câblés. Prochaine étape = **tronçon ⑤** : lire `05_*.md` → banc « jardin tenu »
-(tenu vs abandonné : démographie, couverture sol, **perf LightField** §2.7/Q9) +
-**rapport d'impasses agrégé** (le livrable « trous de gameplay »). C'est le livrable
-de MESURE. Réutilise le journal (gestes/impasses/conséquences/objectifs) — aucune
-machinerie neuve. Chaque tronçon : lire `0N` → bosser → golden intact → maj CE
-fichier → commit → tronçon suivant.
+**⑤ FAIT et vérifié (golden intact `3076c154…`, déterminisme 3/3, troncon2 9/9,
+banc `jardin_tenu` tourne, verdict Q9 = coût comparable, rapport d'impasses
+agrégé OK).** Banc de mesure tenu vs abandonné + `rapport_impasses` livrés, `sim/`
+intact, deux fichiers 🟢. Prochaine étape = **tronçon ⑥** : lire `06_*.md` → **vue
+Godot** (RÈGLE PERMANENTE, dernier tronçon de chaîne) : automate branché dans
+`sim_server` (option F5) + retour visuel des gestes + journal/impasses + onglet
+objectifs. C# namespace `Symbiose`, GDScript interdit, `dotnet build Symbiose.csproj`
+= filet de compil (F5 visuel = Nico). Neutre côté golden. Chaque tronçon : lire
+`0N` → bosser → golden intact → maj CE fichier → commit → tronçon suivant.
 DETTE : **D78** (ce sprint, « conçu, prêt à implémenter ») ; **D79** (système de
 quêtes complet, hors scope). Défauts figés : `part_recoltee=1.0`,
 `desherbage=curatif`. Rappel gestes réels : voir « Faits code établis » ci-dessus
