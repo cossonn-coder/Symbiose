@@ -5,8 +5,8 @@
 > n'est figé, pas de code moteur.** Préalable biologique à D87.
 
 ## Phase courante
-**TRONÇON ① IMPLÉMENTÉ le 2026-07-18** (moteur floraison retypée). Reste ② (nouaison
-calibrée) + ③ (vue Godot + banc F5). Voir §AVANCEMENT ① et §REPRISE.
+**TRONÇONS ① ET ② IMPLÉMENTÉS le 2026-07-18** (floraison retypée + nouaison calibrée).
+Reste ③ (vue Godot + banc F5). Voir §AVANCEMENT ①/② et §REPRISE.
 
 > Historique : **FIGÉ (phase B) le 2026-07-18** — conception validée par Nico +
 > 3 kickoffs autosuffisants. Aucune écriture moteur faite par la conception.
@@ -68,6 +68,59 @@ toucher la nouaison. NON corrigé ici — à résoudre au ②.
 > `test_sim_server` porte aussi **3 échecs PRÉ-EXISTANTS** sans rapport (attend
 > `engine_version 0.5.28`, le code est déjà `0.5.30` — dette de test d'un sprint
 > antérieur, non touchée).
+
+## AVANCEMENT ② — nouaison calibrée (D86 secondaire) — FAIT
+
+**Démarche perf-first : MESURE puis tuning du levier le plus simple.**
+
+- **Banc de mesure NEUF** `data/code/bancs/mesure_nouaison.py` (hors golden, hors
+  registre `BANCS[]` — script diagnostic exécutable, sœur de `tools/diag_population.py`).
+  Monde `full` (seed 42, mêmes tuiles/faune/pré-vieillissement que le serveur),
+  enveloppe READ-ONLY de `_tick_fruits` pour lire la dose `pollen_recu` EXACTE vue par
+  la nouaison + densités des 5 types de pollinisateurs sur la tuile du pommier.
+- **Ce que le banc a mesuré** (pommier verger, `insect`, 1 organ_site) :
+  1. **Magnitude** — un pommier BIEN VISITÉ intègre **~1.55 de pollen** sur sa
+     floraison → `g(1.55)=0.437` avec `POLLEN_DEMI=2.0` → **sous** la cible « belle
+     floraison = beaucoup de fruits » (frac≥0.5). ← **le levier ②**.
+  2. **Timing (HORS scope ②, à signaler)** — la floraison pommier est replacée en
+     PRINTEMPS PRÉCOCE (S12-16, ①) alors que la population de pollinisateurs, gâtée
+     par `warmth` (T_COLD_ZERO=6 °C) + nectar, ne culmine qu'en été (pic ~0.20 à
+     S26-31 vs **~0.01-0.05 à la floraison**). Le dépôt pendant la fenêtre florale est
+     donc **~0** (n_agents≈round(0.02×n_max)=0) ; le pollen n'arrive qu'à S18, APRÈS
+     la nouaison. → cause profonde du « aucune / une seule pomme » = **désaccord
+     phénologie florale ↔ activité pollinisatrice**, PAS la dose. Ni `POLLEN_DEMI` ni
+     le débit butineurs n'y peuvent rien (0 agent × débit = 0).
+  3. **1 organ_site** sur l'arbre de démo → plafond structurel de 1 fruit (artefact de
+     structure, hors scope).
+- **Levier retenu = `POLLEN_DEMI` 2.0 → 1.0** (`sim/engine/decompo.py`), levier UNIQUE
+  et le plus simple. `g(1.55)=0.61` (≥0.5) : un arbre bien visité noue une fraction
+  significative. Invariant intact (`g(0)=0`, sans plancher). Débit butineurs NON touché
+  (0 agent en floraison = magnitude inutile ; risque golden population évité). La rampe
+  Monod est partagée par `wind` (anémophilie) : `ANEMO_DOSE_COEF=6.0 ≫ 1.0` → toujours
+  ≈plein (comm. anemophilie.py:38 mis à jour).
+- **Effet net** : en régime établi (pollen reporté d'une année sur l'autre), le verger
+  noue **1 fruit** (round(0.61×1) = 1) au lieu de **0** (round(0.437×1) = 0).
+
+### Golden ② — INCHANGÉ (neutre)
+- `tests/golden_hash.txt` **INCHANGÉ** = `f3239042ed405102a2369245adbbc4a3f3dec216a7e9fc5ac01861ffa539da1a`
+  (celui de ①). `POLLEN_DEMI` n'est lu QUE par `frac_nouaison`, appelée uniquement
+  quand une fruitière mûre noue — or **aucune** ne noue dans le smoke (2 tuiles × 4 ans,
+  litière `fruit`=0). Neutre, comme prévu au kickoff.
+- `tests/population_hash.txt` **INCHANGÉ** = `ccd448bd…` (butineurs non touchés).
+
+### Tests ciblés ② — état
+VERTS : `test_golden` (inchangé), `test_population` (inchangé), `test_fruits` (24/24 —
+`pollen=100` donne toujours `g=0.99`≈plein, `pollen=0`→0 : sémantique conservée, AUCUNE
+valeur de dose à ajuster), `test_vent` (54/54, anémophilie), `test_ruche` (20/20),
+`test_desync_phenologie` (7/7), `test_floraison_forcage` (9/9).
+**test_epaisseur_500ans NON lancé** (interdit).
+
+> `test_sim_server::test_pommier_fruite` reste ROUGE (0 fruit @ S52) : il ne déroule
+> qu'**un an** → tombe sur la fenêtre de timing où le pollen n'est pas encore arrivé.
+> Le levier ② corrige la MAGNITUDE, pas le TIMING phénologie↔pollinisateurs → **décision
+> design attendue de Nico** (cf. point ②-2 ci-dessus : décaler légèrement la floraison
+> pommier, ou réchauffer la porte pollinisatrice de printemps, ou accepter la
+> fructification en régime pluriannuel). HORS scope du calibrage ②.
 
 ## Carte des tronçons
 - **① `01_moteur_floraison.md`** — forçage thermique événementiel (retype
@@ -203,16 +256,16 @@ floraison += (cible − floraison)·(MONTEE si cible>flor sinon DESCENTE)
    floraison→pollinisation→nouaison→fruit sur l'année, F5 Nico. Golden intact.
 
 ## §REPRISE
-**Tronçon ① FAIT** (moteur floraison retypée, non commité — Nico commit). Prochaine
-action = **tronçon ② `02_nouaison_calibrage.md`** : calibrer la dose de nouaison
-(`sim/engine/decompo.py` `frac_nouaison`/`POLLEN_DEMI` + `sim/engine/butineurs.py`
-débit / `sim/reproduction.py`), invariant « sans plancher » préservé. Point de départ
-concret pour ② : le pommier « full » fleurit bien au printemps (S14) mais **ne noue
-plus** (`test_sim_server::test_pommier_fruite` = 0 fruit @ S52 vs 1 @ S38 baseline) —
-c'est le symptôme D86-secondaire à résoudre en mesurant `pollen_recu` d'un pommier mûr
-sur floraison saine et en tunant la dose. Le golden bougera peut-être (fruits dans le
-smoke) — re-figeage maîtrisé prévu au ②.
+**Tronçons ① ET ② FAITS** (non commités — Nico commit). Prochaine action = **tronçon ③
+`03_vue_godot_banc.md`** (vue Godot + banc F5, dernier tronçon, golden intact).
 
-Pour reprendre : `CONCEPTION_FLORAISON_FRUCTIFICATION.md` §3 + `sim/engine/decompo.py`
-(`_tick_fruits`, `frac_nouaison`, `POLLEN_DEMI`, `SEUIL_FLEURI`/`SEUIL_NOUAISON`) +
-`sim/engine/butineurs.py`. Moteur floraison ① = `sim/engine/floraison.py` (référence).
+État ② : `POLLEN_DEMI` calibré 2.0→1.0 (`sim/engine/decompo.py`), banc de mesure
+`bancs/mesure_nouaison.py` posé, golden + population INCHANGÉS, tous les tests ciblés
+verts. Symptôme résiduel documenté : `test_sim_server::test_pommier_fruite` reste rouge
+car il est monoannuel et heurte le **désaccord de timing phénologie florale (printemps
+précoce) ↔ activité pollinisatrice (été)** — HORS scope ②, **décision design attendue
+de Nico** (voir §AVANCEMENT ② point 2 + encart `test_pommier_fruite`).
+
+Pour reprendre ③ : `03_vue_godot_banc.md` + `PlantRenderer.Organs.cs` (fleurs sur
+`Floraison ≥ 0.5`, déjà branché) + palettes fleur printemps/été/automne + banc
+d'observation F5 floraison→pollinisation→nouaison→fruit.

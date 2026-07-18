@@ -35,7 +35,8 @@ import math
 # bouger pour transporter le pollen) — sous ce seuil, dose nulle.
 ANEMO_VENT_SEUIL = 0.05
 # Conversion « floraison × vent » → dose de pollen_recu (échelle sur g() de la
-# nouaison, demi-saturation POLLEN_DEMI=2.0 : une belle floraison ventée noue plein).
+# nouaison, demi-saturation POLLEN_DEMI=1.0 depuis le sprint FLORAISON·FRUCTIFICATION ② :
+# une belle floraison ventée noue plein — dose typique ANEMO_DOSE_COEF≫DEMI → g≈1).
 ANEMO_DOSE_COEF  = 6.0
 # Part du panache qui retombe sur l'ÉMETTEUR lui-même (auto-anémophilie) : une
 # plante isolée noue un peu sans congénère. ∈ ]0,1[.

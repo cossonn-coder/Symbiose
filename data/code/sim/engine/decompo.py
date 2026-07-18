@@ -25,7 +25,13 @@ SEUIL_NOUAISON = 0.2
 # Demi-saturation de la rampe douce g(pollen_recu) = pollen / (pollen + POLLEN_DEMI)
 # ∈ [0,1[ (Monod) : dose faible → quelques fruits, dose forte → nouaison ≈ pleine,
 # JAMAIS de plancher (0 pollen → 0 fruit). Knob de calibrage (post-test, §B.2).
-POLLEN_DEMI    = 2.0
+# CALIBRÉ 2.0 → 1.0 au sprint FLORAISON·FRUCTIFICATION ② (D86 secondaire) : le banc
+# `bancs/mesure_nouaison.py` (monde full, seed 42) mesure qu'un pommier verger BIEN
+# VISITÉ intègre ~1.55 de pollen sur sa floraison → g(1.55)=0.44 avec DEMI=2.0
+# (sous le seuil « une belle floraison = beaucoup de fruits »). À DEMI=1.0 la même
+# dose donne g(1.55)=0.61 (≥0.5, cible du kickoff) SANS toucher l'invariant (0→0)
+# ni le débit des butineurs. Levier unique, le plus simple (§ démarche perf-first).
+POLLEN_DEMI    = 1.0
 
 
 def semaine_abscission(plant) -> int:
