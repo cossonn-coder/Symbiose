@@ -21,14 +21,31 @@ def journal(game_state: dict) -> list:
 
 def entree(semaine: int, tile_id: str, cible: str, facteur: str,
            geste: str, resultat: str) -> dict:
-    """Construit une entrée de journal (dict JSON-sérialisable, ordre stable)."""
+    """Construit une entrée de journal pour un GESTE (dict JSON-sérialisable, ordre
+    stable). `categorie="geste"` distingue les gestes des impasses au même journal."""
     return {
+        "categorie": "geste",
         "semaine": semaine,
         "tile_id": tile_id,
         "cible": cible,
         "facteur_limitant": facteur,
         "geste": geste,
         "resultat": resultat,
+    }
+
+
+def entree_impasse(semaine: int, tile_id: str, cible: str, facteur: str,
+                   cause: str) -> dict:
+    """Construit une entrée de journal pour une IMPASSE (§7) — un facteur limitant
+    diagnostiqué sans geste-réponse applicable (« trou de gameplay »). `categorie=
+    "impasse"` la sépare des gestes ; `cause` = type d'impasse (impasses.py)."""
+    return {
+        "categorie": "impasse",
+        "semaine": semaine,
+        "tile_id": tile_id,
+        "cible": cible,
+        "facteur_limitant": facteur,
+        "cause": cause,
     }
 
 

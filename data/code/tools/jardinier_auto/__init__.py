@@ -22,5 +22,7 @@
 
 from .profil import ProfilAutomate, LIBRE, BRIDE
 from .boucle import JardinierAutomate
+from .tutelle import marquer_jardin_cultive
 
-__all__ = ["ProfilAutomate", "LIBRE", "BRIDE", "JardinierAutomate"]
+__all__ = ["ProfilAutomate", "LIBRE", "BRIDE", "JardinierAutomate",
+           "marquer_jardin_cultive"]

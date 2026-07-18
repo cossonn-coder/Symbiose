@@ -1,41 +1,67 @@
 # SYMBIOSE — tools/jardinier_auto/execution.py
-# Étape 5 de la boucle (§3.5) : traduire un geste choisi en appel `sim.actions`.
-# C'est la SEULE surface où l'automate touche le monde, et elle passe par les
-# MÊMES fonctions que le joueur (philo #2 : aucune API privilégiée « soigner cette
+# Étape 5 de la boucle (§3.5) : traduire un `Plan` décidé en appel `sim.actions`.
+# C'est la SEULE surface où l'automate touche le monde, et elle passe par les MÊMES
+# fonctions que le joueur (philo #2 : aucune API privilégiée « soigner cette
 # plante »). La vue Godot verra simplement leurs effets dans le snapshot suivant.
 #
-# Tronçon ① : deux verbes câblés — `arroser` (milieu, plot-foyer) et `recolter`
-# (vivant, la plante). Les autres verbes de la table §5 arrivent au ②.
+# Tronçon ② : toute la table §5 est câblée — arroser, recolter, pailler, broyer,
+# recolter_paille, deraciner, tailler, grelinette. Chaque verbe renvoie un résultat
+# NORMALISÉ pour la trace : "ok" | "tronque" | "echec".
 #
-# NOTE budget : au ① le profil est LIBRE (paie_vigueur=False) mais les gestes de
-# `sim.actions` dépensent TOUJOURS la Vigueur en interne et REFUSENT si le solde
-# ne couvre pas le coût. On ne court-circuite rien ici : on rapporte fidèlement le
-# résultat. Le vrai bridage/déblocage (respect de `gestes_debloques`, budget)
-# est câblé au tronçon ③.
+# NOTE budget : le budget de Vigueur (coupe des gestes qui ne rentrent pas) est géré
+# EN AMONT par la boucle (mode paie_vigueur). Ici on exécute et on rapporte
+# fidèlement : les gestes `sim.actions` dépensent la Vigueur en interne et REFUSENT
+# si le solde ne couvre pas — un "echec" reflète ce refus. Le respect fin de
+# `gestes_debloques` (verrouillage par maîtrise) est câblé au ③.
 
 from __future__ import annotations
 
 from sim import actions as ACT
 
 
-def executer(game_state: dict, player: str, eco, plant, regle) -> str:
-    """Joue le `verbe` de `regle` sur `plant` (ou son plot). Renvoie un résultat
-    normalisé pour la trace : "ok" | "tronque" | "echec".
-    `arroser` (bool) : True → "ok", False → "echec" (Vigueur insuffisante).
-    `recolter` (ratio ∈ [0,1]) : 1 → "ok", 0 → "echec", entre-deux → "tronque"."""
-    if regle.verbe == "arroser":
+def _ratio(r: float) -> str:
+    """Normalise un ratio d'effort ∈ [0,1] en résultat de trace."""
+    if r >= 1.0:
+        return "ok"
+    if r <= 0.0:
+        return "echec"
+    return "tronque"
+
+
+def executer(game_state: dict, player: str, eco, plant, plan) -> str:
+    """Joue le `verbe` du `plan`. `plant` = la cultivée en cours ; `plan.cible_obj` =
+    la plante visée pour un geste sur le vivant (deraciner/tailler/broyer/
+    recolter_paille). Renvoie "ok" | "tronque" | "echec"."""
+    v = plan.verbe
+    if v == "arroser":
         r, c = plant.position
-        ok = ACT.arroser(game_state, player, eco, r, c)
+        return "ok" if ACT.arroser(game_state, player, eco, r, c) else "echec"
+
+    if v == "pailler":
+        r, c = plant.position
+        ok = ACT.pailler(game_state, player, eco, r, c, nature=plan.nature)
         return "ok" if ok else "echec"
 
-    if regle.verbe == "recolter":
-        ratio = ACT.recolter(game_state, player, plant, eco)
-        if ratio >= 1.0:
-            return "ok"
-        if ratio <= 0.0:
-            return "echec"
-        return "tronque"
+    if v == "recolter":
+        return _ratio(ACT.recolter(game_state, player, plant, eco))
 
-    # Défensif : un verbe non câblé ne doit jamais atteindre cette fonction en ①
-    # (regles.py n'en émet que deux). Signale l'incohérence sans muter le monde.
-    raise ValueError(f"verbe non câblé au tronçon ① : {regle.verbe!r}")
+    if v == "broyer":
+        # GRADUÉ : crédit de BRF ∝ effort. >0 = du bois a été broyé (ravitaillement).
+        return "ok" if ACT.broyer(game_state, player, plan.cible_obj, eco) > 0.0 else "echec"
+
+    if v == "recolter_paille":
+        return "ok" if ACT.recolter_paille(game_state, player, plan.cible_obj, eco) > 0.0 else "echec"
+
+    if v == "grelinette":
+        r, c = plant.position
+        return "ok" if ACT.grelinette(game_state, player, eco, r, c) else "echec"
+
+    if v == "deraciner":
+        return "ok" if ACT.deraciner(game_state, player, plan.cible_obj, eco) else "echec"
+
+    if v == "tailler":
+        # Écimage de l'apex meneur du voisin ombrageant (réponse ÉMERGENTE, philo #2).
+        return "ok" if ACT.tailler(game_state, player, plan.cible_obj, eco, cible="apex") else "echec"
+
+    # Défensif : un verbe non câblé ne doit jamais atteindre cette fonction.
+    raise ValueError(f"verbe non câblé : {v!r}")

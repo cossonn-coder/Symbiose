@@ -7,9 +7,37 @@
 >
 > Carte des tronçons : ① socle · ② table+budget+impasses · ③ comptabilité+trace ·
 > ④ objectifs+onglet · ⑤ banc jardin tenu · ⑥ vue Godot · ⑦ semiologique (opt).
-> **Golden INTACT partout** (H2 : automate hors tick). **① FAIT** (2026-07-18).
+> **Golden INTACT partout** (H2 : automate hors tick). **①② FAITS** (2026-07-18).
 
 ## Avancement
+- **② Table + budget + impasses — FAIT (2026-07-18).** Table `regles.py` COMPLÈTE
+  (7 facteurs : hydrique/exces_eau/ombrage/concurrence_ferale/sol_compacte/sol_nu/
+  organe_mur ; règles multiples par facteur, chaîne de repli). Nouveaux fichiers :
+  `tutelle.py` (cultivé/féral via set `replante`, `marquer_jardin_cultive`),
+  `impasses.py` (3 types §7), `proposition.py` (cerveau : choix geste OU impasse +
+  chaînage `broyer→pailler` + repli). `diagnostic.py` étendu (seuils nommés),
+  `perception.py` enrichi (paillage, structure, voisinage férale/ombrage, scan
+  LOCAL par tuile O(N²) négligeable), `execution.py` câble les 8 verbes,
+  `profil.py` porte `seuil_concurrence()` + `n_a_recolter()`, `boucle.py` intègre
+  part_recoltee + tri + budget Vigueur + consignation impasses, `trace.py` a la
+  catégorie `impasse`.
+  - **TUTELLE=CULTIVÉES câblée** (POINT À DURCIR du ① résolu) : `sous_tutelle`
+    croise le set `replante`. Le monde `full` ne marque personne → le banc et le
+    test déterminisme appellent `marquer_jardin_cultive` (hors tick, déclare le
+    jardin initial ; les férales de succession restent hors set).
+  - **Golden INCHANGÉ** (`3076c154dc3d5fbf…`, bit-identique — H2 tenu). Déterminisme
+    3/3 (rejeu 3989 entrées identiques). Nouveau `tests/test_automate_troncon2.py` :
+    9/9 (chaînage broyer→pailler, 2 types d'impasse, repli hydrique, seuils
+    désherbage, cible deraciner, part_recoltee, priorité pailler>arroser).
+  - **DÉCOUVERTE (impasse réelle)** : le monde `full` n'a AUCUNE chaîne de mulch
+    (0 squelette ligneux `bois_restant`, 0 espèce `mulch_source`) → l'automate
+    consigne `sol_nu → ravitaillement_manquant` en masse. C'est un vrai trou de
+    gameplay remonté par le détecteur (pas un bug) — à agréger au banc ⑤. Le
+    chaînage broyer→pailler est prouvé fonctionnel par `test_automate_troncon2`
+    (scénario avec squelette). Banc : désherbage commutable vérifié (aucun=0
+    deraciner / curatif≈117 / systematique=143 sur 52 sem) ; `--paie-vigueur`
+    coupe le flot d'échecs (129 gestes vs ~2000) ; `--part-recoltee 0.5` halve la
+    récolte. Tous fichiers ≤ 69 LDC code (bande 🟢). Aucun C# touché.
 - **① Socle — FAIT (2026-07-18).** Paquet `tools/jardinier_auto/` (profil,
   perception, diagnostic, regles, execution, trace, boucle) + banc
   `tools/bancs/automate_demo.py` + `tests/test_automate_determinisme.py`.
@@ -167,13 +195,13 @@ Emplacement gestes = **paquet** `sim/actions/` (ré-exporté via `sim.actions`).
 - **Q8 retour F5** : fusionné dans le tronçon ⑤ (vue Godot obligatoire).
 
 ## §REPRISE
-**① FAIT et vérifié (golden intact, déterminisme 3/3), NON COMMITÉ** (Nico
-commit). Prochaine étape = **tronçon ②** : lire `02_*.md` → table `regles.py`
-complète + priorisation par budget + chaînage `broyer→pailler` +
-`tailler`/`deraciner` (désherbage `curatif`/`aucun`/`systematique`) +
-`part_recoltee` + **détecteur d'impasses**. **Câbler la tutelle=cultivées** au ②
-(croiser le set `replante` — voir POINT À DURCIR ci-dessus). Chaque tronçon :
-lire `0N` → bosser → golden intact → maj CE fichier → commit → tronçon suivant.
+**② FAIT et vérifié (golden intact `3076c154…`, déterminisme 3/3, troncon2 9/9),
+NON COMMITÉ** (Nico commit). Tutelle=cultivées câblée. Prochaine étape = **tronçon
+③** : lire `03_*.md` → comptabilité commutable (flags `paie_vigueur` déjà
+partiellement câblé au budget ② / `credite_maitrise`), respect de
+`gestes_debloques`, **trace des CONSÉQUENCES** (déverrouillages via
+`evaluer_deblocages`, morts, paliers). Chaque tronçon : lire `0N` → bosser →
+golden intact → maj CE fichier → commit → tronçon suivant.
 DETTE : **D78** (ce sprint, « conçu, prêt à implémenter ») ; **D79** (système de
 quêtes complet, hors scope). Défauts figés : `part_recoltee=1.0`,
 `desherbage=curatif`. Rappel gestes réels : voir « Faits code établis » ci-dessus

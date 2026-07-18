@@ -20,7 +20,7 @@ Usage (depuis data/code/) :
 from __future__ import annotations
 import json
 
-from tools.jardinier_auto import JardinierAutomate, LIBRE
+from tools.jardinier_auto import JardinierAutomate, LIBRE, marquer_jardin_cultive
 from tools.jardinier_auto.trace import CLE_JOURNAL, journal
 
 _SEED = 0x5AB1057E
@@ -47,8 +47,11 @@ def _build_engine():
 
 def _jouer(weeks: int) -> list:
     """Un moteur neuf joué `weeks` ticks avec un automate LIBRE frais ; renvoie
-    le journal consigné."""
+    le journal consigné. On DÉCLARE le jardin initial cultivé (tutelle = cultivées,
+    tronçon ②) pour que le journal soit non trivial — le marquage est déterministe
+    (itération sur listes)."""
     engine = _build_engine()
+    marquer_jardin_cultive(engine, engine.game_state["current_player"])
     automate = JardinierAutomate(LIBRE)
     for _ in range(weeks):
         engine.tick_semaine()

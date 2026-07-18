@@ -27,6 +27,26 @@ class ProfilAutomate:
     part_recoltee: float = 1.0           # fraction récoltée ∈ [0,1] — slider (②)
     ecrit_carnet: bool = False           # écritures narratives dans le carnet (③)
 
+    # --- Sémantique des axes réglés au tronçon ② (lus par perception/boucle) ----
+    def seuil_concurrence(self) -> int | None:
+        """Combien de férales à portée racinaire déclenchent une `concurrence_ferale`
+        (→ `deraciner`), selon le mode `desherbage` (§4) :
+          - `aucun`        → None : jamais de désherbage (la concurrence n'est pas
+            même diagnostiquée) ;
+          - `curatif`      → 2 : on n'arrache QUE si la pression férale est réelle
+            (une seule adventice n'est pas encore le facteur limitant) ;
+          - `systematique` → 1 : toute férale à portée d'une cultivée est arrachée.
+        """
+        return {"aucun": None, "curatif": 2, "systematique": 1}.get(self.desherbage, 2)
+
+    def n_a_recolter(self, n_mur: int) -> int:
+        """Nombre de plantes mûres à réellement récolter ce tick, `slider` (§4/Q5) :
+        `round(part_recoltee × n_mûrs)`. `part_recoltee=1.0` (défaut) → tout (=①) ;
+        `0.0` → rien (les fruits tombent, nourrissent la faune, ferment la boucle
+        décompo). Population-level : on récolte les `k` premières mûres dans l'ordre
+        stable, on laisse tomber le reste — déterministe, sans RNG (philo #3)."""
+        return int(round(self.part_recoltee * n_mur))
+
 
 # --- Presets nommés (combinaisons d'axes, cf. §4) -------------------------------
 # LIBRE : aucune comptabilité — l'automate joue « pour voir », sans budget ni
