@@ -473,7 +473,21 @@ from __future__ import annotations
 #       hors serveur ; ce chemin n'existe jamais pour lui). Un binaire pré-0.5.30
 #       ignore la commande (erreur pont non fatale) et n'émet pas le bloc → la vue
 #       retombe sur « pas d'automate » (tolérance, comme tous les bumps précédents).
-ENGINE_VERSION = "0.5.30"
+# 0.5.31 (acquisition des moyens d'agir ①, gestes manuels) : DEUX verbes neufs à la
+#       commande `action`, gestes structurels de BASE à mains nues (gradient
+#       `pincer < arracher < couper/tailler`, spec §A) — désignés par POSITION
+#       continue comme `tailler` (`target.x_cm`/`y_cm` + `params.cible`
+#       apex/branche + `target.segment` optionnel du clic). `pincer` (coût FAIBLE) :
+#       régime DOUX du seam (auxine ↓, AUCUN retrait) → débourrement ÉMERGENT au tick
+#       (philo #2), rien déposé au sol. `arracher` (coût ELEVE) : régime NET à la main
+#       (écime + litière `bois`, MÊME calcul que `tailler`) MAIS appelle `plant.erode`
+#       (la déchirure manuelle stresse la plante — DIFFÉRENCIATEUR main/outil, philo
+#       #1/#6) et NE rend AUCUNE Vigueur (on jette). Les façades `A.pincer`/`A.arracher`
+#       font foi. PURE extension (gestes event-driven, opt-in joueur, hors tick) →
+#       golden INTACT (le smoke est une succession sans joueur, ces verbes ne sont
+#       jamais appelés). Un binaire pré-0.5.31 répond « verbe inconnu » aux 2 gestes
+#       (tolérance côté vue, comme tous les bumps précédents).
+ENGINE_VERSION = "0.5.31"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

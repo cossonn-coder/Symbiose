@@ -299,6 +299,77 @@ def tailler(game_state: dict, player: str, plant, eco, *, cible: str = "apex",
     return True
 
 
+# Intensité de `pincer` — régime DOUX du seam (strictement < COUPE_NETTE=0.8, spec
+# §A) : on ne RETIRE rien, on baisse SEULEMENT l'auxine locale pour lever
+# l'inhibition apicale. Le débourrement latéral ÉMERGE au `grow_plant` suivant
+# (philo #2 : aucun « +N latéraux » codé en dur). Calibrage F5.
+PINCER_INTENSITE = 0.5
+
+
+def pincer(game_state: dict, player: str, plant, eco, *, cible: str = "apex",
+           segment_id: int | None = None) -> bool:
+    """Pincer — geste manuel DOUX de BASE (gradient `pincer < arracher <
+    couper/tailler`, spec §A) : à mains nues on ébourgeonne sans outil. Régime DOUX
+    du seam (`atteindre_segment` à `PINCER_INTENSITE < COUPE_NETTE`) : l'auxine du
+    segment ciblé baisse, AUCUN segment n'est retiré → le débourrement local ÉMERGE
+    au tick de croissance suivant (philo #2). RIEN n'est déposé au sol (rien n'a été
+    coupé). Coût FAIBLE (geste léger, non perturbateur).
+
+    Sélection de cible identique à `tailler` (`segment_id` explicite du clic, sinon
+    `_segment_cible` via `cible`). Binaire tout-ou-rien (modèle `deraciner`) : le
+    seam n'est appelé QUE si le coût est intégralement payé — forcer le geste à vide
+    draine la Vigueur sans rien pincer. `eco` reçu par symétrie de signature avec les
+    autres gestes structurels (non utilisé : le pincement n'écrit aucun champ écolo).
+    Renvoie True si le geste a été pleinement payé (et donc appliqué)."""
+    cost = cout_action(game_state, player, "pincer", _objets_action("pincer", plant))
+    if spend(game_state, player, cost) < 1.0:
+        return False                          # Vigueur insuffisante → structure intacte
+    seg_id = None
+    if segment_id is not None:
+        segs = plant.segments
+        if 0 <= segment_id < len(segs) and segs[segment_id].parent is not None:
+            seg_id = segment_id               # branche désignée à la souris
+    if seg_id is None:
+        seg_id = _segment_cible(plant, cible)
+    if seg_id is not None:
+        atteindre_segment(plant, seg_id, intensite=PINCER_INTENSITE)   # DOUX : auxine ↓, aucun retrait
+    return True
+
+
+def arracher(game_state: dict, player: str, plant, eco, *, cible: str = "apex",
+             segment_id: int | None = None) -> bool:
+    """Arracher — geste manuel NET de BASE (gradient §A), le pendant BRUTAL de la
+    coupe à l'outil. À mains nues on écime (`atteindre_segment` NET, `intensite=1.0`,
+    même retrait que `tailler`) et la masse `bois` retirée retombe en litière au
+    plot-foyer (MÊME calcul que `tailler` : `Σ length_cm × BOIS_PAR_CM`). MAIS la
+    déchirure manuelle STRESSE la plante : on appelle `plant.erode(VITALITE_STEP)` —
+    c'est le DIFFÉRENCIATEUR main/outil (le sécateur, tronçon 02, coupera net SANS
+    éroder). AUCUN gain de Vigueur (on jette, on ne récupère pas proprement — contraste
+    avec `tailler` qui rend un peu de Vigueur). Coût ÉLEVÉ (action directe perturbatrice,
+    philo #1).
+
+    Binaire tout-ou-rien (modèle `deraciner`) : le seam, le dépôt et l'érosion ne sont
+    appliqués QUE si le coût est intégralement payé — forcer le geste à vide draine la
+    Vigueur sans rien arracher (structure ET vitalité intactes).
+    Renvoie True si le geste a été pleinement payé (et donc appliqué)."""
+    cost = cout_action(game_state, player, "arracher", _objets_action("arracher", plant))
+    if spend(game_state, player, cost) < 1.0:
+        return False                          # Vigueur insuffisante → rien n'est écrit
+    seg_id = None
+    if segment_id is not None:
+        segs = plant.segments
+        if 0 <= segment_id < len(segs) and segs[segment_id].parent is not None:
+            seg_id = segment_id               # branche désignée à la souris
+    if seg_id is None:
+        seg_id = _segment_cible(plant, cible)
+    if seg_id is not None:
+        removed = atteindre_segment(plant, seg_id, intensite=1.0)   # NET → écimage du sous-arbre
+        masse_bois = sum(s.length_cm for s in removed) * BOIS_PAR_CM
+        eco.deposer_litiere(*plant.position, "bois", masse_bois)    # no-op si masse_bois ≤ 0
+    plant.erode(VITALITE_STEP)                # déchirure manuelle → stress cicatriciel (différenciateur main/outil)
+    return True
+
+
 def ecraser(game_state: dict, player: str, eco, r: int, c: int,
             guilde: str = "puceron", urgence: bool = True) -> bool:
     """Écraser l'être vivant CLIQUÉ (spec §3.3) — action BINAIRE, RÉELLE (D31.3).

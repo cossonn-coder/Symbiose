@@ -125,7 +125,8 @@ class ActionsMixin:
             tile = tiles.get(target.get("tile"))
             return tile, (None if tile is None else gs["eco"][tile.tile_id])
 
-        if verb in ("manger", "recolter", "deraciner", "tailler", "couper"):
+        if verb in ("manger", "recolter", "deraciner", "tailler", "couper",
+                    "pincer", "arracher"):
             tile, eco = tile_cible()
             if tile is None:
                 return bilan(False, 0.0, 0.0,
@@ -179,6 +180,39 @@ class ActionsMixin:
                 return bilan(ok, cost, 0.0,
                              f"branche coupée : {plant.name}" if ok
                              else "Vigueur insuffisante — rien coupé")
+
+            # Gestes MANUELS de BASE (acquisition des moyens d'agir ①) : `pincer`
+            # (DOUX — auxine ↓, aucun retrait, débourrement émergent) et `arracher`
+            # (NET à la main — écime + litière `bois` + `erode()` la vitalité, le
+            # différenciateur main/outil). Même désignation que `tailler` (cible
+            # apex/branche + segment cliqué validé en amont), coûts propres FAIBLE/
+            # ELEVE via la façade. La façade fait foi (seam, dépôt, érosion).
+            if verb in ("pincer", "arracher"):
+                cible = params.get("cible", "apex")
+                if cible not in ("apex", "branche"):
+                    return bilan(False, 0.0, 0.0,
+                                 f"cible inconnue : {cible!r}")
+                seg = target.get("segment")
+                if seg is not None:
+                    if not isinstance(seg, int) or isinstance(seg, bool):
+                        return bilan(False, 0.0, 0.0, f"segment non entier : {seg!r}")
+                    if not 0 <= seg < len(plant.segments):
+                        return bilan(False, 0.0, 0.0,
+                                     f"segment hors structure : {seg} "
+                                     f"(plante à {len(plant.segments)} segments)")
+                    if plant.segments[seg].parent is None:
+                        return bilan(False, 0.0, 0.0,
+                                     "le collet est protégé — rien à retirer ici")
+                cost = A.cout_action(gs, player, verb, A._objets_action(verb, plant))
+                geste = A.pincer if verb == "pincer" else A.arracher
+                ok = geste(gs, player, plant, eco, cible=cible, segment_id=seg)
+                if verb == "pincer":
+                    msg = (f"pincé : {plant.name}" if ok
+                           else "Vigueur insuffisante — rien pincé")
+                else:
+                    msg = (f"branche arrachée à la main : {plant.name}" if ok
+                           else "Vigueur insuffisante — rien arraché")
+                return bilan(ok, cost, 0.0, msg)
 
             # tailler
             cible = params.get("cible", "apex")

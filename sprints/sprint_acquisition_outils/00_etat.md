@@ -7,7 +7,24 @@
 > amorçable). Même classe de bug : geste bloqué faute d'un moyen non provisionné.
 
 ## Phase courante
-**PHASE B TERMINÉE** — doc figé + 4 kickoffs écrits. Exécution = `/sprint-auto`.
+**TRONÇON 01 FAIT** (moteur, gestes manuels `pincer`+`arracher`). Reste 02→04.
+
+## Avancement
+- **01 — Gestes manuels `pincer` + `arracher` : FAIT** (2026-07-19).
+  Façades `sim/actions/gestes.py` (`PINCER_INTENSITE=0.5 < COUPE_NETTE`) : `pincer`
+  DOUX (auxine ↓, aucun retrait, coût FAIBLE) ; `arracher` NET (écime + litière
+  `bois` MÊME calcul que `tailler` + `plant.erode(VITALITE_STEP)`, coût ELEVE, AUCUN
+  gain). `couts.py` (`COUTS`/`OBJETS_TOUCHES`, famille `taille` SANS outil),
+  `palette.py` (famille `plante`), `__init__.py` (export), dispatch serveur
+  `tools/simserver/actions.py` (branche plante, désignation comme `tailler`), pont
+  **0.5.31** (noté `version.py`). Tests : `tests/test_gestes_manuels.py` 22/22.
+  **Golden INCHANGÉ** (`57c166d8…`). test_vigueur 136/136.
+  ⚠️ DETTE TAILLE : `tools/simserver/actions.py` passe de 391 (vigilance) à **418
+  LDC pur → > 400** avec les 2 branches de dispatch neuves. Router qui gonfle à
+  chaque verbe → candidat `/refactor` (scinder la branche plante), HORS périmètre
+  tronçon 01 (moteur pur, un fichier à la fois). À traiter en fin de sprint.
+  NB : test_sim_server a 4 échecs PRÉ-EXISTANTS (assertions `engine_version==0.5.28`
+  périmées + timing floraison) — indépendants de ce tronçon.
 
 ## Décisions clés (détail dans le doc de conception)
 - **Gradient de gestes** : `pincer` (DOUX, main, BASE) < `arracher` (NET déchiré,
@@ -53,7 +70,10 @@
   tronçon moteur qui ajoute un verbe bump au numéro libre suivant + note version.py.
 
 ## §REPRISE
-Conception FIGÉE, phase B close. Prochaine étape = `/sprint-auto sprint_acquisition_outils`.
-Lire pour exécuter : `CLAUDE.md` + ce fichier + le kickoff `0N` du tronçon courant +
-`docs/conception/CONCEPTION_ACQUISITION_OUTILS.md`. Chaque tronçon met à jour cette
+Tronçon **01 FAIT** (golden `57c166d8…` inchangé, pont 0.5.31). **Prochain = 02**
+(acquisition Atelier + registre `OUTILS` → déblocage sécateur, CŒUR D82).
+Lire pour exécuter : `CLAUDE.md` + ce fichier + le kickoff `02_*.md` +
+`docs/conception/CONCEPTION_ACQUISITION_OUTILS.md` §B. Chaque tronçon met à jour cette
 section (fait/à faire) en fin de course.
+DETTE ouverte à traiter en fin de sprint : `/refactor tools/simserver/actions.py`
+(418 LDC > 400 depuis 01).

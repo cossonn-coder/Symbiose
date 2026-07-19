@@ -42,6 +42,7 @@ FAMILLE_CIBLE: dict[str, str] = {
     "poser_bac": "plot", "poser_pile": "plot", "poser_ruche": "plot",
     # plante par position
     "recolter": "plante", "deraciner": "plante", "tailler": "plante",
+    "pincer": "plante", "arracher": "plante",
     "couper": "plante", "manger": "plante", "ecraser": "plante",
     "broyer": "plante", "bouturer": "plante", "greffer": "plante",
     "favoriser_auxiliaire": "tuile",

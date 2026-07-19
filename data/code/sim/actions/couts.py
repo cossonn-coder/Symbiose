@@ -47,6 +47,8 @@ COUTS = {
     "grelinette":           MODERE,
     "pailler":              MODERE,            # dépose du mulch au sol (phase planification, équilibre invasion ③ §2)
     "broyer":               MODERE,            # broie du bois → BRF (phase planification, équilibre invasion ④ §3.1)
+    "pincer":               FAIBLE,            # geste manuel DOUX de BASE (gradient §A) — léger, non perturbateur
+    "arracher":             ELEVE,             # geste manuel NET de BASE (gradient §A) — action directe perturbatrice (philo #1)
     "tailler":              MODERE,            # geste direct sur le vivant (philo #1) — coût modéré
     "couper":               MODERE,            # geste BRUT ancêtre de tailler (palette D12) — même coût, sans choix de segment
     "bouturer":             MODERE,            # prélève un greffon clone sur une mère (palette ②) — geste direct sur le vivant (philo #1)
@@ -88,6 +90,8 @@ OBJETS_TOUCHES = {
     "pailler":              ("paillage",),       # technique ; on écrit un CHAMP, pas de cible vivante — sans état moteur → atténuation neutre 1.0
     "broyer":               ("broyage", "broyeur"),   # technique + outil (BRF, équilibre invasion ④) — sans état moteur → atténuation neutre 1.0
 
+    "pincer":               ("taille",),   # famille taille, SANS outil (§A) — la maîtrise taille atténue, aucun outil requis
+    "arracher":             ("taille",),   # famille taille, SANS outil (§A) — le différenciateur main/outil est le seul appel `erode`
     "tailler":              ("taille", "sécateur"),
     "couper":               ("taille", "sécateur"),   # geste brut D12 : même technique/outil que tailler
     "bouturer":             ("bouture", "sécateur"),  # technique BOUTURE + outil (on prélève le greffon au sécateur) ; la mère cliquée s'ajoute via _objets_action
