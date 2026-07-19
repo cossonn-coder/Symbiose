@@ -25,6 +25,8 @@ from .conteneurs_route import route_conteneur, VERBES as CONTENEUR_VERBES
 from .multiplication_route import (
     route_multiplication, VERBES as MULTIPLICATION_VERBES,
 )
+from .plante_route import route_plante, VERBES as PLANTE_VERBES
+from .structures_route import route_structure, VERBES as STRUCTURE_VERBES
 from .maitrise_pont import (
     decouvrir_a_usage,         # D60 ③ : découverte du geste à la 1ʳᵉ utilisation réussie
     crediter_usage,            # D60 ③ : preuve légère d'usage réussi
@@ -167,120 +169,13 @@ class ActionsMixin:
             tile = tiles.get(target.get("tile"))
             return tile, (None if tile is None else gs["eco"][tile.tile_id])
 
-        if verb in ("manger", "recolter", "deraciner", "tailler", "couper",
-                    "pincer", "arracher"):
-            tile, eco = tile_cible()
-            if tile is None:
-                return bilan(False, 0.0, 0.0,
-                             f"tuile introuvable : {target.get('tile')!r}")
-            plant = self._plant_at(tile, target.get("x_cm"), target.get("y_cm"))
-            if plant is None:
-                return bilan(False, 0.0, 0.0,
-                             "aucune plante vivante à cette position")
-            # Coût nominal AVANT le geste (cout_action est une lecture pure —
-            # le geste recalcule le même en interne) : pour l'affichage HUD.
-            cost = A.cout_action(gs, player, verb, A._objets_action(verb, plant))
-            if verb == "manger":
-                # Fruit ciblé (③, D19) : index dans plant.fruits du snapshot.
-                # Validé AVANT la façade — un index invalide ne mange rien (et,
-                # côté actions, retombe sur le mode générique). NB : bool < int.
-                fidx = target.get("fruit")
-                if fidx is not None:
-                    if not isinstance(fidx, int) or isinstance(fidx, bool):
-                        return bilan(False, 0.0, 0.0,
-                                     f"fruit non entier : {fidx!r}")
-                    if not 0 <= fidx < len(plant.fruits):
-                        return bilan(False, 0.0, 0.0,
-                                     f"fruit hors structure : {fidx} "
-                                     f"(la plante porte {len(plant.fruits)} fruits)")
-                g = A.manger(gs, player, plant, eco, fruit_index=fidx)
-                # Gain nominal DANS le message (retour F5 Nico : « rien ne se
-                # passe » = organe immature, gain ≈ 0 — qu'on le LISE).
-                cible = f"fruit #{fidx}" if fidx is not None else plant.name
-                return bilan(True, 0.0, g,
-                             f"mangé : {cible} (+{g:.1f} Vigueur — "
-                             f"gain ∝ maturité de l'organe)")
-            if verb == "recolter":
-                ratio = A.recolter(gs, player, plant, eco)
-                msg = ("récolté : " + plant.name if ratio >= 1.0
-                       else f"récolte partielle ({ratio:.0%}) : {plant.name}")
-                return bilan(ratio > 0.0, cost, 0.0, msg)
-            if verb == "deraciner":
-                ok = A.deraciner(gs, player, plant, eco)
-                return bilan(ok, cost, 0.0,
-                             "déraciné : " + plant.name if ok
-                             else "Vigueur insuffisante — rien déraciné")
-            # couper (geste BRUT, D12 — ancêtre de tailler) : coupe SANS choisir le
-            # segment (pas de `target.segment`). Réutilise le seam `tailler` avec la
-            # cible par défaut (apex) → façade fait foi (validité/coût/effet). Coût
-            # propre `couper` (= tailler). Marque l'action (ouvre `tailler` par la
-            # chaîne sécateur→couper→tailler) + réévalue les déblocages.
-            if verb == "couper":
-                cost = A.cout_action(gs, player, "couper",
-                                     A._objets_action("couper", plant))
-                ok = A.tailler(gs, player, plant, eco, cible="apex", segment_id=None)
-                return bilan(ok, cost, 0.0,
-                             f"branche coupée : {plant.name}" if ok
-                             else "Vigueur insuffisante — rien coupé")
-
-            # Gestes MANUELS de BASE (acquisition des moyens d'agir ①) : `pincer`
-            # (DOUX — auxine ↓, aucun retrait, débourrement émergent) et `arracher`
-            # (NET à la main — écime + litière `bois` + `erode()` la vitalité, le
-            # différenciateur main/outil). Même désignation que `tailler` (cible
-            # apex/branche + segment cliqué validé en amont), coûts propres FAIBLE/
-            # ELEVE via la façade. La façade fait foi (seam, dépôt, érosion).
-            if verb in ("pincer", "arracher"):
-                cible = params.get("cible", "apex")
-                if cible not in ("apex", "branche"):
-                    return bilan(False, 0.0, 0.0,
-                                 f"cible inconnue : {cible!r}")
-                seg = target.get("segment")
-                if seg is not None:
-                    if not isinstance(seg, int) or isinstance(seg, bool):
-                        return bilan(False, 0.0, 0.0, f"segment non entier : {seg!r}")
-                    if not 0 <= seg < len(plant.segments):
-                        return bilan(False, 0.0, 0.0,
-                                     f"segment hors structure : {seg} "
-                                     f"(plante à {len(plant.segments)} segments)")
-                    if plant.segments[seg].parent is None:
-                        return bilan(False, 0.0, 0.0,
-                                     "le collet est protégé — rien à retirer ici")
-                cost = A.cout_action(gs, player, verb, A._objets_action(verb, plant))
-                geste = A.pincer if verb == "pincer" else A.arracher
-                ok = geste(gs, player, plant, eco, cible=cible, segment_id=seg)
-                if verb == "pincer":
-                    msg = (f"pincé : {plant.name}" if ok
-                           else "Vigueur insuffisante — rien pincé")
-                else:
-                    msg = (f"branche arrachée à la main : {plant.name}" if ok
-                           else "Vigueur insuffisante — rien arraché")
-                return bilan(ok, cost, 0.0, msg)
-
-            # tailler
-            cible = params.get("cible", "apex")
-            if cible not in ("apex", "branche"):
-                return bilan(False, 0.0, 0.0,
-                             f"cible de taille inconnue : {cible!r}")
-            # Segment explicite (tranche 5, la branche cliquée) : validé AVANT
-            # la façade — un refus de désignation ne draine pas la Vigueur.
-            # NB : bool est un sous-type d'int en Python → exclu explicitement.
-            seg = target.get("segment")
-            if seg is not None:
-                if not isinstance(seg, int) or isinstance(seg, bool):
-                    return bilan(False, 0.0, 0.0,
-                                 f"segment non entier : {seg!r}")
-                if not 0 <= seg < len(plant.segments):
-                    return bilan(False, 0.0, 0.0,
-                                 f"segment hors structure : {seg} "
-                                 f"(plante à {len(plant.segments)} segments)")
-                if plant.segments[seg].parent is None:
-                    return bilan(False, 0.0, 0.0,
-                                 "le collet est protégé — rien à couper ici")
-            ok = A.tailler(gs, player, plant, eco, cible=cible, segment_id=seg)
-            quoi = f"segment {seg}" if seg is not None else cible
-            return bilan(ok, cost, 0.0,
-                         f"taillé ({quoi}) : {plant.name}" if ok
-                         else "Vigueur insuffisante — rien taillé")
+        # Gestes sur une PLANTE VIVANTE désignée par position (manger/recolter/
+        # deraciner/couper/pincer/arracher/tailler) : routage délégué au module
+        # `plante_route` (garde ce routeur court). `_plant_at` passé en résolveur ;
+        # les façades `sim/actions` font foi (validité, coût, effet).
+        if verb in PLANTE_VERBES:
+            return route_plante(gs, player, verb, target, params,
+                                bilan, self._plant_at)
 
         # Multiplication végétative (palette de gestes ②③, protocoles 0.5.24/0.5.25) :
         # `bouturer`/`greffer`, gestes à 2 TEMPS côté VUE (serveur STATELESS). Routage
@@ -532,113 +427,12 @@ class ActionsMixin:
                          f"sol ameubli à la grelinette en ({r},{c})" if ok
                          else "Vigueur insuffisante")
 
-        # Structures posables & compostage (⑤, protocole 0.3.5). Toutes ciblent une
-        # tuile ; poser/composter/empiler/epandre désignent un PLOT {r,c}, les gestes
-        # sur une structure existante (composter/empiler/retourner/epandre) la
-        # désignent par INDEX dans `eco.structures` (= ordre du snapshot). Validation
-        # des bornes ICI (refus de désignation → ne coûte rien), la façade fait foi.
-        if verb in ("poser_bac", "poser_pile", "composter", "empiler_bois",
-                    "retourner", "epandre", "poser_ruche", "recolter_miel"):
-            tile, eco = tile_cible()
-            if tile is None:
-                return bilan(False, 0.0, 0.0,
-                             f"tuile introuvable : {target.get('tile')!r}")
-
-            def plot_rc():
-                """(r, c) entier dans la grille, ou (None, message)."""
-                r, c = target.get("r"), target.get("c")
-                if (not isinstance(r, int) or isinstance(r, bool)
-                        or not isinstance(c, int) or isinstance(c, bool)
-                        or not (0 <= r < tile.grid_rows)
-                        or not (0 <= c < tile.grid_cols)):
-                    return None, f"plot hors tuile : r={r!r}, c={c!r}"
-                return (r, c), None
-
-            def struct_cible():
-                """La Structure désignée par `target.structure`, ou (None, message)."""
-                idx = target.get("structure")
-                if not isinstance(idx, int) or isinstance(idx, bool):
-                    return None, f"structure non entier : {idx!r}"
-                if not 0 <= idx < len(eco.structures):
-                    return None, (f"structure hors liste : {idx} "
-                                  f"({len(eco.structures)} posées sur {tile.tile_id})")
-                return eco.structures[idx], None
-
-            cost = A.cout_action(gs, player, verb, A.OBJETS_TOUCHES[verb])
-
-            if verb in ("poser_bac", "poser_pile", "poser_ruche"):
-                rc, err = plot_rc()
-                if rc is None:
-                    return bilan(False, 0.0, 0.0, err)
-                r, c = rc
-                if verb == "poser_bac":
-                    s = A.poser_bac(gs, player, eco, r, c)
-                    quoi = "bac à compost"
-                elif verb == "poser_pile":
-                    s = A.poser_pile(gs, player, eco, tile, r, c)
-                    quoi = "pile à bois"
-                else:
-                    s = A.poser_ruche(gs, player, eco, r, c)   # ⑥ §H.1
-                    quoi = "ruche"
-                return bilan(s is not None, cost, 0.0,
-                             f"{quoi} posé{'e' if verb == 'poser_ruche' else ''} "
-                             f"en ({r},{c}) sur {tile.tile_id}"
-                             if s is not None
-                             else "Vigueur insuffisante — rien posé")
-
-            struct, err = struct_cible()
-            if struct is None:
-                return bilan(False, 0.0, 0.0, err)
-            # Récolte du miel (⑥ §I.2) : geste sur une ruche (par index), gain Vigueur
-            # ∝ miel transféré, gaté par l'équipement (maîtrise §I.3). Refus de
-            # désignation (pas une ruche) → ne coûte rien.
-            if verb == "recolter_miel":
-                if struct.kind != "ruche":
-                    return bilan(False, 0.0, 0.0, "cette structure n'est pas une ruche")
-                g = A.recolter_miel(gs, player, struct, eco)   # eco → alarme §J si nu
-                equipe = A.equipe(gs, player)
-                return bilan(g > 0.0, cost, g,
-                             f"miel récolté (+{g:.1f} Vigueur"
-                             f"{'' if equipe else ' — récolte partielle, sans équipement'})"
-                             if g > 0.0
-                             else "rien récolté (réserve vide ou Vigueur insuffisante)")
-            # Cohérence kind/geste : composter→bac, empiler→pile (refus de
-            # désignation, ne coûte rien). retourner/epandre marchent sur les deux.
-            if verb == "composter" and struct.kind != "bac":
-                return bilan(False, 0.0, 0.0, "cette structure n'est pas un bac à compost")
-            if verb == "empiler_bois" and struct.kind != "pile":
-                return bilan(False, 0.0, 0.0, "cette structure n'est pas une pile à bois")
-
-            if verb == "retourner":
-                ok = A.retourner(gs, player, struct)
-                return bilan(ok, cost, 0.0,
-                             "compost retourné (maturation accélérée)" if ok
-                             else "Vigueur insuffisante — rien retourné")
-
-            rc, err = plot_rc()
-            if rc is None:
-                return bilan(False, 0.0, 0.0, err)
-            r, c = rc
-            if verb == "composter":
-                ok = A.composter(gs, player, eco, r, c, struct)
-                return bilan(ok, cost, 0.0,
-                             f"litière tendre compostée ({r},{c}) → bac" if ok
-                             else "Vigueur insuffisante — rien composté")
-            if verb == "empiler_bois":
-                ok = A.empiler_bois(gs, player, eco, r, c, struct)
-                return bilan(ok, cost, 0.0,
-                             f"bois empilé ({r},{c}) → pile" if ok
-                             else "Vigueur insuffisante — rien empilé")
-            # epandre : params.q optionnel (None ⇒ tout le disponible).
-            q = params.get("q")
-            if q is not None and (not isinstance(q, (int, float))
-                                  or isinstance(q, bool)):
-                return bilan(False, 0.0, 0.0, f"quantité non numérique : {q!r}")
-            epandu = A.epandre(gs, player, eco, r, c, struct, q=q)
-            return bilan(epandu > 0.0, cost, 0.0,
-                         f"compost épandu en ({r},{c}) : {epandu:.2f} "
-                         f"(jauge restante {struct.compost_mur:.2f})" if epandu > 0.0
-                         else "rien épandu (jauge vide ou Vigueur insuffisante)")
+        # Structures posables & compostage (⑤, protocole 0.3.5 ; ruche ⑥ §H/§I) :
+        # routage délégué au module `structures_route` (garde ce routeur court).
+        # Poser désigne un PLOT {r,c}, les gestes sur structure existante la
+        # désignent par INDEX dans `eco.structures` ; les façades font foi.
+        if verb in STRUCTURE_VERBES:
+            return route_structure(gs, player, verb, target, params, bilan)
 
         # Conteneurs (pots/bacs ④, protocole 0.5.7) : routage délégué au module
         # `conteneurs_route` (garde ce routeur court). Pots/bacs vivent dans la liste
