@@ -19,6 +19,7 @@ from plants import PLANT_CATALOGUE  # validation d'espèce plantable (planter)
 from sim import actions as A      # les 10 gestes joueur (façades, sprint Vigueur/D31.3)
 from sim import vigueur as V      # état Vigueur joueur (ensure/spend/gain, D11)
 from sim.magazine import acheter_au_magazine  # achat magazine (voix ①, verbe Q3)
+from sim.outils import acquerir_outil  # acquisition d'outil à l'Atelier (D82, ②)
 
 from .conteneurs_route import route_conteneur, VERBES as CONTENEUR_VERBES
 from .multiplication_route import (
@@ -115,6 +116,28 @@ class ActionsMixin:
                       f"acheté au magazine : {espece} (graine ajoutée à la banque)"
                       if achete
                       else f"achat refusé : {espece} (hors offre ou Vigueur insuffisante)")
+            b["achete"] = achete
+            return b
+
+        # Acquisition d'un OUTIL à l'Atelier (D82, tronçon ②) : chemin Vigueur
+        # UNIQUE, aucune tuile/plot — l'outil vient de `params.outil`.
+        # `acquerir_outil` gate l'offre + (idempotence) + débite la Vigueur + pose
+        # le marqueur `posseder_secateur` + rouvre la chaîne taille (`couper`→
+        # `tailler`) via `evaluer_deblocages` (bool, jamais d'exception : refus si
+        # hors offre, outil déjà possédé, ou fonds insuffisants). Le `bilan`
+        # rafraîchit vigueur/vigueur_max ; `cmd_action` réévaluera de toute façon
+        # les déblocages en aval (verb `posseder_secateur` non déclencheur — le
+        # marquage/rouverture se fait ici, dans la façade). Miroir d'`acheter_magazine`.
+        if verb == "acheter_outil":
+            outil = params.get("outil")
+            if not isinstance(outil, str):
+                return bilan(False, 0.0, 0.0, f"outil non fourni : {outil!r}")
+            achete = acquerir_outil(gs, player, outil)
+            b = bilan(achete, 0.0, 0.0,
+                      f"{outil} acquis à l'atelier"
+                      if achete
+                      else f"acquisition refusée : {outil} "
+                           "(hors offre, déjà possédé ou Vigueur insuffisante)")
             b["achete"] = achete
             return b
 

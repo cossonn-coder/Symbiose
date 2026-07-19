@@ -487,7 +487,21 @@ from __future__ import annotations
 #       golden INTACT (le smoke est une succession sans joueur, ces verbes ne sont
 #       jamais appelés). Un binaire pré-0.5.31 répond « verbe inconnu » aux 2 gestes
 #       (tolérance côté vue, comme tous les bumps précédents).
-ENGINE_VERSION = "0.5.31"
+# 0.5.32 (acquisition des moyens d'agir ②, sécateur à l'Atelier — CŒUR D82) :
+#       verbe neuf `acheter_outil` à la commande `action`, chemin Vigueur UNIQUE
+#       sans tuile (`params.outil`, jumeau d'`acheter_magazine`). La façade
+#       `sim.outils.acquerir_outil` fait foi : gate l'offre du registre `OUTILS`
+#       data-driven + idempotence (outil déjà possédé → pas de re-débit) + débite
+#       le `cout_vigueur` + POSE le marqueur `posseder_secateur` (via
+#       `marquer_action`) + rouvre la chaîne taille `couper`→`tailler` (via
+#       `evaluer_deblocages`) — lève D82 (rien ne posait ce marqueur, toute la
+#       famille taille était morte). `result.achete` bool + `bilan` rafraîchi ;
+#       les verbes fraîchement ouverts apparaissent dans `player.gestes_debloques`
+#       du snapshot (0.5.23). PURE extension (verbe event-driven, opt-in joueur,
+#       hors tick) → golden INTACT (le smoke tourne sans joueur, ce verbe n'est
+#       jamais appelé). Un binaire pré-0.5.32 répond « verbe inconnu » à
+#       `acheter_outil` (tolérance côté vue, comme tous les bumps précédents).
+ENGINE_VERSION = "0.5.32"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

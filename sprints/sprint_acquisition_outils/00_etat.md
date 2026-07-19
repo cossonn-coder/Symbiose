@@ -7,7 +7,7 @@
 > amorçable). Même classe de bug : geste bloqué faute d'un moyen non provisionné.
 
 ## Phase courante
-**TRONÇON 01 FAIT** (moteur, gestes manuels `pincer`+`arracher`). Reste 02→04.
+**TRONÇONS 01+02 FAITS** (moteur). D82 LEVÉE côté moteur. Reste 03→04.
 
 ## Avancement
 - **01 — Gestes manuels `pincer` + `arracher` : FAIT** (2026-07-19).
@@ -25,6 +25,25 @@
   tronçon 01 (moteur pur, un fichier à la fois). À traiter en fin de sprint.
   NB : test_sim_server a 4 échecs PRÉ-EXISTANTS (assertions `engine_version==0.5.28`
   périmées + timing floraison) — indépendants de ce tronçon.
+- **02 — Acquisition Atelier + registre `OUTILS` → déblocage sécateur : FAIT**
+  (2026-07-19). **CŒUR D82 levé côté moteur.** Module NEUF `sim/outils.py` (30 LDC
+  pur, jumeau de `sim/magazine.py`) : registre `OUTILS` data-driven
+  (`secateur`→`{marqueur:"posseder_secateur", cout_vigueur:40.0 (placeholder F5),
+  offre:True}`), `offre_outils` (Vigueur seule, aucune maîtrise → toujours
+  `["secateur"]`), `acquerir_outil` (gate offre → idempotence → `vigueur.spend` →
+  `marquer_action` + `evaluer_deblocages` ; bool, jamais d'exception). Verbe pont
+  `acheter_outil` (`tools/simserver/actions.py`, patron `acheter_magazine` :
+  `params.outil`, chemin Vigueur unique, `result.achete`), pont **0.5.32** (noté
+  `version.py`). Tests : `tests/test_acquisition_outils.py` 15/15. **Golden
+  INCHANGÉ** (`57c166d8…`).
+  CHAÎNE RÉELLE (fait code, ≠ « cascade auto » du kickoff) : l'acquisition ouvre
+  `couper` (`("action","posseder_secateur")`) ; `tailler` ne s'ouvre qu'après une
+  coupe PRATIQUÉE (`("action","couper")` dans `GESTE_UNLOCK`) — le pont marque
+  `couper` réussi. Test aligné sur ce fait. Kickoff/couper-tailler intacts.
+  ⚠️ DETTE TAILLE : `tools/simserver/actions.py` passe de 418 à **431 LDC pur**
+  (+13, le verbe `acheter_outil`) — toujours > 400. Router qui gonfle à chaque
+  verbe → `/refactor tools/simserver/actions.py` en fin de sprint (HORS périmètre,
+  un fichier à la fois). `sim/outils.py` = 30 LDC (🟢).
 
 ## Décisions clés (détail dans le doc de conception)
 - **Gradient de gestes** : `pincer` (DOUX, main, BASE) < `arracher` (NET déchiré,
@@ -43,9 +62,9 @@
   espèce neuve) ; carnet interprétatif « déchiré vs net » → dette D54.
 
 ## Carte des tronçons
-- **01** — Gestes manuels `pincer` + `arracher` (moteur + tests). Golden inchangé.
+- **01** — Gestes manuels `pincer` + `arracher` (moteur + tests). Golden inchangé. ✅
 - **02** — Acquisition Atelier + registre `OUTILS` → déblocage sécateur (moteur).
-  CŒUR D82. Golden inchangé.
+  CŒUR D82. Golden inchangé. ✅ FAIT (pont 0.5.32).
 - **03** — Ravitaillement mulch : `glaner` + graine paille + import Atelier (moteur).
   Lève `RAVITAILLEMENT_MANQUANT`. Golden inchangé (NEUTRE).
 - **04** — Vue Godot : Atelier cliquable (outils + matériaux) + menu gestes + pont.
@@ -70,10 +89,14 @@
   tronçon moteur qui ajoute un verbe bump au numéro libre suivant + note version.py.
 
 ## §REPRISE
-Tronçon **01 FAIT** (golden `57c166d8…` inchangé, pont 0.5.31). **Prochain = 02**
-(acquisition Atelier + registre `OUTILS` → déblocage sécateur, CŒUR D82).
-Lire pour exécuter : `CLAUDE.md` + ce fichier + le kickoff `02_*.md` +
-`docs/conception/CONCEPTION_ACQUISITION_OUTILS.md` §B. Chaque tronçon met à jour cette
+Tronçons **01+02 FAITS** (golden `57c166d8…` inchangé, pont **0.5.32**). **D82 levée
+côté moteur** : `sim/outils.py` pose `posseder_secateur` → `couper`→`tailler`
+déverrouillables. **Prochain = 03** (ravitaillement mulch : `glaner` + graine paille
+au départ + import Atelier `MATERIAUX`/`acheter_materiau` ; lève l'impasse
+`RAVITAILLEMENT_MANQUANT` ; golden NEUTRE). L'infra Atelier du §B (registre +
+verbe pont) est POSÉE et réutilisable par 03 (`MATERIAUX` = jumeau `OUTILS`).
+Lire pour exécuter : `CLAUDE.md` + ce fichier + le kickoff `03_*.md` +
+`docs/conception/CONCEPTION_ACQUISITION_OUTILS.md` §C. Chaque tronçon met à jour cette
 section (fait/à faire) en fin de course.
 DETTE ouverte à traiter en fin de sprint : `/refactor tools/simserver/actions.py`
-(418 LDC > 400 depuis 01).
+(**431 LDC > 400** depuis 01+02).
