@@ -22,6 +22,10 @@ from __future__ import annotations
 from sim.carnet import carnet_lire
 from sim.encyclopedie import encyclopedie_index, encyclopedie_lire
 from sim.magazine import magazine_offres, magazine_fiche
+from sim.outils import (
+    OUTILS, MATERIAUX, offre_outils, offre_materiaux,
+)   # Atelier (acquisition des moyens d'agir ②/③) : registres + offres
+from sim.actions.deblocage import est_debloque  # possession sécateur DÉRIVÉE (couper ouvert)
 from sim.pages import pages_trouvees
 from sim.pages_corpus import PAGES, ORDRE
 from sim.aide import aide_espece
@@ -85,6 +89,44 @@ class VoixMixin:
         if espece:
             return {"ok": True, "fiche": magazine_fiche(espece)}
         return {"ok": True, "offres": magazine_offres(gs, player)}
+
+    def cmd_atelier(self, msg: dict) -> dict:
+        """L'ATELIER de la maison normande (acquisition des moyens d'agir ②/③) : la
+        VITRINE lecture-seule des OUTILS et MATÉRIAUX à acquérir contre Vigueur, plus
+        l'état de POSSESSION des outils (pour que la vue masque/révèle la chaîne taille).
+        Read-only pur — l'ACQUISITION passe par les verbes `acheter_outil`/
+        `acheter_materiau` de la commande `action` (chemin Vigueur unique). Miroir de
+        `cmd_magazine` : ici on n'a pas de « fiche produit » distincte, on expose le
+        registre complet (marqueur/dose/coût) que la vue met en page.
+
+        `outils` = liste de {cle, cout_vigueur, possede} pour les outils OFFERTS ;
+        `materiaux` = liste de {cle, nature, dose, cout_vigueur} pour les matériaux
+        OFFERTS. « Godot bête » : la vue LIT ces champs, ne calcule ni coût ni
+        possession (Python source de vérité). Le coût reste un placeholder de
+        calibrage F5 (comme le magazine)."""
+        if self.engine is None:
+            return {"ok": False, "error": "atelier avant init"}
+        gs = self.engine.game_state
+        player = gs["current_player"]
+        # `est_debloque(couper)` ⇔ le marqueur `posseder_secateur` a été posé
+        # (`acquerir_outil` ouvre `couper` par la chaîne) → possession dérivée, on ne
+        # duplique aucun état. Pour un futur outil sans geste ouvert, on retomberait
+        # sur False (l'outil n'apparaît juste pas « possédé » — inoffensif).
+        outils = [
+            {"cle": cle,
+             "cout_vigueur": OUTILS[cle]["cout_vigueur"],
+             "possede": est_debloque(gs, player, "couper")
+                        if cle == "secateur" else False}
+            for cle in offre_outils(gs, player)
+        ]
+        materiaux = [
+            {"cle": cle,
+             "nature": MATERIAUX[cle]["nature"],
+             "dose": round(MATERIAUX[cle]["dose"], 4),
+             "cout_vigueur": MATERIAUX[cle]["cout_vigueur"]}
+            for cle in offre_materiaux(gs, player)
+        ]
+        return {"ok": True, "outils": outils, "materiaux": materiaux}
 
     def cmd_aide(self, msg: dict) -> dict:
         """Aide (retour F5, « debug d'abord ») : `msg.espece` → remèdes des

@@ -312,6 +312,37 @@ namespace Symbiose
 			=> Action("acheter_magazine", prms: new GDict { ["espece"] = espece });
 
 		/// <summary>
+		/// Vitrine READ-ONLY de l'ATELIER (acquisition des moyens d'agir ④, pont
+		/// 0.5.34) : `outils` = liste de {cle, cout_vigueur, possede}, `materiaux` =
+		/// liste de {cle, nature, dose, cout_vigueur}. Le pont possède l'offre + le
+		/// coût + la possession (dérivée) — la vue LIT et met en page (« Godot bête »).
+		/// Renvoie la réponse complète, ou null (binaire pré-0.5.34 → « commande
+		/// inconnue » → l'Atelier s'affiche vide, inoffensif).
+		/// </summary>
+		public GDict Atelier() => Request(new GDict { ["cmd"] = "atelier" });
+
+		/// <summary>
+		/// Acquisition d'un OUTIL à l'Atelier (D82, tronçon ②) : passe par le verbe
+		/// `cmd_action` `acheter_outil` (chemin Vigueur UNIQUE, jumeau
+		/// d'`AcheterMagazine`). `params.outil` = clé du registre `OUTILS`
+		/// (`secateur`). Renvoie la réponse complète (`result.achete` = succès/échec
+		/// métier + Vigueur rafraîchie, `snapshot` frais où `gestes_debloques` gagne
+		/// `couper` si l'outil est neuf), ou null. La vue ne pré-valide RIEN.
+		/// </summary>
+		public GDict AcheterOutil(string outil)
+			=> Action("acheter_outil", prms: new GDict { ["outil"] = outil });
+
+		/// <summary>
+		/// Acquisition d'un MATÉRIAU (mulch) à l'Atelier (canal 3, tronçon ③) : verbe
+		/// `cmd_action` `acheter_materiau` (chemin Vigueur UNIQUE). `params.materiau`
+		/// = clé du registre `MATERIAUX` (`botte_paille`) → crédite le STOCK de mulch
+		/// de sa nature (consommable, PAS idempotent). Renvoie la réponse complète
+		/// (`result.achete` + Vigueur, `snapshot`), ou null.
+		/// </summary>
+		public GDict AcheterMateriau(string materiau)
+			=> Action("acheter_materiau", prms: new GDict { ["materiau"] = materiau });
+
+		/// <summary>
 		/// Observation par SURVOL (0.5.12, retour F5) : une plante n'est apprise
 		/// que si le joueur passe la souris dessus. On envoie le NOM DE CLASSE de
 		/// la plante (Meta "species" du renderer, = `cls.__name__` du snapshot) ;

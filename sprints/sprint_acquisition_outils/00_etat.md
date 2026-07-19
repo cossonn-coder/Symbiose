@@ -7,8 +7,9 @@
 > amorçable). Même classe de bug : geste bloqué faute d'un moyen non provisionné.
 
 ## Phase courante
-**TRONÇONS 01+02+03 FAITS** (moteur). D82 LEVÉE + impasse `RAVITAILLEMENT_MANQUANT`
-LEVÉE côté moteur. Reste 04 (vue Godot, F5 Nico).
+**SPRINT CLOS CÔTÉ CODE — TRONÇONS 01+02+03+04 FAITS.** D82 LEVÉE + impasse
+`RAVITAILLEMENT_MANQUANT` LEVÉE côté moteur ; vue Godot (Atelier + gestes + pont)
+posée et buildée. **Reste F5 Nico** (points ci-dessous).
 
 ## Avancement
 - **01 — Gestes manuels `pincer` + `arracher` : FAIT** (2026-07-19).
@@ -95,7 +96,12 @@ LEVÉE côté moteur. Reste 04 (vue Godot, F5 Nico).
 - **03** — Ravitaillement mulch : `glaner` + graine paille + import Atelier (moteur).
   Lève `RAVITAILLEMENT_MANQUANT`. Golden inchangé (NEUTRE). ✅ FAIT (pont 0.5.33).
 - **04** — Vue Godot : Atelier cliquable (outils + matériaux) + menu gestes + pont.
-  F5 Nico. Tronçon vue obligatoire.
+  ✅ FAIT (2026-07-19). Commande pont READ-ONLY `atelier` (0.5.34) → vitrine
+  `AtelierPanel.cs` (jumeau Magazine, ouvert au clic maison via `WorldView.Hub.cs`) ;
+  menu gestes `pincer`/`arracher`/`glaner` (`GesteIcon.cs`+`WorldView.Actions.cs`) ;
+  `SimBridge.cs` relaie les 5 verbes déjà en place (01-03). Fix moteur no-op :
+  les 3 gestes ajoutés à `GESTES_BASE` (`deblocage.py`) — étaient absents → grisés à
+  jamais dans la palette. **Golden INCHANGÉ** (`57c166d8…`), **build C# vert**. F5 Nico.
 
 ## Faits code de vérité (confirmés 2026-07-19)
 - `sim/actions/deblocage.py:55` chaîne `couper→tailler→bouturer` ; `marquer_action`/
@@ -116,15 +122,12 @@ LEVÉE côté moteur. Reste 04 (vue Godot, F5 Nico).
   tronçon moteur qui ajoute un verbe bump au numéro libre suivant + note version.py.
 
 ## §REPRISE
-Tronçons **01+02+03 FAITS** (golden `57c166d8…` inchangé, pont **0.5.33**). **D82
-levée** (`sim/outils.py` pose `posseder_secateur`) ET **impasse
-`RAVITAILLEMENT_MANQUANT` levée à la racine** (canal 1 `glaner` = geste BASE sur le
-milieu, amorçable dès qu'il y a de la litière tendre au sol). Les 3 canaux moteur
-sont câblés + testés (13/13 `test_ravitaillement_mulch`, 10/10 `troncon2`).
-**Prochain = 04** (VUE GODOT, F5 Nico) : Atelier cliquable (outils + matériaux) +
-menu gestes (`pincer`/`arracher`/`glaner`) + branchement pont (`acheter_outil`/
-`acheter_materiau`/`glaner`, protocole 0.5.33). Tronçon vue obligatoire, dernier du
-sprint. Lire pour exécuter : `CLAUDE.md` + ce fichier + kickoff `04_*.md` +
-`docs/conception/CONCEPTION_ACQUISITION_OUTILS.md` §D.
-DETTE ouverte à traiter en fin de sprint : `/refactor tools/simserver/actions.py`
-(**462 LDC > 400** depuis 01+02+03).
+**SPRINT CLOS CÔTÉ CODE — 01+02+03+04 FAITS** (golden `57c166d8…` inchangé sur les
+4 tronçons, pont **0.5.34**, build C# vert). **D82 levée** (`sim/outils.py` pose
+`posseder_secateur`) ET **impasse `RAVITAILLEMENT_MANQUANT` levée à la racine**
+(canal 1 `glaner`). Vue Godot posée : Atelier cliquable (`AtelierPanel.cs`, commande
+read-only `atelier`) + menu gestes (`pincer`/`arracher`/`glaner`) + pont.
+**RESTE = F5 Nico** (points §Points F5 du kickoff 04) : acquérir sécateur à l'Atelier
+→ `couper`/`tailler` apparaissent ; `pincer`/`arracher` d'emblée ; `glaner` crédite
+du mulch ; botte de paille achetée → `pailler` sans culture. Rien à coder.
+DETTE de taille traitée en fin de sprint via `/refactor` auto-léger.

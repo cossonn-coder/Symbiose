@@ -46,6 +46,10 @@ def main() -> int:
                 "encyclopedie": server.cmd_encyclopedie,
                 "pages": server.cmd_pages,
                 "magazine": server.cmd_magazine,
+                # Atelier (acquisition des moyens d'agir ②/③) : vitrine READ-ONLY
+                # des outils/matériaux à acquérir + possession des outils. L'achat
+                # passe par `action` (acheter_outil/acheter_materiau).
+                "atelier": server.cmd_atelier,
                 # Aide au jardinier (retour F5, debug d'abord) : remèdes des
                 # problèmes récents d'une espèce, gatables par la maîtrise.
                 "aide": server.cmd_aide,

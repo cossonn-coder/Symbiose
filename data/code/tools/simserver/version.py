@@ -518,7 +518,26 @@ from __future__ import annotations
 #       nature `feuilles` lue seulement par un paillage `feuilles`, jamais au smoke)
 #       → golden INTACT. Un binaire pré-0.5.33 répond « verbe inconnu » à `glaner`/
 #       `acheter_materiau` (tolérance côté vue, comme tous les bumps précédents).
-ENGINE_VERSION = "0.5.33"
+# 0.5.34 (acquisition des moyens d'agir ④, vue Godot — vitrine Atelier au pont) :
+#       NOUVELLE commande READ-ONLY `atelier` → `{outils: [{cle, cout_vigueur,
+#       possede}], materiaux: [{cle, nature, dose, cout_vigueur}]}`, la vitrine de
+#       l'Atelier de la maison (offre d'OUTILS + MATÉRIAUX à acquérir contre Vigueur).
+#       Miroir lecture-seule des verbes d'ACHAT déjà en place (`acheter_outil` 0.5.32,
+#       `acheter_materiau` 0.5.33) : la commande relaie les registres `OUTILS`/
+#       `MATERIAUX` (offre bornée à la Vigueur) + la possession de l'outil, DÉRIVÉE de
+#       `est_debloque(couper)` (⇔ marqueur `posseder_secateur` posé) — aucun état neuf,
+#       « Godot bête » : la vue LIT et met en page (AtelierPanel, jumeau du Magazine).
+#       PUR ajout de commande lecture-seule (aucun tick, aucune écriture) → golden
+#       INTACT (le golden tourne sans serveur, cette commande n'est jamais appelée).
+#       Un binaire pré-0.5.34 répond « commande inconnue » → l'Atelier s'affiche vide
+#       côté vue (tolérance comme tous les bumps précédents). Côté MOTEUR, les 3 gestes
+#       manuels/glanage (`pincer`/`arracher`/`glaner`) sont ajoutés à `GESTES_BASE`
+#       (sim/actions/deblocage.py) — ils étaient absents de la table de déblocage, ce
+#       qui les GRISAIT à jamais dans la palette Godot ; la spec §A/§C les déclare de
+#       BASE (mains nues, amorçables sans outil). No-op golden (set jamais matérialisé
+#       hors joueur). AUCUN verbe neuf : les 5 verbes de la vue (`acheter_outil`/
+#       `acheter_materiau`/`pincer`/`arracher`/`glaner`) existaient déjà (01-03).
+ENGINE_VERSION = "0.5.34"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

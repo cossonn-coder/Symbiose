@@ -118,13 +118,17 @@ namespace Symbiose
 			AjouterEntreeVoix(vbox, "Magazine",     "Magazine de botanique", "magazine");
 			AjouterEntreeVoix(vbox, "Pages du grenier", "Pages du grenier", "pages");
 
-			// Entrées NON-VOIX (grisées « à venir » → dette D54). Visibles pour
-			// signaler les 5 fonctions du hub, mais inertes.
-			AjouterEntreeGrisee(vbox, "Atelier");
+			// Atelier (acquisition des moyens d'agir ④) : 5ᵉ fonction du hub, ACTIVE.
+			// Même patron que les voix (un VoicePanel spécialisé, AtelierPanel), mais
+			// c'est une VITRINE d'acquisition (outils + matériaux contre Vigueur), pas
+			// une voix narrative. Elle route par la même mécanique OuvrirVoicePanel.
+			AjouterEntreeVoix(vbox, "Atelier", "Atelier", "atelier");
+
+			// Entrées NON-VOIX restantes (grisées « à venir » → dette D54).
 			AjouterEntreeGrisee(vbox, "Semis intérieur");
 			AjouterEntreeGrisee(vbox, "Foyer");
 
-			GD.Print("[WorldView] hub-maison ouvert (5 fonctions, 4 voix actives).");
+			GD.Print("[WorldView] hub-maison ouvert (5 fonctions, Atelier + 4 voix actives).");
 		}
 
 		// Une entrée active : clic → ferme le menu, ouvre le VoicePanel de la
@@ -176,6 +180,7 @@ namespace Symbiose
 				"encyclopedie" => new EncyclopediePanel(),
 				"magazine"     => new MagazinePanel(),
 				"pages"        => new PagesPanel(),
+				"atelier"      => new AtelierPanel(),   // acquisition des moyens d'agir ④
 				_              => new VoicePanel(),
 			};
 			_voicePanel.InjecterPont(_bridge);

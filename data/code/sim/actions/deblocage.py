@@ -30,10 +30,18 @@ from sim import maitrise as M
 # Gestes rustiques du jardinier débutant (calibrage F5, ajustable). `tailler` a
 # QUITTÉ la BASE (D12) : il devient GATED derrière la chaîne sécateur→couper→
 # tailler ci-dessous. `deraciner`/`grelinette` = BASE (gestes rustiques, kickoff).
+# `pincer`/`arracher`/`glaner` = BASE (acquisition des moyens d'agir ①/③, spec
+# §A/§C) : gestes à mains nues du gradient structurel (`pincer < arracher <
+# couper/tailler`) et glanage de litière — amorçables SANS outil ni maîtrise, dès
+# le 1ᵉ avatar (c'est ce qui répond au F5 « pas d'option couper » : un geste
+# structurel d'emblée). Leur absence ici les grisait à jamais dans la palette Godot
+# (④). No-op golden : le smoke tourne sans joueur → clé `gestes_debloques` jamais
+# créée → ce set n'est jamais matérialisé.
 GESTES_BASE: frozenset[str] = frozenset({
     "planter", "arroser", "recolter", "manger",
     "ecraser", "becher", "favoriser_auxiliaire",
     "deraciner", "grelinette",
+    "pincer", "arracher", "glaner",
 })
 
 

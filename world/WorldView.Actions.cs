@@ -31,6 +31,15 @@ namespace Symbiose
 			("ecraser",              "écraser",        'x'),   // plante OU nuisible
 			("favoriser_auxiliaire", "favoriser aux.", 't'),
 			("becher",               "ameublir",       'a'),   // bêcher / Maj grelinette
+			// Gestes structurels sur plante (acquisition des moyens d'agir ①④), tous
+			// désignés par POSITION comme tailler (kind 'p'). `pincer`/`arracher` sont
+			// de BASE (mains nues, gradient doux→net, GESTES_BASE) → toujours ouverts.
+			// `couper`/`tailler` restent GATÉS par la chaîne sécateur (GESTE_UNLOCK) :
+			// la palette les grise tant que `posseder_secateur`→`couper` n'est pas
+			// acquis (④). Un clic simple envoie la cible par défaut (apex) côté serveur.
+			("pincer",               "pincer",         'p'),   // DOUX (main, débourrement)
+			("arracher",             "arracher",       'p'),   // NET déchiré (main, érode)
+			("couper",               "couper",         'p'),   // NET propre (sécateur), gaté
 			("tailler",              "tailler",        'p'),
 			("manger",               "manger",         'p'),
 			("planter",              "planter",        'm'),
@@ -60,6 +69,12 @@ namespace Symbiose
 			// bois → BRF au stock. Approvisionner (broyer / récolter) précède pailler.
 			("pailler",            "pailler",        'U'),   // mulch au plot (nature N)
 			("broyer",             "broyer bois",    'D'),   // squelette → BRF
+			// Glaner (acquisition des moyens d'agir ③, canal 1) : ramasse la litière
+			// tendre du PLOT cliqué → stock nature `feuilles`. Kind 'q' = plot {tile, r,
+			// c} SANS params (comme poser_bac), exactement ce qu'attend le verbe `glaner`
+			// côté serveur. Geste de BASE (GESTES_BASE) → toujours ouvert dans la palette,
+			// amorce le mulch sans outil ni culture (lève l'impasse RAVITAILLEMENT).
+			("glaner",             "glaner",         'q'),   // litière tendre → mulch feuilles
 			// Gestes savants de la palette (tronçons ②③) — 2 TEMPS côté vue, le
 			// serveur reste STATELESS (patron `epandre`/`deplacer_pot`) :
 			//  · Kind 'b' BOUTURER : 1er clic = la MÈRE (position continue), 2e clic

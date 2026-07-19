@@ -86,7 +86,10 @@ namespace Symbiose
 		{
 			"arroser" => 'o',            // goutte (bleu)
 			"planter" or "planter_conteneur" => 'n',   // graine/pousse (vert)
-			"tailler" => 'i',            // ciseaux (gris)
+			"tailler" or "couper" => 'i',   // ciseaux (gris) — coupe nette à l'outil
+			"pincer" => 'c',             // pincement (deux doigts qui se rejoignent)
+			"arracher" => 'e',           // arrachement (tige déchirée)
+			"glaner" => 'l',             // glanage (feuille ramassée)
 			"recolter" or "manger" => 'f',   // fruit/récolte (rouge)
 			"ecraser" => 'x',            // croix (rouge sombre)
 			"becher" => 'a',             // fourche/ameublir (brun)
@@ -110,7 +113,10 @@ namespace Symbiose
 		{
 			'o' => new Color(0.45f, 0.75f, 1f),      // eau
 			'n' => new Color(0.5f, 0.85f, 0.4f),     // planter
-			'i' => new Color(0.8f, 0.82f, 0.85f),    // taille
+			'i' => new Color(0.8f, 0.82f, 0.85f),    // taille (ciseaux)
+			'c' => new Color(0.75f, 0.85f, 0.75f),   // pincer (doux, vert pâle)
+			'e' => new Color(0.7f, 0.6f, 0.4f),      // arracher (déchiré, brun)
+			'l' => new Color(0.6f, 0.8f, 0.45f),     // glaner (litière feuilles)
 			'f' => new Color(0.9f, 0.4f, 0.4f),      // récolte/manger
 			'x' => new Color(0.85f, 0.3f, 0.3f),     // écraser
 			'a' => new Color(0.7f, 0.55f, 0.35f),    // ameublir
@@ -224,6 +230,24 @@ namespace Symbiose
 					DrawLine(new Vector2(mid, lo), new Vector2(mid, mid), c, 3f);
 					DrawLine(new Vector2(mid, mid), new Vector2(lo, hi), c, 2.5f);
 					DrawLine(new Vector2(mid, mid), new Vector2(hi, hi), c, 2.5f);
+					break;
+				case 'c':   // pincer : deux petits arcs qui se rejoignent (doigts)
+					DrawArc(new Vector2(mid - 5f, mid), 7f, -Mathf.Pi / 2f, Mathf.Pi / 2f, 14, c, 2.5f);
+					DrawArc(new Vector2(mid + 5f, mid), 7f, Mathf.Pi / 2f, 3f * Mathf.Pi / 2f, 14, c, 2.5f);
+					break;
+				case 'e':   // arracher : tige oblique cassée en zigzag (déchirure)
+					DrawLine(new Vector2(lo + 2f, hi), new Vector2(mid, mid + 2f), c, 3f);
+					DrawLine(new Vector2(mid, mid + 2f), new Vector2(mid - 3f, mid - 3f), c, 3f);
+					DrawLine(new Vector2(mid - 3f, mid - 3f), new Vector2(hi - 2f, lo + 2f), c, 3f);
+					break;
+				case 'l':   // glaner : feuille ramassée (ellipse + nervure) au-dessus du sol
+					DrawColoredPolygon(new[]
+					{
+						new Vector2(lo + 3f, mid), new Vector2(mid, lo + 3f),
+						new Vector2(hi - 3f, mid), new Vector2(mid, mid + 5f),
+					}, c);
+					DrawLine(new Vector2(lo + 3f, mid), new Vector2(hi - 3f, mid), c.Darkened(0.3f), 1.5f);
+					DrawLine(new Vector2(lo, hi), new Vector2(hi, hi), c, 2f);
 					break;
 				default:    // repli : pastille pleine (le geste existe, forme neutre)
 					DrawCircle(new Vector2(mid, mid), (hi - lo) / 3f, c);
