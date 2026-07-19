@@ -18,7 +18,16 @@ from dataclasses import dataclass
 
 from sim.vigueur_plante import maturite, qi_local
 from sim.semiologie import leaf_symptoms
+from sim.actions.paillage import TISSUS_GLANABLES   # tissus glanables → mulch (③, canal 1)
 from .tutelle import est_ferale
+
+
+def _litiere_tendre_at(eco, r: int, c: int) -> float:
+    """Masse de litière de SURFACE tendre (glanable → mulch `feuilles`, ③) au plot
+    (r,c) — lecture PURE. Sert au ravitaillement par `glaner` : c'est la matière
+    qu'un geste `glaner` créditerait au stock. Miroir de la sélection de la façade
+    `sim.actions.glaner` (mêmes `TISSUS_GLANABLES`)."""
+    return sum(p.masse for p in eco.litiere[r][c] if p.tissu in TISSUS_GLANABLES)
 
 
 @dataclass(frozen=True)
@@ -34,6 +43,7 @@ class Perception:
     qi: float            # Qi territorial puisé sous l'empreinte racinaire [0,1]
     paillage: float      # couverture du sol au plot-foyer [0,1] (0 = sol nu)
     structure: float     # structure du sol au plot-foyer [0,1] (bas = compacté)
+    litiere_tendre: float    # masse de litière de SURFACE tendre au plot (glanable → mulch, ③)
     ferale_cible: object     # férale à arracher (concurrence diagnostiquée) | None
     voisin_ombrageant: object  # voisin plus haut qui ombrage la plante | None
 
@@ -132,6 +142,7 @@ def percevoir(plant, eco, profil, voisins, tile_id, cultivees, saison=None):
         qi=qi_local(plant, eco),
         paillage=eco.paillage.at_plot(r, c),
         structure=eco.structure_sol.at_plot(r, c),
+        litiere_tendre=_litiere_tendre_at(eco, r, c),
         ferale_cible=_ferale_cible(plant, voisins, tile_id, cultivees,
                                    profil.seuil_concurrence()),
         voisin_ombrageant=_voisin_ombrageant(plant, voisins),

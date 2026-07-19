@@ -42,6 +42,12 @@ def executer(game_state: dict, player: str, eco, plant, plan) -> str:
         ok = ACT.pailler(game_state, player, eco, r, c, nature=plan.nature)
         return "ok" if ok else "echec"
 
+    if v == "glaner":
+        # Canal 1 de ravitaillement (moyens d'agir ③) : ramasse la litière tendre du
+        # plot-foyer de `plant` → stock `feuilles`. >0 = de la matière a été glanée.
+        r, c = plant.position
+        return "ok" if ACT.glaner(game_state, player, eco, r, c) > 0.0 else "echec"
+
     if v == "recolter":
         return _ratio(ACT.recolter(game_state, player, plant, eco))
 

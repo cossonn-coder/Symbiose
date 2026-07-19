@@ -50,38 +50,46 @@ def _nature_disponible(game_state) -> str | None:
     return None
 
 
-def _prep_ravitaillement(plant, voisins, tile_id):
+def _prep_ravitaillement(plant, voisins, tile_id, percept):
     """Un geste de RAVITAILLEMENT en mulch à jouer ce tick (le paillage suivra un
-    tick plus tard, une fois le stock crédité), ou None si aucune source :
-      1. BROYER un squelette ligneux au sol (`bois_restant > 0`) → BRF ;
-      2. RÉCOLTER une plante à paille mûre (`plant_class.mulch_source`) → paille.
-    Cherche parmi les `voisins` de la tuile (départage stable). Ne consomme rien —
-    c'est une DÉCISION ; l'exécution suit."""
+    tick plus tard, une fois le stock crédité), ou None si aucune source. Gradient du
+    plus BASE au plus spécifique (moyens d'agir ③) :
+      1. GLANER la litière tendre du plot-foyer (`percept.litiere_tendre ≥ dose`) →
+         feuilles. Canal 1 : geste BASE sur le MILIEU, amorçable dès qu'il y a des
+         feuilles au sol → lève l'impasse à la racine (aucun squelette ni culture
+         requis). Renvoyé en cible "milieu" (le plot de `plant`), pas "vivant".
+      2. BROYER un squelette ligneux au sol (`bois_restant > 0`) → BRF ;
+      3. RÉCOLTER une plante à paille mûre (`plant_class.mulch_source`) → paille.
+    2/3 cherchent parmi les `voisins` de la tuile (départage stable). Ne consomme
+    rien — c'est une DÉCISION ; l'exécution suit. Renvoie (verbe, cible, kind) où
+    `kind` ∈ {"milieu", "vivant"} indique la forme de cible."""
+    if percept.litiere_tendre >= PAILLAGE_DOSE:
+        return ("glaner", None, "milieu")     # canal 1 : ramasse la litière du plot de `plant`
     squelettes = [v for v in voisins
                   if getattr(v, "bois_restant", 0.0) > 0.0]
     if squelettes:
         cible = min(squelettes, key=lambda v: (v.y_cm, v.x_cm))
-        return ("broyer", cible)
+        return ("broyer", cible, "vivant")
     pailles = [v for v in voisins
                if v.is_alive
                and getattr(v.plant_class, "mulch_source", None) is not None]
     if pailles:
         cible = min(pailles, key=lambda v: (v.y_cm, v.x_cm))
-        return ("recolter_paille", cible)
+        return ("recolter_paille", cible, "vivant")
     return None
 
 
-def _plan_pailler(game_state, plant, voisins, tile_id, regle):
+def _plan_pailler(game_state, plant, voisins, tile_id, regle, percept):
     """Décide comment servir un besoin de `pailler` (facteurs `hydrique`/`sol_nu`) :
     pailler direct si stock, sinon un geste de ravitaillement, sinon None (→ la
     chaîne de repli ou l'impasse est gérée par l'appelant)."""
     nat = _nature_disponible(game_state)
     if nat is not None:
         return Plan("pailler", "milieu", None, nat, regle.facteur, regle.priorite)
-    prep = _prep_ravitaillement(plant, voisins, tile_id)
+    prep = _prep_ravitaillement(plant, voisins, tile_id, percept)
     if prep is not None:
-        verbe, cible = prep
-        return Plan(verbe, "vivant", cible, None, regle.facteur, regle.priorite)
+        verbe, cible, kind = prep
+        return Plan(verbe, kind, cible, None, regle.facteur, regle.priorite)
     return None
 
 
@@ -92,7 +100,7 @@ def proposer(game_state, plant, voisins, tile_id, facteur, percept):
     for regle in regles:
         v = regle.verbe
         if v == "pailler":
-            plan = _plan_pailler(game_state, plant, voisins, tile_id, regle)
+            plan = _plan_pailler(game_state, plant, voisins, tile_id, regle, percept)
             if plan is not None:
                 return plan
             continue                    # mulch introuvable → règle suivante (repli)

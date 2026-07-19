@@ -34,7 +34,10 @@ from . import perf   # capture des pires ticks + dump diagnostique (demande Nico
 # dès le lancement sans attendre une récolte d'automne. La config "smoke"
 # (fixture de test déterministe) garde une banque VIDE → le flux empty→récolte
 # reste exercé tel quel par tests/simserver/planter.py.
-BANQUE_DEPART = ("tournesol", "tomate", "basilic")
+# `ble`/`chanvre` = graines à PAILLE au départ (moyens d'agir ③, canal 2, cycle
+# INTERNE cultivé) : les cultiver puis `recolter_paille` alimente le stock de mulch
+# `paille` — une source de ravitaillement amorçable tôt, sans passer par l'Atelier.
+BANQUE_DEPART = ("tournesol", "tomate", "basilic", "ble", "chanvre")
 
 
 def _vider_seedbank_ferale(sb) -> None:

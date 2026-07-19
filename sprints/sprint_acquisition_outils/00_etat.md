@@ -7,7 +7,8 @@
 > amorçable). Même classe de bug : geste bloqué faute d'un moyen non provisionné.
 
 ## Phase courante
-**TRONÇONS 01+02 FAITS** (moteur). D82 LEVÉE côté moteur. Reste 03→04.
+**TRONÇONS 01+02+03 FAITS** (moteur). D82 LEVÉE + impasse `RAVITAILLEMENT_MANQUANT`
+LEVÉE côté moteur. Reste 04 (vue Godot, F5 Nico).
 
 ## Avancement
 - **01 — Gestes manuels `pincer` + `arracher` : FAIT** (2026-07-19).
@@ -44,6 +45,32 @@
   (+13, le verbe `acheter_outil`) — toujours > 400. Router qui gonfle à chaque
   verbe → `/refactor tools/simserver/actions.py` en fin de sprint (HORS périmètre,
   un fichier à la fois). `sim/outils.py` = 30 LDC (🟢).
+- **03 — Ravitaillement mulch (3 canaux) : FAIT** (2026-07-19). **Impasse
+  `RAVITAILLEMENT_MANQUANT` LEVÉE À LA RACINE.**
+  - Canal 1 `glaner` : nature NEUVE `"feuilles"` dans `NATURES_MULCH`
+    (`fields/ecofields/constants.py`, tendre decay 1.0, `vers_bois=0`, `abri 0.5`) ;
+    façade `sim/actions/paillage.py::glaner` (retire la litière de surface tendre
+    `TISSUS_GLANABLES = STRUCTURE_ACCEPTE["bac"]` — bois RESTE — → `mulch_stock["feuilles"]`,
+    coût FAIBLE, refus SANS dépense si sol propre). `couts.py`/`palette.py`/`__init__.py`
+    câblés. Geste BASE sur le MILIEU (philo #1) — amorçable dès qu'il y a des feuilles
+    au sol, aucun squelette ni culture requis.
+  - Canal 2 : graines paille au départ — `BANQUE_DEPART` (`commands.py`) passe à
+    `("tournesol","tomate","basilic","ble","chanvre")` (données seules).
+  - Canal 3 : import Atelier — registre `MATERIAUX` (`sim/outils.py`, jumeau `OUTILS` :
+    `botte_paille`→`{nature:"paille", dose:3×PAILLAGE_DOSE, cout_vigueur:20.0, offre:True}`),
+    `offre_materiaux` + `acquerir_materiau` (gate offre → `vigueur.spend` →
+    `mulch_stock[nature] += dose` ; CONSOMMABLE, non idempotent). Verbe pont
+    `acheter_materiau` (`params.materiau`, chemin Vigueur unique).
+  - jardinier_auto : `Perception.litiere_tendre` neuf (`perception.py`,
+    `_litiere_tendre_at`, mêmes `TISSUS_GLANABLES`) ; `_prep_ravitaillement`
+    (`proposition.py`) propose `glaner` en CANAL 1 (kind "milieu") avant broyer/
+    recolter_paille ; `execution.py` branche `glaner`.
+  - Pont **0.5.33** (`version.py`, changelog glaner+acheter_materiau+canal 2).
+  - Tests : `tests/test_ravitaillement_mulch.py` NEUF 13/13, `test_automate_troncon2`
+    10/10 (nouveau `test_glaner_leve_impasse`). **Golden INCHANGÉ** (`57c166d8…`).
+  ⚠️ DETTE TAILLE : `tools/simserver/actions.py` passe de 431 à **462 LDC pur**
+  (+31, verbes `acheter_materiau`+`glaner`) — toujours > 400. `/refactor` en fin de
+  sprint (HORS périmètre). `sim/outils.py`=50, `paillage.py`=49 LDC (🟢).
 
 ## Décisions clés (détail dans le doc de conception)
 - **Gradient de gestes** : `pincer` (DOUX, main, BASE) < `arracher` (NET déchiré,
@@ -66,7 +93,7 @@
 - **02** — Acquisition Atelier + registre `OUTILS` → déblocage sécateur (moteur).
   CŒUR D82. Golden inchangé. ✅ FAIT (pont 0.5.32).
 - **03** — Ravitaillement mulch : `glaner` + graine paille + import Atelier (moteur).
-  Lève `RAVITAILLEMENT_MANQUANT`. Golden inchangé (NEUTRE).
+  Lève `RAVITAILLEMENT_MANQUANT`. Golden inchangé (NEUTRE). ✅ FAIT (pont 0.5.33).
 - **04** — Vue Godot : Atelier cliquable (outils + matériaux) + menu gestes + pont.
   F5 Nico. Tronçon vue obligatoire.
 
@@ -89,14 +116,15 @@
   tronçon moteur qui ajoute un verbe bump au numéro libre suivant + note version.py.
 
 ## §REPRISE
-Tronçons **01+02 FAITS** (golden `57c166d8…` inchangé, pont **0.5.32**). **D82 levée
-côté moteur** : `sim/outils.py` pose `posseder_secateur` → `couper`→`tailler`
-déverrouillables. **Prochain = 03** (ravitaillement mulch : `glaner` + graine paille
-au départ + import Atelier `MATERIAUX`/`acheter_materiau` ; lève l'impasse
-`RAVITAILLEMENT_MANQUANT` ; golden NEUTRE). L'infra Atelier du §B (registre +
-verbe pont) est POSÉE et réutilisable par 03 (`MATERIAUX` = jumeau `OUTILS`).
-Lire pour exécuter : `CLAUDE.md` + ce fichier + le kickoff `03_*.md` +
-`docs/conception/CONCEPTION_ACQUISITION_OUTILS.md` §C. Chaque tronçon met à jour cette
-section (fait/à faire) en fin de course.
+Tronçons **01+02+03 FAITS** (golden `57c166d8…` inchangé, pont **0.5.33**). **D82
+levée** (`sim/outils.py` pose `posseder_secateur`) ET **impasse
+`RAVITAILLEMENT_MANQUANT` levée à la racine** (canal 1 `glaner` = geste BASE sur le
+milieu, amorçable dès qu'il y a de la litière tendre au sol). Les 3 canaux moteur
+sont câblés + testés (13/13 `test_ravitaillement_mulch`, 10/10 `troncon2`).
+**Prochain = 04** (VUE GODOT, F5 Nico) : Atelier cliquable (outils + matériaux) +
+menu gestes (`pincer`/`arracher`/`glaner`) + branchement pont (`acheter_outil`/
+`acheter_materiau`/`glaner`, protocole 0.5.33). Tronçon vue obligatoire, dernier du
+sprint. Lire pour exécuter : `CLAUDE.md` + ce fichier + kickoff `04_*.md` +
+`docs/conception/CONCEPTION_ACQUISITION_OUTILS.md` §D.
 DETTE ouverte à traiter en fin de sprint : `/refactor tools/simserver/actions.py`
-(**431 LDC > 400** depuis 01+02).
+(**462 LDC > 400** depuis 01+02+03).

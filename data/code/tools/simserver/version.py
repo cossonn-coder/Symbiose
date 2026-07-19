@@ -501,7 +501,24 @@ from __future__ import annotations
 #       hors tick) → golden INTACT (le smoke tourne sans joueur, ce verbe n'est
 #       jamais appelé). Un binaire pré-0.5.32 répond « verbe inconnu » à
 #       `acheter_outil` (tolérance côté vue, comme tous les bumps précédents).
-ENGINE_VERSION = "0.5.32"
+# 0.5.33 (acquisition des moyens d'agir ③, ravitaillement mulch — 2 verbes) : DEUX
+#       verbes neufs à la commande `action`, sourçant le mulch qui manquait (lève
+#       l'impasse `RAVITAILLEMENT_MANQUANT`). `glaner` (canal 1, target plot
+#       {tile, r, c}, patron `becher`) : ramasse la litière de SURFACE tendre du plot
+#       (feuille/fleur/herbace/fruit) → crédite le stock nature NEUVE `feuilles`
+#       (ajout à `NATURES_MULCH`, profil paille-tendre distinct du BRF) ; refus en
+#       amont si sol propre. Coût FAIBLE, geste BASE sans outil. `acheter_materiau`
+#       (canal 3, chemin Vigueur UNIQUE sans tuile, `params.materiau`, jumeau
+#       d'`acheter_outil`) : gate l'offre du registre `MATERIAUX` data-driven
+#       (`botte_paille`) + débite le `cout_vigueur` + crédite le stock de mulch de la
+#       nature (import EXTERNE parallèle au magazine, PAS idempotent = consommable).
+#       En PARALLÈLE, canal 2 = DONNÉES seules : `ble`/`chanvre` ajoutés à
+#       `BANQUE_DEPART` (config `full`) → cultivables tôt → `recolter_paille` alimente
+#       le stock. PURE extension (verbes event-driven, opt-in joueur, hors tick ;
+#       nature `feuilles` lue seulement par un paillage `feuilles`, jamais au smoke)
+#       → golden INTACT. Un binaire pré-0.5.33 répond « verbe inconnu » à `glaner`/
+#       `acheter_materiau` (tolérance côté vue, comme tous les bumps précédents).
+ENGINE_VERSION = "0.5.33"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

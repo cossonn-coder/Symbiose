@@ -19,7 +19,7 @@ from plants import PLANT_CATALOGUE  # validation d'espèce plantable (planter)
 from sim import actions as A      # les 10 gestes joueur (façades, sprint Vigueur/D31.3)
 from sim import vigueur as V      # état Vigueur joueur (ensure/spend/gain, D11)
 from sim.magazine import acheter_au_magazine  # achat magazine (voix ①, verbe Q3)
-from sim.outils import acquerir_outil  # acquisition d'outil à l'Atelier (D82, ②)
+from sim.outils import acquerir_outil, acquerir_materiau  # Atelier : outil (D82, ②) + matériau mulch (③, canal 3)
 
 from .conteneurs_route import route_conteneur, VERBES as CONTENEUR_VERBES
 from .multiplication_route import (
@@ -138,6 +138,25 @@ class ActionsMixin:
                       if achete
                       else f"acquisition refusée : {outil} "
                            "(hors offre, déjà possédé ou Vigueur insuffisante)")
+            b["achete"] = achete
+            return b
+
+        # Acquisition d'un MATÉRIAU (mulch) à l'Atelier (moyens d'agir ③, canal 3) :
+        # chemin Vigueur UNIQUE, aucune tuile/plot — le matériau vient de
+        # `params.materiau`. `acquerir_materiau` gate l'offre + débite la Vigueur +
+        # crédite le STOCK de mulch de sa nature (bool, jamais d'exception : refus si
+        # hors offre ou fonds insuffisants). Import EXTERNE parallèle au magazine de
+        # graines (miroir d'`acheter_outil`, mais consommable → PAS idempotent).
+        if verb == "acheter_materiau":
+            materiau = params.get("materiau")
+            if not isinstance(materiau, str):
+                return bilan(False, 0.0, 0.0, f"matériau non fourni : {materiau!r}")
+            achete = acquerir_materiau(gs, player, materiau)
+            b = bilan(achete, 0.0, 0.0,
+                      f"{materiau} acquis à l'atelier (mulch ajouté au stock)"
+                      if achete
+                      else f"acquisition refusée : {materiau} "
+                           "(hors offre ou Vigueur insuffisante)")
             b["achete"] = achete
             return b
 
@@ -469,6 +488,31 @@ class ActionsMixin:
             return bilan(credit > 0.0, cost, 0.0,
                          f"bois broyé : +{credit:.2f} BRF au stock de mulch" if credit > 0.0
                          else "rien broyé (plus de bois ou Vigueur insuffisante)")
+
+        # Glaner la litière tendre (moyens d'agir ③, canal 1) : geste sur le MILIEU au
+        # PLOT {tile, r, c}, patron `becher`. Ramasse feuilles/fleurs/herbacées/fruits
+        # tombés → crédite le stock nature `feuilles`. La façade REFUSE en amont si le
+        # plot n'a rien de tendre (aucune Vigueur dépensée) → on relaie son verdict.
+        # Lève l'impasse `RAVITAILLEMENT_MANQUANT` : source de mulch sans outil ni culture.
+        if verb == "glaner":
+            tile, eco = tile_cible()
+            if tile is None:
+                return bilan(False, 0.0, 0.0,
+                             f"tuile introuvable : {target.get('tile')!r}")
+            r, c = target.get("r"), target.get("c")
+            if (not isinstance(r, int) or isinstance(r, bool)
+                    or not isinstance(c, int) or isinstance(c, bool)
+                    or not (0 <= r < tile.grid_rows)
+                    or not (0 <= c < tile.grid_cols)):
+                return bilan(False, 0.0, 0.0,
+                             f"plot hors tuile : r={r!r}, c={c!r}")
+            cost = A.cout_action(gs, player, "glaner", A.OBJETS_TOUCHES["glaner"])
+            credit = A.glaner(gs, player, eco, r, c)
+            return bilan(credit > 0.0, cost, 0.0,
+                         f"litière glanée ({r},{c}) : +{credit:.2f} feuilles au stock"
+                         if credit > 0.0
+                         else f"rien à glaner en ({r},{c}) (sol propre) "
+                              "ou Vigueur insuffisante")
 
         if verb == "grelinette":
             tile, eco = tile_cible()

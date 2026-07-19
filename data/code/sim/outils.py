@@ -29,6 +29,8 @@ from __future__ import annotations
 
 from sim import vigueur
 from sim.actions.deblocage import marquer_action, evaluer_deblocages
+from sim.actions.paillage import mulch_stock   # canal 3 : l'import matériau crédite le STOCK de mulch
+from fields.ecofields import PAILLAGE_DOSE      # unité du stock (une dose = un geste `pailler`)
 
 # --- Registre `OUTILS` data-driven (spec §B) --------------------------------
 # Un outil = un MARQUEUR d'action à poser (le même vocabulaire que la chaîne de
@@ -106,4 +108,62 @@ def acquerir_outil(game_state: dict, player: str, outil: str) -> bool:
         return False                          # fonds insuffisants → acquisition annulée
     marquer_action(game_state, player, marqueur)
     evaluer_deblocages(game_state, player)
+    return True
+
+
+# --- Registre `MATERIAUX` data-driven (moyens d'agir ③, canal 3) -------------
+# L'Atelier fournit aussi de la MATIÈRE contre Vigueur : un import EXTERNE de mulch,
+# parallèle au magazine de graines (le magazine importe déjà des espèces « de
+# l'extérieur ») → le principe de `paillage.py` (« le mulch VIENT de quelque part »)
+# TIENT : ce n'est pas du « mulch abstrait », c'est un achat explicite en Vigueur.
+# Un matériau = une NATURE de `NATURES_MULCH` (ici `paille`, déjà couplée) + une
+# DOSE créditée au stock (en unités de `PAILLAGE_DOSE` : un geste `pailler` en
+# consomme une) + un COÛT Vigueur + un drapeau `offre`. EXTENSIBLE (botte de BRF,
+# ballot de foin…) sans toucher la logique. `dose`/`cout_vigueur` = PLACEHOLDERS de
+# calibrage F5 : trois doses par botte, coût MODÉRÉ (dépannage bon marché, sans
+# remplacer le glanage/la récolte gratuits — l'import RESTE un pis-aller Vigueur).
+MATERIAUX: dict[str, dict] = {
+    "botte_paille": {
+        "nature": "paille",
+        "dose": 3.0 * PAILLAGE_DOSE,   # placeholder, calibrage F5
+        "cout_vigueur": 20.0,          # placeholder, calibrage F5
+        "offre": True,
+    },
+}
+
+
+def offre_materiaux(game_state: dict, player: str) -> list[str]:
+    """Matériaux présentés à l'Atelier (parité `offre_outils`) : ceux dont le drapeau
+    `offre` est ouvert. Vigueur-SEULE, aucune maîtrise → liste STABLE (ordre du
+    registre, déterminisme). Lecture PURE ; `game_state`/`player` acceptés pour figer
+    la signature et brancher un futur gating sans casser l'appelant."""
+    return [mat for mat, spec in MATERIAUX.items() if spec.get("offre")]
+
+
+def acquerir_materiau(game_state: dict, player: str, materiau: str) -> bool:
+    """Acquiert un matériau (mulch) à l'Atelier : gate offre → dépense Vigueur →
+    crédite le STOCK de mulch de sa nature (moyens d'agir ③, canal 3). Renvoie `True`
+    ssi l'acquisition a eu lieu, `False` SANS aucun effet sinon. Jumeau
+    d'`acquerir_outil` (event-driven HORS TICK), à ceci près qu'il n'est PAS
+    idempotent (on peut racheter du mulch autant qu'on veut : c'est un consommable,
+    pas un outil) et qu'il pose de la MATIÈRE (stock) plutôt qu'un marqueur.
+
+    Séquence (ordre important pour ne JAMAIS débiter sans livrer) :
+      1. GATE STRICT — `materiau` doit être dans `offre_materiaux(...)` (on
+         RE-VÉRIFIE, on ne fait pas confiance à l'appelant). Hors offre → `False`.
+      2. VIGUEUR — `vigueur.spend(cost)` renvoie le RATIO d'effort : 1.0 ssi payé en
+         entier. Fonds insuffisants → ratio < 1.0 ; on ANNULE (pas de botte à moitié
+         payée). NB : `spend` draine `min(cost, courante)` même en échec.
+      3. LIVRAISON — `mulch_stock(gs)[nature] += dose` : la matière atterrit au stock,
+         `pailler` la posera au sol (le principe `paillage.py` tient : mulch sourcé).
+
+    PUR côté écolo : touche l'état JOUEUR (`vigueur`) + le STOCK profil (`mulch_stock`,
+    patron `player_seed_bank`, PAS un champ du tick) — jamais les champs ni le tick.
+    Aucun RNG (philo #3)."""
+    if materiau not in offre_materiaux(game_state, player):
+        return False                          # gate : hors offre, aucun effet
+    spec = MATERIAUX[materiau]
+    if vigueur.spend(game_state, player, spec["cout_vigueur"]) < 1.0:
+        return False                          # fonds insuffisants → acquisition annulée
+    mulch_stock(game_state)[spec["nature"]] += spec["dose"]
     return True

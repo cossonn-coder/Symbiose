@@ -43,6 +43,7 @@ from .compost import (
 # approvisionnement (broyer bois → BRF, récolte de plantes à paille).
 from .paillage import (
     mulch_stock, stock_disponible, prelever_stock, broyer, recolter_paille,
+    glaner, TISSUS_GLANABLES,
 )
 # Couplage planter+pailler par maîtrise (équilibre invasion ⑦) : auto-paillage à la
 # plantation au-dessus du palier, nature du mulch selon l'espèce.
@@ -100,6 +101,7 @@ __all__ = [
     "EPANDRE_W", "structure_de_tuile", "poser_bac", "poser_pile",
     "composter", "empiler_bois", "retourner", "epandre",
     "mulch_stock", "stock_disponible", "prelever_stock", "broyer", "recolter_paille",
+    "glaner", "TISSUS_GLANABLES",
     "SEUIL_AUTOPAILLAGE", "nature_autopaillage", "auto_pailler",
     "CONCEPT_ABEILLES", "SEUIL_EQUIPEMENT", "MIEL_VIGUEUR_RATIO", "RECOLTE_SANS_EQUIP",
     "poser_ruche", "equipe", "recolter_miel",

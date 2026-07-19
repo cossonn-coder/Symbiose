@@ -25,8 +25,15 @@ from __future__ import annotations
 
 from sim.vigueur import spend
 from fields.ecofields import (NATURES_MULCH, BROYAGE_RENDEMENT,
-                              RECOLTE_MULCH_RENDEMENT)
+                              RECOLTE_MULCH_RENDEMENT, STRUCTURE_ACCEPTE)
 from .couts import cout_action, OBJETS_TOUCHES, _objets_action
+
+# Tissus de litière TENDRE glanables (acquisition des moyens d'agir ③, canal 1) —
+# feuille/fleur/herbace/fruit, EXACTEMENT ce qu'un bac à compost accepte
+# (`STRUCTURE_ACCEPTE["bac"]`, source unique) : la feuille morte de surface, tendre
+# et ramassable. Exclut le `bois` (ligneux, il va à la pile/au broyage) et le
+# `diffus` (exsudats DANS le sol, non ramassables — décision ⑤A du compost).
+TISSUS_GLANABLES = STRUCTURE_ACCEPTE["bac"]
 
 
 def mulch_stock(game_state: dict) -> dict:
@@ -105,3 +112,33 @@ def recolter_paille(game_state: dict, player: str, plant, eco) -> float:
     credit = biomass * ratio * RECOLTE_MULCH_RENDEMENT
     mulch_stock(game_state)[nature] += credit
     return credit
+
+
+def glaner(game_state: dict, player: str, eco, r: int, c: int) -> float:
+    """Glaner la litière de surface TENDRE d'un plot (acquisition des moyens d'agir
+    ③, canal 1) — geste BASE sur le MILIEU (philo #1), le mulch d'ENTRÉE de gamme :
+    on RAMASSE à même le sol les feuilles/fleurs/herbacées/fruits tombés (`TISSUS_
+    GLANABLES`) et on les verse au stock nature **`feuilles`**. C'est la source de
+    mulch amorçable dès qu'il y a des feuilles au sol (la décompo en produit toujours
+    un peu) → elle lève l'impasse `RAVITAILLEMENT_MANQUANT` à la racine : plus besoin
+    d'un squelette à broyer ni d'une plante à paille cultivée pour couvrir un sol nu.
+
+    Interconnexion (règle « tout coexiste ») : le mulch VIENT du plot (patron
+    `_ramasser_vers_structure`, mais vers le STOCK au lieu d'une structure — la masse
+    est CONSERVÉE, jamais créée), reliant décompo → paillage → germination/humidité.
+    Le `bois` (ligneux) et le `diffus` (exsudats, permanent) RESTENT au sol.
+
+    Coût FAIBLE (geste rustique). **Refus EN AMONT** (aucune Vigueur dépensée) si le
+    plot n'a rien de tendre à glaner (`total ≤ 0` — sol propre) : ce n'est pas une
+    maladresse, il n'y a simplement rien à ramasser (patron `broyer`/`epandre`).
+    Renvoie la masse de feuilles créditée au stock (0.0 = rien fait)."""
+    cell = eco.litiere[r][c]
+    total = sum(p.masse for p in cell if p.masse > 0.0 and p.tissu in TISSUS_GLANABLES)
+    if total <= 0.0:
+        return 0.0                            # rien de tendre à glaner → aucune Vigueur dépensée
+    cost = cout_action(game_state, player, "glaner", OBJETS_TOUCHES["glaner"])
+    if spend(game_state, player, cost) < 1.0:
+        return 0.0                            # Vigueur insuffisante → litière intacte
+    eco.litiere[r][c] = [p for p in cell if p.tissu not in TISSUS_GLANABLES]
+    mulch_stock(game_state)["feuilles"] += total
+    return total

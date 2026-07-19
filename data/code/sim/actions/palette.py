@@ -40,6 +40,7 @@ FAMILLE_CIBLE: dict[str, str] = {
     # plot de milieu
     "planter": "plot", "arroser": "plot", "pailler": "plot", "becher": "plot",
     "poser_bac": "plot", "poser_pile": "plot", "poser_ruche": "plot",
+    "glaner": "plot",   # ramasse la litière tendre d'un plot → stock (moyens d'agir ③)
     # plante par position
     "recolter": "plante", "deraciner": "plante", "tailler": "plante",
     "pincer": "plante", "arracher": "plante",

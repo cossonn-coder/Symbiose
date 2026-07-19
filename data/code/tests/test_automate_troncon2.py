@@ -38,6 +38,7 @@ def _percept(**over):
     """Une perception neutre (rien à faire) surchargée par `over`."""
     base = dict(position=(3, 4), vitalite=1.0, maturite=0.0, humidite=1.5,
                 lumiere=1.0, qi=1.0, paillage=1.0, structure=1.0,
+                litiere_tendre=0.0,
                 ferale_cible=None, voisin_ombrageant=None)
     base.update(over)
     return SimpleNamespace(**base)
@@ -77,6 +78,20 @@ def test_impasse_ravitaillement():
     ok = isinstance(p, Impasse) and p.cause == RAVITAILLEMENT_MANQUANT
     check("impasse — sol_nu sans source de mulch → ravitaillement_manquant", ok,
           f"{getattr(p, 'cause', p)}")
+
+
+def test_glaner_leve_impasse():
+    """sol_nu, aucun mulch, aucun squelette ni paille — MAIS de la litière tendre au
+    plot (moyens d'agir ③, canal 1) → propose GLANER (cible milieu), plus d'impasse."""
+    gs = {}
+    mulch_stock(gs)
+    plant = _plant()
+    percept = _percept(paillage=0.0, litiere_tendre=PAILLAGE_DOSE * 2)  # feuilles au sol
+    p = proposer(gs, plant, [plant], "T0", "sol_nu", percept)
+    ok = (isinstance(p, Plan) and p.verbe == "glaner"
+          and p.cible == "milieu" and p.cible_obj is None)
+    check("canal 1 — litière tendre au plot → glaner (lève l'impasse)", ok,
+          f"plan={getattr(p, 'verbe', p)}")
 
 
 def test_impasse_geste_inexistant():
@@ -141,6 +156,7 @@ def test_priorite_hydrique_pailler_avant_arroser():
 def main() -> int:
     print("=== test_automate_troncon2 ===")
     for fn in (test_chainage_broyer_puis_pailler, test_impasse_ravitaillement,
+               test_glaner_leve_impasse,
                test_impasse_geste_inexistant, test_repli_hydrique_pailler_vers_arroser,
                test_desherbage_seuils, test_deraciner_cible, test_part_recoltee,
                test_priorite_hydrique_pailler_avant_arroser):

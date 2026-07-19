@@ -1052,6 +1052,16 @@ NATURES_MULCH = {
     "paille":    {"decay": 1.0, "humidite_w": 1.2, "allelo": 0.0,  "ph_shift":  0.0,  "vers_bois": 0.0,  "fongique": False, "abri_w": 0.7},
     "brf":       {"decay": 0.5, "humidite_w": 0.9, "allelo": 0.0,  "ph_shift":  0.0,  "vers_bois": 1.0,  "fongique": True,  "abri_w": 1.0},
     "aiguilles": {"decay": 0.5, "humidite_w": 0.9, "allelo": 0.3,  "ph_shift": -0.10, "vers_bois": 0.0,  "fongique": False, "abri_w": 0.6},
+    # Feuilles GLANÉES (acquisition des moyens d'agir ③, canal 1 `glaner`) : la
+    # litière de surface TENDRE (feuille/fleur/herbace/fruit) ramassée à même le sol
+    # → le mulch BASE, celui que le débutant se procure sans outil ni culture (lève
+    # l'impasse `RAVITAILLEMENT_MANQUANT`). Profil calqué sur `paille` (mulch tendre,
+    # RAPIDE : `decay` 1.0), MAIS DISTINCT du bois : `vers_bois` = 0 (pas de faim
+    # d'azote, pas d'habitat fongique — c'est de la feuille, pas du BRF), rétention
+    # d'humidité un cran SOUS la paille (couche plus mince, se tasse vite → 1.0 vs
+    # 1.2), abri MODESTE (feuillage plat). Aucune allélopathie/décalage pH.
+    # PLACEHOLDER, calibrage F5 / bancs.
+    "feuilles":  {"decay": 1.0, "humidite_w": 1.0, "allelo": 0.0,  "ph_shift":  0.0,  "vers_bois": 0.0,  "fongique": False, "abri_w": 0.5},
 }
 # Nature NEUTRE (plot non mulché) : tous les multiplicateurs à l'identité, aucun
 # terme extra → lecteurs strictement inchangés (garde-fou golden au repos).

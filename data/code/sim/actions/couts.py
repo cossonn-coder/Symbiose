@@ -47,6 +47,7 @@ COUTS = {
     "grelinette":           MODERE,
     "pailler":              MODERE,            # dépose du mulch au sol (phase planification, équilibre invasion ③ §2)
     "broyer":               MODERE,            # broie du bois → BRF (phase planification, équilibre invasion ④ §3.1)
+    "glaner":               FAIBLE,            # ramasse la litière tendre → stock feuilles (moyens d'agir ③, canal 1) — geste rustique bon marché
     "pincer":               FAIBLE,            # geste manuel DOUX de BASE (gradient §A) — léger, non perturbateur
     "arracher":             ELEVE,             # geste manuel NET de BASE (gradient §A) — action directe perturbatrice (philo #1)
     "tailler":              MODERE,            # geste direct sur le vivant (philo #1) — coût modéré
@@ -89,6 +90,7 @@ OBJETS_TOUCHES = {
     "grelinette":           ("ameublissement", "grelinette"),
     "pailler":              ("paillage",),       # technique ; on écrit un CHAMP, pas de cible vivante — sans état moteur → atténuation neutre 1.0
     "broyer":               ("broyage", "broyeur"),   # technique + outil (BRF, équilibre invasion ④) — sans état moteur → atténuation neutre 1.0
+    "glaner":               (),                        # geste BRUT sur le milieu, SANS outil (moyens d'agir ③, canal 1) — terme 2 vide
 
     "pincer":               ("taille",),   # famille taille, SANS outil (§A) — la maîtrise taille atténue, aucun outil requis
     "arracher":             ("taille",),   # famille taille, SANS outil (§A) — le différenciateur main/outil est le seul appel `erode`
