@@ -108,7 +108,7 @@ collision** avec les règles de Symbiose et doivent être écrits explicitement 
 Reprendre la structure du brief amont (rôles, déclencheurs, syntaxe, exemples,
 répartition des responsabilités, interdictions) **en y intégrant les 4
 adaptations ci-dessus**, et en utilisant les chemins **post-rangement** dans les
-exemples (`docs/champs/eau/dette_hydrologie.md`, etc.).
+exemples (`docs/champs/eau/dette_eau.md`, etc.).
 
 Workflow de MàJ doc après session (sans `extract-chat`) :
 1. Claude rédige la synthèse et identifie **le thème**.

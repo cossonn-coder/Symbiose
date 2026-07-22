@@ -1,3 +1,3 @@
 # agent
 
-Protocole de délégation aux agents externes (DeepSeek) — rempli au tronçon ⑥ du sprint de rangement.
+Protocole de délégation aux agents externes (DeepSeek) — quand fouiller dehors, quand lire soi-même.

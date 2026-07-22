@@ -69,9 +69,45 @@ explicitement avant appel : `. ~/.config/deepseek.env`.
 - [x] ③ Backlog éclaté + renvois journal/dette par thème — 2026-07-22
 - [x] ④ Extractions enchâssées + réparation des liens vivants — 2026-07-22
 - [x] ⑤ Taxonomie appliquée à `sprints/` — 2026-07-22
-- [ ] ⑥ `docs/agent/deepseek_protocol.md` + pointeur `CLAUDE.md`
+- [x] ⑥ `docs/meta/agent/deepseek_protocol.md` + pointeur `CLAUDE.md` — 2026-07-22
 
 ## REPRISE
+
+**SPRINT TERMINÉ** (⑥ fait le 2026-07-22 — les 6 tronçons sont clos). Rien à
+reprendre : la suite est un `git commit` puis, hors de ce sprint, la clôture
+habituelle (journal + `BACKLOG.md`).
+
+**Tronçon ⑥ fait** (golden **INCHANGÉ**, hash `57c166d8d362…` ; **aucun fichier
+C# touché** → `dotnet build` non concerné). Livré :
+
+- **`docs/meta/agent/deepseek_protocol.md`** (253 l.) — et non `docs/agent/…`
+  comme l'écrivait le titre de la case ci-dessus : la taxonomie du ① range ce
+  document sous le type `meta/`, thème `agent/` (le corps du kickoff citait déjà
+  le bon chemin). §4 de `docs/ARBORESCENCE.md` et `README.md` du dossier mis à
+  jour en conséquence.
+- **Les 4 adaptations obligatoires** y sont écrites en toutes lettres : tests
+  moteur ≠ boilerplate (§6.1), suspension **par nature de tâche** avec les cas
+  `/conception` et `/sprint-auto` (§3-§5), interdiction `extract-chat` sur
+  `~/.claude/projects/` (§6.2), français forcé dans les `--spec` (§6.3).
+  S'y ajoute un **§1 Sécurité** en tête (incident de fuite du 2026-07-22) :
+  ne jamais afficher ni copier la clé, aucun secret dans le dépôt, pas de
+  `.bak` qui traîne.
+- **Pointeur `CLAUDE.md`** : section « Délégation DeepSeek » de **9 lignes**,
+  placée juste après l'en-tête (avant « Source de vérité »).
+- **Test de bout en bout OK** du premier coup après correctif :
+  `ask-deepseek --paths CLAUDE.md` a répondu en français correct.
+- **Correctif hors dépôt** (nécessaire, sinon l'outil est inutilisable) :
+  `~/.config/deepseek.env` ne contenait **pas** le mot-clé `export` —
+  ajouté par `sed` **sans jamais afficher la valeur**, mode `600` reconfirmé,
+  copie de sauvegarde supprimée dans la foulée.
+- Point hérité corrigé : `06_protocole_deepseek.md` l.111 cite désormais
+  `docs/champs/eau/dette_eau.md` (le fichier qui existe vraiment).
+
+**Décision imprévue à connaître** : `extract-chat` ne sait lire qu'un
+**transcript Claude Code `.jsonl`** — c'est-à-dire exactement la source que
+l'adaptation 3 interdit. Le jeu ne produit rien dans ce format ; l'outil est
+donc **de fait inutilisé sur Symbiose**, ce qui est écrit tel quel au §6.2
+plutôt que de laisser croire à un usage courant.
 
 **Tronçon ⑤ fait** (golden **INCHANGÉ**, hash `57c166d8d362…` ; **aucun fichier
 C# touché** → `dotnet build` non concerné). Livré, en suivant

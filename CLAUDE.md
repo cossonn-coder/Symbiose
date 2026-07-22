@@ -10,6 +10,16 @@ ingénieur électronique embarqué à Grenoble.
 > roguelike (run, shop inter-run, extinction terminale, héritage entre
 > runs).
 
+## Délégation DeepSeek — lire avant tout appel
+
+Spec : **[`docs/meta/agent/deepseek_protocol.md`](docs/meta/agent/deepseek_protocol.md)**.
+*DeepSeek localise, Claude lit et juge.* `ask-deepseek` = **repérage factuel**
+(inventaire, anti-doublon, couplages, voix narratives), revérifié par `grep` dès
+que ça se grave ; **jamais** de jugement écologique, de trou de conception, de
+golden qui bouge, ni de code `data/code/` ou de test moteur généré. **La clé
+(`~/.config/deepseek.env`) ne s'affiche ni ne se copie jamais** — fuite avérée
+le 2026-07-22 ; `extract-chat` ne vise jamais `~/.claude/projects/`.
+
 ## Source de vérité
 
 Le moteur Python dans `data/code/`, **réorganisé en paquets** (Sprint refactor

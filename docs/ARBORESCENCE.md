@@ -81,7 +81,7 @@ dans la carte : leur nom est déductible du dossier.
 | *(racine)* | `vision.md`, `architecture.md`, `historique_decisions.md`, `instructions.md` |
 | `amorce/` | `amorce_conception_automate.md`, `audit_champs.md`, `brief_champs_conception.md`, `brief_claude.md`, `brief_claude_web.md` |
 | `calibrage/` | `conception_bugs_emergence.md`, `conception_calibration_realiste.md`, `conception_completude_ecosysteme.md` |
-| `agent/` | *(vide — `deepseek_protocol.md` au tronçon ⑥)* |
+| `agent/` | `deepseek_protocol.md` *(protocole de délégation, tronçon ⑥ — pointeur en tête de `CLAUDE.md`)* |
 
 ### `champs/` — champs de simulation
 
