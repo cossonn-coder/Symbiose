@@ -32,7 +32,8 @@ HASH_FILE = os.path.join(os.path.dirname(__file__), "population_hash.txt")
 GUILDS = ("puceron", "limace", "doryphore",
           "coccinelle", "chrysope", "carabe", "merle", "herisson",
           "abeille", "syrphe", "papillon", "bourdon", "osmie",
-          "lombric", "cloporte", "campagnol", "rapace", "couleuvre")
+          "lombric", "cloporte", "campagnol", "rapace", "couleuvre",
+          "moustique", "libellule")
 
 
 def build_world():
@@ -356,6 +357,68 @@ def test_super_predateur_puits_top_down():
           f"(avec {avec:.3f} < sans {sans:.3f}) : OK")
 
 
+# ---------------------------------------------------------------------------
+# 6. FAUNE DE MARE — moustique + libellule (hydrologie ④)
+# ---------------------------------------------------------------------------
+
+def test_faune_mare_presente_et_categorie():
+    """Moustique et libellule sont des champs de population de catégorie NEUVE
+    `aquatique`, greffés sur l'eau stagnante."""
+    tiles, ecos = _run(*build_world())
+    eco = ecos["T0"]
+    for nom in ("moustique", "libellule"):
+        assert nom in eco.populations, f"champ {nom} absent"
+        assert eco.populations[nom].spec.category == "aquatique"
+    print("[pop] moustique + libellule présents (catégorie aquatique) : OK")
+
+
+def test_moustique_nul_sans_flaque():
+    """Sans eau de surface ni marais (repos du smoke), le moustique ne décolle
+    jamais : sa ressource (`_eau_stagnante_grid`) ET son habitat (`_mare_habitat_grid`)
+    sont nuls → densité nulle. Prouve que la faune de mare est bien gatée par l'eau
+    stagnante (golden de population NEUTRE hors flaque)."""
+    tiles, ecos = _run(*build_world())
+    for tile in tiles:
+        f = ecos[tile.tile_id].populations["moustique"]
+        m = max(f.at_plot(r, c) for r in range(f.rows) for c in range(f.cols))
+        assert m < 1e-9, f"moustique décolle sans flaque (max {m:.4f})"
+    print("[pop] moustique nul sans eau stagnante : OK")
+
+
+def test_moustique_monte_avec_eau_surface():
+    """Le moustique MONTE là où l'eau de surface stagne. On maintient une lame
+    d'eau au-dessus de SEUIL_FLAQUE et on vérifie qu'il s'installe."""
+    from fields.ecofields.constants import SEUIL_FLAQUE
+    eco = init_eco("R", 6, 8, humidite=1.5, fertilite=1.0, microbiome=0.3)
+    tile = Tile(tile_id="R", soil_type="terre")
+    eco.temperature.fill(20.0)
+    mous = eco.populations["moustique"]
+    for _ in range(30):
+        eco.eau_surface.fill(SEUIL_FLAQUE + 0.5)   # flaque maintenue (source externe)
+        eco.tick_populations(tile, [], week_in_year=25)
+    m = max(mous.at_plot(r, c) for r in range(mous.rows) for c in range(mous.cols))
+    assert m > 0.05, f"moustique ne s'installe pas malgré une flaque (max {m:.3f})"
+    print(f"[pop] moustique s'installe sur l'eau stagnante (max {m:.3f}) : OK")
+
+
+def test_libellule_suit_le_moustique():
+    """La libellule est un PRÉDATEUR piloté par sa proie : elle ne s'installe (sur
+    l'eau, son habitat) que si le moustique abonde. On injecte du moustique frais à
+    chaque tick au-dessus d'une flaque et on vérifie que la libellule décolle."""
+    from fields.ecofields.constants import SEUIL_FLAQUE
+    eco = init_eco("R", 6, 8, humidite=1.5, fertilite=1.0, microbiome=0.3)
+    tile = Tile(tile_id="R", soil_type="terre")
+    eco.temperature.fill(20.0)
+    mous, lib = eco.populations["moustique"], eco.populations["libellule"]
+    for _ in range(30):
+        eco.eau_surface.fill(SEUIL_FLAQUE + 0.5)   # flaque (habitat de la libellule)
+        mous.fill(0.8)                             # proie maintenue abondante
+        eco.tick_populations(tile, [], week_in_year=25)
+    m = max(lib.at_plot(r, c) for r in range(lib.rows) for c in range(lib.cols))
+    assert m > 0.05, f"la libellule ne suit pas le moustique (max {m:.3f})"
+    print(f"[pop] libellule suit le moustique (max {m:.3f}) : OK")
+
+
 def test_determinisme_golden():
     """Le hash des densités doit être stable (deux runs identiques)."""
     h1 = compute_hash()
@@ -386,6 +449,10 @@ def main():
     test_super_predateur_nul_sans_proie()
     test_super_predateur_monte_avec_proie()
     test_super_predateur_puits_top_down()
+    test_faune_mare_presente_et_categorie()
+    test_moustique_nul_sans_flaque()
+    test_moustique_monte_avec_eau_surface()
+    test_libellule_suit_le_moustique()
     test_determinisme_golden()
     print("[pop] TOUS LES TESTS PASSENT")
     return 0

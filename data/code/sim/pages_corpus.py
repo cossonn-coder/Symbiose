@@ -249,6 +249,17 @@ _ENTREES = [
      "seigle lui-même qui empoisonne le sol contre elle — sans se nuire, car le grain "
      "ne craint pas son propre poison. Le meilleur désherbage est celui qu'une plante "
      "fait à ta place pendant que tu dors."),
+
+    # --- Page de la FAUNE DE MARE (sprint HYDROLOGIE & MARÉCAGES ④) — lore pur ----
+    ("P34", "C", "eau", 3, "hasard",
+     "Ne comble pas la flaque qui s'attarde au bas du jardin : c'est là que le monde "
+     "grouille. L'eau qui dort n'est pas une eau morte. Sur elle danse au soir la nuée "
+     "grêle des moustiques, et sur eux fond, immobile puis foudroyante, la demoiselle "
+     "de gaze — la libellule, qui fut d'abord larve carnassière tapie sous cette même "
+     "surface. Un jardin sans point d'eau est un jardin à demi peuplé. Le paysan qui "
+     "creusait une mare au coin de son pré ne le faisait pas pour la beauté : il "
+     "savait qu'une eau qui stagne appelle tout un peuple d'ailes, et que ce peuple "
+     "dévore ce qui, ailleurs, nous dévore."),
 ]
 
 # Titres recopiés du doc §7 (gras de chaque entrée), indexés par id — gardés à
@@ -287,6 +298,7 @@ _TITRES = {
     "P31": "Chaque litière a son sol",
     "P32": "L'herbe jalouse de la Saint-Jean",
     "P33": "Le seigle qui désherbe en dormant",
+    "P34": "Ne comble pas la flaque",
 }
 
 # `PAGES` = dict id → fiche complète. `ORDRE` = ids dans l'ordre du corpus (tri

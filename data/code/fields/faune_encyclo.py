@@ -111,6 +111,23 @@ FAUNE_ENCYCLO: dict[str, tuple[str, tuple[str, ...]]] = {
         "qui la laisse filer.",
         ("campagnol", "limace"),
     ),
+    # --- catégorie aquatique : faune de mare (hydrologie ④) -----------------
+    # Mini-chaîne de l'eau stagnante : le moustique (proie, pond dans la flaque et
+    # le marais) et la libellule (prédateur, chasse en vol stationnaire au-dessus
+    # de l'eau). Leur niche = les tokens de MILIEU `eau`/`marais` (l'eau libre et le
+    # marécage persistant). Sous-graphe SYMÉTRIQUE entre elles (moustique↔libellule).
+    "moustique": (
+        "Nuée grêle et vibrante qui monte des flaques et de l'eau qui dort ; ses "
+        "larves frétillent sous la surface avant que l'adulte ne prenne l'air aux "
+        "premières chaleurs.",
+        ("libellule", "eau", "marais"),
+    ),
+    "libellule": (
+        "Chasseresse ailée de gaze, immobile en vol stationnaire puis fulgurante "
+        "au-dessus de la mare ; elle fond sur les moustiques qu'elle a vus éclore de "
+        "l'eau où, larve carnassière, elle-même a grandi.",
+        ("moustique", "eau", "marais"),
+    ),
     # --- pollinisateurs (catalogue enrichi ⑤/⑥) ------------------------------
     # Liés à la FLORAISON qu'ils fécondent (→ `fruit`, nouaison), et selon le
     # type à un stade larvaire (pont ⑤ : `chenille`, `syrphe_larve`), une niche
@@ -149,7 +166,8 @@ FAUNE_ENCYCLO: dict[str, tuple[str, tuple[str, ...]]] = {
 
 def encyclo_meta(name: str) -> dict:
     """Métadonnée d'une espèce, prête à splatter dans `TrophicSpec(**...)`.
-    Couvre les 10 espèces trophiques (④) + les 5 pollinisateurs (⑥). Nom inconnu
+    Couvre les espèces trophiques (faune nommée ④ + sommets ①② + faune de mare
+    hydrologie ④) + les 5 pollinisateurs (⑥). Nom inconnu
     (champ larvaire intermédiaire, futur ajout) → métadonnée vide : blurb absent,
     graphe vide — pas d'erreur, pas de fausse entrée d'encyclo."""
     blurb, liens = FAUNE_ENCYCLO.get(name, ("", ()))

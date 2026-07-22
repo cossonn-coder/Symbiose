@@ -197,15 +197,65 @@ humidité) pour éviter le biais d'ordre de parcours (sinon direction privilégi
   (NEUF), simserver/{voix.py, structures.py, conteneurs.py}}`. NON commit (Nico commit).
 - C# non touché (vue marais = ⑧).
 
+## Avancement ④ (faune de mare : moustique + libellule) — FAIT le 2026-07-22
+- **Deux espèces data-driven** ajoutées au registre `TrophicSpec` (`fields/
+  population/registry.py`), en FIN de `build_population_specs()` :
+  - `moustique` (proie, `category="aquatique"`, `salt=0x2B2001`) : `resource_fn=
+    _eau_stagnante_grid` (lame `eau_surface` dominante + `marais_memory` plancher),
+    `habitat_fn=_mare_habitat_grid`, `predators=("libellule",)`, fenêtre
+    photopériode `11.0/13.5`.
+  - `libellule` (auxiliaire, `salt=0x2B3001`) : `resource_fn=_espece_grid(
+    "moustique")` (prédateur qui broute la densité moustique), même habitat de mare,
+    `predators=()`, fenêtre `11.5/14.0`. Ordre de tick proie→prédateur déjà garanti
+    par le registre (boom-bust décalé).
+- **Grilles de ressource/habitat NEUVES** dans `fields/population/resources.py` :
+  `_eau_stagnante_grid` (`MOUSTIQUE_SURFACE_W=1.0`·lame + `MOUSTIQUE_MARAIS_W=0.6`·
+  marais, clampé [0,1], robuste au getattr → grille nulle si `eau_surface` absent) et
+  `_mare_habitat_grid` (`MARE_HABITAT_W=0.8`·max(lame,marais)). Lecture PURE de `eco`
+  par getattr (couche `population` ne dépend jamais de `ecofields`). Zéro RNG,
+  positions sprites par hash de sel (philo #3).
+- **5 voix** : encyclopédie (`fields/faune_encyclo.py` : blurbs + interconnexions
+  `("libellule"/"moustique","eau","marais")`, symétrie du sous-graphe nommé
+  préservée) ; carnet (concept `eau`/`marais` existant, pas de concept neuf) ;
+  page secrète **P34** « Ne comble pas la flaque » (`sim/pages_corpus.py`, voix C,
+  concept `eau`, robinet `hasard`) ; magazine (n/a faune, pas d'offre) ; événements
+  (observabilité par le graphe d'interconnexions — PAS de marqueur de tick neuf, par
+  cohérence avec campagnol/rapace, golden-sûr).
+- **Golden écolo INCHANGÉ** `57c166d8…` (ni `eau_surface` ni `marais_memory` ≠ 0 au
+  smoke ⇒ moustique/libellule densité 0.0 partout ⇒ rien n'entre dans le hash écolo).
+- **Golden POPULATION RE-FIGÉ MAÎTRISÉ** (annoncé « pop NEUTRE/maîtrisé » au kickoff) :
+  ancien `5824ee3f…` → nouveau `cc886bdd…` (`tests/population_hash.txt`). Cause =
+  PUREMENT ADDITIVE : le digest privé des 2 nouvelles espèces == ancienne réf
+  `5824ee3f…` (moustique/libellule = 0.0 partout au smoke, aucune flaque). Recapturé
+  `python3 -m tests.test_population --capture`.
+- **Tests ciblés VERTS** : `test_population` (dont 4 checks neufs : présence+catégorie
+  faune de mare, moustique nul sans flaque, moustique monte avec `eau_surface`,
+  libellule suit le moustique), `test_faune_dediee` (+ `FAUNE_MARE`, catégorie
+  `aquatique`, token milieu `eau`/`marais`), `test_pages` (corpus 33→34, P01..P34),
+  suite pont `simserver/macro.py` (GUILDES 18→20). Balayage complet : 41/42 verts,
+  seul `test_sim_server` ROUGE (266/270).
+- **`test_sim_server` ROUGE = PRÉEXISTANT** (dérive de chaîne `engine_version`
+  0.5.28 attendu vs courant + test fruit pommier), vérifié `git stash` : orthogonal à
+  ④. `test_encyclopedie` idem (gestes sans fiche, préexistant).
+- **Fichiers touchés** : `fields/population/{resources.py, registry.py}`,
+  `fields/faune_encyclo.py`, `sim/pages_corpus.py`, `tests/{test_population.py,
+  test_faune_dediee.py, test_pages.py, simserver/macro.py, population_hash.txt}`.
+  **NON commit** (Nico/orchestrateur commit). C# NON touché (vue faune = ⑧).
+- ⚠️ **`resources.py` = 378 LDC pur** (bande vigilance 300–400, était déjà 349) —
+  responsabilité unique conservée mais à SURVEILLER / candidate au `/refactor`.
+
 ## §REPRISE
-**① CLOS** (altitude). **③ CLOS** (marécage : `marais_memory` + hystérèse `est_marais`
-+ effets décompo anaérobie/pH tourbeux, banc `tourbiere`, pont 0.5.27, golden INTACT
-`eb46b49d…`, tests 13/13 + oracle 5/5). **PROCHAIN = ④** (`04_faune_de_mare.md`) —
-guilde `moustique` (proie, prolifère sur `eau_surface`/marais) + `libellule`
-(auxiliaire prédateur), data-driven + 5 voix ; pop NEUTRE/maîtrisé annoncé. ④ avant
-⑥ (carnivore-puits lit le champ moustique). ⑤→⑦ visent NEUTRE, ⑧ pur-vue.
-**⚠️ Bugs préexistants NON traités ici** : `test_senescence` rouge + banc édaphique
-`carence` FAIL — orthogonaux à l'hydrologie, à trancher avec Nico hors sprint.
+**① CLOS** (altitude). **③ CLOS** (marécage). **④ CLOS** (faune de mare : `moustique`
+proie + `libellule` prédateur data-driven, greffés sur `eau_surface`/`marais_memory`,
+5 voix dont page P34 ; golden écolo INTACT `57c166d8…`, population re-figé MAÎTRISÉ
+additif `cc886bdd…`, 4 tests ciblés neufs verts). **PROCHAIN = ⑤**
+(`05_aulne_sphaigne.md`) — aulne (Betulaceae fixe-N actinorhizien) + sphaigne
+(ingénieur : acidifie pH, rétention d'eau, tourbe) + voix ; vise NEUTRE hors smoke.
+④ avant ⑥ (carnivore-puits lira le champ `moustique` créé ici). ⑥ carnivore, ⑦ gestes
+`creuser`/`drainer`, ⑧ pur-vue F5.
+**⚠️ Bugs préexistants NON traités ici** : `test_sim_server` (dérive version) +
+`test_senescence` + `test_encyclopedie` (gestes sans fiche) + banc édaphique `carence`
+— tous orthogonaux à l'hydrologie, à trancher avec Nico hors sprint.
 Tout re-figeage NON annoncé par un kickoff = bug (`/sprint-auto` refuse).
 
 ## §REPRISE_ANCIENNE (②)

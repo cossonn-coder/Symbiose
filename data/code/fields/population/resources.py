@@ -164,6 +164,67 @@ def _mycelium_signal(eco, tile, plants) -> list[list[float]]:
 
 
 # ---------------------------------------------------------------------------
+# FAUNE DE MARE (hydrologie ④, docs/champs/eau/conception_hydrologie_marecage.md §4)
+# ---------------------------------------------------------------------------
+# La mini-chaîne aquatique se greffe sur les DEUX champs hydriques du sprint :
+#   - `eau_surface` (lame d'eau de surface, ②) = l'eau LIBRE où le moustique pond
+#     (larves aquatiques) → sa ressource DOMINANTE, à effet immédiat ;
+#   - `marais_memory` (mémoire de marécage, ③) = l'eau stagnante PERSISTANTE →
+#     un plancher qui maintient l'insecte même entre deux averses (une mare vive
+#     grouille plus qu'une flaque d'orage éphémère).
+# `resource_fn` du moustique = combinaison des deux, normalisée. `habitat_fn` =
+# proximité de l'eau stagnante (flaque OU marais) : le moustique se tient AU-DESSUS
+# de l'eau, la libellule y chasse en vol stationnaire et s'y reproduit (larve
+# aquatique elle aussi). Lecture PURE des champs (la faune ne touche pas l'eau —
+# c'est le CHAMP qui fait tout, philo #2). Invariant golden : `eau_surface` sous
+# SEUIL_FLAQUE partout ET `marais_memory` nulle (repos du smoke, aucune flaque) ⇒
+# ressource ET habitat nuls ⇒ densité moustique/libellule nulle → golden NEUTRE.
+# Placeholders, calibrage F5 (comme les autres guildes, §5.6).
+MOUSTIQUE_SURFACE_W = 1.0   # poids de la lame d'eau LIBRE (ponte immédiate) dans la ressource
+MOUSTIQUE_MARAIS_W  = 0.6   # poids de la mémoire de marais (mare vive persistante)
+EAU_SURFACE_REF     = 1.0   # lame d'eau/plot (au-delà de SEUIL_FLAQUE) saturant la ressource
+MARE_HABITAT_W      = 0.8   # bump d'habitat au-dessus de l'eau stagnante (flaque/marais)
+
+
+def _eau_stagnante_grid(eco, tile, plants) -> list[list[float]]:
+    """Ressource du MOUSTIQUE (④) = eau stagnante où pondre : lame d'eau LIBRE
+    (`eco.eau_surface`, ponte immédiate) DOMINANTE + plancher de mémoire de marais
+    (`eco.marais_memory`, mare vive persistante). Lecture PURE des deux champs
+    hydriques (②③). Sans flaque ni marais → grille nulle (golden NEUTRE)."""
+    surf = getattr(eco, "eau_surface", None)
+    mem = getattr(eco, "marais_memory", None)
+    g = _zero_grid(eco.rows, eco.cols)
+    if surf is None:                        # robustesse pré-② (jamais en prod)
+        return g
+    for r in range(eco.rows):
+        for c in range(eco.cols):
+            lame = min(1.0, surf.at_plot(r, c) / EAU_SURFACE_REF)
+            marais = mem.at_plot(r, c) if mem is not None else 0.0
+            g[r][c] = _clamp01(MOUSTIQUE_SURFACE_W * lame
+                               + MOUSTIQUE_MARAIS_W * marais)
+    return g
+
+
+def _mare_habitat_grid(eco, tile, plants) -> list[list[float]]:
+    """Habitat de la faune de mare (moustique ET libellule, ④) = proximité de
+    l'eau stagnante (flaque > SEUIL_FLAQUE OU marais). Terme-source uniquement là
+    où l'eau dort : le moustique s'y agglutine, la libellule y chasse en vol
+    stationnaire et y dépose ses œufs (larve aquatique). Sans eau stagnante →
+    grille nulle → golden NEUTRE."""
+    surf = getattr(eco, "eau_surface", None)
+    mem = getattr(eco, "marais_memory", None)
+    g = _zero_grid(eco.rows, eco.cols)
+    if surf is None:                        # robustesse pré-② (jamais en prod)
+        return g
+    for r in range(eco.rows):
+        for c in range(eco.cols):
+            lame = min(1.0, surf.at_plot(r, c) / EAU_SURFACE_REF)
+            marais = mem.at_plot(r, c) if mem is not None else 0.0
+            g[r][c] = _clamp01(MARE_HABITAT_W * max(lame, marais))
+    return g
+
+
+# ---------------------------------------------------------------------------
 # CONSTANTES DE SCISSION DU RAVAGEUR (faune nommée ④b, CONCEPTION_FAUNE_DEDIEE §2)
 # ---------------------------------------------------------------------------
 # Le champ unique `ravageur` se scinde en puceron / limace / doryphore. Chacun a

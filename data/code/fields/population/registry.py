@@ -20,6 +20,7 @@ from fields.population.resources import (
     _base_habitat_grid, _pile_grid, _ravageur_grid, _abeille_habitat_grid,
     _pollinisateur_habitat_grid, _osmie_habitat_grid, _avec_abri_paillage,
     _racine_grid, _proies_grid, _rapace_habitat_grid, _habitat_nul_grid,
+    _eau_stagnante_grid, _mare_habitat_grid,
 )
 
 
@@ -48,6 +49,8 @@ _SALT_OSMIE         = 0x2AE001   # abeille solitaire niche-bois (⑤ catalogue e
 _SALT_CAMPAGNOL     = 0x2AF001   # herbivore vertébré racinaire (sommet trophique ①)
 _SALT_RAPACE        = 0x2B0001   # super-prédateur aérien (sommet trophique ②)
 _SALT_COULEUVRE     = 0x2B1001   # super-prédateur terrestre (sommet trophique ②)
+_SALT_MOUSTIQUE     = 0x2B2001   # proie aquatique de mare (hydrologie ④)
+_SALT_LIBELLULE     = 0x2B3001   # auxiliaire prédateur du moustique (hydrologie ④)
 
 
 def build_population_specs() -> list[TrophicSpec]:
@@ -213,6 +216,33 @@ def build_population_specs() -> list[TrophicSpec]:
             predators=(),
             daylen_min=11.0, daylen_full=13.0,   # HÉLIOPHILE : n'émerge qu'aux beaux jours d'été
             **encyclo_meta("couleuvre"),
+        ),
+        # --- Catégorie NEUVE `aquatique` : faune de mare (hydrologie ④) ---------
+        # Mini-chaîne aquatique greffée sur l'eau stagnante (`eau_surface` ②,
+        # `marais_memory` ③). Insérée en TOUTE FIN d'ordre de tick pour minimiser
+        # le déplacement du golden (mais golden NEUTRE de toute façon : les deux
+        # champs sont nuls au repos du smoke → densités nulles). Ordre INTERNE :
+        # moustique (proie) AVANT libellule (prédateur), comme la chaîne existante
+        # → la libellule lit le moustique FRAIS, le moustique lit la libellule de
+        # la semaine précédente (décalage d'inertie proie↔prédateur = boom-bust,
+        # philo #1/#2 : un puits biotique sur un champ, jamais un malus scripté).
+        # `category="aquatique"` : label NEUF, lu par PERSONNE (aucun consommateur
+        # `category_density`) → golden neutre pour l'agrégat. Fenêtre estivale
+        # (chaleur : le moustique éclot quand l'eau tiédit).
+        TrophicSpec(
+            name="moustique", category="aquatique", salt=_SALT_MOUSTIQUE,
+            resource_fn=_eau_stagnante_grid, habitat_fn=_mare_habitat_grid,
+            predators=("libellule",),
+            daylen_min=11.0, daylen_full=13.5,   # fenêtre estivale (eau tiède)
+            **encyclo_meta("moustique"),
+        ),
+        TrophicSpec(
+            name="libellule", category="aquatique", salt=_SALT_LIBELLULE,
+            resource_fn=_espece_grid("moustique"),   # chasse sa proie fraîche (ticke après)
+            habitat_fn=_mare_habitat_grid,           # se reproduit AU-DESSUS de l'eau (larve aquatique)
+            predators=(),                            # sommet de la mini-chaîne de mare
+            daylen_min=11.5, daylen_full=14.0,       # estivale (adulte volant plus tardif)
+            **encyclo_meta("libellule"),
         ),
     ]
 

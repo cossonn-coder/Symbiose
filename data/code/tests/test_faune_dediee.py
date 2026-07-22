@@ -68,14 +68,20 @@ HERBIVORES_VERTEBRES = ("campagnol",)
 # leurs interconnexions listent leurs proies, réciproques des liens campagnol/merle/
 # limace → la symétrie s'étend désormais à eux (ils ne sont plus forward-declarés).
 SUPER_PREDATEURS = ("rapace", "couleuvre")
+# Faune de mare (hydrologie ④) : catégorie NEUVE `aquatique`, mini-chaîne greffée
+# sur l'eau stagnante (moustique proie → libellule prédateur). Elles SONT dans le
+# sous-graphe symétrique (moustique cite libellule, libellule cite moustique).
+FAUNE_MARE = ("moustique", "libellule")
 ESPECES_QUATRE = RAVAGEURS + AUXILIAIRES + DETRITIVORES   # les 10 espèces de ④
-# Toutes les espèces trophiques consommatrices : ④ (10) + campagnol (①) + sommet (②) = 13
-ESPECES = ESPECES_QUATRE + HERBIVORES_VERTEBRES + SUPER_PREDATEURS
+# Toutes les espèces trophiques consommatrices : ④ (10) + campagnol (①) + sommet (②)
+# + faune de mare (hydrologie ④) = 15
+ESPECES = ESPECES_QUATRE + HERBIVORES_VERTEBRES + SUPER_PREDATEURS + FAUNE_MARE
 CATEGORIES = ("ravageur", "auxiliaire", "detritivore",
-              "herbivore_vertebre", "super_predateur")
+              "herbivore_vertebre", "super_predateur", "aquatique")
 # Tokens du graphe §3 qui ne sont PAS des espèces trophiques nommées (éléments du
-# milieu + champ larvaire du pont ⑤) — admis dans `interconnexions`.
-_MILIEU_TOKENS = {"fruit", "pile", "ail"}
+# milieu + champ larvaire du pont ⑤) — admis dans `interconnexions`. `eau`/`marais`
+# = la niche hydrique de la faune de mare (hydrologie ④).
+_MILIEU_TOKENS = {"fruit", "pile", "ail", "eau", "marais"}
 
 
 def _eco(plants_specs=()):
