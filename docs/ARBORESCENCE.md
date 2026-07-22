@@ -297,7 +297,7 @@ l'ordre d'exécution de `/sprint-auto`.
 |---|---|---|
 | `sprints/_clos/` | **inchangé** | Archives closes. On ne cherche jamais un sprint clos par thème, on le cherche par date via le journal ; les ranger casserait les liens des entrées de `journal/` sans rien apporter. |
 | `sprints/dette_kickoffs/` | **inchangé** | Déjà indexé par `00_index.md` et adossé aux `Dxx` de `DETTE.md` — cohérent en soi. |
-| `sprints/sprint_rangement_doc/` | **inchangé** | C'est le sprint qui exécute ce rangement ; il se décrit lui-même. |
+| `sprints/_clos/sprint_rangement_doc/` | **inchangé** | C'est le sprint qui exécute ce rangement ; il se décrit lui-même. |
 
 ### Cas transverses → `sprints/meta/`
 

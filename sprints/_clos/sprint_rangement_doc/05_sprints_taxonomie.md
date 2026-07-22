@@ -14,7 +14,7 @@ décision 4 de `00_etat.md` (les archives ne se réécrivent pas) :
 | `sprints/_clos/**` | **inchangé** — ce sont des archives closes, leur valeur est historique. On n'y touche pas. |
 | Sprints **actifs / non clos** | rangés en `sprints/<type>/<theme>/<nom_sprint>/` |
 | `sprints/dette_kickoffs/**` | **inchangé** — indexé par `00_index.md`, cohérent en soi, adossé aux `Dxx` |
-| `sprints/sprint_rangement_doc/` | **inchangé** (c'est ce sprint-ci) |
+| `sprints/_clos/sprint_rangement_doc/` | **inchangé** (c'est ce sprint-ci) |
 
 Motif : ranger 200 fichiers d'archives par thème coûte cher, casse les liens des
 entrées de journal qui les citent, et n'aide personne — on ne cherche jamais un

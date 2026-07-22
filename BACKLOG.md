@@ -19,7 +19,8 @@
 
 ## Sprint en cours
 
-**Rangement documentaire** — `sprints/sprint_rangement_doc/00_etat.md`.
+*Aucun.* Dernier sprint clos : **rangement documentaire** (2026-07-22, ①→⑥) —
+`sprints/_clos/sprint_rangement_doc/00_etat.md`.
 
 ## Backlog par thème
 

@@ -120,14 +120,14 @@ C# touché** → `dotnet build` non concerné). Livré, en suivant
   Comptage `find sprints -type f` : **340 avant, 340 après** (zéro perte).
 - **Restent à plat, comme prévu** : `sprints/_clos/` (archives),
   `sprints/dette_kickoffs/` (index adossé aux `Dxx`) et
-  `sprints/sprint_rangement_doc/` (ce sprint-ci) → **le chemin de CE fichier
+  `sprints/_clos/sprint_rangement_doc/` (ce sprint-ci) → **le chemin de CE fichier
   n'a pas changé**.
 - **71 fichiers réécrits** (pointeurs `sprints/<nom>` → nouveau chemin), pilotés
   par la table de déplacement (pas de mapping inventé), avec frontière de mot
   pour ne pas confondre `sprint_voix_narratives` et `…_ui`. Dont **20 `.py`** :
   vérifié par `tokenize` que **zéro ligne hors commentaire/docstring** n'a bougé,
   `compileall` OK. **0 `.cs`**. `journal/`, `journal_archive/` et
-  `sprints/sprint_rangement_doc/` volontairement **non réécrits** (décision 4 +
+  `sprints/_clos/sprint_rangement_doc/` volontairement **non réécrits** (décision 4 +
   ce dossier décrit l'ancien état).
 - **`docs/ARBORESCENCE.md` §7 (neuf)** : carte des sprints, motif du traitement
   asymétrique, **table de traduction ancien → nouveau des 42 entrées** (§7.1,
@@ -214,7 +214,7 @@ récit »**. Un *pointeur* vers un document (même dans un sprint clos) est rép
 — il désigne le même doc, qui a juste déménagé. Un *récit* d'une migration
 passée est laissé intact, comme le journal. Restent donc volontairement en
 `docs/conception/` : `journal/` + `journal_archive/` (décision 4), la table de
-traduction `docs/ARBORESCENCE.md` §5 (c'est son objet), `sprints/sprint_rangement_doc/`
+traduction `docs/ARBORESCENCE.md` §5 (c'est son objet), `sprints/_clos/sprint_rangement_doc/`
 (décrit ce sprint-ci) et `sprints/_clos/sprint_refactor_global/` (raconte la
 **création** de `docs/conception/` en 2026-06-15). **Aucune autre occurrence
 vivante** — vérifié par `grep -rIn` sur tout le dépôt, toutes extensions.
