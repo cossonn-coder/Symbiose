@@ -43,11 +43,33 @@ collision** avec les règles de Symbiose et doivent être écrits explicitement 
    suites ciblées sont du **code de vérité écologique** : ils encodent le
    déterminisme (règle de design #3). Ils restent **écrits par Claude**.
    `write-deepseek` ne génère que des tests **périphériques** (outils, parsing).
-2. **Suspension étendue aux skills.** Le brief suspend `ask-deepseek` sur les
-   tours d'audit pré-fix. Étendre la suspension à **`/audit-projet`,
-   `/refactor`, `/sprint-auto` et `/conception`** : ces skills lisent massivement
-   et par construction, et leur jugement doit porter sur le **contenu brut**, pas
-   sur un résumé de 400 tokens. Un audit qui délègue sa lecture n'audite rien.
+2. **Suspension par NATURE DE TÂCHE, pas par skill** (arbitrage Nico, 2026-07-22).
+   Découper ainsi, et l'écrire tel quel dans la spec :
+
+   **✅ Repérage factuel → `ask-deepseek`**, y compris et surtout dans
+   `/conception` (c'est là que le gain est maximal : 56 docs, 13 954 lignes) :
+   - inventaire d'ouverture : « quels docs/sprints touchent déjà ce sujet ? »
+   - **anti-doublon** : « ce gène / ce champ / cet effet existe-t-il déjà ? »
+     (garde-fou réel : l'incident `resilience_base` du sprint santé était
+     exactement un doublon non détecté)
+   - cartographie de couplages : « quels modules lisent le champ `humidite` ? »
+   - **voix narratives** : « l'espèce Y a-t-elle ses 5 entrées ? » (règle projet
+     « toute plante ajoutée = toutes ses voix », coûteuse à vérifier à la main)
+
+   **❌ Jugement → Claude lit le texte brut** :
+   - les 2-3 docs qui **font l'objet** du travail de conception
+   - toute question de jugement écologique ou de philo #1-#7 — DeepSeek ne
+     connaît ni la philo ni le moteur, il répondrait du plausible invérifiable
+   - « quel trou vois-tu dans cette mécanique ? » : un trou de conception se voit
+     dans l'interstice entre deux phrases, pas dans un résumé de 400 tokens
+   - les tours d'**audit pré-fix**, et `/audit-projet` dans sa phase de verdict
+
+   **Deux garde-fous** : (a) **pipeline en deux temps** — DeepSeek *localise*,
+   Claude lit le passage trouvé ; on délègue la fouille, jamais la lecture de
+   fond. (b) Toute information issue d'`ask-deepseek` qui va **influencer une
+   décision gravée** dans un kickoff est **revérifiée** par `grep` ou lecture
+   ciblée : une réponse DeepSeek n'est ni reproductible ni traçable, et le
+   projet est déterministe par principe (règle de design #3).
 3. **`extract-chat` ne doit JAMAIS viser `~/.claude/projects/`.** Les transcripts
    de session peuvent contenir des secrets (c'est déjà arrivé le 2026-07-22 : la
    clé DeepSeek a fuité dans un transcript). `extract-chat` est réservé aux logs
