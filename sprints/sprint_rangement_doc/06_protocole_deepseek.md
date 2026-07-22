@@ -70,6 +70,31 @@ collision** avec les règles de Symbiose et doivent être écrits explicitement 
    décision gravée** dans un kickoff est **revérifiée** par `grep` ou lecture
    ciblée : une réponse DeepSeek n'est ni reproductible ni traçable, et le
    projet est déterministe par principe (règle de design #3).
+
+2bis. **Cas `/sprint-auto`** (arbitrage Nico, 2026-07-22) — bien plus restrictif
+   que `/conception`, pour une raison structurelle : `/conception` **cherche**
+   (corpus large, on ignore où ça vit) tandis que `/sprint-auto` **modifie**
+   (fichiers déjà désignés par le kickoff, et il faut le **texte exact** pour
+   éditer — un résumé est inutilisable pour un `Edit`).
+
+   **✅ Autorisé** : cartographie d'**impact imprévue** (« qui d'autre lit ce
+   champ ? », effet de bord découvert en cours de tronçon) ; vérification de
+   correspondance **Python ↔ C#** au tronçon « vue Godot ».
+
+   **❌ Interdit** : lire le code que le tronçon va modifier ; **générer du code
+   moteur via `write-deepseek`** (`data/code/` est la source de vérité
+   écologique et le golden est un hash — du code non relu ligne à ligne qui doit
+   préserver un hash exact est le scénario qui casse le golden, pour zéro gain
+   de contexte) ; diagnostiquer un golden qui a bougé ou un test rouge (jugement).
+
+   **Capteur** : un sous-agent qui a besoin de fouiller révèle un **kickoff
+   incomplet** — au même titre que la taille d'un fichier révèle une dette de
+   refactor. Le consigner dans `00_etat.md` au lieu de l'absorber en silence.
+
+   **Plafond budget** : appels DeepSeek réservés à l'**orchestrateur** ; les
+   sous-agents n'y recourent que pour la cartographie d'impact, jamais en
+   routine d'ouverture. L'orchestrateur ne voit pas la consommation de ses
+   sous-agents et la clé est plafonnée (~20 €).
 3. **`extract-chat` ne doit JAMAIS viser `~/.claude/projects/`.** Les transcripts
    de session peuvent contenir des secrets (c'est déjà arrivé le 2026-07-22 : la
    clé DeepSeek a fuité dans un transcript). `extract-chat` est réservé aux logs
