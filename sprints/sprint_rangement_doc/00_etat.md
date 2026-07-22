@@ -66,12 +66,44 @@ explicitement avant appel : `. ~/.config/deepseek.env`.
 
 - [x] ① Structure + `ARBORESCENCE.md` (carte du mapping) — 2026-07-22
 - [x] ② `git mv` des 56 conceptions + études + meta — 2026-07-22
-- [ ] ③ Backlog éclaté + renvois journal/dette par thème
+- [x] ③ Backlog éclaté + renvois journal/dette par thème — 2026-07-22
 - [ ] ④ Extractions enchâssées + réparation des liens vivants
 - [ ] ⑤ Taxonomie appliquée à `sprints/`
 - [ ] ⑥ `docs/agent/deepseek_protocol.md` + pointeur `CLAUDE.md`
 
 ## REPRISE
+
+**Tronçon ③ fait** (golden **inchangé**, hash `57c166d8d362…` — aucun code
+touché, aucun C# concerné). Livré, en suivant `03_pivots.md` A/B/C :
+
+- **A — `BACKLOG.md` éclaté** : les 61 lignes du tableau principal réparties
+  **verbatim** en **28 fragments** `docs/<type>/<theme>/backlog_<theme>.md` ;
+  les sections historiques (Sprint 0 → Sprint 4) dans
+  `docs/meta/backlog_historique.md` (+ les 7 « idées longue traîne » de fin de
+  fichier, sans thème clair, sous leur propre titre) ; les deux sections
+  « Pistes » vers `docs/champs/sol/backlog_generation_terrain.md` et
+  `docs/rendu/pixelart/backlog_pixelart.md`. `BACKLOG.md` devient un **index de
+  pointeurs** (intro + sprint en cours + table thème→fragment) et **garde** la
+  table des kickoffs de dette dormante, qui est déjà un index.
+  **Zéro perte vérifiée par diff** contre `git show HEAD:BACKLOG.md` : seules
+  les 3 lignes de l'ancienne intro (« source unique », devenue fausse) ne se
+  retrouvent pas telles quelles.
+- **B — renvois journal** : **27** `journal_<theme>.md`, liens seuls vers les
+  126 entrées de `journal/` + `journal_archive/` (titres lus dans les fichiers).
+  Une entrée peut figurer dans plusieurs thèmes (11 le font). **Sautés faute de
+  matière** (1 seule entrée, garde-fou de prolifération) : `rendu/pixelart`,
+  `faune/mycelium`, `perf/scatter`.
+- **C — dette** : colonne **`Thème`** ajoutée aux **88** lignes de `DETTE.md`
+  (`grep -c '^| D'` inchangé avant/après) ; **19** `dette_<theme>.md` couvrant
+  les **53 dettes ouvertes**, chacune dans **exactement un** fichier (vérifié)
+  avec libellé court + lien — aucune description recopiée.
+- `docs/ARBORESCENCE.md` §4 : **une note de convention** ajoutée (les trois
+  fichiers de service d'un thème ne sont pas énumérés thème par thème).
+
+**Décisions prises dans le tronçon** (pas d'arbitrage rouvert) : un thème =
+**un** thème par ligne de backlog et par `Dxx` (pas de multi-rattachement, pour
+que « chaque `Dxx` ouvert apparaisse dans exactement un fichier ») ; les renvois
+journal, eux, sont multi-thèmes puisque la vérification ne l'interdit pas.
 
 **Tronçon ② fait** (golden **inchangé**, hash `57c166d8d362…` — aucun code
 touché, aucun C# concerné). Livré :
@@ -97,8 +129,14 @@ encore la réalité du dépôt ». C'est désormais faux. Le ② interdisant tou
 édition de contenu, la phrase est laissée telle quelle : **à corriger au ④**,
 en même temps que les liens vivants.
 
-**Suivant : tronçon ③ (`03_*.md`)** — éclatement physique de `BACKLOG.md` par
-thème + fichiers de renvois `journal/` et `DETTE.md` par thème (ces deux-là
-restent canoniques, décision 2 : on ne pose que des liens, pas des fragments).
-Les liens vivants cassés par le ② (451 occurrences `docs/conception`) sont
-réparés au ④, toujours pas au ③.
+**Suivant : tronçon ④ (`04_*.md`)** — extractions enchâssées + réparation des
+liens vivants. Deux points hérités à traiter là, en plus de son propre
+périmètre :
+
+1. L'en-tête « **État** » de `docs/ARBORESCENCE.md` (lignes 8-10) dit encore que
+   « les déplacements ont lieu au tronçon ② » — **faux depuis le ②**.
+2. Les liens vivants vers `docs/conception/…` restent cassés (451 occurrences au
+   relevé initial) ; s'y ajoutent désormais les **fragments de backlog**, qui
+   citent verbatim d'anciens chemins `docs/conception/CONCEPTION_*.md` — ils
+   sont du contenu **vivant** (pas des archives de journal) et entrent donc dans
+   le périmètre de réparation du ④.

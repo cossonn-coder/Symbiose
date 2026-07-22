@@ -59,6 +59,14 @@ docs/<type de feature>/<thème de feature>/<document>.md
 
 ## 4. Carte type → thème → documents
 
+**Convention des pivots** (posée au tronçon ③, 2026-07-22) : en plus des
+documents listés ci-dessous, un dossier de thème peut porter trois fichiers de
+service, créés **seulement s'ils ont de la matière** —
+`backlog_<theme>.md` (fragment de `BACKLOG.md`, contenu verbatim),
+`journal_<theme>.md` et `dette_<theme>.md` (**renvois seuls** vers `journal/`
+et `DETTE.md`, qui restent canoniques). Ils ne sont pas répétés thème par thème
+dans la carte : leur nom est déductible du dossier.
+
 ### `meta/` — transverse projet
 
 | Thème | Documents |
