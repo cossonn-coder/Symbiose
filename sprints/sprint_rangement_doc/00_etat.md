@@ -64,7 +64,7 @@ explicitement avant appel : `. ~/.config/deepseek.env`.
 
 ## Avancement
 
-- [ ] ① Structure + `ARBORESCENCE.md` (carte du mapping)
+- [x] ① Structure + `ARBORESCENCE.md` (carte du mapping) — 2026-07-22
 - [ ] ② `git mv` des 56 conceptions + études + meta
 - [ ] ③ Backlog éclaté + renvois journal/dette par thème
 - [ ] ④ Extractions enchâssées + réparation des liens vivants
@@ -73,4 +73,19 @@ explicitement avant appel : `. ~/.config/deepseek.env`.
 
 ## REPRISE
 
-Rien n'est commencé. Démarrer au tronçon ① (`01_structure_carte.md`).
+**Tronçon ① fait** (golden **inchangé**, hash `57c166d8d362…` — aucun code
+touché, aucun C# concerné). Livré :
+
+- 41 dossiers sous `docs/` (8 types + 33 thèmes), chacun avec son `README.md`
+  d'une ligne servant d'ancre git.
+- `docs/ARBORESCENCE.md` — carte type → thème → documents (§4), table complète
+  « ancien chemin → nouveau chemin » des 56 conceptions + 14 autres sources
+  (§5), règle de rangement d'un doc neuf (§6).
+- **Rien n'a été déplacé** : `docs/conception/`, `docs/desktop/`, `docs/amorce/`
+  sont intacts.
+
+**Suivant : tronçon ② (`02_*.md`)** — exécuter les `git mv` décrits dans
+`docs/ARBORESCENCE.md` §5 (c'est la carte qui fait foi, pas le tableau de
+`01_structure_carte.md` : les deux concordent, mais §5 porte les noms cibles
+exacts). Après ②, `docs/conception/`, `docs/desktop/` et `docs/amorce/` doivent
+avoir disparu ; les liens vivants sont réparés au ④, pas au ②.
