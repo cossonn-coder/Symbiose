@@ -65,7 +65,7 @@ explicitement avant appel : `. ~/.config/deepseek.env`.
 ## Avancement
 
 - [x] ① Structure + `ARBORESCENCE.md` (carte du mapping) — 2026-07-22
-- [ ] ② `git mv` des 56 conceptions + études + meta
+- [x] ② `git mv` des 56 conceptions + études + meta — 2026-07-22
 - [ ] ③ Backlog éclaté + renvois journal/dette par thème
 - [ ] ④ Extractions enchâssées + réparation des liens vivants
 - [ ] ⑤ Taxonomie appliquée à `sprints/`
@@ -73,19 +73,32 @@ explicitement avant appel : `. ~/.config/deepseek.env`.
 
 ## REPRISE
 
-**Tronçon ① fait** (golden **inchangé**, hash `57c166d8d362…` — aucun code
+**Tronçon ② fait** (golden **inchangé**, hash `57c166d8d362…` — aucun code
 touché, aucun C# concerné). Livré :
 
-- 41 dossiers sous `docs/` (8 types + 33 thèmes), chacun avec son `README.md`
-  d'une ligne servant d'ancre git.
-- `docs/ARBORESCENCE.md` — carte type → thème → documents (§4), table complète
-  « ancien chemin → nouveau chemin » des 56 conceptions + 14 autres sources
-  (§5), règle de rangement d'un doc neuf (§6).
-- **Rien n'a été déplacé** : `docs/conception/`, `docs/desktop/`, `docs/amorce/`
-  sont intacts.
+- **70 `git mv`** suivant `docs/ARBORESCENCE.md` §5 ligne à ligne : 56
+  conceptions + 3 `maitrise/` + 4 `desktop/` + 5 `amorce/` + 2 études venues de
+  `sprints/`. **Zéro écart de mapping** — la table §5 était exacte, aucune
+  cible manquante, aucun doublon.
+- `git status` : **70 lignes `R` et rien d'autre** — aucun `D`+`A` isolé, donc
+  l'historique git est bien suivi sur les 70 fichiers.
+- Comptage : `docs/**/*.md` passe de **110 à 112** (+2 = les deux études
+  rapatriées de `sprints/`), `find docs -name 'conception_*.md'` = **56**.
+- `docs/conception/`, `docs/desktop/` et `docs/amorce/` **n'existent plus**
+  (vidés par les `git mv`, puis `rmdir` — git ne versionne pas les dossiers).
+- Renommage appliqué : `CONCEPTION_X.md` → `conception_x.md`, et les deux
+  `BRIEF_*.md` en capitales → `brief_champs_conception.md` /
+  `brief_claude_web.md`. Les `maitrise/0N_*.md` gardent leur numérotation.
 
-**Suivant : tronçon ② (`02_*.md`)** — exécuter les `git mv` décrits dans
-`docs/ARBORESCENCE.md` §5 (c'est la carte qui fait foi, pas le tableau de
-`01_structure_carte.md` : les deux concordent, mais §5 porte les noms cibles
-exacts). Après ②, `docs/conception/`, `docs/desktop/` et `docs/amorce/` doivent
-avoir disparu ; les liens vivants sont réparés au ④, pas au ②.
+**Point laissé au ④ (pas un oubli, une limite de périmètre)** : l'en-tête
+« **État** » de `docs/ARBORESCENCE.md` (lignes 8-10) dit encore que « les
+déplacements ont lieu au tronçon ② » et que « la colonne ancien chemin décrit
+encore la réalité du dépôt ». C'est désormais faux. Le ② interdisant toute
+édition de contenu, la phrase est laissée telle quelle : **à corriger au ④**,
+en même temps que les liens vivants.
+
+**Suivant : tronçon ③ (`03_*.md`)** — éclatement physique de `BACKLOG.md` par
+thème + fichiers de renvois `journal/` et `DETTE.md` par thème (ces deux-là
+restent canoniques, décision 2 : on ne pose que des liens, pas des fragments).
+Les liens vivants cassés par le ② (451 occurrences `docs/conception`) sont
+réparés au ④, toujours pas au ③.
