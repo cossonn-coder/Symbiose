@@ -50,6 +50,13 @@ class PlantBase(ABC):
     life_cycle: str = "perennial"        # "annual" | "biennial" | "perennial"
     winter_strategy: str = "dormant"     # "die" | "dormant" | "evergreen"
     deciduous: bool = False              # perd son feuillage l'hiver (ombre nulle)
+    # Tissu de LITIÈRE des parties molles déposées à la MORT (sprint HYDROLOGIE ⑤).
+    # None ⇒ règle par défaut (`feuille` si caduc, `herbace` sinon, cf. `tissu_mort`).
+    # Override par espèce quand la nécromasse a une cinétique de décompo PROPRE — la
+    # sphaigne dépose du `mousse` (tourbe, décompo quasi nulle) au lieu d'`herbace`.
+    # Littéral seul, aucun import (règle de couches). Golden NEUTRE : seule la sphaigne
+    # (jamais dans le smoke) le règle → toutes les autres gardent la règle par défaut.
+    litter_tissue: str | None = None
     archetype: str | None = None         # archétype succession écologique
     reproduction_rate: float = 0.02      # production graines par semaine
     # Pollinisation (D22) — pilote l'appariement biparental (reproduction.py)
@@ -114,6 +121,19 @@ class PlantBase(ABC):
     # organe de réserve d'un coup). Défaut 1.0 = neutre acceptable (le campagnol est
     # local et rare) → pas de table exhaustive requise, seuls quelques profils marqués.
     root_loss_tolerance_base: float = 1.0
+    # `asphyxie_tolerance_base` (sprint HYDROLOGIE & MARÉCAGES ⑤) : tolérance
+    # CONSTITUTIVE D'ESPÈCE à l'hypoxie racinaire d'un sol gorgé, DISTINCTE du gène
+    # per-instance `tolerance_asphyxie` (qui varie dans une lignée) — les deux se
+    # MULTIPLIENT à la médiation (mortalite.py, palier asphyxie) : un aulne/une
+    # sphaigne (aérenchyme, racines adventices, tapis capillaire) plie là où le
+    # pommier se noie. >1 = espèce des sols gorgés (aulne 3.0, sphaigne 4.0) ; <1 =
+    # espèce des sols drainés qui pourrit vite les pieds mouillés. DÉFAUT 1.0 = neutre
+    # (aucune table exhaustive requise ; seuls les hélophytes sont marqués). INVARIANT
+    # GOLDEN : le palier asphyxie n'est ARMÉ que quand `asphyxie_memory > seuil` (sol
+    # durablement gorgé, jamais atteint dans le smoke sur terre drainante) → ce facteur
+    # n'est LU par personne au repos → golden strictement inchangé. Littéral seul,
+    # aucun import (règle de couches : `plants` est la couche la plus basse).
+    asphyxie_tolerance_base: float = 1.0
     temp_min_growth: float = 5.0         # °C — seuil de croissance (météo 02) ; en deçà, stagnation. Extensible par espèce.
     # Fenêtre pH d'espèce (sprint physico-chimie, tronçon ⑤). Cloche d'acidité
     # `bell(ph, ph_opt, ph_tol)` lue en germination/succession (porte) ET en
@@ -582,4 +602,25 @@ class Violaceae(PlantBase):
     family = "Violaceae"
     space_tolerance_weeks = 4
     fungal_susceptibility = 0.3
+    family_effects = []
+
+
+class Sphagnaceae(PlantBase):
+    """
+    Famille : Sphaignes (mousses des tourbières, sprint HYDROLOGIE & MARÉCAGES ⑤).
+    BRYOPHYTE — pas une plante vasculaire : pas de vraie racine, un « tapis » de
+    tiges feuillées qui pompe l'eau par capillarité. Famille INERTE au repos (aucun
+    family_effect) : toute la signature d'INGÉNIEUR DU MILIEU est portée au niveau
+    ESPÈCE (`Sphagnum` : trois flux `inject_field` — acidification, rétention d'eau,
+    nécromasse-tourbe), à la manière d'Ericaceae dont la fenêtre pH fait tout le
+    travail. Elle n'existe (aujourd'hui) que pour la sphaigne, mais nommer la famille
+    garde le catalogue cohérent (une espèce = une famille botanique nommée).
+
+    ACIDOPHILE STRICTE au repos : hérite du défaut `ph_opt=6.8`/`ph_tol` large — la
+    fenêtre acide est posée à l'espèce (comme la myrtille), pas ici. Golden NEUTRE :
+    aucune sphaigne n'est semée par le smoke (posée/acquise, `archetype=None`).
+    """
+    family = "Sphagnaceae"
+    space_tolerance_weeks = 5        # tapis lent, tolère bien le voisinage
+    fungal_susceptibility = 0.2      # nécromasse antiseptique (phénols) → peu attaquée
     family_effects = []

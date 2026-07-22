@@ -19,7 +19,7 @@ Toutes HORS scénario golden (jamais semées) → dérive NEUTRE.
 
 from __future__ import annotations
 from plants.base import (GrowthStage, Urticaceae, Ericaceae, Poaceae,
-                         Violaceae, Asteraceae, PlantBase)
+                         Violaceae, Asteraceae, Sphagnaceae, PlantBase)
 
 
 class Nettle(Urticaceae):
@@ -361,5 +361,87 @@ class Mugwort(Asteraceae):
             vigueur_cost=1, canopy_height=110, canopy_radius=35,
             root_radius=45,
             effects=[],
+        ),
+    ]
+
+
+class Sphagnum(Sphagnaceae):
+    """
+    Sphagnum spp. — Sphaigne (Sphagnaceae, mousse des tourbières). L'INGÉNIEUR DU
+    MILIEU de la guilde marécageuse (sprint HYDROLOGIE & MARÉCAGES ⑤) : elle ne
+    « donne » rien aux plantes — elle TRANSFORME le milieu à son avantage, et la
+    tourbière ÉMERGE de ses trois flux (philo #2), tous en `inject_field cible=
+    "local"` (route générique), déposés sous le tapis vivant :
+
+      (a) ACIDIFICATION — elle échange des cations contre des ions H⁺ → le pH baisse.
+          Petite injection NÉGATIVE hebdomadaire sur `ph` : elle S'ACCUMULE contre la
+          dérive très lente du pH (PH_INERTIA=0.02) et se BORNE au plancher PH_MIN=4.0
+          du champ — le MÊME clamp que l'acidification du marais (③), donc AUCUN
+          double-comptage possible (les deux poussées se plafonnent ensemble à PH_MIN,
+          elles ne s'additionnent pas sous le plancher). Elle crée sa tourbière acide.
+      (b) RÉTENTION D'EAU — capillarité colossale (une sphaigne retient ~20× son poids
+          sec en eau). Petite injection POSITIVE sur `humidite` : le tapis garde le sol
+          gorgé (bornée [0,3] par le champ), entretenant la flaque/le marais.
+      (c) NÉCROMASSE-TOURBE — sa litière quasi-indécomposable (`litter_tissue="mousse"`,
+          decay 0.008) s'accumule à sa mort → la MO grossit → épaisseur/tourbe
+          émergentes (aucun code neuf). Antiseptique (phénols) : peu attaquée.
+
+    Strate `sol`, PAS de morphogénèse à segments (bryophyte, modèle minimal : un
+    tapis ras). ACIDOPHILE (fenêtre pH basse, comme la myrtille) et hyper-tolérante à
+    l'asphyxie (elle FLOTTE quasiment). `archetype=None` → hors WEED_CATALOGUE (posée/
+    acquise). Anémophile n/a (spores) : `pollination_mode="self"` (pas de retombée
+    butineurs, pas de fleur). HORS scénario smoke (jamais posée) → golden NEUTRE.
+    """
+    genus = "Sphagnum"
+    name = "Sphaigne"
+    rarity = "Établie"
+    keywords = ["Tourbière", "Ingénieur", "Acidophile", "Zone humide"]
+    silhouette = "tapis"             # tapis ras de mousse (pur descripteur rendu)
+    resilience_base = 1.25          # S — coussin lent et coriace des tourbières
+    resistance_ecrasement  = 0.7    # tapis souple, se relève
+    stimulation_ecrasement = 0.3
+    space_tolerance_weeks = 6       # tapis lent, très tolérant au voisinage
+    life_cycle = "perennial"
+    winter_strategy = "evergreen"   # mousse persistante (ne largue pas de feuillage)
+    archetype = None                # PAS une adventice de succession (hors WEED_CATALOGUE)
+    pollination_mode = "self"       # bryophyte (spores) — aucune fleur/butineur
+    ph_opt = 4.2                    # ACIDOPHILE STRICTE (tourbière) — la plus basse du catalogue
+    ph_tol = 1.0
+    asphyxie_tolerance_base = 4.0   # quasi flottante : increvable au sol gorgé (⑤)
+    litter_tissue = "mousse"        # nécromasse-TOURBE (flux c) — decay quasi nul
+    t_germ_opt = 11.0               # milieu froid et humide
+    t_germ_tol = 10.0
+    foliage_density = 0.25          # tapis ras, ombre négligeable
+    longevity_years = 20
+    reproduction_rate = 0.04
+    # Trois flux d'INGÉNIEUR déposés sous le tapis vivant (family_effects vide sur
+    # Sphagnaceae : toute la signature est ICI, à l'espèce). AMONTS de DÉPART (calibrage
+    # F5, overlay pH/humidité) — petits, l'accumulation contre les dérives lentes fait
+    # le travail. Golden NEUTRE : aucune sphaigne dans le smoke → aucune injection.
+    family_effects = [
+        {
+            "type": "permanent", "trigger": "weekly",
+            "action": "inject_field", "variable": "ph",
+            "amount": -0.03, "cible": "local",
+            "description": "Échange cationique — acidifie le sol (borné PH_MIN, cf. marais)"
+        },
+        {
+            "type": "permanent", "trigger": "weekly",
+            "action": "inject_field", "variable": "humidite",
+            "amount": 0.05, "cible": "local",
+            "description": "Capillarité de la sphaigne — retient l'eau, entretient le marais"
+        },
+    ]
+    growth_stages = [
+        GrowthStage(
+            name="semis", duration_weeks=2, strate="sol",
+            vigueur_cost=0, effects=[], canopy_height=1,
+        ),
+        # Tapis adulte (vivace, duration 0). Empreinte MINIMALE (mousse ras) : hauteur
+        # 6 cm, petit rayon de « racines » (rhizoïdes) portant les flux d'ingénieur.
+        GrowthStage(
+            name="tapis", duration_weeks=0, strate="sol",
+            vigueur_cost=0, canopy_height=6, canopy_radius=25,
+            root_radius=25, effects=[],
         ),
     ]

@@ -244,15 +244,71 @@ humidité) pour éviter le biais d'ordre de parcours (sinon direction privilégi
 - ⚠️ **`resources.py` = 378 LDC pur** (bande vigilance 300–400, était déjà 349) —
   responsabilité unique conservée mais à SURVEILLER / candidate au `/refactor`.
 
+## Avancement ⑤ (aulne + sphaigne + voix) — FAIT le 2026-07-22
+- **AULNE** (`plants/perennials.py` `class Alder(PerennialWoody)`, catalogue
+  `"aulne"`, PERENNIAL_CATALOGUE) : Betulaceae (famille DÉJÀ existante, portée à
+  l'espèce par bouleau/charme — PAS recréée), anémophile (chatons), caduc, pionnier
+  de berge. Deux signatures : (1) FIXATION N₂ actinorhizienne (Frankia) via
+  `family_effects inject_field variable="n" amount=0.05 cible="local"` — MÊME route
+  générique que l'azote ortie/minette (flux, pas bonus, philo #2), sur l'aulne SEUL
+  (pas sur la classe Betulaceae → bouleau/charme ne fixent pas) ; (2) survie au sol
+  gorgé via `asphyxie_tolerance_base=3.0` (cf. ci-dessous). Fenêtre pH tolérante
+  (5.8/1.6), bouturable.
+- **SPHAIGNE** (`plants/species/sauvages.py` `class Sphagnum(Sphagnaceae)`, catalogue
+  `"sphaigne"`, PLANT_CATALOGUE) : famille NEUVE `Sphagnaceae` (INERTE au repos,
+  patron Ericaceae) ajoutée à `familles.py` + exportée (`base/__init__.py`,
+  `species/__init__.py`). INGÉNIEUR : 3 flux `inject_field cible="local"` :
+  (a) acidification `ph` −0.03/sem — S'ACCUMULE contre la dérive lente (PH_INERTIA
+  0.02), BORNÉE au plancher PH_MIN=4.0 du GridField = LE MÊME clamp que l'acidif.
+  marais §3 → aucun double-comptage (les deux poussées se plafonnent ENSEMBLE à
+  PH_MIN, ne s'additionnent pas sous le plancher — c'est la « bornée ensemble » du
+  kickoff) ; (b) rétention `humidite` +0.05/sem (bornée [0,3]) ; (c) nécromasse-tourbe
+  via `litter_tissue="mousse"` (tissu NEUF `TISSU["mousse"]=(0.008,0.60,0.05)`, decay
+  le plus bas du catalogue < bois → tourbe émergente par `tick_epaisseur`, aucun code
+  neuf). Acidophile stricte (ph_opt 4.2), `asphyxie_tolerance_base=4.0`.
+- **NOUVEL attribut d'espèce `asphyxie_tolerance_base`** (PlantBase, défaut 1.0) :
+  tolérance CONSTITUTIVE à l'hypoxie, DISTINCTE du gène per-instance
+  `tolerance_asphyxie` (pas de gène neuf, cf. invariants) — les deux se MULTIPLIENT
+  au dénominateur de la pression asphyxie (`mortalite.py`). Branche ARMÉE seulement si
+  `asphyxie_memory > seuil` (sol durablement gorgé, JAMAIS dans le smoke) → golden
+  inchangé. Nouvel attribut `litter_tissue` (défaut None) routé dans `tissu_mort`
+  (`perturbations.py`).
+- **5 VOIX** : encyclopédie (2 fiches 3 niveaux `aulne`/`sphaigne`,
+  `encyclopedie_corpus.py`, count 43→45) ; carnet AUTO (concepts existants `eau`
+  [asphyxie] + fixation via champ `n` — pas de concept neuf, `CONCEPT_DE` inchangé) ;
+  page secrète **P35** « La mousse qui garde tout » (`pages_corpus.py`, voix C, concept
+  `eau`, robinet `fouille` — tourbe/conservation) ; magazine AUTO (data-driven par
+  famille depuis le catalogue → aulne/sphaigne offerts au palier 3 Betulaceae/
+  Sphagnaceae, aucun code) ; événements = installation/tapis observables au graphe
+  (cohérent avec ④, pas de marqueur de tick neuf, golden-sûr).
+- **Golden écolo INCHANGÉ** `57c166d8…` (aulne/sphaigne absents du smoke ⇒ aucun flux,
+  aucune parcelle `mousse`, branche asphyxie inerte). Golden POPULATION inchangé
+  `cc886bdd…`.
+- **Tests ciblés VERTS** : `test_pages` 62/62 (P35), `test_encyclopedie` alignement +
+  count 45 verts (2 FAIL `geste` arracher/glaner/pincer = PRÉEXISTANTS, vérifiés
+  `git stash`), `test_population`/`test_faune_dediee` verts, `test_marais`/
+  `test_ruissellement`/`test_senescence` verts, suite `simserver.{voix,macro,
+  structures,conteneurs}` verte. `test_sim_server` 266/270 = échecs BIT-IDENTIQUES
+  avant/après (`diff` sur `git stash`) → 100 % préexistants (dérive version + fruit),
+  aucun introduit par ⑤. `test_epaisseur_500ans` NON lancé (interdit).
+- **Taille** (LDC pur, `tools/compte_ldc.py`) : sauvages.py 294, familles.py 263,
+  perennials.py 246 — TOUS ≤300 🟢.
+- **Fichiers touchés** : `plants/base/{familles.py, __init__.py}`,
+  `plants/{perennials.py, catalogue.py}`, `plants/species/{sauvages.py, __init__.py}`,
+  `fields/ecofields/constants.py` (tissu `mousse`), `sim/engine/mortalite.py`
+  (médiation asphyxie ×base), `sim/effects/perturbations.py` (`tissu_mort` override),
+  `sim/encyclopedie_corpus.py` (2 fiches), `sim/pages_corpus.py` (P35),
+  `tests/{test_encyclopedie.py (count 45), test_pages.py (count 35)}`.
+  **NON commit** (orchestrateur commit). C# NON touché (vue guilde = ⑧).
+
 ## §REPRISE
-**① CLOS** (altitude). **③ CLOS** (marécage). **④ CLOS** (faune de mare : `moustique`
-proie + `libellule` prédateur data-driven, greffés sur `eau_surface`/`marais_memory`,
-5 voix dont page P34 ; golden écolo INTACT `57c166d8…`, population re-figé MAÎTRISÉ
-additif `cc886bdd…`, 4 tests ciblés neufs verts). **PROCHAIN = ⑤**
-(`05_aulne_sphaigne.md`) — aulne (Betulaceae fixe-N actinorhizien) + sphaigne
-(ingénieur : acidifie pH, rétention d'eau, tourbe) + voix ; vise NEUTRE hors smoke.
-④ avant ⑥ (carnivore-puits lira le champ `moustique` créé ici). ⑥ carnivore, ⑦ gestes
-`creuser`/`drainer`, ⑧ pur-vue F5.
+**① CLOS** (altitude). **③ CLOS** (marécage). **④ CLOS** (faune de mare). **⑤ CLOS**
+(aulne Betulaceae fixe-N actinorhizien `asphyxie_tolerance_base=3.0` + sphaigne
+Sphagnaceae ingénieur : 3 flux acidif./rétention/tourbe `mousse`, `asphyxie_tolerance_
+base=4.0` ; 5 voix dont P35 ; golden écolo INTACT `57c166d8…`, population INTACT
+`cc886bdd…`). **PROCHAIN = ⑥** (`06_carnivore.md`) — Drosera + PUITS→`moustique`
+(1er végétal-prédateur, lira le champ `moustique` créé au ④) + voix ; vise NEUTRE hors
+smoke. ⑦ gestes `creuser`/`drainer`, ⑧ pur-vue F5.
 **⚠️ Bugs préexistants NON traités ici** : `test_sim_server` (dérive version) +
 `test_senescence` + `test_encyclopedie` (gestes sans fiche) + banc édaphique `carence`
 — tous orthogonaux à l'hydrologie, à trancher avec Nico hors sprint.

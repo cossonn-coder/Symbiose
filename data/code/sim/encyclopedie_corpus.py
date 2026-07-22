@@ -480,6 +480,39 @@ FICHES: dict[str, dict[int, str]] = {
            "nicheurs, auxiliaires). Compagnon fréquent du chêne dans la chênaie-charmaie. "
            "Son bois dur fut le bois de feu et d'outil des campagnes.",
     },
+
+    # === Guilde marécageuse (sprint HYDROLOGIE & MARÉCAGES ⑤) ===
+    "aulne": {
+        1: "Arbre de bord d'eau au tronc droit, écorce sombre crevassée, feuilles "
+           "arrondies au bout comme échancré, petits « cônes » ligneux persistant "
+           "l'hiver et chatons pendants.",
+        2: "Pérenne caduc PIONNIER des berges et sols gorgés, anémophile (chatons). "
+           "Il pousse LES PIEDS DANS L'EAU là où les autres arbres pourrissent : ses "
+           "racines abritent des nodosités où vit la bactérie Frankia, qui FIXE "
+           "l'azote de l'air — comme une légumineuse, mais un arbre. Il enrichit ainsi "
+           "un sol pauvre et noyé.",
+        3: "Bâtisseur des ripisylves : il stabilise les berges, ombrage l'eau, et sa "
+           "fixation d'azote AMÉLIORE le sol autour de lui — un vrai pionnier "
+           "améliorateur des terrains humides que rien ne colonise. Sa litière et son "
+           "azote amorcent une zone humide vivante ; ses graines flottantes essaiment "
+           "au fil de l'eau. Là où une cuvette se gorge, l'aulne prospère quand le "
+           "fruitier de terrain sec dépérit — il RÉVÈLE l'eau qui stagne.",
+    },
+    "sphaigne": {
+        1: "Coussin ras et spongieux d'un vert glauque à roussâtre, gorgé d'eau, sans "
+           "vraie tige ni racine — une mousse molle qui tapisse les creux détrempés.",
+        2: "Mousse (bryophyte) INGÉNIEUR des tourbières : elle ne prend pas racine, "
+           "elle POMPE l'eau par capillarité et en retient des dizaines de fois son "
+           "poids. En échangeant ses ions, elle ACIDIFIE le sol sous elle ; sa "
+           "nécromasse antiseptique ne se décompose presque pas et s'accumule.",
+        3: "Elle FABRIQUE son propre milieu : en retenant l'eau, en acidifiant et en "
+           "empilant une litière imputrescible, elle transforme lentement une flaque "
+           "en TOURBIÈRE — un sol acide, gorgé, où seules les acidophiles (myrtille, "
+           "carnivores) tiennent. La tourbe qu'elle bâtit, couche après couche sur des "
+           "siècles, est une mémoire du sol et un puits de carbone. Là où elle "
+           "s'installe, elle ferme la porte aux plantes de sol riche et l'ouvre à un "
+           "tout autre cortège.",
+    },
 }
 
 

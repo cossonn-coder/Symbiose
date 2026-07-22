@@ -387,3 +387,63 @@ class FirTree(PerennialWoody):
     maturity_years = 20
     age_curve = [(0, 30, 15), (5, 200, 80), (10, 400, 130),
                  (20, 800, 200), (50, 1800, 350), (100, 3000, 500)]
+
+
+# ---------------------------------------------------------------------------
+# AULNE (sprint HYDROLOGIE & MARÉCAGES ⑤) — arbre hélophyte fixateur d'azote
+# ---------------------------------------------------------------------------
+
+class Alder(PerennialWoody):
+    """
+    Alnus glutinosa — Aulne glutineux (Betulaceae, comme bouleau/charme).
+    ARBRE DES BERGES qui « pousse les pieds dans l'eau » : la vedette de la guilde
+    marécageuse. Deux signatures :
+
+      • FIXATION D'AZOTE ACTINORHIZIENNE — comme la légumineuse Medicago mais via la
+        bactérie FRANKIA (nodosités racinaires), pas le Rhizobium. Mécanisme MOTEUR
+        IDENTIQUE : un `family_effect inject_field variable="n" cible="local"` enrichit
+        le N du sol sous son empreinte racinaire (route générique, cf. ortie/minette).
+        C'est un FLUX (philo #2) : l'aulne ne « booste » pas ses voisines, il
+        ENRICHIT le milieu — d'où sa valeur de pionnier améliorateur des sols pauvres
+        et gorgés, là où rien ne fixe l'azote.
+      • TOLÉRANCE À L'ASPHYXIE constitutive ÉLEVÉE (`asphyxie_tolerance_base=3.0`) :
+        aérenchyme + racines adventices → il survit au sol gorgé qui NOIE le pommier
+        (§2.3 asphyxie, palier 2). Émergent : posé dans une cuvette marécageuse, il
+        tient là où un fruitier de terrain sec dépérit.
+
+    Anémophile (chatons pendants), caduc, croissance rapide de pionnier, vie moyenne.
+    Fenêtre pH TOLÉRANTE de l'acide (tourbière) sans être acidophile strict. HORS
+    scénario smoke (`archetype=None`, posé/acquis) → golden NEUTRE.
+    """
+    family = "Betulaceae"
+    genus  = "Alnus"
+    name   = "Aulne"
+    rarity = "Établie"
+    keywords = ["Berge", "Fixatrice N₂", "Pionnière", "Zone humide"]
+    foliage_density = 0.55           # houppier moyen, ombre légère de ripisylve
+    pollination_mode = "wind"        # anémophile (chatons)
+    pollination_radius_cm = 500.0
+    reproduction_rate = 0.15         # petits strobiles ligneux, graines flottantes
+    seed_dispersal = "anemochore"    # graine légère à flotteurs (vent + eau)
+    ph_opt = 5.8                     # tolère l'acide des berges/tourbières (≠ strict)
+    ph_tol = 1.6                     # fenêtre assez large
+    asphyxie_tolerance_base = 3.0    # HÉLOPHYTE : plie où le pommier se noie (⑤)
+    t_germ_opt = 12.0               # lève au frais des sols humides de printemps
+    t_germ_tol = 11.0
+    longevity_years = 100
+    maturity_years = 10
+    bouturable = True                # rameau de saule/aulne piqué au bord de l'eau reprend
+    age_curve = [(0, 40, 20), (5, 350, 120), (10, 700, 200),
+                 (20, 1200, 320), (50, 2000, 450), (100, 2500, 550)]
+    # Fixation N₂ actinorhizienne (Frankia) — même route générique que l'azote de
+    # l'ortie/minette. `amount` légèrement au-dessus de la minette (0.04) : l'aulne
+    # est un gros améliorateur ligneux. Réparti sur l'empreinte racinaire (cible
+    # "local", partagé par `inject_field`). Golden NEUTRE (jamais dans le smoke).
+    family_effects = [
+        {
+            "type": "permanent", "trigger": "weekly",
+            "action": "inject_field", "variable": "n",
+            "amount": 0.05, "cible": "local",
+            "description": "Fixation N₂ actinorhizienne (Frankia) — enrichit le sol gorgé"
+        }
+    ]

@@ -260,6 +260,18 @@ _ENTREES = [
      "creusait une mare au coin de son pré ne le faisait pas pour la beauté : il "
      "savait qu'une eau qui stagne appelle tout un peuple d'ailes, et que ce peuple "
      "dévore ce qui, ailleurs, nous dévore."),
+
+    # --- Page de la SPHAIGNE / TOURBE (sprint HYDROLOGIE & MARÉCAGES ⑤) — lore ----
+    ("P35", "C", "eau", 3, "fouille",
+     "La mousse des marais garde tout et ne rend rien. Les anciens tiraient de la "
+     "tourbière une eau brune et froide où la viande ne se gâtait pas, où le beurre se "
+     "conservait des saisons, où l'on retrouvait parfois, intacts sous des siècles de "
+     "sphaigne, des hommes et des bêtes que l'acide avait tannés comme du cuir. Rien "
+     "n'y pourrit : la mousse boit l'air en même temps que l'eau, et sans air, la mort "
+     "elle-même s'endort. Chaque coussin qui meurt s'ajoute au précédent sans se "
+     "défaire — et c'est ainsi que naît la tourbe, un pouce par cent ans, mémoire "
+     "empilée de tout ce qui a bu à cette eau. Qui assèche une tourbière ne détruit "
+     "pas une flaque : il ouvre un livre que la mousse écrivait depuis mille ans."),
 ]
 
 # Titres recopiés du doc §7 (gras de chaque entrée), indexés par id — gardés à
@@ -299,6 +311,7 @@ _TITRES = {
     "P32": "L'herbe jalouse de la Saint-Jean",
     "P33": "Le seigle qui désherbe en dormant",
     "P34": "Ne comble pas la flaque",
+    "P35": "La mousse qui garde tout",
 }
 
 # `PAGES` = dict id → fiche complète. `ORDRE` = ids dans l'ordre du corpus (tri

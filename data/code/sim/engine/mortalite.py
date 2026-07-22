@@ -104,9 +104,14 @@ class MortaliteMixin:
             # MÉDIÉ par le gène EXPRIMÉ `tolerance_asphyxie` (premier consommateur du
             # gène créé au ① ; plasticité ②) : phénotype >1 → tissu mieux aéré (racines
             # adventices/aérenchyme) → pression réduite. Neutre à 1.0 → inchangé.
+            # MULTIPLIÉ par la tolérance CONSTITUTIVE d'espèce `asphyxie_tolerance_base`
+            # (hélophytes ⑤ : aulne/sphaigne survivent au sol gorgé qui noie le pommier).
+            # Défaut 1.0 → dénominateur inchangé. Branche ARMÉE seulement quand le sol
+            # est durablement gorgé (jamais dans le smoke) → golden inchangé.
             if plant.asphyxie_memory > ASPHYXIE_HEALTH_SEUIL:
-                pression = ((plant.asphyxie_memory - ASPHYXIE_HEALTH_SEUIL)
-                            / plant.expressed_gene("tolerance_asphyxie"))
+                tol = (plant.expressed_gene("tolerance_asphyxie")
+                       * plant.plant_class.asphyxie_tolerance_base)
+                pression = (plant.asphyxie_memory - ASPHYXIE_HEALTH_SEUIL) / tol
                 if _hash_noise(seed, week * 7, r, c) < pression * ASPHYXIE_RATE:
                     # Insulte EXTERNE (excès d'eau) → passe par `erode` (la médiation
                     # `tolerance_asphyxie` reste en amont sur la PRESSION ci-dessus).

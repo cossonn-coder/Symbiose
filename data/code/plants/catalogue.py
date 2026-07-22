@@ -9,10 +9,10 @@ from plants.species import (Tomato, Pepper, Bean, Clover, Sunflower, Basil,
                             Thyme, Lavender, Mint,
                             Carrot, Zucchini, CornSalad, Strawberry, Nettle,
                             Vaccinium, Raspberry, RunningBamboo, SweetViolet, Garlic,
-                            Ivy, Jasmine, Wheat, Hemp, Rye, Mugwort,
+                            Ivy, Jasmine, Wheat, Hemp, Rye, Mugwort, Sphagnum,
                             BursaPastoris, MedicagoLupulina, PoaAnnua, Taraxacum)
 from plants.perennials import (Fig, AppleTree, CherryTree, WalnutTree, OakTree,
-                               FirTree, BeechTree, BirchTree, HornbeamTree)
+                               FirTree, BeechTree, BirchTree, HornbeamTree, Alder)
 
 
 PLANT_CATALOGUE: dict[str, type] = {
@@ -64,6 +64,9 @@ PLANT_CATALOGUE: dict[str, type] = {
     # couvert nettoyant qui étouffe chimiquement les adventices puis se fauche)
     "armoise":   Mugwort,
     "seigle":    Rye,
+    # Ingénieur de tourbière (sprint HYDROLOGIE & MARÉCAGES ⑤) — Sphaigne
+    # (Sphagnaceae, mousse) : acidifie + retient l'eau + nécromasse-tourbe.
+    "sphaigne":  Sphagnum,
     # Adventices / succession écologique
     "bourse_pasteur": BursaPastoris,
     "minette":        MedicagoLupulina,
@@ -93,4 +96,7 @@ PERENNIAL_CATALOGUE: dict[str, type] = {
     "hetre":    BeechTree,     # Fagaceae, hêtraie cathédrale (ombre dense)
     "bouleau":  BirchTree,     # Betulaceae (famille neuve), pionnier de lisière
     "charme":   HornbeamTree,  # Betulaceae, bocage (tronc cannelé)
+    # Hélophyte fixateur d'azote (sprint HYDROLOGIE & MARÉCAGES ⑤) — Aulne
+    # (Betulaceae) : arbre des berges, N₂ actinorhizien (Frankia), survit au sol gorgé.
+    "aulne":    Alder,
 }

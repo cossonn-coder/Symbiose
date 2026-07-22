@@ -36,9 +36,15 @@ def necromass_biomass(plant: PlantInstance) -> float:
 
 def tissu_mort(plant: PlantInstance) -> str:
     """Tissu de litière des parties MOLLES déposées à la mort (décompo·compost ②,
-    kickoff §A.2). Les caducs (`deciduous`, perennials.py) larguent du `feuille`
-    (décompo rapide), les autres de l'`herbace` (annuelles, tiges molles). Le bois
-    du squelette se fragmente lentement (phase B) — pas ici."""
+    kickoff §A.2). Un OVERRIDE d'espèce `litter_tissue` prime (sprint HYDROLOGIE ⑤ :
+    la sphaigne dépose du `mousse`/tourbe, décompo quasi nulle). Sinon : les caducs
+    (`deciduous`, perennials.py) larguent du `feuille` (décompo rapide), les autres de
+    l'`herbace` (annuelles, tiges molles). Le bois du squelette se fragmente lentement
+    (phase B) — pas ici. Golden NEUTRE : `litter_tissue` est None sur tout le catalogue
+    hors sphaigne (jamais dans le smoke)."""
+    override = plant.plant_class.litter_tissue
+    if override is not None:
+        return override
     return "feuille" if plant.plant_class.deciduous else "herbace"
 
 

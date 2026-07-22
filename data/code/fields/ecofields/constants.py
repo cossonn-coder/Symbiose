@@ -339,12 +339,22 @@ TISSU = {
     # AJOUT golden-NEUTRE : aucune parcelle `substrat` n'existe dans le smoke
     # (seul un conteneur `mycelium_use` en pose, et le smoke n'en pose aucun).
     "substrat": (0.04,          0.45,           0.20),
+    # Nécromasse de SPHAIGNE (sprint HYDROLOGIE & MARÉCAGES ⑤) : la tourbe. Tissu
+    # quasi-INDÉCOMPOSABLE (phénols antiseptiques + anaérobie) → `decay` le plus BAS
+    # du catalogue (< bois), forte humification, minéralisation infime. C'est le flux
+    # (c) de l'ingénieur sphaigne : sa litière s'accumule sans se défaire → la MO
+    # grossit → épaisseur/tourbe ÉMERGENT (aucun code neuf, `tick_epaisseur` existant).
+    # AJOUT golden-NEUTRE : aucune parcelle `mousse` n'existe dans le smoke (la
+    # sphaigne, `archetype=None`, n'y est jamais posée). Placé APRÈS `substrat` →
+    # l'ordre des tissus tuile du golden est inchangé.
+    "mousse":   (0.008,         0.60,           0.05),
 }
 # Ordre d'itération STABLE (déterminisme philo #3 : jamais dépendre de l'ordre
 # d'insertion des dépôts). La fusion par tissu garantit ≤ 7 parcelles/plot.
 # `substrat` placé EN FIN (après `bois`) : il n'apparaît que dans les mini-sols de
 # conteneur, jamais sur une tuile → l'ordre des tissus tuile est inchangé (golden).
-TISSU_ORDER = ("diffus", "feuille", "fleur", "herbace", "fruit", "bois", "substrat")
+TISSU_ORDER = ("diffus", "feuille", "fleur", "herbace", "fruit", "bois", "substrat",
+               "mousse")
 
 LEACHING_LOSS    = 0.999   # lessivage nutriments (perte fertilite/semaine)
 BIOMASS_EXPORT   = 0.20    # fraction exportée à la récolte (le reste = nécromasse)
