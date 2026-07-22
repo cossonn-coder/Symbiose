@@ -1,7 +1,7 @@
 # Sprint VENT & ÉVAPOTRANSPIRATION (D37) — état partagé
 
 > **État léger** (mis à jour en fin de chaque tronçon). Le **design figé** vit dans
-> [`docs/champs/climat/conception_vent_evapotranspiration.md`](../../docs/champs/climat/conception_vent_evapotranspiration.md)
+> [`docs/champs/climat/conception_vent_evapotranspiration.md`](../../../../docs/champs/climat/conception_vent_evapotranspiration.md)
 > — chaque kickoff `tN_*.md` y renvoie pour le détail. Repars à froid : lis ce
 > fichier + le `tN_*.md` du tronçon courant + la/les §§ de conception citées.
 
@@ -261,7 +261,7 @@ ou re-figeage annoncé) → MAJ ce fichier → commit → `/clear` → lancer `t
 - Supprimer `HANDOFF.md` (devenu obsolète).
 
 ## REPRISE (démarrage à froid)
-« lis `sprints/sprint_vent_evapotranspiration/00_etat.md` puis
+« lis `sprints/champs/climat/sprint_vent_evapotranspiration/00_etat.md` puis
 `t7_transport_voix.md` » → exécuter le tronçon ⑦ (transport de litière & neige sous
 le vent §5.6 + voix narratives du vent ; lit `eco.vent[r,c]` posé au ③ + direction).
 Tronçons ⓪ (réf perf + scatter D32, golden `11eceeb9…`), ① (masse d'air

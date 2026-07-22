@@ -6,7 +6,7 @@
 > un gène). Complète la couche de tolérances de niche (grêle, déficit racinaire)
 > et replie le fix du **canal chronique campagnol** (herbivorie racinaire → perte
 > d'uptake, couplage mycorhize, annélation létale conservée).
-> Dette : **D75**. Sprint : `sprints/sprint_sante_resilience/`.
+> Dette : **D75**. Sprint : `sprints/vegetal/sante/sprint_sante_resilience/`.
 
 ## 0. Motivation
 

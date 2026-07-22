@@ -2,7 +2,7 @@
 
 > Sujet D60 (Nico 2026-07-02, F5 — S9, étend D31). Conception FIGÉE (« oui »
 > 2026-07-02). Ce doc est la référence de conception ; l'exécution est découpée en
-> 6 kickoffs autosuffisants sous `sprints/sprint_vie_macro_identifiable/`.
+> 6 kickoffs autosuffisants sous `sprints/faune/vie_macro/sprint_vie_macro_identifiable/`.
 
 ## 1. Problème
 

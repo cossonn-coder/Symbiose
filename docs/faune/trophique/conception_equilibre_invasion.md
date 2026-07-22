@@ -1,7 +1,7 @@
 # CONCEPTION — Équilibre de l'invasion d'adventices & levier PAILLAGE
 
 > Conçu le 2026-07-06 (`/conception`, dette **D69**). Sprint
-> `sprints/sprint_equilibre_invasion/` (kickoffs 01-08). Source de vérité
+> `sprints/faune/trophique/sprint_equilibre_invasion/` (kickoffs 01-08). Source de vérité
 > Python `data/code/`. Golden re-figé **une seule fois** (tronçon ②, localisé,
 > annoncé). Ce doc reflète la conception ARBITRÉE, pas la version challengée.
 

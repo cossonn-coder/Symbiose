@@ -7,9 +7,11 @@
 > il dit où elles vivent. Pour ajouter un sprint au backlog, écrire sa ligne
 > dans le fragment de son thème (et créer le fragment si le thème n'en a pas).
 >
-> Chaque sprint à venir possède un **kickoff autosuffisant** dans le dossier
-> `sprints/`. À l'ouverture d'une nouvelle session, donner à Claude
-> l'instruction « lis `sprints/sprint_X.md` » suffit à reprendre sans le
+> Chaque sprint à venir possède un **kickoff autosuffisant** sous
+> `sprints/<type>/<theme>/` — les sprints actifs suivent la **même taxonomie**
+> que `docs/` depuis le tronçon ⑤ (cf. `docs/ARBORESCENCE.md` §7). À l'ouverture
+> d'une nouvelle session, donner à Claude l'instruction « lis
+> `sprints/<type>/<theme>/sprint_X/00_etat.md` » suffit à reprendre sans le
 > contexte de la session précédente.
 >
 > Dette technique → [`DETTE.md`](DETTE.md) · Journal → [`journal.md`](journal.md)

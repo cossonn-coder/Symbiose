@@ -1,7 +1,7 @@
 # CONCEPTION — Floraison & fructification (grappe D84 + D86)
 
 > Figé le 2026-07-18 (skill `/conception`). Sprint :
-> `sprints/sprint_floraison_fructification/`. Préalable biologique à D87
+> `sprints/vegetal/floraison/sprint_floraison_fructification/`. Préalable biologique à D87
 > (automate dirigé par le but).
 > Diagnostic-first : cette conception corrige un **défaut structurel du modèle de
 > floraison** révélé par le sprint DÉSYNCHRONISATION PHÉNOLOGIQUE (journal 119),

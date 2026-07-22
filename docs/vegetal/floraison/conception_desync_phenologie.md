@@ -1,6 +1,6 @@
 # CONCEPTION — Désynchronisation phénologique (+ rendu feuilles/segments dès ×1)
 
-> Figé le 2026-07-14 (skill /conception). Sprint : `sprints/sprint_desync_phenologie/`.
+> Figé le 2026-07-14 (skill /conception). Sprint : `sprints/vegetal/floraison/sprint_desync_phenologie/`.
 > Sujet : les événements de vie des plantes (floraison, fanaison des feuilles,
 > déclin sénescent) surviennent **en lockstep** ; on veut les **étaler par
 > individu**. + demande de rendu : feuilles ET segments visibles **dès le zoom ×1**.

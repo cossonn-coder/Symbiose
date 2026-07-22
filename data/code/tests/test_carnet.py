@@ -2,7 +2,7 @@
 SYMBIOSE — tests/test_carnet.py
 Test du CARNET AUTO (sprint Voix narratives, tronçon ③, D14 + D43).
 Spec : `docs/narration/voix/conception_voix_narratives.md` §2.1/§5 + kickoff
-`sprints/sprint_voix_narratives/03_carnet.md`.
+`sprints/narration/voix/sprint_voix_narratives/03_carnet.md`.
 
 Propriétés exigées (« Définition de done » du kickoff) :
   A. SANS JOUEUR → `[]` (golden-safe, lecture pure).

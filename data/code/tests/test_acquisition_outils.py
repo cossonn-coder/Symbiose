@@ -5,7 +5,7 @@ registre `OUTILS` (`sim/outils.py`) — CŒUR de la dette D82. On vérifie que
 `acquerir_outil` POSE le marqueur `posseder_secateur` que RIEN ne posait, et que
 la chaîne taille (`couper`→`tailler`) s'en trouve DÉVERROUILLÉE.
 Spec : `docs/joueur/outils/conception_acquisition_outils.md` §B + kickoff
-`sprints/sprint_acquisition_outils/02_atelier_secateur.md`.
+`sprints/joueur/outils/sprint_acquisition_outils/02_atelier_secateur.md`.
 
 Propriétés exigées (« Tests ciblés » du kickoff) :
   A. ÉTAT INITIAL — `couper`/`tailler` VERROUILLÉS (chaîne morte, D82).

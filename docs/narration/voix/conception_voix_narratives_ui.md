@@ -2,7 +2,7 @@
 
 > **Conception FIGÉE** le 2026-07-01 (skill `/conception`, phase B). Aucun code
 > touché à la rédaction. Ce doc est la **source de vérité** du sprint
-> `sprint_voix_narratives_ui` (kickoffs `sprints/sprint_voix_narratives_ui/`).
+> `sprint_voix_narratives_ui` (kickoffs `sprints/narration/voix/sprint_voix_narratives_ui/`).
 >
 > **Amont** : le MOTEUR des 4 voix est **100 % fait en Python** (sprint VOIX
 > NARRATIVES ①→⑥, 2026-06-29, golden `db5e7c66…` intact) — `sim/journal.py`

@@ -2,7 +2,7 @@
 SYMBIOSE — sim/geste_corpus.py
 CORPUS de l'ENCYCLOPÉDIE, onglet GESTE — DONNÉE éditoriale pure (D60, ⑤).
 Spec : `docs/faune/vie_macro/conception_vie_macro_identifiable.md` §5 + kickoff
-`sprints/sprint_vie_macro_identifiable/05_corpus_geste_outil.md`.
+`sprints/faune/vie_macro/sprint_vie_macro_identifiable/05_corpus_geste_outil.md`.
 
 Miroir structurel de `sim/technique_corpus.py` mais pour les GESTES — les VERBES
 d'action du joueur (planter, arroser, tailler, composter…), les clés de

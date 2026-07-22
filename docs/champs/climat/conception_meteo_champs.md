@@ -1,7 +1,7 @@
 # Conception — Couplage météo → champs écologiques (dont rosée) (SYMBIOSE)
 
 > **Document de conception. Aucun code écrit.** Spec de référence pour le sprint
-> d'implémentation `sprints/sprint_meteo_champs/` (découpé en 5 sous-sprints,
+> d'implémentation `sprints/champs/climat/sprint_meteo_champs/` (découpé en 5 sous-sprints,
 > chacun préserve / re-fige `tests/test_golden.py` de façon ANNONCÉE).
 >
 > Issu d'un échange de conception (2026-06-29), prolonge `docs/champs/climat/conception_meteo.md`

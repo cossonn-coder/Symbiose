@@ -2,7 +2,7 @@
 
 > **Document de conception FIGÉ (2026-07-19).** Spec de référence du sprint
 > d'implémentation (MOTEUR + vue). Découpe = **4 tronçons** (§L). Kickoffs :
-> `sprints/sprint_acquisition_outils/0N_*.md`. Carnet d'état : `00_etat.md`.
+> `sprints/joueur/outils/sprint_acquisition_outils/0N_*.md`. Carnet d'état : `00_etat.md`.
 > Origine : **dette D82** (chaîne « taille » inatteignable) + impasse
 > `RAVITAILLEMENT_MANQUANT` de `tools/jardinier_auto/` (pailler sans mulch ni moyen
 > d'en produire). Deux instances d'un MÊME bug : un geste bloqué faute d'un

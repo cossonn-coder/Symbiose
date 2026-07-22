@@ -1,7 +1,7 @@
 # 04 — Packaging (tranche 7) : gel PyInstaller + export Godot — clôture
 
 > Lire `00_etat.md`. **Dernier sous-sprint.** Recette détaillée déjà écrite :
-> **`sprints/sprint_integration_godot/07_packaging.md`** (kickoff complet) +
+> **`sprints/meta/sprint_integration_godot/07_packaging.md`** (kickoff complet) +
 > `tools/RECETTE_PACKAGING.md` (étapes Windows pas-à-pas) + `tools/sim_server.spec`.
 > Ce fichier ne duplique pas : il **pointe** et **met à jour** ce qui a changé
 > depuis. Ampleur : **petit** côté VM (déjà fait), **bloqué sur le poste Windows

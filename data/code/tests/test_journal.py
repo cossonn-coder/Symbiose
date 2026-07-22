@@ -2,7 +2,7 @@
 SYMBIOSE — tests/test_journal.py
 Test du LEDGER d'événements (sprint Voix narratives, tronçon ②).
 Spec : `docs/narration/voix/conception_voix_narratives.md` §1.3/§1.4 + kickoff
-`sprints/sprint_voix_narratives/02_journal.md`.
+`sprints/narration/voix/sprint_voix_narratives/02_journal.md`.
 
 Trois propriétés (les trois exigées par la « Définition de done » du kickoff) :
   A. OPT-IN — `consigner` sur un game_state SANS appel préalable n'écrit la clé

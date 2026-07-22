@@ -344,7 +344,7 @@ lue par `_stability_grid`. Le kickoff `06_*.md` reste à écrire.
 re-figé depuis ②ɣ ; pont 0.3.5). Le **⑥ vue Godot** n'a jamais été écrit comme
 tronçon séparé : son contenu (squelettes, litière au sol, maturité-fruit, bac/pile
 + jauge `compost_mur`, gestes compost) a été **rattrapé et validé F5** par le
-**sprint VUE** (`sprints/sprint_vue_rattrapage/` 02 fruits+squelettes + **03
+**sprint VUE** (`sprints/meta/sprint_vue_rattrapage/` 02 fruits+squelettes + **03
 litière+structures+jauge — VALIDÉ F5**). Le ⑥ est donc **fait ailleurs**, ce sprint
 n'a plus de reste propre.
 

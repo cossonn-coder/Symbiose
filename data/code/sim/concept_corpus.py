@@ -2,7 +2,7 @@
 SYMBIOSE — sim/concept_corpus.py
 CORPUS de l'ENCYCLOPÉDIE, onglet CONCEPT — DONNÉE éditoriale pure (D60, ④).
 Spec : `docs/faune/vie_macro/conception_vie_macro_identifiable.md` §5 + kickoff
-`sprints/sprint_vie_macro_identifiable/04_corpus_concept_technique.md`.
+`sprints/faune/vie_macro/sprint_vie_macro_identifiable/04_corpus_concept_technique.md`.
 
 Miroir structurel de `sim/encyclopedie_corpus.py` (plantes) mais pour les CONCEPTS
 transversaux — les grandes causes écologiques que la maîtrise crédite au fil des

@@ -2,7 +2,7 @@
 
 > Conception figée le 2026-07-08 (`/conception D67`). Dette **D67**, suite de
 > **D66②** (spatial hash bit-identique) et **D32** (scatter sol bit-identique).
-> Sprint : `sprints/sprint_perf_lod_ombre/` (3 tronçons). Source de vérité =
+> Sprint : `sprints/perf/lod/sprint_perf_lod_ombre/` (3 tronçons). Source de vérité =
 > `data/code/fields/light.py`. Golden de départ : `33c0ea6f…` (D69),
 > `population_hash` `1aa4997d…`.
 

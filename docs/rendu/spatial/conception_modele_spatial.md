@@ -3,7 +3,7 @@
 > Figé le 2026-07-14 après `/conception`. Sujet ouvert par Nico :
 > « les plots sont trop restrictifs / plusieurs plantes au même endroit
 > impossible / les clones ne ressemblent pas aux clonées ».
-> Sprint : `sprints/sprint_modele_spatial/` (3 tronçons). Prêt pour `/sprint-auto`.
+> Sprint : `sprints/rendu/spatial/sprint_modele_spatial/` (3 tronçons). Prêt pour `/sprint-auto`.
 
 ## 0. Diagnostic — ce que le moteur fait DÉJÀ (ne pas réinventer)
 

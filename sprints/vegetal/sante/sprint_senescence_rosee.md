@@ -106,5 +106,5 @@ Décision = Nico.
 
 ## Reprise
 
-« lis `sprints/sprint_senescence_rosee.md` » → l'arbitrage (a/b) est le seul
+« lis `sprints/vegetal/sante/sprint_senescence_rosee.md` » → l'arbitrage (a/b) est le seul
 préalable ; le diagnostic est fait, le correctif (a) est petit et golden-safe.

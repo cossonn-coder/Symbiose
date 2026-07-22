@@ -2,7 +2,7 @@
 
 > **Document de conception FIGÉ (2026-07-17).** Spec de référence du sprint
 > d'implémentation (MOTEUR + vue). Découpe = **3 tronçons** (§7). Kickoffs :
-> `sprints/sprint_calibration_realiste/0N_*.md`. Carnet d'état : `00_etat.md`.
+> `sprints/meta/calibrage/sprint_calibration_realiste/0N_*.md`. Carnet d'état : `00_etat.md`.
 > Origine : `BRIEF_CHAMPS_CONCEPTION.md` **P1** (verdicts 1 + 5), issu de
 > `audit_champs.md` §9. Couple deux verdicts que la mesure a révélés être **un
 > seul problème** : les champs vivants du sol opèrent ~10× sous la plage

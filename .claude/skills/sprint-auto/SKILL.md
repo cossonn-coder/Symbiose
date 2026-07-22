@@ -25,10 +25,19 @@ cassée — là tu stoppes et livres le rapport en avance.
 
 ## 0. Argument
 
-`/sprint-auto <dossier-sprint>` — le nom du dossier sous `sprints/`
-(ex. `sprint_decomposition_compost`). Si l'argument manque, déduis le sprint en
-cours depuis le contexte / `journal.md` ; en cas de doute, **demande** (ne devine
-pas le mauvais sprint).
+`/sprint-auto <dossier-sprint>` — le **nom** du dossier de sprint
+(ex. `sprint_decomposition_compost`) **ou** son chemin sous `sprints/`
+(ex. `vegetal/allelopathie/sprint_allelopathie`).
+
+Depuis le rangement documentaire du 2026-07-22, les sprints **actifs** vivent
+sous `sprints/<type>/<theme>/sprint_X/` (même taxonomie que `docs/`, cf.
+`docs/ARBORESCENCE.md` §7) — un nom nu ne suffit donc plus à former le chemin.
+**Résous-le d'abord** : `find sprints -maxdepth 4 -type d -name '<nom>'`. Un seul
+résultat → c'est le dossier. Zéro ou plusieurs → **demande**. Note que
+`sprints/_clos/` et `sprints/dette_kickoffs/` sont restés **à plat**.
+
+Si l'argument manque, déduis le sprint en cours depuis le contexte /
+`journal.md` ; en cas de doute, **demande** (ne devine pas le mauvais sprint).
 
 ## 1. Préconditions — vérifie TOUT avant de lancer le moindre sous-agent
 
@@ -37,8 +46,9 @@ Si une seule échoue : **stop net**, explique à Nico, ne lance rien.
 1. **git propre & à jour** (`git status`). Règle projet « vérifier git avant
    tout sprint » + incident Nextcloud du 2026-05-29. Si l'arbre est sale,
    préviens et demande quoi faire — ne commit/stash pas de toi-même.
-2. Le dossier `sprints/<sprint>/` existe et contient `00_etat.md` + des
-   kickoffs `0N_*.md`.
+2. Le dossier de sprint **résolu au §0** existe et contient `00_etat.md` + des
+   kickoffs `0N_*.md`. Dans la suite, `<sprint>` désigne ce **chemin résolu**
+   (`sprints/<type>/<theme>/sprint_X`), pas un nom nu.
 3. **Conception figée.** Lis `00_etat.md` (notamment §REPRISE et les marqueurs
    ✅/CLOSE/⏳) pour établir la **liste ordonnée des tronçons RESTANTS**. Pour
    chaque tronçon restant, un kickoff `0N_*.md` **autosuffisant** doit exister.
@@ -60,8 +70,8 @@ Les tronçons dépendent les uns des autres (le témoin passe par `00_etat.md`).
 Prompt autosuffisant (le sous-agent démarre à froid, il ne sait rien) :
 
 > Tu travailles sur le projet Symbiose dans `/home/nico/Nextcloud/projects/symbiose`.
-> Lis d'abord `CLAUDE.md` (racine), puis `sprints/<sprint>/00_etat.md`, puis le
-> kickoff `sprints/<sprint>/0N_*.md`. **Implémente UNIQUEMENT ce tronçon 0N**,
+> Lis d'abord `CLAUDE.md` (racine), puis `<sprint>/00_etat.md`, puis le
+> kickoff `<sprint>/0N_*.md`. **Implémente UNIQUEMENT ce tronçon 0N**,
 > rien d'autre, en respectant toutes les règles du projet (déterminisme, philo
 > de design, un fichier = une responsabilité, ~350 lignes de code pur max,
 > français, GDScript interdit / C# namespace Symbiose, moteur Python source de
@@ -74,7 +84,7 @@ Prompt autosuffisant (le sous-agent démarre à froid, il ne sait rien) :
 >   kickoff** ; sinon c'est une régression à corriger, pas à figer.
 > - Si tu touches du C# : `dotnet build Symbiose.csproj` (filet de compilation ;
 >   le F5 visuel reste à Nico). Note vert/rouge.
-> - Mets à jour `sprints/<sprint>/00_etat.md` (avancement du tronçon + §REPRISE).
+> - Mets à jour `<sprint>/00_etat.md` (avancement du tronçon + §REPRISE).
 > - **NE COMMIT PAS, ne push pas.** Laisse les changements en place, je commit.
 >
 > Rends un rapport en **moins de 200 mots** : (1) ce que tu as fait, (2) golden

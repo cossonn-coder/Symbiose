@@ -1,7 +1,7 @@
 # CONCEPTION — GERMINATION THERMIQUE (lit T_sol)
 
 > Doc de conception **FIGÉ** (arbitré et validé par Nico, 2026-06-30). On en tire
-> les kickoffs `0N_*.md` de `sprints/sprint_germination_thermique/`.
+> les kickoffs `0N_*.md` de `sprints/vegetal/floraison/sprint_germination_thermique/`.
 >
 > Filiation : s'appuie sur `docs/champs/climat/conception_thermique_microclimat.md` (le champ
 > `temperature_sol` existe et est spatialisé), `docs/champs/sol/conception_sol_ph.md` (patron de

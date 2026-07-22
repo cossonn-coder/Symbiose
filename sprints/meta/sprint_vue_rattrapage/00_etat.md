@@ -78,7 +78,7 @@ amis/famille de Nico.
 
 > **Ordre** : 01→02→03 rattrapent la vue, **04 ferme** (le build distribué
 > reflète alors la vue complète). 04 est en grande partie déjà fait sur la VM
-> (cf. `sprints/sprint_integration_godot/07_packaging.md`) — reste le gel
+> (cf. `sprints/meta/sprint_integration_godot/07_packaging.md`) — reste le gel
 > Windows + build + F5 final par Nico.
 
 ## Boucle de travail (rappel CLAUDE.md)

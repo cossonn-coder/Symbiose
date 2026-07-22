@@ -155,7 +155,7 @@ humidité) pour éviter le biais d'ordre de parcours (sinon direction privilégi
   **INDÉPENDANTE de ②**. À investiguer hors de ce sprint (signaler à Nico).
   `test_epaisseur_500ans` NON lancé (interdit).
 - **Fichiers touchés ce session** : `tests/test_ruissellement.py` (NEUF) +
-  `sprints/sprint_hydrologie_marecage/00_etat.md`. Non commit (Nico commit).
+  `sprints/champs/eau/sprint_hydrologie_marecage/00_etat.md`. Non commit (Nico commit).
 
 ## Avancement ③ (marécage : marais_memory + hystérèse + effets) — FAIT le 2026-07-13
 - Champ STOCKÉ `marais_memory: GridField(max_val=1.0)` (init 0) + grille d'état

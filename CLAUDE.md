@@ -240,7 +240,7 @@ prévisible** — récompense rare qui cristallise la philo non-action.
 > **Architecture Godot ACTÉE le 2026-06-07 = Option B** : Python reste le
 > moteur (sous-process, pont JSON stdin/stdout), **Godot est une VUE**. Plus
 > de portage C# intégral de la simulation — seul le **rendu** se porte.
-> Kickoff : `sprints/sprint_integration_godot/00_etat.md`.
+> Kickoff : `sprints/meta/sprint_integration_godot/00_etat.md`.
 
 ### Fonctionnels (C#)
 > Refactor SS⑦ (2026-06-16) : multi-classes et gros fichiers éclatés en
@@ -335,7 +335,10 @@ historiques.
   perf`) — carte complète et table « ancien chemin → nouveau » dans
   [`docs/ARBORESCENCE.md`](docs/ARBORESCENCE.md) ; journal éclaté par entrée
   dans `journal/` (+ `journal_archive/` 01-12 avant refactor structurel) indexé
-  par `journal.md` ; sprints clos sous `sprints/_clos/`.
+  par `journal.md` ; **sprints actifs rangés par la même taxonomie**
+  (`sprints/<type>/<theme>/sprint_X/`, cf. `docs/ARBORESCENCE.md` §7), sprints
+  clos sous `sprints/_clos/` et kickoffs de dette sous `sprints/dette_kickoffs/`
+  — ces deux derniers **restent à plat**, ce sont des archives et un index.
 - **Le catalogue grandit avec les idées** (règle de conception, 2026-06-29).
   Quand une conception serait mieux **incarnée** par une plante absente du
   catalogue, **ajouter cette/ces plante(s)** au catalogue pour illustrer la
@@ -360,7 +363,7 @@ historiques.
   **préserve le golden**. Viser 3-6 sous-sprints, jamais 20 (chaque
   sous-sprint relancé à froid repaie son amorçage — le sur-découpage coûte
   aussi).
-  - Structure : `sprints/sprint_X/00_etat.md` (état partagé léger, ~20
+  - Structure : `sprints/<type>/<theme>/sprint_X/00_etat.md` (état partagé léger, ~20
     lignes : où on en est, décisions, ce qui reste — mis à jour en fin de
     chaque sous-sprint) + `01_*.md`, `02_*.md`… (kickoffs autonomes).
   - Boucle : lancer `0N` → travailler → vérifier le golden → mettre à jour
@@ -384,11 +387,12 @@ protocole 0.2.2→0.3.0, golden jamais re-figé) le 2026-06-12 —
 `DebugSecondsPerWeek` remis à 0 (rythme design 60 s/semaine). **Reste
 tranche 7 = packaging PyInstaller** (gel du moteur en binaire, export Godot
 pour amis/famille), dernière tranche du sprint — kickoff
-`sprints/sprint_integration_godot/07_packaging.md`. Reprise :
-`sprints/sprint_integration_godot/00_etat.md` §REPRISE.
+`sprints/meta/sprint_integration_godot/07_packaging.md`. Reprise :
+`sprints/meta/sprint_integration_godot/00_etat.md` §REPRISE.
 
-À l'ouverture d'une session, Nico donne « lis `sprints/sprint_X.md` » (sprint
-simple) ou « lis `sprints/sprint_X/00_etat.md` puis `0N_*.md` » (sprint découpé)
-et Claude reprend sans contexte préalable. Historique des décisions :
+À l'ouverture d'une session, Nico donne « lis `sprints/<type>/<theme>/sprint_X.md` »
+(sprint simple) ou « lis `sprints/<type>/<theme>/sprint_X/00_etat.md` puis
+`0N_*.md` » (sprint découpé) et Claude reprend sans contexte préalable. Le nom du
+sprint suffit à le retrouver : `find sprints -maxdepth 4 -type d -name 'sprint_X'`. Historique des décisions :
 `journal.md` (index de pointeurs) → entrées détaillées dans `journal/` (13→…)
 + `journal_archive/` (01-12, avant refactor structurel).

@@ -2,7 +2,7 @@
 
 > **Document de conception FIGÉ (2026-07-13).** Spec de référence du sprint
 > d'implémentation (MOTEUR + vue). Découpe = **6 tronçons** (§L). Kickoffs :
-> `sprints/sprint_allelopathie/0N_*.md`. Carnet d'état : `00_etat.md`.
+> `sprints/vegetal/allelopathie/sprint_allelopathie/0N_*.md`. Carnet d'état : `00_etat.md`.
 > Origine : sujet choisi par Nico le 2026-07-13 (parmi allélopathie / zoochorie /
 > climat pluriannuel / épidémie spatiale). Comble le trou pointé par le TODO
 > `plants/base/familles.py:440` (« faute d'action moteur qui injecte du NÉGATIF

@@ -2,7 +2,7 @@
 SYMBIOSE — tests/test_encyclopedie.py
 Test de l'ENCYCLOPÉDIE (sprint Voix narratives, tronçon ④).
 Spec : `docs/narration/voix/conception_voix_narratives.md` §2.2/§6 + kickoff
-`sprints/sprint_voix_narratives/04_encyclopedie.md`.
+`sprints/narration/voix/sprint_voix_narratives/04_encyclopedie.md`.
 
 Propriétés exigées (« Définition de done » du kickoff) :
   A. SANS JOUEUR → index `[]`, lecture → `None` (golden-safe, lecture pure).

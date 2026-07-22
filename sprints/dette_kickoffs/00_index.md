@@ -32,10 +32,10 @@ conception soit satisfaisante », dette D24) :
 
 | Dette | Kickoff existant |
 |---|---|
-| D2, D3, D4 (dims tuiles, noms sprites, sprite maison) | `sprints/sprint_1_recalibrage_visuel.md` |
-| D7, D8, D9 (namespace, `Main.tscn`, conflit `PlantInstance`) | `sprints/sprint_2_orchestration.md` |
-| D5, D6, D10, D24, et les ports C# de D11/D12.5/D17/D20/D21/D22/D27 | `sprints/sprint_3_portage_simulation.md` |
-| Affichage écologique C# | `sprints/sprint_4_mecaniques_conception.md` |
+| D2, D3, D4 (dims tuiles, noms sprites, sprite maison) | `sprints/meta/sprint_1_recalibrage_visuel.md` |
+| D7, D8, D9 (namespace, `Main.tscn`, conflit `PlantInstance`) | `sprints/meta/sprint_2_orchestration.md` |
+| D5, D6, D10, D24, et les ports C# de D11/D12.5/D17/D20/D21/D22/D27 | `sprints/meta/sprint_3_portage_simulation.md` |
+| Affichage écologique C# | `sprints/meta/sprint_4_mecaniques_conception.md` |
 | D29 (croissance procédurale) | **sprint ACTIF** : `sprints/sprint_croissance/` (tronçons 3bis→6 restants) |
 
 ## Les kickoffs neufs de ce dossier

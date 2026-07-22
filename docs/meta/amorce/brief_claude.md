@@ -34,7 +34,7 @@
   ▎ Symbiose.console.exe : il doit afficher « Mode BINAIRE — moteur gelé » (= aucun 
   ▎ Python sollicité).
   ▎
-  ▎ Critères de succès (cf. sprints/sprint_vue_rattrapage/04_packaging.md) :
+  ▎ Critères de succès (cf. sprints/meta/sprint_vue_rattrapage/04_packaging.md) :
   ▎ - [ ] 158/158 sur le binaire gelé ;
   ▎ - [ ] console affiche « Mode BINAIRE » ;
   ▎ - [ ] double-clic Symbiose.exe hors éditeur → jardin complet + une saison + un geste

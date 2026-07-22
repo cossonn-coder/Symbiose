@@ -2,7 +2,7 @@
 
 > **Statut : FIGÉE le 2026-07-03** (skill `/conception`, 6 arbitrages tranchés avec
 > Nico). Prête pour `/sprint-auto`. Source de vérité de la conception ; les kickoffs
-> `sprints/sprint_hydrologie_marecage/0N_*.md` en dérivent.
+> `sprints/champs/eau/sprint_hydrologie_marecage/0N_*.md` en dérivent.
 >
 > Sujet (F5 post-D57) : l'eau s'écoule des plots hauts vers les bas ; un plot saturé
 > forme une **flaque** ; une flaque persistante devient un **marécage**, avec sa

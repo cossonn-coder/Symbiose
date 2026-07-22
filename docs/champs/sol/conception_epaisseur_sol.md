@@ -3,7 +3,7 @@
 > Conception figée le 2026-07-02 (dette D57, F5 S5+S11). Voisines partageant les
 > champs `om_*` : `docs/champs/sol/conception_decomposition_compost.md`,
 > `docs/champs/sol/conception_sol_structure.md`, `docs/champs/sol/conception_sol_nutriments_npk.md`.
-> Sprint d'exécution : `sprints/sprint_epaisseur_sol/`.
+> Sprint d'exécution : `sprints/champs/sol/sprint_epaisseur_sol/`.
 
 ## 0. Objectif & intuition
 

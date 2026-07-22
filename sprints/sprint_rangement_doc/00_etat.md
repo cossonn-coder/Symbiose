@@ -68,10 +68,65 @@ explicitement avant appel : `. ~/.config/deepseek.env`.
 - [x] ② `git mv` des 56 conceptions + études + meta — 2026-07-22
 - [x] ③ Backlog éclaté + renvois journal/dette par thème — 2026-07-22
 - [x] ④ Extractions enchâssées + réparation des liens vivants — 2026-07-22
-- [ ] ⑤ Taxonomie appliquée à `sprints/`
+- [x] ⑤ Taxonomie appliquée à `sprints/` — 2026-07-22
 - [ ] ⑥ `docs/agent/deepseek_protocol.md` + pointeur `CLAUDE.md`
 
 ## REPRISE
+
+**Tronçon ⑤ fait** (golden **INCHANGÉ**, hash `57c166d8d362…` ; **aucun fichier
+C# touché** → `dotnet build` non concerné). Livré, en suivant
+`05_sprints_taxonomie.md` :
+
+- **42 `git mv`** (36 dossiers de sprint + 6 kickoffs `.md` à plat) →
+  `sprints/<type>/<theme>/<nom_du_sprint>/`, **mêmes 8 types et mêmes thèmes**
+  que `docs/`. Rien renommé à l'intérieur, numérotation `0N_*.md` intacte.
+  `git status` : **212 lignes `R`**, aucun `D`+`A` — l'historique git suit.
+  Comptage `find sprints -type f` : **340 avant, 340 après** (zéro perte).
+- **Restent à plat, comme prévu** : `sprints/_clos/` (archives),
+  `sprints/dette_kickoffs/` (index adossé aux `Dxx`) et
+  `sprints/sprint_rangement_doc/` (ce sprint-ci) → **le chemin de CE fichier
+  n'a pas changé**.
+- **71 fichiers réécrits** (pointeurs `sprints/<nom>` → nouveau chemin), pilotés
+  par la table de déplacement (pas de mapping inventé), avec frontière de mot
+  pour ne pas confondre `sprint_voix_narratives` et `…_ui`. Dont **20 `.py`** :
+  vérifié par `tokenize` que **zéro ligne hors commentaire/docstring** n'a bougé,
+  `compileall` OK. **0 `.cs`**. `journal/`, `journal_archive/` et
+  `sprints/sprint_rangement_doc/` volontairement **non réécrits** (décision 4 +
+  ce dossier décrit l'ancien état).
+- **`docs/ARBORESCENCE.md` §7 (neuf)** : carte des sprints, motif du traitement
+  asymétrique, **table de traduction ancien → nouveau des 42 entrées** (§7.1,
+  clé de lecture du journal) et **arbitrages de rattachement** (§7.2). En-tête
+  « État » passé au ⑤.
+- **Risque de régression principal traité** — les deux skills :
+  `/sprint-auto` §0 sait désormais **résoudre un nom nu** en chemin
+  (`find sprints -maxdepth 4 -type d -name '<nom>'`, ambiguïté → demander ;
+  vérifié : **0 nom ambigu** aujourd'hui) et `<sprint>` y désigne le chemin
+  résolu ; `/conception` crée son ossature sous
+  `sprints/<type>/<theme>/sprint_<nom>/` — **interdiction explicite** de recréer
+  du plat, symétrique de ce que le ④ a fait pour `docs/`.
+- `CLAUDE.md` (§Arbo cible, §structure de sprint, §ouverture de session) et
+  `BACKLOG.md` (intro) disent la nouvelle convention, pas seulement les
+  nouveaux chemins.
+- **Liens morts** : 1 lien relatif cassé par le déplacement, réparé
+  (`sprints/champs/climat/sprint_vent_evapotranspiration/00_etat.md`, `../../`
+  → `../../../../`). Il restait 5 « faux positifs » du scanner, **tous
+  pré-existants** : 4 placeholders de prose (`…X.md`, `journal/<fichier>`,
+  `...`) et 1 lien du kickoff `04_extractions_liens.md` — laissés tels quels,
+  hors périmètre ⑤.
+
+**Arbitrages de design pris dans le tronçon** (consignés en `ARBORESCENCE.md`
+§7.2, à confirmer par Nico d'un mot) : trois sprints sans conception homonyme —
+`sprint_perf_tick_on2` → `perf/scatter` (son propre `00_etat.md` le rattache à
+`conception_perf_scatter_recue.md`) ; `sprint_senescence_rosee.md` →
+`vegetal/sante` (c'est une **cause de mort**, pas un sujet d'eau) ;
+`sprint_pommier_nouaison.md` → `vegetal/floraison`. Et **`sprint_vue_rattrapage`
+→ `meta/`** comme `sprint_integration_godot`, au titre des transverses.
+
+**Suivant : tronçon ⑥ (`06_protocole_deepseek.md`)** — `docs/meta/agent/
+deepseek_protocol.md` + pointeur depuis `CLAUDE.md`. Point hérité à corriger au
+passage (déjà signalé au ④) : `06_protocole_deepseek.md` l.111 cite en exemple
+`docs/champs/eau/dette_hydrologie.md`, alors que le fichier réellement produit au
+③ s'appelle `docs/champs/eau/dette_eau.md`.
 
 **Tronçon ④ fait** (golden **INCHANGÉ**, hash `57c166d8d362…` ; `dotnet build
 Symbiose.csproj` **VERT**, 0 avertissement / 0 erreur — un seul commentaire C#

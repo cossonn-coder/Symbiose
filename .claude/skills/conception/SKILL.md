@@ -34,8 +34,11 @@ est le **carnet de bord** `00_etat.md` (voir §0bis) — persister ce qui a déj
 Une conception longue fait gonfler le contexte. **Tu ne demandes JAMAIS à Nico
 de lancer un `/compact` ni de « lire `HANDOFF.md` ».** À la place, **dès le
 premier échange** tu tiens un **état vivant sur disque**, autosuffisant, mis à
-jour à **CHAQUE décision arrêtée** : `sprints/sprint_<nom>/00_etat.md` (crée le
-dossier tôt, choisis un `<nom>` de sprint provisoire dès que le sujet est cerné).
+jour à **CHAQUE décision arrêtée** : `sprints/<type>/<theme>/sprint_<nom>/00_etat.md`
+(crée le dossier tôt, choisis un `<nom>` de sprint provisoire dès que le sujet est
+cerné). `<type>/<theme>` = **le même couple** que celui choisi en §3.1 pour le doc
+de conception — un sprint est rangé comme sa conception (cf. §7 de
+`docs/ARBORESCENCE.md`). **Ne jamais recréer un `sprints/sprint_<nom>/` à plat.**
 
 - Cet `00_etat.md` est le **handoff permanent** : phase courante, **décisions
   arrêtées** (une ligne + rationale courte chacune), **questions ouvertes /
@@ -153,7 +156,7 @@ Quand Nico a validé la conception (« OK », « vas-y », « lets go »), maté
    F5), golden intact. On ne diffère plus le rendu C# en dette séparée ; rattacher
    au passage toute dette de vue Godot pertinente au sujet. Un sprint sans son
    tronçon vue est incomplet (cf. mémoire `feedback_vue_godot_toujours`).
-3. **Ossature du sprint** sous `sprints/sprint_<nom>/` :
+3. **Ossature du sprint** sous `sprints/<type>/<theme>/sprint_<nom>/` (§0bis) :
    - `00_etat.md` — **déjà vivant depuis la phase A** (§0bis) : tu le
      **finalises** en état de sprint (~20 lignes : où on en est, décisions clés,
      carte des tronçons, ce qui reste, **§REPRISE**), désormais mis à jour par

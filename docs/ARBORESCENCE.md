@@ -5,12 +5,13 @@ C'est la **clé de lecture de tout l'historique** — les 126 entrées de `journ
 et `journal_archive/` ne sont **pas** réécrites (décision 4 du sprint de
 rangement) : elles citent les anciens chemins, et cette table les traduit.
 
-**État** (à jour au tronçon ④, 2026-07-22) : l'arborescence est **en place** et
-la colonne « nouveau chemin » du §5 décrit **la réalité du dépôt**. Faits :
-arborescence créée (①), **70 `git mv`** exécutés (②), `BACKLOG.md` éclaté par
-thème + renvois journal/dette (③), extractions enchâssées et **liens des
+**État** (à jour au tronçon ⑤, 2026-07-22) : l'arborescence est **en place** et
+les colonnes « nouveau chemin » des §5 et §7.1 décrivent **la réalité du dépôt**.
+Faits : arborescence créée (①), **70 `git mv`** exécutés (②), `BACKLOG.md` éclaté
+par thème + renvois journal/dette (③), extractions enchâssées et **liens des
 fichiers vivants réparés** (④ — `CLAUDE.md`, `DETTE.md`, `journal.md`, les
-skills `.claude/skills/`, les commentaires C#/Python, `sprints/`).
+skills `.claude/skills/`, les commentaires C#/Python, `sprints/`), **sprints
+actifs rangés par la même taxonomie** (⑤ — cf. **§7**).
 La colonne « ancien chemin » ne sert plus qu'à **relire l'historique** :
 `journal/`, `journal_archive/` et les kickoffs qui racontent une migration
 passée n'ont **pas** été réécrits (décision 4 du sprint).
@@ -271,3 +272,98 @@ est leur traduction.
    ligne — et on ajoute la ligne correspondante au §4 de ce fichier.
 3. Nom de fichier en `snake_case` sans accents, préfixé `conception_` pour une
    conception, `etude_` pour une étude préparatoire.
+
+---
+
+## 7. Les sprints — même taxonomie, traitement asymétrique
+
+Depuis le tronçon ⑤ du sprint de rangement (2026-07-22), les sprints **actifs**
+sont rangés avec **les 8 mêmes types et les mêmes thèmes** que `docs/` :
+
+```
+sprints/<type de feature>/<thème de feature>/<nom_du_sprint>/
+```
+
+Un sprint hérite du thème de **sa conception homonyme** : `sprint_allelopathie/`
+vit sous `sprints/vegetal/allelopathie/`, comme
+`docs/vegetal/allelopathie/conception_allelopathie.md`. **Le nom du dossier de
+sprint est conservé** — le chemin porte le thème, le nom porte l'identité. Rien
+n'est renommé à l'intérieur : les `0N_*.md` gardent leur numérotation, qui est
+l'ordre d'exécution de `/sprint-auto`.
+
+### Ce qui reste à plat — et pourquoi
+
+| Emplacement | Traitement | Motif |
+|---|---|---|
+| `sprints/_clos/` | **inchangé** | Archives closes. On ne cherche jamais un sprint clos par thème, on le cherche par date via le journal ; les ranger casserait les liens des entrées de `journal/` sans rien apporter. |
+| `sprints/dette_kickoffs/` | **inchangé** | Déjà indexé par `00_index.md` et adossé aux `Dxx` de `DETTE.md` — cohérent en soi. |
+| `sprints/sprint_rangement_doc/` | **inchangé** | C'est le sprint qui exécute ce rangement ; il se décrit lui-même. |
+
+### Cas transverses → `sprints/meta/`
+
+Un sprint qui ne relève pas d'un thème unique va à la racine de `meta/` :
+intégration Godot (pont + packaging), vue de rattrapage, refactor, rangement,
+et les quatre sprints fondateurs `sprint_1..4_*.md`.
+
+### 7.1 Table de traduction — ancien chemin → nouveau chemin
+
+Même rôle que le §5 : relire sans se perdre les entrées de `journal/` et les
+sprints clos, qui citent les anciens chemins et ne sont **pas** réécrits.
+
+| Ancien chemin | Nouveau chemin |
+|---|---|
+| `sprints/sprint_1_recalibrage_visuel.md` | `sprints/meta/sprint_1_recalibrage_visuel.md` |
+| `sprints/sprint_2_orchestration.md` | `sprints/meta/sprint_2_orchestration.md` |
+| `sprints/sprint_3_portage_simulation.md` | `sprints/meta/sprint_3_portage_simulation.md` |
+| `sprints/sprint_4_mecaniques_conception.md` | `sprints/meta/sprint_4_mecaniques_conception.md` |
+| `sprints/sprint_acquisition_outils` | `sprints/joueur/outils/sprint_acquisition_outils` |
+| `sprints/sprint_allelopathie` | `sprints/vegetal/allelopathie/sprint_allelopathie` |
+| `sprints/sprint_bugs_emergence` | `sprints/meta/calibrage/sprint_bugs_emergence` |
+| `sprints/sprint_calibration_realiste` | `sprints/meta/calibrage/sprint_calibration_realiste` |
+| `sprints/sprint_completude_ecosysteme` | `sprints/meta/calibrage/sprint_completude_ecosysteme` |
+| `sprints/sprint_desync_phenologie` | `sprints/vegetal/floraison/sprint_desync_phenologie` |
+| `sprints/sprint_diversite_fondatrice` | `sprints/vegetal/genetique/sprint_diversite_fondatrice` |
+| `sprints/sprint_epaisseur_sol` | `sprints/champs/sol/sprint_epaisseur_sol` |
+| `sprints/sprint_equilibre_invasion` | `sprints/faune/trophique/sprint_equilibre_invasion` |
+| `sprints/sprint_floraison_fructification` | `sprints/vegetal/floraison/sprint_floraison_fructification` |
+| `sprints/sprint_germination_thermique` | `sprints/vegetal/floraison/sprint_germination_thermique` |
+| `sprints/sprint_grimpantes` | `sprints/vegetal/grimpantes/sprint_grimpantes` |
+| `sprints/sprint_hydrologie_marecage` | `sprints/champs/eau/sprint_hydrologie_marecage` |
+| `sprints/sprint_integration_godot` | `sprints/meta/sprint_integration_godot` |
+| `sprints/sprint_jardinier_auto` | `sprints/joueur/automate/sprint_jardinier_auto` |
+| `sprints/sprint_luxuriance_stratification` | `sprints/vegetal/grimpantes/sprint_luxuriance_stratification` |
+| `sprints/sprint_meteo_champs` | `sprints/champs/climat/sprint_meteo_champs` |
+| `sprints/sprint_modele_spatial` | `sprints/rendu/spatial/sprint_modele_spatial` |
+| `sprints/sprint_mycelium_interconnexions` | `sprints/faune/mycelium/sprint_mycelium_interconnexions` |
+| `sprints/sprint_palette_gestes` | `sprints/joueur/gestes/sprint_palette_gestes` |
+| `sprints/sprint_perf_lod_ombre` | `sprints/perf/lod/sprint_perf_lod_ombre` |
+| `sprints/sprint_perf_rendu_plantes` | `sprints/perf/lod/sprint_perf_rendu_plantes` |
+| `sprints/sprint_perf_run_eternel` | `sprints/perf/run_eternel/sprint_perf_run_eternel` |
+| `sprints/sprint_perf_tick_on2` | `sprints/perf/scatter/sprint_perf_tick_on2` |
+| `sprints/sprint_pommier_nouaison.md` | `sprints/vegetal/floraison/sprint_pommier_nouaison.md` |
+| `sprints/sprint_pots_bacs` | `sprints/joueur/outils/sprint_pots_bacs` |
+| `sprints/sprint_rendu_ambiance` | `sprints/rendu/ambiance/sprint_rendu_ambiance` |
+| `sprints/sprint_rendu_pixelart_ss2` | `sprints/rendu/pixelart/sprint_rendu_pixelart_ss2` |
+| `sprints/sprint_sante_resilience` | `sprints/vegetal/sante/sprint_sante_resilience` |
+| `sprints/sprint_semiologie_visuelle` | `sprints/narration/semiologie/sprint_semiologie_visuelle` |
+| `sprints/sprint_senescence_rosee.md` | `sprints/vegetal/sante/sprint_senescence_rosee.md` |
+| `sprints/sprint_sommet_trophique` | `sprints/faune/trophique/sprint_sommet_trophique` |
+| `sprints/sprint_usure_letalite` | `sprints/vegetal/sante/sprint_usure_letalite` |
+| `sprints/sprint_vent_evapotranspiration` | `sprints/champs/climat/sprint_vent_evapotranspiration` |
+| `sprints/sprint_vie_macro_identifiable` | `sprints/faune/vie_macro/sprint_vie_macro_identifiable` |
+| `sprints/sprint_voix_narratives` | `sprints/narration/voix/sprint_voix_narratives` |
+| `sprints/sprint_voix_narratives_ui` | `sprints/narration/voix/sprint_voix_narratives_ui` |
+| `sprints/sprint_vue_rattrapage` | `sprints/meta/sprint_vue_rattrapage` |
+
+### 7.2 Arbitrages de rattachement (tronçon ⑤)
+
+Trois sprints n'avaient pas de conception homonyme évidente ; leur thème vient
+de leur objectif, lu dans leur kickoff :
+
+- `sprint_perf_tick_on2/` → `perf/scatter/` — son `00_etat.md` le rattache
+  explicitement à `docs/perf/scatter/conception_perf_scatter_recue.md`.
+- `sprint_senescence_rosee.md` → `vegetal/sante/` — c'est une **cause de mort**
+  (sénescence contre asphyxie), le thème de `conception_usure_letalite.md` ; la
+  rosée n'y est que la source d'humidité incriminée, pas le sujet.
+- `sprint_pommier_nouaison.md` → `vegetal/floraison/` — la nouaison est l'étape
+  fleur → fruit de `conception_floraison_fructification.md`.

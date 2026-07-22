@@ -2,7 +2,7 @@
 SYMBIOSE — tests/test_pages.py
 Test des PAGES SECRÈTES (sprint Voix narratives, tronçon ⑤, dette D18).
 Spec : `docs/narration/voix/conception_voix_narratives.md` §2.3/§7 + kickoff
-`sprints/sprint_voix_narratives/05_pages.md`.
+`sprints/narration/voix/sprint_voix_narratives/05_pages.md`.
 
 Propriétés exigées (« Définition de done » du kickoff) :
   A. SANS JOUEUR → `pages_trouvees` = set() ET aucune clé `pages` créée (golden-safe).

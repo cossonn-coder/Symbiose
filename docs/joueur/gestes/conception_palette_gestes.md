@@ -1,7 +1,7 @@
 # CONCEPTION — PALETTE DE GESTES PERSONNALISABLE
 
 > Figé le 2026-07-10 (`/conception`, après arbitrages D1→D11).
-> Sprint : `sprints/sprint_palette_gestes/`. Découpage : 5 tronçons perf-first,
+> Sprint : `sprints/joueur/gestes/sprint_palette_gestes/`. Découpage : 5 tronçons perf-first,
 > vue Godot en dernier (règle projet). Golden : NEUTRE partout (état/données +
 > gestes event-driven au-dessus du tick — le smoke n'invoque aucun geste).
 

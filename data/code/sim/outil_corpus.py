@@ -2,7 +2,7 @@
 SYMBIOSE — sim/outil_corpus.py
 CORPUS de l'ENCYCLOPÉDIE, onglet OUTIL — DONNÉE éditoriale pure (D60, ⑤).
 Spec : `docs/faune/vie_macro/conception_vie_macro_identifiable.md` §5 + kickoff
-`sprints/sprint_vie_macro_identifiable/05_corpus_geste_outil.md`.
+`sprints/faune/vie_macro/sprint_vie_macro_identifiable/05_corpus_geste_outil.md`.
 
 Miroir structurel de `sim/technique_corpus.py` mais pour les OUTILS — les OBJETS
 manipulés (arrosoir, sécateur, bêche…) et les STRUCTURES posées (bac, pile, ruche,

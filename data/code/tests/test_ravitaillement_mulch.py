@@ -2,7 +2,7 @@
 SYMBIOSE — tests/test_ravitaillement_mulch.py
 Suite ciblée du tronçon ③ « acquisition des moyens d'agir » : le RAVITAILLEMENT en
 mulch par ses 3 canaux (`docs/joueur/outils/conception_acquisition_outils.md` §C +
-kickoff `sprints/sprint_acquisition_outils/03_ravitaillement_mulch.md`). Lève
+kickoff `sprints/joueur/outils/sprint_acquisition_outils/03_ravitaillement_mulch.md`). Lève
 l'impasse `RAVITAILLEMENT_MANQUANT` : `pailler` refusait faute d'une source de mulch
 amorçable tôt.
 

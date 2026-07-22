@@ -2,7 +2,7 @@
 SYMBIOSE — sim/actions/greffe.py
 Geste GREFFER (sprint PALETTE DE GESTES, tronçon ③).
 Spec : `docs/joueur/gestes/conception_palette_gestes.md` §3.6 + kickoff
-`sprints/sprint_palette_gestes/03_greffe.md`.
+`sprints/joueur/gestes/sprint_palette_gestes/03_greffe.md`.
 
 Greffe PAR LE JOUEUR : on soude un rameau (le GREFFON, scion) sur une plante
 établie (le PORTE-GREFFE, rootstock). Le porte-greffe adopte l'IDENTITÉ AÉRIENNE

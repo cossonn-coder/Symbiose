@@ -115,5 +115,5 @@ catalogue (`maturity_years`, `bloom_daylen_*`, trait mellifère/attractivité).
 
 ## Reprise
 
-« lis `sprints/sprint_pommier_nouaison.md` » → investiguer, diagnostiquer,
+« lis `sprints/vegetal/floraison/sprint_pommier_nouaison.md` » → investiguer, diagnostiquer,
 corriger (ou remonter l'arbitrage), garder le golden, viser 206/206.

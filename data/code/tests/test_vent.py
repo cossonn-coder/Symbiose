@@ -2,7 +2,7 @@
 SYMBIOSE — tests/test_vent.py
 Test de la MASSE D'AIR pure (sprint VENT & ÉVAPOTRANSPIRATION, tronçon ①).
 Spec : `docs/champs/climat/conception_vent_evapotranspiration.md` §2 + kickoff
-`sprints/sprint_vent_evapotranspiration/t1_vent_masse_air.md`.
+`sprints/champs/climat/sprint_vent_evapotranspiration/t1_vent_masse_air.md`.
 
 Vérifie que `sim/wind.py` est :
   A. DÉTERMINISTE  — même (seed, week) → même état, runs répétés identiques ;

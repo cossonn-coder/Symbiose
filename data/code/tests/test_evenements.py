@@ -2,7 +2,7 @@
 SYMBIOSE — tests/test_evenements.py
 Test du PARSEUR D'ÉVÉNEMENTS partagé (sprint Voix narratives, tronçon ①).
 Spec : `docs/narration/voix/conception_voix_narratives.md` §1.2 + kickoff
-`sprints/sprint_voix_narratives/01_evenements.md`.
+`sprints/narration/voix/sprint_voix_narratives/01_evenements.md`.
 
 Vérifie deux choses :
   A. PARITÉ de l'API historique `_evenements()` après extraction (preuve du

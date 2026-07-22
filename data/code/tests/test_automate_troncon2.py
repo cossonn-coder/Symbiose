@@ -3,7 +3,7 @@ SYMBIOSE — tests/test_automate_troncon2.py
 Vérifs FONCTIONNELLES du tronçon ② du jardinier automate (table complète,
 priorisation, chaînage, désherbage, part_recoltee, détecteur d'impasses).
 Spec : docs/joueur/automate/conception_jardinier_automate.md §5/§7 + kickoff
-sprints/sprint_jardinier_auto/02_table_budget_impasses.md.
+sprints/joueur/automate/sprint_jardinier_auto/02_table_budget_impasses.md.
 
 Tests de LOGIQUE PURE (on nourrit `proposer`/`profil` avec des perceptions et des
 voisins fabriqués → pas besoin de dérouler un moteur). Le monde `full` n'a PAS de

@@ -71,7 +71,7 @@ Détail post-② :
 ## Sanity build C#
 `git diff --name-only` depuis le début du sprint = **100 % Python + dossier
 sprint** (`fields/light.py`, `fields/light_index.py`,
-`tests/test_scatter_lumiere_recue.py`, `sprints/sprint_perf_tick_on2/00_etat.md`).
+`tests/test_scatter_lumiere_recue.py`, `sprints/perf/scatter/sprint_perf_tick_on2/00_etat.md`).
 **Aucun `.cs` touché → PAS de `dotnet build` nécessaire.**
 
 ## F5 à faire (Nico, sur Windows)
