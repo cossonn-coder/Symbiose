@@ -20,6 +20,16 @@ golden qui bouge, ni de code `data/code/` ou de test moteur généré. **La clé
 (`~/.config/deepseek.env`) ne s'affiche ni ne se copie jamais** — fuite avérée
 le 2026-07-22 ; `extract-chat` ne vise jamais `~/.claude/projects/`.
 
+**En `/sprint-auto` : les appels sont réservés à l'ORCHESTRATEUR.** Un sous-agent
+de tronçon n'appelle DeepSeek que pour une **cartographie d'impact imprévue**
+(« qui d'autre lit ce champ ? ») — jamais en routine d'ouverture, jamais sur le
+code qu'il va modifier : la clé est plafonnée et l'orchestrateur ne voit pas la
+consommation de ses sous-agents. Un sous-agent qui *a besoin* de fouiller révèle
+un **kickoff incomplet** → le consigner dans `00_etat.md` au lieu de l'absorber.
+Et `ask-deepseek` **n'est pas exhaustif sur un gros corpus** (constaté le
+2026-07-22, §7.1) : faire le balayage soi-même au `grep`, ne lui déléguer que la
+lecture des candidats.
+
 ## Source de vérité
 
 Le moteur Python dans `data/code/`, **réorganisé en paquets** (Sprint refactor

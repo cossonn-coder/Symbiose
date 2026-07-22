@@ -53,9 +53,18 @@ sortie (prévoir large). Deux échecs d'affilée sur une même question →
 
 | Outil | Signature réelle |
 |---|---|
-| `ask-deepseek` | `--paths F [F…] --question "…" [--think]` |
-| `write-deepseek` | `--spec "…" [--context F [F…]] --target F [--lang L] [--think]` (`--lang` défaut `python`) |
+| `ask-deepseek` | `--paths F [F…] --question "…" [--think] [--allow-missing] [--yes]` |
+| `write-deepseek` | `--spec "…" [--context F [F…]] --target F [--lang L] [--think] [--allow-missing] [--force] [--mkdir]` (`--lang` défaut `python`) |
 | `extract-chat` | `<fichier.jsonl> [-o sortie] [--last N]` |
+
+**Durcissement du 2026-07-22** (après le 1er test grandeur nature — voir
+[`note_test_delegation_20260722.md`](note_test_delegation_20260722.md)) : les
+deux outils DeepSeek **refusent de tourner** si un fichier passé en `--paths` /
+`--context` est introuvable, affichent le **volume envoyé et le coût réel**, et
+**signalent toute troncature** (`write-deepseek` n'écrit alors rien). En plus,
+`write-deepseek` n'**écrase** pas une cible sans `--force` et ne **crée** pas de
+répertoire parent sans `--mkdir`. `extract-chat` **refuse en dur** tout chemin
+résolu sous `~/.claude/` (§6.2 n'est plus seulement une consigne écrite).
 
 | Outil | Rôle sur Symbiose |
 |---|---|
@@ -220,6 +229,38 @@ ligne pour <sujet>, même format que les lignes existantes, sans rien réécrire
 
 **Après chaque appel `ask-deepseek`** : ouvrir le fichier cité et **lire le
 passage**. La réponse seule ne fonde aucune décision (§3, garde-fou b).
+
+### 7.1 Les deux modes de défaillance observés (2026-07-22)
+
+**(a) `ask-deepseek` n'est pas exhaustif sur un gros corpus.** Sur 36 fichiers /
+8 247 lignes, ses citations étaient **exactes au mot près** — il lit vraiment, il
+ne brode pas — mais il a produit un **doublon**, **manqué les deux seules entrées
+qui comptaient**, et conclu « aucun autre » sans réserve. Son mode de défaillance
+est le **rappel partiel présenté comme complet**.
+
+> Conséquence pratique : ne jamais lui confier un « liste TOUT ce qui… » sur un
+> large corpus. Faire le **balayage** soi-même (`grep -l`, `grep -c` sur un
+> marqueur) et ne déléguer que la **lecture des candidats**. Une question du type
+> « voici 5 fichiers, dis-moi X pour chacun » lui réussit ; « trouve tous les X
+> parmi 36 fichiers » non. Le prompt système exige désormais l'aveu d'incertitude,
+> ce qui **atténue** le défaut sans le supprimer.
+
+**(b) `write-deepseek` privé de contexte fabriquait tout.** Un `--target`/`--context`
+mal expansé (variable de shell échappée) → aucun fichier de référence lisible →
+il a produit une note d'apparence sérieuse, **entièrement inventée** (un cycle de
+dépendances entre trois dettes qui n'existe nulle part), sans un mot
+d'avertissement, et a créé au passage un répertoire parasite dans le dépôt.
+**Corrigé dans l'outil** : c'est maintenant une erreur fatale, avant tout appel
+API. La leçon qui reste : **toujours vérifier ses chemins** (`ls`) et **relire le
+fichier produit en entier** — l'aperçu de 30 lignes affiché ne remplace pas la
+relecture (règle « zéro perte », §8.4).
+
+### 7.2 Rangement des notes produites
+
+Toute note de synthèse issue de `write-deepseek` qu'on décide de garder est
+**rangée dans l'arborescence** (`docs/<type>/<theme>/`) avec un **en-tête de
+provenance** : outil utilisé, sources, et mention que Claude l'a revérifiée.
+Une note d'agent non tracée est indiscernable d'un document écrit à la main.
 
 ---
 

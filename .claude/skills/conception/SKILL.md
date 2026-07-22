@@ -86,6 +86,23 @@ Charge-toi le contexte qui rend ta critique pertinente (lecture seule) :
 5. Au besoin, le code source de vérité (`data/code/`) pour vérifier ce qui
    existe RÉELLEMENT (un champ, une fonction, un gène) avant de t'appuyer dessus.
 
+> **Délégation DeepSeek — c'est ici qu'elle rapporte le plus** (protocole
+> `docs/meta/agent/deepseek_protocol.md`, **§4** — à lire avant le premier appel).
+> Le corpus est large et on ignore *où* le sujet vit : l'**inventaire d'ouverture**
+> (« quels docs/sprints touchent déjà ce sujet ? »), l'**anti-doublon** (« ce gène /
+> ce champ / cet effet existe-t-il déjà ? » — l'incident `resilience_base` était
+> exactement ça) et la **carte des couplages** (« qui lit ce champ ? ») passent par
+> `ask-deepseek`. Les points 2 à 4 ci-dessus, eux, se lisent **en clair** : ce sont
+> les documents que la conception va durcir, et un trou se voit dans l'interstice
+> entre deux phrases, pas dans un résumé.
+>
+> Trois réflexes : **(a)** toute `--question` exige explicitement « en français,
+> accents corrects » (§6.3) ; **(b)** tout ce qui va se **graver** (kickoff,
+> `00_etat.md`, `DETTE.md`, `BACKLOG.md`) se revérifie au `grep` ou par lecture
+> ciblée — le projet est déterministe, une réponse DeepSeek n'est pas reproductible ;
+> **(c)** `ask-deepseek` **n'est pas exhaustif sur un gros corpus** (§7.1) : fais le
+> balayage toi-même, ne lui délègue que la lecture des candidats.
+
 ## 2. Phase A — challenger (DIALOGUE, ne fige rien)
 
 Passe la conception au crible sur ces axes. Sortie = une **critique structurée

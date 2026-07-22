@@ -60,6 +60,14 @@ Si une seule échoue : **stop net**, explique à Nico, ne lance rien.
 
 Annonce à Nico la liste des tronçons que tu vas enchaîner, puis démarre.
 
+> **Délégation DeepSeek en `/sprint-auto`** — si tu envisages un appel, lis
+> d'abord `docs/meta/agent/deepseek_protocol.md` **§5**, qui est bien plus
+> restrictif qu'en `/conception` : ici on **modifie** des fichiers déjà désignés
+> par le kickoff, et pour éditer il faut le texte exact — un résumé est
+> inutilisable. Les appels te sont **réservés** (les sous-agents n'y recourent
+> que pour une cartographie d'impact imprévue) ; jamais pour diagnostiquer un
+> golden qui a bougé, jamais pour générer du code moteur ou un test.
+
 ## 2. Boucle orchestrateur — STRICTEMENT séquentielle
 
 Les tronçons dépendent les uns des autres (le témoin passe par `00_etat.md`).
@@ -76,6 +84,16 @@ Prompt autosuffisant (le sous-agent démarre à froid, il ne sait rien) :
 > de design, un fichier = une responsabilité, ~350 lignes de code pur max,
 > français, GDScript interdit / C# namespace Symbiose, moteur Python source de
 > vérité).
+>
+> **Pas d'appel DeepSeek** (`ask-deepseek` / `write-deepseek`) sans nécessité :
+> ils sont réservés à l'orchestrateur (clé plafonnée, il ne voit pas ta
+> consommation). Seule exception : une **cartographie d'impact imprévue**
+> (« qui d'autre lit ce champ ? »). Jamais sur le code que tu vas modifier —
+> pour éditer il te faut le texte exact, un résumé est inutilisable. Jamais pour
+> diagnostiquer un golden qui bouge ou un test rouge : c'est du jugement.
+> Si tu as *besoin* de fouiller, c'est que le kickoff est incomplet → signale-le
+> dans ton rapport et consigne-le dans `00_etat.md`.
+> Protocole complet : `docs/meta/agent/deepseek_protocol.md` §5.
 >
 > Avant de finir, OBLIGATOIRE :
 > - Lance le golden : `cd data/code && python3 -m tests.test_golden`. Note s'il
