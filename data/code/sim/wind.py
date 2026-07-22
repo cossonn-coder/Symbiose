@@ -2,7 +2,7 @@
 SYMBIOSE — sim/wind.py
 Vent déterministe : `wind_at(seed, week)` — la MASSE D'AIR, fonction PURE du temps.
 
-Pivot du sprint VENT & ÉVAPOTRANSPIRATION (CONCEPTION_VENT_EVAPOTRANSPIRATION.md
+Pivot du sprint VENT & ÉVAPOTRANSPIRATION (docs/champs/climat/conception_vent_evapotranspiration.md
 §2). Calqué EXACTEMENT sur `weather.py` : canaux-sentinelles décorrélés, zéro RNG
 vivant (philo #3 — déterminisme = seed global + hash de bruit spatial). Deux runs
 identiques → vent identique, et le vent est *évaluable en avance* (forecast,

@@ -1,7 +1,7 @@
 # Sprint « germination thermique » — état partagé
 
 > État léger mis à jour en fin de chaque tronçon. Conception figée :
-> `docs/conception/CONCEPTION_GERMINATION_THERMIQUE.md`. Chaque kickoff `0N_*.md`
+> `docs/vegetal/floraison/conception_germination_thermique.md`. Chaque kickoff `0N_*.md`
 > est **autosuffisant** (démarrage à froid : CLAUDE.md + ce fichier + le kickoff).
 
 ## But en une phrase

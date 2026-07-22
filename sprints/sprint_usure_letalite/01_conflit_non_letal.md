@@ -13,7 +13,7 @@ même paire (un `foliar`, un `root`) se résolvent le même tick → **double
 régression** jeune→semis→mort (bug D64, tournesol du banc `grimpantes`).
 
 C'est en contradiction avec une décision DÉJÀ figée
-(`docs/conception/CONCEPTION_COMPETITION_INTRAPLOT.md`, Q3) : *« la mort du perdant
+(`docs/vegetal/catalogue/conception_competition_intraplot.md`, Q3) : *« la mort du perdant
 ÉMERGE du déclin de santé — jamais de mortalité verdict »*. Ce tronçon aligne le
 code : le conflit reste une **notification** (détection conservée), sa résolution
 n'inflige plus rien. La mort du dominé tombe des voies continues déjà en place

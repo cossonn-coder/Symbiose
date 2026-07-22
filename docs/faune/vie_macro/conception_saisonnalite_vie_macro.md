@@ -11,8 +11,8 @@
 > (2026-06-16) : **photopériode + inertie asymétrique**, **une fenêtre par guilde**,
 > **doc d'abord**. Prépare l'arc **pollinisation & cycle de vie** (la floraison
 > réelle et la phénologie florale viendront s'appuyer sur la même horloge
-> saisonnière). S'appuie sur `CONCEPTION_VIE_MACRO.md` (le modèle hybride d'origine)
-> et `CONCEPTION_METEO.md` §1.1 (la normale de température `temp_norm`).
+> saisonnière). S'appuie sur `docs/faune/vie_macro/conception_vie_macro.md` (le modèle hybride d'origine)
+> et `docs/champs/climat/conception_meteo.md` §1.1 (la normale de température `temp_norm`).
 
 ---
 

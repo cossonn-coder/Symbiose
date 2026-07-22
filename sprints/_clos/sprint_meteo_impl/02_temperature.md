@@ -1,7 +1,7 @@
 # Sous-sprint 02 — Température ambiante + météo hebdomadaire
 
 > **Kickoff autosuffisant.** Démarre à froid. Lis ce fichier, puis
-> [`00_etat.md`](00_etat.md) et la spec [`CONCEPTION_METEO.md`](../../data/code/CONCEPTION_METEO.md)
+> [`00_etat.md`](00_etat.md) et la spec [`docs/champs/climat/conception_meteo.md`](../../../docs/champs/climat/conception_meteo.md)
 > §1.1, §1.2, §2.1, §2.2. Le sous-sprint 01 (déterminisation) est **fait** :
 > `sim/weather.py` fournit déjà `weather_at(seed, week)` pure + `WeatherEvent`
 > + `forecast()`.

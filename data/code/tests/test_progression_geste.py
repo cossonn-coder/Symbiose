@@ -4,7 +4,7 @@ Golden JOUEUR de la PROGRESSION geste / outil / technique (D60, tronçon ③).
 Distinct du golden ÉCOLOGIQUE (`test_golden.py`) et des goldens maîtrise cœur /
 détection (`test_maitrise.py` / `test_maitrise_detection.py`).
 
-Contexte (décision figée §3.4 de `CONCEPTION_VIE_MACRO_IDENTIFIABLE.md`) : geste,
+Contexte (décision figée §3.4 de `docs/faune/vie_macro/conception_vie_macro_identifiable.md`) : geste,
 outil et technique ont des fiches encyclopédie à 3 NIVEAUX gatés palier. Or la
 détection de succès ne crédite QUE plantes + concepts — sans robinet neuf, ces
 objets resteraient plafonnés au palier 1 et les niveaux N2/N3 seraient du contenu

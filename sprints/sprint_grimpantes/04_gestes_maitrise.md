@@ -1,7 +1,7 @@
 # ④ — Gestes joueur (poser support / palisser) + maîtrise + résistance verse
 
 > Kickoff autosuffisant. Lis `CLAUDE.md` + `00_etat.md` + CE fichier. Conception :
-> `docs/conception/CONCEPTION_GRIMPANTES.md` §6. **Golden INTACT** (event-driven,
+> `docs/vegetal/grimpantes/conception_grimpantes.md` §6. **Golden INTACT** (event-driven,
 > hors tick). Repose sur ①②③. Lancement depuis `data/code/`.
 
 ## Objectif

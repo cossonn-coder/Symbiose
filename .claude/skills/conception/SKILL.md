@@ -2,8 +2,8 @@
 name: conception
 description: >-
   Durcit une conception Symbiose EN CONVERSATION puis la fige en sprint prêt
-  pour /sprint-auto. Part d'un doc de conception existant (docs/conception/
-  CONCEPTION_*.md) OU d'un sujet neuf à concevoir : challenge les hypothèses
+  pour /sprint-auto. Part d'un doc de conception existant
+  (docs/<type>/<theme>/conception_*.md) OU d'un sujet neuf à concevoir : challenge les hypothèses
   bio/éco, débusque les trous (effets oubliés, couplages non vus), vérifie la
   philo de design #1-#7, chiffre le coût perf, propose un découpage en tronçons
   perf-first préservant le golden, et remonte les arbitrages à Nico. Ne fige
@@ -61,7 +61,7 @@ dossier tôt, choisis un `<nom>` de sprint provisoire dès que le sujet est cern
 
 `/conception <doc ou sujet>` :
 - un nom de doc existant (`CONCEPTION_VENT`, ou le chemin
-  `docs/conception/CONCEPTION_VENT_EVAPOTRANSPIRATION.md`) → tu pars de ce doc ;
+  `docs/champs/climat/conception_vent_evapotranspiration.md`) → tu pars de ce doc ;
 - un **sujet neuf** (« rosée nocturne D38 », « zoochorie D42 ») → tu pars de la
   conversation et de la dette concernée, il n'y a pas encore de doc.
 
@@ -74,7 +74,8 @@ Charge-toi le contexte qui rend ta critique pertinente (lecture seule) :
 1. `CLAUDE.md` (racine) — **philo de design #1-#7** et garde-fous (taille
    fichiers, déterminisme, un fichier = une responsabilité, français, source de
    vérité Python).
-2. Le doc de conception cible s'il existe (`docs/conception/CONCEPTION_*.md`).
+2. Le doc de conception cible s'il existe
+   (`docs/<type>/<theme>/conception_*.md` — carte : `docs/ARBORESCENCE.md`).
 3. La **dette liée** (`DETTE.md`) et le **backlog** (`BACKLOG.md`) — couplages,
    dettes croisées, ce qui est déjà conçu/implémenté autour.
 4. Les **conceptions voisines** qui partagent des champs/mécaniques (pour ne pas
@@ -119,8 +120,26 @@ reconstructible à tout instant, sans dépendre de ce fil de conversation.
 Quand Nico a validé la conception (« OK », « vas-y », « lets go »), matérialise.
 **Un fichier à la fois**, sauf synchro cohérente explicitement demandée.
 
-1. **Doc de conception** — crée/durcis `docs/conception/CONCEPTION_*.md` : il
-   doit refléter la conception arbitrée, pas la version challengée.
+1. **Doc de conception** — crée/durcis `docs/<type>/<theme>/conception_<sujet>.md` :
+   il doit refléter la conception arbitrée, pas la version challengée.
+
+   **Où le ranger** (sprint de rangement documentaire, 2026-07-22) — la doc est
+   rangée sur **deux niveaux, type puis thème** ; ne recrée JAMAIS un
+   `docs/conception/` à plat :
+   - **type** parmi les **8, fermé** : `meta · champs · vegetal · faune ·
+     joueur · narration · rendu · perf`. Si aucun ne convient, c'est
+     probablement un doc transverse → `meta/`. **On n'ouvre pas un 9ᵉ type
+     sans Nico.**
+   - **thème** : ouvert. S'il n'existe pas, crée le dossier avec son
+     `README.md` d'**une ligne**, et **ajoute la ligne correspondante au §4
+     de `docs/ARBORESCENCE.md`** (la carte doit rester exacte).
+   - **nom de fichier** en `snake_case` **sans accents**, préfixé
+     `conception_` (une conception) ou `etude_` (une étude préparatoire) ;
+     **contenu en français accentué**.
+
+   Référence complète — principe, les 8 types, où ranger un doc neuf, et la
+   table « ancien chemin → nouveau » qui traduit tout l'historique :
+   [`docs/ARBORESCENCE.md`](../../../docs/ARBORESCENCE.md).
 2. **Découpage en tronçons** — autant de **sous-sprints autosuffisants** que la
    conception l'exige (souvent 3-6, **davantage si nécessaire**), **perf-first**,
    chacun une unité logique testable. Pas de plafond rigide, mais évite le

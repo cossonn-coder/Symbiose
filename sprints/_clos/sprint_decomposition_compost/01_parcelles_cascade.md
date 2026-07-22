@@ -1,7 +1,7 @@
 # Sous-sprint ① — Parcelles de litière + cascade + `om_fresh` dérivé + raccourci golden
 
 > **Kickoff autosuffisant (démarrage à froid).** Lire d'abord `00_etat.md` et
-> `docs/conception/CONCEPTION_DECOMPOSITION_COMPOST.md` (§1 surtout). Ce sous-sprint
+> `docs/champs/sol/conception_decomposition_compost.md` (§1 surtout). Ce sous-sprint
 > pose **l'infrastructure** des parcelles. Il ne crée **aucun geste joueur**,
 > **aucun squelette**, **aucun organe-fruit** (ce sont ②③④⑤). Objectif : que le
 > moteur stocke la matière fraîche en **parcelles** au lieu du scalaire

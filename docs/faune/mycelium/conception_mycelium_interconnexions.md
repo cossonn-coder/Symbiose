@@ -3,7 +3,7 @@
 > **Statut : conception FIGÉE (2026-06-25, conversation de design tranchée par Nico).**
 > Prête pour l'implémentation. Fait suite à la gravure backlog « Raffinement
 > compost & interconnexions du jardin » (2026-06-16, retour F5 vue·rattrapage 03)
-> et **prolonge** `CONCEPTION_DECOMPOSITION_COMPOST.md` (sprint décompo ①–⑤,
+> et **prolonge** `docs/champs/sol/conception_decomposition_compost.md` (sprint décompo ①–⑤,
 > structures bac/pile) qu'il faut avoir en tête.
 >
 > **Acteur NEUF : le mycélium.** Il n'existait jusqu'ici que par allusions
@@ -155,7 +155,7 @@ décomposition n'attaque pas une plante vivante).
 
 ## 3. Structures revues (facets a, b, c, d)
 
-Prolonge `CONCEPTION_DECOMPOSITION_COMPOST.md` §5 et son implémentation
+Prolonge `docs/champs/sol/conception_decomposition_compost.md` §5 et son implémentation
 (`sim/actions/compost.py`, `fields/ecofields/litiere.py:Structure`).
 
 ### 3.1 (a) Bac & pile au niveau TUILE

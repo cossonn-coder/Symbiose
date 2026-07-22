@@ -3,7 +3,7 @@
 > **Statut : FIGÉ 2026-07-11** (`/conception`, arbitrages Nico Q1-Q3).
 > **Nature : SPRINT `/sprint-auto`** — moteur + vue, golden **re-figé de façon
 > maîtrisée** (tronçons ① et ②). Comble les trous **T1** et **T7** du référentiel
-> `CONCEPTION_COMPLETUDE_ECOSYSTEME.md` (D61, §3). Premier `/conception` d'ajout
+> `docs/meta/calibrage/conception_completude_ecosysteme.md` (D61, §3). Premier `/conception` d'ajout
 > d'espèces nourri par ce référentiel.
 
 ---
@@ -195,6 +195,6 @@ mémoïsable comme les empreintes). Budget ≤ +10 %/tronçon (à confirmer au c
 ---
 
 ## §7. Après le sprint (maintenance D61)
-Repasser dans `CONCEPTION_COMPLETUDE_ECOSYSTEME.md` : T1 (D1) et T7 (B4) de ⚠️ → ✅,
+Repasser dans `docs/meta/calibrage/conception_completude_ecosysteme.md` : T1 (D1) et T7 (B4) de ⚠️ → ✅,
 colonne « Incarné par » = `rapace`/`couleuvre` (D1), `campagnol` (B4) ; lancer
 `/audit-projet ecosysteme`. Mettre à jour `DETTE.md` (D61 pointeur) et `journal.md`.

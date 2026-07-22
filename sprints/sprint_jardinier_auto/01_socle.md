@@ -1,7 +1,7 @@
 # ① Socle du jardinier automate
 
 > Kickoff autosuffisant. Lire d'abord `CLAUDE.md` + `00_etat.md` +
-> `docs/conception/CONCEPTION_JARDINIER_AUTOMATE.md`. Lancer depuis `data/code/`.
+> `docs/joueur/automate/conception_jardinier_automate.md`. Lancer depuis `data/code/`.
 
 ## Objectif
 Poser le **paquet `tools/jardinier_auto/`** et sa **boucle de décision** en 5

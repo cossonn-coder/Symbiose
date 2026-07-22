@@ -69,7 +69,7 @@ class VieMacroMixin:
         return sum(self.populations[n].at_plot(r, c)
                    for n in POLLINATOR_NAMES if n in self.populations)
 
-    # --- Agrégation par CATÉGORIE (modèle B, CONCEPTION_FAUNE_DEDIEE.md §1.2) ---
+    # --- Agrégation par CATÉGORIE (modèle B, docs/faune/vie_macro/conception_faune_dediee.md §1.2) ---
     # La guilde n'est plus un champ stocké mais une VUE : la somme des espèces qui
     # partagent l'étiquette `spec.category`. Les consommateurs « par guilde » (santé
     # des plantes, vigueur macro) lisent ces agrégats au lieu de `populations[nom]`.

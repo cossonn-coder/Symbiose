@@ -1,6 +1,6 @@
 # Tronçon ① — Substrat de plasticité (gène asphyxie + 2 mémoires + expression)
 
-> Sprint « plasticité ». Conception : `docs/conception/CONCEPTION_PLASTICITE_EXPRESSION.md`
+> Sprint « plasticité ». Conception : `docs/vegetal/genetique/conception_plasticite_expression.md`
 > (§2.1-2.3, §2.6, §6). **Lire la conception d'abord.** C'est le tronçon le plus
 > chargé, mais **golden NEUTRE attendu** : rien ne LIT encore `expressed_gene`.
 

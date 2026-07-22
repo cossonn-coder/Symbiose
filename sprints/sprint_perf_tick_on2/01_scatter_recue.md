@@ -2,7 +2,7 @@
 
 > Kickoff AUTOSUFFISANT. Lis `CLAUDE.md` + `00_etat.md` + ce fichier, rien d'autre
 > n'est nécessaire. **Optimisation PURE, bit-identique, golden INCHANGÉ.**
-> Détail complet dans `docs/conception/CONCEPTION_PERF_SCATTER_RECUE.md`.
+> Détail complet dans `docs/perf/scatter/conception_perf_scatter_recue.md`.
 
 ## Objectif
 

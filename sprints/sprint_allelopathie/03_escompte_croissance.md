@@ -1,7 +1,7 @@
 # ③ Escompte CROISSANCE / vigueur
 
 > Kickoff autosuffisant. Reprise à froid = `CLAUDE.md` + `00_etat.md` + ce fichier
-> + `CONCEPTION_ALLELOPATHIE.md` §C. Prérequis : ①② faits. Golden **re-figeage à
+> + `docs/vegetal/allelopathie/conception_allelopathie.md` §C. Prérequis : ①② faits. Golden **re-figeage à
 > ÉVALUER** (isolé).
 
 ## Objectif

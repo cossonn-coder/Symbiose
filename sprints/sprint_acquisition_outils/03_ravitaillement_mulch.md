@@ -1,7 +1,7 @@
 # Tronçon 03 — Ravitaillement en mulch (3 canaux)
 
 > Tu démarres À FROID. Lis `CLAUDE.md`, `00_etat.md`, puis
-> `docs/conception/CONCEPTION_ACQUISITION_OUTILS.md` §C. Lève l'impasse
+> `docs/joueur/outils/conception_acquisition_outils.md` §C. Lève l'impasse
 > `RAVITAILLEMENT_MANQUANT` de `tools/jardinier_auto/`.
 
 ## Objectif

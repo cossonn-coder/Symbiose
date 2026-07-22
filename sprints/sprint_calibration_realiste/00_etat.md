@@ -1,7 +1,7 @@
 # 00_etat — sprint CALIBRATION RÉALISTE (P1)
 
 **Statut : CONCEPTION FIGÉE (2026-07-17), prête pour `/sprint-auto`. 3 tronçons.**
-Doc : `docs/conception/CONCEPTION_CALIBRATION_REALISTE.md`. Kickoffs 01/02/03.
+Doc : `docs/meta/calibrage/conception_calibration_realiste.md`. Kickoffs 01/02/03.
 Source : `BRIEF_CHAMPS_CONCEPTION.md` P1 (verdicts 1 + 5) + `audit_champs.md`.
 Date d'ouverture : 2026-07-17.
 

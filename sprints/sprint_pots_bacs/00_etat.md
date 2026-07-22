@@ -1,6 +1,6 @@
 # Sprint pots, bacs & substrats — état partagé
 
-> **Conception FIGÉE** → source de vérité = `docs/conception/CONCEPTION_POTS_BACS_SUBSTRATS.md`
+> **Conception FIGÉE** → source de vérité = `docs/joueur/outils/conception_pots_bacs_substrats.md`
 > (la lire d'abord). Ce fichier = état léger + carte des sous-sprints. Mis à jour
 > en fin de **chaque** sous-sprint. Boucle projet : `0N` → coder → vérifier/PROUVER
 > golden neutre → MAJ ce fichier → commit → `/clear` → `0N+1`.

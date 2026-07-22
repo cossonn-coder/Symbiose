@@ -1,6 +1,6 @@
 # Tronçon ③ — Paillage moteur : champ `paillage` + geste `pailler` + effets
 
-**Prérequis** : `CLAUDE.md`, `00_etat.md`, `CONCEPTION_EQUILIBRE_INVASION.md` §2.
+**Prérequis** : `CLAUDE.md`, `00_etat.md`, `docs/faune/trophique/conception_equilibre_invasion.md` §2.
 Patron de référence : `fields/ecofields/couverture.py` (champ scatter + mixin) et
 son couplage évaporation dans `fields/ecofields/hydrologie.py`.
 

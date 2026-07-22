@@ -1,7 +1,7 @@
 # Sprint UI voix narratives — état partagé
 
-> **Conception FIGÉE** → source de vérité = `docs/conception/CONCEPTION_VOIX_NARRATIVES_UI.md`
-> (la lire d'abord ; elle-même s'appuie sur `CONCEPTION_VOIX_NARRATIVES.md`, le doc
+> **Conception FIGÉE** → source de vérité = `docs/narration/voix/conception_voix_narratives_ui.md`
+> (la lire d'abord ; elle-même s'appuie sur `docs/narration/voix/conception_voix_narratives.md`, le doc
 > MOTEUR). Ce fichier = état léger + carte des sous-sprints, mis à jour en fin de
 > **chaque** tronçon. Boucle projet : `0N` → coder → golden → MAJ ce fichier →
 > commit → `/clear` → `0N+1`.

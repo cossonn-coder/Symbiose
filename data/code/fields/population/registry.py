@@ -24,7 +24,7 @@ from fields.population.resources import (
 
 
 # ---------------------------------------------------------------------------
-# INSTANCES NON-POLLINISATRICES (chaîne trophique — CONCEPTION_VIE_MACRO.md §2.2)
+# INSTANCES NON-POLLINISATRICES (chaîne trophique — docs/faune/vie_macro/conception_vie_macro.md §2.2)
 # ---------------------------------------------------------------------------
 # Canaux _hash_noise dédiés (décorrélés) par guilde pour les positions sprites.
 _SALT_RAVAGEUR      = 0x2A0001

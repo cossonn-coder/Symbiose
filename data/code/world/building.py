@@ -1,7 +1,7 @@
 """
 SYMBIOSE — world/building.py
 Config de terrain : la MAISON centrale, décrite comme une donnée paramétrable
-(décision Q5, CONCEPTION_MAISON_OMBRE.md §3). Pavé opaque en espace continu (cm),
+(décision Q5, docs/champs/lumiere/conception_maison_ombre.md §3). Pavé opaque en espace continu (cm),
 posé dans le repère monde.
 
 ⚠️ DONNÉE SEULE (sprint maison, tronçon 1). Cet objet ne projette AUCUNE ombre

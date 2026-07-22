@@ -1,7 +1,7 @@
 # ② Moteur — nouaison calibrée (D86 secondaire)
 
 > Kickoff autosuffisant. Lis `CLAUDE.md` + `00_etat.md` +
-> `docs/conception/CONCEPTION_FLORAISON_FRUCTIFICATION.md` §3. Prérequis : ①
+> `docs/vegetal/floraison/conception_floraison_fructification.md` §3. Prérequis : ①
 > (floraison replacée au bon moment) est FAIT. Lance depuis `data/code/`.
 
 ## Objectif

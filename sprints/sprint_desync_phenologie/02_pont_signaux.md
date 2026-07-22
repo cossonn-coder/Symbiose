@@ -1,7 +1,7 @@
 # Tronçon ② — Pont : signaux phénologiques par-plante pour la vue (PYTHON)
 
 > Kickoff autosuffisant. Lis `CLAUDE.md` (racine) + `00_etat.md` (ce dossier) +
-> `docs/conception/CONCEPTION_DESYNC_PHENOLOGIE.md` (§1bis, §5 tronçon ②), puis
+> `docs/vegetal/floraison/conception_desync_phenologie.md` (§1bis, §5 tronçon ②), puis
 > exécute. Lancement des tests depuis `data/code/`.
 > **Prérequis : tronçon ① CLOS** (désync moteur en place, `w` = semaine
 > d'abscission par-plante existe dans `sim/engine/decompo.py`).

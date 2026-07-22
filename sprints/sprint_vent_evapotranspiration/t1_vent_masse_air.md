@@ -1,6 +1,6 @@
 # Tronçon ① — Vent masse d'air (scalaires O(1))
 
-> Kickoff autonome. Design : `CONCEPTION_VENT_EVAPOTRANSPIRATION.md` **§2** (champ
+> Kickoff autonome. Design : `docs/champs/climat/conception_vent_evapotranspiration.md` **§2** (champ
 > de vent) + **§2.3** (vent↔nébulosité). **Tout scalaire/tuile, O(1).** Golden
 > **neutre** (on calcule le vent, on ne le LIT pas encore).
 

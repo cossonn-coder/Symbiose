@@ -1,6 +1,6 @@
 # ⑥ Magazine de botanique — `magazine_offres` / `acheter_au_magazine` (D13)
 
-> Lire d'abord `00_etat.md` + `docs/conception/CONCEPTION_VOIX_NARRATIVES.md` (§2.4).
+> Lire d'abord `00_etat.md` + `docs/narration/voix/conception_voix_narratives.md` (§2.4).
 > Tronçon **quatrième voix** + 4ᵉ canal d'acquisition d'espèces. Offre = espèces SŒURS
 > au **palier 3 de famille** ; achat = Vigueur → banque de graines. Event-driven hors
 > tick. Dépend de ② (joueur/maîtrise) et réutilise ④ (fiche). Premier geste : RE-MESURER

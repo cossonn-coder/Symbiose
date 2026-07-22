@@ -4,7 +4,7 @@ Test ciblé, lancé À LA DEMANDE (hors smoke test).
 
 Couvre le SUBSTRAT de plasticité (sprint plasticité ①) : l'EXPRESSION plastique
 des gènes adaptogènes dérive du stress vécu, distincte du génotype figé.
-Conception : docs/conception/CONCEPTION_PLASTICITE_EXPRESSION.md (§2.1-2.3).
+Conception : docs/vegetal/genetique/conception_plasticite_expression.md (§2.1-2.3).
 
 Au tronçon ① PERSONNE ne lit `expressed_gene` (acclimatation INERTE) ; on teste
 donc la TUYAUTERIE en isolation, pas un effet écologique :

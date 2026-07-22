@@ -123,7 +123,7 @@
   représentera comme l'ombre — déroulé sur la SEMAINE vécue (pluie, vent,
   gel), même granularité hebdo que le moteur, et son impact (humidité,
   température, ombrage, vent) suivra le même patron visuel. À reprendre au
-  sprint rendu météo (cf. `CONCEPTION_METEO.md`).
+  sprint rendu météo (cf. `docs/champs/climat/conception_meteo.md`).
 
 ### Tranche 4 — volet C2 (perf ombres + mesures) : CODÉ (2026-06-11), F5 rapide à faire
 - **Retour perf Nico** : « plus la simulation avance plus l'ombre ralentit

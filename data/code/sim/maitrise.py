@@ -3,7 +3,7 @@ SYMBIOSE — sim/maitrise.py
 Couche MAÎTRISE JOUEUR (D12, tronçon i1) — le *cœur* de la maîtrise, miroir
 structurel de la couche Vigueur (`sim/vigueur.py`).
 
-Spec de référence : `docs/conception/CONCEPTION_MAITRISE.md`.
+Spec de référence : `docs/joueur/maitrise/conception_maitrise.md`.
   §1   l'objet de maîtrise = unité atomique, paliers 0..5, catalogue-agnostique.
   §2.1 découverte (0→1) gratuite, par simple observation.
   §2.3 courbe de difficulté logarithmique : preuves(k) ≈ ceil(BASE·R**(k-1)).

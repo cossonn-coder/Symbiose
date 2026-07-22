@@ -1,6 +1,6 @@
 # Tronçon ⑧ — Structure / compaction du sol (`structure_sol`, dette D30)
 
-> Sprint physico-chimie du sol. Conception : `docs/conception/CONCEPTION_SOL_STRUCTURE.md`
+> Sprint physico-chimie du sol. Conception : `docs/champs/sol/conception_sol_structure.md`
 > (volet C/3, §2 le modèle, §3 les constantes). Kickoff **autosuffisant** (relançable
 > à froid). Python depuis `data/code/`.
 > Tronçons ① (champ `ph`), ② (n/p/k posés), ③ (Liebig + lessivage diff. + CEC),

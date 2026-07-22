@@ -1,6 +1,6 @@
 # Tronçon ② — N/P/K socle (trois champs posés, uptake lit encore `fertilite`)
 
-> Sprint physico-chimie du sol. Conception : `docs/conception/CONCEPTION_SOL_NUTRIMENTS_NPK.md`
+> Sprint physico-chimie du sol. Conception : `docs/champs/sol/conception_sol_nutriments_npk.md`
 > (§0, §1, §2.1, §3). Kickoff **autosuffisant** (relançable à froid).
 > Tronçon ① (champ `ph`) déjà CLOS — même tactique « neutre-d'abord » à appliquer ici.
 

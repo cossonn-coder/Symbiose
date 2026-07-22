@@ -1,7 +1,7 @@
 # Sprint VENT & ÉVAPOTRANSPIRATION (D37) — état partagé
 
 > **État léger** (mis à jour en fin de chaque tronçon). Le **design figé** vit dans
-> [`docs/conception/CONCEPTION_VENT_EVAPOTRANSPIRATION.md`](../../docs/conception/CONCEPTION_VENT_EVAPOTRANSPIRATION.md)
+> [`docs/champs/climat/conception_vent_evapotranspiration.md`](../../docs/champs/climat/conception_vent_evapotranspiration.md)
 > — chaque kickoff `tN_*.md` y renvoie pour le détail. Repars à froid : lis ce
 > fichier + le `tN_*.md` du tronçon courant + la/les §§ de conception citées.
 

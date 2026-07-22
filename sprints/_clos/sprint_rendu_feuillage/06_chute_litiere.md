@@ -1,6 +1,6 @@
 # ⑥ (T6) — Chute (abscission) + litière au sol (E5bis) — B + PONT
 
-> Lis d'abord `docs/conception/CONCEPTION_RENDU_FEUILLAGE.md` **§6**. **Dernier tronçon
+> Lis d'abord `docs/rendu/feuillage/conception_rendu_feuillage.md` **§6**. **Dernier tronçon
 > du sprint.** Suppose la litière typée par espèce dans le snapshot (vérifier §6.4).
 
 ## But (E5bis, ajout Nico 2026-06-24)

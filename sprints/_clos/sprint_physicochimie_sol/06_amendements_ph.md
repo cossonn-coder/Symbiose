@@ -1,6 +1,6 @@
 # Tronçon ⑥ — Amendements pH (rondelles `chaux` / `soufre`)
 
-> Sprint physico-chimie du sol. Conception : `docs/conception/CONCEPTION_SOL_PH.md`
+> Sprint physico-chimie du sol. Conception : `docs/champs/sol/conception_sol_ph.md`
 > §2.4 (amendements), §2.1 (formule de dérive `cible_ph` où s'injecte `AMEND_PUSH`),
 > §3 (constantes). Kickoff **autosuffisant** (relançable à froid). Python depuis
 > `data/code/`.

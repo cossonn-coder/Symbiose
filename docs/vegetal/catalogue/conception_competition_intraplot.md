@@ -303,7 +303,7 @@ décaler les sprites — volet vue.
 
 ---
 *Réfs : `sprints/sprint_competition_intraplot_conception.md` (kickoff),
-`CONCEPTION_PLANTER_ARROSER.md` (gabarit + Q4 renvoyée ici), `sim/succession.py`
+`docs/joueur/gestes/conception_planter_arroser.md` (gabarit + Q4 renvoyée ici), `sim/succession.py`
 (les 3 portes + `_lever_grains_en_attente`), `fields/seedbank.py:niche_index`,
 `fields/light.py:light_received` (asymétrie hauteur), `sim/engine.py:_apply_uptake`
 /`_update_physiology` (`growth_factor`, `shade_memory`)/`_tick_senescence_health`,

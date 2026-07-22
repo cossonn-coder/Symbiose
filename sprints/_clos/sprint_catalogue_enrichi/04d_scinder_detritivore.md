@@ -1,7 +1,7 @@
 # Tronçon ④d — SCINDER la catégorie `detritivore` (lombric / cloporte)
 
 > Sprint CATALOGUE ENRICHI. État partagé : `00_etat.md` (lire d'abord).
-> Doc FIGÉ : `docs/conception/CONCEPTION_FAUNE_DEDIEE.md` (§2 detritivore, §4 C6/C8/C13, §5.3).
+> Doc FIGÉ : `docs/faune/vie_macro/conception_faune_dediee.md` (§2 detritivore, §4 C6/C8/C13, §5.3).
 > **Pré-requis : ④c CLOS** (auxiliaire scindé, merle/hérisson lisent `detritivore` agrégé).
 > Kickoff autosuffisant. Python depuis `data/code/`. Filet `dotnet build`.
 

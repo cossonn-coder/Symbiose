@@ -1,7 +1,7 @@
 # ① Moteur — floraison retypée (forçage thermique événementiel)
 
 > Kickoff autosuffisant. Lis d'abord `CLAUDE.md` (racine) + `00_etat.md` (ce
-> dossier) + `docs/conception/CONCEPTION_FLORAISON_FRUCTIFICATION.md`.
+> dossier) + `docs/vegetal/floraison/conception_floraison_fructification.md`.
 > Source de vérité = Python `data/code/`. Lance tout depuis `data/code/`.
 
 ## Objectif

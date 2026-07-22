@@ -1,6 +1,6 @@
 # ④ Faune fongivore + carpophores
 
-> Lire d'abord `00_etat.md` + `docs/conception/CONCEPTION_MYCELIUM_INTERCONNEXIONS.md`
+> Lire d'abord `00_etat.md` + `docs/faune/mycelium/conception_mycelium_interconnexions.md`
 > (§1.1, §2 ligne « Nourriture faune », §3.4). Prérequis : ①②③ FAITS. On NOURRIT la
 > faune fongivore (champ) et on fait APPARAÎTRE les carpophores (perception). **Re-
 > figeage golden (population) attendu et MAÎTRISÉ ; carpophores golden-NEUTRES.**

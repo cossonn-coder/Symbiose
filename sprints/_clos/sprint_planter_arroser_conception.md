@@ -2,12 +2,12 @@
 
 > **Kickoff autosuffisant** (démarrage à froid après `/clear`). Objectif : faire
 > passer ces **deux gestes de base** de l'**intention** (déjà écrite,
-> `CONCEPTION_VIGUEUR.md` §3.2) à une **conception FIGÉE** (décisions Q-par-Q
+> `docs/joueur/vigueur/conception_vigueur.md` §3.2) à une **conception FIGÉE** (décisions Q-par-Q
 > tranchées par Nico), prête pour un kickoff d'implémentation séparé.
 >
 > **CE SPRINT NE PRODUIT PAS DE CODE.** Conception seule. Livrable unique :
 > `data/code/CONCEPTION_PLANTER_ARROSER.md` (modèle proposé + décisions figées +
-> découpage impl.), sur le modèle de `CONCEPTION_ECRASEMENT.md`.
+> découpage impl.), sur le modèle de `docs/joueur/gestes/conception_ecrasement.md`.
 >
 > Règles projet : **moteur Python = source de vérité** (« moteur d'abord, pont
 > ensuite ») ; **pédagogie explicite** sur chaque choix ; **max 3 questions à la
@@ -100,7 +100,7 @@ la palette d'interaction de base avant le packaging.
 
 ## 2. L'intention est DÉJÀ écrite (source de vérité du « quoi »)
 
-`CONCEPTION_VIGUEUR.md` §3.2 (« Actions sur le milieu — le canal vertueux ») :
+`docs/joueur/vigueur/conception_vigueur.md` §3.2 (« Actions sur le milieu — le canal vertueux ») :
 
 | Action | Phase | Champ / effet | Coût | Réponse émergente |
 |---|---|---|---|---|
@@ -247,5 +247,5 @@ gestes (choisir une graine, viser, voir le sol s'humidifier) = volet vue ultéri
   impl. Puis un kickoff d'implémentation autosuffisant (modèle
   `sprint_ecrasement_plantes.md`).
 - **Reprise à froid** : « lis `sprints/sprint_planter_arroser_conception.md` »
-  (+ `CONCEPTION_VIGUEUR.md` §3.2 pour l'intention, `CONCEPTION_ECRASEMENT.md`
+  (+ `docs/joueur/vigueur/conception_vigueur.md` §3.2 pour l'intention, `docs/joueur/gestes/conception_ecrasement.md`
   comme gabarit de structure de la conception figée).

@@ -4,8 +4,8 @@
 > d'implémentation `sprints/sprint_meteo_champs/` (découpé en 5 sous-sprints,
 > chacun préserve / re-fige `tests/test_golden.py` de façon ANNONCÉE).
 >
-> Issu d'un échange de conception (2026-06-29), prolonge `CONCEPTION_METEO.md`
-> (modèle météo déterministe `weather_at`) et `CONCEPTION_THERMIQUE_MICROCLIMAT.md`
+> Issu d'un échange de conception (2026-06-29), prolonge `docs/champs/climat/conception_meteo.md`
+> (modèle météo déterministe `weather_at`) et `docs/champs/climat/conception_thermique_microclimat.md`
 > (T_sol, gel nocturne `t_min_nuit_at`). Climat : Normandie océanique.
 
 ---
@@ -62,7 +62,7 @@ et **refonte propre** (on retire les deltas plats, on ne les empile pas).
 | **Neige**        | −6 ✅ | +fonte différée             | —         | —                | dormant           | manteau ✅       |
 
 Le **pH** reste hors périmètre : sa dérive lente + amendements sont déjà modélisés
-(`CONCEPTION_SOL_PH.md`) ; l'acidification par la pluie est marginale → **dette mineure**.
+(`docs/champs/sol/conception_sol_ph.md`) ; l'acidification par la pluie est marginale → **dette mineure**.
 
 ---
 

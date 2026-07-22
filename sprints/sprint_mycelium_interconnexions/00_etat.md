@@ -1,6 +1,6 @@
 # Sprint mycélium & interconnexions — état partagé
 
-> **Conception FIGÉE** → source de vérité = `docs/conception/CONCEPTION_MYCELIUM_INTERCONNEXIONS.md`
+> **Conception FIGÉE** → source de vérité = `docs/faune/mycelium/conception_mycelium_interconnexions.md`
 > (la lire d'abord). Ce fichier = état léger + carte des sous-sprints. Mis à jour
 > en fin de **chaque** sous-sprint. Boucle projet : `0N` → coder → vérifier/re-figer
 > golden (maîtrisé) → MAJ ce fichier → commit → `/clear` → `0N+1`.

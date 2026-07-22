@@ -1,7 +1,7 @@
 # ⑧ — Vue Godot (relief+altitude, flaque, marais, sphaigne/aulne/faune, gestes)
 
 > Kickoff autosuffisant. Lis `CLAUDE.md` + `00_etat.md` + CE fichier. Conception :
-> `docs/conception/CONCEPTION_HYDROLOGIE_MARECAGE.md` §7. Prérequis : ①→⑦ faits (les
+> `docs/champs/eau/conception_hydrologie_marecage.md` §7. Prérequis : ①→⑦ faits (les
 > blocs snapshot existent). **PUR-VUE, golden NEUTRE. F5 = Nico.**
 
 ## Objectif

@@ -1,8 +1,8 @@
 # CONCEPTION — SOL · Épaisseur visible (litière → humus → relief)
 
 > Conception figée le 2026-07-02 (dette D57, F5 S5+S11). Voisines partageant les
-> champs `om_*` : `CONCEPTION_DECOMPOSITION_COMPOST.md`,
-> `CONCEPTION_SOL_STRUCTURE.md`, `CONCEPTION_SOL_NUTRIMENTS_NPK.md`.
+> champs `om_*` : `docs/champs/sol/conception_decomposition_compost.md`,
+> `docs/champs/sol/conception_sol_structure.md`, `docs/champs/sol/conception_sol_nutriments_npk.md`.
 > Sprint d'exécution : `sprints/sprint_epaisseur_sol/`.
 
 ## 0. Objectif & intuition

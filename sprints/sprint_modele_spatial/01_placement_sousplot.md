@@ -1,7 +1,7 @@
 # Tronçon ① — Placement sous-plot (pixel cliqué + offset féral)
 
 > Kickoff autosuffisant. Lis `CLAUDE.md` (racine) + `00_etat.md` (ce dossier) +
-> `docs/conception/CONCEPTION_MODELE_SPATIAL.md` (§0 et §1), puis exécute.
+> `docs/rendu/spatial/conception_modele_spatial.md` (§0 et §1), puis exécute.
 > Lancement des tests depuis `data/code/`.
 
 ## Objectif

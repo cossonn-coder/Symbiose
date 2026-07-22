@@ -1,7 +1,7 @@
 # ③ — Plante-hôte vivante comme support + détachement + étranglement émergent
 
 > Kickoff autosuffisant. Lis `CLAUDE.md` + `00_etat.md` + CE fichier. Conception :
-> `docs/conception/CONCEPTION_GRIMPANTES.md` §5. **Golden NEUTRE** (vérifié :
+> `docs/vegetal/grimpantes/conception_grimpantes.md` §5. **Golden NEUTRE** (vérifié :
 > Bean(4,2) n'a aucune haute à portée). Repose sur ①②. Lancement depuis `data/code/`.
 
 ## Objectif

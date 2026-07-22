@@ -1,6 +1,6 @@
 # Tronçon ② — Branchement `expressed_gene` chez les consommateurs
 
-> Sprint « plasticité ». Conception : `docs/conception/CONCEPTION_PLASTICITE_EXPRESSION.md`
+> Sprint « plasticité ». Conception : `docs/vegetal/genetique/conception_plasticite_expression.md`
 > (§2.1, §2.2, §5). **Lire la conception + relire le journal `00_etat.md` du ①.**
 > **Re-figeage golden MAÎTRISÉ et annoncé** (l'acclimatation devient active).
 

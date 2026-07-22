@@ -31,7 +31,7 @@ class GrowthStage:
 #
 # D29 réorienté (croissance procédurale, tronçon 1). Une plante n'est plus
 # décrite par son seul stade : elle porte un ARBRE de segments enraciné au
-# collet (CONCEPTION_CROISSANCE.md §C). Pour CE tronçon la structure est
+# collet (docs/vegetal/croissance/conception_croissance.md §C). Pour CE tronçon la structure est
 # INERTE — elle pousse à côté (sim/growth.py) mais n'est PAS encore lue par
 # l'empreinte (height_at vient toujours des stades). Le câblage = tronçon 2.
 #

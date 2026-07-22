@@ -1,7 +1,7 @@
 # Tronçon ② — Porte thermique NEUTRE sur la niche de germination
 
 > Kickoff **autosuffisant** (lis CLAUDE.md + 00_etat.md + ce fichier).
-> Conception : `CONCEPTION_GERMINATION_THERMIQUE.md` §1. Lancement depuis
+> Conception : `docs/vegetal/floraison/conception_germination_thermique.md` §1. Lancement depuis
 > `data/code/`. Golden : **INTACT** (la porte démarre plate).
 
 ## Objectif

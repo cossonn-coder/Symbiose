@@ -330,7 +330,10 @@ historiques.
   paquet avec `__init__.py` ré-exportant l'API publique (imports appelants
   intacts) ; C# multi-classes → un fichier par classe, ou `partial` quand le
   découpage par concept garde un état fortement partagé.
-- **Arbo cible** : conception dans `docs/conception/`, journal éclaté par entrée
+- **Arbo cible** : documentation rangée en `docs/<type>/<theme>/` (8 types
+  fermés : `meta · champs · vegetal · faune · joueur · narration · rendu ·
+  perf`) — carte complète et table « ancien chemin → nouveau » dans
+  [`docs/ARBORESCENCE.md`](docs/ARBORESCENCE.md) ; journal éclaté par entrée
   dans `journal/` (+ `journal_archive/` 01-12 avant refactor structurel) indexé
   par `journal.md` ; sprints clos sous `sprints/_clos/`.
 - **Le catalogue grandit avec les idées** (règle de conception, 2026-06-29).
@@ -339,7 +342,7 @@ historiques.
   conception — ne pas se contraindre aux espèces existantes. L'espèce sert l'idée.
 - **Toute plante ajoutée = toutes ses voix** (règle de conception, 2026-06-29).
   L'ajout d'une espèce au catalogue n'est complet qu'avec ses entrées dans les
-  cinq dispositifs narratifs (cf. `docs/conception/CONCEPTION_VOIX_NARRATIVES.md`) :
+  cinq dispositifs narratifs (cf. `docs/narration/voix/conception_voix_narratives.md`) :
   **encyclopédie** (fiche 3 niveaux §6), **carnet** (concepts/causes que l'espèce
   illustre, via `CONCEPT_DE` §5), **pages secrètes** (une page de lore *si* l'espèce
   en porte un §7 — optionnel), **magazine** (rattachement famille/offre §2.4),

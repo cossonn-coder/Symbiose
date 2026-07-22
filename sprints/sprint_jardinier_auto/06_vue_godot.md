@@ -1,7 +1,7 @@
 # ⑥ Vue Godot — automate en F5 + journal/impasses + onglet objectifs
 
 > Kickoff autosuffisant. Lire `CLAUDE.md` + `00_etat.md` +
-> `docs/conception/CONCEPTION_JARDINIER_AUTOMATE.md` (§2 H3, §6, §8). Prérequis :
+> `docs/joueur/automate/conception_jardinier_automate.md` (§2 H3, §6, §8). Prérequis :
 > ①→⑤ faits. **RÈGLE PERMANENTE** : tout sprint se termine par un tronçon vue Godot.
 
 ## Objectif

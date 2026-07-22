@@ -1,7 +1,7 @@
 # Tronçon ① — Bras fidélité + découplage émetteur/récepteur (dormant)
 
 > Kickoff autosuffisant. Lire d'abord `CLAUDE.md` + `00_etat.md` (décisions
-> D1-D7). Réf. conception : `docs/conception/CONCEPTION_PERF_LOD_OMBRE.md`.
+> D1-D7). Réf. conception : `docs/perf/lod/conception_perf_lod_ombre.md`.
 > **Golden attendu : INTACT** (`33c0ea6f…`). Ce tronçon livre le mécanisme
 > DORMANT (seuil défaut 0.0) + l'instrument de mesure. Il n'active RIEN.
 

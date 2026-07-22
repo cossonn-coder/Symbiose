@@ -1,7 +1,7 @@
 # ③ GREFFE (moteur + voix) — kickoff autosuffisant
 
 > Sprint PALETTE DE GESTES. Lire d'abord : `CLAUDE.md` + `00_etat.md` +
-> `docs/conception/CONCEPTION_PALETTE_GESTES.md` §3.6. Démarre à FROID.
+> `docs/joueur/gestes/conception_palette_gestes.md` §3.6. Démarre à FROID.
 > Prérequis : ② fait (patron de geste à 2 temps + voix établi).
 
 ## Objectif

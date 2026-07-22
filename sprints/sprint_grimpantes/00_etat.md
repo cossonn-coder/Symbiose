@@ -100,7 +100,7 @@ moteur sans son tronçon vue est incomplet.
 - ⑥ **CLOS** (2026-07-04) vue Godot + pont + banc. Golden **INTACT** (`a6c2f651…`).
 
 ## §REPRISE
-CONCEPTION FIGÉE 2026-07-03. Doc = `docs/conception/CONCEPTION_GRIMPANTES.md`.
+CONCEPTION FIGÉE 2026-07-03. Doc = `docs/vegetal/grimpantes/conception_grimpantes.md`.
 6 kickoffs `01→06` écrits.
 
 **① CLOS 2026-07-03.** Fait : 2 traits inertes sur `PlantBase`

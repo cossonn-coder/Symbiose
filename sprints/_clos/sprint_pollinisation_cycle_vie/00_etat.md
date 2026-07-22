@@ -1,6 +1,6 @@
 # État partagé — Sprint POLLINISATION & CYCLE DE VIE (implémentation)
 
-> Conception FIGÉE : `docs/conception/CONCEPTION_POLLINISATION_CYCLE_VIE.md`
+> Conception FIGÉE : `docs/faune/pollinisation/conception_pollinisation_cycle_vie.md`
 > (§A–§J figés, synthèse §K, découpe §L). Kickoff conception :
 > `00_conception_kickoff.md`. Mémoire : [[design_pollinisation_cycle_vie]].
 > Découpe = **7 tronçons** : ①→⑤ MOTEUR (re-fige le golden isolé), ⑥⑦ COUCHE

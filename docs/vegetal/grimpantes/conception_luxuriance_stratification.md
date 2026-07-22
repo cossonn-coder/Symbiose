@@ -3,7 +3,7 @@
 > **Statut : conception FIGÉE (2026-07-04, `/conception`).** Prête pour
 > `/sprint-auto`. Extrait de D64 (« le vrai objectif derrière la mort du
 > tournesol ») et **absorbe D62** (rampantes clonales). Fait suite à
-> `CONCEPTION_USURE_LETALITE.md §6`.
+> `docs/vegetal/sante/conception_usure_letalite.md §6`.
 >
 > **Intention Nico** : un plot n'est PAS limité à une plante. Plusieurs strates
 > coexistent (couvre-sol trèfle + potagère + grimpante + traçante) et la

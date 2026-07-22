@@ -1,9 +1,9 @@
 # ⑤ Structures niveau tuile + colonisation fongique + bêchage event-driven
 
-> Lire d'abord `00_etat.md` + `docs/conception/CONCEPTION_MYCELIUM_INTERCONNEXIONS.md`
+> Lire d'abord `00_etat.md` + `docs/faune/mycelium/conception_mycelium_interconnexions.md`
 > (§3.1, §3.3, §3.4, §1.2 perturbation). Prérequis : ①→④ FAITS. Tronçon **structures
 > + gestes**, surtout EVENT-DRIVEN → **golden ~intact** (mais refactor `Structure`
-> sensible : PROUVER la neutralité). Prolonge `CONCEPTION_DECOMPOSITION_COMPOST.md` §5.
+> sensible : PROUVER la neutralité). Prolonge `docs/champs/sol/conception_decomposition_compost.md` §5.
 
 ## Objectif
 (a) Bac & pile rattachés à la **TUILE** (composter/empiler depuis tout plot de la

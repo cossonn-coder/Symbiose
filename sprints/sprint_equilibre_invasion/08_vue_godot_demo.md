@@ -1,6 +1,6 @@
 # Tronçon ⑧ — Vue Godot (pailler/broyer + rendu mulch/BRF + abri faune) + démo sud
 
-**Prérequis** : `CLAUDE.md`, `00_etat.md`, `CONCEPTION_EQUILIBRE_INVASION.md`
+**Prérequis** : `CLAUDE.md`, `00_etat.md`, `docs/faune/trophique/conception_equilibre_invasion.md`
 §8/§9. Rappel : Godot est une VUE (Option B), le moteur reste Python. Patrons :
 `world/WorldView.cs` (+ partials), `visuals/PlantRenderer.cs`,
 `visuals/FieldOverlay.cs`, `visuals/MacroLife.cs`, `core/SimBridge.cs`,

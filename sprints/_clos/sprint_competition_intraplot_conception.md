@@ -7,8 +7,8 @@
 >
 > **CE SPRINT NE PRODUIT PAS DE CODE.** Conception seule. Livrable unique :
 > `data/code/CONCEPTION_COMPETITION_INTRAPLOT.md` (modèle proposé + décisions
-> figées + découpage impl.), sur le modèle de `CONCEPTION_PLANTER_ARROSER.md` /
-> `CONCEPTION_ECRASEMENT.md`.
+> figées + découpage impl.), sur le modèle de `docs/joueur/gestes/conception_planter_arroser.md` /
+> `docs/joueur/gestes/conception_ecrasement.md`.
 >
 > Règles projet : **moteur Python = source de vérité** ; **flux → contrainte →
 > réponse émergente** (philo #2, jamais de bonus/malus direct) ; **pédagogie
@@ -239,5 +239,5 @@ Godot** de la pile (offsets, lisibilité) = volet vue ultérieur.
   `sprint_ecrasement_plantes.md`).
 - **Reprise à froid** : « lis `sprints/sprint_competition_intraplot_conception.md` »
   (+ `sim/succession.py`, `sim/effects.py:349`, `fields/light.py:180`,
-  `sim/engine.py:223` pour les ancrages ; `CONCEPTION_PLANTER_ARROSER.md` comme
+  `sim/engine.py:223` pour les ancrages ; `docs/joueur/gestes/conception_planter_arroser.md` comme
   gabarit de structure de la conception figée).

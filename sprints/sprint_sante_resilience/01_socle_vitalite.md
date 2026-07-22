@@ -2,7 +2,7 @@
 
 > Kickoff autosuffisant. Lis `CLAUDE.md` + `00_etat.md` + ce fichier. Source de
 > vérité = `data/code/` (lancement depuis `data/code/`). Doc de référence :
-> `docs/conception/CONCEPTION_SANTE_RESILIENCE.md` §1, §2.3, §4.
+> `docs/vegetal/sante/conception_sante_resilience.md` §1, §2.3, §4.
 
 ## Objectif
 

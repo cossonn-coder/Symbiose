@@ -24,7 +24,7 @@ class Alea:
 
 # Ancien catalogue météo, conservé pour mémoire. SUPPLANTÉ (sous-sprint 01) par
 # weather_at(seed, week) + WEATHER_ALEA ci-dessous : le tirage n'est plus un
-# random.choice live mais une fonction pure déterministe (CONCEPTION_METEO.md §0).
+# random.choice live mais une fonction pure déterministe (docs/champs/climat/conception_meteo.md §0).
 ALEAS_METEO = [
     Alea("Canicule",     "Humidité chute.",    "humidite",  -0.4, "field"),
     Alea("Pluies",       "Humidité monte.",     "humidite",  +0.5, "field"),
@@ -94,7 +94,7 @@ ALEAS_RAVAGEURS = [
     Alea("Chenilles", "Feuillage abîmé.",  "",           -1.0, "health"),
 ]
 
-# --- Réponses médiées par le milieu (CONCEPTION_METEO.md §2.3) -------------
+# --- Réponses médiées par le milieu (docs/champs/climat/conception_meteo.md §2.3) -------------
 # Gel et grêle ne frappent plus « à plat » (ancienne voie `health`, à la limite
 # de la philo #2). Le dégât subi par un individu ÉMERGE de son état et de son
 # génotype :

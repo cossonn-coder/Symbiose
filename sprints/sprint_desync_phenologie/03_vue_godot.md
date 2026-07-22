@@ -1,7 +1,7 @@
 # Tronçon ③ — Vue Godot : fleurs & teinte automnale par-plante + détail dès ×1 (C#)
 
 > Kickoff autosuffisant. Lis `CLAUDE.md` (racine) + `00_etat.md` (ce dossier) +
-> `docs/conception/CONCEPTION_DESYNC_PHENOLOGIE.md` (§1bis, §3, §5 tronçon ③),
+> `docs/vegetal/floraison/conception_desync_phenologie.md` (§1bis, §3, §5 tronçon ③),
 > puis exécute. **Prérequis : tronçons ① et ② CLOS** (le snapshot expose
 > `floraison` et `automne` par-plante).
 > Filet de compilation : `dotnet build Symbiose.csproj` (le F5 visuel reste à

@@ -1,7 +1,7 @@
 # Sprint PERF « scatter lumière-reçue » — état
 
 > Conception FIGÉE le 2026-07-09. Prêt pour `/sprint-auto sprint_perf_tick_on2`.
-> Doc : `docs/conception/CONCEPTION_PERF_SCATTER_RECUE.md`.
+> Doc : `docs/perf/scatter/conception_perf_scatter_recue.md`.
 > **Optimisation PURE : golden INCHANGÉ (`24ec11e7…`), bit-identique.**
 
 ## Origine

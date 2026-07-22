@@ -4,7 +4,8 @@ description: >-
   Passe le projet Symbiose au crible sur trois plans — conception, code, tests —
   et écrit un rapport de santé priorisé (rouge/jaune/vert) dans AUDIT.md (+
   résumé à l'écran). LECTURE SEULE : il diagnostique, ne corrige rien, ne touche
-  ni au moteur ni à la dette. Conception = cohérence des docs docs/conception/
+  ni au moteur ni à la dette. Conception = cohérence des docs
+  docs/<type>/<theme>/conception_*.md
   entre eux et avec la philo #1-#7, trous, conceptions figées non implémentées,
   dérives de vocabulaire. Code = cohérence Python (vérité) ↔ C# (vue), garde-fous
   (taille fichiers via tools/compte_ldc.py, zéro RNG vivant, un fichier = une
@@ -49,7 +50,11 @@ Annonce à Nico le périmètre retenu avant de commencer.
 
 ## 2. Plan CONCEPTION
 
-Source : `docs/conception/CONCEPTION_*.md`, `DETTE.md`, `BACKLOG.md`, `journal.md`.
+Source : `docs/<type>/<theme>/conception_*.md` (les 56 conceptions sont rangées
+par type puis thème — carte et table « ancien chemin → nouveau » dans
+`docs/ARBORESCENCE.md` ; balayage : `find docs -name 'conception_*.md'`),
+`DETTE.md`, les fragments `docs/**/backlog_<theme>.md` + l'index `BACKLOG.md`,
+et `journal.md` (index de pointeurs vers `journal/`).
 Si un `<sujet>` est donné (ex. `conception CONCEPTION_VENT`), **restreins** l'audit
 à ce doc + ses couplages directs ; sinon balaie tous les docs.
 
@@ -87,7 +92,7 @@ Source : `data/code/` (Python, vérité), les `.cs` (C#, vue), `tools/`.
   (encyclopédie / carnet / pages / magazine / événements). Repère une espèce du
   catalogue qui serait muette = 🟡.
 - **Complétude de l'écosystème (D61)** — référentiel =
-  `docs/conception/CONCEPTION_COMPLETUDE_ECOSYSTEME.md` (matrice fonctionnelle
+  `docs/meta/calibrage/conception_completude_ecosysteme.md` (matrice fonctionnelle
   téléonomique : chaque flux a source ET puits). Lecture croisée référentiel ↔
   catalogues réels (`plants/catalogue.py`, `fields/population/registry.py`, le
   mycélium). Signale : **(a) fonctions orphelines** = lignes ⚠️ encore ouvertes

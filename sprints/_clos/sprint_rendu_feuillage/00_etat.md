@@ -1,6 +1,6 @@
 # SPRINT RENDU FEUILLAGE — état partagé
 
-> Conception figée : `docs/conception/CONCEPTION_RENDU_FEUILLAGE.md`.
+> Conception figée : `docs/rendu/feuillage/conception_rendu_feuillage.md`.
 > Lancement Python depuis `data/code/`. Build C# : `dotnet build Symbiose.csproj`
 > (filet de compilation ; F5 visuel = Nico).
 

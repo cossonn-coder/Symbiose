@@ -228,7 +228,7 @@ avant ③ (marais lit `eau_surface`). ① avant ② (ruissellement lit `altitude
 ## §9 — Voix narratives (corpus par espèce)
 
 Chaque espèce ajoutée (aulne, sphaigne, carnivore, + faune moustique/libellule)
-reçoit ses **5 voix** (cf. `CONCEPTION_VOIX_NARRATIVES.md`) :
+reçoit ses **5 voix** (cf. `docs/narration/voix/conception_voix_narratives.md`) :
 1. **Encyclopédie** : fiche 3 niveaux (basique → bio → effets écosystémiques).
 2. **Carnet** : concepts/causes illustrés (`CONCEPT_DE` — ex. `asphyxie`→eau,
    `marais`, fixation d'azote, carnivorie).

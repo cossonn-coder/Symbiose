@@ -1,6 +1,6 @@
 # ② Saprophyte (décompo `bois`) + liant (`om_stable`)
 
-> Lire d'abord `00_etat.md` + `docs/conception/CONCEPTION_MYCELIUM_INTERCONNEXIONS.md`
+> Lire d'abord `00_etat.md` + `docs/faune/mycelium/conception_mycelium_interconnexions.md`
 > (§2, §2.1). Prérequis : ① FAIT (le champ `mycelium` pousse). On BRANCHE le premier
 > rôle : le champignon **digère le bois** et **lie le sol**. **Re-figeage golden
 > (décompo) attendu et MAÎTRISÉ.**

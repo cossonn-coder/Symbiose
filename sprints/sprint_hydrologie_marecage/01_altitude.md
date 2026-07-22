@@ -1,7 +1,7 @@
 # ① — Champ `altitude` (micro-relief topographique déterministe)
 
 > Kickoff autosuffisant. Lis `CLAUDE.md` + `00_etat.md` + CE fichier. Conception :
-> `docs/conception/CONCEPTION_HYDROLOGIE_MARECAGE.md` §1. **Golden NEUTRE.**
+> `docs/champs/eau/conception_hydrologie_marecage.md` §1. **Golden NEUTRE.**
 
 ## Objectif
 Poser le champ `altitude` (cm de micro-relief du terrain), FIXE, initialisé

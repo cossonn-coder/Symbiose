@@ -1,7 +1,7 @@
 # ① D56 — Champs initiaux riches & hétérogènes
 
 > Kickoff autosuffisant. Lire AVANT : `CLAUDE.md`, `00_etat.md`,
-> `docs/conception/CONCEPTION_BUGS_EMERGENCE.md` (volet S3, fix (c)).
+> `docs/meta/calibrage/conception_bugs_emergence.md` (volet S3, fix (c)).
 > Source de vérité = Python `data/code/`. Lancement depuis `data/code/`.
 
 ## Objectif

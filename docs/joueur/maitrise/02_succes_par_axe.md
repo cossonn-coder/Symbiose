@@ -1,7 +1,7 @@
 # Maîtrise — §9 · Le succès, définition par axe (D12.1)
 
 > Partie 2/3 de la conception des paliers de maîtrise. Index :
-> [`../CONCEPTION_MAITRISE.md`](../CONCEPTION_MAITRISE.md).
+> [`conception_maitrise.md`](conception_maitrise.md).
 > Amont : [`01_modele.md`](01_modele.md) (le modèle). Aval :
 > [`03_taxonomie_objets.md`](03_taxonomie_objets.md) (la taxonomie, D12.3).
 
@@ -47,7 +47,7 @@ Transitions discrètes lisibles depuis la couche gameplay (au-dessus du tick) :
 **Constat structurant :** le moteur possède *tous* les signaux pour les **êtres
 vivants** et les **concepts transversaux**. En revanche **outils, structures et
 techniques n'existent pas encore** (seuls 4 gestes sur le vivant codés ; le
-catalogue d'actions-milieu de `CONCEPTION_VIGUEUR.md` §3.2 est conçu mais non
+catalogue d'actions-milieu de `docs/joueur/vigueur/conception_vigueur.md` §3.2 est conçu mais non
 codé). Leur succès est donc fixé ici comme **patron**, pas comme table calibrable
 (câblage → D12.3 + sprints d'action).
 

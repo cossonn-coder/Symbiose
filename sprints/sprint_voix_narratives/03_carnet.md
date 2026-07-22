@@ -1,6 +1,6 @@
 # ③ Carnet auto — `carnet_lire` + `CONCEPT_DE` + gabarits 2 registres (D14 + D43)
 
-> Lire d'abord `00_etat.md` + `docs/conception/CONCEPTION_VOIX_NARRATIVES.md` (§2.1, §5).
+> Lire d'abord `00_etat.md` + `docs/narration/voix/conception_voix_narratives.md` (§2.1, §5).
 > Tronçon **première voix** : lecteur read-only du ledger ②, voix « je » qui bascule
 > **descriptif → interprétatif** au palier 3 du CONCEPT. Dépend de ②. Premier geste :
 > RE-MESURER les hashs golden.

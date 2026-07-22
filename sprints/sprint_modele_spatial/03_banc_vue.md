@@ -1,7 +1,7 @@
 # Tronçon ③ — Banc d'observation + vue Godot
 
 > Kickoff autosuffisant. Lis `CLAUDE.md` (racine) + `00_etat.md` (ce dossier) +
-> `docs/conception/CONCEPTION_MODELE_SPATIAL.md` (§0, §3), puis exécute.
+> `docs/rendu/spatial/conception_modele_spatial.md` (§0, §3), puis exécute.
 > Tests depuis `data/code/`. **Tronçons ① et ② faits** (placement sous-plot/pixel
 > + `form_seed` héritable).
 

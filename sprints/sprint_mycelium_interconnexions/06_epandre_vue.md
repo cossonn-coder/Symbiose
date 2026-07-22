@@ -1,6 +1,6 @@
 # ⑥ `epandre` 2 clics + vue Godot (carpophores, tas colonisé, overlay)
 
-> Lire d'abord `00_etat.md` + `docs/conception/CONCEPTION_MYCELIUM_INTERCONNEXIONS.md`
+> Lire d'abord `00_etat.md` + `docs/faune/mycelium/conception_mycelium_interconnexions.md`
 > (§3.2, §4). Prérequis : ①→⑤ FAITS (moteur clos). Tronçon **vue + protocole pont**
 > — **Godot DIFFÉRÉ** (intégration en pause). La vue ne touche AUCUN champ
 > écologique → **golden trivialement NEUTRE**. Filet = `dotnet build Symbiose.csproj`,

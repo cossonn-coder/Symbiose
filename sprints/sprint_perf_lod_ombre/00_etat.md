@@ -13,7 +13,7 @@ D67 est une **approximation de modèle → PAS bit-identique → golden re-figé
 
 ## Phase courante
 Phase B (figeage) — 3 arbitrages tranchés par Nico, je finis seul (conception
-autonome + carte blanche). Reste : doc `CONCEPTION_PERF_LOD_OMBRE.md` + kickoffs.
+autonome + carte blanche). Reste : doc `docs/perf/lod/conception_perf_lod_ombre.md` + kickoffs.
 
 ## Constats de vérification (lecture code, 2026-07-08)
 - **`infos` = récepteurs ET émetteurs** confondus dans `light.py:compute`

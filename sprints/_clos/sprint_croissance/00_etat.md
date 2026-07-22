@@ -147,7 +147,7 @@ Déclencheurs naturels du seam (grêle/chenille/vent → `atteindre_segment`) ; 
 `🌿` (succès maîtrise §9.5) ; profil de croissance du **reste du catalogue** (§E.4) ;
 portage C# (D24) ; structure racinaire réelle (gated, §8 = rayon dérivé).
 
-## Décisions déjà actées (conception — `CONCEPTION_CROISSANCE.md` §B)
+## Décisions déjà actées (conception — `docs/vegetal/croissance/conception_croissance.md` §B)
 Segments / Python source de vérité / accumulation **bornée** / auxine le long des
 segments / phototropisme `LightField` / empreinte **dérivée** (contrat inchangé) /
 organes **tout procéduraux** / racines **rayon dérivé**. Intensité **continue**,

@@ -2,7 +2,7 @@
 SYMBIOSE — sim/magazine.py
 Le MAGAZINE DE BOTANIQUE — quatrième et dernière des voix narratives (sprint
 Voix narratives, tronçon ⑥, dette D13) ET 4ᵉ canal d'acquisition d'espèces.
-Spec de référence : `docs/conception/CONCEPTION_VOIX_NARRATIVES.md` §2.4 + §3
+Spec de référence : `docs/narration/voix/conception_voix_narratives.md` §2.4 + §3
 (table D12.2, décision C).
 
 Rôle (doc §2.4) : introduire VOLONTAIREMENT une espèce, vs les 3 canaux subis

@@ -1,7 +1,7 @@
 # Tronçon ④b — SCINDER la catégorie `ravageur` (puceron / limace / doryphore)
 
 > Sprint CATALOGUE ENRICHI. État partagé : `00_etat.md` (lire d'abord).
-> Doc FIGÉ : `docs/conception/CONCEPTION_FAUNE_DEDIEE.md` (§2 ravageur, §4 C11/C13/C14).
+> Doc FIGÉ : `docs/faune/vie_macro/conception_faune_dediee.md` (§2 ravageur, §4 C11/C13/C14).
 > **Pré-requis : ④a CLOS** (catégorie + `category_density` + consommateurs recâblés).
 > Kickoff autosuffisant. Python depuis `data/code/`. Filet `dotnet build`.
 

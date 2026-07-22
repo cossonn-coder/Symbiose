@@ -1,6 +1,6 @@
 # Tronçon ③ — Coût croissance/défense
 
-> Sprint « plasticité ». Conception : `docs/conception/CONCEPTION_PLASTICITE_EXPRESSION.md`
+> Sprint « plasticité ». Conception : `docs/vegetal/genetique/conception_plasticite_expression.md`
 > (§2.4, §3-P6, §5). **Lire la conception + relire le journal `00_etat.md` des ①②.**
 > **Re-figeage golden MAÎTRISÉ et annoncé** (le compromis modifie la croissance).
 

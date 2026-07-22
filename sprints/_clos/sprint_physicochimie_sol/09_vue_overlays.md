@@ -1,7 +1,7 @@
 # Tronçon ⑨ — Vue Godot : overlays des nouveaux champs + indice visuel chlorose
 
 > Sprint physico-chimie du sol. **Dernier tronçon (VUE, pas moteur).** Conception :
-> `docs/conception/CONCEPTION_SOL_{PH,NUTRIMENTS_NPK,STRUCTURE}.md`. Kickoff
+> `docs/champs/sol/conception_sol_{ph,nutriments_npk,structure}.md`. Kickoff
 > **autosuffisant** (relançable à froid). C# depuis la racine repo ; build filet
 > `dotnet build Symbiose.csproj` sur la VM (**F5 visuel = Nico**, Godot pas sur la VM).
 > Tronçons ①→⑧ **moteur CLOS** : champs `ph`, `n`, `p`, `k`, `structure_sol` posés et

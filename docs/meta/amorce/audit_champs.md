@@ -224,7 +224,7 @@ Aucune violation détectée. Les seules « frictions » sont des **dettes de câ
 ## 10. Rattachement à l'existant
 
 - **DETTE** citée dans le code des champs : D3/D4/D9 (allélo/autotox/mulch nature), D10 (parité Python/C#), D22 (banque génétique), D24 (sol vivant → C#), D30 (structure), D31/D32 (vie macro + perf bornée), D49 (grimpantes, sprint actif), D56/D57 (épaisseur de sol), D65 (luxuriance/couverture), D69 (paillage anti-invasion).
-- **Conceptions voisines** dans le knowledge : `CONCEPTION_HYDROLOGIE_MARECAGE.md` (couvre `altitude`/`eau_surface`/`marais`), `CONCEPTION_ALLELOPATHIE.md` (couvre `allelopathie`/`autotox`), `CONCEPTION_VOIX_NARRATIVES.md` (les 5 voix des espèces faune), `etude_sol_vivant.md` (MO/microbiome).
+- **Conceptions voisines** dans le knowledge : `docs/champs/eau/conception_hydrologie_marecage.md` (couvre `altitude`/`eau_surface`/`marais`), `docs/vegetal/allelopathie/conception_allelopathie.md` (couvre `allelopathie`/`autotox`), `docs/narration/voix/conception_voix_narratives.md` (les 5 voix des espèces faune), `etude_sol_vivant.md` (MO/microbiome).
 - **Sprint actif (memory)** : D49 grimpantes. Cet audit n'y touche pas mais note que les grimpantes s'appuieront sur `lumiere` (ombre/hauteur émergente) et `structure`/`abri`.
 
 ---

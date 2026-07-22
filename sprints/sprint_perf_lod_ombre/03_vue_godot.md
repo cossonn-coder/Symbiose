@@ -1,7 +1,7 @@
 # Tronçon ③ — Vue Godot : gain perf visible + debug émetteurs/récepteurs
 
 > Kickoff autosuffisant. Lire `CLAUDE.md` + `00_etat.md` (D1-D7) + tronçons ①②
-> (LOD actif, seuil calibré). Réf. : `docs/conception/CONCEPTION_PERF_LOD_OMBRE.md`.
+> (LOD actif, seuil calibré). Réf. : `docs/perf/lod/conception_perf_lod_ombre.md`.
 > **Golden : INTACT** (vue + snapshot read-only). Dernier tronçon (règle vue Godot).
 > Le `dotnet build Symbiose.csproj` est le filet de compil ; le F5 visuel = Nico.
 

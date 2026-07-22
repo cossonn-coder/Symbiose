@@ -1,6 +1,6 @@
 # Sprint MÉTÉO → CHAMPS (dont rosée) — état partagé
 
-> **Conception FIGÉE** → source de vérité = `docs/conception/CONCEPTION_METEO_CHAMPS.md`
+> **Conception FIGÉE** → source de vérité = `docs/champs/climat/conception_meteo_champs.md`
 > (la lire d'abord, §0→§7). Ce fichier = état léger + carte des sous-sprints, mis à
 > jour en fin de **chaque** tronçon. Boucle projet : `0N` → coder → vérifier/re-figer
 > golden (ANNONCÉ) → MAJ ce fichier → commit → `/clear` → `0N+1`.

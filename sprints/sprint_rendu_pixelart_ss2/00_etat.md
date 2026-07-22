@@ -1,7 +1,7 @@
 # 🏁 SS² RENDU PIXEL-ART — CLOS (Palette + Sol)
 
 > Sous-sprint **②** du cap rendu pixel-art 16-bit (Chrono Trigger).
-> Conception figée : `docs/conception/CONCEPTION_RENDU_PIXELART.md` §5/§7/§8.
+> Conception figée : `docs/rendu/pixelart/conception_rendu_pixelart.md` §5/§7/§8.
 > Mémoire : `project_rendu_pixelart.md`. Reprise sans contexte : lire CE fichier
 > puis le kickoff `0N_*.md` du tronçon en cours.
 

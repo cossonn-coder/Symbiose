@@ -1,7 +1,7 @@
 """
 SYMBIOSE — sim/actions/palette.py
 LAYOUT de la PALETTE de gestes, PAR AVATAR (sprint PALETTE DE GESTES, tronçon ⑤).
-Spec : `docs/conception/CONCEPTION_PALETTE_GESTES.md` §3.1/§3.7 (D1/D5/D10) +
+Spec : `docs/joueur/gestes/conception_palette_gestes.md` §3.1/§3.7 (D1/D5/D10) +
 kickoff `sprints/sprint_palette_gestes/05_macros_banc.md`.
 
 Ce module porte l'ÉTAT et les DONNÉES du layout de palette — les slots CURÉS par

@@ -30,7 +30,7 @@ Rappel des garde-fous de design que toute future espèce devra respecter :
 - **#7** — hétérogénéité (l'espèce ne se distribue pas uniformément).
 - **Règle projet** — toute espèce ajoutée reçoit ses **5 voix** (encyclopédie /
   carnet / pages secrètes / magazine / événements) : cf.
-  `CONCEPTION_VOIX_NARRATIVES.md`. Une fonction bouchée par une fiche muette n'est
+  `docs/narration/voix/conception_voix_narratives.md`. Une fonction bouchée par une fiche muette n'est
   pas bouchée.
 
 ---
@@ -193,7 +193,7 @@ trous.
 
 | Acteur | Fonction bouchée | Doc source |
 |---|---|---|
-| aulne | A2 (fixation N arborée) | `CONCEPTION_HYDROLOGIE_MARECAGE.md` |
+| aulne | A2 (fixation N arborée) | `docs/champs/eau/conception_hydrologie_marecage.md` |
 | sphaigne | A8, I2 (acidophile, ingénieur hydraulique) | idem |
 | plante carnivore (Drosera) | A8, C6 (prédateur végétal, puits N) | idem |
 | moustique | B5 (larve aquatique = proie) | idem |

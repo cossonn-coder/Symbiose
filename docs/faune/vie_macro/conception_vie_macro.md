@@ -9,7 +9,7 @@
 > **D31**. Recoupe **D27** (« champ auxiliaire dédié = sprint futur »), **D30**
 > (structure/aération du sol), **D19** (action manger), **D32** (perf — pourquoi
 > un champ et pas des agents). S'appuie sur le patron de
-> `CONCEPTION_VIGUEUR.md` §1 (façade Vigueur read-only) avec un `qi_local`
+> `docs/joueur/vigueur/conception_vigueur.md` §1 (façade Vigueur read-only) avec un `qi_local`
 > **trophique** au lieu du sol racinaire.
 
 ---
@@ -74,7 +74,7 @@ a câblé `temperature` → santé). C'est **une** re-figeage, propre, déjà é
 re-fige PAS : les sprites (pure lecture, §3) et les gestes joueur (event-driven,
 §5) — comme la Vigueur.
 
-> **Contraste avec `CONCEPTION_VIGUEUR.md`.** La Vigueur joueur ne re-figeait
+> **Contraste avec `docs/joueur/vigueur/conception_vigueur.md`.** La Vigueur joueur ne re-figeait
 > jamais le golden (couche gameplay au-dessus du tick). Ici, c'est l'inverse
 > assumé : la vie macroscopique **est** de l'écologie, elle entre dans le tick
 > déterministe. Seules les façades Vigueur de ces entités (§4) restent des
@@ -89,7 +89,7 @@ re-fige PAS : les sprites (pure lecture, §3) et les gestes joueur (event-driven
 Décision actée avec Nico : **pas** quatre dynamiques bricolées au cas par cas,
 mais **un mécanisme générique** paramétré par **(ressource trophique, prédateurs,
 habitat)**, instancié une fois par guilde. Même esprit data-driven que l'objet de
-maîtrise générique de D12.3 (`CONCEPTION_MAITRISE.md`). Chaque guilde est
+maîtrise générique de D12.3 (`docs/joueur/maitrise/conception_maitrise.md`). Chaque guilde est
 **attirée dans son milieu par la ressource dont elle se nourrit**.
 
 Chaque tick, intégration avec inertie (patron `DisturbanceField`,
@@ -183,7 +183,7 @@ re-figeage.
 
 ## 4. Façades `vigueur_*` — lecture diégétique, jamais pilote
 
-Patron `CONCEPTION_VIGUEUR.md` §1 : **fonctions pures read-only, aucun état
+Patron `docs/joueur/vigueur/conception_vigueur.md` §1 : **fonctions pures read-only, aucun état
 stocké, aucun budget énergétique à équilibrer**. Différence assumée avec les
 plantes : le `qi_local` n'est **pas** le sol racinaire mais la **ressource
 trophique** de la guilde — c'est exactement la `ressource` du champ générique
@@ -215,16 +215,16 @@ gain de « manger un individu » (§5). **Jamais un pilote de simulation.**
 ## 5. Les gestes joueur branchés
 
 Tous **event-driven, au-dessus du tick**, modifiant les champs comme **donnée
-d'entrée** (comme les actions de `CONCEPTION_VIGUEUR.md` §3). Donc **ne re-figent
+d'entrée** (comme les actions de `docs/joueur/vigueur/conception_vigueur.md` §3). Donc **ne re-figent
 PAS le golden** (le golden n'a pas de joueur). Granularité : **un geste = un
 individu = un quantum** (≈ `DENSITÉ_PAR_SPRITE`), pas toute la population du plot
 (décision Nico).
 
 | Geste | Effet sur le(s) champ(s) | Coût Vigueur | Pédagogie |
 |---|---|---|---|
-| **Favoriser un auxiliaire** (hôtel à insectes, nichoir, point d'eau, bande fleurie — déjà `CONCEPTION_VIGUEUR.md` §3.2) | ↑ terme **habitat** du champ `auxiliaire` (plancher persistant) | `MODÉRÉ` (action sur le milieu) | rien tout de suite ; **semaines plus tard** les auxiliaires s'installent **et restent** → régulation émergente. Le canal vertueux, pendant d'« écraser ». |
+| **Favoriser un auxiliaire** (hôtel à insectes, nichoir, point d'eau, bande fleurie — déjà `docs/joueur/vigueur/conception_vigueur.md` §3.2) | ↑ terme **habitat** du champ `auxiliaire` (plancher persistant) | `MODÉRÉ` (action sur le milieu) | rien tout de suite ; **semaines plus tard** les auxiliaires s'installent **et restent** → régulation émergente. Le canal vertueux, pendant d'« écraser ». |
 | **Écraser** un ravageur (devient **réel** — `actions.py:ecraser` n'était que comptabilité) | retire **un quantum** de `ravageur` au plot ciblé (le sprite cliqué) | `MODÉRÉ × URGENCE` | le champ **repousse** depuis sa ressource (l'hôte est toujours là) → **la pression revient**. Net négatif sec, le raccourci s'use (philo #1), sans sermon. |
-| **Fourche-bêche / bêcher** (déjà `CONCEPTION_VIGUEUR.md` §3.2, `microbiome` ↓) | tue la faune du sol → **sprites « vers morts » transitoires** + ↓ `vers_de_terre` local | `FAIBLE` | **vers morts visibles = feedback viscéral immédiat**, *avant* la dette différée `microbiome → uptake → vigueur`. **Visuel avant santé.** La **grelinette** ne tue pas de vers (préserve) → contraste enseigné à l'œil, pas par un texte. |
+| **Fourche-bêche / bêcher** (déjà `docs/joueur/vigueur/conception_vigueur.md` §3.2, `microbiome` ↓) | tue la faune du sol → **sprites « vers morts » transitoires** + ↓ `vers_de_terre` local | `FAIBLE` | **vers morts visibles = feedback viscéral immédiat**, *avant* la dette différée `microbiome → uptake → vigueur`. **Visuel avant santé.** La **grelinette** ne tue pas de vers (préserve) → contraste enseigné à l'œil, pas par un texte. |
 | **Manger un individu** (ravageur / auxiliaire / pollinisateur / ver) | retire **un quantum** du champ correspondant | gain **signé selon l'espèce** | **EN DETTE** (cf. §7). On ne mange qu'**un individu**, pas la population. Manger un nuisible → perte de Vigueur. « Option rigolote, pas prioritaire » (Nico). |
 
 **Prérequis débloqué.** « Manger / écraser un nuisible » était impossible faute
@@ -307,7 +307,7 @@ biologique** (faune du sol, microbiome) pour un gain mécanique immédiat → de
   (l'entité ciblable) ; D19 fournira la **valeur nutritive signée par espèce**.
 - **D32** (perf LightField) — justifie le choix « champ plutôt qu'agents » : un
   champ est gratuit (borné aux 432 plots) là où des agents coûtent ∝ population.
-- **`CONCEPTION_VIGUEUR.md`** — patron de façade (§1) réutilisé pour `vigueur_*`
+- **`docs/joueur/vigueur/conception_vigueur.md`** — patron de façade (§1) réutilisé pour `vigueur_*`
   avec `qi_local` trophique ; actions `écraser`/`manger` y sont déjà cataloguées
   (§3.3) — ce doc les rend **réelles**.
 

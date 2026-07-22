@@ -1,7 +1,7 @@
 # ③ Vue Godot — overlay F6 à la nouvelle échelle + banc d'observation
 
 > Kickoff autosuffisant. Lis `CLAUDE.md` + `00_etat.md` + ce fichier. Spec de
-> référence : `docs/conception/CONCEPTION_CALIBRATION_REALISTE.md` (§7③).
+> référence : `docs/meta/calibrage/conception_calibration_realiste.md` (§7③).
 > **Prérequis : tronçons ① et ② terminés** (échelle réalignée côté moteur).
 > Dernier tronçon (règle permanente : la vue Godot clôt tout sprint). **Golden
 > INTACT** (rendu/pont pur — rien dans `summary()` ni le tick).

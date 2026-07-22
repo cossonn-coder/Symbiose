@@ -7,7 +7,7 @@
 > **Amont** : le MOTEUR des 4 voix est **100 % fait en Python** (sprint VOIX
 > NARRATIVES ①→⑥, 2026-06-29, golden `db5e7c66…` intact) — `sim/journal.py`
 > (ledger), `sim/carnet.py`, `sim/encyclopedie.py`, `sim/magazine.py`,
-> `sim/pages.py` + corpus. Source moteur : **`CONCEPTION_VOIX_NARRATIVES.md`** (à
+> `sim/pages.py` + corpus. Source moteur : **`docs/narration/voix/conception_voix_narratives.md`** (à
 > lire d'abord). Ce doc-ci ne conçoit QUE la **couche présentation** : commandes du
 > pont + panneaux Godot de consultation + la **chaîne de maîtrise** qui alimente les
 > voix.

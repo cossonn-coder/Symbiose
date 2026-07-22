@@ -1,7 +1,7 @@
 # T3 — Maison normande : granite + ardoise (VUE C#, golden inchangé)
 
 > Kickoff autosuffisant. Lire `CLAUDE.md` + `00_etat.md` + ce fichier.
-> Conception : `docs/conception/CONCEPTION_RENDU_AMBIANCE.md` §4.
+> Conception : `docs/rendu/ambiance/conception_rendu_ambiance.md` §4.
 
 ## Objectif
 Remplacer le placeholder gris de la maison par une **maison normande de granite et

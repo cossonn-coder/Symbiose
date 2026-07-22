@@ -1,7 +1,7 @@
 """
 SYMBIOSE — tests/test_pages.py
 Test des PAGES SECRÈTES (sprint Voix narratives, tronçon ⑤, dette D18).
-Spec : `docs/conception/CONCEPTION_VOIX_NARRATIVES.md` §2.3/§7 + kickoff
+Spec : `docs/narration/voix/conception_voix_narratives.md` §2.3/§7 + kickoff
 `sprints/sprint_voix_narratives/05_pages.md`.
 
 Propriétés exigées (« Définition de done » du kickoff) :

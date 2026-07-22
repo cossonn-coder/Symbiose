@@ -1,7 +1,7 @@
 # Sprint « Vie macro identifiable + encyclopédie multi-règnes » (D60) — état de sprint
 
 > État partagé léger. Reprise à froid : lire `CLAUDE.md` +
-> `docs/conception/CONCEPTION_VIE_MACRO_IDENTIFIABLE.md` + ce fichier + le kickoff
+> `docs/faune/vie_macro/conception_vie_macro_identifiable.md` + ce fichier + le kickoff
 > `0N` du tronçon courant. Conception FIGÉE (Nico « oui » 2026-07-02).
 
 ## Où on en est
@@ -115,7 +115,7 @@ Gestes/Outils/Techniques avec N2/N3 progressifs ; onglet non découvert → mess
 La vie macro est un amas de cercles indistincts. Objectif : **survol → nom + entrée
 encyclopédie** (comme les plantes), et **encyclopédie filtrable par règne** en
 **7 onglets** : plante · animal · champignon · concept · technique · outil · geste.
-Détail complet : `docs/conception/CONCEPTION_VIE_MACRO_IDENTIFIABLE.md`.
+Détail complet : `docs/faune/vie_macro/conception_vie_macro_identifiable.md`.
 
 ## Décisions clés (rappel — détail dans le doc de conception §3)
 - Faune = fiche MONO-niveau (blurb + graphe `faune_encyclo.py`), cap palier 1.

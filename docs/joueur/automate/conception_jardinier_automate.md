@@ -1,7 +1,7 @@
 # CONCEPTION — Jardinier automate (pilote de test)
 
 > **Statut** : FIGÉE le 2026-07-18 (`/conception`), prête pour `/sprint-auto`.
-> **Amorce source** : `docs/amorce/amorce_conception_automate.md`.
+> **Amorce source** : `docs/meta/amorce/amorce_conception_automate.md`.
 > **Dette** : D78 (ce sprint) ; D79 (système de quêtes complet, hors scope).
 
 Un **agent déterministe** qui joue le jardin à la place du testeur pendant les

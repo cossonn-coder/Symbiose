@@ -1,7 +1,7 @@
 # Tronçon ① — Correctif T_air pluie + banc/oracle `pluie_thermique`
 
 > Kickoff **autosuffisant** (démarrage à froid : lis CLAUDE.md + 00_etat.md + ce
-> fichier). Conception : `docs/conception/CONCEPTION_GERMINATION_THERMIQUE.md` §3.
+> fichier). Conception : `docs/vegetal/floraison/conception_germination_thermique.md` §3.
 > Lancement depuis `data/code/`. Golden : **RE-FIGÉ maîtrisé** (annoncé).
 
 ## Objectif

@@ -2,7 +2,7 @@
 
 > Le stress VÉCU module l'EXPRESSION effective des gènes adaptogènes (plasticité
 > phénotypique / épigénétique), distincte de la sélection darwinienne sur le
-> génotype figé. Conception FIGÉE : `docs/conception/CONCEPTION_PLASTICITE_EXPRESSION.md`.
+> génotype figé. Conception FIGÉE : `docs/vegetal/genetique/conception_plasticite_expression.md`.
 > **Lire la conception AVANT tout tronçon.**
 
 ## Modèle (3 échelles d'adaptation coexistantes)

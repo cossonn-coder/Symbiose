@@ -1,7 +1,7 @@
 """
 SYMBIOSE — fields/ecofields/transport.py
 Transport ÉOLIEN de la litière de surface (sprint VENT & ÉVAPOTRANSPIRATION ⑦).
-Spec : CONCEPTION_VENT_EVAPOTRANSPIRATION.md §5.6 + §4 (géométrie d'abri).
+Spec : docs/champs/climat/conception_vent_evapotranspiration.md §5.6 + §4 (géométrie d'abri).
 
 Le vent ne fait pas que dessécher : il CHARRIE la litière LÉGÈRE de surface
 (feuilles mortes, brins d'herbe sèche) et la dépose SOUS LE VENT, là où le flux

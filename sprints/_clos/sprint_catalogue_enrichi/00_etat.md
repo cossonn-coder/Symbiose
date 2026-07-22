@@ -40,7 +40,7 @@ guildes abstraites à des **espèces NOMMÉES** rattachées aux guildes.
 
 | # | Tronçon | Golden | Statut |
 |---|---------|--------|--------|
-| ① | Doc-conception `CONCEPTION_CATALOGUE_ENRICHI.md` (audit + matrices + sélection + partage doc/code) | INTACT (0 code) | ✅ |
+| ① | Doc-conception `docs/vegetal/catalogue/conception_catalogue_enrichi.md` (audit + matrices + sélection + partage doc/code) | INTACT (0 code) | ✅ |
 | ② | Plantes lot 1 — familles connues (thym, lavande, bourrache, consoude, moutarde) | NEUTRE (hash intact) | ✅ |
 | ③ | Plantes lot 2 — familles + cycles neufs (carotte, ortie, courgette, mâche, ail) + `_ATTRACT_*` + **vérif `biennial`/`evergreen`** | NEUTRE (hash intact) | ✅ |
 | ④ | Faune nommée — **modèle B, champ dédié par espèce** (RE-DÉCOUPÉ a→e, voir ci-dessous). ~~parfums (A)~~ CADUC | re-figé MAÎTRISÉ large | ✅ |
@@ -55,7 +55,7 @@ guildes abstraites à des **espèces NOMMÉES** rattachées aux guildes.
 
 ## §REPRISE
 
-**① CLOS** le 2026-06-18 — doc figé `docs/conception/CONCEPTION_CATALOGUE_ENRICHI.md`
+**① CLOS** le 2026-06-18 — doc figé `docs/vegetal/catalogue/conception_catalogue_enrichi.md`
 (golden `5fddfe54…` intact, doc seul). Découpage ②→⑥ arrêté ci-dessus (détail
 §7 du doc). **Alerte moteur** : `life_cycle="biennial"` et
 `winter_strategy="evergreen"` sont codés mais **jamais exercés** → ③ devra les
@@ -105,7 +105,7 @@ mutualisée au niveau guilde) est **CADUC**. Nico a tranché le **modèle B** :
 **chaque animal a SA triade propre** (nourriture/prédateur/habitat) et **les
 guildes deviennent des catégories** (les espèces remplacent les champs). C'est une
 **refonte de la vie macro** (3 champs → 10), pas un ajout cosmétique. Conception
-FIGÉE : `docs/conception/CONCEPTION_FAUNE_DEDIEE.md` (amende §5.1 du catalogue).
+FIGÉE : `docs/faune/vie_macro/conception_faune_dediee.md` (amende §5.1 du catalogue).
 Audit clé : **6 consommateurs lisent `populations[guilde]` en dur** dont la SANTÉ
 des plantes (`perturbations.py`) → d'où le re-figeage golden large mais maîtrisé.
 

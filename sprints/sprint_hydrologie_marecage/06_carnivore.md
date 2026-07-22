@@ -1,7 +1,7 @@
 # ⑥ — Plante carnivore + couplage PUITS → `moustique` + voix
 
 > Kickoff autosuffisant. Lis `CLAUDE.md` + `00_etat.md` + CE fichier. Conception :
-> `docs/conception/CONCEPTION_HYDROLOGIE_MARECAGE.md` §5.3 + §9. Prérequis : ④ fait
+> `docs/champs/eau/conception_hydrologie_marecage.md` §5.3 + §9. Prérequis : ④ fait
 > (champ `moustique`) + ③ (marais). **Golden NEUTRE hors smoke.** Tronçon le plus
 > DÉLICAT : premier couplage PLANTE → champ FAUNE.
 

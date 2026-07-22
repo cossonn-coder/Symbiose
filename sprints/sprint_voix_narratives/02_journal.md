@@ -1,6 +1,6 @@
 # ② Ledger `sim/journal.py` + `consigner` + câblage driver
 
-> Lire d'abord `00_etat.md` + `docs/conception/CONCEPTION_VOIX_NARRATIVES.md` (§1.3).
+> Lire d'abord `00_etat.md` + `docs/narration/voix/conception_voix_narratives.md` (§1.3).
 > Tronçon **substrat partagé** : on crée le ledger d'événements opt-in et son point
 > d'entrée **hors tick** appelé par le DRIVER. Dépend de ① (`sim.evenements`). Premier
 > geste : RE-MESURER les hashs golden.

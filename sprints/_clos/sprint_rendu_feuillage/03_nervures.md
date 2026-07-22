@@ -1,6 +1,6 @@
 # ③ (T3) — Nervures = 3ᵉ valeur (E2)
 
-> Lis d'abord `docs/conception/CONCEPTION_RENDU_FEUILLAGE.md` **§3.2** (et §1, §2 pour
+> Lis d'abord `docs/rendu/feuillage/conception_rendu_feuillage.md` **§3.2** (et §1, §2 pour
 > les archétypes). **Dépend de ② (T2)** : la topologie de nervure est fonction de
 > l'archétype `LeafShape`. ② doit être clos avant.
 

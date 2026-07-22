@@ -19,7 +19,7 @@ from fields import _hash_noise, VITALITE_STEP
 from .mutations import (AddRondelle, RemoveRondelle, ReduceHealth, AddScore,
                         InjectField, PropagateDisease, Notification, Mutation)
 
-# Sémiologie ② (CONCEPTION_SEMIOLOGIE_FOLIAIRE.md §2.5) — gain de marque foliaire :
+# Sémiologie ② (docs/narration/semiologie/conception_semiologie_foliaire.md §2.5) — gain de marque foliaire :
 # convertit le coup de santé d'un ReduceHealth à cause typée en intensité [0,1]
 # cumulable. Couplé à SYMPTOM_DECAY (croissance.py) : à GAIN 0.5 / DECAY 0.8, un
 # coup unique laisse une marque ~0.5, de demi-vie ~3 semaines (0.8³≈0.5) → la

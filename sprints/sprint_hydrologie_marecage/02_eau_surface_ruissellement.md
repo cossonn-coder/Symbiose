@@ -1,7 +1,7 @@
 # ② — `eau_surface` + ruissellement latéral (`tick_ruissellement`)
 
 > Kickoff autosuffisant. Lis `CLAUDE.md` + `00_etat.md` + CE fichier. Conception :
-> `docs/conception/CONCEPTION_HYDROLOGIE_MARECAGE.md` §2. **Golden RE-FIGÉ LARGE
+> `docs/champs/eau/conception_hydrologie_marecage.md` §2. **Golden RE-FIGÉ LARGE
 > ANNONCÉ** (l'eau bouge entre plots). Prérequis : ① fait (`altitude` existe).
 
 ## Objectif

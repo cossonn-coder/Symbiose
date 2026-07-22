@@ -31,7 +31,7 @@ golden** — unique, propre, journalisé, exactement comme le sprint météo.
    retirer du calcul) + `:584` (site d'appel) ; `data/code/sim/reproduction.py:45`
    (`pollinator_reach`) + `:59` (`find_father`).
 
-## Périmètre — les 4 câblages (CONCEPTION_VIE_MACRO.md §8 #2)
+## Périmètre — les 4 câblages (docs/faune/vie_macro/conception_vie_macro.md §8 #2)
 
 Chaque champ cesse d'être décoratif et **nourrit la sim**. La règle d'or : la
 santé/les services lisent **la densité locale du champ** (`eco.populations[...]

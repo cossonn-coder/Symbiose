@@ -1,6 +1,6 @@
 # Tronçon ⑧ — Snapshot météo + carte température (pont Python→Godot)
 
-> Sprint thermique-microclimat. Conception : `docs/conception/CONCEPTION_THERMIQUE_MICROCLIMAT.md`.
+> Sprint thermique-microclimat. Conception : `docs/champs/climat/conception_thermique_microclimat.md`.
 > Kickoff **autosuffisant** (relançable à froid).
 > Pré-requis : ⑦ CLOS (catalogue Neige + Orage + manteau neigeux `eco.snow` ;
 > golden re-figé LARGE `5fddfe5430dd896de497d5ac9424951f0f29f3f38ad7b50cdb588310a5ffe9f6`,

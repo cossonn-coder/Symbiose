@@ -12,7 +12,7 @@
 ## Phase courante
 **SPRINT CLOS** — tronçons ① (D56) + ② (D25) + ③ (gène phénologie) + ④ (voix +
 bancs) TOUS LIVRÉS le 2026-07-02 (NON commité — Nico commit + clôture globale
-journal/DETTE). Doc : `docs/conception/CONCEPTION_BUGS_EMERGENCE.md`.
+journal/DETTE). Doc : `docs/meta/calibrage/conception_bugs_emergence.md`.
 
 ### Bilan de clôture (cascade golden ①→③, ④ NEUTRE)
 | Tronçon | Golden après | Neutre ? |

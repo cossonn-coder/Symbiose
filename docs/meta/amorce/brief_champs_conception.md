@@ -83,6 +83,6 @@ et produira ses kickoffs `/sprint-auto`. Ne rien implémenter avant conception f
   réponse (jamais de bonus direct), déterministe (zéro RNG vivant), golden préservé ou re-figé maîtrisé+annoncé.
 - **Perf-first** : chaque tronçon préserve le golden ou re-fige de façon localisée et expliquée.
 - **Rattachements** : DETTE D41 (mort par carence édaphique, bloquée qi_local), D57 (épaisseur), conceptions
-  voisines `CONCEPTION_HYDROLOGIE_MARECAGE.md`, `CONCEPTION_ALLELOPATHIE.md`, `etude_sol_vivant.md`.
+  voisines `docs/champs/eau/conception_hydrologie_marecage.md`, `docs/vegetal/allelopathie/conception_allelopathie.md`, `etude_sol_vivant.md`.
 - **Ménage** : `data/code/outputs/run10.py` et `ablate.py` (scripts d'audit) restent à retirer manuellement
   si non versionnés (cf. `audit_champs.md` annexe).

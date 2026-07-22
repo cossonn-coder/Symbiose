@@ -1,6 +1,6 @@
 # Tronçon ④ — Vue Godot : banc d'observation perf
 
-> Kickoff autosuffisant. Lire `CLAUDE.md` + `00_etat.md` + `CONCEPTION_PERF_RUN_ETERNEL.md`
+> Kickoff autosuffisant. Lire `CLAUDE.md` + `00_etat.md` + `docs/perf/run_eternel/conception_perf_run_eternel.md`
 > §6/§7. C# côté Godot + éventuel champ snapshot côté `tools/simserver/serialize.py`.
 > Filet de compilation : `dotnet build Symbiose.csproj` (SDK sur la VM). F5 visuel = Nico.
 

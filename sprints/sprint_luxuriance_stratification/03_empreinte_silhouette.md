@@ -1,7 +1,7 @@
 # Tronçon 3 — Empreinte propre à l'espèce (silhouette + override ciblé)
 
 > Kickoff autosuffisant. Lis `CLAUDE.md` + `00_etat.md` (D3) +
-> `docs/conception/CONCEPTION_LUXURIANCE_STRATIFICATION.md §2.4`.
+> `docs/vegetal/grimpantes/conception_luxuriance_stratification.md §2.4`.
 > **Golden : NEUTRE** (overrides limités aux espèces hors scénario golden).
 
 ## Objectif

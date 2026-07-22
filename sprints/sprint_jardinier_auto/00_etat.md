@@ -2,7 +2,7 @@
 
 > Carnet de bord `/conception` → **CONCEPTION FIGÉE le 2026-07-18**. Reprise à
 > froid = lire `CLAUDE.md` + CE fichier + le kickoff `0N` du tronçon en cours.
-> Doc : `docs/conception/CONCEPTION_JARDINIER_AUTOMATE.md`. Kickoffs `01`→`07`
+> Doc : `docs/joueur/automate/conception_jardinier_automate.md`. Kickoffs `01`→`07`
 > autosuffisants présents. **Prêt pour `/sprint-auto sprint_jardinier_auto`.**
 >
 > Carte des tronçons : ① socle · ② table+budget+impasses · ③ comptabilité+trace ·
@@ -229,7 +229,7 @@ Un **jardinier automate** déterministe qui joue le jardin à la place du testeu
 pendant les phases de test accélérées (2,5 J/s). Intention : faire pousser les
 plantes et récolter les fruits, « de son mieux pour chaque plante ». Ancrage
 comportemental = **loi du minimum de Liebig** (lever le facteur limitant).
-Amorce source : `docs/amorce/amorce_conception_automate.md`.
+Amorce source : `docs/meta/amorce/amorce_conception_automate.md`.
 
 ## Cadres déjà posés par Nico (amorce §0, 2026-07-18) — NON rediscutés
 - **Perception** : deux profils **commutables** (`omniscient` / `semiologique`).

@@ -1,7 +1,7 @@
 # T5 — Décor : forêt + rivière/falaise détaillés (VUE C#, golden inchangé)
 
 > Kickoff autosuffisant. Lire `CLAUDE.md` + `00_etat.md` + ce fichier.
-> Conception : `docs/conception/CONCEPTION_RENDU_AMBIANCE.md` §5.2 & §5.3.
+> Conception : `docs/rendu/ambiance/conception_rendu_ambiance.md` §5.2 & §5.3.
 > **Dépend de T1** (noms d'essences) et **T4** (zones/`SurroundingsProfile`).
 
 ## Objectif

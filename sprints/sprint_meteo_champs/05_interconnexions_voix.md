@@ -1,6 +1,6 @@
 # ⑤ Interconnexions vivantes + voix narratives + pont snapshot
 
-> Lire d'abord `00_etat.md` + `docs/conception/CONCEPTION_METEO_CHAMPS.md` (§6).
+> Lire d'abord `00_etat.md` + `docs/champs/climat/conception_meteo_champs.md` (§6).
 > Dépend de ② (rosée/givre à relier et exposer). Dernier tronçon. Premier geste :
 > RE-MESURER les hashs golden.
 

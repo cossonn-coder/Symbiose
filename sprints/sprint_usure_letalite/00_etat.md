@@ -7,7 +7,7 @@
 **SPRINT CLOS (2026-07-04, `/sprint-auto`).** ①②③ faits et commités (532e50c,
 9a7973c, 7c07788) ; journal 98, DETTE D64 ✅, BACKLOG à jour. Golden final
 `15073be1…`. Reste à Nico : **F5 de validation** (cf. §F5 et §REPRISE).
-Doc : `docs/conception/CONCEPTION_USURE_LETALITE.md`. Tronçons :
+Doc : `docs/vegetal/sante/conception_usure_letalite.md`. Tronçons :
 `01_conflit_non_letal.md`, `02_cap_letalite_chronique.md`, `03_vue_godot.md`.
 
 ## Carte des tronçons (golden)
@@ -118,7 +118,7 @@ au cœur moteur.
   l'échelle = hors périmètre).
 
 ## Ancrage FORT : le code viole une conception DÉJÀ figée
-`docs/conception/CONCEPTION_COMPETITION_INTRAPLOT.md` (Nico 2026-06-13) tranche
+`docs/vegetal/catalogue/conception_competition_intraplot.md` (Nico 2026-06-13) tranche
 **Q3 : « la mort du perdant ÉMERGE du déclin de santé (`_tick_senescence_health`)
 — JAMAIS de mortalité verdict »**, et décrit `detect_conflicts` comme informatif
 (« `resolved` n'est jamais positionné → aucune mortalité »). Or `_resoudre_conflits`
@@ -205,5 +205,5 @@ aigu/chronique). Golden **re-figé** `15073be1a80bb2aedd686bdf09fe96e96b3979fa09
 côté `PlantRenderer` C# reporté du sprint stress chronique + banc `grimpantes`
 rejoué F5). Après clôture : **F5 Nico** sur le banc `grimpantes` (hôte survit,
 dominé s'ombre lentement, plus de mort-éclair).
-Doc de référence : `docs/conception/CONCEPTION_USURE_LETALITE.md`. Suite (séparée) :
+Doc de référence : `docs/vegetal/sante/conception_usure_letalite.md`. Suite (séparée) :
 ouvrir une `/conception` pour **D65 luxuriance/stratification**.

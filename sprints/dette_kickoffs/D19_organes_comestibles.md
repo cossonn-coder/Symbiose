@@ -21,7 +21,7 @@ signée par espèce/organe** (fruit mûr `+`, feuille de bourrache `un peu +`, l
 - `plants/base.py` : `PlantInstance.organs: list` existe **mais reste vide** (`# tronçon
   5`) ; attribut de classe `organ_site ∈ {"terminal","lateral"}` (où naissent
   fleurs/fruits) **déclaré, pas encore peuplé**.
-- `CONCEPTION_CROISSANCE.md` **§H.2** (organes tout procéduraux : bouton → fleur →
+- `docs/vegetal/croissance/conception_croissance.md` **§H.2** (organes tout procéduraux : bouton → fleur →
   fruit vert → fruit mûr, stades d'organe, palette/saison) et **§D.5** (mise à fruit :
   les organes reproducteurs se forment **selon le profil espèce**, la taille « met à
   fruit » émerge sans `+=`). **C'est là que les organes naissent réellement** — d'où
@@ -78,7 +78,7 @@ Le gain final = `base_organe × maturité_organe × nutrition_espèce`.
   espèce** — calque exact du patron `SOIL_SIGNATURE`/gènes déjà en place.
 
 ## Périmètre (sous Choix 1=A, le cas couplé t5)
-1. **Conception** : section dans `CONCEPTION_CROISSANCE.md` §H.2 (ou doc dédié)
+1. **Conception** : section dans `docs/vegetal/croissance/conception_croissance.md` §H.2 (ou doc dédié)
    actant : organe consommable = entrée de `inst.organs` ; déplétion = retrait ;
    repousse = régénération par la croissance ; table `nutrition` data-driven.
 2. **Impl.** : `manger` prend une **cible organe** (depuis le clic Godot plus tard ;

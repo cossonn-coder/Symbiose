@@ -1,5 +1,5 @@
 // SYMBIOSE — Palette16.cs (SS² Palette, tronçon T1)
-// PALETTE CENTRALE 16-bit (cap docs/conception/CONCEPTION_RENDU_PIXELART.md §5).
+// PALETTE CENTRALE 16-bit (cap docs/rendu/pixelart/conception_rendu_pixelart.md §5).
 //
 // POURQUOI ce fichier : avant T1, les teintes de base du rendu étaient des
 // littéraux `new Color("…")` ÉPARS dans PlantRenderer(.cs/.Palette/.Organs) et

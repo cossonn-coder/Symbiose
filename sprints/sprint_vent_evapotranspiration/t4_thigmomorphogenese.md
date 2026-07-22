@@ -1,6 +1,6 @@
 # Tronçon ④ — Thigmomorphogénèse & dégât des tiges
 
-> Kickoff autonome. Design : `CONCEPTION_VENT_EVAPOTRANSPIRATION.md` **§5.1** (thigmo)
+> Kickoff autonome. Design : `docs/champs/climat/conception_vent_evapotranspiration.md` **§5.1** (thigmo)
 > + **§5.2** (dégât étiolées) + **§3** (transpiration). Effets **par-plante**
 > (négligeable en perf). Re-figeage golden probable.
 

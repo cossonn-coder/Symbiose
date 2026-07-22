@@ -1,7 +1,7 @@
 # ⑤ MACROS + PERSISTANCE LAYOUT + BANC F5 — kickoff autosuffisant
 
 > Sprint PALETTE DE GESTES. Lire d'abord : `CLAUDE.md` + `00_etat.md` +
-> `docs/conception/CONCEPTION_PALETTE_GESTES.md` §3.1/§3.7 (D1/D5/D10).
+> `docs/joueur/gestes/conception_palette_gestes.md` §3.1/§3.7 (D1/D5/D10).
 > Démarre à FROID. Prérequis : ①→④ faits (palette gauche cliquable en place).
 > Dernier tronçon = VUE (règle projet). F5 visuel = Nico.
 

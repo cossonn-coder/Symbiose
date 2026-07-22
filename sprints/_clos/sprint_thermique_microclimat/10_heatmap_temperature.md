@@ -1,6 +1,6 @@
 # Tronçon ⑩ — Heatmap de la température du SOL (debug, F7) — DERNIER du sprint
 
-> Sprint thermique-microclimat. Conception : `docs/conception/CONCEPTION_THERMIQUE_MICROCLIMAT.md`.
+> Sprint thermique-microclimat. Conception : `docs/champs/climat/conception_thermique_microclimat.md`.
 > Kickoff **autosuffisant** (relançable à froid).
 > Pré-requis : ⑨ CLOS (rendu météo : `WeatherLayer` ambiance écran + `SnowLayer`
 > manteau par tuile ; snapshot 0.5.0 expose `weather` + `temperature[tile]`).

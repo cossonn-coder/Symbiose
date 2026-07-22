@@ -1,7 +1,7 @@
 """
 SYMBIOSE — sim/vigueur.py
 Couche Vigueur JOUEUR (D11, sous-sprint 1) — le seul *vrai nouvel état* de la
-conception Vigueur (cf. `docs/conception/CONCEPTION_VIGUEUR.md` §2).
+conception Vigueur (cf. `docs/joueur/vigueur/conception_vigueur.md` §2).
 
 Deux strates distinctes (spec §0) :
   1. Cœur écologique déterministe (le tick `engine`) — INCHANGÉ. La Vigueur des

@@ -1,6 +1,6 @@
 # Tronçon ② — Évapotranspiration enrichie (débloque D39)
 
-> Kickoff autonome. Design : `CONCEPTION_VENT_EVAPOTRANSPIRATION.md` **§3** + **§0**
+> Kickoff autonome. Design : `docs/champs/climat/conception_vent_evapotranspiration.md` **§3** + **§0**
 > (déséquilibre chiffré). **Re-figeage golden LARGE annoncé.** C'est le cœur : il
 > fait repasser `test_senescence` au **vert**.
 

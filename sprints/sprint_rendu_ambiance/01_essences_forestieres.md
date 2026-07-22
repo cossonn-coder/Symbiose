@@ -1,7 +1,7 @@
 # T1 — Essences forestières au catalogue (MOTEUR, golden NEUTRE)
 
 > Kickoff autosuffisant. Lire `CLAUDE.md` + `00_etat.md` + ce fichier suffit.
-> Conception complète : `docs/conception/CONCEPTION_RENDU_AMBIANCE.md` §2.
+> Conception complète : `docs/rendu/ambiance/conception_rendu_ambiance.md` §2.
 
 ## Objectif
 Ajouter **3 essences forestières normandes** au catalogue Python (source de
@@ -18,7 +18,7 @@ golden ne doit PAS bouger.
   essence (voix OBLIGATOIRE ; suivre l'entrée existante du `chene`/`sapin`).
 - `data/code/sim/magazine.py` — rattachement famille/offre (Fagaceae, Betulaceae).
 - `data/code/sim/pages.py` + `data/code/sim/carnet.py` — **optionnels** (page de
-  lore si l'espèce en porte ; concept illustré). Cf. `CONCEPTION_VOIX_NARRATIVES.md`.
+  lore si l'espèce en porte ; concept illustré). Cf. `docs/narration/voix/conception_voix_narratives.md`.
 
 ## Modèle (par espèce)
 Copier la structure de `OakTree` (`plants/perennials.py`) et adapter :

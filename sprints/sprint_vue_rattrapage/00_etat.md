@@ -154,7 +154,7 @@ Le C# reste **pur rendu/câblage** (aucune touche moteur).
 (`litiere[tile] = [[r, c, tissu_dominant, masse], …]`, liste creuse, `diffus`
 écarté). Pont **0.3.7**, module `tests/simserver/litiere.py` (section 15).
 Détail des features moteur rendues : `sprints/sprint_decomposition_compost/00_etat.md`
-(§Acquis ①–⑤) + `docs/conception/CONCEPTION_DECOMPOSITION_COMPOST.md`.
+(§Acquis ①–⑤) + `docs/champs/sol/conception_decomposition_compost.md`.
 
 **02 (rappel) : CODÉ, build vert, EN ATTENTE F5 Nico** — fruits réels + squelettes
 post-mortem + `manger` ciblé. Snapshot 0.3.6 (les morts). Points à vérifier au F5

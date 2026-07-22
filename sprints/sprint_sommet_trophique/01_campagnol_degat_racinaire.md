@@ -1,7 +1,7 @@
 # ① — Campagnol (herbivore vertébré, proie) + dégât racinaire + voix
 
 > Kickoff autosuffisant. Lis `CLAUDE.md` + `00_etat.md` + CE fichier. Conception :
-> `docs/conception/CONCEPTION_SOMMET_TROPHIQUE.md` §2.1, §3, §4. Pas de prérequis.
+> `docs/faune/trophique/conception_sommet_trophique.md` §2.1, §3, §4. Pas de prérequis.
 > **Golden re-figé MAÎTRISÉ #1 (annoncé) — herbivorie racinaire apparaît.**
 
 ## Objectif
@@ -37,7 +37,7 @@ plantes par un **canal racinaire DÉDIÉ**, distinct du ravageur foliaire.
   écorcée au ras du sol ». Rendu C# = ③.
 - Voix (§4) : carnet (`CONCEPT_DE` → régulation/chaîne trophique), événements (arrivée
   campagnol au ledger), pages secrètes si lore (optionnel), magazine n/a. Suivre
-  `CONCEPTION_VOIX_NARRATIVES.md`.
+  `docs/narration/voix/conception_voix_narratives.md`.
 - `tests/test_population.py` : campagnol présent ; densité nulle sans plante à racine ;
   monte là où des racines existent ; catégorie `herbivore_vertebre` agrégée.
 

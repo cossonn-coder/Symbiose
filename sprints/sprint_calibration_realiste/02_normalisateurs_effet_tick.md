@@ -1,7 +1,7 @@
 # ② Normalisateurs d'effet du microbiome — côté TICK
 
 > Kickoff autosuffisant. Lis `CLAUDE.md` + `00_etat.md` + ce fichier. Spec de
-> référence : `docs/conception/CONCEPTION_CALIBRATION_REALISTE.md` (§2.1, §2.2, §7②).
+> référence : `docs/meta/calibrage/conception_calibration_realiste.md` (§2.1, §2.2, §7②).
 > **Prérequis : tronçon ① terminé** (constantes `MICROBE_EFFECT_REF`, `OM_ACTIVE_REF`
 > déjà dans `constants.py`). Ce tronçon RE-FIGE LE GOLDEN LARGE (annoncé).
 

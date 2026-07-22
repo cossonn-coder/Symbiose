@@ -2,7 +2,7 @@
 
 > Kickoff autosuffisant. Lis `CLAUDE.md` + `00_etat.md` + ce fichier. Prérequis :
 > ①②③ faits (`vitalite`, `etat`, constitution, campagnol). Doc :
-> `docs/conception/CONCEPTION_SANTE_RESILIENCE.md` §4. **Golden INTACT** (le pont
+> `docs/vegetal/sante/conception_sante_resilience.md` §4. **Golden INTACT** (le pont
 > et la vue ne touchent pas le moteur — sérialisation pure). Règle permanente :
 > le dernier tronçon de chaque sprint est la vue Godot.
 

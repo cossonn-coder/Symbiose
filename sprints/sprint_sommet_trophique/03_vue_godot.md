@@ -1,7 +1,7 @@
 # ③ — Vue Godot : sprites campagnol/rapace/couleuvre + signe racinaire
 
 > Kickoff autosuffisant. Lis `CLAUDE.md` + `00_etat.md` + CE fichier. Conception :
-> `docs/conception/CONCEPTION_SOMMET_TROPHIQUE.md` §5 (③). Prérequis : ①② faits.
+> `docs/faune/trophique/conception_sommet_trophique.md` §5 (③). Prérequis : ①② faits.
 > **Golden INTACT — vue pure, aucune écriture moteur.** Tronçon vue obligatoire
 > (règle projet : chaque sprint se termine par sa vue Godot).
 
@@ -49,6 +49,6 @@ confirmer et le consigner dans `00_etat.md`.
   criblage foliaire ; boom-bust visible dans la durée. Verser tout écart en dette ciblée.
 
 ## Après ③ (maintenance D61 — clôture du sprint)
-- `CONCEPTION_COMPLETUDE_ECOSYSTEME.md` : T1 (D1) et T7 (B4) ⚠️ → ✅, « Incarné par » =
+- `docs/meta/calibrage/conception_completude_ecosysteme.md` : T1 (D1) et T7 (B4) ⚠️ → ✅, « Incarné par » =
   `rapace`/`couleuvre` / `campagnol`. Lancer `/audit-projet ecosysteme`.
 - `DETTE.md` (D61 pointeur) + `BACKLOG.md` + `journal.md` mis à jour.

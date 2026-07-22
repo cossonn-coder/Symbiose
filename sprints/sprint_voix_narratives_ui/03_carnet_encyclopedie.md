@@ -1,6 +1,6 @@
 # ③ Panneau Carnet + panneau Encyclopédie
 
-> Lire d'abord `00_etat.md` + `CONCEPTION_VOIX_NARRATIVES_UI.md` (§1, §3, §5).
+> Lire d'abord `00_etat.md` + `docs/narration/voix/conception_voix_narratives_ui.md` (§1, §3, §5).
 > Tronçon **C# pur**. Dépend du ① (commandes pont) et du ② (`SimBridge` + nœud
 > `VoicePanel` + hub). Filet = `dotnet build`. **INVARIANT** : affichage
 > **verbatim** du texte renvoyé par Python ; le C# ne concatène/ne reformule rien.

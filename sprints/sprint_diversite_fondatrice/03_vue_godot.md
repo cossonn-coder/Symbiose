@@ -1,7 +1,7 @@
 # Tronçon ③ — Vue Godot : voir les rythmes propres + la catena
 
 > Kickoff autosuffisant. Lis `CLAUDE.md` + `00_etat.md` + ce fichier. Doc complet :
-> `docs/conception/CONCEPTION_DIVERSITE_FONDATRICE.md`. Ce tronçon vient APRÈS ①
+> `docs/vegetal/genetique/conception_diversite_fondatrice.md`. Ce tronçon vient APRÈS ①
 > (génétique fondatrice) et ② (catena) : le moteur produit désormais des plantes à
 > patrimoine propre et des champs de sol hétérogènes structurés par l'altitude. Ici
 > on les REND OBSERVABLES et on re-vérifie l'équilibre de population.

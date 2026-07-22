@@ -60,7 +60,7 @@ le **sol** (`soil_type`) décide de la vitesse de drainage — **pas un bouton**
 - **Golden** : 2 tuiles — **T0 `terre` (hum 1.5)**, **T1 `argile` (hum 2.0)**
   (`tests/test_golden.py:62-69`). Empreinte courante `16a1b937…` (smoke test).
 
-## Modèle figé (résumé — détail dans CONCEPTION_PLANTER_ARROSER.md §2-4)
+## Modèle figé (résumé — détail dans docs/joueur/gestes/conception_planter_arroser.md §2-4)
 
 ```
 # planter (event-driven, golden INTACT)

@@ -8,7 +8,7 @@
 D65 « luxuriance par stratification / densification » — extrait de D64. Un plot
 n'est pas limité à une plante : plusieurs strates coexistent (couvre-sol +
 potagère + grimpante + traçante), la **compétition émerge de la densification**,
-pas d'un conflit discret. Détail source : `CONCEPTION_USURE_LETALITE.md §6`.
+pas d'un conflit discret. Détail source : `docs/vegetal/sante/conception_usure_letalite.md §6`.
 
 ## 4 briques D65 (toutes prioritaires Nico)
 1. Densification clonale des couvre-sols/traçantes (stolons trèfle/fraisier/menthe).
@@ -283,7 +283,7 @@ nombre de ramets → protège le LightField d'une explosion de plantes. Budget �
    teinte/opacité du tapis (`TapisColor`, AlphaFloor/Span) — cosmétique, ajustable.
 À la clôture du sprint (après verdict F5 favorable) : **fermer D62 (absorbée)**,
 MAJ `DETTE.md` (D65 ✅) + `BACKLOG.md` + `journal/` (entrée de clôture) + mémoire
-projet. Conception FIGÉE `docs/conception/CONCEPTION_LUXURIANCE_STRATIFICATION.md`.
+projet. Conception FIGÉE `docs/vegetal/grimpantes/conception_luxuriance_stratification.md`.
 
 **CLÔTURE DOCUMENTAIRE FAITE (2026-07-04, orchestrateur `/sprint-auto`)** :
 D62 ✅ FERMÉE + D65 ✅ FAIT dans `DETTE.md` ; `BACKLOG.md` marqué TERMINÉ ;

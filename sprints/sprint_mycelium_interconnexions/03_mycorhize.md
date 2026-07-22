@@ -1,6 +1,6 @@
 # ③ Mycorhize — boost borné du phosphore (wood-wide-web)
 
-> Lire d'abord `00_etat.md` + `docs/conception/CONCEPTION_MYCELIUM_INTERCONNEXIONS.md`
+> Lire d'abord `00_etat.md` + `docs/faune/mycelium/conception_mycelium_interconnexions.md`
 > (§2, §2.2). Prérequis : ①② FAITS. Rôle le plus STRUCTURANT : le réseau **relie les
 > racines vivantes au sol** et fait passer le **phosphore**. **Re-figeage golden
 > (uptake) attendu et MAÎTRISÉ.**

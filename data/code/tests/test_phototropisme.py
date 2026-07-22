@@ -1,7 +1,7 @@
 """
 SYMBIOSE — tests/test_phototropisme.py
 Test CIBLÉ du phototropisme directionnel (sprint maison, tronçon 3,
-CONCEPTION_MAISON_OMBRE.md §4 + §7). Hors du golden smoke test (décision Q4) :
+docs/champs/lumiere/conception_maison_ombre.md §4 + §7). Hors du golden smoke test (décision Q4) :
 on vérifie ici le COMPORTEMENT (l'apex se penche vers le clair), pas un hash.
 
 Contrats couverts (kickoff 03_phototropisme.md §critères) :

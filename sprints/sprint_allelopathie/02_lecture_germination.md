@@ -1,7 +1,7 @@
 # ② Lecture à la GERMINATION
 
 > Kickoff autosuffisant. Reprise à froid = `CLAUDE.md` + `00_etat.md` + ce fichier
-> + `CONCEPTION_ALLELOPATHIE.md` §B. Prérequis : tronçon ① fait (champ
+> + `docs/vegetal/allelopathie/conception_allelopathie.md` §B. Prérequis : tronçon ① fait (champ
 > `allelopathie` + injection + décroissance). Golden **probable neutre**.
 
 ## Objectif

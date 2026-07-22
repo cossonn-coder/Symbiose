@@ -1,6 +1,6 @@
 # Tronçon ① — pH socle (champ hérité + dérive lente, aucun lecteur)
 
-> Sprint physico-chimie du sol. Conception : `docs/conception/CONCEPTION_SOL_PH.md`
+> Sprint physico-chimie du sol. Conception : `docs/champs/sol/conception_sol_ph.md`
 > (§2.1, §3, §4, §6). Kickoff **autosuffisant** (relançable à froid).
 
 ## Objectif

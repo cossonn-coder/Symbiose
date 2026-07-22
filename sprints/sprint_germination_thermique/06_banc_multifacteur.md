@@ -1,7 +1,7 @@
 # Tronçon ⑥ — Banc multifacteur de germination + oracles
 
 > Kickoff **autosuffisant** (lis CLAUDE.md + 00_etat.md + ce fichier).
-> Conception : `CONCEPTION_GERMINATION_THERMIQUE.md` §5. Lancement depuis
+> Conception : `docs/vegetal/floraison/conception_germination_thermique.md` §5. Lancement depuis
 > `data/code/`. Golden : **NEUTRE** (banc jamais monté au smoke/full).
 
 ## Objectif

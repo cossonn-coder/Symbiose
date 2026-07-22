@@ -1,6 +1,6 @@
 # T1 — Signe `ombre` / étiolement (lève dette 0.5.2)
 
-> Lire d'abord `00_etat.md` (invariants) + `CONCEPTION_SEMIOLOGIE_VISUELLE.md` §2.
+> Lire d'abord `00_etat.md` (invariants) + `docs/narration/semiologie/conception_semiologie_visuelle.md` §2.
 > Couche **B pure** (C#). Golden trivialement préservé, build C# vert, F5 = Nico.
 
 ## But

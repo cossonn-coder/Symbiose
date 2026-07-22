@@ -1,7 +1,7 @@
 # Tronçon ① — LOD silhouette des plantes (le fix décisif du 5 FPS)
 
 > Kickoff autosuffisant. Lire d'abord `CLAUDE.md` (racine) + `00_etat.md` +
-> `docs/conception/CONCEPTION_PERF_RENDU_PLANTES.md`. Rendu/vue **C# pur** :
+> `docs/perf/lod/conception_perf_rendu_plantes.md`. Rendu/vue **C# pur** :
 > **AUCUNE** touche à `data/code/`, **golden INTACT** (rien à re-figer, aucun
 > test moteur à relancer). Filet de compil : `dotnet build Symbiose.csproj` sur
 > la VM (le F5 visuel reste à Nico).

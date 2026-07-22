@@ -1,7 +1,7 @@
 # Tronçon 04 — Vue Godot : Atelier + menu gestes
 
 > Tu démarres À FROID. Lis `CLAUDE.md`, `00_etat.md`, puis
-> `docs/conception/CONCEPTION_ACQUISITION_OUTILS.md` §B/§C. **Tronçon vue
+> `docs/joueur/outils/conception_acquisition_outils.md` §B/§C. **Tronçon vue
 > obligatoire** (règle 2026-07-03 : tout sprint finit par sa vue). Le F5 visuel
 > reste à Nico ; toi tu poses le C# + le pont et valides le build
 > (`dotnet build Symbiose.csproj`, filet de compilation sur la VM).

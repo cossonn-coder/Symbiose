@@ -1,7 +1,7 @@
 # Tronçon 01 — Gestes manuels `pincer` + `arracher`
 
 > Tu démarres À FROID. Lis d'abord `CLAUDE.md`, puis `00_etat.md` (état du sprint),
-> puis `docs/conception/CONCEPTION_ACQUISITION_OUTILS.md` §A. Ce kickoff suffit à
+> puis `docs/joueur/outils/conception_acquisition_outils.md` §A. Ce kickoff suffit à
 > implémenter le tronçon. Lancement moteur depuis `data/code/`.
 
 ## Objectif

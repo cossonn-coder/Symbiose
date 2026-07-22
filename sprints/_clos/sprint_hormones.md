@@ -68,7 +68,7 @@ jamais codé). Livrable : **`data/code/CONCEPTION_HORMONES.md`**.
    même réponse. Si un aléa est utile (variabilité du débourrement), il passe par
    `_hash_noise` comme le reste du moteur.
 
-## Ce que la conception doit produire — `CONCEPTION_HORMONES.md`
+## Ce que la conception doit produire — `docs/vegetal/croissance/conception_hormones.md`
 
 > Un seul fichier (pas de sous-découpage : la conception est une unité, cf. les
 > sprints conception Vigueur / Maîtrise / Vie macro). Structure proposée :
@@ -147,7 +147,7 @@ chiffres ici).
 
 ## Garde-fous spécifiques au sprint
 
-- **Pas de fichier créé sans OK** au-delà de `CONCEPTION_HORMONES.md` (le livrable
+- **Pas de fichier créé sans OK** au-delà de `docs/vegetal/croissance/conception_hormones.md` (le livrable
   attendu). Concevoir en conversation, écrire le doc sur « vas-y ».
 - **Max 3 questions à la fois** ; défaut sobre + signaler quand tu tranches seul.
 - **Ne rien jeter** : `tailler` v1 (effet géométrique) est conservé comme socle, la

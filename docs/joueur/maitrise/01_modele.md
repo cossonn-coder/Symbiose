@@ -1,7 +1,7 @@
 # Maîtrise — §0-8 · Le modèle (squelette réutilisable)
 
 > Partie 1/3 de la conception des paliers de maîtrise. Index :
-> [`../CONCEPTION_MAITRISE.md`](../CONCEPTION_MAITRISE.md).
+> [`conception_maitrise.md`](conception_maitrise.md).
 > Suite : [`02_succes_par_axe.md`](02_succes_par_axe.md) (le succès, D12.1),
 > [`03_taxonomie_objets.md`](03_taxonomie_objets.md) (la taxonomie, D12.3).
 
@@ -97,7 +97,7 @@ répétée — elle accélère seulement le début.
 Un palier acquis **ne se perd jamais** (décision actée). Cohérent avec « le savoir
 voyage à l'avatar au déménagement » (CLAUDE.md) et avec philo #6 (pas de punition
 scriptée) : la pression écologique qui revient punit déjà *via la Vigueur dépensée*
-(cf. `CONCEPTION_VIGUEUR.md` §3.3), inutile de dégrader la maîtrise.
+(cf. `docs/joueur/vigueur/conception_vigueur.md` §3.3), inutile de dégrader la maîtrise.
 
 ---
 
@@ -183,7 +183,7 @@ récolter, bouturer le framboisier deviennent **tous** moins chers (et le spillo
 Rubus/Rosaceae de §3.1 joue).
 
 ### 4.3 Sources ponctuelles de Vigueur (découverte & succès)
-En plus des sources de `CONCEPTION_VIGUEUR.md` §2.2 (récolte, méditation, manger) :
+En plus des sources de `docs/joueur/vigueur/conception_vigueur.md` §2.2 (récolte, méditation, manger) :
 
 - **Découverte d'un objet** (`0 → 1`) → petit `+` Vigueur — *la motivation* :
   chaque découverte donne envie d'en savoir plus.

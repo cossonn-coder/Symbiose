@@ -1,7 +1,7 @@
 # ⑦ Profil `semiologique` — OPTIONNEL, hors chaîne
 
 > Kickoff autosuffisant. Lire `CLAUDE.md` + `00_etat.md` +
-> `docs/conception/CONCEPTION_JARDINIER_AUTOMATE.md` (§9). Prérequis : ①→⑤ tiennent.
+> `docs/joueur/automate/conception_jardinier_automate.md` (§9). Prérequis : ①→⑤ tiennent.
 > **OPTIONNEL** : à n'implémenter que si les tronçons ①-⑤ ont tenu et que Nico le
 > demande. Ne PAS le lancer par défaut en `/sprint-auto`.
 

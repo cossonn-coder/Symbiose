@@ -1,7 +1,7 @@
 # Sprint D29 — Implémentation Python des hormones (réponse à la taille) — état partagé
 
 > ⚠️ **SUPERSEDED (2026-06-05).** Ce découpage reposait sur le modèle « 2 scalaires,
-> golden intact » de `CONCEPTION_HORMONES.md`, **abandonné** au profit du modèle
+> golden intact » de `docs/vegetal/croissance/conception_hormones.md`, **abandonné** au profit du modèle
 > **structure de segments / auxine structurelle / rendu procédural**. Découpage
 > actuel : **`sprints/sprint_croissance/00_etat.md`** (D29 y est absorbé au tronçon
 > 3). On conserve ce dossier pour l'historique ; **ne plus le suivre**.

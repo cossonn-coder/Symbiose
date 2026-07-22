@@ -1,7 +1,7 @@
 # ② BOUTURE (moteur + voix) — kickoff autosuffisant
 
 > Sprint PALETTE DE GESTES. Lire d'abord : `CLAUDE.md` + `00_etat.md` +
-> `docs/conception/CONCEPTION_PALETTE_GESTES.md` §3.5. Démarre à FROID.
+> `docs/joueur/gestes/conception_palette_gestes.md` §3.5. Démarre à FROID.
 > Prérequis : ① fait (le geste sera exposé/débloqué ; ici on l'IMPLÉMENTE).
 
 ## Objectif
@@ -69,7 +69,7 @@ génétique exact, à 2 temps (mère bouturable → plot cible). Réutilise le m
     classe bien `bouturer` en `"geste"` (le test du corpus l'exige).
   - Technique `bouture` : ajoute sa fiche dans `sim/technique_corpus.py` (miroir).
   - Concept carnet : si un `CONCEPT_DE` relie le geste à un concept
-    (« multiplication végétative »), câble-le (cf. `CONCEPTION_VOIX_NARRATIVES.md`
+    (« multiplication végétative »), câble-le (cf. `docs/narration/voix/conception_voix_narratives.md`
     §5). Optionnel : page secrète si lore.
 - **Pont** : route `bouturer` à 2 temps dans `tools/simserver/actions.py`
   (+ `actions_cibles.py` pour la résolution mère/plot). Bump `ENGINE_VERSION`

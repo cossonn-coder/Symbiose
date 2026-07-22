@@ -2,7 +2,7 @@
 
 Cap : combler les trous du **rendu des feuilles** par espèce (forme, couleur,
 nervures, croissance, insertion, chute) dans la continuité du **rendu pixel-art
-16-bit** — cf. [`CONCEPTION_RENDU_PIXELART.md`](CONCEPTION_RENDU_PIXELART.md)
+16-bit** — cf. [`conception_rendu_pixelart.md`](../pixelart/conception_rendu_pixelart.md)
 (SS④ « plantes/organes »). Couche **B** (pixellisation, `visuals/PlantRenderer.*`)
 sauf deux tronçons « pont » (§4, §6) qui transportent une donnée déjà calculée par
 le moteur.
@@ -381,12 +381,12 @@ tronçon C# (le F5 visuel reste à Nico).
 
 ## Liens
 
-- Cap pixel-art : [`CONCEPTION_RENDU_PIXELART.md`](CONCEPTION_RENDU_PIXELART.md)
+- Cap pixel-art : [`conception_rendu_pixelart.md`](../pixelart/conception_rendu_pixelart.md)
   (SS② palette = fondation chromatique, SS④ plantes/organes).
 - Sémiologie foliaire (modèle moteur des symptômes) :
-  `CONCEPTION_SEMIOLOGIE_FOLIAIRE.md` (D33, clos).
+  `docs/narration/semiologie/conception_semiologie_foliaire.md` (D33, clos).
 - Sémiologie visuelle (mapping symptômes rendu) :
-  [`CONCEPTION_SEMIOLOGIE_VISUELLE.md`](CONCEPTION_SEMIOLOGIE_VISUELLE.md)
+  [`conception_semiologie_visuelle.md`](../../narration/semiologie/conception_semiologie_visuelle.md)
   (🅿️ parké, D48).
 - Dettes : D10 (discipline forme SVG→C#, dérogée ici ③), D49 (mécanique grimpe
   vrilles, pré-requis E6).

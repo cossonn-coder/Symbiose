@@ -1,6 +1,6 @@
 # Tronçon ⑤ — Signe diégétique d'acclimatation + dette
 
-> Sprint « plasticité ». Conception : `docs/conception/CONCEPTION_PLASTICITE_EXPRESSION.md`
+> Sprint « plasticité ». Conception : `docs/vegetal/genetique/conception_plasticite_expression.md`
 > (§3-P3, §3-P4, §4, §7). **Lire la conception + relire le journal `00_etat.md`.**
 > **Golden NEUTRE attendu** (détecteur = lecture pure, comme la sémiologie ①).
 

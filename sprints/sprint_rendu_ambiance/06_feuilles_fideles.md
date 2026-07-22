@@ -1,7 +1,7 @@
 # T6 — Feuilles fidèles au modèle réel (VUE C#, golden inchangé)
 
 > Kickoff autosuffisant. Lire `CLAUDE.md` + `00_etat.md` + ce fichier.
-> Conception : `docs/conception/CONCEPTION_RENDU_AMBIANCE.md` §3bis.
+> Conception : `docs/rendu/ambiance/conception_rendu_ambiance.md` §3bis.
 > **Indépendant** (organes végétaux) — peut être fait dès après T1/T2.
 
 ## Objectif

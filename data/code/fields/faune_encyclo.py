@@ -1,7 +1,7 @@
 """
 SYMBIOSE — fields/faune_encyclo.py
 Métadonnée d'ENCYCLOPÉDIE de la faune nommée (tronçon ④e, modèle B
-CONCEPTION_FAUNE_DEDIEE.md §1.1/§3). DONNÉE PURE : jamais lue par le tick de la
+docs/faune/vie_macro/conception_faune_dediee.md §1.1/§3). DONNÉE PURE : jamais lue par le tick de la
 simulation → golden NEUTRE. Le RENDU (l'entrée d'encyclopédie côté Godot, voix
 naturaliste philo #5) est le tronçon ⑥ ; ici on ne porte que le texte et le
 graphe relationnel, prêts à splatter dans `TrophicSpec`.

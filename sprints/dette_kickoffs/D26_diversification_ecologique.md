@@ -34,7 +34,7 @@ nouveaux archétypes) et une décision **class-based vs data-driven**, en coordi
 avec la génétique (D22). » → Aujourd'hui éclairement ✅, génétique ✅. **Il reste la
 décision de structure** + l'arrivée de la **croissance procédurale (D29)** qui ajoute
 un **profil de croissance par espèce** : chaque nouvelle espèce devra désormais
-décrire sa **vitesse + son `port_archetype`** (cf. `CONCEPTION_CROISSANCE.md` §E).
+décrire sa **vitesse + son `port_archetype`** (cf. `docs/vegetal/croissance/conception_croissance.md` §E).
 → **Reco de timing** : faire D26 **une fois D29 stabilisé** (au moins le profil par
 espèce du tronçon 2), sinon on ajoute des espèces qu'il faudra re-profiler.
 

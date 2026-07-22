@@ -1,7 +1,7 @@
 # ① — Traits grimpante + affalement géométrique SANS support
 
 > Kickoff autosuffisant. Lis `CLAUDE.md` + `00_etat.md` + CE fichier. Conception :
-> `docs/conception/CONCEPTION_GRIMPANTES.md` §2/§3. **Golden RE-FIGÉ maîtrisé
+> `docs/vegetal/grimpantes/conception_grimpantes.md` §2/§3. **Golden RE-FIGÉ maîtrisé
 > ANNONCÉ** (le haricot s'affale). Lancement depuis `data/code/`.
 
 ## Objectif

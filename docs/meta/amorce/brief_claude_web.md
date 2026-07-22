@@ -41,14 +41,14 @@ aucun arbitrage lourd — il **prépare le terrain** pour `/conception`.
 | `CLAUDE.md` | Philosophie #1-#7, mécaniques centrales, vocabulaire, garde-fous. LE socle. |
 | `DETTE.md` | Dette technique D1→Dxx — pour ne pas re-proposer ce qui est déjà noté. |
 | `BACKLOG.md` | Sprints passés + à venir — pour savoir ce qui est déjà conçu/planifié. |
-| `docs/conception/CONCEPTION_VOIX_NARRATIVES.md` | Règle des 5 voix (toute espèce ajoutée). |
+| `docs/narration/voix/conception_voix_narratives.md` | Règle des 5 voix (toute espèce ajoutée). |
 
 **Modèles de style (fortement recommandé) — pour caler la qualité cible :**
 
 | Fichier | Sert de modèle pour… |
 |---|---|
-| `docs/conception/CONCEPTION_ALLELOPATHIE.md` | une conception mécanique récente et propre (champ + injection + philo #2). |
-| `docs/conception/CONCEPTION_HYDROLOGIE_MARECAGE.md` | une conception large avec faune + gestes + découpage. |
+| `docs/vegetal/allelopathie/conception_allelopathie.md` | une conception mécanique récente et propre (champ + injection + philo #2). |
+| `docs/champs/eau/conception_hydrologie_marecage.md` | une conception large avec faune + gestes + découpage. |
 
 **Optionnel (si la place le permet) :**
 
@@ -166,7 +166,7 @@ une matière propre et fidèle.
 ## 3. Ce que Nico fait avec le livrable
 
 Une fois `amorce_conception.md` produit par Claude web, tu le déposes sur la VM
-(copier-coller dans un nouveau `docs/conception/CONCEPTION_<SUJET>.md` ou un
+(copier-coller dans un nouveau `docs/<type>/<theme>/conception_<sujet>.md` ou un
 fichier de travail), puis tu lances ici :
 
 ```

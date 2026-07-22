@@ -2,7 +2,7 @@
 
 > **Statut : FIGÉ le 2026-06-19.** Doc à ÉTUDIER (pas de questions à trancher —
 > les décisions sont prises). Ce document **AMENDE et SUPPLANTE** la §5.1 de
-> `CONCEPTION_CATALOGUE_ENRICHI.md` (qui retenait le modèle **A « parfum »** par
+> `docs/vegetal/catalogue/conception_catalogue_enrichi.md` (qui retenait le modèle **A « parfum »** par
 > défaut). Le kickoff `sprints/sprint_catalogue_enrichi/04_faune_parfums.md`
 > (modèle A) devient **caduc** — conservé en historique, remplacé par les
 > tronçons ④a–④e décrits au §7.

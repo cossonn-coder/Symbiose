@@ -1,7 +1,7 @@
 # ④ Objectifs (cœur mécanique) + onglet
 
 > Kickoff autosuffisant. Lire `CLAUDE.md` + `00_etat.md` +
-> `docs/conception/CONCEPTION_JARDINIER_AUTOMATE.md` (§8). Prérequis : ①②③ faits.
+> `docs/joueur/automate/conception_jardinier_automate.md` (§8). Prérequis : ①②③ faits.
 
 ## Objectif
 Donner à l'automate des **objectifs** `(geste, quantité, cible)` (ex. « récolter 1

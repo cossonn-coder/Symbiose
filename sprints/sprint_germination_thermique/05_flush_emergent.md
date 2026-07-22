@@ -1,7 +1,7 @@
 # Tronçon ⑤ — Flush émergent : suppression de `spring_flush`
 
 > Kickoff **autosuffisant** (lis CLAUDE.md + 00_etat.md + ce fichier).
-> Conception : `CONCEPTION_GERMINATION_THERMIQUE.md` §0 + §1.1. Lancement depuis
+> Conception : `docs/vegetal/floraison/conception_germination_thermique.md` §0 + §1.1. Lancement depuis
 > `data/code/`. Golden : **RE-FIGÉ maîtrisé** (annoncé).
 
 ## Objectif

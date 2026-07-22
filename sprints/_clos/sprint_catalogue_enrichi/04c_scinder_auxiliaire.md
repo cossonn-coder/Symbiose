@@ -1,7 +1,7 @@
 # Tronçon ④c — SCINDER la catégorie `auxiliaire` (coccinelle / chrysope / carabe / merle / hérisson)
 
 > Sprint CATALOGUE ENRICHI. État partagé : `00_etat.md` (lire d'abord).
-> Doc FIGÉ : `docs/conception/CONCEPTION_FAUNE_DEDIEE.md` (§2 auxiliaire, §3 graphe, §4).
+> Doc FIGÉ : `docs/faune/vie_macro/conception_faune_dediee.md` (§2 auxiliaire, §3 graphe, §4).
 > **Pré-requis : ④b CLOS** (ravageur scindé en puceron/limace/doryphore).
 > Kickoff autosuffisant. Python depuis `data/code/`. Filet `dotnet build`.
 

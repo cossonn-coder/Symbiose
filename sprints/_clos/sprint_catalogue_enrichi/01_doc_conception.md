@@ -3,7 +3,7 @@
 > Sprint CATALOGUE ENRICHI. État partagé : `00_etat.md` (lire d'abord).
 > Kickoff **autosuffisant** (relançable à froid).
 > **DOC SEUL — golden INTACT par construction** : zéro fichier `data/code/` ou C#
-> touché. Le seul livrable est `docs/conception/CONCEPTION_CATALOGUE_ENRICHI.md`.
+> touché. Le seul livrable est `docs/vegetal/catalogue/conception_catalogue_enrichi.md`.
 
 ## Objectif
 
@@ -47,19 +47,19 @@ Moteur (`data/code/`) :
 - `fields/lifecycle.py` (`LifeCycleBridge`), `fields/foragers.py` (`ForagerParams`),
   `fields/apiculture.py` (ruche/miel).
 
-Conception des features (`docs/conception/`) — pour savoir QUELS leviers chaque
+Conception des features (`docs/<type>/<theme>/`) — pour savoir QUELS leviers chaque
 espèce peut actionner :
-- `CONCEPTION_THERMIQUE_MICROCLIMAT.md` (gel/neige/ombre/`winter_strategy`),
-- `CONCEPTION_POLLINISATION_CYCLE_VIE.md` (floraison, attractivité, ponts larvaires),
-- `CONCEPTION_DECOMPOSITION_COMPOST.md` (fruitiers, litière, attraction animale),
-- `CONCEPTION_ECRASEMENT.md`, `CONCEPTION_COMPETITION_INTRAPLOT.md`,
-  `CONCEPTION_VIGUEUR.md`, `CONCEPTION_MAITRISE.md`, `CONCEPTION_VIE_MACRO.md`,
-  `CONCEPTION_SAISONNALITE_VIE_MACRO.md`.
+- `docs/champs/climat/conception_thermique_microclimat.md` (gel/neige/ombre/`winter_strategy`),
+- `docs/faune/pollinisation/conception_pollinisation_cycle_vie.md` (floraison, attractivité, ponts larvaires),
+- `docs/champs/sol/conception_decomposition_compost.md` (fruitiers, litière, attraction animale),
+- `docs/joueur/gestes/conception_ecrasement.md`, `docs/vegetal/catalogue/conception_competition_intraplot.md`,
+  `docs/joueur/vigueur/conception_vigueur.md`, `docs/joueur/maitrise/conception_maitrise.md`, `docs/faune/vie_macro/conception_vie_macro.md`,
+  `docs/faune/vie_macro/conception_saisonnalite_vie_macro.md`.
 
 > Conseil token : un agent Explore peut faire l'inventaire des champs d'espèces et
 > des accroches feature en parallèle ; garder la SYNTHÈSE pour soi (le doc).
 
-## Plan du doc à produire (`CONCEPTION_CATALOGUE_ENRICHI.md`)
+## Plan du doc à produire (`docs/vegetal/catalogue/conception_catalogue_enrichi.md`)
 
 1. **Intention & cadrage** — pourquoi enrichir (souligner l'inclusion des espèces
    dans les features), périmètre, rappel des décisions du 00_etat.md.
@@ -114,7 +114,7 @@ espèce peut actionner :
 
 ## Validation
 
-- `docs/conception/CONCEPTION_CATALOGUE_ENRICHI.md` existe et couvre les 8 sections.
+- `docs/vegetal/catalogue/conception_catalogue_enrichi.md` existe et couvre les 8 sections.
 - Les deux matrices sont remplies ; les trous de l'existant sont nommés ; chaque
   ajout est justifié par une feature.
 - `git status` : SEUL le doc (et les `.md` de sprint) a changé → golden INTACT.

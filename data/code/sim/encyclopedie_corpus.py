@@ -2,7 +2,7 @@
 SYMBIOSE — sim/encyclopedie_corpus.py
 CORPUS de l'ENCYCLOPÉDIE — DONNÉE éditoriale pure (sprint Voix narratives,
 tronçon ④, dette « 4ᵉ voix »).
-Spec de référence : `docs/conception/CONCEPTION_VOIX_NARRATIVES.md` §6.
+Spec de référence : `docs/narration/voix/conception_voix_narratives.md` §6.
 
 Ce module ne contient QUE de la donnée (aucune logique, aucun import du moteur).
 Il est séparé de `sim/encyclopedie.py` (la logique) pour respecter la règle « un

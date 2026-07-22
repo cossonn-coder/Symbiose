@@ -9,10 +9,10 @@
 > **Kickoff autosuffisant** (démarrage à froid). Lire CE fichier + le `0N_*.md`
 > du tronçon courant suffit à reprendre sans contexte préalable.
 >
-> Conception FIGÉE (source de vérité) : `docs/conception/CONCEPTION_SEMIOLOGIE_VISUELLE.md`
+> Conception FIGÉE (source de vérité) : `docs/narration/semiologie/conception_semiologie_visuelle.md`
 > (figée le 2026-06-24, tronçonnage §8). Suivi dette : **D48**.
 > Modèle moteur sous-jacent (NON retouché ici) :
-> `docs/conception/CONCEPTION_SEMIOLOGIE_FOLIAIRE.md` (D33, clos).
+> `docs/narration/semiologie/conception_semiologie_foliaire.md` (D33, clos).
 
 ## En une phrase
 

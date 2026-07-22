@@ -2,7 +2,7 @@
 
 > Kickoff autosuffisant. Lis `CLAUDE.md` + `00_etat.md` + CE fichier. Prérequis :
 > **①a fait** (le champ `epaisseur_sol` stocké + `tick_epaisseur` existent).
-> Conception complète : `docs/conception/CONCEPTION_EPAISSEUR_SOL.md` §3.
+> Conception complète : `docs/champs/sol/conception_epaisseur_sol.md` §3.
 
 ## Objectif
 
@@ -47,7 +47,7 @@ Le revers **asphyxie** (D39, sol gorgé) n'est **pas bridé** — conséquence
 
 Le **volume de stock de nutriments accessible à l'uptake** croît avec l'épaisseur.
 Trouve la fonction d'uptake racinaire (`plant_uptake` / uptake par nutriment avec
-loi de Liebig — cf. `CONCEPTION_SOL_NUTRIMENTS_NPK.md`, module nutriments/uptake).
+loi de Liebig — cf. `docs/champs/sol/conception_sol_nutriments_npk.md`, module nutriments/uptake).
 Module la **fraction du stock disponible** par `epaisseur_norm` : un sol épais met
 une plus grande part du stock à disposition.
 

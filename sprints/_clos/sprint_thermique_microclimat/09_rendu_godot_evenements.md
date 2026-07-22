@@ -1,6 +1,6 @@
 # Tronçon ⑨ — Rendu Godot des événements météo (pluie/neige/vent/grêle/orage + manteau)
 
-> Sprint thermique-microclimat. Conception : `docs/conception/CONCEPTION_THERMIQUE_MICROCLIMAT.md`.
+> Sprint thermique-microclimat. Conception : `docs/champs/climat/conception_thermique_microclimat.md`.
 > Kickoff **autosuffisant** (relançable à froid).
 > Pré-requis : ⑧ CLOS (snapshot expose `weather` + `temperature` par tuile,
 > protocole **0.5.0** ; golden NEUTRE inchangé `5fddfe54…`).

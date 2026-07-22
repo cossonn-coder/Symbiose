@@ -4,7 +4,7 @@
 > hormonaux, repos neutre » a été **abandonné** au Sprint conception Croissance
 > procédurale : l'auxine devient un **niveau le long d'une structure morphologique
 > réelle** (segments), pilotée en moteur **permanent**, avec rendu pixel procédural.
-> **Source de vérité actuelle : [`CONCEPTION_CROISSANCE.md`](CONCEPTION_CROISSANCE.md).**
+> **Source de vérité actuelle : [`conception_croissance.md`](conception_croissance.md).**
 > On conserve ce fichier pour l'historique (biologie §A toujours valable, action
 > `tailler` absorbée comme appelant du seam §F du nouveau doc). Ne plus l'implémenter
 > tel quel.
@@ -14,7 +14,7 @@
 > **D29**), qui devra préserver `tests/test_golden.py`.
 >
 > Issu du **Sprint conception Hormones** (2026-06-04). Surface l'action `tailler`
-> déjà décrite dans `CONCEPTION_VIGUEUR.md` §3.3 (effet géométrique v1) et lui
+> déjà décrite dans `docs/joueur/vigueur/conception_vigueur.md` §3.3 (effet géométrique v1) et lui
 > ajoute la **réponse architecturale émergente** (débourrement, ramification,
 > mise à fruit). Décisions actées avec Nico : **modèle scalaire émergent** (pas de
 > topologie de branches), **2 scalaires hormonaux**, **démonstrateur tomate +
@@ -318,7 +318,7 @@ def tailler(game_state, player, plant, eco, *, cible="apex") -> bool:
 ### E.1 Vigueur
 
 - **Coût** : `tailler` rejoint la table `COUTS` de `actions.py` à `MODÉRÉ` (déjà
-  acté `CONCEPTION_VIGUEUR.md` §3.3). Passe par le seam `cout_action` →
+  acté `docs/joueur/vigueur/conception_vigueur.md` §3.3). Passe par le seam `cout_action` →
   atténuable par la maîtrise comme les autres gestes.
 - **Gain** : `+` faible **si un organe mûr est récupéré à la coupe** (couper une
   branche portant un fruit mûr) — même logique que `recolter`/`manger` (∝ maturité
@@ -328,7 +328,7 @@ def tailler(game_state, player, plant, eco, *, cible="apex") -> bool:
 ### E.2 Maîtrise
 
 `tailler` est une **« technique »** au sens de la taxonomie de maîtrise — « taille »
-est explicitement déclarée objet de maîtrise (`CONCEPTION_MAITRISE.md` §10.3).
+est explicitement déclarée objet de maîtrise (`docs/joueur/maitrise/conception_maitrise.md` §10.3).
 
 **Détection de succès (patron §9.5 : « action payée ET effet visé observé = 1
 preuve »).** Branchement futur dans `sim/maitrise_detection.py` (i4), **sans le

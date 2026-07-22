@@ -1,7 +1,7 @@
 """
 SYMBIOSE — tests/test_magazine.py
 Test du MAGAZINE DE BOTANIQUE (sprint Voix narratives, tronçon ⑥, dette D13).
-Spec : `docs/conception/CONCEPTION_VOIX_NARRATIVES.md` §2.4 + §3 (décision C) +
+Spec : `docs/narration/voix/conception_voix_narratives.md` §2.4 + §3 (décision C) +
 kickoff `sprints/sprint_voix_narratives/06_magazine.md`.
 
 Propriétés exigées (« Définition de done » du kickoff) :

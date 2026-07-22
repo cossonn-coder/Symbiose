@@ -3,7 +3,7 @@
 # testeur pendant les phases de test accélérées (2,5 J/s). Ce n'est PAS une IA
 # (ni apprentissage, ni RNG — philo #3) et PAS une fonctionnalité de jeu (ni PNJ,
 # ni tutoriel — philo #6) : c'est un INSTRUMENT DE DÉVELOPPEMENT, du même statut
-# que l'overlay debug F6. Conception : docs/conception/CONCEPTION_JARDINIER_AUTOMATE.md.
+# que l'overlay debug F6. Conception : docs/joueur/automate/conception_jardinier_automate.md.
 #
 # Invariant central (H2) : l'automate s'intercale ENTRE deux ticks, côté appelant,
 # jamais dans `tick_semaine`. Le moteur ne change pas d'une ligne → golden INTACT.

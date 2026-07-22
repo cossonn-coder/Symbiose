@@ -1,6 +1,6 @@
 # Tronçon ⓪ — Référence perf + scatter LightField (D32)
 
-> Kickoff autonome. Design : `CONCEPTION_VENT_EVAPOTRANSPIRATION.md` **§7B**.
+> Kickoff autonome. Design : `docs/champs/climat/conception_vent_evapotranspiration.md` **§7B**.
 > **Aucun effet de vent ici** — on prépare le terrain perf. Golden **INTACT**
 > (bit-identique exigé).
 

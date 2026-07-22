@@ -1,6 +1,6 @@
 # ④ Panneau Pages + panneau Magazine (achat bout-en-bout)
 
-> Lire d'abord `00_etat.md` + `CONCEPTION_VOIX_NARRATIVES_UI.md` (§1, §3, §5).
+> Lire d'abord `00_etat.md` + `docs/narration/voix/conception_voix_narratives_ui.md` (§1, §3, §5).
 > Tronçon **C# pur**, dernier avant F5. Dépend de ①②③. Filet = `dotnet build`.
 > **INVARIANT** : texte des pages/fiches affiché **verbatim** ; seul l'achat MUTE
 > l'état (via `cmd_action`, chemin Vigueur unique).

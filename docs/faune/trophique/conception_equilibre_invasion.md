@@ -100,7 +100,7 @@ Ajout de **3 espèces** (règle « l'espèce sert l'idée » + « toutes ses voi
 
 Chacune reçoit ses **5 voix** (encyclopédie 3 niveaux, carnet/concepts, pages
 secrètes si lore, magazine/famille, événements de cycle de vie) — cf.
-`CONCEPTION_VOIX_NARRATIVES.md`.
+`docs/narration/voix/conception_voix_narratives.md`.
 
 ## 5. Paillage ↔ vie macro : ABRI (tronçon ⑥)
 

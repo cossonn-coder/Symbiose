@@ -1,7 +1,7 @@
 """
 SYMBIOSE — sim/actions/deblocage.py
 DÉBLOCAGE des gestes (sprint PALETTE DE GESTES, tronçon ①).
-Spec : `docs/conception/CONCEPTION_PALETTE_GESTES.md` §3.2/§3.3/§3.4 + kickoff
+Spec : `docs/joueur/gestes/conception_palette_gestes.md` §3.2/§3.3/§3.4 + kickoff
 `sprints/sprint_palette_gestes/01_deblocage_python.md`.
 
 L'ÉTAT et les DONNÉES du déblocage, PAR AVATAR, persistés dans la save JSON

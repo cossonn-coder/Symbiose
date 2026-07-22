@@ -1,7 +1,7 @@
 # Tronçon ② — Marques événementielles (mémorisation décroissante)
 
 > Sprint « sémiologie foliaire ». Conception :
-> `docs/conception/CONCEPTION_SEMIOLOGIE_FOLIAIRE.md` (§2.5, §5).
+> `docs/narration/semiologie/conception_semiologie_foliaire.md` (§2.5, §5).
 > Lire la conception + faire ① d'abord. **Re-figeage golden maîtrisé ANNONCÉ.**
 
 ## Objectif

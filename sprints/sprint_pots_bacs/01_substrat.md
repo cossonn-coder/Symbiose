@@ -1,6 +1,6 @@
 # ① Substrat data-driven
 
-> Lire d'abord `00_etat.md` + `docs/conception/CONCEPTION_POTS_BACS_SUBSTRATS.md`
+> Lire d'abord `00_etat.md` + `docs/joueur/outils/conception_pots_bacs_substrats.md`
 > (§2). Tronçon **data pur** : aucun conteneur, aucune boucle touchée → golden
 > trivialement NEUTRE. Premier geste : mesurer et NOTER les hashs golden dans
 > `00_etat.md`.

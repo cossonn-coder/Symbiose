@@ -1,6 +1,6 @@
 # Sprint VOIX NARRATIVES — état partagé
 
-> **Conception FIGÉE** → source de vérité = `docs/conception/CONCEPTION_VOIX_NARRATIVES.md`
+> **Conception FIGÉE** → source de vérité = `docs/narration/voix/conception_voix_narratives.md`
 > (la lire d'abord, §0→§8). Ce fichier = état léger + carte des sous-sprints, mis à
 > jour en fin de **chaque** tronçon. Boucle projet : `0N` → coder → vérifier golden
 > (doit rester INTACT) → MAJ ce fichier → commit → `/clear` → `0N+1`.

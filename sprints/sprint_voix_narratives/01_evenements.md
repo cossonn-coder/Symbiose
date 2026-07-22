@@ -1,6 +1,6 @@
 # ① Extraire `sim/evenements.py` (refactor PUR) + élargir le parseur
 
-> Lire d'abord `00_etat.md` + `docs/conception/CONCEPTION_VOIX_NARRATIVES.md` (§1,
+> Lire d'abord `00_etat.md` + `docs/narration/voix/conception_voix_narratives.md` (§1,
 > surtout §1.2). Tronçon **fondation** : on isole le parsing du `log` du tick dans un
 > module commun pur, et on l'élargit aux *kinds* dont le carnet aura besoin. **Aucun
 > conscommateur neuf branché ici** (ni journal, ni driver). Premier geste : RE-MESURER

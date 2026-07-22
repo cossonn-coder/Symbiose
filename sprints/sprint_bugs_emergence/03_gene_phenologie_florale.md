@@ -1,7 +1,7 @@
 # ③ Gène `phenologie_florale` — désynchroniser la floraison (S2)
 
 > Kickoff autosuffisant. Lire AVANT : `CLAUDE.md`, `00_etat.md`,
-> `docs/conception/CONCEPTION_BUGS_EMERGENCE.md` (volet S2).
+> `docs/meta/calibrage/conception_bugs_emergence.md` (volet S2).
 > Source de vérité = Python `data/code/`. Lancement depuis `data/code/`.
 > **Précédent à répliquer À L'IDENTIQUE : le gène `germination_thermique`**
 > (sprint germination thermique tronçon ④, journal 88) — même patron, mêmes

@@ -4,7 +4,7 @@ Golden JOUEUR de la couche Vigueur (D11, sous-sprint 1) — distinct du golden
 ÉCOLOGIQUE (`tests/test_golden.py`).
 
 La couche Vigueur joueur vit dans `game_state["vigueur"]`, AU-DESSUS du tick, et
-ne doit JAMAIS faire avancer la simulation écologique (CONCEPTION_VIGUEUR.md
+ne doit JAMAIS faire avancer la simulation écologique (docs/joueur/vigueur/conception_vigueur.md
 §0/§5). Deux familles de vérifications :
 
   A. Contrats de la couche (déterministes, sans RNG) :

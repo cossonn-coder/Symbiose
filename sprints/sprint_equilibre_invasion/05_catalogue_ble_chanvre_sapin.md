@@ -1,7 +1,7 @@
 # Tronçon ⑤ — Catalogue paille/BRF : blé, chanvre, sapin + 5 voix chacun
 
-**Prérequis** : `CLAUDE.md`, `00_etat.md`, `CONCEPTION_EQUILIBRE_INVASION.md` §4,
-`docs/conception/CONCEPTION_VOIX_NARRATIVES.md`. Patrons : `plants/species.py`,
+**Prérequis** : `CLAUDE.md`, `00_etat.md`, `docs/faune/trophique/conception_equilibre_invasion.md` §4,
+`docs/narration/voix/conception_voix_narratives.md`. Patrons : `plants/species.py`,
 `plants/perennials.py` (ligneux, pour le sapin), `plants/catalogue.py`, et les
 corpus de voix (`sim/encyclopedie_corpus.py`, `sim/concept_corpus.py`,
 `sim/pages_corpus.py`, `sim/magazine.py`, marqueurs d'événements au ledger).

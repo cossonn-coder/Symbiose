@@ -1,6 +1,6 @@
 # Tronçon ④ — Nébulosité (effet thermique de la météo, diurne)
 
-> Sprint thermique-microclimat. Conception : `docs/conception/CONCEPTION_THERMIQUE_MICROCLIMAT.md`
+> Sprint thermique-microclimat. Conception : `docs/champs/climat/conception_thermique_microclimat.md`
 > (§2.1, §3, §5). Kickoff **autosuffisant** (relançable à froid).
 > Pré-requis : ③ CLOS (cible thermique à 3 termes dans `tick_thermique` ;
 > knobs `ISOLATION_COUVERT=4.0`, `LITIERE_REF=2.0` ; golden re-figé `aab6c60a…`).

@@ -1,7 +1,7 @@
 # Tronçon ④ — Gène `germination_thermique` (variabilité + sélection darwinienne)
 
 > Kickoff **autosuffisant** (lis CLAUDE.md + 00_etat.md + ce fichier).
-> Conception : `CONCEPTION_GERMINATION_THERMIQUE.md` §2. Lancement depuis
+> Conception : `docs/vegetal/floraison/conception_germination_thermique.md` §2. Lancement depuis
 > `data/code/`. Golden : **RE-FIGÉ maîtrisé** (annoncé).
 
 ## Objectif

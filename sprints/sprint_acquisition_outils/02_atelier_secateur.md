@@ -1,7 +1,7 @@
 # Tronçon 02 — Acquisition Atelier + registre `OUTILS` → déblocage sécateur
 
 > Tu démarres À FROID. Lis `CLAUDE.md`, `00_etat.md`, puis
-> `docs/conception/CONCEPTION_ACQUISITION_OUTILS.md` §B. **CŒUR de la dette D82.**
+> `docs/joueur/outils/conception_acquisition_outils.md` §B. **CŒUR de la dette D82.**
 
 ## Objectif
 Donner au joueur un canal d'acquisition du sécateur (marqueur `posseder_secateur`)

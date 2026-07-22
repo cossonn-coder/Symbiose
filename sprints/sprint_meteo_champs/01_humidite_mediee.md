@@ -1,6 +1,6 @@
 # ① Humidité médiée — retrait des deltas plats + apport de pluie ∝ intensité
 
-> Lire d'abord `00_etat.md` + `docs/conception/CONCEPTION_METEO_CHAMPS.md` (§0, §1, §2).
+> Lire d'abord `00_etat.md` + `docs/champs/climat/conception_meteo_champs.md` (§0, §1, §2).
 > Tronçon **fondation** : on rend l'humidité météo conforme à la philo #2 (flux, pas
 > delta plat). Premier geste : MESURER les hashs golden actuels (référence avant/après).
 

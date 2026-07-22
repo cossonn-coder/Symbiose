@@ -1,6 +1,6 @@
 # ④ (T4) — Insertion sur rameau vert + pétiole (E5)
 
-> Lis d'abord `docs/conception/CONCEPTION_RENDU_FEUILLAGE.md` **§5**. C'est l'exigence
+> Lis d'abord `docs/rendu/feuillage/conception_rendu_feuillage.md` **§5**. C'est l'exigence
 > la plus proche de l'acquis : on **verrouille** plutôt qu'on ne construit. Indépendant
 > de ②/③ (peut suivre ③ dans l'ordre).
 

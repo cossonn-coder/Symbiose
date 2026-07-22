@@ -1,7 +1,7 @@
 # Tronçon ② — Identité morphologique héritable (`form_seed`)
 
 > Kickoff autosuffisant. Lis `CLAUDE.md` (racine) + `00_etat.md` (ce dossier) +
-> `docs/conception/CONCEPTION_MODELE_SPATIAL.md` (§2), puis exécute.
+> `docs/rendu/spatial/conception_modele_spatial.md` (§2), puis exécute.
 > Lancement des tests depuis `data/code/`. **Le tronçon ① est fait** (les plantes
 > germées ont déjà une position sous-plot / au pixel cliqué).
 

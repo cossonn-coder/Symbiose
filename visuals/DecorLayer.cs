@@ -1,5 +1,5 @@
 // SYMBIOSE — DecorLayer.cs (T4 RENDU AMBIANCE — décor d'ambiance : OSSATURE)
-// Le BACKDROP cosmétique AUTOUR du jardin (docs/conception/CONCEPTION_RENDU_AMBIANCE.md
+// Le BACKDROP cosmétique AUTOUR du jardin (docs/rendu/ambiance/conception_rendu_ambiance.md
 // §5.1). Une bande de terrain hors-jardin, dessinée DERRIÈRE le sol (ZIndex
 // négatif, hors picking), qui pose l'ASSISE : quel motif occupe chaque bord du
 // jardin (forêt / rivière / falaise / prairie fleurie par défaut) et la frontière

@@ -1,7 +1,7 @@
 # Tronçon ③ — Priorité de clic plante > maison
 
 > Kickoff autosuffisant. Lire `CLAUDE.md` + `00_etat.md` +
-> `docs/conception/CONCEPTION_PERF_RENDU_PLANTES.md` (§3.5). Indépendant des
+> `docs/perf/lod/conception_perf_rendu_plantes.md` (§3.5). Indépendant des
 > tronçons ①/② (picking, pas perf), mais après eux dans l'ordre. Rendu/vue **C#
 > pur** : AUCUNE touche `data/code/`, **golden INTACT**. Filet :
 > `dotnet build Symbiose.csproj`. Validation = **F5 Nico**.

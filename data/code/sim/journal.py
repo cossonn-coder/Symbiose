@@ -1,7 +1,7 @@
 """
 SYMBIOSE — sim/journal.py
 Le LEDGER D'ÉVÉNEMENTS partagé (sprint Voix narratives, tronçon ②).
-Spec de référence : `docs/conception/CONCEPTION_VOIX_NARRATIVES.md` §1.3/§1.4.
+Spec de référence : `docs/narration/voix/conception_voix_narratives.md` §1.3/§1.4.
 
 Substrat commun aux quatre voix narratives (carnet ③, encyclopédie ④, pages ⑤,
 magazine ⑥). Il n'INTERPRÈTE rien : il se contente d'ENREGISTRER, semaine après

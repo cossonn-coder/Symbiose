@@ -2,7 +2,7 @@
 
 > Kickoff autosuffisant. Lis `CLAUDE.md` + `00_etat.md` + CE fichier. Prérequis :
 > **①a + ①b faits** (le champ `epaisseur_sol` existe et évolue). Conception :
-> `docs/conception/CONCEPTION_EPAISSEUR_SOL.md` §4. **Tranche PUR-VUE, golden
+> `docs/champs/sol/conception_epaisseur_sol.md` §4. **Tranche PUR-VUE, golden
 > NEUTRE.** Contient des points **F5** (le F5 visuel est à Nico).
 
 ## Objectif

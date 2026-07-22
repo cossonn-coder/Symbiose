@@ -1,6 +1,6 @@
 # SPRINT THERMIQUE & MICROCLIMAT — état partagé
 
-> Conception figée : `docs/conception/CONCEPTION_THERMIQUE_MICROCLIMAT.md`.
+> Conception figée : `docs/champs/climat/conception_thermique_microclimat.md`.
 > Branche : `sprint/thermique-microclimat`. Lancement Python depuis `data/code/`.
 
 ## Objectif

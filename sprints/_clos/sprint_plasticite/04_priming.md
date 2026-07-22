@@ -1,6 +1,6 @@
 # Tronçon ④ — Priming transgénérationnel
 
-> Sprint « plasticité ». Conception : `docs/conception/CONCEPTION_PLASTICITE_EXPRESSION.md`
+> Sprint « plasticité ». Conception : `docs/vegetal/genetique/conception_plasticite_expression.md`
 > (§2.5, §3-P2). **Lire la conception + relire le journal `00_etat.md` des ①②③.**
 > **Re-figeage golden MAÎTRISÉ et annoncé** (les enfants naissent pré-armés).
 

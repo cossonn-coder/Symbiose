@@ -1,6 +1,6 @@
 # ② (T2) — Forme de feuille par espèce (E3-forme)
 
-> Lis d'abord `docs/conception/CONCEPTION_RENDU_FEUILLAGE.md` **§2** (et §1 invariants).
+> Lis d'abord `docs/rendu/feuillage/conception_rendu_feuillage.md` **§2** (et §1 invariants).
 > Source de vérité du design. Ce kickoff cadre l'exécution.
 
 ## But

@@ -1,6 +1,6 @@
 # ③ Lessivage NPK par la pluie — amplifier le lessivage existant par l'eau drainée
 
-> Lire d'abord `00_etat.md` + `docs/conception/CONCEPTION_METEO_CHAMPS.md` (§4).
+> Lire d'abord `00_etat.md` + `docs/champs/climat/conception_meteo_champs.md` (§4).
 > Dépend de ① (apport de pluie médié → drainage réel). Indépendant de ②. Premier geste :
 > RE-MESURER les hashs golden.
 

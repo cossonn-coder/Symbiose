@@ -2,7 +2,7 @@
 
 > Conception figée le 2026-06-19 (Sprint physico-chimie du sol, volet C/3).
 > Absorbe la dette **D30**. Étude de fond : `sprints/etude_physicochimie_sol.md`.
-> Ordre global du sprint : `CONCEPTION_SOL_PH.md` §6. Volets frères : pH, NPK.
+> Ordre global du sprint : `docs/champs/sol/conception_sol_ph.md` §6. Volets frères : pH, NPK.
 
 ## 0. Objectif & intuition
 

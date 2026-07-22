@@ -128,7 +128,7 @@ La structure procédurale **survit à la mort**. Nouvel état post-mortem de la
    parcelles `feuille`/`fruit`/`fleur` ; ombre = **silhouette de bois nu**
    (ombre dégressive, §racines/lumière) ; **n'occupe PAS le plot** → la
    succession peut germer dessous (trouée de lumière, habitat — lien
-   `CONCEPTION_COMPETITION_INTRAPLOT.md`).
+   `docs/vegetal/catalogue/conception_competition_intraplot.md`).
 2. **`couchée`** : après `T_seche` semaines, la structure tombe au sol (ombre ≈ 0).
 3. **Fragmentation** : chaque semaine le squelette libère une fraction de sa
    masse de bois → parcelle `bois` au plot (vitesse ∝ décompo `bois`, modulée
@@ -198,7 +198,7 @@ pénalisée** (philo : le raccourci « je laisse tout au sol » s'use).
 
 Une parcelle `fruit` émet un **signal selon son `age_sem`** (succession sur le
 fruit), couplé aux 4 guildes existantes (`fields/population.py`, modèle
-`CONCEPTION_VIE_MACRO.md` — **aucune 5ᵉ guilde**, trop lourd) :
+`docs/faune/vie_macro/conception_vie_macro.md` — **aucune 5ᵉ guilde**, trop lourd) :
 
 - **Fruit frais tombé** → gonfle localement **`auxiliaire`** (frugivores,
   oiseaux : le verger nourrit la faune utile).

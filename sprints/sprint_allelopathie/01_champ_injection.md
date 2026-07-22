@@ -1,7 +1,7 @@
 # ① Champ `allelopathie` + injection + décroissance
 
 > Kickoff autosuffisant. Reprise à froid = lire `CLAUDE.md` + `00_etat.md` +
-> ce fichier + `docs/conception/CONCEPTION_ALLELOPATHIE.md` §A. Aval :
+> ce fichier + `docs/vegetal/allelopathie/conception_allelopathie.md` §A. Aval :
 > `/sprint-auto`. Golden **NEUTRE visé**.
 
 ## Objectif

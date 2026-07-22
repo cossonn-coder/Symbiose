@@ -1,6 +1,6 @@
 # Tronçon ⑤ — T ressentie (mix air/sol) → croissance
 
-> Sprint thermique-microclimat. Conception : `docs/conception/CONCEPTION_THERMIQUE_MICROCLIMAT.md`
+> Sprint thermique-microclimat. Conception : `docs/champs/climat/conception_thermique_microclimat.md`
 > (§2.4, §3). Kickoff **autosuffisant** (relançable à froid).
 > Pré-requis : ④ CLOS (carte thermique DIURNE complète à 4 termes ; knobs
 > `K_NEBUL_DIURNE=0.8` + table `NEBULOSITE` ; golden re-figé `c8af9e11…`).

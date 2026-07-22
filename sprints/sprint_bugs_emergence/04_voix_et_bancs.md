@@ -1,8 +1,8 @@
 # ④ Voix narratives + bancs d'acceptation
 
 > Kickoff autosuffisant. Lire AVANT : `CLAUDE.md`, `00_etat.md`,
-> `docs/conception/CONCEPTION_BUGS_EMERGENCE.md`,
-> `docs/conception/CONCEPTION_VOIX_NARRATIVES.md`.
+> `docs/meta/calibrage/conception_bugs_emergence.md`,
+> `docs/narration/voix/conception_voix_narratives.md`.
 > Source de vérité = Python `data/code/`. Lancement depuis `data/code/`.
 
 ## Objectif

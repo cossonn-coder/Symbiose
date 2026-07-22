@@ -3,10 +3,10 @@
 > Doc de conception **FIGÉ** (arbitré et validé par Nico, 2026-06-30). On en tire
 > les kickoffs `0N_*.md` de `sprints/sprint_germination_thermique/`.
 >
-> Filiation : s'appuie sur `CONCEPTION_THERMIQUE_MICROCLIMAT.md` (le champ
-> `temperature_sol` existe et est spatialisé), `CONCEPTION_SOL_PH.md` (patron de
+> Filiation : s'appuie sur `docs/champs/climat/conception_thermique_microclimat.md` (le champ
+> `temperature_sol` existe et est spatialisé), `docs/champs/sol/conception_sol_ph.md` (patron de
 > **porte multiplicative** `bell(val, opt, tol)` sur la niche de germination) et
-> `CONCEPTION_PLASTICITE_EXPRESSION.md` / la génétique (vecteur de gènes hérité).
+> `docs/vegetal/genetique/conception_plasticite_expression.md` / la génétique (vecteur de gènes hérité).
 > Résout le trou : **la germination ignore la température du sol**.
 
 ---
@@ -203,7 +203,7 @@ un banc NEUF `germination_multifacteur` (+ oracle dans `tests/bancs/`) qui balay
 ## 6. Voix narratives (tronçon ⑦, OBLIGATOIRE)
 
 Hors tick (ledger + corpus read-only) — golden NEUTRE. Cf.
-`CONCEPTION_VOIX_NARRATIVES.md`.
+`docs/narration/voix/conception_voix_narratives.md`.
 
 - **Encyclopédie** (`sim/encyclopedie_corpus.py`, §6 fiche 3 niveaux) : la fenêtre
   thermique de levée + l'environnement préférentiel par espèce (niveau 2 « bio »,

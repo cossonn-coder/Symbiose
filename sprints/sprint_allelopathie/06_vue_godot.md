@@ -1,7 +1,7 @@
 # ⑥ Vue Godot — overlay + indices diégétiques
 
 > Kickoff autosuffisant. Reprise à froid = `CLAUDE.md` + `00_etat.md` + ce fichier
-> + `CONCEPTION_ALLELOPATHIE.md` §F. Prérequis : ①→⑤ faits. Golden **INTACT**
+> + `docs/vegetal/allelopathie/conception_allelopathie.md` §F. Prérequis : ①→⑤ faits. Golden **INTACT**
 > (aucune ligne moteur touchée). F5 visuel = Nico (Godot pas sur la VM ;
 > `dotnet build Symbiose.csproj` = filet de compilation).
 

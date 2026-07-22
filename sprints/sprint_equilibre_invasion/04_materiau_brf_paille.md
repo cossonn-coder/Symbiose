@@ -1,6 +1,6 @@
 # Tronçon ④ — Matériau du paillage : `broyer`→BRF + récolte paille → stock + 3 natures
 
-**Prérequis** : `CLAUDE.md`, `00_etat.md`, `CONCEPTION_EQUILIBRE_INVASION.md` §3.
+**Prérequis** : `CLAUDE.md`, `00_etat.md`, `docs/faune/trophique/conception_equilibre_invasion.md` §3.
 Patrons : `sim/actions/compost.py` (`epandre`/`composter`, jauges de structure),
 `sim/actions/gestes.py::recolter`, `bois_restant` des squelettes (décompo·compost
 ②B), `sim/actions/couts.py`.

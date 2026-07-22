@@ -1,7 +1,7 @@
 """
 SYMBIOSE — sim/technique_corpus.py
 CORPUS de l'ENCYCLOPÉDIE, onglet TECHNIQUE — DONNÉE éditoriale pure (D60, ④).
-Spec : `docs/conception/CONCEPTION_VIE_MACRO_IDENTIFIABLE.md` §5 + kickoff
+Spec : `docs/faune/vie_macro/conception_vie_macro_identifiable.md` §5 + kickoff
 `sprints/sprint_vie_macro_identifiable/04_corpus_concept_technique.md`.
 
 Miroir structurel de `sim/encyclopedie_corpus.py` (plantes) mais pour les

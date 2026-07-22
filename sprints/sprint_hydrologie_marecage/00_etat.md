@@ -74,7 +74,7 @@
   golden neutre pour les gestes), sinon fixe déterministe.
 
 ## Phase B — FIGÉE le 2026-07-03 (GO Nico « vas-y »)
-Doc de conception : `docs/conception/CONCEPTION_HYDROLOGIE_MARECAGE.md`.
+Doc de conception : `docs/champs/eau/conception_hydrologie_marecage.md`.
 Kickoffs `01`→`08` écrits, autosuffisants. Prêt pour `/sprint-auto`.
 
 ## Carte des tronçons (8, perf-first)

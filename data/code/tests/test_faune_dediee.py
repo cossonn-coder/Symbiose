@@ -2,7 +2,7 @@
 SYMBIOSE — tests/test_faune_dediee.py
 Tronçons ④b/④c/④d/④e (catalogue enrichi) — scission des champs uniques `ravageur`,
 `auxiliaire` puis `vers_de_terre` en 10 espèces NOMMÉES (modèle B,
-CONCEPTION_FAUNE_DEDIEE.md §2) + métadonnée d'encyclopédie (④e) :
+docs/faune/vie_macro/conception_faune_dediee.md §2) + métadonnée d'encyclopédie (④e) :
   ④b ravageur     → puceron / limace / doryphore
   ④c auxiliaire   → coccinelle / chrysope / carabe / merle / hérisson
   ④d detritivore  → lombric (humus du sol) / cloporte (litière)

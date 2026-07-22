@@ -5,7 +5,7 @@
 > construction). Les tronçons d'implémentation ②+ dérivent de la §7.
 > Sources lues : `plants/catalogue.py`, `plants/species/*`, `plants/perennials.py`,
 > `plants/base/familles.py`, `fields/population.py`, `fields/lifecycle.py`,
-> `fields/foragers.py`, `fields/apiculture.py`, les `docs/conception/*`.
+> `fields/foragers.py`, `fields/apiculture.py`, les `docs/**/conception_*.md`.
 
 ---
 

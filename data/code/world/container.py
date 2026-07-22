@@ -2,7 +2,7 @@
 SYMBIOSE — world/container.py
 Le CONTENEUR (pot mobile / bac immobile) = un `EcoFields` MINIATURE.
 
-> Conception : `docs/conception/CONCEPTION_POTS_BACS_SUBSTRATS.md` §1, §2, §6.
+> Conception : `docs/joueur/outils/conception_pots_bacs_substrats.md` §1, §2, §6.
 > Tronçon ② du sprint pots/bacs : on pose l'objet `Container`, sa fabrique
 > `make_container` (qui applique une recette de `world.substrat`) et son tick
 > chimique ISOLÉ `tick_chimie`. PAS de plante dedans encore (uptake/confinement

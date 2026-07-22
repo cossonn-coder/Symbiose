@@ -5,9 +5,15 @@ C'est la **clé de lecture de tout l'historique** — les 126 entrées de `journ
 et `journal_archive/` ne sont **pas** réécrites (décision 4 du sprint de
 rangement) : elles citent les anciens chemins, et cette table les traduit.
 
-**État** : arborescence créée au tronçon ① du sprint de rangement documentaire
-(2026-07-22). Les déplacements eux-mêmes ont lieu au tronçon ② — tant qu'il
-n'est pas passé, la colonne « ancien chemin » décrit encore la réalité du dépôt.
+**État** (à jour au tronçon ④, 2026-07-22) : l'arborescence est **en place** et
+la colonne « nouveau chemin » du §5 décrit **la réalité du dépôt**. Faits :
+arborescence créée (①), **70 `git mv`** exécutés (②), `BACKLOG.md` éclaté par
+thème + renvois journal/dette (③), extractions enchâssées et **liens des
+fichiers vivants réparés** (④ — `CLAUDE.md`, `DETTE.md`, `journal.md`, les
+skills `.claude/skills/`, les commentaires C#/Python, `sprints/`).
+La colonne « ancien chemin » ne sert plus qu'à **relire l'historique** :
+`journal/`, `journal_archive/` et les kickoffs qui racontent une migration
+passée n'ont **pas** été réécrits (décision 4 du sprint).
 
 ---
 
@@ -81,7 +87,7 @@ dans la carte : leur nom est déductible du dossier.
 | Thème | Documents |
 |---|---|
 | `sol/` | `conception_decomposition_compost.md`, `conception_epaisseur_sol.md`, `conception_sol_nutriments_npk.md`, `conception_sol_ph.md`, `conception_sol_structure.md`, `etude_sol_vivant.md`, `etude_physicochimie_sol.md` |
-| `lumiere/` | `conception_maison_ombre.md` *(+ extraction Z7 au tronçon ④)* |
+| `lumiere/` | `conception_eclairement.md` *(extrait au ④ — cf. §5.3)*, `conception_maison_ombre.md` |
 | `eau/` | `conception_hydrologie_marecage.md` |
 | `climat/` | `conception_meteo.md`, `conception_meteo_champs.md`, `conception_thermique_microclimat.md`, `conception_vent_evapotranspiration.md` |
 
@@ -227,6 +233,26 @@ antérieurs au 2026-07-22 sans se perdre.
 | `docs/amorce/BRIEF_CLAUDE_WEB.md` | `docs/meta/amorce/brief_claude_web.md` |
 | `sprints/etude_sol_vivant.md` | `docs/champs/sol/etude_sol_vivant.md` |
 | `sprints/etude_physicochimie_sol.md` | `docs/champs/sol/etude_physicochimie_sol.md` |
+
+### 5.3 Extractions de contenu enchâssé (tronçon ④)
+
+Un thème sans document dédié parce qu'il vivait **à l'intérieur** d'un autre
+fichier. Le contenu est repris **verbatim** ; l'emplacement d'origine garde un
+**pointeur** (règle « zéro perte »).
+
+| Ancien emplacement | Nouveau document |
+|---|---|
+| `docs/meta/vision.md` § « Z7 — Éclairement spatial… » | `docs/champs/lumiere/conception_eclairement.md` §1 |
+| `docs/meta/backlog_historique.md` § « Zone Z7 — éclairement spatial » | `docs/champs/lumiere/conception_eclairement.md` §2 |
+
+**Candidats examinés et NON extraits** (ce sont des sections de documents de
+synthèse : les démembrer les viderait de leur sens) — `docs/meta/vision.md`
+§ Vigueur unifiée / Paliers de maîtrise / Trois voix narratives / Auxiliaires /
+Maison normande / Extension du terrain / Gestion des aléas météo ;
+`docs/meta/architecture.md` § Sol vivant Python v4 / Échelle spatiale actée.
+Chacun a **déjà** son document de thème, dont ces sections sont le résumé.
+
+---
 
 **Après le tronçon ②**, `docs/conception/`, `docs/desktop/` et `docs/amorce/`
 n'existent plus. Toute référence à ces chemins dans un fichier **vivant**

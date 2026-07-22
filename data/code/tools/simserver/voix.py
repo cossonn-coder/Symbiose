@@ -1,7 +1,7 @@
 """
 SYMBIOSE — tools/simserver/voix.py
 Les 4 commandes READ-ONLY des voix narratives (sprint UI voix narratives ①).
-Spec de référence : `docs/conception/CONCEPTION_VOIX_NARRATIVES_UI.md` §3.
+Spec de référence : `docs/narration/voix/conception_voix_narratives_ui.md` §3.
 
 Mixin de `SimServer` : une commande de protocole par voix (`carnet`,
 `encyclopedie`, `pages`, `magazine`). Chacune LIT `gs["current_player"]`, appelle

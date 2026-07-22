@@ -1,8 +1,8 @@
 # Tronçon ⑦ — Voix narratives (encyclopédie + carnet), OBLIGATOIRE
 
 > Kickoff **autosuffisant** (lis CLAUDE.md + 00_etat.md + ce fichier).
-> Conception : `CONCEPTION_GERMINATION_THERMIQUE.md` §6 +
-> `docs/conception/CONCEPTION_VOIX_NARRATIVES.md`. Lancement depuis `data/code/`.
+> Conception : `docs/vegetal/floraison/conception_germination_thermique.md` §6 +
+> `docs/narration/voix/conception_voix_narratives.md`. Lancement depuis `data/code/`.
 > Golden : **NEUTRE** (corpus read-only, hors tick).
 
 ## Objectif
@@ -12,7 +12,7 @@ voix »). Ici, pas d'espèce neuve, mais on enrichit les voix des espèces typé
 
 ## Contexte voix (read-only, hors tick)
 - **Encyclopédie** : `sim/encyclopedie_corpus.py` (fiche 3 niveaux, §6 de
-  `CONCEPTION_VOIX_NARRATIVES.md` : niveau 1 « vu », niveau 2 « cycle complet/bio »,
+  `docs/narration/voix/conception_voix_narratives.md` : niveau 1 « vu », niveau 2 « cycle complet/bio »,
   niveau 3 « cycles répétés/effets écosystémiques »).
 - **Carnet** : `sim/carnet.py` + `CONCEPT_DE` (§5) — descriptif au début,
   **interprétatif au palier de maîtrise** du concept.

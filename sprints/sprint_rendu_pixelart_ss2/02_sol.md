@@ -1,6 +1,6 @@
 # T2 — Sol : texture pré-cuite (relief lumière-sud + grain), 4 orientations D35
 
-> Lire d'abord `00_etat.md` (invariants) + `CONCEPTION_RENDU_PIXELART.md` §5 (bloc
+> Lire d'abord `00_etat.md` (invariants) + `docs/rendu/pixelart/conception_rendu_pixelart.md` §5 (bloc
 > « Relief du SOL »). Couche **B pure** (C#). Golden trivialement préservé, build C#
 > vert, F5 = Nico. DERNIER tronçon → CLÔT le sprint. **Le dernier aplat du rendu.**
 

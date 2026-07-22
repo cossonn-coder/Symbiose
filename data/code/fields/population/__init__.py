@@ -3,7 +3,7 @@ SYMBIOSE — fields/population.py
 Vie macroscopique observable (D31.1) — champs de population déterministes +
 règle d'échantillonnage des sprites.
 
-Modèle TRANCHÉ (CONCEPTION_VIE_MACRO.md §2, hybride) :
+Modèle TRANCHÉ (docs/faune/vie_macro/conception_vie_macro.md §2, hybride) :
   - DYNAMIQUE = un `PopulationField` générique (sous-classe `GridField`),
     instancié une fois par ESPÈCE nommée (scission ④b/c/d), regroupée en catégorie
     (ravageur / auxiliaire / detritivore) + pollinisateurs par type, borné aux

@@ -1,6 +1,6 @@
 # ① Pont : chaîne de maîtrise + 4 commandes voix + achat magazine
 
-> Lire d'abord `00_etat.md` + `docs/conception/CONCEPTION_VOIX_NARRATIVES_UI.md`
+> Lire d'abord `00_etat.md` + `docs/narration/voix/conception_voix_narratives_ui.md`
 > (§1 invariant, §2 hooks, §3 signatures, §4 pont). Tronçon **Python pur** (dossier
 > `data/code/tools/simserver/`). Premier geste : `python3 -m tests.test_golden` →
 > doit afficher `ae445d3f…`. **INVARIANT** : aucune phrase générée ici, on relaie le

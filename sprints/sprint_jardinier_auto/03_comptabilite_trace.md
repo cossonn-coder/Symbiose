@@ -1,7 +1,7 @@
 # ③ Comptabilité commutable + trace des conséquences
 
 > Kickoff autosuffisant. Lire `CLAUDE.md` + `00_etat.md` +
-> `docs/conception/CONCEPTION_JARDINIER_AUTOMATE.md` (§4, §6). Prérequis : ①② faits.
+> `docs/joueur/automate/conception_jardinier_automate.md` (§4, §6). Prérequis : ①② faits.
 
 ## Objectif
 Câbler la **comptabilité commutable** de l'automate (flags `paie_vigueur`,

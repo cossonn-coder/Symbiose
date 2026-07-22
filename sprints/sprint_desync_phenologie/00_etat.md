@@ -2,7 +2,7 @@
 
 > **Phase : CONCEPTION FIGÉE — prêt pour `/sprint-auto`.** Doc + 3 kickoffs
 > (`01`/`02`/`03`) écrits. Aucun tronçon implémenté. Reprise à froid = lire
-> `CLAUDE.md` + ce fichier + `docs/conception/CONCEPTION_DESYNC_PHENOLOGIE.md`.
+> `CLAUDE.md` + ce fichier + `docs/vegetal/floraison/conception_desync_phenologie.md`.
 
 ## Sujet (Nico, 2026-07-14)
 1. **Rendu** : feuilles ET segments dès le zoom ×1 (aujourd'hui masqués < ×4/×8).

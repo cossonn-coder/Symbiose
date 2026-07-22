@@ -1,7 +1,7 @@
 # Tronçon ① — Désynchronisation des trois horloges phénologiques (MOTEUR)
 
 > Kickoff autosuffisant. Lis `CLAUDE.md` (racine) + `00_etat.md` (ce dossier) +
-> `docs/conception/CONCEPTION_DESYNC_PHENOLOGIE.md` (§2), puis exécute.
+> `docs/vegetal/floraison/conception_desync_phenologie.md` (§2), puis exécute.
 > Lancement des tests depuis `data/code/`.
 
 ## Objectif

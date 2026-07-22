@@ -4,7 +4,7 @@ DÉMO / banc d'essai (sprint maison, tronçon 1). N'est PLUS le golden (décisio
 Q4 : le golden est devenu un smoke test rapide, cf. tests/test_golden.py).
 
 Monde 20×20 m (40×40 = 1600 plots) selon le layout 3×3 de
-CONCEPTION_MAISON_OMBRE.md §2 : la MAISON occupe le centre 8×8 m, entourée de
+docs/champs/lumiere/conception_maison_ombre.md §2 : la MAISON occupe le centre 8×8 m, entourée de
 8 tuiles jardin (les 8 orientations N/NE/E/SE/S/SO/O/NO), séparées par des
 chemins en pierre de 50 cm (largeur tranchée ici = 1 plot). Les chemins ne sont
 PAS des plots simulés : ce sont les espaces monde entre les tuiles (modèle le

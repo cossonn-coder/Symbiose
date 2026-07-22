@@ -14,20 +14,20 @@ apparaître la **tuile thématique** (D15), et enrichit l'**encyclopédie**. C'e
 sienne).
 
 ## Pourquoi c'est un sprint séparé (et pas dans D12, D13, D14, D15)
-- `CONCEPTION_MAITRISE.md` **§8 point 2** l'isole explicitement : « Table de mapping
+- `docs/joueur/maitrise/conception_maitrise.md` **§8 point 2** l'isole explicitement : « Table de mapping
   palier → déblocage […] La coordination inter-dettes, **sans leur mécanique
   interne**. » Chaque consommateur (D13/D14/D15) définit *ce qu'il fait* ; D12.2 dit
   *à partir de quel palier*. Mettre les seuils dans chaque dette les éparpillerait —
   on veut **une source unique** pour équilibrer le rythme de progression d'un coup
   d'œil.
-- `CONCEPTION_MAITRISE.md` **§3.2** : rappel des **deux mesures globales** que la
+- `docs/joueur/maitrise/conception_maitrise.md` **§3.2** : rappel des **deux mesures globales** que la
   table peut lire — la **complétude-ratio** (`completude_ratio`, → seuils de
   déblocage) et l'**accumulation-log** (→ Vigueur, hors sujet ici). La table travaille
   surtout sur les **paliers par objet** (`0..5`) et la complétude.
 
 ## Ce qui est déjà tranché (ne pas re-débattre)
 - Paliers `0..5` : **découverte → investissement → maîtrise → expertise →
-  transcendant** (CLAUDE.md + `CONCEPTION_MAITRISE.md` §2).
+  transcendant** (CLAUDE.md + `docs/joueur/maitrise/conception_maitrise.md` §2).
 - Spillover **intra-famille** déjà actif (la maîtrise d'une espèce nourrit sa famille).
 - Le **transcendant** (palier 5) = non-action existentielle (écosystème
   auto-suffisant) — la table doit réserver quelque chose de fort à ce palier.
@@ -66,7 +66,7 @@ post-test** (D12.4). D12.2 fige la **structure** (qui-débloque-quoi-à-quel-pal
 pas les nombres. **À garder séparé** pour ne pas re-figer la table à chaque réglage.
 
 ## Périmètre — phase CONCEPTION (livrable)
-Une section **§8.2** dans `CONCEPTION_MAITRISE.md` (ou un `CONCEPTION_DEBLOCAGE.md`)
+Une section **§8.2** dans `docs/joueur/maitrise/conception_maitrise.md` (ou un `CONCEPTION_DEBLOCAGE.md`)
 contenant les **4 sous-tables** (encyclopédie / carnet / magazine / terrain) en format
 data-driven, renvoyant les **valeurs numériques** à D12.4. Plus une note sur
 l'**interface** : un seul lecteur (`deblocages_actifs(game_state, player) -> {...}`)

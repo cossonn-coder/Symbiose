@@ -1,6 +1,6 @@
 # ⑤ (T5) — Croissance progressive de la feuille (E1) — B + PONT
 
-> Lis d'abord `docs/conception/CONCEPTION_RENDU_FEUILLAGE.md` **§4**. **Premier tronçon
+> Lis d'abord `docs/rendu/feuillage/conception_rendu_feuillage.md` **§4**. **Premier tronçon
 > qui touche le pont.** Choix acté ①b : croissance ancrée sur l'**âge réel du segment**
 > (`age_weeks`), pas un timer de vue.
 

@@ -1,8 +1,8 @@
 # Tronçon 5 — Catalogue clonal ② : framboisier + bambou traçant + violettes (+ 5 voix)
 
 > Kickoff autosuffisant. Lis `CLAUDE.md` (règle « toute plante = ses 5 voix ») +
-> `00_etat.md` + `docs/conception/CONCEPTION_LUXURIANCE_STRATIFICATION.md` +
-> `docs/conception/CONCEPTION_VOIX_NARRATIVES.md`.
+> `00_etat.md` + `docs/vegetal/grimpantes/conception_luxuriance_stratification.md` +
+> `docs/narration/voix/conception_voix_narratives.md`.
 > **Pré-requis : tronçons 2, 3, 4 faits** (patron d'espèce clonale posé au 4).
 > **Golden : NEUTRE.**
 

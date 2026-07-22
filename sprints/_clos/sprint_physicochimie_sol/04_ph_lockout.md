@@ -1,6 +1,6 @@
 # Tronçon ④ — pH → lockout (cloches `dispo_i(ph)` + chlorose alcaline)
 
-> Sprint physico-chimie du sol. Conception : `docs/conception/CONCEPTION_SOL_PH.md`
+> Sprint physico-chimie du sol. Conception : `docs/champs/sol/conception_sol_ph.md`
 > §2.2 (lockout), §3 (constantes), §5 (interconnexions). Kickoff **autosuffisant**
 > (relançable à froid).
 > Tronçons ① (champ `ph` hérité + dérive, inerte), ② (champs `n`/`p`/`k` posés),

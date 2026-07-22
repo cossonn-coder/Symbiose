@@ -2,7 +2,7 @@
 SYMBIOSE — world/substrat.py
 Registre data-driven des SUBSTRATS de conteneur (pots / bacs).
 
-> Conception : `docs/conception/CONCEPTION_POTS_BACS_SUBSTRATS.md` §2.
+> Conception : `docs/joueur/outils/conception_pots_bacs_substrats.md` §2.
 > Tronçon ① du sprint pots/bacs : DATA PURE. Aucun conteneur n'existe encore,
 > aucune boucle n'est touchée → golden trivialement NEUTRE.
 

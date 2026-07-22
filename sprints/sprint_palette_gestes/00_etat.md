@@ -127,7 +127,7 @@ Voir le message de conception à l'écran. Découpage pressenti (perf-first, vue
 
 ## CONCEPTION FIGÉE (2026-07-10) — prête pour /sprint-auto
 Arbitrages D1→D11 tranchés. Doc maître :
-`docs/conception/CONCEPTION_PALETTE_GESTES.md`. Découpage figé (perf-first, vue
+`docs/joueur/gestes/conception_palette_gestes.md`. Découpage figé (perf-first, vue
 en dernier), golden NEUTRE/INTACT partout (référence
 `452b5256de4f6ff23df825b99596efdfde4e6ac87e8035f6b8da809f4dc000b4`) :
 

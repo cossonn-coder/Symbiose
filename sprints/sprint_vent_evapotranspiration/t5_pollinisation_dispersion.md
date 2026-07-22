@@ -1,6 +1,6 @@
 # Tronçon ⑤ — Pollinisation & dispersion anémophiles
 
-> Kickoff autonome. Design : `CONCEPTION_VENT_EVAPOTRANSPIRATION.md` **§5.3**.
+> Kickoff autonome. Design : `docs/champs/climat/conception_vent_evapotranspiration.md` **§5.3**.
 > Effets **par-plante** (négligeable en perf). Re-figeage golden probable.
 > **Rappel règle projet** : toute espèce ajoutée = ses **5 voix narratives**.
 
@@ -22,7 +22,7 @@ Le catalogue grandit avec les idées (règle projet) : si l'effet est mieux inca
 par une espèce absente (noisetier, graminée nommée…), l'**ajouter** — et alors lui
 donner ses **5 voix** (encyclopédie 3 niveaux, carnet via `CONCEPT_DE`, page secrète
 si lore, magazine famille, événements de cycle de vie). Voir
-`docs/conception/CONCEPTION_VOIX_NARRATIVES.md`.
+`docs/narration/voix/conception_voix_narratives.md`.
 
 ## Critères de succès
 - `test_fruits`/`test_pollinisation` étendu : une anémophile noue sous vent sans

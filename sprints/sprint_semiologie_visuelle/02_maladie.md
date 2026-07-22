@@ -1,6 +1,6 @@
 # T2 — Signe `maladie` / taches cryptogamiques
 
-> Lire d'abord `00_etat.md` (invariants) + `CONCEPTION_SEMIOLOGIE_VISUELLE.md` §3.
+> Lire d'abord `00_etat.md` (invariants) + `docs/narration/semiologie/conception_semiologie_visuelle.md` §3.
 > Couche **B pure** (C#). Golden trivialement préservé, build C# vert, F5 = Nico.
 
 ## But

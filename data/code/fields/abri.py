@@ -1,7 +1,7 @@
 """
 SYMBIOSE — fields/abri.py
 Champ d'ABRI spatial (brise-vent + venturi) — sprint VENT & ÉVAPOTRANSPIRATION ③.
-Spec : CONCEPTION_VENT_EVAPOTRANSPIRATION.md §4 + §2.4 + §7B (perf, CONTRAINTE #1).
+Spec : docs/champs/climat/conception_vent_evapotranspiration.md §4 + §2.4 + §7B (perf, CONTRAINTE #1).
 
 La masse d'air (`sim.wind.wind_at`, ①) est UNIFORME sur la tuile. La force LOCALE
 par plot résulte de la GÉOMÉTRIE d'abri : un obstacle (mur de maison, plante haute)

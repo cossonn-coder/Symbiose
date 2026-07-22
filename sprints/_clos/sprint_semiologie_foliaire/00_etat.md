@@ -1,7 +1,7 @@
 # Sprint « sémiologie foliaire » (D33) — état partagé
 
 > Généralise l'indice foliaire (bool `chlorose` du physico-chimie ⑨) à TOUS les
-> stresseurs. Conception figée : `docs/conception/CONCEPTION_SEMIOLOGIE_FOLIAIRE.md`.
+> stresseurs. Conception figée : `docs/narration/semiologie/conception_semiologie_foliaire.md`.
 > Lire la conception AVANT tout tronçon.
 
 ## Décisions figées (Nico, 2026-06-20)

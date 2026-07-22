@@ -1,7 +1,7 @@
 # T2 — Fleurs par famille (VUE C#, golden inchangé)
 
 > Kickoff autosuffisant. Lire `CLAUDE.md` + `00_etat.md` + ce fichier.
-> Conception : `docs/conception/CONCEPTION_RENDU_AMBIANCE.md` §3.
+> Conception : `docs/rendu/ambiance/conception_rendu_ambiance.md` §3.
 
 ## Objectif
 Donner à chaque fleur une **forme par famille botanique** (aujourd'hui : corolle

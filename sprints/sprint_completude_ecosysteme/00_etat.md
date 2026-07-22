@@ -5,7 +5,7 @@
 > référentiel + une extension de skill. Rien à lancer.
 
 ## Livrables (faits)
-1. **Référentiel** `docs/conception/CONCEPTION_COMPLETUDE_ECOSYSTEME.md` — matrice
+1. **Référentiel** `docs/meta/calibrage/conception_completude_ecosysteme.md` — matrice
    fonctionnelle téléonomique (10 groupes A→J, ~40 fonctions), diagnostic des
    9 trous priorisés (T1→T9), pipeline conçu-non-implémenté (§4), convention +
    procédure de maintenance.

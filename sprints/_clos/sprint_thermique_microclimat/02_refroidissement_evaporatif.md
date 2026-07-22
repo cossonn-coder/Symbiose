@@ -1,6 +1,6 @@
 # Tronçon ② — Refroidissement évaporatif (chaleur latente)
 
-> Sprint thermique-microclimat. Conception : `docs/conception/CONCEPTION_THERMIQUE_MICROCLIMAT.md`
+> Sprint thermique-microclimat. Conception : `docs/champs/climat/conception_thermique_microclimat.md`
 > (§2.1, §3, §5). Kickoff **autosuffisant** (relançable à froid).
 > Pré-requis : ① CLOS (champ `temperature_sol` + `tick_thermique` + helper pur
 > `fields/ecofields/thermique.py` ; golden re-figé `50a6fd2d…`).

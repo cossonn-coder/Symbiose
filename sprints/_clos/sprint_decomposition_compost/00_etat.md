@@ -1,6 +1,6 @@
 # Sprint décomposition & compost — état partagé
 
-> **Conception FIGÉE** → source de vérité = `docs/conception/CONCEPTION_DECOMPOSITION_COMPOST.md`
+> **Conception FIGÉE** → source de vérité = `docs/champs/sol/conception_decomposition_compost.md`
 > (la lire d'abord). Ce fichier = état léger + carte des sous-sprints. Mis à jour
 > en fin de **chaque** sous-sprint. Boucle projet : `0N` → coder → vérifier/re-figer
 > golden → MAJ ce fichier → commit → `/clear` → `0N+1`.

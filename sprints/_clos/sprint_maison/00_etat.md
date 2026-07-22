@@ -56,7 +56,7 @@ la **seule maison** comme obstacle dans `compute`. Cf. §1 du doc.
   **borné** : ≤ `MAX_PHOTOTROPISM_TILT`=**12°/émission** + plancher de verticalité
   `MIN_APEX_Z`=**0.30** (lean max acos(0.30)≈72°, jamais à plat). Intensité par
   espèce `PlantBase.phototropism_strength` (l'ancien `phototropism_gain` RÉSERVÉ a
-  été **renommé** → ⚠ diverge de `CONCEPTION_CROISSANCE.md` §E qui dit encore
+  été **renommé** → ⚠ diverge de `docs/vegetal/croissance/conception_croissance.md` §E qui dit encore
   `phototropism_gain`). **Lumière uniforme/None → biais nul** = structure
   bit-identique (piège §7 couvert). `LightField` du tick (`eco.lumiere`) threadé
   dans `grow_plant(plant, seed, week, light_field=None)` — **4e arg optionnel** →

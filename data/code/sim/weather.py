@@ -2,7 +2,7 @@
 SYMBIOSE — sim/weather.py
 Météo déterministe : `weather_at(seed, week)` — fonction PURE du temps, sans état.
 
-Pivot de la conception météo (CONCEPTION_METEO.md §0-1). L'ancien moteur tirait
+Pivot de la conception météo (docs/champs/climat/conception_meteo.md §0-1). L'ancien moteur tirait
 l'aléa de saison avec `random.choice(ALEAS_METEO)` : un RNG *live* qui consommait
 l'état global de `random` et ne restait déterministe que grâce à une béquille
 `random.seed(42)` — ce qui violait la philo #3 (déterminisme = seed global + hash
@@ -44,10 +44,10 @@ K_SIGN = (90_005, 0)   # un événement émet-il un signe diégétique ? (§4.3)
 # Sous-sprint 02 : la météo passe en cadence HEBDOMADAIRE (consultée chaque
 # semaine, plus seulement au passage de saison) → P_EVENT abaissé de 0.60 (01,
 # 4×/an) à 0.15 pour viser ~8 événements notables/an et laisser le jardin
-# survivre 30 ans. Calibrage post-test (CONCEPTION_METEO.md §5).
+# survivre 30 ans. Calibrage post-test (docs/champs/climat/conception_meteo.md §5).
 P_EVENT = 0.15
 
-# --- Climat normal saisonnier (CONCEPTION_METEO.md §1.1) -------------------
+# --- Climat normal saisonnier (docs/champs/climat/conception_meteo.md §1.1) -------------------
 # Normale de température : sinusoïde Normandie océanique. Minimum ~semaine 4
 # (fin janvier), maximum ~semaine 30 (fin juillet). Faible amplitude (hivers
 # doux, étés frais). T_MOY/T_AMP = calibrage post-test.
@@ -57,7 +57,7 @@ T_AMP = 7.0    # °C — demi-amplitude saisonnière
 # ≈ ±0.08) ; ce facteur la convertit en ±~1 °C de « caractère » d'année.
 DRIFT_TEMP = 12.0
 
-# --- Deltas de température par événement (CONCEPTION_METEO.md §2.1/2.2) -----
+# --- Deltas de température par événement (docs/champs/climat/conception_meteo.md §2.1/2.2) -----
 # Gel/canicule/redoux migrent de leur mapping provisoire WEATHER_ALEA (humidité/
 # santé, 01) vers de VRAIS deltas de température transitoires. Les autres
 # événements (Sécheresse, Tempête, Grêle, Pluie prolongée) gardent leur effet
@@ -154,7 +154,7 @@ def temp_norm(week_in_year: int, year_fraction: float | None = None,
               phase: float = 0.0) -> float:
     """
     Température NORMALE de la semaine (°C) — toile de fond lisse, 100 % prévisible
-    (CONCEPTION_METEO.md §1.1) : `T_MOY − T_AMP·cos(2π·(w − 4)/52)`.
+    (docs/champs/climat/conception_meteo.md §1.1) : `T_MOY − T_AMP·cos(2π·(w − 4)/52)`.
 
     `week_in_year` ∈ [1, 52]. Si `year_fraction` est fourni, on superpose la dérive
     interannuelle `climate_stress` (§1.2, `phase` dérivée du seed) → certaines
@@ -223,7 +223,7 @@ def forecast(seed: int, week: int, horizon: int = 2) -> list[WeatherEvent]:
     return [weather_at(seed, week + k) for k in range(1, horizon + 1)]
 
 
-# --- Signes diégétiques (Z2, CONCEPTION_METEO.md §4) ------------------------
+# --- Signes diégétiques (Z2, docs/champs/climat/conception_meteo.md §4) ------------------------
 # Un signe = un indice perceptif rendu dans le monde 1-2 semaines AVANT
 # l'événement (jamais d'icône calendrier, philo #5). Ces libellés sont des
 # DONNÉES (français, voix naturaliste) que la couche d'affichage (Godot, plus

@@ -1,6 +1,7 @@
 // SYMBIOSE — SolTexture.cs (SS² Rendu pixel-art, tronçon T2)
-// CUISSON de la texture de SOL d'un plot (cap docs/conception/
-// CONCEPTION_RENDU_PIXELART.md §5, bloc « Relief du SOL »). Avant T2 le sol
+// CUISSON de la texture de SOL d'un plot (cap
+// docs/rendu/pixelart/conception_rendu_pixelart.md §5, bloc « Relief du SOL »).
+// Avant T2 le sol
 // était un APLAT : WorldView.Monde posait un losange Polygon2D d'une seule
 // couleur par plot (+ damier ±5 %). C'était le dernier aplat du rendu.
 //

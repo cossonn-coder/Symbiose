@@ -1,7 +1,7 @@
 # Dette D14 — Carnet auto (descriptif → interprétatif)
 
 > **Kickoff autosuffisant.** Lis ce fichier en entier, puis les sources, puis
-> exécute. Français + pédagogie. **Conception SEULE d'abord** (`CONCEPTION_CARNET.md`,
+> exécute. Français + pédagogie. **Conception SEULE d'abord** (`docs/narration/voix/conception_carnet.md`,
 > valider avec Nico, puis impl.). Ampleur **moyenne**.
 
 ## Ce que c'est, en une phrase
@@ -17,7 +17,7 @@ décrit sans expliquer) puis **révèle les causes** une fois la compréhension 
   « Préserve la méthode scientifique pendant l'apprentissage, révèle les causes une
   fois la compréhension intériorisée. » Réglage d'aide : « Carnet interprétatif
   anticipé : OUI/NON (défaut NON) ».
-- **La maîtrise pilote la bascule** (`CONCEPTION_MAITRISE.md` §7) : « D14 (carnet) —
+- **La maîtrise pilote la bascule** (`docs/joueur/maitrise/conception_maitrise.md` §7) : « D14 (carnet) —
   bascule descriptif → interprétatif au **seuil de maîtrise** d'un concept (table de
   mapping, §8) ». La table exacte des seuils = **D12.2** (séparé).
 - **Les événements existent déjà comme marqueurs** : `sim/maitrise_detection.py` lit
@@ -82,7 +82,7 @@ Le carnet est une **voix**. Deux registres par entrée (descriptif / interpréta
 > comme livrable éditorial à relire, pas du code.
 
 ## Périmètre — phase CONCEPTION (livrable)
-`docs/conception/CONCEPTION_CARNET.md` actant : les 3 choix ; la **source d'événements**
+`docs/narration/voix/conception_carnet.md` actant : les 3 choix ; la **source d'événements**
 (réutiliser les marqueurs de `maitrise_detection.py`, **sans** toucher au tick) ;
 l'**interface** (`carnet_consigner(event)` appelée par le **driver** après le tick —
 même logement que la détection de succès, jamais importée par `engine`) ;

@@ -2,7 +2,7 @@
 
 > **Kickoff autosuffisant.** Lis ce fichier en entier, puis les sources, puis
 > exécute. Français + pédagogie. **Conception SEULE d'abord** (produire un
-> `CONCEPTION_MAGAZINE.md`, valider avec Nico, puis seulement impl.). Ampleur
+> `docs/narration/voix/conception_magazine.md`, valider avec Nico, puis seulement impl.). Ampleur
 > **moyenne**. Aucun code golden touché en phase conception.
 
 ## Ce que c'est, en une phrase
@@ -16,7 +16,7 @@ exploration de friche).
 - **Les 4 canaux d'acquisition** (CLAUDE.md) : 1. succession spontanée (`niche_index`),
   2. événements rares (bouture/oiseau/vent), 3. friche périphérique, **4. magazine**
   (déblocage par Vigueur + maîtrise). D13 = le canal 4.
-- **La maîtrise est prête à l'alimenter** (`CONCEPTION_MAITRISE.md`) :
+- **La maîtrise est prête à l'alimenter** (`docs/joueur/maitrise/conception_maitrise.md`) :
   - **§7** : « D13 (magazine) — consomme la **complétude-ratio** + paliers pour
     débloquer des espèces ».
   - **§3.2** : deux mesures globales distinctes — la **complétude-ratio** (→ seuils
@@ -77,7 +77,7 @@ monte (offres qui apparaissent), pas une liste plate.
 > Reco : **(A)** si tu veux du caractère, **(B)** pour un MVP. À toi selon l'effort.
 
 ## Périmètre — phase CONCEPTION (livrable de ce sprint)
-Produire `docs/conception/CONCEPTION_MAGAZINE.md` qui acte : les 3 choix ci-dessus ; la
+Produire `docs/narration/voix/conception_magazine.md` qui acte : les 3 choix ci-dessus ; la
 **signature de l'interface** côté moteur (`magazine_offres(game_state, player) ->
 list[espèce]` lisant `completude_ratio` ; `acheter_au_magazine(game_state, player,
 espèce) -> bool` qui `spend` la Vigueur puis dépose un lot dans `PlayerSeedBank`) ;

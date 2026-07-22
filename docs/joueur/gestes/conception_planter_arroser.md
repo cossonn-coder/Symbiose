@@ -14,7 +14,7 @@
 
 ## 1. L'intention (source de vérité du « quoi »)
 
-`CONCEPTION_VIGUEUR.md` §3.2 (« Actions sur le milieu — le canal vertueux ») :
+`docs/joueur/vigueur/conception_vigueur.md` §3.2 (« Actions sur le milieu — le canal vertueux ») :
 
 | Action | Phase | Champ / effet | Coût | Réponse émergente |
 |---|---|---|---|---|
@@ -251,8 +251,8 @@ s'humidifier, indices d'asphyxie) = **volet vue ultérieur**.
 Q4 / l'empilement).
 
 ---
-*Réfs : `CONCEPTION_VIGUEUR.md` §3.1-3.2 (intention, philo #2, urgence),
-`CONCEPTION_ECRASEMENT.md` (gabarit de structure), `sim/seeds.py`
+*Réfs : `docs/joueur/vigueur/conception_vigueur.md` §3.1-3.2 (intention, philo #2, urgence),
+`docs/joueur/gestes/conception_ecrasement.md` (gabarit de structure), `sim/seeds.py`
 (`PlayerSeedBank`), `fields/seedbank.py` (`SeedBank` agrégée vs `GrainEnAttente`),
 `sim/succession.py` (germination niche), `fields/ecofields.py:tick_hydrology`
 (`DRAINAGE`, `BASE_RAIN`, [0,3]), `sim/engine.py:195/302` (`ok_hum`,

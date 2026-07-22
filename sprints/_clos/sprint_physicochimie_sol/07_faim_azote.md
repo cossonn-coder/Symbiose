@@ -1,6 +1,6 @@
 # Tronçon ⑦ — Faim d'azote (bois/BRF + substrat usé de champignons)
 
-> Sprint physico-chimie du sol. Conception : `docs/conception/CONCEPTION_SOL_NUTRIMENTS_NPK.md`
+> Sprint physico-chimie du sol. Conception : `docs/champs/sol/conception_sol_nutriments_npk.md`
 > §2.7 (faim d'azote, modèle d'immobilisation/restitution). Kickoff **autosuffisant**
 > (relançable à froid). Python depuis `data/code/`.
 > Tronçons ① (champ `ph`), ② (n/p/k posés), ③ (Liebig + lessivage diff. + CEC),

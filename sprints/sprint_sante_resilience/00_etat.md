@@ -2,7 +2,7 @@
 
 > Carnet `/conception` mis à jour EN CONTINU (règle §0bis). Reprise à froid =
 > lire `CLAUDE.md` + ce fichier. **CONCEPTION FIGÉE 2026-07-13 — 4 kickoffs prêts
-> pour `/sprint-auto`.** Doc : `docs/conception/CONCEPTION_SANTE_RESILIENCE.md`.
+> pour `/sprint-auto`.** Doc : `docs/vegetal/sante/conception_sante_resilience.md`.
 
 ## Objectif
 Remplacer les PV plats `health: int 0–3` (uniformes toutes espèces) par une

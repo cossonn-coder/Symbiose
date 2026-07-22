@@ -1,6 +1,6 @@
 # ④ Encyclopédie — `encyclopedie_index` / `encyclopedie_lire` (fiche 3 niveaux)
 
-> Lire d'abord `00_etat.md` + `docs/conception/CONCEPTION_VOIX_NARRATIVES.md` (§2.2, §6).
+> Lire d'abord `00_etat.md` + `docs/narration/voix/conception_voix_narratives.md` (§2.2, §6).
 > Tronçon **deuxième voix** : wiki ingame read-only, voix « naturaliste ». Niveau de
 > fiche = `min(palier, 3)`, **aucun état neuf**. Dépend de ② (présence joueur/maîtrise),
 > indépendant de ③. Premier geste : RE-MESURER les hashs golden.

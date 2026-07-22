@@ -1,7 +1,7 @@
 """
 SYMBIOSE — tests/test_journal.py
 Test du LEDGER d'événements (sprint Voix narratives, tronçon ②).
-Spec : `docs/conception/CONCEPTION_VOIX_NARRATIVES.md` §1.3/§1.4 + kickoff
+Spec : `docs/narration/voix/conception_voix_narratives.md` §1.3/§1.4 + kickoff
 `sprints/sprint_voix_narratives/02_journal.md`.
 
 Trois propriétés (les trois exigées par la « Définition de done » du kickoff) :

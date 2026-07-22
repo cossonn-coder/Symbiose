@@ -7,12 +7,12 @@
 Cap : **compléter et unifier la traduction en pixels** des signes de souffrance/
 réponse émis par le moteur. Couche **B** (pixellisation, `visuals/PlantRenderer.*`)
 — la couche **A** (le modèle moteur : détecteurs, champ `leaf_symptoms`, intensité)
-est figée par [`CONCEPTION_SEMIOLOGIE_FOLIAIRE.md`](CONCEPTION_SEMIOLOGIE_FOLIAIRE.md)
+est figée par [`conception_semiologie_foliaire.md`](conception_semiologie_foliaire.md)
 (D33, clos) et n'est **pas** retouchée ici.
 
 Postérieur à D33 et couplé au **rendu pixel-art** : les teintes de symptôme
 cohabitent désormais avec la palette 16-bit (rampes + hue-shift) introduite au
-SS② — cf. [`CONCEPTION_RENDU_PIXELART.md`](CONCEPTION_RENDU_PIXELART.md) §5.
+SS② — cf. [`conception_rendu_pixelart.md`](../../rendu/pixelart/conception_rendu_pixelart.md) §5.
 
 **Golden trivialement préservé** : rendu = vue passive, zéro moteur touché.
 
@@ -131,8 +131,8 @@ D33 déjà prévu).
 
 ## Liens
 
-- Modèle moteur : `CONCEPTION_SEMIOLOGIE_FOLIAIRE.md` (D33, clos).
-- Palette : `CONCEPTION_RENDU_PIXELART.md` §5 (SS②, committé `23b5613`).
+- Modèle moteur : `docs/narration/semiologie/conception_semiologie_foliaire.md` (D33, clos).
+- Palette : `docs/rendu/pixelart/conception_rendu_pixelart.md` §5 (SS②, committé `23b5613`).
 - Rendu feuillage (forme/couleur/nervures par espèce) :
-  [`CONCEPTION_RENDU_FEUILLAGE.md`](CONCEPTION_RENDU_FEUILLAGE.md).
+  [`conception_rendu_feuillage.md`](../../rendu/feuillage/conception_rendu_feuillage.md).
 - Dettes : 0.5.2 (mapping `ombre`), D47 (C2/C3/ombre → rendu C#), D48 (ce doc).

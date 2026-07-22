@@ -1,7 +1,7 @@
 """
 SYMBIOSE — tools/simserver/maitrise_pont.py
 La CHAÎNE DE MAÎTRISE du pont (sprint UI voix narratives, tronçon ①).
-Spec de référence : `docs/conception/CONCEPTION_VOIX_NARRATIVES_UI.md` §2.
+Spec de référence : `docs/narration/voix/conception_voix_narratives_ui.md` §2.
 
 Sans maîtrise, les quatre voix restent MUETTES (encyclopédie/magazine/carnet
 interprétatif sont gatés par un palier ≥ 1 ou ≥ 3). Ce module BRANCHE la chaîne

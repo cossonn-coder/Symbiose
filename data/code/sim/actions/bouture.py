@@ -1,7 +1,7 @@
 """
 SYMBIOSE — sim/actions/bouture.py
 Geste BOUTURER (sprint PALETTE DE GESTES, tronçon ②).
-Spec : `docs/conception/CONCEPTION_PALETTE_GESTES.md` §3.5 + kickoff
+Spec : `docs/joueur/gestes/conception_palette_gestes.md` §3.5 + kickoff
 `sprints/sprint_palette_gestes/02_bouture.md`.
 
 Multiplication végétative PAR LE JOUEUR : on prélève un fragment (greffon) sur

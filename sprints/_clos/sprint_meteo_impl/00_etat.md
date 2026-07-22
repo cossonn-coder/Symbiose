@@ -1,7 +1,7 @@
 # Sprint implémentation météo — état partagé
 
 > **État léger, mis à jour en fin de chaque sous-sprint.** La spec de référence
-> figée est [`data/code/CONCEPTION_METEO.md`](../../data/code/CONCEPTION_METEO.md)
+> figée est [`docs/champs/climat/conception_meteo.md`](../../../docs/champs/climat/conception_meteo.md)
 > (Sprint conception météo, 2026-06-03). Couvre **D16** + **Z2**.
 >
 > Boucle : lancer `0N` → travailler → **vérifier/re-figer le golden** → mettre à
@@ -21,14 +21,14 @@
   helper `Engine._mediated_damage`). Gel piloté par le MILIEU (température < 0),
   pas par le nom de l'événement. Reste 04. ⚠ **Pas de kickoff `03_*.md`
   pré-écrit** (absent du disque) : travaillé directement depuis la spec figée
-  `CONCEPTION_METEO.md` §2.3 + §7 #3-4 et les notes de passation du 02.
+  `docs/champs/climat/conception_meteo.md` §2.3 + §7 #3-4 et les notes de passation du 02.
 - **Sous-sprint 04 (forecast + signes) : FAIT.** `weather_signs(seed, week,
   horizon=2)` pure livrée dans `sim/weather.py` + `@dataclass WeatherSign(kind,
   in_weeks, signs, signed)` + table `SIGN_TABLE` (§4.1) + masque `is_signed`
   (canal `K_SIGN`, §4.3). **Read-only** : golden **INCHANGÉ** (`63bfdac4…` PASS
   *sans* `--capture`) → aucun couplage n'a fui. Test dédié `tests/test_signes.py`
   (8/8). **Sprint météo d'implémentation TERMINÉ.**
-- Conception **figée** (`CONCEPTION_METEO.md`).
+- Conception **figée** (`docs/champs/climat/conception_meteo.md`).
 
 ## Découpage (4 sous-sprints autosuffisants)
 

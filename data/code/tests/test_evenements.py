@@ -1,7 +1,7 @@
 """
 SYMBIOSE — tests/test_evenements.py
 Test du PARSEUR D'ÉVÉNEMENTS partagé (sprint Voix narratives, tronçon ①).
-Spec : `docs/conception/CONCEPTION_VOIX_NARRATIVES.md` §1.2 + kickoff
+Spec : `docs/narration/voix/conception_voix_narratives.md` §1.2 + kickoff
 `sprints/sprint_voix_narratives/01_evenements.md`.
 
 Vérifie deux choses :

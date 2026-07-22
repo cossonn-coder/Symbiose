@@ -33,7 +33,7 @@ stade** → grandir te désigne perdant (rétroaction perverse).
 
 ## 2. Ancrage — le code viole une conception DÉJÀ figée
 
-`CONCEPTION_COMPETITION_INTRAPLOT.md` (Nico, 2026-06-13) a tranché **Q3** :
+`docs/vegetal/catalogue/conception_competition_intraplot.md` (Nico, 2026-06-13) a tranché **Q3** :
 
 > « La mort du perdant **émerge** du déclin de santé (`_tick_senescence_health`)
 > → nécromasse. **Jamais** de mortalité "verdict". »

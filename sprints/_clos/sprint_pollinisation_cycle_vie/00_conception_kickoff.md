@@ -1,7 +1,7 @@
 # Kickoff — Arc POLLINISATION & CYCLE DE VIE (conception d'abord)
 
 > **Sprint de CONCEPTION d'abord, MOTEUR.** Aucun code moteur tant que le doc
-> n'est pas figé. Livrable de cette phase = `docs/conception/CONCEPTION_POLLINISATION_CYCLE_VIE.md`.
+> n'est pas figé. Livrable de cette phase = `docs/faune/pollinisation/conception_pollinisation_cycle_vie.md`.
 > L'implémentation (MOTEUR → re-fige le golden) sera découpée en sous-sprints
 > APRÈS validation de la conception.
 >
@@ -155,7 +155,7 @@ pas un gros morceau.
 RE-FIGÉ le 2026-06-17.** La 1ʳᵉ passe était incomplète (manquaient : catalogue
 d'acteurs pollinisateurs multi-rôles, trajectoire de butinage, couche joueur
 ruche/miel). Conception complète :
-`docs/conception/CONCEPTION_POLLINISATION_CYCLE_VIE.md`, réorganisée en
+`docs/faune/pollinisation/conception_pollinisation_cycle_vie.md`, réorganisée en
 **Partie I (moteur, re-fige le golden) / Partie II (couche joueur)**.
 Décisions clés :
 - **A** floraison = scalaire `floraison ∈[0,1]`, double porte **GDD + photopériode**,
@@ -182,5 +182,5 @@ Décisions clés :
 ①→⑤ MOTEUR (re-fige le golden isolé), ⑥⑦ COUCHE JOUEUR (golden neutre, sprint
 distinct APRÈS le moteur). Ordre conseillé ①→⑤. Écrire les kickoffs d'impl
 `01_*.md`…au démarrage. **Reprise à froid** : « lis
-`docs/conception/CONCEPTION_POLLINISATION_CYCLE_VIE.md` §K-§L puis lance le
+`docs/faune/pollinisation/conception_pollinisation_cycle_vie.md` §K-§L puis lance le
 tronçon ① (Floraison réelle + phénologie, golden visé NEUTRE) ».

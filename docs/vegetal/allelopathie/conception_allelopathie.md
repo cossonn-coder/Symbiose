@@ -173,7 +173,7 @@ seul traceur d'autotoxicité. Isoler, mesurer, annoncer le nouveau golden.
   stratégique permaculture » (geste joueur : semer un couvert nettoyant).
 - Pour chacune : encyclopédie (fiche 3 niveaux), carnet (concept `allelopathie` /
   cause), pages secrètes (lore optionnel), magazine (famille/offre), événements
-  (marqueurs de cycle) — cf. `CONCEPTION_VOIX_NARRATIVES.md`.
+  (marqueurs de cycle) — cf. `docs/narration/voix/conception_voix_narratives.md`.
 
 ### E.3 Sensibilités
 - Renseigner `allelopathie_sensibilite` sur quelques espèces cibles marquantes

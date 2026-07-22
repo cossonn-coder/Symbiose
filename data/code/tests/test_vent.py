@@ -1,7 +1,7 @@
 """
 SYMBIOSE — tests/test_vent.py
 Test de la MASSE D'AIR pure (sprint VENT & ÉVAPOTRANSPIRATION, tronçon ①).
-Spec : `docs/conception/CONCEPTION_VENT_EVAPOTRANSPIRATION.md` §2 + kickoff
+Spec : `docs/champs/climat/conception_vent_evapotranspiration.md` §2 + kickoff
 `sprints/sprint_vent_evapotranspiration/t1_vent_masse_air.md`.
 
 Vérifie que `sim/wind.py` est :

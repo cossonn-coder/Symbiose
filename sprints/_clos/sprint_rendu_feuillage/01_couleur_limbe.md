@@ -1,6 +1,6 @@
 # ① (T1) — Couleur du limbe par espèce (E3-couleur)
 
-> Lis d'abord `docs/conception/CONCEPTION_RENDU_FEUILLAGE.md` **§3.1** (et §1 pour les
+> Lis d'abord `docs/rendu/feuillage/conception_rendu_feuillage.md` **§3.1** (et §1 pour les
 > invariants). Ce kickoff ne fait que cadrer l'exécution ; le doc est la source.
 
 ## But

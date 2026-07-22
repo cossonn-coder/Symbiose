@@ -1,7 +1,7 @@
 # Sous-sprint ⑤ — Structures posables & gestes : bac à compost, pile à bois, le canal vertueux du joueur
 
 > **Kickoff autosuffisant (démarrage à froid).** Lire d'abord `00_etat.md`
-> (§Acquis ①②③④) et `docs/conception/CONCEPTION_DECOMPOSITION_COMPOST.md` (**§5**
+> (§Acquis ①②③④) et `docs/champs/sol/conception_decomposition_compost.md` (**§5**
 > surtout, + **§4.1** pile à bois → habitat, + §7 ligne ⑤, + §8 philo #1/#4/#6).
 > ① a transformé la litière en **parcelles `{tissu, masse, age_sem}` par plot**
 > (`eco.litiere`, fusion par tissu → au plus **une parcelle par tissu et par

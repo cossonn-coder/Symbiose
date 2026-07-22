@@ -1,6 +1,6 @@
 # Tronçon ③ — Champ d'abri spatial (brise-vent + venturi)
 
-> Kickoff autonome. Design : `CONCEPTION_VENT_EVAPOTRANSPIRATION.md` **§4** + **§2.4**
+> Kickoff autonome. Design : `docs/champs/climat/conception_vent_evapotranspiration.md` **§4** + **§2.4**
 > + **§7B** (perf). **SEUL morceau réellement coûteux du sprint — À BUDGÉTER.**
 > Re-figeage golden probable. **Reportable en dette** si la mesure dérape, sans
 > bloquer la suite.

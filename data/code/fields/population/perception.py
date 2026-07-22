@@ -58,7 +58,7 @@ def sample_sprites(field: PopulationField, seed: int,
                    densite_par_sprite: float = DENSITE_PAR_SPRITE,
                    cap: int = SPRITES_PAR_PLOT_MAX) -> list[SpriteSample]:
     """
-    Règle d'échantillonnage densité → entités (CONCEPTION_VIE_MACRO.md §3).
+    Règle d'échantillonnage densité → entités (docs/faune/vie_macro/conception_vie_macro.md §3).
     PURE & déterministe : aucun spawn par RNG vivant, aucun feedback vers la sim
     → golden-neutre (les sprites lisent le champ, ne le modifient pas).
 

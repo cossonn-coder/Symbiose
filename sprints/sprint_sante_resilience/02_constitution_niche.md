@@ -2,7 +2,7 @@
 
 > Kickoff autosuffisant. Lis `CLAUDE.md` + `00_etat.md` + ce fichier. Prérequis :
 > tronçon ① fait (`vitalite`, `etat`, `erode()` no-op via `getattr(...,1.0)`).
-> Doc : `docs/conception/CONCEPTION_SANTE_RESILIENCE.md` §2. **AUCUN gène** —
+> Doc : `docs/vegetal/sante/conception_sante_resilience.md` §2. **AUCUN gène** —
 > `GENE_NAMES` reste intact. Tout est data-driven par attribut de classe.
 
 ## Objectif

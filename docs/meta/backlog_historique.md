@@ -29,18 +29,10 @@
 - [x] Difficulty / accessibilité — Options modulaires + debug libre + pictogrammes
 
 ### Zone Z7 — éclairement spatial — CONCEPTION CLOSE ✅
-- [x] Décisions actées (pixel exact, 4 tranches + intégrale, hauteurs cm,
-      genetic_factor × growth_factor)
-- [x] Audit botanique des 14 espèces actuelles
-- [x] 5 arbres pérennes premiers calibrés
-- [x] Kickoff sprint éclairement rédigé (`sprints/sprint_eclairement.md`)
-- [x] **Recadrage conception (2026-05-29)** : Option A (lumière+plantes au
-      pixel, sol au plot), échelle 50 cm / 2 cm/px, soleil astronomique,
-      empreintes par stade, pérennes polymorphes, génétique biparentale par
-      introgression. Voir entrée *Sprint conception éclairement & reproduction*.
-- [x] **Implémentation scindée en deux sprints** : éclairement (D20-D21)
-      puis génétique/reproduction (D17+D22)
-- [x] Implémentation : les deux sprints dédiés sont terminés (Python)
+
+> **Déplacé au tronçon ④ du sprint de rangement documentaire (2026-07-22)**
+> → voir [`champs/lumiere/conception_eclairement.md`](../champs/lumiere/conception_eclairement.md) §2,
+> qui reprend cette liste **verbatim** aux côtés de la conception elle-même.
 
 ### Sprint refactor structurel — TERMINÉ ✅ (2026-06-03)
 - [x] Golden output déterministe (`tests/test_golden.py`, 3 tuiles / 100 ans)

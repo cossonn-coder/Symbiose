@@ -1,7 +1,7 @@
 # CONCEPTION — Scatter de la boucle lumière-REÇUE (perf run éternel, suite)
 
 > Figé le 2026-07-09 après audit du coût du tick. Sprint `sprint_perf_tick_on2`.
-> Continuation directe de `CONCEPTION_PERF_RUN_ETERNEL.md` (D66) et de la dette
+> Continuation directe de `docs/perf/run_eternel/conception_perf_run_eternel.md` (D66) et de la dette
 > D32 (LightField). **Optimisation PURE : bit-identité obligatoire, golden
 > INCHANGÉ.**
 

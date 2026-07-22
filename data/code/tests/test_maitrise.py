@@ -5,7 +5,7 @@ Golden JOUEUR de la couche Maîtrise (D12, tronçon i1) — distinct du golden
 (`tests/test_population.py`).
 
 La couche maîtrise vit dans `game_state["maitrise"]`, AU-DESSUS du tick, et ne
-doit JAMAIS faire avancer la simulation écologique (CONCEPTION_MAITRISE.md §6).
+doit JAMAIS faire avancer la simulation écologique (docs/joueur/maitrise/conception_maitrise.md §6).
 Déterministe SANS RNG : les preuves sont *injectées* par appel d'API, comme le
 sous-sprint 1 de la Vigueur posait l'état avant de brancher les actions.
 

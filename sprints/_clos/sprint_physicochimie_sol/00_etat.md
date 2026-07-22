@@ -1,9 +1,9 @@
 # SPRINT PHYSICO-CHIMIE DU SOL — état partagé
 
 > Conception figée (3 docs par volet) :
-> `docs/conception/CONCEPTION_SOL_PH.md` (porte l'ordre global §6),
-> `docs/conception/CONCEPTION_SOL_NUTRIMENTS_NPK.md`,
-> `docs/conception/CONCEPTION_SOL_STRUCTURE.md`.
+> `docs/champs/sol/conception_sol_ph.md` (porte l'ordre global §6),
+> `docs/champs/sol/conception_sol_nutriments_npk.md`,
+> `docs/champs/sol/conception_sol_structure.md`.
 > Branche suggérée : `sprint/physicochimie-sol`. Python depuis `data/code/`.
 > Boucle : lancer `0N` → coder → vérifier golden → MàJ ce fichier → commit → `/clear`
 > → écrire `0N+1` → lancer. **Vérifier git à jour avant de démarrer.**

@@ -1,7 +1,7 @@
 # Sprint implémentation Vigueur (D11) — état partagé
 
 > **État léger, mis à jour en fin de chaque sous-sprint.** La spec de référence
-> figée est [`data/code/CONCEPTION_VIGUEUR.md`](../../data/code/CONCEPTION_VIGUEUR.md)
+> figée est [`docs/joueur/vigueur/conception_vigueur.md`](../../../docs/joueur/vigueur/conception_vigueur.md)
 > (Sprint conception Vigueur, 2026-06-04). Couvre **D11** (+ prépare D19/D22b/D29/D30).
 >
 > Boucle : lancer `0N` → travailler → **vérifier le golden écolo (PASS sans
@@ -63,9 +63,9 @@ vraies voies écologiques et re-figeait).
   manger ne cible JAMAIS le bourgeon apical (apex = `tailler`, réponse hormonale **D29**).
   Golden joueur étendu (D1–D4) → **59/59**, trajectoire passive **inchangée**. Golden
   écolo **inchangé** (`ee79dd66…f0f947`). **Sprint Vigueur D11 complet (1/2/3/4).**
-- Conception **figée** (`CONCEPTION_VIGUEUR.md`).
+- Conception **figée** (`docs/joueur/vigueur/conception_vigueur.md`).
 
-## Découpage (suit CONCEPTION_VIGUEUR.md §8)
+## Découpage (suit docs/joueur/vigueur/conception_vigueur.md §8)
 
 | # | Objet | Impact golden écolo |
 |---|---|---|

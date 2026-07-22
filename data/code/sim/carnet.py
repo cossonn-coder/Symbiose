@@ -2,7 +2,7 @@
 SYMBIOSE — sim/carnet.py
 Le CARNET AUTO — première des quatre voix narratives (sprint Voix narratives,
 tronçon ③, dettes D14 + D43).
-Spec de référence : `docs/conception/CONCEPTION_VOIX_NARRATIVES.md` §2.1 + §5.
+Spec de référence : `docs/narration/voix/conception_voix_narratives.md` §2.1 + §5.
 
 Voix « je », à la première personne. Le carnet est un LECTEUR read-only du ledger
 ②  (`sim/journal.py`) : il ne consigne RIEN, n'avance aucun tick, n'utilise aucun

@@ -2,7 +2,7 @@
 
 > Kickoff autosuffisant. Lire `CLAUDE.md` + `00_etat.md` (D1-D7) + le tronçon ①
 > (déjà livré : découplage dormant + banc `diag_lod_ombre` + invariant seuil=0).
-> Réf. : `docs/conception/CONCEPTION_PERF_LOD_OMBRE.md`.
+> Réf. : `docs/perf/lod/conception_perf_lod_ombre.md`.
 > **Golden : RE-FIGÉ maîtrisé et annoncé** (dérive localisée, cf. §6 conception).
 
 ## Objectif

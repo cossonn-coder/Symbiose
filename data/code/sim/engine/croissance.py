@@ -19,7 +19,7 @@ from fields.ecofields.constants import (T_PLANTE_ALPHA, ROSEE_SURFACE_REF,
 from plants import EXPR_GAIN, EXPR_MIN, EXPR_MAX, TAU_UP, TAU_DOWN
 from .calendrier import saison_de
 
-# Sémiologie ② (CONCEPTION_SEMIOLOGIE_FOLIAIRE.md §2.5) — facteur de décroissance
+# Sémiologie ② (docs/narration/semiologie/conception_semiologie_foliaire.md §2.5) — facteur de décroissance
 # des marques de symptômes ÉVÉNEMENTIELS par tick de plante. Couplé au gain
 # SYMPTOM_MARK_GAIN (resolution.py) : à 0.8, demi-vie d'une marque ~3 semaines
 # (0.8³≈0.5) → cicatrisation visible en quelques semaines, purge sous epsilon

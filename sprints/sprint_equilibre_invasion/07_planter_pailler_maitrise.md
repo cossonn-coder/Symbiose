@@ -1,6 +1,6 @@
 # Tronçon ⑦ — Couplage planter + pailler par MAÎTRISE (auto-paillage)
 
-**Prérequis** : `CLAUDE.md`, `00_etat.md`, `CONCEPTION_EQUILIBRE_INVASION.md` §6.
+**Prérequis** : `CLAUDE.md`, `00_etat.md`, `docs/faune/trophique/conception_equilibre_invasion.md` §6.
 Patrons : `sim/actions/gestes.py::planter`, `sim/maitrise.py` /
 `sim/maitrise_detection.py` (paliers découverte→…→transcendant, par famille/
 concept), le stock de mulch (④), `pailler` (③).

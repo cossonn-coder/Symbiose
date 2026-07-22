@@ -9,7 +9,7 @@
 >
 > Périmètre acté avec toi le 2026-06-19 : **pH + nutriments N/P/K + structure
 > (D30)**. La **température du sol est déjà faite** (sprint thermique-microclimat
-> ①→⑩ clos, `CONCEPTION_THERMIQUE_MICROCLIMAT.md`) — elle n'est rappelée ici que
+> ①→⑩ clos, `docs/champs/climat/conception_thermique_microclimat.md`) — elle n'est rappelée ici que
 > comme modèle de référence d'un « champ physico-chimique » réussi.
 
 ---

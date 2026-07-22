@@ -1,7 +1,7 @@
 """
 SYMBIOSE — sim/semiologie.py
 Sémiologie foliaire (dette D33) — TRONÇON ① : détecteurs CHRONIQUES purs.
-Spec : docs/conception/CONCEPTION_SEMIOLOGIE_FOLIAIRE.md (§2.1-2.4, §5, §6).
+Spec : docs/narration/semiologie/conception_semiologie_foliaire.md (§2.1-2.4, §5, §6).
 
 Une plante qui souffre le MONTRE sur son feuillage, et chaque cause a un signe
 distinct : pas une jauge de santé unique mais un VOCABULAIRE (voir le signe →

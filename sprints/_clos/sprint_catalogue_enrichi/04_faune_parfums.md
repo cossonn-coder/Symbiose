@@ -1,13 +1,13 @@
 > ⚠️ **CADUC depuis le 2026-06-19.** Ce kickoff cadrait le modèle **A « parfum »**
 > (animaux = variantes de sprite d'une guilde, triade mutualisée). Nico a tranché
 > le **modèle B** (chaque animal a SA triade propre, guildes → catégories) — voir
-> `docs/conception/CONCEPTION_FAUNE_DEDIEE.md` et les kickoffs `04a_*`→`04e_*`.
+> `docs/faune/vie_macro/conception_faune_dediee.md` et les kickoffs `04a_*`→`04e_*`.
 > Conservé en historique (règle « ne rien jeter »). **NE PAS implémenter ce doc.**
 
 # Tronçon ④ — FAUNE nommée « parfums » (modèle A) — CADUC
 
 > Sprint CATALOGUE ENRICHI. État partagé : `00_etat.md` (lire d'abord).
-> Doc de référence FIGÉ : `docs/conception/CONCEPTION_CATALOGUE_ENRICHI.md`
+> Doc de référence FIGÉ : `docs/vegetal/catalogue/conception_catalogue_enrichi.md`
 > (§5.1 modèle A tranché, §5.2 catalogue nommé, §5.3 interconnexions, §7.1/§7.3).
 > Kickoff **autosuffisant**. Lancement Python depuis `data/code/`.
 > Filet C# : `dotnet build Symbiose.csproj` (**zéro C# attendu ici** — la vue

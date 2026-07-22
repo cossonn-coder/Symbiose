@@ -1,7 +1,7 @@
 # ③ Vue Godot + banc F5 — floraison → pollinisation → nouaison → fruit
 
 > Kickoff autosuffisant. Lis `CLAUDE.md` + `00_etat.md` +
-> `docs/conception/CONCEPTION_FLORAISON_FRUCTIFICATION.md` §5. Prérequis : ① et ②
+> `docs/vegetal/floraison/conception_floraison_fructification.md` §5. Prérequis : ① et ②
 > FAITS. **Règle projet** : la vue Godot est TOUJOURS le dernier tronçon d'un
 > sprint. Le F5 visuel reste à Nico ; sur la VM = filet `dotnet build
 > Symbiose.csproj` (voir `reference_godot`).

@@ -1,7 +1,7 @@
 # Tronçon ④a — SCAFFOLDING « catégorie » (filet, golden NEUTRE)
 
 > Sprint CATALOGUE ENRICHI. État partagé : `00_etat.md` (lire d'abord).
-> Doc de référence FIGÉ : `docs/conception/CONCEPTION_FAUNE_DEDIEE.md`
+> Doc de référence FIGÉ : `docs/faune/vie_macro/conception_faune_dediee.md`
 > (modèle B ; ce tronçon = §1.2 + §4 + §7 ligne ④a).
 > Kickoff **autosuffisant**. Lancement Python depuis `data/code/`.
 > Filet C# : `dotnet build Symbiose.csproj` (**zéro C# attendu ici**).

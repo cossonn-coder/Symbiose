@@ -1,7 +1,7 @@
 # Tronçon ③ — Plancher froid `T_GERM_FLOOR` + typage de TOUT le catalogue
 
 > Kickoff **autosuffisant** (lis CLAUDE.md + 00_etat.md + ce fichier).
-> Conception : `CONCEPTION_GERMINATION_THERMIQUE.md` §1.2 + §4. Lancement depuis
+> Conception : `docs/vegetal/floraison/conception_germination_thermique.md` §1.2 + §4. Lancement depuis
 > `data/code/`. Golden : **RE-FIGÉ maîtrisé** (annoncé).
 
 ## Objectif

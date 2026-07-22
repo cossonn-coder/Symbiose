@@ -1,7 +1,7 @@
 # Tronçon ③ — Vue C# (canal couleur + canaux texture/forme)
 
 > Sprint « sémiologie foliaire ». Conception :
-> `docs/conception/CONCEPTION_SEMIOLOGIE_FOLIAIRE.md` (§3). Lire la conception
+> `docs/narration/semiologie/conception_semiologie_foliaire.md` (§3). Lire la conception
 > + faire ①② d'abord. **F5 visuel = Nico** (Godot pas sur la VM).
 
 ## Objectif

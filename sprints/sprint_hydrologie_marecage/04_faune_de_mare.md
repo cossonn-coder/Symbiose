@@ -1,7 +1,7 @@
 # ④ — Faune de mare (moustique + libellule) + voix
 
 > Kickoff autosuffisant. Lis `CLAUDE.md` + `00_etat.md` + CE fichier. Conception :
-> `docs/conception/CONCEPTION_HYDROLOGIE_MARECAGE.md` §4 + §9. Prérequis : ②③ faits
+> `docs/champs/eau/conception_hydrologie_marecage.md` §4 + §9. Prérequis : ②③ faits
 > (`eau_surface`/`marais_memory`). **Golden population NEUTRE ou maîtrisé annoncé.**
 
 ## Objectif
@@ -19,7 +19,7 @@ Prépare la proie que la carnivore mangera (⑥).
   graphe encyclopédie, DONNÉE pure jamais lue par le tick).
 - Voix (§9) : encyclopédie 3 niveaux, carnet (`CONCEPT_DE` → concept `marais`/`eau`),
   pages secrètes si lore, magazine (n/a faune), événements (arrivée libellule).
-  Fichiers voix selon `CONCEPTION_VOIX_NARRATIVES.md` (corpus `sim/`).
+  Fichiers voix selon `docs/narration/voix/conception_voix_narratives.md` (corpus `sim/`).
 - `tests/test_population.py` : présence des 2 espèces, moustique nul sans flaque,
   monte avec `eau_surface`, libellule suit le moustique.
 

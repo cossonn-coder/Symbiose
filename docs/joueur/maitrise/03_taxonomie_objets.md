@@ -1,14 +1,14 @@
 # Maîtrise — §10 · Taxonomie des objets de maîtrise (D12.3)
 
 > Partie 3/3 de la conception des paliers de maîtrise. Index :
-> [`../CONCEPTION_MAITRISE.md`](../CONCEPTION_MAITRISE.md).
+> [`conception_maitrise.md`](conception_maitrise.md).
 > Amont : [`01_modele.md`](01_modele.md) (le modèle),
 > [`02_succes_par_axe.md`](02_succes_par_axe.md) (le succès, D12.1).
 
 > **Sous-sprint D12.3 (2026-06-04), conception seule.** Remplit le point §8.3.
 > Précédé d'une **lecture des catalogues moteur** (le point de vigilance acté) : la
 > taxonomie **reflète** `plants/` (espèces) + `sim/actions.py` &
-> `CONCEPTION_VIGUEUR.md` §3.2/§3.3 (actions) — elle n'invente **aucun** catalogue
+> `docs/joueur/vigueur/conception_vigueur.md` §3.2/§3.3 (actions) — elle n'invente **aucun** catalogue
 > parallèle. Reste ouvert : le **câblage** des objets outil/structure/technique
 > (n'existent pas encore dans le moteur → sprints d'action D29/D30/D31) ; les Nᵢ et
 > atténuations → calibrage D12.4.
@@ -21,7 +21,7 @@ objets de maîtrise** sans dupliquer leur contenu :
 - **Espèces** — `plants/catalogue.py` (`PLANT_CATALOGUE` + `PERENNIAL_CATALOGUE`) :
   **17 espèces** réparties sur **11 familles** botaniques.
 - **Actions** — `sim/actions.py` (4 gestes codés sur le vivant) + le catalogue
-  *conçu* de `CONCEPTION_VIGUEUR.md` §3.2 (milieu) / §3.3 (vivant) / §3.4
+  *conçu* de `docs/joueur/vigueur/conception_vigueur.md` §3.2 (milieu) / §3.3 (vivant) / §3.4
   (ressourcement).
 
 Les catégories **outil / structure / technique** (§1) **n'ont aucun support
@@ -73,7 +73,7 @@ globales** (§3.2) **et** le **terme global** de `cout_action` (§10.4, terme 1)
 
 ## 10.3 Catégories « outil / structure / technique » — déclarées, non câblées
 
-Inventaire **dérivé des actions** de `CONCEPTION_VIGUEUR.md` §3.2/§3.3 (rien
+Inventaire **dérivé des actions** de `docs/joueur/vigueur/conception_vigueur.md` §3.2/§3.3 (rien
 d'inventé hors du catalogue d'actions) :
 
 - **Outils** — *geste qualifié, l'objet qui rend le geste précis* :

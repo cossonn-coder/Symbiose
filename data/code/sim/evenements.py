@@ -1,7 +1,7 @@
 """
 SYMBIOSE — sim/evenements.py
 Le PARSEUR D'ÉVÉNEMENTS partagé (sprint Voix narratives, tronçon ①).
-Spec de référence : `docs/conception/CONCEPTION_VOIX_NARRATIVES.md` §1.2.
+Spec de référence : `docs/narration/voix/conception_voix_narratives.md` §1.2.
 
 Le tick émet déjà, dans son `log` texte, des MARQUEURS lisibles (🌱 ⏸ 🌑 ❄ 🌊
 🌰 🪦 ✗ 🍂 🍎 🐛 …). Jusqu'ici, seule la détection de maîtrise

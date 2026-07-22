@@ -1,7 +1,7 @@
 # T4 — Décor d'ambiance : ossature (VUE C#, golden inchangé)
 
 > Kickoff autosuffisant. Lire `CLAUDE.md` + `00_etat.md` + ce fichier.
-> Conception : `docs/conception/CONCEPTION_RENDU_AMBIANCE.md` §5.1.
+> Conception : `docs/rendu/ambiance/conception_rendu_ambiance.md` §5.1.
 
 ## Objectif
 Poser l'**ossature du décor** autour du jardin : des **zones organiques sinueuses**

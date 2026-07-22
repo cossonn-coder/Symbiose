@@ -1,7 +1,7 @@
 # Tronçon 6 — Vue Godot : empilement visible + couverture + silhouettes + colonies
 
 > Kickoff autosuffisant. Lis `CLAUDE.md` (Godot = VUE, C# uniquement, F5 = Nico) +
-> `00_etat.md` + `docs/conception/CONCEPTION_LUXURIANCE_STRATIFICATION.md §2.3-2.4`.
+> `00_etat.md` + `docs/vegetal/grimpantes/conception_luxuriance_stratification.md §2.3-2.4`.
 > **Pré-requis : tronçons 1-5 faits.** **Golden : INTACT** (aucune modif moteur qui
 > touche le tick — seulement pont read-only + rendu).
 > **Règle projet : tout sprint finit par sa vue Godot.**

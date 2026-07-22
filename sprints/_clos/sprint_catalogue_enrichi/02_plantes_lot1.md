@@ -1,7 +1,7 @@
 # Tronçon ② — PLANTES lot 1 (familles déjà cataloguées)
 
 > Sprint CATALOGUE ENRICHI. État partagé : `00_etat.md` (lire d'abord).
-> Doc de référence FIGÉ : `docs/conception/CONCEPTION_CATALOGUE_ENRICHI.md`
+> Doc de référence FIGÉ : `docs/vegetal/catalogue/conception_catalogue_enrichi.md`
 > (§4 sélection, §7 partage doc/code). Kickoff **autosuffisant** (relançable à froid).
 
 ## Objectif

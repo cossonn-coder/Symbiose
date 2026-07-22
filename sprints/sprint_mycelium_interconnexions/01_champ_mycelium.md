@@ -1,6 +1,6 @@
 # ① Champ `mycelium` + dynamique (effets DÉBRANCHÉS)
 
-> Lire d'abord `00_etat.md` + `docs/conception/CONCEPTION_MYCELIUM_INTERCONNEXIONS.md`
+> Lire d'abord `00_etat.md` + `docs/faune/mycelium/conception_mycelium_interconnexions.md`
 > (§1). Tronçon **fondation** : on AJOUTE le champ et sa dynamique propre, **aucun
 > effet §2 branché** (décompo/uptake/faune intacts). Premier geste : RE-MESURER les
 > hashs golden (déjà notés dans `00_etat.md`) pour partir d'une base sûre.

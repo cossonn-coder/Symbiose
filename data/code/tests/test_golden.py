@@ -8,7 +8,7 @@ DIGEST d'état final (chaque plante + champs écologiques de chaque tuile). Si l
 hash diffère de la référence (`golden_hash.txt`), le comportement a bougé.
 
 REFONTE smoke test (sprint maison, tronçon 1 — décision Q4,
-CONCEPTION_MAISON_OMBRE.md §7). Le golden n'est plus le scénario lourd de
+docs/champs/lumiere/conception_maison_ombre.md §7). Le golden n'est plus le scénario lourd de
 `main.py` (devenu une démo) : il vise « quelques secondes » pour tourner souvent.
 Petit monde, court horizon, mais qui exerce toujours le cœur du tick :
 succession + reproduction (automne) + transition hivernale + pérenne (pommier)

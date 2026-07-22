@@ -1,7 +1,7 @@
 # Tronçon ① — Détecteurs chroniques + champ `leaf_symptoms`
 
 > Sprint « sémiologie foliaire ». Conception :
-> `docs/conception/CONCEPTION_SEMIOLOGIE_FOLIAIRE.md` (§2.1-2.4, §5, §6).
+> `docs/narration/semiologie/conception_semiologie_foliaire.md` (§2.1-2.4, §5, §6).
 > Lire la conception d'abord. **Golden NEUTRE attendu** (lecture pure).
 
 ## Objectif

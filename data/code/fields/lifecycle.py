@@ -1,7 +1,7 @@
 """
 SYMBIOSE — fields/lifecycle.py
 Ponts de cycle de vie (chenille→papillon, syrphe_larve→syrphe) — arc
-pollinisation, tronçon ⑤ (CONCEPTION_POLLINISATION_CYCLE_VIE.md §D).
+pollinisation, tronçon ⑤ (docs/faune/pollinisation/conception_pollinisation_cycle_vie.md §D).
 
 Un cycle de vie n'est PAS une 5ᵉ guilde trophique : c'est un STADE, traité à
 part dans le tick (décision Nico, cohérent avec la décompo ④). Le patron est

@@ -292,7 +292,7 @@ def shade_stress_damage(plant: PlantInstance, eco,
 
 
 # --- Herbivorie : la pression vient du champ RAVAGEUR visible (D31.2) ---
-# Câblage D31.2 (CONCEPTION_VIE_MACRO.md §1/§2.2) : on referme la boucle vu↔agi.
+# Câblage D31.2 (docs/faune/vie_macro/conception_vie_macro.md §1/§2.2) : on referme la boucle vu↔agi.
 # Avant, la pression était reconstruite d'un proxy (biomasse × diversité ×
 # microbiome) et la régulation d'un second proxy `predator` (biodiv + rondelles +
 # stabilité) — aucune entité visible. Désormais c'est le RAVAGEUR VISIBLE (le
@@ -318,7 +318,7 @@ def herbivory_pressure(plant: PlantInstance, tile: Tile,
     l'auxiliaire). L'auxiliaire est lu DIRECTEMENT seulement pour la bascule
     LÉTALE (un foyer non régulé sur sol mort).
 
-    Boucle d'apprentissage (CONCEPTION_VIE_MACRO.md §1) : je vois les ravageurs →
+    Boucle d'apprentissage (docs/faune/vie_macro/conception_vie_macro.md §1) : je vois les ravageurs →
     mes plantes souffrent là où leur densité est haute → j'installe de l'habitat →
     les auxiliaires arrivent → le champ ravageur reflue → mes plantes récupèrent.
     """
@@ -339,7 +339,7 @@ def herbivory_pressure(plant: PlantInstance, tile: Tile,
     # biomasse locale ; la régulation d'un terme `predator` agrégé (biodiversité +
     # rondelles pollinisateur/auxiliaire + stabilité). Les deux sont remplacés par
     # la lecture directe des champs de population (ravageur ci-dessus, auxiliaire
-    # pour la bascule létale ci-dessous). Cf. CONCEPTION_VIE_MACRO.md §1/§2.2, D27.
+    # pour la bascule létale ci-dessous). Cf. docs/faune/vie_macro/conception_vie_macro.md §1/§2.2, D27.
     #
     # nearby = [p for p in tile.plants
     #           if p.is_alive and p.current_stage >= 2

@@ -123,7 +123,7 @@ class PlantBase(ABC):
     # acidophile 4.8/0.8, lavande/thym calciphiles 7.4/1.1). La valeur 3.0 est un
     # LITTÉRAL ici (≡ PH_TOL_DEFAUT de la conception §3) : la couche `plants` est la
     # plus basse et n'importe JAMAIS `fields` (règle de couches) — pas d'import du
-    # constants.py d'`ecofields`. Cf. CONCEPTION_SOL_PH.md §2.3.
+    # constants.py d'`ecofields`. Cf. docs/champs/sol/conception_sol_ph.md §2.3.
     ph_opt: float = 6.8                  # pH optimal (défaut ≈ neutre)
     ph_tol: float = 3.0                  # demi-largeur LARGE → cloche plate → insensible au pH
     # Fenêtre thermique de LEVÉE (sprint germination thermique, tronçon ②). Cloche
@@ -137,7 +137,7 @@ class PlantBase(ABC):
     # intact (cf. §REPRISE du 00_etat). Le typage qui rend la porte mordante (et le
     # plancher froid `T_GERM_FLOOR`) vient au ③. Littéraux ici (≡ patron pH) : la couche
     # `plants` est la plus basse et n'importe JAMAIS `fields` (règle de couches).
-    # Cf. CONCEPTION_GERMINATION_THERMIQUE.md §1.
+    # Cf. docs/vegetal/floraison/conception_germination_thermique.md §1.
     t_germ_opt: float = 18.0             # T_sol optimale de levée (°C)
     t_germ_tol: float = 300.0            # demi-largeur TRÈS LARGE → cloche plate → neutre au départ
     # Racine PIVOT décompactante (sprint physico-chimie ⑧) : une plante ainsi marquée

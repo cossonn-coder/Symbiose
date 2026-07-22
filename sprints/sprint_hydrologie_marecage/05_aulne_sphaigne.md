@@ -1,7 +1,7 @@
 # ⑤ — Aulne (Betulaceae) + Sphaigne (ingénieur) : moteur + niches + voix
 
 > Kickoff autosuffisant. Lis `CLAUDE.md` + `00_etat.md` + CE fichier. Conception :
-> `docs/conception/CONCEPTION_HYDROLOGIE_MARECAGE.md` §5.1/§5.2 + §9. Prérequis :
+> `docs/champs/eau/conception_hydrologie_marecage.md` §5.1/§5.2 + §9. Prérequis :
 > ②③ faits. **Golden NEUTRE hors smoke** (espèces absentes du smoke).
 
 ## Objectif

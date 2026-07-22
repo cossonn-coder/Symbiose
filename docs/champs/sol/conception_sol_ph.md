@@ -2,7 +2,7 @@
 
 > Conception figée le 2026-06-19 (Sprint physico-chimie du sol, volet A/3).
 > Étude de fond et pédagogie agronomique complète : `sprints/etude_physicochimie_sol.md`.
-> Volets frères : `CONCEPTION_SOL_NUTRIMENTS_NPK.md`, `CONCEPTION_SOL_STRUCTURE.md`.
+> Volets frères : `docs/champs/sol/conception_sol_nutriments_npk.md`, `docs/champs/sol/conception_sol_structure.md`.
 > Ce doc porte l'**ordre global du sprint** (§6) car le pH en est le socle.
 
 ## 0. Objectif & intuition

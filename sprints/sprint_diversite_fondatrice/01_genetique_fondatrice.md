@@ -1,7 +1,7 @@
 # Tronçon ① — Génétique fondatrice
 
 > Kickoff autosuffisant. Lis `CLAUDE.md` + `00_etat.md` + ce fichier. Ne lis le
-> reste que si besoin. Doc complet : `docs/conception/CONCEPTION_DIVERSITE_FONDATRICE.md`.
+> reste que si besoin. Doc complet : `docs/vegetal/genetique/conception_diversite_fondatrice.md`.
 
 ## Objectif
 Que chaque plante née **sans lignée** ait un patrimoine génétique **propre**

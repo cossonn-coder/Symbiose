@@ -86,7 +86,7 @@ def compute_hash() -> str:
 
 
 # ---------------------------------------------------------------------------
-# 3. SAISONNALITÉ (CONCEPTION_SAISONNALITE_VIE_MACRO.md §6)
+# 3. SAISONNALITÉ (docs/faune/vie_macro/conception_saisonnalite_vie_macro.md §6)
 # ---------------------------------------------------------------------------
 # Ces tests PROUVENT le comportement saisonnier indépendamment du hash golden :
 # dormance hivernale franche (plus de « vie qui grouille en hiver »), réveil

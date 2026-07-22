@@ -1,7 +1,7 @@
 # Sprint SOMMET TROPHIQUE (T1 super-prédateur + T7 herbivore vertébré) — état vivant
 
 > Carnet de bord `/conception` (§0bis). Reconstructible à froid : lire
-> `CLAUDE.md` + `docs/conception/CONCEPTION_COMPLETUDE_ECOSYSTEME.md` §3 (D61,
+> `CLAUDE.md` + `docs/meta/calibrage/conception_completude_ecosysteme.md` §3 (D61,
 > trous T1+T7) + ce fichier. **PHASE B (figeage) — arbitrages Q1-Q3 tranchés.**
 
 ## Arbitrages Nico (2026-07-11, lot 1 — TOUS = reco)
@@ -216,6 +216,6 @@ racine. Budget ≤ +10 %/tronçon respecté (à confirmer au chiffrage ②).
 **SPRINT SOMMET TROPHIQUE TERMINÉ** (①②③ tous FAITS, non commités —
 l'orchestrateur commite). ③ = vue C# pure, **golden INTACT** `eb46b49deef4…`
 (inchangé depuis ②), build C# VERT. Maintenance D61 restante (hors code, à faire
-au commit/après) : `CONCEPTION_COMPLETUDE_ECOSYSTEME.md` T1(D1)+T7(B4) ⚠️→✅
+au commit/après) : `docs/meta/calibrage/conception_completude_ecosysteme.md` T1(D1)+T7(B4) ⚠️→✅
 « Incarné par » rapace/couleuvre/campagnol ; `DETTE.md` (D61) + `BACKLOG.md` +
 `journal.md` ; `/audit-projet ecosysteme`.

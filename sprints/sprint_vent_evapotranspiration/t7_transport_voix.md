@@ -1,6 +1,6 @@
 # Tronçon ⑦ — Transport litière/neige & voix (clôture sprint)
 
-> Kickoff autonome. Design : `CONCEPTION_VENT_EVAPOTRANSPIRATION.md` **§5.6** + **§5**.
+> Kickoff autonome. Design : `docs/champs/climat/conception_vent_evapotranspiration.md` **§5.6** + **§5**.
 > Passe spatiale **conditionnelle** (perf amortie). Re-figeage golden probable.
 > **Dernier tronçon → clôture du sprint.**
 
@@ -16,7 +16,7 @@
    tourne » déjà présent pour Tempête) ; entrées de voix narratives (ledger
    `sim/journal.py`, hors tick) pour les phénomènes neufs introduits par le sprint
    (vent qui tourne, endurcissement, brise-vent, nuages amenés/chassés…). Voir
-   `docs/conception/CONCEPTION_VOIX_NARRATIVES.md`.
+   `docs/narration/voix/conception_voix_narratives.md`.
 
 ## Critères de succès
 - Test transport : sous vent fort, `om_fresh`/neige migrent vers l'abri dans la

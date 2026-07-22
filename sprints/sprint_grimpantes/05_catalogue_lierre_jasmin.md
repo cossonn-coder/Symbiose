@@ -1,7 +1,7 @@
 # ⑤ — Catalogue : Lierre + Jasmin (+ 5 voix chacun)
 
 > Kickoff autosuffisant. Lis `CLAUDE.md` + `00_etat.md` + CE fichier. Conception :
-> `docs/conception/CONCEPTION_GRIMPANTES.md` §7 + `CONCEPTION_VOIX_NARRATIVES.md`.
+> `docs/vegetal/grimpantes/conception_grimpantes.md` §7 + `docs/narration/voix/conception_voix_narratives.md`.
 > **Golden NEUTRE** (espèces non semées dans le golden). Lancement depuis `data/code/`.
 
 ## Objectif
@@ -28,7 +28,7 @@ grimpe, chacune AVEC ses 5 voix narratives (règle projet : « toute plante = se
   endroit que les familles existantes.
 - `SOIL_SIGNATURE` : étendre pour les 2 familles neuves (patron D26 — chercher
   `SOIL_SIGNATURE` et copier une signature de famille voisine, ajuster).
-- **5 voix** (cf. `CONCEPTION_VOIX_NARRATIVES.md`, corpus §5/§6/§7 + §1/§2.4) :
+- **5 voix** (cf. `docs/narration/voix/conception_voix_narratives.md`, corpus §5/§6/§7 + §1/§2.4) :
   - **Encyclopédie** (fiche 3 niveaux) : ajouter lierre + jasmin au corpus
     (`sim/encyclopedie_corpus.py`).
   - **Carnet** : concept(s) que l'espèce illustre via `CONCEPT_DE` (le port

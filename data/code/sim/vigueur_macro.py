@@ -2,7 +2,7 @@
 SYMBIOSE — sim/vigueur_macro.py
 Vigueur des POPULATIONS macroscopiques (ravageur / auxiliaire / pollinisateur /
 vers de terre) — façade dérivée, PURE, read-only (D31.3).
-Spec de référence : `docs/conception/CONCEPTION_VIE_MACRO.md` §4 (façades `vigueur_*`,
+Spec de référence : `docs/faune/vie_macro/conception_vie_macro.md` §4 (façades `vigueur_*`,
 `qi_local` TROPHIQUE, populations PAS individus) ; patron emprunté à
 `sim/vigueur_plante.py` §1 (façade dérivée, la décision structurante).
 
@@ -55,7 +55,7 @@ def _vigueur_pop(field, r: int, c: int) -> float:
 
 
 def _vigueur_categorie(category: str, r: int, c: int, eco) -> float:
-    """Vitalité agrégée d'une CATÉGORIE (modèle B, CONCEPTION_FAUNE_DEDIEE.md §1) :
+    """Vitalité agrégée d'une CATÉGORIE (modèle B, docs/faune/vie_macro/conception_faune_dediee.md §1) :
     somme des `_vigueur_pop` (densité × Qi trophique) des espèces membres, bornée
     [0, 1]. Tant qu'une catégorie n'a qu'un membre (④a), == l'ancien champ unique →
     golden NEUTRE. La somme (pas la moyenne) reflète qu'une catégorie peuplée de

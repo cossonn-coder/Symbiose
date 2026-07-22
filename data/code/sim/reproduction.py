@@ -50,7 +50,7 @@ def pollinator_reach(mother, tile, eco) -> float:
     Insecte : modulé par la DENSITÉ LOCALE du champ `pollinisateur` (D31.2) —
     saturation à POLLINATOR_SAT. Sans pollinisateur → rayon réduit → autofécondation.
 
-    Câblage D31.2 (CONCEPTION_VIE_MACRO.md §2.2 #3) : ce sont désormais les
+    Câblage D31.2 (docs/faune/vie_macro/conception_vie_macro.md §2.2 #3) : ce sont désormais les
     pollinisateurs VISIBLES qui élargissent le brassage. Les rondelles
     `pollinisateur`/`auxiliaire` ne modulent plus ICI ; elles restent terme-source
     d'HABITAT du champ (cf. `_pollinisateur_habitat_grid`/`_stability_grid`), donc

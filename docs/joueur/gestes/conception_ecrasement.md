@@ -203,4 +203,4 @@ horticole. Les **arbres** portent une résistance de base faible **×** l'âge
 ---
 *Réfs : `sim/growth.py` (seam §F `atteindre_segment`, `COUPE_NETTE`,
 `_update_auxin`), `plants/base.py:433` (`port_archetype`,
-`apical_dominance_base`), `CONCEPTION_CROISSANCE.md`, `CONCEPTION_HORMONES.md`.*
+`apical_dominance_base`), `docs/vegetal/croissance/conception_croissance.md`, `docs/vegetal/croissance/conception_hormones.md`.*

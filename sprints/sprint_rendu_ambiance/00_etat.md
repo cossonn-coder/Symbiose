@@ -10,7 +10,7 @@ des plantes** (addendum Nico).
 
 ## Phase courante
 **FIGÉ (2026-07-09) — prêt pour `/sprint-auto`.** Conception :
-`docs/conception/CONCEPTION_RENDU_AMBIANCE.md`. 6 kickoffs `01`→`06` présents.
+`docs/rendu/ambiance/conception_rendu_ambiance.md`. 6 kickoffs `01`→`06` présents.
 Golden préservé partout (T1 moteur NEUTRE, T2-T6 vue pure).
 
 ## Constat de cadrage (VÉRIFIÉ dans le code, 2026-07-09)

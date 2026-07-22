@@ -1,7 +1,7 @@
 # ④ AUTOTOXICITÉ / fatigue du sol
 
 > Kickoff autosuffisant. Reprise à froid = `CLAUDE.md` + `00_etat.md` + ce fichier
-> + `CONCEPTION_ALLELOPATHIE.md` §D. Prérequis : ①②③ faits. Golden **RE-FIGÉ
+> + `docs/vegetal/allelopathie/conception_allelopathie.md` §D. Prérequis : ①②③ faits. Golden **RE-FIGÉ
 > MAÎTRISÉ — ANNONCÉ** (touche la monoculture du smoke).
 
 ## Objectif

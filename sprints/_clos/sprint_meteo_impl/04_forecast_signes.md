@@ -1,7 +1,7 @@
 # Sous-sprint 04 — Forecast + signes diégétiques (read-only)
 
 > **Kickoff autosuffisant.** Démarre à froid. Lis ce fichier, puis
-> [`00_etat.md`](00_etat.md) et la spec [`CONCEPTION_METEO.md`](../../data/code/CONCEPTION_METEO.md)
+> [`00_etat.md`](00_etat.md) et la spec [`docs/champs/climat/conception_meteo.md`](../../../docs/champs/climat/conception_meteo.md)
 > **§3** (forecast), **§4** (signes), **§5** (paliers — pour comprendre ce qui
 > est *hors* périmètre). Les sous-sprints 01-03 sont **faits** : `sim/weather.py`
 > fournit `weather_at(seed, week)` pure, `WeatherEvent(kind, intensity,
@@ -62,7 +62,7 @@ perd la marche transcendant gratuite). Acter avant de coder.
 2. Lire `sim/weather.py` en entier : `weather_at`, `forecast`, le `WeatherEvent`,
    les **canaux-sentinelles** `K_OCC/K_PICK/K_MAG/K_PEST` aux coords `90_00x`,
    `_CATALOGUE` (les `kind` exacts et leurs fenêtres saisonnières).
-3. Relire `CONCEPTION_METEO.md` **§4.1** (table signe→événement — les libellés
+3. Relire `docs/champs/climat/conception_meteo.md` **§4.1** (table signe→événement — les libellés
    des signes sont la source de vérité), **§4.3** (la formule du masque) et la
    note du sous-sprint 02 dans `00_etat.md` (« le forecast sera pleinement
    read-only et honnête » — cadence météo hebdomadaire actée).

@@ -40,7 +40,7 @@ existant** (`growth.py:atteindre_segment`) + une atteinte santé en régime fort
   `self._plant_at(tile, x_cm, y_cm)` (utilisé par manger/recolter/deraciner/
   tailler) ; `ecraser` actuel est dans la branche `r/c + guilde`.
 
-## Modèle figé (résumé — détail dans CONCEPTION_ECRASEMENT.md §5)
+## Modèle figé (résumé — détail dans docs/joueur/gestes/conception_ecrasement.md §5)
 Écraser une plante appelle le seam avec une intensité modulée par l'âge, puis —
 **seulement en régime NET** — entame la santé selon la stimulation :
 ```
@@ -70,7 +70,7 @@ if intensite >= COUPE_NETTE and (1 - stimulation_ecrasement) >= SEUIL_DEGAT:
 ## Plan (étapes vérifiables)
 1. **Traits sur `PlantBase`** (`plants/base.py`) : `resistance_ecrasement:
    float = 0.5` et `stimulation_ecrasement: float = 0.0`. Valeurs par espèce
-   (table `CONCEPTION_ECRASEMENT.md §4`) dans `species.py` + `perennials.py`.
+   (table `docs/joueur/gestes/conception_ecrasement.md §4`) dans `species.py` + `perennials.py`.
    → **vérif** : golden inchangé (`python3 -m tests.test_golden` =
    `16a1b937…`), traits lus nulle part au tick.
 2. **`f_lignification(age)` + constantes** dans `sim/growth.py` : fonction

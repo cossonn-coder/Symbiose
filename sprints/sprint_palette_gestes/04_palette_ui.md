@@ -1,7 +1,7 @@
 # ④ PALETTE UI (C#) — kickoff autosuffisant
 
 > Sprint PALETTE DE GESTES. Lire d'abord : `CLAUDE.md` + `00_etat.md` +
-> `docs/conception/CONCEPTION_PALETTE_GESTES.md` §3.7 (D10/D11). Démarre à FROID.
+> `docs/joueur/gestes/conception_palette_gestes.md` §3.7 (D10/D11). Démarre à FROID.
 > Prérequis : ①②③ faits (snapshot expose `gestes_debloques` ; bouturer/greffer
 > câblés au pont). Ce tronçon est côté **Godot / C#** (`dotnet build` = filet ;
 > F5 visuel = Nico).

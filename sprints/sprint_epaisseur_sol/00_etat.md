@@ -2,7 +2,7 @@
 
 > État partagé léger, mis à jour en fin de chaque tronçon par `/sprint-auto`.
 > Reprise à froid : lire `CLAUDE.md` + CE fichier + le kickoff `0N` courant.
-> Conception figée : `docs/conception/CONCEPTION_EPAISSEUR_SOL.md`.
+> Conception figée : `docs/champs/sol/conception_epaisseur_sol.md`.
 
 ## Sujet
 D57 — **Litière → humus → ÉPAISSEUR de sol visible** (Nico 2026-07-02, F5 S5+S11).

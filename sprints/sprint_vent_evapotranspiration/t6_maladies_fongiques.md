@@ -1,6 +1,6 @@
 # Tronçon ⑥ — Vent × maladies fongiques
 
-> Kickoff autonome. Design : `CONCEPTION_VENT_EVAPOTRANSPIRATION.md` **§5.4**.
+> Kickoff autonome. Design : `docs/champs/climat/conception_vent_evapotranspiration.md` **§5.4**.
 > Effets **par-plante/plot** (négligeable en perf). Re-figeage golden probable.
 > Cohérent avec le diagnostic D39 (le pommier isolé chopait « maladie fongique »).
 

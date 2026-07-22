@@ -1,7 +1,7 @@
 # ① Banc de calibration + métrique vitalité SOL (VUE)
 
 > Kickoff autosuffisant. Lis `CLAUDE.md` + `00_etat.md` + ce fichier. Spec de
-> référence : `docs/conception/CONCEPTION_CALIBRATION_REALISTE.md` (§0, §2.3, §7①).
+> référence : `docs/meta/calibrage/conception_calibration_realiste.md` (§0, §2.3, §7①).
 > Sprint : calibration réaliste. Ce tronçon ne touche QUE la VUE (métrique sol) et
 > ajoute un outil. **Un fichier moteur modifié à la fois.**
 

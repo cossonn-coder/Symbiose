@@ -1,13 +1,13 @@
 # T3 — Cohérence palette SS² + diagnostic F5 (C2/C3)
 
-> Lire d'abord `00_etat.md` (invariants) + `CONCEPTION_SEMIOLOGIE_VISUELLE.md`
+> Lire d'abord `00_etat.md` (invariants) + `docs/narration/semiologie/conception_semiologie_visuelle.md`
 > §5 (palette SS²) et §6 (diagnostic C2/C3). Couche **B pure** (C#). DERNIER
 > tronçon → CLÔT le sprint. Golden trivialement préservé, build C# vert, F5 = Nico.
 
 ## But
 
 Deux choses, toutes deux de **lisibilité** (pas de nouveau signe) :
-1. **Cohabitation palette** : depuis SS² (`CONCEPTION_RENDU_PIXELART.md` §5, commit
+1. **Cohabitation palette** : depuis SS² (`docs/rendu/pixelart/conception_rendu_pixelart.md` §5, commit
    `23b5613`), les feuilles passent par un **hue-shift** (lumière/volume) APRÈS la
    teinte de symptôme. Le hue-shift d'ombre tire vers le **bleu froid** → côté nord,
    un symptôme **jaune** (chlorose, sénescence) peut **verdir** et perdre en
@@ -46,7 +46,7 @@ colorant dominant (0 = tissu sain).
 Le §6 demande un tableau **cause → attendu écran → verdict** à instrumenter avec
 les bancs d'essai (oracle vert moteur ↔ écran muet = bug rendu C#). NE PAS coder
 de nouveau système : produire/compléter un **mémo de protocole F5** (dans la
-clôture `00_etat.md`, ou un court `docs/conception/` si Nico préfère) listant :
+clôture `00_etat.md`, ou un court doc sous `docs/rendu/pixelart/` si Nico préfère) listant :
 - **C2** (asphyxie) : vérifier que l'**intensité** d'asphyxie se LIT à l'écran
   (banc `asphyxie_argile`) — teinte brun-vert proportionnelle, pas binaire.
 - **C3** (ravageurs) : comparer **témoin vs infesté** (banc `infestation_ravageur`)

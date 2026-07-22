@@ -1,7 +1,7 @@
 # ② — Structures-support posables + mur + recherche d'accroche + grimpe
 
 > Kickoff autosuffisant. Lis `CLAUDE.md` + `00_etat.md` + CE fichier. Conception :
-> `docs/conception/CONCEPTION_GRIMPANTES.md` §4. **Golden NEUTRE vs ①.** Repose
+> `docs/vegetal/grimpantes/conception_grimpantes.md` §4. **Golden NEUTRE vs ①.** Repose
 > sur ① (traits + loi d'apex). Lancement depuis `data/code/`.
 
 ## Objectif

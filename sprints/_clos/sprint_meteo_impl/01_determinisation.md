@@ -1,7 +1,7 @@
 # Sous-sprint 01 — Déterminisation du tirage météo
 
 > **Kickoff autosuffisant.** Démarre à froid. Lis ce fichier, puis
-> [`00_etat.md`](00_etat.md) et la spec [`CONCEPTION_METEO.md`](../../data/code/CONCEPTION_METEO.md)
+> [`00_etat.md`](00_etat.md) et la spec [`docs/champs/climat/conception_meteo.md`](../../../docs/champs/climat/conception_meteo.md)
 > §0, §1, §3.
 
 ## Objectif

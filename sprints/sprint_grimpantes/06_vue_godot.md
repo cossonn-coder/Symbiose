@@ -1,7 +1,7 @@
 # ⑥ — Vue Godot (supports + accroche + vrilles) + pont + banc d'observation
 
 > Kickoff autosuffisant. Lis `CLAUDE.md` + `00_etat.md` + CE fichier. Conception :
-> `docs/conception/CONCEPTION_GRIMPANTES.md` §8/§10 + `CONCEPTION_RENDU_FEUILLAGE
+> `docs/vegetal/grimpantes/conception_grimpantes.md` §8/§10 + `CONCEPTION_RENDU_FEUILLAGE
 > §7/E6`. **Golden INTACT** (vue pure + banc jamais monté pour smoke/full).
 > Filet de compilation C# : `dotnet build Symbiose.csproj` sur la VM (F5 = Nico).
 

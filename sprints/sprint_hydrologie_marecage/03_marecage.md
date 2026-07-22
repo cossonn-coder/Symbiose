@@ -1,7 +1,7 @@
 # ③ — Marécage (`marais_memory` + hystérèse + effets)
 
 > Kickoff autosuffisant. Lis `CLAUDE.md` + `00_etat.md` + CE fichier. Conception :
-> `docs/conception/CONCEPTION_HYDROLOGIE_MARECAGE.md` §3. **Golden NEUTRE hors banc.**
+> `docs/champs/eau/conception_hydrologie_marecage.md` §3. **Golden NEUTRE hors banc.**
 > Prérequis : ② fait (`eau_surface` existe).
 
 ## Objectif

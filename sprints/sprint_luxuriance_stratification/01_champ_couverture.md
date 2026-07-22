@@ -1,7 +1,7 @@
 # Tronçon 1 — Champ de couverture au sol + hooks écologiques
 
 > Kickoff autosuffisant. Lis d'abord `CLAUDE.md` (philo #1-#7, garde-fous) +
-> `00_etat.md` (décisions D1-D4) + `docs/conception/CONCEPTION_LUXURIANCE_STRATIFICATION.md §2.1`.
+> `00_etat.md` (décisions D1-D4) + `docs/vegetal/grimpantes/conception_luxuriance_stratification.md §2.1`.
 > **Golden : RE-FIGÉ maîtrisé et annoncé** (voir §Golden).
 
 ## Objectif

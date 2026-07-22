@@ -1,6 +1,6 @@
 # Tronçon ③ — Bascule uptake **Liebig** (retrait `fertilite`, le gros re-figé)
 
-> Sprint physico-chimie du sol. Conception : `docs/conception/CONCEPTION_SOL_NUTRIMENTS_NPK.md`
+> Sprint physico-chimie du sol. Conception : `docs/champs/sol/conception_sol_nutriments_npk.md`
 > (§2.2 → §2.8, §3, §5). Kickoff **autosuffisant** (relançable à froid).
 > Tronçons ① (pH) et ② (champs `n`/`p`/`k` posés, hérités, INERTES) déjà CLOS.
 > ⚠️ **C'EST LE RE-FIGÉ LARGE UNIQUE DU SPRINT** — prévenir Nico, vérifier que

@@ -1,6 +1,6 @@
 # ④ Microbiome climatique — cloche de température + facteur humidité
 
-> Lire d'abord `00_etat.md` + `docs/conception/CONCEPTION_METEO_CHAMPS.md` (§5).
+> Lire d'abord `00_etat.md` + `docs/champs/climat/conception_meteo_champs.md` (§5).
 > Dépend de ① (humidité médiée). Indépendant de ②③. Premier geste : RE-MESURER les
 > hashs golden.
 

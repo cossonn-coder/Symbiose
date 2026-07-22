@@ -1,7 +1,7 @@
 # Dette D15 — Extension du terrain par maîtrise (tuile thématique)
 
 > **Kickoff autosuffisant.** Lis ce fichier en entier, puis les sources, puis
-> exécute. Français + pédagogie. **Conception SEULE d'abord** (`CONCEPTION_TERRAIN.md`,
+> exécute. Français + pédagogie. **Conception SEULE d'abord** (`docs/joueur/maitrise/conception_terrain.md`,
 > valider avec Nico, puis impl.). Ampleur **moyenne**.
 
 ## Ce que c'est, en une phrase
@@ -14,7 +14,7 @@ l'espace » (CLAUDE.md, philo de la non-action et du run éternel).
 - **CLAUDE.md, « Extension du terrain »** : « Par maîtrise écologique **uniquement**.
   Maîtriser une famille fait apparaître une tuile thématique (verger, mare, prairie
   aromatique…). Pas d'achat, pas de conquête. »
-- **La maîtrise est prête** (`CONCEPTION_MAITRISE.md` §7) : « D15 (extension terrain)
+- **La maîtrise est prête** (`docs/joueur/maitrise/conception_maitrise.md` §7) : « D15 (extension terrain)
   — tuile thématique apparaît au palier **maîtrise** d'une famille (table de mapping,
   §8) ». Le palier-déclencheur exact = **D12.2** (séparé). D15 définit **ce qui
   apparaît et comment**, pas le seuil.
@@ -82,7 +82,7 @@ paliers → **débloquerait-il les tuiles du nouveau terrain immédiatement ?**
 > strictement par avatar, le terrain reste intrinsèque ».
 
 ## Périmètre — phase CONCEPTION (livrable)
-`docs/conception/CONCEPTION_TERRAIN.md` actant : les 3 choix ; la **carte thème ↔ famille/
+`docs/joueur/maitrise/conception_terrain.md` actant : les 3 choix ; la **carte thème ↔ famille/
 concept** (verger/mare/prairie… → quel objet de maîtrise) ; le **mécanisme de
 révélation** (tuile périphérique : `actif=False` → `True`, génération déterministe du
 sol depuis la seed, amorçage de banque) ; l'**interface** (`tuiles_disponibles(

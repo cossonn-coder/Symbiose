@@ -1,5 +1,5 @@
 // SYMBIOSE — DecorLayer.Arbres.cs (T5 RENDU AMBIANCE — silhouettes d'arbres du décor)
-// Le MOTIF « forêt » du backdrop (docs/conception/CONCEPTION_RENDU_AMBIANCE.md §5.2).
+// Le MOTIF « forêt » du backdrop (docs/rendu/ambiance/conception_rendu_ambiance.md §5.2).
 // Partial de DecorLayer : sépare la RESPONSABILITÉ « arbres adultes » du reste du
 // décor (eau/roche/prairie, dans DecorLayer.cs) — un fichier reste lisible d'un
 // regard (garde-fou taille).

@@ -4,7 +4,7 @@ Golden JOUEUR de la DÉTECTION DE SUCCÈS (D12, tronçon i4). Distinct des golde
 ÉCOLOGIQUE (`test_golden.py`), POPULATION (`test_population.py`), MAÎTRISE cœur
 (`test_maitrise.py`) et VIGUEUR (`test_vigueur.py`).
 
-La détection vit AU-DESSUS du tick (`CONCEPTION_MAITRISE.md` §9/§6) : elle LIT le
+La détection vit AU-DESSUS du tick (`docs/joueur/maitrise/conception_maitrise.md` §9/§6) : elle LIT le
 `log` d'un tick + l'état post-tick, et crédite des preuves TOUTE SEULE. Elle ne
 fait jamais avancer la simulation → le golden écolo ne bouge pas (vérifié à part).
 

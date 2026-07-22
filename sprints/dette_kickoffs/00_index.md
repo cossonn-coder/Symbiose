@@ -67,7 +67,7 @@ gameplay immédiate.
    (organes procéduraux) : les deux parlent des mêmes feuille/fleur/fruit. À cadrer
    avant ou pendant t5 pour ne pas dessiner deux fois le modèle d'organe.
 3. **D13 → D14 → D15** (magazine, carnet, extension terrain) — les **trois
-   consommateurs de la maîtrise** (`CONCEPTION_MAITRISE.md` §7). À concevoir dans
+   consommateurs de la maîtrise** (`docs/joueur/maitrise/conception_maitrise.md` §7). À concevoir dans
    cet ordre car ils partagent la même question « quel palier débloque quoi ».
 4. **D12.2** (table palier→déblocage) — **APRÈS** D13/D14/D15 : elle ne fait que
    les **coordonner** (elle est explicitement bloquée tant qu'ils n'existent pas).

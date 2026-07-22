@@ -1,6 +1,6 @@
 # Sprint ACQUISITION DES MOYENS D'AGIR (sécateur + mulch) — état
 
-> **CONCEPTION FIGÉE 2026-07-19.** Spec : `docs/conception/CONCEPTION_ACQUISITION_OUTILS.md`.
+> **CONCEPTION FIGÉE 2026-07-19.** Spec : `docs/joueur/outils/conception_acquisition_outils.md`.
 > Prêt pour `/sprint-auto`. Deux dettes levées : **D82** (chaîne taille morte,
 > `couper` gated sur `posseder_secateur` que rien ne pose) + impasse
 > `RAVITAILLEMENT_MANQUANT` de `tools/jardinier_auto/` (pailler sans mulch

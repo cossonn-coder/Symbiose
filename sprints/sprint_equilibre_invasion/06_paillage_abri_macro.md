@@ -1,6 +1,6 @@
 # Tronçon ⑥ — Paillage ↔ vie macro : ABRI pour la faune
 
-**Prérequis** : `CLAUDE.md`, `00_etat.md`, `CONCEPTION_EQUILIBRE_INVASION.md` §5.
+**Prérequis** : `CLAUDE.md`, `00_etat.md`, `docs/faune/trophique/conception_equilibre_invasion.md` §5.
 Patrons : `fields/population/` (`PopulationField`, `TrophicSpec`, ressources
 d'habitat), `fields/ecofields/vie_macro.py`, `sim/vigueur_macro.py`.
 

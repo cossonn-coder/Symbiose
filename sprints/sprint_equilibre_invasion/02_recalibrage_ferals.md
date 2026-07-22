@@ -1,7 +1,7 @@
 # Tronçon ② — Recalibrage des freins férals (onset ~2-3 saisons, N~650/8 tuiles)
 
 **Prérequis de lecture** : `CLAUDE.md`, `00_etat.md`,
-`docs/conception/CONCEPTION_EQUILIBRE_INVASION.md` §7. **SEUL tronçon qui
+`docs/faune/trophique/conception_equilibre_invasion.md` §7. **SEUL tronçon qui
 re-fige le golden** — dérive localisée, maîtrisée, ANNONCÉE.
 
 ## Objectif

@@ -4,7 +4,7 @@ Suite ciblée du tronçon ② « acquisition des moyens d'agir » : l'ATELIER et
 registre `OUTILS` (`sim/outils.py`) — CŒUR de la dette D82. On vérifie que
 `acquerir_outil` POSE le marqueur `posseder_secateur` que RIEN ne posait, et que
 la chaîne taille (`couper`→`tailler`) s'en trouve DÉVERROUILLÉE.
-Spec : `docs/conception/CONCEPTION_ACQUISITION_OUTILS.md` §B + kickoff
+Spec : `docs/joueur/outils/conception_acquisition_outils.md` §B + kickoff
 `sprints/sprint_acquisition_outils/02_atelier_secateur.md`.
 
 Propriétés exigées (« Tests ciblés » du kickoff) :

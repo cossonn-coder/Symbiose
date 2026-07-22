@@ -1,7 +1,7 @@
 # Sprint « équilibre de l'invasion d'adventices » — état vivant (carnet de bord)
 
 > Carnet de conception (`/conception`, dette **D69**). Reprise à froid = lire
-> `CLAUDE.md` + ce fichier + `docs/conception/CONCEPTION_EQUILIBRE_INVASION.md`.
+> `CLAUDE.md` + ce fichier + `docs/faune/trophique/conception_equilibre_invasion.md`.
 > **CONCEPTION FIGÉE (2026-07-06)** — design ARBITRÉ D1-D12, découpage ①-⑧ validé,
 > doc + kickoffs 01-08 écrits. **PRÊT pour `/sprint-auto sprint_equilibre_invasion`.**
 
@@ -131,7 +131,7 @@ isoler la perf à N maîtrisé).
 ## §REPRISE
 Design arbitré D1-D12 (D5 supersédée). Reste : valider le découpage ÉLARGI ①-⑧ +
 le modèle de « nature du mulch » avec Nico → sur accord, PHASE B (doc
-`CONCEPTION_EQUILIBRE_INVASION.md` + kickoffs 01-08, un fichier à la fois). Puis
+`docs/faune/trophique/conception_equilibre_invasion.md` + kickoffs 01-08, un fichier à la fois). Puis
 commit + maj dette D69 (conçu) + message /clear pour `/sprint-auto`. NE PAS OUBLIER :
 revenir à la perf pure (D67/LightField) après ce sprint.
 

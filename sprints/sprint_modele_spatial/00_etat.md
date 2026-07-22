@@ -89,7 +89,7 @@ par Nico vient probablement du **rendu Godot / banc de démo**, pas du moteur.
 - D (identité morpho) : négligeable (remplace la clé de hash, pas un coût runtime).
 
 ## Statut : CONCEPTION FIGÉE (2026-07-14) — prêt pour /sprint-auto
-Doc : `docs/conception/CONCEPTION_MODELE_SPATIAL.md`. Kickoffs autosuffisants :
+Doc : `docs/rendu/spatial/conception_modele_spatial.md`. Kickoffs autosuffisants :
 - `01_placement_sousplot.md` — pixel cliqué (joueur) + offset féral. Golden RE-FIGÉ (féral).
 - `02_form_seed.md` — identité morpho héritable, clone = air de famille. Golden RE-FIGÉ.
 - `03_banc_vue.md` — banc d'observation + F5. Golden INTACT.

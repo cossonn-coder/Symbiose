@@ -2,7 +2,7 @@
 
 > Kickoff autosuffisant. Lis `CLAUDE.md` + `00_etat.md` + CE fichier. Tu ne sais
 > rien d'autre : tout est ici. Conception complète :
-> `docs/conception/CONCEPTION_EPAISSEUR_SOL.md`.
+> `docs/champs/sol/conception_epaisseur_sol.md`.
 
 ## Objectif
 

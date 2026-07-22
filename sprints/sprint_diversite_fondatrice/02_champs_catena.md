@@ -1,7 +1,7 @@
 # Tronçon ② — Champs : catena topographique
 
 > Kickoff autosuffisant. Lis `CLAUDE.md` + `00_etat.md` + ce fichier. Doc complet :
-> `docs/conception/CONCEPTION_DIVERSITE_FONDATRICE.md`. Le flag `heterogene` a été
+> `docs/vegetal/genetique/conception_diversite_fondatrice.md`. Le flag `heterogene` a été
 > introduit au ① (`init_eco`) — on le réutilise ici.
 
 ## Objectif

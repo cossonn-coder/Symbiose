@@ -2,7 +2,7 @@
 
 > Conception figée le 2026-06-19 (Sprint physico-chimie du sol, volet B/3).
 > Étude de fond : `sprints/etude_physicochimie_sol.md`. Ordre global du sprint :
-> voir `CONCEPTION_SOL_PH.md` §6. Volet frère structure : `CONCEPTION_SOL_STRUCTURE.md`.
+> voir `docs/champs/sol/conception_sol_ph.md` §6. Volet frère structure : `docs/champs/sol/conception_sol_structure.md`.
 
 ## 0. Objectif & intuition
 

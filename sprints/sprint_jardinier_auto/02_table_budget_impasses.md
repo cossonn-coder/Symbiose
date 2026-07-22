@@ -1,7 +1,7 @@
 # ② Table complète + priorisation par budget + détecteur d'impasses
 
 > Kickoff autosuffisant. Lire `CLAUDE.md` + `00_etat.md` +
-> `docs/conception/CONCEPTION_JARDINIER_AUTOMATE.md` (§5, §7). Prérequis : ① fait.
+> `docs/joueur/automate/conception_jardinier_automate.md` (§5, §7). Prérequis : ① fait.
 
 ## Objectif
 Compléter la **table facteur → geste** (`regles.py`), ajouter la **priorisation par

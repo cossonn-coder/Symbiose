@@ -1,7 +1,7 @@
 # ② — Super-prédateurs (rapace + couleuvre) + câblage des puits + voix
 
 > Kickoff autosuffisant. Lis `CLAUDE.md` + `00_etat.md` + CE fichier. Conception :
-> `docs/conception/CONCEPTION_SOMMET_TROPHIQUE.md` §2.2-§2.4, §4. Prérequis : ① fait
+> `docs/faune/trophique/conception_sommet_trophique.md` §2.2-§2.4, §4. Prérequis : ① fait
 > (`campagnol` existe, catégorie `herbivore_vertebre`).
 > **Golden re-figé MAÎTRISÉ #2 (annoncé) — top-down boom-bust sur la chaîne.**
 

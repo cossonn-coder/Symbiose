@@ -5,7 +5,7 @@
 > piloté par l'auxine et la lumière.
 >
 > Issu du **Sprint conception Croissance procédurale** (2026-06-05). Ce document
-> **absorbe et refond** `CONCEPTION_HORMONES.md` : le modèle « 2 scalaires
+> **absorbe et refond** `docs/vegetal/croissance/conception_hormones.md` : le modèle « 2 scalaires
 > hormonaux » y est **abandonné** — l'auxine devient un **niveau le long d'une
 > structure morphologique réelle**. Le doc hormones reste en archive (en-tête de
 > renvoi), on n'y revient pas.
@@ -46,7 +46,7 @@ biographie dans sa forme** — cohérent avec le run éternel et le sol-mémoire
 | 7 | Organes | **Tout procédural** (branches + feuilles/fleurs/fruits) | cohérence visuelle, zéro dépendance sprite |
 | 8 | Racines | **Rayon dérivé** (pas de structure souterraine) | suffisant pour la sim, invisible, économe |
 
-> **Le mur qui est tombé.** `CONCEPTION_HORMONES.md` §B justifiait le repli
+> **Le mur qui est tombé.** `docs/vegetal/croissance/conception_hormones.md` §B justifiait le repli
 > « scalaire » par l'**absence de rendu végétal**. En décidant de **construire** ce
 > rendu, on ouvre la porte que le doc hormones laissait entrouverte : la **vraie
 > topologie** (option (i) d'alors) devient possible — et elle est plus fidèle à la
@@ -307,7 +307,7 @@ détail segment + organes. LOD piloté par le palier de zoom.
 
 ## I. Articulation avec l'existant
 
-- **Modèle hormonal** : `CONCEPTION_HORMONES.md` refondu ici. Les 2 scalaires
+- **Modèle hormonal** : `docs/vegetal/croissance/conception_hormones.md` refondu ici. Les 2 scalaires
   (`dominance_apicale`/`ramification`) → **auxine par segment** + **densité de bois
   latéral**. L'action `tailler` survit (appelant du seam §F). La détection de succès
   maîtrise (marqueur `🌿`, §9.5) reste valable : « débourrement observé imputé à la

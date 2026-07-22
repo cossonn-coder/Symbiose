@@ -275,7 +275,7 @@ OM_STABLE_DECAY  = 0.0006  # humus : très lent (décennies)
 # accélère « un poil » la décomposition/minéralisation locale. C'est le SEUL
 # service rendu par le champ `lombric` (④d ; ex-`vers_de_terre`) à la sim ; le système
 # complet structure/aération/infiltration du sol reste DIFFÉRÉ à D30. Borné et
-# léger pour ne pas inventer D30 ici (cf. kickoff #4, CONCEPTION_VIE_MACRO.md §7).
+# léger pour ne pas inventer D30 ici (cf. kickoff #4, docs/faune/vie_macro/conception_vie_macro.md §7).
 WORM_DECOMP_BONUS = 0.25   # densité ver [0,1] → bonus additif à `speed` (knob, D31.2)
 
 # --- Couverture du sol (sprint LUXURIANCE PAR STRATIFICATION ①, D65 §2.1) -----
@@ -519,7 +519,7 @@ UPTAKE = {
 # très forte inertie, frère de soil_memory_deep) vers une cible acidifiée par la
 # matière organique fraîche (acides humiques) et le lessivage (calcium lavé en
 # climat humide). Au tronçon ① le champ est POSÉ mais lu par PERSONNE → golden
-# NEUTRE. Valeurs PLACEHOLDER (calibrage post-test), cf. CONCEPTION_SOL_PH.md §3.
+# NEUTRE. Valeurs PLACEHOLDER (calibrage post-test), cf. docs/champs/sol/conception_sol_ph.md §3.
 PH_MIN, PH_MAX = 4.0, 8.5
 PH_PAR_SOL   = {"terre": 6.8, "argile": 7.0, "sable": 5.8, "roche": 7.6}  # héritage roche-mère
 PH_INERTIA   = 0.02          # dérive décennale (avant amortissement CEC, volet NPK)
@@ -546,7 +546,7 @@ AMEND_PUSH   = 0.15          # poussée pH/saison d'un amendement présent (sign
 #   - micro centré 6.8 (1.6) : activité bactérienne, pilote la vitesse de décompo.
 # Sur les sols du smoke (terre 6.8, argile 7.0) dispo ≈ 0.9+ (proche des optima)
 # → dérive golden faible & localisée. PLACEHOLDERS, calibrage post-test
-# (CONCEPTION_SOL_PH.md §3). La CHLOROSE alcaline (CHLOROSE_PH) est reportée au
+# (docs/champs/sol/conception_sol_ph.md §3). La CHLOROSE alcaline (CHLOROSE_PH) est reportée au
 # tronçon ⑤ : elle a besoin de la notion « acidophile » par espèce (ph_opt/ph_tol)
 # qui n'existe pas encore — pas de proxy jetable ici (décision Nico, 2026-06-20).
 PH_OPT   = {"N": 6.8, "P": 6.5, "K": 6.5, "micro": 6.8}
@@ -567,7 +567,7 @@ PH_WIDTH = {"N": 2.2, "P": 1.0, "K": 1.8, "micro": 1.6}
 # SEUIL_ACIDOPHILE) sur sol ALCALIN (`ph > CHLOROSE_PH`) subit le lockout du fer
 # → malus de vigueur (CHLOROSE_MALUS). Pas un gate de mort (philo #2) : un facteur
 # qui fait DÉPÉRIR, pas disparaître. L'indice visuel jaunissement = tronçon ⑨ (vue).
-# PLACEHOLDERS, calibrage post-test (CONCEPTION_SOL_PH.md §2.2/§2.3/§3).
+# PLACEHOLDERS, calibrage post-test (docs/champs/sol/conception_sol_ph.md §2.2/§2.3/§3).
 CHLOROSE_PH      = 7.6     # au-dessus, chlorose ferrique des acidophiles
 SEUIL_ACIDOPHILE = 5.5     # ph_opt en deçà duquel l'espèce est dite « acidophile »
 CHLOROSE_MALUS   = 0.5     # facteur de vigueur min à chlorose pleine
@@ -581,7 +581,7 @@ CHLOROSE_MALUS   = 0.5     # facteur de vigueur min à chlorose pleine
 # `fertilite` intact) → golden NEUTRE, exactement comme le pH au ①. Ils sont
 # INITIALISÉS PAR HÉRITAGE du `soil_type` (roche-mère). Plage [0, 3] (max_val du
 # GridField, comme l'ancien `fertilite`). Valeurs PLACEHOLDER (calibrage post-
-# test), cf. CONCEPTION_SOL_NUTRIMENTS_NPK.md §3. Le retrait de `fertilite`, le
+# test), cf. docs/champs/sol/conception_sol_nutriments_npk.md §3. Le retrait de `fertilite`, le
 # split de la minéralisation, Liebig, le lessivage différencié, la CEC et la
 # signature explicite arrivent au tronçon ③ (LE gros re-figé).
 NUTRIENT_INIT_PAR_SOL = {  # (N, P, K) hérités de la roche-mère
@@ -657,7 +657,7 @@ FAIM_N_TISSUS = frozenset(("bois", "substrat"))
 # de fond (∝ structure, le reste ruisselle), l'aggravation de l'asphyxie (sol tassé +
 # saturé → anoxie pire) et la pénétration racinaire (uptake ↓ en sol tassé). Le champ
 # hérité ≠ 1.0 sur les tuiles du smoke → golden RE-FIGÉ MAÎTRISÉ (§4). PLACEHOLDERS,
-# calibrage post-test (CONCEPTION_SOL_STRUCTURE.md §3).
+# calibrage post-test (docs/champs/sol/conception_sol_structure.md §3).
 STRUCTURE_INIT_PAR_SOL = {"terre": 0.7, "argile": 0.45, "sable": 0.6, "roche": 0.4}
 STRUCT_INERTIA    = 0.05     # dérive lente (saisons) des forces biotiques/abiotiques
 BIOTURB           = 0.30     # construction par les vers (× densité lombric [0,1])

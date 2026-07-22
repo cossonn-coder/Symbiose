@@ -2,7 +2,7 @@
 
 > Carnet de bord vivant (skill /conception §0bis). Reconstructible à froid :
 > lire `CLAUDE.md` + ce fichier suffit à reprendre sans le fil de conversation.
-> **Phase A (challenge/design) — rien de figé.** Le doc `CONCEPTION_ALLELOPATHIE.md`
+> **Phase A (challenge/design) — rien de figé.** Le doc `docs/vegetal/allelopathie/conception_allelopathie.md`
 > et les kickoffs ne seront écrits qu'après OK explicite de Nico (phase B).
 
 ## Sujet
@@ -225,7 +225,7 @@ Un champ de sol de plus = O(plots) par tick (injection + décroissance), néglig
 ## §REPRISE
 
 Phase B **FIGÉE** (OK Nico 2026-07-13). Doc de référence :
-`docs/conception/CONCEPTION_ALLELOPATHIE.md`. Kickoffs autosuffisants écrits :
+`docs/vegetal/allelopathie/conception_allelopathie.md`. Kickoffs autosuffisants écrits :
 `01_champ_injection.md` … `06_vue_godot.md`. **①②③④⑤⑥ TOUS FAITS → SPRINT
 TERMINÉ (2026-07-14).** Golden final `da2729c5…` (re-figé au ⑤, INTACT au ⑥),
 pont protocole **0.5.29**, build C# vert. Il RESTE (hors sprint) : **verdict F5

@@ -2,7 +2,7 @@
 SYMBIOSE — sim/outils.py
 L'ATELIER de la maison normande, canal d'acquisition des OUTILS (sprint
 Acquisition des moyens d'agir, tronçon ②, dette D82).
-Spec de référence : `docs/conception/CONCEPTION_ACQUISITION_OUTILS.md` §B.
+Spec de référence : `docs/joueur/outils/conception_acquisition_outils.md` §B.
 
 Rôle : donner au joueur un flux qui POSE le marqueur d'outil (`posseder_secateur`)
 que RIEN ne posait — sans quoi toute la chaîne « taille » (`couper`→`tailler`→

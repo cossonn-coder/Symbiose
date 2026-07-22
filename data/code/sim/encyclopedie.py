@@ -2,7 +2,7 @@
 SYMBIOSE — sim/encyclopedie.py
 L'ENCYCLOPÉDIE — deuxième des quatre voix narratives (sprint Voix narratives,
 tronçon ④, dette « 4ᵉ voix »).
-Spec de référence : `docs/conception/CONCEPTION_VOIX_NARRATIVES.md` §2.2 + §6.
+Spec de référence : `docs/narration/voix/conception_voix_narratives.md` §2.2 + §6.
 
 Voix « naturaliste qui observe » (3ᵉ personne, factuelle). L'encyclopédie est un
 LECTEUR read-only : elle ne consigne RIEN, n'avance aucun tick, n'utilise aucun

@@ -1,7 +1,7 @@
 # ② Rééquilibrage de la banque-sol — déverrouiller la succession (S3)
 
 > Kickoff autosuffisant. Lire AVANT : `CLAUDE.md`, `00_etat.md`,
-> `docs/conception/CONCEPTION_BUGS_EMERGENCE.md` (volet S3, fix (a)+(b)).
+> `docs/meta/calibrage/conception_bugs_emergence.md` (volet S3, fix (a)+(b)).
 > Source de vérité = Python `data/code/`. Lancement depuis `data/code/`.
 
 ## Objectif

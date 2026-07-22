@@ -101,7 +101,7 @@ Golden : **INTACT par construction** (rendu C# pur, zéro touche à `data/code/`
   `PointeUnePlante` (ellipse de couronne, `ContientCurseur`) testé AVANT
   `ClicSurMaison`. Golden INCHANGÉ.
 
-Doc de conception : `docs/conception/CONCEPTION_PERF_RENDU_PLANTES.md`.
+Doc de conception : `docs/perf/lod/conception_perf_rendu_plantes.md`.
 
 ## Avancement
 

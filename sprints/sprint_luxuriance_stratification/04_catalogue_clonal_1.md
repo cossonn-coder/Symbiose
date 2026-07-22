@@ -1,8 +1,8 @@
 # Tronçon 4 — Catalogue clonal ① : fraisier + menthe (+ 5 voix chacune)
 
 > Kickoff autosuffisant. Lis `CLAUDE.md` (règle « toute plante = ses 5 voix ») +
-> `00_etat.md` + `docs/conception/CONCEPTION_LUXURIANCE_STRATIFICATION.md` +
-> `docs/conception/CONCEPTION_VOIX_NARRATIVES.md`.
+> `00_etat.md` + `docs/vegetal/grimpantes/conception_luxuriance_stratification.md` +
+> `docs/narration/voix/conception_voix_narratives.md`.
 > **Pré-requis : tronçons 2 (clonal) et 3 (silhouette) faits.**
 > **Golden : NEUTRE** (espèces neuves, hors scénario golden).
 

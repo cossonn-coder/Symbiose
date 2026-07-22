@@ -1,6 +1,6 @@
 # Tronçon ① — Socle T_sol diurne (surchauffe solaire + inertie) + évaporation
 
-> Sprint thermique-microclimat. Conception : `docs/conception/CONCEPTION_THERMIQUE_MICROCLIMAT.md`
+> Sprint thermique-microclimat. Conception : `docs/champs/climat/conception_thermique_microclimat.md`
 > (§2.1, §2.2, §3, §4, §5). Kickoff **autosuffisant** (relançable à froid).
 
 ## Objectif

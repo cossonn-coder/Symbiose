@@ -1,6 +1,6 @@
 # Tronçon ② — Spatial LOD LightField (bit-identique) + cache géométrique
 
-> Kickoff autosuffisant. Lire `CLAUDE.md` + `00_etat.md` + `CONCEPTION_PERF_RUN_ETERNEL.md`
+> Kickoff autosuffisant. Lire `CLAUDE.md` + `00_etat.md` + `docs/perf/run_eternel/conception_perf_run_eternel.md`
 > §2(M2)/§5. Lancement depuis `data/code/`. Fichier cœur : `fields/light.py`.
 
 ## Objectif

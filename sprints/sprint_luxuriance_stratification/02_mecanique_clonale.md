@@ -1,7 +1,7 @@
 # Tronçon 2 — Mécanique clonale (densification par ramets)
 
 > Kickoff autosuffisant. Lis `CLAUDE.md` + `00_etat.md` (D1, D4) +
-> `docs/conception/CONCEPTION_LUXURIANCE_STRATIFICATION.md §2.2`.
+> `docs/vegetal/grimpantes/conception_luxuriance_stratification.md §2.2`.
 > **Pré-requis : tronçon 1 fait** (champ `couverture_sol` disponible = gate).
 > **Golden : RE-FIGÉ maîtrisé et annoncé.**
 

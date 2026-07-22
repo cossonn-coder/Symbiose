@@ -1,7 +1,7 @@
 """
 SYMBIOSE — tests/test_automate_determinisme.py
 Verrous de DÉTERMINISME du jardinier automate (tronçon ①, philo #3).
-Spec : docs/conception/CONCEPTION_JARDINIER_AUTOMATE.md §10 + kickoff
+Spec : docs/joueur/automate/conception_jardinier_automate.md §10 + kickoff
 sprints/sprint_jardinier_auto/01_socle.md.
 
 Trois propriétés :

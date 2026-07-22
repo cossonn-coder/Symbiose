@@ -1,6 +1,6 @@
 # ⑤ Pages secrètes — `pages_trouvees` / `reveler_page` (3 robinets, D18)
 
-> Lire d'abord `00_etat.md` + `docs/conception/CONCEPTION_VOIX_NARRATIVES.md` (§2.3, §7).
+> Lire d'abord `00_etat.md` + `docs/narration/voix/conception_voix_narratives.md` (§2.3, §7).
 > Tronçon **troisième voix** : lore pur, **ZÉRO effet mécanique**, révélé par 3 robinets.
 > État opt-in `gs["pages"][player]=set(ids)`. Dépend de ② (présence joueur), indépendant
 > de ③④. Premier geste : RE-MESURER les hashs golden.

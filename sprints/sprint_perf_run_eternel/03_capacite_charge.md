@@ -1,6 +1,6 @@
 # Tronçon ③ — Capacité de charge émergente + backstop sécurité
 
-> Kickoff autosuffisant. Lire `CLAUDE.md` + `00_etat.md` + `CONCEPTION_PERF_RUN_ETERNEL.md`
+> Kickoff autosuffisant. Lire `CLAUDE.md` + `00_etat.md` + `docs/perf/run_eternel/conception_perf_run_eternel.md`
 > **§4 en entier** (le volet bio) + §2(M1). Lancement depuis `data/code/`.
 > Fichiers cœur : `sim/succession.py`, la voie de mort par stress chronique, un cap tuile.
 
@@ -14,7 +14,7 @@ qui ne se déclenche jamais en jeu normal (disjoncteur anti-pathologie).
 **Philo (impératif)** : #2 flux → contrainte → réponse émergente ; #7 hétérogénéité (le
 plateau varie par tuile). **INTERDIT** : tout terme direct « −santé si trop de voisins »
 (malus direct sur la plante). On agit sur le MILIEU (couvert, lumière reçue), la plante
-répond. Lire `CONCEPTION_PERF_RUN_ETERNEL.md` §4.3 pour la frontière ✅/❌.
+répond. Lire `docs/perf/run_eternel/conception_perf_run_eternel.md` §4.3 pour la frontière ✅/❌.
 
 ## Les deux vis à resserrer (mécanismes existants)
 

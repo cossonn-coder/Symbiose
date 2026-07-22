@@ -1,7 +1,7 @@
 # Tronçon ① — Profileur mémoire par catégorie + colmatage
 
 > Kickoff autosuffisant. Lire d'abord `CLAUDE.md` (racine) + `00_etat.md` (ce dossier) +
-> `docs/conception/CONCEPTION_PERF_RUN_ETERNEL.md` §2/§7. Lancement depuis `data/code/`.
+> `docs/perf/run_eternel/conception_perf_run_eternel.md` §2/§7. Lancement depuis `data/code/`.
 
 ## Objectif
 **Prouver la cause du crash mémoire** avant tout correctif. Le monde complet (8 tuiles)

@@ -1,7 +1,7 @@
 # Tronçon ① — Banc « monde propre » (`config="propre"`) + diag trajectoire outillé
 
 **Prérequis de lecture** : `CLAUDE.md`, `00_etat.md`,
-`docs/conception/CONCEPTION_EQUILIBRE_INVASION.md` §8.
+`docs/faune/trophique/conception_equilibre_invasion.md` §8.
 
 ## Objectif
 Fournir la **fondation de mesure** du sprint : un preset de monde SANS pionnières

@@ -1,6 +1,6 @@
 # Tronçon ⑥ — Gel nocturne localisé
 
-> Sprint thermique-microclimat. Conception : `docs/conception/CONCEPTION_THERMIQUE_MICROCLIMAT.md`
+> Sprint thermique-microclimat. Conception : `docs/champs/climat/conception_thermique_microclimat.md`
 > (§2.3, §3, ligne 188 du plan). Kickoff **autosuffisant** (relançable à froid).
 > Pré-requis : ⑤ CLOS (croissance spatialisée par T ressentie ; knob
 > `T_PLANTE_ALPHA=0.5` ; golden re-figé `b1173a78…`).

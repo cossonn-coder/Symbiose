@@ -1,7 +1,7 @@
 """
 SYMBIOSE — sim/champignon_encyclo.py
 Fiche générique de l'ENCYCLOPÉDIE du règne fongique (D60, tronçon ①).
-Spec : `docs/conception/CONCEPTION_VIE_MACRO_IDENTIFIABLE.md` §3.1(Q2).
+Spec : `docs/faune/vie_macro/conception_vie_macro_identifiable.md` §3.1(Q2).
 
 DÉCISION FIGÉE (Q2) : le champignon = UNE seule entrée générique
 « réseau mycélien ». Le snapshot (`serialize.sample_carpophores`) ne rend

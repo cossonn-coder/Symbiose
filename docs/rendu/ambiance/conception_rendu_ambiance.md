@@ -88,7 +88,7 @@ vérifie explicitement que le golden ne bouge pas.
 
 ### 2.1 — Les 5 voix (règle projet « toute plante ajoutée = toutes ses voix »)
 
-Pour chacune des 3 essences, cf. `CONCEPTION_VOIX_NARRATIVES.md` :
+Pour chacune des 3 essences, cf. `docs/narration/voix/conception_voix_narratives.md` :
 - **Encyclopédie** — fiche 3 niveaux (vue / cycle / effets écosystémiques).
 - **Carnet** — concept(s) que l'espèce illustre (via `CONCEPT_DE`) : hêtre =
   ombre dense / humus doux ; bouleau = pionnière de lumière ; charme = bois dur
@@ -347,12 +347,12 @@ LOD et le voisinage fichier de T2 (organes de `PlantRenderer`).
 
 ## 8. Liens
 
-- Cap pixel-art : [`CONCEPTION_RENDU_PIXELART.md`](CONCEPTION_RENDU_PIXELART.md)
+- Cap pixel-art : [`conception_rendu_pixelart.md`](../pixelart/conception_rendu_pixelart.md)
   (palette `Palette16`, hue-shift sud, dithering, `SolTexture`).
 - Feuillage (patron réutilisé pour les fleurs) :
-  [`CONCEPTION_RENDU_FEUILLAGE.md`](CONCEPTION_RENDU_FEUILLAGE.md).
+  [`conception_rendu_feuillage.md`](../feuillage/conception_rendu_feuillage.md).
 - Voix narratives (5 voix des essences) :
-  [`CONCEPTION_VOIX_NARRATIVES.md`](CONCEPTION_VOIX_NARRATIVES.md).
+  [`conception_voix_narratives.md`](../../narration/voix/conception_voix_narratives.md).
 - Hydrologie (réserve aulne/saule de ripisylve — pas de doublon) :
-  `CONCEPTION_HYDROLOGIE_MARECAGE.md`.
+  `docs/champs/eau/conception_hydrologie_marecage.md`.
 - Dettes : D58 (ce doc), D72 (vent), D73 (terraforming), D4 (maison placeholder).

@@ -2,7 +2,7 @@
 SYMBIOSE — sim/pages_corpus.py
 CORPUS des PAGES SECRÈTES (sprint Voix narratives, tronçon ⑤, dette D18).
 DONNÉE PURE — aucun import moteur, aucune logique. Spec : §7 de
-`docs/conception/CONCEPTION_VOIX_NARRATIVES.md` (recopié VERBATIM).
+`docs/narration/voix/conception_voix_narratives.md` (recopié VERBATIM).
 
 Les pages secrètes sont du LORE PUR : elles ne débloquent rien, ne donnent aucun
 bonus mécanique (décision adoptée §2.3). Elles RÉSONNENT avec ce que le joueur

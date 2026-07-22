@@ -1,6 +1,6 @@
 # ② Rosée & gelée blanche — cœur thermo-hydrique nocturne
 
-> Lire d'abord `00_etat.md` + `docs/conception/CONCEPTION_METEO_CHAMPS.md` (§3).
+> Lire d'abord `00_etat.md` + `docs/champs/climat/conception_meteo_champs.md` (§3).
 > Dépend de ① (le point de rosée lit l'humidité médiée). Premier geste : RE-MESURER
 > les hashs golden (référence post-①).
 

@@ -350,7 +350,7 @@ class MortaliteMixin:
                          severity_fn=None, cause="", species_base=None):
         """
         Dégât MÉDIÉ sur le tissu tendre exposé (stade « semis »), conforme à la
-        philo #2 (CONCEPTION_METEO.md §2.3) — remplace la voie `health` plate pour
+        philo #2 (docs/champs/climat/conception_meteo.md §2.3) — remplace la voie `health` plate pour
         le gel et la grêle.
 
             effectif = sévérité × susceptibilité_gène × (1 − protection_paillage)

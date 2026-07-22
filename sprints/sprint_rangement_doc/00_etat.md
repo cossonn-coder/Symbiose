@@ -67,11 +67,89 @@ explicitement avant appel : `. ~/.config/deepseek.env`.
 - [x] ① Structure + `ARBORESCENCE.md` (carte du mapping) — 2026-07-22
 - [x] ② `git mv` des 56 conceptions + études + meta — 2026-07-22
 - [x] ③ Backlog éclaté + renvois journal/dette par thème — 2026-07-22
-- [ ] ④ Extractions enchâssées + réparation des liens vivants
+- [x] ④ Extractions enchâssées + réparation des liens vivants — 2026-07-22
 - [ ] ⑤ Taxonomie appliquée à `sprints/`
 - [ ] ⑥ `docs/agent/deepseek_protocol.md` + pointeur `CLAUDE.md`
 
 ## REPRISE
+
+**Tronçon ④ fait** (golden **INCHANGÉ**, hash `57c166d8d362…` ; `dotnet build
+Symbiose.csproj` **VERT**, 0 avertissement / 0 erreur — un seul commentaire C#
+touché, `world/SolTexture.cs`). Livré, en suivant `04_extractions_liens.md`
+A/B/C :
+
+- **A — extraction du thème enchâssé « éclairement (Z7) »** → nouveau
+  `docs/champs/lumiere/conception_eclairement.md` (101 l.) : §1 = la conception
+  reprise **verbatim** de `docs/meta/vision.md` (vérifié par `diff` contre
+  `git show HEAD:`), §2 = la liste de clôture reprise **verbatim** de
+  `docs/meta/backlog_historique.md`. Les **deux** emplacements d'origine gardent
+  un **pointeur** (zéro perte). **Autres candidats examinés et NON extraits**
+  (sections de docs de synthèse qui ont déjà leur doc de thème ailleurs — les
+  démembrer les viderait) : `vision.md` § Vigueur / Paliers de maîtrise / Trois
+  voix / Auxiliaires / Maison normande / Extension du terrain / Aléas météo ;
+  `architecture.md` § Sol vivant Python v4 / Échelle spatiale. Liste consignée
+  en clair dans `docs/ARBORESCENCE.md` **§5.3** (neuf).
+- **B — liens réparés** : **405 fichiers** réécrits (dont **75** `data/code/*.py`
+  et **5** C#), pilotés par un script dérivé de la table §5 de `ARBORESCENCE.md`
+  (donc pas de mapping inventé). Trois formes traitées : chemin long
+  `docs/conception/CONCEPTION_X.md` → nouveau chemin ; lien Markdown relatif
+  `[`X.md`](…X.md)` → cible **recalculée** depuis le dossier du fichier ;
+  mention nue `CONCEPTION_X.md` → chemin complet racine-relatif. **Zéro ligne de
+  code touchée** (vérifié : tout le diff `.py`/`.cs` est en commentaire /
+  docstring), `compileall` OK.
+- **⚠️ les deux skills** (le point critique du tronçon) : `/conception` et
+  `/audit-projet` ne codent plus `docs/conception/` en dur. `/conception` reçoit
+  en §3.1 une **règle de choix du thème** explicite (8 types fermés, thème
+  ouvert + `README.md` d'une ligne + **mise à jour obligatoire du §4 de
+  `ARBORESCENCE.md`**, `snake_case` sans accents, préfixe `conception_`/`etude_`)
+  et l'interdiction de recréer un `docs/conception/` à plat. `/audit-projet`
+  balaie désormais `find docs -name 'conception_*.md'` + les fragments
+  `docs/**/backlog_<theme>.md`.
+- **C — note en tête de `journal.md`** : les entrées d'avant le 2026-07-22 citent
+  les anciens chemins et ne sont **pas** réécrites → renvoi vers
+  `docs/ARBORESCENCE.md` §5.
+- **En-tête « État » de `docs/ARBORESCENCE.md` corrigé** (le point hérité du ②) :
+  il décrivait encore les déplacements comme à venir.
+- **Chasse aux liens morts** : **0** lien Markdown mort dans les fichiers vivants
+  (script de contrôle du kickoff, étendu à tout le dépôt hors archives). Au
+  passage, 8 liens **déjà morts avant ce sprint** réparés : les 3 sous-docs de
+  `conception_maitrise.md` (désormais dans le même dossier) et 5 renvois de
+  sprints clos vers `data/code/CONCEPTION_{METEO,VIGUEUR}.md` (morts depuis le
+  refactor du 2026-06-15).
+
+**Décision de périmètre prise dans le tronçon** (à connaître pour le ⑤) : le
+critère de réécriture n'est pas « vivant vs archive » mais **« pointeur vs
+récit »**. Un *pointeur* vers un document (même dans un sprint clos) est réparé
+— il désigne le même doc, qui a juste déménagé. Un *récit* d'une migration
+passée est laissé intact, comme le journal. Restent donc volontairement en
+`docs/conception/` : `journal/` + `journal_archive/` (décision 4), la table de
+traduction `docs/ARBORESCENCE.md` §5 (c'est son objet), `sprints/sprint_rangement_doc/`
+(décrit ce sprint-ci) et `sprints/_clos/sprint_refactor_global/` (raconte la
+**création** de `docs/conception/` en 2026-06-15). **Aucune autre occurrence
+vivante** — vérifié par `grep -rIn` sur tout le dépôt, toutes extensions.
+
+**Décision de design imprévue, à valider par Nico** : 4 documents **qui
+n'existent pas encore** étaient cités en `docs/conception/CONCEPTION_*.md` par
+les kickoffs de dette dormante. Il fallait leur donner un chemin cible, sinon le
+skill les recrée à plat. Rattachement retenu (déductible de la taxonomie, mais
+non tranché avant) : `CONCEPTION_MAGAZINE` / `CONCEPTION_CARNET` /
+`CONCEPTION_PAGES_SECRETES` → `docs/narration/voix/` (ce sont 3 des 4 voix) ;
+`CONCEPTION_TERRAIN` (extension du terrain **par maîtrise**) →
+`docs/joueur/maitrise/`. Deux noms de docs purement hypothétiques
+(`CONCEPTION_PHYSICOCHIMIE_SOL.md`, `CONCEPTION_DEBLOCAGE.md`, jamais créés sous
+ce nom) ont été **laissés tels quels** : ils ne pointent sur rien.
+
+**Signalé au ⑥** : `06_protocole_deepseek.md` l.111 cite en exemple
+`docs/champs/eau/dette_hydrologie.md` — le fichier réellement produit au ③
+s'appelle `docs/champs/eau/dette_eau.md`. Simple exemple en prose, à corriger
+au passage.
+
+**Suivant : tronçon ⑤ (`05_sprints_taxonomie.md`)** — taxonomie appliquée à
+`sprints/` (traitement asymétrique : `_clos/`, `dette_kickoffs/` et
+`sprint_rangement_doc/` **ne bougent pas** ; seuls les sprints actifs sont
+rangés en `sprints/<type>/<theme>/`). Attention : le ④ a modifié le **contenu**
+de nombreux fichiers sous `sprints/` (réparation de pointeurs) — cela n'entre
+pas en conflit avec le ⑤, qui déplace des **dossiers** au `git mv`.
 
 **Tronçon ③ fait** (golden **inchangé**, hash `57c166d8d362…` — aucun code
 touché, aucun C# concerné). Livré, en suivant `03_pivots.md` A/B/C :

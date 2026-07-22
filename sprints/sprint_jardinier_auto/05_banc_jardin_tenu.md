@@ -1,7 +1,7 @@
 # ⑤ Banc « jardin tenu » + rapport d'impasses agrégé
 
 > Kickoff autosuffisant. Lire `CLAUDE.md` + `00_etat.md` +
-> `docs/conception/CONCEPTION_JARDINIER_AUTOMATE.md` (§11, §7). Prérequis : ①→④ faits.
+> `docs/joueur/automate/conception_jardinier_automate.md` (§11, §7). Prérequis : ①→④ faits.
 
 ## Objectif
 Le **livrable de mesure** du sprint : un banc qui fait tourner le MÊME monde en deux

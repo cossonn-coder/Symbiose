@@ -2,7 +2,7 @@
 SYMBIOSE — sim/pages.py
 LES PAGES SECRÈTES — troisième des quatre voix narratives (sprint Voix narratives,
 tronçon ⑤, dette D18).
-Spec de référence : `docs/conception/CONCEPTION_VOIX_NARRATIVES.md` §2.3 + §7.
+Spec de référence : `docs/narration/voix/conception_voix_narratives.md` §2.3 + §7.
 
 Voix MULTIPLES (cinq registres éditoriaux), LORE PUR. Les pages ne débloquent
 RIEN : ZÉRO effet mécanique (décision adoptée §2.3). Elles RÉSONNENT avec ce que

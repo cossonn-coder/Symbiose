@@ -1,6 +1,6 @@
 # T1 — Palette SNES ~24 couleurs centrale + rampe branches sur l'âge
 
-> Lire d'abord `00_etat.md` (invariants) + `CONCEPTION_RENDU_PIXELART.md` §5/§7.
+> Lire d'abord `00_etat.md` (invariants) + `docs/rendu/pixelart/conception_rendu_pixelart.md` §5/§7.
 > Couche **B pure** (C#). Golden trivialement préservé, build C# vert, F5 = Nico.
 > PREMIER tronçon : valide la palette sur un acteur déjà fait (les branches).
 

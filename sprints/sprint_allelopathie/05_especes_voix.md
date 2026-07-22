@@ -1,7 +1,7 @@
 # ⑤ Espèces émettrices + voix narratives
 
 > Kickoff autosuffisant. Reprise à froid = `CLAUDE.md` + `00_etat.md` + ce fichier
-> + `CONCEPTION_ALLELOPATHIE.md` §E + `CONCEPTION_VOIX_NARRATIVES.md`. Prérequis :
+> + `docs/vegetal/allelopathie/conception_allelopathie.md` §E + `docs/narration/voix/conception_voix_narratives.md`. Prérequis :
 > ①②③④ faits. Golden **NEUTRE visé** (à mesurer).
 
 ## Objectif
@@ -31,7 +31,7 @@ narratives** (règle projet : une plante sans ses voix est une fiche muette).
   vivace existante). Facette « vivace toxique ».
 - **Seigle** (Secale, Poaceae) — annuel, **engrais vert allélopathique**, couvert qui
   étouffe puis se fauche. Facette « couvert stratégique permaculture ».
-- Pour **chacune**, les **5 voix** (cf. `CONCEPTION_VOIX_NARRATIVES.md`) :
+- Pour **chacune**, les **5 voix** (cf. `docs/narration/voix/conception_voix_narratives.md`) :
   encyclopédie (fiche 3 niveaux §6), carnet (`CONCEPT_DE` → concept `allelopathie`
   / cause, §5), pages secrètes (lore optionnel §7), magazine (rattachement
   famille/offre §2.4), événements (marqueurs de cycle au ledger §1).

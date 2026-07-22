@@ -1,7 +1,7 @@
 """
 SYMBIOSE — tests/test_encyclopedie.py
 Test de l'ENCYCLOPÉDIE (sprint Voix narratives, tronçon ④).
-Spec : `docs/conception/CONCEPTION_VOIX_NARRATIVES.md` §2.2/§6 + kickoff
+Spec : `docs/narration/voix/conception_voix_narratives.md` §2.2/§6 + kickoff
 `sprints/sprint_voix_narratives/04_encyclopedie.md`.
 
 Propriétés exigées (« Définition de done » du kickoff) :

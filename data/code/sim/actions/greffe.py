@@ -1,7 +1,7 @@
 """
 SYMBIOSE — sim/actions/greffe.py
 Geste GREFFER (sprint PALETTE DE GESTES, tronçon ③).
-Spec : `docs/conception/CONCEPTION_PALETTE_GESTES.md` §3.6 + kickoff
+Spec : `docs/joueur/gestes/conception_palette_gestes.md` §3.6 + kickoff
 `sprints/sprint_palette_gestes/03_greffe.md`.
 
 Greffe PAR LE JOUEUR : on soude un rameau (le GREFFON, scion) sur une plante

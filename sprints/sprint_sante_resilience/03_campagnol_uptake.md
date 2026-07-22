@@ -2,7 +2,7 @@
 
 > Kickoff autosuffisant. Lis `CLAUDE.md` + `00_etat.md` + ce fichier. Prérequis :
 > ① (`vitalite`/`erode`) + ② (`resilience_base`). Doc :
-> `docs/conception/CONCEPTION_SANTE_RESILIENCE.md` §3. **Golden NEUTRE attendu.**
+> `docs/vegetal/sante/conception_sante_resilience.md` §3. **Golden NEUTRE attendu.**
 
 ## Objectif
 

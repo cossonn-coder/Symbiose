@@ -1,5 +1,5 @@
 // SYMBIOSE — PlantRenderer.Palette.cs (partial de PlantRenderer, SS② Palette)
-// FONDATION CHROMATIQUE 16-bit (cap docs/conception/CONCEPTION_RENDU_PIXELART.md
+// FONDATION CHROMATIQUE 16-bit (cap docs/rendu/pixelart/conception_rendu_pixelart.md
 // §5/§6). Trois idées de la palette SNES, portées sur les plantes :
 //
 //  1. RAMPE 2-3 valeurs — un aplat (une couleur par organe) devient une mini-

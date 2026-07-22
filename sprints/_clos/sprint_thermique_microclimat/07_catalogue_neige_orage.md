@@ -1,6 +1,6 @@
 # Tronçon ⑦ — Catalogue météo : Neige + Orage + manteau neigeux
 
-> Sprint thermique-microclimat. Conception : `docs/conception/CONCEPTION_THERMIQUE_MICROCLIMAT.md`.
+> Sprint thermique-microclimat. Conception : `docs/champs/climat/conception_thermique_microclimat.md`.
 > Kickoff **autosuffisant** (relançable à froid).
 > Pré-requis : ⑥ CLOS (gel nocturne localisé ; helper `t_min_nuit_at` dans
 > `fields/ecofields/thermique.py` ; knob `RAYONNEMENT_NOCTURNE=5.0` ; golden

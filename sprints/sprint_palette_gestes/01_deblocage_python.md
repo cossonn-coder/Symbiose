@@ -1,7 +1,7 @@
 # ① DÉBLOCAGE DES GESTES (Python) — kickoff autosuffisant
 
 > Sprint PALETTE DE GESTES. Lire d'abord : `CLAUDE.md` (racine) + `00_etat.md`
-> (ce dossier) + `docs/conception/CONCEPTION_PALETTE_GESTES.md` §3.3/§3.4.
+> (ce dossier) + `docs/joueur/gestes/conception_palette_gestes.md` §3.3/§3.4.
 > Tu démarres à FROID : tout le nécessaire est ici.
 
 ## Objectif

@@ -247,8 +247,8 @@ ajoutée). Le banc `tools/` est un outil hors-tick.
   réalignement `qi_local` de ② y contribue indirectement) ; **D-cal** (nouvelle :
   calibration MO/décompo des modulateurs de rythme, §6).
 - **Conceptions voisines** : `etude_sol_vivant.md` (MO/microbiome),
-  `CONCEPTION_DECOMPOSITION_COMPOST.md`, `CONCEPTION_PHYSICOCHIMIE_SOL.md` (NPK,
-  Liebig), `CONCEPTION_MYCELIUM_INTERCONNEXIONS.md` (mycorhize → uptake P, futur
+  `docs/champs/sol/conception_decomposition_compost.md`, `CONCEPTION_PHYSICOCHIMIE_SOL.md` (NPK,
+  Liebig), `docs/faune/mycelium/conception_mycelium_interconnexions.md` (mycorhize → uptake P, futur
   câblage P3).
 - **Golden** : `tests/test_golden.py` — re-figé au ① (localisé) et au ② (large),
   intact au ③.

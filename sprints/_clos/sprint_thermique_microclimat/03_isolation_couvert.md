@@ -1,6 +1,6 @@
 # Tronçon ③ — Isolation par le couvert (litière)
 
-> Sprint thermique-microclimat. Conception : `docs/conception/CONCEPTION_THERMIQUE_MICROCLIMAT.md`
+> Sprint thermique-microclimat. Conception : `docs/champs/climat/conception_thermique_microclimat.md`
 > (§2.1, §3). Kickoff **autosuffisant** (relançable à froid).
 > Pré-requis : ② CLOS (terme chaleur latente dans `tick_thermique` ; knob
 > `REFROID_EVAP=6.0` ; golden re-figé `7cfef331…`).

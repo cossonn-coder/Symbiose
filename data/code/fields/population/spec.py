@@ -17,7 +17,7 @@ from fields.population.constants import (
 @dataclass(frozen=True)
 class TrophicSpec:
     """
-    Décrit UNE guilde de façon data-driven (CONCEPTION_VIE_MACRO.md §2.1) :
+    Décrit UNE guilde de façon data-driven (docs/faune/vie_macro/conception_vie_macro.md §2.1) :
       - resource_fn : (eco, tile, plants) → grille [rows][cols] ∈ [0,1]
                       = le `qi_local` trophique (ce dont la guilde se nourrit).
       - habitat_fn  : (eco, tile, plants) → grille [rows][cols] ∈ [0,1]
@@ -32,7 +32,7 @@ class TrophicSpec:
                       neutre pour les guildes sans fruit : pollinisateur, vers).
     Les pondérations ont des défauts de module, surchargeables par guilde.
 
-    `category` (modèle B, CONCEPTION_FAUNE_DEDIEE.md §1) : la GUILDE rétrogradée en
+    `category` (modèle B, docs/faune/vie_macro/conception_faune_dediee.md §1) : la GUILDE rétrogradée en
     ÉTIQUETTE. Plusieurs espèces nommées partageront une même catégorie
     (ravageur / auxiliaire / detritivore) ; les consommateurs qui raisonnaient
     « par guilde » (santé des plantes, vigueur macro) lisent désormais l'AGRÉGAT

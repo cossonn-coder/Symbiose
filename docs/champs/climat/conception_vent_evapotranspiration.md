@@ -4,8 +4,8 @@
 > le modèle avant de coder). État : **PROPOSITION**, en attente de validation Nico.
 > Une fois figé, on en tire les kickoffs `0N_*.md` du sprint et on implémente.
 >
-> Filiation : prolonge `CONCEPTION_METEO.md` (météo déterministe) et
-> `CONCEPTION_METEO_CHAMPS.md` (rosée, lessivage, microbiome climatique).
+> Filiation : prolonge `docs/champs/climat/conception_meteo.md` (météo déterministe) et
+> `docs/champs/climat/conception_meteo_champs.md` (rosée, lessivage, microbiome climatique).
 > Résout **D37** (vent continu) et, par effet de bord, **D39** (régression
 > `test_senescence`).
 

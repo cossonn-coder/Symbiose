@@ -26,7 +26,7 @@ qui préserve » (no-op écolo). On ferme l'asymétrie.
   `GridField` (432 plots) diffusés/tickés chaque semaine.
 - `vers_de_terre` fournit **déjà** un couplage minimal : bioturbation → léger bonus
   de décomposition/minéralisation (`WORM_DECOMP_BONUS`, câblé à D31.2).
-- Spec de référence : `docs/conception/CONCEPTION_VIGUEUR.md` **§3.6** (couple
+- Spec de référence : `docs/joueur/vigueur/conception_vigueur.md` **§3.6** (couple
   biner/grelinette, tableau des gestes de sol) et **§ « champ structure/compaction »**
   (~l.231) qui pose explicitement la question ci-dessous.
 
@@ -71,8 +71,8 @@ bord. **Déconseillé** sauf si tu veux le strict minimum.
 > le moment d'introduire `structure_sol`. Décision = la tienne.
 
 ## Périmètre (sous Option A — à adapter si tu choisis B/C)
-1. **Conception** : une courte section dans `CONCEPTION_VIGUEUR.md` (ou un
-   `CONCEPTION_SOL_STRUCTURE.md` si tu préfères isoler) qui acte le choix et le
+1. **Conception** : une courte section dans `docs/joueur/vigueur/conception_vigueur.md` (ou un
+   `docs/champs/sol/conception_sol_structure.md` si tu préfères isoler) qui acte le choix et le
    mécanisme : *grelinette → +quantum `vers_de_terre` (habitat favorisé) ; le
    bénéfice agronomique passe par `WORM_DECOMP_BONUS` existant.*
 2. **Impl. minimale** dans `sim/actions.py::grelinette` : ajouter le **bonus

@@ -1,6 +1,6 @@
 # ② SimBridge C# + nœud VoicePanel + hub-maison cliquable
 
-> Lire d'abord `00_etat.md` + `CONCEPTION_VOIX_NARRATIVES_UI.md` (§1 invariant, §5
+> Lire d'abord `00_etat.md` + `docs/narration/voix/conception_voix_narratives_ui.md` (§1 invariant, §5
 > archi C#). Tronçon **C# pur** (couche vue). Dépend du ① (commandes de pont
 > présentes). Filet de compil = `dotnet build Symbiose.csproj` sur la VM (F5 visuel
 > = Nico). **INVARIANT** : le C# ne fait que de la mise en page, jamais de texte.

@@ -11,7 +11,7 @@ import math
 
 POP_MAX = 1.0          # densité normalisée par plot ∈ [0, POP_MAX]
 POP_INERTIA = 0.85     # inertie de MONTÉE (la pop croît vers sa cible à ce rythme)
-# Inertie de DÉCRUE (CONCEPTION_SAISONNALITE_VIE_MACRO.md §4) : quand la cible
+# Inertie de DÉCRUE (docs/faune/vie_macro/conception_saisonnalite_vie_macro.md §4) : quand la cible
 # tombe sous la pop courante, la relaxation est PLUS RAPIDE → la dormance
 # automnale ne traîne plus 13 semaines (0.55⁴ ≈ 0.09, extinction en ~4 sem).
 # Asymétrie écologique : « meurt vite quand le milieu se dégrade, recolonise
@@ -32,7 +32,7 @@ POP_INERTIA_DECAY = 0.55
 T_COLD_ZERO = 3.0      # °C : en dessous, plus aucune chaleur utile (warmth = 0)
 T_WARM_FULL = 15.0     # °C : au-dessus, chaleur maximale (warmth = 1)
 
-# --- Saisonnalité photopériodique (CONCEPTION_SAISONNALITE_VIE_MACRO.md §2-3) ---
+# --- Saisonnalité photopériodique (docs/faune/vie_macro/conception_saisonnalite_vie_macro.md §2-3) ---
 # La DORMANCE/le RÉVEIL des guildes se pilotent par la LONGUEUR DU JOUR, pas par
 # la température seule : un signal anticipateur fiable et déterministe (le jour
 # court ne ment pas, un redoux si). `daylength(wiy)` est une sinusoïde 8 h↔16 h
@@ -89,7 +89,7 @@ def _smoothstep(x: float, a: float, b: float) -> float:
 def daylength(week_in_year: int) -> float:
     """
     Longueur du jour (heures) à ~49°N — sinusoïde 8 h↔16 h, pic au solstice d'été
-    (CONCEPTION_SAISONNALITE_VIE_MACRO.md §2). Fonction PURE de la semaine (philo
+    (docs/faune/vie_macro/conception_saisonnalite_vie_macro.md §2). Fonction PURE de la semaine (philo
     #3) : le forecast et la phénologie florale (arc pollinisation) pourront s'y
     appuyer. NON-monotone → une simple rampe sur cette grandeur donne du même
     coup le réveil printanier ET la dormance automnale, des deux côtés du solstice.

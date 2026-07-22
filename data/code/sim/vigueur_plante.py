@@ -1,7 +1,7 @@
 """
 SYMBIOSE — sim/vigueur_plante.py
 Vigueur des ÊTRES VIVANTS — façade dérivée, PURE, read-only (D11, sous-sprint 3).
-Spec de référence : `docs/conception/CONCEPTION_VIGUEUR.md` §1 (façade dérivée — la
+Spec de référence : `docs/joueur/vigueur/conception_vigueur.md` §1 (façade dérivée — la
 décision structurante), §4 (Qi territorial = champs éco existants), §5
 (déterminisme/golden), §6 (gène `vigueur` D22b stabilisé par la façade).
 

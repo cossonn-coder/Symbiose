@@ -1,7 +1,7 @@
 # Tronçon ② — LOD organes intermédiaire + culling préventif
 
 > Kickoff autosuffisant. Lire `CLAUDE.md` + `00_etat.md` +
-> `docs/conception/CONCEPTION_PERF_RENDU_PLANTES.md`. **Dépend du tronçon ①**
+> `docs/perf/lod/conception_perf_rendu_plantes.md`. **Dépend du tronçon ①**
 > (constante `SegmentDetailMinZoom`, pompe `RedrawAllPlants` déjà en place).
 > Rendu/vue **C# pur** : AUCUNE touche `data/code/`, **golden INTACT**. Filet :
 > `dotnet build Symbiose.csproj`.

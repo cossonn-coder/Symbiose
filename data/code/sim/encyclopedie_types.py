@@ -1,7 +1,7 @@
 """
 SYMBIOSE — sim/encyclopedie_types.py
 Table de CLASSIFICATION string → type de l'encyclopédie multi-règnes (D60, ①).
-Spec : `docs/conception/CONCEPTION_VIE_MACRO_IDENTIFIABLE.md` §5 + kickoff
+Spec : `docs/faune/vie_macro/conception_vie_macro_identifiable.md` §5 + kickoff
 `sprints/sprint_vie_macro_identifiable/01_backend_encyclo_unifiee.md`.
 
 C'est le module PIVOT du sprint : la source de vérité UNIQUE qui range chaque

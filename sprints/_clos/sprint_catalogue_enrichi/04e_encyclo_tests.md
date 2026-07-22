@@ -1,7 +1,7 @@
 # Tronçon ④e — MÉTADONNÉE encyclopédie + tests + stub pont (golden NEUTRE)
 
 > Sprint CATALOGUE ENRICHI. État partagé : `00_etat.md` (lire d'abord).
-> Doc FIGÉ : `docs/conception/CONCEPTION_FAUNE_DEDIEE.md` (§1.1 blurb/interconnexions, §4 C9/C10, §7 ④e).
+> Doc FIGÉ : `docs/faune/vie_macro/conception_faune_dediee.md` (§1.1 blurb/interconnexions, §4 C9/C10, §7 ④e).
 > **Pré-requis : ④d CLOS** (les 10 espèces existent, toutes les interconnexions
 > dynamiques bouclées). Kickoff autosuffisant. Python depuis `data/code/`.
 
