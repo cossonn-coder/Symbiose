@@ -906,6 +906,23 @@ EPAISSEUR_NPK_BONUS  = 0.30   # amplification max de la fraction de stock N/P/K 
 ALT_BASE      = 20.0   # cm — altitude de référence (mi-hauteur du micro-relief)
 ALT_AMPLITUDE = 20.0   # cm — amplitude ± du micro-relief (dénivelé jardin ~0–40 cm)
 
+# --- Gestes de terrassement : creuser / drainer (sprint hydrologie & marécages ⑦) ---
+# Deux gestes JOUEUR sur le MILIEU (philo #1), EVENT-DRIVEN (hors tick → golden neutre,
+# comme becher/pailler) et COÛTEUX en Vigueur (terrassement = usure de la solution facile).
+#  - CREUSER_DELTA : cm d'altitude retirés au plot creusé (`altitude ← max(0, alt − delta)`).
+#    Une cuvette locale se forme → au ruissellement ② l'eau y CONVERGE (surface hydraulique
+#    plus basse) : la cuvette accumule la lame, l'assèchement du versant devient réel. Assez
+#    profond pour créer un minimum LOCAL en un-deux gestes (le bruit d'altitude oscille sur
+#    ~40 cm), sans être brutal. PLACEHOLDER, calibrage F5 (« creuser amène-t-il l'eau ? »).
+#  - DRAINER_ASSECHE : fraction de `marais_memory` effacée d'un coup au drainage forcé
+#    (`marais_memory *= 1 − DRAINER_ASSECHE`). Combinée au vidage de `eau_surface`, elle
+#    fait REDESCENDRE la mémoire sous le seuil de sortie d'hystérèse (MARAIS_OFF=0.30) en
+#    deux-trois passages → le marais se lève VISIBLEMENT (③) au lieu d'attendre des saisons
+#    d'évaporation. < 1 : un seul drainage ne suffit pas sur un marais bien installé (la
+#    tourbe garde l'eau) — l'assèchement se MÉRITE. PLACEHOLDER, calibrage F5.
+CREUSER_DELTA    = 15.0   # cm d'altitude retirés par un coup de bêche (cuvette locale)
+DRAINER_ASSECHE  = 0.40   # part de mémoire de marais effacée par un drainage forcé
+
 # --- Catena topographique des champs édaphiques (sprint DIVERSITÉ FONDATRICE ②) ---
 # Sous le flag `heterogene` (sites monde-réel : golden, main, pont, bancs), les champs
 # de SOL STATIQUE non nuls (ph, n, p, k, structure_sol, microbiome) démarrent

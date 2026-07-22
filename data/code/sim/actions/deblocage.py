@@ -42,6 +42,11 @@ GESTES_BASE: frozenset[str] = frozenset({
     "ecraser", "becher", "favoriser_auxiliaire",
     "deraciner", "grelinette",
     "pincer", "arracher", "glaner",
+    # Terrassement (hydrologie ⑦) : gestes rustiques à la bêche, du même registre que
+    # `becher`/`deraciner` — amorçables dès le 1ᵉ avatar (creuser une cuvette, ouvrir
+    # un fossé de drainage n'exige aucune maîtrise). No-op golden (set jamais matérialisé
+    # hors joueur). Découverte à l'usage (D60) via le pont, comme les autres.
+    "creuser", "drainer",
 })
 
 

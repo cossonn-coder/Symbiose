@@ -27,6 +27,7 @@ from fields.ecofields import VITALITE_STEP   # pas d'érosion de vitalité (éci
 from fields.ecofields import BECHAGE_MALUS, GRELINETTE_GAIN   # deltas structure du sol des gestes (physico-chimie ⑧)
 from fields.ecofields import BECHAGE_MYCELIUM_MALUS   # quantum de réseau fongique cassé par le bêchage (mycélium ⑤, event-driven)
 from fields.ecofields import PAILLAGE_DOSE   # dose de mulch d'un geste `pailler` (équilibre invasion ③)
+from fields.ecofields import CREUSER_DELTA, DRAINER_ASSECHE   # terrassement joueur (hydrologie ⑦, event-driven)
 from fields.population import DENSITE_PAR_SPRITE   # « un geste = un individu = un quantum » (D31.3 §5)
 from fields.alarme import declencher_alarme, ALARME_DEPOT   # phéromone d'alarme apienne (⑦ §J)
 from fields.seedbank import GrainEnAttente          # dépôt de `planter` (germination différée, distinct de la banque-sol)
@@ -545,6 +546,58 @@ def grelinette(game_state: dict, player: str, eco, r: int, c: int) -> bool:
         return False
     eco.structure_sol.add(r, c, GRELINETTE_GAIN)        # aère sans retourner (gain durable)
     eco.populations["lombric"].add(r, c, DENSITE_PAR_SPRITE)   # ↑vers (effet 2nd, §3 bioturbation)
+    return True
+
+
+def creuser(game_state: dict, player: str, eco, r: int, c: int) -> bool:
+    """Creuser — façonner une CUVETTE au plot cliqué (sprint hydrologie & marécages ⑦) —
+    geste sur le MILIEU (philo #1), TERRASSEMENT coûteux. Canon philo #2 : on n'écrit
+    QUE des champs du milieu, jamais un attribut de plante. Deux écritures :
+      1) `altitude ← max(0, altitude − CREUSER_DELTA)` : le plot descend. `altitude`
+         cesse d'être purement déterministe — le JOUEUR la modifie (event-driven, hors
+         tick → golden neutre). La cuvette devient un MINIMUM local de la surface
+         hydraulique (`altitude + epaisseur_sol`) → au `tick_ruissellement` (②) l'eau
+         des voisins CONVERGE ici et y stagne : la mare se remplit d'elle-même, aucun
+         effet scripté (philo #6, on n'ajoute pas d'eau, on creuse la forme).
+      2) `microbiome −= BECHAGE_MICROBIOME_MALUS` : retourner la terre PERTURBE la vie
+         du sol (comme `becher`) — creuser n'est pas gratuit écologiquement.
+
+    Coût ÉLEVÉ (terrassement, phase planification). Binaire tout-ou-rien (modèle
+    `becher`) : altitude ET microbiome ne bougent QUE si le coût est intégralement
+    payé — forcer le geste à vide draine la Vigueur sans rien creuser.
+    `GridField.set`/`.add` bornent déjà (altitude ≥ 0, microbiome ≥ 0).
+    Renvoie True si le geste a été pleinement payé (et donc appliqué)."""
+    cost = cout_action(game_state, player, "creuser", OBJETS_TOUCHES["creuser"])
+    if spend(game_state, player, cost) < 1.0:
+        return False                          # Vigueur insuffisante → relief ET sol intacts
+    alt = eco.altitude.at_plot(r, c)
+    eco.altitude.set(r, c, max(0.0, alt - CREUSER_DELTA))   # cuvette (borné ≥ 0)
+    eco.microbiome.add(r, c, -BECHAGE_MICROBIOME_MALUS)     # perturbation du sol (comme becher)
+    return True
+
+
+def drainer(game_state: dict, player: str, eco, r: int, c: int) -> bool:
+    """Drainer — ASSÉCHER une flaque / un marais au plot cliqué (sprint hydrologie &
+    marécages ⑦) — geste sur le MILIEU (philo #1), coûteux. Canon philo #2 : on n'écrit
+    QUE des champs du milieu. Deux écritures :
+      1) `eau_surface ← 0.0` : la lame d'eau de surface est ÉVACUÉE (fossé de drainage,
+         l'eau part au réseau). La flaque disparaît immédiatement.
+      2) `marais_memory *= (1 − DRAINER_ASSECHE)` : la MÉMOIRE de marais recule d'un
+         coup (assèchement forcé). Répété, elle repasse sous le seuil de sortie
+         d'hystérèse (`MARAIS_OFF`) → l'état `est_marais` se lève au `tick_marais` (③),
+         la décompo redémarre et le pH remonte — tout ÉMERGE du tick, rien n'est
+         scripté ici (philo #6). Un seul drainage ne suffit pas sur un marais installé
+         (la tourbe garde l'eau) : l'assèchement se mérite.
+
+    Coût MODÉRÉ-élevé (phase planification/réaction). Binaire tout-ou-rien (modèle
+    `becher`) : les deux champs ne bougent QUE si le coût est intégralement payé.
+    Renvoie True si le geste a été pleinement payé (et donc appliqué)."""
+    cost = cout_action(game_state, player, "drainer", OBJETS_TOUCHES["drainer"])
+    if spend(game_state, player, cost) < 1.0:
+        return False                          # Vigueur insuffisante → eau ET marais intacts
+    eco.eau_surface.set(r, c, 0.0)            # vide la flaque de surface
+    mem = eco.marais_memory.at_plot(r, c)
+    eco.marais_memory.set(r, c, mem * (1.0 - DRAINER_ASSECHE))   # assèchement forcé de la mémoire
     return True
 
 

@@ -86,7 +86,7 @@ Kickoffs `01`→`08` écrits, autosuffisants. Prêt pour `/sprint-auto`.
 | ④ | `04_faune_de_mare.md` | Moustique + libellule (data-driven) + 5 voix | pop NEUTRE/maîtrisé annoncé |
 | ⑤ | `05_aulne_sphaigne.md` | Aulne (Betulaceae fixe-N) + Sphaigne (ingénieur) + voix | NEUTRE hors smoke |
 | ⑥ | `06_carnivore.md` | Drosera + PUITS→`moustique` (1er végétal-prédateur) + voix | NEUTRE hors smoke |
-| ⑦ | `07_gestes_creuser_drainer.md` | Gestes `creuser`/`drainer` (actions + pont) | NEUTRE (event-driven) |
+| ⑦ | `07_gestes_creuser_drainer.md` | Gestes `creuser`/`drainer` (actions + pont) | NEUTRE (event-driven) ✅ FAIT (golden INTACT `57c166d8…`, pont **0.5.35**) |
 | ⑧ | `08_vue_godot.md` | Vue : relief+altitude, flaque, marais, guilde, gestes | pur-vue, F5 |
 
 **Ordre imposé** : ① avant ② (ruissellement lit altitude) ; ② avant ③ (marais lit
@@ -362,10 +362,18 @@ humidité) pour éviter le biais d'ordre de parcours (sinon direction privilégi
 `moustique` sur foliar_plots + faim d'azote neutralisée dans `qi_local` [N hors
 Liebig] ; attribut `carnivore` + drapeau `a_capture` ; 5 voix dont concept NEUF
 `carnivorie` + P36 ; golden écolo INTACT `57c166d8…`, population INTACT `cc886bdd…`).
-**PROCHAIN = ⑦** (`07_gestes_creuser_drainer.md`) — gestes `creuser` (abaisse
-`altitude`, cuvette) / `drainer` (évacue `eau_surface` + abaisse `marais_memory`),
-event-driven hors tick → vise NEUTRE. Puis ⑧ pur-vue F5 (relief, flaque, marais,
-guilde, gestes).
+**⑦ CLOS** (2026-07-23) : gestes `creuser` (abaisse `altitude` d'un cran
+`CREUSER_DELTA=15 cm` → cuvette qui capte l'eau au ruissellement ② + `microbiome`
+perturbé comme `becher`) / `drainer` (vide `eau_surface` + `marais_memory *=
+1−DRAINER_ASSECHE=0.40` → assèchement forcé, la mémoire repasse sous `MARAIS_OFF`
+au tick ③). Event-driven, tout-ou-rien gaté sur la Vigueur, `GESTES_BASE`
+(rustiques, amorçables 1ᵉ avatar). Pont `action` routé (verbes `creuser`/`drainer`
+au plot {tile,r,c}, message diagnostic avant/après), **ENGINE_VERSION 0.5.35**.
+Golden écolo INTACT `57c166d8…`, population INTACT `cc886bdd…`, pont 266/270
+(4 échecs = assertions version figées 0.5.28 + pommier floraison, PRÉEXISTANTS).
+**PROCHAIN = ⑧** (`08_vue_godot.md`, DERNIER) — pur-vue C# F5 : relief/altitude,
+flaque, marais, guilde de mare (aulne/sphaigne/drosera/moustique/libellule),
+gestes creuser/drainer cliquables.
 **⚠️ Bugs préexistants NON traités ici** : `test_sim_server` (dérive version) +
 `test_senescence` + `test_encyclopedie` (gestes sans fiche) + banc édaphique `carence`
 — tous orthogonaux à l'hydrologie, à trancher avec Nico hors sprint.

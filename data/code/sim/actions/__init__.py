@@ -34,6 +34,7 @@ from .gestes import (
     BECHAGE_MALUS, GRELINETTE_GAIN, PAILLAGE_DOSE, PINCER_INTENSITE,
     manger, planter, arroser, recolter, deraciner, tailler, pincer, arracher,
     ecraser, ecraser_plante, favoriser_auxiliaire, becher, grelinette, pailler,
+    creuser, drainer,
 )
 from .compost import (
     EPANDRE_W, structure_de_tuile, poser_bac, poser_pile,
@@ -98,6 +99,7 @@ __all__ = [
     "BECHAGE_MALUS", "GRELINETTE_GAIN", "PAILLAGE_DOSE", "PINCER_INTENSITE",
     "manger", "planter", "arroser", "recolter", "deraciner", "tailler", "pincer", "arracher",
     "ecraser", "ecraser_plante", "favoriser_auxiliaire", "becher", "grelinette", "pailler",
+    "creuser", "drainer",
     "EPANDRE_W", "structure_de_tuile", "poser_bac", "poser_pile",
     "composter", "empiler_bois", "retourner", "epandre",
     "mulch_stock", "stock_disponible", "prelever_stock", "broyer", "recolter_paille",

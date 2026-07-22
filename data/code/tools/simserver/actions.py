@@ -427,6 +427,42 @@ class ActionsMixin:
                          f"sol ameubli à la grelinette en ({r},{c})" if ok
                          else "Vigueur insuffisante")
 
+        # Terrassement (sprint hydrologie & marécages ⑦) : gestes sur le MILIEU au PLOT
+        # {tile, r, c}, patron `grelinette`. `creuser` abaisse l'altitude (cuvette qui
+        # accumule l'eau au ruissellement ②) + perturbe le microbiome ; `drainer` vide la
+        # flaque (`eau_surface`) et fait reculer `marais_memory` (assèchement forcé ③). Les
+        # façades `A.creuser`/`A.drainer` font foi (coût, effet, bornes des champs). Message
+        # DIAGNOSTIC en lecture pure (avant/après du champ agi), on lit ce que le geste a fait.
+        if verb in ("creuser", "drainer"):
+            tile, eco = tile_cible()
+            if tile is None:
+                return bilan(False, 0.0, 0.0,
+                             f"tuile introuvable : {target.get('tile')!r}")
+            r, c = target.get("r"), target.get("c")
+            if (not isinstance(r, int) or isinstance(r, bool)
+                    or not isinstance(c, int) or isinstance(c, bool)
+                    or not (0 <= r < tile.grid_rows)
+                    or not (0 <= c < tile.grid_cols)):
+                return bilan(False, 0.0, 0.0,
+                             f"plot hors tuile : r={r!r}, c={c!r}")
+            cost = A.cout_action(gs, player, verb, A.OBJETS_TOUCHES[verb])
+            if verb == "creuser":
+                alt_avant = eco.altitude.at_plot(r, c)
+                ok = A.creuser(gs, player, eco, r, c)
+                alt_apres = eco.altitude.at_plot(r, c)
+                return bilan(ok, cost, 0.0,
+                             f"cuvette creusée ({r},{c}) : altitude "
+                             f"{alt_avant:.1f} → {alt_apres:.1f} cm" if ok
+                             else "Vigueur insuffisante — rien creusé")
+            lame_avant = eco.eau_surface.at_plot(r, c)
+            mem_avant = eco.marais_memory.at_plot(r, c)
+            ok = A.drainer(gs, player, eco, r, c)
+            mem_apres = eco.marais_memory.at_plot(r, c)
+            return bilan(ok, cost, 0.0,
+                         f"drainé ({r},{c}) : flaque {lame_avant:.2f} → 0.00, "
+                         f"marais {mem_avant:.2f} → {mem_apres:.2f}" if ok
+                         else "Vigueur insuffisante — rien drainé")
+
         # Structures posables & compostage (⑤, protocole 0.3.5 ; ruche ⑥ §H/§I) :
         # routage délégué au module `structures_route` (garde ce routeur court).
         # Poser désigne un PLOT {r,c}, les gestes sur structure existante la

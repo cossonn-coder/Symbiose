@@ -537,7 +537,25 @@ from __future__ import annotations
 #       BASE (mains nues, amorçables sans outil). No-op golden (set jamais matérialisé
 #       hors joueur). AUCUN verbe neuf : les 5 verbes de la vue (`acheter_outil`/
 #       `acheter_materiau`/`pincer`/`arracher`/`glaner`) existaient déjà (01-03).
-ENGINE_VERSION = "0.5.34"
+# 0.5.35 (hydrologie & marécages ⑦, gestes de terrassement) : DEUX verbes neufs à la
+#       commande `action`, gestes sur le MILIEU au PLOT {tile, r, c} (patron
+#       `grelinette`), coûteux en Vigueur et EVENT-DRIVEN (hors tick → golden neutre).
+#       `creuser` (coût ÉLEVÉ, technique `terrassement`+`bêche`) : `altitude ← max(0,
+#       altitude − CREUSER_DELTA)` (le JOUEUR façonne une CUVETTE → au ruissellement ②
+#       l'eau y converge, mare émergente) + `microbiome −= BECHAGE_MICROBIOME_MALUS`
+#       (retourner la terre perturbe le sol, comme `becher`). `drainer` (coût MODÉRÉ) :
+#       `eau_surface ← 0` (vide la flaque) + `marais_memory *= 1 − DRAINER_ASSECHE`
+#       (assèchement forcé — répété, la mémoire repasse sous MARAIS_OFF et l'état marais
+#       se lève au `tick_marais` ③). Les façades `A.creuser`/`A.drainer` font foi (coût,
+#       bornes des GridField altitude≥0/microbiome≥0/eau_surface≥0/marais_memory≥0).
+#       `altitude` cesse d'être purement déterministe : creuser la modifie (hors tick).
+#       Les 2 gestes rejoignent `GESTES_BASE` (rustiques à la bêche, dès le 1ᵉ avatar) →
+#       palette Godot les propose. PURE extension (gestes event-driven, opt-in joueur,
+#       hors tick) → golden INTACT (le smoke est une succession sans joueur, ces verbes
+#       ne sont jamais appelés). Un binaire pré-0.5.35 répond « verbe inconnu » à
+#       `creuser`/`drainer` (tolérance côté vue, comme tous les bumps précédents). VUE C#
+#       (relief creusé, flaque/marais drainés) = tronçon ⑧.
+ENGINE_VERSION = "0.5.35"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les
