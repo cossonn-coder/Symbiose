@@ -72,13 +72,23 @@ def qi_local(plant, eco) -> float:
     plots = plant.root_plots or [plant.plot_foyer]
     total = 0.0
     ph_sum = 0.0
+    # FAIM D'AZOTE NEUTRALISÉE pour la carnivore (hydrologie & marécages ⑥) : son
+    # azote vient des PROIES (le puits `_tick_carnivore` sur `moustique`), pas du sol
+    # → le N édaphique ne la LIMITE plus. On retire donc N de la loi de Liebig pour
+    # une espèce `carnivore` : le minimum ne porte que sur P et K (qui restent
+    # limitants → aucun bonus de vitesse, philo #1, elle SURVIT là où les autres
+    # carencent en N, elle ne pousse pas plus vite). Read-only, aucun dépôt d'azote
+    # dans le sol (son N est INTERNE → ne profite pas aux voisines). NEUTRE : par
+    # défaut `carnivore=False` → minimum N/P/K inchangé (aucune carnivore au smoke).
+    carnivore = getattr(plant.plant_class, "carnivore", False)
     for (r, c) in plots:
         # ③ MYCORHIZE (miroir de `plant_uptake`) : là où le réseau touche la racine,
         # le P EFFECTIVEMENT prélevable est amplifié (P SEULEMENT). La façade doit
         # suivre l'uptake réel sinon la vigueur perçue ment — mais c'est une LECTURE,
         # aucune mutation de champ (read-only, cf. en-tête module).
         p_eff = eco.p.at_plot(r, c) * (1.0 + MYCO_P_BONUS * eco.mycelium.at_plot(r, c))
-        nutri = min(eco.n.at_plot(r, c), p_eff, eco.k.at_plot(r, c))
+        nutri = (min(p_eff, eco.k.at_plot(r, c)) if carnivore
+                 else min(eco.n.at_plot(r, c), p_eff, eco.k.at_plot(r, c)))
         fert = min(1.0, nutri / FIELD_NORM)
         micro = min(1.0, eco.microbiome.at_plot(r, c) / MICROBE_EFFECT_REF)
         total += fert * (1.0 + micro * UPTAKE_MICRO_BONUS)

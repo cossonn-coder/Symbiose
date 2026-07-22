@@ -301,14 +301,71 @@ humidité) pour éviter le biais d'ordre de parcours (sinon direction privilégi
   `tests/{test_encyclopedie.py (count 45), test_pages.py (count 35)}`.
   **NON commit** (orchestrateur commit). C# NON touché (vue guilde = ⑧).
 
+## Avancement ⑥ (drosera carnivore : puits → moustique) — FAIT le 2026-07-22
+- **DROSERA** (`plants/species/sauvages.py` `class Drosera(Droseraceae)`, catalogue
+  `"drosera"`, PLANT_CATALOGUE) : 1ᵉʳ végétal-prédateur. Famille NEUVE `Droseraceae`
+  (INERTE au repos, `family_effects=[]`, patron Sphagnaceae) ajoutée à `familles.py`
+  + exportée (`base/__init__.py`, `species/__init__.py`). Acidophile stricte (ph_opt
+  4.2, comme la sphaigne), `asphyxie_tolerance_base=3.0`, rosette `tapis` strate sol,
+  petite fleur entomophile faible. `archetype=None` (hors WEED_CATALOGUE).
+- **Attribut d'espèce NEUF `carnivore: bool = False`** (PlantBase, `familles.py`),
+  littéral seul (aucun import → règle de couches). Arme DEUX mécaniques :
+- **(1) PUITS → `moustique`** : mixin NEUF `sim/engine/carnivore.py` (`CarnivoreMixin`,
+  25 LDC), constante LOCALE `CARNIVORE_CAPTURE=0.20`. `_tick_carnivore` : pour chaque
+  Drosera vivante, retire `CARNIVORE_CAPTURE × densité` de `moustique` sur ses
+  `foliar_plots` (borné ≥ 0 par le clamp de PopulationField, zéro RNG). Câblé en
+  **13b-ter** dans `boucle.py`, JUSTE APRÈS `tick_populations` (moustique du tick à
+  jour) — hook DISTINCT du registre faune→faune (kickoff). No-op strict sans champ
+  `moustique`. Émet 🪰 UNE fois par plante (drapeau transient `a_capture`, hors
+  `_PLANT_ATTRS` → golden NEUTRE) = 1ʳᵉ capture au ledger des voix.
+- **(2) FAIM D'AZOTE NEUTRALISÉE** : dans `sim/vigueur_plante.qi_local` (LECTURE,
+  read-only), une espèce `carnivore` retire N de la loi de Liebig → le minimum ne
+  porte que sur P/K (son azote vient des proies, pas du sol). Elle SURVIT sur tourbe
+  pauvre en N là où une herbacée carence, SANS pousser plus vite (P/K restent
+  limitants, philo #1). Aucun dépôt d'azote au sol (N interne → ne profite pas aux
+  voisines). Défaut `carnivore=False` → minimum N/P/K inchangé (golden NEUTRE).
+- **Vérif fonctionnelle** (banc jetable) : puits ⇒ moustique baisse sur les plots
+  foliaires + log une seule fois ; N-escape ⇒ sur sol N=0.001/P=K=0.5, `qi_local`
+  drosera=0.167 (survit) vs ortie=0.0 (carence).
+- **5 VOIX** : encyclopédie (fiche 3 niveaux `drosera`, `encyclopedie_corpus.py`,
+  count 45→46) ; carnet (concept NEUF `carnivorie` : `CONCEPT_DE[("carnivorie",None)]`
+  + gabarits descriptif/interprétatif) ; événements (parseur `evenements.py` : regex
+  `_RE_CAPTURE` sur 🪰 → `Evenement("carnivorie",…,espece="drosera")`) ; page secrète
+  **P36** « Le rossolis qui chasse » (`pages_corpus.py`, voix E sorcières, concept
+  `carnivorie`, robinet `fouille`) ; magazine AUTO (data-driven par famille → drosera
+  offerte au palier 3 Droseraceae, aucun code).
+- **Golden écolo INCHANGÉ** `57c166d8…` (aucune Drosera au smoke ⇒ hook inerte, puits
+  jamais armé, branche N-escape jamais prise, `a_capture` hors digest). Golden
+  POPULATION INCHANGÉ `cc886bdd…`.
+- **Tests ciblés VERTS** : `test_golden` (hash identique), `test_population` (hash
+  `cc886bdd…` identique + 3 checks faune de mare), `test_pages` 63/63 (P36),
+  `test_carnet` 19/19, `test_evenements` 20/20, `test_maitrise_detection` 20/20 (le
+  `_evenements` historique intact), `test_faune_dediee` vert, `test_encyclopedie`
+  count 46 + alignement OK (2 FAIL `geste` arracher/glaner/pincer = PRÉEXISTANTS,
+  vérifiés `git stash`). `test_sim_server` 266/270 = échecs BIT-IDENTIQUES avant/après
+  (`git stash`) → 100 % préexistants (dérive version + fruit). `test_epaisseur_500ans`
+  NON lancé (interdit).
+- **Taille** (LDC pur, `tools/compte_ldc.py`) : carnivore.py 25 🟢, vigueur_plante.py
+  41 🟢, evenements.py 140 🟢, carnet.py 156 🟢, familles.py 269 🟢. ⚠️ **sauvages.py
+  = 338 LDC** (bande vigilance 300–400) — responsabilité unique conservée (spontanées
+  sauvages), mais à SURVEILLER / candidate au `/refactor`.
+- **Fichiers touchés** : `plants/base/{familles.py, __init__.py, instance.py
+  (a_capture)}`, `plants/{catalogue.py}`, `plants/species/{sauvages.py, __init__.py}`,
+  `sim/engine/{carnivore.py (NEUF), boucle.py}`, `sim/vigueur_plante.py`,
+  `sim/evenements.py`, `sim/carnet.py`, `sim/{encyclopedie_corpus.py, pages_corpus.py}`,
+  `tests/{test_encyclopedie.py (count 46), test_pages.py (count 36)}`.
+  **NON commit** (orchestrateur commit). C# NON touché (vue guilde/carnivore = ⑧).
+
 ## §REPRISE
 **① CLOS** (altitude). **③ CLOS** (marécage). **④ CLOS** (faune de mare). **⑤ CLOS**
-(aulne Betulaceae fixe-N actinorhizien `asphyxie_tolerance_base=3.0` + sphaigne
-Sphagnaceae ingénieur : 3 flux acidif./rétention/tourbe `mousse`, `asphyxie_tolerance_
-base=4.0` ; 5 voix dont P35 ; golden écolo INTACT `57c166d8…`, population INTACT
-`cc886bdd…`). **PROCHAIN = ⑥** (`06_carnivore.md`) — Drosera + PUITS→`moustique`
-(1er végétal-prédateur, lira le champ `moustique` créé au ④) + voix ; vise NEUTRE hors
-smoke. ⑦ gestes `creuser`/`drainer`, ⑧ pur-vue F5.
+(aulne + sphaigne). **⑥ CLOS** (Drosera Droseraceae : PUITS `_tick_carnivore` →
+`moustique` sur foliar_plots + faim d'azote neutralisée dans `qi_local` [N hors
+Liebig] ; attribut `carnivore` + drapeau `a_capture` ; 5 voix dont concept NEUF
+`carnivorie` + P36 ; golden écolo INTACT `57c166d8…`, population INTACT `cc886bdd…`).
+**PROCHAIN = ⑦** (`07_gestes_creuser_drainer.md`) — gestes `creuser` (abaisse
+`altitude`, cuvette) / `drainer` (évacue `eau_surface` + abaisse `marais_memory`),
+event-driven hors tick → vise NEUTRE. Puis ⑧ pur-vue F5 (relief, flaque, marais,
+guilde, gestes).
 **⚠️ Bugs préexistants NON traités ici** : `test_sim_server` (dérive version) +
 `test_senescence` + `test_encyclopedie` (gestes sans fiche) + banc édaphique `carence`
 — tous orthogonaux à l'hydrologie, à trancher avec Nico hors sprint.

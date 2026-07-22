@@ -9,7 +9,7 @@ from plants.species import (Tomato, Pepper, Bean, Clover, Sunflower, Basil,
                             Thyme, Lavender, Mint,
                             Carrot, Zucchini, CornSalad, Strawberry, Nettle,
                             Vaccinium, Raspberry, RunningBamboo, SweetViolet, Garlic,
-                            Ivy, Jasmine, Wheat, Hemp, Rye, Mugwort, Sphagnum,
+                            Ivy, Jasmine, Wheat, Hemp, Rye, Mugwort, Sphagnum, Drosera,
                             BursaPastoris, MedicagoLupulina, PoaAnnua, Taraxacum)
 from plants.perennials import (Fig, AppleTree, CherryTree, WalnutTree, OakTree,
                                FirTree, BeechTree, BirchTree, HornbeamTree, Alder)
@@ -67,6 +67,10 @@ PLANT_CATALOGUE: dict[str, type] = {
     # Ingénieur de tourbière (sprint HYDROLOGIE & MARÉCAGES ⑤) — Sphaigne
     # (Sphagnaceae, mousse) : acidifie + retient l'eau + nécromasse-tourbe.
     "sphaigne":  Sphagnum,
+    # Végétal-prédateur de tourbière (sprint HYDROLOGIE & MARÉCAGES ⑥) — Rossolis
+    # (Droseraceae, drosera) : puits sur le moustique + azote des proies (échappe
+    # à la faim d'azote → prospère sur tourbe acide pauvre).
+    "drosera":   Drosera,
     # Adventices / succession écologique
     "bourse_pasteur": BursaPastoris,
     "minette":        MedicagoLupulina,

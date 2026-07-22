@@ -65,6 +65,9 @@ _RE_ABSCISSION = re.compile(r"🍂\s+Abscission\s+(.+?)@")  # 🍂 Abscission <n
 # La cause de l'événement = le MODE clonal (stolon/rhizome/drageon) → le carnet
 # distingue le tapissage stolonifère de la colonie rhizomateuse.
 _RE_RAMET = re.compile(r"🌿\s+Ramet\s+\((\w+)\)\s*:\s*(.+?)\s+@")
+# Capture carnivore (hydrologie & marécages ⑥) : 🪰 Capture <nom>@(r, c) → … . La
+# 1ʳᵉ capture d'une plante est consignée UNE fois (drapeau moteur `a_capture`).
+_RE_CAPTURE = re.compile(r"🪰\s+Capture\s+(.+?)@")
 
 
 def _raison_stagnation(line: str) -> str | None:
@@ -230,6 +233,14 @@ def evenements(log: list[str]) -> list[Evenement]:
             m = _RE_ABSCISSION.search(line)
             if m:
                 out.append(Evenement("abscission", tile_id, pos,
+                                     _CLE_DE_NOM.get(m.group(1).strip()), None))
+        elif "🪰" in line and "Capture" in line:
+            # Capture carnivore (hydrologie & marécages ⑥) : la Drosera prélève la
+            # nuée de moustiques → azote interne. Le carnet gate ce fait sous le
+            # concept « carnivorie » (le végétal qui chasse pour son azote).
+            m = _RE_CAPTURE.search(line)
+            if m:
+                out.append(Evenement("carnivorie", tile_id, pos,
                                      _CLE_DE_NOM.get(m.group(1).strip()), None))
         elif "🌿" in line and "Ramet" in line:
             # Émission clonale (luxuriance ②/④) : espèce = groupe 2, cause = mode

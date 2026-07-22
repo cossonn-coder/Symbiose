@@ -19,7 +19,8 @@ Toutes HORS scénario golden (jamais semées) → dérive NEUTRE.
 
 from __future__ import annotations
 from plants.base import (GrowthStage, Urticaceae, Ericaceae, Poaceae,
-                         Violaceae, Asteraceae, Sphagnaceae, PlantBase)
+                         Violaceae, Asteraceae, Sphagnaceae, Droseraceae,
+                         PlantBase)
 
 
 class Nettle(Urticaceae):
@@ -443,5 +444,74 @@ class Sphagnum(Sphagnaceae):
             name="tapis", duration_weeks=0, strate="sol",
             vigueur_cost=0, canopy_height=6, canopy_radius=25,
             root_radius=25, effects=[],
+        ),
+    ]
+
+
+class Drosera(Droseraceae):
+    """
+    Drosera rotundifolia — Rossolis / Drosera (Droseraceae). Le PREMIER
+    VÉGÉTAL-PRÉDATEUR du jeu (sprint HYDROLOGIE & MARÉCAGES ⑥) : une petite rosette
+    plaquée des TOURBIÈRES ACIDES, dont les feuilles portent des poils rouges gluants
+    qui capturent les insectes. Sa niche = le marais acide et pauvre en azote — là où
+    la sphaigne (⑤) a fabriqué la tourbe. Deux traits la définissent :
+
+      (a) `carnivore=True` : le hook `sim/engine/carnivore.py` (après `tick_populations`)
+          PRÉLÈVE une fraction de la densité `moustique` sur son empreinte foliaire →
+          la nuée se raréfie autour d'elle (flux réel, observable, philo #2), et son
+          azote vient des proies → elle ÉCHAPPE à la faim d'azote édaphique (le sol
+          pauvre ne la bride plus sur N). Elle SURVIT là où une herbacée normale
+          carence, sans pousser plus vite (pas de bonus, philo #1).
+      (b) ACIDOPHILE STRICTE (`ph_opt=4.2`, comme la sphaigne) + hyper-tolérante à
+          l'asphyxie (`asphyxie_tolerance_base=3.0`, ses pieds baignent dans la tourbe
+          gorgée).
+
+    Petite fleur blanche entomophile FAIBLE (`bloom_forcing_gdd` estival, rosette
+    minuscule → une seule table discrète). `archetype=None` → hors WEED_CATALOGUE
+    (posée/acquise, jamais tirée par la succession). HORS scénario smoke (jamais
+    posée) → golden NEUTRE.
+    """
+    genus = "Drosera"
+    name = "Rossolis"
+    rarity = "Ancienne"                # curiosité rare des tourbières
+    keywords = ["Carnivore", "Tourbière", "Acidophile", "Zone humide"]
+    silhouette = "tapis"               # rosette plaquée au sol (pur descripteur rendu)
+    resilience_base = 1.0              # intermédiaire — petite plante spécialiste, pas coriace
+    resistance_ecrasement  = 0.4       # rosette tendre, glu fragile
+    stimulation_ecrasement = 0.2
+    carnivore = True                   # végétal-prédateur (puits moustique + N interne, ⑥)
+    ph_opt = 4.2                       # ACIDOPHILE STRICTE (tourbière), comme la sphaigne
+    ph_tol = 1.0
+    asphyxie_tolerance_base = 3.0      # pieds dans la tourbe gorgée — increvable au sol noyé
+    space_tolerance_weeks = 3
+    life_cycle = "perennial"
+    winter_strategy = "dormant"        # rosette d'hiver (hibernacle) au ras du sol
+    archetype = None                   # PAS une adventice de succession (hors WEED_CATALOGUE)
+    t_germ_opt = 11.0                  # milieu froid et humide (tourbière)
+    t_germ_tol = 10.0
+    bloom_forcing_gdd = 60.0           # hampe florale estivale (~S22) — table discrète
+    bloom_duration = 4
+    foliage_density = 0.20             # minuscule rosette : ombre négligeable
+    longevity_years = 8
+    reproduction_rate = 0.04           # graines fines, se ressème peu
+    growth_stages = [
+        GrowthStage(
+            name="semis", duration_weeks=3, strate="sol",
+            vigueur_cost=0, effects=[], canopy_height=1,
+        ),
+        # Rosette adulte fleurie (vivace, duration 0). Empreinte MINIMALE (rosette
+        # plaquée) : la hampe florale porte une petite table entomophile.
+        GrowthStage(
+            name="rosette", duration_weeks=0, strate="sol",
+            vigueur_cost=0, canopy_height=10, canopy_radius=12,
+            root_radius=12,
+            effects=[
+                {
+                    "type": "floraison",
+                    "action": "add_rondelle", "variable": "pollinisateur",
+                    "amount": 1,
+                    "description": "Hampe florale blanche discrète — table entomophile faible"
+                },
+            ],
         ),
     ]

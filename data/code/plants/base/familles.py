@@ -134,6 +134,22 @@ class PlantBase(ABC):
     # n'est LU par personne au repos → golden strictement inchangé. Littéral seul,
     # aucun import (règle de couches : `plants` est la couche la plus basse).
     asphyxie_tolerance_base: float = 1.0
+    # `carnivore` (sprint HYDROLOGIE & MARÉCAGES ⑥) : marque un VÉGÉTAL-PRÉDATEUR
+    # (drosera/rossolis). Deux conséquences, toutes deux GATÉES par ce drapeau donc
+    # NEUTRES pour toute espèce non marquée (défaut False → aucune drosera dans le
+    # smoke → golden strictement inchangé) :
+    #   (a) PUITS sur la faune de mare : un hook dédié (`sim/engine/carnivore.py`,
+    #       après `tick_populations`) prélève une fraction `CARNIVORE_CAPTURE` de la
+    #       densité `moustique` sur les `foliar_plots` de chaque drosera vivante — un
+    #       FLUX réel (la nuée se raréfie, observable), jamais un gain chiffré (philo
+    #       #1/#2). Le moustique reste borné ≥ 0.
+    #   (b) N INTERNE : la plante tire son azote de ses proies, pas du sol → elle
+    #       ÉCHAPPE à la faim d'azote édaphique (le `min(besoin, dispo_stock)` de
+    #       Liebig ne la bride PAS sur N, cf. `plant_uptake`). Elle SURVIT là où les
+    #       autres carencent — SANS pousser plus vite (son besoin N reste plafonné par
+    #       le stade : aucun bonus de croissance arbitraire).
+    # Littéral seul, aucun import (règle de couches : `plants` est la couche la plus basse).
+    carnivore: bool = False
     temp_min_growth: float = 5.0         # °C — seuil de croissance (météo 02) ; en deçà, stagnation. Extensible par espèce.
     # Fenêtre pH d'espèce (sprint physico-chimie, tronçon ⑤). Cloche d'acidité
     # `bell(ph, ph_opt, ph_tol)` lue en germination/succession (porte) ET en
@@ -623,4 +639,22 @@ class Sphagnaceae(PlantBase):
     family = "Sphagnaceae"
     space_tolerance_weeks = 5        # tapis lent, tolère bien le voisinage
     fungal_susceptibility = 0.2      # nécromasse antiseptique (phénols) → peu attaquée
+    family_effects = []
+
+
+class Droseraceae(PlantBase):
+    """
+    Famille : Droséracées (plantes carnivores à glu, sprint HYDROLOGIE & MARÉCAGES ⑥).
+    Herbacées des TOURBIÈRES ACIDES et pauvres en azote : leur signature n'est PAS
+    un family_effect (aucun flux de sol injecté) mais leur TRAIT `carnivore` (porté à
+    l'espèce, `Drosera`) — elles piègent des insectes et en tirent leur azote, ce qui
+    les affranchit de la faim d'azote édaphique. Famille INERTE au repos (aucun
+    family_effect), à la manière d'Ericaceae dont la fenêtre pH fait tout le travail :
+    toute la mécanique carnivore vit au niveau ESPÈCE + dans le hook `sim/engine/
+    carnivore.py`. Nommer la famille garde le catalogue cohérent (une espèce = une
+    famille botanique nommée). Golden NEUTRE : aucune droséracée dans le smoke.
+    """
+    family = "Droseraceae"
+    space_tolerance_weeks = 3        # petite rosette fragile, réagit vite au voisinage
+    fungal_susceptibility = 0.3
     family_effects = []

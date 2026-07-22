@@ -48,6 +48,7 @@ from .decompo import DecompoMixin
 from .floraison import FloraisonMixin
 from .butineurs import ButineurMixin
 from .anemophilie import AnemophilieMixin
+from .carnivore import CarnivoreMixin
 
 # Pont récolte → banque-joueur (D17) : classe → clé catalogue (inverse).
 _SPECIES_KEY = {cls: key for key, cls in PLANT_CATALOGUE.items()}
@@ -55,7 +56,7 @@ _SPECIES_KEY = {cls: key for key, cls in PLANT_CATALOGUE.items()}
 
 @dataclass
 class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
-             ButineurMixin, AnemophilieMixin):
+             ButineurMixin, AnemophilieMixin, CarnivoreMixin):
     game_state: dict
 
     def __post_init__(self):
@@ -413,6 +414,16 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
             # services ne les LIT encore (câblage = D31.2). Aucun log produit
             # → golden INTACT.
             eco.tick_populations(tile, tile.plants, week_in_year)
+
+            # 13b-ter. Puits carnivore → `moustique` (hydrologie & marécages ⑥) —
+            # APRÈS tick_populations (le champ `moustique` du tick est à jour) : la
+            # Drosera prélève une fraction de la nuée sur son empreinte foliaire → la
+            # faune de mare se raréfie localement (flux plante→faune, philo #2), et son
+            # azote « interne » (proies) la libère de la faim d'azote via `qi_local`
+            # (lecture). Premier couplage PLANTE → champ FAUNE. NEUTRE : aucune Drosera
+            # au smoke → boucle vide → digest inchangé.
+            clog = self._tick_carnivore(tile, eco)
+            if clog: log += clog
 
             # 13b-bis. Épaisseur de sol visible (D57, ①a) — APRÈS tous les
             # consommateurs de MO du tick (décompo 4, structures 4b, mycélium 4e,

@@ -513,6 +513,23 @@ FICHES: dict[str, dict[int, str]] = {
            "s'installe, elle ferme la porte aux plantes de sol riche et l'ouvre à un "
            "tout autre cortège.",
     },
+    "drosera": {
+        1: "Minuscule rosette rouge plaquée au sol, aux feuilles rondes hérissées de "
+           "poils luisants coiffés d'une gouttelette gluante ; au-dessus, une frêle "
+           "hampe portant de petites fleurs blanches.",
+        2: "Petite carnivore des tourbières acides : ses poils gluants CAPTURENT les "
+           "insectes (moustiques, moucherons) qu'elle digère. C'est ainsi qu'elle se "
+           "procure l'AZOTE que le sol tourbeux, très pauvre, ne lui offre pas — elle "
+           "chasse au lieu de puiser. Acidophile stricte, elle vit les pieds dans la "
+           "tourbe gorgée que la sphaigne a fabriquée.",
+        3: "Végétal-prédateur : en prélevant la nuée de moustiques au-dessus d'elle, "
+           "elle RARÉFIE la faune de mare autour de son tapis — un flux insectes→azote "
+           "qui l'AFFRANCHIT de la faim d'azote. Elle prospère précisément là où toute "
+           "herbacée ordinaire dépérirait, faute d'azote, sur la tourbe acide et "
+           "maigre : sa niche est un manque que sa chasse comble. Là où le rossolis "
+           "abonde, l'eau dort acide et pauvre depuis longtemps — il SIGNE la "
+           "tourbière mûre.",
+    },
 }
 
 

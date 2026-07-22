@@ -161,6 +161,12 @@ class PlantInstance:
     # arme la cohorte suivante. Remplace le rendez-vous global FRUIT_NOUAISON_WEEK.
     # Hors `_PLANT_ATTRS` du golden → golden NEUTRE.
     a_fleuri: bool = False
+    # Marque « a déjà capturé au moins une fois » (végétal-prédateur, sprint
+    # HYDROLOGIE & MARÉCAGES ⑥). Reste False sur toute plante NON carnivore (seule la
+    # drosera l'arme, au 1er prélèvement réel de moustique). Sert au hook carnivore à
+    # ne JOURNALISER la capture qu'UNE FOIS (marqueur 🪰 → ledger, voix carnet/
+    # événements). Petit bool, hors `_PLANT_ATTRS` du golden → golden NEUTRE.
+    a_capture: bool = False
     # Support de grimpe accroché (D49 volet A, CONCEPTION_GRIMPANTES §3). None =
     # grimpante LIBRE (non accrochée) ou non-grimpante → au-delà de sa
     # `hauteur_autoportante` l'apex retombe (affalement, tronçon ①). L'accroche à

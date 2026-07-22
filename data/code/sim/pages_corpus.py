@@ -272,6 +272,18 @@ _ENTREES = [
      "défaire — et c'est ainsi que naît la tourbe, un pouce par cent ans, mémoire "
      "empilée de tout ce qui a bu à cette eau. Qui assèche une tourbière ne détruit "
      "pas une flaque : il ouvre un livre que la mousse écrivait depuis mille ans."),
+
+    # --- Page du ROSSOLIS / carnivore (sprint HYDROLOGIE & MARÉCAGES ⑥) — lore ----
+    ("P36", "E", "carnivorie", 3, "fouille",
+     "On l'appelle rossolis, la rosée du soleil, car ses feuilles perlent au matin "
+     "d'une glu qui brille comme mille larmes — et c'est un piège. La mouche qui s'y "
+     "pose ne repart plus : la feuille se referme lentement sur elle et la boit. Les "
+     "vieilles cueillaient cette herbe des tourbières pour les poitrines prises et "
+     "les verrues, mais s'en méfiaient : une plante qui se nourrit de chair n'est "
+     "pas tout à fait une plante. Elle prospère pourtant là où rien d'autre ne veut "
+     "pousser — dans l'acide, dans le vide, dans la faim. Là où la terre ne donne "
+     "pas d'azote, le rossolis le prend au ciel, une aile après l'autre. C'est le "
+     "secret des lieux pauvres : qui ne peut puiser apprend à chasser."),
 ]
 
 # Titres recopiés du doc §7 (gras de chaque entrée), indexés par id — gardés à
@@ -312,6 +324,7 @@ _TITRES = {
     "P33": "Le seigle qui désherbe en dormant",
     "P34": "Ne comble pas la flaque",
     "P35": "La mousse qui garde tout",
+    "P36": "Le rossolis qui chasse",
 }
 
 # `PAGES` = dict id → fiche complète. `ORDRE` = ids dans l'ordre du corpus (tri

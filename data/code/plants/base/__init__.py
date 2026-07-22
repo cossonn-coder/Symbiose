@@ -26,7 +26,7 @@ from .instance import PlantInstance, ConflictNotification
 from .familles import (PlantBase,
                        Solanaceae, Fabaceae, Asteraceae, Lamiaceae, Poaceae,
                        Urticaceae, Amaryllidaceae, Ericaceae, Violaceae,
-                       Sphagnaceae)
+                       Sphagnaceae, Droseraceae)
 
 __all__ = [
     "_plots_in_radius", "STRATE_DEFAULTS", "STRATE_SHADE_TOLERANCE", "PROC_ROOT_RATIO",
@@ -35,4 +35,5 @@ __all__ = [
     "PlantInstance", "ConflictNotification", "PlantBase",
     "Solanaceae", "Fabaceae", "Asteraceae", "Lamiaceae", "Poaceae",
     "Urticaceae", "Amaryllidaceae", "Ericaceae", "Violaceae", "Sphagnaceae",
+    "Droseraceae",
 ]

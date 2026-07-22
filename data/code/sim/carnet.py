@@ -104,6 +104,12 @@ CONCEPT_DE: dict[tuple[str, str | None], str] = {
     # litière qui s'amasse au pied d'un abri amorce l'humus de demain), gaté par le
     # concept « décomposition » comme l'abscission.
     ("transport_litiere", None):  "décomposition",
+    # Carnivorie végétale (hydrologie & marécages ⑥) : la Drosera prélève la nuée
+    # de moustiques → azote INTERNE (elle échappe à la faim d'azote). Concept NEUF
+    # « carnivorie » (gate le registre du carnet ; palier défaut → descriptif tant
+    # qu'il n'est pas maîtrisé). Le joueur y apprend le flux insectes→azote et la
+    # niche du manque comblé par la chasse (§5, doc voix).
+    ("carnivorie", None):         "carnivorie",
 }
 
 # Concept de la « levée (reprise) » : doc §5.0 dit « = la cause (eau / lumière /
@@ -203,6 +209,13 @@ GABARIT: dict[tuple[str, str | None, str], str] = {
     # piège la matière, qui s'y décompose et enrichit le coin).
     ("transport_litiere", None, _D): "Après le coup de vent {l}, les feuilles mortes s'étaient amassées le long de l'abri.",
     ("transport_litiere", None, _I): "Le vent {l} a charrié la litière jusqu'à l'abri : là où il ralentit, la matière s'amasse et nourrira ce coin de terre.",
+
+    # Carnivorie végétale (hydrologie & marécages ⑥). Descriptif = ce qu'on VOIT
+    # (la nuée qui se creuse au-dessus du rossolis, philo #5) ; interprétatif = la
+    # cause comprise au seuil « carnivorie » (le flux insectes→azote qui affranchit
+    # la plante de la faim d'azote sur la tourbe pauvre).
+    ("carnivorie", None, _D): "La nuée de moustiques se raréfie au-dessus de {e} {l}.",
+    ("carnivorie", None, _I): "{e} chasse {l} : ses feuilles gluantes piègent les insectes, et cet azote de proies la nourrit là où le sol tourbeux, trop pauvre, n'offre rien — elle mange ce qu'elle ne peut puiser.",
 }
 
 # Gabarit générique quand la paire (kind, cause) n'a pas de texte dédié (§5.0 ne
