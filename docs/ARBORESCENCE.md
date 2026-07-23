@@ -122,6 +122,7 @@ dans la carte : leur nom est déductible du dossier.
 | `gestes/` | `conception_ecrasement.md`, `conception_palette_gestes.md`, `conception_planter_arroser.md` |
 | `outils/` | `conception_acquisition_outils.md`, `conception_pots_bacs_substrats.md` |
 | `automate/` | `conception_jardinier_automate.md` |
+| `interface/` | `conception_fenetrage_ui.md` |
 
 ### `narration/` — voix et dispositifs informationnels
 

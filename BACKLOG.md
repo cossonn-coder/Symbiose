@@ -37,6 +37,7 @@
 | `faune/vie_macro` | [vie macroscopique](docs/faune/vie_macro/backlog_vie_macro.md) |
 | `joueur/automate` | [jardinier automate](docs/joueur/automate/backlog_automate.md) |
 | `joueur/gestes` | [gestes](docs/joueur/gestes/backlog_gestes.md) |
+| `joueur/interface` | [fenêtrage UI](docs/joueur/interface/backlog_interface.md) |
 | `joueur/maitrise` | [maîtrise](docs/joueur/maitrise/backlog_maitrise.md) |
 | `joueur/outils` | [outils & conteneurs](docs/joueur/outils/backlog_outils.md) |
 | `joueur/vigueur` | [Vigueur](docs/joueur/vigueur/backlog_vigueur.md) |
