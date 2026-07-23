@@ -1,35 +1,32 @@
-// SYMBIOSE — WorldView.Hub.cs (partial de WorldView, sprint UI voix ②)
-// La MAISON NORMANDE comme HUB VIVANT cliquable (décision Q2). Un clic sur
-// l'empreinte de la maison ouvre un petit menu des 5 fonctions du hub :
-// Atelier · Semis intérieur · Magazine · Carnet · Foyer (CLAUDE.md). Ici, 4
-// entrées VOIX (Carnet / Encyclopédie / Magazine / Pages du grenier) ouvrent un
-// VoicePanel ; les 3 entrées non-voix (Atelier / Semis intérieur / Foyer) sont
-// affichées mais GRISÉES « à venir » (micro-décision A → dette D54). On
-// n'invente pas leur comportement.
+// SYMBIOSE — WorldView.Hub.cs (partial de WorldView ; refactor fenêtrage UI T3)
+// La MAISON NORMANDE comme HUB VIVANT cliquable. Depuis T3, le clic maison n'ouvre
+// PLUS un menu intermédiaire des 5 fonctions (A8) : il ouvre DIRECTEMENT le
+// conteneur de consultation à onglets (`ConsultationPanel`), positionné au tiers
+// droit (D59 absorbée), sur l'onglet Carnet. Les surfaces d'information (Carnet ·
+// Encyclopédie · Magazine · Pages · Atelier) sont des ONGLETS ; l'Automate s'ajoute
+// en dernier, DEV-GATED (touche A). Foyer / Semis intérieur redeviendront des
+// onglets à leur implémentation (A9 → dette D54) — pas d'onglet mort en v1.
 //
 // 📖 Pédagogie Godot/C# :
-//  - Détection du clic maison : on convertit la souris (espace caméra du
-//    SubViewport, via WorldMouseCanvas) en cm MONDE (ScreenToWorld), puis on
-//    teste l'appartenance au rectangle d'empreinte [_hx0,_hy0]→[_hx1,_hy1]. Pas
-//    besoin d'Area2D/collision : l'empreinte est un simple rectangle au sol.
-//  - Le menu est un CanvasLayer éphémère (comme le sélecteur ⑤) : il se libère
-//    au clic d'une entrée ou en cliquant à côté.
-//  - Button.Disabled = true grise le bouton ET l'inerte (aucun signal émis) —
-//    la façon native de dire « à venir » sans câbler de comportement.
+//  - Détection du clic maison : on convertit la souris en cm MONDE (ScreenToWorld)
+//    et on teste l'appartenance à la SILHOUETTE ÉCRAN du volume (empreinte + murs
+//    + faîte). Pas d'Area2D : géométrie pure, qui suit la rotation de vue (D35).
+//  - Chaque onglet est un `Control` (VoicePanel-dérivé ou AutomateContent) construit
+//    UNE fois puis confié au `TabContainer` : masqué/affiché, jamais reconstruit.
 //
-// INVARIANT « Godot bête » : ce partial ne fabrique aucun texte de voix. Il
-// route seulement vers le bon VoicePanel ; le contenu viendra du pont en ③④.
+// INVARIANT « Godot bête » : ce partial ne fabrique aucun texte de voix. Il route
+// vers le conteneur ; le contenu verbatim vient du pont dans chaque onglet.
 
 using Godot;
+using System.Collections.Generic;
 
 namespace Symbiose
 {
 	public partial class WorldView : Node2D
 	{
-		// Un seul menu / un seul panneau voix actifs à la fois (le clic maison
-		// route vers le bon contenu). Champs pour pouvoir les fermer/remplacer.
-		private CanvasLayer _hubMenu;
-		private VoicePanel _voicePanel;
+		// Un seul conteneur de consultation actif à la fois (le clic maison / la
+		// touche A route vers le bon onglet). Champ pour pouvoir le fermer/remplacer.
+		private ConsultationPanel _consultation;
 
 		// -------------------------------------------------------------------
 		// DÉTECTION DU CLIC MAISON
@@ -45,15 +42,12 @@ namespace Symbiose
 			// _house n'existe qu'une fois le monde construit (BuildHouse).
 			if (_house == null) return false;
 
-			// 📖 Picking iso : la maison est DESSINÉE comme un volume (empreinte
-			// au sol + murs qui montent + toit jusqu'au faîte, cf. BuildHouse).
-			// Tester l'empreinte au sol via ScreenToWorld(z=0) raterait tout clic
-			// sur les façades/toit (ils se reprojettent au sol PLUS AU NORD que
-			// l'empreinte → hors rectangle). On teste donc la SILHOUETTE ÉCRAN
-			// complète : enveloppe convexe des 4 coins au sol + leurs hauts de
-			// murs + le faîte. WorldToScreen applique déjà l'orientation → le
-			// test suit la rotation de vue (D35) sans effort. Généreux aux
-			// avant-toits, ce qui aide la visée.
+			// 📖 Picking iso : la maison est DESSINÉE comme un volume (empreinte au
+			// sol + murs + toit). Tester la seule empreinte au sol raterait les clics
+			// sur façades/toit (ils se reprojettent PLUS AU NORD). On teste donc la
+			// SILHOUETTE ÉCRAN complète : enveloppe convexe des 4 coins au sol + leurs
+			// hauts de murs + le faîte. WorldToScreen applique déjà l'orientation → le
+			// test suit la rotation de vue (D35). Généreux aux avant-toits (aide la visée).
 			Vector2 up   = new(0f, -_hWallCm * PxPerCmZ);
 			Vector2 apex = WorldToScreen((_hx0 + _hx1) / 2f, (_hy0 + _hy1) / 2f)
 						 - new Vector2(0f, _hHeightCm * PxPerCmZ);
@@ -71,121 +65,64 @@ namespace Symbiose
 		}
 
 		// -------------------------------------------------------------------
-		// MENU HUB — 5 fonctions (4 voix actives + Foyer/Atelier/Semis grisés)
+		// CONTENEUR DE CONSULTATION — onglets Carnet…Atelier (+ Automate dev-gated)
 		// -------------------------------------------------------------------
 
-		private void OuvrirHubMaison()
+		/// <summary>
+		/// Ouvre (ou ré-ouvre) le conteneur de consultation sur l'onglet nommé.
+		/// Reconstruit la fenêtre entière — bon marché : les contenus sont légers, et
+		/// seul le CHANGEMENT D'ONGLET reste sans reconstruction (perf, garanti par le
+		/// TabContainer). Un seul conteneur actif à la fois.
+		/// </summary>
+		private void OuvrirConsultation(string ongletInitial)
 		{
-			FermerHubMenu();   // jamais deux menus superposés
+			if (_consultation != null && IsInstanceValid(_consultation))
+				_consultation.Fermer();
 
-			_hubMenu = new CanvasLayer { Name = "HubMenu", Layer = 8 };
-			AddChild(_hubMenu);
-
-			// Voile qui referme le menu si on clique à côté (hors du panneau).
-			var voile = new ColorRect
+			// Onglets VOIX : chacun met la sim en PAUSE (on lit en pause, A2).
+			var onglets = new List<ConsultationPanel.Onglet>
 			{
-				Color = new Color(0f, 0f, 0f, 0.25f),
-				MouseFilter = Control.MouseFilterEnum.Stop,
+				OngletVoix("Carnet",       new CarnetPanel()),
+				OngletVoix("Encyclopédie", new EncyclopediePanel()),
+				OngletVoix("Magazine",     new MagazinePanel()),
+				OngletVoix("Pages",        new PagesPanel()),
+				OngletVoix("Atelier",      new AtelierPanel()),
 			};
-			voile.SetAnchorsPreset(Control.LayoutPreset.FullRect);
-			voile.GuiInput += ev =>
+
+			// Onglet AUTOMATE dev-gated (A6) : présent uniquement s'il a été branché
+			// (touche A). Il NE met PAS en pause (on regarde la sim jouer, A2). On le
+			// « seed » avec le dernier bloc connu pour éviter un onglet vide à l'ouverture.
+			if (_automateOn)
 			{
-				if (ev is InputEventMouseButton mb && mb.Pressed
-					&& mb.ButtonIndex == MouseButton.Left)
-					FermerHubMenu();
-			};
-			_hubMenu.AddChild(voile);
+				_automateContent = new AutomateContent();
+				_automateContent.Construire();
+				if (_automateBlock != null) _automateContent.Rendre(_automateBlock);
+				onglets.Add(new ConsultationPanel.Onglet("Automate", _automateContent, false));
+			}
 
-			var panneau = new PanelContainer();
-			panneau.SetAnchorsPreset(Control.LayoutPreset.Center);
-			panneau.CustomMinimumSize = new Vector2(280, 0);
-			_hubMenu.AddChild(panneau);
+			_consultation = new ConsultationPanel();
+			AddChild(_consultation);
+			_consultation.Ouvrir(onglets, IndexOnglet(onglets, ongletInitial),
+				onFerme: () => { _consultation = null; _automateContent = null; });
 
-			var vbox = new VBoxContainer();
-			panneau.AddChild(vbox);
-
-			vbox.AddChild(new Label
-			{
-				Text = "Maison",
-				HorizontalAlignment = HorizontalAlignment.Center,
-			});
-
-			// Entrées VOIX (actives) — chacune ouvre le VoicePanel adéquat. ③ a
-			// branché Carnet et Encyclopédie sur le pont ; Magazine / Pages
-			// restent des VoicePanel de base (« à venir ») jusqu'au tronçon ④.
-			AjouterEntreeVoix(vbox, "Carnet",       "Carnet",       "carnet");
-			AjouterEntreeVoix(vbox, "Encyclopédie", "Encyclopédie", "encyclopedie");
-			AjouterEntreeVoix(vbox, "Magazine",     "Magazine de botanique", "magazine");
-			AjouterEntreeVoix(vbox, "Pages du grenier", "Pages du grenier", "pages");
-
-			// Atelier (acquisition des moyens d'agir ④) : 5ᵉ fonction du hub, ACTIVE.
-			// Même patron que les voix (un VoicePanel spécialisé, AtelierPanel), mais
-			// c'est une VITRINE d'acquisition (outils + matériaux contre Vigueur), pas
-			// une voix narrative. Elle route par la même mécanique OuvrirVoicePanel.
-			AjouterEntreeVoix(vbox, "Atelier", "Atelier", "atelier");
-
-			// Entrées NON-VOIX restantes (grisées « à venir » → dette D54).
-			AjouterEntreeGrisee(vbox, "Semis intérieur");
-			AjouterEntreeGrisee(vbox, "Foyer");
-
-			GD.Print("[WorldView] hub-maison ouvert (5 fonctions, Atelier + 4 voix actives).");
+			GD.Print($"[WorldView] consultation ouverte (onglet {ongletInitial}).");
 		}
 
-		// Une entrée active : clic → ferme le menu, ouvre le VoicePanel de la
-		// voix (`fonction` sélectionne la spécialisation ; titre = libellé affiché).
-		private void AjouterEntreeVoix(VBoxContainer parent, string libelle,
-			string titre, string fonction)
+		// Construit un onglet VOIX : injecte le pont, bâtit le contenu (Remplir lit
+		// via Bridge), et le marque « met en pause ».
+		private ConsultationPanel.Onglet OngletVoix(string nom, VoicePanel contenu)
 		{
-			var b = new Button { Text = libelle };
-			b.Pressed += () =>
-			{
-				FermerHubMenu();
-				OuvrirVoicePanel(titre, fonction);
-			};
-			parent.AddChild(b);
+			contenu.InjecterPont(_bridge);
+			contenu.Construire();
+			return new ConsultationPanel.Onglet(nom, contenu, MetEnPause: true);
 		}
 
-		// Une entrée grisée : visible, inerte (aucun signal). « à venir » (D54).
-		private void AjouterEntreeGrisee(VBoxContainer parent, string libelle)
+		// Index de l'onglet nommé (défaut 0 = Carnet si introuvable).
+		private static int IndexOnglet(List<ConsultationPanel.Onglet> onglets, string nom)
 		{
-			parent.AddChild(new Button
-			{
-				Text = $"{libelle}  (à venir)",
-				Disabled = true,
-			});
-		}
-
-		private void FermerHubMenu()
-		{
-			if (_hubMenu == null) return;
-			_hubMenu.QueueFree();
-			_hubMenu = null;
-		}
-
-		// -------------------------------------------------------------------
-		// VOICE PANEL — un seul actif à la fois
-		// -------------------------------------------------------------------
-
-		private void OuvrirVoicePanel(string titre, string fonction)
-		{
-			if (_voicePanel != null && IsInstanceValid(_voicePanel))
-				_voicePanel.Fermer();
-
-			// Une voix = une spécialisation de VoicePanel (③ : Carnet /
-			// Encyclopédie ; ④ : Magazine / Pages). Le pont est injecté AVANT
-			// Ouvrir (les spécialisations lisent leur voix dès le peuplement).
-			_voicePanel = fonction switch
-			{
-				"carnet"       => new CarnetPanel(),
-				"encyclopedie" => new EncyclopediePanel(),
-				"magazine"     => new MagazinePanel(),
-				"pages"        => new PagesPanel(),
-				"atelier"      => new AtelierPanel(),   // acquisition des moyens d'agir ④
-				_              => new VoicePanel(),
-			};
-			_voicePanel.InjecterPont(_bridge);
-			AddChild(_voicePanel);
-			_voicePanel.Ouvrir(titre, onFerme: () => _voicePanel = null);
+			for (int i = 0; i < onglets.Count; i++)
+				if (onglets[i].Nom == nom) return i;
+			return 0;
 		}
 	}
 }

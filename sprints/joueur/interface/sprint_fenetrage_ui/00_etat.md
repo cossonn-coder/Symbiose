@@ -97,11 +97,38 @@ Fermer **D59** ; consigner reliquats (Semis/Foyer onglets, éventuel Paramètres
   - **F5 Nico** : bouton Paramètres ouvre/ferme le panneau ; vitesse agit ;
     « encyclo fournie » → encyclopédie remplie ; « carnet anticipé » ON → carnet
     interprétatif dès palier 1 ; ombres OFF au démarrage.
-- **T3 — Panneau à onglets : à faire.**
+- **T3 — Panneau de consultation à onglets : FAIT (2026-07-23).**
+  - Refactor : `VoicePanel` (CanvasLayer chrome) → **contenu d'onglet** défilable
+    (`ScrollContainer`). Chrome (voile, cadre, fermer, PAUSE) remonté dans un
+    NOUVEAU `world/ConsultationPanel.cs` (CanvasLayer hôte d'un `TabContainer`,
+    ancré tiers droit 1142,100 / 772×872, **D59 absorbée**). Les 5 spécialisations
+    (Carnet/Encyclopédie/Magazine/Pages/Atelier) **INCHANGÉES** — elles n'usaient
+    que `Contenu`/`Bridge`/`Remplir()`/`InjecterPont`, tous préservés. Pattern
+    `Remplir()`/`InjecterPont` intact ; contenu bâti une fois via `Construire()`,
+    jamais reconstruit au changement d'onglet.
+  - **Pause PAR ONGLET (A2)** : conteneur agnostique — liste `Onglet{nom, Control,
+    metEnPause}`. Onglet voix → `Paused=true` + voile plein écran (bloque le monde) ;
+    onglet Automate → `Paused=false` + voile effacé (monde visible/vivant). Bascule
+    sur `TabChanged` ; fermeture restaure l'état de pause d'avant ouverture.
+  - **Onglet Automate DEV-GATED (A6)** : rendu (profil/objectifs/journal/filtre
+    F·Maj+F) extrait dans NOUVEAU `world/AutomateContent.cs` (Control HUD live).
+    `WorldView.Automate.cs` réduit à la GLUE (toggle serveur, cycle de l'onglet,
+    feed du bloc snapshot). Feed gaté sur `IsVisibleInTree()` → aucune mise en page
+    si l'onglet n'est pas l'onglet affiché (perf). Bloc mémorisé → seed à l'ouverture.
+  - **Routage (A8)** : clic maison → `OuvrirConsultation("Carnet")` (plus de menu
+    hub intermédiaire — `OuvrirHubMaison`/`OuvrirVoicePanel`/`_hubMenu` supprimés).
+    Touche A → branche + ouvre/bascule sur Automate ; re-appui A sur Automate actif
+    → débranche + ferme. `BuildAutomatePanel` retiré (WorldView.cs), onglet à la demande.
+  - Golden **INCHANGÉ** (`57c166d8d3…`). Build C# **VERT** (0/0). LDC verts (≤208).
+  - **F5 Nico** : clic maison → fenêtre à droite sur Carnet ; onglets basculent ;
+    Carnet/Encyclopédie/Magazine/Pages/Atelier mettent en pause ; appui A ajoute
+    l'onglet Automate (sim tourne, live) ; A ré-appuyé sur Automate ferme ; filtre
+    F/Maj+F du log automate ; achat magazine/atelier, aide carnet, etc. inchangés.
 
 ## §REPRISE
-T1 + T2 CLOS (voir Avancement). Prochaine étape : T3 (`03_panneau_onglets.md`).
-Réemployer `UiScroll.Envelopper` pour les fenêtres défilables. À confirmer avec
-Nico : l'écart de périmètre T2 (overlays debug runtime laissés sur leurs touches,
-pas exposés au launcher). En fin de sprint : fermer D59, verser reliquats D54,
-MAJ journal.
+**T1 + T2 + T3 CLOS** (voir Avancement) — les 3 tronçons du sprint sont faits, tout
+en vue C#, golden `57c166d8d3…` inchangé, build vert. **Reste la Phase C (livraison,
+non faite par ce tronçon)** : fermer **D59** (absorbée), verser reliquats en **D54**
+(onglets Foyer/Semis à l'implémentation, éventuel Paramètres in-game v2), MAJ
+`DETTE.md` + `BACKLOG.md` + `journal.md`. À confirmer avec Nico après F5 : l'écart
+de périmètre T2 (overlays debug runtime laissés sur leurs touches).

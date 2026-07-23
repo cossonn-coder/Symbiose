@@ -355,7 +355,8 @@ namespace Symbiose
 			BuildMeteoLayers();   // ambiance écran + manteau neigeux (⑨) — avant le HUD
 
 			BuildHud();
-			BuildAutomatePanel(); // panneau jardinier automate F5 (touche A, ⑥)
+			// (T3) Plus de panneau automate à construire d'avance : l'onglet Automate
+			// naît à la demande (touche A) dans le conteneur de consultation.
 			BuildPalette();       // palette de gestes en colonne gauche (④, D11)
 			BuildPlantLabels();   // couche d'étiquettes NETTE (hors SubViewport, SS①)
 			ApplySnapshot(snap, fade: false);   // monde initial : pas de fondu

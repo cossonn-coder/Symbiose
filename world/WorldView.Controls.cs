@@ -119,7 +119,7 @@ namespace Symbiose
 					// devant/derrière la plante. Le hub ne s'ouvre que sur un clic maison
 					// SANS plante sous le curseur.
 					if (!PointeUnePlante(canvas) && ClicSurMaison(canvas))
-						OuvrirHubMaison();
+						OuvrirConsultation("Carnet");
 					else
 						TryAction(canvas, mb.ShiftPressed);
 				}
