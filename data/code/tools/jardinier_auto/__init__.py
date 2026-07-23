@@ -17,6 +17,8 @@
 #   - trace        : journal déterministe structuré (game_state["automate_journal"])
 #   - filtre       : vues LECTURE SEULE du journal (filtrer/trier/rendre, D87 ①)
 #   - objectifs    : objectifs (geste, quantité, cible) + biais/comptage (④)
+#   - operateurs   : catalogue des 3 opérateurs créatifs (pré/post sondées, D87 ②)
+#   - planification: chaînage arrière borné + état automate_plans (D87 ②)
 #   - onglet       : projection scopée du journal + log sur un objectif (④)
 #   - boucle       : JardinierAutomate.jouer_tick (5 étapes)
 #
@@ -30,8 +32,10 @@ from .objectifs import Objectif, ajouter_objectif, objectifs_actifs
 from .onglet import onglet
 from .rapport import rapport_impasses
 from .filtre import filtrer, trier, rendre
+from .operateurs import but_satisfait
+from .planification import avancer_plans
 
 __all__ = ["ProfilAutomate", "LIBRE", "BRIDE", "JardinierAutomate",
            "marquer_jardin_cultive", "Objectif", "ajouter_objectif",
            "objectifs_actifs", "onglet", "rapport_impasses",
-           "filtrer", "trier", "rendre"]
+           "filtrer", "trier", "rendre", "but_satisfait", "avancer_plans"]

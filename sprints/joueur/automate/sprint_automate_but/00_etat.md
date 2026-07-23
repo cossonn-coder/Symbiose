@@ -219,8 +219,28 @@ tick) :
   LDC : trace 99 / filtre 55 / profil 21 / test 104 (tous 🟢). **Cap sur ②.**
 - **①** `01_log_structure.md` — enrichir `trace.py` + `filtre.py` + verbosité +
   test oracle déterminisme (FONDATION).
-- **②** `02_operateurs_regression.md` — `operateurs.py` (3 opérateurs, `fruitier`,
-  placement) + `planification.py` (`avancer_plans`, `automate_plans`). Non branché.
+- **② FAIT (2026-07-23)** `02_operateurs_regression.md` — opérateurs + régression
+  livrés, NON branchés (③). `operateurs.py` NEUF (LDC 62 🟢) : `PRIO_CREATIF=5`,
+  `FACTEUR_ADVENIR="advenir"`, `FRUIT_MUR=1.0`, namedtuple `CibleCreative(espece,
+  tile,r,c)` (charge du `Plan` réutilisé) ; post-condition organe-typée
+  `but_satisfait(plant,sp)` (fruitier→fruit mûr / sinon maturité végétative
+  MATURITE_MUR) ; sondes `cultivees_vivantes` (couples `(tile,plant)` sous tutelle,
+  tri `(tile_id,y,x)`, C1), `plot_libre` (balayage canonique T5), pré-conditions
+  `pre_acheter_magazine`/`pre_planter`(rend le placement, pas de recalcul)/
+  `zone_fruitiere_sans_habitat` (C4, au plus tôt). `planification.py` NEUF (LDC 86
+  🟢) : `avancer_plans(engine,actifs,profil)->(plans,veilles)`, chaînage arrière
+  borné (`PROFONDEUR_MAX=4` garde-fou, chaîne réelle ≤3 : planter←graine←magazine),
+  `NB_CIBLE_PLAFOND=3` (nb_cible=min(quantite,3)), état persistant
+  `game_state["automate_plans"]` (`_etat_plan`, keys tentatives_semaille/
+  essai_precedent/en_veille/chainon posées pour ④), émet lignes `plan`
+  (planter/acheter/favoriser) + `diagnostic` (chaînon manquant). Sous-chaîne
+  pollinisation conditionnelle au flag `fruitier`. Zéro RNG, placement déterministe.
+  Ré-exports `__init__` (`avancer_plans`, `but_satisfait`). Test
+  `tests/test_automate_planif.py` (LDC 136 🟢, 24/24 ✅ : semis+déterminisme rejeu,
+  achat, blocage Vigueur<120, veille chainon_manquant, sous-chaîne fruitier vs non-
+  fruitier, but_satisfait). **Golden `57c166d8…` INTACT** ; determinisme+log VERTS.
+  **Cap sur ③** (brancher `avancer_plans` dans `boucle.jouer_tick`, préemption
+  survie, exécution des Plans créatifs via `execution`/gestes moteur).
 - **③** `03_boucle_preemption.md` — brancher dans `boucle.jouer_tick`, préemption
   survie, timing `favoriser_auxiliaire`, exécution + trace.
 - **④** `04_veille_impasses.md` — suivi germination, re-semis armé `(saison,plot)`,
