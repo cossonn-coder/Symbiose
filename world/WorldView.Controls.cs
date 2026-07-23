@@ -93,6 +93,12 @@ namespace Symbiose
 						if (k.ShiftPressed) InjecterObjectifDemo();
 						else ToggleAutomate();
 						break;
+					// F = filtre du log automate (⑤) : cycle la catégorie focus ;
+					// Maj+F la (dé)coche. Inerte tant que l'automate n'est pas branché.
+					case Key.F:
+						if (k.ShiftPressed) ToggleAutomateCat();
+						else CycleAutomateCat();
+						break;
 				}
 			}
 			// Molette = paliers de zoom (décision Nico 2026-06-10 : molette,

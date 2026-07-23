@@ -129,7 +129,12 @@ def avancer_plans(engine, actifs: list, profil):
         # CHAÎNE PRINCIPALE — obtenir une NOUVELLE cultivée si le compte manque et la
         # quantité n'est pas atteinte (C1 : culture permanente jusqu'à `quantite`).
         prog = _progression(gs, obj.id)
-        nb_cible = min(obj.quantite, NB_CIBLE_PLAFOND)
+        # nb_cible = cultivées vivantes visées (C1). Défaut `min(quantite, plafond)` ;
+        # le banc ⑤ le SURCHARGE via `profil.nb_plants_cible` (≥1) pour une chaîne plus
+        # courte/large. Borné à ≥1 pour ne jamais viser zéro cultivée (chaîne vide).
+        nb_cible = (max(1, profil.nb_plants_cible)
+                    if getattr(profil, "nb_plants_cible", None) is not None
+                    else min(obj.quantite, NB_CIBLE_PLAFOND))
         n_vivantes = len(cultivees_vivantes(engine, sp, cultivees))
 
         # Compte suffisant / quantité atteinte : si un semis pendait, il a LEVÉ (une

@@ -27,12 +27,19 @@ class ProfilAutomate:
     part_recoltee: float = 1.0           # fraction récoltée ∈ [0,1] — slider (②)
     ecrit_carnet: bool = False           # écritures narratives dans le carnet (③)
     verbosite_log: int = 1               # verbosité de LECTURE du log (D87 ①)
+    nb_plants_cible: int | None = None   # surcharge du nb de cultivées visées (D87 ⑤)
 
     # `verbosite_log` (0=décision · 1=détail · 2=perception fine) NE contraint PAS
     # l'écriture : le journal (trace.py) est TOUJOURS écrit complet — c'est ce qui en
     # fait un oracle de déterminisme. Cet axe n'est qu'un DÉFAUT de lecture, consommé
     # par `filtre.filtrer(..., niveau_max=profil.verbosite_log)` quand une vue veut
     # abréger. Présent dès ① pour que les tronçons ②→⑤ n'aient qu'à le LIRE.
+
+    # `nb_plants_cible` (D87 ⑤/C1) : nombre de cultivées vivantes visées par le
+    # planificateur pour un objectif `recolter`. `None` (défaut) = laisse la règle
+    # standard `min(quantite, NB_CIBLE_PLAFOND)` (planification.py). Le banc « X depuis
+    # rien » le SURCHARGE (param `nb_plants`) pour exhiber une chaîne plus courte (viser
+    # 1 seule cultivée) ou plus large. Golden neutre : None → comportement ② inchangé.
 
     # --- Sémantique des axes réglés au tronçon ② (lus par perception/boucle) ----
     def seuil_concurrence(self) -> int | None:

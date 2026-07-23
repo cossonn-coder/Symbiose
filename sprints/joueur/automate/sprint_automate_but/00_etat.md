@@ -281,12 +281,51 @@ tick) :
   **Cap sur ⑤** (banc paramétré + vue Godot log filtrable).
 - **④** `04_veille_impasses.md` — suivi germination, re-semis armé `(saison,plot)`,
   veille + re-sonde, impasses `chainon_manquant`/`niche_defavorable`.
-- **⑤** `05_banc_vue_godot.md` — `banc_culture_depuis_rien` paramétré + onglet
-  Godot log filtrable (DERNIER = vue).
+- **⑤ FAIT (2026-07-23)** `05_banc_vue_godot.md` — banc paramétré + vue Godot log
+  filtrable livrés. **SPRINT CLOS.**
+  - `tools/bancs/culture_depuis_rien.py` NEUF (LDC 155 🟢) :
+    `banc_culture_depuis_rien(espece, quantite, source_graine ∈ {auto,banque,magazine,
+    aucune}, cout_vigueur, nb_plants, annees, config)` — monte un monde `smoke` (léger,
+    ~5 s/2 ans), FORCE chaque branche (« depuis rien » = retrait des cultivées de
+    l'espèce + banque neuve + porte voulue), tourne l'automate hors tick, compose le
+    RÉCIT depuis le log filtré par `objectif_id` (les gestes créatifs legacy ont
+    `espece=None` → filtrage par objectif, PAS par espèce). Mode `--matrice` (espèces ×
+    sources) tabule les issues (Q8) : haricot/basilic/courgette → accompli 5/5 (banque
+    ET magazine) ; **tomate → partiel/en_cours (mildiou familial, révélé PAS masqué)** ;
+    `aucune` → `impasse:chainon_manquant`. Oracle déterministe (2 runs = récit identique).
+  - `profil.py` + `planification.py` : champ `nb_plants_cible:int|None=None` (surcharge
+    C1, défaut None = comportement ② `min(quantite,3)`) — golden neutre.
+  - `tests/test_automate_banc.py` NEUF (LDC ~90, 12/12 ✅ : branche banque/magazine/
+    aucune + nb_plants + fruitier C2 + oracle déterminisme).
+  - **Vue Godot** `world/WorldView.Automate.cs` (LDC 195 🟢) : log FILTRABLE par
+    catégories (touche **F** cycle la catégorie focus, **Maj+F** la (dé)coche) — vue
+    LECTURE SEULE (masque à l'affichage, le log Python reste complet). `LigneTrace`
+    étendu aux catégories neuves (plan/diagnostic/perception/geste_coupe/veille/
+    resultat, rendu dérivé de `detail`). `WorldView.Controls.cs` : câblage touche F.
+    Pas de bump `ENGINE_VERSION` (le snapshot portait DÉJÀ les champs structurés depuis
+    ①). `dotnet build` VERT (0/0). **Golden `57c166d8…` INTACT** ; 6 suites automate
+    VERTES (log 7 / planif 24 / troncon2 10 / veille 22 / determinisme 10 / banc 12).
+  - **FINDING (remonté à Nico)** : la branche magazine est INATTEIGNABLE en régime
+    LIBRE — `pre_acheter_magazine` exige Vigueur≥`COUT_MAGAZINE`(120) mais la régen
+    plafonne à `MAX_BASE`(100) au moment où le planificateur sonde (avant
+    `assurer_solde_libre`). Le banc PROVISIONNE la Vigueur (dev) pour éprouver la
+    chaîne. Contradiction avec exigence B (« coût 0 = rien n'est coupé ») → petit
+    follow-up ② possible : ignorer la porte Vigueur du magazine en mode LIBRE.
 
 Nuance log/ordre tranchée : log = tronçon **①** (fondation, le schéma précède ses
 écrivains) — cohérent avec « défini dès ① » ; le sprint passe bien à 5 tronçons.
 
-**Prochaine étape** : `/sprint-auto sprint_automate_but`. Toutes les décisions
-sont dans les sections ci-dessus + le doc de conception. Aucun code moteur écrit
-en conception.
+## §REPRISE — SPRINT TERMINÉ (2026-07-23)
+
+Les **5 tronçons sont CLOS**. Golden `57c166d8…` **INTACT partout** (jamais re-figé,
+planif opt-in hors tick). Build C# VERT. 6 suites automate VERTES + banc `--matrice`
+opérationnel. Reste **F5 Nico** (non bloquant) :
+- lancer `python3 -m tools.bancs.culture_depuis_rien --espece haricot --source magazine`
+  (chaîne complète achat→semis→levée→récolte, accompli 5/5) puis `--source aucune`
+  (impasse honnête `chainon_manquant`), et `--matrice` (tableau espèces×sources) ;
+- onglet automate F5 : touche **A** (brancher) + **Maj+A** (objectif démo) → **F**
+  cycle la catégorie de log, **Maj+F** coche/décoche (filtre d'affichage) ;
+- trancher le follow-up magazine/Vigueur (FINDING ci-dessus).
+
+Pas de commit fait par le sous-agent (consigne). DETTE/BACKLOG à mettre à jour par
+l'orchestrateur en clôture.
