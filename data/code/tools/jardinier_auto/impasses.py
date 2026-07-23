@@ -18,6 +18,11 @@ GESTE_VERROUILLE = "geste_verrouille"          # règle GATED non débloquée (m
 RAVITAILLEMENT_MANQUANT = "ravitaillement_manquant"  # pailler sans mulch ni moyen d'en produire
 OBJECTIF_INATTEIGNABLE = "objectif_inatteignable"    # cible absente ET sans moyen de l'obtenir (④, §8)
 FACTEUR_INVISIBLE = "facteur_invisible"        # facteur RÉEL sans signe diégétique (⑦, défaut #5)
+# Impasses du PLANIFICATEUR (D87 ④, §5) — plus précises qu'OBJECTIF_INATTEIGNABLE : la
+# cible EST atteignable en principe mais un chaînon manque MAINTENANT. Elles mettent
+# l'objectif en VEILLE (il reste actif) et portent le chaînon nommé (facteur_limitant).
+CHAINON_MANQUANT = "chainon_manquant"          # ni graine en banque ni offre magazine
+NICHE_DEFAVORABLE = "niche_defavorable"        # semis répété sans levée, conditions inchangées
 
 # Facteurs limitants qui n'émettent AUCUN signe foliaire → INVISIBLES au profil
 # semiologique (§9, ⑦). Un joueur humain ne peut pas les diagnostiquer non plus : ce

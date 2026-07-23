@@ -261,6 +261,24 @@ tick) :
   favoriser 1×). **Golden `57c166d8…` INTACT.** LDC boucle 153 / execution 43 /
   planification 93 (🟢). **Cap sur ④** (veille/re-sonde armée `(saison,plot)`, suivi
   germination, impasses `chainon_manquant`/`niche_defavorable`).
+- **④ FAIT (2026-07-23)** `04_veille_impasses.md` — veille + re-sonde + impasses
+  honnêtes livrés. `impasses.py` : 2 constantes neuves `CHAINON_MANQUANT` /
+  `NICHE_DEFAVORABLE` (LDC 21 🟢). `planification.py` (LDC 152 🟢) : état plan étendu
+  (`semaine_semaille`/`n_au_semis`/`impasse_signalee`), constantes `FENETRE_LEVEE=4`
+  / `MAX_TENTATIVES=2`. `avancer_plans` gère désormais le **suivi de germination**
+  (T1 : un semis en attente ne re-sème plus chaque tick ; levée détectée quand
+  `n_vivantes` monte → `resultat` leve + relais Liebig ; fenêtre écoulée sans levée →
+  échec), le **re-semis armé** (C3 : réarmé SEULEMENT si `(saison, plot)` a bougé ET
+  `tentatives ≤ 2`, sinon `niche_defavorable` directe — pas de retry cosmétique), la
+  **veille** (impasse typée, objectif RESTE actif, `diagnostic`+`impasse` tracés 1×
+  par cause via `impasse_signalee`) et la **re-sonde sur déclencheur** (le flux
+  principal relève l'objectif dès qu'un geste redevient faisable → plan `reveil:<decl>`).
+  C1 (mort d'une cultivée réveille l'objectif non-accompli) vérifié. Helpers neufs :
+  `_enregistrer_semaille`/`_resoudre_levee`/`_mettre_en_veille`/`_sig_plot`. Test neuf
+  `tests/test_automate_veille.py` (22/22 ✅ : levée/attente/niche/re-semis armé
+  saison+plot/garde-fou tentatives/réveil magazine/veille active+impasse unique/mort
+  C1/déterminisme). **Golden `57c166d8…` INTACT** ; planif+log+determinisme VERTS.
+  **Cap sur ⑤** (banc paramétré + vue Godot log filtrable).
 - **④** `04_veille_impasses.md` — suivi germination, re-semis armé `(saison,plot)`,
   veille + re-sonde, impasses `chainon_manquant`/`niche_defavorable`.
 - **⑤** `05_banc_vue_godot.md` — `banc_culture_depuis_rien` paramétré + onglet

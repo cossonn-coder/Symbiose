@@ -18,14 +18,17 @@
 
 from __future__ import annotations
 
+from sim.engine.calendrier import saison_de
+
 from .proposition import Plan
 from .objectifs import classe_cible, progression as _progression
 from .tutelle import zones_cultivees
 from .operateurs import (
     PRIO_CREATIF, FACTEUR_ADVENIR, CibleCreative,
     cultivees_vivantes, pre_planter, pre_acheter_magazine,
-    zone_fruitiere_sans_habitat,
+    plot_libre, zone_fruitiere_sans_habitat,
 )
+from .impasses import CHAINON_MANQUANT, NICHE_DEFAVORABLE
 from . import trace as T
 
 CLE_PLANS = "automate_plans"
@@ -40,6 +43,15 @@ PROFONDEUR_MAX = 4
 # émerge via `incrementer`). Surchargeable au banc (⑤) ; ici, défaut de lecture.
 NB_CIBLE_PLAFOND = 3
 
+# T1 — un `planter` dépose un grain qui LÈVE plus tard (ou jamais). On lui laisse
+# `FENETRE_LEVEE` semaines pour donner une cultivée vivante avant de conclure à un
+# ÉCHEC de levée (④, §Suivi de germination). Constante nommée, déterministe.
+FENETRE_LEVEE = 4
+
+# C3 — garde-fou dur du re-semis : au-delà de ce nombre de tentatives, on n'arme plus
+# de nouveau semis même si une condition a bougé → impasse `niche_defavorable`.
+MAX_TENTATIVES = 2
+
 
 def _etat_plan(gs: dict, obj_id: str) -> dict:
     """Le record de planification d'un objectif sous `game_state["automate_plans"]`
@@ -52,9 +64,12 @@ def _etat_plan(gs: dict, obj_id: str) -> dict:
     reg = gs.setdefault(CLE_PLANS, {})
     return reg.setdefault(obj_id, {
         "tentatives_semaille": 0,
-        "essai_precedent": None,
+        "essai_precedent": None,       # signature (saison, (tile_id, r, c)) du dernier semis
         "en_veille": False,
         "chainon": None,
+        "semaine_semaille": None,      # semaine du dernier semis en attente de levée (T1)
+        "n_au_semis": 0,               # n_vivantes au moment du semis (détection de levée)
+        "impasse_signalee": None,      # cause d'impasse déjà tracée (dédup, une fois par cause)
     })
 
 
@@ -87,6 +102,7 @@ def avancer_plans(engine, actifs: list, profil):
     gs = engine.game_state
     player = gs["current_player"]
     semaine = engine.week
+    saison = saison_de(semaine)
     cultivees = zones_cultivees(gs, player)
     plans, veilles = [], []
 
@@ -114,21 +130,104 @@ def avancer_plans(engine, actifs: list, profil):
         # quantité n'est pas atteinte (C1 : culture permanente jusqu'à `quantite`).
         prog = _progression(gs, obj.id)
         nb_cible = min(obj.quantite, NB_CIBLE_PLAFOND)
-        if prog < obj.quantite and len(cultivees_vivantes(engine, sp, cultivees)) < nb_cible:
-            plan, chainon = _obtenir_cultivee(engine, sp, player)
-            if plan is not None:
-                etat["en_veille"] = False
-                etat["chainon"] = None
-                plans.append(plan)
-                _tracer_plan_principal(gs, semaine, obj.id, sp, plan)
-            else:                          # ni graine ni offre → chaînon manquant
-                etat["chainon"] = chainon
-                veilles.append((obj.id, chainon, "aucune"))
-                T.consigner(gs, T.entree_diagnostic(
-                    semaine, objectif_id=obj.id, espece=sp,
-                    detail={"sous_but": "cultivee_presente", "manque": chainon}))
+        n_vivantes = len(cultivees_vivantes(engine, sp, cultivees))
+
+        # Compte suffisant / quantité atteinte : si un semis pendait, il a LEVÉ (une
+        # cultivée est apparue et fait le compte) → on clôt le suivi, relais Liebig.
+        if prog >= obj.quantite or n_vivantes >= nb_cible:
+            _resoudre_levee(gs, etat, semaine, obj.id, sp)
+            continue
+
+        # Un semis pend-il en attente de levée (T1) ? On gère germination / échec AVANT
+        # d'émettre un nouveau geste (sinon on re-sème un grain à chaque tick).
+        if etat["semaine_semaille"] is not None:
+            if n_vivantes > etat["n_au_semis"]:
+                _resoudre_levee(gs, etat, semaine, obj.id, sp)   # une cultivée est apparue
+                continue
+            if semaine - etat["semaine_semaille"] < FENETRE_LEVEE:
+                continue                                          # fenêtre ouverte : on attend
+            # Fenêtre écoulée SANS levée → échec ; re-semis armé seulement si une
+            # condition a bougé (C3), sinon impasse `niche_defavorable` directe.
+            plot = plot_libre(engine)
+            arme = (etat["tentatives_semaille"] <= MAX_TENTATIVES
+                    and plot is not None
+                    and (saison, _sig_plot(plot)) != etat["essai_precedent"])
+            if not arme:
+                _mettre_en_veille(gs, etat, semaine, obj, sp, NICHE_DEFAVORABLE, veilles)
+                continue
+            etat["semaine_semaille"] = None                       # armé : on retente ce tick
+
+        # Obtenir une cultivée : semis / achat / chaînon manquant.
+        etait_veille = etat["en_veille"]
+        plan, chainon = _obtenir_cultivee(engine, sp, player)
+        if plan is not None:
+            if plan.verbe == "planter":
+                _enregistrer_semaille(etat, semaine, saison, plan, n_vivantes)
+            etat["en_veille"] = False
+            etat["chainon"] = None
+            etat["impasse_signalee"] = None      # sortie d'impasse → une rechute re-signalera
+            plans.append(plan)
+            _tracer_plan_principal(gs, semaine, obj.id, sp, plan, etait_veille)
+        else:                                    # ni graine ni offre → chaînon manquant
+            _mettre_en_veille(gs, etat, semaine, obj, sp, CHAINON_MANQUANT,
+                              veilles, chainon)
 
     return plans, veilles
+
+
+# --- Suivi de germination, re-semis armé et veille (④, §5) ------------------------
+
+def _sig_plot(plot):
+    """Identité canonique d'un plot pour la signature d'essai C3 : `(tile_id, r, c)`,
+    ou None si le monde est saturé. `plot` est le triplet `(tile, r, c)` de plot_libre."""
+    return None if plot is None else (plot[0].tile_id, plot[1], plot[2])
+
+
+def _enregistrer_semaille(etat: dict, semaine: int, saison: str, plan, n_vivantes: int) -> None:
+    """Mémorise l'essai de semis (T1/C3) : fenêtre de levée (`semaine_semaille`),
+    signature `(saison, plot)` pour armer un futur re-semis, compteur de tentatives
+    (garde-fou dur) et `n_vivantes` de départ (détection de levée = le compte monte)."""
+    cr = plan.cible_obj
+    etat["semaine_semaille"] = semaine
+    etat["essai_precedent"] = (saison, (cr.tile.tile_id, cr.r, cr.c))
+    etat["tentatives_semaille"] += 1
+    etat["n_au_semis"] = n_vivantes
+
+
+def _resoudre_levee(gs: dict, etat: dict, semaine: int, obj_id: str, sp: str) -> None:
+    """Un semis en attente a LEVÉ (une cultivée vivante est apparue) → sous-but atteint :
+    on réinitialise le suivi (le relais passe à Liebig) et on trace le `resultat`. No-op
+    strict si aucun semis ne pendait (pas de ligne parasite → oracle préservé)."""
+    if etat["semaine_semaille"] is None:
+        return
+    T.consigner(gs, T.entree_resultat(semaine, objectif_id=obj_id, espece=sp,
+                                      detail={"sous_but": "semer", "issue": "leve"}))
+    etat["semaine_semaille"] = None
+    etat["n_au_semis"] = 0
+    etat["tentatives_semaille"] = 0
+    etat["essai_precedent"] = None
+
+
+def _mettre_en_veille(gs: dict, etat: dict, semaine: int, obj, sp: str,
+                      cause: str, veilles: list, chainon: str | None = None) -> None:
+    """Met l'objectif en VEILLE sur une impasse TYPÉE (`chainon_manquant` /
+    `niche_defavorable`) — l'objectif RESTE actif (jamais retiré). Remonte le tuple
+    veille à la boucle (ligne `veille`, dédup par chaînon) et trace `diagnostic` +
+    `impasse` UNE fois par cause (dédup `impasse_signalee`) → le journal n'est pas noyé
+    tick après tick. La re-sonde armée (saison/plot changé, offre ouverte) est gérée
+    par le flux principal : l'impasse se lève d'elle-même dès qu'un geste redevient
+    faisable (`impasse_signalee` remis à None), une rechute re-signalera."""
+    lien = chainon if cause == CHAINON_MANQUANT else cause
+    source = "aucune" if cause == CHAINON_MANQUANT else "niche"
+    etat["chainon"] = lien
+    veilles.append((obj.id, lien, source))
+    if etat.get("impasse_signalee") == cause:
+        return
+    etat["impasse_signalee"] = cause
+    T.consigner(gs, T.entree_diagnostic(
+        semaine, objectif_id=obj.id, espece=sp,
+        detail={"sous_but": "cultivee_presente", "manque": lien}))
+    T.consigner(gs, T.entree_impasse(semaine, "-", f"{sp}#{obj.id}", lien, cause))
 
 
 def _obtenir_cultivee(engine, sp: str, player: str):
@@ -163,10 +262,11 @@ def _plan_favoriser(sp, tile) -> Plan:
                 None, FACTEUR_ADVENIR, PRIO_CREATIF)
 
 
-def _tracer_plan_principal(gs, semaine, obj_id, sp, plan) -> None:
+def _tracer_plan_principal(gs, semaine, obj_id, sp, plan, reveil=False) -> None:
     """Journalise un plan de la chaîne principale (ligne `plan`, niveau 0). Le
     sous-but et la raison DÉRIVENT du verbe (dérivation de champs — trace.py : jamais
-    de texte libre, le rendu se dérive des champs)."""
+    de texte libre, le rendu se dérive des champs). `reveil=True` (④) → l'objectif
+    SORT de veille : la raison porte le DÉCLENCHEUR qui l'a réveillé."""
     if plan.verbe == "planter":
         cible = plan.cible_obj
         zone = (cible.tile.tile_id, cible.r, cible.c)
@@ -175,5 +275,8 @@ def _tracer_plan_principal(gs, semaine, obj_id, sp, plan) -> None:
     else:                                  # acheter_magazine
         zone = None
         detail = {"sous_but": "acheter", "raison": "pas_de_graine & offre_magazine"}
+    if reveil:
+        decl = "magazine_ouvert" if plan.verbe == "acheter_magazine" else "plot_ou_graine"
+        detail["raison"] = f"reveil:{decl}"
     T.consigner(gs, T.entree_plan(semaine, objectif_id=obj_id, espece=sp,
                                   zone=zone, detail=detail))
