@@ -7,3 +7,4 @@
 
 - [2026-07-18 — Conception JARDINIER AUTOMATE (D78) — FIGÉE (`/conception`)](../../../journal/122_2026-07-18_conception-jardinier-automate-FIGEE.md)
 - [2026-07-18 — Sprint JARDINIER AUTOMATE (D78) — CLOS (`/sprint-auto`, ①→⑦)](../../../journal/123_2026-07-18_sprint-jardinier-automate-CLOS-sprint-terminé.md)
+- [2026-07-23 — Conception AUTOMATE DIRIGÉ PAR LE BUT (D87) — FIGÉE (`/conception`)](../../../journal/129_2026-07-23_conception-automate-dirige-but-FIGEE.md)
