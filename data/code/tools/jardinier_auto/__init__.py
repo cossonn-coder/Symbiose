@@ -14,7 +14,8 @@
 #   - diagnostic   : facteur limitant dominant (loi de Liebig)
 #   - regles       : table facteur→geste priorisée
 #   - execution    : traduction geste → appel sim.actions
-#   - trace        : journal déterministe (game_state["automate_journal"])
+#   - trace        : journal déterministe structuré (game_state["automate_journal"])
+#   - filtre       : vues LECTURE SEULE du journal (filtrer/trier/rendre, D87 ①)
 #   - objectifs    : objectifs (geste, quantité, cible) + biais/comptage (④)
 #   - onglet       : projection scopée du journal + log sur un objectif (④)
 #   - boucle       : JardinierAutomate.jouer_tick (5 étapes)
@@ -28,7 +29,9 @@ from .tutelle import marquer_jardin_cultive
 from .objectifs import Objectif, ajouter_objectif, objectifs_actifs
 from .onglet import onglet
 from .rapport import rapport_impasses
+from .filtre import filtrer, trier, rendre
 
 __all__ = ["ProfilAutomate", "LIBRE", "BRIDE", "JardinierAutomate",
            "marquer_jardin_cultive", "Objectif", "ajouter_objectif",
-           "objectifs_actifs", "onglet", "rapport_impasses"]
+           "objectifs_actifs", "onglet", "rapport_impasses",
+           "filtrer", "trier", "rendre"]

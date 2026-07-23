@@ -206,6 +206,17 @@ Phase B faite. Doc : `docs/joueur/automate/conception_automate_but.md`. Découpa
 FINAL = **5 tronçons**, golden `57c166d8…` **INTACT partout** (planif opt-in, hors
 tick) :
 
+- **① FAIT (2026-07-23)** `01_log_structure.md` — log structuré livré. `trace.py`
+  enrichi : schéma commun `{categorie, semaine, niveau(0/1/2), objectif_id, espece,
+  zone, detail}` sur TOUTES les lignes ; legacy (entree/impasse/consequence)
+  normalisé (clés à plat historiques CONSERVÉES pour onglet/rapport/automate_cmd) ;
+  6 constructeurs neufs `entree_perception/diagnostic/plan/geste_coupe/veille/resultat`
+  (schéma commun, charge dans `detail`) — **pas encore appelés par la boucle** (②-④).
+  `filtre.py` NEUF (lecture seule, ne mute jamais) : `filtrer/trier/rendre`, re-export
+  `__init__`. `profil.verbosite_log:int=1` posé (non contraignant, défaut de lecture).
+  Test oracle `tests/test_automate_log.py` (déterminisme rejeu + schéma + rétro-compat
+  + filtre) VERT. `test_automate_determinisme` VERT. **Golden `57c166d8…` INTACT.**
+  LDC : trace 99 / filtre 55 / profil 21 / test 104 (tous 🟢). **Cap sur ②.**
 - **①** `01_log_structure.md` — enrichir `trace.py` + `filtre.py` + verbosité +
   test oracle déterminisme (FONDATION).
 - **②** `02_operateurs_regression.md` — `operateurs.py` (3 opérateurs, `fruitier`,
