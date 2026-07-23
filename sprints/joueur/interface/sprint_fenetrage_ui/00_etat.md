@@ -67,10 +67,41 @@ Fermer **D59** ; consigner reliquats (Semis/Foyer onglets, éventuel Paramètres
   - Golden **INCHANGÉ** (`57c166d8d3…`). Build C# **VERT** (0 warning/0 erreur).
   - **F5 Nico** : ouverture haut-gauche, défilement si liste déborde, filtres
     nom + catégorie, lancement du banc choisi.
-- **T2 — Paramètres launcher : à faire.**
+- **T2 — Paramètres launcher : FAIT (2026-07-23).**
+  - Python : `cmd_init` accepte deux champs OPTIONNELS. `carnet_anticipe` (bool) →
+    pose `game_state["options"][player]["carnet_anticipe"]` (lu DÉJÀ par
+    `sim/carnet._reglage_anticipe`, seuil 1). `encyclo_demarrage`
+    (`vierge`/`amorcee`/`fournie`) → helper `_amorcer_encyclo` qui pose des
+    DÉCOUVERTES (palier 1) via le mécanisme EXISTANT `maitrise.decouvrir` :
+    `amorcee` = `BANQUE_DEPART` (cultivées de départ), `fournie` = tout le catalogue
+    (annuelles + pérennes). Champs ABSENTS → aucun effet. Pont bumpé
+    **0.5.36 → 0.5.37** (changelog version.py). Vérifié à la main : amorcee→fiche N1
+    sans bascule carnet, fournie→tout palier≥1, carnet_anticipe→seuil 1, défaut→rien.
+  - C# : `SimBridge.Init` gagne 2 params optionnels (`encycloDemarrage`,
+    `carnetAnticipe`) joints au message seulement si renseignés. Nouveau partial
+    `world/WorldView.Parametres.cs` : bouton « Paramètres… » dans le sélecteur →
+    sous-panneau défilable (`UiScroll.Envelopper`) avec vitesse de sim
+    (`SecondsPerWeek`, slider 30-180), ombres (bascule `ShadowsOn` via
+    `ToggleShadows`, zéro duplication), encyclopédie de démarrage (OptionButton,
+    défaut amorcée) et carnet anticipé (CheckButton, défaut NON). Choix d'init
+    mémorisés (`_encycloDemarrage`/`_carnetAnticipe`) → `StartSimulation` les passe
+    à `_bridge.Init`.
+  - **Écart de périmètre ASSUMÉ (à confirmer par Nico)** : les overlays debug
+    PUREMENT runtime listés au kickoff (heatmaps F6, temp sol F7, vie macro I,
+    LOD F9) dépendent de couches construites APRÈS le lancement → aucune cible au
+    launcher (pré-simulation) ; `ToggleMacroLife` fait même un early-return si la
+    couche n'existe pas. Ils RESTENT sur leurs touches in-game (cohérent D-A7 :
+    « toggles confort in-game restent sur leurs touches »). Seuls les réglages
+    honorés dès le démarrage (vitesse, ombres) + les 2 options d'init sont exposés.
+  - Golden **INCHANGÉ** (`57c166d8d3…`). Build C# **VERT** (0 warning/0 erreur).
+  - **F5 Nico** : bouton Paramètres ouvre/ferme le panneau ; vitesse agit ;
+    « encyclo fournie » → encyclopédie remplie ; « carnet anticipé » ON → carnet
+    interprétatif dès palier 1 ; ombres OFF au démarrage.
 - **T3 — Panneau à onglets : à faire.**
 
 ## §REPRISE
-T1 CLOS (voir Avancement). Prochaine étape : T2 (`02_parametres.md`), puis T3
-(`03_panneau_onglets.md`). Réemployer `UiScroll.Envelopper` pour les fenêtres
-défilables. En fin de sprint : fermer D59, verser reliquats D54, MAJ journal.
+T1 + T2 CLOS (voir Avancement). Prochaine étape : T3 (`03_panneau_onglets.md`).
+Réemployer `UiScroll.Envelopper` pour les fenêtres défilables. À confirmer avec
+Nico : l'écart de périmètre T2 (overlays debug runtime laissés sur leurs touches,
+pas exposés au launcher). En fin de sprint : fermer D59, verser reliquats D54,
+MAJ journal.

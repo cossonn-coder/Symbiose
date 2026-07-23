@@ -155,10 +155,20 @@ namespace Symbiose
 		// PROTOCOLE v0 — une commande = une réponse (cf. sim_server.py)
 		// -------------------------------------------------------------------
 
-		/// <summary>init(seed) → partie STATIQUE du monde (tuiles, maison), ou null.</summary>
-		public GDict Init(int seed, string config = "smoke")
+		/// <summary>init(seed) → partie STATIQUE du monde (tuiles, maison), ou null.
+		/// Options d'INIT du panneau Paramètres (fenêtrage UI T2), toutes deux
+		/// OPTIONNELLES : <paramref name="encycloDemarrage"/> ∈ {vierge, amorcee,
+		/// fournie} amorce l'encyclopédie de départ ; <paramref name="carnetAnticipe"/>
+		/// bascule le carnet interprétatif dès le palier 1. Non renseignées (null),
+		/// elles ne sont pas transmises → moteur inchangé (binaire pré-0.5.37 les
+		/// ignore de toute façon).</summary>
+		public GDict Init(int seed, string config = "smoke",
+						  string encycloDemarrage = null, bool? carnetAnticipe = null)
 		{
-			var resp = Request(new GDict { ["cmd"] = "init", ["seed"] = seed, ["config"] = config });
+			var msg = new GDict { ["cmd"] = "init", ["seed"] = seed, ["config"] = config };
+			if (encycloDemarrage != null) msg["encyclo_demarrage"] = encycloDemarrage;
+			if (carnetAnticipe.HasValue) msg["carnet_anticipe"] = carnetAnticipe.Value;
+			var resp = Request(msg);
 			return resp?["world"].AsGodotDictionary();
 		}
 

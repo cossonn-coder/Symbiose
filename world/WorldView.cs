@@ -264,7 +264,9 @@ namespace Symbiose
 		// init → warmup → construction des couches → 1er snapshot → caméra.
 		private void StartSimulation(string config)
 		{
-			var world = _bridge.Init(Seed, config);
+			// Options d'init du panneau Paramètres (T2) : mémorisées avant « Lancer »,
+			// transmises au montage du monde (encyclopédie de départ + carnet anticipé).
+			var world = _bridge.Init(Seed, config, _encycloDemarrage, _carnetAnticipe);
 			if (world == null) { _bridge.Quit(); return; }
 			_world = world;
 

@@ -565,7 +565,18 @@ from __future__ import annotations
 #       golden NEUTRE (le golden tourne hors serveur ; smoke/full ne sont pas des
 #       bancs). Un binaire pré-0.5.36 renvoie des noms nus → SimBridge.ListBancs()
 #       les mappe en catégorie "divers" (tolérance, compat binaire gelé).
-ENGINE_VERSION = "0.5.36"
+# 0.5.37 (fenêtrage UI T2, options d'init au montage) : `cmd_init` accepte DEUX
+#       champs OPTIONNELS du panneau Paramètres du launcher. `carnet_anticipe: bool`
+#       → pose `game_state["options"][player]["carnet_anticipe"]`, lu DÉJÀ par
+#       `sim/carnet._reglage_anticipe` (SEUIL_ANTICIPE=1 : le carnet bascule en
+#       interprétatif dès palier 1). `encyclo_demarrage: "vierge"|"amorcee"|"fournie"`
+#       → amorce des DÉCOUVERTES (palier 1, fiche encyclo niveau 1 seule, PAS le
+#       carnet) via le mécanisme EXISTANT `maitrise.decouvrir` : "amorcee" = cultivées
+#       de départ (BANQUE_DEPART), "fournie" = tout le catalogue, "vierge"/absent =
+#       rien. Champs ABSENTS → aucun effet (smoke/full ne les passent jamais) → golden
+#       INTACT. Un binaire pré-0.5.37 ignore silencieusement ces deux champs de
+#       `cmd_init` (tolérance : options sans effet, le monde monte quand même).
+ENGINE_VERSION = "0.5.37"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

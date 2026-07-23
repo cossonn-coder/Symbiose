@@ -14,6 +14,8 @@ import time
 from world import House
 from sim.engine import Engine
 from sim import vigueur as V      # état Vigueur joueur (ensure/spend/gain, D11)
+from sim import maitrise as M     # amorçage encyclopédie de démarrage (option d'init T2)
+from plants.catalogue import PLANT_CATALOGUE, PERENNIAL_CATALOGUE  # clés d'espèces (encyclo fournie)
 from sim import journal as J      # ledger d'événements hors tick (voix narratives ②)
 from sim.seeds import PlayerSeedBank, Seed  # banque-joueur (source de planter, remplie à la récolte)
 # Type de base des champs écologiques (tranche 6·C) : le registre de la
@@ -51,6 +53,27 @@ def _vider_seedbank_ferale(sb) -> None:
             for a in sb.data[r][c]:
                 sb.data[r][c][a] = 0.0
             sb.species[r][c].clear()
+
+
+def _amorcer_encyclo(game_state: dict, player: str, mode: str) -> None:
+    """Amorce l'encyclopédie de démarrage (option d'init T2, réglage d'aide CLAUDE.md).
+    L'encyclopédie DÉRIVE des paliers de maîtrise (une fiche niveau 1 existe SSI
+    palier ≥ 1, cf. sim/encyclopedie._decouverte) → « amorcer » = poser des
+    DÉCOUVERTES (palier 1) via le mécanisme EXISTANT `maitrise.decouvrir`, jamais un
+    état neuf. Palier 1 = fiche niveau 1 SEULE ; le carnet interprétatif (seuil 3)
+    ne bascule PAS. Modes :
+      - "amorcee" → petit lot curé (les cultivées de départ, `BANQUE_DEPART`) ;
+      - "fournie" → toutes les espèces du catalogue (annuelles + pérennes) ;
+      - autre / "vierge" → rien (état actuel).
+    Hors tick (init) → aucun impact golden (smoke/full ne passent jamais l'option)."""
+    if mode == "amorcee":
+        cles = BANQUE_DEPART
+    elif mode == "fournie":
+        cles = tuple(PLANT_CATALOGUE) + tuple(PERENNIAL_CATALOGUE)
+    else:
+        return
+    for cle in cles:
+        M.decouvrir(game_state, player, cle)
 
 
 def _banque_initiale(config: str) -> PlayerSeedBank:
@@ -154,6 +177,15 @@ class CommandsMixin:
         # comportement inchangé pour smoke/full/bancs (golden intact).
         if config == "propre":
             game_state["feral_off"] = True
+        # Option d'init « carnet interprétatif anticipé » (T2, réglage d'aide
+        # CLAUDE.md, défaut NON). Champ OPTIONNEL du message : absent → aucune clé
+        # `options` → `sim/carnet._reglage_anticipe` renvoie False → seuil normal
+        # (comportement actuel, golden intact). Présent → pose le flag lu au tick.
+        carnet_anticipe = msg.get("carnet_anticipe")
+        if carnet_anticipe is not None:
+            player = game_state["current_player"]
+            game_state.setdefault("options", {}).setdefault(player, {})[
+                "carnet_anticipe"] = bool(carnet_anticipe)
         self.engine = Engine(game_state)
         # Un nouvel `init` repart d'un monde neuf : tout automate actif d'une
         # session précédente pointait l'ancien engine → on le démonte (opt-in :
@@ -176,6 +208,13 @@ class CommandsMixin:
         post = BANC_POST_INIT.get(config)
         if post is not None:
             post(game_state, game_state["current_player"])
+        # Option d'init « encyclopédie de démarrage » (T2). APRÈS l'opt-in Vigueur
+        # et le hook de banc, comme `BANC_POST_INIT` : l'état maîtrise est prêt.
+        # Champ OPTIONNEL : absent → pas d'amorçage (encyclo vierge, comportement
+        # actuel, golden intact). smoke/full ne le passent jamais.
+        encyclo = msg.get("encyclo_demarrage")
+        if encyclo:
+            _amorcer_encyclo(game_state, game_state["current_player"], encyclo)
         return {"ok": True, "engine_version": ENGINE_VERSION,
                 "world": self._world_static()}
 

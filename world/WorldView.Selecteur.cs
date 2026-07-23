@@ -102,11 +102,17 @@ namespace Symbiose
 			_liste = new VBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
 			vbox.AddChild(UiScroll.Envelopper(_liste, 360f));
 
+			// Bouton « Paramètres » : ouvre/ferme le sous-panneau d'options (T2).
+			var params_ = new Button { Text = "Paramètres…" };
+			params_.Pressed += ToggleParametres;
+			vbox.AddChild(params_);
+
 			var bouton = new Button { Text = "Lancer" };
 			bouton.Pressed += Lancer;
 			vbox.AddChild(bouton);
 
-			RebatirListe();   // remplit la liste + applique la présélection
+			BuildParametres();   // sous-panneau caché, révélé par le bouton ci-dessus
+			RebatirListe();      // remplit la liste + applique la présélection
 		}
 
 		// Recompose la liste affichée depuis `_bancs` selon les deux filtres. La
