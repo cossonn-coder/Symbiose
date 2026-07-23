@@ -198,16 +198,9 @@ namespace Symbiose
 			UpdatePaletteSelection();   // met à jour l'entrée active de la palette gauche
 		}
 
-		// Sélection cyclique sur TOUTE la palette (touche Tab, cf. Controls) :
-		// une seule touche atteint tous les gestes. Premier appel sans geste →
-		// bord selon le sens. Modulo positif (les indices peuvent être négatifs).
-		private void CyclePalette(int dir)
-		{
-			int n = Gestes.Length;
-			int idx = _gesteIndex < 0 ? (dir > 0 ? 0 : n - 1)
-									  : ((_gesteIndex + dir) % n + n) % n;
-			SelectGeste(idx);
-		}
+		// (Le cycle Tab vit désormais dans CycleSlots — WorldView.Palette.cs — car
+		// il parcourt les SLOTS occupés, pas Gestes[] brut, depuis le modèle de
+		// palette gérable T1.)
 
 		// Espèce courante pour `planter` (touche S). Cycle sur les lots non vides
 		// du snapshot ; rien à faire si la banque est vide.

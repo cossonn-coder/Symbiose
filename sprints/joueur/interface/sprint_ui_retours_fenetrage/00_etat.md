@@ -99,8 +99,38 @@
   (champs mémoires+expression+âge, bump version) + panneau debug C# (clic `FindPlant`
   → lit le dict du dernier snapshot). Golden NEUTRE annoncé (snapshot). Dernier tronçon = vue+pont.
 
+## Avancement T1 — Palette gérable (item 1) — FAIT le 2026-07-23
+- **Modèle SLOT (D2) livré, pure vue C#.** `_slots[10]` (index de geste ou -1),
+  masquage des non débloqués (plus de grisé), auto-remplissage dans l'ordre de
+  `Gestes[]` parmi les débloqués, débordement invisible au-delà du 10ᵉ.
+- **Touches 1..9 + 0** → slots 0..8 puis 9 (`SelectSlot`, PhysicalKeycode AZERTY-safe) ;
+  **Tab** cycle les slots OCCUPÉS (`CycleSlots`, remplace `CyclePalette` supprimé).
+- **Édition clic droit** : `GesteIcon._GuiInput` capte le bouton droit → `OnRightClick` →
+  `PopupMenu` (vider ce slot / assigner un débloqué absent). Assignation/vidage
+  reconstruit + persiste.
+- **Persistance GLOBALE par VERBE** : nouveau `world/PaletteLayout.cs` (`user://palette.json`,
+  {slots:[verbes]}). Chargée au montage, complétée par auto-remplissage. Verbe
+  inconnu/non débloqué ignoré (purgé au 1er snapshot). AUCUNE collision avec
+  `player.palette.macros` du serveur (ApplyPalette ne lit que `macros`).
+- **Golden INCHANGÉ** : `57c166d8…` (aucune touche `data/code/`). **Build C# VERT**
+  (0 warning / 0 erreur). LDC : Palette.cs 189 🟢, PaletteLayout.cs 35 🟢,
+  GesteIcon.cs 235 🟢 ; Actions.cs 554 (⚠ pré-existant, réduit de 7 par la suppression
+  de CyclePalette — dette antérieure, hors T1).
+- **Fichiers touchés** : `world/WorldView.Palette.cs` (réécrit, modèle slot),
+  `world/PaletteLayout.cs` (NEUF, persistance), `world/GesteIcon.cs` (+clic droit),
+  `world/WorldView.Controls.cs` (remap 1..9+0 → slots, Tab → CycleSlots),
+  `world/WorldView.Actions.cs` (CyclePalette retiré au profit de CycleSlots).
+- **Points F5 Nico** : (a) HUD action (`WorldView.Hud.cs:223`) affiche encore
+  `[{_gesteIndex+1}]` = index de geste, PAS le n° de slot → indice de touche trompeur ;
+  laissé pour T2 (chrome HUD). (b) « vider un slot » n'est durable que jusqu'au
+  prochain déblocage (l'auto-remplissage recomble alors le trou, conforme au kickoff) —
+  à calibrer si gênant. (c) Menu clic droit positionné à droite de l'icône.
+- **Reste T2** (chrome/navigation) **et T3** (dossier plante, vue+pont).
+
 ## §REPRISE
-Lire `CLAUDE.md` + ce fichier. Phase A CLOSE (arbitrages Q1-Q3 tranchés → D1-D5).
-Prochaine étape : sur OK de Nico, PHASE B — figer le doc
-`docs/joueur/interface/conception_retours_ui_fenetrage.md` puis kickoffs 01_palette,
-02_chrome_navigation, 03_dossier_plante ; commit ; MAJ DETTE (D54/D55/D59)/BACKLOG/journal.
+Lire `CLAUDE.md` + ce fichier. Phase A CLOSE (D1-D5). **T1 palette FAIT** (golden
+`57c166d8…` intact, build vert, non commité — Nico commit). Prochaine étape :
+**T2 — Chrome & navigation** (`02_chrome_navigation.md` : legend → overlay F1 masqué,
+launcher pleine hauteur, Échap → retour accueil) puis **T3 — Dossier plante**
+(`03_dossier_plante.md`, vue+pont, golden NEUTRE annoncé). MAJ DETTE (D54/D55/D59)/
+BACKLOG/journal en fin de sprint.

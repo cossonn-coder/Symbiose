@@ -28,6 +28,12 @@ namespace Symbiose
 		private bool _actif;
 		private bool _verrouille;
 
+		// Callback d'ÉDITION (T1) : le clic DROIT sur un slot ouvre le menu
+		// assigner/vider (branché par la palette, cf. WorldView.Palette.cs). On
+		// passe par une Action C# plutôt qu'un signal Godot : la palette capture
+		// déjà l'index de slot dans son lambda, rien à transporter.
+		public System.Action OnRightClick;
+
 		public bool Actif
 		{
 			get => _actif;
@@ -62,6 +68,21 @@ namespace Symbiose
 			AddThemeStyleboxOverride("pressed", new StyleBoxEmpty());
 			AddThemeStyleboxOverride("disabled", new StyleBoxEmpty());
 			AddThemeStyleboxOverride("focus", new StyleBoxEmpty());
+		}
+
+		// Le clic DROIT n'est pas un « appui » de Button (Pressed = gauche) : on
+		// l'intercepte ici et on délègue à la palette (édition du slot). Les autres
+		// événements repartent au Button (base) pour garder le clic gauche/survol.
+		public override void _GuiInput(InputEvent ev)
+		{
+			if (ev is InputEventMouseButton mb && mb.Pressed
+				&& mb.ButtonIndex == MouseButton.Right)
+			{
+				OnRightClick?.Invoke();
+				AcceptEvent();
+				return;
+			}
+			base._GuiInput(ev);
 		}
 
 		public override void _Draw()

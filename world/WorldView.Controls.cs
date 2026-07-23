@@ -35,19 +35,20 @@ namespace Symbiose
 			// univoques en AZERTY).
 			if (ev is InputEventKey k && k.Pressed && !k.Echo)
 			{
-				// Gestes 1..8 en PhysicalKeycode (POSITION de la touche, pas son
+				// SLOTS de la palette (T1) en PhysicalKeycode (POSITION de la touche, pas son
 				// étiquette) : en AZERTY la rangée des chiffres non-shiftée émet
 				// &é"'(-è_ comme Keycode — le code physique, lui, reste Key1..8
 				// quel que soit le layout. 📖 C'est la différence scancode/keysym.
 				if (k.PhysicalKeycode >= Key.Key1 && k.PhysicalKeycode <= Key.Key9)
 				{
-					SelectGeste((int)(k.PhysicalKeycode - Key.Key1));
+					SelectSlot((int)(k.PhysicalKeycode - Key.Key1));
 					return;
 				}
-				// Tab = geste suivant : UNE touche cycle toute la palette (retour
+				if (k.PhysicalKeycode == Key.Key0) { SelectSlot(9); return; }
+				// Tab = slot suivant : UNE touche cycle les slots OCCUPÉS (retour
 				// F5 Nico). Plus robuste que les chiffres pour atteindre les
 				// derniers gestes ; le HUD montre toujours le geste courant.
-				if (k.Keycode == Key.Tab) { CyclePalette(+1); return; }
+				if (k.Keycode == Key.Tab) { CycleSlots(+1); return; }
 				switch (k.Keycode)
 				{
 					case Key.Space:    TogglePhase();  break;
