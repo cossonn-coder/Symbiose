@@ -32,7 +32,11 @@ DEFAULT_PALETTE = {"leaf": "#469a3f", "flower": "#ead85a",
                    "fruit_unripe": "#6fae45", "fruit_ripe": "#cf3a2e"}
 AUTUMN_LEAVES = ["#c9a23a", "#c4762a", "#a8392a", "#b8902f", "#9c5a22"]
 
-LEAF_MAX_THICK_CM = 1.6      # au-delà = bois structurel (tronc) → nu, pas de feuilles
+LEAF_MAX_THICK_CM = 2.5      # au-delà = bois structurel (charpente/tronc) → nu. Recalibré
+                             # au sprint lisibilité ligneuse : sous le pipe model
+                             # (taper_thickness) les brindilles restent fines (~0.3–2.1 cm)
+                             # et le bois épaissit fort (charpente ≥3, tronc ~10–15 cm) →
+                             # ce seuil laisse la couronne feuillée et dénude la charpente.
 LEAF_SPACING_CM   = 11.0     # une feuille tous les ~11 cm de rameau feuillé
 LEAF_OFFSET_CM    = 7.0      # déport latéral de la feuille p/r à l'axe du rameau
 LEAF_SIZE_CM      = 7.0      # demi-grandeur d'une feuille

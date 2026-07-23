@@ -241,6 +241,7 @@ class PlantBase(ABC):
     max_extent_cm:         float = 200.0  # plafond d'extension horizontale de la couronne
     emit_length_cm:        float = 8.0    # cm : granularité de segment émis par l'apex (≡ EMIT_LENGTH)
     max_segments:          int   = 40     # plafond dur de segments (≡ MAX_SEGMENTS ; haut pour un arbre)
+    girth_max_cm:          float = 1.5    # épaisseur cible du "tronc" mûr (cm), pipe model (sprint lisibilité ligneuse). Défaut FAIBLE : une herbacée procédurale (tomate, grimpantes) reste fine, proche de l'ancienne accumulation à âge mûr. Les ligneux surchargent haut (perennials.py).
     organ_site:            str   = "terminal"  # "terminal"|"lateral" — naissance fleurs/fruits (tronçon 5)
     foliage_halfwidth:     float = 0.0    # demi-largeur de feuillage autour d'un segment (couronne non nulle)
     # Bascule vers la voie procédurale (empreinte dérivée de la structure §G). OFF par

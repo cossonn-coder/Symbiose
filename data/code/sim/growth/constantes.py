@@ -25,7 +25,19 @@ AUXIN_RELEASE_SCALE   = 400.0   # semaines : échelle de relâchement avec l'âg
 GROWTH_SPEED   = 2.0     # ↳ défaut PlantBase.growth_speed (cm/tick d'allongement)
 EMIT_LENGTH    = 8.0     # cm : au-delà, l'apex émet un segment axial
 THICKNESS_INIT = 0.3     # épaisseur d'un segment neuf
-THICKEN_RATE   = 0.03    # cm/tick d'épaississement du bois porteur
+THICKEN_RATE   = 0.03    # OBSOLÈTE depuis le sprint lisibilité ligneuse (2026-07-23) :
+                         # l'accumulation uniforme non bornée (baobab + ronces d'égal
+                         # diamètre) est remplacée par le pipe model `taper_thickness`
+                         # (geometrie.py). Conservé pour mémoire (garde-fou « conserver
+                         # le code ») — plus lu par grow_plant.
+
+# --- Croissance secondaire du bois (sprint lisibilité ligneuse, pipe model) ---
+# Remplace THICKEN_RATE. L'épaisseur d'un segment DÉRIVE de la topologie (pipe
+# model : section ∝ nombre de terminaux portés en aval) et d'une croissance
+# secondaire SATURANTE avec l'âge → tronc épais mais BORNÉ, brindilles fines.
+# thickness = THICKNESS_INIT + girth_max_espèce · (1−exp(−âge/GIRTH_TAU)) · taper.
+GIRTH_TAU  = 300.0   # semaines : échelle de saturation de la croissance secondaire (placeholder → F5)
+TAPER_EXP  = 0.5     # exposant du pipe model (0.5 = section ∝ n_term ; →1 = hiérarchie visuelle plus marquée) (placeholder → F5)
 
 # --- Débourrement (§D.3) ----------------------------------------------------
 BRANCH_ANGLE = math.radians(50.0)  # ↳ défaut PlantBase.branch_angle (50°) — converti à la lecture

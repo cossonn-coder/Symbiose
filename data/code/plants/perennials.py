@@ -139,6 +139,7 @@ class Fig(PerennialWoody):
     greffable = True           # ligneux fruitier : porte-greffe/greffon de greffe (palette ③, D8)
     bloom_forcing_gdd = 40.0   # figuier MÉDITERRANÉEN : fleurit plus tard que le pommier, en début d'été (~S20) (①)
     bloom_duration = 4
+    girth_max_cm = 12.0        # tronc mûr ~12 cm (pipe model) — POSÉ, sans effet tant que non migré en procédural (dette) ; placeholder → F5
     age_curve = [(0, 30, 20), (5, 200, 150), (10, 400, 250), (20, 500, 300)]
 
 
@@ -193,6 +194,7 @@ class AppleTree(PerennialWoody):
     emit_length_cm        = 50.0
     max_segments          = 70
     wood_persistence      = 4000
+    girth_max_cm          = 18.0      # tronc mûr ~18 cm (pipe model, sprint lisibilité ligneuse — SEULE espèce qui l'exerce aujourd'hui, procedural_growth=True) ; placeholder → F5
     foliage_halfwidth     = 50.0      # couronne non nulle + racines viables (cf. ci-dessus)
     organ_site            = "lateral" # fructification latérale (lu au tronçon 5)
     fruitier              = True      # porte des fruits traçables (③ ; 1re fructif. à maturity_years=5)
@@ -220,6 +222,7 @@ class CherryTree(PerennialWoody):
     greffable = True           # ligneux fruitier greffé (palette ③, D8) ; Rosaceae → compatible pommier/framboisier
     bloom_forcing_gdd = 12.0   # printemps (~S16) — floraison de cerisier légèrement après le pommier (①)
     bloom_duration = 3         # floraison courte
+    girth_max_cm = 15.0        # tronc mûr ~15 cm (pipe model) — POSÉ, sans effet tant que non migré ; placeholder → F5
     age_curve = [(0, 40, 25), (5, 250, 150), (10, 500, 280),
                  (20, 700, 380), (50, 900, 450), (100, 1000, 500)]
 
@@ -258,6 +261,7 @@ class WalnutTree(PerennialWoody):
             "description": "Juglone — forte allélopathie racinaire (rien ne pousse sous le noyer)"
         }
     ]
+    girth_max_cm = 30.0        # tronc mûr ~30 cm (pipe model) — POSÉ, sans effet tant que non migré ; placeholder → F5
     age_curve = [(0, 40, 25), (5, 300, 200), (10, 600, 350),
                  (20, 1000, 550), (50, 1500, 750), (100, 2500, 1000)]
 
@@ -274,6 +278,7 @@ class OakTree(PerennialWoody):
     reproduction_rate = 0.08   # glandée (mast) rare
     longevity_years = 500
     maturity_years = 25
+    girth_max_cm = 40.0        # tronc mûr ~40 cm (pipe model) — POSÉ, sans effet tant que non migré ; placeholder → F5
     age_curve = [(0, 30, 20), (5, 200, 150), (10, 400, 300),
                  (20, 700, 450), (50, 1500, 800), (100, 3000, 1200)]
 
@@ -302,6 +307,7 @@ class BeechTree(PerennialWoody):
     reproduction_rate = 0.08         # faînée (mast) irrégulière
     longevity_years = 300
     maturity_years = 30
+    girth_max_cm = 35.0        # tronc mûr ~35 cm (pipe model) — POSÉ, sans effet tant que non migré ; placeholder → F5
     age_curve = [(0, 30, 18), (5, 200, 130), (10, 400, 260),
                  (20, 700, 400), (50, 1500, 650), (100, 2800, 950)]
 
@@ -325,6 +331,7 @@ class BirchTree(PerennialWoody):
     reproduction_rate = 0.20         # graines ailées abondantes, dispersion large
     longevity_years = 90
     maturity_years = 10
+    girth_max_cm = 14.0        # tronc mûr ~14 cm (pipe model) — POSÉ, sans effet tant que non migré ; placeholder → F5
     age_curve = [(0, 40, 15), (5, 400, 120), (10, 800, 200),
                  (20, 1300, 300), (50, 1800, 420), (90, 2000, 480)]
 
@@ -347,6 +354,7 @@ class HornbeamTree(PerennialWoody):
     reproduction_rate = 0.12         # samares en grappes
     longevity_years = 150
     maturity_years = 15
+    girth_max_cm = 18.0        # tronc mûr ~18 cm (pipe model) — POSÉ, sans effet tant que non migré ; placeholder → F5
     age_curve = [(0, 40, 20), (5, 250, 120), (10, 500, 220),
                  (20, 900, 340), (50, 1500, 520), (100, 2000, 650)]
 
@@ -385,6 +393,7 @@ class FirTree(PerennialWoody):
     mulch_source = "aiguilles"       # récolté → stock aiguilles (④/⑤)
     longevity_years = 250
     maturity_years = 20
+    girth_max_cm = 25.0        # tronc mûr ~25 cm (pipe model) — POSÉ, sans effet tant que non migré ; placeholder → F5
     age_curve = [(0, 30, 15), (5, 200, 80), (10, 400, 130),
                  (20, 800, 200), (50, 1800, 350), (100, 3000, 500)]
 
@@ -433,6 +442,7 @@ class Alder(PerennialWoody):
     longevity_years = 100
     maturity_years = 10
     bouturable = True                # rameau de saule/aulne piqué au bord de l'eau reprend
+    girth_max_cm = 16.0              # tronc mûr ~16 cm (pipe model) — POSÉ, sans effet tant que non migré ; placeholder → F5
     age_curve = [(0, 40, 20), (5, 350, 120), (10, 700, 200),
                  (20, 1200, 320), (50, 2000, 450), (100, 2500, 550)]
     # Fixation N₂ actinorhizienne (Frankia) — même route générique que l'azote de

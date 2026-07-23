@@ -190,6 +190,37 @@ def _apex_in_subtree(segs: list, ch: dict, depth: list) -> list:
     return res
 
 
+def taper_thickness(segs: list, girth_max: float, tau: float,
+                    exp: float, init: float) -> None:
+    """Pipe model + croissance secondaire saturante (sprint lisibilité ligneuse).
+    Écrit `thickness_cm` sur CHAQUE segment (pure, déterministe, zéro RNG) :
+
+        thickness_i = init + girth_max · (1 − exp(−âge_i / tau)) · (n_term_i / n_root) ^ exp
+
+    - `n_term_i` = nombre de segments TERMINAUX (sans enfant) portés dans le
+      sous-arbre de `i`. Le collet (index 0) porte le total. Une extrémité → 1.
+      On compte l'absence d'enfant, PAS `is_apex` (un apex retiré peut avoir des
+      enfants ; une extrémité sénescente sans enfant reste terminale).
+    - taper = (n_term_i / n_root) ^ exp ∈ ]0,1] (1 au collet) → tronc épais,
+      brindilles fines. Le collet obtient init + girth_max·sat(âge) : borné.
+    - O(n), une passe en post-ordre (profondeur décroissante = enfants d'abord).
+    """
+    n = len(segs)
+    if n == 0:
+        return
+    ch = _children(segs)
+    depth = _depths(segs)
+    n_term = [0] * n
+    for i in sorted(range(n), key=lambda i: -depth[i]):  # enfants avant parent
+        kids = ch[i]
+        n_term[i] = 1 if not kids else sum(n_term[c] for c in kids)
+    n_root = n_term[0]
+    for i, s in enumerate(segs):
+        taper = 1.0 if n_root <= 0 else (n_term[i] / n_root) ** exp
+        sat = 1.0 - math.exp(-s.age_weeks / tau)
+        s.thickness_cm = init + girth_max * sat * taper
+
+
 def _rebuild(plant, kill: set) -> None:
     """Retire les segments de `kill` et réindexe les `parent` survivants."""
     segs = plant.segments

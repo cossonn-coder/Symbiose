@@ -97,7 +97,37 @@ sont pas migrés. Migration des 9 arbres en procédural = **sprint distinct, det
 - Doc : `docs/vegetal/croissance/conception_lisibilite_ligneuse.md`
 - Kickoffs : `01_moteur_taper.md`, `02_vue_godot.md`
 
+## Tronçon ① — FAIT (moteur pipe model + taper)
+Implémenté : `taper_thickness` pure (post-ordre O(n), pipe model n_terminaux +
+sat(âge)) dans `sim/growth/geometrie.py` ; appel unique/tick dans `grow_plant`
+(`phases.py`) pour les espèces `procedural_growth`, après élagage, avant empreinte ;
+retrait de l'accumulation `+= THICKEN_RATE` (constante CONSERVÉE + commentée
+obsolète). Leviers module posés : **`GIRTH_TAU = 300.0`**, **`TAPER_EXP = 0.5`**.
+Attribut `girth_max_cm` sur `PlantBase` (**défaut 1.5** = herbacées fines) + 10
+ligneux (pommier 18 / cerisier 15 / figuier 12 / noyer 30 / chêne 40 / hêtre 35 /
+bouleau 14 / charme 18 / sapin 25 / aulne 16 — placeholders → F5 ; SEUL le pommier
+les exerce, seul `procedural_growth=True`). Maquette : **`LEAF_MAX_THICK_CM = 2.5`**
+(recalibré ; brindilles ≤2.1 cm feuillues, charpente ≥3 cm nue).
+
+Vérifs (pommier 10 ans, 55 segments) : collet 15.1 cm (borné ≤ 18.3 = init+girth),
+brindilles 0.31 cm → contraste net (plus de baobab ni de ronces d'égal diamètre).
+Tests croissance : **75/75** (dont 3 neufs : taper monotone, tronc borné 5 ans ET
+50 ans, déterminisme). Sous-suites vertes (génétique, vigueur, population, ombre,
+phototropisme, sénescence, signes, maîtrise). Tailles LDC toutes ≤300 (code pur).
+
+### Golden : PAS re-figé — prémisse du kickoff corrigée
+Le golden `tests/test_golden.py` **ne sérialise PAS `thickness_cm`** : son digest ne
+capture que des attrs plante ÉCOLOGIQUES (`_PLANT_ATTRS` : stade, âges, vitalité,
+growth_factor, x/y, mémoires) + gènes + rondelles + résumé eco. L'épaisseur vit
+uniquement dans la structure `Segment`, HORS digest, et n'a **aucun couplage
+écologique** (cartographie confirmée). → golden **INVARIANT**, hash INCHANGÉ
+`57c166d8d3626444e0fc9b88b360edc62c047927f7608c45fefae35a6bba08da`. Aucune
+re-figeage nécessaire (le « re-figeage maîtrisé attendu » du kickoff reposait sur
+une prémisse fausse). Golden de champ population aussi inchangé.
+
 ## §REPRISE
-Conception FIGÉE, sprint prêt pour `/sprint-auto sprint_lisibilite_ligneuse`.
-Prochain : tronçon ① (moteur), golden re-figé maîtrisé attendu. Rien à concevoir
-de plus. Reste F5 Nico après ②.
+Tronçon ① (moteur) CLOS — golden intact (thickness hors digest, zéro couplage).
+Changements NON commités (Nico commit). Prochain : **tronçon ② `02_vue_godot.md`**
+(recalibrer largeur de trait C# `×2.2` + seuil feuilles `LeafMaxThickCm` contre la
+nouvelle échelle d'épaisseur, banc F5 vieux pommier ; golden pur-vue intact). Reste
+F5 Nico après ②.

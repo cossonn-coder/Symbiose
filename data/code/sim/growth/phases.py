@@ -14,11 +14,12 @@ import math
 
 from fields import _hash_noise, form_seed_at
 from .constantes import (AUXIN_PROD_FLOOR, AUXIN_RELEASE_SCALE, AUXIN_DECAY,
-                         AUXIN_INHIB_THRESHOLD, THICKEN_RATE, THICKNESS_INIT,
-                         JITTER_RAD, ETIOLEMENT_LIGHT_SEUIL, ETIOLEMENT_GAIN)
+                         AUXIN_INHIB_THRESHOLD, THICKNESS_INIT,
+                         JITTER_RAD, ETIOLEMENT_LIGHT_SEUIL, ETIOLEMENT_GAIN,
+                         GIRTH_TAU, TAPER_EXP)
 from .geometrie import (_tip, _horiz, _lateral_dir, _phototropic_bias,
                         _apex_z_floor, _depths, _children, _subtree,
-                        _apex_in_subtree, _rebuild)
+                        _apex_in_subtree, _rebuild, taper_thickness)
 
 
 # ---------------------------------------------------------------------------
@@ -64,8 +65,7 @@ def _elongate_emit(plant, speed: float, max_height: float, max_extent: float,
     new_segs = []
     for i, s in enumerate(list(segs)):  # snapshot : indices stables (on append)
         if not s.is_apex:
-            s.thickness_cm += THICKEN_RATE        # le bois porteur épaissit
-            continue
+            continue                              # épaisseur = pipe model (taper_thickness), en fin de passe
         tip = _tip(s)
         if tip[2] >= max_height or _horiz(tip, collet) >= max_extent:
             s.is_apex = False                     # gabarit atteint → l'apex se retire
@@ -248,6 +248,13 @@ def grow_plant(plant, seed: int, week: int, light_field=None,
     # ex. après senescence totale du vieux bois) reprend du collet → run éternel.
     if not any(s.is_apex for s in plant.segments):
         plant.segments[0].has_bud = True
+    # Épaisseur du bois = pipe model + croissance secondaire saturante (sprint
+    # lisibilité ligneuse). UNE seule passe par tick (topologie stable ici), après
+    # élagage/rejet, avant l'empreinte. Pure structurelle, sans couplage écologique.
+    # Réservée aux espèces migrées : les autres n'exposent pas leur structure.
+    if cls.procedural_growth:
+        taper_thickness(plant.segments, cls.girth_max_cm, GIRTH_TAU,
+                        TAPER_EXP, THICKNESS_INIT)
     # §G — empreinte dérivée de la structure (seulement pour les espèces migrées :
     # les autres gardent l'ancien chemin par les stades → recalcul inutile).
     if cls.procedural_growth:

@@ -360,6 +360,62 @@ def test_allure_pommier_determinisme():
           f"hfin {h1[-1]:.1f} vs {h2[-1]:.1f}")
 
 
+# --- 8bis. Épaisseur du bois (sprint lisibilité ligneuse) : pipe model + borne --
+#
+# Remplace l'accumulation uniforme non bornée (baobab + ronces d'égal diamètre) par
+# une épaisseur DÉRIVÉE de la topologie (pipe model : section ∝ n_terminaux portés
+# en aval) et d'une croissance secondaire SATURANTE avec l'âge. Contrats :
+#   (a) amincissement monotone — parent ≥ enfant, collet le plus épais ;
+#   (b) tronc BORNÉ — collet ≤ THICKNESS_INIT + girth_max à tout âge (5 ans ET 50) ;
+#   (c) déterminisme — mêmes ticks → mêmes épaisseurs (zéro RNG, philo #3).
+
+
+def _apple_at(n):
+    """Pommier grandi n ticks (cycle saisonnier réel), pleine vigueur."""
+    p = PlantInstance(plant_class=AppleTree, position=POS)
+    p.growth_factor = 1.0
+    for k in range(n):
+        G.grow_plant(p, SEED, 1 + k)
+    return p
+
+
+def test_taper_amincissement_monotone():
+    p = _apple_at(520)                          # ~10 ans → structure ramifiée
+    segs = p.segments
+    check("taper: plus d'un segment (arbre ramifié)", len(segs) > 5,
+          f"len={len(segs)}")
+    mono = all(segs[s.parent].thickness_cm >= s.thickness_cm - 1e-9
+               for s in segs if s.parent is not None)
+    check("taper: amincissement monotone (parent ≥ enfant)", mono)
+    collet = segs[0].thickness_cm
+    check("taper: collet le plus épais",
+          collet >= max(s.thickness_cm for s in segs) - 1e-9,
+          f"collet={collet:.2f}")
+    # Brindilles fines : au moins une extrémité proche de THICKNESS_INIT (≠ baobab
+    # uniforme). Le contraste collet/brindille tue les « ronces diamètre baobab ».
+    fin = min(s.thickness_cm for s in segs)
+    check("taper: brindilles fines (contraste avec le collet)",
+          fin < collet * 0.5, f"fin={fin:.2f} vs collet={collet:.2f}")
+
+
+def test_taper_tronc_borne():
+    from sim.growth.constantes import THICKNESS_INIT
+    bound = THICKNESS_INIT + AppleTree.girth_max_cm + 1e-6
+    c5  = _apple_at(260).segments[0].thickness_cm    # ~5 ans
+    c50 = _apple_at(2600).segments[0].thickness_cm   # ~50 ans (borne tient dans la durée)
+    check("taper: tronc borné à ~5 ans", c5 <= bound, f"{c5:.2f} ≤ {bound:.2f}")
+    check("taper: tronc borné à ~50 ans (pas de baobab)", c50 <= bound,
+          f"{c50:.2f} ≤ {bound:.2f}")
+    check("taper: le tronc grossit AVEC l'âge (saturant)", c50 > c5,
+          f"{c5:.2f} → {c50:.2f}")
+
+
+def test_taper_determinisme():
+    def run():
+        return [round(s.thickness_cm, 6) for s in _apple_at(260).segments]
+    check("taper: épaisseurs déterministes (260 ticks, zéro RNG)", run() == run())
+
+
 def test_pommier_temoin_non_migre():
     """Une LIGNEUSE NON migrée (Figuier) garde l'age_curve : l'override résolu ne
     fuit pas. Sa hauteur suit age_years ; sa structure pousse mais reste non lue."""
@@ -434,6 +490,9 @@ if __name__ == "__main__":
     test_temoin_non_migre()
     test_allure_pommier()
     test_allure_pommier_determinisme()
+    test_taper_amincissement_monotone()
+    test_taper_tronc_borne()
+    test_taper_determinisme()
     test_pommier_temoin_non_migre()
     test_serialisation_structure()
 
