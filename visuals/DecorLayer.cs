@@ -288,37 +288,85 @@ namespace Symbiose
 			DrawColoredPolygon(new[] { p0, p1, p2, p3 }, col);
 		}
 
-		// FALAISE : paroi ÉTAGÉE en redans (3 valeurs) ; le NOMBRE de redans traduit
-		// la PENTE issue du profil (douce = large & peu étagée, déversante = serrée).
-		// Sommet végétalisé déjà donné par l'assise (RocheHaut). Adjacente à la rivière.
+		// FALAISE : un ressaut rocheux qui SURPLOMBE le jardin (T3). Plus des redans
+		// à plat : une vraie FACE VERTICALE montée en −Y écran (comme un mur de
+		// maison, cf. WorldView.Maison upWall), STRATIFIÉE en 3 valeurs de roche
+		// dures, coiffée d'un PLATEAU végétalisé lui aussi élevé, avec une ombre
+		// portée au pied (le surplomb) et un semis d'ÉBOULIS clairs à la base. La
+		// hauteur de la face dérive de la PENTE (Douce basse → Déversante haute).
+		// NON forcée : le seed décide de sa présence (philo #7) — on la rend juste
+		// lisible quand elle paraît. Déterministe (hash + 3-sinus, zéro Random, #3).
 		private void DrawFalaise(Secteur s)
 		{
-			int redans = s.Pente switch
+			// Hauteur de la face (cm monde) élevée en −Y écran, selon la pente.
+			float faceCm = s.Pente switch
+			{
+				PenteFalaise.Douce      => 190f,
+				PenteFalaise.Verticale  => 330f,
+				_                       => 470f,   // déversante : surplomb haut
+			};
+			float facePx = faceCm * WorldView.PxPerCmZ;
+			// Nombre de strates de roche empilées sur la face (pente serrée = plus).
+			int strates = s.Pente switch
 			{
 				PenteFalaise.Douce      => 3,
-				PenteFalaise.Verticale  => 5,
-				_                       => 7,   // déversante : gradins serrés
+				PenteFalaise.Verticale  => 4,
+				_                       => 5,
 			};
 			Color[] rampe = { Palette16.RocheOmbre, Palette16.RocheMedian, Palette16.RocheClair };
+			float dFront  = AmplitudeCm + DepthCm * 0.15f;   // pied de la face (bord jardin)
+			float ombreW  = DepthCm * 0.08f;                 // largeur d'ombre au pied
+			Color ombreCol = Assombrir(Palette16.RocheOmbre, -0.25f);
 			int steps = Mathf.CeilToInt(WorldView.WorldCm / StepCm);
-			// Chaque redan = une bande le long de la profondeur, à sa valeur, avec un
-			// front sinueux (jamais une droite) qui suit le tracé du secteur.
-			for (int r = 0; r < redans; r++)
+			// Front SINUEUX partagé (jamais une droite) : même ondulation pour l'ombre,
+			// la face et le plateau → un seul bord cohérent qui serpente.
+			float Wob(float u) => AmplitudeCm * 0.4f * Ondulation(s.SeedSecteur, u / 120f);
+
+			// 1) OMBRE PORTÉE au pied, côté jardin (depth < dFront) : le surplomb.
+			for (int i = 0; i < steps; i++)
 			{
-				float d0 = AmplitudeCm + DepthCm * (0.15f + 0.7f * r / redans);
-				float d1 = AmplitudeCm + DepthCm * (0.15f + 0.7f * (r + 1) / redans);
-				Color col = rampe[r % 3];
+				float u0 = i * StepCm, u1 = Mathf.Min(u0 + StepCm, WorldView.WorldCm);
+				Bande(s.Cote, u0, u1, dFront - ombreW + Wob(u0), dFront - ombreW + Wob(u1),
+					  dFront + Wob(u0), dFront + Wob(u1), ombreCol);
+			}
+			// 2) PLATEAU VÉGÉTALISÉ élevé de la hauteur de face : recule en profondeur
+			//    (DecorRocheHaut). C'est le SOMMET — il coiffe la face plus haut à l'écran.
+			Vector2 up = new Vector2(0f, -facePx);
+			for (int i = 0; i < steps; i++)
+			{
+				float u0 = i * StepCm, u1 = Mathf.Min(u0 + StepCm, WorldView.WorldCm);
+				Vector2 p0 = EdgePoint(s.Cote, u0, dFront + Wob(u0)) + up;
+				Vector2 p1 = EdgePoint(s.Cote, u1, dFront + Wob(u1)) + up;
+				Vector2 p2 = EdgePoint(s.Cote, u1, dFront + DepthCm * 0.55f + Wob(u1)) + up;
+				Vector2 p3 = EdgePoint(s.Cote, u0, dFront + DepthCm * 0.55f + Wob(u0)) + up;
+				DrawColoredPolygon(new[] { p0, p1, p2, p3 }, Palette16.DecorRocheHaut);
+			}
+			// 3) FACE VERTICALE stratifiée : chaque strate = une tranche de hauteur du
+			//    pied (dFront, au sol) vers le sommet (dFront + up), teinte alternée →
+			//    bandes de roche contrastées qui font lire le relief (base la + sombre).
+			for (int k = 0; k < strates; k++)
+			{
+				Vector2 upA = new Vector2(0f, -facePx * k / strates);
+				Vector2 upB = new Vector2(0f, -facePx * (k + 1) / strates);
+				Color col = rampe[k % 3];
 				for (int i = 0; i < steps; i++)
 				{
 					float u0 = i * StepCm, u1 = Mathf.Min(u0 + StepCm, WorldView.WorldCm);
-					float w0 = AmplitudeCm * 0.4f * Ondulation(s.SeedSecteur + (uint)r * 131u, u0 / 120f);
-					float w1 = AmplitudeCm * 0.4f * Ondulation(s.SeedSecteur + (uint)r * 131u, u1 / 120f);
-					Vector2 p0 = EdgePoint(s.Cote, u0, d0 + w0);
-					Vector2 p1 = EdgePoint(s.Cote, u1, d0 + w1);
-					Vector2 p2 = EdgePoint(s.Cote, u1, d1 + w1);
-					Vector2 p3 = EdgePoint(s.Cote, u0, d1 + w0);
-					DrawColoredPolygon(new[] { p0, p1, p2, p3 }, col);
+					Vector2 g0 = EdgePoint(s.Cote, u0, dFront + Wob(u0));
+					Vector2 g1 = EdgePoint(s.Cote, u1, dFront + Wob(u1));
+					DrawColoredPolygon(new[] { g0 + upA, g1 + upA, g1 + upB, g0 + upB }, col);
 				}
+			}
+			// 4) ÉBOULIS : taches claires (RocheClair) jonchant le pied de la face,
+			//    semis déterministe hashé (densité modérée, jamais de Random).
+			for (int i = 0; i < steps; i++)
+			{
+				uint hh = HashKey($"eboul|{s.SeedSecteur}|{i}");
+				if (hh % 100u >= 42u) continue;              // ~42 % des pas
+				float u = i * StepCm + ((hh >> 6 & 0xff) / 255f) * StepCm;
+				if (u < 0f || u > WorldView.WorldCm) continue;
+				float d = dFront - ombreW * ((hh >> 3 & 7u) / 7f);
+				DrawCircle(EdgePoint(s.Cote, u, d + Wob(u)), 1.5f + (hh & 1u), Palette16.RocheClair);
 			}
 		}
 

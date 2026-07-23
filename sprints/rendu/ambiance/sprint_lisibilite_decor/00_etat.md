@@ -94,12 +94,33 @@ Golden **INCHANGÉ** aux 4 tronçons (pure vue C#, zéro moteur — ne PAS lance
   **F5 Nico requis** : la rivière se lit-elle comme surface d'eau creusée (berges nettes, courant
   perceptible via les streaks) ?
 
+- **T3 — Falaise : CLOSE** (2026-07-24). Pure vue C#, golden non concerné (aucun moteur touché,
+  test_golden NON lancé). `DrawFalaise` réécrit : la falaise SURPLOMBE désormais. (a) **Face
+  verticale** montée en −Y écran (offset `Vector2(0,-facePx)`, même patron que `WorldView.Maison`
+  upWall), **stratifiée** en 3 valeurs de roche (base la + sombre → strate claire, `RocheOmbre/
+  Median/Clair`), nb de strates ∝ pente (Douce 3 / Verticale 4 / Déversante 5), hauteur ∝ pente
+  (190/330/470 cm). (b) **Plateau végétalisé** (`DecorRocheHaut`) lui-même élevé de la hauteur de
+  face → coiffe la paroi, recule en profondeur (0.55·DepthCm). (c) **Ombre portée au pied** côté
+  jardin (bande `Assombrir(RocheOmbre,-0.25)` en avant du pied, depth < dFront) = le surplomb.
+  (d) **Éboulis** : semis hashé de taches `RocheClair` (~42 %) au pied. Front SINUEUX partagé
+  (helper local `Wob`, même ondulation pour ombre/face/plateau → un seul bord cohérent). **NON
+  forcée** : `BuildProfile`/couplage rivière↔falaise INTOUCHÉS (philo #7) ; aucun forçage laissé.
+  Palette : `DecorRocheHaut` a39a8b→8a9668 (plateau herbeux, distinct de la roche grise),
+  `RocheClair` 9c9182→aca291 + `RocheOmbre` 5c5449→4c453a (contraste creusé). Zéro `Random`
+  (hash + 3-sinus, philo #3). Build `dotnet` = 0 err / 0 warn.
+  LDC : `DecorLayer.cs` 276 code / `Palette16.cs` 81 code (🟢).
+  **F5 Nico requis** : quand une falaise est présente (rare, au gré du seed), surplombe-t-elle
+  bien (face verticale stratifiée + ombre au pied + plateau végétalisé au-dessus) ?
+
 ## §REPRISE
-T1 (forêt) + T2 (rivière) CLOSES, commits à faire par Nico. **Prochaine étape = T3 falaise** : lire
-`03_falaise.md` (vraie face verticale montée −Y + ombre portée au pied/surplomb + éboulis + 3 valeurs
-roche contrastées, NON forcée = fidèle #7), toucher `DecorLayer.cs` (`DrawFalaise`) + `Palette16.cs`
-(teintes roche). Golden INCHANGÉ (pure vue, ne PAS lancer test_golden). Boucle : `dotnet build`
-(0 err) → MAJ ce fichier → commit → T4.
+T1 (forêt) + T2 (rivière) + T3 (falaise) CLOSES, commits à faire par Nico. **Prochaine étape = T4
+transitions/échelle + banc F5** : lire `04_transitions_banc.md` (lisière nette côté jardin,
+recalibrage taille des détails en LOD 2 niveaux — détails fins si zoom ≥ 2, banc seed exposant les
+4 motifs, MAJ doc conception `docs/rendu/ambiance/conception_lisibilite_decor.md`). Toucher
+`DecorLayer.cs` (+ `Palette16.cs` au besoin) — c'est la **vue finale** du sprint. Golden INCHANGÉ
+(pure vue, ne PAS lancer test_golden). Boucle : `dotnet build` (0 err) → MAJ ce fichier → commit.
+⚠️ Taille : `DecorLayer.cs` à 276 code (fichier total 431 lignes commentaires inclus) — encore 🟢
+en LDC pur, mais T4 y ajoute encore ; surveiller le seuil 300 (candidat `/refactor` si dépassement).
 
 ## §REPRISE
 Lire ce fichier. Phase A en cours : diagnostic posé, 3 arbitrages en attente de Nico.

@@ -130,7 +130,10 @@ namespace Symbiose
 		public static readonly Color DecorEau           = new Color("3f6f8e"); // rivière (bleu-gris)
 		public static readonly Color DecorEauBerge      = new Color("6f9a86"); // berge herbeuse (vert-eau)
 		public static readonly Color DecorRoche         = new Color("8a8073"); // falaise (gris-brun)
-		public static readonly Color DecorRocheHaut     = new Color("a39a8b"); // sommet végétalisé clair
+		// T3 lisibilité décor : le SOMMET de la falaise est un plateau HERBEUX (le
+		// surplomb rocheux se lit à la face verticale, pas au sommet) → teinte
+		// poussée vers un vert-gris sec d'herbe rase, distincte de la roche grise.
+		public static readonly Color DecorRocheHaut     = new Color("8a9668"); // plateau végétalisé (herbe rase sèche)
 		// === CHEMINS ENHERBÉS (gazon inter-tuiles, T4) =======================
 		// Le gris pierre FondPierre du fond de fenêtre bascule en vert gazon.
 		public static readonly Color GazonChemin        = new Color("6f9350"); // gazon des chemins (grain léger)
@@ -161,9 +164,9 @@ namespace Symbiose
 		public static readonly Color EauReflet         = new Color("6fa6bf"); // reflet de ciel (bleu clair, streak courant)
 		public static readonly Color BergeGalet        = new Color("9a8f76"); // berge de galets/limon (bord franc du lit)
 		// -- Roche de falaise (3 valeurs de redans étagés) --
-		public static readonly Color RocheClair        = new Color("9c9182"); // redan éclairé
+		public static readonly Color RocheClair        = new Color("aca291"); // strate éclairée / éboulis (contraste creusé T3)
 		public static readonly Color RocheMedian        = new Color("7c7264"); // pan médian
-		public static readonly Color RocheOmbre        = new Color("5c5449"); // redan d'ombre / faille
+		public static readonly Color RocheOmbre        = new Color("4c453a"); // strate d'ombre / pied de face (assombri T3)
 		// -- Petites fleurs de la prairie (semis déterministe) --
 		public static readonly Color FleurPrairieBlanc = new Color("e7e3d2"); // marguerites (points clairs)
 		public static readonly Color FleurPrairieJaune = new Color("e6c24a"); // boutons-d'or (points jaunes)
