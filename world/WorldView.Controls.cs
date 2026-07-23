@@ -45,6 +45,23 @@ namespace Symbiose
 					return;
 				}
 				if (k.PhysicalKeycode == Key.Key0) { SelectSlot(9); return; }
+				// Échap (T2, item 5, D4) : retour à l'accueil, avec PRÉCÉDENCE. Si un
+				// panneau de consultation (Carnet/Encyclopédie/… ou Automate) est
+				// ouvert, Échap le ferme d'abord et s'arrête là ; sinon il recharge la
+				// scène → _ExitTree ferme proprement le pont, re-_Ready reconstruit le
+				// sélecteur (nouveau choix de monde). Le garde `_started` en tête de
+				// méthode assure qu'on ne recharge pas pendant l'écran de sélection.
+				if (k.Keycode == Key.Escape)
+				{
+					if (_consultation != null && IsInstanceValid(_consultation))
+						_consultation.Fermer();
+					else
+					{
+						GD.Print("[WorldView] Échap → retour à l'accueil (rechargement).");
+						GetTree().ReloadCurrentScene();
+					}
+					return;
+				}
 				// Tab = slot suivant : UNE touche cycle les slots OCCUPÉS (retour
 				// F5 Nico). Plus robuste que les chiffres pour atteindre les
 				// derniers gestes ; le HUD montre toujours le geste courant.
@@ -60,6 +77,7 @@ namespace Symbiose
 					case Key.Pageup:   RotateView(+1); break;
 					case Key.Pagedown: RotateView(-1); break;
 					case Key.M:        CycleSimMode();    break;
+					case Key.F1:       ToggleLegend();    break;   // aide clavier (T2, masquée par défaut)
 					case Key.F3:       ToggleLabels();    break;
 					case Key.F4:       TogglePerf();      break;
 					case Key.C:        CopyPerfReport();  break;  // presse-papier perf

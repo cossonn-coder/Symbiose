@@ -31,6 +31,7 @@ namespace Symbiose
 		// Labels du HUD provisoire.
 		private Label _actionLabel;                // 2e ligne HUD (Vigueur+geste)
 		private Label _clockLabel;
+		private Label _legendLabel;                // aide-mémoire clavier (F1, masqué par défaut, T2)
 
 		// --- Overlay de perfs (F4, volet C2 — demande Nico) -----------------
 		// Mesuré dans la vue, sans instrumenter le moteur : durée du dernier
@@ -152,11 +153,15 @@ namespace Symbiose
 			// Position fixe : la résolution projet est 1920×1080. AutowrapMode +
 			// largeur bornée (retour F5 Nico : le texte des gestes débordait) :
 			// la ligne se replie au lieu de sortir de l'écran, quoi qu'on écrive.
+			// ESCAMOTABLE (T2, item 3 : le texte recouvrait le bas du champ de jeu) :
+			// masqué par défaut, révélé/caché par F1 (voir ToggleLegend). Le champ
+			// de jeu reste dégagé tant qu'on ne demande pas l'aide.
 			var legend = new Label
 			{
 				Position = new Vector2(16f, 1080f - 96f),
 				CustomMinimumSize = new Vector2(1888f, 0f),
 				AutowrapMode = TextServer.AutowrapMode.WordSmart,
+				Visible = false,
 			};
 			legend.AddThemeFontSizeOverride("font_size", 18);
 			legend.AddThemeColorOverride("font_color", Colors.White);
@@ -174,8 +179,18 @@ namespace Symbiose
 				+ "palette de gestes = colonne d'icônes à GAUCHE (clic) · Tab/1..9 accélérateurs · S graine (planter) · B substrat (poser pot/bac) · N nature (pailler) · clic gauche = agir"
 				+ " — geste courant affiché en haut à gauche";
 			hud.AddChild(legend);
+			_legendLabel = legend;
 			AddChild(hud);
 			UpdateActionHud();
+		}
+
+		// Touche F1 (T2, item 3) : montre/cache l'aide-mémoire clavier. Masqué par
+		// défaut pour dégager le bas du champ de jeu ; un appui le rappelle.
+		private void ToggleLegend()
+		{
+			if (_legendLabel == null) return;
+			_legendLabel.Visible = !_legendLabel.Visible;
+			GD.Print($"[WorldView] F1 → aide clavier {(_legendLabel.Visible ? "ON" : "OFF")}.");
 		}
 
 		private void UpdateClock()

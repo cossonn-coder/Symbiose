@@ -127,10 +127,36 @@
   à calibrer si gênant. (c) Menu clic droit positionné à droite de l'icône.
 - **Reste T2** (chrome/navigation) **et T3** (dossier plante, vue+pont).
 
+## Avancement T2 — Chrome & navigation (items 2, 3, 5) — FAIT le 2026-07-23
+- **Item 2 (D3) — légende clavier escamotable.** `WorldView.Hud.cs` : le `Label
+  legend` passe `Visible = false` par défaut (champ de jeu dégagé) et est mémorisé
+  dans `_legendLabel` ; nouvelle méthode `ToggleLegend()`. Toggle **F1** câblé dans
+  `WorldView.Controls.cs` (touche libre — non prise). Texte inchangé (D54-a = plus tard).
+- **Item 3 (D5) — launcher pleine hauteur.** `WorldView.Selecteur.cs` : plafond de
+  `UiScroll.Envelopper` relevé de 360 px à `1080 − 16 − 16 − 220 ≈ 832 px` (const
+  locale `hauteurListe`, écran − marges − widgets fixes). Comportement « défile si
+  débordement » conservé (`UiScroll` inchangé).
+- **Item 5 (D4) — Échap → retour accueil, avec précédence.** `WorldView.Controls.cs`,
+  dans `_UnhandledInput` (déjà gardé par `_started` → jamais pendant le sélecteur) :
+  `Key.Escape` → si `_consultation` ouvert (`!= null && IsInstanceValid`) le ferme
+  (`Fermer()`) et s'arrête ; sinon `GetTree().ReloadCurrentScene()` (pont refermé
+  proprement par `_ExitTree`, sélecteur reconstruit). Pas de confirmation.
+- **Cohérence T1 préservée** : slots 1..9+0 et Tab intacts ; F1 ajouté au `switch`
+  sans collision ; Échap géré AVANT le `switch` (return, ne perturbe pas les slots).
+- **Golden INCHANGÉ** : `57c166d8…` (aucune touche `data/code/`). **Build C# VERT**
+  (0 warning / 0 erreur).
+- **Fichiers touchés** : `world/WorldView.Hud.cs` (legend masquée + `_legendLabel`
+  + `ToggleLegend`), `world/WorldView.Controls.cs` (F1 → ToggleLegend ; Échap →
+  précédence panneau/ReloadCurrentScene), `world/WorldView.Selecteur.cs` (hauteur liste).
+- **Points F5 Nico** : (a) F1 affiche/masque l'aide clavier, champ dégagé par défaut ;
+  (b) launcher descend jusqu'en bas et défile si trop d'entrées ; (c) Échap en jeu →
+  accueil (nouveau pont, nouveau choix de monde) ; Échap panneau ouvert → ferme le
+  panneau seulement.
+- **Reste T3** (dossier plante au clic, vue+pont).
+
 ## §REPRISE
-Lire `CLAUDE.md` + ce fichier. Phase A CLOSE (D1-D5). **T1 palette FAIT** (golden
-`57c166d8…` intact, build vert, non commité — Nico commit). Prochaine étape :
-**T2 — Chrome & navigation** (`02_chrome_navigation.md` : legend → overlay F1 masqué,
-launcher pleine hauteur, Échap → retour accueil) puis **T3 — Dossier plante**
-(`03_dossier_plante.md`, vue+pont, golden NEUTRE annoncé). MAJ DETTE (D54/D55/D59)/
-BACKLOG/journal en fin de sprint.
+Lire `CLAUDE.md` + ce fichier. Phase A CLOSE (D1-D5). **T1 palette FAIT** + **T2
+chrome/navigation FAIT** (golden `57c166d8…` intact, build vert, non commités —
+Nico commit). Prochaine étape : **T3 — Dossier plante** (`03_dossier_plante.md`,
+vue+pont, golden NEUTRE annoncé). MAJ DETTE (D54/D55/D59)/BACKLOG/journal en fin
+de sprint.

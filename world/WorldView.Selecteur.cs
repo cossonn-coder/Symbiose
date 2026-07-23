@@ -98,9 +98,15 @@ namespace Symbiose
 				_filtreCat.AddItem(cat);
 
 			// --- Liste défilante (un bouton toggle par banc) ---
+			// Pleine hauteur (T2, item 3, D5) : la liste descend jusqu'en bas d'écran
+			// au lieu de plafonner à 360 px. Hauteur max = écran (1080) − marge haute
+			// (16) − marge basse (16) − widgets fixes du panneau (titre + 2 filtres +
+			// 2 boutons ≈ 220 px). Le ScrollContainer défile toujours si la liste
+			// dépasse cette hauteur (comportement inchangé), sinon rien ne bouge.
+			const float hauteurListe = 1080f - 16f - 16f - 220f;   // ≈ 832 px
 			_groupeBancs = new ButtonGroup();
 			_liste = new VBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
-			vbox.AddChild(UiScroll.Envelopper(_liste, 360f));
+			vbox.AddChild(UiScroll.Envelopper(_liste, hauteurListe));
 
 			// Bouton « Paramètres » : ouvre/ferme le sous-panneau d'options (T2).
 			var params_ = new Button { Text = "Paramètres…" };
