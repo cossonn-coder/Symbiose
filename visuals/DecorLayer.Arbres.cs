@@ -140,7 +140,9 @@ namespace Symbiose
 			Vector2 al = apex + Vector2.Left * w * 0.5f;
 			Vector2 ar = apex + Vector2.Right * w * 0.5f;
 			DrawColoredPolygon(new[] { bl, br, ar, al }, sil.Ecorce);
-			if (sil.Port == TreePort.Elance)   // bouleau : chevrons sombres
+			// Chevrons (lenticelles) = DÉTAIL FIN (traits 1.5 px) → seulement à zoom
+			// ≥ DetailZoom ; au dézoom le tronc blanc du bouleau suffit à le distinguer.
+			if (sil.Port == TreePort.Elance && DetailsVisibles)   // bouleau : chevrons sombres
 			{
 				int chevrons = Mathf.Max(2, (int)((basePos.Y - apex.Y) / 14f));
 				for (int k = 1; k < chevrons; k++)

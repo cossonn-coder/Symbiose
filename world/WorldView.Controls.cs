@@ -96,6 +96,7 @@ namespace Symbiose
 						break;
 					case Key.F7:       ToggleSoilTemp();   break;
 					case Key.F9:       ToggleLodDebug();   break;  // LOD émetteurs d'ombre (D67)
+					case Key.F10:      _decorLayer?.ToggleBanc(); break;  // banc décor : 4 motifs (lisibilité décor T4)
 					case Key.G:        ToggleGenesHover(); break;  // survol gènes debug (diversité fondatrice ③)
 					// Macros de gestes (⑤, palette perso) : K enregistre une
 					// séquence (re-K pour finir + persister) ; J arme le rejeu de

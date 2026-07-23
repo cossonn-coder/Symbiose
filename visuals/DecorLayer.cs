@@ -65,9 +65,17 @@ namespace Symbiose
 		// LOD : le décor cadre la vue d'ensemble → visible dès le dézoom (contraire
 		// de la litière). On l'éteint au gros plan (on est « dans » le jardin).
 		private const float MaxZoom = 4f;
+		// LOD DÉTAIL à 2 niveaux (T4) : la MASSE (assises, houppiers, surface d'eau,
+		// face de falaise) se dessine sur toute la plage visible ; les DÉTAILS FINS
+		// (reflets de courant, fleurs de prairie, chevrons du bouleau, éboulis) — 1-2
+		// px, invisibles au dézoom et calibrés vue proche — ne se peignent qu'à partir
+		// de ce seuil. Recale l'échelle détail/distance ET allège le dessin au dézoom.
+		private const float DetailZoom = 2f;
+		private static bool DetailsVisibles => WorldView.CurrentZoom >= DetailZoom;
 
 		private SurroundingsProfile _profile;
 		private bool _built;
+		private int _seed;   // mémorisé pour reconstruire (rotation D35, bascule banc)
 
 		// Hash djb2-xor (même choix que CouvertureLayer/LitterLayer : jamais
 		// GetHashCode pour du visuel stable, jamais de Random).
@@ -140,21 +148,29 @@ namespace Symbiose
 		/// </summary>
 		public void Build(int seed)
 		{
-			_profile = BuildProfile(seed);
+			_seed = seed;
+			// Banc d'observation (F10) : force les 4 motifs côte à côte pour valider
+			// la lisibilité au F5 — SANS toucher la distribution normale par seed
+			// (philo #7). Voir DecorLayer.Banc.cs.
+			_profile = _banc ? BancProfile() : BuildProfile(seed);
 			_built = true;
 			QueueRedraw();
 		}
 
 		private bool _lastZoomOk;
+		private bool _lastDetailOk;
 
 		public override void _Process(double delta)
 		{
 			if (!Visible || !_built) return;
-			// Inerte : on ne redessine qu'au basculement du LOD (apparaît au dézoom).
+			// Inerte : on ne redessine qu'aux DEUX basculements de LOD — apparition au
+			// dézoom (MaxZoom) et bascule masse↔détails fins (DetailZoom).
 			bool zoomOk = WorldView.CurrentZoom <= MaxZoom;
-			if (zoomOk != _lastZoomOk)
+			bool detailOk = DetailsVisibles;
+			if (zoomOk != _lastZoomOk || detailOk != _lastDetailOk)
 			{
 				_lastZoomOk = zoomOk;
+				_lastDetailOk = detailOk;
 				QueueRedraw();
 			}
 		}
@@ -218,6 +234,15 @@ namespace Symbiose
 				Vector2 m2 = EdgePoint(s.Cote, u1, DepthCm * 0.34f + b1 * 0.66f);
 				Vector2 m3 = EdgePoint(s.Cote, u0, DepthCm * 0.34f + b0 * 0.66f);
 				DrawColoredPolygon(new[] { p0, p1, m2, m3 }, inner);
+				// LISIÈRE NETTE (T4) : un seuil SOMBRE franc collé au tracé sinueux,
+				// côté décor, sur les 4 motifs → la frontière jardin/décor se LIT au
+				// lieu de fondre (rang d'ombre bas en forêt, ourlet de prairie, etc.).
+				// Rivière/falaise ont déjà leur bord franc (berge/éboulis peints en
+				// passe 2), ce seuil passe dessous sans les gêner. Suit la sinuosité.
+				float seuilW = DepthCm * 0.06f;
+				Vector2 e2 = EdgePoint(s.Cote, u1, b1 + seuilW);
+				Vector2 e3 = EdgePoint(s.Cote, u0, b0 + seuilW);
+				DrawColoredPolygon(new[] { p0, p1, e2, e3 }, Assombrir(near, -0.24f));
 			}
 		}
 
@@ -263,7 +288,9 @@ namespace Symbiose
 				// -- Reflet orienté courant : un streak clair 1 case sur 2, tracé le
 				// long du COURS (direction = le segment d'axe lui-même = tangente du
 				// lit). Longueur ∝ pas monde → suit zoom/rotation, jamais 2 px morts.
-				if ((hd & 2u) == 0u)
+				// DÉTAIL FIN : seulement à zoom ≥ DetailZoom (la surface d'eau et les
+				// berges portent déjà la lisibilité de masse au dézoom).
+				if (DetailsVisibles && (hd & 2u) == 0u)
 				{
 					float dOff = (((hd >> 8) & 0xff) / 255f - 0.5f) * half * 1.1f;
 					Vector2 pa = EdgePoint(s.Cote, u0, ax0 + dOff);
@@ -358,7 +385,10 @@ namespace Symbiose
 				}
 			}
 			// 4) ÉBOULIS : taches claires (RocheClair) jonchant le pied de la face,
-			//    semis déterministe hashé (densité modérée, jamais de Random).
+			//    semis déterministe hashé (densité modérée, jamais de Random). DÉTAIL
+			//    FIN (taches 1-2 px) → seulement à zoom ≥ DetailZoom ; la face
+			//    stratifiée + l'ombre au pied portent le surplomb au dézoom.
+			if (!DetailsVisibles) return;
 			for (int i = 0; i < steps; i++)
 			{
 				uint hh = HashKey($"eboul|{s.SeedSecteur}|{i}");
@@ -374,6 +404,10 @@ namespace Symbiose
 		// (points blancs/jaunes), densité modérée, échantillonnage stable par hash.
 		private void DrawPrairie(Secteur s)
 		{
+			// La prairie n'a PAS d'autre motif que ses fleurs (l'assise verte est
+			// peinte en passe 1 par DrawSecteur) : elles sont DÉTAIL FIN (points 1.5
+			// px) → au dézoom, l'assise + la lisière suffisent, on saute le semis.
+			if (!DetailsVisibles) return;
 			const float cell = 110f;
 			int nU = Mathf.CeilToInt(WorldView.WorldCm / cell);
 			int nD = Mathf.CeilToInt(DepthCm / cell);

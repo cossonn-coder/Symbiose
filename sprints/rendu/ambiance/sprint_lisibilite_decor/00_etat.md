@@ -112,16 +112,40 @@ Golden **INCHANGÉ** aux 4 tronçons (pure vue C#, zéro moteur — ne PAS lance
   **F5 Nico requis** : quand une falaise est présente (rare, au gré du seed), surplombe-t-elle
   bien (face verticale stratifiée + ombre au pied + plateau végétalisé au-dessus) ?
 
-## §REPRISE
-T1 (forêt) + T2 (rivière) + T3 (falaise) CLOSES, commits à faire par Nico. **Prochaine étape = T4
-transitions/échelle + banc F5** : lire `04_transitions_banc.md` (lisière nette côté jardin,
-recalibrage taille des détails en LOD 2 niveaux — détails fins si zoom ≥ 2, banc seed exposant les
-4 motifs, MAJ doc conception `docs/rendu/ambiance/conception_lisibilite_decor.md`). Toucher
-`DecorLayer.cs` (+ `Palette16.cs` au besoin) — c'est la **vue finale** du sprint. Golden INCHANGÉ
-(pure vue, ne PAS lancer test_golden). Boucle : `dotnet build` (0 err) → MAJ ce fichier → commit.
-⚠️ Taille : `DecorLayer.cs` à 276 code (fichier total 431 lignes commentaires inclus) — encore 🟢
-en LDC pur, mais T4 y ajoute encore ; surveiller le seuil 300 (candidat `/refactor` si dépassement).
+- **T4 — Transitions / échelle / banc F5 : CLOSE** (2026-07-24). Pure vue C#, golden non concerné
+  (aucun moteur touché, test_golden NON lancé). Faits : (a) **LISIÈRE NETTE** — seuil sombre franc
+  (`Assombrir(near,-0.24)`, largeur `DepthCm·0.06`) collé au tracé sinueux côté décor, dans
+  `DrawSecteur`, sur les 4 motifs → la frontière jardin/décor se lit au lieu de fondre (passe sous
+  les berges/éboulis de passe 2, ne les gêne pas). (b) **LOD DÉTAIL 2 niveaux** (`DetailZoom = 2f`,
+  helper `DetailsVisibles`) : la MASSE (assises, houppiers, surface d'eau, face de falaise) reste
+  sur toute la plage visible ; les DÉTAILS FINS ne se peignent qu'à `CurrentZoom ≥ 2` — reflets de
+  courant (`DrawRiviere`), éboulis (`DrawFalaise`), fleurs (`DrawPrairie` return anticipé), chevrons
+  bouleau (`DrawTronc`, Arbres.cs) ; `_Process` redessine aussi au basculement `DetailZoom` (2e
+  seuil de LOD, reste inerte sinon). (c) **BANC F5 = TOGGLE F10** (`DecorLayer.Banc.cs`, off par
+  défaut) → **PAS un seed de démo** : découverte T4, aucun seed n'expose les 4 motifs (cf. BLOCAGE
+  ci-dessous). Le toggle force un profil forêt N / rivière E / falaise S / prairie O UNIQUEMENT
+  quand activé — distribution par seed intacte (philo #7). (d) MAJ doc conception §7 « état livré ».
+  Build `dotnet` = 0 err / 0 warn. LDC : `DecorLayer.cs` 289 code, `DecorLayer.Arbres.cs` 163,
+  `DecorLayer.Banc.cs` 23, `Palette16.cs` 81 (TOUS 🟢 — le banc sorti en partial a maintenu
+  `DecorLayer.cs` sous 300 malgré T2+T3+T4 cumulés). Zéro `Random` (philo #3).
+  **F5 Nico requis** : F10 → les 4 motifs se lisent d'un regard, démarqués du jardin, détails nets
+  à zoom ≥ ×2 et masse lisible au dézoom ?
 
-## §REPRISE
-Lire ce fichier. Phase A en cours : diagnostic posé, 3 arbitrages en attente de Nico.
-Prochaine étape : intégrer les réponses → figer découpage en tronçons perf-first (dernier = vue Godot F5) → kickoffs.
+## ⚠️ BLOCAGE / DÉCOUVERTE T4 (à verser en dette par Nico)
+**La falaise n'apparaît sur AUCUN seed en jeu normal.** Dans `BuildProfile` (DecorLayer.cs), les 4
+côtés d'un même seed dérivent d'un hash `decor|seed|cote` qui ne diffère que du DERNIER caractère
+(0..3) → le djb2-xor ne brasse que les bits bas → les 4 rolls %100 tombent quasi identiques → un
+terrain porte presque toujours un ANNEAU UNIFORME d'un seul motif. La falaise, qui exige une rivière
+clockwise-adjacente à une prairie, ne réunit JAMAIS ses conditions : **0 falaise sur 300 000 seeds**
+(vérifié par réplication Python du hash). Le tronçon T3 (face verticale de falaise) n'est donc
+visible qu'au banc F10. **Corriger `BuildProfile`** (décorréler les 4 côtés — p.ex. hash sur une
+chaîne plus brassée par côté — pour que forêt/rivière/falaise/prairie coexistent) **déborde T4**
+(changerait la distribution par défaut, interdit par le kickoff, philo #7) → **candidat dette** :
+« BuildProfile : motifs de décor quasi uniformes par seed, falaise jamais produite ».
+
+## §REPRISE — SPRINT TERMINÉ
+T1 (forêt) + T2 (rivière) + T3 (falaise) + T4 (transitions/LOD/banc) **CLOSES**. Pure vue C#,
+**golden jamais touché** (aucun moteur), build vert. **Reste = F5 Nico** (validation visuelle des
+4 tronçons + banc F10) puis clôture sprint : commits (par Nico), MAJ `DETTE.md` (D58 résorbée +
+ouvrir la dette `BuildProfile` ci-dessus), `BACKLOG.md`, `journal.md`. Aucun `/refactor` requis
+(tous fichiers 🟢).

@@ -115,3 +115,42 @@ satisfaite d'office ; T4 porte le banc d'observation F5.
 - **D66/D67 perf** — garde-fou : LOD 2 niveaux au lieu de densifier.
 
 *Aucune voix narrative concernée (décor pur ; essences forestières déjà voisées en T1 D58).*
+
+## 7. État livré (2026-07-24 — sprint clos, reste F5 Nico)
+
+Les 4 tronçons sont implémentés (pure vue C#, **golden inchangé**, jamais relancé —
+zéro moteur touché). Build `dotnet` vert à chaque tronçon.
+
+- **T1 — Forêt** (`DecorLayer.Arbres.cs`, `Palette16.cs`) : marches de valeur franches
+  dans les houppiers (masse ×0.75 / calotte ×1.25 décalée SO), ombre portée au pied,
+  accent de cime → skyline bosselée ; fond forêt poussé sombre/froid, feuillages
+  ré-étalés en valeurs distinctes + `DecorForetCime`.
+- **T2 — Rivière** (`DecorLayer.cs`, `Palette16.cs`) : berges franches de galets,
+  surface d'eau 2 valeurs en damier hashé, ombre de berge qui creuse le lit, reflets
+  en streaks orientés dans le sens du courant (tangente du lit).
+- **T3 — Falaise** (`DecorLayer.cs`, `Palette16.cs`) : face verticale stratifiée
+  (3 valeurs de roche, hauteur ∝ pente), plateau végétalisé élevé, ombre portée au
+  pied (surplomb), éboulis ; front sinueux partagé. Non forcée (seed).
+- **T4 — Transitions / échelle / banc** (`DecorLayer.cs`, `DecorLayer.Arbres.cs`,
+  `DecorLayer.Banc.cs`) :
+  - **Lisière nette** : seuil sombre franc collé au tracé sinueux côté décor, sur les
+    4 motifs, dans `DrawSecteur` (la frontière jardin/décor se lit au lieu de fondre).
+  - **LOD détail 2 niveaux** (`DetailZoom = 2f`) : la masse (assises, houppiers,
+    surface d'eau, face de falaise) reste sur toute la plage visible ; les détails fins
+    (reflets de courant, fleurs de prairie, chevrons du bouleau, éboulis) ne se peignent
+    qu'à `CurrentZoom ≥ 2` → recale l'échelle ET allège le dézoom.
+  - **Banc F5 = TOGGLE (touche F10), off par défaut** — PAS un seed de démo. Découverte
+    T4 : aucun seed n'expose les 4 motifs. Dans `BuildProfile`, les 4 côtés d'un seed
+    dérivent d'un hash `decor|seed|cote` qui ne diffère que du dernier caractère → les
+    rolls %100 tombent quasi identiques → anneau uniforme d'un motif, et la **falaise
+    n'apparaît sur AUCUN seed** (0 / 300 000, la coupure rivière↔prairie-adjacente
+    n'étant jamais réunie). Le toggle force un profil des 4 motifs (forêt N / rivière E /
+    falaise S / prairie O) **uniquement quand activé** ; la distribution par seed reste
+    intacte (philo #7). Corriger `BuildProfile` (décorréler les 4 côtés, faire exister
+    la falaise en jeu normal) déborde T4 (changerait la distribution) → **à verser en
+    dette**.
+
+**Points F5 Nico** : (1) au F10, les 4 motifs se lisent et se distinguent d'un regard ;
+(2) décor démarqué du jardin (seuil de lisière net) ; (3) détails nets dans leur plage
+de zoom (≥ ×2), masse lisible au dézoom ; (4) constat à trancher : la falaise étant
+absente du jeu normal (bug latent `BuildProfile`), faut-il la faire exister par seed ?
