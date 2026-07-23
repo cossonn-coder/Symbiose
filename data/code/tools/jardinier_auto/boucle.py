@@ -17,6 +17,7 @@
 from __future__ import annotations
 
 from sim.actions.couts import cout_action
+from sim.magazine import COUT_MAGAZINE
 from sim import vigueur as V
 from sim.engine.calendrier import saison_de
 
@@ -25,14 +26,38 @@ from .diagnostic import facteur_limitant
 from .proposition import proposer
 from .impasses import Impasse, GESTE_VERROUILLE, OBJECTIF_INATTEIGNABLE
 from .execution import executer
-from .trace import consigner, entree, entree_impasse, entree_consequence
+from .trace import (consigner, entree, entree_impasse, entree_consequence,
+                    entree_geste_coupe, entree_veille)
 from .tutelle import zones_cultivees, sous_tutelle
+from .planification import avancer_plans, marquer_veille_signalee
+from .operateurs import FACTEUR_ADVENIR
 from . import comptabilite as CPT
 from . import objectifs as OBJ
 
 # Verbes dont la clé de coût diffère du nom (budget) : `recolter_paille` est tarifé
 # comme `recolter`. Tous les autres verbes SONT des clés de `COUTS`.
 _COUT_KEY = {"recolter_paille": "recolter"}
+
+
+def _cle_creatif(cible) -> tuple:
+    """Clé de départage canonique d'un geste CRÉATIF (③), homogène avec la clé
+    réactive `(tile_id, y_cm, x_cm)` pour un tri stable commun (philo #3). Un
+    `planter`/`favoriser_auxiliaire` porte la position de son plot `(tile_id, r, c)` ;
+    un `acheter_magazine` n'a PAS de lieu → sentinelle `("~", 0, 0)` (tri en fin, "~"
+    au-delà des tile_id réels). Nombres (r,c ou 0) comparables aux `y_cm/x_cm`
+    flottants réactifs → aucune erreur de tri."""
+    if cible.tile is None:
+        return ("~", 0, 0)
+    return (cible.tile.tile_id, cible.r or 0, cible.c or 0)
+
+
+def _oid_pour_espece(actifs: list, espece: str):
+    """L'`objectif_id` (actifs déjà trié par id) dont la cible `recolter` est
+    `espece`, ou None. Rattache un geste CRÉATIF à l'objectif qu'il fait ADVENIR pour
+    la trace ; le COMPTAGE de progression, lui, reste réservé au geste-cible réactif
+    `recolter` (③ : planter/acheter n'incrémentent jamais l'objectif)."""
+    return next((o.id for o in actifs
+                 if o.geste == "recolter" and o.cible == espece), None)
 
 
 class JardinierAutomate:
@@ -90,11 +115,37 @@ class JardinierAutomate:
         retenus = []
         for p in plans:
             verbe = p[4].verbe
-            cout = cout_action(gs, player, _COUT_KEY.get(verbe, verbe), None)
+            # `acheter_magazine` n'est pas un geste `sim.actions` (pas dans `COUTS`) :
+            # il débite `COUT_MAGAZINE` via `acheter_au_magazine` (③). Coût pris ICI en
+            # amont pour la cohérence budget (survie mieux priorisée passe d'abord).
+            cout = (COUT_MAGAZINE if verbe == "acheter_magazine"
+                    else cout_action(gs, player, _COUT_KEY.get(verbe, verbe), None))
             if cout <= solde:
                 retenus.append(p)
                 solde -= cout
         return retenus
+
+    def _tuple_creatif(self, engine, plan):
+        """Emballe un `Plan` créatif (②) au format des tuples réactifs `(cle, tile,
+        eco, plant, Plan)` pour un tri/budget COMMUN. `plant=None` (aucune cultivée en
+        cours) ; `tile`/`eco` sont ceux du plot choisi (None pour `acheter_magazine`).
+        L'`eco` sert à `planter` (auto-paillage) — lu une fois ici (pas de recalcul)."""
+        cible = plan.cible_obj
+        tile = cible.tile
+        eco = engine._eco(tile) if tile is not None else None
+        return (_cle_creatif(cible), tile, eco, None, plan)
+
+    def _executer_creatif(self, gs, player, semaine, eco, plan, actifs) -> None:
+        """Exécute un geste CRÉATIF (planter/acheter_magazine/favoriser_auxiliaire) et
+        le trace en ligne `geste` (schéma legacy : la position vit dans `cible`). Le
+        `objectif_id` RATTACHE le geste à l'objectif qu'il fait advenir (trace), sans
+        JAMAIS incrémenter sa progression (réservé au `recolter` réactif, kickoff ③)."""
+        cr = plan.cible_obj
+        tile_id = cr.tile.tile_id if cr.tile is not None else "-"
+        oid = _oid_pour_espece(actifs, cr.espece)
+        resultat = executer(gs, player, eco, None, plan)
+        consigner(gs, entree(semaine, tile_id, f"{cr.espece}@{tile_id}",
+                             plan.facteur, plan.verbe, resultat, oid))
 
     def jouer_tick(self, engine) -> None:
         """Un passage complet de la boucle sur l'état courant de `engine`.
@@ -115,28 +166,50 @@ class JardinierAutomate:
 
         plans, impasses = self._collecter(engine, cultivees)
         plans = self._appliquer_part_recoltee(plans)
+
+        # Étage CRÉATIF (③) — le PLANIFICATEUR (②) propose le prochain geste d'ADVENUE
+        # par objectif (planter/acheter/favoriser). NO-OP strict sans objectif (actifs
+        # vide → `avancer_plans` renvoie ([], []) → golden intact). `avancer_plans`
+        # trace déjà ses lignes `plan`/`diagnostic` ; ici on EXÉCUTE + trace `geste`.
+        plans_creatifs, veilles = avancer_plans(engine, actifs, self.profil)
+        creatifs = [self._tuple_creatif(engine, p) for p in plans_creatifs]
+
         # Étape 4 — prioriser : priorité DÉCROISSANTE, puis clé de départage totale. Un
         # geste servant un objectif actif reçoit BONUS_OBJECTIF (biais, pas exclusivité :
-        # le tri reste stable, les autres soins passent ensuite).
+        # le tri reste stable, les autres soins passent ensuite). Les gestes créatifs
+        # portent PRIO_CREATIF (5) SANS bonus (plant=None → objectifs_servis vide) → ils
+        # se rangent SOUS les facteurs de survie (10-20) : PRÉEMPTION SURVIE (l'advenir
+        # ralentit, jamais au prix du vivant), valable en mode payé ET libre.
         def _prio(p):
             bonus = OBJ.BONUS_OBJECTIF if OBJ.objectifs_servis(actifs, p[4].verbe, p[3]) else 0
             return (-(p[4].priorite + bonus), p[0])
-        plans.sort(key=_prio)
-        # Étape 4bis — comptabilité (§4). Mode payé : écarter les gestes VERROUILLÉS
-        # (→ impasses) avant de couper au budget de Vigueur. Mode libre : garantir un
-        # solde non borné pour ne pas noyer le journal d'échecs par épuisement.
+        # Étape 4bis — comptabilité (§4). Mode payé : écarter les gestes RÉACTIFS
+        # VERROUILLÉS (→ impasses) AVANT la fusion (les créatifs planter/favoriser sont
+        # de BASE, acheter a sa propre porte magazine → pas de gating `gestes_debloques`),
+        # puis couper au budget de Vigueur sur la liste TRIÉE commune. Mode libre :
+        # garantir un solde non borné pour ne pas noyer le journal d'échecs.
         verrous = []
         if self.profil.paie_vigueur:
             plans, verrous = CPT.separer_verrouilles(gs, player, plans)
-            plans = self._couper_au_budget(gs, player, plans)
+        plans = plans + creatifs
+        plans.sort(key=_prio)
+        coupes = []
+        if self.profil.paie_vigueur:
+            retenus = self._couper_au_budget(gs, player, plans)
+            ids_retenus = {id(p) for p in retenus}
+            coupes = [p for p in plans if id(p) not in ids_retenus]
+            plans = retenus
         else:
             CPT.assurer_solde_libre(gs, player)
 
-        # Étape 5 — exécuter + consigner les gestes. Un geste servant un objectif porte
-        # son `objectif_id` (clé de l'onglet) et, s'il RÉUSSIT, incrémente la
-        # progression de tous les objectifs qu'il sert (④, §8). `resultat != "echec"` :
-        # un geste tronqué (récolte graduée) a tout de même produit → il compte.
+        # Étape 5 — exécuter + consigner les gestes. Un geste RÉACTIF servant un objectif
+        # porte son `objectif_id` et, s'il RÉUSSIT, incrémente la progression des
+        # objectifs qu'il sert (④, §8). Un geste CRÉATIF (advenir) est exécuté à part :
+        # il ne compte JAMAIS dans la progression (seul `recolter` le fait).
         for _cle, tile, eco, plant, plan in plans:
+            if plan.facteur == FACTEUR_ADVENIR:
+                self._executer_creatif(gs, player, semaine, eco, plan, actifs)
+                continue
             cible = f"{plant.name}@{plant.position}"
             resultat = executer(gs, player, eco, plant, plan)
             servis = OBJ.objectifs_servis(actifs, plan.verbe, plant)
@@ -148,6 +221,24 @@ class JardinierAutomate:
                     if OBJ.incrementer(gs, o.id):
                         consigner(gs, entree_consequence(semaine, "objectif",
                                                          f"{o.id}:accompli"))
+        # Gestes CRÉATIFS COUPÉS au budget (mode payé) : la survie, mieux priorisée, a
+        # consommé la Vigueur → l'advenir est REPORTÉ. Trace `geste_coupe` (cause budget)
+        # pour rendre la préemption visible, ordre stable de la clé de départage.
+        for _cle, _tile, _eco, _plant, plan in sorted(
+                (p for p in coupes if p[4].facteur == FACTEUR_ADVENIR), key=lambda p: p[0]):
+            cr = plan.cible_obj
+            zone = (cr.tile.tile_id, cr.r, cr.c) if cr.tile is not None else None
+            consigner(gs, entree_geste_coupe(
+                semaine, espece=cr.espece, zone=zone,
+                objectif_id=_oid_pour_espece(actifs, cr.espece),
+                detail={"verbe": plan.verbe, "cause": "budget"}))
+        # Veilles (③) : un objectif ACTIF sans geste créatif faisable maintenant attend
+        # un DÉCLENCHEUR. On consigne une ligne `veille` UNE fois par chaînon (dédup via
+        # `marquer_veille_signalee`) — la re-sonde armée fine est ④.
+        for obj_id, chainon, source in veilles:
+            if marquer_veille_signalee(gs, obj_id, chainon):
+                consigner(gs, entree_veille(semaine, objectif_id=obj_id,
+                                            detail={"chainon": chainon, "source": source}))
         # Consigner les IMPASSES (signalement — n'interrompt jamais la boucle, §7),
         # dans l'ordre stable de la clé de départage.
         for _cle, tile_id, imp in sorted(impasses, key=lambda x: x[0]):

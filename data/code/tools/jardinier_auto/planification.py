@@ -58,6 +58,21 @@ def _etat_plan(gs: dict, obj_id: str) -> dict:
     })
 
 
+def marquer_veille_signalee(gs: dict, obj_id: str, chainon: str) -> bool:
+    """Patron `marquer_inatteignable_signale` (objectifs.py) pour la VEILLE (③) :
+    renvoie True au PREMIER passage en veille sur ce chaînon (→ l'appelant consigne
+    une ligne `veille`), False tant que l'objectif reste en veille sur le MÊME
+    chaînon → le log n'est pas noyé tick après tick. `avancer_plans` remet
+    `en_veille=False` dès qu'un geste redevient faisable → une reprise puis rechute
+    re-signale (transition, pas spam). ④ raffinera la re-sonde armée sur DÉCLENCHEUR."""
+    etat = _etat_plan(gs, obj_id)
+    if etat["en_veille"] and etat["chainon"] == chainon:
+        return False
+    etat["en_veille"] = True
+    etat["chainon"] = chainon
+    return True
+
+
 def avancer_plans(engine, actifs: list, profil):
     """Produit le prochain geste créatif faisable pour chaque objectif `recolter`
     actif. Renvoie `(plans_creatifs, veilles)` :

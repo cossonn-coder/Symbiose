@@ -241,8 +241,26 @@ tick) :
   fruitier, but_satisfait). **Golden `57c166d8…` INTACT** ; determinisme+log VERTS.
   **Cap sur ③** (brancher `avancer_plans` dans `boucle.jouer_tick`, préemption
   survie, exécution des Plans créatifs via `execution`/gestes moteur).
-- **③** `03_boucle_preemption.md` — brancher dans `boucle.jouer_tick`, préemption
-  survie, timing `favoriser_auxiliaire`, exécution + trace.
+- **③ FAIT (2026-07-23)** `03_boucle_preemption.md` — planificateur (②) BRANCHÉ dans
+  `boucle.jouer_tick`. `avancer_plans` appelé après `_collecter` ; chaque `Plan` créatif
+  emballé au format tuple réactif (`_tuple_creatif`, clé de départage `_cle_creatif` :
+  `(tile_id, r, c)` planter/favoriser, sentinelle `("~",0,0)` acheter). **Préemption
+  survie** : créatifs à PRIO_CREATIF=5 SANS BONUS_OBJECTIF (plant=None → objectifs_servis
+  vide) → tri les range sous la survie (10-20), valable payé ET libre. Mode payé :
+  `separer_verrouilles` sur RÉACTIFS seuls (créatifs base/porte magazine, pas de gating),
+  fusion, tri commun, `_couper_au_budget` étendu (`acheter_magazine`→COUT_MAGAZINE) ;
+  créatifs coupés → `entree_geste_coupe {verbe, cause:"budget"}`. Mode libre : ordre seul.
+  `execution.executer` étendu (planter/favoriser_auxiliaire/acheter_magazine → sim.actions/
+  sim.magazine). Créatifs tracés en ligne `geste` (legacy, `_executer_creatif`), rattachés
+  à l'objectif (`_oid_pour_espece`) SANS incrémenter la progression (réservé `recolter`).
+  `favoriser_auxiliaire` one-shot (pré-condition « zone sans rondelle »). Veilles de ②
+  consignées 1×/chaînon via `marquer_veille_signalee` (helper NEUF dans planification.py,
+  dédup type `marquer_inatteignable_signale` ; ④ raffinera la re-sonde armée).
+  Tests `test_automate_determinisme` étendu (10/10 : bout-en-bout monde full 2 rejeux
+  égaux + creatif émis ; préemption budget geste_coupe ; ordre libre survie<créatif ;
+  favoriser 1×). **Golden `57c166d8…` INTACT.** LDC boucle 153 / execution 43 /
+  planification 93 (🟢). **Cap sur ④** (veille/re-sonde armée `(saison,plot)`, suivi
+  germination, impasses `chainon_manquant`/`niche_defavorable`).
 - **④** `04_veille_impasses.md` — suivi germination, re-semis armé `(saison,plot)`,
   veille + re-sonde, impasses `chainon_manquant`/`niche_defavorable`.
 - **⑤** `05_banc_vue_godot.md` — `banc_culture_depuis_rien` paramétré + onglet

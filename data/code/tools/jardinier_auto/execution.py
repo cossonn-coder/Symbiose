@@ -17,6 +17,7 @@
 from __future__ import annotations
 
 from sim import actions as ACT
+from sim.magazine import acheter_au_magazine
 
 
 def _ratio(r: float) -> str:
@@ -68,6 +69,24 @@ def executer(game_state: dict, player: str, eco, plant, plan) -> str:
     if v == "tailler":
         # Écimage de l'apex meneur du voisin ombrageant (réponse ÉMERGENTE, philo #2).
         return "ok" if ACT.tailler(game_state, player, plan.cible_obj, eco, cible="apex") else "echec"
+
+    # --- Gestes CRÉATIFS (③) : faire ADVENIR la cible (planification.py). `plant`
+    # est None (aucune cultivée en cours) ; la charge vit dans `plan.cible_obj`
+    # (CibleCreative espece/tile/r/c). Mêmes fonctions que le joueur (philo #2) : elles
+    # dépensent la Vigueur en interne et REFUSENT si le solde ne couvre pas → "echec".
+    if v == "planter":
+        cr = plan.cible_obj
+        return "ok" if ACT.planter(game_state, player, cr.tile, eco,
+                                   cr.espece, cr.r, cr.c) else "echec"
+
+    if v == "favoriser_auxiliaire":
+        # Habitat auxiliaire posé « au plus tôt » (C4) : rondelle persistante sur la tuile.
+        return "ok" if ACT.favoriser_auxiliaire(game_state, player, plan.cible_obj.tile) else "echec"
+
+    if v == "acheter_magazine":
+        # Voie n°2 d'acquisition de graine (magazine, palier 3 famille). Sans lieu :
+        # écrit UNIQUEMENT l'état joueur (Vigueur + banque), débite COUT_MAGAZINE.
+        return "ok" if acheter_au_magazine(game_state, player, plan.cible_obj.espece) else "echec"
 
     # Défensif : un verbe non câblé ne doit jamais atteindre cette fonction.
     raise ValueError(f"verbe non câblé : {v!r}")
