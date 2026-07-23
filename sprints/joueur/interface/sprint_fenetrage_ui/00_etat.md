@@ -3,7 +3,7 @@
 **Type/thème :** `joueur/interface` (nouveau thème).
 **Nature :** pure vue C#/Godot (nuance : le filtre launcher PEUT toucher Python — voir Q3).
 **Golden attendu :** INCHANGÉ sur tous les tronçons (aucune touche moteur).
-**Statut :** FIGÉ 2026-07-23 — prêt pour `/sprint-auto`. Doc : `docs/joueur/interface/conception_fenetrage_ui.md`. Kickoffs : 01_launcher · 02_parametres · 03_panneau_onglets.
+**Statut :** ✅ CLOS 2026-07-23 (`/sprint-auto`, T1→T3, golden `57c166d8…` INTACT, pont 0.5.37). Doc : `docs/joueur/interface/conception_fenetrage_ui.md`. Kickoffs : 01_launcher · 02_parametres · 03_panneau_onglets. Phase C faite (D59 fermée, reliquats→D54, journal 131). Reste **F5 Nico**.
 
 ## Origine
 Amorce Nico 2026-07-23, deux volets :
