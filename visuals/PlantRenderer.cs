@@ -119,6 +119,22 @@ namespace Symbiose
 		// pic). Ex-ChloroseAmount=0.6 ; un poil relevé : l'intensité module désormais.
 		private const float SymptomTintMax = 0.7f;
 
+		// --- Largeur de trait du bois (lisibilité ligneuse D90, tronçon ②) ---------
+		// Largeur (px LOGIQUES) d'un segment = round(thickness_cm · PxPerCmX · facteur),
+		// bornée à 1 (une brindille ne disparaît jamais). RECALIBRÉ contre la NOUVELLE
+		// échelle d'épaisseur du moteur (tronçon ①, pipe model + croissance secondaire
+		// saturante) : `thickness_cm` porte désormais des cm de bois RÉELS — le collet
+		// d'un vieux pommier est BORNÉ par `girth_max_cm` (~18 cm), les brindilles
+		// restent fines (~THICKNESS_INIT). L'ancien facteur 2.2 était calé sur
+		// l'accumulation uniforme non bornée (le tronc pouvait filer vers ~120 cm) : sous
+		// la nouvelle échelle il rendrait le tronc excessivement épais. À 1.5, avec
+		// PxPerCmX = 0.39 : collet ~17 cm → ~10 px, charpentière ~6 cm → ~4 px,
+		// brindille ~1 cm → 1 px (plancher) — le contraste tronc↔brindille se LIT, sans
+		// « baobab ». Centralisé (3 sites : DrawSegments, DrawSkeleton, DrawHighlight)
+		// pour que la surbrillance suive exactement la largeur du bois qu'elle recouvre.
+		// Valeur à confirmer au F5 (banc « vieux_pommier »).
+		private const float WoodWidthFactor = 1.5f;
+
 		// Organes procéduraux (feuilles/fleurs/fruits) : constantes, palettes et
 		// méthodes de dessin → PlantRenderer.Organs.cs (partial, SS⑦).
 
@@ -449,7 +465,7 @@ namespace Symbiose
 				// Largeur ∝ épaisseur, ARRONDIE au pixel (pixel art). NB : à un vrai
 				// zoom ×N, 1 px logique = N px écran ; l'arrondi entier ici donne un
 				// trait net au palier. min 1 px pour rester visible.
-				float w = Mathf.Max(1f, Mathf.Round(s.ThicknessCm * WorldView.PxPerCmX * 2.2f));
+				float w = Mathf.Max(1f, Mathf.Round(s.ThicknessCm * WorldView.PxPerCmX * WoodWidthFactor));
 				// SS② : rampe de lignification vert-tendre → brun (∝ épaisseur), au
 				// lieu du binaire apex/bois. Les symptômes colorants ne teintent que
 				// la part VIVANTE (verte) : le bois mûr (lig→1) ne se décolore pas.
@@ -502,7 +518,7 @@ namespace Symbiose
 				Vector3 tip = s.Base + s.Dir * s.LengthCm;
 				Vector2 p1 = Iso(s.Base.X - collet.X, s.Base.Y - collet.Y, s.Base.Z * zf);
 				Vector2 p2 = Iso(tip.X - collet.X, tip.Y - collet.Y, tip.Z * zf);
-				float w = Mathf.Max(1f, Mathf.Round(s.ThicknessCm * WorldView.PxPerCmX * 2.2f));
+				float w = Mathf.Max(1f, Mathf.Round(s.ThicknessCm * WorldView.PxPerCmX * WoodWidthFactor));
 				DrawLine(p1, p2, DeadWoodColor, w, antialiased: false);
 			}
 		}
@@ -521,7 +537,7 @@ namespace Symbiose
 			Vector2 p1 = Iso(s.Base.X - collet.X, s.Base.Y - collet.Y, s.Base.Z);
 			Vector2 p2 = Iso(tip.X - collet.X, tip.Y - collet.Y, tip.Z);
 			float w = Mathf.Max(2f,
-				Mathf.Round(s.ThicknessCm * WorldView.PxPerCmX * 2.2f) + 2f);
+				Mathf.Round(s.ThicknessCm * WorldView.PxPerCmX * WoodWidthFactor) + 2f);
 			DrawLine(p1, p2, HighlightColor, w, antialiased: false);
 		}
 

@@ -14,16 +14,19 @@ namespace Symbiose
 {
 	public partial class PlantRenderer : Node2D
 	{
-		// VERROU « feuille ⟹ segment rendu vert » (④, doc §5.2). Ce seuil DOIT rester
-		// ≤ au point de bascule vert→olive de la rampe de lignification (Palette.cs) :
-		// `WoodRamp` quitte le vert-tendre quand `Lignification = ThicknessCm /
-		// LignifyFullCm` atteint 0.5, soit ThicknessCm = LignifyFullCm * 0.5 = 1.5 cm.
-		// Au-delà de 1.5 cm un segment commence à virer olive — il ne serait PLUS vert.
-		// On cale donc LeafMaxThickCm = 1.5 (et non l'ancien 1.6, qui laissait la bande
-		// [1.5, 1.6] feuillue alors qu'elle commençait à olivir : violation discrète de
-		// l'invariant E5). Apex toujours vert pur (Lignification=0). Si LignifyFullCm
-		// bouge un jour, ré-aligner ce seuil sur LignifyFullCm * 0.5.
-		private const float LeafMaxThickCm = 1.5f; // au-delà = bois structurel, nu
+		// Seuil « rameau feuillu ⟹ bois structurel nu » : un segment porte des feuilles
+		// s'il est un apex OU assez FIN (brindille/rameau) ; au-delà c'est de la
+		// charpente/du tronc, qui reste nu. RECALIBRÉ (lisibilité ligneuse D90, tronçon ②)
+		// contre la NOUVELLE échelle d'épaisseur du moteur (tronçon ① : pipe model +
+		// croissance secondaire saturante bornée par `girth_max_cm`). Le seuil se cale
+		// désormais sur cette échelle de cm de bois réels — aligné sur le
+		// `LEAF_MAX_THICK_CM = 2.5` de la maquette (tools/maquette/organes.py, posé en ①) :
+		// brindilles ≤ ~2 cm feuillues, charpente ≥ ~3 cm nue.
+		// NB découplage : la COULEUR du bois (rampe vert→olive→brun, WoodRamp) est pilotée
+		// par l'ÂGE du segment (`Lignification = AgeWeeks / LignifyFullWeeks`, Palette.cs),
+		// PLUS par l'épaisseur — l'ancien lien épaisseur↔lignification n'existe plus, ce
+		// seuil et la lignification sont deux axes indépendants. Valeur à confirmer au F5.
+		private const float LeafMaxThickCm = 2.5f; // au-delà = bois structurel, nu
 		private const float LeafSpacingCm = 11f;   // une feuille tous les ~11 cm
 		private const float LeafOffsetCm = 7f;     // déport latéral p/r à l'axe
 		private const float LeafSizeCm = 7f;       // demi-grandeur d'une feuille

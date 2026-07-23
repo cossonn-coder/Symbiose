@@ -15,6 +15,7 @@ from .hydrologie import tourbiere
 from .biotique import (infestation_ravageur, verger_floraison, semis_tempere,
                        etalement_floraison, grimpantes, floraison_saisons)
 from .succession import succession_bascule
+from .croissance import vieux_pommier
 from .luxuriance import luxuriance
 from .diversite import diversite_fondatrice
 from .modele_spatial import modele_spatial
@@ -37,6 +38,7 @@ BANCS = {
     "floraison_saisons": floraison_saisons,
     "grimpantes": grimpantes,
     "succession_bascule": succession_bascule,
+    "vieux_pommier": vieux_pommier,
     "luxuriance": luxuriance,
     "diversite_fondatrice": diversite_fondatrice,
     "modele_spatial": modele_spatial,

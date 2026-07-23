@@ -125,9 +125,39 @@ uniquement dans la structure `Segment`, HORS digest, et n'a **aucun couplage
 re-figeage nécessaire (le « re-figeage maîtrisé attendu » du kickoff reposait sur
 une prémisse fausse). Golden de champ population aussi inchangé.
 
+## Tronçon ② — FAIT (vue Godot : recalibrage rendu + banc F5)
+Pur-vue C#, moteur NON touché. **Golden INTACT** (`57c166d8…`, revérifié) ;
+**`dotnet build` VERT** (0 erreur, 0 avertissement).
+
+Calibrage rendu posé (placeholders → F5) :
+- **`WoodWidthFactor = 1.5`** (`visuals/PlantRenderer.cs`, constante NEUVE centralisée)
+  remplace l'ancien facteur `×2.2` sur les **3** sites du trait de bois (DrawSegments,
+  DrawSkeleton, **DrawHighlight** — 3ᵉ site trouvé, centralisé pour que la surbrillance
+  suive la largeur du bois). Avec `PxPerCmX = 0.39` : collet ~17 cm → ~10 px, charpentière
+  ~6 cm → ~4 px, brindille ~1 cm → 1 px (plancher). L'ancien 2.2 était calé sur
+  l'accumulation non bornée (~120 cm) → aurait fait un tronc trop épais sous la nouvelle échelle.
+- **`LeafMaxThickCm = 2.5`** (`visuals/PlantRenderer.Organs.cs`, ex-1.5) aligné sur le
+  `LEAF_MAX_THICK_CM = 2.5` de la maquette (①) : brindilles ≤~2 cm feuillues, charpente ≥~3 cm nue.
+  Commentaire d'en-tête corrigé : l'ancien lien épaisseur↔lignification n'existe plus
+  (la COULEUR du bois est age-based `AgeWeeks/LignifyFullWeeks`, indépendante — NON touchée).
+- **Pont/snapshot** : aucun changement (thickness lu sans clamp `PlantStructure.cs:235`),
+  protocole NON bumpé (rien à bumper).
+
+Banc F5 : **`bancs/croissance.py` → `vieux_pommier`** (registré dans `bancs/__init__.py`,
+catégorie dérivée "croissance"). Un pommier isolé DÉROULÉ `WARMUP_ANS=15` ans de morphogénèse
+à l'init (Engine local, nappe forcée `NAPPE=2.0` chaque tick sinon l'arbre meurt de soif à
+~5 ans → **écueil imprévu du kickoff**, résolu par forçage d'eau, esprit banc). Résultat :
+vivant, 70 segments (couronne pleine), épaisseur **1,0 → 16,96 cm** (collet borné ~girth_max,
+brindilles fines → taper net). Coût d'init **~40 s** (one-shot, instrument d'observation, assumé ;
+levier `WARMUP_ANS` si trop lent). F5 : `init config="vieux_pommier"`. Oracle = visuel (pas de
+test auto ajouté : instrument F5, la monotonie du taper est déjà testée en ①). Complément
+encyclopédie : NON ajouté (optionnel, le pommier a déjà ses voix).
+
 ## §REPRISE
-Tronçon ① (moteur) CLOS — golden intact (thickness hors digest, zéro couplage).
-Changements NON commités (Nico commit). Prochain : **tronçon ② `02_vue_godot.md`**
-(recalibrer largeur de trait C# `×2.2` + seuil feuilles `LeafMaxThickCm` contre la
-nouvelle échelle d'épaisseur, banc F5 vieux pommier ; golden pur-vue intact). Reste
-F5 Nico après ②.
+Tronçon ① (moteur) + ② (vue) CLOS — golden INTACT (`57c166d8…`), build C# vert.
+Changements NON commités (Nico commit). **Sprint terminé côté impl.** — reste :
+1. **F5 Nico** (`init config="vieux_pommier"`) : juger la silhouette et caler
+   `WoodWidthFactor` (1.5), `LeafMaxThickCm` (2.5) côté vue + `TAPER_EXP`/`GIRTH_TAU`/
+   `girth_max_cm` côté moteur (①). Escape : ajuster ces constantes, re-F5.
+2. À la clôture : journal + DETTE/BACKLOG (dette « migration des 9 autres arbres en
+   procédural » à consigner — cf. Périmètre CIBLÉ, seul le pommier exerce l'effet).
