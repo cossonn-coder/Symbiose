@@ -154,9 +154,40 @@
   panneau seulement.
 - **Reste T3** (dossier plante au clic, vue+pont).
 
+## Avancement T3 — Dossier de plante au clic (item 4), VUE+PONT — FAIT le 2026-07-23
+- **PONT (`data/code/tools/simserver/serialize.py`)** — dans la sérialisation par
+  plante VIVANTE (après `base["etat"]`), TROIS ajouts lecture-seule : `memoires`
+  (dict des 8 intégrateurs — shade/drought/asphyxie/cold/infection/wind/
+  root_herbivory/stress, arrondis 3 déc.), `expression` (dict des facteurs de
+  plasticité ≠ 1.0, filtré — vide pour une plante non acclimatée), `age_weeks`
+  (int) + `age_years` (round 2). Noms d'attributs VÉRIFIÉS dans
+  `plants/base/instance.py` (dataclass `PlantInstance`). Hors `_PLANT_ATTRS`.
+- **Version pont bumpée `0.5.37 → 0.5.38`** (`version.py`, changelog ajouté).
+- **VUE C#** — mode INSPECTION debug touche **F2** (registre F6/F7) : tant qu'il
+  est ON, le clic gauche ouvre le dossier de la plante pointée (picking `FindPlant`)
+  au lieu d'exécuter un geste. Source = dict du DERNIER snapshot (cache
+  `_plantPayloads` clé `tile|species|x|y` == `PlantKey`, rempli dans `ApplySnapshot`),
+  AUCUN appel pont. Panneau `world/DossierPlantePanel.cs` (`CanvasLayer` Layer 9,
+  read-only) : espèce/nom · tuile+plot(x,y) · stade+âge · vitalité/état · symptômes ·
+  mémoires (non nulles) · expression · gènes. Fermable : clic ailleurs / **Échap**
+  (inséré dans la précédence T2 : dossier → consultation → retour accueil) / F2 off.
+- **Golden INCHANGÉ** : `57c166d8…` (les ajouts pont sont hors `_PLANT_ATTRS`, le
+  golden tourne hors serveur). **Build C# VERT** (0 warning / 0 erreur).
+- **LDC** : `DossierPlantePanel.cs` 114 🟢, `WorldView.Dossier.cs` 45 🟢.
+- **Fichiers touchés** : `serialize.py` (3 champs), `version.py` (bump 0.5.38),
+  `world/DossierPlantePanel.cs` (NEUF, panneau), `world/WorldView.Dossier.cs` (NEUF,
+  wiring mode inspection + cache + précédence Échap), `world/WorldView.Controls.cs`
+  (F2 → ToggleInspectMode ; clic → InspecterAuClic prioritaire ; Échap → dossier
+  d'abord), `world/WorldView.Snapshot.cs` (remplissage `_plantPayloads`).
+- **Points F5 Nico** : (a) F2 arme le mode inspection (message console), clic sur une
+  plante → panneau tiers-droit avec son état complet ; clic dans le vide referme.
+  (b) Une plante stressée montre des mémoires élevées (ombre/soif…) cohérentes avec
+  l'observation. (c) Échap ferme le dossier avant de fermer un panneau, puis avant le
+  retour accueil (précédence T2 respectée). (d) Le panneau absorbe les clics sur sa
+  propre surface (Panel MouseFilter Stop) → aucun geste parasite dessous.
+
 ## §REPRISE
-Lire `CLAUDE.md` + ce fichier. Phase A CLOSE (D1-D5). **T1 palette FAIT** + **T2
-chrome/navigation FAIT** (golden `57c166d8…` intact, build vert, non commités —
-Nico commit). Prochaine étape : **T3 — Dossier plante** (`03_dossier_plante.md`,
-vue+pont, golden NEUTRE annoncé). MAJ DETTE (D54/D55/D59)/BACKLOG/journal en fin
-de sprint.
+Lire `CLAUDE.md` + ce fichier. Phase A CLOSE (D1-D5). **T1 + T2 + T3 TOUS FAITS**
+(golden `57c166d8…` intact, pont bumpé **0.5.38**, build vert, non commités — Nico
+commit). Les 3 tronçons du sprint sont livrés. **Reste = clôture (Phase C)** : MAJ
+DETTE (D54/D55/D59)/BACKLOG/journal + F5 Nico. Aucun dev restant.

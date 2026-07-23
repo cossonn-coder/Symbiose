@@ -576,7 +576,20 @@ from __future__ import annotations
 #       rien. Champs ABSENTS → aucun effet (smoke/full ne les passent jamais) → golden
 #       INTACT. Un binaire pré-0.5.37 ignore silencieusement ces deux champs de
 #       `cmd_init` (tolérance : options sans effet, le monde monte quand même).
-ENGINE_VERSION = "0.5.37"
+# 0.5.38 (retours UI/HUD T3, dossier de plante DEBUG) : chaque plante VIVANTE du
+#       snapshot gagne TROIS clés lecture-seule pour l'outil de test « dossier de
+#       plante » (clic en mode inspection F2 → panneau debug read-only, du rang des
+#       overlays F6/F7). `memoires` = dict des 8 intégrateurs lents de stress vécu
+#       (shade/drought/asphyxie/cold/infection/wind/root_herbivory/stress ∈ [0,1],
+#       l'« histoire compressée » de la plante — il n'existe PAS de chronologie par
+#       instance côté moteur, ces scalaires en tiennent lieu) ; `expression` = dict
+#       FILTRÉ des facteurs de plasticité ≠ 1.0 (durcissement acquis ; plante non
+#       acclimatée → dict vide) ; `age_weeks`/`age_years` (âge dans le stade / total).
+#       PURE lecture d'un état DÉJÀ porté par `plants/base/instance.py` (hors
+#       _PLANT_ATTRS du golden) → golden INTACT (le golden tourne hors serveur). Un
+#       binaire pré-0.5.38 n'émet pas ces clés → le panneau retombe sur les champs
+#       absents (lecture tolérante ContainsKey, comme tous les bumps précédents).
+ENGINE_VERSION = "0.5.38"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

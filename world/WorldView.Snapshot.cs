@@ -122,6 +122,7 @@ namespace Symbiose
 			int born = 0, grown = 0, empty = 0, nSegs = 0;
 			var seen = new HashSet<string>();
 			_plantsByName.Clear();   // index des fleurs de saut des butineurs
+			_plantPayloads.Clear();  // cache clé→dict-plante lu par le dossier (T3)
 			foreach (var pv in snap["plants"].AsGodotArray())
 			{
 				var p = pv.AsGodotDictionary();
@@ -134,6 +135,7 @@ namespace Symbiose
 				nSegs += structure.Segments.Count;
 				string key = PlantKey(p);
 				seen.Add(key);
+				_plantPayloads[key] = p;   // dossier de plante debug (T3), lu au clic
 				IndexPlantByName(p);   // fleurs cibles des butineurs (vivantes only)
 
 				// Position écran de la plante, RECALÉE sur le relief (D57 ②) : le

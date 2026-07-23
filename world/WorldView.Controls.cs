@@ -53,7 +53,12 @@ namespace Symbiose
 				// méthode assure qu'on ne recharge pas pendant l'écran de sélection.
 				if (k.Keycode == Key.Escape)
 				{
-					if (_consultation != null && IsInstanceValid(_consultation))
+					// Précédence (T3 s'insère AVANT la consultation) : le dossier de
+					// plante debug se ferme d'abord, puis un panneau de consultation,
+					// et seulement sinon → retour à l'accueil.
+					if (_dossier != null && IsInstanceValid(_dossier))
+						FermerDossier();
+					else if (_consultation != null && IsInstanceValid(_consultation))
 						_consultation.Fermer();
 					else
 					{
@@ -78,6 +83,7 @@ namespace Symbiose
 					case Key.Pagedown: RotateView(-1); break;
 					case Key.M:        CycleSimMode();    break;
 					case Key.F1:       ToggleLegend();    break;   // aide clavier (T2, masquée par défaut)
+					case Key.F2:       ToggleInspectMode(); break; // dossier de plante debug (T3)
 					case Key.F3:       ToggleLabels();    break;
 					case Key.F4:       TogglePerf();      break;
 					case Key.C:        CopyPerfReport();  break;  // presse-papier perf
@@ -129,6 +135,10 @@ namespace Symbiose
 				if (mb.ButtonIndex == MouseButton.Left)
 				{
 					var canvas = WorldMouseCanvas();
+					// Mode inspection (T3, touche F2) : le clic ouvre le dossier de la
+					// plante pointée (ou referme) au lieu d'agir — priorité sur tout.
+					if (InspecterAuClic(canvas))
+						return;
 					// Macro armée (⑤, touche J) : le clic capture le point et enfile
 					// le rejeu — priorité sur tout le reste (ni hub, ni geste simple).
 					if (LancerMacroSiArmee(canvas, mb.ShiftPressed))

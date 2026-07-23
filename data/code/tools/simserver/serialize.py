@@ -154,6 +154,34 @@ class SerializeMixin:
                 # pré-0.5.28 → la vue retombe sur le mapping par symptômes seul).
                 base["vitalite"] = round(p.vitalite, 3)
                 base["etat"] = p.etat
+                # Dossier de plante DEBUG (sprint retours UI/HUD T3, outil de test) :
+                # l'état physiologique COURANT lu par le panneau au clic d'inspection
+                # (WorldView.Dossier.cs → DossierPlantePanel). Trois ajouts LECTURE
+                # SEULE d'un état DÉJÀ porté par l'instance (`plants/base/instance.py`)
+                # — hors _PLANT_ATTRS du golden → golden INTACT (le golden tourne hors
+                # serveur, ces clés ne naissent jamais pour lui).
+                #  · `memoires` = les 8 intégrateurs lents de stress vécu (shade/
+                #    drought/asphyxie/cold/infection/wind/root_herbivory/stress). C'est
+                #    l'« histoire compressée » de la plante : shade_memory=0.8 = longtemps
+                #    à l'ombre. Regroupés sous une clé pour ne pas polluer le socle.
+                #  · `expression` = facteurs de plasticité ≠ 1.0 (durcissement acquis,
+                #    sprint plasticité) ; dict FILTRÉ (une plante non acclimatée a tout à
+                #    1.0 → dict vide, pas de bruit).
+                #  · `age_weeks` (âge dans le stade) / `age_years` (âge total).
+                base["memoires"] = {
+                    "shade_memory": round(p.shade_memory, 3),
+                    "drought_memory": round(p.drought_memory, 3),
+                    "asphyxie_memory": round(p.asphyxie_memory, 3),
+                    "cold_memory": round(p.cold_memory, 3),
+                    "infection_memory": round(p.infection_memory, 3),
+                    "wind_memory": round(p.wind_memory, 3),
+                    "root_herbivory_memory": round(p.root_herbivory_memory, 3),
+                    "stress_memory": round(p.stress_memory, 3),
+                }
+                base["expression"] = {g: round(f, 3)
+                                      for g, f in p.expression.items() if f != 1.0}
+                base["age_weeks"] = p.age_weeks
+                base["age_years"] = round(p.age_years, 2)
                 # Patrimoine génétique (sprint DIVERSITÉ FONDATRICE ③) : le vecteur
                 # de gènes de l'individu, exposé en DEBUG pour le survol (WorldView
                 # affiche les gènes de rythme de la plante pointée → corréler « ce
