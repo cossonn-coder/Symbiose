@@ -66,10 +66,24 @@
 
 Golden **INCHANGÉ** aux 4 tronçons (pure vue C#, zéro moteur — ne PAS lancer test_golden).
 
+## AVANCEMENT EXÉCUTION
+- **T1 — Forêt : CLOSE** (2026-07-24). Pure vue C#, golden non concerné (aucun moteur touché).
+  Faits : (a) marches de valeur franches dans `DrawVolumeBlob` (masse ×0.75 / calotte ×1.25,
+  bornes `Assombrir`, au lieu de ±15 %), calotte décalée SO (bas+ouest) ; (b) ombre portée
+  aplatie au pied de chaque arbre (`DrawOmbrePied`, teinte = `DecorForetFond` −0.30, décalée NE) ;
+  (c) accent de cime clair au sommet du houppier (`DrawCimeAccent`, `Lerp` feuillage→`DecorForetCime`,
+  hauteur par port) → skyline bosselée ; (d) palette : `DecorForetFond` poussé plus sombre/froid
+  (`223a2b`), feuillages ré-étalés en valeurs distinctes (hêtre `35603a` / chêne `44703f` /
+  charme `4f7d47` / bouleau `74a250`), nouveau `DecorForetCime` (`a6c56e`).
+  Build `dotnet` = 0 err / 0 warn. LDC : `DecorLayer.Arbres.cs` 163 code, `Palette16.cs` 79 code (🟢).
+  Géométrie de placement `DrawForet` INCHANGÉE. Zéro `Random` (philo #3 préservée).
+  **F5 Nico requis** : la forêt se lit-elle comme masse volumée détachée du sol, cime bosselée ?
+
 ## §REPRISE
-Phase B terminée : doc de conception + 4 kickoffs écrits, prêts pour `/sprint-auto`.
-Prochaine étape = exécution : `/sprint-auto sprint_lisibilite_decor`. Commencer par `01_foret.md`.
-Chaque tronçon : `dotnet build` (0 err), pas de test moteur, MAJ ce fichier, commit, tronçon suivant.
+T1 (forêt) CLOSE, commit à faire par Nico. **Prochaine étape = T2 rivière** : lire `02_riviere.md`
+(berges franches + surface eau 2-3 valeurs + reflets orientés courant + ombre de berge), toucher
+`DecorLayer.cs` (`DrawRiviere`) + `Palette16.cs` (teintes eau). Golden INCHANGÉ (pure vue, ne PAS
+lancer test_golden). Boucle : `dotnet build` (0 err) → MAJ ce fichier → commit → T3.
 
 ## §REPRISE
 Lire ce fichier. Phase A en cours : diagnostic posé, 3 arbitrages en attente de Nico.

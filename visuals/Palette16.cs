@@ -121,7 +121,11 @@ namespace Symbiose
 		// art ; le DÉTAIL (arbres, reflets, redans) est peint par-dessus en T5.
 		public static readonly Color DecorPrairie       = new Color("6e9a4a"); // prairie fleurie (fond)
 		public static readonly Color DecorPrairieClair  = new Color("83af58"); // prairie éclairée (lisière)
-		public static readonly Color DecorForetFond     = new Color("2f5738"); // forêt profonde (vert sombre)
+		// T1 lisibilité décor : fond poussé PLUS SOMBRE/FROID pour que les cimes
+		// éclairées (calotte + accent de cime) tranchent — avant, hêtre ≈ fond =
+		// tache verte plate. Le fond est désormais sous TOUS les feuillages, même
+		// leur masse d'ombre (feuillage ×0.75, cf. DrawVolumeBlob).
+		public static readonly Color DecorForetFond     = new Color("223a2b"); // forêt profonde (vert sombre-froid)
 		public static readonly Color DecorForetLisiere  = new Color("46764a"); // lisière (vert moyen)
 		public static readonly Color DecorEau           = new Color("3f6f8e"); // rivière (bleu-gris)
 		public static readonly Color DecorEauBerge      = new Color("6f9a86"); // berge herbeuse (vert-eau)
@@ -137,11 +141,16 @@ namespace Symbiose
 		// valeurs (calotte éclairée) est fabriqué à l'usage par hue-shift, pas
 		// dupliqué ici (cohérent avec le rendu des plantes, philo pixel-art).
 		// -- Feuillages par essence (houppiers du décor) --
-		public static readonly Color FeuillageChene    = new Color("3d6b3c"); // chêne : vert moyen dense
-		public static readonly Color FeuillageHetre    = new Color("2c5730"); // hêtre : vert profond de hêtraie
-		public static readonly Color FeuillageBouleau  = new Color("6f9a4c"); // bouleau : vert clair léger
-		public static readonly Color FeuillageCharme   = new Color("47713e"); // charme : vert moyen bocager
+		public static readonly Color FeuillageChene    = new Color("44703f"); // chêne : vert moyen dense
+		public static readonly Color FeuillageHetre    = new Color("35603a"); // hêtre : vert profond de hêtraie
+		public static readonly Color FeuillageBouleau  = new Color("74a250"); // bouleau : vert clair léger
+		public static readonly Color FeuillageCharme   = new Color("4f7d47"); // charme : vert moyen bocager
 		public static readonly Color FeuillageSapin    = new Color("2c4d47"); // sapin : vert-bleu sombre
+			// Accent de CIME (T1) : vert eclaire chaud du sommet des houppiers
+			// (soleil SO). Distinct des feuillages car la calotte du volume plafonne
+			// a x1.25 (Assombrir borne) -> il faut une VRAIE couleur claire pour que
+			// la skyline foret bosselee tranche contre le jardin.
+			public static readonly Color DecorForetCime    = new Color("a6c56e"); // cime au soleil
 		// -- Écorces (troncs du décor) --
 		public static readonly Color EcorceBrune       = new Color("5a4632"); // tronc brun (chêne/hêtre/charme/sapin)
 		public static readonly Color EcorceBouleau     = new Color("d3d0c6"); // écorce blanche du bouleau
