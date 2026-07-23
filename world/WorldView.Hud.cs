@@ -31,7 +31,16 @@ namespace Symbiose
 		// Labels du HUD provisoire.
 		private Label _actionLabel;                // 2e ligne HUD (Vigueur+geste)
 		private Label _clockLabel;
-		private Label _legendLabel;                // aide-mémoire clavier (F1, masqué par défaut, T2)
+		private Label _versionLabel;               // version du pont (haut-droit) — masquable en vue nue (T4)
+		private Label _legendLabel;                // aide-mémoire clavier (bas, T2)
+
+		// Cycle du texte HUD (T4, item 6). F1 fait tourner 3 états :
+		//  0 Jeu  → texte du haut (horloge/Vigueur/version) VISIBLE · aide bas masquée (défaut)
+		//  1 Nu   → tout le texte HUD MASQUÉ (screenshot / observation nue ; palette + overlays intacts)
+		//  2 Aide → texte du haut VISIBLE · aide clavier du bas VISIBLE
+		// Chaque bloc garde son défaut naturel (le haut est montré, l'aide est cachée) ;
+		// le cycle réconcilie leurs polarités opposées sans réassigner de touche.
+		private int _hudTextMode;                  // 0 Jeu (défaut) · 1 Nu · 2 Aide
 
 		// --- Overlay de perfs (F4, volet C2 — demande Nico) -----------------
 		// Mesuré dans la vue, sans instrumenter le moteur : durée du dernier
@@ -145,6 +154,7 @@ namespace Symbiose
 			build.AddThemeColorOverride("font_outline_color", Colors.Black);
 			build.AddThemeConstantOverride("outline_size", 4);
 			hud.AddChild(build);
+			_versionLabel = build;   // mémorisé pour la vue nue (T4) — masquable comme le reste du texte du haut
 
 			// Légende des commandes (décision Nico 2026-06-10) : ce que le
 			// joueur PEUT faire, coin bas-gauche, petite police. PROVISOIRE
@@ -184,13 +194,34 @@ namespace Symbiose
 			UpdateActionHud();
 		}
 
-		// Touche F1 (T2, item 3) : montre/cache l'aide-mémoire clavier. Masqué par
-		// défaut pour dégager le bas du champ de jeu ; un appui le rappelle.
-		private void ToggleLegend()
+		// Touche F1 (T4, item 6) : fait tourner le mode d'affichage du texte HUD
+		// (Jeu → Nu → Aide → Jeu). Le mode « Nu » dégage le champ de tout MOT pour
+		// l'observation nue / les screenshots — la palette de gestes et les overlays
+		// debug (F4/F6/G, allumés délibérément) restent, eux, intouchés.
+		private void CycleHudText()
 		{
-			if (_legendLabel == null) return;
-			_legendLabel.Visible = !_legendLabel.Visible;
-			GD.Print($"[WorldView] F1 → aide clavier {(_legendLabel.Visible ? "ON" : "OFF")}.");
+			_hudTextMode = (_hudTextMode + 1) % 3;
+			ApplyHudTextMode();
+			string nom = _hudTextMode switch
+			{
+				1 => "Nu (texte masqué)",
+				2 => "Aide (état + aide clavier)",
+				_ => "Jeu (état seul)",
+			};
+			GD.Print($"[WorldView] F1 → texte HUD : {nom}.");
+		}
+
+		// Applique la visibilité des labels selon _hudTextMode. Le texte du HAUT
+		// (horloge, Vigueur/geste, version du pont) est visible sauf en mode Nu ;
+		// l'aide clavier du BAS n'est visible qu'en mode Aide.
+		private void ApplyHudTextMode()
+		{
+			bool hautVisible = _hudTextMode != 1;   // masqué uniquement en Nu
+			bool aideVisible = _hudTextMode == 2;   // révélée seulement en Aide
+			if (_clockLabel != null)   _clockLabel.Visible = hautVisible;
+			if (_actionLabel != null)  _actionLabel.Visible = hautVisible;
+			if (_versionLabel != null) _versionLabel.Visible = hautVisible;
+			if (_legendLabel != null)  _legendLabel.Visible = aideVisible;
 		}
 
 		private void UpdateClock()

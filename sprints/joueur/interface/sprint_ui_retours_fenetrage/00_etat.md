@@ -186,8 +186,51 @@
   retour accueil (précédence T2 respectée). (d) Le panneau absorbe les clics sur sa
   propre surface (Panel MouseFilter Stop) → aucun geste parasite dessous.
 
+## ADDENDUM — item 6 (F1 toggle texte du HAUT), 2026-07-23 (post-clôture)
+Retour SUPPLÉMENTAIRE après screenshot : « le texte en haut peut aussi être
+visible/invisible avec F1 ». T1-T3 (items 1-5) sont commités/clos (T3 = `86b0f48`,
+clôture = `c6f3243`). Item 6 = SEUL reste réel. Complète l'intention d'item 2 : le
+texte qui gênait Nico est celui du HAUT (horloge/Vigueur), pas la légende du bas.
+
+**Constat CODE** : F1 → `ToggleLegend()` (`WorldView.Hud.cs:189`) bascule la SEULE
+légende clavier du bas (masquée par défaut, T2/D54-a). Texte du haut = `_clockLabel`
+(y=10) + `_actionLabel` (y=52) + label version pont (haut-droit, local `build`, PAS
+stocké). Overlays debug (`_perfLabel` F4, `_fieldLabel` F6, `_genesLabel` G) =
+toggles propres, indépendants.
+
+**Nœud (tranché)** : polarité par défaut OPPOSÉE — état haut VISIBLE par défaut vs
+aide bas MASQUÉE par défaut → un seul toggle 2 états ne peut servir les deux
+proprement.
+
+### Décisions lot 2 (réponses Nico 2026-07-23)
+- **D6 (item 6) = F1 devient un CYCLE 3 ÉTATS** `_hudTextMode ∈ {Jeu, Nu, Aide}` :
+  - **Jeu** (0, défaut) : haut (horloge+action+version) VISIBLE · légende bas MASQUÉE.
+  - **Nu** (1) : tout le texte HUD MASQUÉ (screenshot / obs. nue).
+  - **Aide** (2) : haut VISIBLE · légende bas VISIBLE.
+  - F1 cycle 0→1→2→0. Rationale : un seul geste connu, rien à réassigner, chaque
+    bloc garde son défaut naturel, aide toujours joignable, vue nue franche.
+- **D7 (portée du nu) = TEXTE SEUL.** Le mode Nu masque le texte (horloge, Vigueur/
+  geste, version, aide) mais PAS la palette de gestes (outil d'action) ni les
+  overlays debug (allumés délibérément). Rationale : vue nue = sans MOTS, pas sans
+  outils ; on peut encore agir.
+- **Non-diégétisation** : item 6 = pur toggle de visibilité, PAS la diégétisation
+  D54-a (qui reste une dette future). Simple déménagement/masquage.
+
+### T4 — Cycle texte HUD (item 6) — FAIT le 2026-07-23 (carte blanche, path b)
+- **Implémenté directement** (pure vue, trop petit pour /sprint-auto). `WorldView.Hud.cs` :
+  `ToggleLegend()` → `CycleHudText()` (état `_hudTextMode ∈ {0 Jeu, 1 Nu, 2 Aide}`) +
+  `ApplyHudTextMode()` (haut = horloge/action/version masqué en Nu ; aide bas visible
+  en Aide seulement). Label version stocké dans `_versionLabel` pour être masquable.
+  `WorldView.Controls.cs` : `Key.F1 → CycleHudText()`.
+- Overlays debug (F4/F6/G) et palette de gestes NON touchés (D7 : texte seul).
+- **Golden INTACT par construction** : `57c166d8…` (aucun `data/code/`). **Build C#
+  VERT** (0 warning / 0 erreur). LDC : Hud.cs 294 🟢, Controls.cs 191 🟢.
+- **Fichiers touchés** : `world/WorldView.Hud.cs`, `world/WorldView.Controls.cs`.
+- **Points F5 Nico** : F1 cycle Jeu → Nu (tout le texte disparaît, palette reste) →
+  Aide (état + aide clavier du bas) → Jeu. Défaut = Jeu (comportement de jeu normal).
+- **Non commité** — laissé à Nico (règle projet : commit sur demande).
+
 ## §REPRISE
-Lire `CLAUDE.md` + ce fichier. Phase A CLOSE (D1-D5). **T1 + T2 + T3 TOUS FAITS**
-(golden `57c166d8…` intact, pont bumpé **0.5.38**, build vert, non commités — Nico
-commit). Les 3 tronçons du sprint sont livrés. **Reste = clôture (Phase C)** : MAJ
-DETTE (D54/D55/D59)/BACKLOG/journal + F5 Nico. Aucun dev restant.
+Lire `CLAUDE.md` + ce fichier. **Items 1-6 TOUS FAITS.** T1-T3 (items 1-5) commités/
+clos (`c6f3243`) ; **T4 (item 6) implémenté** (carte blanche, non commité, golden
+`57c166d8…` intact, build vert). Reste : commit T4 par Nico + F5. Aucun dev restant.

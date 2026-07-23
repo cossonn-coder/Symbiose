@@ -82,7 +82,7 @@ namespace Symbiose
 					case Key.Pageup:   RotateView(+1); break;
 					case Key.Pagedown: RotateView(-1); break;
 					case Key.M:        CycleSimMode();    break;
-					case Key.F1:       ToggleLegend();    break;   // aide clavier (T2, masquée par défaut)
+					case Key.F1:       CycleHudText();    break;   // cycle texte HUD : Jeu → Nu → Aide (T4, item 6)
 					case Key.F2:       ToggleInspectMode(); break; // dossier de plante debug (T3)
 					case Key.F3:       ToggleLabels();    break;
 					case Key.F4:       TogglePerf();      break;
