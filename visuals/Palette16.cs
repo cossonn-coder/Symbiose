@@ -155,9 +155,11 @@ namespace Symbiose
 		public static readonly Color EcorceBrune       = new Color("5a4632"); // tronc brun (chêne/hêtre/charme/sapin)
 		public static readonly Color EcorceBouleau     = new Color("d3d0c6"); // écorce blanche du bouleau
 		public static readonly Color EcorceLenticelle  = new Color("35322c"); // chevrons sombres du bouleau
-		// -- Eau de rivière (2 teintes pour le dithering des reflets) --
+		// -- Eau de rivière (T2 : berge franche + 2 valeurs d'eau + reflet) --
 		public static readonly Color EauProfonde       = new Color("35617f"); // eau profonde (bleu-gris sombre)
-		public static readonly Color EauReflet         = new Color("6fa6bf"); // reflet de ciel (bleu clair, dithering)
+		public static readonly Color EauSurface        = new Color("4a7d9c"); // eau de surface (valeur claire, damier)
+		public static readonly Color EauReflet         = new Color("6fa6bf"); // reflet de ciel (bleu clair, streak courant)
+		public static readonly Color BergeGalet        = new Color("9a8f76"); // berge de galets/limon (bord franc du lit)
 		// -- Roche de falaise (3 valeurs de redans étagés) --
 		public static readonly Color RocheClair        = new Color("9c9182"); // redan éclairé
 		public static readonly Color RocheMedian        = new Color("7c7264"); // pan médian

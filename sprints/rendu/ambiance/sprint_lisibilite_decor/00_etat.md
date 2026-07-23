@@ -79,11 +79,27 @@ Golden **INCHANGÉ** aux 4 tronçons (pure vue C#, zéro moteur — ne PAS lance
   Géométrie de placement `DrawForet` INCHANGÉE. Zéro `Random` (philo #3 préservée).
   **F5 Nico requis** : la forêt se lit-elle comme masse volumée détachée du sol, cime bosselée ?
 
+- **T2 — Rivière : CLOSE** (2026-07-24). Pure vue C#, golden non concerné (aucun moteur touché,
+  test_golden NON lancé). `DrawRiviere` réécrit : (a) **berges franches** de galets (`BergeGalet`)
+  sur chaque rive du lit (`ax ± half`, berge = `DepthCm·0.11`) au lieu de l'assise nue ; (b) **surface
+  eau 2 valeurs** en damier hashé (parité du pas × moitié du lit : `EauProfonde`/`EauSurface`),
+  frémissement sans dégradé ; (c) **ombre de berge** = liseré d'eau assombri (`Assombrir(EauProfonde,-0.18)`)
+  le long des deux rives → creuse le lit ; (d) **reflets orientés courant** : streaks `DrawLine`
+  (`EauReflet`, largeur 2.5) tracés le long de la tangente du lit (segment d'axe), longueur ∝ pas
+  monde (suit zoom/rotation) — remplacent les cercles 2 px sous-pixel. Facteur commun extrait en
+  helper `Bande(...)`. Palette : +`EauSurface` (`4a7d9c`), +`BergeGalet` (`9a8f76`), `EauReflet`
+  reclassé streak. Zéro `Random` (hash + 3-sinus, philo #3 préservée). Géométrie de l'axe/secteur
+  INCHANGÉE (couplage rivière↔falaise `BuildProfile` non touché).
+  Build `dotnet` = 0 err / 0 warn. LDC : `DecorLayer.cs` 244 code / `Palette16.cs` 81 code (🟢).
+  **F5 Nico requis** : la rivière se lit-elle comme surface d'eau creusée (berges nettes, courant
+  perceptible via les streaks) ?
+
 ## §REPRISE
-T1 (forêt) CLOSE, commit à faire par Nico. **Prochaine étape = T2 rivière** : lire `02_riviere.md`
-(berges franches + surface eau 2-3 valeurs + reflets orientés courant + ombre de berge), toucher
-`DecorLayer.cs` (`DrawRiviere`) + `Palette16.cs` (teintes eau). Golden INCHANGÉ (pure vue, ne PAS
-lancer test_golden). Boucle : `dotnet build` (0 err) → MAJ ce fichier → commit → T3.
+T1 (forêt) + T2 (rivière) CLOSES, commits à faire par Nico. **Prochaine étape = T3 falaise** : lire
+`03_falaise.md` (vraie face verticale montée −Y + ombre portée au pied/surplomb + éboulis + 3 valeurs
+roche contrastées, NON forcée = fidèle #7), toucher `DecorLayer.cs` (`DrawFalaise`) + `Palette16.cs`
+(teintes roche). Golden INCHANGÉ (pure vue, ne PAS lancer test_golden). Boucle : `dotnet build`
+(0 err) → MAJ ce fichier → commit → T4.
 
 ## §REPRISE
 Lire ce fichier. Phase A en cours : diagnostic posé, 3 arbitrages en attente de Nico.

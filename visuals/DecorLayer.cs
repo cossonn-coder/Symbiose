@@ -227,34 +227,65 @@ namespace Symbiose
 		// suit la rotation D35. Statique, cullé par le LOD global (comme l'ossature).
 		// -----------------------------------------------------------------------
 
-		// RIVIÈRE : une bande d'eau sinueuse au CŒUR de la bande (bordée de berges
-		// herbeuses déjà posées par l'assise), semée de reflets clairs par un
-		// dithering ORDONNÉ (damier hashé) — 2 teintes de palette, pas de dégradé.
+		// RIVIÈRE : une surface d'eau CREUSÉE dans le terrain (T2). Berges franches
+		// de galets de part et d'autre du lit, eau à 2 valeurs par damier hashé
+		// ORDONNÉ (frémissement, jamais de dégradé), liseré d'ombre le long des deux
+		// rives (creuse le lit, décolle la surface du plan-sol comme l'ombre T1), et
+		// reflets = STREAKS clairs orientés dans le sens du COURANT (la tangente de
+		// l'axe sinueux du lit). Zéro Random (hash + 3-sinus, philo #3).
 		private void DrawRiviere(Secteur s)
 		{
 			int steps = Mathf.CeilToInt(WorldView.WorldCm / StepCm);
-			// Le lit occupe la moitié médiane de la profondeur (berges de part et
-			// d'autre) ; son axe serpente d'un tracé sinueux propre (déphasé).
+			const float half   = DepthCm * 0.22f;   // demi-largeur du lit
+			const float berge  = DepthCm * 0.11f;   // largeur de berge sur chaque rive
+			float liseré = half * 0.18f;             // ombre de berge (bord d'eau)
+			Color eauSombre = Assombrir(Palette16.EauProfonde, -0.18f);
+			// L'axe du lit serpente d'un tracé sinueux propre (déphasé du secteur).
 			for (int i = 0; i < steps; i++)
 			{
 				float u0 = i * StepCm, u1 = Mathf.Min(u0 + StepCm, WorldView.WorldCm);
 				float ax0 = DepthCm * 0.5f + AmplitudeCm * Ondulation(s.SeedSecteur ^ 0x9e37u, u0 / 230f);
 				float ax1 = DepthCm * 0.5f + AmplitudeCm * Ondulation(s.SeedSecteur ^ 0x9e37u, u1 / 230f);
-				float half = DepthCm * 0.22f;
-				Vector2 a0 = EdgePoint(s.Cote, u0, ax0 - half);
-				Vector2 a1 = EdgePoint(s.Cote, u1, ax1 - half);
-				Vector2 b1 = EdgePoint(s.Cote, u1, ax1 + half);
-				Vector2 b0 = EdgePoint(s.Cote, u0, ax0 + half);
-				DrawColoredPolygon(new[] { a0, a1, b1, b0 }, Palette16.EauProfonde);
-				// Reflets : un point clair 1 case sur 2 (damier hashé) au fil de l'eau.
+				// -- Berges franches : bande de galets clairs sur chaque rive (au lieu
+				// de laisser l'assise nue) → bord net entre terre et eau.
+				Bande(s.Cote, u0, u1, ax0 - half - berge, ax1 - half - berge, ax0 - half, ax1 - half, Palette16.BergeGalet);
+				Bande(s.Cote, u0, u1, ax0 + half, ax1 + half, ax0 + half + berge, ax1 + half + berge, Palette16.BergeGalet);
+				// -- Surface d'eau : 2 valeurs en damier (parité du pas × moitié du
+				// lit) → frémissement lisible à distance, sans dégradé continu.
 				uint hd = (uint)i * 2654435761u ^ s.SeedSecteur;
-				if ((hd & 1u) == 0u)
+				Color eauA = (hd & 1u) == 0u ? Palette16.EauProfonde : Palette16.EauSurface;
+				Color eauB = (hd & 1u) == 0u ? Palette16.EauSurface  : Palette16.EauProfonde;
+				Bande(s.Cote, u0, u1, ax0 - half, ax1 - half, ax0, ax1, eauA);
+				Bande(s.Cote, u0, u1, ax0, ax1, ax0 + half, ax1 + half, eauB);
+				// -- Ombre de berge : liseré d'eau plus sombre le long des deux rives.
+				Bande(s.Cote, u0, u1, ax0 - half, ax1 - half, ax0 - half + liseré, ax1 - half + liseré, eauSombre);
+				Bande(s.Cote, u0, u1, ax0 + half - liseré, ax1 + half - liseré, ax0 + half, ax1 + half, eauSombre);
+				// -- Reflet orienté courant : un streak clair 1 case sur 2, tracé le
+				// long du COURS (direction = le segment d'axe lui-même = tangente du
+				// lit). Longueur ∝ pas monde → suit zoom/rotation, jamais 2 px morts.
+				if ((hd & 2u) == 0u)
 				{
-					float d = ax0 + (((hd >> 8) & 0xff) / 255f - 0.5f) * half;
-					DrawCircle(EdgePoint(s.Cote, u0 + StepCm * 0.5f, d),
-							   2f, Palette16.EauReflet);
+					float dOff = (((hd >> 8) & 0xff) / 255f - 0.5f) * half * 1.1f;
+					Vector2 pa = EdgePoint(s.Cote, u0, ax0 + dOff);
+					Vector2 pb = EdgePoint(s.Cote, u1, ax1 + dOff);
+					Vector2 mid = pa.Lerp(pb, 0.5f);
+					Vector2 flow = (pb - pa) * 0.42f;
+					DrawLine(mid - flow, mid + flow, Palette16.EauReflet, 2.5f);
 				}
 			}
+		}
+
+		// Un quad-bande le long d'un bord entre deux profondeurs, par pas de `u`
+		// (near→far). Facteur commun des rubans de la rivière (berges, eau, liserés)
+		// — garde DrawRiviere lisible sans dupliquer 4 EdgePoint à chaque bande.
+		private void Bande(int cote, float u0, float u1,
+						   float dNear0, float dNear1, float dFar0, float dFar1, Color col)
+		{
+			Vector2 p0 = EdgePoint(cote, u0, dNear0);
+			Vector2 p1 = EdgePoint(cote, u1, dNear1);
+			Vector2 p2 = EdgePoint(cote, u1, dFar1);
+			Vector2 p3 = EdgePoint(cote, u0, dFar0);
+			DrawColoredPolygon(new[] { p0, p1, p2, p3 }, col);
 		}
 
 		// FALAISE : paroi ÉTAGÉE en redans (3 valeurs) ; le NOMBRE de redans traduit
