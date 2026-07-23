@@ -139,6 +139,10 @@ namespace Symbiose
 				["CherryTree"] = new OrganPalette("3f8a3e", "f2dde2", "7fae50", "a01f28"), // cerisier : vert franc, fleur rose pâle, cerise rouge profond
 				["WalnutTree"] = new OrganPalette("4a8240", "dfe2cc", "7aa84f", "4a3a22"), // noyer : vert olive, brou brun
 				["OakTree"]    = new OrganPalette("46823c", "d6cf9a", "78a64a", "7a5a2e"), // chêne : vert mat lobé, gland brun
+				// --- Guilde marécageuse (sprint HYDROLOGIE & MARÉCAGES ⑤/⑥) ----------
+				["Alder"]      = new OrganPalette("3a6e3f", "6a7a4a", "5a8a4a", "4a3020"), // aulne : vert sombre de berge, chatons vert-brun, strobiles (cônes) brun-noir
+				["Sphagnum"]   = new OrganPalette("7aae6a", "9abf7a", "8fc07a", "9a8f5a"), // sphaigne : tapis vert-jaune clair de tourbière (pas de fleur, spores)
+				["Drosera"]    = new OrganPalette("4a8a52", "eef0e8", "6fae5a", "c43a2e"), // drosera : rosette verte MAIS poils/glu ROUGES (fruit=rouge carnivore, fleur blanche discrète)
 			};
 		private static readonly OrganPalette DefaultPalette =
 			new OrganPalette("469a3f", "ead85a", "6fae45", "cf3a2e");

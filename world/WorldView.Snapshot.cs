@@ -108,6 +108,14 @@ namespace Symbiose
 			// boucle des plantes : leur recalage vertical (ReliefRisePx) lit
 			// l'épaisseur courante → elles restent plantées dans la terre, pas
 			// suspendues. Lecture TOLÉRANTE : bloc absent (pré-0.5.16) → relief plat.
+			// Altitude (micro-relief topographique FIXE, hydrologie ①, 0.5.17) :
+			// socle géométrique du terrain, SOMMÉ à l'épaisseur pour le relief
+			// (surface = altitude + epaisseur, comme la surface hydraulique du
+			// moteur). Posé AVANT ApplyEpaisseur, qui déclenche seul UpdateRelief →
+			// la remontée voit déjà l'altitude courante. Lecture TOLÉRANTE (bloc
+			// absent, pré-0.5.17 → altitude nulle → terrain plat, aucun crash).
+			if (snap.ContainsKey("altitude"))
+				ApplyAltitude(snap["altitude"].AsGodotDictionary());
 			if (snap.ContainsKey("epaisseur"))
 				ApplyEpaisseur(snap["epaisseur"].AsGodotDictionary());
 
@@ -315,6 +323,20 @@ namespace Symbiose
 			// TOLÉRANTE : un snapshot pré-0.5.29 sans le bloc → pas de halo, jamais de crash.
 			if (snap.ContainsKey("allelopathie"))
 				ApplyAllelopathie(snap["allelopathie"].AsGodotDictionary());
+
+			// Eau de surface + marécage (hydrologie ⑧, 0.5.18/0.5.27, lecture seule) :
+			// flaques (`eau_surface`) et voile de tourbe (`marais`) posés au sol,
+			// recalés sur le relief (le PuddleLayer relit ReliefRiseAtPlot, à jour car
+			// l'altitude/épaisseur ont été appliquées plus haut). Lecture TOLÉRANTE :
+			// un bloc absent → liste vide, jamais de crash. Un seul appel pour les deux.
+			if (_puddleLayer != null
+				&& (snap.ContainsKey("eau_surface") || snap.ContainsKey("marais")))
+				_puddleLayer.SetWater(
+					snap.ContainsKey("eau_surface")
+						? snap["eau_surface"].AsGodotDictionary() : null,
+					snap.ContainsKey("marais")
+						? snap["marais"].AsGodotDictionary() : null,
+					_origins);
 
 			if (snap.ContainsKey("litiere"))
 				ApplyLitiere(snap["litiere"].AsGodotDictionary());

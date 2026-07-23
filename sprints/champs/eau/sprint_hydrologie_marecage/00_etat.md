@@ -356,8 +356,44 @@ humidité) pour éviter le biais d'ordre de parcours (sinon direction privilégi
   `tests/{test_encyclopedie.py (count 46), test_pages.py (count 36)}`.
   **NON commit** (orchestrateur commit). C# NON touché (vue guilde/carnivore = ⑧).
 
+## Avancement ⑧ (vue Godot : relief/altitude, flaque, marais, guilde, gestes) — FAIT le 2026-07-23
+- **PUR-VUE C#, golden Python NEUTRE** `57c166d8…` (seul du C# touché + 1 ligne
+  d'export pont ADDITIVE). `dotnet build Symbiose.csproj` VERT (0 err, 0 warn).
+- **Relief + altitude** (`world/WorldView.Relief.cs`) : `surface = altitude +
+  epaisseur_sol` (même empilement que la surface hydraulique du moteur → les creux
+  d'altitude coïncident avec les flaques). Parseur de grille dense FACTORISÉ
+  (`ParseDenseGrid`, partagé altitude/épaisseur), `EpaisseurPxAt` somme les deux
+  termes, accesseur public `ReliefRiseAtPlot` pour les calques de sol. `ApplyAltitude`
+  lit `altitude` AVANT `ApplyEpaisseur` (qui déclenche `UpdateRelief`). Tolérant.
+- **Calque `visuals/PuddleLayer.cs` (NEUF)** : flaque (bloc `eau_surface`, lame
+  bleutée ∝ profondeur + liseré miroitement) + voile marais (bloc `marais`, tourbe
+  brun-noir ∝ `marais_memory`), recalés sur la surface extrudée via `ReliefRiseAtPlot`.
+  UN CanvasItem redessine tout en `_Draw` (patron CouvertureLayer/LitterLayer), LOD
+  ≥0.5, culling, inerte entre snapshots, ZIndex 2. Câblé `WorldView.cs` (création +
+  `Init(this)`) + `WorldView.Snapshot.cs` (`SetWater`, lecture tolérante).
+- **Pont** : `eau_surface_by_tile` CALCULÉ mais jamais émis (le ② l'avait cru exposé)
+  → ajouté au dict de sortie (`serialize.py`, 1 ligne ADDITIVE). Pont 266/270 = 4
+  échecs BIT-IDENTIQUES préexistants (dérive version + fruits pommier), aucun introduit.
+- **Faune de mare** (`visuals/MacroLife.cs`) : moustique (nuée fine gris-brun rapide)
+  + libellule (bleu-vert iridescent, vol stationnaire lent).
+- **Placeholders guilde** (`visuals/PlantRenderer.Organs.cs`) : palettes aulne
+  (berge, strobiles bruns) / sphaigne (tapis vert-jaune) / drosera (rosette, glu ROUGE).
+- **Gestes creuser/drainer** : verbes kind `'q'` (plot {tile,r,c}, ACK diagnostic,
+  `world/WorldView.Actions.cs`) + icônes `k`/`j` (`world/GesteIcon.cs`).
+- **Overlays F6** (`visuals/FieldOverlay.cs`) : palettes DÉDIÉES `eau_surface`
+  (bleu d'eau [0,3]) + `marais_memory` (brun tourbe [0,1]) + moustique/libellule
+  (calées MacroLife, patron « une palette/espèce » ⑥b). `altitude` déjà présente.
+- **Fichiers touchés** : `world/{WorldView.cs, WorldView.Relief.cs, WorldView.Snapshot.cs,
+  WorldView.Actions.cs, GesteIcon.cs}`, `visuals/{PuddleLayer.cs (NEUF), MacroLife.cs,
+  PlantRenderer.Organs.cs, FieldOverlay.cs}`, `data/code/tools/simserver/serialize.py`.
+- **F5 Nico** : micro-relief lisible (cuvettes/bosses) ? flaques qui brillent dans les
+  creux ? marais qui « noircit » ? guilde crédible ? gestes lisibles ? Calibrage
+  exagération relief + palettes.
+
 ## §REPRISE
-**① CLOS** (altitude). **③ CLOS** (marécage). **④ CLOS** (faune de mare). **⑤ CLOS**
+**SPRINT CLOS le 2026-07-23** — les 8 tronçons ①→⑧ sont FAITS et committés. Reste
+UNIQUEMENT le **F5 de Nico** (voir §Avancement ⑧). **① CLOS** (altitude). **② CLOS**
+(eau_surface + ruissellement). **③ CLOS** (marécage). **④ CLOS** (faune de mare). **⑤ CLOS**
 (aulne + sphaigne). **⑥ CLOS** (Drosera Droseraceae : PUITS `_tick_carnivore` →
 `moustique` sur foliar_plots + faim d'azote neutralisée dans `qi_local` [N hors
 Liebig] ; attribut `carnivore` + drapeau `a_capture` ; 5 voix dont concept NEUF

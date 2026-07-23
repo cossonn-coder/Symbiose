@@ -93,6 +93,8 @@ namespace Symbiose
 			"recolter" or "manger" => 'f',   // fruit/récolte (rouge)
 			"ecraser" => 'x',            // croix (rouge sombre)
 			"becher" => 'a',             // fourche/ameublir (brun)
+			"creuser" => 'k',            // cuvette creusée (brun terre)
+			"drainer" => 'j',            // écoulement/évacuation (bleu)
 			"pailler" => 'u',            // trait de mulch (paille)
 			"bouturer" => 'b',           // tige piquée (vert clair)
 			"greffer" => 'g',            // jonction en T (vert-brun)

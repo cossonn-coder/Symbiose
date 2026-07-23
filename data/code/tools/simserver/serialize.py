@@ -597,6 +597,7 @@ class SerializeMixin:
                 "condensation": condensation_by_tile,
                 "epaisseur": epaisseur_by_tile,
                 "altitude": altitude_by_tile,
+                "eau_surface": eau_surface_by_tile,
                 "marais": marais_by_tile,
                 "couverture": couverture_by_tile,
                 "paillage": paillage_by_tile,

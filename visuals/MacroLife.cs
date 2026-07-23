@@ -109,6 +109,16 @@ namespace Symbiose
 			// couleuvre = serpent vert-olive ONDULÉ au sol près des piles au soleil.
 			// Errance moyenne, ondulation LENTE (elle rampe, se love, file à découvert).
 			["couleuvre"]  = (new Color("5a7a3a"), 2.6f, 10f, 0.7f),
+			// Faune de mare (sprint HYDROLOGIE & MARÉCAGES ④) — proie + prédateur
+			// aquatiques, prolifèrent sur `eau_surface`/marais. Un langage visuel
+			// distinct de la faune terrestre : ils DANSENT au-dessus de l'eau.
+			//  · moustique = NUÉE FINE : point minuscule (radius bas) gris-brun,
+			//    errance COURTE mais TRÈS RAPIDE (vibrionnement au ras de la flaque).
+			["moustique"]  = (new Color("6a5f57"), 1.4f, 3f, 4.2f),
+			//  · libellule = VOL STATIONNAIRE : point plus GRAND bleu-vert iridescent,
+			//    errance MOYENNE et LENTE (elle plane, fait du surplace, puis file).
+			//    Le prédateur du moustique (registre) → visible au-dessus des mêmes mares.
+			["libellule"]  = (new Color("2f9f8f"), 3.0f, 9f, 0.9f),
 		};
 		// Espèce inconnue d'un futur protocole : point gris, pas un crash.
 		private static readonly (Color, float, float, float) EspeceInconnue =

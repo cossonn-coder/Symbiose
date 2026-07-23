@@ -75,6 +75,14 @@ namespace Symbiose
 			// physiques ALT_BASE ± ALT_AMPLITUDE = 20 ± 20 → [0, 40] cm (fields/ecofields/
 			// constants.py). Bas de pente foncé (creux humide), haut clair (butte sèche).
 			["altitude"]         = (new Color("4a3a2a"), new Color("d8c8a8"), "creux", "butte", 0f, 40f),
+			// Hydrologie de surface (sprint HYDROLOGIE & MARÉCAGES ②/③) : la LAME
+			// d'eau stagnante `eau_surface` (excédent de saturation qui ruisselle vers
+			// les creux d'altitude) et la MÉMOIRE de milieu `marais_memory` (hystérèse
+			// → tourbe). Palettes CALÉES sur PuddleLayer (même langage visuel que la vue
+			// jeu : bleu d'eau, brun-noir de tourbe) — la heatmap double le calque de
+			// sol. Bornes PHYSIQUES : lame [0, HUM_CAP=3], mémoire [0, 1].
+			["eau_surface"]      = (new Color("d8cfc0"), new Color("2f6a8f"), "sec", "flaque", 0f, 3f),
+			["marais_memory"]    = (new Color("d8cfc0"), new Color("241d16"), "drainé", "marais", 0f, 1f),
 			["om_fresh"]         = (new Color("e0d6a8"), new Color("8f7a3a"), "sol nu", "litière", float.NaN, float.NaN),
 			["om_active"]        = (new Color("e0d6a8"), new Color("6f5a2a"), "peu", "en digestion", float.NaN, float.NaN),
 			["om_stable"]        = (new Color("e0d6a8"), new Color("5a4630"), "peu", "humus", float.NaN, float.NaN),
@@ -138,6 +146,12 @@ namespace Symbiose
 			// Super-prédateurs (category="super_predateur") — ferment le sommet
 			["rapace"]           = (new Color("e8e2d4"), new Color("b58a4a"), "absent", "en chasse", 0f, 1f),
 			["couleuvre"]        = (new Color("e8e2d4"), new Color("5a7a3a"), "absent", "au soleil", 0f, 1f),
+			// Faune de mare (sprint HYDROLOGIE & MARÉCAGES ④) — proie + prédateur
+			// aquatiques, densités bornées 0..1. Pôles hauts calés sur MacroLife
+			// (moustique gris-brun, libellule bleu-vert iridescent) : la heatmap
+			// double les points de la vue jeu (un seul langage visuel).
+			["moustique"]        = (new Color("e8e2d4"), new Color("6a5f57"), "absent", "nuée", 0f, 1f),
+			["libellule"]        = (new Color("e8e2d4"), new Color("2f9f8f"), "absent", "en vol", 0f, 1f),
 		};
 		// Champ inconnu de la table (futur champ moteur ramassé par
 		// l'introspection) : bleu→rouge générique en échelle auto, jamais un

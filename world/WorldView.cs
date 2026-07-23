@@ -135,6 +135,10 @@ namespace Symbiose
 		// du sol, sous les plantes. Enfant direct de WorldView : il survit à
 		// RebuildWorld (il se re-projette seul à chaque dessin d'animation).
 		private MacroLife _macroLife;
+		// Eau de surface + marécage (hydrologie ⑧) : UN nœud pour flaques + voile de
+		// tourbe (cf. PuddleLayer.cs). ZIndex 2 = au ras du sol, sous la macro/plantes.
+		// Recalé sur le relief via la vue. Survit à RebuildWorld (se re-projette seul).
+		private PuddleLayer _puddleLayer;
 		// Butineurs (arc pollinisation) : agents fleur-en-fleur, distincts du nuage
 		// MacroLife. ZIndex 11 = AU-DESSUS des plantes/objets (10) — l'abeille se
 		// pose sur la corolle, on doit la voir par-dessus. Survit à RebuildWorld.
@@ -319,6 +323,15 @@ namespace Symbiose
 			// nécromasse spontanée. Lit le bloc `paillage` (0.5.20).
 			_mulchLayer = new MulchLayer { Name = "Mulch", ZIndex = 1 };
 			AddWorld(_mulchLayer);
+
+			// Eau de surface + marécage (hydrologie ⑧) — ZIndex 2 : le marais
+			// « noircit » le sol par-dessus la couverture/litière, la flaque brille
+			// au-dessus, le tout SOUS la macro (5) et les plantes (10). Enfant direct
+			// de WorldView (survit à RebuildWorld). Recalé sur le relief via la vue
+			// (ReliefRiseAtPlot) → il faut lui passer `this`. Lit `eau_surface`/`marais`.
+			_puddleLayer = new PuddleLayer { Name = "Puddle", ZIndex = 2 };
+			_puddleLayer.Init(this);
+			AddWorld(_puddleLayer);
 
 			_macroLife = new MacroLife { Name = "MacroLife", ZIndex = 5 };
 			AddWorld(_macroLife);

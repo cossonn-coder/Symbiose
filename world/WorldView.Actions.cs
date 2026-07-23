@@ -44,6 +44,14 @@ namespace Symbiose
 			("manger",               "manger",         'p'),
 			("planter",              "planter",        'm'),
 			("arroser",              "arroser",        'm'),
+			// Terrassement hydrologique (hydrologie ⑦, gestes sur le MILIEU, philo #1,
+			// coûteux Vigueur). Kind 'q' = plot {tile, r, c} SANS params (comme
+			// poser_bac/glaner) : le serveur route les verbes au plot cliqué et répond
+			// un message diagnostic (avant/après) qu'on relaie tel quel (ACK générique).
+			//  · creuser = abaisse `altitude` d'un cran → cuvette qui capte l'eau ② ;
+			//  · drainer = vide `eau_surface` + fait reculer `marais_memory` (assèche).
+			("creuser",              "creuser",        'q'),
+			("drainer",              "drainer",        'q'),
 			("poser_bac",            "poser bac",      'q'),   // compost ⑤ (planification)
 			("poser_pile",           "poser pile",     'q'),
 			("composter",            "composter",      's'),   // litière tendre → bac
