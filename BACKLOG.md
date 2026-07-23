@@ -19,8 +19,9 @@
 
 ## Sprint en cours
 
-*Aucun.* Dernier sprint clos : **rangement documentaire** (2026-07-22, ①→⑥) —
-`sprints/_clos/sprint_rangement_doc/00_etat.md`.
+*Aucun.* Dernier sprint clos : **hydrologie de relief & marécages** (2026-07-23,
+①→⑧, `/sprint-auto`) — `sprints/champs/eau/sprint_hydrologie_marecage/00_etat.md`
+(golden écolo `57c166d8…`, `dotnet build` vert, reste F5 Nico).
 
 ## Backlog par thème
 
