@@ -62,3 +62,15 @@ BANC_POST_INIT = {"palette_gestes": _palette_gestes.post_init}
 # départ début printemps fige la levée sous le seuil thermique pendant des semaines.
 # Décalé MI-PRINTEMPS pour voir la désynchronisation des rythmes tout de suite.
 BANC_WEEK_DEPART = {"grimpantes": 9, "luxuriance": 9, "diversite_fondatrice": 9}
+
+
+def banc_categorie(nom: str) -> str:
+    """Catégorie d'un banc = le MODULE thématique d'où vient sa fabrique
+    (`bancs.climatique` → "climatique"). DÉRIVÉE, pas maintenue à la main : un
+    banc neuf hérite tout seul de la catégorie de son fichier, aucune table à
+    resynchroniser (le piège des menus qui mentent, D47). Repli "divers" si le
+    module n'est pas résolvable (fabrique anonyme, lambda…)."""
+    fabrique = BANCS.get(nom)
+    module = getattr(fabrique, "__module__", "") or ""
+    cat = module.rsplit(".", 1)[-1]
+    return cat if cat and cat != "__init__" else "divers"

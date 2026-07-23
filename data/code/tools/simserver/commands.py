@@ -23,7 +23,7 @@ from fields.grids import GridField
 # Registre des bancs d'essai (sprint dédié) : mondes paramétrés montés par
 # `init config="<banc>"` pour forcer/observer un signe. Import au niveau module
 # (paquet `bancs/` au sommet, peut tout importer) ; jamais monté pour smoke/full.
-from bancs import BANCS, BANC_WEEK_DEPART, BANC_POST_INIT
+from bancs import BANCS, BANC_WEEK_DEPART, BANC_POST_INIT, banc_categorie
 
 from .version import ENGINE_VERSION
 from .maitrise_pont import observer_apres_tick  # chaîne de maîtrise après tick (voix ①)
@@ -185,8 +185,14 @@ class CommandsMixin:
         source de vérité) — le sélecteur Godot la LIT au lieu de dupliquer les
         noms en C#, qui se périmeraient en silence à l'ajout d'un banc (un menu
         qui ment = le piège même que ce sprint élimine, cf. D47). Lecture du
-        registre, pas du moteur → appelable AVANT `init` (pour peupler le menu)."""
-        return {"ok": True, "bancs": sorted(BANCS)}
+        registre, pas du moteur → appelable AVANT `init` (pour peupler le menu).
+
+        Chaque entrée porte sa CATÉGORIE (module thématique d'origine, dérivée)
+        pour que le sélecteur Godot filtre par thème sans dupliquer une table de
+        classement (fenêtrage UI T1). Trié par nom → affichage déterministe."""
+        return {"ok": True,
+                "bancs": [{"nom": n, "categorie": banc_categorie(n)}
+                          for n in sorted(BANCS)]}
 
     def cmd_step_week(self, msg: dict) -> dict:
         if self.engine is None:

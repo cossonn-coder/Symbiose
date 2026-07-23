@@ -381,20 +381,34 @@ namespace Symbiose
 
 		/// <summary>
 		/// Liste des bancs d'essai montables (`init config="<nom>"`), DEMANDÉE au
-		/// serveur (commande `list_bancs`, pont 0.5.4) : la source reste le registre
-		/// Python `BANCS` — le C# ne duplique pas les noms (un menu périmé = le piège
-		/// D47). Appelable après Start() SANS Init (lecture du registre, pas du
-		/// moteur). Renvoie [] si le serveur ne répond pas (vieux binaire gelé
-		/// pré-0.5.4) → le sélecteur retombe sur full/smoke.
+		/// serveur (commande `list_bancs`) : la source reste le registre Python
+		/// `BANCS` — le C# ne duplique pas les noms (un menu périmé = le piège D47).
+		/// Appelable après Start() SANS Init (lecture du registre, pas du moteur).
+		/// Chaque entrée porte sa CATÉGORIE (module thématique, pont 0.5.36) → le
+		/// sélecteur filtre par thème. Renvoie [] si le serveur ne répond pas (vieux
+		/// binaire gelé pré-0.5.4) → le sélecteur retombe sur full/smoke.
+		/// COMPAT : un binaire 0.5.4→0.5.35 renvoie des noms NUS (chaînes) → mappés
+		/// en catégorie "divers".
 		/// </summary>
-		public string[] ListBancs()
+		public (string Nom, string Categorie)[] ListBancs()
 		{
 			var resp = Request(new GDict { ["cmd"] = "list_bancs" });
-			if (resp == null) return System.Array.Empty<string>();
+			if (resp == null) return System.Array.Empty<(string, string)>();
 			var arr = resp["bancs"].AsGodotArray();
-			var noms = new string[arr.Count];
-			for (int i = 0; i < arr.Count; i++) noms[i] = arr[i].AsString();
-			return noms;
+			var bancs = new (string Nom, string Categorie)[arr.Count];
+			for (int i = 0; i < arr.Count; i++)
+			{
+				if (arr[i].VariantType == Variant.Type.Dictionary)
+				{
+					var d = arr[i].AsGodotDictionary();
+					string cat = d.ContainsKey("categorie")
+						? d["categorie"].AsString() : "divers";
+					bancs[i] = (d["nom"].AsString(), cat);
+				}
+				else  // binaire pré-0.5.36 : nom nu → catégorie de repli
+					bancs[i] = (arr[i].AsString(), "divers");
+			}
+			return bancs;
 		}
 
 		// -------------------------------------------------------------------

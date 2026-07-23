@@ -48,5 +48,29 @@ Fermer **D59** ; consigner reliquats (Semis/Foyer onglets, éventuel Paramètres
 ## Décision complémentaire (2026-07-23)
 - **A9 précisée** : Foyer / Semis intérieur redeviendront des ONGLETS du conteneur quand ils seront implémentés (Nico) — reliquat D54, pas d'onglet mort en v1.
 
+## Avancement
+- **T1 — Launcher haut-gauche défilable + filtrable : FAIT (2026-07-23).**
+  - Python : `bancs/__init__.py` gagne `banc_categorie(nom)` (catégorie dérivée du
+    module de la fabrique, repli `divers`). `cmd_list_bancs` renvoie
+    `[{nom, categorie}]` trié par nom. Pont bumpé **0.5.35 → 0.5.36** (changelog
+    version.py). 9 catégories dérivées (biotique/climatique/diversite/edaphique/
+    hydrologie/luxuriance/modele_spatial/palette_gestes/succession).
+  - C# : `SimBridge.ListBancs()` renvoie `(string Nom, string Categorie)[]`
+    (défensif : binaire pré-0.5.36 → catégorie `divers`). Nouveau helper
+    réutilisable `world/UiScroll.cs` (`Envelopper(Control, hauteurMax)` = scroll
+    si débordement, réemployable T2/T3). `WorldView.Selecteur.cs` réécrit :
+    panneau ancré TopLeft (pos 16,16, largeur 320), liste défilante de boutons
+    toggle (ButtonGroup = sélection visible), barre filtre nom (LineEdit) +
+    catégorie (OptionButton « toutes catégories » + distinctes). full/smoke/propre
+    en tête (catégorie « monde »). Filtre travaille sur `_bancs` mémorisé, jamais
+    re-interroge le pont. Présélection = `Config`.
+  - Golden **INCHANGÉ** (`57c166d8d3…`). Build C# **VERT** (0 warning/0 erreur).
+  - **F5 Nico** : ouverture haut-gauche, défilement si liste déborde, filtres
+    nom + catégorie, lancement du banc choisi.
+- **T2 — Paramètres launcher : à faire.**
+- **T3 — Panneau à onglets : à faire.**
+
 ## §REPRISE
-Conception FIGÉE. Doc + 3 kickoffs écrits, commités. Thème `joueur/interface` créé (README + ligne ARBORESCENCE §4 + fragment backlog). D59 marquée absorbée dans DETTE. Prochaine étape : `/sprint-auto sprint_fenetrage_ui`. En fin de sprint : fermer D59, verser reliquats D54, MAJ journal.
+T1 CLOS (voir Avancement). Prochaine étape : T2 (`02_parametres.md`), puis T3
+(`03_panneau_onglets.md`). Réemployer `UiScroll.Envelopper` pour les fenêtres
+défilables. En fin de sprint : fermer D59, verser reliquats D54, MAJ journal.

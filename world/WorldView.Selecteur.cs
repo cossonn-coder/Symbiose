@@ -1,24 +1,29 @@
 // SYMBIOSE — WorldView.Selecteur.cs
-// Écran de SÉLECTION DE MONDE (sprint « bancs d'essai », tronçon ⑤). Partial de
-// WorldView : au lancement de la scène, au lieu de démarrer directement la
-// `config` de l'Export, on présente un menu pour choisir full / smoke / un banc
-// d'essai À L'ÉCRAN, sans éditer d'argument dans l'inspecteur.
+// Écran de SÉLECTION DE MONDE (sprint « bancs d'essai » ⑤, refondu au sprint
+// « fenêtrage UI » T1). Au lancement de la scène, au lieu de démarrer la `config`
+// de l'Export, on présente un menu pour choisir full / smoke / propre / un banc
+// d'essai À L'ÉCRAN. T1 : panneau ancré EN HAUT À GAUCHE, liste DÉFILANTE (au lieu
+// d'un dropdown) et barre de FILTRE (par nom + par catégorie).
 //
 // 📖 Pédagogie Godot/C# (Nico apprend le frontend) :
-//  - CanvasLayer : une couche d'UI qui flotte AU-DESSUS du monde, en coordonnées
-//    ÉCRAN (indifférente à la caméra/zoom 2D). C'est le bon parent pour un menu.
-//  - OptionButton : la liste déroulante native (un « combo box »). AddItem ajoute
-//    une entrée ; Selected = index courant ; GetItemText(i) = son libellé.
-//  - Button.Pressed += () => {…} : on branche un lambda C# sur le SIGNAL Godot du
-//    bouton (équivalent d'un connect()). Au clic, il lance la simulation.
-//  - QueueFree() : libère le nœud à la fin de la frame (on retire tout le menu une
-//    fois le monde lancé — il ne doit plus capter le moindre clic).
+//  - CanvasLayer : couche d'UI qui flotte AU-DESSUS du monde, en coordonnées
+//    ÉCRAN (indifférente à la caméra/zoom). Le bon parent pour un menu.
+//  - LayoutPreset.TopLeft + Position : on ancre le panneau au coin haut-gauche
+//    puis on le décale d'une marge (16 px). Pas de calcul de centrage.
+//  - ScrollContainer (via UiScroll.Envelopper) : la liste défile si elle déborde.
+//  - ButtonGroup : un groupe de boutons TOGGLE dont un SEUL reste enfoncé —
+//    c'est notre « sélection courante » visible (le banc choisi reste pressé).
+//  - LineEdit.TextChanged / OptionButton.ItemSelected : signaux de filtre. Ils
+//    recomposent la liste depuis la source MÉMORISÉE (`_bancs`), sans jamais
+//    ré-interroger le pont (le registre ne change pas en cours d'écran).
 //
 // La LISTE des bancs vient du serveur (SimBridge.ListBancs → commande list_bancs),
-// pas d'une copie codée en dur ici : le registre Python `BANCS` reste la source
-// unique (un menu périmé serait exactement le faux signal que ce sprint combat).
+// jamais d'une copie codée en dur : le registre Python `BANCS` reste la source
+// unique (un menu périmé serait le faux signal que ce sprint combat, D47).
 
 using Godot;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Symbiose
 {
@@ -27,18 +32,38 @@ namespace Symbiose
 		// La couche entière du menu — libérée d'un bloc au lancement.
 		private CanvasLayer _selecteur;
 
+		// Entrées fixes (mondes canon) présentées en tête, hors registre de bancs.
+		// « propre » = banc « monde propre » (équilibre invasion, D69) monté par une
+		// config d'init côté serveur, pas par le registre → ajouté à la main ici.
+		private static readonly (string Nom, string Categorie)[] EntreesCanon =
+		{
+			("full", "monde"), ("smoke", "monde"), ("propre", "monde"),
+		};
+
+		// Source COMPLÈTE mémorisée (canon + bancs) : le filtre travaille dessus,
+		// jamais sur le pont.
+		private (string Nom, string Categorie)[] _bancs;
+
+		// Widgets de filtre + réceptacle de la liste (rebâtie à chaque filtrage).
+		private LineEdit _filtreNom;
+		private OptionButton _filtreCat;
+		private VBoxContainer _liste;
+		private ButtonGroup _groupeBancs;   // sélection courante (un toggle actif)
+
 		private void BuildSelecteur()
 		{
 			_selecteur = new CanvasLayer { Name = "Selecteur" };
 			AddChild(_selecteur);
 
-			// Panneau centré (PanelContainer = fond + marges ; preset Center le
-			// place au milieu de l'écran sans calcul manuel d'ancrage).
+			// Panneau ancré en HAUT À GAUCHE, largeur fixe raisonnable, décalé d'une
+			// marge du coin. PanelContainer = fond + marges natifs.
 			var panneau = new PanelContainer();
-			panneau.SetAnchorsPreset(Control.LayoutPreset.Center);
+			panneau.SetAnchorsPreset(Control.LayoutPreset.TopLeft);
+			panneau.Position = new Vector2(16, 16);
+			panneau.CustomMinimumSize = new Vector2(320, 0);
 			_selecteur.AddChild(panneau);
 
-			var vbox = new VBoxContainer { CustomMinimumSize = new Vector2(260, 0) };
+			var vbox = new VBoxContainer { CustomMinimumSize = new Vector2(320, 0) };
 			panneau.AddChild(vbox);
 
 			vbox.AddChild(new Label
@@ -47,35 +72,97 @@ namespace Symbiose
 				HorizontalAlignment = HorizontalAlignment.Center,
 			});
 
-			var liste = new OptionButton();
-			vbox.AddChild(liste);
-			// full / smoke d'abord (les deux mondes canon : la démo et le golden),
-			// puis les bancs d'essai dans l'ordre du registre Python (source unique).
-			liste.AddItem("full");
-			liste.AddItem("smoke");
-			// « propre » = banc « monde propre » (équilibre invasion ①/⑧, D69) : mêmes
-			// tuiles + cultivées + démo paillée sud, mais succession férale COUPÉE →
-			// observer les cultivées seules (levier paillage lisible sans l'invasion).
-			// Config d'init côté serveur (pas un banc du registre) → ajoutée à la main.
-			liste.AddItem("propre");
-			foreach (string nom in _bridge.ListBancs())
-				liste.AddItem(nom);
-			// Présélection = la `config` de l'Export (défaut « full ») si elle est
-			// dans la liste → l'inspecteur garde son rôle de défaut, le menu n'est
-			// qu'un moyen d'en changer à la volée.
-			for (int i = 0; i < liste.ItemCount; i++)
-				if (liste.GetItemText(i) == Config) { liste.Select(i); break; }
+			// --- Barre de filtre : nom (sous-chaîne) + catégorie ---
+			_filtreNom = new LineEdit
+			{
+				PlaceholderText = "Filtrer par nom…",
+				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+			};
+			_filtreNom.TextChanged += _ => RebatirListe();
+			vbox.AddChild(_filtreNom);
+
+			_filtreCat = new OptionButton
+			{
+				SizeFlagsHorizontal = Control.SizeFlags.ExpandFill,
+			};
+			_filtreCat.ItemSelected += _ => RebatirListe();
+			vbox.AddChild(_filtreCat);
+
+			// --- Source mémorisée : canon en tête, puis les bancs du registre ---
+			_bancs = EntreesCanon.Concat(_bridge.ListBancs()).ToArray();
+
+			// Catégories distinctes → OptionButton du filtre. « toutes » en tête
+			// (index 0 = pas de filtre catégorie), puis les catégories triées.
+			_filtreCat.AddItem("toutes catégories");
+			foreach (string cat in _bancs.Select(b => b.Categorie).Distinct().OrderBy(c => c))
+				_filtreCat.AddItem(cat);
+
+			// --- Liste défilante (un bouton toggle par banc) ---
+			_groupeBancs = new ButtonGroup();
+			_liste = new VBoxContainer { SizeFlagsHorizontal = Control.SizeFlags.ExpandFill };
+			vbox.AddChild(UiScroll.Envelopper(_liste, 360f));
 
 			var bouton = new Button { Text = "Lancer" };
+			bouton.Pressed += Lancer;
 			vbox.AddChild(bouton);
-			bouton.Pressed += () =>
+
+			RebatirListe();   // remplit la liste + applique la présélection
+		}
+
+		// Recompose la liste affichée depuis `_bancs` selon les deux filtres. La
+		// sélection courante est préservée si l'entrée choisie reste visible ; sinon
+		// on retombe sur la présélection (`Config`), puis sur la 1re entrée visible.
+		private void RebatirListe()
+		{
+			string dejaChoisi = ConfigChoisie();
+			foreach (Node enfant in _liste.GetChildren())
+				enfant.QueueFree();
+
+			string saisie = _filtreNom.Text.ToLower();
+			string cat = _filtreCat.Selected <= 0 ? null : _filtreCat.GetItemText(_filtreCat.Selected);
+
+			Button premier = null, aReselectionner = null;
+			foreach (var (nom, categorie) in _bancs)
 			{
-				string config = liste.GetItemText(liste.Selected);
-				GD.Print($"[WorldView] sélecteur → lancement config « {config} ».");
-				_selecteur.QueueFree();   // le menu disparaît (plus aucun clic capté)
-				_selecteur = null;
-				StartSimulation(config);
-			};
+				if (saisie.Length > 0 && !nom.ToLower().Contains(saisie)) continue;
+				if (cat != null && categorie != cat) continue;
+
+				var b = new Button
+				{
+					Text = categorie == "monde" ? nom : $"[{categorie}] {nom}",
+					ToggleMode = true,
+					ButtonGroup = _groupeBancs,
+					Alignment = HorizontalAlignment.Left,
+				};
+				b.SetMeta("config", nom);
+				_liste.AddChild(b);
+
+				premier ??= b;
+				if (nom == dejaChoisi || (aReselectionner == null && nom == Config))
+					aReselectionner = b;
+			}
+
+			// Rétablir une sélection visible (choix courant > présélection Export >
+			// 1re entrée) pour que « Lancer » ait toujours une cible.
+			var cible = aReselectionner ?? premier;
+			if (cible != null) cible.ButtonPressed = true;
+		}
+
+		// Config du banc actuellement sélectionné (bouton toggle enfoncé), ou null.
+		private string ConfigChoisie()
+		{
+			var presse = _groupeBancs?.GetPressedButton();
+			return presse != null ? (string)presse.GetMeta("config") : null;
+		}
+
+		private void Lancer()
+		{
+			string config = ConfigChoisie();
+			if (config == null) return;   // liste vide (filtre trop strict) → rien à lancer
+			GD.Print($"[WorldView] sélecteur → lancement config « {config} ».");
+			_selecteur.QueueFree();   // le menu disparaît (plus aucun clic capté)
+			_selecteur = null;
+			StartSimulation(config);
 		}
 	}
 }

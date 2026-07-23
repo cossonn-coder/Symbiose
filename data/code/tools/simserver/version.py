@@ -555,7 +555,17 @@ from __future__ import annotations
 #       ne sont jamais appelés). Un binaire pré-0.5.35 répond « verbe inconnu » à
 #       `creuser`/`drainer` (tolérance côté vue, comme tous les bumps précédents). VUE C#
 #       (relief creusé, flaque/marais drainés) = tronçon ⑧.
-ENGINE_VERSION = "0.5.35"
+# 0.5.36 (fenêtrage UI T1, sélecteur défilable + filtrable) : la commande
+#       `list_bancs` renvoie désormais `{bancs: [{nom, categorie}, …]}` (au lieu
+#       d'une liste de noms nus) — la CATÉGORIE = le module thématique d'où vient
+#       la fabrique du banc (`bancs.climatique` → "climatique"), DÉRIVÉE par
+#       `banc_categorie` (aucune table à resynchroniser). Trié par nom (affichage
+#       déterministe). Sert le FILTRE par catégorie du nouveau sélecteur Godot
+#       (panneau haut-gauche défilable). Lecture du registre (aucun moteur) →
+#       golden NEUTRE (le golden tourne hors serveur ; smoke/full ne sont pas des
+#       bancs). Un binaire pré-0.5.36 renvoie des noms nus → SimBridge.ListBancs()
+#       les mappe en catégorie "divers" (tolérance, compat binaire gelé).
+ENGINE_VERSION = "0.5.36"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les
