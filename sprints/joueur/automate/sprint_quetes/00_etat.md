@@ -19,8 +19,17 @@ pour `/sprint-auto sprint_quetes`. Golden INCHANGÉ sur les 5 tronçons.
   `game_state["log"]`. Tests `tests/test_quetes.py` (12/12 verts).
   **Golden INCHANGÉ** `57c166d8…` (opt-in strict). NB : `test_sim_server` a un
   échec PRÉEXISTANT (pommier pré-âgé, nouaison — sans rapport, vérifié au stash).
-- ② `02_conditions_etat.md` — `hauteur_min`/`floraison_min`/`nombre_vivant_min`
-  sur snapshot hors tick + progression diégétique. Golden intact.
+- ② `02_conditions_etat.md` — **FAIT (2026-07-24).** 3 évaluateurs d'état purs
+  ajoutés à `sim/quetes.py` (`hauteur_min`/`floraison_min`/`nombre_vivant_min`),
+  registre `_EVALUATEURS_ETAT`, aiguillage par tag ; lecture SNAPSHOT hors tick
+  (`tiles → plants`, prédicats EXISTANTS `current_height`/`floraison ≥ SEUIL_FLEURI`
+  — seuil 0.5 redéfini localement, règle de couches `sim ← engine`). Nouvelle API
+  publique : `evaluer_etat(gs)` (clôt les quêtes d'état comblées, ✉ au ledger,
+  à appeler HORS tick) + `avancement(gs, id)` (phrase DIÉGÉTIQUE V2, 4 bandes
+  <1/3/<2/3/<1/accompli, zéro chiffre ; couvre aussi `recolte_cumulee`).
+  `_consigner_accomplissement` généralisé via `_decrire_condition` (message ①
+  inchangé). Tests `tests/test_quetes.py` 25/25 (5 suites d'état ajoutées).
+  **Golden INCHANGÉ** `57c166d8…` (évaluation opt-in hors tick). LDC 161 (🟢).
 - ③ `03_declenchement_habillage.md` — déclenchement déterministe (maîtrise/saison)
   + table `quetes_corpus.py` + voix lettres + plafond #6 + récompenses simples.
 - ④ `04_recompenses_materielles.md` — vivace enracinée + structure (outil différé
@@ -71,13 +80,16 @@ pour `/sprint-auto sprint_quetes`. Golden INCHANGÉ sur les 5 tronçons.
 Négligeable : K conditions actives lues sur snapshot hors tick, K petit
 (plafond de quêtes actives). Aucun O(N²). Golden intact.
 
-## §REPRISE (prochaine étape : tronçon ②)
-Tronçon ① CLOS. Prochaine étape = **② `02_conditions_etat.md`** : conditions
-`hauteur_min` / `floraison_min` / `nombre_vivant_min` lues sur le SNAPSHOT hors
-tick + progression diégétique. L'aiguillage par TAG est déjà prévu dans
-`notifier_geste` (branche `cond[0] != "recolte_cumulee"`) et dans le mini-catalogue
-déclaratif — ② ajoute ses évaluateurs sans toucher l'existant. Le parseur carnet
-de la ligne ✉ reste à câbler au tronçon ③ (habillage/voix). Golden à garder
+## §REPRISE (prochaine étape : tronçon ③)
+Tronçons ① et ② CLOS. Prochaine étape = **③ `03_declenchement_habillage.md`** :
+déclenchement déterministe (palier maîtrise `sim.maitrise.palier` + jalon saison,
+zéro RNG), table déclarative `quetes_corpus.py`, voix des donneurs (corpus
+épistolaire V1), plafond de N quêtes actives (#6), récompenses SIMPLES
+(graine/page/Vigueur/maîtrise). À câbler aussi au ③ : le parseur carnet de la ligne
+✉ (aujourd'hui émise mais non reconnue → ignorée sans dommage) et
+`est_atteignable` (cible hors catalogue). Points d'accroche déjà posés au ② :
+`evaluer_etat(gs)` à appeler au passage de saison / ouverture panneau ;
+`avancement(gs, id)` fournit la phrase diégétique au panneau (⑤). Golden à garder
 INCHANGÉ. Ne pas re-figer.
 
 ---

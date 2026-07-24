@@ -21,11 +21,14 @@ comme `objectifs.py`. OPT-IN STRICT : `game_state["quetes"]` n'existe qu'après 
 → `notifier_geste()` est un no-op total → **golden intact**.
 
 FAMILLES DE CONDITIONS (conception §4, mini-catalogue déclaratif FERMÉ) :
-  - ① ICI : `("recolte_cumulee", geste, quantite, cible)` — comptée par HOOK geste.
-  - ② (à venir) : `hauteur_min` / `floraison_min` / `nombre_vivant_min` — lues sur
-    le snapshot hors tick.
-L'aiguillage se fait sur le TAG (1er élément de la condition) → ② ajoute ses types
-sans toucher l'existant.
+  - ① `("recolte_cumulee", geste, quantite, cible)` — comptée par HOOK geste.
+  - ② `("hauteur_min", cible, metres)` / `("floraison_min", cible, n)` /
+    `("nombre_vivant_min", cible, n)` — lues sur le SNAPSHOT hors tick, à la
+    demande (passage de saison / ouverture du panneau), JAMAIS dans le tick moteur
+    → golden intact. Aucun hook : un balayage borné `tiles → plants`.
+L'aiguillage se fait sur le TAG (1er élément de la condition) : le hook geste ne
+sert QUE `recolte_cumulee` ; `evaluer_etat()` ne sert QUE les tags d'état (registre
+`_EVALUATEURS_ETAT`). Les deux familles cohabitent sans se marcher dessus.
 
 État (miroir du pattern `objectifs.py`, philo #3 — la progression vit HORS du
 frozen) :
@@ -160,6 +163,27 @@ def notifier_geste(game_state: dict, player: str, verbe: str, plant) -> None:
             _consigner_accomplissement(game_state, rec["quete"])
 
 
+def _decrire_condition(condition: tuple) -> str:
+    """Description COURTE et factuelle d'une condition (pour le ledger ✉ ; le chiffre
+    exact y est admis — le ledger est un canal technique, pas le HUD primaire). Route
+    par tag ; couvre les deux familles (① cumulée + ② état). La forme `recolte_cumulee`
+    est identique au ① (aucune régression de message)."""
+    tag = condition[0]
+    if tag == "recolte_cumulee":
+        _t, geste, quantite, cible = condition
+        return f"{geste} ×{quantite} {cible}"
+    if tag == "hauteur_min":
+        _t, cible, metres = condition
+        return f"{cible} ≥ {metres} m"
+    if tag == "floraison_min":
+        _t, cible, n = condition
+        return f"{cible} en fleur ×{n}"
+    if tag == "nombre_vivant_min":
+        _t, cible, n = condition
+        return f"{cible} vivant ×{n}"
+    return tag
+
+
 def _consigner_accomplissement(game_state: dict, quete: Quete) -> None:
     """Émet une ligne de log PARSABLE à l'accomplissement (conception §6) — le
     canal EXISTANT `game_state["log"]`, consigné au ledger des voix au tick suivant
@@ -170,6 +194,141 @@ def _consigner_accomplissement(game_state: dict, quete: Quete) -> None:
     log = game_state.get("log")
     if log is None:
         return
-    _tag, geste, quantite, cible = quete.condition
     log.append(f"✉ Quête accomplie ({quete.donneur}) : "
-               f"{geste} ×{quantite} {cible}")
+               f"{_decrire_condition(quete.condition)}")
+
+
+# --- ② Conditions d'ÉTAT : lecture du snapshot vivant, hors tick ------------
+# Seuil de « pleine floraison ». CANONIQUE = `sim/engine/floraison.py` /
+# `decompo.py::SEUIL_FLEURI` (0.5) ET la vue C# qui dessine une fleur à
+# `floraison ≥ 0.5` — une seule vérité. Redéfini LOCALEMENT (valeur, pas import) :
+# `quetes` est couche `sim`, sous `engine` (règle de couches `sim ← engine` : on ne
+# remonte jamais vers engine), et c'est le patron déjà en place dans les mixins
+# d'engine (cf. le commentaire de `engine/carnivore.py`).
+SEUIL_FLEURI = 0.5
+
+# Phrases DIÉGÉTIQUES (V2, conception §3) : progression en langage vivant, JAMAIS un
+# chiffre (le chiffre exact reste au mode debug, exposé à part au ⑤). Quatre bandes
+# par type : <1/3, <2/3, <1, accompli (≥1).
+_PHRASE_CIBLE_ABSENTE = "cette plante n'a pas encore trouvé sa place au jardin"
+_PHRASE_ACCOMPLIE = "c'est fait, la lettre peut repartir"
+_BANDES_HAUTEUR = ("à peine sorti de terre", "il prend de la hauteur",
+                   "presque à hauteur voulue", "ça y est, il a la stature demandée")
+_BANDES_FLORAISON = ("pas une fleur encore", "la floraison s'éveille",
+                     "ça y est presque, ça fleurit de partout", "un vrai tapis de fleurs")
+_BANDES_NOMBRE = ("il en manque encore beaucoup", "la petite troupe s'étoffe",
+                  "presque le compte", "les voilà en nombre")
+_BANDES_RECOLTE = ("le panier est encore vide", "de quoi grappiller",
+                   "de quoi remplir un cageot", "la cagette est pleine")
+
+
+def _phrase(ratio: float, bandes: tuple) -> str:
+    """Mappe un ratio d'avancement (≥ 0) sur une des 4 bandes diégétiques. Seuils
+    fixes 1/3, 2/3, 1 (déterministe, aucun chiffre restitué à l'appelant)."""
+    if ratio >= 1.0:
+        return bandes[3]
+    if ratio >= 2.0 / 3.0:
+        return bandes[2]
+    if ratio >= 1.0 / 3.0:
+        return bandes[1]
+    return bandes[0]
+
+
+def _plantes_vivantes(game_state: dict, cls):
+    """Itère les plantes VIVANTES de l'espèce `cls` sur le snapshot (`tiles → plants`),
+    hors tick. Balayage borné (K conditions × N plantes), aucun O(N²). Robuste aux
+    faux game_state (pas de clé `tiles`) → itère du vide."""
+    for tile in game_state.get("tiles", ()):
+        for plant in getattr(tile, "plants", ()):
+            if getattr(plant, "is_alive", False) and plant.plant_class is cls:
+                yield plant
+
+
+def _eval_hauteur_min(condition: tuple, game_state: dict):
+    """`("hauteur_min", cible, metres)` : accomplie ssi une plante vivante de l'espèce
+    atteint la hauteur. Lecture via `PlantInstance.current_height` (cm) — le prédicat
+    EXISTANT (ne recalcule rien)."""
+    _tag, cible, metres = condition
+    cls = _classe_cible(cible)
+    if cls is None:
+        return False, _PHRASE_CIBLE_ABSENTE
+    seuil_cm = metres * 100.0
+    plus_haut = max((p.current_height for p in _plantes_vivantes(game_state, cls)),
+                    default=0.0)
+    ratio = plus_haut / seuil_cm if seuil_cm > 0 else 1.0
+    return plus_haut >= seuil_cm, _phrase(ratio, _BANDES_HAUTEUR)
+
+
+def _eval_floraison_min(condition: tuple, game_state: dict):
+    """`("floraison_min", cible, n)` : accomplie ssi ≥ n plantes vivantes de l'espèce
+    sont EN FLEUR — état floral `p.floraison ≥ SEUIL_FLEURI`, même prédicat que
+    l'engine/la vue (ne recalcule aucune phénologie)."""
+    _tag, cible, n = condition
+    cls = _classe_cible(cible)
+    if cls is None:
+        return False, _PHRASE_CIBLE_ABSENTE
+    fleuris = sum(1 for p in _plantes_vivantes(game_state, cls)
+                  if getattr(p, "floraison", 0.0) >= SEUIL_FLEURI)
+    ratio = fleuris / n if n > 0 else 1.0
+    return fleuris >= n, _phrase(ratio, _BANDES_FLORAISON)
+
+
+def _eval_nombre_vivant_min(condition: tuple, game_state: dict):
+    """`("nombre_vivant_min", cible, n)` : accomplie ssi ≥ n plants vivants de
+    l'espèce coexistent sur le terrain."""
+    _tag, cible, n = condition
+    cls = _classe_cible(cible)
+    if cls is None:
+        return False, _PHRASE_CIBLE_ABSENTE
+    vivants = sum(1 for _ in _plantes_vivantes(game_state, cls))
+    ratio = vivants / n if n > 0 else 1.0
+    return vivants >= n, _phrase(ratio, _BANDES_NOMBRE)
+
+
+_EVALUATEURS_ETAT = {
+    "hauteur_min": _eval_hauteur_min,
+    "floraison_min": _eval_floraison_min,
+    "nombre_vivant_min": _eval_nombre_vivant_min,
+}
+
+
+def evaluer_etat(game_state: dict) -> None:
+    """Balaye les quêtes d'ÉTAT actives et CLÔT celles comblées sur le snapshot
+    courant. À appeler HORS tick (passage de saison, ouverture du panneau courrier) —
+    jamais dans la boucle moteur → golden intact. Chaque clôture : `semaine_fin` +
+    événement ✉ au ledger (comme le hook cumulé). Les tags `recolte_cumulee` sont
+    IGNORÉS ici (ils vivent sur le hook geste). No-op strict sans quête (opt-in).
+    Itère les id TRIÉS (déterminisme, philo #3)."""
+    reg = game_state.get(CLE_QUETES)
+    if not reg:
+        return
+    for qid in sorted(reg):
+        rec = reg[qid]
+        if rec["semaine_fin"] is not None:
+            continue
+        evalr = _EVALUATEURS_ETAT.get(rec["quete"].condition[0])
+        if evalr is None:
+            continue                       # recolte_cumulee → hook geste, pas ici
+        accomplie, _ = evalr(rec["quete"].condition, game_state)
+        if accomplie:
+            rec["semaine_fin"] = game_state.get("week", 0)
+            _consigner_accomplissement(game_state, rec["quete"])
+
+
+def avancement(game_state: dict, quete_id: str) -> str:
+    """Phrase DIÉGÉTIQUE (V2) de l'avancement d'une quête, pour le panneau courrier
+    (⑤). Accomplie → phrase de clôture ; sinon route par tag : condition d'état →
+    évaluée sur le snapshot, `recolte_cumulee` → tirée du compteur/hook. Quête inconnue
+    → chaîne vide. Read-only (n'écrit rien, ne clôt rien : c'est `evaluer_etat` qui
+    clôt)."""
+    rec = game_state.get(CLE_QUETES, {}).get(quete_id)
+    if rec is None:
+        return ""
+    if rec["semaine_fin"] is not None:
+        return _PHRASE_ACCOMPLIE
+    cond = rec["quete"].condition
+    evalr = _EVALUATEURS_ETAT.get(cond[0])
+    if evalr is not None:
+        return evalr(cond, game_state)[1]
+    ratio = rec["progression"] / cond[2] if cond[2] > 0 else 1.0   # recolte_cumulee
+    return _phrase(ratio, _BANDES_RECOLTE)

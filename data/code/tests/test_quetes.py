@@ -31,10 +31,22 @@ def check(name, cond, detail=""):
 
 class _FakePlante:
     """Plante-cible minimale : le hook ne lit que `plant_class` (comme
-    `objectifs.sert`). On évite ainsi tout montage de monde."""
+    `objectifs.sert`). On évite ainsi tout montage de monde. Les conditions d'état
+    (②) lisent en plus `is_alive` / `current_height` (cm) / `floraison` — attributs
+    plats posés ici en duck-typing (le vrai `PlantInstance` les expose en propriétés)."""
 
-    def __init__(self, cle):
+    def __init__(self, cle, is_alive=True, current_height=0.0, floraison=0.0):
         self.plant_class = PLANT_CATALOGUE[cle]
+        self.is_alive = is_alive
+        self.current_height = current_height
+        self.floraison = floraison
+
+
+class _FakeTile:
+    """Tuile-snapshot minimale : `evaluer_etat` n'itère que `tile.plants`."""
+
+    def __init__(self, plants):
+        self.plants = list(plants)
 
 
 # ---------------------------------------------------------------------------
@@ -122,13 +134,123 @@ def test_opt_in_strict():
     check("aucun événement émis", gs["log"] == [])
 
 
+# ---------------------------------------------------------------------------
+# 6. hauteur_min : snapshot, prédicat current_height (cm), mètres → cm
+# ---------------------------------------------------------------------------
+
+def _gs_snapshot(plants, week=3):
+    return {"week": week, "log": [], "tiles": [_FakeTile(plants)]}
+
+
+def test_hauteur_min():
+    print("\n[6] hauteur_min(tournesol, 2 m) sur snapshot")
+    q = Q.Quete(id="q_h", donneur="Léa",
+                condition=("hauteur_min", "tournesol", 2.0))
+    # En deçà (1 m = 100 cm < 200) → non accomplie, phrase diégétique sans chiffre.
+    gs = _gs_snapshot([_FakePlante("tournesol", current_height=100.0)])
+    Q.ajouter_quete(gs, q)
+    Q.evaluer_etat(gs)
+    check("1 m < 2 m → non accomplie", not Q.est_accomplie(gs, "q_h"))
+    phrase = Q.avancement(gs, "q_h")
+    check("phrase diégétique non vide et sans chiffre",
+          phrase and not any(ch.isdigit() for ch in phrase), f"phrase={phrase!r}")
+    # Au-delà (2,5 m = 250 cm ≥ 200) → accomplie après évaluation.
+    gs = _gs_snapshot([_FakePlante("tournesol", current_height=250.0)])
+    Q.ajouter_quete(gs, q)
+    Q.evaluer_etat(gs)
+    check("2,5 m ≥ 2 m → accomplie", Q.est_accomplie(gs, "q_h"))
+    check("événement ✉ émis", any("✉" in l for l in gs["log"]))
+    check("avancement d'une quête close = phrase de clôture",
+          Q.avancement(gs, "q_h") and not any(c.isdigit() for c in Q.avancement(gs, "q_h")))
+
+
+# ---------------------------------------------------------------------------
+# 7. floraison_min : compte les pieds EN FLEUR (floraison ≥ SEUIL_FLEURI)
+# ---------------------------------------------------------------------------
+
+def test_floraison_min():
+    print("\n[7] floraison_min(trefle, 3) : 3 trèfles en fleur")
+    q = Q.Quete(id="q_f", donneur="Oncle",
+                condition=("floraison_min", "trefle", 3))
+    # 2 fleuris + 1 en dessous du seuil → non.
+    gs = _gs_snapshot([_FakePlante("trefle", floraison=0.8),
+                       _FakePlante("trefle", floraison=0.6),
+                       _FakePlante("trefle", floraison=0.2)])
+    Q.ajouter_quete(gs, q)
+    Q.evaluer_etat(gs)
+    check("2 < 3 fleuris → non accomplie", not Q.est_accomplie(gs, "q_f"),
+          f"phrase={Q.avancement(gs, 'q_f')!r}")
+    # 3 pieds au seuil → oui.
+    gs = _gs_snapshot([_FakePlante("trefle", floraison=0.5) for _ in range(3)])
+    Q.ajouter_quete(gs, q)
+    Q.evaluer_etat(gs)
+    check("3 fleuris (≥ 0.5) → accomplie", Q.est_accomplie(gs, "q_f"))
+
+
+# ---------------------------------------------------------------------------
+# 8. nombre_vivant_min : un mort ne compte pas
+# ---------------------------------------------------------------------------
+
+def test_nombre_vivant_min():
+    print("\n[8] nombre_vivant_min(trefle, 4) : un mort ne compte pas")
+    q = Q.Quete(id="q_n", donneur="Léa",
+                condition=("nombre_vivant_min", "trefle", 4))
+    gs = _gs_snapshot([_FakePlante("trefle") for _ in range(3)]
+                      + [_FakePlante("trefle", is_alive=False)])
+    Q.ajouter_quete(gs, q)
+    Q.evaluer_etat(gs)
+    check("3 vivants + 1 mort < 4 → non accomplie", not Q.est_accomplie(gs, "q_n"))
+    gs = _gs_snapshot([_FakePlante("trefle") for _ in range(4)])
+    Q.ajouter_quete(gs, q)
+    Q.evaluer_etat(gs)
+    check("4 vivants → accomplie", Q.est_accomplie(gs, "q_n"))
+
+
+# ---------------------------------------------------------------------------
+# 9. Cible absente du catalogue → non accomplie, phrase dédiée
+# ---------------------------------------------------------------------------
+
+def test_cible_absente():
+    print("\n[9] cible hors catalogue (kiwi, D26) → non accomplie")
+    q = Q.Quete(id="q_k", donneur="Enfant",
+                condition=("hauteur_min", "kiwi", 5.0))
+    gs = _gs_snapshot([])
+    Q.ajouter_quete(gs, q)
+    Q.evaluer_etat(gs)
+    check("cible inconnue → jamais accomplie", not Q.est_accomplie(gs, "q_k"))
+    check("phrase 'pas encore trouvé sa place'",
+          "place" in Q.avancement(gs, "q_k"), f"phrase={Q.avancement(gs, 'q_k')!r}")
+
+
+# ---------------------------------------------------------------------------
+# 10. evaluer_etat : opt-in strict + n'écrit rien pour recolte_cumulee
+# ---------------------------------------------------------------------------
+
+def test_evaluer_etat_neutre():
+    print("\n[10] evaluer_etat : opt-in + ignore recolte_cumulee")
+    gs = {"week": 1, "log": [], "tiles": []}
+    Q.evaluer_etat(gs)                       # aucune quête
+    check("aucune clé 'quetes' créée", "quetes" not in gs)
+    gs = _gs_snapshot([])
+    Q.ajouter_quete(gs, Q.Quete(id="q", donneur="M",
+                    condition=("recolte_cumulee", "recolter", 2, "tomate")))
+    Q.evaluer_etat(gs)
+    check("evaluer_etat ne clôt pas une quête cumulée",
+          not Q.est_accomplie(gs, "q"))
+
+
 def main():
-    print("=== test_quetes (D79 ①) ===")
+    print("=== test_quetes (D79 ①②) ===")
     test_accomplissement_et_evenement()
     test_autre_espece_ignoree()
     test_autre_verbe_ignore()
     test_ordre_deterministe()
     test_opt_in_strict()
+    test_hauteur_min()
+    test_floraison_min()
+    test_nombre_vivant_min()
+    test_cible_absente()
+    test_evaluer_etat_neutre()
 
     total = len(_results)
     ok = sum(1 for _, c in _results if c)
