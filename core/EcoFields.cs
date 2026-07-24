@@ -36,9 +36,6 @@ namespace Symbiose
 		// Perturbation
 		public GridField Disturbance;
 
-		// Pression pathogène scalaire par tuile [0–1]
-		public float PathogenPressure = 0f;
-
 		// Constantes hydrologiques
 		public const float BaseRain         = 0.015f;
 		public const float RainVegFeedback  = 0.020f;
@@ -262,40 +259,16 @@ namespace Symbiose
 			return consumed;
 		}
 
-		// --- Pathogènes ---
-
-		public void TickPathogen(List<PlantInstance> plants)
-		{
-			float humAvg     = Humidite.Average();
-			float microAvg   = Microbiome.Average() / 3f;
-			float distAvg    = Disturbance.Average();
-			float omFreshAvg = OmFresh.Average();
-
-			var families = new HashSet<string>();
-			foreach (var p in plants)
-				if (p.IsAlive) families.Add(p.Data.Family);
-			float biodiv  = Math.Min(1f, families.Count / 4f);
-
-			float humRisk  = Math.Max(0f, (humAvg - 0.4f) / 0.6f);
-			float monoRisk = Math.Max(0f, 1f - biodiv);
-			float omRisk   = Math.Min(1f, omFreshAvg / 3f);
-
-			float infection = humRisk * monoRisk * 0.05f + omRisk * 0.02f;
-			PathogenPressure += infection;
-			PathogenPressure -= microAvg * 0.04f;
-			PathogenPressure -= distAvg  * 0.01f;
-			PathogenPressure *= 0.97f;
-			PathogenPressure  = Math.Clamp(PathogenPressure, 0f, 1f);
-		}
-
 		// --- Probabilité maladie ---
+		// NB : la math de maladie (dont l'inoculum hôte-spécifique) vit dans le
+		// moteur Python — source de vérité. Ici on ne garde que la protection par
+		// microbiome, sans terme de pression pathogène (divergence D10 close).
 
 		public float DiseaseProbability(int r, int c, float baseRate = 0.3f)
 		{
 			float microNorm  = Math.Min(1f, Microbiome.AtPlot(r, c) / 3f);
 			float protection = 1f / (1f + MathF.Exp(-6f * (microNorm - 0.5f)));
-			float effectiveRate = baseRate * (1f + PathogenPressure * 0.5f);
-			return effectiveRate * Math.Max(0.02f, 1f - protection);
+			return baseRate * Math.Max(0.02f, 1f - protection);
 		}
 
 		// --- Résumé ---
@@ -311,7 +284,6 @@ namespace Symbiose
 			{ "lumiere",     Lumiere.Average()        },
 			{ "soil_memory", SoilMemory.Average()     },
 			{ "disturbance", Disturbance.Average()    },
-			{ "pathogen",    PathogenPressure         },
 		};
 
 		public override string ToString()
@@ -320,8 +292,7 @@ namespace Symbiose
 			return $"EcoFields[{TileId}] " +
 				   $"hum={s["humidite"]:F2} fert={s["fertilite"]:F2} " +
 				   $"micro={s["microbiome"]:F2} " +
-				   $"omF/A/S={s["om_fresh"]:F2}/{s["om_active"]:F2}/{s["om_stable"]:F2} " +
-				   $"path={s["pathogen"]:F3}";
+				   $"omF/A/S={s["om_fresh"]:F2}/{s["om_active"]:F2}/{s["om_stable"]:F2}";
 		}
 	}
 }

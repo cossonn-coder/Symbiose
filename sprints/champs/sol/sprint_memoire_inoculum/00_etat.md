@@ -87,8 +87,23 @@ verticillium, fonte). Prive le jeu de la **pédagogie de rotation** (philo #2/#6
   `sim/carnet.py` (CONCEPT_DE+GABARIT concept « maladie »), `sim/evenements.py`
   (germination molène → cause `sol_vicie`), `sim/pages_corpus.py` (P37),
   `tests/{test_inoculum,test_pages,test_encyclopedie}.py`.
-- ④ ménage C# (`PathogenPressure`/`TickPathogen` morts supprimés) + vue Godot
-  (snapshot inoculum + heatmap F6 + banc F5 `rotation_inoculum`) — golden INTACT.
+- ④ **CLOS 2026-07-24** — ménage C# (`PathogenPressure`/`TickPathogen`/`Summary("pathogen")`/
+  lambda indicatrice molène morts supprimés → **divergence D10 close**) + vue Godot
+  (snapshot `inoculum` par tuile + F6 heatmap + banc F5 `rotation_inoculum`) —
+  **golden INTACT `57c166d8…`**, `dotnet build` VERT. `test_inoculum.py` 32/32.
+  Fichiers : `core/EcoFields.cs` (retrait champ+TickPathogen+Summary+ToString ;
+  `DiseaseProbability` conservée mais délestée du terme `PathogenPressure`),
+  `core/PlantCatalogue.Indicatrices.cs` (bloc `UnlockCondition` molène retiré),
+  `tools/simserver/serialize.py` (bloc `inoculum` par tuile, liste creuse
+  `[[r,c,famille_dominante,charge_totale],…]`), `tools/simserver/version.py`
+  (0.5.38→**0.5.39**), `tools/simserver/commands.py` (`inoculum` au registre
+  `fields` + grille dense `inoculum.total`, patron `vitalite`), `visuals/FieldOverlay.cs`
+  (palette `["inoculum"]`), `bancs/edaphique.py` (`rotation_inoculum`),
+  `bancs/__init__.py` (registre), 3 checks `engine_version` alignés à 0.5.39
+  (`tests/simserver/{structures,conteneurs,voix}.py`, piège D76).
+
+## SPRINT TERMINÉ (2026-07-24)
+Tronçons ①②③④ TOUS CLOS. Golden INTACT `57c166d8…` de bout en bout. D10 CLOSE.
 
 ## Coût perf estimé
 +1 GridField (scalaire) OU dict sparse famille→charge par plot ; accumulation
@@ -96,6 +111,18 @@ O(plots) scatter/tick, décroissance ; négligeable. Zéro RNG (accumulateur
 déterministe). Golden RE-FIGÉ maîtrisé (proba de maladie change).
 
 ## §REPRISE
+**SPRINT TERMINÉ 2026-07-24 — tous les tronçons ①②③④ CLOS.** Golden INTACT
+`57c166d8…` de bout en bout, `test_inoculum.py` 32/32, `test_sim_server` 269/270
+(le seul rouge = pommier-fruit PRÉEXISTANT, hors sujet), `dotnet build` VERT,
+pont 0.5.39. **D10 CLOSE** (DETTE.md + BACKLOG.md à jour). Rien à reprendre.
+
+Note ④ : la heatmap F6 lit l'inoculum via le registre `fields` (grille dense de
+`inoculum.total` matérialisée à la demande côté pont, patron `vitalite`) plutôt que
+par une lecture directe du bloc snapshot côté C# comme le suggérait le kickoff — ce
+choix mirrore le précédent `vitalite`/`marais_memory` (champ dérivé → cmd_fields), ne
+demande QUE la palette côté FieldOverlay, et laisse le bloc snapshot `inoculum` servir
+la future vue-jeu diégétique (indice de sol vicié). Golden NEUTRE dans les deux cas.
+
 Tronçons ①+②+③ **CLOS** (golden INTACT `57c166d8…`, `test_inoculum.py` 32/32).
 
 **③ — molène (`03_molene.md`).** Espèce *Verbascum thapsus* (bisannuelle, rosette→hampe,

@@ -19,13 +19,18 @@
 
 ## Sprint en cours
 
-*Aucun en exécution.* **Conçu & FIGÉ, prêt `/sprint-auto`** : **mémoire
-d'inoculum du sol** (D10, 2026-07-24) — champ édaphique « terre malade » indexé
-par famille (pédagogie de rotation), greffé à `disease_probability`, indicatrice
-molène ; `sprints/champs/sol/sprint_memoire_inoculum/00_etat.md` (4 tronçons,
-golden ① INTACT · ② re-figé maîtrisé · ③ neutre · ④ INTACT).
+*Aucun en exécution.*
 
-Dernier sprint clos : **hydrologie de relief & marécages** (2026-07-23,
+Dernier sprint clos : **mémoire d'inoculum du sol** (D10, 2026-07-24, `/sprint-auto`
+①→④) — champ édaphique `InoculumField` « terre malade » sparse indexé par famille
+(pédagogie de rotation, philo #2/#6), greffé au point unique `disease_probability(family)`,
+indicatrice molène + 5 voix, ménage C# (`PathogenPressure`/`TickPathogen` morts
+supprimés → **D10 CLOSE**) + vue Godot (snapshot `inoculum`, heatmap F6, banc F5
+`rotation_inoculum`) ; `sprints/champs/sol/sprint_memoire_inoculum/00_etat.md`
+(golden INTACT `57c166d8…` de bout en bout, `dotnet build` vert, pont 0.5.39,
+reste F5 Nico).
+
+Sprint clos précédent : **hydrologie de relief & marécages** (2026-07-23,
 ①→⑧, `/sprint-auto`) — `sprints/champs/eau/sprint_hydrologie_marecage/00_etat.md`
 (golden écolo `57c166d8…`, `dotnet build` vert, reste F5 Nico).
 

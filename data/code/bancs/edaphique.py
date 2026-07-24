@@ -16,7 +16,7 @@ uniformément pauvres).
 """
 from __future__ import annotations
 
-from plants import Vaccinium, Basil, Sunflower
+from plants import Vaccinium, Basil, Sunflower, Tomato, Pepper, Bean
 from .base import build_banc_tile, monde, force_memoire
 
 # ───────────────────────────── 1. chlorose pH ────────────────────────────────
@@ -90,3 +90,49 @@ def carence_npk():
     temoin.add_plant(Sunflower, 4, 4)
     return monde([carence, temoin],
                  {carence.tile_id: eco_c, temoin.tile_id: eco_t})
+
+
+# ──────────────────── 4. mémoire d'inoculum & rotation ────────────────────────
+# DEUX planches JUMELLES (même sol, même humidité) qui ne diffèrent QUE par
+# l'HISTOIRE culturale, pour démontrer la mémoire d'inoculum de tuile (sprint
+# éponyme, §11) et la pédagogie de rotation (philo #2/#6) :
+#   · MONOCULT : Solanacées répétées (tomate + poivron) sur un sol déjà VICIÉ —
+#     l'inoculum `Solanaceae` est pré-chargé au-dessus du seuil molène (patron
+#     `force_memoire` : on pose la mémoire édaphique DÉJÀ installée, comme après
+#     plusieurs saisons de monoculture malade). Sous F5, le couplage ② amplifie
+#     la maladie sur toute nouvelle Solanacée, et la porte de niche `arch_inoculum`
+#     laisse la MOLÈNE coloniser la planche (indicatrice de sol vicié).
+#   · ROTATION : familles ALTERNÉES (basilic Lamiaceae, tournesol Asteraceae,
+#     haricot Fabaceae) sur un sol PROPRE — aucun inoculum. Rien à amplifier :
+#     la maladie ne monte pas, aucune molène ne germe. C'est le témoin sain.
+# Pré-charge édaphique déterministe (zéro RNG) ; ce banc n'est jamais monté pour
+# smoke/full → golden NEUTRE.
+INOC_VICIE = 0.7          # > INOC_MOLENE_SEUIL (0.4) : molène candidate, heatmap rouge
+INFECTION_PRECHARGE = 0.6  # mémoire d'infection vécue → dépôt continu + amplification
+
+
+def rotation_inoculum():
+    """Banc « mémoire d'inoculum & rotation » : une planche de Solanacées répétées
+    sur sol vicié (inoculum `Solanaceae` pré-chargé, maladie qui s'aggrave, molène
+    qui colonise) VS une planche tournée (familles alternées, sol sain). Démontre
+    §11 : la terre garde la mémoire hôte-spécifique de la maladie, tourner de
+    famille y échappe. Observation F5 (pas d'oracle : phénomène temps réel)."""
+    # Planche viciée — Solanacées répétées sur terre déjà malade.
+    mono, eco_m = build_banc_tile("MONOCULT", "terre", 8, 8,
+                                  humidite=1.6, fertilite=1.0, microbiome=0.3)
+    solanacees = [(Tomato, 2, 2), (Pepper, 2, 5), (Tomato, 5, 2), (Pepper, 5, 5)]
+    for espece, r, c in solanacees:
+        plante = mono.add_plant(espece, r, c)
+        force_memoire(plante, "infection_memory", INFECTION_PRECHARGE)
+    # Sol vicié : inoculum Solanaceae au-dessus du seuil molène sur tout le lit.
+    for r in range(eco_m.rows):
+        for c in range(eco_m.cols):
+            eco_m.inoculum.deposit(r, c, "Solanaceae", INOC_VICIE)
+    # Planche tournée — familles alternées, sol propre (aucun inoculum).
+    rot, eco_r = build_banc_tile("ROTATION", "terre", 8, 8, 500.0, 0.0,
+                                 humidite=1.6, fertilite=1.0, microbiome=0.5)
+    for espece, r, c in [(Basil, 2, 2), (Sunflower, 2, 5),
+                         (Bean, 5, 2), (Basil, 5, 5)]:
+        rot.add_plant(espece, r, c)
+    return monde([mono, rot],
+                 {mono.tile_id: eco_m, rot.tile_id: eco_r})

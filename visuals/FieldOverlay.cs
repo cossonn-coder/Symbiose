@@ -116,6 +116,15 @@ namespace Symbiose
 			// champs sont auto-découverts par l'introspection `fields` (GridField).
 			["allelopathie"]     = (new Color("d8cfc0"), new Color("6f3a5a"), "sol propre", "inhibé", 0f, 3f),
 			["autotox"]          = (new Color("d8cfc0"), new Color("8f2f2f"), "sol propre", "fatigué", 0f, 3f),
+			// Mémoire d'inoculum du sol (sprint mémoire d'inoculum ④) : charge
+			// pathogène PERSISTANTE par plot (résidus hivernants d'une maladie
+			// hôte-spécifique), matérialisée par le pont en grille dense de
+			// `inoculum.total` (Σ des familles). Un plot sain = 0 ; une planche en
+			// monoculture malade se charge saison après saison → la heatmap vire au
+			// rouge/brun vicié, et TOURNER de famille la fait refluer (pédagogie de
+			// rotation, philo #2/#6). Bornes physiques 0..INOC_MAX(=1) → échelle
+			// comparable de semaine en semaine. Pôle bas = parchemin « sol sain ».
+			["inoculum"]         = (new Color("d8cfc0"), new Color("7a2f22"), "sol sain", "vicié", 0f, 1f),
 			// Heatmaps PAR ESPÈCE (catalogue enrichi ⑥b) : le registre `fields`
 			// expose désormais une grille par espèce (eco.populations, 15 clés)
 			// au lieu des 3 anciennes guildes. Pôle haut = la couleur du point

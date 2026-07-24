@@ -301,6 +301,7 @@ class SerializeMixin:
         couverture_by_tile = {}
         paillage_by_tile = {}
         allelopathie_by_tile = {}
+        inoculum_by_tile = {}
         for tile in gs["tiles"]:
             eco = gs["eco"][tile.tile_id]
             # Toutes les espèces TOUJOURS présentes (listes vides) — invariant du
@@ -540,6 +541,28 @@ class SerializeMixin:
                 [r, c, round(al.data[r][c], 4)]
                 for r in range(eco.rows) for c in range(eco.cols)
                 if al is not None and al.data[r][c] > ALLELO_FLOOR]
+            # Carte de MÉMOIRE D'INOCULUM par tuile (sprint mémoire d'inoculum ④) :
+            # liste CREUSE `[[r, c, famille_dominante, charge_totale], …]` des SEULS
+            # plots viciés (`eco.inoculum.load` est un dict SPARSE indexé par plot →
+            # un plot resté sain n'a AUCUNE entrée, la liste reste courte, patron
+            # `marais`/`eau_surface`). Par plot chargé : la famille dominante (bucket
+            # de plus forte charge — la maladie qui hiverne le plus) + la charge
+            # totale toutes familles confondues (`inoculum.total`, sert la niche
+            # molène ③ et la heatmap). La vue F6 en tire l'overlay « charge pathogène »
+            # (sain → rouge/brun vicié). PURE lecture d'un champ déjà tické par
+            # `tick_decay` → golden NEUTRE (le smoke ne vicie aucun plot → dict vide →
+            # liste vide). Champ optionnel côté vue (tolérance pré-0.5.39 → pas
+            # d'overlay). `inoculum` peut être absent d'un vieil eco → garde-fou getattr.
+            ino = getattr(eco, "inoculum", None)
+            plots_ino = []
+            if ino is not None:
+                for (r, c), bucket in ino.load.items():
+                    if not bucket:
+                        continue
+                    dominante = max(bucket, key=bucket.get)
+                    total = sum(bucket.values())
+                    plots_ino.append([r, c, dominante, round(total, 4)])
+            inoculum_by_tile[tile.tile_id] = plots_ino
         # Cap GLOBAL de la vie macro (perception pure, golden-neutre) : une fois TOUS
         # les candidats collectés, on ne garde que les SPRITES_MONDE_MAX plus denses,
         # puis on regroupe au format compact `{tuile: {espèce: [[r,c,x,y,act], …]}}`
@@ -630,6 +653,7 @@ class SerializeMixin:
                 "couverture": couverture_by_tile,
                 "paillage": paillage_by_tile,
                 "allelopathie": allelopathie_by_tile,
+                "inoculum": inoculum_by_tile,
                 "containers": self._containers_snapshot(gs, saison)}
         # Jardinier automate (sprint jardinier_auto ⑥) : bloc OPT-IN. Présent UNIQUEMENT
         # quand un automate est actif → un snapshot F5 ordinaire (sans automate) est

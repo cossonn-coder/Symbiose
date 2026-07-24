@@ -589,7 +589,17 @@ from __future__ import annotations
 #       _PLANT_ATTRS du golden) → golden INTACT (le golden tourne hors serveur). Un
 #       binaire pré-0.5.38 n'émet pas ces clés → le panneau retombe sur les champs
 #       absents (lecture tolérante ContainsKey, comme tous les bumps précédents).
-ENGINE_VERSION = "0.5.38"
+# 0.5.39 (mémoire d'inoculum ④, vue Godot) : nouveau bloc `inoculum` par tuile au
+#       snapshot = liste CREUSE `[[r, c, famille_dominante, charge_totale], …]` des
+#       SEULS plots viciés (dict `eco.inoculum.load` SPARSE → un plot sain n'a aucune
+#       entrée, liste courte, patron `marais`/`eau_surface`). Par plot chargé : la
+#       famille dont le bucket est le plus lourd (la maladie qui hiverne le plus) +
+#       la charge totale toutes familles (`inoculum.total`, sert la niche molène ③
+#       et la heatmap F6 « charge pathogène »). PURE lecture d'un champ déjà tické
+#       par `tick_decay` (④g) → golden NEUTRE : le smoke ne vicie aucun plot →
+#       dict vide → liste vide. Un binaire pré-0.5.39 ignore le bloc (la heatmap
+#       `inoculum` retombe sur 0 = sol sain ; tolérance comme tous les bumps).
+ENGINE_VERSION = "0.5.39"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

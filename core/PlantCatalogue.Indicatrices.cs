@@ -135,18 +135,14 @@ namespace Symbiose
 				}
 			});
 
-			// --- Molène — pression pathogène élevée ---
+			// --- Molène — indicatrice de sol vicié ---
+			// La relâche (porte de niche `arch_inoculum` sur l'inoculum du plot)
+			// vit dans le moteur Python. Plus d'UnlockCondition C# adossée à
+			// PathogenPressure (divergence D10 close).
 			Register("molene", new SpeciesDefinition
 			{
 				Category  = PlantCategory.Indicator,
 				Archetype = "pioneer",
-				UnlockCondition = new UnlockCondition
-				{
-					Description = "Une pression pathogène persistante fragilise le jardin. " +
-								  "Une plante médicinale ancienne y trouve sa place.",
-					Check = eco =>
-						eco.PathogenPressure > 0.6f,
-				},
 				Data = new PlantData
 				{
 					Name           = "Molène",

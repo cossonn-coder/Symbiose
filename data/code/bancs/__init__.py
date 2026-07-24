@@ -10,7 +10,8 @@ Les tronçons ②③④ ajoutent leurs entrées ici (édaphique, climatique, bio
 """
 from .climatique import (secheresse_sable, acclimatation, ombre_dense,
                          pluie_thermique, germination_multifacteur)
-from .edaphique import chlorose_acidophile, asphyxie_argile, carence_npk
+from .edaphique import (chlorose_acidophile, asphyxie_argile, carence_npk,
+                       rotation_inoculum)
 from .hydrologie import tourbiere
 from .biotique import (infestation_ravageur, verger_floraison, semis_tempere,
                        etalement_floraison, grimpantes, floraison_saisons)
@@ -30,6 +31,7 @@ BANCS = {
     "chlorose_acidophile": chlorose_acidophile,
     "asphyxie_argile": asphyxie_argile,
     "carence_npk": carence_npk,
+    "rotation_inoculum": rotation_inoculum,
     "tourbiere": tourbiere,
     "infestation_ravageur": infestation_ravageur,
     "verger_floraison": verger_floraison,

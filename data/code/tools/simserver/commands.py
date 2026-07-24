@@ -314,9 +314,14 @@ class CommandsMixin:
                             if isinstance(v, GridField))
             # "vitalite" : synthèse DÉRIVÉE (méthode, pas un GridField) — ajoutée
             # explicitement au registre pour que l'overlay F6 la propose (§7③).
+            # "inoculum" : idem (charge pathogène SPARSE par plot indexée par
+            # famille, pas un GridField dense) — on matérialise `inoculum.total`
+            # à la demande (mémoire d'inoculum ④) pour la heatmap F6.
+            extra = ["vitalite"]
+            if getattr(eco0, "inoculum", None) is not None:
+                extra.append("inoculum")
             return {"ok": True,
-                    "fields": direct + list(eco0.populations.keys())
-                              + ["vitalite"]}
+                    "fields": direct + list(eco0.populations.keys()) + extra}
         tiles_out = {}
         for tile in gs["tiles"]:
             eco = gs["eco"][tile.tile_id]
@@ -326,6 +331,18 @@ class CommandsMixin:
                 tiles_out[tile.tile_id] = {
                     "rows": eco.rows, "cols": eco.cols,
                     "values": [round(eco.vitalite(r, c), 4)
+                               for r in range(eco.rows)
+                               for c in range(eco.cols)]}
+                continue
+            if field == "inoculum":
+                # Cas spécial (mémoire d'inoculum ④) : charge pathogène TOTALE
+                # par plot (Σ des familles, `inoculum.total`), matérialisée en
+                # grille dense row-major à la demande. Le champ moteur est SPARSE
+                # (dict par plot) → un plot sain répond 0.0. PURE lecture.
+                ino = getattr(eco, "inoculum", None)
+                tiles_out[tile.tile_id] = {
+                    "rows": eco.rows, "cols": eco.cols,
+                    "values": [round(ino.total(r, c) if ino is not None else 0.0, 4)
                                for r in range(eco.rows)
                                for c in range(eco.cols)]}
                 continue
