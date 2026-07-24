@@ -10,8 +10,15 @@
 pour `/sprint-auto sprint_quetes`. Golden INCHANGÉ sur les 5 tronçons.
 
 ## Carte des tronçons
-- ① `01_module_conditions_cumulees.md` — `sim/quetes.py` + `recolte_cumulee`
-  (hook geste joueur) + consignation ledger. Golden intact.
+- ① `01_module_conditions_cumulees.md` — **FAIT (2026-07-24).** `sim/quetes.py`
+  (`Quete` frozen, état opt-in `game_state["quetes"]`, API
+  ajouter/actives/progression/est_accomplie + hook `notifier_geste`) +
+  `recolte_cumulee` compté par hook geste joueur, câblé dans
+  `tools/simserver/plante_route.py` (rebind local de `bilan` → notifie APRÈS
+  geste réussi, zéro changement des branches) + consignation ledger ✉ dans
+  `game_state["log"]`. Tests `tests/test_quetes.py` (12/12 verts).
+  **Golden INCHANGÉ** `57c166d8…` (opt-in strict). NB : `test_sim_server` a un
+  échec PRÉEXISTANT (pommier pré-âgé, nouaison — sans rapport, vérifié au stash).
 - ② `02_conditions_etat.md` — `hauteur_min`/`floraison_min`/`nombre_vivant_min`
   sur snapshot hors tick + progression diégétique. Golden intact.
 - ③ `03_declenchement_habillage.md` — déclenchement déterministe (maîtrise/saison)
@@ -64,7 +71,16 @@ pour `/sprint-auto sprint_quetes`. Golden INCHANGÉ sur les 5 tronçons.
 Négligeable : K conditions actives lues sur snapshot hors tick, K petit
 (plafond de quêtes actives). Aucun O(N²). Golden intact.
 
-## §REPRISE
+## §REPRISE (prochaine étape : tronçon ②)
+Tronçon ① CLOS. Prochaine étape = **② `02_conditions_etat.md`** : conditions
+`hauteur_min` / `floraison_min` / `nombre_vivant_min` lues sur le SNAPSHOT hors
+tick + progression diégétique. L'aiguillage par TAG est déjà prévu dans
+`notifier_geste` (branche `cond[0] != "recolte_cumulee"`) et dans le mini-catalogue
+déclaratif — ② ajoute ses évaluateurs sans toucher l'existant. Le parseur carnet
+de la ligne ✉ reste à câbler au tronçon ③ (habillage/voix). Golden à garder
+INCHANGÉ. Ne pas re-figer.
+
+---
 Lire : `CLAUDE.md` + cette fiche + l'amorce (dans le fil `/conception D79`) +
 `docs/joueur/automate/conception_jardinier_automate.md` (D78) +
 `data/code/tools/jardinier_auto/objectifs.py`. Prochaine étape : recueillir les

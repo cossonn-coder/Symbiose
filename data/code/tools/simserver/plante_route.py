@@ -20,6 +20,7 @@ de réponse JSON commune à tous les gestes.
 from __future__ import annotations
 
 from sim import actions as A      # façades des 7 gestes sur plante (foi métier)
+from sim import quetes as Q       # hook de comptage des quêtes joueur (D79 ①)
 
 VERBES = ("manger", "recolter", "deraciner", "tailler", "couper",
           "pincer", "arracher")
@@ -38,6 +39,19 @@ def route_plante(gs: dict, player: str, verb: str,
     if plant is None:
         return bilan(False, 0.0, 0.0,
                      "aucune plante vivante à cette position")
+    # Hook QUÊTES (D79 ①) : on ENROBE `bilan` pour notifier le système de quêtes
+    # APRÈS un geste RÉUSSI (applied truthy). Rebind LOCAL du nom → toutes les
+    # branches ci-dessous appellent la version enrobée SANS changer une ligne (les
+    # deux retours d'échec au-dessus ont déjà utilisé le `bilan` brut, avant que
+    # `plant` existe). `notifier_geste` est un no-op strict tant qu'aucune quête
+    # n'est active (opt-in) → golden intact. Le verbe transmis est le verbe JOUEUR
+    # (ex. `couper`), même quand la façade retombe sur `tailler` en interne.
+    _bilan_brut = bilan
+
+    def bilan(applied, cost, gain, message):
+        if applied:
+            Q.notifier_geste(gs, player, verb, plant)
+        return _bilan_brut(applied, cost, gain, message)
     # Coût nominal AVANT le geste (cout_action est une lecture pure —
     # le geste recalcule le même en interne) : pour l'affichage HUD.
     cost = A.cout_action(gs, player, verb, A._objets_action(verb, plant))
