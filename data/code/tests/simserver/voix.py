@@ -17,8 +17,8 @@ def test_voix():
     print("[voix narratives — pont ①]")
     s = ServerProc()
     init = s.send(cmd="init", config="full", seed=7)
-    check("protocole bumpé à 0.5.39 (mémoire d'inoculum ④ : bloc inoculum)",
-          init["engine_version"] == "0.5.39", init.get("engine_version"))
+    check("protocole bumpé à 0.5.40 (courrier des quêtes D79 ⑤)",
+          init["engine_version"] == "0.5.40", init.get("engine_version"))
 
     # Retour F5 : une plante n'est PLUS observée parce qu'elle pousse — seulement au
     # SURVOL souris. Après quelques semaines SANS survol, aucune ESPÈCE (plante /

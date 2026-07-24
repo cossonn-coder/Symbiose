@@ -495,6 +495,38 @@ def _offrir_structure(game_state: dict, kind: str) -> None:
     eco.structures.append(Structure(kind=kind, plot=(0, 0)))
 
 
+# --- ⑤ Vue read-only : alimentation du panneau « courrier » ------------------
+def etat_courrier(game_state: dict, debug: bool = False) -> list:
+    """VUE read-only des lettres pour le panneau courrier Godot (⑤). ÉVALUE d'abord
+    les quêtes d'état sur le snapshot courant (`evaluer_etat`, hors tick — l'ouverture
+    du panneau est un point d'évaluation légitime, conception §4) puis renvoie TOUTES
+    les lettres posées (actives ET accomplies), triées par `id` (déterminisme, philo
+    #3), chacune : `id`, `donneur`, `texte_lettre`, `avancement` (phrase DIÉGÉTIQUE
+    V2), `accomplie` (→ la vue coche la lettre), `atteignable` (→ la vue signale un
+    rêve hors catalogue, F3). Le CHIFFRE exact (`progression` + `condition` brute) n'est
+    joint QUE si `debug` (V2/#5 : jamais de chiffre en primaire). No-op → liste vide sans
+    quête (opt-in). Ne verse AUCUNE récompense (c'est le driver `remettre_recompenses`
+    au passage de semaine qui honore)."""
+    evaluer_etat(game_state)
+    reg = game_state.get(CLE_QUETES, {})
+    lettres = []
+    for qid in sorted(reg):
+        quete = reg[qid]["quete"]
+        item = {
+            "id": qid,
+            "donneur": quete.donneur,
+            "texte_lettre": quete.texte_lettre,
+            "avancement": avancement(game_state, qid),
+            "accomplie": est_accomplie(game_state, qid),
+            "atteignable": est_atteignable(quete.condition),
+        }
+        if debug:                                  # chiffre exact réservé au debug (#5)
+            item["progression"] = progression(game_state, qid)
+            item["condition"] = _decrire_condition(quete.condition)
+        lettres.append(item)
+    return lettres
+
+
 def remettre_recompenses(game_state: dict, player: str) -> list:
     """Verse les récompenses des quêtes ACCOMPLIES pas encore honorées. À appeler
     HORS tick (passage de saison / ouverture du panneau), APRÈS `notifier_geste` /

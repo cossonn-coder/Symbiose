@@ -86,6 +86,7 @@ namespace Symbiose
 				OngletVoix("Encyclopédie", new EncyclopediePanel()),
 				OngletVoix("Magazine",     new MagazinePanel()),
 				OngletVoix("Pages",        new PagesPanel()),
+				OngletVoix("Courrier",     new CourrierPanel()),
 				OngletVoix("Atelier",      new AtelierPanel()),
 			};
 

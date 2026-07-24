@@ -271,6 +271,13 @@ class CommandsMixin:
         # de le vider. Opt-in joueur ici (même principe que `consigner`/Vigueur) →
         # golden intact (le moteur tourne sans serveur, ces hooks jamais appelés).
         observer_apres_tick(gs, gs["current_player"], gs["log"])
+        # DRIVER des quêtes (D79 ⑤) : HORS tick, après la simulation — arrivée des
+        # lettres mûres, clôture des quêtes d'état comblées, versement des récompenses.
+        # Opt-in strict (aucune lettre mûre → no-op) ; le golden tourne hors serveur →
+        # jamais appelé → golden intact. Les quêtes CUMULÉES, elles, se closent au hook
+        # geste (plante_route), pas ici. Câblé APRÈS `consigner` (le ledger ✉ des quêtes
+        # accomplies sera consigné au tick suivant, comme tout marqueur du log).
+        self.avancer_quetes(gs, gs["current_player"])
         gs["log"].clear()   # borne la mémoire (cf. golden)
         # Jardinier automate (sprint jardinier_auto ⑥) : SI actif, il joue ICI, APRÈS
         # le tick, côté APPELANT — invariant H2 (jamais dans tick_semaine). Opt-in

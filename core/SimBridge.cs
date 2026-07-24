@@ -332,6 +332,24 @@ namespace Symbiose
 		public GDict Atelier() => Request(new GDict { ["cmd"] = "atelier" });
 
 		/// <summary>
+		/// COURRIER des quêtes (D79 ⑤, pont 0.5.40) : les lettres du joueur, actives
+		/// ET accomplies — `lettres` = liste (triée par id) de {id, donneur,
+		/// texte_lettre, avancement (phrase DIÉGÉTIQUE, jamais un chiffre), accomplie
+		/// (→ coche), atteignable (→ rêve hors catalogue, le kiwi)}. Avec `debug`, chaque
+		/// lettre gagne aussi `progression`/`condition` (chiffre exact, mode debug #5).
+		/// Le pont calcule tout (avancement, coche, atteignabilité) — la vue LIT et met
+		/// en page (« Godot bête »). Renvoie [] si le pont ne répond pas (binaire
+		/// pré-0.5.40 → « commande inconnue » → l'onglet Courrier s'affiche vide).
+		/// </summary>
+		public Godot.Collections.Array Courrier(bool debug = false)
+		{
+			var msg = new GDict { ["cmd"] = "courrier" };
+			if (debug) msg["debug"] = true;
+			var resp = Request(msg);
+			return resp?["lettres"].AsGodotArray() ?? new Godot.Collections.Array();
+		}
+
+		/// <summary>
 		/// Acquisition d'un OUTIL à l'Atelier (D82, tronçon ②) : passe par le verbe
 		/// `cmd_action` `acheter_outil` (chemin Vigueur UNIQUE, jumeau
 		/// d'`AcheterMagazine`). `params.outil` = clé du registre `OUTILS`

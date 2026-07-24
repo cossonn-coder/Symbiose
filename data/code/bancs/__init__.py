@@ -21,6 +21,7 @@ from .luxuriance import luxuriance
 from .diversite import diversite_fondatrice
 from .modele_spatial import modele_spatial
 from . import palette_gestes as _palette_gestes
+from . import courrier as _courrier
 
 BANCS = {
     "secheresse_sable": secheresse_sable,
@@ -46,6 +47,7 @@ BANCS = {
     "diversite_fondatrice": diversite_fondatrice,
     "modele_spatial": modele_spatial,
     "palette_gestes": _palette_gestes.palette_gestes,
+    "courrier": _courrier.courrier,
 }
 
 # Hook POST-INIT par banc (palette de gestes ⑤) : callback OPTIONNEL `(game_state,
@@ -55,7 +57,8 @@ BANCS = {
 # s'en sert pour OUVRIR d'emblée les gestes savants (bouturer/greffer) sans jouer
 # jusqu'à la maîtrise réelle. Banc sans hook → absent → cmd_init ne fait rien de plus
 # (comportement inchangé, golden NEUTRE : smoke/full ne sont pas des bancs).
-BANC_POST_INIT = {"palette_gestes": _palette_gestes.post_init}
+BANC_POST_INIT = {"palette_gestes": _palette_gestes.post_init,
+                  "courrier": _courrier.post_init}
 
 # Semaine de départ par banc (retour F5 Nico 2026-07-04). La plupart démarrent à
 # `week=1` (début printemps) — repli par défaut. `grimpantes` observe des FRILEUSES
@@ -72,7 +75,13 @@ BANC_POST_INIT = {"palette_gestes": _palette_gestes.post_init}
 # feuillage). L'été donne les 10 couronnes pleines et sans coloration automnale,
 # pour lire chaque PORT habillé (le banc n'observe PAS le rythme phénologique).
 BANC_WEEK_DEPART = {"grimpantes": 9, "luxuriance": 9, "diversite_fondatrice": 9,
-                    "foret_ports": 20}
+                    "foret_ports": 20,
+                    # `courrier` (D79 ⑤) démarre SEMAINE 12 (fin de printemps, sol
+                    # réchauffé) : les lettres sont POSÉES au post_init (pas via les
+                    # jalons de saison), mais un départ tardif évite de figer lavande /
+                    # trèfle sous le seuil thermique — le panneau montre des avancements
+                    # diégétiques qui bougent plutôt que « rien ne pousse ».
+                    "courrier": 12}
 
 
 def banc_categorie(nom: str) -> str:

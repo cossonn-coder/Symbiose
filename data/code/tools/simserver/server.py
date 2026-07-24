@@ -13,13 +13,14 @@ from .actions import ActionsMixin
 from .actions_cibles import CiblesMixin
 from .serialize import SerializeMixin
 from .voix import VoixMixin
+from .courrier import CourrierMixin
 from .maitrise_cmds import MaitriseCmdsMixin
 from .palette_cmd import PaletteCmdMixin
 from .automate_cmd import AutomateCmdMixin
 
 
 class SimServer(CommandsMixin, ActionsMixin, CiblesMixin, SerializeMixin, VoixMixin,
-                MaitriseCmdsMixin, PaletteCmdMixin, AutomateCmdMixin):
+                CourrierMixin, MaitriseCmdsMixin, PaletteCmdMixin, AutomateCmdMixin):
     """État du serveur : un Engine (ou None avant `init`). Dispatch des commandes."""
 
     def __init__(self):
@@ -46,6 +47,10 @@ def main() -> int:
                 "encyclopedie": server.cmd_encyclopedie,
                 "pages": server.cmd_pages,
                 "magazine": server.cmd_magazine,
+                # Courrier des quêtes (read-only, D79 ⑤) : les lettres actives +
+                # accomplies du joueur, avec avancement diégétique. Le DRIVER (arrivée
+                # + clôture + récompenses) vit hors tick dans step_week, pas ici.
+                "courrier": server.cmd_courrier,
                 # Atelier (acquisition des moyens d'agir ②/③) : vitrine READ-ONLY
                 # des outils/matériaux à acquérir + possession des outils. L'achat
                 # passe par `action` (acheter_outil/acheter_materiau).

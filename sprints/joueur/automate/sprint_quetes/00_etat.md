@@ -5,9 +5,10 @@
 > Type/thème : `joueur/automate`. Dépend de D78 (fait) / couple D87 (clos).
 
 ## Phase courante
-**FIGÉE le 2026-07-24.** Conception validée par Nico, doc écrit
-(`docs/joueur/automate/conception_quetes.md`), 5 kickoffs `01→05` écrits. Prêt
-pour `/sprint-auto sprint_quetes`. Golden INCHANGÉ sur les 5 tronçons.
+**SPRINT CLOS CÔTÉ IMPLÉMENTATION le 2026-07-24.** Les 5 tronçons ①→⑤ sont FAITS.
+Golden INCHANGÉ `57c166d8…` sur tout le sprint (opt-in strict). Reste F5 Nico + la
+clôture documentaire (DETTE D79→CLOSE + D93, BACKLOG, journal) au moment du commit.
+Doc de conception : `docs/joueur/automate/conception_quetes.md`.
 
 ## Carte des tronçons
 - ① `01_module_conditions_cumulees.md` — **FAIT (2026-07-24).** `sim/quetes.py`
@@ -63,8 +64,29 @@ pour `/sprint-auto sprint_quetes`. Golden INCHANGÉ sur les 5 tronçons.
   **OUTIL DIFFÉRÉ EN DETTE** (aucun inventaire d'outils n'existe → D93, cf. DETTE.md).
   Tests `tests/test_quetes.py` 52/52 (2 suites ④). **Golden INCHANGÉ** `57c166d8…`
   (opt-in, hors tick). LDC quetes.py 260 (🟢), quetes_corpus.py 68 (🟢).
-- ⑤ `05_vue_godot_courrier.md` — pont `cmd_courrier` + panneau lettres + banc F5.
-  Clôture : maj DETTE/BACKLOG/journal.
+- ⑤ `05_vue_godot_courrier.md` — **FAIT (2026-07-24).** VUE de bout en bout.
+  - **Pont** : commande read-only `courrier` (mixin NEUF `tools/simserver/courrier.py`,
+    `CourrierMixin`, câblé dans `server.py`) → `sim.quetes.etat_courrier(gs, debug)` =
+    lettres triées par id {id, donneur, texte_lettre, avancement DIÉGÉTIQUE, accomplie,
+    atteignable} ; chiffre exact (progression/condition) SEULEMENT si `msg.debug` (V2/#5).
+    Ouvrir le panneau évalue les quêtes d'état (`evaluer_etat`, hors tick) sans verser de
+    récompense. **DRIVER** `avancer_quetes` (même mixin) câblé dans `cmd_step_week` HORS
+    tick (déclencheurs → clôture d'état → récompenses idempotentes) ; les cumulées se
+    closent au hook geste. Opt-in strict → golden intact. Protocole **0.5.40**.
+  - **Godot (C#)** : `SimBridge.Courrier(debug=false)` + panneau `world/CourrierPanel.cs`
+    (VoicePanel : lettre verbatim, coche ✉/☑, avancement diégétique, gris si rêve hors
+    catalogue) + onglet « Courrier » dans `WorldView.Hub.cs`. Build **vert** (0/0).
+  - **Banc F5** : `bancs/courrier.py` (registré `BANCS`/`BANC_POST_INIT`/`BANC_WEEK_DEPART=12`) :
+    monde 8×8 (tournesol, lavandes adultes, trèfles, 2 pommiers mûrs) ; post_init POSE
+    5 lettres curées, UNE par famille + le kiwi inatteignable.
+  - **Golden INCHANGÉ** `57c166d8…`. Tests `tests/test_quetes.py` 52/52. LDC quetes.py 279
+    (🟢), courrier.py 13 (🟢), banc 32 (🟢).
+  - **RESTE (clôture doc, hors ce tronçon car pas de commit ici)** : maj DETTE
+    (D79 → CLOSE ; rattacher D93 outil différé du ④), BACKLOG, entrée journal.
+  - **Carnet-parseur de la ligne ✉ NON câblé** (déféré au ③, resté hors scope) : la ligne
+    `✉ Quête accomplie …` est émise dans le log mais ignorée par `sim/evenements.py`
+    (parseur par marqueurs positionnés `@(r,c)` ; le ✉ social est positionless → régex +
+    kind `Evenement` à ajouter). Ignorée sans dommage → petite DETTE à ouvrir.
 
 ## Faits vérifiés dans le code (source de vérité, revérifiés au grep)
 - **F1 — D78 n'est PAS sur le chemin joueur.** `objectifs.py` vit dans
@@ -109,16 +131,26 @@ pour `/sprint-auto sprint_quetes`. Golden INCHANGÉ sur les 5 tronçons.
 Négligeable : K conditions actives lues sur snapshot hors tick, K petit
 (plafond de quêtes actives). Aucun O(N²). Golden intact.
 
-## §REPRISE (prochaine étape : tronçon ⑤)
-Tronçons ①②③④ CLOS. Prochaine étape = **⑤ `05_vue_godot_courrier.md`** : pont
-`cmd_courrier` + panneau lettres + banc F5 (câblage du DRIVER : appeler
-`evaluer_declencheurs`/`evaluer_etat`/`remettre_recompenses` au passage de saison ;
-parseur carnet de la ligne ✉). Toute l'API moteur est en place :
-`evaluer_declencheurs(gs, player)` (ouverture), `evaluer_etat(gs)` + `notifier_geste`
-(clôture), `remettre_recompenses(gs, player)` (versement idempotent — inclut désormais
-les cadeaux matériels vivace/structure, drapeau `recompense_versee`), `avancement(gs, id)`
-(phrase diégétique V2 pour le panneau). Clôture ⑤ : maj DETTE (D93 outil différé) /
-BACKLOG / journal. Golden à garder INCHANGÉ. Ne pas re-figer.
+## §REPRISE (tous tronçons FAITS — reste F5 + clôture doc)
+①②③④⑤ CLOS côté implémentation. Golden INCHANGÉ `57c166d8…`, build C# vert (0/0),
+`tests/test_quetes.py` 52/52.
+
+**F5 Nico** : lancer la vue, monter le banc `init config="courrier"` (sélecteur de
+bancs, catégorie « courrier »), cliquer la maison → onglet **Courrier** : 5 lettres
+attendues (Marcel/cageot tomates = recolte_cumulee « le panier est encore vide » ;
+Léa/tournesol = hauteur_min « à peine sorti de terre » ; Amélie/lavande = floraison_min ;
+Marcel/verger = nombre_vivant_min « presque le compte » ; Léa/kiwi = rêve INATTEIGNABLE
+grisé). En jeu normal (config full), les lettres arrivent seules au fil des semaines
+(driver `step_week`) ; les cumulées se cochent en récoltant, les quêtes d'état à
+l'ouverture du panneau.
+
+**Clôture doc à faire au commit** (pas fait ici, subagent sans commit) :
+1. `DETTE.md` : **D79 → CLOSE** ; ouvrir/rattacher **D93** (outil de récompense différé,
+   pas d'inventaire d'outils) + une micro-dette « carnet-parseur de la ligne ✉ »
+   (marqueur social positionless à reconnaître dans `sim/evenements.py`).
+2. `BACKLOG.md` : sprint quêtes → terminé.
+3. `journal.md` (+ entrée `journal/`) : décision figée + clôture D79.
+Golden à garder INCHANGÉ. Ne pas re-figer.
 
 ---
 Lire : `CLAUDE.md` + cette fiche + l'amorce (dans le fil `/conception D79`) +

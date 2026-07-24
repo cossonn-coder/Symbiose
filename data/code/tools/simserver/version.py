@@ -599,7 +599,19 @@ from __future__ import annotations
 #       par `tick_decay` (④g) → golden NEUTRE : le smoke ne vicie aucun plot →
 #       dict vide → liste vide. Un binaire pré-0.5.39 ignore le bloc (la heatmap
 #       `inoculum` retombe sur 0 = sol sain ; tolérance comme tous les bumps).
-ENGINE_VERSION = "0.5.39"
+# 0.5.40 (système de quêtes D79 ⑤, vue Godot du courrier) : nouvelle commande
+#       READ-ONLY `courrier` → `lettres` = liste (triée par id) des quêtes du joueur,
+#       chacune {id, donneur, texte_lettre, avancement (phrase DIÉGÉTIQUE, jamais un
+#       chiffre), accomplie (coche), atteignable (rêve hors catalogue = kiwi, F3)}. Le
+#       CHIFFRE exact (progression/condition) n'est joint QUE si `msg.debug` (V2/#5).
+#       Ouvrir le panneau ÉVALUE les quêtes d'état sur le snapshot (hors tick, point
+#       d'évaluation légitime) mais NE VERSE aucune récompense. En parallèle, le DRIVER
+#       des quêtes (arrivée des lettres mûres + clôture d'état + versement idempotent)
+#       est câblé dans `step_week` HORS tick (opt-in : le golden tourne hors serveur →
+#       jamais appelé → golden intact ; snapshot inchangé, aucun bloc `quetes` sérialisé).
+#       Un binaire pré-0.5.40 répond « commande inconnue » à `courrier` (l'onglet
+#       Courrier s'affiche vide, inoffensif — tolérance comme tous les bumps).
+ENGINE_VERSION = "0.5.40"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les
