@@ -25,7 +25,7 @@ import json
 
 from plants import Tomato, Basil, AppleTree, Fig, PlantInstance, Segment
 from plants.perennials import (CherryTree, HornbeamTree, BeechTree,
-                               WalnutTree, OakTree)
+                               WalnutTree, OakTree, Alder, FirTree, BirchTree)
 import sim.growth as G
 
 SEED = 0x5AB1057E
@@ -419,17 +419,18 @@ def test_taper_determinisme():
 
 
 def test_pommier_temoin_non_migre():
-    """Une LIGNEUSE NON migrée (Figuier) garde l'age_curve : l'override résolu ne
-    fuit pas. Sa hauteur suit age_years ; sa structure pousse mais reste non lue."""
+    """Une LIGNEUSE NON migrée (Bouleau, migration en T3) garde l'age_curve :
+    l'override résolu ne fuit pas. Sa hauteur suit age_years ; sa structure pousse
+    mais reste non lue."""
     check("témoin ligneux: AppleTree migré", AppleTree.procedural_growth)
-    check("témoin ligneux: Fig non migré", not Fig.procedural_growth)
-    f = PlantInstance(plant_class=Fig, position=POS)
-    f.age_years = 10.0                          # age_curve Fig : (10, 400, 250)
-    h_age = Fig.height_at(f)                     # = 400 × growth_factor × gène
+    check("témoin ligneux: Bouleau non migré (T3)", not BirchTree.procedural_growth)
+    f = PlantInstance(plant_class=BirchTree, position=POS)
+    f.age_years = 10.0                          # age_curve Bouleau : (10, 800, 200)
+    h_age = BirchTree.height_at(f)               # = 800 × growth_factor × gène
     for k in range(40):
         G.grow_plant(f, SEED, 1 + k)
     check("témoin ligneux: hauteur = age_curve (inchangée par la structure)",
-          abs(Fig.height_at(f) - h_age) < 1e-9, f"h={Fig.height_at(f):.1f}")
+          abs(BirchTree.height_at(f) - h_age) < 1e-9, f"h={BirchTree.height_at(f):.1f}")
     check("témoin ligneux: structure poussée mais jamais lue", len(f.segments) > 1,
           f"len={len(f.segments)}")
     check("témoin ligneux: cache d'empreinte jamais peuplé", f.footprint is None)
@@ -483,6 +484,74 @@ def test_feuillus_d91_determinisme():
         check(f"{cls.name}: empreinte déterministe (260 ticks)",
               h1 == h2 and p1.segments == p2.segments,
               f"hfin {h1[-1]:.1f} vs {h2[-1]:.1f}")
+
+
+# --- 8quater. Cas atypiques migrés (D91 ②) : aulne / figuier / sapin ----------
+#
+# Trois ports PARTICULIERS passent à la croissance procédurale :
+#   • Aulne  — `etale` élancé, pionnier HAUT (h10 ~700) : rôle hydro D61 à préserver ;
+#   • Figuier — `buissonnant`, BAS & LARGE, mono-collet (dominance modérée) ;
+#   • Sapin  — `fleche` conique conifère, ÉTROIT (cr le plus faible), survie hydrique.
+# Mêmes contrats d'allure que les feuillus (migré, pousse, monotone, borné, déterministe).
+# En plus : (a) l'aulne enrichit toujours le N local (`family_effects` inchangés — la
+# migration morphologique ne touche pas le rôle écologique) ; (b) le sapin reste ÉTROIT
+# (flèche : couronne ≈ foliage_halfwidth, bien < un feuillu étalé). HORS golden.
+
+_ATYPIQUES_D91 = [Alder, Fig, FirTree]
+
+
+def test_atypiques_d91_migres():
+    for cls in _ATYPIQUES_D91:
+        check(f"{cls.name}: migré (procedural_growth)", cls.procedural_growth)
+        p, hs, lens = _grow_tree(cls)
+        check(f"{cls.name}: a poussé (an 10 >> semis)", hs[-1] > 200.0,
+              f"h10={hs[-1]:.1f}")
+        check(f"{cls.name}: montée monotone (flèche ne redescend jamais)",
+              all(hs[i] >= hs[i-1] - 1e-9 for i in range(1, len(hs))),
+              f"h10={hs[-1]:.1f}")
+        check(f"{cls.name}: structure bornée (≤ max_segments)",
+              max(lens) <= cls.max_segments, f"max={max(lens)} (cap={cls.max_segments})")
+        check(f"{cls.name}: jamais éteinte (≥1, run éternel)", min(lens) >= 1,
+              f"min={min(lens)}")
+
+
+def test_atypiques_d91_determinisme():
+    for cls in (Alder, FirTree):
+        p1, h1, _ = _grow_tree(cls, 260)
+        p2, h2, _ = _grow_tree(cls, 260)
+        check(f"{cls.name}: empreinte déterministe (260 ticks)",
+              h1 == h2 and p1.segments == p2.segments,
+              f"hfin {h1[-1]:.1f} vs {h2[-1]:.1f}")
+
+
+def test_sapin_fleche_etroit():
+    """Le sapin garde un port `fleche` conique : couronne ÉTROITE (≈ foliage_halfwidth,
+    la flèche n'ajoute quasi pas de spread latéral), nettement plus serrée qu'un feuillu
+    étalé de même âge (le chêne). Vérifie que le port conifère émerge du couple
+    dominance haute + release long."""
+    check("sapin: port fleche déclaré", FirTree.port_archetype == "fleche")
+    fir = _grow_tree(FirTree)[0]
+    oak = _grow_tree(OakTree)[0]
+    cr_fir = FirTree.canopy_radius_at(fir)
+    cr_oak = OakTree.canopy_radius_at(oak)
+    check("sapin: couronne étroite (< feuillu étalé du même âge)", cr_fir < cr_oak,
+          f"sapin cr={cr_fir:.1f} < chêne cr={cr_oak:.1f}")
+    check("sapin: couronne ≈ foliage_halfwidth (flèche sans spread)",
+          cr_fir <= FirTree.foliage_halfwidth + 40.0, f"cr={cr_fir:.1f}")
+
+
+def test_aulne_role_hydro_preserve():
+    """Migration MORPHOLOGIQUE seulement : le rôle écologique D61 de l'aulne est
+    intact. `family_effects` injecte toujours du N en local (fixation Frankia) et la
+    tolérance à l'asphyxie hélophyte est conservée — indépendants de la structure."""
+    fx = Alder.family_effects
+    check("aulne: family_effects conservés (1 effet)", len(fx) == 1, f"n={len(fx)}")
+    e = fx[0]
+    check("aulne: injecte toujours du N local (fixation Frankia)",
+          e["action"] == "inject_field" and e["variable"] == "n" and e["cible"] == "local",
+          f"{e['action']}/{e.get('variable')}/{e.get('cible')}")
+    check("aulne: tolérance asphyxie hélophyte préservée",
+          Alder.asphyxie_tolerance_base == 3.0, f"tol={Alder.asphyxie_tolerance_base}")
 
 
 def test_serialisation_structure():
@@ -548,6 +617,10 @@ if __name__ == "__main__":
     test_pommier_temoin_non_migre()
     test_feuillus_d91_migres()
     test_feuillus_d91_determinisme()
+    test_atypiques_d91_migres()
+    test_atypiques_d91_determinisme()
+    test_sapin_fleche_etroit()
+    test_aulne_role_hydro_preserve()
     test_serialisation_structure()
 
     print("\n" + "=" * 60)

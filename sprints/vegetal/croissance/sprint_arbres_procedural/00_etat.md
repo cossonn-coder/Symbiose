@@ -111,6 +111,31 @@ pommier — pour qu'ils se dessinent en branches et portent le taper D90.
   test_croissance : 102/102 (dont 2 tests D91 neufs). Suites connexes vertes
   (phototropisme, senescence, grimpe, confinement, lifecycle). C# non touché.
   Reste : T2 (aulne/figuier/sapin), T3 (bouleau+gravitropisme), T4 (vue Godot+banc).
+- [x] **T2 — cas atypiques : aulne / figuier / sapin** (2026-07-24). 3 espèces
+  migrées (`procedural_growth=True`), calibrées à la sonde (520 ticks, an 10,
+  monotones, bornées, déterministes) :
+  | espèce | port | gs | rs | dom | fhw | maxseg | h10/cr10 (cible) |
+  |---|---|---|---|---|---|---|---|
+  | Aulne | etale élancé | 1.65 | 800 | 2.0 | 50 | 70 | 680/233 (700/200) |
+  | Figuier | buissonnant | 1.00 | 450 | 1.9 | 95 | **90** | 421/256 (400/250) |
+  | Sapin | fleche conique | 0.95 | 700 | 2.8 | 110 | 70 | 398/130 (400/130) |
+  **Décisions imprévues** : (1) **Aulne rs=800** (pas « petit » comme suggéré au
+  kickoff) : à rs bas le leader s'étalait trop tôt, saturait le cap segments et la
+  hauteur stagnait à ~200 (h700 est le PLUS grand jeune arbre → exige un leader tenu ;
+  le « pionnier s'étale vite » se lit sur l'ampleur finale, pas à l'an 10). (2) **Figuier
+  max_segments relevé 70→90** : un buissonnant ramifie légitimement plus qu'une flèche
+  decurrent ; au défaut 70 le cap AMPUTAIT la charpente (couronne non monotone). Reste
+  BORNÉ (79<90, run éternel OK). (3) **Sapin = cas le plus simple** : la flèche haute-
+  dominance + release long donne cr≈fhw sans réglage laborieux ; fhw=110 tient à la fois
+  cr130 étroit ET la survie hydrique (~2,2 plots). **Multi-tronc figuier = option F5
+  différée** (mono-collet OK). **Golden INCHANGÉ `57c166d8…`**. test_croissance : 125/125
+  (dont 4 tests T2 neufs : migration, déterminisme, sapin-fleche-étroit, aulne-rôle-hydro).
+  Suites connexes vertes (marais, evergreen, lifecycle, senescence, phototropisme,
+  confinement, mulch). Rôle D61 aulne (fixation N₂ Frankia + asphyxie 3.0) préservé
+  (testé). C# non touché. **Note taille** : `perennials.py` = 316 LDC pur → zone vigilance
+  (300-400), responsabilité unique (catalogue pérennes ligneuses) → signalé, pas scindé
+  en plein sprint. Valeurs = placeholders → F5 (T4). Reste : T3 (bouleau+gravitropisme),
+  T4 (vue Godot+banc).
 
 ## CARTE DES TRONÇONS (kickoffs autosuffisants présents)
 - `01_feuillus_etale.md` — levier `auxin_release_scale` + cerisier/charme/hêtre/noyer/chêne
@@ -119,10 +144,12 @@ pommier — pour qu'ils se dessinent en branches et portent le taper D90.
 - `04_vue_godot_banc.md` — rendu branches + aiguilles sapin + banc F5 `foret_ports`
 
 ## §REPRISE
-Conception FIGÉE. **T1 CLOS** (golden `57c166d8…` inchangé). Prochaine étape :
-**T2 = `02_cas_atypiques.md`** (aulne / figuier buissonnant / sapin flèche). Lire :
-`CLAUDE.md` + ce fichier + le doc figé
-`docs/vegetal/croissance/conception_migration_arbres.md` + `02_cas_atypiques.md`.
-Le levier `auxin_release_scale` (T1) est en place et disponible pour le sapin
-(flèche → rs long). Chaque tronçon met à jour ce fichier (cocher + valeurs de
-calibrage + hash golden confirmé).
+Conception FIGÉE. **T1 + T2 CLOS** (golden `57c166d8…` inchangé). Prochaine étape :
+**T3 = `03_bouleau_gravitropisme.md`** (levier NEUF `gravitropism_gain` (D1) + bouleau
+`fleche` élancé + retombée distale ; prépare saule D23). Lire : `CLAUDE.md` + ce fichier
++ le doc figé `docs/vegetal/croissance/conception_migration_arbres.md` +
+`03_bouleau_gravitropisme.md`. Le bouleau (`BirchTree`) est le SEUL arbre encore non
+migré — il sert de témoin non-migré dans `test_pommier_temoin_non_migre` (à basculer
+sur un autre témoin ou adapter quand T3 le migre). Leviers en place : `auxin_release_scale`
+(T1, par espèce), défauts procéduraux sur `PerennialWoody`. Chaque tronçon met à jour ce
+fichier (cocher + valeurs de calibrage + hash golden confirmé).

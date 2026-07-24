@@ -157,8 +157,30 @@ class Fig(PerennialWoody):
     greffable = True           # ligneux fruitier : porte-greffe/greffon de greffe (palette ③, D8)
     bloom_forcing_gdd = 40.0   # figuier MÉDITERRANÉEN : fleurit plus tard que le pommier, en début d'été (~S20) (①)
     bloom_duration = 4
-    girth_max_cm = 12.0        # tronc mûr ~12 cm (pipe model) — POSÉ, sans effet tant que non migré en procédural (dette) ; placeholder → F5
+    girth_max_cm = 12.0        # tronc mûr ~12 cm (pipe model, procédural)
     age_curve = [(0, 30, 20), (5, 200, 150), (10, 400, 250), (20, 500, 300)]
+    # --- Croissance procédurale (D91 ②) — buissonnant, BAS & LARGE ---------------
+    # Cas atypique : le figuier ne fait PAS de flèche dominante, il DÉBOURRE tôt et
+    # ramifie bas → port `buissonnant` étalé. On l'obtient par une dominance apicale
+    # MODÉRÉE (< 2.0 des autres arbres) : l'apex ne bride pas ses latéraux, la
+    # couronne s'ouvre dès le jeune âge. auxin_release_scale reste au défaut (400) :
+    # inutile de tenir un leader qu'on ne veut pas. Calibré (sonde §C, 520 ticks)
+    # pour l'allure age_curve à l'an 10 (~421 cm haut / ~256 couronne ; cible 400/250).
+    # Bas : gabarit plafonné à 500 cm (age_curve figuier plafonne à 20 ans). Large :
+    # foliage_halfwidth généreux (houppier dense de figuier + survie hydrique).
+    # max_segments RELEVÉ à 90 : un buissonnant ramifie légitimement plus qu'une flèche
+    # decurrent ; au défaut 70 le cap AMPUTAIT la charpente (couronne non monotone). 90
+    # reste BORNÉ (à l'an 10 ~79 seg → marge, run éternel préservé). MONO-COLLET : un seul
+    # Segment(parent=None) — le multi-tronc est une OPTION F5 différée. HORS golden.
+    procedural_growth     = True
+    port_archetype        = "buissonnant"
+    apical_dominance_base = 1.9       # MODÉRÉ (< 2.0) : débourre tôt → ramifie bas
+    growth_speed          = 1.0       # bas (plafond age_curve ~500 cm)
+    auxin_release_scale   = 450.0     # court : pas de leader séculaire à tenir
+    max_height_cm         = 500.0     # plafond = dernier point age_curve (20 ans)
+    max_extent_cm         = 300.0
+    max_segments          = 90        # buissonnant ramifié → cap relevé (borné, cf. ci-dessus)
+    foliage_halfwidth     = 95.0      # houppier large de figuier + survie hydrique
 
 
 class AppleTree(PerennialWoody):
@@ -475,9 +497,29 @@ class FirTree(PerennialWoody):
     mulch_source = "aiguilles"       # récolté → stock aiguilles (④/⑤)
     longevity_years = 250
     maturity_years = 20
-    girth_max_cm = 25.0        # tronc mûr ~25 cm (pipe model) — POSÉ, sans effet tant que non migré ; placeholder → F5
+    girth_max_cm = 25.0        # tronc mûr ~25 cm (pipe model, procédural)
     age_curve = [(0, 30, 15), (5, 200, 80), (10, 400, 130),
                  (20, 800, 200), (50, 1800, 350), (100, 3000, 500)]
+    # --- Croissance procédurale (D91 ②) — FLÈCHE conique, conifère lent -----------
+    # Cas atypique : le sapin garde une FLÈCHE dominante toute sa vie → port conique
+    # `fleche` (≠ l'étalement `etale` des feuillus). On l'obtient par dominance apicale
+    # HAUTE + relâchement d'auxine TRÈS long : le leader ne s'ouvre jamais vraiment, la
+    # couronne reste ÉTROITE. Croissance LENTE (conifère). Calibré (sonde §C, 520 ticks)
+    # pour l'allure age_curve à l'an 10 (~398 cm haut / ~130 couronne étroite ; cible
+    # 400/130). foliage_halfwidth : cas le PLUS exposé à la mort hydrique (§1.3) — une
+    # flèche sans latéraux a canopy_r ≈ foliage_halfwidth, donc root_r ≈ fhw. On le porte
+    # à 110 pour que les racines couvrent ~2,2 plots (survie) TOUT en tenant la cible
+    # étroite cr130 (la flèche n'ajoute quasi pas de spread latéral). deciduous=False /
+    # mulch_source / ph_opt INCHANGÉS (rôles D69). Aiguilles + verticille = rendu (T4).
+    # HORS golden.
+    procedural_growth     = True
+    port_archetype        = "fleche"
+    apical_dominance_base = 2.8       # HAUT : flèche tenue → cône serré
+    growth_speed          = 0.95      # LENT (conifère)
+    auxin_release_scale   = 700.0     # TRÈS long : reste dressé (jamais decurrent)
+    max_height_cm         = 3000.0    # plafond = dernier point age_curve (100 ans)
+    max_extent_cm         = 500.0
+    foliage_halfwidth     = 110.0     # cône étroit cr130 + racines multi-plots (survie)
 
 
 # ---------------------------------------------------------------------------
@@ -524,9 +566,27 @@ class Alder(PerennialWoody):
     longevity_years = 100
     maturity_years = 10
     bouturable = True                # rameau de saule/aulne piqué au bord de l'eau reprend
-    girth_max_cm = 16.0              # tronc mûr ~16 cm (pipe model) — POSÉ, sans effet tant que non migré ; placeholder → F5
+    girth_max_cm = 16.0              # tronc mûr ~16 cm (pipe model, procédural)
     age_curve = [(0, 40, 20), (5, 350, 120), (10, 700, 200),
                  (20, 1200, 320), (50, 2000, 450), (100, 2500, 550)]
+    # --- Croissance procédurale (D91 ②) — pionnier étalé ÉLANCÉ de berge ----------
+    # Cas atypique : l'aulne pousse VITE (pionnier) et HAUT (h10 ~700, le plus grand
+    # des jeunes arbres migrés), houppier moyen ÉLANCÉ (`etale` mais plus étroit que le
+    # chêne). Calibré (sonde §C, 520 ticks) : ~680 cm haut / ~233 couronne à l'an 10
+    # (cible 700/200). growth_speed élevé (pionnier) ; auxin_release_scale MODÉRÉ (800) :
+    # assez pour tenir une flèche de 7 m (à rs plus bas le leader s'étalait trop tôt,
+    # saturait le cap segments et la hauteur stagnait à ~200), mais bien EN DEÇÀ du
+    # séculaire — l'aulne est un pionnier à vie moyenne. foliage_halfwidth ÉTROIT (50)
+    # pour la couronne élancée ; racines viables via le spread des latéraux (root_r ≈
+    # cr ≈ 233, ~4,6 plots). Les family_effects (fixation N₂ Frankia) et
+    # asphyxie_tolerance_base sont INDÉPENDANTS de la morphologie → INCHANGÉS (rôle hydro
+    # D61 préservé, vérifié en test). HORS golden.
+    procedural_growth   = True
+    growth_speed        = 1.65        # pionnier rapide (h10 ~680)
+    max_height_cm       = 2500.0      # plafond = dernier point age_curve (100 ans)
+    max_extent_cm       = 550.0
+    auxin_release_scale = 800.0       # tient la flèche de 7 m sans saturer le cap segments
+    foliage_halfwidth   = 50.0        # houppier élancé cr~233 ; racines via spread latéral
     # Fixation N₂ actinorhizienne (Frankia) — même route générique que l'azote de
     # l'ortie/minette. `amount` légèrement au-dessus de la minette (0.04) : l'aulne
     # est un gros améliorateur ligneux. Réparti sur l'empreinte racinaire (cible
