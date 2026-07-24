@@ -10,7 +10,8 @@ from plants.species import (Tomato, Pepper, Bean, Clover, Sunflower, Basil,
                             Carrot, Zucchini, CornSalad, Strawberry, Nettle,
                             Vaccinium, Raspberry, RunningBamboo, SweetViolet, Garlic,
                             Ivy, Jasmine, Wheat, Hemp, Rye, Mugwort, Sphagnum, Drosera,
-                            BursaPastoris, MedicagoLupulina, PoaAnnua, Taraxacum)
+                            BursaPastoris, MedicagoLupulina, PoaAnnua, Taraxacum,
+                            Molene)
 from plants.perennials import (Fig, AppleTree, CherryTree, WalnutTree, OakTree,
                                FirTree, BeechTree, BirchTree, HornbeamTree, Alder)
 
@@ -76,6 +77,11 @@ PLANT_CATALOGUE: dict[str, type] = {
     "minette":        MedicagoLupulina,
     "paturin":        PoaAnnua,
     "pissenlit":      Taraxacum,
+    # Indicatrice de terre malade (sprint MÉMOIRE D'INOCULUM ③) — Molène / bouillon-
+    # blanc (Scrophulariaceae NEUVE) : bisannuelle qui lève sur inoculum élevé (porte
+    # `arch_inoculum`), pas par le gradient de succession. Aussi dans WEED_CATALOGUE
+    # (archétype `disease_indicator`) ; ici pour ses voix (encyclopédie, magazine, maîtrise).
+    "molene":         Molene,
 }
 
 # Catalogue des adventices uniquement (pour la succession)
@@ -84,6 +90,10 @@ WEED_CATALOGUE: dict[str, type] = {
     "nitrogen_fixer": MedicagoLupulina,
     "grass":          PoaAnnua,
     "competitor":     Taraxacum,
+    # Archétype HORS gradient de maturité (sprint MÉMOIRE D'INOCULUM ③) : ne germe
+    # que via la porte de relâche `arch_inoculum` (inoculum du plot élevé), jamais
+    # sur sol sain → golden NEUTRE. Cf. `choisir_archetype` (priorité indicatrice).
+    "disease_indicator": Molene,
 }
 
 PERENNIAL_CATALOGUE: dict[str, type] = {

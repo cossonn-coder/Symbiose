@@ -284,6 +284,19 @@ _ENTREES = [
      "pousser — dans l'acide, dans le vide, dans la faim. Là où la terre ne donne "
      "pas d'azote, le rossolis le prend au ciel, une aile après l'autre. C'est le "
      "secret des lieux pauvres : qui ne peut puiser apprend à chasser."),
+
+    # Molène / bouillon-blanc (sprint MÉMOIRE D'INOCULUM ③) — lore médicinal & théorie
+    # des signatures (voix D, herbiers anciens). Résonne avec le concept « maladie ».
+    ("P37", "D", "maladie", 3, "récompense",
+     "Le bouillon-blanc, herbe à mille vertus, dresse sa hampe laineuse là où la "
+     "terre a été malade — sur les décombres, les friches lasses, les coins que le "
+     "jardinier a trop tourmentés. Les anciens y voyaient un signe : quand la molène "
+     "s'installe, écoute-la, car elle dit que le sol demande à reposer. Ses feuilles "
+     "duveteuses, on les faisait sécher pour les poitrines encombrées, et sa fleur "
+     "jaune, infusée, apaisait les toux de l'hiver — mèche de lampe des pauvres, "
+     "flanelle du bon Dieu, on lui donnait cent noms. Mais sa vertu première n'est "
+     "pas dans la tisane : c'est de pousser sans faiblir là où tout le reste "
+     "pourrit. Elle ne guérit pas la terre — elle la nomme, et laisse le temps faire."),
 ]
 
 # Titres recopiés du doc §7 (gras de chaque entrée), indexés par id — gardés à
@@ -325,6 +338,7 @@ _TITRES = {
     "P34": "Ne comble pas la flaque",
     "P35": "La mousse qui garde tout",
     "P36": "Le rossolis qui chasse",
+    "P37": "L'herbe qui nomme les terres malades",
 }
 
 # `PAGES` = dict id → fiche complète. `ORDRE` = ids dans l'ordre du corpus (tri

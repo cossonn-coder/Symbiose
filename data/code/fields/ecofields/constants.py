@@ -489,6 +489,14 @@ INOC_FROM_DEATH    = 0.3    # coefficient du PULSE de résidu ∝ infection_memo
 # formule strictement inchangée (golden bit-identique — invariant de contrôle du tronçon).
 # PLACEHOLDER §10, calage F5 au banc `rotation_inoculum`.
 INOC_GAIN          = 1.5
+# Porte de RELÂCHE de la molène (tronçon ③). Seuil d'inoculum TOTAL du plot (toutes
+# familles) à partir duquel la niche de l'indicatrice de terre malade (bouillon-blanc)
+# commence à s'ouvrir ; la rampe LISSE (smoothstep) atteint 1.0 au DOUBLE du seuil.
+# En dessous, molène ne lève PAS (facteur ~0) → sur le sol SAIN du smoke (inoculum nul)
+# elle reste absente ⇒ golden NEUTRE. Contrairement aux portes pH/thermique/allélo qui
+# REFERMENT la niche des sensibles, celle-ci l'OUVRE pour la SEULE molène (les autres
+# archétypes restent à 1.0 neutre). PLACEHOLDER §10, calage F5 au banc `rotation_inoculum`.
+INOC_MOLENE_SEUIL  = 0.4
 
 RESEED_RADIUS_CM  = 150.0  # rayon de dispersion du renouvellement (M7)
 NECROMASS_PER_CM  = 0.03   # nécromasse déposée par cm de hauteur à la mort

@@ -204,8 +204,13 @@ def evenements(log: list[str]) -> list[Evenement]:
                 # germination/levée — le moteur n'émet qu'un seul marqueur 🌱
                 # d'avance de stade ; on l'expose en `germination` (le carnet ne
                 # distingue pas finement levée vs germination, doc §5.0).
-                out.append(Evenement("germination", tile_id, pos,
-                                     _CLE_DE_NOM.get(m.group(1).strip()), None))
+                # Cas molène (sprint MÉMOIRE D'INOCULUM ③) : l'indicatrice ne lève
+                # que sur terre viciée (porte `arch_inoculum`) → cause `sol_vicie`
+                # pour gater son entrée sous le concept « maladie » (carnet §5.0) ;
+                # toute autre espèce garde cause None (concept « succession »).
+                cle_germ = _CLE_DE_NOM.get(m.group(1).strip())
+                out.append(Evenement("germination", tile_id, pos, cle_germ,
+                                     "sol_vicie" if cle_germ == "molene" else None))
         elif "🌰" in line:
             m = _RE_REPRO.search(line)
             tag = _RE_TAG.search(line)

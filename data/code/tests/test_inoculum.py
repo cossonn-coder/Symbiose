@@ -161,6 +161,80 @@ def test_couplage_disease_probability():
 
 
 # ---------------------------------------------------------------------------
+# (f) molène : porte de RELÂCHE `arch_inoculum` (tronçon ③)
+# ---------------------------------------------------------------------------
+def test_molene_niche_inoculum():
+    print("\n[f] molène : ne germe QU'À inoculum élevé (porte arch_inoculum)")
+    from fields import SeedBank, SEED_ARCHETYPES
+    from fields.lifecycle import _smoothstep
+    from fields.ecofields.constants import INOC_MOLENE_SEUIL
+
+    # smoothstep : ~0 sur sol sain, →1 au double du seuil (rampe lisse bornée).
+    check("smoothstep = 0 à inoculum nul (sol sain → molène absente)",
+          _smoothstep(0.0, INOC_MOLENE_SEUIL, 2.0 * INOC_MOLENE_SEUIL) == 0.0)
+    check("smoothstep = 1 au double du seuil (terre viciée → niche pleine)",
+          _smoothstep(2.0 * INOC_MOLENE_SEUIL, INOC_MOLENE_SEUIL,
+                      2.0 * INOC_MOLENE_SEUIL) == 1.0)
+
+    sb = SeedBank(2, 2)
+    for a in SEED_ARCHETYPES:                     # plot NU sauf la molène
+        sb.data[0][0][a] = 0.0
+    sb.data[0][0]["disease_indicator"] = 1.0
+    # (a) porte FERMÉE (inoculum nul) → molène absente des candidats
+    fermee = sb.germination_candidates(0, 0, seed=1, week=5, niche=1.0,
+                                       arch_inoculum={"disease_indicator": 0.0})
+    check("(a) porte fermée (inoculum nul) → molène NE germe PAS",
+          "disease_indicator" not in fermee, f"{fermee}")
+    # (b) porte OUVERTE (inoculum > seuil) → molène germe (niche·densité pleines)
+    ouverte = sb.germination_candidates(0, 0, seed=1, week=5, niche=1.0,
+                                        arch_inoculum={"disease_indicator": 1.0})
+    check("(b) porte ouverte (inoculum élevé) → molène germe",
+          "disease_indicator" in ouverte, f"{ouverte}")
+    # arch_inoculum ABSENT ⇒ comportement historique (rétro-compat, golden-safe)
+    hist = sb.germination_candidates(0, 0, seed=1, week=5, niche=1.0)
+    check("arch_inoculum absent ⇒ molène traitée comme un archétype normal",
+          "disease_indicator" in hist, f"{hist}")
+
+
+# ---------------------------------------------------------------------------
+# (g) les 5 VOIX de la molène existent (règle « toute plante = ses 5 voix »)
+# ---------------------------------------------------------------------------
+def test_molene_cinq_voix():
+    print("\n[g] molène : ses 5 voix narratives sont présentes")
+    from plants import PLANT_CATALOGUE
+    from sim.encyclopedie_corpus import FICHES
+    from sim.carnet import CONCEPT_DE, GABARIT
+    from sim.pages_corpus import PAGES
+    from sim.evenements import evenements
+
+    # 1. Encyclopédie — fiche 3 niveaux
+    check("encyclopédie : fiche molène aux 3 niveaux",
+          "molene" in FICHES and set(FICHES["molene"]) == {1, 2, 3})
+    # 2. Carnet — CONCEPT_DE + gabarits pour la levée sur terre viciée
+    check("carnet : (germination, sol_vicie) → concept « maladie »",
+          CONCEPT_DE.get(("germination", "sol_vicie")) == "maladie")
+    check("carnet : gabarits descriptif + interprétatif présents",
+          ("germination", "sol_vicie", "descriptif") in GABARIT
+          and ("germination", "sol_vicie", "interprétatif") in GABARIT)
+    # 3. Pages secrètes — une page de lore rattachée au concept « maladie »
+    check("pages secrètes : une page de concept « maladie » existe",
+          any(p["concept"] == "maladie" for p in PAGES.values()))
+    # 4. Magazine — rattachement à la famille Scrophulariaceae (catalogue maître)
+    check("magazine : molène au catalogue, famille Scrophulariaceae",
+          "molene" in PLANT_CATALOGUE
+          and PLANT_CATALOGUE["molene"].family == "Scrophulariaceae")
+    # 5. Événements — la germination de molène est taguée `sol_vicie` au ledger
+    evs = evenements(["[T0]", "🌱 Molène@(1,1) → [semis]"])
+    molene_evs = [e for e in evs if e.espece == "molene"]
+    check("événements : germination molène → cause sol_vicie",
+          len(molene_evs) == 1 and molene_evs[0].kind == "germination"
+          and molene_evs[0].cause == "sol_vicie", f"{molene_evs}")
+    autre = evenements(["[T0]", "🌱 Pissenlit@(1,1) → [semis]"])
+    check("événements : une AUTRE espèce garde cause None (concept succession)",
+          autre and autre[0].cause is None, f"{autre}")
+
+
+# ---------------------------------------------------------------------------
 # Golden inchangé — le couplage est LIVE (② branché) mais l'accumulation
 # d'inoculum du smoke (max ~0.058 sur 1 plot) ne flippe aucun tirage discret.
 # ---------------------------------------------------------------------------
@@ -185,6 +259,8 @@ if __name__ == "__main__":
     test_purge_epsilon()
     test_repos_neutre()
     test_couplage_disease_probability()
+    test_molene_niche_inoculum()
+    test_molene_cinq_voix()
     test_golden_intact()
     print("\n" + "=" * 64)
     passed = sum(1 for _, ok in _results if ok)

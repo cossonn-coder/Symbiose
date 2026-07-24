@@ -15,7 +15,16 @@ from plants.genetics import clamp_gene, GENE_NAMES, GENE_INIT_SIGMA
 # CONSTANTES — archétypes & pool génétique
 # ---------------------------------------------------------------------------
 
-SEED_ARCHETYPES = ["pioneer", "nitrogen_fixer", "grass", "competitor"]
+# Les 4 archétypes du GRADIENT de succession (rang = maturité du sol) + la molène,
+# indicatrice de terre malade (sprint MÉMOIRE D'INOCULUM ③). La molène est un
+# archétype À PART : elle n'entre PAS dans le gradient de maturité (elle ne germe
+# QUE sur inoculum élevé, via la porte de relâche `arch_inoculum`) → `choisir_archetype`
+# la traite en priorité et calcule son rang cible sur `GRADIENT_ARCHETYPES` seul, si
+# bien que l'AJOUT de "disease_indicator" ne déplace AUCUN choix des 4 classiques
+# (golden INTACT). Appendue en FIN de liste ⇒ l'index des 4 premiers (donc leur bruit
+# de germination `_hash_noise`) est inchangé.
+GRADIENT_ARCHETYPES = ["pioneer", "nitrogen_fixer", "grass", "competitor"]
+SEED_ARCHETYPES = GRADIENT_ARCHETYPES + ["disease_indicator"]
 
 SEED_VIABILITY_LOSS = 0.998   # vieillissement hebdomadaire des graines
 SEED_DISTURBANCE_GAIN = 0.002 # enrichissement par perturbation (pioneer surtout)
@@ -412,7 +421,8 @@ class SeedBank:
                                arch_tolerance: dict | None = None,
                                arch_ph: dict | None = None,
                                arch_temp: dict | None = None,
-                               arch_allelo: dict | None = None) -> list[str]:
+                               arch_allelo: dict | None = None,
+                               arch_inoculum: dict | None = None) -> list[str]:
         """
         Tirage déterministe des archétypes qui germent sur ce plot.
         hash(seed, week, r, c) < niche * seed_density → germination.
@@ -445,6 +455,16 @@ class SeedBank:
         Un fort chargement d'allélochimiques referme la niche des candidats sensibles
         (pas de levée) ; champ nul ⇒ `f_allelo = 1` (rampe(0)=0) ⇒ golden INTACT tant
         qu'aucun émetteur ne charge le champ (tronçon ⑤). Absent ⇒ comportement historique.
+
+        Porte de RELÂCHE de la molène (sprint MÉMOIRE D'INOCULUM ③) : si `arch_inoculum`
+        est fourni (map archétype → facteur), la niche est multipliée par ce facteur —
+        même mécanique que `arch_ph`/`arch_temp`, mais INVERSE dans l'intention : seul
+        l'archétype `disease_indicator` porte `smoothstep(inoculum.total, seuil)` (∈[0,1],
+        ~0 sur sol sain, →1 sur terre durablement viciée), tous les autres valent 1.0. La
+        molène ne LÈVE donc que sur inoculum élevé ; elle n'a AUCUN effet sur la niche des
+        autres archétypes. Inoculum nul (golden) ⇒ facteur `disease_indicator` = 0 → elle
+        ne germe pas, et 1.0 partout ailleurs ⇒ germination férale STRICTEMENT inchangée.
+        Absent ⇒ comportement historique.
         """
         candidates = []
         for archetype in SEED_ARCHETYPES:
@@ -461,6 +481,8 @@ class SeedBank:
                 niche_eff *= arch_temp.get(archetype, 1.0)
             if arch_allelo:
                 niche_eff *= arch_allelo.get(archetype, 1.0)
+            if arch_inoculum:
+                niche_eff *= arch_inoculum.get(archetype, 1.0)
             threshold = niche_eff * density
             noise = _hash_noise(seed, week * 7 + SEED_ARCHETYPES.index(archetype),
                                 r, c)

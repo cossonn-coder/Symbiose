@@ -110,6 +110,12 @@ CONCEPT_DE: dict[tuple[str, str | None], str] = {
     # qu'il n'est pas maîtrisé). Le joueur y apprend le flux insectes→azote et la
     # niche du manque comblé par la chasse (§5, doc voix).
     ("carnivorie", None):         "carnivorie",
+    # Levée de la molène sur terre viciée (sprint MÉMOIRE D'INOCULUM ③) : l'indicatrice
+    # ne germe QUE sur inoculum élevé (porte `arch_inoculum`) → sa germination porte la
+    # cause `sol_vicie` (posée par `evenements.py`) et gate le registre sous le concept
+    # NEUF « maladie ». Concept propre au carnet (comme carnivorie/sénescence, hors
+    # `encyclopedie_types.CONCEPTS`) : reste descriptif tant que non maîtrisé.
+    ("germination", "sol_vicie"): "maladie",
 }
 
 # Concept de la « levée (reprise) » : doc §5.0 dit « = la cause (eau / lumière /
@@ -142,6 +148,12 @@ _I = "interprétatif"
 GABARIT: dict[tuple[str, str | None, str], str] = {
     ("germination", None, _D): "Une pousse de {e} a levé {l}.",
     ("germination", None, _I): "{e} a germé {l} : le sol a enfin atteint sa chaleur de réveil — et mes lignées semblent lever un peu plus tôt chaque année.",
+
+    # Molène sur terre viciée (sprint MÉMOIRE D'INOCULUM ③) — descriptif = ce qu'on VOIT
+    # (elle prospère là où le reste peine, philo #5) ; interprétatif = la cause comprise
+    # au seuil « maladie » (le sol chargé d'inoculum qu'il faut faire reposer/tourner).
+    ("germination", "sol_vicie", _D): "Une rosette laineuse de {e} s'est installée {l}, là où le reste peine.",
+    ("germination", "sol_vicie", _I): "{e} lève {l} : elle prospère sur cette terre lasse que les maladies passées ont chargée — le signe qu'il faut la laisser reposer, ou y tourner les familles.",
 
     ("stagnation", "sec", _D): "Le plant de {e} {l} fait grise mine, feuilles molles.",
     ("stagnation", "sec", _I): "Encore la soif {l} — ce sol draine trop vite pour {e}, je le sais maintenant.",

@@ -399,6 +399,17 @@ FICHES: dict[str, dict[int, str]] = {
            "ressources de nectar pour les abeilles au sortir de l'hiver. Indicatrice de "
            "sol tassé.",
     },
+    "molene": {
+        1: "Grande rosette de feuilles épaisses couvertes d'un duvet blanc laineux ; "
+           "l'an suivant, une haute hampe dressée constellée de fleurs jaunes.",
+        2: "Bisannuelle pionnière (rosette l'an 1, hampe florale et graines l'an 2, puis "
+           "elle meurt) ; frugale, elle s'installe sur les sols nus, remués ou fatigués. "
+           "Feuilles pectorales autrefois récoltées.",
+        3: "Indicatrice de terre viciée : elle colonise les plots que des maladies "
+           "passées ont chargés, là où les cultures peinent — sa venue signale un sol à "
+           "laisser reposer ou à tourner. Peu sujette aux pathogènes du sol, elle tient "
+           "où d'autres tombent ; sa hampe nourrit fort les butineurs.",
+    },
 
     # === Arbres pérennes ===
     "figuier": {

@@ -73,8 +73,20 @@ verticillium, fonte). Prive le jeu de la **pédagogie de rotation** (philo #2/#6
   (`INOC_GAIN`), `ecofields/sol.py` (signature + terme inoculum),
   `sim/effects/perturbations.py` (2 appels), `sim/effects/resolution.py` (1 appel),
   `tests/test_inoculum.py` (bloc [e] couplage).
-- ③ molène (espèce + `arch_inoculum` + 5 voix) — golden NEUTRE visé (re-figeage
-  localisé annoncé SI l'ajout catalogue déplace un tirage smoke).
+- ③ **CLOS 2026-07-24** — molène (*Verbascum thapsus*, Scrophulariaceae, bisannuelle)
+  ajoutée au catalogue + archétype `disease_indicator` (HORS gradient) + porte de RELÂCHE
+  `arch_inoculum` (`germination_candidates`) + 5 voix. **golden INTACT `57c166d8…`**
+  (NEUTRE atteint, PAS de re-figeage : `arch_inoculum` gate molène à 0 sur sol sain, et
+  `choisir_archetype` calcule son rang sur `GRADIENT_ARCHETYPES` seul → l'ajout du 5ᵉ
+  archétype ne déplace AUCUN choix des 4 classiques). `test_inoculum.py` 32/32.
+  Fichiers : `ecofields/constants.py` (`INOC_MOLENE_SEUIL`), `seedbank.py`
+  (`GRADIENT_ARCHETYPES`+`disease_indicator`, param `arch_inoculum`), `fields/__init__.py`
+  (export), `plants/species/adventices.py` (`Molene`), `plants/species/__init__.py`,
+  `plants/catalogue.py` (PLANT+WEED), `sim/succession.py` (build+pass `arch_inoculum`,
+  priorité molène dans `choisir_archetype`), `sim/encyclopedie_corpus.py` (fiche),
+  `sim/carnet.py` (CONCEPT_DE+GABARIT concept « maladie »), `sim/evenements.py`
+  (germination molène → cause `sol_vicie`), `sim/pages_corpus.py` (P37),
+  `tests/{test_inoculum,test_pages,test_encyclopedie}.py`.
 - ④ ménage C# (`PathogenPressure`/`TickPathogen` morts supprimés) + vue Godot
   (snapshot inoculum + heatmap F6 + banc F5 `rotation_inoculum`) — golden INTACT.
 
@@ -84,7 +96,34 @@ O(plots) scatter/tick, décroissance ; négligeable. Zéro RNG (accumulateur
 déterministe). Golden RE-FIGÉ maîtrisé (proba de maladie change).
 
 ## §REPRISE
-Tronçons ①+② **CLOS** (golden INTACT `57c166d8…`, `test_inoculum.py` 20/20).
+Tronçons ①+②+③ **CLOS** (golden INTACT `57c166d8…`, `test_inoculum.py` 32/32).
+
+**③ — molène (`03_molene.md`).** Espèce *Verbascum thapsus* (bisannuelle, rosette→hampe,
+monocarpique) ajoutée en `plants/species/adventices.py`, clé `"molene"` (PLANT_CATALOGUE,
+pour les voix) + archétype `"disease_indicator"` (WEED_CATALOGUE). Nouvel archétype appendu
+en FIN de `SEED_ARCHETYPES` ; `GRADIENT_ARCHETYPES` (= les 4 classiques) isolé pour que
+`choisir_archetype` calcule son rang cible SANS l'indicatrice → aucun choix des 4 déplacé.
+Porte de RELÂCHE `arch_inoculum` dans `germination_candidates` (patron `arch_ph`) :
+`smoothstep(inoculum.total, INOC_MOLENE_SEUIL, 2·SEUIL)` sur le SEUL `disease_indicator`,
+1.0 partout ailleurs. `succession.py` construit et passe le dict ; `choisir_archetype`
+PRIORISE molène si candidate (sa présence = terre viciée). 5 voix : encyclopédie (fiche
+3 niveaux), carnet (concept NEUF « maladie » via `CONCEPT_DE`/`GABARIT` + cause `sol_vicie`
+posée sur la germination molène dans `evenements.py`), pages secrètes (P37, lore médicinal),
+magazine (famille Scrophulariaceae, automatique via catalogue), événements (marqueurs de
+cycle au ledger). Concept « maladie » = carnet-interne (comme carnivorie), PAS dans
+`encyclopedie_types.CONCEPTS` → n'a PAS touché le corpus concept (test d'alignement intact).
+
+**GOLDEN : INTACT `57c166d8…`, NON re-figé.** NEUTRE atteint : sur le sol sain du smoke
+l'inoculum reste nul → `arch_inoculum[disease_indicator]=0` → molène jamais candidate → aucun
+tirage déplacé. Vérifié aussi : suites `test_encyclopedie` (65/68 = 3 échecs geste/outil
+PRÉEXISTANTS, hors sujet), `test_pages` 64/64, `test_carnet` 19/19, `test_biennial`,
+`test_magazine`, `test_evenements`, `test_diversite_fondatrice`, `test_competition`,
+`test_paillage`, `test_maitrise_detection`, `test_genetique` — toutes vertes.
+
+**Prochaine étape = tronçon ④** (`04_menage_cs_vue.md` s'il existe, sinon le kickoff ④) :
+ménage C# (`PathogenPressure`/`TickPathogen`/`Summary("pathogen")`/lambda indicatrice morts
+dans `core/EcoFields.cs`+`PlantCatalogue.Indicatrices.cs`) + vue Godot (snapshot `inoculum`,
+heatmap F6, banc F5 `rotation_inoculum`) — golden INTACT, `dotnet build` à garder vert.
 
 **② — couplage LIVE (`02_couplage_maladie.md`).** `disease_probability(r,c,base,
 family=None)` lit désormais `self.inoculum.at(r,c,family)` et amplifie

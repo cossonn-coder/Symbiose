@@ -14,10 +14,12 @@ from __future__ import annotations
 
 from constants import PLOT_CM
 from plants import WEED_CATALOGUE, PLANT_CATALOGUE, PERENNIAL_CATALOGUE
-from fields import SEED_ARCHETYPES, _hash_noise, founder_genes, form_seed_at
+from fields import (SEED_ARCHETYPES, GRADIENT_ARCHETYPES, _hash_noise,
+                    founder_genes, form_seed_at)
+from fields.lifecycle import _smoothstep
 from fields.ecofields import (bell, T_GERM_FLOOR, GERM_GENE_SHIFT,
                               COUVERTURE_ADVENTICE_SEUIL, PAILLAGE_GERM_SEUIL,
-                              ALLELO_GERM_K)
+                              ALLELO_GERM_K, INOC_MOLENE_SEUIL)
 from sim.capacite import recrutement_bloque
 
 # Vis A (sprint PERF ③) — raideur de la réponse graduée « couverture → germination
@@ -119,10 +121,19 @@ def choisir_archetype(candidates: list[str],
 
     Filet conservé : sur sol pauvre en azote (fertilite < 0.3), la fixatrice
     prime si elle a germé — biologiquement, l'azote limitant la sélectionne.
+
+    Priorité molène (sprint MÉMOIRE D'INOCULUM ③) : `disease_indicator` n'est un
+    candidat QUE si la porte `arch_inoculum` s'est ouverte (inoculum du plot élevé) —
+    sa seule présence signale une terre viciée, elle prime donc sur le gradient (elle
+    prospère là où les autres tombent). Le rang cible se calcule sur `GRADIENT_ARCHETYPES`
+    seul (les 4 classiques) → l'ajout de l'indicatrice ne déplace AUCUN choix des 4
+    (golden INTACT) ; elle est de toute façon absente des candidats sur sol sain.
     """
+    if "disease_indicator" in candidates:
+        return "disease_indicator"
     if fertilite < 0.3 and "nitrogen_fixer" in candidates:
         return "nitrogen_fixer"
-    rang_cible = soil_deep * (len(SEED_ARCHETYPES) - 1)
+    rang_cible = soil_deep * (len(GRADIENT_ARCHETYPES) - 1)
     return min(candidates,
                key=lambda a: (abs(SEED_ARCHETYPES.index(a) - rang_cible),
                               -SEED_ARCHETYPES.index(a)))
@@ -438,11 +449,22 @@ def succession(game_state: dict, tile, eco, week: int) -> list[str]:
                                         cls.allelopathie_sensibilite)
                            for a, cls in WEED_CATALOGUE.items()}
 
+            # Porte de RELÂCHE de la molène (sprint MÉMOIRE D'INOCULUM ③) : SEUL
+            # l'archétype `disease_indicator` (bouillon-blanc, indicatrice de terre
+            # malade) voit sa niche s'ouvrir ∝ inoculum TOTAL du plot ; tous les autres
+            # restent à 1.0 neutre (elle ne REFERME jamais la niche des autres — patron
+            # inverse de arch_ph/temp/allelo). smoothstep(total, SEUIL, 2·SEUIL) : ~0 sur
+            # sol sain (inoculum nul → molène ne lève pas → golden INTACT), →1 sur un plot
+            # durablement vicié. Rampe bornée au double du seuil (§10, calage F5).
+            arch_inoculum = {a: 1.0 for a in WEED_CATALOGUE}
+            arch_inoculum["disease_indicator"] = _smoothstep(
+                eco.inoculum.total(r, c), INOC_MOLENE_SEUIL, 2.0 * INOC_MOLENE_SEUIL)
+
             # Priorité écologique : sol pauvre → fixatrice, sinon ordre standard
             candidates = eco.seed_bank.germination_candidates(
                 r, c, seed, week, niche, light=light,
                 arch_tolerance=arch_tolerance, arch_ph=arch_ph, arch_temp=arch_temp,
-                arch_allelo=arch_allelo
+                arch_allelo=arch_allelo, arch_inoculum=arch_inoculum
             )
 
             if not candidates:

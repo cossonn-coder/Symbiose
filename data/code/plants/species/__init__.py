@@ -28,7 +28,7 @@ Orientation :
                         NEUVE) → paille (sprint équilibre invasion ⑤)
 """
 
-from .adventices import BursaPastoris, MedicagoLupulina, PoaAnnua, Taraxacum
+from .adventices import BursaPastoris, MedicagoLupulina, PoaAnnua, Taraxacum, Molene
 from .cultivees import Tomato, Pepper, Bean, Clover, Sunflower, Basil
 from .compagnes import Yarrow, Phacelia, Borage, Comfrey, Mustard, Garlic
 from .aromatiques import Thyme, Lavender, Mint
@@ -39,7 +39,7 @@ from .grimpantes import Ivy, Jasmine
 from .mulch_sources import Wheat, Hemp, Rye
 
 __all__ = [
-    "BursaPastoris", "MedicagoLupulina", "PoaAnnua", "Taraxacum",
+    "BursaPastoris", "MedicagoLupulina", "PoaAnnua", "Taraxacum", "Molene",
     "Tomato", "Pepper", "Bean", "Clover", "Sunflower", "Basil",
     "Yarrow", "Phacelia", "Borage", "Comfrey", "Mustard", "Garlic",
     "Thyme", "Lavender", "Mint",

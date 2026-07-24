@@ -225,3 +225,74 @@ class Taraxacum(PlantBase):
             "description": "Floraison mellifère familiale (Asteraceae)"
         }
     ]
+
+
+class Molene(PlantBase):
+    """
+    Verbascum thapsus — Bouillon-blanc / Molène (Scrophulariaceae).
+    Archétype `disease_indicator` (sprint MÉMOIRE D'INOCULUM ③) : bisannuelle
+    pionnière INDICATRICE de terre malade persistante. Elle ne lève PAS par le
+    gradient de maturité du sol mais par la porte de RELÂCHE `arch_inoculum` —
+    elle colonise les plots durablement chargés en inoculum (là où les cultures
+    tombent, elle prospère). Rosette laineuse l'an 1, haute hampe florale jaune
+    l'an 2 (montaison monocarpique), puis mort. Médicinale (feuilles pectorales).
+
+    Peu sensible aux pathogènes du sol (`fungal_susceptibility` basse) : c'est
+    justement ce qui lui permet de tenir là où l'inoculum accable les autres.
+    """
+    family = "Scrophulariaceae"
+    genus  = "Verbascum"
+    name   = "Molène"
+    resilience_base = 1.2          # S — pionnière rustique des sols pauvres/remués, rosette coriace
+    resistance_ecrasement  = 0.5   # hampe cassable, rosette laineuse survit (volet 2 §4)
+    stimulation_ecrasement = 0.2
+    rarity = "Indicatrice"
+    keywords = ["Indicatrice", "Médicinale", "Bisannuelle"]
+    silhouette = "rosette"         # rosette laineuse plaquée l'an 1 ; HORS golden → neutre
+    space_tolerance_weeks = 6
+    life_cycle = "biennial"        # rosette l'an 1, hampe l'an 2, mort monocarpique (gate ③)
+    winter_strategy = "dormant"    # passe l'hiver de l'an 1 en rosette
+    archetype = "disease_indicator"
+    t_germ_opt = 15.0              # pionnière de sol nu remué : lève au réchauffement (fenêtre ③)
+    t_germ_tol = 12.0              # large → opportuniste sur terrain perturbé/vicié
+    fungal_susceptibility = 0.2    # BASSE — prospère là où l'inoculum abat les autres (rôle indicateur)
+    reproduction_rate = 0.07       # forte production de graines minuscules, banque durable
+    foliage_density = 0.40
+    longevity_years = 2
+    growth_stages = [
+        GrowthStage(
+            name="semis", duration_weeks=3, strate="sol",
+            vigueur_cost=0, effects=[], canopy_height=3,
+        ),
+        # An 1 : rosette laineuse plaquée — PLAFOND tant que age_years < 1.0 (gate
+        # annuel des bisannuelles). Aucun effet `floraison` → PAS le stade de montaison.
+        GrowthStage(
+            name="rosette", duration_weeks=6, strate="basse",
+            vigueur_cost=0, effects=[], canopy_height=20, canopy_radius=22,
+            root_radius=25,   # pivot qui décompacte le sol vicié
+        ),
+        # An 2 : montaison. 1er stade fleuri → stade de MONTAISON repéré par le gate.
+        GrowthStage(
+            name="hampe", duration_weeks=6, strate="haute",
+            vigueur_cost=1, canopy_height=150, canopy_radius=20,
+            effects=[
+                {
+                    "type": "floraison",
+                    "action": "add_rondelle", "variable": "pollinisateur",
+                    "amount": 1,
+                    "description": "Haute hampe jaune — mellifère, nourrit l'abeille"
+                },
+            ],
+        ),
+        GrowthStage(
+            name="mature", duration_weeks=4, strate="haute",
+            vigueur_cost=0, canopy_height=160,
+            effects=[
+                {
+                    "type": "recolte",
+                    "action": "score", "axis": "biodiversite", "amount": 1,
+                    "description": "Montée en graines — banque durable, biodiversité"
+                },
+            ],
+        ),
+    ]
