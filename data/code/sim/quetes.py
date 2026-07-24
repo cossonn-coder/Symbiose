@@ -43,8 +43,16 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from plants.catalogue import PLANT_CATALOGUE, PERENNIAL_CATALOGUE
+from sim import maitrise, pages, vigueur
+from sim.seeds import Seed
 
 CLE_QUETES = "quetes"
+
+# Plafond de quêtes ACTIVES simultanées (garde-fou #6, conception §4) : tant que
+# le plafond est plein, aucune nouvelle lettre n'arrive — ce qui tue l'effet
+# « checklist » et préserve l'apprentissage diffus. Les quêtes ACCOMPLIES
+# (`semaine_fin` posé) ne comptent PAS (le plafond borne le présent, pas l'histoire).
+PLAFOND_QUETES_ACTIVES = 6
 
 
 @dataclass(frozen=True)
@@ -57,15 +65,18 @@ class Quete:
       - `condition` : tuple déclaratif `(tag, ...)` — pour ① le seul tag actif est
         `"recolte_cumulee"` : `("recolte_cumulee", geste, quantite, cible)` ;
       - `recompense` : POSÉ ici, traité aux tronçons ③/④ (opaque pour ①) ;
-      - `declencheur` : POSÉ ici, traité au tronçon ③ (opaque pour ①).
+      - `declencheur` : condition d'OUVERTURE (③) — `None` (d'emblée),
+        `("palier", objet, seuil)` ou `("saison", semaine_min)` ;
+      - `texte_lettre` : corps épistolaire (③, V1), affiché par le panneau ⑤.
     `recompense`/`declencheur` sont typés `object` (catalogue déclaratif ouvert,
-    V3) : ① ne les interprète pas, il les transporte."""
+    V3) : ① ne les interprète pas, il les transporte ; ③ les traite."""
 
     id: str
     donneur: str
     condition: tuple
     recompense: object = None
     declencheur: object = None
+    texte_lettre: str = ""      # corps épistolaire (V1) ; vide pour les quêtes de test
 
 
 def _catalogue() -> dict:
@@ -332,3 +343,106 @@ def avancement(game_state: dict, quete_id: str) -> str:
         return evalr(cond, game_state)[1]
     ratio = rec["progression"] / cond[2] if cond[2] > 0 else 1.0   # recolte_cumulee
     return _phrase(ratio, _BANDES_RECOLTE)
+
+
+# --- ③ Atteignabilité : une lettre peut rêver d'une espèce absente -----------
+def _cible_de_condition(condition: tuple) -> str:
+    """La CIBLE (clé d'espèce) portée par une condition. Position selon la famille :
+    `recolte_cumulee` la porte en index 3, les conditions d'état en index 1."""
+    return condition[3] if condition[0] == "recolte_cumulee" else condition[1]
+
+
+def est_atteignable(condition: tuple) -> bool:
+    """Vrai ssi l'espèce visée existe au catalogue. Une lettre qui rêve du « kiwi »
+    (grimpante absente, D26/F3) est INATTEIGNABLE : elle reste ouverte sans jamais
+    s'accomplir (#4 — pas d'échec), et le panneau ⑤ peut le signaler diégétiquement.
+    Read-only, aucun effet."""
+    return _classe_cible(_cible_de_condition(condition)) is not None
+
+
+# --- ③ Déclenchement déterministe (palier maîtrise / jalon saison, zéro RNG) --
+def _declencheur_satisfait(game_state: dict, player: str, declencheur) -> bool:
+    """La condition d'OUVERTURE d'une lettre est-elle remplie ? DÉTERMINISTE, aucun
+    `random` (philo #3) :
+      - `None` → toujours (la lettre arrive d'emblée) ;
+      - `("palier", objet, seuil)` → `maitrise.palier(...) >= seuil` (D12.2) ;
+      - `("saison", semaine_min)` → semaine courante `>= semaine_min`.
+    Un déclencheur inconnu reste muet (`False`) — jamais d'ouverture par défaut."""
+    if declencheur is None:
+        return True
+    tag = declencheur[0]
+    if tag == "palier":
+        _t, objet, seuil = declencheur
+        return maitrise.palier(game_state, player, objet) >= seuil
+    if tag == "saison":
+        _t, semaine_min = declencheur
+        return game_state.get("week", 0) >= semaine_min
+    return False
+
+
+def evaluer_declencheurs(game_state: dict, player: str) -> list:
+    """Ouvre les lettres du CORPUS dont le déclencheur est satisfait, dans la limite
+    du PLAFOND de quêtes actives (#6). À appeler HORS tick (passage de saison) —
+    jamais dans la boucle moteur. DÉTERMINISTE : parcours des `id` TRIÉS, arrêt net
+    dès le plafond atteint (les lettres restantes attendent leur tour → file stable).
+    Une lettre déjà posée (active OU accomplie) n'est JAMAIS reposée. Renvoie les
+    ids ouverts (ordre d'ouverture). No-op pour le golden (jamais appelé sans joueur).
+
+    Import LOCAL du corpus (`quetes_corpus` importe `Quete` d'ici → dépendance
+    inverse résolue à l'appel, pas au chargement)."""
+    from sim.quetes_corpus import QUETES_CORPUS
+    reg = game_state.get(CLE_QUETES, {})
+    actives = sum(1 for r in reg.values() if r["semaine_fin"] is None)
+    ouverts: list = []
+    for qid in sorted(QUETES_CORPUS):
+        if actives + len(ouverts) >= PLAFOND_QUETES_ACTIVES:
+            break                              # plafond plein → plus rien n'arrive
+        if qid in reg:
+            continue                           # déjà posée (active ou accomplie)
+        if _declencheur_satisfait(game_state, player, QUETES_CORPUS[qid].declencheur):
+            ajouter_quete(game_state, QUETES_CORPUS[qid])
+            ouverts.append(qid)
+    return ouverts
+
+
+# --- ③ Récompenses SIMPLES à l'accomplissement (V3) --------------------------
+def _appliquer_recompense(game_state: dict, player: str, recompense) -> None:
+    """Verse UNE récompense simple (V3) — appelée à l'accomplissement, hors tick.
+    Aucun buff plante (#2) : on ne touche QUE l'inventaire/état JOUEUR via les API
+    EXISTANTES (banque de graines, pages, Vigueur D11, maîtrise D12), jamais un canal
+    inventé. `None` = plaisir pur → no-op. Une banque de graines absente (contexte
+    minimal) fait échouer silencieusement le canal `graine` (pas de destination)."""
+    if recompense is None:
+        return
+    tag = recompense[0]
+    if tag == "graine":
+        banque = game_state.get("player_seed_bank")
+        if banque is not None:
+            banque.add(Seed(species=recompense[1]))
+    elif tag == "vigueur":
+        vigueur.gain(game_state, player, recompense[1])
+    elif tag == "maitrise":
+        _t, objet, poids = recompense
+        maitrise.enregistrer_preuve(game_state, player, objet, poids)
+    elif tag == "page":
+        pages.reveler_page(game_state, player, "fouille")
+
+
+def remettre_recompenses(game_state: dict, player: str) -> list:
+    """Verse les récompenses des quêtes ACCOMPLIES pas encore honorées. À appeler
+    HORS tick (passage de saison / ouverture du panneau), APRÈS `notifier_geste` /
+    `evaluer_etat` qui clôturent. IDEMPOTENT : un drapeau `recompense_versee` empêche
+    tout double versement (appels répétés inoffensifs). DÉTERMINISTE (ids triés).
+    Renvoie les ids honorés. No-op strict sans quête (opt-in) → golden intact."""
+    reg = game_state.get(CLE_QUETES)
+    if not reg:
+        return []
+    honorees: list = []
+    for qid in sorted(reg):
+        rec = reg[qid]
+        if rec["semaine_fin"] is None or rec.get("recompense_versee"):
+            continue
+        _appliquer_recompense(game_state, player, rec["quete"].recompense)
+        rec["recompense_versee"] = True
+        honorees.append(qid)
+    return honorees

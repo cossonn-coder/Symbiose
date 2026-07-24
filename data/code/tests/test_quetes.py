@@ -239,8 +239,145 @@ def test_evaluer_etat_neutre():
           not Q.est_accomplie(gs, "q"))
 
 
+# ---------------------------------------------------------------------------
+# 11. Déclenchement : palier de maîtrise ouvre la bonne lettre
+# ---------------------------------------------------------------------------
+
+def test_declencheur_palier():
+    print("\n[11] déclencheur palier : lavande palier 1 ouvre la lettre lavande")
+    from sim import maitrise
+    gs = {"week": 0, "log": []}
+    ouverts = Q.evaluer_declencheurs(gs, "j")
+    check("sans maîtrise, la lettre lavande (palier lavande 1) reste fermée",
+          "lettre_lavande_amelie" not in ouverts, f"ouverts={ouverts}")
+    check("la lettre d'emblée (déclencheur None) s'ouvre",
+          "lettre_cageot_tomates" in ouverts)
+    maitrise.decouvrir(gs, "j", "lavande")               # palier 0→1
+    ouverts2 = Q.evaluer_declencheurs(gs, "j")
+    check("lavande palier 1 → la lettre lavande s'ouvre",
+          "lettre_lavande_amelie" in ouverts2, f"ouverts2={ouverts2}")
+    check("une lettre déjà ouverte n'est pas reposée",
+          "lettre_cageot_tomates" not in ouverts2)
+
+
+# ---------------------------------------------------------------------------
+# 12. Déclenchement : jalon de saison
+# ---------------------------------------------------------------------------
+
+def test_declencheur_saison():
+    print("\n[12] déclencheur saison : tournesol s'ouvre à partir de la semaine 4")
+    gs = {"week": 2, "log": []}
+    check("semaine 2 < 4 → tournesol fermé",
+          "lettre_tournesol_geant" not in Q.evaluer_declencheurs(gs, "j"))
+    gs = {"week": 5, "log": []}
+    check("semaine 5 ≥ 4 → tournesol ouvert",
+          "lettre_tournesol_geant" in Q.evaluer_declencheurs(gs, "j"))
+
+
+# ---------------------------------------------------------------------------
+# 13. Plafond : aucune lettre n'arrive quand le plafond est plein
+# ---------------------------------------------------------------------------
+
+def test_plafond_bloque():
+    print("\n[13] plafond plein → la (N+1)ᵉ lettre n'arrive pas")
+    gs = {"week": 0, "log": []}
+    # Sature le registre de PLAFOND quêtes actives factices (ids hors corpus).
+    for i in range(Q.PLAFOND_QUETES_ACTIVES):
+        Q.ajouter_quete(gs, Q.Quete(id=f"factice_{i}", donneur="M",
+                        condition=("recolte_cumulee", "recolter", 1, "tomate")))
+    ouverts = Q.evaluer_declencheurs(gs, "j")
+    check("plafond plein → aucune lettre du corpus ne s'ouvre",
+          ouverts == [], f"ouverts={ouverts}")
+    check("aucune lettre du corpus n'a été posée",
+          all(qid.startswith("factice_") for qid in gs["quetes"]))
+
+
+# ---------------------------------------------------------------------------
+# 14. Déterminisme : même état → même séquence d'ouverture
+# ---------------------------------------------------------------------------
+
+def test_declenchement_deterministe():
+    print("\n[14] même état → même séquence de lettres")
+    a = Q.evaluer_declencheurs({"week": 6, "log": []}, "j")
+    b = Q.evaluer_declencheurs({"week": 6, "log": []}, "j")
+    check("séquence d'ouverture reproductible", a == b, f"a={a} b={b}")
+    check("triée par id (déterminisme)", a == sorted(a), f"a={a}")
+
+
+# ---------------------------------------------------------------------------
+# 15. Récompense graine : la banque est créditée, une seule fois
+# ---------------------------------------------------------------------------
+
+def test_recompense_graine():
+    print("\n[15] récompense graine → banque créditée (idempotent)")
+    from sim.seeds import PlayerSeedBank
+    gs = {"week": 1, "log": [], "player_seed_bank": PlayerSeedBank()}
+    q = Q.Quete(id="q_g", donneur="Léa",
+                condition=("recolte_cumulee", "recolter", 1, "tournesol"),
+                recompense=("graine", "tournesol"))
+    Q.ajouter_quete(gs, q)
+    avant = gs["player_seed_bank"].count("tournesol")
+    Q.notifier_geste(gs, "j", "recolter", _FakePlante("tournesol"))  # accomplit
+    Q.remettre_recompenses(gs, "j")
+    check("banque +1 graine de tournesol",
+          gs["player_seed_bank"].count("tournesol") == avant + 1)
+    Q.remettre_recompenses(gs, "j")                                  # rappel
+    check("récompense versée une seule fois (idempotent)",
+          gs["player_seed_bank"].count("tournesol") == avant + 1)
+
+
+# ---------------------------------------------------------------------------
+# 16. Récompense Vigueur : crédit joueur (pas un buff plante)
+# ---------------------------------------------------------------------------
+
+def test_recompense_vigueur():
+    print("\n[16] récompense vigueur → crédit joueur")
+    from sim import vigueur
+    gs = {"week": 1, "log": []}
+    vigueur.spend(gs, "j", 50.0)                     # descend sous le plafond
+    avant = vigueur.ensure_player(gs, "j")["courante"]
+    q = Q.Quete(id="q_v", donneur="M",
+                condition=("recolte_cumulee", "recolter", 1, "tomate"),
+                recompense=("vigueur", 30.0))
+    Q.ajouter_quete(gs, q)
+    Q.notifier_geste(gs, "j", "recolter", _FakePlante("tomate"))
+    Q.remettre_recompenses(gs, "j")
+    check("Vigueur créditée de +30",
+          vigueur.ensure_player(gs, "j")["courante"] == avant + 30.0,
+          f"avant={avant} après={vigueur.ensure_player(gs, 'j')['courante']}")
+
+
+# ---------------------------------------------------------------------------
+# 17. Atteignabilité : une lettre peut viser une espèce absente (kiwi, D26)
+# ---------------------------------------------------------------------------
+
+def test_est_atteignable():
+    print("\n[17] est_atteignable : kiwi non, tomate oui")
+    check("cible kiwi (absente) → inatteignable",
+          not Q.est_atteignable(("hauteur_min", "kiwi", 5.0)))
+    check("cible tomate (récolte) → atteignable",
+          Q.est_atteignable(("recolte_cumulee", "recolter", 3, "tomate")))
+
+
+# ---------------------------------------------------------------------------
+# 18. remettre_recompenses : opt-in strict + plaisir pur (None) sans effet
+# ---------------------------------------------------------------------------
+
+def test_remettre_opt_in():
+    print("\n[18] remettre_recompenses : opt-in + plaisir pur no-op")
+    gs = {"week": 1, "log": []}
+    check("aucune quête → no-op, aucune clé créée",
+          Q.remettre_recompenses(gs, "j") == [] and "quetes" not in gs)
+    q = Q.Quete(id="q_p", donneur="M",
+                condition=("recolte_cumulee", "recolter", 1, "tomate"))  # recompense None
+    Q.ajouter_quete(gs, q)
+    Q.notifier_geste(gs, "j", "recolter", _FakePlante("tomate"))
+    check("plaisir pur (None) → quête honorée sans effet",
+          Q.remettre_recompenses(gs, "j") == ["q_p"])
+
+
 def main():
-    print("=== test_quetes (D79 ①②) ===")
+    print("=== test_quetes (D79 ①②③) ===")
     test_accomplissement_et_evenement()
     test_autre_espece_ignoree()
     test_autre_verbe_ignore()
@@ -251,6 +388,14 @@ def main():
     test_nombre_vivant_min()
     test_cible_absente()
     test_evaluer_etat_neutre()
+    test_declencheur_palier()
+    test_declencheur_saison()
+    test_plafond_bloque()
+    test_declenchement_deterministe()
+    test_recompense_graine()
+    test_recompense_vigueur()
+    test_est_atteignable()
+    test_remettre_opt_in()
 
     total = len(_results)
     ok = sum(1 for _, c in _results if c)

@@ -30,8 +30,21 @@ pour `/sprint-auto sprint_quetes`. Golden INCHANGÉ sur les 5 tronçons.
   `_consigner_accomplissement` généralisé via `_decrire_condition` (message ①
   inchangé). Tests `tests/test_quetes.py` 25/25 (5 suites d'état ajoutées).
   **Golden INCHANGÉ** `57c166d8…` (évaluation opt-in hors tick). LDC 161 (🟢).
-- ③ `03_declenchement_habillage.md` — déclenchement déterministe (maîtrise/saison)
-  + table `quetes_corpus.py` + voix lettres + plafond #6 + récompenses simples.
+- ③ `03_declenchement_habillage.md` — **FAIT (2026-07-24).** Corpus déclaratif
+  `sim/quetes_corpus.py` (6 LETTRES anonymes V1, chaleureuses/non-directives ;
+  couvre les 2 familles de conditions, les 5 récompenses simples, les 3 formes de
+  déclencheur ; une lettre vise le kiwi = cible inatteignable assumée F3). Champ
+  `Quete.texte_lettre` ajouté (défaut `""`, ①② intacts). Nouvelle API `sim/quetes.py`
+  (hors tick, opt-in) : `evaluer_declencheurs(gs, player)` (ouvre les lettres dont
+  le déclencheur `None`/`("palier",objet,seuil)`/`("saison",semaine_min)` est
+  satisfait, DÉTERMINISTE ids triés, plafond `PLAFOND_QUETES_ACTIVES=6` #6),
+  `remettre_recompenses(gs, player)` (verse graine/vigueur/maitrise/page via les API
+  EXISTANTES, drapeau `recompense_versee` idempotent, `None`=plaisir pur), et
+  `est_atteignable(condition)` (kiwi hors catalogue → jamais accomplie #4). Zéro RNG.
+  Tests `tests/test_quetes.py` 42/42 (8 suites ③ ajoutées). **Golden INCHANGÉ**
+  `57c166d8…` (tout hors tick, opt-in). LDC quetes.py 222 (🟢), quetes_corpus.py 52
+  (🟢). NON câblé au pont (= tronçon ⑤). Carnet-parseur de la ligne ✉ laissé au ⑤
+  (émise, ignorée sans dommage — hors scope kickoff ③).
 - ④ `04_recompenses_materielles.md` — vivace enracinée + structure (outil différé
   en dette si pas d'inventaire).
 - ⑤ `05_vue_godot_courrier.md` — pont `cmd_courrier` + panneau lettres + banc F5.
@@ -80,17 +93,21 @@ pour `/sprint-auto sprint_quetes`. Golden INCHANGÉ sur les 5 tronçons.
 Négligeable : K conditions actives lues sur snapshot hors tick, K petit
 (plafond de quêtes actives). Aucun O(N²). Golden intact.
 
-## §REPRISE (prochaine étape : tronçon ③)
-Tronçons ① et ② CLOS. Prochaine étape = **③ `03_declenchement_habillage.md`** :
-déclenchement déterministe (palier maîtrise `sim.maitrise.palier` + jalon saison,
-zéro RNG), table déclarative `quetes_corpus.py`, voix des donneurs (corpus
-épistolaire V1), plafond de N quêtes actives (#6), récompenses SIMPLES
-(graine/page/Vigueur/maîtrise). À câbler aussi au ③ : le parseur carnet de la ligne
-✉ (aujourd'hui émise mais non reconnue → ignorée sans dommage) et
-`est_atteignable` (cible hors catalogue). Points d'accroche déjà posés au ② :
-`evaluer_etat(gs)` à appeler au passage de saison / ouverture panneau ;
-`avancement(gs, id)` fournit la phrase diégétique au panneau (⑤). Golden à garder
-INCHANGÉ. Ne pas re-figer.
+## §REPRISE (prochaine étape : tronçon ④)
+Tronçons ①②③ CLOS. Prochaine étape = **④ `04_recompenses_materielles.md`** :
+récompenses MATÉRIELLES rares (vivace déjà enracinée = instanciation d'une pérenne
+à âge avancé ; structure permanente posée ; outil différé en dette si pas
+d'inventaire d'outils). S'appuie sur `_appliquer_recompense` (③, `sim/quetes.py`) :
+y AJOUTER les tags matériels (`("vivace", espece, age)`, `("structure", type)`) sans
+toucher aux tags simples. Attention #2 : instancier une pérenne à âge avancé est un
+CADEAU matériel (une nouvelle plante posée), PAS un buff sur une plante existante.
+Points d'accroche posés : `evaluer_declencheurs(gs, player)` (ouverture au passage
+de saison), `evaluer_etat(gs)` + `notifier_geste` (clôture), `remettre_recompenses(gs,
+player)` (versement, drapeau `recompense_versee`), `avancement(gs, id)` (phrase
+diégétique ⑤). Reste ⑤ = pont `cmd_courrier` + panneau lettres + banc F5 (câblage du
+driver : appeler `evaluer_declencheurs`/`evaluer_etat`/`remettre_recompenses` au
+passage de saison ; parseur carnet de la ligne ✉). Golden à garder INCHANGÉ.
+Ne pas re-figer.
 
 ---
 Lire : `CLAUDE.md` + cette fiche + l'amorce (dans le fil `/conception D79`) +
