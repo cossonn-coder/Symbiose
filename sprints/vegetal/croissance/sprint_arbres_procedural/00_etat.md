@@ -86,6 +86,32 @@ pommier — pour qu'ils se dessinent en branches et portent le taper D90.
   fait déjà les segments), mode aiguilles pour le sapin (`PlantRenderer.Organs.cs`),
   LOD, banc d'observation des 10 arbres. Golden intact.
 
+## AVANCEMENT
+- [x] **T1 — feuillus etale + levier `auxin_release_scale`** (2026-07-24).
+  Moteur : attribut `auxin_release_scale` (défaut 400) sur `PlantBase`
+  (`familles.py`) ; `_update_auxin` prend le param `release_scale` ; `grow_plant`
+  passe `cls.auxin_release_scale` (pommier/Tomate/grimpantes = 400 → **appel
+  bit-identique**). Défauts procéduraux d'arbre mutualisés sur `PerennialWoody`
+  (emit 50 / max_seg 70 / wood 4000 / angle 70° / fhw 50 / etale / dom 2.0),
+  `procedural_growth` NON flippé sur la base. 5 feuillus migrés (`procedural_growth
+  =True`), calibrés à la sonde (520 ticks, an 10, monotones, bornés) :
+  | espèce | gs | release_scale | foliage_hw | h10/cr10 (cible) |
+  |---|---|---|---|---|
+  | Cerisier | 1.20 | 600 | 140 | 504/276 (500/280) |
+  | Charme | 1.20 | 600 | 100 | 504/236 (500/220) |
+  | Hêtre | 0.95 | 500 | 140 | 398/262 (400/260) |
+  | Noyer | 1.50 | 650 | 160 | 620/352 (600/350) |
+  | Chêne | 0.95 | 500 | 185 | 398/307 (400/300) |
+  **Décision imprévue** : le kickoff suggérait `auxin_release_scale` 900-1500 pour
+  chêne/hêtre, mais un rs aussi haut → l'apex ne relâche jamais → **poteau nu** (0
+  latéral, couronne = foliage_halfwidth) → contredit `etale` + « grand & large ».
+  Résolu : rs modéré (500) pour ouvrir la couronne + **largeur portée par
+  `foliage_halfwidth`** (double dividende : survie hydrique du jeune arbre à racines
+  courtes). Valeurs = placeholders → F5 (T4). **Golden INCHANGÉ `57c166d8…`**.
+  test_croissance : 102/102 (dont 2 tests D91 neufs). Suites connexes vertes
+  (phototropisme, senescence, grimpe, confinement, lifecycle). C# non touché.
+  Reste : T2 (aulne/figuier/sapin), T3 (bouleau+gravitropisme), T4 (vue Godot+banc).
+
 ## CARTE DES TRONÇONS (kickoffs autosuffisants présents)
 - `01_feuillus_etale.md` — levier `auxin_release_scale` + cerisier/charme/hêtre/noyer/chêne
 - `02_cas_atypiques.md` — aulne / figuier buissonnant / sapin flèche
@@ -93,7 +119,10 @@ pommier — pour qu'ils se dessinent en branches et portent le taper D90.
 - `04_vue_godot_banc.md` — rendu branches + aiguilles sapin + banc F5 `foret_ports`
 
 ## §REPRISE
-Conception FIGÉE. Lire : `CLAUDE.md` + ce fichier + le doc figé
-`docs/vegetal/croissance/conception_migration_arbres.md` + le kickoff `0N` du tronçon
-courant. Prochaine étape : `/sprint-auto sprint_arbres_procedural` (T1 → T4). Chaque
-tronçon met à jour ce fichier (cocher + valeurs de calibrage + hash golden confirmé).
+Conception FIGÉE. **T1 CLOS** (golden `57c166d8…` inchangé). Prochaine étape :
+**T2 = `02_cas_atypiques.md`** (aulne / figuier buissonnant / sapin flèche). Lire :
+`CLAUDE.md` + ce fichier + le doc figé
+`docs/vegetal/croissance/conception_migration_arbres.md` + `02_cas_atypiques.md`.
+Le levier `auxin_release_scale` (T1) est en place et disponible pour le sapin
+(flèche → rs long). Chaque tronçon met à jour ce fichier (cocher + valeurs de
+calibrage + hash golden confirmé).

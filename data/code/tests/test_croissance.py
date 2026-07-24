@@ -24,6 +24,8 @@ from collections import Counter
 import json
 
 from plants import Tomato, Basil, AppleTree, Fig, PlantInstance, Segment
+from plants.perennials import (CherryTree, HornbeamTree, BeechTree,
+                               WalnutTree, OakTree)
 import sim.growth as G
 
 SEED = 0x5AB1057E
@@ -433,6 +435,56 @@ def test_pommier_temoin_non_migre():
     check("témoin ligneux: cache d'empreinte jamais peuplé", f.footprint is None)
 
 
+# --- 8ter. Feuillus étalés migrés (D91 ①) : 5 nouvelles ligneuses procédurales --
+#
+# Cerisier, charme, hêtre, noyer, chêne passent de l'age_curve tabulée à la
+# croissance procédurale en segments (comme le pommier). On valide, en croissance
+# libre sur ~520 ticks (an 10, cycle saisonnier réel) : (a) chaque espèce est bien
+# migrée ; (b) elle POUSSE (hauteur an 10 >> semis) et reste MONOTONE (la couronne
+# ne s'effondre pas, le cap segments ne rabote pas la flèche) ; (c) structure bornée
+# (≤ max_segments, jamais éteinte) ; (d) déterminisme (zéro RNG, philo #3). Les
+# valeurs de calibrage précises sont des placeholders → F5 (T4) : on teste l'ALLURE
+# (ordre de grandeur, montée saine), pas des seuils fins. HORS golden (aucune de ces
+# espèces n'est dans le smoke).
+
+_FEUILLUS_D91 = [CherryTree, HornbeamTree, BeechTree, WalnutTree, OakTree]
+
+
+def _grow_tree(cls, n=520):
+    p = PlantInstance(plant_class=cls, position=POS)
+    p.growth_factor = 1.0
+    hs, lens = [], []
+    for k in range(n):
+        G.grow_plant(p, SEED, 1 + k)            # cycle saisonnier réel
+        hs.append(cls.height_at(p))
+        lens.append(len(p.segments))
+    return p, hs, lens
+
+
+def test_feuillus_d91_migres():
+    for cls in _FEUILLUS_D91:
+        check(f"{cls.name}: migré (procedural_growth)", cls.procedural_growth)
+        p, hs, lens = _grow_tree(cls)
+        check(f"{cls.name}: a poussé (an 10 >> semis)", hs[-1] > 200.0,
+              f"h10={hs[-1]:.1f}")
+        check(f"{cls.name}: montée monotone (flèche ne redescend jamais)",
+              all(hs[i] >= hs[i-1] - 1e-9 for i in range(1, len(hs))),
+              f"h10={hs[-1]:.1f}")
+        check(f"{cls.name}: structure bornée (≤ max_segments)",
+              max(lens) <= cls.max_segments, f"max={max(lens)} (cap={cls.max_segments})")
+        check(f"{cls.name}: jamais éteinte (≥1, run éternel)", min(lens) >= 1,
+              f"min={min(lens)}")
+
+
+def test_feuillus_d91_determinisme():
+    for cls in (CherryTree, OakTree):          # échantillon (kickoff : au moins ces 2)
+        p1, h1, _ = _grow_tree(cls, 260)
+        p2, h2, _ = _grow_tree(cls, 260)
+        check(f"{cls.name}: empreinte déterministe (260 ticks)",
+              h1 == h2 and p1.segments == p2.segments,
+              f"hfin {h1[-1]:.1f} vs {h2[-1]:.1f}")
+
+
 def test_serialisation_structure():
     """Tronçon 6 (§J) : la structure de segments est sérialisable en JSON et
     round-trip FIDÈLE (sérialise → JSON → désérialise = structure identique), et
@@ -494,6 +546,8 @@ if __name__ == "__main__":
     test_taper_tronc_borne()
     test_taper_determinisme()
     test_pommier_temoin_non_migre()
+    test_feuillus_d91_migres()
+    test_feuillus_d91_determinisme()
     test_serialisation_structure()
 
     print("\n" + "=" * 60)

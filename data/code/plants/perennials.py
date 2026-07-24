@@ -44,6 +44,24 @@ class PerennialWoody(PlantBase):
     root_loss_tolerance_base = 1.3
     age_curve: list[tuple] = []   # [(age_years, height_cm, canopy_radius_cm), ...]
 
+    # --- Défauts procéduraux communs aux ligneux migrés (D91, §4 mutualisation) ---
+    # Profil d'ÉCHELLE ARBRE répliqué du pommier (perennials.py AppleTree) : flèche en
+    # peu de segments, bois quasi pérenne, insertion latérale horizontale (étalement),
+    # feuillage assez large pour que les racines couvrent plusieurs plots (SURVIE
+    # hydrique, cf. commentaire d'AppleTree). `procedural_growth` reste False sur la base :
+    # la migration se fait PAR ESPÈCE (chaque arbre migré flippe le flag + surcharge son
+    # gabarit `max_height_cm`/`max_extent_cm`/`growth_speed`/`auxin_release_scale`). Un
+    # arbre NON migré garde son age_curve interpolée ; ces défauts ne sont alors lus par
+    # personne (structure de segments inerte). Golden NEUTRE (seul AppleTree est ligneux
+    # dans le smoke, et il surcharge tous ces champs).
+    emit_length_cm        = 50.0    # flèche en peu de segments (comme le pommier)
+    max_segments          = 70
+    wood_persistence      = 4000    # ~la vie de l'arbre (sinon charpentières meurent en 1 an)
+    branch_angle          = 70.0    # insertion assez horizontale → étalement
+    foliage_halfwidth     = 50.0    # SURVIE hydrique (racines multi-plots) — départ, à ajuster F5
+    port_archetype        = "etale"
+    apical_dominance_base = 2.0
+
     # Fenêtre thermique de levée (sprint germination thermique ③) : défaut LIGNEUX
     # TEMPÉRÉ — un arbre de climat tempéré (pommier, cerisier, noyer, chêne) lève sur
     # sol frais de printemps. Le figuier méditerranéen surcharge vers plus chaud.
@@ -222,9 +240,23 @@ class CherryTree(PerennialWoody):
     greffable = True           # ligneux fruitier greffé (palette ③, D8) ; Rosaceae → compatible pommier/framboisier
     bloom_forcing_gdd = 12.0   # printemps (~S16) — floraison de cerisier légèrement après le pommier (①)
     bloom_duration = 3         # floraison courte
-    girth_max_cm = 15.0        # tronc mûr ~15 cm (pipe model) — POSÉ, sans effet tant que non migré ; placeholder → F5
+    girth_max_cm = 15.0        # tronc mûr ~15 cm (pipe model, procédural)
     age_curve = [(0, 40, 25), (5, 250, 150), (10, 500, 280),
                  (20, 700, 380), (50, 900, 450), (100, 1000, 500)]
+    # --- Croissance procédurale (D91 ①) — feuillu étalé, patron pommier ---
+    # Calibré (sonde §C, 520 ticks) pour reproduire l'allure age_curve à l'an 10
+    # (~504 cm haut / ~276 couronne ; cible 500/280). Défauts d'arbre hérités de
+    # PerennialWoody ; on surcharge gabarit + vitesse + release_scale + couronne.
+    # auxin_release_scale=600 : au défaut 400 la flèche s'étale trop tôt et sature le
+    # cap segments (couronne effondrée, non monotone) ; à 600 le leader tient jusqu'à
+    # ~500 cm puis débourre → étalement `etale` propre. foliage_halfwidth=140 porte la
+    # couronne à ~276 ET garantit des racines multi-plots (survie hydrique). HORS golden.
+    procedural_growth   = True
+    growth_speed        = 1.20
+    max_height_cm       = 1000.0    # plafond = dernier point age_curve (100 ans) — non atteint à 10 ans
+    max_extent_cm       = 500.0
+    auxin_release_scale = 600.0     # leader tenu jusqu'à ~500 cm avant de s'étaler
+    foliage_halfwidth   = 140.0     # couronne ~276 + survie hydrique (racines multi-plots)
 
 
 class WalnutTree(PerennialWoody):
@@ -261,9 +293,20 @@ class WalnutTree(PerennialWoody):
             "description": "Juglone — forte allélopathie racinaire (rien ne pousse sous le noyer)"
         }
     ]
-    girth_max_cm = 30.0        # tronc mûr ~30 cm (pipe model) — POSÉ, sans effet tant que non migré ; placeholder → F5
+    girth_max_cm = 30.0        # tronc mûr ~30 cm (pipe model, procédural)
     age_curve = [(0, 40, 25), (5, 300, 200), (10, 600, 350),
                  (20, 1000, 550), (50, 1500, 750), (100, 2500, 1000)]
+    # --- Croissance procédurale (D91 ①) — grand feuillu ouvert, patron pommier ---
+    # Calibré (sonde §C) pour ~620 cm haut / ~352 couronne à l'an 10 (cible 600/350).
+    # Noyer = essence de longue vie (200 ans) → release_scale un peu au-dessus du
+    # cerisier (leader dressé jusqu'à ~600 cm). foliage_halfwidth=160 pour sa large
+    # couronne ouverte + racines multi-plots. HORS golden.
+    procedural_growth   = True
+    growth_speed        = 1.50
+    max_height_cm       = 2500.0    # plafond = dernier point age_curve (100 ans)
+    max_extent_cm       = 1000.0
+    auxin_release_scale = 650.0     # longévif → flèche tenue jusqu'à ~600 cm
+    foliage_halfwidth   = 160.0     # couronne ouverte ~352 + survie hydrique
 
 
 class OakTree(PerennialWoody):
@@ -278,9 +321,26 @@ class OakTree(PerennialWoody):
     reproduction_rate = 0.08   # glandée (mast) rare
     longevity_years = 500
     maturity_years = 25
-    girth_max_cm = 40.0        # tronc mûr ~40 cm (pipe model) — POSÉ, sans effet tant que non migré ; placeholder → F5
+    girth_max_cm = 40.0        # tronc mûr ~40 cm (pipe model, procédural)
     age_curve = [(0, 30, 20), (5, 200, 150), (10, 400, 300),
                  (20, 700, 450), (50, 1500, 800), (100, 3000, 1200)]
+    # --- Croissance procédurale (D91 ①) — sujet centenaire, jeune chêne large-bas ---
+    # Calibré (sonde §C) pour ~398 cm haut / ~307 couronne à l'an 10 (le chêne est
+    # LENT en hauteur jeune, il prend son ampleur sur des siècles). L'ampleur
+    # centenaire est portée par max_height_cm=3000 / max_extent_cm=1200 (age_curve
+    # 100 ans), atteints sur la durée. NOTE calibrage (décision imprévue, cf. rapport) :
+    # un auxin_release_scale très élevé (1500, suggéré au kickoff) fabrique un POTEAU
+    # nu (l'apex ne relâche jamais → zéro latéral → couronne = foliage_halfwidth),
+    # ce qui contredit `etale` et « grand & LARGE ». On garde release_scale modéré
+    # (500 → couronne qui s'ouvre) et on porte la LARGEUR par foliage_halfwidth=185
+    # (double dividende : survie hydrique du jeune chêne à racines encore courtes).
+    # HORS golden.
+    procedural_growth   = True
+    growth_speed        = 0.95
+    max_height_cm       = 3000.0    # plafond = dernier point age_curve (100 ans)
+    max_extent_cm       = 1200.0
+    auxin_release_scale = 500.0     # couronne qui s'ouvre (≠ poteau fastigié)
+    foliage_halfwidth   = 185.0     # jeune chêne large-bas ~307 + survie hydrique
 
 
 # ---------------------------------------------------------------------------
@@ -307,9 +367,21 @@ class BeechTree(PerennialWoody):
     reproduction_rate = 0.08         # faînée (mast) irrégulière
     longevity_years = 300
     maturity_years = 30
-    girth_max_cm = 35.0        # tronc mûr ~35 cm (pipe model) — POSÉ, sans effet tant que non migré ; placeholder → F5
+    girth_max_cm = 35.0        # tronc mûr ~35 cm (pipe model, procédural)
     age_curve = [(0, 30, 18), (5, 200, 130), (10, 400, 260),
                  (20, 700, 400), (50, 1500, 650), (100, 2800, 950)]
+    # --- Croissance procédurale (D91 ①) — grand houppier ample, ombre profonde ---
+    # Calibré (sonde §C) pour ~398 cm haut / ~262 couronne à l'an 10 (cible 400/260).
+    # Même arbitrage que le chêne (cf. rapport) : release_scale modéré (500) pour que
+    # le houppier s'ouvre (un rs élevé ferait un poteau), largeur portée par
+    # foliage_halfwidth=140. L'ampleur cathédrale séculaire vient de max_extent=950.
+    # HORS golden.
+    procedural_growth   = True
+    growth_speed        = 0.95
+    max_height_cm       = 2800.0    # plafond = dernier point age_curve (100 ans)
+    max_extent_cm       = 950.0
+    auxin_release_scale = 500.0     # houppier qui s'ouvre (≠ poteau fastigié)
+    foliage_halfwidth   = 140.0     # houppier ample ~262 + survie hydrique
 
 
 class BirchTree(PerennialWoody):
@@ -354,9 +426,19 @@ class HornbeamTree(PerennialWoody):
     reproduction_rate = 0.12         # samares en grappes
     longevity_years = 150
     maturity_years = 15
-    girth_max_cm = 18.0        # tronc mûr ~18 cm (pipe model) — POSÉ, sans effet tant que non migré ; placeholder → F5
+    girth_max_cm = 18.0        # tronc mûr ~18 cm (pipe model, procédural)
     age_curve = [(0, 40, 20), (5, 250, 120), (10, 500, 220),
                  (20, 900, 340), (50, 1500, 520), (100, 2000, 650)]
+    # --- Croissance procédurale (D91 ①) — port moyen ovoïde du bocage ---
+    # Calibré (sonde §C) pour ~504 cm haut / ~236 couronne à l'an 10 (cible 500/220).
+    # Ovoïde plus étroit que le cerisier : même vitesse/release_scale mais
+    # foliage_halfwidth plus modeste (100 vs 140) → houppier plus fermé. HORS golden.
+    procedural_growth   = True
+    growth_speed        = 1.20
+    max_height_cm       = 2000.0    # plafond = dernier point age_curve (100 ans)
+    max_extent_cm       = 650.0
+    auxin_release_scale = 600.0     # leader tenu jusqu'à ~500 cm avant de s'étaler
+    foliage_halfwidth   = 100.0     # ovoïde moyen ~236 + survie hydrique
 
 
 # ---------------------------------------------------------------------------

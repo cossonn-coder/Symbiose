@@ -234,6 +234,11 @@ class PlantBase(ABC):
     growth_speed:          float = 2.0    # cm/tick d'allongement de l'apex (≡ GROWTH_SPEED)
     port_archetype:        str   = "fleche"   # stratégie de port (§E.2) — descriptif ici
     apical_dominance_base: float = 1.0    # FORCE de dominance = production d'auxine d'un apex au repos (1.0 = nominal ≡ AUXIN_SOURCE ; >1 = flèche tenue plus longtemps, cf. Tomato)
+    auxin_release_scale:   float = 400.0  # semaines : échelle de relâchement d'auxine avec
+                                          # l'âge (§D.1 ≡ AUXIN_RELEASE_SCALE). Défaut = ancienne
+                                          # constante globale → espèce non réglée = comportement
+                                          # historique (golden bit-identique). Ligneux longévif →
+                                          # PLUS GRAND (dressé plus longtemps) ; pionnier → plus petit.
     branch_angle:          float = 50.0   # angle d'insertion des latéraux (degrés, ≡ BRANCH_ANGLE)
     phototropism_strength: float = 0.30   # sensibilité au gradient de lumière (MARQUÉ par défaut, Q3 — l'apex se penche vers le clair ; 0 = tout droit ; Nico tranche la valeur finale à la maquette, tronçon 4)
     wood_persistence:      int   = 60     # longévité du bois sans apex (semaines, ≡ WOOD_PERSISTENCE)

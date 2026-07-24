@@ -26,13 +26,16 @@ from .geometrie import (_tip, _horiz, _lateral_dir, _phototropic_bias,
 # Les 4 phases de la croissance (§D)
 # ---------------------------------------------------------------------------
 
-def _update_auxin(segs: list, dominance: float) -> None:
+def _update_auxin(segs: list, dominance: float, release_scale: float) -> None:
     """§D.1 — production aux apex (relâchée avec l'âge), transport descendant.
     `dominance` (profil espèce apical_dominance_base) = production d'un apex au
     repos : plus elle est haute, plus l'auxine inhibe loin → flèche ; plus elle est
-    basse, plus tôt les latéraux débourrent → buisson."""
+    basse, plus tôt les latéraux débourrent → buisson.
+    `release_scale` (profil espèce auxin_release_scale) = échelle d'âge du relâchement
+    d'auxine : GRAND → l'arbre reste dressé longtemps (chêne, hêtre) ; petit → il
+    s'étale tôt (pionnier). Défaut 400 = ancienne constante AUXIN_RELEASE_SCALE."""
     plant_age = max((s.age_weeks for s in segs), default=0)
-    f_age = max(AUXIN_PROD_FLOOR, 1.0 - plant_age / AUXIN_RELEASE_SCALE)
+    f_age = max(AUXIN_PROD_FLOOR, 1.0 - plant_age / release_scale)
     for s in segs:
         s.auxin = dominance * f_age if s.is_apex else 0.0
     depth = _depths(segs)
@@ -238,7 +241,7 @@ def grow_plant(plant, seed: int, week: int, light_field=None,
     if est_etiole(plant, light_field):
         gain = ETIOLEMENT_GAIN / plant.expressed_gene("port_trapu")
         speed *= (1.0 + gain)
-    _update_auxin(segs, cls.apical_dominance_base)
+    _update_auxin(segs, cls.apical_dominance_base, cls.auxin_release_scale)
     _elongate_emit(plant, speed, cls.max_height_cm, cls.max_extent_cm,
                    cls.emit_length_cm, light_field, cls.phototropism_strength)
     _debourrement(plant, seed, week, math.radians(cls.branch_angle),
