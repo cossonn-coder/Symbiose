@@ -150,6 +150,35 @@ def _phototropic_bias(d: tuple, tx: float, ty: float, lf, strength: float,
 
 
 # ---------------------------------------------------------------------------
+# Gravitropisme (D91 ③) — retombée des rameaux distaux (port pleureur)
+# ---------------------------------------------------------------------------
+
+def _gravitropic_droop(d: tuple, off_axis: float, gain: float) -> tuple:
+    """Retombée gravitropique : incline la direction `d` vers le bas (0,0,-1),
+    proportionnellement à `gain` (profil espèce, attendu dans [0,1]) et à
+    l'ÉLOIGNEMENT HORIZONTAL du segment à l'axe du tronc `off_axis` ∈ [0,1]
+    (0 = sur l'axe → flèche/leader dressé, NE ploie PAS ; 1 = bord de couronne →
+    rameau DISTAL qui pend). Blend linéaire vers le bas puis renormalisation
+    (vecteur direction unitaire, même convention que `_norm`). Biais géométrique
+    PUR, déterministe, zéro RNG (philo #3). gain=0 ou off_axis=0 → `d` renvoyé
+    inchangé (golden bit-identique : seul le bouleau règle gain>0).
+
+    NB modèle (décision de calibrage D91 ③) : le discriminant est l'éloignement à
+    l'axe, PAS la profondeur topologique `depth` suggérée au kickoff. Motif : la
+    flèche d'un arbre est une CHAÎNE axiale dont la profondeur s'accumule (depth ~16
+    à 800 cm), si bien que `depth` fait ployer le LEADER autant que les rameaux et
+    effondre la hauteur. L'éloignement horizontal sépare proprement le leader
+    (près de l'axe) des rameaux distaux (loin) — l'intention « tronc dressé, twigs
+    pendants » est préservée, le mécanisme corrigé."""
+    if gain <= 0.0 or off_axis <= 0.0:
+        return d
+    w = gain * off_axis
+    return _norm(((1.0 - w) * d[0],
+                  (1.0 - w) * d[1],
+                  (1.0 - w) * d[2] - w))
+
+
+# ---------------------------------------------------------------------------
 # Topologie de l'arbre de segments (pure)
 # ---------------------------------------------------------------------------
 

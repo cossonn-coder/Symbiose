@@ -241,6 +241,12 @@ class PlantBase(ABC):
                                           # PLUS GRAND (dressé plus longtemps) ; pionnier → plus petit.
     branch_angle:          float = 50.0   # angle d'insertion des latéraux (degrés, ≡ BRANCH_ANGLE)
     phototropism_strength: float = 0.30   # sensibilité au gradient de lumière (MARQUÉ par défaut, Q3 — l'apex se penche vers le clair ; 0 = tout droit ; Nico tranche la valeur finale à la maquette, tronçon 4)
+    gravitropism_gain:     float = 0.0    # retombée des rameaux sous leur poids (port
+                                          # pleureur, ex. bouleau/saule, D91 ③). 0 = aucune
+                                          # retombée → golden intact (personne ne le règle sauf
+                                          # le bouleau). >0 (attendu dans [0,1]) = les rameaux
+                                          # DISTAUX ploient vers le bas, échelonné par la
+                                          # profondeur (tronc/flèche à faible depth restent dressés).
     wood_persistence:      int   = 60     # longévité du bois sans apex (semaines, ≡ WOOD_PERSISTENCE)
     max_height_cm:         float = 200.0  # plafond de hauteur de l'apex (≡ MAX_REACH_CM, défaut d'arbre)
     max_extent_cm:         float = 200.0  # plafond d'extension horizontale de la couronne

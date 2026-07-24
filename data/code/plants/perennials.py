@@ -425,9 +425,29 @@ class BirchTree(PerennialWoody):
     reproduction_rate = 0.20         # graines ailées abondantes, dispersion large
     longevity_years = 90
     maturity_years = 10
-    girth_max_cm = 14.0        # tronc mûr ~14 cm (pipe model) — POSÉ, sans effet tant que non migré ; placeholder → F5
+    girth_max_cm = 14.0        # tronc mûr ~14 cm (pipe model, procédural) ; placeholder → F5
     age_curve = [(0, 40, 15), (5, 400, 120), (10, 800, 200),
                  (20, 1300, 300), (50, 1800, 420), (90, 2000, 480)]
+    # --- Croissance procédurale (D91 ③) — pionnier élancé + port PLEUREUR ------------
+    # Betula pendula : flèche DRESSÉE (leader net) + rameaux DISTAUX qui RETOMBENT
+    # (levier gravitropique `gravitropism_gain`, seul le bouleau le règle). Calibré
+    # (sonde §C) : ~783 cm haut / ~270 couronne à l'an 10 (cible age_curve 800/200 ;
+    # couronne volontairement un peu au-dessus de 200 → voir NOTE hydrique). Leader
+    # tenu par une dominance haute (2.7) + un release_scale long (800, comme l'aulne
+    # pionnier T2) : « pionnier rapide » se lit sur la VITESSE d'élongation, pas sur
+    # un étalement précoce qui casserait la flèche élancée. HORS golden.
+    procedural_growth   = True
+    growth_speed        = 1.9       # pionnier rapide
+    max_height_cm       = 2000.0    # plafond = dernier point age_curve (90 ans)
+    max_extent_cm       = 400.0     # houppier LÉGER, élancé (plus étroit qu'un grand feuillu)
+    apical_dominance_base = 2.7     # flèche élancée — leader net, houppier resserré
+    auxin_release_scale = 800.0     # leader dressé longtemps (élancé, ≠ étalement précoce)
+    foliage_halfwidth   = 70.0      # NOTE hydrique (état §3) : bouleau grêle = LE plus exposé
+                                    # (root_r = canopy_r) → fhw généreux (>50 du pommier qui
+                                    # survit) pour couvrir plusieurs plots au jeune âge ;
+                                    # élargit un peu la couronne (270 vs 200) → arbitrage F5.
+    gravitropism_gain   = 1.0       # rameaux distaux PENDANTS (Betula pendula) ; SEULE espèce
+                                    # à régler ce levier (prépare le saule D23) — calibrer F5.
 
 
 class HornbeamTree(PerennialWoody):

@@ -22,6 +22,7 @@ Usage (depuis data/code/) :
 """
 from collections import Counter
 import json
+import math
 
 from plants import Tomato, Basil, AppleTree, Fig, PlantInstance, Segment
 from plants.perennials import (CherryTree, HornbeamTree, BeechTree,
@@ -418,22 +419,52 @@ def test_taper_determinisme():
     check("taper: épaisseurs déterministes (260 ticks, zéro RNG)", run() == run())
 
 
-def test_pommier_temoin_non_migre():
-    """Une LIGNEUSE NON migrée (Bouleau, migration en T3) garde l'age_curve :
-    l'override résolu ne fuit pas. Sa hauteur suit age_years ; sa structure pousse
-    mais reste non lue."""
-    check("témoin ligneux: AppleTree migré", AppleTree.procedural_growth)
-    check("témoin ligneux: Bouleau non migré (T3)", not BirchTree.procedural_growth)
-    f = PlantInstance(plant_class=BirchTree, position=POS)
-    f.age_years = 10.0                          # age_curve Bouleau : (10, 800, 200)
-    h_age = BirchTree.height_at(f)               # = 800 × growth_factor × gène
-    for k in range(40):
-        G.grow_plant(f, SEED, 1 + k)
-    check("témoin ligneux: hauteur = age_curve (inchangée par la structure)",
-          abs(BirchTree.height_at(f) - h_age) < 1e-9, f"h={BirchTree.height_at(f):.1f}")
-    check("témoin ligneux: structure poussée mais jamais lue", len(f.segments) > 1,
-          f"len={len(f.segments)}")
-    check("témoin ligneux: cache d'empreinte jamais peuplé", f.footprint is None)
+def test_bouleau_d91_migre():
+    """Le Bouleau était le TÉMOIN ligneux NON migré (D91 T1/T2) ; T3 le migre en
+    croissance procédurale (levier gravitropique). On vérifie qu'il est DÉSORMAIS
+    migré, que son empreinte est DÉRIVÉE de la structure (footprint peuplé, plus
+    l'age_curve), qu'il pousse en flèche montante bornée/déterministe, et le port
+    PLEUREUR (Betula pendula) : au moins un rameau distal dont l'extrémité RETOMBE
+    sous son insertion — sans casser la flèche montante. HORS golden."""
+    check("bouleau: AppleTree migré", AppleTree.procedural_growth)
+    check("bouleau: migré en T3 (procedural_growth)", BirchTree.procedural_growth)
+    p, hs, lens = _grow_tree(BirchTree)
+    check("bouleau: a poussé (an 10 >> semis)", hs[-1] > 400.0, f"h10={hs[-1]:.1f}")
+    check("bouleau: flèche montante monotone (leader dressé)",
+          all(hs[i] >= hs[i-1] - 1e-9 for i in range(1, len(hs))), f"h10={hs[-1]:.1f}")
+    check("bouleau: structure bornée (≤ max_segments)",
+          max(lens) <= BirchTree.max_segments, f"max={max(lens)} (cap={BirchTree.max_segments})")
+    check("bouleau: jamais éteint (≥1, run éternel)", min(lens) >= 1, f"min={min(lens)}")
+    check("bouleau: empreinte dérivée de la structure (footprint peuplé)",
+          p.footprint is not None)
+    # Port pleureur : ≥1 rameau distal dont l'extrémité (dz = dir_z·length) est SOUS
+    # son insertion → retombée gravitropique. Le tronc/leader, lui, monte (h10 élevé).
+    droop = [s for s in p.segments
+             if s.parent is not None and s.dir[2] * s.length_cm < -1e-6]
+    check("bouleau: rameaux distaux qui RETOMBENT (port pleureur)",
+          len(droop) >= 1, f"n_droop={len(droop)}")
+    p2, h2, _ = _grow_tree(BirchTree, 260)
+    p3, h3, _ = _grow_tree(BirchTree, 260)
+    check("bouleau: empreinte déterministe (260 ticks)",
+          h2 == h3 and p2.segments == p3.segments, f"hfin {h2[-1]:.1f} vs {h3[-1]:.1f}")
+
+
+def test_gravitropic_droop_helper():
+    """Levier gravitropique (D91 ③) — contrat du helper `_gravitropic_droop` :
+    gain=0 OU off_axis=0 (sur l'axe du tronc) → direction INCHANGÉE (flèche dressée,
+    golden bit-identique) ; gain>0 & off_axis>0 → la composante verticale DIMINUE
+    (incline vers le bas) et le vecteur reste UNITAIRE (renormalisé). NB : le
+    discriminant est l'éloignement à l'axe (off_axis), pas la profondeur (cf. helper)."""
+    from sim.growth.geometrie import _gravitropic_droop
+    d = (1.0, 0.0, 0.0)                          # rameau horizontal
+    check("droop: gain=0 → inchangé", _gravitropic_droop(d, 0.5, 0.0) == d)
+    check("droop: off_axis=0 → inchangé (flèche sur l'axe)",
+          _gravitropic_droop(d, 0.0, 1.0) == d)
+    nd = _gravitropic_droop(d, 1.0, 0.8)
+    check("droop: incline vers le bas (z résultat < z entrée)", nd[2] < d[2] - 1e-9,
+          f"nz={nd[2]:.3f}")
+    norm = math.sqrt(nd[0] ** 2 + nd[1] ** 2 + nd[2] ** 2)
+    check("droop: résultat normalisé (‖nd‖ = 1)", abs(norm - 1.0) < 1e-9, f"|nd|={norm:.6f}")
 
 
 # --- 8ter. Feuillus étalés migrés (D91 ①) : 5 nouvelles ligneuses procédurales --
@@ -614,7 +645,8 @@ if __name__ == "__main__":
     test_taper_amincissement_monotone()
     test_taper_tronc_borne()
     test_taper_determinisme()
-    test_pommier_temoin_non_migre()
+    test_bouleau_d91_migre()
+    test_gravitropic_droop_helper()
     test_feuillus_d91_migres()
     test_feuillus_d91_determinisme()
     test_atypiques_d91_migres()

@@ -18,8 +18,8 @@ from .constantes import (AUXIN_PROD_FLOOR, AUXIN_RELEASE_SCALE, AUXIN_DECAY,
                          JITTER_RAD, ETIOLEMENT_LIGHT_SEUIL, ETIOLEMENT_GAIN,
                          GIRTH_TAU, TAPER_EXP)
 from .geometrie import (_tip, _horiz, _lateral_dir, _phototropic_bias,
-                        _apex_z_floor, _depths, _children, _subtree,
-                        _apex_in_subtree, _rebuild, taper_thickness)
+                        _gravitropic_droop, _apex_z_floor, _depths, _children,
+                        _subtree, _apex_in_subtree, _rebuild, taper_thickness)
 
 
 # ---------------------------------------------------------------------------
@@ -47,7 +47,8 @@ def _update_auxin(segs: list, dominance: float, release_scale: float) -> None:
 
 
 def _elongate_emit(plant, speed: float, max_height: float, max_extent: float,
-                   emit_length: float, light_field=None, strength: float = 0.0) -> None:
+                   emit_length: float, light_field=None, strength: float = 0.0,
+                   gain: float = 0.0) -> None:
     """§D.2 — l'apex allonge, émet un segment axial au seuil, se retire à portée.
     Bornage par le gabarit du profil espèce : l'apex se retire quand son extrémité
     dépasse `max_height` en hauteur OU `max_extent` en extension horizontale — la
@@ -56,7 +57,12 @@ def _elongate_emit(plant, speed: float, max_height: float, max_extent: float,
     (flèche en peu de segments), petit pour une herbacée (granularité fine).
     Phototropisme (§D.4) : le segment émis prend la direction de l'apex BIAISÉE vers
     le gradient de lumière local (`_phototropic_bias`), bornée et déterministe ;
-    `light_field=None` ou `strength=0` → direction axiale droite (ancien comportement)."""
+    `light_field=None` ou `strength=0` → direction axiale droite (ancien comportement).
+    Gravitropisme (D91 ③) : APRÈS le phototropisme, `gain` (profil espèce) fait ployer
+    le segment émis vers le bas, échelonné par la profondeur du porteur (tronc dressé,
+    rameaux distaux pendants = port pleureur). `gain=0` → direction inchangée (défaut :
+    seul le bouleau règle gain>0 → golden bit-identique). ORDRE impératif axial →
+    phototropisme → gravitropisme : la retombée n'écrase pas la recherche de lumière."""
     segs = plant.segments
     collet = segs[0].base
     # Plancher de verticalité de l'apex, CONTEXTUEL (grimpe, D49 ①). Dépend de la
@@ -80,6 +86,12 @@ def _elongate_emit(plant, speed: float, max_height: float, max_extent: float,
             tip = _tip(s)
             new_dir = _phototropic_bias(s.dir, tip[0], tip[1], light_field,
                                         strength, z_floor)
+            if gain > 0.0:
+                # Éloignement horizontal du porteur à l'axe du tronc, normalisé par le
+                # gabarit de couronne : 0 sur l'axe (flèche dressée), →1 au bord (rameau
+                # distal pendant). Discriminant géométrique leader/rameau (cf. helper).
+                off_axis = min(1.0, _horiz(tip, collet) / max_extent) if max_extent > 0 else 0.0
+                new_dir = _gravitropic_droop(new_dir, off_axis, gain)  # retombée APRÈS phototropisme
             new_segs.append(_mk(i, tip, new_dir, s.auxin))  # apex penché / affalé selon le plancher
     segs.extend(new_segs)
 
@@ -243,7 +255,8 @@ def grow_plant(plant, seed: int, week: int, light_field=None,
         speed *= (1.0 + gain)
     _update_auxin(segs, cls.apical_dominance_base, cls.auxin_release_scale)
     _elongate_emit(plant, speed, cls.max_height_cm, cls.max_extent_cm,
-                   cls.emit_length_cm, light_field, cls.phototropism_strength)
+                   cls.emit_length_cm, light_field, cls.phototropism_strength,
+                   cls.gravitropism_gain)
     _debourrement(plant, seed, week, math.radians(cls.branch_angle),
                   cls.apical_dominance_base)
     _elaguer(plant, cls.wood_persistence, cls.max_segments)

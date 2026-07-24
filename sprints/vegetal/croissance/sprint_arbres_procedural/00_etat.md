@@ -137,6 +137,35 @@ pommier — pour qu'ils se dessinent en branches et portent le taper D90.
   en plein sprint. Valeurs = placeholders → F5 (T4). Reste : T3 (bouleau+gravitropisme),
   T4 (vue Godot+banc).
 
+- [x] **T3 — bouleau + levier `gravitropism_gain`** (2026-07-24). Moteur : attribut
+  `gravitropism_gain` (défaut 0.0 = neutre) sur `PlantBase` (`familles.py`) ; helper neuf
+  `_gravitropic_droop` (`geometrie.py`) ; greffe dans `_elongate_emit` (`phases.py`) APRÈS
+  `_phototropic_bias`, passé via `grow_plant` (`cls.gravitropism_gain`). **Décision imprévue
+  (trou de modèle révélé à la sonde)** : le kickoff/D1 échelonnaient la retombée par la
+  PROFONDEUR topologique `depth`. Or la flèche d'un arbre est une CHAÎNE axiale dont la
+  profondeur s'accumule (depth ~16 à 800 cm) → `depth` fait ployer le LEADER autant que les
+  rameaux → hauteur s'effondre (783→368 à gain≥0.6). **Correctif** : discriminant =
+  **éloignement HORIZONTAL à l'axe du tronc** (`off_axis = min(1, _horiz(tip,collet)/max_extent)`)
+  — 0 sur l'axe (flèche dressée, ne ploie pas), →1 au bord (rameau distal pendant).
+  Géométrique pur, déterministe, zéro RNG, zéro état neuf (pas de champ Segment, sérialisation
+  intacte). L'INTENTION « tronc dressé, twigs pendants » est préservée, le mécanisme corrigé.
+  Bouleau migré (`procedural_growth=True`), calibré à la sonde (520 ticks, an 10) :
+  | espèce | port | gs | rs | dom | fhw | maxseg | gain | h10/cr10 (cible) |
+  |---|---|---|---|---|---|---|---|---|
+  | Bouleau | fleche pleureur | 1.9 | 800 | 2.7 | 70 | 70 | **1.0** | 783/270 (800/200) |
+  Retombée : 6/36 rameaux distaux dont l'extrémité est SOUS son insertion (worstdz −12,5 cm),
+  flèche montante monotone, structure bornée (37≤70), déterministe. **NOTE hydrique (état §3)** :
+  bouleau grêle = LE plus exposé (root_r=canopy_r) → fhw=70 généreux (>50 du pommier qui survit)
+  → couronne un peu large (270 vs 200) = arbitrage F5. `gravitropism_gain>0` sur le BOULEAU SEUL
+  (prépare saule D23). **Golden INCHANGÉ `57c166d8…`** (défaut gain=0 → bit-identique).
+  test_croissance : 133/133 (dont 2 tests T3 : `test_bouleau_d91_migre` pleureur+migration,
+  `test_gravitropic_droop_helper` contrat du helper ; l'ancien `test_pommier_temoin_non_migre`
+  repurposé car plus AUCUNE ligneuse non-migrée après T3). Suites connexes vertes (phototropisme
+  11/11, senescence, grimpe, confinement, lifecycle, evergreen, marais). C# NON touché (rendu
+  des segments = T4). Tailles : geometrie 138 🟢, phases 140 🟢, perennials 324 🟡 (vigilance,
+  responsabilité unique = catalogue, déjà signalé T2). Valeurs = placeholders → F5 (T4).
+  Reste : **T4 (vue Godot + banc F5)**.
+
 ## CARTE DES TRONÇONS (kickoffs autosuffisants présents)
 - `01_feuillus_etale.md` — levier `auxin_release_scale` + cerisier/charme/hêtre/noyer/chêne
 - `02_cas_atypiques.md` — aulne / figuier buissonnant / sapin flèche
@@ -144,12 +173,13 @@ pommier — pour qu'ils se dessinent en branches et portent le taper D90.
 - `04_vue_godot_banc.md` — rendu branches + aiguilles sapin + banc F5 `foret_ports`
 
 ## §REPRISE
-Conception FIGÉE. **T1 + T2 CLOS** (golden `57c166d8…` inchangé). Prochaine étape :
-**T3 = `03_bouleau_gravitropisme.md`** (levier NEUF `gravitropism_gain` (D1) + bouleau
-`fleche` élancé + retombée distale ; prépare saule D23). Lire : `CLAUDE.md` + ce fichier
-+ le doc figé `docs/vegetal/croissance/conception_migration_arbres.md` +
-`03_bouleau_gravitropisme.md`. Le bouleau (`BirchTree`) est le SEUL arbre encore non
-migré — il sert de témoin non-migré dans `test_pommier_temoin_non_migre` (à basculer
-sur un autre témoin ou adapter quand T3 le migre). Leviers en place : `auxin_release_scale`
-(T1, par espèce), défauts procéduraux sur `PerennialWoody`. Chaque tronçon met à jour ce
-fichier (cocher + valeurs de calibrage + hash golden confirmé).
+Conception FIGÉE. **T1 + T2 + T3 CLOS** (golden `57c166d8…` inchangé). Les **10 arbres sont
+désormais TOUS migrés** (`procedural_growth=True` : pommier + 9). Prochaine (et DERNIÈRE)
+étape : **T4 = `04_vue_godot_banc.md`** — vue Godot (les 9 ports en branches via `PlantRenderer`,
+mode aiguilles sapin `PlantRenderer.Organs.cs`, LOD) + banc d'observation `foret_ports` des 10
+arbres. Golden intact (pure vue C#). Lire : `CLAUDE.md` + ce fichier + le doc figé
+`docs/vegetal/croissance/conception_migration_arbres.md` + `04_vue_godot_banc.md`.
+Leviers moteur EN PLACE : `auxin_release_scale` (T1) + `gravitropism_gain` (T3, discriminant =
+éloignement horizontal à l'axe, PAS depth — cf. T3) par espèce, défauts procéduraux sur
+`PerennialWoody`. **Le port pleureur du bouleau est un port F5 à valider visuellement** (retombée
+des rameaux distaux). Chaque tronçon met à jour ce fichier (cocher + valeurs + hash golden).
