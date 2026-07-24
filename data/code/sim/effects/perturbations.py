@@ -127,8 +127,11 @@ def damping_off(plant: PlantInstance, tile: Tile, eco,
         return []
     density = _local_density(plant, tile)
     saison_factor = 1.0 if saison in ("printemps", "automne") else 0.4
-    # Protection microbiome via la logistique existante (disease_probability)
-    p = eco.disease_probability(r, c, base_rate=DAMPOFF_BASE)
+    # Protection microbiome via la logistique existante (disease_probability).
+    # `family` (inoculum ②) : la terre chargée de la MÊME famille aggrave la fonte
+    # (mémoire édaphique hôte-spécifique). Plot vierge → amplif neutre (golden-safe).
+    p = eco.disease_probability(r, c, base_rate=DAMPOFF_BASE,
+                                family=plant.plant_class.family)
     p *= excess * (0.3 + density) * saison_factor
     # resistance_pathogene : un semis au phénotype résistant succombe moins (1/gène
     # EXPRIMÉ — un semis dont la lignée a vécu l'infection est primé, plasticité ②).
@@ -205,7 +208,11 @@ def fungal_disease(plant: PlantInstance, tile: Tile, eco,
     r, c = plant.position
     hum_norm = min(1.0, eco.humidite.at_plot(r, c) / 3.0)
     density = _local_density(plant, tile, same_family=True)
-    p = eco.disease_probability(r, c, base_rate=FUNGAL_BASE)
+    # `family` (inoculum ②) : l'inoculum persistant de CETTE famille amplifie la
+    # pression fongique (résidus hivernants). Rotation vers une autre famille échappe
+    # à la charge (émergent). Plot vierge / INOC_GAIN=0 → amplif neutre (golden-safe).
+    p = eco.disease_probability(r, c, base_rate=FUNGAL_BASE,
+                                family=plant.plant_class.family)
     p *= hum_norm * (0.4 + density) * susc
     # Vent (⑥) : assèchement protecteur PUIS apport de spores du foyer au vent.
     p *= max(0.0, 1.0 - FUNGAL_VENT_DRY * min(1.0, vent_local))

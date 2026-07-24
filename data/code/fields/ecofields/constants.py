@@ -479,6 +479,16 @@ INOC_MICRO_SUPPRESS = 0.02  # retrait ADDITIF/tick à microbiome plein (sol viva
 INOC_DEPOT_SEUIL   = 0.3    # infection_memory au-delà de laquelle une plante vivante DÉPOSE (canal 1)
 INOC_FROM_MEMORY   = 0.05   # coefficient du dépôt CONTINU ∝ (infection_memory − seuil) (canal 1)
 INOC_FROM_DEATH    = 0.3    # coefficient du PULSE de résidu ∝ infection_memory à la mort (canal 2)
+# Couplage inoculum → maladie (tronçon ②). Amplification DOUCE de la proba de maladie
+# par la charge d'inoculum HÔTE-SPÉCIFIQUE du plot : `× (1 + INOC_GAIN · load[family])`,
+# appliquée UNIQUEMENT quand une famille est passée (fungal_disease/damping_off/mildiou).
+# Le signal SAR (`croissance.py`, family=None) reste inoculum-free → casse la boucle de
+# rétroaction inoculum→SAR→infection_memory→inoculum (D5, anti-runaway). À charge pleine
+# (load=INOC_MAX=1) la proba est multipliée par (1 + INOC_GAIN) → la terre viciée
+# aggrave la maladie de la MÊME famille (rotation émergente, philo #2/#6). À INOC_GAIN=0,
+# formule strictement inchangée (golden bit-identique — invariant de contrôle du tronçon).
+# PLACEHOLDER §10, calage F5 au banc `rotation_inoculum`.
+INOC_GAIN          = 1.5
 
 RESEED_RADIUS_CM  = 150.0  # rayon de dispersion du renouvellement (M7)
 NECROMASS_PER_CM  = 0.03   # nécromasse déposée par cm de hauteur à la mort

@@ -105,7 +105,8 @@ class SolMixin:
 
     # --- Probabilité de maladie (hybride probabiliste) ---
 
-    def disease_probability(self, r: int, c: int, base_rate: float = 0.3) -> float:
+    def disease_probability(self, r: int, c: int, base_rate: float = 0.3,
+                            family=None) -> float:
         """
         Probabilité de propagation maladie — réponse logistique.
 
@@ -116,11 +117,21 @@ class SolMixin:
 
         logistic(x, k=6) = 1 / (1 + exp(-k*(x-0.5)))
         protection = logistic(microbiome_normalisé)
-        p = base_rate * (1 - protection)
+        p = base_rate * (1 + INOC_GAIN·load[family]) * (1 - protection)
+
+        `family` (tronçon ② mémoire d'inoculum, D5) : SI une famille botanique est
+        passée, la charge d'inoculum HÔTE-SPÉCIFIQUE persistante du plot amplifie la
+        proba de maladie de CETTE famille — replanter la même famille sur une terre
+        viciée aggrave la maladie (rotation émergente, philo #2/#6). SANS famille
+        (`family=None`, cas du signal SAR `croissance.py`), l'inoculum est IGNORÉ :
+        la boucle inoculum→SAR→infection_memory→inoculum est cassée (anti-runaway).
+        À INOC_GAIN=0 OU sur un plot vierge (charge=0), formule bit-identique à l'avant-②.
         """
         micro_norm = min(1.0, self.microbiome.at_plot(r, c) / MICROBE_EFFECT_REF)
         protection = 1.0 / (1.0 + math.exp(-6.0 * (micro_norm - 0.5)))
-        return base_rate * max(0.02, 1.0 - protection)
+        charge = 0.0 if family is None else self.inoculum.at(r, c, family)
+        amplif = 1.0 + INOC_GAIN * charge
+        return base_rate * amplif * max(0.02, 1.0 - protection)
 
     # --- Vitalité (grandeur dérivée, non stockée) ---
 

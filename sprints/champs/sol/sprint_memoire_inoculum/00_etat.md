@@ -64,8 +64,15 @@ verticillium, fonte). Prive le jeu de la **pédagogie de rotation** (philo #2/#6
   `ecofields/__init__.py` + `fields/__init__.py` (exports), `perturbations.py`
   (canal 1 dans `apply_disturbances`, canal 2 dans `deposer_mort`), `boucle.py`
   (`eco.inoculum.tick_decay(eco)` étape 4g).
-- ② couplage `disease_probability` (family) → fungal_disease/damping_off/mildiou —
-  **golden RE-FIGÉ MAÎTRISÉ** (proba maladie change, dérive localisée annoncée).
+- ② **CLOS 2026-07-24** — couplage `disease_probability(family)` LIVE →
+  fungal_disease/damping_off/mildiou-rondelle amplifiés par l'inoculum hôte-spécifique
+  (`× (1 + INOC_GAIN·load[family])`, `INOC_GAIN=1.5`) ; SAR `croissance.py:316`
+  reste `family=None` (anti-runaway D5, vérifié). **golden INTACT `57c166d8…`**
+  (voir §REPRISE : re-figeage attendu mais l'accumulation du smoke reste sous le
+  seuil de flip discret). `test_inoculum.py` 20/20. Fichiers : `constants.py`
+  (`INOC_GAIN`), `ecofields/sol.py` (signature + terme inoculum),
+  `sim/effects/perturbations.py` (2 appels), `sim/effects/resolution.py` (1 appel),
+  `tests/test_inoculum.py` (bloc [e] couplage).
 - ③ molène (espèce + `arch_inoculum` + 5 voix) — golden NEUTRE visé (re-figeage
   localisé annoncé SI l'ajout catalogue déplace un tirage smoke).
 - ④ ménage C# (`PathogenPressure`/`TickPathogen` morts supprimés) + vue Godot
@@ -77,13 +84,28 @@ O(plots) scatter/tick, décroissance ; négligeable. Zéro RNG (accumulateur
 déterministe). Golden RE-FIGÉ maîtrisé (proba de maladie change).
 
 ## §REPRISE
-Tronçon ① **CLOS** (golden INTACT `57c166d8…`, `test_inoculum.py` 15/15). Le champ
-`InoculumField` est en place, alimenté (2 canaux) et décroissant, mais DORMANT :
-personne ne lit `eco.inoculum` dans la math du tick. Placeholders de calibrage posés
-(INOC_MAX/EPSILON/DECAY/MICRO_SUPPRESS/DEPOT_SEUIL/FROM_MEMORY/FROM_DEATH, §10).
-**Prochaine étape = tronçon ②** (`02_couplage_maladie.md`) : greffer `family` à
-`disease_probability` (`× (1 + INOC_GAIN·load[family])`) pour fungal_disease/
-damping_off/mildiou-rondelle, le signal SAR (`croissance.py:316`, family=None) reste
-SANS inoculum (casse la boucle de rétroaction, D5). Ajouter `INOC_GAIN`.
-→ **golden RE-FIGÉ MAÎTRISÉ attendu** (proba de maladie change, dérive localisée
-annoncée). Puis ③ molène (NEUTRE visé) · ④ ménage C# + vue (INTACT).
+Tronçons ①+② **CLOS** (golden INTACT `57c166d8…`, `test_inoculum.py` 20/20).
+
+**② — couplage LIVE (`02_couplage_maladie.md`).** `disease_probability(r,c,base,
+family=None)` lit désormais `self.inoculum.at(r,c,family)` et amplifie
+`× (1 + INOC_GAIN·charge)` (`INOC_GAIN=1.5` placeholder §10). Appelants qui passent
+la famille : `damping_off` + `fungal_disease` (`perturbations.py`), mildiou-rondelle
+(`resolution.py`, branche `reduce_health`). Le signal SAR `croissance.py:316` reste
+`family=None` → inoculum-free (anti-runaway D5 VÉRIFIÉ).
+
+**GOLDEN : INTACT, PAS re-figé — décision assumée.** Le kickoff PRÉVOYAIT un re-figeage
+maîtrisé, mais le contrôle a montré que le smoke (2 tuiles × 4 ans) accumule au plus
+**0.058** d'inoculum sur **1 seul plot** (infection_memory alive plafonne à 0.284,
+JUSTE sous INOC_DEPOT_SEUIL=0.3 → canal 1 tire rarement ; l'essentiel vient des pulses
+de mort canal 2). L'amplification résultante (~+8,7 % sur 1 plot) ne FLIPPE aucun tirage
+discret `_hash_noise < p` → hash strictement inchangé. Le couplage est bien BRANCHÉ et
+change la proba CONTINUE (prouvé par `test_inoculum` bloc [e]), il ne fait juste pas
+bouger le smoke. Contrôle du kickoff satisfait : à `INOC_GAIN=0` le hash retombe aussi
+sur `57c166d8…` (donc la voie family=None/SAR est intouchée). **Aucun re-figeage forcé**
+(cohérent avec l'interdit « ne jamais fabriquer une dérive »). Suites voisines vertes :
+`test_senescence`, `test_population`.
+
+**Prochaine étape = tronçon ③** (`03_molene.md`) : espèce Scrophulariaceae + niche
+`arch_inoculum` sur `inoculum.total` élevé + 5 voix. Golden NEUTRE visé. Puis ④ ménage
+C# (`PathogenPressure`/`TickPathogen` morts) + vue Godot (snapshot inoculum, heatmap F6,
+banc `rotation_inoculum`).

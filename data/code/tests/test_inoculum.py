@@ -20,7 +20,8 @@ import sys
 
 from fields import EcoFields
 from fields.ecofields.constants import (INOC_MAX, INOC_EPSILON, INOC_DECAY,
-                                        INOC_MICRO_SUPPRESS, MICROBE_EFFECT_REF)
+                                        INOC_MICRO_SUPPRESS, MICROBE_EFFECT_REF,
+                                        INOC_GAIN)
 
 _results = []
 
@@ -129,10 +130,42 @@ def test_repos_neutre():
 
 
 # ---------------------------------------------------------------------------
-# Golden inchangé (le champ est DORMANT au ① : personne ne le lit)
+# (e) couplage inoculum → disease_probability (tronçon ②, D5)
+# ---------------------------------------------------------------------------
+def test_couplage_disease_probability():
+    print("\n[e] couplage : l'inoculum amplifie disease_probability de SA famille")
+    eco = _eco()
+    eco.microbiome.fill(0.0)   # protection nulle → base pleine, comparaison propre
+    base = eco.disease_probability(0, 0, base_rate=0.3, family="Solanaceae")
+    p_none = eco.disease_probability(0, 0, base_rate=0.3, family=None)
+    # (b) family=None == ancienne formule (bit-identique), et plot vierge == family=None
+    check("family=None == ancienne formule (aucun inoculum lu)",
+          base == p_none,
+          f"famille={base:.6f} == none={p_none:.6f} (plot vierge)")
+    # Charge la famille Solanaceae → sa proba doit CROÎTRE ; Fabaceae reste INCHANGÉ.
+    eco.inoculum.deposit(0, 0, "Solanaceae", 0.4)
+    p_solan = eco.disease_probability(0, 0, base_rate=0.3, family="Solanaceae")
+    p_fab   = eco.disease_probability(0, 0, base_rate=0.3, family="Fabaceae")
+    check("(a) disease_probability CROÎT avec l'inoculum de la famille chargée",
+          p_solan > base,
+          f"chargée={p_solan:.6f} > vierge={base:.6f}")
+    attendu = base * (1.0 + INOC_GAIN * 0.4)
+    check("amplif = base × (1 + INOC_GAIN·charge)",
+          abs(p_solan - attendu) < 1e-9,
+          f"obtenu={p_solan:.6f}, attendu={attendu:.6f}")
+    check("(a) une AUTRE famille du même plot reste INCHANGÉE (spécificité D3)",
+          p_fab == base,
+          f"Fabaceae={p_fab:.6f} == vierge={base:.6f}")
+    check("family=None reste inoculum-free même sur un plot chargé (anti-runaway D5)",
+          eco.disease_probability(0, 0, base_rate=0.3, family=None) == p_none)
+
+
+# ---------------------------------------------------------------------------
+# Golden inchangé — le couplage est LIVE (② branché) mais l'accumulation
+# d'inoculum du smoke (max ~0.058 sur 1 plot) ne flippe aucun tirage discret.
 # ---------------------------------------------------------------------------
 def test_golden_intact():
-    print("\n[golden] le smoke test golden reste INCHANGÉ (inoculum dormant)")
+    print("\n[golden] le smoke test golden reste INCHANGÉ (couplage live, smoke sous seuil)")
     import os
     from tests.test_golden import compute_hash
     hash_now = compute_hash()
@@ -151,6 +184,7 @@ if __name__ == "__main__":
     test_decroissance_microbiome()
     test_purge_epsilon()
     test_repos_neutre()
+    test_couplage_disease_probability()
     test_golden_intact()
     print("\n" + "=" * 64)
     passed = sum(1 for _, ok in _results if ok)

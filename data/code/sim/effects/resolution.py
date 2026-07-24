@@ -135,7 +135,11 @@ def resolve(effect: dict, plant: PlantInstance, tile: Tile,
         # Probabilité de dégât réduite par microbiome local
         base_p = effect.get("probability", 0.8)
         if eco:
-            p = eco.disease_probability(r, c, base_rate=base_p)
+            # `family` (inoculum ②) : le mildiou-rondelle (Solanacées) est aggravé par
+            # l'inoculum persistant de la MÊME famille (terre viciée). Plot vierge /
+            # INOC_GAIN=0 → amplif neutre (golden-safe).
+            p = eco.disease_probability(r, c, base_rate=base_p,
+                                        family=plant.plant_class.family)
         else:
             p = base_p
         if _hash_noise(seed, week * 23, r, c) <= p:
