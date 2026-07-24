@@ -19,7 +19,13 @@
 
 ## Sprint en cours
 
-*Aucun.* Dernier sprint clos : **hydrologie de relief & marécages** (2026-07-23,
+*Aucun en exécution.* **Conçu & FIGÉ, prêt `/sprint-auto`** : **mémoire
+d'inoculum du sol** (D10, 2026-07-24) — champ édaphique « terre malade » indexé
+par famille (pédagogie de rotation), greffé à `disease_probability`, indicatrice
+molène ; `sprints/champs/sol/sprint_memoire_inoculum/00_etat.md` (4 tronçons,
+golden ① INTACT · ② re-figé maîtrisé · ③ neutre · ④ INTACT).
+
+Dernier sprint clos : **hydrologie de relief & marécages** (2026-07-23,
 ①→⑧, `/sprint-auto`) — `sprints/champs/eau/sprint_hydrologie_marecage/00_etat.md`
 (golden écolo `57c166d8…`, `dotnet build` vert, reste F5 Nico).
 
