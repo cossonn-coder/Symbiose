@@ -36,6 +36,8 @@ from fields.lifecycle import larval_field_names
 from .constants import *          # constantes de calibration écologique
 from .litiere import Parcelle     # parcelle de litière (couche fraîche, __post_init__)
 
+from .inoculum import InoculumField   # mémoire d'inoculum du sol (sprint mémoire d'inoculum ①)
+
 from .matiere_organique import MatiereOrganiqueMixin
 from .hydrologie import HydrologieMixin
 from .ruissellement import RuissellementMixin
@@ -281,6 +283,16 @@ class EcoFields(MatiereOrganiqueMixin, HydrologieMixin, RuissellementMixin,
     # partout au repos (aucun émetteur avant le ⑤) → aucune montée → golden NEUTRE.
     # Hors `summary()` (état d'identité, ne change pas le digest écologique).
     autotox_espece:   list = field(default=None)
+    # Mémoire d'inoculum du sol (sprint mémoire d'inoculum ①) — champ SPARSE indexé
+    # par FAMILLE botanique (dict, PAS un GridField) : la charge pathogène PERSISTANTE
+    # qui SURVIT à la mort de la plante, là où `infection_memory` (par plante) s'éteint
+    # avec l'hôte. Alimenté par deux canaux CONSÉQUENCE (dépôt continu de la plante
+    # infectée vivante + pulse de résidu à la mort, cf. perturbations.py) et rabattu par
+    # `tick_decay` (décroissance passive − microbiome suppressif). Au tronçon ① ALIMENTÉ
+    # et DÉCROISSANT mais lu par PERSONNE dans la math du tick (DORMANT) → golden INTACT ;
+    # le couplage à `disease_probability(family)` est le ②, la niche molène le ③. Hors
+    # `summary()` (structure sparse, pas une grandeur du digest écologique).
+    inoculum:         InoculumField = field(default=None)
 
     def __post_init__(self):
         if self.humidite    is None: self.humidite    = GridField(self.rows, self.cols)
@@ -436,6 +448,11 @@ class EcoFields(MatiereOrganiqueMixin, HydrologieMixin, RuissellementMixin,
             self.autotox = GridField(self.rows, self.cols, max_val=AUTOTOX_MAX)
         if self.autotox_espece is None:
             self.autotox_espece = [[None] * self.cols for _ in range(self.rows)]
+        # Mémoire d'inoculum (sprint mémoire d'inoculum ①) — VIDE au repos (aucun plot
+        # infecté) → `at`/`total` renvoient 0 partout, `tick_decay` no-op → lu par
+        # personne ce tronçon → déterminisme préservé, golden INTACT.
+        if self.inoculum is None:
+            self.inoculum = InoculumField()
         self._abri_cache = None
 
     def _init_heterogene(self, grid: GridField, plancher: float) -> None:

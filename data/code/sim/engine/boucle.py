@@ -288,6 +288,15 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
             #     espèce ne l'émet encore (tronçon ⑤) → golden NEUTRE.
             eco.tick_allelopathie()
 
+            # 4g. Mémoire d'inoculum du sol (sprint mémoire d'inoculum ①) —
+            #     décroissance passive des buckets d'inoculum (× INOC_DECAY) rabattue
+            #     par le microbiome suppressif. Placé près des autres décroissances de
+            #     champs ; l'ordre est SANS IMPORTANCE (personne ne lit `inoculum` ce
+            #     tronçon — DORMANT). L'alimentation (2 canaux CONSÉQUENCE) se fait dans
+            #     la passe maladie (étape 13, apply_disturbances/deposer_mort). Champ VIDE
+            #     au repos (aucun plot infecté) → boucle sparse vide → golden INTACT.
+            eco.inoculum.tick_decay(eco)
+
             # 5. Diffusion spatiale (humidité, fertilité, microbiome)
             eco.tick_diffusion()
 

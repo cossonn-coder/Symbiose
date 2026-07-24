@@ -20,6 +20,7 @@ import math
 from fields import (_hash_noise, MORTALITY_RATE, climate_stress,
                     DAMPOFF_BASE, DAMPOFF_HUM_SEUIL, FUNGAL_BASE,
                     FUNGAL_VENT_DRY, FUNGAL_SPORE_GAIN, FUNGAL_INOC_SEUIL,
+                    INOC_DEPOT_SEUIL, INOC_FROM_MEMORY, INOC_FROM_DEATH,
                     NECROMASS_PER_CM, FRAC_BOIS_MORT, VITALITE_STEP)
 from .mutations import ReduceHealth, Mutation
 from .resolution import apply_mutations
@@ -71,6 +72,15 @@ def deposer_mort(plant: PlantInstance, eco) -> float:
     if plant.morte:
         return 0.0
     r, c = plant.position
+    # Canal 2 — PULSE de résidu à la mort (mémoire d'inoculum ①, §2). Une plante
+    # infectée qui meurt hiverne son inoculum dans ses débris → la terre reste malade
+    # APRÈS la disparition de l'hôte (leçon sanitation : ne pas composter du matériel
+    # malade). Déposé AVANT de perdre la référence, dans le bucket FAMILLE du plot.
+    # Idempotent via le garde `plant.morte` ci-dessus (un seul dépôt). DORMANT au ① :
+    # `inoculum` n'est lu par personne → golden INTACT.
+    if plant.infection_memory > 0.0:
+        eco.inoculum.deposit(r, c, plant.plant_class.family,
+                             INOC_FROM_DEATH * plant.infection_memory)
     biomass = necromass_biomass(plant)
     fb = frac_bois_mort(plant)
     mous = biomass * (1.0 - fb)
@@ -558,6 +568,16 @@ def apply_disturbances(tile, eco, game_state: dict,
         chronic_muts += shade_stress_damage(plant, eco, seed, week)
         # Mortalité de fond (chronique)
         chronic_muts += background_mortality(plant, eco, seed, week)
+        # Canal 1 — dépôt CONTINU de la mémoire d'inoculum (①, §2). Une plante
+        # infectée vivante (infection_memory au-dessus du seuil) vicie SON plot dans
+        # le bucket de SA famille, ∝ l'excès de charge. Piggyback sur cette passe
+        # par-plante déjà existante (zéro nouvelle boucle spatiale, garde-fou perf).
+        # DORMANT au ① : `inoculum` n'est lu par personne → golden INTACT.
+        if eco is not None and plant.infection_memory > INOC_DEPOT_SEUIL:
+            r, c = plant.position
+            eco.inoculum.deposit(
+                r, c, plant.plant_class.family,
+                INOC_FROM_MEMORY * (plant.infection_memory - INOC_DEPOT_SEUIL))
 
     log += apply_mutations(acute_muts + _cap_chronique(chronic_muts), game_state)
 

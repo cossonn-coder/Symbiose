@@ -56,8 +56,14 @@ verticillium, fonte). Prive le jeu de la **pédagogie de rotation** (philo #2/#6
   comme réducteur (éviterait un « biner pour guérir » anti-permaculture). [Claude]
 
 ## Tronçonnage figé (perf-first, vue en dernier)
-- ① champ `InoculumField` + alimentation (2 canaux) + décroissance/microbiome —
-  DORMANT (rien ne le lit) → **golden INTACT**. Test dynamique + verrou golden.
+- ① **CLOS 2026-07-24** — champ `InoculumField` + alimentation (2 canaux) +
+  décroissance/microbiome, DORMANT (rien ne le lit) → **golden INTACT**
+  (`57c166d8d3626444e0fc9b88b360edc62c047927f7608c45fefae35a6bba08da`).
+  `test_inoculum.py` 15/15. Fichiers : `fields/ecofields/inoculum.py` (neuf),
+  `constants.py` (7 constantes INOC), `container.py` (champ `inoculum` + init),
+  `ecofields/__init__.py` + `fields/__init__.py` (exports), `perturbations.py`
+  (canal 1 dans `apply_disturbances`, canal 2 dans `deposer_mort`), `boucle.py`
+  (`eco.inoculum.tick_decay(eco)` étape 4g).
 - ② couplage `disease_probability` (family) → fungal_disease/damping_off/mildiou —
   **golden RE-FIGÉ MAÎTRISÉ** (proba maladie change, dérive localisée annoncée).
 - ③ molène (espèce + `arch_inoculum` + 5 voix) — golden NEUTRE visé (re-figeage
@@ -71,8 +77,13 @@ O(plots) scatter/tick, décroissance ; négligeable. Zéro RNG (accumulateur
 déterministe). Golden RE-FIGÉ maîtrisé (proba de maladie change).
 
 ## §REPRISE
-Conception FIGÉE. Doc `docs/champs/sol/conception_memoire_inoculum.md` écrit,
-kickoffs `01_champ_inoculum` / `02_couplage_maladie` / `03_molene` /
-`04_menage_cs_vue` écrits. Prochaine étape = exécution :
-`/sprint-auto sprint_memoire_inoculum` (commence au ①, golden INTACT attendu).
-Ordre golden : ① INTACT · ② RE-FIGÉ maîtrisé annoncé · ③ NEUTRE visé · ④ INTACT.
+Tronçon ① **CLOS** (golden INTACT `57c166d8…`, `test_inoculum.py` 15/15). Le champ
+`InoculumField` est en place, alimenté (2 canaux) et décroissant, mais DORMANT :
+personne ne lit `eco.inoculum` dans la math du tick. Placeholders de calibrage posés
+(INOC_MAX/EPSILON/DECAY/MICRO_SUPPRESS/DEPOT_SEUIL/FROM_MEMORY/FROM_DEATH, §10).
+**Prochaine étape = tronçon ②** (`02_couplage_maladie.md`) : greffer `family` à
+`disease_probability` (`× (1 + INOC_GAIN·load[family])`) pour fungal_disease/
+damping_off/mildiou-rondelle, le signal SAR (`croissance.py:316`, family=None) reste
+SANS inoculum (casse la boucle de rétroaction, D5). Ajouter `INOC_GAIN`.
+→ **golden RE-FIGÉ MAÎTRISÉ attendu** (proba de maladie change, dérive localisée
+annoncée). Puis ③ molène (NEUTRE visé) · ④ ménage C# + vue (INTACT).

@@ -461,6 +461,25 @@ FUNGAL_BASE       = 0.04   # maladies fongiques adultes, base avant modulation
 FUNGAL_VENT_DRY   = 0.7    # fraction max de pression fongique retirée par un feuillage bien venté
 FUNGAL_SPORE_GAIN = 0.8    # gain de pression par unité d'inoculum reçu sous le vent
 FUNGAL_INOC_SEUIL = 0.4    # infection_memory d'un voisin au-delà de laquelle il est un FOYER émetteur
+
+# --- Mémoire d'inoculum du sol (sprint mémoire d'inoculum, tronçon ①) --------
+# Champ édaphique PERSISTANT `InoculumField` (dict sparse par plot, indexé FAMILLE)
+# qui se SOUVIENT des maladies passées, là où `infection_memory` (par plante) meurt
+# avec l'hôte. Deux canaux de dépôt = CONSÉQUENCE (jamais une re-dérivation
+# humidité×mono, §5) : (1) dépôt CONTINU de la plante infectée vivante, (2) PULSE de
+# résidu à la mort d'une plante infectée (débris hivernants). Rabattu par la
+# décroissance passive + le microbiome (sols suppressifs). Au tronçon ① le champ est
+# ALIMENTÉ et DÉCROÎT mais lu par PERSONNE dans la math du tick (DORMANT, patron D31.1)
+# → golden INTACT ; le couplage à `disease_probability(family)` est le tronçon ②.
+# PLACEHOLDERS §10 (calage F5 au banc `rotation_inoculum`).
+INOC_MAX           = 1.0    # charge maximale d'un bucket famille (borne haute ∈ [0, INOC_MAX])
+INOC_EPSILON       = 0.01   # sous ce seuil, un bucket est PURGÉ (sparse : borne le coût mémoire)
+INOC_DECAY         = 0.97   # décroissance passive/tick — demi-vie ~2 saisons (l'inoculum HIVERNE)
+INOC_MICRO_SUPPRESS = 0.02  # retrait ADDITIF/tick à microbiome plein (sol vivant DIGÈRE l'inoculum)
+INOC_DEPOT_SEUIL   = 0.3    # infection_memory au-delà de laquelle une plante vivante DÉPOSE (canal 1)
+INOC_FROM_MEMORY   = 0.05   # coefficient du dépôt CONTINU ∝ (infection_memory − seuil) (canal 1)
+INOC_FROM_DEATH    = 0.3    # coefficient du PULSE de résidu ∝ infection_memory à la mort (canal 2)
+
 RESEED_RADIUS_CM  = 150.0  # rayon de dispersion du renouvellement (M7)
 NECROMASS_PER_CM  = 0.03   # nécromasse déposée par cm de hauteur à la mort
 
