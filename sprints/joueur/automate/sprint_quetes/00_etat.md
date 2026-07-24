@@ -45,8 +45,24 @@ pour `/sprint-auto sprint_quetes`. Golden INCHANGÉ sur les 5 tronçons.
   `57c166d8…` (tout hors tick, opt-in). LDC quetes.py 222 (🟢), quetes_corpus.py 52
   (🟢). NON câblé au pont (= tronçon ⑤). Carnet-parseur de la ligne ✉ laissé au ⑤
   (émise, ignorée sans dommage — hors scope kickoff ③).
-- ④ `04_recompenses_materielles.md` — vivace enracinée + structure (outil différé
-  en dette si pas d'inventaire).
+- ④ `04_recompenses_materielles.md` — **FAIT (2026-07-24).** Récompenses MATÉRIELLES
+  rares (V3, #2 respecté : un ACTEUR neuf apparaît, jamais un buff) ajoutées à
+  `sim/quetes.py` :
+  - `("vivace", espece, annees)` → `_offrir_vivace` instancie une pérenne LIGNEUSE du
+    `PERENNIAL_CATALOGUE` puis la FAIT POUSSER par le VRAI chemin (`grow_plant` sur
+    `annees×52` ticks, growth_factor plein soleil = la sonde de calibration des arbres) →
+    structure de segments cohérente « comme si elle avait poussé » ; `form_seed` amorcé
+    par `form_seed_at(seed,…)` → DÉTERMINISTE, zéro RNG. Placement au plot (0,0) de la
+    1ʳᵉ tuile (tri `tile_id`). Test : pommier 6 ans → 8 segments, 211 cm, reproductible.
+  - `("structure", kind)` → `_offrir_structure` pose un `bac` (`Structure` + append à
+    `eco.structures`, patron `poser_bac`) GRATUITEMENT (pas de Vigueur : cadeau ≠ geste
+    payant), unicité tuile respectée (`structure_de_tuile`).
+  Aiguillage branché dans `_appliquer_recompense` (③) sans toucher aux tags simples ;
+  imports LOCAUX (rare, évite tout cycle). 2 lettres corpus ajoutées
+  (`lettre_vieux_pommier_gaston` vivace pommier, `lettre_bac_compost_odette` structure).
+  **OUTIL DIFFÉRÉ EN DETTE** (aucun inventaire d'outils n'existe → D93, cf. DETTE.md).
+  Tests `tests/test_quetes.py` 52/52 (2 suites ④). **Golden INCHANGÉ** `57c166d8…`
+  (opt-in, hors tick). LDC quetes.py 260 (🟢), quetes_corpus.py 68 (🟢).
 - ⑤ `05_vue_godot_courrier.md` — pont `cmd_courrier` + panneau lettres + banc F5.
   Clôture : maj DETTE/BACKLOG/journal.
 
@@ -93,21 +109,16 @@ pour `/sprint-auto sprint_quetes`. Golden INCHANGÉ sur les 5 tronçons.
 Négligeable : K conditions actives lues sur snapshot hors tick, K petit
 (plafond de quêtes actives). Aucun O(N²). Golden intact.
 
-## §REPRISE (prochaine étape : tronçon ④)
-Tronçons ①②③ CLOS. Prochaine étape = **④ `04_recompenses_materielles.md`** :
-récompenses MATÉRIELLES rares (vivace déjà enracinée = instanciation d'une pérenne
-à âge avancé ; structure permanente posée ; outil différé en dette si pas
-d'inventaire d'outils). S'appuie sur `_appliquer_recompense` (③, `sim/quetes.py`) :
-y AJOUTER les tags matériels (`("vivace", espece, age)`, `("structure", type)`) sans
-toucher aux tags simples. Attention #2 : instancier une pérenne à âge avancé est un
-CADEAU matériel (une nouvelle plante posée), PAS un buff sur une plante existante.
-Points d'accroche posés : `evaluer_declencheurs(gs, player)` (ouverture au passage
-de saison), `evaluer_etat(gs)` + `notifier_geste` (clôture), `remettre_recompenses(gs,
-player)` (versement, drapeau `recompense_versee`), `avancement(gs, id)` (phrase
-diégétique ⑤). Reste ⑤ = pont `cmd_courrier` + panneau lettres + banc F5 (câblage du
-driver : appeler `evaluer_declencheurs`/`evaluer_etat`/`remettre_recompenses` au
-passage de saison ; parseur carnet de la ligne ✉). Golden à garder INCHANGÉ.
-Ne pas re-figer.
+## §REPRISE (prochaine étape : tronçon ⑤)
+Tronçons ①②③④ CLOS. Prochaine étape = **⑤ `05_vue_godot_courrier.md`** : pont
+`cmd_courrier` + panneau lettres + banc F5 (câblage du DRIVER : appeler
+`evaluer_declencheurs`/`evaluer_etat`/`remettre_recompenses` au passage de saison ;
+parseur carnet de la ligne ✉). Toute l'API moteur est en place :
+`evaluer_declencheurs(gs, player)` (ouverture), `evaluer_etat(gs)` + `notifier_geste`
+(clôture), `remettre_recompenses(gs, player)` (versement idempotent — inclut désormais
+les cadeaux matériels vivace/structure, drapeau `recompense_versee`), `avancement(gs, id)`
+(phrase diégétique V2 pour le panneau). Clôture ⑤ : maj DETTE (D93 outil différé) /
+BACKLOG / journal. Golden à garder INCHANGÉ. Ne pas re-figer.
 
 ---
 Lire : `CLAUDE.md` + cette fiche + l'amorce (dans le fil `/conception D79`) +

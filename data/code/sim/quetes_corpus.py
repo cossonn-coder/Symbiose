@@ -32,7 +32,12 @@ RÉCOMPENSES (V3, catalogue déclaratif ouvert — SIMPLES au ③) :
   - `("page",)`                → une page secrète débloquée ;
   - `("vigueur", montant)`     → crédit de Vigueur joueur (PAS un buff plante, #2) ;
   - `("maitrise", objet, poids)` → crédit de maîtrise (une preuve pondérée).
-Les récompenses MATÉRIELLES lourdes (vivace enracinée, structure) sont pour ④.
+RÉCOMPENSES MATÉRIELLES rares (V3, tronçon ④ — un ACTEUR neuf apparaît, jamais un
+buff #2) :
+  - `("vivace", espece, annees)`  → une pérenne LIGNEUSE déjà enracinée depuis
+                                     `annees` ans (instanciée puis poussée par le vrai
+                                     chemin de croissance) apparaît dans le jardin ;
+  - `("structure", kind)`         → une structure permanente (`bac` à compost) posée.
 """
 from __future__ import annotations
 
@@ -114,4 +119,29 @@ QUETES_CORPUS: dict[str, Quete] = {
         condition=("nombre_vivant_min", "pommier", 3),
         recompense=("vigueur", 30.0),
         declencheur=("palier", "pommier", 2)),
+
+    # --- Récompenses MATÉRIELLES rares (④) --------------------------------------
+    "lettre_vieux_pommier_gaston": Quete(
+        id="lettre_vieux_pommier_gaston",
+        donneur="Gaston",
+        texte_lettre=(
+            "Voisin, je me fais vieux et mon verger me dépasse. Toi qui sais si "
+            "bien mener les pommiers, laisse-moi t'offrir l'un des miens — un beau "
+            "sujet de six ans, déjà en âge de fleurir. Il sera mieux chez toi.\n"
+            "— Le vieux Gaston"),
+        condition=("nombre_vivant_min", "pommier", 2),
+        recompense=("vivace", "pommier", 6),       # pérenne enracinée depuis 6 ans (④)
+        declencheur=("palier", "pommier", 3)),
+
+    "lettre_bac_compost_odette": Quete(
+        id="lettre_bac_compost_odette",
+        donneur="Odette",
+        texte_lettre=(
+            "Mon mari en avait fabriqué deux, de ces grands bacs à compost, et je "
+            "n'ai jamais eu l'usage du second. Il prend la poussière au fond du "
+            "hangar. Passe donc le chercher, il fera merveille chez toi.\n"
+            "— Ta voisine Odette"),
+        condition=("recolte_cumulee", "recolter", 5, "tomate"),
+        recompense=("structure", "bac"),           # structure permanente posée (④)
+        declencheur=("saison", 12)),
 }

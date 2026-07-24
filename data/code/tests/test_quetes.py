@@ -376,8 +376,84 @@ def test_remettre_opt_in():
           Q.remettre_recompenses(gs, "j") == ["q_p"])
 
 
+# ---------------------------------------------------------------------------
+# 19. Récompense MATÉRIELLE : vivace enracinée (④) — un ACTEUR neuf, pas un buff
+# ---------------------------------------------------------------------------
+
+def _monde_cadeau():
+    """Monde MINIMAL mais RÉEL (tuile + eco) : les cadeaux matériels ont besoin d'une
+    destination (`tiles` / `eco`), contrairement aux conditions d'état factices."""
+    from world import Tile
+    from fields import init_eco
+    tile = Tile(tile_id="t0", soil_type="terre")
+    eco = init_eco(tile.tile_id, tile.grid_rows, tile.grid_cols)
+    return {"week": 3, "seed": 42, "log": [],
+            "tiles": [tile], "eco": {tile.tile_id: eco}}
+
+
+def _accomplir_et_remettre(gs, quete):
+    Q.ajouter_quete(gs, quete)
+    Q.notifier_geste(gs, "j", "recolter", _FakePlante("tomate"))  # 1 récolte suffit
+    Q.remettre_recompenses(gs, "j")
+
+
+def test_recompense_vivace():
+    print("\n[19] récompense vivace : un pommier de 6 ans apparaît, poussé & cohérent")
+    from plants.perennials import AppleTree
+    q = Q.Quete(id="q_vivace", donneur="Gaston",
+                condition=("recolte_cumulee", "recolter", 1, "tomate"),
+                recompense=("vivace", "pommier", 6))
+    gs = _monde_cadeau()
+    _accomplir_et_remettre(gs, q)
+    plants = gs["tiles"][0].plants
+    check("une plante ajoutée à la tuile", len(plants) == 1, f"n={len(plants)}")
+    p = plants[0]
+    check("c'est un pommier VIVANT",
+          p.is_alive and p.plant_class is AppleTree, f"class={p.plant_class}")
+    check("âge = 6 ans (cohérent avec la croissance)", abs(p.age_years - 6.0) < 1e-9,
+          f"age={p.age_years}")
+    check("structure réellement poussée (>1 segment)", len(p.segments) > 1,
+          f"segments={len(p.segments)}")
+    check("arbre établi (hauteur > 1 m, pas un collet)", p.current_height > 100.0,
+          f"h={p.current_height:.0f}cm")
+    # Déterminisme : même seed → même arbre.
+    gs2 = _monde_cadeau()
+    _accomplir_et_remettre(gs2, q)
+    p2 = gs2["tiles"][0].plants[0]
+    check("déterministe : hauteur identique",
+          abs(p.current_height - p2.current_height) < 1e-9,
+          f"{p.current_height:.4f} vs {p2.current_height:.4f}")
+    # Idempotent : un rappel ne re-offre pas l'arbre.
+    Q.remettre_recompenses(gs, "j")
+    check("cadeau versé une seule fois (idempotent)", len(plants) == 1)
+
+
+# ---------------------------------------------------------------------------
+# 20. Récompense MATÉRIELLE : structure permanente (④) — gratuite, unique
+# ---------------------------------------------------------------------------
+
+def test_recompense_structure():
+    print("\n[20] récompense structure : un bac à compost posé (gratuit, unique)")
+    from sim import vigueur
+    q = Q.Quete(id="q_struct", donneur="Odette",
+                condition=("recolte_cumulee", "recolter", 1, "tomate"),
+                recompense=("structure", "bac"))
+    gs = _monde_cadeau()
+    vig_avant = vigueur.ensure_player(gs, "j")["courante"]
+    _accomplir_et_remettre(gs, q)
+    eco = gs["eco"]["t0"]
+    check("un bac posé sur la tuile", any(s.kind == "bac" for s in eco.structures))
+    check("cadeau GRATUIT (aucune Vigueur prélevée)",
+          vigueur.ensure_player(gs, "j")["courante"] == vig_avant,
+          f"avant={vig_avant} après={vigueur.ensure_player(gs, 'j')['courante']}")
+    # Idempotent + unicité tuile : un rappel ne pose pas un 2ᵉ bac.
+    Q.remettre_recompenses(gs, "j")
+    check("un seul bac (idempotent + unicité tuile)",
+          sum(s.kind == "bac" for s in eco.structures) == 1)
+
+
 def main():
-    print("=== test_quetes (D79 ①②③) ===")
+    print("=== test_quetes (D79 ①②③④) ===")
     test_accomplissement_et_evenement()
     test_autre_espece_ignoree()
     test_autre_verbe_ignore()
@@ -396,6 +472,8 @@ def main():
     test_recompense_vigueur()
     test_est_atteignable()
     test_remettre_opt_in()
+    test_recompense_vivace()
+    test_recompense_structure()
 
     total = len(_results)
     ok = sum(1 for _, c in _results if c)

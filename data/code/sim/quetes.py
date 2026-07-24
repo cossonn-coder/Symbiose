@@ -407,11 +407,12 @@ def evaluer_declencheurs(game_state: dict, player: str) -> list:
 
 # --- ③ Récompenses SIMPLES à l'accomplissement (V3) --------------------------
 def _appliquer_recompense(game_state: dict, player: str, recompense) -> None:
-    """Verse UNE récompense simple (V3) — appelée à l'accomplissement, hors tick.
-    Aucun buff plante (#2) : on ne touche QUE l'inventaire/état JOUEUR via les API
-    EXISTANTES (banque de graines, pages, Vigueur D11, maîtrise D12), jamais un canal
-    inventé. `None` = plaisir pur → no-op. Une banque de graines absente (contexte
-    minimal) fait échouer silencieusement le canal `graine` (pas de destination)."""
+    """Verse UNE récompense (V3) — appelée à l'accomplissement, hors tick. Deux classes :
+    SIMPLES (état JOUEUR via les API EXISTANTES : banque de graines, pages, Vigueur D11,
+    maîtrise D12) et MATÉRIELLES rares (④ : `vivace`/`structure` → un ACTEUR neuf apparaît
+    dans le monde). Aucun buff plante (#2) : on ne dope aucune plante en terre — on crédite
+    le joueur OU on fait naître un cadeau. `None` = plaisir pur → no-op. Un contexte minimal
+    (banque/monde absents) fait échouer silencieusement le canal concerné (pas de destination)."""
     if recompense is None:
         return
     tag = recompense[0]
@@ -426,6 +427,72 @@ def _appliquer_recompense(game_state: dict, player: str, recompense) -> None:
         maitrise.enregistrer_preuve(game_state, player, objet, poids)
     elif tag == "page":
         pages.reveler_page(game_state, player, "fouille")
+    elif tag == "vivace":                         # ④ récompense MATÉRIELLE rare
+        _offrir_vivace(game_state, recompense[1], recompense[2])
+    elif tag == "structure":                      # ④ récompense MATÉRIELLE rare
+        _offrir_structure(game_state, recompense[1])
+
+
+# --- ④ Récompenses MATÉRIELLES rares (V3) : un ACTEUR neuf apparaît, jamais un
+# buff. On ne touche AUCUNE plante en terre (#2) — on FAIT NAÎTRE un cadeau (une
+# pérenne instanciée à un âge avancé, une structure posée), comme le voisin qui
+# offre son vieux pommier. Réservées à quelques belles lettres.
+def _tuile_cadeau(game_state: dict):
+    """La tuile-destination d'un cadeau matériel : la PREMIÈRE par `tile_id`
+    (déterministe, philo #3). Renvoie None hors d'un vrai monde (contexte de test
+    minimal sans `tiles`) → le cadeau retombe silencieusement (comme le canal
+    `graine` sans banque). Placement au plot (0,0) — règle simple et stable."""
+    tiles = game_state.get("tiles")
+    if not tiles:
+        return None
+    return min(tiles, key=lambda t: t.tile_id)
+
+
+def _offrir_vivace(game_state: dict, espece: str, annees: float) -> None:
+    """Offre une pérenne LIGNEUSE déjà enracinée depuis `annees` (cadeau matériel).
+    On ne forge PAS un état incohérent (#2, kickoff §Ne PAS faire) : on instancie une
+    `PlantInstance` NEUVE puis on la FAIT POUSSER par le vrai chemin de croissance
+    (`grow_plant`, growth_factor plein soleil = la sonde de calibration des arbres) sur
+    `annees × 52` ticks — le moteur voit une plante VALIDE, avec sa structure de segments
+    tabulée à son âge, exactement « comme si elle avait poussé ». DÉTERMINISTE : `form_seed`
+    (identité morphologique) est amorcé par `form_seed_at` sur la seed globale, zéro RNG.
+    Silencieux si l'espèce n'est pas une pérenne du catalogue ou hors d'un vrai monde."""
+    cls = PERENNIAL_CATALOGUE.get(espece)
+    tile = _tuile_cadeau(game_state)
+    if cls is None or tile is None:
+        return
+    from plants.base import PlantInstance          # imports LOCAUX (rare, évite tout cycle de chargement)
+    from sim.growth.phases import grow_plant
+    from fields import form_seed_at
+    seed = game_state.get("seed", 0)
+    plant = PlantInstance(plant_class=cls, position=(0, 0))
+    plant.form_seed = form_seed_at(seed, plant.x_cm, plant.y_cm,
+                                   game_state.get("week", 0))
+    for w in range(int(round(annees * 52))):       # croissance réelle, tick à tick
+        grow_plant(plant, seed, w)                 # light_field=None → apex droit (plein soleil)
+    plant.age_years = float(annees)                # âge cohérent avec la structure poussée
+    tile.plants.append(plant)
+
+
+def _offrir_structure(game_state: dict, kind: str) -> None:
+    """Pose une structure permanente `kind` (un `bac` à compost) en cadeau — un ACTEUR
+    posé, pas un buff. On ajoute la `Structure` à `eco.structures` EXACTEMENT comme le
+    fait `poser_bac` après paiement, MAIS sans facturer de Vigueur : un cadeau est GRATUIT
+    (appeler `poser_bac` prélèverait la Vigueur du joueur — absurde pour un présent). On
+    respecte l'unicité par tuile (au plus un bac, comme `poser_bac`) : si la tuile en porte
+    déjà un, le cadeau retombe silencieusement. Silencieux hors d'un vrai monde."""
+    tile = _tuile_cadeau(game_state)
+    ecos = game_state.get("eco")
+    if tile is None or not ecos:
+        return
+    eco = ecos.get(tile.tile_id)
+    if eco is None:
+        return
+    from fields.ecofields import Structure
+    from sim.actions.compost import structure_de_tuile
+    if structure_de_tuile(eco, kind) is not None:
+        return                                     # déjà une structure de ce type (unicité tuile)
+    eco.structures.append(Structure(kind=kind, plot=(0, 0)))
 
 
 def remettre_recompenses(game_state: dict, player: str) -> list:
