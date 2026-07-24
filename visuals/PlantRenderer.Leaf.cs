@@ -83,6 +83,12 @@ namespace Symbiose
 				["CherryTree"] = new(LeafShape.Elliptique, 1.9f, 0, true), // limbe ovale-lancéolé
 				["WalnutTree"] = new(LeafShape.Composee,  1.7f, 5, false), // feuille composée pennée
 				["OakTree"]    = new(LeafShape.Lobee,     1.6f, 5, false), // limbe lobé caractéristique
+				// --- Essences migrées en croissance procédurale (D91 T4) -----
+				["BeechTree"]  = new(LeafShape.Elliptique, 1.7f, 0, true),  // hêtre : ovale ondulé-denté
+				["HornbeamTree"] = new(LeafShape.Elliptique, 1.7f, 0, true),// charme : ovale doublement denté
+				["BirchTree"]  = new(LeafShape.Cordee,    1.2f, 0, true),   // bouleau : triangulaire, base tronquée
+				["Alder"]      = new(LeafShape.Elliptique, 1.3f, 0, false), // aulne : obovale arrondi de berge
+				["FirTree"]    = new(LeafShape.Aciculaire, 3.0f, 0, false), // SAPIN : aiguilles (touffes fines) — pas de limbe
 			};
 		private static readonly LeafProfile DefaultLeaf =
 			new(LeafShape.Elliptique, 1.15f / 0.65f, 0, true); // = proportions de l'ellipse historique

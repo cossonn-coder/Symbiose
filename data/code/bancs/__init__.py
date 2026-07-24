@@ -16,7 +16,7 @@ from .hydrologie import tourbiere
 from .biotique import (infestation_ravageur, verger_floraison, semis_tempere,
                        etalement_floraison, grimpantes, floraison_saisons)
 from .succession import succession_bascule
-from .croissance import vieux_pommier
+from .croissance import vieux_pommier, foret_ports
 from .luxuriance import luxuriance
 from .diversite import diversite_fondatrice
 from .modele_spatial import modele_spatial
@@ -41,6 +41,7 @@ BANCS = {
     "grimpantes": grimpantes,
     "succession_bascule": succession_bascule,
     "vieux_pommier": vieux_pommier,
+    "foret_ports": foret_ports,
     "luxuriance": luxuriance,
     "diversite_fondatrice": diversite_fondatrice,
     "modele_spatial": modele_spatial,
@@ -65,7 +66,13 @@ BANC_POST_INIT = {"palette_gestes": _palette_gestes.post_init}
 # `diversite_fondatrice` sème du TOURNESOL (t_germ_opt=20, sol chaud requis) : un
 # départ début printemps fige la levée sous le seuil thermique pendant des semaines.
 # Décalé MI-PRINTEMPS pour voir la désynchronisation des rythmes tout de suite.
-BANC_WEEK_DEPART = {"grimpantes": 9, "luxuriance": 9, "diversite_fondatrice": 9}
+# `foret_ports` (D91 ④) démarre en PLEIN ÉTÉ (semaine 20) : la densité foliaire
+# du snapshot dérive de la saison (`foliage_density_at`) — un départ hiver
+# montrerait les 8 CADUCS nus (seuls sapin/pommier persistants garderaient un
+# feuillage). L'été donne les 10 couronnes pleines et sans coloration automnale,
+# pour lire chaque PORT habillé (le banc n'observe PAS le rythme phénologique).
+BANC_WEEK_DEPART = {"grimpantes": 9, "luxuriance": 9, "diversite_fondatrice": 9,
+                    "foret_ports": 20}
 
 
 def banc_categorie(nom: str) -> str:

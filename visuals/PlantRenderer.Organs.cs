@@ -142,6 +142,11 @@ namespace Symbiose
 				["CherryTree"] = new OrganPalette("3f8a3e", "f2dde2", "7fae50", "a01f28"), // cerisier : vert franc, fleur rose pâle, cerise rouge profond
 				["WalnutTree"] = new OrganPalette("4a8240", "dfe2cc", "7aa84f", "4a3a22"), // noyer : vert olive, brou brun
 				["OakTree"]    = new OrganPalette("46823c", "d6cf9a", "78a64a", "7a5a2e"), // chêne : vert mat lobé, gland brun
+				// --- Essences migrées en croissance procédurale (D91 T4) -------------
+				["BeechTree"]  = new OrganPalette("4a8a3e", "e6ddbe", "6fa04a", "6a4a2a"), // hêtre : vert frais lisse, faîne brune
+				["HornbeamTree"] = new OrganPalette("3f7d38", "9aaa60", "7a9a50", "8a7a4a"), // charme : vert sombre, chatons vert-jaune, samares
+				["BirchTree"]  = new OrganPalette("5aa048", "9ab060", "78b050", "9a8a4a"), // bouleau : vert clair vif, chatons pendants (jaunit en automne)
+				["FirTree"]    = new OrganPalette("2f5a3a", "6a5a4a", "4a6a4a", "5a3a28"), // sapin : vert conifère bleu-sombre, cônes dressés brun-pourpre
 				// --- Guilde marécageuse (sprint HYDROLOGIE & MARÉCAGES ⑤/⑥) ----------
 				["Alder"]      = new OrganPalette("3a6e3f", "6a7a4a", "5a8a4a", "4a3020"), // aulne : vert sombre de berge, chatons vert-brun, strobiles (cônes) brun-noir
 				["Sphagnum"]   = new OrganPalette("7aae6a", "9abf7a", "8fc07a", "9a8f5a"), // sphaigne : tapis vert-jaune clair de tourbière (pas de fleur, spores)

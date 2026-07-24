@@ -166,6 +166,42 @@ pommier — pour qu'ils se dessinent en branches et portent le taper D90.
   responsabilité unique = catalogue, déjà signalé T2). Valeurs = placeholders → F5 (T4).
   Reste : **T4 (vue Godot + banc F5)**.
 
+- [x] **T4 — vue Godot + banc F5** (2026-07-24). PUR-VUE (C#) + banc Python (outil
+  de test, niveau `main.py`). **Golden INCHANGÉ `57c166d8…`** (rien touché au moteur
+  écolo). `dotnet build Symbiose.csproj` **VERT** (0 erreur / 0 avertissement).
+  test_croissance : 133/133 (inchangé, T4 ne touche pas la sim).
+  - **Rendu branches** : générique — les 9 arbres sortent du snapshot en SEGMENTS
+    comme le pommier, `PlantRenderer` les dessine sans code par espèce (vérifié :
+    aucun code d'ossature neuf).
+  - **Aiguilles sapin** : **l'archétype `Aciculaire` existait déjà** (`LeafShape`,
+    utilisé par thym/lavande). Décision (anti sur-ingénierie #2) : **mapper
+    `FirTree → Aciculaire`** dans `LeafProfiles` = mode aiguilles, aucun dispatch
+    neuf. `FirTree` reste HORS `LeafOutlines` → au ×16+ il retombe sur l'archétype
+    aiguille (pas de limbe à détourer ; verticille = polish différé §7).
+  - **Couverture par espèce** (clé = nom de classe Python) : `LeafProfiles` +5
+    (Beech/Hornbeam=Elliptique, Birch=Cordee, Alder=Elliptique, Fir=Aciculaire) ;
+    `LeafOutlines` +1 (Alder ; Fir volontairement absent) ; `Palettes` +4
+    (Beech/Hornbeam/Birch/Fir ; Alder déjà présent, guilde marais). Teintes par espèce.
+  - **Banc `foret_ports`** (`bancs/croissance.py` + registre `bancs/__init__.py`,
+    `BANC_WEEK_DEPART=20` plein été → 10 couronnes pleines) : les 10 arbres (pommier +
+    9) en grille 5×2, ~5 m d'écart, `init config="foret_ports"`. **Décision de
+    conception imprévue** : PAS de déroulé Engine (comme `vieux_pommier`) mais
+    **morphogénèse PURE** (`grow_plant` direct, l'oracle des sondes T1-T3). Raison :
+    l'**aulne** (berge, veut le sol gorgé) et le **figuier** (méditerranéen, pourrit
+    dans l'eau) ont des besoins hydriques **inconciliables** → aucune nappe forcée
+    unique ne garde les 10 vivants sous le moteur complet (aulne+figuier meurent <an 2,
+    constaté). Le banc observe l'ARCHITECTURE, pas l'équilibre écolo → on déroule la
+    seule croissance (ni mort hydrique, ni volontaires spontanés). Déterministe
+    (graine + positions fixes), sans mécanique neuve, monté 0,6 s (O(segments), pas de
+    LightField). Golden NEUTRE (jamais monté pour smoke/full). Heights à l'an 10
+    conformes aux gabarits T1-T3 (cerisier 504, noyer 620, bouleau 783…).
+  - **Encyclopédie (§6)** : enrichissement descriptif optionnel/non bloquant **NON
+    fait** (différé, cf. kickoff « peut être différé »).
+  - Tailles : `croissance.py` 54 LDC 🟢 ; `PlantRenderer.Leaf.cs` 217 🟢,
+    `.LeafOutline.cs` 167 🟢, `.Organs.cs` **317 🟡** (vigilance, +4 lignes palette
+    sur un fichier DÉJÀ en zone, responsabilité unique = organes procéduraux ; pas
+    scindé mid-tronçon, signalé). **Reste = F5 Nico** (validation visuelle des 10 ports).
+
 ## CARTE DES TRONÇONS (kickoffs autosuffisants présents)
 - `01_feuillus_etale.md` — levier `auxin_release_scale` + cerisier/charme/hêtre/noyer/chêne
 - `02_cas_atypiques.md` — aulne / figuier buissonnant / sapin flèche
@@ -173,13 +209,23 @@ pommier — pour qu'ils se dessinent en branches et portent le taper D90.
 - `04_vue_godot_banc.md` — rendu branches + aiguilles sapin + banc F5 `foret_ports`
 
 ## §REPRISE
-Conception FIGÉE. **T1 + T2 + T3 CLOS** (golden `57c166d8…` inchangé). Les **10 arbres sont
-désormais TOUS migrés** (`procedural_growth=True` : pommier + 9). Prochaine (et DERNIÈRE)
-étape : **T4 = `04_vue_godot_banc.md`** — vue Godot (les 9 ports en branches via `PlantRenderer`,
-mode aiguilles sapin `PlantRenderer.Organs.cs`, LOD) + banc d'observation `foret_ports` des 10
-arbres. Golden intact (pure vue C#). Lire : `CLAUDE.md` + ce fichier + le doc figé
-`docs/vegetal/croissance/conception_migration_arbres.md` + `04_vue_godot_banc.md`.
-Leviers moteur EN PLACE : `auxin_release_scale` (T1) + `gravitropism_gain` (T3, discriminant =
-éloignement horizontal à l'axe, PAS depth — cf. T3) par espèce, défauts procéduraux sur
-`PerennialWoody`. **Le port pleureur du bouleau est un port F5 à valider visuellement** (retombée
-des rameaux distaux). Chaque tronçon met à jour ce fichier (cocher + valeurs + hash golden).
+Conception FIGÉE. **T1 + T2 + T3 + T4 CLOS** (golden `57c166d8…` inchangé de bout en bout).
+Les **10 arbres sont TOUS migrés** (`procedural_growth=True`) ET rendus (branches génériques +
+feuilles/palettes par espèce + aiguilles sapin). **SPRINT PRÊT À CLÔTURER** — il ne reste que la
+**validation F5 par Nico** (aucun dev restant côté agent).
+
+**Ce que Nico doit valider au F5** (`init config="foret_ports"`, banc monté ~1 s, plein été) :
+1. Chaque port lit-il juste ? flèche du **sapin**, étalé du **chêne/hêtre/noyer**, ovoïde du
+   **cerisier/charme**, bas-ramifié du **figuier**, élancé de l'**aulne**, **pleureur** du
+   **bouleau** (retombée des rameaux distaux — le port F5 le plus incertain).
+2. **Sapin** : nseg=10 à l'an 10 → flèche assez fournie ? aiguilles crédibles (archétype
+   Aciculaire) ou trop clairsemé → relever `max_segments`/densité côté moteur (hors T4).
+3. **Feuilles** par espèce plausibles (repli/contour) ? teintes des palettes ?
+4. Calibrage à l'œil des gabarits placeholders T1-T3 (`foliage_halfwidth`, `auxin_release_scale`,
+   `gravitropism_gain`) — tout écart = dette/kickoff moteur séparé, pas T4.
+
+Après F5 OK : cocher le sprint CLOS, passer **D91 → CLOS** dans `DETTE.md`, écrire l'entrée de
+clôture `journal.md`, mettre à jour `BACKLOG.md`. Leviers moteur EN PLACE : `auxin_release_scale`
+(T1) + `gravitropism_gain` (T3, discriminant = éloignement horizontal à l'axe, PAS depth) par
+espèce, défauts procéduraux sur `PerennialWoody`. Encyclopédie §6 = enrichissement optionnel
+NON fait (différé). **NE PAS re-figer le golden** (T4 est pur-vue).

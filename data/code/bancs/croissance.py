@@ -30,8 +30,11 @@ from __future__ import annotations
 
 from world import Tile, House
 from sim.engine import Engine
+from sim.growth import grow_plant
 from fields import init_eco
 from plants import AppleTree
+from plants.perennials import (Fig, CherryTree, WalnutTree, OakTree, BeechTree,
+                               BirchTree, HornbeamTree, FirTree, Alder)
 from .base import monde
 
 # Années de morphogénèse déroulées à l'init pour bâtir la couronne. À ~15 ans la
@@ -79,3 +82,71 @@ def build_and_grow():
             if not arbre.is_alive:      # garde-fou : arrêt propre si l'arbre meurt
                 return tile, eco
     return tile, eco
+
+
+# ---------------------------------------------------------------------------
+# BANC « forêt de ports » (D91, tronçon ④) — les 10 arbres procéduraux côte à
+# côte pour valider CHAQUE PORT à l'œil : flèche du sapin, étalé du chêne/hêtre/
+# noyer, ovoïde du cerisier/charme, bas-ramifié du figuier, élancé de l'aulne,
+# pleureur du bouleau. Après la migration D91, les 9 arbres sortent du snapshot
+# en SEGMENTS (comme le pommier) → le rendu C# les dessine en branches sans code
+# par espèce ; ce banc est l'instrument F5 qui donne à voir les 10 silhouettes.
+#
+# POURQUOI une morphogénèse PURE (grow_plant direct), pas le déroulé Engine de
+# `vieux_pommier` : sur UNE tuile, les 10 espèces ont des EXIGENCES HYDRIQUES
+# INCONCILIABLES — l'aulne est une essence de BERGE (D61, veut le sol gorgé) et
+# le figuier MÉDITERRANÉEN pourrit les pieds dans l'eau. Aucune nappe forcée
+# unique ne les garde tous vivants sous le moteur écologique complet (constaté :
+# aulne+figuier meurent < an 2 quelle que soit la valeur). Or ce banc observe
+# l'ARCHITECTURE, pas l'équilibre écologique. On DÉROULE donc la seule
+# morphogénèse — `grow_plant`, EXACTEMENT l'oracle de calibrage des sondes T1-T3
+# (tests/test_croissance.py `_grow_tree`) — sur `WARMUP_ANS` ans de cycle
+# saisonnier réel : chaque arbre bâtit sa charpente sans jamais subir la mort
+# hydrique (ni volontaires spontanés, puisqu'aucun tick d'écosystème n'est joué).
+# Déterministe (graine de forme fixe, positions fixes → même forêt à chaque
+# lancement, philo #3), et sans mécanique neuve (grow_plant est le tick de
+# croissance existant, appelé sans champ de lumière → apex droit, gravitropisme
+# du bouleau appliqué). Golden NEUTRE : `croissance.py` n'est monté que par
+# `init config="foret_ports"`, jamais pour smoke/full.
+#
+# Les 10 ports, dans l'ordre de lecture (grille 5×2) : rangée haute = feuillus
+# étalés migrés en T1 + pommier témoin ; rangée basse = atypiques T2/T3.
+FORET_PORTS = [AppleTree, CherryTree, HornbeamTree, BeechTree, WalnutTree,
+               OakTree, Alder, Fig, FirTree, BirchTree]
+# Graine de forme FIXE : la ramification hash-based (form_seed) en dérive → forêt
+# reproductible d'un lancement à l'autre (philo #3).
+FORET_SEED = 20260724
+# An 10 = fenêtre de calibrage des sondes T1-T3 (les gabarits h10/cr10 y sont
+# calés). Coût d'init modeste : morphogénèse pure O(segments), pas de LightField.
+FORET_WARMUP_ANS = 10
+# Disposition en grille 5 colonnes × 2 rangées, ~5 m entre arbres (couronnes
+# ~2,5-3,5 m de rayon → silhouettes lisibles, léger recouvrement au bord assumé
+# — le F5 zoome/panne pour isoler un port). Marge de bord pour cadrer.
+FORET_NC = 5             # arbres par rangée
+FORET_ESPACEMENT = 10    # plots (× 50 cm = 5 m) entre centres d'arbres
+FORET_MARGE = 5          # plots de marge sur les bords
+
+
+def foret_ports():
+    """Banc « forêt de ports » (D91 ④) : les 10 arbres procéduraux (pommier + les
+    9 migrés) déroulés `FORET_WARMUP_ANS` ans de morphogénèse PURE, espacés en
+    grille sur une tuile fertile, pour observer chaque PORT à maturité. Instrument
+    F5 : oracle visuel = l'œil de Nico (flèche, étalé, pleureur, buissonnant…).
+    Monté par `init config="foret_ports"`."""
+    rows = FORET_MARGE * 2 + FORET_ESPACEMENT
+    cols = FORET_MARGE * 2 + (FORET_NC - 1) * FORET_ESPACEMENT
+    tile = Tile(tile_id="FORET_PORTS", soil_type="terre",
+                grid_rows=rows, grid_cols=cols)
+    eco = init_eco("FORET_PORTS", rows, cols, humidite=1.2, fertilite=1.5,
+                   microbiome=0.5, soil_type="terre", heterogene=True)
+    for k, cls in enumerate(FORET_PORTS):
+        row = FORET_MARGE + (k // FORET_NC) * FORET_ESPACEMENT
+        col = FORET_MARGE + (k % FORET_NC) * FORET_ESPACEMENT
+        arbre = tile.add_plant(cls, row, col)
+        arbre.growth_factor = 1.0            # croissance favorable (banc)
+        # Morphogénèse pure : un tick de croissance par semaine, cycle saisonnier
+        # réel (1+kk) comme la sonde de calibrage. Aucun tick d'écosystème → ni
+        # mort hydrique, ni volontaires (cf. docstring module).
+        for kk in range(FORET_WARMUP_ANS * 52):
+            grow_plant(arbre, FORET_SEED, 1 + kk)
+    return monde([tile], {tile.tile_id: eco})
