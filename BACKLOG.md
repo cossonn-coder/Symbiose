@@ -21,7 +21,18 @@
 
 *Aucun en exécution.*
 
-Dernier sprint clos : **mémoire d'inoculum du sol** (D10, 2026-07-24, `/sprint-auto`
+Dernier sprint clos : **système de quêtes** (D79, 2026-07-24, `/sprint-auto`
+①→⑤) — module MOTEUR joueur neuf `sim/quetes.py` (opt-in, conditions cumulées par
+hook geste + conditions d'état sur snapshot hors tick, déclenchement déterministe
+par palier/saison, plafond 6) + corpus de **lettres anonymes** `sim/quetes_corpus.py`
+(voix épistolaire, progression diégétique #5) + récompenses (simples + rares :
+vivace déjà enracinée par vraie croissance, structure gratuite ; outil différé
+→ **D93**) + pont `courrier` + panneau C# `CourrierPanel` au hub + banc F5
+`bancs/courrier.py` ; `sprints/joueur/automate/sprint_quetes/00_etat.md`
+(golden INTACT `57c166d8…` de bout en bout, `dotnet build` vert, pont 0.5.40,
+`test_quetes` 52/52, reste F5 Nico). **D79 CLOSE**.
+
+Sprint clos précédent : **mémoire d'inoculum du sol** (D10, 2026-07-24, `/sprint-auto`
 ①→④) — champ édaphique `InoculumField` « terre malade » sparse indexé par famille
 (pédagogie de rotation, philo #2/#6), greffé au point unique `disease_probability(family)`,
 indicatrice molène + 5 voix, ménage C# (`PathogenPressure`/`TickPathogen` morts
@@ -29,10 +40,6 @@ supprimés → **D10 CLOSE**) + vue Godot (snapshot `inoculum`, heatmap F6, banc
 `rotation_inoculum`) ; `sprints/champs/sol/sprint_memoire_inoculum/00_etat.md`
 (golden INTACT `57c166d8…` de bout en bout, `dotnet build` vert, pont 0.5.39,
 reste F5 Nico).
-
-Sprint clos précédent : **hydrologie de relief & marécages** (2026-07-23,
-①→⑧, `/sprint-auto`) — `sprints/champs/eau/sprint_hydrologie_marecage/00_etat.md`
-(golden écolo `57c166d8…`, `dotnet build` vert, reste F5 Nico).
 
 ## Backlog par thème
 
