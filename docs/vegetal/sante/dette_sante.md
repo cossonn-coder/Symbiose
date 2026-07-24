@@ -7,5 +7,4 @@
 
 | Dette | Libellé court |
 |---|---|
-| [D27](../../../DETTE.md) | Mortalité réaliste (sénescence) — reste le portage C# |
 | [D41](../../../DETTE.md) | Mort par carence édaphique chronique (NPK + pH) |

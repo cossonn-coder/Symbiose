@@ -9,4 +9,3 @@
 |---|---|
 | [D79](../../../DETTE.md) | Système de quêtes complet |
 | [D81](../../../DETTE.md) | Correctifs F5 du panneau automate |
-| [D87](../../../DETTE.md) | Automate dirigé par le but — planification des prérequis |

@@ -12,5 +12,4 @@
 | [D18](../../../DETTE.md) | Pages secrètes — conçu, reste l'implémentation |
 | [D43](../../../DETTE.md) | Maîtrise → carnet interprétatif de l'acclimatation |
 | [D54](../../../DETTE.md) | Reliquats UI des voix narratives |
-| [D59](../../../DETTE.md) | Menu maison à afficher à droite |
 | [D80](../../../DETTE.md) | Panneaux latéraux : ergonomie & cohérence UI |

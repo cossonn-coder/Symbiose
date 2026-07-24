@@ -7,6 +7,5 @@
 
 | Dette | Libellé court |
 |---|---|
-| [D31](../../../DETTE.md) | Vie macroscopique observable — reste le portage C# |
 | [D42](../../../DETTE.md) | Zoochorie — dispersion animale des graines |
 | [D60](../../../DETTE.md) | Vie macro identifiable + encyclopédie multi-règnes — conçu |

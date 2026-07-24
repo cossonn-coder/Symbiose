@@ -7,5 +7,4 @@
 
 | Dette | Libellé court |
 |---|---|
-| [D12](../../../DETTE.md) | Paliers de maîtrise — reste le portage C# (D12.5) et le calibrage (D12.4) |
 | [D15](../../../DETTE.md) | Extension du terrain par maîtrise |

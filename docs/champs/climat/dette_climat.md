@@ -7,5 +7,4 @@
 
 | Dette | Libellé court |
 |---|---|
-| [D16](../../../DETTE.md) | Météo en `forecast` — reste le portage C# |
 | [D38](../../../DETTE.md) | Rosée nocturne + hygrométrie de l'air |

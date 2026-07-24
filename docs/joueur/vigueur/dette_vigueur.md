@@ -7,5 +7,4 @@
 
 | Dette | Libellé court |
 |---|---|
-| [D11](../../../DETTE.md) | Vigueur universelle — reste le portage C# |
 | [D85](../../../DETTE.md) | Vigueur : régénération trop lente, maximum qui ne monte pas |
