@@ -21,7 +21,27 @@
 
 *Aucun en exécution.*
 
-Dernier sprint clos : **système de quêtes** (D79, 2026-07-24, `/sprint-auto`
+Dernier sprint clos : **PÉRIPHÉRIE — le jardin n'est pas une île** (D73,
+2026-07-26, `/sprint-auto` ①→⑦ + passe `/refactor`) — la périphérie cesse d'être
+un décor : **ceinture de 4 secteurs cardinaux en vérité Python**
+(`fields/peripherie.py`, **D92 refermée** — 4 côtés identiques 96,0 % → **2,7 %**,
+falaise 0 % → **52,0 %** sur 300 000 seeds), **cinq flux entrants** (ombre de
+lisière · abri poreux + champ neuf `eco.turbulence` · pluie de graines · nappe de
+berge en condition aux limites · corridor `eco.lisiere` + `lisiere_w` par guilde),
+**sept gestes** de paysage (`abattre`/`receper`/`eteter` gatés hache/serpe,
+`endiguer`/`deriver`/`entailler` + `creuser` étendu au secteur) avec asymétrie de
+réversibilité (trogne 5 ans · taillis 10 · canopée 30 · entaille **jamais** ·
+ouvrage rompt à 8), bois rendu en **parcelles de litière `bois`** aux plots du
+bord, érosion sur `structure_sol`/`om_stable`, **saule** au catalogue avec ses
+5 voix, et `DecorLayer` qui **CONSOMME** le snapshot (couture D58·T4 consommée,
+clic hors jardin → `cote`, protocole **0.5.41**) ;
+`sprints/champs/peripherie/sprint_peripherie/00_etat.md` (golden `57c166d8…`
+**INCHANGÉ du premier au dernier tronçon** — ceinture opt-in, aucun re-figeage ;
+`dotnet build` vert ; perf dans le bruit ; reste **F5 Nico**, 6+6 points de
+calibrage). **D73 CLOSE**, D92 absorbée, D93 périmée, D94 confirmée,
+**D95→D99 ouvertes**.
+
+Sprint clos précédent : **système de quêtes** (D79, 2026-07-24, `/sprint-auto`
 ①→⑤) — module MOTEUR joueur neuf `sim/quetes.py` (opt-in, conditions cumulées par
 hook geste + conditions d'état sur snapshot hors tick, déclenchement déterministe
 par palier/saison, plafond 6) + corpus de **lettres anonymes** `sim/quetes_corpus.py`
@@ -32,14 +52,8 @@ vivace déjà enracinée par vraie croissance, structure gratuite ; outil diffé
 (golden INTACT `57c166d8…` de bout en bout, `dotnet build` vert, pont 0.5.40,
 `test_quetes` 52/52, reste F5 Nico). **D79 CLOSE**.
 
-Sprint clos précédent : **mémoire d'inoculum du sol** (D10, 2026-07-24, `/sprint-auto`
-①→④) — champ édaphique `InoculumField` « terre malade » sparse indexé par famille
-(pédagogie de rotation, philo #2/#6), greffé au point unique `disease_probability(family)`,
-indicatrice molène + 5 voix, ménage C# (`PathogenPressure`/`TickPathogen` morts
-supprimés → **D10 CLOSE**) + vue Godot (snapshot `inoculum`, heatmap F6, banc F5
-`rotation_inoculum`) ; `sprints/champs/sol/sprint_memoire_inoculum/00_etat.md`
-(golden INTACT `57c166d8…` de bout en bout, `dotnet build` vert, pont 0.5.39,
-reste F5 Nico).
+(Sprints clos plus anciens : voir [`journal.md`](journal.md) — mémoire d'inoculum
+du sol D10, migration des arbres D91, lisibilité du décor D83…)
 
 ## Backlog par thème
 

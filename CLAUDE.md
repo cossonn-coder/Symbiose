@@ -43,7 +43,8 @@ structurel, 2026-06-03), est la **source de vérité écologique** du jeu :
 - `world/` — `tile.py` (`Tile`, `StakeSlot`, `RONDELLE_TYPES`), `building.py`
   (`House` paramétrable, ombre + albédo espalier)
 - `fields/` — `noise.py` (fondation déterministe), `grids.py`, `light.py`,
-  `seedbank.py`, `ecofields.py`, `population.py` (vie macro, 4 guildes)
+  `seedbank.py`, `ecofields.py`, `population.py` (vie macro, 4 guildes),
+  `peripherie.py` (ceinture 4 secteurs : état + géométrie MONDE + cinétiques)
 - `sim/` — `effects.py`, `seeds.py`, `reproduction.py`, `succession.py`,
   `engine.py`, `weather.py` (météo pure `weather_at`), `growth.py`
   (morphogénèse segments + auxine + phototropisme), `vigueur.py` /
@@ -302,8 +303,11 @@ physiologique, pont Godot, etc.) vit désormais dans **[`DETTE.md`](DETTE.md)**
 ### Échelle spatiale actée (éclairement 2026-05-29, agrandie au Sprint maison 2026-06-07)
 - **1 plot = 50×50 cm** ; monde **20×20 m = 1600 plots**, **maison centrale
   8×8×6 m** (paramétrable) + 8 tuiles hétérogènes, **chemins en pierre de
-  50 cm** entre tuiles (non simulés ; pas d'ombrage inter-tuiles, seule la
-  maison ombrage globalement via `origin_*_cm`)
+  50 cm** entre tuiles (non simulés ; pas d'ombrage inter-tuiles). **Deux**
+  obstacles ombragent globalement via `origin_*_cm` : la maison (masque total) et,
+  depuis le sprint PÉRIPHÉRIE (D73, 2026-07-26), la **ceinture** de 4 secteurs
+  cardinaux qui borde le monde (bande de 9 m — occulteur **partiel** modulé par la
+  densité ligneuse ; elle abrite aussi du vent, avec porosité et turbulence)
 - Le **plot** ne sert plus qu'à la **chimie du sol** (humidité, fertilité,
   microbiome, soil_memory…). La **position des plantes est continue**
   (pixel-sol `x_cm, y_cm`), plot-foyer = `floor(pos / 50 cm)`.

@@ -919,9 +919,17 @@ c'est un REPLI. **La couture D58·T4 est consommée, D92 refermée par le haut.*
 (`mulch_stock`, `broyer`) · `sim/actions/compost.py` (`empiler_bois`) ·
 `fields/ecofields/matiere_organique.py` (`deposer_litiere`).
 
-**Prochaine étape** : **les 7 tronçons sont CLOS.** Il ne reste que la CLÔTURE
-documentaire du sprint (kickoff ⑦ §Fin de sprint), volontairement NON faite par le
-tronçon ⑦ (périmètre : « uniquement ce tronçon ») :
+**Prochaine étape** : **SPRINT CLOS — plus rien à faire côté agent.** Les
+7 tronçons sont clos, la passe `/refactor` de fin est passée (`18b5eb4`), et la
+**CLÔTURE DOCUMENTAIRE est FAITE le 2026-07-26** : `DETTE.md` (**D73 CLOSE** ·
+D92 absorbée et mesurée · D93 périmée · D94 confirmée par l'implémentation ·
+**D95→D99 ouvertes**), `BACKLOG.md` + fragment de thème (sprint terminé,
+noisetier/prunellier consignés comme écartés), `journal.md` → **entrée 144**
+(`journal/144_2026-07-26_sprint-peripherie-CLOS.md`, dont la liste F5 consolidée
+en 18 points), `CLAUDE.md` (deux retouches chirurgicales : `fields/peripherie.py`
+à l'arbo, la ceinture comme **second** occulteur global). **Ne reste que le F5 de
+Nico.** ⟶ *ci-dessous, la liste de clôture telle que le kickoff ⑦ la demandait
+(historique) :*
 - **`DETTE.md`** — D73 CLOSE · D92 ABSORBÉE (le tirage vient de Python, le hash C# n'est
   plus qu'un repli) · D93 PÉRIMÉE pour ce périmètre (gating par outil = 3 entrées
   d'`OUTILS` + 3 de `GESTE_UNLOCK`, aucun inventaire) · **D94 à OUVRIR** (porosité des
