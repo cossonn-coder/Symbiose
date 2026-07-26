@@ -17,7 +17,7 @@
 > |---|---|---|
 > | ① | `01_ceinture.md` | état 4 secteurs + génération déterministe, **D92 refermée** — ✅ **FAIT 2026-07-26** |
 > | ② | `02_exposition_abri.md` | lisière = obstacle lumière + abri, porosité/turbulence — ✅ **FAIT 2026-07-26** |
-> | ③ | `03_graines_eau_corridor.md` | pluie de graines, nappe de berge, `eco.lisiere` |
+> | ③ | `03_graines_eau_corridor.md` | pluie de graines, nappe de berge, `eco.lisiere` — ✅ **FAIT 2026-07-26** |
 > | ④ | `04_gestes_forestiers.md` | `abattre`/`receper`/`eteter`, outils, cinétiques, matière |
 > | ⑤ | `05_eau_roche_erosion.md` | `endiguer`/`deriver`/`entailler`, mare, érosion |
 > | ⑥ | `06_voix_narratives.md` | saule + 5 voix, gestes/techniques/outils, pages, événements |
@@ -265,6 +265,97 @@ faits ci-dessus** ; il reste 4 vrais arbitrages, dont 3 remontés à Nico.
 - Autre écart mineur signalé : la turbulence n'est **pas** dégressive le long du
   sillage (le kickoff donne la formule sans `frac`), là où la réduction d'abri l'est.
 
+### ③ Graines, eau, corridor — ✅ CLOS le 2026-07-26
+
+Trois flux entrants, chacun greffé sur un système existant, **aucun système neuf**.
+
+- **`fields/peripherie.py`** (117 → 139 LDC, 🟢) : ajout du helper GÉOMÉTRIQUE partagé
+  par les trois flux — `plots_de_bord(cote, rows, cols, tile_origin, portee_cm)`,
+  **générateur** de `(r, c, poids)` avec décroissance linéaire de la distance au bord
+  (1 au contact, 0 à la portée). Ne parcourt que l'axe perpendiculaire (≤ 40 itérations)
+  puis, pour les seules rangées dans la portée, l'axe parallèle ⇒ **O(portée × côté)**,
+  jamais O(rows × cols) (réflexe D32). Une tuile loin du bord ne rend RIEN. Aucun
+  `fields/lisiere_geom.py` : la géométrie de la bande reste la responsabilité de
+  `peripherie`. Nouvel import `constants.PLOT_CM` (couche fondation, OK).
+- **A. Pluie de graines** — `fields/seedbank.py` (215 → 254 LDC, 🟢) :
+  `tick_apport_peripherie(ceinture, tile_origin)`, patron **exact** de
+  `tick_late_succession_enrichment` (même geste : un apport hebdo dans la banque),
+  + `apport_secteur(secteur)` (table écologique : friche→`pioneer` 0.0010,
+  forêt→`competitor` 0.0008 × `densite_ligneuse`, prairie→`grass` 0.0004,
+  rivière/falaise→rien). Portée **4 plots (200 cm)**. Câblé via
+  `EcoFields.tick_seed_bank(..., ceinture, tile_origin)` (`fields/ecofields/sol.py`),
+  **appelé seulement si `ceinture`** ⇒ sans ceinture la banque n'est même pas touchée.
+  C'est le support mécanique qui manquait au **canal d'acquisition #3**.
+- **B. Nappe de berge** — nouveau mixin **`fields/ecofields/bordure.py`** (49 LDC, 🟢),
+  ajouté aux bases d'`EcoFields` : `tick_berge(ceinture, tile_origin)`. Un secteur
+  `riviere` pousse (`ligne_eau > 0`) ou retire (`< 0`) de l'eau dans les pores des
+  **3 premiers plots** du bord. **Placé JUSTE AVANT `tick_hydrology`** (étape 2e de
+  `boucle.py`) : tout le reste ÉMERGE du circuit existant (capture du surplus en lame
+  de surface → `tick_ruissellement` → `marais_memory` → `est_marais`), zéro ligne de
+  physique neuve, aucune grille hors jardin. **Piège trouvé et traité** : `humidite.add`
+  écrête SILENCIEUSEMENT à `HUM_CAP` — sans routage explicite du surplus vers
+  `eau_surface` (miroir de l'étape 5 de `tick_hydrology`), **aucun marécage de berge
+  ne pouvait naître**. Calibrage mesuré : `ligne_eau` +40 ⇒ marais au bord en ~80
+  semaines · +20 ⇒ marais · +10 ⇒ gorgé sans marais · +4 ⇒ humide · négatif ⇒ bord
+  asséché (0.01). Gradient lisible, pas un interrupteur.
+- **C. Corridor de lisière** — même mixin : `maj_lisiere(ceinture, tile_origin)` publie
+  **`eco.lisiere`** (`GridField` ∈ [0,1], **LAZY, None au repos**, patron
+  `eco.turbulence` du ②). Gradient sur **8 plots (400 cm)** ∝ `INTENSITE_LISIERE`
+  (forêt 1.00 · friche 0.90 · rivière 0.50 · prairie 0.20 · falaise 0.15), combiné
+  entre bords par **MAXIMUM** (un coin n'est pas deux fois une lisière).
+  **MÉMOÏSÉ** sur `(types des secteurs, tile_origin)` via `self._lisiere_sig` — la
+  ceinture est quasi statique ⇒ calculé une fois ; une coupe du ④ change le type ⇒
+  recalcul. Réponse **déclarée par guilde** : `TrophicSpec.lisiere_w` (défaut **0.0**),
+  terme additif dans `capacite` (`fields/population/field.py`), lu SEULEMENT si
+  `lisiere_w > 0` **et** champ présent ⇒ sinon **non calculé**, bit-identique.
+  Poids renseignés (`registry.py`) : hérisson 0.30 · carabe 0.25 · merle 0.25 ·
+  chrysope 0.20 · coccinelle 0.20 · syrphe 0.15 (via `PollinatorSpec.lisiere_w`) —
+  **14 guildes restent à 0.0**, ravageurs de culture compris. Aucun terme d'habitat
+  conditionnel : le milieu porte l'information, la guilde y répond (philo #2).
+- **Câblage** `sim/engine/boucle.py` : `maj_lisiere` en **2a-bis** (après `tick_abri`,
+  groupé avec les couplages de ceinture, mémoïsé donc ~gratuit, bien avant son unique
+  lecteur `tick_populations`), `tick_berge` en **2e** (avant l'hydrologie),
+  `tick_seed_bank` reçoit `ceinture` + `tile_origin` (étape 14).
+- **Constantes** (`fields/ecofields/constants.py`) : `BERGE_PORTEE_CM = 150`,
+  `BERGE_FLUX_PAR_CM = 0.010`, `LISIERE_PORTEE_CM = 400`, `INTENSITE_LISIERE` + deux
+  blocs pédagogiques (pourquoi une condition aux limites et pas une rivière ; pourquoi
+  un champ du milieu et pas un bonus d'habitat).
+- **Tests** `tests/test_peripherie.py` (228 → 415 LDC) : **71/71 OK**. 4 suites neuves —
+  ③bis `plots_de_bord` (4 rangées par côté, poids bornés, tuile centrale vide, portée
+  nulle), I graines (gradient strict 0.203→0.147→0.090→0.034, **nul au-delà de 4 plots**,
+  bord opposé intact, autres archétypes intacts, apport forêt ∝ densité, rivière/falaise
+  muettes, neutralité sans ceinture), J berge (bord gorgé ×3.5 / asséché ×0.01, lame de
+  surface, **marais émergent au bord et pas à 5 m**, hors-portée bit-identique,
+  neutralité), K corridor (gradient, MAX au coin, mémoïsation prouvée par sentinelle,
+  retour à None, guilde sensible enrichie au bord et **pas au centre**, guilde à
+  `lisiere_w = 0.0` **inchangée au bit près**, audit du registre).
+- **Golden INCHANGÉ** : `57c166d8d3626444e0fc9b88b360edc62c047927f7608c45fefae35a6bba08da`.
+  Suite complète relancée (71 fichiers hors golden/périphérie/500ans) : `test_sim_server`
+  269/270 (pommier sans fruits) et `test_auxiliaires` (0 dégât des deux côtés) —
+  **échecs PRÉ-EXISTANTS**, `test_auxiliaires` revérifié IDENTIQUE sur l'arbre propre
+  (`git stash`). Tout le reste vert, dont `test_population`, `test_faune_dediee`,
+  `test_marais`, `test_ruissellement`, `test_eau`, `test_diversite_fondatrice`.
+- **Fumée d'intégration** : monde du golden + `House` + `ceinture = generer_ceinture(7)`
+  (forêts N/E en aulne, rivières S+O à `ligne_eau` −77/−76) × 60 semaines → aucun crash ;
+  `lisiere` moyenne T0 0.625 / T1 0.083, `turbulence` 1.31, bords asséchés par les deux
+  rivières en creux (T0 `humidite` 0.406), carabe/merle/hérisson présents.
+- **⚠️ Écart ASSUMÉ et signalé — la prairie n'est pas neutre.** Le kickoff demande
+  `prairie → grass` (modérée) et le ③ donne à la prairie une intensité de lisière 0.20.
+  Or `secteur_neutre()` est de type `prairie` ⇒ une ceinture « neutre » (4 prairies
+  rases) N'EST PLUS neutre pour ces deux flux (elle l'est toujours pour ombre/abri/
+  turbulence/graines forestières, qui dépendent d'une hauteur ou d'une densité
+  ligneuse). Choix : suivre le kickoff (une prairie SÈME et porte un ourlet — c'est de
+  l'écologie) et **corriger la docstring de `secteur_neutre`**, plutôt qu'inventer un
+  champ « densité herbacée » hors périmètre. **L'interrupteur opt-in qui protège le
+  golden reste l'ABSENCE de ceinture**, ce qui est le cas du golden. À trancher par
+  Nico s'il veut un état de ceinture strictement inerte.
+- **⚠️ Taille** : `tests/test_peripherie.py` à **415 LDC** (> 400 🔴). Justifié et
+  signalé : le kickoff prescrit explicitement d'ÉTENDRE ce fichier, sa responsabilité
+  reste unique (tests de la ceinture), et les ④⑤ vont encore l'alimenter → scission à
+  confier au **`/refactor`** de fin de sprint (candidat : un fichier par tronçon).
+- Écart mineur : `eco.lisiere` **n'est pas exposé à `get_field`** (donc pas d'overlay
+  debug F6 ni de pont) — cohérent avec `eco.vent`/`eco.turbulence` du ② ; à décider au ⑦.
+
 ## 6. §REPRISE
 
 **Lire** : `CLAUDE.md` · ce fichier · `docs/champs/peripherie/conception_peripherie.md`
@@ -275,12 +366,20 @@ faits ci-dessus** ; il reste 4 vrais arbitrages, dont 3 remontés à Nico.
 (`mulch_stock`, `broyer`) · `sim/actions/compost.py` (`empiler_bois`) ·
 `fields/ecofields/matiere_organique.py` (`deposer_litiere`).
 
-**Prochaine étape** : tronçon **③** (`03_graines_eau_corridor.md`) — pluie de graines,
-nappe de berge, champ `eco.lisiere`. Points d'appui posés par le ② : la ceinture vit
-dans `game_state["ceinture"]` (lue par `boucle.py`), et `fields/peripherie.py` expose
-déjà `rect_secteur` / `MONDE_CM` / `PROFONDEUR_CM` pour convertir « secteur → plots de
-bord » (le ③ en aura besoin pour la décroissance de la distance au bord). Le patron
-LAZY de `eco.turbulence` (None au repos, allouée à la 1ʳᵉ lisière) est le modèle à
-reprendre pour `eco.lisiere`.
+**Prochaine étape** : tronçon **④** (`04_gestes_forestiers.md`) — `abattre`/`receper`/
+`eteter`, outils, cinétiques de repousse, retour de matière en parcelles de litière
+`bois`. Points d'appui posés par ①②③ :
+- l'état de la ceinture vit dans `game_state["ceinture"]` (4 secteurs, lue par
+  `boucle.py` aux étapes 2, 2a, 2a-bis, 2e et 14) ; les champs `souche_memory` et
+  `annees_depuis_coupe` de `secteur_neutre()` sont **posés et vierges**, prêts pour ④ ;
+- **muter `type` / `densite_ligneuse` / `hauteur_canopee` d'un secteur suffit** à
+  propager la coupe partout : `light` (cache `geom_key`) et `abri` (`_signature`)
+  invalident déjà sur la densité, `maj_lisiere` invalide sur le **type**
+  (⚠️ si le ④ veut qu'une éclaircie SANS changement de type bouge la lisière, il faut
+  ajouter la densité à `_lisiere_sig` dans `fields/ecofields/bordure.py`) ;
+- `fields/peripherie.plots_de_bord(cote, rows, cols, tile_origin, portee_cm)` est le
+  helper à réutiliser pour tout dépôt au sol sur les plots de bord (bois abattu) ;
+- circuit du bois déjà en place : `eco.deposer_litiere` (parcelle typée `bois`),
+  `empiler_bois` (`sim/actions/compost.py`), `broyer` (`sim/actions/paillage.py`).
 Aucun tronçon n'est autorisé à re-figer le golden ; si le digest bouge, c'est un bug.
 Golden de référence courant : `57c166d8d3626444e0fc9b88b360edc62c047927f7608c45fefae35a6bba08da`.

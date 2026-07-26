@@ -50,6 +50,13 @@ class TrophicSpec:
     habitat_w: float = DEF_HABITAT_W
     pred_w: float = DEF_PRED_W
     disturb_w: float = DEF_DISTURB_W
+    # Poids de l'effet de LISIÈRE dans la capacité (sprint PÉRIPHÉRIE ③, D73, §4.2) :
+    # ce que CETTE guilde tire du champ du milieu `eco.lisiere`. Le milieu porte
+    # l'information, la réponse est déclarée par espèce — un carabe hiverne dans
+    # l'ourlet d'une lisière, un puceron s'en moque. DÉFAUT 0.0 : toute guilde qui ne
+    # le déclare pas ignore la lisière, terme non calculé → capacité bit-identique
+    # (golden INTACT). C'est ce défaut qui empêche le « bonus déguisé » (philo #2).
+    lisiere_w: float = 0.0
     inertia: float = POP_INERTIA               # inertie de MONTÉE
     inertia_decay: float = POP_INERTIA_DECAY   # inertie de DÉCRUE (§4)
     # Fenêtre phénologique de la guilde (heures de jour) : porte saisonnière §3.
@@ -77,6 +84,9 @@ class PollinatorSpec:
       - bridge              : pont de cycle de vie larvaire optionnel (§D, tronçon
                               ⑤) — `None` pour l'abeille (nid hors sol, pas de larve
                               au sol). Source UNIQUE des ponts (build_lifecycle_bridges).
+      - lisiere_w           : poids d'effet de lisière, comme pour une guilde
+                              trophique (périphérie ③). Défaut 0.0 ; seul le syrphe
+                              le porte (il hiverne hors des planches).
     """
     name: str
     salt: int
@@ -87,3 +97,4 @@ class PollinatorSpec:
     daylen_full: float
     forager: ForagerParams
     bridge: LifeCycleBridge | None = None
+    lisiere_w: float = 0.0

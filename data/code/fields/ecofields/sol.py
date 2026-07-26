@@ -43,8 +43,13 @@ class SolMixin:
 
     # --- Banque de graines ---
 
-    def tick_seed_bank(self, plants: list, seed: int = 0, week: int = 0) -> None:
-        """Mise à jour hebdomadaire de la banque de graines."""
+    def tick_seed_bank(self, plants: list, seed: int = 0, week: int = 0,
+                       ceinture=None, tile_origin: tuple = (0.0, 0.0)) -> None:
+        """Mise à jour hebdomadaire de la banque de graines.
+
+        `ceinture`/`tile_origin` (sprint PÉRIPHÉRIE ③, D73) : la matrice qui entoure
+        le jardin sème dans les plots de bord (canal d'acquisition #3). ABSENTE →
+        l'apport n'est même pas appelé → banque strictement inchangée (golden INTACT)."""
         # Le paillage (③, D69) accélère le vieillissement des graines ENFOUIES sous le
         # mulch → épuisement durable de la banque locale. Champ NUL au repos (golden) →
         # vieillissement inchangé (cf. `SeedBank.tick_aging`).
@@ -54,6 +59,11 @@ class SolMixin:
         self.seed_bank.tick_disturbance_enrichment(self.disturbance, om_index)
         self.seed_bank.tick_late_succession_enrichment(om_index)
         self.seed_bank.tick_plant_production(plants)
+        # Pluie de graines de la périphérie (③) — APRÈS le vieillissement et les
+        # enrichissements internes : l'apport de la matrice est un flux du tick, il
+        # n'a pas à être immédiatement rogné par le vieillissement de la semaine.
+        if ceinture:
+            self.seed_bank.tick_apport_peripherie(ceinture, tile_origin)
 
     # --- Soil memory ---
 

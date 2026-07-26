@@ -1076,6 +1076,50 @@ MARAIS_DECOMP_MALUS = 0.6    # part max de vitesse de décompo rabotée à marai
 PH_TOURBE           = 4.5    # pH cible d'une tourbière acide (marais plein pousse la cible du pH ici)
 PH_MARAIS_LERP      = 1.0    # poids du terme marais dans la cible de dérive du pH (∝ marais_memory)
 
+# --- Périphérie : NAPPE DE BERGE (sprint PÉRIPHÉRIE ③, D73, conception §3.4) ---
+# 📖 Pédagogie — pourquoi une CONDITION AUX LIMITES et pas une rivière simulée.
+# `altitude` et `eau_surface` s'arrêtent au bord du jardin : il n'existe AUCUNE
+# grille hydraulique au-delà. « Appliquer la même physique hors terrain » n'a donc
+# pas de support — il faudrait un second système pour un bénéfice nul. On modélise
+# donc l'unique chose que le jardin PEUT ressentir d'un cours d'eau voisin : sa
+# nappe. Un secteur `riviere` porte `ligne_eau` (cm, relatif au bord du jardin) :
+#   ligne_eau > 0  → la nappe est AU-DESSUS du terrain : elle POUSSE de l'eau dans
+#                    les pores de la première rangée (berge gorgée) ;
+#   ligne_eau < 0  → elle est EN CREUX : elle DRAINE (le lit appelle l'eau).
+# `humidite.add` borne déjà à [0, HUM_CAP] → aucun cas limite à traiter.
+# TOUT LE RESTE ÉMERGE, aucune ligne de plus : le surplus au-delà de HUM_CAP est
+# capturé en lame de surface par `tick_hydrology` (étape 5), `tick_ruissellement`
+# l'étale vers les creux, `tick_marais` en tire la mémoire puis l'état de marécage.
+# Endiguer (④/⑤) relèvera la ligne d'eau, dériver l'abaissera : le joueur découvre
+# qu'il a DÉPLACÉ l'eau, pas créé (philo #2).
+# Portée courte (3 plots) : une nappe de berge se ressent en mètres, pas à 20 m.
+BERGE_PORTEE_CM   = 150.0    # 3 plots depuis le bord ; au-delà, la nappe ne se sent plus
+BERGE_FLUX_PAR_CM = 0.010    # humidité échangée/tick et par cm de ligne d'eau (au contact)
+
+# --- Périphérie : champ de LISIÈRE `eco.lisiere` (③, D73, conception §4.2) -----
+# 📖 Pédagogie — pourquoi un CHAMP DU MILIEU et pas un bonus d'habitat.
+# Le champ de population COLONISE DÉJÀ depuis zéro partout où ressource + habitat
+# existent : il n'y a aucune barrière de dispersion à lever. Écrire « la périphérie
+# augmente l'habitat de l'auxiliaire » serait donc un bonus déguisé, interdit par
+# la philo #2. La formulation juste est que la lisière EST un habitat — de
+# l'écologie, pas une faveur. On la publie comme un champ du milieu ∈ [0,1]
+# (gradient décroissant depuis les bords, porté par le TYPE de secteur) et chaque
+# guilde y répond à SA manière via son poids déclaré `TrophicSpec.lisiere_w`
+# (défaut 0.0 : le carabe et le hérisson y répondent, le puceron non).
+# Intensités : une forêt/friche est la vraie lisière (structure, litière, bois mort) ;
+# une berge de rivière en est une moyenne ; une prairie et une falaise, faible.
+# Combinaison entre bords : MAXIMUM, jamais somme — un coin de jardin n'est pas
+# DEUX fois une lisière. Portée 8 plots (4 m) : l'effet de lisière se mesure en
+# quelques mètres. PLACEHOLDERS, calibrage F5.
+LISIERE_PORTEE_CM = 400.0    # 8 plots depuis le bord (4 m)
+INTENSITE_LISIERE = {
+    "foret":   1.00,   # la lisière au sens plein : structure verticale + litière
+    "friche":  0.90,   # ronces et jeunes ligneux : couvert dense, presque autant
+    "riviere": 0.50,   # berge : corridor humide réel, mais sans strate arbustive
+    "prairie": 0.20,   # ourlet herbacé : un peu de refuge, pas de structure
+    "falaise": 0.15,   # roche nue : quelques anfractuosités, guère plus
+}
+
 # --- Paillage — champ `paillage` par plot (sprint équilibre invasion ③, D69) ---
 # Le LEVIER PERMACOLE central contre l'invasion d'adventices : un champ scalaire
 # `paillage` ∈ [0,1] (profondeur/densité du mulch) posé par le geste `pailler`, qui

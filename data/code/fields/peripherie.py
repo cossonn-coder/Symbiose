@@ -34,6 +34,7 @@ basse n'importe pas la haute.
 
 from __future__ import annotations
 
+from constants import PLOT_CM
 from fields.noise import _hash_noise
 
 # --- Géométrie de la bande ------------------------------------------------
@@ -127,9 +128,15 @@ def voisins(cote: int) -> tuple[int, int]:
 
 def secteur_neutre(cote: int) -> dict:
     """
-    Secteur VIDE (prairie rase, aucun ligneux) — l'état neutre de référence. Tous
-    les flux entrants (②③) doivent être nuls sur ce secteur : c'est ce qui rend la
-    ceinture opt-in et garde le golden intact.
+    Secteur VIDE (prairie rase, aucun ligneux) — l'état neutre de référence pour
+    tout ce qui dépend d'une HAUTEUR ou d'une DENSITÉ ligneuse : ombre, abri,
+    turbulence (②) et pluie de graines forestière (③) y sont strictement nuls.
+
+    ⚠️ Ce n'est PAS un secteur « mort » pour autant (précision ③) : son type est
+    `prairie`, et une prairie sème des graminées et porte un peu d'effet de
+    lisière — c'est de l'écologie, une prairie n'est pas du béton. Le vrai
+    interrupteur opt-in qui garde le golden intact est l'ABSENCE de ceinture
+    (`game_state["ceinture"]` non renseigné ⇒ aucun flux appelé du tout).
     """
     return {
         "cote": cote,
@@ -309,3 +316,56 @@ def obstacles_abri(ceinture) -> list[tuple[float, float, float, float, float]]:
         out.append(((x0 + x1) / 2.0, (y0 + y1) / 2.0,
                     hauteur, MONDE_CM / 2.0, 1.0 - densite))
     return out
+
+
+# ---------------------------------------------------------------------------
+# PLOTS DE BORD — la décroissance vers l'intérieur (tronçon ③)
+# ---------------------------------------------------------------------------
+# Les flux entrants NON géométriques (pluie de graines, nappe de berge, champ de
+# lisière) ne portent pas loin : ils s'atténuent en quelques plots depuis le bord.
+# On ne balaie donc JAMAIS la grille pour un effet de bord (réflexe D32) — on
+# n'itère que la BANDE de plots réellement atteinte, et chaque plot arrive avec
+# son poids de décroissance. Un seul helper pour les trois flux : la géométrie de
+# la ceinture est une responsabilité de CE module, pas de ses consommateurs.
+
+
+def plots_de_bord(cote: int, rows: int, cols: int,
+                  tile_origin: tuple[float, float],
+                  portee_cm: float):
+    """
+    Itère `(r, c, poids)` : les plots d'une tuile atteints par le secteur `cote`,
+    avec un poids ∈ ]0, 1] qui DÉCROÎT LINÉAIREMENT avec la distance au bord du
+    jardin (1 au contact, 0 à `portee_cm`, rien au-delà).
+
+    `tile_origin` = offset MONDE de la tuile en cm (même argument que
+    `light.compute`/`abri`) : le centre du plot `(r, c)` est à
+    `(c·PLOT_CM + PLOT_CM/2 + ox, r·PLOT_CM + PLOT_CM/2 + oy)` dans le repère sol
+    (x = Est, y = Sud). La distance au bord considéré est donc `y` au NORD,
+    `MONDE_CM − y` au SUD, `x` à l'OUEST, `MONDE_CM − x` à l'EST.
+
+    Coût : on ne parcourt QUE l'axe perpendiculaire au bord (≤ 40 itérations) et,
+    pour les seules rangées dans la portée, l'axe parallèle → O(portée × côté),
+    jamais O(rows × cols). Générateur : aucune liste intermédiaire allouée.
+    Une tuile trop loin du bord ne rend RIEN (boucle vide) — une ceinture n'agit
+    que sur les tuiles qui la touchent.
+    """
+    if portee_cm <= 0.0:
+        return
+    ox, oy = tile_origin
+    # Les bords NORD/SUD décroissent le long des LIGNES (axe y), EST/OUEST le long
+    # des COLONNES (axe x) — un seul code pour les quatre côtés.
+    axe_lignes = cote in (NORD, SUD)
+    n = rows if axe_lignes else cols
+    origine = oy if axe_lignes else ox
+    for i in range(n):
+        centre = i * PLOT_CM + PLOT_CM / 2.0 + origine
+        dist = centre if cote in (NORD, OUEST) else MONDE_CM - centre
+        if dist < 0.0 or dist >= portee_cm:
+            continue
+        poids = 1.0 - dist / portee_cm
+        if axe_lignes:
+            for c in range(cols):
+                yield i, c, poids
+        else:
+            for r in range(rows):
+                yield r, i, poids

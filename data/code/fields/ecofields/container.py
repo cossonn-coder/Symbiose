@@ -48,12 +48,13 @@ from .sol import SolMixin
 from .ticks import TicksMixin
 from .couverture import CouvertureMixin
 from .paillage import PaillageMixin
+from .bordure import BordureMixin   # conditions aux limites de la ceinture (périphérie ③)
 
 
 @dataclass
 class EcoFields(MatiereOrganiqueMixin, HydrologieMixin, RuissellementMixin,
                 MaraisMixin, UptakeMixin, VieMacroMixin, SolMixin, TicksMixin,
-                CouvertureMixin, PaillageMixin):
+                CouvertureMixin, PaillageMixin, BordureMixin):
     tile_id:    str
     rows:       int
     cols:       int
@@ -189,6 +190,18 @@ class EcoFields(MatiereOrganiqueMixin, HydrologieMixin, RuissellementMixin,
     # None → golden INTACT tant qu'aucune ceinture n'est posée. Hors `summary()`
     # (grandeur géométrique transiente, comme `vent`).
     turbulence:       GridField = field(default=None)
+    # Champ de LISIÈRE (sprint PÉRIPHÉRIE ③, D73, conception §4.2) — ∈ [0,1] par plot :
+    # l'intensité d'effet de lisière apportée par la ceinture, gradient décroissant
+    # depuis chaque bord et pondéré par le TYPE de secteur (forêt/friche fort, berge
+    # moyen, prairie/falaise faible). C'est un champ DU MILIEU, pas un bonus : chaque
+    # guilde y répond via son poids déclaré `TrophicSpec.lisiere_w` (défaut 0.0 — le
+    # carabe et le hérisson y répondent, le puceron non), ce qui interdit le « +0.2
+    # d'habitat si forêt » que la philo #2 proscrit. Écrit par `maj_lisiere`, MÉMOÏSÉ
+    # sur les types de secteurs (quasi statiques → calculé une fois). LAZY et **None
+    # au repos** : son unique lecteur (`PopulationField.tick`) saute alors le terme →
+    # capacité de charge bit-identique → golden INTACT sans ceinture. Hors `summary()`
+    # (grandeur géométrique du milieu, comme `vent`/`turbulence`).
+    lisiere:          GridField = field(default=None)
     # Épaisseur de sol visible (D57, sprint épaisseur de sol ①a) — cm de sol
     # foisonnant au-dessus de la roche-mère, PAR PLOT. Champ STOCKÉ (persisté) qui
     # RELAXE vers une cible bulk-density dérivée des `om_*` (litière fraîche
@@ -466,6 +479,10 @@ class EcoFields(MatiereOrganiqueMixin, HydrologieMixin, RuissellementMixin,
         if self.inoculum is None:
             self.inoculum = InoculumField()
         self._abri_cache = None
+        # Signature du champ de lisière (③) — `None` = jamais calculé. `maj_lisiere`
+        # ne reconstruit `eco.lisiere` que si les types de secteurs (ou l'offset de la
+        # tuile) ont changé : la ceinture est quasi statique, donc coût ≈ 0 par tick.
+        self._lisiere_sig = None
 
     def _init_heterogene(self, grid: GridField, plancher: float) -> None:
         """Pose `plancher` sur `grid` avec une HÉTÉROGÉNÉITÉ spatiale déterministe

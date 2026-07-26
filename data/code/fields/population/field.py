@@ -56,6 +56,10 @@ class PopulationField(GridField):
         # Terme additif optionnel (attraction par le fruit tombé, ④). None → 0
         # partout → capacité strictement inchangée (golden neutre sans fruit).
         sig = spec.signal_fn(eco, tile, plants) if spec.signal_fn else None
+        # Effet de LISIÈRE (périphérie ③) : champ DU MILIEU `eco.lisiere`, lu SEULEMENT
+        # par les guildes qui l'ont déclaré (`lisiere_w > 0`). Absent (aucune ceinture)
+        # ou poids nul → `lis is None` → terme non calculé → capacité BIT-IDENTIQUE.
+        lis = eco.lisiere if spec.lisiere_w > 0.0 else None
         self.activite_grid = res   # mémorise la ressource pour `activite()`
         # Porte saisonnière : scalaire GLOBAL à la tuile (la photopériode ne varie
         # pas d'un plot à l'autre) → calculé UNE fois hors de la boucle r×c.
@@ -71,7 +75,9 @@ class PopulationField(GridField):
 
                 capacite = _clamp01(spec.resource_w * res[r][c]
                                     + spec.habitat_w * hab[r][c]
-                                    + (sig[r][c] if sig else 0.0))
+                                    + (sig[r][c] if sig else 0.0)
+                                    + (spec.lisiere_w * lis.data[r][c]
+                                       if lis is not None else 0.0))
                 survie = (phenology * warmth
                           * (1.0 - min(1.0, spec.pred_w * predation))
                           * (1.0 - min(1.0, spec.disturb_w * disturb)))

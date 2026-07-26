@@ -205,6 +205,16 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
                           tile_origin=(tile.origin_x_cm, tile.origin_y_cm),
                           ceinture=self.game_state.get("ceinture"))
 
+            # 2a-bis. Champ de LISIÈRE (sprint PÉRIPHÉRIE ③, D73, §4.2) — publie
+            #     `eco.lisiere` (gradient d'effet de lisière depuis les bords, porté
+            #     par le TYPE de secteur). Groupé ici avec les autres couplages de la
+            #     ceinture ; l'appel est MÉMOÏSÉ sur les types de secteurs (quasi
+            #     statiques) donc quasi gratuit, et il précède de loin son unique
+            #     lecteur (`tick_populations`, vie macro). Sans ceinture le champ reste
+            #     None → capacité de charge des guildes bit-identique.
+            eco.maj_lisiere(self.game_state.get("ceinture"),
+                            tile_origin=(tile.origin_x_cm, tile.origin_y_cm))
+
             # 2b. Microclimat de surface T_sol (sprint thermique ①) — APRÈS la
             #     lumière (il la lit), AVANT l'hydrologie (qui lit T_sol). Surchauffe
             #     solaire par plot + inertie ; T_air (champ `temperature`) inchangé →
@@ -232,6 +242,17 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
             #     sans plante basse → champ nul → lecteurs neutres. La tuile 2 du golden
             #     porte du Clover → couverture > 0 → RE-FIGEAGE MAÎTRISÉ ANNONCÉ.
             eco.tick_couverture(tile.plants, saison)
+
+            # 2e. Nappe de BERGE (sprint PÉRIPHÉRIE ③, D73, §3.4) — JUSTE AVANT
+            #     l'hydrologie, pour que l'eau poussée (ou retirée) par un secteur
+            #     `riviere` suive TOUT le circuit existant sans une ligne de plus :
+            #     capture du surplus > HUM_CAP en lame de surface (étape 3), puis
+            #     ruissellement (3b) et mémoire de marais (3c). Le marécage de berge
+            #     ÉMERGE donc, il n'est nulle part scripté. Il n'existe AUCUNE grille
+            #     hydraulique hors jardin : c'est une condition aux limites, pas une
+            #     rivière simulée. Sans ceinture → no-op strict.
+            eco.tick_berge(self.game_state.get("ceinture"),
+                           tile_origin=(tile.origin_x_cm, tile.origin_y_cm))
 
             # 3. Hydrologie : évaporation → pluie de fond → rétention → drainage
             #    (le drainage dépend du type de sol de la tuile, §2.3 a). L'apport
@@ -491,8 +512,14 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
             # fait quand aucune alarme n'est posée (le smoke n'en pose pas) → golden NEUTRE.
             tick_alarme(eco)
 
-            # 14. Banque de graines (vieillissement + enrichissement)
-            eco.tick_seed_bank(tile.plants, seed=seed, week=week)
+            # 14. Banque de graines (vieillissement + enrichissement). La PLUIE DE
+            # GRAINES de la périphérie (③) s'y ajoute : la matrice ensemence les plots
+            # de bord (canal d'acquisition #3, jusqu'ici sans support mécanique).
+            # Placée AVANT la succession (15) : une graine tombée cette semaine peut
+            # lever cette semaine, comme les enrichissements internes.
+            eco.tick_seed_bank(tile.plants, seed=seed, week=week,
+                               ceinture=self.game_state.get("ceinture"),
+                               tile_origin=(tile.origin_x_cm, tile.origin_y_cm))
 
             # 15. Succession écologique
             slog = succession(self.game_state, tile, eco, week)

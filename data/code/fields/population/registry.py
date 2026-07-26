@@ -151,11 +151,18 @@ def build_population_specs() -> list[TrophicSpec]:
         # Sans prédateur (sommets de chaîne de jardin, doc §5.5) ; leur frein est la
         # fenêtre + l'habitat. Le fruit frais (ex-signal de l'auxiliaire) devient la
         # RESSOURCE du merle (`_merle_food_grid`, C13).
+        # POIDS DE LISIÈRE (`lisiere_w`, périphérie ③, D73 §4.2) : renseigné SEULEMENT
+        # ici et pour le syrphe (registre §E) — les auxiliaires qui hivernent hors des
+        # planches et chassent depuis l'ourlet. Volontairement ABSENT des ravageurs de
+        # culture (puceron/limace/doryphore, qui vivent DES cultures, pas de la lisière)
+        # et des espèces de sol/mare. La lisière n'est pas un bonus générique : c'est un
+        # champ du milieu auquel chaque guilde répond ou non (philo #2).
         TrophicSpec(
             name="coccinelle", category="auxiliaire", salt=_SALT_COCCINELLE,
             resource_fn=_espece_grid("puceron"), habitat_fn=_stability_grid,
             predators=(),
             daylen_min=10.0, daylen_full=13.0,   # estivale (suit le puceron)
+            lisiere_w=0.20,                      # hiverne en litière d'ourlet, essaime au printemps
             **encyclo_meta("coccinelle"),
         ),
         TrophicSpec(
@@ -163,6 +170,7 @@ def build_population_specs() -> list[TrophicSpec]:
             resource_fn=_espece_grid("puceron"), habitat_fn=_auxiliaire_habitat_grid,
             predators=(),
             daylen_min=10.0, daylen_full=13.0,   # estivale
+            lisiere_w=0.20,                      # hivernage adulte à l'abri des ligneux
             **encyclo_meta("chrysope"),
         ),
         TrophicSpec(
@@ -171,6 +179,7 @@ def build_population_specs() -> list[TrophicSpec]:
             habitat_fn=_avec_abri_paillage(_undisturbed_structure_grid),   # ombrophile : se réfugie sous le mulch (⑥)
             predators=(),
             daylen_min=9.0, daylen_full=12.0,    # nocturne→large (élargie comme la limace, sa proie)
+            lisiere_w=0.25,                      # bande-refuge classique : il sort la nuit de l'ourlet
             **encyclo_meta("carabe"),
         ),
         TrophicSpec(
@@ -178,6 +187,7 @@ def build_population_specs() -> list[TrophicSpec]:
             resource_fn=_merle_food_grid, habitat_fn=_base_habitat_grid,
             predators=("rapace",),               # ② : le rapace fond sur l'oiseau à découvert
             daylen_min=8.5, daylen_full=10.0,    # toute saison (oiseau résident, fenêtre LARGE)
+            lisiere_w=0.25,                      # niche dans les ligneux du bord, se nourrit au jardin
             **encyclo_meta("merle"),
         ),
         TrophicSpec(
@@ -186,6 +196,7 @@ def build_population_specs() -> list[TrophicSpec]:
             habitat_fn=_avec_abri_paillage(_pile_grid),   # ombrophile : niche sous le mulch/les piles (⑥)
             predators=(),
             daylen_min=9.0, daylen_full=12.0,    # nocturne→large
+            lisiere_w=0.30,                      # le plus lié au bord : gîte d'hibernation en haie
             **encyclo_meta("herisson"),
         ),
         # --- Catégorie NEUVE `super_predateur` : rapace + couleuvre (sommet ②) ---
@@ -376,6 +387,7 @@ def build_pollinator_registry() -> list[PollinatorSpec]:
             habitat_fn=_auxiliaire_habitat_grid,
             daylen_min=10.5, daylen_full=13.0,   # printemps → été (précoce)
             forager=_FORAGER_SYRPHE, bridge=_BRIDGE_SYRPHE,
+            lisiere_w=0.15,                      # hiverne hors des planches (périphérie ③)
         ),
         PollinatorSpec(
             name="papillon", salt=_SALT_PAPILLON,
@@ -422,6 +434,7 @@ def build_pollinator_specs() -> list[TrophicSpec]:
             resource_fn=_make_nectar_grid(ps.attractivite, ps.attractivite_defaut),
             habitat_fn=ps.habitat_fn, predators=(),
             daylen_min=ps.daylen_min, daylen_full=ps.daylen_full,
+            lisiere_w=ps.lisiere_w,              # périphérie ③ (0.0 sauf syrphe)
             **encyclo_meta(ps.name),
         )
         for ps in build_pollinator_registry()

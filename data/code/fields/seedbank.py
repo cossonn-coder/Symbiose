@@ -9,6 +9,7 @@ import math
 from dataclasses import dataclass, field
 
 from fields.noise import _hash_noise, hash_gauss, stable_str_hash
+from fields.peripherie import plots_de_bord
 from plants.genetics import clamp_gene, GENE_NAMES, GENE_INIT_SIGMA
 
 # ---------------------------------------------------------------------------
@@ -72,6 +73,45 @@ SPECIES_POOL_MIN_DENSITY    = 0.005   # en-deçà : pool négligeable → gènes
 # philo #4). La `var` posée (= GENE_INIT_SIGMA²) donne à la sélection darwinienne
 # (germ. thermique, désynchro florale) de quoi dériver sans attendre N générations.
 FOUNDER_POOL_DENSITY = 0.02
+
+# --- Pluie de graines de la PÉRIPHÉRIE (sprint PÉRIPHÉRIE ③, D73, §4.2) ------
+# Le CANAL D'ACQUISITION #3 (« exploration de friche périphérique ») était jusqu'ici
+# une intention sans code : rien, dans le moteur, ne faisait entrer de propagule
+# depuis l'extérieur du terrain. La matrice qui entoure le jardin est pourtant sa
+# première source de vivant — une friche voisine ensemence les bords en continu.
+#
+# Modèle (patron EXACT de `tick_late_succession_enrichment`) : chaque secteur de
+# ceinture dépose son archétype dominant dans la BANDE de plots de son bord, avec
+# décroissance de la distance (portée 4 plots = 2 m ; au-delà, rien — on ne balaie
+# pas la grille pour un effet de bord, réflexe D32).
+#   friche  → pioneer     (forte : c'est LA friche semencière)
+#   foret   → competitor  (∝ densite_ligneuse : une lisière claire sème peu)
+#   prairie → grass       (modérée)
+#   riviere / falaise     → rien (l'eau et la roche ne sèment pas)
+# Calibrage : à l'équilibre avec le vieillissement (`1 − SEED_VIABILITY_LOSS =
+# 0.002/sem), le plot du bord se stabilise vers `gain/0.002` ≈ 0.44 pour une friche,
+# ~0.3 pour une forêt dense, 0.18 pour une prairie — une pression réelle mais
+# NON saturante, qui laisse le gradient de succession décider (philo #2 : la graine
+# arrive, c'est la niche qui tranche). PLACEHOLDERS, calibrage F5.
+SEED_PERIPHERIE_PORTEE_CM = 200.0   # 4 plots depuis le bord (2 m), au-delà : rien
+SEED_PERIPHERIE_FRICHE    = 0.0010  # apport hebdo au contact (friche → pioneer)
+SEED_PERIPHERIE_FORET     = 0.0008  # × densite_ligneuse (forêt → competitor)
+SEED_PERIPHERIE_PRAIRIE   = 0.0004  # prairie → grass (modérée)
+
+
+def apport_secteur(secteur: dict) -> tuple[str | None, float]:
+    """`(archétype semé, intensité au contact)` d'un secteur de ceinture. Rend
+    `(None, 0.0)` pour une rivière, une falaise ou une lisière sans ligneux — la
+    responsabilité « quel archétype vient de quel milieu » est écologique, elle vit
+    donc ici, avec la banque de graines, et non dans la géométrie de la ceinture."""
+    typ = secteur["type"]
+    if typ == "friche":
+        return "pioneer", SEED_PERIPHERIE_FRICHE
+    if typ == "foret":
+        return "competitor", SEED_PERIPHERIE_FORET * secteur["densite_ligneuse"]
+    if typ == "prairie":
+        return "grass", SEED_PERIPHERIE_PRAIRIE
+    return None, 0.0
 
 
 def founder_genes(plant_class: type, seed: int, week: int,
@@ -267,6 +307,29 @@ class SeedBank:
                 self.add(r, c, "grass",          om * SEED_LATE_GAIN)
                 if om >= SEED_OM_COMPETITOR_MIN:
                     self.add(r, c, "competitor", om * SEED_LATE_GAIN)
+
+    def tick_apport_peripherie(self, ceinture,
+                               tile_origin: tuple = (0.0, 0.0)) -> None:
+        """
+        PLUIE DE GRAINES de la périphérie (③, §4.2) — la matrice ensemence les bords.
+        Symétrique de `tick_late_succession_enrichment` (même geste : un apport
+        hebdomadaire dans la banque), mais l'apport vient de DEHORS et ne concerne
+        que la BANDE de plots proche du bord concerné.
+
+        `tile_origin` = offset MONDE de la tuile (cm) : c'est lui qui décide si CETTE
+        tuile touche le bord — une tuile au centre du jardin ne reçoit rien.
+
+        ⚠️ Appelé SEULEMENT quand une ceinture existe (cf. `EcoFields.tick_seed_bank`)
+        ⇒ sans ceinture la banque est strictement inchangée (golden INTACT).
+        """
+        for secteur in ceinture:
+            archetype, intensite = apport_secteur(secteur)
+            if archetype is None or intensite <= 0.0:
+                continue
+            for r, c, poids in plots_de_bord(secteur["cote"], self.rows, self.cols,
+                                             tile_origin,
+                                             SEED_PERIPHERIE_PORTEE_CM):
+                self.add(r, c, archetype, intensite * poids)
 
     def tick_plant_production(self, plants: list) -> None:
         """Plantes matures → production de graines dans la banque locale."""
