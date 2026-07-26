@@ -48,6 +48,30 @@ OUTILS: dict[str, dict] = {
         "cout_vigueur": 40.0,   # placeholder, calibrage F5
         "offre": True,
     },
+    # --- Outils de PAYSAGE (sprint PÉRIPHÉRIE ④, conception §4.3) --------------
+    # Trois entrées, zéro logique : `GESTE_UNLOCK` lit les marqueurs, la porte reste
+    # Vigueur-SEULE (aucune maîtrise — sinon poule-œuf, cf. le sécateur). Coûts
+    # PLACEHOLDERS de calibrage F5, ordonnés comme l'effort qu'ils permettent : la
+    # hache (qui ouvre `abattre`, le geste le plus cher) est l'outil le plus cher.
+    # D93 tombe pour ce périmètre : aucun inventaire à concevoir.
+    "serpe": {
+        "marqueur": "posseder_serpe",
+        "cout_vigueur": 50.0,   # placeholder, calibrage F5
+        "offre": True,
+    },
+    "hache": {
+        "marqueur": "posseder_hache",
+        "cout_vigueur": 70.0,   # placeholder, calibrage F5
+        "offre": True,
+    },
+    # La pioche n'ouvre encore AUCUN geste : elle sera l'outil d'`entailler` au
+    # tronçon ⑤ (entaille de falaise). Posée ici pour que le registre soit complet
+    # côté Atelier ; sans entrée dans `GESTE_UNLOCK` elle n'a aucun effet.
+    "pioche": {
+        "marqueur": "posseder_pioche",
+        "cout_vigueur": 60.0,   # placeholder, calibrage F5
+        "offre": True,
+    },
 }
 
 

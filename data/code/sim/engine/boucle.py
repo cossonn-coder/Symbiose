@@ -26,6 +26,7 @@ from plants import PLANT_CATALOGUE
 from fields import (_hash_noise, ABSCISSION_MIN, ABSCISSION_MAX,
                     PRECIP_NORM, PLUIE_APPORT)
 from fields.ecofields.thermique import t_min_nuit_at  # gel nocturne localisé (⑥)
+from fields.peripherie import tick_repousse  # repousse des coupes de la ceinture (PÉRIPHÉRIE ④)
 from fields.apiculture import tick_ruches   # ruches : capture essaim + miel (⑥, §H/§I)
 from fields.alarme import tick_alarme       # phéromone d'alarme apienne : décroissance (⑦, §J)
 from sim.effects import resolve_plant_turn, apply_disturbances
@@ -172,6 +173,14 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
             log.append(f"  🐛  {ravageur.nom} : {ravageur.description}")
             for tile in self.tiles:
                 log += appliquer_alea(ravageur, tile, self._eco(tile), self.game_state)
+
+        # 1c. Repousse de la CEINTURE (sprint PÉRIPHÉRIE ④, D73, §4.4) — O(4), une
+        # fois par monde (la ceinture n'appartient à aucune tuile), AVANT la boucle :
+        # lumière (2) et abri (2a) doivent lire la hauteur/densité de CE tick. Fait
+        # vieillir les seules coupes en cours : trogne 5 ans, taillis 10, canopée 30.
+        # Déterministe, aucun tirage. **No-op strict sans ceinture** (cas du golden)
+        # ou sans coupe en cours → aucune écriture → digest intact.
+        tick_repousse(self.game_state.get("ceinture"))
 
         for tile in self.tiles:
             eco = self._eco(tile)

@@ -24,7 +24,7 @@ Orientation :
 from sim.vigueur_plante import maturite   # ré-exporté pour compat (ACT.maturite, tests vigueur)
 
 from .couts import (
-    NUL, FAIBLE, MODERE, ELEVE, URGENCE_MULT, HARVEST_VIGUEUR_COST,
+    NUL, FAIBLE, MODERE, ELEVE, TRES_ELEVE, URGENCE_MULT, HARVEST_VIGUEUR_COST,
     COUTS, OBJETS_TOUCHES, ATT_GLOBALE_MAX, ATT_OBJET_MAX,
     _CLE_DE_CLASSE, _cle_espece, _objets_action, f_globale, f_objets, cout_action,
 )
@@ -81,6 +81,12 @@ from .bouture import (
 from .greffe import (
     GENES_AERIENS, GENES_RACINAIRES, peut_greffer, greffer,
 )
+# Sylviculture périphérique (PÉRIPHÉRIE ④, D73) : gestes JOUEUR sur la ceinture
+# (`abattre`/`receper`/`eteter`). La mutation d'état et la cinétique de repousse
+# vivent, elles, dans `fields/peripherie.py` (l'état avec ses transitions).
+from .paysage import (
+    BOIS_COUPE_PAR_CM, BOIS_PORTEE_CM, abattre, receper, eteter,
+)
 # Palette de gestes ⑤ : LAYOUT curé + MACROS par avatar (D1/D5/D10). ÉTAT/DONNÉES
 # pur (slots + séquences validées en cohérence de cible) — aucune logique de sim,
 # la vue REJOUE la macro comme N gestes normaux. Opt-in → golden NEUTRE.
@@ -91,7 +97,7 @@ from .palette import (
 
 __all__ = [
     "maturite",
-    "NUL", "FAIBLE", "MODERE", "ELEVE", "URGENCE_MULT", "HARVEST_VIGUEUR_COST",
+    "NUL", "FAIBLE", "MODERE", "ELEVE", "TRES_ELEVE", "URGENCE_MULT", "HARVEST_VIGUEUR_COST",
     "COUTS", "OBJETS_TOUCHES", "ATT_GLOBALE_MAX", "ATT_OBJET_MAX",
     "_cle_espece", "_objets_action", "f_globale", "f_objets", "cout_action",
     "GAIN_DECOUVERTE", "GAIN_SUCCES", "observer", "crediter_succes",
@@ -113,6 +119,7 @@ __all__ = [
     "marquer_action", "marquer_evenement", "evaluer_deblocages", "gestes_debloques",
     "BOUTURE_STRESS_COST", "BOUTURE_VIGUEUR_SEUIL", "peut_bouturer", "bouturer",
     "GENES_AERIENS", "GENES_RACINAIRES", "peut_greffer", "greffer",
+    "BOIS_COUPE_PAR_CM", "BOIS_PORTEE_CM", "abattre", "receper", "eteter",
     "FAMILLE_CIBLE", "famille_cible", "macro_coherente",
     "init_palette", "palette_layout", "definir_palette",
 ]

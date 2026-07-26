@@ -98,6 +98,14 @@ GESTE_UNLOCK: dict[str, list] = {
     # ruche
     "poser_ruche":   [("maitrise", "apiculture", 1)],
     "recolter_miel": [("action", "poser_ruche")],
+
+    # sylviculture périphérique (PÉRIPHÉRIE ④, conception §4.3) — l'OUTIL fait le
+    # geste : sans hache on n'abat pas, sans serpe on ne recèpe pas (marqueurs posés
+    # par l'Atelier, `sim/outils.py`). L'étêtage, lui, s'apprend APRÈS le taillis :
+    # on découvre la trogne en ayant recépé, pas en achetant un outil de plus.
+    "abattre": [("action", "posseder_hache")],
+    "receper": [("action", "posseder_serpe")],
+    "eteter":  [("action", "receper")],
 }
 
 

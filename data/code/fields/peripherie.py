@@ -53,6 +53,9 @@ MONDE_CM = 2000.0
 # hash et de clé de secteur dans le save.
 NORD, EST, SUD, OUEST = 0, 1, 2, 3
 COTES = (NORD, EST, SUD, OUEST)
+# Noms diégétiques des bords, dans l'ordre des index — pour les lignes de log des
+# gestes (④) et pour la vue (⑦). Jamais utilisés comme clé d'état.
+NOMS_COTES = ("nord", "est", "sud", "ouest")
 
 # --- Canaux-sentinelles (philo #3 : zéro RNG vivant) ----------------------
 # Comme `weather.py` (tranche 90_00x) et `wind.py` (90_01x), la ceinture réserve
@@ -150,6 +153,14 @@ def secteur_neutre(cote: int) -> dict:
         # Horloge de repousse, avancée par la cinétique (tronçon ④). En années :
         # trogne 5 ans, recépage 10, canopée refermée 30.
         "annees_depuis_coupe": 0.0,
+        # Coupe EN COURS de repousse (tronçon ④) : le geste dont la cinétique
+        # s'applique, `None` quand le peuplement est reconstitué (ou jamais coupé).
+        "geste_coupe": None,
+        # Cibles de repousse : le peuplement MÛR d'avant la première coupe. C'est ce
+        # vers quoi la cinétique ramène le secteur — le terrain garde son identité,
+        # une lisière recépée redevient CETTE lisière-là, pas une lisière moyenne.
+        "densite_avant": 0.0,
+        "hauteur_avant": 0.0,
         "ligne_eau": 0.0,
         "altitude_relative": 0.0,
     }
@@ -369,3 +380,133 @@ def plots_de_bord(cote: int, rows: int, cols: int,
         else:
             for r in range(rows):
                 yield r, i, poids
+
+
+# ---------------------------------------------------------------------------
+# SYLVICULTURE — la coupe et sa repousse (tronçon ④)
+# ---------------------------------------------------------------------------
+# La MUTATION de l'état d'un secteur et sa CINÉTIQUE de retour vivent ici, avec
+# l'état qu'elles transforment ; la couche JOUEUR (gate d'outil, coût de Vigueur,
+# bois déposé au sol, trace au ledger) vit dans `sim/actions/paysage.py`. Un
+# secteur n'est pas une `PlantInstance` : c'est un agrégat, on ne simule pas N
+# arbres (D32) — ce qu'on coupe, ce sont ses trois scalaires.
+#
+# Le matériau pédagogique du tronçon est l'ASYMÉTRIE DE RÉVERSIBILITÉ
+# (conception §3.3/§4.4) : trois gestes qui se ressemblent au moment du coup de
+# lame et que DIX ANS séparent. Rien n'est annoncé, rien n'est bloqué (philo #6).
+
+# LE fait discriminant de la sylviculture : toutes les essences ne rejettent pas de
+# souche. Charme et aulne sont des taillis classiques, le saule rejette très vite
+# (il entre au catalogue au tronçon ⑥). Hêtre et bouleau rejettent très mal ⇒
+# **recéper une hêtraie, c'est l'abattre**, et le joueur ne l'apprend qu'en le
+# faisant (ou en lisant l'encyclopédie une fois la maîtrise acquise).
+ESSENCES_QUI_REJETTENT = frozenset({"charme", "aulne", "saule"})
+
+# Cinétiques par geste : `(densité résiduelle, fraction de hauteur conservée,
+# durée de retour en années)`. Une densité résiduelle `None` signifie « densité
+# CONSERVÉE » (l'étêtage ne retire pas de tige, il rabat les têtes).
+# Chiffres calés sur le réel (conception §4.4) : noisetier 7-9 ans, charme 10-12,
+# saule têtard 3-5, canopée tempérée refermée en 25-40 ans. Zéro tirage (philo #3) :
+# la repousse est une fonction de `annees_depuis_coupe`, pas un pari.
+CINETIQUES = {
+    "abattre": (0.10, 0.00, 30.0),   # l'arbre meurt ; la STRUCTURE est lente à revenir
+    "receper": (0.20, 0.00, 10.0),   # la souche rajeunit — un flux, pas un gisement
+    "eteter":  (None, 0.60,  5.0),   # la trogne : on prend la tête, le tronc dure
+}
+
+# Après un ABATTAGE, le vide ne reste pas vide : ronces et semis pionniers le
+# comblent en ~4 ans. Mais ce couvert-là n'est pas une forêt — la canopée, elle,
+# met 30 ans. On exprime les deux lignes de la table §4.4 sans machinerie : la
+# densité prend le MAXIMUM des deux courbes (plancher pionnier tôt, canopée
+# ensuite). Plafond aligné sur `DENSITE_FRICHE` — une trouée EST une friche.
+DENSITE_PIONNIERE = DENSITE_FRICHE[1]
+DUREE_PIONNIERES_ANS = 4.0
+
+# La ceinture vieillit en ANNÉES (cinétiques décennales) là où le tick avance en
+# semaines. Constante locale : `constants.py` ne porte que l'échelle spatiale.
+SEMAINES_PAR_AN = 52.0
+
+
+def couper_secteur(secteur: dict, geste: str) -> str:
+    """Applique une coupe (`abattre`/`receper`/`eteter`) à UN secteur et renvoie le
+    geste dont la CINÉTIQUE s'appliquera réellement.
+
+    Ce retour n'est pas une coquetterie : un `receper` sur une essence qui ne rejette
+    pas EST un abattage, et c'est écrit là, littéralement — la souche est morte, donc
+    la repousse suit la courbe de l'abattage (30 ans) et non celle du taillis (10).
+
+    Écrit trois traces dans le milieu (conception §5, décision D-3) — jamais un
+    compteur : les scalaires effondrés, la `souche_memory` (« elle rejettera » /
+    « le vide restera à combler ») et l'horloge remise à zéro. Les cibles de repousse
+    mémorisent le peuplement mûr par un MAXIMUM : recouper avant reconstitution
+    n'efface pas la mémoire du terrain.
+
+    PURE (aucun RNG, aucun coût, aucun champ écologique touché) — la couche joueur
+    est au-dessus.
+    """
+    rejette = secteur.get("essence") in ESSENCES_QUI_REJETTENT
+    if geste == "eteter":
+        souche = "vivante"                       # le tronc reste debout et vivant
+    elif geste == "receper" and rejette:
+        souche = "vivante"                       # la souche a de la mémoire
+    else:
+        souche = "morte"
+    enregistre = "abattre" if (geste == "receper" and not rejette) else geste
+
+    densite_res, frac_h, _duree = CINETIQUES[enregistre]
+    secteur["densite_avant"] = max(secteur.get("densite_avant") or 0.0,
+                                   secteur["densite_ligneuse"])
+    secteur["hauteur_avant"] = max(secteur.get("hauteur_avant") or 0.0,
+                                   secteur["hauteur_canopee"])
+    if densite_res is not None:
+        # `min` et pas affectation : une friche clairsemée ne DEVIENT pas plus dense
+        # parce qu'on l'a coupée (bornes, test ⑥).
+        secteur["densite_ligneuse"] = min(secteur["densite_ligneuse"], densite_res)
+    secteur["hauteur_canopee"] = round(secteur["hauteur_canopee"] * frac_h, 3)
+    secteur["souche_memory"] = souche
+    secteur["geste_coupe"] = enregistre
+    secteur["annees_depuis_coupe"] = 0.0
+    return enregistre
+
+
+def tick_repousse(ceinture, semaines: float = 1.0) -> None:
+    """Fait vieillir les coupes de la ceinture d'un pas de tick — O(4), appelé une
+    fois par semaine depuis `sim/engine/boucle.py` AVANT la lumière et l'abri (qui
+    lisent la hauteur et la densité du tick).
+
+    **No-op strict** si `ceinture` est absente (cas du golden) ou si aucun secteur ne
+    porte de coupe en cours (`geste_coupe is None`) ⇒ aucune écriture, digest intact.
+
+    Déterministe (philo #3) : interpolation linéaire de la valeur résiduelle vers la
+    cible mémorisée, sur la durée de la cinétique. Aucun tirage — « l'arbre repousse
+    peut-être » n'existe pas. La coupe cesse d'être une coupe quand le peuplement est
+    reconstitué ; `souche_memory` reste, elle, comme trace persistante du milieu.
+    """
+    for s in ceinture or ():
+        geste = s.get("geste_coupe")
+        if not geste:
+            continue
+        s["annees_depuis_coupe"] = round(s["annees_depuis_coupe"]
+                                         + semaines / SEMAINES_PAR_AN, 6)
+        t = s["annees_depuis_coupe"]
+        densite_res, frac_h, duree = CINETIQUES[geste]
+        cible_d, cible_h = s["densite_avant"], s["hauteur_avant"]
+        avance = min(1.0, t / duree) if duree > 0.0 else 1.0
+
+        if densite_res is not None:
+            # Départ borné par la cible : sur une friche déjà clairsemée, la coupe
+            # n'a rien retiré → la « repousse » ne doit rien ajouter non plus.
+            depart = min(densite_res, cible_d)
+            d = depart + (cible_d - depart) * avance
+            if geste == "abattre":
+                # Plancher pionnier, lui aussi borné par la cible : une friche coupée
+                # ne devient pas plus fournie qu'elle ne l'était.
+                pionnieres = min(DENSITE_PIONNIERE, cible_d)
+                d = max(d, pionnieres * min(1.0, t / DUREE_PIONNIERES_ANS))
+            s["densite_ligneuse"] = round(min(1.0, max(0.0, d)), 3)
+
+        depart_h = cible_h * frac_h
+        s["hauteur_canopee"] = round(max(0.0, depart_h
+                                         + (cible_h - depart_h) * avance), 3)
+        if avance >= 1.0:
+            s["geste_coupe"] = None              # peuplement reconstitué

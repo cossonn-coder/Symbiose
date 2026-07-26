@@ -22,9 +22,34 @@ No-op strict sans ceinture (`None`) ⇒ champs bit-identiques ⇒ golden INTACT.
 from __future__ import annotations
 
 from fields.grids import GridField
-from fields.peripherie import plots_de_bord
+from fields.peripherie import plots_de_bord, DENSITE_FORET
 from .constants import (HUM_CAP, BERGE_PORTEE_CM, BERGE_FLUX_PAR_CM,
-                        LISIERE_PORTEE_CM, INTENSITE_LISIERE)
+                        LISIERE_PORTEE_CM, INTENSITE_LISIERE,
+                        LISIERE_TYPES_LIGNEUX, LISIERE_SOCLE)
+
+# Densité de référence d'une strate ligneuse PLEINE = le haut de la plage des forêts
+# du générateur. DÉRIVÉE, jamais recopiée : si le ① recalibre `DENSITE_FORET`, la
+# normalisation suit.
+_DENSITE_PLEINE = DENSITE_FORET[1]
+
+
+def intensite_lisiere(secteur: dict) -> float:
+    """Intensité d'effet de lisière d'UN secteur, au contact de son bord.
+
+    `INTENSITE_LISIERE[type]` donne l'ARCHÉTYPE (une forêt est une lisière au sens
+    plein, une prairie un simple ourlet) ; pour les types à strate ligneuse
+    (`LISIERE_TYPES_LIGNEUX`) la `densite_ligneuse` en module l'intensité de façon
+    AFFINE et MONOTONE croissante, entre `LISIERE_SOCLE` (coupe rase : il reste la
+    litière et l'ourlet) et 1.0 (canopée pleine). C'est ce qui fait qu'un abattage du
+    ④ se VOIT sur le corridor : le type ne change pas, la densité, elle, s'effondre.
+
+    Les types sans strate ligneuse ne sont PAS modulés (leur densité est nulle par
+    construction — les moduler les annulerait). PURE, aucun effet de bord."""
+    base = INTENSITE_LISIERE.get(secteur["type"], 0.0)
+    if base <= 0.0 or secteur["type"] not in LISIERE_TYPES_LIGNEUX:
+        return base
+    norm = min(1.0, max(0.0, secteur["densite_ligneuse"] / _DENSITE_PLEINE))
+    return base * (LISIERE_SOCLE + (1.0 - LISIERE_SOCLE) * norm)
 
 
 class BordureMixin:
@@ -77,24 +102,30 @@ class BordureMixin:
 
     def maj_lisiere(self, ceinture, tile_origin: tuple = (0.0, 0.0)) -> None:
         """(Re)construit `eco.lisiere` — gradient d'effet de lisière ∈ [0,1] depuis
-        les quatre bords, intensité selon le TYPE de secteur (`INTENSITE_LISIERE`),
-        combinée par MAXIMUM entre bords (un coin n'est pas deux fois une lisière).
+        les quatre bords, intensité donnée par `intensite_lisiere` (archétype du TYPE
+        × densité ligneuse pour les types boisés), combinée par MAXIMUM entre bords
+        (un coin n'est pas deux fois une lisière).
 
-        MÉMOÏSÉ sur une signature (types des secteurs + offset de tuile) : la
-        ceinture est quasi statique, le champ est donc calculé UNE fois et réutilisé
-        tel quel — on ne recalcule jamais dans un tick ce qui l'a déjà été. Une coupe
-        forestière (④) change le type d'un secteur ⇒ signature différente ⇒ recalcul.
+        MÉMOÏSÉ sur une signature (type ET densité ligneuse de chaque secteur, +
+        offset de tuile) : la ceinture est quasi statique, le champ est donc calculé
+        UNE fois et réutilisé tel quel — on ne recalcule jamais dans un tick ce qui
+        l'a déjà été. La densité entre dans la signature depuis le ④ : une coupe ne
+        change pas le TYPE d'un secteur (une forêt rasée reste une forêt qui se
+        régénère), donc sans elle une éclaircie ne serait JAMAIS vue.
 
         LAZY : sans ceinture, `eco.lisiere` reste **None** (aucune allocation) et son
         unique lecteur (`PopulationField.tick`) saute alors le terme → capacité de
         charge bit-identique → golden INTACT. Patron de `eco.turbulence` (②)."""
-        sig = (tuple((s["cote"], s["type"]) for s in ceinture or ()), tile_origin)
+        sig = (tuple((s["cote"], s["type"], s["densite_ligneuse"])
+                     for s in ceinture or ()), tile_origin)
         if sig == self._lisiere_sig:
             return
         self._lisiere_sig = sig
 
-        actifs = [s for s in (ceinture or ())
-                  if INTENSITE_LISIERE.get(s["type"], 0.0) > 0.0]
+        # Intensité calculée UNE fois par secteur (pas par plot) — elle ne dépend que
+        # de l'état du secteur, la distance au bord n'entre que dans `poids`.
+        actifs = [(s, i) for s, i in ((s, intensite_lisiere(s))
+                                      for s in (ceinture or ())) if i > 0.0]
         if not actifs:
             self.lisiere = None
             return
@@ -102,8 +133,7 @@ class BordureMixin:
             self.lisiere = GridField(self.rows, self.cols, max_val=1.0)
         else:
             self.lisiere.fill(0.0)        # ceinture changée : on repart d'un fond nul
-        for secteur in actifs:
-            intensite = INTENSITE_LISIERE[secteur["type"]]
+        for secteur, intensite in actifs:
             for r, c, poids in plots_de_bord(secteur["cote"],
                                              self.rows, self.cols,
                                              tile_origin, LISIERE_PORTEE_CM):

@@ -18,7 +18,7 @@
 > | ① | `01_ceinture.md` | état 4 secteurs + génération déterministe, **D92 refermée** — ✅ **FAIT 2026-07-26** |
 > | ② | `02_exposition_abri.md` | lisière = obstacle lumière + abri, porosité/turbulence — ✅ **FAIT 2026-07-26** |
 > | ③ | `03_graines_eau_corridor.md` | pluie de graines, nappe de berge, `eco.lisiere` — ✅ **FAIT 2026-07-26** |
-> | ④ | `04_gestes_forestiers.md` | `abattre`/`receper`/`eteter`, outils, cinétiques, matière |
+> | ④ | `04_gestes_forestiers.md` | `abattre`/`receper`/`eteter`, outils, cinétiques, matière — ✅ **FAIT 2026-07-26** |
 > | ⑤ | `05_eau_roche_erosion.md` | `endiguer`/`deriver`/`entailler`, mare, érosion |
 > | ⑥ | `06_voix_narratives.md` | saule + 5 voix, gestes/techniques/outils, pages, événements |
 > | ⑦ | `07_vue_godot.md` | pont 0.5.41, `DecorLayer` consomme, clic secteur, banc F5 |
@@ -356,30 +356,192 @@ Trois flux entrants, chacun greffé sur un système existant, **aucun système n
 - Écart mineur : `eco.lisiere` **n'est pas exposé à `get_field`** (donc pas d'overlay
   debug F6 ni de pont) — cohérent avec `eco.vent`/`eco.turbulence` du ② ; à décider au ⑦.
 
+### ④ Gestes forestiers — ✅ CLOS le 2026-07-26
+
+Trois gestes, une cinétique, un retour de matière. **Aucun système neuf** : tout se
+greffe sur l'existant (`sim/actions`, `cout_action`, `OUTILS`/`GESTE_UNLOCK`,
+`deposer_litiere`, canal `log` du ledger).
+
+- **Découpage des responsabilités** (écart ASSUMÉ au kickoff, motivé) : le kickoff ne
+  prévoyait qu'un fichier (`sim/actions/paysage.py`). Livré en **deux**, parce que ce
+  sont deux responsabilités :
+  - **`fields/peripherie.py`** (139 → 196 LDC, 🟢) — la MUTATION de l'état et sa
+    CINÉTIQUE : `ESSENCES_QUI_REJETTENT`, table `CINETIQUES`, `DENSITE_PIONNIERE`
+    (= `DENSITE_FRICHE[1]`), `SEMAINES_PAR_AN`, `NOMS_COTES`, `couper_secteur(secteur,
+    geste)`, `tick_repousse(ceinture, semaines=1.0)`. L'état vit là depuis le ① : ses
+    transitions y vivent aussi, sans joueur, sans coût, sans RNG.
+  - **`sim/actions/paysage.py`** (NEUF, 68 LDC pur, 🟢) — la couche JOUEUR : gate
+    d'outil, coût de Vigueur, bois déposé, trace au ledger — `abattre`/`receper`/
+    `eteter`, et rien d'autre (aucun accesseur spéculatif : ⑥/⑦ liront `CINETIQUES`).
+  - Bénéfice : `tick_repousse` s'importe depuis `fields` dans `boucle.py` — **aucune
+    remontée de `sim.engine` vers le paquet `sim.actions`** (le sens des couches reste
+    `fields ← sim ← engine`).
+- **3 champs de secteur ajoutés** à `secteur_neutre()` : `geste_coupe` (la cinétique en
+  cours, `None` = peuplement reconstitué), `densite_avant`/`hauteur_avant` (le
+  peuplement MÛR, cible de repousse, mémorisé par **MAXIMUM** ⇒ recouper avant
+  reconstitution n'efface pas la mémoire du terrain).
+- **« Recéper une hêtraie, c'est l'abattre » est LITTÉRAL dans le code** :
+  `couper_secteur` RENVOIE le geste dont la cinétique s'applique — `receper` sur hêtre/
+  bouleau renvoie `"abattre"` (souche morte, 30 ans). Le geste n'est jamais bloqué, rien
+  ne l'annonce (philo #6) ; le ledger, lui, le consigne.
+- **Cinétiques** (interpolation linéaire déterministe, zéro tirage) : trogne **5 ans**
+  (densité CONSERVÉE, hauteur ×0.6) · taillis **10 ans** · abattage **30 ans**. Les DEUX
+  lignes de la table §4.4 pour l'abattage sont rendues **sans machinerie** : la densité
+  prend le **MAXIMUM** de la courbe de canopée (30 ans) et d'un **plancher pionnier**
+  (`DENSITE_PIONNIERE` atteint en 4 ans) ⇒ le vide se remplit vite, la structure est
+  lente. Mesuré : charme recépé 0.500 à 5 ans → **0.800 pile à 10 ans** ; abattage 0.250
+  à 4 ans, **0.333 seulement à 10 ans**, plein à 30. Départ borné par la cible
+  (`min(densite_res, cible)`) ⇒ couper une friche clairsemée ne la densifie jamais.
+- **Retour de matière** : `BOIS_COUPE_PAR_CM = 0.002` × densité debout × hauteur retirée,
+  déposé en parcelles de litière **`bois`** sur **2 rangées** de plots du bord
+  (`BOIS_PORTEE_CM = 100`, via `plots_de_bord`, poids 0.75/0.25). **Aucun stock crédité**,
+  aucune nature `"bois"` créée. Vérifié : la **pile** accepte, le **bac REFUSE**. Étêter
+  rend moins que d'abattre (la tête, pas le fût). Une tuile loin du bord ne reçoit RIEN.
+- **Outils (D93 tombe pour ce périmètre)** : `sim/outils.py` gagne **serpe 50 · hache 70
+  · pioche 60** (placeholders F5, ordonnés comme l'effort qu'ils permettent), porte
+  Vigueur-SEULE comme le sécateur. `GESTE_UNLOCK` : `abattre ← posseder_hache`,
+  `receper ← posseder_serpe`, `eteter ← ("action","receper")` (la trogne s'apprend APRÈS
+  le taillis, pas en achetant un outil de plus). `DECLENCHEURS` absorbe `receper` par
+  simple dérivation — rien à câbler côté pont.
+- **Coûts** : nouveau palier **`TRES_ELEVE = 60.0`** (`couts.py`) — le barème s'arrêtait à
+  `ELEVE`, ce qui aurait mis abattre et recéper au même prix alors que leur ASYMÉTRIE est
+  toute la leçon. Additif (aucun geste existant ne le référence). `OBJETS_TOUCHES` :
+  `("essartage","hache")` · `("taillis","serpe")` · `("trogne","serpe")` — les trois
+  techniques reçoivent leurs voix au ⑥.
+- **Ledger** : ligne `🪓` dans `game_state["log"]`, patron EXACT de
+  `quetes._consigner_accomplissement` (le canal existant ; `journal.consigner` la verse
+  au ledger après le tick). **Le parseur de `sim/evenements.py` n'est PAS touché** —
+  c'est le périmètre du ⑥ ; une ligne non reconnue est ignorée sans dommage.
+- **Câblage** `sim/engine/boucle.py` : `tick_repousse(...)` en **1c**, une fois par monde
+  (la ceinture n'appartient à aucune tuile), **AVANT** la boucle des tuiles pour que
+  lumière (2) et abri (2a) lisent la hauteur/densité de CE tick. O(4), no-op strict sans
+  ceinture ou sans coupe en cours.
+- **Caches — le point légué par le ③, vérifié** : `light.geom_key` inclut
+  `tuple(lisieres)` (hauteur + opacité=densité) et `abri._signature` inclut
+  `(h, poro)` ⇒ **les deux invalident sur hauteur ET sur densité**, prouvé par sentinelle
+  dans le champ (suite Q). Une trouée au sud fait passer la lumière-sol du bord de
+  **0.150 à 1.000** en hiver.
+- **`eco.lisiere` répond désormais à la coupe** (⚖️ **arbitrage Nico, 2026-07-26** — le
+  ③ l'avait laissé porté par le SEUL type, ce qui tenait tant que la ceinture était
+  figée ; le ④ la fait bouger, et un corridor inerte après un abattage rendrait le geste
+  destructeur creux sur ce flux). Modèle : **le type reste l'ARCHÉTYPE, la
+  `densite_ligneuse` en module l'INTENSITÉ** — nouveau helper PUR
+  `bordure.intensite_lisiere(secteur)` = `INTENSITE_LISIERE[type] × (LISIERE_SOCLE +
+  (1 − LISIERE_SOCLE) × densité/DENSITE_FORET[1])`, **affine et monotone croissante**
+  (aucune non-linéarité inventée — la non-linéarité reste du côté de l'abri, §3.2).
+  - Le **socle** (`LISIERE_SOCLE = 0.25`, `fields/ecofields/constants.py`) est
+    ÉCOLOGIQUE, pas un garde-fou numérique : une trouée fraîche n'est pas du béton (il
+    reste la litière, le bois mort, l'ourlet). Il garantit en prime que **l'ORDRE des
+    archétypes tient** (friche la plus clairsemée 0.261 > prairie 0.20), ce qu'une
+    simple multiplication aurait inversé.
+  - **Seuls les types à strate ligneuse sont modulés** (`LISIERE_TYPES_LIGNEUX =
+    ("foret","friche")`) : prairie/rivière/falaise ont une densité nulle par
+    construction, les moduler les annulerait — elles gardent le comportement du ③,
+    **intact** (vérifié).
+  - Normalisation **dérivée** de `DENSITE_FORET[1]` (import, pas de valeur recopiée) :
+    un recalibrage du ① suit automatiquement.
+  - **`_lisiere_sig` inclut la densité** ⇒ une éclaircie invalide la mémoïsation, qui
+    est CONSERVÉE (règle projet : ne jamais recalculer dans un tick ce qui l'a déjà
+    été). L'intensité est calculée une fois par secteur, jamais par plot.
+  - **Mesuré** — abattage du bord nord (charme, densité 0.8 → 0.1) : `eco.lisiere` aux
+    3 premières rangées **0.826 → 0.308 · 0.716 → 0.267 · 0.606 → 0.226** (−63 %), le
+    gradient reste un gradient, **rien ne bouge loin du bord**, et après 30 ans de
+    repousse le corridor est **revenu exactement à 0.826** (rien n'est épuisable, #4).
+  - **Neutralité intacte** : sans ceinture, `eco.lisiere` reste `None` ⇒ le terme est
+    sauté dans `PopulationField.tick` ⇒ capacité de charge **bit-identique**.
+  - Conséquence de calibrage : la valeur du ③ « `lisiere` moyenne T0 0.625 » n'est plus
+    la référence (une forêt à densité 0.83 rayonne 0.906, non 1.00).
+- **Tests** : **nouveau fichier `tests/test_peripherie_gestes.py`** (326 LDC, 🟡 vigilance — responsabilité unique : les tests du ④) —
+  **76/76 OK**. Écart au kickoff (« étendre `test_peripherie.py` ») **assumé et motivé** :
+  ce fichier était déjà à 415 LDC 🔴 et ④+⑤ l'auraient poussé vers 550 ; « un fichier par
+  tronçon » est exactement la scission que le ③ renvoyait au `/refactor` de fin de sprint
+  — faite d'emblée plutôt que payée deux fois. Sept suites : L golden neutre (200 ticks
+  sur ceinture non coupée = **zéro dérive**), M gating (« refuser sans rien coûter » :
+  aucune Vigueur débitée, secteur intact, ledger muet), N rejet de souche, O cinétiques
+  (l'asymétrie), P matière, Q bornes + invalidation des caches, **R corridor** (la coupe
+  fait baisser `eco.lisiere`, la mémoïsation ne le fige pas, la repousse le ramène).
+- **Golden INCHANGÉ** : `57c166d8d3626444e0fc9b88b360edc62c047927f7608c45fefae35a6bba08da`.
+  `tests/test_peripherie.py` (①②③) toujours **71/71** — les assertions de la suite K
+  sont RELATIVES, la modulation par la densité ne les touche pas. Suite complète relancée
+  (63 fichiers hors golden/500ans/périphérie) : **1 seul rouge**, `test_sim_server`
+  269/270 (« le pommier pré-âgé a noué des fruits réels » → 0 fruits @ S52) — échec
+  **PRÉ-EXISTANT** déjà consigné au ③. Tout le reste vert, dont `test_vent`,
+  `test_stress_chronique`, `test_structures`, `test_substrat`, `test_ruissellement`,
+  `test_marais`, `test_deblocage`, `test_vigueur`, `test_maitrise*`, `test_carnet`,
+  `test_quetes`. **Aucun C# touché** (la vue est le tronçon ⑦) → pas de build à faire.
+- **Régression corrigée** : `tests/test_acquisition_outils.py` assertionnait
+  `offre_outils == ["secateur"]` (snapshot figé du registre D82). Remplacé par
+  l'INVARIANT (« le sécateur y est » + « l'offre = les outils marqués `offre` ») → 16/16.
+  Le registre grandira encore.
+- **Échec PRÉ-EXISTANT aggravé, attendu** : `test_encyclopedie` était à 64/68 (5 gestes +
+  1 technique sans fiche). Il l'est toujours à 64/68 — **les mêmes 4 vérifications**,
+  vérifiées identiques sur l'arbre propre (`git stash`) — mais ses listes de « muettes »
+  s'allongent de `abattre`/`receper`/`eteter` et `essartage`/`taillis`/`trogne`/`hache`/
+  `serpe`. **C'est exactement le périmètre du ⑥** (`geste_corpus`/`technique_corpus`/
+  `outil_corpus`), pas un bug de ④.
+- **Fumée d'intégration** : monde du golden + `ceinture = generer_ceinture(7)` (forêts N
+  19,8 m / E 15,9 m en aulne, rivières S+O) + joueur outillé × 60 semaines → aucun crash ;
+  `abattre` nord dépose **26,3** de litière `bois` sur T0, décomposée à **11,7** en 55
+  semaines (le circuit décompo la reprend) ; secteur nord à 1,06 an : densité 0.126,
+  hauteur 70 cm, souche `morte`, cinétique `abattre` toujours en cours.
+
+**⚠️ À valider par Nico (calibrage/design, pas bugs)** :
+1. **`BOIS_COUPE_PAR_CM = 0.002`** — raser une forêt de 20 m de front à densité 0.83 rend
+   ~26 unités de `bois` sur une tuile de 6×8. Placeholder ; se juge au F5 (est-ce qu'on
+   croule sous le bois, ou est-ce dérisoire ?).
+2. **`TRES_ELEVE = 60.0`** — nouveau palier. Sur `MAX_BASE = 100`, abattre est faisable
+   une fois par recharge : cher, jamais impossible. À arbitrer si le barème doit rester à
+   4 paliers.
+3. **`LISIERE_SOCLE = 0.25`** — part de l'effet de lisière qui survit à une coupe rase
+   (litière, bois mort, ourlet herbacé qui monte dans la lumière neuve). Placeholder
+   écologique ; il fixe aussi de combien le corridor tombe (mesuré : −63 %).
+4. **Le ledger n'est encore lu par personne** : la ligne `🪓` traverse `journal.consigner`
+   mais aucun `Evenement` typé n'en sort tant que le ⑥ n'a pas ajouté son motif au
+   parseur. Attendu, pas oublié.
+
 ## 6. §REPRISE
 
 **Lire** : `CLAUDE.md` · ce fichier · `docs/champs/peripherie/conception_peripherie.md`
 · le kickoff `0N` du tronçon en cours. Au besoin : `DETTE.md` D73/D92/D93/D94 ·
 `visuals/DecorLayer.cs` · `fields/abri.py` · `fields/light.py` (`compute`, cache
-`geom_key`) · `sim/outils.py` + `sim/actions/deblocage.py` ·
+`geom_key`) · `sim/actions/paysage.py` + `fields/peripherie.py` (§SYLVICULTURE) ·
+`sim/outils.py` + `sim/actions/deblocage.py` ·
 `fields/ecofields/{hydrologie,ruissellement,marais}.py` · `sim/actions/paillage.py`
 (`mulch_stock`, `broyer`) · `sim/actions/compost.py` (`empiler_bois`) ·
 `fields/ecofields/matiere_organique.py` (`deposer_litiere`).
 
-**Prochaine étape** : tronçon **④** (`04_gestes_forestiers.md`) — `abattre`/`receper`/
-`eteter`, outils, cinétiques de repousse, retour de matière en parcelles de litière
-`bois`. Points d'appui posés par ①②③ :
+**Prochaine étape** : tronçon **⑤** (`05_eau_roche_erosion.md`) — `endiguer`/`deriver`/
+`entailler`, mare, érosion. Points d'appui posés par ①②③④ :
 - l'état de la ceinture vit dans `game_state["ceinture"]` (4 secteurs, lue par
-  `boucle.py` aux étapes 2, 2a, 2a-bis, 2e et 14) ; les champs `souche_memory` et
-  `annees_depuis_coupe` de `secteur_neutre()` sont **posés et vierges**, prêts pour ④ ;
-- **muter `type` / `densite_ligneuse` / `hauteur_canopee` d'un secteur suffit** à
-  propager la coupe partout : `light` (cache `geom_key`) et `abri` (`_signature`)
-  invalident déjà sur la densité, `maj_lisiere` invalide sur le **type**
-  (⚠️ si le ④ veut qu'une éclaircie SANS changement de type bouge la lisière, il faut
-  ajouter la densité à `_lisiere_sig` dans `fields/ecofields/bordure.py`) ;
-- `fields/peripherie.plots_de_bord(cote, rows, cols, tile_origin, portee_cm)` est le
-  helper à réutiliser pour tout dépôt au sol sur les plots de bord (bois abattu) ;
-- circuit du bois déjà en place : `eco.deposer_litiere` (parcelle typée `bois`),
-  `empiler_bois` (`sim/actions/compost.py`), `broyer` (`sim/actions/paillage.py`).
+  `boucle.py` aux étapes **1c** (repousse), 2, 2a, 2a-bis, 2e et 14) ;
+- **le patron d'un geste de paysage est posé** : `sim/actions/paysage.py` (couche
+  joueur : gate `est_debloque` → bornes métier → `spend` tout-ou-rien → mutation →
+  matière → `_consigner` 🪓) + `fields/peripherie.py` (mutation d'état pure). Le ⑤
+  ajoute ses verbes dans `paysage.py` (il est à 71 LDC, large marge) et ses mutations
+  dans `peripherie.py` ; **ne pas créer un 3ᵉ module**, ne pas gonfler `gestes.py` ;
+- **outils** : `OUTILS` porte déjà **pioche** (marqueur `posseder_pioche`) sans entrée
+  `GESTE_UNLOCK` — le ⑤ n'a qu'à écrire `"entailler": [("action","posseder_pioche")]`.
+  `endiguer`/`deriver` sont à la **bêche** (déjà en `OBJETS_TOUCHES` via `creuser`) ;
+- **coûts** : le palier **`TRES_ELEVE`** existe (`couts.py`) → `entailler` s'y branche
+  directement, `endiguer`/`deriver` sur `ELEVE` ;
+- **cinétiques** : le ⑤ doit poser « barrage non entretenu rompt vers 8 ans » — le
+  patron est `CINETIQUES` + `tick_repousse` (interpolation déterministe sur
+  `annees_depuis_coupe`, no-op strict sans ceinture). L'entaille de falaise, elle,
+  ne repousse **jamais** ⇒ ne lui donner **aucune** entrée de cinétique ;
+- **érosion** (§4.5) : se greffe sur `structure_sol` (D30) aux plots de bord via
+  `plots_de_bord`, aucun champ neuf. `bordure.py` (mixin `BordureMixin`) est l'endroit
+  où l'écrire, à côté de `tick_berge` ;
+- `fields/peripherie.plots_de_bord(cote, rows, cols, tile_origin, portee_cm)` reste le
+  helper de tout effet de bord (déjà utilisé par graines, berge, lisière, bois) ;
+- circuit du bois en place et exercé : `eco.deposer_litiere` (parcelle typée `bois`),
+  `empiler_bois` (`sim/actions/compost.py`), `broyer` (`sim/actions/paillage.py`) ;
+- **les QUATRE flux répondent maintenant à une coupe** : lumière (`geom_key`), abri +
+  turbulence (`_signature`) et corridor (`_lisiere_sig` + `intensite_lisiere`). Un
+  cinquième geste du ⑤ qui toucherait `ligne_eau` ou `altitude_relative` doit vérifier
+  la même chose : **quel cache lit ce champ, et invalide-t-il sur MON écriture ?** ;
+- **⚠️ voix manquantes (périmètre ⑥, `test_encyclopedie` le mesure déjà)** : gestes
+  `abattre`/`receper`/`eteter`, techniques `essartage`/`taillis`/`trogne`, outils
+  `hache`/`serpe`/`pioche` sont sans fiche ; le parseur `sim/evenements.py` ne
+  reconnaît pas encore le marqueur `🪓`.
 Aucun tronçon n'est autorisé à re-figer le golden ; si le digest bouge, c'est un bug.
 Golden de référence courant : `57c166d8d3626444e0fc9b88b360edc62c047927f7608c45fefae35a6bba08da`.

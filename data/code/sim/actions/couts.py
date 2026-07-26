@@ -16,6 +16,11 @@ NUL    = 0.0
 FAIBLE = 5.0
 MODERE = 15.0
 ELEVE  = 30.0
+# Palier ajouté au sprint PÉRIPHÉRIE ④ (conception §4.3 : `abattre` = TRÈS ÉLEVÉ).
+# Le barème s'arrêtait à ÉLEVÉ, ce qui aurait mis l'abattage d'une lisière au même
+# prix qu'un recépage — or c'est justement l'ASYMÉTRIE des deux qui enseigne. Additif
+# (aucun geste existant ne le référence) → coûts historiques inchangés, golden intact.
+TRES_ELEVE = 60.0
 URGENCE_MULT = 1.5   # majoration des actions de phase « saison » (urgence, §3.1)
 
 # Le hook de la conception (§3.5) devient réel : le geste de prélèvement de la
@@ -72,6 +77,12 @@ COUTS = {
     "poser_treillis":       MODERE,            # pose un treillis (planification, grimpantes ④ §6)
     "poser_pergola":        MODERE,            # pose une pergola (planification, grimpantes ④ §6)
     "palisser":             MODERE,            # noue une canne sarmenteuse à un support (grimpantes ④ §6)
+    # Sylviculture périphérique (PÉRIPHÉRIE ④, §4.3/§5) — coût justifié par l'EFFORT
+    # PHYSIQUE, pas par « action directe sur le vivant » (l'arbre périphérique est un
+    # agrégat de secteur, pas une `PlantInstance`). Placeholders de calibrage F5.
+    "abattre":              TRES_ELEVE,        # abattre une lisière à la hache — le geste le plus cher du jeu
+    "receper":              ELEVE,             # couper au ras : dur, mais la souche rajeunit
+    "eteter":               ELEVE,             # rabattre les têtes en trogne
 }
 
 # Objets STATIQUES touchés par chaque geste (§10.4, terme 2 : technique + outil/
@@ -118,6 +129,12 @@ OBJETS_TOUCHES = {
     "poser_treillis":       ("palissage", "treillis"),
     "poser_pergola":        ("palissage", "pergola"),
     "palisser":             ("palissage",),                    # technique seule ; la cible vivante est ajoutée par _objets_action
+    # Sylviculture périphérique (PÉRIPHÉRIE ④) : technique + outil, AUCUNE cible
+    # vivante (on agit sur un secteur agrégé, pas sur une `PlantInstance`). Les trois
+    # techniques reçoivent leurs voix au tronçon ⑥ ; sans état moteur → neutre 1.0.
+    "abattre":              ("essartage", "hache"),
+    "receper":              ("taillis", "serpe"),
+    "eteter":               ("trogne", "serpe"),
 }
 
 # Atténuations maximales — PLACEHOLDERS NOMMÉS, *calibrage D12.4*. Bornées < 1 pour

@@ -1120,6 +1120,28 @@ INTENSITE_LISIERE = {
     "falaise": 0.15,   # roche nue : quelques anfractuosités, guère plus
 }
 
+# 📖 Pédagogie — pourquoi la DENSITÉ module l'archétype (④, arbitrage Nico 2026-07-26).
+# Le ③ portait l'intensité par le SEUL type de secteur, ce qui se tenait tant que la
+# ceinture était figée. Le ④ la fait bouger : une forêt RASÉE reste de type `foret`
+# (le type est l'identité du terrain — essence, ripisylve, archétype semencier), et
+# elle rayonnerait donc encore un corridor plein. C'est faux et ça rendrait le geste
+# destructeur creux sur ce flux : pour un carabe ou un hérisson, une coupe rase n'est
+# plus une lisière. Le type reste l'ARCHÉTYPE, la densité ligneuse en module
+# l'INTENSITÉ — affine et monotone croissante, aucune non-linéarité inventée (la
+# non-linéarité, elle, est du côté de l'abri : cf. §3.2, porosité/turbulence).
+#
+# Le SOCLE est écologique, pas un garde-fou numérique : une trouée fraîche n'est pas
+# du béton. Il y reste la litière, le bois mort au sol, l'ourlet herbacé qui monte
+# dans la lumière neuve — un quart de l'effet de lisière survit à la coupe. Il
+# garantit au passage que l'ORDRE des archétypes tient (une friche clairsemée reste
+# au-dessus d'une prairie rase), ce qui serait perdu par une simple multiplication.
+#
+# Seuls les types dont la `densite_ligneuse` a un SENS sont modulés : une prairie,
+# une berge et une falaise n'ont pas de strate ligneuse (densité 0 par construction)
+# → les moduler les annulerait. Elles gardent le comportement du ③, intact.
+LISIERE_TYPES_LIGNEUX = ("foret", "friche")
+LISIERE_SOCLE = 0.25         # part de l'effet qui survit à une coupe rase (litière, ourlet)
+
 # --- Paillage — champ `paillage` par plot (sprint équilibre invasion ③, D69) ---
 # Le LEVIER PERMACOLE central contre l'invasion d'adventices : un champ scalaire
 # `paillage` ∈ [0,1] (profondeur/densité du mulch) posé par le geste `pailler`, qui

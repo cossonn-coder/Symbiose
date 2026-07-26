@@ -71,8 +71,13 @@ def test_etat_initial_verrouille():
 def test_offre():
     print("\n[②B] offre de l'Atelier — sécateur, aucune maîtrise requise")
     gs = _gs(0.0)   # même sans Vigueur, l'offre est présentée (le paiement échoue après)
-    check("offre = ['secateur']", outils.offre_outils(gs, P) == ["secateur"],
-          f"{outils.offre_outils(gs, P)}")
+    offre = outils.offre_outils(gs, P)
+    # Le registre GRANDIT avec les sprints (PÉRIPHÉRIE ④ y a ajouté serpe/hache/pioche)
+    # → on n'assertion plus une liste figée, mais l'invariant : le sécateur y est, et
+    # l'offre est exactement l'ensemble des outils marqués `offre` (ordre du registre).
+    check("le sécateur est présenté à l'Atelier", "secateur" in offre, f"{offre}")
+    check("offre = les outils marqués `offre`, dans l'ordre du registre",
+          offre == [o for o, spec in outils.OUTILS.items() if spec.get("offre")])
 
 
 # ---------------------------------------------------------------------------
