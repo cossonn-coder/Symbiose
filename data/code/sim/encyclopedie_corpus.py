@@ -509,6 +509,28 @@ FICHES: dict[str, dict[int, str]] = {
            "au fil de l'eau. Là où une cuvette se gorge, l'aulne prospère quand le "
            "fruitier de terrain sec dépérit — il RÉVÈLE l'eau qui stagne.",
     },
+    # === L'arbre de la trogne (sprint PÉRIPHÉRIE ⑥) ===
+    # N1 = la SILHOUETTE seule (philo #6 : le rejet de souche est une DÉCOUVERTE, pas
+    # une consigne — il n'apparaît qu'au N2, quand le joueur a fait le cycle).
+    "saule": {
+        1: "Arbre de bord d'eau au houppier ample et retombant, longues feuilles "
+           "étroites d'un vert argenté au revers, rameaux souples et flexibles ; "
+           "au sortir de l'hiver, des chatons duveteux couvrent le bois encore nu.",
+        2: "Pérenne caduc de ripisylve, à croissance TRÈS rapide et à vie brève pour un "
+           "arbre. Il pousse les pieds dans l'eau, là où les racines des autres "
+           "pourrissent. Ses chatons s'ouvrent AVANT les feuilles et donnent nectar et "
+           "pollen quand presque rien d'autre n'est fleuri — les butineurs sortis "
+           "d'hibernation y trouvent leur première table. Un rameau cassé, tombé dans "
+           "la vase, refait des racines tout seul : il se bouture sans qu'on l'aide.",
+        3: "Arbre-atelier du bocage : coupé au ras, il ne meurt pas — la souche rejette "
+           "en une gerbe de tiges droites, bonnes à la vannerie et au chauffage, "
+           "indéfiniment. Étêté haut et régulièrement, il devient une TROGNE : un fût "
+           "trapu qui se creuse avec les années et abrite chouettes, chauves-souris et "
+           "insectes du bois mort. Paradoxe qui fut le savoir des paysans : le saule "
+           "qu'on prélève tous les dix ans vit bien plus vieux que celui qu'on laisse "
+           "libre — la coupe le rajeunit là où sa tête, trop lourde, finirait par le "
+           "fendre. Ses racines tiennent la berge, son ombre tempère l'eau.",
+    },
     "sphaigne": {
         1: "Coussin ras et spongieux d'un vert glauque à roussâtre, gorgé d'eau, sans "
            "vraie tige ni racine — une mousse molle qui tapisse les creux détrempés.",

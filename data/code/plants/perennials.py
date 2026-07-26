@@ -619,3 +619,73 @@ class Alder(PerennialWoody):
             "description": "Fixation N₂ actinorhizienne (Frankia) — enrichit le sol gorgé"
         }
     ]
+
+
+# ---------------------------------------------------------------------------
+# SAULE (sprint PÉRIPHÉRIE ⑥, décision D-5) — l'arbre de la TROGNE
+# ---------------------------------------------------------------------------
+
+class Willow(PerennialWoody):
+    """
+    Salix alba — Saule blanc (Salicaceae, famille NEUVE déclarée à l'espèce comme
+    l'ont fait FirTree pour Pinaceae et BirchTree pour Betulaceae).
+
+    SEULE espèce ajoutée par le sprint PÉRIPHÉRIE (règle « le catalogue grandit avec
+    les idées », application signalée) : le sprint invente le geste `eteter` et il lui
+    fallait son incarnation. Le saule têtard EST la trogne — l'arbre que l'on coupe
+    pour qu'il dure. Trois signatures, toutes déjà portées par des leviers existants :
+
+      • REJET DE SOUCHE — il figure dans `fields/peripherie.ESSENCES_QUI_REJETTENT`
+        (avec le charme et l'aulne) : recépé, il ne meurt pas, il rajeunit. C'est la
+        moitié « vivante » de l'asymétrie que le joueur découvre en coupant.
+      • BOUTURE SPONTANÉE (`bouturable`) — un rameau piqué en terre humide reprend.
+        Croise l'événement rare « bouture » et le canal d'acquisition #2 déjà en place ;
+        c'est aussi pourquoi le bocage se plantait sans pépinière.
+      • RIPISYLVE — hélophyte (`asphyxie_tolerance_base`, comme l'aulne) : il pousse
+        les pieds dans l'eau, d'où sa place dans `ESSENCES_RIPISYLVE` (un secteur de
+        forêt au bord d'une rivière tire saule ou aulne).
+
+    Et une quatrième, gratuite : il fleurit AVANT de feuiller (`bloom_forcing_gdd` très
+    bas), en chatons nectarifères — la PREMIÈRE table des butineurs au sortir de
+    l'hiver, quand rien d'autre n'est ouvert (entomophile, ≠ l'aulne anémophile).
+
+    Croissance la plus RAPIDE du catalogue ligneux, port PLEUREUR (le levier
+    `gravitropism_gain` que le bouleau avait ouvert « pour préparer le saule »), vie
+    brève pour un arbre — mais un saule ÉTÊTÉ vit bien plus vieux qu'un saule libre.
+    HORS scénario smoke (jamais semé dans `build_world`) → golden NEUTRE.
+    """
+    family = "Salicaceae"
+    genus  = "Salix"
+    name   = "Saule"
+    rarity = "Établie"
+    keywords = ["Berge", "Trogne", "Bouture", "Mellifère précoce"]
+    foliage_density = 0.50           # feuillage fin et lâche → ombre légère de bord d'eau
+    pollination_mode = "insect"      # chatons NECTARIFÈRES (≠ aulne/bouleau anémophiles)
+    reproduction_rate = 0.22         # graines cotonneuses innombrables, viabilité très courte
+    seed_dispersal = "anemochore"    # aigrette de coton (vent + eau)
+    ph_opt = 6.5                     # indifférent, tolère du frais au neutre
+    ph_tol = 1.5
+    asphyxie_tolerance_base = 3.0    # HÉLOPHYTE comme l'aulne : tient le sol gorgé
+    t_germ_opt = 12.0                # lève au frais des berges de printemps
+    t_germ_tol = 10.0
+    longevity_years = 80
+    maturity_years = 5
+    bouturable = True                # bouture PROVERBIALE : un rameau piqué reprend seul
+    bloom_forcing_gdd = 4.0          # fleurit AVANT les feuilles (~fin d'hiver) : 1ʳᵉ table
+    bloom_duration = 3               # chatons brefs
+    girth_max_cm = 22.0              # fût épais (une trogne épaissit) ; placeholder → F5
+    age_curve = [(0, 50, 25), (5, 600, 220), (10, 1100, 380),
+                 (20, 1700, 520), (50, 2200, 650), (80, 2400, 700)]
+    # --- Croissance procédurale (patron aulne/bouleau) — pionnier PLEUREUR ---------
+    # ⚠️ Valeurs NON calibrées à la sonde §C (le saule n'est semé nulle part : ni
+    # golden, ni banc) — PLACEHOLDERS cohérents avec l'aulne (même stature, même
+    # milieu) poussés d'un cran en vitesse, à recalibrer au F5 le jour où le joueur en
+    # plante un. `gravitropism_gain` > celui du bouleau : rameaux franchement PENDANTS.
+    procedural_growth   = True
+    growth_speed        = 2.1        # le plus rapide du catalogue ligneux
+    max_height_cm       = 2400.0     # plafond = dernier point age_curve (80 ans)
+    max_extent_cm       = 700.0
+    apical_dominance_base = 2.2
+    auxin_release_scale = 750.0      # tient la flèche, puis s'ouvre en houppier ample
+    foliage_halfwidth   = 60.0       # houppier lâche + racines multi-plots (survie)
+    gravitropism_gain   = 1.4        # rameaux PENDANTS (port pleureur) — calibrer F5

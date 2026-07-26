@@ -13,7 +13,9 @@ Propriétés exigées (« Définition de done » du kickoff) :
   E. ÉPUISABLE — jamais de re-révélation ; tout trouvé → tous robinets muets.
   F. ZÉRO EFFET MÉCANIQUE — `reveler_page` ne touche QUE `gs["pages"]`, aucun autre
      champ de `gs` ne change avant/après.
-  G. CORPUS — 37 entrées P01..P37, champs complets, concepts/robinets recopiés.
+  G. CORPUS — entrées P01..PNN CONTIGUËS (le corpus grandit à chaque sprint : on
+     teste l'INVARIANT, plancher + contiguïté, jamais un compte figé), champs
+     complets, concepts/robinets recopiés.
 
 Usage (depuis data/code/) :
   python3 -m tests.test_pages
@@ -84,8 +86,8 @@ def test_fouille_globale():
     trouvees = pages.pages_trouvees(gs, "j1")
     while pages.reveler_page(gs, "j1", "fouille", {}) is not None:
         pass
-    check("fouille épuise tout le corpus (37 pages)",
-          len(pages.pages_trouvees(gs, "j1")) == 37,
+    check("fouille épuise tout le corpus",
+          len(pages.pages_trouvees(gs, "j1")) == len(PAGES),
           f"{len(pages.pages_trouvees(gs, 'j1'))}")
     check("fouille corpus épuisé → None",
           pages.reveler_page(gs, "j1", "fouille", {}) is None)
@@ -110,8 +112,8 @@ def test_hasard_deterministe():
     s, w = 1, 0
     while pages.reveler_page(gs, "j1", "hasard", {"seed": s, "semaine": w}) is not None:
         w += 1
-    check("hasard épuise tout le corpus (37 pages)",
-          len(pages.pages_trouvees(gs, "j1")) == 37,
+    check("hasard épuise tout le corpus",
+          len(pages.pages_trouvees(gs, "j1")) == len(PAGES),
           f"{len(pages.pages_trouvees(gs, 'j1'))}")
     check("hasard corpus épuisé → None",
           pages.reveler_page(gs, "j1", "hasard", {"seed": s, "semaine": w + 1}) is None)
@@ -124,13 +126,14 @@ def test_hasard_deterministe():
 def test_jamais_re_revelation():
     gs = {}
     vues = set()
-    for _ in range(45):                       # > 33 : sur-tire volontairement
+    for _ in range(len(PAGES) + 8):           # sur-tire volontairement le corpus
         p = pages.reveler_page(gs, "j1", "fouille", {})
         if p is None:
             break
         check(f"page {p} jamais re-révélée", p not in vues, f"déjà vue : {p}")
         vues.add(p)
-    check("exactement 37 pages distinctes révélées", len(vues) == 37, f"{len(vues)}")
+    check("toutes les pages du corpus révélées, sans doublon",
+          len(vues) == len(PAGES), f"{len(vues)} / {len(PAGES)}")
     # robinet inconnu → toujours None (jamais de crash)
     check("robinet inconnu → None",
           pages.reveler_page({}, "j1", "zzz", {}) is None)
@@ -162,9 +165,12 @@ def test_zero_effet_mecanique():
 # ---------------------------------------------------------------------------
 
 def test_corpus():
-    check("corpus = 37 pages", len(PAGES) == 37, f"{len(PAGES)}")
+    # Plancher (le corpus ne rétrécit jamais) + CONTIGUÏTÉ des ids : invariants
+    # stables quand un sprint ajoute ses pages (⑥ périphérie : P38..P42).
+    check("corpus ≥ 37 pages", len(PAGES) >= 37, f"{len(PAGES)}")
     ids = sorted(PAGES)
-    check("ids = P01..P37", ids == [f"P{i:02d}" for i in range(1, 38)], f"{ids}")
+    check("ids contigus P01..P%02d" % len(PAGES),
+          ids == [f"P{i:02d}" for i in range(1, len(PAGES) + 1)], f"{ids}")
     champs = {"id", "titre", "voix", "concept", "palier_theme", "robinet", "texte"}
     incomplets = [pid for pid, f in PAGES.items()
                   if set(f) != champs or not f["texte"].strip()]
@@ -174,7 +180,8 @@ def test_corpus():
     check("tous les robinets ∈ {hasard, récompense, fouille}", robinets_ok)
     voix_ok = all(PAGES[p]["voix"] in {"A", "B", "C", "D", "E"} for p in PAGES)
     check("toutes les voix ∈ {A..E}", voix_ok)
-    check("ORDRE = 37 ids alignés sur PAGES", len(ORDRE) == 37 and set(ORDRE) == set(PAGES))
+    check("ORDRE aligné sur PAGES",
+          len(ORDRE) == len(PAGES) and set(ORDRE) == set(PAGES))
 
 
 if __name__ == "__main__":

@@ -13,7 +13,8 @@ from plants.species import (Tomato, Pepper, Bean, Clover, Sunflower, Basil,
                             BursaPastoris, MedicagoLupulina, PoaAnnua, Taraxacum,
                             Molene)
 from plants.perennials import (Fig, AppleTree, CherryTree, WalnutTree, OakTree,
-                               FirTree, BeechTree, BirchTree, HornbeamTree, Alder)
+                               FirTree, BeechTree, BirchTree, HornbeamTree, Alder,
+                               Willow)
 
 
 PLANT_CATALOGUE: dict[str, type] = {
@@ -113,4 +114,8 @@ PERENNIAL_CATALOGUE: dict[str, type] = {
     # Hélophyte fixateur d'azote (sprint HYDROLOGIE & MARÉCAGES ⑤) — Aulne
     # (Betulaceae) : arbre des berges, N₂ actinorhizien (Frankia), survit au sol gorgé.
     "aulne":    Alder,
+    # Arbre de la TROGNE (sprint PÉRIPHÉRIE ⑥, décision D-5) — Saule blanc
+    # (Salicaceae NEUVE) : rejette de souche, se bouture seul, ripisylve, et fleurit
+    # avant de feuiller (1ʳᵉ table des butineurs). Incarne le geste `eteter`.
+    "saule":    Willow,
 }

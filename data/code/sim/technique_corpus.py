@@ -24,7 +24,7 @@ golden NEUTRE.
 """
 from __future__ import annotations
 
-# --- Les 11 techniques × 3 niveaux -------------------------------------------
+# --- Les techniques × 3 niveaux (alignées sur `encyclopedie_types.TECHNIQUES`) --
 FICHES_TECHNIQUE: dict[str, dict[int, str]] = {
 
     "semis": {
@@ -242,6 +242,82 @@ FICHES_TECHNIQUE: dict[str, dict[int, str]] = {
            "d'écraser chaque ravageur. Diversité d'abris, diversité d'auxiliaires, "
            "diversité de services. C'est l'inverse exact de la solution facile : on "
            "construit le milieu pour n'avoir plus à agir.",
+    },
+
+    # --- Terrassement (hydrologie ⑦ + périphérie ⑤) : donner une FORME au terrain ---
+    "terrassement": {
+        1: "Remuer et déplacer de la terre pour changer la forme du sol : creuser un "
+           "creux, ouvrir un fossé, relever une berge. Le terrain garde la trace du "
+           "chantier.",
+        2: "Terrasser ne fabrique pas d'eau : ça la fait ALLER ailleurs. L'eau de "
+           "surface suit la pente et s'accumule au point bas — un creux devient donc un "
+           "réservoir qui se remplit tout seul, un fossé une porte de sortie, une berge "
+           "relevée une retenue. Rien de tout cela n'est instantané : on façonne la "
+           "forme, et l'eau met des semaines à s'y installer. Remuer la terre a aussi "
+           "un coût invisible : la vie du sol y est brassée et met du temps à revenir.",
+        3: "Toute la sagesse du terrassement tient dans une distinction : la FORME "
+           "dure, l'OUVRAGE s'entretient. Un creux excavé reste creux pour toujours ; "
+           "une digue ou une dérivation sont des artefacts que le temps défait — l'eau "
+           "reprend son cours à la première crue passée quelques années. Et ce qu'on "
+           "retire ici manque là : gorger une berge assèche l'aval, drainer une "
+           "cuvette prive la mare et son peuple. Le jardinier avisé façonne les creux "
+           "et les pentes une fois, puis laisse l'eau faire le reste ; il se méfie des "
+           "ouvrages qu'il devra surveiller jusqu'à la fin.",
+    },
+
+    # --- Techniques FORESTIÈRES (sprint PÉRIPHÉRIE ④) --------------------------
+    # ⚠️ Philo #6 : le fait que certaines essences NE rejettent PAS est une DÉCOUVERTE.
+    # Elle n'apparaît qu'au N3 (maîtrise), jamais en consigne préalable.
+    "essartage": {
+        1: "Abattre les arbres d'une lisière pour ouvrir la terre à la lumière. Une "
+           "trouée franche remplace le couvert ; le bois abattu jonche le sol.",
+        2: "Essarter, c'est prendre le terrain à la forêt. La lumière tombe d'un coup "
+           "sur un sol qui n'en recevait plus, l'air et le vent y entrent, et la banque "
+           "de graines dormantes se réveille : ronces, herbes hautes, pionnières "
+           "comblent le vide en quelques saisons. Mais un couvert d'arbres n'est pas "
+           "une haie : ce qui repousse vite est un fourré, pas une forêt.",
+        3: "L'essartage est la coupe dont on ne revient pas vite : le vide se referme en "
+           "quelques années, la STRUCTURE — les fûts, l'ombre, l'abri, le réseau du sol "
+           "forestier — demande des décennies. Entre-temps le jardin paie : le vent "
+           "n'est plus freiné et décroche en rafales, la terre nue du talus part en "
+           "colluvions vers les premiers rangs, la faune de lisière déserte. C'est "
+           "ainsi qu'un pays se déboise sans qu'aucune génération ne le décide : "
+           "chaque coupe semblait raisonnable.",
+    },
+    "taillis": {
+        1: "Couper les tiges au ras de la souche, tout près du sol. Le peuplement "
+           "disparaît, il ne reste qu'un moignon de bois vif à terre.",
+        2: "Le taillis exploite une propriété du bois vif : coupée bas, une souche "
+           "VIVANTE relance des rejets depuis ses réserves racinaires, plus nombreux et "
+           "plus vigoureux que la tige unique qu'on a prise. La souche est déjà "
+           "enracinée, elle n'a pas à recommencer — c'est pourquoi le peuplement revient "
+           "bien plus vite qu'après un abattage, et pourquoi le geste se répète toute la "
+           "vie de la souche.",
+        3: "Le taillis est le seul flux de bois qui ne s'épuise pas : couper le fait "
+           "durer. Le bocage a vécu là-dessus des siècles — chauffage, piquets, "
+           "fascines, sans jamais entamer le capital. Mais tout dépend de l'ESSENCE : "
+           "le charme, l'aulne, le saule rejettent avec force ; le hêtre et le bouleau, "
+           "eux, ne rejettent pas — sur eux le recépage n'est qu'un abattage déguisé, et "
+           "la souche pourrit. Ça ne se lit pas sur l'arbre : ça s'apprend en le "
+           "faisant, ou en écoutant ceux qui l'ont fait.",
+    },
+    "trogne": {
+        1: "Couper la tête de l'arbre haut sur le tronc, en laissant le fût debout. La "
+           "silhouette est rabattue mais rien n'est retiré du sol.",
+        2: "Étêter prélève la tête sans toucher au pied : le fût reste, les tiges "
+           "restent en place, et la couronne se reforme en une gerbe de rejets sur le "
+           "moignon. C'est le prélèvement le plus rapide à se refaire — quelques années "
+           "seulement, contre une décennie pour un taillis et une vie humaine pour une "
+           "coupe rase. Comme rien n'est arraché, le sol reste couvert et l'abri du "
+           "rideau tient.",
+        3: "La trogne est l'arbre que l'on coupe pour qu'il DURE. Régulièrement rabattu, "
+           "il ne porte jamais la tête trop lourde qui finirait par le fendre : un "
+           "têtard vit des siècles là où son voisin libre en aurait vécu un. Son fût "
+           "s'épaissit, se creuse, s'emplit de terreau — et devient un habitat à lui "
+           "seul : chouettes, chauves-souris, insectes du bois mort, mousses. Fourrage, "
+           "vannerie, bois de feu, ombre pour les bêtes : les paysans en ont tiré tout "
+           "cela d'un arbre qu'ils n'ont jamais tué. C'est le geste le plus fréquentable "
+           "de la lisière — celui qui prend sans défaire.",
     },
 
     "palissage": {

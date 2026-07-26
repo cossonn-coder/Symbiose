@@ -20,7 +20,7 @@
 > | ③ | `03_graines_eau_corridor.md` | pluie de graines, nappe de berge, `eco.lisiere` — ✅ **FAIT 2026-07-26** |
 > | ④ | `04_gestes_forestiers.md` | `abattre`/`receper`/`eteter`, outils, cinétiques, matière — ✅ **FAIT 2026-07-26** |
 > | ⑤ | `05_eau_roche_erosion.md` | `endiguer`/`deriver`/`entailler`, mare, érosion — ✅ **FAIT 2026-07-26** |
-> | ⑥ | `06_voix_narratives.md` | saule + 5 voix, gestes/techniques/outils, pages, événements |
+> | ⑥ | `06_voix_narratives.md` | saule + 5 voix, gestes/techniques/outils, pages, événements — ✅ **FAIT 2026-07-26** |
 > | ⑦ | `07_vue_godot.md` | pont 0.5.41, `DecorLayer` consomme, clic secteur, banc F5 |
 
 ---
@@ -644,6 +644,138 @@ tout se greffe sur `tick_berge` (③), l'hydrologie (D30/hydrologie), `structure
    en aval (la bêche n'a pas de marqueur d'outil). Si Nico préfère un marqueur `bêche` à
    l'Atelier, c'est 1 entrée dans `OUTILS` + 2 conditions à réécrire.
 
+### ⑥ Voix narratives — ✅ CLOS le 2026-07-26
+
+Aucune écologie : de la DONNÉE éditoriale, une table de classification, un PARSEUR.
+Le tronçon **referme ce que ④ et ⑤ avaient ouvert** — `test_encyclopedie` repasse de
+**64/68 à 68/68** (il était rouge AVANT le sprint : c'était le compteur du ⑥).
+
+- **Le SAULE au catalogue** (décision D-5, règle « le catalogue grandit avec les idées »
+  signalée) : `plants/perennials.Willow` (`plants/perennials.py` 324 → **355 LDC**, 🟡
+  vigilance — responsabilité unique : les pérennes ligneuses) + `plants/catalogue.py`
+  (`"saule"`). *Salix alba*, **Salicaceae** (famille NEUVE déclarée à l'espèce, patron
+  `FirTree`/`BirchTree`). Rien d'inventé côté moteur : ses trois signatures étaient
+  **déjà** référencées par la chaîne du sprint comme des CHAÎNES sans espèce —
+  `ESSENCES_QUI_REJETTENT` (rejet de souche), `ESSENCES_RIPISYLVE` (hélophyte,
+  `asphyxie_tolerance_base = 3.0` comme l'aulne), `bouturable` (bouture spontanée →
+  croise l'événement rare et le canal d'acquisition #2). Quatrième trait **gratuit** :
+  `bloom_forcing_gdd = 4.0` ⇒ il fleurit AVANT de feuiller, en chatons
+  **entomophiles** (`pollination_mode="insect"`, ≠ aulne/bouleau anémophiles) = la
+  PREMIÈRE table des butineurs de l'année. Port PLEUREUR par `gravitropism_gain = 1.4`
+  — le levier que le bouleau avait ouvert « pour préparer le saule ».
+- **Ses CINQ voix** (règle « toute plante ajoutée = toutes ses voix ») :
+  encyclopédie (`encyclopedie_corpus.FICHES["saule"]`, 3 niveaux ; N1 = la seule
+  silhouette, le rejet de souche n'apparaît qu'au N2 et la trogne au N3 — philo #6) ·
+  carnet (concept `rejet_de_souche`, vérifié bout-en-bout : une ligne de log de
+  recépage produit une note qui NOMME le saule) · pages secrètes (**P42** « La dame
+  blanche du saule creux ») · magazine (fiche produit + offre effective, dérivées —
+  **zéro ligne** dans `magazine.py`, tout vient du catalogue) · ledger (le fait de
+  coupe entre au journal avec `kind`/`cause`/`espece`).
+- **Classification corrigée** (`sim/encyclopedie_types.py`) : `TECHNIQUES` gagne
+  `terrassement` (⚠️ **PRÉ-EXISTANT** : la technique de `creuser`/`drainer` tombait
+  dans `OUTILS` par défaut et se voyait réclamer une fiche d'objet) + `essartage`,
+  `taillis`, `trogne`. C'était la cause des 7 « outils muets » du test.
+- **Corpus des voix du geste** (D60), tous à 3 niveaux, voix « naturaliste » :
+  - `geste_corpus.py` (233 → **321 LDC**, 🟡) : les **6 gestes du sprint** (`abattre`,
+    `receper`, `eteter`, `endiguer`, `deriver`, `entailler`) + `creuser`/`drainer`
+    (⑤ étend `creuser` à la mare de bordure et son kickoff §A affirmait qu'il avait
+    « déjà sa fiche » — il n'en avait AUCUNE) ;
+  - `technique_corpus.py` (123 → 155) : `essartage` · `taillis` · `trogne` ·
+    `terrassement` ;
+  - `outil_corpus.py` (145 → 169) : `hache` · `serpe` · `pioche` (N3 = « quand s'en
+    passer », patron du sécateur).
+  - **⚠️ Extension de périmètre ASSUMÉE et signalée** : 3 gestes **hors sprint** étaient
+    muets depuis leur propre sprint (`pincer`, `arracher`, `glaner`) et bloquaient
+    l'invariant « tout objet classé a une source de fiche », qui est TOUT-OU-RIEN. Leurs
+    fiches sont écrites pour rendre la suite verte (68/68) — pure donnée éditoriale,
+    zéro mécanique. À relire côté éditorial ; annulables sans rien casser d'autre que
+    le compteur du test.
+- **Le ledger a enfin ses lecteurs** — `sim/evenements.py` (141 → **166 LDC**) reconnaît
+  les **quatre marqueurs** que ④ et ⑤ émettaient dans le vide : `🪓` coupe · `⛏`
+  eau/roche · `🚧` rupture d'ouvrage · `🪨` éboulis. Trois points de conception :
+  1. ils sont testés **AVANT** le filtre `@(r, c)` (patron des marqueurs de tuile
+     `🐛`/`💧`/`❄`/`🍃`) — ce sont des faits de **secteur**, sans position ; sans ça la
+     ligne était silencieusement ignorée ;
+  2. `cause` = le **VERBE** (retraduit du libellé lisible), `espece` = l'**ESSENCE**
+     coupée quand le catalogue la connaît (bord sans essence → `None`, gracieux) ;
+  3. les deux tables de libellés sont des **MIROIRS** de `paysage.LIBELLE_GESTE` /
+     `LIBELLE_TERRE`, **non importées** (le parseur reste pur : `sim.actions` tirerait
+     tout le paquet des gestes dans son graphe d'import) — l'exactitude du miroir est
+     **vérifiée par test**, pas par la discipline.
+  L'API HISTORIQUE `_evenements` (détection de maîtrise D12) reste **aveugle** à ces
+  lignes (aucun `@pos`) ⇒ zéro régression, prouvé en test.
+- **Carnet** (`sim/carnet.py` 159 → **188 LDC**) : 9 entrées `CONCEPT_DE` + 18 gabarits.
+  Les 4 concepts NEUFS du kickoff sont attribués sur ce que le geste **ENSEIGNE** :
+  `abattre → brise_vent` (ce qu'on perd d'abord, c'est l'écran ; la rafale décroche),
+  `receper → rejet_de_souche` (la souche vit ou meurt), `eteter → lisiere` (la seule
+  coupe qui prélève **sans défaire** la lisière — densité conservée), `entailler` +
+  éboulis `→ erosion`, eau/rupture `→ eau` (concept existant). Concepts **propres au
+  carnet** (hors `encyclopedie_types.CONCEPTS`, comme `carnivorie`/`maladie`) : ils ne
+  réclament donc aucune fiche d'encyclopédie, et **restent descriptifs tant qu'aucune
+  route ne les crédite** (voir point 3 à valider).
+  - **Correctif de lisibilité** : `_lieu((None,))` rendait « **sur None** » — un fait de
+    ceinture n'appartient à aucune tuile. Il rend « au jardin ». Les gabarits de
+    paysage n'emploient donc pas `{l}` (sauf l'éboulis, tenu par une tuile) et le côté
+    du terrain reste lisible dans la ligne de log.
+- **Pages secrètes** (`pages_corpus.py` 129 → **144 LDC**) : **P38→P42** — le bocage et
+  le remembrement (« Le pays qu'on a rendu lisse »), l'essartage (« On n'ouvre pas un
+  bois, on l'emprunte »), la trogne, le meunier et le droit d'eau, la chouette du saule
+  creux. Voix C/E, lore PUR (zéro effet), patron du corpus existant.
+- **Quêtes (§E) — le kickoff se trompait, et c'est signalé** : « ouvrir une clairière »
+  et « rendre la mare aux libellules » ne sont **PAS** des objectifs déjà supportés —
+  le mini-catalogue de conditions de `sim/quetes.py` est **FERMÉ** et toutes ses
+  familles visent une **classe de plante** (`_classe_cible`), aucune ne lit la ceinture.
+  Les écrire aurait demandé de toucher le moteur de quêtes (interdit). Livré à la place :
+  **une** lettre (`lettre_saule_tetard`, voix épistolaire d'Odette) sur la famille
+  EXISTANTE `nombre_vivant_min` — elle pose un désir, jamais le geste (philo #6).
+- **Tests** : **nouveau `tests/test_peripherie_voix.py`** (212 LDC, 🟢) — **91/91 OK**.
+  Cinq suites : Y les 5 voix du saule (dont 2 bout-en-bout, log → ledger → carnet),
+  Z fiches + onglet de chaque geste/technique/outil du ④/⑤ (+ deux gardes **philo #6** :
+  « le hêtre ne rejette pas » n'apparaît qu'au N3, pas de doublon `creuser_mare`),
+  AA parseur (4 marqueurs, miroirs des libellés, essence absente gracieuse, API
+  historique aveugle), AB carnet (9 concepts, 18 gabarits, notes lisibles sans slot
+  vide ni « None », bascule descriptif→interprétatif), AC neutralité (parseur pur,
+  carnet sans joueur ⇒ aucune clé, saule **hors** archétypes de succession).
+- **Deux tests recalibrés d'un SNAPSHOT vers un INVARIANT** (patron du ④ sur
+  `test_acquisition_outils`) : `test_encyclopedie` « corpus = 47 fiches » → **48**
+  (l'alignement corpus ⟷ catalogue, lui, était déjà l'invariant) et `test_pages`
+  passe de « 37 pages / ids P01..P37 » figés à **plancher + contiguïté** dérivés de
+  `len(PAGES)` ⇒ un futur sprint qui ajoute une page ne le rendra plus rouge.
+- **Golden INCHANGÉ** : `57c166d8d3626444e0fc9b88b360edc62c047927f7608c45fefae35a6bba08da`.
+  Le saule n'est semé nulle part (`build_world` n'en connaît rien, il n'est pas un
+  archétype de `WEED_CATALOGUE`) et aucun registre n'est parcouru dans le tick.
+  **Aucun C# touché** (la vue est le ⑦) → pas de build.
+  Suite complète relancée (**74 fichiers hors golden/500ans**) : **1 seul rouge**,
+  `test_sim_server` 269/270 (« le pommier pré-âgé a noué des fruits réels » → 0 fruits
+  @ S52) — échec **PRÉ-EXISTANT**, déjà consigné aux ③④⑤, message identique. Tout le
+  reste vert, dont `test_encyclopedie` **68/68**, `test_pages` 69/69, `test_carnet`,
+  `test_journal`, `test_evenements`, `test_maitrise_detection` (l'API historique du
+  parseur est intacte), `test_magazine`, `test_quetes`, `test_palette`,
+  `test_progression_geste`, `test_deblocage`, `test_catalogue_lot2/mulch`,
+  `test_diversite_fondatrice`, et les trois suites de périphérie (71/71 · 76/76 · 59/59).
+
+**⚠️ À valider par Nico (design/éditorial, pas bugs)** :
+1. **Attribution des 4 concepts de carnet** — `eteter → lisiere` est le choix le moins
+   évident (il n'y a pas d'événement « corridor » à gater, et la trogne est la seule
+   coupe qui laisse la lisière intacte). `abattre → brise_vent` fait porter au geste la
+   leçon centrale T1. Si Nico préfère un autre découpage, c'est 3 lignes.
+2. **Le saule n'est pas calibré à la sonde** (`growth_speed`, `gravitropism_gain`,
+   `age_curve`) : il n'est semé ni au golden ni à un banc, donc rien ne l'exerce. Les
+   valeurs sont un décalque de l'aulne poussé d'un cran → **à voir au F5** le jour où
+   le joueur en plante un (la lettre d'Odette rend ce cas possible).
+3. **Les 4 concepts neufs restent descriptifs pour toujours** tant qu'aucune route ne
+   les crédite : `maitrise_detection` ne crédite que les transitions de plante
+   (avance/stagne/repro), et rien ne crédite `brise_vent`/`lisiere`/`erosion`/
+   `rejet_de_souche`. C'est **cohérent avec le précédent** `carnivorie`/`maladie`
+   (même situation depuis leur sprint), mais ça veut dire que la moitié
+   interprétative du corpus est **écrite et jamais servie**. Route naturelle : un
+   crédit de maîtrise sur le concept à la Nᵉ répétition du geste → hors périmètre ⑥,
+   à verser en dette si Nico veut la voir.
+4. **`sim/encyclopedie_corpus.py` est à 402 LDC** (🔴 de 2 lignes) après la fiche du
+   saule. Sa propre docstring documente déjà la tolérance « corpus de texte, garde-fou
+   pas dogme » ; candidat naturel au `/refactor` de fin de sprint (scission par règne
+   ou par guilde), **pas** en rognant la prose.
+
 ## 6. §REPRISE
 
 **Lire** : `CLAUDE.md` · ce fichier · `docs/champs/peripherie/conception_peripherie.md`
@@ -655,8 +787,19 @@ tout se greffe sur `tick_berge` (③), l'hydrologie (D30/hydrologie), `structure
 (`mulch_stock`, `broyer`) · `sim/actions/compost.py` (`empiler_bois`) ·
 `fields/ecofields/matiere_organique.py` (`deposer_litiere`).
 
-**Prochaine étape** : tronçon **⑥** (`06_voix_narratives.md`) — saule + 5 voix, gestes/
-techniques/outils, pages secrètes, événements. Points d'appui posés par ①→⑤ :
+**Prochaine étape** : tronçon **⑦** (`07_vue_godot.md`) — **DERNIER du sprint** : pont
+0.5.41, `DecorLayer` qui CONSOMME le snapshot (il génère encore), clic secteur, banc F5.
+Points d'appui posés par ①→⑥ :
+- **côté voix, tout est câblé et n'attend que le pont** (⑥) : les 4 marqueurs de log
+  (`🪓 ⛏ 🚧 🪨`) sont parsés en `Evenement` typés (`coupe`/`terrassement`/`rupture`/
+  `eboulis`) et le carnet en rend une note ; les 6 gestes + 4 techniques + 3 outils ont
+  leurs fiches d'encyclopédie à 3 niveaux ; le **saule** est au catalogue (`Salicaceae`,
+  `plants/perennials.Willow`) avec ses 5 voix. ⇒ le ⑦ n'a **aucun corpus à écrire** :
+  il expose les 7 gestes au pont et affiche des fiches qui existent déjà ;
+- attention **la vue devra nommer les secteurs** : l'`Evenement` ne porte PAS le côté du
+  terrain (pas de champ pour ça) — il n'est lisible que dans la ligne de log. Si le
+  panneau Carnet doit dire « au bord nord », c'est au ⑦ de le décider (champ neuf dans
+  `Evenement`, ou libellé côté vue) ;
 - l'état de la ceinture vit dans `game_state["ceinture"]` (4 secteurs, lue par
   `boucle.py` aux étapes **1c** (repousse), **1c-bis** (ouvrages), 2, 2a, 2a-bis, 2e,
   **2e-bis** (érosion) et 14). Champs du secteur (schéma complet dans
@@ -668,25 +811,16 @@ techniques/outils, pages secrètes, événements. Points d'appui posés par ①�
   (couche joueur : gate `est_debloque` → portes métier → `spend`/`_payer` tout-ou-rien →
   mutation → matière → `_consigner` 🪓 / `_consigner_terre` ⛏) + `fields/peripherie.py`
   (mutations d'état PURES + cinétiques). Le fichier joueur est à **131 LDC** (🟢, marge) ;
-- **⚠️ LE PÉRIMÈTRE DU ⑥ EST DÉJÀ MESURÉ PAR `test_encyclopedie` (64/68)** — voix
-  manquantes accumulées par ④ et ⑤ :
-  - **gestes** sans fiche (`sim/geste_corpus.py`) : `abattre`, `receper`, `eteter`,
-    `endiguer`, `deriver`, `entailler` (+ mare = **pas** un geste neuf, c'est `creuser`
-    étendu ⇒ **ne pas** lui écrire de fiche à part) ;
-  - **techniques** (`sim/technique_corpus.py`) : `essartage`, `taillis`, `trogne`.
-    `terrassement` est REMPLOYÉE par `endiguer`/`deriver`/`entailler` (comme
-    `creuser`/`drainer`) — aucune technique d'eau/roche à inventer ;
-  - **outils** (`sim/outil_corpus.py`) : `hache`, `serpe`, `pioche` ;
-  - **concepts carnet** (`CONCEPT_DE`) : `lisiere`, `brise_vent`, `erosion`,
-    `rejet_de_souche` ;
-  - **parseur `sim/evenements.py`** : **QUATRE** marqueurs sont émis et aucun n'est
-    reconnu — `🪓` coupe (④), `⛏` geste d'eau/roche, `🚧` rupture d'ouvrage, `🪨` éboulis
-    (⑤). Les événements de la conception §7 (« 1ʳᵉ clairière », « 1ᵉʳ rejet de souche »,
-    « rupture de barrage », « 1ᵉʳ éboulis ») sortent tous de ces quatre motifs ; le
-    verrou `erosion_signalee` garantit déjà **un seul** 🪨 par épisode ;
-- **saule** (décision D-5) : la chaîne le référence déjà comme une CHAÎNE, sans import —
-  `ESSENCES_RIPISYLVE = ("aulne","saule")` et `ESSENCES_QUI_REJETTENT ⊇ {"saule"}`. Son
-  entrée au catalogue ne casse rien et rend ces deux tables cohérentes ;
+- **le compteur du ⑥ est refermé** : `test_encyclopedie` est passé de **64/68 à
+  68/68** (gestes/techniques/outils du sprint + `terrassement` reclassé technique),
+  et les quatre marqueurs de log ont leur motif dans `sim/evenements.py`. Le
+  **saule** est au catalogue avec ses 5 voix. Les concepts de carnet neufs
+  (`brise_vent`/`rejet_de_souche`/`lisiere`/`erosion`) sont tabulés mais **rien ne
+  les crédite encore** (cf. ⑥ point 3 à valider) ;
+- **saule** (décision D-5, FAIT au ⑥) : `PERENNIAL_CATALOGUE["saule"] = Willow`
+  (`Salicaceae`) rend enfin cohérentes les deux tables qui le citaient sans espèce —
+  `ESSENCES_RIPISYLVE = ("aulne","saule")` et `ESSENCES_QUI_REJETTENT ⊇ {"saule"}`.
+  Sa morphologie n'est PAS calibrée (personne ne le sème) → F5 ;
 - **règles d'écriture des flux** (à respecter si le ⑥/⑦ touche un champ) :
   `fields/peripherie.plots_de_bord(...)` est le helper de TOUT effet de bord (graines,
   berge, lisière, bois, érosion — jamais un balayage de grille, réflexe D32), et **les

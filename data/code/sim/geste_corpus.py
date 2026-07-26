@@ -435,6 +435,179 @@ FICHES_GESTE: dict[str, dict[int, str]] = {
            "désirée l'été condamne à l'ombre perpétuelle ce qu'elle recouvre.",
     },
 
+    # --- Gestes manuels de BASE (palette de gestes ①) ---------------------------
+    "pincer": {
+        1: "Ôter un bourgeon ou une jeune pousse entre deux doigts, sans outil. La "
+           "pointe s'arrête ; quelques jours plus tard, des pousses partent en dessous.",
+        2: "Pincer supprime le bourgeon qui COMMANDE : tant qu'il est là, il inhibe "
+           "chimiquement ceux du dessous (l'auxine). Retiré, l'inhibition tombe et les "
+           "bourgeons latéraux débourrent d'eux-mêmes — la plante se ramifie sans qu'on "
+           "ait rien coupé de ligneux. Rien ne tombe au sol : il n'y a pas de plaie, à "
+           "peine une pincée de tissu tendre.",
+        3: "Pincer est le geste le plus économe du jardin : fait à temps, sur du tendre, "
+           "il obtient ce qu'une taille obtiendra plus tard à coups de lame et de "
+           "plaies. Il conduit la forme d'une plante au moment où elle se décide encore, "
+           "pincer le basilic avant la fleur prolonge son feuillage, pincer un gourmand "
+           "concentre la sève ailleurs. Peu coûteux, peu perturbateur — et d'autant plus "
+           "efficace qu'on est passé souvent, avec les mains, en observant.",
+    },
+    "arracher": {
+        1: "Casser à la main une tige ou un rameau, sans outil. La pousse cède en "
+           "déchirant, et le morceau retombe au sol.",
+        2: "Arracher fait le même retrait qu'une coupe à l'outil, mais la déchirure "
+           "manuelle laisse une plaie irrégulière : la plante y perd de la vitalité, "
+           "au-delà du seul tissu retiré. Le bois cassé retombe en litière au pied et "
+           "repart dans le cycle. Rien n'est récupéré proprement : on jette.",
+        3: "C'est la version brutale de la coupe — dépanner sans outil se paie en stress "
+           "pour la plante, là où une lame franche l'aurait épargnée. Le geste garde son "
+           "usage : on ne porte pas un sécateur pour un gourmand qui gêne. Mais répété "
+           "sur la même plante, il l'affaiblit sans qu'on voie pourquoi ; la plaie "
+           "déchirée reste aussi une porte d'entrée pour les maladies.",
+    },
+    "glaner": {
+        1: "Ramasser à même le sol les feuilles, fleurs et débris tendres tombés d'une "
+           "parcelle. Le sol se dégarnit là, et la réserve de paillis s'étoffe.",
+        2: "Glaner récupère la litière TENDRE de surface — ce que la décomposition "
+           "produit toujours un peu — pour en faire du paillis à étaler ailleurs. Le "
+           "bois et les exsudats restent sur place : trop dur, trop diffus. La matière "
+           "n'est pas créée, elle est DÉPLACÉE : ce qu'on emporte d'ici ne nourrira pas "
+           "le sol d'ici.",
+        3: "Glaner est le premier geste du jardinier sans ressources : il permet de "
+           "couvrir un sol nu avant même d'avoir une plante à faucher ou un squelette à "
+           "broyer. Mais c'est un transfert, pas un gain — dépouiller un coin de sa "
+           "litière pour couvrir un autre l'appauvrit d'autant. Sur un jardin mûr où la "
+           "feuille tombe partout, on glane le trop-plein d'un côté pour amorcer un coin "
+           "encore nu ; on ne ratisse jamais tout.",
+    },
+
+    # --- Gestes de TERRASSEMENT (hydrologie ⑦ + périphérie ⑤) --------------------
+    "creuser": {
+        1: "Enfoncer la bêche et retirer de la terre pour former un creux. La surface "
+           "descend à cet endroit et la terre est remuée.",
+        2: "Creuser façonne une CUVETTE : un point bas vers lequel l'eau de surface des "
+           "alentours converge d'elle-même. On n'ajoute pas d'eau, on donne au terrain "
+           "une forme qui la retient — la flaque, puis la mare, se remplissent seules "
+           "les semaines suivantes. Retourner la terre a un prix : la vie du sol y est "
+           "brassée et met du temps à revenir. Le même geste, appliqué à un bord de "
+           "terrain, y ouvre une mare de bordure.",
+        3: "Une excavation est une FORME donnée au terrain, pas un ouvrage à entretenir : "
+           "elle ne se comble pas, elle ne rompt pas, elle reste. C'est pourquoi creuser "
+           "est le geste d'eau le plus durable — et le plus peuplé : une eau qui dort "
+           "appelle tout un cortège (larves, demoiselles, amphibiens) qui régule ensuite "
+           "le jardin entier. Le corollaire vaut d'être su : la flaque qui s'attarde au "
+           "bas du jardin n'est pas un défaut à corriger.",
+    },
+    "drainer": {
+        1: "Ouvrir une saignée pour évacuer l'eau qui stagne. La lame d'eau disparaît "
+           "aussitôt du plot.",
+        2: "Drainer fait deux choses : il évacue l'eau de SURFACE sur-le-champ, et il "
+           "entame la MÉMOIRE d'eau du lieu — cette inertie qui fait qu'un sol longtemps "
+           "gorgé le reste. La flaque s'en va d'un coup, mais l'état de marais, lui, ne "
+           "se lève qu'après plusieurs assèchements : la tourbe garde l'eau. Une fois "
+           "l'état levé, la décomposition redémarre et l'acidité reflue d'elle-même.",
+        3: "Drainer arrache un milieu ENTIER, pas une flaque : avec l'eau partent la "
+           "faune de mare, les hélophytes, la tourbe et sa mémoire de siècles. C'est le "
+           "geste qui a fait disparaître les zones humides de nos campagnes, chacune "
+           "asséchée pour une bonne raison locale. Il garde son usage — sauver des "
+           "racines qui étouffent, rendre un passage praticable — mais l'asphyxie "
+           "s'évite mieux par la forme du terrain que par le fossé, et une cuvette "
+           "assumée ailleurs vaut mieux qu'un jardin partout drainé.",
+    },
+
+    # --- Gestes FORESTIERS de la lisière (sprint PÉRIPHÉRIE ④) ------------------
+    # ⚠️ Philo #6 : le N1 dit ce qu'on VOIT, jamais la conséquence. Que le hêtre ne
+    # rejette pas, que la trouée mette trente ans à se refermer, que la rafale
+    # empire derrière un rideau trop dense : ce sont des DÉCOUVERTES (N3).
+    "abattre": {
+        1: "Mettre à terre les arbres d'un bord du terrain, à la hache. Une trouée "
+           "franche s'ouvre dans la lisière et le bois abattu jonche le sol du bord.",
+        2: "Abattre engage l'ESSARTAGE : le couvert tombe, la lumière atteint le sol du "
+           "bord, l'air et le vent entrent sans plus rien pour les freiner. La souche "
+           "est morte — rien ne repartira d'elle. Le vide, lui, ne reste pas vide : la "
+           "banque de graines réveillée par la lumière le comble de ronces et d'herbes "
+           "hautes en quelques saisons.",
+        3: "Le fourré revient en quelques années, la STRUCTURE en trente : c'est toute "
+           "l'asymétrie du geste. Entre-temps le jardin encaisse ce que la lisière "
+           "portait — l'écran contre le vent, l'ombre de fin de journée, la pluie de "
+           "graines, le passage de la faune de bord — et la terre nue du talus descend "
+           "en colluvions sur les premiers rangs. Rien n'empêche d'abattre les quatre "
+           "côtés ; c'est le jardin qui répond, et il répond longtemps.",
+    },
+    "receper": {
+        1: "Couper les tiges au ras du sol, à la serpe. Le peuplement du bord "
+           "disparaît ; il ne reste qu'un moignon à terre et du bois tombé alentour.",
+        2: "Recéper engage le TAILLIS : coupée bas, une souche vivante relance des "
+           "rejets depuis ses réserves racinaires — plus nombreux et plus vigoureux que "
+           "la tige unique qu'on a prise, et déjà enracinés. Le peuplement revient donc "
+           "bien plus vite qu'après un abattage, et le geste se répète.",
+        3: "Le recépage est le seul prélèvement de bois qui ne s'épuise pas : couper "
+           "fait durer, et un cycle de quelques années suffit à en revivre. Mais tout "
+           "tient à l'ESSENCE : charme, aulne et saule rejettent avec force ; le hêtre "
+           "et le bouleau ne rejettent pas, et sur eux le geste n'est qu'un abattage "
+           "déguisé dont la souche pourrira. Rien ne le dit avant : ça s'apprend en le "
+           "faisant, puis en s'en souvenant.",
+    },
+    "eteter": {
+        1: "Rabattre la tête des arbres d'un bord en laissant les troncs debout, à la "
+           "serpe. La silhouette est raccourcie mais le rideau reste en place.",
+        2: "Étêter engage la TROGNE : on prend la tête, jamais le pied. Aucune tige n'est "
+           "retirée du sol — l'écran contre le vent, la lumière du bord et le passage de "
+           "la faune ne changent presque pas — et la couronne se reforme en une gerbe de "
+           "rejets sur le moignon, plus vite qu'après toute autre coupe.",
+        3: "C'est le prélèvement le plus fréquentable de la lisière : le seul qui ne "
+           "dénude rien, donc le seul qui n'envoie pas de terre dans le jardin. Et il "
+           "fait plus que ménager — il PROLONGE : rabattu régulièrement, l'arbre ne "
+           "porte jamais la tête trop lourde qui finirait par le fendre, son fût "
+           "s'épaissit et se creuse, et ce creux devient à lui seul un habitat (chouette, "
+           "chauve-souris, insectes du bois mort). Le paysan qui étêtait ses saules "
+           "récoltait tous les cinq ans d'un arbre qu'il n'a jamais tué.",
+    },
+
+    # --- Gestes d'EAU & de ROCHE de la lisière (sprint PÉRIPHÉRIE ⑤) ------------
+    "endiguer": {
+        1: "Relever à la bêche la ligne d'eau d'un bord en eau. Les premiers plots du "
+           "jardin de ce côté-là deviennent plus humides.",
+        2: "Endiguer retient l'eau au bord : elle pousse dans les pores du sol des "
+           "premiers rangs, et le surplus que la terre ne peut plus boire s'étale en "
+           "lame de surface, gagne les creux, y séjourne. Gorger vraiment une berge "
+           "demande d'y revenir plusieurs fois — et si l'eau s'attarde assez longtemps, "
+           "le sol finit par basculer en marécage, avec tout ce qui l'accompagne.",
+        3: "Le joueur qui endigue apprend qu'il n'a pas créé d'eau : il l'a DÉPLACÉE — "
+           "ce qui se gorge ici manque ailleurs. Et il a posé un OUVRAGE, pas une forme : "
+           "un barrage que personne n'entretient rompt au bout de quelques années, et "
+           "l'eau reprend alors le cours qu'elle avait avant lui. Refaire le geste EST "
+           "l'entretien. Une cuvette creusée, elle, ne rompt jamais : c'est la différence "
+           "entre façonner le terrain et lui imposer une pièce d'artifice.",
+    },
+    "deriver": {
+        1: "Abaisser à la bêche la ligne d'eau d'un bord en eau. Les premiers plots de "
+           "ce côté-là s'assèchent.",
+        2: "Dériver détourne l'eau du bord : le sol des premiers rangs se vide, et si le "
+           "lit descend sous le niveau du jardin, il APPELLE à lui l'eau des plots "
+           "voisins. C'est l'autre moitié de la leçon de l'eau : on ne la supprime pas, "
+           "on choisit où elle va — et ce qu'on retire ici manque là.",
+        3: "Dériver assèche vite et bien, et c'est justement le piège : un bord privé de "
+           "sa nappe perd ses hélophytes, sa faune de mare et sa fraîcheur d'été, tandis "
+           "que le jardin, lui, réclame l'arrosoir. Comme l'endiguement, c'est un OUVRAGE "
+           "fragile — un fossé que personne ne recreuse se comble en quelques années et "
+           "l'eau revient. Le geste sert à sauver des racines qui étouffent, pas à "
+           "installer un jardin sec sur une terre humide.",
+    },
+    "entailler": {
+        1: "Attaquer à la pioche le front de roche d'un bord en falaise. La paroi "
+           "recule d'une entaille et la roche mise à nu reste ouverte.",
+        2: "Entailler retire de la matière minérale : la paroi perd de la hauteur, donc "
+           "l'ombre qu'elle portait sur le jardin diminue et l'abri qu'elle offrait "
+           "faiblit d'autant. La roche nue, elle, ne se recouvre pas : elle continue de "
+           "descendre en fins éboulis vers les premiers rangs.",
+        3: "C'est le seul geste du jardin dont on ne revient JAMAIS. Il n'existe aucune "
+           "repousse pour une falaise : ce qui est retiré est retiré, l'ombre perdue est "
+           "perdue, et la cicatrice érode indéfiniment. Tout le reste au jardin se "
+           "répare — une coupe rejette, une eau détournée revient, un sol massacré se "
+           "reconstruit. Ici, non : certaines échelles ne nous appartiennent pas, et "
+           "l'apprendre coûte le paysage.",
+    },
+
     "palisser": {
         1: "Nouer à la main la tige d'une grimpante à un support voisin, là où elle "
            "ne sait pas s'accrocher seule. La plante, attachée, se met à monter.",

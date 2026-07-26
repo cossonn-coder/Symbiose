@@ -133,6 +133,24 @@ QUETES_CORPUS: dict[str, Quete] = {
         recompense=("vivace", "pommier", 6),       # pérenne enracinée depuis 6 ans (④)
         declencheur=("palier", "pommier", 3)),
 
+    # --- Voix épistolaire de la PÉRIPHÉRIE (⑥) : le saule têtard ----------------
+    # Aucune condition NEUVE (le mini-catalogue de `sim/quetes.py` reste FERMÉ, le
+    # moteur de quêtes n'est pas touché) : la lettre se contente de viser une espèce
+    # vivante, famille `nombre_vivant_min` déjà démontrée. Elle ne dit PAS d'étêter
+    # (philo #6) — elle pose un DÉSIR, le geste reste au joueur.
+    "lettre_saule_tetard": Quete(
+        id="lettre_saule_tetard",
+        donneur="Odette",
+        texte_lettre=(
+            "Au bout du pré de mon enfance il y avait une rangée de saules à grosse "
+            "tête, tout bossus, que mon père taillait l'hiver. On y entendait la "
+            "chouette. Je n'en vois plus un seul dans le pays. Si un jour tu en "
+            "plantais un, même un tout jeune, ça me ferait quelque chose.\n"
+            "— Ta voisine Odette"),
+        condition=("nombre_vivant_min", "saule", 1),
+        recompense=("page",),                  # une page de lore, jamais un buff (#2)
+        declencheur=("saison", 16)),
+
     "lettre_bac_compost_odette": Quete(
         id="lettre_bac_compost_odette",
         donneur="Odette",

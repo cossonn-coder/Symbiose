@@ -116,6 +116,29 @@ CONCEPT_DE: dict[tuple[str, str | None], str] = {
     # NEUF « maladie ». Concept propre au carnet (comme carnivorie/sénescence, hors
     # `encyclopedie_types.CONCEPTS`) : reste descriptif tant que non maîtrisé.
     ("germination", "sol_vicie"): "maladie",
+    # PAYSAGE de la ceinture (sprint PÉRIPHÉRIE ⑥) : les gestes de lisière, d'eau et de
+    # roche, et les réponses du terrain. Quatre concepts NEUFS propres au carnet (comme
+    # carnivorie/maladie, hors `encyclopedie_types.CONCEPTS`) → la note reste descriptive
+    # tant qu'ils ne sont pas maîtrisés. Le concept est choisi sur ce que le geste
+    # ENSEIGNE, pas sur l'outil employé :
+    #   - abattre → `brise_vent` : ce qu'on perd d'abord, c'est l'écran (le vent entre,
+    #     la rafale décroche derrière ce qui reste) ;
+    #   - receper → `rejet_de_souche` : la souche vit ou meurt, toute la leçon du taillis ;
+    #   - eteter  → `lisiere` : la seule coupe qui prélève SANS défaire la lisière
+    #     (densité conservée : abri, corridor et ombre restent) ;
+    #   - endiguer/deriver/creuser + rupture d'ouvrage → `eau` (concept existant : on
+    #     déplace l'eau, on ne la crée pas) ;
+    #   - entailler + éboulis → `erosion` : la terre qui descend, seule trace lisible
+    #     de l'irréversible.
+    ("coupe", "abattre"):         "brise_vent",
+    ("coupe", "receper"):         "rejet_de_souche",
+    ("coupe", "eteter"):          "lisiere",
+    ("terrassement", "endiguer"): "eau",
+    ("terrassement", "deriver"):  "eau",
+    ("terrassement", "creuser"):  "eau",
+    ("terrassement", "entailler"): "erosion",
+    ("rupture", None):            "eau",
+    ("eboulis", None):            "erosion",
 }
 
 # Concept de la « levée (reprise) » : doc §5.0 dit « = la cause (eau / lumière /
@@ -226,6 +249,34 @@ GABARIT: dict[tuple[str, str | None, str], str] = {
     # (la nuée qui se creuse au-dessus du rossolis, philo #5) ; interprétatif = la
     # cause comprise au seuil « carnivorie » (le flux insectes→azote qui affranchit
     # la plante de la faim d'azote sur la tourbe pauvre).
+    # PAYSAGE de la ceinture (sprint PÉRIPHÉRIE ⑥) — faits de SECTEUR : ni plot ni
+    # tuile (le côté du terrain est dans la ligne de log, pas dans la zone) → ces
+    # gabarits n'emploient PAS le slot {l}, sauf l'éboulis qui est bien tenu par une
+    # tuile. {e} = l'essence coupée (« le couvert » si le bord n'en portait pas).
+    # Descriptif = ce que je VOIS le jour même (philo #5) ; interprétatif = la cause
+    # comprise au seuil du concept (le vent, la souche, l'eau déplacée, la terre nue).
+    ("coupe", "abattre", _D): "J'ai abattu la lisière d'un bord — {e}. Tout est à terre, le bois jonche le sol.",
+    ("coupe", "abattre", _I): "Abattu, ce bord de {e} : avec lui tombe l'écran qui coupait le vent — ce qui reste debout prendra les rafales de plein fouet, et la trouée mettra une vie d'homme à se refermer.",
+    ("coupe", "receper", _D): "J'ai recépé un bord au ras du sol — {e}. Il ne reste que les souches.",
+    ("coupe", "receper", _I): "Recépé, ce bord de {e} : la souche est vivante, elle relancera des rejets plus drus que la tige que j'ai prise — couper, chez lui, c'est faire durer.",
+    ("coupe", "eteter", _D): "J'ai rabattu la tête des arbres d'un bord — {e}. Les troncs sont restés debout.",
+    ("coupe", "eteter", _I): "Étêté, ce bord de {e} : le rideau tient, le sol reste couvert, et la tête sera refaite dans quelques années — c'est le prélèvement qui ne défait rien.",
+
+    ("terrassement", "endiguer", _D): "J'ai relevé l'eau au bord ; la terre des premiers rangs est plus sombre.",
+    ("terrassement", "endiguer", _I): "J'ai endigué : je n'ai pas fait d'eau, je l'ai retenue ici — elle manquera en aval, et mon barrage ne tiendra pas si je ne reviens pas.",
+    ("terrassement", "deriver", _D): "J'ai fait descendre l'eau du bord ; les premiers rangs s'assèchent déjà.",
+    ("terrassement", "deriver", _I): "J'ai dérivé : le bord se vide, et c'est le jardin qui devra rendre l'eau au fossé — ce qu'on retire ici manque là.",
+    ("terrassement", "creuser", _D): "J'ai creusé au bord ; le fond est encore sec, mais il est plus bas que tout le reste.",
+    ("terrassement", "creuser", _I): "J'ai creusé une mare : l'eau viendra seule au point le plus bas, et elle restera — un creux, contrairement à une digue, ne rompt jamais.",
+    ("terrassement", "entailler", _D): "J'ai entamé la roche à la pioche ; la paroi a reculé, la pierre est à vif.",
+    ("terrassement", "entailler", _I): "J'ai entaillé la falaise : rien ne la fera revenir, l'ombre qu'elle portait est perdue, et la roche nue descendra sur mes rangs des années durant.",
+
+    ("rupture", None, _D): "L'ouvrage d'eau du bord a lâché ; l'eau a changé de niveau toute seule.",
+    ("rupture", None, _I): "Ma digue a rompu : je l'avais laissée sans y revenir et l'eau a repris ses aises — un ouvrage se surveille, une forme se contente d'exister.",
+
+    ("eboulis", None, _D): "De la terre nue est descendue sur les premiers rangs {l}.",
+    ("eboulis", None, _I): "Le sol part {l} : le bord que j'ai dénudé n'a plus rien pour le tenir, et il descend chez moi — grumeaux enfouis, humus dilué.",
+
     ("carnivorie", None, _D): "La nuée de moustiques se raréfie au-dessus de {e} {l}.",
     ("carnivorie", None, _I): "{e} chasse {l} : ses feuilles gluantes piègent les insectes, et cet azote de proies la nourrit là où le sol tourbeux, trop pauvre, n'offre rien — elle mange ce qu'elle ne peut puiser.",
 }
@@ -253,6 +304,11 @@ def _lieu(zone: tuple) -> str:
     if not zone:
         return "au jardin"
     tid = zone[0]
+    # Événement HORS TUILE (marqueur émis avant tout en-tête `[T0]` : geste de
+    # paysage sur la ceinture, ouvrage rompu…) → `tile_id` est None. On rend « au
+    # jardin » plutôt que « sur None » (le libellé reste factuel, jamais faux).
+    if tid is None:
+        return "au jardin"
     if len(zone) >= 3:
         return f"sur {tid} en ({zone[1]},{zone[2]})"
     return f"sur {tid}"

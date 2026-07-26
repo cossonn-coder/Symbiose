@@ -267,6 +267,49 @@ FICHES_OUTIL: dict[str, dict[int, str]] = {
            "déchaîne selon la main qui l'installe.",
     },
 
+    # --- Outils de PAYSAGE (sprint PÉRIPHÉRIE ④/⑤) ------------------------------
+    # Le N3 de chacun tient la même leçon, déclinée : la hache défait ce qu'on ne
+    # refera pas, la serpe prélève sans tuer, la pioche ouvre une plaie définitive.
+    "hache": {
+        1: "Une lourde lame emmanchée long, qu'on lance à deux mains pour fendre et "
+           "abattre le bois debout.",
+        2: "La hache sert l'ESSARTAGE : elle met à terre les arbres d'une lisière et "
+           "ouvre la trouée. C'est l'outil de la coupe rase — celle qui rend d'un coup "
+           "beaucoup de bois, beaucoup de lumière, et laisse une souche morte. Le bois "
+           "abattu reste où il tombe : à charge d'aller le chercher.",
+        3: "La hache est l'outil dont la trace dure le plus longtemps : ce qu'elle "
+           "défait en une matinée, la lisière met des décennies à le rebâtir — le vent "
+           "revient, la terre du talus descend, la faune du bord s'en va. Elle ne "
+           "distingue rien : la même lame abat l'arbre qui aurait rejeté. Le paysan qui "
+           "avait la serpe et la hache sortait la seconde le moins souvent possible.",
+    },
+    "serpe": {
+        1: "Une petite lame courbe à manche court, tranchante à l'intérieur de la "
+           "courbe, pour attaquer les tiges d'un geste tiré.",
+        2: "La serpe sert les deux prélèvements qui ne tuent pas : le TAILLIS (couper au "
+           "ras pour que la souche rejette) et la TROGNE (prendre la tête en laissant le "
+           "fût). Sa lame courbe coupe le bois de brin près du sol ou sur le moignon "
+           "sans arracher l'écorce — la plaie se referme et la repousse part de là.",
+        3: "La serpe est l'outil du bocage : la même lame, revenant tous les quelques "
+           "ans sur les mêmes souches et les mêmes têtes, a nourri des villages en bois "
+           "de feu, en piquets et en fourrage sans jamais entamer le peuplement. Elle "
+           "enseigne le rythme plus que la force — couper au bon endroit et revenir, "
+           "plutôt que tout prendre une fois. Sur les essences qui ne rejettent pas, "
+           "elle ne peut rien : là, ce qu'on croit récolter, on l'abat.",
+    },
+    "pioche": {
+        1: "Une lame étroite et massive montée en travers d'un long manche, pour "
+           "attaquer la terre dure et la roche.",
+        2: "La pioche sert le TERRASSEMENT dans ce que la bêche ne peut pas : entailler "
+           "un front de roche, ouvrir un passage dans un talus dur. Elle arrache la "
+           "pierre par éclats, quelques dizaines de centimètres à chaque campagne.",
+        3: "La pioche est le seul outil du jardin dont le travail ne se répare jamais : "
+           "la roche retirée ne revient pas, et la paroi mise à nu continue de descendre "
+           "en éboulis longtemps après le dernier coup. Ce qu'elle ouvre change l'ombre "
+           "et l'abri du lieu pour toujours. Certaines échelles ne nous appartiennent "
+           "pas : on la prend en sachant que le geste sera là après nous.",
+    },
+
     "pergola": {
         1: "Une structure haute, poteaux et traverses, sous laquelle on passe et sur "
            "laquelle une grimpante court en hauteur, formant une voûte de feuillage.",

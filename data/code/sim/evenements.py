@@ -69,6 +69,30 @@ _RE_RAMET = re.compile(r"🌿\s+Ramet\s+\((\w+)\)\s*:\s*(.+?)\s+@")
 # 1ʳᵉ capture d'une plante est consignée UNE fois (drapeau moteur `a_capture`).
 _RE_CAPTURE = re.compile(r"🪰\s+Capture\s+(.+?)@")
 
+# --- Marqueurs de PAYSAGE (sprint PÉRIPHÉRIE ④/⑤) ----------------------------
+# Quatre marqueurs émis à la maille du SECTEUR de ceinture (ou de la tuile pour
+# l'éboulis), tous SANS `@(r, c)` : ils sont donc traités AVANT le test de position
+# (patron des marqueurs de tuile 🐛 / 💧 / ❄ / 🍃), sinon la ligne serait ignorée.
+#   🪓 `sim/actions/paysage._consigner`        — « Abattage (nord) : charme, souche … »
+#   ⛏ `sim/actions/paysage._consigner_terre`  — « Endiguement (sud) : ligne d'eau … »
+#   🚧 `fields/peripherie.tick_ouvrages`       — « l'ouvrage d'eau (sud) a rompu … »
+#   🪨 `fields/ecofields/bordure.tick_erosion` — « le sol part au bord nord [T0] … »
+# Les libellés lisibles sont retraduits en VERBE (la `cause` de l'événement) par les
+# deux tables ci-dessous : ce sont les MIROIRS de `paysage.LIBELLE_GESTE` et
+# `paysage.LIBELLE_TERRE`. On ne les importe PAS (ce module reste pur : il ne lit
+# qu'un log texte, et `sim.actions` tirerait tout le paquet des gestes dans son
+# graphe d'import) — l'exactitude du miroir est VÉRIFIÉE par
+# `tests/test_peripherie_voix.py` (il compare les deux tables aux originales).
+_VERBE_COUPE = {"Abattage": "abattre", "Recépage": "receper", "Étêtage": "eteter"}
+_VERBE_TERRE = {"Endiguement": "endiguer", "Dérivation": "deriver",
+                "Mare creusée": "creuser", "Entaille de falaise": "entailler"}
+# `  🪓 <Libellé> (<côté>) : …` → on capture le libellé, avant la parenthèse du côté.
+_RE_PAYSAGE = re.compile(r"(?:🪓|⛏)\s+(.+?)\s+\(")
+# L'ESSENCE coupée est écrite après « : » (clé de catalogue : charme/aulne/saule…),
+# suivie de « , souche … ». Sur un secteur sans essence, c'est le type (prairie…) →
+# non présent au catalogue → `espece` restera None (gracieux).
+_RE_ESSENCE = re.compile(r":\s*([a-zé_]+),\s*souche")
+
 
 def _raison_stagnation(line: str) -> str | None:
     """Cause d'une stagnation (`sec`/`ombre`/`froid`/`noyé`) lue dans la ligne de
@@ -184,6 +208,36 @@ def evenements(log: list[str]) -> list[Evenement]:
         # lignes 🍃) pour ne capter QUE le transport. Voix : concept « décomposition ».
         if "🍃" in line and "charrie" in line:
             out.append(Evenement("transport_litiere", tile_id, None, None, None))
+            continue
+
+        # --- PAYSAGE (sprint PÉRIPHÉRIE ④/⑤) : événements de SECTEUR, sans @pos ---
+        # Un geste du joueur sur la ceinture (🪓 coupe / ⛏ eau-roche) ou une réponse
+        # du terrain (🚧 ouvrage rompu / 🪨 éboulis). `cause` = le VERBE, ce qui suffit
+        # au carnet à choisir son concept (brise-vent, rejet de souche, eau, érosion).
+        # Le côté du terrain n'est PAS porté par l'`Evenement` (il n'a pas de champ
+        # pour ça) : il reste lisible dans la ligne de log, et les notes du carnet
+        # sont écrites pour s'en passer.
+        if "🪓" in line or "⛏" in line:
+            m = _RE_PAYSAGE.search(line)
+            if m:
+                libelle = m.group(1).strip()
+                if libelle in _VERBE_COUPE:
+                    # Espèce = l'ESSENCE du secteur coupé (clé de catalogue) : la note
+                    # du carnet nomme l'arbre qu'on a mis à terre.
+                    m_ess = _RE_ESSENCE.search(line)
+                    cle = m_ess.group(1) if m_ess else None
+                    out.append(Evenement("coupe", tile_id, None,
+                                         cle if cle in _CATALOGUE else None,
+                                         _VERBE_COUPE[libelle]))
+                elif libelle in _VERBE_TERRE:
+                    out.append(Evenement("terrassement", tile_id, None, None,
+                                         _VERBE_TERRE[libelle]))
+            continue
+        if "🚧" in line and "rompu" in line:
+            out.append(Evenement("rupture", tile_id, None, None, None))
+            continue
+        if "🪨" in line and "le sol part" in line:
+            out.append(Evenement("eboulis", tile_id, None, None, None))
             continue
 
         m_pos = _POS.search(line)

@@ -297,6 +297,61 @@ _ENTREES = [
      "flanelle du bon Dieu, on lui donnait cent noms. Mais sa vertu première n'est "
      "pas dans la tisane : c'est de pousser sans faiblir là où tout le reste "
      "pourrit. Elle ne guérit pas la terre — elle la nomme, et laisse le temps faire."),
+
+    # --- Pages de la PÉRIPHÉRIE (sprint PÉRIPHÉRIE ⑥, conception §7) — lore pur ----
+    # Le gisement le plus riche du projet : le bocage était une INFRASTRUCTURE, et son
+    # arasement au XXᵉ siècle a rendu le vent et l'érosion. Aucune de ces pages ne dit
+    # au joueur quoi faire (philo #6) : ce sont des voix qui ont vécu la leçon.
+    ("P38", "C", "brise_vent", 3, "récompense",
+     "Du temps de mon grand-père, entre chaque champ il y avait un talus, et sur le "
+     "talus une haie. On croyait que c'était pour marquer les limites. C'était pour "
+     "tout : le vent qu'elle cassait, le bois qu'elle donnait chaque hiver, les "
+     "feuilles que mangeaient les bêtes, l'eau qu'elle buvait au bas des pentes. Puis "
+     "sont venus les grands engins, et l'on nous a expliqué que ces haies "
+     "encombraient. En dix ans le pays est devenu lisse. Le vent, lui, n'a pas "
+     "attendu dix ans : dès le premier printemps il a couché les blés et emporté la "
+     "terre fine des labours. On a rendu les champs plus grands et le sol plus "
+     "maigre. Ce qu'on avait mis trois siècles à tresser, une saison de tracteurs "
+     "l'a défait."),
+    ("P39", "C", "erosion", 2, "fouille",
+     "L'essartage, chez nous, c'était l'affaire d'une génération et le remords de la "
+     "suivante. On abattait le bord du bois pour gagner un carré de terre neuve, et "
+     "cette terre-là donnait comme aucune autre — trois, quatre récoltes grasses, la "
+     "richesse de la forêt qu'on venait de brûler. Puis la pluie prenait le talus nu, "
+     "et ce que la forêt avait mis mille ans à faire descendait au ruisseau en deux "
+     "orages. Mon père disait : on n'ouvre pas un bois, on l'emprunte. Ceux qui ne "
+     "replantaient rien derrière eux laissaient à leurs fils un champ de cailloux et "
+     "une source tarie."),
+    ("P40", "C", "rejet_de_souche", 2, "récompense",
+     "Le têtard, c'est l'arbre qu'on coupe pour qu'il dure. On lui prend la tête tous "
+     "les cinq ou six ans, jamais le pied, et on le laisse recommencer. À force, le "
+     "fût s'épaissit, se boursoufle, se creuse ; il s'y amasse du terreau, il s'y "
+     "installe la chouette, la chauve-souris, tout un peuple qu'on ne voit pas. Les "
+     "vieux d'ici montraient un saule au bord du pré en disant qu'il avait connu "
+     "leurs arrière-grands-pères — et de fait, un têtard bien mené passe trois vies "
+     "d'homme, quand son frère laissé libre se fend sous le poids de sa propre tête "
+     "avant la centaine. C'est le seul arbre qui gagne à la serpe. Toute la sagesse "
+     "du bocage est là : prends la tête, laisse le pied, et reviens."),
+    ("P41", "C", "eau", 4, "fouille",
+     "Qui possède la rivière ? Le meunier disait : l'eau qui tourne ma roue. Le "
+     "pêcheur disait : l'eau qui porte mes truites. Le pré d'en bas disait : l'eau "
+     "qui me vient. Et l'on plaidait des vies entières pour un batardeau de trois "
+     "planches. La vérité que le procès n'écrivait jamais, c'est que celui qui relève "
+     "l'eau chez lui l'enlève à celui d'en dessous — il ne fabrique rien, il "
+     "déplace. Les anciens règlements de moulin obligeaient à ouvrer les vannes "
+     "certains jours : non par charité, mais parce qu'un bief tenu fermé finit "
+     "toujours par rompre, et l'eau, ce jour-là, reprend son chemin d'avant et "
+     "n'épargne personne."),
+    ("P42", "E", "lisiere", 3, "hasard",
+     "Ne fais jamais tomber le vieux saule creux du bas du jardin. Ce n'est plus un "
+     "arbre, c'est une maison. Passe-lui la main dans le ventre : de la terre, du "
+     "bois pourri chaud, des bêtes que le jour n'a jamais vues. Au crépuscule il en "
+     "sort une chouette, silencieuse comme un mensonge, et cette chouette-là mange "
+     "chaque nuit les mulots qui te rongeaient les racines. On m'a dit que la dame "
+     "blanche portait malheur ; j'ai vu qu'elle portait surtout mes récoltes. Un "
+     "arbre à moitié mort travaille pour toi plus qu'un jeune bien portant — et il "
+     "n'y a pas de sortilège là-dedans, seulement un creux, du noir, et le temps "
+     "qu'il a fallu pour les faire."),
 ]
 
 # Titres recopiés du doc §7 (gras de chaque entrée), indexés par id — gardés à
@@ -339,6 +394,11 @@ _TITRES = {
     "P35": "La mousse qui garde tout",
     "P36": "Le rossolis qui chasse",
     "P37": "L'herbe qui nomme les terres malades",
+    "P38": "Le pays qu'on a rendu lisse",
+    "P39": "On n'ouvre pas un bois, on l'emprunte",
+    "P40": "L'arbre que l'on coupe pour qu'il dure",
+    "P41": "À qui appartient la rivière",
+    "P42": "La dame blanche du saule creux",
 }
 
 # `PAGES` = dict id → fiche complète. `ORDRE` = ids dans l'ordre du corpus (tri

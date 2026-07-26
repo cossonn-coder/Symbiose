@@ -60,6 +60,15 @@ TECHNIQUES: frozenset[str] = frozenset({
     "aménagement-habitat", "palissage", "broyage",
     "bouture",   # multiplication végétative (palette de gestes ②)
     "greffe",    # soudure aérien/racinaire (palette de gestes ③)
+    # Savoir-faire de TERRASSEMENT (hydrologie ⑦ : creuser/drainer ; périphérie ⑤ :
+    # endiguer/deriver/entailler). Il manquait au set explicite → il tombait dans
+    # `OUTILS` par défaut et se voyait réclamer une fiche d'outil, alors que ce n'est
+    # pas un objet qu'on prend en main. Rangé ici avec les autres gestes-savoirs.
+    "terrassement",
+    # Savoir-faire FORESTIERS (sprint PÉRIPHÉRIE ④) : les trois manières de prélever
+    # du bois sur une lisière — essartage (on ouvre et on ne revient pas), taillis
+    # (on coupe au ras pour que ça rejette), trogne (on prend la tête, le fût reste).
+    "essartage", "taillis", "trogne",
 })
 
 # Tous les membres statiques touchés par un geste (union des tuples), puis les
