@@ -168,10 +168,28 @@ namespace Symbiose
 						prms["urgence"] = _phase == Phase.Saison;
 					break;
 
+				case 'L':   // SECTEUR de PÉRIPHÉRIE (D73 ⑦) : les gestes de paysage
+					// (abattre/recéper/étêter/endiguer/dériver/entailler) portent sur
+					// un BORD entier — on clique le DÉCOR, hors du jardin. Le décor
+					// n'est pas un nœud pickable (ZIndex négatif) et n'a pas besoin de
+					// l'être : la résolution est géométrique (FindSecteur), comme
+					// FindPlot, et les deux domaines sont disjoints (dedans/dehors).
+					if (!TryCibleSecteur(nom, w, out target)) return;
+					break;
+
 				case 'q':   // POSER une structure (compost ⑤) : plot {tile, r, c}.
 					// Geste de PLANIFICATION dans le modèle préparation/réaction —
 					// pas de garde-fou DUR ici (à confirmer au F5) : le serveur
 					// applique quelle que soit la phase, on relaie son verdict.
+					// `creuser` hors du jardin = une MARE de bordure (périphérie ⑤) :
+					// même verbe, même coût, même fiche — seule la cible change (un
+					// secteur au lieu d'un plot), et le serveur route sur la forme du
+					// target. On tente donc le secteur AVANT d'exiger une tuile.
+					if (verb == "creuser")
+					{
+						target = CibleSecteur(w);
+						if (target != null) break;
+					}
 					if (!FindPlot(w, out string qTile, out int qr, out int qc))
 					{
 						_lastActionMsg = $"{nom} : aucune tuile ici (chemin/maison)";

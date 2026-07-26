@@ -15,12 +15,19 @@
 // stable dérivé du SEED du terrain (philo #7 : deux terrains n'ont pas le même
 // entourage). Le décor est INERTE entre snapshots → on ne QueueRedraw qu'au build.
 //
-// 📖 Pédagogie — la COUTURE d'extensibilité (SurroundingsProfile) :
-// aujourd'hui le profil est calculé C#-depuis-seed (repli par défaut). Demain le
-// pont pourra livrer la friche périphérique / les extensions par maîtrise : il
-// suffira d'un second constructeur BuildFromBridge(...) alimentant la MÊME struct,
-// sans toucher au rendu. Le point d'entrée unique est BuildProfile(seed). On ne
-// câble PAS le pont ici (cosmétique — dette D73 terraforming).
+// 📖 Pédagogie — la COUTURE d'extensibilité, DÉSORMAIS BRANCHÉE (D73 ⑦) :
+// le profil vient maintenant du PONT (bloc `ceinture` du snapshot, protocole
+// 0.5.41 — cf. DecorLayer.Pont.cs, qui alimente la MÊME struct sans toucher aux
+// tracés). `BuildProfile(seed)` reste, mais comme REPLI : binaire antérieur à
+// 0.5.41, monde sans périphérie (smoke, bancs), banc F10. Le point d'entrée
+// unique reste Build(seed), qui choisit la source.
+//
+// ⚠️ D92 est refermée PAR LE HAUT, pas corrigée sur place : le hash
+// `decor|{seed}|{cote}` de BuildProfile ne brasse que ses bits bas (mesuré :
+// 96 % de terrains aux 4 côtés identiques, 0 falaise sur 300 000 seeds). La
+// distribution vient désormais de Python (`fields/peripherie.generer_ceinture`,
+// tronçon ①, mesuré 2,7 % / 52 %). On ne touche pas au repli : le corriger ici
+// dédoublerait un tirage dont Python est la source de vérité.
 
 using Godot;
 using System.Collections.Generic;
@@ -29,8 +36,11 @@ namespace Symbiose
 {
 	public partial class DecorLayer : Node2D
 	{
-		// Les 4 motifs possibles d'un secteur autour du jardin. Prairie = défaut.
-		public enum Motif { Prairie, Foret, Riviere, Falaise }
+		// Les motifs possibles d'un secteur autour du jardin. Prairie = défaut.
+		// `Friche` (D73 ⑦) double la table des types du moteur : une friche a des
+		// ligneux ÉPARS et pas de canopée — assise + ourlet fleuri de la prairie,
+		// plus un semis de ronciers rabougris (cf. DecorLayer.Pont.cs).
+		public enum Motif { Prairie, Foret, Riviere, Falaise, Friche }
 		// Pente de falaise (couplée à la rivière voisine) — donnée figée ici,
 		// consommée au rendu fin en T5.
 		public enum PenteFalaise { Douce, Verticale, Deversante }
@@ -44,6 +54,19 @@ namespace Symbiose
 			public Motif Motif;
 			public PenteFalaise Pente;
 			public uint SeedSecteur;    // graine du tracé sinueux (stable)
+			// --- État MOTEUR du secteur (pont 0.5.41, D73 ⑦) ------------------
+			// `DuPont = false` ⇒ profil LOCAL de repli : tous les champs ci-dessous
+			// sont ignorés et le rendu garde ses valeurs nominales (le décor d'avant,
+			// au pixel près). Sinon ils pilotent la MASSE dessinée — une clairière se
+			// voit, une trogne se voit, une falaise entaillée se voit (philo #5,
+			// aucune jauge). Cf. DecorLayer.Pont.cs pour la traduction en facteurs.
+			public bool DuPont;
+			public float DensiteLigneuse;      // [0,1] couvert ligneux debout
+			public float HauteurCanopeeCm;     // hauteur du peuplement
+			public float LigneEauCm;           // ligne d'eau relative au bord (± cm)
+			public float AltitudeRelativeCm;   // roche au-dessus du jardin (falaise)
+			public float EntailleCm;           // roche RETIRÉE cumulée (irréversible)
+			public string Essence;             // essence dominante, ou null
 		}
 
 		// La COUTURE d'extensibilité : le placement complet des zones. Calculée
@@ -149,10 +172,14 @@ namespace Symbiose
 		public void Build(int seed)
 		{
 			_seed = seed;
-			// Banc d'observation (F10) : force les 4 motifs côte à côte pour valider
-			// la lisibilité au F5 — SANS toucher la distribution normale par seed
-			// (philo #7). Voir DecorLayer.Banc.cs.
-			_profile = _banc ? BancProfile() : BuildProfile(seed);
+			// Trois sources, dans cet ordre de priorité :
+			//  1. le banc F10 (force les 4 motifs côte à côte pour valider la
+			//     lisibilité — SANS toucher la distribution normale, philo #7) ;
+			//  2. le PONT (D73 ⑦) : la ceinture du moteur, vérité du jeu ;
+			//  3. le repli local par seed (binaire ancien, monde sans périphérie).
+			_profile = _banc ? BancProfile()
+					 : _ceinture != null ? BuildFromBridge(_ceinture)
+					 : BuildProfile(seed);
 			_built = true;
 			QueueRedraw();
 		}
@@ -196,6 +223,11 @@ namespace Symbiose
 				case Motif.Foret:   DrawForet(s);       break;   // DecorLayer.Arbres.cs
 				case Motif.Riviere: DrawRiviere(s);     break;
 				case Motif.Falaise: DrawFalaise(s);     break;
+				// FRICHE (D73 ⑦) : l'ourlet fleuri de la prairie PLUS les ligneux
+				// épars (DrawForet, dont la densité et la taille viennent du moteur —
+				// une friche à 0.20 de densité et sans canopée donne des ronciers
+				// rabougris, pas une futaie).
+				case Motif.Friche:  DrawPrairie(s); DrawForet(s); break;
 				default:            DrawPrairie(s);     break;
 			}
 		}
@@ -261,7 +293,10 @@ namespace Symbiose
 		private void DrawRiviere(Secteur s)
 		{
 			int steps = Mathf.CeilToInt(WorldView.WorldCm / StepCm);
-			const float half   = DepthCm * 0.22f;   // demi-largeur du lit
+			// Demi-largeur du lit MODULÉE par la ligne d'eau du moteur (pont) : un
+			// bord endigué s'élargit, un bord dérivé se réduit à un filet — c'est
+			// le retour visuel d'`endiguer`/`deriver` et de la mare creusée.
+			float half         = DepthCm * 0.22f * FacteurLit(s);
 			const float berge  = DepthCm * 0.11f;   // largeur de berge sur chaque rive
 			float liseré = half * 0.18f;             // ombre de berge (bord d'eau)
 			Color eauSombre = Assombrir(Palette16.EauProfonde, -0.18f);
@@ -325,14 +360,11 @@ namespace Symbiose
 		// lisible quand elle paraît. Déterministe (hash + 3-sinus, zéro Random, #3).
 		private void DrawFalaise(Secteur s)
 		{
-			// Hauteur de la face (cm monde) élevée en −Y écran, selon la pente.
-			float faceCm = s.Pente switch
-			{
-				PenteFalaise.Douce      => 190f,
-				PenteFalaise.Verticale  => 330f,
-				_                       => 470f,   // déversante : surplomb haut
-			};
-			float facePx = faceCm * WorldView.PxPerCmZ;
+			// Hauteur de la face (cm monde) élevée en −Y écran : la ROCHE RESTANTE du
+			// moteur si le pont l'a fournie (⇒ chaque coup de pioche d'`entailler`
+			// abaisse la falaise à l'écran, et c'est le seul retour visuel de
+			// l'irréversible), sinon la pente du profil local. Cf. HauteurFaceCm.
+			float facePx = HauteurFaceCm(s) * WorldView.PxPerCmZ;
 			// Nombre de strates de roche empilées sur la face (pente serrée = plus).
 			int strates = s.Pente switch
 			{
@@ -389,10 +421,15 @@ namespace Symbiose
 			//    FIN (taches 1-2 px) → seulement à zoom ≥ DetailZoom ; la face
 			//    stratifiée + l'ombre au pied portent le surplomb au dézoom.
 			if (!DetailsVisibles) return;
+			// Densité d'éboulis : ~42 % des pas au repos, jusqu'à ~82 % quand la
+			// roche a été ENTAILLÉE (la cicatrice se lit au pied de la face, et
+			// l'érosion qu'elle nourrit dans le sol du jardin en est la conséquence
+			// moteur — cf. bordure.tick_erosion).
+			uint seuilEboulis = SeuilEboulis(s);
 			for (int i = 0; i < steps; i++)
 			{
 				uint hh = HashKey($"eboul|{s.SeedSecteur}|{i}");
-				if (hh % 100u >= 42u) continue;              // ~42 % des pas
+				if (hh % 100u >= seuilEboulis) continue;
 				float u = i * StepCm + ((hh >> 6 & 0xff) / 255f) * StepCm;
 				if (u < 0f || u > WorldView.WorldCm) continue;
 				float d = dFront - ombreW * ((hh >> 3 & 7u) / 7f);
@@ -447,6 +484,9 @@ namespace Symbiose
 			Motif.Foret   => (Palette16.DecorForetLisiere, Palette16.DecorForetFond),
 			Motif.Riviere => (Palette16.DecorEauBerge, Palette16.DecorEau),
 			Motif.Falaise => (Palette16.DecorRocheHaut, Palette16.DecorRoche),
+			// Friche : assise de prairie CLAIRE devant, lisière de bois au fond —
+			// l'entre-deux, ce qu'une friche EST (une prairie qui se referme).
+			Motif.Friche  => (Palette16.DecorPrairieClair, Palette16.DecorForetLisiere),
 			_             => (Palette16.DecorPrairieClair, Palette16.DecorPrairie),
 		};
 

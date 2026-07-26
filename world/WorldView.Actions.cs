@@ -50,8 +50,31 @@ namespace Symbiose
 			// un message diagnostic (avant/après) qu'on relaie tel quel (ACK générique).
 			//  · creuser = abaisse `altitude` d'un cran → cuvette qui capte l'eau ② ;
 			//  · drainer = vide `eau_surface` + fait reculer `marais_memory` (assèche).
+			// `creuser` a DEUX cibles pour UN verbe (périphérie ⑤/⑦) : un plot du
+			// jardin (cuvette) si le clic tombe sur une tuile, un SECTEUR de
+			// périphérie (mare de bordure) s'il tombe dans le décor. Le kind reste
+			// 'q' : c'est le dispatch qui route sur la position du clic, comme le
+			// serveur route sur la forme du target — pas de `creuser_mare` en double.
 			("creuser",              "creuser",        'q'),
 			("drainer",              "drainer",        'q'),
+			// GESTES DE PAYSAGE (périphérie D73 ④⑤, protocole 0.5.41). Kind 'L' =
+			// un SECTEUR de la ceinture, désigné en cliquant le décor HORS du jardin
+			// (granularité D-1 : un geste vaut pour un bord entier). Tous gatés par
+			// `GESTE_UNLOCK` côté moteur — la palette les grise tant que la hache /
+			// la serpe / la pioche ne sont pas à l'Atelier, ou que l'expérience
+			// requise manque (étêter s'apprend après avoir recépé).
+			//  · abattre = la trouée franche (30 ans de structure perdue) ;
+			//  · receper = le taillis (10 ans… sauf hêtre/bouleau, où c'est abattre) ;
+			//  · eteter  = la trogne (5 ans, densité conservée) ;
+			//  · endiguer/deriver = déplacer la ligne d'eau d'un bord (un OUVRAGE :
+			//    il rompt sans entretien) ; entailler = retirer de la roche, le seul
+			//    geste du jeu dont on ne revient JAMAIS.
+			("abattre",              "abattre",        'L'),
+			("receper",              "recéper",        'L'),
+			("eteter",               "étêter",         'L'),
+			("endiguer",             "endiguer",       'L'),
+			("deriver",              "dériver",        'L'),
+			("entailler",            "entailler",      'L'),
 			("poser_bac",            "poser bac",      'q'),   // compost ⑤ (planification)
 			("poser_pile",           "poser pile",     'q'),
 			("composter",            "composter",      's'),   // litière tendre → bac

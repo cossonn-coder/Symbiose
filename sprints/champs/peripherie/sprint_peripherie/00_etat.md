@@ -21,7 +21,7 @@
 > | ④ | `04_gestes_forestiers.md` | `abattre`/`receper`/`eteter`, outils, cinétiques, matière — ✅ **FAIT 2026-07-26** |
 > | ⑤ | `05_eau_roche_erosion.md` | `endiguer`/`deriver`/`entailler`, mare, érosion — ✅ **FAIT 2026-07-26** |
 > | ⑥ | `06_voix_narratives.md` | saule + 5 voix, gestes/techniques/outils, pages, événements — ✅ **FAIT 2026-07-26** |
-> | ⑦ | `07_vue_godot.md` | pont 0.5.41, `DecorLayer` consomme, clic secteur, banc F5 |
+> | ⑦ | `07_vue_godot.md` | pont 0.5.41, `DecorLayer` consomme, clic secteur, banc F5 — ✅ **FAIT 2026-07-26** |
 
 ---
 
@@ -776,6 +776,138 @@ Le tronçon **referme ce que ④ et ⑤ avaient ouvert** — `test_encyclopedie`
    pas dogme » ; candidat naturel au `/refactor` de fin de sprint (scission par règne
    ou par guilde), **pas** en rognant la prose.
 
+### ⑦ Vue Godot — ✅ CLOS le 2026-07-26 (DERNIER tronçon du sprint)
+
+Zéro écologie : un bloc de snapshot, un routeur de gestes, un banc, et le rendu qui
+CESSE de s'inventer. `DecorLayer.BuildProfile(seed)` n'est plus la source du décor —
+c'est un REPLI. **La couture D58·T4 est consommée, D92 refermée par le haut.**
+
+- **Pont — `tools/simserver/peripherie_route.py`** (NEUF, 57 LDC pur, 🟢) : UN module
+  pour les deux sens (« la périphérie au pont »). `ceinture_block(gs)` → 4 secteurs
+  × **10 champs** (les 8 du §4.1 + `entaille_cm` et `ouvrage`, sans quoi la vue ne
+  peut pas dessiner la cicatrice ni l'ouvrage du ⑤) ; `route_peripherie(...)` → les
+  6 gestes de secteur. **La mécanique NE fuit PAS** vers la vue (horloges,
+  `densite_avant`, `erosion_signalee`, `ligne_eau_naturelle` restent côté moteur —
+  les exposer inviterait à les recalculer en C#, invariant « Godot bête », vérifié
+  par test).
+- **Snapshot OPT-IN** (`serialize.py` +10 LDC, 336 🟡) : la clé `ceinture` n'existe
+  QUE si le monde en a une ⇒ `smoke` et les bancs thématiques émettent un snapshot
+  bit-pour-bit inchangé, et la vue retombe sur son profil local.
+- **`creuser` n'a PAS été dupliqué** (décision ⑤ tenue de bout en bout) : le routeur
+  l'aiguille vers `creuser_peripherie` quand la cible porte un `cote`, vers le plot
+  sinon — routage sur la FORME du target, patron d'`ecraser` (0.3.2). Côté vue, même
+  geste, même icône, même touche : le clic **hors** du jardin creuse une mare de
+  bordure, le clic **dedans** une cuvette. Aucune entrée neuve dans `COUTS`.
+- **`ENGINE_VERSION` 0.5.40 → 0.5.41** avec son commentaire (patron des bumps). Trois
+  assertions de version recalibrées (`tests/simserver/{structures,conteneurs,voix}.py`).
+- **Ceinture POSÉE à l'init** (`commands.py`) : `generer_ceinture(seed)` pour `full` et
+  `propre` — c'est là que « le jardin n'est pas une île » devient vrai en JEU et que
+  D92 disparaît réellement de l'écran. **PAS** pour `smoke` (fixture du golden au pont :
+  la faire dériver de son jumeau hors serveur n'est pas un tronçon de vue) **ni** pour
+  les autres bancs (un banc force UNE condition ; une ceinture non demandée y ajouterait
+  ombre, eau et graines dans le dos de l'oracle). Le banc `peripherie` pose la sienne.
+- **`DecorLayer` consomme** — `visuals/DecorLayer.Pont.cs` (NEUF, 90 LDC, 🟢) : la
+  TRADUCTION état moteur → struct `Secteur`, zéro tracé (les tracés ne savent pas d'où
+  vient le profil, et c'était toute l'intention de la couture). `Build(seed)` a
+  désormais **trois** sources, dans l'ordre : banc F10 → pont → repli par seed.
+  `Secteur` gagne `DuPont`/`DensiteLigneuse`/`HauteurCanopeeCm`/`LigneEauCm`/
+  `AltitudeRelativeCm`/`EntailleCm`/`Essence`. **`DuPont = false` ⇒ tous les facteurs
+  rendent 1** ⇒ le décor de repli est celui d'avant ce tronçon, au pixel près (pas de
+  sentinelle `-1` à semer dans `BuildProfile`/`BancProfile`).
+- **Cinq retours visuels, tous dérivés de l'état** (aucune jauge, philo #5) :
+  clairière (occupation du semis ∝ `densite_ligneuse / 0.95`) · trogne (taille des
+  arbres ∝ `hauteur_canopee / 2000`, densité conservée ⇒ *autant* d'arbres, plus
+  courts) · ligne d'eau (demi-largeur du lit × `1 + ligne_eau/200`, bornée) · entaille
+  (la face de falaise EST `altitude_relative` ⇒ chaque coup de pioche l'abaisse à
+  l'écran) · éboulis (42 % des pas au repos → 82 % sur roche entaillée).
+- **`Motif.Friche` ajouté** (5ᵉ motif) : le moteur a un type `friche` que les 4 motifs
+  hérités de D58 ne savaient pas rendre. Rendu = ourlet fleuri de la prairie **+**
+  `DrawForet` avec une hauteur de repli de 250 cm (le moteur ne donne pas de canopée à
+  une friche — elle n'ombre ni n'abrite, ②) ⇒ ronciers rabougris, pas une futaie.
+  Assise prairie-claire devant / lisière de bois au fond : l'entre-deux qu'une friche
+  EST. **Aucun tracé existant réécrit** (D58/D83 clos et validés).
+- **Deux essences ajoutées à la table des silhouettes** (`DecorLayer.Arbres.cs`) :
+  `aulne` et `saule` — le moteur peut les donner comme dominante de ripisylve (①/⑥) et
+  sans entrée elles n'auraient jamais pu être rendues. **Zéro couleur neuve** à
+  `Palette16` (teintes reprises du registre). L'essence dominante habille **~75 %** du
+  semis, le gradient de profondeur historique le reste : une dominante n'est pas une
+  monoculture.
+- **Clic secteur** — `world/WorldView.Peripherie.cs` (NEUF, 49 LDC, 🟢) :
+  `ApplyCeinture` (snapshot → décor), `FindSecteur` (géométrie pure), `CibleSecteur`,
+  `TryCibleSecteur`. **Le ZIndex négatif du décor n'était pas un problème** : le
+  picking de `WorldView` n'utilise PAS l'input de Godot (aucun `Area2D`) — il convertit
+  la souris en cm MONDE et cherche géométriquement. Il suffisait d'une résolution de
+  plus, et le picking des plots **n'est pas touché** : les deux domaines sont DISJOINTS
+  (dedans/dehors le carré `[0, WorldCm]²`). Aux coins, le débordement le plus franc
+  gagne ; au-delà de 900 cm (= `PROFONDEUR_CM`) le clic est perdu, on n'abat rien.
+- **6 gestes à la palette** (`WorldView.Actions.cs`, kind **'L'** = secteur) + le case
+  du dispatch (2 lignes, la résolution vit dans le partial ⑦ — `ActionDispatch.cs`
+  passe de 382 à **390 LDC**, 🟡 déjà avant ce tronçon, +8). **La vue NOMME le bord**
+  visé dans le HUD (« abattre — bord nord… ») : point légué par le ⑥, l'`Evenement` du
+  carnet ne porte pas le côté du terrain — c'est donc la vue qui le dit, sans champ neuf.
+- **3 pictogrammes** (`GesteIcon.cs`, 262 LDC 🟢) : bois coupé `z` (abattre/receper/
+  eteter) · digue `v` (endiguer/deriver) · roche entaillée `y`. Sans eux les six gestes
+  tombaient sur la MÊME pastille neutre du repli — indistinguables au clic.
+- **`FAMILLE_CIBLE` gagne la famille `secteur`** (`sim/actions/palette.py`) : sinon une
+  macro `receper → eteter` (même bord, un clic) était jugée incohérente. `creuser`
+  reste `plot` — son cas périphérique est une exception de ROUTAGE, pas une famille.
+- **Banc `bancs/peripherie.py`** (NEUF, 40 LDC, 🟢) + registre + `BANC_POST_INIT` :
+  falaise 9 m au NORD · rivière `ligne_eau +40` à l'EST · forêt 18 m / 0.90 en
+  **charme** au SUD (le seul bord dont l'ombre entre au jardin, et une essence qui
+  REJETTE ⇒ le contraste recépage/abattage se teste tout de suite) · friche 0.20 à
+  l'OUEST. **4 tuiles 6×6 COLLÉES aux bords** — sans contact, `plots_de_bord` ne rend
+  RIEN et on croirait à un bug alors que c'est la géométrie. Les 3 outils + les 2
+  marqueurs d'expérience (`receper`, `creuser`) sont POSÉS, pas achetés : les outils
+  coûtent 180 de Vigueur pour un plafond de 100. `init config="peripherie"` marche
+  d'emblée dans le sélecteur Godot (`list_bancs` dérive la catégorie du module).
+- **Tests** : **nouveau `tests/test_peripherie_pont.py`** (170 LDC, 🟢) — **50/50 OK**.
+  Cinq suites : AD bloc (opt-in, 10 champs exacts, valeurs miroirs, la mécanique ne
+  fuit pas, le bloc SUIT une coupe), AE snapshot (absent en smoke / présent en full et
+  au banc / persiste au tick / version), AF routage (les 6 verbes passent, `creuser`
+  DUAL secteur↔plot, falaise refusée, 4 désignations invalides **sans coût**),
+  AG banc (4 motifs distincts, tuiles collées, forêt au sud, déterminisme, 7 gestes
+  ouverts), AH neutralité (aucune clé créée, les 7 gestes refusés, bloc jamais émis).
+- **Golden INCHANGÉ** : `57c166d8d3626444e0fc9b88b360edc62c047927f7608c45fefae35a6bba08da`.
+  **`dotnet build Symbiose.csproj` VERT** (0 avertissement, 0 erreur). Suite complète
+  relancée : **72 fichiers verts** + les 5 oracles de bancs + `test_automate_*`.
+  **Rouges = 2, tous deux PRÉ-EXISTANTS** — `test_sim_server` 269/270 (« le pommier
+  pré-âgé a noué des fruits réels » → 0 fruits @ S52, déjà consigné aux ③④⑤⑥) et
+  `tests/bancs/test_edaphique` 6/7 (« carence — croissance bridée vs témoin »),
+  **vérifié IDENTIQUE sur l'arbre propre** (`git stash -u`).
+- **Perf** : mesurée sur `full` (seed 11, médiane de 10 ticks, 2 passes croisées) —
+  447/483 ms avec ceinture contre 450/512 ms sans : **dans le bruit**, conforme à
+  l'estimation ①-③ (les caches `geom_key`/`_signature` absorbent une ceinture quasi
+  statique). Nombre de plantes du même ordre (106 vs 115).
+- **Fumée d'intégration** : banc + les 4 gestes (abattre sud, entailler nord, endiguer
+  est, creuser ouest) × 60 semaines → aucun crash en 5,5 s ; **12 plots de litière
+  `bois`** au bord sud, **érosion locale** au bord nord (`structure_sol` 0.7299 au
+  contact contre 0.7679 à 5 plots), **12 plots de marais** au bord est, forêt sud en
+  repousse (densité 0.131, canopée 69 cm à ~1,15 an).
+
+**⚠️ À valider par Nico (F5, calibrage — voir la liste actionnable du rapport)** :
+1. **Les falaises du pont sont BEAUCOUP plus hautes** que celles du repli : la face
+   dessinée est maintenant `altitude_relative` (300 → 1200 cm) là où le C# codait
+   190/330/470 cm. C'est géométriquement juste (une falaise de 9 m à côté d'un jardin
+   de 20 m) mais ça change fort l'image, et ① avait déjà signalé que **52 % des
+   terrains portent une falaise**. Si ça mange l'écran : soit un tirage de conversion
+   côté ① (falaise plus rare), soit un facteur d'échelle ici.
+2. **`DensiteRef = 0.95` / `HauteurRefCm = 2000`** (`DecorLayer.Pont.cs`) : miroirs des
+   maxima du générateur. Une lisière moyenne (12 m, 0.75) rend donc ~79 % des arbres à
+   ~60 % de leur taille d'avant — le décor est globalement **plus bas et plus clair**
+   qu'au F10. Voulu (il dit la vérité du moteur), à juger à l'œil.
+3. **`Motif.Friche`** : le rendu « prairie + ronciers de 2,5 m » est une invention de ce
+   tronçon (le moteur ne donne pas de hauteur à une friche). À arbitrer si une friche
+   doit se lire autrement (hautes herbes ? genêts ?).
+4. **`LigneEauPleineCm = 200`** : ±200 cm de ligne d'eau double/annule la largeur du
+   lit. Placeholder, comme le pas d'`endiguer` (⑤ point 1) — est-ce qu'un barrage se
+   VOIT en un geste ?
+5. **Les gestes de paysage ne sont dans AUCUN slot par défaut** : ils apparaissent via
+   l'auto-remplissage de la palette (D2) et le cycle Tab. Avec 6 verbes de plus,
+   vérifier que la colonne gauche reste lisible.
+6. **Le banc démarre semaine 1** (début printemps) : l'ombre d'hiver de la lisière sud,
+   qui est la leçon centrale du ②, ne se voit PAS à cette date. Si Nico veut la
+   constater d'emblée, une entrée dans `BANC_WEEK_DEPART` (~semaine 47) suffit.
+
 ## 6. §REPRISE
 
 **Lire** : `CLAUDE.md` · ce fichier · `docs/champs/peripherie/conception_peripherie.md`
@@ -787,9 +919,27 @@ Le tronçon **referme ce que ④ et ⑤ avaient ouvert** — `test_encyclopedie`
 (`mulch_stock`, `broyer`) · `sim/actions/compost.py` (`empiler_bois`) ·
 `fields/ecofields/matiere_organique.py` (`deposer_litiere`).
 
-**Prochaine étape** : tronçon **⑦** (`07_vue_godot.md`) — **DERNIER du sprint** : pont
-0.5.41, `DecorLayer` qui CONSOMME le snapshot (il génère encore), clic secteur, banc F5.
-Points d'appui posés par ①→⑥ :
+**Prochaine étape** : **les 7 tronçons sont CLOS.** Il ne reste que la CLÔTURE
+documentaire du sprint (kickoff ⑦ §Fin de sprint), volontairement NON faite par le
+tronçon ⑦ (périmètre : « uniquement ce tronçon ») :
+- **`DETTE.md`** — D73 CLOSE · D92 ABSORBÉE (le tirage vient de Python, le hash C# n'est
+  plus qu'un repli) · D93 PÉRIMÉE pour ce périmètre (gating par outil = 3 entrées
+  d'`OUTILS` + 3 de `GESTE_UNLOCK`, aucun inventaire) · **D94 à OUVRIR** (porosité des
+  haies du JARDIN : `abri.py` garde `poro=None` pour la maison et les plantes, donc la
+  non-linéarité de rafale ne s'applique qu'à la ceinture) ;
+- **`BACKLOG.md`** (noisetier / prunellier écartés au ①, cf. D-5) et **`journal.md`**
+  (entrée de sprint) ;
+- **F5 de Nico** : la liste actionnable est en fin de section ⑦ ci-dessus (6 points de
+  calibrage, aucun bug connu). Le F5 n'a PAS été simulé — `dotnet build` est vert, mais
+  aucun rendu n'a été observé sur la VM (Godot n'y est pas).
+
+Points d'appui posés par ①→⑦ :
+- **le pont expose tout** (⑦) : bloc `ceinture` (10 champs × 4 secteurs, OPT-IN) au
+  snapshot, protocole **0.5.41**, les 6 verbes de secteur + `creuser` dual routés par
+  `tools/simserver/peripherie_route.py`, ceinture posée à l'init pour `full`/`propre`,
+  banc `init config="peripherie"`. Côté vue : `DecorLayer` CONSOMME (repli local
+  conservé), `world/WorldView.Peripherie.cs` résout le clic hors jardin en `cote`,
+  kind **'L'** dans la table des gestes ;
 - **côté voix, tout est câblé et n'attend que le pont** (⑥) : les 4 marqueurs de log
   (`🪓 ⛏ 🚧 🪨`) sont parsés en `Evenement` typés (`coupe`/`terrassement`/`rupture`/
   `eboulis`) et le carnet en rend une note ; les 6 gestes + 4 techniques + 3 outils ont
@@ -828,12 +978,13 @@ Points d'appui posés par ①→⑥ :
   (`abri._signature`), corridor (`_lisiere_sig` + `intensite_lisiere`) et érosion
   (recalculée à chaque tick, sans cache). Toute écriture neuve doit répondre à : **quel
   cache lit ce champ, et invalide-t-il sur MON écriture ?** ;
-- **le pont n'expose AUCUN des 7 gestes de paysage** (ni ④ ni ⑤ n'ont touché
-  `tools/simserver/actions.py`, volontairement) → c'est le périmètre du **⑦** avec la
-  vue, `DecorLayer` et le clic secteur. À noter pour ⑦ : `eco.lisiere` et
-  `eco.turbulence` ne sont pas exposés à `get_field` (pas d'overlay F6), et
-  `erosion_signalee`/`entaille_cm` sont les deux champs qui donnent à la vue de quoi
-  dessiner une cicatrice ;
+- ~~le pont n'expose AUCUN des 7 gestes de paysage~~ → **FAIT au ⑦** (les 7 sont
+  routés). Reste vrai et non traité : `eco.lisiere` et `eco.turbulence` ne sont
+  **pas** exposés à `get_field` ⇒ **aucun overlay debug F6** pour le corridor ni la
+  turbulence (cohérent avec `eco.vent`, qui n'y est pas non plus ; à verser en dette
+  si Nico veut les voir en heatmap). `entaille_cm` EST exposé au snapshot (⑦, il
+  pilote les éboulis) ; `erosion_signalee` reste côté moteur (c'est un verrou de
+  signe, pas une donnée de rendu) ;
 - circuit du bois en place et exercé : `eco.deposer_litiere` (parcelle typée `bois`),
   `empiler_bois` (`sim/actions/compost.py`), `broyer` (`sim/actions/paillage.py`).
 Aucun tronçon n'est autorisé à re-figer le golden ; si le digest bouge, c'est un bug.

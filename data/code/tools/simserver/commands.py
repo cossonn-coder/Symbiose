@@ -22,6 +22,10 @@ from sim.seeds import PlayerSeedBank, Seed  # banque-joueur (source de planter, 
 # commande `fields` se DÉCOUVRE par introspection (tout attribut GridField
 # d'EcoFields) — un champ ajouté au moteur apparaît tout seul dans l'overlay.
 from fields.grids import GridField
+# Ceinture périphérique (PÉRIPHÉRIE ⑦, D73) : génération déterministe des 4 secteurs
+# depuis le seed du terrain — posée dans `game_state` pour les mondes de JEU (voir
+# `cmd_init`). C'est ce branchement qui fait de la vue une CONSOMMATRICE (D92).
+from fields.peripherie import generer_ceinture
 # Registre des bancs d'essai (sprint dédié) : mondes paramétrés montés par
 # `init config="<banc>"` pour forcer/observer un signe. Import au niveau module
 # (paquet `bancs/` au sommet, peut tout importer) ; jamais monté pour smoke/full.
@@ -177,6 +181,20 @@ class CommandsMixin:
         # comportement inchangé pour smoke/full/bancs (golden intact).
         if config == "propre":
             game_state["feral_off"] = True
+        # Ceinture périphérique (PÉRIPHÉRIE ⑦, D73) : les mondes de JEU portent une
+        # périphérie tirée du SEED — c'est ici que « le jardin n'est pas une île »
+        # devient vrai, et que **D92 se referme** (le tirage vient de Python, plus du
+        # hash mal brassé de `DecorLayer`). Réservé à `full`/`propre` :
+        #   · `smoke` est la FIXTURE du golden au pont (2 tuiles, mêmes valeurs que
+        #     `tests/test_golden.py`) — lui poser une ceinture le ferait dériver de son
+        #     jumeau hors serveur, ce qui n'est pas un tronçon de vue ;
+        #   · un BANC force UNE condition et rien d'autre : une ceinture non demandée
+        #     y ajouterait de l'ombre, de l'eau et des graines dans le dos de l'oracle.
+        #     Le banc `peripherie` pose la sienne (contrastée) dans son `post_init`.
+        # Absente ⇒ tous les couplages de ceinture sont des no-op strictes (⇒ golden
+        # et bancs existants inchangés au bit près).
+        if config in ("full", "propre"):
+            game_state["ceinture"] = generer_ceinture(seed)
         # Option d'init « carnet interprétatif anticipé » (T2, réglage d'aide
         # CLAUDE.md, défaut NON). Champ OPTIONNEL du message : absent → aucune clé
         # `options` → `sim/carnet._reglage_anticipe` renvoie False → seuil normal

@@ -611,7 +611,30 @@ from __future__ import annotations
 #       jamais appelé → golden intact ; snapshot inchangé, aucun bloc `quetes` sérialisé).
 #       Un binaire pré-0.5.40 répond « commande inconnue » à `courrier` (l'onglet
 #       Courrier s'affiche vide, inoffensif — tolérance comme tous les bumps).
-ENGINE_VERSION = "0.5.40"
+# 0.5.41 (périphérie D73 ⑦, vue Godot — DERNIER tronçon du sprint) : nouveau bloc
+#       OPT-IN `ceinture` au snapshot = les 4 secteurs cardinaux de la périphérie
+#       (`cote`, `type`, `essence`, `hauteur_canopee`, `densite_ligneuse`,
+#       `souche_memory`, `ligne_eau`, `altitude_relative`, `entaille_cm`, `ouvrage`).
+#       C'est la fin de la dette D58·T4 : `DecorLayer.BuildProfile(seed)` CESSE
+#       d'être la source du décor et devient un REPLI — la vue consomme désormais la
+#       vérité Python, ce qui referme **D92 par le haut** (le hash C# mal brassé
+#       donnait 96 % de terrains aux 4 côtés identiques et zéro falaise ; le tirage
+#       Python du ① donne 2,7 % / 52 %). Le bloc est ABSENT d'un monde sans ceinture
+#       (smoke, bancs thématiques) → snapshot inchangé, repli local côté vue. PLUS
+#       **SIX verbes neufs** à la commande `action`, tous ciblant un SECTEUR
+#       (`target.cote` ∈ 0..3, granularité D-1) : `abattre`/`receper`/`eteter` (④,
+#       gatés par hache/serpe via `GESTE_UNLOCK`) et `endiguer`/`deriver`/
+#       `entailler` (⑤). `creuser` N'EST PAS dupliqué : il est routé vers la MARE de
+#       bordure quand sa cible porte un `cote` (clic hors jardin), au plot sinon —
+#       routage sur la FORME du target, comme `ecraser` (0.3.2). Enfin la ceinture
+#       est POSÉE à l'init (`generer_ceinture(seed)`) pour les mondes de JEU (`full`,
+#       `propre`) et par le banc `peripherie` (§D) ; `smoke` et les autres bancs
+#       restent SANS périphérie (fixtures inchangées). PURE extension (bloc
+#       lecture-seule + gestes event-driven hors tick) → golden INTACT : le golden
+#       tourne hors serveur et n'a aucune clé `ceinture`. Un binaire pré-0.5.41
+#       n'émet pas le bloc (→ `DecorLayer` garde son profil local) et répond « verbe
+#       inconnu » aux 6 gestes (tolérance comme tous les bumps précédents).
+ENGINE_VERSION = "0.5.41"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

@@ -22,6 +22,7 @@ from .diversite import diversite_fondatrice
 from .modele_spatial import modele_spatial
 from . import palette_gestes as _palette_gestes
 from . import courrier as _courrier
+from . import peripherie as _peripherie
 
 BANCS = {
     "secheresse_sable": secheresse_sable,
@@ -48,6 +49,7 @@ BANCS = {
     "modele_spatial": modele_spatial,
     "palette_gestes": _palette_gestes.palette_gestes,
     "courrier": _courrier.courrier,
+    "peripherie": _peripherie.peripherie,
 }
 
 # Hook POST-INIT par banc (palette de gestes ⑤) : callback OPTIONNEL `(game_state,
@@ -58,7 +60,12 @@ BANCS = {
 # jusqu'à la maîtrise réelle. Banc sans hook → absent → cmd_init ne fait rien de plus
 # (comportement inchangé, golden NEUTRE : smoke/full ne sont pas des bancs).
 BANC_POST_INIT = {"palette_gestes": _palette_gestes.post_init,
-                  "courrier": _courrier.post_init}
+                  "courrier": _courrier.post_init,
+                  # `peripherie` (D73 ⑦) : POSE la ceinture contrastée dans
+                  # `game_state["ceinture"]` (la fabrique ne rend que le monde) et
+                  # met les outils de paysage en poche → les 7 gestes sont
+                  # cliquables dès l'ouverture.
+                  "peripherie": _peripherie.post_init}
 
 # Semaine de départ par banc (retour F5 Nico 2026-07-04). La plupart démarrent à
 # `week=1` (début printemps) — repli par défaut. `grimpantes` observe des FRILEUSES

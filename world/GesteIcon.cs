@@ -128,6 +128,12 @@ namespace Symbiose
 				=> 's',                  // support (gris clair)
 			"poser_ruche" or "recolter_miel" => 'h',   // ruche (miel)
 			"deraciner" => 'r',          // racine arrachée (brun)
+			// PAYSAGE de la ceinture (périphérie D73 ⑦) : trois glyphes pour trois
+			// familles de geste, sinon les six gestes tomberaient sur la même
+			// pastille neutre du repli et seraient indistinguables au clic.
+			"abattre" or "receper" or "eteter" => 'z',   // lame de bois (hache/serpe)
+			"endiguer" or "deriver" => 'v',              // digue en travers de l'eau
+			"entailler" => 'y',                          // pointe dans la roche
 			_ => _kind,                  // repli par famille de cible
 		};
 
@@ -153,6 +159,9 @@ namespace Symbiose
 			's' => new Color(0.75f, 0.75f, 0.78f),   // support
 			'h' => new Color(0.95f, 0.75f, 0.3f),    // ruche
 			'r' => new Color(0.6f, 0.45f, 0.35f),    // déraciner
+			'z' => new Color(0.72f, 0.62f, 0.45f),   // paysage : bois coupé
+			'v' => new Color(0.4f, 0.65f, 0.8f),     // paysage : eau détournée
+			'y' => new Color(0.68f, 0.64f, 0.58f),   // paysage : roche entaillée
 			_ => new Color(0.7f, 0.7f, 0.7f),        // neutre
 		};
 
@@ -271,6 +280,27 @@ namespace Symbiose
 					}, c);
 					DrawLine(new Vector2(lo + 3f, mid), new Vector2(hi - 3f, mid), c.Darkened(0.3f), 1.5f);
 					DrawLine(new Vector2(lo, hi), new Vector2(hi, hi), c, 2f);
+					break;
+				case 'z':   // bois coupé : tronc oblique + entaille en V au pied
+					DrawLine(new Vector2(lo + 2f, hi), new Vector2(hi - 4f, lo + 2f), c, 3f);
+					DrawLine(new Vector2(lo + 2f, hi), new Vector2(mid, mid + 2f),
+							 c.Darkened(0.35f), 2f);
+					DrawLine(new Vector2(lo, hi), new Vector2(hi, hi), c, 2f);
+					break;
+				case 'v':   // digue : barre en travers de deux vagues
+					DrawLine(new Vector2(lo, mid + 5f), new Vector2(hi, mid + 5f), c, 2f);
+					DrawLine(new Vector2(lo, hi - 2f), new Vector2(hi, hi - 2f), c, 2f);
+					DrawLine(new Vector2(mid, lo + 2f), new Vector2(mid, hi), c.Lightened(0.3f), 3f);
+					break;
+				case 'y':   // roche entaillée : bloc en escalier, un cran retiré
+					DrawColoredPolygon(new[]
+					{
+						new Vector2(lo, hi), new Vector2(lo, mid), new Vector2(mid, mid),
+						new Vector2(mid, lo + 3f), new Vector2(hi, lo + 3f),
+						new Vector2(hi, hi),
+					}, c);
+					DrawLine(new Vector2(mid, mid), new Vector2(hi - 2f, mid),
+							 c.Darkened(0.4f), 1.5f);
 					break;
 				default:    // repli : pastille pleine (le geste existe, forme neutre)
 					DrawCircle(new Vector2(mid, mid), (hi - lo) / 3f, c);

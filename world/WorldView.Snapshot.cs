@@ -114,6 +114,15 @@ namespace Symbiose
 			// moteur). Posé AVANT ApplyEpaisseur, qui déclenche seul UpdateRelief →
 			// la remontée voit déjà l'altitude courante. Lecture TOLÉRANTE (bloc
 			// absent, pré-0.5.17 → altitude nulle → terrain plat, aucun crash).
+			// Ceinture périphérique (PÉRIPHÉRIE ⑦, 0.5.41, lecture seule) : les 4
+			// secteurs qui entourent le jardin → `DecorLayer`, qui CESSE de générer
+			// son décor et consomme la vérité moteur (fin de la couture D58·T4, D92
+			// refermée par le haut). Appliquée TÔT : c'est un fond, il n'attend
+			// personne. Lecture TOLÉRANTE — bloc absent (monde sans périphérie,
+			// binaire pré-0.5.41) → le décor garde son profil local par seed.
+			ApplyCeinture(snap.ContainsKey("ceinture")
+				? snap["ceinture"].AsGodotArray() : null);
+
 			if (snap.ContainsKey("altitude"))
 				ApplyAltitude(snap["altitude"].AsGodotDictionary());
 			if (snap.ContainsKey("epaisseur"))

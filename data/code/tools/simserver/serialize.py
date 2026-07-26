@@ -50,6 +50,10 @@ from sim.actions import palette as PAL
 from tools.render_structure import REPRO_BY_SEASON
 
 from .version import DEFAULT_REPRO
+# Ceinture périphérique au pont (PÉRIPHÉRIE ⑦, D73) : le bloc `ceinture` du
+# snapshot, opt-in (None sans ceinture). Vit dans `peripherie_route` avec le
+# routage des gestes de paysage — un module = « la périphérie au pont ».
+from .peripherie_route import ceinture_block
 
 
 class SerializeMixin:
@@ -655,6 +659,16 @@ class SerializeMixin:
                 "allelopathie": allelopathie_by_tile,
                 "inoculum": inoculum_by_tile,
                 "containers": self._containers_snapshot(gs, saison)}
+        # Ceinture périphérique (PÉRIPHÉRIE ⑦, D73) : bloc OPT-IN de 4 secteurs
+        # (`ceinture_block`, cf. peripherie_route). Présent UNIQUEMENT quand le
+        # monde porte une ceinture → un monde sans périphérie (smoke, bancs
+        # thématiques) émet un snapshot bit-pour-bit inchangé et la vue retombe sur
+        # `DecorLayer.BuildProfile(seed)`. C'est ce bloc qui fait de `DecorLayer` un
+        # CONSOMMATEUR au lieu d'un générateur (D92 refermée par le haut). PURE
+        # lecture d'un état déjà tické (repousse/ouvrages/érosion) → golden NEUTRE.
+        ceinture = ceinture_block(gs)
+        if ceinture is not None:
+            snap["ceinture"] = ceinture
         # Jardinier automate (sprint jardinier_auto ⑥) : bloc OPT-IN. Présent UNIQUEMENT
         # quand un automate est actif → un snapshot F5 ordinaire (sans automate) est
         # bit-pour-bit inchangé (la vue existante ne voit jamais la clé). PURE lecture

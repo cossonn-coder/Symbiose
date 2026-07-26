@@ -55,6 +55,14 @@ namespace Symbiose
 			["charme"]  = new(TreePort.Sinueux, Palette16.FeuillageCharme,  Palette16.EcorceBrune,   230f, 200f),
 			["sapin"]   = new(TreePort.Conique, Palette16.FeuillageSapin,   Palette16.EcorceBrune,   210f, 120f),
 			["noyer"]   = new(TreePort.Etale,   Palette16.FeuillageChene,   Palette16.EcorceBrune,   300f, 240f),
+			// Essences de RIPISYLVE (D73 ①/⑥) : le moteur peut donner `aulne` ou
+			// `saule` comme dominante d'une lisière qui touche une rivière. Sans
+			// entrée ici, elles ne pourraient jamais être rendues. Teintes reprises
+			// du registre existant (aucune couleur neuve à la palette) : l'aulne
+			// dressé et sombre, le saule clair et sinueux (port pleureur, cf. son
+			// `gravitropism_gain` côté moteur).
+			["aulne"]   = new(TreePort.Ovoide,  Palette16.FeuillageCharme,  Palette16.EcorceBrune,   250f, 260f),
+			["saule"]   = new(TreePort.Sinueux, Palette16.FeuillageBouleau, Palette16.EcorceBrune,   280f, 180f),
 		};
 
 		// Peuple un secteur « forêt » : scatter d'arbres en gradient de lisière,
@@ -70,6 +78,14 @@ namespace Symbiose
 			// On collecte d'abord (base monde, essence, taille) pour trier par Y
 			// ÉCRAN avant de peindre (peintre : lointain d'abord).
 			var arbres = new System.Collections.Generic.List<(Vector2 basePos, TreeSilhouette sil, float scale)>();
+			// État MOTEUR du secteur (D73 ⑦) : la densité règle COMBIEN d'arbres se
+			// posent, la hauteur de canopée règle leur TAILLE. Hors pont, les deux
+			// facteurs valent 1 → le semis d'avant, au pixel près. C'est ici que le
+			// geste du joueur devient visible : une clairière abattue s'éclaircit,
+			// une trogne étêtée garde ses arbres mais les rabat.
+			float kDensite = FacteurDensite(s);
+			float kTaille = FacteurTaille(s);
+			if (kDensite <= 0f || kTaille <= 0f) return;   // secteur rase : rien à peindre
 			for (int iu = 0; iu < nU; iu++)
 			for (int id = 0; id < nD; id++)
 			{
@@ -77,7 +93,7 @@ namespace Symbiose
 				// Profondeur normalisée 0 (bord jardin) → 1 (fond). La densité
 				// CROÎT vers le fond : proba d'occupation = 0.25 au bord → 0.92 au cœur.
 				float dn = nD > 1 ? id / (float)(nD - 1) : 0f;
-				float proba = Mathf.Lerp(0.25f, 0.92f, dn);
+				float proba = Mathf.Lerp(0.25f, 0.92f, dn) * kDensite;
 				if (h % 1000u / 1000f > proba) continue;
 				// Jitter de position DANS la cellule (déterministe, jamais aligné).
 				float ju = (h >> 4 & 0xff) / 255f - 0.5f;
@@ -85,16 +101,31 @@ namespace Symbiose
 				float u = (iu + 0.5f + ju * 0.8f) * cellU;
 				float depth = (id + 0.5f + jd * 0.8f) * cellDepth + AmplitudeCm;
 				if (u < 0f || u > WorldView.WorldCm) continue;
-				// Essence par profondeur : bord = pionniers (bouleau), cœur =
-				// grands arbres (chêne/hêtre) ; sapin/charme en accents constants.
-				string esp = PickEssence(h, dn);
-				// Taille : ±20 % autour de l'adulte (hétérogénéité, philo #7).
-				float scale = 0.8f + (h >> 20 & 0xff) / 255f * 0.4f;
+				// Essence : la DOMINANTE du moteur (décision D-4, un secteur porte
+				// une essence, pas une flore) sur les deux tiers du semis, le
+				// gradient de profondeur historique pour le reste — une lisière
+				// d'aulnes reste mêlée, elle n'est pas une plantation. Sans
+				// dominante (friche, repli local) : gradient seul, inchangé.
+				string esp = EssenceDominante(s, h) ?? PickEssence(h, dn);
+				// Taille : ±20 % autour de l'adulte (hétérogénéité, philo #7),
+				// mise à l'échelle de la canopée réelle du secteur.
+				float scale = (0.8f + (h >> 20 & 0xff) / 255f * 0.4f) * kTaille;
 				arbres.Add((EdgePoint(s.Cote, u, depth), Silhouettes[esp], scale));
 			}
 			arbres.Sort((a, b) => a.basePos.Y.CompareTo(b.basePos.Y));
 			foreach (var (basePos, sil, scale) in arbres)
 				DrawArbre(basePos, sil, scale);
+		}
+
+		// L'essence DOMINANTE du secteur (moteur), ou null s'il n'y en a pas / si le
+		// gabarit est inconnu de la table (moteur plus récent que la vue → on ne
+		// crashe pas, on retombe sur le gradient). Deux tiers des sujets la portent :
+		// une dominante n'est pas une monoculture.
+		private static string EssenceDominante(Secteur s, uint h)
+		{
+			if (!s.DuPont || s.Essence == null) return null;
+			if ((h >> 28 & 3u) == 0u) return null;            // ~25 % de mélange
+			return Silhouettes.ContainsKey(s.Essence) ? s.Essence : null;
 		}
 
 		// Choix d'essence pondéré par la profondeur normalisée dn ∈ [0,1].

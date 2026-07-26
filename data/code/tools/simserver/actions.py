@@ -25,6 +25,7 @@ from .conteneurs_route import route_conteneur, VERBES as CONTENEUR_VERBES
 from .multiplication_route import (
     route_multiplication, VERBES as MULTIPLICATION_VERBES,
 )
+from .peripherie_route import route_peripherie, VERBES as PERIPHERIE_VERBES
 from .plante_route import route_plante, VERBES as PLANTE_VERBES
 from .structures_route import route_structure, VERBES as STRUCTURE_VERBES
 from .maitrise_pont import (
@@ -161,6 +162,16 @@ class ActionsMixin:
                            "(hors offre ou Vigueur insuffisante)")
             b["achete"] = achete
             return b
+
+        # Gestes de PAYSAGE sur la ceinture (PÉRIPHÉRIE ④⑤, protocole 0.5.41) :
+        # routage délégué à `peripherie_route` (garde ce routeur court). La cible
+        # n'est ni une tuile ni un plot mais un SECTEUR cardinal (`target.cote` ∈
+        # 0..3) — la ceinture n'appartient à aucune tuile. Placé AVANT la famille
+        # `creuser`/`drainer` : `creuser` est routé ici quand la cible porte un
+        # `cote` (clic hors jardin → mare de bordure) et au PLOT sinon, sur la forme
+        # du target comme `ecraser` (0.3.2). Aucun `creuser_mare` en doublon.
+        if verb in PERIPHERIE_VERBES or (verb == "creuser" and "cote" in target):
+            return route_peripherie(gs, player, verb, target, params, bilan)
 
         # --- résolution de la cible, selon la famille du verbe ------------
         tiles = {t.tile_id: t for t in gs["tiles"]}
