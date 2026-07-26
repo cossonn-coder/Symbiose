@@ -48,6 +48,7 @@ reste F5 Nico).
 | `champs/climat` | [climat](docs/champs/climat/backlog_climat.md) |
 | `champs/eau` | [eau](docs/champs/eau/backlog_eau.md) |
 | `champs/lumiere` | [lumière](docs/champs/lumiere/backlog_lumiere.md) |
+| `champs/peripherie` | [périphérie](docs/champs/peripherie/backlog_peripherie.md) |
 | `champs/sol` | [sol](docs/champs/sol/backlog_sol.md) |
 | `faune/mycelium` | [mycélium](docs/faune/mycelium/backlog_mycelium.md) |
 | `faune/pollinisation` | [pollinisation](docs/faune/pollinisation/backlog_pollinisation.md) |

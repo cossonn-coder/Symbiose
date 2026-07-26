@@ -91,6 +91,7 @@ dans la carte : leur nom est déductible du dossier.
 | `lumiere/` | `conception_eclairement.md` *(extrait au ④ — cf. §5.3)*, `conception_maison_ombre.md` |
 | `eau/` | `conception_hydrologie_marecage.md` |
 | `climat/` | `conception_meteo.md`, `conception_meteo_champs.md`, `conception_thermique_microclimat.md`, `conception_vent_evapotranspiration.md` |
+| `peripherie/` | `conception_peripherie.md` |
 
 ### `vegetal/` — physiologie et populations végétales
 
