@@ -15,7 +15,7 @@
 >
 > | # | Kickoff | Objet |
 > |---|---|---|
-> | ① | `01_ceinture.md` | état 4 secteurs + génération déterministe, **D92 refermée** |
+> | ① | `01_ceinture.md` | état 4 secteurs + génération déterministe, **D92 refermée** — ✅ **FAIT 2026-07-26** |
 > | ② | `02_exposition_abri.md` | lisière = obstacle lumière + abri, porosité/turbulence |
 > | ③ | `03_graines_eau_corridor.md` | pluie de graines, nappe de berge, `eco.lisiere` |
 > | ④ | `04_gestes_forestiers.md` | `abattre`/`receper`/`eteter`, outils, cinétiques, matière |
@@ -167,6 +167,37 @@ faits ci-dessus** ; il reste 4 vrais arbitrages, dont 3 remontés à Nico.
   à lever. Passe par un **champ du milieu** `eco.lisiere` + poids `lisiere_w` par spec
   (défaut 0.0) — jamais par un bonus d'habitat conditionnel.
 
+## 5bis. Avancement des tronçons
+
+### ① Ceinture moteur — ✅ CLOS le 2026-07-26
+
+- **Créé** `data/code/fields/peripherie.py` (79 LDC pur, 🟢) : `PROFONDEUR_CM = 900`,
+  `COTES`, canaux-sentinelles **tranche 91_00x** (`K_TYPE`/`K_ESSENCE`/`K_HAUTEUR`/
+  `K_DENSITE`/`K_EAU`/`K_ROCHE`), `voisins(cote)`, `secteur_neutre(cote)`,
+  `generer_ceinture(seed) -> list[dict]` (3 passages : type → couplage falaise →
+  scalaires+essence). Couche `fields`, n'importe QUE `fields.noise`. **Rien n'est
+  branché** : aucun module de la boucle ne l'importe (pas même `fields/__init__.py`,
+  volontairement — ② l'y ajoutera au moment du câblage) ⇒ neutralité structurelle.
+- **Créé** `data/code/tests/test_peripherie.py` (120 LDC) — **16/16 OK**.
+- **Golden INCHANGÉ** : `57c166d8d3626444e0fc9b88b360edc62c047927f7608c45fefae35a6bba08da`.
+- **D92 mesurée refermée** sur 300 000 seeds : 4 côtés identiques **2,7 %**
+  (avant : 96,0 %) · terrains avec falaise **52,0 %** (avant : 0 %) · présence
+  forêt 82,2 % / rivière 68,3 % / prairie 44,4 % / friche 19,5 %.
+  Deux correctifs par rapport au C# : décalage par côté sur **deux grands premiers**
+  (`7 919` / `104 729`, l'avalanche de `_hash_noise` ne suffisait pas à décorréler
+  `cote±1`) **et** adjacence **symétrique** (les deux voisins, plus le seul sens
+  horaire) avec condition réalisable (`ni rivière ni forêt`, plus « resté prairie »).
+- **⚠️ À valider par Nico (calibrage, pas bug)** : la règle de falaise du kickoff,
+  appliquée littéralement, donne **52 % de terrains portant une falaise** — très
+  au-dessus du plancher demandé (≥ 5 %). C'est l'arithmétique de la règle
+  (P(prairie|friche) 0,40 × P(≥1 voisin rivière) 0,44 ≈ 0,17 par secteur). Si la
+  falaise doit rester un accident de terrain rare, il faut **ajouter un tirage de
+  conversion** (p. ex. `K_ROCHE < 0,35`) — décision de design, pas absorbée ici.
+  Se juge au **F5 du tronçon ⑦** (est-ce que ça se voit trop ?).
+- Écarts assumés au modèle §4.1 : pas de champ `pente` ni `seed_secteur` (présents
+  côté `DecorLayer` uniquement) — le modèle figé ne les liste pas ; ⑦ les dérivera
+  du seed monde + `cote` s'il en a besoin.
+
 ## 6. §REPRISE
 
 **Lire** : `CLAUDE.md` · ce fichier · `docs/champs/peripherie/conception_peripherie.md`
@@ -177,5 +208,10 @@ faits ci-dessus** ; il reste 4 vrais arbitrages, dont 3 remontés à Nico.
 (`mulch_stock`, `broyer`) · `sim/actions/compost.py` (`empiler_bois`) ·
 `fields/ecofields/matiere_organique.py` (`deposer_litiere`).
 
-**Prochaine étape** : `/sprint-auto sprint_peripherie` — commencer au tronçon **①**.
+**Prochaine étape** : tronçon **②** (`02_exposition_abri.md`) — la lisière devient un
+obstacle de lumière + une entrée de `abri._obstacles()`. Il consommera
+`fields/peripherie.py` (créé au ①) : lire `generer_ceinture`, `secteur_neutre`,
+`PROFONDEUR_CM`, `voisins`. C'est ② qui décidera d'ajouter le ré-export dans
+`fields/__init__.py`.
 Aucun tronçon n'est autorisé à re-figer le golden ; si le digest bouge, c'est un bug.
+Golden de référence courant : `57c166d8d3626444e0fc9b88b360edc62c047927f7608c45fefae35a6bba08da`.
