@@ -1,8 +1,9 @@
 """
 SYMBIOSE — sim/actions/paysage.py
-Les gestes JOUEUR sur le PAYSAGE : la sylviculture de la ceinture périphérique
-(sprint PÉRIPHÉRIE ④, D73). Spec : `docs/champs/peripherie/conception_peripherie.md`
-§3.3 (le phénomène), §4.3 (les gestes), §4.4 (les cinétiques), §5 (la comptabilité).
+Les gestes JOUEUR sur le PAYSAGE : sylviculture (④) puis eau & roche (⑤) de la
+ceinture périphérique (sprint PÉRIPHÉRIE, D73). Spec :
+`docs/champs/peripherie/conception_peripherie.md` §3.3 (le phénomène), §3.4 (l'eau),
+§4.3 (les gestes), §4.4 (les cinétiques), §4.5 (l'érosion), §5 (la comptabilité).
 
 Trois gestes que le paysan distingue et que le jeu doit distinguer :
 
@@ -15,6 +16,23 @@ Ce n'est pas leur effet immédiat qui enseigne (les trois font tomber du bois), 
 l'ASYMÉTRIE DE LEURS CINÉTIQUES : 5 ans, 10 ans, 30 ans. Rien ne l'annonce, rien ne
 bloque le geste destructeur (philo #6) — abattre toute la lisière sud DOIT être
 possible ; c'est le jardin qui répond, pas un avertissement.
+
+Le ⑤ ajoute les gestes du MILIEU PUR — la philo #1 dans sa forme la plus nette, on ne
+touche aucun être vivant :
+
+  • `endiguer` / `deriver` — relever / abaisser la ligne d'eau d'un secteur en eau.
+                     Le joueur découvre qu'il a **déplacé** l'eau, pas créé : la
+                     berge se gorge ici, s'assèche là. Un OUVRAGE, donc : il se rompt
+                     sans entretien (8 ans, `tick_ouvrages`).
+  • `creuser`      — le geste EXISTANT (`sim/actions/gestes.py`) appliqué à une autre
+                     cible : une MARE de bordure. Aucun verbe de plus.
+  • `entailler`    — retirer de la roche à une falaise. IRRÉVERSIBLE, et c'est tout
+                     le contenu du geste : rien ne la fait revenir, jamais.
+
+Et leur conséquence la plus lisible, l'ÉROSION (`bordure.tick_erosion`) : un couvert
+rasé ou une roche mise à nu déposent des colluvions sur les plots du bord. C'est la
+seule trace qu'une coupe excessive laisse DANS LE SOL, et le seul canal qui rende
+l'irréversible visible (philo #5).
 
 Séparation des responsabilités (un fichier = une responsabilité) :
   - `fields/peripherie.py` — l'ÉTAT du secteur, sa mutation (`couper_secteur`) et sa
@@ -35,7 +53,9 @@ c'est une fuite dans le tick (BUG), pas un re-figeage.
 """
 from __future__ import annotations
 
-from fields.peripherie import COTES, NOMS_COTES, couper_secteur, plots_de_bord
+from fields.peripherie import (COTES, NOMS_COTES, couper_secteur, plots_de_bord,
+                               creuser_secteur, deplacer_ligne_eau,
+                               entailler_secteur, porte_eau)
 from sim.vigueur import spend
 from .couts import cout_action, OBJETS_TOUCHES
 from .deblocage import est_debloque
@@ -193,3 +213,128 @@ def eteter(game_state: dict, player: str, cote: int) -> bool:
     prélèvement le plus fréquentable — l'arbre étêté vit plus vieux que l'arbre
     libre, son tronc se creuse et devient un habitat."""
     return _couper(game_state, player, "eteter", cote)
+
+
+# ---------------------------------------------------------------------------
+# EAU & ROCHE (tronçon ⑤) — le milieu pur
+# ---------------------------------------------------------------------------
+# Aucun de ces gestes ne touche un être vivant : on déplace de l'eau et de la terre,
+# et le jardin répond (philo #1/#2). Le coût est un coût d'EFFORT, comme pour la
+# sylviculture — un chantier de terrassement, pas une agression du vivant.
+
+MARQUEUR_TERRE = "⛏"
+LIBELLE_TERRE = {
+    "endiguer": "Endiguement", "deriver": "Dérivation",
+    "creuser": "Mare creusée", "entailler": "Entaille de falaise",
+}
+
+
+def _payer(game_state: dict, player: str, verbe: str) -> bool:
+    """Débit de Vigueur binaire tout-ou-rien (modèle `deraciner`/`_couper`) : renvoie
+    True ssi le coût a été intégralement payé. À appeler APRÈS les portes métier, pour
+    que « refuser » ne coûte JAMAIS rien."""
+    cost = cout_action(game_state, player, verbe, OBJETS_TOUCHES[verbe])
+    return spend(game_state, player, cost) >= 1.0
+
+
+def _consigner_terre(game_state: dict, verbe: str, secteur: dict,
+                     detail: str) -> None:
+    """Trace au LEDGER d'un geste d'eau ou de roche (jumeau de `_consigner`, marqueur
+    distinct). Enregistré, jamais scoré — aucun compteur d'impact cumulé (philo #5,
+    décision D-3). No-op silencieux hors serveur (pas de clé `log`)."""
+    log = game_state.get("log")
+    if log is None:
+        return
+    log.append(f"  {MARQUEUR_TERRE} {LIBELLE_TERRE[verbe]} "
+               f"({NOMS_COTES[secteur['cote']]}) : {detail}")
+
+
+def endiguer(game_state: dict, player: str, cote: int) -> bool:
+    """Endiguer un bord en eau (bêche, coût ÉLEVÉ) — relever la ligne d'eau d'un pas.
+
+    Le moteur n'écrit RIEN d'autre que `ligne_eau` : c'est `tick_berge` (③) qui pousse
+    ensuite l'eau dans les pores du bord, `tick_hydrology` qui capture le surplus en
+    lame de surface, `tick_ruissellement` qui l'étale vers les creux et `tick_marais`
+    qui en tire la mémoire puis le marécage. Le joueur, lui, constate qu'il a
+    **déplacé** l'eau — et que gorger une berge demande plusieurs passages.
+
+    Pose un OUVRAGE : sans y revenir, il rompt vers 8 ans et l'eau reprend son cours
+    (`tick_ouvrages`). Refaire le geste EST l'entretien."""
+    secteur = _secteur(game_state, cote)
+    if secteur is None or not est_debloque(game_state, player, "endiguer"):
+        return False
+    if not porte_eau(secteur):
+        return False                          # rien à endiguer sur un bord à sec
+    if not _payer(game_state, player, "endiguer"):
+        return False                          # secteur intact
+    ligne = deplacer_ligne_eau(secteur, +1)
+    _consigner_terre(game_state, "endiguer", secteur, f"ligne d'eau {ligne:.0f} cm")
+    return True
+
+
+def deriver(game_state: dict, player: str, cote: int) -> bool:
+    """Dériver un bord en eau (bêche, coût ÉLEVÉ) — abaisser la ligne d'eau d'un pas :
+    le bord s'assèche, et si la ligne passe en creux le lit APPELLE l'eau du jardin.
+    C'est le geste qui enseigne l'autre moitié de la leçon : ce qu'on retire ici
+    manque là. Pose le même OUVRAGE qu'`endiguer`, avec la même fragilité — un fossé
+    non entretenu se comble."""
+    secteur = _secteur(game_state, cote)
+    if secteur is None or not est_debloque(game_state, player, "deriver"):
+        return False
+    if not porte_eau(secteur):
+        return False
+    if not _payer(game_state, player, "deriver"):
+        return False
+    ligne = deplacer_ligne_eau(secteur, -1)
+    _consigner_terre(game_state, "deriver", secteur, f"ligne d'eau {ligne:.0f} cm")
+    return True
+
+
+def creuser_peripherie(game_state: dict, player: str, cote: int) -> bool:
+    """Creuser une MARE dans un bord de ceinture.
+
+    ⚠️ Ce n'est PAS un geste de plus : c'est le verbe `creuser` EXISTANT
+    (`sim/actions/gestes.py`, geste de BASE à la bêche) appliqué à une autre CIBLE.
+    Même entrée de `COUTS`, même `OBJETS_TOUCHES`, même déblocage, même fiche
+    d'encyclopédie — seule la cible change (un secteur au lieu d'un plot). Créer un
+    `creuser_mare` aurait dédoublé un geste que le joueur pense déjà comme un seul.
+
+    Une excavation est une FORME, pas un artefact : elle relève la ligne d'eau ET sa
+    valeur naturelle, donc elle ne rompt jamais (contrairement à un barrage). On ne
+    creuse pas la roche à la bêche → refusé sur une falaise, sans rien coûter."""
+    secteur = _secteur(game_state, cote)
+    if secteur is None or not est_debloque(game_state, player, "creuser"):
+        return False
+    if secteur["type"] == "falaise":
+        return False                          # la roche ne se creuse pas à la bêche
+    if not _payer(game_state, player, "creuser"):
+        return False
+    ligne = creuser_secteur(secteur)
+    _consigner_terre(game_state, "creuser", secteur, f"ligne d'eau {ligne:.0f} cm")
+    return True
+
+
+def entailler(game_state: dict, player: str, cote: int) -> bool:
+    """Entailler une falaise (pioche, coût TRÈS ÉLEVÉ) — retirer un pas de roche.
+
+    **Le seul geste du jeu dont on ne revient pas**, et c'est délibéré : aucune
+    cinétique de retour, `entaille_cm` ne décroît jamais. *Certaines échelles ne nous
+    appartiennent pas.* Rien ne l'annonce et rien ne l'empêche (philo #6) — le jardin
+    répond de deux manières : l'ombre portée diminue (② relit `altitude_relative`,
+    les caches lumière/abri invalident sur la hauteur) et la roche mise à nu part en
+    ÉROSION, indéfiniment (`bordure.tick_erosion`).
+
+    Refusé — sans rien coûter — hors falaise ou sur une roche déjà rasée : il n'y a
+    alors plus rien à entailler."""
+    secteur = _secteur(game_state, cote)
+    if secteur is None or not est_debloque(game_state, player, "entailler"):
+        return False
+    if secteur["type"] != "falaise" or secteur["altitude_relative"] <= 0.0:
+        return False
+    if not _payer(game_state, player, "entailler"):
+        return False
+    retiree = entailler_secteur(secteur)
+    _consigner_terre(game_state, "entailler", secteur,
+                     f"{retiree:.0f} cm de roche retirés, "
+                     f"il reste {secteur['altitude_relative']:.0f} cm")
+    return True

@@ -26,7 +26,7 @@ from plants import PLANT_CATALOGUE
 from fields import (_hash_noise, ABSCISSION_MIN, ABSCISSION_MAX,
                     PRECIP_NORM, PLUIE_APPORT)
 from fields.ecofields.thermique import t_min_nuit_at  # gel nocturne localisé (⑥)
-from fields.peripherie import tick_repousse  # repousse des coupes de la ceinture (PÉRIPHÉRIE ④)
+from fields.peripherie import tick_repousse, tick_ouvrages  # ceinture : repousse (④) + ouvrages d'eau (⑤)
 from fields.apiculture import tick_ruches   # ruches : capture essaim + miel (⑥, §H/§I)
 from fields.alarme import tick_alarme       # phéromone d'alarme apienne : décroissance (⑦, §J)
 from sim.effects import resolve_plant_turn, apply_disturbances
@@ -182,6 +182,15 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
         # ou sans coupe en cours → aucune écriture → digest intact.
         tick_repousse(self.game_state.get("ceinture"))
 
+        # 1c-bis. Vieillissement des OUVRAGES d'eau (PÉRIPHÉRIE ⑤, D73, §4.4) — même
+        # place, même coût O(4), pour la même raison : la ligne d'eau doit être à jour
+        # AVANT que `tick_berge` (2e) ne la lise. Un barrage non entretenu rompt vers
+        # 8 ans et l'eau reprend son cours (marqueur 🚧 au ledger) — l'artefact demande
+        # un entretien perpétuel, cohérent avec le run éternel (#4). Déterministe (un
+        # seuil sur une horloge). **No-op strict sans ceinture ni ouvrage** → golden
+        # intact.
+        log += tick_ouvrages(self.game_state.get("ceinture"))
+
         for tile in self.tiles:
             eco = self._eco(tile)
             log.append(f"  [{tile.tile_id}]")
@@ -262,6 +271,20 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
             #     rivière simulée. Sans ceinture → no-op strict.
             eco.tick_berge(self.game_state.get("ceinture"),
                            tile_origin=(tile.origin_x_cm, tile.origin_y_cm))
+
+            # 2e-bis. ÉROSION de bordure (PÉRIPHÉRIE ⑤, D73, §4.5) — un secteur dénudé
+            #     (coupe rase) ou une falaise entaillée dépose ses colluvions sur les
+            #     3 premiers plots du bord : `structure_sol` déstructurée, `om_stable`
+            #     dilué. Groupé ici avec les autres couplages de ceinture et placé
+            #     AVANT l'hydrologie (3), qui lit `structure_sol` pour l'infiltration →
+            #     la conséquence est immédiate et lisible. Ce n'est pas un malus mais un
+            #     flux de matière : tout le reste (infiltration ↓, asphyxie ↑, uptake ↓)
+            #     émerge des lecteurs existants (philo #2). L'érosion CESSE d'elle-même
+            #     quand la repousse ramène le couvert ; une entaille de falaise, elle,
+            #     ne se referme jamais. Émet 🪨 (signe diégétique, une fois par épisode).
+            #     Sans ceinture ni secteur dénudé → no-op strict → golden intact.
+            log += eco.tick_erosion(self.game_state.get("ceinture"),
+                                    tile_origin=(tile.origin_x_cm, tile.origin_y_cm))
 
             # 3. Hydrologie : évaporation → pluie de fond → rétention → drainage
             #    (le drainage dépend du type de sol de la tuile, §2.3 a). L'apport

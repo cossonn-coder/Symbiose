@@ -83,6 +83,12 @@ COUTS = {
     "abattre":              TRES_ELEVE,        # abattre une lisière à la hache — le geste le plus cher du jeu
     "receper":              ELEVE,             # couper au ras : dur, mais la souche rajeunit
     "eteter":               ELEVE,             # rabattre les têtes en trogne
+    # Eau & roche périphériques (PÉRIPHÉRIE ⑤, §4.3) — terrassement de bordure, même
+    # justification d'EFFORT (aucun être vivant touché : philo #1 dans sa forme pure).
+    # `creuser` n'y figure PAS : la mare de bordure réutilise le verbe existant.
+    "endiguer":             ELEVE,             # relever la ligne d'eau à la bêche — chantier
+    "deriver":              ELEVE,             # l'abaisser : même effort, effet inverse
+    "entailler":            TRES_ELEVE,        # attaquer la roche à la pioche — et c'est irréversible
 }
 
 # Objets STATIQUES touchés par chaque geste (§10.4, terme 2 : technique + outil/
@@ -135,6 +141,13 @@ OBJETS_TOUCHES = {
     "abattre":              ("essartage", "hache"),
     "receper":              ("taillis", "serpe"),
     "eteter":               ("trogne", "serpe"),
+    # Eau & roche périphériques (PÉRIPHÉRIE ⑤) : on REMPLOIE la technique
+    # `terrassement` de `creuser`/`drainer` — endiguer et entailler sont du
+    # terrassement, et inventer deux techniques de plus obligerait le ⑥ à leur écrire
+    # des voix que la conception §7 ne demande pas. Aucune cible vivante.
+    "endiguer":             ("terrassement", "bêche"),
+    "deriver":              ("terrassement", "bêche"),
+    "entailler":            ("terrassement", "pioche"),
 }
 
 # Atténuations maximales — PLACEHOLDERS NOMMÉS, *calibrage D12.4*. Bornées < 1 pour

@@ -84,8 +84,11 @@ from .greffe import (
 # Sylviculture périphérique (PÉRIPHÉRIE ④, D73) : gestes JOUEUR sur la ceinture
 # (`abattre`/`receper`/`eteter`). La mutation d'état et la cinétique de repousse
 # vivent, elles, dans `fields/peripherie.py` (l'état avec ses transitions).
+# ⑤ y ajoute l'eau et la roche (`endiguer`/`deriver`/`entailler`) + la mare, qui
+# REMPLOIE le verbe `creuser` sur une autre cible (`creuser_peripherie`).
 from .paysage import (
     BOIS_COUPE_PAR_CM, BOIS_PORTEE_CM, abattre, receper, eteter,
+    endiguer, deriver, entailler, creuser_peripherie,
 )
 # Palette de gestes ⑤ : LAYOUT curé + MACROS par avatar (D1/D5/D10). ÉTAT/DONNÉES
 # pur (slots + séquences validées en cohérence de cible) — aucune logique de sim,
@@ -120,6 +123,7 @@ __all__ = [
     "BOUTURE_STRESS_COST", "BOUTURE_VIGUEUR_SEUIL", "peut_bouturer", "bouturer",
     "GENES_AERIENS", "GENES_RACINAIRES", "peut_greffer", "greffer",
     "BOIS_COUPE_PAR_CM", "BOIS_PORTEE_CM", "abattre", "receper", "eteter",
+    "endiguer", "deriver", "entailler", "creuser_peripherie",
     "FAMILLE_CIBLE", "famille_cible", "macro_coherente",
     "init_palette", "palette_layout", "definir_palette",
 ]

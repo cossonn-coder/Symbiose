@@ -106,6 +106,18 @@ GESTE_UNLOCK: dict[str, list] = {
     "abattre": [("action", "posseder_hache")],
     "receper": [("action", "posseder_serpe")],
     "eteter":  [("action", "receper")],
+
+    # eau & roche périphériques (PÉRIPHÉRIE ⑤, conception §4.3). Deux logiques :
+    #   • `entailler` suit la règle « l'OUTIL fait le geste » : sans pioche, pas
+    #     d'entaille (marqueur posé par l'Atelier, `sim/outils.py`) ;
+    #   • `endiguer`/`deriver` sont à la BÊCHE, qui n'a pas de marqueur d'outil (les
+    #     gestes de bêche sont de BASE, cf. `creuser`/`drainer`). On les ouvre donc sur
+    #     l'EXPÉRIENCE : avoir creusé une fois. C'est l'idiome d'`eteter` ← `receper`
+    #     (on apprend à déplacer l'eau en ayant remué la terre), et ça met `creuser`
+    #     dans `DECLENCHEURS` par simple dérivation — rien à câbler côté pont.
+    "endiguer":  [("action", "creuser")],
+    "deriver":   [("action", "creuser")],
+    "entailler": [("action", "posseder_pioche")],
 }
 
 

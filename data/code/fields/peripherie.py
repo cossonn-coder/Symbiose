@@ -163,6 +163,25 @@ def secteur_neutre(cote: int) -> dict:
         "hauteur_avant": 0.0,
         "ligne_eau": 0.0,
         "altitude_relative": 0.0,
+        # --- Eau & roche (tronçon ⑤) --------------------------------------
+        # OUVRAGE d'eau en place (`endiguer`/`deriver`), `None` = aucun. Un ouvrage
+        # est un ARTEFACT : il demande un entretien perpétuel, et se rompt sans lui
+        # (`tick_ouvrages`). Une mare CREUSÉE n'est pas un ouvrage — c'est une forme
+        # donnée au terrain, elle ne rompt pas.
+        "ouvrage": None,
+        "annees_depuis_ouvrage": 0.0,
+        # Ligne d'eau NATURELLE = celle d'avant les travaux, mémorisée à la pose du
+        # premier ouvrage. C'est là que la rupture ramène l'eau (jamais à zéro : le
+        # terrain garde son identité, cf. `densite_avant`).
+        "ligne_eau_naturelle": 0.0,
+        # Roche RETIRÉE cumulée par `entailler`, en cm. IRRÉVERSIBLE : aucune
+        # cinétique ne la fait décroître, jamais. C'est la cicatrice du terrain, et
+        # la source permanente d'érosion de la falaise entaillée.
+        "entaille_cm": 0.0,
+        # Verrou du signe diégétique d'éboulis (« 1ᵉʳ éboulis », conception §7) : le
+        # signe est émis UNE fois par épisode d'érosion, pas chaque semaine. Il se
+        # ré-arme quand le couvert est revenu et que le sol cesse de partir.
+        "erosion_signalee": False,
     }
 
 
@@ -510,3 +529,178 @@ def tick_repousse(ceinture, semaines: float = 1.0) -> None:
                                          + (cible_h - depart_h) * avance), 3)
         if avance >= 1.0:
             s["geste_coupe"] = None              # peuplement reconstitué
+
+
+# ---------------------------------------------------------------------------
+# EAU & ROCHE — le milieu pur, et son asymétrie (tronçon ⑤)
+# ---------------------------------------------------------------------------
+# Après le bois qui repousse, la roche qui ne repousse pas. Ces mutations sont la
+# forme la plus nette de la philo #1 : le joueur ne touche AUCUN être vivant, il
+# déplace de l'eau et de la terre — et tout le reste (berge gorgée, marécage,
+# éboulis) ÉMERGE des circuits déjà en place (conception §3.4, §4.3, §4.5).
+#
+# Trois asymétries, gravées dans les données et non dans un discours :
+#   • l'eau se DÉPLACE et jamais ne se crée : `ligne_eau` monte d'un côté, et c'est
+#     tout ce que le moteur sait — le joueur découvre le reste au bord du jardin ;
+#   • un OUVRAGE se rompt (8 ans sans entretien), une FORME creusée reste ;
+#   • une ENTAILLE de falaise ne se referme jamais, et le matériau mis à nu part.
+#
+# Comme la sylviculture ci-dessus : mutations PURES (aucun RNG, aucun coût, aucun
+# champ écologique touché), la couche joueur est dans `sim/actions/paysage.py`.
+
+# Pas d'un geste sur la ligne d'eau, en cm. Un geste ne bascule pas un régime : il
+# faut plusieurs passages pour gorger une berge, ce qui fait de l'endiguement un
+# CHANTIER (philo #1 : l'usure de la solution facile). Bornes = plage un peu plus
+# large que celle du générateur (`LIGNE_EAU_CM`) : le joueur peut dépasser ce que la
+# nature avait posé, pas de plusieurs ordres de grandeur.
+LIGNE_EAU_PAS_CM = 30.0
+LIGNE_EAU_BORNES = (-150.0, 120.0)
+
+# Une MARE creusée en périphérie : elle amène l'eau à fleur de terrain au bord. Petit
+# et positif — une mare n'est pas un barrage, elle ne gorge pas 20 m de jardin.
+MARE_LIGNE_EAU_CM = 20.0
+
+# Un ouvrage d'eau non entretenu se rompt vers 8 ans (conception §4.4). Refaire le
+# geste EST l'entretien : il remet l'horloge à zéro. Zéro tirage (philo #3) — « le
+# barrage tiendra peut-être » n'existe pas ; il tient tant qu'on y retourne.
+OUVRAGE_RUPTURE_ANS = 8.0
+MARQUEUR_RUPTURE = "🚧"
+
+# Roche retirée par coup de pioche, en cm. Gros (1,5 m) : entailler une falaise de
+# 3 à 12 m doit être un chantier de quelques gestes, pas de cinquante.
+ENTAILLE_PAS_CM = 150.0
+
+# --- Érosion : de l'état du secteur à une intensité (conception §4.5) ------
+# Le sol ne part pas dès qu'on touche à la lisière : il faut que le couvert soit
+# VRAIMENT ouvert (seuil de dénudation) — une éclaircie n'érode pas, une coupe rase
+# oui. Au-dessus du seuil, l'intensité rampe linéairement jusqu'à 1 (sol nu total).
+EROSION_DENUDATION_MIN = 0.25
+# Entaille au-delà de laquelle la cicatrice de falaise érode à pleine intensité :
+# deux coups de pioche mettent la roche franchement à nu.
+ENTAILLE_REFERENCE_CM = 2.0 * ENTAILLE_PAS_CM
+
+
+def porte_eau(secteur: dict) -> bool:
+    """Ce secteur a-t-il une ligne d'eau sur laquelle agir ? Une `riviere` en a une
+    par nature ; tout autre secteur en acquiert une si le joueur y a creusé une mare.
+    Une falaise n'en a jamais (on ne creuse pas la roche à la bêche)."""
+    return secteur["type"] == "riviere" or secteur["ligne_eau"] != 0.0
+
+
+def deplacer_ligne_eau(secteur: dict, sens: int) -> float:
+    """Endigue (`sens = +1`) ou dérive (`sens = -1`) : décale la ligne d'eau d'un pas
+    et (re)pose l'OUVRAGE. Renvoie la nouvelle ligne d'eau.
+
+    La ligne d'eau NATURELLE est mémorisée au premier ouvrage seulement : refaire le
+    geste ensuite entretient l'ouvrage (horloge à zéro) sans réécrire la référence —
+    sinon la rupture ne ramènerait jamais l'eau au-delà du dernier passage. Une mare
+    creusée AVANT l'ouvrage fait donc partie de la nature du terrain : elle survit à
+    la rupture, l'ouvrage non. C'est la distinction forme/artefact, dans deux lignes.
+
+    PURE : aucun champ écologique touché. Ce que la nouvelle ligne d'eau fait au
+    jardin est le travail de `tick_berge` (③) puis de l'hydrologie — le joueur
+    n'écrit pas d'humidité, il déplace une nappe (philo #2)."""
+    if secteur["ouvrage"] is None:
+        secteur["ligne_eau_naturelle"] = secteur["ligne_eau"]
+    bas, haut = LIGNE_EAU_BORNES
+    secteur["ligne_eau"] = round(min(haut, max(bas, secteur["ligne_eau"]
+                                               + sens * LIGNE_EAU_PAS_CM)), 3)
+    secteur["ouvrage"] = "endiguer" if sens > 0 else "deriver"
+    secteur["annees_depuis_ouvrage"] = 0.0
+    return secteur["ligne_eau"]
+
+
+def creuser_secteur(secteur: dict) -> float:
+    """Creuse une MARE dans un secteur de ceinture — le geste `creuser` EXISTANT
+    appliqué à une autre cible, pas un geste de plus (kickoff ⑤ §A).
+
+    Une excavation est une FORME donnée au terrain, pas un artefact : elle relève la
+    ligne d'eau *et* sa valeur naturelle, donc elle ne rompt jamais et survit à la
+    rupture d'un barrage posé après. Exactement le statut du `creuser` de plot, qui
+    baisse `altitude` définitivement.
+
+    Renvoie la nouvelle ligne d'eau. PURE."""
+    _, haut = LIGNE_EAU_BORNES
+    ligne = round(min(haut, secteur["ligne_eau"] + MARE_LIGNE_EAU_CM), 3)
+    secteur["ligne_eau"] = ligne
+    secteur["ligne_eau_naturelle"] = round(
+        min(haut, secteur["ligne_eau_naturelle"] + MARE_LIGNE_EAU_CM), 3)
+    return ligne
+
+
+def entailler_secteur(secteur: dict) -> float:
+    """Entaille la falaise : retire un pas de roche. Renvoie la hauteur RÉELLEMENT
+    retirée (0.0 si la roche est déjà rasée — il n'y a alors plus rien à entailler).
+
+    IRRÉVERSIBLE, et c'est le contenu du geste : `entaille_cm` ne décroît jamais et
+    aucune entrée de `CINETIQUES` ne concerne la falaise. `tick_repousse` ne la
+    regarde pas — elle ne boucle que sur `geste_coupe`, qu'`entailler` ne pose pas.
+    Certaines échelles ne nous appartiennent pas (conception §4.4).
+
+    Deux conséquences, toutes deux déjà supportées : l'ombre portée diminue (② lit
+    `altitude_relative` via `_hauteur_occultante`) et la roche mise à nu part en
+    érosion (`erosion_secteur` → `bordure.tick_erosion`). PURE."""
+    avant = secteur["altitude_relative"]
+    if avant <= 0.0:
+        return 0.0
+    retiree = min(avant, ENTAILLE_PAS_CM)
+    secteur["altitude_relative"] = round(avant - retiree, 3)
+    secteur["entaille_cm"] = round(secteur["entaille_cm"] + retiree, 3)
+    return retiree
+
+
+def tick_ouvrages(ceinture, semaines: float = 1.0) -> list[str]:
+    """Fait vieillir les OUVRAGES d'eau de la ceinture — O(4), à côté de
+    `tick_repousse` (étape 1c de `sim/engine/boucle.py`). Renvoie les marqueurs de log
+    des ruptures (liste VIDE le reste du temps).
+
+    Un ouvrage non entretenu se rompt à `OUVRAGE_RUPTURE_ANS` : la ligne d'eau revient
+    à sa valeur naturelle et l'ouvrage disparaît. Rien n'avertit (philo #6) ; le
+    ledger, lui, le consigne. Leçon : l'artefact demande un entretien perpétuel — ce
+    qui est cohérent avec le run éternel (#4), où rien n'est jamais « fini ».
+
+    **No-op strict** sans ceinture (cas du golden) ou sans ouvrage posé. Déterministe :
+    un seuil sur une horloge, aucun tirage (philo #3)."""
+    lignes: list[str] = []
+    for s in ceinture or ():
+        if not s.get("ouvrage"):
+            continue
+        s["annees_depuis_ouvrage"] = round(s["annees_depuis_ouvrage"]
+                                           + semaines / SEMAINES_PAR_AN, 6)
+        if s["annees_depuis_ouvrage"] < OUVRAGE_RUPTURE_ANS:
+            continue
+        s["ligne_eau"] = s["ligne_eau_naturelle"]
+        s["ouvrage"] = None
+        s["annees_depuis_ouvrage"] = 0.0
+        lignes.append(f"  {MARQUEUR_RUPTURE} l'ouvrage d'eau "
+                      f"({NOMS_COTES[s['cote']]}) a rompu : "
+                      f"l'eau reprend son cours ({s['ligne_eau']:.0f} cm)")
+    return lignes
+
+
+def erosion_secteur(secteur: dict) -> float:
+    """Intensité d'érosion ∈ [0,1] d'un secteur : ce que son sol nu lâche vers le
+    jardin. PURE, dérivée du SEUL état du secteur (aucun champ lu).
+
+    Deux sources, combinées par MAXIMUM (le pire des deux gouverne, elles ne
+    s'additionnent pas — un même mètre carré ne part pas deux fois) :
+      • la DÉNUDATION d'une coupe = fraction du couvert perdue par rapport au
+        peuplement mûr mémorisé (`densite_avant`). Elle se REFERME d'elle-même quand
+        `tick_repousse` ramène la densité : l'érosion s'arrête quand la végétation
+        revient, sans qu'aucune ligne ne le dise. Un `eteter` conserve la densité →
+        n'érode PAS : la trogne est le prélèvement fréquentable, y compris ici ;
+      • la CICATRICE d'une falaise entaillée, qui ne se referme jamais et érode donc
+        en permanence — le seul retour qui rend l'irréversible visible (philo #5).
+
+    Sous `EROSION_DENUDATION_MIN` : strictement 0. Une éclaircie n'érode pas ; il faut
+    avoir vraiment ouvert le couvert. Au-dessus, rampe linéaire jusqu'à 1."""
+    cible = secteur.get("densite_avant") or 0.0
+    denude = 0.0
+    if cible > 0.0:
+        denude = max(0.0, 1.0 - secteur["densite_ligneuse"] / cible)
+    roche = min(1.0, (secteur.get("entaille_cm") or 0.0) / ENTAILLE_REFERENCE_CM)
+    brut = max(denude, roche)
+    if brut <= EROSION_DENUDATION_MIN:
+        return 0.0
+    return round((brut - EROSION_DENUDATION_MIN)
+                 / (1.0 - EROSION_DENUDATION_MIN), 4)

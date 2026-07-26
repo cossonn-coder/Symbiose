@@ -1142,6 +1142,36 @@ INTENSITE_LISIERE = {
 LISIERE_TYPES_LIGNEUX = ("foret", "friche")
 LISIERE_SOCLE = 0.25         # part de l'effet qui survit à une coupe rase (litière, ourlet)
 
+# --- Périphérie : ÉROSION de bordure (⑤, D73, conception §4.5) ----------------
+# 📖 Pédagogie — pourquoi l'érosion est le retour le plus important de ce sprint.
+# Tous les autres effets d'une coupe sont RÉVERSIBLES : la lumière revient quand la
+# canopée revient, l'abri aussi, le corridor aussi. L'érosion, elle, est le seul
+# canal par lequel une coupe excessive laisse une trace DANS LE SOL — et le seul qui
+# rende l'irréversible (l'entaille de falaise) VISIBLE. Sans elle, `entailler` serait
+# un geste sans conséquence, donc un geste creux.
+#
+# Modèle MINIMAL et volontairement pauvre : aucun champ neuf, aucune boucle neuve.
+# Un secteur dénudé (coupe rase) ou une falaise entaillée dépose des colluvions sur
+# les plots du bord — du matériau minéral qui DÉSTRUCTURE le sol en place et DILUE
+# son humus. Deux écritures, sur deux champs qui existent depuis D30/D56 :
+#   structure_sol −  (les grumeaux sont enfouis sous du minéral battu)
+#   om_stable     −  (l'humus est dilué par ce qui arrive d'en haut)
+# Ce n'est PAS un malus : c'est un flux de matière, dont les mécaniques existantes
+# tirent ensuite les conséquences (infiltration ↓, asphyxie ↑, uptake ↓, rétention ↓)
+# — philo #2, jamais d'effet direct sur une plante.
+#
+# Intensités calées pour être du même ORDRE que la battance de pluie sur sol nu
+# (BATTANCE × STRUCT_INERTIA ≈ 0.0075/tick) : perceptible en une saison, jamais
+# foudroyant, et contrable par le sol vivant (bioturbation) une fois le couvert
+# revenu. L'humus part BEAUCOUP plus lentement en valeur absolue parce que le champ
+# lui-même est petit (OM_STABLE_INIT = 0.15). PLACEHOLDERS, calibrage F5.
+EROSION_PORTEE_CM   = 150.0    # 3 plots depuis le bord — des colluvions ne portent pas loin
+EROSION_STRUCTURE   = 0.003    # structure_sol perdue/tick au contact, à intensité 1
+EROSION_HUMUS       = 0.0006   # om_stable dilué/tick au contact, à intensité 1
+# Intensité à partir de laquelle le sol qui part se VOIT → signe diégétique (philo #5 :
+# un signe, jamais un chiffre, et surtout aucun indicateur d'impact cumulé — D-3).
+EROSION_SIGNE_SEUIL = 0.35
+
 # --- Paillage — champ `paillage` par plot (sprint équilibre invasion ③, D69) ---
 # Le LEVIER PERMACOLE central contre l'invasion d'adventices : un champ scalaire
 # `paillage` ∈ [0,1] (profondeur/densité du mulch) posé par le geste `pailler`, qui

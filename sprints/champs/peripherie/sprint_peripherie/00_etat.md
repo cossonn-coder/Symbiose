@@ -19,7 +19,7 @@
 > | ② | `02_exposition_abri.md` | lisière = obstacle lumière + abri, porosité/turbulence — ✅ **FAIT 2026-07-26** |
 > | ③ | `03_graines_eau_corridor.md` | pluie de graines, nappe de berge, `eco.lisiere` — ✅ **FAIT 2026-07-26** |
 > | ④ | `04_gestes_forestiers.md` | `abattre`/`receper`/`eteter`, outils, cinétiques, matière — ✅ **FAIT 2026-07-26** |
-> | ⑤ | `05_eau_roche_erosion.md` | `endiguer`/`deriver`/`entailler`, mare, érosion |
+> | ⑤ | `05_eau_roche_erosion.md` | `endiguer`/`deriver`/`entailler`, mare, érosion — ✅ **FAIT 2026-07-26** |
 > | ⑥ | `06_voix_narratives.md` | saule + 5 voix, gestes/techniques/outils, pages, événements |
 > | ⑦ | `07_vue_godot.md` | pont 0.5.41, `DecorLayer` consomme, clic secteur, banc F5 |
 
@@ -499,6 +499,151 @@ greffe sur l'existant (`sim/actions`, `cout_action`, `OUTILS`/`GESTE_UNLOCK`,
    mais aucun `Evenement` typé n'en sort tant que le ⑥ n'a pas ajouté son motif au
    parseur. Attendu, pas oublié.
 
+### ⑤ Eau, roche & érosion — ✅ CLOS le 2026-07-26
+
+Les gestes du **milieu pur** (philo #1 dans sa forme la plus nette : aucun être vivant
+touché) et leur conséquence la plus lisible. **Aucun système neuf, aucun champ neuf** :
+tout se greffe sur `tick_berge` (③), l'hydrologie (D30/hydrologie), `structure_sol`,
+`om_stable`, `OUTILS`/`GESTE_UNLOCK` et le canal `log` du ledger.
+
+- **`fields/peripherie.py`** (196 → **262 LDC**, 🟢) — nouvelle section §EAU & ROCHE, à
+  côté de §SYLVICULTURE, même contrat : mutations **PURES** (zéro RNG, zéro coût, zéro
+  champ écologique touché). `porte_eau`, `deplacer_ligne_eau(secteur, sens)`,
+  `creuser_secteur(secteur)`, `entailler_secteur(secteur)`, `tick_ouvrages(ceinture)`,
+  `erosion_secteur(secteur)`. Constantes : `LIGNE_EAU_PAS_CM = 30`,
+  `LIGNE_EAU_BORNES = (−150, +120)`, `MARE_LIGNE_EAU_CM = 20`, `ENTAILLE_PAS_CM = 150`,
+  `OUVRAGE_RUPTURE_ANS = 8`, `EROSION_DENUDATION_MIN = 0.25`,
+  `ENTAILLE_REFERENCE_CM = 2 × ENTAILLE_PAS_CM`, `MARQUEUR_RUPTURE = 🚧`.
+- **5 champs de secteur ajoutés** à `secteur_neutre()` : `ouvrage` (`None`/`endiguer`/
+  `deriver`), `annees_depuis_ouvrage`, `ligne_eau_naturelle`, `entaille_cm`,
+  `erosion_signalee`.
+- **La distinction FORME / ARTEFACT est le cœur du tronçon, et elle tient en deux
+  lignes de code** : `ligne_eau_naturelle` est mémorisée **au premier ouvrage
+  seulement** ; `creuser` relève `ligne_eau` **ET** `ligne_eau_naturelle` (une
+  excavation est une forme donnée au terrain, comme le `creuser` de plot qui baisse
+  `altitude` définitivement), `endiguer`/`deriver` ne relèvent que `ligne_eau`.
+  Conséquence **émergente** : un barrage rompt et rend l'eau à la mare creusée avant
+  lui, jamais à zéro. Refaire le geste = **entretien** (horloge à zéro, référence
+  naturelle NON réécrite) — mesuré : entretenu tous les 3 ans, un ouvrage tient 12 ans.
+- **Mare = le verbe `creuser` EXISTANT sur une autre CIBLE** (kickoff §A respecté à la
+  lettre) : `sim/actions/paysage.creuser_peripherie` lit `COUTS["creuser"]`,
+  `OBJETS_TOUCHES["creuser"]` et `est_debloque(..., "creuser")`. **Aucune** entrée neuve
+  dans `COUTS`/`GESTE_UNLOCK`/l'encyclopédie — pas de `creuser_mare` en doublon.
+  Refusé sur une falaise (on ne creuse pas la roche à la bêche).
+- **`tick_berge` généralisé** (`fields/ecofields/bordure.py`) : le critère devient la
+  **ligne d'eau non nulle**, plus le `type == "riviere"`. Sans ça une mare creusée dans
+  une prairie de bordure aurait été **muette**. Le générateur ne pose `ligne_eau` que
+  sur les `riviere` ⇒ toute ceinture générée se comporte **bit pour bit** comme au ③
+  (les 71 checks du ③ le confirment, dont l'assertion « `ligne_eau` parasite »).
+- **`entailler` est le seul geste irréversible du jeu**, et c'est écrit dans les
+  données : `entaille_cm` ne décroît jamais, `CINETIQUES` n'a **aucune** entrée de
+  falaise, et `tick_repousse` ne boucle que sur `geste_coupe` — qu'`entailler` ne pose
+  pas. Vérifié sur **10 000 ticks** (~190 ans) : `altitude_relative` ne remonte pas d'un
+  cm. Deux conséquences déjà supportées : l'ombre portée diminue (② relit
+  `altitude_relative` via `_hauteur_occultante`, une falaise rasée n'occulte plus rien)
+  et la roche mise à nu part en érosion **indéfiniment**.
+- **Érosion** (`bordure.tick_erosion`, `fields/ecofields/bordure.py` 57 → **81 LDC**,
+  🟢) : intensité fournie par `erosion_secteur` (état du secteur SEUL), deux sources
+  combinées par **MAXIMUM** — la **dénudation** d'une coupe (`1 − densité/densite_avant`)
+  et la **cicatrice** d'une falaise entaillée. Deux écritures sur des champs existants,
+  sur **3 plots** (`EROSION_PORTEE_CM = 150`) avec décroissance : `structure_sol −`
+  (grumeaux enfouis sous du minéral) et `om_stable −` (humus dilué). Ce n'est pas un
+  malus mais un **flux de matière** : infiltration ↓, asphyxie ↑, uptake ↓ émergent des
+  lecteurs existants (philo #2).
+  - **Trois émergences gratuites, aucune ligne pour les produire** : l'`eteter`
+    **n'érode pas** (densité conservée ⇒ dénudation nulle — la trogne est fréquentable
+    jusque dans le sol) ; une **éclaircie légère** non plus (seuil de dénudation 0.25 —
+    il faut vraiment ouvrir le couvert) ; et l'érosion **CESSE d'elle-même** quand
+    `tick_repousse` ramène la densité, sans qu'aucune ligne ne le dise (philo #6).
+    Mesuré : coupe rase du bord nord ⇒ intensité 0.833, `structure_sol` du bord
+    0.700 → 0.575 en 60 semaines (gradient 0.575 < 0.625 < 0.675, **plots centraux
+    bit-identiques**) ; après 30 ans de repousse, intensité **0.000** et plus rien ne se
+    dépose. Une falaise entaillée, elle, érode **toujours** à 50 ans.
+  - **Signe diégétique `🪨`** émis **UNE fois par ÉPISODE** (verrou `erosion_signalee`
+    sur le secteur, ré-armé quand le sol cesse de partir) = l'événement « 1ᵉʳ éboulis »
+    de la conception §7. Sans ce verrou une cicatrice de falaise (permanente) noierait
+    le carnet d'une ligne hebdomadaire. Une tuile hors portée ne déclenche **aucun**
+    signe (drapeau `touche`).
+- **⚠️ Écart ASSUMÉ au kickoff — le signe d'érosion n'est PAS dans `sim/semiologie.py`.**
+  Le kickoff écrit « Registre `sim/semiologie.py` ». Or ce module est la **sémiologie
+  FOLIAIRE** : signature `(plant, eco, saison) -> float`, et son invariant §2.4 est que
+  chaque détecteur **réutilise le seuil même de la mécanique qui blesse le tissu**. Une
+  érosion ne blesse aucune feuille, et il n'existe **aucun champ par plot** d'où la
+  détecter (le kickoff interdit d'en créer un) : un détecteur foliaire aurait été un
+  signe qui **ment sur sa cause**. Le signe est donc rendu par le canal **déjà utilisé
+  pour les signes du MILIEU** — un marqueur de log par tuile, patron exact de
+  `tick_rosee` (💧/❄) et du transport éolien (🍂), consommé par `journal.consigner`.
+  Aucun chiffre en HUD (philo #5), aucun indicateur d'impact cumulé (D-3).
+- **Outils / déblocage** : `entailler ← ("action","posseder_pioche")` (la pioche
+  attendait depuis le ④ dans `OUTILS`, sans entrée `GESTE_UNLOCK` — elle en a une).
+  `endiguer`/`deriver` sont à la **bêche**, qui n'a **pas** de marqueur d'outil (les
+  gestes de bêche sont de BASE, cf. `creuser`/`drainer`) → ouverts sur l'**expérience** :
+  `("action","creuser")`, idiome exact d'`eteter ← receper`. Effet de bord voulu :
+  `creuser` entre dans `DECLENCHEURS` **par simple dérivation** ⇒ `tools/simserver/
+  actions.py` le marque déjà, **rien à câbler côté pont**.
+- **Coûts** : `endiguer`/`deriver` = `ELEVE`, `entailler` = `TRES_ELEVE` (palier créé au
+  ④). `OBJETS_TOUCHES` **REMPLOIE la technique `terrassement`** de `creuser`/`drainer`
+  (+ outil bêche / pioche) : inventer deux techniques de plus obligerait le ⑥ à leur
+  écrire des voix que la conception §7 ne demande pas.
+- **`sim/actions/paysage.py`** (68 → **131 LDC**, 🟢 — pas de 3ᵉ module, consigne du
+  §REPRISE respectée) : `endiguer`/`deriver`/`entailler`/`creuser_peripherie`, patron du
+  ④ (gate `est_debloque` → **portes métier** → `_payer` tout-ou-rien → mutation →
+  `_consigner_terre` ⛏). « Refuser sans rien coûter » vérifié sur **7 portes**.
+  Marqueur `⛏` distinct de `🪓` (④), `🚧` (rupture) et `🪨` (éboulis).
+- **Câblage `sim/engine/boucle.py`** : `tick_ouvrages` en **1c-bis** (à côté de
+  `tick_repousse`, O(4), une fois par monde, AVANT que `tick_berge` ne lise la ligne
+  d'eau) ; `tick_erosion` en **2e-bis** (après `tick_berge`, **avant** l'hydrologie qui
+  lit `structure_sol` pour l'infiltration ⇒ la conséquence est immédiate). Les deux
+  renvoient leurs marqueurs (`log += …`, patron `tick_light`/`tick_rosee`).
+  **No-op strict** sans ceinture, sans ouvrage et sans secteur dénudé.
+- **Tests** : **nouveau fichier `tests/test_peripherie_eau_roche.py`** (324 LDC, 🟡
+  vigilance — responsabilité unique : les tests du ⑤) — **59/59 OK**. Même écart assumé
+  qu'au ④ (le kickoff dit « étendre `test_peripherie.py` », déjà à 415 LDC 🔴) : un
+  fichier par tronçon. Six suites, une par point du kickoff — S gating (7 portes,
+  Vigueur intacte, ledger muet), T déplacement (marécage ÉMERGENT après endiguement,
+  bord asséché après dérivation, bornes), U rupture (8 ans, retour à la valeur
+  **naturelle**, ledger, entretien, la mare qui survit, no-op 500 ticks), V
+  irréversibilité (10 000 ticks, ombre, rasage borné), W érosion (gradient, centre
+  intact, étêtage/éclaircie muets, repousse qui arrête, falaise permanente, signe unique,
+  tuile hors portée), X neutralité (champs bit-identiques, ceinture neutre inerte,
+  lumière identique).
+- **Golden INCHANGÉ** : `57c166d8d3626444e0fc9b88b360edc62c047927f7608c45fefae35a6bba08da`.
+  `test_peripherie` (①②③) **71/71**, `test_peripherie_gestes` (④) **76/76**. Suite
+  complète relancée (**72 fichiers verts** hors golden/500ans) : **2 rouges, tous deux
+  PRÉ-EXISTANTS** — `test_encyclopedie` 64/68 (périmètre ⑥) et `test_sim_server` 269/270
+  (« le pommier pré-âgé a noué des fruits réels » → 0 fruits @ S52), vérifiés identiques
+  sur l'arbre propre (`git stash -u`). **Aucun C# touché** (la vue est le ⑦) → pas de
+  build.
+  - ⚠️ *Note de flakiness observée* : sous charge machine, `test_sim_server` peut aussi
+    faire tomber « snapshot == état du dernier step » (268/270). C'est le bloc `perf`
+    (`ms_tick`/`rss_mo`) que `harness._scrub` neutralise pour la comparaison de
+    déterminisme **mais pas** pour cette égalité-là. **Sans rapport avec ⑤** (reproduit
+    à vide), à verser en dette si ça gêne.
+- **Fumée d'intégration** : monde du golden + `House` + `ceinture = generer_ceinture(3)`
+  (forêts N/E, **falaise S 827 cm**, rivière O à −71) + joueur outillé (pioche, hache,
+  `creuser` réalisé) → les 8 gestes applicables passent, 60 semaines sans crash ; le
+  marqueur `🪨` sort au bord nord après l'abattage, `structure_sol` moyenne 0.6986 →
+  0.7120 (l'érosion est **locale** aux 3 rangées, la bioturbation domine ailleurs — le
+  sol vivant contre-attaque, philo #4), marécage au bord après la mare.
+
+**⚠️ À valider par Nico (calibrage/design, pas bugs)** :
+1. **`LIGNE_EAU_PAS_CM = 30` sur des bornes (−150, +120)** — gorger une berge demande
+   ~2-3 endiguements, l'assécher autant. Placeholder : se juge au F5 du ⑦ (est-ce qu'un
+   barrage se sent en 1 geste ou en 5 ?).
+2. **`OUVRAGE_RUPTURE_ANS = 8`** — à 60 s/semaine, 8 ans ≈ 7 h de jeu. Assez long pour
+   qu'on oublie l'ouvrage, assez court pour que la leçon arrive dans une partie.
+3. **`EROSION_STRUCTURE = 0.003` / `EROSION_HUMUS = 0.0006`** (`fields/ecofields/
+   constants.py`) — calés du même ORDRE que la battance de pluie sur sol nu
+   (`BATTANCE × STRUCT_INERTIA ≈ 0.0075`). Mesuré : −0.125 de `structure_sol` au bord en
+   60 semaines à intensité 0.833. Est-ce que ça se voit assez, ou trop ?
+4. **`EROSION_DENUDATION_MIN = 0.25`** — en-dessous, une éclaircie n'érode pas. C'est ce
+   seuil qui décide si « couper un peu » est gratuit ou non.
+5. **`ENTAILLE_PAS_CM = 150`** ⇒ raser une falaise de 8 m demande 6 coups de pioche à
+   60 de Vigueur chacun. Volontairement lourd (irréversible), à arbitrer.
+6. **`endiguer`/`deriver` ouverts par `("action","creuser")`** — décision de gating prise
+   en aval (la bêche n'a pas de marqueur d'outil). Si Nico préfère un marqueur `bêche` à
+   l'Atelier, c'est 1 entrée dans `OUTILS` + 2 conditions à réécrire.
+
 ## 6. §REPRISE
 
 **Lire** : `CLAUDE.md` · ce fichier · `docs/champs/peripherie/conception_peripherie.md`
@@ -510,38 +655,52 @@ greffe sur l'existant (`sim/actions`, `cout_action`, `OUTILS`/`GESTE_UNLOCK`,
 (`mulch_stock`, `broyer`) · `sim/actions/compost.py` (`empiler_bois`) ·
 `fields/ecofields/matiere_organique.py` (`deposer_litiere`).
 
-**Prochaine étape** : tronçon **⑤** (`05_eau_roche_erosion.md`) — `endiguer`/`deriver`/
-`entailler`, mare, érosion. Points d'appui posés par ①②③④ :
+**Prochaine étape** : tronçon **⑥** (`06_voix_narratives.md`) — saule + 5 voix, gestes/
+techniques/outils, pages secrètes, événements. Points d'appui posés par ①→⑤ :
 - l'état de la ceinture vit dans `game_state["ceinture"]` (4 secteurs, lue par
-  `boucle.py` aux étapes **1c** (repousse), 2, 2a, 2a-bis, 2e et 14) ;
-- **le patron d'un geste de paysage est posé** : `sim/actions/paysage.py` (couche
-  joueur : gate `est_debloque` → bornes métier → `spend` tout-ou-rien → mutation →
-  matière → `_consigner` 🪓) + `fields/peripherie.py` (mutation d'état pure). Le ⑤
-  ajoute ses verbes dans `paysage.py` (il est à 71 LDC, large marge) et ses mutations
-  dans `peripherie.py` ; **ne pas créer un 3ᵉ module**, ne pas gonfler `gestes.py` ;
-- **outils** : `OUTILS` porte déjà **pioche** (marqueur `posseder_pioche`) sans entrée
-  `GESTE_UNLOCK` — le ⑤ n'a qu'à écrire `"entailler": [("action","posseder_pioche")]`.
-  `endiguer`/`deriver` sont à la **bêche** (déjà en `OBJETS_TOUCHES` via `creuser`) ;
-- **coûts** : le palier **`TRES_ELEVE`** existe (`couts.py`) → `entailler` s'y branche
-  directement, `endiguer`/`deriver` sur `ELEVE` ;
-- **cinétiques** : le ⑤ doit poser « barrage non entretenu rompt vers 8 ans » — le
-  patron est `CINETIQUES` + `tick_repousse` (interpolation déterministe sur
-  `annees_depuis_coupe`, no-op strict sans ceinture). L'entaille de falaise, elle,
-  ne repousse **jamais** ⇒ ne lui donner **aucune** entrée de cinétique ;
-- **érosion** (§4.5) : se greffe sur `structure_sol` (D30) aux plots de bord via
-  `plots_de_bord`, aucun champ neuf. `bordure.py` (mixin `BordureMixin`) est l'endroit
-  où l'écrire, à côté de `tick_berge` ;
-- `fields/peripherie.plots_de_bord(cote, rows, cols, tile_origin, portee_cm)` reste le
-  helper de tout effet de bord (déjà utilisé par graines, berge, lisière, bois) ;
+  `boucle.py` aux étapes **1c** (repousse), **1c-bis** (ouvrages), 2, 2a, 2a-bis, 2e,
+  **2e-bis** (érosion) et 14). Champs du secteur (schéma complet dans
+  `fields/peripherie.secteur_neutre`) : `type`/`essence`/`hauteur_canopee`/
+  `densite_ligneuse`/`souche_memory`/`annees_depuis_coupe`/`geste_coupe`/`densite_avant`/
+  `hauteur_avant`/`ligne_eau`/`altitude_relative` + ⑤ `ouvrage`/`annees_depuis_ouvrage`/
+  `ligne_eau_naturelle`/`entaille_cm`/`erosion_signalee` ;
+- **le patron d'un geste de paysage est posé et exercé 7 fois** : `sim/actions/paysage.py`
+  (couche joueur : gate `est_debloque` → portes métier → `spend`/`_payer` tout-ou-rien →
+  mutation → matière → `_consigner` 🪓 / `_consigner_terre` ⛏) + `fields/peripherie.py`
+  (mutations d'état PURES + cinétiques). Le fichier joueur est à **131 LDC** (🟢, marge) ;
+- **⚠️ LE PÉRIMÈTRE DU ⑥ EST DÉJÀ MESURÉ PAR `test_encyclopedie` (64/68)** — voix
+  manquantes accumulées par ④ et ⑤ :
+  - **gestes** sans fiche (`sim/geste_corpus.py`) : `abattre`, `receper`, `eteter`,
+    `endiguer`, `deriver`, `entailler` (+ mare = **pas** un geste neuf, c'est `creuser`
+    étendu ⇒ **ne pas** lui écrire de fiche à part) ;
+  - **techniques** (`sim/technique_corpus.py`) : `essartage`, `taillis`, `trogne`.
+    `terrassement` est REMPLOYÉE par `endiguer`/`deriver`/`entailler` (comme
+    `creuser`/`drainer`) — aucune technique d'eau/roche à inventer ;
+  - **outils** (`sim/outil_corpus.py`) : `hache`, `serpe`, `pioche` ;
+  - **concepts carnet** (`CONCEPT_DE`) : `lisiere`, `brise_vent`, `erosion`,
+    `rejet_de_souche` ;
+  - **parseur `sim/evenements.py`** : **QUATRE** marqueurs sont émis et aucun n'est
+    reconnu — `🪓` coupe (④), `⛏` geste d'eau/roche, `🚧` rupture d'ouvrage, `🪨` éboulis
+    (⑤). Les événements de la conception §7 (« 1ʳᵉ clairière », « 1ᵉʳ rejet de souche »,
+    « rupture de barrage », « 1ᵉʳ éboulis ») sortent tous de ces quatre motifs ; le
+    verrou `erosion_signalee` garantit déjà **un seul** 🪨 par épisode ;
+- **saule** (décision D-5) : la chaîne le référence déjà comme une CHAÎNE, sans import —
+  `ESSENCES_RIPISYLVE = ("aulne","saule")` et `ESSENCES_QUI_REJETTENT ⊇ {"saule"}`. Son
+  entrée au catalogue ne casse rien et rend ces deux tables cohérentes ;
+- **règles d'écriture des flux** (à respecter si le ⑥/⑦ touche un champ) :
+  `fields/peripherie.plots_de_bord(...)` est le helper de TOUT effet de bord (graines,
+  berge, lisière, bois, érosion — jamais un balayage de grille, réflexe D32), et **les
+  CINQ flux répondent à une coupe** : lumière (`light.geom_key`), abri + turbulence
+  (`abri._signature`), corridor (`_lisiere_sig` + `intensite_lisiere`) et érosion
+  (recalculée à chaque tick, sans cache). Toute écriture neuve doit répondre à : **quel
+  cache lit ce champ, et invalide-t-il sur MON écriture ?** ;
+- **le pont n'expose AUCUN des 7 gestes de paysage** (ni ④ ni ⑤ n'ont touché
+  `tools/simserver/actions.py`, volontairement) → c'est le périmètre du **⑦** avec la
+  vue, `DecorLayer` et le clic secteur. À noter pour ⑦ : `eco.lisiere` et
+  `eco.turbulence` ne sont pas exposés à `get_field` (pas d'overlay F6), et
+  `erosion_signalee`/`entaille_cm` sont les deux champs qui donnent à la vue de quoi
+  dessiner une cicatrice ;
 - circuit du bois en place et exercé : `eco.deposer_litiere` (parcelle typée `bois`),
-  `empiler_bois` (`sim/actions/compost.py`), `broyer` (`sim/actions/paillage.py`) ;
-- **les QUATRE flux répondent maintenant à une coupe** : lumière (`geom_key`), abri +
-  turbulence (`_signature`) et corridor (`_lisiere_sig` + `intensite_lisiere`). Un
-  cinquième geste du ⑤ qui toucherait `ligne_eau` ou `altitude_relative` doit vérifier
-  la même chose : **quel cache lit ce champ, et invalide-t-il sur MON écriture ?** ;
-- **⚠️ voix manquantes (périmètre ⑥, `test_encyclopedie` le mesure déjà)** : gestes
-  `abattre`/`receper`/`eteter`, techniques `essartage`/`taillis`/`trogne`, outils
-  `hache`/`serpe`/`pioche` sont sans fiche ; le parseur `sim/evenements.py` ne
-  reconnaît pas encore le marqueur `🪓`.
+  `empiler_bois` (`sim/actions/compost.py`), `broyer` (`sim/actions/paillage.py`).
 Aucun tronçon n'est autorisé à re-figer le golden ; si le digest bouge, c'est un bug.
 Golden de référence courant : `57c166d8d3626444e0fc9b88b360edc62c047927f7608c45fefae35a6bba08da`.
