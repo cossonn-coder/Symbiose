@@ -446,6 +446,11 @@ class MortaliteMixin:
         vent = getattr(eco, "vent", None)
         if vent is None or gust_peak <= 0.0:
             return log
+        # TURBULENCE de lisière (périphérie ②) : multiplicateur de rafale LOCALE
+        # posé par `tick_abri` derrière un secteur peu poreux — le flux décroche
+        # par-dessus le rideau dense et retombe en rafales. `None` au repos (aucune
+        # ceinture) → aucune multiplication → casse mécanique bit-identique.
+        turb = getattr(eco, "turbulence", None)
         protection = min(1.0, tile.get_rondelle_count("paillage") * PAILLAGE_PROTECT)
         newly_dead = []
         for p in tile.plants:
@@ -458,6 +463,8 @@ class MortaliteMixin:
             if getattr(p, "support", None) is not None:
                 continue
             vent_local = vent.at_plot(*p.position) * gust_peak
+            if turb is not None:
+                vent_local *= turb.at_plot(*p.position)
             sev = max(0.0, vent_local - WIND_DAMAGE_SEUIL) / WIND_SEVERITY_REF
             if sev <= 0.0:
                 continue

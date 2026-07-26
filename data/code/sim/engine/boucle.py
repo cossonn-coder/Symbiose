@@ -180,9 +180,14 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
             # 2. Lumière directionnelle (avant tout le reste). La maison (si posée
             # dans le monde) projette son ombre/albédo dans CETTE tuile selon son
             # offset monde (tronçon 2). Absente → lumière historique inchangée.
+            # PÉRIPHÉRIE ② : la `ceinture` (4 secteurs, `game_state["ceinture"]`)
+            # ajoute ses lisières boisées/rocheuses comme occulteurs GLOBAUX du même
+            # type que la maison — ombre partielle, saisonnalité produite par la
+            # géométrie solaire seule. Absente (cas du golden) → inchangé.
             lum_log = eco.tick_light(tile.plants, saison,
                                      house=self.game_state.get("house"),
-                                     tile_origin=(tile.origin_x_cm, tile.origin_y_cm))
+                                     tile_origin=(tile.origin_x_cm, tile.origin_y_cm),
+                                     ceinture=self.game_state.get("ceinture"))
             log += lum_log
 
             # 2a. Champ d'abri spatial (sprint VENT & ÉVAPOTRANSPIRATION ③, §4) —
@@ -192,9 +197,13 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
             #     sous le vent, un goulet accélère (venturi). CACHE sur (obstacles,
             #     direction discrétisée) → coût ≈ 0 en régime permanent (§7B). À
             #     `vent_force=0` → champ NUL → évaporation/wind chill inchangés.
+            #     PÉRIPHÉRIE ② : la ceinture entre comme obstacle POREUX (φ = 1 −
+            #     densité) → réduction du vent moyen LINÉAIRE + `eco.turbulence`
+            #     (rafale locale) QUADRATIQUE. Absente → `turbulence` reste None.
             eco.tick_abri(tile.plants, vent_dir, vent_force,
                           house=self.game_state.get("house"),
-                          tile_origin=(tile.origin_x_cm, tile.origin_y_cm))
+                          tile_origin=(tile.origin_x_cm, tile.origin_y_cm),
+                          ceinture=self.game_state.get("ceinture"))
 
             # 2b. Microclimat de surface T_sol (sprint thermique ①) — APRÈS la
             #     lumière (il la lit), AVANT l'hydrologie (qui lit T_sol). Surchauffe

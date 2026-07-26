@@ -11,6 +11,7 @@ import math
 from constants import PLOT_CM
 from fields.grids import GridField
 from fields.light_index import ReceiverIndex
+from fields.peripherie import occulteurs
 
 # --- Éclairement astronomique (LightField v2 — ombres-capsules analytiques) ---
 LATITUDE_DEG = 49.0          # ~Normandie / 49°N
@@ -208,16 +209,27 @@ class LightField(GridField):
         return self.received.get(id(plant), 1.0)
 
     def compute(self, plants: list, saison: str,
-                house=None, tile_origin: tuple = (0.0, 0.0)) -> list[str]:
+                house=None, tile_origin: tuple = (0.0, 0.0),
+                ceinture=None) -> list[str]:
         """Recalcule lumière-sol (grille) + lumière reçue par plante pour ce tick.
 
-        `house` : config `House` (pavé opaque, seul obstacle GLOBAL, option B §1)
+        `house` : config `House` (pavé opaque, obstacle GLOBAL, option B §1)
         ou None. Si fournie, son **ombre** (rectangle balayé §3) et l'**albédo** de
         ses murs ensoleillés (espalier §3) sont injectés, en convertissant chaque
         plot/échantillon en coordonnées MONDE via `tile_origin` (offset cm de la
         tuile). **None → comportement historique strictement inchangé** (le golden
-        smoke test des autres scénarios reste bit-identique)."""
+        smoke test des autres scénarios reste bit-identique).
+
+        `ceinture` : les 4 secteurs de périphérie (`fields.peripherie`) ou None
+        (sprint PÉRIPHÉRIE ②, D73). Chaque secteur boisé/rocheux devient un SECOND
+        obstacle global du même type que la maison — rectangle balayé en coordonnées
+        MONDE — à ceci près que son ombre est PARTIELLE (multipliée par l'opacité,
+        là où la maison masque à 0). Aucune règle saisonnière n'est écrite : à 49°N
+        `solar_slice` donne tout seul 47 m d'ombre en hiver et 7 m en été. Une
+        ceinture absente ou neutre (prairie rase) → aucun occulteur → inchangé."""
         slices = self._sun_slices(saison)
+        # Occulteurs de lisière (x0,y0,x1,y1,hauteur,opacité) en coordonnées MONDE.
+        lisieres = occulteurs(ceinture)
         alive = [p for p in plants if p.is_alive]
 
         # Snapshot géométrique de chaque plante : (plante, x, y, hauteur, rayon, densité)
@@ -261,7 +273,11 @@ class LightField(GridField):
         # figé (planification) rien ne bouge → HIT → on réutilise self.data /
         # self.received tels quels. En saison la croissance change la géométrie
         # chaque semaine → MISS → recompute → golden neutre par construction.
+        # `lisieres` ENTRE dans la clé (quelques scalaires par secteur) : sans ça une
+        # coupe forestière (tronçon ④) ne serait jamais prise en compte. La ceinture
+        # étant quasi statique, le cache reste HIT → coût ≈ 0 en régime permanent.
         geom_key = (saison, ox, oy, hx0, hy0, hx1, hy1, h_height, wall_albedo,
+                    tuple(lisieres),
                     tuple((x, y, h, r, d) for _, x, y, h, r, d in infos))
         if geom_key == self._geom_key:
             return []                        # géométrie inchangée : champ réutilisé
@@ -302,6 +318,11 @@ class LightField(GridField):
         acc = {ref: 0.0 for ref in rec_samples}
         for sdx, sdy, inv_tan, w in slices:
             h_len = h_height * inv_tan
+            # Longueur d'ombre + facteur de transmission de chaque lisière pour CETTE
+            # tranche solaire (pré-calcul : une multiplication par secteur, pas par
+            # échantillon). Liste VIDE sans ceinture → boucles ci-dessous no-op.
+            lis_slice = [(x0, y0, x1, y1, lh * inv_tan, 1.0 - lop)
+                         for x0, y0, x1, y1, lh, lop in lisieres]
             # 1+2. Échantillons ACTIFS = non masqués par la maison. `att[(ref,k)]`
             # init 1.0 uniquement pour les actifs (les masqués comptent comme 0,
             # exclus de la somme → répliquent le `continue` du gather).
@@ -313,7 +334,13 @@ class LightField(GridField):
                     if house is not None and _point_in_swept_rect(
                             sx + ox, sy + oy, hx0, hy0, hx1, hy1, sdx, sdy, h_len):
                         continue             # masqué → att=0 (hors somme)
-                    att[(ref, k)] = 1.0
+                    a = 1.0
+                    for lx0, ly0, lx1, ly1, l_len, transmit in lis_slice:
+                        if _point_in_swept_rect(sx + ox, sy + oy,
+                                                lx0, ly0, lx1, ly1,
+                                                sdx, sdy, l_len):
+                            a *= transmit    # ombre PARTIELLE de lisière (②)
+                    att[(ref, k)] = a
                     index_samples.append((ph, (ref, k), sx, sy))
             rindex = ReceiverIndex(index_samples)
             # 3. Chaque émetteur (déjà hauteur décroissante) atténue les
@@ -387,8 +414,10 @@ class LightField(GridField):
                         if _point_in_capsule(cx, cy, qx, qy, sdx, sdy, length, qr):
                             row_att[c] *= factor
             # Passe par-plot : maison (ombre pleine AVANT le produit plantes →
-            # un plot sous la maison ignore les capsules), albédo, pondération.
+            # un plot sous la maison ignore les capsules), lisières, albédo, pondération.
             h_len = h_height * inv_tan
+            lis_slice = [(x0, y0, x1, y1, lh * inv_tan, 1.0 - lop)
+                         for x0, y0, x1, y1, lh, lop in lisieres]
             for r in range(rows):
                 cy = r * PLOT_CM + PLOT_CM / 2
                 wy = cy + oy
@@ -401,6 +430,14 @@ class LightField(GridField):
                         att = 0.0            # sous la maison : ombre pleine
                     else:
                         att = row_att[c]
+                    # Lisières (②) : occulteurs GLOBAUX à ombre PARTIELLE, appliqués
+                    # multiplicativement APRÈS les plantes et la maison.
+                    if lis_slice:
+                        wx = c * PLOT_CM + PLOT_CM / 2 + ox
+                        for lx0, ly0, lx1, ly1, l_len, transmit in lis_slice:
+                            if _point_in_swept_rect(wx, wy, lx0, ly0, lx1, ly1,
+                                                    sdx, sdy, l_len):
+                                att *= transmit
                     if house is not None and wall_albedo > 0.0:
                         att += _wall_albedo_bonus(
                             c * PLOT_CM + PLOT_CM / 2 + ox, wy,

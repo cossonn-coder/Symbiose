@@ -16,7 +16,7 @@
 > | # | Kickoff | Objet |
 > |---|---|---|
 > | ① | `01_ceinture.md` | état 4 secteurs + génération déterministe, **D92 refermée** — ✅ **FAIT 2026-07-26** |
-> | ② | `02_exposition_abri.md` | lisière = obstacle lumière + abri, porosité/turbulence |
+> | ② | `02_exposition_abri.md` | lisière = obstacle lumière + abri, porosité/turbulence — ✅ **FAIT 2026-07-26** |
 > | ③ | `03_graines_eau_corridor.md` | pluie de graines, nappe de berge, `eco.lisiere` |
 > | ④ | `04_gestes_forestiers.md` | `abattre`/`receper`/`eteter`, outils, cinétiques, matière |
 > | ⑤ | `05_eau_roche_erosion.md` | `endiguer`/`deriver`/`entailler`, mare, érosion |
@@ -198,6 +198,73 @@ faits ci-dessus** ; il reste 4 vrais arbitrages, dont 3 remontés à Nico.
   côté `DecorLayer` uniquement) — le modèle figé ne les liste pas ; ⑦ les dérivera
   du seed monde + `cote` s'il en a besoin.
 
+### ② Exposition & abri — ✅ CLOS le 2026-07-26
+
+- **`fields/peripherie.py`** (79 → 117 LDC, 🟢) : ajout de la **géométrie MONDE** de
+  la ceinture — `MONDE_CM = 2000.0` (miroir exact de `WorldView.WorldCm`, le moteur
+  n'avait aucune constante d'emprise globale), `rect_secteur(cote)` (emprise
+  `(x0,y0,x1,y1)` de la bande, repère sol x=Est/y=Sud comme `light.py`),
+  `occulteurs(ceinture)` → `(x0,y0,x1,y1,hauteur,opacité)` pour `light`, et
+  `obstacles_abri(ceinture)` → `(cx,cy,h,rayon,poro)` pour `abri`.
+  `TYPES_OCCULTANTS = ("foret","falaise")` — prairie/rivière/friche n'ont pas de
+  hauteur, elles n'ombrent ni n'abritent. **Aucun `fields/lisiere_geom.py` créé** :
+  la géométrie de la bande EST la responsabilité de `peripherie`, et `light.py`
+  reste à 262 LDC (🟢) — pas de scission nécessaire.
+- **`fields/light.py`** (262 LDC, 🟢) : `compute(..., ceinture=None)`. Les occulteurs
+  sont des **rectangles balayés** (`_point_in_swept_rect`, mêmes helpers que la
+  maison) mais à ombre **PARTIELLE** (`att *= 1 − opacité`, là où la maison masque à
+  0). Pré-calcul par tranche solaire de `(longueur d'ombre, transmission)` → une
+  multiplication par secteur, pas par échantillon. `lisieres` **entre dans
+  `geom_key`** → une coupe du ④ invalide le cache ; ceinture statique ⇒ HIT.
+  **Zéro `if saison`** : l'asymétrie hiver/été sort de `solar_slice`.
+- **`fields/abri.py`** (116 LDC, 🟢) : `_obstacles(..., ceinture=None)` passe en
+  **5-uplets** `(cx,cy,h,rayon,poro)` ; `poro=None` pour maison/plantes ⇒ branche
+  `ABRI_REDUCTION_MAX * frac` **bit-identique** (porosité des haies du jardin = D94).
+  Lisière : `reduction = REDUCTION_LISIERE_MAX·(1−φ)·frac` (linéaire) **et**
+  `turbulence *= 1 + TURBULENCE_MUR·(1−φ)²` (quadratique — formule du kickoff prise
+  au mot, **sans** dégressivité `frac` sur la turbulence). `poro` ajouté à
+  `_signature`. `_build_facteur` renvoie `(facteur, turbulence)` ; le cache
+  `eco._abri_cache` passe de 2 à **3 éléments**.
+- **Nouveau champ `eco.turbulence`** (`GridField` **LAZY, None au repos**, plafond
+  `TURBULENCE_PLAFOND = 2.0`) : multiplicateur de **rafale LOCALE**. Son SEUL lecteur
+  est `_wind_damage` (`sim/engine/mortalite.py`), qui lit 1.0 quand le champ est None
+  ⇒ casse mécanique **bit-identique** sans ceinture. Pas exposé à `get_field`
+  (cohérent avec `eco.vent`, qui n'y est pas non plus).
+- **Constantes** (`fields/ecofields/constants.py`) : `REDUCTION_LISIERE_MAX = 0.75`,
+  `TURBULENCE_MUR = 0.45`, `TURBULENCE_PLAFOND = 2.0` + le bloc pédagogique §3.2
+  (pourquoi PAS la parabole de portée des manuels).
+- **Câblage** : `fields/ecofields/ticks.py` (passe-plats `tick_light`/`tick_abri` —
+  ils sont **là**, pas dans `container.py` comme l'annonçait le kickoff) et
+  `sim/engine/boucle.py` (`ceinture=self.game_state.get("ceinture")` aux deux appels).
+  **Pas de ré-export dans `fields/__init__.py`** : `light`/`abri` importent
+  `fields.peripherie` directement, personne ne fait `from fields import ...` — le ⑦
+  l'ajoutera s'il en a besoin.
+- **Tests** `tests/test_peripherie.py` (120 → 228 LDC) : **38/38 OK**. 4 suites
+  neuves — E neutralité (champs bit-identiques `None` vs ceinture neutre, aux 4
+  saisons, + `turbulence is None`), F saisonnalité (lisière SUD : bord nord **−49 %**
+  en hiver, **−0 %** en été ; lisière NORD : lumière-sol **inchangée aux 4 saisons**),
+  G porosité (dense abrite plus ET turbule plus, turbulence ×3.24 contre réduction
+  ×1.80 ⇒ non-linéarité vérifiée), H caches (HIT/MISS prouvés par sentinelle dans le
+  champ, pas par le code de retour — `compute` renvoie `[]` dans les DEUX cas).
+- **Golden INCHANGÉ** : `57c166d8d3626444e0fc9b88b360edc62c047927f7608c45fefae35a6bba08da`.
+  Suite complète relancée : seuls `test_encyclopedie` (64/68) et `test_sim_server`
+  (269/270, pommier sans fruits) échouent — **échecs PRÉ-EXISTANTS**, vérifiés
+  identiques sur l'arbre propre (`git stash`).
+- **Fumée d'intégration** : monde du golden + `game_state["ceinture"] =
+  generer_ceinture(7)` (forêts N 19,8 m / E 15,9 m, rivières S+O) × 60 semaines →
+  aucun crash ; `lumiere` moyenne T0 0.235 (hiver, ombrée par l'EST au matin),
+  `turbulence` moyenne 1.31.
+- **⚠️ À valider par Nico (calibrage, F5 ⑦) — écart assumé à la conception §3.1** :
+  l'occulteur est **toute la bande** `[bord, bord+900]`, donc sa face PROCHE est au
+  bord du jardin. La table §3.1 (« 7 m en été, n'atteint pas le jardin ») supposait
+  implicitement la lisière **en retrait de 9 m**. Conséquence : une forêt au sud
+  ombre ~7 m du jardin à midi en été (au lieu de 0). Le kickoff définissait
+  explicitement le rectangle comme la bande → suivi au mot, **aucune constante de
+  retrait spéculative ajoutée**. Si Nico veut retrouver la table, c'est UNE constante
+  (`RETRAIT_LISIERE_CM`) dans `rect_secteur`.
+- Autre écart mineur signalé : la turbulence n'est **pas** dégressive le long du
+  sillage (le kickoff donne la formule sans `frac`), là où la réduction d'abri l'est.
+
 ## 6. §REPRISE
 
 **Lire** : `CLAUDE.md` · ce fichier · `docs/champs/peripherie/conception_peripherie.md`
@@ -208,10 +275,12 @@ faits ci-dessus** ; il reste 4 vrais arbitrages, dont 3 remontés à Nico.
 (`mulch_stock`, `broyer`) · `sim/actions/compost.py` (`empiler_bois`) ·
 `fields/ecofields/matiere_organique.py` (`deposer_litiere`).
 
-**Prochaine étape** : tronçon **②** (`02_exposition_abri.md`) — la lisière devient un
-obstacle de lumière + une entrée de `abri._obstacles()`. Il consommera
-`fields/peripherie.py` (créé au ①) : lire `generer_ceinture`, `secteur_neutre`,
-`PROFONDEUR_CM`, `voisins`. C'est ② qui décidera d'ajouter le ré-export dans
-`fields/__init__.py`.
+**Prochaine étape** : tronçon **③** (`03_graines_eau_corridor.md`) — pluie de graines,
+nappe de berge, champ `eco.lisiere`. Points d'appui posés par le ② : la ceinture vit
+dans `game_state["ceinture"]` (lue par `boucle.py`), et `fields/peripherie.py` expose
+déjà `rect_secteur` / `MONDE_CM` / `PROFONDEUR_CM` pour convertir « secteur → plots de
+bord » (le ③ en aura besoin pour la décroissance de la distance au bord). Le patron
+LAZY de `eco.turbulence` (None au repos, allouée à la 1ʳᵉ lisière) est le modèle à
+reprendre pour `eco.lisiere`.
 Aucun tronçon n'est autorisé à re-figer le golden ; si le digest bouge, c'est un bug.
 Golden de référence courant : `57c166d8d3626444e0fc9b88b360edc62c047927f7608c45fefae35a6bba08da`.

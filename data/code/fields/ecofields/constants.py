@@ -87,6 +87,29 @@ ABRI_RAYON_FRAC     = 0.5     # rayon mini de capsule-plante en fraction de PLOT
 ABRI_ANGULAR_STEP   = 0.262   # ~15° — grain du cache directionnel (recalcul si franchi)
 ABRI_VENTURI_BOOST  = 0.15    # surcroît de vent dans le goulet en frange de sillage
 
+# --- Lisière périphérique : POROSITÉ (sprint PÉRIPHÉRIE ②, D73, conception §3.2) ---
+# Un secteur de ceinture (`fields.peripherie.obstacles_abri`) est un obstacle
+# d'abri comme un autre, MAIS il porte une porosité φ = 1 − densite_ligneuse.
+#
+# 📖 Pédagogie — pourquoi PAS la parabole de portée des manuels. L'agronomie
+# enseigne qu'une haie poreuse protège jusqu'à 20-30 H contre 10-15 H pour un mur
+# plein. À l'échelle du jeu, cette règle NE SE MANIFESTE PAS : derrière une
+# lisière de 15 m, un jardin de 20 m tient entre 0 et 1,3 H — là où le mur plein
+# est justement LE PLUS protecteur. Ce qui s'exprime à 0-3 H, c'est la TURBULENCE
+# DE DÉCOLLEMENT : derrière un obstacle imperméable le flux décroche et retombe en
+# rafales descendantes (« le vent tombe par-dessus le mur »). D'où deux termes :
+#   reduction_lisiere  = REDUCTION_LISIERE_MAX × (1 − φ)      vent MOYEN, linéaire
+#   turbulence_lisiere = TURBULENCE_MUR        × (1 − φ)²     RAFALE, quadratique
+# La quadratique ne pénalise que le TRÈS dense → leçon émergente (#6, zéro
+# tutoriel) : une lisière trop dense abrite du vent constant mais fait tomber des
+# rafales ; l'éclaircir un peu réduit la casse sans perdre l'abri.
+REDUCTION_LISIERE_MAX = 0.75   # réduction du vent moyen d'un rideau PLEIN (φ=0)
+TURBULENCE_MUR        = 0.45   # surcroît de RAFALE d'un rideau plein (φ=0)
+# Plafond de sécurité du champ `eco.turbulence` (multiplicateur de rafale LOCALE) :
+# quatre secteurs denses aux quatre bords cumuleraient 1.45⁴ ≈ 4.4. On borne à 2 —
+# la rafale locale ne peut, au pire, que DOUBLER. À 1.0 partout le champ est neutre.
+TURBULENCE_PLAFOND    = 2.0
+
 # Refroidissement éolien — wind chill (sprint VENT & ÉVAPOTRANSPIRATION ③, §5.5) :
 # le vent abaisse la température RESSENTIE nocturne (un abri RÉCHAUFFE la nuit,
 # cohérent avec le brise-vent §4). Terme `−WINDCHILL_COEF·vent_local` ajouté à

@@ -119,25 +119,33 @@ class TicksMixin:
     # --- Lumière ---
 
     def tick_light(self, plants: list, saison: str,
-                   house=None, tile_origin: tuple = (0.0, 0.0)) -> list[str]:
+                   house=None, tile_origin: tuple = (0.0, 0.0),
+                   ceinture=None) -> list[str]:
         """Recalcule le champ de lumière pour ce tick (+ ombre/albédo de la maison
-        si `house` est fournie ; `tile_origin` = offset monde de la tuile)."""
+        si `house` est fournie ; `tile_origin` = offset monde de la tuile). `ceinture`
+        (② périphérie) = les 4 secteurs de lisière, occulteurs globaux à ombre
+        partielle ; None/neutre → lumière historique inchangée."""
         return self.lumiere.compute(plants, saison,
-                                    house=house, tile_origin=tile_origin)
+                                    house=house, tile_origin=tile_origin,
+                                    ceinture=ceinture)
 
     # --- Vent spatialisé (champ d'abri) ---
 
     def tick_abri(self, plants: list, wind_dir: float, wind_force: float,
-                  house=None, tile_origin: tuple = (0.0, 0.0)) -> None:
+                  house=None, tile_origin: tuple = (0.0, 0.0),
+                  ceinture=None) -> None:
         """Recalcule `eco.vent` (force LOCALE par plot, ③) depuis la masse d'air
         (`wind_dir`/`wind_force`, `sim.wind.wind_at` ①) MODULÉE par la géométrie
         d'abri. Délègue au helper PUR `fields.abri.compute_abri` (container déjà
         dense) qui porte la mutualisation capsule + le CACHE directionnel (§7B).
         À appeler APRÈS la lumière (les obstacles/hauteurs sont à jour), AVANT
         l'hydrologie (qui lit `eco.vent`). À `wind_force=0` (calme) → champ NUL →
-        évaporation/wind chill inchangés."""
+        évaporation/wind chill inchangés. `ceinture` (②) ajoute les secteurs de
+        lisière comme obstacles POREUX et alimente `eco.turbulence` (rafale locale) ;
+        None/neutre → aucun obstacle de plus, `turbulence` reste None."""
         from fields.abri import compute_abri   # import local (évite un cycle au load)
-        compute_abri(self, plants, house, tile_origin, wind_dir, wind_force)
+        compute_abri(self, plants, house, tile_origin, wind_dir, wind_force,
+                     ceinture)
 
     def tick_transport(self, wind_dir: float, wind_force: float) -> list:
         """Transport ÉOLIEN de la litière légère sous le vent (⑦, §5.6). Délègue au

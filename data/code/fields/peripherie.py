@@ -11,10 +11,14 @@ essence dominante. Trois scalaires, pas trois cents arbres.
 
 Spec : `docs/champs/peripherie/conception_peripherie.md` §4.1 (décisions D-1/D-4).
 
-Périmètre de CE tronçon : on CRÉE l'état et sa génération déterministe, on ne
-BRANCHE rien. Personne n'importe ce module dans la boucle → golden NEUTRE par
-construction, exactement comme `sim/wind.py` au ① du sprint vent. Lumière, abri,
-pluie de graines, nappe de berge et gestes forestiers = tronçons ②→⑦.
+Le ① a créé l'état et sa génération déterministe. Le ② y ajoute la GÉOMÉTRIE
+MONDE de la bande (§ en fin de fichier) et branche `light`/`abri` dessus : un
+secteur devient un obstacle global de plus, du même type que la maison. Pluie de
+graines, nappe de berge et gestes forestiers = tronçons ③→⑦.
+
+Opt-in par construction : sans ceinture (`None`) ou sur une ceinture NEUTRE
+(prairie rase), `occulteurs` et `obstacles_abri` renvoient des listes VIDES →
+lumière et abri strictement inchangés → golden intact.
 
 **D92 se referme ici.** La génération C# (`DecorLayer.BuildProfile`, hash
 `decor|{seed}|{cote}`) produisait 96,0 % de terrains aux 4 côtés identiques et
@@ -37,6 +41,12 @@ from fields.noise import _hash_noise
 # `DecorLayer.DepthCm` côté Godot : quand le pont alimentera la vue (tronçon ⑦),
 # les deux mondes parleront de la même bande.
 PROFONDEUR_CM = 900.0
+
+# Côté du jardin en cm (monde 20×20 m, échelle actée). Miroir EXACT de
+# `WorldView.WorldCm = 2000f` côté Godot : la ceinture est le seul endroit du
+# moteur qui a besoin de l'emprise GLOBALE du jardin (les tuiles, elles, ne
+# connaissent que leur propre `origin_*_cm`).
+MONDE_CM = 2000.0
 
 # Les 4 bords cardinaux. `cote` est un index, pas une chaîne : il sert d'entrée de
 # hash et de clé de secteur dans le save.
@@ -204,3 +214,98 @@ def generer_ceinture(seed: int) -> list[dict]:
                                             ALTITUDE_FALAISE_CM)
 
     return ceinture
+
+
+# ---------------------------------------------------------------------------
+# GÉOMÉTRIE MONDE — la ceinture vue comme des OBSTACLES (tronçon ②)
+# ---------------------------------------------------------------------------
+# Le moteur sait déjà traiter un « obstacle global en coordonnées MONDE » : la
+# maison est un rectangle balayé dans `light.compute` et une capsule dans
+# `abri._obstacles`. Un secteur de lisière n'est RIEN DE PLUS que cela. On ne
+# construit donc aucun masque d'horizon : on fabrique ici, à partir de l'état
+# agrégé, les mêmes primitives que la maison — et `light`/`abri` les consomment
+# avec leurs helpers existants.
+
+# Seuls ces deux types interceptent le soleil et le vent. Une `prairie` est rase,
+# une `riviere` est au niveau du sol, une `friche` n'a pas de hauteur
+# (`hauteur_canopee` reste à 0) : elles n'ombrent ni n'abritent rien.
+TYPES_OCCULTANTS = ("foret", "falaise")
+
+
+def rect_secteur(cote: int) -> tuple[float, float, float, float]:
+    """
+    Emprise MONDE `(x0, y0, x1, y1)` en cm de la bande d'un bord cardinal.
+
+    Repère du sol de `light.py` : **x = Est, y = Sud** (donc le Nord est en y
+    négatif). Le jardin occupe `[0, MONDE_CM]²` ; chaque bande s'étend de
+    `PROFONDEUR_CM` VERS L'EXTÉRIEUR. Miroir de `DecorLayer.EdgePoint`.
+    """
+    w, d = MONDE_CM, PROFONDEUR_CM
+    if cote == NORD:
+        return (0.0, -d, w, 0.0)
+    if cote == EST:
+        return (w, 0.0, w + d, w)
+    if cote == SUD:
+        return (0.0, w, w, w + d)
+    return (-d, 0.0, 0.0, w)          # OUEST
+
+
+def _hauteur_occultante(secteur: dict) -> float:
+    """Hauteur d'interception d'un secteur : canopée pour un bois, roche pour une
+    falaise. 0 pour tout le reste (aucune ombre, aucun abri)."""
+    if secteur["type"] == "foret":
+        return secteur["hauteur_canopee"]
+    if secteur["type"] == "falaise":
+        return secteur["altitude_relative"]
+    return 0.0
+
+
+def occulteurs(ceinture) -> list[tuple[float, float, float, float, float, float]]:
+    """
+    Occulteurs de LUMIÈRE de la ceinture : `(x0, y0, x1, y1, hauteur_cm, opacite)`
+    en coordonnées MONDE — le format que `light.compute` sait balayer
+    (`_point_in_swept_rect`, exactement comme la maison).
+
+    L'opacité d'un bois est sa `densite_ligneuse` (ombre PARTIELLE, multiplicative,
+    contrairement au mur plein de la maison) ; une falaise est opaque (1.0, la roche
+    ne filtre pas). Aucune règle saisonnière ici : c'est `solar_slice` qui produit
+    l'ombre longue d'hiver et l'ombre courte d'été (conception §3.1).
+
+    `None`/liste vide → liste vide → `light.compute` strictement inchangé.
+    """
+    out = []
+    for s in ceinture or ():
+        hauteur = _hauteur_occultante(s)
+        opacite = 1.0 if s["type"] == "falaise" else s["densite_ligneuse"]
+        if hauteur <= 0.0 or opacite <= 0.0:
+            continue
+        x0, y0, x1, y1 = rect_secteur(s["cote"])
+        out.append((x0, y0, x1, y1, hauteur, opacite))
+    return out
+
+
+def obstacles_abri(ceinture) -> list[tuple[float, float, float, float, float]]:
+    """
+    Obstacles de VENT de la ceinture : `(cx, cy, hauteur_cm, rayon_cm, porosite)`
+    en coordonnées MONDE — le format 5-uplet de `abri._obstacles` (la maison et
+    les plantes y portent `porosite = None`, ce qui garde leur branche historique).
+
+    Un secteur est une capsule TRÈS LARGE : centrée au milieu de la bande (donc à
+    `PROFONDEUR_CM / 2` au-delà du bord), de rayon = demi-longueur du bord. Même
+    approximation grossière que la demi-diagonale de la maison — on ne raffine pas
+    la forme d'un agrégat de 20 m de large.
+
+    La porosité φ = `1 − densite_ligneuse` pilote DEUX grandeurs dans `abri.py` :
+    la réduction du vent moyen (linéaire) et le surcroît de rafale (quadratique).
+    Une falaise est imperméable (φ = 0) : abri maximal, turbulence maximale.
+    """
+    out = []
+    for s in ceinture or ():
+        hauteur = _hauteur_occultante(s)
+        if hauteur <= 0.0:
+            continue
+        x0, y0, x1, y1 = rect_secteur(s["cote"])
+        densite = 1.0 if s["type"] == "falaise" else s["densite_ligneuse"]
+        out.append(((x0 + x1) / 2.0, (y0 + y1) / 2.0,
+                    hauteur, MONDE_CM / 2.0, 1.0 - densite))
+    return out

@@ -178,6 +178,17 @@ class EcoFields(MatiereOrganiqueMixin, HydrologieMixin, RuissellementMixin,
     # (③ remplace la masse d'air uniforme du ②) et le wind chill (`t_min_nuit_at`, §5.5).
     # À 0 au repos (aucun vent/obstacle) → golden NEUTRE tant que `tick_abri` n'écrit pas.
     vent:             GridField = field(default=None)
+    # Multiplicateur de RAFALE locale (sprint PÉRIPHÉRIE ②, D73, conception §3.2) —
+    # ≥ 1 par plot : la TURBULENCE DE DÉCOLLEMENT derrière une lisière PEU POREUSE.
+    # Le vent moyen (`vent`) et la rafale ne réagissent pas pareil à la porosité :
+    # réduction linéaire en densité, turbulence QUADRATIQUE → une lisière trop dense
+    # abrite du vent constant mais fait tomber des rafales (leçon émergente #6).
+    # LAZY et **None au repos** (aucun obstacle poreux → aucune allocation) ; écrit
+    # par `tick_abri` quand la ceinture porte un secteur boisé/rocheux. Son SEUL
+    # lecteur est `_wind_damage` (casse mécanique), qui lit 1.0 quand le champ est
+    # None → golden INTACT tant qu'aucune ceinture n'est posée. Hors `summary()`
+    # (grandeur géométrique transiente, comme `vent`).
+    turbulence:       GridField = field(default=None)
     # Épaisseur de sol visible (D57, sprint épaisseur de sol ①a) — cm de sol
     # foisonnant au-dessus de la roche-mère, PAR PLOT. Champ STOCKÉ (persisté) qui
     # RELAXE vers une cible bulk-density dérivée des `om_*` (litière fraîche
@@ -389,8 +400,9 @@ class EcoFields(MatiereOrganiqueMixin, HydrologieMixin, RuissellementMixin,
         if self.rosee_last is None:
             self.rosee_last = GridField(self.rows, self.cols)
         # Vent spatialisé (③) — NUL au repos (aucun tick d'abri encore appelé), écrit
-        # par `tick_abri`. `_abri_cache` mémorise (signature, grille de facteur) pour ne
-        # recalculer la géométrie que sur Δdirection/obstacle (§7B levier 2). None = froid.
+        # par `tick_abri`. `_abri_cache` mémorise (signature, facteur, turbulence) pour
+        # ne recalculer la géométrie que sur Δdirection/obstacle (§7B levier 2). None =
+        # froid. `turbulence` reste None (② : allouée à la 1ʳᵉ lisière rencontrée).
         if self.vent is None:
             self.vent = GridField(self.rows, self.cols)
         # Épaisseur de sol (①a) — bornée [0, EPAISSEUR_MAX]. Créée à 0 ici (repos

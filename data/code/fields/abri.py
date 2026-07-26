@@ -30,21 +30,31 @@ from __future__ import annotations
 import math
 
 from constants import PLOT_CM
+from fields.grids import GridField
 from fields.light import _point_in_capsule
+from fields.peripherie import obstacles_abri
 from fields.ecofields.constants import (
     ABRI_HAUTEUR_MIN_CM, ABRI_PORTEE_HAUTEUR, ABRI_REDUCTION_MAX,
     ABRI_RAYON_FRAC, ABRI_ANGULAR_STEP, ABRI_VENTURI_BOOST,
+    REDUCTION_LISIERE_MAX, TURBULENCE_MUR, TURBULENCE_PLAFOND,
 )
 
 
-def _obstacles(plants, house, tile_origin):
+def _obstacles(plants, house, tile_origin, ceinture=None):
     """Liste des obstacles brise-vent de la tuile, en coordonnées TUILE (cm) :
-    `(cx, cy, hauteur_cm, rayon_cm)`. Deux sources :
+    `(cx, cy, hauteur_cm, rayon_cm, porosite)`. Trois sources :
 
       • la MAISON (pavé opaque global) — son centre/demi-diagonale ramenés en repère
         tuile via `tile_origin` (offset monde) ;
       • les PLANTES HAUTES vivantes (≥ `ABRI_HAUTEUR_MIN_CM`) — une haie alignée
-        devient un brise-vent émergent (philo #1).
+        devient un brise-vent émergent (philo #1) ;
+      • les SECTEURS de CEINTURE boisés/rocheux (sprint PÉRIPHÉRIE ②, D73), ramenés
+        eux aussi du repère MONDE au repère tuile.
+
+    `porosite` est **None** pour la maison et les plantes → branche historique
+    BIT-IDENTIQUE dans `_build_facteur` (donner leur vraie porosité aux haies du
+    jardin est un calibrage ultérieur, dette D94). Elle vaut φ = 1 − densité pour
+    une lisière, ce qui module réduction (linéaire) et turbulence (quadratique).
 
     PURE, déterministe (ordre des plantes = ordre de la liste, zéro RNG). Sert AUSSI
     de SIGNATURE de cache (cf. `_signature`)."""
@@ -57,7 +67,7 @@ def _obstacles(plants, house, tile_origin):
         cx = (hx0 + hx1) / 2.0 - ox
         cy = (hy0 + hy1) / 2.0 - oy
         rayon = math.hypot(hx1 - hx0, hy1 - hy0) / 2.0
-        obs.append((cx, cy, house.height_cm, rayon))
+        obs.append((cx, cy, house.height_cm, rayon, None))
     for p in plants:
         if not p.is_alive:
             continue
@@ -66,7 +76,9 @@ def _obstacles(plants, house, tile_origin):
             continue
         rayon = max(PLOT_CM * ABRI_RAYON_FRAC,
                     p.plant_class.canopy_radius_at(p))
-        obs.append((p.x_cm, p.y_cm, h, rayon))
+        obs.append((p.x_cm, p.y_cm, h, rayon, None))
+    for cx, cy, h, rayon, poro in obstacles_abri(ceinture):
+        obs.append((cx - ox, cy - oy, h, rayon, poro))
     return obs
 
 
@@ -76,15 +88,17 @@ def _signature(obs, wind_dir):
     le vent tourne moins d'un pas, la géométrie d'abri est INCHANGÉE (régime
     permanent = recalcul sauté). Les obstacles entrent par leur géométrie arrondie
     au cm (les micro-variations de hauteur d'une plante qui pousse d'un poil ne
-    forcent pas un recalcul — pas angulaire et arrondi = grain de cache)."""
+    forcent pas un recalcul — pas angulaire et arrondi = grain de cache). La
+    POROSITÉ entre aussi (②) : sans elle, une coupe forestière (④) qui éclaircit un
+    secteur sans changer sa hauteur ne serait jamais vue par le cache."""
     step = int(wind_dir / ABRI_ANGULAR_STEP)
-    geo = tuple((round(cx), round(cy), round(h), round(ray))
-                for cx, cy, h, ray in obs)
+    geo = tuple((round(cx), round(cy), round(h), round(ray), poro)
+                for cx, cy, h, ray, poro in obs)
     return (step, geo)
 
 
 def compute_abri(eco, plants, house, tile_origin,
-                 wind_dir: float, wind_force: float) -> None:
+                 wind_dir: float, wind_force: float, ceinture=None) -> None:
     """Recalcule `eco.vent` (force locale par plot) depuis la masse d'air + abris.
 
     `wind_dir` = direction D'OÙ VIENT le vent (rad, `WindState.direction`) ;
@@ -106,12 +120,17 @@ def compute_abri(eco, plants, house, tile_origin,
     MUTUALISATION (§7B, levier 1) : capsule = `_point_in_capsule` de `light.py`,
     scatter par bbox (D32) — chaque obstacle ne visite que sa boîte englobante.
 
-    PURE écriture de `eco.vent` (philo #2 : aucune plante touchée ; flux →
-    contrainte). Déterministe, zéro RNG. À facteur figé (cache), aucun appel à
+    `ceinture` (②) : les 4 secteurs de périphérie ou None. Un secteur boisé/rocheux
+    entre comme un obstacle de plus, POREUX — il module en plus `eco.turbulence`
+    (multiplicateur de RAFALE locale lu par `_wind_damage`). Sans lisière ce champ
+    reste **None** (donc facteur 1.0 implicite) → casse mécanique inchangée.
+
+    PURE écriture de `eco.vent`/`eco.turbulence` (philo #2 : aucune plante touchée ;
+    flux → contrainte). Déterministe, zéro RNG. À facteur figé (cache), aucun appel à
     `_point_in_capsule` → le poste cher reste sauté en régime permanent.
     """
     rows, cols = eco.vent.rows, eco.vent.cols
-    obs = _obstacles(plants, house, tile_origin)
+    obs = _obstacles(plants, house, tile_origin, ceinture)
     sig = _signature(obs, wind_dir)
 
     cache = eco._abri_cache
@@ -119,26 +138,43 @@ def compute_abri(eco, plants, house, tile_origin,
         # Direction VERS OÙ VA le vent (sillage sous le vent = à l'opposé de l'origine).
         gx = -math.sin(wind_dir + math.pi)
         gy = -math.cos(wind_dir + math.pi)
-        facteur = _build_facteur(obs, rows, cols, gx, gy)
-        eco._abri_cache = (sig, facteur)
+        facteur, turbulence = _build_facteur(obs, rows, cols, gx, gy)
+        eco._abri_cache = (sig, facteur, turbulence)
     else:
-        facteur = cache[1]
+        facteur, turbulence = cache[1], cache[2]
 
     # Mise à l'échelle par la force du tick (la SEULE opération en régime permanent).
     for r in range(rows):
         frow = facteur[r]
         for c in range(cols):
             eco.vent.set(r, c, frow[c] * wind_force)
+    # Champ de turbulence : LAZY (None sans lisière → aucune allocation, aucun
+    # lecteur touché). La rafale n'est pas mise à l'échelle par la force : c'est un
+    # MULTIPLICATEUR géométrique, la force arrive déjà par `eco.vent`.
+    if turbulence is None:
+        eco.turbulence = None
+    else:
+        if eco.turbulence is None:
+            eco.turbulence = GridField(rows, cols, initial=1.0,
+                                       max_val=TURBULENCE_PLAFOND)
+        for r in range(rows):
+            trow = turbulence[r]
+            for c in range(cols):
+                eco.turbulence.set(r, c, trow[c])
 
 
 def _build_facteur(obs, rows, cols, gx, gy):
-    """Construit la grille de FACTEUR d'abri (1.0 = pleine exposition, < 1 abrité,
-    > 1 venturi). Scatter par bbox de capsule (D32) : chaque obstacle ne visite que
-    sa boîte. C'est l'opération CHÈRE — appelée SEULEMENT au franchissement d'un pas
-    angulaire ou d'un changement d'obstacle (cache). `(gx, gy)` = direction unitaire
-    vers où VA le vent (axe du sillage)."""
+    """Construit `(facteur, turbulence)` : la grille de FACTEUR d'abri (1.0 = pleine
+    exposition, < 1 abrité, > 1 venturi) et — SEULEMENT si un obstacle est poreux
+    (lisière) — la grille de TURBULENCE (multiplicateur de rafale ≥ 1, `None` sinon).
+    Scatter par bbox de capsule (D32) : chaque obstacle ne visite que sa boîte. C'est
+    l'opération CHÈRE — appelée SEULEMENT au franchissement d'un pas angulaire ou
+    d'un changement d'obstacle (cache). `(gx, gy)` = direction unitaire vers où VA le
+    vent (axe du sillage)."""
     facteur = [[1.0] * cols for _ in range(rows)]
-    for cx, cy, h, rayon in obs:
+    turbulence = ([[1.0] * cols for _ in range(rows)]
+                  if any(o[4] is not None for o in obs) else None)
+    for cx, cy, h, rayon, poro in obs:
         portee = h * ABRI_PORTEE_HAUTEUR        # longueur du sillage abrité (∝ hauteur)
         bx = cx + gx * portee                   # extrémité aval de la capsule
         by = cy + gy * portee
@@ -163,11 +199,19 @@ def _build_facteur(obs, rows, cols, gx, gy):
                 # l'obstacle, s'estompe en bout de portée (distance projetée sur l'axe).
                 dist = (cxp - cx) * gx + (cyp - cy) * gy   # avancement dans le sillage
                 frac = 1.0 - min(1.0, max(0.0, dist) / portee) if portee > 0 else 1.0
-                reduction = ABRI_REDUCTION_MAX * frac
+                if poro is None:
+                    reduction = ABRI_REDUCTION_MAX * frac
+                else:
+                    # LISIÈRE POREUSE (②, conception §3.2) : la réduction du vent
+                    # moyen est LINÉAIRE en (1−φ), le surcroît de rafale est
+                    # QUADRATIQUE → seul le TRÈS dense fait tomber des rafales.
+                    plein = 1.0 - poro
+                    reduction = REDUCTION_LISIERE_MAX * plein * frac
+                    turbulence[r][c] *= 1.0 + TURBULENCE_MUR * plein * plein
                 # Multiplicatif : deux obstacles alignés (haie) cumulent leur abri.
                 frow[c] *= (1.0 - reduction)
     _venturi(facteur, rows, cols)
-    return facteur
+    return facteur, turbulence
 
 
 def _venturi(facteur, rows, cols):
