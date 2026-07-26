@@ -42,7 +42,7 @@ existants. Vérifié par lecture du code le 2026-07-26 :
 | `fields/ecofields/{hydrologie,ruissellement,marais}.py` + gestes `creuser`/`drainer` | L'hydrologie est **implémentée**, pas seulement conçue : `altitude`, `eau_surface`, double-buffer, `marais_memory`, `est_marais()`, coûts et outil `("terrassement", "bêche")` déjà déclarés. |
 | `fields/seedbank.py` — `tick_late_succession_enrichment(om_index)` | Le patron d'**apport exogène de propagules** par archétype. La pluie de graines de la friche s'y calque. |
 | `sim/outils.py` (D82) + `sim/actions/deblocage.py` (`GESTE_UNLOCK`) | Un **registre d'outils data-driven** + une grammaire de déblocage `("action", marqueur)`. Gater `abattre` sur une hache = deux entrées de registre. |
-| `sim/actions/paillage.py` — `mulch_stock` | Le patron de **stock de matériau** (jauge par nature dans `game_state`, `pailler` débite et refuse à vide). Le bois coupé y rentre. |
+| `fields/ecofields/matiere_organique.py` — `deposer_litiere` · `sim/actions/compost.py` — `empiler_bois` · `sim/actions/paillage.py` — `broyer` | Le **circuit du bois** : parcelle de litière typée `bois` au sol → pile à bois (`STRUCTURE_ACCEPTE["pile"] = {"bois"}`, le bac le refuse) ou broyage → BRF. Le bois coupé y rentre. |
 
 Deux caches rendent l'ensemble gratuit en régime permanent : `geom_key` dans
 `light.compute` (géométrie inchangée → `return []` immédiat) et `_signature` dans
@@ -275,14 +275,24 @@ Quatre formes, dont trois retenues :
 3. **Trace dans le milieu** — `souche_memory`, clairière, cicatrice de falaise,
    éboulis. C'est un **état écologique persistant**, pas un compteur : la lecture la
    plus conforme à #4 et #5.
-4. **Retour de matière** — le bois rentre en BRF/paillage/bois mort via le patron
-   `mulch_stock` **existant**, avec sa faim d'azote (D40). Gain écologique et différé.
+4. **Retour de matière** — le bois abattu **tombe en parcelles de litière `bois`** sur
+   les plots du bord (`eco.deposer_litiere(r, c, "bois", masse)`). Le joueur va ensuite
+   le chercher : `empiler_bois` vers une pile (qui devient habitat), ou `broyer` en BRF
+   avec sa faim d'azote (D40). Gain écologique et différé.
+
+   ⚠️ **Il n'existe pas de nature `"bois"` dans `mulch_stock`** (`NATURES_MULCH` =
+   paille · brf · aiguilles · feuilles) — et il ne faut pas en créer une. Dans ce
+   projet le bois est une **matière posée qu'on voit et qu'on déplace**, pas une jauge :
+   créditer un stock directement court-circuiterait tout le circuit décompo/structures
+   et remplacerait une matière visible par un compteur (#5).
 
 **Aucun indicateur d'impact cumulé.** Pas de jauge « bois coupé », pas de compteur à
 l'écran. La comptabilité vit au carnet (#5).
 
-Note d'honnêteté : le garde-fou « surtout pas de stock » de l'amorce est déjà contredit
-par le projet — `mulch_stock` existe et est assumé. Le vrai garde-fou n'est pas
+Note d'honnêteté : le garde-fou « surtout pas de stock » de l'amorce est déjà nuancé par
+le projet — `mulch_stock` existe et est assumé (paille, BRF, aiguilles, feuilles). Mais
+le **bois**, lui, n'y a jamais été une jauge : il vit en parcelles posées. Le sprint
+suit cette distinction plutôt que de l'aplatir. Le vrai garde-fou n'est donc pas
 « pas de stock », c'est **pas de chiffre en HUD** (#5) et **rien d'épuisable** (#4).
 La friche se reconstitue ; le bois est un flux, pas un gisement.
 

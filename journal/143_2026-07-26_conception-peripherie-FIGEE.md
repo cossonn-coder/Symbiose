@@ -47,8 +47,8 @@ que la génération migre en Python. **D73 absorbe D92** ; ce n'était pas un pr
 - **Un seul sprint**, ordre interne entrant → sortant. L'ordre défendu par l'amorce
   reste juste, mais n'avait pas besoin d'être une frontière de sprint : couper en deux
   aurait fait repayer deux fois l'amorçage de la ceinture.
-- **« Comptabilisé »** = ledger + trace dans le milieu + matière (`mulch_stock`
-  existant), coût Vigueur justifié par l'**effort physique** et non par « action directe
+- **« Comptabilisé »** = ledger + trace dans le milieu + matière, coût Vigueur justifié
+  par l'**effort physique** et non par « action directe
   sur le vivant » (l'arbre périphérique est un agrégat, pas une `PlantInstance` ; fonder
   un barème sur cette fiction se paierait plus tard). **Aucun indicateur cumulé** (#5).
 
@@ -74,9 +74,16 @@ que la génération migre en Python. **D73 absorbe D92** ; ce n'était pas un pr
 
 ## Note d'honnêteté versée à la conception
 
-Le garde-fou « surtout pas de stock » de l'amorce est **déjà contredit par le projet** :
-`mulch_stock` existe et est assumé. Le vrai garde-fou n'est pas « pas de stock », c'est
-**pas de chiffre en HUD** (#5) et **rien d'épuisable** (#4).
+Le garde-fou « surtout pas de stock » de l'amorce est **déjà nuancé par le projet** :
+`mulch_stock` existe et est assumé (paille, BRF, aiguilles, feuilles). Mais — précision
+de Nico en relecture, et elle corrige une erreur de ma première rédaction — **le bois
+n'y a jamais été une jauge** : il vit en **parcelles de litière typées `bois`**
+(`eco.deposer_litiere`), qu'on empile en pile à bois (`empiler_bois`, le bac les refuse)
+ou qu'on broie en BRF. L'abattage dépose donc des parcelles au sol, et surtout pas un
+stock : c'est plus incarné (#5, on voit le bois par terre) et ça branche le geste sur
+tout le circuit décompo/structures (pile = habitat, BRF = faim d'azote D40). Le vrai
+garde-fou n'est pas « pas de stock », c'est **pas de chiffre en HUD** (#5) et **rien
+d'épuisable** (#4).
 
 ## Le sprint
 

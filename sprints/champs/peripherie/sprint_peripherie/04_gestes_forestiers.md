@@ -92,10 +92,25 @@ dans le commentaire.
    maîtrise. Le geste est *enregistré*, jamais *scoré*.
 2. **Trace dans le milieu** — `souche_memory`, `annees_depuis_coupe`, densité effondrée.
    État écologique persistant, pas un compteur.
-3. **Retour de matière** — le bois crédite le stock existant via
-   `sim/actions/paillage.py::mulch_stock` (nature `"bois"` / BRF). **Ne crée pas un
-   second système de stock.** Le débit passe par `pailler` comme le reste, avec sa faim
-   d'azote (D40).
+3. **Retour de matière — le bois est une MATIÈRE POSÉE, pas une jauge.** Attention,
+   c'est un point où il est facile de se tromper : **il n'existe PAS de nature `"bois"`
+   dans `mulch_stock`** (`NATURES_MULCH` = paille · brf · aiguilles · feuilles).
+   Dans ce projet le bois vit comme **parcelle de litière typée `bois`** au sol, et deux
+   gestes le manipulent :
+   - `empiler_bois` (`sim/actions/compost.py:131`) — déplace les parcelles `bois` d'un
+     plot vers une **pile à bois** (`STRUCTURE_ACCEPTE["pile"] = {"bois"}`, le bac le
+     **refuse**) ;
+   - `broyer` (`sim/actions/paillage.py`) — consomme le `bois_restant` d'un squelette et
+     crédite `mulch_stock["brf"]`.
+
+   Donc : **l'abattage dépose des parcelles `bois`** sur les plots du bord, via
+   `eco.deposer_litiere(r, c, "bois", masse)`
+   (`fields/ecofields/matiere_organique.py:47`). Le joueur va ensuite le chercher,
+   l'empile ou le broie — avec sa décompo lente, son habitat de pile, ses champignons
+   saproxyliques et la faim d'azote du BRF (D40). **Ne crédite AUCUN stock directement**
+   et ne crée pas de nature `"bois"` : ce serait un raccourci qui court-circuite tout le
+   circuit décompo/structures déjà en place, et remplacerait une matière qu'on voit par
+   un compteur qu'on lit (#5).
 
 **AUCUN indicateur d'impact cumulé, aucune jauge à l'écran** (#5).
 
@@ -110,7 +125,9 @@ dans le commentaire.
    sur `hetre` ⇒ `"morte"`.
 4. **Cinétiques** — après recépage d'un charme : densité pleine à 10 ans, pas à 5.
    Après abattage : toujours pas pleine à 10 ans.
-5. **Matière** — abattre crédite `mulch_stock["bois"]`.
+5. **Matière** — abattre dépose des parcelles `bois` sur les plots du bord (et **pas**
+   sur les plots centraux) ; ces parcelles sont bien acceptées par `empiler_bois` et
+   refusées par le bac.
 6. **Idempotence/bornes** — `densite_ligneuse` reste dans [0,1] après gestes répétés.
 
 ## Golden

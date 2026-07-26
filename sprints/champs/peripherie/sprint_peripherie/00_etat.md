@@ -37,7 +37,7 @@ par lecture directe du code, pas par mémoire.
 | **Le patron « obstacle global en coordonnées MONDE » existe** | `eco.tick_light(plants, saison, house=…, tile_origin=…)` et `eco.tick_abri(…, house=…, tile_origin=…)` (`boucle.py:183-197`) ; `light.compute` traite la maison en rectangle balayé + albédo de mur | **Pas de « masque d'horizon » neuf à inventer** (H2). Une lisière = un second obstacle du même type que la maison. |
 | **LightField a un CACHE géométrique** | `light.py` `geom_key = (saison, ox, oy, maison…, tuple(obstacles))` → HIT ⇒ `return []` immédiat ; `abri.py` a son `_signature` équivalent | **Le point chaud redouté par l'amorce n'existe pas.** La ceinture est quasi statique ⇒ quelques scalaires de plus dans la clé ⇒ coût ≈ 0 en régime permanent. |
 | **Un système d'OUTILS existe** (D82, l'Atelier) | `sim/outils.py` (registre `OUTILS` data-driven, `acquerir_outil`, marqueur `posseder_secateur`) + `sim/actions/deblocage.py:66 GESTE_UNLOCK` (grammaire `("action", verbe)` / `("maitrise", objet, palier)` / `("evenement", marqueur)`) | **Q8 tranchée / D93 PARTIELLEMENT PÉRIMÉE.** Gater `abattre` sur une hache = 1 entrée dans `OUTILS` + 1 dans `GESTE_UNLOCK`. Zéro conception d'inventaire. |
-| **Un précédent de STOCK de matériau existe et est assumé** | `sim/actions/paillage.py:39 mulch_stock` — jauge par nature dans `game_state`, patron `player_seed_bank`, `pailler` débite et refuse à vide | **Q12 : le bois suit ce patron.** Le garde-fou « pas de stock » de l'amorce est déjà contredit par le projet ; le vrai garde-fou est #5 (pas de chiffre en HUD) + #4 (rien d'épuisable). |
+| **Le bois a DÉJÀ son circuit — et ce n'est PAS une jauge** (précision Nico, 2026-07-26) | `NATURES_MULCH` = paille · brf · aiguilles · feuilles → **aucune nature `"bois"`**. Le bois vit en **parcelle de litière typée `bois`** (`eco.deposer_litiere`, `fields/ecofields/matiere_organique.py:47`), manipulée par `empiler_bois` (→ pile, `STRUCTURE_ACCEPTE["pile"] = {"bois"}`, le bac le **refuse**) et `broyer` (squelette → `mulch_stock["brf"]`) | **Q12 : le bois abattu tombe en parcelles `bois` sur les plots du bord**, pas dans un stock. Plus incarné (#5 : on voit le bois par terre) et branché sur tout le circuit décompo/structures (pile = habitat, BRF = faim d'azote D40). |
 
 **D92 quantifiée** (réplication Python du hash `decor|{seed}|{cote}` sur 300 000 seeds) :
 **287 929 terrains sur 300 000 (96,0 %) ont les 4 côtés identiques ; 0 falaise.**
@@ -79,7 +79,8 @@ l'amorçage de la ceinture et de son pont. ~7 tronçons, le dernier = vue Godot.
 **D-3 — « Comptabilisé » = ledger + trace dans le milieu + matière** (Nico, 2026-07-26).
 Trois lectures sur les quatre de H4 : consignation au ledger (carnet / encyclopédie /
 détection de maîtrise), état écologique persistant (`souche_memory`, clairière,
-cicatrice, éboulis), et retour de matière via le patron `mulch_stock` existant. Le coût
+cicatrice, éboulis), et retour de matière en **parcelles de litière `bois`** posées au
+sol (circuit `empiler_bois`/`broyer` existant — surtout PAS une jauge). Le coût
 Vigueur est ÉLEVÉ mais **justifié par l'effort physique**, PAS par « action directe sur
 le vivant » — l'arbre périphérique est un agrégat, pas une `PlantInstance` ; fonder un
 barème sur cette fiction se paierait plus tard. **Aucun indicateur d'impact cumulé**
@@ -119,7 +120,7 @@ faits ci-dessus** ; il reste 4 vrais arbitrages, dont 3 remontés à Nico.
 | Q9 forme de la comptabilité | **Proposé** : H4-2 (ledger) + H4-3 (trace dans le milieu) + H4-4 (matière), **pas** d'indicateur d'impact cumulé (violerait #5). H4-1 (Vigueur) retenu mais **re-justifié** : effort physique, pas « action sur le vivant » (l'arbre périphérique n'est pas une `PlantInstance`). |
 | Q10 cinétique de repousse | À chiffrer en aval (bio). Ordres visés : recépage 7-12 ans, clairière 30-60 ans, falaise jamais. |
 | Q11 érosion | **Proposé** : modéliser, mais **minimalement** — c'est le seul retour lisible d'une coupe excessive. |
-| Q12 le bois | **TRANCHÉE : patron `mulch_stock`.** |
+| Q12 le bois | **TRANCHÉE : parcelles de litière `bois` au sol**, circuit `empiler_bois`/`broyer` existant. **Pas** de nature `"bois"` dans `mulch_stock` (précision Nico). |
 
 **Trous trouvés dans l'amorce** (à intégrer à la conception) :
 - **T1 — le brise-vent POREUX est la leçon centrale, pas une note de bas de page.**
@@ -173,7 +174,8 @@ faits ci-dessus** ; il reste 4 vrais arbitrages, dont 3 remontés à Nico.
 `visuals/DecorLayer.cs` · `fields/abri.py` · `fields/light.py` (`compute`, cache
 `geom_key`) · `sim/outils.py` + `sim/actions/deblocage.py` ·
 `fields/ecofields/{hydrologie,ruissellement,marais}.py` · `sim/actions/paillage.py`
-(`mulch_stock`).
+(`mulch_stock`, `broyer`) · `sim/actions/compost.py` (`empiler_bois`) ·
+`fields/ecofields/matiere_organique.py` (`deposer_litiere`).
 
 **Prochaine étape** : `/sprint-auto sprint_peripherie` — commencer au tronçon **①**.
 Aucun tronçon n'est autorisé à re-figer le golden ; si le digest bouge, c'est un bug.
