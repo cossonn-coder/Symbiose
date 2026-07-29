@@ -18,7 +18,7 @@ Spec : **[`docs/meta/agent/deepseek_protocol.md`](docs/meta/agent/deepseek_proto
 que ça se grave ; **jamais** de jugement écologique, de trou de conception, de
 golden qui bouge, ni de code `data/code/` ou de test moteur généré. **La clé
 (`~/.config/deepseek.env`) ne s'affiche ni ne se copie jamais** — fuite avérée
-le 2026-07-22 ; `extract-chat` ne vise jamais `~/.claude/projects/`.
+le 2026-07-22.
 
 **En `/sprint-auto` : les appels sont réservés à l'ORCHESTRATEUR.** Un sous-agent
 de tronçon n'appelle DeepSeek que pour une **cartographie d'impact imprévue**
