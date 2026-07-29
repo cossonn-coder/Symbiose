@@ -2,7 +2,7 @@
 
 **Origine** : amorce D38 « rosée nocturne & hygrométrie de l'air » (2026-07-26).
 **Phase courante** : B **FIGÉE** — doc de conception + 4 kickoffs autosuffisants
-(01→04). **0 tronçon exécuté. Prêt pour `/sprint-auto`.**
+(01→04). **Tronçon ① EXÉCUTÉ (golden INCHANGÉ). Reste ②③④.**
 **Rangement** : `vegetal/sante` (et non `champs/climat` — cf. décision D3 ci-dessous).
 
 ---
@@ -78,6 +78,12 @@ agit dans `fungal_disease`, en aval).
 ## Carte des tronçons (golden attendu)
 
 - **① `wetness_memory`** — pose + alimente la mémoire d'humectation, lue par personne. **NEUTRE.**
+  ✅ **FAIT** (golden INCHANGÉ `57c166d8…`). Champ sur `PlantInstance`, alimenté dans
+  `_update_physiology` (rosée `capte` remontée hors garde, pluie/nébulosité passées par
+  `boucle.py`, séchage vent+soleil, aération par `foliage_density_at`). Test
+  `tests/test_humectation.py` (4 cas) vert. `croissance.py` = 204 LDC pur (🟢).
+  **Écart kickoff assumé** : `foliage_density_at(plant)` au lieu de `plant_class.foliage_density`
+  (None sur les herbacées → crash évité, valeur de repli par strate).
 - **② bascule du proxy** — `fungal_disease` lit l'humectation foliaire au lieu de l'humidité-sol.
   **RE-FIGÉ — maîtrisé et annoncé (le SEUL du sprint).**
 - **③ `arroser` pied/feuillage** — le geste rend le dilemme jouable. **NEUTRE.**
@@ -117,6 +123,7 @@ Note : `fungal_disease` tire sur `week·13`.
 `sim/effects/perturbations.py:179-224` (`fungal_disease`), `fields/ecofields/sol.py:118`
 (`disease_probability`), `fields/ecofields/rosee.py`, `sim/actions/gestes.py:162`.
 
-**Prochaine étape** : conception FIGÉE, 4 kickoffs prêts. Lancer en session fraîche :
-`/sprint-auto sprint_humectation_foliaire` (enchaîne ①→④). Golden re-figé au **seul**
-tronçon ②, maîtrisé et annoncé. Aucun tronçon encore exécuté.
+**Prochaine étape** : tronçon ① CLOS (golden inchangé `57c166d8…`). Reprendre au **②**
+(`02_*.md`) : bascule du proxy `fungal_disease` sur `wetness_memory` — SEUL re-figeage
+golden du sprint, maîtrisé et annoncé. `wetness_memory` est en place, bornée, alimentée,
+et n'est encore lue par personne — prête à être consommée par le ②.

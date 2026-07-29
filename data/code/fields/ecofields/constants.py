@@ -265,6 +265,26 @@ GIVRE_SEVERITY_REF = 8.0    # réf de sévérité du dégât foliaire de givre (
 ROSEE_SURFACE_REF     = 0.03   # eau liquide/plot saturant le signal de surface [→1]
 ROSEE_FOLIAIRE_MAX    = 0.35   # raboteur max du stress hydrique foliaire (B), ∝ canopée
 
+# --- Humectation foliaire (sprint HUMECTATION FOLIAIRE ①, §2.2) ---
+# Durée d'humectation du FEUILLAGE (≠ humidité du SOL) : l'eau posée sur les feuilles
+# est le vrai signal des maladies cryptogamiques (règle de Mills, périodes de Smith).
+# Mémoire par plante (patron `drought_memory`/`wind_memory`) : l'eau se POSE (rosée,
+# pluie, aspersion) puis SÈCHE (vent, soleil) — le vent ne pénètre pas un couvert
+# dense, d'où l'aération comme levier de MILIEU (espacer, tailler — philo #1). Lerp
+# VOLONTAIREMENT plus rapide que les autres mémoires (0.05 = stress chronique décennal) :
+# l'humectation se mesure en heures ; à l'échelle du tick (1 semaine) le signal utile
+# est « combien de nuits mouillées cette semaine », avec juste assez d'inertie pour que
+# « trois nuits sans vent » émerge comme critère de DURÉE. Toutes PLACEHOLDERS,
+# calibrage F5 / bancs d'essai (⑥).
+WETNESS_MEMORY_LERP  = 0.35
+ROSEE_WET_GAIN       = 0.9    # la rosée est la source d'humectation la plus RÉGULIÈRE
+PLUIE_WET_GAIN       = 0.8    # la pluie mouille fort mais passe
+PLUIE_WET_REF        = 0.5    # pluie_event saturant le signal d'humectation
+ASPERSION_WET_GAIN   = 1.0    # arroser AU FEUILLAGE : la source la plus mouillante (③)
+VENT_WET_DRY         = 0.7    # part du séchage imputable au vent à force 1
+RAD_WET_DRY          = 0.5    # part du séchage imputable au soleil à ciel clair
+COUVERT_WET_SHELTER  = 0.8    # un couvert dense empêche le vent de pénétrer (aération)
+
 # --- Lessivage NPK AMPLIFIÉ par la pluie (sprint météo→champs ③, §4) ---
 # Le lessivage passif existe DÉJÀ (`tick_decomposition` : `champ *= leach_factor(...)`,
 # rétention modulée par la CEC = texture + humus). Ce tronçon NE LE RECRÉE PAS : il

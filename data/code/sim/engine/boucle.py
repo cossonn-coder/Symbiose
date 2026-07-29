@@ -377,8 +377,9 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
             # 8b. Exsudats racinaires — boucle rhizosphère (chantier A)
             log += self._apply_exudates(tile, eco)
 
-            # 9. Mise à jour mémoire physiologique
-            self._update_physiology(tile, eco)
+            # 9. Mise à jour mémoire physiologique. `nebul`/`pluie_event` (météo du
+            #    tick, cf. lignes 95/114) alimentent l'humectation foliaire (①).
+            self._update_physiology(tile, eco, nebulosite=nebul, pluie_event=pluie_event)
 
             # 9c. Croissance de structure (D29 réorienté). Phototropisme branché
             # (sprint maison, tronçon 3) : l'apex se penche vers le gradient de la

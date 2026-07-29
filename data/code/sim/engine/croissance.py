@@ -15,7 +15,10 @@ from fields import (EXUDATE_BASE, EXUDATE_OM_SHARE, HUM_NOYE, HUM_EXCES,
                     ASPHYXIE_MEMORY_LERP)
 from fields.ecofields.constants import (T_PLANTE_ALPHA, ROSEE_SURFACE_REF,
                                         ROSEE_FOLIAIRE_MAX, ROOT_HERBIVORY_MEMORY_LERP,
-                                        ALLELO_GERM_K, ALLELO_GROWTH_ESC_MAX)
+                                        ALLELO_GERM_K, ALLELO_GROWTH_ESC_MAX,
+                                        WETNESS_MEMORY_LERP, ROSEE_WET_GAIN,
+                                        PLUIE_WET_GAIN, PLUIE_WET_REF, VENT_WET_DRY,
+                                        RAD_WET_DRY, COUVERT_WET_SHELTER)
 from plants import EXPR_GAIN, EXPR_MIN, EXPR_MAX, TAU_UP, TAU_DOWN
 from .calendrier import saison_de
 
@@ -248,10 +251,13 @@ class CroissanceMixin:
                        f"(boucle rhizosphère)")
         return log
 
-    def _update_physiology(self, tile, eco):
+    def _update_physiology(self, tile, eco, nebulosite=1.0, pluie_event=0.0):
         """
         Mise à jour des mémoires physiologiques des plantes.
-        Appelée après l'uptake, chaque semaine.
+        Appelée après l'uptake, chaque semaine. `nebulosite`/`pluie_event` (météo du
+        tick, passés par boucle.py) alimentent l'humectation foliaire (①) ; leurs
+        défauts inertes (ciel clair sec, pas de pluie) laissent les autres appelants
+        (tests) inchangés.
         shade_memory  = lerp(actuel, 1 - lumiere_locale, 0.10)
         drought_memory = lerp(actuel, stress_hydrique, 0.05)
         cold_memory / infection_memory = lerp(actuel, signal, 0.05) (plasticité ①)
@@ -281,11 +287,20 @@ class CroissanceMixin:
             # (`eco.rosee_last`), borné par ROSEE_FOLIAIRE_MAX. Effet marginal mais réel
             # (un LEVIER, pas une pluie) : à rosée nulle → terme nul → comportement
             # antérieur (golden NEUTRE pour cette part). Lecture PURE de `rosee_last`.
+            # Rosée MOYENNE captée sur l'empreinte foliaire — calculée UNE fois, DEUX
+            # consommateurs (captation foliaire du drought_stress ci-dessous +
+            # humectation ① plus bas). On ne recalcule JAMAIS dans un tick ce qui l'a
+            # déjà été. Le garde `capte > 0.0` est STRICTEMENT équivalent à l'ancien
+            # `rosee is not None and plant.foliar_plots` pour le rabot : capte>0 implique
+            # rosée présente et canopée non vide ; et capte==0 laissait `relief=0` donc
+            # `drought_stress` inchangé (×1.0) → drought_stress reste bit-identique.
+            capte = 0.0
             rosee = getattr(eco, "rosee_last", None)
-            if rosee is not None and drought_stress > 0.0 and plant.foliar_plots:
+            if rosee is not None and plant.foliar_plots:
                 capte = sum(rosee.at_plot(fr, fc) for (fr, fc) in plant.foliar_plots
                             if 0 <= fr < eco.rows and 0 <= fc < eco.cols)
                 capte /= len(plant.foliar_plots)            # rosée MOYENNE sur la canopée
+            if capte > 0.0 and drought_stress > 0.0:
                 relief = ROSEE_FOLIAIRE_MAX * min(1.0, capte / ROSEE_SURFACE_REF)
                 drought_stress = max(0.0, drought_stress * (1.0 - relief))
             # Transpiration foliaire (vent ④, §3) : le vent assèche aussi la PLANTE
@@ -333,6 +348,23 @@ class CroissanceMixin:
             rong = eco.category_density("herbivore_vertebre", r, c)
             plant.root_herbivory_memory += (rong - plant.root_herbivory_memory) * ROOT_HERBIVORY_MEMORY_LERP
             plant.root_herbivory_memory  = max(0.0, min(1.0, plant.root_herbivory_memory))
+            # Humectation foliaire (sprint HUMECTATION FOLIAIRE ①, §2.2) : l'eau se POSE
+            # sur le feuillage (rosée `capte` déjà calculée ci-dessus + pluie du tick)
+            # puis SÈCHE (vent, soleil ciel clair). Le vent ne PÉNÈTRE pas un couvert
+            # dense (`foliage_density_at` — jamais None, repli strate) → l'aération
+            # devient un levier de MILIEU (espacer, tailler — philo #1). L'aspersion au
+            # feuillage (ASPERSION_WET_GAIN) arrive au ③ (pas de `aspersion_last` encore).
+            # INERTE au ① : `wetness_memory` n'est lue par PERSONNE (le proxy fongique la
+            # lira au ②) et est hors `_PLANT_ATTRS` → golden NEUTRE.
+            dens = plant.plant_class.foliage_density_at(plant)
+            vent_eff = vent_local * (1.0 - COUVERT_WET_SHELTER * dens)
+            mouillage = (ROSEE_WET_GAIN * min(1.0, capte / ROSEE_SURFACE_REF)
+                         + PLUIE_WET_GAIN * min(1.0, max(0.0, pluie_event) / PLUIE_WET_REF))
+            sechage = ((1.0 - VENT_WET_DRY * min(1.0, max(0.0, vent_eff)))
+                       * (1.0 - RAD_WET_DRY * (1.0 - nebulosite)))
+            wet_sig = max(0.0, min(1.0, mouillage * sechage))
+            plant.wetness_memory += (wet_sig - plant.wetness_memory) * WETNESS_MEMORY_LERP
+            plant.wetness_memory  = max(0.0, min(1.0, plant.wetness_memory))
             # Dynamique d'EXPRESSION plastique (§2.3) : chaque gène adaptogène glisse
             # vers cible = 1 + EXPR_GAIN × mémoire(g), en lerp à HYSTÉRÈSE (montée
             # TAU_UP rapide, descente TAU_DOWN lente). Borné [EXPR_MIN, EXPR_MAX].

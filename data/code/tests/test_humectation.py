@@ -1,0 +1,129 @@
+"""
+SYMBIOSE — tests/test_humectation.py
+Test ciblé, lancé À LA DEMANDE (hors smoke test).
+
+Couvre le SUBSTRAT d'humectation foliaire (sprint HUMECTATION FOLIAIRE ①) :
+`PlantInstance.wetness_memory` intègre la durée d'humectation du FEUILLAGE (≠ humidité
+du SOL), alimentée dans `_update_physiology` par la rosée captée, la pluie du tick, et
+séchée par le vent et le soleil (ciel clair). Conception :
+docs/vegetal/sante/conception_humectation_foliaire.md §2.1-2.3.
+
+Au tronçon ① PERSONNE ne lit `wetness_memory` (le proxy fongique la lira au ②) ; on
+teste donc la TUYAUTERIE en isolation, pas un effet écologique :
+  (a) MONTÉE  — sous rosée saturante, vent nul, ciel couvert, la mémoire monte de 0 ;
+  (b) DÉCROISSANCE — mouillage cessé (rosée/pluie nuls), la mémoire redescend vers 0
+      (philo #4 : rien ne persiste sans entretien) ;
+  (c) BORNES  — 200 tics saturés → la mémoire reste dans [0,1] ;
+  (d) AÉRATION — à vent égal, un couvert DENSE (foliage_density haute) sèche MOINS
+      qu'un couvert clair (le vent pénètre moins) → plus d'humectation retenue.
+
+On pilote rosée / vent en surchargeant `eco.rosee_last.at_plot` / `eco.vent.at_plot`
+(patron du test plasticité sur `humidite`), et pluie / nébulosité via les paramètres
+de `_update_physiology` → déterministe, sans RNG, assertions numériques exactes.
+
+Lancement (depuis data/code/) :
+  python3 -m tests.test_humectation
+"""
+
+from world import Tile
+from plants import Zucchini
+from fields import init_eco
+from sim.engine import Engine
+
+_EPS = 1e-9
+
+
+def _lab():
+    """Tuile 6×6 terre + courgette + Engine ; renvoie (engine, tile, eco, plant)."""
+    tile = Tile(tile_id="T0", soil_type="terre", grid_rows=6, grid_cols=6)
+    eco = init_eco("T0", 6, 6, humidite=1.2, fertilite=1.2, microbiome=0.3)
+    plant = tile.add_plant(Zucchini, 3, 3)
+    gs = {"tiles": [tile], "eco": {"T0": eco}, "scores": {},
+          "current_player": "j1", "week": 1, "log": []}
+    return Engine(gs), tile, eco, plant
+
+
+def _pin_rosee(eco, val: float):
+    eco.rosee_last.at_plot = lambda r, c, _v=val: _v
+
+
+def _pin_vent(eco, val: float):
+    eco.vent.at_plot = lambda r, c, _v=val: _v
+
+
+def test_montee_sous_rosee():
+    """Rosée saturante + vent nul + ciel couvert (nebulosite=1 → pas de séchage
+    solaire) : `wetness_memory` monte strictement depuis 0."""
+    engine, tile, eco, p = _lab()
+    _pin_rosee(eco, 0.10)                 # >> ROSEE_SURFACE_REF (0.03) → signal saturé
+    _pin_vent(eco, 0.0)
+    assert p.wetness_memory == 0.0
+    engine._update_physiology(tile, eco, nebulosite=1.0, pluie_event=0.0)
+    assert p.wetness_memory > 0.0, "la mémoire ne monte pas sous rosée"
+    print(f"[humectation ①·montée] PASS — wetness 0.0 → {p.wetness_memory:.4f} sous rosée")
+
+
+def test_decroissance_sans_mouillage():
+    """Mouillage cessé (rosée + pluie nuls) : la mémoire redescend strictement vers 0
+    (décroissance garantie — philo #4). On la charge d'abord, puis on coupe l'eau."""
+    engine, tile, eco, p = _lab()
+    _pin_vent(eco, 0.0)
+    # Charge : quelques tics mouillés
+    _pin_rosee(eco, 0.10)
+    for _ in range(5):
+        engine._update_physiology(tile, eco, nebulosite=1.0, pluie_event=0.5)
+    charge = p.wetness_memory
+    assert charge > 0.0
+    # Coupe l'eau : rosée + pluie nulles
+    _pin_rosee(eco, 0.0)
+    prev = charge
+    for _ in range(5):
+        engine._update_physiology(tile, eco, nebulosite=1.0, pluie_event=0.0)
+        assert p.wetness_memory < prev - _EPS, "la mémoire ne décroît pas à sec"
+        prev = p.wetness_memory
+    assert p.wetness_memory < charge, "pas de décroissance nette"
+    print(f"[humectation ①·décroissance] PASS — {charge:.4f} → {p.wetness_memory:.4f} à sec")
+
+
+def test_bornes():
+    """200 tics entièrement saturés (rosée + pluie fortes) : la mémoire reste dans
+    [0,1] (jamais d'emballement)."""
+    engine, tile, eco, p = _lab()
+    _pin_rosee(eco, 1.0)
+    _pin_vent(eco, 0.0)
+    for _ in range(200):
+        engine._update_physiology(tile, eco, nebulosite=1.0, pluie_event=1.0)
+        assert 0.0 <= p.wetness_memory <= 1.0, f"hors bornes : {p.wetness_memory}"
+    print(f"[humectation ①·bornes] PASS — 200 tics saturés, wetness={p.wetness_memory:.4f} ∈ [0,1]")
+
+
+def test_aeration_couvert_dense_seche_moins():
+    """À vent ÉGAL, un couvert DENSE (foliage_density haute) laisse moins pénétrer le
+    vent → sèche moins → retient PLUS d'humectation qu'un couvert clair. On compare
+    deux runs identiques ne différant que par `foliage_density`."""
+    def _run(dens: float) -> float:
+        engine, tile, eco, p = _lab()
+        _pin_rosee(eco, 0.10)             # même apport
+        _pin_vent(eco, 1.0)               # même vent, non nul (le levier d'aération)
+        saved = Zucchini.foliage_density
+        try:
+            Zucchini.foliage_density = dens
+            for _ in range(20):
+                engine._update_physiology(tile, eco, nebulosite=1.0, pluie_event=0.0)
+            return p.wetness_memory
+        finally:
+            Zucchini.foliage_density = saved
+
+    dense = _run(0.9)
+    clair = _run(0.2)
+    assert dense > clair + _EPS, (
+        f"le couvert dense ne retient pas plus d'humectation : dense {dense:.4f} ≤ clair {clair:.4f}")
+    print(f"[humectation ①·aération] PASS — dense {dense:.4f} > clair {clair:.4f} (vent pénètre moins)")
+
+
+if __name__ == "__main__":
+    test_montee_sous_rosee()
+    test_decroissance_sans_mouillage()
+    test_bornes()
+    test_aeration_couvert_dense_seche_moins()
+    print("\n[humectation ①] TOUS LES TESTS PASSENT")

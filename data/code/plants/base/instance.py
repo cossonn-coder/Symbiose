@@ -68,6 +68,15 @@ class PlantInstance:
                                     #  → la plante s'affame par les voies EXISTANTES (philo #2), pas par
                                     #  un malus direct. Compensée par la mycorhize, modulée par la niche
                                     #  d'espèce `root_loss_tolerance_base`. Densité nulle → reste 0.
+    wetness_memory: float = 0.0     # durée d'humectation FOLIAIRE intégrée [0-1]
+                                    # (sprint HUMECTATION FOLIAIRE ① — §2.2). L'eau posée
+                                    #  sur les FEUILLES (rosée/pluie/aspersion), non l'humidité
+                                    #  du SOL, est le vrai signal des maladies cryptogamiques
+                                    #  (règle de Mills). L'aération (vent + couvert clair) sèche
+                                    #  le feuillage → levier de MILIEU (espacer, tailler). INERTE
+                                    #  au ① : alimentée dans _update_physiology, lue par PERSONNE
+                                    #  (le proxy fongique la lira au ②). Hors `_PLANT_ATTRS` →
+                                    #  golden NEUTRE.
     stress_memory: float = 0.0      # intégration des perturbations subies [0-1]
                                     # stress↑ → croissance↓ mais résistance↑
     # Marques de symptômes ÉVÉNEMENTIELS (sémiologie ②) : maladie/gel/grêle n'ont
