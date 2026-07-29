@@ -149,9 +149,23 @@ jamais `git add -A` aveugle (ajoute les fichiers du tronçon nommément).
 3. Mets à jour la mémoire auto si des **décisions de design / feedback notables**
    ont émergé (sinon, rien — pas de bruit).
 4. Supprime `HANDOFF.md` s'il existe et est devenu obsolète.
-5. **Rapport final à Nico** : tronçons faits, hash golden final, **scissions
+5. **Mesure de coût du run (automatique).** Lance l'analyseur **déterministe**
+   (arithmétique pure sur les `usage`, **sans LLM, quasi gratuit**) :
+   `python3 ~/.claude/skills/analyzer/scripts/report.py --latest`. Il recolle
+   l'orchestrateur + tous les sous-agents de **ce** run (le coût que tu ne vois
+   pas), écrit le JSON d'historique dans `~/skills-lab/` (permet l'avant/après
+   entre sprints) et imprime la ventilation. **Commit ce JSON** dans `~/skills-lab`
+   (dépôt git dédié), message court. Le **deep-dive qualitatif DeepSeek** (le skill
+   `/analyzer` complet : *pourquoi* un maillon a coûté) **consomme des tokens à
+   chaque appel** → ne le déclenche **que** si un maillon est **anormal**
+   (≈ > 2× la médiane des tronçons, ou une grappe d'échecs golden/build) ; sinon
+   note « coûts nominaux, pas de deep-dive ». **Jamais** de `Read` direct sur un
+   `.jsonl` de transcript (des dizaines de M de tokens) — le *pourquoi* passe par
+   `ask-deepseek` sur le chemin du transcript (règle dure du skill `/analyzer`).
+6. **Rapport final à Nico** : tronçons faits, hash golden final, **scissions
    refactor éventuelles**, **liste précise des points F5 à valider**, ce qui reste
-   éventuellement.
+   éventuellement, **+ une ligne de coût** issue de l'étape 5 (total du run,
+   part portage, tronçon le plus cher — et le verdict du deep-dive s'il a eu lieu).
 
 ## 4. Échec bloquant = la seule cause d'arrêt anticipé
 
