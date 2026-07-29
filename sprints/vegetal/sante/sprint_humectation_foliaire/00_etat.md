@@ -2,7 +2,7 @@
 
 **Origine** : amorce D38 « rosée nocturne & hygrométrie de l'air » (2026-07-26).
 **Phase courante** : B **FIGÉE** — doc de conception + 4 kickoffs autosuffisants
-(01→04). **Tronçon ① EXÉCUTÉ (golden INCHANGÉ). Reste ②③④.**
+(01→04). **Tronçons ①② EXÉCUTÉS (golden INCHANGÉ dans les DEUX). Reste ③④.**
 **Rangement** : `vegetal/sante` (et non `champs/climat` — cf. décision D3 ci-dessous).
 
 ---
@@ -85,7 +85,29 @@ agit dans `fungal_disease`, en aval).
   **Écart kickoff assumé** : `foliage_density_at(plant)` au lieu de `plant_class.foliage_density`
   (None sur les herbacées → crash évité, valeur de repli par strate).
 - **② bascule du proxy** — `fungal_disease` lit l'humectation foliaire au lieu de l'humidité-sol.
-  **RE-FIGÉ — maîtrisé et annoncé (le SEUL du sprint).**
+  ✅ **FAIT — golden INCHANGÉ `57c166d8…` (re-figeage PRÉVU mais NON survenu, expliqué ci-dessous).**
+  Deux sites basculés `min(1,hum/3)` → `plant.wetness_memory` : `fungal_disease`
+  (`perturbations.py:216`) et `infection_memory` (`croissance.py`). Bloc `wetness_memory`
+  DÉPLACÉ avant `infection_memory` dans `_update_physiology` (mise à jour du tick courant
+  avant lecture — pas de décalage d'un tick). `FUNGAL_VENT_DRY`/`_spore_load` intacts
+  (double comptage vent assumé, D1 kickoff). `disease_probability` NON touché.
+  Tests `test_humectation.py` étendus (a/b/c ②) — dont la non-régression du bug pédagogique
+  (arroser au pied ne change plus la maladie). 11 suites ciblées vertes (dont `inoculum`,
+  `senescence`, `plasticite`, `stress_chronique`). LDC : croissance 204, perturbations 249 (🟢).
+
+  **POURQUOI le golden n'a PAS bougé** (vérifié empiriquement, pas une supposition) :
+  1. `fungal_disease` ne déclenche **JAMAIS** dans le smoke 2 tuiles × 4 ans (0 ligne
+     `maladie fongique` — p reste sous le bruit AVANT comme APRÈS). Donc aucun `vitalite`
+     ni rondelle `maladie` ne change.
+  2. `infection_memory` **change bien** (mesuré : p.ex. Minette `resistance_pathogene`
+     exprimé 1.03 avant → 1.001 après ; toggle env comparant `hum/3` vs `wetness` = hash
+     **byte-identique**). Son SEUL aval est `cout_defense()` → timing de stade + `heal`.
+     L'écart de sur-expression (~0.03 → ~0.001) déplace `needed` de <0,5 % : sous la
+     résolution qui ferait franchir une frontière de stade entière ou bouger un flottant
+     digéré (`growth_factor`/`vitalite` restent bit-identiques pour TOUTES les plantes).
+  → Correction **live et câblée** (wetness max 0.295, 2684 plant-semaines >0 dans le smoke),
+    mais **neutre au digest** de ce smoke. Dérive LOCALISÉE à santé/plasticité, conforme au
+    kickoff (rien sur hydro/nutriments/épaisseur). **Aucun re-figeage nécessaire.**
 - **③ `arroser` pied/feuillage** — le geste rend le dilemme jouable. **NEUTRE.**
 - **④ guilde oïdium** — la courgette, exception qui interdit la solution unique.
   **NEUTRE — à prouver.**
@@ -123,7 +145,10 @@ Note : `fungal_disease` tire sur `week·13`.
 `sim/effects/perturbations.py:179-224` (`fungal_disease`), `fields/ecofields/sol.py:118`
 (`disease_probability`), `fields/ecofields/rosee.py`, `sim/actions/gestes.py:162`.
 
-**Prochaine étape** : tronçon ① CLOS (golden inchangé `57c166d8…`). Reprendre au **②**
-(`02_*.md`) : bascule du proxy `fungal_disease` sur `wetness_memory` — SEUL re-figeage
-golden du sprint, maîtrisé et annoncé. `wetness_memory` est en place, bornée, alimentée,
-et n'est encore lue par personne — prête à être consommée par le ②.
+**Prochaine étape** : tronçons ①② CLOS (golden inchangé `57c166d8…` dans les deux ;
+pour ②, le re-figeage était prévu mais NON survenu — smoke n'exerce pas le déclenchement
+fongique, et l'aval de `infection_memory` est sous-résolution ; explication vérifiée
+ci-dessus). Reprendre au **③** (`03_*.md`) : `arroser` pied/feuillage — rend le dilemme
+jouable, golden attendu NEUTRE. `wetness_memory` est désormais **lue** par les deux sites
+de pression fongique ; le ③ ajoutera un mode feuillage à `arroser` (écrira l'humectation
+via un `aspersion_last`, cf. `ASPERSION_WET_GAIN` réservé au ①).

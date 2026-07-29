@@ -325,11 +325,32 @@ class CroissanceMixin:
             cold_sev = max(0.0, min(1.0, (COLD_HARDENING_SEUIL - t_air) / COLD_SEVERITY_REF))
             plant.cold_memory += (cold_sev - plant.cold_memory) * COLD_MEMORY_LERP
             plant.cold_memory  = max(0.0, min(1.0, plant.cold_memory))
+            # Humectation foliaire (sprint HUMECTATION FOLIAIRE ①, §2.2) : l'eau se POSE
+            # sur le feuillage (rosée `capte` déjà calculée ci-dessus + pluie du tick)
+            # puis SÈCHE (vent, soleil ciel clair). Le vent ne PÉNÈTRE pas un couvert
+            # dense (`foliage_density_at` — jamais None, repli strate) → l'aération
+            # devient un levier de MILIEU (espacer, tailler — philo #1). L'aspersion au
+            # feuillage (ASPERSION_WET_GAIN) arrive au ③ (pas de `aspersion_last` encore).
+            # DÉPLACÉE AVANT infection_memory (② §2.3) : les deux sites de pression fongique
+            # — fungal_disease ET infection_memory ci-dessous — lisent désormais
+            # `wetness_memory`. Elle doit donc être à jour du tick COURANT avant sa lecture,
+            # sinon infection_memory retarderait d'un tick (décalage silencieux).
+            dens = plant.plant_class.foliage_density_at(plant)
+            vent_eff = vent_local * (1.0 - COUVERT_WET_SHELTER * dens)
+            mouillage = (ROSEE_WET_GAIN * min(1.0, capte / ROSEE_SURFACE_REF)
+                         + PLUIE_WET_GAIN * min(1.0, max(0.0, pluie_event) / PLUIE_WET_REF))
+            sechage = ((1.0 - VENT_WET_DRY * min(1.0, max(0.0, vent_eff)))
+                       * (1.0 - RAD_WET_DRY * (1.0 - nebulosite)))
+            wet_sig = max(0.0, min(1.0, mouillage * sechage))
+            plant.wetness_memory += (wet_sig - plant.wetness_memory) * WETNESS_MEMORY_LERP
+            plant.wetness_memory  = max(0.0, min(1.0, plant.wetness_memory))
             # Infection memory (plasticité ①) : pression pathogène VÉCUE = manque de
-            # protection du sol × humidité (le champignon a besoin d'eau). Pression
-            # déterministe, pas l'événement aléatoire de fungal_disease.
+            # protection du sol × HUMECTATION du feuillage (② : c'était `min(1, hum/3)`,
+            # l'humidité du SOL — même proxy faux que fungal_disease ; le champignon
+            # germe sur l'eau LIQUIDE posée sur la feuille, pas dans le sol humide).
+            # Pression déterministe, pas l'événement aléatoire de fungal_disease.
             infection_sig = ((eco.disease_probability(r, c, INFECTION_BASE) / INFECTION_BASE)
-                             * min(1.0, hum / 3.0))
+                             * plant.wetness_memory)
             plant.infection_memory += (infection_sig - plant.infection_memory) * INFECTION_MEMORY_LERP
             plant.infection_memory  = max(0.0, min(1.0, plant.infection_memory))
             # Wind memory (thigmomorphogénèse, vent ④) : exposition mécanique VÉCUE,
@@ -348,23 +369,6 @@ class CroissanceMixin:
             rong = eco.category_density("herbivore_vertebre", r, c)
             plant.root_herbivory_memory += (rong - plant.root_herbivory_memory) * ROOT_HERBIVORY_MEMORY_LERP
             plant.root_herbivory_memory  = max(0.0, min(1.0, plant.root_herbivory_memory))
-            # Humectation foliaire (sprint HUMECTATION FOLIAIRE ①, §2.2) : l'eau se POSE
-            # sur le feuillage (rosée `capte` déjà calculée ci-dessus + pluie du tick)
-            # puis SÈCHE (vent, soleil ciel clair). Le vent ne PÉNÈTRE pas un couvert
-            # dense (`foliage_density_at` — jamais None, repli strate) → l'aération
-            # devient un levier de MILIEU (espacer, tailler — philo #1). L'aspersion au
-            # feuillage (ASPERSION_WET_GAIN) arrive au ③ (pas de `aspersion_last` encore).
-            # INERTE au ① : `wetness_memory` n'est lue par PERSONNE (le proxy fongique la
-            # lira au ②) et est hors `_PLANT_ATTRS` → golden NEUTRE.
-            dens = plant.plant_class.foliage_density_at(plant)
-            vent_eff = vent_local * (1.0 - COUVERT_WET_SHELTER * dens)
-            mouillage = (ROSEE_WET_GAIN * min(1.0, capte / ROSEE_SURFACE_REF)
-                         + PLUIE_WET_GAIN * min(1.0, max(0.0, pluie_event) / PLUIE_WET_REF))
-            sechage = ((1.0 - VENT_WET_DRY * min(1.0, max(0.0, vent_eff)))
-                       * (1.0 - RAD_WET_DRY * (1.0 - nebulosite)))
-            wet_sig = max(0.0, min(1.0, mouillage * sechage))
-            plant.wetness_memory += (wet_sig - plant.wetness_memory) * WETNESS_MEMORY_LERP
-            plant.wetness_memory  = max(0.0, min(1.0, plant.wetness_memory))
             # Dynamique d'EXPRESSION plastique (§2.3) : chaque gène adaptogène glisse
             # vers cible = 1 + EXPR_GAIN × mémoire(g), en lerp à HYSTÉRÈSE (montée
             # TAU_UP rapide, descente TAU_DOWN lente). Borné [EXPR_MIN, EXPR_MAX].

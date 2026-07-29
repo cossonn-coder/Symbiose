@@ -206,14 +206,20 @@ def fungal_disease(plant: PlantInstance, tile: Tile, eco,
     # résistantes, philo #2/#7) ET un sujet déjà infecté monte sa SAR (plasticité ②).
     susc /= plant.expressed_gene("resistance_pathogene")
     r, c = plant.position
-    hum_norm = min(1.0, eco.humidite.at_plot(r, c) / 3.0)
+    # HUMECTATION FOLIAIRE (sprint humectation ②) : le vrai signal de germination des
+    # spores est l'eau LIQUIDE posée sur la feuille pendant des heures, pas l'humidité
+    # du SOL. On lisait `humidite/3` — un proxy faux qui faisait monter la maladie quand
+    # le joueur arrosait AU PIED (l'inverse de la règle permacole, philo #6). L'assèchement
+    # direct du vent (FUNGAL_VENT_DRY, plus bas) est CONSERVÉ : léger double comptage du
+    # vent assumé (il sèche aussi le feuillage dans wetness_memory ①) — le ⑥ calibrera.
+    wet = plant.wetness_memory
     density = _local_density(plant, tile, same_family=True)
     # `family` (inoculum ②) : l'inoculum persistant de CETTE famille amplifie la
     # pression fongique (résidus hivernants). Rotation vers une autre famille échappe
     # à la charge (émergent). Plot vierge / INOC_GAIN=0 → amplif neutre (golden-safe).
     p = eco.disease_probability(r, c, base_rate=FUNGAL_BASE,
                                 family=plant.plant_class.family)
-    p *= hum_norm * (0.4 + density) * susc
+    p *= wet * (0.4 + density) * susc
     # Vent (⑥) : assèchement protecteur PUIS apport de spores du foyer au vent.
     p *= max(0.0, 1.0 - FUNGAL_VENT_DRY * min(1.0, vent_local))
     spore = _spore_load(plant, tile, wind_vec)

@@ -29,6 +29,7 @@ from world import Tile
 from plants import Zucchini
 from fields import init_eco
 from sim.engine import Engine
+from sim.effects.perturbations import fungal_disease
 
 _EPS = 1e-9
 
@@ -121,9 +122,81 @@ def test_aeration_couvert_dense_seche_moins():
     print(f"[humectation ①·aération] PASS — dense {dense:.4f} > clair {clair:.4f} (vent pénètre moins)")
 
 
+# ---------------------------------------------------------------------------
+# Tronçon ② — BASCULE DU PROXY : la pression fongique suit l'humectation FOLIAIRE
+# (`wetness_memory`), plus l'humidité du SOL (`eco.humidite`). Ces tests gèlent la
+# correction du bug pédagogique (arroser au pied ne doit plus rendre malade, philo #6).
+# ---------------------------------------------------------------------------
+
+def _adulte(plant):
+    """Sort la plante du stade `semis` (fungal_disease l'immunise) → stade adulte."""
+    plant.current_stage = 1
+    return plant
+
+
+def test_fungal_nul_si_feuillage_sec():
+    """(a) `wetness_memory = 0` → `fungal_disease` ne déclenche JAMAIS : le facteur
+    d'humectation est nul, donc p = 0 quelle que soit la graine. C'est le sens même de
+    la bascule : sans eau LIQUIDE sur la feuille, pas de germination des spores."""
+    _, tile, eco, p = _lab()
+    _adulte(p)
+    p.wetness_memory = 0.0
+    fires = sum(1 for s in range(3000) if fungal_disease(p, tile, eco, s, 3))
+    assert fires == 0, f"la maladie déclenche à feuillage sec ({fires} fois)"
+    print("[humectation ②·feuillage-sec] PASS — 0 déclenchement sur 3000 graines à wetness=0")
+
+
+def test_arroser_au_pied_ne_change_plus_la_maladie():
+    """(b) NON-RÉGRESSION DU BUG PÉDAGOGIQUE : à humectation foliaire ÉGALE, changer
+    l'humidité du SOL (arroser au pied) ne change PLUS le déclenchement fongique. On
+    compare le motif de déclenchement sur 3000 graines entre un sol sec et un sol
+    détrempé, `wetness_memory` fixée. AVANT ②, `hum_norm` en dépendait → la maladie
+    montait quand on arrosait ; c'est précisément ce qu'on interdit ici."""
+    _, tile, eco, p = _lab()
+    _adulte(p)
+    p.wetness_memory = 0.9                 # feuillage mouillé, constant
+    def _motif(hum_sol):
+        eco.humidite.at_plot = lambda r, c, _v=hum_sol: _v
+        return [bool(fungal_disease(p, tile, eco, s, 3)) for s in range(3000)]
+    sec     = _motif(0.1)                  # sol sec
+    detrempe = _motif(3.0)                 # sol détrempé (arrosé au pied)
+    assert sec == detrempe, "l'humidité du SOL modifie encore la pression fongique"
+    assert any(sec), "le banc ne déclenche jamais — test non probant"
+    print(f"[humectation ②·arroser-au-pied] PASS — motif identique sol sec/détrempé "
+          f"({sum(sec)} déclenchements, indépendants de l'humidité-sol)")
+
+
+def test_infection_memory_suit_l_humectation():
+    """(c) `infection_memory` (qui durcit `resistance_pathogene`) suit désormais
+    l'humectation FOLIAIRE, pas l'humidité du SOL. Deux runs :
+      • même humidité de sol, humectation HAUTE vs BASSE → infection_memory suit ;
+      • même humectation, humidité de sol différente → infection_memory INCHANGÉE."""
+    def _run(rosee, hum_sol):
+        engine, tile, eco, p = _lab()
+        _adulte(p)
+        eco.humidite.at_plot = lambda r, c, _v=hum_sol: _v
+        _pin_rosee(eco, rosee)
+        _pin_vent(eco, 0.0)
+        for _ in range(30):
+            engine._update_physiology(tile, eco, nebulosite=1.0, pluie_event=0.0)
+        return p.infection_memory
+    haute = _run(0.10, 1.0)                # feuillage bien mouillé
+    basse = _run(0.0, 1.0)                 # feuillage sec (même sol)
+    assert haute > basse + _EPS, "infection_memory ne suit pas l'humectation"
+    # Découplage du sol : même humectation, humidité de sol opposée → identique.
+    sol_sec     = _run(0.10, 0.1)
+    sol_detrempe = _run(0.10, 3.0)
+    assert abs(sol_sec - sol_detrempe) < _EPS, "infection_memory dépend encore du sol"
+    print(f"[humectation ②·infection-suit-humectation] PASS — haute {haute:.4f} > basse "
+          f"{basse:.4f} ; indépendante du sol ({sol_sec:.4f} == {sol_detrempe:.4f})")
+
+
 if __name__ == "__main__":
     test_montee_sous_rosee()
     test_decroissance_sans_mouillage()
     test_bornes()
     test_aeration_couvert_dense_seche_moins()
-    print("\n[humectation ①] TOUS LES TESTS PASSENT")
+    test_fungal_nul_si_feuillage_sec()
+    test_arroser_au_pied_ne_change_plus_la_maladie()
+    test_infection_memory_suit_l_humectation()
+    print("\n[humectation ①②] TOUS LES TESTS PASSENT")
