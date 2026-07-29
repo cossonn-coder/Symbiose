@@ -125,6 +125,7 @@ class Zucchini(PlantBase):
     foliage_density = 0.60
     reproduction_rate = 0.05
     fruitier = True                # porte des fruits traçables (maturity_years=0 → dès l'année)
+    oidium_susceptibility = 0.9    # Cucurbitaceae : LE cas d'école de l'oïdium (humectation ④)
     growth_stages = [
         GrowthStage(
             name="semis", duration_weeks=2, strate="sol",

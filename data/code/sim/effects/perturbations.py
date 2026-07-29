@@ -20,6 +20,7 @@ import math
 from fields import (_hash_noise, MORTALITY_RATE, climate_stress,
                     DAMPOFF_BASE, DAMPOFF_HUM_SEUIL, FUNGAL_BASE,
                     FUNGAL_VENT_DRY, FUNGAL_SPORE_GAIN, FUNGAL_INOC_SEUIL,
+                    OIDIUM_BASE, OIDIUM_T_REF, OIDIUM_T_SPAN,
                     INOC_DEPOT_SEUIL, INOC_FROM_MEMORY, INOC_FROM_DEATH,
                     NECROMASS_PER_CM, FRAC_BOIS_MORT, VITALITE_STEP)
 from .mutations import ReduceHealth, Mutation
@@ -227,6 +228,50 @@ def fungal_disease(plant: PlantInstance, tile: Tile, eco,
         p *= 1.0 + FUNGAL_SPORE_GAIN * spore
     if _hash_noise(seed, week * 13, r, c) < p:
         return [ReduceHealth(plant, 1, reason="maladie fongique", cause="maladie")]
+    return []
+
+
+def oidium_disease(plant: PlantInstance, tile: Tile, eco,
+                   seed: int, week: int,
+                   vent_local: float = 0.0) -> list[Mutation]:
+    """
+    Oïdium — la SECONDE guilde cryptogamique (sprint HUMECTATION FOLIAIRE ④, §2.4),
+    biologiquement OPPOSÉE au mildiou. Presque toutes les cryptogames du feuillage
+    (mildiou, rouille, tavelure, botrytis) exigent un FILM D'EAU liquide ; l'oïdium
+    est l'exception notoire : il germe SANS eau libre, préfère un air humide avec un
+    feuillage SEC, et l'eau libre lui est défavorable (elle fait éclater ses conidies).
+    Son climat : nuits humides + journées chaudes et sèches, typiquement la fin d'été.
+
+    SIGNAL INVERSE de `fungal_disease` : (1 − wetness_memory) × chaleur. Aérer et garder
+    le feuillage sec écrase le mildiou MAIS ouvre la porte à l'oïdium ; asperger fait
+    l'inverse → aucun geste universellement bon (le dilemme, philo #2/#6). Défaut
+    `oidium_susceptibility = 0.0` → sortie immédiate (coût nul, golden neutre).
+
+    Note : PAS de FUNGAL_VENT_DRY ici — le vent ne protège pas de l'oïdium (il aide
+    même à disperser ses conidies). `vent_local` est accepté pour l'homogénéité de
+    l'appel mais non consommé (ne pas ajouter d'assèchement protecteur : il tuerait
+    le dilemme). Canal de bruit `week·47` (décorrélé de `fungal_disease`, week·13).
+    """
+    if not plant.is_alive or plant.stage.name == "semis":
+        return []
+    susc = getattr(plant.plant_class, "oidium_susceptibility", 0.0)
+    if susc <= 0.0:
+        return []                      # défaut 0.0 → sortie immédiate, coût nul
+    # resistance_pathogene (D22b) médie les DEUX guildes — pas de gène neuf.
+    susc /= plant.expressed_gene("resistance_pathogene")
+    r, c = plant.position
+    t_air = eco.temperature.at_plot(r, c)
+    chaleur = max(0.0, min(1.0, (t_air - OIDIUM_T_REF) / OIDIUM_T_SPAN))
+    if chaleur <= 0.0:
+        return []                      # sous OIDIUM_T_REF : aucune pression (froid)
+    # SIGNAL INVERSE du mildiou : feuillage SEC (1 − humectation) × chaleur.
+    oidium_sig = (1.0 - plant.wetness_memory) * chaleur
+    density = _local_density(plant, tile, same_family=True)
+    p = eco.disease_probability(r, c, base_rate=OIDIUM_BASE,
+                                family=plant.plant_class.family)
+    p *= oidium_sig * (0.4 + density) * susc
+    if _hash_noise(seed, week * 47, r, c) < p:
+        return [ReduceHealth(plant, 1, reason="oïdium", cause="maladie")]
     return []
 
 
@@ -575,6 +620,10 @@ def apply_disturbances(tile, eco, game_state: dict,
         acute_muts += damping_off(plant, tile, eco, seed, week, saison)
         vl = eco.vent.at_plot(*plant.position) if eco and eco.vent else 0.0
         chronic_muts += fungal_disease(plant, tile, eco, seed, week, vl, wind_vec)
+        # Oïdium — SECONDE guilde, signal INVERSE (feuillage SEC × chaleur). Chronique
+        # (capée comme le mildiou). À `oidium_susceptibility` nulle (défaut catalogue)
+        # → sortie immédiate → invariant golden pour ce terme.
+        chronic_muts += oidium_disease(plant, tile, eco, seed, week, vl)
         # Stress hydrique sévère (voie sécheresse → santé, médiée par génotype)
         chronic_muts += drought_stress_damage(plant, eco, seed, week)
         # Carence lumineuse chronique (voie ombre → santé, médiée par tolerance_ombre)

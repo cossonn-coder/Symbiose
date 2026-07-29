@@ -264,6 +264,89 @@ def test_vigueur_insuffisante_ne_touche_rien():
     print("[humectation ③·vigueur] PASS — Vigueur nulle : ni sol ni feuillage touchés")
 
 
+# ---------------------------------------------------------------------------
+# Tronçon ④ — GUILDE OÏDIUM : l'exception qui interdit la solution unique.
+# `oidium_disease` a le signal INVERSE du mildiou : (1 − wetness_memory) × chaleur.
+# Feuillage SEC + chaleur → oïdium ; feuillage MOUILLÉ → mildiou. Aucun geste bon
+# partout (le dilemme, philo #2/#6). La courgette (Cucurbitaceae, oidium=0.9) est
+# le cas d'école ; une espèce à oidium=0 (tomate) n'est jamais touchée.
+# ---------------------------------------------------------------------------
+
+from plants import Tomato
+from sim.effects.perturbations import oidium_disease
+
+
+def _pin_temp(eco, val: float):
+    eco.temperature.at_plot = lambda r, c, _v=val: _v
+
+
+def test_oidium_nul_si_espece_non_sensible():
+    """(a) Une espèce à `oidium_susceptibility = 0` (défaut catalogue, ici la tomate)
+    n'attrape JAMAIS l'oïdium, même feuillage sec en pleine chaleur : sortie immédiate
+    (coût nul, invariant golden pour toute espèce non porteuse)."""
+    tile = Tile(tile_id="T0", soil_type="terre", grid_rows=6, grid_cols=6)
+    eco = init_eco("T0", 6, 6, humidite=1.2, fertilite=1.2, microbiome=0.3)
+    p = _adulte(tile.add_plant(Tomato, 3, 3))
+    _pin_temp(eco, 28.0)                       # chaud
+    p.wetness_memory = 0.0                     # feuillage sec (signal oïdium max)
+    fires = sum(1 for s in range(3000) if oidium_disease(p, tile, eco, s, 4))
+    assert fires == 0, f"la tomate (oidium=0) attrape l'oïdium ({fires} fois)"
+    print("[humectation ④·non-sensible] PASS — 0 déclenchement sur 3000 graines (tomate)")
+
+
+def test_oidium_frappe_feuillage_sec_et_chaud():
+    """(b) Feuillage SEC + chaleur : la courgette (oidium=0.9) attrape l'oïdium — le
+    signal (1 − wetness) × chaleur est haut. C'est le climat de fin d'été (nuits
+    humides, journées chaudes et sèches)."""
+    _, tile, eco, p = _lab()                   # courgette
+    _adulte(p)
+    _pin_temp(eco, 28.0)                        # chaleur pleine (chaleur = 1.0)
+    p.wetness_memory = 0.05                     # feuillage quasi sec
+    fires = sum(1 for s in range(3000) if oidium_disease(p, tile, eco, s, 4))
+    assert fires > 0, "l'oïdium ne frappe pas la courgette à feuillage sec et chaud"
+    print(f"[humectation ④·sec-chaud] PASS — {fires} déclenchements oïdium sur 3000 (feuillage sec)")
+
+
+def test_dilemme_humectation_inverse_les_deux_guildes():
+    """(c) LE TEST DU DILEMME. Sur la MÊME courgette, à chaleur ÉGALE, on compare
+    feuillage MOUILLÉ vs SEC pour les DEUX guildes :
+      • feuillage MOUILLÉ → mildiou (`fungal_disease`) MONTE, oïdium S'EFFONDRE ;
+      • feuillage SEC     → oïdium MONTE, mildiou s'effondre.
+    Aucun état d'humectation n'écrase les deux → pas de solution unique (philo #2/#6)."""
+    def _bancs(wet):
+        _, tile, eco, p = _lab()
+        _adulte(p)
+        _pin_temp(eco, 28.0)                    # chaleur pleine pour les deux runs
+        _pin_vent(eco, 0.0)                     # pas d'assèchement éolien parasite
+        p.wetness_memory = wet
+        mildiou = sum(1 for s in range(3000) if fungal_disease(p, tile, eco, s, 4))
+        oidium  = sum(1 for s in range(3000) if oidium_disease(p, tile, eco, s, 4))
+        return mildiou, oidium
+
+    m_mouille, o_mouille = _bancs(0.95)         # feuillage détrempé
+    m_sec,     o_sec     = _bancs(0.05)         # feuillage sec
+    # Feuillage mouillé : le mildiou domine, l'oïdium s'effondre.
+    assert m_mouille > m_sec, "le mildiou ne monte pas avec le feuillage mouillé"
+    assert o_mouille < o_sec, "l'oïdium ne s'effondre pas avec le feuillage mouillé"
+    # Feuillage sec : l'oïdium domine, le mildiou s'effondre.
+    assert o_sec > o_mouille, "l'oïdium ne monte pas à feuillage sec"
+    assert m_sec < m_mouille, "le mildiou ne s'effondre pas à feuillage sec"
+    print(f"[humectation ④·dilemme] PASS — mouillé(mildiou {m_mouille}, oïdium {o_mouille}) "
+          f"vs sec(mildiou {m_sec}, oïdium {o_sec}) : les guildes s'inversent")
+
+
+def test_oidium_nul_au_froid():
+    """(d) Le froid (T < OIDIUM_T_REF) annule la pression oïdium : `chaleur` tombe à 0
+    → sortie immédiate, même feuillage sec. L'oïdium est une maladie de saison chaude."""
+    _, tile, eco, p = _lab()
+    _adulte(p)
+    _pin_temp(eco, 10.0)                        # sous OIDIUM_T_REF (18 °C)
+    p.wetness_memory = 0.0                      # feuillage sec (signal maximal SI chaud)
+    fires = sum(1 for s in range(3000) if oidium_disease(p, tile, eco, s, 4))
+    assert fires == 0, f"l'oïdium frappe au froid ({fires} fois)"
+    print("[humectation ④·froid] PASS — 0 déclenchement sur 3000 graines à T=10 °C")
+
+
 if __name__ == "__main__":
     test_montee_sous_rosee()
     test_decroissance_sans_mouillage()
@@ -276,4 +359,8 @@ if __name__ == "__main__":
     test_arroser_feuillage_monte_l_humectation()
     test_les_deux_modes_mouillent_le_sol_pareil()
     test_vigueur_insuffisante_ne_touche_rien()
-    print("\n[humectation ①②③] TOUS LES TESTS PASSENT")
+    test_oidium_nul_si_espece_non_sensible()
+    test_oidium_frappe_feuillage_sec_et_chaud()
+    test_dilemme_humectation_inverse_les_deux_guildes()
+    test_oidium_nul_au_froid()
+    print("\n[humectation ①②③④] TOUS LES TESTS PASSENT")

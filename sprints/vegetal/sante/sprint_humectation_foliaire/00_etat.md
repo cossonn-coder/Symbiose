@@ -2,7 +2,8 @@
 
 **Origine** : amorce D38 « rosée nocturne & hygrométrie de l'air » (2026-07-26).
 **Phase courante** : B **FIGÉE** — doc de conception + 4 kickoffs autosuffisants
-(01→04). **Tronçons ①②③ EXÉCUTÉS (golden INCHANGÉ dans les TROIS). Reste ④.**
+(01→04). **SPRINT TERMINÉ : tronçons ①②③④ TOUS EXÉCUTÉS (golden INCHANGÉ `57c166d8…`
+dans les QUATRE).**
 **Rangement** : `vegetal/sante` (et non `champs/climat` — cf. décision D3 ci-dessous).
 
 ---
@@ -130,7 +131,25 @@ agit dans `fungal_disease`, en aval).
      normalisation `aspersion / DOSE_ARROSAGE`) crée un CYCLE engine→actions→world→sim.
      Constante logée bas-couche = une seule source de vérité, pas de cycle, pas de drift.
 - **④ guilde oïdium** — la courgette, exception qui interdit la solution unique.
-  **NEUTRE — à prouver.**
+  ✅ **FAIT — golden INCHANGÉ `57c166d8…` (neutralité PROUVÉE empiriquement, pas supposée).**
+  Attribut ADDITIF `oidium_susceptibility` sur `PlantBase` (défaut 0.0, à côté de
+  `fungal_susceptibility`) ; porteurs : **courgette 0.9** (Cucurbitaceae, cas d'école,
+  hors smoke) + **pommier 0.3** (`AppleTree`, Rosaceae — tavelure ET oïdium). Constantes
+  `OIDIUM_BASE/T_REF/T_SPAN` (`ecofields/constants.py`, exportées `fields/__init__`).
+  Fonction `oidium_disease` (miroir de `fungal_disease`, signal **INVERSE**
+  `(1−wetness_memory)×chaleur`, canal `week·47`, PAS de FUNGAL_VENT_DRY — le vent
+  n'assèche pas l'oïdium, c'est le dilemme). Branchée en **chronique** dans
+  `apply_disturbances` (capée comme le mildiou), export `effects/__init__`. `resistance_pathogene`
+  médie les deux guildes (aucun gène neuf). Tests `test_humectation.py` étendus (④ a/b/c/d —
+  dont **le test du dilemme** : à chaleur égale, mouillé→mildiou 27/oïdium 2, sec→mildiou 2/oïdium 22,
+  les guildes s'inversent). LDC perturbations : **273 pur 🟢** (< 300, aucun refactor).
+  **⚠️ Point critique du kickoff RÉSOLU — le pommier EST dans le smoke golden.** Le kickoff
+  offrait deux options (pommier→0.0 OU re-figeage sur autorisation). J'ai testé
+  **empiriquement** pommier=0.3 → **golden byte-identique `57c166d8…`** : `oidium_disease`
+  ne franchit jamais le seuil sur le pommier du smoke (gate T>18 °C × feuillage sec × densité
+  familiale). Donc la 3ᵉ voie s'ouvre : **guilde à 2 porteurs ET golden neutre**, sans
+  re-figeage. Valeur 0.3 = placeholder → **calibrage F5** possible. 11+4 tests
+  `test_humectation` verts ; suites `inoculum`/`stress_chronique`/`plasticite` vertes.
 - *Pas de tronçon vue Godot : sprint moteur pur ; le visible (gouttes/givre) = D24, déjà tracé.*
 
 ## L'incohérence pédagogique (argument central, à valider par Nico)
@@ -165,13 +184,16 @@ Note : `fungal_disease` tire sur `week·13`.
 `sim/effects/perturbations.py:179-224` (`fungal_disease`), `fields/ecofields/sol.py:118`
 (`disease_probability`), `fields/ecofields/rosee.py`, `sim/actions/gestes.py:162`.
 
-**Prochaine étape** : tronçons ①②③ CLOS (golden inchangé `57c166d8…` dans les trois).
-Le ③ a livré le geste `arroser(feuillage=…)` + la carte `aspersion_last` + le pont 0.5.42
-(voir la carte des tronçons ci-dessus pour les 2 écarts assumés : reset après physiologie,
-`DOSE_ARROSAGE` déplacé bas-couche). Reprendre au **④** (`04_*.md`) : **guilde oïdium** —
-la courgette, seule espèce dont la maladie CHUTE quand le feuillage est mouillé (l'oïdium
-germe sur feuille SÈCHE, à l'inverse du mildiou) → interdit la solution unique « asperge
-toujours / jamais ». Golden attendu NEUTRE (à prouver, pas d'espèce ajoutée — la courgette
-existe déjà). NON COMMITÉ par le sous-agent ③ (commit = orchestrateur/Nico).
-**F5 Nico restant** : la vue Godot pourrait offrir un TOGGLE pied/feuillage sur le geste
-`arroser` (`params.feuillage`, protocole 0.5.42) — pur ajout vue, non implémenté ici.
+**Prochaine étape** : **SPRINT TERMINÉ.** ①②③④ CLOS (golden inchangé `57c166d8…` dans les
+quatre). ④ a livré la guilde oïdium (attribut `oidium_susceptibility`, `oidium_disease`
+signal inverse, 2 porteurs courgette 0.9 / pommier 0.3, canal `week·47`) — aucune espèce
+ajoutée, aucun gène neuf, aucun re-figeage. NON COMMITÉ par le sous-agent ④ (commit =
+orchestrateur/Nico).
+**F5 Nico restant** :
+- ③ : TOGGLE pied/feuillage sur `arroser` côté vue Godot (`params.feuillage`, pont 0.5.42).
+- ④ : **calibrer `oidium_susceptibility` du pommier** (0.3 = placeholder ; libre de le
+  monter APRÈS F5, mais alors vérifier le golden — au-delà d'un certain seuil × chaleur il
+  pourrait franchir sur le pommier du smoke et demander un re-figeage annoncé). La courgette
+  (0.9, hors smoke) est le vrai porteur pédagogique.
+- Rendu C# des signes `oïdium` (feutrage blanc) : hors périmètre moteur, à tracer si absent
+  du mapping `PlantRenderer` (cf. reliquat D24 gouttes/givre du ①).

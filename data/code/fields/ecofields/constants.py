@@ -514,6 +514,17 @@ FUNGAL_VENT_DRY   = 0.7    # fraction max de pression fongique retirée par un f
 FUNGAL_SPORE_GAIN = 0.8    # gain de pression par unité d'inoculum reçu sous le vent
 FUNGAL_INOC_SEUIL = 0.4    # infection_memory d'un voisin au-delà de laquelle il est un FOYER émetteur
 
+# --- Guilde OÏDIUM (sprint HUMECTATION FOLIAIRE ④, §2.4) ---
+# L'EXCEPTION cryptogamique : germe SANS eau libre, aime l'air humide et le feuillage
+# SEC (l'eau fait éclater ses conidies). Son signal est INVERSE du mildiou =
+# (1 − humectation) × chaleur → fin d'été chaude et sèche. Le dilemme avec la guilde
+# à eau libre (mildiou) interdit la solution unique « asperge toujours / jamais ».
+# PAS d'assèchement protecteur du vent ici (le vent disperse même ses conidies) : c'est
+# précisément ce qui crée le dilemme.
+OIDIUM_BASE   = 0.035   # base avant modulation (ordre de FUNGAL_BASE = 0.04)
+OIDIUM_T_REF  = 18.0    # °C — sous ce seuil, aucune pression oïdium
+OIDIUM_T_SPAN = 10.0    # °C — amplitude jusqu'à la pression pleine
+
 # --- Mémoire d'inoculum du sol (sprint mémoire d'inoculum, tronçon ①) --------
 # Champ édaphique PERSISTANT `InoculumField` (dict sparse par plot, indexé FAMILLE)
 # qui se SOUVIENT des maladies passées, là où `infection_memory` (par plante) meurt

@@ -25,7 +25,7 @@ from .resolution import (resolve, basil_companion_check, apply_mutations,
                          resolve_plant_turn)
 from .perturbations import (
     necromass_biomass, tissu_mort, frac_bois_mort, deposer_mort,
-    damping_off, fungal_disease, drought_stress_damage,
+    damping_off, fungal_disease, oidium_disease, drought_stress_damage,
     herbivory_pressure, background_mortality, apply_disturbances,
     DROUGHT_DAMAGE_THRESHOLD, DROUGHT_DAMAGE_RATE,
     HERBIVORY_GAIN, HERBIVORY_LETHAL_AUX, HERBIVORY_LETHAL_MICRO,
@@ -36,7 +36,7 @@ __all__ = [
     "InjectField", "PropagateDisease", "Notification", "Mutation",
     "resolve", "basil_companion_check", "apply_mutations", "resolve_plant_turn",
     "necromass_biomass", "tissu_mort", "frac_bois_mort", "deposer_mort",
-    "damping_off", "fungal_disease", "drought_stress_damage",
+    "damping_off", "fungal_disease", "oidium_disease", "drought_stress_damage",
     "herbivory_pressure", "background_mortality", "apply_disturbances",
     "DROUGHT_DAMAGE_THRESHOLD", "DROUGHT_DAMAGE_RATE",
     "HERBIVORY_GAIN", "HERBIVORY_LETHAL_AUX", "HERBIVORY_LETHAL_MICRO",

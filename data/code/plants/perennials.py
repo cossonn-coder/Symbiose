@@ -238,6 +238,7 @@ class AppleTree(PerennialWoody):
     foliage_halfwidth     = 50.0      # couronne non nulle + racines viables (cf. ci-dessus)
     organ_site            = "lateral" # fructification latérale (lu au tronçon 5)
     fruitier              = True      # porte des fruits traçables (③ ; 1re fructif. à maturity_years=5)
+    oidium_susceptibility = 0.3       # second porteur d'oïdium (humectation ④) — tavelure ET oïdium
     # Floraison PRINTANIÈRE (sprint FLORAISON & FRUCTIFICATION ①). L'ancien patch
     # `gdd_floraison=130` (qui plaçait la floraison en début d'automne, D84) est
     # ANNULÉ : avec le forçage thermique événementiel, un seuil BAS `bloom_forcing_

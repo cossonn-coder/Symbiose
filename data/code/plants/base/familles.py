@@ -89,6 +89,12 @@ class PlantBase(ABC):
     bloom_forcing_gdd: float = 60.0   # seuil de forçage (bas→printemps … haut→automne)
     bloom_duration:    int   = 6      # durée de floraison, en semaines, FIXE par espèce
     fungal_susceptibility: float = 0.5   # sensibilité aux maladies fongiques [0-1]
+    # --- Guilde OÏDIUM (sprint HUMECTATION FOLIAIRE ④, §2.4) ---
+    # ADDITIF (pas un enum de guilde) : sensibilité à l'oïdium — l'EXCEPTION
+    # cryptogamique qui germe SANS eau libre (air humide + feuillage SEC). Une espèce
+    # peut être sensible aux DEUX guildes (le pommier a tavelure ET oïdium), ce qu'un
+    # enum interdirait. Défaut 0.0 ⇒ aucune pression oïdium ⇒ rétro-compat golden.
+    oidium_susceptibility: float = 0.0   # sensibilité à l'oïdium (guilde feuillage SEC) [0-1]
     # --- Constitution d'espèce (sprint SANTÉ & RÉSILIENCE ②, couche 2) ---
     # `resilience_base` = « quand un coup PASSE, à quel point je plie plutôt que je
     # casse ». Tampon de MAGNITUDE générique, appliqué EN AVAL dans `erode()`
