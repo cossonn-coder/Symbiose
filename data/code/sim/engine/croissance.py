@@ -18,7 +18,8 @@ from fields.ecofields.constants import (T_PLANTE_ALPHA, ROSEE_SURFACE_REF,
                                         ALLELO_GERM_K, ALLELO_GROWTH_ESC_MAX,
                                         WETNESS_MEMORY_LERP, ROSEE_WET_GAIN,
                                         PLUIE_WET_GAIN, PLUIE_WET_REF, VENT_WET_DRY,
-                                        RAD_WET_DRY, COUVERT_WET_SHELTER)
+                                        RAD_WET_DRY, COUVERT_WET_SHELTER,
+                                        ASPERSION_WET_GAIN, DOSE_ARROSAGE)
 from plants import EXPR_GAIN, EXPR_MIN, EXPR_MAX, TAU_UP, TAU_DOWN
 from .calendrier import saison_de
 
@@ -330,15 +331,27 @@ class CroissanceMixin:
             # puis SÈCHE (vent, soleil ciel clair). Le vent ne PÉNÈTRE pas un couvert
             # dense (`foliage_density_at` — jamais None, repli strate) → l'aération
             # devient un levier de MILIEU (espacer, tailler — philo #1). L'aspersion au
-            # feuillage (ASPERSION_WET_GAIN) arrive au ③ (pas de `aspersion_last` encore).
+            # feuillage (ASPERSION_WET_GAIN) est le geste `arroser(feuillage=True)` du ③ :
+            # la source la plus MOUILLANTE (on vise directement la canopée). Carte
+            # transiente `eco.aspersion_last` (posée par le geste, effacée par le tick),
+            # moyennée sur l'empreinte foliaire comme la rosée — `getattr` défensif → un
+            # `eco` sans la carte (pots/bacs, outils) reste inerte. NULLE au repos (aucun
+            # `arroser(feuillage=True)`) → terme nul → golden NEUTRE pour cette part.
             # DÉPLACÉE AVANT infection_memory (② §2.3) : les deux sites de pression fongique
             # — fungal_disease ET infection_memory ci-dessous — lisent désormais
             # `wetness_memory`. Elle doit donc être à jour du tick COURANT avant sa lecture,
             # sinon infection_memory retarderait d'un tick (décalage silencieux).
+            asp = getattr(eco, "aspersion_last", None)
+            aspersion = 0.0
+            if asp is not None and plant.foliar_plots:
+                aspersion = sum(asp.at_plot(fr, fc) for (fr, fc) in plant.foliar_plots
+                                if 0 <= fr < eco.rows and 0 <= fc < eco.cols)
+                aspersion /= len(plant.foliar_plots)   # aspersion MOYENNE sur la canopée
             dens = plant.plant_class.foliage_density_at(plant)
             vent_eff = vent_local * (1.0 - COUVERT_WET_SHELTER * dens)
             mouillage = (ROSEE_WET_GAIN * min(1.0, capte / ROSEE_SURFACE_REF)
-                         + PLUIE_WET_GAIN * min(1.0, max(0.0, pluie_event) / PLUIE_WET_REF))
+                         + PLUIE_WET_GAIN * min(1.0, max(0.0, pluie_event) / PLUIE_WET_REF)
+                         + ASPERSION_WET_GAIN * min(1.0, aspersion / DOSE_ARROSAGE))
             sechage = ((1.0 - VENT_WET_DRY * min(1.0, max(0.0, vent_eff)))
                        * (1.0 - RAD_WET_DRY * (1.0 - nebulosite)))
             wet_sig = max(0.0, min(1.0, mouillage * sechage))

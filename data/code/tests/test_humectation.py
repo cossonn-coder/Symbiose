@@ -191,6 +191,79 @@ def test_infection_memory_suit_l_humectation():
           f"{basse:.4f} ; indépendante du sol ({sol_sec:.4f} == {sol_detrempe:.4f})")
 
 
+# ---------------------------------------------------------------------------
+# Tronçon ③ — `arroser` PIED/FEUILLAGE : le geste qui rend le dilemme jouable.
+# `arroser(feuillage=False)` = comportement inchangé (sol seul) ; `feuillage=True`
+# pose `eco.aspersion_last` → l'humectation foliaire monte au tick suivant. Coût
+# identique dans les deux modes (§2.5, choix écologique pas économique).
+# ---------------------------------------------------------------------------
+
+from sim.actions.gestes import arroser, DOSE_ARROSAGE
+from sim import vigueur as V
+
+
+def test_arroser_pied_ne_mouille_pas_le_feuillage():
+    """(a) `arroser(feuillage=False)` (défaut, au PIED) laisse `wetness_memory`
+    INCHANGÉE au tick suivant : le sol est mouillé mais pas la canopée → aucun apport
+    à l'humectation (aspersion_last reste nulle)."""
+    engine, tile, eco, p = _lab()
+    _pin_vent(eco, 0.0)                       # pas de séchage éolien
+    assert p.wetness_memory == 0.0
+    r, c = p.position
+    ok = arroser(engine.game_state, "j1", eco, r, c, feuillage=False)
+    assert ok, "arroser au pied a échoué (Vigueur ?)"
+    assert eco.aspersion_last.at_plot(r, c) == 0.0, "le pied ne doit rien asperger"
+    engine._update_physiology(tile, eco, nebulosite=1.0, pluie_event=0.0)
+    assert p.wetness_memory == 0.0, "arroser au pied a mouillé le feuillage"
+    print("[humectation ③·pied] PASS — arroser au pied laisse le feuillage sec (wetness=0)")
+
+
+def test_arroser_feuillage_monte_l_humectation():
+    """(b) `arroser(feuillage=True)` pose l'aspersion → `wetness_memory` monte
+    strictement depuis 0 au tick suivant (feuillage mouillé)."""
+    engine, tile, eco, p = _lab()
+    _pin_vent(eco, 0.0)
+    r, c = p.position
+    ok = arroser(engine.game_state, "j1", eco, r, c, feuillage=True)
+    assert ok
+    assert abs(eco.aspersion_last.at_plot(r, c) - DOSE_ARROSAGE) < _EPS, \
+        "l'aspersion foliaire n'a pas été posée"
+    engine._update_physiology(tile, eco, nebulosite=1.0, pluie_event=0.0)
+    assert p.wetness_memory > 0.0, "asperger le feuillage n'a pas monté l'humectation"
+    print(f"[humectation ③·feuillage] PASS — aspersion → wetness 0.0 → {p.wetness_memory:.4f}")
+
+
+def test_les_deux_modes_mouillent_le_sol_pareil():
+    """(c) Les deux modes montent `eco.humidite` de la MÊME dose (le feuillage est un
+    APPORT EN PLUS, pas un détournement) : seul le mode feuillage ajoute l'aspersion."""
+    def _delta_sol(feuillage: bool) -> float:
+        engine, tile, eco, p = _lab()
+        r, c = p.position
+        h_avant = eco.humidite.at_plot(r, c)
+        arroser(engine.game_state, "j1", eco, r, c, feuillage=feuillage)
+        return eco.humidite.at_plot(r, c) - h_avant
+    d_pied = _delta_sol(False)
+    d_feuillage = _delta_sol(True)
+    assert d_pied > 0.0, "arroser n'a pas humidifié le sol"
+    assert abs(d_pied - d_feuillage) < _EPS, \
+        f"le sol n'est pas mouillé pareil : pied {d_pied:.4f} ≠ feuillage {d_feuillage:.4f}"
+    print(f"[humectation ③·sol-égal] PASS — les deux modes montent le sol de {d_pied:.4f}")
+
+
+def test_vigueur_insuffisante_ne_touche_rien():
+    """(d) Vigueur insuffisante → tout-ou-rien : NI `eco.humidite` NI `eco.aspersion_last`
+    ne sont touchés (le geste échoue en amont de toute écriture)."""
+    engine, tile, eco, p = _lab()
+    V.ensure_player(engine.game_state, "j1")["courante"] = 0.0   # à sec
+    r, c = p.position
+    h_avant = eco.humidite.at_plot(r, c)
+    ok = arroser(engine.game_state, "j1", eco, r, c, feuillage=True)
+    assert not ok, "arroser a réussi à Vigueur nulle"
+    assert eco.humidite.at_plot(r, c) == h_avant, "le sol a été mouillé sans Vigueur"
+    assert eco.aspersion_last.at_plot(r, c) == 0.0, "l'aspersion a été posée sans Vigueur"
+    print("[humectation ③·vigueur] PASS — Vigueur nulle : ni sol ni feuillage touchés")
+
+
 if __name__ == "__main__":
     test_montee_sous_rosee()
     test_decroissance_sans_mouillage()
@@ -199,4 +272,8 @@ if __name__ == "__main__":
     test_fungal_nul_si_feuillage_sec()
     test_arroser_au_pied_ne_change_plus_la_maladie()
     test_infection_memory_suit_l_humectation()
-    print("\n[humectation ①②] TOUS LES TESTS PASSENT")
+    test_arroser_pied_ne_mouille_pas_le_feuillage()
+    test_arroser_feuillage_monte_l_humectation()
+    test_les_deux_modes_mouillent_le_sol_pareil()
+    test_vigueur_insuffisante_ne_touche_rien()
+    print("\n[humectation ①②③] TOUS LES TESTS PASSENT")

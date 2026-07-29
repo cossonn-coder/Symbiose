@@ -171,6 +171,16 @@ class EcoFields(MatiereOrganiqueMixin, HydrologieMixin, RuissellementMixin,
     # NULLE au repos / nuit douce-couverte → golden NEUTRE pour ces termes ; la rosée du
     # smoke en pose → golden léger ANNONCÉ. Hors `summary()` (transient, comme drainage_last).
     rosee_last:       GridField = field(default=None)
+    # Aspersion foliaire du DERNIER geste (sprint HUMECTATION FOLIAIRE ③, §2.5) —
+    # carte TRANSIENTE par plot (patron `rosee_last`) posée par le geste `arroser`
+    # en mode FEUILLAGE (`aspersion_last.set(r, c, DOSE_ARROSAGE)`, event-driven, hors
+    # tick). Lue par la SEULE humectation foliaire (`_update_physiology`, terme
+    # ASPERSION_WET_GAIN) puis REMISE À PLAT chaque tick par `tick_semaine` (APRÈS
+    # `_update_physiology` — cf. le commentaire au point de reset : le geste s'applique
+    # ENTRE deux ticks, un reset AVANT la lecture effacerait l'apport). NULLE au repos
+    # (aucun `arroser(feuillage=True)`) → terme nul → construction directe / smoke
+    # bit-identiques, golden INTACT. Hors `summary()` (transiente comme `rosee_last`).
+    aspersion_last:   GridField = field(default=None)
     # Champ de VENT spatialisé (sprint VENT & ÉVAPOTRANSPIRATION ③, §2.4/§4) — force
     # LOCALE du vent par plot ∈ [0,1+] : la masse d'air uniforme (`wind_at` ①) MODULÉE
     # par la géométrie d'abri (sillage sous le vent des obstacles, venturi des goulets).
@@ -412,6 +422,10 @@ class EcoFields(MatiereOrganiqueMixin, HydrologieMixin, RuissellementMixin,
         # lue par les interconnexions vivantes du matin (faune abreuvée + captation foliaire).
         if self.rosee_last is None:
             self.rosee_last = GridField(self.rows, self.cols)
+        # Aspersion foliaire du dernier geste (③) — NULLE au repos, posée par
+        # `arroser(feuillage=True)`, lue par l'humectation puis remise à plat par le tick.
+        if self.aspersion_last is None:
+            self.aspersion_last = GridField(self.rows, self.cols)
         # Vent spatialisé (③) — NUL au repos (aucun tick d'abri encore appelé), écrit
         # par `tick_abri`. `_abri_cache` mémorise (signature, facteur, turbulence) pour
         # ne recalculer la géométrie que sur Δdirection/obstacle (§7B levier 2). None =

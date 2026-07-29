@@ -240,14 +240,19 @@ class ActionsMixin:
             # `params.urgence` (bool) OU `params.phase == "saison"` (couture §3.1).
             urgence = bool(params.get("urgence", False)
                            or params.get("phase") == "saison")
+            # Mode ASPERSION (③, §2.5) : `params.feuillage` mouille le FEUILLAGE en plus
+            # du sol (mildiou ↑) ; défaut False = arrosage AU PIED (le bon geste). Coût
+            # identique dans les deux modes (le choix est écologique, pas économique).
+            feuillage = bool(params.get("feuillage", False))
             cost = (A.cout_action(gs, player, "arroser",
                                   A.OBJETS_TOUCHES["arroser"])
                     * (A.URGENCE_MULT if urgence else 1.0))
             h_avant = eco.humidite.at_plot(r, c)
-            ok = A.arroser(gs, player, eco, r, c, urgence=urgence)
+            ok = A.arroser(gs, player, eco, r, c, urgence=urgence, feuillage=feuillage)
             h_apres = eco.humidite.at_plot(r, c)
             return bilan(ok, cost, 0.0,
                          f"arrosé ({r},{c}) : humidité {h_avant:.2f} → {h_apres:.2f}"
+                         + (" [feuillage]" if feuillage else "")
                          + (" [urgence]" if urgence else "") if ok
                          else "Vigueur insuffisante — rien arrosé")
 

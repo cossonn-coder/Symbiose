@@ -381,6 +381,20 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
             #    tick, cf. lignes 95/114) alimentent l'humectation foliaire (①).
             self._update_physiology(tile, eco, nebulosite=nebul, pluie_event=pluie_event)
 
+            # 9b. Remise à plat de l'aspersion foliaire (sprint HUMECTATION FOLIAIRE ③) —
+            #     carte transiente `eco.aspersion_last` posée par `arroser(feuillage=True)`.
+            #     APRÈS `_update_physiology` (son SEUL lecteur), PAS avant : le geste
+            #     s'applique ENTRE deux ticks (hors tick, invariant H2 — cmd_action /
+            #     automate après `tick_semaine`), donc l'aspersion est déjà écrite quand ce
+            #     tick démarre ; un reset en TÊTE de tick l'effacerait AVANT que l'humectation
+            #     la lise (le geste n'aurait jamais d'effet). En la remettant à plat ICI,
+            #     l'aspersion vit exactement le tick qui suit le geste, comme une transiente
+            #     (patron `rosee_last`, mais reset côté CONSOMMATEUR car le producteur est
+            #     hors tick). `fill(0.0)` écrit des 0 dans un champ que personne d'autre ne
+            #     lit → aucun effet de bord ; nul au repos (aucun geste) → golden INTACT.
+            if getattr(eco, "aspersion_last", None) is not None:
+                eco.aspersion_last.fill(0.0)
+
             # 9c. Croissance de structure (D29 réorienté). Phototropisme branché
             # (sprint maison, tronçon 3) : l'apex se penche vers le gradient de la
             # lumière-sol du tick (eco.lumiere, déjà recalculée à l'étape 2). Pour

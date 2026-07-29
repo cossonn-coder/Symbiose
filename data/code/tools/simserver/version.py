@@ -634,7 +634,19 @@ from __future__ import annotations
 #       tourne hors serveur et n'a aucune clé `ceinture`. Un binaire pré-0.5.41
 #       n'émet pas le bloc (→ `DecorLayer` garde son profil local) et répond « verbe
 #       inconnu » aux 6 gestes (tolérance comme tous les bumps précédents).
-ENGINE_VERSION = "0.5.41"
+# 0.5.42 (humectation foliaire ③, geste arroser pied/feuillage) : le verbe `arroser`
+#       gagne un champ OPTIONNEL `params.feuillage` (bool, défaut False). False = arrosage
+#       AU PIED (comportement STRICTEMENT inchangé, écrit `eco.humidite` seul — le bon
+#       geste permacole) ; True = ASPERSION du feuillage (écrit `humidite` COMME au pied
+#       **et** pose la carte transiente `eco.aspersion_last`, lue au tick suivant par
+#       l'humectation foliaire → mildiou ↑ / oïdium ↓). Coût IDENTIQUE dans les deux modes
+#       (§2.5 : le choix est écologique, pas économique — le mauvais geste produit sa
+#       CONSÉQUENCE, pas un surcoût). La carte `aspersion_last` est remise à plat CHAQUE
+#       tick (`tick_semaine`, APRÈS `_update_physiology`). PURE extension (champ optionnel,
+#       geste event-driven hors tick ; carte nulle au repos) → golden INTACT (le smoke ne
+#       joue aucun `arroser`). Un binaire pré-0.5.42 ignore `params.feuillage` → arrose
+#       toujours au pied (tolérance côté vue, comme tous les bumps précédents).
+ENGINE_VERSION = "0.5.42"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

@@ -281,6 +281,15 @@ ROSEE_WET_GAIN       = 0.9    # la rosée est la source d'humectation la plus R�
 PLUIE_WET_GAIN       = 0.8    # la pluie mouille fort mais passe
 PLUIE_WET_REF        = 0.5    # pluie_event saturant le signal d'humectation
 ASPERSION_WET_GAIN   = 1.0    # arroser AU FEUILLAGE : la source la plus mouillante (③)
+# Dose d'humidité d'un geste `arroser` (CONCEPTION_PLANTER_ARROSER §4, Q9), échelle
+# [0,3]. Calée sur l'aléa « Pluies » (`+0.5`) : un geste = une bonne pluie locale. Cap
+# 3.0 appliqué dans `arroser` ; le tick (évaporation × drainage) la fait redescendre.
+# VIT ICI (bas de couche) et non dans `sim/actions/gestes.py` : c'est AUSSI la référence
+# de NORMALISATION de l'aspersion foliaire (③) lue par `sim/engine/croissance.py`
+# (`aspersion / DOSE_ARROSAGE` ∈ [0,1]) — une seule source de vérité évite tout drift, et
+# la loger dans `sim.actions` créerait un cycle d'import (engine → actions → world → sim).
+# `gestes.py` la ré-importe (API `sim.actions.DOSE_ARROSAGE` inchangée).
+DOSE_ARROSAGE        = 0.5
 VENT_WET_DRY         = 0.7    # part du séchage imputable au vent à force 1
 RAD_WET_DRY          = 0.5    # part du séchage imputable au soleil à ciel clair
 COUVERT_WET_SHELTER  = 0.8    # un couvert dense empêche le vent de pénétrer (aération)

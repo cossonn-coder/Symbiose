@@ -27,6 +27,7 @@ from fields.ecofields import VITALITE_STEP   # pas d'érosion de vitalité (éci
 from fields.ecofields import BECHAGE_MALUS, GRELINETTE_GAIN   # deltas structure du sol des gestes (physico-chimie ⑧)
 from fields.ecofields import BECHAGE_MYCELIUM_MALUS   # quantum de réseau fongique cassé par le bêchage (mycélium ⑤, event-driven)
 from fields.ecofields import PAILLAGE_DOSE   # dose de mulch d'un geste `pailler` (équilibre invasion ③)
+from fields.ecofields.constants import DOSE_ARROSAGE   # dose d'un arrosage — source de vérité bas-couche (aussi réf. de normalisation de l'aspersion ③, évite le cycle engine→actions)
 from fields.ecofields import CREUSER_DELTA, DRAINER_ASSECHE   # terrassement joueur (hydrologie ⑦, event-driven)
 from fields.population import DENSITE_PAR_SPRITE   # « un geste = un individu = un quantum » (D31.3 §5)
 from fields.alarme import declencher_alarme, ALARME_DEPOT   # phéromone d'alarme apienne (⑦ §J)
@@ -34,11 +35,6 @@ from fields.seedbank import GrainEnAttente          # dépôt de `planter` (germ
 from .couts import cout_action, _objets_action, OBJETS_TOUCHES, URGENCE_MULT
 from .paillage import stock_disponible, prelever_stock   # matériau du mulch (④) : stock par nature
 from .autopaillage import auto_pailler   # couplage planter+pailler par maîtrise (⑦, D12)
-
-# Dose d'humidité d'un arrosage (CONCEPTION_PLANTER_ARROSER §4, Q9), échelle [0,3].
-# Calée sur l'aléa « Pluies » (`+0.5`) : un geste = une bonne pluie locale. Cap 3.0
-# appliqué dans `arroser` ; le tick (évaporation × drainage) la fait redescendre.
-DOSE_ARROSAGE = 0.5
 
 # Malus de microbiome local du bêchage (CONCEPTION_VIGUEUR §3.2, « biner/bêcher :
 # microbiome ↓ » — la conception ne chiffrait pas l'ampleur). Knob sobre, calibrage
@@ -160,32 +156,46 @@ def planter(game_state: dict, player: str, tile, eco, species: str,
 
 
 def arroser(game_state: dict, player: str, eco, r: int, c: int,
-            urgence: bool = False) -> bool:
-    """Arroser (spec §3.2 / CONCEPTION_PLANTER_ARROSER §2.2, Q8-Q12) — geste sur le
-    MILIEU, canal VERTUEUX (philo #1). Canon philo #2 : on écrit UNIQUEMENT le champ
-    `eco.humidite` au plot cliqué (`+DOSE_ARROSAGE`, cap 3.0, CUMULATIF) — RIEN
-    d'autre. La plante « se débrouille » avec l'humidité du sol au tick suivant
-    (Q12 a) : sa stagnation « sec » se lève si l'eau remonte, l'excès → asphyxie
-    (modèle eau, tick). On n'écrit JAMAIS un attribut de la plante.
+            urgence: bool = False, feuillage: bool = False) -> bool:
+    """Arroser (spec §3.2 / CONCEPTION_PLANTER_ARROSER §2.2, Q8-Q12 ; mode feuillage :
+    sprint HUMECTATION FOLIAIRE §2.5) — geste sur le MILIEU, canal VERTUEUX (philo #1).
+    Canon philo #2 : on écrit UNIQUEMENT des champs du MILIEU au plot cliqué, JAMAIS
+    un attribut de la plante. La plante « se débrouille » au tick suivant (Q12 a) : sa
+    stagnation « sec » se lève si l'eau remonte, l'excès → asphyxie (modèle eau, tick).
+
+    DEUX modes (§2.5, le levier qui rend le dilemme jouable) :
+    • `feuillage=False` (DÉFAUT — le BON geste permacole) : arrosage AU PIED. On écrit
+      SEULEMENT `eco.humidite` (`+DOSE_ARROSAGE`, cap 3.0, CUMULATIF). Le feuillage reste
+      sec → aucune humectation foliaire → la pression fongique (bascule ②) n'est PAS
+      nourrie. Comportement STRICTEMENT inchangé — tous les appelants historiques sont
+      bit-identiques.
+    • `feuillage=True` : ASPERSION du feuillage. On écrit `eco.humidite` COMME AU PIED
+      **et** on pose `eco.aspersion_last.set(r, c, DOSE_ARROSAGE)` (carte transiente ③,
+      remise à plat chaque tick). Le feuillage MOUILLÉ alimente `wetness_memory` au tick
+      suivant (croissance.py, terme ASPERSION_WET_GAIN) → mildiou ↑ (et oïdium ↓, ④). Le
+      mauvais geste n'est PAS puni par le PRIX (coût identique, §2.5, décision de design :
+      le choix est écologique, pas économique) — il produit sa CONSÉQUENCE (philo #6).
 
     Transitoire par construction : `tick_hydrology` (évaporation × drainage) fait
-    REDESCENDRE l'apport → ré-arroser COÛTE = l'usure de la solution facile (philo
-    #1). La diffusion (`HUMIDITY_INERTIA`, au tick) mouille naturellement autour
-    (Q8) — on n'écrit que le plot cliqué. Cumuler les doses peut franchir le seuil
-    d'excès → noyade (§2.3) : arroser n'est bénéfique QUE dosé (fausse bonne idée
-    si abusé).
+    REDESCENDRE l'apport hydrique → ré-arroser COÛTE = l'usure de la solution facile
+    (philo #1). Cumuler les doses peut franchir le seuil d'excès → noyade (§2.3).
 
-    DEUX phases (Q10) : planification (prévention, coût simple) ET saison (réaction,
-    `urgence=True` → `× URGENCE_MULT`). Coût **MODÉRÉ**. Binaire tout-ou-rien (modèle
-    `deraciner`) : le champ n'est mouillé QUE si le coût est intégralement payé —
-    forcer le geste à vide draine la Vigueur sans rien arroser.
+    DEUX phases (Q10) : planification (coût simple) ET saison (réaction, `urgence=True`
+    → `× URGENCE_MULT`). Coût **MODÉRÉ**, IDENTIQUE dans les deux modes. Binaire
+    tout-ou-rien (modèle `deraciner`) : NI `humidite` NI `aspersion_last` ne sont écrits
+    tant que le coût n'est pas intégralement payé — forcer le geste à vide draine la
+    Vigueur sans rien arroser.
     Renvoie True si le geste a été pleinement payé (et donc appliqué)."""
     cost = (cout_action(game_state, player, "arroser", OBJETS_TOUCHES["arroser"])
             * (URGENCE_MULT if urgence else 1.0))
     if spend(game_state, player, cost) < 1.0:
-        return False                          # Vigueur insuffisante → champ intact
+        return False                          # Vigueur insuffisante → champ ET aspersion intacts
     h = eco.humidite.at_plot(r, c)
     eco.humidite.set(r, c, min(3.0, h + DOSE_ARROSAGE))
+    if feuillage:
+        # Asperger le feuillage : humectation foliaire au plot cliqué (③). Carte
+        # transiente lue par `_update_physiology` puis effacée par le tick.
+        eco.aspersion_last.set(r, c, DOSE_ARROSAGE)
     return True
 
 

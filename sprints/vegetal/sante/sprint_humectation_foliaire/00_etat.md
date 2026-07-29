@@ -2,7 +2,7 @@
 
 **Origine** : amorce D38 « rosée nocturne & hygrométrie de l'air » (2026-07-26).
 **Phase courante** : B **FIGÉE** — doc de conception + 4 kickoffs autosuffisants
-(01→04). **Tronçons ①② EXÉCUTÉS (golden INCHANGÉ dans les DEUX). Reste ③④.**
+(01→04). **Tronçons ①②③ EXÉCUTÉS (golden INCHANGÉ dans les TROIS). Reste ④.**
 **Rangement** : `vegetal/sante` (et non `champs/climat` — cf. décision D3 ci-dessous).
 
 ---
@@ -109,6 +109,26 @@ agit dans `fungal_disease`, en aval).
     mais **neutre au digest** de ce smoke. Dérive LOCALISÉE à santé/plasticité, conforme au
     kickoff (rien sur hydro/nutriments/épaisseur). **Aucun re-figeage nécessaire.**
 - **③ `arroser` pied/feuillage** — le geste rend le dilemme jouable. **NEUTRE.**
+  ✅ **FAIT (golden INCHANGÉ `57c166d8…`).** Carte transiente `eco.aspersion_last`
+  (patron `rosee_last`) posée par `arroser(feuillage=True)` (`gestes.py`), lue par le
+  terme `ASPERSION_WET_GAIN` de l'humectation (`croissance.py::_update_physiology`) puis
+  remise à plat par `tick_semaine` (`boucle.py`, étape **9b**). Défaut `feuillage=False`
+  = au pied, comportement bit-identique (appelants inchangés). Coût IDENTIQUE dans les
+  deux modes (§2.5). Pont : `params.feuillage` sur `arroser`, `ENGINE_VERSION` → **0.5.42**.
+  Tests `test_humectation.py` étendus (③ a/b/c/d) — 11 suites vertes. LDC : croissance 212,
+  gestes 235, boucle 269 🟢.
+  **⚠️ Écart au kickoff (2 points, assumés) :**
+  1. **Reset placé APRÈS `_update_physiology` (étape 9b), pas AVANT.** Le kickoff disait
+     « avant `_update_physiology` ». Faux pour une transiente PRODUITE HORS TICK : le geste
+     s'applique ENTRE deux ticks (cmd_action / automate après `tick_semaine`, invariant H2),
+     donc l'aspersion est déjà écrite quand le tick démarre ; un reset EN TÊTE l'effacerait
+     avant que l'humectation la lise → le geste n'aurait JAMAIS d'effet. Reset côté
+     CONSOMMATEUR (après lecture) → l'aspersion vit exactement le tick qui suit le geste.
+  2. **`DOSE_ARROSAGE` DÉPLACÉ** de `sim/actions/gestes.py` vers `fields/ecofields/constants.py`
+     (ré-importé par gestes.py, API `sim.actions.DOSE_ARROSAGE` inchangée). Cause : l'import
+     de `sim.actions.gestes` par `sim.engine.croissance` (voulu par le kickoff pour la
+     normalisation `aspersion / DOSE_ARROSAGE`) crée un CYCLE engine→actions→world→sim.
+     Constante logée bas-couche = une seule source de vérité, pas de cycle, pas de drift.
 - **④ guilde oïdium** — la courgette, exception qui interdit la solution unique.
   **NEUTRE — à prouver.**
 - *Pas de tronçon vue Godot : sprint moteur pur ; le visible (gouttes/givre) = D24, déjà tracé.*
@@ -145,10 +165,13 @@ Note : `fungal_disease` tire sur `week·13`.
 `sim/effects/perturbations.py:179-224` (`fungal_disease`), `fields/ecofields/sol.py:118`
 (`disease_probability`), `fields/ecofields/rosee.py`, `sim/actions/gestes.py:162`.
 
-**Prochaine étape** : tronçons ①② CLOS (golden inchangé `57c166d8…` dans les deux ;
-pour ②, le re-figeage était prévu mais NON survenu — smoke n'exerce pas le déclenchement
-fongique, et l'aval de `infection_memory` est sous-résolution ; explication vérifiée
-ci-dessus). Reprendre au **③** (`03_*.md`) : `arroser` pied/feuillage — rend le dilemme
-jouable, golden attendu NEUTRE. `wetness_memory` est désormais **lue** par les deux sites
-de pression fongique ; le ③ ajoutera un mode feuillage à `arroser` (écrira l'humectation
-via un `aspersion_last`, cf. `ASPERSION_WET_GAIN` réservé au ①).
+**Prochaine étape** : tronçons ①②③ CLOS (golden inchangé `57c166d8…` dans les trois).
+Le ③ a livré le geste `arroser(feuillage=…)` + la carte `aspersion_last` + le pont 0.5.42
+(voir la carte des tronçons ci-dessus pour les 2 écarts assumés : reset après physiologie,
+`DOSE_ARROSAGE` déplacé bas-couche). Reprendre au **④** (`04_*.md`) : **guilde oïdium** —
+la courgette, seule espèce dont la maladie CHUTE quand le feuillage est mouillé (l'oïdium
+germe sur feuille SÈCHE, à l'inverse du mildiou) → interdit la solution unique « asperge
+toujours / jamais ». Golden attendu NEUTRE (à prouver, pas d'espèce ajoutée — la courgette
+existe déjà). NON COMMITÉ par le sous-agent ③ (commit = orchestrateur/Nico).
+**F5 Nico restant** : la vue Godot pourrait offrir un TOGGLE pied/feuillage sur le geste
+`arroser` (`params.feuillage`, protocole 0.5.42) — pur ajout vue, non implémenté ici.
