@@ -185,6 +185,19 @@ Quand Nico a validé la conception (« OK », « vas-y », « lets go »), maté
      toucher, modèle/formules, golden attendu (inchangé / re-figé + raison),
      ce qu'il NE faut PAS faire, points F5 éventuels.
 
+     **Prescris l'intention, pas un placement non vérifié.** Les détails d'impl
+     *transversaux* — ceux qui cassent à l'exécution, **hors du fichier édité** —
+     ne se gravent que **vérifiés au code** ; sinon énonce l'intention et laisse
+     le sous-agent placer. Trois classiques (tous vus au sprint HUMECTATION
+     FOLIAIRE ③, +9 M tokens de tâtonnement) : **(a)** le sens d'un import
+     (couches `plants ← fields ← sim ← engine` : une couche basse importée
+     depuis une haute = cycle) ; **(b)** l'ordre d'un reset/écriture dans le tick
+     (champ produit *dans* le tick → reset en tête ; posé *hors* tick par un
+     geste → reset en queue, sinon l'apport est effacé avant lecture) ;
+     **(c)** le point de mutation d'un champ à plusieurs lecteurs. C'est la règle
+     « ce qui se grave se revérifie » (§1 réflexe b) étendue de l'*existence* des
+     symboles à la *faisabilité* de leur agencement.
+
 ## 4. Phase C — livrer
 
 1. **git** — vérifie l'arbre propre AVANT (garde-fou projet + incident Nextcloud

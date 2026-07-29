@@ -95,6 +95,14 @@ Prompt autosuffisant (le sous-agent démarre à froid, il ne sait rien) :
 > dans ton rapport et consigne-le dans `00_etat.md`.
 > Protocole complet : `docs/meta/agent/deepseek_protocol.md` §5.
 >
+> **Les prescriptions d'implémentation du kickoff sont des hypothèses réfutables,
+> pas des ordres.** Avant de bâtir dessus, vérifie tôt les points *transversaux*
+> qui cassent à l'exécution — sens des imports (règle de couches
+> `plants ← fields ← sim ← engine`), ordre d'un reset/écriture dans le tick,
+> mutation d'un champ partagé. Si l'un ne tient pas, corrige-le **d'emblée** (ne
+> construis pas 8 fichiers sur une prémisse fausse) et signale l'écart au
+> point (6) de ton rapport.
+>
 > Avant de finir, OBLIGATOIRE :
 > - Lance le golden : `cd data/code && python3 -m tests.test_golden`. Note s'il
 >   est **inchangé** ou **re-figé** (et dans ce cas le nouveau hash + la raison).
