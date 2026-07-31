@@ -104,14 +104,61 @@ vs été (22 °C) :
 |---|---|---|
 | ① | Décompo cœur `matiere_organique.py:96`+`:133` → `MICROBE_RHYTHM_REF`+cap ; site D40 | **RE-FIGE LARGE** (cascade MO→NPK→humus→vitalité) |
 | ② | `sol.py:81`(+cap), `resources:316`, `allelopathie:43` → RHYTHM_REF ; `perturbations:438`+seuil 0.20→0.05 | **RE-FIGÉ** `9ad035f18…` (+ population_hash `c59e0ddb…`) — FAIT |
-| ③ | Banc mesure favorabilité D41 + vérif heatmaps/litière saisonnière F5 Godot | **INTACT** attendu |
+| ③ | Banc mesure favorabilité D41 + vérif heatmaps/litière saisonnière F5 Godot | **INTACT** `9ad035f18…` — FAIT |
+
+- **③ Banc de mesure + vérif vue — FAIT.** Nouveau `tools/banc_favorabilite.py`
+  (PURE mesure, aucun `data/code/` hors `tools/`). Réutilise `FIELD_NORM`
+  (`sim.vigueur_plante`), `dispo(ph,nut)` (`nutriments.py`), `microbe_clim_factor`
+  (`thermique.py`), `MICROBE_RHYTHM_REF` — zéro ré-implémentation. Monde sain
+  = `build_world(dense=True)` du banc de calibration (seed 42, miroir golden), 20 ans.
+  - **Golden INTACT** : `9ad035f18916813dbd194f0d7b76c11178229c63203dccd832bdf4ea3175411c`
+    (inchangé — seul un fichier `tools/` ajouté). population_hash inchangé.
+  - **Vue F5** : `visuals/FieldOverlay.cs` expose DÉJÀ om_fresh/om_active/om_stable/
+    n/p/k/microbiome (palettes présentes + auto-découverte `cmd_fields` par
+    introspection des GridField d'EcoFields). **Aucune heatmap à câbler, aucun C#
+    touché** (donc pas de `dotnet build` requis).
+
+### VERDICT précondition D41 : **NO-GO** (favorabilité au plancher sur sol sain)
+Favorabilité D41 DIRECTE = `Liebig(min N,P,K /FIELD_NORM) × min(dispo(ph,N/P/K))`,
+mesurée sur les 96 plots du jardin sain à l'an 20 :
+- **médiane 0.000, moyenne 0.001, p90 0.003, max 0.012.** Plancher partout.
+- Cause : les stocks N/P/K restent **au sol** malgré la recalibration. N ~0.05–0.09,
+  **P ~0.003, K ~0.003** (échelle 0–3) → `min` de Liebig ≈ 0.001. Le pH n'est PAS le
+  frein (`dispo(6.8,P)`≈0.91) : c'est la **carence NPK absolue**. L'uptake + le
+  lessivage vident P/K aussi vite que la minéralisation les relâche.
+- La recalibration a bien **allumé l'aval MO** : microbiome ~0.35, om_active sain
+  ~0.6, **om_stable grimpe 0.16 → 1.31** sur 20 ans, D40 swingue (+20.4 % sur le
+  plot riche réel, humidité contrôlée — vs +13 % avant ; le +55 % de ② était sur un
+  microbiome synthétique 0.5 à humidité optimale). **Mais la ligne de base NPK n'a
+  PAS remonté** → l'hypothèse §5 de la conception (« NPK/favorabilité d'un jardin sain
+  remonte ») est **RÉFUTÉE par la mesure**.
+- **Conséquence D41** : la précondition « signal ≈ favorable en conditions normales »
+  (analogue `drought_memory ≈ 0`) **n'est PAS atteinte**. Une voie « mort édaphique
+  chronique » construite sur la favorabilité brute condamnerait TOUT sol sain (comme
+  le `qi_local ~0.014` épuisé qu'elle devait remplacer). D41 ne peut PAS partir en
+  /conception contre ce sol : le vrai blocage est en amont, dans l'**équilibre
+  uptake ↔ minéralisation** (P/K drainés au plancher), pas dans le rythme microbien.
+  /conception D41 doit d'abord traiter ce déséquilibre (ratios `split_miner`, BESOIN
+  uptake, ou lessivage P/K) OU adosser D41 à un autre signal que le stock NPK brut.
+
+### §F5 — checkpoints pour Nico (à observer en F5 Godot, heatmaps F6)
+- **Litière saisonnière (D40 visible)** : la couche fraîche (`om_fresh`) doit
+  s'ACCUMULER l'hiver (décompo gelée) et se RÉSORBER l'été (recyclage) — swing
+  décompo mesuré +20 % sur plot riche. Basculer F6 sur `om_fresh` / `om_active`.
+- **Heatmaps N/P/K** : ATTENTION — elles resteront quasi UNIFORMÉMENT « pauvres »
+  (P/K ~0.003 sur 0–3). Ce n'est **pas** un bug de rendu : c'est le NO-GO ci-dessus
+  (stocks NPK au plancher). L'`om_stable` (humus), lui, doit franchement verdir avec
+  les années → montre que la MO s'accumule sans nourrir les stocks minéraux dispo.
+- **Pas de mort en masse** : la recalibration ne doit tuer aucune plante d'un artefact
+  (golden intact, `main.py` exit 0 sans NaN aux tronçons ①/②). Vérifier à l'œil qu'aucune
+  planche ne s'effondre après la bascule de rythme.
 
 ## §REPRISE
-① + ② FAITS (② non commité — l'orchestrateur commit). Prochain : **tronçon ③**
-(`03_*.md` : banc de mesure favorabilité D41 sur jardin sain post-recalibration +
-vérif F5 Godot heatmaps F6 om/npk/microbiome + accumulation saisonnière de litière ;
-**golden INTACT attendu** — mesure/observation, aucun champ/rendu neuf). Golden courant
-après ② = `9ad035f18916813dbd194f0d7b76c11178229c63203dccd832bdf4ea3175411c`
-(+ `tests/population_hash.txt` = `c59e0ddb94cab1d25bd212e4590229ec87d5cc7ba0f2ba1c963f754253c8f1b7`).
-Chaque tronçon lit `CLAUDE.md` + ce fichier + son `0N_*.md`. À la fin du sprint :
-maj DETTE.md (D40/D77 → faits ; D41 → statut précondition mesuré) + `journal.md`.
+**SPRINT TERMINÉ.** ① + ② + ③ FAITS (non commités — l'orchestrateur commit).
+Tronçon ③ = mesure pure, **golden INTACT** `9ad035f18916813dbd194f0d7b76c11178229c63203dccd832bdf4ea3175411c`
+(+ `tests/population_hash.txt` = `c59e0ddb94cab1d25bd212e4590229ec87d5cc7ba0f2ba1c963f754253c8f1b7`,
+inchangé). Livrable : `tools/banc_favorabilite.py` + **verdict D41 = NO-GO** (ci-dessus).
+Clôture orchestrateur : maj `DETTE.md` (D40 & D77 → FAITS ; **D41 → précondition
+MESURÉE = NON atteinte / NO-GO**, rouvrir vers /conception le déséquilibre
+uptake↔minéralisation P/K, PAS la mort chronique tant que le sol sain est au plancher)
++ `journal.md`.
