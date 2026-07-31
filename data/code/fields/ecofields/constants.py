@@ -456,6 +456,15 @@ UPTAKE_MICRO_BONUS = 0.40  # bonus d'uptake fertilité à microbiome saturé (r�
 MICROBE_EFFECT_REF = 0.6
 OM_ACTIVE_REF      = 1.0
 
+# Référence de RYTHME du sol vivant (sprint RYTHMES MO, D40≡D77). Distincte de
+# MICROBE_EFFECT_REF (lecture VUE/uptake) : découple le réglage de la DYNAMIQUE MO
+# (vitesse de décompo/mémoire/lombric/détox) de celui de la lisibilité — cf.
+# conception_rythmes_mo.md §3. Même valeur au départ ; le banc ③ peut nudger l'un
+# sans toucher l'autre. Le /3.0 hérité (saturation du champ, max_val=3.0) écrasait
+# le microbiome sur sa plage RÉELLE (~0.05 équilibre, ~0.5 riche) → la décompo lisait
+# « morte » et la cloche climatique Q10 (microbe_clim_factor, D40) restait inerte.
+MICROBE_RHYTHM_REF = 0.6
+
 # Vitalité dérivée — pondérations (cf. vitalite()), somme des positifs = 1.0.
 # RÉÉQUILIBRÉ au sprint CALIBRATION RÉALISTE ① (ancien 0.35/0.25/0.20/0.20, disturb
 # 0.15). Deux pathologies mesurées au banc justifiaient la dérive (kickoff §D, autorisé

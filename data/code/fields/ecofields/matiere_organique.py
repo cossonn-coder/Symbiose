@@ -93,7 +93,7 @@ class MatiereOrganiqueMixin:
         `microbe_clim_factor(T_sol, humidité)` (météo→champs ④) ; pas ici — la
         fragmentation mécanique/fongique du bois mort est moins sensible au pH/climat
         que la minéralisation bactérienne (divergence assumée, calibrage post-test)."""
-        micro = self.microbiome.at_plot(r, c) / 3.0
+        micro = min(1.0, self.microbiome.at_plot(r, c) / MICROBE_RHYTHM_REF)
         speed = 0.5 + micro * 0.5
         worms = self.populations["lombric"] if self.populations else None
         if worms is not None:
@@ -130,7 +130,7 @@ class MatiereOrganiqueMixin:
         worms = self.populations["lombric"] if self.populations else None
         for r in range(self.rows):
             for c in range(self.cols):
-                micro = self.microbiome.at_plot(r, c) / 3.0
+                micro = min(1.0, self.microbiome.at_plot(r, c) / MICROBE_RHYTHM_REF)
                 # ④ LOCKOUT pH : l'activité bactérienne suit une cloche autour du
                 # neutre (ph → microbiome → minéralisation, couplage indirect sans
                 # champ neuf). Module la part BIOLOGIQUE de la vitesse uniquement —
