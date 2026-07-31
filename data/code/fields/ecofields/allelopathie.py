@@ -13,7 +13,7 @@ générique via `get_field` — même chemin que l'azote de l'ortie) : ce module
 QUE le décliner. Décroissance LABILE (tronçon ① — l'accumulation autotoxique est le
 tronçon ④, un autre champ) :
 
-    detox      = ALLELO_DECAY_MICROBE · min(1, microbiome[r,c] / 3)   (sol vivant)
+    detox      = ALLELO_DECAY_MICROBE · min(1, microbiome[r,c] / MICROBE_RHYTHM_REF)  (sol vivant)
     a         *= (1 − ALLELO_DECAY_BASE − detox)                      (perte fractionnelle)
     a          = 0  si a < ALLELO_FLOOR                               (snap fin de traîne)
 
@@ -27,7 +27,8 @@ BIT-IDENTIQUE.
 
 from __future__ import annotations
 
-from .constants import ALLELO_DECAY_BASE, ALLELO_DECAY_MICROBE, ALLELO_FLOOR
+from .constants import (ALLELO_DECAY_BASE, ALLELO_DECAY_MICROBE, ALLELO_FLOOR,
+                        MICROBE_RHYTHM_REF)
 
 
 def tick_allelopathie(eco) -> None:
@@ -40,6 +41,6 @@ def tick_allelopathie(eco) -> None:
             a = allelo.at_plot(r, c)
             if a <= 0.0:
                 continue
-            detox = ALLELO_DECAY_MICROBE * min(1.0, eco.microbiome.at_plot(r, c) / 3.0)
+            detox = ALLELO_DECAY_MICROBE * min(1.0, eco.microbiome.at_plot(r, c) / MICROBE_RHYTHM_REF)
             a *= max(0.0, 1.0 - ALLELO_DECAY_BASE - detox)
             allelo.set(r, c, 0.0 if a < ALLELO_FLOOR else a)

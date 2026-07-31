@@ -78,7 +78,7 @@ class SolMixin:
         """
         for r in range(self.rows):
             for c in range(self.cols):
-                micro = self.microbiome.at_plot(r, c) / 3.0
+                micro = min(1.0, self.microbiome.at_plot(r, c) / MICROBE_RHYTHM_REF)
                 fert  = min(1.0, self.fertilite_index(r, c) / 3.0)
                 om    = min(1.0, (self.om_fresh_at(r, c) +
                                   self.om_active.at_plot(r, c) +

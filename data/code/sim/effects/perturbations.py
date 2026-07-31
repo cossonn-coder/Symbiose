@@ -23,6 +23,12 @@ from fields import (_hash_noise, MORTALITY_RATE, climate_stress,
                     OIDIUM_BASE, OIDIUM_T_REF, OIDIUM_T_SPAN,
                     INOC_DEPOT_SEUIL, INOC_FROM_MEMORY, INOC_FROM_DEATH,
                     NECROMASS_PER_CM, FRAC_BOIS_MORT, VITALITE_STEP)
+# Référence de rythme du sol vivant (sprint RYTHMES MO ②) : la bascule létale
+# d'herbivorie normalise le microbiome sur la même échelle que les readers de
+# rythme. `sim` importe depuis `fields.ecofields` (couche basse), comme
+# `sim/vigueur_plante.py` le fait pour `MICROBE_EFFECT_REF` — pas via `fields`
+# (le ré-export plat ne l'expose pas ; on va droit au sous-paquet propriétaire).
+from fields.ecofields import MICROBE_RHYTHM_REF
 from .mutations import ReduceHealth, Mutation
 from .resolution import apply_mutations
 
@@ -374,7 +380,15 @@ def shade_stress_damage(plant: PlantInstance, eco,
 # le champ qui AGIT.
 HERBIVORY_GAIN         = 0.20  # densité ravageur [0,1] → pression sur la santé (knob de calibrage, §8)
 HERBIVORY_LETHAL_AUX   = 0.20  # densité auxiliaire en dessous de laquelle un foyer non régulé tourne au létal
-HERBIVORY_LETHAL_MICRO = 0.20  # microbiome normalisé en dessous duquel le sol mort ne tamponne plus
+# Seuil RE-DÉRIVÉ au sprint RYTHMES MO ② : la bascule normalise désormais le
+# microbiome par MICROBE_RHYTHM_REF (0.6) au lieu du /3.0 hérité. Sur cette échelle,
+# banc `full` 3 ans : sol vivant d'équilibre → micro_norm médian 0.18 (moy 0.21,
+# plage typique 0.08–0.40) ; sol BÊCHÉ/stérile → micro_norm ~0 (médian 0.0). L'ancien
+# 0.20 sur l'échelle /3.0 lisait micro_norm ~0.017 partout → « sol mort » TOUJOURS
+# vrai (doublement systématique, calibration cassée). Le nouveau seuil siège dans le
+# creux entre stérile (~0) et sain (≥0.08) → seul un sol réellement dégradé
+# (post-bêchage) fait sauter la bascule létale. Placeholder, calibrage F5.
+HERBIVORY_LETHAL_MICRO = 0.05  # microbiome normalisé (/0.6) sous lequel le sol mort ne tamponne plus
 
 
 def herbivory_pressure(plant: PlantInstance, tile: Tile,
@@ -435,7 +449,7 @@ def herbivory_pressure(plant: PlantInstance, tile: Tile,
         return []
 
     # Microbiome + auxiliaire locaux → bascule LÉTALE (lecture directe des champs).
-    micro_norm = min(1.0, eco.microbiome.at_plot(r, c) / 3.0) if eco else 0.3
+    micro_norm = min(1.0, eco.microbiome.at_plot(r, c) / MICROBE_RHYTHM_REF) if eco else 0.3
     aux = eco.category_density("auxiliaire", r, c) if eco else 0.0
 
     # Application probabiliste sur la santé

@@ -310,10 +310,15 @@ def _soil_food_grid(eco, tile, plants) -> list[list[float]]:
     Ressource des vers de terre = microbiome + matière organique en décomposition
     (om_fresh + om_active, part fongique incluse — cf. §6.1, pas un 5ᵉ champ).
     """
+    # Import PARESSEUX (au point d'appel, runtime tick) de la référence de rythme :
+    # la couche `fields/population` n'importe JAMAIS `ecofields` au top-level (cycle —
+    # `ecofields/container.py` importe déjà `fields.population`). À l'exécution du tick
+    # tous les modules sont chargés → `sys.modules` cache l'import, coût nul.
+    from fields.ecofields.constants import MICROBE_RHYTHM_REF
     g = _zero_grid(eco.rows, eco.cols)
     for r in range(eco.rows):
         for c in range(eco.cols):
-            micro = min(1.0, eco.microbiome.at_plot(r, c) / 3.0)
+            micro = min(1.0, eco.microbiome.at_plot(r, c) / MICROBE_RHYTHM_REF)
             om = min(1.0, (eco.om_fresh_at(r, c)
                            + eco.om_active.at_plot(r, c)) / OM_REF)
             g[r][c] = _clamp01(0.5 * micro + 0.5 * om)
