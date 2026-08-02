@@ -1,0 +1,122 @@
+# ============================================================
+# RUN démarré : 2026-08-02 00:00:14
+# Sprint D100/D32 — mesure échelle N_max + re-mesure saturation
+# Scripts : measure_nmax.py (timing A/B) puis mesure_saturation.py (#1)
+# ============================================================
+
+### (A) MONDE multi-tuiles + (B) TUILE-UNIQUE géante — measure_nmax.py
+
+===== (A) MONDE multi-tuiles (12×12 pleines, 144 pl/tuile) =====
+     si tick ∝ k (linéaire), l'O(N²) light est borné PAR TUILE, pas par le monde
+  monde k=1              tuiles= 1 plots=  144 plantes=  147 | tick=  501.3  light=   78.1  pop=  51.2  reste=  372.0 ms/tick
+  monde k=2              tuiles= 2 plots=  288 plantes=  294 | tick= 1063.3  light=  162.1  pop= 106.9  reste=  794.3 ms/tick
+  monde k=4              tuiles= 4 plots=  576 plantes=  588 | tick= 2053.3  light=  320.6  pop= 208.4  reste= 1524.4 ms/tick
+  monde k=8              tuiles= 8 plots= 1152 plantes= 1176 | tick= 4005.6  light=  627.3  pop= 403.4  reste= 2974.9 ms/tick
+  monde k=9              tuiles= 9 plots= 1296 plantes= 1323 | tick= 4669.8  light=  730.1  pop= 470.1  reste= 3469.6 ms/tick
+
+===== (B) TUILE-UNIQUE géante (pire cas O(N²) intra-tuile) =====
+     jusqu'où build_dense monte : une seule tuile, n plantes, rc=ceil(√n)
+  1 tuile n=144          tuiles= 1 plots=  144 plantes=  147 | tick=  507.1  light=   79.4  pop=  50.1  reste=  377.6 ms/tick
+  1 tuile n=256          tuiles= 1 plots=  256 plantes=  268 | tick=  832.6  light=  127.3  pop=  90.1  reste=  615.3 ms/tick
+  1 tuile n=400          tuiles= 1 plots=  400 plantes=  446 | tick= 1692.9  light=  202.7  pop= 140.3  reste= 1349.9 ms/tick
+  1 tuile n=600          tuiles= 1 plots=  625 plantes=  663 | tick= 2709.4  light=  273.9  pop= 221.0  reste= 2214.5 ms/tick
+  1 tuile n=800          tuiles= 1 plots=  841 plantes=  787 | tick= 3122.9  light=  316.0  pop= 274.9  reste= 2532.0 ms/tick
+
+### (#1) RE-MESURE saturation — mesure_saturation.py
+# SATURATION — tuile 11x11 = 121 plots, germination ON, seed 12345
+# annee  N_vivantes  pl/plot
+      1          51    0.421
+      2          47    0.388
+      3          41    0.339
+      4          45    0.372
+      5          46    0.380
+      6          43    0.355
+      7          57    0.471
+      8          58    0.479
+      9          62    0.512
+     10          70    0.579
+     11          83    0.686
+     12          66    0.545
+     13          69    0.570
+     14          96    0.793
+     15          79    0.653
+     16          89    0.736
+     17          94    0.777
+     18          73    0.603
+     19          88    0.727
+     20          96    0.793
+     21          67    0.554
+     22          92    0.760
+     23          80    0.661
+     24          86    0.711
+     25          82    0.678
+     26          17    0.140
+     27          86    0.711
+     28          57    0.471
+     29          77    0.636
+     30          87    0.719
+# borne 30 ans atteinte sans plateau strict ; dernier N=87 (0.719 pl/plot)
+# FIN saturation. max observé = 96 (0.793 pl/plot)
+
+# ============================================================
+# RUN terminé : 2026-08-02 00:14:17
+# ============================================================
+
+# ============================================================
+# CONCLUSIONS (écrites 2026-08-02 par Claude, à valider par Nico)
+# ============================================================
+#
+# CRITÈRE D'ACCEPTATION (négatif) — les 4 livrables demandés :
+#
+# [ms aux paliers atteints] — voir tableaux (A) et (B) ci-dessus.
+#   (A) monde k=1,2,4,8,9  → 147..1323 plantes, 144..1296 plots.
+#   (B) tuile unique n=144,256,400,600,800 → 147..787 plantes.
+#
+# [paliers NON atteints] — AUCUN dans le plan. (A) atteint k=9 = 1296 plots ≈
+#   le monde plantable entier (~1344) → l'échelle N_max EST mesurée, pas extrapolée.
+#   (B) atteint 787 plantes sur une seule tuile (bien au-dessus du plateau naturel
+#   ~0,65-0,79/plot et proche du disjoncteur 800). Rien d'important hors mesure.
+#
+# [statut du chiffre de saturation] — RE-MESURÉ par commande (mesure_saturation.py,
+#   tuile 11x11, germination ON, seed 12345) : OSCILLE 0,55-0,79 pl/plot, moyenne
+#   ~0,65, max 0,79, PAS de plateau strict (crash à 0,14 an 26 = dynamique réelle).
+#   Le commentaire de capacite.py (~0,83) était OPTIMISTE. CAVEAT : ce setup (5
+#   fondatrices, pas de pool externe garanti) ≠ celui du commentaire → c'est UNE
+#   re-mesure honnête, pas LA définitive. N_max recalculé = 1344 plots × [0,65..0,79]
+#   ≈ 875..1060 plantes, ordre ~1000 (cohérent avec l'estimation initiale).
+#
+# [couplage inter-tuiles côté lumière] — AUCUN. compute() (light.py:211) ne voit
+#   que tile.plants + house + ceinture (vérifié au corps). Ombrage plante<->plante
+#   STRICTEMENT intra-tuile, fait de design ASSUMÉ (CLAUDE.md : pas d'ombrage
+#   inter-tuiles). La borne par tuile ne fuit pas.
+#
+# ------------------------------------------------------------
+# VERDICT (les 3 points soldés → conclusion autorisée) :
+#
+# 1. PAS D'INCOMPATIBILITÉ STRUCTURELLE avec le but "luxuriance maximale".
+#    - (A) tick du monde LINÉAIRE en tuiles (tick/k plat 501->519 ms).
+#    - (B) light ~LINÉAIRE en plots à densité naturelle (light_index sous-quadratise) ;
+#      l'O(N²) n'apparaît qu'à densité > saturation sur plots fixes = régime hors-jeu.
+#    - light est PER-TUILE et les tuiles sont bornées → aucun terme n'explose au monde.
+#
+# 2. RIEN N'EST VISIBLE AU JOUEUR, même à N_max. Monde plein (k=9, 1323 plantes)
+#    = 4,67 s/tick vs budget 60 s/semaine = 12,8x sous. La luxuriance maximale reste
+#    jouable au rythme chill.
+#
+# 3. LE SEUL COÛT RÉEL = la boucle debug/test à N_max. 4,67 s/tick x 500-1000
+#    semaines = ~40-78 min/run. Réel mais LINÉAIRE. Le levier = le plus gros terme
+#    = RESTE (74 % du tick à toute échelle : croissance cluster ~70 + apply_disturbances
+#    ~36 par tuile), PAS light (16 %), PAS pop (10 %).
+#
+# CONSÉQUENCES SUR LES DETTES :
+#    - D100 (pop) : déclassement CONFIRMÉ. pop = 10 % plat à toute échelle, linéaire.
+#      Prédiction pop~457 ms au monde CONFIRMÉE (mesuré 470). Dette d'opportunité.
+#    - D32 (light "O(N²)") : PRÉMISSE À RE-CADRER. À densité de jeu, light est
+#      linéaire-par-tuile (16 %), pas le dealbreaker de maturité annoncé. L'O(N²)
+#      strict est un régime hors-jeu (densité > saturation, plots fixes). D32 n'est
+#      PAS prioritaire ; si un jour on l'ouvre, c'est pour la boucle test, derrière RESTE.
+#    - RESTE : jamais tracé en dette, et c'est le vrai gros terme (74 %) pour la boucle
+#      test. Croissance (structurel) + apply_disturbances (surprise, ~36 ms/tuile).
+#      => candidat à une dette "coût boucle debug/test à N_max" SI Nico veut des runs
+#      d'endgame rapides. À trancher par Nico (pas urgent : non player-facing).
+# ============================================================

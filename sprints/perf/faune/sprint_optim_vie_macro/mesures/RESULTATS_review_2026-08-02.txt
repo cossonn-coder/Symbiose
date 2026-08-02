@@ -1,0 +1,90 @@
+# ============================================================
+# REVUE 2026-08-02 — réponses aux dettes A / B / C + dette 3
+# Scripts : mesure_review_1b_3.py (1b initial + dette 3), mesure_review_B_expo.py (B),
+#           mesure_review_C_satur.py (C). Toutes lignes ci-dessous = sorties BRUTES.
+# ============================================================
+
+### DETTE 3 — k=1 et k=9, 3 runs chacun (tuile 12×12=144, comme carnet d'hier)
+#   NOTE : 144 n'existe PAS dans le monde réel (SECTORS = 121 et 176). Cette mesure
+#   ne dit RIEN de physique — elle répond à UNE question de méthode : « PLAT » mérité ?
+  k=1 run1 : tick=  659.3 ms  (tick/k= 659.3)  plantes=147
+  k=1 run2 : tick=  643.4 ms  (tick/k= 643.4)  plantes=147
+  k=1 run3 : tick=  647.7 ms  (tick/k= 647.7)  plantes=147
+  k=1 → tick   min=  643.4  méd=  647.7  max=  659.3  (étendue 2.5 %)
+  k=9 run1 : tick= 5927.8 ms  (tick/k= 658.6)  plantes=1323
+  k=9 run2 : tick= 5988.8 ms  (tick/k= 665.4)  plantes=1323
+  k=9 run3 : tick= 5917.9 ms  (tick/k= 657.5)  plantes=1323
+  k=9 → tick   min= 5917.9  méd= 5927.8  max= 5988.8  (étendue 1.2 %)
+  k=9 → tick/k min=  657.5  méd=  658.6  max=  665.4
+# LECTURE (méthode SEULE) : k=1 méd 647,7 vs k=9 méd 658,6 = +1,7 %, DANS le bruit
+#   intra-palier (1,2-2,5 %) → « PLAT » défendable au sens « tick/k constant ± bruit ».
+#   MAIS absolus INSTABLES entre jours : hier tick/k≈519, aujourd'hui≈658 (+27 %,
+#   cProfile + machine chargée). Tout chiffre ABSOLU de tick doit porter cette réserve.
+
+### DETTE B — exposant de light, surface FIXE = tuile réelle 16×11=176, N étendu
+  N_dem= 20  vivantes= 35  (0.20 pl/plot) | tick=  235.2  light=  15.5 ms
+  N_dem= 45  vivantes= 58  (0.33 pl/plot) | tick=  306.9  light=  28.2 ms
+  N_dem= 90  vivantes=102  (0.58 pl/plot) | tick=  408.4  light=  49.6 ms
+  N_dem=140  vivantes=151  (0.86 pl/plot) | tick=  534.3  light=  71.1 ms
+  N_dem=200  vivantes=211  (1.20 pl/plot) | tick=  765.4  light= 103.7 ms
+  N_dem=280  vivantes=284  (1.61 pl/plot) | tick= 1098.7  light= 157.9 ms
+  → EXPOSANT (log-log, 6 points, levier N 35→284) : alpha = 1.07  IC95% [0.99 , 1.16]  SE=0.029
+  → plage JOUABLE seule (≤0,79 pl/plot) : light 15,5 (35 pl) · 28,2 (58) · 49,6 (102) ms
+# LECTURE : light ~ N^1.07, IC EXCLUT 2 décisivement (et frôle 1,0). Linéaire, très
+#   légèrement super-linéaire, JAMAIS quadratique — même poussé à 1,61 pl/plot sur la
+#   plus grande tuile réelle. La prémisse « O(N²) » de D32 est RÉFUTÉE à la géométrie produit.
+
+### DETTE C — saturation 3 SEEDS, grande tuile réelle 16×11=176 plots
+# seed 12345  : max 0.812 pl/plot ; chutes≥25% aux années [18, 21, 26, 28]
+#   (an 26 = -81,3 %, N=23 = 0,131 pl/plot — MÊME seed reproduit la catastrophe d'hier/121)
+# seed 271828 : max 0.795 pl/plot ; chutes≥25% aux années [19, 25]
+# seed 987654 : max 0.778 pl/plot ; chutes≥25% aux années [3, 15, 22, 27, 29]
+# (séries annuelles complètes : voir sortie de mesure_review_C_satur.py)
+# LECTURE (rien de plus que le critère négatif) :
+#   - dates d'effondrement TOUTES DIFFÉRENTES entre seeds → STOCHASTIQUES, pas
+#     structurelles-à-26. « pas du bruit car déterministe » était un abus : un tirage
+#     rare seedé est déterministe ET stochastique.
+#   - max ~0,78-0,81 sur les 3 → [ERREUR, CORRIGÉE 2e passe ci-dessous : un MAX n'est
+#     pas un PLATEAU ; la médiane hors transitoire dit l'inverse].
+#   - les 3 séries OSCILLENT sans plateau → « luxuriance maximale » N'EST PAS un état
+#     stationnaire ; N_max est une DISTRIBUTION à queue basse (jusqu'à 0,13 pl/plot).
+#   - PAS de moyenne des 3 présentée comme « la » saturation ; N_max NON recalculé
+#     (nature de l'effondrement = question de conception, appartient à Nico).
+# ============================================================
+
+# ============================================================
+# 2e PASSE (revue) — corrections dettes 1 et 2
+# Scripts : mesure_review_1_propre.py (α propre), analyse_C_median.py (plateau+fréquence)
+# ============================================================
+
+### DETTE 1 — α PROPRE (machine au repos, ordre alterné) + régime réel vs empilé
+# FAUTE : B et C ont tourné en background SIMULTANÉMENT → ms de B prises pendant la
+#   montée en charge de C, dans l'ordre croissant de N → dérive confondue avec la pente.
+#   (Règle « ne pas lancer une sim lourde en parallèle d'un banc de ms » : je l'avais
+#    énoncée 2 tours plus tôt, puis violée le même tour.)
+  N= 35 : light 15,7 / 16,0 / 15,7 ms  (étendue 2,4 %)   [alterné, rien d'autre en vol]
+  N=284 : light 151,3 / 154,7 / 153,6 ms (étendue 2,2 %)
+  → α endpoints (médianes) = 1,09 ; enveloppe dispersion [1,07 ; 1,09]
+  → α régime RÉEL (≤176 = ≤1 pl/plot, 4 pts) = 1,04 ; α global (avec empilé 1,1-1,6) = 1,07 ; écart 0,03
+# LECTURE : contamination sans effet matériel sur α (propre 1,09 ≈ contaminé 1,07) ;
+#   empilement : écart 0,03 DE SIGNE ATTENDU (plus de paires/bucket → α vers le haut),
+#   confirme le mécanisme, sans effet sur la conclusion. MAIS l'IC95 [0,99;1,16] SE=0,029 était un OLS
+#   i.i.d. sur le bruit court terme, PAS sur le bruit dominant (inter-jour +27 %, dette 3).
+#   → au carnet : « α ≈ 1, exclut 2 » SANS décimales ni IC. Un intervalle faux est pire
+#   qu'une borne grossière. Empilement N>176 = régime spatial que le jeu ne produit jamais.
+
+### DETTE 2 — le PLATEAU (médiane hors transitoire), pas le max ; + fréquence + cause exogène
+# médianes de plateau (années 11-30) :
+  seed 12345  : médiane 0,671  Q1 0,567  Q3 0,760
+  seed 271828 : médiane 0,665  Q1 0,571  Q3 0,710
+  seed 987654 : médiane 0,622  Q1 0,528  Q3 0,714
+# → médiane ≈ 0,62-0,67 ≈ 0,68 de capacite.py → capacite.py CONFIRMÉ, PAS réfuté.
+#   Mon « RÉFUTÉ » comparait le MAX (0,78-0,81) à un plateau — mauvaise grandeur.
+# fréquence effondrements ≥25 % : 11 / 87 années-tuile = 1 tous les 7,9 ans
+#   → partie 500-1000 sem (~10-20 ans) : le joueur en traverse ~1-3. FAIT DE GAMEPLAY.
+# cause EXOGÈNE (même seed, même année 26, 2 géométries 121 & 176 → identique) :
+#   weather_at (weather.py:124) produit des événements GLOBAUX seedés fenêtrés/semaine
+#   (weather.py:110-119, scope="global"). Année 26 seed 12345 : Gelée tardive (w1311),
+#   double Tempête (w1332-1333, int~1,2), Pluie prolongée (w1334, int 1,84). Lien létal
+#   précis NON tracé (dynamique, hors périmètre) → « cause exogène nommée, létalité non tracée ».
+# ============================================================
