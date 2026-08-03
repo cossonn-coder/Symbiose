@@ -1,11 +1,30 @@
 # sprint_effondrement_meteo — 00_etat (état de sprint, FIGÉ 2026-08-02)
 
-**Phase courante** : FIGÉ, prêt pour `/sprint-auto`. Conception close, 4 kickoffs écrits, 0 tronçon fait.
+**Phase courante** : EN COURS. ① FAIT (golden re-figé). Restent ②③④.
 **Doc de conception** : `docs/champs/climat/conception_effondrement_meteo.md`.
-**Carte des tronçons** : ① `01_impact_heterogene.md` (golden RE-FIGÉ) → ② `02_preavis_composite.md`
+**Carte des tronçons** : ① `01_impact_heterogene.md` ✅ FAIT (golden RE-FIGÉ) → ② `02_preavis_composite.md`
 (intact) → ③ `03_couvertures.md` (neutre) → ④ `04_vue_encart_ciel.md` (intact). Perf-first, finit par la vue.
-**§REPRISE (pour /sprint-auto)** : lancer les tronçons RESTANTS dans l'ordre 01→04. Golden re-figé UNE
-fois au ①, annoncé (impacts météo spatialisés + médiation health résorbée) ; ②③④ le préservent.
+**§REPRISE (pour /sprint-auto)** : lancer les tronçons RESTANTS dans l'ordre 02→04. Golden déjà re-figé au ①
+(`22768f339ac41bb20b1604bb29672bb3b209ee62ec659b1c8369dd31ccd6cfb8`) ; ②③④ le PRÉSERVENT.
+
+## ① Impact hétérogène — FAIT (2026-08-03, NON commité, Nico commit)
+- **(a) Averse concentrée par le relief** : `tick_hydrology` module la part `pluie_event>0`
+  par l'altitude locale (creux ×(1+coef), hauteur ×(1−coef)) ; sécheresse/calme = uniforme
+  bit-identique. Constante `RELIEF_APPORT_COEF=0.5` (`fields/ecofields/constants.py`).
+- **(c) `scope="local"` honoré** : `sim/weather.py::patch_local(seed,week,rows,cols)` (2 canaux
+  sentinelles `K_PATCH_R/C`, `PATCH_FRAC=0.42`) → la grêle ne frappe qu'un PATCH ; `boucle.py`
+  passe une `severity_fn` (sév hors patch = 0) à `_mediated_damage`. `scope="global"` inchangé.
+- **(b) Canicule sur ombre/évaporation** : DÉJÀ acquis avant ① (Canicule ∈ TEMP_DRIVEN → T_air
+  chaud → évaporation lit T_sol spatial ombre/soleil). Aucun code. Vérifié.
+- **(d) Médiation health météo** : DÉJÀ résorbée avant ① (Gelée tardive ∈ TEMP_DRIVEN via
+  `_mediated_damage` ; Grêle interceptée hors `appliquer_alea`). AUCUN événement météo n'atteint
+  la voie `health` plate. Reste `health` = ravageurs (limaces/chenilles), canal HORS météo → hors ①.
+- **Golden re-figé** : dérive dans la fenêtre smoke = UNIQUEMENT le relief d'averse (Pluie
+  prolongée ; aucune Grêle dans le smoke → patch neutre ici). Cascade humidité→diffusion/lessivage/
+  rosée/givre, TOUTES numériques infimes, **survie IDENTIQUE** (0 plante flippée). Localisée + maîtrisée.
+- **Test ajouté** : `tests/test_meteo_heterogene.py` (seed 12345, week 1310 = an 26 s10, Grêle i=1.94) —
+  variance spatiale de survie > 0 corrélée au patch (in-patch 0 % vs out 100 %) + plancher ∝ abri
+  (paillage 3 → 176 survivants vs nu 54). PASS.
 
 ---
 **[HISTORIQUE CONCEPTION ci-dessous]**

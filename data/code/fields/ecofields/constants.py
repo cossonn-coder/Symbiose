@@ -1015,6 +1015,19 @@ EPAISSEUR_NPK_BONUS  = 0.30   # amplification max de la fraction de stock N/P/K 
 ALT_BASE      = 20.0   # cm — altitude de référence (mi-hauteur du micro-relief)
 ALT_AMPLITUDE = 20.0   # cm — amplitude ± du micro-relief (dénivelé jardin ~0–40 cm)
 
+# Concentration de la pluie d'ÉVÉNEMENT par le RELIEF (sprint effondrement météo ①,
+# docs/champs/climat/conception_effondrement_meteo.md §2). L'apport d'une averse
+# (`pluie_event>0`) n'est plus uniforme sur la tuile : il RUISSELLE des hauteurs vers
+# les creux. Facteur par plot, modulant SEULEMENT la part événement (la pluie de FOND
+# `BASE_RAIN` reste uniforme) :
+#     relief = 1 − RELIEF_APPORT_COEF · topo      (topo ∈ ~[−1,1], + = hauteur)
+# Un creux (topo=−1) reçoit ×(1+coef), une hauteur (topo=+1) ×(1−coef) → l'eau
+# s'accumule en bas, le versant s'égoutte. La SÉCHERESSE (`pluie_event<0`) garde un
+# apport uniforme : sa spatialisation vient déjà de l'évaporation ∝ T_sol (ombre/soleil
+# par plot). Semaines calmes/sèches → `pluie_event≤0` → chemin uniforme bit-identique
+# (le golden ne dérive QUE sur les averses). Zéro RNG (relief = champ hashé statique).
+RELIEF_APPORT_COEF = 0.5
+
 # --- Gestes de terrassement : creuser / drainer (sprint hydrologie & marécages ⑦) ---
 # Deux gestes JOUEUR sur le MILIEU (philo #1), EVENT-DRIVEN (hors tick → golden neutre,
 # comme becher/pailler) et COÛTEUX en Vigueur (terrassement = usure de la solution facile).

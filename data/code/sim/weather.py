@@ -39,6 +39,14 @@ K_PICK = (90_002, 0)   # lequel (parmi les candidats de la saison) ?
 K_MAG  = (90_003, 0)   # intensité (loi normale via hash_gauss)
 K_PEST = (90_004, 0)   # ravageur (canal séparé, hors météo)
 K_SIGN = (90_005, 0)   # un événement émet-il un signe diégétique ? (§4.3)
+K_PATCH_R = (90_006, 0)  # centre du patch d'un événement local — ligne (grêle/orage)
+K_PATCH_C = (90_007, 0)  # centre du patch d'un événement local — colonne
+
+# Rayon du patch d'un événement `scope="local"`, en fraction de la plus grande
+# dimension de la tuile (sprint effondrement météo ①, §2). ~0.42 → le patch couvre
+# un COIN, jamais toute la tuile ni rien : la grêle frappe une sous-zone, plus les
+# 8 secteurs d'un bloc (honore `scope="local"`, longtemps déclaré mais jamais lu).
+PATCH_FRAC = 0.42
 
 # Probabilité qu'une SEMAINE porte un VRAI événement (sinon temps calme).
 # Sous-sprint 02 : la météo passe en cadence HEBDOMADAIRE (consultée chaque
@@ -148,6 +156,28 @@ def weather_at(seed: int, week: int) -> WeatherEvent:
     kind, scope, duration, _ = cands[int(pick * len(cands)) % len(cands)]
     mag = abs(hash_gauss(seed, week, K_MAG[0], K_MAG[1]))
     return WeatherEvent(kind, round(mag, 3), duration, scope)
+
+
+def patch_local(seed: int, week: int, rows: int, cols: int):
+    """
+    Masque spatial déterministe d'un événement `scope="local"` (grêle / orage, §2).
+
+    Renvoie un prédicat `est_dans_patch(r, c) -> bool` : un DISQUE de plots, centré
+    sur un plot tiré par hash (canaux sentinelles décorrélés de la grille du sol),
+    rayon ∝ `PATCH_FRAC`. Un événement local ne frappe donc qu'un COIN de la tuile —
+    un plot hors patch est épargné → variance spatiale de survie sous un même hiver
+    (philo #7). PURE et déterministe (zéro RNG, philo #3) : deux runs identiques
+    frappent exactement le même coin. Un événement `scope="global"` n'appelle jamais
+    ceci (l'engine frappe alors toute la tuile).
+    """
+    cr = _hash_noise(seed, week, *K_PATCH_R) * rows
+    cc = _hash_noise(seed, week, *K_PATCH_C) * cols
+    rayon2 = (PATCH_FRAC * max(rows, cols)) ** 2
+
+    def est_dans_patch(r: int, c: int) -> bool:
+        return (r - cr) ** 2 + (c - cc) ** 2 <= rayon2
+
+    return est_dans_patch
 
 
 def temp_norm(week_in_year: int, year_fraction: float | None = None,

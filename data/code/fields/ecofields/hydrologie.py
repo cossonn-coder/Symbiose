@@ -77,7 +77,14 @@ class HydrologieMixin:
                     else DRAINAGE_PAR_SOL.get(soil_type, DRAINAGE))
         # Apport total de la pluie de fond + météo, borné ≥ 0 (on ne retire jamais
         # d'eau ; en sécheresse l'apport négatif tarit la pluie de fond, sans plus).
-        apport = max(0.0, BASE_RAIN + pluie_event)
+        # RELIEF (sprint effondrement météo ①, §2) : une AVERSE (`pluie_event>0`)
+        # ruisselle des hauteurs vers les creux → l'apport événement est CONCENTRÉ
+        # par plot (`RELIEF_APPORT_COEF·topo`), la pluie de fond restant uniforme. On
+        # ne prend ce chemin par plot QUE sur une averse ; sinon (calme/sécheresse)
+        # l'apport reste uniforme → bit-identique (conteneurs & semaines sèches). La
+        # sécheresse se spatialise déjà par l'évaporation ∝ T_sol (ombre locale).
+        relief_pluie = pluie_event > 0.0
+        apport = max(0.0, BASE_RAIN + pluie_event)   # part uniforme / fallback
         pertes: list = []
         for r in range(self.rows):
             for c in range(self.cols):
@@ -128,6 +135,12 @@ class HydrologieMixin:
                 # un sol grumeleux absorbe toute la pluie de fond, un sol compacté en
                 # laisse RUISSELER une part (perdue). Lit la structure du tick précédent
                 # (champ lent → OK). structure terre héritée 0.7 < 1.0 → golden re-figé.
+                # RELIEF de l'averse (①) : les creux concentrent, les hauteurs
+                # s'égouttent. `topo` recentre l'altitude sur ~[−1,1] (patron catena).
+                if relief_pluie:
+                    topo = (self.altitude.at_plot(r, c) - ALT_BASE) / ALT_AMPLITUDE
+                    apport = max(0.0, BASE_RAIN
+                                 + pluie_event * (1.0 - RELIEF_APPORT_COEF * topo))
                 h += apport * self.structure_sol.at_plot(r, c)      # 2. pluie (fond+météo) infiltrée
                 h += self.soil_memory.at_plot(r, c) * SOIL_RETENTION  # 3. rétention
                 # 3b. RÉTENTION D'ÉPAISSEUR (D57 ①b) : miroir de la rétention (3),

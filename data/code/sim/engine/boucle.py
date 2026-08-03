@@ -33,7 +33,7 @@ from sim.effects import resolve_plant_turn, apply_disturbances
 from sim.reproduction import is_seed_bearing, child_expression
 from sim.seeds import Seed
 from sim.succession import succession
-from sim.weather import weather_state, K_PEST, TEMP_DRIVEN
+from sim.weather import weather_state, K_PEST, TEMP_DRIVEN, patch_local
 from sim.wind import wind_at, gust_profile
 from sim.vigueur import tick_player_vigueur, refill_saison
 from sim.growth import grow_plant
@@ -151,11 +151,25 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
                 # Grêle : impact physique LOCALISÉ sur le feuillage exposé. Médiée
                 # par la protection (paillage), pas par le froid (aucun gène) ;
                 # sévérité ∝ intensité de l'événement. Remplace la voie `health`.
+                # ① : `scope="local"` (§2) est ENFIN honoré — un PATCH déterministe
+                # (patch_local, canaux sentinelles) sélectionne le coin frappé ; un
+                # plot HORS patch est épargné (sév 0) → variance spatiale de survie
+                # (philo #7 : le jardin ne meurt plus d'un bloc). `scope="global"`
+                # (grêle importée d'un futur catalogue) frappe toute la tuile.
                 hail_sev = event.intensity / HAIL_SEVERITY_REF
                 for tile in self.tiles:
-                    log += self._mediated_damage(tile, self._eco(tile), hail_sev,
-                                                 "grêle (feuillage)", cause="grele",
-                                                 species_base="hail_resistance_base")
+                    eco = self._eco(tile)
+                    if event.scope == "local":
+                        in_patch = patch_local(seed, week, eco.rows, eco.cols)
+                        sev_fn = lambda p, s=hail_sev, f=in_patch: (
+                            s if f(*p.position) else 0.0)
+                        log += self._mediated_damage(
+                            tile, eco, 0.0, "grêle (feuillage)", cause="grele",
+                            severity_fn=sev_fn, species_base="hail_resistance_base")
+                    else:
+                        log += self._mediated_damage(
+                            tile, eco, hail_sev, "grêle (feuillage)", cause="grele",
+                            species_base="hail_resistance_base")
             elif event.kind not in TEMP_DRIVEN:
                 meteo = WEATHER_ALEA[event.kind]
                 for tile in self.tiles:
