@@ -1,12 +1,13 @@
 # sprint_effondrement_meteo — 00_etat (état de sprint, FIGÉ 2026-08-02)
 
-**Phase courante** : EN COURS. ①② FAITS. Restent ③④.
+**Phase courante** : EN COURS. ①②③ FAITS. Reste ④.
 **Doc de conception** : `docs/champs/climat/conception_effondrement_meteo.md`.
 **Carte des tronçons** : ① `01_impact_heterogene.md` ✅ FAIT (golden RE-FIGÉ) → ② `02_preavis_composite.md`
-✅ FAIT (golden INTACT) → ③ `03_couvertures.md` (neutre) → ④ `04_vue_encart_ciel.md` (intact). Perf-first, finit par la vue.
-**§REPRISE (pour /sprint-auto)** : lancer les tronçons RESTANTS dans l'ordre 03→04. Golden re-figé au ①
-(`22768f339ac41bb20b1604bb29672bb3b209ee62ec659b1c8369dd31ccd6cfb8`), CONFIRMÉ INTACT au ② ; ③④ le PRÉSERVENT.
-④ consommera `sim.ciel.ciel_semaine` (structure `CielSemaine` prête à sérialiser).
+✅ FAIT (golden INTACT) → ③ `03_couvertures.md` ✅ FAIT (golden NEUTRE/INTACT) → ④ `04_vue_encart_ciel.md` (intact). Perf-first, finit par la vue.
+**§REPRISE (pour /sprint-auto)** : lancer le tronçon RESTANT ④. Golden re-figé au ①
+(`22768f339ac41bb20b1604bb29672bb3b209ee62ec659b1c8369dd31ccd6cfb8`), CONFIRMÉ INTACT au ②③ ; ④ le PRÉSERVE.
+④ consommera `sim.ciel.ciel_semaine` (structure `CielSemaine` prête à sérialiser) ET, pour le rendu des
+structures posées (placeholders), exposera `eco.couvert_pose`/`eco.ombre_pose` (déjà au registre `get_field`).
 
 ## ① Impact hétérogène — FAIT (2026-08-03, NON commité, Nico commit)
 - **(a) Averse concentrée par le relief** : `tick_hydrology` module la part `pluie_event>0`
@@ -45,6 +46,34 @@
 - **Golden INTACT** : `22768f339ac41bb20b1604bb29672bb3b209ee62ec659b1c8369dd31ccd6cfb8` (re-vérifié).
 - **Test ajouté** : `tests/test_ciel_compose.py` — convergence(1308, an 26 approche Grêle i≈1.94) > semaine
   calme (1300) ; `ciel_semaine` pur (2 appels égaux) ; nom du composé seulement si palier ≥ 4. PASS.
+
+## ③ Couvertures posables (voile / cloche / ombrière) — FAIT (2026-08-03, NON commité, Nico commit)
+- **Champs de MILIEU sur `eco`** (nouveau mixin `fields/ecofields/couvertures_posees.py`,
+  `CouverturePoseeMixin`, 42 LDC 🟢) : `couvert_pose` (voile/cloche, écran physique) et `ombre_pose`
+  (ombrière), 2 `GridField` [0,1] ALLOUÉS PARESSEUSEMENT (None au repos → zéro RAM, readers `couvert_at`/
+  `ombre_at` rendent 0.0). PERSISTANTS (aucun tick propre). Déclarés dans `container.py` + exposés au
+  registre `get_field` (overlay F6 / pont ④).
+- **Voie GEL/GRÊLE (voile+cloche)** : `couvert_at` s'AJOUTE au couvert dans `thermique.t_min_nuit_at`
+  (gel nocturne) ET à la protection LOCALE dans `mortalite._mediated_damage` (grêle) — jamais un
+  multiplicateur direct sur la plante (philo #1/#2).
+- **Voie CANICULE/SÉCHERESSE (ombrière)** : `eco.appliquer_ombrieres()` (1 ligne dans `boucle.py`, JUSTE
+  après `tick_light`, avant thermique/hydro) atténue la lumière-SOL → moins de gain solaire → sol plus
+  frais → moins d'évaporation. **Décision de design** (§6) : on atténue la lumière-SOL (grille lue par la
+  thermique), PAS le `received` par-plante → l'ombrière REFROIDIT sans (encore) brider la photosynthèse ;
+  un vrai occulteur géométrique dans `LightField.compute` est différé (le refroidissement/anti-évaporation
+  est l'effet visé, 00_etat audit canicule « impact via évaporation »).
+- **Gestes** `sim/actions/couvertures.py` (`poser_voile`/`poser_cloche`/`poser_ombriere`, 27 LDC 🟢) modelés
+  sur `poser_tuteur` : PLANIFICATION, coût MODÉRÉ, binaire. Câblés : `couts.COUTS`+`OBJETS_TOUCHES`
+  (technique NEUVE `protection-climatique`), `deblocage.GESTE_UNLOCK` (maîtrise concept `météo` ≥ 1),
+  `palette.FAMILLE_CIBLE` (=`plot`), ré-export `actions/__init__.py`.
+- **Voix** : 3 fiches GESTE × 3 niveaux (`geste_corpus.py`) + 1 fiche TECHNIQUE `protection-climatique`
+  (`technique_corpus.py`) + ajout au set `encyclopedie_types.TECHNIQUES`. `test_encyclopedie` 68/68.
+- **Golden INTACT** : `22768f339ac41bb20b1604bb29672bb3b209ee62ec659b1c8369dd31ccd6cfb8` (re-vérifié) — rien
+  posé dans le smoke → champs None → readers neutres → NEUTRE par construction.
+- **Test ajouté** : `tests/test_couvertures.py` — sous le collapse connu (seed 12345, week 1310, Grêle
+  i≈1.94), les plots du PATCH VOILÉS gardent + de survivants que découverts ; + neutralité (`eco` neuf =
+  champs None, readers 0) + gestes-milieu (voile/cloche → `couvert_pose`, ombrière → `ombre_pose` + lumière
+  atténuée). PASS. Non-régression : meteo_heterogene / ciel_compose / gestes_manuels / palette / encyclopedie.
 
 ---
 **[HISTORIQUE CONCEPTION ci-dessous]**

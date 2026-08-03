@@ -222,6 +222,14 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
                                      ceinture=self.game_state.get("ceinture"))
             log += lum_log
 
+            # 2-bis. Ombrières posées (effondrement météo ③) — ATTÉNUENT la lumière-sol
+            #     que `tick_light` vient de recalculer, AVANT la thermique/l'hydrologie
+            #     (qui la lisent). Un plot sous ombrière chauffe moins et évapore moins
+            #     → mitige canicule/sécheresse PAR LE MILIEU (philo #1). No-op STRICT
+            #     sans ombrière posée (`ombre_pose is None`) → lumière-sol bit-identique
+            #     → golden NEUTRE.
+            eco.appliquer_ombrieres()
+
             # 2a. Champ d'abri spatial (sprint VENT & ÉVAPOTRANSPIRATION ③, §4) —
             #     APRÈS la lumière (les obstacles/hauteurs sont à jour), AVANT la
             #     thermique/l'hydrologie (qui lisent `eco.vent`). Spatialise la masse

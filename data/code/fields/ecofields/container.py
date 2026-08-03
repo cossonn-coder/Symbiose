@@ -48,13 +48,14 @@ from .sol import SolMixin
 from .ticks import TicksMixin
 from .couverture import CouvertureMixin
 from .paillage import PaillageMixin
+from .couvertures_posees import CouverturePoseeMixin   # voile/cloche/ombrière posées (effondrement météo ③)
 from .bordure import BordureMixin   # conditions aux limites de la ceinture (périphérie ③)
 
 
 @dataclass
 class EcoFields(MatiereOrganiqueMixin, HydrologieMixin, RuissellementMixin,
                 MaraisMixin, UptakeMixin, VieMacroMixin, SolMixin, TicksMixin,
-                CouvertureMixin, PaillageMixin, BordureMixin):
+                CouvertureMixin, PaillageMixin, CouverturePoseeMixin, BordureMixin):
     tile_id:    str
     rows:       int
     cols:       int
@@ -286,6 +287,17 @@ class EcoFields(MatiereOrganiqueMixin, HydrologieMixin, RuissellementMixin,
     # via `nature_at` par la germination/l'évaporation/la décompo → propriétés distinctes
     # par nature (`NATURES_MULCH`). "" partout au repos → NATURE_NEUTRE → golden INTACT.
     paillage_nature:  list = field(default=None)
+    # Couvertures POSÉES par le joueur (sprint effondrement météo ③) — écran physique
+    # `couvert_pose` (voile/cloche) et occultation `ombre_pose` (ombrière), ∈ [0,1] par
+    # plot. Alloués PARESSEUSEMENT (None au repos → zéro RAM) par les gestes
+    # `poser_voile`/`poser_cloche`/`poser_ombriere` (event-driven, hors tick). Le
+    # `couvert_pose` s'ajoute au couvert de gel (`t_min_nuit_at`) et protège de la grêle
+    # (`_mediated_damage`) ; l'`ombre_pose` atténue la lumière-sol (`appliquer_ombrieres`)
+    # → sol plus frais → moins d'évaporation (canicule/sécheresse). PERSISTANTS (structure
+    # durable, aucun tick propre). NULS au repos (le smoke ne pose rien) → lecteurs neutres
+    # → golden NEUTRE. Exposés AUTO au registre `get_field` (overlay debug F6 / pont ④).
+    couvert_pose:     GridField = field(default=None)
+    ombre_pose:       GridField = field(default=None)
     # Allélopathie racinaire (sprint ALLÉLOPATHIE ①, D4) — concentration agrégée
     # d'allélochimiques par plot, bornée [0, ALLELO_MAX]. Champ de sol UNIQUE (D4 :
     # pas un dict par molécule). ALIMENTÉ par les émetteurs via `inject_field
@@ -560,6 +572,8 @@ class EcoFields(MatiereOrganiqueMixin, HydrologieMixin, RuissellementMixin,
             "marais_memory":    self.marais_memory,
             "couverture_sol":   self.couverture_sol,
             "paillage":         self.paillage,
+            "couvert_pose":     self.couvert_pose,
+            "ombre_pose":       self.ombre_pose,
             "allelopathie":     self.allelopathie,
             "autotox":          self.autotox,
         }.get(name)

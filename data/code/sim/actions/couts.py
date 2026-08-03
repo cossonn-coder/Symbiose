@@ -73,6 +73,11 @@ COUTS = {
     "deplacer_pot":         MODERE,            # déplace un pot — effort joueur SEUL (pots/bacs ④ §4)
     "creuser":              ELEVE,             # façonne une cuvette (terrassement, hydrologie ⑦) — coût ÉLEVÉ
     "drainer":              MODERE,            # assèche flaque/marais (hydrologie ⑦) — MODÉRÉ-élevé (< creuser, palier existant le plus proche)
+    # Couvertures climatiques (effondrement météo ③) — pose en PLANIFICATION, coût
+    # MODÉRÉ (philo #1 : préparer coûte moins que réagir dans l'urgence). Placeholders F5.
+    "poser_voile":          MODERE,            # voile d'hivernage (zone) — couvert gel/grêle
+    "poser_cloche":         MODERE,            # cloche individuelle (1 plot) — couvert gel/grêle
+    "poser_ombriere":       MODERE,            # ombrière (zone) — occulte la lumière, mitige canicule
     "poser_tuteur":         MODERE,            # pose un tuteur (planification, grimpantes ④ §6)
     "poser_treillis":       MODERE,            # pose un treillis (planification, grimpantes ④ §6)
     "poser_pergola":        MODERE,            # pose une pergola (planification, grimpantes ④ §6)
@@ -131,6 +136,13 @@ OBJETS_TOUCHES = {
     "deplacer_pot":         ("jardinage_hors_sol",),
     "creuser":              ("terrassement", "bêche"),         # technique + outil ; on écrit un CHAMP (altitude), pas de cible vivante — sans état moteur → atténuation neutre 1.0
     "drainer":              ("terrassement", "bêche"),         # technique + outil ; on écrit des CHAMPS (eau_surface/marais_memory), pas de cible vivante
+    # Couvertures climatiques (effondrement météo ③) : le savoir-faire `protection-
+    # climatique` (technique, comme `paillage`/`terrassement`) — AUCUNE cible vivante
+    # (on écrit un CHAMP du milieu), aucun outil nommé (patron `pailler`). Sans état
+    # moteur → M.palier == 0 → atténuation neutre 1.0.
+    "poser_voile":          ("protection-climatique",),
+    "poser_cloche":         ("protection-climatique",),
+    "poser_ombriere":       ("protection-climatique",),
     "poser_tuteur":         ("palissage", "tuteur"),           # technique + outil (grimpantes ④ §6) — sans état moteur → neutre 1.0
     "poser_treillis":       ("palissage", "treillis"),
     "poser_pergola":        ("palissage", "pergola"),

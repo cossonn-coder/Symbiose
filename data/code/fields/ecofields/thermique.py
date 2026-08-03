@@ -84,9 +84,12 @@ def t_min_nuit_at(eco, r: int, c: int, t_air: float, nebulosite: float) -> float
         T_min_nuit = T_air − RAYONNEMENT_NOCTURNE · (1 − couvert) · (1 − nébulosité)
 
     - `couvert` = litière locale normalisée `min(1, om_fresh_at/LITIERE_REF)` PLUS
-      le manteau neigeux `eco.snow` (⑦) : un sol nu rayonne à plein, un sol paillé
-      OU enneigé garde sa chaleur. Sous un bon manteau (`snow→1`) le couvert sature
-      à 1 → `T_min_nuit → T_air` : la neige PROTÈGE du gel (effet igloo).
+      le manteau neigeux `eco.snow` (⑦) PLUS l'écran POSÉ `eco.couvert_at` (voile/
+      cloche, effondrement météo ③) : un sol nu rayonne à plein, un sol paillé,
+      enneigé OU voilé garde sa chaleur. Sous un bon manteau/voile (couvert→1) il
+      sature à 1 → `T_min_nuit → T_air` : neige et voile PROTÈGENT du gel (effet
+      igloo). `couvert_at` = 0.0 tant qu'aucune couverture n'est posée → terme neutre,
+      golden NEUTRE.
     - `(1 − nébulosité)` : un ciel couvert renvoie l'IR → peu de gel. Les gelées
       arrivent par nuit CLAIRE et calme.
 
@@ -96,9 +99,10 @@ def t_min_nuit_at(eco, r: int, c: int, t_air: float, nebulosite: float) -> float
     champ d'abri SPATIALISÉ (③) ; à `eco.vent` nul (calme / pas de tick d'abri) le
     terme est NUL → comportement ②/historique inchangé.
 
-    Pure, zéro RNG, zéro effet de bord (philo #3 — lit `eco.snow`/`eco.vent`, ne les
-    écrit pas)."""
-    couvert = min(1.0, eco.om_fresh_at(r, c) / LITIERE_REF + eco.snow)
+    Pure, zéro RNG, zéro effet de bord (philo #3 — lit `eco.snow`/`eco.vent`/
+    `couvert_at`, ne les écrit pas)."""
+    couvert = min(1.0, eco.om_fresh_at(r, c) / LITIERE_REF + eco.snow
+                  + eco.couvert_at(r, c))
     t_min = t_air - RAYONNEMENT_NOCTURNE * (1.0 - couvert) * (1.0 - nebulosite)
     return t_min - WINDCHILL_COEF * eco.vent.at_plot(r, c)
 

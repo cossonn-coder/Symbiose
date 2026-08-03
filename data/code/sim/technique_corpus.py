@@ -27,6 +27,24 @@ from __future__ import annotations
 # --- Les techniques × 3 niveaux (alignées sur `encyclopedie_types.TECHNIQUES`) --
 FICHES_TECHNIQUE: dict[str, dict[int, str]] = {
 
+    "protection-climatique": {
+        1: "Poser au-dessus des cultures une protection amovible — voile, cloche, "
+           "ombrière — pour les mettre à l'abri d'un excès du ciel. La planche disparaît "
+           "sous un écran le temps de l'épisode.",
+        2: "Protéger du climat, c'est glisser un ÉCRAN entre la plante et le ciel pour "
+           "corriger le milieu, jamais la plante : le voile et la cloche renvoient au sol "
+           "la chaleur qu'il rayonnerait la nuit (moins de gel) et amortissent la grêle ; "
+           "l'ombrière tamise le soleil d'été, si bien que la terre chauffe moins et perd "
+           "moins d'eau. On agit sur le flux — chaleur, lumière — et la plante répond.",
+        3: "C'est l'art de la PRÉPARATION : posé à temps, au calme, un écran sauve ce "
+           "qu'une réaction en catastrophe ne rattraperait plus. Tout tient au discernement "
+           "— couvrir contre le gel mais retirer avant que la cloche ne cuise au soleil, "
+           "ombrer contre la canicule sans voler à la feuille la lumière dont elle vit. "
+           "Aucun de ces abris n'est permanent : ils dépannent l'épisode. La résilience "
+           "durable, elle, vient du sol vivant et de la diversité — l'écran n'est qu'un "
+           "filet, tendu pour les coups les plus rudes.",
+    },
+
     "semis": {
         1: "Déposer une graine dans la terre, à l'endroit et à la profondeur voulus. "
            "Plus tard, si tout va bien, une pousse perce.",

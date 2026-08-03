@@ -69,6 +69,10 @@ TECHNIQUES: frozenset[str] = frozenset({
     # du bois sur une lisière — essartage (on ouvre et on ne revient pas), taillis
     # (on coupe au ras pour que ça rejette), trogne (on prend la tête, le fût reste).
     "essartage", "taillis", "trogne",
+    # Savoir-faire de PROTECTION climatique (sprint EFFONDREMENT MÉTÉO ③) : poser
+    # voile/cloche/ombrière pour tempérer gel/grêle/canicule. Technique, pas un objet
+    # qu'on prend en main → rangée ici (sinon elle tomberait dans OUTILS par défaut).
+    "protection-climatique",
 })
 
 # Tous les membres statiques touchés par un geste (union des tuples), puis les

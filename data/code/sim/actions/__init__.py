@@ -65,6 +65,12 @@ from .conteneurs import (
 from .supports import (
     poser_tuteur, poser_treillis, poser_pergola, palisser,
 )
+# Couvertures climatiques (effondrement météo ③) : voile/cloche/ombrière posées —
+# modificateurs de MILIEU qui atténuent gel/grêle/canicule (préparation §6).
+from .couvertures import (
+    VOILE_COUVERT, CLOCHE_COUVERT, OMBRIERE_OMBRE,
+    poser_voile, poser_cloche, poser_ombriere,
+)
 # Déblocage des gestes (palette de gestes ①) : ÉTAT/DONNÉES par avatar (BASE +
 # table `GESTE_UNLOCK` + hook `evaluer_deblocages`) — aucune logique de sim.
 from .deblocage import (

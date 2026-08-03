@@ -95,6 +95,13 @@ GESTE_UNLOCK: dict[str, list] = {
     "pailler": [("maitrise", "paillage", 1)],
     "broyer":  [("maitrise", "paillage", 1)],
 
+    # couvertures climatiques (effondrement météo ③) — la maîtrise du concept `météo`
+    # (levée en lisant les signes de gel/froid, cf. CONCEPT_PAR_STAGNATION) ouvre les
+    # trois gestes de préparation.
+    "poser_voile":    [("maitrise", "météo", 1)],
+    "poser_cloche":   [("maitrise", "météo", 1)],
+    "poser_ombriere": [("maitrise", "météo", 1)],
+
     # ruche
     "poser_ruche":   [("maitrise", "apiculture", 1)],
     "recolter_miel": [("action", "poser_ruche")],

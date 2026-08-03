@@ -608,6 +608,55 @@ FICHES_GESTE: dict[str, dict[int, str]] = {
            "l'apprendre coûte le paysage.",
     },
 
+    # --- Couvertures climatiques de la lisière (sprint EFFONDREMENT MÉTÉO ③) -----
+    # ⚠️ Philo #6 : le N1 dit ce qu'on VOIT/pose. Que le voile ne serve à rien s'il
+    # arrive trop tard, que l'ombrière ralentisse aussi la croissance en volant du
+    # soleil : ce sont des DÉCOUVERTES (N3).
+    "poser_voile": {
+        1: "Tendre un voile léger au-dessus d'une planche, avant les nuits froides. "
+           "Les plantes disparaissent sous une gaze blanche qui laisse passer le jour.",
+        2: "Poser un voile d'hivernage glisse un ÉCRAN entre le sol et le ciel : la nuit, "
+           "la terre nue rayonne sa chaleur vers les étoiles et gèle en surface ; sous le "
+           "voile, cette chaleur est renvoyée et l'air reste quelques degrés plus doux. Le "
+           "même tissu amortit la grêle qui, sinon, hacherait le jeune feuillage. C'est un "
+           "geste de PRÉPARATION, posé au calme avant le coup de froid.",
+        3: "Le voile ne réchauffe rien : il RETIENT la chaleur que le sol a emmagasinée le "
+           "jour, comme la litière ou un ciel nuageux. Sa vertu est toute dans le TIMING — "
+           "posé à temps il sauve une planche, posé sur des tissus déjà gelés il ne répare "
+           "rien. Il protège une ZONE, pas un pied précis : à couvrir large, on tempère tout "
+           "un carré. Rien n'est gratuit — un voile laissé en permanence prive aussi de "
+           "lumière et d'air ; on le pose pour l'épisode, puis on le retire.",
+    },
+    "poser_cloche": {
+        1: "Coiffer un plant fragile d'une cloche transparente. L'individu se retrouve seul "
+           "sous son petit dôme, à l'abri.",
+        2: "Poser une cloche enferme UN plant dans un microclimat clos : l'écran, plus "
+           "étanche qu'un voile, coupe le rayonnement nocturne qui fait geler et pare les "
+           "impacts de la grêle. C'est la protection RAPPROCHÉE, pour un pied précieux ou "
+           "un semis précoce isolé, là où tendre un voile sur toute une planche serait de "
+           "trop.",
+        3: "La cloche est l'écran le plus fort mais le plus étroit : elle sauve un individu "
+           "quand le voile tempère une zone. Close, elle chauffe vite au soleil et peut "
+           "étouffer ou cuire ce qu'elle abrite si on l'oublie fermée par une belle journée. "
+           "C'est l'outil du jardinier attentif — présent pour l'épisode de froid, retiré "
+           "dès que la menace passe. Protéger un pied, c'est aussi le surveiller.",
+    },
+    "poser_ombriere": {
+        1: "Dresser une toile ajourée au-dessus d'un carré, en plein été. Une ombre douce "
+           "tombe sur les plantes et sur la terre.",
+        2: "Poser une ombrière tamise la LUMIÈRE d'une zone : moins de soleil frappe le sol, "
+           "qui chauffe moins ; un sol plus frais perd moins d'eau par évaporation. C'est le "
+           "geste des canicules et des sécheresses — non pas arroser plus, mais faire que la "
+           "terre garde l'eau qu'elle a. On agit sur le MILIEU (l'ensoleillement), la plante "
+           "répond en soufflant moins.",
+        3: "L'ombrière échange du soleil contre de la fraîcheur : le sol reste humide, les "
+           "tissus tendres ne brûlent pas — mais la lumière volée est aussi celle de la "
+           "photosynthèse, et sous une ombre trop dense ou trop longue, la croissance "
+           "ralentit. C'est un abri d'ÉPISODE, pas un toit permanent : on l'installe pour la "
+           "vague de chaleur, on la retire quand elle passe. La vraie fraîcheur durable vient "
+           "d'un sol vivant, couvert et grumeleux qui fait éponge ; l'ombrière dépanne.",
+    },
+
     "palisser": {
         1: "Nouer à la main la tige d'une grimpante à un support voisin, là où elle "
            "ne sait pas s'accrocher seule. La plante, attachée, se met à monter.",

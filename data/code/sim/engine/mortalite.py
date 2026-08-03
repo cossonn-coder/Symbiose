@@ -407,7 +407,12 @@ class MortaliteMixin:
                 suscept = 1.0 / getattr(p.plant_class, species_base, 1.0)
             else:
                 suscept = 1.0
-            effective = sev * suscept * (1.0 - protection)
+            # Protection LOCALE = paillage-rondelle (tuile) + écran POSÉ au plot
+            # (voile/cloche, effondrement météo ③) : un plot voilé encaisse la grêle
+            # là où le paillage seul (uniforme) laisserait passer. `couvert_at` = 0 au
+            # repos → protection inchangée → golden NEUTRE.
+            prot_local = min(1.0, protection + eco.couvert_at(*p.position))
+            effective = sev * suscept * (1.0 - prot_local)
             # Amount CONTINU (plus de plancher entier `int()` : l'érosion
             # fractionnaire est fidèle à la sévérité). La résolution applique
             # `amount * VITALITE_STEP` et `erode` borne à 0 → pas de `min(p.health…)`.
