@@ -1,11 +1,12 @@
 # sprint_effondrement_meteo — 00_etat (état de sprint, FIGÉ 2026-08-02)
 
-**Phase courante** : EN COURS. ① FAIT (golden re-figé). Restent ②③④.
+**Phase courante** : EN COURS. ①② FAITS. Restent ③④.
 **Doc de conception** : `docs/champs/climat/conception_effondrement_meteo.md`.
 **Carte des tronçons** : ① `01_impact_heterogene.md` ✅ FAIT (golden RE-FIGÉ) → ② `02_preavis_composite.md`
-(intact) → ③ `03_couvertures.md` (neutre) → ④ `04_vue_encart_ciel.md` (intact). Perf-first, finit par la vue.
-**§REPRISE (pour /sprint-auto)** : lancer les tronçons RESTANTS dans l'ordre 02→04. Golden déjà re-figé au ①
-(`22768f339ac41bb20b1604bb29672bb3b209ee62ec659b1c8369dd31ccd6cfb8`) ; ②③④ le PRÉSERVENT.
+✅ FAIT (golden INTACT) → ③ `03_couvertures.md` (neutre) → ④ `04_vue_encart_ciel.md` (intact). Perf-first, finit par la vue.
+**§REPRISE (pour /sprint-auto)** : lancer les tronçons RESTANTS dans l'ordre 03→04. Golden re-figé au ①
+(`22768f339ac41bb20b1604bb29672bb3b209ee62ec659b1c8369dd31ccd6cfb8`), CONFIRMÉ INTACT au ② ; ③④ le PRÉSERVENT.
+④ consommera `sim.ciel.ciel_semaine` (structure `CielSemaine` prête à sérialiser).
 
 ## ① Impact hétérogène — FAIT (2026-08-03, NON commité, Nico commit)
 - **(a) Averse concentrée par le relief** : `tick_hydrology` module la part `pluie_event>0`
@@ -25,6 +26,25 @@
 - **Test ajouté** : `tests/test_meteo_heterogene.py` (seed 12345, week 1310 = an 26 s10, Grêle i=1.94) —
   variance spatiale de survie > 0 corrélée au patch (in-patch 0 % vs out 100 %) + plancher ∝ abri
   (paillage 3 → 176 survivants vs nu 54). PASS.
+
+## ② Préavis dramatique du composé + `ciel_semaine` — FAIT (2026-08-03, NON commité, Nico commit)
+- **Nouveau module `sim/ciel.py`** (frère de `weather.py`, couche `sim`, 47 LDC pur, 🟢) — SRP :
+  `weather.py` = météo pure, `ciel.py` = LECTURE agrégée. Read-only sur la fonction météo, zéro RNG,
+  aucun champ de sim touché.
+- **(a) `convergence(seed, week, horizon=3)`** : scalaire PUR = somme des intensités sévères
+  (≥ `SEUIL_SEVERE=0.8`) dans une fenêtre resserrée de `forecast`. Monte à l'approche d'un composé
+  (un coup exceptionnel OU plusieurs rapprochés). `est_compose` = `convergence ≥ COMPOSE_SEUIL=1.8`
+  (calibré ~0.8 composé/an sur seed 12345, F5 ajustable — non gravé au golden).
+- **(b) Signe intensifié** `SIGNE_COMPOSE` (3 libellés voix naturaliste, « l'hiver de tous les dangers »)
+  + `NOM_COMPOSE`. Le signe perceptif est TOUJOURS montré dès qu'un composé approche (ciel qui s'assombrit
+  pour tous, §5) ; seul le NOM est masqué sous le palier.
+- **(c) `ciel_semaine(seed, week, palier_climat=0, horizon=2)` → `CielSemaine` (@dataclass frozen)** :
+  agrège événement courant + nébulosité (`weather_state`), signes 1-2 sem en avant (`weather_signs`),
+  convergence, signe composé, nom composé masqué par palier (`NOMMAGE_PALIER=4` = expertise). Prêt à
+  sérialiser par le pont en ④.
+- **Golden INTACT** : `22768f339ac41bb20b1604bb29672bb3b209ee62ec659b1c8369dd31ccd6cfb8` (re-vérifié).
+- **Test ajouté** : `tests/test_ciel_compose.py` — convergence(1308, an 26 approche Grêle i≈1.94) > semaine
+  calme (1300) ; `ciel_semaine` pur (2 appels égaux) ; nom du composé seulement si palier ≥ 4. PASS.
 
 ---
 **[HISTORIQUE CONCEPTION ci-dessous]**
