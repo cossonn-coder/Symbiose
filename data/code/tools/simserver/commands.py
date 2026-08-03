@@ -29,7 +29,8 @@ from fields.peripherie import generer_ceinture
 # Registre des bancs d'essai (sprint dédié) : mondes paramétrés montés par
 # `init config="<banc>"` pour forcer/observer un signe. Import au niveau module
 # (paquet `bancs/` au sommet, peut tout importer) ; jamais monté pour smoke/full.
-from bancs import BANCS, BANC_WEEK_DEPART, BANC_POST_INIT, banc_categorie
+from bancs import (BANCS, BANC_WEEK_DEPART, BANC_SEED, BANC_POST_INIT,
+                   banc_categorie)
 
 from .version import ENGINE_VERSION
 from .maitrise_pont import observer_apres_tick  # chaîne de maîtrise après tick (voix ①)
@@ -94,8 +95,12 @@ class CommandsMixin:
     # ------------------------------------------------------------------ cmds
 
     def cmd_init(self, msg: dict) -> dict:
-        seed = msg.get("seed", 0x5AB1057E)
         config = msg.get("config", "smoke")
+        # Seed : `msg["seed"]` explicite prioritaire (oracle/tests) ; sinon un banc
+        # peut IMPOSER son seed (effondrement météo ④ : le collapse déterministe du
+        # seed 12345) via `BANC_SEED` ; sinon le défaut serveur. smoke/full absents
+        # du registre → défaut inchangé (golden NEUTRE).
+        seed = msg.get("seed", BANC_SEED.get(config, 0x5AB1057E))
         if not isinstance(seed, int):
             return {"ok": False, "error": f"seed doit être un entier (reçu {seed!r})"}
         banque = None   # renseignée par une fabrique de banc ; sinon helper plus bas

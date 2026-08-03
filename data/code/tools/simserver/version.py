@@ -646,7 +646,27 @@ from __future__ import annotations
 #       geste event-driven hors tick ; carte nulle au repos) → golden INTACT (le smoke ne
 #       joue aucun `arroser`). Un binaire pré-0.5.42 ignore `params.feuillage` → arrose
 #       toujours au pied (tolérance côté vue, comme tous les bumps précédents).
-ENGINE_VERSION = "0.5.42"
+# 0.5.43 (effondrement météo ④, encart « état du ciel » + couvertures posées au
+#       pont) : TROIS blocs lecture-seule neufs au snapshot, tous PURS.
+#       (1) `ciel` = agrégat du « ciel de la semaine » (sim/ciel.py, tronçon ②) :
+#       {evenement_courant, nebulosite, convergence, signes ([{kind, in_weeks,
+#       signs, signed}]), signe_compose ([libellés] perceptifs si un composé
+#       catastrophe approche, () sinon), nom_compose (nom du composé « l'hiver de
+#       tous les dangers », joint UNIQUEMENT si le palier maîtrise météo ≥ seuil —
+#       masque de nommage §4.2 appliqué CÔTÉ MOTEUR)}. L'encart Godot en tire une
+#       fenêtre DIÉGÉTIQUE sur le ciel (couleur/nuages/halo/brume qui s'assombrit
+#       ∝ convergence, philo #5 : pas de chiffre ni d'icône calendrier). Évalué au
+#       front courant (dernière semaine simulée) → les signes portent sur les
+#       semaines À VENIR (préavis). (2)+(3) `couvert_pose` et `ombre_pose` = deux
+#       listes CREUSES par tuile `[[r, c, dose], …]` des plots abrités par une
+#       couverture POSÉE (voile/cloche → couvert_pose ; ombrière → ombre_pose,
+#       tronçon ③). La vue en tire les placeholders procéduraux (voile translucide
+#       / filet d'ombre, CoverLayer). PURE lecture d'états déjà portés/tickés
+#       (fonctions météo pures + champs de milieu alloués paresseusement) → golden
+#       NEUTRE : le smoke ne pose rien et le golden tourne hors serveur. Un binaire
+#       pré-0.5.43 n'émet pas ces blocs → l'encart s'affiche neutre et aucun
+#       placeholder n'est dessiné (tolérance côté vue, comme tous les bumps).
+ENGINE_VERSION = "0.5.43"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

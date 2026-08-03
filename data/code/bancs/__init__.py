@@ -9,7 +9,8 @@ golden (les bancs ne sont jamais montés pour smoke/full).
 Les tronçons ②③④ ajoutent leurs entrées ici (édaphique, climatique, biotique).
 """
 from .climatique import (secheresse_sable, acclimatation, ombre_dense,
-                         pluie_thermique, germination_multifacteur)
+                         pluie_thermique, germination_multifacteur,
+                         effondrement)
 from .edaphique import (chlorose_acidophile, asphyxie_argile, carence_npk,
                        rotation_inoculum)
 from .hydrologie import tourbiere
@@ -30,6 +31,7 @@ BANCS = {
     "ombre_dense": ombre_dense,
     "pluie_thermique": pluie_thermique,
     "germination_multifacteur": germination_multifacteur,
+    "effondrement": effondrement,
     "chlorose_acidophile": chlorose_acidophile,
     "asphyxie_argile": asphyxie_argile,
     "carence_npk": carence_npk,
@@ -67,6 +69,15 @@ BANC_POST_INIT = {"palette_gestes": _palette_gestes.post_init,
                   # cliquables dès l'ouverture.
                   "peripherie": _peripherie.post_init}
 
+# Seed IMPOSÉ par banc (effondrement météo ④). La plupart des bancs sont neutres au
+# seed (ils forcent leur condition par composition) → repli sur le défaut du serveur.
+# `effondrement` fait EXCEPTION : il met en scène le collapse DÉTERMINISTE du seed
+# 12345 (Grêle locale sévère semaine 1310) — sans ce seed, la météo seedée ne pose
+# aucune catastrophe à la fenêtre observée. Lu par `cmd_init` (banc absent → défaut
+# serveur → comportement inchangé ; un `msg["seed"]` explicite reste prioritaire pour
+# l'oracle/tests). golden NEUTRE : smoke/full ne sont pas des bancs.
+BANC_SEED = {"effondrement": 12345}
+
 # Semaine de départ par banc (retour F5 Nico 2026-07-04). La plupart démarrent à
 # `week=1` (début printemps) — repli par défaut. `grimpantes` observe des FRILEUSES
 # (haricot/jasmin) qu'un départ début printemps fige sous le seuil de croissance
@@ -83,6 +94,13 @@ BANC_POST_INIT = {"palette_gestes": _palette_gestes.post_init,
 # pour lire chaque PORT habillé (le banc n'observe PAS le rythme phénologique).
 BANC_WEEK_DEPART = {"grimpantes": 9, "luxuriance": 9, "diversite_fondatrice": 9,
                     "foret_ports": 20,
+                    # `effondrement` (④) démarre SEMAINE 1309 (an 26) : le ciel est
+                    # déjà au plomb à l'arrivée (convergence 1.94) et le reste ; deux
+                    # pas de simulation amènent la frappe de Grêle locale (semaine 1310)
+                    # → la moitié voilée garde un noyau vivant, la moitié nue est fauchée.
+                    # Compromis contraste/anticipation (cf. climatique.effondrement) —
+                    # calibrage F5.
+                    "effondrement": 1309,
                     # `courrier` (D79 ⑤) démarre SEMAINE 12 (fin de printemps, sol
                     # réchauffé) : les lettres sont POSÉES au post_init (pas via les
                     # jalons de saison), mais un départ tardif évite de figer lavande /

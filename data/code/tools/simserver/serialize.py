@@ -14,6 +14,16 @@ from sim import vigueur as V      # état Vigueur joueur (ensure/spend/gain, D11
 # (boucle.py étape 1) + signes diégétiques + cas calme. Recalculés ici car le
 # snapshot LIT l'état sans accès aux locaux du tick — fonctions pures, golden NEUTRE.
 from sim.weather import weather_state, weather_signs, CALME, T_MOY
+# Ciel de la semaine (effondrement météo ②) : agrégat PUR read-only du ciel
+# lisible (état courant + signes en avance + convergence du composé). Le pont
+# le SÉRIALISE tel quel (④) — la couche d'affichage (encart Godot) rend, ne
+# calcule rien. Zéro RNG, aucun champ de sim touché → golden NEUTRE.
+from sim.ciel import ciel_semaine
+# Palier de maîtrise « météo/climat » (D12) : c'est le MASQUE DE NOMMAGE de
+# l'encart (§4.2). Le pont le lit côté serveur et le passe à `ciel_semaine`
+# → le nom du composé n'est joint que si le palier suffit. Lecture pure d'un
+# état joueur (opt-in) → golden NEUTRE (le golden tourne hors serveur).
+from sim import maitrise as M
 # Échantillonneur de vie macro (tranche 6·B) : fonction PURE et déterministe
 # densité → entités (fields/population.py §3). L'échantillonnage se fait CÔTÉ
 # SERVEUR — la vue n'a pas besoin de _hash_noise (kickoff t6 §4).
@@ -306,6 +316,8 @@ class SerializeMixin:
         paillage_by_tile = {}
         allelopathie_by_tile = {}
         inoculum_by_tile = {}
+        couvert_pose_by_tile = {}
+        ombre_pose_by_tile = {}
         for tile in gs["tiles"]:
             eco = gs["eco"][tile.tile_id]
             # Toutes les espèces TOUJOURS présentes (listes vides) — invariant du
@@ -567,6 +579,27 @@ class SerializeMixin:
                     total = sum(bucket.values())
                     plots_ino.append([r, c, dominante, round(total, 4)])
             inoculum_by_tile[tile.tile_id] = plots_ino
+            # Couvertures POSÉES par le joueur (effondrement météo ③, tronçon ④ au
+            # pont) : deux listes CREUSES par tuile `[[r, c, dose], …]` des plots
+            # abrités — `couvert_pose` (écran physique du VOILE/CLOCHE, protège gel/
+            # grêle) et `ombre_pose` (occultation de l'OMBRIÈRE, rafraîchit contre
+            # canicule/sécheresse). Champs alloués PARESSEUSEMENT (None au repos → la
+            # plupart des mondes n'ont RIEN de posé, liste vide, patron `paillage`).
+            # La vue en tire les placeholders procéduraux (voile translucide / filet
+            # d'ombre, CoverLayer). PURE lecture (aucun tick propre, cf.
+            # couvertures_posees.py) → golden NEUTRE : le smoke ne pose aucune
+            # couverture → champs None → listes vides. Champ optionnel côté vue
+            # (tolérance pré-0.5.43). Garde-fou getattr (vieil eco sans le mixin).
+            cvp = getattr(eco, "couvert_pose", None)
+            couvert_pose_by_tile[tile.tile_id] = [
+                [r, c, round(cvp.data[r][c], 3)]
+                for r in range(eco.rows) for c in range(eco.cols)
+                if cvp is not None and cvp.data[r][c] > 0.0]
+            omp = getattr(eco, "ombre_pose", None)
+            ombre_pose_by_tile[tile.tile_id] = [
+                [r, c, round(omp.data[r][c], 3)]
+                for r in range(eco.rows) for c in range(eco.cols)
+                if omp is not None and omp.data[r][c] > 0.0]
         # Cap GLOBAL de la vie macro (perception pure, golden-neutre) : une fois TOUS
         # les candidats collectés, on ne garde que les SPRITES_MONDE_MAX plus denses,
         # puis on regroupe au format compact `{tuile: {espèce: [[r,c,x,y,act], …]}}`
@@ -601,6 +634,34 @@ class SerializeMixin:
                  "signs": list(s.signs), "signed": s.signed}
                 for s in signs
             ],
+        }
+        # « Ciel de la semaine » (effondrement météo ②→④, sim/ciel.py) : agrégat
+        # PUR de tout ce que le joueur peut LIRE du ciel — état de fond, signes
+        # 1-2 sem en avant, et surtout la CONVERGENCE du composé catastrophe (le
+        # ciel qui va « virer au plomb » à l'approche de « l'hiver de tous les
+        # dangers »). L'encart Godot (④) le rend en fenêtre diégétique (couleur/
+        # nuages/halo/brume qui s'assombrit ∝ convergence), sans chiffre ni icône
+        # calendrier (philo #5). Le NOMMAGE est masqué CÔTÉ MOTEUR : `ciel_semaine`
+        # ne joint `nom_compose` que si le palier maîtrise météo suffit (§4.2) —
+        # la vue reçoit un nom déjà gaté, elle ne décide rien (« Godot bête »).
+        # Évalué au front courant `last` (= dernière semaine simulée, même repère
+        # que `weather`) → les signes portent sur les semaines À VENIR. PURE lecture
+        # (fonctions météo pures, zéro RNG) → golden NEUTRE. À l'init (rien simulé)
+        # on évalue en semaine 1 (le ciel du tout début).
+        palier_meteo = M.palier(gs, gs["current_player"], "météo")
+        cs = ciel_semaine(gs["seed"], last if last >= 1 else 1,
+                          palier_climat=palier_meteo)
+        ciel = {
+            "evenement_courant": cs.evenement_courant,
+            "nebulosite": round(cs.nebulosite, 3),
+            "convergence": cs.convergence,
+            "signes": [
+                {"kind": s.kind, "in_weeks": s.in_weeks,
+                 "signs": list(s.signs), "signed": s.signed}
+                for s in cs.signes
+            ],
+            "signe_compose": list(cs.signe_compose),
+            "nom_compose": cs.nom_compose,
         }
         # Bloc joueur (tranche 4, lecture seule) : la vue affiche la Vigueur
         # au HUD. vigueur_max passe par la façade (bonus maîtrise compris).
@@ -658,6 +719,9 @@ class SerializeMixin:
                 "paillage": paillage_by_tile,
                 "allelopathie": allelopathie_by_tile,
                 "inoculum": inoculum_by_tile,
+                "couvert_pose": couvert_pose_by_tile,
+                "ombre_pose": ombre_pose_by_tile,
+                "ciel": ciel,
                 "containers": self._containers_snapshot(gs, saison)}
         # Ceinture périphérique (PÉRIPHÉRIE ⑦, D73) : bloc OPT-IN de 4 secteurs
         # (`ceinture_block`, cf. peripherie_route). Présent UNIQUEMENT quand le

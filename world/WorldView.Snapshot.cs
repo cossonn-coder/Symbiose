@@ -391,6 +391,22 @@ namespace Symbiose
 				ApplySoilTemp(temperature);    // heatmap T sol spatialisée F7 (⑩)
 			}
 
+			// Ciel de la semaine (effondrement météo ④, snapshot 0.5.43, lecture seule) :
+			// l'encart diégétique « état du ciel » (convergence du composé, signes,
+			// nommage gaté maîtrise). Lecture TOLÉRANTE : un snapshot pré-0.5.43 sans
+			// le bloc → encart neutre, aucun crash.
+			if (snap.ContainsKey("ciel"))
+				ApplyCiel(snap["ciel"].AsGodotDictionary());
+			// Couvertures posées (③, snapshot 0.5.43, lecture seule) : placeholders
+			// voile/cloche (couvert_pose) + ombrière (ombre_pose). Un seul appel pour
+			// les deux. Lecture TOLÉRANTE : blocs absents → aucun placeholder dessiné.
+			if (snap.ContainsKey("couvert_pose") || snap.ContainsKey("ombre_pose"))
+				ApplyCovers(
+					snap.ContainsKey("couvert_pose")
+						? snap["couvert_pose"].AsGodotDictionary() : null,
+					snap.ContainsKey("ombre_pose")
+						? snap["ombre_pose"].AsGodotDictionary() : null);
+
 			// Heatmap (t6·C) : la grille affichée date de la semaine d'avant →
 			// périmée. Si l'overlay est ON, _Process relancera UNE requête
 			// `fields` dès que le pipe sera libre ; OFF, le flag dort.

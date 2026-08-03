@@ -353,8 +353,10 @@ namespace Symbiose
 			AddWorld(_fieldOverlay);
 
 			BuildMeteoLayers();   // ambiance écran + manteau neigeux (⑨) — avant le HUD
+			BuildCielView();      // placeholders couvertures (monde) — avant le HUD
 
 			BuildHud();
+			BuildSkyPanel();      // encart « état du ciel » (CanvasLayer, APRÈS le HUD)
 			// (T3) Plus de panneau automate à construire d'avance : l'onglet Automate
 			// naît à la demande (touche A) dans le conteneur de consultation.
 			BuildPalette();       // palette de gestes en colonne gauche (④, D11)

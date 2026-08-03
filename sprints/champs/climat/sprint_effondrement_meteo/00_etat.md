@@ -1,13 +1,13 @@
 # sprint_effondrement_meteo — 00_etat (état de sprint, FIGÉ 2026-08-02)
 
-**Phase courante** : EN COURS. ①②③ FAITS. Reste ④.
+**Phase courante** : CLOS (moteur+vue). ①②③④ FAITS. Reste F5 (calibrage visuel Nico).
 **Doc de conception** : `docs/champs/climat/conception_effondrement_meteo.md`.
 **Carte des tronçons** : ① `01_impact_heterogene.md` ✅ FAIT (golden RE-FIGÉ) → ② `02_preavis_composite.md`
-✅ FAIT (golden INTACT) → ③ `03_couvertures.md` ✅ FAIT (golden NEUTRE/INTACT) → ④ `04_vue_encart_ciel.md` (intact). Perf-first, finit par la vue.
-**§REPRISE (pour /sprint-auto)** : lancer le tronçon RESTANT ④. Golden re-figé au ①
-(`22768f339ac41bb20b1604bb29672bb3b209ee62ec659b1c8369dd31ccd6cfb8`), CONFIRMÉ INTACT au ②③ ; ④ le PRÉSERVE.
-④ consommera `sim.ciel.ciel_semaine` (structure `CielSemaine` prête à sérialiser) ET, pour le rendu des
-structures posées (placeholders), exposera `eco.couvert_pose`/`eco.ombre_pose` (déjà au registre `get_field`).
+✅ FAIT (golden INTACT) → ③ `03_couvertures.md` ✅ FAIT (golden NEUTRE/INTACT) → ④ `04_vue_encart_ciel.md`
+✅ FAIT (golden INTACT). Perf-first, fini par la vue.
+**§REPRISE (pour /sprint-auto)** : SPRINT CLOS. Golden re-figé au ①
+(`22768f339ac41bb20b1604bb29672bb3b209ee62ec659b1c8369dd31ccd6cfb8`), CONFIRMÉ INTACT au ②③④.
+Reste UNIQUEMENT le **F5 de Nico** (calibrage visuel de l'encart + banc collapse), non commité. NE PAS commiter (Nico).
 
 ## ① Impact hétérogène — FAIT (2026-08-03, NON commité, Nico commit)
 - **(a) Averse concentrée par le relief** : `tick_hydrology` module la part `pluie_event>0`
@@ -74,6 +74,43 @@ structures posées (placeholders), exposera `eco.couvert_pose`/`eco.ombre_pose` 
   i≈1.94), les plots du PATCH VOILÉS gardent + de survivants que découverts ; + neutralité (`eco` neuf =
   champs None, readers 0) + gestes-milieu (voile/cloche → `couvert_pose`, ombrière → `ombre_pose` + lumière
   atténuée). PASS. Non-régression : meteo_heterogene / ciel_compose / gestes_manuels / palette / encyclopedie.
+
+## ④ Vue Godot : encart « état du ciel » + couvertures + banc F5 — FAIT (2026-08-03, NON commité, Nico commit)
+- **(a) Pont exporte `ciel`** (`tools/simserver/serialize.py`, protocole **0.5.43**) : bloc `ciel` =
+  sérialisation de `sim.ciel.ciel_semaine` (`evenement_courant`, `nebulosite`, `convergence`, `signes`,
+  `signe_compose`, `nom_compose`). Évalué au front courant `last = week-1` (même repère que `weather`) →
+  signes/convergence portent sur les semaines À VENIR. **Nommage gaté CÔTÉ MOTEUR** : le pont lit
+  `M.palier(gs, player, "météo")` (D12) et le passe à `ciel_semaine` → `nom_compose` n'est joint qu'au
+  palier ≥ 4. PLUS deux blocs creux `couvert_pose`/`ombre_pose` par tuile (`[[r,c,dose],…]`, patron
+  `paillage`) pour les placeholders. PURE lecture → golden INTACT.
+- **(b) Encart diégétique** `world/SkyPanel.cs` (namespace `Symbiose`, CanvasLayer écran coin haut-droit,
+  patron WeatherLayer = wrapper + peintre `SkyVignette`). Fenêtre sur le ciel : fond dégradé
+  clair→couvert (nébulosité) →**plomb** (convergence), bancs de nuages (hash, no Random), halo laiteux
+  (nébulosité moyenne), brume basse, liseré rouge qui bat si composé. **Aucun chiffre/barre/icône
+  calendrier** (philo #5). Deux libellés : PERCEPTIF (toujours — le libellé intensifié du composé, sinon
+  lecture sobre `ciel dégagé/voilé/couvert/bas`) + NOMMÉ (le `nom_compose` du pont, vide sous le palier).
+- **(c) Placeholders couvertures** `visuals/CoverLayer.cs` (Node2D monde, ZIndex 12 = au-dessus des
+  plantes ; patron CouvertureLayer) : voile/cloche = drap translucide clair sur le losange du plot ;
+  ombrière = filet gris hachuré. Lit `couvert_pose`/`ombre_pose`.
+- **Câblage** `world/WorldView.Ciel.cs` (partial : `BuildCielView`/`BuildSkyPanel` + `ApplyCiel`/
+  `ApplyCovers`) ; appels dans `WorldView.cs` (_Ready) + `WorldView.Snapshot.cs` (ApplySnapshot, lecture
+  tolérante pré-0.5.43).
+- **(d) Banc F5** `bancs/climatique.py::effondrement` (registre + `BANC_SEED={"effondrement":12345}` NEUF
+  dans `bancs/__init__.py`, câblé `commands.py` ; `BANC_WEEK_DEPART=1309`). Tuile 16×11 semée de basilics
+  fondateurs, MOITIÉ GAUCHE (c<6) voilée / droite nue, seed 12345 → Grêle locale sévère semaine 1310. Vérifié
+  serveur : ciel au plomb dès l'arrivée (conv 1.94), puis à la frappe **abrité 41/96 vs exposé 5/80** vivants.
+- **Golden INTACT** : `22768f339ac41bb20b1604bb29672bb3b209ee62ec659b1c8369dd31ccd6cfb8` (re-vérifié) — pure
+  vue + pont read-only, aucune règle de sim touchée.
+- **Build C#** : `dotnet build Symbiose.csproj` VERT (0 erreur, 0 warning).
+- **Tests** : test_ciel_compose / test_couvertures / test_meteo_heterogene PASS ; test_sim_server 269/270
+  (versions bumpées 0.5.41→0.5.43 dans voix/conteneurs/structures ; **1 échec pré-existant** = pommier
+  pré-âgé 0 fruits @S52, reproduit sans mes changements, HORS ④).
+- **Point F5 Nico** : (1) l'encart se lit-il d'un regard, s'assombrit-il assez tôt/nettement ? (2) la zone
+  abritée survit-elle visiblement au banc `effondrement` ? (3) nommage au bon moment (palier météo ≥ 4) ?
+  (4) COMPROMIS départ 1309 = ciel déjà lourd à l'arrivée (pas de « virage » clair→plomb) MAIS fauche nette ;
+  reculer le départ montre le virage mais adoucit la fauche (semis durcissent) — à arbitrer au F5.
+- **Note taille** : `serialize.py` = 368 LDC pur (🟡 vigilance, responsabilité unique = sérialisation ;
+  déjà grand avant ④, +~40 lignes).
 
 ---
 **[HISTORIQUE CONCEPTION ci-dessous]**
