@@ -20,7 +20,7 @@
 | # | Kickoff | Contenu | Golden | État |
 |---|---|---|---|---|
 | T0 | `01_banc_capture.md` | Godot portable + Xvfb + Movie Maker → PNG | intact | **fait** (non commité) |
-| T1 | `02_palette_curseur.md` | shader palette 32 + Bayer · curseur + losange de survol | intact | à faire |
+| T1 | `02_palette_curseur.md` | shader palette 32 + Bayer · curseur + losange de survol | intact | **fait** (non commité) |
 | T2 | `03_precuisson.md` | cuisson par plante + cache + file étalée (image identique) | intact | à faire |
 | T3 | `04_vent_onde.md` | pont `weather.wind` + 8 poses de flexion + onde | intact | à faire |
 | T4 | `05_canicule_pluie.md` | réponses par plante canicule + pluie/orage | intact | à faire |
@@ -55,8 +55,30 @@
 - **Limites** : la phase démarre en Planification (temps figé) → images identiques tant que rien
   n'anime ; pas de souris (étiquette de survol arbitraire possible) ; avertissement V-Sync bénin.
 
+## T1 — palette SNES + curseur (fait 2026-10-15, golden `22768f33…` PASS, build vert)
+- **Palette maître** `Palette16.Maitre` = **34 couleurs** (8 verts, 5 terres, 4 argiles, 3 sables,
+  6 pierres, 1 blanc, 3 eaux, 4 accents fleurs) ; calée par k-means sur les captures T0 puis
+  simulation Python du shader. 4 entrées nommées (`MaitreSombre/Granite/Blanc/Jaune`).
+- **Shader** `visuals/palette_snes.gdshader` sur le `SubViewportContainer` (`PaletteSnes.cs`) :
+  plus proche en **OKLab** + Bayer 4×4 sur la grille interne 960×540, `tramage` 0.5 ; **accents
+  (fleurs) jamais partenaires de tramage** (sinon argile mouchetée de rouge, constaté). **F11** =
+  avant/après. HUD/étiquettes non quantifiés.
+- **Curseur** main gantée 16×16 ×2 cuite (`WorldView.Curseur.cs`), tap 150 ms au clic gauche.
+  **Losange de survol** `visuals/PlotHover.cs` (blanc + ombre 1 px, suit relief et rotation),
+  respire (période 1,4 s) **seulement** geste armé.
+- **Banc** : `capture_vm.sh` gagne `-s X,Y` (souris, WarpMouse sous Xvfb OK) et `-g N` (geste armé).
+- **Avant/après** (full vue d'ensemble + zoom 4 sur le sable 300,1700) : nuances conservées ; erreur
+  moyenne OKLab ~0,02 [simulation Python, 2 images] ; 28 couleurs distinctes à l'écran [vue
+  d'ensemble, n=1]. Flancs de sable = aplat gris-beige (avant : trame grise) ; dessus de sable et
+  terres = grain tramé fin ; ardoise/granite gardent leurs 2-3 valeurs. Moucheture rouge résiduelle
+  sur l'argile : ~118 px [simulation, vue d'ensemble], uniquement là où la source est déjà rouge.
+- **Coût shader** : non mesurable sur la VM (Movie Maker 9-14 s/image dominé par sim + encodage
+  [n=2 avant, n=2 après]) ; 1 passe 518 400 px × 2 boucles ≤ 34 → à confirmer F4 par Nico.
+- **Points F5** : plus SNES / plus beau ? `tramage` (0,5) ; grain vert sur le sable ; losange
+  lisible sur sable clair ? curseur main (taille ×2) ; respiration trop/pas assez visible.
+
 ## Ce qui reste
-T1→T5. Mesures à graver ici au fil des tronçons : Mo de cache, ms de cuisson/plante, budget/frame retenu.
+T2→T5. Mesures à graver ici au fil des tronçons : Mo de cache, ms de cuisson/plante, budget/frame retenu.
 
 ## §REPRISE
-`/sprint-auto sprint_jardin_vivant` : lire CLAUDE.md + ce fichier + le doc de conception, puis le premier kickoff « à faire » (T1). T0 fait mais **non commité** (orchestrateur). Vérifier chaque rendu avec `tools/capture_vm.sh` puis Read des PNG.
+`/sprint-auto sprint_jardin_vivant` : lire CLAUDE.md + ce fichier + le doc de conception, puis le premier kickoff « à faire » (**T2** `03_precuisson.md`). T1 fait mais **non commité** (orchestrateur). Bascule F11 = palette ON/OFF pour comparer. Vérifier chaque rendu avec `tools/capture_vm.sh` puis Read des PNG.

@@ -97,6 +97,7 @@ namespace Symbiose
 					case Key.F7:       ToggleSoilTemp();   break;
 					case Key.F9:       ToggleLodDebug();   break;  // LOD émetteurs d'ombre (D67)
 					case Key.F10:      _decorLayer?.ToggleBanc(); break;  // banc décor : 4 motifs (lisibilité décor T4)
+					case Key.F11:      PaletteSnes.Basculer(); break;     // palette SNES avant/après (jardin vivant T1)
 					case Key.G:        ToggleGenesHover(); break;  // survol gènes debug (diversité fondatrice ③)
 					// Macros de gestes (⑤, palette perso) : K enregistre une
 					// séquence (re-K pour finir + persister) ; J arme le rejeu de
@@ -135,6 +136,7 @@ namespace Symbiose
 				if (mb.ButtonIndex == MouseButton.WheelDown) StepZoom(-1);
 				if (mb.ButtonIndex == MouseButton.Left)
 				{
+					TapCurseur();   // la main « tape » : signal du clic (jardin vivant T1)
 					var canvas = WorldMouseCanvas();
 					// Mode inspection (T3, touche F2) : le clic ouvre le dossier de la
 					// plante pointée (ou referme) au lieu d'agir — priorité sur tout.

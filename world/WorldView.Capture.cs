@@ -17,6 +17,8 @@
 //                            du registre Python `BANCS`) — active le mode
 //   --capture-zoom=<z>       palier de zoom (0.5 1 2 4 8 16 32) ; défaut = cadrage
 //   --capture-centre=<x>,<y> point visé en cm monde (défaut = centre 1000,1000)
+//   --capture-souris=<x>,<y> souris posée en px ÉCRAN (survol : losange, étiquette)
+//   --capture-geste=<n>      slot de geste armé (0..9) — losange qui « respire »
 
 using Godot;
 using System.Globalization;
@@ -30,6 +32,8 @@ namespace Symbiose
 		private static readonly string CaptureBanc = ArgCapture("banc");
 		private static readonly float CaptureZoom = ParseFloat(ArgCapture("zoom"));
 		private static readonly string CaptureCentre = ArgCapture("centre");
+		private static readonly string CaptureSouris = ArgCapture("souris");
+		private static readonly float CaptureGeste = ParseFloat(ArgCapture("geste"));
 
 		// Vrai quand le jeu est lancé par le banc de capture (WorldView._Ready
 		// saute alors le sélecteur de monde).
@@ -74,6 +78,14 @@ namespace Symbiose
 					CurrentZoom = CaptureZoom;
 				}
 			}
+			// Xvfb a un vrai pointeur X : WarpMouse le déplace, GetMousePosition le relit.
+			if (CaptureSouris != null)
+			{
+				string[] s = CaptureSouris.Split(',');
+				if (s.Length == 2)
+					Input.WarpMouse(new Vector2(ParseFloat(s[0]), ParseFloat(s[1])));
+			}
+			if (!float.IsNaN(CaptureGeste)) SelectSlot((int)CaptureGeste);
 			RedrawAllPlants();
 			CullPlants();
 		}

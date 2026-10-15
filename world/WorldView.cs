@@ -216,6 +216,10 @@ namespace Symbiose
 			container.Size = GetViewport().GetVisibleRect().Size;
 			GetViewport().SizeChanged += () =>
 				container.Size = GetViewport().GetVisibleRect().Size;
+			// Palette SNES ~32 couleurs + tramage Bayer sur TOUT le monde affiché
+			// (jardin vivant T1, F11 bascule) ; curseur + losange de survol.
+			PaletteSnes.Appliquer(container);
+			InitCurseur();
 			// Champ STATIQUE (partagé avec PlantRenderer via WorldToScreen) :
 			// toujours repartir « nord en haut » à l'ouverture de la scène.
 			_orientation = 0;
@@ -384,6 +388,7 @@ namespace Symbiose
 			try { _pendingAction?.Wait(2000); } catch { /* idem */ }
 			try { _pendingFields?.Wait(2000); } catch { /* idem */ }
 			_bridge?.Quit();
+			LibererCurseur();   // rend le curseur système, libère ses textures (T1)
 		}
 
 		// -------------------------------------------------------------------
@@ -416,6 +421,8 @@ namespace Symbiose
 			// 0b') Surbrillance de la branche sous la souris (mode tailler, t5).
 			//      Chaque frame aussi, mais le redraw ne part qu'au CHANGEMENT.
 			UpdateTailleHighlight();
+			// 0b'·bis) Curseur vivant + losange du plot survolé (jardin vivant T1).
+			UpdateCurseur();
 			// 0c) Soleil (volet C) : la jauge intra-semaine est l'heure du jour.
 			//     Early-out interne si le soleil a bougé de moins de 2°.
 			UpdateSun();

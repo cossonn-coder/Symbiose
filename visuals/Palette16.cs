@@ -170,5 +170,49 @@ namespace Symbiose
 		// -- Petites fleurs de la prairie (semis déterministe) --
 		public static readonly Color FleurPrairieBlanc = new Color("e7e3d2"); // marguerites (points clairs)
 		public static readonly Color FleurPrairieJaune = new Color("e6c24a"); // boutons-d'or (points jaunes)
+
+		// === PALETTE MAÎTRE SNES — 34 couleurs (jardin vivant T1) =============
+		// LA contrainte finale de l'écran : le shader `palette_snes.gdshader`
+		// ramène CHAQUE pixel du SubViewport monde à l'une de ces 32 couleurs (la
+		// plus proche en OKLab), avec un tramage Bayer 4×4 entre les deux plus
+		// proches. Les teintes ci-dessus restent les couleurs « d'intention » des
+		// dessinateurs ; celles-ci sont le NUANCIER réellement affiché.
+		// 📖 Pourquoi des rampes à hue-shift : une rampe SNES ne va pas du vert au
+		// noir, elle glisse vers le FROID (bleu) dans l'ombre et vers le CHAUD
+		// (jaune) dans la lumière — le relief se lit sans noircir. Rampes
+		// partagées par tous les acteurs (feuillage = herbe = décor) → cohérence.
+		// Calées sur les couleurs dominantes mesurées (k-means sur captures VM T0).
+		// Entrées NOMMÉES de la palette maître (curseur, losange de survol) —
+		// déclarées AVANT le tableau (ordre d'initialisation statique C#).
+		public static readonly Color MaitreSombre  = new Color("2e3038"); // contour (ardoise nuit)
+		public static readonly Color MaitreGranite = new Color("b5b0a2"); // ombre claire (granite chaud)
+		public static readonly Color MaitreBlanc   = new Color("f2efe6"); // blanc chaux
+		public static readonly Color MaitreJaune   = new Color("e6c24a"); // jaune fleur
+		// Nombre d'ACCENTS en fin de Maitre (fleurs/fruits) : couleurs franches,
+		// jamais partenaires de tramage (évite la moucheture rouge sur l'argile).
+		public const int MaitreAccents = 4;
+		public static readonly Color[] Maitre =
+		{
+			// Verts (8) : forêt profonde froide → pousse tendre chaude → crème verdi (sable herbu)
+			new Color("1c3328"), new Color("2f5139"), new Color("44703f"), new Color("5f8a47"),
+			new Color("709354"), new Color("82ac5a"), new Color("a6c56e"), new Color("d2d3a0"),
+			// Terre / bois (5) : humus froid → terre sèche
+			new Color("33261f"), new Color("5a4030"), new Color("836556"), new Color("967961"),
+			new Color("b39d85"),
+			// Argile / brique (4)
+			new Color("8a3f26"), new Color("a8462c"), new Color("c77137"), new Color("e8a060"),
+			// Sable / crème (3)
+			new Color("c9c29a"), new Color("e3dbb3"), new Color("f5edc6"),
+			// Pierre / ardoise (6) : gris bleutés (ombre) → gris-beige (flancs de sol) → granite chaud
+			MaitreSombre, new Color("3f4550"), new Color("5a616c"), new Color("8a8e93"),
+			new Color("918a72"), MaitreGranite,
+			// Blanc (1) : écorce de bouleau, chaux, reflets
+			MaitreBlanc,
+			// Eau / ciel (3)
+			new Color("35617f"), new Color("5f94b8"), new Color("a8cfe6"),
+			// Fleurs / fruits (4) : rouge, jaune, rose, violet — ACCENTS, toujours en
+			// FIN de tableau (le shader ne les trame jamais, cf. MaitreAccents).
+			new Color("b8323a"), MaitreJaune, new Color("de8ab0"), new Color("7c5cb0"),
+		};
 	}
 }
