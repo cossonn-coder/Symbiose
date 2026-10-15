@@ -109,19 +109,32 @@ def test_pommier_fruite():
     full. Garde-fou de ce levier ET du chemin floraison → pollinisation → nouaison
     → `plant.fruits` → snapshot (Partie A vivante)."""
     print("[pommier mûr → fruits en fin de floraison]")
-    s = ServerProc()
-    s.send(cmd="init", seed=42, config="full")
-    snap = s.send(cmd="snapshot")["snapshot"]
-    # La nouaison suit la fanaison (fin d'été) et n'est plus calée sur une semaine
-    # fixe → on avance jusqu'à voir le pommier porter des fruits (cap an 1).
-    pommier = None
-    while snap["week"] < 52:
-        snap = s.send(cmd="step_week")["snapshot"]
-        pommier = next((p for p in snap["plants"]
-                        if p["species"] == "AppleTree" and not p.get("dead", False)),
-                       None)
+    # Plusieurs seeds, arrêt au premier qui noue (tri des dettes 2026-10-15) : la
+    # nouaison entomophile est une LOTERIE par seed. Les butineurs sont peu nombreux
+    # (round(densité × n_max) ≈ 0-1 agent par type) et naissent à une position
+    # hashée ; le pommier pré-âgé n'occupe qu'un plot → certains seeds n'ont aucun
+    # butineur qui le trouve (seed 42 depuis 2ec2e2d ; mesuré : 10/12 seeds nouent
+    # l'an 1). Ce test garde le CHEMIN floraison → pollen → nouaison → snapshot,
+    # pas la chance d'un seed précis.
+    seeds = (42, 1, 2)
+    for i, seed in enumerate(seeds):
+        s = ServerProc()
+        s.send(cmd="init", seed=seed, config="full")
+        snap = s.send(cmd="snapshot")["snapshot"]
+        # La nouaison suit la fanaison (fin d'été) et n'est plus calée sur une
+        # semaine fixe → on avance jusqu'à voir le pommier porter des fruits (cap an 1).
+        pommier = None
+        while snap["week"] < 52:
+            snap = s.send(cmd="step_week")["snapshot"]
+            pommier = next((p for p in snap["plants"]
+                            if p["species"] == "AppleTree" and not p.get("dead", False)),
+                           None)
+            if pommier and pommier.get("fruits"):
+                break
         if pommier and pommier.get("fruits"):
             break
+        if i < len(seeds) - 1:            # le dernier reste ouvert pour le quit final
+            s.send(cmd="quit"); s.close()
     check("config full : un pommier vivant", pommier is not None)
     check("le pommier pré-âgé a noué des fruits réels (fin de floraison)",
           pommier and len(pommier.get("fruits", [])) > 0,

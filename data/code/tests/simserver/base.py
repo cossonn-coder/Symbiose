@@ -7,7 +7,7 @@ quit), monde full (tranche 2). Mesure aussi la taille du snapshot (octets/sem).
 import json
 import subprocess
 
-from .harness import check, ServerProc, run_scenario
+from .harness import check, ServerProc, run_scenario, _scrub
 
 
 def test_v0_contract():
@@ -40,7 +40,12 @@ def test_v0_contract():
                                 "stage", "height_cm", "segments")))
 
     r = s.send(cmd="snapshot")
-    check("snapshot == état du dernier step", r.get("snapshot") == snap)
+    # D96 : le bloc `perf` (ms_tick, rss_mo) dépend de la charge machine et
+    # diffère entre les deux lectures → on le neutralise via `_scrub`, comme
+    # pour les autres comparaisons de déterminisme. Sinon ce check est flaky.
+    check("snapshot == état du dernier step",
+          _scrub(json.dumps({"snapshot": r.get("snapshot")}))
+          == _scrub(json.dumps({"snapshot": snap})))
 
     # Mesure (kickoff : la donnée qui tranchera complet vs diffs)
     size = len(json.dumps(r, sort_keys=True, separators=(",", ":")))
