@@ -237,6 +237,7 @@ namespace Symbiose
 						case "maladie":   _maladie = it; break;
 					}
 				}
+			RefreshMeteo();   // la variante canicule suit `secheresse` (T4)
 			Invalidate();
 		}
 

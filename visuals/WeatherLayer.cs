@@ -82,6 +82,7 @@ namespace Symbiose
 		private float _t;                  // accumulateur de temps (animation)
 		private float _flash;              // alpha du flash d'éclair courant
 		private float _flashTimer = 2.2f;  // compte à rebours avant le prochain
+		private int _flashes;              // rang de l'éclair (graine de l'intervalle)
 
 		private static readonly Color RainColor = new Color(0.72f, 0.80f, 0.92f, 0.5f);
 		private static readonly Color SnowColor = new Color(1f, 1f, 1f, 0.85f);
@@ -156,9 +157,15 @@ namespace Symbiose
 			if (_lightning)
 			{
 				_flashTimer -= d;
-				if (_flashTimer <= 0f) { _flash = 1f; _flashTimer = 2.4f; }
+				// T4 : un éclair = le SEUL flash autorisé, bref (~0,15 s) et à
+				// intervalles irréguliers (3-9 s, hash de son rang : déterministe).
+				if (_flashTimer <= 0f)
+				{
+					_flash = 1f;
+					_flashTimer = 3f + 6f * (Hash((uint)_flashes++ + 977u) & 0xffff) / 65536f;
+				}
 			}
-			_flash = Mathf.Max(0f, _flash - d * 4f);
+			_flash = Mathf.Max(0f, _flash - d * 7f);
 
 			// On ne redessine que s'il y a quelque chose d'animé/visible.
 			if (_mode != Precip.None || _nebCur > 0.01f || _flash > 0.01f)
@@ -181,7 +188,7 @@ namespace Symbiose
 			float intNorm = _intensity / 3f;
 			switch (_mode)
 			{
-				case Precip.Rain:  DrawRain(w, h, intNorm); break;
+				case Precip.Rain:  DrawRain(w, h, intNorm); DrawSplashes(w, h); break;
 				case Precip.Snow:  DrawSnow(w, h, intNorm); break;
 				case Precip.Hail:  DrawHail(w, h, intNorm); break;
 				case Precip.Storm: DrawStorm(w, h, intNorm); break;
@@ -193,6 +200,33 @@ namespace Symbiose
 
 		// --- Précipitations : positions dérivées d'un HASH d'indice (pas de Random) ;
 		//     la chute vient de l'accumulateur _t. PosMod = modulo TOUJOURS positif.
+
+		// --- Éclaboussures au sol (T4) : par endroits, une goutte frappe (point)
+		// puis rejaillit (couronne de 2 points) ; chaque site renaît ailleurs au
+		// cycle suivant (hash du site × rang du cycle). Tracées en carrés de 2 px
+		// alignés sur la grille du monde pixel-art (×2), couleur eau claire de la
+		// palette maître (Palette16.Maitre) — ce calque écran n'est pas tramé.
+		private const float SplashPeriod = 0.45f;
+		private static readonly Color SplashColor = new Color("a8cfe6", 0.8f);
+
+		private void DrawSplashes(float w, float h)
+		{
+			int n = _count / 3;
+			var px = new Vector2(2f, 2f);
+			for (int i = 0; i < n; i++)
+			{
+				uint hi = Hash((uint)i + 4099u);
+				float cyc = _t / SplashPeriod + (hi & 0xffff) / 65536f;
+				float u = cyc - Mathf.Floor(cyc);
+				if (u > 0.4f) continue;   // le site est au repos le reste du cycle
+				uint hp = Hash((uint)i * 7919u + (uint)Mathf.FloorToInt(cyc) * 104729u);
+				var c = new Vector2(Mathf.Floor((hp & 0xffff) / 65536f * w / 2f) * 2f,
+									Mathf.Floor(((hp >> 16) & 0xffff) / 65536f * h / 2f) * 2f);
+				if (u < 0.15f) { DrawRect(new Rect2(c, px), SplashColor); continue; }
+				DrawRect(new Rect2(c + new Vector2(-4f, -2f), px), SplashColor);
+				DrawRect(new Rect2(c + new Vector2(4f, -2f), px), SplashColor);
+			}
+		}
 
 		private void DrawRain(float w, float h, float intNorm)
 		{
@@ -264,13 +298,14 @@ namespace Symbiose
 		}
 
 		// Hash djb2-xor (même choix que LitterLayer : visuel stable, jamais Random).
-		private static uint Hash(uint i)
+		// T4 : finaliseur murmur3 (32 bits pleins). L'ancien hash (djb2 sur 3
+		// octets) laissait les bits hauts quasi constants → toutes les gouttes
+		// partageaient la même phase verticale : la pluie tombait en NAPPE (une
+		// rangée horizontale de traits, constaté au banc). Corrige pluie/neige/grêle.
+		private static uint Hash(uint x)
 		{
-			uint h = 5381u;
-			h = ((h << 5) + h) ^ (i & 0xff);
-			h = ((h << 5) + h) ^ ((i >> 8) & 0xff);
-			h = ((h << 5) + h) ^ ((i >> 16) & 0xff);
-			return h;
+			x ^= x >> 16; x *= 0x85ebca6bu; x ^= x >> 13; x *= 0xc2b2ae35u; x ^= x >> 16;
+			return x;
 		}
 	}
 }

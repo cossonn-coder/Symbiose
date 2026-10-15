@@ -226,6 +226,9 @@ namespace Symbiose
 			// Onde de vent (jardin vivant T3) : choisit chaque frame la pose de
 			// flexion des plantes près de l'écran (WindWave.cs).
 			AddChild(new WindWave { Name = "WindWave" });
+			// Variante météo des plantes (jardin vivant T4) : canicule, pluie qui
+			// sèche en quelques secondes de jeu (MeteoPlantes.cs).
+			AddChild(new MeteoPlantes { Name = "MeteoPlantes" });
 			// Champ STATIQUE (partagé avec PlantRenderer via WorldToScreen) :
 			// toujours repartir « nord en haut » à l'ouverture de la scène.
 			_orientation = 0;
@@ -244,7 +247,7 @@ namespace Symbiose
 			// par `_started` tant qu'on n'a pas lancé. Voir WorldView.Selecteur.cs.
 			// Mode capture VM (T0 jardin vivant) : monde imposé par argument, pas
 			// de menu. Inactif sans `--capture-banc=` (cf. WorldView.Capture.cs).
-			if (CaptureActive) { StartSimulation(CaptureBanc); return; }
+			if (CaptureActive) { PreparerCapture(); StartSimulation(CaptureBanc); return; }
 			BuildSelecteur();
 		}
 

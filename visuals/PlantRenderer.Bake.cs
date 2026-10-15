@@ -106,6 +106,9 @@ namespace Symbiose
 			brush._maladie = _maladie;
 			brush._vitalite = _vitalite;
 			brush._silhouette = _silhouette;
+			brush._heat = _heat;           // variante météo (T4)
+			brush._wet = _wet;
+			brush._raideur = _raideur;
 			brush._supportKind = _supportKind;
 			brush._highlightSegment = -1;
 			brush.QueueRedraw();

@@ -21,9 +21,14 @@
 //   --capture-geste=<n>      slot de geste armé (0..9) — losange qui « respire »
 //   --capture-vent=<f>[,<d>] force de vent imposée (0 = calme) et direction
 //                            D'OÙ il vient en rad (défaut = celle du snapshot) — T3
+//   --capture-meteo=<kind>[,<intensité>[,<durée_s>]]  météo imposée (ex. Canicule,
+//                            « Pluie prolongée », Orage) ; après <durée_s> secondes de
+//                            jeu, retour à celle du snapshot (observe l'« après ») — T4
+//   --capture-semaines=<n>   semaines de warmup (défaut WarmupWeeks = 12) — T4
 
 using Godot;
 using System.Globalization;
+using GDict = Godot.Collections.Dictionary;
 
 namespace Symbiose
 {
@@ -37,6 +42,12 @@ namespace Symbiose
 		private static readonly string CaptureSouris = ArgCapture("souris");
 		private static readonly float CaptureGeste = ParseFloat(ArgCapture("geste"));
 		private static readonly string CaptureVent = ArgCapture("vent");
+		private static readonly string CaptureMeteo = ArgCapture("meteo");
+		private static readonly float CaptureSemaines = ParseFloat(ArgCapture("semaines"));
+
+		// Météo imposée par le banc (T4) : active jusqu'à l'échéance de sa durée.
+		private bool _captureMeteoActive = CaptureMeteo != null;
+		private GDict _lastWeather;
 
 		// Vrai quand le jeu est lancé par le banc de capture (WorldView._Ready
 		// saute alors le sélecteur de monde).
@@ -53,6 +64,32 @@ namespace Symbiose
 		private static float ParseFloat(string s) =>
 			s != null && float.TryParse(s, NumberStyles.Float, CultureInfo.InvariantCulture, out float v)
 				? v : float.NaN;
+
+		// Appelé AVANT StartSimulation : warmup imposé et fin programmée de la
+		// météo imposée (minuterie de l'arbre = temps de jeu, fixe en Movie Maker).
+		private void PreparerCapture()
+		{
+			if (!float.IsNaN(CaptureSemaines)) WarmupWeeks = Mathf.Max(0, (int)CaptureSemaines);
+			string[] m = CaptureMeteo?.Split(',');
+			if (m == null || m.Length < 3) return;
+			GetTree().CreateTimer(ParseFloat(m[2])).Timeout += () =>
+			{
+				_captureMeteoActive = false;
+				GD.Print("[Capture] fin de la météo imposée → météo du snapshot.");
+				if (_lastWeather != null) ApplyWeather(_lastWeather);
+			};
+		}
+
+		// Bloc `weather` éventuellement remplacé par la météo imposée du banc.
+		private GDict CaptureMeteoOverride(GDict weather)
+		{
+			if (!_captureMeteoActive) return weather;
+			string[] m = CaptureMeteo.Split(',');
+			var w = weather.Duplicate();
+			w["kind"] = m[0];
+			if (m.Length > 1) w["intensity"] = ParseFloat(m[1]);
+			return w;
+		}
 
 		// Appelé APRÈS FrameCamera (monde construit) : impose le palier de zoom et
 		// le point visé. On n'utilise pas StepZoom (zoom centré SOURIS — sous Xvfb

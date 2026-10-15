@@ -46,9 +46,14 @@ namespace Symbiose
 		// Bloc `weather` (lecture tolérante : pré-0.5.0 sans le bloc → ciel neutre).
 		// T3 (0.5.44) : sous-bloc `wind` → onde de vent des plantes (WindWave).
 		// Absent (binaire pré-0.5.44) → vent nul → jardin immobile.
+		// T4 : `kind` → variante de dessin des plantes (MeteoPlantes). Le banc de
+		// capture peut imposer la météo (--capture-meteo, WorldView.Capture.cs).
 		private void ApplyWeather(GDict weather)
 		{
+			_lastWeather = weather;
+			weather = CaptureMeteoOverride(weather);
 			_weatherLayer?.SetWeather(weather);
+			MeteoPlantes.SetWeather(weather.ContainsKey("kind") ? weather["kind"].AsString() : "");
 			var w = weather.ContainsKey("wind") ? weather["wind"].AsGodotDictionary() : null;
 			WindWave.SetWind(w != null ? (float)w["force"].AsDouble() : 0f,
 							 w != null ? (float)w["direction"].AsDouble() : 0f,

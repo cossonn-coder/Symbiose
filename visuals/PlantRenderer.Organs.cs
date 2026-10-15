@@ -282,8 +282,9 @@ namespace Symbiose
 						float ly = p.Y + perp.Y * off * side;
 						float lz = p.Z + (h2 - 0.5f) * LeafOffsetCm;
 						// Sécheresse (canal FORME) : turgescence perdue → la feuille
-						// s'affaisse, on l'abaisse ∝ intensité (conception §3/§4).
-						lz -= _drought * DroughtDroopCm;
+						// s'affaisse ∝ intensité (conception §3/§4) ; + canicule et
+						// poids de la pluie (variante météo T4, PlantRenderer.Meteo.cs).
+						lz -= LeafDropCm(p.Z);
 						Vector2 c = Iso(lx - collet.X, ly - collet.Y, lz);
 						Color col = SymptomTint(LeafColor(pal, automne, Hash01(13, i, j)));
 						col.A = 0.92f;
@@ -309,10 +310,11 @@ namespace Symbiose
 						// catalogue fermé `LeafProfiles` (PlantRenderer.Leaf.cs). Chaque
 						// sous-élément reste un volume 2 valeurs (E4) ; plancher de rayon
 						// et repli LOD gérés dans DrawLeafShape.
-						DrawLeafShape(c, r * 1.15f, r * 0.65f, col, i, j);
+						DrawLeafShape(c, r * 1.15f, r * 0.65f * LeafOpen, col, i, j);
 						// Canaux TEXTURE additifs (sémiologie ③) : criblage ravageurs/
 						// grêle + bords gelés, par-dessus la feuille, stables au hash.
 						DrawLeafDamage(c, r, i, j);
+						DrawWetGlint(c, r, i, j);   // reflet humide (pluie, T4)
 					}
 				}
 			}

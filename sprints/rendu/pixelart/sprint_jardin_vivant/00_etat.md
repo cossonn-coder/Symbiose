@@ -22,8 +22,8 @@
 | T0 | `01_banc_capture.md` | Godot portable + Xvfb + Movie Maker → PNG | intact | **fait** (non commité) |
 | T1 | `02_palette_curseur.md` | shader palette 32 + Bayer · curseur + losange de survol | intact | **fait** (`447da15`) |
 | T2 | `03_precuisson.md` | cuisson par plante + cache + file étalée (image identique) | intact | **fait** (`0bb6cb6`) |
-| T3 | `04_vent_onde.md` | pont `weather.wind` + 8 poses de flexion + onde | intact | **fait** (non commité) |
-| T4 | `05_canicule_pluie.md` | réponses par plante canicule + pluie/orage | intact | à faire |
+| T3 | `04_vent_onde.md` | pont `weather.wind` + 8 poses de flexion + onde | intact | **fait** (`14c0fc4`) |
+| T4 | `05_canicule_pluie.md` | réponses par plante canicule + pluie/orage | intact | **fait** (non commité) |
 | T5 | `06_neige_gel_banc.md` | neige + grêle/gel + traces + banc F5 « jardin vivant » | intact | à faire |
 
 ## Faits vérifiés au code (2026-10-15)
@@ -149,8 +149,45 @@
   (SwayAmp 0,08) fait-il frétiller (trop) ? ; mémoire vidéo à ×8 (~2,3 Mo/plante) → si trop, baisser
   le nombre de poses ou ne cuire les 8 qu'en dessous de ×8 ; pluie qui s'incline dans le bon sens.
 
+## T4 — canicule + pluie/orage (fait 2026-10-15, golden `22768f33…` PASS, build vert, pont NON touché)
+- **Variante de dessin par plante** (`visuals/PlantRenderer.Meteo.cs`) : `_heat` = `secheresse` si
+  `weather.kind == "Canicule"` (sinon 0) → feuilles abaissées de +6 cm × i et limbe refermé
+  (largeur × (1 − 0,55 i)) ; `_wet` ∈ {0, ⅓, ⅔, 1} → extrémités qui retombent (4 cm × wet × raideur
+  du port × z/H : l'herbacée ploie, l'arbre à peine) + reflets 1-2 px `MaitreBlanc` sur ~45 % × wet
+  des feuilles (hash). Cuite dans l'atlas (× poses T3), copiée au pinceau ; `RefreshMeteo` ne salit
+  QUE les plantes dont la variante change (sans `secheresse` → pas de recuisson à la canicule ; sans
+  feuillage → pas de recuisson à la pluie). Hooks dans `.Organs.cs` : `LeafDropCm(p.Z)` remplace
+  l'abaissement sécheresse (identique hors épisode), `LeafOpen`, `DrawWetGlint`.
+- **État global** `visuals/MeteoPlantes.cs` (Node) : lit `weather.kind` ; pluie = « Pluie prolongée » ou
+  « Orage » ; après l'épisode le feuillage se ressuie en 8 s de jeu par 3 paliers (= 3 vagues de
+  recuisson via la file). `_Process` sort immédiatement sans épisode (animation = signal).
+- **`WeatherLayer`** : éclaboussures au sol (carrés 2 px eau claire de `Palette16.Maitre`, point puis
+  couronne, cycle 0,45 s, sites re-tirés au hash) ; éclair = flash 1 frame ~0,14 s à intervalles
+  3-9 s (hash du rang), ex-2,4 s régulier. **Bug pré-existant corrigé** : le hash des précipitations
+  (djb2 3 octets) avait des bits hauts quasi constants → toutes les gouttes à la même phase verticale
+  = pluie en NAPPE horizontale (vu au banc) ; remplacé par le finaliseur murmur3 (pluie/neige/grêle
+  désormais dispersées — touche aussi la neige T5).
+- **Banc** : `capture_vm.sh -m KIND[,INT[,DUREE_S]]` (`--capture-meteo`, météo imposée puis retour au
+  snapshot après DUREE_S → observe l'« après ») et `-w N` (`--capture-semaines`, warmup).
+  Canicule : `-b secheresse_sable -w 3 -z 4 -c 125,222 -m Canicule`. Pluie : `-b full -z 8 -c 300,1700 -m "Pluie prolongée,0.8"`.
+- **Mesures** (VM llvmpipe, Movie Maker) :
+  - Canicule [secheresse_sable sem. 4, n=1] : 2 plantes examinées, seul le basilic (`secheresse`
+    0,52) change (1128 px différents à ×4, 4244 à ×8) ; la bourse-à-pasteur voisine (sans symptôme)
+    n'est pas recuite (0 px).
+  - Pluie/orage [full ×4 300,1700, n=1] : 4 vagues (1 → ⅔ → ⅓ → 0) de 31 plantes cuites en 6 frames
+    chacune (80 sales hors champ attendent) ; à 60 FPS ≈ 0,1 s par vague.
+  - Mémoire : **0 Mo de plus** — la variante REMPLACE l'image (même atlas), pas d'image supplémentaire
+    (17,4 Mo / 31 images avant et après chaque vague [full ×4, vent actif, n=1]).
+  - Éclair : 1 frame éclaircie (+18 de luminance moyenne) en 4 s [smoke, 10 FPS, n=1].
+- **Constat pour Nico** : sur `full` seed 42, AUCUNE plante ne porte `secheresse` en 34 semaines [scan
+  Python, n=1 seed] (ni sur les autres bancs testés, sauf `secheresse_sable`) → en jeu la canicule ne
+  se lira sur les plantes que dans un jardin réellement assoiffé (voulu : pas d'effet sans état).
+  Le symptôme lui-même est rare — à juger si c'est un manque de calibrage moteur (dette éventuelle).
+- **Points F5** : « on sent la chaleur / la pluie sur les plantes ? » ; reflets assez visibles
+  (taille `r·0,1·zoom` px) ? ; séchage 8 s trop rapide/lent ? ; éclaboussures/éclair.
+
 ## Ce qui reste
-T4→T5. Calibrage onde (`WindWave` λ/f/enveloppe, `PlantRenderer.Wind` BendReach/raideur) = F5.
+T5. Calibrage onde (`WindWave` λ/f/enveloppe, `PlantRenderer.Wind` BendReach/raideur) = F5.
 
 ## §REPRISE
-`/sprint-auto sprint_jardin_vivant` : lire CLAUDE.md + ce fichier + le doc de conception, puis le premier kickoff « à faire » (**T4** `05_canicule_pluie.md`). T3 fait mais **non commité** (orchestrateur). Vent forcé au banc : `tools/capture_vm.sh -v 1.2` (calme : `-v 0`). Comparer avant/après sur les pixels STATIQUES (couches animées non déterministes) ; Pillow dispo seulement via un venv scratch (`python3 -m venv … && pip install pillow`).
+`/sprint-auto sprint_jardin_vivant` : lire CLAUDE.md + ce fichier + le doc de conception, puis le premier kickoff « à faire » (**T5** `06_neige_gel_banc.md`). T4 fait mais **non commité** (orchestrateur). Météo forcée au banc : `-m Canicule` / `-m "Orage,1,1.5"` ; warmup `-w N`. T5 peut réutiliser `MeteoPlantes` (état global) et `PlantRenderer.Meteo.cs` (variante cuite) pour la charge de neige. Vent forcé au banc : `tools/capture_vm.sh -v 1.2` (calme : `-v 0`). Comparer avant/après sur les pixels STATIQUES (couches animées non déterministes) ; Pillow dispo seulement via un venv scratch (`python3 -m venv … && pip install pillow`).
