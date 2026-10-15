@@ -232,6 +232,9 @@ namespace Symbiose
 			// peut demander la liste des bancs au serveur (list_bancs) AVANT init.
 			// Tout le reste de la machine (_Process, _UnhandledInput) reste gardé
 			// par `_started` tant qu'on n'a pas lancé. Voir WorldView.Selecteur.cs.
+			// Mode capture VM (T0 jardin vivant) : monde imposé par argument, pas
+			// de menu. Inactif sans `--capture-banc=` (cf. WorldView.Capture.cs).
+			if (CaptureActive) { StartSimulation(CaptureBanc); return; }
 			BuildSelecteur();
 		}
 
@@ -364,6 +367,7 @@ namespace Symbiose
 			ApplySnapshot(snap, fade: false);   // monde initial : pas de fondu
 
 			FrameCamera();
+			AppliquerCapture();   // no-op hors mode capture (WorldView.Capture.cs)
 			// Monde construit → on débloque la boucle (_Process) et les entrées
 			// (_UnhandledInput), gardées par `_started` pendant l'écran de sélection.
 			_started = true;

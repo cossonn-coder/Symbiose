@@ -19,7 +19,7 @@
 ## Carte des tronçons
 | # | Kickoff | Contenu | Golden | État |
 |---|---|---|---|---|
-| T0 | `01_banc_capture.md` | Godot portable + Xvfb + Movie Maker → PNG | — | à faire |
+| T0 | `01_banc_capture.md` | Godot portable + Xvfb + Movie Maker → PNG | intact | **fait** (non commité) |
 | T1 | `02_palette_curseur.md` | shader palette 32 + Bayer · curseur + losange de survol | intact | à faire |
 | T2 | `03_precuisson.md` | cuisson par plante + cache + file étalée (image identique) | intact | à faire |
 | T3 | `04_vent_onde.md` | pont `weather.wind` + 8 poses de flexion + onde | intact | à faire |
@@ -35,8 +35,28 @@
 - Aucun curseur/survol de plot existant (seul `world/SolTexture.cs` cuit un losange de sol).
 - Météo C# : `visuals/WeatherLayer.cs` (197 LDC, stries de vent tempête), `SnowLayer.cs`, `PuddleLayer.cs`.
 
+## Banc de capture VM (T0, vérifié 2026-10-15)
+- **Commande** : `tools/capture_vm.sh -o <dossier> -b <monde|banc> -z <palier> -c <x_cm>,<y_cm> -n <N>`
+  (ex. `tools/capture_vm.sh -o /tmp/cap -b full -z 2 -c 300,1700 -n 3`) → `frame0000000k.png`
+  1920×1080 (HUD compris) + `godot.log`. `--no-build` saute le `dotnet build`.
+- **Durée** : ~11 s pour 3 images [smoke et full, warmup 12 sem. inclus, n=4 runs] ; rendu llvmpipe
+  ~12 % du temps réel [n=1]. FPS **fixes** (Movie Maker, défaut 10) → temps de jeu = N/FPS, déterministe.
+- **Mode capture C#** : `world/WorldView.Capture.cs` (args `--capture-banc/zoom/centre` après `--`) saute
+  le sélecteur et cadre la caméra ; **inactif sans argument** (F5 Nico inchangé). 2 lignes d'accroche
+  dans `WorldView.cs` (`_Ready`, après `FrameCamera`).
+- **Hors dépôt** : Godot 4.6-stable mono dans `~/opt/godot/` ; Xvfb + deps (`xvfb`, `xserver-common`,
+  `x11-xkb-utils`, `libunwind8`, `libxfont2` 2.0.6-1+deb13u1, `libfontenc1`, `libxkbfile1`) téléchargés
+  depuis `deb.debian.org/debian/pool/` (l'index apt local est périmé : `apt-get download` → 404) et
+  extraits `dpkg-deb -x` dans `~/opt/xvfb/root/`. **Patch** : Xvfb appelle `xkbcomp` via un chemin
+  compilé `/usr/bin` → copie `Xvfb-patched` où cette chaîne (unique) devient `/tmp/xk` ; le script
+  recrée le lien `/tmp/xk/xkbcomp` à chaque lancement.
+- **Import** : `.godot/` présent ; un `Godot --headless --path . --import` (~50 s) a suffi, aucun
+  fichier suivi modifié.
+- **Limites** : la phase démarre en Planification (temps figé) → images identiques tant que rien
+  n'anime ; pas de souris (étiquette de survol arbitraire possible) ; avertissement V-Sync bénin.
+
 ## Ce qui reste
-Tout (T0→T5). Mesures à graver ici au fil des tronçons : Mo de cache, ms de cuisson/plante, budget/frame retenu.
+T1→T5. Mesures à graver ici au fil des tronçons : Mo de cache, ms de cuisson/plante, budget/frame retenu.
 
 ## §REPRISE
-`/sprint-auto sprint_jardin_vivant` : lire CLAUDE.md + ce fichier + le doc de conception, puis le premier kickoff « à faire ».
+`/sprint-auto sprint_jardin_vivant` : lire CLAUDE.md + ce fichier + le doc de conception, puis le premier kickoff « à faire » (T1). T0 fait mais **non commité** (orchestrateur). Vérifier chaque rendu avec `tools/capture_vm.sh` puis Read des PNG.
