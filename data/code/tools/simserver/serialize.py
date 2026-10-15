@@ -64,6 +64,9 @@ from .version import DEFAULT_REPRO
 # snapshot, opt-in (None sans ceinture). Vit dans `peripherie_route` avec le
 # routage des gestes de paysage — un module = « la périphérie au pont ».
 from .peripherie_route import ceinture_block
+# Vent au pont (JARDIN VIVANT T3, 0.5.44) : masse d'air `weather.wind` + facteur
+# d'abri par plante (lu SEULEMENT si le champ d'abri est déjà calculé). Pur.
+from .vent_pont import wind_block, abri_facteur
 
 
 class SerializeMixin:
@@ -244,6 +247,11 @@ class SerializeMixin:
                 #    (gène + week_in_year, zéro RNG). On NE touche PAS foliage_density_at
                 #    (il sert la sim / fields/light.py) : on ne fait qu'ajouter un hint.
                 base["floraison"] = round(p.floraison, 3)
+                # Abri local au vent (T3, 0.5.44) : clé OMISE si le champ d'abri
+                # n'a jamais été calculé (la vue prend alors 1.0, pleine exposition).
+                abri = abri_facteur(eco, p)
+                if abri is not None:
+                    base["abri"] = abri
                 if cls.deciduous:
                     w = semaine_abscission(p)
                     automne = (week_in_year - (w - AUTOMNE_RAMP)) / AUTOMNE_RAMP
@@ -634,6 +642,9 @@ class SerializeMixin:
                  "signs": list(s.signs), "signed": s.signed}
                 for s in signs
             ],
+            # Masse d'air (JARDIN VIVANT T3, 0.5.44) : {force, direction, gusts},
+            # même semaine `last` ; la vue en tire l'onde de vent sur les plantes.
+            "wind": wind_block(gs["seed"], last),
         }
         # « Ciel de la semaine » (effondrement météo ②→④, sim/ciel.py) : agrégat
         # PUR de tout ce que le joueur peut LIRE du ciel — état de fond, signes

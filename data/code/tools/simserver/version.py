@@ -666,7 +666,17 @@ from __future__ import annotations
 #       NEUTRE : le smoke ne pose rien et le golden tourne hors serveur. Un binaire
 #       pré-0.5.43 n'émet pas ces blocs → l'encart s'affiche neutre et aucun
 #       placeholder n'est dessiné (tolérance côté vue, comme tous les bumps).
-ENGINE_VERSION = "0.5.43"
+# 0.5.44 (jardin vivant T3, vent en onde) : DEUX ajouts lecture-seule. (1) Sous-bloc
+#       `weather.wind = {force, direction, gusts}` — masse d'air de la dernière semaine
+#       simulée (`sim.wind.wind_at` + `gust_profile`, PURES) ; `direction` (rad) = D'OÙ
+#       vient le vent ; à l'init = calme (force 0). (2) Clé OPTIONNELLE par plante
+#       vivante `abri` = facteur d'abri local au plot-foyer (1 = exposé, < 1 abrité,
+#       > 1 venturi), lu dans le cache géométrique de `fields/abri.py` ; OMISE tant que
+#       le champ d'abri n'a jamais été calculé (jamais forcé, D99). La vue en tire
+#       l'onde de flexion des plantes + l'inclinaison de la pluie. PURE lecture →
+#       golden NEUTRE. Un binaire pré-0.5.44 n'émet ni l'un ni l'autre → la vue reste
+#       immobile (vent nul) et prend abri = 1.0 (tolérance comme tous les bumps).
+ENGINE_VERSION = "0.5.44"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

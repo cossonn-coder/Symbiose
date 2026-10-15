@@ -335,6 +335,7 @@ namespace Symbiose
 				}
 			}
 			_shadow?.SetExtent(_spreadCm, _heightCm);
+			ComputeStiffness();   // raideur au vent suit la croissance (T3)
 			Invalidate(); // re-cuisson à venir (T2) — l'ancienne image reste d'ici là
 		}
 
@@ -348,8 +349,13 @@ namespace Symbiose
 		// translation du quart de tour et téléporterait chaque branche. Effet
 		// gagné : la plante « tourne » avec le monde — son phototropisme penche
 		// vers le même point monde (la maison) quelle que soit la vue.
-		private static Vector2 Iso(float dx, float dy, float dz) =>
-			WorldView.WorldToScreenOffset(dx, dy) - new Vector2(0f, dz * WorldView.PxPerCmZ);
+		// T3 (jardin vivant) : la projection passe d'abord par la FLEXION au vent
+		// (PlantRenderer.Wind.cs) — no-op à flexion nulle, donc dessin inchangé.
+		private Vector2 Iso(float dx, float dy, float dz)
+		{
+			if (_bendFlex > 0f && dz > 0f) Bend(ref dx, ref dy, ref dz);
+			return WorldView.WorldToScreenOffset(dx, dy) - new Vector2(0f, dz * WorldView.PxPerCmZ);
+		}
 
 		// ---------------------------------------------------------------------------
 		// HIT-TEST DE SEGMENT (tranche 5 — taille au clic)

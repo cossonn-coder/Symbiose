@@ -19,6 +19,8 @@
 //   --capture-centre=<x>,<y> point visé en cm monde (défaut = centre 1000,1000)
 //   --capture-souris=<x>,<y> souris posée en px ÉCRAN (survol : losange, étiquette)
 //   --capture-geste=<n>      slot de geste armé (0..9) — losange qui « respire »
+//   --capture-vent=<f>[,<d>] force de vent imposée (0 = calme) et direction
+//                            D'OÙ il vient en rad (défaut = celle du snapshot) — T3
 
 using Godot;
 using System.Globalization;
@@ -34,6 +36,7 @@ namespace Symbiose
 		private static readonly string CaptureCentre = ArgCapture("centre");
 		private static readonly string CaptureSouris = ArgCapture("souris");
 		private static readonly float CaptureGeste = ParseFloat(ArgCapture("geste"));
+		private static readonly string CaptureVent = ArgCapture("vent");
 
 		// Vrai quand le jeu est lancé par le banc de capture (WorldView._Ready
 		// saute alors le sélecteur de monde).
@@ -86,6 +89,13 @@ namespace Symbiose
 					Input.WarpMouse(new Vector2(ParseFloat(s[0]), ParseFloat(s[1])));
 			}
 			if (!float.IsNaN(CaptureGeste)) SelectSlot((int)CaptureGeste);
+			// Vent imposé (T3) : rend l'onde observable quelle que soit la semaine.
+			if (CaptureVent != null)
+			{
+				string[] v = CaptureVent.Split(',');
+				WindWave.SetCaptureOverride(ParseFloat(v[0]),
+											v.Length > 1 ? ParseFloat(v[1]) : float.NaN);
+			}
 			RedrawAllPlants();
 			CullPlants();
 		}

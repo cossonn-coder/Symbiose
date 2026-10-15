@@ -44,7 +44,16 @@ namespace Symbiose
 		}
 
 		// Bloc `weather` (lecture tolérante : pré-0.5.0 sans le bloc → ciel neutre).
-		private void ApplyWeather(GDict weather) => _weatherLayer?.SetWeather(weather);
+		// T3 (0.5.44) : sous-bloc `wind` → onde de vent des plantes (WindWave).
+		// Absent (binaire pré-0.5.44) → vent nul → jardin immobile.
+		private void ApplyWeather(GDict weather)
+		{
+			_weatherLayer?.SetWeather(weather);
+			var w = weather.ContainsKey("wind") ? weather["wind"].AsGodotDictionary() : null;
+			WindWave.SetWind(w != null ? (float)w["force"].AsDouble() : 0f,
+							 w != null ? (float)w["direction"].AsDouble() : 0f,
+							 w != null && w.ContainsKey("gusts") ? w["gusts"].AsGodotArray() : null);
+		}
 
 		// Bloc `temperature` (lecture tolérante : pré-0.5.0 → pas de manteau).
 		private void ApplySnow(GDict temperature) =>

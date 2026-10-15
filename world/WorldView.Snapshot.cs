@@ -199,6 +199,9 @@ namespace Symbiose
 				// un snapshot pré-0.5.21 (clé absente → true = émettrice, aucune teinte).
 				// Pilote la seule teinte de l'overlay debug F9, jamais le rendu normal.
 				bool emitteur = !p.ContainsKey("emitteur") || p["emitteur"].AsBool();
+				// Abri local au vent (jardin vivant T3, 0.5.44) : facteur du champ
+				// d'abri ; clé absente (champ pas encore calculé / pré-0.5.44) → 1.0.
+				float abri = p.ContainsKey("abri") ? (float)p["abri"].AsDouble() : 1f;
 
 				if (_plantNodes.TryGetValue(key, out var node))
 				{
@@ -209,6 +212,7 @@ namespace Symbiose
 					node.SetSupport(supportKind);    // vrille d'accroche (grimpantes ⑥)
 					node.SetSilhouette(silhouette);  // forme au LOD couronne (luxuriance ⑥)
 					node.SetEmitter(emitteur);       // teinte overlay LOD F9 (D67)
+					node.SetWindAnchor(wx, wy, abri);  // onde de vent (T3)
 					node.ZIndex = PlantZIndex(strate);  // empilement par strate (luxuriance ⑥)
 					node.SetMeta("tag", TagText(p));   // le stade évolue (étiquette nette)
 					node.Position = screenPos;         // suit le relief du sol (D57 ②)
@@ -251,6 +255,7 @@ namespace Symbiose
 				renderer.SetSupport(supportKind);  // vrille d'accroche (grimpantes ⑥)
 				renderer.SetSilhouette(silhouette);  // forme au LOD couronne (luxuriance ⑥)
 				renderer.SetEmitter(emitteur);     // teinte overlay LOD F9 (D67)
+				renderer.SetWindAnchor(wx, wy, abri);  // onde de vent (T3)
 				renderer.SetMeta("tag", TagText(p));   // texte d'étiquette (rendu net hors grille)
 				if (fade)
 					renderer.CreateTween()

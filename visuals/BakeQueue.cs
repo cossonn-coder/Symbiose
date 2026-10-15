@@ -62,6 +62,8 @@ namespace Symbiose
 		private static double _drawMsSum, _drawMsMax;
 		private static int _drawCount, _drawMaxSegs;
 
+		/// <summary>Toutes les plantes cuisables (lu par l'onde de vent, T3).</summary>
+		public static IReadOnlyCollection<PlantRenderer> All => _all;
 		public static void Register(PlantRenderer p) => _all.Add(p);
 		public static void Unregister(PlantRenderer p) { _all.Remove(p); _dirty.Remove(p); }
 		public static void MarkDirty(PlantRenderer p) => _dirty.Add(p);

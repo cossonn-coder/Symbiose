@@ -63,8 +63,19 @@ namespace Symbiose
 		private bool _lightning;          // Orage : flashs d'éclair
 		private float _intensity;         // σ météo, ~0..3
 		private int _count;               // nb de particules dessinées
-		private float _slantPx;           // inclinaison des traits (vent)
-		private float _windDxPx;          // dérive horizontale (px/s)
+		// Vent RÉEL (jardin vivant T3) : direction aval projetée À L'ÉCRAN et force
+		// de la masse d'air (WindWave, bloc `weather.wind`), relues chaque frame —
+		// la rotation de vue (D35) est donc suivie sans re-câblage. Ex-inclinaison
+		// fixe par type de météo (_slantPx codé en dur), désormais dérivée.
+		private float _slantPx;           // inclinaison des traits (px, signée)
+		private float _windDxPx;          // dérive horizontale (px/s, signée)
+		private Vector2 _windScreen = new(1f, 0f);   // direction aval écran (unitaire)
+		private float _windForce;
+		// Calibrage : px d'inclinaison / de dérive par unité de force (Orage 0,95
+		// → ~15 px et ~125 px/s, proches des anciennes valeurs fixes 16 / 130).
+		private const float SlantPerForce = 16f;
+		private const float DriftPerForce = 130f;
+		private const float StormSpeedPerForce = 900f;
 		private Color _veilColor = new Color(0.42f, 0.46f, 0.52f);
 
 		private float _nebCur, _nebTarget; // alpha voile lissé (transition douce)
@@ -87,27 +98,22 @@ namespace Symbiose
 			{
 				case "Pluie prolongée":
 					_mode = Precip.Rain; _lightning = false;
-					_slantPx = 4f; _windDxPx = 30f;
 					_veilColor = new Color(0.42f, 0.46f, 0.52f);
 					break;
 				case "Orage":
 					_mode = Precip.Rain; _lightning = true;
-					_slantPx = 16f; _windDxPx = 130f;
 					_veilColor = new Color(0.36f, 0.39f, 0.46f);
 					break;
 				case "Neige":
 					_mode = Precip.Snow; _lightning = false;
-					_slantPx = 0f; _windDxPx = 0f;
 					_veilColor = new Color(0.72f, 0.76f, 0.82f);
 					break;
 				case "Grêle":
 					_mode = Precip.Hail; _lightning = false;
-					_slantPx = 6f; _windDxPx = 40f;
 					_veilColor = new Color(0.50f, 0.54f, 0.60f);
 					break;
 				case "Tempête":
 					_mode = Precip.Storm; _lightning = false;
-					_slantPx = 0f; _windDxPx = 0f;
 					_veilColor = new Color(0.46f, 0.49f, 0.54f);
 					break;
 				default:   // Canicule, Beau temps, Gelée, Redoux… : juste la nébulosité
@@ -134,6 +140,15 @@ namespace Symbiose
 		{
 			float d = (float)delta;
 			_t += d;
+			_windForce = Mathf.Min(WindWave.Force, 2f);
+			Vector2 down = WorldView.WorldToScreenOffset(WindWave.Downwind.X, WindWave.Downwind.Y);
+			if (down.LengthSquared() > 1e-6f) _windScreen = down.Normalized();
+			// La pluie s'incline et dérive selon la composante LATÉRALE du vent ;
+			// la grêle, plus lourde, deux fois moins.
+			float lat = _windScreen.X * _windForce;
+			float heavy = _mode == Precip.Hail ? 0.5f : 1f;
+			_slantPx = SlantPerForce * lat * heavy;
+			_windDxPx = DriftPerForce * lat * heavy;
 			// Voile : on glisse l'alpha courant vers la cible (≈1 s) → pas de saut
 			// brutal au changement de semaine (même esprit que les fondus plantes).
 			_nebCur = Mathf.MoveToward(_nebCur, _nebTarget, d * 1.2f);
@@ -206,8 +221,9 @@ namespace Symbiose
 				float ph = ((hsh >> 16) & 0xffff) / 65536f;
 				float sp = speed * (0.6f + 0.8f * ph);
 				float y = Mathf.PosMod(ph * h + _t * sp, h + 8f);
-				// Dérive sinusoïdale latérale : le flocon ne tombe pas droit.
-				float x = Mathf.PosMod(x0 + Mathf.Sin(_t * 0.6f + ph * Mathf.Tau) * 18f, w);
+				// Dérive sinusoïdale latérale (le flocon ne tombe pas droit) + le vent.
+				float x = Mathf.PosMod(x0 + Mathf.Sin(_t * 0.6f + ph * Mathf.Tau) * 18f
+									   + 0.3f * _windDxPx * _t, w);
 				DrawCircle(new Vector2(x, y), 2.2f + 1.2f * ph, SnowColor);
 			}
 		}
@@ -231,17 +247,19 @@ namespace Symbiose
 
 		private void DrawStorm(float w, float h, float intNorm)
 		{
-			float speed = 1400f + 300f * intNorm;
+			// Les stries FILENT dans la vraie direction du vent (écran), plus vite
+			// et plus longues quand il forcit.
+			float speed = 500f + StormSpeedPerForce * _windForce + 300f * intNorm;
+			Vector2 v = _windScreen;
 			for (int i = 0; i < _count; i++)
 			{
 				uint hsh = Hash((uint)i);
 				float x0 = (hsh & 0xffff) / 65536f * w;
 				float ph = ((hsh >> 16) & 0xffff) / 65536f;
-				float len = 40f + 30f * ph;
-				float y = Mathf.PosMod(ph * h, h);            // rangées fixes
-				float x = Mathf.PosMod(x0 - _t * speed, w);   // file vers la gauche
-				DrawLine(new Vector2(x, y),
-						 new Vector2(x + len, y), WindColor, 1.5f);
+				float len = (40f + 30f * ph) * (0.6f + 0.4f * _windForce);
+				float y = Mathf.PosMod(ph * h + v.Y * _t * speed, h);
+				float x = Mathf.PosMod(x0 + v.X * _t * speed, w);
+				DrawLine(new Vector2(x, y), new Vector2(x, y) - v * len, WindColor, 1.5f);
 			}
 		}
 

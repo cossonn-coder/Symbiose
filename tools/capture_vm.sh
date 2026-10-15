@@ -16,6 +16,7 @@
 #     -c  point visé en cm monde X,Y   (défaut = centre du monde 1000,1000)
 #     -s  souris en px écran X,Y       (survol : losange de plot, étiquette)
 #     -g  slot de geste armé 0..9      (losange qui « respire »)
+#     -v  vent imposé FORCE[,DIR_RAD]  (0 = calme ; DIR = d'où il vient) — T3
 #     -n  nombre d'images              (défaut 3)
 #     -f  images/s simulées            (défaut 10 → 3 images = 0,3 s de jeu)
 #   Sortie : DOSSIER/frame00000000.png, frame00000001.png, … (1920×1080).
@@ -39,7 +40,7 @@ set -euo pipefail
 DEPOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 GODOT="${GODOT:-$HOME/opt/godot/Godot_v4.6-stable_mono_linux_x86_64/Godot_v4.6-stable_mono_linux.x86_64}"
 XROOT="${XROOT:-$HOME/opt/xvfb/root}"
-SORTIE=/tmp/capture_symbiose BANC=smoke ZOOM="" CENTRE="" SOURIS="" GESTE="" FRAMES=3 FPS=10 BUILD=1
+SORTIE=/tmp/capture_symbiose BANC=smoke ZOOM="" CENTRE="" SOURIS="" GESTE="" VENT="" FRAMES=3 FPS=10 BUILD=1
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -49,10 +50,11 @@ while [ $# -gt 0 ]; do
     -c) CENTRE="$2"; shift 2 ;;
     -s) SOURIS="$2"; shift 2 ;;
     -g) GESTE="$2"; shift 2 ;;
+    -v) VENT="$2"; shift 2 ;;
     -n) FRAMES="$2"; shift 2 ;;
     -f) FPS="$2"; shift 2 ;;
     --no-build) BUILD=0; shift ;;
-    -h|--help) sed -n '2,38p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,39p' "$0"; exit 0 ;;
     *) echo "option inconnue : $1" >&2; exit 2 ;;
   esac
 done
@@ -81,6 +83,7 @@ ARGS=(--capture-banc="$BANC")
 [ -n "$CENTRE" ] && ARGS+=(--capture-centre="$CENTRE")
 [ -n "$SOURIS" ] && ARGS+=(--capture-souris="$SOURIS")
 [ -n "$GESTE" ] && ARGS+=(--capture-geste="$GESTE")
+[ -n "$VENT" ] && ARGS+=(--capture-vent="$VENT")
 DISPLAY="$ECRAN" LIBGL_ALWAYS_SOFTWARE=1 "$GODOT" --path "$DEPOT" \
   --rendering-driver opengl3 --resolution 1920x1080 \
   --write-movie "$SORTIE/frame.png" --fixed-fps "$FPS" --quit-after "$FRAMES" \

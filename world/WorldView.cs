@@ -223,6 +223,9 @@ namespace Symbiose
 			// Pré-cuisson des plantes (jardin vivant T2) : la file qui recuit au plus
 			// quelques plantes par frame, seulement près de l'écran (BakeQueue.cs).
 			AddChild(new BakeQueue { Name = "BakeQueue" });
+			// Onde de vent (jardin vivant T3) : choisit chaque frame la pose de
+			// flexion des plantes près de l'écran (WindWave.cs).
+			AddChild(new WindWave { Name = "WindWave" });
 			// Champ STATIQUE (partagé avec PlantRenderer via WorldToScreen) :
 			// toujours repartir « nord en haut » à l'ouverture de la scène.
 			_orientation = 0;

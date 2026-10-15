@@ -21,8 +21,8 @@
 |---|---|---|---|---|
 | T0 | `01_banc_capture.md` | Godot portable + Xvfb + Movie Maker → PNG | intact | **fait** (non commité) |
 | T1 | `02_palette_curseur.md` | shader palette 32 + Bayer · curseur + losange de survol | intact | **fait** (`447da15`) |
-| T2 | `03_precuisson.md` | cuisson par plante + cache + file étalée (image identique) | intact | **fait** (non commité) |
-| T3 | `04_vent_onde.md` | pont `weather.wind` + 8 poses de flexion + onde | intact | à faire |
+| T2 | `03_precuisson.md` | cuisson par plante + cache + file étalée (image identique) | intact | **fait** (`0bb6cb6`) |
+| T3 | `04_vent_onde.md` | pont `weather.wind` + 8 poses de flexion + onde | intact | **fait** (non commité) |
 | T4 | `05_canicule_pluie.md` | réponses par plante canicule + pluie/orage | intact | à faire |
 | T5 | `06_neige_gel_banc.md` | neige + grêle/gel + traces + banc F5 « jardin vivant » | intact | à faire |
 
@@ -115,9 +115,42 @@
   et en zoomant ; pan rapide à ×4-×8 (plantes jamais invisibles, éventuel flou d'1-2 frames au
   changement de palier = ancienne image étirée, voulu) ; taille au survol (surbrillance réactive).
 
+## T3 — vent en onde (fait 2026-10-15, golden `22768f33…` PASS, build vert, test_sim_server 283/283)
+- **Pont 0.5.44** (`tools/simserver/vent_pont.py`, branché dans `serialize.py`) : `weather.wind =
+  {force, direction, gusts}` (`wind_at`/`gust_profile` de la semaine `last`, calme à l'init) + clé
+  OPTIONNELLE `abri` par plante vivante = facteur géométrique lu dans `eco._abri_cache[1]` (omise
+  tant que le cache est froid). Test section 22 `tests/simserver/vent.py` ; asserts de version
+  0.5.43→0.5.44 dans `simserver/{voix,structures,conteneurs}.py` (convention).
+- **Écart kickoff (prémisse réfutée)** : `eco.vent` n'est PAS `None` au repos — il est alloué à 0
+  (`container.py:445`) et recalculé à CHAQUE tick par `tick_abri` (`boucle.py:235`). Le seul état
+  paresseux est `eco._abri_cache` (None avant le 1er tick) → c'est lui qui conditionne la clé `abri`.
+  Pré-existant hors périmètre : `tests/test_peripherie_pont.py:97` attend encore 0.5.41.
+- **Vue** : `visuals/WindWave.cs` (Node, état global + onde par frame sur `BakeQueue.All` visibles,
+  zéro allocation) ; `visuals/PlantRenderer.Wind.cs` (flexion dans `Iso` : apex tiré vers l'aval
+  ∝ z²/H et abaissé, raideur = 1/(1+épaisseur max/3 cm) ∈ [0,12;1], retard 0,002 s/cm, phase propre
+  = hash de la position) ; `PlantBaker` : atlas de **1 pose au calme (force < 0,05), jusqu'à 8 au vent**
+  (pose max = ceil(7×raideur×1,5) → un arbre n'en cuit que 3) ; boîte = union droite/plus couchée ;
+  `MaxAtlasPx` 4096. Re-cuisson de tout (via la file) seulement à la bascule calme↔vent ou dérive
+  de direction > 15°. `WeatherLayer` : inclinaison/dérive pluie-grêle-neige et stries de tempête
+  suivent la direction ÉCRAN réelle × force (ex-`_slantPx` fixe par type).
+- **Banc** : `capture_vm.sh -v FORCE[,DIR_RAD]` (`--capture-vent`, inactif sans argument).
+- **Mesures** (VM llvmpipe, Movie Maker 10 FPS) :
+  - Onde : 0,129 ms/frame moy. (max 1,4) [69 plantes, ×2, n=1] ; 0,169 ms (max 2,0) [109 plantes, ×1, n=1].
+  - Cache : 116,1 Mo / 51 images au vent vs 12,8 Mo au calme [×8 full 700,1620, n=1 chacun] (×9 =
+    8 poses + boîte élargie) ; 10,2 Mo / 69 [×2, vent 0,7] ; 4,3 Mo / 109 [×1, vent 0,7].
+  - Calme (`-v 0`, ×8) : pixels de la plante identiques frame à frame après la cuisson (0 px sur
+    10 paires) ; d'autres zones bougent aussi au calme (vie macro), hors plantes.
+  - Vent 1,2 (×8) : la plantule (`-c 700,1620`) change de pose 3 fois en 4 s (4068 px par bascule) :
+    tige penchée vers la gauche-bas écran (vent du N-NO → aval vers le sud), elle se couche
+    davantage au passage du front puis revient. À ×1 (vent 0,7) : 100-500 px changent par frame,
+    dispersés sur le massif (front + balancement propre mêlés) — **front peu lisible à ×1** sur des
+    semis de 5 cm ; à juger au F5 sur un jardin adulte.
+- **Points F5** : « le vent se voit-il, comme une main qui appuie ? » ; le balancement propre
+  (SwayAmp 0,08) fait-il frétiller (trop) ? ; mémoire vidéo à ×8 (~2,3 Mo/plante) → si trop, baisser
+  le nombre de poses ou ne cuire les 8 qu'en dessous de ×8 ; pluie qui s'incline dans le bon sens.
+
 ## Ce qui reste
-T3→T5. T3 : porter `PlantBaker.PoseCount` à 8 (poses = cellules de l'atlas, `brush.Position`
-décalée par cellule ; ajouter la pose à l'état du pinceau) ; mémoire ×8 → revoir `MaxSidePx`.
+T4→T5. Calibrage onde (`WindWave` λ/f/enveloppe, `PlantRenderer.Wind` BendReach/raideur) = F5.
 
 ## §REPRISE
-`/sprint-auto sprint_jardin_vivant` : lire CLAUDE.md + ce fichier + le doc de conception, puis le premier kickoff « à faire » (**T3** `04_vent_onde.md`). T2 fait mais **non commité** (orchestrateur). Bascule F11 = palette ON/OFF pour comparer. Vérifier chaque rendu avec `tools/capture_vm.sh` puis Read des PNG ; comparer avant/après sur les pixels STATIQUES (couches animées non déterministes).
+`/sprint-auto sprint_jardin_vivant` : lire CLAUDE.md + ce fichier + le doc de conception, puis le premier kickoff « à faire » (**T4** `05_canicule_pluie.md`). T3 fait mais **non commité** (orchestrateur). Vent forcé au banc : `tools/capture_vm.sh -v 1.2` (calme : `-v 0`). Comparer avant/après sur les pixels STATIQUES (couches animées non déterministes) ; Pillow dispo seulement via un venv scratch (`python3 -m venv … && pip install pillow`).

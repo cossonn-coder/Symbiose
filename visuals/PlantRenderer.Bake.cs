@@ -80,7 +80,7 @@ namespace Symbiose
 				return;
 			}
 			if (!HasBakedImage) { DrawVector(); return; }
-			_baker.DrawImage();
+			_baker.DrawImage(_pose);   // T3 : la pose de flexion courante (WindWave)
 			// Surbrillance de taille : interactive (survol souris) → dessinée EN
 			// DIRECT par-dessus l'image, jamais cuite (aucune latence de file).
 			if (_structure != null && string.IsNullOrEmpty(_deadStade)
@@ -111,11 +111,15 @@ namespace Symbiose
 			brush.QueueRedraw();
 		}
 
+		/// <summary>Boîte englobante LOCALE de l'atlas : union des `poses` premières
+		/// flexions (T3). Une seule pose = la plante droite, comme en T2.</summary>
+		internal Rect2 LocalBounds(int poses) => BoundsAllPoses(poses);
+
 		/// <summary>Boîte englobante LOCALE (px canvas, origine = collet) de tout
-		/// ce que DrawVector peut tracer : extrémités de segments (et leur pied au
+		/// ce que DrawVector peut tracer (à la flexion courante) : extrémités de segments (et leur pied au
 		/// sol, pour le squelette couché aplati), silhouette de couronne du LOD,
 		/// élargie de BakePadPx pour les organes. Vide si rien à dessiner.</summary>
-		internal Rect2 LocalBounds()
+		private Rect2 StraightBounds()
 		{
 			if (_structure == null || _structure.Segments.Count == 0) return default;
 			Vector3 c = _structure.ColletCm;

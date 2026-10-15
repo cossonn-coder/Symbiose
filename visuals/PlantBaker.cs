@@ -16,8 +16,9 @@
 // l'image (arrondis du rastériseur, 00_etat.md) — reporter la phase sous-pixel
 // du collet a été essayé et fait PIRE (3 variantes mesurées).
 //
-// Atlas de POSES : l'image est une rangée de PoseCount cellules (une par pose).
-// T2 = 1 pose (celle d'aujourd'hui) ; T3 portera PoseCount à 8 (flexion au vent).
+// Atlas de POSES : l'image est une rangée de cellules, une par degré de flexion
+// au vent (T3) : 1 au calme, jusqu'à 8 (PlantRenderer.MaxPoses) sous le vent —
+// un port raide (arbre) n'en cuit que 3-4, il ne se couche jamais.
 
 using Godot;
 using System.Collections.Generic;
@@ -26,13 +27,13 @@ namespace Symbiose
 {
 	internal sealed class PlantBaker
 	{
-		/// <summary>Nombre de poses par plante (T2 : 1 ; T3 : 8 degrés de flexion).</summary>
-		public const int PoseCount = 1;
-
 		// Au-delà de ce côté (px du SubViewport monde), on ne cuit pas : la plante
 		// reste en dessin direct (un grand arbre à ×8 ferait > 15 Mo d'image pour
 		// un objet qui déborde déjà de l'écran — le vectoriel y est moins cher).
 		public const int MaxSidePx = 2048;
+		// T3 : largeur max de l'ATLAS (toutes poses côte à côte). Garde la mémoire
+		// d'une plante ≤ 4096 × 2048 × 4 o = 32 Mo et sous la limite GPU (16384).
+		public const int MaxAtlasPx = 4096;
 
 		// Comptabilité mémoire vidéo de TOUTES les images cuites (rapport F4/log).
 		public static long TotalBytes { get; private set; }
@@ -52,6 +53,7 @@ namespace Symbiose
 			public readonly List<PlantRenderer> Brushes = new();
 			public Vector2I CellSize;    // px d'une pose
 			public Vector2I Origin;      // px du collet dans une cellule
+			public int Poses;            // cellules de l'atlas (degrés de flexion)
 			public float Zoom;
 			public long Bytes => 4L * Vp.Size.X * Vp.Size.Y;   // RGBA8
 		}
@@ -65,20 +67,25 @@ namespace Symbiose
 		/// false = rien à cuire ou trop grand → la plante reste en direct.</summary>
 		public bool Begin(float zoom)
 		{
-			Rect2 b = _owner.LocalBounds();
+			int poses = _owner.BakePoseCount;
+			Rect2 b = _owner.LocalBounds(poses);
 			if (b.Size == Vector2.Zero) { Release(); return false; }
 			// Décalage ENTIER du collet dans la cellule (+1 px de garde) et taille.
 			var origin = new Vector2I(1 - Mathf.FloorToInt(b.Position.X * zoom),
 									  1 - Mathf.FloorToInt(b.Position.Y * zoom));
 			var size = new Vector2I(origin.X + Mathf.CeilToInt(b.End.X * zoom) + 1,
 									origin.Y + Mathf.CeilToInt(b.End.Y * zoom) + 1);
-			if (size.X * PoseCount > MaxSidePx || size.Y > MaxSidePx) { Release(); return false; }
+			if (size.X > MaxSidePx || size.Y > MaxSidePx || size.X * poses > MaxAtlasPx)
+			{ Release(); return false; }
 
-			Cell cell = _shown != null && _shown.CellSize == size
+			Cell cell = _shown != null && _shown.CellSize == size && _shown.Poses == poses
 						&& _shown.Origin == origin && _shown.Zoom == zoom
-				? _shown : NewCell(size, origin, zoom);
-			for (int k = 0; k < PoseCount; k++)
+				? _shown : NewCell(size, origin, zoom, poses);
+			for (int k = 0; k < poses; k++)
+			{
 				_owner.CopyDrawStateTo(cell.Brushes[k]);
+				cell.Brushes[k].SetBrushPose(k);   // cellule k = flexion k/7
+			}
 			cell.Vp.RenderTargetUpdateMode = SubViewport.UpdateMode.Once;
 			if (_next != null && _next != cell && _next != _shown) Free(_next);
 			_next = cell;
@@ -105,21 +112,23 @@ namespace Symbiose
 		}
 
 		/// <summary>Affiche la pose `pose` de l'image cuite, en coordonnées
-		/// LOCALES du PlantRenderer (un px cuit = 1/zoom px canvas).</summary>
+		/// LOCALES du PlantRenderer (un px cuit = 1/zoom px canvas). Une pose
+		/// absente de l'atlas (cuit au calme, vent levé depuis) → la plus couchée.</summary>
 		public void DrawImage(int pose = 0)
 		{
 			Cell c = _shown;
+			pose = Mathf.Min(pose, c.Poses - 1);
 			var rect = new Rect2(-(Vector2)c.Origin / c.Zoom, (Vector2)c.CellSize / c.Zoom);
 			var src = new Rect2(c.CellSize.X * pose, 0, c.CellSize.X, c.CellSize.Y);
 			_owner.DrawTextureRectRegion(c.Vp.GetTexture(), rect, src);
 		}
 
-		private Cell NewCell(Vector2I size, Vector2I origin, float zoom)
+		private Cell NewCell(Vector2I size, Vector2I origin, float zoom, int poses)
 		{
-			var c = new Cell { CellSize = size, Origin = origin, Zoom = zoom };
+			var c = new Cell { CellSize = size, Origin = origin, Zoom = zoom, Poses = poses };
 			c.Vp = new SubViewport
 			{
-				Size = new Vector2I(size.X * PoseCount, size.Y),
+				Size = new Vector2I(size.X * poses, size.Y),
 				TransparentBg = true,
 				Disable3D = true,
 				GuiDisableInput = true,
@@ -130,7 +139,7 @@ namespace Symbiose
 				CanvasItemDefaultTextureFilter = Viewport.DefaultCanvasItemTextureFilter.Nearest,
 				RenderTargetUpdateMode = SubViewport.UpdateMode.Disabled,
 			};
-			for (int k = 0; k < PoseCount; k++)
+			for (int k = 0; k < poses; k++)
 			{
 				// Une pose = une cellule décalée d'un nombre ENTIER de px cuits.
 				var brush = new PlantRenderer

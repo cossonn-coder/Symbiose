@@ -184,6 +184,7 @@ namespace Symbiose
 				};
 				_objects.AddChild(renderer);
 				renderer.SetStructure(structure);
+				renderer.SetWindAnchor(cx + lx, cy + ly, 1f);   // onde de vent (T3)
 				// Squelette si morte (le snapshot conteneur n'expose pas `stade_mort`
 				// → mode bois nu par défaut "seche"). Symptômes foliaires si présents.
 				string stadeMort = p.ContainsKey("dead") && p["dead"].AsBool()
