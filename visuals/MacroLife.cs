@@ -190,11 +190,32 @@ namespace Symbiose
 		/// disparue → fondu de sortie puis oubli. `origins` = origin_cm par
 		/// tuile (le même cache que les plantes).
 		/// </summary>
+		// Application REPRENABLE (F5 Nico 2026-10-15) : ~10 000 bestioles à
+		// clé texte coûtaient 30-108 ms d'un bloc [24 semaines, VM]. Le diff se
+		// découpe en tranches de temps (WorldView.Etalement.cs) : BeginSprites
+		// prépare la liste des groupes (tuile × guilde), StepSprites en traite
+		// jusqu'à épuisement du budget et reprend à la frame suivante. Pendant ce
+		// temps les bestioles déjà connues continuent simplement de s'animer.
+		private struct Groupe { public string Tile, Guild; public Vector2 O; public Godot.Collections.Array Ev; }
+		private List<Groupe> _groupes;
+		private int _gi, _ei;             // groupe courant, événement courant
+		private HashSet<string> _seen;
+		private bool _fade;
+
 		public void SetSprites(GDict sprites, Dictionary<string, Vector2> origins,
 							   bool fade)
 		{
-			float now = NowSec();
-			var seen = new HashSet<string>();
+			BeginSprites(sprites, origins, fade);
+			StepSprites(long.MaxValue);
+		}
+
+		public void BeginSprites(GDict sprites, Dictionary<string, Vector2> origins,
+								 bool fade)
+		{
+			_groupes = new List<Groupe>();
+			_gi = _ei = 0;
+			_seen = new HashSet<string>();
+			_fade = fade;
 			foreach (var tileKv in sprites)
 			{
 				string tileId = tileKv.Key.AsString();
@@ -204,51 +225,69 @@ namespace Symbiose
 				{
 					string guild = guildKv.Key.AsString();
 					if (NonDessine.Contains(guild)) continue;   // butineurs → ForagerLayer
-					foreach (var ev in guildKv.Value.AsGodotArray())
+					_groupes.Add(new Groupe { Tile = tileId, Guild = guild, O = o,
+											  Ev = guildKv.Value.AsGodotArray() });
+				}
+			}
+		}
+
+		/// <summary>Traite des bestioles jusqu'à `budgetUs` µs. Vrai = diff terminé.</summary>
+		public bool StepSprites(long budgetUs)
+		{
+			if (_groupes == null) return true;
+			ulong t0 = Time.GetTicksUsec();
+			float now = NowSec();
+			for (; _gi < _groupes.Count; _gi++, _ei = 0)
+			{
+				var g = _groupes[_gi];
+				for (; _ei < g.Ev.Count; _ei++)
+				{
+					if ((long)(Time.GetTicksUsec() - t0) >= budgetUs) return false;
+					// Format compact 0.2.3 : [r, c, x_frac, y_frac, activite].
+					var e = g.Ev[_ei].AsGodotArray();
+					int r = e[0].AsInt32(), c = e[1].AsInt32();
+					double xf = e[2].AsDouble(), yf = e[3].AsDouble();
+					float act = (float)e[4].AsDouble();
+					string key = g.Tile + "|" + g.Guild + "|" + r + "|" + c
+						+ "|" + xf.ToString("F3", CultureInfo.InvariantCulture)
+						+ "|" + yf.ToString("F3", CultureInfo.InvariantCulture);
+					_seen.Add(key);
+					if (_entries.TryGetValue(key, out var known))
 					{
-						// Format compact 0.2.3 : [r, c, x_frac, y_frac, activite].
-						var e = ev.AsGodotArray();
-						int r = e[0].AsInt32(), c = e[1].AsInt32();
-						double xf = e[2].AsDouble(), yf = e[3].AsDouble();
-						float act = (float)e[4].AsDouble();
-						string key = tileId + "|" + guild + "|" + r + "|" + c
-							+ "|" + xf.ToString("F3", CultureInfo.InvariantCulture)
-							+ "|" + yf.ToString("F3", CultureInfo.InvariantCulture);
-						seen.Add(key);
-						if (_entries.TryGetValue(key, out var known))
+						known.Act = act;
+						// Re-franchit son seuil pendant son fondu de mort →
+						// il revit : repartir du fondu d'entrée à l'alpha
+						// courant (pas de pop), comme si de rien n'était.
+						if (known.DyingAt >= 0f)
 						{
-							known.Act = act;
-							// Re-franchit son seuil pendant son fondu de mort →
-							// il revit : repartir du fondu d'entrée à l'alpha
-							// courant (pas de pop), comme si de rien n'était.
-							if (known.DyingAt >= 0f)
-							{
-								float alpha = Mathf.Clamp(
-									1f - (now - known.DyingAt) / FadeOutSec, 0f, 1f);
-								known.BornAt = now - FadeInSec * alpha;
-								known.DyingAt = -1f;
-							}
-							continue;
+							float alpha = Mathf.Clamp(
+								1f - (now - known.DyingAt) / FadeOutSec, 0f, 1f);
+							known.BornAt = now - FadeInSec * alpha;
+							known.DyingAt = -1f;
 						}
-						// x = est (colonnes), y = sud (lignes) — la convention
-						// de FindPlot/WorldToScreen, pas une 2ᵉ (leçon D2).
-						_entries[key] = new Entry
-						{
-							Guild = guild,
-							Wx = o.X + (c + (float)xf) * WorldView.PlotCm,
-							Wy = o.Y + (r + (float)yf) * WorldView.PlotCm,
-							Act = act,
-							Phase = HashKey(key),
-							BornAt = fade ? now : now - FadeInSec,
-						};
+						continue;
 					}
+					// x = est (colonnes), y = sud (lignes) — la convention
+					// de FindPlot/WorldToScreen, pas une 2ᵉ (leçon D2).
+					_entries[key] = new Entry
+					{
+						Guild = g.Guild,
+						Wx = g.O.X + (c + (float)xf) * WorldView.PlotCm,
+						Wy = g.O.Y + (r + (float)yf) * WorldView.PlotCm,
+						Act = act,
+						Phase = HashKey(key),
+						BornAt = _fade ? now : now - FadeInSec,
+					};
 				}
 			}
 			// Slots passés sous leur seuil de densité → fondu de sortie.
 			foreach (var kv in _entries)
-				if (kv.Value.DyingAt < 0f && !seen.Contains(kv.Key))
+				if (kv.Value.DyingAt < 0f && !_seen.Contains(kv.Key))
 					kv.Value.DyingAt = now;
+			_groupes = null;
+			_seen = null;
 			QueueRedraw();
+			return true;
 		}
 
 		// Le LOD vient de basculer (zoom franchit MinZoom) → UN redraw pour

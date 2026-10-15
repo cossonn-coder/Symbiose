@@ -82,20 +82,35 @@ namespace Symbiose
 		// Range une plante VIVANTE dans l'index nom-FR → positions MONDE (cm), pour
 		// les fleurs de saut des butineurs (ForagerLayer). Les morts (squelettes) ne
 		// fleurissent pas → écartés. Clé = `name` (Phacélie…), pas `species` (anglais).
-		private void IndexPlantByName(GDict p)
+		// Index construit dans `byName` (celui de l'étalement en cours), échangé
+		// avec _plantsByName à la fin de la famille plantes (WorldView.Etalement.cs).
+		private void IndexPlantByName(GDict p, Dictionary<string, List<Vector2>> byName)
 		{
 			if (p.ContainsKey("dead") && p["dead"].AsBool()) return;
 			Vector2 o = _origins[p["tile"].AsString()];
 			var pos = new Vector2(o.X + (float)p["x_cm"].AsDouble(),
 								  o.Y + (float)p["y_cm"].AsDouble());
 			string name = p["name"].AsString();
-			if (!_plantsByName.TryGetValue(name, out var list))
-				_plantsByName[name] = list = new List<Vector2>();
+			if (!byName.TryGetValue(name, out var list))
+				byName[name] = list = new List<Vector2>();
 			list.Add(pos);
 		}
 
+		// Application SYNCHRONE (d'un bloc) : chargement initial, rotation, saut
+		// debug, résultat d'action. Mêmes 7 familles que l'étalement, budget
+		// infini. Un snapshot synchrone, plus frais et complet, REMPLACE un
+		// étalement en cours (WorldView.Etalement.cs).
 		private void ApplySnapshot(GDict snap, bool fade = true)
 		{
+			_etale = null;
+			var e = new Etalement(snap, fade);
+			while (!Avancer(e, long.MaxValue)) { }
+		}
+
+		// Famille 0 — horloge + sol (relief) : AVANT les plantes, qui s'y recalent.
+		private void AppliquerSol(Etalement e)
+		{
+			GDict snap = e.Snap;
 			_lastSnap = snap;   // gardé pour RebuildWorld (rotation)
 
 			// Horloge (52 sem/an, saisons de 13 — sim/engine.py saison_de).
@@ -129,25 +144,24 @@ namespace Symbiose
 				ApplyAltitude(snap["altitude"].AsGodotDictionary());
 			if (snap.ContainsKey("epaisseur"))
 				ApplyEpaisseur(snap["epaisseur"].AsGodotDictionary());
+		}
 
-			int born = 0, grown = 0, empty = 0, nSegs = 0;
-			var seen = new HashSet<string>();
-			_plantsByName.Clear();   // index des fleurs de saut des butineurs
-			_plantPayloads.Clear();  // cache clé→dict-plante lu par le dossier (T3)
-			foreach (var pv in snap["plants"].AsGodotArray())
-			{
-				var p = pv.AsGodotDictionary();
+		// Famille 1 — UNE plante (diff naissance/croissance). Appelée par tranches
+		// (AvancerPlantes) ; la suppression des disparues attend FinirPlantes.
+		private void AppliquerPlante(Etalement e, GDict p)
+		{
+				bool fade = e.Fade;
 				var structure = StructureLoader.FromSnapshot(p);
 				if (structure.Segments.Count == 0)
 				{
-					empty++;   // germination sans bois : rien à dessiner encore
-					continue;
+					e.Empty++;   // germination sans bois : rien à dessiner encore
+					return;
 				}
-				nSegs += structure.Segments.Count;
+				e.NSegs += structure.Segments.Count;
 				string key = PlantKey(p);
-				seen.Add(key);
-				_plantPayloads[key] = p;   // dossier de plante debug (T3), lu au clic
-				IndexPlantByName(p);   // fleurs cibles des butineurs (vivantes only)
+				e.Seen.Add(key);
+				e.Payloads[key] = p;   // dossier de plante debug (T3), lu au clic
+				IndexPlantByName(p, e.ByName);   // fleurs cibles des butineurs (vivantes only)
 
 				// Position écran de la plante, RECALÉE sur le relief (D57 ②) : le
 				// collet suit la surface du sol → remonté de l'épaisseur au plot.
@@ -216,8 +230,8 @@ namespace Symbiose
 					node.ZIndex = PlantZIndex(strate);  // empilement par strate (luxuriance ⑥)
 					node.SetMeta("tag", TagText(p));   // le stade évolue (étiquette nette)
 					node.Position = screenPos;         // suit le relief du sol (D57 ②)
-					grown++;
-					continue;
+					e.Grown++;
+					return;
 				}
 				var renderer = new PlantRenderer
 				{
@@ -261,8 +275,18 @@ namespace Symbiose
 					renderer.CreateTween()
 						.TweenProperty(renderer, "modulate:a", 1f, FadeInSec);
 				_plantNodes[key] = renderer;
-				born++;
-			}
+				e.Born++;
+		}
+
+		// Fin de la famille 1 — toutes les plantes du snapshot sont passées.
+		private void FinirPlantes(Etalement e)
+		{
+			GDict snap = e.Snap;
+			// Échange des index reconstruits (dossier au clic, fleurs des butineurs).
+			_plantPayloads.Clear();
+			foreach (var kv in e.Payloads) _plantPayloads[kv.Key] = kv.Value;
+			_plantsByName.Clear();
+			foreach (var kv in e.ByName) _plantsByName[kv.Key] = kv.Value;
 
 			// Plantes affichées absentes du snapshot = RETIRÉES par le moteur
 			// (squelette à bois épuisé, ②B ; ou herbacée morte au tick) → fondu
@@ -270,12 +294,12 @@ namespace Symbiose
 			// squelette, traité ci-dessus) : ici c'est la fin de vie du bois.
 			var dead = new List<string>();
 			foreach (var kv in _plantNodes)
-				if (!seen.Contains(kv.Key)) dead.Add(kv.Key);
+				if (!e.Seen.Contains(kv.Key)) dead.Add(kv.Key);
 			foreach (string key in dead)
 			{
 				var node = _plantNodes[key];
 				_plantNodes.Remove(key);   // hors index : le fondu finit seul
-				if (fade)
+				if (e.Fade)
 				{
 					var tw = node.CreateTween();
 					tw.TweenProperty(node, "modulate:a", 0f, FadeOutSec);
@@ -284,8 +308,8 @@ namespace Symbiose
 				else node.QueueFree();
 			}
 
-			_nSegments = nSegs;
-			_nPousses = empty;
+			_nSegments = e.NSegs;
+			_nPousses = e.Empty;
 
 			// Banc d'observation perf (sprint « run éternel » ④) : bloc `perf` du
 			// snapshot (serialize.py), mesures côté MOTEUR. Lecture TOLÉRANTE : un
@@ -301,16 +325,21 @@ namespace Symbiose
 				var rss = perf["rss_mo"];
 				_srvRssMo = rss.VariantType == Variant.Type.Nil ? -1 : rss.AsDouble();
 			}
-			GD.Print($"[WorldView] {season} an {_year}, semaine {_weekInSeason}/13 : "
-					 + $"{_plantNodes.Count} plantes (+{born} −{dead.Count}, "
-					 + $"{grown} maj, {empty} sans segments).");
+			GD.Print($"[WorldView] {CurrentSeason} an {_year}, semaine {_weekInSeason}/13 : "
+					 + $"{_plantNodes.Count} plantes (+{e.Born} −{dead.Count}, "
+					 + $"{e.Grown} maj, {e.Empty} sans segments).");
+		}
 
+		// Famille 2 — vie macro, butineurs, carpophores (index des fleurs à jour).
+		private void AppliquerVieMacro(Etalement e)
+		{
+			GDict snap = e.Snap;
+			bool fade = e.Fade;
 			// Vie macro (t6·B) : même diff doux que les plantes, délégué au
 			// nœud MacroLife. Lecture TOLÉRANTE : un snapshot pré-0.2.3 n'a
 			// pas le bloc — la vue affiche simplement un jardin sans bestioles.
-			if (snap.ContainsKey("sprites"))
-				_macroLife?.SetSprites(snap["sprites"].AsGodotDictionary(),
-									   _origins, fade);
+			// (Le nuage MacroLife lui-même est appliqué par tranches AVANT cette
+			// fonction, cf. AvancerVieMacro dans WorldView.Etalement.cs.)
 
 			// Butineurs (arc pollinisation, 0.3.9, lecture seule) : agents
 			// fleur-en-fleur, dessinés par ForagerLayer (≠ nuage MacroLife). L'index
@@ -326,7 +355,11 @@ namespace Symbiose
 			if (snap.ContainsKey("carpophores"))
 				_carpophoreLayer?.SetCarpophores(
 					snap["carpophores"].AsGodotDictionary(), _origins, fade);
+		}
 
+		// Famille 3 — couches au sol (tapis, halos, eau, litière, mulch).
+		private void AppliquerCouchesSol(GDict snap)
+		{
 			// Décompo·compost (③, lecture seule, protocole 0.3.7/0.3.5) : litière
 			// au sol (layer batché) + structures bac/pile (nœuds YSort). Lecture
 			// TOLÉRANTE : un snapshot ancien sans ces blocs → rien dessiné.
@@ -363,6 +396,11 @@ namespace Symbiose
 			// snapshot pré-0.5.20 sans le bloc → pas de mulch dessiné, jamais de crash.
 			if (snap.ContainsKey("paillage"))
 				ApplyPaillage(snap["paillage"].AsGodotDictionary());
+		}
+
+		// Famille 4 — structures posées (bac/pile, supports de grimpe, conteneurs).
+		private void AppliquerStructures(GDict snap)
+		{
 			if (snap.ContainsKey("structures"))
 				ApplyStructures(snap["structures"].AsGodotDictionary());
 
@@ -378,7 +416,11 @@ namespace Symbiose
 			// conteneur dessiné, jamais de crash (cf. WorldView.Conteneurs.cs).
 			if (snap.ContainsKey("containers"))
 				ApplyContainers(snap["containers"].AsGodotArray());
+		}
 
+		// Famille 5 — alarme, météo, neige, ciel, couvertures posées.
+		private void AppliquerMeteo(GDict snap)
+		{
 			// Alarme apienne (⑦ §J, 0.4.1, lecture seule) : foyers de phéromone par
 			// plot, consommés par la piqûre temps réel. Lecture TOLÉRANTE : un
 			// snapshot pré-0.4.1 n'a pas le bloc → aucun foyer, aucune piqûre.
@@ -413,7 +455,14 @@ namespace Symbiose
 						? snap["couvert_pose"].AsGodotDictionary() : null,
 					snap.ContainsKey("ombre_pose")
 						? snap["ombre_pose"].AsGodotDictionary() : null);
+		}
 
+		// Famille 6 — ménage : heatmap périmée, HUD joueur, automate, fin de
+		// saison, horloge, culling des plantes nées hors champ.
+		private void AppliquerMenage(Etalement e)
+		{
+			GDict snap = e.Snap;
+			string season = snap["season"].AsString();
 			// Heatmap (t6·C) : la grille affichée date de la semaine d'avant →
 			// périmée. Si l'overlay est ON, _Process relancera UNE requête
 			// `fields` dès que le pipe sera libre ; OFF, le flag dort.

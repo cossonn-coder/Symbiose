@@ -459,8 +459,11 @@ namespace Symbiose
 					SetPhase(Phase.Planification);
 					return;
 				}
-				ApplySnapshot(step.Result);
+				ApplySnapshotEtale(step.Result);   // 7 familles sur plusieurs frames
 			}
+			// 1·bis) Une famille (ou une tranche de plantes) de la semaine en cours
+			//        d'application — jamais tout le jardin dans la même frame.
+			AvancerEtalement();
 
 			// 1b) Consommer une action terminée (volet B) : afficher l'ACK/NAK
 			//     métier et appliquer le snapshot frais joint (un déracinement
@@ -573,7 +576,7 @@ namespace Symbiose
 			// ni fields en vol (maître/esclave 1↔1 — une requête d'instrument
 			// retarde la semaine d'une frame ou deux, jamais elle ne corrompt
 			// le tube).
-			if (_timeAccum >= spw && PipeFree)
+			if (_timeAccum >= spw && PipeFree && _etale == null)
 			{
 				_timeAccum = 0f;
 				_stepStartMs = Time.GetTicksMsec();
