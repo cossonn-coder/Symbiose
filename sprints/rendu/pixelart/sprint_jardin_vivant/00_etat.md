@@ -11,7 +11,8 @@
   `automne` par plante, fleur par famille/espèce).
 - 8 poses = **8 degrés de flexion**, choisis par une **onde de vent cohérente
   qui appuie** ; balancement propre décalé par plante (hash id).
-- **Re-cuisson jamais simultanée** : file à budget par frame, visibles d'abord.
+- **Re-cuisson jamais simultanée** : file à budget par frame, **seulement écran visible + marge** (rien hors champ).
+- Hors sprint : détails par palier de zoom + culling généralisé = **D106** ; D72 absorbée (à fermer en T5).
 - Palette ~32 couleurs + tramage Bayer (shader sur le SubViewport).
 - 2 sprints : A (ici) puis B = faune + champignons + fumée/eau (réutilise T2).
 

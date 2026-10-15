@@ -31,7 +31,11 @@ cuite de CETTE plante ». **Aucun changement visible** attendu à ce tronçon
   sales (même file, pas de pic).
 - **File de re-cuisson à BUDGET PAR FRAME — exigence Nico : JAMAIS toutes les
   plantes au même moment.** Budget en plantes ET/OU en ms par `_Process`,
-  ordre = plantes visibles à l'écran d'abord (frustum caméra), puis le reste.
+  **seulement pour les plantes visibles à l'écran + une marge** (déplacement
+  caméra) — Nico 2026-10-15 : rien n'est cuit hors champ. Une plante hors
+  marge reste « sale » sans coût ; elle entre dans la file quand la caméra
+  l'approche (marge assez large pour qu'elle soit cuite avant d'être vue).
+  Généralisation à faune/décor + détails par palier de zoom = **D106**, hors sprint.
   Une plante sale garde son ancienne image jusqu'à sa cuisson (jamais de trou,
   jamais de plante invisible). Une semaine simulée (60 s) salit tout le
   jardin : la file doit se vider en ~1-2 s sans chute de FPS.

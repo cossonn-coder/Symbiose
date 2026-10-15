@@ -32,7 +32,7 @@ canicule, pluie, neige, grêle, gel) pour qu'il juge le ressenti d'un coup.
   `00_etat.md` (touche, durée). Captures T0 de chaque épisode.
 - **Clôture du sprint** : `00_etat.md` (mesures finales, tableau des tronçons),
   entrée `journal/` + pointeur `journal.md`, `BACKLOG.md` (sprint A clos,
-  sprint B faune/champignons/fumée/eau à concevoir), `DETTE.md` (D34/D44 :
+  sprint B faune/champignons/fumée/eau à concevoir), `DETTE.md` (**fermer D72** — absorbée par T3, contrepartie de D106 ; D34/D44 :
   noter ce que le sprint a couvert ou non), `/refactor` auto-léger si un
   fichier a franchi 400 LDC.
 
