@@ -31,10 +31,12 @@ namespace Symbiose
 		// StepZoom au franchissement d'un palier. PlantRenderer._Draw ne tourne que
 		// sur QueueRedraw ; sans cette pompe, une plante ne rebasculerait pas entre
 		// silhouette et segments en (dé)zoomant. Ponctuel (~500 QueueRedraw par cran).
+		// Jardin vivant T2 : la pompe INVALIDE (plante « sale ») au lieu de redessiner ;
+		// la BakeQueue recuit quelques plantes par frame, celles près de l'écran d'abord.
 		private void RedrawAllPlants()
 		{
 			foreach (var node in _plantNodes.Values)
-				if (IsInstanceValid(node)) node.QueueRedraw();
+				if (IsInstanceValid(node)) node.Invalidate();   // T2 : file de cuisson, pas de pic
 		}
 		// Phéromone d'alarme apienne (⑦ §J, snapshot 0.4.1) : par tuile, les plots
 		// en alarme → intensité. Liste CREUSE côté serveur (foyers > 0) ; ici un

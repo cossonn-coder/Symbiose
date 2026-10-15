@@ -58,7 +58,7 @@ namespace Symbiose
 		{
 			if (_supportKind == kind) return;
 			_supportKind = kind;
-			QueueRedraw();
+			Invalidate();
 		}
 
 		// Une petite VRILLE en spirale au sommet de la grimpante accrochée : l'organe

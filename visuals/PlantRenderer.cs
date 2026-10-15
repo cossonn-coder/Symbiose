@@ -173,6 +173,7 @@ namespace Symbiose
 
 		public override void _Ready()
 		{
+			if (IsBrush) return;   // pinceau de cuisson (T2) : ni ombre ni registre
 			_shadow = new PlantShadow { Name = "Shadow", ShowBehindParent = true };
 			AddChild(_shadow);
 			_shadow.SetExtent(_spreadCm, _heightCm);   // si SetStructure a précédé
@@ -187,7 +188,7 @@ namespace Symbiose
 		{
 			if (_deadStade == stadeMort) return;   // early-out : pas de redraw inutile
 			_deadStade = stadeMort;
-			QueueRedraw();
+			Invalidate();
 		}
 
 		// Canal COULEUR résolu : teinte du symptôme colorant dominant + force (=
@@ -236,7 +237,7 @@ namespace Symbiose
 						case "maladie":   _maladie = it; break;
 					}
 				}
-			QueueRedraw();
+			Invalidate();
 		}
 
 		// Vitalité continue (santé & résilience ④, snapshot 0.5.28) : `vitalite` ∈
@@ -253,7 +254,7 @@ namespace Symbiose
 			v = Mathf.Clamp(v, 0f, 1f);
 			if (Mathf.IsEqualApprox(v, _vitalite)) return;   // early-out : pas de redraw
 			_vitalite = v;
-			QueueRedraw();
+			Invalidate();
 		}
 
 		// Tire un tissu vert (feuilles/apex/silhouette) vers la teinte du symptôme
@@ -281,7 +282,7 @@ namespace Symbiose
 		{
 			if (_silhouette == silhouette) return;   // early-out : pas de redraw inutile
 			_silhouette = silhouette;
-			QueueRedraw();
+			Invalidate();
 		}
 
 		// LOD des émetteurs d'ombre (D67, snapshot 0.5.21) : `emitteur` dérivé du
@@ -334,7 +335,7 @@ namespace Symbiose
 				}
 			}
 			_shadow?.SetExtent(_spreadCm, _heightCm);
-			QueueRedraw(); // redemande un _Draw au prochain frame
+			Invalidate(); // re-cuisson à venir (T2) — l'ancienne image reste d'ici là
 		}
 
 		// ---------------------------------------------------------------------------
@@ -410,7 +411,10 @@ namespace Symbiose
 		// DESSIN
 		// ---------------------------------------------------------------------------
 
-		public override void _Draw()
+		// Dessin VECTORIEL d'origine = le PINCEAU de la pré-cuisson (jardin vivant
+		// T2) : rejoué tel quel vers une image par PlantRenderer.Bake.cs, ou en
+		// direct tant que la plante n'a pas d'image cuite. Le _Draw est dans Bake.
+		private void DrawVector()
 		{
 			if (_structure == null || _structure.Segments.Count == 0)
 				return;

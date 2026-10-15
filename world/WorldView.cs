@@ -220,6 +220,9 @@ namespace Symbiose
 			// (jardin vivant T1, F11 bascule) ; curseur + losange de survol.
 			PaletteSnes.Appliquer(container);
 			InitCurseur();
+			// Pré-cuisson des plantes (jardin vivant T2) : la file qui recuit au plus
+			// quelques plantes par frame, seulement près de l'écran (BakeQueue.cs).
+			AddChild(new BakeQueue { Name = "BakeQueue" });
 			// Champ STATIQUE (partagé avec PlantRenderer via WorldToScreen) :
 			// toujours repartir « nord en haut » à l'ouverture de la scène.
 			_orientation = 0;
