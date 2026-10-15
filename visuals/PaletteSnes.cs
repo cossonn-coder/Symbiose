@@ -33,7 +33,10 @@ namespace Symbiose
 		/// <summary>Actif ? (lu par le HUD/log de la bascule).</summary>
 		public static bool Actif => _cible != null && _cible.Material != null;
 
-		/// <summary>Pose le shader sur le conteneur du monde (ON par défaut).</summary>
+		/// <summary>Prépare le shader du conteneur du monde, OFF par défaut (F5 Nico
+		/// 2026-10-15 : préfère l'ancienne palette, trame jugée laide, et la passe
+		/// plein écran divise les FPS par 2 sans carte graphique [VM llvmpipe, n=1]).
+		/// F11 l'allume pour comparer.</summary>
 		public static void Appliquer(SubViewportContainer cible)
 		{
 			_cible = cible;
@@ -54,7 +57,7 @@ namespace Symbiose
 				_mat.SetShaderParameter("pal_accents", pal.Length - Palette16.MaitreAccents);
 				_mat.SetShaderParameter("tramage", Tramage);
 			}
-			_cible.Material = _mat;
+			_cible.Material = null;
 		}
 
 		/// <summary>Bascule avant/après (touche debug F11) — comparer au F5.</summary>
