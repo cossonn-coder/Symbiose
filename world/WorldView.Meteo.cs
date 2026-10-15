@@ -51,9 +51,10 @@ namespace Symbiose
 		private void ApplyWeather(GDict weather)
 		{
 			_lastWeather = weather;
-			weather = CaptureMeteoOverride(weather);
+			weather = DefileOverride(CaptureMeteoOverride(weather));   // bancs (T4, T5)
 			_weatherLayer?.SetWeather(weather);
-			MeteoPlantes.SetWeather(weather.ContainsKey("kind") ? weather["kind"].AsString() : "");
+			MeteoPlantes.SetWeather(weather.ContainsKey("kind") ? weather["kind"].AsString() : "",
+				weather.ContainsKey("intensity") ? (float)weather["intensity"].AsDouble() : 0f);
 			var w = weather.ContainsKey("wind") ? weather["wind"].AsGodotDictionary() : null;
 			WindWave.SetWind(w != null ? (float)w["force"].AsDouble() : 0f,
 							 w != null ? (float)w["direction"].AsDouble() : 0f,

@@ -450,6 +450,7 @@ namespace Symbiose
 			if (WorldView.CurrentZoom < SegmentDetailMinZoom)
 			{
 				DrawCanopySilhouette();
+				DrawSnowCrown();   // calotte de neige au LOD couronne (T5)
 				return;
 			}
 
@@ -465,8 +466,9 @@ namespace Symbiose
 			var segs = new List<Segment>(_structure.Segments);
 			segs.Sort((a, b) => b.ThicknessCm.CompareTo(a.ThicknessCm));
 
-			foreach (var s in segs)
+			for (int k = 0; k < segs.Count; k++)
 			{
+				var s = segs[k];
 				Vector3 tip = s.Base + s.Dir * s.LengthCm;
 				// On soustrait x,y du collet (recadrage horizontal) et on garde z
 				// absolu (le collet est au sol, z=0) — exactement comme _iso(bx-cx,…).
@@ -485,6 +487,7 @@ namespace Symbiose
 				Color col = baseCol.Lerp(SymptomTint(baseCol), 1f - lig);
 
 				DrawBranch(p1, p2, col, w);
+				DrawSnowOnBranch(p1, p2, w, s, k);   // neige posée sur le bois (T5)
 			}
 
 			// Organes (tranche 6·A) : feuilles puis fleurs/fruits, PAR-DESSUS le
@@ -524,8 +527,9 @@ namespace Symbiose
 			float zf = _deadStade == "couchee" ? CoucheeFlatten : 1f;
 			var segs = new List<Segment>(_structure.Segments);
 			segs.Sort((a, b) => b.ThicknessCm.CompareTo(a.ThicknessCm));
-			foreach (var s in segs)
+			for (int k = 0; k < segs.Count; k++)
 			{
+				var s = segs[k];
 				Vector3 tip = s.Base + s.Dir * s.LengthCm;
 				Vector2 p1 = Iso(s.Base.X - collet.X, s.Base.Y - collet.Y, s.Base.Z * zf);
 				Vector2 p2 = Iso(tip.X - collet.X, tip.Y - collet.Y, tip.Z * zf);
@@ -575,7 +579,7 @@ namespace Symbiose
 		}
 
 		private void DrawCanopySilhouette() =>
-			DrawCanopySilhouette(SymptomTint(CrownColor));
+			DrawCanopySilhouette(Frosted(SymptomTint(CrownColor)));
 
 		private void DrawCanopySilhouette(Color baseC)
 		{

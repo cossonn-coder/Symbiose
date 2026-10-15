@@ -286,7 +286,7 @@ namespace Symbiose
 						// poids de la pluie (variante météo T4, PlantRenderer.Meteo.cs).
 						lz -= LeafDropCm(p.Z);
 						Vector2 c = Iso(lx - collet.X, ly - collet.Y, lz);
-						Color col = SymptomTint(LeafColor(pal, automne, Hash01(13, i, j)));
+						Color col = Frosted(SymptomTint(LeafColor(pal, automne, Hash01(13, i, j))));
 						col.A = 0.92f;
 						// ⑤ Le rayon du limbe est MULTIPLIÉ par leafGrowth : sous le
 						// plancher (§1) à l'émergence (1 valeur nue, pas de nervure),
@@ -315,6 +315,7 @@ namespace Symbiose
 						// grêle + bords gelés, par-dessus la feuille, stables au hash.
 						DrawLeafDamage(c, r, i, j);
 						DrawWetGlint(c, r, i, j);   // reflet humide (pluie, T4)
+						DrawColdLeaf(c, r, i, j, p.Z);   // grêle/givre/neige (T5)
 					}
 				}
 			}

@@ -19,12 +19,12 @@
 ## Carte des tronçons
 | # | Kickoff | Contenu | Golden | État |
 |---|---|---|---|---|
-| T0 | `01_banc_capture.md` | Godot portable + Xvfb + Movie Maker → PNG | intact | **fait** (non commité) |
+| T0 | `01_banc_capture.md` | Godot portable + Xvfb + Movie Maker → PNG | intact | **fait** (`e88da4b`) |
 | T1 | `02_palette_curseur.md` | shader palette 32 + Bayer · curseur + losange de survol | intact | **fait** (`447da15`) |
 | T2 | `03_precuisson.md` | cuisson par plante + cache + file étalée (image identique) | intact | **fait** (`0bb6cb6`) |
 | T3 | `04_vent_onde.md` | pont `weather.wind` + 8 poses de flexion + onde | intact | **fait** (`14c0fc4`) |
-| T4 | `05_canicule_pluie.md` | réponses par plante canicule + pluie/orage | intact | **fait** (non commité) |
-| T5 | `06_neige_gel_banc.md` | neige + grêle/gel + traces + banc F5 « jardin vivant » | intact | à faire |
+| T4 | `05_canicule_pluie.md` | réponses par plante canicule + pluie/orage | intact | **fait** (`c0e9a34`) |
+| T5 | `06_neige_gel_banc.md` | neige + grêle/gel + traces + banc F5 « jardin vivant » | intact | **fait** (non commité) |
 
 ## Faits vérifiés au code (2026-10-15)
 - `data/code/sim/wind.py` : `wind_at(seed, week) -> WindState(force ∈ [0,1+], direction ∈ [0,2π) = D'OÙ vient le vent)`, pur ; `gust_profile(seed, week)` (4 sous-ticks). `fields/abri.py` → `eco.vent` (force locale, **LAZY**, `None` au repos, D99).
@@ -186,8 +186,56 @@
 - **Points F5** : « on sent la chaleur / la pluie sur les plantes ? » ; reflets assez visibles
   (taille `r·0,1·zoom` px) ? ; séchage 8 s trop rapide/lent ? ; éclaboussures/éclair.
 
+## T5 — neige, givre, grêle + banc F5 (fait 2026-10-15, golden `22768f33…` PASS, build vert, test_sim_server 283/283, pont NON touché)
+- **Variantes froides cuites** (`visuals/PlantRenderer.Froid.cs`, partial NEUF 90 LDC) : **neige** = calotte
+  blanche (`MaitreBlanc` sur ombre bleutée `a8cfe6`) sur le dessus des feuilles (part ∝ charge, plus en haut
+  de la plante), trait blanc sur les branches peu inclinées (`DrawSnowOnBranch`, utile aux caducs nus de
+  l'hiver), calotte sur la couronne au LOD ×0,5 ; la charge **raidit** (flexion × (1 − 0,6 neige), dans
+  `PlantRenderer.Wind.UpdateWind`). **Givre** (« Gelée tardive ») = limbe tiré vers `a8c4d0` (45 % × givre) +
+  liseré blanc 1 px pixel-art sur 40-100 % des feuilles. **Grêle** = 1-3 encoches triangulaires au bord du
+  limbe ∝ `grele` (en plus du criblage existant). Hooks : `Organs` (couleur `Frosted`, `DrawColdLeaf`),
+  `PlantRenderer.cs` (`DrawSnowOnBranch` dans la boucle des segments, `DrawSnowCrown` au LOD), `Bake`
+  (copie `_snow/_frost` au pinceau), `Meteo.RefreshMeteo` (appelle `RefreshCold`).
+- **État global** `MeteoPlantes` étendu : `SetWeather(kind, intensity)` ; charge = clamp(σ, 0,5, 2)/2 (même
+  bornage que l'effet moteur) ; givre se dissipe en 5 s, neige fond en 6 s après l'épisode ; sous vent ≥ 0,5
+  elle **tombe** en 5 s jusqu'à 30 % de la charge (il neige encore). La neige est quantifiée **par plante**
+  avec un décalage de hash (±0,15) → les plantes perdent leurs plaques à des instants différents (jamais tout
+  le jardin à la même frame) ; plantes ré-examinées toutes les 0,2 s pendant la fonte/chute seulement.
+- **Traces** : rien d'inventé — encoches/criblage (`grele`) et bords noircis (`gel`) suivent `leaf_symptoms`
+  (qui inclut `plant.symptom_marks`) ; elles restent tant que le snapshot les porte.
+- **Abri** : `WorldView.Ciel.MarkCoveredPlants` marque les plantes dont le plot-foyer porte `couvert_pose`
+  (voile/cloche) → ni neige ni givre ; grêle/gel déjà épargnés par le moteur. ⚠️ **Écart kickoff** : il citait
+  `CouvertureLayer.cs` — c'est le tapis de couvre-sol (luxuriance) ; les voiles D104 sont `CoverLayer.cs`.
+- **Banc F5 « jardin vivant » = touche F12** (`world/WorldView.Defile.cs`) : défilé sur le jardin courant,
+  **7 situations × 10 s de jeu** en boucle (calme → vent 0,9 → canicule → pluie → neige, le vent forcit à
+  mi-étape → grêle → gelée), encart ciel = « jardin vivant · Neige (5/7) » ; **re-F12 = arrêt** (météo, vent
+  et ciel du snapshot). Impose seulement le `weather` reçu par la vue + l'onde (moteur intouché). Pour voir
+  des **traces réelles** de grêle et la moitié voilée : banc `effondrement` **avec seed 12345** (cf. blocage).
+- **Banc VM** : `capture_vm.sh -d` (défilé) et `-S N` (seed ; `--capture-seed`).
+- **Mesures** (VM llvmpipe, Movie Maker) — PNG dans le scratchpad de session (non versionnés) :
+  - 7 situations [défilé full ×4 300,1700, 2 FPS, 142 images, n=1] : calme/vent identiques à T3 ; canicule
+    sans effet visible (aucune plante en `secheresse` sur full, cf. T4) ; pluie = voile gris + reflets ; neige =
+    calottes blanches sur les 4 plantes du cadre puis plaques tombées après le coup de vent ; grêle = billes ;
+    gelée = feuilles pâles bleutées cerclées de blanc ; l'encart nomme chaque situation.
+  - Neige + vent 1,0 [full ×4, 60 images, n=1] : pixels blancs 5 680 → ~4 700 en 6 s (plaques tombées,
+    flocons inclus dans le compte) ; vague de re-cuisson unique au début (111 plantes examinées).
+  - Abri [effondrement ×4, seed 42, n=1] : moitié voilée **0 calotte**, moitié nue toutes enneigées.
+  - Trace grêle [effondrement seed 12345, sem. 1312, ×16, n=1] : 18 plantes survivantes portent `grele` 0,117
+    (toutes sous voile : grêle amortie) → 1 trou + 1 encoche par feuille, discret mais lisible à ×16.
+  - Mémoire : 0 Mo de plus (variante = même atlas, remplace l'image, comme T4).
+- **Blocage pré-existant (hors périmètre, NON corrigé)** : Godot envoie TOUJOURS `seed` (42, `WorldView.Seed`)
+  à `init` → `BANC_SEED={"effondrement":12345}` n'est **jamais appliqué au F5** : le banc D104 tourne en seed
+  42, sans la grêle du collapse (176 basilics vivants, ciel dégagé). Correctif possible : ne pas envoyer de
+  seed pour un banc (`SimBridge.Init`), ou laisser le banc imposer le sien côté serveur — décision Nico.
+
 ## Ce qui reste
-T5. Calibrage onde (`WindWave` λ/f/enveloppe, `PlantRenderer.Wind` BendReach/raideur) = F5.
+Sprint A **terminé**. F5 Nico : une seule question, « le jardin est-il beau et vivant ? » — F12 sur `full`
+(défilé), puis sur `effondrement` (voile vs nu). Calibrages F5 : onde (`WindWave` λ/f/enveloppe,
+`PlantRenderer.Wind` BendReach/raideur), séchage 8 s / fonte 6 s / givre 5 s, taille des calottes. Ensuite
+sprint B (faune + champignons + fumée/eau) à concevoir.
 
 ## §REPRISE
-`/sprint-auto sprint_jardin_vivant` : lire CLAUDE.md + ce fichier + le doc de conception, puis le premier kickoff « à faire » (**T5** `06_neige_gel_banc.md`). T4 fait mais **non commité** (orchestrateur). Météo forcée au banc : `-m Canicule` / `-m "Orage,1,1.5"` ; warmup `-w N`. T5 peut réutiliser `MeteoPlantes` (état global) et `PlantRenderer.Meteo.cs` (variante cuite) pour la charge de neige. Vent forcé au banc : `tools/capture_vm.sh -v 1.2` (calme : `-v 0`). Comparer avant/après sur les pixels STATIQUES (couches animées non déterministes) ; Pillow dispo seulement via un venv scratch (`python3 -m venv … && pip install pillow`).
+Sprint clos (T0→T5 faits ; T5 **non commité** — orchestrateur). Prochaine étape : commit T5, puis F5 Nico.
+Banc VM : `tools/capture_vm.sh -b full -z 4 -c 300,1700 -d -f 2 -n 142` (défilé complet, ~3 min) ;
+neige `-m "Neige,1.5"`, gelée `-m "Gelée tardive,1.5"`, grêle `-m "Grêle,1.9"` ; traces réelles
+`-b effondrement -S 12345 -w 3 -z 16 -c 225,175`.

@@ -19,12 +19,12 @@
 
 ## Sprint en cours
 
-**JARDIN VIVANT (sprint A rendu)** — conception FIGÉE le 2026-10-15, prêt pour
-`/sprint-auto sprint_jardin_vivant` (6 tronçons T0→T5, golden intact) :
-banc de capture VM · palette 32 + Bayer + curseur · pré-cuisson par plante ·
-vent en onde · canicule/pluie · neige/gel + banc F5. Doc :
+**JARDIN VIVANT (sprint A rendu)** — **CLOS le 2026-10-15** (T0→T5, golden intact) :
+banc de capture VM · palette 34 + Bayer + curseur · pré-cuisson par plante ·
+vent en onde · canicule/pluie · neige/givre/grêle + banc F5 (défilé **F12**). Reste
+**F5 Nico** (« le jardin est-il beau et vivant ? »). Doc :
 [`conception_jardin_vivant.md`](docs/rendu/pixelart/conception_jardin_vivant.md).
-Ensuite : **sprint B** (faune D44, champignons, fumée de cheminée, eau) à concevoir.
+**Prochain : sprint B** (faune D44, champignons, fumée de cheminée, eau) à concevoir (`/conception`).
 
 Dernier sprint clos : **PÉRIPHÉRIE — le jardin n'est pas une île** (D73,
 2026-07-26, `/sprint-auto` ①→⑦ + passe `/refactor`) — la périphérie cesse d'être

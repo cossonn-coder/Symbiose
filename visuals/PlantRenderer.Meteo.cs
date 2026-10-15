@@ -47,7 +47,8 @@ namespace Symbiose
 			float heat = vivante && MeteoPlantes.Canicule ? _drought : 0f;
 			// Pas de feuilles (caduc en hiver) → rien à mouiller, rien à recuire.
 			float wet = vivante && _structure.FoliageDensity > 0f ? MeteoPlantes.Wet : 0f;
-			if (heat == _heat && wet == _wet) return;
+			bool cold = RefreshCold(vivante);   // neige + givre (T5, PlantRenderer.Froid.cs)
+			if (heat == _heat && wet == _wet && !cold) return;
 			_heat = heat;
 			_wet = wet;
 			Invalidate();

@@ -78,7 +78,8 @@ namespace Symbiose
 		internal void UpdateWind()
 		{
 			int max = string.IsNullOrEmpty(_deadStade) ? _maxPoseLive : 0;
-			ApplyWindPose(WindWave.PoseFor(_windX, _windY, _abri, _raideur, _lagSec,
+			// Sous la neige la plante est RAIDIE (T5, SnowStiffness) : elle plie moins.
+			ApplyWindPose(WindWave.PoseFor(_windX, _windY, _abri, _raideur * SnowStiffness, _lagSec,
 										   _swayPhase, max));
 		}
 

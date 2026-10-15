@@ -108,6 +108,8 @@ namespace Symbiose
 			brush._silhouette = _silhouette;
 			brush._heat = _heat;           // variante météo (T4)
 			brush._wet = _wet;
+			brush._snow = _snow;           // variante froide (T5)
+			brush._frost = _frost;
 			brush._raideur = _raideur;
 			brush._supportKind = _supportKind;
 			brush._highlightSegment = -1;

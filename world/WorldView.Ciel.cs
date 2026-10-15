@@ -38,11 +38,42 @@ namespace Symbiose
 
 		// Bloc `ciel` du snapshot (lecture tolérante : pré-0.5.43 sans le bloc → encart
 		// neutre, jamais appelé).
-		private void ApplyCiel(GDict ciel) => _skyPanel?.SetSky(ciel);
+		// Le dernier bloc réel est gardé : le défilé F12 (T5) le restaure en sortant.
+		private void ApplyCiel(GDict ciel)
+		{
+			_lastCiel = ciel;
+			if (!DefileActif) _skyPanel?.SetSky(ciel);
+		}
+		private GDict _lastCiel;
 
 		// Blocs `couvert_pose` / `ombre_pose` (lecture tolérante : un bloc absent →
 		// null → CoverLayer le saute, pas de placeholder dessiné).
-		private void ApplyCovers(GDict couvert, GDict ombre) =>
+		private void ApplyCovers(GDict couvert, GDict ombre)
+		{
 			_coverLayer?.SetCovers(couvert, ombre, _origins);
+			MarkCoveredPlants(couvert);
+		}
+
+		// Jardin vivant T5 : une plante dont le PLOT-foyer porte un voile/cloche
+		// (`couvert_pose` > 0) ne montre ni neige ni givre. Appelé APRÈS la mise à
+		// jour des plantes du même snapshot (ApplySnapshot) ; la position monde
+		// (méta tile/lx/ly) est l'identité de la plante, plot = floor(pos / 50 cm).
+		private void MarkCoveredPlants(GDict couvert)
+		{
+			var abrites = new System.Collections.Generic.HashSet<(string, int, int)>();
+			if (couvert != null)
+				foreach (var kv in couvert)
+					foreach (var e in kv.Value.AsGodotArray())
+					{
+						var a = e.AsGodotArray();
+						abrites.Add((kv.Key.AsString(), a[0].AsInt32(), a[1].AsInt32()));
+					}
+			foreach (var p in _plantNodes.Values)
+			{
+				int r = Mathf.FloorToInt((float)p.GetMeta("ly").AsDouble() / PlotCm);
+				int c = Mathf.FloorToInt((float)p.GetMeta("lx").AsDouble() / PlotCm);
+				p.SetCovered(abrites.Contains((p.GetMeta("tile").AsString(), r, c)));
+			}
+		}
 	}
 }

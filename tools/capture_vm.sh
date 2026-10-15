@@ -20,6 +20,8 @@
 #     -m  météo imposée KIND[,INT[,DUREE_S]] (Canicule, « Pluie prolongée », Orage… ;
 #                                       après DUREE_S s de jeu → météo du snapshot) — T4
 #     -w  semaines de warmup           (défaut 12) — T4
+#     -d  défilé « jardin vivant » (F12) : 7 situations × 10 s de jeu — T5
+#     -S  seed du monde                (défaut 42 ; 12345 = collapse d'effondrement) — T5
 #     -n  nombre d'images              (défaut 3)
 #     -f  images/s simulées            (défaut 10 → 3 images = 0,3 s de jeu)
 #   Sortie : DOSSIER/frame00000000.png, frame00000001.png, … (1920×1080).
@@ -43,7 +45,7 @@ set -euo pipefail
 DEPOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 GODOT="${GODOT:-$HOME/opt/godot/Godot_v4.6-stable_mono_linux_x86_64/Godot_v4.6-stable_mono_linux.x86_64}"
 XROOT="${XROOT:-$HOME/opt/xvfb/root}"
-SORTIE=/tmp/capture_symbiose BANC=smoke ZOOM="" CENTRE="" SOURIS="" GESTE="" VENT="" METEO="" SEMAINES="" FRAMES=3 FPS=10 BUILD=1
+SORTIE=/tmp/capture_symbiose BANC=smoke ZOOM="" CENTRE="" SOURIS="" GESTE="" VENT="" METEO="" SEMAINES="" DEFILE="" GRAINE="" FRAMES=3 FPS=10 BUILD=1
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -56,10 +58,12 @@ while [ $# -gt 0 ]; do
     -v) VENT="$2"; shift 2 ;;
     -m) METEO="$2"; shift 2 ;;
     -w) SEMAINES="$2"; shift 2 ;;
+    -d) DEFILE=1; shift ;;
+    -S) GRAINE="$2"; shift 2 ;;
     -n) FRAMES="$2"; shift 2 ;;
     -f) FPS="$2"; shift 2 ;;
     --no-build) BUILD=0; shift ;;
-    -h|--help) sed -n '2,42p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,44p' "$0"; exit 0 ;;
     *) echo "option inconnue : $1" >&2; exit 2 ;;
   esac
 done
@@ -91,6 +95,8 @@ ARGS=(--capture-banc="$BANC")
 [ -n "$VENT" ] && ARGS+=(--capture-vent="$VENT")
 [ -n "$METEO" ] && ARGS+=(--capture-meteo="$METEO")
 [ -n "$SEMAINES" ] && ARGS+=(--capture-semaines="$SEMAINES")
+[ -n "$DEFILE" ] && ARGS+=(--capture-defile=1)
+[ -n "$GRAINE" ] && ARGS+=(--capture-seed="$GRAINE")
 DISPLAY="$ECRAN" LIBGL_ALWAYS_SOFTWARE=1 "$GODOT" --path "$DEPOT" \
   --rendering-driver opengl3 --resolution 1920x1080 \
   --write-movie "$SORTIE/frame.png" --fixed-fps "$FPS" --quit-after "$FRAMES" \
