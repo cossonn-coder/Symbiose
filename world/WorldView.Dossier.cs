@@ -49,6 +49,7 @@ namespace Symbiose
 		{
 			if (!_inspectMode) return false;
 			var node = FindPlant(ScreenToWorld(canvasMouse), PickRadiusCm);
+			AppliquerSiEnAttente(node);   // consultation : plante à jour d'abord (T4)
 			if (node == null || !IsInstanceValid(node)
 				|| !_plantPayloads.TryGetValue(DossierKey(node), out var payload))
 			{

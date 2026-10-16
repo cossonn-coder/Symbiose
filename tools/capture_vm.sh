@@ -24,6 +24,8 @@
 #     -S  seed du monde                (défaut 42 ; 12345 = collapse d'effondrement) — T5
 #     -r  orientation D35 0..3         (quarts de tour de vue) — D106 T2
 #     -x  couches masquées N1,N2       (noms de nœuds, cf. perf_vm.sh) — D106 T2
+#     -T  n semaines en TURBO après le montage (semaine paresseuse) — D106 T4
+#     -p  saut caméra X,Y (cm monde) à la fin des semaines turbo — D106 T4
 #     -n  nombre d'images              (défaut 3)
 #     -f  images/s simulées            (défaut 10 → 3 images = 0,3 s de jeu)
 #   Sortie : DOSSIER/frame00000000.png, frame00000001.png, … (1920×1080).
@@ -45,7 +47,7 @@
 set -euo pipefail
 
 . "$(dirname "${BASH_SOURCE[0]}")/lib_vm_godot.sh"   # DEPOT GODOT XROOT + vm_* (D106 T1)
-SORTIE=/tmp/capture_symbiose BANC=smoke ZOOM="" CENTRE="" SOURIS="" GESTE="" VENT="" METEO="" SEMAINES="" DEFILE="" GRAINE="" ORIENT="" CACHER="" FRAMES=3 FPS=10 BUILD=1
+SORTIE=/tmp/capture_symbiose BANC=smoke ZOOM="" CENTRE="" SOURIS="" GESTE="" VENT="" METEO="" SEMAINES="" DEFILE="" GRAINE="" ORIENT="" CACHER="" TURBO="" PAN="" FRAMES=3 FPS=10 BUILD=1
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -65,7 +67,9 @@ while [ $# -gt 0 ]; do
     -n) FRAMES="$2"; shift 2 ;;
     -f) FPS="$2"; shift 2 ;;
     --no-build) BUILD=0; shift ;;
-    -h|--help) sed -n '2,46p' "$0"; exit 0 ;;
+    -T) TURBO="$2"; shift 2 ;;
+    -p) PAN="$2"; shift 2 ;;
+    -h|--help) sed -n '2,48p' "$0"; exit 0 ;;
     *) echo "option inconnue : $1" >&2; exit 2 ;;
   esac
 done
@@ -92,6 +96,8 @@ ARGS=(--capture-banc="$BANC")
 [ -n "$GRAINE" ] && ARGS+=(--capture-seed="$GRAINE")
 [ -n "$ORIENT" ] && ARGS+=(--capture-orient="$ORIENT")
 [ -n "$CACHER" ] && ARGS+=(--capture-cacher="$CACHER")
+[ -n "$TURBO" ] && ARGS+=(--capture-turbo="$TURBO")
+[ -n "$PAN" ] && ARGS+=(--capture-pan="$PAN")
 DISPLAY="$ECRAN" LIBGL_ALWAYS_SOFTWARE=1 "$GODOT" --path "$DEPOT" \
   --rendering-driver opengl3 --resolution 1920x1080 \
   --write-movie "$SORTIE/frame.png" --fixed-fps "$FPS" --quit-after "$FRAMES" \

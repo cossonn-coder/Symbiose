@@ -32,6 +32,12 @@
 //   --capture-cacher=<N1>,<N2>  couches masquées par NOM de nœud (Ground, Decor,
 //                            Objects…) — banc temps réel tools/perf_vm.sh, même
 //                            mécanique que Shift+F4 (WorldView.Couches.cs) — D106 T1
+//   --capture-turbo=<n>      fait passer n semaines en TURBO après le montage (le
+//                            temps court : semaine paresseuse hors marge, gel
+//                            hebdomadaire mesurable) puis revient en planification — D106 T4
+//   --capture-pan=<x>,<y>    à la fin des semaines turbo, la caméra saute au point
+//                            visé (cm monde) : les plantes en attente y entrent dans
+//                            la marge (vérif « rien de périmé ») — D106 T4
 
 using Godot;
 using System.Globalization;
@@ -57,6 +63,10 @@ namespace Symbiose
 		// Orientation D35 imposée (0..3 quarts de tour, D106 T2 : vérifier le sol
 		// en un lot sous les 4 orientations). Appliquée AVANT le centrage caméra.
 		private static readonly float CaptureOrient = ParseFloat(ArgCapture("orient"));
+		// Semaines turbo puis saut caméra (D106 T4, banc de la semaine paresseuse).
+		private static readonly float CaptureTurbo = ParseFloat(ArgCapture("turbo"));
+		private static readonly string CapturePan = ArgCapture("pan");
+		private int _captureTurboRestant;
 
 		// Météo imposée par le banc (T4) : active jusqu'à l'échéance de sa durée.
 		private bool _captureMeteoActive = CaptureMeteo != null;
@@ -154,8 +164,33 @@ namespace Symbiose
 			}
 			if (CaptureDefile) ToggleDefile();   // défilé jardin vivant (T5)
 			if (CaptureCacher != null) AppliquerMasqueCouches();   // D106 T1
+			if (!float.IsNaN(CaptureTurbo) && CaptureTurbo >= 1f)
+			{
+				_captureTurboRestant = (int)CaptureTurbo;
+				_simMode = SimMode.Turbo;
+				SetPhase(Phase.Saison);
+			}
 			RedrawAllPlants();
 			CullPlants();
+		}
+
+		// Appelé à chaque step consommé (_Process) : décompte des semaines turbo du
+		// banc ; à la dernière, retour en planification + saut caméra éventuel, 3 s
+		// de jeu plus tard (la dernière semaine est alors appliquée : les plantes
+		// hors marge attendent → c'est la file d'entrée qui les rattrape).
+		private void CaptureApresStep()
+		{
+			if (_captureTurboRestant <= 0 || --_captureTurboRestant > 0) return;
+			SetPhase(Phase.Planification);
+			string[] xy = CapturePan?.Split(',');
+			if (xy == null || xy.Length != 2 || _camera == null) return;
+			GetTree().CreateTimer(3.0).Timeout += () =>
+			{
+				_camera.Position = ClampToWorld(WorldToScreen(ParseFloat(xy[0]), ParseFloat(xy[1])));
+				CullPlants();
+				GD.Print($"[Capture] fin des semaines turbo → caméra sur {CapturePan} "
+					+ $"({_fileEntree.Count} plantes en attente entrent dans la marge).");
+			};
 		}
 	}
 }

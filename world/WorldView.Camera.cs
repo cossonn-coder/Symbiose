@@ -50,6 +50,7 @@ namespace Symbiose
 			_camera.Zoom = Vector2.One * ZoomSteps[_zoomIndex];
 			CurrentZoom = ZoomSteps[_zoomIndex];
 			_camera.MakeCurrent();
+			CullPlants();   // T4 : la marge commune naît avec la caméra (couches au sol)
 		}
 
 		private void UpdateCameraPan(float delta)
@@ -128,17 +129,27 @@ namespace Symbiose
 		// d'optimiser : pas de quadtree). Ne touche PAS au picking : FindSegmentGlobal
 		// itère _plantNodes indépendamment de Visible, et une plante hors-écran n'est
 		// de toute façon pas sous le curseur.
+		// D106 T4 : marge PROPORTIONNELLE au cadre avec hystérésis (world/MargeVue.cs,
+		// +25 % pour entrer, +50 % pour sortir), testée sur l'EMPRISE projetée de la
+		// plante (plus son centre : l'ancienne marge fixe de 400 cm était énorme à
+		// ×32). Visible = « dans la marge » : c'est aussi le drapeau que lisent la
+		// file de cuisson et la semaine paresseuse (WorldView.Attente.cs).
 		private void CullPlants()
 		{
 			if (_camera == null) return;
-			// Marge = étendue max d'une grande plante (~grand arbre) en px canvas :
-			// on teste le CENTRE du nœud (node.Position, déjà en canvas), la marge
-			// couvre la couronne qui déborde du centre. 400 cm × PxPerCmX.
-			float margin = 400f * PxPerCmX;
-			Rect2 grown = VisibleCanvasRect().Grow(margin);
+			MargeVue.Mettre(VisibleCanvasRect());
+			bool entrees = false;
 			foreach (var node in _plantNodes.Values)
-				if (IsInstanceValid(node))
-					node.Visible = grown.HasPoint(node.Position);
+			{
+				if (!IsInstanceValid(node)) continue;
+				bool avant = node.Visible;
+				bool dedans = MargeVue.Garde(avant, node.EmpriseCanvas);
+				if (dedans == avant) continue;
+				node.Visible = dedans;
+				BakeQueue.VisibiliteChangee(node);
+				if (dedans) entrees |= EntreeDansMarge(node);
+			}
+			if (entrees) TrierFileEntree();
 		}
 
 		// Rectangle du viewport interne en coordonnées CANVAS (l'espace où vivent
@@ -178,6 +189,7 @@ namespace Symbiose
 			_structs.Clear();       // nœuds libérés avec _objects → ApplyStructures recrée
 			_supportNodes.Clear();  // idem → ApplySupports recrée (supports de grimpe ⑥)
 			_containers.Clear();    // idem → ApplyContainers recrée (conteneurs ⑥a)
+			ViderAttente();         // semaine paresseuse (T4) : nœuds libérés, snapshot complet ci-dessous
 
 			// Le décor SURVIT à RebuildWorld (enfant direct du SubViewport, non
 			// libéré) mais il est INERTE : on le re-Build pour re-projeter au nouvel

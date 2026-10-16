@@ -66,6 +66,7 @@ namespace Symbiose
 
 		private readonly List<Patch> _patches = new();
 		private bool _lastZoomOk;
+		private int _margeVersion = -1;   // cadre commun déjà dessiné (MargeVue, T4)
 
 		// Hash djb2-xor (même choix que MacroLife : jamais GetHashCode pour du
 		// visuel stable, jamais de Random).
@@ -121,9 +122,10 @@ namespace Symbiose
 			// La litière ne s'anime pas : on ne redessine qu'au basculement de LOD
 			// (zoom franchit MinZoom) — sinon le canvas dort.
 			bool zoomOk = WorldView.CurrentZoom >= MinZoom;
-			if (zoomOk != _lastZoomOk)
+			if (zoomOk != _lastZoomOk || _margeVersion != MargeVue.Version)
 			{
 				_lastZoomOk = zoomOk;
+				_margeVersion = MargeVue.Version;   // pan/zoom : cadre ré-ancré
 				QueueRedraw();
 			}
 		}
@@ -131,10 +133,9 @@ namespace Symbiose
 		public override void _Draw()
 		{
 			if (_patches.Count == 0 || WorldView.CurrentZoom < MinZoom) return;
-			// Culling : la transform canvas→écran de Godot inversée ramène le
-			// viewport en coordonnées canvas (notre espace de dessin).
-			Rect2 vis = (GetCanvasTransform().AffineInverse()
-						 * GetViewportRect()).Grow(CullMarginPx);
+			// Culling (T4) : cadre de marge COMMUN et stable (world/MargeVue.cs),
+			// + notre marge d'objet ; redessiné au ré-ancrage (pan/zoom), pas par frame.
+			Rect2 vis = MargeVue.CadreCouche(CullMarginPx);
 			foreach (var p in _patches)
 			{
 				Vector2 center = WorldView.WorldToScreen(p.Cx, p.Cy);

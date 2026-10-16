@@ -11,8 +11,14 @@
 // tick, comme une boucle principale qui ne traite que N messages d'une FIFO par
 // passage pour ne jamais rater son échéance temps réel.
 //
-// Marge = celle de WorldView.CullPlants (Visible=false au-delà) : une seule
-// définition du « près de l'écran ». Généralisation faune/décor = D106.
+// Marge = celle de WorldView.CullPlants (Visible=false au-delà, world/MargeVue.cs) :
+// une seule définition du « près de l'écran ».
+//
+// D106 T4 : la file ne rebalaye plus TOUTES les plantes sales à chaque frame. Elle
+// tient à part les ÉLIGIBLES (sales ET dans la marge), mis à jour aux seuls
+// événements qui les changent — une plante salie (MarkDirty), une plante qui entre
+// ou sort de la marge (VisibiliteChangee, appelé par CullPlants). Cas normal : les
+// sales sont hors marge → zéro éligible → la frame ne coûte rien ici.
 
 using Godot;
 using System.Collections.Generic;
@@ -34,6 +40,7 @@ namespace Symbiose
 
 		private static readonly HashSet<PlantRenderer> _all = new();
 		private static readonly HashSet<PlantRenderer> _dirty = new();
+		private static readonly HashSet<PlantRenderer> _eligibles = new();   // ⊂ _dirty, Visible
 		private readonly List<(PlantRenderer Node, ulong Frame)> _inFlight = new();
 		private readonly List<PlantRenderer> _pick = new();
 		private int _pickSegs;
@@ -65,8 +72,25 @@ namespace Symbiose
 		/// <summary>Toutes les plantes cuisables (lu par l'onde de vent, T3).</summary>
 		public static IReadOnlyCollection<PlantRenderer> All => _all;
 		public static void Register(PlantRenderer p) => _all.Add(p);
-		public static void Unregister(PlantRenderer p) { _all.Remove(p); _dirty.Remove(p); }
-		public static void MarkDirty(PlantRenderer p) => _dirty.Add(p);
+		public static void Unregister(PlantRenderer p)
+		{
+			_all.Remove(p);
+			_dirty.Remove(p);
+			_eligibles.Remove(p);
+		}
+
+		public static void MarkDirty(PlantRenderer p)
+		{
+			_dirty.Add(p);
+			if (p.Visible) _eligibles.Add(p);
+		}
+
+		/// <summary>La plante vient d'entrer dans la marge ou d'en sortir (T4).</summary>
+		public static void VisibiliteChangee(PlantRenderer p)
+		{
+			if (p.Visible && _dirty.Contains(p)) _eligibles.Add(p);
+			else _eligibles.Remove(p);
+		}
 
 		public static void RecordBrushDraw(double ms, int segs)
 		{
@@ -80,7 +104,7 @@ namespace Symbiose
 			ulong frame = Engine.GetProcessFrames();
 			CommitRendered(frame);
 			if (frame % ReleaseEveryFrames == 0) ReleaseOffscreen();
-			if (_dirty.Count == 0) { EndBurst(frame); return; }
+			if (_eligibles.Count == 0) { EndBurst(frame); return; }
 
 			// Deux passes : d'abord ce qui est À L'ÉCRAN, puis la marge.
 			_pick.Clear();
@@ -97,6 +121,7 @@ namespace Symbiose
 			foreach (var p in _pick)
 			{
 				_dirty.Remove(p);
+				_eligibles.Remove(p);
 				if (p.Baker.Begin(WorldView.CurrentZoom))
 				{
 					_inFlight.Add((p, frame));
@@ -108,10 +133,12 @@ namespace Symbiose
 
 		private void PickInto(bool onScreenOnly)
 		{
-			foreach (var p in _dirty)
+			foreach (var p in _eligibles)
 			{
 				if (_pick.Count >= PlantsPerFrame || _pickSegs >= SegmentsPerFrame) return;
-				if (!GodotObject.IsInstanceValid(p) || !p.IsVisibleInTree()
+				// IsVisibleInTree reste testé : le masque de couches (Maj+F4) cache le
+				// parent « Objects » sans toucher au Visible propre de la plante.
+				if (!GodotObject.IsInstanceValid(p) || !p.IsVisibleInTree() || p.EnAttente
 					|| p.Baker.InFlight || _pick.Contains(p)) continue;
 				if (onScreenOnly && !OnScreen(p)) continue;
 				// Une plante qui ferait déborder le budget attend la frame suivante

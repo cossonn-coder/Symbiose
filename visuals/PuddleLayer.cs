@@ -69,6 +69,7 @@ namespace Symbiose
 		private readonly List<Wet> _flaques = new();
 		private readonly List<Wet> _marais = new();
 		private bool _lastZoomOk;
+		private int _margeVersion = -1;   // cadre commun déjà dessiné (MargeVue, T4)
 
 		// Référence à la vue pour le recalage relief (ReliefRiseAtPlot) : la flaque
 		// se pose SUR la surface extrudée, comme les plantes. Posée à la construction.
@@ -134,9 +135,10 @@ namespace Symbiose
 			if (!Visible) return;
 			// Inerte entre snapshots : on ne redessine qu'au basculement de LOD.
 			bool zoomOk = WorldView.CurrentZoom >= MinZoom;
-			if (zoomOk != _lastZoomOk)
+			if (zoomOk != _lastZoomOk || _margeVersion != MargeVue.Version)
 			{
 				_lastZoomOk = zoomOk;
+				_margeVersion = MargeVue.Version;   // pan/zoom : cadre ré-ancré
 				QueueRedraw();
 			}
 		}
@@ -145,10 +147,9 @@ namespace Symbiose
 		{
 			if (WorldView.CurrentZoom < MinZoom) return;
 			if (_flaques.Count == 0 && _marais.Count == 0) return;
-			// Culling : la transform canvas→écran inversée ramène le viewport en
-			// coordonnées canvas (notre espace de dessin).
-			Rect2 vis = (GetCanvasTransform().AffineInverse()
-						 * GetViewportRect()).Grow(CullMarginPx);
+			// Culling (T4) : cadre de marge COMMUN et stable (world/MargeVue.cs),
+			// + notre marge d'objet ; redessiné au ré-ancrage (pan/zoom), pas par frame.
+			Rect2 vis = MargeVue.CadreCouche(CullMarginPx);
 			// Marais SOUS la flaque (le milieu d'abord, l'eau ensuite).
 			foreach (var w in _marais) DrawWet(w, vis);
 			foreach (var w in _flaques) DrawWet(w, vis);

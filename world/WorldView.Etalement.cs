@@ -58,6 +58,9 @@ namespace Symbiose
 			public int Curseur;                     // prochaine plante de Ordre
 			public bool MacroCommence;              // nuage MacroLife préparé (famille 2)
 			public int Born, Grown, Empty, NSegs;
+			public int Attente;      // plantes connues hors marge : donnée stockée seule (T4)
+			public long PlantesUs;   // temps passé dans la famille 1 (mesure du gel, T4)
+			public long MacroUs;     // idem famille 2 (vie macro) — banc seulement
 			public readonly HashSet<string> Seen = new();
 			// Index reconstruits À CÔTÉ des index affichés, puis échangés en fin de
 			// famille 1 : le clic (dossier) et les butineurs ne voient jamais un
@@ -92,6 +95,7 @@ namespace Symbiose
 					break;
 				case 2:
 					if (!AvancerVieMacro(e, budgetUs)) return false;   // tranche suivante
+					if (CaptureActive) GD.Print($"[Etalement] vie macro {e.MacroUs / 1000.0:F1} ms.");
 					AppliquerVieMacro(e);   // butineurs + carpophores (légers)
 					break;
 				case 3: AppliquerCouchesSol(e.Snap); break;
@@ -113,7 +117,10 @@ namespace Symbiose
 				_macroLife.BeginSprites(e.Snap["sprites"].AsGodotDictionary(), _origins, e.Fade);
 				e.MacroCommence = true;
 			}
-			return _macroLife.StepSprites(budgetUs);
+			ulong t0 = Time.GetTicksUsec();
+			bool fini = _macroLife.StepSprites(budgetUs);
+			e.MacroUs += (long)(Time.GetTicksUsec() - t0);
+			return fini;
 		}
 
 		// Tranche de plantes dans le budget. Au 1er appel : ordre « visibles
@@ -143,6 +150,7 @@ namespace Symbiose
 				AppliquerPlante(e, e.Plantes[e.Ordre[e.Curseur++]].AsGodotDictionary());
 				if ((long)(Time.GetTicksUsec() - t0) >= budgetUs) break;
 			}
+			e.PlantesUs += (long)(Time.GetTicksUsec() - t0);
 			return e.Curseur >= e.Ordre.Count;
 		}
 	}

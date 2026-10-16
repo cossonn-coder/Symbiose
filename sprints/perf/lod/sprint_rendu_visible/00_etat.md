@@ -20,8 +20,8 @@
 |---|---|---|---|---|
 | T1 | `01_instrument.md` | F4 draw calls + bascule couches + `tools/perf_vm.sh` | intact | **fait** (`a5fa36b`, F5 Nico à faire) |
 | T2 | `02_sol_un_lot.md` | sol = 1 maillage/tuile, image identique | intact | **fait** (`7868373`, F5 Nico à faire) |
-| T3 | `03_plancher_fixe.md` | souris 1×/frame, survol paresseux, plein écran à la demande | intact | **fait** (non commité, F5 Nico à faire) |
-| T4 | `04_marge_paresseuse.md` | marge proportionnelle + hystérésis, semaine paresseuse | intact | à faire |
+| T3 | `03_plancher_fixe.md` | souris 1×/frame, survol paresseux, plein écran à la demande | intact | **fait** (`8d49ab9`, F5 Nico à faire) |
+| T4 | `04_marge_paresseuse.md` | marge proportionnelle + hystérésis, semaine paresseuse | intact | **fait** (non commité, F5 Nico à faire) |
 | T5 | `05_paliers_bas.md` | ×0,5/×1/×2 + tapis par plot | intact | à faire |
 | T6 | `06_paliers_hauts.md` | ×4/×8/×16/×32 + cellules d'atlas par pose | intact | à faire |
 | T7 | `07_banc_bilan.md` | planche des paliers F5 + bilan contre D1 | intact | à faire |
@@ -128,6 +128,57 @@ diffèrent AUTANT entre deux runs « après » (bruit de run, vérifié).
   plante sale n'est visible (cas normal : les sales hors marge) — à n'évaluer qu'au
   changement de caméra/culling/masque. 1er poste C# restant, ~quelques % du temps C#.
 
+**Mesures T4** (`tools/perf_vm.sh -T 30 -n 40`, `full` seed 42, 30 semaines TURBO pendant
+la mesure, charge < 3 au départ ; « avant » = même outillage sans la logique T4) :
+
+| Cas | famille plantes / semaine (médiane) | FPS VM | draw calls | gels > 250 ms |
+|---|---|---|---|---|
+| ×8 sur 300,1700, avant | 54,1 ms [n=14 semaines, 1 run] | 9,7 | 741 | 6 [1 run] |
+| ×8 sur 300,1700, après | **12,7-15,5 ms** [n=17 semaines × 2 runs] | 10,8 [2 runs] | 663-671 | 1-2 [2 runs] |
+| ×8 centre (maison, 0 plante à l'écran) avant → après | 55,7 → 10,8 ms [n=16 / 19, 1 run chacun] | 12,1 → 13,2 | 724 → 647 | 0 → 0 |
+| ×0,5, avant → après | 54,4 → 53,0 ms [n=14 / 12, 1 run chacun] | 8,6 → 8,1 [bruit] | 1577 → 1577 | 0 → 0 |
+
+→ à ×8, ~120 des ~130 plantes restent en attente chaque semaine ; la famille plantes est
+divisée par ~4 [×8, 2 runs]. À ×0,5 tout est dans la marge : gain ≈ 0, c'est normal.
+Pire frame ×8 : 297 → 255-270 ms [1 run vs 2]. Le reste du gel n'est plus dans les plantes :
+vie macro 28 ms/semaine en médiane [×8, n=18, 2 runs], étalée en tranches de 6 ms → **non
+rendue paresseuse** (cf. kickoff : « mesurer d'abord ») ; ces 28 ms sont déjà étalées.
+**Vérif « rien de périmé »** : `capture_vm.sh -b full -z 8 -T 4 -p 300,1700 -v 0
+-x MacroLife,ForagerLayer,Weather -n 200`, départ à 1700,300 (saut caméra 3 s après la
+4e semaine, 8 plantes en attente entrent dans la marge → file) contre départ direct sur
+300,1700 : **0 pixel différent** sur les images 120, 150 et 199 ; image non vide.
+
+**Technique retenue T4** (pédagogie dans les en-têtes) :
+- `world/MargeVue.cs` (neuf, statique) : la marge commune. Visible +25 %/côté pour
+  ENTRER, +50 % pour SORTIR (`Garde(dedans, emprise)`, test sur l'emprise). `Cadre` =
+  rectangle stable des couches inertes, ré-ancré (`Version++`) seulement quand la zone
+  d'entrée en déborde ou quand le zoom change sa taille. `Mettre` appelé par `CullPlants`
+  (pan/zoom/rotation/snapshot + désormais `FrameCamera`).
+- `CullPlants` : emprise mémoïsée par plante (`PlantRenderer.EmpriseCanvas`, recalculée
+  après `Invalidate` seulement) au lieu du centre + 400 cm fixes ; notifie la file de
+  cuisson et la file d'entrée au seul changement d'état.
+- `BakeQueue` : ensemble `_eligibles` (sales ET dans la marge) tenu par événements
+  (`MarkDirty`, `VisibiliteChangee`) → plus de rebalayage de tous les sales chaque frame
+  (le poste C# reporté depuis T3) ; saute les plantes `EnAttente`.
+- `WorldView.Attente.cs` (neuf) : semaine paresseuse D2. Famille 1 : plante connue hors
+  marge → payload stocké (la dernière écrase la précédente), index dossier/butineurs/clés
+  à jour. Entrée dans la marge → file à budget `BudgetPlantesUs`, du centre vers
+  l'extérieur, hors étalement en cours. Consultation (clic du dossier F2, segment visé
+  par la taille) → application synchrone. Naissances toujours appliquées tout de suite ;
+  mortes hors marge retirées sans fondu.
+- `Snapshot.cs` : `AppliquerPlante` scindé (index → `MajPlante` / naissance,
+  `PositionPlante`) ; le test « sans segments » lit la taille du tableau sans le parser.
+- 7 couches inertes (Mulch, Litter, LeafLitter, Couverture, Puddle, Allelopathie, Cover)
+  dessinent dans `MargeVue.CadreCouche(CullMarginPx)` et se redessinent au ré-ancrage.
+  **Effet de bord voulu** : avant, elles ne se redessinaient jamais au pan → au-delà de
+  leur cadre de départ (+48-64 px), rien n'était dessiné jusqu'au snapshot suivant (trou
+  au bord en pannant à fort zoom). MacroLife/ForagerLayer (animées, redessinées à chaque
+  tick d'animation) gardent volontairement leur rectangle visible serré.
+- Outils : `--capture-turbo=n` / `--capture-pan=x,y` (`WorldView.Capture.cs`),
+  `perf_vm.sh -T`, `capture_vm.sh -T -p` ; la ligne `[perf]` ajoute `max=` (pire frame) et
+  `gels=` (> 250 ms) ; le journal hebdo donne « dont N en attente » + ms de la famille
+  plantes ; `[Etalement] vie macro X ms` (capture seulement).
+
 ## Règles communes à tous les tronçons
 - `dotnet build Symbiose.csproj` vert ; golden PASS ; **jamais** `test_epaisseur_500ans`.
 - Taille : `python3 tools/compte_ldc.py <fichiers>` ≤ 300 (🟡 ≤ 400 signalé).
@@ -156,12 +207,13 @@ diffèrent AUTANT entre deux runs « après » (bruit de run, vérifié).
   `Weather,Sky,Vignette`.
 
 ## §REPRISE
-T1 (`a5fa36b`) et T2 (`7868373`) commités. **T3 fait** (golden PASS `22768f33…`, build
-vert, comportement de survol identique en capture), **non commité** (l'orchestrateur
+T1 (`a5fa36b`), T2 (`7868373`), T3 (`8d49ab9`) commités. **T4 fait** (golden PASS
+`22768f33…`, build vert, pan = image identique au pixel), **non commité** (l'orchestrateur
 commit). Points F5 Nico ouverts : (T1) F4 + Maj+F4 à ×0,5 et ×4 sur `full` ; (T2) « le sol
-a-t-il changé ? » (attendu : non) + F4 ×0,5 (~1450 draw calls) ; (T3) survol, étiquettes
-(modes Survol/Toutes), losange (et sa respiration geste armé), surbrillance de taille,
-survol gènes G, étiquette de conteneur : **réactifs comme avant**, y compris en pannant
-aux flèches souris immobile, en tournant la vue, et sur une semaine qui passe sous une
-souris immobile ; voile météo (ciel couvert) toujours là au repos. Prochaine étape : T4
-`04_marge_paresseuse.md` (+ balayage `BakeQueue.PickInto` reporté, cf. Technique T3).
+a-t-il changé ? » (attendu : non) + F4 ×0,5 (~1450 draw calls) ; (T3) survol, étiquettes,
+losange, surbrillance de taille, gènes G, étiquette conteneur réactifs comme avant ; voile
+météo au repos ; **(T4) à ×8 en Continu/Turbo, pan rapide d'un bord à l'autre : aucune
+plante ne « saute » ni n'apparaît en retard, pas d'à-coup hebdomadaire ; paillis / litière /
+flaques / couverture présents jusqu'au bord après un long pan (avant : trou possible) ;
+clic F2 sur une plante qui vient d'entrer à l'écran → dossier à jour ; tailler une branche
+juste après un pan.** Prochaine étape : T5 `05_paliers_bas.md`.

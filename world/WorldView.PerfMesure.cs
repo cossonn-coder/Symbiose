@@ -37,6 +37,11 @@ namespace Symbiose
 		private double _pmDraw, _pmObj, _pmPrim;
 		private ulong _pmDebutUs;
 		private int _pmFrames;
+		// Gel (D106 T4, méthode 73a3f24) : frame la plus longue de la fenêtre et
+		// nombre de frames > 250 ms — la moyenne seule masque l'à-coup hebdomadaire.
+		private ulong _pmPrecUs;
+		private double _pmMaxMs;
+		private int _pmGels;
 		// Moyennes de la dernière fenêtre close (−1 = pas encore mesuré).
 		private double _pmFrameMs = -1, _pmDrawMoy = -1, _pmObjMoy = -1, _pmPrimMoy = -1;
 
@@ -44,8 +49,12 @@ namespace Symbiose
 		private void MesurerPerfRendu()
 		{
 			ulong now = Time.GetTicksUsec();
-			if (_pmDebutUs == 0) { _pmDebutUs = now; return; }   // 1re frame : ouvre la fenêtre
+			if (_pmDebutUs == 0) { _pmDebutUs = _pmPrecUs = now; return; }   // 1re frame : ouvre la fenêtre
 			_pmFrames++;
+			double frameMs = (now - _pmPrecUs) / 1000.0;
+			_pmPrecUs = now;
+			if (frameMs > _pmMaxMs) _pmMaxMs = frameMs;
+			if (frameMs > 250.0) _pmGels++;
 			_pmDraw += Performance.GetMonitor(Performance.Monitor.RenderTotalDrawCallsInFrame);
 			_pmObj += Performance.GetMonitor(Performance.Monitor.RenderTotalObjectsInFrame);
 			_pmPrim += Performance.GetMonitor(Performance.Monitor.RenderTotalPrimitivesInFrame);
@@ -61,8 +70,10 @@ namespace Symbiose
 				GD.Print(string.Create(CultureInfo.InvariantCulture,
 					$"[perf] fps={1000.0 / _pmFrameMs:F1} ms={_pmFrameMs:F1} "
 					+ $"draw={_pmDrawMoy:F0} obj={_pmObjMoy:F0} prim={_pmPrimMoy:F0} "
-					+ $"couches={NomCasCouches()}"));
+					+ $"max={_pmMaxMs:F0} gels={_pmGels} couches={NomCasCouches()}"));
 			_pmDraw = _pmObj = _pmPrim = 0;
+			_pmMaxMs = 0;
+			_pmGels = 0;
 			_pmDebutUs = now;
 			_pmFrames = 0;
 		}

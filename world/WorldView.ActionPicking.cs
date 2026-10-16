@@ -80,6 +80,7 @@ namespace Symbiose
 				float dy = (float)node.GetMeta("wy").AsDouble() - w.Y;
 				float ext = node.PickExtentCm;
 				if (dx * dx + dy * dy > ext * ext) continue;
+				AppliquerSiEnAttente(node);   // segments à jour avant l'index visé (T4)
 				int seg = node.FindSegmentNear(canvasMouse, bestD, out float d);
 				if (seg >= 0 && d < bestD) { bestD = d; best = node; segIndex = seg; }
 			}

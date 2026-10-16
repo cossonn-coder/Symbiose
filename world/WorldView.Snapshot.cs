@@ -148,98 +148,41 @@ namespace Symbiose
 
 		// Famille 1 — UNE plante (diff naissance/croissance). Appelée par tranches
 		// (AvancerPlantes) ; la suppression des disparues attend FinirPlantes.
+		// Semaine paresseuse (D106 T4, D2) : les INDEX (payload du dossier, fleurs
+		// des butineurs, clés vues) sont toujours tenus à jour — le clic et les
+		// butineurs ne voient jamais un index faux ; seule l'APPLICATION coûteuse
+		// (parse des segments + setters + recuisson) d'une plante connue HORS marge
+		// est différée (WorldView.Attente.cs). Les naissances, rares, restent
+		// appliquées tout de suite.
 		private void AppliquerPlante(Etalement e, GDict p)
 		{
-				bool fade = e.Fade;
-				var structure = StructureLoader.FromSnapshot(p);
-				if (structure.Segments.Count == 0)
+				int nSegs = p["segments"].AsGodotArray().Count;
+				if (nSegs == 0)
 				{
 					e.Empty++;   // germination sans bois : rien à dessiner encore
 					return;
 				}
-				e.NSegs += structure.Segments.Count;
+				e.NSegs += nSegs;
 				string key = PlantKey(p);
 				e.Seen.Add(key);
 				e.Payloads[key] = p;   // dossier de plante debug (T3), lu au clic
 				IndexPlantByName(p, e.ByName);   // fleurs cibles des butineurs (vivantes only)
 
-				// Position écran de la plante, RECALÉE sur le relief (D57 ②) : le
-				// collet suit la surface du sol → remonté de l'épaisseur au plot.
-				// Calculé une fois, appliqué à la naissance ET à la croissance (le
-				// sol monte/descend au fil des saisons → la plante suit).
-				string tile = p["tile"].AsString();
-				float lx = (float)p["x_cm"].AsDouble();
-				float ly = (float)p["y_cm"].AsDouble();
-				Vector2 o = _origins[tile];
-				float wx = o.X + lx, wy = o.Y + ly;
-				Vector2 screenPos =
-					WorldToScreen(wx, wy) - new Vector2(0f, ReliefRisePx(tile, lx, ly));
-
-				// Squelette (0.3.6) : `dead` → mode bois nu. Le mort GARDE sa clé
-				// (même tile|species|x|y) → il n'est pas fondu sortant ; il bascule
-				// squelette sur place jusqu'à ce que le moteur le retire (clé alors
-				// absente → fondu). stade_mort = "seche"/"couchee".
-				string stadeMort = p.ContainsKey("dead") && p["dead"].AsBool()
-					? p["stade_mort"].AsString() : null;
-				// Sémiologie foliaire (D33, snapshot 0.5.1) : liste de symptômes
-				// {cause, intensité} déjà triée par le moteur (chlorose/sécheresse/
-				// asphyxie/ravageurs/sénescence/maladie/gel/grêle). Tolérant à un
-				// snapshot pré-D33 (clé absente → null → plante saine). La vue teinte
-				// et texture, sans recalculer pH/pression (cf. PlantRenderer).
-				var symptoms = p.ContainsKey("leaf_symptoms")
-					? p["leaf_symptoms"].AsGodotArray() : null;
-				// Vitalité continue (santé & résilience ④, snapshot 0.5.28) : fond
-				// global d'usure ∈ [0,1] (1.0 = sain neuf), complète les symptômes
-				// localisés. Tolérant à un snapshot pré-0.5.28 (clé absente → 1.0 →
-				// plante rendue pleine). `etat` est aussi émis (sain/affaibli/malade/
-				// mort) mais la vue consomme le CONTINU (dégradé, pas de palier).
-				float vitalite = p.ContainsKey("vitalite")
-					? (float)p["vitalite"].AsDouble() : 1f;
-				// Accroche de grimpe (grimpantes ⑥, 0.5.18) : type d'appui accroché
-				// (tuteur/mur/hote…) ou null. Tolérant à un snapshot pré-0.5.18 (clé
-				// absente → plante libre → pas de vrille). Pilote la vrille (indice ⑥).
-				string supportKind = p.ContainsKey("support")
-					? p["support"].AsGodotDictionary()["type"].AsString() : null;
-				// Luxuriance (⑥, 0.5.19) : strate du stade COURANT (ordre de dessin par
-				// strate) + silhouette d'espèce (forme au LOD couronne). Tolérant à un
-				// snapshot pré-0.5.19 (clés absentes → strate neutre "moyenne", silhouette
-				// par défaut). La strate évolue au fil des stades (sol→basse→…) → on la
-				// relit à chaque snapshot pour recaler le ZIndex, comme la position.
-				string strate = p.ContainsKey("strate") ? p["strate"].AsString() : null;
-				string silhouette = p.ContainsKey("silhouette")
-					? p["silhouette"].AsString() : null;
-				// LOD émetteurs d'ombre (D67, snapshot 0.5.21) : `emitteur` dérivé du
-				// pouvoir ombrageant côté MOTEUR (miroir de fields/light.py). Tolérant à
-				// un snapshot pré-0.5.21 (clé absente → true = émettrice, aucune teinte).
-				// Pilote la seule teinte de l'overlay debug F9, jamais le rendu normal.
-				bool emitteur = !p.ContainsKey("emitteur") || p["emitteur"].AsBool();
-				// Abri local au vent (jardin vivant T3, 0.5.44) : facteur du champ
-				// d'abri ; clé absente (champ pas encore calculé / pré-0.5.44) → 1.0.
-				float abri = p.ContainsKey("abri") ? (float)p["abri"].AsDouble() : 1f;
-
 				if (_plantNodes.TryGetValue(key, out var node))
 				{
-					node.SetStructure(structure);   // la plante a poussé
-					node.SetSkeleton(stadeMort);     // ou vient de mourir / s'est couchée
-					node.SetSymptoms(symptoms);      // teinte + texture des symptômes (D33)
-					node.SetVitality(vitalite);      // fond global d'usure (santé ④, 0.5.28)
-					node.SetSupport(supportKind);    // vrille d'accroche (grimpantes ⑥)
-					node.SetSilhouette(silhouette);  // forme au LOD couronne (luxuriance ⑥)
-					node.SetEmitter(emitteur);       // teinte overlay LOD F9 (D67)
-					node.SetWindAnchor(wx, wy, abri);  // onde de vent (T3)
-					node.ZIndex = PlantZIndex(strate);  // empilement par strate (luxuriance ⑥)
-					node.SetMeta("tag", TagText(p));   // le stade évolue (étiquette nette)
-					node.Position = screenPos;         // suit le relief du sol (D57 ②)
 					e.Grown++;
+					if (!node.Visible) { MettreEnAttente(node, p); e.Attente++; return; }
+					MajPlante(node, p);   // la plante a poussé
 					return;
 				}
+				Vector2 screenPos = PositionPlante(p, out float wx, out float wy);
 				var renderer = new PlantRenderer
 				{
 					Position = screenPos,
 					// Empilement multi-strates (luxuriance ⑥) : biais de ZIndex par
 					// strate → le couvre-sol passe sous la potagère/grimpante. À strate
 					// égale, le y-sort du parent "Objects" départage (intra-strate).
-					ZIndex = PlantZIndex(strate),
+					ZIndex = PlantZIndex(p.ContainsKey("strate") ? p["strate"].AsString() : null),
 					Name = $"{p["tile"].AsString()}_{p["species"].AsString()}_{_plantSeq++}",
 				};
 				// Métadonnées de picking (volet B) : position MONDE pour la
@@ -260,22 +203,91 @@ namespace Symbiose
 				// un snapshot pré-③ (clé absente → dict vide → survol muet).
 				if (p.ContainsKey("genes"))
 					renderer.SetMeta("genes", p["genes"]);
-				if (fade) renderer.Modulate = new Color(1f, 1f, 1f, 0f);
+				if (e.Fade) renderer.Modulate = new Color(1f, 1f, 1f, 0f);
 				_objects.AddChild(renderer);
-				renderer.SetStructure(structure);
-				renderer.SetSkeleton(stadeMort);   // squelette déjà mort au chargement (save)
-				renderer.SetSymptoms(symptoms);    // teinte + texture des symptômes (D33)
-				renderer.SetVitality(vitalite);    // fond global d'usure (santé ④, 0.5.28)
-				renderer.SetSupport(supportKind);  // vrille d'accroche (grimpantes ⑥)
-				renderer.SetSilhouette(silhouette);  // forme au LOD couronne (luxuriance ⑥)
-				renderer.SetEmitter(emitteur);     // teinte overlay LOD F9 (D67)
-				renderer.SetWindAnchor(wx, wy, abri);  // onde de vent (T3)
-				renderer.SetMeta("tag", TagText(p));   // texte d'étiquette (rendu net hors grille)
-				if (fade)
+				MajPlante(renderer, p);   // squelette déjà mort au chargement (save) compris
+				if (e.Fade)
 					renderer.CreateTween()
 						.TweenProperty(renderer, "modulate:a", 1f, FadeInSec);
 				_plantNodes[key] = renderer;
 				e.Born++;
+		}
+
+		// Position écran de la plante, RECALÉE sur le relief (D57 ②) : le collet
+		// suit la surface du sol → remonté de l'épaisseur au plot. Appliquée à la
+		// naissance ET à la croissance (le sol monte/descend au fil des saisons →
+		// la plante suit). Sort aussi la position MONDE (cm) du collet.
+		private Vector2 PositionPlante(GDict p, out float wx, out float wy)
+		{
+			string tile = p["tile"].AsString();
+			float lx = (float)p["x_cm"].AsDouble();
+			float ly = (float)p["y_cm"].AsDouble();
+			Vector2 o = _origins[tile];
+			wx = o.X + lx;
+			wy = o.Y + ly;
+			return WorldToScreen(wx, wy) - new Vector2(0f, ReliefRisePx(tile, lx, ly));
+		}
+
+		/// <summary>Applique la donnée `p` du snapshot au nœud (structure, symptômes,
+		/// position…) — le coût de la famille 1. Retire la plante de l'attente.</summary>
+		private void MajPlante(PlantRenderer node, GDict p)
+		{
+			SortirAttente(node);
+			var structure = StructureLoader.FromSnapshot(p);
+			Vector2 screenPos = PositionPlante(p, out float wx, out float wy);
+			// Squelette (0.3.6) : `dead` → mode bois nu. Le mort GARDE sa clé
+			// (même tile|species|x|y) → il n'est pas fondu sortant ; il bascule
+			// squelette sur place jusqu'à ce que le moteur le retire (clé alors
+			// absente → fondu). stade_mort = "seche"/"couchee".
+			string stadeMort = p.ContainsKey("dead") && p["dead"].AsBool()
+				? p["stade_mort"].AsString() : null;
+			// Sémiologie foliaire (D33, snapshot 0.5.1) : liste de symptômes
+			// {cause, intensité} déjà triée par le moteur (chlorose/sécheresse/
+			// asphyxie/ravageurs/sénescence/maladie/gel/grêle). Tolérant à un
+			// snapshot pré-D33 (clé absente → null → plante saine). La vue teinte
+			// et texture, sans recalculer pH/pression (cf. PlantRenderer).
+			var symptoms = p.ContainsKey("leaf_symptoms")
+				? p["leaf_symptoms"].AsGodotArray() : null;
+			// Vitalité continue (santé & résilience ④, snapshot 0.5.28) : fond
+			// global d'usure ∈ [0,1] (1.0 = sain neuf), complète les symptômes
+			// localisés. Tolérant à un snapshot pré-0.5.28 (clé absente → 1.0 →
+			// plante rendue pleine). `etat` est aussi émis (sain/affaibli/malade/
+			// mort) mais la vue consomme le CONTINU (dégradé, pas de palier).
+			float vitalite = p.ContainsKey("vitalite")
+				? (float)p["vitalite"].AsDouble() : 1f;
+			// Accroche de grimpe (grimpantes ⑥, 0.5.18) : type d'appui accroché
+			// (tuteur/mur/hote…) ou null. Tolérant à un snapshot pré-0.5.18 (clé
+			// absente → plante libre → pas de vrille). Pilote la vrille (indice ⑥).
+			string supportKind = p.ContainsKey("support")
+				? p["support"].AsGodotDictionary()["type"].AsString() : null;
+			// Luxuriance (⑥, 0.5.19) : strate du stade COURANT (ordre de dessin par
+			// strate) + silhouette d'espèce (forme au LOD couronne). Tolérant à un
+			// snapshot pré-0.5.19 (clés absentes → strate neutre "moyenne", silhouette
+			// par défaut). La strate évolue au fil des stades (sol→basse→…) → on la
+			// relit à chaque snapshot pour recaler le ZIndex, comme la position.
+			string strate = p.ContainsKey("strate") ? p["strate"].AsString() : null;
+			string silhouette = p.ContainsKey("silhouette")
+				? p["silhouette"].AsString() : null;
+			// LOD émetteurs d'ombre (D67, snapshot 0.5.21) : `emitteur` dérivé du
+			// pouvoir ombrageant côté MOTEUR (miroir de fields/light.py). Tolérant à
+			// un snapshot pré-0.5.21 (clé absente → true = émettrice, aucune teinte).
+			// Pilote la seule teinte de l'overlay debug F9, jamais le rendu normal.
+			bool emitteur = !p.ContainsKey("emitteur") || p["emitteur"].AsBool();
+			// Abri local au vent (jardin vivant T3, 0.5.44) : facteur du champ
+			// d'abri ; clé absente (champ pas encore calculé / pré-0.5.44) → 1.0.
+			float abri = p.ContainsKey("abri") ? (float)p["abri"].AsDouble() : 1f;
+
+			node.SetStructure(structure);   // la plante a poussé
+			node.SetSkeleton(stadeMort);     // ou vient de mourir / s'est couchée
+			node.SetSymptoms(symptoms);      // teinte + texture des symptômes (D33)
+			node.SetVitality(vitalite);      // fond global d'usure (santé ④, 0.5.28)
+			node.SetSupport(supportKind);    // vrille d'accroche (grimpantes ⑥)
+			node.SetSilhouette(silhouette);  // forme au LOD couronne (luxuriance ⑥)
+			node.SetEmitter(emitteur);       // teinte overlay LOD F9 (D67)
+			node.SetWindAnchor(wx, wy, abri);  // onde de vent (T3)
+			node.ZIndex = PlantZIndex(strate);  // empilement par strate (luxuriance ⑥)
+			node.SetMeta("tag", TagText(p));   // le stade évolue (étiquette nette)
+			node.Position = screenPos;         // suit le relief du sol (D57 ②)
 		}
 
 		// Fin de la famille 1 — toutes les plantes du snapshot sont passées.
@@ -299,7 +311,9 @@ namespace Symbiose
 			{
 				var node = _plantNodes[key];
 				_plantNodes.Remove(key);   // hors index : le fondu finit seul
-				if (e.Fade)
+				SortirAttente(node);
+				// Hors marge (T4) : retirée tout de suite, pas de fondu que personne ne voit.
+				if (e.Fade && node.Visible)
 				{
 					var tw = node.CreateTween();
 					tw.TweenProperty(node, "modulate:a", 0f, FadeOutSec);
@@ -327,7 +341,8 @@ namespace Symbiose
 			}
 			GD.Print($"[WorldView] {CurrentSeason} an {_year}, semaine {_weekInSeason}/13 : "
 					 + $"{_plantNodes.Count} plantes (+{e.Born} −{dead.Count}, "
-					 + $"{e.Grown} maj, {e.Empty} sans segments).");
+					 + $"{e.Grown} maj dont {e.Attente} en attente hors marge, {e.Empty} sans "
+					 + $"segments) · famille plantes {e.PlantesUs / 1000.0:F1} ms.");
 		}
 
 		// Famille 2 — vie macro, butineurs, carpophores (index des fleurs à jour).

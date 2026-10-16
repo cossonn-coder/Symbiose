@@ -48,6 +48,7 @@ namespace Symbiose
 
 		private readonly List<Patch> _patches = new();
 		private bool _lastZoomOk;
+		private int _margeVersion = -1;   // cadre commun déjà dessiné (MargeVue, T4)
 
 		/// <summary>
 		/// Applique les blocs `couvert_pose` (voile/cloche) et `ombre_pose` (ombrière)
@@ -95,9 +96,10 @@ namespace Symbiose
 			if (!Visible) return;
 			// La couverture ne s'anime pas : redraw au seul basculement de LOD.
 			bool zoomOk = WorldView.CurrentZoom >= MinZoom;
-			if (zoomOk != _lastZoomOk)
+			if (zoomOk != _lastZoomOk || _margeVersion != MargeVue.Version)
 			{
 				_lastZoomOk = zoomOk;
+				_margeVersion = MargeVue.Version;   // pan/zoom : cadre ré-ancré
 				QueueRedraw();
 			}
 		}
@@ -105,8 +107,7 @@ namespace Symbiose
 		public override void _Draw()
 		{
 			if (_patches.Count == 0 || WorldView.CurrentZoom < MinZoom) return;
-			Rect2 vis = (GetCanvasTransform().AffineInverse()
-						 * GetViewportRect()).Grow(CullMarginPx);
+			Rect2 vis = MargeVue.CadreCouche(CullMarginPx);   // cadre commun stable (T4)
 			float pc = WorldView.PlotCm;
 			foreach (var p in _patches)
 			{

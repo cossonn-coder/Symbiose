@@ -469,10 +469,13 @@ namespace Symbiose
 					return;
 				}
 				ApplySnapshotEtale(step.Result);   // 7 familles sur plusieurs frames
+				CaptureApresStep();   // banc D106 T4 (no-op hors capture turbo)
 			}
 			// 1·bis) Une famille (ou une tranche de plantes) de la semaine en cours
 			//        d'application — jamais tout le jardin dans la même frame.
 			AvancerEtalement();
+			// 1·ter) Plantes en attente entrées dans la marge (semaine paresseuse, T4).
+			AvancerAttente();
 
 			// 1b) Consommer une action terminée (volet B) : afficher l'ACK/NAK
 			//     métier et appliquer le snapshot frais joint (un déracinement

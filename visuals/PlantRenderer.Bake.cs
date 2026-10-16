@@ -34,6 +34,28 @@ namespace Symbiose
 		// Coût estimé d'une cuisson (budget de la file) = nombre de segments.
 		internal int BakeCost => _structure?.Segments.Count ?? 0;
 
+		/// <summary>Semaine paresseuse (D106 T4) : la plante est hors marge et sa
+		/// dernière donnée n'est pas encore appliquée (WorldView.Attente.cs). La file
+		/// de cuisson la saute : on ne cuit pas une image déjà périmée.</summary>
+		internal bool EnAttente { get; set; }
+
+		// Emprise projetée (boîte locale, mémoïsée) pour la marge du culling (T4) :
+		// recalculée seulement après un Invalidate (ce qui est dessiné a changé),
+		// jamais à chaque pan — StraightBounds parcourt tous les segments.
+		private Rect2 _emprise;
+		private bool _empriseSale = true;
+
+		/// <summary>Emprise de la plante en coordonnées CANVAS (boîte de dessin à
+		/// la pose courante, translatée au collet). Taille nulle = juste le collet.</summary>
+		internal Rect2 EmpriseCanvas
+		{
+			get
+			{
+				if (_empriseSale) { _emprise = StraightBounds(); _empriseSale = false; }
+				return new Rect2(Position + _emprise.Position, _emprise.Size);
+			}
+		}
+
 		// Marge autour de la géométrie projetée (px canvas) : feuilles déportées
 		// (≤ ~6 px), limbe (≤ ~3 px), fruits (≤ 6 px), fleurs, vrille, surbrillance.
 		// Mesurée large : un organe rogné serait une différence visible.
@@ -64,6 +86,7 @@ namespace Symbiose
 		/// garde jusqu'à sa re-cuisson ; sinon elle se redessine en direct.</summary>
 		public void Invalidate()
 		{
+			_empriseSale = true;   // la boîte de dessin a pu changer (T4)
 			if (!Bakeable) { QueueRedraw(); return; }
 			BakeQueue.MarkDirty(this);
 			if (!HasBakedImage) QueueRedraw();
