@@ -82,6 +82,7 @@ namespace Symbiose
 		/// `budgetUs` ne borne que les plantes (les autres familles sont courtes).</summary>
 		private bool Avancer(Etalement e, long budgetUs)
 		{
+			_survolVersion++;   // le monde affiché change → survol à recalculer (T3)
 			switch (e.Famille)
 			{
 				case 0: AppliquerSol(e); break;

@@ -117,7 +117,8 @@ namespace Symbiose
 		}
 
 		/// <summary>Chaque frame (_Process) : fin du tap + losange du plot survolé.
-		/// Coût : un FindPlot (8 tuiles) + un déplacement de nœud, pas de redraw.</summary>
+		/// Coût : un FindPlot (8 tuiles) + un déplacement de nœud, pas de redraw —
+		/// et seulement quand la clé de survol a changé (T3, WorldView.Survol.cs).</summary>
 		private void UpdateCurseur()
 		{
 			if (_tapFinMs != 0 && Time.GetTicksMsec() >= _tapFinMs)
@@ -128,11 +129,14 @@ namespace Symbiose
 			if (_plotHover == null)
 			{
 				// Enfant DIRECT du SubViewport : survit à RebuildWorld (rotation),
-				// et sa position est recalculée chaque frame → suit l'orientation.
+				// et sa position suit l'orientation (clé de survol, T3).
 				_plotHover = new PlotHover { Name = "PlotHover", ZIndex = 3 };
 				AddWorld(_plotHover);
 			}
-			Vector2 w = ScreenToWorld(WorldMouseCanvas());
+			// Respiration (geste armé) : son rythme propre, hors clé de survol.
+			_plotHover.Modulate = new Color(1f, 1f, 1f, AlphaLosange());
+			if (!_survolSale) return;   // position du losange inchangée (T3)
+			Vector2 w = _sourisMonde;
 			if (_origins == null || !FindPlot(w, out string tile, out int r, out int c)
 				|| !_origins.TryGetValue(tile, out Vector2 org))
 			{
@@ -143,14 +147,14 @@ namespace Symbiose
 			// Centre du plot (comme BuildGround), remonté du relief du sol (D57).
 			_plotHover.Position = WorldToScreen(org.X + (c + 0.5f) * PlotCm, org.Y + (r + 0.5f) * PlotCm)
 				- new Vector2(0f, ReliefRiseAtPlot(tile, r, c));
-			// Respiration UNIQUEMENT geste armé ; sinon contour fixe et discret.
-			float a = 0.8f;
-			if (_gesteIndex >= 0)
-			{
-				float t = Time.GetTicksMsec() / 1000f;
-				a = 0.55f + 0.45f * (0.5f + 0.5f * Mathf.Sin(t * Mathf.Tau / RespirationPeriodeS));
-			}
-			_plotHover.Modulate = new Color(1f, 1f, 1f, a);
+		}
+
+		// Respiration UNIQUEMENT geste armé ; sinon contour fixe et discret.
+		private float AlphaLosange()
+		{
+			if (_gesteIndex < 0) return 0.8f;
+			float t = Time.GetTicksMsec() / 1000f;
+			return 0.55f + 0.45f * (0.5f + 0.5f * Mathf.Sin(t * Mathf.Tau / RespirationPeriodeS));
 		}
 	}
 }

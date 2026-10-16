@@ -139,7 +139,10 @@ namespace Symbiose
 			{
 				string[] s = CaptureSouris.Split(',');
 				if (s.Length == 2)
+				{
 					Input.WarpMouse(new Vector2(ParseFloat(s[0]), ParseFloat(s[1])));
+					ResemerSouris();   // T3 : la frame suivante relit le pointeur
+				}
 			}
 			if (!float.IsNaN(CaptureGeste)) SelectSlot((int)CaptureGeste);
 			// Vent imposé (T3) : rend l'onde observable quelle que soit la semaine.

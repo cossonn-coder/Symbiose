@@ -266,13 +266,18 @@ namespace Symbiose
 		//     (zoom + pan) via GetCanvasTransform().AffineInverse().
 		// ScreenToWorld (projection) finit le travail canvas → cm monde. Une seule
 		// fonction, cinq appelants (leçon D2 : jamais deux conversions divergentes).
-		private Vector2 WorldMouseCanvas()
+		// (T3 : _Process lit la souris UNE fois par frame via LireSourisFrame,
+		// WorldView.Survol.cs ; cette lecture directe reste pour clic et zoom.)
+		private Vector2 WorldMouseCanvas() => SourisVersCanvas(
+			GetViewport().GetMousePosition(), _worldVp.GetCanvasTransform());
+
+		// px fenêtre → canvas monde, la caméra donnée (partagé avec le cache T3).
+		private Vector2 SourisVersCanvas(Vector2 px, Transform2D camera)
 		{
 			var container = _worldVp.GetParent<SubViewportContainer>();
 			Vector2 scale = (Vector2)_worldVp.Size / container.Size;
-			Vector2 internalPx =
-				(GetViewport().GetMousePosition() - container.GlobalPosition) * scale;
-			return _worldVp.GetCanvasTransform().AffineInverse() * internalPx;
+			Vector2 internalPx = (px - container.GlobalPosition) * scale;
+			return camera.AffineInverse() * internalPx;
 		}
 
 		// Démarrage EFFECTIF de la simulation, déclenché par le sélecteur (⑤) au
@@ -414,6 +419,9 @@ namespace Symbiose
 			// 0) Caméra : pan aux flèches — actif dans TOUTES les phases (la
 			//    caméra n'interagit jamais avec la machine à états).
 			UpdateCameraPan((float)delta);
+			// 0a) Souris lue UNE fois + clé de survol (T3, WorldView.Survol.cs) :
+			//     les étapes 0b-0d·bis ci-dessous ne recalculent que si elle a changé.
+			LireSourisFrame();
 			// 0b) Étiquettes des plantes (nettes, hors SubViewport) — reprojetées
 			//     chaque frame selon le mode (Aucune/Survol/Toutes). Cf.
 			//     WorldView.Etiquettes.cs.

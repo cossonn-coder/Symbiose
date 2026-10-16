@@ -19,8 +19,8 @@
 | # | Kickoff | Contenu | Golden | État |
 |---|---|---|---|---|
 | T1 | `01_instrument.md` | F4 draw calls + bascule couches + `tools/perf_vm.sh` | intact | **fait** (`a5fa36b`, F5 Nico à faire) |
-| T2 | `02_sol_un_lot.md` | sol = 1 maillage/tuile, image identique | intact | **fait** (non commité, F5 Nico à faire) |
-| T3 | `03_plancher_fixe.md` | souris 1×/frame, survol paresseux, plein écran à la demande | intact | à faire |
+| T2 | `02_sol_un_lot.md` | sol = 1 maillage/tuile, image identique | intact | **fait** (`7868373`, F5 Nico à faire) |
+| T3 | `03_plancher_fixe.md` | souris 1×/frame, survol paresseux, plein écran à la demande | intact | **fait** (non commité, F5 Nico à faire) |
 | T4 | `04_marge_paresseuse.md` | marge proportionnelle + hystérésis, semaine paresseuse | intact | à faire |
 | T5 | `05_paliers_bas.md` | ×0,5/×1/×2 + tapis par plot | intact | à faire |
 | T6 | `06_paliers_hauts.md` | ×4/×8/×16/×32 + cellules d'atlas par pose | intact | à faire |
@@ -82,6 +82,52 @@ vie macro diffèrent (phase d'animation).
 - Leçon (shaders Godot 4.6 GLES3, lue dans le binaire `strings`) : `MODEL_MATRIX` exclut la
   caméra (`CANVAS_MATRIX`), l'arrondi des transforms se fait en espace local du canvas.
 
+**Mesures T3** (`tools/perf_vm.sh`, `full` seed 42, 2026-10-16, charge < 3 attendue avant
+chaque run — un autre projet chargeait la VM par moments, runs sous charge écartés) :
+
+| Cas | frame VM avant → après | FPS avant → après |
+|---|---|---|
+| ×0,5 rien du monde | 32,5-32,6 ms → **29,4-31,2 ms** | 30,7-30,8 [2 runs] → 32,0-34,0 [3 runs] |
+| ×4 rien du monde | 32,0-33,0 ms → **29,1-29,9 ms** | 30,3-31,2 [2 runs] → 33,5-34,3 [3 runs] |
+| ×0,5 tout | 81-82 ms → 78,5-79,2 ms | 12,2-12,3 → 12,6-12,7 [2 runs chacun] |
+| ×4 tout | 66,7-66,8 ms → 64,5 ms | 15,0 → 15,5 [2 runs chacun] |
+
+Draw calls inchangés (36 / 1456 / 1520). **Gain ~2-3 ms/frame [VM, 2-3 runs]** : le
+plancher restant (~29 ms à 36 draw calls) n'est **plus du C#**. Profil `dotnet-trace`
+avant : 75 % des échantillons C# dans le SEUL `Viewport.GetMousePosition()` (aller-retour
+X11 `XQueryPointer` à chaque appel, ~8 appels/frame) ; après : la souris n'y figure plus,
+le 1er poste C# restant est `BakeQueue.PickInto` (cf. ci-dessous), puis `UpdateCameraPan`
+(4 `IsKeyPressed`) et la sonde F4 elle-même. Retirer 75 % des échantillons C# n'a rendu
+que ~2-3 ms → le C# par frame pèse quelques ms sur ~30 : il n'est plus dominant (critère
+d'arrêt du kickoff). Hypothèse (non mesurée) pour le reste : composition llvmpipe plein
+écran (upscale SubViewport 480×270 → 1920×1080 + HUD), coût GPU-logiciel propre à la VM.
+**Comportement inchangé** : captures avant/après (`-z 2 -c 300,1700 -s 960,560 -g 1` et
+`-z 4 … -s 900,500`) — losange + étiquette « Pepper · mature » au même endroit ; seuls
+diffèrent la respiration du losange (horloge murale) et la vie macro animée, qui
+diffèrent AUTANT entre deux runs « après » (bruit de run, vérifié).
+
+**Technique retenue T3** (pédagogie dans les en-têtes) :
+- `world/WorldView.Survol.cs` (neuf) : souris mémorisée depuis `_Input` (tous les
+  `InputEventMouse`, jamais consommés) → zéro `GetMousePosition` par frame ; lecture directe
+  seulement au démarrage et après `WarpMouse` (`ResemerSouris`, banc capture). **Clé de
+  survol** = px souris + transform caméra + orientation + `_survolVersion` + modes
+  (étiquettes, gènes, geste armé) ; `_survolVersion++` dans `Etalement.Avancer` (point de
+  passage UNIQUE de toute application de snapshot, étalée ou synchrone, rotation comprise).
+- Sites lazy (`if (!_survolSale) return;`) : étiquettes, observation plante + vie macro
+  (ancres = position snapshot), étiquette conteneur, surbrillance taille, losange
+  (position), gènes. La respiration du losange (`AlphaLosange`) et la fin du « tap »
+  restent par frame (animations voulues). `TickPiqure` lit la souris de la frame.
+  Clic et zoom centré gardent `WorldMouseCanvas()` direct ; conversion px → canvas
+  factorisée (`SourisVersCanvas`, une seule formule).
+- `visuals/WeatherLayer.cs` : ne `QueueRedraw` plus le voile AU REPOS (redessinait le
+  plein écran chaque frame dès `_nebCur > 0,01`) : seulement précipitations, voile qui
+  glisse, éclair (+ la frame qui l'efface). `SkyPanel` était déjà paresseux (battement du
+  composé = animation voulue).
+- **Reporté à T4** (marge paresseuse, même famille « hors champ ») : `BakeQueue.PickInto`
+  rebalaye chaque frame TOUT `_dirty` (2 passes × `IsVisibleInTree`) même quand aucune
+  plante sale n'est visible (cas normal : les sales hors marge) — à n'évaluer qu'au
+  changement de caméra/culling/masque. 1er poste C# restant, ~quelques % du temps C#.
+
 ## Règles communes à tous les tronçons
 - `dotnet build Symbiose.csproj` vert ; golden PASS ; **jamais** `test_epaisseur_500ans`.
 - Taille : `python3 tools/compte_ldc.py <fichiers>` ≤ 300 (🟡 ≤ 400 signalé).
@@ -110,8 +156,12 @@ vie macro diffèrent (phase d'animation).
   `Weather,Sky,Vignette`.
 
 ## §REPRISE
-T1 commité (`a5fa36b`). **T2 fait** (golden PASS `22768f33…`, build vert, 0 pixel
-différent), **non commité** (l'orchestrateur commit). Points F5 Nico ouverts : (T1) F4 +
-Maj+F4 à ×0,5 et ×4 sur `full` ; (T2) « le sol a-t-il changé ? » (attendu : non, y compris
-rotation et relief qui monte) + F4 ×0,5 (draw calls attendus ~1450 sur `full`). Prochaine
-étape : T3 `03_plancher_fixe.md` (plancher fixe ~36 ms à 36 draw calls = coût CPU).
+T1 (`a5fa36b`) et T2 (`7868373`) commités. **T3 fait** (golden PASS `22768f33…`, build
+vert, comportement de survol identique en capture), **non commité** (l'orchestrateur
+commit). Points F5 Nico ouverts : (T1) F4 + Maj+F4 à ×0,5 et ×4 sur `full` ; (T2) « le sol
+a-t-il changé ? » (attendu : non) + F4 ×0,5 (~1450 draw calls) ; (T3) survol, étiquettes
+(modes Survol/Toutes), losange (et sa respiration geste armé), surbrillance de taille,
+survol gènes G, étiquette de conteneur : **réactifs comme avant**, y compris en pannant
+aux flèches souris immobile, en tournant la vue, et sur une semaine qui passe sous une
+souris immobile ; voile météo (ciel couvert) toujours là au repos. Prochaine étape : T4
+`04_marge_paresseuse.md` (+ balayage `BakeQueue.PickInto` reporté, cf. Technique T3).

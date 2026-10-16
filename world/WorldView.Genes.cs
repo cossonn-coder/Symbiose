@@ -44,8 +44,8 @@ namespace Symbiose
 		// la souris (ou sans gènes, snapshot pré-③) → ligne d'invite discrète.
 		private void UpdateGenesHover()
 		{
-			if (!_genesHoverOn || _genesLabel == null) return;
-			var node = FindPlant(ScreenToWorld(WorldMouseCanvas()), HoverRadiusCm);
+			if (!_genesHoverOn || _genesLabel == null || !_survolSale) return;
+			var node = FindPlant(_sourisMonde, HoverRadiusCm);
 			if (node == null || !IsInstanceValid(node) || !node.HasMeta("genes"))
 			{
 				_genesLabel.Text = "[gènes] survole une plante";

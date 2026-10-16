@@ -33,14 +33,15 @@ namespace Symbiose
 		// place les étiquettes nettes sur les plantes concernées.
 		private void UpdatePlantLabels()
 		{
-			if (_plantLabels == null) return;
+			// Clé de survol inchangée (T3) : les Labels posés tiennent tels quels.
+			if (_plantLabels == null || !_survolSale) return;
 			int n = 0;
 			if (_labelMode != LabelMode.Aucune && _plantNodes.Count > 0)
 			{
 				if (_labelMode == LabelMode.Survol)
 				{
 					// Seule la plante la plus proche du curseur (défaut, demande Nico).
-					var best = FindPlant(ScreenToWorld(WorldMouseCanvas()), HoverRadiusCm);
+					var best = FindPlant(_sourisMonde, HoverRadiusCm);
 					if (best != null) n = PlaceLabel(n, best);
 				}
 				else   // Toutes

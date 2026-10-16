@@ -93,11 +93,12 @@ namespace Symbiose
 		// redraw ne part qu'au changement.
 		private void UpdateTailleHighlight()
 		{
+			if (!_survolSale) return;   // clé de survol inchangée (T3)
 			PlantRenderer node = null;
 			int seg = -1;
 			if (_gesteIndex >= 0 && Gestes[_gesteIndex].Verb == "tailler"
 				&& _plantNodes.Count > 0)
-				node = FindSegmentGlobal(WorldMouseCanvas(), out seg);
+				node = FindSegmentGlobal(_sourisCanvas, out seg);
 			if (_highlightNode != null && _highlightNode != node
 				&& IsInstanceValid(_highlightNode))
 				_highlightNode.HighlightSegment = -1;

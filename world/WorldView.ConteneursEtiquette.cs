@@ -31,9 +31,9 @@ namespace Symbiose
 		{
 			if (_plantLabels == null) return;
 			if (_containerLabel == null) BuildContainerLabel();
+			if (!_survolSale) return;   // clé de survol inchangée (T3)
 
-			int idx = FindNearestContainer(
-				ScreenToWorld(WorldMouseCanvas()), ContainerHoverRadiusCm);
+			int idx = FindNearestContainer(_sourisMonde, ContainerHoverRadiusCm);
 			if (idx < 0)
 			{
 				_containerLabel.Visible = false;

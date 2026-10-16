@@ -37,8 +37,8 @@ namespace Symbiose
 		// son espèce n'a jamais été observée, on la consigne au pont (survol = appris).
 		private void ObserveHoveredPlant()
 		{
-			if (_bridge == null || _plantNodes.Count == 0) return;
-			var node = FindPlant(ScreenToWorld(WorldMouseCanvas()), HoverRadiusCm);
+			if (_bridge == null || _plantNodes.Count == 0 || !_survolSale) return;
+			var node = FindPlant(_sourisMonde, HoverRadiusCm);
 			if (node == null || !IsInstanceValid(node)) return;
 			string species = node.GetMeta("species", "").AsString();
 			if (species.Length == 0 || !_especesObservees.Add(species)) return;
@@ -56,9 +56,10 @@ namespace Symbiose
 		// macro est masquée — on n'observe pas l'invisible).
 		private void ObserveHoveredMacroLife()
 		{
-			if (_bridge == null) return;
+			// Les ancres macro ne bougent qu'au snapshot → clé de survol (T3).
+			if (_bridge == null || !_survolSale) return;
 			if (CurrentZoom < MacroObserveMinZoom) return;
-			Vector2 w = ScreenToWorld(WorldMouseCanvas());
+			Vector2 w = _sourisMonde;
 
 			// Espèce animale sous le curseur : d'abord le nuage trophique, sinon un
 			// butineur (les deux exposent la MÊME clé d'espèce que le pont attend).

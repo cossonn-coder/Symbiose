@@ -152,6 +152,7 @@ namespace Symbiose
 			_windDxPx = DriftPerForce * lat * heavy;
 			// Voile : on glisse l'alpha courant vers la cible (≈1 s) → pas de saut
 			// brutal au changement de semaine (même esprit que les fondus plantes).
+			float nebAvant = _nebCur, flashAvant = _flash;
 			_nebCur = Mathf.MoveToward(_nebCur, _nebTarget, d * 1.2f);
 
 			if (_lightning)
@@ -167,8 +168,12 @@ namespace Symbiose
 			}
 			_flash = Mathf.Max(0f, _flash - d * 7f);
 
-			// On ne redessine que s'il y a quelque chose d'animé/visible.
-			if (_mode != Precip.None || _nebCur > 0.01f || _flash > 0.01f)
+			// On ne redessine que s'il y a quelque chose d'ANIMÉ (T3 rendu visible) :
+			// précipitations, voile qui glisse, éclair (+ la frame qui l'efface). Un
+			// voile au repos reste peint tel quel — Godot garde le dessin d'un
+			// CanvasItem tant qu'on ne le QueueRedraw pas (SetWeather redessine).
+			bool flash = _flash > 0.01f || flashAvant > 0.01f;
+			if (_mode != Precip.None || _nebCur != nebAvant || flash)
 				QueueRedraw();
 		}
 
