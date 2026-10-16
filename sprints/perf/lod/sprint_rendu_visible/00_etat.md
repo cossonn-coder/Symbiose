@@ -23,8 +23,8 @@
 | T3 | `03_plancher_fixe.md` | souris 1×/frame, survol paresseux, plein écran à la demande | intact | **fait** (`8d49ab9`, F5 Nico à faire) |
 | T4 | `04_marge_paresseuse.md` | marge proportionnelle + hystérésis, semaine paresseuse | intact | **fait** (`4b6e402`, F5 Nico à faire) |
 | T5 | `05_paliers_bas.md` | ×0,5/×1/×2 + tapis par plot | intact | **fait** (`7912b1a`, F5 Nico à faire) |
-| T6 | `06_paliers_hauts.md` | ×4/×8/×16/×32 + cellules d'atlas par pose | intact | **fait** (non commité, F5 Nico à faire) |
-| T7 | `07_banc_bilan.md` | planche des paliers F5 + bilan contre D1 | intact | à faire |
+| T6 | `06_paliers_hauts.md` | ×4/×8/×16/×32 + cellules d'atlas par pose | intact | **fait** (`25c5679`, F5 Nico à faire) |
+| T7 | `07_banc_bilan.md` | planche des paliers F5 + bilan contre D1 | intact | **fait** (F5 Nico à faire) |
 
 ## Mesures de référence (VM llvmpipe, 2026-10-16)
 ×0,5 : 5,2-5,5 FPS [3 runs] ; sans sol 11,7-12,0 [3 runs] ; ×4 : 12-13 FPS [4 runs] ;
@@ -280,6 +280,52 @@ SANS structure (1 segment, invisibles) — artefact de banc pré-existant (vu su
   `MaxSidePx` par pose, `MaxAtlasPx` sur la somme, repli dessin direct inchangés.
 - Taille : `PaliersHauts.cs` 207 LDC ; tous les fichiers touchés ≤ 300.
 
+**T7 — banc + bilan** (2026-10-16, golden PASS `22768f33…`, build vert)
+
+*Planche des paliers* : touche **L** (`world/WorldView.Planche.cs`, neuf, 94 LDC) — la
+caméra descend ×0,5 → ×32 sur la plante sous le curseur (sinon la plus proche du centre),
+3 s par palier, encart bas-gauche « palier ×N · information — espèce (k/7) » (tableau D4) ;
+re-L = arrêt, caméra et palier restaurés ; s'arrête seule après ×32 ou si la plante meurt.
+Banc VM : `tools/capture_vm.sh -l SEC` (`--capture-planche=`) → `planche_x0,5.png` …
+`planche_x32.png` (dernière image de chaque palier, repérée par la ligne `[Planche] fin`).
+Ex. vérifié : `capture_vm.sh -b full -c 648,1474 -w 24 -l 2 -f 5 -n 110` (~70 s, tournesol).
+
+*Bilan perf VM* (`perf_vm.sh`, `full` seed 42, warmup défaut, 8 relevés de 1 s ; charge 2-4
+au départ, llvmpipe la remonte lui-même — le script attend < 4) :
+
+| Cas | T1 réf. FPS / draw | T7 FPS VM [2 runs] | T7 draw calls | PC Nico (D1) |
+|---|---|---|---|---|
+| ×0,5 centre | 5,1-5,4 / 3825 | **11,2-13,2** | 1524 | ≥ 30 ? ___ |
+| ×4 centre (maison) | 13,0-13,2 / 1522 | 15,2-16,1 | 1565 | ≥ 60 ? ___ |
+| ×0,5 sur 600,1400 | — | 13,8-14,2 | 1523 | ≥ 30 ? ___ |
+| ×1 sur 600,1400 | — | 12,6-13,1 | 1670 | ≥ 30 ? ___ |
+| ×2 sur 600,1400 | — | 14,1-14,5 | 1792 | ≥ 30 ? ___ |
+| ×4 sur 600,1400 | — | 13,7-15,3 | 1677 | ≥ 60 ? ___ |
+| ×8 sur 600,1400 | — | 20,2-20,7 | 472 | ≥ 60 ? ___ |
+| ×16 sur 600,1400 | — | 19,7-20,3 | 426 | ≥ 60 ? ___ |
+| ×32 sur 600,1400 | — | 19,4-21,0 | 411 | ≥ 60 ? ___ |
+
+Pire frame ≤ 123 ms, 0 gel > 250 ms [18 runs, sans turbo]. → ×0,5 : FPS ×2,1-2,6 et draw
+calls −60 % [2 runs] vs T1. **D1 non vérifiable sur VM** (llvmpipe : plancher ~29 ms à
+36 draw calls, cf. T3) : verdict = F5 Nico (F4 à ×0,5 et ×4). Lecture : ×0,5-×4 restent
+à ~1500-1800 draw calls (sol + décor + ~150 plantes cuites + ombres) ; si le PC de Nico
+n'atteint pas 60 FPS à ×4, la piste suivante est le **regroupement des plantes cuites en
+atlas commun / lots** (≥ ×4, ~1100 draw calls de plus qu'à ×8 [2 runs]) — à ouvrir en
+dette, pas codée ici (kickoff : « pas de nouvelle optimisation »).
+
+*Verdict « arbres invisibles »* (`verger_floraison`) : **PAS une régression du sprint.**
+Capturé sur un worktree à `8d49ab9` (T3, avant T5/T6) vs HEAD, ×1 et ×4, `-c 250,250 -w 4` :
+mêmes pommiers réduits à un brin + une feuille sur les deux commits. Cause = le banc Python
+`vieillir()` avance l'âge sans faire pousser de segments (1 segment) — artefact de banc
+pré-existant (côté `data/code/bancs`, hors périmètre vue). Seul écart : à ×1 les points
+de fleurs/fruits de T3 ont disparu (voulu D4 : fleurs dès ×2). Worktree supprimé.
+
+*Non corrigé, consigné* : `AllelopathieLayer` ZIndex 0 → recouverte par le sol après
+rotation (même défaut que `CouvertureLayer`, corrigé en T5) ; vie macro non paresseuse
+(28 ms/semaine étalée, T4) ; cache au vent : cuire seulement les poses atteignables par
+le vent courant (levier mémoire réel, T6) ; `WorldView.Snapshot.cs` 302 LDC 🟡 (une seule
+responsabilité, pas de scission requise). Autres fichiers touchés ≤ 300.
+
 ## Règles communes à tous les tronçons
 - `dotnet build Symbiose.csproj` vert ; golden PASS ; **jamais** `test_epaisseur_500ans`.
 - Taille : `python3 tools/compte_ldc.py <fichiers>` ≤ 300 (🟡 ≤ 400 signalé).
@@ -308,16 +354,14 @@ SANS structure (1 segment, invisibles) — artefact de banc pré-existant (vu su
   `Weather,Sky,Vignette`.
 
 ## §REPRISE
-T1 (`a5fa36b`), T2 (`7868373`), T3 (`8d49ab9`), T4 (`4b6e402`), T5 (`7912b1a`) commités.
-**T6 fait** (golden PASS `22768f33…`, build vert), **non commité** (l'orchestrateur commit).
-Points F5 Nico ouverts : (T1) F4 + Maj+F4 à ×0,5 et ×4 sur `full` ; (T2) « le sol a-t-il
-changé ? » (attendu : non) ; (T3) survol, étiquettes, losange, surbrillance de taille, gènes G,
-étiquette conteneur ; voile météo au repos ; (T4) pan rapide ×8 sans plante en retard,
-couches au sol jusqu'au bord, clic F2 juste après un pan ; (T5) « au dézoom, je lis où ça
-pousse (×0,5), quel port (×1), qui va bien (×2) ? » ; semis = taches du tapis, pas de double
-voile ; cliquer dans un tapis sélectionne la plante la plus proche ; arbre caduc nu en hiver ;
-seuil `TapisSeuilPx` et formes de port ; rotation (R) garde le tapis ; **(T6) « zoomer = voir
-plus ? » à chaque cran ×4→×8→×16→×32 ; masses ×4 lisibles (taille, `MasseFeuilles` = 3) ;
-contraste/largeur des nervures (`NervureShift` 0,45, `NervureLargeurPx`) ; poils/étamines
-visibles à ×32 ; la grêle et les morsures ne se lisent plus qu'à ×16 (voulu D4) ; pas de
-saut de pose au vent.** Prochaine étape : T7 `07_banc_bilan.md`.
+**SPRINT CLOS côté code** : T1 (`a5fa36b`) → T6 (`25c5679`) commités, T7 fait (non commité,
+l'orchestrateur commit). Golden jamais re-figé (`22768f33…`). **Reste : F5 Nico** — une
+question : « en dézoom c'est fluide et lisible, en zoom c'est riche ; et F4 à ×0,5 et ×4
+donne combien ? » (remplir la colonne PC Nico du bilan T7 ; D1 = ≥ 30 FPS ×0,5-×2, ≥ 60 FPS
+≥ ×4). Banc : touche **L** sur une plante (planche ×0,5 → ×32). Points F5 détaillés par
+tronçon : (T1) F4 + Maj+F4 ; (T2) sol inchangé ; (T3) survol, étiquettes, losange,
+surbrillance de taille, gènes G, voile météo au repos ; (T4) pan rapide ×8, couches au sol
+jusqu'au bord, clic F2 après pan ; (T5) lisibilité ×0,5/×1/×2, tapis, clic dans un tapis,
+caduc nu en hiver, rotation R garde le tapis ; (T6) « zoomer = voir plus ? » ×4→×32,
+nervures, poils/étamines ×32, pas de saut de pose au vent ; (T7) planche L : caméra
+restaurée à re-L, encart lisible.

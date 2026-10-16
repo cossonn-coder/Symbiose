@@ -38,6 +38,8 @@
 //   --capture-pan=<x>,<y>    à la fin des semaines turbo, la caméra saute au point
 //                            visé (cm monde) : les plantes en attente y entrent dans
 //                            la marge (vérif « rien de périmé ») — D106 T4
+//   --capture-planche=<s>    planche des paliers ×0,5→×32 (touche L), s secondes de
+//                            jeu par palier, plante la plus proche du centre — D106 T7
 
 using Godot;
 using System.Globalization;
@@ -66,6 +68,9 @@ namespace Symbiose
 		// Semaines turbo puis saut caméra (D106 T4, banc de la semaine paresseuse).
 		private static readonly float CaptureTurbo = ParseFloat(ArgCapture("turbo"));
 		private static readonly string CapturePan = ArgCapture("pan");
+		// --capture-planche=<s> : planche des paliers (touche L), s secondes de jeu par
+		// palier, sur la plante la plus proche du point visé — D106 T7.
+		private static readonly float CapturePlanche = ParseFloat(ArgCapture("planche"));
 		private int _captureTurboRestant;
 
 		// Météo imposée par le banc (T4) : active jusqu'à l'échéance de sa durée.
@@ -172,6 +177,7 @@ namespace Symbiose
 			}
 			RedrawAllPlants();
 			CullPlants();
+			if (!float.IsNaN(CapturePlanche)) TogglePlanche(CapturePlanche, parSouris: false);   // D106 T7
 		}
 
 		// Appelé à chaque step consommé (_Process) : décompte des semaines turbo du

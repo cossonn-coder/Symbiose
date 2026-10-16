@@ -26,6 +26,9 @@
 #     -x  couches masquées N1,N2       (noms de nœuds, cf. perf_vm.sh) — D106 T2
 #     -T  n semaines en TURBO après le montage (semaine paresseuse) — D106 T4
 #     -p  saut caméra X,Y (cm monde) à la fin des semaines turbo — D106 T4
+#     -l  planche des paliers ×0,5→×32 (touche L), SEC s de jeu par palier, sur la
+#         plante la plus proche de -c ; copie la dernière image de chaque palier en
+#         DOSSIER/planche_xN.png (prévoir -n ≥ 7×SEC×FPS + amorçage) — D106 T7
 #     -n  nombre d'images              (défaut 3)
 #     -f  images/s simulées            (défaut 10 → 3 images = 0,3 s de jeu)
 #   Sortie : DOSSIER/frame00000000.png, frame00000001.png, … (1920×1080).
@@ -47,7 +50,7 @@
 set -euo pipefail
 
 . "$(dirname "${BASH_SOURCE[0]}")/lib_vm_godot.sh"   # DEPOT GODOT XROOT + vm_* (D106 T1)
-SORTIE=/tmp/capture_symbiose BANC=smoke ZOOM="" CENTRE="" SOURIS="" GESTE="" VENT="" METEO="" SEMAINES="" DEFILE="" GRAINE="" ORIENT="" CACHER="" TURBO="" PAN="" FRAMES=3 FPS=10 BUILD=1
+SORTIE=/tmp/capture_symbiose BANC=smoke ZOOM="" CENTRE="" SOURIS="" GESTE="" VENT="" METEO="" SEMAINES="" DEFILE="" GRAINE="" ORIENT="" CACHER="" TURBO="" PAN="" PLANCHE="" FRAMES=3 FPS=10 BUILD=1
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -69,7 +72,8 @@ while [ $# -gt 0 ]; do
     --no-build) BUILD=0; shift ;;
     -T) TURBO="$2"; shift 2 ;;
     -p) PAN="$2"; shift 2 ;;
-    -h|--help) sed -n '2,48p' "$0"; exit 0 ;;
+    -l) PLANCHE="$2"; shift 2 ;;
+    -h|--help) sed -n '2,49p' "$0"; exit 0 ;;
     *) echo "option inconnue : $1" >&2; exit 2 ;;
   esac
 done
@@ -98,11 +102,22 @@ ARGS=(--capture-banc="$BANC")
 [ -n "$CACHER" ] && ARGS+=(--capture-cacher="$CACHER")
 [ -n "$TURBO" ] && ARGS+=(--capture-turbo="$TURBO")
 [ -n "$PAN" ] && ARGS+=(--capture-pan="$PAN")
+[ -n "$PLANCHE" ] && ARGS+=(--capture-planche="$PLANCHE")
 DISPLAY="$ECRAN" LIBGL_ALWAYS_SOFTWARE=1 "$GODOT" --path "$DEPOT" \
   --rendering-driver opengl3 --resolution 1920x1080 \
   --write-movie "$SORTIE/frame.png" --fixed-fps "$FPS" --quit-after "$FRAMES" \
   -- "${ARGS[@]}" >"$SORTIE/godot.log" 2>&1 || true
 rm -f "$SORTIE/frame.wav"
+
+# Planche (D106 T7) : le jeu journalise « [Planche] fin ×N — frame F » ; F compte
+# les images dessinées, l'image Movie Maker n° F−1 est la dernière du palier.
+if [ -n "$PLANCHE" ]; then
+  grep -o '\[Planche\] fin ×[0-9.,]* — frame [0-9]*' "$SORTIE/godot.log" | while read -r _ _ Z _ _ F; do
+    SRC=$(printf '%s/frame%08d.png' "$SORTIE" $((F - 1)))
+    [ -f "$SRC" ] && cp "$SRC" "$SORTIE/planche_x${Z#×}.png"
+  done
+  ls "$SORTIE"/planche_x*.png 2>/dev/null || echo "planche : aucun palier complet (augmenter -n)" >&2
+fi
 
 N=$(ls "$SORTIE"/frame*.png 2>/dev/null | wc -l)
 echo "$N image(s) dans $SORTIE (journal : $SORTIE/godot.log)"
