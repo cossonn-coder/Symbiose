@@ -26,3 +26,8 @@
   avant tout dev pixel-art : assumer l'iso (tuiles diamant) ou se rapprocher du carré.
 - [ ] **Cache de sprite `PlantRenderer`** (perf) — « rendre une fois sur une
   surface/texture puis blitter » si le rendu procédural redessine trop souvent.
+- [ ] **États visuels du sol par paliers** (D108, à concevoir `/conception`) — le
+  sol devient lisible : paliers statiques par plot (craquelé, imbibé, herbacé, nu,
+  litière…) au franchissement de seuils avec hystérésis, variantes d'atlas dans le
+  maillage par tuile. Prérequis : T2 du sprint RENDU VISIBLE
+  (`sprints/perf/lod/sprint_rendu_visible/`).
