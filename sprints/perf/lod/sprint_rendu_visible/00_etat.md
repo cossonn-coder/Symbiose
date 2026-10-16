@@ -354,8 +354,8 @@ responsabilité, pas de scission requise). Autres fichiers touchés ≤ 300.
   `Weather,Sky,Vignette`.
 
 ## §REPRISE
-**SPRINT CLOS côté code** : T1 (`a5fa36b`) → T6 (`25c5679`) commités, T7 fait (non commité,
-l'orchestrateur commit). Golden jamais re-figé (`22768f33…`). **Reste : F5 Nico** — une
+**SPRINT CLOS côté code** : T1 (`a5fa36b`) → T6 (`25c5679`) commités, T7 (`5d9fd6e`) commité ;
+D106 fermée (archive lot F), reliquats → D109. Golden jamais re-figé (`22768f33…`). **Reste : F5 Nico** — une
 question : « en dézoom c'est fluide et lisible, en zoom c'est riche ; et F4 à ×0,5 et ×4
 donne combien ? » (remplir la colonne PC Nico du bilan T7 ; D1 = ≥ 30 FPS ×0,5-×2, ≥ 60 FPS
 ≥ ×4). Banc : touche **L** sur une plante (planche ×0,5 → ×32). Points F5 détaillés par

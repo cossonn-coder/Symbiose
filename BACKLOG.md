@@ -19,12 +19,17 @@
 
 ## Sprint en cours
 
-**JARDIN VIVANT (sprint A rendu)** — **CLOS le 2026-10-15** (T0→T5, golden intact) :
-banc de capture VM · palette 34 + Bayer + curseur · pré-cuisson par plante ·
-vent en onde · canicule/pluie · neige/givre/grêle + banc F5 (défilé **F12**). Reste
-**F5 Nico** (« le jardin est-il beau et vivant ? »). Doc :
+**RENDU VISIBLE (D106)** — **CLOS le 2026-10-16** (T1→T7, golden intact `22768f33…`) :
+sol en un maillage par tuile · survol paresseux · marge + semaine paresseuse hors
+champ · paliers ×0,5 → ×32 + tapis par plot · planche des paliers (touche **L**).
+Reste **F5 Nico** (critère D1 : 30 FPS ×0,5-×2, 60 FPS ≥ ×4 sur son PC). Bilan :
+`sprints/perf/lod/sprint_rendu_visible/00_etat.md`. Reliquats → D109.
+
+Précédent : **JARDIN VIVANT (sprint A rendu)** — CLOS le 2026-10-15 (T0→T5) ; reste
+F5 Nico (« le jardin est-il beau et vivant ? »). Doc :
 [`conception_jardin_vivant.md`](docs/rendu/pixelart/conception_jardin_vivant.md).
-**Prochain : sprint B** (faune D44, champignons, fumée de cheminée, eau) à concevoir (`/conception`).
+**Prochain : sprint B** (faune D44 + ses paliers de zoom, champignons, fumée de
+cheminée, eau) à concevoir (`/conception`) ; D108 états visuels du sol à concevoir.
 
 Dernier sprint clos : **PÉRIPHÉRIE — le jardin n'est pas une île** (D73,
 2026-07-26, `/sprint-auto` ①→⑦ + passe `/refactor`) — la périphérie cesse d'être
