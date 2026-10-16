@@ -436,6 +436,7 @@ namespace Symbiose
 			//     Early-out interne si le soleil a bougé de moins de 2°.
 			UpdateSun();
 			// 0d) Overlay de perfs (F4) — toutes phases.
+			MesurerPerfRendu();     // draw calls/temps de frame (PerfMesure.cs, coût nul)
 			if (_perfVisible) UpdatePerf();
 			// 0d·bis) Survol gènes debug (diversité fondatrice ③, touche G) : affiche
 			//     les gènes de rythme de la plante pointée. Early-out interne si OFF.

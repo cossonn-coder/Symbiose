@@ -28,6 +28,9 @@
 //   --capture-defile=1       lance le défilé « jardin vivant » (touche F12) — T5
 //   --capture-seed=<n>       seed du monde (défaut Seed = 42 ; ex. 12345 pour le
 //                            collapse du banc `effondrement`, cf. BANC_SEED) — T5
+//   --capture-cacher=<N1>,<N2>  couches masquées par NOM de nœud (Ground, Decor,
+//                            Objects…) — banc temps réel tools/perf_vm.sh, même
+//                            mécanique que Shift+F4 (WorldView.Couches.cs) — D106 T1
 
 using Godot;
 using System.Globalization;
@@ -49,6 +52,7 @@ namespace Symbiose
 		private static readonly float CaptureSemaines = ParseFloat(ArgCapture("semaines"));
 		private static readonly bool CaptureDefile = ArgCapture("defile") != null;
 		private static readonly float CaptureSeed = ParseFloat(ArgCapture("seed"));
+		private static readonly string CaptureCacher = ArgCapture("cacher");
 
 		// Météo imposée par le banc (T4) : active jusqu'à l'échéance de sa durée.
 		private bool _captureMeteoActive = CaptureMeteo != null;
@@ -140,6 +144,7 @@ namespace Symbiose
 											v.Length > 1 ? ParseFloat(v[1]) : float.NaN);
 			}
 			if (CaptureDefile) ToggleDefile();   // défilé jardin vivant (T5)
+			if (CaptureCacher != null) AppliquerMasqueCouches();   // D106 T1
 			RedrawAllPlants();
 			CullPlants();
 		}

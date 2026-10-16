@@ -184,7 +184,7 @@ namespace Symbiose
 			// le HUD en haut à gauche montre toujours le geste courant et sa cible.
 			legend.Text = "Espace lancer/pause · flèches déplacer"
 				+ " · molette zoom · PageUp/PageDown pivoter\n"
-				+ "F3 étiquettes · F4 perfs · C copier perfs · H maison transparente · F6 heatmap debug (Maj+F6 champ)"
+				+ "F3 étiquettes · F4 perfs (Maj+F4 couches) · C copier perfs · H maison transparente · F6 heatmap debug (Maj+F6 champ)"
 				+ " · F7 carte T sol · G survol gènes · I vie macro · O ombres · M mode simu · A jardinier automate (Maj+A objectif démo)\n"
 				+ "palette de gestes = colonne d'icônes à GAUCHE (clic) · Tab/1..9 accélérateurs · S graine (planter) · B substrat (poser pot/bac) · N nature (pailler) · clic gauche = agir"
 				+ " — geste courant affiché en haut à gauche";
@@ -343,7 +343,8 @@ namespace Symbiose
 				+ $"ombres {(ShadowsOn ? "ON" : "OFF")} · "
 				+ $"zoom ×{ZoomSteps[_zoomIndex]}\n"
 				+ $"serveur (banc perf) — tick moteur {srvTick} · "
-				+ $"N plantes {srvN} · RSS {srvRss}";
+				+ $"N plantes {srvN} · RSS {srvRss}\n"
+				+ LignePerfRendu();   // draw calls + temps de frame (WorldView.PerfMesure.cs)
 		}
 
 		// Refus métier → flash rouge de la 2e ligne (kickoff B·12 : pas de

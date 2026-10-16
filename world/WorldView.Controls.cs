@@ -85,7 +85,10 @@ namespace Symbiose
 					case Key.F1:       CycleHudText();    break;   // cycle texte HUD : Jeu → Nu → Aide (T4, item 6)
 					case Key.F2:       ToggleInspectMode(); break; // dossier de plante debug (T3)
 					case Key.F3:       ToggleLabels();    break;
-					case Key.F4:       TogglePerf();      break;
+					case Key.F4:
+						if (k.ShiftPressed) CycleCouches();   // bascule de couches (Couches.cs)
+						else TogglePerf();
+						break;
 					case Key.C:        CopyPerfReport();  break;  // presse-papier perf
 					case Key.H:        ToggleHouseGhost(); break;
 					case Key.O:        ToggleShadows();   break;

@@ -41,6 +41,7 @@ namespace Symbiose
 			sb.AppendLine($"[serveur] tick moteur {srvTick} · N plantes "
 				+ $"{(_srvNPlants < 0 ? "—" : _srvNPlants.ToString())} · "
 				+ $"RSS {(_srvRssMo < 0 ? "—" : $"{_srvRssMo:F0} Mo")}");
+			sb.AppendLine($"[{LignePerfRendu()}]");   // envois GPU (PerfMesure.cs)
 
 			// Rapport serveur enrichi (pires ticks + état courant).
 			var rep = _bridge?.PerfReport();

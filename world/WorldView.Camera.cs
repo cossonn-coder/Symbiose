@@ -191,6 +191,7 @@ namespace Symbiose
 			ApplySnapshot(_lastSnap, fade: false);
 			// La heatmap se re-projette au _Draw : un redraw suffit (t6·C).
 			_fieldOverlay?.QueueRedraw();
+			AppliquerMasqueCouches();   // Ground/Objects recréés → re-masquer (Couches.cs)
 		}
 	}
 }

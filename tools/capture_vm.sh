@@ -42,9 +42,7 @@
 #   Réinstallation : cf. sprints/rendu/pixelart/sprint_jardin_vivant/00_etat.md.
 set -euo pipefail
 
-DEPOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-GODOT="${GODOT:-$HOME/opt/godot/Godot_v4.6-stable_mono_linux_x86_64/Godot_v4.6-stable_mono_linux.x86_64}"
-XROOT="${XROOT:-$HOME/opt/xvfb/root}"
+. "$(dirname "${BASH_SOURCE[0]}")/lib_vm_godot.sh"   # DEPOT GODOT XROOT + vm_* (D106 T1)
 SORTIE=/tmp/capture_symbiose BANC=smoke ZOOM="" CENTRE="" SOURIS="" GESTE="" VENT="" METEO="" SEMAINES="" DEFILE="" GRAINE="" FRAMES=3 FPS=10 BUILD=1
 
 while [ $# -gt 0 ]; do
@@ -68,22 +66,13 @@ while [ $# -gt 0 ]; do
   esac
 done
 
-[ -x "$GODOT" ] || { echo "Godot absent : $GODOT" >&2; exit 1; }
-[ -x "$XROOT/usr/bin/Xvfb-patched" ] || { echo "Xvfb absent : $XROOT" >&2; exit 1; }
+vm_verifier
 
 # 1. Build C# (filet de compilation) — le Movie Maker lance les DLL compilées.
-if [ "$BUILD" = 1 ]; then
-  PATH="$HOME/.dotnet:$PATH" dotnet build "$DEPOT/Symbiose.csproj" -nologo -v q >/dev/null
-fi
+if [ "$BUILD" = 1 ]; then vm_build; fi
 
 # 2. Xvfb sur un écran virtuel libre (démarré ici, tué en sortie).
-export LD_LIBRARY_PATH="$XROOT/usr/lib/x86_64-linux-gnu${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
-mkdir -p /tmp/xk && ln -sf "$XROOT/usr/bin/xkbcomp" /tmp/xk/xkbcomp
-ECRAN=:${CAPTURE_DISPLAY:-97}
-"$XROOT/usr/bin/Xvfb-patched" "$ECRAN" -screen 0 1920x1080x24 -nolisten tcp >/tmp/xk/xvfb$ECRAN.log 2>&1 &
-XPID=$!
-trap 'kill $XPID 2>/dev/null || true' EXIT
-for _ in $(seq 50); do [ -e "/tmp/.X11-unix/X${ECRAN#:}" ] && break; read -rt 0.1 <> <(:) || true; done
+vm_xvfb ":${CAPTURE_DISPLAY:-97}"
 
 # 3. Godot en rendu logiciel + Movie Maker → PNG.
 rm -rf "$SORTIE"; mkdir -p "$SORTIE"
