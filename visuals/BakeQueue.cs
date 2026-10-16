@@ -79,6 +79,13 @@ namespace Symbiose
 			_eligibles.Remove(p);
 		}
 
+		/// <summary>La plante passe au tapis de son plot (D106 T5) : plus rien à cuire.</summary>
+		public static void Retirer(PlantRenderer p)
+		{
+			_dirty.Remove(p);
+			_eligibles.Remove(p);
+		}
+
 		public static void MarkDirty(PlantRenderer p)
 		{
 			_dirty.Add(p);

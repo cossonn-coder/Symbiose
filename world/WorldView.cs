@@ -328,7 +328,11 @@ namespace Symbiose
 			// au ras du sol), SOUS la litière (1), la macro (5) et les plantes (10) :
 			// le couvre-sol tapisse la terre, tout se dessine par-dessus. Enfant
 			// direct de WorldView (survit à RebuildWorld, il se re-projette seul).
-			_couvertureLayer = new CouvertureLayer { Name = "Couverture", ZIndex = 0 };
+			// D106 T5 : ZIndex 0 → 1. À ZIndex ÉGAL l'ordre des enfants départage, et
+			// RebuildWorld (rotation) RE-crée le sol en DERNIER enfant → il recouvrait
+			// le tapis après un quart de tour. Ajouté avant la litière (1 aussi), le
+			// tapis reste dessous.
+			_couvertureLayer = new CouvertureLayer { Name = "Couverture", ZIndex = 1 };
 			AddWorld(_couvertureLayer);
 
 			// Halo de SOL PELÉ de l'allélopathie (⑥) — ZIndex 0 comme la couverture
@@ -476,6 +480,9 @@ namespace Symbiose
 			AvancerEtalement();
 			// 1·ter) Plantes en attente entrées dans la marge (semaine paresseuse, T4).
 			AvancerAttente();
+			// 1·quater) Tapis des petites plantes, si une plante ou le palier a changé
+			//           (D106 T5, WorldView.Tapis.cs) — jamais par frame au repos.
+			MajTapisSiSale();
 
 			// 1b) Consommer une action terminée (volet B) : afficher l'ACK/NAK
 			//     métier et appliquer le snapshot frais joint (un déracinement

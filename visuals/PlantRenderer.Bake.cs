@@ -88,6 +88,17 @@ namespace Symbiose
 		{
 			_empriseSale = true;   // la boîte de dessin a pu changer (T4)
 			if (!Bakeable) { QueueRedraw(); return; }
+			// Tapis par plot (D106 T5, D5) : trop petite pour ce palier → ni image
+			// ni dessin propre ni ombre ; c'est le tapis de son plot qui la montre.
+			DeciderTapis();
+			if (_shadow != null) _shadow.Visible = !_enTapis;
+			if (_enTapis)
+			{
+				_baker?.Release();
+				BakeQueue.Retirer(this);
+				QueueRedraw();   // efface l'ancienne image / le dessin direct
+				return;
+			}
 			BakeQueue.MarkDirty(this);
 			if (!HasBakedImage) QueueRedraw();
 		}
@@ -102,6 +113,7 @@ namespace Symbiose
 										  _structure?.Segments.Count ?? 0);
 				return;
 			}
+			if (_enTapis) return;   // rendue par le tapis de son plot (T5)
 			if (!HasBakedImage) { DrawVector(); return; }
 			_baker.DrawImage(_pose);   // T3 : la pose de flexion courante (WindWave)
 			// Surbrillance de taille : interactive (survol souris) → dessinée EN
@@ -129,6 +141,11 @@ namespace Symbiose
 			brush._maladie = _maladie;
 			brush._vitalite = _vitalite;
 			brush._silhouette = _silhouette;
+			brush._strate = _strate;           // port (paliers bas, D106 T5)
+			brush._rayonReelCm = _rayonReelCm;
+			brush._hauteurReelCm = _hauteurReelCm;
+			brush._epaisseurMaxCm = _epaisseurMaxCm;
+			brush._swayPhase = _swayPhase;     // teinte d'automne stable par pied
 			brush._heat = _heat;           // variante météo (T4)
 			brush._wet = _wet;
 			brush._snow = _snow;           // variante froide (T5)
@@ -145,7 +162,7 @@ namespace Symbiose
 
 		/// <summary>Boîte englobante LOCALE (px canvas, origine = collet) de tout
 		/// ce que DrawVector peut tracer (à la flexion courante) : extrémités de segments (et leur pied au
-		/// sol, pour le squelette couché aplati), silhouette de couronne du LOD,
+		/// sol, pour le squelette couché aplati), couronne des paliers bas (T5),
 		/// élargie de BakePadPx pour les organes. Vide si rien à dessiner.</summary>
 		private Rect2 StraightBounds()
 		{
@@ -159,14 +176,8 @@ namespace Symbiose
 					 .Expand(Iso(tip.X - c.X, tip.Y - c.Y, tip.Z))
 					 .Expand(Iso(tip.X - c.X, tip.Y - c.Y, 0f));
 			}
-			if (WorldView.CurrentZoom >= SegmentDetailMinZoom) return r.Grow(BakePadPx);
-			// Silhouette de couronne (LOD ×0.5 seulement) : même géométrie que
-			// DrawCanopySilhouette, calotte éclairée comprise (≤ 1,05 rayon).
-			(float wf, float hf, float yf) = SilhouetteShape(_silhouette);
-			Vector2 ctr = Iso(0f, 0f, _structure.HeightCm * yf);
-			float rx = 1.1f * _structure.CanopyRadiusCm * WorldView.PxPerCmX * wf;
-			float ry = 1.1f * _structure.CanopyRadiusCm * WorldView.PxPerCmX * hf;
-			r = r.Expand(ctr - new Vector2(rx, ry)).Expand(ctr + new Vector2(rx, ry));
+			// Paliers bas (T5) : la couronne (tache / port) déborde des segments.
+			if (WorldView.CurrentZoom < PaliersHautsMinZoom) r = EtendrePalierBas(r);
 			return r.Grow(BakePadPx);
 		}
 	}

@@ -41,8 +41,9 @@ namespace Symbiose
 		// chaque plante se résume à sa silhouette de couronne (2 polygones). Le
 		// zoom réel vit dans WorldView.CurrentZoom (static) ; la pompe de redraw
 		// au franchissement de palier est dans WorldView.Camera.StepZoom.
-		// DÉSYNC ③ (doc §3, Q3) : abaissé 4→1 — segments rastérisés dès ×1. Seul le
-		// palier ×0.5 (« monde entier ») garde désormais la silhouette de couronne.
+		// DÉSYNC ③ (doc §3, Q3) : abaissé 4→1 — segments rastérisés dès ×1.
+		// D106 T5 : sous ×4 le dessin passe aux PALIERS BAS (PlantRenderer.Paliers.cs,
+		// PaliersHautsMinZoom) ; ce seuil ne pilote plus que la surbrillance de taille.
 		private const float SegmentDetailMinZoom = 1f;
 
 		// LOD organes intermédiaire (sprint PERF rendu plantes, tronçon ②) : entre
@@ -62,7 +63,6 @@ namespace Symbiose
 		// Couleurs (palette centrale Palette16, T1) : apex vert vif, bois brun.
 		private static readonly Color ApexColor = Palette16.BoisApex;
 		private static readonly Color WoodColor = Palette16.BoisMur;
-		private static readonly Color CrownColor = Palette16.Couronne; // silhouette LOD
 		// Bois MORT (squelette post-mortem, vue·rattrapage 02) : gris-brun éteint,
 		// aucune teinte d'apex — la mort se lit à la couleur dès le premier regard.
 		private static readonly Color DeadWoodColor = Palette16.BoisMort;
@@ -336,6 +336,7 @@ namespace Symbiose
 				}
 			}
 			_shadow?.SetExtent(_spreadCm, _heightCm);
+			MesurerPort();        // taille réelle → port et tapis (Paliers.cs, T5)
 			ComputeStiffness();   // raideur au vent suit la croissance (T3)
 			Invalidate(); // re-cuisson à venir (T2) — l'ancienne image reste d'ici là
 		}
@@ -430,27 +431,20 @@ namespace Symbiose
 			// le nœud enfant PlantShadow (ShowBehindParent) — le balayage du
 			// soleil ne redessine qu'elle, jamais ces segments-ci.
 
-			// Squelette post-mortem (vue·rattrapage 02) : bois nu, ni feuilles ni
-			// organes ni LOD — la mort se lit à la couleur et (couchée) à
-			// l'aplatissement. Court-circuite tout le rendu vivant.
-			if (!string.IsNullOrEmpty(_deadStade))
+			// Paliers BAS ×0,5-×2 (D106 T5, PlantRenderer.Paliers.cs) : chaque palier
+			// porte SON information (présence+saison / port / santé), squelette et
+			// caduc d'hiver compris. Le détail (segments + organes) commence à ×4.
+			if (WorldView.CurrentZoom < PaliersHautsMinZoom)
 			{
-				// LOD (tronçon ①) : sous le seuil, le squelette lui aussi se résume
-				// à une silhouette — mais en BOIS MORT (jamais teintée par un
-				// symptôme vivant : une plante morte n'a plus de symptôme).
-				if (WorldView.CurrentZoom < SegmentDetailMinZoom)
-					DrawCanopySilhouette(DeadWoodColor);
-				else
-					DrawSkeleton();
+				DrawPalierBas();
 				return;
 			}
 
-			// LOD (tronçon ①) : zoom faible → on ne rastérise pas chaque brindille,
-			// on dessine la silhouette de couronne dérivée de l'empreinte (§G).
-			if (WorldView.CurrentZoom < SegmentDetailMinZoom)
+			// Squelette post-mortem (vue·rattrapage 02) : bois nu, ni feuilles ni
+			// organes — la mort se lit à la couleur et (couchée) à l'aplatissement.
+			if (!string.IsNullOrEmpty(_deadStade))
 			{
-				DrawCanopySilhouette();
-				DrawSnowCrown();   // calotte de neige au LOD couronne (T5)
+				DrawSkeleton();
 				return;
 			}
 
@@ -556,82 +550,20 @@ namespace Symbiose
 			DrawLine(p1, p2, HighlightColor, w, antialiased: false);
 		}
 
-		// Silhouette grossière de couronne pour le LOD faible : une ellipse pleine
-		// centrée à mi-hauteur de la plante, dimensionnée par le rayon de couronne
-		// (empreinte §G). Volontairement simple — placeholder LOD, pas un rendu fin.
-		// Silhouette vivante : couleur de couronne, teintée par le symptôme colorant
-		// dominant (canal COULEUR). Le squelette appelle la surcharge avec le bois mort.
 		/// <summary>Le curseur (canvas) touche-t-il le corps visible de la plante ?
-		/// Test de l'ellipse de silhouette de couronne (même géométrie que
-		/// DrawCanopySilhouette) → forgiving, cohérent à tout zoom. Sert la priorité
-		/// de clic plante > maison (WorldView.PointeUnePlante).</summary>
+		/// Test de l'ellipse de couronne des paliers bas (Couronne, D106 T5 — même
+		/// géométrie que la tache / le port dessinés) → forgiving, cohérent à tout
+		/// zoom. Sert la priorité de clic plante > maison (WorldView.PointeUnePlante).
+		/// NB T5 : l'ancienne silhouette lisait CanopyRadiusCm, que le snapshot ne
+		/// porte pas (0) → ellipse vide, le test rendait toujours faux.</summary>
 		public bool ContientCurseur(Vector2 canvasPos)
 		{
 			if (_structure == null) return false;
 			Vector2 local = ToLocal(canvasPos);
-			(float wf, float hf, float yf) = SilhouetteShape(_silhouette);
-			Vector2 center = Iso(0f, 0f, _structure.HeightCm * yf);
-			float rx = _structure.CanopyRadiusCm * WorldView.PxPerCmX * wf;
-			float ry = _structure.CanopyRadiusCm * WorldView.PxPerCmX * hf;
+			var (center, rx, ry) = Couronne();   // PlantRenderer.Paliers.cs (T5)
 			if (rx <= 0f || ry <= 0f) return false;
 			Vector2 d = local - center;
 			return d.X * d.X / (rx * rx) + d.Y * d.Y / (ry * ry) <= 1f;  // dans l'ellipse
 		}
-
-		private void DrawCanopySilhouette() =>
-			DrawCanopySilhouette(Frosted(SymptomTint(CrownColor)));
-
-		private void DrawCanopySilhouette(Color baseC)
-		{
-			float cr = _structure.CanopyRadiusCm;
-			// Forme selon la silhouette d'espèce (luxuriance ⑥) : (largeur, hauteur,
-			// centre vertical) relatifs. Le couvre-sol (tapis) est LARGE, PLAT et RAS ;
-			// la dressée est ÉTROITE et HAUTE ; l'étalée large et basse ; le buisson
-			// rond ; la rosette un disque plaqué. Défaut « touffe » (comportement d'avant).
-			(float wf, float hf, float yf) = SilhouetteShape(_silhouette);
-			Vector2 center = Iso(0f, 0f, _structure.HeightCm * yf);
-			float rx = cr * WorldView.PxPerCmX * wf;   // largeur ~ rayon couronne projeté
-			float ry = cr * WorldView.PxPerCmX * hf;   // hauteur de la calotte
-
-			// SS② : masse de couronne en 2 valeurs — base ombrée + calotte
-			// éclairée décalée sud (même volume 16-bit que les organes). La couleur
-			// de base est reçue en paramètre : couronne vivante teintée par symptôme,
-			// ou bois mort pour un squelette (tronçon ① LOD).
-			Vector2 lit = center + SouthDir() * (ry * 0.45f);
-			const int n = 24;
-			var shadePts = new Vector2[n];
-			var litPts = new Vector2[n];
-			for (int i = 0; i < n; i++)
-			{
-				float a = Mathf.Tau * i / n;
-				Vector2 u = new Vector2(Mathf.Cos(a), Mathf.Sin(a));
-				shadePts[i] = center + new Vector2(rx * u.X, ry * u.Y);
-				litPts[i] = lit + new Vector2(rx * 0.6f * u.X, ry * 0.6f * u.Y);
-			}
-			DrawColoredPolygon(shadePts, HueShift(baseC, -OrganShade));
-			DrawColoredPolygon(litPts, HueShift(baseC, OrganLit));
-		}
-
-		// Forme de la silhouette de couronne selon le descripteur data d'espèce
-		// (luxuriance ⑥) → (facteur largeur, facteur hauteur de calotte, fraction de
-		// hauteur du centre). Purement visuel : de quoi DISTINGUER à l'œil un tapis ras
-		// d'un port dressé au LOD couronne, sans prétendre à un rendu fin (le zoom fort
-		// garde le détail segment inchangé). Descripteur inconnu/null → « touffe ».
-		private static (float w, float h, float y) SilhouetteShape(string silhouette) =>
-			silhouette switch
-			{
-				// tapis : couvre-sol RAS et LARGE, plaqué au sol (centre bas).
-				"tapis"   => (1.35f, 0.35f, 0.18f),
-				// rosette : disque plat plaqué au sol, un peu moins large que le tapis.
-				"rosette" => (1.15f, 0.30f, 0.15f),
-				// étalée : large mais un peu de volume (courge qui rampe).
-				"étalée"  => (1.45f, 0.55f, 0.30f),
-				// dressée : ÉTROITE et HAUTE (tige montante, centre haut).
-				"dressée" => (0.65f, 1.05f, 0.62f),
-				// buisson : rond et dense, centré à mi-hauteur.
-				"buisson" => (1.05f, 0.95f, 0.50f),
-				// touffe (défaut) : couronne légèrement aplatie, ~ comportement d'avant.
-				_         => (1.0f, 0.8f, 0.55f),
-			};
 	}
 }

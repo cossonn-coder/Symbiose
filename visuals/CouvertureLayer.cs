@@ -14,6 +14,14 @@
 // jitter est STABLE (hash, zéro Random — philo #3) : le tapis ne frétille pas. Le
 // tapis est inerte entre deux snapshots → on ne QueueRedraw qu'à l'arrivée d'un
 // snapshot et au basculement de LOD.
+//
+// D106 T5 — UN SEUL TAPIS (D5) : les plantes trop petites pour être lisibles au
+// palier courant (PlantRenderer.EnTapis) ne sont plus dessinées seules ; leur
+// agrégat par plot (WorldView.Tapis.cs) arrive par SetPetites et se FOND ici avec
+// `couverture_sol` : même patch, teinte de l'espèce dominante (saison comprise),
+// densité = couverture + aire des petites. Un plot qui porte des petites plantes
+// se voit à TOUT palier (une plante reste toujours visible, D4) ; un plot de
+// couverture seule garde son LOD d'avant (dès ×1).
 
 using Godot;
 using System.Collections.Generic;
@@ -48,9 +56,22 @@ namespace Symbiose
 			public float Cx, Cy;
 			public float Cov;
 			public uint Hash;
+			public (string, int, int) Cle;   // tuile|ligne|colonne (fusion des petites, T5)
 		}
 
 		private readonly List<Patch> _patches = new();
+
+		/// <summary>Agrégat des petites plantes d'un plot (WorldView.Tapis.cs) :
+		/// `Fraction` = aire cumulée / aire du plot, `Teinte` = espèce dominante.</summary>
+		public readonly record struct Petites(string Tile, int R, int C, float Fraction, Color Teinte);
+		private readonly Dictionary<(string, int, int), Petites> _petites = new();
+		private readonly HashSet<(string, int, int)> _dejaDessine = new();
+		private Dictionary<string, Vector2> _origins;
+		// Plot de petites plantes : opacité plancher (la présence se LIT même pour un
+		// seul semis) et semis de taches à ≤ ~2,6 px internes (pas plus gros que
+		// les plantes qu'il remplace, quel que soit le palier).
+		private const float AlphaPetitesMin = 0.55f;
+		private const float SpeckRadiusPx = 2.6f;
 		private bool _lastZoomOk;
 		private int _margeVersion = -1;   // cadre commun déjà dessiné (MargeVue, T4)
 
@@ -84,17 +105,30 @@ namespace Symbiose
 					var e = pv.AsGodotArray();
 					int r = e[0].AsInt32(), c = e[1].AsInt32();
 					float cov = Mathf.Clamp((float)e[2].AsDouble(), 0f, 1f);
-					_patches.Add(new Patch
-					{
-						// x = est (colonnes), y = sud (lignes) — convention
-						// WorldToScreen, jamais une 2ᵉ (leçon D2).
-						Cx = o.X + (c + 0.5f) * WorldView.PlotCm,
-						Cy = o.Y + (r + 0.5f) * WorldView.PlotCm,
-						Cov = cov,
-						Hash = HashKey(tileId + "|" + r + "|" + c),
-					});
+					_patches.Add(NewPatch(tileId, r, c, o, cov));
 				}
 			}
+			QueueRedraw();
+		}
+
+		// Un plot (r, c) de la tuile d'origine `o` → patch au centre du plot.
+		// x = est (colonnes), y = sud (lignes) — convention WorldToScreen (leçon D2).
+		private static Patch NewPatch(string tileId, int r, int c, Vector2 o, float cov) => new()
+		{
+			Cx = o.X + (c + 0.5f) * WorldView.PlotCm,
+			Cy = o.Y + (r + 0.5f) * WorldView.PlotCm,
+			Cov = cov,
+			Hash = HashKey(tileId + "|" + r + "|" + c),
+			Cle = (tileId, r, c),
+		};
+
+		/// <summary>Agrégat des petites plantes par plot (D106 T5), recalculé par
+		/// WorldView au snapshot et au changement de palier — jamais par frame.</summary>
+		public void SetPetites(List<Petites> petites, Dictionary<string, Vector2> origins)
+		{
+			_origins = origins;
+			_petites.Clear();
+			foreach (var p in petites) _petites[(p.Tile, p.R, p.C)] = p;
 			QueueRedraw();
 		}
 
@@ -113,29 +147,60 @@ namespace Symbiose
 
 		public override void _Draw()
 		{
-			if (_patches.Count == 0 || WorldView.CurrentZoom < MinZoom) return;
 			// Culling (T4) : cadre de marge COMMUN et stable (world/MargeVue.cs),
 			// + notre marge d'objet ; redessiné au ré-ancrage (pan/zoom), pas par frame.
 			Rect2 vis = MargeVue.CadreCouche(CullMarginPx);
+			bool zoomOk = WorldView.CurrentZoom >= MinZoom;
+			_dejaDessine.Clear();
+			// 1) Plots de couverture : fondus avec les petites plantes du même plot.
 			foreach (var p in _patches)
 			{
-				Vector2 center = WorldView.WorldToScreen(p.Cx, p.Cy);
-				if (!vis.HasPoint(center)) continue;   // hors cadre : rien
-				Color col = TapisColor;
-				col.A = AlphaFloor + AlphaSpan * p.Cov;
-				int specks = 1 + Mathf.RoundToInt((SpecksMax - 1) * p.Cov);
-				for (int i = 0; i < specks; i++)
-				{
-					// Jitter déterministe (même schéma que LitterLayer) : deux tirages
-					// du hash (déphasés par i) → angle + distance dans le plot. Projeté
-					// en OFFSET → le semis pivote avec la vue sans glisser (D35).
-					uint hi = p.Hash * 2654435761u + (uint)(i * 40503);
-					float ang = (hi & 0xffff) * (Mathf.Tau / 65536f);
-					float dist = SpreadCm * ((hi >> 16 & 0xff) / 255f);
-					Vector2 off = WorldView.WorldToScreenOffset(
-						dist * Mathf.Cos(ang), dist * Mathf.Sin(ang));
-					DrawCircle(center + off, 2.6f, col);
-				}
+				bool aPetites = TryPetites(p, out var pet);
+				if (!zoomOk && !aPetites) continue;   // couverture seule : LOD d'avant
+				DrawPatch(p, vis, aPetites, pet);
+			}
+			// 2) Plots de petites plantes SANS couverture moteur (semis isolé).
+			if (_origins == null) return;
+			foreach (var kv in _petites)
+			{
+				if (_dejaDessine.Contains(kv.Key)
+					|| !_origins.TryGetValue(kv.Value.Tile, out Vector2 o)) continue;
+				DrawPatch(NewPatch(kv.Value.Tile, kv.Value.R, kv.Value.C, o, 0f), vis, true, kv.Value);
+			}
+		}
+
+		// Le plot `p` porte-t-il des petites plantes ? (même clé tuile|ligne|colonne)
+		private bool TryPetites(Patch p, out Petites pet)
+		{
+			if (!_petites.TryGetValue(p.Cle, out pet)) return false;
+			_dejaDessine.Add(p.Cle);
+			return true;
+		}
+
+		// Un patch = un semis de taches au jitter stable. Densité = couverture +
+		// aire des petites plantes ; teinte = espèce dominante des petites, sinon
+		// le vert de couvre-sol.
+		private void DrawPatch(Patch p, Rect2 vis, bool aPetites, Petites pet)
+		{
+			Vector2 center = WorldView.WorldToScreen(p.Cx, p.Cy);
+			if (!vis.HasPoint(center)) return;   // hors cadre : rien
+			float dens = Mathf.Clamp(p.Cov + (aPetites ? pet.Fraction : 0f), 0f, 1f);
+			Color col = aPetites ? pet.Teinte : TapisColor;
+			col.A = AlphaFloor + AlphaSpan * dens;
+			if (aPetites) col.A = Mathf.Max(col.A, AlphaPetitesMin);
+			int specks = 1 + Mathf.RoundToInt((SpecksMax - 1) * dens) + (aPetites ? 1 : 0);
+			float rad = aPetites ? SpeckRadiusPx / Mathf.Max(1f, WorldView.CurrentZoom) : 2.6f;
+			for (int i = 0; i < specks; i++)
+			{
+				// Jitter déterministe (même schéma que LitterLayer) : deux tirages
+				// du hash (déphasés par i) → angle + distance dans le plot. Projeté
+				// en OFFSET → le semis pivote avec la vue sans glisser (D35).
+				uint hi = p.Hash * 2654435761u + (uint)(i * 40503);
+				float ang = (hi & 0xffff) * (Mathf.Tau / 65536f);
+				float dist = SpreadCm * ((hi >> 16 & 0xff) / 255f);
+				Vector2 off = WorldView.WorldToScreenOffset(
+					dist * Mathf.Cos(ang), dist * Mathf.Sin(ang));
+				DrawCircle(center + off, rad, col);
 			}
 		}
 	}

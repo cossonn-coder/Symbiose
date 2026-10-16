@@ -37,6 +37,7 @@ namespace Symbiose
 		{
 			foreach (var node in _plantNodes.Values)
 				if (IsInstanceValid(node)) node.Invalidate();   // T2 : file de cuisson, pas de pic
+			_tapisSale = true;   // le seuil du tapis dépend du palier (D106 T5)
 		}
 		// Phéromone d'alarme apienne (⑦ §J, snapshot 0.4.1) : par tuile, les plots
 		// en alarme → intensité. Liste CREUSE côté serveur (foyers > 0) ; ici un
@@ -283,11 +284,13 @@ namespace Symbiose
 			node.SetVitality(vitalite);      // fond global d'usure (santé ④, 0.5.28)
 			node.SetSupport(supportKind);    // vrille d'accroche (grimpantes ⑥)
 			node.SetSilhouette(silhouette);  // forme au LOD couronne (luxuriance ⑥)
+			node.SetStrate(strate);          // port arbre/grimpante (paliers bas, D106 T5)
 			node.SetEmitter(emitteur);       // teinte overlay LOD F9 (D67)
 			node.SetWindAnchor(wx, wy, abri);  // onde de vent (T3)
 			node.ZIndex = PlantZIndex(strate);  // empilement par strate (luxuriance ⑥)
 			node.SetMeta("tag", TagText(p));   // le stade évolue (étiquette nette)
 			node.Position = screenPos;         // suit le relief du sol (D57 ②)
+			_tapisSale = true;                 // agrégat du tapis à refaire (WorldView.Tapis.cs)
 		}
 
 		// Fin de la famille 1 — toutes les plantes du snapshot sont passées.
@@ -312,6 +315,7 @@ namespace Symbiose
 				var node = _plantNodes[key];
 				_plantNodes.Remove(key);   // hors index : le fondu finit seul
 				SortirAttente(node);
+				_tapisSale = true;         // elle quitte aussi le tapis de son plot (T5)
 				// Hors marge (T4) : retirée tout de suite, pas de fondu que personne ne voit.
 				if (e.Fade && node.Visible)
 				{

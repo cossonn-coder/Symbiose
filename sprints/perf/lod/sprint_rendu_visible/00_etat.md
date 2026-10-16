@@ -21,8 +21,8 @@
 | T1 | `01_instrument.md` | F4 draw calls + bascule couches + `tools/perf_vm.sh` | intact | **fait** (`a5fa36b`, F5 Nico à faire) |
 | T2 | `02_sol_un_lot.md` | sol = 1 maillage/tuile, image identique | intact | **fait** (`7868373`, F5 Nico à faire) |
 | T3 | `03_plancher_fixe.md` | souris 1×/frame, survol paresseux, plein écran à la demande | intact | **fait** (`8d49ab9`, F5 Nico à faire) |
-| T4 | `04_marge_paresseuse.md` | marge proportionnelle + hystérésis, semaine paresseuse | intact | **fait** (non commité, F5 Nico à faire) |
-| T5 | `05_paliers_bas.md` | ×0,5/×1/×2 + tapis par plot | intact | à faire |
+| T4 | `04_marge_paresseuse.md` | marge proportionnelle + hystérésis, semaine paresseuse | intact | **fait** (`4b6e402`, F5 Nico à faire) |
+| T5 | `05_paliers_bas.md` | ×0,5/×1/×2 + tapis par plot | intact | **fait** (non commité, F5 Nico à faire) |
 | T6 | `06_paliers_hauts.md` | ×4/×8/×16/×32 + cellules d'atlas par pose | intact | à faire |
 | T7 | `07_banc_bilan.md` | planche des paliers F5 + bilan contre D1 | intact | à faire |
 
@@ -179,6 +179,51 @@ rendue paresseuse** (cf. kickoff : « mesurer d'abord ») ; ces 28 ms sont déj�
   `gels=` (> 250 ms) ; le journal hebdo donne « dont N en attente » + ms de la famille
   plantes ; `[Etalement] vie macro X ms` (capture seulement).
 
+**Mesures T5** (`tools/perf_vm.sh -z 0.5 -w 30`, `full` seed 42, 2026-10-16, charge < 2 ;
+« avant » = T4 seul, mêmes options) :
+
+| Cas | FPS VM | draw calls | images cuites (cache) | cuisson initiale ×0,5 |
+|---|---|---|---|---|
+| ×0,5 avant | 12,6-13,9 [2 runs] | 1534 | 150 (2,6 Mo) | 150 plantes / 25 frames, 2,8-2,9 s [2 runs] |
+| ×0,5 après | 9,9-12,8 [2 runs, bruit VM] | **1580** | **132** (2,6 Mo) | 132 plantes / 22 frames, 2,7 s [2 runs] |
+
+→ coût d'affichage inchangé (+46 draw calls [×0,5, 2 runs] : les plantes AVANT étaient
+cuites… vides, cf. trou ci-dessous) ; 18 plantes [×0,5, w30, n=1 monde] passent au tapis
+au lieu d'être cuites. Pinceau ≤ 0,24 ms/plante. Cuisson d'un palier complet mesurée au
+démarrage à ×0,5 (pas de dézoom ×1→×0,5 scripté : la ligne `[Cuisson] file vidée` du
+F4/journal le donne au F5).
+**Trou trouvé** : le snapshot ne porte pas `CanopyRadiusCm` (0, `PlantStructure.FromSnapshot`)
+→ l'ancienne silhouette ×0,5 était une ellipse VIDE : **aucune plante n'était visible à
+×0,5** (capture avant/après), et `ContientCurseur` rendait toujours faux. Corrigé côté vue
+(rayon = étalement réel des segments), pont intouché.
+
+**Technique retenue T5** (pédagogie dans les en-têtes) :
+- `visuals/PlantRenderer.Paliers.cs` (neuf) : `DrawPalierBas` sous `PaliersHautsMinZoom`
+  (= 4, le détail segments+organes reste à ≥ ×4 pour T6). Cumulatif : ×0,5 tache
+  (teinte d'ESPÈCE `Palettes[].Leaf` → automne (teinte chaude au hash de position) → bois
+  ∝ 1−`foliage_density`) ; ×1 + port (`Couronne()` par port + fût/tige) ; ×2 + santé
+  (`SymptomTint` = vitalité + colorant dominant) + taches de fleurs (`floraison` ≥ seuil).
+  Caduc défeuillé / squelette = vrais segments en bois nu (≥ 1 px interne). Port =
+  grimpante (strate) · arbre (strate haute ET bois > `LeafMaxThickCm`) · sinon silhouette
+  moteur (tapis/rosette/étalée→couchée/dressée/buisson/touffe). Géométrie = SEGMENTS
+  (pas `height_cm`, qui peut valoir 4× le bois dessiné : la plante rétrécirait en zoomant).
+  Couronne lisse (10-48 sommets selon la taille).
+- **Tapis D5** : `TapisSeuilPx = 3` px INTERNES (max largeur/hauteur projetée × zoom).
+  Décidé à chaque `Invalidate` (croissance, pompe de palier) : plante au tapis → image
+  libérée, `BakeQueue.Retirer`, ombre masquée, `_Draw` vide. `world/WorldView.Tapis.cs`
+  (neuf) agrège par plot (espèce dominante par aire, teinte moyenne, fraction d'aire),
+  drapeau `_tapisSale` (MajPlante, retrait, pompe de palier), recalcul hors étalement.
+  `CouvertureLayer` = LE tapis : fusion par clé tuile|ligne|colonne avec `couverture_sol`
+  (jamais deux voiles) ; plot à petites plantes visible à tout palier (alpha ≥ 0,55,
+  taches ≤ 2,6 px internes), plot de couverture seule = LOD d'avant (≥ ×1).
+- Picking inchangé (FindPlant itère tous les nœuds, dessinés ou non) ; `ContientCurseur`
+  lit la même `Couronne()` que le dessin.
+- **Bug corrigé en passant** : `CouvertureLayer` ZIndex 0 → 1 — à ZIndex égal,
+  `RebuildWorld` (rotation) recrée le sol en dernier enfant et le dessinait PAR-DESSUS le
+  tapis. ⚠️ Même défaut non corrigé (hors périmètre) : `AllelopathieLayer` (ZIndex 0).
+- Orphelin : `Palette16.Couronne` n'est plus lu (laissé, palette centrale).
+- Taille : `WorldView.Snapshot.cs` 302 LDC 🟡 (+4, une responsabilité) ; autres ≤ 300.
+
 ## Règles communes à tous les tronçons
 - `dotnet build Symbiose.csproj` vert ; golden PASS ; **jamais** `test_epaisseur_500ans`.
 - Taille : `python3 tools/compte_ldc.py <fichiers>` ≤ 300 (🟡 ≤ 400 signalé).
@@ -207,13 +252,13 @@ rendue paresseuse** (cf. kickoff : « mesurer d'abord ») ; ces 28 ms sont déj�
   `Weather,Sky,Vignette`.
 
 ## §REPRISE
-T1 (`a5fa36b`), T2 (`7868373`), T3 (`8d49ab9`) commités. **T4 fait** (golden PASS
-`22768f33…`, build vert, pan = image identique au pixel), **non commité** (l'orchestrateur
-commit). Points F5 Nico ouverts : (T1) F4 + Maj+F4 à ×0,5 et ×4 sur `full` ; (T2) « le sol
-a-t-il changé ? » (attendu : non) + F4 ×0,5 (~1450 draw calls) ; (T3) survol, étiquettes,
-losange, surbrillance de taille, gènes G, étiquette conteneur réactifs comme avant ; voile
-météo au repos ; **(T4) à ×8 en Continu/Turbo, pan rapide d'un bord à l'autre : aucune
-plante ne « saute » ni n'apparaît en retard, pas d'à-coup hebdomadaire ; paillis / litière /
-flaques / couverture présents jusqu'au bord après un long pan (avant : trou possible) ;
-clic F2 sur une plante qui vient d'entrer à l'écran → dossier à jour ; tailler une branche
-juste après un pan.** Prochaine étape : T5 `05_paliers_bas.md`.
+T1 (`a5fa36b`), T2 (`7868373`), T3 (`8d49ab9`), T4 (`4b6e402`) commités. **T5 fait**
+(golden PASS `22768f33…`, build vert), **non commité** (l'orchestrateur commit). Points F5
+Nico ouverts : (T1) F4 + Maj+F4 à ×0,5 et ×4 sur `full` ; (T2) « le sol a-t-il changé ? »
+(attendu : non) ; (T3) survol, étiquettes, losange, surbrillance de taille, gènes G,
+étiquette conteneur ; voile météo au repos ; (T4) pan rapide ×8 sans plante en retard,
+couches au sol jusqu'au bord, clic F2 juste après un pan ; **(T5) « au dézoom, je lis où
+ça pousse (×0,5), quel port (×1), qui va bien (×2) ? » ; semis = taches du tapis, pas de
+double voile ; cliquer dans un tapis sélectionne la plante la plus proche ; arbre caduc nu
+en hiver ; seuil `TapisSeuilPx` (3 px) et formes de port à régler à l'œil ; rotation (R)
+garde le tapis visible.** Prochaine étape : T6 `06_paliers_hauts.md`.

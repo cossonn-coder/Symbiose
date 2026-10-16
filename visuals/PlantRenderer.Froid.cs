@@ -126,14 +126,11 @@ namespace Symbiose
 			DrawLine(p1 + up, p2 + up, SnowColor, sw, antialiased: false);
 		}
 
-		/// <summary>Calotte de neige sur la silhouette de couronne (LOD ×0,5).</summary>
-		private void DrawSnowCrown()
+		/// <summary>Calotte de neige sur la couronne des paliers bas (×0,5-×2, D106 T5) :
+		/// `center`/`rx`/`ry` = la couronne dessinée (PlantRenderer.Paliers.cs).</summary>
+		private void DrawSnowCrown(Vector2 center, float rx, float ry)
 		{
 			if (_snow <= 0f) return;
-			(float wf, float hf, float yf) = SilhouetteShape(_silhouette);
-			Vector2 center = Iso(0f, 0f, _structure.HeightCm * yf);
-			float rx = _structure.CanopyRadiusCm * WorldView.PxPerCmX * wf;
-			float ry = _structure.CanopyRadiusCm * WorldView.PxPerCmX * hf;
 			Vector2 cap = center - new Vector2(0f, ry * 0.5f);
 			DrawEllipse(cap, rx * (0.5f + 0.4f * _snow), ry * 0.45f, SnowShade);
 			DrawEllipse(cap - new Vector2(0f, ry * 0.08f), rx * (0.4f + 0.35f * _snow), ry * 0.32f, SnowColor);
