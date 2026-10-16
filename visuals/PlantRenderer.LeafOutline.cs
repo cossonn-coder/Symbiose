@@ -8,7 +8,7 @@
 // dentée / lobée, ou composée pennée à folioles).
 //
 // Trois paliers LOD (attente honnête) — le dispatch vit dans Leaf.cs :
-//  • zoom ≥ LeafOutlineMinZoom (16) : CE fichier — contour fidèle + volume + nervures.
+//  • zoom ≥ PalierSymptomesZoom (16) : CE fichier — contour fidèle + volume + nervures.
 //  • [LeafShapeMinZoom(4), 16[   : archétype d'ellipses de Leaf.cs (repli intermédiaire).
 //  • < 4                          : tache simple (existant).
 // Au dézoom la silhouette fine est de toute façon invisible (2-5 px) : on ne
@@ -44,11 +44,11 @@ namespace Symbiose
 {
 	public partial class PlantRenderer : Node2D
 	{
-		// Palier HAUT : au-dessus de ce zoom on dessine le contour fidèle. En
-		// dessous (jusqu'à LeafShapeMinZoom) l'archétype d'ellipses de Leaf.cs prend
-		// le relais. 16 = premier palier entier où une feuille fait assez de pixels
-		// pour qu'une marge dentée/lobée se lise (physique du pixel, §3bis.1).
-		private const float LeafOutlineMinZoom = 16f;
+		// Palier HAUT : à partir de ×16 (PalierSymptomesZoom, D106 T6 — ex-
+		// LeafOutlineMinZoom) on dessine le contour fidèle ; en dessous l'archétype
+		// d'ellipses de Leaf.cs prend le relais. 16 = premier palier entier où une
+		// feuille fait assez de pixels pour qu'une marge dentée/lobée se lise
+		// (physique du pixel, §3bis.1).
 
 		// --- Descripteur de contour par espèce -------------------------------
 		// Silhouette = base × marge × (lobes | folioles). Tout est compact ET
@@ -167,7 +167,13 @@ namespace Symbiose
 				: spec.Margin == LeafMargin.Lobee ? spec.Lobes : 0;
 			bool lighter = !LeafProfiles.TryGetValue(species, out var lp) || lp.VeinLighter;
 			var vprof = new LeafProfile(veinTopo, spec.Aspect, veinCount, lighter);
-			DrawLeafVeins(c, rx, ry, col, veinTopo, vprof, i, j);
+			// Géométrie des nervures CALÉE sur le contour (D106 T6 : devenues visibles,
+			// elles débordaient du limbe et filaient en travers). Chaque topologie lit
+			// (rx, ry) à sa façon : penninerve/palmée = (largeur, longueur), composée =
+			// (longueur, largeur) — cf. Draw*Veins, Leaf.cs.
+			var (vrx, vry) = veinTopo == LeafShape.Composee
+				? (halfLen * 0.95f, halfWid) : (halfWid * 0.85f, halfLen * 0.95f);
+			DrawLeafVeins(c, vrx, vry, col, veinTopo, vprof, i, j);
 			return true;
 		}
 

@@ -108,19 +108,13 @@ namespace Symbiose
 			dz *= 1f - BendDrop * _bendFlex * t;
 		}
 
-		/// <summary>Boîte englobante couvrant TOUTES les poses à cuire (la plus
-		/// couchée contient les intermédiaires : déplacement monotone).</summary>
-		private Rect2 BoundsAllPoses(int poses)
+		/// <summary>Boîte englobante LOCALE de la pose `pose` seule (cellule
+		/// serrée de l'atlas, D106 T6) : la flexion de la pose, puis la boîte.</summary>
+		internal Rect2 PoseBounds(int pose)
 		{
 			float keep = _bendFlex;
-			_bendFlex = 0f;
+			_bendFlex = pose / (float)(MaxPoses - 1);
 			Rect2 r = StraightBounds();
-			if (poses > 1)
-			{
-				_bendFlex = (poses - 1) / (float)(MaxPoses - 1);
-				Rect2 b = StraightBounds();
-				r = r.Size == Vector2.Zero ? b : r.Merge(b);
-			}
 			_bendFlex = keep;
 			return r;
 		}

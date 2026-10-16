@@ -22,8 +22,8 @@
 | T2 | `02_sol_un_lot.md` | sol = 1 maillage/tuile, image identique | intact | **fait** (`7868373`, F5 Nico à faire) |
 | T3 | `03_plancher_fixe.md` | souris 1×/frame, survol paresseux, plein écran à la demande | intact | **fait** (`8d49ab9`, F5 Nico à faire) |
 | T4 | `04_marge_paresseuse.md` | marge proportionnelle + hystérésis, semaine paresseuse | intact | **fait** (`4b6e402`, F5 Nico à faire) |
-| T5 | `05_paliers_bas.md` | ×0,5/×1/×2 + tapis par plot | intact | **fait** (non commité, F5 Nico à faire) |
-| T6 | `06_paliers_hauts.md` | ×4/×8/×16/×32 + cellules d'atlas par pose | intact | à faire |
+| T5 | `05_paliers_bas.md` | ×0,5/×1/×2 + tapis par plot | intact | **fait** (`7912b1a`, F5 Nico à faire) |
+| T6 | `06_paliers_hauts.md` | ×4/×8/×16/×32 + cellules d'atlas par pose | intact | **fait** (non commité, F5 Nico à faire) |
 | T7 | `07_banc_bilan.md` | planche des paliers F5 + bilan contre D1 | intact | à faire |
 
 ## Mesures de référence (VM llvmpipe, 2026-10-16)
@@ -224,6 +224,62 @@ F4/journal le donne au F5).
 - Orphelin : `Palette16.Couronne` n'est plus lu (laissé, palette centrale).
 - Taille : `WorldView.Snapshot.cs` 302 LDC 🟡 (+4, une responsabilité) ; autres ≤ 300.
 
+**Mesures T6** (`full` seed 42 sauf mention, 2026-10-16, charge < 3 ; « avant » = T5, même
+outillage, build HEAD via `git stash -u`) :
+
+| Cas | avant → après |
+|---|---|
+| cache au vent ×4 (`capture_vm -w 30 -v 0.9 -c 600,1400`, 43 plantes) | 37,3 → **33,4 Mo** [n=1 chacun] |
+| cache au vent ×8 (même cadrage, 13 plantes ; au calme 4,5 Mo) | 45,5 → **40,5 Mo** [n=1 chacun] |
+| pinceau ×4, calme (`-w 24 -c 648,1474`, 49 plantes) | 0,77 → **0,13 ms/plante** (max 2,74 → 0,21) [n=1] |
+| pinceau ×8 `vieux_pommier` (arbre 70 segments) | max 5,67 → **3,47 ms** [n=1] (0,05 ms/segment) |
+| pinceau ×16 / ×32, calme (tournesol 6 segments) | max 3,44 → 3,99 ms / 2,43 → 2,74 ms [n=1 chacun] |
+| FPS VM ×4 / ×16 (`perf_vm -c 600,1400 -w 30`) | 12,0 → 12,0 / 16,5 → 17,1 [n=1 chacun], draw calls identiques |
+
+→ **Prémisse du kickoff réfutée** (cellules serrées) : le gain mémoire au vent n'est que
+de ~11 % [×4 et ×8, n=1 chacun]. Ce n'est pas l'union des boîtes qui coûte, c'est le
+NOMBRE de poses (jusqu'à 8 cellules, la pose couchée étant aussi la plus large) : au vent
+le cache reste ~9× celui du calme [×8, n=1]. Levier réel (non fait, hors kickoff) : ne
+cuire que les poses que la force du vent courante peut atteindre. Le ×4 cuit ~6× plus
+vite [n=1] (masses au lieu de chaque feuille) ; ×16/×32 +15 % [n=1], pas d'explosion de
+file. Un grand arbre à ×16+ dépasse `MaxSidePx` → dessin direct, inchangé.
+**Images** (montages vus) : poivron ×4 masses où seront les feuilles → ×8 feuilles d'espèce
++ pétiole, morsures disparues → ×16 contour + nervures + morsures → ×32 nervilles ;
+basilic grêlé (`effondrement` seed 12345) : encoche + trou + nervures dès ×16 seulement ;
+tournesol : point jaune ×4 → capitule ×8 → nervures + morsures ×16 → poils + fleurons
+en spirale ×32. Vent ×8 (`-v 1.2`, 40 images) : le collet reste au même pixel d'une pose
+à l'autre (pas de saut). Bancs `verger_floraison`/`floraison_saisons` : arbres « vieillis »
+SANS structure (1 segment, invisibles) — artefact de banc pré-existant (vu sur HEAD).
+
+**Technique retenue T6** (pédagogie dans les en-têtes) :
+- `visuals/PlantRenderer.PaliersHauts.cs` (neuf) : seuils `PalierOrganesZoom` 8,
+  `PalierSymptomesZoom` 16, `PalierIntimeZoom` 32 + `AuPalier(z)`. ×4 `DrawMassesFeuillage` :
+  les feuilles RÉELLES (même hash de présence, même position que ×8) groupées par 3 voisines
+  → une ellipse volumée par paquet ; neige par masse. `DrawFleurs`/`DrawFruits` (déplacés
+  d'Organs) : point ×4, organe ×8, pruine ×32. `DrawDetailsFeuille` : ×16 `DrawLeafDamage`
+  (déplacé, + nécrose MARGINALE de `secheresse`), ×32 surface par espèce (table `Surfaces` :
+  poils / pruine / glandes — drosera). `DrawNervuresSecondaires`, `DrawEtamines` (Simple :
+  filets + anthères ; Capitule : fleurons en spirale d'or ; Clochette : style).
+- `Organs.cs` 319 → 273 LDC : `PlaceFeuille`/`NbFeuilles`/`PerpFeuilles` (géométrie de
+  feuille partagée masses ↔ feuilles, comportement identique). `Froid.cs` : encoches de
+  grêle + liseré de givre ≥ ×16 (teinte givrée et neige dès ×4). `Leaf.cs` : nervures ≥ ×16
+  pour une plante vivante (la litière garde son LOD, hors périmètre), nervilles ×32.
+- **Seuils supprimés car remplacés** : `OrganDetailMinZoom` (PlantRenderer.cs),
+  `FlowerShapeMinZoom` (Flower.cs), `LeafOutlineMinZoom` (→ `PalierSymptomesZoom`).
+  `LeafShapeMinZoom` garde le repli de la litière.
+- **Défauts d'unité corrigés** (révélés par les paliers) : nervures et pétiole tracés en
+  1-2 px CANVAS = 16-32 px INTERNES à ×16 (aussi larges que la tige ; de même couleur après
+  la quantification SNES, ils faisaient des « taches » sur le limbe) → `NervureLargeurPx`
+  0,125 px canvas (2 px internes à ×16) + `NervureShift` 0,45 (≠ 0,22, fondu par la palette
+  34 couleurs). Nervures du contour fidèle recalées sur ses demi-axes (elles filaient en
+  travers du limbe et en débordaient).
+- `PlantBaker.cs` : `Cell` = `Rect2I[] Cells` + `Vector2I[] Origins` par pose, atlas en
+  rangée de largeurs variables (hauteur = max) ; chaque pinceau porte son ancrage
+  (`Position`), `CanvasTransform` = échelle seule ; `DrawImage` pose la cellule depuis SON
+  ancrage. `Wind.cs` : `PoseBounds(k)` remplace `BoundsAllPoses` (+ `LocalBounds` retiré).
+  `MaxSidePx` par pose, `MaxAtlasPx` sur la somme, repli dessin direct inchangés.
+- Taille : `PaliersHauts.cs` 207 LDC ; tous les fichiers touchés ≤ 300.
+
 ## Règles communes à tous les tronçons
 - `dotnet build Symbiose.csproj` vert ; golden PASS ; **jamais** `test_epaisseur_500ans`.
 - Taille : `python3 tools/compte_ldc.py <fichiers>` ≤ 300 (🟡 ≤ 400 signalé).
@@ -252,13 +308,16 @@ F4/journal le donne au F5).
   `Weather,Sky,Vignette`.
 
 ## §REPRISE
-T1 (`a5fa36b`), T2 (`7868373`), T3 (`8d49ab9`), T4 (`4b6e402`) commités. **T5 fait**
-(golden PASS `22768f33…`, build vert), **non commité** (l'orchestrateur commit). Points F5
-Nico ouverts : (T1) F4 + Maj+F4 à ×0,5 et ×4 sur `full` ; (T2) « le sol a-t-il changé ? »
-(attendu : non) ; (T3) survol, étiquettes, losange, surbrillance de taille, gènes G,
+T1 (`a5fa36b`), T2 (`7868373`), T3 (`8d49ab9`), T4 (`4b6e402`), T5 (`7912b1a`) commités.
+**T6 fait** (golden PASS `22768f33…`, build vert), **non commité** (l'orchestrateur commit).
+Points F5 Nico ouverts : (T1) F4 + Maj+F4 à ×0,5 et ×4 sur `full` ; (T2) « le sol a-t-il
+changé ? » (attendu : non) ; (T3) survol, étiquettes, losange, surbrillance de taille, gènes G,
 étiquette conteneur ; voile météo au repos ; (T4) pan rapide ×8 sans plante en retard,
-couches au sol jusqu'au bord, clic F2 juste après un pan ; **(T5) « au dézoom, je lis où
-ça pousse (×0,5), quel port (×1), qui va bien (×2) ? » ; semis = taches du tapis, pas de
-double voile ; cliquer dans un tapis sélectionne la plante la plus proche ; arbre caduc nu
-en hiver ; seuil `TapisSeuilPx` (3 px) et formes de port à régler à l'œil ; rotation (R)
-garde le tapis visible.** Prochaine étape : T6 `06_paliers_hauts.md`.
+couches au sol jusqu'au bord, clic F2 juste après un pan ; (T5) « au dézoom, je lis où ça
+pousse (×0,5), quel port (×1), qui va bien (×2) ? » ; semis = taches du tapis, pas de double
+voile ; cliquer dans un tapis sélectionne la plante la plus proche ; arbre caduc nu en hiver ;
+seuil `TapisSeuilPx` et formes de port ; rotation (R) garde le tapis ; **(T6) « zoomer = voir
+plus ? » à chaque cran ×4→×8→×16→×32 ; masses ×4 lisibles (taille, `MasseFeuilles` = 3) ;
+contraste/largeur des nervures (`NervureShift` 0,45, `NervureLargeurPx`) ; poils/étamines
+visibles à ×32 ; la grêle et les morsures ne se lisent plus qu'à ×16 (voulu D4) ; pas de
+saut de pose au vent.** Prochaine étape : T7 `07_banc_bilan.md`.

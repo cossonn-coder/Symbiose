@@ -9,8 +9,8 @@
 //        rosette, tapis, couchée, grimpante) à sa hauteur RELATIVE juste.
 //   ×2   + SANTÉ : teinte de vigueur (vitalité + symptôme colorant dominant :
 //        franc / pâle-chlorose / fané / sénescent) ; floraison en taches.
-// À partir de ×4 (PaliersHautsMinZoom) on garde le dessin détaillé existant
-// (segments + organes) — les paliers hauts sont le tronçon T6.
+// À partir de ×4 (PaliersHautsMinZoom) : les PALIERS HAUTS ×4/×8/×16/×32
+// (segments + organes par palier, PlantRenderer.PaliersHauts.cs, T6).
 //
 // Et le TAPIS PAR PLOT (D5) : une plante trop petite pour être lisible au palier
 // courant (emprise projetée < TapisSeuilPx px INTERNES) n'est ni cuite ni

@@ -46,19 +46,10 @@ namespace Symbiose
 		// PaliersHautsMinZoom) ; ce seuil ne pilote plus que la surbrillance de taille.
 		private const float SegmentDetailMinZoom = 1f;
 
-		// LOD organes intermédiaire (sprint PERF rendu plantes, tronçon ②) : entre
-		// ×4 et ×8 on dessine la STRUCTURE de bois mais on SAUTE le feuillage. Les
-		// organes (feuilles par segment × lobes/folioles + nervures, fleurs, fruits)
-		// dominent le décompte de primitives rejouées/frame, or à cette distance leur
-		// détail est illisible — gain visuel nul, coût GPU maximal. À partir de ×8 le
-		// feuillage revient. La pompe RedrawAllPlants (tronçon ①, appelée à chaque
-		// StepZoom) couvre déjà le franchissement de ce seuil : rien à ajouter côté
-		// redraw.
-		// DÉSYNC ③ (doc §3, Q3) : abaissé 8→1 — feuilles/fleurs/fruits visibles dès ×1
-		// (le détail complet apparaît au même palier que les segments). Culling
-		// (WorldView.Camera.CullPlants) reste le filet perf. À VÉRIFIER F5 (lisibilité +
-		// FPS à ×1 sur scène chargée) : escape hatch = remonter ce seuil d'un cran.
-		private const float OrganDetailMinZoom = 1f;
+		// (L'ancien seuil OrganDetailMinZoom a disparu au D106 T6 : sous ×4 on
+		// dessine les paliers bas, et dès ×4 les organes suivent l'échelle des
+		// paliers hauts — masses ×4, organes ×8, symptômes ×16, intime ×32 —
+		// cf. PlantRenderer.PaliersHauts.cs.)
 
 		// Couleurs (palette centrale Palette16, T1) : apex vert vif, bois brun.
 		private static readonly Color ApexColor = Palette16.BoisApex;
@@ -233,7 +224,7 @@ namespace Symbiose
 						// maladie (cryptogames) : EN PLUS de la teinte brune (canal
 						// COULEUR, ColorantTints), un semis de petites taches ponctuées
 						// sur le limbe → distingue le ponctué de l'asphyxie uniforme
-						// (cf. DrawLeafDamage, PlantRenderer.Organs.cs).
+						// (cf. DrawLeafDamage, PlantRenderer.PaliersHauts.cs).
 						case "maladie":   _maladie = it; break;
 					}
 				}
@@ -488,10 +479,8 @@ namespace Symbiose
 			// bois (ordre du prototype). Redessinés UNIQUEMENT avec la plante
 			// (SetStructure à chaque snapshot) — jamais par frame ni au balayage
 			// du soleil (leçon perf C2 : l'ombre seule vit dans un nœud séparé).
-			// LOD organes (tronçon ②) : sous ×8, on garde le bois mais on saute le
-			// feuillage (le gros du décompte de primitives, illisible à distance).
-			if (WorldView.CurrentZoom >= OrganDetailMinZoom)
-				DrawOrgans(collet);
+			// Paliers hauts (D106 T6) : masses ×4, organes ×8, symptômes ×16, intime ×32.
+			DrawOrgans(collet);
 
 			// Surbrillance (tranche 5) : le segment sous la souris en mode
 			// tailler se redessine PAR-DESSUS, après tout le bois.

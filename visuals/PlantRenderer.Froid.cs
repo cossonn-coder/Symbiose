@@ -83,8 +83,11 @@ namespace Symbiose
 		private void DrawColdLeaf(Vector2 c, float r, int i, int j, float z)
 		{
 			float rx = r * 1.15f, ry = r * 0.65f * LeafOpen;
+			// Encoches de grêle et liseré de givre = SYMPTÔMES FINS (×16, D106 T6) ;
+			// la teinte givrée (Frosted) et la neige se lisent dès ×4.
+			bool fin = AuPalier(PalierSymptomesZoom);
 			// Grêle : 1 à 3 encoches triangulaires mordant le bord du limbe.
-			if (_grele > 0f)
+			if (fin && _grele > 0f)
 			{
 				int notches = Mathf.CeilToInt(_grele * 3f);
 				for (int k = 0; k < notches; k++)
@@ -102,7 +105,7 @@ namespace Symbiose
 				}
 			}
 			// Givre : liseré clair sur une part des feuilles (les mêmes, au hash).
-			if (_frost > 0f && Hash01(59, i, j) < 0.4f + 0.6f * _frost)
+			if (fin && _frost > 0f && Hash01(59, i, j) < 0.4f + 0.6f * _frost)
 				DrawEllipseOutline(c, rx, ry, FrostEdge, Px(r * 0.08f));
 			// Neige : calotte sur le dessus, plus probable en haut de la plante.
 			float top = Mathf.Clamp(z / Mathf.Max(_heightCm, 1f), 0f, 1f);

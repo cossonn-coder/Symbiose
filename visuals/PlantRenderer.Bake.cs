@@ -156,10 +156,6 @@ namespace Symbiose
 			brush.QueueRedraw();
 		}
 
-		/// <summary>Boîte englobante LOCALE de l'atlas : union des `poses` premières
-		/// flexions (T3). Une seule pose = la plante droite, comme en T2.</summary>
-		internal Rect2 LocalBounds(int poses) => BoundsAllPoses(poses);
-
 		/// <summary>Boîte englobante LOCALE (px canvas, origine = collet) de tout
 		/// ce que DrawVector peut tracer (à la flexion courante) : extrémités de segments (et leur pied au
 		/// sol, pour le squelette couché aplati), couronne des paliers bas (T5),

@@ -253,7 +253,10 @@ namespace Symbiose
 				// point de devenir illisible côté nord. Sain (`_colorAmount=0`) → 1
 				// (SS² plein). Remis à 1 après la boucle (branches/fruits/fleurs intacts).
 				_coolShiftScale = Mathf.Lerp(1f, ColorCoolShiftFloor, _colorAmount);
-				for (int i = 0; i < _structure.Segments.Count; i++)
+				// Palier ×4 (D106 T6) : des MASSES de feuillage, pas chaque feuille.
+				if (!AuPalier(PalierOrganesZoom))
+					DrawMassesFeuillage(collet, pal, automne, density);
+				else for (int i = 0; i < _structure.Segments.Count; i++)
 				{
 					var s = _structure.Segments[i];
 					if (!IsLeafy(s)) continue;
@@ -262,30 +265,13 @@ namespace Symbiose
 					// (age ≥ maturité) → 1 = feuilles pleines d'emblée (pas de pop-in au
 					// chargement, §4.3) ; seul un segment JEUNE montre la croissance.
 					float leafGrowth = LeafGrowthFactor(s);
-					int n = Mathf.Max(1, (int)(s.LengthCm / LeafSpacingCm));
-					// Perpendiculaire HORIZONTALE à l'axe du rameau (plan sol) —
-					// le déport latéral des feuilles, comme le prototype.
-					float hmag = new Vector2(s.Dir.X, s.Dir.Y).Length();
-					Vector2 perp = hmag > 1e-6f
-						? new Vector2(-s.Dir.Y / hmag, s.Dir.X / hmag)
-						: new Vector2(1f, 0f);
+					int n = NbFeuilles(s);
+					Vector2 perp = PerpFeuilles(s);
 					for (int j = 0; j < n; j++)
 					{
 						if (Hash01(17, i, j) >= density) continue;
-						float t = (j + 0.5f) / n;
-						Vector3 p = s.Base + s.Dir * (s.LengthCm * t);
-						float h1 = Hash01(7, i, j);
-						float h2 = Hash01(11, i, j);
-						float side = h1 < 0.5f ? 1f : -1f;
-						float off = LeafOffsetCm * (0.5f + h2);
-						float lx = p.X + perp.X * off * side;
-						float ly = p.Y + perp.Y * off * side;
-						float lz = p.Z + (h2 - 0.5f) * LeafOffsetCm;
-						// Sécheresse (canal FORME) : turgescence perdue → la feuille
-						// s'affaisse ∝ intensité (conception §3/§4) ; + canicule et
-						// poids de la pluie (variante météo T4, PlantRenderer.Meteo.cs).
-						lz -= LeafDropCm(p.Z);
-						Vector2 c = Iso(lx - collet.X, ly - collet.Y, lz);
+						Vector2 c = PlaceFeuille(s, i, j, n, perp, collet, leafGrowth,
+												 out Vector3 p, out Vector2 insert);
 						Color col = Frosted(SymptomTint(LeafColor(pal, automne, Hash01(13, i, j))));
 						col.A = 0.92f;
 						// ⑤ Le rayon du limbe est MULTIPLIÉ par leafGrowth : sous le
@@ -294,16 +280,8 @@ namespace Symbiose
 						// La feuille se construit visuellement, gratuitement (DrawLeafShape).
 						float r = LeafSizeCm * WorldView.PxPerCmX * leafGrowth;
 						// ④ PÉTIOLE (doc §5.3) — court trait vert reliant le point
-						// d'insertion sur l'axe (p) au limbe (c). Tracé AVANT le limbe :
-						// le limbe se pose dessus, le pétiole n'affleure qu'à sa base
-						// (l'émergence se lit, la feuille n'est pas « posée dans le vide »).
-						// ⑤ Le limbe s'éloigne du rameau AVEC sa croissance : on déplace
-						// son centre `c` depuis le point d'insertion vers sa position pleine
-						// par leafGrowth (à l'émergence le limbe colle au rameau, il s'écarte
-						// en grandissant). Le pétiole, tracé jusqu'à ce centre, s'allonge donc
-						// de pair (cohérence pétiole↔limbe, doc §4.2).
-						Vector2 insert = Iso(p.X - collet.X, p.Y - collet.Y, p.Z);
-						c = insert.Lerp(c, leafGrowth);
+						// d'insertion sur l'axe au limbe. Tracé AVANT le limbe : le limbe
+						// se pose dessus, le pétiole n'affleure qu'à sa base.
 						DrawPetiole(insert, c, s);
 						// ② FORME PAR ESPÈCE : la silhouette (ellipse/lancéolée/cordée/
 						// lobée/composée/aiguille) est choisie par espèce dans le
@@ -311,9 +289,9 @@ namespace Symbiose
 						// sous-élément reste un volume 2 valeurs (E4) ; plancher de rayon
 						// et repli LOD gérés dans DrawLeafShape.
 						DrawLeafShape(c, r * 1.15f, r * 0.65f * LeafOpen, col, i, j);
-						// Canaux TEXTURE additifs (sémiologie ③) : criblage ravageurs/
-						// grêle + bords gelés, par-dessus la feuille, stables au hash.
-						DrawLeafDamage(c, r, i, j);
+						// Canaux TEXTURE additifs (sémiologie ③) : criblage, bords gelés
+						// ou secs, taches — dès ×16 ; poils/pruine dès ×32 (PaliersHauts).
+						DrawDetailsFeuille(c, r, i, j);
 						DrawWetGlint(c, r, i, j);   // reflet humide (pluie, T4)
 						DrawColdLeaf(c, r, i, j, p.Z);   // grêle/givre/neige (T5)
 					}
@@ -325,53 +303,46 @@ namespace Symbiose
 			// … et le froid PLEIN pour fruits/fleurs/silhouette (repli T3 limbe-only).
 			_coolShiftScale = 1f;
 
-			// --- FLEURS — VRAI état moteur (désync ③) : le scalaire `floraison`
-			// par-plante (② `_structure.Floraison`) REMPLACE le proxy season-gated
-			// `Organ == "flower"` (qui faisait fleurir tout le jardin d'un coup au
-			// passage de saison). Au-delà de FloraisonSeuil la plante est fleurie, à
-			// SA semaine propre dispersée par son gène tempo → floraisons étalées.
-			// REPLI : un snapshot pré-② n'a pas la clé (`Floraison` = 0) → aucune fleur ;
-			// le proxy `Organ` n'est plus consulté (② est le prérequis, un seul chemin).
-			// La SILHOUETTE reste par FAMILLE (DrawFlowerShape, PlantRenderer.Flower.cs).
-			if (_structure.Floraison >= FloraisonSeuil)
-			{
-				var sites = OrganSites();
-				for (int k = 0; k < sites.Count; k++)
-				{
-					Vector3 site = sites[k];
-					DrawFlowerShape(Iso(site.X - collet.X, site.Y - collet.Y, site.Z),
-									pal, 71, k);
-				}
-			}
-
-			// --- FRUITS — VRAI état moteur (plant.fruits, ③), plus le proxy : la
-			// maturité (vert→mûr→brun) et la déplétion par `manger` deviennent
-			// OBSERVABLES. Une espèce sans fruit moteur (herbacées) n'en montre
-			// donc plus — c'est l'état réel, pas une décoration saisonnière.
+			// --- FLEURS puis FRUITS — VRAI état moteur (`floraison`, `fruits`), en
+			// points à ×4, en organes dès ×8 (PlantRenderer.PaliersHauts.cs, D106 T6).
+			DrawFleurs(collet, pal);
 			DrawFruits(collet, pal);
 		}
 
-		// (La corolle générique 5 pétales a migré vers PlantRenderer.Flower.cs
-		// sous le nom DrawSimple — un des 6 archétypes de famille, T2.)
+		// --- Géométrie d'une feuille (partagée : feuilles ×8+, masses ×4) --------
+		// Une feuille tous les ~LeafSpacingCm le long d'un rameau feuillu.
+		private static int NbFeuilles(Segment s) => Mathf.Max(1, (int)(s.LengthCm / LeafSpacingCm));
 
-		// Fruits tracés : un disque par entrée de `_structure.Fruits`, ancré au
-		// bout de son segment porteur, COULEUR ∝ maturité, TAILLE ∝ masse. Reflet
-		// blanc haut-gauche comme le proxy d'avant — continuité visuelle.
-		private void DrawFruits(Vector3 collet, OrganPalette pal)
+		// Perpendiculaire HORIZONTALE à l'axe du rameau (plan sol) — le déport
+		// latéral des feuilles, comme le prototype.
+		private static Vector2 PerpFeuilles(Segment s)
 		{
-			foreach (var f in _structure.Fruits)
-			{
-				Vector3 p3 = FruitPoint(f);
-				Vector2 c = Iso(p3.X - collet.X, p3.Y - collet.Y, p3.Z);
-				// masse → rayon (FRUIT_MASSE=0.15 côté moteur → ~4.5 px ; borné).
-				float rad = 3.0f + Mathf.Min(f.Masse, 0.3f) * 10f;
-				// SS② : globe en 2 valeurs (croissant d'ombre froide côté nord +
-				// face sud éclairée), PUIS le reflet spéculaire blanc d'avant.
-				DrawVolumeCircle(c, rad, FruitColor(pal, f.Maturite));
-				DrawCircle(c - new Vector2(rad * 0.3f, rad * 0.3f),
-						   rad * 0.3f, new Color(1f, 1f, 1f, 0.45f));
-			}
+			float hmag = new Vector2(s.Dir.X, s.Dir.Y).Length();
+			return hmag > 1e-6f ? new Vector2(-s.Dir.Y / hmag, s.Dir.X / hmag) : new Vector2(1f, 0f);
 		}
+
+		// Centre ÉCRAN du limbe de la feuille (i, j) sur `n`, + son point d'insertion
+		// sur l'axe (`p` en cm, `insert` à l'écran). Déport latéral et hauteur au hash ;
+		// sécheresse/canicule/pluie l'affaissent (LeafDropCm, Meteo.cs) ; ⑤ le limbe
+		// s'écarte du rameau AVEC sa croissance (lerp insert → position pleine par
+		// leafGrowth : à l'émergence il colle au rameau, le pétiole s'allonge de pair).
+		private Vector2 PlaceFeuille(Segment s, int i, int j, int n, Vector2 perp, Vector3 collet,
+									 float leafGrowth, out Vector3 p, out Vector2 insert)
+		{
+			p = s.Base + s.Dir * (s.LengthCm * (j + 0.5f) / n);
+			float h2 = Hash01(11, i, j);
+			float side = Hash01(7, i, j) < 0.5f ? 1f : -1f;
+			float off = LeafOffsetCm * (0.5f + h2);
+			float lz = p.Z + (h2 - 0.5f) * LeafOffsetCm - LeafDropCm(p.Z);
+			Vector2 c = Iso(p.X + perp.X * off * side - collet.X, p.Y + perp.Y * off * side - collet.Y, lz);
+			insert = Iso(p.X - collet.X, p.Y - collet.Y, p.Z);
+			return insert.Lerp(c, leafGrowth);
+		}
+
+		// (La corolle générique 5 pétales a migré vers PlantRenderer.Flower.cs
+		// sous le nom DrawSimple — un des 6 archétypes de famille, T2. Les fleurs,
+		// les fruits et les marques fines des feuilles sont dessinés par palier dans
+		// PlantRenderer.PaliersHauts.cs, D106 T6.)
 
 		// Couleur d'un fruit selon sa maturité : interpolation vert→mûr sur [0,1],
 		// puis mûr→brun fermenté de 1.0 au seuil de chute (1.3 = MATURITE_CHUTE).
@@ -467,52 +438,13 @@ namespace Symbiose
 		{
 			Color green = WoodRamp(Lignification(s)); // vert local, jamais brun (invariant ④)
 			green.A = 0.95f;
-			// Largeur 1-2 px selon le zoom (pixel-art : entier, jamais antialiasé).
-			float w = WorldView.CurrentZoom >= LeafShapeMinZoom ? 2f : 1f;
+			// Largeur en px INTERNES (D106 T6 : l'ancien 2 px canvas valait 16 px
+			// internes à ×8 — un moignon carré) : celle des nervures, qui suit la feuille.
+			float w = NervureLargeurPx;
 			// On s'arrête un peu avant le centre du limbe : le limbe (dessiné juste
 			// après) recouvre la jonction, seule la base du pétiole reste visible.
 			Vector2 petTip = insert.Lerp(leaf, 0.75f);
 			DrawLine(insert, petTip, green, w, antialiased: false);
-		}
-
-		// Marques de TEXTURE sur une feuille (canaux additifs, ③), par-dessus le
-		// limbe déjà dessiné. Ravageurs + grêle CRIBLENT le limbe (petits trous
-		// sombres, nombre ∝ intensité) ; gel NOIRCIT les bords (contour brûlé). Les
-		// trous sont placés au hash (i,j,k) → stables inter-frames (philo #3).
-		private void DrawLeafDamage(Vector2 c, float r, int i, int j)
-		{
-			float bite = Mathf.Min(1f, _ravageurs + _grele); // criblage cumulé
-			if (bite > 0f)
-			{
-				int holes = Mathf.CeilToInt(bite * 4f);   // 1 à 4 morsures
-				for (int k = 0; k < holes; k++)
-				{
-					float a = Hash01(23 + k, i, j) * Mathf.Tau;
-					float rad = (0.3f + 0.55f * Hash01(29 + k, i, j));
-					Vector2 hp = c + new Vector2(Mathf.Cos(a) * rad * r * 1.15f,
-												 Mathf.Sin(a) * rad * r * 0.65f);
-					DrawCircle(hp, r * 0.22f, LeafHoleColor);
-				}
-			}
-			if (_gel > 0f)
-				DrawEllipseOutline(c, r * 1.15f, r * 0.65f, GelEdgeColor,
-								   Mathf.Max(1f, _gel * 2.5f));
-			// maladie : semis de petites taches brun foncé (pustules cryptogamiques),
-			// nombre ∝ intensité. Salt NEUF (37/41) ≠ criblage (23/29) → les taches ne
-			// se superposent jamais exactement aux trous ; rayon r*0.12 << r*0.22 du
-			// criblage (ponctuation, pas morsure). Canal additif indépendant (D33).
-			if (_maladie > 0f)
-			{
-				int spots = Mathf.CeilToInt(_maladie * 5f);   // 1 à 5 taches
-				for (int k = 0; k < spots; k++)
-				{
-					float a = Hash01(37 + k, i, j) * Mathf.Tau;
-					float rad = (0.2f + 0.65f * Hash01(41 + k, i, j));
-					Vector2 sp = c + new Vector2(Mathf.Cos(a) * rad * r * 1.15f,
-												 Mathf.Sin(a) * rad * r * 0.65f);
-					DrawCircle(sp, r * 0.12f, LeafSpotColor);
-				}
-			}
 		}
 
 		// Génère les sommets d'une ellipse alignée écran (partagés entre le plein et

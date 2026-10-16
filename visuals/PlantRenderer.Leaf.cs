@@ -155,7 +155,7 @@ namespace Symbiose
 			// l'archétype ci-dessous (repli intermédiaire inchangé). Ne se déclenche
 			// qu'au zoom rapproché : en dessous la silhouette fine est invisible et
 			// le contour coûterait pour rien (perf, sprint plantes du 2026-07-09).
-			if (WorldView.CurrentZoom >= LeafOutlineMinZoom
+			if (AuPalier(PalierSymptomesZoom)
 				&& TryDrawLeafOutline(species, c, rx, ry, col, i, j))
 				return;
 
@@ -174,9 +174,9 @@ namespace Symbiose
 			}
 
 			// ③ NERVURES — 3ᵉ valeur posée APRÈS le volume (se lit par-dessus
-			// ombre+lumière). Pas au repli LOD : la silhouette fine est invisible
-			// de loin, une ligne 1 px y serait illisible/du bruit.
-			if (!lod)
+			// ombre+lumière). Plante vivante : palier SYMPTÔMES FINS ×16 (D106 T6) ;
+			// litière (stylo sans structure, hors périmètre) : hors repli LOD.
+			if (_structure != null ? AuPalier(PalierSymptomesZoom) : !lod)
 				DrawLeafVeins(c, rx, ry, col, shape, prof, i, j);
 		}
 
@@ -196,7 +196,10 @@ namespace Symbiose
 		{
 			// Sens du shift : plus claire (lum>0, vers le chaud) ou plus sombre
 			// (lum<0, vers le froid) — HueShift garde le pixel-art (jamais gris).
-			float lum = p.VeinLighter ? VeinShift : -VeinShift;
+			// Plante vivante (palier ×16, D106 T6) : contraste NervureShift, sinon la
+			// quantification SNES (34 couleurs) la fond dans le limbe ; litière : VeinShift.
+			float shift = _structure != null ? NervureShift : VeinShift;
+			float lum = p.VeinLighter ? shift : -shift;
 			Color vein = HueShift(limbe, lum);
 
 			switch (shape)
@@ -206,11 +209,16 @@ namespace Symbiose
 				case LeafShape.Aciculaire: break; // aucune (trop fin, illisible au pixel)
 				default:                   DrawPennateVeins(c, rx, ry, vein, p, i, j); break;
 			}
+			// Palier INTIME (×32, D106 T6) : nervures secondaires (plante vivante).
+			if (_structure != null && shape != LeafShape.Aciculaire && AuPalier(PalierIntimeZoom))
+				DrawNervuresSecondaires(c, rx, ry, vein, i, j);
 		}
 
 		// Une fine ligne 1 px NON antialiasée (le geste de base de toute nervure).
+		// Plante vivante : NervureLargeurPx (fine à ×16, cf. PaliersHauts) au lieu
+		// d'1 px canvas = 16 px internes à ×16, aussi large que la tige.
 		private void DrawVein(Vector2 a, Vector2 b, Color col) =>
-			DrawLine(a, b, col, 1f, antialiased: false);
+			DrawLine(a, b, col, _structure != null ? NervureLargeurPx : 1f, antialiased: false);
 
 		// --- Penninerve (Elliptique / Lanceolee / Cordee) --------------------
 		// 1 médiane qui suit l'axe + 2-4 latérales obliques par paires opposées,

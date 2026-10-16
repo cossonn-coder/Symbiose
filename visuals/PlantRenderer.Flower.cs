@@ -79,11 +79,9 @@ namespace Symbiose
 		// Plancher de rayon (invariant E4, calque LeafFloorRadiusPx) : sous ce
 		// demi-rayon ÉCRAN une corolle composée est illisible → une tache 1 valeur.
 		private const float FlowerFloorRadiusPx = 2.5f;
-		// Repli LOD : sous ce zoom, toute corolle composée retombe sur Simple
-		// (aligné sur LeafShapeMinZoom). NB : DrawOrgans n'est déjà appelé qu'à
-		// partir de OrganDetailMinZoom (×8), donc ce repli ne mord qu'entre ×4-×8
-		// si ce seuil bougeait ; il garantit surtout la cohérence avec les feuilles.
-		private const float FlowerShapeMinZoom = 4f;
+		// (Ex-repli LOD FlowerShapeMinZoom retiré au D106 T6 : la corolle n'est
+		// dessinée qu'à partir du palier ORGANES ×8 — à ×4 la fleur est un point,
+		// PlantRenderer.PaliersHauts.cs.)
 
 		// Rayon de base d'une corolle à l'écran (px). L'ancien DrawFlower codait
 		// ~3.6 px de rayon d'implantation des pétales ; on garde cet ordre.
@@ -108,10 +106,7 @@ namespace Symbiose
 			if (!FlowerProfiles.TryGetValue(_structure.SpeciesName, out var prof))
 				prof = DefaultFlower;
 
-			// Repli LOD : au dézoom, toute corolle redevient les 5 pétales simples.
-			bool lod = WorldView.CurrentZoom < FlowerShapeMinZoom;
-			FlowerShape shape = lod ? FlowerShape.Simple : prof.Shape;
-
+			FlowerShape shape = prof.Shape;
 			switch (shape)
 			{
 				case FlowerShape.Ombelle:      DrawOmbelle(c, r, pal, prof, i, j); break;
@@ -121,6 +116,8 @@ namespace Symbiose
 				case FlowerShape.Clochette:    DrawClochette(c, r, pal, prof); break;
 				default:                       DrawSimple(c, r, pal); break;
 			}
+			// Palier INTIME (×32, D106 T6) : étamines par archétype.
+			if (AuPalier(PalierIntimeZoom)) DrawEtamines(c, r, shape);
 		}
 
 		// --- Simple : 5 pétales radiaux + cœur (= l'ancien DrawFlower) ---------

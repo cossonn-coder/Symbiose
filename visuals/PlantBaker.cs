@@ -19,6 +19,11 @@
 // Atlas de POSES : l'image est une rangée de cellules, une par degré de flexion
 // au vent (T3) : 1 au calme, jusqu'à 8 (PlantRenderer.MaxPoses) sous le vent —
 // un port raide (arbre) n'en cuit que 3-4, il ne se couche jamais.
+// D106 T6 : chaque pose a SA cellule SERRÉE (sa boîte + son ancrage du collet)
+// au lieu de l'union de la pose droite et de la plus couchée répétée 8 fois
+// (116 Mo au vent vs 12,8 Mo au calme [×8, 51 plantes, n=1]). La plante ne
+// « saute » pas d'une pose à l'autre : DrawImage pose chaque cellule à partir
+// de SON ancrage, le collet reste sur le même pixel.
 
 using Godot;
 using System.Collections.Generic;
@@ -51,11 +56,17 @@ namespace Symbiose
 		{
 			public SubViewport Vp;
 			public readonly List<PlantRenderer> Brushes = new();
-			public Vector2I CellSize;    // px d'une pose
-			public Vector2I Origin;      // px du collet dans une cellule
-			public int Poses;            // cellules de l'atlas (degrés de flexion)
+			public Rect2I[] Cells;       // par pose : x dans l'atlas (y = 0) + taille
+			public Vector2I[] Origins;   // par pose : px du collet dans SA cellule
 			public float Zoom;
+			public int Poses => Cells.Length;
 			public long Bytes => 4L * Vp.Size.X * Vp.Size.Y;   // RGBA8
+
+			// Même découpage (tailles, ancrages, zoom) → on recuit sur place.
+			public bool Matches(Rect2I[] cells, Vector2I[] origins, float zoom) =>
+				Zoom == zoom && Cells.Length == cells.Length
+				&& System.Linq.Enumerable.SequenceEqual(Cells, cells)
+				&& System.Linq.Enumerable.SequenceEqual(Origins, origins);
 		}
 
 		public PlantBaker(PlantRenderer owner) => _owner = owner;
@@ -68,19 +79,30 @@ namespace Symbiose
 		public bool Begin(float zoom)
 		{
 			int poses = _owner.BakePoseCount;
-			Rect2 b = _owner.LocalBounds(poses);
-			if (b.Size == Vector2.Zero) { Release(); return false; }
-			// Décalage ENTIER du collet dans la cellule (+1 px de garde) et taille.
-			var origin = new Vector2I(1 - Mathf.FloorToInt(b.Position.X * zoom),
-									  1 - Mathf.FloorToInt(b.Position.Y * zoom));
-			var size = new Vector2I(origin.X + Mathf.CeilToInt(b.End.X * zoom) + 1,
-									origin.Y + Mathf.CeilToInt(b.End.Y * zoom) + 1);
-			if (size.X > MaxSidePx || size.Y > MaxSidePx || size.X * poses > MaxAtlasPx)
-			{ Release(); return false; }
+			var cells = new Rect2I[poses];
+			var origins = new Vector2I[poses];
+			int x = 0, h = 0;
+			for (int k = 0; k < poses; k++)
+			{
+				// Boîte SERRÉE de la pose k (T6) : la plante droite ne paie plus la
+				// largeur de sa pose la plus couchée.
+				Rect2 b = _owner.PoseBounds(k);
+				if (b.Size == Vector2.Zero) { Release(); return false; }
+				// Décalage ENTIER du collet dans la cellule (+1 px de garde) et taille.
+				var origin = new Vector2I(1 - Mathf.FloorToInt(b.Position.X * zoom),
+										  1 - Mathf.FloorToInt(b.Position.Y * zoom));
+				var size = new Vector2I(origin.X + Mathf.CeilToInt(b.End.X * zoom) + 1,
+										origin.Y + Mathf.CeilToInt(b.End.Y * zoom) + 1);
+				if (size.X > MaxSidePx || size.Y > MaxSidePx) { Release(); return false; }
+				cells[k] = new Rect2I(x, 0, size.X, size.Y);
+				origins[k] = origin;
+				x += size.X;
+				h = Mathf.Max(h, size.Y);
+			}
+			if (x > MaxAtlasPx) { Release(); return false; }
 
-			Cell cell = _shown != null && _shown.CellSize == size && _shown.Poses == poses
-						&& _shown.Origin == origin && _shown.Zoom == zoom
-				? _shown : NewCell(size, origin, zoom, poses);
+			Cell cell = _shown != null && _shown.Matches(cells, origins, zoom)
+				? _shown : NewCell(cells, origins, new Vector2I(x, h), zoom);
 			for (int k = 0; k < poses; k++)
 			{
 				_owner.CopyDrawStateTo(cell.Brushes[k]);
@@ -118,17 +140,18 @@ namespace Symbiose
 		{
 			Cell c = _shown;
 			pose = Mathf.Min(pose, c.Poses - 1);
-			var rect = new Rect2(-(Vector2)c.Origin / c.Zoom, (Vector2)c.CellSize / c.Zoom);
-			var src = new Rect2(c.CellSize.X * pose, 0, c.CellSize.X, c.CellSize.Y);
-			_owner.DrawTextureRectRegion(c.Vp.GetTexture(), rect, src);
+			Rect2I cell = c.Cells[pose];
+			// Ancrage PROPRE à la pose : le collet tombe toujours au même endroit.
+			var rect = new Rect2(-(Vector2)c.Origins[pose] / c.Zoom, (Vector2)cell.Size / c.Zoom);
+			_owner.DrawTextureRectRegion(c.Vp.GetTexture(), rect, (Rect2)cell);
 		}
 
-		private Cell NewCell(Vector2I size, Vector2I origin, float zoom, int poses)
+		private Cell NewCell(Rect2I[] cells, Vector2I[] origins, Vector2I atlas, float zoom)
 		{
-			var c = new Cell { CellSize = size, Origin = origin, Zoom = zoom, Poses = poses };
+			var c = new Cell { Cells = cells, Origins = origins, Zoom = zoom };
 			c.Vp = new SubViewport
 			{
-				Size = new Vector2I(size.X * poses, size.Y),
+				Size = atlas,
 				TransparentBg = true,
 				Disable3D = true,
 				GuiDisableInput = true,
@@ -139,21 +162,22 @@ namespace Symbiose
 				CanvasItemDefaultTextureFilter = Viewport.DefaultCanvasItemTextureFilter.Nearest,
 				RenderTargetUpdateMode = SubViewport.UpdateMode.Disabled,
 			};
-			for (int k = 0; k < poses; k++)
+			for (int k = 0; k < cells.Length; k++)
 			{
-				// Une pose = une cellule décalée d'un nombre ENTIER de px cuits.
+				// Pinceau k : son collet sur un pixel ENTIER de sa cellule
+				// (x de la cellule + ancrage), en px canvas (÷ zoom).
 				var brush = new PlantRenderer
 				{
 					IsBrush = true,
-					Position = new Vector2(size.X * k / zoom, 0f),
+					Position = new Vector2(cells[k].Position.X + origins[k].X, origins[k].Y) / zoom,
 				};
 				c.Vp.AddChild(brush);
 				c.Brushes.Add(brush);
 			}
 			_owner.AddChild(c.Vp);
-			// Échelle = zoom du monde, collet posé sur un pixel ENTIER (le canvas
-			// du SubViewport n'existe qu'une fois dans l'arbre → après AddChild).
-			c.Vp.CanvasTransform = new Transform2D(0f, new Vector2(zoom, zoom), 0f, origin);
+			// Échelle = zoom du monde (le canvas du SubViewport n'existe qu'une fois
+			// dans l'arbre → après AddChild). Les ancrages sont portés par les pinceaux.
+			c.Vp.CanvasTransform = new Transform2D(0f, new Vector2(zoom, zoom), 0f, Vector2.Zero);
 			TotalBytes += c.Bytes;
 			TotalImages++;
 			return c;
