@@ -28,6 +28,7 @@
 //   --capture-defile=1       lance le défilé « jardin vivant » (touche F12) — T5
 //   --capture-seed=<n>       seed du monde (défaut Seed = 42 ; ex. 12345 pour le
 //                            collapse du banc `effondrement`, cf. BANC_SEED) — T5
+//   --capture-orient=<n>     orientation D35 imposée (0..3 quarts de tour) — D106 T2
 //   --capture-cacher=<N1>,<N2>  couches masquées par NOM de nœud (Ground, Decor,
 //                            Objects…) — banc temps réel tools/perf_vm.sh, même
 //                            mécanique que Shift+F4 (WorldView.Couches.cs) — D106 T1
@@ -53,6 +54,9 @@ namespace Symbiose
 		private static readonly bool CaptureDefile = ArgCapture("defile") != null;
 		private static readonly float CaptureSeed = ParseFloat(ArgCapture("seed"));
 		private static readonly string CaptureCacher = ArgCapture("cacher");
+		// Orientation D35 imposée (0..3 quarts de tour, D106 T2 : vérifier le sol
+		// en un lot sous les 4 orientations). Appliquée AVANT le centrage caméra.
+		private static readonly float CaptureOrient = ParseFloat(ArgCapture("orient"));
 
 		// Météo imposée par le banc (T4) : active jusqu'à l'échéance de sa durée.
 		private bool _captureMeteoActive = CaptureMeteo != null;
@@ -109,6 +113,8 @@ namespace Symbiose
 		{
 			if (!CaptureActive || _camera == null) return;
 			GD.Print($"[Capture] banc « {CaptureBanc} », zoom {CaptureZoom}, centre {CaptureCentre ?? "monde"}.");
+			if (!float.IsNaN(CaptureOrient) && (int)CaptureOrient % 4 != 0)
+				RotateView((int)CaptureOrient % 4);
 
 			if (CaptureCentre != null)
 			{

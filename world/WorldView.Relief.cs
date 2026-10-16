@@ -5,7 +5,7 @@
 // tassement, érosion) — le pendant visible du cycle de la matière organique.
 //
 // 📖 Modèle iso : le « dessus » du plot (le losange texturé de BuildGround) est
-// remonté de `rise` px ; un FLANC vertical (Polygon2D sombre) comble la bande
+// remonté de `rise` px ; un FLANC vertical sombre comble la bande
 // entre le dessus remonté et le niveau du sol de base. Les objets enracinés
 // (plantes) suivent le MÊME `rise` → ils restent plantés dans la terre, pas
 // suspendus (Partie C, helper UNIQUE `ReliefRisePx`).
@@ -34,24 +34,35 @@ namespace Symbiose
 		// (avance d'une semaine / mode Turbo) : UpdateRelief relit la valeur alors.
 		[Export] public float ReliefExaggeration = 0.5f;
 
-		// Un plot du relief : le losange « dessus » (déjà créé par BuildGround),
-		// son flanc vertical, sa position écran de BASE (niveau sol 0) et son
-		// identité tuile/plot pour lire l'épaisseur. baseScreen = WorldToScreen du
-		// centre au niveau du sol : le dessus s'en écarte de `rise` vers le haut.
+		// Un plot du relief : sa position écran de BASE (niveau sol 0), son
+		// identité tuile/plot pour lire l'épaisseur, et son damier (ex-Modulate du
+		// Sprite2D). baseScreen = WorldToScreen du centre au niveau du sol : le
+		// dessus s'en écarte de `rise` vers le haut.
 		private readonly struct ReliefPlot
 		{
 			public readonly string Tile;
 			public readonly int R, C;
 			public readonly Vector2 BaseScreen;
-			public readonly Sprite2D Top;
-			public readonly Polygon2D Flanc;
-			public ReliefPlot(string tile, int r, int c, Vector2 baseScreen,
-							  Sprite2D top, Polygon2D flanc)
-			{ Tile = tile; R = r; C = c; BaseScreen = baseScreen; Top = top; Flanc = flanc; }
+			public readonly Color Damier;
+			public ReliefPlot(string tile, int r, int c, Vector2 baseScreen, Color damier)
+			{ Tile = tile; R = r; C = c; BaseScreen = baseScreen; Damier = damier; }
 		}
 
-		// Plots du relief, reconstruits par BuildGround (donc à chaque rotation).
-		private readonly List<ReliefPlot> _reliefPlots = new();
+		// D106 T2 « sol en un lot » : une tuile de sol = UN nœud MeshInstance2D
+		// (tous ses flancs + dessus, cf. SolMaillage) au lieu de 2 nœuds par plot.
+		// `Rises` mémorise le relief (px) avec lequel le maillage a été construit :
+		// on ne reconstruit QUE les tuiles dont un plot a bougé (jamais par frame).
+		private sealed class SolTuile
+		{
+			public readonly MeshInstance2D Noeud;
+			public readonly Color Flanc;
+			public readonly List<ReliefPlot> Plots = new();
+			public float[] Rises;
+			public SolTuile(MeshInstance2D noeud, Color flanc) { Noeud = noeud; Flanc = flanc; }
+		}
+
+		// Tuiles du sol, reconstruites par BuildGround (donc à chaque rotation).
+		private readonly List<SolTuile> _solTuiles = new();
 		// Épaisseur courante par tuile (grille dense cm), lue au dernier snapshot.
 		private Dictionary<string, float[,]> _epaisseurCm;
 		// Altitude (micro-relief topographique FIXE, hydrologie ①, snapshot 0.5.17)
@@ -63,20 +74,24 @@ namespace Symbiose
 		private Dictionary<string, float[,]> _altitudeCm;
 
 		// Vidé en tête de BuildGround (le sol est reconstruit sur rotation) : les
-		// vieux ReliefPlot pointaient des nœuds désormais libérés.
-		private void ResetRelief() => _reliefPlots.Clear();
+		// vieilles SolTuile pointaient des nœuds désormais libérés.
+		private void ResetRelief() => _solTuiles.Clear();
 
-		// Enregistre un plot pour le relief + crée son FLANC (sous le dessus).
-		// Appelé par BuildGround pour chaque plot, APRÈS l'ajout du dessus `top`
-		// (le flanc, ajouté ensuite, se dessine par-dessus les DESSUS des plots
-		// nord déjà posés mais SOUS son propre dessus — non : le flanc doit passer
-		// SOUS son dessus). On l'ajoute donc AVANT le dessus : voir BuildGround.
-		private void RegisterReliefPlot(Node2D ground, string soilName, string tile,
-										int r, int c, Vector2 baseScreen, Sprite2D top)
+		// Crée le nœud d'une tuile de sol (maillage vide, rempli par UpdateRelief)
+		// et l'enregistre. L'ordre d'appel = l'ordre des tuiles = l'ordre de
+		// peinture d'avant (les tuiles étaient déjà posées l'une après l'autre).
+		private SolTuile RegisterSolTuile(Node2D ground, string soilName, Texture2D tex)
 		{
-			var flanc = new Polygon2D { Color = SoilColor(soilName).Darkened(0.4f) };
-			ground.AddChild(flanc);   // sous le dessus (ajouté juste après par BuildGround)
-			_reliefPlots.Add(new ReliefPlot(tile, r, c, baseScreen, top, flanc));
+			var noeud = new MeshInstance2D
+			{
+				Texture = tex,
+				TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
+				Material = SolMateriau.Materiau,   // flanc uni / damier exact (cf. SolMateriau)
+			};
+			ground.AddChild(noeud);
+			var tuile = new SolTuile(noeud, SoilColor(soilName).Darkened(0.4f));
+			_solTuiles.Add(tuile);
+			return tuile;
 		}
 
 		// SOURCE UNIQUE de l'offset vertical (kickoff §C : « un seul point de
@@ -157,21 +172,42 @@ namespace Symbiose
 			return res;
 		}
 
-		// Applique l'épaisseur courante à la géométrie : dessus remonté + flanc
-		// redessiné. Une passe sur les plots (une fois par snapshot ≈ 60 s) — le
-		// coût est celui de BuildGround, jugé trivial à cette cadence.
+		// Applique l'épaisseur courante à la géométrie : pour chaque tuile, relit
+		// le relief de ses plots ; si l'un a changé (ou au premier passage), le
+		// maillage de la tuile est ré-émis en entier (≤ 1188 quads au total =
+		// trivial, une fois par snapshot ≈ 60 s ou par rotation, jamais par frame).
 		private void UpdateRelief()
 		{
-			const float hw = TileWPx / 2f, hh = TileHPx / 2f;
-			foreach (var p in _reliefPlots)
+			foreach (var tuile in _solTuiles)
 			{
-				float rise = EpaisseurPxAt(p.Tile, p.R, p.C);
-				p.Top.Position = p.BaseScreen - new Vector2(0f, rise);
+				int n = tuile.Plots.Count;
+				bool change = tuile.Rises == null || tuile.Rises.Length != n;
+				if (change) tuile.Rises = new float[n];
+				for (int i = 0; i < n; i++)
+				{
+					var p = tuile.Plots[i];
+					float rise = EpaisseurPxAt(p.Tile, p.R, p.C);
+					if (rise != tuile.Rises[i]) { tuile.Rises[i] = rise; change = true; }
+				}
+				if (change) tuile.Noeud.Mesh = MaillageTuile(tuile);
+			}
+		}
+
+		// Émet les triangles d'une tuile dans l'ORDRE DE PEINTURE d'avant T2 :
+		// pour chaque plot (ordre de BuildGround), le flanc PUIS le dessus.
+		private static ArrayMesh MaillageTuile(SolTuile tuile)
+		{
+			const float hw = TileWPx / 2f, hh = TileHPx / 2f;
+			var m = new SolMaillage();
+			for (int i = 0; i < tuile.Plots.Count; i++)
+			{
+				var p = tuile.Plots[i];
+				float rise = tuile.Rises[i];
 				// Flanc = bande verticale sous le losange remonté : arête basse du
 				// dessus (ouest/sud/est remontés de `rise`) jusqu'à l'arête basse
-				// au niveau du sol. Dégénéré (invisible) quand rise = 0.
+				// au niveau du sol. Dégénéré (aucun triangle) quand rise = 0.
 				Vector2 b = p.BaseScreen;
-				p.Flanc.Polygon = new[]
+				m.AjouterFlanc(new[]
 				{
 					b + new Vector2(-hw, -rise),    // ouest, dessus remonté
 					b + new Vector2(0f, hh - rise),  // sud,   dessus remonté
@@ -179,8 +215,10 @@ namespace Symbiose
 					b + new Vector2(hw, 0f),         // est,   niveau sol
 					b + new Vector2(0f, hh),         // sud,   niveau sol
 					b + new Vector2(-hw, 0f),        // ouest, niveau sol
-				};
+				}, tuile.Flanc);
+				m.AjouterDessus(b - new Vector2(0f, rise), p.Damier);
 			}
+			return m.Construire();
 		}
 	}
 }

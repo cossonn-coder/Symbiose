@@ -18,8 +18,8 @@
 ## Carte des tronçons
 | # | Kickoff | Contenu | Golden | État |
 |---|---|---|---|---|
-| T1 | `01_instrument.md` | F4 draw calls + bascule couches + `tools/perf_vm.sh` | intact | **fait** (non commité, F5 Nico à faire) |
-| T2 | `02_sol_un_lot.md` | sol = 1 maillage/tuile, image identique | intact | à faire |
+| T1 | `01_instrument.md` | F4 draw calls + bascule couches + `tools/perf_vm.sh` | intact | **fait** (`a5fa36b`, F5 Nico à faire) |
+| T2 | `02_sol_un_lot.md` | sol = 1 maillage/tuile, image identique | intact | **fait** (non commité, F5 Nico à faire) |
 | T3 | `03_plancher_fixe.md` | souris 1×/frame, survol paresseux, plein écran à la demande | intact | à faire |
 | T4 | `04_marge_paresseuse.md` | marge proportionnelle + hystérésis, semaine paresseuse | intact | à faire |
 | T5 | `05_paliers_bas.md` | ×0,5/×1/×2 + tapis par plot | intact | à faire |
@@ -45,6 +45,42 @@ une fois → runs aberrants). Métrique portable = draw calls/frame (T1).
 
 → le sol coûte ~2390 draw calls [×0,5, 2 runs] = la cible de T2 ; plancher fixe ~36 ms
 [n=2] à 36 draw calls (coût CPU, pas GPU → T3).
+
+**Mesures T2** (`tools/perf_vm.sh`, `full` seed 42, 2026-10-16, charge < 4) :
+
+| Cas | FPS VM avant → après | draw calls avant → après |
+|---|---|---|
+| ×0,5 tout | 5,1-5,4 → **12,2** [2 runs chacun] | 3825 → **1456** |
+| ×0,5 sans `Ground` | 11,9-12,4 [2 runs] → 13,2 [n=1] | 1439 → 1439 |
+| ×4 tout | 13,0-13,2 → 15,0 [2 runs chacun] | 1522 → 1520 |
+
+→ le sol passe de ~2390 à **17 draw calls** [×0,5] (8 tuiles + boussole/ombre) ; il
+coûte encore ~7 ms [×0,5, n=1 sans `Ground`]. Primitives ×4 : 35 621 → 39 825 (une tuile
+partiellement visible envoie tous ses triangles, coût GPU négligeable).
+**Image : identique au pixel** (0 pixel différent, sol seul) sur 10 captures avant/après :
+×0,5 aux 4 orientations, ×4 et ×16 sur 300,1700, ×4 orientation 1, ×1 après 40 semaines
+de warmup (relief monté) ; scène complète ×0,5 : 0 ; ×4 : seuls les sprites animés de la
+vie macro diffèrent (phase d'animation).
+
+**Technique retenue T2** (pédagogie dans les en-têtes) :
+- `world/SolMaillage.cs` : builder d'`ArrayMesh` par tuile, triangles émis dans l'ordre
+  d'avant (flanc puis dessus, plot par plot). Dessus = les 6 sommets du rectangle Sprite2D
+  de Godot (mêmes triangles, UV 0/1 exacts : à ×0,5 chaque pixel tombe pile sur une
+  frontière de texel → le choix du texel dépend de l'interpolation). **Arrondi Sprite2D
+  rejoué CPU** : le SubViewport snappe (`snap_2d_transforms_to_pixel`), Godot arrondissait
+  l'origine LOCALE de chaque sprite `floor(pos+0,5)` puis le décalage `floor(−taille/2+0,5)`
+  = (−19,−10) ; sans ça ~300 000 pixels différaient. Flanc = `Geometry2D.TriangulatePolygon`
+  (la fonction de Polygon2D).
+- `world/SolMateriau.cs` : `ShaderMaterial` partagé, **fragment seul** : flanc (UV = −1)
+  → couleur de sommet ; dessus → texture × damier, damier en DRAPEAU (blanc/noir) et 0,95
+  en constante flottante (une couleur de sommet est sur 8 bits → ±1 sur ~80 000 px sinon).
+- `WorldView.Relief.cs` : `SolTuile` (un `MeshInstance2D` par tuile + relief mémorisé) ;
+  `UpdateRelief` ne ré-émet que les tuiles dont un plot a bougé. API `ReliefRisePx` /
+  `ReliefRiseAtPlot` intactes. `WorldView.Monde.cs` `BuildGround` : 1 nœud/tuile.
+- Outils : `capture_vm.sh -r ORIENT -x COUCHES` (+ `--capture-orient=` dans
+  `WorldView.Capture.cs`) pour comparer le sol seul aux 4 orientations.
+- Leçon (shaders Godot 4.6 GLES3, lue dans le binaire `strings`) : `MODEL_MATRIX` exclut la
+  caméra (`CANVAS_MATRIX`), l'arrondi des transforms se fait en espace local du canvas.
 
 ## Règles communes à tous les tronçons
 - `dotnet build Symbiose.csproj` vert ; golden PASS ; **jamais** `test_epaisseur_500ans`.
@@ -74,7 +110,8 @@ une fois → runs aberrants). Métrique portable = draw calls/frame (T1).
   `Weather,Sky,Vignette`.
 
 ## §REPRISE
-T1 fait (golden PASS `22768f33…`, build vert), **non commité** (l'orchestrateur commit).
-Point F5 Nico ouvert : F4 + Maj+F4 à ×0,5 et ×4 sur `full`, noter FPS + draw calls de
-chaque cas (référence D1 sur SON PC). Prochaine étape : T2 `02_sol_un_lot.md` — cible
-mesurable : ×0,5 tout de 3825 → ~1440 draw calls (`tools/perf_vm.sh -z 0.5`).
+T1 commité (`a5fa36b`). **T2 fait** (golden PASS `22768f33…`, build vert, 0 pixel
+différent), **non commité** (l'orchestrateur commit). Points F5 Nico ouverts : (T1) F4 +
+Maj+F4 à ×0,5 et ×4 sur `full` ; (T2) « le sol a-t-il changé ? » (attendu : non, y compris
+rotation et relief qui monte) + F4 ×0,5 (draw calls attendus ~1450 sur `full`). Prochaine
+étape : T3 `03_plancher_fixe.md` (plancher fixe ~36 ms à 36 draw calls = coût CPU).

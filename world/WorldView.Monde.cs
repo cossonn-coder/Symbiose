@@ -60,36 +60,28 @@ namespace Symbiose
 				// et CACHÉE : ≤ 4 sols × 4 orient = 16 textures au total, jamais
 				// recuites à chaque rotation (cf. GroundTexture).
 				ImageTexture tex = GroundTexture(soilName);
+				// D106 T2 : UN nœud-maillage par tuile (flancs + dessus de tous
+				// ses plots en un seul lot GPU, cf. SolMaillage / Relief.cs).
+				var tuile = RegisterSolTuile(ground, soilName, tex);
 
 				for (int r = 0; r < rows; r++)
 					for (int c = 0; c < cols; c++)
 					{
-						// Centre du plot en cm monde → centre du sprite écran.
+						// Centre du plot en cm monde → centre du dessus écran.
 						float cx = ox + (c + 0.5f) * PlotCm;
 						float cy = oy + (r + 0.5f) * PlotCm;
 						Vector2 screenCenter = WorldToScreen(cx, cy);
-						// Sprite2D plutôt que Polygon2D texturé (T2) : centrage
-						// automatique sur la Position, pas d'UV à mapper sur le
-						// losange — le plus direct pour poser la texture cuite.
-						var sp = new Sprite2D
-						{
-							Texture = tex,
-							TextureFilter = CanvasItem.TextureFilterEnum.Nearest,
-							Position = screenCenter,
-							// Damier subtil (±5 %) appliqué par plot via Modulate :
-							// la texture reste partagée (pixel art sobre, sans
-							// bordures). L'effet d'avant (Darkened 0.05) conservé.
-							Modulate = (r + c) % 2 == 0
-								? Colors.White
-								: new Color(0.95f, 0.95f, 0.95f, 1f),
-						};
-						// D57 ② : le FLANC du relief (ajouté à `ground` ici) doit
-						// passer SOUS le dessus → on l'enregistre AVANT d'ajouter sp.
-						RegisterReliefPlot(ground, soilName, tileId, r, c, screenCenter, sp);
-						ground.AddChild(sp);
+						// Damier subtil (±5 %) par plot, en drapeau de sommet lu par
+						// le shader (SolMateriau) : la texture reste partagée (pixel art
+						// sobre, sans bordures).
+						Color damier = SolMateriau.DrapeauDamier((r + c) % 2 != 0);
+						tuile.Plots.Add(new ReliefPlot(tileId, r, c, screenCenter, damier));
 						nPlots++;
 					}
 			}
+			// Maillages émis d'emblée avec le relief connu (rotation : celui du
+			// dernier snapshot) ; ApplyEpaisseur ne ré-émet ensuite que ce qui bouge.
+			UpdateRelief();
 			// Boussole posée AU SOL (demande Nico F5 t4 : « j'ai perdu le
 			// nord ») : les 4 points cardinaux aux bords du monde. Enfants de
 			// _ground → reconstruits à chaque rotation, ils suivent le MONDE :

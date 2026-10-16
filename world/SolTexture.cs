@@ -37,8 +37,10 @@ namespace Symbiose
 	{
 		// Cotes de l'image cuite = losange iso interne, arrondies au pixel
 		// supérieur (la diagonale doit tenir entière dans l'image).
-		private static readonly int W = Mathf.CeilToInt(WorldView.TileWPx);   // ~39
-		private static readonly int H = Mathf.CeilToInt(WorldView.TileHPx);   // ~20
+		// Exposées (D106 T2) : le maillage du sol (SolMaillage) reproduit la
+		// géométrie EXACTE de l'ancien Sprite2D centré, qui faisait W×H px.
+		internal static readonly int W = Mathf.CeilToInt(WorldView.TileWPx);   // ~39
+		internal static readonly int H = Mathf.CeilToInt(WorldView.TileHPx);   // ~20
 
 		// --- Amplitudes (à régler au F5) ------------------------------------
 		// Relief DOUX : le sol est mat, pas un organe rond — on suggère un bombé,
