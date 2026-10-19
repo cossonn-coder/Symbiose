@@ -30,7 +30,7 @@
 | ④ | `04_kit_elements.md` | atlas du kit (touffes, fleurons) + planche | intact | **FAIT** (atlas 84×70 px, 72 touffes + 3 fleurons ; planche `capture_vm.sh -k`) |
 | ⑤ | `05_montage_paliers_bas.md` | plante assemblée à ×0,5/×1/×2 | intact | **FAIT** (`PlantRenderer.Assemblee.cs` ; ×4/×8 identiques au pixel) |
 | ⑥ | `06_signes_python.md` | corpus signes + faune, observer étendu, carnet, encyclopédie, `appris` | intact (pont bumpé) | **FAIT** (corpus 11 signes + 20 bêtes ; `observer`+`signe` ; `player.appris` ; pont 0.5.46) |
-| ⑦ | `07_vue_infobulle_bilan.md` | info-bulle 2 niveaux + technique + bilan + procédure PC + F5 | intact | à faire |
+| ⑦ | `07_vue_infobulle_bilan.md` | info-bulle 2 niveaux + technique + bilan + procédure PC + F5 | intact | **FAIT** (`WorldView.InfoBulle.cs` ; Maj+F3 technique ; onglet Signes ; suspect cuisson tranché) |
 
 ## Mesures
 (à remplir par chaque tronçon : [machine, n=…] sur chaque chiffre)
@@ -192,13 +192,53 @@
 - Taille (LDC) : `signes_corpus.py` 170, `signes.py` 35, `carnet.py` 188 → 193, `encyclopedie.py`
   72 → 89, `serialize.py` 366 → 368 (bande vigilance, préexistant), `maitrise_cmds.py` 52.
 
+### ⑦ Info-bulle à deux niveaux + bilan (`world/WorldView.InfoBulle.cs`)
+- **Info-bulle** sous l'étiquette « espèce · stade » (plante) ou près du curseur (bête seule), même
+  picking (`FindPlant`, `BeteSousSouris` extrait d'`Observation.cs` et partagé), même clé `_survolSale`,
+  même couche nette que les étiquettes ; masquée en étiquettes « Aucune » (F3). Plante : `vu` du signe
+  le plus intense **visible au palier** (`PlantRenderer.SigneVisible` : teinte dès ×2, criblage/bord
+  gel/grêle dès ×16, miroir du dessin) ; appris → « — <cause> ». Bête (≥ ×4) : `vu` ; apprise → « Nom : vu ».
+- **Maj+F3** = affichage technique (libre au code ; légende F1 mise à jour) : mention « affichage technique
+  — déconseillé en première découverte », tous les `leaf_symptoms` + intensité, signe visible, clé d'espèce.
+- **Observation** du signe visible au survol → `observer`+`signe`+`tile`/`x_cm`/`y_cm` ; dédup vue
+  (espèce, signe, saison). Indépendante du mode d'étiquette (comme l'espèce).
+- **Hors kickoff** : (a) `cmd_legende` renvoie aussi `cause` = tête de la fiche niveau 2 (« Chlorose
+  ferrique ») — pont additif, **version non bumpée** (0.5.46) ; test `test_signes_legende` 42/42 ;
+  (b) onglet **« Signes »** de l'encyclopédie (1 ligne, fiche 3 niveaux existante) ; (c) P/V/R relisent
+  `appris` aussitôt (snapshot complet, debug seulement) ; (d) `capture_vm.sh -P` (palier3) / `-t` (technique).
+- Captures [VM, n=1 chacune] : ×16 poivron (full s42, w12) « feuilles couvertes d'un voile cireux
+  bleu-gris » ; après palier3 « … — acclimatation » ; technique « acclimatation 0,20 · ravageurs 0,10 ·
+  rongeur_racinaire 0,05 (visible ici : acclimatation) » ; ×4 (w26) plante + « petit mammifère couvert de
+  piquants… » (hérisson). Carpophore : **aucun `vu` au corpus** → pas d'info-bulle par défaut (reliquat).
+- **Bilan VM, banc E s45** (`perf_vm.sh -E 20 -z Z`) [VM llvmpipe, n=1 chacun] : ×4 draw calls
+  **2 013 (entrée) → 111**, médiane 77,2 ms, > 100 ms 1 ; ×2 73 dc, médiane 73,1, > 100 ms 0 ; ×1 68 dc,
+  médiane 87,2, > 100 ms 0 ; ×0,5 75 dc, médiane 69,2, > 100 ms 0. Accéléré ×8 3 s/sem s35
+  (`-z 8 -A 3 -W 35`) : 213 dc, médiane 70,4 ms, **> 100 ms 23** [VM, n=1], parse JSON 50,9 / max 62,5 ms.
+- **Suspect ③ TRANCHÉ** (sonde temporaire, retirée) : chaque image accélérée > 60 ms = **création d'une
+  page d'atlas 2048²** dans `Begin` de la 1ʳᵉ plante (hors budget 4 ms) : 9 Begin de 34-99 ms, tous avec
+  `pages n → n+1` [VM, n=1 run] ; pages **vidangées puis recréées** (7 vidanges, 10-11 pages, ~115 Mo)
+  [VM, n=1] → brassage de pages en croissance rapide. Remède possible (non fait, pas de boucle) : recycler
+  une page vidangée au lieu de la détruire/recréer. À chiffrer au PC.
+- Build vert, 0 avertissement. Golden `22768f33…` PASS. `test_sim_server` 285/285. LDC : `InfoBulle.cs`
+  131, `Hud.cs` 297, `Observation.cs` 40, `Genes.cs` 39, `Controls.cs` 205, `SimBridge.cs` 305 (vigilance,
+  pont seul), `Snapshot.cs` 306 (vigilance, préexistant), `PlantRenderer.cs` 253.
+
+### Procédure PC pour Nico (seule mesure F5)
+1. `git pull` · ouvrir Godot · F5 · monde **full**.
+2. Touche **E** (banc ×4, ≈ 2 min, rapport copié) → coller le rapport.
+3. Touche **Maj+E** (banc accéléré ×8, 3 s/semaine) → coller le rapport.
+Critères : **60 FPS à ×4** ; **aucune image > 100 ms en accéléré**. Raté → dette chiffrée, pas de boucle
+(lire la ligne « priorité du moteur » Windows, et les « pire … cuisson (file) »).
+
+### F5 ressenti (3 questions)
+1. Paliers bas ×2/×1/×0,5 : encore horribles ? (densité des touffes en hiver, liseré clair orientations
+   2-3, ail jamais vu)
+2. L'info-bulle aide-t-elle à savoir ce qu'on regarde ? (survol ×16 d'une plante marquée ; P puis
+   re-survol → cause ; Maj+F3 ; onglet Signes de l'encyclopédie)
+3. L'accéléré (Maj+E ou M) est-il agréable ?
+
 ## §REPRISE
-①②③④ commités. ⑤ FAIT (non commité, à commiter par l'orchestrateur) : plante assemblée aux paliers
-bas (`PlantRenderer.Assemblee.cs` + appel dans `Paliers.cs`). Points F5 (au ⑦) : « à ×2/×1/×0,5,
-est-ce encore horrible ? » ; densité des touffes (sparse en hiver, `foliage_density` faible) ;
-liseré clair des orientations 2-3 ; ail (lancéolée) jamais vu à l'écran. Pour ⑦ : faire lancer
-Maj+E au PC (priorité moteur Windows + file de cuisson).
-⑥ FAIT (non commité). Pour ⑦ : onglet « Signes » à ajouter à `EncyclopediePanel.cs` (type `signe`) ;
-info-bulle = `vu` du corpus tant que non appris — commande pont `legende` (statique, une fois) ;
-envoyer `observer` avec `signe`/`tile`/`x_cm`/`y_cm` ; lire `player.appris`.
-Prochain : ⑦ `07_vue_infobulle_bilan.md`. Chaque tronçon met à jour sa ligne + « Mesures ».
+**Sprint CLOS côté code** (①→⑦ ; ⑦ non commité, à commiter par l'orchestrateur). Reste : **F5 Nico**
+(procédure PC + 3 questions ci-dessus) et la clôture (DETTE D109 d/e/f, BACKLOG, journal, mémoire,
+`/refactor` auto-léger). À trancher par Nico : bête jamais nommée en jeu normal (⑥) ; `vu` des
+carpophores absent ; recyclage des pages d'atlas (brassage en accéléré).

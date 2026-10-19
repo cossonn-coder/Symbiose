@@ -58,9 +58,19 @@ namespace Symbiose
 		{
 			// Les ancres macro ne bougent qu'au snapshot → clé de survol (T3).
 			if (_bridge == null || !_survolSale) return;
-			if (CurrentZoom < MacroObserveMinZoom) return;
-			Vector2 w = _sourisMonde;
+			string espece = BeteSousSouris();
+			if (espece == null || !_especesMacroObservees.Add(espece)) return;
+			_bridge.Observer(espece);
+			GD.Print($"[WorldView] survol → vie macro observée : {espece}.");
+		}
 
+		/// <summary>Clé de la bête sous le curseur (ou "champignon" pour un
+		/// carpophore), null si rien ou si la vie macro n'est pas affichée (zoom
+		/// &lt; ×4). Partagée par l'observation et l'info-bulle (⑦) : un seul picking.</summary>
+		private string BeteSousSouris()
+		{
+			if (CurrentZoom < MacroObserveMinZoom) return null;
+			Vector2 w = _sourisMonde;
 			// Espèce animale sous le curseur : d'abord le nuage trophique, sinon un
 			// butineur (les deux exposent la MÊME clé d'espèce que le pont attend).
 			string espece = _macroLife?.SpeciesNear(w, MacroPickRadiusCm)
@@ -69,10 +79,7 @@ namespace Symbiose
 			if (espece == null && _carpophoreLayer != null
 				&& _carpophoreLayer.HasNear(w, MacroPickRadiusCm))
 				espece = "champignon";
-
-			if (espece == null || !_especesMacroObservees.Add(espece)) return;
-			_bridge.Observer(espece);
-			GD.Print($"[WorldView] survol → vie macro observée : {espece}.");
+			return espece;
 		}
 	}
 }

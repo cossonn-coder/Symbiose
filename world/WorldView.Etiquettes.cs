@@ -27,6 +27,7 @@ namespace Symbiose
 		{
 			_plantLabels = new CanvasLayer { Name = "PlantLabels" };
 			AddChild(_plantLabels);
+			BuildInfoBulle();   // info-bulle à deux niveaux (PLANTE ASSEMBLÉE ⑦)
 		}
 
 		// Appelée chaque frame (_Process) : selon le mode (Aucune / Survol / Toutes),

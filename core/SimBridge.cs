@@ -431,6 +431,17 @@ namespace Symbiose
 		public void Observer(string species)
 			=> Request(new GDict { ["cmd"] = "observer", ["species"] = species });
 
+		/// <summary>Observation d'un SIGNE visible sur la plante survolée (⑥/⑦) :
+		/// `observer` + `signe` + lieu (tuile, cm locaux) → note au carnet, dédupliquée
+		/// côté Python par (espèce, signe, saison).</summary>
+		public void ObserverSigne(string species, string signe, Variant tile, Variant xCm, Variant yCm)
+			=> Request(new GDict { ["cmd"] = "observer", ["species"] = species, ["signe"] = signe,
+								   ["tile"] = tile, ["x_cm"] = xCm, ["y_cm"] = yCm });
+
+		/// <summary>Légende STATIQUE des signes et des bêtes (⑥/⑦) : `vu` (et `cause`
+		/// des signes) — demandée une fois, l'info-bulle gate par `player.appris`.</summary>
+		public GDict Legende() => Request(new GDict { ["cmd"] = "legende" });
+
 		/// <summary>
 		/// Raccourci DEBUG (0.5.12, retour F5) : `op` ∈ {"palier3", "observer_tout",
 		/// "reset"}. Force la maîtrise pour tester magazine/pages/carnet sans jouer

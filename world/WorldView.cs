@@ -444,6 +444,8 @@ namespace Symbiose
 			// 0b·ter) Observation de la VIE MACRO au survol (D60 ②) : animal (nuage
 			//     ou butineur) / carpophore → champignon. Gaté au zoom ≥ ×4 (visible).
 			ObserveHoveredMacroLife();
+			// 0b·quater) Info-bulle à deux niveaux + observation d'un signe (⑦).
+			UpdateInfoBulle();
 			// 0b'') Étiquette de survol d'un CONTENEUR (substrat/volume + état
 			//       qualitatif du mini-sol, ⑥c) — même couche nette, mots seuls.
 			UpdateContainerLabel();

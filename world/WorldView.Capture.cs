@@ -50,6 +50,8 @@
 //                            s > 0 = s par semaine ; absent = 60 s (nominale) — PERF VUE ④
 //   --capture-kit=1          planche du kit d'éléments (touffes, fleurons) par-dessus
 //                            le monde — PLANTE ASSEMBLÉE ④ (WorldView.PlancheKit.cs)
+//   --capture-palier3=1 / --capture-technique=1  info-bulle apprise / technique
+//                            (debug palier3 au montage ; Maj+F3) — PLANTE ASSEMBLÉE ⑦
 //   --capture-pleine-res=1   monde rendu en 1920×1080 ×1 au lieu de 960×540 ×2
 //                            (MESURE seulement, PERF VUE ⑤ ; le défaut ne change pas)
 
@@ -97,6 +99,9 @@ namespace Symbiose
 		private static readonly bool CapturePleineRes = ArgCapture("pleine-res") == "1";
 		// Aide clavier F1 affichée (PLANTE ASSEMBLÉE ③ : vérifier qu'elle tient à l'écran).
 		private static readonly bool CaptureAide = ArgCapture("aide") == "1";
+		// Info-bulle (PLANTE ASSEMBLÉE ⑦) : debug palier3 au montage / mode technique.
+		private static readonly bool CapturePalier3 = ArgCapture("palier3") == "1";
+		private static readonly bool CaptureTechnique = ArgCapture("technique") == "1";
 		private static float EchelleCamera => CapturePleineRes ? 2f : 1f;
 
 		// Zoom de la Camera2D pour un palier logique (seul écrivain : les 4 poses).
@@ -217,6 +222,8 @@ namespace Symbiose
 			if (!float.IsNaN(CapturePlanche)) TogglePlanche(CapturePlanche, parSouris: false);   // D106 T7
 			if (CaptureAide) { _hudTextMode = 2; ApplyHudTextMode(); }   // F1 mode Aide
 			if (CaptureKit) AfficherPlancheKit();   // planche du kit (PLANTE ASSEMBLÉE ④)
+			if (CapturePalier3) DebugMaitrise("palier3");   // info-bulle apprise (⑦)
+			if (CaptureTechnique) ToggleInfoTechnique();    // info-bulle technique (⑦)
 			AppliquerCaptureBanc();   // ombres / banc d'étalonnage (WorldView.Etalonnage.cs)
 		}
 

@@ -28,7 +28,7 @@ namespace Symbiose
 {
 	public partial class EncyclopediePanel : VoicePanel
 	{
-		// Les 7 onglets (règnes), dans l'ordre figé (taxonomie QA, kickoff ⑥). Une
+		// Les 8 onglets (règnes + signes, ⑦), dans l'ordre figé (taxonomie QA, kickoff ⑥). Une
 		// paire {clé de type protocole, libellé d'onglet affiché}. La clé de type
 		// est celle que le pont attend (`msg.type`) et que porte chaque entrée.
 		private static readonly (string Type, string Libelle)[] Onglets =
@@ -40,6 +40,7 @@ namespace Symbiose
 			("technique",  "Techniques"),
 			("outil",      "Outils"),
 			("geste",      "Gestes"),
+			("signe",      "Signes"),   // fiche ouverte quand le signe est APPRIS (⑥/⑦)
 		};
 
 		// Titres des trois niveaux des fiches 3-niveaux (mise en page seulement — ce

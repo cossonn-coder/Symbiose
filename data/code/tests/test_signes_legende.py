@@ -155,6 +155,10 @@ def test_pont():
     check("legende : 11 signes + toute la faune (vu)",
           lg["ok"] and set(lg["signes"]) == set(SIGNES) and set(lg["faune"]) == set(FAUNE_ENCYCLO)
           and lg["signes"]["gel"]["vu"] == SIGNES["gel"]["vu"])
+    check("legende : nom de cause court (⑦ info-bulle apprise)",
+          lg["signes"]["chlorose"]["cause"] == "Chlorose ferrique"
+          and all(0 < len(v["cause"]) < 40 for v in lg["signes"].values()),
+          {k: v["cause"] for k, v in lg["signes"].items()})
     snap = s.send(cmd="snapshot")["snapshot"]
     check("snapshot : player.appris vide", snap["player"]["appris"] == {"signes": [], "faune": []})
     s.send(cmd="debug", op="palier3")

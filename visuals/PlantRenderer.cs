@@ -110,6 +110,23 @@ namespace Symbiose
 		// pic). Ex-ChloroseAmount=0.6 ; un poil relevé : l'intensité module désormais.
 		private const float SymptomTintMax = 0.7f;
 
+		// Causes à MARQUE FOLIAIRE fine sans teinte propre (criblage, bord noirci) :
+		// dessinées par DrawLeafDamage, donc visibles seulement dès ×16.
+		private static readonly HashSet<string> MarquesFines = new() { "ravageurs", "gel", "grele" };
+
+		/// <summary>Le signe `cause` se VOIT-il au palier `zoom` (info-bulle ⑦) ?
+		/// Teinte de santé (canal couleur) dès ×2 (`PalierSanteZoom`, comme le dessin
+		/// des paliers bas et ×4+) ; marques foliaires fines dès ×16. Miroir de ce que
+		/// le dessin montre — pas une règle de jeu.</summary>
+		public static bool SigneVisible(string cause, float zoom)
+			=> ColorantTints.ContainsKey(cause) ? zoom >= PalierSanteZoom
+				: MarquesFines.Contains(cause) && zoom >= PalierSymptomesZoom;
+
+		// Liste brute du snapshot, dans l'ordre du moteur (intensité décroissante) :
+		// lue par l'info-bulle (WorldView.InfoBulle.cs), jamais par le dessin.
+		private readonly List<(string Cause, float Intensite)> _symptomes = new();
+		public IReadOnlyList<(string Cause, float Intensite)> Symptomes => _symptomes;
+
 		// --- Largeur de trait du bois (lisibilité ligneuse D90, tronçon ②) ---------
 		// Largeur (px LOGIQUES) d'un segment = round(thickness_cm · PxPerCmX · facteur),
 		// bornée à 1 (une brindille ne disparaît jamais). RECALIBRÉ contre la NOUVELLE
@@ -194,6 +211,7 @@ namespace Symbiose
 			_colorTint = default;
 			_colorAmount = 0f;
 			_ravageurs = _gel = _grele = _drought = _ombre = _maladie = 0f;
+			_symptomes.Clear();
 			if (symptoms != null)
 				for (int i = 0; i < symptoms.Count; i++)
 				{
@@ -201,6 +219,7 @@ namespace Symbiose
 					using var d = LectureSnap.Dico(symptoms, i);
 					string cause = LectureSnap.S(d, "cause");
 					float it = LectureSnap.F(d, "intensity");
+					_symptomes.Add((cause, it));
 					// COULEUR : on garde le colorant de plus forte intensité (pas de
 					// mélange). On compare l'intensité brute (SymptomTintMax constant).
 					if (ColorantTints.TryGetValue(cause, out var tint)

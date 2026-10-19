@@ -62,10 +62,13 @@ class MaitriseCmdsMixin:
     def cmd_legende(self, msg: dict) -> dict:
         """Légende des signes (⑥), LECTURE SEULE et statique (corpus, pas d'état) :
         ce que l'info-bulle ⑦ montre AVANT apprentissage — `signes: {signe: {vu,
-        concept}}` et `faune: {bête: vu}`. La vue la demande une fois ; ce qui est
-        appris arrive au snapshot (`player.appris`). Utilisable avant `init`."""
+        concept, cause}}` et `faune: {bête: vu}`. La vue la demande une fois ; ce qui
+        est appris arrive au snapshot (`player.appris`). Utilisable avant `init`.
+        `cause` (⑦) = le NOM de la cause, tête de la fiche niveau 2 (« Chlorose
+        ferrique : … ») — l'info-bulle ne l'affiche qu'une fois le signe APPRIS."""
         return {"ok": True,
-                "signes": {s: {"vu": c["vu"], "concept": c["concept"]}
+                "signes": {s: {"vu": c["vu"], "concept": c["concept"],
+                               "cause": c["fiche"][2].split(" : ", 1)[0]}
                            for s, c in SIGNES.items()},
                 "faune": dict(FAUNE_VU)}
 
