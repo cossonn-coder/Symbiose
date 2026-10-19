@@ -90,6 +90,7 @@ namespace Symbiose
 						else TogglePerf();
 						break;
 					case Key.C:        CopyPerfReport();  break;  // presse-papier perf
+					case Key.E:        ToggleEtalonnage(); break; // banc d'étalonnage perf (PERF VUE ①)
 					case Key.H:        ToggleHouseGhost(); break;
 					case Key.O:        ToggleShadows();   break;
 					case Key.I:        ToggleMacroLife(); break;

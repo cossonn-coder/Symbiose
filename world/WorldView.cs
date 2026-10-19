@@ -287,6 +287,7 @@ namespace Symbiose
 		{
 			// Options d'init du panneau Paramètres (T2) : mémorisées avant « Lancer »,
 			// transmises au montage du monde (encyclopédie de départ + carnet anticipé).
+			_configLancee = config;   // rapport perf : quel monde (WorldView.Etalonnage.cs)
 			var world = _bridge.Init(Seed, config, _encycloDemarrage, _carnetAnticipe);
 			if (world == null) { _bridge.Quit(); return; }
 			_world = world;
@@ -446,7 +447,9 @@ namespace Symbiose
 			UpdateCurseur();
 			// 0c) Soleil (volet C) : la jauge intra-semaine est l'heure du jour.
 			//     Early-out interne si le soleil a bougé de moins de 2°.
+			long tp = PerfPostes.Debut();   // chronos par poste (banc PERF VUE ①)
 			UpdateSun();
+			PerfPostes.Fin(PerfPostes.Poste.Soleil, tp);
 			// 0d) Overlay de perfs (F4) — toutes phases.
 			MesurerPerfRendu();     // draw calls/temps de frame (PerfMesure.cs, coût nul)
 			if (_perfVisible) UpdatePerf();
@@ -477,12 +480,22 @@ namespace Symbiose
 			}
 			// 1·bis) Une famille (ou une tranche de plantes) de la semaine en cours
 			//        d'application — jamais tout le jardin dans la même frame.
+			tp = PerfPostes.Debut();
 			AvancerEtalement();
+			PerfPostes.Fin(PerfPostes.Poste.Etalement, tp);
 			// 1·ter) Plantes en attente entrées dans la marge (semaine paresseuse, T4).
+			tp = PerfPostes.Debut();
 			AvancerAttente();
+			PerfPostes.Fin(PerfPostes.Poste.Attente, tp);
 			// 1·quater) Tapis des petites plantes, si une plante ou le palier a changé
 			//           (D106 T5, WorldView.Tapis.cs) — jamais par frame au repos.
+			tp = PerfPostes.Debut();
 			MajTapisSiSale();
+			PerfPostes.Fin(PerfPostes.Poste.Tapis, tp);
+			// 1·quinquies) Banc d'étalonnage (touche E, PERF VUE ①) : APRÈS l'étalement
+			//   (la semaine courante est lue) et AVANT le lancement du step suivant
+			//   (il coupe le turbo à la semaine cible, sans semaine de trop).
+			AvancerEtalonnage();
 
 			// 1b) Consommer une action terminée (volet B) : afficher l'ACK/NAK
 			//     métier et appliquer le snapshot frais joint (un déracinement

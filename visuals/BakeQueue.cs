@@ -106,7 +106,15 @@ namespace Symbiose
 			if (ms > _drawMsMax) { _drawMsMax = ms; _drawMaxSegs = segs; }
 		}
 
+		// Banc PERF VUE ① : chronométré (PerfPostes), corps inchangé.
 		public override void _Process(double delta)
+		{
+			long t0 = PerfPostes.Debut();
+			ProcessFile();
+			PerfPostes.Fin(PerfPostes.Poste.CuissonFile, t0);
+		}
+
+		private void ProcessFile()
 		{
 			ulong frame = Engine.GetProcessFrames();
 			CommitRendered(frame);

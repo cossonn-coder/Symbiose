@@ -117,7 +117,15 @@ namespace Symbiose
 				foreach (var p in BakeQueue.All) p.Invalidate();
 		}
 
+		// Banc PERF VUE ① : chronométré (PerfPostes), corps inchangé.
 		public override void _Process(double delta)
+		{
+			long t0 = PerfPostes.Debut();
+			ProcessVent(delta);
+			PerfPostes.Fin(PerfPostes.Poste.Vent, t0);
+		}
+
+		private void ProcessVent(double delta)
 		{
 			_t += delta;
 			if (!Active)

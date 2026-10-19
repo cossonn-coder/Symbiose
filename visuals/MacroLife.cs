@@ -294,7 +294,35 @@ namespace Symbiose
 		// effacer ou raviver le canvas, puis silence tant que rien ne change.
 		private bool _lastZoomOk;
 
+		// Banc PERF VUE ① : les deux points d'entrée sont chronométrés (PerfPostes),
+		// le corps est inchangé.
 		public override void _Process(double delta)
+		{
+			long t0 = PerfPostes.Debut();
+			ProcessMacro(delta);
+			PerfPostes.Fin(PerfPostes.Poste.MacroProcess, t0);
+		}
+
+		public override void _Draw()
+		{
+			long t0 = PerfPostes.Debut();
+			DessinerMacro();
+			PerfPostes.Fin(PerfPostes.Poste.MacroDraw, t0);
+		}
+
+		/// <summary>Entrées en fondu de sortie (`DyingAt` posé) : mesure de la fuite
+		/// (purgées seulement dans _Draw) pour le banc — compte, ne corrige rien.</summary>
+		public int CountMourantes
+		{
+			get
+			{
+				int n = 0;
+				foreach (var e in _entries.Values) if (e.DyingAt >= 0f) n++;
+				return n;
+			}
+		}
+
+		private void ProcessMacro(double delta)
 		{
 			if (!Visible) return;              // touche I : coût strictement nul
 			bool zoomOk = WorldView.CurrentZoom >= MinZoom;
@@ -310,7 +338,7 @@ namespace Symbiose
 			QueueRedraw();
 		}
 
-		public override void _Draw()
+		private void DessinerMacro()
 		{
 			if (_entries.Count == 0) return;
 			if (WorldView.CurrentZoom < MinZoom) return;   // LOD : trop loin

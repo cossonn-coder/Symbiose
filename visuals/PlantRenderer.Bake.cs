@@ -103,7 +103,15 @@ namespace Symbiose
 			if (!HasBakedImage) QueueRedraw();
 		}
 
+		// Banc PERF VUE ① : chronométré (PerfPostes), corps inchangé.
 		public override void _Draw()
+		{
+			long t0 = PerfPostes.Debut();
+			DessinerPlante();
+			PerfPostes.Fin(PerfPostes.Poste.PlanteDraw, t0);
+		}
+
+		private void DessinerPlante()
 		{
 			if (IsBrush)
 			{

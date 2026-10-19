@@ -27,7 +27,15 @@ namespace Symbiose
 			QueueRedraw();
 		}
 
+		// Banc PERF VUE ① : chronométré (PerfPostes) — appels/s = redessins d'ombre.
 		public override void _Draw()
+		{
+			long t0 = PerfPostes.Debut();
+			DessinerOmbre();
+			PerfPostes.Fin(PerfPostes.Poste.OmbreDraw, t0);
+		}
+
+		private void DessinerOmbre()
 		{
 			if (!WorldView.ShadowsOn) return;
 			Vector2 dir = WorldView.SunShadowDir;            // unité, monde

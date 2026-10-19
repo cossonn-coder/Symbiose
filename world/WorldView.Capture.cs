@@ -40,6 +40,12 @@
 //                            la marge (vérif « rien de périmé ») — D106 T4
 //   --capture-planche=<s>    planche des paliers ×0,5→×32 (touche L), s secondes de
 //                            jeu par palier, plante la plus proche du centre — D106 T7
+//   --capture-etalonnage=<s> banc d'étalonnage (touche E), mesure de s secondes ;
+//                            rapport imprimé puis sortie — PERF VUE ①
+//   --capture-banc-semaine=<n> semaine moteur du banc (défaut 45) — PERF VUE ①
+//   --capture-banc-zoom=<z> / --capture-banc-centre=<x>,<y>  cadrage du banc E
+//                            (défaut ×4 sur EtalonCentreCm) — PERF VUE ①
+//   --capture-ombres=0       ombres coupées (comme la touche O) — PERF VUE ①
 
 using Godot;
 using System.Globalization;
@@ -178,6 +184,7 @@ namespace Symbiose
 			RedrawAllPlants();
 			CullPlants();
 			if (!float.IsNaN(CapturePlanche)) TogglePlanche(CapturePlanche, parSouris: false);   // D106 T7
+			AppliquerCaptureBanc();   // ombres / banc d'étalonnage (WorldView.Etalonnage.cs)
 		}
 
 		// Appelé à chaque step consommé (_Process) : décompte des semaines turbo du
