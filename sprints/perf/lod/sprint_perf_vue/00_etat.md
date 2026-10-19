@@ -25,7 +25,7 @@
 | ② | `02_vie_macro.md` | peintre D2 + points chauds + taille réelle, lot par tuile, fuite | intact (pont 0.5.45) | **fait** |
 | ③ | `03_ombres_lot.md` | ombres en lot (un maillage) | intact | **fait** |
 | ④ | `04_cadence_acoups.md` | cadence adaptative, priorité serveur, à-coups, D109 | intact | **fait** |
-| ⑤ | `05_vue_bilan.md` | pleine résolution mesurée, bilan converti PC, F5 ressenti | intact | **fait** (bilan PC non converti : rapport absent) |
+| ⑤ | `05_vue_bilan.md` | pleine résolution mesurée, bilan converti PC, F5 ressenti | intact | **fait** (bilan PC converti le 2026-10-19 : ×4 = 32,5 FPS, D1 raté) |
 
 ## Mesures
 ### Banc ① (2026-10-19) — touche **E** (F5) ≡ `tools/perf_vm.sh -E 20` (VM)
@@ -199,6 +199,89 @@ zoomez ×4 » remplacé par « taille réelle : palier par espèce » (`WorldVie
 **Écarts** : ×8 non mesuré (hors critères) ; `WorldView.Hud.cs` à 294 LDC (sous 300, inchangé de bande) ;
 `ForagerLayer` toujours non touché (reliquat ②).
 
+### Étalonnage PC reçu (Nico, 2026-10-19) — banc E s45 ×4, F5 Windows
+Machine : i5-4200H (4 fils), HD 4600 via ANGLE/Direct3D11 (`opengl3_angle`), monde 960×540 (×½).
+Extraits du rapport (complet ci-dessous) :
+| mesure (20 s, 60 s/semaine, vent actif 0,24) | PC [n=1] | VM même cas (⑤) [n=1] | ratio PC/VM |
+|---|---|---|---|
+| FPS | **32,5** | ≈ 13 | — |
+| médiane / p95 / p99 / max ms | 28,9 / 41,6 / 47,0 / 51,3 | 75,8 / 88,2 / — / — | **0,38** (médiane) |
+| images > 33 ms / > 100 ms | 123 / **0** | — / 0 | — |
+| rendu CPU ms/image | **28,7** (GPU non mesuré par ANGLE) | 64 | **0,45** |
+| postes CPU (somme) | **0,25 ms/image** | ≤ 0,3 | ~1 |
+| draw calls / primitives | 2 044 / 70 k | 2 016 / 68 k | ~1 |
+| GC | 3 collectes, 6,6 ms au total sur 20 s | 10-20 ms par collecte (④) | — |
+| tick serveur | 1 146 ms (pire 1 495 ms en s39) | — | — |
+Lecture : **il ne reste que le rendu**. Les postes de la vue (vie macro, ombres, vent, cuisson, semaine)
+font 0,25 ms sur 30,8 ; le GC ne compte plus (1 image lente sur 123 avec un GC). Avant le sprint : 1-3 FPS
+à ×4 (F5 du 2026-10-19 [n=1]) → **×10 à ×30**.
+
+**Bilan contre les critères** (conversion = ratio de médiane ×4 appliqué aux autres paliers [n=1, même
+scène supposée comparable — hypothèse]) :
+| critère | chiffre PC | verdict |
+|---|---|---|
+| 60 FPS à ×4 (≤ 16,7 ms) | médiane 28,9 ms, 32,5 FPS [PC, n=1] | ❌ **RATÉ** — il manque ~12 ms par image, tout en rendu |
+| 30 FPS de ×0,5 à ×2 (≤ 33,3 ms) | estimé 29-31 ms en médiane [VM 77-81 ms × 0,38, n=1] | 🟡 **probablement tenu, de justesse** — non mesuré au PC (le p95 ×4 vaut 41,6 ms) |
+| accéléré : aucune image > 100 ms | estimé ~50-60 ms au pire [VM 131-141 ms × 0,38-0,45, n=1] | 🟡 **probable, non mesuré** — le ratio ne tient pas forcément quand le serveur Python dispute les 2 cœurs |
+
+**Où chercher les 12 ms** (hypothèse à vérifier en mesure, pas un constat) : rendu CPU 28,7 ms pour 2 044
+draw calls ≈ 14 µs par draw call [PC, n=1] → viser ≲ 1 000 draw calls à ×4 pour passer sous 16,7 ms.
+Plantes + maison ≈ 400 draw calls sur 2 044 [VM ④, n=1] : D109 (d) seule ne suffit pas, il faut la
+ventilation des ~1 600 autres (sol par tuile, couches, décor, HUD) — sur le PC, pas sur la VM (llvmpipe ne
+réagit pas au nombre de draw calls de la même façon : masquer `Objects` n'y baissait rien). → **entrée du
+sprint « plante assemblée »** (ou d'un tronçon perf dédié, à trancher en `/conception`).
+Non couvert par ce rapport : pleine résolution (pas d'option F5), turbo et 1 s/semaine au PC.
+
+<details><summary>Rapport brut du PC (collé par Nico)</summary>
+
+```
+=== Rapport perf Symbiose — hiver an 1 semaine 6/13 ===
+[machine] Windows · Intel(R) Core(TM) i5-4200H CPU @ 2.80GHz (4 threads) · GPU ANGLE (Intel, Intel(R) HD Graphics 4600 (0x00000416) Direct3D11 vs_5_0 ps_5_0, D3D11-20.19.15.5171) · pilote opengl3_angle · F5
+[banc E] semaine moteur 45 · zoom ×4 · centre 1650,950 cm · mesure 20 s · monde 960×540
+  vie macro au cadrage (avant purge) : 63 entrées dont 0 mourantes
+  cadence nominale 60 s/semaine : 0 semaines appliquées · dernier tick vu par la vue 1390 ms
+  images 650 en 20.0 s · FPS 32.5 · moyenne 30.8 ms · médiane 28.9 · p95 41.6 · p99 47.0 · max 51.3 ms
+  images > 33 ms : 123 · > 100 ms : 0 · draw calls 2044 · primitives 70035
+  moniteur TimeProcess 44.59 ms/image · rendu CPU 28.71 · rendu GPU 0.00 ms/image (0 = non mesuré par ce pilote)
+  postes CPU (somme 0.25 ms/image, non attribué 30.56) :
+    vie macro _Process        0.00 ms/image ( 0.0 %) ·      32 appels/s ·       0 Ko alloués/s
+    vie macro _Draw           0.00 ms/image ( 0.0 %) ·       0 appels/s ·       0 Ko alloués/s
+    ombres _Draw              0.03 ms/image ( 0.1 %) ·       1 appels/s ·      24 Ko alloués/s
+    soleil (UpdateSun)        0.01 ms/image ( 0.0 %) ·      32 appels/s ·       0 Ko alloués/s
+    vent (poses)              0.20 ms/image ( 0.6 %) ·      32 appels/s ·       1 Ko alloués/s
+    cuisson (file)            0.01 ms/image ( 0.0 %) ·      32 appels/s ·       0 Ko alloués/s
+    plantes _Draw             0.01 ms/image ( 0.0 %) ·      14 appels/s ·       0 Ko alloués/s
+    semaine (étalement)       0.00 ms/image ( 0.0 %) ·      32 appels/s ·       0 Ko alloués/s
+    attente (marge)           0.00 ms/image ( 0.0 %) ·      32 appels/s ·       0 Ko alloués/s
+    tapis/sol                 0.00 ms/image ( 0.0 %) ·      32 appels/s ·       0 Ko alloués/s
+  à-coups : 123 images > 33 ms, dont 0 pendant l'application d'une semaine, 0 avec un step en vol, 1 avec un GC · pause GC totale 6.6 ms (0.01 ms/image)
+    étalement, pire passage par famille : sol 0.0 plantes 0.0 vie macro 0.0 couches sol 0.0 structures 0.0 météo 0.0 ménage 0.0 ms
+    étalement, alloué par famille : sol 0.0 plantes 0.0 vie macro 0.0 couches sol 0.0 structures 0.0 météo 0.0 ménage 0.0 Mo
+    collectes GC gen0/1/2 : 2 / 1 / 0 · mode Interactive · serveur GC False · alloué 3 Mo (tous threads)
+    cuissons 0 · poses cuites 0 (0.0 par cuisson) · vent force 0.24 (actif)
+    dernier GC : gen0 · pause 2.3 ms · tas 17 Mo · promus 0.0 Mo · épinglés 0 · finaliseurs en attente 54 · compacté True · concurrent False
+    pire 51.3 ms : rendu CPU 32.4 ms · postes — · GC 0.0 ms
+    pire 48.8 ms : rendu CPU 26.7 ms · postes — · GC 0.0 ms
+    pire 47.4 ms : rendu CPU 27.1 ms · postes — · GC 0.0 ms
+    pire 47.1 ms : rendu CPU 27.5 ms · postes — · GC 0.0 ms
+    pire 47.1 ms : rendu CPU 28.4 ms · postes — · GC 0.0 ms
+[client] FPS 29 · tick 1390 ms · cadence 2,9 s/sem (2,4 j/s)
+  plantes 272 (+0 pousses) · segments 1243 · vie macro 25 entrées dont 0 mourantes, AFFICHÉE · butineurs 0 · ombres ON · zoom ×4
+  cadence : phase Saison · mode Saison · 60 s/semaine · monde « full » seed 42 · semaine moteur 45
+[serveur] tick moteur 1146,2 ms · N plantes 272 · RSS —
+[rendu — frame 35,0 ms (moy. ~1 s) · draw calls 2044 · objets 3178 · primitives 70034 · couches : tout]
+
+--- pires ticks (serveur) ---
+  s39 (an 1) : 1494,6 ms · 224 pl · 1136 seg · RSS —
+  s43 (an 1) : 1487,2 ms · 255 pl · 1212 seg · RSS —
+  s33 (an 1) : 1401,4 ms · 172 pl · 865 seg · RSS —
+  s15 (an 1) : 1357,5 ms · 115 pl · 361 seg · RSS —
+  s36 (an 1) : 1245,9 ms · 186 pl · 997 seg · RSS —
+--- état courant ---
+  s44 (an 1) : 1146,2 ms · 272 pl · 1243 seg · RSS —
+```
+</details>
+
 ### F5 ressenti — PROCÉDURE COURTE POUR NICO (après le banc E ci-dessous)
 `git pull`, F5, **full** → Lancer. Espace (saison, 60 s/semaine). Molette jusqu'à ×4 sur la tuile E
 (est de la maison). Répondre par oui/non + un mot :
@@ -215,9 +298,9 @@ autre touche). Attends ~2-4 min (le jardin avance tout seul jusqu'en hiver an 1,
 (Re-E pendant le banc = abandon. Si le jardin a déjà dépassé la semaine 45 : relancer F5.)
 
 ## §REPRISE
-Sprint : ①-⑤ **faits**, golden jamais re-figé (`22768f33…`). ⑤ = option `-R` (pleine résolution,
-mesure seule, surcoût +20 à +31 ms [VM, n=1-2]), bilan VM brut, légende F1. **Reste, côté Nico** : (1) banc E
-sur le PC (rapport à coller ici) → conversion des 3 critères (procédure en §⑤) et verdict D109 (d) ;
-(2) F5 ressenti (5 questions ci-dessus). Prochain sprint : « plante assemblée » (avec le chiffre de pleine
-résolution et un banc E `-R`-équivalent sur le PC).
+Sprint **CLOS**, golden jamais re-figé (`22768f33…`). Étalonnage PC reçu et converti (section
+« Étalonnage PC reçu ») : **×4 = 32,5 FPS** [PC, n=1] (avant 1-3), critère 60 FPS **raté**, ~12 ms à
+trouver, tout en rendu CPU (~14 µs par draw call, 2 044 draw calls). ×0,5-×2 à 30 FPS et accéléré
+< 100 ms : probables, non mesurés au PC. **Reste** : F5 ressenti (5 questions) ; ventilation des
+draw calls au PC → entrée du sprint « plante assemblée » (avec D109 d) ou d'un tronçon perf dédié.
 Mesurer par `tools/perf_vm.sh -E 20 [-z Z] [-x MacroLife] [-O] [-R]`.

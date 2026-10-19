@@ -26,7 +26,12 @@ Nico (i5-4200H + HD 4600), 30 FPS de ×0,5 à ×2, accéléré sans image > 100 
   [VM llvmpipe, n=1-2] ; HUD F1/F4 corrigés. **Critères PC : inconnus** — rapport du
   banc E de Nico absent, aucune conversion VM → PC inventée.
 
-Reste : **rapport banc E du PC de Nico** (seul juge des critères), puis F5 ressenti
+**Verdict PC (banc E, F5 Windows, le soir même)** : ×4 = **32,5 FPS**, médiane 28,9 ms, 0 image
+> 100 ms [PC, n=1] — avant 1-3 FPS. Critère 60 FPS **raté** (~12 ms à trouver), mais il ne reste
+que le rendu CPU (28,7 ms, ~14 µs par draw call ×2 044) : postes de la vue 0,25 ms, GC négligeable.
+×0,5-×2 à 30 FPS et accéléré < 100 ms : probables par ratio PC/VM 0,38-0,45, non mesurés au PC.
+
+Reste : ventilation des draw calls au PC (entrée du sprint suivant), puis F5 ressenti
 (fluidité ×4, lisibilité et taille de la vie macro, pullulations, accéléré, ombres
 sans fondu ni recouvrement des voisines). Mesures VM ×1, ×2, ×8 manquantes.
 Ensuite : sprint « plante assemblée » (absorbe D109 d).
