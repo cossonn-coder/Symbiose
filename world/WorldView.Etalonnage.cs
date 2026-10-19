@@ -7,7 +7,9 @@
 //   3. REPOS    — EtalonReposSec secondes (fin de l'étalement, file de cuisson) ;
 //   4. MESURE   — EtalonMesureSec secondes : distribution des images + postes CPU ;
 //   5. RAPPORT  — copié au presse-papier (comme C), mode et cadence restaurés.
-// Re-E pendant le banc = abandon (mode et cadence restaurés).
+// Re-E pendant le banc = abandon (mode et cadence restaurés). Maj+E = la variante
+// ACCÉLÉRÉE (PLANTE ASSEMBLÉE ③, WorldView.BancAccelere.cs) : même machine, autres
+// défauts (semaine 35, ×8, continu 3 s/semaine) et postes du mode accéléré.
 //
 // Déterminisme : graine (Seed) et warmup identiques au lancement normal, puis
 // uniquement des semaines sans geste → le même jardin sur les deux machines. Le
@@ -65,20 +67,28 @@ namespace Symbiose
 		// (1 = le défaut de test de Nico). Le rapport donne la cadence obtenue.
 		private static readonly float CaptureBancCadence = ParseFloat(ArgCapture("banc-cadence"));
 		private int _bancSemaineMesure;         // semaine moteur au début de la mesure
-		private static int EtalonSemaine =>
-			float.IsNaN(CaptureBancSemaine) ? EtalonSemaineDefaut : (int)CaptureBancSemaine;
+		// Banc ACCÉLÉRÉ (Maj+E, WorldView.BancAccelere.cs) : ses défauts remplacent
+		// semaine / zoom / cadence ; les arguments de capture VM gardent la main.
+		private int EtalonSemaine =>
+			!float.IsNaN(CaptureBancSemaine) ? (int)CaptureBancSemaine
+			: _bancAccelere ? AccelSemaine : EtalonSemaineDefaut;
+		private float CadenceMesure =>
+			!float.IsNaN(CaptureBancCadence) ? CaptureBancCadence
+			: _bancAccelere ? AccelCadence : float.NaN;
 
 		private int SemaineMoteur => _lastSnap == null ? -1 : _lastSnap["week"].AsInt32();
 		private static double Maintenant => Time.GetTicksUsec() / 1e6;
 
 		/// <summary>Touche E (ou `--capture-etalonnage`) : lance ou abandonne le banc.</summary>
-		private void ToggleEtalonnage()
+		private void ToggleEtalonnage(bool accelere = false)
 		{
 			if (_banc != EtatBanc.Inactif) { FinBanc(null); GD.Print("[banc] abandon."); return; }
+			_bancAccelere = accelere;
 			if (SemaineMoteur > EtalonSemaine)
 			{
 				GD.Print($"[banc] semaine moteur {SemaineMoteur} > {EtalonSemaine} : relancer le jeu (F5) puis E.");
-				_lastActionMsg = "banc E : jardin trop avancé — relancer le jeu puis E";
+				_lastActionMsg = $"banc {NomBanc} : jardin trop avancé — relancer le jeu puis {NomBanc}";
+				_bancAccelere = false;
 				UpdateActionHud();
 				return;
 			}
@@ -111,6 +121,7 @@ namespace Symbiose
 				case EtatBanc.Repos:
 					if (_etale != null || _pendingStep != null || Maintenant - _bancT0 < EtalonReposSec) return;
 					DemarrerDistribution();
+					DemarrerPostesAccelere();   // steps, retard, priorité (BancAccelere.cs)
 					PoserCadenceMesure();
 					_banc = EtatBanc.Mesure;
 					_bancT0 = Maintenant;
@@ -120,11 +131,12 @@ namespace Symbiose
 					if (Maintenant - _bancT0 < _bancMesureSec) return;
 					var sb = new StringBuilder();
 					sb.AppendLine(string.Create(CultureInfo.InvariantCulture,
-						$"[banc E] semaine moteur {SemaineMoteur} · zoom ×{ZoomSteps[_zoomIndex]} · "
+						$"[banc {NomBanc}] semaine moteur {SemaineMoteur} · zoom ×{ZoomSteps[_zoomIndex]} · "
 						+ $"centre {EtalonCentre().X:F0},{EtalonCentre().Y:F0} cm · mesure {_bancMesureSec:F0} s · monde {_worldVp.Size.X}×{_worldVp.Size.Y}"));
 					sb.AppendLine($"  vie macro au cadrage (avant purge) : {_bancCadrage}");
 					EcrireCadenceMesure(sb);
 					EcrireDistribution(sb);
+					EcrirePostesAccelere(sb);
 					FinBanc(ConstruireRapportPerf(sb.ToString()));
 					return;
 			}
@@ -133,17 +145,21 @@ namespace Symbiose
 		private void PoserCadenceMesure()
 		{
 			_bancSemaineMesure = SemaineMoteur;
-			if (float.IsNaN(CaptureBancCadence)) return;   // nominale : déjà posée
-			if (CaptureBancCadence <= 0f) _simMode = SimMode.Turbo;
-			else DebugSecondsPerWeek = CaptureBancCadence;
+			float cad = CadenceMesure;
+			if (float.IsNaN(cad)) return;   // nominale : déjà posée
+			// Cadence imposée : mode CONTINU (le cas de Nico) — en mode Saison, le
+			// passage de saison renverrait en planification et couperait les steps.
+			if (cad <= 0f) _simMode = SimMode.Turbo;
+			else { _simMode = SimMode.Continu; DebugSecondsPerWeek = cad; }
 			_timeAccum = 0f;
 		}
 
 		private void EcrireCadenceMesure(StringBuilder sb)
 		{
 			int n = SemaineMoteur - _bancSemaineMesure;
-			string consigne = float.IsNaN(CaptureBancCadence) ? "nominale 60 s/semaine"
-				: CaptureBancCadence <= 0f ? "turbo (au plus vite)" : $"{CaptureBancCadence:F1} s/semaine";
+			float cad = CadenceMesure;
+			string consigne = float.IsNaN(cad) ? "nominale 60 s/semaine"
+				: cad <= 0f ? "turbo (au plus vite)" : $"{cad:F1} s/semaine (continu)";
 			string obtenue = n > 0
 				? string.Create(CultureInfo.InvariantCulture, $" → {_bancMesureSec / n:F2} s/semaine obtenues") : "";
 			sb.AppendLine($"  cadence {consigne} : {n} semaines appliquées{obtenue}"
@@ -151,7 +167,8 @@ namespace Symbiose
 		}
 
 		// Zoom et centre du banc ; en capture VM, `-z` / `-c` les remplacent.
-		private float EtalonZoomEffectif() => float.IsNaN(CaptureBancZoom) ? EtalonZoom : CaptureBancZoom;
+		private float EtalonZoomEffectif() => !float.IsNaN(CaptureBancZoom) ? CaptureBancZoom
+			: _bancAccelere ? AccelZoom : EtalonZoom;
 
 		private Vector2 EtalonCentre()
 		{
@@ -183,7 +200,7 @@ namespace Symbiose
 			SetPhase(Phase.Planification);
 			if (rapport == null) return;
 			CopierRapport(rapport);
-			_lastActionMsg = "banc E terminé — rapport copié (presse-papier)";
+			_lastActionMsg = $"banc {NomBanc} terminé — rapport copié (presse-papier)";
 			UpdateActionHud();
 			if (!CaptureActive) return;
 			GD.Print("[banc] DEBUT\n" + rapport + "[banc] FIN");

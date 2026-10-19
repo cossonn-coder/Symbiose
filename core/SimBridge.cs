@@ -200,8 +200,34 @@ namespace Symbiose
 		/// <summary>Avance la simulation d'une semaine → snapshot, ou null.</summary>
 		public GDict StepWeek()
 		{
-			var resp = Request(new GDict { ["cmd"] = "step_week" });
+			var resp = Request(new GDict { ["cmd"] = "step_week" },
+				out double pipe, out double parse, out int octets);
+			StepPipeMs = pipe; StepParseMs = parse; StepOctets = octets;
 			return resp?["snapshot"].AsGodotDictionary();
+		}
+
+		// Chronos du DERNIER step (banc accéléré, PLANTE ASSEMBLÉE ③) : écrits par le
+		// thread du pool qui fait le step, lus par le fil principal APRÈS que la Task
+		// est terminée (IsCompleted = barrière mémoire, pas de verrou nécessaire).
+		//  - pipe  = écriture → réponse lue (calcul Python + sérialisation + transport,
+		//            attente du verrou comprise) ;
+		//  - parse = Json.ParseString de la réponse (thread du pool, PAS le fil
+		//            principal — mais sur 2 cœurs il lui dispute quand même le CPU).
+		public double StepPipeMs { get; private set; }
+		public double StepParseMs { get; private set; }
+		public int StepOctets { get; private set; }
+
+		/// <summary>Priorité du moteur LUE APRÈS COUP par l'OS (banc accéléré) : dit si
+		/// `BaisserPriorite` tient vraiment (Windows : BelowNormal ; Linux : nice).</summary>
+		public string PrioriteEffective()
+		{
+			if (!IsAlive) return "moteur absent";
+			try
+			{
+				_proc.Refresh();
+				return $"{_proc.PriorityClass} (base {_proc.BasePriority})";
+			}
+			catch (System.Exception e) { return $"illisible ({e.Message})"; }
 		}
 
 		/// <summary>Relit l'état courant sans avancer → snapshot, ou null.</summary>
@@ -509,8 +535,11 @@ namespace Symbiose
 		/// Cœur du pont : écrit 1 ligne JSON, lit 1 ligne JSON (bloquant).
 		/// Retourne le message si ok:true, sinon null (+ erreur en console).
 		/// </summary>
-		private GDict Request(GDict msg)
+		private GDict Request(GDict msg) => Request(msg, out _, out _, out _);
+
+		private GDict Request(GDict msg, out double pipeMs, out double parseMs, out int octets)
 		{
+			pipeMs = parseMs = 0; octets = 0;
 			if (!IsAlive)
 			{
 				GD.PrintErr("[SimBridge] Requête sur un moteur non démarré/mort.");
@@ -521,6 +550,7 @@ namespace Symbiose
 			// (coûteux, mais local) se fait APRÈS, hors verrou — inutile de le
 			// sérialiser, seul l'accès au tube l'exige.
 			string line;
+			long t0 = Stopwatch.GetTimestamp();
 			lock (_ioLock)
 			{
 				_proc.StandardInput.WriteLine(Json.Stringify(msg));
@@ -533,7 +563,11 @@ namespace Symbiose
 				return null;
 			}
 
+			long t1 = Stopwatch.GetTimestamp();
 			Variant parsed = Json.ParseString(line);
+			pipeMs = (t1 - t0) * 1000.0 / Stopwatch.Frequency;
+			parseMs = (Stopwatch.GetTimestamp() - t1) * 1000.0 / Stopwatch.Frequency;
+			octets = line.Length;
 			if (parsed.VariantType != Variant.Type.Dictionary)
 			{
 				GD.PrintErr($"[SimBridge] Réponse non-JSON : {line}");

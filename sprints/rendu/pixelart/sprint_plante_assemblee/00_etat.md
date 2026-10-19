@@ -26,7 +26,7 @@
 |---|---|---|---|---|
 | ① | `01_decor_couvresol_lot.md` | Decor + couvre-sol en maillage | intact | **FAIT** (2 030 → 471 draw calls ×4) |
 | ② | `02_plantes_atlas_commun.md` | plantes en pages d'atlas communes (D109 d) + bilan ×4 VM | intact | **FAIT** (×4 : 471 → 114 draw calls ; + maison en lot, hors kickoff) |
-| ③ | `03_accelere_legende_f1.md` | banc accéléré + postes + priorité + ForagerLayer ; bug F1 | intact | à faire |
+| ③ | `03_accelere_legende_f1.md` | banc accéléré + postes + priorité + ForagerLayer ; bug F1 | intact | **FAIT** (Maj+E ; butineurs _Draw 1,54 → 0,58 ms/image ; F1 tient) |
 | ④ | `04_kit_elements.md` | atlas du kit (touffes, fleurons) + planche | intact | à faire |
 | ⑤ | `05_montage_paliers_bas.md` | plante assemblée à ×0,5/×1/×2 | intact | à faire |
 | ⑥ | `06_signes_python.md` | corpus signes + faune, observer étendu, carnet, encyclopédie, `appris` | intact (pont bumpé) | à faire |
@@ -73,6 +73,41 @@
 - Image : 24 captures avant/après (×1/×2/×4/×8, vent 0 et 0,6, 4 cadrages dont la maison, 3
   instants chacune) **identiques au pixel, 0 px d'écart** [VM, n=24 images].
 
+### ③ Banc accéléré + postes + butineurs + légende F1
+- **Banc accéléré** = **Maj+E** au F5 (E reste le banc nominal ; touche choisie indépendante de la
+  disposition AZERTY/QWERTY, comme Maj+A / Maj+F) : semaine 35, ×8, mode **Continu** 3 s/semaine,
+  même centre que E, rapport copié. VM : `tools/perf_vm.sh -E 20 -z 8 -A 3 -W 35` (en-tête « banc E »
+  en capture, mêmes paramètres). Constantes : `world/WorldView.BancAccelere.cs`.
+- **Écart corrigé** : `-A s` laissait le mode Saison → au passage de saison (s39) la vue repassait
+  en planification et coupait les steps. Cadence imposée ⇒ mode **Continu** désormais.
+- Postes ajoutés au rapport : butineurs `_Process`/`_Draw` (PerfPostes) ; par step : durée vue,
+  tick moteur, pipe (calcul+transport), **parse JSON** (thread du pool), taille de réponse ; **retard
+  de cadence** (step en vol / semaine en application) ; **priorité du moteur relue par l'OS**
+  (`SimBridge.PrioriteEffective`). GC et étalement par famille : déjà au bloc à-coups (PERF VUE ④).
+- Accéléré ×8 3 s/sem, s35→41, VM llvmpipe [VM, n=1 chacun, avant → après] : butineurs `_Draw`
+  **1,54 → 0,58 ms/image** ; images > 100 ms 35 → 25 [bruit n=1] ; médiane 77,0 → 76,6 ms ;
+  draw calls 223-224. Cadence obtenue 3,33 s/semaine (6 semaines) ; step vu par la vue 1 041-1 068 ms
+  dont tick moteur 778-780 ms, pipe 945-952 ms, **parse 55-71 ms (max 113)**, réponse 517 Ko ;
+  retard de cadence **0,0 s** [VM, n=1] ; priorité lue **BelowNormal (base 10)** [Linux VM, n=1 —
+  Windows à lire au ⑦].
+- **Prémisse du kickoff nuancée** : `ForagerLayer` ne redessinait pas « à chaque image » mais à
+  24 Hz — soit chaque image dès que le FPS < 24 (le cas accéléré). Mesure (sonde temporaire,
+  retirée) : le **pollen déposé** faisait ~0,8-1,5 ms des ~1,5 ms (111-144 fleurs, 470-704 points)
+  [VM, n=6 relevés]. → pollen extrait dans `visuals/PollenLot.cs` (enfant `ShowBehindParent`,
+  dessous des butineurs comme avant), redessiné **sur signal** (dépôt/élagage/saison, ≤ 4 Hz ;
+  pan/zoom/rotation immédiat) ; les butineurs gardent leur 24 Hz (vol). Code de tracé inchangé.
+- **Nouveau suspect (hors périmètre, pour ⑦)** : les pires images accélérées sont la **file de
+  cuisson** (52-72 ms dans UNE image, 3,2 ms/image en moyenne, ~230 cuissons/20 s) [VM, n=2 runs] —
+  la file ne semble pas bornée en temps par image à ×8. À trancher au banc PC du ⑦.
+- Nominal ×4 (`-E 20 -z 4`, s45) : draw calls 111 [VM, n=1] (109 au 2ᵉ run, VM chargée), 0 butineur.
+- **Légende F1** : le bloc avait une position FIXE (1080−96) pour 4 lignes repliées → bas coupé.
+  Désormais ancré en bas, grandit vers le haut (`BottomWide` + `GrowVertical = Begin`) ; + « Maj+E
+  banc accéléré ». Capture VM `tools/capture_vm.sh -a` (option ajoutée) : 4 lignes entières, bas à
+  ~1 065 px [VM, n=1 image].
+- Taille : `core/SimBridge.cs` **301 LDC** (bande vigilance, une seule responsabilité — le pont) ;
+  `WorldView.Hud.cs` 297 ; `ForagerLayer.cs` 281 → 255.
+
 ## §REPRISE
-① commité. ② FAIT (non commité, à commiter par l'orchestrateur) : ×4 = 114 draw calls [VM, n=1].
-Prochain : ③ `03_accelere_legende_f1.md`. Chaque tronçon met à jour sa ligne + « Mesures ».
+①② commités. ③ FAIT (non commité, à commiter par l'orchestrateur) : Maj+E banc accéléré + postes,
+pollen des butineurs sur signal, légende F1 ancrée en bas. Pour ⑦ : faire lancer Maj+E au PC (lire
+la ligne « priorité du moteur » sous Windows + la file de cuisson). Prochain : ④ `04_kit_elements.md`. Chaque tronçon met à jour sa ligne + « Mesures ».

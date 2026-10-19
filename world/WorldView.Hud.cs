@@ -166,13 +166,22 @@ namespace Symbiose
 			// ESCAMOTABLE (T2, item 3 : le texte recouvrait le bas du champ de jeu) :
 			// masqué par défaut, révélé/caché par F1 (voir ToggleLegend). Le champ
 			// de jeu reste dégagé tant qu'on ne demande pas l'aide.
+			// Bug F1 (PLANTE ASSEMBLÉE ③) : la position était FIXE (haut du bloc à
+			// 1080−96) alors que le texte replié tient sur 5-6 lignes → le bas sortait
+			// de l'écran. Le bloc est désormais ANCRÉ EN BAS et grandit VERS LE HAUT
+			// (GrowVertical = Begin) : quelle que soit la longueur, il finit à 12 px
+			// du bord. 📖 Un Control dont le parent n'est pas un Control (ici le
+			// CanvasLayer du HUD) s'ancre sur le rectangle de l'écran.
 			var legend = new Label
 			{
-				Position = new Vector2(16f, 1080f - 96f),
-				CustomMinimumSize = new Vector2(1888f, 0f),
 				AutowrapMode = TextServer.AutowrapMode.WordSmart,
+				GrowVertical = Control.GrowDirection.Begin,
 				Visible = false,
 			};
+			legend.SetAnchorsAndOffsetsPreset(Control.LayoutPreset.BottomWide);
+			legend.OffsetLeft = 16f;
+			legend.OffsetRight = -16f;
+			legend.OffsetTop = legend.OffsetBottom = -12f;
 			legend.AddThemeFontSizeOverride("font_size", 18);
 			legend.AddThemeColorOverride("font_color", Colors.White);
 			legend.AddThemeColorOverride("font_outline_color", Colors.Black);
@@ -184,7 +193,7 @@ namespace Symbiose
 			// le HUD en haut à gauche montre toujours le geste courant et sa cible.
 			legend.Text = "Espace lancer/pause · flèches déplacer"
 				+ " · molette zoom · PageUp/PageDown pivoter\n"
-				+ "F3 étiquettes · F4 perfs (Maj+F4 couches) · C copier perfs · E banc perf (≈2 min, rapport copié) · H maison transparente · F6 heatmap debug (Maj+F6 champ)"
+				+ "F3 étiquettes · F4 perfs (Maj+F4 couches) · C copier perfs · E banc perf (≈2 min, rapport copié ; Maj+E banc accéléré) · H maison transparente · F6 heatmap debug (Maj+F6 champ)"
 				+ " · F7 carte T sol · G survol gènes · L planche des paliers · I vie macro (1 bête par espèce et par tuile + pullulations, taille réelle : les petites aux forts zooms) · O ombres · M mode simu · A jardinier automate (Maj+A objectif démo)\n"
 				+ "palette de gestes = colonne d'icônes à GAUCHE (clic) · Tab/1..9 accélérateurs · S graine (planter) · B substrat (poser pot/bac) · N nature (pailler) · clic gauche = agir"
 				+ " — geste courant affiché en haut à gauche";

@@ -93,6 +93,8 @@ namespace Symbiose
 		// palier logique (CurrentZoom, LOD) ne change pas, seul l'agrandissement passe
 		// du conteneur à la caméra. Seule l'option mesure le surcoût de remplissage.
 		private static readonly bool CapturePleineRes = ArgCapture("pleine-res") == "1";
+		// Aide clavier F1 affichée (PLANTE ASSEMBLÉE ③ : vérifier qu'elle tient à l'écran).
+		private static readonly bool CaptureAide = ArgCapture("aide") == "1";
 		private static float EchelleCamera => CapturePleineRes ? 2f : 1f;
 
 		// Zoom de la Camera2D pour un palier logique (seul écrivain : les 4 poses).
@@ -211,6 +213,7 @@ namespace Symbiose
 			RedrawAllPlants();
 			CullPlants();
 			if (!float.IsNaN(CapturePlanche)) TogglePlanche(CapturePlanche, parSouris: false);   // D106 T7
+			if (CaptureAide) { _hudTextMode = 2; ApplyHudTextMode(); }   // F1 mode Aide
 			AppliquerCaptureBanc();   // ombres / banc d'étalonnage (WorldView.Etalonnage.cs)
 		}
 

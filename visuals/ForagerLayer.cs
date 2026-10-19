@@ -52,14 +52,8 @@ namespace Symbiose
 		// Part de la période passée POSÉE sur la fleur (le reste = vol vers la
 		// suivante). Un butineur s'attarde sur la corolle plus qu'il ne vole.
 		private const float DwellRatio = 0.5f;
-		// Pollen déposé (décision Nico 2026-06-18) : à CHAQUE atterrissage d'un
-		// butineur PORTEUR, un point pollen s'ajoute sur la fleur, et ça s'ACCUMULE
-		// toute la saison (capé pour ne pas noyer la corolle). C'est un ressenti de
-		// vue (par atterrissage, pas la vérité moteur `pollen_recu`) : remis à zéro
-		// au passage de saison (WorldView.OnSeasonEnd → ClearPollen).
-		private const int MaxPollenPerFlower = 8;
-		private const float PollenDotPx = 1.3f;
-		private const float PollenSpreadCm = 2.2f;   // pas de la spirale de points
+		// Pollen déposé (décision Nico 2026-06-18) : nœud enfant PollenLot, redessiné
+		// sur signal seulement (PLANTE ASSEMBLÉE ③) — cf. visuals/PollenLot.cs.
 
 		// Par espèce de butineur : couleur, rayon px du point, période d'un saut
 		// (s). Le syrphe (mouche en vol stationnaire) saute vite et court ; le
@@ -96,11 +90,7 @@ namespace Symbiose
 		// sur seed + champs), donc le i-ᵉ butineur d'une guilde d'une tuile est « le
 		// même » d'une semaine à l'autre. Un changement d'effectif fond entrée/sortie.
 		private readonly Dictionary<string, Entry> _entries = new();
-		// Pollen accumulé par fleur : clé = position MONDE arrondie au cm (les Hops
-		// sont des copies exactes des positions de l'index plantes) → nb de points
-		// (capé). Persiste toute la saison ; élagué dans SetForagers (fleur disparue)
-		// et vidé à la saison (ClearPollen).
-		private readonly Dictionary<(int X, int Y), int> _pollen = new();
+		private readonly PollenLot _pollen = new() { Name = "Pollen" };
 		private float _animAccum;
 		private bool _lastZoomOk;
 
@@ -152,13 +142,11 @@ namespace Symbiose
 			return h;
 		}
 
-		// Clé d'une fleur dans la carte de pollen : position MONDE arrondie au cm.
-		private static (int, int) FlowerKey(Vector2 p) =>
-			((int)Mathf.Round(p.X), (int)Mathf.Round(p.Y));
+		public override void _Ready() => AddChild(_pollen);
 
 		/// <summary>Vide le pollen accumulé (appelé au passage de saison —
 		/// l'accumulation est par saison, décision Nico).</summary>
-		public void ClearPollen() => _pollen.Clear();
+		public void ClearPollen() => _pollen.Vider();
 
 		/// <summary>Applique le bloc `foragers` (diff doux par clé stable).
 		/// `plantsByName` = nom FR d'espèce → positions MONDE (cm) des plantes
@@ -217,25 +205,8 @@ namespace Symbiose
 			foreach (var kv in _entries)
 				if (kv.Value.DyingAt < 0f && !seen.Contains(kv.Key))
 					kv.Value.DyingAt = now;
-			PrunePollen(plantsByName);
+			_pollen.Elaguer(plantsByName);
 			QueueRedraw();
-		}
-
-		// Oublie le pollen posé sur une fleur qui n'existe plus (plante morte/retirée
-		// entre deux semaines) : les points restent collés aux fleurs VIVANTES.
-		private void PrunePollen(Dictionary<string, List<Vector2>> plantsByName)
-		{
-			if (_pollen.Count == 0) return;
-			var valid = new HashSet<(int, int)>();
-			if (plantsByName != null)
-				foreach (var kv in plantsByName)
-					foreach (var p in kv.Value)
-						valid.Add(FlowerKey(p));
-			List<(int, int)> drop = null;
-			foreach (var k in _pollen.Keys)
-				if (!valid.Contains(k)) (drop ??= new()).Add(k);
-			if (drop != null)
-				foreach (var k in drop) _pollen.Remove(k);
 		}
 
 		// Les K fleurs conspécifiques les plus proches de l'ancre (dans HopRadius),
@@ -265,7 +236,23 @@ namespace Symbiose
 			return new[] { new Vector2(hx, hy) };   // hésite sur place
 		}
 
+		// Banc accéléré (PLANTE ASSEMBLÉE ③) : les deux points d'entrée sont
+		// chronométrés (PerfPostes), comme MacroLife.
 		public override void _Process(double delta)
+		{
+			long t0 = PerfPostes.Debut();
+			ProcessButineurs(delta);
+			PerfPostes.Fin(PerfPostes.Poste.ForagerProcess, t0);
+		}
+
+		public override void _Draw()
+		{
+			long t0 = PerfPostes.Debut();
+			DessinerButineurs();
+			PerfPostes.Fin(PerfPostes.Poste.ForagerDraw, t0);
+		}
+
+		private void ProcessButineurs(double delta)
 		{
 			if (!Visible) return;
 			bool zoomOk = WorldView.CurrentZoom >= MinZoom;
@@ -297,19 +284,16 @@ namespace Symbiose
 				int step = (int)Mathf.Floor(now / hopSec + ph * k);
 				if (step == e.LastStep) continue;
 				e.LastStep = step;
-				var key = FlowerKey(e.Hops[Mathf.PosMod(step, k)]);
-				int cur = _pollen.TryGetValue(key, out int v) ? v : 0;
-				if (cur < MaxPollenPerFlower) _pollen[key] = cur + 1;
+				_pollen.Deposer(PollenLot.Cle(e.Hops[Mathf.PosMod(step, k)]));
 			}
 		}
 
-		public override void _Draw()
+		private void DessinerButineurs()
 		{
 			if (WorldView.CurrentZoom < MinZoom) return;
-			if (_entries.Count == 0 && _pollen.Count == 0) return;
+			if (_entries.Count == 0) return;
 			Rect2 vis = (GetCanvasTransform().AffineInverse()
 						 * GetViewportRect()).Grow(CullMarginPx);
-			DrawPollen(vis);   // les points déposés, SOUS les butineurs
 			float now = NowSec();
 			List<string> gone = null;
 			foreach (var kv in _entries)
@@ -368,27 +352,6 @@ namespace Symbiose
 				}
 			}
 			if (gone != null) foreach (string k in gone) _entries.Remove(k);
-		}
-
-		// Pollen accumulé : n points par fleur, en spirale serrée sur la corolle
-		// (angle d'or → répartition régulière sans grille). Offsets en cm MONDE
-		// (WorldToScreenOffset) pour tourner avec la vue (D35). Cullé par fleur.
-		private void DrawPollen(Rect2 vis)
-		{
-			if (_pollen.Count == 0) return;
-			foreach (var kv in _pollen)
-			{
-				Vector2 c = WorldView.WorldToScreen(kv.Key.X, kv.Key.Y);
-				if (!vis.HasPoint(c)) continue;
-				for (int i = 0; i < kv.Value; i++)
-				{
-					float a = i * 2.39996f;                  // angle d'or (rad)
-					float rad = PollenSpreadCm * Mathf.Sqrt(i);
-					Vector2 off = WorldView.WorldToScreenOffset(
-						rad * Mathf.Cos(a), rad * Mathf.Sin(a));
-					DrawCircle(c + off, PollenDotPx, PollenCol);
-				}
-			}
 		}
 	}
 }

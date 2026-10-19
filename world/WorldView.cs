@@ -474,6 +474,7 @@ namespace Symbiose
 				_lastTickMs = now - _stepStartMs;
 				if (_lastStepEndMs > 0) _lastWeekGapSec = (now - _lastStepEndMs) / 1000.0;
 				_lastStepEndMs = now;
+				NoterStepBanc(step.IsFaulted ? null : step.Result);   // banc accéléré (BancAccelere.cs)
 				if (step.IsFaulted || step.Result == null)
 				{
 					// Moteur mort ou réponse invalide (SimBridge a déjà loggé le
@@ -615,6 +616,7 @@ namespace Symbiose
 			// ni fields en vol (maître/esclave 1↔1 — une requête d'instrument
 			// retarde la semaine d'une frame ou deux, jamais elle ne corrompt
 			// le tube).
+			NoterRetardStep((float)delta, spw);   // banc accéléré : semaine due mais retenue
 			if (_timeAccum >= spw && PipeFree && _etale == null)
 			{
 				_timeAccum = 0f;
