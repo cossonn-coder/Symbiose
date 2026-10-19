@@ -19,6 +19,11 @@
 // Atlas de POSES : l'image est une rangée de cellules, une par degré de flexion
 // au vent (T3) : 1 au calme, jusqu'à 8 (PlantRenderer.MaxPoses) sous le vent —
 // un port raide (arbre) n'en cuit que 3-4, il ne se couche jamais.
+// PLANTE ASSEMBLÉE ② (D109 d) : l'image n'est plus un SubViewport PAR PLANTE
+// mais un rectangle réservé dans une PAGE d'atlas commune (AtlasPages.cs) — les
+// plantes voisines lisent la même texture, Godot les envoie en un seul lot. Les
+// pinceaux vivent dans la page, à la position du rectangle, visibles le seul
+// temps de leur cuisson.
 // D106 T6 : chaque pose a SA cellule SERRÉE (sa boîte + son ancrage du collet)
 // au lieu de l'union de la pose droite et de la plus couchée répétée 8 fois
 // (116 Mo au vent vs 12,8 Mo au calme [×8, 51 plantes, n=1]). La plante ne
@@ -40,9 +45,10 @@ namespace Symbiose
 		// d'une plante ≤ 4096 × 2048 × 4 o = 32 Mo et sous la limite GPU (16384).
 		public const int MaxAtlasPx = 4096;
 
-		// Comptabilité mémoire vidéo de TOUTES les images cuites (rapport F4/log).
-		public static long TotalBytes { get; private set; }
-		public static int TotalImages { get; private set; }
+		// Comptabilité mémoire vidéo de TOUTES les images cuites (rapport F4/log) :
+		// depuis ② ce sont les pages communes (une « image » = une page).
+		public static long TotalBytes => AtlasPages.TotalBytes;
+		public static int TotalImages => AtlasPages.Pages;
 		// Banc PERF VUE ④ : cuissons lancées et poses cuites (moyenne poses/cuisson).
 		public static long Cuissons, PosesCuites;
 
@@ -57,18 +63,18 @@ namespace Symbiose
 
 		private sealed class Cell
 		{
-			public SubViewport Vp;
+			public AtlasSlot Slot;       // rectangle réservé dans une page commune (②)
 			public readonly List<PlantRenderer> Brushes = new();
-			public Rect2I[] Cells;       // par pose : x dans l'atlas (y = 0) + taille
+			public Rect2I[] Cells;       // par pose : x dans le rectangle (y = 0) + taille
 			public Vector2I[] Origins;   // par pose : px du collet dans SA cellule
 			public float Zoom;
 			public int Utiles = 1;       // cellules peintes (≤ Poses), D109 c
 			public int Poses => Cells.Length;
-			public long Bytes => 4L * Vp.Size.X * Vp.Size.Y;   // RGBA8
 
-			// Même découpage (tailles, ancrages, zoom) → on recuit sur place.
+			// Même découpage (tailles, ancrages, zoom) → on recuit sur place, sauf
+			// si la page est en vidange (la plante migre vers une page plus pleine).
 			public bool Matches(Rect2I[] cells, Vector2I[] origins, float zoom) =>
-				Zoom == zoom && Cells.Length == cells.Length
+				Zoom == zoom && !Slot.Page.Vidange && Cells.Length == cells.Length
 				&& System.Linq.Enumerable.SequenceEqual(Cells, cells)
 				&& System.Linq.Enumerable.SequenceEqual(Origins, origins);
 		}
@@ -121,7 +127,11 @@ namespace Symbiose
 				_owner.CopyDrawStateTo(cell.Brushes[k]);
 				cell.Brushes[k].SetBrushPose(k);   // cellule k = flexion k/7
 			}
-			cell.Vp.RenderTargetUpdateMode = SubViewport.UpdateMode.Once;
+			// ② : la page ne s'efface pas seule → on gomme NOTRE rectangle, puis la
+			// page est rendue une fois avec nos seuls pinceaux visibles.
+			AtlasPage page = cell.Slot.Page;
+			page.Gomme.Effacer(cell.Slot.Rect);
+			page.Vp.RenderTargetUpdateMode = SubViewport.UpdateMode.Once;
 			Cuissons++;
 			PosesCuites += _nextUtiles;
 			if (_next != null && _next != cell && _next != _shown) Free(_next);
@@ -138,6 +148,9 @@ namespace Symbiose
 			_shown = _next;
 			_shown.Utiles = _nextUtiles;
 			_next = null;
+			// Rendu fait : les pixels restent dans la page, les pinceaux se taisent
+			// (sinon le prochain rendu de la page les rejouerait pour rien).
+			foreach (var b in _shown.Brushes) b.Visible = false;
 		}
 
 		/// <summary>Libère toutes les images (plante retirée, hors champ, ou trop
@@ -160,51 +173,37 @@ namespace Symbiose
 			Rect2I cell = c.Cells[pose];
 			// Ancrage PROPRE à la pose : le collet tombe toujours au même endroit.
 			var rect = new Rect2(-(Vector2)c.Origins[pose] / c.Zoom, (Vector2)cell.Size / c.Zoom);
-			_owner.DrawTextureRectRegion(c.Vp.GetTexture(), rect, (Rect2)cell);
+			var src = new Rect2I(cell.Position + c.Slot.Rect.Position, cell.Size);
+			_owner.DrawTextureRectRegion(c.Slot.Page.Vp.GetTexture(), rect, (Rect2)src);
 		}
 
 		private Cell NewCell(Rect2I[] cells, Vector2I[] origins, Vector2I atlas, float zoom)
 		{
 			var c = new Cell { Cells = cells, Origins = origins, Zoom = zoom };
-			c.Vp = new SubViewport
-			{
-				Size = atlas,
-				TransparentBg = true,
-				Disable3D = true,
-				GuiDisableInput = true,
-				HandleInputLocally = false,
-				// Mêmes accroches au pixel que le SubViewport du monde (WorldView.tscn).
-				Snap2DTransformsToPixel = true,
-				Snap2DVerticesToPixel = true,
-				CanvasItemDefaultTextureFilter = Viewport.DefaultCanvasItemTextureFilter.Nearest,
-				RenderTargetUpdateMode = SubViewport.UpdateMode.Disabled,
-			};
+			c.Slot = AtlasPages.Allouer(atlas, zoom, _owner);
+			Vector2I o = c.Slot.Rect.Position;
 			for (int k = 0; k < cells.Length; k++)
 			{
-				// Pinceau k : son collet sur un pixel ENTIER de sa cellule
-				// (x de la cellule + ancrage), en px canvas (÷ zoom).
+				// Pinceau k : son collet sur un pixel ENTIER de la page (coin du
+				// rectangle + x de la cellule + ancrage), en px canvas (÷ zoom).
 				var brush = new PlantRenderer
 				{
 					IsBrush = true,
-					Position = new Vector2(cells[k].Position.X + origins[k].X, origins[k].Y) / zoom,
+					Visible = false,
+					Position = new Vector2(o.X + cells[k].Position.X + origins[k].X,
+										   o.Y + origins[k].Y) / zoom,
 				};
-				c.Vp.AddChild(brush);
+				c.Slot.Page.Vp.AddChild(brush);
 				c.Brushes.Add(brush);
 			}
-			_owner.AddChild(c.Vp);
-			// Échelle = zoom du monde (le canvas du SubViewport n'existe qu'une fois
-			// dans l'arbre → après AddChild). Les ancrages sont portés par les pinceaux.
-			c.Vp.CanvasTransform = new Transform2D(0f, new Vector2(zoom, zoom), 0f, Vector2.Zero);
-			TotalBytes += c.Bytes;
-			TotalImages++;
 			return c;
 		}
 
 		private static void Free(Cell c)
 		{
-			TotalBytes -= c.Bytes;
-			TotalImages--;
-			if (GodotObject.IsInstanceValid(c.Vp)) c.Vp.QueueFree();
+			foreach (var b in c.Brushes)
+				if (GodotObject.IsInstanceValid(b)) b.QueueFree();
+			AtlasPages.Liberer(c.Slot);
 		}
 	}
 }

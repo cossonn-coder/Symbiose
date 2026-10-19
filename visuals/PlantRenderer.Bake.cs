@@ -78,7 +78,7 @@ namespace Symbiose
 		{
 			if (!Bakeable) return;
 			BakeQueue.Unregister(this);
-			_baker?.Release();   // les SubViewport enfants partent avec le nœud
+			_baker?.Release();   // rend son rectangle de page et ses pinceaux (②)
 		}
 
 		/// <summary>Ce qui est dessiné a changé (croissance, symptôme, palier de

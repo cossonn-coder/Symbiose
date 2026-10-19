@@ -25,7 +25,7 @@
 | # | Kickoff | Contenu | Golden | État |
 |---|---|---|---|---|
 | ① | `01_decor_couvresol_lot.md` | Decor + couvre-sol en maillage | intact | **FAIT** (2 030 → 471 draw calls ×4) |
-| ② | `02_plantes_atlas_commun.md` | plantes en pages d'atlas communes (D109 d) + bilan ×4 VM | intact | à faire |
+| ② | `02_plantes_atlas_commun.md` | plantes en pages d'atlas communes (D109 d) + bilan ×4 VM | intact | **FAIT** (×4 : 471 → 114 draw calls ; + maison en lot, hors kickoff) |
 | ③ | `03_accelere_legende_f1.md` | banc accéléré + postes + priorité + ForagerLayer ; bug F1 | intact | à faire |
 | ④ | `04_kit_elements.md` | atlas du kit (touffes, fleurons) + planche | intact | à faire |
 | ⑤ | `05_montage_paliers_bas.md` | plante assemblée à ×0,5/×1/×2 | intact | à faire |
@@ -50,6 +50,29 @@
 - **Ground « sans effet » expliqué** : le sol est déjà en lot depuis D106 (un maillage
   par tuile) → masqué = −11 draw calls [VM, n=1], dans le bruit du relevé n=1 d'entrée.
 
+### ② Plantes en pages d'atlas communes (`visuals/AtlasPages.cs`) + maison en lot
+- **Prémisse du kickoff fausse** (vérifiée par masquage, ×4 banc E s45, toutes couches masquées
+  sauf `Objects`) : `Objects` ≈ 380 draw calls n'étaient PAS les plantes. **Maison ≈ 345**
+  [VM, n=1] (`HouseNode` : un `DrawColoredPolygon` = un envoi), **plantes cuites ≈ 36** [VM, n=1].
+  → la maison est passée au `LotTriangles` de ① (même ordre peintre, un `DrawMesh`) — écart au
+  kickoff assumé : c'était le seul levier pour « Objects ÷ ≥ 3 ».
+- Plantes : pages partagées 2048² par zoom (étagères de hauteur arrondie à 16 px, first-fit,
+  trous fusionnés ; page dédiée si plus grande ; gomme `blend_disabled` + `ClearMode.Never` →
+  une cuisson ne repeint que SON rectangle). Godot 4.6 `gl_compatibility` regroupe bien les
+  plantes consécutives de même page : images cuites ×4 36 → 19 [VM, n=1], ×2 −41 [VM, n=1],
+  ×8 −5 [VM, n=1] (maison masquée, HUD seul = 41 [VM, n=1]). Reste : tri Y/strates intercalés
+  et plusieurs pages.
+- **Bilan ×4 VM (banc E s45, `perf_vm.sh -E 20 -z 4`)** : draw calls **2 013 (entrée) → 471
+  (après ①) → 114 (après ②)** [VM, n=1 chacun] ; `Objects` 382 → 31 [VM, n=1] (÷12) ;
+  médiane 87,2 → 81,7 ms [VM llvmpipe, n=1 chacun — non transposable au PC].
+  ×8 : 453 → 105 draw calls [VM, n=1], médiane 79,0 → 73,5 ms [VM llvmpipe, n=1].
+- Mémoire vidéo du cache : ×4 34,4 → 48,0 Mo, ×8 93,8 → 118,3 Mo [VM, n=1] (granularité de page).
+  File de cuisson du banc : 774 → 533 images pour vider [VM, n=1] (plus de SubViewport créé par cuisson).
+- Seuil de vidange (page < 25 % occupée et une autre page du zoom existe) : **0 vidange** au
+  banc E ×8 [VM, n=1] — seuil non éprouvé, le compteur est dans le log `[Cuisson]`.
+- Image : 24 captures avant/après (×1/×2/×4/×8, vent 0 et 0,6, 4 cadrages dont la maison, 3
+  instants chacune) **identiques au pixel, 0 px d'écart** [VM, n=24 images].
+
 ## §REPRISE
-① FAIT (non commité, à commiter par l'orchestrateur). Prochain : ② `02_plantes_atlas_commun.md`
-(base ×4 = 471 draw calls [VM, n=1], dont Objects ≈ 380 [VM, n=1, relevé d'entrée]). Chaque tronçon met à jour sa ligne + « Mesures ».
+① commité. ② FAIT (non commité, à commiter par l'orchestrateur) : ×4 = 114 draw calls [VM, n=1].
+Prochain : ③ `03_accelere_legende_f1.md`. Chaque tronçon met à jour sa ligne + « Mesures ».

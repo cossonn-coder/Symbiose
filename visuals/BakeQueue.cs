@@ -107,6 +107,9 @@ namespace Symbiose
 			if (ms > _drawMsMax) { _drawMsMax = ms; _drawMaxSegs = segs; }
 		}
 
+		// ② : les pages d'atlas communes (AtlasPages.cs) sont rangées sous la file.
+		public override void _EnterTree() => AtlasPages.Hote = this;
+
 		// Banc PERF VUE ① : chronométré (PerfPostes), corps inchangé.
 		public override void _Process(double delta)
 		{
@@ -210,7 +213,7 @@ namespace Symbiose
 			double ms = (Time.GetTicksUsec() - _burstStartUsec) / 1000.0;
 			GD.Print($"[Cuisson] file vidée : {_burstCount} plantes en "
 				+ $"{frame - _burstStartFrame} frames ({ms:F0} ms) · cache "
-				+ $"{PlantBaker.TotalBytes / 1048576.0:F1} Mo / {PlantBaker.TotalImages} images · "
+				+ $"{PlantBaker.TotalBytes / 1048576.0:F1} Mo / {PlantBaker.TotalImages} pages ({AtlasPages.Vidanges} vidanges) · "
 				+ $"pinceau {(_drawCount == 0 ? 0 : _drawMsSum / _drawCount):F2} ms/plante "
 				+ $"(max {_drawMsMax:F2} ms, {_drawMaxSegs} segments) · "
 				+ $"{_dirty.Count} sales hors champ.");

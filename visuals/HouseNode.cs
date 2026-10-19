@@ -8,7 +8,8 @@
 //
 // 📖 POURQUOI un Node2D dédié à _Draw (et non 40 Polygon2D enfants) : le détail
 // (grain de moellon, écailles d'ardoise, croisillons de fenêtre) se compte en
-// centaines de primitives. Un `_Draw` immédiat les émet en UNE passe, statique
+// centaines de primitives. Un `_Draw` immédiat les émet en UNE passe (un seul
+// DrawMesh depuis PLANTE ASSEMBLÉE ②), statique
 // (jamais rejoué par frame — cohérent avec l'exclusion du vent, D72), et se
 // re-cuit seulement à la rotation D35 (WorldView.RebuildWorld). WorldView.Maison
 // calcule la GÉOMÉTRIE (coins projetés, faîte, murs visibles + leur index
@@ -77,9 +78,16 @@ namespace Symbiose
 			Mathf.Clamp(c.R * f, 0f, 1f), Mathf.Clamp(c.G * f, 0f, 1f),
 			Mathf.Clamp(c.B * f, 0f, 1f), c.A);
 
+		// PLANTE ASSEMBLÉE ② : chaque DrawColoredPolygon était UN draw call (~345 à
+		// ×4 banc E s45 [VM, n=1] — l'essentiel de « Objects »). Les primitives vont
+		// désormais dans un lot de triangles, dans le même ordre peintre, envoyé en
+		// un seul DrawMesh (recette de LotTriangles.cs, ①).
+		private readonly LotTriangles _lot = new();
+
 		public override void _Draw()
 		{
 			if (_corners == null) return;
+			_lot.Vider();
 
 			int rightWall = (_front + 3) % 4;   // mur côté droit écran
 			int leftWall  = _front;             // mur côté gauche écran
@@ -93,6 +101,7 @@ namespace Symbiose
 			DrawRoof(back: false);
 			DrawRidgeAndDormer();
 			DrawChimney();
+			_lot.Dessiner(this);
 		}
 
 		// Point d'une façade en coordonnées (u,v) : u le long du sol du mur w
@@ -223,7 +232,7 @@ namespace Symbiose
 				QuadPoint(w, u0, v0), QuadPoint(w, u1, v0),
 				QuadPoint(w, u1, v1), QuadPoint(w, u0, v1),
 			};
-			DrawColoredPolygon(poly, col);
+			_lot.Polygone(poly, col);
 		}
 
 		// -------------------------------------------------------------------
@@ -253,7 +262,7 @@ namespace Symbiose
 			Vector2 r1 = b1.DistanceSquaredTo(_apexA) <= b1.DistanceSquaredTo(_apexB) ? _apexA : _apexB;
 			float light = WallLight(w) * 0.9f;   // le toit est plus incliné → un peu plus sombre
 
-			DrawColoredPolygon(new[] { b0, b1, r1, r0 }, Lit(Palette16.ArdoiseSombre, light));
+			_lot.Polygone(new[] { b0, b1, r1, r0 }, Lit(Palette16.ArdoiseSombre, light));
 
 			// Rangs d'écailles : ~7 rangs du bas (t=0) au faîte (t=1). Chaque rang =
 			// une bande de petites écailles décalées (pureau serré). 2 valeurs au hash.
@@ -275,7 +284,7 @@ namespace Symbiose
 						? Palette16.Ardoise : Palette16.ArdoiseClair;
 					// Écaille = 85 % du rang (le recouvrement sombre transparaît en bas).
 					Vector2 q0 = p0.Lerp(p3, 0.15f), q1 = p1.Lerp(p2, 0.15f);
-					DrawColoredPolygon(new[] { q0, q1, p2, p3 }, Lit(a, light));
+					_lot.Polygone(new[] { q0, q1, p2, p3 }, Lit(a, light));
 				}
 			}
 		}
@@ -284,7 +293,7 @@ namespace Symbiose
 		private void DrawRidgeAndDormer()
 		{
 			// Faîtage : trait épais le long du segment de faîte.
-			DrawLine(_apexA, _apexB, Lit(Palette16.ArdoiseSombre, 0.7f), 2.5f, false);
+			_lot.Ligne(_apexA, _apexB, Lit(Palette16.ArdoiseSombre, 0.7f), 2.5f);
 
 			// Lucarne à bâtière : petit volume saillant sur le pan SUD-monde (mur 2)
 			// s'il est un des 2 pans avant visibles. Sinon on ne la dessine pas (elle
@@ -304,11 +313,11 @@ namespace Symbiose
 			Vector2 fl = baseL - _upWall.Normalized() * (sz * 0.55f);
 			Vector2 fr = baseL + _upWall.Normalized() * (sz * 0.55f);
 			Vector2 ft = baseL - up * sz;
-			DrawColoredPolygon(new[] { fl, fr, fr - up * sz * 0.7f, fl - up * sz * 0.7f },
+			_lot.Polygone(new[] { fl, fr, fr - up * sz * 0.7f, fl - up * sz * 0.7f },
 							   Lit(Palette16.GraniteClair, 1.0f));                 // joue/front clair
-			DrawColoredPolygon(new[] { fl - up * sz * 0.7f, fr - up * sz * 0.7f, ft },
+			_lot.Polygone(new[] { fl - up * sz * 0.7f, fr - up * sz * 0.7f, ft },
 							   Lit(Palette16.Ardoise, 0.95f));                     // mini-toit
-			DrawColoredPolygon(new[]
+			_lot.Polygone(new[]
 			{
 				fl.Lerp(fr, 0.28f), fl.Lerp(fr, 0.72f),
 				(fl.Lerp(fr, 0.72f)) - up * sz * 0.42f, (fl.Lerp(fr, 0.28f)) - up * sz * 0.42f,
@@ -333,16 +342,16 @@ namespace Symbiose
 				baseC + new Vector2(-half, 0f), baseC + new Vector2(half, 0f),
 				top + new Vector2(half, 0f), top + new Vector2(-half, 0f),
 			};
-			DrawColoredPolygon(body, Palette16.BriqueOrange);
+			_lot.Polygone(body, Palette16.BriqueOrange);
 			// Assises de brique (traits sombres horizontaux) + un joint vertical.
 			for (int r = 1; r < 5; r++)
 			{
 				float y = -tall * r / 5f;
-				DrawLine(baseC + new Vector2(-half, y), baseC + new Vector2(half, y),
-						 Palette16.BriqueSombre, 1f, false);
+				_lot.Ligne(baseC + new Vector2(-half, y), baseC + new Vector2(half, y),
+						 Palette16.BriqueSombre, 1f);
 			}
 			// Couronnement (chapeau débordant plus sombre).
-			DrawColoredPolygon(new[]
+			_lot.Polygone(new[]
 			{
 				top + new Vector2(-half * 1.3f, 4f), top + new Vector2(half * 1.3f, 4f),
 				top + new Vector2(half * 1.3f, -3f), top + new Vector2(-half * 1.3f, -3f),
