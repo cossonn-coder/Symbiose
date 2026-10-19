@@ -683,7 +683,18 @@ from __future__ import annotations
 #       par tuile, jusqu'à 3 points chauds de plus, grappes (≤ 6) pour puceron /
 #       moustique / cloporte ; lombric et pollinisateurs : listes VIDES. Plus de cap
 #       « 4 par plot » (une grappe en compte jusqu'à 6). PURE lecture → golden NEUTRE.
-ENGINE_VERSION = "0.5.45"
+# 0.5.46 (PLANTE ASSEMBLÉE ⑥, légende des signes) : DEUX ajouts rétro-compatibles.
+#       (1) `observer` accepte un champ OPTIONNEL `signe` (+ `tile`, `x_cm`/`y_cm`) :
+#       la plante survolée porte ce signe visible → note au ledger `kind="signe"`
+#       (dédup par espèce, signe, saison), hors tick ; réponse + `signe_note`.
+#       (2) `player.appris = {signes: [...], faune: [...]}` au snapshot — signes dont
+#       le palier du concept atteint le seuil du carnet interprétatif, bêtes dont le
+#       palier atteint ce même seuil (`sim/signes.appris`, LECTURE PURE → golden
+#       NEUTRE). Encyclopédie : 8ᵉ type `signe` (fiche ouverte quand appris). Debug
+#       `palier3` crédite aussi les concepts des signes et la faune nommée. Un
+#       binaire pré-0.5.46 n'émet pas `appris` → la vue reste descriptive. (3) Commande
+#       `legende` (lecture seule, statique) : `vu` de chaque signe et de chaque bête.
+ENGINE_VERSION = "0.5.46"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

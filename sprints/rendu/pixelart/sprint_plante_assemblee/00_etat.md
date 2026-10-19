@@ -29,7 +29,7 @@
 | ③ | `03_accelere_legende_f1.md` | banc accéléré + postes + priorité + ForagerLayer ; bug F1 | intact | **FAIT** (Maj+E ; butineurs _Draw 1,54 → 0,58 ms/image ; F1 tient) |
 | ④ | `04_kit_elements.md` | atlas du kit (touffes, fleurons) + planche | intact | **FAIT** (atlas 84×70 px, 72 touffes + 3 fleurons ; planche `capture_vm.sh -k`) |
 | ⑤ | `05_montage_paliers_bas.md` | plante assemblée à ×0,5/×1/×2 | intact | **FAIT** (`PlantRenderer.Assemblee.cs` ; ×4/×8 identiques au pixel) |
-| ⑥ | `06_signes_python.md` | corpus signes + faune, observer étendu, carnet, encyclopédie, `appris` | intact (pont bumpé) | à faire |
+| ⑥ | `06_signes_python.md` | corpus signes + faune, observer étendu, carnet, encyclopédie, `appris` | intact (pont bumpé) | **FAIT** (corpus 11 signes + 20 bêtes ; `observer`+`signe` ; `player.appris` ; pont 0.5.46) |
 | ⑦ | `07_vue_infobulle_bilan.md` | info-bulle 2 niveaux + technique + bilan + procédure PC + F5 | intact | à faire |
 
 ## Mesures
@@ -164,10 +164,41 @@
 - Build vert, 0 avertissement. Golden `22768f33…` PASS. Taille : `PlantRenderer.Assemblee.cs`
   **146 LDC**, `PlantRenderer.Paliers.cs` 156.
 
+### ⑥ Signes côté Python (`sim/signes_corpus.py` donnée, `sim/signes.py` logique)
+- **Corpus** : 11 signes (`vu` calé sur les teintes `PlantRenderer.cs` + marques ×16 `PaliersHauts.cs`,
+  concept, carnet D/I, fiche 3 niveaux — niveau 3 = action par le MILIEU) + `FAUNE_VU` pour les 20
+  bêtes de `FAUNE_ENCYCLO` (sans les nommer). Concepts tous EXISTANTS : chlorose → `sol` (concept
+  des pages), acclimatation → `adaptation` (D43), rongeur_racinaire → `ravageurs`, gel/grêle → `météo`.
+- **Observation** : `observer` + champ optionnel `signe` (+ `tile`, `x_cm`/`y_cm` → plot-foyer) →
+  entrée ledger `kind="signe"` ; dédup (espèce, signe, saison de 13 sem.) relue DANS le ledger
+  (aucun état neuf) ; réponse `signe_note`. Aucune maîtrise créditée (observer un signe ≠ découvrir
+  son concept — choix : l'observation d'espèce découvre l'ESPÈCE, rien d'analogue pour un signe).
+  Le pont ne vérifie PAS que la plante porte le signe (« la vue n'envoie que ce que le snapshot
+  montre ») — à durcir si ⑦ le juge utile.
+- **Hors kickoff (ajouté)** : commande pont `legende` (lecture seule, statique) → `vu`+`concept` des
+  signes et `vu` des bêtes, pour que ⑦ (C#) n'ait pas à retoucher Python.
+- **Carnet** : `CONCEPT_DE`/`GABARIT` alimentés depuis le corpus (boucle de 4 lignes dans `carnet.py`).
+- **Appris** : `player.appris = {signes, faune}` au snapshot (sous `player`, pas à la racine),
+  lecture pure. Encyclopédie : 8ᵉ type `signe` (hors `encyclopedie_types`, aucun signe n'y collide —
+  testé), fiche ouverte quand appris, niveau = `min(palier(concept), 3)`.
+- **Écart / trou de conception** : en jeu normal une bête ne dépasse JAMAIS le palier 1 (la détection
+  ne crédite pas la faune, `encyclopedie._lire_mono`) → au seuil 3 son nom n'est **jamais** révélé ;
+  seuls l'option « interprétatif anticipé » (seuil 1) ou le debug y mènent. Debug `palier3` étendu
+  (concepts des signes + faune nommée) pour le F5. **À trancher par Nico** (dette ou voie de crédit).
+- Tests : `tests/test_signes_legende.py` **41/41** ; `test_sim_server` **285/285** (3 attentes
+  de version 0.5.45 → 0.5.46 mises à jour) ; carnet, encyclopédie, journal, signes, pages, magazine,
+  peripherie_voix, maitrise, maitrise_detection, greffe, bouture verts [VM, n=1 chacun].
+  Golden `22768f33…` PASS (inchangé). Pas de C#.
+- Taille (LDC) : `signes_corpus.py` 170, `signes.py` 35, `carnet.py` 188 → 193, `encyclopedie.py`
+  72 → 89, `serialize.py` 366 → 368 (bande vigilance, préexistant), `maitrise_cmds.py` 52.
+
 ## §REPRISE
 ①②③④ commités. ⑤ FAIT (non commité, à commiter par l'orchestrateur) : plante assemblée aux paliers
 bas (`PlantRenderer.Assemblee.cs` + appel dans `Paliers.cs`). Points F5 (au ⑦) : « à ×2/×1/×0,5,
 est-ce encore horrible ? » ; densité des touffes (sparse en hiver, `foliage_density` faible) ;
 liseré clair des orientations 2-3 ; ail (lancéolée) jamais vu à l'écran. Pour ⑦ : faire lancer
 Maj+E au PC (priorité moteur Windows + file de cuisson).
-Prochain : ⑥ `06_signes_python.md`. Chaque tronçon met à jour sa ligne + « Mesures ».
+⑥ FAIT (non commité). Pour ⑦ : onglet « Signes » à ajouter à `EncyclopediePanel.cs` (type `signe`) ;
+info-bulle = `vu` du corpus tant que non appris — commande pont `legende` (statique, une fois) ;
+envoyer `observer` avec `signe`/`tile`/`x_cm`/`y_cm` ; lire `player.appris`.
+Prochain : ⑦ `07_vue_infobulle_bilan.md`. Chaque tronçon met à jour sa ligne + « Mesures ».

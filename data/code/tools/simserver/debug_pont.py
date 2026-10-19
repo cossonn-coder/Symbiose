@@ -18,6 +18,8 @@ from sim import maitrise_detection as MD
 from sim import pages
 from sim.actions import observer
 from sim.pages_corpus import PAGES
+from sim.signes_corpus import SIGNES
+from fields.faune_encyclo import FAUNE_ENCYCLO
 
 from .maitrise_pont import _CLE_DE_CLASSE, _CONCEPT_REPRO_BIPARENTAL
 
@@ -28,7 +30,8 @@ PALIER_DEBUG = 3   # « maîtrise » — le seuil qui ouvre magazine + pages + i
 # dupliqué.
 _CONCEPTS = (set(MD.CONCEPT_PAR_STAGNATION.values())
              | {_CONCEPT_REPRO_BIPARENTAL}
-             | {PAGES[pid]["concept"] for pid in PAGES})
+             | {PAGES[pid]["concept"] for pid in PAGES}
+             | {s["concept"] for s in SIGNES.values()})   # PLANTE ASSEMBLÉE ⑥
 
 
 def forcer_palier_3(game_state: dict, player: str) -> int:
@@ -37,7 +40,9 @@ def forcer_palier_3(game_state: dict, player: str) -> int:
     d'un coup magazine (offres), carnet interprétatif et pages. Renvoie le nombre
     d'objets crédités."""
     st = M.ensure_player_maitrise(game_state, player)
-    objets = set(PLANT_CATALOGUE) | set(PERENNIAL_CATALOGUE) | _CONCEPTS
+    # + la faune nommée (⑥) : son nom se révèle au même seuil (info-bulle ⑦).
+    objets = (set(PLANT_CATALOGUE) | set(PERENNIAL_CATALOGUE) | _CONCEPTS
+              | set(FAUNE_ENCYCLO))
     for objet in objets:
         st["objets"][objet] = {"palier": PALIER_DEBUG, "preuves": 0}
     for concept in _CONCEPTS:

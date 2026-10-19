@@ -61,6 +61,9 @@ def main() -> int:
                 # Observation par SURVOL (retour F5 : voir une plante ≠ l'observer)
                 # + raccourcis DEBUG (forcer palier / observer tout / reset).
                 "observer": server.cmd_observer,
+                # Légende des signes (PLANTE ASSEMBLÉE ⑥, 0.5.46) : corpus statique
+                # des descriptions VISIBLES (signes + bêtes) pour l'info-bulle ⑦.
+                "legende": server.cmd_legende,
                 # Palette de gestes ⑤ (write) : persiste le layout curé + les
                 # macros de l'avatar (bornée à l'état joueur, opt-in → golden intact).
                 "palette": server.cmd_palette,

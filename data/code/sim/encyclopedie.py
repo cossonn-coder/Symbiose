@@ -39,6 +39,8 @@ from sim.technique_corpus import FICHES_TECHNIQUE
 from sim.geste_corpus import FICHES_GESTE
 from sim.outil_corpus import FICHES_OUTIL
 from fields.faune_encyclo import FAUNE_ENCYCLO, encyclo_meta as _faune_meta
+from sim.signes_corpus import SIGNES
+from sim.signes import signe_appris
 
 # --- Calibrage (décision A, doc §0 — figée, pas un knob de tuning) ------------
 # Niveau de fiche maximum : l'encyclopédie n'a que 3 niveaux (basique / bio /
@@ -70,7 +72,10 @@ def _decouverte(game_state: dict, player: str, cle: str) -> bool:
 # Ordre STABLE d'énumération de l'index : d'abord par type (ordre des onglets),
 # puis, à l'intérieur d'un type, l'ordre de son corpus source. Les plantes gardent
 # l'ordre de `FICHES`, la faune celui de `FAUNE_ENCYCLO`, etc.
-_ORDRE_TYPES = ("plante", "animal", "champignon", "concept", "technique", "outil", "geste")
+# `signe` (PLANTE ASSEMBLÉE ⑥) : 8ᵉ type, HORS `encyclopedie_types` — un signe n'est
+# pas une clé de maîtrise ; sa fiche s'ouvre quand il est APPRIS (`sim/signes.py`).
+_ORDRE_TYPES = ("plante", "animal", "champignon", "concept", "technique", "outil", "geste",
+                "signe")
 
 
 def _cles_du_type(nom_type: str) -> list[str]:
@@ -83,6 +88,8 @@ def _cles_du_type(nom_type: str) -> list[str]:
         return list(FAUNE_ENCYCLO)
     if nom_type == "champignon":
         return [CLE_CHAMPIGNON]
+    if nom_type == "signe":
+        return list(SIGNES)
     return list(CORPUS_PAR_TYPE.get(nom_type, {}))
 
 
@@ -101,7 +108,9 @@ def encyclopedie_index(game_state: dict, player: str,
         if type_filtre is not None and nom_type != type_filtre:
             continue
         for cle in _cles_du_type(nom_type):
-            if _decouverte(game_state, player, cle):
+            ouverte = (signe_appris(game_state, player, cle) if nom_type == "signe"
+                       else _decouverte(game_state, player, cle))
+            if ouverte:
                 entrees.append({"cle": cle, "type": nom_type, "titre": cle})
     return entrees
 
@@ -152,8 +161,13 @@ def encyclopedie_lire(game_state: dict, player: str, cle: str) -> dict | None:
     - concept/technique/outil/geste → corpus 3-niveaux quand il existe (④⑤), sinon
       `None` proprement.
 
+    - signe (⑥)                   → corpus 3-niveaux des signes, ouvert quand le
+      signe est APPRIS ; niveau = `min(palier(concept), 3)`.
+
     PUR : lit `maitrise.palier` + les corpus, n'écrit RIEN. Clé de type inconnu
     (`type_de` → `None`) → `None` (jamais de crash)."""
+    if cle in SIGNES and type_de(cle) is None:
+        return _lire_signe(game_state, player, cle)
     p = maitrise.palier(game_state, player, cle)
     if p < 1:
         return None
@@ -167,3 +181,16 @@ def encyclopedie_lire(game_state: dict, player: str, cle: str) -> dict | None:
     if nom_type in CORPUS_PAR_TYPE:
         return _lire_corpus_3n(cle, nom_type, p)
     return None
+
+
+def _lire_signe(game_state: dict, player: str, cle: str) -> dict | None:
+    """Fiche « signe » (⑥) : fermée tant que le signe n'est pas appris (même bascule
+    que le carnet). Ouverte, elle est tronquée au palier du CONCEPT du signe (au
+    seuil normal 3 → les 3 niveaux ; option « anticipé » → selon le palier)."""
+    if not signe_appris(game_state, player, cle):
+        return None
+    p = maitrise.palier(game_state, player, SIGNES[cle]["concept"])
+    niveau_max = max(1, min(p, NIVEAU_MAX))
+    fiche = SIGNES[cle]["fiche"]
+    niveaux = {n: fiche[n] for n in range(1, niveau_max + 1)}
+    return {"cle": cle, "type": "signe", "niveau_max": niveau_max, "niveaux": niveaux}

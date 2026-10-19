@@ -46,6 +46,9 @@ from sim.engine.decompo import semaine_abscission
 # par la liste `leaf_symptoms`. Recalcul pur côté serveur (moteur = source de
 # vérité, zéro recalcul C#) → golden NEUTRE.
 from sim import semiologie
+# Légende des signes (PLANTE ASSEMBLÉE ⑥, 0.5.46) : ce que le joueur a APPRIS
+# (signes, bêtes), lecture pure → l'info-bulle à deux niveaux de la vue (⑦).
+from sim.signes import appris as signes_appris
 # Déblocage des gestes (palette de gestes ①) : expo au snapshot des gestes ouverts
 # pour l'avatar courant. Lecture pure d'un état joueur (opt-in) → golden NEUTRE.
 from sim.actions import deblocage as DEBL
@@ -702,7 +705,8 @@ class SerializeMixin:
                            "seeds": seeds,
                            "gestes_debloques": gestes_ouverts,
                            "debloques_recents": recents,
-                           "palette": palette_layout},
+                           "palette": palette_layout,
+                           "appris": signes_appris(gs, player)},
                 "perf": perf,
                 "plants": plants, "sprites": sprites, "foragers": foragers,
                 "carpophores": carpophores,

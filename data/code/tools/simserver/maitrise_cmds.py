@@ -10,7 +10,10 @@ palier, révélation de page) vit en Python. Golden intact (pont opt-in, hors ti
 """
 from __future__ import annotations
 
-from .maitrise_pont import observer_espece
+from constants import PLOT_CM
+from sim.signes import observer_signe
+from sim.signes_corpus import SIGNES, FAUNE_VU
+from .maitrise_pont import observer_espece, _CLE_DE_NOM
 from . import debug_pont as D
 
 
@@ -20,7 +23,13 @@ class MaitriseCmdsMixin:
     def cmd_observer(self, msg: dict) -> dict:
         """Observation par SURVOL (retour F5) : `msg.species` = nom de classe de la
         plante survolée (côté C#). Découvre l'espèce (idempotent). Écriture bornée à
-        l'état joueur."""
+        l'état joueur.
+
+        Champ OPTIONNEL `signe` (PLANTE ASSEMBLÉE ⑥, rétro-compatible) : la plante
+        survolée porte ce signe VISIBLE au palier courant → note au carnet (ledger),
+        dédupliquée par (espèce, signe, saison). Lieu optionnel : `tile` + `x_cm`/
+        `y_cm` (position de la plante, résolue en plot-foyer). Réponse enrichie de
+        `signe_note` (True ssi une note a été écrite)."""
         if self.engine is None:
             return {"ok": False, "error": "observer avant init"}
         species = msg.get("species")
@@ -28,7 +37,37 @@ class MaitriseCmdsMixin:
             return {"ok": False, "error": "observer sans species"}
         gs = self.engine.game_state
         nouveau = observer_espece(gs, gs["current_player"], species)
-        return {"ok": True, "observed": bool(nouveau)}
+        rep = {"ok": True, "observed": bool(nouveau)}
+        signe = msg.get("signe")
+        if signe:
+            rep["signe_note"] = self._noter_signe(gs, msg, species, signe)
+        return rep
+
+    @staticmethod
+    def _noter_signe(gs: dict, msg: dict, species: str, signe: str) -> bool:
+        """Note de signe au ledger (⑥) : nom de classe → clé catalogue (résolution
+        Python, « Godot bête ») ; nom inconnu ou signe hors corpus → aucune note.
+        Semaine = la dernière simulée (`week - 1`, convention de `consigner`)."""
+        espece = _CLE_DE_NOM.get(species)
+        if espece is None:
+            return False
+        zone: tuple = ()
+        if msg.get("tile") is not None:
+            zone = (msg["tile"],)
+            if msg.get("x_cm") is not None and msg.get("y_cm") is not None:
+                zone = (msg["tile"], int(msg["y_cm"] // PLOT_CM), int(msg["x_cm"] // PLOT_CM))
+        return observer_signe(gs, gs["current_player"], espece, signe, zone,
+                              gs["week"] - 1)
+
+    def cmd_legende(self, msg: dict) -> dict:
+        """Légende des signes (⑥), LECTURE SEULE et statique (corpus, pas d'état) :
+        ce que l'info-bulle ⑦ montre AVANT apprentissage — `signes: {signe: {vu,
+        concept}}` et `faune: {bête: vu}`. La vue la demande une fois ; ce qui est
+        appris arrive au snapshot (`player.appris`). Utilisable avant `init`."""
+        return {"ok": True,
+                "signes": {s: {"vu": c["vu"], "concept": c["concept"]}
+                           for s, c in SIGNES.items()},
+                "faune": dict(FAUNE_VU)}
 
     def cmd_debug(self, msg: dict) -> dict:
         """Raccourcis DEBUG (F5) : `msg.op` ∈ {palier3, observer_tout, reset}.

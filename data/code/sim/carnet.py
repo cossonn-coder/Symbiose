@@ -30,6 +30,7 @@ recopiée fidèlement du doc, pas de la logique. Ne pas réécrire les gabarits.
 from __future__ import annotations
 
 from sim import maitrise
+from sim.signes_corpus import SIGNES
 
 # --- Calibrage (PLACEHOLDER NOMMÉ, à régler post-test D12.4) ------------------
 # Palier du CONCEPT à partir duquel la note bascule en interprétatif (décision B
@@ -280,6 +281,15 @@ GABARIT: dict[tuple[str, str | None, str], str] = {
     ("carnivorie", None, _D): "La nuée de moustiques se raréfie au-dessus de {e} {l}.",
     ("carnivorie", None, _I): "{e} chasse {l} : ses feuilles gluantes piègent les insectes, et cet azote de proies la nourrit là où le sol tourbeux, trop pauvre, n'offre rien — elle mange ce qu'elle ne peut puiser.",
 }
+
+# Signes OBSERVÉS au survol (sprint PLANTE ASSEMBLÉE ⑥, `sim/signes.py`) : une note
+# `kind="signe"`, `cause=<signe>`. Concept et gabarits D/I vivent dans le corpus
+# éditorial des signes (source unique, partagée avec l'encyclopédie et la vue) ; on
+# les VERSE ici dans les deux tables, le reste du carnet ne change pas.
+for _signe, _corpus in SIGNES.items():
+    CONCEPT_DE[("signe", _signe)] = _corpus["concept"]
+    for _reg, _gabarit in _corpus["carnet"].items():
+        GABARIT[("signe", _signe, _reg)] = _gabarit
 
 # Gabarit générique quand la paire (kind, cause) n'a pas de texte dédié (§5.0 ne
 # tabule pas tous les croisements possibles). Jamais un crash, jamais une chaîne
