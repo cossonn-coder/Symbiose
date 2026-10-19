@@ -48,6 +48,8 @@
 //   --capture-ombres=0       ombres coupées (comme la touche O) — PERF VUE ①
 //   --capture-banc-cadence=<s> cadence PENDANT la mesure du banc E : 0 = turbo,
 //                            s > 0 = s par semaine ; absent = 60 s (nominale) — PERF VUE ④
+//   --capture-kit=1          planche du kit d'éléments (touffes, fleurons) par-dessus
+//                            le monde — PLANTE ASSEMBLÉE ④ (WorldView.PlancheKit.cs)
 //   --capture-pleine-res=1   monde rendu en 1920×1080 ×1 au lieu de 960×540 ×2
 //                            (MESURE seulement, PERF VUE ⑤ ; le défaut ne change pas)
 
@@ -214,6 +216,7 @@ namespace Symbiose
 			CullPlants();
 			if (!float.IsNaN(CapturePlanche)) TogglePlanche(CapturePlanche, parSouris: false);   // D106 T7
 			if (CaptureAide) { _hudTextMode = 2; ApplyHudTextMode(); }   // F1 mode Aide
+			if (CaptureKit) AfficherPlancheKit();   // planche du kit (PLANTE ASSEMBLÉE ④)
 			AppliquerCaptureBanc();   // ombres / banc d'étalonnage (WorldView.Etalonnage.cs)
 		}
 

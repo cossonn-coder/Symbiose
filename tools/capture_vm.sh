@@ -30,6 +30,7 @@
 #         plante la plus proche de -c ; copie la dernière image de chaque palier en
 #         DOSSIER/planche_xN.png (prévoir -n ≥ 7×SEC×FPS + amorçage) — D106 T7
 #     -a  aide clavier F1 affichée (mode Aide) — PLANTE ASSEMBLÉE ③
+#     -k  planche du kit d'éléments (touffes, fleurons) — PLANTE ASSEMBLÉE ④
 #     -n  nombre d'images              (défaut 3)
 #     -f  images/s simulées            (défaut 10 → 3 images = 0,3 s de jeu)
 #   Sortie : DOSSIER/frame00000000.png, frame00000001.png, … (1920×1080).
@@ -51,7 +52,7 @@
 set -euo pipefail
 
 . "$(dirname "${BASH_SOURCE[0]}")/lib_vm_godot.sh"   # DEPOT GODOT XROOT + vm_* (D106 T1)
-SORTIE=/tmp/capture_symbiose BANC=smoke ZOOM="" CENTRE="" SOURIS="" GESTE="" VENT="" METEO="" SEMAINES="" DEFILE="" GRAINE="" ORIENT="" CACHER="" TURBO="" PAN="" PLANCHE="" AIDE="" FRAMES=3 FPS=10 BUILD=1
+SORTIE=/tmp/capture_symbiose BANC=smoke ZOOM="" CENTRE="" SOURIS="" GESTE="" VENT="" METEO="" SEMAINES="" DEFILE="" GRAINE="" ORIENT="" CACHER="" TURBO="" PAN="" PLANCHE="" AIDE="" KIT="" FRAMES=3 FPS=10 BUILD=1
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -75,6 +76,7 @@ while [ $# -gt 0 ]; do
     -p) PAN="$2"; shift 2 ;;
     -l) PLANCHE="$2"; shift 2 ;;
     -a) AIDE=1; shift ;;
+    -k) KIT=1; shift ;;
     -h|--help) sed -n '2,50p' "$0"; exit 0 ;;
     *) echo "option inconnue : $1" >&2; exit 2 ;;
   esac
@@ -106,6 +108,7 @@ ARGS=(--capture-banc="$BANC")
 [ -n "$PAN" ] && ARGS+=(--capture-pan="$PAN")
 [ -n "$PLANCHE" ] && ARGS+=(--capture-planche="$PLANCHE")
 [ -n "$AIDE" ] && ARGS+=(--capture-aide=1)
+[ -n "$KIT" ] && ARGS+=(--capture-kit=1)
 DISPLAY="$ECRAN" LIBGL_ALWAYS_SOFTWARE=1 "$GODOT" --path "$DEPOT" \
   --rendering-driver opengl3 --resolution 1920x1080 \
   --write-movie "$SORTIE/frame.png" --fixed-fps "$FPS" --quit-after "$FRAMES" \

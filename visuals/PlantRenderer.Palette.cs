@@ -139,12 +139,17 @@ namespace Symbiose
 		// `_coolShiftScale` ne vaut < 1 QUE pendant la boucle feuilles (toggle posé
 		// dans Organs.cs) : branches, fruits, fleurs, silhouette gardent le froid
 		// plein. Tissu sain (`_colorAmount=0` → `_coolShiftScale=1`) = zéro régression.
-		private Color HueShift(Color c, float lum)
+		private Color HueShift(Color c, float lum) => HueShiftPur(c, lum, _coolShiftScale);
+
+		// Cœur STATIQUE du hue-shift (même arithmétique) : `coolScale` = amplitude
+		// du shift froid (1 = plein). Sert aussi la rampe du kit (Kit.cs, PLANTE
+		// ASSEMBLÉE ④), qui se teinte hors de toute instance de plante.
+		private static Color HueShiftPur(Color c, float lum, float coolScale)
 		{
 			float h = c.H, s = c.S, v = c.V;
 			float target = lum >= 0f ? WarmHue : CoolHue;
 			float hueAmt = Mathf.Abs(lum) * HueShiftStrength
-				* (lum < 0f ? _coolShiftScale : 1f);
+				* (lum < 0f ? coolScale : 1f);
 			h = HueTowards(h, target, hueAmt);
 			v = Mathf.Clamp(v + lum * ValueStrength, 0f, 1f);
 			// Seules les ombres (lum<0) gagnent en saturation (couleur plus dense).

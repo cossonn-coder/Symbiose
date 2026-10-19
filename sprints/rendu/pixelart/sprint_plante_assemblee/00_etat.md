@@ -27,7 +27,7 @@
 | ① | `01_decor_couvresol_lot.md` | Decor + couvre-sol en maillage | intact | **FAIT** (2 030 → 471 draw calls ×4) |
 | ② | `02_plantes_atlas_commun.md` | plantes en pages d'atlas communes (D109 d) + bilan ×4 VM | intact | **FAIT** (×4 : 471 → 114 draw calls ; + maison en lot, hors kickoff) |
 | ③ | `03_accelere_legende_f1.md` | banc accéléré + postes + priorité + ForagerLayer ; bug F1 | intact | **FAIT** (Maj+E ; butineurs _Draw 1,54 → 0,58 ms/image ; F1 tient) |
-| ④ | `04_kit_elements.md` | atlas du kit (touffes, fleurons) + planche | intact | à faire |
+| ④ | `04_kit_elements.md` | atlas du kit (touffes, fleurons) + planche | intact | **FAIT** (atlas 84×70 px, 72 touffes + 3 fleurons ; planche `capture_vm.sh -k`) |
 | ⑤ | `05_montage_paliers_bas.md` | plante assemblée à ×0,5/×1/×2 | intact | à faire |
 | ⑥ | `06_signes_python.md` | corpus signes + faune, observer étendu, carnet, encyclopédie, `appris` | intact (pont bumpé) | à faire |
 | ⑦ | `07_vue_infobulle_bilan.md` | info-bulle 2 niveaux + technique + bilan + procédure PC + F5 | intact | à faire |
@@ -107,7 +107,30 @@
 - Taille : `core/SimBridge.cs` **301 LDC** (bande vigilance, une seule responsabilité — le pont) ;
   `WorldView.Hud.cs` 297 ; `ForagerLayer.cs` 281 → 255.
 
+### ④ Kit d'éléments (`visuals/PlantRenderer.Kit.cs`, planche `world/WorldView.PlancheKit.cs`)
+- **Atlas R8 de NIVEAUX** (0 vide · 1 contour · 2 ombre · 3 base · 4 lumière · 5 cœur), généré
+  à la 1ʳᵉ demande (`KitNiveaux`) : 6 `LeafShape` × tailles 3/5/7/9 px × 3 variantes au hash
+  (canaux 61-69, zéro Random) + fleurons point 1×1 / bouton 2×2 / étoile 3×3 = **84×70 px** [VM, n=1].
+  Une touffe = feuilles analytiques (u le long, v en travers) rastérisées sur 3×3 sous-échantillons,
+  ordre nord→sud (le sud devant), ombre de séparation ≥ 5 px, contour 1 px ≥ 7 px.
+- API pour ⑤ (dans `PlantRenderer`) : `KitTouffe(forme, taille, variante)` → `Rect2I`,
+  `KitFleuron(Fleuron)`, `RampeKit(couleur)` (même hue-shift OrganShade/OrganLit que ×4 ; cœur =
+  `FlowerHeart`), `TeindreKit(rect, rampe)` → Image RGBA8. Teinter = remplacer l'indice par la rampe.
+- **Écart au kickoff** : `HueShift` scindé en `HueShiftPur` statique (même arithmétique ; l'instance
+  garde `_coolShiftScale`) pour teinter hors instance. ×4+ non touché.
+- **Lumière vers le BAS de la pièce** (sud de l'orientation 0) : le kit, cuit une fois, ne suit PAS la
+  rotation D35 (×4 la suit via `SouthDir`). À trancher en ⑤ (miroir par orientation ?) ou F5.
+- Planche (capture `-k` : loupe ×10 teinte tomate + 3 teintes ×4 et ×2) jugée : à 3 px lancéolée (V
+  dressé) ≠ composée (anneau ajouré) ; aciculaire = traits fins dès 5 px ; à 7-9 px lancéolée, lobée,
+  cordée (échancrure), aciculaire reconnaissables [VM, n=1 planche]. **Faibles** : à 3 px les 3
+  variantes de composée sont identiques ; elliptique ≈ cordée à 7-9 px (blob ±échancrure) ; composée
+  7-9 px peu ajourée. Réglages dans les `switch` de `DisposerFeuilles`/`Dedans` (point F5).
+- Déterminisme : 2 captures de la planche **md5 identiques** [VM, n=2]. Build vert, 0 avertissement.
+  Taille : `PlantRenderer.Kit.cs` **243 LDC**, `WorldView.PlancheKit.cs` 60.
+
 ## §REPRISE
-①② commités. ③ FAIT (non commité, à commiter par l'orchestrateur) : Maj+E banc accéléré + postes,
-pollen des butineurs sur signal, légende F1 ancrée en bas. Pour ⑦ : faire lancer Maj+E au PC (lire
-la ligne « priorité du moteur » sous Windows + la file de cuisson). Prochain : ④ `04_kit_elements.md`. Chaque tronçon met à jour sa ligne + « Mesures ».
+①②③ commités. ④ FAIT (non commité, à commiter par l'orchestrateur) : atlas du kit en niveaux
+(`PlantRenderer.Kit.cs`) + planche `tools/capture_vm.sh -k`. Pour ⑤ : monter les touffes via
+`KitTouffe`/`RampeKit`/`TeindreKit` (choisir la stratégie de teinte à la cuisson + la rotation D35 de
+la lumière). Pour ⑦ : faire lancer Maj+E au PC (priorité moteur Windows + file de cuisson).
+Prochain : ⑤ `05_montage_paliers_bas.md`. Chaque tronçon met à jour sa ligne + « Mesures ».
