@@ -137,8 +137,11 @@ namespace Symbiose
 			// pas de touches). Clic gauche = exécuter le geste courant (volet B).
 			else if (ev is InputEventMouseButton mb && mb.Pressed)
 			{
-				if (mb.ButtonIndex == MouseButton.WheelUp)   StepZoom(+1);
-				if (mb.ButtonIndex == MouseButton.WheelDown) StepZoom(-1);
+				// Planche L active : la molette garde la plante verrouillée au centre.
+				if (mb.ButtonIndex == MouseButton.WheelUp)
+				{ if (PlancheActive) PlancheMolette(+1); else StepZoom(+1); }
+				if (mb.ButtonIndex == MouseButton.WheelDown)
+				{ if (PlancheActive) PlancheMolette(-1); else StepZoom(-1); }
 				if (mb.ButtonIndex == MouseButton.Left)
 				{
 					TapCurseur();   // la main « tape » : signal du clic (jardin vivant T1)

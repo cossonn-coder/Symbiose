@@ -3,7 +3,8 @@
 // descend ×0,5 → ×32 sur UNE plante (celle sous le curseur, sinon la plus proche
 // du centre de l'écran), PlancheStepSec secondes par palier, avec un encart
 // « palier ×N · information » (le tableau D4 de la conception). Re-L = arrêt :
-// la caméra revient exactement où elle était (position + palier).
+// la caméra revient exactement où elle était (position + palier). Molette pendant
+// la planche = défilé arrêté, plante verrouillée au centre, palier à la main.
 //
 // C'est un OUTIL D'OBSERVATION (comme le défilé F12) : il ne fait que poser
 // l'état caméra, puis refait ce que StepZoom fait après coup (pompe de redraw +
@@ -70,19 +71,38 @@ namespace Symbiose
 				ArreterPlanche();
 				return;
 			}
-			_plancheStep = step;
-			var (zoom, info) = Planche[step];
-			PoserCamera(System.Array.IndexOf(ZoomSteps, zoom),
-				_plancheCible.EmpriseCanvas.GetCenter());
-			string espece = _plancheCible.GetMeta("species", "?").AsString();
-			EncartPlanche($"palier ×{zoom} · {info}   —   {espece} ({step + 1}/{Planche.Length})");
-			GD.Print($"[Planche] début ×{zoom} · {info} — frame {Engine.GetFramesDrawn()}");
+			AfficherPalier(step, "");
+			var zoom = Planche[step].Zoom;
+			GD.Print($"[Planche] début ×{zoom} — frame {Engine.GetFramesDrawn()}");
 			GetTree().CreateTimer(pasSec).Timeout += () =>
 			{
 				if (gen != _plancheGen) return;
 				GD.Print($"[Planche] fin ×{zoom} — frame {Engine.GetFramesDrawn()}");
 				PlancheEtape(step + 1, gen, pasSec);
 			};
+		}
+
+		// Cadre la cible au palier `step` (caméra centrée sur elle) + encart.
+		private void AfficherPalier(int step, string suffixe)
+		{
+			_plancheStep = step;
+			var (zoom, info) = Planche[step];
+			PoserCamera(System.Array.IndexOf(ZoomSteps, zoom),
+				_plancheCible.EmpriseCanvas.GetCenter());
+			string espece = _plancheCible.GetMeta("species", "?").AsString();
+			EncartPlanche($"palier ×{zoom} · {info}   —   {espece} "
+				+ $"({step + 1}/{Planche.Length}){suffixe}");
+		}
+
+		// Molette pendant la planche (demande Nico F5 2026-10-19) : la plante reste
+		// VERROUILLÉE au centre — le défilé automatique s'arrête (génération périmée)
+		// et chaque cran monte/descend d'un palier sur elle. Re-L sort comme avant.
+		private void PlancheMolette(int dir)
+		{
+			_plancheGen++;   // périme la minuterie du défilé en cours
+			if (!IsInstanceValid(_plancheCible)) { ArreterPlanche(); return; }
+			int step = Mathf.Clamp(_plancheStep + dir, 0, Planche.Length - 1);
+			AfficherPalier(step, "   ·   molette = palier, L = sortir");
 		}
 
 		private void ArreterPlanche()
