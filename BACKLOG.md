@@ -19,13 +19,13 @@
 
 ## Sprint en cours
 
-**PERF VUE** — conçu le 2026-10-19, **prêt pour `/sprint-auto sprint_perf_vue`** (5 tronçons,
-golden intact) : le F5 de D106 a raté D1 (×4 = 1-3 FPS sur le PC de Nico, i5-4200H + HD 4600).
-Banc du jardin réel + étalonnage PC → vie macro « D2 + points chauds + taille réelle » en un lot →
-ombres en lot → cadence adaptative + à-coups + D109 → bilan (pleine résolution mesurée). Doc :
-[`conception_perf_vue.md`](docs/perf/lod/conception_perf_vue.md). **Ensuite : sprint « plante
+**PERF VUE** — **CLOS le 2026-10-19** (`/sprint-auto` ①→⑤, golden intact `22768f33…`) :
+banc E (touche E au F5), vie macro en présence (pont 0.5.45, fuite corrigée), ombres en un
+maillage, à-coups GC/cuisson/priorité serveur. **Verdict des critères en attente du rapport
+banc E du PC de Nico.** Doc : [`conception_perf_vue.md`](docs/perf/lod/conception_perf_vue.md) ;
+journal [151](journal/151_2026-10-19_sprint-perf-vue-CLOS.md). **Ensuite : sprint « plante
 assemblée »** (kit de sprites d'éléments réutilisables, silhouettes par palier au lieu de blobs,
-pixels plus fins) — à concevoir après la perf.
+pixels plus fins ; absorbe D109 d) — à concevoir.
 
 Précédent : **RENDU VISIBLE (D106)** — **CLOS le 2026-10-16** (T1→T7, golden intact `22768f33…`) :
 sol en un maillage par tuile · survol paresseux · marge + semaine paresseuse hors
