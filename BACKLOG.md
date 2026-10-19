@@ -25,7 +25,7 @@ maillage, à-coups GC/cuisson/priorité serveur. **PC de Nico : ×4 = 32,5 FPS**
 reste le seul rendu CPU (~2 000 draw calls, ~14 µs chacun). Doc : [`conception_perf_vue.md`](docs/perf/lod/conception_perf_vue.md) ;
 journal [151](journal/151_2026-10-19_sprint-perf-vue-CLOS.md). **Ensuite : sprint « plante
 assemblée »** (kit de sprites d'éléments réutilisables, silhouettes par palier au lieu de blobs,
-pixels plus fins ; absorbe D109 d + la baisse des draw calls à ≲ 1 000 à ×4) — à concevoir.
+pixels plus fins ; absorbe D109 d/e/f : draw calls ≲ 1 000 à ×4, chute à 5 FPS en accéléré, légende F1 coupée) + **légende des signes** (carnet = observé, encyclopédie = appris, info-bulle technique au survol plantes et animaux) — à concevoir, entrée : [`entree_plante_assemblee.md`](docs/rendu/pixelart/entree_plante_assemblee.md).
 
 Précédent : **RENDU VISIBLE (D106)** — **CLOS le 2026-10-16** (T1→T7, golden intact `22768f33…`) :
 sol en un maillage par tuile · survol paresseux · marge + semaine paresseuse hors

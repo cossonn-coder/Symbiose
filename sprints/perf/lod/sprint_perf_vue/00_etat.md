@@ -291,6 +291,22 @@ Non couvert par ce rapport : pleine résolution (pas d'option F5), turbo et 1 s/
 4. Le mode accéléré (M) est-il agréable (pas d'image figée) ?
 5. F1 : la légende de I (vie macro) est-elle claire ?
 
+### F5 ressenti — réponses de Nico (2026-10-19)
+1. **Fluidité** : « beaucoup plus fluide, mais ça chute à moins de 10 FPS parfois ». Second rapport F4
+   (automne s35, ×8, **Continu 3 s/semaine**) : **FPS 5, frame 199 ms, 936 draw calls**, tick serveur
+   2 354 ms (s34) contre ≤ 1 495 ms au banc nominal du même jardin [PC, n=1 chacun] ; vie macro 311 entrées,
+   70 butineurs. → **critère accéléré « aucune image > 100 ms » RATÉ** [PC, n=1]. Pas les draw calls ;
+   hypothèse contention CPU Python ↔ Godot (priorité réduite non vérifiée sous Windows), suspects
+   `ForagerLayer` (jamais optimisé) et arrivée des semaines. À mesurer (le rapport F4 n'a pas les postes).
+2. **Vie macro** : pas visible, ne le dérange pas ; ce qu'il voit, il ne sait pas l'identifier.
+3. **Pullulations** : non vues, ne sait pas où regarder.
+4. **Accéléré** : « ça va mieux ».
+5. **F1** : la ligne sous « I vie macro… » est coupée en bas de l'écran (bug).
+Hors questions : détails des feuilles beaucoup plus visibles, mais **demande une légende** (liseré
+brun, taches noires) ; **×4 = le zoom où l'on a envie de rester**, ×2/×1/×0,5 « horribles » (blobs).
+Décision de Nico : carnet = observé, encyclopédie = confirmé/appris, + légende technique au survol
+(plantes et animaux). Tout est versé dans `docs/rendu/pixelart/entree_plante_assemblee.md`.
+
 ### Étalonnage PC — DEMANDE À NICO (seul point F5 de mesure du sprint)
 « `git pull`, F5, choisis **full** → Lancer, puis **tout de suite** touche **E** (sans geste ni
 autre touche). Attends ~2-4 min (le jardin avance tout seul jusqu'en hiver an 1, zoome ×4, mesure
@@ -301,6 +317,7 @@ autre touche). Attends ~2-4 min (le jardin avance tout seul jusqu'en hiver an 1,
 Sprint **CLOS**, golden jamais re-figé (`22768f33…`). Étalonnage PC reçu et converti (section
 « Étalonnage PC reçu ») : **×4 = 32,5 FPS** [PC, n=1] (avant 1-3), critère 60 FPS **raté**, ~12 ms à
 trouver, tout en rendu CPU (~14 µs par draw call, 2 044 draw calls). ×0,5-×2 à 30 FPS et accéléré
-< 100 ms : probables, non mesurés au PC. **Reste** : F5 ressenti (5 questions) ; ventilation des
-draw calls au PC → entrée du sprint « plante assemblée » (avec D109 d) ou d'un tronçon perf dédié.
+< 100 ms : probables, non mesurés au PC. F5 ressenti reçu : accéléré **raté** (5 FPS à ×8,
+Continu 3 s/semaine [PC, n=1]). **Suite** : `/conception` du sprint « plante assemblée » à partir de
+`docs/rendu/pixelart/entree_plante_assemblee.md` (silhouettes, perf ×4 + accéléré, légende des signes).
 Mesurer par `tools/perf_vm.sh -E 20 [-z Z] [-x MacroLife] [-O] [-R]`.
