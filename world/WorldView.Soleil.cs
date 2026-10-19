@@ -25,7 +25,7 @@ namespace Symbiose
 		public static float SunInvTan { get; private set; } = 1.0f;   // longueur = h × invTan
 		public static float SunStrength { get; private set; } = 1.0f; // sin(élévation)
 		// Touche O (volet C2, retour perf Nico) : coupe TOUTES les ombres
-		// (plantes + maison) — PlantShadow._Draw devient un no-op, UpdateSun
+		// (plantes + maison) — le lot PlantShadow se vide, UpdateSun
 		// s'endort. Lu par PlantShadow.
 		public static bool ShadowsOn { get; private set; } = true;
 		private const float LatitudeDeg = 49.0f;    // = fields/light.py LATITUDE_DEG
@@ -100,12 +100,10 @@ namespace Symbiose
 			SunInvTan = Mathf.Min(cosElev / sinElev, MaxInvTan);
 			SunStrength = sinElev;
 
-			// Re-projeter les ombres : maison (polygone) + nœuds PlantShadow
-			// SEULS (volet C2 : jamais les segments des plantes — le balayage
-			// ne coûte plus ∝ taille des plantes).
+			// Re-projeter les ombres : maison (polygone) + lot des ombres de
+			// plantes (PERF VUE ③ : une commande, jamais les segments des plantes).
 			UpdateHouseShadow();
-			foreach (var node in _plantNodes.Values)
-				node.GetNodeOrNull<Node2D>("Shadow")?.QueueRedraw();
+			PlantShadow.MarquerSale();
 		}
 
 		// Ombre de la maison = enveloppe convexe, EN COORDONNÉES MONDE, de

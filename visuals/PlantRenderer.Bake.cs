@@ -87,11 +87,11 @@ namespace Symbiose
 		public void Invalidate()
 		{
 			_empriseSale = true;   // la boîte de dessin a pu changer (T4)
+			PlantShadow.MarquerSale();   // emprise ou tapis ont pu changer → lot d'ombres (③)
 			if (!Bakeable) { QueueRedraw(); return; }
 			// Tapis par plot (D106 T5, D5) : trop petite pour ce palier → ni image
 			// ni dessin propre ni ombre ; c'est le tapis de son plot qui la montre.
 			DeciderTapis();
-			if (_shadow != null) _shadow.Visible = !_enTapis;
 			if (_enTapis)
 			{
 				_baker?.Release();

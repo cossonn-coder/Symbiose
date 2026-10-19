@@ -233,11 +233,10 @@ namespace Symbiose
 		{
 			ShadowsOn = !ShadowsOn;
 			if (_houseShadow != null) _houseShadow.Visible = ShadowsOn;
-			// Re-dessiner les nœuds d'ombre : OFF → _Draw vide les efface ;
+			// Re-dessiner le lot d'ombres : OFF → _Draw vide l'efface ;
 			// ON → repartir d'un soleil « sale » force le recalcul immédiat.
 			_lastSunH = float.NaN;
-			foreach (var node in _plantNodes.Values)
-				node.GetNodeOrNull<Node2D>("Shadow")?.QueueRedraw();
+			PlantShadow.MarquerSale();
 			GD.Print($"[WorldView] O → ombres {(ShadowsOn ? "ON" : "OFF")}.");
 		}
 

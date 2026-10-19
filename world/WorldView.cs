@@ -312,6 +312,7 @@ namespace Symbiose
 
 			_objects = new Node2D { Name = "Objects", ZIndex = 10, YSortEnabled = true };
 			AddWorld(_objects);
+			_objects.AddChild(new PlantShadow(_plantNodes.Values));   // ombres en lot (PERF VUE ③)
 			BuildHouse(world);
 
 			// Origins des tuiles en cache : le snapshot donne des positions

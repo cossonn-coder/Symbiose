@@ -139,11 +139,10 @@ namespace Symbiose
 		// C) : longueur = hauteur × 1/tan(élévation), exactement le modèle
 		// ombres-capsules du moteur (fields/light.py §3).
 		private float _heightCm;
-		// L'ombre vit dans un nœud ENFANT séparé (volet C2, retour perf Nico) :
-		// quand le soleil balaye, SEULE l'ombre se redessine (un polygone),
-		// jamais les segments — le coût du balayage ne grandit plus avec l'âge
-		// des plantes. ShowBehindParent la dessine SOUS le bois, même YSort.
-		private PlantShadow _shadow;
+		// L'ombre n'est plus un nœud enfant (PERF VUE ③) : toutes les capsules
+		// partent en UN lot (visuals/PlantShadow.cs), qui lit ces deux mesures.
+		internal float OmbreSpreadCm => _spreadCm;
+		internal float OmbreHeightCm => _heightCm;
 
 		// Segment à surligner (index dans Segments = l'ordre du SNAPSHOT, le
 		// même que structure_to_dict() Python — c'est CET index qui part dans
@@ -165,9 +164,7 @@ namespace Symbiose
 		public override void _Ready()
 		{
 			if (IsBrush) return;   // pinceau de cuisson (T2) : ni ombre ni registre
-			_shadow = new PlantShadow { Name = "Shadow", ShowBehindParent = true };
-			AddChild(_shadow);
-			_shadow.SetExtent(_spreadCm, _heightCm);   // si SetStructure a précédé
+			PlantShadow.MarquerSale();   // nouvelle plante → nouvelle ombre dans le lot
 		}
 
 		// État post-mortem (vue·rattrapage 02) : null/"" = plante vivante ;
@@ -326,7 +323,6 @@ namespace Symbiose
 					if (z > _heightCm) _heightCm = z;
 				}
 			}
-			_shadow?.SetExtent(_spreadCm, _heightCm);
 			MesurerPort();        // taille réelle → port et tapis (Paliers.cs, T5)
 			ComputeStiffness();   // raideur au vent suit la croissance (T3)
 			Invalidate(); // re-cuisson à venir (T2) — l'ancienne image reste d'ici là
@@ -418,9 +414,9 @@ namespace Symbiose
 			if (_structure == null || _structure.Segments.Count == 0)
 				return;
 
-			// L'ombre au sol n'est PLUS dessinée ici (volet C2) : elle vit dans
-			// le nœud enfant PlantShadow (ShowBehindParent) — le balayage du
-			// soleil ne redessine qu'elle, jamais ces segments-ci.
+			// L'ombre au sol n'est PLUS dessinée ici (volet C2) : elle part dans
+			// le lot d'ombres (PlantShadow, PERF VUE ③) — le balayage du soleil
+			// ne redessine qu'elle, jamais ces segments-ci.
 
 			// Paliers BAS ×0,5-×2 (D106 T5, PlantRenderer.Paliers.cs) : chaque palier
 			// porte SON information (présence+saison / port / santé), squelette et

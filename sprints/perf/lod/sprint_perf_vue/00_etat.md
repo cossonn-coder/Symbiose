@@ -23,7 +23,7 @@
 |---|---|---|---|---|
 | ① | `01_banc_etalonnage.md` | banc du jardin réel + instrument + étalonnage PC | intact | **fait** (attend le rapport PC de Nico) |
 | ② | `02_vie_macro.md` | peintre D2 + points chauds + taille réelle, lot par tuile, fuite | intact (pont 0.5.45) | **fait** (non commité) |
-| ③ | `03_ombres_lot.md` | ombres en lot par tuile | intact | à faire |
+| ③ | `03_ombres_lot.md` | ombres en lot (un maillage) | intact | **fait** (non commité) |
 | ④ | `04_cadence_acoups.md` | cadence adaptative, priorité serveur, à-coups, D109 | intact | à faire |
 | ⑤ | `05_vue_bilan.md` | pleine résolution mesurée, bilan converti PC, F5 ressenti | intact | à faire |
 
@@ -81,6 +81,35 @@ Capture ×4 (s20) : limaces = tirets bruns, merle = barre sombre ; ×16 : aucune
 effet (bêtes déjà fixes) ; texte HUD « LOD : zoomez ×4 » (`WorldView.Hud.cs:340`) périmé ;
 `ForagerLayer` non touché (0 butineur à s45, 8 à s67).
 
+### Tronçon ③ (2026-10-19) — ombres en lot, VM llvmpipe
+`visuals/PlantShadow.cs` n'est plus un nœud par plante : c'est UN nœud « Ombres », enfant de
+`Objects` en ZIndex relatif −1 (sous toutes les plantes, au-dessus de la maison, du sol et de la
+vie macro, hors du tri en Y). Toutes les capsules forment **un ArrayMesh** (éventails), `DrawMesh`.
+Modèle inchangé (`fields/light.py` §3), même alpha `SunStrength`. Drapeau `PlantShadow.Sale`,
+consommé une fois par image : pas de soleil ≥ 2°, touche O, `PlantRenderer.Invalidate` (emprise,
+tapis), entrée ou sortie de marge (`CullPlants`), retrait au snapshot. Seules les plantes dans la
+marge (`Visible`) et hors tapis ont une ombre. L'ombre de la maison n'est pas touchée.
+**Écart au kickoff** : un lot unique, pas un lot par tuile (la conception autorise « ou un lot ») ;
+un pas de soleil redessine tout de toute façon.
+**Piège mesuré** : la même géométrie passée par `CanvasItemAddTriangleArray` coûtait
+**+55 ms** de rendu par image (131,7 ms contre 74,1 OFF [n=1]) → maillage retenu.
+| cas (banc E, ×4, 20 s) | n | moy. ms | p95 | > 100 ms | draw | prim | ombres _Draw |
+|---|---|---|---|---|---|---|---|
+| s45 ON, avant | 1 | 76,8 | 83,4 | 0 | 2059 | 68,1 k | 51 appels/s |
+| s45 OFF, avant | 1 | 73,7 | 79,9 | 0 | 2022 | 67,5 k | 0 |
+| s45 ON, après (maillage) | 2 | 75,1 / 72,5 | 82,1 / 79,9 | 1 / 0 | 2023 / 2024 | 68,4 k | 1 appel/s, ~0,4 ms par recalcul |
+| s45 OFF, après | 1 | 74,1 | 80,9 | 0 | 2024 | 67,6 k | 0 |
+| s67 ON, après | 1 | 103,6 | 114,6 | 144 | 2603 | 102 k | 2 appels/s, ~2,3 ms par recalcul |
+| s67 OFF, après | 1 | 101,1 | 109,3 | 86 | 2601 | 100 k | 0 |
+→ ON − OFF tombe au bruit : 37 draw calls → 0, ~2-3 ms → ≤ 1 ms. Recalcul ≤ 2,3 ms [s67, VM], donc pas
+d'image > 33 ms due aux ombres (sur la VM, toutes les images dépassent 33 ms de toute façon).
+**Même image** (captures `full` ×4 et ×2, planification = midi) : les intérieurs sont identiques à
+±1 niveau (arrondi du mélange). Le bord de chaque capsule est décalé d'**1 px écran** (rastérisation
+par le chemin y-sort de l'ancien nœud enfant ; vérifié : `DrawSetTransform` donne le même résultat
+que le lot, pas l'ancien). Changement d'ordre assumé : une ombre ne recouvre plus une plante voisine
+ni la maison (« sous les plantes », kickoff). Les ombres n'ont plus de fondu : elles apparaissent
+avec la plante et disparaissent au début de son fondu de sortie.
+
 ### Étalonnage PC — DEMANDE À NICO (seul point F5 de mesure du sprint)
 « `git pull`, F5, choisis **full** → Lancer, puis **tout de suite** touche **E** (sans geste ni
 autre touche). Attends ~2-4 min (le jardin avance tout seul jusqu'en hiver an 1, zoome ×4, mesure
@@ -88,7 +117,7 @@ autre touche). Attends ~2-4 min (le jardin avance tout seul jusqu'en hiver an 1,
 (Re-E pendant le banc = abandon. Si le jardin a déjà dépassé la semaine 45 : relancer F5.)
 
 ## §REPRISE
-Lire `CLAUDE.md` + ce fichier + la conception, puis le prochain kickoff « à faire » (③).
-① fait : banc E + instrument. ② fait (pont 0.5.45, golden intact `22768f33…`, suites pont 285/285). Mesurer chaque tronçon par `tools/perf_vm.sh -E 20 [-z Z] [-x MacroLife] [-O]`.
+Lire `CLAUDE.md` + ce fichier + la conception, puis le prochain kickoff « à faire » (④).
+① fait : banc E + instrument. ② fait (pont 0.5.45, golden intact `22768f33…`, suites pont 285/285). ③ fait (ombres = 1 maillage, vue C# pure, golden intact, build vert) → prochain : ④. Mesurer chaque tronçon par `tools/perf_vm.sh -E 20 [-z Z] [-x MacroLife] [-O]`.
 Rapport PC de Nico attendu → à recopier dans « Mesures » (conversion en ⑤). ×1/×2/×8 VM manquants.
 Lancement : `/sprint-auto sprint_perf_vue`.

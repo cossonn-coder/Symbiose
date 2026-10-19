@@ -314,6 +314,7 @@ namespace Symbiose
 			{
 				var node = _plantNodes[key];
 				_plantNodes.Remove(key);   // hors index : le fondu finit seul
+				PlantShadow.MarquerSale(); // son ombre quitte le lot (PERF VUE ③)
 				SortirAttente(node);
 				_tapisSale = true;         // elle quitte aussi le tapis de son plot (T5)
 				// Hors marge (T4) : retirée tout de suite, pas de fondu que personne ne voit.

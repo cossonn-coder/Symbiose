@@ -147,6 +147,7 @@ namespace Symbiose
 				if (dedans == avant) continue;
 				node.Visible = dedans;
 				BakeQueue.VisibiliteChangee(node);
+				PlantShadow.MarquerSale();   // l'ombre suit la marge (lot, PERF VUE ③)
 				if (dedans) entrees |= EntreeDansMarge(node);
 			}
 			if (entrees) TrierFileEntree();
@@ -199,6 +200,7 @@ namespace Symbiose
 			BuildGround(_world);
 			_objects = new Node2D { Name = "Objects", ZIndex = 10, YSortEnabled = true };
 			AddWorld(_objects);
+			_objects.AddChild(new PlantShadow(_plantNodes.Values));   // ombres en lot (PERF VUE ③)
 			BuildHouse(_world);
 			ApplySnapshot(_lastSnap, fade: false);
 			// La heatmap se re-projette au _Draw : un redraw suffit (t6·C).
