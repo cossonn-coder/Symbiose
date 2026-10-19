@@ -238,7 +238,6 @@ Critères : **60 FPS à ×4** ; **aucune image > 100 ms en accéléré**. Raté 
 3. L'accéléré (Maj+E ou M) est-il agréable ?
 
 ## §REPRISE
-**Sprint CLOS côté code** (①→⑦ ; ⑦ non commité, à commiter par l'orchestrateur). Reste : **F5 Nico**
-(procédure PC + 3 questions ci-dessus) et la clôture (DETTE D109 d/e/f, BACKLOG, journal, mémoire,
-`/refactor` auto-léger). À trancher par Nico : bête jamais nommée en jeu normal (⑥) ; `vu` des
+**Sprint CLOS le 2026-10-20** (①→⑦ commités, `/refactor` auto-léger : rien > 400 LDC ; D109 archivée,
+reliquats → **D110**). Reste : **F5 Nico** (procédure PC + 3 questions ci-dessus). À trancher par Nico : bête jamais nommée en jeu normal (⑥) ; `vu` des
 carpophores absent ; recyclage des pages d'atlas (brassage en accéléré).

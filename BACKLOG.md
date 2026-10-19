@@ -19,13 +19,11 @@
 
 ## Sprint en cours
 
-**PLANTE ASSEMBLÉE** — **conçu le 2026-10-19, prêt pour `/sprint-auto`** (7 tronçons, golden intact
-`22768f33…`) : Decor + couvre-sol en maillage (la ceinture pesait 1 099 draw calls sur 2 013 à ×4),
-plantes en atlas commun (D109 d), banc accéléré + `ForagerLayer` + bug légende F1 (D109 e/f), kit
-d'éléments généré depuis `LeafShape` → plante assemblée aux paliers bas (×4+ intact), légende des
-signes (observation au survol → carnet, fiche « signe » à l'encyclopédie, info-bulle descriptive puis
-cause une fois apprise + affichage technique). Doc : [`conception_plante_assemblee.md`](docs/rendu/pixelart/conception_plante_assemblee.md) ;
-sprint `sprints/rendu/pixelart/sprint_plante_assemblee/`.
+Aucun sprint en cours. Dernier : **PLANTE ASSEMBLÉE** — **CLOS le 2026-10-20** (`/sprint-auto` ①→⑦, golden intact
+`22768f33…`, pont 0.5.46) : Decor/couvre-sol/maison en maillage, plantes en pages d'atlas communes (×4 VM
+2 013 → 111 draw calls [VM, n=1]), banc accéléré Maj+E, kit d'éléments + plante assemblée à ×0,5/×1/×2,
+corpus des signes + info-bulle 2 niveaux + Maj+F3 technique + onglet Signes. **Reste F5 Nico** (procédure PC
+E + Maj+E, 3 questions de ressenti) et reliquats D110. Journal : [`153`](journal/153_2026-10-20_sprint-plante-assemblee-CLOS.md).
 
 Précédent : **PERF VUE** — **CLOS le 2026-10-19** (`/sprint-auto` ①→⑤, golden intact `22768f33…`) :
 banc E (touche E au F5), vie macro en présence (pont 0.5.45, fuite corrigée), ombres en un
