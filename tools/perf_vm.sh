@@ -33,13 +33,14 @@
 #         semaine (1 = défaut de test de Nico) ; absent = nominale 60 s/semaine
 #     -V  vent imposé (force[,direction rad], 0 = calme) — comme --capture-vent
 #     -W  semaine moteur du banc E (défaut 45 ; 67 = été an 2, cas de stress)
+#     -R  monde rendu en PLEINE RÉSOLUTION 1920×1080 ×1 (mesure, PERF VUE ⑤)
 #   Exemple : tools/perf_vm.sh -z 0.5 -x Ground
 #   Exemple : tools/perf_vm.sh -E 20 -z 4 -x MacroLife -O
 #   Journal complet : /tmp/perf_symbiose/godot.log
 set -euo pipefail
 
 . "$(dirname "${BASH_SOURCE[0]}")/lib_vm_godot.sh"   # DEPOT GODOT XROOT + vm_*
-BANC=full ZOOM="" CENTRE="" CACHER="" SAUT=4 N=8 DELAI=300 GRAINE="" SEMAINES="" TURBO="" BUILD=1 BANC_E="" OMBRES="" BANC_W="" CADENCE="" VENT=""
+BANC=full ZOOM="" CENTRE="" CACHER="" SAUT=4 N=8 DELAI=300 GRAINE="" SEMAINES="" TURBO="" BUILD=1 BANC_E="" OMBRES="" BANC_W="" CADENCE="" VENT="" PLEINE=""
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -58,6 +59,7 @@ while [ $# -gt 0 ]; do
     -W) BANC_W="$2"; shift 2 ;;
     -A) CADENCE="$2"; shift 2 ;;
     -V) VENT="$2"; shift 2 ;;
+    -R) PLEINE=1; shift ;;
     --no-build) BUILD=0; shift ;;
     -h|--help) sed -n '2,41p' "$0"; exit 0 ;;
     *) echo "option inconnue : $1" >&2; exit 2 ;;
@@ -96,6 +98,7 @@ if [ -n "$BANC_E" ]; then Z=banc-zoom C=banc-centre; else Z=zoom C=centre; fi
 [ -n "$BANC_W" ] && ARGS+=(--capture-banc-semaine="$BANC_W")
 [ -n "$CADENCE" ] && ARGS+=(--capture-banc-cadence="$CADENCE")
 [ -n "$VENT" ] && ARGS+=(--capture-vent="$VENT")
+[ -n "$PLEINE" ] && ARGS+=(--capture-pleine-res=1)
 DISPLAY="$ECRAN" LIBGL_ALWAYS_SOFTWARE=1 "$GODOT" --path "$DEPOT" \
   --rendering-driver opengl3 --resolution 1920x1080 --print-fps \
   -- "${ARGS[@]}" >"$LOG" 2>&1 &

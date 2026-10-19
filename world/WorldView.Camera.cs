@@ -47,7 +47,7 @@ namespace Symbiose
 			// moitié du plein écran d'avant → ~50 px au lieu de ~100).
 			_camera.Position = WorldToScreen(WorldCm / 2f, WorldCm / 2f)
 				- new Vector2(0f, 50f);
-			_camera.Zoom = Vector2.One * ZoomSteps[_zoomIndex];
+			_camera.Zoom = ZoomCamera(ZoomSteps[_zoomIndex]);
 			CurrentZoom = ZoomSteps[_zoomIndex];
 			_camera.MakeCurrent();
 			CullPlants();   // T4 : la marge commune naît avec la caméra (couches au sol)
@@ -104,7 +104,7 @@ namespace Symbiose
 			Vector2 mouse = WorldMouseCanvas();
 			_camera.Position = ClampToWorld(
 				mouse + (_camera.Position - mouse) * (oldZ / newZ));
-			_camera.Zoom = Vector2.One * newZ;
+			_camera.Zoom = ZoomCamera(newZ);
 			CurrentZoom = newZ;
 			// LOD plantes (sprint PERF, tronçon ①) : franchir un palier peut changer
 			// la REPRÉSENTATION de chaque plante (silhouette ⟷ segments). Comme

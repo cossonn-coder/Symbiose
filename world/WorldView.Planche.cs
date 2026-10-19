@@ -119,7 +119,7 @@ namespace Symbiose
 		private void PoserCamera(int zoomIndex, Vector2 position)
 		{
 			_zoomIndex = zoomIndex;
-			_camera.Zoom = Vector2.One * ZoomSteps[zoomIndex];
+			_camera.Zoom = ZoomCamera(ZoomSteps[zoomIndex]);
 			CurrentZoom = ZoomSteps[zoomIndex];
 			_camera.Position = ClampToWorld(position);
 			RedrawAllPlants();

@@ -48,6 +48,8 @@
 //   --capture-ombres=0       ombres coupées (comme la touche O) — PERF VUE ①
 //   --capture-banc-cadence=<s> cadence PENDANT la mesure du banc E : 0 = turbo,
 //                            s > 0 = s par semaine ; absent = 60 s (nominale) — PERF VUE ④
+//   --capture-pleine-res=1   monde rendu en 1920×1080 ×1 au lieu de 960×540 ×2
+//                            (MESURE seulement, PERF VUE ⑤ ; le défaut ne change pas)
 
 using Godot;
 using System.Globalization;
@@ -80,6 +82,29 @@ namespace Symbiose
 		// palier, sur la plante la plus proche du point visé — D106 T7.
 		private static readonly float CapturePlanche = ParseFloat(ArgCapture("planche"));
 		private int _captureTurboRestant;
+
+		// --- Pleine résolution, MESURE seulement (PERF VUE ⑤) ----------------
+		// 📖 Pédagogie — le monde est peint dans un SubViewport fenêtre/2 (960×540)
+		// que le conteneur agrandit ×2 (stretch_shrink = 2, WorldView.tscn) : c'est le
+		// pixel-art. Avec shrink = 1, le SubViewport fait 1920×1080 : 4× plus de pixels
+		// à remplir. Pour garder la MÊME image (même cadrage, mêmes tailles à l'écran),
+		// la caméra zoome 2× plus : palier ×4 → Zoom caméra 8. Toutes les constantes en
+		// px internes (TileWPx, 1/CurrentZoom de la vie macro…) restent justes : le
+		// palier logique (CurrentZoom, LOD) ne change pas, seul l'agrandissement passe
+		// du conteneur à la caméra. Seule l'option mesure le surcoût de remplissage.
+		private static readonly bool CapturePleineRes = ArgCapture("pleine-res") == "1";
+		private static float EchelleCamera => CapturePleineRes ? 2f : 1f;
+
+		// Zoom de la Camera2D pour un palier logique (seul écrivain : les 4 poses).
+		private static Vector2 ZoomCamera(float palier) => Vector2.One * palier * EchelleCamera;
+
+		// Appelé dans _Ready, après la mise à taille du conteneur.
+		private static void AppliquerPleineRes(SubViewportContainer container)
+		{
+			if (!CapturePleineRes) return;
+			container.StretchShrink = 1;
+			GD.Print("[Capture] pleine résolution : monde rendu en 1920×1080 ×1 (mesure).");
+		}
 
 		// Météo imposée par le banc (T4) : active jusqu'à l'échéance de sa durée.
 		private bool _captureMeteoActive = CaptureMeteo != null;
@@ -153,7 +178,7 @@ namespace Symbiose
 				else
 				{
 					_zoomIndex = idx;
-					_camera.Zoom = Vector2.One * CaptureZoom;
+					_camera.Zoom = ZoomCamera(CaptureZoom);
 					CurrentZoom = CaptureZoom;
 				}
 			}

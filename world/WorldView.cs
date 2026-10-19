@@ -218,6 +218,7 @@ namespace Symbiose
 				container.Size = GetViewport().GetVisibleRect().Size;
 			// Palette SNES ~32 couleurs + tramage Bayer sur TOUT le monde affiché
 			// (jardin vivant T1, F11 bascule) ; curseur + losange de survol.
+			AppliquerPleineRes(container);   // option de mesure PERF VUE ⑤ (Capture.cs)
 			PaletteSnes.Appliquer(container);
 			InitCurseur();
 			// Pré-cuisson des plantes (jardin vivant T2) : la file qui recuit au plus

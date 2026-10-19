@@ -22,10 +22,10 @@
 | # | Kickoff | Contenu | Golden | État |
 |---|---|---|---|---|
 | ① | `01_banc_etalonnage.md` | banc du jardin réel + instrument + étalonnage PC | intact | **fait** (attend le rapport PC de Nico) |
-| ② | `02_vie_macro.md` | peintre D2 + points chauds + taille réelle, lot par tuile, fuite | intact (pont 0.5.45) | **fait** (non commité) |
-| ③ | `03_ombres_lot.md` | ombres en lot (un maillage) | intact | **fait** (non commité) |
-| ④ | `04_cadence_acoups.md` | cadence adaptative, priorité serveur, à-coups, D109 | intact | **fait** (non commité) |
-| ⑤ | `05_vue_bilan.md` | pleine résolution mesurée, bilan converti PC, F5 ressenti | intact | à faire |
+| ② | `02_vie_macro.md` | peintre D2 + points chauds + taille réelle, lot par tuile, fuite | intact (pont 0.5.45) | **fait** |
+| ③ | `03_ombres_lot.md` | ombres en lot (un maillage) | intact | **fait** |
+| ④ | `04_cadence_acoups.md` | cadence adaptative, priorité serveur, à-coups, D109 | intact | **fait** |
+| ⑤ | `05_vue_bilan.md` | pleine résolution mesurée, bilan converti PC, F5 ressenti | intact | **fait** (bilan PC non converti : rapport absent) |
 
 ## Mesures
 ### Banc ① (2026-10-19) — touche **E** (F5) ≡ `tools/perf_vm.sh -E 20` (VM)
@@ -157,6 +157,57 @@ orientation 0 identique à HEAD, orientation 1 : halo visible) ; (b) vérifié ;
 finaliseurs. Reste hors tronçon : `SimBridge.Request` (~0,9 Mo de chaîne par semaine, tas des gros
 objets), `PlantShadow` (~6 Mo de tableaux / 25 s), conversions de chaînes Godot.
 
+### Tronçon ⑤ (2026-10-19) — pleine résolution mesurée, bilan, VM llvmpipe
+**Option de mesure** `--capture-pleine-res=1` (`tools/perf_vm.sh -R`, `world/WorldView.Capture.cs`) :
+`stretch_shrink` 2 → 1 (SubViewport 1920×1080) et Zoom caméra = palier × 2 (`ZoomCamera`, 4 poses :
+Camera, Capture, Planche) → même cadrage, mêmes tailles à l'écran ; palier logique (`CurrentZoom`,
+LOD, 1/zoom de la vie macro) et `TileWPx` inchangés. Défaut intact. Vérifié : draw calls et
+primitives identiques à ±10 entre les deux modes, à chaque palier → même scène, seul le remplissage change.
+VM chargée : un process d'un AUTRE projet (`aria/bot.py`, 35-39 % CPU) tourne en continu ; charge 3,7-4,0
+au départ de chaque run (sous le seuil 4 du script).
+| banc E s45, 20 s | n | médiane ms ×1/2 → ×1 | rendu CPU ms | > 100 ms /20 s | draw | surcoût médiane |
+|---|---|---|---|---|---|---|
+| ×0,5 | 2 / 1 | 80,0 et 79,0 → 99,4 | 68-80 → 87 | 35 et 4 → 90 | 1830 | **+20 ms [VM, n=1 en ×1]** |
+| ×1 | 1 / 1 | 80,8 → 106,8 | 69 → 95 | 2 → 183 | 2357 | **+26 ms [VM, n=1]** |
+| ×2 | 1 / 1 | 77,1 → 103,8 | 66 → 92 | 2 → 187 | 2544 | **+27 ms [VM, n=1]** |
+| ×4 | 1 / 2 | 75,8 → 107,2 et 106,5 | 64 → 93-95 | 0 → 185 et 184 | 2016 | **+31 ms [VM, n=1 en ×½]** |
+→ **Donnée d'entrée du sprint « plante assemblée »** : sur la VM, la pleine résolution ajoute
+**+20 à +31 ms par image [VM llvmpipe, n=1-2]** (+25 à +40 %), croissant avec le palier, tout en rendu.
+llvmpipe remplit les pixels sur CPU (16 fils) : ce chiffre ne se transpose PAS à la HD 4600, dont le
+remplissage est le point faible attendu (4× les pixels, conception décision 8). Seul un banc E sur le PC
+(`-R` n'existe qu'en capture VM ; pas d'option F5) tranchera — à prévoir dans le sprint plante assemblée.
+(La 1re mesure ×0,5 ×½ : p95 199,7, 35 images > 100 ms, pire image = cuisson 7 ms + rendu non mesuré :
+bruit de démarrage [n=1], non reproduit au 2e run.)
+
+**Bilan contre les critères — rapport d'étalonnage du PC de Nico ABSENT** (banc E pas encore lancé
+sur le PC). Aucune conversion VM → PC n'est faite (rien pour la caler). Chiffres VM bruts, s45, ×½ (défaut) :
+| critère (PC) | chiffre VM brut | tenu ? |
+|---|---|---|
+| 60 FPS à ×4, 60 s/semaine, vent | médiane 75,8 ms, p95 88,2 [VM, n=1] (≈ 13 FPS) | **inconnu** (VM : rendu logiciel 64 ms/image à lui seul) |
+| 30 FPS de ×0,5 à ×2 | médianes 79-81 / 80,8 / 77,1 ms [VM, n=1-2] | **inconnu** |
+| accéléré : aucune image > 100 ms | turbo max 140,9 ms, 1 s/semaine max 131,1 ms [VM, n=1, ④] | **inconnu** (non vérifiable sur la VM) |
+Ce que la VM établit sans le PC (portable : draw calls, primitives, ms CPU par poste) : à ×4 s45, 2 016
+draw calls [n=1] contre 2 730 [n=2] au départ de ① ; postes CPU ≤ 0,3 ms/image hors semaine ; vie macro
+0 appel/s de `_Draw` entre deux snapshots ; ombres 1 appel/s ; GC 10-20 ms par collecte (④).
+Fermeture du bilan dès que le rapport PC arrive : le recopier dans « Mesures », puis ratio PC/VM par
+ligne (médiane, rendu CPU/GPU) et application aux 3 critères ; rejouer au besoin `-A 0` / `-A 1` /
+`-E 75 -A 60` (④) pour l'accéléré.
+
+**Vue** : légende F1 — touche E déjà présente ; I vie macro décrit le peintre (« 1 bête par espèce et
+par tuile + pullulations, taille réelle : les petites aux forts zooms ») ; texte F4 périmé « LOD :
+zoomez ×4 » remplacé par « taille réelle : palier par espèce » (`WorldView.Hud.cs`).
+**Écarts** : ×8 non mesuré (hors critères) ; `WorldView.Hud.cs` à 294 LDC (sous 300, inchangé de bande) ;
+`ForagerLayer` toujours non touché (reliquat ②).
+
+### F5 ressenti — PROCÉDURE COURTE POUR NICO (après le banc E ci-dessous)
+`git pull`, F5, **full** → Lancer. Espace (saison, 60 s/semaine). Molette jusqu'à ×4 sur la tuile E
+(est de la maison). Répondre par oui/non + un mot :
+1. À ×4, c'est fluide (pas de saccade au vent, pas d'à-coup à chaque nouvelle semaine) ?
+2. La vie macro est-elle lisible et à la bonne taille (limace, merle dès ×0,5 ; coccinelle ×4 ; puceron ×16) ?
+3. Les pullulations se voient-elles (grappes de pucerons / moustiques / cloportes aux points chauds) ?
+4. Le mode accéléré (M) est-il agréable (pas d'image figée) ?
+5. F1 : la légende de I (vie macro) est-elle claire ?
+
 ### Étalonnage PC — DEMANDE À NICO (seul point F5 de mesure du sprint)
 « `git pull`, F5, choisis **full** → Lancer, puis **tout de suite** touche **E** (sans geste ni
 autre touche). Attends ~2-4 min (le jardin avance tout seul jusqu'en hiver an 1, zoome ×4, mesure
@@ -164,7 +215,9 @@ autre touche). Attends ~2-4 min (le jardin avance tout seul jusqu'en hiver an 1,
 (Re-E pendant le banc = abandon. Si le jardin a déjà dépassé la semaine 45 : relancer F5.)
 
 ## §REPRISE
-Lire `CLAUDE.md` + ce fichier + la conception, puis le prochain kickoff « à faire » (⑤).
-① fait : banc E + instrument. ② fait (pont 0.5.45, golden intact `22768f33…`, suites pont 285/285). ③ fait (ombres = 1 maillage, vue C# pure, golden intact, build vert). ④ fait (GC/finaliseurs, poses atteignables, budget cuisson, priorité serveur, D109 a/c ; vue C# pure, golden intact, build vert) → prochain : ⑤ (bilan converti PC : rejouer `-A 0` / `-A 1` / `-E 75 -A 60` sur le rapport de Nico). Mesurer chaque tronçon par `tools/perf_vm.sh -E 20 [-z Z] [-x MacroLife] [-O]`.
-Rapport PC de Nico attendu → à recopier dans « Mesures » (conversion en ⑤). ×1/×2/×8 VM manquants.
-Lancement : `/sprint-auto sprint_perf_vue`.
+Sprint : ①-⑤ **faits**, golden jamais re-figé (`22768f33…`). ⑤ = option `-R` (pleine résolution,
+mesure seule, surcoût +20 à +31 ms [VM, n=1-2]), bilan VM brut, légende F1. **Reste, côté Nico** : (1) banc E
+sur le PC (rapport à coller ici) → conversion des 3 critères (procédure en §⑤) et verdict D109 (d) ;
+(2) F5 ressenti (5 questions ci-dessus). Prochain sprint : « plante assemblée » (avec le chiffre de pleine
+résolution et un banc E `-R`-équivalent sur le PC).
+Mesurer par `tools/perf_vm.sh -E 20 [-z Z] [-x MacroLife] [-O] [-R]`.

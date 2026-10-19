@@ -121,7 +121,7 @@ namespace Symbiose
 					var sb = new StringBuilder();
 					sb.AppendLine(string.Create(CultureInfo.InvariantCulture,
 						$"[banc E] semaine moteur {SemaineMoteur} · zoom ×{ZoomSteps[_zoomIndex]} · "
-						+ $"centre {EtalonCentre().X:F0},{EtalonCentre().Y:F0} cm · mesure {_bancMesureSec:F0} s"));
+						+ $"centre {EtalonCentre().X:F0},{EtalonCentre().Y:F0} cm · mesure {_bancMesureSec:F0} s · monde {_worldVp.Size.X}×{_worldVp.Size.Y}"));
 					sb.AppendLine($"  vie macro au cadrage (avant purge) : {_bancCadrage}");
 					EcrireCadenceMesure(sb);
 					EcrireDistribution(sb);
