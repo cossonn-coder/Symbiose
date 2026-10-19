@@ -28,7 +28,7 @@
 | ② | `02_plantes_atlas_commun.md` | plantes en pages d'atlas communes (D109 d) + bilan ×4 VM | intact | **FAIT** (×4 : 471 → 114 draw calls ; + maison en lot, hors kickoff) |
 | ③ | `03_accelere_legende_f1.md` | banc accéléré + postes + priorité + ForagerLayer ; bug F1 | intact | **FAIT** (Maj+E ; butineurs _Draw 1,54 → 0,58 ms/image ; F1 tient) |
 | ④ | `04_kit_elements.md` | atlas du kit (touffes, fleurons) + planche | intact | **FAIT** (atlas 84×70 px, 72 touffes + 3 fleurons ; planche `capture_vm.sh -k`) |
-| ⑤ | `05_montage_paliers_bas.md` | plante assemblée à ×0,5/×1/×2 | intact | à faire |
+| ⑤ | `05_montage_paliers_bas.md` | plante assemblée à ×0,5/×1/×2 | intact | **FAIT** (`PlantRenderer.Assemblee.cs` ; ×4/×8 identiques au pixel) |
 | ⑥ | `06_signes_python.md` | corpus signes + faune, observer étendu, carnet, encyclopédie, `appris` | intact (pont bumpé) | à faire |
 | ⑦ | `07_vue_infobulle_bilan.md` | info-bulle 2 niveaux + technique + bilan + procédure PC + F5 | intact | à faire |
 
@@ -128,9 +128,46 @@
 - Déterminisme : 2 captures de la planche **md5 identiques** [VM, n=2]. Build vert, 0 avertissement.
   Taille : `PlantRenderer.Kit.cs` **243 LDC**, `WorldView.PlancheKit.cs` 60.
 
+### ⑤ Montage de la plante assemblée (`visuals/PlantRenderer.Assemblee.cs`, appelé par `DrawPalierBas`)
+- **Modèle livré** : tiges = tous les segments (épais dessous), ligne ≥ 1 px interne, couleur de
+  lignification `WoodRamp` (comme ×4). Touffes du kit (forme `LeafProfiles` de l'espèce) le long de
+  chaque segment `IsLeafy`, du bout vers la base, pas = 0,6 × taille, ≤ 8 par segment, gardées si
+  hash(71) < `foliage_density` ; 1 sur 3 descend d'un cran (grain). Taille : 3 px ×0,5 · 5 ×1 · 7 ×2,
+  +1 cran si emprise ≥ 64 px internes, bornée à 60 % de l'emprise. Tri en profondeur = Y écran de la
+  projection au sol (+ hauteur en départage). Sans segment feuillé : semis sur le disque `_rayonReelCm`.
+  Teinte inchangée (TeinteSaison → SymptomTint à ×2 → Frosted) ; neige = `DrawSnowCrown` par touffe
+  au hash ; fleurons (×2) point/bouton/étoile selon la taille de touffe, hash < 0,6 × floraison.
+- **Teinte du kit** : texture « masques » construite UNE fois (atlas des niveaux répété en 6 bandes
+  blanches) ; une pièce = 4 `DrawTextureRectRegion` (contour/ombre/base/lumière) modulés par la rampe
+  → zéro texture par plante ; `TeindreKit` n'est pas utilisé.
+- **Lumière vs rotation D35 (tranchée ici, la conception ne tranchait pas)** : quand le sud projeté
+  pointe vers le HAUT (orientations 2-3), on PERMUTE ombre ↔ lumière dans la rampe au lieu de
+  retourner la pièce (un retournement ferait pendre les feuilles lancéolées dressées). Capture
+  `-r 2` vérifiée [VM, n=1 image]. Effet de bord : la séparation (ombre entre feuilles) devient un
+  liseré clair dans ces orientations — point F5.
+- **Inchangé** : bois nu (hiver / squelette), tapis D5, `Couronne()` (picking + boîte de cuisson ;
+  pas élargie : une touffe déborde d'≤ 4,5 px internes, couvert par `BakePadPx`). `DrawCouronne`,
+  `DrawTige`, `DrawTachesFleurs` ne sont plus appelés — **conservés** (règle « ne jamais jeter de code »).
+- **Image** : ×4 et ×8 **identiques au pixel** (md5) avant/après [VM, n=4 images, full s44 c=1650,950].
+  ×0,5/×1/×2 : plus d'ellipse ; tiges + touffes ; arbre (banc `foret_ports`, pommier, été) = charpente
+  + grappes le long des rameaux, lisible comme arbre à ×2 [VM, n=1 planche]. Tomate (full, S
+  1075,1875) : tiges feuillées [VM, n=1 planche]. **Ail non vérifié** : aucune espèce lancéolée dans
+  le monde `full` s44 ni dans un banc qui pousse (lavandes du banc `courrier` absentes à l'écran).
+- **Perf banc E s45** [VM llvmpipe, n=1 chacun, avant → après] : ×2 médiane 75,0 → 72,6 ms,
+  > 100 ms 0 → 0, draw calls 73 → 71 ; ×1 médiane 90,1 → 87,8 ms, > 100 ms 11 → 3 [bruit n=1],
+  draw calls 68 → 68. Pinceau moyen 0,05 → 0,03 ms/plante [VM, n=2 vidanges de file par zoom] ;
+  max 8,5-11,6 ms [VM, n=1 par vidange] = 1ʳᵉ cuisson qui génère l'atlas du kit + les masques (une
+  fois) — aucune image > 100 ms. Changement de palier en direct non mesuré (banc à zoom fixe).
+- Hors périmètre vu en capture (préexistant, identique avant) : à ×0,5 des plantes de la tuile N
+  apparaissent PAR-DESSUS le toit de la maison ; les bancs `foret_ports`/`courrier` sont posés sous
+  la maison.
+- Build vert, 0 avertissement. Golden `22768f33…` PASS. Taille : `PlantRenderer.Assemblee.cs`
+  **146 LDC**, `PlantRenderer.Paliers.cs` 156.
+
 ## §REPRISE
-①②③ commités. ④ FAIT (non commité, à commiter par l'orchestrateur) : atlas du kit en niveaux
-(`PlantRenderer.Kit.cs`) + planche `tools/capture_vm.sh -k`. Pour ⑤ : monter les touffes via
-`KitTouffe`/`RampeKit`/`TeindreKit` (choisir la stratégie de teinte à la cuisson + la rotation D35 de
-la lumière). Pour ⑦ : faire lancer Maj+E au PC (priorité moteur Windows + file de cuisson).
-Prochain : ⑤ `05_montage_paliers_bas.md`. Chaque tronçon met à jour sa ligne + « Mesures ».
+①②③④ commités. ⑤ FAIT (non commité, à commiter par l'orchestrateur) : plante assemblée aux paliers
+bas (`PlantRenderer.Assemblee.cs` + appel dans `Paliers.cs`). Points F5 (au ⑦) : « à ×2/×1/×0,5,
+est-ce encore horrible ? » ; densité des touffes (sparse en hiver, `foliage_density` faible) ;
+liseré clair des orientations 2-3 ; ail (lancéolée) jamais vu à l'écran. Pour ⑦ : faire lancer
+Maj+E au PC (priorité moteur Windows + file de cuisson).
+Prochain : ⑥ `06_signes_python.md`. Chaque tronçon met à jour sa ligne + « Mesures ».

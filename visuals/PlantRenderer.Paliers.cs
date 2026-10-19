@@ -9,6 +9,9 @@
 //        rosette, tapis, couchée, grimpante) à sa hauteur RELATIVE juste.
 //   ×2   + SANTÉ : teinte de vigueur (vitalité + symptôme colorant dominant :
 //        franc / pâle-chlorose / fané / sénescent) ; floraison en taches.
+// Depuis PLANTE ASSEMBLÉE ⑤, la FORME de ces trois paliers est la plante
+// assemblée (PlantRenderer.Assemblee.cs : vraies tiges + touffes du kit) ; ce
+// fichier garde l'information (teintes, port, tapis) et le contour Couronne().
 // À partir de ×4 (PaliersHautsMinZoom) : les PALIERS HAUTS ×4/×8/×16/×32
 // (segments + organes par palier, PlantRenderer.PaliersHauts.cs, T6).
 //
@@ -189,19 +192,20 @@ namespace Symbiose
 				DrawBoisNu(mort ? DeadWoodColor : WoodColor, _deadStade == "couchee" ? CoucheeFlatten : 1f);
 				return;
 			}
-			bool port = WorldView.CurrentZoom >= PalierPortZoom;
 			bool sante = WorldView.CurrentZoom >= PalierSanteZoom;
 			Color c = TeinteSaison();
 			if (sante) c = SymptomTint(c);   // ×2 : vitalité + symptôme dominant
 			c = Frosted(c);                  // givre (météo T5) : lisible à tout palier
-			var (centre, rx, ry) = Couronne();
-			if (port) DrawTige(centre);
-			DrawCouronne(centre, rx, ry, c);
-			if (sante) DrawTachesFleurs(centre, rx, ry);
-			DrawSnowCrown(centre, rx, ry);   // calotte de neige (météo T5)
+			// PLANTE ASSEMBLÉE ⑤ (PlantRenderer.Assemblee.cs) : vraies tiges + touffes
+			// du kit à la place de la couronne-ellipse. Le PORT (×1) se lit désormais
+			// à la géométrie réelle ; neige et fleurons sont posés sur les touffes.
+			// DrawCouronne / DrawTige / DrawTachesFleurs ci-dessous ne sont plus
+			// appelés (conservés, règle « ne jamais jeter de code ») ; Couronne()
+			// reste le contour du picking et de la boîte de cuisson.
+			DrawPlanteAssemblee(c, sante);
 		}
 
-		// Couronne en volume 2 valeurs (même recette que DrawVolumeEllipse : base
+		// [Avant ⑤] Couronne en volume 2 valeurs (même recette que DrawVolumeEllipse : base
 		// ombrée + calotte éclairée décalée sud), mais LISSE : le nombre de sommets
 		// suit la taille à l'écran (une couronne d'arbre à ×1 fait ~100 px — à 10
 		// sommets elle devenait un octogone).
