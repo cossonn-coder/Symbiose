@@ -36,8 +36,10 @@ protocole v0 par les pipes. Couvre les contrats du kickoff 01_pont_minimal.md :
                     organ null pour tout le monde. Pur rendu, lecture seule.
  10. vie macro    — (tranche 6·B) bloc `sprites` au snapshot : par tuile et
                     par guilde, tableaux compacts [r, c, x_frac, y_frac,
-                    activite] issus de sample_sprites (PUR, déterministe).
-                    Forme et bornes (cap 4/plot/guilde, fracs ∈ [0,1]),
+                    activite] issus de peindre_presence (PUR, déterministe,
+                    PERF VUE ② 0.5.45). Forme et bornes (≤ 4 points par espèce
+                    et par tuile, grappe ≤ 6, lombric/pollinisateurs jamais
+                    peints, fracs ∈ [0,1]),
                     démarrage à zéro (populations vides semaine 1), émergence
                     estivale, positions STABLES d'une semaine à l'autre (un
                     slot vit toujours au même point), lecture sans effet de

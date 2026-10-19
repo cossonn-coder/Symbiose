@@ -2,7 +2,9 @@
 SYMBIOSE — tests/simserver/macro.py
 Section 10 : vie macro (tranche 6·B). Bloc `sprites` au snapshot, par tuile et
 par guilde, tableaux compacts [r, c, x_frac, y_frac, activite] issus de
-sample_sprites (PUR, déterministe). Forme et bornes (cap 4/plot/guilde, fracs
+peindre_presence (PUR, déterministe ; PERF VUE ② 0.5.45 — remplace l'ancien
+sample_sprites cap 4/plot). Forme et bornes (≤ 4 points peints par espèce et par
+tuile, grappe ≤ 6 pour les coloniales, lombric/pollinisateurs jamais peints, fracs
 ∈ [0,1]), démarrage à zéro, émergence estivale, positions STABLES, lecture sans
 effet de bord.
 """
@@ -43,6 +45,7 @@ def test_vie_macro():
         rows, cols = rows_cols[tid]
         for lst in guilds.values():
             par_plot = {}
+            n_espece = 0
             for e in lst:
                 ok_forme &= (len(e) == 5
                              and isinstance(e[0], int) and 0 <= e[0] < rows
@@ -50,9 +53,15 @@ def test_vie_macro():
                              and 0.0 <= e[2] <= 1.0 and 0.0 <= e[3] <= 1.0
                              and 0.0 <= e[4] <= 1.0)
                 par_plot[(e[0], e[1])] = par_plot.get((e[0], e[1]), 0) + 1
-            ok_cap &= all(n <= 4 for n in par_plot.values())
+                n_espece += 1
+            ok_cap &= len(par_plot) <= 4 and all(n <= 6 for n in par_plot.values())
     check("forme [r, c, x_frac, y_frac, activite] et bornes", ok_forme)
-    check("cap respecté (≤ 4 sprites par plot et par guilde)", ok_cap)
+    check("peintre présence : ≤ 4 points par espèce et par tuile, grappe ≤ 6", ok_cap)
+    NON_PEINTS = {"lombric", "abeille", "syrphe", "papillon", "bourdon", "osmie"}
+    check("lombric et pollinisateurs jamais peints (listes vides)",
+          all(not g[k] for g in spr.values() for k in NON_PEINTS))
+    check("quelques centaines de bêtes au plus sur le monde smoke",
+          n_tot <= 300, f"n={n_tot}")
 
     # Positions stables entre 2 semaines : un slot vit toujours au même point
     # (hash indépendant de la semaine) — pour chaque (guilde, plot), la liste
@@ -73,7 +82,7 @@ def test_vie_macro():
     check("positions stables d'une semaine à l'autre (slots ancrés)", stable)
 
     # Lecture sans effet de bord : 2 snapshots consécutifs sans step sont
-    # identiques (sample_sprites est PURE — elle n'avance aucun RNG vivant). On
+    # identiques (peindre_presence est PURE — elle n'avance aucun RNG vivant). On
     # neutralise le bloc `perf` (ms_tick/rss_mo VOLATILS par nature, cf.
     # harness._PERF_VOLATILE) : l'invariant testé est la pureté de
     # l'ÉCHANTILLONNAGE, pas la stabilité du RSS entre deux appels.

@@ -113,6 +113,88 @@ def cap_sprites_global(candidats, cap: int = SPRITES_MONDE_MAX):
 
 
 # ---------------------------------------------------------------------------
+# PERCEPTION — peintre « présence + points chauds » (sprint PERF VUE ②)
+# ---------------------------------------------------------------------------
+# 📖 Pédagogie — la calculatrice ≠ le peintre (décision D2, 2026-08-01). Le CHAMP
+# garde la densité continue (herbivorie, pollinisation, Vigueur macro la lisent) ;
+# l'ÉCRAN, lui, n'a pas besoin d'un point par quantum de densité (3 848 bêtes au
+# banc PERF VUE ①, illisibles et ruineuses). Il dit deux choses : « il y a des
+# limaces dans cette tuile » (1 individu par espèce présente) et « ici, ça
+# pullule » (quelques individus de plus aux points chauds, en GRAPPE pour les
+# espèces coloniales). Lecture seule du champ → golden-neutre, zéro RNG vivant.
+
+# Espèces jamais peintes : le lombric vit sous terre ; les pollinisateurs sont des
+# AGENTS butineurs (bloc `foragers`, ForagerLayer) — la vue sautait déjà leur nuage.
+NON_PEINTS = frozenset({"lombric"})
+CATEGORIES_NON_PEINTES = frozenset({"pollinisateur"})
+# Espèces COLONIALES : chaque point peint est une grappe d'individus serrés.
+COLONIALES = frozenset({"puceron", "moustique", "cloporte"})
+# Densité minimale de présence = un quantum (même seuil que l'ancien peintre :
+# une espèce apparaît quand son premier sprite apparaissait).
+SEUIL_PRESENCE = DENSITE_PAR_SPRITE
+# Point chaud = 3 quanta (pullulation nette, ~pic estival d'un plot ordinaire ×1,5).
+SEUIL_POINT_CHAUD = 3 * DENSITE_PAR_SPRITE
+POINTS_CHAUDS_MAX = 3       # points chauds peints EN PLUS du représentant, par tuile
+ECART_POINTS_PLOTS = 3      # distance de Tchebychev minimale entre deux points peints
+GRAPPE_MAX = 6              # individus max d'une grappe coloniale
+GRAPPE_RAYON = 0.08         # demi-étendue d'une grappe, en fraction de plot (4 cm)
+_SALT_GRAPPE = 0x80         # canal _hash_noise des décalages de grappe
+
+
+def peindre_presence(field: PopulationField, seed: int) -> list[SpriteSample]:
+    """
+    Sprites PEINTS d'une espèce sur une tuile (conception PERF VUE §3.5) :
+      - 0 si l'espèce n'est pas peinte ou absente (aucun plot ≥ SEUIL_PRESENCE) ;
+      - 1 représentant au plot le plus dense ;
+      - jusqu'à POINTS_CHAUDS_MAX points de plus, plots ≥ SEUIL_POINT_CHAUD,
+        espacés d'au moins ECART_POINTS_PLOTS ;
+      - coloniale : chaque point = grappe de 1 + quanta (≤ GRAPPE_MAX) individus.
+    Classement par (quanta de densité, hash spatial) : la densité est arrondie au
+    quantum pour qu'un point ne saute pas de plot à chaque variation infime, le
+    hash (indépendant de la semaine) départage → sélection stable dans le temps.
+    PURE & déterministe : lit le champ, n'écrit rien → golden-neutre.
+    """
+    spec = field.spec
+    if spec.name in NON_PEINTS or spec.category in CATEGORIES_NON_PEINTES:
+        return []
+    candidats = []
+    for r in range(field.rows):
+        for c in range(field.cols):
+            d = field.at_plot(r, c)
+            if d >= SEUIL_PRESENCE:
+                candidats.append((int(d / DENSITE_PAR_SPRITE),
+                                  _hash_noise(seed, spec.salt, r, c), r, c, d))
+    if not candidats:
+        return []
+    candidats.sort(reverse=True)
+    points = [candidats[0]]
+    for cand in candidats[1:]:
+        if len(points) > POINTS_CHAUDS_MAX or cand[4] < SEUIL_POINT_CHAUD:
+            break   # trié décroissant : plus aucun point chaud après celui-ci
+        if all(max(abs(cand[2] - p[2]), abs(cand[3] - p[3])) >= ECART_POINTS_PLOTS
+               for p in points):
+            points.append(cand)
+    sprites: list[SpriteSample] = []
+    for quanta, _h, r, c, d in points:
+        x0 = _hash_noise(seed, spec.salt, r, c)
+        y0 = _hash_noise(seed, spec.salt + _SLOT_Y_OFFSET, r, c)
+        n = min(GRAPPE_MAX, 1 + quanta) if spec.name in COLONIALES else 1
+        act = field.activite(r, c)
+        for slot in range(n):
+            x, y = x0, y0
+            if slot:   # le 1er individu tient le centre, les autres l'entourent
+                x += GRAPPE_RAYON * (2 * _hash_noise(
+                    seed, spec.salt + _SALT_GRAPPE + slot, r, c) - 1)
+                y += GRAPPE_RAYON * (2 * _hash_noise(
+                    seed, spec.salt + _SALT_GRAPPE + _SLOT_Y_OFFSET + slot, r, c) - 1)
+            sprites.append(SpriteSample(
+                guild=spec.name, row=r, col=c, slot=slot,
+                x_frac=min(1.0, max(0.0, x)), y_frac=min(1.0, max(0.0, y)),
+                activite=act, densite=d))
+    return sprites
+
+
+# ---------------------------------------------------------------------------
 # PERCEPTION — carpophores échantillonnés (sprint mycélium ④, CONCEPTION §1.1)
 # ---------------------------------------------------------------------------
 # Les carpophores (champignons VISIBLES) sont de la PERCEPTION PURE, dérivée du

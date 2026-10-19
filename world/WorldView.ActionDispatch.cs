@@ -479,6 +479,8 @@ namespace Symbiose
 				// '-' : grelinette, pas de cible.
 			}
 
+			// Signal à la vie macro (PERF VUE ②) : les bêtes proches du geste sursautent.
+			_macroLife?.Signal(w);
 			// Pipe occupé (step, action ou fields en vol) → l'intention est
 			// MÉMORISÉE (une seule, la dernière gagne) et partira dès que le
 			// tube se libère — indispensable en Turbo où le pipe ne dort jamais.

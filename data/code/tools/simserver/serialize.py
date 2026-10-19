@@ -27,8 +27,7 @@ from sim import maitrise as M
 # Échantillonneur de vie macro (tranche 6·B) : fonction PURE et déterministe
 # densité → entités (fields/population.py §3). L'échantillonnage se fait CÔTÉ
 # SERVEUR — la vue n'a pas besoin de _hash_noise (kickoff t6 §4).
-from fields.population import (
-    sample_sprites, cap_sprites_global, SPRITES_MONDE_MAX, sample_carpophores)
+from fields.population import peindre_presence, sample_carpophores
 # LOD des émetteurs d'ombre (D67, sprint perf-lod-ombre ③) : on relit le SEUIL de
 # pouvoir ombrageant pour DÉRIVER, par plante, si elle émet une ombre (miroir exact
 # de la métrique de fields/light.py:compute). Lecture pure d'une constante de module
@@ -301,13 +300,12 @@ class SerializeMixin:
         # client). RESTE en ⑥b (vue Godot) : la TABLE sprite par espèce côté client.
         # Arrondis : x/y_frac 3 déc. (= 0,05 cm dans le plot), activite 2 —
         # et round() est déterministe, la clé de diff côté vue reste stable.
+        # PERF VUE ② (0.5.45) : peintre « présence + points chauds »
+        # (peindre_presence) à la place de sample_sprites + cap global — 1 individu
+        # par espèce présente et par tuile, quelques-uns de plus aux pullulations,
+        # en grappe pour les coloniales ; lombric et pollinisateurs jamais peints.
+        # Le CHAMP reste intact (les gestes y retirent toujours un quantum).
         sprites = {}
-        # Candidats sprites de TOUT le monde (toutes tuiles × espèces), collectés
-        # avant d'appliquer le cap GLOBAL (cap_sprites_global) : borner le total
-        # allège serveur + pont + diff client à chaque snapshot. Chaque candidat =
-        # `((tile_id, espèce), SpriteSample)` — le porteur voyage, la sélection ne
-        # regarde que la densité du sample. Regroupé en `sprites` APRÈS le cap.
-        sprite_candidats = []
         carpophores = {}
         foragers = {}
         structures = {}
@@ -328,13 +326,13 @@ class SerializeMixin:
         ombre_pose_by_tile = {}
         for tile in gs["tiles"]:
             eco = gs["eco"][tile.tile_id]
-            # Toutes les espèces TOUJOURS présentes (listes vides) — invariant du
-            # protocole (15 clés par tuile) ; le cap global remplira celles retenues.
+            # Toutes les espèces TOUJOURS présentes (listes vides comprises) —
+            # invariant du protocole (une clé par espèce et par tuile).
             sprites[tile.tile_id] = {
-                f.spec.name: [] for f in eco.populations.values()}
-            for f in eco.populations.values():
-                for s in sample_sprites(f, gs["seed"]):
-                    sprite_candidats.append(((tile.tile_id, f.spec.name), s))
+                f.spec.name: [[s.row, s.col, round(s.x_frac, 3), round(s.y_frac, 3),
+                               round(s.activite, 2)]
+                              for s in peindre_presence(f, gs["seed"])]
+                for f in eco.populations.values()}
             # Carpophores (sprint mycélium ④, §1.1) : champignons VISIBLES
             # échantillonnés du champ `mycelium` — PERCEPTION PURE (aucun état
             # moteur, dérivés du champ comme les sprites macro). Format COMPACT par
@@ -608,16 +606,6 @@ class SerializeMixin:
                 [r, c, round(omp.data[r][c], 3)]
                 for r in range(eco.rows) for c in range(eco.cols)
                 if omp is not None and omp.data[r][c] > 0.0]
-        # Cap GLOBAL de la vie macro (perception pure, golden-neutre) : une fois TOUS
-        # les candidats collectés, on ne garde que les SPRITES_MONDE_MAX plus denses,
-        # puis on regroupe au format compact `{tuile: {espèce: [[r,c,x,y,act], …]}}`
-        # — inchangé côté client. Les tuiles/espèces dont tous les sprites sont coupés
-        # disparaissent du bloc (le client les fait fondre, cf. MacroLife.SetSprites).
-        for (tile_id, espece), s in cap_sprites_global(
-                sprite_candidats, SPRITES_MONDE_MAX):
-            sprites.setdefault(tile_id, {}).setdefault(espece, []).append(
-                [s.row, s.col, round(s.x_frac, 3), round(s.y_frac, 3),
-                 round(s.activite, 2)])
         # Météo scalaire GLOBALE du tick (sprint thermique ⑧, §A) : la météo qui a
         # produit l'état COURANT est celle de la semaine DÉJÀ simulée = `week − 1`
         # (`week` = prochaine à simuler). `weather_state` étant PURE, on la RECALCULE

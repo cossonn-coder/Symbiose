@@ -676,7 +676,14 @@ from __future__ import annotations
 #       l'onde de flexion des plantes + l'inclinaison de la pluie. PURE lecture →
 #       golden NEUTRE. Un binaire pré-0.5.44 n'émet ni l'un ni l'autre → la vue reste
 #       immobile (vent nul) et prend abri = 1.0 (tolérance comme tous les bumps).
-ENGINE_VERSION = "0.5.44"
+# 0.5.45 (PERF VUE ②, vie macro) : le bloc `sprites` garde sa FORME
+#       (`{tuile: {espèce: [[r, c, x_frac, y_frac, activite], …]}}`, toutes les
+#       espèces en clé) mais change de PEINTRE : `peindre_presence` remplace
+#       `sample_sprites` + `cap_sprites_global` — 1 individu par espèce présente et
+#       par tuile, jusqu'à 3 points chauds de plus, grappes (≤ 6) pour puceron /
+#       moustique / cloporte ; lombric et pollinisateurs : listes VIDES. Plus de cap
+#       « 4 par plot » (une grappe en compte jusqu'à 6). PURE lecture → golden NEUTRE.
+ENGINE_VERSION = "0.5.45"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

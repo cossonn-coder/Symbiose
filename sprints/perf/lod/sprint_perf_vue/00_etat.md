@@ -22,7 +22,7 @@
 | # | Kickoff | Contenu | Golden | État |
 |---|---|---|---|---|
 | ① | `01_banc_etalonnage.md` | banc du jardin réel + instrument + étalonnage PC | intact | **fait** (attend le rapport PC de Nico) |
-| ② | `02_vie_macro.md` | peintre D2 + points chauds + taille réelle, lot par tuile, fuite | intact (pont 0.5.45) | à faire |
+| ② | `02_vie_macro.md` | peintre D2 + points chauds + taille réelle, lot par tuile, fuite | intact (pont 0.5.45) | **fait** (non commité) |
 | ③ | `03_ombres_lot.md` | ombres en lot par tuile | intact | à faire |
 | ④ | `04_cadence_acoups.md` | cadence adaptative, priorité serveur, à-coups, D109 | intact | à faire |
 | ⑤ | `05_vue_bilan.md` | pleine résolution mesurée, bilan converti PC, F5 ressenti | intact | à faire |
@@ -57,6 +57,30 @@ rendu 64-78 ms). La vie macro coûte 8,7 ms de `_Draw` et environ 40 k primitive
 Les ombres coûtent peu sur la VM (0,1-0,3 ms, 48-128 redessins/s) : les ~300 ms vues sur le PC
 viendraient du pilote/GPU → le rapport du PC tranchera.
 
+### Tronçon ② (2026-10-19) — vie macro, VM llvmpipe
+Peintre `peindre_presence` (`fields/population/perception.py`) : 1 représentant au plot le plus
+dense (≥ 0,06) + ≤ 3 points chauds (≥ 0,18, écart ≥ 3 plots) par espèce et par tuile ; grappe
+1 + quanta (≤ 6) pour puceron/moustique/cloporte ; **lombric ET pollinisateurs** jamais peints.
+Bêtes servies, monde full seed 42 [scan Python] : s20 **300** · s45 **25** (avant 3 848) · s67 **77**
+(avant ~5 000). Vue : un seul CanvasItem, `DrawRect` à taille réelle (px1 = 1/zoom), redessin
+au snapshot / palier / marge / rotation / signal seulement ; sursaut 1,2 s sur geste (`Signal`).
+| cas (banc E, ×4, 20 s) | n | moy. ms | p95 | > 100 ms | draw | prim | macro _Draw |
+|---|---|---|---|---|---|---|---|
+| s45 tout, après | 2 | 77,1 [p95 et moy. d'1 run] | 84,7 | 1 / 1 | 2063 / 2061 | 68 k | 0 appel/s |
+| s67 tout, après | 1 | 113,1 | 128 | 177 | 2714 | 101 k | 0 appel/s |
+| s67 macro masquée, après | 1 | 127,5 | 154 | 157 | 2712 | 101 k | 0 |
+→ s45 « tout » rejoint « macro masquée » d'avant (2070 draw, 69 k prim) : la vie macro ne coûte
+plus que ~0 entre deux snapshots. s67 : pas de mesure « avant » à cette semaine.
+**Fuite corrigée** : masquée (s67, après turbo) 58 entrées au cadrage, 77 à la fin, **0 mourante**
+(avant : 13 305 dont 9 475). Purge dans `_Process`, indépendante du dessin.
+Paliers retenus (géométrie, ≥ 1 px interne) : puceron ×16 · moustique ×8 · coccinelle, doryphore ×4 ·
+chrysope, cloporte, carabe ×2 · limace, merle, hérisson, campagnol, rapace, couleuvre, libellule ×0,5.
+Capture ×4 (s20) : limaces = tirets bruns, merle = barre sombre ; ×16 : aucune bête dans le cadre
+(1 à 4 points par espèce et par tuile → rare dans un cadre de 1,5 m) — à juger au F5 ⑤.
+Écarts / reliquats : pollinisateurs exclus du bloc (la vue les sautait déjà) ; `FocusGuild` sans
+effet (bêtes déjà fixes) ; texte HUD « LOD : zoomez ×4 » (`WorldView.Hud.cs:340`) périmé ;
+`ForagerLayer` non touché (0 butineur à s45, 8 à s67).
+
 ### Étalonnage PC — DEMANDE À NICO (seul point F5 de mesure du sprint)
 « `git pull`, F5, choisis **full** → Lancer, puis **tout de suite** touche **E** (sans geste ni
 autre touche). Attends ~2-4 min (le jardin avance tout seul jusqu'en hiver an 1, zoome ×4, mesure
@@ -64,7 +88,7 @@ autre touche). Attends ~2-4 min (le jardin avance tout seul jusqu'en hiver an 1,
 (Re-E pendant le banc = abandon. Si le jardin a déjà dépassé la semaine 45 : relancer F5.)
 
 ## §REPRISE
-Lire `CLAUDE.md` + ce fichier + la conception, puis le prochain kickoff « à faire » (②).
-① fait : banc E + instrument. Mesurer chaque tronçon par `tools/perf_vm.sh -E 20 [-z Z] [-x MacroLife] [-O]`.
+Lire `CLAUDE.md` + ce fichier + la conception, puis le prochain kickoff « à faire » (③).
+① fait : banc E + instrument. ② fait (pont 0.5.45, golden intact `22768f33…`, suites pont 285/285). Mesurer chaque tronçon par `tools/perf_vm.sh -E 20 [-z Z] [-x MacroLife] [-O]`.
 Rapport PC de Nico attendu → à recopier dans « Mesures » (conversion en ⑤). ×1/×2/×8 VM manquants.
 Lancement : `/sprint-auto sprint_perf_vue`.
