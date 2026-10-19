@@ -195,10 +195,13 @@ namespace Symbiose
 
 		// Émet les triangles d'une tuile dans l'ORDRE DE PEINTURE d'avant T2 :
 		// pour chaque plot (ordre de BuildGround), le flanc PUIS le dessus.
+		private static readonly SolMaillage _maillageReutilise = new();
+
 		private static ArrayMesh MaillageTuile(SolTuile tuile)
 		{
 			const float hw = TileWPx / 2f, hh = TileHPx / 2f;
-			var m = new SolMaillage();
+			var m = _maillageReutilise;   // fil principal seul (PERF VUE ④)
+			m.Vider();
 			for (int i = 0; i < tuile.Plots.Count; i++)
 			{
 				var p = tuile.Plots[i];

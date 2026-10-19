@@ -46,6 +46,8 @@
 //   --capture-banc-zoom=<z> / --capture-banc-centre=<x>,<y>  cadrage du banc E
 //                            (défaut ×4 sur EtalonCentreCm) — PERF VUE ①
 //   --capture-ombres=0       ombres coupées (comme la touche O) — PERF VUE ①
+//   --capture-banc-cadence=<s> cadence PENDANT la mesure du banc E : 0 = turbo,
+//                            s > 0 = s par semaine ; absent = 60 s (nominale) — PERF VUE ④
 
 using Godot;
 using System.Globalization;

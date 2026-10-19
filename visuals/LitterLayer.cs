@@ -92,12 +92,13 @@ namespace Symbiose
 				string tileId = tileKv.Key.AsString();
 				if (!origins.TryGetValue(tileId, out Vector2 o))
 					continue;   // tuile inconnue du init : on n'invente rien
-				foreach (var pv in tileKv.Value.AsGodotArray())
+				using var plots = tileKv.Value.AsGodotArray();
+				for (int i = 0; i < plots.Count; i++)
 				{
 					// Format compact 0.3.7 : [r, c, tissu_dominant, masse].
-					var e = pv.AsGodotArray();
+					using var e = LectureSnap.Tab(plots, i);   // PERF VUE ④ : sans finaliseur
 					int r = e[0].AsInt32(), c = e[1].AsInt32();
-					string tissu = e[2].AsString();
+					string tissu = LectureSnap.S(e, 2);
 					float masse = (float)e[3].AsDouble();
 					float sat = Mathf.Clamp(masse / MasseRef, 0f, 1f);
 					_patches.Add(new Patch

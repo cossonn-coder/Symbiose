@@ -37,14 +37,14 @@ namespace Symbiose
 			foreach (var node in _plantNodes.Values)
 			{
 				if (!IsInstanceValid(node) || !node.EnTapis) continue;
-				string tile = node.GetMeta("tile").AsString();
-				int c = Mathf.FloorToInt((float)node.GetMeta("lx").AsDouble() / PlotCm);
-				int r = Mathf.FloorToInt((float)node.GetMeta("ly").AsDouble() / PlotCm);
+				string tile = node.GetMeta(LectureSnap.Meta("tile")).AsString();
+				int c = Mathf.FloorToInt((float)node.GetMeta(LectureSnap.Meta("lx")).AsDouble() / PlotCm);
+				int r = Mathf.FloorToInt((float)node.GetMeta(LectureSnap.Meta("ly")).AsDouble() / PlotCm);
 				if (!_tapisParPlot.TryGetValue((tile, r, c), out var parEspece))
 					_tapisParPlot[(tile, r, c)] = parEspece = new();
 				// Somme des teintes PONDÉRÉE par l'aire : la couleur moyenne de
 				// l'espèce dans ce plot (chaque pied a sa nuance d'automne).
-				string esp = node.GetMeta("species").AsString();
+				string esp = node.GetMeta(LectureSnap.Meta("species")).AsString();
 				float aire = node.AireTapisCm2;
 				parEspece.TryGetValue(esp, out var acc);
 				parEspece[esp] = (acc.Aire + aire, acc.Somme + node.TeinteTapis * aire);

@@ -63,16 +63,19 @@ namespace Symbiose
 			var abrites = new System.Collections.Generic.HashSet<(string, int, int)>();
 			if (couvert != null)
 				foreach (var kv in couvert)
-					foreach (var e in kv.Value.AsGodotArray())
+				{
+					using var plots = kv.Value.AsGodotArray();
+					for (int i = 0; i < plots.Count; i++)
 					{
-						var a = e.AsGodotArray();
-						abrites.Add((kv.Key.AsString(), a[0].AsInt32(), a[1].AsInt32()));
+						using var a = LectureSnap.Tab(plots, i);   // PERF VUE ④ : sans finaliseur
+						abrites.Add((kv.Key.AsString(), (int)LectureSnap.D(a, 0), (int)LectureSnap.D(a, 1)));
 					}
+				}
 			foreach (var p in _plantNodes.Values)
 			{
-				int r = Mathf.FloorToInt((float)p.GetMeta("ly").AsDouble() / PlotCm);
-				int c = Mathf.FloorToInt((float)p.GetMeta("lx").AsDouble() / PlotCm);
-				p.SetCovered(abrites.Contains((p.GetMeta("tile").AsString(), r, c)));
+				int r = Mathf.FloorToInt((float)p.GetMeta(LectureSnap.Meta("ly")).AsDouble() / PlotCm);
+				int c = Mathf.FloorToInt((float)p.GetMeta(LectureSnap.Meta("lx")).AsDouble() / PlotCm);
+				p.SetCovered(abrites.Contains((p.GetMeta(LectureSnap.Meta("tile")).AsString(), r, c)));
 			}
 		}
 	}

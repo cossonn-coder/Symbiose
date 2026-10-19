@@ -46,13 +46,13 @@ namespace Symbiose
 		{
 			if (!_genesHoverOn || _genesLabel == null || !_survolSale) return;
 			var node = FindPlant(_sourisMonde, HoverRadiusCm);
-			if (node == null || !IsInstanceValid(node) || !node.HasMeta("genes"))
+			if (node == null || !IsInstanceValid(node) || !node.HasMeta(LectureSnap.Meta("genes")))
 			{
 				_genesLabel.Text = "[gènes] survole une plante";
 				return;
 			}
-			var genes = node.GetMeta("genes").AsGodotDictionary();
-			string species = node.GetMeta("species", "?").AsString();
+			var genes = node.GetMeta(LectureSnap.Meta("genes")).AsGodotDictionary();
+			string species = node.GetMeta(LectureSnap.Meta("species"), "?").AsString();
 			var sb = new System.Text.StringBuilder();
 			sb.Append($"[gènes] {species}");
 			// Gènes de rythme d'abord (l'objet du sprint), formatés à 2 déc.

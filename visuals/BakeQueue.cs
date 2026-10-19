@@ -35,6 +35,7 @@ namespace Symbiose
 		// file vidée en ~1-2 s). Valeurs à confirmer au F4 de Nico.
 		private const int PlantsPerFrame = 6;
 		private const int SegmentsPerFrame = 80;
+		private const long BudgetUs = 4000;   // temps max de préparation par image (PERF VUE ④)
 		// Libération des images hors champ : balayage espacé (pas chaque frame).
 		private const int ReleaseEveryFrames = 15;
 
@@ -133,8 +134,15 @@ namespace Symbiose
 				_burstStartFrame = frame;
 				_burstStartUsec = Time.GetTicksUsec();
 			}
+			ulong t0 = Time.GetTicksUsec();
 			foreach (var p in _pick)
 			{
+				// PERF VUE ④ : budget de TEMPS en plus du budget de plantes/segments.
+				// Mesuré au banc E (turbo, VM) : 6 cuissons coûtaient jusqu'à 30 ms dans
+				// une même image (préparation de l'atlas, pinceaux). Au-delà du budget,
+				// les plantes restantes gardent leur ancienne image et passent à l'image
+				// suivante (toujours au moins une par image : jamais de famine).
+				if (p != _pick[0] && (long)(Time.GetTicksUsec() - t0) >= BudgetUs) break;
 				_dirty.Remove(p);
 				_eligibles.Remove(p);
 				if (p.Baker.Begin(WorldView.CurrentZoom))

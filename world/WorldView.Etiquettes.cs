@@ -62,7 +62,7 @@ namespace Symbiose
 		{
 			if (!IsInstanceValid(node)) return i;
 			var lbl = LabelFromPool(i);
-			lbl.Text = node.GetMeta("tag", "").AsString();
+			lbl.Text = node.GetMeta(LectureSnap.Meta("tag"), "").AsString();
 			// node.Position = WorldToScreen(collet) en canvas SubViewport → écran.
 			// Offset ÉCRAN constant (px fenêtre) : sous le collet, centré à la louche.
 			lbl.Position = WorldToWindow(node.Position) + new Vector2(-24f, 8f);

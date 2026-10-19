@@ -29,6 +29,9 @@
 #         images, postes CPU) au lieu de la moyenne [perf]. -z / -c remplacent zoom
 #         et centre ; -x MacroLife masque la vie macro ; -O coupe les ombres.
 #     -O  ombres coupées (comme la touche O)
+#     -A  cadence PENDANT la mesure du banc E (PERF VUE ④) : 0 = turbo, s = s par
+#         semaine (1 = défaut de test de Nico) ; absent = nominale 60 s/semaine
+#     -V  vent imposé (force[,direction rad], 0 = calme) — comme --capture-vent
 #     -W  semaine moteur du banc E (défaut 45 ; 67 = été an 2, cas de stress)
 #   Exemple : tools/perf_vm.sh -z 0.5 -x Ground
 #   Exemple : tools/perf_vm.sh -E 20 -z 4 -x MacroLife -O
@@ -36,7 +39,7 @@
 set -euo pipefail
 
 . "$(dirname "${BASH_SOURCE[0]}")/lib_vm_godot.sh"   # DEPOT GODOT XROOT + vm_*
-BANC=full ZOOM="" CENTRE="" CACHER="" SAUT=4 N=8 DELAI=300 GRAINE="" SEMAINES="" TURBO="" BUILD=1 BANC_E="" OMBRES="" BANC_W=""
+BANC=full ZOOM="" CENTRE="" CACHER="" SAUT=4 N=8 DELAI=300 GRAINE="" SEMAINES="" TURBO="" BUILD=1 BANC_E="" OMBRES="" BANC_W="" CADENCE="" VENT=""
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -53,8 +56,10 @@ while [ $# -gt 0 ]; do
     -E) BANC_E="$2"; shift 2 ;;
     -O) OMBRES=0; shift ;;
     -W) BANC_W="$2"; shift 2 ;;
+    -A) CADENCE="$2"; shift 2 ;;
+    -V) VENT="$2"; shift 2 ;;
     --no-build) BUILD=0; shift ;;
-    -h|--help) sed -n '2,38p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,41p' "$0"; exit 0 ;;
     *) echo "option inconnue : $1" >&2; exit 2 ;;
   esac
 done
@@ -89,6 +94,8 @@ if [ -n "$BANC_E" ]; then Z=banc-zoom C=banc-centre; else Z=zoom C=centre; fi
 [ -n "$BANC_E" ] && ARGS+=(--capture-etalonnage="$BANC_E")
 [ -n "$OMBRES" ] && ARGS+=(--capture-ombres=0)
 [ -n "$BANC_W" ] && ARGS+=(--capture-banc-semaine="$BANC_W")
+[ -n "$CADENCE" ] && ARGS+=(--capture-banc-cadence="$CADENCE")
+[ -n "$VENT" ] && ARGS+=(--capture-vent="$VENT")
 DISPLAY="$ECRAN" LIBGL_ALWAYS_SOFTWARE=1 "$GODOT" --path "$DEPOT" \
   --rendering-driver opengl3 --resolution 1920x1080 --print-fps \
   -- "${ARGS[@]}" >"$LOG" 2>&1 &

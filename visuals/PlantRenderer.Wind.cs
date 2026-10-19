@@ -44,9 +44,16 @@ namespace Symbiose
 		private float _windX, _windY, _abri = 1f, _raideur = 1f, _lagSec, _swayPhase;
 		private int _maxPoseLive;
 
-		/// <summary>Poses à cuire maintenant : 1 au calme ou pour un squelette.</summary>
+		/// <summary>Cellules de l'atlas : 1 au calme ou pour un squelette.</summary>
 		internal int BakePoseCount =>
 			WindWave.Active && string.IsNullOrEmpty(_deadStade) ? _maxPoseLive + 1 : 1;
+
+		/// <summary>Cellules réellement PEINTES (D109 c, PERF VUE ④) : jusqu'à la pose
+		/// la plus couchée que le vent courant peut demander. L'atlas garde sa taille
+		/// (BakePoseCount cellules) : même géométrie, mêmes UV, même image au pixel
+		/// près ; seules les poses inatteignables ne sont plus dessinées.</summary>
+		internal int BakePosesUtiles =>
+			Mathf.Min(BakePoseCount, WindWave.PoseMaxAtteignable(_abri, _raideur) + 1);
 
 		/// <summary>Position MONDE (cm) et facteur d'abri local (clé `abri` du
 		/// snapshot, 1.0 si absente). La phase propre = hash de la position, qui

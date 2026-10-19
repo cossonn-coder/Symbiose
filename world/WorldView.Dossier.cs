@@ -39,8 +39,8 @@ namespace Symbiose
 		// Clé de dossier d'un renderer, RECONSTRUITE de ses Metas — même format que
 		// PlantKey (tile|species|x_cm:F1|y_cm:F1), posées à la création du nœud.
 		private static string DossierKey(PlantRenderer node) =>
-			$"{node.GetMeta("tile").AsString()}|{node.GetMeta("species").AsString()}"
-			+ $"|{node.GetMeta("lx").AsDouble():F1}|{node.GetMeta("ly").AsDouble():F1}";
+			$"{node.GetMeta(LectureSnap.Meta("tile")).AsString()}|{node.GetMeta(LectureSnap.Meta("species")).AsString()}"
+			+ $"|{node.GetMeta(LectureSnap.Meta("lx")).AsDouble():F1}|{node.GetMeta(LectureSnap.Meta("ly")).AsDouble():F1}";
 
 		/// <summary>Clic en mode inspection : plante pointée → ouvre/rafraîchit son
 		/// dossier ; clic dans le vide → ferme. Retourne true si le clic a été

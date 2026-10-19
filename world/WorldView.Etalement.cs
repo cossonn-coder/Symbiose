@@ -86,6 +86,17 @@ namespace Symbiose
 		private bool Avancer(Etalement e, long budgetUs)
 		{
 			_survolVersion++;   // le monde affiché change → survol à recalculer (T3)
+			ulong t0 = Time.GetTicksUsec();   // pire passage par famille (banc ④)
+			int famille = e.Famille;
+			long a0 = System.GC.GetAllocatedBytesForCurrentThread();
+			bool fini = AvancerFamille(e, budgetUs);
+			NoterFamille(famille, (long)(Time.GetTicksUsec() - t0),
+						 System.GC.GetAllocatedBytesForCurrentThread() - a0);
+			return fini;
+		}
+
+		private bool AvancerFamille(Etalement e, long budgetUs)
+		{
 			switch (e.Famille)
 			{
 				case 0: AppliquerSol(e); break;
@@ -135,10 +146,11 @@ namespace Symbiose
 				Vector2 centre = _camera != null ? _camera.Position : Vector2.Zero;
 				for (int i = 0; i < e.Plantes.Count; i++)
 				{
-					var p = e.Plantes[i].AsGodotDictionary();
-					Vector2 o = _origins[p["tile"].AsString()];
-					dist[i] = WorldToScreen(o.X + (float)p["x_cm"].AsDouble(),
-											o.Y + (float)p["y_cm"].AsDouble())
+					// LectureSnap (PERF VUE ④) : wrapper disposé, aucun finaliseur.
+					using var p = LectureSnap.Dico(e.Plantes, i);
+					Vector2 o = _origins[LectureSnap.S(p, "tile")];
+					dist[i] = WorldToScreen(o.X + LectureSnap.F(p, "x_cm"),
+											o.Y + LectureSnap.F(p, "y_cm"))
 							  .DistanceSquaredTo(centre);
 					e.Ordre.Add(i);
 				}

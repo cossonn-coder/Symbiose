@@ -195,11 +195,12 @@ namespace Symbiose
 			_colorAmount = 0f;
 			_ravageurs = _gel = _grele = _drought = _ombre = _maladie = 0f;
 			if (symptoms != null)
-				foreach (var sv in symptoms)
+				for (int i = 0; i < symptoms.Count; i++)
 				{
-					var d = sv.AsGodotDictionary();
-					string cause = d["cause"].AsString();
-					float it = (float)d["intensity"].AsDouble();
+					// LectureSnap (PERF VUE ④) : wrapper disposé, aucun finaliseur.
+					using var d = LectureSnap.Dico(symptoms, i);
+					string cause = LectureSnap.S(d, "cause");
+					float it = LectureSnap.F(d, "intensity");
 					// COULEUR : on garde le colorant de plus forte intensité (pas de
 					// mélange). On compare l'intensité brute (SymptomTintMax constant).
 					if (ColorantTints.TryGetValue(cause, out var tint)

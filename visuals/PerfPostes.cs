@@ -41,21 +41,57 @@ namespace Symbiose
 		};
 
 		private static readonly int N = Noms.Length;
+		public static int Nombre => Noms.Length;   // taille des tableaux de Copier (PERF VUE ④)
 		private static readonly long[] _ticks = new long[N];
 		private static readonly int[] _appels = new int[N];
 
-		public static long Debut() => Stopwatch.GetTimestamp();
+		// Octets alloués (tas managé) par poste — PERF VUE ④ : le ramasse-miettes
+		// .NET suspend le jeu ~35-45 ms par collecte [VM] ; qui le nourrit ?
+		// `GetAllocatedBytesForCurrentThread` = compteur du thread appelant (le fil
+		// principal ici) : quelques ns, pas d'allocation. Postes jamais imbriqués.
+		private static readonly long[] _octets = new long[N];
+		private static long _allocT0;
+
+		public static long Debut()
+		{
+			_allocT0 = System.GC.GetAllocatedBytesForCurrentThread();
+			return Stopwatch.GetTimestamp();
+		}
 
 		public static void Fin(Poste p, long t0)
 		{
 			_ticks[(int)p] += Stopwatch.GetTimestamp() - t0;
+			_octets[(int)p] += System.GC.GetAllocatedBytesForCurrentThread() - _allocT0;
 			_appels[(int)p]++;
+		}
+
+		/// <summary>Copie les compteurs bruts (ticks cumulés) dans `dst` (taille Nombre),
+		/// sans allocation : le diagnostic des à-coups en fait des deltas par image.</summary>
+		public static void Copier(long[] dst) => System.Array.Copy(_ticks, dst, N);
+
+		/// <summary>Postes d'un delta de ticks au-dessus de `seuilMs`, « nom x ms », le plus
+		/// lourd d'abord ; « — » si aucun (le temps est alors du rendu ou hors postes).</summary>
+		public static string Detail(long[] delta, double seuilMs)
+		{
+			var l = new System.Collections.Generic.List<(double ms, string nom)>();
+			for (int i = 0; i < N; i++)
+			{
+				double ms = delta[i] * 1000.0 / Stopwatch.Frequency;
+				if (ms >= seuilMs) l.Add((ms, Noms[i]));
+			}
+			if (l.Count == 0) return "postes —";
+			l.Sort((a, b) => b.ms.CompareTo(a.ms));
+			var sb = new StringBuilder("postes ");
+			foreach (var (ms, nom) in l)
+				sb.Append(string.Create(CultureInfo.InvariantCulture, $"{nom} {ms:F1} ms, "));
+			return sb.ToString(0, sb.Length - 2);
 		}
 
 		public static void Reset()
 		{
 			System.Array.Clear(_ticks);
 			System.Array.Clear(_appels);
+			System.Array.Clear(_octets);
 		}
 
 		/// <summary>Somme des postes, en ms sur la fenêtre (pour le « non attribué »).</summary>
@@ -76,7 +112,7 @@ namespace Symbiose
 				double ms = _ticks[i] * 1000.0 / Stopwatch.Frequency / frames;
 				sb.AppendLine(string.Create(CultureInfo.InvariantCulture,
 					$"    {Noms[i],-22} {ms,7:F2} ms/image ({100 * ms / msImage,4:F1} %) "
-					+ $"· {_appels[i] / secondes,7:F0} appels/s"));
+					+ $"· {_appels[i] / secondes,7:F0} appels/s · {_octets[i] / 1024.0 / secondes,7:F0} Ko alloués/s"));
 			}
 		}
 	}

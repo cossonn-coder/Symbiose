@@ -24,7 +24,7 @@
 | ① | `01_banc_etalonnage.md` | banc du jardin réel + instrument + étalonnage PC | intact | **fait** (attend le rapport PC de Nico) |
 | ② | `02_vie_macro.md` | peintre D2 + points chauds + taille réelle, lot par tuile, fuite | intact (pont 0.5.45) | **fait** (non commité) |
 | ③ | `03_ombres_lot.md` | ombres en lot (un maillage) | intact | **fait** (non commité) |
-| ④ | `04_cadence_acoups.md` | cadence adaptative, priorité serveur, à-coups, D109 | intact | à faire |
+| ④ | `04_cadence_acoups.md` | cadence adaptative, priorité serveur, à-coups, D109 | intact | **fait** (non commité) |
 | ⑤ | `05_vue_bilan.md` | pleine résolution mesurée, bilan converti PC, F5 ressenti | intact | à faire |
 
 ## Mesures
@@ -110,6 +110,53 @@ que le lot, pas l'ancien). Changement d'ordre assumé : une ombre ne recouvre pl
 ni la maison (« sous les plantes », kickoff). Les ombres n'ont plus de fondu : elles apparaissent
 avec la plante et disparaissent au début de son fondu de sortie.
 
+### Tronçon ④ (2026-10-19) — à-coups, cadence, D109, VM llvmpipe
+**Instrument** (`world/WorldView.PerfAcoups.cs`, banc E) : 5 pires images avec leurs postes, rendu CPU
+et pause GC ; coïncidences des images > 33 ms (étalement / step en vol / GC) ; pire passage et octets
+par famille d'étalement ; collectes GC par génération + dernier GC (finaliseurs en attente) ; cuissons
+et poses. Octets alloués par poste (`PerfPostes`). **Cadence pendant la mesure** : `perf_vm.sh -A s`
+(0 = turbo, 1 = défaut de Nico, absent = 60 s) ; `-V f` impose le vent.
+**À-coups expliqués** (suspects du kickoff départagés) : pas le parsing (déjà hors fil principal,
+`SimBridge.Request` dans la Task) ; ce sont, par ordre de poids :
+1. **GC .NET** : 9-11 collectes gen1 par 20 s, **35-45 ms chacune**, 26 000-64 000 objets à
+   FINALISEUR en attente par collecte. Source mesurée (dotnet-trace, AllocationTick) : l'API Godot C#
+   — `Variant` (Disposer finalisable), `StringName` (chaque `GetMeta("wx")`), wrappers `Array`/
+   `Dictionary` + leurs `WeakReference`. 1er émetteur : `FindPlant` (survol, CHAQUE image pendant
+   l'étalement, 2 StringName × 272 plantes). Corrigé : `core/LectureSnap.cs` (clés Variant et noms de
+   méta en cache, valeurs/wrappers disposés) sur les chemins chauds (plantes, segments, symptômes,
+   litières, couvertures, picking) + `SolMaillage` réutilisé. → 5-6 collectes, **10-20 ms**, 242 à
+   6 600 finaliseurs.
+2. **Cuisson** : 8,0 poses par plante cuites au vent alors que l'onde n'en atteint que 2-4 (D109 c) ;
+   jusqu'à 30-47 ms de préparation dans une image. Corrigé : poses atteignables seules (2,9/cuisson)
+   + budget de temps 4 ms par image dans `BakeQueue` (≥ 1 plante).
+3. **Python sur 2 cœurs** : serveur lancé en priorité réduite (`SimBridge`, `BelowNormal` → nice 10
+   vérifié sur la VM ; Windows = BELOW_NORMAL, non vérifiable ici). La VM (16 cœurs) ne montre pas
+   l'effet.
+Hypothèse sur le « 3 FPS à 57 ms » des rapports C : ils sont pris à `DebugSecondsPerWeek = 1` (défaut,
+inchangé) → une semaine appliquée toutes les ~2,5-3 s en continu ; le compteur FPS et la ligne
+« frame » ne couvrent pas la même seconde. Cohérent avec le banc [VM] ; non vérifié sur le PC.
+| cas (banc E s45, ×4, 20 s) | n | moy. ms | p95 | p99 | max | GC total | s/semaine |
+|---|---|---|---|---|---|---|---|
+| nominal, avant | 1 | 77,3 | 85,7 | 100,2 | 107,2 | 0 | — |
+| nominal, après | 1 | 72,1 | 78,9 | 84,1 | 87,7 | 0 | — |
+| nominal + 1 semaine (`-E 75 -A 60`), après | 1 | 74,9 | 84,6 | 92,6 | 108,0 | 17,6 ms | — |
+| 1 s/semaine, avant | 1 | 123,0 | 165,2 | 197,2 | 203,4 | 338 ms | 2,86 |
+| 1 s/semaine, après | 1 | 95,6 | 113,6 | 127,7 | 131,1 | 74 ms | 2,50 |
+| turbo, avant | 1 | 144,3 | 287,1 | 380,2 | 388,4 | 285 ms | 3,33 |
+| turbo, après | 1 | 98,4 | 118,5 | 132,6 | 140,9 | 98 ms | 2,00 |
+→ « aucune image > 100 ms » n'est **pas vérifiable sur la VM** : son rendu seul coûte 60-80 ms par
+image. Ce qui reste au fil principal dans les pires images turbo : GC 10-20 ms + une famille
+d'étalement (sol ≈ 8 ms dont maillage du relief 6 ms, couches ≈ 7 ms) + cuisson ≤ ~10 ms. Le PC tranchera.
+Vent : vitesse et poses inchangées — même image au pixel (captures HEAD vs ④,
+vent du snapshot et vent 0,9 : 0 px d'écart). **D109** : (a) fait (halo avant la couverture, ZIndex 1 ;
+orientation 0 identique à HEAD, orientation 1 : halo visible) ; (b) vérifié ; (c) fait ; (d) reportée
+(plantes + maison ≈ 400 draw calls sur 2 028 à ×4 ; masquer `Objects` ne baisse pas le rendu VM [n=1]).
+Écarts au kickoff : « semaine suivante dès que la précédente est appliquée » existait déjà
+(`_etale == null` dans `_Process`) : vérifié, inchangé. GC aussi testé par `DOTNET_GCgen0size`
+(2 Mo : 18 pauses de ~36 ms ; 64 Mo : 2 pauses de ~215 ms) → rejeté, la cause est le nombre de
+finaliseurs. Reste hors tronçon : `SimBridge.Request` (~0,9 Mo de chaîne par semaine, tas des gros
+objets), `PlantShadow` (~6 Mo de tableaux / 25 s), conversions de chaînes Godot.
+
 ### Étalonnage PC — DEMANDE À NICO (seul point F5 de mesure du sprint)
 « `git pull`, F5, choisis **full** → Lancer, puis **tout de suite** touche **E** (sans geste ni
 autre touche). Attends ~2-4 min (le jardin avance tout seul jusqu'en hiver an 1, zoome ×4, mesure
@@ -117,7 +164,7 @@ autre touche). Attends ~2-4 min (le jardin avance tout seul jusqu'en hiver an 1,
 (Re-E pendant le banc = abandon. Si le jardin a déjà dépassé la semaine 45 : relancer F5.)
 
 ## §REPRISE
-Lire `CLAUDE.md` + ce fichier + la conception, puis le prochain kickoff « à faire » (④).
-① fait : banc E + instrument. ② fait (pont 0.5.45, golden intact `22768f33…`, suites pont 285/285). ③ fait (ombres = 1 maillage, vue C# pure, golden intact, build vert) → prochain : ④. Mesurer chaque tronçon par `tools/perf_vm.sh -E 20 [-z Z] [-x MacroLife] [-O]`.
+Lire `CLAUDE.md` + ce fichier + la conception, puis le prochain kickoff « à faire » (⑤).
+① fait : banc E + instrument. ② fait (pont 0.5.45, golden intact `22768f33…`, suites pont 285/285). ③ fait (ombres = 1 maillage, vue C# pure, golden intact, build vert). ④ fait (GC/finaliseurs, poses atteignables, budget cuisson, priorité serveur, D109 a/c ; vue C# pure, golden intact, build vert) → prochain : ⑤ (bilan converti PC : rejouer `-A 0` / `-A 1` / `-E 75 -A 60` sur le rapport de Nico). Mesurer chaque tronçon par `tools/perf_vm.sh -E 20 [-z Z] [-x MacroLife] [-O]`.
 Rapport PC de Nico attendu → à recopier dans « Mesures » (conversion en ⑤). ×1/×2/×8 VM manquants.
 Lancement : `/sprint-auto sprint_perf_vue`.

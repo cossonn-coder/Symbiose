@@ -40,7 +40,7 @@ namespace Symbiose
 			if (_bridge == null || _plantNodes.Count == 0 || !_survolSale) return;
 			var node = FindPlant(_sourisMonde, HoverRadiusCm);
 			if (node == null || !IsInstanceValid(node)) return;
-			string species = node.GetMeta("species", "").AsString();
+			string species = node.GetMeta(LectureSnap.Meta("species"), "").AsString();
 			if (species.Length == 0 || !_especesObservees.Add(species)) return;
 			// 1er survol de cette espèce → découverte côté Python (idempotent).
 			_bridge.Observer(species);

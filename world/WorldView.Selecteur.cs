@@ -146,7 +146,7 @@ namespace Symbiose
 					ButtonGroup = _groupeBancs,
 					Alignment = HorizontalAlignment.Left,
 				};
-				b.SetMeta("config", nom);
+				b.SetMeta(LectureSnap.Meta("config"), nom);
 				_liste.AddChild(b);
 
 				premier ??= b;
@@ -164,7 +164,7 @@ namespace Symbiose
 		private string ConfigChoisie()
 		{
 			var presse = _groupeBancs?.GetPressedButton();
-			return presse != null ? (string)presse.GetMeta("config") : null;
+			return presse != null ? (string)presse.GetMeta(LectureSnap.Meta("config")) : null;
 		}
 
 		private void Lancer()

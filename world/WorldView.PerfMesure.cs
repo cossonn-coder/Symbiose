@@ -105,11 +105,13 @@ namespace Symbiose
 			RenderingServer.ViewportSetMeasureRenderTime(GetViewport().GetViewportRid(), true);
 			RenderingServer.ViewportSetMeasureRenderTime(_worldVp.GetViewportRid(), true);
 			PerfPostes.Reset();
+			DemarrerAcoups();   // pires images + GC (WorldView.PerfAcoups.cs, ④)
 		}
 
 		private void EchantillonDistribution(double frameMs)
 		{
 			_distMs.Add(frameMs);
+			EchantillonAcoups(frameMs);
 			_distDraw += Performance.GetMonitor(Performance.Monitor.RenderTotalDrawCallsInFrame);
 			_distPrim += Performance.GetMonitor(Performance.Monitor.RenderTotalPrimitivesInFrame);
 			_distProcMs += 1000.0 * Performance.GetMonitor(Performance.Monitor.TimeProcess);
@@ -149,6 +151,7 @@ namespace Symbiose
 			sb.AppendLine(string.Create(ci,
 				$"  postes CPU (somme {postes:F2} ms/image, non attribué {moy - postes:F2}) :"));
 			PerfPostes.Ecrire(sb, n, sec, moy);
+			EcrireAcoups(sb, n);
 			_distMs = null;
 			RenderingServer.ViewportSetMeasureRenderTime(GetViewport().GetViewportRid(), false);
 			RenderingServer.ViewportSetMeasureRenderTime(_worldVp.GetViewportRid(), false);

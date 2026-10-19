@@ -16,7 +16,7 @@
 //
 // Banc VM : `tools/perf_vm.sh -E <s>` passe `--capture-etalonnage=<s>` (même code ;
 // `-z`/`-c` y remplacent zoom et centre, `-x MacroLife` / `-O` masquent vie macro et
-// ombres). En capture, le rapport s'imprime entre `[banc] DEBUT` et `[banc] FIN`
+// ombres ; `-A` la cadence pendant la mesure, PERF VUE ④). En capture, le rapport s'imprime entre `[banc] DEBUT` et `[banc] FIN`
 // puis le jeu quitte.
 //
 // 📖 Pédagogie (côté embarqué) : une petite machine à états pilotée par la boucle
@@ -60,6 +60,11 @@ namespace Symbiose
 		private static readonly float CaptureBancZoom = ParseFloat(ArgCapture("banc-zoom"));
 		private static readonly string CaptureBancCentre = ArgCapture("banc-centre");
 		private string _bancCadrage = "";       // état de la vie macro au cadrage (fuite)
+		// Cadence PENDANT la mesure (PERF VUE ④) : absente = nominale (60 s/semaine,
+		// aucun step) ; 0 = turbo (« au plus vite ») ; s > 0 = s secondes par semaine
+		// (1 = le défaut de test de Nico). Le rapport donne la cadence obtenue.
+		private static readonly float CaptureBancCadence = ParseFloat(ArgCapture("banc-cadence"));
+		private int _bancSemaineMesure;         // semaine moteur au début de la mesure
 		private static int EtalonSemaine =>
 			float.IsNaN(CaptureBancSemaine) ? EtalonSemaineDefaut : (int)CaptureBancSemaine;
 
@@ -106,6 +111,7 @@ namespace Symbiose
 				case EtatBanc.Repos:
 					if (_etale != null || _pendingStep != null || Maintenant - _bancT0 < EtalonReposSec) return;
 					DemarrerDistribution();
+					PoserCadenceMesure();
 					_banc = EtatBanc.Mesure;
 					_bancT0 = Maintenant;
 					GD.Print($"[banc] mesure {_bancMesureSec} s.");
@@ -117,10 +123,31 @@ namespace Symbiose
 						$"[banc E] semaine moteur {SemaineMoteur} · zoom ×{ZoomSteps[_zoomIndex]} · "
 						+ $"centre {EtalonCentre().X:F0},{EtalonCentre().Y:F0} cm · mesure {_bancMesureSec:F0} s"));
 					sb.AppendLine($"  vie macro au cadrage (avant purge) : {_bancCadrage}");
+					EcrireCadenceMesure(sb);
 					EcrireDistribution(sb);
 					FinBanc(ConstruireRapportPerf(sb.ToString()));
 					return;
 			}
+		}
+
+		private void PoserCadenceMesure()
+		{
+			_bancSemaineMesure = SemaineMoteur;
+			if (float.IsNaN(CaptureBancCadence)) return;   // nominale : déjà posée
+			if (CaptureBancCadence <= 0f) _simMode = SimMode.Turbo;
+			else DebugSecondsPerWeek = CaptureBancCadence;
+			_timeAccum = 0f;
+		}
+
+		private void EcrireCadenceMesure(StringBuilder sb)
+		{
+			int n = SemaineMoteur - _bancSemaineMesure;
+			string consigne = float.IsNaN(CaptureBancCadence) ? "nominale 60 s/semaine"
+				: CaptureBancCadence <= 0f ? "turbo (au plus vite)" : $"{CaptureBancCadence:F1} s/semaine";
+			string obtenue = n > 0
+				? string.Create(CultureInfo.InvariantCulture, $" → {_bancMesureSec / n:F2} s/semaine obtenues") : "";
+			sb.AppendLine($"  cadence {consigne} : {n} semaines appliquées{obtenue}"
+				+ $" · dernier tick vu par la vue {_lastTickMs:F0} ms");
 		}
 
 		// Zoom et centre du banc ; en capture VM, `-z` / `-c` les remplacent.

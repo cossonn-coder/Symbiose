@@ -110,11 +110,44 @@ namespace Symbiose
 			Downwind = new Vector2(Mathf.Sin(d), Mathf.Cos(d));
 			bool drift = Mathf.Abs(BakedDir.AngleTo(Downwind)) > ReBakeAngleRad;
 			if (drift) BakedDir = Downwind;
+			// D109 (c) : le vent FORCIT (force ou plus forte risée) → des poses plus
+			// couchées deviennent atteignables, absentes des atlas déjà cuits.
+			float risee = RiseeMax();
+			bool forcit = Force > _forcePrec || risee > _riseePrec;
+			_forcePrec = Force;
+			_riseePrec = risee;
+			drift |= forcit;
 			// Le nombre de poses cuites (1 au calme, jusqu'à 8 au vent) ou leur
 			// direction change → toutes les plantes sont salies ; la FILE (T2) les
 			// recuit quelques-unes par frame, l'écran d'abord.
 			if (Active != wasActive || (Active && drift))
 				foreach (var p in BakeQueue.All) p.Invalidate();
+		}
+
+		// --- D109 (c), PERF VUE ④ : ne cuire que les poses ATTEIGNABLES ---------
+		// Mesuré (banc E turbo, force 0,33) : 8,0 poses cuites par plante alors que
+		// le vent n'en couche presque aucune au-delà de la 3ᵉ-4ᵉ ; la cuisson était
+		// le premier poste CPU (13 ms/image, contre 3,8 au calme). Borne SUPÉRIEURE
+		// exacte de PoseFor : enveloppe ≤ 1, risée ≤ sa valeur max, |sin| ≤ 1, et la
+		// neige ne fait que raidir (SnowStiffness ≤ 1) → aucune pose demandée par
+		// l'onde ne manque jamais à l'atlas (même image qu'avant).
+		private static float _forcePrec, _riseePrec;
+
+		private static float RiseeMax()
+		{
+			float m = 0f;
+			foreach (float g in _gusts) m = Mathf.Max(m, g);
+			return m / _gustMean;
+		}
+
+		/// <summary>Pose la plus couchée que l'onde peut demander à une plante
+		/// d'abri `abri` et de raideur `raideur` sous le vent courant.</summary>
+		public static int PoseMaxAtteignable(float abri, float raideur)
+		{
+			float f = Force * abri;
+			float flex = raideur * f * (FondCoef * Mathf.Min(f, FondCap) + EnvGain * RiseeMax())
+						 + SwayAmp * raideur * f;
+			return Mathf.Clamp(Mathf.RoundToInt(Mathf.Min(flex + 1e-3f, 1f) * 7f), 0, 7);
 		}
 
 		// Banc PERF VUE ① : chronométré (PerfPostes), corps inchangé.

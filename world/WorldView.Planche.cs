@@ -89,7 +89,7 @@ namespace Symbiose
 			var (zoom, info) = Planche[step];
 			PoserCamera(System.Array.IndexOf(ZoomSteps, zoom),
 				_plancheCible.EmpriseCanvas.GetCenter());
-			string espece = _plancheCible.GetMeta("species", "?").AsString();
+			string espece = _plancheCible.GetMeta(LectureSnap.Meta("species"), "?").AsString();
 			EncartPlanche($"palier ×{zoom} · {info}   —   {espece} "
 				+ $"({step + 1}/{Planche.Length}){suffixe}");
 		}

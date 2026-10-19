@@ -83,6 +83,16 @@ namespace Symbiose
 			_couleurs.Add(c);
 		}
 
+		/// <summary>Repart à vide en GARDANT la capacité des listes (PERF VUE ④) :
+		/// un seul constructeur réutilisé pour toutes les tuiles, chaque semaine —
+		/// ~1,9 Mo de tableaux réalloués par semaine en moins pour le GC [VM].</summary>
+		public void Vider()
+		{
+			_sommets.Clear();
+			_uvs.Clear();
+			_couleurs.Clear();
+		}
+
 		/// <summary>Le maillage d'une surface (triangles non indexés, sommets 2D),
 		/// ou null si rien à peindre.</summary>
 		public ArrayMesh Construire()

@@ -326,6 +326,18 @@ namespace Symbiose
 					(float)t["origin_y_cm"].AsDouble());
 			}
 
+			// Halo de SOL PELÉ de l'allélopathie (⑥) — au ras du sol comme la couverture,
+			// son pendant NÉGATIF : là où le champ `allelopathie` est chargé, la terre
+			// reste nue. Enfant direct de WorldView (survit à RebuildWorld, se re-projette
+			// seul). Lit le bloc `allelopathie` (0.5.29).
+			// D109 (a), PERF VUE ④ : ZIndex 0 → 1, même défaut et même remède que la
+			// couverture (D106 T5) : à ZIndex 0, le sol RE-créé en dernier enfant à la
+			// rotation le recouvrait. Ajouté AVANT la couverture : à ZIndex égal l'ordre
+			// des enfants départage → halo puis couverture, litière, mulch, comme avant
+			// (vérifié : image identique à l'orientation 0, halo enfin visible à la 1).
+			_allelopathieLayer = new AllelopathieLayer { Name = "Allelopathie", ZIndex = 1 };
+			AddWorld(_allelopathieLayer);
+
 			// Tapis de COUVERTURE au sol (luxuriance ⑥, D65) — ZIndex 0 (juste
 			// au ras du sol), SOUS la litière (1), la macro (5) et les plantes (10) :
 			// le couvre-sol tapisse la terre, tout se dessine par-dessus. Enfant
@@ -336,13 +348,6 @@ namespace Symbiose
 			// tapis reste dessous.
 			_couvertureLayer = new CouvertureLayer { Name = "Couverture", ZIndex = 1 };
 			AddWorld(_couvertureLayer);
-
-			// Halo de SOL PELÉ de l'allélopathie (⑥) — ZIndex 0 comme la couverture
-			// (au ras du sol), son pendant NÉGATIF : là où le champ `allelopathie` est
-			// chargé, la terre reste nue. Enfant direct de WorldView (survit à
-			// RebuildWorld, se re-projette seul). Lit le bloc `allelopathie` (0.5.29).
-			_allelopathieLayer = new AllelopathieLayer { Name = "Allelopathie", ZIndex = 0 };
-			AddWorld(_allelopathieLayer);
 
 			BuildLitterLayer();   // litière au sol (③·B) — ZIndex 1, sous la macro
 

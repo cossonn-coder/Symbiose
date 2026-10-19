@@ -125,6 +125,7 @@ namespace Symbiose
 			try
 			{
 				_proc = Process.Start(psi);
+				BaisserPriorite();
 				return true;
 			}
 			catch (System.Exception e)
@@ -132,6 +133,30 @@ namespace Symbiose
 				GD.Print($"[SimBridge] {fileName} : lancement impossible ({e.Message}).");
 				_proc = null;
 				return false;
+			}
+		}
+
+		// PERF VUE ④ — le moteur passe APRÈS l'affichage. Sur le PC de Nico (2 cœurs),
+		// un tick Python (0,8-2,3 s) en mode accéléré volait un cœur au fil principal
+		// de Godot. Priorité « sous la normale » : l'OS donne la main à l'affichage
+		// d'abord, le moteur prend le temps CPU restant — le tick dure parfois un peu
+		// plus, l'image ne saute plus. Baisser sa propre priorité ne demande aucun
+		// droit (Windows : BELOW_NORMAL_PRIORITY_CLASS ; Linux/macOS : nice +10,
+		// posé avant que Python ne crée ses threads, qui en héritent). Échec = sans
+		// gravité : le jeu tourne comme avant, on le dit en console.
+		// 📖 Pédagogie (embarqué) : c'est la priorité de tâche d'un RTOS — la tâche
+		// d'affichage (échéance à 16 ms) passe devant la tâche de calcul (échéance
+		// d'une semaine de jeu), qui tourne dans les creux.
+		private void BaisserPriorite()
+		{
+			try
+			{
+				_proc.PriorityClass = ProcessPriorityClass.BelowNormal;
+				GD.Print($"[SimBridge] moteur en priorité réduite ({_proc.PriorityClass}).");
+			}
+			catch (System.Exception e)
+			{
+				GD.Print($"[SimBridge] priorité du moteur inchangée ({e.Message}).");
 			}
 		}
 

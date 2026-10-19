@@ -43,6 +43,8 @@ namespace Symbiose
 		// Comptabilité mémoire vidéo de TOUTES les images cuites (rapport F4/log).
 		public static long TotalBytes { get; private set; }
 		public static int TotalImages { get; private set; }
+		// Banc PERF VUE ④ : cuissons lancées et poses cuites (moyenne poses/cuisson).
+		public static long Cuissons, PosesCuites;
 
 		private readonly PlantRenderer _owner;
 
@@ -51,6 +53,7 @@ namespace Symbiose
 		// jusqu'à ce que la nouvelle soit rendue (jamais de trou, jamais d'image
 		// à moitié allouée). Même géométrie → on recuit sur place.
 		private Cell _shown, _next;
+		private int _nextUtiles = 1;   // cellules peintes par la cuisson en vol (D109 c)
 
 		private sealed class Cell
 		{
@@ -59,6 +62,7 @@ namespace Symbiose
 			public Rect2I[] Cells;       // par pose : x dans l'atlas (y = 0) + taille
 			public Vector2I[] Origins;   // par pose : px du collet dans SA cellule
 			public float Zoom;
+			public int Utiles = 1;       // cellules peintes (≤ Poses), D109 c
 			public int Poses => Cells.Length;
 			public long Bytes => 4L * Vp.Size.X * Vp.Size.Y;   // RGBA8
 
@@ -103,12 +107,23 @@ namespace Symbiose
 
 			Cell cell = _shown != null && _shown.Matches(cells, origins, zoom)
 				? _shown : NewCell(cells, origins, new Vector2I(x, h), zoom);
+			// D109 (c) : seules les poses ATTEIGNABLES sont peintes ; les cellules
+			// au-delà restent vides (pinceau masqué), jamais affichées (DrawImage).
+			// Recuisson SUR PLACE : jusqu'au Commit, on n'affiche que les cellules
+			// peintes à la fois avant et après (jamais une cellule vidée cette frame).
+			_nextUtiles = _owner.BakePosesUtiles;
+			cell.Utiles = cell == _shown ? Mathf.Min(cell.Utiles, _nextUtiles) : _nextUtiles;
 			for (int k = 0; k < poses; k++)
 			{
+				bool peinte = k < _nextUtiles;
+				cell.Brushes[k].Visible = peinte;
+				if (!peinte) continue;
 				_owner.CopyDrawStateTo(cell.Brushes[k]);
 				cell.Brushes[k].SetBrushPose(k);   // cellule k = flexion k/7
 			}
 			cell.Vp.RenderTargetUpdateMode = SubViewport.UpdateMode.Once;
+			Cuissons++;
+			PosesCuites += _nextUtiles;
 			if (_next != null && _next != cell && _next != _shown) Free(_next);
 			_next = cell;
 			return true;
@@ -121,6 +136,7 @@ namespace Symbiose
 			if (_next == null) return;
 			if (_shown != null && _shown != _next) Free(_shown);
 			_shown = _next;
+			_shown.Utiles = _nextUtiles;
 			_next = null;
 		}
 
@@ -135,11 +151,12 @@ namespace Symbiose
 
 		/// <summary>Affiche la pose `pose` de l'image cuite, en coordonnées
 		/// LOCALES du PlantRenderer (un px cuit = 1/zoom px canvas). Une pose
-		/// absente de l'atlas (cuit au calme, vent levé depuis) → la plus couchée.</summary>
+		/// absente de l'atlas (cuit au calme, vent levé depuis) ou non peinte (vent
+		/// qui vient de forcir, recuisson en file) → la plus couchée PEINTE.</summary>
 		public void DrawImage(int pose = 0)
 		{
 			Cell c = _shown;
-			pose = Mathf.Min(pose, c.Poses - 1);
+			pose = Mathf.Min(pose, c.Utiles - 1);
 			Rect2I cell = c.Cells[pose];
 			// Ancrage PROPRE à la pose : le collet tombe toujours au même endroit.
 			var rect = new Rect2(-(Vector2)c.Origins[pose] / c.Zoom, (Vector2)cell.Size / c.Zoom);

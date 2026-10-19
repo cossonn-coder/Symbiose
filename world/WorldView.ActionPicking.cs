@@ -22,8 +22,8 @@ namespace Symbiose
 			float bestD = radiusCm * radiusCm;
 			foreach (var node in _plantNodes.Values)
 			{
-				float dx = (float)node.GetMeta("wx").AsDouble() - w.X;
-				float dy = (float)node.GetMeta("wy").AsDouble() - w.Y;
+				float dx = (float)node.GetMeta(LectureSnap.Meta("wx")).AsDouble() - w.X;
+				float dy = (float)node.GetMeta(LectureSnap.Meta("wy")).AsDouble() - w.Y;
 				float d = dx * dx + dy * dy;
 				if (d < bestD) { bestD = d; best = node; }
 			}
@@ -34,16 +34,18 @@ namespace Symbiose
 		/// point tombe entre les tuiles (chemins) ou sur la maison.</summary>
 		private bool FindPlot(Vector2 w, out string tileId, out int r, out int c)
 		{
-			foreach (var tv in _world["tiles"].AsGodotArray())
+			// LectureSnap (PERF VUE ④) : appelé par le survol, sans finaliseur.
+			using var tiles = LectureSnap.Tab(_world, "tiles");
+			for (int i = 0; i < tiles.Count; i++)
 			{
-				var t = tv.AsGodotDictionary();
-				float ox = (float)t["origin_x_cm"].AsDouble();
-				float oy = (float)t["origin_y_cm"].AsDouble();
-				int rows = t["rows"].AsInt32(), cols = t["cols"].AsInt32();
+				using var t = LectureSnap.Dico(tiles, i);
+				float ox = LectureSnap.F(t, "origin_x_cm");
+				float oy = LectureSnap.F(t, "origin_y_cm");
+				int rows = LectureSnap.I(t, "rows"), cols = LectureSnap.I(t, "cols");
 				if (w.X >= ox && w.X < ox + cols * PlotCm
 					&& w.Y >= oy && w.Y < oy + rows * PlotCm)
 				{
-					tileId = t["id"].AsString();
+					tileId = LectureSnap.S(t, "id");
 					c = (int)((w.X - ox) / PlotCm);
 					r = (int)((w.Y - oy) / PlotCm);
 					return true;
@@ -76,8 +78,8 @@ namespace Symbiose
 			Vector2 w = ScreenToWorld(canvasMouse);
 			foreach (var node in _plantNodes.Values)
 			{
-				float dx = (float)node.GetMeta("wx").AsDouble() - w.X;
-				float dy = (float)node.GetMeta("wy").AsDouble() - w.Y;
+				float dx = (float)node.GetMeta(LectureSnap.Meta("wx")).AsDouble() - w.X;
+				float dy = (float)node.GetMeta(LectureSnap.Meta("wy")).AsDouble() - w.Y;
 				float ext = node.PickExtentCm;
 				if (dx * dx + dy * dy > ext * ext) continue;
 				AppliquerSiEnAttente(node);   // segments à jour avant l'index visé (T4)

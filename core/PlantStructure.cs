@@ -176,44 +176,54 @@ namespace Symbiose
 		// Python, jamais le recalculer ici).
 		// -------------------------------------------------------------------
 
+		// PERF VUE ④ : lecture par LectureSnap (clés en cache, valeurs et wrappers
+		// disposés aussitôt) — c'est la boucle la plus dense du snapshot (~1 200
+		// segments × 3 wrappers par semaine), source principale des finaliseurs.
 		public static PlantStructure FromSnapshot(Godot.Collections.Dictionary plant)
 		{
 			var ps = new PlantStructure
 			{
-				Title = plant["name"].AsString(),
-				SpeciesName = plant["species"].AsString(),
-				HeightCm = (float)plant["height_cm"].AsDouble(),
+				Title = LectureSnap.S(plant, "name"),
+				SpeciesName = LectureSnap.S(plant, "species"),
+				HeightCm = LectureSnap.F(plant, "height_cm"),
 				CanopyRadiusCm = 0f,
 			};
 			// Hints d'organes (t6·A). Lecture TOLÉRANTE (ContainsKey + défauts) :
 			// un snapshot pré-0.2.2 reste lisible. `organ` JSON null → Variant
 			// Nil → AsString() rend "" = « pas d'organe », exactement le défaut.
-			if (plant.ContainsKey("foliage_density"))
-				ps.FoliageDensity = (float)plant["foliage_density"].AsDouble();
-			if (plant.ContainsKey("organ"))
-				ps.Organ = plant["organ"].AsString();
-			if (plant.ContainsKey("organ_site"))
-				ps.OrganSite = plant["organ_site"].AsString();
+			if (LectureSnap.A(plant, "foliage_density"))
+				ps.FoliageDensity = LectureSnap.F(plant, "foliage_density");
+			if (LectureSnap.A(plant, "organ"))
+				ps.Organ = LectureSnap.S(plant, "organ");
+			if (LectureSnap.A(plant, "organ_site"))
+				ps.OrganSite = LectureSnap.S(plant, "organ_site");
 			// Signaux phénologiques par-plante (désync ②) : lecture TOLÉRANTE — un
 			// snapshot pré-② n'a pas les clés → 0f (aucune fleur, aucune coloration
 			// automnale = comportement d'été neutre). La vue ne recalcule rien.
-			if (plant.ContainsKey("floraison"))
-				ps.Floraison = (float)plant["floraison"].AsDouble();
-			if (plant.ContainsKey("automne"))
-				ps.Automne = (float)plant["automne"].AsDouble();
+			if (LectureSnap.A(plant, "floraison"))
+				ps.Floraison = LectureSnap.F(plant, "floraison");
+			if (LectureSnap.A(plant, "automne"))
+				ps.Automne = LectureSnap.F(plant, "automne");
 			// Fruits tracés (③, 0.3.4) : lecture tolérante (un snapshot pré-0.3.4
 			// ou une plante morte n'a pas la clé → liste vide, rien à dessiner).
-			if (plant.ContainsKey("fruits"))
-				foreach (var fv in plant["fruits"].AsGodotArray())
+			if (LectureSnap.A(plant, "fruits"))
+			{
+				using var fruits = LectureSnap.Tab(plant, "fruits");
+				for (int i = 0; i < fruits.Count; i++)
 				{
-					var f = fv.AsGodotDictionary();
+					using var f = LectureSnap.Dico(fruits, i);
 					ps.Fruits.Add(new FruitData(
-						f["segment"].AsInt32(),
-						(float)f["maturite"].AsDouble(),
-						(float)f["masse"].AsDouble()));
+						LectureSnap.I(f, "segment"),
+						LectureSnap.F(f, "maturite"),
+						LectureSnap.F(f, "masse")));
 				}
-			foreach (var segVar in plant["segments"].AsGodotArray())
-				ps.Segments.Add(ParseSegment(segVar.AsGodotDictionary()));
+			}
+			using (var segs = LectureSnap.Tab(plant, "segments"))
+				for (int i = 0; i < segs.Count; i++)
+				{
+					using var seg = LectureSnap.Dico(segs, i);
+					ps.Segments.Add(ParseSegment(seg));
+				}
 			if (ps.Segments.Count > 0)
 				ps.ColletCm = ps.Segments[0].Base;
 			return ps;
@@ -227,16 +237,20 @@ namespace Symbiose
 		// flux muet, le défaut sûr serait l'inverse ; le renderer gère ce cas en traitant
 		// AgeWeeks==0 sur un segment épaissi comme « déjà mûr » (cf. PlantRenderer.Organs).
 		// Les autres champs dynamiques (auxin…) restent ignorés.
-		private static Segment ParseSegment(Godot.Collections.Dictionary seg) =>
-			new Segment(
-				Base: ParseVec3(seg["base"].AsGodotArray()),
-				Dir: ParseVec3(seg["dir"].AsGodotArray()),
-				LengthCm: (float)seg["length_cm"].AsDouble(),
-				ThicknessCm: (float)seg["thickness_cm"].AsDouble(),
-				IsApex: seg["is_apex"].AsBool(),
-				AgeWeeks: seg.ContainsKey("age_weeks") ? seg["age_weeks"].AsInt32() : 0);
+		private static Segment ParseSegment(Godot.Collections.Dictionary seg)
+		{
+			using var b = LectureSnap.Tab(seg, "base");
+			using var d = LectureSnap.Tab(seg, "dir");
+			return new Segment(
+				Base: ParseVec3(b),
+				Dir: ParseVec3(d),
+				LengthCm: LectureSnap.F(seg, "length_cm"),
+				ThicknessCm: LectureSnap.F(seg, "thickness_cm"),
+				IsApex: LectureSnap.B(seg, "is_apex"),
+				AgeWeeks: LectureSnap.A(seg, "age_weeks") ? LectureSnap.I(seg, "age_weeks") : 0);
+		}
 
 		private static Vector3 ParseVec3(Godot.Collections.Array a) =>
-			new Vector3((float)a[0].AsDouble(), (float)a[1].AsDouble(), (float)a[2].AsDouble());
+			new Vector3((float)LectureSnap.D(a, 0), (float)LectureSnap.D(a, 1), (float)LectureSnap.D(a, 2));
 	}
 }
