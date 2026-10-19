@@ -137,7 +137,18 @@ namespace Symbiose
 			}
 		}
 
+		// PLANTE ASSEMBLÉE ① : les primitives partent en UN lot (LotTriangles,
+		// ordre des anciens appels conservé) → un seul draw call pour la couche.
+		private readonly LotTriangles _lot = new();
+
 		public override void _Draw()
+		{
+			_lot.Vider();
+			Peindre();
+			_lot.Dessiner(this);
+		}
+
+		private void Peindre()
 		{
 			if (_patches.Count == 0 || WorldView.CurrentZoom < MinZoom) return;
 			// Culling (T4) : cadre de marge COMMUN et stable (world/MargeVue.cs),
@@ -164,7 +175,7 @@ namespace Symbiose
 					// dérivée du même hash → tapis « fibreux » cohérent.
 					float bl = 3.2f;
 					Vector2 dir = new Vector2(Mathf.Cos(ang), Mathf.Sin(ang)) * bl;
-					DrawLine(center + off - dir, center + off + dir, col, 1.4f);
+					_lot.Ligne(center + off - dir, center + off + dir, col, 1.4f);
 				}
 			}
 		}

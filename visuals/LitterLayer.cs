@@ -131,7 +131,18 @@ namespace Symbiose
 			}
 		}
 
+		// PLANTE ASSEMBLÉE ① : les primitives partent en UN lot (LotTriangles,
+		// ordre des anciens appels conservé) → un seul draw call pour la couche.
+		private readonly LotTriangles _lot = new();
+
 		public override void _Draw()
+		{
+			_lot.Vider();
+			Peindre();
+			_lot.Dessiner(this);
+		}
+
+		private void Peindre()
 		{
 			if (_patches.Count == 0 || WorldView.CurrentZoom < MinZoom) return;
 			// Culling (T4) : cadre de marge COMMUN et stable (world/MargeVue.cs),
@@ -153,7 +164,7 @@ namespace Symbiose
 					float dist = SpreadCm * ((hi >> 16 & 0xff) / 255f);
 					Vector2 off = WorldView.WorldToScreenOffset(
 						dist * Mathf.Cos(ang), dist * Mathf.Sin(ang));
-					DrawCircle(center + off, 2.2f, col);
+					_lot.Cercle(center + off, 2.2f, col);
 				}
 			}
 		}

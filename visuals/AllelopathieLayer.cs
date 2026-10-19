@@ -120,7 +120,18 @@ namespace Symbiose
 			}
 		}
 
+		// PLANTE ASSEMBLÉE ① : les primitives partent en UN lot (LotTriangles,
+		// ordre des anciens appels conservé) → un seul draw call pour la couche.
+		private readonly LotTriangles _lot = new();
+
 		public override void _Draw()
+		{
+			_lot.Vider();
+			Peindre();
+			_lot.Dessiner(this);
+		}
+
+		private void Peindre()
 		{
 			if (_patches.Count == 0 || WorldView.CurrentZoom < MinZoom) return;
 			// Culling (T4) : cadre de marge COMMUN et stable (world/MargeVue.cs),
@@ -145,7 +156,7 @@ namespace Symbiose
 						dist * Mathf.Cos(ang), dist * Mathf.Sin(ang));
 					// Tache un poil plus large que la couverture (plaque de terre nue,
 					// pas un brin d'herbe).
-					DrawCircle(center + off, 3.0f, col);
+					_lot.Cercle(center + off, 3.0f, col);
 				}
 			}
 		}

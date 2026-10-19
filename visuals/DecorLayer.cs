@@ -209,11 +209,18 @@ namespace Symbiose
 			// le fond sur lequel les motifs se détachent. Passe 2 : le MOTIF détaillé
 			// (T5) peint par-dessus. On sépare les passes pour que les aplats voisins
 			// ne recouvrent jamais un motif déjà tracé (les bandes se touchent aux coins).
+			// PLANTE ASSEMBLÉE ① : tout part en UN lot (LotTriangles) — les triangles
+			// gardent l'ordre des anciens appels, donc l'ordre des passes (~1 100 draw
+			// calls → 1 à ×4 [VM]). On ne change que COMMENT, pas QUAND on redessine.
+			_lot.Vider();
 			foreach (var s in _profile.Secteurs)
 				DrawSecteur(s);
 			foreach (var s in _profile.Secteurs)
 				DrawMotif(s);
+			_lot.Dessiner(this);
 		}
+
+		private readonly LotTriangles _lot = new();
 
 		// Dispatch du MOTIF détaillé d'un secteur (T5), peint sur son assise.
 		private void DrawMotif(Secteur s)
@@ -261,11 +268,11 @@ namespace Symbiose
 				Color outer = far;  outer = Assombrir(outer, jitter);
 				// Deux triangles remplis (quad). L'inner sur le bord jardin, l'outer
 				// au fond : on peint le fond puis la frange claire par-dessus.
-				DrawColoredPolygon(new[] { p0, p1, p2, p3 }, outer);
+				_lot.Polygone(new[] { p0, p1, p2, p3 }, outer);
 				// Frange de lisière (bande claire côté jardin), 1/3 de la profondeur.
 				Vector2 m2 = EdgePoint(s.Cote, u1, DepthCm * 0.34f + b1 * 0.66f);
 				Vector2 m3 = EdgePoint(s.Cote, u0, DepthCm * 0.34f + b0 * 0.66f);
-				DrawColoredPolygon(new[] { p0, p1, m2, m3 }, inner);
+				_lot.Polygone(new[] { p0, p1, m2, m3 }, inner);
 				// LISIÈRE NETTE (T4) : un seuil SOMBRE franc collé au tracé sinueux,
 				// côté décor, sur les 4 motifs → la frontière jardin/décor se LIT au
 				// lieu de fondre (rang d'ombre bas en forêt, ourlet de prairie, etc.).
@@ -274,7 +281,7 @@ namespace Symbiose
 				float seuilW = DepthCm * 0.06f;
 				Vector2 e2 = EdgePoint(s.Cote, u1, b1 + seuilW);
 				Vector2 e3 = EdgePoint(s.Cote, u0, b0 + seuilW);
-				DrawColoredPolygon(new[] { p0, p1, e2, e3 }, Assombrir(near, -0.24f));
+				_lot.Polygone(new[] { p0, p1, e2, e3 }, Assombrir(near, -0.24f));
 			}
 		}
 
@@ -332,7 +339,7 @@ namespace Symbiose
 					Vector2 pb = EdgePoint(s.Cote, u1, ax1 + dOff);
 					Vector2 mid = pa.Lerp(pb, 0.5f);
 					Vector2 flow = (pb - pa) * 0.42f;
-					DrawLine(mid - flow, mid + flow, Palette16.EauReflet, 2.5f);
+					_lot.Ligne(mid - flow, mid + flow, Palette16.EauReflet, 2.5f);
 				}
 			}
 		}
@@ -347,7 +354,7 @@ namespace Symbiose
 			Vector2 p1 = EdgePoint(cote, u1, dNear1);
 			Vector2 p2 = EdgePoint(cote, u1, dFar1);
 			Vector2 p3 = EdgePoint(cote, u0, dFar0);
-			DrawColoredPolygon(new[] { p0, p1, p2, p3 }, col);
+			_lot.Polygone(new[] { p0, p1, p2, p3 }, col);
 		}
 
 		// FALAISE : un ressaut rocheux qui SURPLOMBE le jardin (T3). Plus des redans
@@ -398,7 +405,7 @@ namespace Symbiose
 				Vector2 p1 = EdgePoint(s.Cote, u1, dFront + Wob(u1)) + up;
 				Vector2 p2 = EdgePoint(s.Cote, u1, dFront + DepthCm * 0.55f + Wob(u1)) + up;
 				Vector2 p3 = EdgePoint(s.Cote, u0, dFront + DepthCm * 0.55f + Wob(u0)) + up;
-				DrawColoredPolygon(new[] { p0, p1, p2, p3 }, Palette16.DecorRocheHaut);
+				_lot.Polygone(new[] { p0, p1, p2, p3 }, Palette16.DecorRocheHaut);
 			}
 			// 3) FACE VERTICALE stratifiée : chaque strate = une tranche de hauteur du
 			//    pied (dFront, au sol) vers le sommet (dFront + up), teinte alternée →
@@ -413,7 +420,7 @@ namespace Symbiose
 					float u0 = i * StepCm, u1 = Mathf.Min(u0 + StepCm, WorldView.WorldCm);
 					Vector2 g0 = EdgePoint(s.Cote, u0, dFront + Wob(u0));
 					Vector2 g1 = EdgePoint(s.Cote, u1, dFront + Wob(u1));
-					DrawColoredPolygon(new[] { g0 + upA, g1 + upA, g1 + upB, g0 + upB }, col);
+					_lot.Polygone(new[] { g0 + upA, g1 + upA, g1 + upB, g0 + upB }, col);
 				}
 			}
 			// 4) ÉBOULIS : taches claires (RocheClair) jonchant le pied de la face,
@@ -433,7 +440,7 @@ namespace Symbiose
 				float u = i * StepCm + ((hh >> 6 & 0xff) / 255f) * StepCm;
 				if (u < 0f || u > WorldView.WorldCm) continue;
 				float d = dFront - ombreW * ((hh >> 3 & 7u) / 7f);
-				DrawCircle(EdgePoint(s.Cote, u, d + Wob(u)), 1.5f + (hh & 1u), Palette16.RocheClair);
+				_lot.Cercle(EdgePoint(s.Cote, u, d + Wob(u)), 1.5f + (hh & 1u), Palette16.RocheClair);
 			}
 		}
 
@@ -457,7 +464,7 @@ namespace Symbiose
 				float depth = AmplitudeCm + (id + 0.5f) * cell;
 				if (u < 0f || u > WorldView.WorldCm) continue;
 				Color c = (h & 1u) == 0u ? Palette16.FleurPrairieBlanc : Palette16.FleurPrairieJaune;
-				DrawCircle(EdgePoint(s.Cote, u, depth), 1.5f, c);
+				_lot.Cercle(EdgePoint(s.Cote, u, depth), 1.5f, c);
 			}
 		}
 

@@ -143,7 +143,18 @@ namespace Symbiose
 			}
 		}
 
+		// PLANTE ASSEMBLÉE ① : les primitives partent en UN lot (LotTriangles,
+		// ordre des anciens appels conservé) → un seul draw call pour la couche.
+		private readonly LotTriangles _lot = new();
+
 		public override void _Draw()
+		{
+			_lot.Vider();
+			Peindre();
+			_lot.Dessiner(this);
+		}
+
+		private void Peindre()
 		{
 			if (WorldView.CurrentZoom < MinZoom) return;
 			if (_flaques.Count == 0 && _marais.Count == 0) return;
@@ -171,17 +182,17 @@ namespace Symbiose
 			{
 				Color col = TourbeColor;
 				col.A = MaraisAlphaMax * w.Depth;
-				DrawColoredPolygon(new[] { ctr + n, ctr + e, ctr + s, ctr + o }, col);
+				_lot.Polygone(new[] { ctr + n, ctr + e, ctr + s, ctr + o }, col);
 				return;
 			}
 			// Flaque : lame bleutée ∝ profondeur + liseré clair sur l'arête nord
 			// (miroitement statique, calibrage F5).
 			Color eau = EauColor;
 			eau.A = EauAlphaFloor + EauAlphaSpan * w.Depth;
-			DrawColoredPolygon(new[] { ctr + n, ctr + e, ctr + s, ctr + o }, eau);
+			_lot.Polygone(new[] { ctr + n, ctr + e, ctr + s, ctr + o }, eau);
 			Color mir = MiroirColor;
 			mir.A = 0.35f * w.Depth;
-			DrawLine(ctr + o * 0.6f + n * 0.4f, ctr + e * 0.6f + n * 0.4f, mir, 1f);
+			_lot.Ligne(ctr + o * 0.6f + n * 0.4f, ctr + e * 0.6f + n * 0.4f, mir, 1f);
 		}
 	}
 }

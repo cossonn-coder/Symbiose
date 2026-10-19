@@ -170,7 +170,7 @@ namespace Symbiose
 			Vector2 br = basePos + Vector2.Right * w;
 			Vector2 al = apex + Vector2.Left * w * 0.5f;
 			Vector2 ar = apex + Vector2.Right * w * 0.5f;
-			DrawColoredPolygon(new[] { bl, br, ar, al }, sil.Ecorce);
+			_lot.Polygone(new[] { bl, br, ar, al }, sil.Ecorce);
 			// Chevrons (lenticelles) = DÉTAIL FIN (traits 1.5 px) → seulement à zoom
 			// ≥ DetailZoom ; au dézoom le tronc blanc du bouleau suffit à le distinguer.
 			if (sil.Port == TreePort.Elance && DetailsVisibles)   // bouleau : chevrons sombres
@@ -180,7 +180,7 @@ namespace Symbiose
 				{
 					float t = k / (float)chevrons;
 					Vector2 c = basePos.Lerp(apex, t);
-					DrawLine(c + Vector2.Left * w * 0.6f, c + Vector2.Right * w * 0.2f,
+					_lot.Ligne(c + Vector2.Left * w * 0.6f, c + Vector2.Right * w * 0.2f,
 							 Palette16.EcorceLenticelle, 1.5f);
 				}
 			}
@@ -253,8 +253,8 @@ namespace Symbiose
 			// Marches FRANCHES (T1) : masse ×0.75 / calotte ×1.25 (bornes Assombrir)
 			// au lieu de ±15 % — le volume se lit. Calotte décalée vers le SO
 			// (bas+ouest écran = soleil commun aux plantes et à la maison).
-			DrawEllipse(c, rx, ry, Assombrir(col, -0.25f + grain));
-			DrawEllipse(c + Vector2.Down * ry * 0.32f + Vector2.Left * rx * 0.18f,
+			_lot.Ellipse(c, rx, ry, Assombrir(col, -0.25f + grain));
+			_lot.Ellipse(c + Vector2.Down * ry * 0.32f + Vector2.Left * rx * 0.18f,
 						rx * 0.66f, ry * 0.66f, Assombrir(col, 0.30f + grain));
 		}
 
@@ -264,7 +264,7 @@ namespace Symbiose
 		private void DrawOmbrePied(Vector2 basePos, float canopyR)
 		{
 			Vector2 c = basePos + Vector2.Up * canopyR * 0.06f + Vector2.Right * canopyR * 0.10f;
-			DrawEllipse(c, canopyR * 0.70f, canopyR * 0.22f,
+			_lot.Ellipse(c, canopyR * 0.70f, canopyR * 0.22f,
 						Assombrir(Palette16.DecorForetFond, -0.30f));
 		}
 
@@ -274,7 +274,7 @@ namespace Symbiose
 		// gardant un reste de la teinte d'essence (Lerp 0.7). Un seul par houppier.
 		private void DrawCimeAccent(Vector2 sommet, float rc, Color col)
 		{
-			DrawEllipse(sommet, rc, rc * 0.70f, col.Lerp(Palette16.DecorForetCime, 0.70f));
+			_lot.Ellipse(sommet, rc, rc * 0.70f, col.Lerp(Palette16.DecorForetCime, 0.70f));
 		}
 	}
 }

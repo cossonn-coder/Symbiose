@@ -24,7 +24,7 @@
 ## Carte des tronçons
 | # | Kickoff | Contenu | Golden | État |
 |---|---|---|---|---|
-| ① | `01_decor_couvresol_lot.md` | Decor + couvre-sol en maillage | intact | à faire |
+| ① | `01_decor_couvresol_lot.md` | Decor + couvre-sol en maillage | intact | **FAIT** (2 030 → 471 draw calls ×4) |
 | ② | `02_plantes_atlas_commun.md` | plantes en pages d'atlas communes (D109 d) + bilan ×4 VM | intact | à faire |
 | ③ | `03_accelere_legende_f1.md` | banc accéléré + postes + priorité + ForagerLayer ; bug F1 | intact | à faire |
 | ④ | `04_kit_elements.md` | atlas du kit (touffes, fleurons) + planche | intact | à faire |
@@ -35,5 +35,21 @@
 ## Mesures
 (à remplir par chaque tronçon : [machine, n=…] sur chaque chiffre)
 
+### ① Decor + couvre-sol en lot (`visuals/LotTriangles.cs`, un `DrawMesh` par couche)
+- Draw calls ×4, banc E s45 (`perf_vm.sh -E 20 -z 4`) : **2 030 [VM, n=1] → 471 [VM, n=1]**.
+  Frame moyenne 117 → 91 ms [VM llvmpipe, n=1 chacun — non transposable au PC].
+- Part de chaque couche avant, par masquage (`-E 5 -x …`, réf. 2 030) : Decor −1 077,
+  Couverture −252, Litter −180, Allelopathie −8, Puddle −8, Mulch −5, LeafLitter −3
+  [VM, n=1 chacun]. **LeafLitter laissée telle quelle** : elle dessine avec le kit de
+  feuilles de `PlantRenderer` (formes, nervures, contours) — la mettre en lot = toucher
+  au dessin des plantes (②) pour −3 draw calls.
+- Image : 22 captures avant/après (×0,5/×1/×2/×4, seeds 42 et 2 — forêt, rivière,
+  falaise, prairie —, orientations 0-3) : **géométrie identique au pixel** ; seul écart
+  ±1/255 sur un canal [VM, n=22 images] = couleurs de sommet du maillage stockées sur
+  8 bits (float avant). Recentrage essayé : déplace l'écart sans l'annuler → abandonné.
+- **Ground « sans effet » expliqué** : le sol est déjà en lot depuis D106 (un maillage
+  par tuile) → masqué = −11 draw calls [VM, n=1], dans le bruit du relevé n=1 d'entrée.
+
 ## §REPRISE
-Prochain : ① (`/sprint-auto sprint_plante_assemblee`). Chaque tronçon met à jour sa ligne + « Mesures ».
+① FAIT (non commité, à commiter par l'orchestrateur). Prochain : ② `02_plantes_atlas_commun.md`
+(base ×4 = 471 draw calls [VM, n=1], dont Objects ≈ 380 [VM, n=1, relevé d'entrée]). Chaque tronçon met à jour sa ligne + « Mesures ».
