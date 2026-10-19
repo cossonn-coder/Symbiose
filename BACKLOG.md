@@ -19,13 +19,21 @@
 
 ## Sprint en cours
 
-**PERF VUE** — **CLOS le 2026-10-19** (`/sprint-auto` ①→⑤, golden intact `22768f33…`) :
+**PLANTE ASSEMBLÉE** — **conçu le 2026-10-19, prêt pour `/sprint-auto`** (7 tronçons, golden intact
+`22768f33…`) : Decor + couvre-sol en maillage (la ceinture pesait 1 099 draw calls sur 2 013 à ×4),
+plantes en atlas commun (D109 d), banc accéléré + `ForagerLayer` + bug légende F1 (D109 e/f), kit
+d'éléments généré depuis `LeafShape` → plante assemblée aux paliers bas (×4+ intact), légende des
+signes (observation au survol → carnet, fiche « signe » à l'encyclopédie, info-bulle descriptive puis
+cause une fois apprise + affichage technique). Doc : [`conception_plante_assemblee.md`](docs/rendu/pixelart/conception_plante_assemblee.md) ;
+sprint `sprints/rendu/pixelart/sprint_plante_assemblee/`.
+
+Précédent : **PERF VUE** — **CLOS le 2026-10-19** (`/sprint-auto` ①→⑤, golden intact `22768f33…`) :
 banc E (touche E au F5), vie macro en présence (pont 0.5.45, fuite corrigée), ombres en un
 maillage, à-coups GC/cuisson/priorité serveur. **PC de Nico : ×4 = 32,5 FPS** (avant 1-3), 60 FPS raté —
 reste le seul rendu CPU (~2 000 draw calls, ~14 µs chacun). Doc : [`conception_perf_vue.md`](docs/perf/lod/conception_perf_vue.md) ;
 journal [151](journal/151_2026-10-19_sprint-perf-vue-CLOS.md). **Ensuite : sprint « plante
 assemblée »** (kit de sprites d'éléments réutilisables, silhouettes par palier au lieu de blobs,
-pixels plus fins ; absorbe D109 d/e/f : draw calls ≲ 1 000 à ×4, chute à 5 FPS en accéléré, légende F1 coupée) + **légende des signes** (carnet = observé, encyclopédie = appris, info-bulle technique au survol plantes et animaux) — à concevoir, entrée : [`entree_plante_assemblee.md`](docs/rendu/pixelart/entree_plante_assemblee.md).
+pixels plus fins ; absorbe D109 d/e/f : draw calls ≲ 1 000 à ×4, chute à 5 FPS en accéléré, légende F1 coupée) + **légende des signes** (carnet = observé, encyclopédie = appris, info-bulle technique au survol plantes et animaux) — conçu (cf. ci-dessus).
 
 Précédent : **RENDU VISIBLE (D106)** — **CLOS le 2026-10-16** (T1→T7, golden intact `22768f33…`) :
 sol en un maillage par tuile · survol paresseux · marge + semaine paresseuse hors
