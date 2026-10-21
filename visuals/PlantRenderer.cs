@@ -114,13 +114,53 @@ namespace Symbiose
 		// dessinées par DrawLeafDamage, donc visibles seulement dès ×16.
 		private static readonly HashSet<string> MarquesFines = new() { "ravageurs", "gel", "grele" };
 
-		/// <summary>Le signe `cause` se VOIT-il au palier `zoom` (info-bulle ⑦) ?
-		/// Teinte de santé (canal couleur) dès ×2 (`PalierSanteZoom`, comme le dessin
-		/// des paliers bas et ×4+) ; marques foliaires fines dès ×16. Miroir de ce que
-		/// le dessin montre — pas une règle de jeu.</summary>
-		public static bool SigneVisible(string cause, float zoom)
-			=> ColorantTints.ContainsKey(cause) ? zoom >= PalierSanteZoom
-				: MarquesFines.Contains(cause) && zoom >= PalierSymptomesZoom;
+		// SEUILS DE VISIBILITÉ MESURÉS (INFO-BULLE DU VIVANT ②) — plus petite intensité
+		// dont la teinte change AU MOINS UN PIXEL de la plante témoin à l'écran, prise
+		// au MAX (le plus prudent) sur les paliers ×2/×4/×8 ET sur les deux rendus
+		// (palette SNES F11 OFF = défaut, et ON = 34 couleurs + Bayer). Banc :
+		// world/WorldView.BancSeuil.cs via sprints/narration/semiologie/
+		// sprint_infobulle_vivant/mesures/mesure_seuil.sh. Palette OFF : tout change
+		// dès 0,005 ; c'est la quantification SNES qui fixe ces valeurs. Grille
+		// 0,005·0,01·0,02·0,03·0,05·0,075·0,1·0,15·0,2·0,3·0,5 → seuil réel dans
+		// ]pas précédent, valeur]. [VM llvmpipe, n=1 témoin Clover banc smoke s12]
+		private static readonly Dictionary<string, float> SeuilTeinte = new()
+		{
+			["chlorose"] = 0.03f,           // max ×4 palette ON
+			["asphyxie"] = 0.075f,          // ×2 et ×4 palette ON
+			["secheresse"] = 0.01f,         // ×2 palette ON
+			["senescence"] = 0.1f,          // ×4 palette ON
+			["maladie"] = 0.075f,           // ×2 et ×4 palette ON
+			["ombre"] = 0.02f,              // ×4 palette ON
+			["rongeur_racinaire"] = 0.2f,   // ×4 palette ON
+			["acclimatation"] = 0.05f,      // ×4 palette ON
+		};
+		// Vitalité : ApplyVitality ternit un pixel dès un manque de 0,075 (×4 palette
+		// ON ; OFF dès 0,01) → au-dessus de 0,925 le feuillage reste « vert franc ».
+		// [VM llvmpipe, n=1 témoin, même banc]
+		public const float VitaliteFranche = 0.925f;
+		// Automne : la teinte de saison change un pixel dès 0,03 (×4 palette ON).
+		// [VM llvmpipe, n=1 témoin, même banc]
+		public const float SeuilAutomne = 0.03f;
+		// Marques fines (DrawLeafDamage) : un CALCUL, pas une mesure — criblage =
+		// ceil(i × 4) trous (≥ 1 dès i > 0), bord de gel en trait ≥ 1 px dès i > 0 →
+		// toute intensité strictement positive dessine au moins une marque à ×16.
+
+		/// <summary>Le signe `cause` d'intensité `intensite` se VOIT-il au palier
+		/// `zoom` (info-bulle) ? Teinte de santé dès ×2 (`PalierSanteZoom`) ET au-dessus
+		/// de son seuil mesuré ; marques foliaires fines dès ×16, dès i > 0. Miroir de
+		/// ce que le dessin montre — pas une règle de jeu.</summary>
+		public static bool SigneVisible(string cause, float intensite, float zoom)
+			=> SeuilTeinte.TryGetValue(cause, out float seuil)
+				? zoom >= PalierSanteZoom && intensite >= seuil
+				: MarquesFines.Contains(cause) && zoom >= PalierSymptomesZoom && intensite > 0f;
+
+		/// <summary>La santé (vitalité + teinte de symptôme) est-elle dessinée à ce
+		/// palier ? Sous ×2 non : la voix saine ne parle alors que de l'automne.</summary>
+		public static bool SanteVisible(float zoom) => zoom >= PalierSanteZoom;
+
+		// Lus par la voix saine de l'info-bulle (lecture seule).
+		public float Vitalite => _vitalite;
+		public float Automne => _structure?.Automne ?? 0f;
 
 		// Liste brute du snapshot, dans l'ordre du moteur (intensité décroissante) :
 		// lue par l'info-bulle (WorldView.InfoBulle.cs), jamais par le dessin.

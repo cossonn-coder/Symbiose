@@ -54,6 +54,8 @@
 //                            (debug palier3 au montage ; Maj+F3) — PLANTE ASSEMBLÉE ⑦
 //   --capture-pleine-res=1   monde rendu en 1920×1080 ×1 au lieu de 960×540 ×2
 //                            (MESURE seulement, PERF VUE ⑤ ; le défaut ne change pas)
+//   --capture-seuil=… / --capture-seuil-pose=… / --capture-palette=1  banc du seuil
+//                            de visibilité des signes (INFO-BULLE ②, WorldView.BancSeuil.cs)
 
 using Godot;
 using System.Globalization;
@@ -225,6 +227,7 @@ namespace Symbiose
 			if (CapturePalier3) DebugMaitrise("palier3");   // info-bulle apprise (⑦)
 			if (CaptureTechnique) ToggleInfoTechnique();    // info-bulle technique (⑦)
 			AppliquerCaptureBanc();   // ombres / banc d'étalonnage (WorldView.Etalonnage.cs)
+			LancerBancSeuil();        // seuil de visibilité des signes (WorldView.BancSeuil.cs)
 		}
 
 		// Appelé à chaque step consommé (_Process) : décompte des semaines turbo du

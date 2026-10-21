@@ -21,6 +21,10 @@
 //
 // « Visible au palier » = ce que le DESSIN montre (PlantRenderer.SigneVisible) :
 // teinte de santé dès ×2, marques foliaires fines dès ×16 ; la vie macro dès ×4.
+// INFO-BULLE DU VIVANT ② : visible = au palier ET au-dessus du SEUIL MESURÉ au rendu
+// (banc WorldView.BancSeuil.cs) — un symptôme qui ne change aucun pixel se tait,
+// le carnet ne le note pas non plus. Sans signe visible, la VOIX SAINE décrit le
+// feuillage (vert franc / couleurs d'automne / terne), textes de la légende Python.
 
 using Godot;
 using System.Collections.Generic;
@@ -37,6 +41,8 @@ namespace Symbiose
 		// Légende statique du pont (commande `legende`) : signe → (vu, cause) ; bête → vu.
 		private readonly Dictionary<string, (string Vu, string Cause)> _legendeSignes = new();
 		private readonly Dictionary<string, string> _legendeFaune = new();
+		// Voix saine (légende `voix_saine` ①) : franc / automne / terne → texte.
+		private readonly Dictionary<string, string> _voixSaine = new();
 		// Appris (snapshot `player.appris`), relus à chaque application de snapshot.
 		private readonly HashSet<string> _signesAppris = new(), _fauneApprise = new();
 		// Observations de signe déjà envoyées : "espèce|signe|saison" (dédup vue).
@@ -70,6 +76,9 @@ namespace Symbiose
 			if (lg.ContainsKey("faune"))
 				foreach (var (k, v) in lg["faune"].AsGodotDictionary())
 					_legendeFaune[k.AsString()] = v.AsString();
+			if (lg.ContainsKey("voix_saine"))   // pont ≥ 0.5.47 ; absent → voix saine muette
+				foreach (var (k, v) in lg["voix_saine"].AsGodotDictionary())
+					_voixSaine[k.AsString()] = v.AsString();
 		}
 
 		// Appelée à l'application du bloc joueur (WorldView.Snapshot.cs). Tolérant à
@@ -130,13 +139,25 @@ namespace Symbiose
 				: _sourisPx + new Vector2(18f, 14f);
 		}
 
-		// Le signe le plus intense VISIBLE au palier courant (liste déjà triée par
-		// le moteur), null si aucun ne se voit à ce zoom.
+		// Le signe le plus intense VISIBLE au palier courant ET au-dessus de son seuil
+		// mesuré (liste déjà triée par le moteur), null si aucun ne se voit.
 		private static string SigneDominant(PlantRenderer plante)
 		{
-			foreach (var (cause, _) in plante.Symptomes)
-				if (PlantRenderer.SigneVisible(cause, CurrentZoom)) return cause;
+			foreach (var (cause, it) in plante.Symptomes)
+				if (PlantRenderer.SigneVisible(cause, it, CurrentZoom)) return cause;
 			return null;
+		}
+
+		// Voix saine (aucun signe visible) : couleurs d'automne si elles se voient (dès
+		// ×0,5, teinte de saison) ; sinon, dès ×2 seulement (sous ×2 la santé n'est pas
+		// dessinée — on ne dit pas ce qu'on ne montre pas), vert franc ou terne selon
+		// la vitalité, comparée à la borne où ApplyVitality ternit un pixel.
+		private string VoixSaine(PlantRenderer plante)
+		{
+			string cle = plante.Automne >= PlantRenderer.SeuilAutomne ? "automne"
+				: !PlantRenderer.SanteVisible(CurrentZoom) ? null
+				: plante.Vitalite >= PlantRenderer.VitaliteFranche ? "franc" : "terne";
+			return cle != null && _voixSaine.TryGetValue(cle, out var t) ? t : null;
 		}
 
 		private void LignesPlante(StringBuilder sb, PlantRenderer plante, string signe)
@@ -144,14 +165,27 @@ namespace Symbiose
 			if (_infoTechnique)
 			{
 				var syms = plante.Symptomes;
+				Ligne(sb, $"vitalité {plante.Vitalite:F2} · automne {plante.Automne:F2}");
 				Ligne(sb, "symptômes : ");
 				if (syms.Count == 0) sb.Append("aucun");
 				for (int i = 0; i < syms.Count; i++)
-					sb.Append(i > 0 ? " · " : "").Append($"{syms[i].Cause} {syms[i].Intensite:F2}");
+				{
+					var (c, it) = syms[i];
+					sb.Append(i > 0 ? " · " : "").Append($"{c} {it:F2}");
+					// Pourquoi il se tait ici : trop faible à tout palier, ou palier trop bas.
+					if (!PlantRenderer.SigneVisible(c, it, CurrentZoom))
+						sb.Append(PlantRenderer.SigneVisible(c, it, 32f) ? " (hors palier)" : " (sous seuil)");
+				}
 				if (signe != null) sb.Append($"  (visible ici : {signe})");
 				return;
 			}
-			if (signe == null || !_legendeSignes.TryGetValue(signe, out var lg)) return;
+			if (signe == null)
+			{
+				string voix = VoixSaine(plante);
+				if (voix != null) Ligne(sb, voix);
+				return;
+			}
+			if (!_legendeSignes.TryGetValue(signe, out var lg)) return;
 			Ligne(sb, lg.Vu);
 			if (_signesAppris.Contains(signe) && lg.Cause.Length > 0)
 				sb.Append(" — ").Append(lg.Cause.ToLowerInvariant());
