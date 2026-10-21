@@ -56,6 +56,8 @@
 //                            (MESURE seulement, PERF VUE ⑤ ; le défaut ne change pas)
 //   --capture-seuil=… / --capture-seuil-pose=… / --capture-palette=1  banc du seuil
 //                            de visibilité des signes (INFO-BULLE ②, WorldView.BancSeuil.cs)
+//   --capture-vivant=… / --capture-vivant-png=…  captures de l'info-bulle d'une bête
+//                            ou d'un carpophore (INFO-BULLE ③, WorldView.BancVivant.cs)
 
 using Godot;
 using System.Globalization;
@@ -228,6 +230,7 @@ namespace Symbiose
 			if (CaptureTechnique) ToggleInfoTechnique();    // info-bulle technique (⑦)
 			AppliquerCaptureBanc();   // ombres / banc d'étalonnage (WorldView.Etalonnage.cs)
 			LancerBancSeuil();        // seuil de visibilité des signes (WorldView.BancSeuil.cs)
+			LancerBancVivant();       // captures info-bulle bête / carpophore (WorldView.BancVivant.cs)
 		}
 
 		// Appelé à chaque step consommé (_Process) : décompte des semaines turbo du

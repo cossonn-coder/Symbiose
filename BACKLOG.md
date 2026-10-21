@@ -19,9 +19,15 @@
 
 ## Sprint en cours
 
-**Prêt à lancer : INFO-BULLE DU VIVANT** — conception figée le 2026-10-22 ([`conception_infobulle_vivant.md`](docs/narration/semiologie/conception_infobulle_vivant.md)), 3 tronçons, golden intact, absorbe D110 (a)(b)(g) : bêtes et champignons nommés après observation en 3 saisons, rôle + état (abondance, nourriture) en peu de mots, seuil de visibilité des symptômes mesuré, voix « plante saine ». Lancer : `/sprint-auto sprint_infobulle_vivant` (`sprints/narration/semiologie/sprint_infobulle_vivant/`).
+Aucun sprint lancé. Prochain au choix de Nico (arbitrages D110 (g)(h)(i) en attente).
 
-Dernier sprint clos : **PLANTE ASSEMBLÉE** — **CLOS le 2026-10-20** (`/sprint-auto` ①→⑦, golden intact
+Dernier sprint clos : **INFO-BULLE DU VIVANT** — **CLOS le 2026-10-22** (`/sprint-auto` ①→③, golden intact
+`22768f33…`, pont 0.5.48) : bêtes et champignons nommés après observation en 3 saisons, rôle + abondance +
+nourriture, seuil de visibilité des symptômes mesuré, voix « plante saine », Maj+F3 technique. **Reste F5 Nico**
+(procédure `sprints/narration/semiologie/sprint_infobulle_vivant/00_etat.md` §F5). Journal :
+[`154`](journal/154_2026-10-22_sprint-infobulle-vivant-CLOS.md).
+
+Précédent : **PLANTE ASSEMBLÉE** — **CLOS le 2026-10-20** (`/sprint-auto` ①→⑦, golden intact
 `22768f33…`, pont 0.5.46) : Decor/couvre-sol/maison en maillage, plantes en pages d'atlas communes (×4 VM
 2 013 → 111 draw calls [VM, n=1]), banc accéléré Maj+E, kit d'éléments + plante assemblée à ×0,5/×1/×2,
 corpus des signes + info-bulle 2 niveaux + Maj+F3 technique + onglet Signes. **Reste F5 Nico** (procédure PC

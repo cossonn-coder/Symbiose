@@ -11,7 +11,7 @@ palier, révélation de page) vit en Python. Golden intact (pont opt-in, hors ti
 from __future__ import annotations
 
 from constants import PLOT_CM
-from sim.signes import observer_signe
+from sim.signes import observer_signe, appris as signes_appris
 from sim.signes_corpus import SIGNES, FAUNE_VU
 from sim import signes_corpus as SC
 from fields.population.perception import CARPO_DENS_REF
@@ -31,7 +31,12 @@ class MaitriseCmdsMixin:
         survolée porte ce signe VISIBLE au palier courant → note au carnet (ledger),
         dédupliquée par (espèce, signe, saison). Lieu optionnel : `tile` + `x_cm`/
         `y_cm` (position de la plante, résolue en plot-foyer). Réponse enrichie de
-        `signe_note` (True ssi une note a été écrite)."""
+        `signe_note` (True ssi une note a été écrite).
+
+        INFO-BULLE DU VIVANT ③ (0.5.48, rétro-compatible) : pour une bête ou le
+        champignon (clé non-plante), la réponse porte aussi `appris` (même forme
+        que `player.appris` du snapshot, LECTURE PURE) — si ce survol vient de
+        franchir le palier du nom, la vue nomme la bête sans attendre le snapshot."""
         if self.engine is None:
             return {"ok": False, "error": "observer avant init"}
         species = msg.get("species")
@@ -40,6 +45,8 @@ class MaitriseCmdsMixin:
         gs = self.engine.game_state
         nouveau = observer_espece(gs, gs["current_player"], species, gs["week"] - 1)
         rep = {"ok": True, "observed": bool(nouveau)}
+        if species not in _CLE_DE_NOM:   # bête ou champignon : crédit saisonnier possible
+            rep["appris"] = signes_appris(gs, gs["current_player"])
         signe = msg.get("signe")
         if signe:
             rep["signe_note"] = self._noter_signe(gs, msg, species, signe)

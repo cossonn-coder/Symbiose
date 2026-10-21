@@ -45,6 +45,7 @@ namespace Symbiose
 		private class Entry
 		{
 			public float Wx, Wy, Densite;
+			public string Role;           // b / r / h (pont ≥ 0.5.47), null : absent
 			public uint Phase;            // hash de la clé → taille/inclinaison propres
 			public float BornAt;
 			public float DyingAt = -1f;   // < 0 : vivant
@@ -54,21 +55,25 @@ namespace Symbiose
 		// x/y de façon déterministe, la clé survit aux semaines).
 		private readonly Dictionary<string, Entry> _entries = new();
 
-		/// <summary>Vrai si un carpophore VIVANT a son ANCRE dans `rayonCm` du point
-		/// MONDE (cm) (D60 ② : survol → observation du champignon). Un seul règne
-		/// fongique générique → un booléen suffit (pas d'espèce à distinguer, Q2) :
-		/// le survol d'un chapeau découvre la fiche unique « champignon ». On teste
-		/// l'ancre (position snapshot stable, les chapeaux sont sessiles).</summary>
-		public bool HasNear(Vector2 wMonde, float rayonCm)
+		/// <summary>Carpophore VIVANT dont l'ANCRE est la plus proche du point MONDE
+		/// (cm), dans `rayonCm`, ou null (D60 ② : survol → observation du
+		/// champignon ; INFO-BULLE ③ : + rôle local et densité du réseau). Un seul
+		/// règne fongique générique → clé unique « champignon » (Q2). On teste
+		/// l'ancre (position snapshot stable, les chapeaux sont sessiles). `role`
+		/// non null : ne retient que ce rôle local (banc de capture ③).</summary>
+		public MacroPick? Near(Vector2 wMonde, float rayonCm, string role = null)
 		{
-			float r2 = rayonCm * rayonCm;
+			float bestD = rayonCm * rayonCm;
+			Entry best = null;
 			foreach (var e in _entries.Values)
 			{
-				if (e.DyingAt >= 0f) continue;
+				if (e.DyingAt >= 0f || (role != null && e.Role != role)) continue;
 				float dx = e.Wx - wMonde.X, dy = e.Wy - wMonde.Y;
-				if (dx * dx + dy * dy <= r2) return true;
+				float d = dx * dx + dy * dy;
+				if (d <= bestD) { bestD = d; best = e; }
 			}
-			return false;
+			return best == null ? null
+				: new MacroPick("champignon", 1, -1f, best.Role, best.Densite, new Vector2(best.Wx, best.Wy));
 		}
 
 		private static float NowSec() => Time.GetTicksMsec() / 1000f;
@@ -84,7 +89,8 @@ namespace Symbiose
 
 		/// <summary>
 		/// Applique le bloc `carpophores` d'un snapshot (diff doux, même patron que
-		/// MacroLife) : format COMPACT par tuile `[r, c, x_frac, y_frac, densite]`.
+		/// MacroLife) : format COMPACT par tuile `[r, c, x_frac, y_frac, densite,
+		/// role]` (role b/r/h depuis 0.5.47, absent d'un pont plus ancien).
 		/// Clé connue → maj de la densité ; nouvelle → fondu d'entrée ; disparue →
 		/// fondu de sortie puis oubli. `origins` = origin_cm par tuile.
 		/// </summary>
@@ -104,6 +110,7 @@ namespace Symbiose
 					int r = a[0].AsInt32(), c = a[1].AsInt32();
 					double xf = a[2].AsDouble(), yf = a[3].AsDouble();
 					float dens = (float)a[4].AsDouble();
+					string role = a.Count > 5 ? a[5].AsString() : null;
 					string key = tileId + "|" + r + "|" + c
 						+ "|" + xf.ToString("F3", CultureInfo.InvariantCulture)
 						+ "|" + yf.ToString("F3", CultureInfo.InvariantCulture);
@@ -111,6 +118,7 @@ namespace Symbiose
 					if (_entries.TryGetValue(key, out var known))
 					{
 						known.Densite = dens;
+						known.Role = role;
 						if (known.DyingAt >= 0f)   // re-pousse pendant son fondu de mort
 						{
 							float alpha = Mathf.Clamp(
@@ -125,6 +133,7 @@ namespace Symbiose
 						Wx = o.X + (c + (float)xf) * WorldView.PlotCm,
 						Wy = o.Y + (r + (float)yf) * WorldView.PlotCm,
 						Densite = dens,
+						Role = role,
 						Phase = HashKey(key),
 						BornAt = fade ? now : now - FadeInSec,
 					};

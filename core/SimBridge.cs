@@ -428,7 +428,7 @@ namespace Symbiose
 		/// Python résout la clé catalogue et découvre. Idempotent — appelable en
 		/// continu (l'appelant déduplique déjà par espèce pour ne pas spammer).
 		/// </summary>
-		public void Observer(string species)
+		public GDict Observer(string species)
 			=> Request(new GDict { ["cmd"] = "observer", ["species"] = species });
 
 		/// <summary>Observation d'un SIGNE visible sur la plante survolée (⑥/⑦) :

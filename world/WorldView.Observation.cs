@@ -14,6 +14,7 @@
 
 using Godot;
 using System.Collections.Generic;
+using GDict = Godot.Collections.Dictionary;
 
 namespace Symbiose
 {
@@ -23,9 +24,12 @@ namespace Symbiose
 		// ne pas ré-émettre `observer` à chaque frame de survol.
 		private readonly HashSet<string> _especesObservees = new();
 
-		// Vie macro (D60 ②) : clés d'espèce animale + "champignon" déjà consignées.
-		// Set SÉPARÉ des plantes — les clés sont d'un autre espace (clé de maîtrise
-		// directe, pas un nom de classe) : pas de collision, dédup propre.
+		// Vie macro (D60 ②) : "clé|saison" déjà consignés (clé d'espèce animale ou
+		// "champignon"). Set SÉPARÉ des plantes — les clés sont d'un autre espace
+		// (clé de maîtrise directe, pas un nom de classe). INFO-BULLE DU VIVANT ③ :
+		// dédup par (clé, SAISON) et non plus « une fois par session » — Python
+		// crédite +1 palier par saison neuve d'observation (le nom se révèle en 3
+		// saisons) ; une dédup de session bloquerait tout crédit après le 1er survol.
 		private readonly HashSet<string> _especesMacroObservees = new();
 
 		// Zoom en deçà duquel la vie macro n'est pas affichée (aligné sur
@@ -50,7 +54,7 @@ namespace Symbiose
 		// Survol de la VIE MACRO (D60 ②) : porter la posture naturaliste des plantes
 		// à toute la vie macro. On observe l'espèce animale (nuage MacroLife OU
 		// butineur ForagerLayer) ou le champignon (carpophore) sous le curseur, à la
-		// 1ʳᵉ fois. On RÉUTILISE le picking déjà présent (SpeciesNear / HasNear,
+		// 1ʳᵉ fois. On RÉUTILISE le picking déjà présent (Near → MacroPick,
 		// lecture des ancres en mémoire — zéro requête pipe, zéro nouveau balayage).
 		// Gaté au zoom ≥ ×4 : on ne découvre que ce qui est AFFICHÉ (au dézoom la vie
 		// macro est masquée — on n'observe pas l'invisible).
@@ -58,28 +62,37 @@ namespace Symbiose
 		{
 			// Les ancres macro ne bougent qu'au snapshot → clé de survol (T3).
 			if (_bridge == null || !_survolSale) return;
-			string espece = BeteSousSouris();
-			if (espece == null || !_especesMacroObservees.Add(espece)) return;
-			_bridge.Observer(espece);
+			string espece = BeteSousSouris()?.Cle;
+			if (espece == null || !_especesMacroObservees.Add($"{espece}|{SaisonObservee}")) return;
+			var rep = _bridge.Observer(espece);
+			// Pont ≥ 0.5.48 : la réponse porte `appris` (lecture pure) → si ce survol
+			// vient de franchir le palier du nom, l'info-bulle nomme la bête TOUT DE
+			// SUITE, sans attendre le snapshot de la semaine suivante.
+			if (rep != null && rep.ContainsKey("appris"))
+			{
+				LireAppris(new GDict { ["appris"] = rep["appris"] });
+				_cleVersion = -1;   // recalcul de l'info-bulle à la frame suivante
+			}
 			GD.Print($"[WorldView] survol → vie macro observée : {espece}.");
 		}
 
-		/// <summary>Clé de la bête sous le curseur (ou "champignon" pour un
-		/// carpophore), null si rien ou si la vie macro n'est pas affichée (zoom
-		/// &lt; ×4). Partagée par l'observation et l'info-bulle (⑦) : un seul picking.</summary>
-		private string BeteSousSouris()
+		// Saison d'observation, MÊME formule que la note Python (semaine consignée =
+		// semaine moteur − 1, saisons de 13 semaines, semaine 0 ≡ semaine 1) : la
+		// dédup vue des signes et de la vie macro tombe sur les saisons de Python.
+		private int SaisonObservee => System.Math.Max(0, SemaineMoteur - 2) / 13;
+
+		/// <summary>Bête sous le curseur (ou carpophore, clé "champignon"), null si
+		/// rien ou si la vie macro n'est pas affichée (zoom &lt; ×4). Partagée par
+		/// l'observation et l'info-bulle : un seul picking (cf. MacroPick).</summary>
+		private MacroPick? BeteSousSouris()
 		{
 			if (CurrentZoom < MacroObserveMinZoom) return null;
 			Vector2 w = _sourisMonde;
-			// Espèce animale sous le curseur : d'abord le nuage trophique, sinon un
-			// butineur (les deux exposent la MÊME clé d'espèce que le pont attend).
-			string espece = _macroLife?.SpeciesNear(w, MacroPickRadiusCm)
-							?? _foragerLayer?.SpeciesNear(w, MacroPickRadiusCm);
-			// À défaut d'animal, un carpophore → la clé fongique générique unique.
-			if (espece == null && _carpophoreLayer != null
-				&& _carpophoreLayer.HasNear(w, MacroPickRadiusCm))
-				espece = "champignon";
-			return espece;
+			// D'abord le nuage trophique, sinon un butineur (les deux exposent la
+			// MÊME clé d'espèce que le pont attend), à défaut un carpophore.
+			return _macroLife?.Near(w, MacroPickRadiusCm)
+				?? _foragerLayer?.Near(w, MacroPickRadiusCm)
+				?? _carpophoreLayer?.Near(w, MacroPickRadiusCm);
 		}
 	}
 }

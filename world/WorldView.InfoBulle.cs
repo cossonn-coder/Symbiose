@@ -14,6 +14,8 @@
 //   - Maj+F3 = AFFICHAGE TECHNIQUE (comme F6) : cause brute + intensité, clé
 //     d'espèce. Seul endroit avec des chiffres (philo #5), étiqueté comme tel.
 //
+// Bête / carpophore : WorldView.InfoBulleVivant.cs (INFO-BULLE DU VIVANT ③).
+//
 // Pas de 4ᵉ système de survol : même picking (FindPlant / BeteSousSouris), même
 // clé de survol (`_survolSale`), même couche nette que les étiquettes. Le texte
 // n'est recalculé que quand la clé change ; la légende statique (`vu`, `cause`)
@@ -79,6 +81,7 @@ namespace Symbiose
 			if (lg.ContainsKey("voix_saine"))   // pont ≥ 0.5.47 ; absent → voix saine muette
 				foreach (var (k, v) in lg["voix_saine"].AsGodotDictionary())
 					_voixSaine[k.AsString()] = v.AsString();
+			ChargerLegendeVivant(lg);   // bêtes / carpophores (WorldView.InfoBulleVivant.cs)
 		}
 
 		// Appelée à l'application du bloc joueur (WorldView.Snapshot.cs). Tolérant à
@@ -121,13 +124,13 @@ namespace Symbiose
 			// d'étiquette (on observe même étiquettes coupées).
 			if (signe != null) ObserverSigne(plante, signe);
 
-			string bete = BeteSousSouris();
+			var bete = BeteSousSouris();
 			var sb = new StringBuilder();
 			if (_labelMode != LabelMode.Aucune)
 			{
 				if (_infoTechnique) sb.Append(MentionTechnique);
 				if (plante != null) LignesPlante(sb, plante, signe);
-				if (bete != null) LigneBete(sb, bete);
+				if (bete != null) LigneBete(sb, bete.Value);
 			}
 			bool rien = sb.Length == 0 || (_infoTechnique && plante == null && bete == null);
 			_infoBulle.Visible = !rien;
@@ -191,14 +194,6 @@ namespace Symbiose
 				sb.Append(" — ").Append(lg.Cause.ToLowerInvariant());
 		}
 
-		private void LigneBete(StringBuilder sb, string bete)
-		{
-			if (_infoTechnique) { Ligne(sb, $"espèce : {bete}"); return; }
-			if (!_legendeFaune.TryGetValue(bete, out var vu)) return;   // carpophore : pas de `vu`
-			Ligne(sb, _fauneApprise.Contains(bete)
-				? char.ToUpperInvariant(bete[0]) + bete.Substring(1) + " : " + vu : vu);
-		}
-
 		private static void Ligne(StringBuilder sb, string texte)
 		{
 			if (sb.Length > 0) sb.Append('\n');
@@ -213,7 +208,7 @@ namespace Symbiose
 		{
 			if (_bridge == null) return;
 			string species = plante.GetMeta(LectureSnap.Meta("species"), "").AsString();
-			int saison = System.Math.Max(0, SemaineMoteur - 2) / 13;
+			int saison = SaisonObservee;
 			if (species.Length == 0 || !_signesObserves.Add($"{species}|{signe}|{saison}")) return;
 			// Métas de lieu posées à la création (Snapshot.cs) ; absentes → nil → note sans lieu.
 			_bridge.ObserverSigne(species, signe, plante.GetMeta(LectureSnap.Meta("tile"), default),

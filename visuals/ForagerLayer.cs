@@ -76,7 +76,9 @@ namespace Symbiose
 		private class Entry
 		{
 			public string Guild;
+			public string Plot;           // tile|r|c : compte d'abondance (INFO-BULLE ③)
 			public float Hx, Hy;          // ancre MONDE (cm) = position du snapshot
+			public float Nourriture = -1f; // 8ᵉ champ (pont ≥ 0.5.47), < 0 : absent
 			public bool Carrying;
 			public uint Phase;
 			public float BornAt;
@@ -113,24 +115,29 @@ namespace Symbiose
 			return sum;
 		}
 
-		/// <summary>Espèce du butineur VIVANT dont l'ANCRE est la plus proche du
-		/// point MONDE (cm), dans `rayonCm`, ou null (D60 ② : survol → observation).
-		/// Miroir de `MacroLife.SpeciesNear` pour les butineurs (rendus ici, pas dans
-		/// MacroLife) : on teste l'ancre (position snapshot stable) et non la position
-		/// de vol errante — le rayon couvre l'amplitude du saut. Lecture des données
-		/// en mémoire, aucune requête pipe.</summary>
-		public string SpeciesNear(Vector2 wMonde, float rayonCm)
+		/// <summary>Butineur VIVANT dont l'ANCRE est la plus proche du point MONDE
+		/// (cm), dans `rayonCm`, ou null (D60 ② : survol → observation ; INFO-BULLE
+		/// ③ : + abondance dans le plot + nourriture). Miroir de `MacroLife.Near`
+		/// pour les butineurs (rendus ici, pas dans MacroLife) : on teste l'ancre
+		/// (position snapshot stable) et non la position de vol errante — le rayon
+		/// couvre l'amplitude du saut. Lecture des données en mémoire, aucune
+		/// requête pipe.</summary>
+		public MacroPick? Near(Vector2 wMonde, float rayonCm)
 		{
 			float bestD = rayonCm * rayonCm;
-			string best = null;
+			Entry best = null;
 			foreach (var e in _entries.Values)
 			{
 				if (e.DyingAt >= 0f) continue;   // en train de disparaître
 				float dx = e.Hx - wMonde.X, dy = e.Hy - wMonde.Y;
 				float d = dx * dx + dy * dy;
-				if (d < bestD) { bestD = d; best = e.Guild; }
+				if (d < bestD) { bestD = d; best = e; }
 			}
-			return best;
+			if (best == null) return null;
+			int n = 0;
+			foreach (var e in _entries.Values)
+				if (e.DyingAt < 0f && e.Guild == best.Guild && e.Plot == best.Plot) n++;
+			return new MacroPick(best.Guild, n, best.Nourriture, null, 0f, new Vector2(best.Hx, best.Hy));
 		}
 
 		private static float NowSec() => Time.GetTicksMsec() / 1000f;
@@ -164,13 +171,15 @@ namespace Symbiose
 				var rangs = new Dictionary<string, int>();
 				foreach (var av in tileKv.Value.AsGodotArray())
 				{
-					// [guild, r, c, x_frac, y_frac, espèce-cible(FR), charge(0/1)].
+					// [guild, r, c, x_frac, y_frac, espèce-cible(FR), charge(0/1),
+					//  nourriture (≥ 0.5.47, absente d'un pont plus ancien)].
 					var a = av.AsGodotArray();
 					string guild = a[0].AsString();
 					int r = a[1].AsInt32(), c = a[2].AsInt32();
 					float xf = (float)a[3].AsDouble(), yf = (float)a[4].AsDouble();
 					string target = a[5].AsString();
 					bool carrying = a[6].AsInt32() != 0;
+					float nour = a.Count > 7 ? (float)a[7].AsDouble() : -1f;
 
 					int rang = rangs.TryGetValue(guild, out int n) ? n : 0;
 					rangs[guild] = rang + 1;
@@ -184,6 +193,7 @@ namespace Symbiose
 					if (_entries.TryGetValue(key, out var known))
 					{
 						known.Carrying = carrying;
+						known.Nourriture = nour;
 						known.Hops = hops;        // les fleurs ont pu pousser/mourir
 						if (known.DyingAt >= 0f)   // revit pendant son fondu de mort
 						{
@@ -197,6 +207,7 @@ namespace Symbiose
 					_entries[key] = new Entry
 					{
 						Guild = guild, Hx = hx, Hy = hy, Carrying = carrying,
+						Plot = tileId + "|" + r + "|" + c, Nourriture = nour,
 						Phase = HashKey(key), BornAt = fade ? now : now - FadeInSec,
 						Hops = hops,
 					};

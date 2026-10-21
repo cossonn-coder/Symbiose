@@ -100,7 +100,9 @@ namespace Symbiose
 		private class Entry
 		{
 			public string Guild;
+			public string Plot;           // tile|r|c : compte d'abondance (INFO-BULLE ③)
 			public float Wx, Wy;
+			public float Activite;        // ressource locale du snapshot (nourriture)
 			public uint Phase;            // hash de la clé : déphasage du sursaut
 			public float BornAt;
 			public float DyingAt = -1f;   // < 0 : vivante
@@ -134,20 +136,31 @@ namespace Symbiose
 		}
 
 		/// <summary>Espèce de la bête VIVANTE la plus proche du point MONDE (cm),
-		/// dans `rayonCm`, ou null. Sert l'écrasement ciblé (target.espece) et
-		/// l'observation au survol : on désigne ce qu'on VOIT sous le curseur.</summary>
+		/// dans `rayonCm`, ou null. Sert l'écrasement ciblé (target.espece).</summary>
 		public string SpeciesNear(Vector2 wMonde, float rayonCm)
+			=> Near(wMonde, rayonCm)?.Cle;
+
+		/// <summary>La bête VIVANTE la plus proche (cf. MacroPick) : espèce, nombre
+		/// de ses congénères vivants dans le même plot, `activite`. Sert
+		/// l'observation et l'info-bulle : on désigne ce qu'on VOIT sous le curseur.
+		/// Appelé au changement de survol seulement (clé `_survolSale`) : le 2ᵉ
+		/// passage (compte du plot) est sur quelques centaines de bêtes.</summary>
+		public MacroPick? Near(Vector2 wMonde, float rayonCm)
 		{
 			float bestD = rayonCm * rayonCm;
-			string best = null;
+			Entry best = null;
 			foreach (var e in _entries.Values)
 			{
 				if (e.DyingAt >= 0f) continue;   // en train de disparaître
 				float dx = e.Wx - wMonde.X, dy = e.Wy - wMonde.Y;
 				float d = dx * dx + dy * dy;
-				if (d < bestD) { bestD = d; best = e.Guild; }
+				if (d < bestD) { bestD = d; best = e; }
 			}
-			return best;
+			if (best == null) return null;
+			int n = 0;
+			foreach (var e in _entries.Values)
+				if (e.DyingAt < 0f && e.Guild == best.Guild && e.Plot == best.Plot) n++;
+			return new MacroPick(best.Guild, n, best.Activite, null, 0f, new Vector2(best.Wx, best.Wy));
 		}
 
 		/// <summary>Un geste du joueur au point MONDE `wMonde` : les bêtes proches
@@ -236,16 +249,19 @@ namespace Symbiose
 				{
 					if ((long)(Time.GetTicksUsec() - t0) >= budgetUs) return false;
 					// Format compact : [r, c, x_frac, y_frac, activite] (activite
-					// n'est plus lue : les bêtes sont fixes au repos).
+					// ne pilote plus le dessin — bêtes fixes au repos — mais nourrit
+					// la ligne « nourriture » de l'info-bulle, INFO-BULLE ③).
 					var e = g.Ev[_ei].AsGodotArray();
 					int r = e[0].AsInt32(), c = e[1].AsInt32();
 					double xf = e[2].AsDouble(), yf = e[3].AsDouble();
+					float act = e.Count > 4 ? (float)e[4].AsDouble() : -1f;
 					string key = g.Tile + "|" + g.Guild + "|" + r + "|" + c
 						+ "|" + xf.ToString("F3", CultureInfo.InvariantCulture)
 						+ "|" + yf.ToString("F3", CultureInfo.InvariantCulture);
 					_seen.Add(key);
 					if (_entries.TryGetValue(key, out var known))
 					{
+						known.Activite = act;   // la ressource change d'une semaine à l'autre
 						// Revenue pendant son fondu de mort → elle revit depuis
 						// l'alpha courant (pas de pop).
 						if (known.DyingAt >= 0f)
@@ -262,6 +278,8 @@ namespace Symbiose
 					_entries[key] = new Entry
 					{
 						Guild = g.Guild,
+						Plot = g.Tile + "|" + r + "|" + c,
+						Activite = act,
 						Wx = g.O.X + (c + (float)xf) * WorldView.PlotCm,
 						Wy = g.O.Y + (r + (float)yf) * WorldView.PlotCm,
 						Phase = HashKey(key),

@@ -20,6 +20,7 @@ from sim.actions import observer
 from sim.pages_corpus import PAGES
 from sim.signes_corpus import SIGNES
 from fields.faune_encyclo import FAUNE_ENCYCLO
+from sim.champignon_encyclo import CLE_CHAMPIGNON
 
 from .maitrise_pont import _CLE_DE_CLASSE, _CONCEPT_REPRO_BIPARENTAL
 
@@ -40,9 +41,10 @@ def forcer_palier_3(game_state: dict, player: str) -> int:
     d'un coup magazine (offres), carnet interprétatif et pages. Renvoie le nombre
     d'objets crédités."""
     st = M.ensure_player_maitrise(game_state, player)
-    # + la faune nommée (⑥) : son nom se révèle au même seuil (info-bulle ⑦).
+    # + la faune nommée (⑥) : son nom se révèle au même seuil (info-bulle ⑦) ;
+    # + le champignon (INFO-BULLE DU VIVANT ③ : même règle de nom, sinon 3 automnes).
     objets = (set(PLANT_CATALOGUE) | set(PERENNIAL_CATALOGUE) | _CONCEPTS
-              | set(FAUNE_ENCYCLO))
+              | set(FAUNE_ENCYCLO) | {CLE_CHAMPIGNON})
     for objet in objets:
         st["objets"][objet] = {"palier": PALIER_DEBUG, "preuves": 0}
     for concept in _CONCEPTS:

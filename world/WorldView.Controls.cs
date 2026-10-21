@@ -288,7 +288,7 @@ namespace Symbiose
 			_bridge.Debug(op);
 			// Reset : vider aussi la dédup de survol, sinon les espèces déjà
 			// survolées ne se ré-observeraient plus (encyclopédie muette au survol).
-			if (op == "reset") { _especesObservees.Clear(); _signesObserves.Clear(); }
+			if (op == "reset") { _especesObservees.Clear(); _signesObserves.Clear(); _especesMacroObservees.Clear(); }
 			RelireAppris();   // l'info-bulle nomme tout de suite ce qui vient d'être appris (⑦)
 			GD.Print($"[WorldView] DEBUG maîtrise : {op}.");
 		}

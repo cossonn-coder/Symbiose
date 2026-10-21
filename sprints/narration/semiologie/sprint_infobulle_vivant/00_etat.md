@@ -28,8 +28,8 @@
 | # | Kickoff | Contenu | Golden | État |
 |---|---|---|---|---|
 | ① | `01_python_corpus_credit.md` | corpus, crédit saisonnier, `appris` champignon, snapshot rôle carpophore, bandes nourriture mesurées, légende, pont bumpé | intact `22768f33…` | **FAIT** (2026-10-22, pont 0.5.47) |
-| ② | `02_vue_plante_seuil_voix.md` | seuil mesuré (capture VM) + voix saine + technique | intact | **FAIT** (2026-10-22, golden intact, build vert) |
-| ③ | `03_vue_faune_champignon_bilan.md` | lignes bête/carpophore, dédup (clé, saison), technique, bilan, F5, clôture | intact | à faire |
+| ② | `02_vue_plante_seuil_voix.md` | seuil mesuré (capture VM) + voix saine + technique | intact | **FAIT** (2026-10-22, 2bc9233) |
+| ③ | `03_vue_faune_champignon_bilan.md` | lignes bête/carpophore, dédup (clé, saison), technique, bilan, F5, clôture | intact | **FAIT** (2026-10-22, pont 0.5.48, build vert) — **SPRINT CLOS** |
 
 ## Livré en ① — formes dont la vue dépend (pont 0.5.47)
 - **Snapshot** `carpophores[tuile]` = `[r, c, x_frac, y_frac, densite, role]`, `role` ∈
@@ -90,6 +90,39 @@
   mais le pessimisme ressenti vient du moteur (acclimatation quasi universelle, vitalité
   basse), pas de l'info-bulle → à arbitrer par Nico (D110 ou nouvelle dette).
 
+## Livré en ③ (vue faune / champignon)
+- Picking : `MacroLife` / `ForagerLayer` / `CarpophoreLayer.Near` → `visuals/MacroPick.cs`
+  (clé, abondance = vivants de la même clé dans le même plot, `activite`, rôle, densité,
+  ancre). `BeteSousSouris` reste le point unique (observation + info-bulle) ; `SpeciesNear`
+  de MacroLife (écraser) délègue à `Near`.
+- Lignes : `world/WorldView.InfoBulleVivant.cs` (textes + bornes de la légende ①, rien en
+  dur). Technique : `Nom — rôle` + `clé · abondance n · activite x.xx` / `clé · rôle · densité`.
+- Dédup observation macro par `clé|saison` (`SaisonObservee`, même formule que les signes).
+- **Prémisse corrigée** : `observer` ne disait pas si un palier était franchi → pont
+  **0.5.48** : la réponse d'`observer` (bête / champignon) porte `appris` (lecture pure) →
+  la vue nomme la bête dès le survol qui franchit le palier (pas de snapshot complet).
+- **Prémisse corrigée** : debug `palier3` ne créditait pas `champignon` → ajouté
+  (`tools/simserver/debug_pont.py`), test `test_signes_legende` ajusté.
+- Butineurs : **bandes communes conservées** (non tranché, cf. points ouverts ③).
+- Banc : `world/WorldView.BancVivant.cs` + `mesures/capture_vivant.sh` (bête / carpophore,
+  `-a` palier3, `-t` technique). Captures ×4 : `mesures/infobulle_x4_{bete_vue,bete_nommee,
+  bete_technique,carpophore_bois_vu,carpophore_bois_nomme,carpophore_humus_nomme,
+  carpophore_technique}.png`. Carpophores **synthétiques** (posés par le banc, cf. ci-dessous).
+
+## Points ouverts (③) — arbitrages Nico
+- **Carpophores jamais visibles en jeu normal** : 0 carpophore en 5 automnes [VM, `full`
+  seed 42, 269 sem.] — mycélium max 0,06 (an 1) / 0,17 (an 2) puis 0,03, sous le seuil
+  0,30 ; humidité max 1,82 (an 1) puis 1,07 → 0,38, sous le seuil 1,5. Aucun banc testé
+  n'en montre non plus (`rotation_inoculum` mycélium 0,04, `foret_ports` 0,31 mais humidité
+  1,13 [VM, 30-39 sem., n=1 chacun]). → le champignon ne peut pas être nommé en jeu normal
+  (3 automnes requis) ; la ligne carpophore n'est vérifiée qu'en capture synthétique.
+  Versé en D110 (h).
+- **Nourriture des butineurs** : non tranché. Bornes propres impossibles sans nouvelle
+  décision : tertiles butineurs 0,00 / 0,27 [VM, n=3205] = dégénérés (≥ 1/3 à 0). Comportement
+  retenu = bandes communes (une seule paire de bornes dans la légende) → un butineur nommé lit
+  surtout « nourriture rare » (médiane 0,07). Versé en D110 (i).
+- Nom affiché = clé capitalisée (« Herisson » sans accent) : pas de nom d'affichage au corpus.
+
 ## Mesures
 - Seuils colorants (max ×2/×4/×8 × palette OFF/ON) : chlorose 0,03 · asphyxie 0,075 ·
   sécheresse 0,01 · sénescence 0,1 · maladie 0,075 · ombre 0,02 · rongeur 0,2 ·
@@ -101,11 +134,25 @@
   `mesures/mesure_nourriture.py` (~87 s [VM, n=1]). Médiane 0,42 [même run].
 - Butineurs : médiane 0,07, tertiles 0,00 / 0,27 [VM, n=3205, même run].
 
+- Carpophores : cf. points ouverts ③ [VM, `full` seed 42, 269 sem., n=1 run].
+- Captures ③ : ~20 s par pose [VM, n=7] (`capture_vivant.sh`, build exclu).
+
 ## §F5
-(procédure écrite par ③)
+Pour Nico (≈ 10 min), monde `full`, zoom ×4 au moins (la vie macro n'apparaît pas en dessous) :
+1. **Bête non apprise** : survoler une bête (un campagnol, une limace…). Attendu : sa
+   description + « seule / quelques-unes / nombreuses », **sans nom ni nourriture**.
+2. **Nom au fil des saisons** : la survoler à nouveau dans 2 saisons différentes (touche **T**
+   = avancer de N semaines). Attendu : à la 3ᵉ saison, la ligne devient « Nom — rôle ·
+   abondance, nourriture … » **immédiatement** au survol. Raccourci : debug **palier3** (F8)
+   nomme tout d'un coup.
+3. **Technique** : **Maj+F3**. Attendu : nom dès le 1er survol + `clé · abondance n ·
+   activite x.xx` (champignon : `rôle · densité`).
+4. **Champignon** : en jeu normal il n'en pousse pas (cf. points ouverts) — à ne pas chercher.
+   La ligne est visible sur les captures `mesures/infobulle_x4_carpophore_*.png`.
+5. Question de ressenti : la ligne bête est-elle lisible et courte ? « nourriture rare » sur les
+   abeilles te gêne-t-il ?
 
 ## §REPRISE
-`/sprint-auto sprint_infobulle_vivant` — reprendre au premier tronçon « à faire »
-(③ `03_vue_faune_champignon_bilan.md`). ① commité (11317ea) ; ② fait, NON commité
-(commit par l'orchestrateur).
-Tests ①: `python3 -m tests.test_infobulle_vivant` (27/27) ; `test_sim_server` 285/285.
+Sprint **CLOS** (①→③). ③ NON commité au moment de l'écriture (commit par l'orchestrateur).
+Tests : `test_infobulle_vivant` 31/31 ; `test_signes_legende` 42/42 ; `test_sim_server`
+285/285 ; golden `22768f33…` intact. Reste : F5 Nico + arbitrages D110 (g)(h)(i).

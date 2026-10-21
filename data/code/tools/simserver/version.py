@@ -705,7 +705,11 @@ from __future__ import annotations
 #       `champignon`, `voix_saine`, `abondance`, `nourriture` (bornes mesurées),
 #       `reseau`. Tout hors tick → golden NEUTRE. Un client pré-0.5.47 ignore les
 #       champs en plus (tableaux lus par index).
-ENGINE_VERSION = "0.5.47"
+# 0.5.48 (INFO-BULLE DU VIVANT ③) : ajout rétro-compatible. `observer` d'une bête
+#       ou de `champignon` renvoie aussi `appris` (forme de `player.appris`, lecture
+#       pure) → la vue nomme la bête dès le survol qui franchit le palier. Hors
+#       tick → golden NEUTRE.
+ENGINE_VERSION = "0.5.48"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

@@ -163,8 +163,9 @@ def test_pont():
     check("snapshot : player.appris vide", snap["player"]["appris"] == {"signes": [], "faune": []})
     s.send(cmd="debug", op="palier3")
     ap = s.send(cmd="snapshot")["snapshot"]["player"]["appris"]
-    check("après palier3 : 11 signes + toute la faune",
-          len(ap["signes"]) == 11 and len(ap["faune"]) == len(FAUNE_ENCYCLO), ap)
+    # INFO-BULLE DU VIVANT ③ : palier3 crédite aussi le champignon (en dernier).
+    check("après palier3 : 11 signes + toute la faune + champignon",
+          len(ap["signes"]) == 11 and ap["faune"] == [*FAUNE_ENCYCLO, "champignon"], ap)
     s.send(cmd="quit")
     check("quit → exit 0", s.close() == 0)
 

@@ -10,6 +10,8 @@ INFO-BULLE DU VIVANT, tronçon ① (Python). Spec :
      aucun crédit ; champignon idem (3 automnes) ; option anticipée nommée au 1er.
   C. Rôle carpophore : bois / racines / humus.
   D. Légende : nouvelles clés, anciennes intactes.
+  E. (③, pont 0.5.48) `observer` d'une bête renvoie `appris` (nom révélé tout de
+     suite côté vue) ; d'une plante, non.
 
 Usage (depuis data/code/) : python3 -m tests.test_infobulle_vivant
 """
@@ -17,7 +19,7 @@ from sim import maitrise
 from sim import signes as SG
 from sim import signes_corpus as SC
 from sim.champignon_role import plots_racines, role_carpophore
-from tools.simserver.maitrise_pont import observer_espece
+from tools.simserver.maitrise_pont import observer_espece, _CLE_DE_NOM
 from tools.simserver.server import SimServer
 
 P = "joueur_1"
@@ -136,11 +138,28 @@ def test_legende():
     check("réseau dense = plot plein (CARPO_DENS_REF)", rep["reseau"]["dense"] == 0.70)
 
 
+def test_observer_appris():
+    print("\n[E] observer → appris (③)")
+    srv = SimServer()
+    gs = {"current_player": P, "week": 1}
+    srv.engine = type("E", (), {"game_state": gs})()
+    reps = []
+    for semaine in (2, 15, 28):   # 3 saisons distinctes (semaine consignée = week - 1)
+        gs["week"] = semaine
+        reps.append(srv.cmd_observer({"species": "coccinelle"}))
+    check("bête : `appris` dans chaque réponse", all("appris" in r for r in reps))
+    check("pas nommée avant la 3ᵉ saison", "coccinelle" not in reps[1]["appris"]["faune"])
+    check("nommée dans la réponse de la 3ᵉ saison", "coccinelle" in reps[2]["appris"]["faune"])
+    plante = srv.cmd_observer({"species": next(iter(_CLE_DE_NOM))})
+    check("plante : pas d'`appris`", plante["ok"] and "appris" not in plante, plante)
+
+
 if __name__ == "__main__":
     test_corpus()
     test_credit()
     test_role_carpophore()
     test_legende()
+    test_observer_appris()
     ok = sum(1 for _, c in _results if c)
     print(f"\n{ok}/{len(_results)} OK")
     raise SystemExit(0 if ok == len(_results) else 1)
