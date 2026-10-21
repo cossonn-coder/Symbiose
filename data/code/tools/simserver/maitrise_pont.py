@@ -31,6 +31,7 @@ from sim import maitrise as M
 from sim import maitrise_detection as MD
 from sim import pages
 from sim.evenements import evenements
+from sim.signes import crediter_saison
 from sim.actions.deblocage import evaluer_deblocages   # palette ① : voie savoir
 
 # Reverse mapping classe → clé de catalogue (objet → clé), DÉRIVÉ des catalogues
@@ -150,7 +151,8 @@ def noter_geste_pont(game_state: dict, player: str, semaine: int, zone,
     MD.noter_geste(game_state, player, semaine, zone, verb=verb)
 
 
-def observer_espece(game_state: dict, player: str, nom: str) -> bool:
+def observer_espece(game_state: dict, player: str, nom: str,
+                    semaine: int | None = None) -> bool:
     """Hook A par SURVOL (retour F5 Nico), MULTI-RÈGNES (D60 ②). Une entité n'est
     observée que quand le joueur PASSE LA SOURIS dessus (voir son nom) — pas parce
     qu'elle vit dans le jardin. On résout `nom` en clé de maîtrise puis on DÉCOUVRE
@@ -166,13 +168,22 @@ def observer_espece(game_state: dict, player: str, nom: str) -> bool:
          carpophore) → cette clé ;
       4. sinon `None` → no-op (nom inconnu : aucune fausse découverte).
 
+    CRÉDIT SAISONNIER (INFO-BULLE DU VIVANT ①) : pour une bête ou le champignon
+    SEULEMENT (règnes 2-3, jamais une plante), si `semaine` est fournie (semaine
+    consignée, `week - 1`), `crediter_saison` ajoute +1 palier par saison neuve
+    d'observation (plafond `SEUIL_CARNET`) → le nom se révèle en 3 saisons.
+    `semaine=None` (balayage debug, anciens appels) → découverte seule.
+
     Renvoie True ssi nouvelle découverte."""
     cle = _CLE_DE_NOM.get(nom)
-    if cle is None and (nom in FAUNE_ENCYCLO or nom == CLE_CHAMPIGNON):
-        cle = nom
-    if cle is None:
+    if cle is not None:
+        return observer(game_state, player, cle)
+    if nom not in FAUNE_ENCYCLO and nom != CLE_CHAMPIGNON:
         return False
-    return observer(game_state, player, cle)
+    nouveau = observer(game_state, player, nom)
+    if semaine is not None:
+        crediter_saison(game_state, player, nom, semaine, decouverte=nouveau)
+    return nouveau
 
 
 def _observer(game_state: dict, player: str, log: list[str]) -> None:

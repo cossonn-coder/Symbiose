@@ -28,6 +28,7 @@ from sim import maitrise as M
 # densité → entités (fields/population.py §3). L'échantillonnage se fait CÔTÉ
 # SERVEUR — la vue n'a pas besoin de _hash_noise (kickoff t6 §4).
 from fields.population import peindre_presence, sample_carpophores
+from sim.champignon_role import plots_racines, role_carpophore   # rôle carpophore (D110 b)
 # LOD des émetteurs d'ombre (D67, sprint perf-lod-ombre ③) : on relit le SEUIL de
 # pouvoir ombrageant pour DÉRIVER, par plante, si elle émet une ombre (miroir exact
 # de la métrique de fields/light.py:compute). Lecture pure d'une constante de module
@@ -69,6 +70,14 @@ from .peripherie_route import ceinture_block
 # Vent au pont (JARDIN VIVANT T3, 0.5.44) : masse d'air `weather.wind` + facteur
 # d'abri par plante (lu SEULEMENT si le champ d'abri est déjà calculé). Pur.
 from .vent_pont import wind_block, abri_facteur
+
+
+def _activite_butineur(eco, agent) -> float:
+    """Nourriture d'un butineur (D110) = `activite` de SON champ pollinisateur au plot
+    de fin de tournée (ressource nectarifère déjà calculée par le tick). 0 si champ
+    absent. Lecture pure, arrondie à 2 déc. comme les sprites."""
+    field = eco.populations.get(agent.guild) if eco.populations else None
+    return round(field.activite(agent.row, agent.col), 2) if field else 0.0
 
 
 class SerializeMixin:
@@ -342,18 +351,26 @@ class SerializeMixin:
             # tuile : `[r, c, x_frac, y_frac, densite]`. Apparaissent en automne, sol
             # humide, réseau dense → liste VIDE hors saison / mycélium nul → pont
             # neutre. PURE lecture (sample_carpophores ne modifie rien) → golden NEUTRE.
+            # INFO-BULLE DU VIVANT ① (0.5.47) : 6ᵉ champ = RÔLE LOCAL `b`/`r`/`h`
+            # (bois / racines / humus, `sim/champignon_role`) ; plots racinés
+            # calculés une fois par tuile, et seulement s'il y a des carpophores.
+            carpos = sample_carpophores(eco, gs["seed"], week_in_year)
+            racines = plots_racines(tile.plants) if carpos else set()
             carpophores[tile.tile_id] = [
                 [k.row, k.col, round(k.x_frac, 3), round(k.y_frac, 3),
-                 round(k.densite, 3)]
-                for k in sample_carpophores(eco, gs["seed"], week_in_year)]
+                 round(k.densite, 3), role_carpophore(eco, racines, k.row, k.col)]
+                for k in carpos]
             # Butineurs déterministes (arc pollinisation §F, 0.3.9) : agents
             # échantillonnés/marchés par engine._tick_butineurs (eco.foragers, déjà
             # rempli par le tick). Format COMPACT (cf. `sprites`) par tuile :
             # [guild, r, c, x_frac, y_frac, espèce-cible, charge(0/1)]. PURE lecture
             # → golden NEUTRE. La vue dessine l'insecte de fleur en fleur.
+            # INFO-BULLE DU VIVANT ① (0.5.47) : 8ᵉ champ = NOURRITURE (ressource
+            # florale locale, `activite` du champ pollinisateur déjà calculée au
+            # tick — même sens que l'`activite` des sprites).
             foragers[tile.tile_id] = [
                 [a.guild, a.row, a.col, round(a.x_frac, 3), round(a.y_frac, 3),
-                 a.target, int(a.carrying)]
+                 a.target, int(a.carrying), _activite_butineur(eco, a)]
                 for a in (eco.foragers or [])]
             # Structures posables (⑤, 0.3.5) : index implicite = position dans la
             # liste = `target.structure` des gestes. `compost_mur` = jauge mûre

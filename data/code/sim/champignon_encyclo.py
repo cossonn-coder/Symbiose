@@ -16,9 +16,10 @@ champignon aux acteurs qu'il touche réellement dans la simulation (bois mort
 qu'il décompose, humus stable qu'il lie, racines qu'il mycorhize — les 3 rôles
 du sprint mycélium).
 
-MONO-NIVEAU (comme la faune, §3.1) : le champignon n'a pas de progression de
-palier propre (`detecter` ne crédite ni la faune ni le champignon) → il reste
-plafonné à palier 1 = cette seule fiche.
+MONO-NIVEAU (comme la faune, §3.1) : une seule fiche quel que soit le palier.
+`detecter` ne crédite ni la faune ni le champignon ; leur palier monte par
+l'observation saisonnière (`sim/signes.crediter_saison`, INFO-BULLE DU VIVANT ① :
+3 automnes de survol → nommé dans l'info-bulle), sans ouvrir de niveau de fiche.
 """
 from __future__ import annotations
 

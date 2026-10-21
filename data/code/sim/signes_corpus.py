@@ -26,6 +26,14 @@ Pour chacun des 11 signes de `sim/semiologie.py` (8 détecteurs chroniques +
                 (philo #1 : jamais un remède appliqué à la plante).
 `FAUNE_VU` : description visible de chaque espèce de la vie macro (`FAUNE_ENCYCLO`),
 sans son nom (« visible dès le début, non identifiable sans maîtrise »).
+
+INFO-BULLE DU VIVANT (D110 a·b·g, `docs/narration/semiologie/conception_infobulle_vivant.md`
+§2-§3) — la vue n'a AUCUN texte en dur, tout vient d'ici via `cmd_legende` :
+  - `FAUNE_ROLE`      : ce que fait la bête, ≤ 6 mots (affiché une fois NOMMÉE) ;
+  - `CHAMPIGNON_VU` / `CHAMPIGNON_ROLE` : le carpophore avant/après apprentissage,
+                        rôle LU SUR PLACE (bois / racines / humus, code au snapshot) ;
+  - `VOIX_SAINE`      : la plante sans signe visible (vert franc / automne / terne) ;
+  - libellés d'ABONDANCE, de NOURRITURE (bornes MESURÉES) et de RÉSEAU.
 """
 from __future__ import annotations
 
@@ -201,4 +209,83 @@ FAUNE_VU: dict[str, str] = {
     "papillon":   "insecte aux grandes ailes colorées, au vol hésitant",
     "bourdon":    "gros insecte velu et ronflant, rayé de jaune",
     "osmie":      "petite abeille rousse et solitaire, qui niche dans les tiges creuses",
+}
+
+# CE QUE FAIT chaque bête (même clés que `FAUNE_VU`), ≤ 6 mots, voix naturaliste.
+# Ne dit QUE ce que le moteur fait (`fields/population/registry.py` : resource_fn /
+# predators ; `fields/lifecycle.py` pour les larves de syrphe et de papillon).
+FAUNE_ROLE: dict[str, str] = {
+    "puceron":    "suce la sève des jeunes pousses",
+    "limace":     "broute litière et feuillage tendre",
+    "doryphore":  "dévore le feuillage des Solanacées",
+    "coccinelle": "mange les pucerons",
+    "chrysope":   "sa larve dévore les pucerons",
+    "carabe":     "chasse limaces et cloportes au sol",
+    "merle":      "mange les vers et fruits tombés",
+    "herisson":   "mange limaces, cloportes et vers",
+    "lombric":    "digère la litière en humus",
+    "cloporte":   "fragmente la litière humide",
+    "campagnol":  "ronge racines et collets",
+    "rapace":     "chasse rongeurs et oiseaux à découvert",
+    "couleuvre":  "chasse campagnols et limaces",
+    "moustique":  "pond dans l'eau qui dort",
+    "libellule":  "chasse les moustiques au-dessus de l'eau",
+    "abeille":    "butine et noue les fruits",
+    "syrphe":     "butine ; sa larve mange les pucerons",
+    "papillon":   "butine ; sa chenille broute les feuilles",
+    "bourdon":    "butine, même par temps frais",
+    "osmie":      "butine les premiers fruitiers",
+}
+
+# Le carpophore AVANT apprentissage (sans le nom « champignon »), et son rôle LOCAL
+# une fois appris. Codes = ceux du snapshot (`sim/champignon_role.py`) : `b` bois
+# frais au plot, `r` racines vivantes au plot, `h` sinon (l'humus).
+CHAMPIGNON_VU = "petit chapeau pâle sorti de la litière humide"
+CHAMPIGNON_ROLE: dict[str, str] = {
+    "b": "décompose le bois mort",
+    "r": "relie les racines",
+    "h": "lie l'humus",
+}
+
+# Voix « plante saine » (§2.6) : sans signe VISIBLE, l'info-bulle décrit tout de même
+# le feuillage. `terne` est honnête sans inventer de cause (vitalité basse).
+VOIX_SAINE: dict[str, str] = {
+    "franc":   "feuillage ferme, d'un vert franc",
+    "automne": "prend ses couleurs d'automne",
+    "terne":   "feuillage terne, sans signe distinct",
+}
+
+# ABONDANCE d'une bête = nombre d'individus de l'espèce VUS dans le plot (peintre
+# `peindre_presence` : jusqu'à 6 en grappe pour les coloniales). Bornes : 1 → seule ;
+# 2-3 → quelques-unes ; ≥ 4 → nombreuses.
+ABONDANCE_QUELQUES = 2
+ABONDANCE_NOMBREUSES = 4
+ABONDANCE: dict[str, str] = {
+    "seule":      "seule",
+    "quelques":   "quelques-unes",
+    "nombreuses": "nombreuses",
+}
+
+# NOURRITURE d'une bête apprise = `activite` du sprite (ressource locale [0,1]).
+# Bornes = TERTILES MESURÉS de la distribution réelle (pas devinés) :
+#   activite < NOURRITURE_SUFFISANTE → rare ; < NOURRITURE_ABONDANTE → suffisante ;
+#   sinon abondante. Source : `sprints/narration/semiologie/sprint_infobulle_vivant/
+#   mesures/mesure_nourriture.py` (monde `full`, seed 0x5AB1057E, 104 semaines,
+#   sprites peints par `peindre_presence`) → tertiles 0,23 / 0,50 [VM, n=18697 sprites].
+#   Les butineurs suivent une autre distribution (médiane 0,07 [VM, n=3205]) : avec ces
+#   bornes ils lisent surtout « rare » (cf. 00_etat du sprint).
+NOURRITURE_SUFFISANTE = 0.23   # [VM, n=18697, tertile 1/3]
+NOURRITURE_ABONDANTE = 0.50    # [VM, n=18697, tertile 2/3]
+NOURRITURE: dict[str, str] = {
+    "rare":       "nourriture rare",
+    "suffisante": "nourriture suffisante",
+    "abondante":  "nourriture abondante",
+}
+
+# RÉSEAU d'un carpophore = densité mycélienne du plot (déjà au snapshot) : « dense »
+# dès que le plot est PLEIN (`fields.population.perception.CARPO_DENS_REF`, borne
+# émise par `cmd_legende` — pas recopiée ici, ce corpus n'importe rien).
+RESEAU: dict[str, str] = {
+    "clairseme": "réseau clairsemé",
+    "dense":     "réseau dense",
 }

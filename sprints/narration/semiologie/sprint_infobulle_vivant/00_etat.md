@@ -27,15 +27,55 @@
 ## Carte des tronçons
 | # | Kickoff | Contenu | Golden | État |
 |---|---|---|---|---|
-| ① | `01_python_corpus_credit.md` | corpus, crédit saisonnier, `appris` champignon, snapshot rôle carpophore, bandes nourriture mesurées, légende, pont bumpé | intact | à faire |
+| ① | `01_python_corpus_credit.md` | corpus, crédit saisonnier, `appris` champignon, snapshot rôle carpophore, bandes nourriture mesurées, légende, pont bumpé | intact `22768f33…` | **FAIT** (2026-10-22, pont 0.5.47) |
 | ② | `02_vue_plante_seuil_voix.md` | seuil mesuré (capture VM) + voix saine + technique | intact | à faire |
 | ③ | `03_vue_faune_champignon_bilan.md` | lignes bête/carpophore, dédup (clé, saison), technique, bilan, F5, clôture | intact | à faire |
 
+## Livré en ① — formes dont la vue dépend (pont 0.5.47)
+- **Snapshot** `carpophores[tuile]` = `[r, c, x_frac, y_frac, densite, role]`, `role` ∈
+  `b` (bois frais) / `r` (racines vivantes) / `h` (humus) — `sim/champignon_role.py`.
+- **Snapshot** `foragers[tuile]` = `[guild, r, c, x_frac, y_frac, cible, charge, nourriture]`
+  (8ᵉ champ = `activite` du champ pollinisateur au plot, 2 déc.).
+- `player.appris.faune` contient aussi **`champignon`** (même liste, en dernier).
+- `observer` (bête ou `champignon`) : +1 palier par saison absolue neuve, plafond
+  `SEUIL_CARNET` ; mémoire `maitrise[joueur]["_saisons_vues"] = {clé: saison}`
+  (`sim/signes.crediter_saison`). Jamais les plantes. La vue doit renvoyer `observer`
+  au moins une fois par (clé, saison) → dédup ③.
+- **`legende`** ajoute : `faune_role {bête: rôle}`, `champignon {vu, roles{b,r,h}}`,
+  `voix_saine {franc, automne, terne}`, `abondance {libelles{seule,quelques,nombreuses},
+  quelques: 2, nombreuses: 4}`, `nourriture {libelles{rare,suffisante,abondante},
+  suffisante, abondante}`, `reseau {libelles{clairseme,dense}, dense: 0.70}`.
+  Règles : n < `quelques` → seule ; < `nombreuses` → quelques ; activite < `suffisante`
+  → rare ; < `abondante` → suffisante ; densite ≥ `dense` → dense.
+
+## Prémisses corrigées / points ouverts (①)
+- « Cap 4 par plot » (conception §3) est FAUX depuis 0.5.45 : `peindre_presence` peint
+  1 individu/espèce/tuile + ≤ 3 points chauds, grappes ≤ 6 (puceron, moustique,
+  cloporte). Les bornes d'abondance 1 / 2-3 / ≥ 4 restent valables.
+- **Lombric et pollinisateurs ne sont jamais peints en sprite** : lombric jamais
+  survolable (jamais nommé) ; pollinisateurs seulement via `ForagerLayer`.
+- `ForagerLayer` ne recevait aucune ressource → ajoutée (8ᵉ champ, coût nul : grille du
+  tick). Mais leur distribution diffère : avec les bornes des sprites, les butineurs
+  lisent surtout « rare » (médiane 0,07 [VM, n=3205]) — à trancher en ③ (accepter, ou
+  bornes propres ; tertile 1/3 butineurs = 0,00, dégénéré).
+- **Aucun save global n'existe** (hook OnSeasonEnd seulement posé) : la mémoire est un
+  dict str → int dans la tranche maîtrise, JSON-sérialisable tel quel ; elle sera
+  conservée dès que le save sérialisera `game_state["maitrise"]`.
+- Crédit via `maitrise.enregistrer_preuve` (preuve = exactement ce qui manque au palier)
+  → pas de récompense de Vigueur par palier (`crediter_succes` non utilisé, conforme
+  kickoff). Semaine 0 (survol avant le 1er tick) = saison de la semaine 1.
+- `tools/simserver/serialize.py` à 374 LDC (🟡, était 368) — candidat `/refactor`.
+
 ## Mesures
-(à remplir : [machine, n=…] sur chaque chiffre)
+- Bornes de nourriture (tertiles d'`activite` des sprites peints) : **0,23 / 0,50**
+  [VM, n=18697 sprites, monde `full` seed 0x5AB1057E, 104 semaines] — script
+  `mesures/mesure_nourriture.py` (~87 s [VM, n=1]). Médiane 0,42 [même run].
+- Butineurs : médiane 0,07, tertiles 0,00 / 0,27 [VM, n=3205, même run].
 
 ## §F5
 (procédure écrite par ③)
 
 ## §REPRISE
-`/sprint-auto sprint_infobulle_vivant` — reprendre au premier tronçon « à faire ».
+`/sprint-auto sprint_infobulle_vivant` — reprendre au premier tronçon « à faire »
+(② `02_vue_plante_seuil_voix.md`). ① fait, NON commité (commit par l'orchestrateur).
+Tests ①: `python3 -m tests.test_infobulle_vivant` (27/27) ; `test_sim_server` 285/285.

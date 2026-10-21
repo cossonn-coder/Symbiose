@@ -127,8 +127,10 @@ def _lire_plante(cle: str, palier: int) -> dict | None:
 
 
 def _lire_mono(cle: str, nom_type: str, meta: dict) -> dict:
-    """Fiche MONO-niveau (animal, champignon) : blurb + graphe d'interconnexions,
-    plafonnée à palier 1 (la détection ne les crédite pas). `meta` = `{blurb,
+    """Fiche MONO-niveau (animal, champignon) : blurb + graphe d'interconnexions.
+    La fiche n'a qu'UN niveau quel que soit le palier : le palier de la clé monte
+    bien (crédit d'observation saisonnière, `sim/signes.crediter_saison`, jusqu'à 3
+    = nom révélé dans l'info-bulle), mais il n'ouvre pas de niveau de fiche. `meta` = `{blurb,
     interconnexions}` de la source (`faune_encyclo` / `champignon_encyclo`)."""
     return {
         "cle": cle, "type": nom_type, "niveau_max": 1,

@@ -694,7 +694,18 @@ from __future__ import annotations
 #       `palier3` crédite aussi les concepts des signes et la faune nommée. Un
 #       binaire pré-0.5.46 n'émet pas `appris` → la vue reste descriptive. (3) Commande
 #       `legende` (lecture seule, statique) : `vu` de chaque signe et de chaque bête.
-ENGINE_VERSION = "0.5.46"
+# 0.5.47 (INFO-BULLE DU VIVANT ①, D110 a·b·g) : ajouts rétro-compatibles.
+#       (1) `carpophores` : 6ᵉ champ = rôle local `b`/`r`/`h` (bois frais / racines
+#       vivantes / humus, `sim/champignon_role`). (2) `foragers` : 8ᵉ champ =
+#       nourriture (`activite` du champ pollinisateur au plot, 2 déc.). (3)
+#       `observer` d'une bête ou de `champignon` crédite +1 palier par SAISON neuve
+#       d'observation (plafond 3, `sim/signes.crediter_saison`, mémoire
+#       `maitrise[joueur]["_saisons_vues"]`) ; jamais une plante. (4)
+#       `player.appris.faune` inclut `champignon`. (5) `legende` + `faune_role`,
+#       `champignon`, `voix_saine`, `abondance`, `nourriture` (bornes mesurées),
+#       `reseau`. Tout hors tick → golden NEUTRE. Un client pré-0.5.47 ignore les
+#       champs en plus (tableaux lus par index).
+ENGINE_VERSION = "0.5.47"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

@@ -13,6 +13,8 @@ from __future__ import annotations
 from constants import PLOT_CM
 from sim.signes import observer_signe
 from sim.signes_corpus import SIGNES, FAUNE_VU
+from sim import signes_corpus as SC
+from fields.population.perception import CARPO_DENS_REF
 from .maitrise_pont import observer_espece, _CLE_DE_NOM
 from . import debug_pont as D
 
@@ -36,7 +38,7 @@ class MaitriseCmdsMixin:
         if not species:
             return {"ok": False, "error": "observer sans species"}
         gs = self.engine.game_state
-        nouveau = observer_espece(gs, gs["current_player"], species)
+        nouveau = observer_espece(gs, gs["current_player"], species, gs["week"] - 1)
         rep = {"ok": True, "observed": bool(nouveau)}
         signe = msg.get("signe")
         if signe:
@@ -65,12 +67,29 @@ class MaitriseCmdsMixin:
         concept, cause}}` et `faune: {bête: vu}`. La vue la demande une fois ; ce qui
         est appris arrive au snapshot (`player.appris`). Utilisable avant `init`.
         `cause` (⑦) = le NOM de la cause, tête de la fiche niveau 2 (« Chlorose
-        ferrique : … ») — l'info-bulle ne l'affiche qu'une fois le signe APPRIS."""
+        ferrique : … ») — l'info-bulle ne l'affiche qu'une fois le signe APPRIS.
+
+        INFO-BULLE DU VIVANT ① (clés AJOUTÉES, rétro-compatible) : `faune_role`
+        {bête: rôle}, `champignon {vu, roles{b,r,h}}`, `voix_saine {franc, automne,
+        terne}`, `abondance {libelles, quelques, nombreuses}` (bornes en nombre de
+        bêtes vues dans le plot), `nourriture {libelles, suffisante, abondante}`
+        (bornes MESURÉES sur `activite`), `reseau {libelles, dense}` (densité)."""
         return {"ok": True,
                 "signes": {s: {"vu": c["vu"], "concept": c["concept"],
                                "cause": c["fiche"][2].split(" : ", 1)[0]}
                            for s, c in SIGNES.items()},
-                "faune": dict(FAUNE_VU)}
+                "faune": dict(FAUNE_VU),
+                "faune_role": dict(SC.FAUNE_ROLE),
+                "champignon": {"vu": SC.CHAMPIGNON_VU,
+                               "roles": dict(SC.CHAMPIGNON_ROLE)},
+                "voix_saine": dict(SC.VOIX_SAINE),
+                "abondance": {"libelles": dict(SC.ABONDANCE),
+                              "quelques": SC.ABONDANCE_QUELQUES,
+                              "nombreuses": SC.ABONDANCE_NOMBREUSES},
+                "nourriture": {"libelles": dict(SC.NOURRITURE),
+                               "suffisante": SC.NOURRITURE_SUFFISANTE,
+                               "abondante": SC.NOURRITURE_ABONDANTE},
+                "reseau": {"libelles": dict(SC.RESEAU), "dense": CARPO_DENS_REF}}
 
     def cmd_debug(self, msg: dict) -> dict:
         """Raccourcis DEBUG (F5) : `msg.op` ∈ {palier3, observer_tout, reset}.

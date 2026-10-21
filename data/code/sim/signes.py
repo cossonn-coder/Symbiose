@@ -17,14 +17,19 @@ Deux services, tous deux HORS TICK (niveau `sim`, au-dessus du moteur ;
      l'encyclopédie. Même bascule que le carnet : `palier(concept) ≥ carnet._seuil`
      — la note se comprend, la fiche s'ouvre et l'info-bulle nomme la cause AU MÊME
      MOMENT. Une bête : palier de SA clé de maîtrise ≥ ce même seuil.
+  3. `crediter_saison` (INFO-BULLE DU VIVANT ①, D110 a·b) — le NOM d'une bête ou du
+     champignon se mérite en la regardant au fil des saisons : chaque survol dans une
+     saison NEUVE crédite +1 palier, jusqu'à `SEUIL_CARNET` (3 saisons distinctes →
+     nommée). Jamais les plantes (leur maîtrise passe par la détection D12).
 """
 from __future__ import annotations
 
 from sim import maitrise
 from sim import journal
-from sim.carnet import _seuil
+from sim.carnet import _seuil, SEUIL_CARNET
 from sim.signes_corpus import SIGNES
 from fields.faune_encyclo import FAUNE_ENCYCLO
+from sim.champignon_encyclo import CLE_CHAMPIGNON
 
 # `kind` des notes de signe au ledger (clé du carnet `CONCEPT_DE[("signe", cause)]`).
 KIND_SIGNE = "signe"
@@ -33,6 +38,11 @@ KIND_SIGNE = "signe"
 # de 13 (`sim/engine/calendrier.SAISONS` : 1-13, 14-26, 27-39, 40-52). Calcul local
 # pour ne pas tirer le paquet `engine` depuis une voix narrative.
 _SEMAINES_PAR_SAISON = 13
+
+# Clé privée de la tranche joueur de maîtrise (même convention que `_detection` de
+# `maitrise_detection`) : `{clé: dernière saison absolue créditée}`. Dict str → int
+# → JSON-sérialisable tel quel. `maitrise.py` l'ignore (il ne lit que `objets`).
+_CLE_SAISONS = "_saisons_vues"
 
 
 def _saison_absolue(semaine: int) -> int:
@@ -80,9 +90,44 @@ def faune_apprise(game_state: dict, player: str, espece: str) -> bool:
 
 def appris(game_state: dict, player: str) -> dict:
     """Ce que le joueur a appris, pour la vue : `{"signes": [...], "faune": [...]}`
-    dans l'ordre stable des corpus. LECTURE PURE (aucune clé créée) : sans couche
-    maîtrise, deux listes vides."""
+    dans l'ordre stable des corpus. La liste `faune` porte aussi la clé générique
+    `champignon` (en dernier) : même règle de nom que les bêtes, une seule liste à
+    tester côté vue. LECTURE PURE (aucune clé créée) : sans couche maîtrise, deux
+    listes vides."""
+    vivants = [*FAUNE_ENCYCLO, CLE_CHAMPIGNON]
     return {
         "signes": [s for s in SIGNES if signe_appris(game_state, player, s)],
-        "faune": [f for f in FAUNE_ENCYCLO if faune_apprise(game_state, player, f)],
+        "faune": [f for f in vivants if faune_apprise(game_state, player, f)],
     }
+
+
+def crediter_saison(game_state: dict, player: str, cle: str, semaine: int,
+                    decouverte: bool) -> bool:
+    """Crédit par OBSERVATION SAISONNIÈRE d'une bête ou du champignon (`cle` déjà
+    résolue par le pont ; l'appelant garantit que ce n'est pas une plante). À
+    appeler APRÈS la découverte du survol (`decouverte` = ce survol vient de la
+    faire) :
+      - découverte → la saison courante est mémorisée (le 1er survol EST la 1ʳᵉ
+        saison, palier 1) ; clé déjà connue sans mémoire (état antérieur au sprint)
+        → idem, sans crédit (prudence : on ignore quand elle a été vue) ;
+      - saison STRICTEMENT postérieure à la dernière créditée ET palier <
+        `SEUIL_CARNET` → exactement +1 palier (preuve = ce qui manque au palier
+        courant), puis la saison est mémorisée. Sinon rien.
+    Déterministe, hors tick (geste joueur). Renvoie True ssi un palier a été gagné.
+    Effet de bord assumé : Σ paliers ↑ → `palier_bonus` (Vigueur max) ↑ un peu."""
+    st = maitrise.ensure_player_maitrise(game_state, player)
+    vues = st.setdefault(_CLE_SAISONS, {})
+    # Semaine 0 (survol avant le 1er tick) = même saison que la semaine 1 : pas de
+    # palier « gratuit » entre l'init et le premier pas.
+    saison = _saison_absolue(max(1, semaine))
+    derniere = vues.get(cle)
+    if decouverte or derniere is None:
+        vues[cle] = saison
+        return False
+    p = maitrise.palier(game_state, player, cle)
+    if saison <= derniere or p >= SEUIL_CARNET:
+        return False
+    manque = maitrise.preuves_requises(p) - st["objets"][cle]["preuves"]
+    maitrise.enregistrer_preuve(game_state, player, cle, poids=manque)
+    vues[cle] = saison
+    return True
