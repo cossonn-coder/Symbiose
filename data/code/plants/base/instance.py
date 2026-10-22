@@ -68,6 +68,11 @@ class PlantInstance:
                                     #  → la plante s'affame par les voies EXISTANTES (philo #2), pas par
                                     #  un malus direct. Compensée par la mycorhize, modulée par la niche
                                     #  d'espèce `root_loss_tolerance_base`. Densité nulle → reste 0.
+    pourriture_memory: float = 0.0  # POURRIDIÉ racinaire cumulé [0-1] (D111 ⑦bis, parasite qui
+                                    #  tue). Monte tant qu'un parasite attaque un hôte affaibli
+                                    #  (`sim/engine/racines.maj_pourriture`), redescend quand
+                                    #  l'attaque cesse (racines qui repoussent). Sans plafond :
+                                    #  à 1 la plante ne boit plus → mort par la voie sécheresse.
     wetness_memory: float = 0.0     # durée d'humectation FOLIAIRE intégrée [0-1]
                                     # (sprint HUMECTATION FOLIAIRE ① — §2.2). L'eau posée
                                     #  sur les FEUILLES (rosée/pluie/aspersion), non l'humidité
@@ -136,6 +141,7 @@ class PlantInstance:
     morte: bool = False          # True dès la mort (skip biologie via is_alive)
     stade_mort: str = ""         # "" vivant · "seche" debout · "couchee" au sol
     bois_restant: float = 0.0    # réservoir de bois à fragmenter en litière `bois`
+    bois_diam_cm: float = 0.0    # grosseur moyenne de ce bois (cm, ⑦bis) ; 0 = inconnue
     semaines_mort: int = 0       # compteur sèche→couchée
     # Organes-fruits traçables (décompo·compost ③, absorbe D19). Vide → aucun
     # fruit (défaut : golden inchangé tant que rien ne noue). Peuplé à la nouaison

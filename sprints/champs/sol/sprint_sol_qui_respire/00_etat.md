@@ -20,7 +20,7 @@ suivants : budget perf mesuré **par rapport à ①** ; ne pas tenter de résorb
 | ⑤ | `05_voix_champignons.md` | INTACT `df6ebf04…` | FAIT — pont 0.5.53 ; clé générique `champignon` retirée |
 | ⑥ | `06_manger_vision.md` | INTACT `df6ebf04…` | FAIT — pont 0.5.54 ; overdose +75 ms/snapshot [n=1 run, `full`] |
 | ⑦ | `07_nectar_espece.md` | RE-FIGÉ `df6ebf04…` → `fecccded…` (floraison au smoke, 5 lignes de log) | FAIT — ⚠ D110 (i) non résolu (médiane 0,08 inchangée) |
-| ⑦bis | `07b_bois_continu_parasite.md` (ajouté 2026-10-22, décisions Nico : ceinture → bois, décompo par grosseur, parasite peut tuer) | re-figé si décompo bois ou pommier du smoke touchés | à faire |
+| ⑦bis | `07b_bois_continu_parasite.md` (ajouté 2026-10-22, décisions Nico : ceinture → bois, décompo par grosseur, parasite peut tuer) | INTACT `fecccded…` (smoke sans ceinture ; aucun bois de grosseur ≠ défaut ; pourridié du pommier sous la résolution du digest) | FAIT — pont 0.5.55 |
 | ⑧ | `08_vue_godot.md` | intact | à faire |
 
 Golden de départ (relevé par ①) : `22768f339ac41bb20b1604bb29672bb3b209ee62ec659b1c8369dd31ccd6cfb8`.
@@ -450,6 +450,77 @@ digest final IDENTIQUE (aucune plante, aucun champ final ne bouge).
    champ seul). Sinon l'abeille irait butiner la tomate qui ne la nourrit pas ; conséquence :
    la pollinisation de la tomate ne vient plus que du bourdon (réaliste, autogame de toute façon).
 
+## ⑦bis Bois continu & parasite qui tue — FAIT (2026-10-22), golden INTACT `fecccded…`, pont **0.5.55**
+
+**Livré** :
+- **B. Grosseur** : `Parcelle.diam_cm` (cm, moyenne pondérée par la masse à la fusion, comme
+  `age_sem`) ; `deposer_litiere(…, diam_cm=BOIS_DIAM_DEFAUT)` ; décompo du `bois` ×
+  `facteur_grosseur(d) = (1 + 0,5/1)/(1 + d/1)` (`fields/ecofields/litiere.py`). **Taux par
+  grosseur** (base 0,02/sem × vitesse du sol × saprophyte) : brindille 0,3 cm ×1,15 · défaut
+  0,5 cm ×1 (taux historique EXACT, facteur non appliqué) · 1 cm ×0,75 · 5 cm ×0,25 · 10 cm
+  ×0,14 · 30 cm ×0,05 → demi-vie sol moyen ≈ 0,7 / 1 / 2,7 / 5 / 14 ans. Écrivains : segment
+  tombé = `thickness_cm` ; squelette = `diam_pondere(segments)` figé à la mort
+  (`PlantInstance.bois_diam_cm`, 0 = inconnu) ; gestes tailler/arracher/écraser =
+  `diam_pondere(removed)` ; bois initial (sous couronne 0,5-3 · branche 2-8 · souche 15-40) ;
+  coupe de secteur 6 cm ; ceinture (A). Défaut (0,5) : BRF, arbustes, précharge substrat.
+  Tiges de l'année (tomate, courgette) → `herbace`, jamais `bois` (testé).
+- **A. Lisière** : `sim/engine/ceinture_bois.py` (NOUVEAU), étape 9c-quater de `boucle.py` :
+  secteur ligneux (forêt, friche) → chutes hachées par plot de bord (`plots_de_bord`, portée
+  = hauteur/4 ≤ 4 m), p ∝ densité × hauteur/15 m × poids distance × saison (aut. 1,4, hiv.
+  1,5, print. 0,6, été 0,5) × tempête (force × rafale > 1 → ×(1+3·sév.)) ; pièces brindilles
+  70 % / branche 25 % / grosse branche 5 %, chacune avec sa grosseur. `P_CHUTE` 0,03.
+  Secteur coupé → densité/hauteur ↓ → moins de bois. Sans ceinture → no-op.
+- **C. Pourridié** : `PlantInstance.pourriture_memory` ; `racines.maj_pourriture` : sous
+  pression `m += 0,10 × pression × (1−m)`, sinon `m × 0,98` (racines qui repoussent) ;
+  `eau_percue` × (1 − m), SANS plafond → mort par la voie sécheresse existante. La pression
+  continue d'alimenter `root_herbivory_memory` (canal ④ inchangé). Voix des êtres : la plainte
+  « parasite » lit max(mémoire racinaire, pourridié). Pont : `bois_diam_cm` (index 7 de
+  `litiere`), `memoires.pourriture_memory`.
+- Tests : `test_bois_mort` 42/42 (14 neufs M-O) ; `test_parasite` 25/25 (8 neufs H-J) ;
+  versions 0.5.55 dans `tests/simserver/*` + format litière 8 champs ; `test_sim_server`
+  288/288. Mesure `mesures/bois_mort.py` étendue (lisière/centre, grosseurs, `--carpo`).
+
+**Mesures** [graine 1521550718, `full`, 156 sem., n=1 run ; base = HEAD ⑦ ; « lisière » =
+544 plots à ≤ 4 m d'un secteur ligneux : ouest forêt de bouleau 13,8 m d. 0,64, sud friche] :
+| sem. | masse bois (lisière / centre) ⑦bis | base | plots bois>0 | fructif. saprophytes du bois (plot-sem., lisière / centre) ⑦bis | base |
+|---|---|---|---|---|---|
+| 0 | 18,1 (7,1 / 11,0) | 18,1 | 21 | — | — |
+| 52 | 41,3 (31,5 / 9,7) | 7,3 | 124 | 56 / 41 (an 0) | 29 / 41 |
+| 104 | 56,1 (47,4 / 8,7) | 3,3 | 181 | 66 / 24 (an 1) | 7 / 18 |
+| 156 | 68,3 (60,5 / 7,9) | 1,7 | 207 | 92 / 22 (an 2) | 0 / 3 |
+Bois de lisière déposé : 27,8 / 23,5 / 24,0 par an (87 / 83 / 89 chutes) ; le stock de
+lisière croît de moins en moins (+24, +16, +13) → s'approche d'un équilibre. Grosseurs à
+sem. 156 : < 1 cm 4,3 · 1-10 cm 42,3 · > 10 cm 21,7. Mycélium max 0,92 (base 0,47), médian
+0,014 (base 0,009). Population fin an 2 : 648 (= base).
+Parasite sur `full` [même run] : 1 hôte (pommier), attaqué 1 sem. (pression max 0,041),
+**0 mort** (composition, cf. ④). Banc (`test_parasite` I) [pommier 8 ans, n=1 arbre par
+cas] : vitalité 0,6 + réseau 0,4 → pourridié 0,8 en 26 sem., **mort sem. 119**, squelette
+4,7 de bois Ø 12,6 cm ; sans réseau → vit ; hôte parti sain affaibli un temps → m 0,51 puis
+guérit. Réseau 0,25 → mort sem. 119 aussi ; POURRI_TAUX 0,02 essayé d'abord → JAMAIS de mort
+(l'hôte guérit sur sol humide avant que la pourriture compte).
+**Perf** : `bois_de_lisiere` 0,7 ms/sem. sur `full` (≈ 0,05 % du tick) ; tick moyen an 0/1/2 635 / 1044 / 1273 ms contre
+621 / 1041 / 1260 ms (base) = **+2,3 / +0,3 / +1,0 %** [n=1 run chacun, lancés en parallèle ; le
+chrono ⑦bis inclut le relevé de masse de la mesure autour de chaque appel] → sous +5 %.
+
+**Golden** : INTACT `fecccded…` (vérifié après B, après C, en fin de tronçon). Le smoke n'a
+pas de ceinture (A neutre) ; aucune parcelle de bois de grosseur ≠ défaut n'y décompose dans
+la fenêtre ; le pommier n'y est attaqué qu'1 sem. à pression 0,010 → pourridié 0,001, sous la
+résolution du digest. Aucun re-figeage.
+
+**⚠ REMONTÉES / DÉCISIONS** :
+1. Prescription « lever le plafond » réalisée par une mémoire NEUVE (`pourriture_memory`)
+   plutôt qu'en déplafonnant `root_herbivory_memory` : le cap à 50 % reste celui du campagnol
+   (chevelu rongé), le pourridié du collet n'en a pas. Il ne réduit QUE l'eau perçue (pas
+   l'uptake du sol). Pas de save Python des plantes (aucun `save` côté moteur) : rien à
+   sérialiser au-delà du snapshot.
+2. Le parasite ne tue toujours personne sur `full` : le pommier, seul hôte, n'y est presque
+   jamais affaibli sur réseau (mycélium sous lui 0,02-0,05). Mécanique prouvée au banc.
+3. Faim d'azote : le bois de lisière immobilise N sur les plots de bord (`bois_fresh_at`,
+   `FAIM_N_TISSUS`) — écologiquement juste (effet BRF), à observer au F5 (plantes de bordure).
+4. La pile à bois ne lit pas la grosseur (maturation au taux du tissu) ; `empiler` y verse
+   la masse sans le diamètre — sans effet aujourd'hui.
+5. `serialize.py` 385 → 387 LDC (bande jaune, déjà au-dessus).
+
 ## Ajouts de Nico à l'accord (2026-10-22)
 - Bois mort VISIBLE au sol, dégradation en sprite à stades (② pont, ⑧ dessin).
 - Overdose : 2ᵉ psychédélique pendant l'effet → phrases de TOUS les êtres à chaque snapshot.
@@ -555,7 +626,11 @@ semaine (lecture transcendante via `sim/vision.palier_lu`), `parler`, overdose, 
 cf. §⑥ (pour ⑧ : `parler` une fois par entrée de survol ; `target.carpophore [r, c, slot]`).
 ⑦ FAIT (golden RE-FIGÉ `fecccded…`, pont inchangé 0.5.54) : nectar d'espèce + pollen vibré
 du bourdon, `FLOWER_REF` 0,75 ; D110 (i) non résolu (cf. §⑦ remontées).
-Prochain tronçon : ⑧ `08_vue_godot.md` (golden de départ **`fecccded…`**, pont 0.5.54).
+⑦bis FAIT (golden INTACT `fecccded…`, pont **0.5.55**) : bois de lisière continu (stock
+`full` 18 → 68 en 3 ans, concentré en lisière), décompo par grosseur (`diam_cm`), pourridié
+qui tue un hôte affaibli au banc (0 mort sur `full`, composition) ; cf. §⑦bis.
+Prochain tronçon : ⑧ `08_vue_godot.md` (golden de départ **`fecccded…`**, pont **0.5.55** :
+`litiere` index 7 = `bois_diam_cm` → brindille / branche / souche).
 Chaque tronçon met à jour sa ligne de statut, consigne ses mesures [n=…] et ses hashes golden.
 ## Liste fongique VALIDÉE (Q7)
 

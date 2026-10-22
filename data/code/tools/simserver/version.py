@@ -760,7 +760,12 @@ from __future__ import annotations
 #       clé `voix {tuile: {plantes, betes, champignons}}` au snapshot. (5) Pendant la
 #       vision, `player.appris` / carnet / encyclopédie se lisent au palier transcendant.
 #       Hors tick → golden NEUTRE.
-ENGINE_VERSION = "0.5.54"
+# 0.5.55 (LE SOL QUI RESPIRE ⑦bis, bois continu & parasite qui tue) : ajouts rétro-
+#       compatibles. (1) entrée `litiere` : + `bois_diam_cm` (index 7, diamètre moyen
+#       pondéré par la masse de la parcelle `bois`, 0.0 sans bois). (2) debug
+#       `memoires` : + `pourriture_memory` (pourridié du collet). Le moteur change
+#       (bois de lisière, décompo par grosseur, pourridié) mais pas la forme du reste.
+ENGINE_VERSION = "0.5.55"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

@@ -13,6 +13,11 @@ la perte (eau perçue ↓ → stress hydrique ↑, convalescence ↓).
   F. le canal agit : uptake ↓ et eau perçue ↓ à mémoire > 0 ;
   G. intégration (moteur, 104 sem., sol sec plafonné) : pommier affaibli sur réseau →
      mémoire racinaire ↑, stress hydrique ↑, déficit de vitalité cumulé plus fort que le témoin.
+⑦bis (le parasite peut tuer — pourridié du collet `pourriture_memory`) :
+  H. pourridié : monte sous pression, redescend sans pression ; eau perçue × (1 − m) ;
+  I. banc moteur sol HUMIDE (non plafonné), 156 sem. : hôte affaibli + réseau → MEURT
+     (squelette de bois) ; même hôte sans réseau → vit ; hôte vigoureux jamais attaqué ;
+  J. déterminisme (même semaine de mort).
 
 Déterministe (zéro RNG). Lancement depuis `data/code` : `python3 -m tests.test_parasite`.
 """
@@ -149,6 +154,74 @@ check("G. mémoire racinaire ↑ sous le parasite", a_mem > t_mem + 0.3,
 check("G. stress hydrique ressenti ↑", a_dm > t_dm, f"{t_dm:.2f} → {a_dm:.2f}")
 check("G. déclin : déficit de vitalité cumulé ↑ (convalescence freinée)", a_ns > t_ns,
       f"{t_ns:.1f} → {a_ns:.1f}")
+
+# H. pourridié (⑦bis)
+from sim.engine.racines import maj_pourriture
+ph = _plante(AppleTree, 0.4)
+maj_pourriture(ph, 0.5)
+m1 = ph.pourriture_memory
+maj_pourriture(ph, 0.5)
+check("H. pourridié monte sous pression", 0.0 < m1 < ph.pourriture_memory <= 1.0,
+      f"{m1:.3f} → {ph.pourriture_memory:.3f}")
+m2 = ph.pourriture_memory
+maj_pourriture(ph, 0.0)
+check("H. pourridié redescend sans pression (racines qui repoussent)",
+      ph.pourriture_memory < m2, f"{m2:.3f} → {ph.pourriture_memory:.3f}")
+ph.pourriture_memory = 0.75
+check("H. eau perçue × (1 − pourridié), sans plafond",
+      abs(eau_percue(ph, _eco(0.0), 2.0) - 0.5) < 1e-12, eau_percue(ph, _eco(0.0), 2.0))
+
+
+# I-J. banc moteur sur sol humide : le parasite TUE un hôte affaibli
+def _banc_mort(myc: float, vit: float, n: int = 156):
+    from world import Tile
+    from sim.engine import Engine
+    from sim.precroissance import pre_croitre
+    tile = Tile(tile_id="T0", soil_type="terre", origin_x_cm=0, origin_y_cm=0)
+    e = init_eco("T0", 6, 6, humidite=1.5, fertilite=1.0, microbiome=0.3,
+                 soil_type="terre", heterogene=True)
+    p = tile.add_plant(AppleTree, 2, 2)
+    p.age_years = 8
+    p.current_stage = len(AppleTree.growth_stages) - 1
+    pre_croitre(p, 42, 8)
+    p.vitalite = vit
+    gs = {"tiles": [tile], "eco": {"T0": e}, "scores": {}, "current_player": "j",
+          "week": 1, "log": []}
+    eng = Engine(gs)
+    orig = Engine._apply_uptake
+
+    def force(self, t, ec, *a, **k):        # réseau imposé, sol NON plafonné (humide)
+        for r in range(ec.rows):
+            for c in range(ec.cols):
+                ec.mycelium.set(r, c, myc)
+        return orig(self, t, ec, *a, **k)
+    Engine._apply_uptake = force
+    mort, attaque = None, False
+    try:
+        for w in range(n):
+            if p.vitalite > SEUIL_SAIN and pression_parasite(p, e) > 0.0:
+                attaque = True             # garde-fou : un hôte sain n'est jamais attaqué
+            eng.tick_semaine()
+            gs["log"].clear()
+            if not p.is_alive:
+                mort = w + 1
+                break
+    finally:
+        Engine._apply_uptake = orig
+    return mort, attaque, p
+
+
+mort_a, att_a, pa = _banc_mort(0.4, 0.6)
+mort_t, _, pt = _banc_mort(0.0, 0.6)
+check("I. hôte affaibli + réseau 0,4 → MEURT en quelques années", mort_a is not None,
+      f"sem. {mort_a}, pourridié {pa.pourriture_memory:.2f}")
+check("I. sa mort laisse un squelette de bois (boucle → saprophytes)",
+      pa.morte and pa.bois_restant > 0.0 and pa.bois_diam_cm > 1.0,
+      f"bois {pa.bois_restant:.2f}, Ø {pa.bois_diam_cm:.1f} cm")
+check("I. même hôte SANS réseau → vit", mort_t is None and pt.pourriture_memory == 0.0,
+      f"vitalité {pt.vitalite:.2f}")
+check("I. un hôte sain n'est jamais attaqué (pression 0 au-dessus de SEUIL_SAIN)", not att_a)
+check("J. déterminisme : même semaine de mort", _banc_mort(0.4, 0.6)[0] == mort_a)
 
 n_ok = sum(ok for _, ok in _results)
 print(f"\n=== test_parasite : {n_ok}/{len(_results)} OK ===")

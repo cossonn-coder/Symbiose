@@ -48,6 +48,7 @@ from .croissance import CroissanceMixin
 from .mortalite import MortaliteMixin
 from .decompo import DecompoMixin, deposer_bois_tombe
 from .branches import mort_des_branches
+from .ceinture_bois import bois_de_lisiere
 from .floraison import FloraisonMixin
 from .butineurs import ButineurMixin
 from .anemophilie import AnemophilieMixin
@@ -453,6 +454,11 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
             #     neige, bois sec des arbustes → litière `bois` (même relais que 9c).
             log += mort_des_branches(tile, eco, saison, week, week_in_year, seed,
                                      gust_peak, is_neige)
+            # 9c-quater. La LISIÈRE boisée lâche du bois mort sur les plots de bord
+            #     (D111 ⑦bis) : flux continu, plus fort l'automne-hiver et en tempête.
+            #     Sans ceinture (golden/smoke) → no-op strict.
+            log += bois_de_lisiere(tile, eco, self.game_state.get("ceinture"), saison,
+                                   seed, week, vent_force, gust_peak)
 
             # 9b. Mortalité réaliste — sénescence + santé dynamique (D27)
             log += self._tick_senescence_health(tile, eco)

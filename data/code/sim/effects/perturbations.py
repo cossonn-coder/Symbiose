@@ -29,6 +29,7 @@ from fields import (_hash_noise, MORTALITY_RATE, climate_stress,
 # `sim/vigueur_plante.py` le fait pour `MICROBE_EFFECT_REF` — pas via `fields`
 # (le ré-export plat ne l'expose pas ; on va droit au sous-paquet propriétaire).
 from fields.ecofields import MICROBE_RHYTHM_REF
+from fields.ecofields.litiere import diam_pondere   # grosseur du squelette (⑦bis)
 from .mutations import ReduceHealth, Mutation
 from .resolution import apply_mutations
 
@@ -97,6 +98,11 @@ def deposer_mort(plant: PlantInstance, eco) -> float:
     plant.morte = True
     plant.stade_mort = "seche"
     plant.bois_restant = biomass * fb
+    # Grosseur du squelette (⑦bis) : diamètre moyen pondéré par la masse de sa
+    # structure, figé à la mort (le bois mort ne grossit plus) → lu à chaque
+    # fragmentation sans recalcul.
+    if fb > 0.0:
+        plant.bois_diam_cm = diam_pondere(plant.segments)
     plant.semaines_mort = 0
     return mous
 

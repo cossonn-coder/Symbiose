@@ -207,6 +207,7 @@ class SerializeMixin:
                     "infection_memory": round(p.infection_memory, 3),
                     "wind_memory": round(p.wind_memory, 3),
                     "root_herbivory_memory": round(p.root_herbivory_memory, 3),
+                    "pourriture_memory": round(p.pourriture_memory, 3),
                     "stress_memory": round(p.stress_memory, 3),
                 }
                 base["expression"] = {g: round(f, 3)
@@ -426,6 +427,8 @@ class SerializeMixin:
             # `diffus`, masse = Σ des parcelles de surface (densité ∝ masse côté
             # vue). Les plots sans litière de surface sont OMIS (liste creuse).
             # 0.5.51 : + `bois_masse, bois_age_sem` (index 5-6, 0.0 sans bois).
+            # 0.5.55 (⑦bis) : + `bois_diam_cm` (index 7, 0.0 sans bois) — la vue ⑧
+            # dessine brindille / branche / souche selon la grosseur.
             # `age_sem` (rendu feuillage ⑥, 0.5.6) = ÂGE MOYEN pondéré par la masse
             # des parcelles de surface : proxy d'ÉTAT DE DÉCOMPO déjà calculé par le
             # moteur (`Parcelle.age_sem`, semaines depuis dépôt) — la vue assombrit/
@@ -453,7 +456,8 @@ class SerializeMixin:
                     plots.append([r, c, dominant.tissu,
                                   round(total, 4), round(age_moy, 3),
                                   round(bois.masse, 4) if bois else 0.0,
-                                  round(bois.age_sem, 3) if bois else 0.0])
+                                  round(bois.age_sem, 3) if bois else 0.0,
+                                  round(bois.diam_cm, 2) if bois else 0.0])
             litiere[tile.tile_id] = plots
             # Phéromone d'alarme apienne (⑦, §J, 0.4.1) : liste CREUSE des plots en
             # alarme `[r, c, intensite]` (foyers > 0 seulement). Godot lit l'intensité

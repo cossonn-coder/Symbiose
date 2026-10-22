@@ -15,6 +15,7 @@ from __future__ import annotations
 from .constants import *          # constantes de calibration écologique
 from .litiere import *            # Parcelle, Structure, TISSU, MATUR_*, COLONISATION_*…
 from .litiere import _fusion_parcelle, _lisser_ages   # helpers privés (hors import *)
+from .litiere import BOIS_DIAM_DEFAUT, facteur_grosseur   # grosseur du bois (⑦bis)
 from .nutriments import split_miner, cec_norm_at, leach_factor, dispo   # chimie N/P/K pure
 from .thermique import microbe_clim_factor as _microbe_clim_factor      # cloche T × humidité (météo→champs ④)
 
@@ -44,16 +45,18 @@ class MatiereOrganiqueMixin:
                     for row in self.litiere for cell in row for p in cell)
         return total / n
 
-    def deposer_litiere(self, r: int, c: int, tissu: str, masse: float) -> None:
+    def deposer_litiere(self, r: int, c: int, tissu: str, masse: float,
+                        diam_cm: float = BOIS_DIAM_DEFAUT) -> None:
         """Point d'entrée UNIQUE pour tout écrivain de matière fraîche.
 
         Fusion par tissu (`_fusion_parcelle`, §1.1) : masse cumulée, `age_sem`
-        moyenné par la masse (le dépôt neuf, d'âge 0, rajeunit le tas). No-op si
-        `masse ≤ 0`.
+        moyenné par la masse (le dépôt neuf, d'âge 0, rajeunit le tas). `diam_cm`
+        (⑦bis) = grosseur du bois déposé, moyennée de même ; ignorée hors `bois`.
+        No-op si `masse ≤ 0`.
         """
         if masse <= 0.0:
             return
-        _fusion_parcelle(self.litiere[r][c], tissu, masse)
+        _fusion_parcelle(self.litiere[r][c], tissu, masse, diam_cm)
 
     def retirer_litiere(self, r: int, c: int, tissu: str, masse: float) -> float:
         """Retire (au plus) `masse` de litière du `tissu` donné d'un plot — miroir
@@ -185,6 +188,10 @@ class MatiereOrganiqueMixin:
                     # plante (philo #2). at_plot ∈ [0,1], zéro RNG (philo #3).
                     if p.tissu == "bois":
                         d *= 1.0 + ALPHA_SAPRO * self.mycelium.at_plot(r, c)
+                        # GROSSEUR (⑦bis) : gros bois lent, brindille rapide. Le
+                        # diamètre par défaut garde le taux historique EXACT.
+                        if p.diam_cm != BOIS_DIAM_DEFAUT:
+                            d *= facteur_grosseur(p.diam_cm)
                     p.masse  -= d
                     p.age_sem += 1.0
                     fresh_humif += d * humif

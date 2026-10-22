@@ -23,7 +23,7 @@ from fields.ecofields.constants import (T_PLANTE_ALPHA, ROSEE_SURFACE_REF,
 from plants import EXPR_GAIN, EXPR_MIN, EXPR_MAX, TAU_UP, TAU_DOWN
 from .calendrier import saison_de
 from .transpiration import facteur_transpiration
-from .racines import eau_percue, pression_parasite
+from .racines import eau_percue, pression_parasite, maj_pourriture
 
 # Sémiologie ② (docs/narration/semiologie/conception_semiologie_foliaire.md §2.5) — facteur de décroissance
 # des marques de symptômes ÉVÉNEMENTIELS par tick de plante. Couplé au gain
@@ -396,8 +396,12 @@ class CroissanceMixin:
             # signal 0 → mémoire reste 0 → uptake bit-identique → golden NEUTRE.
             # + PARASITE DE FAIBLESSE (D111 ④) : un champignon parasite du registre
             # pourrit les racines d'un hôte DÉJÀ affaibli (0 sur hôte sain / non listé).
+            # ⑦bis : la même pression CUMULE le pourridié du collet (sans plafond,
+            # `maj_pourriture`) → un hôte affaibli attaqué durablement peut mourir.
+            pression = pression_parasite(plant, eco)
+            maj_pourriture(plant, pression)
             rong = min(1.0, eco.category_density("herbivore_vertebre", r, c)
-                       + pression_parasite(plant, eco))
+                       + pression)
             plant.root_herbivory_memory += (rong - plant.root_herbivory_memory) * ROOT_HERBIVORY_MEMORY_LERP
             plant.root_herbivory_memory  = max(0.0, min(1.0, plant.root_herbivory_memory))
             # Dynamique d'EXPRESSION plastique (§2.3) : chaque gène adaptogène glisse

@@ -15,6 +15,7 @@ from fields import (T_SECHE, FRAG_RATE, NECROMASS_PER_CM, ABSCISSION_FRAC,
                     ABSCISSION_BASE, ABSCISSION_JITTER, ABSCISSION_MIN,
                     ABSCISSION_MAX, FRUIT_MASSE, FRUIT_DMAT, MATURITE_CHUTE)
 from fields.ecofields.constants import BOIS_MORT_PAR_CM3   # D111 ② (sous-paquet propriétaire)
+from fields.ecofields.litiere import BOIS_DIAM_DEFAUT      # grosseur inconnue (⑦bis)
 from constants import PLOT_CM
 from sim.effects.perturbations import frac_bois_mort
 
@@ -79,7 +80,7 @@ def deposer_bois_tombe(plant, tombes, eco) -> float:
         my = s.base[1] + s.dir[1] * s.length_cm * 0.5
         r = min(eco.rows - 1, max(0, int(my // PLOT_CM)))
         c = min(eco.cols - 1, max(0, int(mx // PLOT_CM)))
-        eco.deposer_litiere(r, c, "bois", masse)
+        eco.deposer_litiere(r, c, "bois", masse, s.thickness_cm)   # grosseur ⑦bis
         total += masse
     return total
 
@@ -112,7 +113,8 @@ class DecompoMixin:
             if plant.bois_restant > 1e-9:
                 d = min(plant.bois_restant,
                         plant.bois_restant * FRAG_RATE * eco.decomp_speed(r, c))
-                eco.deposer_litiere(r, c, "bois", d)
+                eco.deposer_litiere(r, c, "bois", d,
+                                    plant.bois_diam_cm or BOIS_DIAM_DEFAUT)
                 plant.bois_restant -= d
                 if d > 1e-4:
                     log.append(f"    🪵 Fragmentation +{d:.3f} bois @{plant.position} "

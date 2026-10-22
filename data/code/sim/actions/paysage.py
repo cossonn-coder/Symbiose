@@ -71,6 +71,9 @@ BOIS_COUPE_PAR_CM = 0.002
 # sur le jardin, le tronc reste dehors). On ne charrie pas le bois au milieu du
 # potager — c'est au joueur d'aller le chercher (`empiler_bois`, `broyer`).
 BOIS_PORTEE_CM = 100.0
+# Grosseur du bois de coupe (⑦bis) : houppier et rémanents (le tronc reste dehors),
+# branches de 5-8 cm → décompo de plusieurs années.
+BOIS_COUPE_DIAM_CM = 6.0
 
 # Marqueur de log, style des marqueurs du tick (🌱 🪦 🍂 …). Le ledger des voix le
 # consomme HORS tick (`sim/journal.consigner`) ; le parseur de `sim/evenements.py`
@@ -120,7 +123,7 @@ def _deposer_bois(game_state: dict, cote: int, masse_contact: float) -> float:
                                          (tile.origin_x_cm, tile.origin_y_cm),
                                          BOIS_PORTEE_CM):
             masse = masse_contact * poids
-            eco.deposer_litiere(r, c, "bois", masse)
+            eco.deposer_litiere(r, c, "bois", masse, BOIS_COUPE_DIAM_CM)
             total += masse
     return total
 

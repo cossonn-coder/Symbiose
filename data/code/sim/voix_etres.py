@@ -111,7 +111,8 @@ def besoins_plante(plant, tile, eco, saison, ctx: dict | None = None) -> list[tu
         out.append((_ramp(len(rivaux), 2, 6), "concurrence", {"voisin": fort.name}))
     rong = S.rongeur_racinaire(plant, eco, saison)
     out.append((rong, "campagnol", {}) if rong > 0
-               else (_ramp(plant.root_herbivory_memory, 0.2, 0.8), "parasite", {}))
+               else (_ramp(max(plant.root_herbivory_memory, plant.pourriture_memory),
+                           0.2, 0.8), "parasite", {}))
     if eco.vent is not None:
         out.append((_ramp(eco.vent.at_plot(*plant.plot_foyer), 0.9, 1.5), "vent", {}))
     return out

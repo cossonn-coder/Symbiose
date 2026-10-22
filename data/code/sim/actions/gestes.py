@@ -23,6 +23,7 @@ from sim.growth import (atteindre_segment,   # seam de perturbation §F (sim→s
                         f_lignification, INTENSITE_PIED, SEUIL_DEGAT, COUPE_NETTE)  # calibrage écrasement (volet 2)
 from sim.effects import deposer_mort   # mort → squelette persistant (②B), point d'entrée unique
 from fields.ecofields import BOIS_PAR_CM, ECRASER_FRAG_BOOST   # litière `bois` (taille/écimage) + boost fragmentation (②)
+from fields.ecofields.litiere import diam_pondere, BOIS_DIAM_DEFAUT   # grosseur du bois déposé (⑦bis)
 from fields.ecofields import VITALITE_STEP   # pas d'érosion de vitalité (écimage NET, sprint santé ①)
 from fields.ecofields import BECHAGE_MALUS, GRELINETTE_GAIN   # deltas structure du sol des gestes (physico-chimie ⑧)
 from fields.ecofields import BECHAGE_MYCELIUM_MALUS   # quantum de réseau fongique cassé par le bêchage (mycélium ⑤, event-driven)
@@ -305,7 +306,8 @@ def tailler(game_state: dict, player: str, plant, eco, *, cible: str = "apex",
     if seg_id is not None:
         removed = atteindre_segment(plant, seg_id, intensite=1.0)   # ≥ COUPE_NETTE → écimage du sous-arbre ciblé
         masse_bois = sum(s.length_cm for s in removed) * BOIS_PAR_CM
-        eco.deposer_litiere(*plant.position, "bois", masse_bois)    # no-op si masse_bois ≤ 0
+        eco.deposer_litiere(*plant.position, "bois", masse_bois,    # no-op si masse_bois ≤ 0
+                            diam_pondere(removed))                   # grosseur ⑦bis
     gain(game_state, player, HARVEST_GAIN_FULL * maturite(plant) * GAIN_TAILLE_RATIO)
     return True
 
@@ -376,7 +378,8 @@ def arracher(game_state: dict, player: str, plant, eco, *, cible: str = "apex",
     if seg_id is not None:
         removed = atteindre_segment(plant, seg_id, intensite=1.0)   # NET → écimage du sous-arbre
         masse_bois = sum(s.length_cm for s in removed) * BOIS_PAR_CM
-        eco.deposer_litiere(*plant.position, "bois", masse_bois)    # no-op si masse_bois ≤ 0
+        eco.deposer_litiere(*plant.position, "bois", masse_bois,    # no-op si masse_bois ≤ 0
+                            diam_pondere(removed))                   # grosseur ⑦bis
     plant.erode(VITALITE_STEP)                # déchirure manuelle → stress cicatriciel (différenciateur main/outil)
     return True
 
@@ -459,7 +462,8 @@ def ecraser_plante(game_state: dict, player: str, plant, eco, *,
             plant.stade_mort = "couchee"
         chute = plant.bois_restant * ECRASER_FRAG_BOOST
         if chute > 0.0:
-            eco.deposer_litiere(*plant.position, "bois", chute)
+            eco.deposer_litiere(*plant.position, "bois", chute,
+                                plant.bois_diam_cm or BOIS_DIAM_DEFAUT)
             plant.bois_restant -= chute
         return True
     cls = plant.plant_class
@@ -473,7 +477,8 @@ def ecraser_plante(game_state: dict, player: str, plant, eco, *,
     # ② : un écimage NET casse du bois au sol (même logique que `tailler` ; le coup
     # de pied qui brise une branche la met en litière). Vide en régime DOUX/collet.
     masse_bois = sum(s.length_cm for s in removed) * BOIS_PAR_CM
-    eco.deposer_litiere(*plant.position, "bois", masse_bois)   # no-op si masse_bois ≤ 0
+    eco.deposer_litiere(*plant.position, "bois", masse_bois,   # no-op si masse_bois ≤ 0
+                        diam_pondere(removed))                  # grosseur ⑦bis
     if intensite >= COUPE_NETTE and (1.0 - cls.stimulation_ecrasement) >= SEUIL_DEGAT:
         plant.erode(VITALITE_STEP)              # NET sur une espèce qui n'en profite pas → sentier
     return True

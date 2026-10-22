@@ -382,7 +382,7 @@ def _heriter_tuile(eco: EcoFields, tile_eco: EcoFields, tile_rc: tuple) -> None:
     eco.om_active.set(0, 0, tile_eco.om_active.at_plot(sr, sc))
     eco.om_stable.set(0, 0, tile_eco.om_stable.at_plot(sr, sc))
     # Litière : copie profonde des parcelles du plot source (jamais le même objet).
-    eco.litiere[0][0] = [Parcelle(p.tissu, p.masse, p.age_sem)
+    eco.litiere[0][0] = [Parcelle(p.tissu, p.masse, p.age_sem, p.diam_cm)
                          for p in tile_eco.litiere[sr][sc]]
 
 

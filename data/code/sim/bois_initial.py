@@ -26,19 +26,23 @@ BRANCHE         = (0.4, 1.0)     # masse d'une branche tombée
 P_SOUCHE        = 0.35           # part des pièces qui sont des souches
 AGE_MAX         = 150            # semaines : la plus vieille pièce (~3 ans au sol)
 PERTE_AGE       = 0.5            # part de masse déjà perdue à AGE_MAX
+# Grosseurs (cm, ⑦bis) : la décompo du bois dépend de son diamètre.
+DIAM_SOUS_COURONNE = (0.5, 3.0)  # brindilles et petites branches tombées
+DIAM_SOUCHE        = (15.0, 40.0)
+DIAM_BRANCHE       = (2.0, 8.0)
 
 
 def _entre(bornes: tuple, h: float) -> float:
     return bornes[0] + (bornes[1] - bornes[0]) * h
 
 
-def _poser(eco, r: int, c: int, masse: float, age: float) -> float:
-    """Dépose `masse` de bois d'âge `age` (fusion pondérée par la masse, comme
-    `_fusion_parcelle`, mais avec un âge non nul)."""
+def _poser(eco, r: int, c: int, masse: float, age: float, diam: float) -> float:
+    """Dépose `masse` de bois d'âge `age` et de diamètre `diam` (fusion pondérée par
+    la masse, comme `_fusion_parcelle`, mais avec un âge non nul)."""
     masse *= 1.0 - PERTE_AGE * age / AGE_MAX
     if masse <= 0.0:
         return 0.0
-    eco.deposer_litiere(r, c, "bois", masse)
+    eco.deposer_litiere(r, c, "bois", masse, diam)
     for p in eco.litiere[r][c]:
         if p.tissu == "bois":
             # le dépôt vient d'être fusionné à l'âge 0 : on lui rend son âge
@@ -67,7 +71,8 @@ def poser_bois_initial(tiles, ecos: dict, seed: int) -> float:
                         continue
                     m = _entre(SOUS_COURONNE, _hash_noise(seed, ti, r, c))
                     age = AGE_MAX * _hash_noise(seed, ti + 101, r, c)
-                    total += _poser(eco, r, c, m, age)
+                    d = _entre(DIAM_SOUS_COURONNE, _hash_noise(seed, ti + 203, r, c))
+                    total += _poser(eco, r, c, m, age, d)
         # 2. Pièces isolées (souche ou branche).
         n = PIECES_PAR_TUILE[0] + int(_hash_noise(seed, ti, 977, 1)
                                       * (PIECES_PAR_TUILE[1] - PIECES_PAR_TUILE[0] + 1))
@@ -77,5 +82,6 @@ def poser_bois_initial(tiles, ecos: dict, seed: int) -> float:
             souche = _hash_noise(seed, ti, k, 13) < P_SOUCHE
             m = _entre(SOUCHE if souche else BRANCHE, _hash_noise(seed, ti, k, 14))
             age = AGE_MAX * _hash_noise(seed, ti, k, 15)
-            total += _poser(eco, r, c, m, age)
+            d = _entre(DIAM_SOUCHE if souche else DIAM_BRANCHE, _hash_noise(seed, ti, k, 16))
+            total += _poser(eco, r, c, m, age, d)
     return total
