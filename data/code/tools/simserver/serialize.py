@@ -27,9 +27,11 @@ from sim import maitrise as M
 # Échantillonneur de vie macro (tranche 6·B) : fonction PURE et déterministe
 # densité → entités (fields/population.py §3). L'échantillonnage se fait CÔTÉ
 # SERVEUR — la vue n'a pas besoin de _hash_noise (kickoff t6 §4).
-from fields.population import peindre_presence, sample_carpophores
-from sim.champignon_role import (racines_par_plot, role_carpophore,   # D110 b + D111 ③
+from fields.population import peindre_presence
+from sim.champignon_role import (role_carpophore,   # D110 b + D111 ③
                                  pluie_semaine_precedente)   # rôle carpophore (D110 b)
+from sim.champignon_manger import carpophores_tuile   # carpophores visibles non mangés (⑥)
+from .vision_cmds import bloc_vision, bloc_voix   # vision du jardinier (sol qui respire ⑥)
 # LOD des émetteurs d'ombre (D67, sprint perf-lod-ombre ③) : on relit le SEUIL de
 # pouvoir ombrageant pour DÉRIVER, par plante, si elle émet une ombre (miroir exact
 # de la métrique de fields/light.py:compute). Lecture pure d'une constante de module
@@ -359,8 +361,10 @@ class SerializeMixin:
             # déduite de la niche (bois / humus / racines d'hôte) → 7ᵉ champ = clé
             # d'espèce (`fields/fongique.REGISTRE_FONGIQUE`). Racines indexées une
             # fois par tuile, seulement les semaines qui suivent une pluie.
-            racines = racines_par_plot(tile.plants) if pluie_prec else {}
-            carpos = sample_carpophores(eco, gs["seed"], week_in_year, pluie_prec, racines)
+            # SOL QUI RESPIRE ⑥ : échantillonnage factorisé (`sim/champignon_manger`,
+            # même source que le geste `manger`) — moins les carpophores MANGÉS cette
+            # semaine (mémoire de perception, jamais lue par le tick).
+            carpos, racines = carpophores_tuile(gs, tile, pluie_prec)
             carpophores[tile.tile_id] = [
                 [k.row, k.col, round(k.x_frac, 3), round(k.y_frac, 3),
                  round(k.densite, 3), role_carpophore(eco, racines, k.row, k.col),
@@ -738,7 +742,8 @@ class SerializeMixin:
                            "gestes_debloques": gestes_ouverts,
                            "debloques_recents": recents,
                            "palette": palette_layout,
-                           "appris": signes_appris(gs, player)},
+                           "appris": signes_appris(gs, player),
+                           "vision": bloc_vision(gs, player)},
                 "perf": perf,
                 "plants": plants, "sprites": sprites, "foragers": foragers,
                 "carpophores": carpophores,
@@ -758,6 +763,11 @@ class SerializeMixin:
                 "ombre_pose": ombre_pose_by_tile,
                 "ciel": ciel,
                 "containers": self._containers_snapshot(gs, saison)}
+        # OVERDOSE (sol qui respire ⑥) : les phrases de TOUS les êtres, à chaque
+        # snapshot, le temps de l'effet. Clé ABSENTE sinon (coût nul hors overdose).
+        voix = bloc_voix(gs, player, sprites, foragers, carpophores)
+        if voix is not None:
+            snap["voix"] = voix
         # Ceinture périphérique (PÉRIPHÉRIE ⑦, D73) : bloc OPT-IN de 4 secteurs
         # (`ceinture_block`, cf. peripherie_route). Présent UNIQUEMENT quand le
         # monde porte une ceinture → un monde sans périphérie (smoke, bancs

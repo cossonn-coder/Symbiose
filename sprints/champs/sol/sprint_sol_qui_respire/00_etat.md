@@ -18,7 +18,7 @@ suivants : budget perf mesuré **par rapport à ①** ; ne pas tenter de résorb
 | ③ | `03_regne_fongique.md` | INTACT `df6ebf04…` | FAIT — ⚠ 8 espèces/13 sur `full` [3 graines] (composition) |
 | ④ | `04_parasite_faiblesse.md` | INTACT `df6ebf04…` (hôte affaibli attaqué 1 sem., dérive sous la résolution du digest) | FAIT — ⚠ aucune mort d'hôte (trappe de faiblesse seule) |
 | ⑤ | `05_voix_champignons.md` | INTACT `df6ebf04…` | FAIT — pont 0.5.53 ; clé générique `champignon` retirée |
-| ⑥ | `06_manger_vision.md` | neutre | à faire |
+| ⑥ | `06_manger_vision.md` | INTACT `df6ebf04…` | FAIT — pont 0.5.54 ; overdose +75 ms/snapshot [n=1 run, `full`] |
 | ⑦ | `07_nectar_espece.md` | re-figé si floraison au smoke | à faire |
 | ⑧ | `08_vue_godot.md` | intact | à faire |
 
@@ -351,6 +351,50 @@ Banc contrôlé (pommier pré-crû 8 ans, vitalité 0,6, mycélium et sol impos�
 4. Le survol n'envoie pas encore le lieu → notes « au jardin » (le pont accepte
    `tile`/`x_cm`/`y_cm` : à brancher au ⑧ si voulu).
 
+## ⑥ Manger un champignon et la vision — FAIT (2026-10-22), golden INTACT `df6ebf04…`, pont **0.5.54**
+
+**Livré** :
+- `sim/champignon_manger.py` (NOUVEAU) : `carpophores_tuile` (source UNIQUE snapshot +
+  geste, moins les mangés de la semaine : `game_state["carpophores_manges"]`, remis à
+  zéro au changement de semaine) ; `manger_carpophore` : comestible → +`HARVEST_GAIN_FULL`
+  × densité/`CARPO_DENS_REF` ; vénéneux → −0,5 × Vigueur max ; mortel → −0,9 × max
+  (plancher 0, pas de mort) ; psychédélique → vision ; tue-mouches → vision + perte ;
+  immangeable → refus sans consommation. Message sans nom tant que l'espèce n'est pas nommée.
+- `sim/vision.py` (NOUVEAU) : `game_state["vision"][joueur] = {debut, fin, overdose,
+  survols}` (JSON pur). Durée : semaine où l'on mange + 1 semaine pleine (`week ≤ fin`).
+  `palier_lu` = transcendant pendant l'effet, branché SEULEMENT dans les lecteurs :
+  `carnet._registre`, `encyclopedie_lire` (niveau ; la découverte reste au vrai palier →
+  pas de fiche créée), `signes.signe_appris`/`faune_apprise`, `champignons_nommes`.
+  `maitrise.palier` (Vigueur max, magazine, extension) jamais touché. Clôture
+  `clore_si_echue` dans `cmd_step_week` (hors tick) : survols ≥ 3 → +1 palier EXACT
+  (crédit ÷ spillover), plafond 4, inconnue → découverte ; `player.vision.reste` notifié une fois.
+- `sim/voix_etres.py` + `sim/voix_etres_corpus.py` (NOUVEAUX) : besoins mesurés
+  (plante : mémoires sécheresse/asphyxie/ombre + voisin qui fait de l'ombre, Liebig N/P/K,
+  pH/chlorose, allélopathie effective, concurrence racinaire + rival, campagnol/parasite,
+  ravageurs, vent ; bête : ressource, famille florale/proie, abri `habitat_fn`, prédateurs,
+  humidité des hygrophiles ; champignon : rôle b/r/h) → ≤ 3 phrases, variante par hash.
+- Pont : commande `parler` (`tools/simserver/vision_cmds.py`, NOUVEAU), `manger` +
+  `target.carpophore [r, c, slot]` (`champignon_route.py`, NOUVEAU, aiguillé dans
+  `plante_route`), `player.vision`, clé `voix` en overdose seulement.
+- Tests : `tests/test_vision.py` 37/37 (NOUVEAU) ; versions 0.5.54 dans tests/simserver.
+
+**Mesure overdose** [n=1 run, `full` sem. 61, 509 plantes, médiane de 5 snapshots] :
+snapshot 80 → 154 ms (+75 ms) ; avant mémoïsation du voisinage par tuile : +198 ms.
+
+**⚠ DÉCISIONS / PRÉMISSES** :
+1. Palette : `manger` reste famille « plante » (le kickoff pointait `palette.py`) ;
+   l'aiguillage carpophore se fait sur la FORME du target (patron `ecraser`/`creuser`)
+   pour ne pas casser la cohérence des macros.
+2. `parler` n'est pas strictement read-only : il compte le survol (seule écriture,
+   tranche vision). Un survol = un appel → la vue ⑧ doit appeler `parler` UNE fois par
+   entrée de survol (pas par frame). Seuil 3 survols (knob `SEUIL_SURVOLS`).
+3. Pendant la vision l'index de l'encyclopédie n'est PAS élargi (on lit complètes les
+   fiches déjà découvertes) ; l'info-bulle nomme TOUT (bêtes et champignons, comestibilité).
+4. Pertes via `vigueur.spend` → masquées par « Vigueur infinie » (ON par défaut).
+5. Champignons parlent aussi (rôle local), pour que leur survol compte dans « ce qui reste ».
+6. `serialize.py` 380 → 385 LDC (bande jaune, déjà au-dessus avant ⑥).
+7. Dette « voix écrites à la main » = D113 (déjà ouverte, rien à ajouter).
+
 ## Ajouts de Nico à l'accord (2026-10-22)
 - Bois mort VISIBLE au sol, dégradation en sprite à stades (② pont, ⑧ dessin).
 - Overdose : 2ᵉ psychédélique pendant l'effet → phrases de TOUS les êtres à chaque snapshot.
@@ -451,8 +495,10 @@ après la pluie ; seules 8 sortent sur `full` (pas d'hôte mycorhizien, cf. §�
 (canal racinaire enfin ressenti, campagnol compris) ; ne tue pas (cf. §④ remontée 1).
 ⑤ FAIT (golden INTACT `df6ebf04…`, pont **0.5.53**) : 13 champignons avec leurs 5 voix,
 clé par espèce de bout en bout (survol C# compris) ; cf. §⑤.
-Prochain tronçon : ⑥ `06_manger_vision.md` (golden de départ **`df6ebf04…`**, pont 0.5.53 ;
-comestibilité lisible dans `fields/fongique` + `FICHES_CHAMPIGNON[...]["comestibilite"]`).
+⑥ FAIT (golden INTACT `df6ebf04…`, pont **0.5.54**) : manger un carpophore, vision d'une
+semaine (lecture transcendante via `sim/vision.palier_lu`), `parler`, overdose, palier durable ;
+cf. §⑥ (pour ⑧ : `parler` une fois par entrée de survol ; `target.carpophore [r, c, slot]`).
+Prochain tronçon : ⑦ `07_nectar_espece.md` (golden de départ **`df6ebf04…`**, pont 0.5.54).
 Chaque tronçon met à jour sa ligne de statut, consigne ses mesures [n=…] et ses hashes golden.
 ## Liste fongique VALIDÉE (Q7)
 

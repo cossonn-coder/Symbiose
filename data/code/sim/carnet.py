@@ -30,6 +30,7 @@ recopiée fidèlement du doc, pas de la logique. Ne pas réécrire les gabarits.
 from __future__ import annotations
 
 from sim import maitrise
+from sim.vision import palier_lu   # vision (sol qui respire ⑥) : lecture transcendante le temps de l'effet
 from sim.signes_corpus import SIGNES
 from sim.champignon_encyclo import FICHES_CHAMPIGNON
 
@@ -357,8 +358,9 @@ def _seuil(game_state: dict, player: str) -> int:
 def _registre(game_state: dict, player: str, concept: str) -> str:
     """Registre d'une entrée selon le palier du CONCEPT (révélation rétroactive,
     décision B) : interprétatif dès que `palier(concept) ≥ seuil`, descriptif
-    sinon. Lecture pure de `maitrise.palier` (ne crée aucune clé)."""
-    if maitrise.palier(game_state, player, concept) >= _seuil(game_state, player):
+    sinon. Lecture pure de `maitrise.palier` (ne crée aucune clé) — via
+    `vision.palier_lu` : pendant une vision (⑥), tout se lit interprétatif."""
+    if palier_lu(game_state, player, concept) >= _seuil(game_state, player):
         return _I
     return _D
 

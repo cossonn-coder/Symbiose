@@ -36,6 +36,7 @@ from bancs import (BANCS, BANC_WEEK_DEPART, BANC_SEED, BANC_POST_INIT,
 
 from .version import ENGINE_VERSION
 from .maitrise_pont import observer_apres_tick  # chaîne de maîtrise après tick (voix ①)
+from sim.vision import clore_si_echue as clore_vision   # fin de vision (sol qui respire ⑥)
 from . import perf   # capture des pires ticks + dump diagnostique (demande Nico 2026-07-05)
 
 # Kit de démarrage déposé dans la banque-joueur, UNIQUEMENT en config "full" (le
@@ -317,6 +318,10 @@ class CommandsMixin:
         # de le vider. Opt-in joueur ici (même principe que `consigner`/Vigueur) →
         # golden intact (le moteur tourne sans serveur, ces hooks jamais appelés).
         observer_apres_tick(gs, gs["current_player"], gs["log"])
+        # Fin de VISION (sol qui respire ⑥) : si l'effet est échu, ce que le jardinier
+        # a longuement survolé lui laisse un palier durable. Hors tick, opt-in (aucune
+        # vision → no-op) → golden intact.
+        clore_vision(gs, gs["current_player"])
         # DRIVER des quêtes (D79 ⑤) : HORS tick, après la simulation — arrivée des
         # lettres mûres, clôture des quêtes d'état comblées, versement des récompenses.
         # Opt-in strict (aucune lettre mûre → no-op) ; le golden tourne hors serveur →

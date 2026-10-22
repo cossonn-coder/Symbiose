@@ -24,6 +24,7 @@ from __future__ import annotations
 
 from fields.fongique import REGISTRE_FONGIQUE
 from sim import journal, maitrise, pages
+from sim.vision import palier_lu   # vision (⑥) : nom lu le temps de l'effet
 from sim.carnet import SEUIL_CARNET, _seuil
 from sim.champignon_encyclo import FICHES_CHAMPIGNON
 
@@ -80,9 +81,10 @@ def crediter_concept(game_state: dict, player: str, cle: str, decouverte: bool,
 def champignons_nommes(game_state: dict, player: str) -> dict:
     """`{clé: {nom, comestibilite}}` des espèces NOMMÉES (palier ≥ seuil du carnet,
     option « anticipé » comprise — même règle que les bêtes), ordre du registre.
+    Pendant une vision (⑥, `palier_lu`), toutes sont nommées le temps de l'effet.
     LECTURE PURE ; sans couche maîtrise → `{}`."""
     seuil = _seuil(game_state, player)
     return {cle: {"nom": esp.nom,
                   "comestibilite": FICHES_CHAMPIGNON[cle]["comestibilite"]}
             for cle, esp in REGISTRE_FONGIQUE.items()
-            if maitrise.palier(game_state, player, cle) >= seuil}
+            if palier_lu(game_state, player, cle) >= seuil}

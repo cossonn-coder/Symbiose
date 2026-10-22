@@ -21,6 +21,7 @@ from __future__ import annotations
 
 from sim import actions as A      # façades des 7 gestes sur plante (foi métier)
 from sim import quetes as Q       # hook de comptage des quêtes joueur (D79 ①)
+from .champignon_route import route_carpophore   # `manger` un carpophore (sol qui respire ⑥)
 
 VERBES = ("manger", "recolter", "deraciner", "tailler", "couper",
           "pincer", "arracher")
@@ -29,6 +30,10 @@ VERBES = ("manger", "recolter", "deraciner", "tailler", "couper",
 def route_plante(gs: dict, player: str, verb: str,
                  target: dict, params: dict, bilan, plant_at):
     """Aiguille un geste sur plante. Résout la tuile + la plante, délègue aux façades."""
+    # `manger` un CARPOPHORE (sol qui respire ⑥, 0.5.54) : aiguillé sur la FORME du
+    # target (`carpophore: [r, c, slot]`), la famille de cible reste « plante ».
+    if verb == "manger" and "carpophore" in target:
+        return route_carpophore(gs, player, target, bilan)
     tiles = {t.tile_id: t for t in gs["tiles"]}
     tile = tiles.get(target.get("tile"))
     if tile is None:

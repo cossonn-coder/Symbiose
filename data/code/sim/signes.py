@@ -26,6 +26,7 @@ from __future__ import annotations
 
 from sim import maitrise
 from sim import journal
+from sim.vision import palier_lu   # vision (⑥) : info-bulle complète le temps de l'effet
 from sim.carnet import _seuil, SEUIL_CARNET
 from sim.signes_corpus import SIGNES
 from fields.faune_encyclo import FAUNE_ENCYCLO
@@ -80,13 +81,13 @@ def signe_appris(game_state: dict, player: str, signe: str) -> bool:
     """Un signe est appris quand le palier de SON concept atteint le seuil du carnet
     interprétatif (option « anticipé » comprise). Lecture pure."""
     concept = SIGNES[signe]["concept"]
-    return maitrise.palier(game_state, player, concept) >= _seuil(game_state, player)
+    return palier_lu(game_state, player, concept) >= _seuil(game_state, player)
 
 
 def faune_apprise(game_state: dict, player: str, espece: str) -> bool:
     """Une bête est apprise (nom révélé) quand le palier de sa clé de maîtrise
     atteint le seuil du carnet interprétatif. Lecture pure."""
-    return maitrise.palier(game_state, player, espece) >= _seuil(game_state, player)
+    return palier_lu(game_state, player, espece) >= _seuil(game_state, player)
 
 
 def appris(game_state: dict, player: str) -> dict:

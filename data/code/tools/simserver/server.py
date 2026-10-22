@@ -17,10 +17,12 @@ from .courrier import CourrierMixin
 from .maitrise_cmds import MaitriseCmdsMixin
 from .palette_cmd import PaletteCmdMixin
 from .automate_cmd import AutomateCmdMixin
+from .vision_cmds import VisionCmdsMixin
 
 
 class SimServer(CommandsMixin, ActionsMixin, CiblesMixin, SerializeMixin, VoixMixin,
-                CourrierMixin, MaitriseCmdsMixin, PaletteCmdMixin, AutomateCmdMixin):
+                CourrierMixin, MaitriseCmdsMixin, PaletteCmdMixin, AutomateCmdMixin,
+                VisionCmdsMixin):
     """État du serveur : un Engine (ou None avant `init`). Dispatch des commandes."""
 
     def __init__(self):
@@ -64,6 +66,10 @@ def main() -> int:
                 # Légende des signes (PLANTE ASSEMBLÉE ⑥, 0.5.46) : corpus statique
                 # des descriptions VISIBLES (signes + bêtes) pour l'info-bulle ⑦.
                 "legende": server.cmd_legende,
+                # Les êtres PARLENT sous vision (sol qui respire ⑥, 0.5.54) : phrases
+                # au survol ; hors vision → liste vide. Écriture bornée au compteur
+                # de survols de la vision (ce qui en reste).
+                "parler": server.cmd_parler,
                 # Palette de gestes ⑤ (write) : persiste le layout curé + les
                 # macros de l'avatar (bornée à l'état joueur, opt-in → golden intact).
                 "palette": server.cmd_palette,

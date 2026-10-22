@@ -31,6 +31,7 @@ renvoie `[]` et `encyclopedie_lire` renvoie `None` (no-op golden, jamais de cras
 from __future__ import annotations
 
 from sim import maitrise
+from sim.vision import palier_lu   # vision (⑥) : fiches lues complètes le temps de l'effet
 from sim.encyclopedie_corpus import FICHES
 from sim.encyclopedie_types import type_de
 from sim.champignon_encyclo import FICHES_CHAMPIGNON
@@ -183,9 +184,11 @@ def encyclopedie_lire(game_state: dict, player: str, cle: str) -> dict | None:
     (`type_de` → `None`) → `None` (jamais de crash)."""
     if cle in SIGNES and type_de(cle) is None:
         return _lire_signe(game_state, player, cle)
-    p = maitrise.palier(game_state, player, cle)
-    if p < 1:
+    # Découverte = VRAI palier (la vision ne crée pas de fiche) ; niveau lu =
+    # `palier_lu` (transcendant pendant une vision, sol qui respire ⑥).
+    if maitrise.palier(game_state, player, cle) < 1:
         return None
+    p = palier_lu(game_state, player, cle)
     nom_type = type_de(cle)
     if nom_type == "plante":
         return _lire_plante(cle, p)
@@ -204,7 +207,7 @@ def _lire_signe(game_state: dict, player: str, cle: str) -> dict | None:
     seuil normal 3 → les 3 niveaux ; option « anticipé » → selon le palier)."""
     if not signe_appris(game_state, player, cle):
         return None
-    p = maitrise.palier(game_state, player, SIGNES[cle]["concept"])
+    p = palier_lu(game_state, player, SIGNES[cle]["concept"])
     niveau_max = max(1, min(p, NIVEAU_MAX))
     fiche = SIGNES[cle]["fiche"]
     niveaux = {n: fiche[n] for n in range(1, niveau_max + 1)}

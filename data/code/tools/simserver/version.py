@@ -750,7 +750,17 @@ from __future__ import annotations
 #       (3) `legende.champignons {clé: vu}`. (4) encyclopédie : type `champignon` = 13
 #       fiches 3 niveaux. (5) `magazine` (offres) + `articles` [{cle, titre, texte}].
 #       Pages P43-P47. Hors tick → golden NEUTRE.
-ENGINE_VERSION = "0.5.53"
+# 0.5.54 (LE SOL QUI RESPIRE ⑥, manger un champignon & la vision) : ajouts rétro-compatibles.
+#       (1) `action manger` accepte `target.carpophore: [r, c, slot]` (+ `tile`) : effet
+#       selon la comestibilité (Vigueur / perte sans mort / vision) ; réponse + `vision`
+#       ∈ {null, "vision", "overdose"} et `espece_nommee` (clé si nommée, sinon null) ;
+#       le carpophore mangé disparaît du snapshot pour la semaine. (2) Nouvelle commande
+#       `parler` {tile, x_cm, y_cm} | {espece, tile, r, c} → `{vision, phrases}` (vide
+#       hors vision). (3) `player.vision {active, overdose, fin, reste}`. (4) OVERDOSE :
+#       clé `voix {tuile: {plantes, betes, champignons}}` au snapshot. (5) Pendant la
+#       vision, `player.appris` / carnet / encyclopédie se lisent au palier transcendant.
+#       Hors tick → golden NEUTRE.
+ENGINE_VERSION = "0.5.54"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les
