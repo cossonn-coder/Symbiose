@@ -14,6 +14,9 @@ from plants import Fruit, organ_sites
 from fields import (T_SECHE, FRAG_RATE, NECROMASS_PER_CM, ABSCISSION_FRAC,
                     ABSCISSION_BASE, ABSCISSION_JITTER, ABSCISSION_MIN,
                     ABSCISSION_MAX, FRUIT_MASSE, FRUIT_DMAT, MATURITE_CHUTE)
+from fields.ecofields.constants import BOIS_MORT_PAR_CM3   # D111 ② (sous-paquet propriétaire)
+from constants import PLOT_CM
+from sim.effects.perturbations import frac_bois_mort
 
 # Nouaison « en fin de floraison, par plante » (arc pollinisation ④ — §B.2).
 # `floraison` (état floral ∈[0,1], écrit par engine._tick_floraison) monte vers 1
@@ -51,6 +54,34 @@ def frac_nouaison(pollen_recu: float) -> float:
     (Monod). Sans plancher (pollen=0 → 0) → un fruitier entomophile sans
     butineur ne fait pas de fruit (pression écologique assumée, §B.2)."""
     return pollen_recu / (pollen_recu + POLLEN_DEMI)
+
+
+def deposer_bois_tombe(plant, tombes, eco) -> float:
+    """Bois mort qui TOMBE (D111 ②) : les segments que la croissance vient d'élaguer
+    (`grow_plant` les renvoie) deviennent de la litière `bois` au sol, au lieu de
+    disparaître. Seuls les LIGNEUX déposent (même critère de donnée que le squelette
+    post-mortem, `frac_bois_mort` > 0) : les tiges mortes des herbacées ont déjà leur
+    voie (litière molle à la mort, abscission).
+
+    Chaque segment tombe à la VERTICALE de son milieu : `base` est dans le repère
+    cm de la tuile (le collet = `(x_cm, y_cm, 0)`, cf. `PlantInstance.__post_init__`),
+    plot = `floor(pos / PLOT_CM)` borné à la tuile (une branche qui déborde du bord
+    tombe sur le plot de bordure). Masse ∝ volume `length × thickness²`.
+    Renvoie la masse totale déposée (0.0 si rien). Zéro RNG."""
+    if not tombes or frac_bois_mort(plant) <= 0.0:
+        return 0.0
+    total = 0.0
+    for s in tombes:
+        masse = s.length_cm * s.thickness_cm ** 2 * BOIS_MORT_PAR_CM3
+        if masse <= 0.0:
+            continue
+        mx = s.base[0] + s.dir[0] * s.length_cm * 0.5
+        my = s.base[1] + s.dir[1] * s.length_cm * 0.5
+        r = min(eco.rows - 1, max(0, int(my // PLOT_CM)))
+        c = min(eco.cols - 1, max(0, int(mx // PLOT_CM)))
+        eco.deposer_litiere(r, c, "bois", masse)
+        total += masse
+    return total
 
 
 class DecompoMixin:

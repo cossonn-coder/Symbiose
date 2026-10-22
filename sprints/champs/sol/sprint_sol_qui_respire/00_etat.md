@@ -12,7 +12,7 @@ suivants : budget perf mesuré **par rapport à ①** ; ne pas tenter de résorb
 | # | Kickoff | Golden | Statut |
 |---|---|---|---|
 | ① | `01_bilan_hydrique.md` | RE-FIGÉ `22768f33…` → `1ce02bce…` | FAIT (D114, D115) |
-| ② | `02_bois_mort.md` | re-figé probable | à faire |
+| ② | `02_bois_mort.md` | INTACT `1ce02bce…` (prémisse fausse) | FAIT — ⚠ inerte en pratique |
 | ③ | `03_regne_fongique.md` | neutre | à faire |
 | ④ | `04_parasite_faiblesse.md` | re-figé si hôte affaibli au smoke | à faire |
 | ⑤ | `05_voix_champignons.md` | neutre | à faire |
@@ -77,6 +77,33 @@ fragile. Non « réglé » ici (hors périmètre) → à trancher (dette success
 52/54. Acclimatation du monde full après ① [40 sem., n=1 run] : 259/374 plantes portent
 `tolerance_ombre`, pas la sécheresse → le « voile cireux » F5 viendra surtout de l'OMBRE.
 Conteneurs : `plant_uptake` y reste à transpiration 1,0 (défaut neutre, non saisonnier).
+
+## ② Bois mort qui tombe — FAIT (2026-10-22), golden INTACT `1ce02bce…`
+
+**Livré** : `_elaguer` puis `grow_plant` RENVOIENT les segments élagués (growth reste pur,
+sans `eco`) ; `sim/engine/decompo.deposer_bois_tombe(plant, tombes, eco)` dépose
+`length × thickness² × BOIS_MORT_PAR_CM3` (1e-4, calé sur le squelette d'un pommier de
+10 ans [n=1 arbre]) en litière `bois` au plot de la verticale du milieu du segment
+(`base` = repère cm de la TUILE, vérifié : collet = `(x_cm, y_cm, 0)`), borné à la tuile.
+Ligneux = même critère que le squelette (`frac_bois_mort` > 0, i.e. `age_curve`).
+Branché en 9c de `boucle.py` (tuile seule ; les conteneurs ignorent le retour). Pont
+**0.5.51** : entrée `litiere` = `[r, c, tissu_dom, masse, age, bois_masse, bois_age]`.
+Test `tests/test_bois_mort.py` 9/9 ; mesure `mesures/bois_mort.py`.
+
+**⚠ REMONTÉE — prémisse du kickoff fausse, mécanique INERTE en pratique** : AUCUN ligneux
+ne s'élague. `wood_persistence = 4000` sem. sur `PerennialWoody` (bois sans apex ne meurt
+pas avant ~77 ans) et le plafond `max_segments` (70-90) n'est pas atteint : pommier, chêne,
+bouleau, figuier isolés sur 520 sem. → 0 segment tombé (pommier 55 seg. à 10 ans) [n=1 arbre
+par espèce, sans lumière]. Monde `full`, 1521550718, 104 sem. [n=1 run] : **0/1188 plots
+avec bois** (inchangé), mycélium max 0,449 / méd 0,0021 (identique avec/sans dépôt ; le
+« 0,24 » du kickoff datait d'avant ①). Seules les herbacées élaguent (trèfle, pâturin…,
+écartées par la règle « ligneux seuls »). → pour que du bois tombe vraiment, il faut une
+**cause de mort de branche** : cladoptose par l'OMBRE (branche basse sous la couronne qui
+ne reçoit plus de lumière → meurt), ou ④ armillaire/vent. Décision de conception (Nico) —
+non inventée ici. Aussi : lierre/jasmin/thym/lavande/myrtille/framboisier, ligneux réels,
+ne portent pas `age_curve` → exclus.
+Perf : surcoût nul (aucun dépôt ; état identique avec/sans, écarts de tick = bruit de deux
+runs parallèles). Échecs pré-existants non relancés hors suites touchées.
 
 ## Ajouts de Nico à l'accord (2026-10-22)
 - Bois mort VISIBLE au sol, dégradation en sprite à stades (② pont, ⑧ dessin).
@@ -168,8 +195,10 @@ Aucune. Accord de Nico pour figer : 2026-10-22.
 ## §REPRISE
 
 Lire `CLAUDE.md` + ce fichier + le kickoff du prochain tronçon « à faire » de la carte.
-**Avant ②** : trancher les deux remontées de ① (perf +33 % an 2 par la population ; banc
-succession). Prochain tronçon : ② `02_bois_mort.md` (golden de départ `1ce02bce…`).
+Remontées de ① tranchées (D114, D115). **② FAIT mais INERTE** (aucun ligneux ne s'élague,
+cf. §②) → à trancher par Nico/orchestrateur : ajouter une cause de mort de branche
+(cladoptose par l'ombre ?) avant ③, ou accepter que le bois mort n'arrive que par ④/squelettes.
+Prochain tronçon : ③ `03_regne_fongique.md` (golden de départ `1ce02bce…`, pont 0.5.51).
 Chaque tronçon met à jour sa ligne de statut, consigne ses mesures [n=…] et ses hashes golden.
 ## Liste fongique VALIDÉE (Q7)
 

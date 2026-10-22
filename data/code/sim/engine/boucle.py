@@ -46,7 +46,7 @@ from .aleas import (appliquer_alea, ALEAS_RAVAGEURS, WEATHER_ALEA, ORAGE_VENT,
                     TEMP_FROST_DAMAGE, FROST_SEVERITY_REF, HAIL_SEVERITY_REF)
 from .croissance import CroissanceMixin
 from .mortalite import MortaliteMixin
-from .decompo import DecompoMixin
+from .decompo import DecompoMixin, deposer_bois_tombe
 from .floraison import FloraisonMixin
 from .butineurs import ButineurMixin
 from .anemophilie import AnemophilieMixin
@@ -442,7 +442,12 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
             for plant in tile.plants:
                 if plant.is_alive:
                     chercher_support(plant, tile, house)
-                    grow_plant(plant, seed, week, eco.lumiere)
+                    # D111 ② : les branches élaguées d'un LIGNEUX tombent en litière
+                    # `bois` sous elles (no-op pour les herbacées / rien d'élagué).
+                    tombes = grow_plant(plant, seed, week, eco.lumiere)
+                    if deposer_bois_tombe(plant, tombes, eco) > 1e-4:
+                        log.append(f"    🪵 Branche morte tombée {plant.name}"
+                                   f"@{plant.position}")
 
             # 9b. Mortalité réaliste — sénescence + santé dynamique (D27)
             log += self._tick_senescence_health(tile, eco)

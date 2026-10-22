@@ -590,6 +590,16 @@ NECROMASS_PER_CM  = 0.03   # nécromasse déposée par cm de hauteur à la mort
 # (`ecraser_plante`) déposent `Σ length_cm × BOIS_PAR_CM` du sous-arbre retiré.
 BOIS_PAR_CM       = 0.03
 
+# Bois mort qui TOMBE (D111 ②, cladoptose) : une branche élaguée par la croissance
+# (`_elaguer` : vieux bois sans apex, plafond de segments) dépose en litière `bois`
+# `length_cm × thickness_cm² × BOIS_MORT_PAR_CM3` (∝ volume du segment). Calé sur le
+# squelette post-mortem d'un POMMIER (référence fruitière) : bois_restant =
+# H·NECROMASS_PER_CM·FRAC_BOIS_MORT ≈ 4,7 pour un pommier de 10 ans (H 351 cm,
+# volume de structure 36 250 cm³) → ≈ 1,3e-4 /cm³ [n=1 arbre, croissance sans lumière] ;
+# pommier de 2 ans du monde full ≈ 5e-4, chêne de 10 ans ≈ 3e-5. Arrondi 1e-4 : un
+# arbre entier débité en branches rendrait au sol l'ordre de grandeur de son squelette.
+BOIS_MORT_PAR_CM3 = 1.0e-4
+
 # --- Squelette post-mortem (décompo·compost ②, phase B) --------------------
 # À la mort, une plante ne disparaît plus : ses tissus MOUS tombent tout de suite
 # (litière feuille/herbace, cf. tissu_mort), et sa part LIGNEUSE reste en squelette

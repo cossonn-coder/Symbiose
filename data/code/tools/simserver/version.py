@@ -722,7 +722,15 @@ from __future__ import annotations
 #       TEST `pluie_continue` (`init config="pluie_continue"`, pluie forcée chaque
 #       semaine via `game_state["pluie_forcee"]`, lue aussi par le bloc `weather`).
 #       Golden RE-FIGÉ (annoncé par le kickoff).
-ENGINE_VERSION = "0.5.50"
+# 0.5.51 (LE SOL QUI RESPIRE ②, D111 bois mort) : ajout rétro-compatible. Chaque
+#       entrée du bloc `litiere` gagne 2 éléments en fin de tableau : `[r, c,
+#       tissu_dominant, masse, age_sem, bois_masse, bois_age_sem]` — masse et âge de
+#       la parcelle `bois` du plot (0.0 si aucune), exposés même quand un autre tissu
+#       domine, pour que la vue (⑧) dessine la branche tombée et son stade de
+#       décomposition. Moteur : les branches élaguées d'un LIGNEUX (`_elaguer`)
+#       tombent désormais en litière `bois` (∝ longueur × épaisseur²). Un client
+#       pré-0.5.51 lit par index et ignore les 2 éléments. Golden INTACT.
+ENGINE_VERSION = "0.5.51"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

@@ -125,13 +125,16 @@ def _debourrement(plant, seed: int, week: int, branch_angle: float,
     segs.extend(new_segs)
 
 
-def _elaguer(plant, wood_persistence: int, max_segments: int) -> None:
+def _elaguer(plant, wood_persistence: int, max_segments: int) -> list:
     """§D.6 — sénescence du bois sans apex + plafond `max_segments`. Collet protégé.
     `wood_persistence` (profil espèce) = longévité du bois sans apex actif ;
-    `max_segments` (profil espèce) = plafond dur de segments (haut pour un arbre)."""
+    `max_segments` (profil espèce) = plafond dur de segments (haut pour un arbre).
+    RENVOIE les segments retirés (D111 ② bois mort) : la croissance reste PURE
+    structurelle (aucun `eco` ici, couche growth), c'est `sim/engine` qui décide
+    d'en faire de la litière `bois`. Liste vide si rien ne tombe."""
     segs = plant.segments
     if len(segs) <= 1:
-        return
+        return []
     ch       = _children(segs)
     depth    = _depths(segs)
     has_apex = _apex_in_subtree(segs, ch, depth)
@@ -162,8 +165,10 @@ def _elaguer(plant, wood_persistence: int, max_segments: int) -> None:
                 continue
             kill.update(_subtree(i, ch))
             alive = len(segs) - len(kill)
+    tombes = [segs[i] for i in sorted(kill)]   # capturés AVANT la réindexation
     if kill:
         _rebuild(plant, kill)
+    return tombes
 
 
 def _mk(parent: int, base: tuple, direction: tuple, auxin: float):
@@ -212,7 +217,7 @@ def est_etiole(plant, light_field) -> bool:
 # ---------------------------------------------------------------------------
 
 def grow_plant(plant, seed: int, week: int, light_field=None,
-               confinement: float = 1.0) -> None:
+               confinement: float = 1.0) -> list:
     """
     Fait pousser la structure de `plant` d'un tick, selon le PROFIL DE SON ESPÈCE
     (plant.plant_class : vitesse, dominance, gabarit, angle… cf. PlantBase §E). Les
@@ -235,10 +240,13 @@ def grow_plant(plant, seed: int, week: int, light_field=None,
     Tronçon 2 : pour une espèce MIGRÉE (`procedural_growth`), l'empreinte est
     recalculée en fin de passe (update_footprint, §G) → height_at/canopy_radius_at…
     la liront. Pour une espèce non migrée, la structure reste INERTE (non lue).
+
+    RENVOIE les segments élagués ce tick (D111 ② bois mort, cf. `_elaguer`) ; les
+    appelants qui l'ignorent gardent leur comportement historique.
     """
     segs = plant.segments
     if not segs:
-        return
+        return []
     cls = plant.plant_class
     for s in segs:
         s.age_weeks += 1
@@ -259,7 +267,7 @@ def grow_plant(plant, seed: int, week: int, light_field=None,
                    cls.gravitropism_gain)
     _debourrement(plant, seed, week, math.radians(cls.branch_angle),
                   cls.apical_dominance_base)
-    _elaguer(plant, cls.wood_persistence, cls.max_segments)
+    tombes = _elaguer(plant, cls.wood_persistence, cls.max_segments)
     # Rejet de souche : une plante vivante entièrement dormante (plus aucun apex,
     # ex. après senescence totale du vieux bois) reprend du collet → run éternel.
     if not any(s.is_apex for s in plant.segments):
@@ -275,3 +283,4 @@ def grow_plant(plant, seed: int, week: int, light_field=None,
     # les autres gardent l'ancien chemin par les stades → recalcul inutile).
     if cls.procedural_growth:
         plant.update_footprint()
+    return tombes

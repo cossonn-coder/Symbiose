@@ -415,6 +415,7 @@ class SerializeMixin:
             # masse, age_sem]` — dominant = parcelle de plus grande masse hors
             # `diffus`, masse = Σ des parcelles de surface (densité ∝ masse côté
             # vue). Les plots sans litière de surface sont OMIS (liste creuse).
+            # 0.5.51 : + `bois_masse, bois_age_sem` (index 5-6, 0.0 sans bois).
             # `age_sem` (rendu feuillage ⑥, 0.5.6) = ÂGE MOYEN pondéré par la masse
             # des parcelles de surface : proxy d'ÉTAT DE DÉCOMPO déjà calculé par le
             # moteur (`Parcelle.age_sem`, semaines depuis dépôt) — la vue assombrit/
@@ -435,8 +436,14 @@ class SerializeMixin:
                     # ne retient que les parcelles masse > 0). Litière fraîche
                     # (age ≈ 0) = brun-roux vif ; vieillie, elle fond dans le sol.
                     age_moy = sum(p.age_sem * p.masse for p in surface) / total
+                    # Bois mort (D111 ②, 0.5.51) : masse + âge de la parcelle `bois`
+                    # MÊME sous des feuilles dominantes → la vue (⑧) dessine la branche
+                    # et son stade de décompo. Fusion par tissu ⇒ ≤ 1 parcelle `bois`.
+                    bois = next((p for p in surface if p.tissu == "bois"), None)
                     plots.append([r, c, dominant.tissu,
-                                  round(total, 4), round(age_moy, 3)])
+                                  round(total, 4), round(age_moy, 3),
+                                  round(bois.masse, 4) if bois else 0.0,
+                                  round(bois.age_sem, 3) if bois else 0.0])
             litiere[tile.tile_id] = plots
             # Phéromone d'alarme apienne (⑦, §J, 0.4.1) : liste CREUSE des plots en
             # alarme `[r, c, intensite]` (foyers > 0 seulement). Godot lit l'intensité
