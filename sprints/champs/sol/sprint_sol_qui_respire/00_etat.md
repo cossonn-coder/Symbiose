@@ -13,6 +13,7 @@ suivants : budget perf mesuré **par rapport à ①** ; ne pas tenter de résorb
 |---|---|---|---|
 | ① | `01_bilan_hydrique.md` | RE-FIGÉ `22768f33…` → `1ce02bce…` | FAIT (D114, D115) |
 | ② | `02_bois_mort.md` | INTACT `1ce02bce…` (prémisse fausse) | FAIT — ⚠ inerte en pratique |
+| ②bis | `02b_mort_branches.md` (ajouté 2026-10-22, accord Nico) | re-figé si un ligneux du smoke perd une branche | à faire |
 | ③ | `03_regne_fongique.md` | neutre | à faire |
 | ④ | `04_parasite_faiblesse.md` | re-figé si hôte affaibli au smoke | à faire |
 | ⑤ | `05_voix_champignons.md` | neutre | à faire |
