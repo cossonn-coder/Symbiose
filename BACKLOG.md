@@ -19,7 +19,7 @@
 
 ## Sprint en cours
 
-Aucun sprint lancé. **File priorisée validée par Nico le 2026-10-22 (retour F5), à faire DANS L'ORDRE :**
+**Sprint A CONÇU le 2026-10-22, prêt à lancer** : `/sprint-auto sprint_sol_qui_respire` (`sprints/champs/sol/sprint_sol_qui_respire/`, 8 tronçons). **File priorisée validée par Nico le 2026-10-22 (retour F5), à faire DANS L'ORDRE :**
 
 1. **Sprint A « le sol qui respire »** (moteur, [D111](DETTE.md)) → `/conception` : bilan hydrique (le sol
    se dessèche), champignons (bois mort au sol, fructification la semaine après la pluie, ~10 espèces
