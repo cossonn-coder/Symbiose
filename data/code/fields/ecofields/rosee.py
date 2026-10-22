@@ -44,11 +44,12 @@ note de fin de fichier. Le socle ② = dépôt + fonte (B), sûr et golden-maît
 from __future__ import annotations
 
 from .constants import (ECART_ROSEE_SEC, GAIN_HUM_ROSEE, ROSEE_PAR_DEGRE,
-                        ROSEE_LOG_SEUIL)
+                        ROSEE_LOG_SEUIL, ECART_ROSEE_HR)
 from .thermique import t_min_nuit_at
 
 
-def tick_rosee(eco, t_air: float, nebulosite: float) -> list[str]:
+def tick_rosee(eco, t_air: float, nebulosite: float,
+               humidite_air: float | None = None) -> list[str]:
     """Dépose la rosée (régime liquide) ou accumule/fond le givre (régime gelée
     blanche) sur chaque plot, depuis le thermomètre nocturne `t_min_nuit_at` et
     l'humidité du sol local. Écrit `eco.humidite` (rosée + fonte différée) et
@@ -61,7 +62,16 @@ def tick_rosee(eco, t_air: float, nebulosite: float) -> list[str]:
 
     Écrit AUSSI `eco.rosee_last` (carte transiente ⑤, REMISE À PLAT chaque tick) :
     l'eau LIQUIDE déposée par plot (régime > 0 °C — pas le givre). Lue par les
-    interconnexions vivantes du matin (faune abreuvée + captation foliaire, §6)."""
+    interconnexions vivantes du matin (faune abreuvée + captation foliaire, §6).
+
+    `humidite_air` ∈ [0,1] (sprint « le sol qui respire » ①, D111 §1a) : humidité
+    relative de l'AIR (océanique, saisonnière, `sim.weather.humidite_air`), reçue en
+    argument (les `fields` n'importent pas `sim`). Fournie, elle REMPLACE l'humidité
+    du sol dans le point de rosée (règle T_rosée ≈ T_air − (1−HR)·ECART_ROSEE_HR) →
+    la rosée ne s'effondre plus quand le sol sèche (la boucle sèche mesurée est
+    rompue : c'est l'air marin qui porte la vapeur).
+    `None` (défaut : conteneurs, tests unitaires) → dérivation historique depuis le
+    sol, bit-identique."""
     total_rosee = 0.0   # eau liquide déposée (régime > 0 °C) sur la tuile
     total_givre = 0.0    # eau gelée nouvellement déposée (régime ≤ 0 °C)
     total_fonte = 0.0    # givre restitué à l'humidité (réchauffement)
@@ -71,8 +81,11 @@ def tick_rosee(eco, t_air: float, nebulosite: float) -> list[str]:
             if rosee_last is not None:
                 rosee_last.set(r, c, 0.0)   # transiente : on repart à plat ce tick
             t_min    = t_min_nuit_at(eco, r, c, t_air, nebulosite)
-            hum_norm = min(1.0, eco.humidite.at_plot(r, c) / 3.0)
-            t_rosee  = t_air - ECART_ROSEE_SEC + GAIN_HUM_ROSEE * hum_norm
+            if humidite_air is not None:   # air océanique (D111 ①)
+                t_rosee = t_air - ECART_ROSEE_HR * (1.0 - humidite_air)
+            else:                          # historique : dérivé du sol local
+                hum_norm = min(1.0, eco.humidite.at_plot(r, c) / 3.0)
+                t_rosee  = t_air - ECART_ROSEE_SEC + GAIN_HUM_ROSEE * hum_norm
             cond     = max(0.0, t_rosee - t_min) * ROSEE_PAR_DEGRE
             if t_min > 0.0:
                 # Régime LIQUIDE : la condensation du matin hydrate le sol, ET le

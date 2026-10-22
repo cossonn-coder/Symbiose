@@ -41,6 +41,8 @@ K_PEST = (90_004, 0)   # ravageur (canal séparé, hors météo)
 K_SIGN = (90_005, 0)   # un événement émet-il un signe diégétique ? (§4.3)
 K_PATCH_R = (90_006, 0)  # centre du patch d'un événement local — ligne (grêle/orage)
 K_PATCH_C = (90_007, 0)  # centre du patch d'un événement local — colonne
+K_PLUIE   = (90_008, 0)  # épisode de pluie ORDINAIRE (sprint sol qui respire ①, D111)
+K_HR      = (90_009, 0)  # bruit hebdo de l'humidité de l'air (rosée, ①)
 
 # Rayon du patch d'un événement `scope="local"`, en fraction de la plus grande
 # dimension de la tuile (sprint effondrement météo ①, §2). ~0.42 → le patch couvre
@@ -129,6 +131,46 @@ _CATALOGUE = [
 ]
 
 
+# --- Épisodes de pluie ORDINAIRE (sprint « le sol qui respire » ①, D111 §1b) ---
+# Diagnostic mesuré : la pluie n'existait QUE comme aléa (« Pluie prolongée »
+# automne-hiver, « Orage » d'été, chacun en concurrence dans le catalogue sous
+# P_EVENT=0.15) → ~1-6 semaines de pluie/an, climat méditerranéen, sol désertifié
+# dès l'an 2. Un climat OCÉANIQUE pleut en toute saison : on ajoute un canal dédié
+# (K_PLUIE, décorrélé des aléas) consulté SEULEMENT les semaines restées calmes →
+# un aléa (Sécheresse, Canicule, Gelée…) EXCLUT donc la pluie par construction (un
+# seul événement par semaine). Fréquences TOTALES visées (Nico, D-eau c) : hiver
+# ~1 sem./3, printemps & automne ~1/4, été ~1/6 (orages). Les probabilités
+# ci-dessous sont conditionnelles à « semaine calme » (×0.85) et tiennent compte
+# des pluies-aléas du catalogue (mesuré sur 200 graines, cf. 00_etat.md). JAMAIS
+# de pluie chaque semaine en jeu (D-pluie) : seul un banc de test la force.
+# La pluie reste un `WeatherEvent` réutilisant les kinds EXISTANTS (« Pluie
+# prolongée », « Orage » l'été) → nébulosité, préavis `sim/ciel.py`, signes, apport
+# `PLUIE_APPORT`, delta froid et vue Godot les lisent sans une ligne de plus.
+P_PLUIE_SAISON = {"printemps": 0.27, "ete": 0.16, "automne": 0.22, "hiver": 0.35}
+# Intensité d'un épisode ORDINAIRE : tirée sous le seuil de sévérité du composé
+# (`sim/ciel.py` SEUIL_SEVERE = 0.8) → une averse ordinaire n'alimente jamais
+# « l'hiver de tous les dangers » ; seule la « Pluie prolongée »-ALÉA peut le faire.
+PLUIE_INTENSITE_MAX = 0.75
+
+
+def _saison_meteo(wiy: int) -> str:
+    """Saison du calendrier moteur (printemps 1-13, été 14-26, automne 27-39, hiver
+    40-52). Dupliquée ici (2 lignes) car `sim.engine.calendrier` est une couche HAUTE
+    (engine importe weather → import inverse = cycle)."""
+    return ("printemps", "ete", "automne", "hiver")[min(3, (wiy - 1) // 13)]
+
+
+def _pluie_ordinaire(seed: int, week: int, wiy: int) -> WeatherEvent:
+    """Épisode de pluie ordinaire d'une semaine CALME, ou `CALME`. Pur (hash)."""
+    saison = _saison_meteo(wiy)
+    if _hash_noise(seed, week, *K_PLUIE) >= P_PLUIE_SAISON[saison]:
+        return CALME
+    kind = "Orage" if saison == "ete" else "Pluie prolongée"
+    scope = "local" if kind == "Orage" else "global"
+    inten = PLUIE_INTENSITE_MAX * _hash_noise(seed, week, *K_MAG)
+    return WeatherEvent(kind, round(inten, 3), 1, scope)
+
+
 def weather_at(seed: int, week: int) -> WeatherEvent:
     """
     Tire l'événement météo de la semaine `week`, de façon PURE et déterministe.
@@ -146,11 +188,11 @@ def weather_at(seed: int, week: int) -> WeatherEvent:
 
     occ = _hash_noise(seed, week, *K_OCC)
     if occ >= P_EVENT:
-        return CALME
+        return _pluie_ordinaire(seed, week, wiy)   # semaine calme : pleut-il ? (①)
 
     cands = [e for e in _CATALOGUE if e[3][0] <= wiy <= e[3][1]]
     if not cands:
-        return CALME
+        return _pluie_ordinaire(seed, week, wiy)
 
     pick = _hash_noise(seed, week, *K_PICK)
     kind, scope, duration, _ = cands[int(pick * len(cands)) % len(cands)]
@@ -211,7 +253,14 @@ def temperature_delta(event: WeatherEvent) -> float:
     return base * scale
 
 
-def weather_state(seed: int, week: int) -> tuple[WeatherEvent, float, float]:
+# Banc de TEST « pluie chaque semaine » (D111 ①e, D-pluie : JAMAIS en jeu). Le flag
+# `game_state["pluie_forcee"]` n'est posé QUE par le hook du banc `pluie_continue` ;
+# il remplace l'événement de chaque semaine par cette pluie (aléas compris).
+PLUIE_FORCEE = WeatherEvent("Pluie prolongée", 0.5, 1, "global")
+
+
+def weather_state(seed: int, week: int,
+                  pluie_forcee: bool = False) -> tuple[WeatherEvent, float, float]:
     """
     État météo COMPLET de la semaine `week` : `(événement, T_air °C, nébulosité)`.
     Point de vérité UNIQUE du calcul que l'engine (boucle.py étape 1) et le
@@ -232,15 +281,51 @@ def weather_state(seed: int, week: int) -> tuple[WeatherEvent, float, float]:
     Import LOCAL de `wind` : `wind.py` importe déjà `weather_at`/`CALME` de ce module
     → un import au niveau module créerait un cycle. L'import différé (au 1er appel)
     le résout sans dupliquer le catalogue de nébulosité.
+
+    `pluie_forcee` (banc de TEST `pluie_continue`, D111 ①e) : l'événement de la
+    semaine devient `PLUIE_FORCEE` ; T_air et nébulosité en découlent. Défaut False
+    → comportement de jeu inchangé.
     """
     from sim.wind import nebulosite_dynamique   # local : évite le cycle weather↔wind
     week_in_year  = ((week - 1) % 52) + 1
-    event         = weather_at(seed, week)
+    event         = PLUIE_FORCEE if pluie_forcee else weather_at(seed, week)
     year_fraction = (week - 1) / 52.0
     phase         = (seed & 0xFFFF) / 0xFFFF * 2.0 * math.pi
     t_air         = temp_norm(week_in_year, year_fraction, phase) + temperature_delta(event)
-    nebul         = nebulosite_dynamique(seed, week)
+    nebul         = nebulosite_dynamique(seed, week, event if pluie_forcee else None)
     return event, t_air, nebul
+
+
+# --- Humidité de l'air (sprint « le sol qui respire » ①, D111 §1a) ----------
+# La rosée dérivait son point de rosée de l'humidité du SOL → sol sec ⇒ pas de
+# rosée ⇒ sol plus sec (boucle sèche mesurée). En climat océanique, c'est l'AIR
+# marin qui porte la vapeur : humidité relative haute, plus haute l'hiver que
+# l'été, saturée sous la pluie, effondrée sous un épisode sec. Grandeur PURE
+# `f(seed, semaine)` — scalaire uniforme comme T_air — passée en ARGUMENT à la
+# rosée (les `fields` n'importent jamais `sim`).
+HR_MOY   = 0.80    # humidité relative moyenne annuelle (Normandie ≈ 80 %)
+HR_AMP   = 0.07    # demi-amplitude saisonnière (max fin janvier, min fin juillet)
+HR_BRUIT = 0.05    # bruit hebdomadaire ± (canal K_HR)
+HR_EVENT = {       # humidité imposée par l'événement (None = régime normal)
+    "Pluie prolongée": 0.97, "Orage": 0.92, "Neige": 0.92, "Tempête": 0.85,
+    "Sécheresse": 0.50, "Canicule": 0.50,
+}
+
+
+def humidite_air(seed: int, week: int, event: WeatherEvent | None = None) -> float:
+    """Humidité relative de l'air ∈ [0,1] de la semaine `week` — PURE, déterministe
+    (zéro RNG). Normale saisonnière océanique + bruit hebdo, ou la valeur imposée
+    par l'événement de la semaine (pluie saturante, sécheresse sèche). `event`
+    fourni (événement déjà résolu par l'appelant, ex. banc de pluie forcée) → il
+    remplace `weather_at`."""
+    ev = event if event is not None else weather_at(seed, week)
+    imposee = HR_EVENT.get(ev.kind)
+    if imposee is not None:
+        return imposee
+    wiy = ((week - 1) % 52) + 1
+    base = HR_MOY + HR_AMP * math.cos(2.0 * math.pi * (wiy - 4) / 52.0)
+    base += HR_BRUIT * (2.0 * _hash_noise(seed, week, *K_HR) - 1.0)
+    return round(max(0.0, min(1.0, base)), 4)
 
 
 def forecast(seed: int, week: int, horizon: int = 2) -> list[WeatherEvent]:

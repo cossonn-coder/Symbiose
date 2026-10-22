@@ -1,13 +1,17 @@
 # Sprint « le sol qui respire » (D111) — état partagé
 
-**Phase** : CONCEPTION FIGÉE le 2026-10-22 → prêt pour `/sprint-auto sprint_sol_qui_respire`.
-Doc : `docs/champs/sol/conception_sol_qui_respire.md`. 8 tronçons, aucun commencé.
+**Phase** : CONCEPTION FIGÉE le 2026-10-22 → `/sprint-auto sprint_sol_qui_respire` en cours.
+Doc : `docs/champs/sol/conception_sol_qui_respire.md`. 8 tronçons ; ① FAIT et commité.
+**Remontées de ① TRANCHÉES (Nico, 2026-10-22)** : perf +33 % acceptée → dette **D114** (URGENTE,
+sprint perf juste après ce sprint ; F5 suspendu d'ici là) ; banc succession 4/6 → dette **D115**
+(banc conservé tel quel : il révèle un trou de mécanique, ne pas l'affaiblir). Pour les tronçons
+suivants : budget perf mesuré **par rapport à ①** ; ne pas tenter de résorber D114 ici.
 
 ## Carte des tronçons (statut)
 
 | # | Kickoff | Golden | Statut |
 |---|---|---|---|
-| ① | `01_bilan_hydrique.md` | RE-FIGÉ annoncé | à faire |
+| ① | `01_bilan_hydrique.md` | RE-FIGÉ `22768f33…` → `1ce02bce…` | FAIT (D114, D115) |
 | ② | `02_bois_mort.md` | re-figé probable | à faire |
 | ③ | `03_regne_fongique.md` | neutre | à faire |
 | ④ | `04_parasite_faiblesse.md` | re-figé si hôte affaibli au smoke | à faire |
@@ -16,7 +20,63 @@ Doc : `docs/champs/sol/conception_sol_qui_respire.md`. 8 tronçons, aucun commen
 | ⑦ | `07_nectar_espece.md` | re-figé si floraison au smoke | à faire |
 | ⑧ | `08_vue_godot.md` | intact | à faire |
 
-Golden de départ : à relever par ① (`python3 -m tests.test_golden`) avant toute modif.
+Golden de départ (relevé par ①) : `22768f339ac41bb20b1604bb29672bb3b209ee62ec659b1c8369dd31ccd6cfb8`.
+Golden après ① : `1ce02bce275a2b4c262564e7eda384b1071125ebc67e65346d101820102d6bfd` (re-figé
+UNE fois, annoncé : climat + hydrologie changent partout). Pont **0.5.50**.
+
+## ① Bilan hydrique — FAIT (2026-10-22)
+
+**Livré** :
+- 1a `sim/weather.humidite_air(seed, week, event)` (océanique ~0,80 ± 0,07 saisonnier ± 0,05
+  bruit, imposée par l'événement : pluie 0,97, sécheresse/canicule 0,50) → passée à
+  `tick_rosee(…, humidite_air=)` ; point de rosée = T_air − (1−HR)·`ECART_ROSEE_HR` (20 °C,
+  règle des météorologues). Défaut `None` = dérivation historique depuis le sol.
+- 1b canal `K_PLUIE` (90_008) : les semaines CALMES tirent un épisode `P_PLUIE_SAISON`
+  {printemps .27, été .16, automne .22, hiver .35} → « Pluie prolongée » (« Orage » l'été,
+  intensité ≤ 0,75 < SEUIL_SEVERE du composé). Fréquences totales mesurées [200 graines ×
+  2 ans] : printemps 1/4,0 · été 1/6,1 · automne 1/4,0 · hiver 1/3,0. Aléas inchangés (un
+  aléa exclut la pluie). `BASE_RAIN` 0,015 → 0,006 ; `PLUIE_APPORT` Pluie 0,012 → 0,14,
+  Orage 0,010 → 0,10.
+- 1c `feuillage` (attribut d'espèce, défaut `moyen`) + `sim/engine/transpiration.py` :
+  facteur = demande (T_air 3→16 °C, ciel, vent) × feuillage présent (caduc 0 hiver/après
+  abscission, vivace dormante 0,15 l'hiver, débourrement sem. 1→8) × `COEF_FEUILLAGE`
+  {large 1,3 · moyen 1 · fin 0,8 · cireux 0,55 · aiguilles 0,4}. Eau seule.
+  Large : courgette, tournesol, figuier, noyer, consoude, bourrache. Cireux : thym, lavande,
+  lierre, myrtille, ail, armoise, molène. Fin : blé, seigle, pâturin, bambou, carotte,
+  achillée, phacélie, sphaigne, drosera, bouleau, saule. Aiguilles : sapin. Reste moyen.
+- 1e banc TEST `pluie_continue` (monde `full`, flag `pluie_forcee` → `weather_state`) +
+  `mesures/banc_pluie.py` : **5/5 maillons OK** [40 sem., n=1 run] — sol 3,00 (80 % plots au
+  plafond), `eau_surface` 79, `marais_memory` ≥ MARAIS_ON sur 73 plots, asphyxie argile 69 %
+  des plantes (témoin 0 %), acclimatation 66 % (témoin 78 %).
+
+**Calibrage** (`mesures/bilan_eau.py`, monde full, 156 sem.) [n=1 run par graine] :
+| graine | hum. méd. an 0/1/2 | sem. ~10 (fin d'hiver) an 1/2 | sem. ~35 an 1/2 | pluie/an |
+|---|---|---|---|---|
+| 1521550718 | 1,61 / 1,92 / 1,86 | 2,37 / 2,26 | 1,59 / 1,72 | 17/17/17 |
+| 7 | 1,07 / **0,85** / 0,99 | 0,97 / 1,29 | 0,71 / 0,74 | 4/9/12 |
+| 1515525502 | 1,76 / 1,82 / 1,86 | 2,12 / 1,98 | 1,70 / 1,69 | 16/15/18 |
+Cible tenue sauf graine 7 an 1-2 (années sèches, 9 et 12 sem. de pluie) ; creux d'été jamais
+< 0,7 ; fin d'hiver ≈ 2,0-2,4/3,0 (« presque plein » partiel). Rosée 0,005-0,008/plot/sem
+(avant : 0,008 → 0,0001). Uptake hiver ≈ 0 (transpiration).
+
+**⚠ REMONTÉE PERF (règle du kickoff : dépassement ⇒ STOP)** [graine 1521550718, n=1 run, base
+et ① lancés en parallèle] : tick moyen an 0 626 → 626 ms, an 1 1126 → 1112, **an 2 1417 →
+1884 ms (+33 %)** ; population an 2 539→449 (base, mort de soif) contre 628→675 (①, +32 %).
+Coût PAR PLANTE inchangé (~2,9 ms/plante an 2 dans les deux) : le surcoût est la population
+qui survit enfin, pas le mécanisme. Population NON bridée. → décision orchestrateur/Nico.
+
+**⚠ REMONTÉE banc `succession_bascule`** (`tests/bancs/test_succession`, 4/6) : pioneer final
+40 (53 %) au lieu de 9. Ablation : la bascule de la base se jouait dans un DÉSERT (hum. méd.
+banc 0,03-0,10, drought_memory 0,5-0,8 des 4 archétypes [n=1 run]) — c'est la soif qui
+rabattait le pioneer, pas la facilitation OM. Sol arrosé (hum. 1,1-1,8) → pioneer non rabattu.
+Chaque correction seule (pluie / rosée / transpiration) passe, les trois ensemble non : banc
+fragile. Non « réglé » ici (hors périmètre) → à trancher (dette succession ou oracle).
+
+**Autres constats** : échecs PRÉ-EXISTANTS inchangés (base 2026-10-22 déjà rouge) :
+`bancs.test_edaphique` 6/7, `test_peripherie_pont` 49/50, `test_population` (hash), `test_vent`
+52/54. Acclimatation du monde full après ① [40 sem., n=1 run] : 259/374 plantes portent
+`tolerance_ombre`, pas la sécheresse → le « voile cireux » F5 viendra surtout de l'OMBRE.
+Conteneurs : `plant_uptake` y reste à transpiration 1,0 (défaut neutre, non saisonnier).
 
 ## Ajouts de Nico à l'accord (2026-10-22)
 - Bois mort VISIBLE au sol, dégradation en sprite à stades (② pont, ⑧ dessin).
@@ -108,6 +168,8 @@ Aucune. Accord de Nico pour figer : 2026-10-22.
 ## §REPRISE
 
 Lire `CLAUDE.md` + ce fichier + le kickoff du prochain tronçon « à faire » de la carte.
+**Avant ②** : trancher les deux remontées de ① (perf +33 % an 2 par la population ; banc
+succession). Prochain tronçon : ② `02_bois_mort.md` (golden de départ `1ce02bce…`).
 Chaque tronçon met à jour sa ligne de statut, consigne ses mesures [n=…] et ses hashes golden.
 ## Liste fongique VALIDÉE (Q7)
 

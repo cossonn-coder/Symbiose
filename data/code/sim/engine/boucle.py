@@ -33,7 +33,8 @@ from sim.effects import resolve_plant_turn, apply_disturbances
 from sim.reproduction import is_seed_bearing, child_expression
 from sim.seeds import Seed
 from sim.succession import succession
-from sim.weather import weather_state, K_PEST, TEMP_DRIVEN, patch_local
+from sim.weather import weather_state, K_PEST, TEMP_DRIVEN, patch_local, humidite_air
+from .transpiration import demande_climatique   # transpiration foliaire (D111 ①)
 from sim.wind import wind_at, gust_profile
 from sim.vigueur import tick_player_vigueur, refill_saison
 from sim.growth import grow_plant
@@ -92,7 +93,10 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
         # État météo consolidé (événement + T_air + nébulosité) via le helper PUR
         # partagé avec le snapshot (serialize §A) — un seul calcul, jamais deux qui
         # dérivent. T_air = normale saisonnière + delta transitoire ; nébulosité ④.
-        event, temp_now, nebul = weather_state(seed, week)
+        # `pluie_forcee` : banc de TEST `pluie_continue` SEULEMENT (D111 ①e) — clé
+        # absente en jeu/golden → False → météo pure inchangée.
+        pluie_forcee  = self.game_state.get("pluie_forcee", False)
+        event, temp_now, nebul = weather_state(seed, week, pluie_forcee)
         # Vent de MASSE D'AIR de la semaine (sprint VENT & ÉVAPOTRANSPIRATION ①/②/③).
         # Scalaire uniforme sur le monde (comme T_air/nébulosité), fonction PURE O(1).
         # `force` pilote l'évaporation (②) ; `direction` oriente le sillage d'abri (③).
@@ -112,6 +116,12 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
         # dessous. Remplace les deltas plats humidité retirés de WEATHER_ALEA. 0 hors
         # pluie/sécheresse → ces semaines-là l'hydrologie est inchangée.
         pluie_event   = PLUIE_APPORT.get(event.kind, 0.0)
+        # Sprint « le sol qui respire » ① (D111) : humidité de l'AIR océanique (lue
+        # par la rosée à la place de l'humidité du sol) et DEMANDE climatique de
+        # transpiration (chaleur × ciel × vent, lue par l'uptake d'eau). Scalaires
+        # uniformes PURS, calculés une fois par tick comme T_air/nébulosité.
+        hr_air        = humidite_air(seed, week, event)
+        demande_eau   = demande_climatique(temp_now, nebul, vent_force)
         for tile in self.tiles:
             eco = self._eco(tile)
             eco.temperature.fill(temp_now)
@@ -271,7 +281,7 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
             #     diégétique, philo #5). No-op si aucune condensation → golden-safe ;
             #     les nuits claires/froides du smoke (hiver) en produisent → re-figeage
             #     MAÎTRISÉ (humidité matinale en hausse).
-            log += eco.tick_rosee(temp_now, nebul)
+            log += eco.tick_rosee(temp_now, nebul, humidite_air=hr_air)
 
             # 2d. Couverture du sol (sprint LUXURIANCE ①, D65 §2.1) — SCATTER des
             #     empreintes des plantes BASSES (sol+basse) vers le champ scalaire
@@ -394,7 +404,7 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
                 log += [l for l in elog if l.strip()]
 
             # 8. Uptake racinaire (après effets, avant physiologie)
-            log += self._apply_uptake(tile, eco)
+            log += self._apply_uptake(tile, eco, saison, week_in_year, demande_eau)
 
             # 8b. Exsudats racinaires — boucle rhizosphère (chantier A)
             log += self._apply_exudates(tile, eco)

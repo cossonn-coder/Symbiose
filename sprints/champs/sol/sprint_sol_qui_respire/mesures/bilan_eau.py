@@ -1,5 +1,5 @@
 """Bilan hydrique par an (lecture seule, monkeypatch mémoire). Usage : bilan_eau.py seed semaines"""
-import sys, statistics as st
+import sys, time, statistics as st
 from tools.simserver.server import SimServer
 from fields.ecofields import container as C
 from sim.weather import weather_state
@@ -30,11 +30,15 @@ def ecos():
 yr = {}
 for w in range(N):
     acc.update(upt=0.0, drain=0.0, hydro=0.0, rosee=0.0)
-    srv.cmd_step_week({})
+    t0 = time.perf_counter(); srv.cmd_step_week({}); dt = time.perf_counter() - t0
     es = ecos(); nplots = sum(e.rows * e.cols for e in es)
     hs = [v for e in es for row in e.humidite.data for v in row]
-    ev = weather_state(seed, w)[0].kind
-    y = yr.setdefault(w // 52, {"h": [], "u": 0, "d": 0, "hy": 0, "rain": 0, "n": [], "w": 0, "ro": 0})
+    ev = weather_state(seed, w + 1)[0].kind   # semaine simulée = w+1 (moteur démarre à 1)
+    y = yr.setdefault(w // 52, {"h": [], "u": 0, "d": 0, "hy": 0, "rain": 0, "n": [], "w": 0, "ro": 0,
+                                "t": 0.0, "h10": None, "h35": None})
+    y["t"] += dt
+    if w % 52 == 9: y["h10"] = st.median(hs)
+    if w % 52 == 34: y["h35"] = st.median(hs)
     y["h"].append(st.median(hs)); y["u"] += acc["upt"] / nplots; y["d"] += acc["drain"] / nplots
     y["hy"] += acc["hydro"] / nplots; y["ro"] += acc["rosee"] / nplots; y["w"] += 1
     y["rain"] += ev in ("Pluie prolongée", "Orage")
@@ -42,4 +46,5 @@ for w in range(N):
 for k, y in yr.items():
     n = [x for x in y["n"] if x is not None]
     print(f"an {k}: hum méd {st.median(y['h']):.2f} (fin {y['h'][-1]:.2f}) | /plot/sem : uptake {y['u']/y['w']:.4f} "
-          f"drain {y['d']/y['w']:.4f} net_hydro {y['hy']/y['w']:+.4f} rosee {y['ro']/y['w']:.4f} | sem pluie {y['rain']} | plantes {n}")
+          f"drain {y['d']/y['w']:.4f} net_hydro {y['hy']/y['w']:+.4f} rosee {y['ro']/y['w']:.4f} | sem pluie {y['rain']} | plantes {n}"
+          f" | h10 {y['h10']} h35 {y['h35']} | tick moy {1000*y['t']/y['w']:.0f} ms")

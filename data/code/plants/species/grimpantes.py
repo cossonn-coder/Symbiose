@@ -40,6 +40,7 @@ class Ivy(PlantBase):
     family = "Araliaceae"
     genus = "Hedera"
     name = "Lierre"
+    feuillage = "cireux"  # transpiration (D111 ①) : type de feuillage d'espèce
     resilience_base = 1.25         # S — liane ligneuse persistante, extrêmement rustique
     mode_grimpe            = "crampon"   # crampons adhésifs → escalade le mur nu (②)
     hauteur_autoportante   = 15.0        # rampe bas ; au-delà, libre → l'apex retombe (①)
@@ -116,6 +117,7 @@ class Jasmine(PlantBase):
     family = "Oleaceae"
     genus = "Jasminum"
     name = "Jasmin"
+    feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     resilience_base = 1.0          # intermédiaire — sarment ligneux, mais rameaux tendres au froid
     mode_grimpe            = "sarmenteux"  # ne s'accroche que par palissage (④)
     hauteur_autoportante   = 25.0          # sarments souples : retombent vite sans appui (①)

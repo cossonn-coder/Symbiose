@@ -145,6 +145,7 @@ class Fig(PerennialWoody):
     family = "Moraceae"
     genus  = "Ficus"
     name   = "Figuier"
+    feuillage = "large"  # transpiration (D111 ①) : type de feuillage d'espèce
     rarity = "Établie"
     keywords = ["Fruitier", "Jardin", "Ombre dense"]
     t_germ_opt = 20.0             # MÉDITERRANÉEN : exige un sol chaud (≠ ligneux tempéré) (③)
@@ -187,6 +188,7 @@ class AppleTree(PerennialWoody):
     family = "Rosaceae"
     genus  = "Malus"
     name   = "Pommier"
+    feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     rarity = "Établie"
     keywords = ["Fruitier", "Jardin", "Mellifère"]
     foliage_density = 0.60
@@ -254,6 +256,7 @@ class CherryTree(PerennialWoody):
     family = "Rosaceae"
     genus  = "Prunus"
     name   = "Cerisier"
+    feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     rarity = "Établie"
     keywords = ["Fruitier", "Intermédiaire", "Mellifère"]
     foliage_density = 0.60
@@ -295,6 +298,7 @@ class WalnutTree(PerennialWoody):
     family = "Juglandaceae"
     genus  = "Juglans"
     name   = "Noyer"
+    feuillage = "large"  # transpiration (D111 ①) : type de feuillage d'espèce
     rarity = "Climacique"
     keywords = ["Lisière", "Ombre dense", "Structurant", "Allélopathe"]
     foliage_density = 0.80
@@ -336,6 +340,7 @@ class OakTree(PerennialWoody):
     family = "Fagaceae"
     genus  = "Quercus"
     name   = "Chêne"
+    feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     rarity = "Sentinelle"
     keywords = ["Lisière", "Sujet structurant", "Centenaire"]
     foliage_density = 0.75
@@ -382,6 +387,7 @@ class BeechTree(PerennialWoody):
     family = "Fagaceae"
     genus  = "Fagus"
     name   = "Hêtre"
+    feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     rarity = "Climacique"
     keywords = ["Lisière", "Ombre dense", "Structurant"]
     foliage_density = 0.85            # houppier fermé → ombre profonde de hêtraie
@@ -418,6 +424,7 @@ class BirchTree(PerennialWoody):
     family = "Betulaceae"
     genus  = "Betula"
     name   = "Bouleau"
+    feuillage = "fin"  # transpiration (D111 ①) : type de feuillage d'espèce
     rarity = "Établie"
     keywords = ["Pionnière", "Lisière", "Ombre légère"]
     foliage_density = 0.45           # houppier léger → sous-bois clair
@@ -461,6 +468,7 @@ class HornbeamTree(PerennialWoody):
     family = "Betulaceae"
     genus  = "Carpinus"
     name   = "Charme"
+    feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     rarity = "Établie"
     keywords = ["Bocage", "Haie", "Structurant"]
     foliage_density = 0.65           # houppier moyen
@@ -505,6 +513,7 @@ class FirTree(PerennialWoody):
     family = "Pinaceae"
     genus  = "Abies"
     name   = "Sapin"
+    feuillage = "aiguilles"  # transpiration (D111 ①) : type de feuillage d'espèce
     rarity = "Établie"
     keywords = ["Conifère", "Persistant", "Aiguilles", "Brise-vent"]
     deciduous = False                # PERSISTANT : ombre projetée toute l'année
@@ -572,6 +581,7 @@ class Alder(PerennialWoody):
     family = "Betulaceae"
     genus  = "Alnus"
     name   = "Aulne"
+    feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     rarity = "Établie"
     keywords = ["Berge", "Fixatrice N₂", "Pionnière", "Zone humide"]
     foliage_density = 0.55           # houppier moyen, ombre légère de ripisylve
@@ -658,6 +668,7 @@ class Willow(PerennialWoody):
     family = "Salicaceae"
     genus  = "Salix"
     name   = "Saule"
+    feuillage = "fin"  # transpiration (D111 ①) : type de feuillage d'espèce
     rarity = "Établie"
     keywords = ["Berge", "Trogne", "Bouture", "Mellifère précoce"]
     foliage_density = 0.50           # feuillage fin et lâche → ombre légère de bord d'eau

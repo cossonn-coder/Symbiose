@@ -35,7 +35,7 @@ MAX_YEARS = 110   # garde-fou : longévité 70 ans → mort attendue bien avant
 # TEMP_FROST_DAMAGE=0 (→ pas de gel). nébulosité 0.1 = ciel clair neutre.
 _T_DOUCE = 15.0
 _NEBUL_CLAIR = 0.1
-def _meteo_labo(seed, week):
+def _meteo_labo(seed, week, pluie_forcee=False):   # signature de weather_state (D111 ①)
     return CALME, _T_DOUCE, _NEBUL_CLAIR
 
 

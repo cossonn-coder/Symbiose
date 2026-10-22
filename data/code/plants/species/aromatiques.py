@@ -31,6 +31,7 @@ class Mint(Lamiaceae):
     """
     genus = "Mentha"
     name = "Menthe"
+    feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     resilience_base = 1.25         # S — vivace robuste, repart du rhizome après un coup
     t_germ_opt = 15.0              # tempérée : lève au frais du printemps (fenêtre ③)
     t_germ_tol = 10.0              # tolérante
@@ -83,6 +84,7 @@ class Thyme(Lamiaceae):
     """
     genus = "Thymus"
     name = "Thym"
+    feuillage = "cireux"  # transpiration (D111 ①) : type de feuillage d'espèce
     resilience_base = 1.25         # S — coussin ligneux de garrigue, très coriace
     hail_resistance_base = 1.3     # feuilles minuscules et coriaces — insensibles à la grêle
     ph_opt = 7.4                   # calciphile : prospère sur sol calcaire (garrigue) — fenêtre ⑤
@@ -131,6 +133,7 @@ class Lavender(Lamiaceae):
     """
     genus = "Lavandula"
     name = "Lavande"
+    feuillage = "cireux"  # transpiration (D111 ①) : type de feuillage d'espèce
     resilience_base = 1.25         # S — sous-arbrisseau ligneux méditerranéen, rustique
     hail_resistance_base = 1.3     # feuillage étroit argenté — la grêle glisse
     ph_opt = 7.4                   # calciphile : terrain sec et calcaire — fenêtre ⑤

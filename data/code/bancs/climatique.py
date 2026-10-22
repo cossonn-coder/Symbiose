@@ -277,3 +277,25 @@ def germination_multifacteur():
         tiles.append(tile); ecos[tile.tile_id] = eco
         ox += 800.0
     return monde(tiles, ecos)
+
+
+# ─────────────────────── pluie chaque semaine (D111 ①e) ───────────────────────
+# Banc de TEST SEULEMENT (D-pluie, Nico : « jamais de pluie chaque semaine en jeu »).
+# Le MÊME monde que `full` (8 tuiles terre/sable/argile, relief, plantations) — aucun
+# réglage ad hoc : seule la météo est forcée en pluie chaque semaine, via le flag
+# `pluie_forcee` posé par le hook post-init (la fabrique ne rend que le monde). Il
+# doit faire émerger TOUTE la chaîne aval : sol au plafond, flaques (`eau_surface`),
+# marécage des creux (`marais_memory`), asphyxie sur argile, recul de l'acclimatation
+# à la sécheresse (puis carpophores, tronçon ③). Vérification :
+# sprints/champs/sol/sprint_sol_qui_respire/mesures/banc_pluie.py. Un maillon muet
+# = couplage cassé, à consigner (pas à « régler » dans le banc).
+def pluie_continue():
+    """Banc « pluie chaque semaine » : monde `full` sous pluie forcée (test)."""
+    from main import build_world_full     # local : main est au sommet des couches
+    tiles, ecos, _aux, house = build_world_full()
+    return monde(tiles, ecos, house)
+
+
+def pluie_continue_post_init(game_state, _player) -> None:
+    """Hook post-init : force la pluie chaque semaine (lu par la boucle + le pont)."""
+    game_state["pluie_forcee"] = True

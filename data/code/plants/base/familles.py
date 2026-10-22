@@ -118,6 +118,13 @@ class PlantBase(ABC):
     # qui se déchirent. Défaut 1.0 = neutre acceptable (la grêle est rare et locale) →
     # pas de table exhaustive requise, seuls quelques profils marqués suffisent.
     hail_resistance_base: float = 1.0
+    # `feuillage` (sprint « le sol qui respire » ①, D111 §1c, D-feuillage) : TYPE DE
+    # FEUILLAGE de l'espèce ∈ {"large", "moyen", "fin", "cireux", "aiguilles"} → pilote
+    # le coefficient de TRANSPIRATION (table `COEF_FEUILLAGE`, sim/engine/transpiration.py).
+    # Constante d'ESPÈCE, PAS un gène (patron `resilience_base`) : la forme des feuilles
+    # est un trait fixe de l'espèce ; `tolerance_secheresse` (gène) est une tolérance de
+    # croissance, autre notion. Littéral seul (règle de couches : plants n'importe rien).
+    feuillage: str = "moyen"
     # `root_loss_tolerance_base` (couche 1 — niche herbivorie racinaire, campagnol,
     # sprint santé & résilience ③) : capacité D'ESPÈCE à ENCAISSER la perte de chevelu
     # racinaire sans effondrer son uptake. DIVISE la perte dans `plant_uptake`. >1 =

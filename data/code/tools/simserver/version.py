@@ -715,7 +715,14 @@ from __future__ import annotations
 #       (aucun débit, ratio 1.0). Défaut ON côté panneau Paramètres tant que dure la
 #       phase de test. Absent → aucun effet → golden INTACT. Un binaire pré-0.5.49
 #       ignore le champ (les gestes coûtent leur prix normal).
-ENGINE_VERSION = "0.5.49"
+# 0.5.50 (LE SOL QUI RESPIRE ①, D111 bilan hydrique) : schéma du snapshot INCHANGÉ,
+#       mais le CLIMAT du moteur change (épisodes de pluie toutes saisons → le bloc
+#       `weather` porte bien plus souvent « Pluie prolongée »/« Orage » ; rosée sur
+#       l'humidité de l'air ; transpiration foliaire saisonnière). Ajout : banc de
+#       TEST `pluie_continue` (`init config="pluie_continue"`, pluie forcée chaque
+#       semaine via `game_state["pluie_forcee"]`, lue aussi par le bloc `weather`).
+#       Golden RE-FIGÉ (annoncé par le kickoff).
+ENGINE_VERSION = "0.5.50"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

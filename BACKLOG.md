@@ -24,6 +24,7 @@
 1. **Sprint A « le sol qui respire »** (moteur, [D111](DETTE.md)) → `/conception` : bilan hydrique (le sol
    se dessèche), champignons (bois mort au sol, fructification la semaine après la pluie, ~10 espèces
    comestibles / vénéneuses / psychédéliques avec leurs voix), nectar par espèce. Puis re-mesurer D110 (g).
+1bis. **URGENT — perf du tick** ([D114](DETTE.md), +33 % en an 2 depuis le tronçon ① du sprint A) → `/conception` d'un sprint perf dès la fin du sprint A ; **F5 suspendu par Nico jusque-là**.
 2. **Sprint B « ce qui est cassé à l'écran »** (vue, [D112](DETTE.md)) : bêtes et carpophores non dessinés,
    maison en verre, périphérie qui exige F10, bugs de la heatmap du vent + vent en tête de F6, jauges Maj+F3,
    F11 « spray ».

@@ -17,7 +17,11 @@ HUMIDITY_INERTIA  = 0.55
 FERTILITY_INERTIA = 0.85
 MICROBE_INERTIA   = 0.92   # plus diffusif pour aura basilic
 
-BASE_RAIN      = 0.015
+# Pluie de FOND (bruine uniforme hebdomadaire). Sprint « le sol qui respire » ①
+# (D111 §1b) : 0.015 → 0.006. Elle tenait lieu de climat tant que la pluie n'existait
+# que comme aléa ; désormais les ÉPISODES de pluie (toutes saisons) portent l'essentiel
+# de l'eau (`PLUIE_APPORT`), la bruine de fond n'en garde qu'un reliquat.
+BASE_RAIN      = 0.006
 EVAPORATION    = 0.997
 DRAINAGE       = 0.993   # drainage de référence (terre) — conservé comme fallback
 SOIL_RETENTION = 0.010
@@ -244,6 +248,13 @@ GAIN_HUM_ROSEE    = 5.0     # °C — remontée du point de rosée à humidité 
 ROSEE_PAR_DEGRE   = 0.010   # humidité déposée par °C sous le point de rosée
 ROSEE_LOG_SEUIL   = 0.02    # condensation/fonte cumulée/tuile pour émettre un marqueur
 GIVRE_SEVERITY_REF = 8.0    # réf de sévérité du dégât foliaire de givre (option §3.5, différée)
+# Sprint « le sol qui respire » ① (D111 §1a) : quand l'HUMIDITÉ DE L'AIR est fournie
+# (`sim.weather.humidite_air`), le point de rosée suit la règle des météorologues
+# T_rosée ≈ T_air − (1 − HR)·ECART_ROSEE_HR (≈ 1 °C par 5 % d'humidité manquante).
+# Air marin à 80 % → point de rosée 4 °C sous l'air : la rosée ne tombe que les nuits
+# claires sur sol nu qui rayonne assez (RAYONNEMENT_NOCTURNE) → régulière mais MODESTE,
+# elle ne remplace pas la pluie (mesuré [n=3 graines] dans le 00_etat.md du sprint).
+ECART_ROSEE_HR    = 20.0    # °C d'écart air↔point de rosée par unité d'humidité manquante
 
 # --- Interconnexions vivantes de la rosée (sprint météo→champs ⑤, §6) ---
 # La rosée du matin RELIE le vivant (règle « tout coexiste », 2026-06-16). Deux
@@ -804,13 +815,20 @@ PRECIP_NORM = {"Pluie prolongée": 1.0, "Orage": 0.9, "Grêle": 0.7}
 # (apport 0) : son assèchement ÉMERGE de l'évaporation montée par la T_sol chaude.
 # Événements non listés (Beau temps, Gelée, Redoux, Tempête, Grêle, Neige) → 0 :
 # aucun apport d'eau ces semaines-là. PLACEHOLDERS, calibrage F5 / bancs d'essai.
+# Sprint « le sol qui respire » ① (D111 §1b) : un ÉPISODE de pluie doit recharger
+# vraiment le sol (avant : +0.012 ≈ la pluie de fond, une semaine de pluie ne faisait
+# que doubler l'apport). Les épisodes deviennent aussi réguliers (toutes saisons,
+# `sim.weather.P_PLUIE_SAISON`) → valeurs calibrées sur la cible validée par Nico
+# (humidité médiane annuelle ∈ [1,0 ; 2,0], fin d'hiver proche du plafond, creux d'été
+# sans désert) — mesures [n=3 graines] consignées dans le 00_etat.md du sprint.
 PLUIE_APPORT = {
-    "Pluie prolongée": +0.012,
-    "Orage":           +0.010,
+    "Pluie prolongée": +0.140,
+    "Orage":           +0.100,
     "Tempête":         +0.004,
     "Grêle":           +0.003,
-    "Sécheresse":      -0.012,   # < −BASE_RAIN (0.015) en valeur absolue → apport net
-                                 # encore positif, jamais d'eau soustraite (cf. borne)
+    "Sécheresse":      -0.012,   # ≥ BASE_RAIN (0.006, D111 ①) en valeur absolue → la
+                                 # bruine de fond est TARIE (apport borné à 0, jamais
+                                 # d'eau soustraite, cf. borne côté hydrologie)
 }
 
 # --- Mycélium — réseau fongique (sprint mycélium & interconnexions, tronçon ①) --

@@ -40,7 +40,7 @@ _T_DOUCE = 15.0
 _NEBUL_CLAIR = 0.1
 
 
-def _meteo_labo(seed, week):
+def _meteo_labo(seed, week, pluie_forcee=False):   # signature de weather_state (D111 ①)
     """Beau temps doux constant : pas de précipitation (→ pas d'asphyxie), 15 °C
     (→ pas de gel). Isole le facteur testé de tout aléa météo global."""
     return CALME, _T_DOUCE, _NEBUL_CLAIR

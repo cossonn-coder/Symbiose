@@ -173,7 +173,7 @@ def gust_profile(seed: int, week: int) -> tuple[float, ...]:
     return tuple(profile)
 
 
-def nebulosite_dynamique(seed: int, week: int) -> float:
+def nebulosite_dynamique(seed: int, week: int, event=None) -> float:
     """
     Nébulosité DYNAMIQUE pilotée par le vent (§2.3) — remplace, à terme, la lecture
     figée `NEBULOSITE[kind]` de `weather_state`. ICI elle est seulement CALCULÉE,
@@ -182,8 +182,10 @@ def nebulosite_dynamique(seed: int, week: int) -> float:
     Modèle sobre : on part de la valeur figée (couverture « de référence » de
     l'événement) et le vent la CHASSE — un vent fort disperse la couche nuageuse.
     Vent nul → couverture figée inchangée (stagnation). PURE et déterministe.
+    `event` fourni (banc de pluie forcée, D111 ①e) → remplace `weather_at`.
     """
-    event = weather_at(seed, week)
+    if event is None:
+        event = weather_at(seed, week)
     base = NEBULOSITE.get(event.kind, 0.10 if event.kind == CALME.kind else 0.10)
     force = wind_at(seed, week).force
     # Un vent à force 1 chasse jusqu'à NEBUL_WIND_CLEAR de la couverture ; borné.

@@ -14,6 +14,7 @@ from plants.base import (GrowthStage,
 class Tomato(Solanaceae):
     genus = "Solanum"
     name = "Tomate"
+    feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     # Sensibilité EMBLÉMATIQUE à la juglone (sprint ALLÉLOPATHIE ⑤) : la tomate est
     # le cas d'école du dépérissement sous noyer. > 1 = plus sensible que le standard
     # (borné [0,1] par la rampe → une forte charge effondre sa niche/croissance).
@@ -94,6 +95,7 @@ class Tomato(Solanaceae):
 class Pepper(Solanaceae):
     genus = "Capsicum"
     name = "Poivron"
+    feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     t_germ_opt = 24.0              # la PLUS frileuse : tropicale, lève très tard (fenêtre ③)
     t_germ_tol = 6.0               # la plus étroite des cultivées chaudes
     resistance_ecrasement  = 0.35  # buissonnant cassant, repart un peu (volet 2 §4)
@@ -142,6 +144,7 @@ class Pepper(Solanaceae):
 class Bean(Fabaceae):
     genus = "Phaseolus"
     name = "Haricot"
+    feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     resilience_base = 0.8          # R — annuelle tendre à tige volubile fragile
     t_germ_opt = 20.0              # FRILEUSE : sème « quand le sol est chaud au toucher » (③)
     t_germ_tol = 7.0               # étroite → pourrit en terre froide
@@ -197,6 +200,7 @@ class Bean(Fabaceae):
 class Clover(Fabaceae):
     genus = "Trifolium"
     name = "Trèfle"
+    feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     resilience_base = 1.25         # S — couvre-sol vivace piétinable, repart du stolon
     t_germ_opt = 16.0              # tempérée : couvre-sol qui lève au mitan du printemps (③)
     t_germ_tol = 10.0              # tolérante (germe printemps comme arrière-saison)
@@ -247,6 +251,7 @@ class Clover(Fabaceae):
 class Sunflower(Asteraceae):
     genus = "Helianthus"
     name = "Tournesol"
+    feuillage = "large"  # transpiration (D111 ①) : type de feuillage d'espèce
     # --- Allélopathie racinaire (sprint ALLÉLOPATHIE ⑤) ---
     # Émission MODÉRÉE : le tournesol est notoirement allélopathique (composés
     # phénoliques des racines et feuilles) — il « espace » ses voisines sensibles.
@@ -344,6 +349,7 @@ class Sunflower(Asteraceae):
 class Basil(Lamiaceae):
     genus = "Ocimum"
     name = "Basilic"
+    feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     resilience_base = 0.8          # R — annuelle tendre frileuse, noircit au moindre stress
     t_germ_opt = 22.0              # FRILEUSE tropicale : exige la chaleur, lève tard (fenêtre ③)
     t_germ_tol = 6.0               # étroite → noircit au moindre coup de froid

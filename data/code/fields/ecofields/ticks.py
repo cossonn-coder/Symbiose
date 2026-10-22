@@ -106,15 +106,17 @@ class TicksMixin:
         nocturne (qui lit `snow` via `t_min_nuit_at`)."""
         self.snow = _snow_next(self.snow, temp_now, is_neige)
 
-    def tick_rosee(self, t_air: float, nebulosite: float) -> list:
+    def tick_rosee(self, t_air: float, nebulosite: float,
+                   humidite_air: float | None = None) -> list:
         """Dépose la rosée / accumule-fond le givre nocturne (②). Délègue au helper
         PUR `rosee.tick_rosee` (container déjà dense) : il lit le thermomètre nocturne
         `t_min_nuit_at` + l'humidité du sol, écrit `humidite` (rosée + fonte différée)
         et `eco.givre` (dépôt gelé). À appeler ENTRE la thermique (2b) et l'hydrologie
         (3) : la rosée lit l'humidité de fin du tick précédent, son dépôt est ensuite
         drainé/diffusé. Renvoie les marqueurs de log diégétiques (💧/❄). No-op (liste
-        vide, golden-safe) si aucune condensation nulle part."""
-        return _tick_rosee(self, t_air, nebulosite)
+        vide, golden-safe) si aucune condensation nulle part. `humidite_air` (D111 ①) :
+        humidité de l'air océanique ; `None` → dérivée du sol (historique)."""
+        return _tick_rosee(self, t_air, nebulosite, humidite_air)
 
     # --- Lumière ---
 

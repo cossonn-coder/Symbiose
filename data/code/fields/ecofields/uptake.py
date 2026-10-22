@@ -24,7 +24,8 @@ class UptakeMixin:
                       root_herbivory_memory: float = 0.0,
                       root_loss_tolerance: float = 1.0,
                       share: float = 1.0,
-                      volume_factor: float = 1.0) -> dict[str, float]:
+                      volume_factor: float = 1.0,
+                      transpiration: float = 1.0) -> dict[str, float]:
         """
         Consommation racinaire modulée par la mémoire physiologique.
 
@@ -55,6 +56,13 @@ class UptakeMixin:
                         un FLUX rapporté au volume réel du réservoir, JAMAIS la plante
                         (philo #2 : pas de malus direct). Le prélèvement reste plafonné
                         par le stock local (Liebig / `min(amount, f.at_plot)`).
+        transpiration → facteur de TRANSPIRATION FOLIAIRE (sprint « le sol qui
+                        respire » ①, D111 §1c) calculé côté `sim` (saison, météo,
+                        feuillage présent, type de feuillage de l'espèce) : il module
+                        le prélèvement d'EAU SEUL (pas N/P/K — une plante dormante
+                        sans feuilles ne pompe plus l'eau, sa racine vit toujours).
+                        C'est la demande atmosphérique qui TIRE l'eau du sol (flux,
+                        philo #2). DÉFAUT 1.0 → historique bit-identique (conteneurs).
 
         Rétroaction rhizosphère : un microbiome riche améliore l'assimilation des
         nutriments (bonus borné UPTAKE_MICRO_BONUS) — la boucle vertueuse côté plante.
@@ -106,6 +114,9 @@ class UptakeMixin:
                 amount *= (0.5 + light * 0.5) * shade_factor
                 # Stress hydrique adaptatif (plante économise l'eau)
                 amount *= max(0.5, 1.0 - drought_memory * 0.3)
+                # Transpiration foliaire saisonnière (D111 ①) : sans feuilles ou
+                # sous un ciel froid/couvert, la plante ne tire presque plus d'eau.
+                amount *= transpiration
             f = self.get_field(var)
             real = min(amount, f.at_plot(r, c))
             if real > 0:

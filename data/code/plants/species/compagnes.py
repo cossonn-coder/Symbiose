@@ -26,6 +26,7 @@ class Yarrow(Asteraceae):
     """
     genus = "Achillea"
     name = "Achillée millefeuille"
+    feuillage = "fin"  # transpiration (D111 ①) : type de feuillage d'espèce
     resilience_base = 1.25         # S — vivace rustique stolonifère, très encaissante
     resistance_ecrasement  = 0.75  # stolons, repart (volet 2 §4)
     stimulation_ecrasement = 0.6
@@ -70,6 +71,7 @@ class Phacelia(PlantBase):
     family = "Boraginaceae"
     genus = "Phacelia"
     name = "Phacélie"
+    feuillage = "fin"  # transpiration (D111 ①) : type de feuillage d'espèce
     resilience_base = 0.8          # R — engrais vert annuel à tige tendre, cycle court
     resistance_ecrasement  = 0.45  # tige tendre dressée, déformée (volet 2 §4)
     stimulation_ecrasement = 0.2
@@ -133,6 +135,7 @@ class Borage(PlantBase):
     family = "Boraginaceae"
     genus = "Borago"
     name = "Bourrache"
+    feuillage = "large"  # transpiration (D111 ①) : type de feuillage d'espèce
     resilience_base = 1.0          # intermédiaire — annuelle vigoureuse mais charnue/cassante
     resistance_ecrasement  = 0.4   # tige creuse charnue, casse net (volet 2 §4)
     stimulation_ecrasement = 0.2
@@ -190,6 +193,7 @@ class Comfrey(PlantBase):
     family = "Boraginaceae"
     genus = "Symphytum"
     name = "Consoude"
+    feuillage = "large"  # transpiration (D111 ①) : type de feuillage d'espèce
     resilience_base = 1.25         # S — vivace pionnière à pivot profond, quasi indestructible
     root_loss_tolerance_base = 1.4 # niche campagnol (③) : pivot charnu profond → le chevelu rongé se refait, l'uptake tient
     resistance_ecrasement  = 0.65  # rosette charnue, repart du pivot (volet 2 §4)
@@ -247,6 +251,7 @@ class Mustard(PlantBase):
     family = "Brassicaceae"
     genus = "Sinapis"
     name = "Moutarde"
+    feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     resilience_base = 0.8          # R — engrais vert annuel à croissance éclair, tendre
     resistance_ecrasement  = 0.45  # hampe tendre, casse (volet 2 §4)
     stimulation_ecrasement = 0.2
@@ -309,6 +314,7 @@ class Garlic(Amaryllidaceae):
     """
     genus = "Allium"
     name = "Ail"
+    feuillage = "cireux"  # transpiration (D111 ①) : type de feuillage d'espèce
     resilience_base = 1.0          # intermédiaire — bisannuelle bulbeuse, tenue moyenne
     root_loss_tolerance_base = 0.7 # niche campagnol (③) : bulbe & racines superficielles concentrés → le rongeur emporte l'organe de réserve d'un coup
     resistance_ecrasement  = 0.4   # hampe tendre, casse ; le bulbe survit sous terre

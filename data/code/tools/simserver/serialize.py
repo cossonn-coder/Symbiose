@@ -635,7 +635,9 @@ class SerializeMixin:
         # À l'init (rien simulé, `last < 1`) : temps calme, normale, pas de signe.
         last = gs["week"] - 1
         if last >= 1:
-            ev, t_air, nebul = weather_state(gs["seed"], last)
+            # `pluie_forcee` : banc de test `pluie_continue` (D111 ①e) — même météo
+            # que le tick l'a vécue ; absent en jeu → False.
+            ev, t_air, nebul = weather_state(gs["seed"], last, gs.get("pluie_forcee", False))
             signs = weather_signs(gs["seed"], last, horizon=2)
         else:
             ev, t_air, nebul, signs = CALME, T_MOY, 0.10, []

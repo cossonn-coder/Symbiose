@@ -10,7 +10,7 @@ Les tronçons ②③④ ajoutent leurs entrées ici (édaphique, climatique, bio
 """
 from .climatique import (secheresse_sable, acclimatation, ombre_dense,
                          pluie_thermique, germination_multifacteur,
-                         effondrement)
+                         effondrement, pluie_continue, pluie_continue_post_init)
 from .edaphique import (chlorose_acidophile, asphyxie_argile, carence_npk,
                        rotation_inoculum)
 from .hydrologie import tourbiere
@@ -32,6 +32,7 @@ BANCS = {
     "pluie_thermique": pluie_thermique,
     "germination_multifacteur": germination_multifacteur,
     "effondrement": effondrement,
+    "pluie_continue": pluie_continue,      # TEST seulement (D111 ①e, D-pluie)
     "chlorose_acidophile": chlorose_acidophile,
     "asphyxie_argile": asphyxie_argile,
     "carence_npk": carence_npk,
@@ -67,7 +68,10 @@ BANC_POST_INIT = {"palette_gestes": _palette_gestes.post_init,
                   # `game_state["ceinture"]` (la fabrique ne rend que le monde) et
                   # met les outils de paysage en poche → les 7 gestes sont
                   # cliquables dès l'ouverture.
-                  "peripherie": _peripherie.post_init}
+                  "peripherie": _peripherie.post_init,
+                  # `pluie_continue` (D111 ①e) : pose `pluie_forcee` → pluie chaque
+                  # semaine (banc de TEST ; jamais en jeu, D-pluie).
+                  "pluie_continue": pluie_continue_post_init}
 
 # Seed IMPOSÉ par banc (effondrement météo ④). La plupart des bancs sont neutres au
 # seed (ils forcent leur condition par composition) → repli sur le défaut du serveur.

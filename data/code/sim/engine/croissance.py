@@ -22,6 +22,7 @@ from fields.ecofields.constants import (T_PLANTE_ALPHA, ROSEE_SURFACE_REF,
                                         ASPERSION_WET_GAIN, DOSE_ARROSAGE)
 from plants import EXPR_GAIN, EXPR_MIN, EXPR_MAX, TAU_UP, TAU_DOWN
 from .calendrier import saison_de
+from .transpiration import facteur_transpiration
 
 # Sémiologie ② (docs/narration/semiologie/conception_semiologie_foliaire.md §2.5) — facteur de décroissance
 # des marques de symptômes ÉVÉNEMENTIELS par tick de plante. Couplé au gain
@@ -177,17 +178,25 @@ class CroissanceMixin:
                     log.append(f"    ⏸  {plant.name}@{plant.position} stagne (sec hum={hum:.2f})")
         return log
 
-    def _apply_uptake(self, tile, eco):
+    def _apply_uptake(self, tile, eco, saison=None, week_in_year=None,
+                      demande=None):
         """
         Uptake racinaire SPATIAL (chantier B) : la plante puise sur toute son
         empreinte racinaire `root_plots`, pas seulement le plot central. La
         quantité prélevée est répartie (share = 1/nb plots) — on ne duplique
         pas la consommation. La compétition souterraine entre voisines devient
         alors émergente : deux empreintes qui se chevauchent puisent le même sol.
+
+        Transpiration foliaire (sprint « le sol qui respire » ①, D111 §1c) : la
+        boucle passe la saison, la semaine et la `demande` climatique du tick → le
+        prélèvement d'EAU est modulé par plante (feuillage présent × type de
+        feuillage). `demande=None` (appelant sans météo) → facteur 1.0 historique.
         """
         log = []
         for plant in tile.plants:
             if not plant.is_alive: continue
+            transp = (1.0 if demande is None else
+                      facteur_transpiration(plant, saison, week_in_year, demande))
             plots = [(r, c) for (r, c) in plant.root_plots
                      if 0 <= r < eco.rows and 0 <= c < eco.cols]
             if not plots:
@@ -200,7 +209,8 @@ class CroissanceMixin:
                                             drought_memory=plant.drought_memory,
                                             root_herbivory_memory=plant.root_herbivory_memory,
                                             root_loss_tolerance=plant.plant_class.root_loss_tolerance_base,
-                                            share=share)
+                                            share=share,
+                                            transpiration=transp)
                 for k, v in consumed.items():
                     total[k] = round(total.get(k, 0.0) + v, 3)
             if total:

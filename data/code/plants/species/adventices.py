@@ -17,6 +17,7 @@ class BursaPastoris(PlantBase):
     family = "Brassicaceae"
     genus  = "Capsella"
     name   = "Bourse-à-pasteur"
+    feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     resilience_base = 1.25         # S — pionnière rustique r-stratège, la rosette encaisse tout
     resistance_ecrasement  = 0.55  # hampe cassable, rosette survit (volet 2 §4)
     stimulation_ecrasement = 0.2
@@ -71,6 +72,7 @@ class MedicagoLupulina(PlantBase):
     family = "Fabaceae"
     genus  = "Medicago"
     name   = "Minette"
+    feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     resilience_base = 1.25         # S — légumineuse pionnière rampante des sols pauvres, rustique
     resistance_ecrasement  = 0.7   # port bas rampant, encaisse (volet 2 §4)
     stimulation_ecrasement = 0.5
@@ -129,6 +131,7 @@ class PoaAnnua(PlantBase):
     family = "Poaceae"
     genus  = "Poa"
     name   = "Pâturin annuel"
+    feuillage = "fin"  # transpiration (D111 ①) : type de feuillage d'espèce
     resilience_base = 1.25         # S — graminée fibreuse pionnière, coriace (elle hérite de
                                    # PlantBase et non de la classe Poaceae : valeur posée en
                                    # explicite pour éviter le défaut silencieux 1.0)
@@ -176,6 +179,7 @@ class Taraxacum(PlantBase):
     family = "Asteraceae"
     genus  = "Taraxacum"
     name   = "Pissenlit"
+    feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     resilience_base = 1.25         # S — pivot profond, rosette plaquée : repart de la racine
     resistance_ecrasement  = 0.8   # rosette plaquée, encaisse, repart mou (volet 2 §4)
     stimulation_ecrasement = 0.4
@@ -243,6 +247,7 @@ class Molene(PlantBase):
     family = "Scrophulariaceae"
     genus  = "Verbascum"
     name   = "Molène"
+    feuillage = "cireux"  # transpiration (D111 ①) : type de feuillage d'espèce
     resilience_base = 1.2          # S — pionnière rustique des sols pauvres/remués, rosette coriace
     resistance_ecrasement  = 0.5   # hampe cassable, rosette laineuse survit (volet 2 §4)
     stimulation_ecrasement = 0.2
