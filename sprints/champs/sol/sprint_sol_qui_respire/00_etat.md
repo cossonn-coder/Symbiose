@@ -14,7 +14,7 @@ suivants : budget perf mesuré **par rapport à ①** ; ne pas tenter de résorb
 | ① | `01_bilan_hydrique.md` | RE-FIGÉ `22768f33…` → `1ce02bce…` | FAIT (D114, D115) |
 | ② | `02_bois_mort.md` | INTACT `1ce02bce…` (prémisse fausse) | FAIT — ⚠ inerte en pratique |
 | ②bis | `02b_mort_branches.md` (ajouté 2026-10-22, accord Nico) | INTACT `1ce02bce…` (pommier du smoke trop jeune) | FAIT — ⚠ flux quasi nul sur `full` |
-| ②ter | `02c_arbres_adultes.md` (ajouté 2026-10-22, mandat Nico « favoriser le résultat ») | re-figé seulement si tolérance ombre du pommier change | à faire |
+| ②ter | `02c_arbres_adultes.md` (ajouté 2026-10-22, mandat Nico « favoriser le résultat ») | RE-FIGÉ `1ce02bce…` → `df6ebf04…` (tolérance ombre pommier, seul motif) | FAIT — ⚠ objectif bois NON atteint sur `full` |
 | ③ | `03_regne_fongique.md` | neutre | à faire |
 | ④ | `04_parasite_faiblesse.md` | re-figé si hôte affaibli au smoke | à faire |
 | ⑤ | `05_voix_champignons.md` | neutre | à faire |
@@ -25,6 +25,8 @@ suivants : budget perf mesuré **par rapport à ①** ; ne pas tenter de résorb
 Golden de départ (relevé par ①) : `22768f339ac41bb20b1604bb29672bb3b209ee62ec659b1c8369dd31ccd6cfb8`.
 Golden après ① : `1ce02bce275a2b4c262564e7eda384b1071125ebc67e65346d101820102d6bfd` (re-figé
 UNE fois, annoncé : climat + hydrologie changent partout). Pont **0.5.50**.
+Golden après ②ter : `df6ebf044655d162293ce3dfee1baa3dc781a7f39bae78d4a7594f120b80b0e6` (tolérance
+à l'ombre du pommier 0,90 → 0,85, dérive locale prouvée).
 
 ## ① Bilan hydrique — FAIT (2026-10-22)
 
@@ -159,6 +161,52 @@ Perf : tick an 0 934 → 948 ms (+1,5 %), an 1 1126 → 1132 ms (+0,5 %) [n=1 ru
    et germination → hors périmètre.
 4. Taille : `perennials.py` 375 et `sauvages.py` 352 LDC (bande vigilance, déjà 367/346).
 
+## ②ter Arbres adultes — FAIT (2026-10-22), golden RE-FIGÉ `df6ebf04…`
+
+**Livré** :
+- A. `sim/precroissance.py` (NOUVEAU, pur, hors tick) `pre_croitre(plant, seed, annees)` :
+  `grow_plant` semaine 1..N·52 (finit en fin d'hiver) + cladoptose au rythme borné du jeu
+  (plein soleil, auto-ombrage seul), puis `update_footprint`. Appelé par
+  `commands._pre_vieillir_fruitiers` (`full`/`propre`) et par `bancs/base.vieillir` (bancs F5).
+  Pommier de `full` : 1 seg./22 cm → **4 seg., 174 cm**, couronne r 50 cm. Init : +~10 ms ;
+  snapshot +3 segments. La graine ne change pas la forme [3 graines testées].
+- B. `shade_tolerance` par arbre (échelle existante, défaut strate haute 0,90) : bouleau
+  0,75 · cerisier, noyer, saule 0,80 · **pommier 0,85** · figuier, aulne 0,85 · chêne 0,90 ·
+  charme 1,15 · sapin 1,25 · hêtre 1,30. Lecteurs vérifiés : croissance (`light·tol` plafonné
+  à 1 → un tol < 1 freine aussi en plein soleil : 0,6+0,4·tol), `shade_stress_damage` (÷tol),
+  germination/succession, cladoptose. Pommier d'abord à 0,80 : `test_senescence` ROUGE (mort
+  « carence lumineuse » à 54 ans sous ses propres rejets ; 0,75 → 35 ans, 0,78/0,82/0,85 →
+  sénescence 59,8 ans) → test au bord du chaos, 0,85 retenu.
+- C. Rythme BORNÉ sans état : `fenetre_ouverte` (1 sem./`CLADO_FENETRE`=6, phase hachée par
+  position) + `n_max=CLADO_PAR_FENETRE`=1 (la branche la plus sombre) → ≤ ~6/an. Ce bornage
+  permet `CLADO_SEUIL` 0,18 → **0,25** sans raser. Balayage 0,18/0,25/0,30, 7 arbres pré-crûs
+  14 ans [n=1 arbre/espèce] : adultes plein soleil pommier 1-3/an, cerisier 2-4, chêne/hêtre
+  0-2, bouleau ~0 ; lumière 0,6 : bouleau 3-6/an, hêtre 0-3. Pommier 10 ans en plein soleil :
+  34 seg. (55 sans cladoptose), couronne r 186 cm (cible 200).
+- Tests `test_bois_mort` 28/28 (7 neufs : J pré-croissance, K ordre des tolérances, L rythme).
+
+**Golden** : dérive LOCALE prouvée (pommier remis à `shade_tolerance=None` → `1ce02bce…` au
+bit près) : pommier du smoke `growth_factor` 0,780 → 0,770, abscission 0,122→0,121, 4 lignes
+NPK ±0,001, voisins ~1e-10 (ombre). `df6ebf044655d162293ce3dfee1baa3dc781a7f39bae78d4a7594f120b80b0e6`.
+
+**Mesures** [graine 1521550718, `full`, 104 sem., n=1 run ; base = HEAD ②bis en parallèle] :
+| sem. | plots bois>0 | masse bois | mycélium max / méd | branches tombées |
+|---|---|---|---|---|
+| 0 | 21/1188 | 18,13 | 0 / 0 | — |
+| 52 | 21 | 7,30 | 0,371 / 0,0001 | 0 |
+| 104 | 21 | 3,29 | 0,449 / 0,0023 | 0 |
+Identique à ②bis. Perf : tick an 0 642 vs 652 ms, an 1 1061 vs 1075 ms (−1,5 %) [n=1 run].
+Variante MESURE seule (non livrée) pommier pré-crû **10 ans** : 36 seg., 347 cm ; bois sem. 0
+23,3 (43 plots) → 9,75 → 4,40 ; ombre 2 branches an 1, 3 an 2 (0,054 puis 0,026 de bois/an).
+
+**⚠ REMONTÉE — objectif de Nico NON atteint, et hors de portée de ce tronçon** : (1) le
+pommier de 5 ans n'a pas de branche latérale dans la morphogénèse (flèche seule jusqu'à
+l'an 6-7) → 0 branche en 2 ans ; (2) même adulte, UN arbre lâche ~0,03-0,05 de bois/an,
+quand le stock au sol perd ~55-60 %/an (≈ 10/an l'an 1, ≈ 2/an l'an 2) : écart **×40 à
+×100**. Une souche initiale (1,5-3) vaut tout le bois d'un pommier de 10 ans (3,6). Seule
+une source à l'échelle d'un BOISEMENT tient le flux : ceinture boisée D73 qui lâche du bois
+en lisière, ou des ligneux dans `full` — décision de composition (Nico), non prise ici.
+
 ## Ajouts de Nico à l'accord (2026-10-22)
 - Bois mort VISIBLE au sol, dégradation en sprite à stades (② pont, ⑧ dessin).
 - Overdose : 2ᵉ psychédélique pendant l'effet → phrases de TOUS les êtres à chaque snapshot.
@@ -249,10 +297,11 @@ Aucune. Accord de Nico pour figer : 2026-10-22.
 ## §REPRISE
 
 Lire `CLAUDE.md` + ce fichier + le kickoff du prochain tronçon « à faire » de la carte.
-Remontées de ① tranchées (D114, D115). ② + ②bis FAITS : bois mort initial réel sur `full`,
-causes de mort de branche codées, mais **flux continu quasi nul sur `full`** (cf. §②bis
-remontée 1) → à trancher par Nico/orchestrateur avant ou pendant ③.
-Prochain tronçon : ③ `03_regne_fongique.md` (golden de départ `1ce02bce…`, pont 0.5.51).
+Remontées de ① tranchées (D114, D115). ② + ②bis + ②ter FAITS : bois mort initial réel,
+causes de mort de branche codées et bornées, arbres pré-crûs, ombre par espèce — mais
+**flux continu NUL sur `full` (un seul ligneux, 5 ans, sans latérales)** (cf. §②ter
+remontée) → source boisée à trancher par Nico avant ③ (ceinture D73 ou ligneux dans `full`).
+Prochain tronçon : ③ `03_regne_fongique.md` (golden de départ **`df6ebf04…`**, pont 0.5.51).
 Chaque tronçon met à jour sa ligne de statut, consigne ses mesures [n=…] et ses hashes golden.
 ## Liste fongique VALIDÉE (Q7)
 

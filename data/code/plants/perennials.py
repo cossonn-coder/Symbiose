@@ -147,6 +147,7 @@ class Fig(PerennialWoody):
     genus  = "Ficus"
     name   = "Figuier"
     feuillage = "large"  # transpiration (D111 ①) : type de feuillage d'espèce
+    shade_tolerance = 0.85  # D111 ②ter : héliophile (méditerranéen de plein soleil) (≠ défaut strate haute 0,90)
     rarity = "Établie"
     keywords = ["Fruitier", "Jardin", "Ombre dense"]
     t_germ_opt = 20.0             # MÉDITERRANÉEN : exige un sol chaud (≠ ligneux tempéré) (③)
@@ -191,6 +192,7 @@ class AppleTree(PerennialWoody):
     genus  = "Malus"
     name   = "Pommier"
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
+    shade_tolerance = 0.85  # D111 ②ter : héliophile modéré (fruitier de lumière, supporte une mi-ombre) (≠ défaut strate haute 0,90)
     rarity = "Établie"
     keywords = ["Fruitier", "Jardin", "Mellifère"]
     foliage_density = 0.60
@@ -259,6 +261,7 @@ class CherryTree(PerennialWoody):
     genus  = "Prunus"
     name   = "Cerisier"
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
+    shade_tolerance = 0.80  # D111 ②ter : héliophile (≠ défaut strate haute 0,90)
     rarity = "Établie"
     keywords = ["Fruitier", "Intermédiaire", "Mellifère"]
     foliage_density = 0.60
@@ -301,6 +304,7 @@ class WalnutTree(PerennialWoody):
     genus  = "Juglans"
     name   = "Noyer"
     feuillage = "large"  # transpiration (D111 ①) : type de feuillage d'espèce
+    shade_tolerance = 0.80  # D111 ②ter : héliophile strict (≠ défaut strate haute 0,90)
     rarity = "Climacique"
     keywords = ["Lisière", "Ombre dense", "Structurant", "Allélopathe"]
     foliage_density = 0.80
@@ -343,6 +347,7 @@ class OakTree(PerennialWoody):
     genus  = "Quercus"
     name   = "Chêne"
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
+    shade_tolerance = 0.90  # D111 ②ter : intermédiaire (jeune : supporte une ombre légère) (= défaut strate haute, explicité)
     rarity = "Sentinelle"
     keywords = ["Lisière", "Sujet structurant", "Centenaire"]
     foliage_density = 0.75
@@ -391,6 +396,7 @@ class BeechTree(PerennialWoody):
     genus  = "Fagus"
     name   = "Hêtre"
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
+    shade_tolerance = 1.30  # D111 ②ter : sciaphile (l'arbre d'ombre par excellence) (≠ défaut strate haute 0,90)
     rarity = "Climacique"
     keywords = ["Lisière", "Ombre dense", "Structurant"]
     foliage_density = 0.85            # houppier fermé → ombre profonde de hêtraie
@@ -429,6 +435,7 @@ class BirchTree(PerennialWoody):
     genus  = "Betula"
     name   = "Bouleau"
     feuillage = "fin"  # transpiration (D111 ①) : type de feuillage d'espèce
+    shade_tolerance = 0.75  # D111 ②ter : héliophile pionnier (le plus exigeant en lumière) (≠ défaut strate haute 0,90)
     rarity = "Établie"
     keywords = ["Pionnière", "Lisière", "Ombre légère"]
     foliage_density = 0.45           # houppier léger → sous-bois clair
@@ -474,6 +481,7 @@ class HornbeamTree(PerennialWoody):
     genus  = "Carpinus"
     name   = "Charme"
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
+    shade_tolerance = 1.15  # D111 ②ter : semi-sciaphile (sous-étage de chênaie) (≠ défaut strate haute 0,90)
     rarity = "Établie"
     keywords = ["Bocage", "Haie", "Structurant"]
     foliage_density = 0.65           # houppier moyen
@@ -520,6 +528,7 @@ class FirTree(PerennialWoody):
     genus  = "Abies"
     name   = "Sapin"
     feuillage = "aiguilles"  # transpiration (D111 ①) : type de feuillage d'espèce
+    shade_tolerance = 1.25  # D111 ②ter : sciaphile (sapin pectiné : régénère sous couvert) (≠ défaut strate haute 0,90)
     rarity = "Établie"
     keywords = ["Conifère", "Persistant", "Aiguilles", "Brise-vent"]
     deciduous = False                # PERSISTANT : ombre projetée toute l'année
@@ -588,6 +597,7 @@ class Alder(PerennialWoody):
     genus  = "Alnus"
     name   = "Aulne"
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
+    shade_tolerance = 0.85  # D111 ②ter : pionnier de berge, héliophile modéré (≠ défaut strate haute 0,90)
     rarity = "Établie"
     keywords = ["Berge", "Fixatrice N₂", "Pionnière", "Zone humide"]
     foliage_density = 0.55           # houppier moyen, ombre légère de ripisylve
@@ -676,6 +686,7 @@ class Willow(PerennialWoody):
     genus  = "Salix"
     name   = "Saule"
     feuillage = "fin"  # transpiration (D111 ①) : type de feuillage d'espèce
+    shade_tolerance = 0.80  # D111 ②ter : pionnier héliophile (≠ défaut strate haute 0,90)
     rarity = "Établie"
     keywords = ["Berge", "Trogne", "Bouture", "Mellifère précoce"]
     foliage_density = 0.50           # feuillage fin et lâche → ombre légère de bord d'eau

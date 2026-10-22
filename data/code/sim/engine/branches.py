@@ -26,7 +26,9 @@ from __future__ import annotations
 from fields import _hash_noise
 from fields.ecofields.constants import BOIS_MORT_PAR_CM3
 from sim.growth import (shade_tolerance_effective, branches_ombragees,
-                        branches_a_casser, couper_branches, seuil_et_age)
+                        branches_a_casser, couper_branches, seuil_et_age,
+                        fenetre_ouverte)
+from sim.growth.constantes import CLADO_PAR_FENETRE
 from .decompo import deposer_bois_tombe
 
 # --- Tempête (vent local × rafale × turbulence, même lecture que _wind_damage) ---
@@ -58,7 +60,11 @@ def _taille(plant) -> float:
     return min(1.0, len(plant.segments) / COURONNE_PLEINE)
 
 
-def _cladoptose(plant, eco, saison: str) -> list:
+def _cladoptose(plant, eco, saison: str, seed: int, week: int) -> list:
+    """Rythme BORNÉ (②ter) : une semaine sur CLADO_FENETRE par arbre, au plus
+    CLADO_PAR_FENETRE branche (la plus sombre)."""
+    if not fenetre_ouverte(plant, seed, week):
+        return []
     cls = plant.plant_class
     densite = cls.foliage_density_at(plant, saison)
     if densite <= 0.0:
@@ -66,7 +72,8 @@ def _cladoptose(plant, eco, saison: str) -> list:
     lf = getattr(eco, "lumiere", None)
     l_plante = lf.light_received(plant) if lf is not None else 1.0
     seuil, age_min = seuil_et_age(shade_tolerance_effective(plant))
-    roots = branches_ombragees(plant, l_plante, densite, seuil, age_min)
+    roots = branches_ombragees(plant, l_plante, densite, seuil, age_min,
+                               n_max=CLADO_PAR_FENETRE)
     return couper_branches(plant, roots)
 
 
@@ -126,7 +133,7 @@ def mort_des_branches(tile, eco, saison: str, week: int, week_in_year: int,
             if _chute_arbuste(plant, eco, week_in_year) > 1e-4:
                 log.append(f"    🪵 Bois sec largué {plant.name}@{plant.position}")
             continue
-        causes = (("ombre", _cladoptose(plant, eco, saison)),
+        causes = (("ombre", _cladoptose(plant, eco, saison, seed, week)),
                   ("tempête", _casse_vent(plant, eco, gust_peak, seed, week)),
                   ("neige", _casse_neige(plant, eco, seed, week) if is_neige else []))
         for cause, tombes in causes:

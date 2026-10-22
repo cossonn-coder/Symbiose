@@ -31,7 +31,7 @@ from .geometrie import _phototropic_bias
 from .seam import f_lignification, atteindre_segment
 from .phases import (shade_tolerance_effective, est_etiole, grow_plant)
 from .cladoptose import (branches_ombragees, branches_a_casser, couper_branches,
-                         seuil_et_age)
+                         seuil_et_age, fenetre_ouverte)
 
 __all__ = [
     "AUXIN_SOURCE", "AUXIN_DECAY", "AUXIN_INHIB_THRESHOLD", "AUXIN_PROD_FLOOR",
@@ -43,4 +43,5 @@ __all__ = [
     "_phototropic_bias", "f_lignification", "atteindre_segment",
     "shade_tolerance_effective", "est_etiole", "grow_plant",
     "branches_ombragees", "branches_a_casser", "couper_branches", "seuil_et_age",
+    "fenetre_ouverte",
 ]

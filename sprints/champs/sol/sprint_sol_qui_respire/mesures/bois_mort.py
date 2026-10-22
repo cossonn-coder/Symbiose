@@ -1,4 +1,4 @@
-"""Bois mort (D111 ② + ②bis) — lecture seule. Usage (depuis data/code/) :
+"""Bois mort (D111 ② + ②bis + ②ter) — lecture seule. Usage (depuis data/code/) :
   python3 ../../sprints/champs/sol/sprint_sol_qui_respire/mesures/bois_mort.py seed semaines [--sans]
 Rapporte, à la semaine 0 puis chaque fin d'année : plots avec litière `bois` > 0,
 masse de bois au sol, mycélium max/médian, branches tombées par cause (élagage ②,
@@ -18,6 +18,7 @@ def dep(plant, tombes, eco):
     m = _dep(plant, tombes, eco)
     if m > 0:
         cause = inspect.stack()[1].frame.f_locals.get("cause", "élagage")
+        cause = f"{cause}/{plant.name}"          # ②ter : par cause ET par arbre
         nb[cause] += 1; masse[cause] += m
     return m
 B.deposer_bois_tombe = dep; BR.deposer_bois_tombe = dep
@@ -46,6 +47,8 @@ def bilan(label, t_an=None):
           f"(ligneux {nlig}) | tombées {dict(nb)} masse {{{', '.join(f'{k}: {v:.3f}' for k, v in masse.items())}}}"
           + (f" | tick moy {1000 * st.mean(t_an):.0f} ms" if t_an else ""))
 bilan("sem 0")
+print("  structure des ligneux :", [(p.name, len(p.segments), round(p.plant_class.height_at(p)))
+      for t in gs["tiles"] for p in t.plants if p.plant_class.ligneux])
 t_an = {}
 for w in range(N):
     t0 = time.perf_counter(); srv.cmd_step_week({}); dt = time.perf_counter() - t0

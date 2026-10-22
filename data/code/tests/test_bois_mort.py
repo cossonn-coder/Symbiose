@@ -14,6 +14,10 @@ meurt (élaguée par `_elaguer`) TOMBE en litière `bois` sous elle au lieu de d
   G. arbuste non procédural (framboisier) : bois sec largué à sa semaine.
   H. donnée `ligneux` : thym → squelette de bois, tomate → rien.
   I. init `full` : du bois au sol dès la semaine 0, âges variés, déterministe.
+②ter (arbres adultes) :
+  J. pré-croissance : déterministe, ≫ 1 segment à 10 ans ; pommier de `full` crû.
+  K. tolérance à l'ombre par espèce : bouleau < pommier < chêne < charme < hêtre.
+  L. rythme borné : fenêtre 1 sem./CLADO_FENETRE, au plus n_max branche (la plus sombre).
 
 Usage (depuis data/code/) :
   python3 -m tests.test_bois_mort
@@ -161,6 +165,40 @@ ages = {round(a) for *_, a in b1}
 check("init full : du bois au sol dès la semaine 0", len(b1) >= 8, f"{len(b1)} plots")
 check("init full : âges variés", len(ages) >= 5, sorted(ages)[:8])
 check("init full : déterministe (2 inits identiques)", b1 == b2)
+
+# J. pré-croissance (hors tick)
+from sim.precroissance import pre_croitre
+from sim.growth import fenetre_ouverte
+from sim.growth.constantes import CLADO_FENETRE
+def _pre(ans):
+    a = PlantInstance(plant_class=AppleTree, position=(3, 3))
+    pre_croitre(a, 1521550718, ans)
+    return a
+a1, a2 = _pre(10), _pre(10)
+forme = lambda a: [(s.base, s.dir, s.length_cm, s.thickness_cm) for s in a.segments]
+check("pré-croissance : déterministe", forme(a1) == forme(a2))
+check("pré-croissance : arbre de 10 ans ≫ 1 segment", len(a1.segments) >= 30, len(a1.segments))
+check("pré-croissance : empreinte à jour (couronne > 1 m)",
+      AppleTree.canopy_radius_at(a1) > 100.0, round(AppleTree.canopy_radius_at(a1)))
+srv_f = SimServer(); srv_f.cmd_init({"config": "full", "seed": 1521550718})
+pom = [p for t in srv_f.engine.game_state["tiles"] for p in t.plants if p.name == "Pommier"][0]
+check("init full : pommier pré-vieilli a une structure (D105)",
+      len(pom.segments) > 1 and AppleTree.height_at(pom) > 150.0,
+      f"{len(pom.segments)} seg., {AppleTree.height_at(pom):.0f} cm")
+
+# K. tolérance à l'ombre par espèce
+from plants.perennials import BirchTree, OakTree, HornbeamTree, BeechTree
+tols = [c.shade_tolerance_base() for c in (BirchTree, AppleTree, OakTree, HornbeamTree, BeechTree)]
+check("tolérance ombre : héliophile → sciaphile croissante", tols == sorted(tols)
+      and len(set(tols)) == len(tols), tols)
+
+# L. rythme borné
+ouvertes = sum(fenetre_ouverte(adulte, 7, w) for w in range(1, 1 + 10 * CLADO_FENETRE))
+check("fenêtre : 1 semaine sur CLADO_FENETRE", ouvertes == 10, ouvertes)
+tous = branches_ombragees(copy.deepcopy(adulte), 0.05, 0.6, seuil, age)
+un = branches_ombragees(copy.deepcopy(adulte), 0.05, 0.6, seuil, age, n_max=1)
+check("rythme : n_max=1 → une seule branche parmi les condamnées",
+      len(tous) > 1 and len(un) == 1 and un[0] in tous, f"{len(tous)} → {un}")
 
 n_ok = sum(ok for _, ok in _results)
 print(f"\n{n_ok}/{len(_results)} OK")

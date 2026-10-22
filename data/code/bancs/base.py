@@ -24,6 +24,11 @@ from __future__ import annotations
 from world import Tile, House
 from fields import init_eco
 from sim.seeds import PlayerSeedBank
+from sim.precroissance import pre_croitre
+
+# Graine de la morphogénèse pré-déroulée par `vieillir` (la forme ne dépend pas
+# de la graine du monde, mesuré ②ter : 3 graines → structure identique).
+BANC_PRECROISSANCE_SEED = 0
 
 
 def build_banc_tile(name: str, soil: str, rows: int, cols: int,
@@ -89,6 +94,9 @@ def vieillir(plant, ans: float) -> None:
     """ACCÉLÉRATION : pré-vieillit une plante de `ans` années (âge en années ET en
     semaines, cohérents). Sert aux bancs qui veulent une vivace en fin de longévité
     (sénescence) ou un fruitier mûr sans dérouler des années en Turbo — même geste
-    que la config "full" de `cmd_init` sur les fruitiers du verger."""
+    que la config "full" de `cmd_init` sur les fruitiers du verger. Depuis D111
+    ②ter (ferme D105) la STRUCTURE pousse aussi sur ces années (espèce
+    procédurale) : un pommier de 5 ans n'est plus une pousse invisible au F5."""
+    pre_croitre(plant, BANC_PRECROISSANCE_SEED, ans)
     plant.age_years += float(ans)
     plant.age_weeks += int(round(ans * 52))

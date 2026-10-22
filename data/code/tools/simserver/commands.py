@@ -27,6 +27,7 @@ from fields.grids import GridField
 # `cmd_init`). C'est ce branchement qui fait de la vue une CONSOMMATRICE (D92).
 from fields.peripherie import generer_ceinture
 from sim.bois_initial import poser_bois_initial   # D111 ②bis : bois mort dès la semaine 0
+from sim.precroissance import pre_croitre         # D111 ②ter : structure des pré-vieillis
 # Registre des bancs d'essai (sprint dédié) : mondes paramétrés montés par
 # `init config="<banc>"` pour forcer/observer un signe. Import au niveau module
 # (paquet `bancs/` au sommet, peut tout importer) ; jamais monté pour smoke/full.
@@ -82,6 +83,19 @@ def _amorcer_encyclo(game_state: dict, player: str, mode: str) -> None:
         M.decouvrir(game_state, player, cle)
 
 
+def _pre_vieillir_fruitiers(tiles: list, seed: int) -> None:
+    """Démo/F5 (`full`/`propre`) : les fruitiers du verger démarrent à leur âge de
+    maturité (`maturity_years`) pour NOUER dès le 1er été — et, depuis D111 ②ter
+    (ferme D105), avec la STRUCTURE de cet âge (morphogénèse déroulée hors tick).
+    Déterministe ; le monde garde ses plantes (on vieillit, on n'ajoute pas)."""
+    for _t in tiles:
+        for _p in _t.plants:
+            if getattr(_p.plant_class, "fruitier", False):
+                ans = float(_p.plant_class.maturity_years)
+                pre_croitre(_p, seed, ans)
+                _p.age_years = ans
+
+
 def _banque_initiale(config: str) -> PlayerSeedBank:
     bank = PlayerSeedBank()
     if config == "full":
@@ -125,10 +139,10 @@ class CommandsMixin:
             # `age_years` n'altère que la courbe d'âge et la grille de nouaison ;
             # déterministe (constante), monde toujours 53 plantes (on vieillit, on
             # n'ajoute pas).
-            for _t in tiles:
-                for _p in _t.plants:
-                    if getattr(_p.plant_class, "fruitier", False):
-                        _p.age_years = float(_p.plant_class.maturity_years)
+            # D111 ②ter (ferme D105) : on PRÉ-CROÎT aussi la structure sur ces
+            # années (`sim/precroissance.py`, hors tick) → un arbre de son âge, plus
+            # une pousse de 22 cm. No-op pour les fruitiers non procéduraux.
+            _pre_vieillir_fruitiers(tiles, seed)
         elif config == "propre":
             # Banc « monde propre » (sprint équilibre invasion ①, D69) : MÊME monde
             # que "full" (mêmes 8 tuiles + maison + cultivées + pré-vieillissement
@@ -143,10 +157,7 @@ class CommandsMixin:
             # "full"/"smoke"/bancs n'ont pas le flag (absent → False) → intacts.
             from main import build_world_full
             tiles, ecos, _aux_tiles, house = build_world_full()
-            for _t in tiles:
-                for _p in _t.plants:
-                    if getattr(_p.plant_class, "fruitier", False):
-                        _p.age_years = float(_p.plant_class.maturity_years)
+            _pre_vieillir_fruitiers(tiles, seed)
             for _eco in ecos.values():
                 _vider_seedbank_ferale(_eco.seed_bank)
         elif config in BANCS:

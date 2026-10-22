@@ -104,8 +104,19 @@ LIGNIFICATION_SCALE = 52.0  # semaines : échelle de lignification. f≈0 pour u
 # isolés en plein soleil, 520 sem. [n=1 arbre/espèce, croissance sans lumière] :
 # 0,30 démantèle chêne/hêtre (32 → 12 segments, la structure ne réitère pas) ;
 # 0,12 → ~0 chute ; 0,18 → 0-2 branches/an dès l'an 7, couronne préservée.
+# ②ter : avec le rythme BORNÉ (CLADO_FENETRE) le seuil remonte sans raser : 0,25,
+# balayé 0,18/0,25/0,30 sur 7 arbres pré-crûs 14 ans [n=1 arbre/espèce, plein
+# soleil] → adultes (an 8-14) pommier 1-3/an, cerisier 2-4, chêne/hêtre 0-2,
+# charme 1-3, bouleau ~0 (couronne claire) ; sous lumière 0,6 : bouleau 3-6/an,
+# hêtre 0-3 (l'héliophile lâche, le sciaphile garde).
 CLADO_OPACITE_GRAPPE = 0.35   # part de lumière qu'une grappe de feuillage intercepte (× densité d'espèce)
 CLADO_DZ_CM          = 30.0   # une grappe ne fait de l'ombre qu'à ce qui est nettement plus bas
 CLADO_RAYON_CM       = 80.0   # rayon horizontal de l'ombre portée d'une grappe (soleil haut)
-CLADO_SEUIL          = 0.18   # lumière sous laquelle une branche n'est plus rentable (tol = 1)
+CLADO_SEUIL          = 0.25   # lumière sous laquelle une branche n'est plus rentable (tol = 1)
 CLADO_AGE_MIN        = 26     # semaines : âge minimal d'une branche condamnée (tol = 1)
+# Bornage du RYTHME (D111 ②ter) : un arbre ne lâche au plus que CLADO_PAR_FENETRE
+# branche(s) d'ombre par FENÊTRE de CLADO_FENETRE semaines (la plus sombre d'abord),
+# fenêtre déphasée par arbre (hachage de sa position). Saison feuillée d'un caduc ≈
+# 39 sem. → au plus ~6 branches/an : jamais une couronne rasée d'un coup.
+CLADO_FENETRE        = 6      # semaines entre deux cladoptoses possibles d'un même arbre
+CLADO_PAR_FENETRE    = 1      # branches d'ombre au plus par fenêtre

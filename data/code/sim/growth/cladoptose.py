@@ -23,7 +23,7 @@ import math
 
 from fields import _hash_noise
 from .constantes import (CLADO_OPACITE_GRAPPE, CLADO_DZ_CM, CLADO_RAYON_CM,
-                         CLADO_SEUIL, CLADO_AGE_MIN)
+                         CLADO_SEUIL, CLADO_AGE_MIN, CLADO_FENETRE)
 from .geometrie import _tip, _children, _subtree, _rebuild
 
 
@@ -71,8 +71,18 @@ def lumiere_pointes(segs: list, ch: dict, l_plante: float,
     return out
 
 
+def fenetre_ouverte(plant, seed: int, week: int) -> bool:
+    """Bornage SANS ÉTAT du rythme de cladoptose (D111 ②ter) : un arbre n'est
+    examiné qu'une semaine sur CLADO_FENETRE, à une phase propre tirée de sa
+    position (deux arbres voisins ne lâchent pas leurs branches la même semaine)."""
+    r, c = plant.position
+    phase = int(_hash_noise(seed, 0, r * 131 + c, 13) * CLADO_FENETRE)
+    return (week + phase) % CLADO_FENETRE == 0
+
+
 def branches_ombragees(plant, l_plante: float, densite: float,
-                       seuil: float, age_min: int, frac_max: float = 0.25) -> list:
+                       seuil: float, age_min: int, frac_max: float = 0.25,
+                       n_max: int | None = None) -> list:
     """Racines des sous-arbres LATÉRAUX à faire tomber par l'ombre.
 
     Un sous-arbre meurt si TOUTES ses pointes sont sous `seuil` (aucune partie de
@@ -108,7 +118,12 @@ def branches_ombragees(plant, l_plante: float, densite: float,
             continue        # tronc + flèche protégés ; grosse charpentière : par rameaux
         if best[i] < seuil and s.age_weeks >= age_min:
             roots.append(i)
-    return _maximales(segs, roots)
+    roots = _maximales(segs, roots)
+    if n_max is not None:
+        # Rythme borné (②ter) : la branche la plus SOMBRE d'abord (à égalité, la
+        # plus grosse : l'arbre lâche d'abord ce qui lui coûte le plus).
+        roots = sorted(roots, key=lambda i: (best[i], -taille[i], i))[:n_max]
+    return roots
 
 
 def _maximales(segs: list, roots: list) -> list:
