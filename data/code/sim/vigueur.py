@@ -70,8 +70,16 @@ def spend(game_state: dict, player: str, cost: float) -> float:
     `min(cost, courante)` — plancher 0, jamais de dette (spec §2/§3 : on dépense
     ce qu'on a). Le sens du ratio < 1 appartient à l'appelant (cf. `sim/actions.py`)
     : action graduée tronquée (récolte partielle) ou action binaire échouée
-    (déracinage/écrasement à vide)."""
+    (déracinage/écrasement à vide).
+
+    Réglage de TEST « Vigueur infinie » (Paramètres du launcher, demande Nico
+    2026-10-22) : flag OPTIONNEL `game_state["options"][player]["vigueur_infinie"]`
+    → tout geste est payé en entier SANS débit (ratio 1.0, courante intacte). C'est
+    le SEUL point de débit de la Vigueur joueur : un seul garde suffit. Absent →
+    comportement normal (golden : aucun joueur, aucune option)."""
     if cost <= 0:
+        return 1.0
+    if game_state.get("options", {}).get(player, {}).get("vigueur_infinie", False):
         return 1.0
     st = ensure_player(game_state, player)
     courante = st["courante"]

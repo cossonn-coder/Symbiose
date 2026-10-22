@@ -186,13 +186,16 @@ namespace Symbiose
 		/// fournie} amorce l'encyclopédie de départ ; <paramref name="carnetAnticipe"/>
 		/// bascule le carnet interprétatif dès le palier 1. Non renseignées (null),
 		/// elles ne sont pas transmises → moteur inchangé (binaire pré-0.5.37 les
-		/// ignore de toute façon).</summary>
+		/// ignore de toute façon). <paramref name="vigueurInfinie"/> (réglage de TEST,
+		/// pont 0.5.49) : les gestes ne débitent plus la Vigueur.</summary>
 		public GDict Init(int seed, string config = "smoke",
-						  string encycloDemarrage = null, bool? carnetAnticipe = null)
+						  string encycloDemarrage = null, bool? carnetAnticipe = null,
+						  bool? vigueurInfinie = null)
 		{
 			var msg = new GDict { ["cmd"] = "init", ["seed"] = seed, ["config"] = config };
 			if (encycloDemarrage != null) msg["encyclo_demarrage"] = encycloDemarrage;
 			if (carnetAnticipe.HasValue) msg["carnet_anticipe"] = carnetAnticipe.Value;
+			if (vigueurInfinie.HasValue) msg["vigueur_infinie"] = vigueurInfinie.Value;
 			var resp = Request(msg);
 			return resp?["world"].AsGodotDictionary();
 		}

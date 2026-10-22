@@ -34,6 +34,12 @@ def test_primitives_spend_gain():
     V.gain(gs, "j", 1000.0)
     check("gain plafonné à vigueur_max", st["courante"] == V.vigueur_max(gs, "j"),
           f"courante={st['courante']}")
+    # Réglage de test « Vigueur infinie » (0.5.49) : payé en entier, aucun débit.
+    gs["options"] = {"j": {"vigueur_infinie": True}}
+    st["courante"] = 0.0
+    r = V.spend(gs, "j", 30.0)
+    check("Vigueur infinie → ratio 1.0 sans débit", r == 1.0 and st["courante"] == 0.0,
+          f"ratio={r} courante={st['courante']}")
 
 
 # ---------------------------------------------------------------------------

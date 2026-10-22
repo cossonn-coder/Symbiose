@@ -709,7 +709,13 @@ from __future__ import annotations
 #       ou de `champignon` renvoie aussi `appris` (forme de `player.appris`, lecture
 #       pure) → la vue nomme la bête dès le survol qui franchit le palier. Hors
 #       tick → golden NEUTRE.
-ENGINE_VERSION = "0.5.48"
+# 0.5.49 (réglage de test « Vigueur infinie », demande Nico 2026-10-22) : `cmd_init`
+#       accepte le champ OPTIONNEL `vigueur_infinie: bool` → pose
+#       `game_state["options"][player]["vigueur_infinie"]`, lu par `sim/vigueur.spend`
+#       (aucun débit, ratio 1.0). Défaut ON côté panneau Paramètres tant que dure la
+#       phase de test. Absent → aucun effet → golden INTACT. Un binaire pré-0.5.49
+#       ignore le champ (les gestes coûtent leur prix normal).
+ENGINE_VERSION = "0.5.49"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

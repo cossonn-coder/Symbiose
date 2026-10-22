@@ -209,6 +209,13 @@ class CommandsMixin:
             player = game_state["current_player"]
             game_state.setdefault("options", {}).setdefault(player, {})[
                 "carnet_anticipe"] = bool(carnet_anticipe)
+        # Option d'init « Vigueur infinie » (réglage de TEST, 0.5.49) : même patron.
+        # Absent → aucun effet ; présent → `sim/vigueur.spend` ne débite plus rien.
+        vigueur_infinie = msg.get("vigueur_infinie")
+        if vigueur_infinie is not None:
+            player = game_state["current_player"]
+            game_state.setdefault("options", {}).setdefault(player, {})[
+                "vigueur_infinie"] = bool(vigueur_infinie)
         self.engine = Engine(game_state)
         # Un nouvel `init` repart d'un monde neuf : tout automate actif d'une
         # session précédente pointait l'ancien engine → on le démonte (opt-in :

@@ -289,7 +289,8 @@ namespace Symbiose
 			// Options d'init du panneau Paramètres (T2) : mémorisées avant « Lancer »,
 			// transmises au montage du monde (encyclopédie de départ + carnet anticipé).
 			_configLancee = config;   // rapport perf : quel monde (WorldView.Etalonnage.cs)
-			var world = _bridge.Init(Seed, config, _encycloDemarrage, _carnetAnticipe);
+			var world = _bridge.Init(Seed, config, _encycloDemarrage, _carnetAnticipe,
+									 _vigueurInfinie);
 			if (world == null) { _bridge.Quit(); return; }
 			_world = world;
 

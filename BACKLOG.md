@@ -19,7 +19,21 @@
 
 ## Sprint en cours
 
-Aucun sprint lancé. Prochain au choix de Nico (arbitrages D110 (g)(h)(i) en attente).
+Aucun sprint lancé. **File priorisée validée par Nico le 2026-10-22 (retour F5), à faire DANS L'ORDRE :**
+
+1. **Sprint A « le sol qui respire »** (moteur, [D111](DETTE.md)) → `/conception` : bilan hydrique (le sol
+   se dessèche), champignons (bois mort au sol, fructification la semaine après la pluie, ~10 espèces
+   comestibles / vénéneuses / psychédéliques avec leurs voix), nectar par espèce. Puis re-mesurer D110 (g).
+2. **Sprint B « ce qui est cassé à l'écran »** (vue, [D112](DETTE.md)) : bêtes et carpophores non dessinés,
+   maison en verre, périphérie qui exige F10, bugs de la heatmap du vent + vent en tête de F6, jauges Maj+F3,
+   F11 « spray ».
+3. **À concevoir ensuite** : rosace des vents (objet à débloquer à l'atelier : direction + force) ;
+   refonte esthétique de la périphérie (falaise / rivière / forêt sans continuité) ; zooms forts trop loin
+   de la forme réelle des feuilles.
+
+Fait hors sprint le 2026-10-22 : interrupteur **« Vigueur infinie (test) »** dans Paramètres, **ON par
+défaut** pendant la phase de test (pont 0.5.49) — ⚠️ le repasser à OFF (`_vigueurInfinie` dans
+`world/WorldView.Parametres.cs`) avant toute distribution (tranche 7 packaging).
 
 Dernier sprint clos : **INFO-BULLE DU VIVANT** — **CLOS le 2026-10-22** (`/sprint-auto` ①→③, golden intact
 `22768f33…`, pont 0.5.48) : bêtes et champignons nommés après observation en 3 saisons, rôle + abondance +

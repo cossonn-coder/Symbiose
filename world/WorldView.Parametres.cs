@@ -11,7 +11,8 @@
 //   2. INIT passées à `cmd_init` au lancement (mémorisées ici, lues par
 //      StartSimulation → SimBridge.Init) :
 //      - Encyclopédie de démarrage (vierge / amorcée / fournie) ;
-//      - Carnet interprétatif anticipé (OUI / NON).
+//      - Carnet interprétatif anticipé (OUI / NON) ;
+//      - Vigueur infinie (réglage de TEST, défaut OUI pendant la phase de test).
 //
 // ⚠️ Périmètre volontairement RESTREINT (Simplicity First + D-A7) : les overlays
 // debug PUREMENT runtime (heatmaps F6, température sol F7, vie macro I, LOD F9)
@@ -39,6 +40,10 @@ namespace Symbiose
 		// (encyclopédie « amorcée », carnet interprétatif NON anticipé).
 		private string _encycloDemarrage = "amorcee";
 		private bool _carnetAnticipe = false;
+		// Réglage de TEST « Vigueur infinie » : les gestes ne coûtent plus rien.
+		// Défaut ON tant que dure la phase de test (demande Nico 2026-10-22) — à
+		// repasser à false avant de distribuer le jeu.
+		private bool _vigueurInfinie = true;
 
 		// Le sous-panneau lui-même (caché par défaut) + le label de la vitesse (mis
 		// à jour au fil du slider).
@@ -116,6 +121,15 @@ namespace Symbiose
 			};
 			carnet.Toggled += on => _carnetAnticipe = on;
 			vbox.AddChild(carnet);
+
+			// --- Init : Vigueur infinie (réglage de test) ---
+			var vigueur = new CheckButton
+			{
+				Text = "Vigueur infinie (test)",
+				ButtonPressed = _vigueurInfinie,
+			};
+			vigueur.Toggled += on => _vigueurInfinie = on;
+			vbox.AddChild(vigueur);
 		}
 
 		private void MajVitesseLabel()
