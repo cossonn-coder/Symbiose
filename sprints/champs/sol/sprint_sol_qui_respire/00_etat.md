@@ -16,7 +16,7 @@ suivants : budget perf mesuré **par rapport à ①** ; ne pas tenter de résorb
 | ②bis | `02b_mort_branches.md` (ajouté 2026-10-22, accord Nico) | INTACT `1ce02bce…` (pommier du smoke trop jeune) | FAIT — ⚠ flux quasi nul sur `full` |
 | ②ter | `02c_arbres_adultes.md` (ajouté 2026-10-22, mandat Nico « favoriser le résultat ») | RE-FIGÉ `1ce02bce…` → `df6ebf04…` (tolérance ombre pommier, seul motif) | FAIT — ⚠ objectif bois NON atteint sur `full` |
 | ③ | `03_regne_fongique.md` | INTACT `df6ebf04…` | FAIT — ⚠ 8 espèces/13 sur `full` [3 graines] (composition) |
-| ④ | `04_parasite_faiblesse.md` | re-figé si hôte affaibli au smoke | à faire |
+| ④ | `04_parasite_faiblesse.md` | INTACT `df6ebf04…` (hôte affaibli attaqué 1 sem., dérive sous la résolution du digest) | FAIT — ⚠ aucune mort d'hôte (trappe de faiblesse seule) |
 | ⑤ | `05_voix_champignons.md` | neutre | à faire |
 | ⑥ | `06_manger_vision.md` | neutre | à faire |
 | ⑦ | `07_nectar_espece.md` | re-figé si floraison au smoke | à faire |
@@ -257,6 +257,62 @@ Perf : tick inchangé (aucun code de tick touché) ; perception carpophores 3,1 
 3. Hôte `Pinaceae` ajouté à la tue-mouches (écologie réelle : bouleau, pin, épicéa).
 4. `serialize.py` 377 → 380 LDC (bande vigilance, inchangée en nature).
 
+## ④ Parasite de faiblesse — FAIT (2026-10-22), golden INTACT `df6ebf04…`
+
+**Livré** :
+- `sim/engine/racines.py` (NOUVEAU, pur, sans état) : `HOTES_PARASITES` = union des `hotes`
+  des espèces `parasite=True` du registre (Pommier, Cerisier, Fagaceae, Bouleau — DONNÉES) ;
+  `faiblesse` = 0 si vitalité > SEUIL_SAIN (même porte que les labels `"!"` du ③), rampe
+  → 1 à SEUIL_AFFAIBLI ; `pression_parasite = PARASITE_K (2,0) × mycélium moyen sous les
+  `root_plots` × faiblesse`, AJOUTÉE à la cible `rong` du lerp `root_herbivory_memory`
+  (`_update_physiology`, `min(1, campagnol + parasite)`).
+- `fields/ecofields/uptake.facteur_racinaire(mémoire, tolérance, mycélium)` : formule
+  extraite de `plant_uptake` (bit-identique), SOURCE UNIQUE du facteur racinaire.
+- `eau_percue(plant, eco, hum)` = hum × facteur racinaire : lue par le stress hydrique
+  (`croissance._update_physiology`) et la convalescence (`mortalite`, `min(1, hum)`).
+- Test `tests/test_parasite.py` 17/17 (NOUVEAU) ; mesure `mesures/parasite.py` (`--sans` = avant ④).
+
+**⚠ PRÉMISSE RÉFUTÉE (canal)** : `root_herbivory_memory` ne réduisait QUE l'uptake (ce que
+le sol cède) ; aucun lecteur ne ramenait la perte à la plante (stress, croissance,
+convalescence lisent l'humidité du SOL) → forcer la mémoire à 1,0 sur TOUT le smoke ne
+changeait rien à la plante (pommier hauteur 59,983 → 59,980, vitalité moyenne T0 ↑). Le
+canal campagnol était donc INERTE aussi. Corrigé par `eau_percue` — **le campagnol est
+désormais ressenti lui aussi** (979 plantes l'an 2 sur `full`, population 650 vs 651
+[n=1 run]). Autre prémisse fausse : le smoke porte du campagnol (mémoire du pommier ~0,09) — le
+commentaire « densité nulle (smoke) » de `croissance.py` est périmé (non touché).
+
+**Golden** : smoke = pommier affaibli sem. 92 (vitalité 0,733, mycélium 0,017) → pression
+0,010, mémoire 0,0675 → 0,0681 en fin de run ; pas d'écart sur le digest ni le log (uptake
+d'eau d'hiver ≈ 0, arrondis) → hash INCHANGÉ, cas « constaté, intact ».
+
+**Mesures** `full`, 156 sem. [n=1 run par graine] :
+| graine | hôtes vus | attaqués (sem., pression max) | morts d'hôtes | tick an 2 avec / sans |
+|---|---|---|---|---|
+| 1521550718 | 1 pommier | 1 sem., 0,037 | 0 | 1256 / 1277 ms |
+| 7 | 2 pommiers | 30 et 85 sem., 0,018 / 0,014 | 0 | 991 / 1011 ms |
+| 1515525502 | 2 pommiers | 65 sem., 0,053 | 0 | 1132 ms |
+Bois produit par le parasite : 0 (aucune mort). Perf : surcoût non mesurable (écarts −2 %,
+bruit de runs parallèles) — sous +5 %.
+Banc contrôlé (pommier pré-crû 8 ans, vitalité 0,6, mycélium et sol imposés, 312 sem.)
+[n=1 arbre par cas] : semaines non saines témoin/parasite (myc 0,4) : sol ≤ 0,5 → 72/126 ;
+≤ 0,4 → 126/270 ; myc 0,25 sol ≤ 0,3 → 270/312 (jamais guéri). **0 mort** dans tous les cas.
+
+**⚠ REMONTÉES** :
+1. **Le parasite ne tue pas** : c'est une TRAPPE de faiblesse (convalescence bloquée,
+   stress hydrique ↑), pas une mort. Limite structurelle du canal partagé : facteur
+   racinaire ≥ 0,5 à mémoire 1 (`ROOT_HERBIVORY_UPTAKE_MALUS` 0,5, compensation
+   mycorhizienne, plancher 0,3) → sur sol humide (≥ 1) l'eau perçue ne descend jamais sous
+   le seuil de stress (0,5). Tuer exige une décision de Nico : (a) régime LÉTAL
+   « pourridié du collet » miroir de l'annélation du campagnol (mort mécanique d'un hôte
+   « malade » à mémoire saturée — interdit par le kickoff, d'où non fait) ; ou (b) un malus
+   propre au parasite, non plafonné par le cap campagnol.
+2. Paradoxe assumé : la compensation mycorhizienne (`MYCO_ROOT_COMPENS`) atténue aussi la
+   pourriture alors que c'est le même réseau qui l'apporte (champ `mycelium` unique) —
+   net = myc × (1 − 0,5·myc), monotone ; à revoir si un champ par guilde existe un jour.
+3. Composition (comme ②ter/③) : le seul hôte de `full` est le pommier, sous lequel le
+   mycélium plafonne ~0,01-0,05 → pression ≤ 0,053.
+4. `mortalite.py` 246 LDC, `croissance.py` 220 : bande verte.
+
 ## Ajouts de Nico à l'accord (2026-10-22)
 - Bois mort VISIBLE au sol, dégradation en sprite à stades (② pont, ⑧ dessin).
 - Overdose : 2ᵉ psychédélique pendant l'effet → phrases de TOUS les êtres à chaque snapshot.
@@ -353,8 +409,9 @@ causes de mort de branche codées et bornées, arbres pré-crûs, ombre par esp�
 remontée) → source boisée à trancher par Nico avant ③ (ceinture D73 ou ligneux dans `full`).
 ③ FAIT (golden INTACT `df6ebf04…`, pont **0.5.52**) : 13 espèces data-driven, fructification
 après la pluie ; seules 8 sortent sur `full` (pas d'hôte mycorhizien, cf. §③ remontée 1).
-Prochain tronçon : ④ `04_parasite_faiblesse.md` (golden de départ **`df6ebf04…`**, pont 0.5.52 ;
-niche parasite « hôte affaibli » déjà lue par `fields/fongique.py` via labels `"!"`).
+④ FAIT (golden INTACT `df6ebf04…`) : parasite générique sur hôte affaibli + `eau_percue`
+(canal racinaire enfin ressenti, campagnol compris) ; ne tue pas (cf. §④ remontée 1).
+Prochain tronçon : ⑤ `05_voix_champignons.md` (golden de départ **`df6ebf04…`**, pont 0.5.52).
 Chaque tronçon met à jour sa ligne de statut, consigne ses mesures [n=…] et ses hashes golden.
 ## Liste fongique VALIDÉE (Q7)
 

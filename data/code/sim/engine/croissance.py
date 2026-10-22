@@ -23,6 +23,7 @@ from fields.ecofields.constants import (T_PLANTE_ALPHA, ROSEE_SURFACE_REF,
 from plants import EXPR_GAIN, EXPR_MIN, EXPR_MAX, TAU_UP, TAU_DOWN
 from .calendrier import saison_de
 from .transpiration import facteur_transpiration
+from .racines import eau_percue, pression_parasite
 
 # Sémiologie ② (docs/narration/semiologie/conception_semiologie_foliaire.md §2.5) — facteur de décroissance
 # des marques de symptômes ÉVÉNEMENTIELS par tick de plante. Couplé au gain
@@ -289,8 +290,12 @@ class CroissanceMixin:
             # Shade memory : intégration lente de l'ombre vécue
             plant.shade_memory += (1.0 - light - plant.shade_memory) * 0.10
             plant.shade_memory  = max(0.0, min(1.0, plant.shade_memory))
-            # Drought memory : stress quand humidité < 0.5
-            drought_stress = max(0.0, 1.0 - hum / 0.5) if hum < 0.5 else 0.0
+            # Drought memory : stress quand humidité < 0.5. Humidité RESSENTIE (D111 ④) :
+            # des racines rongées/pourries (`root_herbivory_memory`) n'atteignent plus
+            # toute l'eau du plot → `eau_percue` (sim/engine/racines.py). Mémoire 0 ⇒
+            # `hum` inchangé ⇒ bit-identique.
+            hum_p = eau_percue(plant, eco, hum)
+            drought_stress = max(0.0, 1.0 - hum_p / 0.5) if hum_p < 0.5 else 0.0
             # Captation foliaire de la rosée (sprint météo→champs ⑤, §6) : une CANOPÉE
             # intercepte la rosée du matin → le feuillage hydraté ALLÈGE le stress
             # hydrique (interconnexion « tout coexiste »). On RABOTE le drought_stress
@@ -389,7 +394,10 @@ class CroissanceMixin:
             # `plant_uptake` (via `_apply_uptake`) où elle réduit l'uptake effectif → la
             # plante s'affame par les voies EXISTANTES (philo #2). Densité nulle (smoke) →
             # signal 0 → mémoire reste 0 → uptake bit-identique → golden NEUTRE.
-            rong = eco.category_density("herbivore_vertebre", r, c)
+            # + PARASITE DE FAIBLESSE (D111 ④) : un champignon parasite du registre
+            # pourrit les racines d'un hôte DÉJÀ affaibli (0 sur hôte sain / non listé).
+            rong = min(1.0, eco.category_density("herbivore_vertebre", r, c)
+                       + pression_parasite(plant, eco))
             plant.root_herbivory_memory += (rong - plant.root_herbivory_memory) * ROOT_HERBIVORY_MEMORY_LERP
             plant.root_herbivory_memory  = max(0.0, min(1.0, plant.root_herbivory_memory))
             # Dynamique d'EXPRESSION plastique (§2.3) : chaque gène adaptogène glisse

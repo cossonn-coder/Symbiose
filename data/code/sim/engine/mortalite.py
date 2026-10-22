@@ -20,6 +20,7 @@ from sim.reproduction import (find_father, child_genes, child_expression,
                               is_seed_bearing)
 from sim.capacite import recrutement_bloque
 from sim.growth import est_etiole
+from .racines import eau_percue
 from .aleas import (PAILLAGE_PROTECT, DAMAGE_STEP, WIND_DAMAGE_SEUIL,
                     WIND_SEVERITY_REF, WIND_ETIOLE_SUSCEPT)
 
@@ -124,7 +125,8 @@ class MortaliteMixin:
             # Guérison (convalescence) — coupée en fin de vie
             if plant.etat != "sain" and sen < HEAL_SEN_CUTOFF:
                 light   = eco.lumiere.light_received(plant)
-                hum     = eco.humidite.at_plot(r, c)
+                # Eau RESSENTIE (D111 ④) : racines pourries/rongées → convalescence ↓.
+                hum     = eau_percue(plant, eco, eco.humidite.at_plot(r, c))
                 disturb = eco.disturbance.local(r, c)
                 Q = light * min(1.0, hum) * max(0.0, 1.0 - disturb)
                 # vigueur accélère la convalescence (gène >1 → guérit plus vite) ;

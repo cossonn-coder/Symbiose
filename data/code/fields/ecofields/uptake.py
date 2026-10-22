@@ -15,6 +15,18 @@ from .constants import *          # UPTAKE, BESOIN, HUM_EXCES, ASPHYXIE_*, STRUC
 from .nutriments import dispo, immobilise_n   # cloche pH + immobilisation N
 
 
+def facteur_racinaire(memoire: float, tolerance: float, mycelium: float) -> float:
+    """Fonction racinaire restante ∈ [ROOT_UPTAKE_FLOOR, 1] d'une plante dont le chevelu
+    est rongé (campagnol) ou pourri (parasite de faiblesse, D111 ④) : mémoire /
+    tolérance d'espèce, compensée par la mycorhize, plancher ROOT_UPTAKE_FLOOR.
+    SOURCE UNIQUE : lue par `plant_uptake` (ce que le sol cède) ET par la physiologie
+    (`sim/engine/racines.eau_percue` : ce que la plante en ressent). mémoire = 0 ⇒
+    1.0 exactement (golden NEUTRE). Pure, zéro RNG."""
+    root_loss = memoire / max(1e-6, tolerance)
+    root_loss *= max(0.0, 1.0 - MYCO_ROOT_COMPENS * mycelium)
+    return max(ROOT_UPTAKE_FLOOR, 1.0 - root_loss * ROOT_HERBIVORY_UPTAKE_MALUS)
+
+
 class UptakeMixin:
     """Consommation racinaire (eau + nutriments)."""
 
@@ -98,9 +110,8 @@ class UptakeMixin:
         #      rongée boit encore un minimum). mémoire = 0 (aucun campagnol) ⇒ root_factor
         #      = 1.0 ⇒ uptake bit-identique ⇒ golden NEUTRE. Philo #2 : on module un FLUX
         #      du sol vers la racine, jamais la plante.
-        root_loss = root_herbivory_memory / max(1e-6, root_loss_tolerance)
-        root_loss *= max(0.0, 1.0 - MYCO_ROOT_COMPENS * self.mycelium.at_plot(r, c))
-        root_factor = max(ROOT_UPTAKE_FLOOR, 1.0 - root_loss * ROOT_HERBIVORY_UPTAKE_MALUS)
+        root_factor = facteur_racinaire(root_herbivory_memory, root_loss_tolerance,
+                                        self.mycelium.at_plot(r, c))
         asphyxie_factor *= root_factor
         consumed = {}
         for var, by_stage in UPTAKE.items():
