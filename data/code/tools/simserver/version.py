@@ -730,7 +730,16 @@ from __future__ import annotations
 #       décomposition. Moteur : les branches élaguées d'un LIGNEUX (`_elaguer`)
 #       tombent désormais en litière `bois` (∝ longueur × épaisseur²). Un client
 #       pré-0.5.51 lit par index et ignore les 2 éléments. Golden INTACT.
-ENGINE_VERSION = "0.5.51"
+# 0.5.52 (LE SOL QUI RESPIRE ③, D111 règne fongique) : ajout rétro-compatible.
+#       Chaque entrée du bloc `carpophores` gagne un 7ᵉ élément : la CLÉ D'ESPÈCE
+#       (`fields/fongique.REGISTRE_FONGIQUE`, 13 espèces : pleurote, hypholome,
+#       collybie, coprin, rose_des_pres, clitocybe, psilocybe, morille, cepe,
+#       amanite_phalloide, amanite_tue_mouches, armillaire, polypore_bouleau),
+#       déduite de la NICHE du plot (bois / humus / racines d'hôte). Les carpophores
+#       sortent la semaine qui SUIT une semaine de pluie, dans la fenêtre de leur
+#       espèce (plus seulement l'automne). Un client pré-0.5.52 lit par index et
+#       ignore l'élément. Perception pure → golden INTACT.
+ENGINE_VERSION = "0.5.52"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

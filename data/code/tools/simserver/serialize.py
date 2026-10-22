@@ -28,7 +28,8 @@ from sim import maitrise as M
 # densité → entités (fields/population.py §3). L'échantillonnage se fait CÔTÉ
 # SERVEUR — la vue n'a pas besoin de _hash_noise (kickoff t6 §4).
 from fields.population import peindre_presence, sample_carpophores
-from sim.champignon_role import plots_racines, role_carpophore   # rôle carpophore (D110 b)
+from sim.champignon_role import (racines_par_plot, role_carpophore,   # D110 b + D111 ③
+                                 pluie_semaine_precedente)   # rôle carpophore (D110 b)
 # LOD des émetteurs d'ombre (D67, sprint perf-lod-ombre ③) : on relit le SEUIL de
 # pouvoir ombrageant pour DÉRIVER, par plante, si elle émet une ombre (miroir exact
 # de la métrique de fields/light.py:compute). Lecture pure d'une constante de module
@@ -319,6 +320,7 @@ class SerializeMixin:
         # Le CHAMP reste intact (les gestes y retirent toujours un quantum).
         sprites = {}
         carpophores = {}
+        pluie_prec = pluie_semaine_precedente(gs)
         foragers = {}
         structures = {}
         supports = {}
@@ -348,17 +350,21 @@ class SerializeMixin:
             # Carpophores (sprint mycélium ④, §1.1) : champignons VISIBLES
             # échantillonnés du champ `mycelium` — PERCEPTION PURE (aucun état
             # moteur, dérivés du champ comme les sprites macro). Format COMPACT par
-            # tuile : `[r, c, x_frac, y_frac, densite]`. Apparaissent en automne, sol
-            # humide, réseau dense → liste VIDE hors saison / mycélium nul → pont
-            # neutre. PURE lecture (sample_carpophores ne modifie rien) → golden NEUTRE.
+            # tuile : `[r, c, x_frac, y_frac, densite, rôle, espèce]`. Sol humide,
+            # réseau dense, après la pluie → liste VIDE sinon → pont neutre. PURE lecture (sample_carpophores ne modifie rien) → golden NEUTRE.
             # INFO-BULLE DU VIVANT ① (0.5.47) : 6ᵉ champ = RÔLE LOCAL `b`/`r`/`h`
-            # (bois / racines / humus, `sim/champignon_role`) ; plots racinés
-            # calculés une fois par tuile, et seulement s'il y a des carpophores.
-            carpos = sample_carpophores(eco, gs["seed"], week_in_year)
-            racines = plots_racines(tile.plants) if carpos else set()
+            # (bois / racines / humus, `sim/champignon_role`).
+            # SOL QUI RESPIRE ③ (0.5.52) : fructification la semaine qui SUIT une
+            # semaine de pluie (`pluie_prec`, calculé une fois hors boucle) et ESPÈCE
+            # déduite de la niche (bois / humus / racines d'hôte) → 7ᵉ champ = clé
+            # d'espèce (`fields/fongique.REGISTRE_FONGIQUE`). Racines indexées une
+            # fois par tuile, seulement les semaines qui suivent une pluie.
+            racines = racines_par_plot(tile.plants) if pluie_prec else {}
+            carpos = sample_carpophores(eco, gs["seed"], week_in_year, pluie_prec, racines)
             carpophores[tile.tile_id] = [
                 [k.row, k.col, round(k.x_frac, 3), round(k.y_frac, 3),
-                 round(k.densite, 3), role_carpophore(eco, racines, k.row, k.col)]
+                 round(k.densite, 3), role_carpophore(eco, racines, k.row, k.col),
+                 k.espece]
                 for k in carpos]
             # Butineurs déterministes (arc pollinisation §F, 0.3.9) : agents
             # échantillonnés/marchés par engine._tick_butineurs (eco.foragers, déjà

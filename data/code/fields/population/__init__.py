@@ -49,5 +49,5 @@ from fields.population.perception import (
     SpriteSample, sample_sprites, cap_sprites_global, peindre_presence,
     Carpophore, sample_carpophores,
     DENSITE_PAR_SPRITE, SPRITES_PAR_PLOT_MAX, SPRITES_MONDE_MAX,
-    CARPO_MYCEL_MIN, CARPO_HUMIDE_MIN, _CARPO_AUTOMNE,
+    CARPO_MYCEL_MIN, CARPO_HUMIDE_MIN,
 )

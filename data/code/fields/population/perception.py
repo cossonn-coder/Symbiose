@@ -9,6 +9,7 @@ import heapq
 from dataclasses import dataclass
 
 from fields.noise import _hash_noise
+from fields.fongique import especes_de_saison, candidates_du_plot, choisir_espece
 from fields.population.field import PopulationField
 
 
@@ -195,24 +196,31 @@ def peindre_presence(field: PopulationField, seed: int) -> list[SpriteSample]:
 
 
 # ---------------------------------------------------------------------------
-# PERCEPTION — carpophores échantillonnés (sprint mycélium ④, CONCEPTION §1.1)
+# PERCEPTION — carpophores échantillonnés (sprint mycélium ④ ; espèces : D111 ③)
 # ---------------------------------------------------------------------------
 # Les carpophores (champignons VISIBLES) sont de la PERCEPTION PURE, dérivée du
 # champ `mycelium` — AUCUN état propre, recalculés à chaque snapshot (comme la vie
-# macro). Ils apparaissent là où le réseau est DENSE + le sol HUMIDE (après pluie)
-# + en SAISON favorable (automne). Zéro RNG (hash spatial déterministe), zéro
-# retour sur la simulation → golden-NEUTRES (le CHAMP fait tout, le carpophore ne
-# nourrit ni ne décompose — piège du kickoff §pièges).
+# macro). Zéro RNG (hash spatial déterministe), zéro retour sur la simulation →
+# golden-NEUTRES (le CHAMP fait tout, le carpophore ne nourrit ni ne décompose).
+#
+# 📖 D111 ③ — « après la pluie », et plus seulement l'automne. Un carpophore est
+# l'organe reproducteur d'un réseau qui attend un signal d'eau : il perce ~3 jours
+# après une bonne pluie. Au pas hebdomadaire : il est visible la semaine qui SUIT
+# une semaine de pluie (l'appelant, couche `sim`/pont, sait lire la météo — la
+# couche `fields` ne l'importe pas, règle de couches). La SAISON n'est plus un gate
+# global : chaque espèce a sa fenêtre (`fields/fongique.py`), et l'ESPÈCE est
+# déduite de la niche du plot (bois, humus, racines d'hôte).
 
 _SALT_CARPOPHORE = 0x2AF001       # canal _hash_noise dédié (décorrélé des guildes)
-CARPO_MYCEL_MIN  = 0.30           # seuil de densité mycélienne sous lequel rien ne fructifie
-CARPO_HUMIDE_MIN = 1.5            # humidité (échelle [0,3]) sous laquelle pas de fructification
+# Seuils recalibrés au ③ (D111) sur le monde `full` APRÈS le bilan hydrique ① et
+# le bois mort ② [3 graines × 156 sem., 1 run chacune] : le réseau plafonne vers
+# 0,45 (médiane ~0,002) → 0,30 ne laissait fructifier qu'une poignée de plots, et
+# une année sèche (graine 7, humidité médiane ~0,9) presque rien. 0,20 / 1,2 :
+# un réseau franc sur un sol encore frais la semaine qui suit la pluie.
+CARPO_MYCEL_MIN  = 0.20           # seuil de densité mycélienne sous lequel rien ne fructifie
+CARPO_HUMIDE_MIN = 1.2            # humidité (échelle [0,3]) sous laquelle pas de fructification
 CARPO_PAR_PLOT   = 3              # nb max de carpophores par plot (saturation visuelle)
 CARPO_DENS_REF   = 0.70           # densité mycélienne au-delà de laquelle le plot est plein
-# Fenêtre AUTOMNE (semaines dans l'année) — dupliquée ici plutôt qu'importée de
-# `sim.engine.calendrier` (couche `fields` n'importe JAMAIS `sim`, règle de couches).
-# Miroir de SAISONS["automne"] = range(27, 40) ; constante simple, pas de cycle.
-_CARPO_AUTOMNE = range(27, 40)
 
 
 @dataclass(frozen=True)
@@ -224,25 +232,35 @@ class Carpophore:
     x_frac: float      # position dans le plot ∈ [0,1], INDÉPENDANTE de la semaine
     y_frac: float
     densite: float     # densité mycélienne locale [0,1] (pilote la taille du sprite)
+    espece: str = ""   # clé de `fields.fongique.REGISTRE_FONGIQUE` (D111 ③)
 
 
-def sample_carpophores(eco, seed: int, week_in_year: int) -> list[Carpophore]:
+def sample_carpophores(eco, seed: int, week_in_year: int, pluie_prec: bool,
+                       racines: dict | None = None) -> list[Carpophore]:
     """
-    Échantillonne les carpophores VISIBLES du champ `mycelium` (perception §1.1).
-    PURE & déterministe : lecture seule du champ, positions par hash spatial
-    indépendant de la semaine → golden-NEUTRE.
+    Échantillonne les carpophores VISIBLES du champ `mycelium`. PURE & déterministe :
+    lecture seule, positions par hash spatial indépendant de la semaine → golden-NEUTRE.
 
-    Conditions de fructification, par plot :
-      - réseau DENSE          : mycelium ≥ CARPO_MYCEL_MIN ;
-      - sol HUMIDE (pluie)    : humidite ≥ CARPO_HUMIDE_MIN ;
-      - SAISON favorable      : automne (saison_de(week_in_year) == "automne").
-    Nombre de carpophores = floor(CARPO_PAR_PLOT × min(1, mycelium / CARPO_DENS_REF)).
-    Liste VIDE si mycélium nul / sol sec / hors automne → pont neutre.
+      pluie_prec : la semaine PRÉCÉDENTE a été pluvieuse (calculé par l'appelant) ;
+      racines    : plot `(r, c)` → labels (familles/noms) des racines vivantes qui
+                   l'exploitent, `"!"`-préfixés si l'hôte est affaibli
+                   (`sim.champignon_role.racines_par_plot`). None = aucune racine.
+
+    Conditions, par plot : pluie la semaine d'avant ; mycelium ≥ CARPO_MYCEL_MIN ;
+    humidite ≥ CARPO_HUMIDE_MIN ; au moins une espèce EN SAISON dont la niche est
+    offerte au plot (sinon rien : un réseau sans niche ne fructifie pas). Espèce =
+    départage par hash spatial entre les candidates.
+    Nombre = floor(CARPO_PAR_PLOT × min(1, mycelium / CARPO_DENS_REF)).
     """
     mycel = getattr(eco, "mycelium", None)
-    # Saison non favorable ou pas de champ → aucun carpophore (perception muette).
-    if mycel is None or week_in_year not in _CARPO_AUTOMNE:
+    if mycel is None or not pluie_prec:
         return []
+    cles = especes_de_saison(week_in_year)
+    if not cles:
+        return []
+    racines = racines or {}
+    tas = frozenset(s.plot for s in (getattr(eco, "structures", None) or []))
+    vide = frozenset()
     carpos: list[Carpophore] = []
     for r in range(eco.rows):
         for c in range(eco.cols):
@@ -251,10 +269,15 @@ def sample_carpophores(eco, seed: int, week_in_year: int) -> list[Carpophore]:
                 continue
             if eco.humidite.at_plot(r, c) < CARPO_HUMIDE_MIN:
                 continue
+            esp = choisir_espece(
+                candidates_du_plot(eco, r, c, racines.get((r, c), vide), cles, tas),
+                seed, r, c)
+            if esp is None:
+                continue
             n = int(CARPO_PAR_PLOT * min(1.0, d / CARPO_DENS_REF))
             for slot in range(n):
                 x = _hash_noise(seed, _SALT_CARPOPHORE + slot, r, c)
                 y = _hash_noise(seed, _SALT_CARPOPHORE + _SLOT_Y_OFFSET + slot, r, c)
                 carpos.append(Carpophore(
-                    row=r, col=c, slot=slot, x_frac=x, y_frac=y, densite=d))
+                    row=r, col=c, slot=slot, x_frac=x, y_frac=y, densite=d, espece=esp))
     return carpos

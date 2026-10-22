@@ -245,56 +245,63 @@ check("FAUNE FONGIVORE : mycélium nul ⇒ lombric = repos (signal ×0)",
 
 # --- M. CARPOPHORES (④) : perception PURE échantillonnée du champ `mycelium`. ----
 from fields import sample_carpophores
-from fields.population import (CARPO_MYCEL_MIN, CARPO_HUMIDE_MIN, _CARPO_AUTOMNE)
+from fields.population import (CARPO_MYCEL_MIN, CARPO_HUMIDE_MIN)
 
-_WIY_AUTOMNE = _CARPO_AUTOMNE.start            # une semaine d'automne valide
-_WIY_ETE = 25                                  # hors fenêtre de fructification
+# D111 ③ : la fructification suit la PLUIE (pas l'automne seul) et l'espèce vient
+# de la niche. Sol riche (om_active) = niche humus du coprin, fenêtre sem. 8-45.
+_WIY_AUTOMNE = 30                              # coprin en fenêtre
+_WIY_ETE = 50                                  # hors fenêtre du coprin (hiver)
 _SEED_C = 0x5AB1057E
 
 
 def _eco_carpo(mycel, humidite):
     e = init_eco("carpo", 4, 4, humidite=humidite)
     e.mycelium.fill(mycel)
+    e.om_active.fill(1.0)                      # humus riche → niche du coprin
     return e
 
 
 # Réseau dense + sol humide + automne → carpophores PRÉSENTS.
 e_dense = _eco_carpo(0.8, 2.5)
-carpos = sample_carpophores(e_dense, _SEED_C, _WIY_AUTOMNE)
+carpos = sample_carpophores(e_dense, _SEED_C, _WIY_AUTOMNE, True)
 check("CARPOPHORES : présents (réseau dense + humide + automne)",
       len(carpos) > 0, detail=f"{len(carpos)} carpophores")
 check("CARPOPHORES : positions ∈ [0,1] (frac dans le plot)",
       all(0.0 <= k.x_frac <= 1.0 and 0.0 <= k.y_frac <= 1.0 for k in carpos))
 
 # Déterminisme : deux échantillonnages du MÊME état → identiques (zéro RNG).
-c1 = sample_carpophores(e_dense, _SEED_C, _WIY_AUTOMNE)
-c2 = sample_carpophores(e_dense, _SEED_C, _WIY_AUTOMNE)
+c1 = sample_carpophores(e_dense, _SEED_C, _WIY_AUTOMNE, True)
+c2 = sample_carpophores(e_dense, _SEED_C, _WIY_AUTOMNE, True)
 check("CARPOPHORES : déterministes (h1 == h2, mêmes positions)",
       [(k.row, k.col, k.slot, k.x_frac, k.y_frac) for k in c1]
       == [(k.row, k.col, k.slot, k.x_frac, k.y_frac) for k in c2])
 
 # Mycélium NUL → liste VIDE (golden/pont neutres).
 check("CARPOPHORES : VIDE si mycélium nul",
-      sample_carpophores(_eco_carpo(0.0, 2.5), _SEED_C, _WIY_AUTOMNE) == [])
+      sample_carpophores(_eco_carpo(0.0, 2.5), _SEED_C, _WIY_AUTOMNE, True) == [])
 # Sous le seuil de densité → VIDE.
 check("CARPOPHORES : VIDE si réseau trop ténu (< seuil)",
       sample_carpophores(_eco_carpo(CARPO_MYCEL_MIN - 0.05, 2.5),
-                         _SEED_C, _WIY_AUTOMNE) == [])
+                         _SEED_C, _WIY_AUTOMNE, True) == [])
 # Sol sec → VIDE (pas de fructification sans pluie).
 check("CARPOPHORES : VIDE si sol sec (< seuil humidité)",
       sample_carpophores(_eco_carpo(0.8, CARPO_HUMIDE_MIN - 0.2),
-                         _SEED_C, _WIY_AUTOMNE) == [])
-# Hors automne → VIDE (saison non favorable).
-check("CARPOPHORES : VIDE hors automne (saison défavorable)",
-      sample_carpophores(e_dense, _SEED_C, _WIY_ETE) == [])
+                         _SEED_C, _WIY_AUTOMNE, True) == [])
+# Hors fenêtre de l'espèce → VIDE ; pas de pluie la semaine d'avant → VIDE.
+check("CARPOPHORES : VIDE hors fenêtre de l'espèce de la niche",
+      sample_carpophores(e_dense, _SEED_C, _WIY_ETE, True) == [])
+check("CARPOPHORES : VIDE si la semaine précédente n'a pas plu",
+      sample_carpophores(e_dense, _SEED_C, _WIY_AUTOMNE, False) == [])
+check("CARPOPHORES : espèce de la niche humus = coprin",
+      {k.espece for k in carpos} == {"coprin"}, str({k.espece for k in carpos}))
 
 # Indépendance position/semaine : un slot occupe le MÊME point quel que soit
 # `week_in_year` (positions par hash de seed/position/slot, pas de la semaine).
 e_dense2 = _eco_carpo(0.8, 2.5)
 pos_a = {(k.row, k.col, k.slot): (k.x_frac, k.y_frac)
-         for k in sample_carpophores(e_dense2, _SEED_C, _WIY_AUTOMNE)}
+         for k in sample_carpophores(e_dense2, _SEED_C, _WIY_AUTOMNE, True)}
 pos_b = {(k.row, k.col, k.slot): (k.x_frac, k.y_frac)
-         for k in sample_carpophores(e_dense2, _SEED_C, _CARPO_AUTOMNE.stop - 1)}
+         for k in sample_carpophores(e_dense2, _SEED_C, 40, True)}
 check("CARPOPHORES : positions indépendantes de la semaine (slot stable)",
       pos_a == pos_b)
 

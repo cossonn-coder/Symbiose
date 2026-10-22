@@ -15,7 +15,7 @@ suivants : budget perf mesuré **par rapport à ①** ; ne pas tenter de résorb
 | ② | `02_bois_mort.md` | INTACT `1ce02bce…` (prémisse fausse) | FAIT — ⚠ inerte en pratique |
 | ②bis | `02b_mort_branches.md` (ajouté 2026-10-22, accord Nico) | INTACT `1ce02bce…` (pommier du smoke trop jeune) | FAIT — ⚠ flux quasi nul sur `full` |
 | ②ter | `02c_arbres_adultes.md` (ajouté 2026-10-22, mandat Nico « favoriser le résultat ») | RE-FIGÉ `1ce02bce…` → `df6ebf04…` (tolérance ombre pommier, seul motif) | FAIT — ⚠ objectif bois NON atteint sur `full` |
-| ③ | `03_regne_fongique.md` | neutre | à faire |
+| ③ | `03_regne_fongique.md` | INTACT `df6ebf04…` | FAIT — ⚠ 8 espèces/13 sur `full` [3 graines] (composition) |
 | ④ | `04_parasite_faiblesse.md` | re-figé si hôte affaibli au smoke | à faire |
 | ⑤ | `05_voix_champignons.md` | neutre | à faire |
 | ⑥ | `06_manger_vision.md` | neutre | à faire |
@@ -207,6 +207,56 @@ quand le stock au sol perd ~55-60 %/an (≈ 10/an l'an 1, ≈ 2/an l'an 2) : éc
 une source à l'échelle d'un BOISEMENT tient le flux : ceinture boisée D73 qui lâche du bois
 en lisière, ou des ligneux dans `full` — décision de composition (Nico), non prise ici.
 
+## ③ Règne fongique — FAIT (2026-10-22), golden INTACT `df6ebf04…`, pont **0.5.52**
+
+**Livré** :
+- `fields/fongique.py` (NOUVEAU, données pures) : `REGISTRE_FONGIQUE` 13 espèces (clé, nom,
+  groupe, substrats ⊂ {bois, humus, racines}, hôtes = familles OU noms d'espèce, fenêtres,
+  comestibilité en tags cumulables — tue-mouches `psychedelique`+`veneneux`, polypore
+  `immangeable` —, pH optionnel, `parasite`). Fenêtres : collybie SEULE sem. 44-52 et 1-4,
+  morille SEULE sem. 5-13, le reste de l'été à sem. 43. Niche du plot : `bois` =
+  `bois_fresh_at > 0` ; `humus` = `om_active ≥ HUMUS_OM_MIN` (0,6) ou plot d'ancrage d'un
+  bac/pile ; `racines` = labels des racines vivantes. Départage par hash spatial (sosies
+  sur la même niche : pleurote/hypholome/collybie/armillaire, rosé/clitocybe, cèpe/phalloïde).
+- Parasites (armillaire racines, polypore) : niche `racines` seulement sur hôte AFFAIBLI
+  (`etat != "sain"`, labels `"!"`-préfixés) — la visibilité seule ; l'attaque reste ④.
+  Armillaire fructifie aussi sur le bois (souche).
+- `sample_carpophores(eco, seed, wiy, pluie_prec, racines)` : gate automne SUPPRIMÉ
+  (`_CARPO_AUTOMNE` retiré) → semaine qui SUIT une pluie (`PLUIE_APPORT ≥ 0,05`, Pluie
+  prolongée/Orage), fenêtre de l'espèce, niche ; `Carpophore.espece`. Seuils recalibrés
+  `CARPO_MYCEL_MIN` 0,30 → **0,20**, `CARPO_HUMIDE_MIN` 1,5 → **1,2** (perception seule).
+- `sim/champignon_role.py` : `racines_par_plot` (une fois par tuile, seulement après pluie)
+  + `pluie_semaine_precedente(gs)` (météo `week−2`, pure, honore `pluie_forcee`).
+- Pont : 7ᵉ champ carpophore = clé d'espèce ; `CarpophoreLayer.cs` lit par index → ignore.
+- Tests : `tests/test_fongique.py` 28/28 (NOUVEAU) ; `test_mycelium` 36/36 (section M
+  adaptée : niche humus + pluie) ; versions 0.5.52 dans `tests/simserver/*`.
+- Mesure : `mesures/fongique.py` (lit le VRAI bloc `carpophores` du snapshot).
+
+**Mesures** [`full`, n=1 run par graine ; « plot-sem. » = plot fructifiant une semaine] :
+| graine | plot-sem. an 0/1/2 | sem. avec carpophores an 0/1/2 | espèces vues (plot-sem. sur 3 ans) |
+|---|---|---|---|
+| 1521550718 | 70 / 90 / 103 | 15 / 11 / 7 | coprin 156 · collybie 41 · hypholome 34 · armillaire 13 · pleurote 10 · rosé 3 · clitocybe 3 · psilocybe 3 |
+| 7 (sèche) | 6 / 0 / 10 | 3 / 0 / 3 | coprin 8 · collybie 4 · hypholome 2 · psilocybe 2 |
+| 1515525502 | 65 / 156 / 167 | 10 / 13 / 9 | coprin 264 · hypholome 33 · collybie 32 · clitocybe 27 · armillaire 18 · rosé 8 · psilocybe 4 · pleurote 2 |
+`full` 1521550718, 104 sem. via le pont : coprin 65 · collybie 41 · hypholome 31 · armillaire
+13 · pleurote 10 ; carpophores dans TOUTES les saisons (printemps 4-5 = collybie sem. 1-4).
+Où : coprin sur 20 plots d'humus riche (planches), bois sur les 21 plots de bois initial
+(collybie l'hiver, hypholome/pleurote/armillaire l'automne), prairie = racines du pâturin.
+Banc `pluie_continue` 104 sem. : 0 carpophore l'an 0 (pas de bois initial, mycélium max
+0,08 à sem. 41) puis coprin **chaque semaine** sem. 78-95 (fin de sa fenêtre sem. 43).
+Perf : tick inchangé (aucun code de tick touché) ; perception carpophores 3,1 ms/snapshot
+(0,3 % du tick ; 0,8 % sur le banc pluie) [n=1 run].
+
+**⚠ REMONTÉES** :
+1. **Morille, cèpe, phalloïde, tue-mouches, polypore : 0 sur `full`** — composition, pas
+   mécanique : aucune Fagacée/bouleau/sapin dans `full` ; sous le pommier le mycélium plafonne
+   ~0,015 (sol pauvre en `om_active`, pas de bois). Couverts par `test_fongique`. Même
+   décision de boisement que ②ter (ligneux dans `full` / ceinture D73).
+2. Coprin domine (~60 %) : 90 % des plots à mycélium ≥ 0,2 ont `om_active` ≥ 0,6 (le réseau
+   vit de l'humus des planches, pas du bois). Fidèle au moteur, à garder en tête au F5.
+3. Hôte `Pinaceae` ajouté à la tue-mouches (écologie réelle : bouleau, pin, épicéa).
+4. `serialize.py` 377 → 380 LDC (bande vigilance, inchangée en nature).
+
 ## Ajouts de Nico à l'accord (2026-10-22)
 - Bois mort VISIBLE au sol, dégradation en sprite à stades (② pont, ⑧ dessin).
 - Overdose : 2ᵉ psychédélique pendant l'effet → phrases de TOUS les êtres à chaque snapshot.
@@ -301,7 +351,10 @@ Remontées de ① tranchées (D114, D115). ② + ②bis + ②ter FAITS : bois mo
 causes de mort de branche codées et bornées, arbres pré-crûs, ombre par espèce — mais
 **flux continu NUL sur `full` (un seul ligneux, 5 ans, sans latérales)** (cf. §②ter
 remontée) → source boisée à trancher par Nico avant ③ (ceinture D73 ou ligneux dans `full`).
-Prochain tronçon : ③ `03_regne_fongique.md` (golden de départ **`df6ebf04…`**, pont 0.5.51).
+③ FAIT (golden INTACT `df6ebf04…`, pont **0.5.52**) : 13 espèces data-driven, fructification
+après la pluie ; seules 8 sortent sur `full` (pas d'hôte mycorhizien, cf. §③ remontée 1).
+Prochain tronçon : ④ `04_parasite_faiblesse.md` (golden de départ **`df6ebf04…`**, pont 0.5.52 ;
+niche parasite « hôte affaibli » déjà lue par `fields/fongique.py` via labels `"!"`).
 Chaque tronçon met à jour sa ligne de statut, consigne ses mesures [n=…] et ses hashes golden.
 ## Liste fongique VALIDÉE (Q7)
 
