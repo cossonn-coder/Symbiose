@@ -1,6 +1,6 @@
 # Sprint « le sol qui respire » (D111) — état partagé
 
-**Phase** : CONCEPTION FIGÉE le 2026-10-22 → `/sprint-auto sprint_sol_qui_respire` en cours.
+**Phase** : SPRINT CLOS le 2026-10-23 (①→⑧ + ②bis/②ter/⑦bis). Golden final `fecccded…`, pont 0.5.56.
 Doc : `docs/champs/sol/conception_sol_qui_respire.md`. 8 tronçons ; ① FAIT et commité.
 **Remontées de ① TRANCHÉES (Nico, 2026-10-22)** : perf +33 % acceptée → dette **D114** (URGENTE,
 sprint perf juste après ce sprint ; F5 suspendu d'ici là) ; banc succession 4/6 → dette **D115**

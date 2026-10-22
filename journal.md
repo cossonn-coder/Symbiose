@@ -195,6 +195,7 @@ pointeur ci-dessous. Ne plus écrire le contenu des entrées ici.
 - [2026-10-20 — Sprint **PLANTE ASSEMBLÉE** — CLOS (`/sprint-auto`, ①→⑦) : Decor/couvre-sol/maison en maillage, plantes en pages d'atlas, banc accéléré Maj+E, plante assemblée aux paliers bas, corpus des signes + info-bulle 2 niveaux ; ×4 VM 2 013 → 111 draw calls [VM, n=1] ; golden intact `22768f33…`, pont 0.5.46 ; D109 → D110 ; reste F5 PC](journal/153_2026-10-20_sprint-plante-assemblee-CLOS.md)
 - [2026-10-22 — Sprint **INFO-BULLE DU VIVANT** — CLOS (`/sprint-auto`, ①→③) : bêtes et champignons nommés après 3 saisons d'observation, rôle + abondance + nourriture, seuil de visibilité mesuré, voix saine ; golden intact `22768f33…`, pont 0.5.48 ; D110 (a)(b) fermés, (g) levé côté vue, + (h)(i) ; reste F5](journal/154_2026-10-22_sprint-infobulle-vivant-CLOS.md)
 - [2026-10-22 — Conception **LE SOL QUI RESPIRE** (D111) — FIGÉE : eau (rosée de l'air, pluie toutes saisons, transpiration foliaire), bois mort visible, 13 champignons + parasite de faiblesse, manger & vision, nectar par espèce ; 8 tronçons](journal/155_2026-10-22_conception-sol-qui-respire-FIGEE.md)
+- [2026-10-23 — Sprint **LE SOL QUI RESPIRE** (D111) — CLOS (`/sprint-auto`, ①→⑧ + ②bis/②ter/⑦bis) : eau qui respire, bois mort continu (ceinture + décompo par grosseur), 13 champignons avec leurs voix, parasite qui tue, manger/vision ; golden `fecccded…`, pont 0.5.56 ; D114 perf URGENTE, D115 succession](journal/156_2026-10-23_sprint-sol-qui-respire-CLOS.md)
 
 ---
 

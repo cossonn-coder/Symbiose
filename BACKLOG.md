@@ -19,9 +19,9 @@
 
 ## Sprint en cours
 
-**Sprint A CONÇU le 2026-10-22, prêt à lancer** : `/sprint-auto sprint_sol_qui_respire` (`sprints/champs/sol/sprint_sol_qui_respire/`, 8 tronçons). **File priorisée validée par Nico le 2026-10-22 (retour F5), à faire DANS L'ORDRE :**
+**Sprint A « le sol qui respire » CLOS le 2026-10-23** (`/sprint-auto`, ①→⑧ + ②bis/②ter/⑦bis ajoutés en cours, golden `fecccded…`, pont 0.5.56) ; F5 Nico suspendu jusqu'à D114. **Prochain = 1bis, perf du tick (D114) → `/conception`.** **File priorisée validée par Nico le 2026-10-22 (retour F5), à faire DANS L'ORDRE :**
 
-1. **Sprint A « le sol qui respire »** (moteur, [D111](DETTE.md)) → `/conception` : bilan hydrique (le sol
+1. ~~**Sprint A « le sol qui respire »**~~ CLOS 2026-10-23 (moteur, [D111](DETTE.md)) → `/conception` : bilan hydrique (le sol
    se dessèche), champignons (bois mort au sol, fructification la semaine après la pluie, ~10 espèces
    comestibles / vénéneuses / psychédéliques avec leurs voix), nectar par espèce. Puis re-mesurer D110 (g).
 1bis. **URGENT — perf du tick** ([D114](DETTE.md), +33 % en an 2 depuis le tronçon ① du sprint A) → `/conception` d'un sprint perf dès la fin du sprint A ; **F5 suspendu par Nico jusque-là**.
