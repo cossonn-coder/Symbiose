@@ -17,8 +17,8 @@ def test_voix():
     print("[voix narratives — pont ①]")
     s = ServerProc()
     init = s.send(cmd="init", config="full", seed=7)
-    check("protocole bumpé à 0.5.52 (sol qui respire ③)",
-          init["engine_version"] == "0.5.52", init.get("engine_version"))
+    check("protocole bumpé à 0.5.53 (sol qui respire ⑤)",
+          init["engine_version"] == "0.5.53", init.get("engine_version"))
 
     # Retour F5 : une plante n'est PLUS observée parce qu'elle pousse — seulement au
     # SURVOL souris. Après quelques semaines SANS survol, aucune ESPÈCE (plante /
@@ -63,16 +63,18 @@ def test_voix():
           absente["ok"] and absente["fiche"] is None)
 
     # D60 ② : le survol de la VIE MACRO est aussi une observation. Le C# envoie
-    # directement la CLÉ d'espèce (animale) ou "champignon" (carpophore) dans
-    # `species` — `observer_espece` est multi-règnes.
+    # directement la CLÉ d'espèce (animale, ou fongique depuis ⑤ du sol qui
+    # respire) dans `species` — `observer_espece` est multi-règnes.
     obs_faune = s.send(cmd="observer", species="puceron")
     check("observer (survol) une clé animale connue → observed:true",
           obs_faune["ok"] and obs_faune["observed"] is True, obs_faune)
     check("ré-observer la même clé animale → observed:false (idempotent)",
           s.send(cmd="observer", species="puceron")["observed"] is False)
-    obs_champi = s.send(cmd="observer", species="champignon")
-    check("observer (survol) un carpophore → champignon découvert (observed:true)",
+    obs_champi = s.send(cmd="observer", species="pleurote")
+    check("observer (survol) un carpophore → espèce fongique découverte (observed:true)",
           obs_champi["ok"] and obs_champi["observed"] is True, obs_champi)
+    check("l'ancienne clé générique `champignon` → no-op (⑤)",
+          s.send(cmd="observer", species="champignon")["observed"] is False)
     obs_bog = s.send(cmd="observer", species="_pas_une_espece_")
     check("observer un nom inconnu (règne inconnu) → observed:false, no-op",
           obs_bog["ok"] and obs_bog["observed"] is False, obs_bog)

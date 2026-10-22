@@ -32,6 +32,7 @@ from plants.catalogue import PLANT_CATALOGUE, PERENNIAL_CATALOGUE
 from sim import maitrise, vigueur
 from sim.encyclopedie import NIVEAU_MAX
 from sim.encyclopedie_corpus import FICHES
+from sim.champignon_encyclo import FICHES_CHAMPIGNON
 from sim.seeds import Seed
 
 # --- Calibrage (placeholder D12.4, knob en tête de module) -------------------
@@ -172,3 +173,14 @@ def magazine_fiche(espece: str) -> dict | None:
         return None
     niveaux = {n: fiche[n] for n in range(1, NIVEAU_FICHE_PRODUIT + 1)}
     return {"espece": espece, "niveau_max": NIVEAU_FICHE_PRODUIT, "niveaux": niveaux}
+
+
+def magazine_articles(game_state: dict, player: str) -> list[dict]:
+    """Rubrique CHAMPIGNONS du magazine (sol qui respire ⑤) : un ARTICLE à lire par
+    espèce fongique NOMMÉE (palier ≥ SEUIL_MAGAZINE, le seuil du nom). Lecture, pas
+    d'achat : on ne vend ni spores ni geste d'inoculation — le champignon vient au
+    milieu qu'on lui fait (philo #1). Liste `{cle, titre, texte}`, ordre du corpus.
+    PUR ; sans couche maîtrise → `[]`."""
+    return [{"cle": cle, "titre": f["article"][0], "texte": f["article"][1]}
+            for cle, f in FICHES_CHAMPIGNON.items()
+            if maitrise.palier(game_state, player, cle) >= SEUIL_MAGAZINE]

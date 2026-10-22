@@ -30,6 +30,10 @@ namespace Symbiose
 		private readonly Dictionary<string, string> _libAbondance = new(), _libNourriture = new(),
 			_libReseau = new();
 		private string _vuChampignon;
+		// Sol qui respire ⑤ (pont 0.5.53) : `vu` par ESPÈCE de champignon (légende), et
+		// nom + comestibilité des seules espèces NOMMÉES (`player.appris.champignons`).
+		private readonly Dictionary<string, string> _vuChampiEspece = new();
+		private readonly Dictionary<string, (string Nom, string Comestibilite)> _champiNommes = new();
 		private int _abondQuelques = int.MaxValue, _abondNombreuses = int.MaxValue;
 		private float _nourSuffisante, _nourAbondante, _reseauDense;
 
@@ -37,6 +41,7 @@ namespace Symbiose
 		private void ChargerLegendeVivant(GDict lg)
 		{
 			if (lg.ContainsKey("faune_role")) Copier(lg["faune_role"].AsGodotDictionary(), _roleFaune);
+			if (lg.ContainsKey("champignons")) Copier(lg["champignons"].AsGodotDictionary(), _vuChampiEspece);
 			if (lg.ContainsKey("champignon"))
 			{
 				var ch = lg["champignon"].AsGodotDictionary();
@@ -70,10 +75,25 @@ namespace Symbiose
 			foreach (var (k, v) in src) dst[k.AsString()] = v.AsString();
 		}
 
+		// Appelée par LireAppris : nom + comestibilité des champignons NOMMÉS (Python
+		// ne les envoie qu'une fois le nom mérité — la vue ne peut rien révéler trop tôt).
+		private void LireChampignonsNommes(GDict ap)
+		{
+			_champiNommes.Clear();
+			if (!ap.ContainsKey("champignons")) return;
+			foreach (var (k, v) in ap["champignons"].AsGodotDictionary())
+			{
+				var d = v.AsGodotDictionary();
+				_champiNommes[k.AsString()] = (d["nom"].AsString(), d["comestibilite"].AsString());
+			}
+		}
+
 		private void LigneBete(StringBuilder sb, MacroPick p)
 		{
-			bool champi = p.Cle == "champignon";
-			string nom = char.ToUpperInvariant(p.Cle[0]) + p.Cle.Substring(1);
+			bool champi = p.Cle == "champignon" || _vuChampiEspece.ContainsKey(p.Cle);
+			bool champiNomme = _champiNommes.TryGetValue(p.Cle, out var cn);
+			string nom = champiNomme ? cn.Nom
+				: char.ToUpperInvariant(p.Cle[0]) + p.Cle.Substring(1).Replace('_', ' ');
 			string role = champi ? Lib(_roleChampignon, p.Role) : Lib(_roleFaune, p.Cle);
 			if (_infoTechnique)
 			{
@@ -84,7 +104,8 @@ namespace Symbiose
 					  + (p.Nourriture >= 0f ? p.Nourriture.ToString("F2") : "—"));
 				return;
 			}
-			string vu = champi ? _vuChampignon : Lib(_legendeFaune, p.Cle);
+			string vu = champi ? (Lib(_vuChampiEspece, p.Cle) ?? _vuChampignon)
+				: Lib(_legendeFaune, p.Cle);
 			if (vu == null) return;   // clé hors corpus : on n'invente rien
 			// État visible sans savoir : l'abondance (bête) / le réseau (carpophore).
 			string etat = champi
@@ -98,6 +119,7 @@ namespace Symbiose
 			}
 			Ligne(sb, role != null ? $"{nom} — {role}" : $"{nom} : {vu}");
 			if (etat != null) sb.Append(" · ").Append(etat);
+			if (champiNomme) Ligne(sb, cn.Comestibilite);   // dite seulement une fois nommé
 			// Nourriture : bête nommée seulement, si le snapshot la donne (bandes ①).
 			string nour = champi || p.Nourriture < 0f ? null
 				: Lib(_libNourriture, p.Nourriture < _nourSuffisante ? "rare"

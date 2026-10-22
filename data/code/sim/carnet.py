@@ -31,6 +31,7 @@ from __future__ import annotations
 
 from sim import maitrise
 from sim.signes_corpus import SIGNES
+from sim.champignon_encyclo import FICHES_CHAMPIGNON
 
 # --- Calibrage (PLACEHOLDER NOMMÉ, à régler post-test D12.4) ------------------
 # Palier du CONCEPT à partir duquel la note bascule en interprétatif (décision B
@@ -290,6 +291,16 @@ for _signe, _corpus in SIGNES.items():
     CONCEPT_DE[("signe", _signe)] = _corpus["concept"]
     for _reg, _gabarit in _corpus["carnet"].items():
         GABARIT[("signe", _signe, _reg)] = _gabarit
+
+# Fructifications OBSERVÉES au survol d'un carpophore (sol qui respire ⑤,
+# `sim/champignon_voix.py`) : une note `kind="fructification"`, `cause=<espèce>`.
+# Concept (saprophytie/mycorhize/parasitisme/sosies) et gabarits D/I vivent dans le
+# corpus fongique (source unique) ; les gabarits n'emploient pas {e} — la note ne
+# nomme jamais le champignon (le nom se mérite dans l'info-bulle).
+for _cle, _fiche in FICHES_CHAMPIGNON.items():
+    CONCEPT_DE[("fructification", _cle)] = _fiche["concept"]
+    for _reg, _gabarit in _fiche["carnet"].items():
+        GABARIT[("fructification", _cle, _reg)] = _gabarit
 
 # Gabarit générique quand la paire (kind, cause) n'a pas de texte dédié (§5.0 ne
 # tabule pas tous les croisements possibles). Jamais un crash, jamais une chaîne

@@ -15,7 +15,8 @@ Chaque catégorie DÉRIVE des tables moteur déjà existantes (jamais de liste f
 dupliquée) :
   - plante     ← clés de `{PLANT_CATALOGUE, PERENNIAL_CATALOGUE}` ;
   - animal     ← clés de `FAUNE_ENCYCLO` (`fields/faune_encyclo.py`) ;
-  - champignon ← la clé générique `CLE_CHAMPIGNON` (constante, une seule fiche) ;
+  - champignon ← clés de `REGISTRE_FONGIQUE` (`fields/fongique.py`, 13 espèces —
+                 sol qui respire ⑤ ; remplace l'ancienne clé générique unique) ;
   - concept    ← concepts transversaux (causes de stagnation + pollinisation) ;
   - technique  ← set explicite (les gestes-savoirs dans `OBJETS_TOUCHES`) ;
   - outil      ← reste des membres de `OBJETS_TOUCHES` MOINS les techniques ;
@@ -34,7 +35,7 @@ from __future__ import annotations
 
 from plants.catalogue import PLANT_CATALOGUE, PERENNIAL_CATALOGUE
 from fields.faune_encyclo import FAUNE_ENCYCLO
-from sim.champignon_encyclo import CLE_CHAMPIGNON
+from fields.fongique import REGISTRE_FONGIQUE
 from sim.maitrise_detection import CONCEPT_PAR_STAGNATION
 from sim.actions.couts import COUTS, OBJETS_TOUCHES
 
@@ -43,6 +44,9 @@ PLANTES: frozenset[str] = frozenset({**PLANT_CATALOGUE, **PERENNIAL_CATALOGUE})
 
 # --- animal : la faune nommée de l'encyclopédie ------------------------------
 ANIMAUX: frozenset[str] = frozenset(FAUNE_ENCYCLO)
+
+# --- champignon : une fiche par espèce du registre fongique (⑤) ---------------
+CHAMPIGNONS: frozenset[str] = frozenset(REGISTRE_FONGIQUE)
 
 # --- concept : concepts transversaux (crédités par la détection) -------------
 # Dérivé des causes de stagnation (eau/lumière/météo) + la pollinisation (créditée
@@ -90,7 +94,7 @@ GESTES: frozenset[str] = frozenset(COUTS)
 _PRIORITE: tuple[tuple[str, frozenset[str]], ...] = (
     ("plante",      PLANTES),
     ("animal",      ANIMAUX),
-    ("champignon",  frozenset({CLE_CHAMPIGNON})),
+    ("champignon",  CHAMPIGNONS),
     ("concept",     CONCEPTS),
     ("technique",   TECHNIQUES),
     ("outil",       OUTILS),

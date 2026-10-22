@@ -25,7 +25,7 @@ from __future__ import annotations
 
 from plants.catalogue import PLANT_CATALOGUE, PERENNIAL_CATALOGUE
 from fields.faune_encyclo import FAUNE_ENCYCLO
-from sim.champignon_encyclo import CLE_CHAMPIGNON
+from sim import champignon_voix as CV
 from sim.actions import observer, OBJETS_TOUCHES
 from sim import maitrise as M
 from sim import maitrise_detection as MD
@@ -152,7 +152,7 @@ def noter_geste_pont(game_state: dict, player: str, semaine: int, zone,
 
 
 def observer_espece(game_state: dict, player: str, nom: str,
-                    semaine: int | None = None) -> bool:
+                    semaine: int | None = None, zone: tuple = ()) -> bool:
     """Hook A par SURVOL (retour F5 Nico), MULTI-RÈGNES (D60 ②). Une entité n'est
     observée que quand le joueur PASSE LA SOURIS dessus (voir son nom) — pas parce
     qu'elle vit dans le jardin. On résout `nom` en clé de maîtrise puis on DÉCOUVRE
@@ -164,25 +164,32 @@ def observer_espece(game_state: dict, player: str, nom: str,
       2. CLÉ ANIMALE connue (`FAUNE_ENCYCLO`) → cette clé telle quelle. La vie macro
          (`MacroLife`/`ForagerLayer`) connaît déjà les clés d'espèce (`puceron`,
          `abeille`…) et les envoie directement — pas de reverse-map (kickoff ②) ;
-      3. CLÉ CHAMPIGNON générique (`CLE_CHAMPIGNON` = `"champignon"`, survol d'un
-         carpophore) → cette clé ;
+      3. CLÉ D'ESPÈCE FONGIQUE (`fields/fongique.REGISTRE_FONGIQUE`, survol d'un
+         carpophore — 7ᵉ champ du snapshot ; sol qui respire ⑤, la clé générique
+         `"champignon"` n'existe plus) → cette clé ;
       4. sinon `None` → no-op (nom inconnu : aucune fausse découverte).
 
-    CRÉDIT SAISONNIER (INFO-BULLE DU VIVANT ①) : pour une bête ou le champignon
+    CRÉDIT SAISONNIER (INFO-BULLE DU VIVANT ①) : pour une bête ou un champignon
     SEULEMENT (règnes 2-3, jamais une plante), si `semaine` est fournie (semaine
     consignée, `week - 1`), `crediter_saison` ajoute +1 palier par saison neuve
     d'observation (plafond `SEUIL_CARNET`) → le nom se révèle en 3 saisons.
+    Un champignon nourrit en plus ses voix (⑤, `sim/champignon_voix`) : concept du
+    carnet crédité, fructification notée au ledger en `zone`.
     `semaine=None` (balayage debug, anciens appels) → découverte seule.
 
     Renvoie True ssi nouvelle découverte."""
     cle = _CLE_DE_NOM.get(nom)
     if cle is not None:
         return observer(game_state, player, cle)
-    if nom not in FAUNE_ENCYCLO and nom != CLE_CHAMPIGNON:
+    champi = CV.est_champignon(nom)
+    if nom not in FAUNE_ENCYCLO and not champi:
         return False
     nouveau = observer(game_state, player, nom)
     if semaine is not None:
-        crediter_saison(game_state, player, nom, semaine, decouverte=nouveau)
+        gagne = crediter_saison(game_state, player, nom, semaine, decouverte=nouveau)
+        if champi:
+            CV.crediter_concept(game_state, player, nom, nouveau, gagne)
+            CV.noter_fructification(game_state, player, nom, zone, semaine)
     return nouveau
 
 

@@ -28,7 +28,8 @@ from sim import encyclopedie
 from sim.encyclopedie_corpus import FICHES
 from sim import maitrise
 from sim import encyclopedie_types as ET
-from sim.champignon_encyclo import CLE_CHAMPIGNON
+from sim.champignon_encyclo import FICHES_CHAMPIGNON
+from fields.fongique import REGISTRE_FONGIQUE
 from fields.faune_encyclo import FAUNE_ENCYCLO
 from plants.catalogue import PLANT_CATALOGUE, PERENNIAL_CATALOGUE
 
@@ -151,7 +152,8 @@ def test_type_de():
     check("tomate → plante", ET.type_de("tomate") == "plante")
     check("chene (pérenne) → plante", ET.type_de("chene") == "plante")
     check("puceron → animal", ET.type_de("puceron") == "animal")
-    check("champignon → champignon", ET.type_de(CLE_CHAMPIGNON) == "champignon")
+    check("coprin → champignon (⑤ : une clé par espèce)", ET.type_de("coprin") == "champignon")
+    check("ancienne clé générique « champignon » → None", ET.type_de("champignon") is None)
     check("eau → concept", ET.type_de("eau") == "concept")
     check("pollinisation → concept", ET.type_de("pollinisation") == "concept")
     check("arrosage → technique", ET.type_de("arrosage") == "technique")
@@ -164,7 +166,7 @@ def test_type_de():
     # cohérent avec l'énumération outils du kickoff. Toute AUTRE clé doit tomber
     # dans son unique type (aucune ambiguïté imprévue ne doit apparaître).
     ensembles = {"plante": ET.PLANTES, "animal": ET.ANIMAUX,
-                 "champignon": {CLE_CHAMPIGNON}, "concept": ET.CONCEPTS,
+                 "champignon": ET.CHAMPIGNONS, "concept": ET.CONCEPTS,
                  "technique": ET.TECHNIQUES, "outil": ET.OUTILS, "geste": ET.GESTES}
     COLLISIONS_CONNUES = {"grelinette"}
     collisions = []
@@ -219,12 +221,18 @@ def test_dispatch_mono():
     check("animal → interconnexions présentes",
           list(f["interconnexions"]) == list(FAUNE_ENCYCLO["puceron"][1]))
 
-    _poser_palier(gs, "j1", CLE_CHAMPIGNON, 3)
-    fc = encyclopedie.encyclopedie_lire(gs, "j1", CLE_CHAMPIGNON)
-    check("champignon → type champignon, niveau_max=1",
-          fc["type"] == "champignon" and fc["niveau_max"] == 1, f"{fc}")
-    check("champignon → blurb + graphe non vides",
-          fc["niveaux"][1].strip() and fc["interconnexions"])
+    # Champignon (sol qui respire ⑤) : fiche 3 niveaux PAR ESPÈCE, tronquée au palier.
+    _poser_palier(gs, "j1", "cepe", 2)
+    fc = encyclopedie.encyclopedie_lire(gs, "j1", "cepe")
+    check("champignon palier 2 → type champignon, niveau_max=2",
+          fc["type"] == "champignon" and fc["niveau_max"] == 2
+          and set(fc["niveaux"]) == {1, 2}, f"{fc}")
+    check("champignon → pas de graphe (rendu 3 niveaux côté vue)",
+          "interconnexions" not in fc)
+    _poser_palier(gs, "j1", "cepe", 3)
+    fc = encyclopedie.encyclopedie_lire(gs, "j1", "cepe")
+    check("champignon palier 3 → niveau 3 (comestibilité) ouvert",
+          fc["niveau_max"] == 3 and fc["niveaux"][3] == FICHES_CHAMPIGNON["cepe"]["fiche"][3])
 
     # geste : depuis ⑤ le corpus geste existe → fiche 3-niveaux (plus de None).
     _poser_palier(gs, "j1", "planter", 2)
@@ -355,12 +363,12 @@ def test_corpus_geste_outil():
 
 def test_completude_globale():
     # Toutes les clés que `type_de` sait ranger dans un des 7 onglets.
-    toutes = (set(ET.PLANTES) | set(ET.ANIMAUX) | {CLE_CHAMPIGNON}
+    toutes = (set(ET.PLANTES) | set(ET.ANIMAUX) | set(ET.CHAMPIGNONS)
               | set(ET.CONCEPTS) | set(ET.TECHNIQUES) | set(ET.OUTILS) | set(ET.GESTES))
     sources = {
         "plante":     set(FICHES),
         "animal":     set(FAUNE_ENCYCLO),
-        "champignon": {CLE_CHAMPIGNON},
+        "champignon": set(FICHES_CHAMPIGNON),
         "concept":    set(encyclopedie.CORPUS_PAR_TYPE["concept"]),
         "technique":  set(encyclopedie.CORPUS_PAR_TYPE["technique"]),
         "outil":      set(encyclopedie.CORPUS_PAR_TYPE["outil"]),

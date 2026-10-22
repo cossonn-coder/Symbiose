@@ -94,6 +94,7 @@ namespace Symbiose
 			var ap = pl["appris"].AsGodotDictionary();
 			foreach (var s in ap["signes"].AsGodotArray()) _signesAppris.Add(s.AsString());
 			foreach (var f in ap["faune"].AsGodotArray()) _fauneApprise.Add(f.AsString());
+			LireChampignonsNommes(ap);   // sol qui respire ⑤ (InfoBulleVivant)
 		}
 
 		// Après un raccourci debug de maîtrise (P/V/R) : relire `appris` sans attendre

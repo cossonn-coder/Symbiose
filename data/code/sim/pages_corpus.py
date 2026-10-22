@@ -29,7 +29,8 @@ c'est un corpus de texte, pas du code (CLAUDE.md « garde-fou, pas dogme »).
 from __future__ import annotations
 
 # --- Liste ordonnée des 33 entrées (doc §7 + Grimpantes ⑤ + Luxuriance ④/⑤ +
-#     sources de mulch équilibre invasion ⑤ + émetteurs allélopathie ⑤) ----------
+#     sources de mulch équilibre invasion ⑤ + émetteurs allélopathie ⑤ + règne
+#     fongique ⑤ du sol qui respire) ---------------------------------------------
 # Format : (id, voix, concept, palier_theme, robinet, texte). On construit ensuite
 # `PAGES` (dict id → champs) ET `ORDRE` (ids dans l'ordre du corpus) pour des
 # itérations stables et déterministes.
@@ -352,6 +353,55 @@ _ENTREES = [
      "arbre à moitié mort travaille pour toi plus qu'un jeune bien portant — et il "
      "n'y a pas de sortilège là-dedans, seulement un creux, du noir, et le temps "
      "qu'il a fallu pour les faire."),
+
+    # --- Pages du RÈGNE FONGIQUE (sol qui respire ⑤, D111 §3.4) — lore pur ------
+    # Une page par champignon qui porte une histoire (règle « toute espèce = ses
+    # voix », pages optionnelles). Concepts = ceux du carnet fongique : la page due
+    # se révèle quand le concept atteint le palier 3 (robinet récompense,
+    # `sim/champignon_voix.crediter_concept`) ou se trouve en fouillant.
+    ("P43", "D", "parasitisme", 3, "récompense",
+     "On a retrouvé dans la glace un homme mort depuis cinq mille ans, et dans sa "
+     "bourse, deux champignons de bouleau enfilés sur une lanière. L'un, coriace, "
+     "pour le feu : l'amadou, qu'on battait et qu'on séchait, prenait l'étincelle "
+     "du silex et gardait la braise d'une halte à l'autre. L'autre pour le corps, "
+     "contre les vers et les fièvres. Le polypore ne vient qu'aux bouleaux "
+     "fatigués ; il les pourrit lentement par le cœur. Ce que l'arbre perdait, "
+     "l'homme le portait à sa ceinture : le feu et le remède, tirés d'une mort "
+     "lente."),
+    ("P44", "E", "saprophytie", 3, "fouille",
+     "Il y a dans l'herbe des prés, à l'automne, une petite clochette brune au pied "
+     "si fin qu'on la prend pour une herbe. Les vieilles ne la cueillaient pas pour "
+     "la soupe. Qui la mange voit, dit-on, ce que les bêtes savent : la couleur des "
+     "choses se met à parler, l'herbe a un avis, la haie respire. Le lendemain on "
+     "ne se souvient que d'une lumière trop forte et d'une grande fatigue. Je n'en "
+     "dis pas plus : celle qui l'a goûtée une fois sait pourquoi on la laisse où "
+     "elle est, et pourquoi pourtant on revient voir si elle a poussé."),
+    ("P45", "E", "mycorhize", 3, "récompense",
+     "Le chapeau rouge à pois blancs ne vient jamais seul : cherche le bouleau, il "
+     "est là, ou le pin. Ils se tiennent par les racines comme deux vieux qui ne "
+     "se parlent plus mais ne se quittent pas. Dans le Nord, on le faisait sécher, "
+     "on le trempait dans le lait pour tuer les mouches qui venaient y boire — "
+     "d'où son nom. D'autres le mangeaient pour voyager loin sans bouger, et le "
+     "payaient de vomissements et d'une semaine de faiblesse. Il ne tue pas souvent. "
+     "Il prend toujours quelque chose."),
+    ("P46", "C", "mycorhize", 4, "fouille",
+     "Ma grand-mère connaissait un pommier, au bas du clos, sous lequel les "
+     "morilles revenaient chaque printemps depuis avant sa naissance. Elle n'y "
+     "menait personne. Elle disait qu'il fallait un arbre vieux, une terre jamais "
+     "retournée, et une pluie tiède en mars — et qu'on ne plante pas une morille "
+     "comme on plante un chou. L'année où l'on a arraché le vieux verger pour en "
+     "planter un neuf, plus rien n'est venu, et rien n'est jamais revenu. Le "
+     "champignon n'était pas dans la terre : il était entre la terre et l'arbre, "
+     "et c'est cela qu'on avait arraché."),
+    ("P47", "E", "sosies", 3, "récompense",
+     "Les ronds de sorcière, on les voit au matin dans les prés : un cercle d'herbe "
+     "plus verte, et dessus, en couronne, des petits chapeaux blancs. On disait que "
+     "les fées y avaient dansé, et que celui qui entrait dans le cercle dansait "
+     "jusqu'à mourir. La vérité est plus simple et plus froide : le champignon "
+     "pousse en rond parce qu'il grandit depuis son centre, d'année en année, comme "
+     "une onde dans l'eau. Et ces chapeaux blancs, si pareils au rosé qu'on cueille "
+     "pour l'omelette, sont de ceux qui tuent. Regarde les lames : rose, tu manges ; "
+     "blanc, tu passes. Les fées n'y sont pour rien."),
 ]
 
 # Titres recopiés du doc §7 (gras de chaque entrée), indexés par id — gardés à
@@ -399,6 +449,11 @@ _TITRES = {
     "P40": "L'arbre que l'on coupe pour qu'il dure",
     "P41": "À qui appartient la rivière",
     "P42": "La dame blanche du saule creux",
+    "P43": "L'homme des glaces et l'amadou",
+    "P44": "La clochette qui fait parler l'herbe",
+    "P45": "Le chapeau rouge et son bouleau",
+    "P46": "Le pommier aux morilles",
+    "P47": "Les ronds de sorcière",
 }
 
 # `PAGES` = dict id → fiche complète. `ORDRE` = ids dans l'ordre du corpus (tri

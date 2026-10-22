@@ -78,9 +78,9 @@ def test_credit():
     check("plante survolée : aucun crédit saisonnier",
           maitrise.palier(gs, P, "tomate") == 1
           and "_saisons_vues" not in gs["maitrise"][P], maitrise.palier(gs, P, "tomate"))
-    gs, p = _survols("champignon", [30, 35, 82, 134])
-    check("champignon : 3 automnes → 3 et appris",
-          p == [1, 1, 2, 3] and "champignon" in SG.appris(gs, P)["faune"], p)
+    gs, p = _survols("coprin", [30, 35, 82, 134])
+    check("champignon (coprin) : 3 saisons → 3 et appris",
+          p == [1, 1, 2, 3] and "coprin" in SG.appris(gs, P)["faune"], p)
     gs, p = _survols("puceron", [0, 1])
     check("semaine 0 (avant le 1er tick) = même saison que la semaine 1", p == [1, 1], p)
     gs, p = _survols("merle", [1], gs={"options": {P: {"carnet_anticipe": True}}})
@@ -127,8 +127,8 @@ def test_role_carpophore():
 def test_legende():
     print("\n[D] légende")
     rep = SimServer().cmd_legende({})
-    attendues = {"ok", "signes", "faune", "faune_role", "champignon", "voix_saine",
-                 "abondance", "nourriture", "reseau"}
+    attendues = {"ok", "signes", "faune", "faune_role", "champignon", "champignons",
+                 "voix_saine", "abondance", "nourriture", "reseau"}
     check("clés attendues (anciennes + nouvelles)", set(rep) == attendues, sorted(rep))
     check("nourriture : bornes du corpus",
           rep["nourriture"]["suffisante"] == SC.NOURRITURE_SUFFISANTE

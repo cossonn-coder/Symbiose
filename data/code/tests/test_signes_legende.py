@@ -24,6 +24,7 @@ from sim.signes_corpus import SIGNES, FAUNE_VU
 from sim.concept_corpus import FICHES_CONCEPT
 from sim.pages_corpus import PAGES
 from fields.faune_encyclo import FAUNE_ENCYCLO
+from fields.fongique import REGISTRE_FONGIQUE
 
 P = "joueur_1"
 _results = []
@@ -105,7 +106,7 @@ def test_carnet():
 def test_appris():
     print("\n[D] appris : vide, puis rempli au seuil")
     gs = {}
-    check("vide au départ", SG.appris(gs, P) == {"signes": [], "faune": []})
+    check("vide au départ", SG.appris(gs, P) == {"signes": [], "faune": [], "champignons": {}})
     check("lecture pure (aucune clé créée)", gs == {})
     _poser_palier(gs, "météo", 3)
     check("météo p3 → gel + grêle appris", SG.appris(gs, P)["signes"] == ["gel", "grele"],
@@ -160,12 +161,16 @@ def test_pont():
           and all(0 < len(v["cause"]) < 40 for v in lg["signes"].values()),
           {k: v["cause"] for k, v in lg["signes"].items()})
     snap = s.send(cmd="snapshot")["snapshot"]
-    check("snapshot : player.appris vide", snap["player"]["appris"] == {"signes": [], "faune": []})
+    check("snapshot : player.appris vide",
+          snap["player"]["appris"] == {"signes": [], "faune": [], "champignons": {}})
     s.send(cmd="debug", op="palier3")
     ap = s.send(cmd="snapshot")["snapshot"]["player"]["appris"]
-    # INFO-BULLE DU VIVANT ③ : palier3 crédite aussi le champignon (en dernier).
-    check("après palier3 : 11 signes + toute la faune + champignon",
-          len(ap["signes"]) == 11 and ap["faune"] == [*FAUNE_ENCYCLO, "champignon"], ap)
+    # INFO-BULLE DU VIVANT ③ : palier3 crédite aussi les champignons (en dernier,
+    # par espèce depuis le sol qui respire ⑤).
+    check("après palier3 : 11 signes + toute la faune + les 13 champignons",
+          len(ap["signes"]) == 11
+          and ap["faune"] == [*FAUNE_ENCYCLO, *REGISTRE_FONGIQUE]
+          and set(ap["champignons"]) == set(REGISTRE_FONGIQUE), ap)
     s.send(cmd="quit")
     check("quit → exit 0", s.close() == 0)
 

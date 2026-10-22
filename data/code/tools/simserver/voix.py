@@ -21,7 +21,7 @@ from __future__ import annotations
 
 from sim.carnet import carnet_lire
 from sim.encyclopedie import encyclopedie_index, encyclopedie_lire
-from sim.magazine import magazine_offres, magazine_fiche
+from sim.magazine import magazine_offres, magazine_fiche, magazine_articles
 from sim.outils import (
     OUTILS, MATERIAUX, offre_outils, offre_materiaux,
 )   # Atelier (acquisition des moyens d'agir ②/③) : registres + offres
@@ -80,7 +80,9 @@ class VoixMixin:
     def cmd_magazine(self, msg: dict) -> dict:
         """Magazine de botanique (§3) : `msg.espece` → la fiche PRODUIT (N1+N2, PAS
         de gs/player — argument de vente indépendant du palier joueur) ou `null` ;
-        sinon les OFFRES (sœurs des familles maîtrisées, hors banque)."""
+        sinon les OFFRES (sœurs des familles maîtrisées, hors banque) + les
+        ARTICLES champignons des espèces nommées (sol qui respire ⑤, 0.5.53 —
+        rétro-compatible : clé en plus)."""
         if self.engine is None:
             return {"ok": False, "error": "magazine avant init"}
         gs = self.engine.game_state
@@ -88,7 +90,8 @@ class VoixMixin:
         espece = msg.get("espece")
         if espece:
             return {"ok": True, "fiche": magazine_fiche(espece)}
-        return {"ok": True, "offres": magazine_offres(gs, player)}
+        return {"ok": True, "offres": magazine_offres(gs, player),
+                "articles": magazine_articles(gs, player)}
 
     def cmd_atelier(self, msg: dict) -> dict:
         """L'ATELIER de la maison normande (acquisition des moyens d'agir ②/③) : la

@@ -33,7 +33,7 @@ from __future__ import annotations
 from sim import maitrise
 from sim.encyclopedie_corpus import FICHES
 from sim.encyclopedie_types import type_de
-from sim.champignon_encyclo import CLE_CHAMPIGNON, encyclo_meta as _champignon_meta
+from sim.champignon_encyclo import FICHES_CHAMPIGNON
 from sim.concept_corpus import FICHES_CONCEPT
 from sim.technique_corpus import FICHES_TECHNIQUE
 from sim.geste_corpus import FICHES_GESTE
@@ -87,7 +87,7 @@ def _cles_du_type(nom_type: str) -> list[str]:
     if nom_type == "animal":
         return list(FAUNE_ENCYCLO)
     if nom_type == "champignon":
-        return [CLE_CHAMPIGNON]
+        return list(FICHES_CHAMPIGNON)
     if nom_type == "signe":
         return list(SIGNES)
     return list(CORPUS_PAR_TYPE.get(nom_type, {}))
@@ -127,16 +127,26 @@ def _lire_plante(cle: str, palier: int) -> dict | None:
 
 
 def _lire_mono(cle: str, nom_type: str, meta: dict) -> dict:
-    """Fiche MONO-niveau (animal, champignon) : blurb + graphe d'interconnexions.
+    """Fiche MONO-niveau (animal) : blurb + graphe d'interconnexions.
     La fiche n'a qu'UN niveau quel que soit le palier : le palier de la clé monte
     bien (crédit d'observation saisonnière, `sim/signes.crediter_saison`, jusqu'à 3
     = nom révélé dans l'info-bulle), mais il n'ouvre pas de niveau de fiche. `meta` = `{blurb,
-    interconnexions}` de la source (`faune_encyclo` / `champignon_encyclo`)."""
+    interconnexions}` de la source (`faune_encyclo`)."""
     return {
         "cle": cle, "type": nom_type, "niveau_max": 1,
         "niveaux": {1: meta["blurb"]},
         "interconnexions": list(meta["interconnexions"]),
     }
+
+
+def _lire_champignon(cle: str, palier: int) -> dict:
+    """Fiche CHAMPIGNON 3 niveaux (sol qui respire ⑤) : voir · cycle · effets
+    écosystémiques, tronquée à `min(palier, 3)`. SANS `interconnexions` (la vue rend
+    alors la fiche en 3 niveaux, pas en graphe mono-niveau)."""
+    fiche = FICHES_CHAMPIGNON[cle]["fiche"]
+    niveau_max = min(palier, NIVEAU_MAX)
+    niveaux = {n: fiche[n] for n in range(1, niveau_max + 1)}
+    return {"cle": cle, "type": "champignon", "niveau_max": niveau_max, "niveaux": niveaux}
 
 
 def _lire_corpus_3n(cle: str, nom_type: str, palier: int) -> dict | None:
@@ -156,10 +166,13 @@ def encyclopedie_lire(game_state: dict, player: str, cle: str) -> dict | None:
     corpus. Structure de retour (miroir plante enrichi d'un `type`) :
 
         {"cle": …, "type": …, "niveau_max": …, "niveaux": {1:…, …},
-         "interconnexions": [...]}   # présent seulement pour animal/champignon
+         "interconnexions": [...]}   # présent seulement pour animal
 
     - plante                      → 3 niveaux, `min(palier, 3)` (inchangé) ;
-    - animal / champignon         → mono-niveau (blurb + graphe), cap palier 1 ;
+    - animal                      → mono-niveau (blurb + graphe), cap palier 1 ;
+    - champignon (⑤)              → 3 niveaux, `min(palier, 3)` — le palier monte par
+      observation saisonnière (1 saison = 1 niveau ; le 3ᵉ, avec la comestibilité,
+      s'ouvre au même palier que le nom) ;
     - concept/technique/outil/geste → corpus 3-niveaux quand il existe (④⑤), sinon
       `None` proprement.
 
@@ -179,7 +192,7 @@ def encyclopedie_lire(game_state: dict, player: str, cle: str) -> dict | None:
     if nom_type == "animal":
         return _lire_mono(cle, "animal", _faune_meta(cle))
     if nom_type == "champignon":
-        return _lire_mono(cle, "champignon", _champignon_meta())
+        return _lire_champignon(cle, p)
     if nom_type in CORPUS_PAR_TYPE:
         return _lire_corpus_3n(cle, nom_type, p)
     return None

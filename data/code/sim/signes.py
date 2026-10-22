@@ -17,8 +17,8 @@ Deux services, tous deux HORS TICK (niveau `sim`, au-dessus du moteur ;
      l'encyclopédie. Même bascule que le carnet : `palier(concept) ≥ carnet._seuil`
      — la note se comprend, la fiche s'ouvre et l'info-bulle nomme la cause AU MÊME
      MOMENT. Une bête : palier de SA clé de maîtrise ≥ ce même seuil.
-  3. `crediter_saison` (INFO-BULLE DU VIVANT ①, D110 a·b) — le NOM d'une bête ou du
-     champignon se mérite en la regardant au fil des saisons : chaque survol dans une
+  3. `crediter_saison` (INFO-BULLE DU VIVANT ①, D110 a·b) — le NOM d'une bête ou d'un
+     champignon (par espèce depuis le sol qui respire ⑤) se mérite en la regardant au fil des saisons : chaque survol dans une
      saison NEUVE crédite +1 palier, jusqu'à `SEUIL_CARNET` (3 saisons distinctes →
      nommée). Jamais les plantes (leur maîtrise passe par la détection D12).
 """
@@ -29,7 +29,8 @@ from sim import journal
 from sim.carnet import _seuil, SEUIL_CARNET
 from sim.signes_corpus import SIGNES
 from fields.faune_encyclo import FAUNE_ENCYCLO
-from sim.champignon_encyclo import CLE_CHAMPIGNON
+from fields.fongique import REGISTRE_FONGIQUE
+from sim.champignon_voix import champignons_nommes
 
 # `kind` des notes de signe au ledger (clé du carnet `CONCEPT_DE[("signe", cause)]`).
 KIND_SIGNE = "signe"
@@ -89,15 +90,18 @@ def faune_apprise(game_state: dict, player: str, espece: str) -> bool:
 
 
 def appris(game_state: dict, player: str) -> dict:
-    """Ce que le joueur a appris, pour la vue : `{"signes": [...], "faune": [...]}`
-    dans l'ordre stable des corpus. La liste `faune` porte aussi la clé générique
-    `champignon` (en dernier) : même règle de nom que les bêtes, une seule liste à
-    tester côté vue. LECTURE PURE (aucune clé créée) : sans couche maîtrise, deux
-    listes vides."""
-    vivants = [*FAUNE_ENCYCLO, CLE_CHAMPIGNON]
+    """Ce que le joueur a appris, pour la vue : `{"signes": [...], "faune": [...],
+    "champignons": {...}}` dans l'ordre stable des corpus. La liste `faune` porte
+    aussi les espèces de champignons nommées (en dernier, ordre du registre) : même
+    règle de nom que les bêtes, une seule liste à tester côté vue. `champignons`
+    (sol qui respire ⑤) = `{clé: {nom, comestibilite}}` des seules espèces nommées —
+    la comestibilité n'existe pour la vue qu'une fois le nom mérité. LECTURE PURE
+    (aucune clé créée) : sans couche maîtrise, listes et dict vides."""
+    vivants = [*FAUNE_ENCYCLO, *REGISTRE_FONGIQUE]
     return {
         "signes": [s for s in SIGNES if signe_appris(game_state, player, s)],
         "faune": [f for f in vivants if faune_apprise(game_state, player, f)],
+        "champignons": champignons_nommes(game_state, player),
     }
 
 

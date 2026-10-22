@@ -17,7 +17,7 @@ suivants : budget perf mesuré **par rapport à ①** ; ne pas tenter de résorb
 | ②ter | `02c_arbres_adultes.md` (ajouté 2026-10-22, mandat Nico « favoriser le résultat ») | RE-FIGÉ `1ce02bce…` → `df6ebf04…` (tolérance ombre pommier, seul motif) | FAIT — ⚠ objectif bois NON atteint sur `full` |
 | ③ | `03_regne_fongique.md` | INTACT `df6ebf04…` | FAIT — ⚠ 8 espèces/13 sur `full` [3 graines] (composition) |
 | ④ | `04_parasite_faiblesse.md` | INTACT `df6ebf04…` (hôte affaibli attaqué 1 sem., dérive sous la résolution du digest) | FAIT — ⚠ aucune mort d'hôte (trappe de faiblesse seule) |
-| ⑤ | `05_voix_champignons.md` | neutre | à faire |
+| ⑤ | `05_voix_champignons.md` | INTACT `df6ebf04…` | FAIT — pont 0.5.53 ; clé générique `champignon` retirée |
 | ⑥ | `06_manger_vision.md` | neutre | à faire |
 | ⑦ | `07_nectar_espece.md` | re-figé si floraison au smoke | à faire |
 | ⑧ | `08_vue_godot.md` | intact | à faire |
@@ -313,6 +313,44 @@ Banc contrôlé (pommier pré-crû 8 ans, vitalité 0,6, mycélium et sol impos�
    mycélium plafonne ~0,01-0,05 → pression ≤ 0,053.
 4. `mortalite.py` 246 LDC, `croissance.py` 220 : bande verte.
 
+## ⑤ Voix des champignons — FAIT (2026-10-22), golden INTACT `df6ebf04…`, pont **0.5.53**
+
+**Livré** :
+- `sim/champignon_encyclo.py` RÉÉCRIT (ex-fiche générique Q2) : `FICHES_CHAMPIGNON`, 13
+  espèces = registre ③ (même ordre) : `concept` (saprophytie ×5 · mycorhize ×3 [morille,
+  cèpe, tue-mouches] · sosies ×3 [hypholome, clitocybe, phalloïde] · parasitisme ×2),
+  `vu` (avant le nom, sans nom ni comestibilité), `comestibilite`, fiche 3 niveaux
+  (N3 = effets + comestibilité), carnet D/I (sans `{e}` : la note ne nomme pas), article.
+- `sim/champignon_voix.py` (NOUVEAU, hors tick) : `noter_fructification` (ledger
+  `kind="fructification"`, dédup espèce×saison), `crediter_concept` (découverte espèce →
+  concept p1 ; espèce NOMMÉE → +1, plafond 3 ; au 3 → page récompense),
+  `champignons_nommes` (nom + comestibilité des seules espèces nommées).
+- Branchements : `encyclopedie_types.CHAMPIGNONS` = registre ; `encyclopedie` fiche
+  champignon 3 niveaux `min(palier,3)` (sans `interconnexions` → rendu 3 niveaux côté vue) ;
+  `carnet` verse CONCEPT_DE/GABARIT `("fructification", espèce)` ; `signes.appris` :
+  `faune` += espèces fongiques nommées, nouvelle clé `champignons {clé:{nom,comestibilite}}` ;
+  `magazine_articles` (+ `articles` dans `cmd_magazine`) ; pages **P43-P47** (amadou/Ötzi,
+  psilocybe, tue-mouches, morille, ronds de sorcière) ; pont `observer_espece` accepte les
+  clés fongiques (+ `zone`), `legende.champignons {clé: vu}`, debug `palier3` les 13.
+- C# minimal (sans quoi le nom ne se gagnait plus en jeu) : `CarpophoreLayer` lit le 7ᵉ
+  champ et le survol envoie la clé d'espèce ; info-bulle : `vu` par espèce, nom réel +
+  ligne de comestibilité une fois nommé. `dotnet build` 0 erreur.
+- Tests : `tests/test_champignon_voix.py` 23/23 (NOUVEAU) ; adaptés : `test_encyclopedie`
+  70/70, `test_signes_legende` 42/42, `test_infobulle_vivant` 31/31, `test_sim_server`
+  287/287 (versions 0.5.53) ; carnet/pages/magazine/fongique/mycélium verts.
+
+**⚠ PRÉMISSES RÉFUTÉES / DÉCISIONS** :
+1. « Fructification consignée au ledger via `sim/evenements.py` » : faux — les carpophores
+   sont de la perception (snapshot), absents du log du tick ; les consigner au snapshot
+   rendrait le journal dépendant de la fréquence d'appel. Consignés au SURVOL (patron
+   `observer_signe`).
+2. Les concepts fongiques n'avaient aucun chemin de crédit (comme `carnivorie`) → règle
+   ajoutée : nommer les espèces crédite leur concept (sinon carnet descriptif à vie).
+3. Clé générique `champignon` retirée partout (Python) ; `observer("champignon")` = no-op.
+   `CHAMPIGNON_VU`/`CHAMPIGNON_ROLE` (signes_corpus) gardés : repli et rôles b/r/h.
+4. Le survol n'envoie pas encore le lieu → notes « au jardin » (le pont accepte
+   `tile`/`x_cm`/`y_cm` : à brancher au ⑧ si voulu).
+
 ## Ajouts de Nico à l'accord (2026-10-22)
 - Bois mort VISIBLE au sol, dégradation en sprite à stades (② pont, ⑧ dessin).
 - Overdose : 2ᵉ psychédélique pendant l'effet → phrases de TOUS les êtres à chaque snapshot.
@@ -411,7 +449,10 @@ remontée) → source boisée à trancher par Nico avant ③ (ceinture D73 ou li
 après la pluie ; seules 8 sortent sur `full` (pas d'hôte mycorhizien, cf. §③ remontée 1).
 ④ FAIT (golden INTACT `df6ebf04…`) : parasite générique sur hôte affaibli + `eau_percue`
 (canal racinaire enfin ressenti, campagnol compris) ; ne tue pas (cf. §④ remontée 1).
-Prochain tronçon : ⑤ `05_voix_champignons.md` (golden de départ **`df6ebf04…`**, pont 0.5.52).
+⑤ FAIT (golden INTACT `df6ebf04…`, pont **0.5.53**) : 13 champignons avec leurs 5 voix,
+clé par espèce de bout en bout (survol C# compris) ; cf. §⑤.
+Prochain tronçon : ⑥ `06_manger_vision.md` (golden de départ **`df6ebf04…`**, pont 0.5.53 ;
+comestibilité lisible dans `fields/fongique` + `FICHES_CHAMPIGNON[...]["comestibilite"]`).
 Chaque tronçon met à jour sa ligne de statut, consigne ses mesures [n=…] et ses hashes golden.
 ## Liste fongique VALIDÉE (Q7)
 

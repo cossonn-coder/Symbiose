@@ -739,7 +739,18 @@ from __future__ import annotations
 #       sortent la semaine qui SUIT une semaine de pluie, dans la fenêtre de leur
 #       espèce (plus seulement l'automne). Un client pré-0.5.52 lit par index et
 #       ignore l'élément. Perception pure → golden INTACT.
-ENGINE_VERSION = "0.5.52"
+# 0.5.53 (LE SOL QUI RESPIRE ⑤, D111 voix des champignons) : ajouts rétro-compatibles.
+#       La clé générique `champignon` DISPARAÎT au profit des 13 clés d'espèce
+#       (`REGISTRE_FONGIQUE`). (1) `observer` accepte une clé d'espèce fongique (7ᵉ
+#       champ du carpophore) : crédit saisonnier par espèce, concept du carnet
+#       (saprophytie/mycorhize/parasitisme/sosies), note `fructification` au ledger
+#       (lieu optionnel `tile`/`x_cm`/`y_cm`). `observer("champignon")` → no-op.
+#       (2) `player.appris.faune` liste les espèces fongiques nommées ; nouvelle clé
+#       `player.appris.champignons {clé: {nom, comestibilite}}` (nommées seulement).
+#       (3) `legende.champignons {clé: vu}`. (4) encyclopédie : type `champignon` = 13
+#       fiches 3 niveaux. (5) `magazine` (offres) + `articles` [{cle, titre, texte}].
+#       Pages P43-P47. Hors tick → golden NEUTRE.
+ENGINE_VERSION = "0.5.53"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

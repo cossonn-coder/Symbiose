@@ -46,6 +46,7 @@ namespace Symbiose
 		{
 			public float Wx, Wy, Densite;
 			public string Role;           // b / r / h (pont ≥ 0.5.47), null : absent
+			public string Espece;         // clé d'espèce (pont ≥ 0.5.52), null : absent
 			public uint Phase;            // hash de la clé → taille/inclinaison propres
 			public float BornAt;
 			public float DyingAt = -1f;   // < 0 : vivant
@@ -57,8 +58,9 @@ namespace Symbiose
 
 		/// <summary>Carpophore VIVANT dont l'ANCRE est la plus proche du point MONDE
 		/// (cm), dans `rayonCm`, ou null (D60 ② : survol → observation du
-		/// champignon ; INFO-BULLE ③ : + rôle local et densité du réseau). Un seul
-		/// règne fongique générique → clé unique « champignon » (Q2). On teste
+		/// champignon ; INFO-BULLE ③ : + rôle local et densité du réseau). Clé =
+		/// l'ESPÈCE du carpophore (sol qui respire ⑤ : une fiche par espèce), repli
+		/// « champignon » d'un pont pré-0.5.52. On teste
 		/// l'ancre (position snapshot stable, les chapeaux sont sessiles). `role`
 		/// non null : ne retient que ce rôle local (banc de capture ③).</summary>
 		public MacroPick? Near(Vector2 wMonde, float rayonCm, string role = null)
@@ -73,7 +75,8 @@ namespace Symbiose
 				if (d <= bestD) { bestD = d; best = e; }
 			}
 			return best == null ? null
-				: new MacroPick("champignon", 1, -1f, best.Role, best.Densite, new Vector2(best.Wx, best.Wy));
+				: new MacroPick(best.Espece ?? "champignon", 1, -1f, best.Role, best.Densite,
+								new Vector2(best.Wx, best.Wy));
 		}
 
 		private static float NowSec() => Time.GetTicksMsec() / 1000f;
@@ -111,6 +114,7 @@ namespace Symbiose
 					double xf = a[2].AsDouble(), yf = a[3].AsDouble();
 					float dens = (float)a[4].AsDouble();
 					string role = a.Count > 5 ? a[5].AsString() : null;
+					string espece = a.Count > 6 ? a[6].AsString() : null;
 					string key = tileId + "|" + r + "|" + c
 						+ "|" + xf.ToString("F3", CultureInfo.InvariantCulture)
 						+ "|" + yf.ToString("F3", CultureInfo.InvariantCulture);
@@ -119,6 +123,7 @@ namespace Symbiose
 					{
 						known.Densite = dens;
 						known.Role = role;
+						known.Espece = espece;
 						if (known.DyingAt >= 0f)   // re-pousse pendant son fondu de mort
 						{
 							float alpha = Mathf.Clamp(
@@ -134,6 +139,7 @@ namespace Symbiose
 						Wy = o.Y + (r + (float)yf) * WorldView.PlotCm,
 						Densite = dens,
 						Role = role,
+						Espece = espece,
 						Phase = HashKey(key),
 						BornAt = fade ? now : now - FadeInSec,
 					};
