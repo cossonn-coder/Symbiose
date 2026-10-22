@@ -34,6 +34,10 @@ uniform int pal_accents = 30;
 // que la bande médiane entre deux couleurs, les zones proches d'une couleur
 // de palette restent unies (lisibilité pixel-art).
 uniform float tramage : hint_range(0.0, 1.0) = 0.5;
+// VISION (sol qui respire ⑧) : 0 = jeu normal ; 1 = vision ; 2 = overdose. On
+// étire la CHROMA en OKLab AVANT la quantification → les couleurs choisies dans
+// la palette sont plus vives, mais restent DES COULEURS DE LA PALETTE.
+uniform float vision = 0.0;
 
 // Matrice de Bayer 4×4 (seuils 0..15) — l'ordre classique, ligne par ligne.
 const float BAYER[16] = float[16](
@@ -58,6 +62,8 @@ vec3 srgb_vers_oklab(vec3 c) {
 void fragment() {
 	vec4 src = texture(TEXTURE, UV);
 	vec3 p = srgb_vers_oklab(src.rgb);
+	p.yz *= 1.0 + 0.45 * vision;   // chroma ×1,45 (vision) / ×1,9 (overdose)
+	p.x = min(p.x * (1.0 + 0.05 * vision), 1.0);
 
 	// i1 = la couleur la plus proche (toutes) ; i2 = la plus proche des
 	// NON-accents hors i1 (le partenaire de tramage).

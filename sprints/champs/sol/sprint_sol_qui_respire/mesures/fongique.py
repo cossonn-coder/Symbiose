@@ -34,7 +34,7 @@ for w in range(N):
     n = 0
     for tid, ks in snap["carpophores"].items():
         for k in ks:
-            r, c, *_x, esp = k
+            r, c, esp = k[0], k[1], k[6]
             plots_esp[esp].add((tid, r, c))
             if (r, c) not in {(q[0], q[1]) for q in ks[:ks.index(k)]}:
                 par_an[an] += 1; par_esp[esp] += 1; par_sais[(an, sais)] += 1; n += 1

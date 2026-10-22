@@ -35,11 +35,8 @@ namespace Symbiose
 		// caméra ne cadre qu'une fraction du monde, on dessine peu).
 		private const float MinZoom = 4f;
 
-		// Teintes : pied crème, chapeau brun-roux de sous-bois (champignon
-		// saprophyte, pas une amanite criarde). Calé sur la litière de bois.
-		private static readonly Color PiedCol = new Color("e2d8c4");
-		private static readonly Color ChapeauCol = new Color("8a5a36");
-		private static readonly Color ChapeauOmbre = new Color("5e3c22");
+		// Teintes et silhouettes : PAR ESPÈCE depuis ⑧ (CarpophoreStyles.cs ; repli
+		// = l'ancien champignon brun de sous-bois).
 
 		// Un chapeau affiché. Position MONDE absolue (cm) ; densite ∝ taille.
 		private class Entry
@@ -47,6 +44,9 @@ namespace Symbiose
 			public float Wx, Wy, Densite;
 			public string Role;           // b / r / h (pont ≥ 0.5.47), null : absent
 			public string Espece;         // clé d'espèce (pont ≥ 0.5.52), null : absent
+			public string Tile;           // désignation du geste `manger` (⑧) :
+			public int R, C, Slot = -1;   // [r, c, slot] ; slot -1 = pont pré-0.5.56
+			public StyleCarpo Style;      // portrait de l'espèce (résolu une fois)
 			public uint Phase;            // hash de la clé → taille/inclinaison propres
 			public float BornAt;
 			public float DyingAt = -1f;   // < 0 : vivant
@@ -77,6 +77,28 @@ namespace Symbiose
 			return best == null ? null
 				: new MacroPick(best.Espece ?? "champignon", 1, -1f, best.Role, best.Densite,
 								new Vector2(best.Wx, best.Wy));
+		}
+
+		/// <summary>Désignation `target.carpophore [r, c, slot]` du carpophore VIVANT
+		/// le plus proche (geste `manger`, ⑧) : false si aucun dans le rayon ou si le
+		/// pont ne donne pas le slot (pré-0.5.56). `distCm` = distance à l'ancre.</summary>
+		public bool Cible(Vector2 wMonde, float rayonCm, out string tile, out int r,
+						  out int c, out int slot, out float distCm)
+		{
+			tile = null; r = c = slot = -1; distCm = float.MaxValue;
+			float bestD = rayonCm * rayonCm;
+			Entry best = null;
+			foreach (var e in _entries.Values)
+			{
+				if (e.DyingAt >= 0f || e.Slot < 0) continue;
+				float dx = e.Wx - wMonde.X, dy = e.Wy - wMonde.Y;
+				float d = dx * dx + dy * dy;
+				if (d <= bestD) { bestD = d; best = e; }
+			}
+			if (best == null) return false;
+			tile = best.Tile; r = best.R; c = best.C; slot = best.Slot;
+			distCm = Mathf.Sqrt(bestD);
+			return true;
 		}
 
 		private static float NowSec() => Time.GetTicksMsec() / 1000f;
@@ -115,6 +137,7 @@ namespace Symbiose
 					float dens = (float)a[4].AsDouble();
 					string role = a.Count > 5 ? a[5].AsString() : null;
 					string espece = a.Count > 6 ? a[6].AsString() : null;
+					int slot = a.Count > 7 ? a[7].AsInt32() : -1;   // pont ≥ 0.5.56
 					string key = tileId + "|" + r + "|" + c
 						+ "|" + xf.ToString("F3", CultureInfo.InvariantCulture)
 						+ "|" + yf.ToString("F3", CultureInfo.InvariantCulture);
@@ -124,6 +147,8 @@ namespace Symbiose
 						known.Densite = dens;
 						known.Role = role;
 						known.Espece = espece;
+						known.Slot = slot;
+						known.Style = CarpophoreStyles.De(espece);
 						if (known.DyingAt >= 0f)   // re-pousse pendant son fondu de mort
 						{
 							float alpha = Mathf.Clamp(
@@ -140,6 +165,8 @@ namespace Symbiose
 						Densite = dens,
 						Role = role,
 						Espece = espece,
+						Tile = tileId, R = r, C = c, Slot = slot,
+						Style = CarpophoreStyles.De(espece),
 						Phase = HashKey(key),
 						BornAt = fade ? now : now - FadeInSec,
 					};
@@ -173,7 +200,18 @@ namespace Symbiose
 			}
 		}
 
+		// ⑧ : tous les chapeaux partent en UN lot de triangles (un draw call), comme
+		// la litière — avant, chaque DrawCircle/DrawLine coûtait le sien.
+		private readonly LotTriangles _lot = new();
+
 		public override void _Draw()
+		{
+			_lot.Vider();
+			Peindre();
+			_lot.Dessiner(this);
+		}
+
+		private void Peindre()
 		{
 			if (_entries.Count == 0) return;
 			if (WorldView.CurrentZoom < MinZoom) return;   // LOD : trop loin
@@ -193,38 +231,25 @@ namespace Symbiose
 				}
 				Vector2 scr = WorldView.WorldToScreen(e.Wx, e.Wy);
 				if (!vis.HasPoint(scr)) continue;
-				DrawChampignon(scr, e.Densite, e.Phase, alpha);
+				DrawChampignon(scr, e.Densite, e.Phase, alpha, e.Style);
 			}
 			if (gone != null)
 				foreach (string k in gone) _entries.Remove(k);
 		}
 
-		// Un petit champignon en placeholder procédural : un pied vertical (Z écran)
-		// surmonté d'un chapeau (demi-disque). Taille ∝ densité du réseau (un réseau
-		// dense pousse de plus gros carpophores). Le pied monte en VERTICAL écran
-		// (comme les plantes/maison) ; le chapeau coiffe. Zéro Random (la phase
-		// donne une légère variété de taille déterministe).
+		// Gabarit commun à toutes les espèces : taille ∝ densité du réseau (un réseau
+		// dense pousse de plus gros carpophores), ±20 % de variété déterministe par le
+		// hash (un rond de sorcière n'est pas un clone) ; la silhouette et les
+		// couleurs viennent du style de l'espèce. Le pied monte en VERTICAL écran
+		// (comme les plantes/maison). Zéro Random.
 		private void DrawChampignon(Vector2 baseScr, float densite, uint phase,
-									float alpha)
+									float alpha, StyleCarpo style)
 		{
 			float d = Mathf.Clamp(densite, 0f, 1f);
-			// Variété déterministe ±20 % par le hash (un champ vif n'est pas un clone).
 			float varia = 0.8f + 0.4f * ((phase & 0xff) / 255f);
 			float h = (5f + 7f * d) * varia * WorldView.PxPerCmZ;   // hauteur pied
 			float cap = (2.5f + 4f * d) * varia;                    // rayon chapeau px
-			Vector2 sommet = baseScr + new Vector2(0f, -h);
-
-			var pied = PiedCol; pied.A = alpha;
-			DrawLine(baseScr, sommet, pied, Mathf.Max(1.4f, cap * 0.4f));
-
-			// Chapeau = un petit arc plein (demi-disque) posé sur le sommet.
-			var cha = ChapeauCol; cha.A = alpha;
-			var ombre = ChapeauOmbre; ombre.A = alpha;
-			DrawCircle(sommet, cap, cha);
-			// Trait sombre sous le chapeau = la lame, et coupe le bas du disque pour
-			// la silhouette « chapeau » (un simple trait suffit en pixel-art).
-			DrawLine(sommet + new Vector2(-cap, 0f), sommet + new Vector2(cap, 0f),
-					 ombre, 1.2f);
+			CarpophoreStyles.Dessiner(_lot, style, baseScr, h, cap, phase, alpha);
 		}
 	}
 }

@@ -32,6 +32,11 @@ namespace Symbiose
 		// bloc snapshot `litiere`, mais ne retient que le tissu dominant `feuille`.
 		private LeafLitterLayer _leafLitterLayer;
 
+		// BOIS MORT au sol (sol qui respire ⑧) : brindilles / branches / souches à
+		// stades de décompo, lues aux index 5-7 du MÊME bloc `litiere`. Entre les amas
+		// et les feuilles (même bande ZIndex 1) : les feuilles tombent SUR le bois.
+		private DeadWoodLayer _deadWoodLayer;
+
 		// Structures posées affichées (③·C). On garde l'INDEX dans la liste de la
 		// tuile (= `target.structure` attendu par le serveur, qui indexe
 		// eco.structures de CETTE tuile) pour la désignation des gestes (③·D).
@@ -45,6 +50,8 @@ namespace Symbiose
 		{
 			_litterLayer = new LitterLayer { Name = "Litter", ZIndex = 1 };
 			AddWorld(_litterLayer);
+			_deadWoodLayer = new DeadWoodLayer { Name = "DeadWood", ZIndex = 1 };
+			AddWorld(_deadWoodLayer);
 			_leafLitterLayer = new LeafLitterLayer { Name = "LeafLitter", ZIndex = 1 };
 			AddWorld(_leafLitterLayer);
 		}
@@ -56,6 +63,7 @@ namespace Symbiose
 		private void ApplyLitiere(GDict litiere)
 		{
 			_litterLayer?.SetLitiere(litiere, _origins);
+			_deadWoodLayer?.SetLitiere(litiere, _origins);
 			_leafLitterLayer?.SetLitiere(litiere, _origins);
 		}
 

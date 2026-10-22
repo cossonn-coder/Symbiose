@@ -120,6 +120,10 @@ def test_disparition_et_nom():
     s = _serveur()
     gs = s.engine.game_state
     tid = gs["tiles"][0].tile_id
+    _forcer("cepe")
+    k0 = s.cmd_snapshot({})["snapshot"]["carpophores"][tid][0]
+    check("⑧ (0.5.56) : 8ᵉ champ = slot, la clé [r, c, slot] du geste",
+          len(k0) == 8 and [k0[0], k0[1], k0[7]] == [2, 3, 0], k0)
     r, snap = _manger(s, "cepe")
     check("le geste ne nomme pas une espèce inconnue",
           r["espece_nommee"] is None and "Cèpe" not in r["message"], r["message"])

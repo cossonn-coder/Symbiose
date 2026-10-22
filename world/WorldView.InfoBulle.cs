@@ -132,6 +132,7 @@ namespace Symbiose
 				if (_infoTechnique) sb.Append(MentionTechnique);
 				if (plante != null) LignesPlante(sb, plante, signe);
 				if (bete != null) LigneBete(sb, bete.Value);
+				LignesVision(sb, plante, bete);   // la vision fait parler (⑧, Vision.cs)
 			}
 			bool rien = sb.Length == 0 || (_infoTechnique && plante == null && bete == null);
 			_infoBulle.Visible = !rien;

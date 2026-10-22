@@ -3,7 +3,7 @@
 # Lance le banc world/WorldView.BancVivant.cs sous Xvfb : pose ×4 sur l'entrée la plus
 # proche du point visé, souris dessus, recadrage PNG 640×400, texte de l'info-bulle au log.
 #
-# USAGE : capture_vivant.sh CIBLE FICHIER.png [-b BANC] [-c X,Y] [-w SEMAINES] [-a] [-t] [--no-build]
+# USAGE : capture_vivant.sh CIBLE FICHIER.png [-b BANC] [-c X,Y] [-w SEMAINES] [-a] [-t] [-V 1|2] [--no-build]
 #   CIBLE = bete | carpophore[,b|r|h] · -a palier3 (bête nommée) · -t technique (Maj+F3)
 set -euo pipefail
 . "$(dirname "${BASH_SOURCE[0]}")/../../../../../tools/lib_vm_godot.sh"
@@ -14,6 +14,7 @@ while [ $# -gt 0 ]; do
     -b) BANC="$2"; shift 2 ;;  -c) CENTRE="$2"; shift 2 ;;
     -w) SEM="$2"; shift 2 ;;   -a) ARGS+=(--capture-palier3=1); shift ;;
     -t) ARGS+=(--capture-technique=1); shift ;;
+    -V) ARGS+=(--capture-vision="$2"); shift 2 ;;   # sol qui respire ⑧ : 1 vision, 2 overdose
     --no-build) BUILD=0; shift ;;
     *) echo "option inconnue : $1" >&2; exit 2 ;;
   esac

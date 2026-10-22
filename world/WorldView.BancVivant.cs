@@ -8,6 +8,8 @@
 //   --capture-vivant=bete                 la bête (MacroLife, sinon butineur) la
 //                                         plus proche de --capture-centre
 //   --capture-vivant=carpophore[,b|r|h]   le carpophore le plus proche (de ce rôle)
+//   --capture-vivant=planche              les 13 espèces de champignons côte à côte
+//                                         (sol qui respire ⑧ : portraits par espèce)
 //   --capture-vivant-png=<chemin>         PNG 640×400 autour de la souris
 // Se combine avec --capture-palier3=1 (bête nommée) et --capture-technique=1.
 //
@@ -39,6 +41,7 @@ namespace Symbiose
 					? _carpophoreLayer?.Near(centre, 1e5f, a.Length > 1 ? a[1] : null)
 					: _macroLife?.Near(centre, 1e5f) ?? _foragerLayer?.Near(centre, 1e5f);
 				if (p == null && a[0] == "carpophore") p = CarpophoreSynthetique(a.Length > 1 ? a[1] : "b");
+				if (a[0] == "planche") p = PlancheCarpophores();
 				if (p == null) { GD.Print($"[Vivant] aucun « {CaptureVivant} »."); GetTree().Quit(); return; }
 				Vector2 canvas = WorldToScreen(p.Value.Pos.X, p.Value.Pos.Y);
 				PoserCamera(System.Array.IndexOf(ZoomSteps, 4f), canvas);
@@ -50,7 +53,9 @@ namespace Symbiose
 					GetTree().CreateTimer(1.0).Timeout += () =>
 					{
 						var img = GetViewport().GetTexture().GetImage();
-						var r = new Rect2I((int)px.X - 320, (int)px.Y - 200, 640, 400)
+						bool large = a[0] == "planche";   // la planche entière
+						var r = (large ? new Rect2I((int)px.X - 800, (int)px.Y - 450, 1600, 900)
+									   : new Rect2I((int)px.X - 320, (int)px.Y - 200, 640, 400))
 							.Intersection(new Rect2I(Vector2I.Zero, img.GetSize()));
 						if (CaptureVivantPng != null) img.GetRegion(r).SavePng(CaptureVivantPng);
 						GD.Print($"[Vivant] {p.Value} → {CaptureVivantPng} · info-bulle « {_infoBulle?.Text} »");
@@ -58,6 +63,33 @@ namespace Symbiose
 					};
 				};
 			};
+		}
+
+		// Planche ⑧ : les 13 clés du registre Python (`fields/fongique.py`, même
+		// ordre), deux rangées de plots sur la 1ʳᵉ tuile, densité 0,8 → portraits
+		// comparables. Banc seulement : la vue ne tient AUCUNE liste d'espèces.
+		private static readonly string[] PlancheEspeces =
+		{
+			"pleurote", "hypholome", "collybie", "coprin", "rose_des_pres", "clitocybe",
+			"psilocybe", "morille", "cepe", "amanite_phalloide", "amanite_tue_mouches",
+			"armillaire", "polypore_bouleau",
+		};
+
+		private MacroPick? PlancheCarpophores()
+		{
+			if (_carpophoreLayer == null || _origins == null || _origins.Count == 0) return null;
+			string tuile = null;
+			foreach (var k in _origins.Keys) { tuile = k; break; }
+			var liste = new Godot.Collections.Array();
+			for (int i = 0; i < PlancheEspeces.Length; i++)
+				liste.Add(new Godot.Collections.Array
+					{ 2 + i / 7, i % 7, 0.5, 0.5, 0.8, "b", PlancheEspeces[i], 0 });
+			_carpophoreLayer.SetCarpophores(new Godot.Collections.Dictionary { [tuile] = liste },
+											_origins, fade: false);
+			GD.Print($"[Vivant] planche des {PlancheEspeces.Length} champignons sur {tuile}.");
+			Vector2 o = _origins[tuile];
+			return new MacroPick("planche", 1, -1f, null, 0f,
+								 o + new Vector2(3.5f * PlotCm, 3f * PlotCm));
 		}
 
 		private MacroPick? CarpophoreSynthetique(string role)

@@ -21,7 +21,7 @@ suivants : budget perf mesuré **par rapport à ①** ; ne pas tenter de résorb
 | ⑥ | `06_manger_vision.md` | INTACT `df6ebf04…` | FAIT — pont 0.5.54 ; overdose +75 ms/snapshot [n=1 run, `full`] |
 | ⑦ | `07_nectar_espece.md` | RE-FIGÉ `df6ebf04…` → `fecccded…` (floraison au smoke, 5 lignes de log) | FAIT — ⚠ D110 (i) non résolu (médiane 0,08 inchangée) |
 | ⑦bis | `07b_bois_continu_parasite.md` (ajouté 2026-10-22, décisions Nico : ceinture → bois, décompo par grosseur, parasite peut tuer) | INTACT `fecccded…` (smoke sans ceinture ; aucun bois de grosseur ≠ défaut ; pourridié du pommier sous la résolution du digest) | FAIT — pont 0.5.55 |
-| ⑧ | `08_vue_godot.md` | intact | à faire |
+| ⑧ | `08_vue_godot.md` | INTACT `fecccded…` | FAIT — pont 0.5.56 (slot carpophore) ; F5 Nico en attente (suspendu D114) |
 
 Golden de départ (relevé par ①) : `22768f339ac41bb20b1604bb29672bb3b209ee62ec659b1c8369dd31ccd6cfb8`.
 Golden après ① : `1ce02bce275a2b4c262564e7eda384b1071125ebc67e65346d101820102d6bfd` (re-figé
@@ -521,6 +521,65 @@ résolution du digest. Aucun re-figeage.
    la masse sans le diamètre — sans effet aujourd'hui.
 5. `serialize.py` 385 → 387 LDC (bande jaune, déjà au-dessus).
 
+## ⑧ Vue Godot — FAIT (2026-10-23), golden INTACT `fecccded…`, pont **0.5.56**
+
+**Livré** (C#, `dotnet build` 0 erreur 0 avertissement) :
+- **Bois mort** `visuals/DeadWoodLayer.cs` (NOUVEAU, lot de triangles = 1 draw call, ZIndex 1
+  entre amas et feuilles, couche `DeadWood` dans Maj+F4) : lit `litiere` index 5-7 ; grosseur →
+  brindilles (< 1 cm) / branche (1-10 cm, épaisseur ∝ Ø, rameaux) / souche (≥ 10 cm, section
+  claire + cerne) ; masse → longueur ; âge → stade fraîche → grise → moussue (touffes vertes) →
+  miettes. Échelle de temps VISUELLE `(1+Ø)/1,5 an` (même allure que `facteur_grosseur`, teinte
+  seule). Ombre portée 1 px (sans elle, bois brun invisible sur terre brune, capture VM).
+- **Carpophores par espèce** `visuals/CarpophoreStyles.cs` (NOUVEAU) : 13 portraits (7 silhouettes :
+  dôme, creusé, cône, coprin, morille, cèpe, console ; touffes pour hypholome/collybie/armillaire ;
+  points du tue-mouches et écailles de l'armillaire) ; sosies rosé/clitocybe = lames rose/blanches.
+  `CarpophoreLayer` passe en lot (avant : 1 draw call par DrawCircle/DrawLine).
+- **Manger** `world/WorldView.Champignon.cs` (NOUVEAU) : geste `manger`, chapeau à ≤ 15 cm du clic
+  avant la plante, sinon plante, sinon carpophore à 50 cm → `target.carpophore [r, c, slot]`.
+- **Vision** `world/WorldView.Vision.cs` + `visuals/vision.gdshader` (NOUVEAUX), `PaletteSnes` :
+  saturation + onde lente de teinte (F11 OFF) ; F11 ON = chroma OKLab étirée AVANT quantification
+  (sortie dans la palette) ; force 1 vision / 2 overdose. `parler` ASYNCHRONE (Task) une fois par
+  ENTRÉE de survol (clé d'être), phrases « … » sous l'info-bulle ; `reste` annoncé une fois.
+  Overdose `world/WorldView.Murmures.cs` (NOUVEAU) : 1ʳᵉ phrase des 24 êtres visibles les plus
+  proches de la souris, pool de Labels reposé seulement si la clé de survol change.
+- Banc VM : `--capture-vivant=planche` (13 espèces) et `--capture-vision=1|2` (`capture_vivant.sh -V`).
+  Captures : `mesures/capture_x4_planche_champignons.png`, `capture_x4_planche_overdose.png`,
+  `capture_x8_bois_mort.png`.
+
+**⚠ PRÉMISSES RÉFUTÉES / DÉCISIONS** :
+1. Le snapshot n'exposait PAS le `slot` exigé par `target.carpophore [r, c, slot]` (le rang dans
+   la liste ≠ slot dès qu'un carpophore du plot est mangé) → pont **0.5.56** : 8ᵉ champ `slot`
+   (rétro-compatible, perception pure ; test ajouté à `test_vision` 38/38 ; versions des tests
+   simserver ; `mesures/fongique.py` et `bois_mort.py` lisaient l'espèce en `k[-1]` → `k[6]`).
+2. Diagnostic D112 (a) carpophores : pas de bug de rendu — aucune donnée en jeu normal avant ③
+   (D110 h) + LOD ×4. Absorbé, consigné dans DETTE.
+3. Info-bulle nom/comestibilité : déjà livrée au ⑤ ; la vision la nomme d'elle-même (Python lit
+   `appris` au palier transcendant). Le lieu du survol n'est toujours pas envoyé à `observer`.
+4. FPS de l'overdose NON mesuré (impossible de provoquer l'overdose dans le banc à coût
+   raisonnable) : borné par construction (≤ 24 Labels, recalcul sur changement de clé, même
+   mécanique que les étiquettes « Toutes » ~170 Labels). Coût moteur connu : +75 ms/snapshot (§⑥).
+5. `WorldView.ActionDispatch.cs` 391 → 393 LDC (bande jaune, déjà au-dessus) ; souche dessinée
+   au sol (ZIndex 1) : une plante derrière peut la recouvrir — à juger au F5.
+
+**Re-mesure finale D110 (g)(h)(i)** (`mesures/remesure_finale.py`, `full`, 156 sem.) [n=1 run par graine] :
+| graine | vitalité méd. an 0/1/2 | acclimatation > 0,05 an 0/1/2 | carpophores plot-sem. an 0/1/2 (espèces) | nourriture butineurs méd. an 0/1/2 (< 0,1 an 2) |
+|---|---|---|---|---|
+| 1521550718 | 0,73 / 0,73 / 0,73 | 80 / 98 / 98 % | 97 / 155 / 247 (8) | 0,10 / 0,06 / 0,07 (54 %) |
+| 7 | 0,58 / 0,78 / 0,80 | 78 / 92 / 95 % | 17 / 46 / 126 (8) | 0,05 / 0,05 / 0,03 (59 %) |
+| 1515525502 | 0,95 / 0,80 / 0,73 | 75 / 95 / 98 % | 83 / 277 / 446 (8) | 0,04 / 0,10 / 0,05 (56 %) |
+→ **(h) résolu** ; **(g) non** (acclimatation quasi universelle, surtout l'ombre) ; **(i) non**.
+Consigné dans DETTE D111 (reformulé), D112 (a) part carpophores fermée.
+
+**Points F5 pour Nico** (ressenti seulement ; F5 suspendu tant que D114) :
+1. Bois mort lisible au sol (×2 à ×8) : brindilles / branche / souche se distinguent ? stades
+   (brun → gris → moussu → miettes) perceptibles ? (lisière ouest/sud de `full` après 1-2 ans).
+2. Carpophores reconnaissables par espèce à ×4 ; taille vs plantes (peut-être trop gros).
+3. Manger un champignon (geste manger, clic sur le chapeau) ; **Vigueur infinie OFF** pour sentir
+   les vénéneux (hypholome, clitocybe, phalloïde, tue-mouches).
+4. Vision « trip » agréable (psilocybe) — trop/pas assez ? ; info-bulle qui parle au survol ;
+   overdose (2ᵉ psilocybe pendant l'effet) : murmures lisibles, FPS tenus ?
+5. Avec F11 ON : la vision reste dans la palette.
+
 ## Ajouts de Nico à l'accord (2026-10-22)
 - Bois mort VISIBLE au sol, dégradation en sprite à stades (② pont, ⑧ dessin).
 - Overdose : 2ᵉ psychédélique pendant l'effet → phrases de TOUS les êtres à chaque snapshot.
@@ -629,8 +688,11 @@ du bourdon, `FLOWER_REF` 0,75 ; D110 (i) non résolu (cf. §⑦ remontées).
 ⑦bis FAIT (golden INTACT `fecccded…`, pont **0.5.55**) : bois de lisière continu (stock
 `full` 18 → 68 en 3 ans, concentré en lisière), décompo par grosseur (`diam_cm`), pourridié
 qui tue un hôte affaibli au banc (0 mort sur `full`, composition) ; cf. §⑦bis.
-Prochain tronçon : ⑧ `08_vue_godot.md` (golden de départ **`fecccded…`**, pont **0.5.55** :
-`litiere` index 7 = `bois_diam_cm` → brindille / branche / souche).
+⑧ FAIT (golden INTACT `fecccded…`, pont **0.5.56** : slot du carpophore) : bois mort dessiné à
+stades, 13 portraits de champignons, manger ciblé, vision (écran + `parler` + murmures d'overdose),
+re-mesure finale (h résolu, g et i non) ; cf. §⑧ (points F5).
+**Tous les tronçons sont FAITS** → clôture du sprint (journal, BACKLOG, DETTE D111) par l'orchestrateur ;
+F5 de Nico après D114.
 Chaque tronçon met à jour sa ligne de statut, consigne ses mesures [n=…] et ses hashes golden.
 ## Liste fongique VALIDÉE (Q7)
 

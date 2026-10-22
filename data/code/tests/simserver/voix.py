@@ -17,8 +17,8 @@ def test_voix():
     print("[voix narratives — pont ①]")
     s = ServerProc()
     init = s.send(cmd="init", config="full", seed=7)
-    check("protocole bumpé à 0.5.55 (sol qui respire ⑦bis)",
-          init["engine_version"] == "0.5.55", init.get("engine_version"))
+    check("protocole bumpé à 0.5.56 (sol qui respire ⑧)",
+          init["engine_version"] == "0.5.56", init.get("engine_version"))
 
     # Retour F5 : une plante n'est PLUS observée parce qu'elle pousse — seulement au
     # SURVOL souris. Après quelques semaines SANS survol, aucune ESPÈCE (plante /

@@ -365,11 +365,14 @@ class SerializeMixin:
             # SOL QUI RESPIRE ⑥ : échantillonnage factorisé (`sim/champignon_manger`,
             # même source que le geste `manger`) — moins les carpophores MANGÉS cette
             # semaine (mémoire de perception, jamais lue par le tick).
+            # SOL QUI RESPIRE ⑧ (0.5.56) : 8ᵉ champ = SLOT (rang du quantum dans le
+            # plot, `Carpophore.slot`) — clé `target.carpophore [r, c, slot]` du geste
+            # `manger` ; le rang dans la liste ne le donne plus dès qu'un est mangé.
             carpos, racines = carpophores_tuile(gs, tile, pluie_prec)
             carpophores[tile.tile_id] = [
                 [k.row, k.col, round(k.x_frac, 3), round(k.y_frac, 3),
                  round(k.densite, 3), role_carpophore(eco, racines, k.row, k.col),
-                 k.espece]
+                 k.espece, k.slot]
                 for k in carpos]
             # Butineurs déterministes (arc pollinisation §F, 0.3.9) : agents
             # échantillonnés/marchés par engine._tick_butineurs (eco.foragers, déjà

@@ -447,6 +447,10 @@ namespace Symbiose
 			ObserveHoveredMacroLife();
 			// 0b·quater) Info-bulle à deux niveaux + observation d'un signe (⑦).
 			UpdateInfoBulle();
+			// 0b·quinquies) Vision (sol qui respire ⑧) : réponse `parler` arrivée ?
+			//     + murmures de l'overdose (reposés seulement si la clé a changé).
+			MajVision();
+			UpdateMurmures();
 			// 0b'') Étiquette de survol d'un CONTENEUR (substrat/volume + état
 			//       qualitatif du mini-sol, ⑥c) — même couche nette, mots seuls.
 			UpdateContainerLabel();

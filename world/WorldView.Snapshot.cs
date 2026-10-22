@@ -499,6 +499,7 @@ namespace Symbiose
 				_vigueur = pl["vigueur"].AsDouble();
 				_vigueurMax = pl["vigueur_max"].AsDouble();
 				LireAppris(pl);   // signes / bêtes appris → info-bulle (⑦)
+				LireVision(pl);   // vision psychédélique (sol qui respire ⑧, Vision.cs)
 				// Graines plantables (0.3.3) → choix d'espèce pour `planter`.
 				// Lecture tolérante : un snapshot pré-0.3.3 n'a pas la clé.
 				if (pl.ContainsKey("seeds"))
@@ -520,6 +521,7 @@ namespace Symbiose
 				ApplyPalette(pl.ContainsKey("palette")
 					? pl["palette"].AsGodotDictionary() : null);
 			}
+			LireVoix(snap);   // overdose : phrases de tous les êtres (Murmures.cs)
 			UpdateActionHud();
 
 			// Jardinier automate (sprint jardinier_auto ⑥, snapshot 0.5.30) : bloc

@@ -103,7 +103,7 @@ for w in range(N):
     t_an.setdefault(w // 52, []).append(dt)
     if CARPO:
         for tid, ks in srv._snapshot()["carpophores"].items():
-            for (r, c) in {(k[0], k[1]) for k in ks if k[-1] in SAPRO_BOIS}:
+            for (r, c) in {(k[0], k[1]) for k in ks if k[6] in SAPRO_BOIS}:
                 fruits[("lisière" if (tid, r, c) in LISIERE else "centre", w // 52)] += 1
     if w % 52 == 51 or w == N - 1:
         bilan(f"sem {w + 1}", t_an[w // 52])

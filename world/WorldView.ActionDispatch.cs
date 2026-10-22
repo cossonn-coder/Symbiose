@@ -39,12 +39,16 @@ namespace Symbiose
 					// débordantes comprises) ; sans branche sous le curseur,
 					// repli sur le collet à 30 cm = comportement t4 inchangé.
 					int segIdx = -1;
+					// Manger un CHAMPIGNON (⑧) : un carpophore tout près du clic passe
+					// avant la plante (WorldView.Champignon.cs).
+					if (verb == "manger" && CibleCarpophore(w, CarpoPrioriteCm, out target)) break;
 					if (verb == "tailler")
 						node = FindSegmentGlobal(canvasPos, out segIdx);
 					if (node == null)
 						node = FindPlant(w, PickRadiusCm);
 					if (node == null)
 					{
+						if (verb == "manger" && CibleCarpophore(w, MacroPickRadiusCm, out target)) break;
 						_lastActionMsg = $"{nom} : aucune plante à portée du clic";
 						UpdateActionHud(); FlashActionLabel();
 						return;

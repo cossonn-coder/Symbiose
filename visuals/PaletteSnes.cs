@@ -29,9 +29,17 @@ namespace Symbiose
 
 		private static ShaderMaterial _mat;
 		private static SubViewportContainer _cible;
+		// VISION (sol qui respire ⑧) : 0 = normal, 1 = vision, 2 = overdose. Le
+		// conteneur ne porte qu'UN matériau : palette SNES ON → la vision passe par
+		// son uniform `vision` (chroma étirée AVANT quantification, la sortie reste
+		// dans la palette) ; OFF → un shader de vision seul (vision.gdshader).
+		private const string VisionPath = "res://visuals/vision.gdshader";
+		private static ShaderMaterial _matVision;
+		private static bool _snes;
+		private static float _vision;
 
 		/// <summary>Actif ? (lu par le HUD/log de la bascule).</summary>
-		public static bool Actif => _cible != null && _cible.Material != null;
+		public static bool Actif => _cible != null && _snes;
 
 		/// <summary>Prépare le shader du conteneur du monde, OFF par défaut (F5 Nico
 		/// 2026-10-15 : préfère l'ancienne palette, trame jugée laide, et la passe
@@ -57,15 +65,37 @@ namespace Symbiose
 				_mat.SetShaderParameter("pal_accents", pal.Length - Palette16.MaitreAccents);
 				_mat.SetShaderParameter("tramage", Tramage);
 			}
-			_cible.Material = null;
+			Rafraichir();
 		}
 
 		/// <summary>Bascule avant/après (touche debug F11) — comparer au F5.</summary>
 		public static void Basculer()
 		{
 			if (_cible == null) return;
-			_cible.Material = _cible.Material == null ? _mat : null;
+			_snes = !_snes;
+			Rafraichir();
 			GD.Print($"[PaletteSnes] F11 → palette SNES {(Actif ? "ON" : "OFF")}.");
+		}
+
+		/// <summary>Force de la vision (0 = rien, 1 = vision, 2 = overdose), lue au
+		/// snapshot (`player.vision`). Sans effet si inchangée.</summary>
+		public static void Vision(float force)
+		{
+			if (_cible == null || force == _vision) return;
+			_vision = force;
+			Rafraichir();
+			GD.Print($"[PaletteSnes] vision → force {force}.");
+		}
+
+		// Choisit le matériau du conteneur selon (palette SNES, vision).
+		private static void Rafraichir()
+		{
+			_mat?.SetShaderParameter("vision", _vision);
+			if (_snes) { _cible.Material = _mat; return; }
+			if (_vision <= 0f) { _cible.Material = null; return; }
+			_matVision ??= new ShaderMaterial { Shader = GD.Load<Shader>(VisionPath) };
+			_matVision.SetShaderParameter("force", _vision);
+			_cible.Material = _matVision;
 		}
 
 		// sRGB → OKLab (Ottosson 2020) — MÊMES coefficients que le shader

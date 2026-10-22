@@ -441,6 +441,17 @@ namespace Symbiose
 			=> Request(new GDict { ["cmd"] = "observer", ["species"] = species, ["signe"] = signe,
 								   ["tile"] = tile, ["x_cm"] = xCm, ["y_cm"] = yCm });
 
+		/// <summary>VISION (sol qui respire ⑧, pont ≥ 0.5.54) : `parler` à l'ENTRÉE du
+		/// survol d'un être → `{vision, phrases}`. `cible` = plante `{tile, x_cm, y_cm}`
+		/// ou bête/champignon `{espece, tile, r, c}`. Le pont COMPTE ce survol (ce qui
+		/// reste après la vision) : un appel par entrée, jamais par frame.</summary>
+		public GDict Parler(GDict cible)
+		{
+			var msg = cible.Duplicate();
+			msg["cmd"] = "parler";
+			return Request(msg);
+		}
+
 		/// <summary>Légende STATIQUE des signes et des bêtes (⑥/⑦) : `vu` (et `cause`
 		/// des signes) — demandée une fois, l'info-bulle gate par `player.appris`.</summary>
 		public GDict Legende() => Request(new GDict { ["cmd"] = "legende" });

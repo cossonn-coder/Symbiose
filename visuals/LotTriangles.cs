@@ -91,6 +91,14 @@ namespace Symbiose
 			Ajouter(gA, col); Ajouter(dB, col); Ajouter(gB, col);
 		}
 
+		/// <summary>Un triangle plein (sol qui respire ⑧ : silhouettes basse
+		/// définition des carpophores et du bois mort — quelques triangles au lieu
+		/// des 64 d'un Cercle, l'œil n'en voit pas plus à 3-10 px).</summary>
+		public void Triangle(Vector2 a, Vector2 b, Vector2 c, Color col)
+		{
+			Ajouter(a, col); Ajouter(b, col); Ajouter(c, col);
+		}
+
 		private void Ajouter(Vector2 p, Color c)
 		{
 			_sommets.Add(p);

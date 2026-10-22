@@ -765,7 +765,13 @@ from __future__ import annotations
 #       pondéré par la masse de la parcelle `bois`, 0.0 sans bois). (2) debug
 #       `memoires` : + `pourriture_memory` (pourridié du collet). Le moteur change
 #       (bois de lisière, décompo par grosseur, pourridié) mais pas la forme du reste.
-ENGINE_VERSION = "0.5.55"
+# 0.5.56 (LE SOL QUI RESPIRE ⑧, vue Godot) : ajout rétro-compatible. Chaque entrée du
+#       bloc `carpophores` gagne un 8ᵉ élément : le SLOT du carpophore dans son plot
+#       (`[r, c, x_frac, y_frac, densite, rôle, espèce, slot]`) — la vue en tire
+#       `target.carpophore [r, c, slot]` pour `manger` (le rang dans la liste ne vaut
+#       plus le slot dès qu'un carpophore du plot a été mangé). Perception pure →
+#       golden INTACT.
+ENGINE_VERSION = "0.5.56"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les
