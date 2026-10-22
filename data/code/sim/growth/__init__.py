@@ -16,6 +16,7 @@ Orientation :
   - `geometrie.py`  — géométrie 3D, topologie de l'arbre, biais phototropique (purs)
   - `seam.py`       — f_lignification + atteindre_segment (point d'entrée des perturbations)
   - `phases.py`     — les 4 phases §D + étiolement + grow_plant (point d'entrée du tick)
+  - `cladoptose.py` — mort de branches (ombre, casse) : choix + coupe, purs (D111 ②bis)
 """
 
 from .constantes import (
@@ -29,6 +30,8 @@ from .constantes import (
 from .geometrie import _phototropic_bias
 from .seam import f_lignification, atteindre_segment
 from .phases import (shade_tolerance_effective, est_etiole, grow_plant)
+from .cladoptose import (branches_ombragees, branches_a_casser, couper_branches,
+                         seuil_et_age)
 
 __all__ = [
     "AUXIN_SOURCE", "AUXIN_DECAY", "AUXIN_INHIB_THRESHOLD", "AUXIN_PROD_FLOOR",
@@ -39,4 +42,5 @@ __all__ = [
     "COUPE_NETTE", "INTENSITE_PIED", "SEUIL_DEGAT", "LIGNIFICATION_SCALE",
     "_phototropic_bias", "f_lignification", "atteindre_segment",
     "shade_tolerance_effective", "est_etiole", "grow_plant",
+    "branches_ombragees", "branches_a_casser", "couper_branches", "seuil_et_age",
 ]

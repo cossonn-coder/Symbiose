@@ -84,6 +84,9 @@ class Thyme(Lamiaceae):
     """
     genus = "Thymus"
     name = "Thym"
+    ligneux = True        # D111 ②bis : sous-arbrisseau — bois sec de la base, largué l'hiver
+    bois_chute_cm3 = 40.0
+    bois_chute_semaine = 48
     feuillage = "cireux"  # transpiration (D111 ①) : type de feuillage d'espèce
     resilience_base = 1.25         # S — coussin ligneux de garrigue, très coriace
     hail_resistance_base = 1.3     # feuilles minuscules et coriaces — insensibles à la grêle
@@ -133,6 +136,9 @@ class Lavender(Lamiaceae):
     """
     genus = "Lavandula"
     name = "Lavande"
+    ligneux = True        # D111 ②bis : sous-arbrisseau — bois sec de la base, largué l'hiver
+    bois_chute_cm3 = 80.0
+    bois_chute_semaine = 48
     feuillage = "cireux"  # transpiration (D111 ①) : type de feuillage d'espèce
     resilience_base = 1.25         # S — sous-arbrisseau ligneux méditerranéen, rustique
     hail_resistance_base = 1.3     # feuillage étroit argenté — la grêle glisse

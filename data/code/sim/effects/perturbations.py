@@ -58,10 +58,12 @@ def tissu_mort(plant: PlantInstance) -> str:
 
 def frac_bois_mort(plant: PlantInstance) -> float:
     """Fraction LIGNEUSE de la nécromasse (décompo·compost ②, phase B). Seules les
-    plantes ligneuses (PerennialWoody, reconnues par l'attribut `age_curve`) laissent
-    un squelette de bois qui se fragmente ; les herbacées/annuelles → 0 (tout en
-    tissu mou, retrait immédiat — équivalent à l'ancien filtre is_alive)."""
-    return FRAC_BOIS_MORT if getattr(plant.plant_class, "age_curve", None) else 0.0
+    plantes LIGNEUSES laissent un squelette de bois qui se fragmente ; les
+    herbacées/annuelles → 0 (tout en tissu mou, retrait immédiat — équivalent à
+    l'ancien filtre is_alive). D111 ②bis : critère = DONNÉE d'espèce `ligneux`
+    (arbres + lierre, jasmin, framboisier, thym, lavande, myrtille), plus la
+    présence implicite d'une `age_curve` (qui n'en couvrait que les arbres)."""
+    return FRAC_BOIS_MORT if getattr(plant.plant_class, "ligneux", False) else 0.0
 
 
 def deposer_mort(plant: PlantInstance, eco) -> float:

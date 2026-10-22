@@ -230,6 +230,19 @@ class PlantBase(ABC):
     # multiplie un CLONE entier ; la greffe SOUDE l'aérien d'un greffon sur le
     # racinaire d'un porte-greffe (D8). Littéral seul, aucun import (règle de couches).
     greffable: bool = False
+    # LIGNEUX (D111 ②bis) — DONNÉE explicite d'espèce, remplace le critère implicite
+    # « porte une `age_curve` » (arbres seuls). Un ligneux laisse du BOIS : squelette à
+    # la mort (`frac_bois_mort`), branches mortes qui tombent (ombre, tempête, neige).
+    # Arbres (PerennialWoody), lierre, jasmin, framboisier, thym, lavande, myrtille.
+    # `fragilite_bois` : bois cassant (bouleau, saule, figuier >1) ou solide (chêne,
+    # charme, hêtre <1) sous la tempête / la neige. Défaut neutre 1.0.
+    # `bois_chute_cm3` / `bois_chute_semaine` : ligneux SANS structure procédurale
+    # (framboisier, thym…) — volume de bois mort largué par an à maturité, et sa
+    # semaine (cannes de 2 ans après fruits, bois sec de la base l'hiver). 0 = rien.
+    ligneux: bool = False
+    fragilite_bois: float = 1.0
+    bois_chute_cm3: float = 0.0
+    bois_chute_semaine: int = 0
     # Silhouette de RENDU (sprint LUXURIANCE ③, D65 §2.4 (a)). PUR DESCRIPTEUR data :
     # AUCUN effet moteur ici — le renderer C# le lira au tronçon ⑥ (via le pont) pour
     # dessiner la bonne forme au sol. None ⇒ dérivée de la strate du stade MATURE

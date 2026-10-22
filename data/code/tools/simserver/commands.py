@@ -26,6 +26,7 @@ from fields.grids import GridField
 # depuis le seed du terrain — posée dans `game_state` pour les mondes de JEU (voir
 # `cmd_init`). C'est ce branchement qui fait de la vue une CONSOMMATRICE (D92).
 from fields.peripherie import generer_ceinture
+from sim.bois_initial import poser_bois_initial   # D111 ②bis : bois mort dès la semaine 0
 # Registre des bancs d'essai (sprint dédié) : mondes paramétrés montés par
 # `init config="<banc>"` pour forcer/observer un signe. Import au niveau module
 # (paquet `bancs/` au sommet, peut tout importer) ; jamais monté pour smoke/full.
@@ -200,6 +201,10 @@ class CommandsMixin:
         # et bancs existants inchangés au bit près).
         if config in ("full", "propre"):
             game_state["ceinture"] = generer_ceinture(seed)
+            # D111 ②bis : bois mort dès la semaine 0 (sous les ligneux + souches et
+            # branches isolées, âges variés). Mêmes configs que la ceinture → smoke
+            # (golden) et bancs intacts.
+            poser_bois_initial(tiles, ecos, seed)
         # Option d'init « carnet interprétatif anticipé » (T2, réglage d'aide
         # CLAUDE.md, défaut NON). Champ OPTIONNEL du message : absent → aucune clé
         # `options` → `sim/carnet._reglage_anticipe` renvoie False → seuil normal

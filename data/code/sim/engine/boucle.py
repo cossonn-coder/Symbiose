@@ -47,6 +47,7 @@ from .aleas import (appliquer_alea, ALEAS_RAVAGEURS, WEATHER_ALEA, ORAGE_VENT,
 from .croissance import CroissanceMixin
 from .mortalite import MortaliteMixin
 from .decompo import DecompoMixin, deposer_bois_tombe
+from .branches import mort_des_branches
 from .floraison import FloraisonMixin
 from .butineurs import ButineurMixin
 from .anemophilie import AnemophilieMixin
@@ -448,6 +449,10 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
                     if deposer_bois_tombe(plant, tombes, eco) > 1e-4:
                         log.append(f"    🪵 Branche morte tombée {plant.name}"
                                    f"@{plant.position}")
+            # 9c-ter. Les branches MEURENT (D111 ②bis) : ombre (cladoptose), tempête,
+            #     neige, bois sec des arbustes → litière `bois` (même relais que 9c).
+            log += mort_des_branches(tile, eco, saison, week, week_in_year, seed,
+                                     gust_peak, is_neige)
 
             # 9b. Mortalité réaliste — sénescence + santé dynamique (D27)
             log += self._tick_senescence_health(tile, eco)

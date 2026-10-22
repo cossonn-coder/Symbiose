@@ -40,6 +40,7 @@ class Ivy(PlantBase):
     family = "Araliaceae"
     genus = "Hedera"
     name = "Lierre"
+    ligneux = True                       # D111 ②bis : liane ligneuse (tiges lignifiées) → bois mort
     feuillage = "cireux"  # transpiration (D111 ①) : type de feuillage d'espèce
     resilience_base = 1.25         # S — liane ligneuse persistante, extrêmement rustique
     mode_grimpe            = "crampon"   # crampons adhésifs → escalade le mur nu (②)
@@ -117,6 +118,7 @@ class Jasmine(PlantBase):
     family = "Oleaceae"
     genus = "Jasminum"
     name = "Jasmin"
+    ligneux = True                       # D111 ②bis : sarments ligneux → bois mort
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     resilience_base = 1.0          # intermédiaire — sarment ligneux, mais rameaux tendres au froid
     mode_grimpe            = "sarmenteux"  # ne s'accroche que par palissage (④)

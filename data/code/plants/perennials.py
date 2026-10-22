@@ -43,6 +43,7 @@ class PerennialWoody(PlantBase):
     # d'ancrage hors d'atteinte → il ENCAISSE mieux la perte d'uptake (÷1.3).
     root_loss_tolerance_base = 1.3
     age_curve: list[tuple] = []   # [(age_years, height_cm, canopy_radius_cm), ...]
+    ligneux = True                # D111 ②bis : bois mort (squelette + branches qui tombent)
 
     # --- Défauts procéduraux communs aux ligneux migrés (D91, §4 mutualisation) ---
     # Profil d'ÉCHELLE ARBRE répliqué du pommier (perennials.py AppleTree) : flèche en
@@ -151,6 +152,7 @@ class Fig(PerennialWoody):
     t_germ_opt = 20.0             # MÉDITERRANÉEN : exige un sol chaud (≠ ligneux tempéré) (③)
     t_germ_tol = 8.0              # moyenne
     foliage_density = 0.75
+    fragilite_bois = 1.4           # D111 ②bis : bois tendre et cassant
     reproduction_rate = 0.15   # dispersion (M7) — gated par la lumière
     longevity_years = 80
     maturity_years = 5
@@ -344,6 +346,7 @@ class OakTree(PerennialWoody):
     rarity = "Sentinelle"
     keywords = ["Lisière", "Sujet structurant", "Centenaire"]
     foliage_density = 0.75
+    fragilite_bois = 0.6           # D111 ②bis : bois dur, branches solides
     pollination_mode = "wind"        # anémophile (chatons)
     pollination_radius_cm = 800.0
     reproduction_rate = 0.08   # glandée (mast) rare
@@ -391,6 +394,7 @@ class BeechTree(PerennialWoody):
     rarity = "Climacique"
     keywords = ["Lisière", "Ombre dense", "Structurant"]
     foliage_density = 0.85            # houppier fermé → ombre profonde de hêtraie
+    fragilite_bois = 0.7           # D111 ②bis : bois dur
     pollination_mode = "wind"        # anémophile (chatons)
     pollination_radius_cm = 700.0
     reproduction_rate = 0.08         # faînée (mast) irrégulière
@@ -428,6 +432,7 @@ class BirchTree(PerennialWoody):
     rarity = "Établie"
     keywords = ["Pionnière", "Lisière", "Ombre légère"]
     foliage_density = 0.45           # houppier léger → sous-bois clair
+    fragilite_bois = 1.5           # D111 ②bis : bois cassant, branches fines
     pollination_mode = "wind"        # anémophile (chatons)
     pollination_radius_cm = 600.0
     reproduction_rate = 0.20         # graines ailées abondantes, dispersion large
@@ -472,6 +477,7 @@ class HornbeamTree(PerennialWoody):
     rarity = "Établie"
     keywords = ["Bocage", "Haie", "Structurant"]
     foliage_density = 0.65           # houppier moyen
+    fragilite_bois = 0.6           # D111 ②bis : bois très dur (« bois de fer »)
     pollination_mode = "wind"        # anémophile (chatons)
     pollination_radius_cm = 550.0
     reproduction_rate = 0.12         # samares en grappes
@@ -585,6 +591,7 @@ class Alder(PerennialWoody):
     rarity = "Établie"
     keywords = ["Berge", "Fixatrice N₂", "Pionnière", "Zone humide"]
     foliage_density = 0.55           # houppier moyen, ombre légère de ripisylve
+    fragilite_bois = 1.2           # D111 ②bis : bois tendre
     pollination_mode = "wind"        # anémophile (chatons)
     pollination_radius_cm = 500.0
     reproduction_rate = 0.15         # petits strobiles ligneux, graines flottantes
@@ -672,6 +679,7 @@ class Willow(PerennialWoody):
     rarity = "Établie"
     keywords = ["Berge", "Trogne", "Bouture", "Mellifère précoce"]
     foliage_density = 0.50           # feuillage fin et lâche → ombre légère de bord d'eau
+    fragilite_bois = 1.6           # D111 ②bis : bois mou qui casse net (saule)
     pollination_mode = "insect"      # chatons NECTARIFÈRES (≠ aulne/bouleau anémophiles)
     reproduction_rate = 0.22         # graines cotonneuses innombrables, viabilité très courte
     seed_dispersal = "anemochore"    # aigrette de coton (vent + eau)

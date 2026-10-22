@@ -79,6 +79,9 @@ class Vaccinium(Ericaceae):
     """
     genus = "Vaccinium"
     name = "Myrtille"
+    ligneux = True        # D111 ②bis : arbrisseau — rameaux âgés qui sèchent (hiver)
+    bois_chute_cm3 = 60.0
+    bois_chute_semaine = 46
     feuillage = "cireux"  # transpiration (D111 ①) : type de feuillage d'espèce
     resilience_base = 1.25         # S — sous-arbrisseau ligneux de lande acide, lent et coriace
     ph_opt = 4.8                   # acidophile strict — fenêtre étroite (calcifuge)
@@ -136,6 +139,9 @@ class Raspberry(PlantBase):
     family = "Rosaceae"
     genus = "Rubus"
     name = "Framboisier"
+    ligneux = True        # D111 ②bis : cannes de 2 ans qui meurent après fructification
+    bois_chute_cm3 = 600.0
+    bois_chute_semaine = 38
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     resilience_base = 1.25         # S — ronce ligneuse drageonnante, repart du réseau souterrain
     resistance_ecrasement  = 0.4   # cannes ligneuses mais cassantes

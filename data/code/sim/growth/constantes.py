@@ -95,3 +95,17 @@ SEUIL_DEGAT        = 0.5    # seuil sur (1 − stimulation) : au-delà, un écra
                            # pâturin, trèfle…) des entamées (stim < 0.5 : tournesol…).
 LIGNIFICATION_SCALE = 52.0  # semaines : échelle de lignification. f≈0 pour un semis
                            # (s'écrase), → 1 pour un sujet établi (résistance pleine).
+
+# --- Mort des branches (D111 ②bis, cf. cladoptose.py) ------------------------
+# Cladoptose : lumière à une pointe = lumière reçue par la plante × (1 − densité ×
+# OPACITE)^n, n = autres pointes de la même couronne plus hautes de > DZ dans un
+# rayon horizontal RAYON. Une branche dont TOUTES les pointes sont sous SEUIL / tol
+# et dont la racine a ≥ AGE_MIN × tol semaines tombe. SEUIL balayé sur 4 arbres
+# isolés en plein soleil, 520 sem. [n=1 arbre/espèce, croissance sans lumière] :
+# 0,30 démantèle chêne/hêtre (32 → 12 segments, la structure ne réitère pas) ;
+# 0,12 → ~0 chute ; 0,18 → 0-2 branches/an dès l'an 7, couronne préservée.
+CLADO_OPACITE_GRAPPE = 0.35   # part de lumière qu'une grappe de feuillage intercepte (× densité d'espèce)
+CLADO_DZ_CM          = 30.0   # une grappe ne fait de l'ombre qu'à ce qui est nettement plus bas
+CLADO_RAYON_CM       = 80.0   # rayon horizontal de l'ombre portée d'une grappe (soleil haut)
+CLADO_SEUIL          = 0.18   # lumière sous laquelle une branche n'est plus rentable (tol = 1)
+CLADO_AGE_MIN        = 26     # semaines : âge minimal d'une branche condamnée (tol = 1)

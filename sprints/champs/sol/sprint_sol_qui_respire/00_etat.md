@@ -13,7 +13,7 @@ suivants : budget perf mesuré **par rapport à ①** ; ne pas tenter de résorb
 |---|---|---|---|
 | ① | `01_bilan_hydrique.md` | RE-FIGÉ `22768f33…` → `1ce02bce…` | FAIT (D114, D115) |
 | ② | `02_bois_mort.md` | INTACT `1ce02bce…` (prémisse fausse) | FAIT — ⚠ inerte en pratique |
-| ②bis | `02b_mort_branches.md` (ajouté 2026-10-22, accord Nico) | re-figé si un ligneux du smoke perd une branche | à faire |
+| ②bis | `02b_mort_branches.md` (ajouté 2026-10-22, accord Nico) | INTACT `1ce02bce…` (pommier du smoke trop jeune) | FAIT — ⚠ flux quasi nul sur `full` |
 | ③ | `03_regne_fongique.md` | neutre | à faire |
 | ④ | `04_parasite_faiblesse.md` | re-figé si hôte affaibli au smoke | à faire |
 | ⑤ | `05_voix_champignons.md` | neutre | à faire |
@@ -106,6 +106,58 @@ ne portent pas `age_curve` → exclus.
 Perf : surcoût nul (aucun dépôt ; état identique avec/sans, écarts de tick = bruit de deux
 runs parallèles). Échecs pré-existants non relancés hors suites touchées.
 
+## ②bis Les branches meurent — FAIT (2026-10-22), golden INTACT `1ce02bce…`
+
+**Livré** :
+- Donnée d'espèce `ligneux` (+ `fragilite_bois`, `bois_chute_cm3`, `bois_chute_semaine`,
+  défauts neutres, `plants/base/familles.py`) ; `frac_bois_mort` lit `ligneux` (plus
+  `age_curve`). **Espèces `ligneux`** : les 11 arbres (figuier, pommier, cerisier, noyer,
+  chêne, hêtre, bouleau, charme, sapin, aulne, saule) + lierre, jasmin, framboisier, thym,
+  lavande, myrtille. Écartés : bambou (chaume sans bois secondaire), armoise, chanvre.
+  Fragilité : saule 1,6 · bouleau 1,5 · figuier 1,4 · aulne 1,2 · hêtre 0,7 · chêne,
+  charme 0,6 · autres 1,0. Chute arbustes : framboisier 600 cm³ sem. 38, lavande 80 sem.
+  48, thym 40 sem. 48, myrtille 60 sem. 46 (× maturité, après 1 an).
+- `sim/growth/cladoptose.py` (NOUVEAU, pur) : axe porteur protégé (enfant le plus épais),
+  lumière par pointe = lumière reçue × (1 − densité·0,35)^n pointes plus hautes (auto-
+  ombrage que LightField exclut), branche morte si TOUTES ses pointes < 0,18/tol et racine
+  ≥ 26·tol sem. ; SANS ÉTAT (pas de champ neuf sur `Segment` → snapshot/save inchangés) ;
+  une branche > 25 % de la structure tombe par rameaux. Choix de casse levier × hachage.
+- `sim/engine/branches.py` (NOUVEAU) : étape 9c-ter de `boucle.py` — ombre (saison
+  feuillée), tempête (vent local × rafale × turbulence, seuil 0,45), neige (manteau ≥ 0,3
+  une semaine de Neige, caduc ×0,3), arbustes ; même relais `deposer_bois_tombe`.
+- `sim/bois_initial.py` (NOUVEAU) appelé par `tools/simserver/commands.py` pour `full` et
+  `propre` (pas `smoke`) : bois sous les ligneux + 2-4 pièces/tuile (souche 1,5-3 / branche
+  0,4-1), âges 0-150 sem.
+- Tests `test_bois_mort` 21/21 (12 neufs) ; mesure `mesures/bois_mort.py` étendue.
+
+**Mesures** [graine 1521550718, monde `full`, 104 sem., n=1 run ; base = HEAD lancé en
+parallèle] :
+| sem. | plots bois>0 | masse bois | mycélium max / méd | base (②) |
+|---|---|---|---|---|
+| 0 | 21/1188 | 18,1 | 0 / 0 | 0 plot |
+| 52 | 21 | 7,3 | **0,371** / 0,0001 | 0 plot, 0,059 / 0,0001 |
+| 104 | 21 | 3,3 | 0,449 / 0,0023 | 0 plot, 0,449 / 0,0021 |
+Branches tombées sur `full` : **0** en 2 ans (le monde ne porte qu'UN ligneux, le pommier
+pré-vieilli dont seule `age_years` est vieillie — sa structure est juvénile ; aucun arbuste).
+Arbres isolés, croissance pure 520 sem. [n=1 arbre/espèce, plein soleil] : pommier 0-1
+branche/an dès l'an 7, chêne/hêtre 1-2/an, bouleau 0 ; ~0,01-0,1 de bois/an/arbre.
+Pommier dans le moteur (tuile seule, 10 ans) : 1 casse tempête an 6, 1 ombre an 8.
+Perf : tick an 0 934 → 948 ms (+1,5 %), an 1 1126 → 1132 ms (+0,5 %) [n=1 run] — sous +5 %.
+
+**⚠ REMONTÉES** :
+1. **Flux continu non atteint sur `full`** : la mécanique marche (tests, arbres isolés) mais
+   le monde de jeu n'a qu'un ligneux juvénile → seul le bois INITIAL nourrit le mycélium
+   (max 0,06 → 0,37 l'an 1), et il fond de 60 %/an (décompo `bois` × saprophyte). Pistes
+   (décision Nico) : la ceinture boisée (D73) lâche du bois en lisière ; planter des
+   ligneux/arbustes dans `full` ; pré-faire pousser la STRUCTURE des fruitiers pré-vieillis.
+2. Cible kickoff « 2-6 branches/an pour un arbre de 10 ans » NON tenue : la structure est
+   trop grossière (≤ 55 segments, pas de réitération) — seuil 0,30 démantèle chêne/hêtre
+   (32 → 12 segments), 0,18 retenu = 0-2/an.
+3. Héliophile/sciaphile non différencié entre arbres : tous ont `shade_tolerance` 0,9 (strate
+   haute) → seuls les gènes modulent. Donner une tolérance par arbre change aussi croissance
+   et germination → hors périmètre.
+4. Taille : `perennials.py` 375 et `sauvages.py` 352 LDC (bande vigilance, déjà 367/346).
+
 ## Ajouts de Nico à l'accord (2026-10-22)
 - Bois mort VISIBLE au sol, dégradation en sprite à stades (② pont, ⑧ dessin).
 - Overdose : 2ᵉ psychédélique pendant l'effet → phrases de TOUS les êtres à chaque snapshot.
@@ -196,9 +248,9 @@ Aucune. Accord de Nico pour figer : 2026-10-22.
 ## §REPRISE
 
 Lire `CLAUDE.md` + ce fichier + le kickoff du prochain tronçon « à faire » de la carte.
-Remontées de ① tranchées (D114, D115). **② FAIT mais INERTE** (aucun ligneux ne s'élague,
-cf. §②) → à trancher par Nico/orchestrateur : ajouter une cause de mort de branche
-(cladoptose par l'ombre ?) avant ③, ou accepter que le bois mort n'arrive que par ④/squelettes.
+Remontées de ① tranchées (D114, D115). ② + ②bis FAITS : bois mort initial réel sur `full`,
+causes de mort de branche codées, mais **flux continu quasi nul sur `full`** (cf. §②bis
+remontée 1) → à trancher par Nico/orchestrateur avant ou pendant ③.
 Prochain tronçon : ③ `03_regne_fongique.md` (golden de départ `1ce02bce…`, pont 0.5.51).
 Chaque tronçon met à jour sa ligne de statut, consigne ses mesures [n=…] et ses hashes golden.
 ## Liste fongique VALIDÉE (Q7)
