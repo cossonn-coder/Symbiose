@@ -19,7 +19,8 @@ suivants : budget perf mesuré **par rapport à ①** ; ne pas tenter de résorb
 | ④ | `04_parasite_faiblesse.md` | INTACT `df6ebf04…` (hôte affaibli attaqué 1 sem., dérive sous la résolution du digest) | FAIT — ⚠ aucune mort d'hôte (trappe de faiblesse seule) |
 | ⑤ | `05_voix_champignons.md` | INTACT `df6ebf04…` | FAIT — pont 0.5.53 ; clé générique `champignon` retirée |
 | ⑥ | `06_manger_vision.md` | INTACT `df6ebf04…` | FAIT — pont 0.5.54 ; overdose +75 ms/snapshot [n=1 run, `full`] |
-| ⑦ | `07_nectar_espece.md` | re-figé si floraison au smoke | à faire |
+| ⑦ | `07_nectar_espece.md` | RE-FIGÉ `df6ebf04…` → `fecccded…` (floraison au smoke, 5 lignes de log) | FAIT — ⚠ D110 (i) non résolu (médiane 0,08 inchangée) |
+| ⑦bis | `07b_bois_continu_parasite.md` (ajouté 2026-10-22, décisions Nico : ceinture → bois, décompo par grosseur, parasite peut tuer) | re-figé si décompo bois ou pommier du smoke touchés | à faire |
 | ⑧ | `08_vue_godot.md` | intact | à faire |
 
 Golden de départ (relevé par ①) : `22768f339ac41bb20b1604bb29672bb3b209ee62ec659b1c8369dd31ccd6cfb8`.
@@ -27,6 +28,8 @@ Golden après ① : `1ce02bce275a2b4c262564e7eda384b1071125ebc67e65346d101820102
 UNE fois, annoncé : climat + hydrologie changent partout). Pont **0.5.50**.
 Golden après ②ter : `df6ebf044655d162293ce3dfee1baa3dc781a7f39bae78d4a7594f120b80b0e6` (tolérance
 à l'ombre du pommier 0,90 → 0,85, dérive locale prouvée).
+Golden après ⑦ : `fecccded8cd146368623372919f4bdc6c61fb8bb997c75fdc59806f08dc3898b` (nectar
+d'espèce : le smoke fleurit, champ papillon → chenille → herbivorie, cf. §⑦).
 
 ## ① Bilan hydrique — FAIT (2026-10-22)
 
@@ -395,6 +398,58 @@ snapshot 80 → 154 ms (+75 ms) ; avant mémoïsation du voisinage par tuile : +
 6. `serialize.py` 380 → 385 LDC (bande jaune, déjà au-dessus avant ⑥).
 7. Dette « voix écrites à la main » = D113 (déjà ouverte, rien à ajouter).
 
+## ⑦ Nectar par espèce — FAIT (2026-10-22), golden RE-FIGÉ `fecccded…`
+
+**Livré** : attribut d'espèce `nectar` ∈ [0,1] (`plants/base/familles.py`, défaut 0,3 = fleur
+générique, réservé aux classes nues de test) déclaré sur les **48 espèces** : phacélie 1,0 ·
+bourrache 0,95 · trèfle 0,85 · lavande 0,85 · thym 0,8 · framboisier 0,8 · lierre 0,8 · saule
+0,75 (chatons nectarifères) · consoude 0,7 · pissenlit 0,7 · menthe 0,65 · moutarde 0,65 ·
+tournesol 0,6 · courgette 0,6 · minette 0,6 · myrtille 0,6 · pommier 0,55 · cerisier 0,55 ·
+basilic 0,5 · jasmin 0,5 · carotte 0,4 · achillée 0,35 · fraisier 0,35 · ail 0,3 · violette 0,3 ·
+haricot 0,25 · bourse-à-pasteur 0,2 · mâche 0,15 · rossolis 0,1 · poivron 0,05 · molène 0,05
+(fleur à pollen) · **tomate 0** (pollen vibré) · **0** pour les anémophiles et sans-fleur :
+graminées (blé, seigle, pâturin, bambou), armoise, ortie, chanvre, figuier (sycone), noyer,
+chêne, hêtre, bouleau, charme, aulne, sapin, sphaigne. Pas de tilleul au catalogue.
+- `fields/population/registry.py::poids_floral(p, goût, défaut, pollen_vibre)` = floraison ×
+  goût de famille × ressource d'espèce — source UNIQUE lue par le champ (`_make_nectar_grid`)
+  ET par les agents (`sim/engine/butineurs._build_flower_maps`, décision ci-dessous).
+- **Bourdon × Solanacées préservé** : `PollinatorSpec.pollen_vibre` (seconde ressource, par
+  famille) ; bourdon `{"Solanaceae": 0.7}` → ressource = max(nectar, pollen). Tomate en pleine
+  fleur : abeille 0, bourdon 0,45. Le goût Solanaceae du bourdon (0,65) reste inchangé.
+- `FLOWER_REF` 1,5 → **0,75** (unité = fleur mellifère pleine ; garde le niveau moyen).
+- Test 4 ajouté à `tests/test_catalogue_lot2.py` (table complète, phacélie→abeille,
+  tomate→bourdon seul) : 20/20.
+
+**Mesures** [monde `full`, seed serveur par défaut, 104 sem., n=1 run chacune] :
+| | base `df6ebf04` | nectar, REF 1,5 | nectar, REF 0,75 (retenu) |
+|---|---|---|---|
+| nourriture butineur médiane (tertiles) | 0,081 (0,006 / 0,266) | 0,035 (0,003 / 0,140) | 0,079 (0,008 / 0,288) |
+| part des butineurs < 0,1 | 51 % | 62 % | 53 % |
+| butineurs relevés | 3 130 | 3 019 | 3 151 |
+| médiane abeille / bourdon / osmie / papillon / syrphe | ,13/,11/,08/,09/,02 | ,04/,04/,04/,05/,01 | ,10/,07/,09/,10/,02 |
+| semaines fleuries / avec butineurs / les deux | 93 / 59 / 59 | idem | idem (recouvrement 0,63) |
+`mesure_nourriture.py` officiel : butineurs médiane 0,08, tertiles 0,01 / 0,27 → 0,01 / 0,29
+[n=3130 → 3151] ; sprites inchangés (0,42 ; 0,24 / 0,51).
+**Perf** : tick moyen 827-868 ms (base) vs 813-832 ms (⑦), an 2 1 042-1 082 vs 1 019-1 035 ms
+[n=2 runs base, 2 runs ⑦ ; 1 run à 1 422 ms écarté : charge machine 3,6-5,1] → surcoût nul.
+Population fin an 2 : 629 (base) vs 627.
+
+**Golden** : re-figé UNE fois (cas prévu). Dérive : 5 lignes de log sur 12 014 — pression
+d'herbivorie de la bourse-à-pasteur ±0,003 (champ papillon → pont chenille → feuillage) ;
+digest final IDENTIQUE (aucune plante, aucun champ final ne bouge).
+
+**⚠ Remontées** :
+1. **D110 (i) NON résolu** : la nourriture lue sous un butineur reste « rare » (médiane 0,08,
+   tertiles dégénérés). Le nectar redistribue entre espèces mais ne change pas la cause
+   (≈ 1 plante en fleur faiblement fleurie sous l'insecte). Reste à trancher (bandes propres
+   aux butineurs dans l'info-bulle, ou densité florale du monde `full`).
+2. **Recouvrement inchangé** (34 des 93 semaines fleuries sans aucun butineur) : la
+   fenêtre photopériodique des guildes, pas la nourriture, cale le décalage phénologique
+   (lien `design_floraison_fructification`, décalage à trancher).
+3. **Décision imprévue** : les AGENTS butineurs lisent aussi `poids_floral` (prescription :
+   champ seul). Sinon l'abeille irait butiner la tomate qui ne la nourrit pas ; conséquence :
+   la pollinisation de la tomate ne vient plus que du bourdon (réaliste, autogame de toute façon).
+
 ## Ajouts de Nico à l'accord (2026-10-22)
 - Bois mort VISIBLE au sol, dégradation en sprite à stades (② pont, ⑧ dessin).
 - Overdose : 2ᵉ psychédélique pendant l'effet → phrases de TOUS les êtres à chaque snapshot.
@@ -498,7 +553,9 @@ clé par espèce de bout en bout (survol C# compris) ; cf. §⑤.
 ⑥ FAIT (golden INTACT `df6ebf04…`, pont **0.5.54**) : manger un carpophore, vision d'une
 semaine (lecture transcendante via `sim/vision.palier_lu`), `parler`, overdose, palier durable ;
 cf. §⑥ (pour ⑧ : `parler` une fois par entrée de survol ; `target.carpophore [r, c, slot]`).
-Prochain tronçon : ⑦ `07_nectar_espece.md` (golden de départ **`df6ebf04…`**, pont 0.5.54).
+⑦ FAIT (golden RE-FIGÉ `fecccded…`, pont inchangé 0.5.54) : nectar d'espèce + pollen vibré
+du bourdon, `FLOWER_REF` 0,75 ; D110 (i) non résolu (cf. §⑦ remontées).
+Prochain tronçon : ⑧ `08_vue_godot.md` (golden de départ **`fecccded…`**, pont 0.5.54).
 Chaque tronçon met à jour sa ligne de statut, consigne ses mesures [n=…] et ses hashes golden.
 ## Liste fongique VALIDÉE (Q7)
 

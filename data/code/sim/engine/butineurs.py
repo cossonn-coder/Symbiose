@@ -27,6 +27,7 @@ digest), AUCUN log. Déterminisme (philo #3) : tout dérive de `seed` + `_hash_n
 from __future__ import annotations
 from fields import (sample_foragers, build_pollinator_registry,
                     POLLINATOR_NAMES)
+from fields.population import poids_floral
 
 # Butineurs cloués par le vent (sprint VENT ⑤, §5.3). Au-delà d'un vent local
 # soutenu, l'abeille/le syrphe ne tient plus en vol et cesse de butiner → le dépôt
@@ -47,25 +48,24 @@ def _forager_wind_factor(vent_local: float) -> float:
     return max(FORAGER_WIND_FLOOR, 1.0 - vent_local / FORAGER_WIND_STOP)
 
 
-def _build_flower_maps(plants, rows, cols, attractivite, defaut):
+def _build_flower_maps(plants, rows, cols, attractivite, defaut, pollen_vibre=None):
     """Construit, pour UN type de pollinisateur, la « carte des fleurs » perçue
-    (floraison conspécifique × attractivité du type) ET l'index plot→plantes pour
-    appliquer les dépôts.
+    (floraison conspécifique × attractivité du type × nectar d'espèce — ou pollen
+    vibré, D111 ⑦ : `poids_floral`, même source que le champ) ET l'index
+    plot→plantes pour appliquer les dépôts.
 
     Retourne (species_grids, plants_at) :
-      - species_grids : {nom_espèce → grille[r][c]} pondérée par l'attractivité
-        (les familles d'attractivité nulle — anémophiles — sont écartées : le type
-        ne les butine pas) ;
+      - species_grids : {nom_espèce → grille[r][c]} pondérée par la nourriture
+        (les fleurs qui ne nourrissent pas CE type — anémophiles, tomate pour
+        l'abeille — sont écartées : le type ne les butine pas) ;
       - plants_at     : {nom_espèce → {(r,c) → [(plante, floraison), …]}} pour
         répartir un dépôt entre les plantes conspécifiques d'un plot, ∝ floraison.
     """
     species_grids: dict = {}
     plants_at: dict = {}
     for p in plants:
-        if not p.is_alive or p.floraison <= 0.0:
-            continue
-        w = attractivite.get(p.plant_class.family, defaut)
-        if w <= 0.0:
+        contrib = poids_floral(p, attractivite, defaut, pollen_vibre)
+        if contrib <= 0.0:
             continue
         key = p.plant_class.name
         grid = species_grids.get(key)
@@ -73,7 +73,6 @@ def _build_flower_maps(plants, rows, cols, attractivite, defaut):
             grid = [[0.0] * cols for _ in range(rows)]
             species_grids[key] = grid
             plants_at[key] = {}
-        contrib = p.floraison * w
         for (r, c) in p.foliar_plots:
             if 0 <= r < rows and 0 <= c < cols:
                 grid[r][c] += contrib
@@ -120,7 +119,7 @@ class ButineurMixin:
                 continue
             species_grids, plants_at = _build_flower_maps(
                 tile.plants, eco.rows, eco.cols,
-                ps.attractivite, ps.attractivite_defaut)
+                ps.attractivite, ps.attractivite_defaut, ps.pollen_vibre)
             if not species_grids:
                 continue
             agents, deposits = sample_foragers(

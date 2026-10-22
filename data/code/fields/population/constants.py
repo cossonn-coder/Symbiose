@@ -48,7 +48,13 @@ DEF_DAYLEN_FULL = 13.0  # au-dessus → pleine activité (phenology = 1)
 
 # Références de normalisation des ressources trophiques → [0, 1].
 FOLIAGE_REF = 2.0      # somme de feuillage (santé/3 × densité) saturant la ressource
-FLOWER_REF  = 1.5      # somme de "fleurs" (plantes matures) saturant le nectar
+# FLOWER_REF : somme de nourriture florale (floraison × goût × nectar) saturant la
+# ressource d'un plot. 1,5 → 0,75 au D111 ⑦ : le nectar d'espèce (moyenne ≈ 0,5 sur
+# les fleurs du monde `full`) ajoute un facteur < 1 ; l'unité devient la « fleur
+# mellifère pleine » (phacélie) et la référence est divisée d'autant pour garder le
+# NIVEAU moyen de nourriture (médiane butineur 0,081 → 0,079 [`full`, 104 sem., n=1
+# run]) tout en le REDISTRIBUANT entre espèces (tomate 0 pour l'abeille).
+FLOWER_REF  = 0.75
 OM_REF      = 4.0      # om_fresh + om_active saturant la ressource des vers
 MONO_REF    = 3.0      # nb de familles voisines au-delà duquel la monoculture cesse
 

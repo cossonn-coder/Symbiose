@@ -39,6 +39,7 @@ class Carrot(PlantBase):
     genus = "Daucus"
     name = "Carotte"
     feuillage = "fin"  # transpiration (D111 ①) : type de feuillage d'espèce
+    nectar = 0.4  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     resilience_base = 0.8          # R — potagère bisannuelle exigeante, feuillage fin fragile
     resistance_ecrasement  = 0.6   # rosette plaquée, encaisse mais la racine compte
     stimulation_ecrasement = 0.3
@@ -105,6 +106,7 @@ class Zucchini(PlantBase):
     genus = "Cucurbita"
     name = "Courgette"
     feuillage = "large"  # transpiration (D111 ①) : type de feuillage d'espèce
+    nectar = 0.6  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     resilience_base = 0.8          # R — annuelle gourmande à grandes feuilles molles
     hail_resistance_base = 0.6     # immenses limbes tendres exposés — la grêle les hache
     resistance_ecrasement  = 0.35  # tige creuse charnue, casse net
@@ -178,6 +180,7 @@ class Strawberry(PlantBase):
     genus = "Fragaria"
     name = "Fraisier"
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
+    nectar = 0.35  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     resilience_base = 1.0          # intermédiaire — vivace couvre-sol stolonifère, tenue moyenne
     resistance_ecrasement  = 0.7   # rosette basse plaquée, encaisse le piétinement
     stimulation_ecrasement = 0.4
@@ -245,6 +248,7 @@ class CornSalad(PlantBase):
     genus = "Valerianella"
     name = "Mâche"
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
+    nectar = 0.15  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     resilience_base = 0.8          # R — petite annuelle en rosette tendre de mi-saison
     resistance_ecrasement  = 0.7   # rosette basse plaquée, encaisse le piétinement
     stimulation_ecrasement = 0.3

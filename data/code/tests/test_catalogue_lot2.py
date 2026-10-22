@@ -16,6 +16,9 @@ Trois vérifications :
   3. COURGETTE FRUITIER — Cucurbitaceae entomophile (`fruitier=True`,
      `pollination_mode="insect"`) : noue ≥1 fruit traçable POLLINISÉE, et ZÉRO
      fruit sans pollen (philo #2 : flux de pollinisation → contrainte → fruit).
+  4. NECTAR PAR ESPÈCE (D111 ⑦) — chaque espèce du catalogue DÉCLARE son `nectar`
+     ∈ [0,1] ; une phacélie nourrit l'abeille, une tomate (pollen vibré, nectar 0)
+     non — mais elle nourrit le BOURDON (`pollen_vibre`, sonication préservée).
 
 Lancement (depuis data/code/) :
   python3 -m tests.test_catalogue_lot2
@@ -24,13 +27,14 @@ Lancement (depuis data/code/) :
 import sys
 
 from world import Tile
-from plants import Carrot, Zucchini, CornSalad, Nettle, Garlic, organ_sites
+from plants import (Carrot, Zucchini, CornSalad, Nettle, Garlic, organ_sites,
+                    Tomato, Phacelia)
 from plants.base import Segment
 from plants.catalogue import PLANT_CATALOGUE
 from fields import init_eco
 from fields.population import (
     _make_nectar_grid, _ATTRACT_SYRPHE, _ATTRACT_ABEILLE, _ATTRACT_PAPILLON,
-    _ATTRACT_DEFAUT,
+    _ATTRACT_DEFAUT, poids_floral, build_pollinator_registry,
 )
 from sim.engine import Engine
 
@@ -170,10 +174,31 @@ def test_courgette_fruitier():
     check("sans pollen → 0 fruit (entomophile, philo #2)", cg.fruits == [])
 
 
+# ---------------------------------------------------------------------------
+# 4. Nectar par espèce (D111 ⑦)
+# ---------------------------------------------------------------------------
+def test_nectar_espece():
+    print("\n[4] nectar d'espèce : table complète ; tomate → bourdon seul (pollen vibré)")
+    sans = [k for k, cls in PLANT_CATALOGUE.items()
+            if "nectar" not in cls.__dict__ or not 0.0 <= cls.nectar <= 1.0]
+    check("chaque espèce du catalogue déclare un nectar ∈ [0,1]", not sans, str(sans))
+    tile = Tile(tile_id="NE", soil_type="terre", grid_rows=8, grid_cols=8)
+    tomate, phacelie = tile.add_plant(Tomato, 2, 2), tile.add_plant(Phacelia, 5, 5)
+    tomate.floraison = phacelie.floraison = 1.0
+    reg = {ps.name: ps for ps in build_pollinator_registry()}
+    w = lambda p, n: poids_floral(p, reg[n].attractivite, reg[n].attractivite_defaut,
+                                  reg[n].pollen_vibre)
+    check("phacélie nourrit l'abeille", w(phacelie, "abeille") > 0.5, f"{w(phacelie, 'abeille'):.2f}")
+    check("tomate ne nourrit PAS l'abeille (nectar 0)", w(tomate, "abeille") == 0.0)
+    check("tomate nourrit le bourdon (pollen vibré)", w(tomate, "bourdon") > 0.3,
+          f"{w(tomate, 'bourdon'):.2f}")
+
+
 def main():
     test_catalogue_germination_lot2()
     test_attractivite_familles_neuves()
     test_courgette_fruitier()
+    test_nectar_espece()
 
     print("\n" + "=" * 60)
     total = len(_results)

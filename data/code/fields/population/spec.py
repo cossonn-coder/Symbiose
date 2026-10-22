@@ -87,6 +87,12 @@ class PollinatorSpec:
       - lisiere_w           : poids d'effet de lisière, comme pour une guilde
                               trophique (périphérie ③). Défaut 0.0 ; seul le syrphe
                               le porte (il hiverne hors des planches).
+      - pollen_vibre        : (D111 ⑦) seconde ressource, le POLLEN que seul ce
+                              type sait récolter, par famille → valeur ∈ [0,1].
+                              Le bourdon VIBRE les Solanacées (sonication) : la
+                              tomate n'offre aucun nectar mais nourrit le bourdon.
+                              Nourriture = floraison × goût × max(nectar, pollen).
+                              `None` = nectar seul (tous les autres types).
     """
     name: str
     salt: int
@@ -98,3 +104,4 @@ class PollinatorSpec:
     forager: ForagerParams
     bridge: LifeCycleBridge | None = None
     lisiere_w: float = 0.0
+    pollen_vibre: dict | None = None

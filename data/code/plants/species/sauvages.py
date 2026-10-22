@@ -35,6 +35,7 @@ class Nettle(Urticaceae):
     genus = "Urtica"
     name = "Ortie"
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
+    nectar = 0.0  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     resilience_base = 1.25         # S — pionnière nitrophile robuste, quasi increvable
     resistance_ecrasement  = 0.6   # touffe dressée, repart de la souche
     stimulation_ecrasement = 0.4
@@ -83,6 +84,7 @@ class Vaccinium(Ericaceae):
     bois_chute_cm3 = 60.0
     bois_chute_semaine = 46
     feuillage = "cireux"  # transpiration (D111 ①) : type de feuillage d'espèce
+    nectar = 0.6  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     resilience_base = 1.25         # S — sous-arbrisseau ligneux de lande acide, lent et coriace
     ph_opt = 4.8                   # acidophile strict — fenêtre étroite (calcifuge)
     ph_tol = 0.8
@@ -143,6 +145,7 @@ class Raspberry(PlantBase):
     bois_chute_cm3 = 600.0
     bois_chute_semaine = 38
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
+    nectar = 0.8  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     resilience_base = 1.25         # S — ronce ligneuse drageonnante, repart du réseau souterrain
     resistance_ecrasement  = 0.4   # cannes ligneuses mais cassantes
     stimulation_ecrasement = 0.3
@@ -216,6 +219,7 @@ class RunningBamboo(Poaceae):
     genus = "Phyllostachys"
     name = "Bambou traçant"
     feuillage = "fin"  # transpiration (D111 ①) : type de feuillage d'espèce
+    nectar = 0.0  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     resistance_ecrasement  = 0.7   # chaume flexible, plie sans casser
     stimulation_ecrasement = 0.5
     rarity = "Établie"
@@ -270,6 +274,7 @@ class SweetViolet(Violaceae):
     genus = "Viola"
     name = "Violette odorante"
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
+    nectar = 0.3  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     resilience_base = 1.0          # intermédiaire — petit couvre-sol d'ombre vivace, tenue moyenne
     resistance_ecrasement  = 0.7   # rosette basse plaquée, encaisse le piétinement
     stimulation_ecrasement = 0.4
@@ -330,6 +335,7 @@ class Mugwort(Asteraceae):
     genus = "Artemisia"
     name = "Armoise"
     feuillage = "cireux"  # transpiration (D111 ①) : type de feuillage d'espèce
+    nectar = 0.0  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     resilience_base = 1.25         # S — vivace rustique quasi-increvable, souche ligneuse
     resistance_ecrasement  = 0.6   # touffe dressée, repart de la souche
     stimulation_ecrasement = 0.4
@@ -408,6 +414,7 @@ class Sphagnum(Sphagnaceae):
     genus = "Sphagnum"
     name = "Sphaigne"
     feuillage = "fin"  # transpiration (D111 ①) : type de feuillage d'espèce
+    nectar = 0.0  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     rarity = "Établie"
     keywords = ["Tourbière", "Ingénieur", "Acidophile", "Zone humide"]
     silhouette = "tapis"             # tapis ras de mousse (pur descripteur rendu)
@@ -487,6 +494,7 @@ class Drosera(Droseraceae):
     genus = "Drosera"
     name = "Rossolis"
     feuillage = "fin"  # transpiration (D111 ①) : type de feuillage d'espèce
+    nectar = 0.1  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     rarity = "Ancienne"                # curiosité rare des tourbières
     keywords = ["Carnivore", "Tourbière", "Acidophile", "Zone humide"]
     silhouette = "tapis"               # rosette plaquée au sol (pur descripteur rendu)

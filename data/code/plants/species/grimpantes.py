@@ -42,6 +42,7 @@ class Ivy(PlantBase):
     name = "Lierre"
     ligneux = True                       # D111 ②bis : liane ligneuse (tiges lignifiées) → bois mort
     feuillage = "cireux"  # transpiration (D111 ①) : type de feuillage d'espèce
+    nectar = 0.8  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     resilience_base = 1.25         # S — liane ligneuse persistante, extrêmement rustique
     mode_grimpe            = "crampon"   # crampons adhésifs → escalade le mur nu (②)
     hauteur_autoportante   = 15.0        # rampe bas ; au-delà, libre → l'apex retombe (①)
@@ -120,6 +121,7 @@ class Jasmine(PlantBase):
     name = "Jasmin"
     ligneux = True                       # D111 ②bis : sarments ligneux → bois mort
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
+    nectar = 0.5  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     resilience_base = 1.0          # intermédiaire — sarment ligneux, mais rameaux tendres au froid
     mode_grimpe            = "sarmenteux"  # ne s'accroche que par palissage (④)
     hauteur_autoportante   = 25.0          # sarments souples : retombent vite sans appui (①)

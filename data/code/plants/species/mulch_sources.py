@@ -33,6 +33,7 @@ class Wheat(Poaceae):
     genus = "Triticum"
     name = "Blé"
     feuillage = "fin"  # transpiration (D111 ①) : type de feuillage d'espèce
+    nectar = 0.0  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     rarity = "Établie"
     keywords = ["Céréale", "Paille", "Couvre-sol", "Comestible"]
     t_germ_opt = 12.0              # rustique : lève sur sol seulement frais de printemps (③)
@@ -103,6 +104,7 @@ class Rye(Poaceae):
     genus = "Secale"
     name = "Seigle"
     feuillage = "fin"  # transpiration (D111 ①) : type de feuillage d'espèce
+    nectar = 0.0  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     rarity = "Établie"
     keywords = ["Céréale", "Engrais vert", "Allélopathe", "Couvre-sol"]
     t_germ_opt = 10.0              # TRÈS rustique : lève au froid (semé à l'automne) (③)
@@ -189,6 +191,7 @@ class Hemp(PlantBase):
     genus = "Cannabis"
     name = "Chanvre"
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
+    nectar = 0.0  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     resilience_base = 1.0          # intermédiaire — annuelle vigoureuse à tige fibreuse mais tendre jeune
     rarity = "Établie"
     keywords = ["Fibre", "Paille", "Étouffe-adventice", "Structurante"]

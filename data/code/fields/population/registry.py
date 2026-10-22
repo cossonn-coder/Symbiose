@@ -315,20 +315,48 @@ _ATTRACT_OSMIE = {        # abeille des vergers : Rosacées (arbres fruitiers) +
 }
 
 
-def _make_nectar_grid(attractivite: dict, defaut: float) -> Callable:
-    """Fabrique la resource_fn d'un type de pollinisateur (§C.1) : nectar perçu =
-    Σ_plantes vivantes en floraison (floraison × préférence[famille]) réparti sur
-    l'empreinte canopée, normalisé par FLOWER_REF. REMPLACE `_flower_grid` : la
-    ressource suit la VRAIE floraison (①) au lieu du proxy stade ≥ 2.
+# POLLEN VIBRÉ du bourdon (D111 ⑦, sonication) : les Solanacées (tomate, poivron)
+# n'offrent PAS de nectar (`nectar` ≈ 0) mais un pollen enfermé dans des anthères
+# poricides que seul le bourdon libère en vibrant ses muscles alaires — l'abeille
+# domestique ne sait pas le faire. Ce pollen est une vraie nourriture (protéines
+# des larves) : seconde ressource du bourdon, ∈ [0,1] comme le nectar. 0,7 = une
+# bonne table mais sans égaler une mellifère majeure (phacélie 1,0) ; le goût
+# Solanaceae 0,65 du bourdon (déjà porté, ⑤) reste le second facteur.
+_POLLEN_VIBRE_BOURDON = {"Solanaceae": 0.7}
+
+
+def poids_floral(p, attractivite: dict, defaut: float,
+                 pollen_vibre: dict | None = None) -> float:
+    """Nourriture qu'UNE plante en fleur offre à UN type de butineur (D111 ⑦) :
+    floraison × goût de famille × ressource de l'espèce. La ressource est le
+    `nectar` de l'espèce (donnée, `plants/base/familles.py`) ; pour un type qui
+    VIBRE une famille (`pollen_vibre`, bourdon × Solanacées), c'est le meilleur
+    des deux, nectar ou pollen — la tomate sans nectar nourrit le bourdon, pas
+    l'abeille. Source UNIQUE, lue par le champ (`_make_nectar_grid`) ET par les
+    agents (`sim/engine/butineurs._build_flower_maps`) : l'insecte cherche ses
+    fleurs là où il trouve sa nourriture. 0 si la plante n'est pas en fleur."""
+    if not p.is_alive or p.floraison <= 0.0:
+        return 0.0
+    famille = p.plant_class.family
+    ressource = p.plant_class.nectar
+    if pollen_vibre:
+        ressource = max(ressource, pollen_vibre.get(famille, 0.0))
+    return p.floraison * attractivite.get(famille, defaut) * ressource
+
+
+def _make_nectar_grid(attractivite: dict, defaut: float,
+                      pollen_vibre: dict | None = None) -> Callable:
+    """Fabrique la resource_fn d'un type de pollinisateur (§C.1) : nourriture
+    perçue = Σ_plantes `poids_floral` (floraison × goût × nectar d'espèce, D111 ⑦)
+    répartie sur l'empreinte canopée, normalisée par FLOWER_REF. Suit la VRAIE
+    floraison (①) : une phacélie nourrit tout le monde, une tomate le seul bourdon.
 
     Invariant golden : floraison = 0 partout (aucune plante en fleur) ⇒ grille
     nulle ⇒ champ pollinisateur nul (comme une absence de fleur)."""
     def _grid(eco, tile, plants) -> list[list[float]]:
         g = _zero_grid(eco.rows, eco.cols)
         for p in plants:
-            if not p.is_alive or p.floraison <= 0.0:
-                continue
-            w = p.floraison * attractivite.get(p.plant_class.family, defaut)
+            w = poids_floral(p, attractivite, defaut, pollen_vibre)
             if w <= 0.0:
                 continue
             for (r, c) in p.foliar_plots:
@@ -403,6 +431,7 @@ def build_pollinator_registry() -> list[PollinatorSpec]:
             habitat_fn=_pollinisateur_habitat_grid,
             daylen_min=9.5, daylen_full=12.0,    # PRÉCOCE/frais : jours courts tolérés
             forager=_FORAGER_BOURDON,            # comble la fenêtre où l'abeille n'est pas
+            pollen_vibre=_POLLEN_VIBRE_BOURDON,  # D111 ⑦ : la tomate le nourrit, sans nectar
         ),
         PollinatorSpec(
             name="osmie", salt=_SALT_OSMIE,
@@ -431,7 +460,8 @@ def build_pollinator_specs() -> list[TrophicSpec]:
     return [
         TrophicSpec(
             name=ps.name, category="pollinisateur", salt=ps.salt,
-            resource_fn=_make_nectar_grid(ps.attractivite, ps.attractivite_defaut),
+            resource_fn=_make_nectar_grid(ps.attractivite, ps.attractivite_defaut,
+                                          ps.pollen_vibre),
             habitat_fn=ps.habitat_fn, predators=(),
             daylen_min=ps.daylen_min, daylen_full=ps.daylen_full,
             lisiere_w=ps.lisiere_w,              # périphérie ③ (0.0 sauf syrphe)

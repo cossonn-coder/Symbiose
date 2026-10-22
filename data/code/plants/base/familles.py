@@ -125,6 +125,18 @@ class PlantBase(ABC):
     # est un trait fixe de l'espèce ; `tolerance_secheresse` (gène) est une tolérance de
     # croissance, autre notion. Littéral seul (règle de couches : plants n'importe rien).
     feuillage: str = "moyen"
+    # `nectar` (sprint « le sol qui respire » ⑦, D111 §5, D-nectar) : PRODUCTION DE
+    # NECTAR de la fleur de l'espèce ∈ [0,1] — ce qu'une fleur ouverte OFFRE au
+    # butineur, indépendamment de qui la visite (le goût de famille, lui, est porté par
+    # le pollinisateur : `attractivite` du registre). Nourriture d'un butineur =
+    # floraison × nectar × goût (`fields/population/registry.py::poids_floral`).
+    # Échelle : 1 = grande mellifère (phacélie), ~0,5 = moyenne et brève (pommier),
+    # 0 = anémophile (graminées, chatons au vent) ou fleur à POLLEN seul (tomate,
+    # molène : la tomate se vibre, voir `pollen_vibre` du bourdon). Constante d'ESPÈCE,
+    # PAS un gène (patron `feuillage`). Table COMPLÈTE exigée : chaque espèce du
+    # catalogue la déclare ; le défaut 0,3 (= `_ATTRACT_DEFAUT`, « fleur générique »)
+    # ne sert qu'aux classes nues de test.
+    nectar: float = 0.3
     # `root_loss_tolerance_base` (couche 1 — niche herbivorie racinaire, campagnol,
     # sprint santé & résilience ③) : capacité D'ESPÈCE à ENCAISSER la perte de chevelu
     # racinaire sans effondrer son uptake. DIVISE la perte dans `plant_uptake`. >1 =

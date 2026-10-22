@@ -42,7 +42,7 @@ from fields.population.resources import (
 )
 from fields.population.registry import (
     build_population_specs, build_pollinator_registry, build_pollinator_specs,
-    build_lifecycle_bridges, POLLINATOR_NAMES, _make_nectar_grid,
+    build_lifecycle_bridges, POLLINATOR_NAMES, _make_nectar_grid, poids_floral,
     _ATTRACT_ABEILLE, _ATTRACT_SYRPHE, _ATTRACT_PAPILLON, _ATTRACT_DEFAUT,
 )
 from fields.population.perception import (
