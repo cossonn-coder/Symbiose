@@ -170,7 +170,7 @@ Chaque ligne de constat : `🔴/🟡/🟢 — description courte — (Dxx | spri
 **Affiche à l'écran** la **Synthèse** + les **Points forts** + les 🔴 (le détail
 vit dans le fichier). Puis **commit `AUDIT.md`** (Nico l'a autorisé), message
 style projet en HEREDOC terminé par
-`Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>` ; jamais `push`, jamais
+`Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>` ; pousse (`git push origin main`) une fois le travail fini, sans demander (règle Nico 2026-10-23), jamais
 `--no-verify`, ajoute `AUDIT.md` nommément.
 
 ## 6. Ce que ce skill ne fait JAMAIS

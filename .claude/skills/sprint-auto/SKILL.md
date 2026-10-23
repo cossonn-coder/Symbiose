@@ -130,9 +130,9 @@ est sur le disque.
   non concerné ; pas de blocage) → **commit** (message style projet, HEREDOC,
   terminé par `Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>`), puis
   tronçon suivant.
-- **Échec bloquant** → voir §4. Tu stoppes.
+- **Échec bloquant** → voir §4. Tu stoppes (pousse ce qui est sain et commité avant le rapport).
 
-Garde-fous à chaque commit : jamais `push`, jamais `--no-verify`/`--no-gpg-sign`,
+Garde-fous à chaque commit : jamais `--no-verify`/`--no-gpg-sign`,
 jamais `git add -A` aveugle (ajoute les fichiers du tronçon nommément).
 
 ## 3. Fin de sprint (tous les tronçons clos)
@@ -162,7 +162,9 @@ jamais `git add -A` aveugle (ajoute les fichiers du tronçon nommément).
    note « coûts nominaux, pas de deep-dive ». **Jamais** de `Read` direct sur un
    `.jsonl` de transcript (des dizaines de M de tokens) — le *pourquoi* passe par
    `ask-deepseek` sur le chemin du transcript (règle dure du skill `/analyzer`).
-6. **Rapport final à Nico** : tronçons faits, hash golden final, **scissions
+6. **Push** : `git push origin main` (règle Nico 2026-10-23 : on pousse quand le
+   travail est fini, sans demander — c'est ainsi que le F5 Windows reçoit le code).
+7. **Rapport final à Nico** : tronçons faits, hash golden final, **scissions
    refactor éventuelles**, **liste précise des points F5 à valider**, ce qui reste
    éventuellement, **+ une ligne de coût** issue de l'étape 5 (total du run,
    part portage, tronçon le plus cher — et le verdict du deep-dive s'il a eu lieu).

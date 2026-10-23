@@ -203,7 +203,7 @@ Quand Nico a validé la conception (« OK », « vas-y », « lets go »), maté
 1. **git** — vérifie l'arbre propre AVANT (garde-fou projet + incident Nextcloud
    2026-05-29). Si sale, préviens, ne stash/commit pas de toi-même.
 2. **Commit** (doc + kickoffs), message style projet en HEREDOC, terminé par
-   `Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>`. Jamais `push`,
+   `Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>`. Puis pousse (`git push origin main`) une fois le travail fini, sans demander (règle Nico 2026-10-23) ;
    jamais `--no-verify`, ajoute les fichiers nommément (pas de `git add -A`).
 3. Mets à jour la **dette** (passe l'entrée concernée à « conçu, prêt à
    implémenter ») et `journal.md` si une décision notable a été prise.

@@ -108,7 +108,7 @@ autosuffisant : « scinde CE fichier par responsabilité en paquet, golden
 INCHANGÉ obligatoire, ne change aucun comportement, ne commit pas ») pour garder
 ton propre contexte léger — mais **tu** vérifies le golden et **tu** commit.
 
-Jamais `push`, jamais `--no-verify`/`--no-gpg-sign`.
+En fin de passe, pousse (`git push origin main`) une fois le travail fini, sans demander (règle Nico 2026-10-23). Jamais `--no-verify`/`--no-gpg-sign`.
 
 ## 4. Mode auto en fin de /sprint-auto
 
