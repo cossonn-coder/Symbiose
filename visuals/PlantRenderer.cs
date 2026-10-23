@@ -248,6 +248,15 @@ namespace Symbiose
 		// canaux texture. La vue ne recalcule rien : elle traduit la liste en pixels.
 		public void SetSymptoms(Godot.Collections.Array symptoms)
 		{
+			_lusTmp.Clear();
+			if (symptoms != null) PlanteLue.LireSymptomes(symptoms, _lusTmp);
+			SetSymptoms(_lusTmp);
+		}
+		private static readonly List<(string, float)> _lusTmp = new();
+
+		// FLUIDITÉ AN 2 ④ : symptômes déjà LUS hors fil principal (core/PlanteLue.cs).
+		public void SetSymptoms(IReadOnlyList<(string Cause, float Intensite)> symptoms)
+		{
 			_colorTint = default;
 			_colorAmount = 0f;
 			_ravageurs = _gel = _grele = _drought = _ombre = _maladie = 0f;
@@ -255,10 +264,7 @@ namespace Symbiose
 			if (symptoms != null)
 				for (int i = 0; i < symptoms.Count; i++)
 				{
-					// LectureSnap (PERF VUE ④) : wrapper disposé, aucun finaliseur.
-					using var d = LectureSnap.Dico(symptoms, i);
-					string cause = LectureSnap.S(d, "cause");
-					float it = LectureSnap.F(d, "intensity");
+					var (cause, it) = symptoms[i];
 					_symptomes.Add((cause, it));
 					// COULEUR : on garde le colorant de plus forte intensité (pas de
 					// mélange). On compare l'intensité brute (SymptomTintMax constant).

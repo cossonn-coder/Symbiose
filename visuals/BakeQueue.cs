@@ -69,6 +69,12 @@ namespace Symbiose
 		private ulong _burstStartUsec;
 		private static double _drawMsSum, _drawMsMax;
 		private static int _drawCount, _drawMaxSegs;
+		// Diagnostic FLUIDITÉ AN 2 ④ : sous-postes de la file sur l'IMAGE courante
+		// (rendu→affiché / libération hors champ / pire Begin), imprimés si l'image
+		// dépasse ImageLenteUs — pour savoir CE QUI coûte dans une cuisson lente.
+		private const long ImageLenteUs = 20000;
+		private long _commitUs, _releaseUs, _beginUsMax;
+		private int _beginMaxSegs, _beginNb;
 
 		/// <summary>Toutes les plantes cuisables (lu par l'onde de vent, T3).</summary>
 		public static IReadOnlyCollection<PlantRenderer> All => _all;
@@ -114,15 +120,33 @@ namespace Symbiose
 		public override void _Process(double delta)
 		{
 			long t0 = PerfPostes.Debut();
+			ulong u0 = Time.GetTicksUsec();
+			_commitUs = _releaseUs = _beginUsMax = 0;
+			_beginMaxSegs = _beginNb = 0;
+			AtlasPages.CreationUs = 0;
+			AtlasPages.Creees = 0;
 			ProcessFile();
+			long us = (long)(Time.GetTicksUsec() - u0);
+			if (us > ImageLenteUs)
+				GD.Print($"[Cuisson] image lente {us / 1000.0:F1} ms : rendu→affiché {_commitUs / 1000.0:F1} ms, "
+					+ $"libération hors champ {_releaseUs / 1000.0:F1} ms, {_beginNb} Begin dont le pire "
+					+ $"{_beginUsMax / 1000.0:F1} ms ({_beginMaxSegs} seg.), {AtlasPages.Creees} page(s) "
+					+ $"créée(s) en {AtlasPages.CreationUs / 1000.0:F1} ms, {AtlasPages.Pages} pages.");
 			PerfPostes.Fin(PerfPostes.Poste.CuissonFile, t0);
 		}
 
 		private void ProcessFile()
 		{
 			ulong frame = Engine.GetProcessFrames();
+			ulong tc = Time.GetTicksUsec();
 			CommitRendered(frame);
-			if (frame % ReleaseEveryFrames == 0) ReleaseOffscreen();
+			ulong tr = Time.GetTicksUsec();
+			_commitUs = (long)(tr - tc);
+			if (frame % ReleaseEveryFrames == 0)
+			{
+				ReleaseOffscreen();
+				_releaseUs = (long)(Time.GetTicksUsec() - tr);
+			}
 			if (_eligibles.Count == 0) { EndBurst(frame); return; }
 
 			// Deux passes : d'abord ce qui est À L'ÉCRAN, puis la marge.
@@ -148,12 +172,16 @@ namespace Symbiose
 				if (p != _pick[0] && (long)(Time.GetTicksUsec() - t0) >= BudgetUs) break;
 				_dirty.Remove(p);
 				_eligibles.Remove(p);
+				ulong tb = Time.GetTicksUsec();
 				if (p.Baker.Begin(WorldView.CurrentZoom))
 				{
 					_inFlight.Add((p, frame));
 					_burstCount++;
 				}
 				else p.QueueRedraw();   // trop grand / vide → dessin direct
+				long us = (long)(Time.GetTicksUsec() - tb);
+				_beginNb++;
+				if (us > _beginUsMax) { _beginUsMax = us; _beginMaxSegs = p.BakeCost; }
 			}
 		}
 

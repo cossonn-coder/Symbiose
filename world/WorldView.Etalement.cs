@@ -26,6 +26,19 @@
 // debug et résultat d'une ACTION restent appliqués d'un bloc (synchrones) :
 // un clic attend une réponse immédiate, et un snapshot synchrone, plus
 // frais, REMPLACE un étalement en cours (il porte l'état complet).
+//
+// CHEVAUCHEMENT (FLUIDITÉ AN 2 ④) : avant, le step N+1 ne partait qu'une fois la
+// semaine N entièrement appliquée → calcul moteur + application s'ADDITIONNAIENT
+// (garde `_etale == null`, posée avec l'étalement, commit 73a3f24, pour ne jamais
+// empiler deux étalements). Désormais le step N+1 part PENDANT l'application de
+// N. Intention de la garde préservée autrement : au plus UNE semaine reçue en
+// réserve (`_semainePrete`), démarrée à la fin de l'étalement courant — jamais
+// deux étalements à la fois, jamais deux semaines en réserve (pas de step tant
+// qu'une attend). Exception : en mode Saison, une semaine qui CHANGE de saison
+// garde l'ancienne règle (le moteur s'arrête à la 1ʳᵉ semaine de la saison
+// nouvelle, comme avant, pour le retour en planification).
+// 📖 C'est un double tampon (ping-pong) : le producteur remplit le tampon B
+// pendant que le consommateur vide le tampon A.
 
 using Godot;
 using System.Collections.Generic;
@@ -47,11 +60,23 @@ namespace Symbiose
 		/// <summary>Étalement en cours (null = aucune semaine en application).</summary>
 		private Etalement _etale;
 
+		/// <summary>Semaine reçue pendant un étalement, en réserve (au plus UNE).</summary>
+		private SemaineRecue _semainePrete;
+
+		/// <summary>Le step suivant peut-il partir côté VUE ? (le pipe libre est
+		/// testé à part). Non si une semaine attend déjà, ou si la semaine en
+		/// application change de saison en mode Saison (retour en planification).</summary>
+		private bool VuePrete =>
+			_semainePrete == null
+			&& (_etale == null || _simMode != SimMode.Saison || _etale.Saison == _season);
+
 		/// <summary>État d'une application de snapshot, reprise frame après frame.</summary>
 		private sealed class Etalement
 		{
 			public readonly GDict Snap;
 			public readonly bool Fade;
+			public readonly string Saison;          // saison du snapshot (garde de bascule)
+			public PlanteLue[] Lues;                // plantes déjà lues (pool), ou null
 			public int Famille;                     // 0..6 : prochaine famille à traiter
 			public Godot.Collections.Array Plantes; // payloads, ordonnés à la famille 1
 			public List<int> Ordre;                 // indices, plantes visibles d'abord
@@ -68,16 +93,34 @@ namespace Symbiose
 			public readonly Dictionary<string, GDict> Payloads = new();
 			public readonly Dictionary<string, List<Vector2>> ByName = new();
 
-			public Etalement(GDict snap, bool fade) { Snap = snap; Fade = fade; }
+			public Etalement(GDict snap, bool fade, PlanteLue[] lues = null)
+			{
+				Snap = snap; Fade = fade; Lues = lues;
+				Saison = LectureSnap.S(snap, "season");
+			}
 		}
 
-		/// <summary>Step hebdomadaire : appliqué en 7 familles sur plusieurs frames.</summary>
-		private void ApplySnapshotEtale(GDict snap) => _etale = new Etalement(snap, true);
+		/// <summary>Step hebdomadaire : appliqué en 7 familles sur plusieurs frames.
+		/// Arrivé pendant un étalement → mis en réserve (remplace une réserve plus
+		/// ancienne, cas qui ne se produit pas : VuePrete bloque le step).</summary>
+		private void ApplySnapshotEtale(SemaineRecue s)
+		{
+			if (_etale != null) _semainePrete = s;
+			else _etale = new Etalement(s.Snap, true, s.Plantes);
+		}
 
 		/// <summary>Appelé à chaque frame par _Process : avance d'UNE famille
-		/// (ou d'une tranche de plantes). Fin de l'étalement → _etale = null.</summary>
+		/// (ou d'une tranche de plantes). Fin de l'étalement → _etale = null. La
+		/// semaine en réserve démarre à la frame SUIVANTE : la frame de fin laisse
+		/// passer l'attente et le tapis (gardés par `_etale == null`).</summary>
 		private void AvancerEtalement()
 		{
+			if (_etale == null && _semainePrete != null)
+			{
+				var s = _semainePrete;
+				_semainePrete = null;
+				_etale = new Etalement(s.Snap, true, s.Plantes);
+			}
 			if (_etale != null && Avancer(_etale, BudgetPlantesUs)) _etale = null;
 		}
 
@@ -141,17 +184,22 @@ namespace Symbiose
 			if (e.Ordre == null)
 			{
 				e.Plantes = e.Snap["plants"].AsGodotArray();
+				// Chemin synchrone (action, saut, rotation, chargement) : rien n'a été
+				// lu hors fil principal → lecture ici, d'un bloc (budget infini).
+				if (e.Lues == null)
+				{
+					e.Lues = new PlanteLue[e.Plantes.Count];
+					for (int i = 0; i < e.Plantes.Count; i++)
+						using (var p = LectureSnap.Dico(e.Plantes, i)) e.Lues[i] = PlanteLue.Lire(p);
+				}
 				e.Ordre = new List<int>(e.Plantes.Count);
 				var dist = new float[e.Plantes.Count];
 				Vector2 centre = _camera != null ? _camera.Position : Vector2.Zero;
 				for (int i = 0; i < e.Plantes.Count; i++)
 				{
-					// LectureSnap (PERF VUE ④) : wrapper disposé, aucun finaliseur.
-					using var p = LectureSnap.Dico(e.Plantes, i);
-					Vector2 o = _origins[LectureSnap.S(p, "tile")];
-					dist[i] = WorldToScreen(o.X + LectureSnap.F(p, "x_cm"),
-											o.Y + LectureSnap.F(p, "y_cm"))
-							  .DistanceSquaredTo(centre);
+					var l = e.Lues[i];
+					Vector2 o = _origins[l.Tile];
+					dist[i] = WorldToScreen(o.X + l.X, o.Y + l.Y).DistanceSquaredTo(centre);
 					e.Ordre.Add(i);
 				}
 				e.Ordre.Sort((a, b) => dist[a].CompareTo(dist[b]));
@@ -159,7 +207,8 @@ namespace Symbiose
 			ulong t0 = Time.GetTicksUsec();
 			while (e.Curseur < e.Ordre.Count)
 			{
-				AppliquerPlante(e, e.Plantes[e.Ordre[e.Curseur++]].AsGodotDictionary());
+				int i = e.Ordre[e.Curseur++];
+				AppliquerPlante(e, e.Plantes[i].AsGodotDictionary(), e.Lues[i]);
 				if ((long)(Time.GetTicksUsec() - t0) >= budgetUs) break;
 			}
 			e.PlantesUs += (long)(Time.GetTicksUsec() - t0);

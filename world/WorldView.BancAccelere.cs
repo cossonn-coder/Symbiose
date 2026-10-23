@@ -41,6 +41,7 @@ namespace Symbiose
 		private double _baClient, _baClientMax, _baSrv, _baSrvMax;
 		private double _baPipe, _baPipeMax, _baParse, _baParseMax, _baOctets;
 		private double _baRetardStep, _baRetardEtale;   // secondes
+		private double _baLecture, _baLectureMax;       // lecture des plantes (pool, FLUIDITÉ AN 2 ④)
 
 		private void DemarrerPostesAccelere()
 		{
@@ -48,12 +49,15 @@ namespace Symbiose
 			_baClient = _baClientMax = _baSrv = _baSrvMax = 0;
 			_baPipe = _baPipeMax = _baParse = _baParseMax = _baOctets = 0;
 			_baRetardStep = _baRetardEtale = 0;
+			_baLecture = _baLectureMax = 0;
 		}
 
 		/// <summary>Appelé par _Process à chaque step consommé (no-op hors mesure).</summary>
-		private void NoterStepBanc(GDict snap)
+		private void NoterStepBanc(SemaineRecue s)
 		{
-			if (_distMs == null || snap == null || _bridge == null) return;
+			if (_distMs == null || s == null || _bridge == null) return;
+			GDict snap = s.Snap;
+			Cumul(ref _baLecture, ref _baLectureMax, s.LectureMs);   // plantes lues (pool, ④)
 			_baSteps++;
 			Cumul(ref _baClient, ref _baClientMax, _lastTickMs);
 			Cumul(ref _baPipe, ref _baPipeMax, _bridge.StepPipeMs);
@@ -78,7 +82,7 @@ namespace Symbiose
 		{
 			if (_distMs == null || _timeAccum < spw) return;
 			if (_pendingStep != null) _baRetardStep += delta;      // moteur pas fini
-			else if (_etale != null) _baRetardEtale += delta;      // vue pas finie
+			else if (!VuePrete) _baRetardEtale += delta;          // vue pas finie (réserve pleine / bascule)
 		}
 
 		private void EcrirePostesAccelere(StringBuilder sb)
@@ -89,7 +93,7 @@ namespace Symbiose
 				$"  steps pendant la mesure : {_baSteps} · vu par la vue moy. {_baClient / n:F0} / max {_baClientMax:F0} ms"
 				+ $" · tick moteur {_baSrv / n:F0} / {_baSrvMax:F0} ms · pipe (calcul+transport) {_baPipe / n:F0} / {_baPipeMax:F0} ms"));
 			sb.AppendLine(string.Create(ci,
-				$"    parse JSON (thread du pool) {_baParse / n:F1} / {_baParseMax:F1} ms · réponse {_baOctets / n / 1024.0:F0} Ko"
+				$"    parse JSON (thread du pool) {_baParse / n:F1} / {_baParseMax:F1} ms · lecture plantes (pool) {_baLecture / n:F1} / {_baLectureMax:F1} ms · réponse {_baOctets / n / 1024.0:F0} Ko"
 				+ $" · retard de cadence : step en vol {_baRetardStep:F1} s, semaine en application {_baRetardEtale:F1} s"));
 			sb.AppendLine($"  priorité du moteur lue par l'OS : {_bridge?.PrioriteEffective() ?? "—"}"
 				+ $" · butineurs {(_foragerLayer == null ? "—" : _foragerLayer.Count.ToString())}");

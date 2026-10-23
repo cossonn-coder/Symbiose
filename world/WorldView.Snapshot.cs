@@ -49,18 +49,10 @@ namespace Symbiose
 		private string _season;
 		private int _year, _weekInSeason;
 
-		// Lectures du snapshot par LectureSnap (PERF VUE ④) : clés en cache, valeurs
-		// disposées → aucun objet à finaliseur par plante et par semaine.
-		private static string PlantKey(GDict p) =>
-			$"{LectureSnap.S(p, "tile")}|{LectureSnap.S(p, "species")}"
-			+ $"|{LectureSnap.D(p, "x_cm"):F1}|{LectureSnap.D(p, "y_cm"):F1}";
-
-		// Étiquette debug « espèce · stade » (demande Nico F5 t4), toggle F3.
-		// Le TEXTE est stocké en Meta "tag" sur le renderer ; le RENDU se fait
-		// hors SubViewport, net, par WorldView.Etiquettes.cs (SS① : le texte dans
-		// la grille pixel-art était illisible). On ne crée plus de Label enfant.
-		private static string TagText(GDict p) =>
-			$"{LectureSnap.S(p, "species")} · {LectureSnap.S(p, "stage_name")}";
+		// Clé stable (tile|species|x|y) et étiquette debug « espèce · stade » (F3)
+		// sont lues avec le reste de la plante, hors fil principal (FLUIDITÉ AN 2 ④,
+		// core/PlanteLue.cs). Le TEXTE de l'étiquette est stocké en Meta "tag" ; le
+		// RENDU se fait hors SubViewport, net, par WorldView.Etiquettes.cs.
 
 		// Reconstruit l'index d'alarme par plot depuis le bloc CREUX du snapshot
 		// (format `[r, c, intensité]` par tuile). Reconstruction pleine : l'alarme
@@ -87,15 +79,13 @@ namespace Symbiose
 		// fleurissent pas → écartés. Clé = `name` (Phacélie…), pas `species` (anglais).
 		// Index construit dans `byName` (celui de l'étalement en cours), échangé
 		// avec _plantsByName à la fin de la famille plantes (WorldView.Etalement.cs).
-		private void IndexPlantByName(GDict p, Dictionary<string, List<Vector2>> byName)
+		private void IndexPlantByName(PlanteLue l, Dictionary<string, List<Vector2>> byName)
 		{
-			if (LectureSnap.A(p, "dead") && LectureSnap.B(p, "dead")) return;
-			Vector2 o = _origins[LectureSnap.S(p, "tile")];
-			var pos = new Vector2(o.X + LectureSnap.F(p, "x_cm"),
-								  o.Y + LectureSnap.F(p, "y_cm"));
-			string name = LectureSnap.S(p, "name");
-			if (!byName.TryGetValue(name, out var list))
-				byName[name] = list = new List<Vector2>();
+			if (l.Dead) return;
+			Vector2 o = _origins[l.Tile];
+			var pos = new Vector2(o.X + l.X, o.Y + l.Y);
+			if (!byName.TryGetValue(l.Name, out var list))
+				byName[l.Name] = list = new List<Vector2>();
 			list.Add(pos);
 		}
 
@@ -106,6 +96,10 @@ namespace Symbiose
 		private void ApplySnapshot(GDict snap, bool fade = true)
 		{
 			_etale = null;
+			// Semaine en réserve (chevauchement, FLUIDITÉ AN 2 ④) : un snapshot frais
+			// du PIPE (action, saut) est postérieur → la réserve est périmée. La
+			// rotation ré-applique `_lastSnap` (plus ancien) → la réserve reste due.
+			if (snap != _lastSnap) _semainePrete = null;
 			var e = new Etalement(snap, fade);
 			while (!Avancer(e, long.MaxValue)) { }
 		}
@@ -157,37 +151,36 @@ namespace Symbiose
 		// (parse des segments + setters + recuisson) d'une plante connue HORS marge
 		// est différée (WorldView.Attente.cs). Les naissances, rares, restent
 		// appliquées tout de suite.
-		private void AppliquerPlante(Etalement e, GDict p)
+		// `l` = la même plante déjà LUE (thread du pool pour un step, cf. PlanteLue).
+		private void AppliquerPlante(Etalement e, GDict p, PlanteLue l)
 		{
-				int nSegs;
-				using (var segs = LectureSnap.Tab(p, "segments")) nSegs = segs.Count;
-				if (nSegs == 0)
+				if (l.NSegs == 0)
 				{
 					e.Empty++;   // germination sans bois : rien à dessiner encore
 					return;
 				}
-				e.NSegs += nSegs;
-				string key = PlantKey(p);
+				e.NSegs += l.NSegs;
+				string key = l.Key;
 				e.Seen.Add(key);
 				e.Payloads[key] = p;   // dossier de plante debug (T3), lu au clic
-				IndexPlantByName(p, e.ByName);   // fleurs cibles des butineurs (vivantes only)
+				IndexPlantByName(l, e.ByName);   // fleurs cibles des butineurs (vivantes only)
 
 				if (_plantNodes.TryGetValue(key, out var node))
 				{
 					e.Grown++;
-					if (!node.Visible) { MettreEnAttente(node, p); e.Attente++; return; }
-					MajPlante(node, p);   // la plante a poussé
+					if (!node.Visible) { MettreEnAttente(node, l); e.Attente++; return; }
+					MajPlante(node, l);   // la plante a poussé
 					return;
 				}
-				Vector2 screenPos = PositionPlante(p, out float wx, out float wy);
+				Vector2 screenPos = PositionPlante(l, out float wx, out float wy);
 				var renderer = new PlantRenderer
 				{
 					Position = screenPos,
 					// Empilement multi-strates (luxuriance ⑥) : biais de ZIndex par
 					// strate → le couvre-sol passe sous la potagère/grimpante. À strate
 					// égale, le y-sort du parent "Objects" départage (intra-strate).
-					ZIndex = PlantZIndex(p.ContainsKey("strate") ? p["strate"].AsString() : null),
-					Name = $"{p["tile"].AsString()}_{p["species"].AsString()}_{_plantSeq++}",
+					ZIndex = PlantZIndex(l.Strate),
+					Name = $"{l.Tile}_{l.Species}_{_plantSeq++}",
 				};
 				// Métadonnées de picking (volet B) : position MONDE pour la
 				// distance au clic/survol, et la désignation EXACTE du snapshot
@@ -209,7 +202,7 @@ namespace Symbiose
 					renderer.SetMeta(LectureSnap.Meta("genes"), p["genes"]);
 				if (e.Fade) renderer.Modulate = new Color(1f, 1f, 1f, 0f);
 				_objects.AddChild(renderer);
-				MajPlante(renderer, p);   // squelette déjà mort au chargement (save) compris
+				MajPlante(renderer, l);   // squelette déjà mort au chargement (save) compris
 				if (e.Fade)
 					renderer.CreateTween()
 						.TweenProperty(renderer, "modulate:a", 1f, FadeInSec);
@@ -221,78 +214,41 @@ namespace Symbiose
 		// suit la surface du sol → remonté de l'épaisseur au plot. Appliquée à la
 		// naissance ET à la croissance (le sol monte/descend au fil des saisons →
 		// la plante suit). Sort aussi la position MONDE (cm) du collet.
-		private Vector2 PositionPlante(GDict p, out float wx, out float wy)
+		private Vector2 PositionPlante(PlanteLue l, out float wx, out float wy)
 		{
-			string tile = LectureSnap.S(p, "tile");
-			float lx = LectureSnap.F(p, "x_cm");
-			float ly = LectureSnap.F(p, "y_cm");
-			Vector2 o = _origins[tile];
-			wx = o.X + lx;
-			wy = o.Y + ly;
-			return WorldToScreen(wx, wy) - new Vector2(0f, ReliefRisePx(tile, lx, ly));
+			Vector2 o = _origins[l.Tile];
+			wx = o.X + l.X;
+			wy = o.Y + l.Y;
+			return WorldToScreen(wx, wy) - new Vector2(0f, ReliefRisePx(l.Tile, l.X, l.Y));
 		}
 
-		/// <summary>Applique la donnée `p` du snapshot au nœud (structure, symptômes,
-		/// position…) — le coût de la famille 1. Retire la plante de l'attente.</summary>
-		private void MajPlante(PlantRenderer node, GDict p)
+		/// <summary>Applique la plante LUE `l` au nœud (structure, symptômes,
+		/// position…) — le coût de la famille 1. Retire la plante de l'attente.
+		/// FLUIDITÉ AN 2 ④ : plus aucune lecture du dictionnaire Godot ici ; tout a
+		/// été lu par PlanteLue.Lire (thread du pool). Sens des champs :
+		///  · StadeMort (0.3.6) : squelette sur place, "seche"/"couchee", sinon null ;
+		///  · Symptomes (D33, 0.5.1) : {cause, intensité} triés par le moteur ;
+		///  · Vitalite (0.5.28) : fond global d'usure ∈ [0,1], défaut 1 ;
+		///  · SupportKind (0.5.18) : type d'appui accroché → vrille ;
+		///  · Strate / Silhouette (0.5.19) : ZIndex par strate, forme au LOD couronne ;
+		///  · Emitteur (D67, 0.5.21) : teinte de l'overlay F9 seulement ;
+		///  · Abri (0.5.44) : facteur d'abri au vent, défaut 1.
+		/// Clés absentes (snapshot ancien) → défauts neutres, aucun crash.</summary>
+		private void MajPlante(PlantRenderer node, PlanteLue l)
 		{
 			SortirAttente(node);
-			var structure = StructureLoader.FromSnapshot(p);
-			Vector2 screenPos = PositionPlante(p, out float wx, out float wy);
-			// Squelette (0.3.6) : `dead` → mode bois nu. Le mort GARDE sa clé
-			// (même tile|species|x|y) → il n'est pas fondu sortant ; il bascule
-			// squelette sur place jusqu'à ce que le moteur le retire (clé alors
-			// absente → fondu). stade_mort = "seche"/"couchee".
-			string stadeMort = LectureSnap.A(p, "dead") && LectureSnap.B(p, "dead")
-				? LectureSnap.S(p, "stade_mort") : null;
-			// Sémiologie foliaire (D33, snapshot 0.5.1) : liste de symptômes
-			// {cause, intensité} déjà triée par le moteur (chlorose/sécheresse/
-			// asphyxie/ravageurs/sénescence/maladie/gel/grêle). Tolérant à un
-			// snapshot pré-D33 (clé absente → null → plante saine). La vue teinte
-			// et texture, sans recalculer pH/pression (cf. PlantRenderer).
-			using var symptoms = LectureSnap.A(p, "leaf_symptoms")
-				? LectureSnap.Tab(p, "leaf_symptoms") : null;
-			// Vitalité continue (santé & résilience ④, snapshot 0.5.28) : fond
-			// global d'usure ∈ [0,1] (1.0 = sain neuf), complète les symptômes
-			// localisés. Tolérant à un snapshot pré-0.5.28 (clé absente → 1.0 →
-			// plante rendue pleine). `etat` est aussi émis (sain/affaibli/malade/
-			// mort) mais la vue consomme le CONTINU (dégradé, pas de palier).
-			float vitalite = LectureSnap.A(p, "vitalite")
-				? LectureSnap.F(p, "vitalite") : 1f;
-			// Accroche de grimpe (grimpantes ⑥, 0.5.18) : type d'appui accroché
-			// (tuteur/mur/hote…) ou null. Tolérant à un snapshot pré-0.5.18 (clé
-			// absente → plante libre → pas de vrille). Pilote la vrille (indice ⑥).
-			string supportKind = null;
-			if (LectureSnap.A(p, "support"))
-				using (var sup = LectureSnap.Dico(p, "support")) supportKind = LectureSnap.S(sup, "type");
-			// Luxuriance (⑥, 0.5.19) : strate du stade COURANT (ordre de dessin par
-			// strate) + silhouette d'espèce (forme au LOD couronne). Tolérant à un
-			// snapshot pré-0.5.19 (clés absentes → strate neutre "moyenne", silhouette
-			// par défaut). La strate évolue au fil des stades (sol→basse→…) → on la
-			// relit à chaque snapshot pour recaler le ZIndex, comme la position.
-			string strate = LectureSnap.A(p, "strate") ? LectureSnap.S(p, "strate") : null;
-			string silhouette = LectureSnap.A(p, "silhouette")
-				? LectureSnap.S(p, "silhouette") : null;
-			// LOD émetteurs d'ombre (D67, snapshot 0.5.21) : `emitteur` dérivé du
-			// pouvoir ombrageant côté MOTEUR (miroir de fields/light.py). Tolérant à
-			// un snapshot pré-0.5.21 (clé absente → true = émettrice, aucune teinte).
-			// Pilote la seule teinte de l'overlay debug F9, jamais le rendu normal.
-			bool emitteur = !LectureSnap.A(p, "emitteur") || LectureSnap.B(p, "emitteur");
-			// Abri local au vent (jardin vivant T3, 0.5.44) : facteur du champ
-			// d'abri ; clé absente (champ pas encore calculé / pré-0.5.44) → 1.0.
-			float abri = LectureSnap.A(p, "abri") ? LectureSnap.F(p, "abri") : 1f;
-
-			node.SetStructure(structure);   // la plante a poussé
-			node.SetSkeleton(stadeMort);     // ou vient de mourir / s'est couchée
-			node.SetSymptoms(symptoms);      // teinte + texture des symptômes (D33)
-			node.SetVitality(vitalite);      // fond global d'usure (santé ④, 0.5.28)
-			node.SetSupport(supportKind);    // vrille d'accroche (grimpantes ⑥)
-			node.SetSilhouette(silhouette);  // forme au LOD couronne (luxuriance ⑥)
-			node.SetStrate(strate);          // port arbre/grimpante (paliers bas, D106 T5)
-			node.SetEmitter(emitteur);       // teinte overlay LOD F9 (D67)
-			node.SetWindAnchor(wx, wy, abri);  // onde de vent (T3)
-			node.ZIndex = PlantZIndex(strate);  // empilement par strate (luxuriance ⑥)
-			node.SetMeta(LectureSnap.Meta("tag"), TagText(p));   // le stade évolue (étiquette nette)
+			Vector2 screenPos = PositionPlante(l, out float wx, out float wy);
+			node.SetStructure(l.Structure);   // la plante a poussé
+			node.SetSkeleton(l.StadeMort);     // ou vient de mourir / s'est couchée
+			node.SetSymptoms(l.Symptomes);     // teinte + texture des symptômes (D33)
+			node.SetVitality(l.Vitalite);      // fond global d'usure (santé ④, 0.5.28)
+			node.SetSupport(l.SupportKind);    // vrille d'accroche (grimpantes ⑥)
+			node.SetSilhouette(l.Silhouette);  // forme au LOD couronne (luxuriance ⑥)
+			node.SetStrate(l.Strate);          // port arbre/grimpante (paliers bas, D106 T5)
+			node.SetEmitter(l.Emitteur);       // teinte overlay LOD F9 (D67)
+			node.SetWindAnchor(wx, wy, l.Abri);  // onde de vent (T3)
+			node.ZIndex = PlantZIndex(l.Strate);  // empilement par strate (luxuriance ⑥)
+			node.SetMeta(LectureSnap.Meta("tag"), l.Tag);   // le stade évolue (étiquette nette)
 			node.Position = screenPos;         // suit le relief du sol (D57 ②)
 			_tapisSale = true;                 // agrégat du tapis à refaire (WorldView.Tapis.cs)
 		}

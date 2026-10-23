@@ -226,8 +226,43 @@ namespace Symbiose
 			}
 		}
 
+		// Diagnostic FLUIDITÉ AN 2 ④ : temps passé à créer des pages (remis à zéro
+		// par BakeQueue à chaque image, imprimé avec une image de cuisson lente).
+		public static long CreationUs;
+		public static int Creees;
+
 		private static AtlasPage NouvellePage(Vector2I taille, float zoom, bool dediee)
 		{
+			ulong t0 = Time.GetTicksUsec();
+			try { return CreerPage(taille, zoom, dediee); }
+			finally { CreationUs += (long)(Time.GetTicksUsec() - t0); Creees++; }
+		}
+
+		// RÉSERVE de pages vides (FLUIDITÉ AN 2 ④). Mesuré au banc E VM : créer une
+		// page 2048² (SubViewport + cible de rendu) coûte 33-87 ms d'UN bloc
+		// [n=12 créations, 1 run] — c'était LA cuisson « unique de 60-74 ms » : le
+		// budget ne peut rien contre un seul appel. Or le jardin crée et détruit des
+		// pages en continu (une recuisson double l'occupation le temps du Commit, les
+		// pages trop creuses se vident). Une page devenue vide est donc GARDÉE (au
+		// plus ReserveMax) et resservie, remise à zéro, au lieu d'être recréée.
+		// Pas de trou : ses anciens pixels ne sont jamais affichés — chaque cuisson
+		// gomme son rectangle avant de peindre (Gomme), et seule la cellule
+		// cuite est lue. Mémoire vidéo : la réserve reste comptée dans TotalBytes.
+		private const int ReserveMax = 2;
+		private static readonly List<AtlasPage> _reserve = new();
+
+		private static AtlasPage CreerPage(Vector2I taille, float zoom, bool dediee)
+		{
+			if (!dediee && _reserve.Count > 0)
+			{
+				var r = _reserve[^1];
+				_reserve.RemoveAt(_reserve.Count - 1);
+				r.Zoom = zoom;
+				r.Gomme.Scale = new Vector2(1f / zoom, 1f / zoom);
+				r.Vp.CanvasTransform = new Transform2D(0f, new Vector2(zoom, zoom), 0f, Vector2.Zero);
+				_pages.Add(r);
+				return r;
+			}
 			var p = new AtlasPage { Zoom = zoom, Dediee = dediee };
 			p.Vp = new SubViewport
 			{
@@ -258,6 +293,17 @@ namespace Symbiose
 		private static void Detruire(AtlasPage p)
 		{
 			_pages.Remove(p);
+			if (!p.Dediee && _reserve.Count < ReserveMax && GodotObject.IsInstanceValid(p.Vp))
+			{
+				// Remise à zéro de la comptabilité ; la cible de rendu est gardée.
+				p.Vidange = false;
+				p.Occupe = 0;
+				p.Slots.Clear();
+				p.Etageres.Clear();
+				p.BasY = 0;
+				_reserve.Add(p);
+				return;
+			}
 			TotalBytes -= p.Bytes;
 			if (GodotObject.IsInstanceValid(p.Vp)) p.Vp.QueueFree();
 		}

@@ -21,7 +21,7 @@
 | ① | `01_banc_cadence.md` | banc headless n≥3 + banc E automate ON/OFF/onglet → baseline + cause « automate » | intact | **FAIT** (non commité) |
 | ② | `02_moteur_bit_identique.md` | postes plats du tick an 2, −20 % visé | INCHANGÉ (bit-identique) | **FAIT** (non commité) — −22,6 % |
 | ③ | `03_pont_allege.md` | `auxin` hors snapshot, flottants arrondis, `_snapshot` −40 % | intact (pont 0.5.57) | **FAIT** (non commité) — réponse −37 %, `_snapshot` NON tenu |
-| ④ | `04_vue_application.md` | lecture des plantes hors thread principal, cuisson sous budget, cause ① | intact | à faire |
+| ④ | `04_vue_application.md` | lecture des plantes hors thread principal, cuisson sous budget, cause ① | intact | **FAIT** (non commité) — 7,5 → 2,7-3,0 s/sem VM |
 | ⑤ | `05_bilan.md` | banc final VM, protocole PC, clôture D114 | intact | à faire |
 
 ## Mesures de référence (HEAD `5c69ac6`, VM, graine 1521550718, `full`)
@@ -137,11 +137,67 @@ vrai tick ; `gc.disable()` autour de `_snapshot` mesuré −10 % [n=5 appels], N
 Le reste de `_snapshot` (~100 ms) est éparpillé (`leaf_symptoms` per-plante → `category_density`
 par plot dans `sim/` = moteur, interdit au ③ ; boucles de grilles) : rien de gros côté pont.
 
+## ④ Vue — FAIT (2026-10-23), C# seul (golden `fecccded…` INCHANGÉ, `dotnet build` vert)
+1. **Chevauchement calcul/application** (`world/WorldView.Etalement.cs`) : la garde
+   `_etale == null` (commit 73a3f24 : ne jamais empiler deux étalements) devient `VuePrete` :
+   le step N+1 part PENDANT l'application de N ; au plus UNE semaine reçue en réserve
+   (`_semainePrete`), démarrée à la frame APRÈS la fin de l'étalement (la frame de fin laisse
+   passer attente + tapis, gardés par `_etale == null`). Mode Saison : une semaine qui change
+   de saison garde l'ancienne règle (retour en planification à la 1ʳᵉ semaine, comme avant).
+   Snapshot synchrone du pipe (action, saut) → réserve périmée, jetée ; rotation → gardée.
+2. **Plantes lues sur le thread du pool** (`core/PlanteLue.cs` NEUF : `PlanteLue` +
+   `SemaineRecue`) : `Task.Run(() => SemaineRecue.Lire(bridge.StepWeek()))` lit structure,
+   symptômes, vitalité, strate… du dictionnaire fraîchement parsé, en objets C# purs (aucun
+   nœud, aucun état de WorldView). `MajPlante`/attente consomment `PlanteLue` ; chemin
+   synchrone = même lecture sur le fil principal. Clé de plante en culture INVARIANTE
+   (`PlanteLue.Cle`, aussi `DossierKey`) : deux fils, deux cultures possibles.
+   `SetSymptoms(IReadOnlyList)` ajouté (`PlantRenderer.cs`).
+3. **Cuisson : cause trouvée** — la « cuisson unique de 60-74 ms » n'est PAS un pinceau : c'est
+   la **création d'une page d'atlas 2048²** (SubViewport + cible) dans `Begin`, 33-120 ms
+   (une fois 498 ms) [n=~60 créations, 7 runs, VM llvmpipe], plante de 3 à 40 seg. Le budget
+   ne peut rien contre un appel unique. Fait : réserve de 2 pages vides réutilisées au lieu
+   d'être détruites/recréées (`AtlasPages.cs`) + diagnostic `[Cuisson] image lente …` (> 20 ms,
+   sous-postes + pages créées) dans `BakeQueue.cs`. **Limite** : au banc l'atlas CROÎT
+   (8 → 13-15 pages pendant la mesure, après le passage à ×4) → aucune destruction, la réserve
+   n'y sert pas ; ces créations restent les pics > 100 ms côté cuisson.
+4. **Cause « automate »** : toujours non reproduite sur VM. Trouvé en passant un vrai gel :
+   les **observations par survol** (`Observer`, `ObserverSigne`) sont des appels SYNCHRONES au
+   pont ; avec un step en vol, le fil principal attend le verrou tout le tick (3 survols =
+   images de 0,6-1,4 s [n=1 run]). Désormais différées tant que le pipe est occupé
+   (`WorldView.Observation.cs`, `DrainObservations` avant le lancement du step). Restent
+   synchrones (gestes ponctuels, non traités) : `Automate` (touche A), `Palette`, debug.
+
+### Mesures banc E `-E 30 -A 1 -W 90 -S 1521550718` (VM llvmpipe, semaine moteur ~94-101)
+| cas | s/sem obtenues | semaine en application / 30 s | step en vol | FPS | famille plantes pire | parse / lecture plantes (pool) |
+|---|---|---|---|---|---|---|
+| HEAD `ce0f965`, OFF | 7,50 ×2 (15,0 sous charge) [n=3 runs, résolution 1 sem./30 s] | 12,0 / 12,1 / 7,1 s | 0,3-0,9 s | 2,7-4,7 | 14-44 ms | 239-553 ms / (fil principal) |
+| ④, OFF | 3,00 / 6,00 / 2,73 [n=3 runs, run 2 sous charge, FPS 1,9] | 0,5 / 1,5 / 0,5 s | 0,0-2,0 s | 1,9-4,0 | 6,9-7,6 ms | 250-474 / 362-578 ms |
+| ④, automate onglet ouvert | 3,00 / 3,33 / 2,73 [n=3 runs] | 0,8-1,1 s | 1,5-2,0 s | 3,4-4,0 | 6,9-10,2 ms | 218-258 / 315-384 ms |
+→ **cadence ×2,5** [n=3 runs] ; le retard « semaine en application » (12 s) a quasi disparu,
+le goulot VM est désormais le **step en vol** : tick vu par la vue 2,4-2,9 s (moteur ~1,1 s
++ parse + lecture, sous la contention CPU de llvmpipe). Cible ≤ 1,5 s/sem **non tenue sur
+VM** ; sur PC, la cadence ≈ max(tick + parse + lecture, application) — à mesurer au ⑤.
+Images > 100 ms : toujours 100 % sur VM (rendu logiciel 120-200 ms/image), inchangé.
+**Régression à surveiller** : GC — pause totale 0,8 → 4,7-6,0 ms/image, ~2× par semaine
+appliquée (22-28 ms par gen0 au lieu de 12 ; pires images avec GC 65-180 ms vs ≤ 13)
+[n=3+3 runs]. Allocation par semaine quasi égale (~25 → ~31 Mo) : plausiblement la lecture du
+pool qui alloue en concurrence du fil principal. Piste ⑤ ou suite : alléger `PlantStructure`
+(réutilisation), ou GC « SustainedLowLatency » pendant la saison.
+LDC : tous les fichiers touchés ≤ 300 (WorldView.cs 287, Snapshot 282, PlantRenderer 275).
+
+### Points F5 / PC pour Nico
+- Touche E à 1 s/sem : regarder « retard de cadence » (step en vol vs semaine en
+  application), la ligne « lecture plantes (pool) » et, dans la console, les lignes
+  `[Cuisson] image lente … page(s) créée(s) en X ms` (coût réel d'une page sur la HD 4600).
+- Automate onglet ouvert vs fermé : toujours à mesurer au PC (cause non reproduite VM).
+- Ressenti : survoler des espèces nouvelles pendant la saison ne doit plus figer l'image.
+
 ## Ce qui reste
-④→⑤ (+ décider si `_snapshot` mérite un tronçon : mémo `category_density` par plot côté sim,
-GC).
+⑤ (+ décider : `_snapshot` (mémo `category_density` par plot côté sim, GC Python) ; GC .NET de
+la vue (régression ④) ; croissance de l'atlas / coût d'une page sur PC).
 
 ## §REPRISE
 Lire `CLAUDE.md`, ce fichier, le doc de conception, puis le kickoff du premier tronçon
-« à faire » (④ `04_vue_application.md`). Pont = **0.5.57**. Référence headless à re-mesurer avec
-`cd data/code && python3 -m tools.banc_cadence [--automate]` (≈ 3 min/run). Lancement : `/sprint-auto sprint_fluidite_an2`.
+« à faire » (⑤ `05_bilan.md`). Pont = **0.5.57**. Référence headless à re-mesurer avec
+`cd data/code && python3 -m tools.banc_cadence [--automate]` (≈ 3 min/run). Banc E : passer `-t 900` (le défaut 300 s ne suffit plus pour atteindre
+la semaine 90, ≈ 7 min/run). Lancement : `/sprint-auto sprint_fluidite_an2`.

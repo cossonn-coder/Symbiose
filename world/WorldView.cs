@@ -183,7 +183,7 @@ namespace Symbiose
 		private enum LabelMode { Survol, Toutes, Aucune }
 		private LabelMode _labelMode = LabelMode.Survol;
 		private float _timeAccum;                  // secondes réelles écoulées
-		private Task<GDict> _pendingStep;          // step en vol (ou null)
+		private Task<SemaineRecue> _pendingStep;   // step en vol (ou null) : snapshot + plantes lues
 
 		// Le pipe est maître/esclave 1↔1 : libre = AUCUNE requête en vol
 		// (step, action ou fields). LA condition de toute écriture sur le tube.
@@ -490,7 +490,7 @@ namespace Symbiose
 					SetPhase(Phase.Planification);
 					return;
 				}
-				ApplySnapshotEtale(step.Result);   // 7 familles sur plusieurs frames
+				ApplySnapshotEtale(step.Result);   // 7 familles sur plusieurs frames (ou en réserve)
 				CaptureApresStep();   // banc D106 T4 (no-op hors capture turbo)
 			}
 			// 1·bis) Une famille (ou une tranche de plantes) de la semaine en cours
@@ -560,6 +560,8 @@ namespace Symbiose
 			//     point cliqué dès que le pipe est libre (chaque geste paie sa
 			//     Vigueur, philo #1). No-op si aucune macro n'est en cours de rejeu.
 			DrainMacro();
+			// 1c-ter) Observations par survol en attente du pipe (Observation.cs).
+			DrainObservations();
 
 			// 1d) Consommer une réponse `fields` (t6·C) : registre (liste de
 			//     noms) ou grilles — distingués par la clé présente.
@@ -624,13 +626,18 @@ namespace Symbiose
 			// retarde la semaine d'une frame ou deux, jamais elle ne corrompt
 			// le tube).
 			NoterRetardStep((float)delta, spw);   // banc accéléré : semaine due mais retenue
-			if (_timeAccum >= spw && PipeFree && _etale == null)
+			// FLUIDITÉ AN 2 ④ : le step peut partir PENDANT l'application de la
+			// semaine précédente (VuePrete, WorldView.Etalement.cs).
+			if (_timeAccum >= spw && PipeFree && VuePrete)
 			{
 				_timeAccum = 0f;
 				_stepStartMs = Time.GetTicksMsec();
-				// Task.Run : la requête part sur un thread du pool ; on ne
-				// touche à RIEN d'autre qu'au pipe depuis ce thread (règle (a)).
-				_pendingStep = Task.Run(() => _bridge.StepWeek());
+				// Task.Run : la requête part sur un thread du pool ; on ne touche à
+				// RIEN d'autre qu'au pipe depuis ce thread (règle (a)) — puis on y LIT
+				// les plantes du dictionnaire fraîchement parsé, que personne d'autre
+				// ne voit encore (données C# pures, aucun nœud : core/PlanteLue.cs).
+				var bridge = _bridge;
+				_pendingStep = Task.Run(() => SemaineRecue.Lire(bridge.StepWeek()));
 			}
 			UpdateClock();   // anime la jauge intra-semaine (fige en pause)
 		}

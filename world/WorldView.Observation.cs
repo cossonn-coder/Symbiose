@@ -47,7 +47,7 @@ namespace Symbiose
 			string species = node.GetMeta(LectureSnap.Meta("species"), "").AsString();
 			if (species.Length == 0 || !_especesObservees.Add(species)) return;
 			// 1er survol de cette espèce → découverte côté Python (idempotent).
-			_bridge.Observer(species);
+			AppelObservation(() => _bridge.Observer(species));
 			GD.Print($"[WorldView] survol → espèce observée : {species}.");
 		}
 
@@ -64,16 +64,43 @@ namespace Symbiose
 			if (_bridge == null || !_survolSale) return;
 			string espece = BeteSousSouris()?.Cle;
 			if (espece == null || !_especesMacroObservees.Add($"{espece}|{SaisonObservee}")) return;
-			var rep = _bridge.Observer(espece);
-			// Pont ≥ 0.5.48 : la réponse porte `appris` (lecture pure) → si ce survol
-			// vient de franchir le palier du nom, l'info-bulle nomme la bête TOUT DE
-			// SUITE, sans attendre le snapshot de la semaine suivante.
-			if (rep != null && rep.ContainsKey("appris"))
+			AppelObservation(() =>
 			{
-				LireAppris(new GDict { ["appris"] = rep["appris"] });
-				_cleVersion = -1;   // recalcul de l'info-bulle à la frame suivante
-			}
+				var rep = _bridge.Observer(espece);
+				// Pont ≥ 0.5.48 : la réponse porte `appris` (lecture pure) → si ce survol
+				// vient de franchir le palier du nom, l'info-bulle nomme la bête TOUT DE
+				// SUITE, sans attendre le snapshot de la semaine suivante.
+				if (rep != null && rep.ContainsKey("appris"))
+				{
+					LireAppris(new GDict { ["appris"] = rep["appris"] });
+					_cleVersion = -1;   // recalcul de l'info-bulle à la frame suivante
+				}
+			});
 			GD.Print($"[WorldView] survol → vie macro observée : {espece}.");
+		}
+
+		// OBSERVATIONS DIFFÉRÉES (FLUIDITÉ AN 2 ④). Une observation est un appel
+		// SYNCHRONE au pont : si un step est en vol, le fil principal attend le verrou
+		// du pipe pendant tout le tick (~1 s) → image gelée. Mesuré au banc E VM : 3
+		// survols pendant la mesure = 3 images de 0,6 à 1,4 s [n=1 run]. Depuis que le
+		// step suivant part pendant l'application de la semaine (chevauchement), le
+		// pipe est presque toujours occupé : l'appel attend donc son tour en file et
+		// part dès que le pipe est libre (quelques images plus tard, invisible).
+		// 📖 C'est le report d'une requête bloquante hors de la boucle temps réel :
+		// on poste un message au lieu d'attendre la réponse sous interruption.
+		private readonly Queue<System.Action> _observationsEnFile = new();
+
+		private void AppelObservation(System.Action appel)
+		{
+			if (PipeFree) appel();
+			else _observationsEnFile.Enqueue(appel);
+		}
+
+		/// <summary>Chaque frame (_Process), avant le lancement du step : vide la file
+		/// tant que le pipe est libre.</summary>
+		private void DrainObservations()
+		{
+			while (_observationsEnFile.Count > 0 && PipeFree) _observationsEnFile.Dequeue()();
 		}
 
 		// Saison d'observation, MÊME formule que la note Python (semaine consignée =

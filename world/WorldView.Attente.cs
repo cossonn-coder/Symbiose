@@ -18,20 +18,19 @@
 
 using Godot;
 using System.Collections.Generic;
-using GDict = Godot.Collections.Dictionary;
 
 namespace Symbiose
 {
 	public partial class WorldView : Node2D
 	{
-		// Dernière donnée non appliquée, par plante hors marge.
-		private readonly Dictionary<PlantRenderer, GDict> _enAttente = new();
+		// Dernière donnée non appliquée (déjà LUE, FLUIDITÉ AN 2 ④), par plante hors marge.
+		private readonly Dictionary<PlantRenderer, PlanteLue> _enAttente = new();
 		// Plantes en attente entrées dans la marge, à appliquer (triées au centre).
 		private readonly List<PlantRenderer> _fileEntree = new();
 
-		private void MettreEnAttente(PlantRenderer node, GDict p)
+		private void MettreEnAttente(PlantRenderer node, PlanteLue l)
 		{
-			_enAttente[node] = p;   // écrase : seule la dernière semaine compte
+			_enAttente[node] = l;   // écrase : seule la dernière semaine compte
 			node.EnAttente = true;
 		}
 

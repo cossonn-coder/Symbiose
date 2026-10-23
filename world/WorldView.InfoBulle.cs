@@ -213,8 +213,11 @@ namespace Symbiose
 			int saison = SaisonObservee;
 			if (species.Length == 0 || !_signesObserves.Add($"{species}|{signe}|{saison}")) return;
 			// Métas de lieu posées à la création (Snapshot.cs) ; absentes → nil → note sans lieu.
-			_bridge.ObserverSigne(species, signe, plante.GetMeta(LectureSnap.Meta("tile"), default),
-				plante.GetMeta(LectureSnap.Meta("lx"), default), plante.GetMeta(LectureSnap.Meta("ly"), default));
+			// Différé si un step est en vol (FLUIDITÉ AN 2 ④, WorldView.Observation.cs).
+			Variant tile = plante.GetMeta(LectureSnap.Meta("tile"), default),
+				lx = plante.GetMeta(LectureSnap.Meta("lx"), default),
+				ly = plante.GetMeta(LectureSnap.Meta("ly"), default);
+			AppelObservation(() => _bridge.ObserverSigne(species, signe, tile, lx, ly));
 			GD.Print($"[WorldView] survol → signe observé : {signe} sur {species}.");
 		}
 	}

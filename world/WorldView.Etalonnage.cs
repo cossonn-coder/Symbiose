@@ -123,7 +123,7 @@ namespace Symbiose
 					GD.Print($"[banc] semaine {SemaineMoteur} atteinte → cadrage, repos {EtalonReposSec} s.");
 					return;
 				case EtatBanc.Repos:
-					if (_etale != null || _pendingStep != null || Maintenant - _bancT0 < EtalonReposSec) return;
+					if (_etale != null || _semainePrete != null || _pendingStep != null || Maintenant - _bancT0 < EtalonReposSec) return;
 					DemarrerDistribution();
 					DemarrerPostesAccelere();   // steps, retard, priorité (BancAccelere.cs)
 					PoserCadenceMesure();
