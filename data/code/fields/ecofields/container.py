@@ -52,6 +52,16 @@ from .couvertures_posees import CouverturePoseeMixin   # voile/cloche/ombrière 
 from .bordure import BordureMixin   # conditions aux limites de la ceinture (périphérie ③)
 
 
+# Noms acceptés par `EcoFields.get_field` (chaque nom = un attribut GridField).
+_CHAMPS_NOMMES = frozenset((
+    "humidite", "microbiome", "lumiere", "soil_memory", "disturbance", "om_active",
+    "om_stable", "soil_memory_fast", "soil_memory_deep", "temperature",
+    "temperature_sol", "ph", "n", "p", "k", "structure_sol", "mycelium",
+    "epaisseur_sol", "altitude", "eau_surface", "marais_memory", "couverture_sol",
+    "paillage", "couvert_pose", "ombre_pose", "allelopathie", "autotox",
+))
+
+
 @dataclass
 class EcoFields(MatiereOrganiqueMixin, HydrologieMixin, RuissellementMixin,
                 MaraisMixin, UptakeMixin, VieMacroMixin, SolMixin, TicksMixin,
@@ -548,35 +558,11 @@ class EcoFields(MatiereOrganiqueMixin, HydrologieMixin, RuissellementMixin,
                 grid.set(r, c, base * facteur)
 
     def get_field(self, name: str) -> GridField | None:
-        return {
-            "humidite":    self.humidite,
-            "microbiome":  self.microbiome,
-            "lumiere":     self.lumiere,
-            "soil_memory": self.soil_memory,
-            "disturbance":      self.disturbance,
-            "om_active":        self.om_active,
-            "om_stable":        self.om_stable,
-            "soil_memory_fast": self.soil_memory_fast,
-            "soil_memory_deep": self.soil_memory_deep,
-            "temperature":      self.temperature,
-            "temperature_sol":  self.temperature_sol,
-            "ph":               self.ph,
-            "n":                self.n,
-            "p":                self.p,
-            "k":                self.k,
-            "structure_sol":    self.structure_sol,
-            "mycelium":         self.mycelium,
-            "epaisseur_sol":    self.epaisseur_sol,
-            "altitude":         self.altitude,
-            "eau_surface":      self.eau_surface,
-            "marais_memory":    self.marais_memory,
-            "couverture_sol":   self.couverture_sol,
-            "paillage":         self.paillage,
-            "couvert_pose":     self.couvert_pose,
-            "ombre_pose":       self.ombre_pose,
-            "allelopathie":     self.allelopathie,
-            "autotox":          self.autotox,
-        }.get(name)
+        """Champ nommé (clé = nom d'attribut) ou None. Avant : un dictionnaire de
+        25 entrées reconstruit à CHAQUE appel (~4 000 appels/tick via l'uptake) ;
+        désormais un test d'appartenance à `_CHAMPS_NOMMES` + `getattr` (FLUIDITÉ
+        AN 2 ②) — même table de noms, même résultat."""
+        return getattr(self, name) if name in _CHAMPS_NOMMES else None
 
     def allelo_effectif(self, r: int, c: int, plant_class) -> float:
         """Allélopathie EFFECTIVE ressentie par `plant_class` au plot `(r, c)`

@@ -19,7 +19,7 @@
 | # | Kickoff | Contenu | Golden | État |
 |---|---|---|---|---|
 | ① | `01_banc_cadence.md` | banc headless n≥3 + banc E automate ON/OFF/onglet → baseline + cause « automate » | intact | **FAIT** (non commité) |
-| ② | `02_moteur_bit_identique.md` | postes plats du tick an 2, −20 % visé | INCHANGÉ (bit-identique) | à faire |
+| ② | `02_moteur_bit_identique.md` | postes plats du tick an 2, −20 % visé | INCHANGÉ (bit-identique) | **FAIT** (non commité) — −22,6 % |
 | ③ | `03_pont_allege.md` | `auxin` hors snapshot, flottants arrondis, `_snapshot` −40 % | intact (pont +1) | à faire |
 | ④ | `04_vue_application.md` | lecture des plantes hors thread principal, cuisson sous budget, cause ① | intact | à faire |
 | ⑤ | `05_bilan.md` | banc final VM, protocole PC, clôture D114 | intact | à faire |
@@ -72,10 +72,42 @@ touche E onglet Automate ouvert vs fermé (le rapport le dit désormais).
 - Réponse an 2 ≈ 5 Mo [n=3 runs] (pas 1,5) : l'enjeu du ③ est plus gros que prévu.
 - Cuisson : pires images 50-160 ms dans 9/9 runs → le budget de cuisson (④ b) reste n°1 côté vue.
 
+## ② Moteur bit-identique — FAIT (2026-10-23)
+Outil : `data/code/tools/profile_phases.py` (cumul par phase appelée par `tick_semaine`,
+lecture seule). Profil s128-130 (656 pl.) avant : tick_populations 15,6 % · grow_plant 13,6 %
+· apply_disturbances 10,3 % · tick_light 10,0 % · _apply_uptake 7,7 % · tick_soil_memory
+5,1 % (fin de saison seulement) [n=1 run, 3 ticks cProfile].
+Leviers (tous ordre d'addition flottante conservé, aucune formule touchée) :
+- `fields/population/field.py` : boucle chaude en locales + `data[r][c]` direct ; prédation
+  0/1 prédateur sans `sum` (≥ 2 : `sum` d'origine, Python 3.13 = somme compensée).
+- `sim/effects/voisinage.py` (NEUF) `IndexVoisinage` : casiers plantes/plot UNE fois par
+  `apply_disturbances` → `_local_density`/`_spore_load` O(N) au lieu de O(N²). Indexe aussi
+  les mortes (le campagnol tue EN COURS de passe : filtre `is_alive` gardé à la requête).
+- `fields/ecofields/sol.py` + `autotoxicite.py` : signatures / émetteurs par plot en une
+  passe (avant plots × plantes, pic de fin de saison).
+- `sim/growth/geometrie.py` + `phases.py` : post-ordre = indices inversés quand parent <
+  enfant (vérifié O(n), repli sur l'ancien tri) ; `_depths` O(n) ; `max_z` sans `_tip`.
+- `container.get_field` (frozenset + getattr, plus de dict de 27 entrées/appel),
+  `vie_macro.category_fields` mémoïsé (clé = dict `populations` + taille), `seedbank`
+  decay en ligne, `tile.detect_conflicts` conflits rangés par (couche, nb plantes).
+Garde-fous : golden `fecccded…` INCHANGÉ ; empreinte monde `full` s115 (log + digest final
+façon golden, script scratch) identique HEAD/②. 29 suites `tests/` : mêmes rc et sorties
+qu'à HEAD (hors ordre d'affichage des `set` et RSS). **Préexistants à HEAD, pas du ②** :
+`test_population` (hash pop `c59e0d…` attendu, obtenu `a60c4a…`) et `test_vent` 52/54
+(⑥ assèchement ×2) — à verser en dette par l'orchestrateur.
+
+Mesure banc ① (VM, graine 1521550718, `full`, OFF, même session, HEAD en worktree) :
+| | tick an 0/1/2 moy | pire semaine an 2 | snapshot an 2 | plantes an 2 |
+|---|---|---|---|---|
+| HEAD | 548 / 893 / 1 042 ms [n=3 runs, charge < 1,6] | 1 488 ms | 192 ms | 654 |
+| ② | 516 / 703 / 807 ms [n=3 runs, charge < 2,0] | 1 114 ms | 179 ms | 654 |
+→ **tick an 2 −22,6 %** [n=3 runs], pire semaine −25 % [n=3 runs] ; population identique.
+LDC : `container.py` 310 (🟡 préexistant, inchangé en responsabilité) ; autres ≤ 300.
+
 ## Ce qui reste
-②→⑤.
+③→⑤.
 
 ## §REPRISE
 Lire `CLAUDE.md`, ce fichier, le doc de conception, puis le kickoff du premier tronçon
-« à faire » (② `02_moteur_bit_identique.md`). Référence headless à re-mesurer avec
+« à faire » (③ `03_pont_allege.md`). Référence headless à re-mesurer avec
 `cd data/code && python3 -m tools.banc_cadence [--automate]` (≈ 3 min/run). Lancement : `/sprint-auto sprint_fluidite_an2`.

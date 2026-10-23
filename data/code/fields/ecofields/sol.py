@@ -76,6 +76,11 @@ class SolMixin:
 
         Le sol ne peut pas être réinitialisé instantanément.
         """
+        # Contributions de signature par plot, préparées en UNE passe sur les
+        # plantes (FLUIDITÉ AN 2 ②) : avant, chaque plot reparcourait toutes les
+        # plantes (plots × plantes, ~150 × 650 par tuile). Les contributions d'un
+        # plot sont rangées dans l'ORDRE des plantes → même somme flottante.
+        contribs = _signatures_par_plot(plants)
         for r in range(self.rows):
             for c in range(self.cols):
                 micro = min(1.0, self.microbiome.at_plot(r, c) / MICROBE_RHYTHM_REF)
@@ -86,12 +91,8 @@ class SolMixin:
 
                 # Signature des plantes sur ce plot
                 sig = 0.0
-                for p in plants:
-                    if not p.is_alive:
-                        continue
-                    if (r, c) == p.position or (r, c) in p.root_plots:
-                        family_sig = SOIL_SIGNATURE.get(p.plant_class.family, {})
-                        sig += family_sig.get("microbiome", 0.0) * 0.5
+                for v in contribs.get((r, c), ()):
+                    sig += v
                 sig = max(-0.2, min(0.2, sig))
 
                 # Cible écologique
@@ -173,3 +174,21 @@ class SolMixin:
         total = sum(self.vitalite(r, c)
                     for r in range(self.rows) for c in range(self.cols))
         return total / n
+
+
+def _signatures_par_plot(plants: list) -> dict[tuple, list[float]]:
+    """Plot → contributions « microbiome » des plantes VIVANTES qui l'occupent
+    (par leur plot-foyer OU leur empreinte racinaire), dans l'ordre de `plants`.
+    Une plante contribue au plus une fois par plot (le test d'origine était un
+    OU) — d'où l'ensemble `{position} ∪ root_plots`."""
+    contribs: dict[tuple, list[float]] = {}
+    for p in plants:
+        if not p.is_alive:
+            continue
+        family_sig = SOIL_SIGNATURE.get(p.plant_class.family, {})
+        v = family_sig.get("microbiome", 0.0) * 0.5
+        plots = set(p.root_plots)
+        plots.add(p.position)
+        for plot in plots:
+            contribs.setdefault(plot, []).append(v)
+    return contribs

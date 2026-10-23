@@ -179,6 +179,15 @@ class Tile:
         """
         new_conflicts = []
         alive = [p for p in self.plants if p.is_alive]
+        # Conflits NON résolus rangés par (couche, nb de plantes) — les deux premiers
+        # critères du test « déjà signalé » (FLUIDITÉ AN 2 ②). Avant, chaque plot
+        # reparcourait TOUTE la liste des conflits ; désormais seulement le casier
+        # qui peut correspondre. Le test complet (`all(p in occupants …)`) est
+        # inchangé, `any` est un booléen sans effet de bord → même résultat.
+        casiers: dict[tuple, list] = {}
+        for c in self.conflicts:
+            if not c.resolved:
+                casiers.setdefault((c.conflict_type, len(c.plants)), []).append(c)
 
         for layer, get_plots in [("foliar", lambda p: p.foliar_plots),
                                    ("root", lambda p: p.root_plots)]:
@@ -195,11 +204,8 @@ class Tile:
                     continue
                 # Vérifier si ce conflit est déjà signalé
                 already = any(
-                    c.conflict_type == layer
-                    and len(c.plants) == len(occupants)
-                    and all(p in occupants for p in c.plants)
-                    for c in self.conflicts
-                    if not c.resolved
+                    all(p in occupants for p in c.plants)
+                    for c in casiers.get((layer, len(occupants)), ())
                 )
                 if not already:
                     nc = ConflictNotification(
@@ -209,6 +215,7 @@ class Tile:
                     )
                     new_conflicts.append(nc)
                     self.conflicts.append(nc)
+                    casiers.setdefault((layer, len(occupants)), []).append(nc)
 
         return new_conflicts
 

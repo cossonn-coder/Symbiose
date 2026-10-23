@@ -65,27 +65,57 @@ class PopulationField(GridField):
         # pas d'un plot à l'autre) → calculé UNE fois hors de la boucle r×c.
         phenology = _smoothstep(daylength(week_in_year),
                                 spec.daylen_min, spec.daylen_full)
+        # Boucle CHAUDE (20 guildes × 8 tuiles × ~150 plots par tick) : attributs
+        # de `spec` et lignes de grilles hissés en variables locales, lecture
+        # directe `data[r][c]` au lieu de `at_plot` (tous ces champs ont les
+        # dimensions de la tuile → toujours dans les bornes, le garde-fou de
+        # `at_plot` ne servait jamais). Expressions et ORDRE des opérations
+        # flottantes strictement inchangés → bit-identique (sprint FLUIDITÉ AN 2 ②).
+        resource_w, habitat_w = spec.resource_w, spec.habitat_w
+        pred_w, disturb_w = spec.pred_w, spec.disturb_w
+        inertia, inertia_decay = spec.inertia, spec.inertia_decay
+        lisiere_w = spec.lisiere_w
+        max_val = self.max_val
+        temp_data, dist_data = eco.temperature.data, eco.disturbance.data
+        lis_data = lis.data if lis is not None else None
+        pred_datas = [pf.data for pf in predator_fields]
         for r in range(self.rows):
+            row = self.data[r]
+            temp_row, dist_row = temp_data[r], dist_data[r]
+            res_row, hab_row = res[r], hab[r]
+            sig_row = sig[r] if sig else None
+            lis_row = lis_data[r] if lis_data is not None else None
+            pred_rows = [d[r] for d in pred_datas]
+            # 0 ou 1 prédateur (la majorité des guildes) : `sum` rendrait 0 (entier)
+            # ou 0 + x == x au bit près → on l'évite ; ≥ 2 → `sum` d'origine.
+            pred_seul = pred_rows[0] if len(pred_rows) == 1 else None
             for c in range(self.cols):
-                temp = eco.temperature.at_plot(r, c)
+                temp = temp_row[c]
                 warmth = _clamp01((temp - T_COLD_ZERO) / (T_WARM_FULL - T_COLD_ZERO))
-                disturb = eco.disturbance.at_plot(r, c)
-                predation = sum(pf.at_plot(r, c) for pf in predator_fields)
-                pop = self.data[r][c]
+                disturb = dist_row[c]
+                # `sum` conservé tel quel dès 2 prédateurs (Python ≥ 3.12 : somme
+                # flottante compensée, départ entier 0) → même résultat au bit près.
+                if pred_seul is not None:
+                    predation = pred_seul[c]
+                elif pred_rows:
+                    predation = sum(pr[c] for pr in pred_rows)
+                else:
+                    predation = 0
+                pop = row[c]
 
-                capacite = _clamp01(spec.resource_w * res[r][c]
-                                    + spec.habitat_w * hab[r][c]
-                                    + (sig[r][c] if sig else 0.0)
-                                    + (spec.lisiere_w * lis.data[r][c]
+                capacite = _clamp01(resource_w * res_row[c]
+                                    + habitat_w * hab_row[c]
+                                    + (sig_row[c] if sig else 0.0)
+                                    + (lisiere_w * lis_row[c]
                                        if lis is not None else 0.0))
                 survie = (phenology * warmth
-                          * (1.0 - min(1.0, spec.pred_w * predation))
-                          * (1.0 - min(1.0, spec.disturb_w * disturb)))
+                          * (1.0 - min(1.0, pred_w * predation))
+                          * (1.0 - min(1.0, disturb_w * disturb)))
                 cible = capacite * survie
                 # Inertie ASYMÉTRIQUE (§4) : décrue rapide / montée au rythme calibré.
-                inertie = spec.inertia_decay if cible < pop else spec.inertia
-                self.data[r][c] = max(0.0, min(
-                    self.max_val,
+                inertie = inertia_decay if cible < pop else inertia
+                row[c] = max(0.0, min(
+                    max_val,
                     pop * inertie + cible * (1.0 - inertie)
                 ))
 

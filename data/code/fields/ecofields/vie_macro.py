@@ -78,9 +78,22 @@ class VieMacroMixin:
     # naturellement exclus (getattr → None).
 
     def category_fields(self, category: str) -> list:
-        """Champs de population membres d'une CATÉGORIE (étiquette `spec.category`)."""
-        return [pf for pf in self.populations.values()
-                if getattr(pf.spec, "category", None) == category]
+        """Champs de population membres d'une CATÉGORIE (étiquette `spec.category`).
+        Mémoïsé (FLUIDITÉ AN 2 ②) : appelé ~4 000 fois par tick (par plot, via
+        `category_density`) alors que l'appartenance ne change pas. Clé auto-
+        invalidante = (dict `populations` lui-même, sa taille) ; liste en LECTURE
+        seule pour les appelants (même contenu, même ordre qu'avant)."""
+        pops = self.populations
+        cache = getattr(self, "_cache_categories", None)
+        if cache is None or cache[0] is not pops or cache[1] != len(pops):
+            cache = (pops, len(pops), {})
+            self._cache_categories = cache
+        membres = cache[2].get(category)
+        if membres is None:
+            membres = [pf for pf in pops.values()
+                       if getattr(pf.spec, "category", None) == category]
+            cache[2][category] = membres
+        return membres
 
     def category_density(self, category: str, r: int, c: int) -> float:
         """Densité agrégée d'une catégorie = somme des densités des espèces membres.

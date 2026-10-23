@@ -182,9 +182,41 @@ def _gravitropic_droop(d: tuple, off_axis: float, gain: float) -> tuple:
 # Topologie de l'arbre de segments (pure)
 # ---------------------------------------------------------------------------
 
+def _parents_avant(segs: list) -> bool:
+    """True si chaque segment a son parent à un indice INFÉRIEUR (invariant tenu
+    par la croissance : un segment neuf est ajouté en fin de liste avec un parent
+    existant, et `_rebuild` conserve l'ordre). Vérifié en O(n) plutôt que supposé :
+    une structure posée à la main (tests) peut ne pas le respecter."""
+    for i, s in enumerate(segs):
+        if s.parent is not None and s.parent >= i:
+            return False
+    return True
+
+
+def ordre_enfants_dabord(segs: list, depth: list | None = None):
+    """Indices dans un ordre où tout segment passe APRÈS tous ses descendants
+    (post-ordre). Chemin rapide (FLUIDITÉ AN 2 ②) : si les parents précèdent
+    leurs enfants, l'ordre inverse des indices suffit — plus besoin de trier par
+    profondeur. Les seuls consommateurs (propagation d'auxine par `max`, OU des
+    apex, somme d'ENTIERS du pipe model) ne dépendent que de cette propriété →
+    résultat bit-identique au tri par profondeur décroissante d'avant."""
+    n = len(segs)
+    if _parents_avant(segs):
+        return range(n - 1, -1, -1)
+    if depth is None:
+        depth = _depths(segs)
+    return sorted(range(n), key=lambda i: -depth[i])
+
+
 def _depths(segs: list) -> list:
-    """Profondeur de chaque segment (collet = 0). O(n²) borné par MAX_SEGMENTS."""
+    """Profondeur de chaque segment (collet = 0). O(n) si les parents précèdent
+    leurs enfants (cas de la croissance), sinon remontée O(n²) bornée par MAX_SEGMENTS."""
     out = [0] * len(segs)
+    if _parents_avant(segs):
+        for i, s in enumerate(segs):
+            if s.parent is not None:
+                out[i] = out[s.parent] + 1
+        return out
     for i, s in enumerate(segs):
         d, p = 0, s.parent
         while p is not None:
@@ -214,8 +246,14 @@ def _subtree(root: int, ch: dict) -> list:
 def _apex_in_subtree(segs: list, ch: dict, depth: list) -> list:
     """True[i] si le sous-arbre enraciné en i contient au moins un apex actif."""
     res = [False] * len(segs)
-    for i in sorted(range(len(segs)), key=lambda i: -depth[i]):  # enfants d'abord
-        res[i] = segs[i].is_apex or any(res[c] for c in ch[i])
+    for i in ordre_enfants_dabord(segs, depth):                  # enfants d'abord
+        if segs[i].is_apex:
+            res[i] = True
+            continue
+        for c in ch[i]:
+            if res[c]:
+                res[i] = True
+                break
     return res
 
 
@@ -238,9 +276,8 @@ def taper_thickness(segs: list, girth_max: float, tau: float,
     if n == 0:
         return
     ch = _children(segs)
-    depth = _depths(segs)
     n_term = [0] * n
-    for i in sorted(range(n), key=lambda i: -depth[i]):  # enfants avant parent
+    for i in ordre_enfants_dabord(segs):                 # enfants avant parent
         kids = ch[i]
         n_term[i] = 1 if not kids else sum(n_term[c] for c in kids)
     n_root = n_term[0]

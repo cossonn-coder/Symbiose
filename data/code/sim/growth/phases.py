@@ -19,7 +19,8 @@ from .constantes import (AUXIN_PROD_FLOOR, AUXIN_RELEASE_SCALE, AUXIN_DECAY,
                          GIRTH_TAU, TAPER_EXP)
 from .geometrie import (_tip, _horiz, _lateral_dir, _phototropic_bias,
                         _gravitropic_droop, _apex_z_floor, _depths, _children,
-                        _subtree, _apex_in_subtree, _rebuild, taper_thickness)
+                        _subtree, _apex_in_subtree, _rebuild, taper_thickness,
+                        ordre_enfants_dabord)
 
 
 # ---------------------------------------------------------------------------
@@ -38,8 +39,7 @@ def _update_auxin(segs: list, dominance: float, release_scale: float) -> None:
     f_age = max(AUXIN_PROD_FLOOR, 1.0 - plant_age / release_scale)
     for s in segs:
         s.auxin = dominance * f_age if s.is_apex else 0.0
-    depth = _depths(segs)
-    for i in sorted(range(len(segs)), key=lambda i: -depth[i]):  # extrémités d'abord
+    for i in ordre_enfants_dabord(segs):                          # extrémités d'abord
         s = segs[i]
         if s.parent is not None:
             par = segs[s.parent]
@@ -69,7 +69,9 @@ def _elongate_emit(plant, speed: float, max_height: float, max_extent: float,
     # hauteur courante max(z) de la structure : au-delà de la hauteur autoportante,
     # une grimpante libre voit son plancher s'effondrer → elle s'affale (§3). Pour
     # une non-grimpante → MIN_APEX_Z (comportement historique inchangé).
-    max_z = max((_tip(s)[2] for s in segs), default=0.0)
+    # Seule la cote z de l'extrémité sert ici : même expression que `_tip(s)[2]`
+    # (base_z + dir_z·longueur), sans construire le triplet (FLUIDITÉ AN 2 ②).
+    max_z = max((s.base[2] + s.dir[2] * s.length_cm for s in segs), default=0.0)
     z_floor = _apex_z_floor(plant, max_z)
     new_segs = []
     for i, s in enumerate(list(segs)):  # snapshot : indices stables (on append)

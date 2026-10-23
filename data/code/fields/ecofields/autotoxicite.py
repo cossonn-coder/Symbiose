@@ -59,6 +59,22 @@ def emetteur_du_plot(plants: list, r: int, c: int):
     return None
 
 
+def emetteurs_par_plot(plants: list) -> dict:
+    """`emetteur_du_plot` pour TOUS les plots d'un coup : plot → `plant_class` de
+    la PREMIÈRE plante émettrice vivante (ordre de `plants`) qui l'occupe par sa
+    position ou son empreinte racinaire. Plot absent → None (aucun émetteur)."""
+    out: dict = {}
+    for p in plants:
+        if not p.is_alive:
+            continue
+        if getattr(p.plant_class, "allelopathie_emission", 0.0) <= 0.0:
+            continue
+        out.setdefault(p.position, p.plant_class)
+        for plot in p.root_plots:
+            out.setdefault(plot, p.plant_class)
+    return out
+
+
 def tick_autotoxicite(eco, plants: list) -> None:
     """Fait MONTER `eco.autotox` sur les plots ré-occupés par la même espèce
     émettrice, REDESCENDRE ailleurs (rotation / sol nu, détox ∝ microbiome), et
@@ -69,10 +85,14 @@ def tick_autotoxicite(eco, plants: list) -> None:
     autotox  = eco.autotox
     tracer   = eco.autotox_espece
     micro    = eco.microbiome
+    # Émetteur de chaque plot préparé en UNE passe sur les plantes (FLUIDITÉ AN 2
+    # ②) au lieu d'appeler `emetteur_du_plot` (qui reparcourt toutes les plantes)
+    # pour chacun des plots. Même règle, même tie-break (1re plante de la liste).
+    emetteurs = emetteurs_par_plot(plants)
     for r in range(eco.rows):
         row = tracer[r]
         for c in range(eco.cols):
-            E = emetteur_du_plot(plants, r, c)
+            E = emetteurs.get((r, c))
             if E is not None and E is row[c]:
                 # Même espèce émettrice qu'à la saison précédente → accumulation.
                 autotox.add(r, c, AUTOTOX_MONTEE)

@@ -32,6 +32,7 @@ from fields.ecofields import MICROBE_RHYTHM_REF
 from fields.ecofields.litiere import diam_pondere   # grosseur du squelette (⑦bis)
 from .mutations import ReduceHealth, Mutation
 from .resolution import apply_mutations
+from .voisinage import IndexVoisinage
 
 
 def necromass_biomass(plant: PlantInstance) -> float:
@@ -107,17 +108,14 @@ def deposer_mort(plant: PlantInstance, eco) -> float:
     return mous
 
 
-def _local_density(plant: PlantInstance, tile: Tile, same_family: bool = False) -> float:
-    """Densité de plantes vivantes voisines [0,1] (option : même famille seulement)."""
-    r, c = plant.position
-    # Voisinage 1-connexe calculé UNE fois (set → appartenance O(1)). Avant, la
-    # comprehension ré-exécutait la BFS `plots_within_radius` à CHAQUE plante testée
-    # (recalcul dans le tick + `in` sur une liste) → O(N²) sur une tuile dense. Le
-    # set préserve l'ensemble ET l'ordre de `nearby` → résultat bit-identique.
-    voisinage = set(tile.plots_within_radius(r, c, 1))
-    nearby = [p for p in tile.plants
-              if p.is_alive and p is not plant
-              and p.position in voisinage]
+def _local_density(plant: PlantInstance, tile: Tile, same_family: bool = False,
+                   index: IndexVoisinage | None = None) -> float:
+    """Densité de plantes vivantes voisines [0,1] (option : même famille seulement).
+    `index` : casiers par plot de la passe en cours (FLUIDITÉ AN 2 ②) — évite de
+    reparcourir toute la tuile pour chaque plante ; absent (appel isolé, tests) →
+    construit à la volée, même résultat."""
+    index = index or IndexVoisinage(tile)
+    nearby = [p for p in index.voisins(plant) if p.is_alive]
     if same_family:
         n = sum(1 for p in nearby
                 if p.plant_class.family == plant.plant_class.family)
@@ -127,7 +125,8 @@ def _local_density(plant: PlantInstance, tile: Tile, same_family: bool = False) 
 
 
 def damping_off(plant: PlantInstance, tile: Tile, eco,
-                seed: int, week: int, saison: str) -> list[Mutation]:
+                seed: int, week: int, saison: str,
+                index: IndexVoisinage | None = None) -> list[Mutation]:
     """
     Fonte des semis (M4) — mort des semis en sol trop humide / dense / froid,
     atténuée par un microbiome vivant. Leçon permaculture : ne pas semer serré
@@ -140,7 +139,7 @@ def damping_off(plant: PlantInstance, tile: Tile, eco,
     excess = max(0.0, hum_norm - DAMPOFF_HUM_SEUIL)
     if excess <= 0.0:
         return []
-    density = _local_density(plant, tile)
+    density = _local_density(plant, tile, index=index)
     saison_factor = 1.0 if saison in ("printemps", "automne") else 0.4
     # Protection microbiome via la logistique existante (disease_probability).
     # `family` (inoculum ②) : la terre chargée de la MÊME famille aggrave la fonte
@@ -158,7 +157,8 @@ def damping_off(plant: PlantInstance, tile: Tile, eco,
     return []
 
 
-def _spore_load(plant: PlantInstance, tile: Tile, wind_vec: tuple[float, float]) -> float:
+def _spore_load(plant: PlantInstance, tile: Tile, wind_vec: tuple[float, float],
+                index: IndexVoisinage | None = None) -> float:
     """Inoculum fongique reçu d'un FOYER infecté placé AU VENT (sprint VENT ⑥, §5.4).
 
     Le vent disperse les spores : une plante capte l'inoculum des voisins infectés
@@ -174,16 +174,12 @@ def _spore_load(plant: PlantInstance, tile: Tile, wind_vec: tuple[float, float])
     wx, wy = wind_vec
     if wx == 0.0 and wy == 0.0:
         return 0.0
-    r, c = plant.position
-    # Même voisinage 1-connexe que `_local_density`, calculé UNE fois (set → O(1)) :
-    # avant, la BFS était ré-exécutée à chaque plante de la boucle (recalcul dans le
-    # tick). Ensemble et parcours inchangés → charge d'inoculum bit-identique.
-    voisinage = set(tile.plots_within_radius(r, c, 1))
+    # Même voisinage 1-connexe que `_local_density`, lu dans l'index de la passe
+    # (voisins rendus dans l'ordre de `tile.plants` → somme flottante bit-identique).
+    index = index or IndexVoisinage(tile)
     load = 0.0
-    for p in tile.plants:
-        if (not p.is_alive or p is plant
-                or p.infection_memory < FUNGAL_INOC_SEUIL
-                or p.position not in voisinage):
+    for p in index.voisins(plant):
+        if not p.is_alive or p.infection_memory < FUNGAL_INOC_SEUIL:
             continue
         dx, dy = p.x_cm - plant.x_cm, p.y_cm - plant.y_cm
         if dx * wx + dy * wy > 0.0:        # le foyer p est AU VENT de la cible
@@ -194,7 +190,8 @@ def _spore_load(plant: PlantInstance, tile: Tile, wind_vec: tuple[float, float])
 def fungal_disease(plant: PlantInstance, tile: Tile, eco,
                    seed: int, week: int,
                    vent_local: float = 0.0,
-                   wind_vec: tuple[float, float] = (0.0, 0.0)) -> list[Mutation]:
+                   wind_vec: tuple[float, float] = (0.0, 0.0),
+                   index: IndexVoisinage | None = None) -> list[Mutation]:
     """
     Maladies fongiques généralisées (M5) — pression ∝ humidité × densité de la
     MÊME famille (la monoculture propage) × susceptibilité familiale, atténuée
@@ -228,7 +225,7 @@ def fungal_disease(plant: PlantInstance, tile: Tile, eco,
     # direct du vent (FUNGAL_VENT_DRY, plus bas) est CONSERVÉ : léger double comptage du
     # vent assumé (il sèche aussi le feuillage dans wetness_memory ①) — le ⑥ calibrera.
     wet = plant.wetness_memory
-    density = _local_density(plant, tile, same_family=True)
+    density = _local_density(plant, tile, same_family=True, index=index)
     # `family` (inoculum ②) : l'inoculum persistant de CETTE famille amplifie la
     # pression fongique (résidus hivernants). Rotation vers une autre famille échappe
     # à la charge (émergent). Plot vierge / INOC_GAIN=0 → amplif neutre (golden-safe).
@@ -237,7 +234,7 @@ def fungal_disease(plant: PlantInstance, tile: Tile, eco,
     p *= wet * (0.4 + density) * susc
     # Vent (⑥) : assèchement protecteur PUIS apport de spores du foyer au vent.
     p *= max(0.0, 1.0 - FUNGAL_VENT_DRY * min(1.0, vent_local))
-    spore = _spore_load(plant, tile, wind_vec)
+    spore = _spore_load(plant, tile, wind_vec, index)
     if spore > 0.0:
         p *= 1.0 + FUNGAL_SPORE_GAIN * spore
     if _hash_noise(seed, week * 13, r, c) < p:
@@ -247,7 +244,8 @@ def fungal_disease(plant: PlantInstance, tile: Tile, eco,
 
 def oidium_disease(plant: PlantInstance, tile: Tile, eco,
                    seed: int, week: int,
-                   vent_local: float = 0.0) -> list[Mutation]:
+                   vent_local: float = 0.0,
+                   index: IndexVoisinage | None = None) -> list[Mutation]:
     """
     Oïdium — la SECONDE guilde cryptogamique (sprint HUMECTATION FOLIAIRE ④, §2.4),
     biologiquement OPPOSÉE au mildiou. Presque toutes les cryptogames du feuillage
@@ -280,7 +278,7 @@ def oidium_disease(plant: PlantInstance, tile: Tile, eco,
         return []                      # sous OIDIUM_T_REF : aucune pression (froid)
     # SIGNAL INVERSE du mildiou : feuillage SEC (1 − humectation) × chaleur.
     oidium_sig = (1.0 - plant.wetness_memory) * chaleur
-    density = _local_density(plant, tile, same_family=True)
+    density = _local_density(plant, tile, same_family=True, index=index)
     p = eco.disease_probability(r, c, base_rate=OIDIUM_BASE,
                                 family=plant.plant_class.family)
     p *= oidium_sig * (0.4 + density) * susc
@@ -627,6 +625,10 @@ def apply_disturbances(tile, eco, game_state: dict,
     #     des mutations produites dans deux listes change.
     acute_muts = []
     chronic_muts = []
+    # Casiers « plantes par plot » construits UNE fois pour toute la passe (②
+    # FLUIDITÉ AN 2) : les voisinages de fonte/mildiou/oïdium/spores y sont lus
+    # au lieu de reparcourir la tuile pour chaque plante (O(N²) → O(N)).
+    index = IndexVoisinage(tile)
     for plant in list(tile.plants):
         if not plant.is_alive:
             continue
@@ -639,13 +641,13 @@ def apply_disturbances(tile, eco, game_state: dict,
         # aucune mort → invariant golden pour ce terme.
         root_herbivory(plant, tile, game_state, eco, seed, week)
         # Fonte des semis (AIGU, non capé) + maladies fongiques (chronique)
-        acute_muts += damping_off(plant, tile, eco, seed, week, saison)
+        acute_muts += damping_off(plant, tile, eco, seed, week, saison, index)
         vl = eco.vent.at_plot(*plant.position) if eco and eco.vent else 0.0
-        chronic_muts += fungal_disease(plant, tile, eco, seed, week, vl, wind_vec)
+        chronic_muts += fungal_disease(plant, tile, eco, seed, week, vl, wind_vec, index)
         # Oïdium — SECONDE guilde, signal INVERSE (feuillage SEC × chaleur). Chronique
         # (capée comme le mildiou). À `oidium_susceptibility` nulle (défaut catalogue)
         # → sortie immédiate → invariant golden pour ce terme.
-        chronic_muts += oidium_disease(plant, tile, eco, seed, week, vl)
+        chronic_muts += oidium_disease(plant, tile, eco, seed, week, vl, index)
         # Stress hydrique sévère (voie sécheresse → santé, médiée par génotype)
         chronic_muts += drought_stress_damage(plant, eco, seed, week)
         # Carence lumineuse chronique (voie ombre → santé, médiée par tolerance_ombre)

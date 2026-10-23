@@ -441,16 +441,19 @@ class SeedBank:
 
     def tick_species_aging(self) -> None:
         """Vieillissement du pool génétique (densité), purge des pools épuisés."""
+        # `stat.weight *= perte` écrit en ligne = `stat.decay(perte)` sans l'appel de
+        # méthode (~60 000 stats par tick en an 2 — FLUIDITÉ AN 2 ②). Même opération.
+        perte = SPECIES_SEED_VIABILITY_LOSS
         for r in range(self.rows):
             for c in range(self.cols):
                 cell = self.species[r][c]
                 dead = []
                 for cls, rec in cell.items():
-                    rec["density"] *= SPECIES_SEED_VIABILITY_LOSS
+                    rec["density"] *= perte
                     for stat in rec["genes"].values():
-                        stat.decay(SPECIES_SEED_VIABILITY_LOSS)
+                        stat.weight *= perte
                     for stat in rec.get("expression", {}).values():
-                        stat.decay(SPECIES_SEED_VIABILITY_LOSS)
+                        stat.weight *= perte
                     if rec["density"] < 1e-4:
                         dead.append(cls)
                 for cls in dead:
