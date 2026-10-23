@@ -67,6 +67,10 @@ namespace Symbiose
 		// (1 = le défaut de test de Nico). Le rapport donne la cadence obtenue.
 		private static readonly float CaptureBancCadence = ParseFloat(ArgCapture("banc-cadence"));
 		private int _bancSemaineMesure;         // semaine moteur au début de la mesure
+		// Automate pendant le banc (FLUIDITÉ AN 2 ①) : « ouvert » = touche A (branché +
+		// onglet Automate affiché) ; « ferme » = A puis fermeture (branché, onglet fermé).
+		// Absent = automate débranché. Posé AVANT l'avance : l'automate joue tout le banc.
+		private static readonly string CaptureBancAutomate = ArgCapture("banc-automate");
 		// Banc ACCÉLÉRÉ (Maj+E, WorldView.BancAccelere.cs) : ses défauts remplacent
 		// semaine / zoom / cadence ; les arguments de capture VM gardent la main.
 		private int EtalonSemaine =>
@@ -207,10 +211,31 @@ namespace Symbiose
 			GetTree().Quit();
 		}
 
+		// Mêmes gestes que le joueur (touche A, puis fermeture du panneau) : on mesure
+		// exactement ce que Nico voit au F5, sans chemin de code propre au banc.
+		private void BrancherAutomateBanc()
+		{
+			if (CaptureBancAutomate != "ouvert" && CaptureBancAutomate != "ferme") return;
+			ToggleAutomate();
+			if (CaptureBancAutomate == "ferme" && _consultation != null && IsInstanceValid(_consultation))
+				_consultation.Fermer();
+		}
+
+		// Ligne du rapport (E et C) : l'automate et son onglet changent le coût de la vue.
+		private string LigneAutomate()
+		{
+			bool onglet = _automateContent != null && IsInstanceValid(_automateContent)
+				&& _automateContent.IsVisibleInTree();
+			return $"automate {(_automateOn ? "BRANCHÉ" : "débranché")} · onglet Automate "
+				+ $"{(onglet ? "VISIBLE" : "fermé")} · panneau de consultation "
+				+ $"{(_consultation != null && IsInstanceValid(_consultation) ? "ouvert" : "fermé")}";
+		}
+
 		// Appelé en fin d'AppliquerCapture : options du banc VM.
 		private void AppliquerCaptureBanc()
 		{
 			if (CaptureOmbres == "0" && ShadowsOn) ToggleShadows();
+			BrancherAutomateBanc();
 			if (!float.IsNaN(CaptureEtalonnage)) ToggleEtalonnage();
 		}
 	}

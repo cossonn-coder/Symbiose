@@ -51,6 +51,7 @@ namespace Symbiose
 			sb.AppendLine($"  cadence : phase {_phase} · mode {_simMode} · "
 				+ $"{(_simMode == SimMode.Turbo ? "turbo" : $"{spw:F0} s/semaine")} · "
 				+ $"monde « {_configLancee} » seed {Seed} · semaine moteur {SemaineMoteur}");
+			sb.AppendLine($"  {LigneAutomate()}");   // WorldView.Etalonnage.cs
 			// Ligne SERVEUR (tick moteur pur, cf. banc perf).
 			string srvTick = _srvMsTick < 0 ? "—" : $"{_srvMsTick:F1} ms";
 			sb.AppendLine($"[serveur] tick moteur {srvTick} · N plantes "

@@ -78,7 +78,11 @@ namespace Symbiose
 		private static readonly string CaptureMeteo = ArgCapture("meteo");
 		private static readonly float CaptureSemaines = ParseFloat(ArgCapture("semaines"));
 		private static readonly bool CaptureDefile = ArgCapture("defile") != null;
-		private static readonly float CaptureSeed = ParseFloat(ArgCapture("seed"));
+		// Graine lue en ENTIER (fluidité an 2 ①) : un float n'a que 24 bits de mantisse,
+		// 1521550718 y devenait 1521550720 (pas de 128 à cette échelle) → mauvais jardin.
+		private static readonly int? CaptureSeed =
+			int.TryParse(ArgCapture("seed"), NumberStyles.Integer, CultureInfo.InvariantCulture, out int g)
+				? g : null;
 		private static readonly string CaptureCacher = ArgCapture("cacher");
 		// Orientation D35 imposée (0..3 quarts de tour, D106 T2 : vérifier le sol
 		// en un lot sous les 4 orientations). Appliquée AVANT le centrage caméra.
@@ -144,7 +148,7 @@ namespace Symbiose
 		private void PreparerCapture()
 		{
 			if (!float.IsNaN(CaptureSemaines)) WarmupWeeks = Mathf.Max(0, (int)CaptureSemaines);
-			if (!float.IsNaN(CaptureSeed)) Seed = (int)CaptureSeed;
+			if (CaptureSeed.HasValue) Seed = CaptureSeed.Value;
 			string[] m = CaptureMeteo?.Split(',');
 			if (m == null || m.Length < 3) return;
 			GetTree().CreateTimer(ParseFloat(m[2])).Timeout += () =>
