@@ -20,7 +20,7 @@
 |---|---|---|---|---|
 | ① | `01_banc_cadence.md` | banc headless n≥3 + banc E automate ON/OFF/onglet → baseline + cause « automate » | intact | **FAIT** (non commité) |
 | ② | `02_moteur_bit_identique.md` | postes plats du tick an 2, −20 % visé | INCHANGÉ (bit-identique) | **FAIT** (non commité) — −22,6 % |
-| ③ | `03_pont_allege.md` | `auxin` hors snapshot, flottants arrondis, `_snapshot` −40 % | intact (pont +1) | à faire |
+| ③ | `03_pont_allege.md` | `auxin` hors snapshot, flottants arrondis, `_snapshot` −40 % | intact (pont 0.5.57) | **FAIT** (non commité) — réponse −37 %, `_snapshot` NON tenu |
 | ④ | `04_vue_application.md` | lecture des plantes hors thread principal, cuisson sous budget, cause ① | intact | à faire |
 | ⑤ | `05_bilan.md` | banc final VM, protocole PC, clôture D114 | intact | à faire |
 
@@ -104,10 +104,44 @@ Mesure banc ① (VM, graine 1521550718, `full`, OFF, même session, HEAD en work
 → **tick an 2 −22,6 %** [n=3 runs], pire semaine −25 % [n=3 runs] ; population identique.
 LDC : `container.py` 310 (🟡 préexistant, inchangé en responsabilité) ; autres ≤ 300.
 
+## ③ Pont allégé — FAIT (2026-10-23), protocole **0.5.57**
+Module neuf `tools/simserver/segments_pont.py` (`SegmentsVue`, instance portée par
+`SimServer.__init__`, `nouvelle_passe()` en tête de `_snapshot`) : segments du snapshot (sol
++ conteneurs) SANS `auxin` NI `has_bud` (aucun lecteur C#/tests/outils — grep ; `has_bud` =
+écart au kickoff, même raison) ; `base`/`length_cm`/`thickness_cm` à 0,01 cm (pas 0,1 : écart
+d'enchaînement ~2,5 px au zoom ×32 ; épaisseur plancher mesurée 0,3 cm), `dir` à 1e-3.
+Plante : `height_cm` 0,1 cm, `foliage_density` 1e-3 ; **`x_cm`/`y_cm` laissés pleins** (clé de
+diff vue + cible des gestes, ε 0,1). `structure_to_dict()` intact. Arrondi `round(x*100)/100`
+(rint, ×2 plus rapide que `round(x,2)`) + cache par segment à 2 générations (95 % des
+segments gardent leurs tuples base/dir d'une semaine à l'autre). Neutralité du cache vérifiée
+(snapshot identique cache froid/chaud/vide, hors `perf.rss_mo`, 8 semaines). `sort_keys`
+GARDÉ : ~40 ms de dumps, mais des dicts sont construits depuis des `set` (ordre dépendant de
+PYTHONHASHSEED) → l'ôter casserait l'identité octet à octet entre processus.
+Tests : golden `fecccded…` INCHANGÉ ; `test_sim_server` 288/288 ; bois_mort, vision,
+infobulle_vivant, automate_determinisme/log, croissance verts ; `test_peripherie_pont` 49/50
+(attend 0.5.41 — **préexistant**, déjà rouge à 0.5.56). `dotnet build` vert. Tests version
+`tests/simserver/{voix,conteneurs,structures}.py` → 0.5.57. LDC : `serialize.py` 389 (🟡
+préexistant, +4) ; `segments_pont.py` 33.
+
+Mesure banc ① (VM, graine 1521550718, `full`, OFF, même session, HEAD `c243170` en worktree) :
+| | réponse an 1 / an 2 moy (max) | snapshot an 2 moy (max) | tick an 2 | plantes |
+|---|---|---|---|---|
+| HEAD | 2 422 / 5 072 Ko (5 771) [n=3 runs] | 186 ms (427) [n=3 runs] | 818 ms | 654 |
+| ③ | 1 693 / 3 193 Ko (3 596) [n=3 runs] | 234 ms (469) [n=3 runs] | 814 ms | 654 |
+→ **réponse an 2 −37 %** [n=3 runs] ; **`_snapshot` +26 %** [n=3 runs, charge ~1,1] — cible −40 %
+**NON tenue**. A/B en processus s111-118 (snapshot + `json.dumps` du pont) : HEAD 129 + 229 =
+359 ms, ③ 140 + 146 = 298 ms → **pipe Python −17 %** [n=8 semaines, VM bruitée ±30 %] ; le parse
+Godot (∝ taille) devrait baisser d'autant que la réponse — à confirmer au ④/⑤. Écart banc/A-B
+sur `_snapshot` non élucidé (piste : le cache retient ~16 k tuples → GC gen2 plus long dans le
+vrai tick ; `gc.disable()` autour de `_snapshot` mesuré −10 % [n=5 appels], NON appliqué).
+Le reste de `_snapshot` (~100 ms) est éparpillé (`leaf_symptoms` per-plante → `category_density`
+par plot dans `sim/` = moteur, interdit au ③ ; boucles de grilles) : rien de gros côté pont.
+
 ## Ce qui reste
-③→⑤.
+④→⑤ (+ décider si `_snapshot` mérite un tronçon : mémo `category_density` par plot côté sim,
+GC).
 
 ## §REPRISE
 Lire `CLAUDE.md`, ce fichier, le doc de conception, puis le kickoff du premier tronçon
-« à faire » (③ `03_pont_allege.md`). Référence headless à re-mesurer avec
+« à faire » (④ `04_vue_application.md`). Pont = **0.5.57**. Référence headless à re-mesurer avec
 `cd data/code && python3 -m tools.banc_cadence [--automate]` (≈ 3 min/run). Lancement : `/sprint-auto sprint_fluidite_an2`.

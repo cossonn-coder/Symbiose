@@ -771,7 +771,15 @@ from __future__ import annotations
 #       `target.carpophore [r, c, slot]` pour `manger` (le rang dans la liste ne vaut
 #       plus le slot dès qu'un carpophore du plot a été mangé). Perception pure →
 #       golden INTACT.
-ENGINE_VERSION = "0.5.56"
+# 0.5.57 (FLUIDITÉ AN 2 ③, pont allégé) : chaque segment du snapshot (plantes du
+#       sol ET des conteneurs) PERD `auxin` et `has_bud` (jamais lus par la vue ni
+#       par un test du pont) et ses flottants sont ARRONDIS à la précision
+#       perceptible : `base`/`length_cm`/`thickness_cm` à 0,01 cm, `dir` à 1e-3
+#       (cf. `segments_pont.py`). Plante : `height_cm` à 0,1 cm, `foliage_density`
+#       à 1e-3. `x_cm`/`y_cm` de la plante restent PLEINS (clé de diff côté vue +
+#       cible des gestes). `structure_to_dict()` (save/tests) inchangé. Réponse
+#       an 2 −37 % [n=3 runs]. Perception pure → golden INTACT.
+ENGINE_VERSION = "0.5.57"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

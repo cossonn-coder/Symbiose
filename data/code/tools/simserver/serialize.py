@@ -116,6 +116,9 @@ class SerializeMixin:
         week = gs["week"]
         week_in_year = ((week - 1) % 52) + 1
         saison = saison_de(week_in_year)
+        # Segments allégés + cache de vecteurs arrondis (③, cf. segments_pont).
+        segv = self._segments_vue
+        segv.nouvelle_passe()
         plants = []
         for tile in gs["tiles"]:
             eco = gs["eco"][tile.tile_id]
@@ -132,8 +135,9 @@ class SerializeMixin:
                     "x_cm": p.x_cm, "y_cm": p.y_cm,
                     "stage": p.current_stage,
                     "stage_name": p.stage.name,
-                    "height_cm": p.current_height,
-                    "segments": p.structure_to_dict(),
+                    # 0,1 cm : silhouette LOD, la vue ne fait que dessiner (③, 0.5.57).
+                    "height_cm": round(p.current_height, 1),
+                    "segments": segv.segments(p.segments),
                     # Luxuriance par stratification (D65, sprint LUXURIANCE ⑥) —
                     # trois descripteurs PUR RENDU, lecture seule (hors _PLANT_ATTRS
                     # du golden → golden INTACT). Tous dérivés d'un état déjà calculé :
@@ -233,7 +237,7 @@ class SerializeMixin:
                 # smoke, sols drainants : aucun symptôme).
                 base["leaf_symptoms"] = semiologie.leaf_symptoms(p, eco, saison)
                 foliage_density = cls.foliage_density_at(p, saison)
-                base["foliage_density"] = foliage_density
+                base["foliage_density"] = round(foliage_density, 3)   # jauge [0,1] (③)
                 # ÉMETTEUR d'ombre (LOD D67, ③) : miroir EXACT de la métrique de
                 # fields/light.py:compute — pouvoir = hauteur × rayon canopée ×
                 # densité foliaire, émettrice ssi ≥ SHADING_POWER_MIN. On réutilise la
@@ -814,7 +818,7 @@ class SerializeMixin:
                       "stage": p.current_stage, "stage_name": p.stage.name,
                       "height_cm": p.current_height,
                       "dead": not p.is_alive,
-                      "segments": p.structure_to_dict()}
+                      "segments": self._segments_vue.segments(p.segments)}
                 if p.is_alive:
                     # Vitalité continue (0.5.28, miroir du vivant en pleine terre) :
                     # même descripteur global d'usure pour la plante d'un conteneur.

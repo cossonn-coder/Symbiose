@@ -18,6 +18,7 @@ from .maitrise_cmds import MaitriseCmdsMixin
 from .palette_cmd import PaletteCmdMixin
 from .automate_cmd import AutomateCmdMixin
 from .vision_cmds import VisionCmdsMixin
+from .segments_pont import SegmentsVue
 
 
 class SimServer(CommandsMixin, ActionsMixin, CiblesMixin, SerializeMixin, VoixMixin,
@@ -30,6 +31,10 @@ class SimServer(CommandsMixin, ActionsMixin, CiblesMixin, SerializeMixin, VoixMi
         # Jardinier automate (sprint jardinier_auto ⑥) : None tant qu'on ne l'a pas
         # activé (`automate on`). Opt-in strict → F5 par défaut inchangé.
         self._automate = None
+        # Segments ALLÉGÉS pour la vue (FLUIDITÉ AN 2 ③, 0.5.57) : sans `auxin`,
+        # flottants arrondis, vecteurs en cache (cf. segments_pont).
+        # `structure_to_dict()` reste le format complet (save/tests).
+        self._segments_vue = SegmentsVue()
 
 
 def main() -> int:
