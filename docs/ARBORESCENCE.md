@@ -149,6 +149,7 @@ dans la carte : leur nom est déductible du dossier.
 | `run_eternel/` | `conception_perf_run_eternel.md` |
 | `lod/` | `conception_perf_lod_ombre.md`, `conception_perf_rendu_plantes.md` |
 | `scatter/` | `conception_perf_scatter_recue.md` |
+| `fluidite/` | `conception_fluidite_an2.md` |
 
 ---
 

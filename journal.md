@@ -196,6 +196,7 @@ pointeur ci-dessous. Ne plus écrire le contenu des entrées ici.
 - [2026-10-22 — Sprint **INFO-BULLE DU VIVANT** — CLOS (`/sprint-auto`, ①→③) : bêtes et champignons nommés après 3 saisons d'observation, rôle + abondance + nourriture, seuil de visibilité mesuré, voix saine ; golden intact `22768f33…`, pont 0.5.48 ; D110 (a)(b) fermés, (g) levé côté vue, + (h)(i) ; reste F5](journal/154_2026-10-22_sprint-infobulle-vivant-CLOS.md)
 - [2026-10-22 — Conception **LE SOL QUI RESPIRE** (D111) — FIGÉE : eau (rosée de l'air, pluie toutes saisons, transpiration foliaire), bois mort visible, 13 champignons + parasite de faiblesse, manger & vision, nectar par espèce ; 8 tronçons](journal/155_2026-10-22_conception-sol-qui-respire-FIGEE.md)
 - [2026-10-23 — Sprint **LE SOL QUI RESPIRE** (D111) — CLOS (`/sprint-auto`, ①→⑧ + ②bis/②ter/⑦bis) : eau qui respire, bois mort continu (ceinture + décompo par grosseur), 13 champignons avec leurs voix, parasite qui tue, manger/vision ; golden `fecccded…`, pont 0.5.56 ; D114 perf URGENTE, D115 succession](journal/156_2026-10-23_sprint-sol-qui-respire-CLOS.md)
+- [2026-10-23 — Conception **FLUIDITÉ AN 2** (D114 recadrée) — FIGÉE : le tick n'est plus le goulot (an 2 ≈ 1,07 s VM [n=1 run]), la vue si (2,73 s/sem pour 1 demandée) ; cible PC ≤ 1,5 s/sem, aucune image > 100 ms, automate compris ; 5 tronçons, golden jamais re-figé](journal/157_2026-10-23_conception-fluidite-an2-FIGEE.md)
 
 ---
 
