@@ -78,3 +78,28 @@ p99 image ≤ 100 ms hors rendu GPU logiciel (postes CPU + étalement + cuisson)
   C#) → inventaire au `grep` avant de retirer une clé.
 - ④ : risque de thread (un `GDict` partagé entre pool et thread principal) → la pré-digestion
   ne touche **que** le snapshot fraîchement parsé, jamais un nœud de scène.
+
+## 6. Bilan (⑤, 2026-10-23) — sprint CLOS, golden `fecccded…` jamais re-figé
+
+Mesures complètes : `sprints/perf/fluidite/sprint_fluidite_an2/00_etat.md` §⑤ (VM partagée,
+charge 2-15 pendant les runs : limite commune à tous les chiffres).
+
+| poste (VM, graine 1521550718, `full`) | avant | après | écart |
+|---|---|---|---|
+| tick an 2 moy (headless, A/B entrelacé) | 1 350 ms [n=3 runs] | 1 056 ms [n=3 runs] | −21,8 % |
+| pire semaine an 2 | 2 023 ms [n=3 runs] | 1 277 ms [n=3 runs] | −37 % |
+| `_snapshot` an 2 moy | 239 ms [n=3 runs] | 302 ms [n=3 runs] | +26 % (cible −40 % manquée) |
+| réponse an 2 moy | 5 072 Ko | 3 193 Ko | −37 % |
+| banc E 1 s/sem, OFF | 7,50 s/sem [n=3 runs] | 3,33-3,75 s/sem [n=2 runs hors run sous charge 14] | ×2-2,3 |
+| banc E, automate onglet fermé | 6,0-7,5 s/sem [n=3 runs] | 3,00 s/sem [n=3 runs] | ×2-2,5 |
+| banc E, automate onglet ouvert | 7,50 s/sem [n=3 runs] | 3,00-3,75 s/sem [n=3 runs] | ×2-2,5 |
+| semaine en application / 30 s | 11,5-12,1 s [n=9 runs] | 0,8-2,0 s [n=9 runs] | quasi résorbé |
+| images > 100 ms | 100 % [n=9 runs] | 100 % [n=9 runs] | non interprétable (llvmpipe) |
+
+**Verdict** : cible (≤ 1,5 s/sem, aucune image > 100 ms, PC an 2) **non tenue sur VM** ; sur PC
+estimée à la limite (step ~1,2-1,5 s [conversion ÷ 1,3, pas une mesure]) → **rapport PC requis**
+(protocole §F5 de `00_etat.md`). Poste restant mesuré : la **chaîne du step** (tick moteur +
+parse JSON + lecture des plantes, 2,4-3,0 s vus par la vue sur VM) ; côté images, **création des
+pages d'atlas 2048²** (médiane 83 ms, max 697 ms [n=94 créations, 9 runs]) et **pauses GC .NET**
+(4,3-6,7 ms/image, ~×2 depuis le ④). Cause « automate » du F5 jamais reproduite sur VM.
+D114 **close** (motif +33 % résorbé), **D116** ouverte pour le poste restant.

@@ -19,12 +19,12 @@
 
 ## Sprint en cours
 
-**Sprint A « le sol qui respire » CLOS le 2026-10-23** (`/sprint-auto`, ①→⑧ + ②bis/②ter/⑦bis ajoutés en cours, golden `fecccded…`, pont 0.5.56) ; F5 Nico suspendu jusqu'à D114. **Prochain = 1bis, sprint FLUIDITÉ AN 2 (D114 recadrée, conçu 2026-10-23) → `/sprint-auto sprint_fluidite_an2`.** **File priorisée validée par Nico le 2026-10-22 (retour F5), à faire DANS L'ORDRE :**
+**Sprint FLUIDITÉ AN 2 (D114 recadrée) CLOS le 2026-10-23** (`/sprint-auto`, ①→⑤, golden `fecccded…` jamais re-figé, pont 0.5.57) : tick an 2 −21,8 % [n=3+3 runs entrelacés, VM], réponse −37 %, cadence banc E 1 s/sem 7,5 → 3,0-3,75 s/sem [n=8 runs, VM] ; cible PC ≤ 1,5 s/sem **non tenue sur VM**, à trancher par **3 rapports PC** (protocole `sprints/perf/fluidite/sprint_fluidite_an2/00_etat.md` §F5) ; D114 close → [D116](DETTE.md) (poste restant). F5 Nico de nouveau possible. **Prochain = 2, sprint B vue (D112) → `/conception`.** **File priorisée validée par Nico le 2026-10-22 (retour F5), à faire DANS L'ORDRE :**
 
 1. ~~**Sprint A « le sol qui respire »**~~ CLOS 2026-10-23 (moteur, [D111](DETTE.md)) → `/conception` : bilan hydrique (le sol
    se dessèche), champignons (bois mort au sol, fructification la semaine après la pluie, ~10 espèces
    comestibles / vénéneuses / psychédéliques avec leurs voix), nectar par espèce. Puis re-mesurer D110 (g).
-1bis. **URGENT — perf du tick** ([D114](DETTE.md), +33 % en an 2 depuis le tronçon ① du sprint A) → `/conception` d'un sprint perf dès la fin du sprint A ; **F5 suspendu par Nico jusque-là**.
+1bis. ~~**URGENT — perf du tick**~~ CLOS 2026-10-23 (sprint FLUIDITÉ AN 2, D114 close → [D116](DETTE.md) : rapports PC à fournir).
 2. **Sprint B « ce qui est cassé à l'écran »** (vue, [D112](DETTE.md)) : bêtes et carpophores non dessinés,
    maison en verre, périphérie qui exige F10, bugs de la heatmap du vent + vent en tête de F6, jauges Maj+F3,
    F11 « spray ».
@@ -36,7 +36,9 @@ Fait hors sprint le 2026-10-22 : interrupteur **« Vigueur infinie (test) »** d
 défaut** pendant la phase de test (pont 0.5.49) — ⚠️ le repasser à OFF (`_vigueurInfinie` dans
 `world/WorldView.Parametres.cs`) avant toute distribution (tranche 7 packaging).
 
-Dernier sprint clos : **INFO-BULLE DU VIVANT** — **CLOS le 2026-10-22** (`/sprint-auto` ①→③, golden intact
+Dernier sprint clos : **FLUIDITÉ AN 2** (ci-dessus, journal [`158`](journal/158_2026-10-23_sprint-fluidite-an2-CLOS.md)).
+
+Précédent : **INFO-BULLE DU VIVANT** — **CLOS le 2026-10-22** (`/sprint-auto` ①→③, golden intact
 `22768f33…`, pont 0.5.48) : bêtes et champignons nommés après observation en 3 saisons, rôle + abondance +
 nourriture, seuil de visibilité des symptômes mesuré, voix « plante saine », Maj+F3 technique. **Reste F5 Nico**
 (procédure `sprints/narration/semiologie/sprint_infobulle_vivant/00_etat.md` §F5). Journal :

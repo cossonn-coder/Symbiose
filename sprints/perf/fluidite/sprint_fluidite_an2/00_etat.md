@@ -18,11 +18,11 @@
 ## Carte des tronçons
 | # | Kickoff | Contenu | Golden | État |
 |---|---|---|---|---|
-| ① | `01_banc_cadence.md` | banc headless n≥3 + banc E automate ON/OFF/onglet → baseline + cause « automate » | intact | **FAIT** (non commité) |
-| ② | `02_moteur_bit_identique.md` | postes plats du tick an 2, −20 % visé | INCHANGÉ (bit-identique) | **FAIT** (non commité) — −22,6 % |
-| ③ | `03_pont_allege.md` | `auxin` hors snapshot, flottants arrondis, `_snapshot` −40 % | intact (pont 0.5.57) | **FAIT** (non commité) — réponse −37 %, `_snapshot` NON tenu |
-| ④ | `04_vue_application.md` | lecture des plantes hors thread principal, cuisson sous budget, cause ① | intact | **FAIT** (non commité) — 7,5 → 2,7-3,0 s/sem VM |
-| ⑤ | `05_bilan.md` | banc final VM, protocole PC, clôture D114 | intact | à faire |
+| ① | `01_banc_cadence.md` | banc headless n≥3 + banc E automate ON/OFF/onglet → baseline + cause « automate » | intact | ✅ FAIT |
+| ② | `02_moteur_bit_identique.md` | postes plats du tick an 2, −20 % visé | INCHANGÉ (bit-identique) | ✅ FAIT — −22,6 % |
+| ③ | `03_pont_allege.md` | `auxin` hors snapshot, flottants arrondis, `_snapshot` −40 % | intact (pont 0.5.57) | ✅ FAIT — réponse −37 %, `_snapshot` NON tenu |
+| ④ | `04_vue_application.md` | lecture des plantes hors thread principal, cuisson sous budget, cause ① | intact | ✅ FAIT — 7,5 → 2,7-3,0 s/sem VM |
+| ⑤ | `05_bilan.md` | banc final VM, protocole PC, clôture D114 | intact | ✅ FAIT — cible NON tenue VM, D114 close → D116 |
 
 ## Mesures de référence (HEAD `5c69ac6`, VM, graine 1521550718, `full`)
 Headless [n=1 run] : tick an 0/1/2 591/921/1074 ms, snapshot an 2 183 ms, 654 pl. ; automate ON
@@ -192,12 +192,85 @@ LDC : tous les fichiers touchés ≤ 300 (WorldView.cs 287, Snapshot 282, PlantR
 - Automate onglet ouvert vs fermé : toujours à mesurer au PC (cause non reproduite VM).
 - Ressenti : survoler des espèces nouvelles pendant la saison ne doit plus figer l'image.
 
+## ⑤ Bilan — FAIT (2026-10-23), mesure seule (golden `fecccded…` INCHANGÉ, aucun code touché)
+Conditions : VM partagée avec une autre session (moteur d'échecs `stockfish` jusqu'à 340 % CPU,
+par rafales) → charge 1 min 2-15 pendant les runs (llvmpipe compris) ; toutes les mesures portent
+cette limite. Graine 1521550718, monde `full`, runs EN SÉRIE.
+
+### Headless (`tools/banc_cadence.py`, 156 sem.) — A/B ENTRELACÉ même session
+Avant = worktree HEAD `5c69ac6` (+ outil du ① copié, aucun autre changement) ; après = HEAD
+`303276c` (①→④). Runs alternés avant/après pour partager la même charge.
+| | tick an 0/1/2 moy | pire semaine an 2 | snapshot an 2 moy (max) | réponse an 2 moy (max) | plantes an 2 |
+|---|---|---|---|---|---|
+| avant `5c69ac6` | 679 / 1 123 / 1 350 ms [n=3 runs, charge départ 2,0-5,3] | 2 023 ms | 239 ms (462) [n=3 runs] | 5 072 Ko (5 771) | 654 |
+| après `303276c` | 571 / 917 / 1 056 ms [n=3 runs, charge départ 2,1-2,8] | 1 277 ms | 302 ms (546) [n=3 runs] | 3 193 Ko (3 596) | 654 |
+→ **tick an 2 −21,8 %** [n=3+3 runs entrelacés], pire semaine −37 % [n=3+3 runs] ; tick + snapshot
+(= ce que le pipe paie côté Python) 1 589 → 1 358 ms **−14,5 %** [n=3+3 runs] ; **réponse −37 %** ;
+**`_snapshot` +26 %** [n=3+3 runs] (cible −40 % du ③ manquée ; un vrai gain exige de toucher `sim/` :
+`leaf_symptoms` → `category_density` par plot). Populations identiques avant/après et entre runs.
+Série non entrelacée du ⑤ (même HEAD, avant l'A/B) : OFF 575 / 926 / 1 114 ms, snapshot 317 ms
+[n=3 runs, charge 1-3] ; automate 575 / 969 / 1 139 ms, automate 34 ms/tick (max 54), 613 pl.
+[n=3 runs, run 3 sous charge 7,2]. Absolus plus hauts qu'au ①/② (1 011 / 807 ms) : **charge VM**,
+d'où l'A/B entrelacé comme seule comparaison valable.
+
+### Banc E `tools/perf_vm.sh -E 30 -A 1 -W 90 -S 1521550718 -t 900` (VM llvmpipe, semaine moteur 94)
+Avant = mesures du ① (`b198967` + instruments ①, même scénario, graine corrigée).
+| cas | avant (①) s/sem | après (⑤) s/sem | step vu par la vue (après) | tick moteur / parse / lecture pool (après) | semaine en application / 30 s (après) | images > 100 ms (après) |
+|---|---|---|---|---|---|---|
+| OFF | 7,50 ×3 [n=3 runs] | 7,50 / 3,33 / 3,75 [n=3 runs, run 1 sous charge 14 : tick 1,77 s] | 2,7-3,8 s | 1,30-1,77 s / 271-401 / 420-485 ms | 1,1-1,7 s | 100 % |
+| automate, onglet fermé | 6,00 / 6,00 / 7,50 [n=3 runs] | 3,00 ×3 [n=3 runs] | 2,5-2,6 s | 1,24-1,29 s / 241-272 / 324-352 ms | 0,8-0,9 s | 100 % |
+| automate, onglet ouvert | 7,50 ×3 [n=3 runs] | 3,33 / 3,75 / 3,00 [n=3 runs, run 2 sous charge 19] | 2,4-2,8 s | 1,23-1,36 s / 214-286 / 298-389 ms | 1,1-2,0 s | 100 % |
+Résolution : 1 semaine appliquée sur 30 s (3,00 ↔ 3,33 = une semaine de plus). FPS 2,0-3,9 ; p99
+image 345-1 039 ms ; rendu CPU llvmpipe 110-370 ms/image → images > 100 ms : 100 % avant comme après,
+**non interprétable sur VM**. Réponse vue côté Godot 2,06-2,23 Mo. Pause GC 4,3-6,7 ms/image, pires
+GC 10-60 ms dans les pires images [n=9 runs]. **Pages d'atlas 2048² créées : 94 créations,
+médiane 83 ms, max 697 ms** [n=9 runs, VM, avance comprise] ; c'est le pire poste ponctuel de cuisson.
+Automate : onglet ouvert vs fermé = ≤ 1 semaine d'écart, « ménage » pire passage 22-38 ms (ouvert)
+vs 8-9 ms (fermé) [n=3+3 runs] → cause « automate » du F5 **toujours non reproduite sur VM**.
+
+### Verdict cible (PC, an 2, 1 s/sem : ≤ 1,5 s/sem, aucune image > 100 ms)
+**Non tenue sur VM** : 3,0-3,75 s/sem [n=8 runs hors run sous charge 14] (cadence ×2-2,5 vs avant).
+La cadence VM ≈ step vu par la vue (2,4-3,0 s), plus le retard d'application. **Poste restant
+mesuré = la chaîne du step** : tick moteur 1,2-1,4 s (sous contention llvmpipe ; 1,06 s headless
+[n=3 runs]) + parse 0,21-0,40 s + lecture des plantes 0,30-0,49 s ; côté images : création de pages
+d'atlas (médiane 83 ms) et pauses GC. Conversion PC (moteur ÷ 1,3 [mesure 2026-07-09]) : tick
+~0,8 s → step ~1,2-1,5 s **estimé** [conversion, pas une mesure] : la cible est à la limite ; seul
+le rapport PC tranche. → **D114 close** (son motif — tick +33 % — est résorbé : −21,8 %), **D116
+ouverte** = le poste restant (règle « une fermée, une ouverte »).
+
+### Tests rouges PRÉEXISTANTS (vérifiés à HEAD d'origine, aucun lien avec ce sprint)
+`test_population` (hash de réf. périmé, obtenu `a60c4a31…`), `test_vent` 52/54 (⑥ assèchement ×2),
+`test_peripherie_pont` 49/50 (attend pont 0.5.41). Rattachés à D116 (point (d), ménage des oracles).
+
+## §F5 — protocole PC pour Nico (mesure, puis ressenti)
+1. `git pull` sur le Windows (le F5 teste souvent du code non poussé), puis ouvrir Godot.
+2. **Mesure an 2 à 1 s/semaine** : la touche E seule mesure la semaine 45 au rythme nominal — pour
+   l'an 2 il faut les arguments du banc VM. Dans Godot : *Projet → Paramètres du projet* (cocher
+   « Avancé ») *→ Éditeur → Run → Main Run Args* :
+   `-- --capture-banc=full --capture-seed=1521550718 --capture-etalonnage=30 --capture-banc-semaine=90 --capture-banc-cadence=1`
+   puis F5 : le jeu avance seul en turbo jusqu'à la semaine 90 (quelques minutes), mesure 30 s,
+   copie le rapport au presse-papier et se ferme. **Coller ce rapport** (il commence par
+   `=== Rapport perf Symbiose`).
+3. Recommencer en ajoutant ` --capture-banc-automate=ferme` (automate branché, onglet fermé), puis
+   avec ` --capture-banc-automate=ouvert` (onglet Automate affiché). 3 rapports au total.
+4. **Vider Main Run Args** ensuite (sinon chaque F5 relance le banc) — et ne pas committer
+   `project.godot` s'il a été modifié par ce réglage.
+5. Ce qui compte dans chaque rapport : la ligne `cadence 1,0 s/semaine … → X s/semaine obtenues`
+   (cible ≤ 1,5), `images > 100 ms : N` (cible 0), `vu par la vue … tick moteur … parse JSON …
+   lecture plantes`, et dans la console Godot les lignes `[Cuisson] image lente … page(s) créée(s)
+   en X ms` (coût réel d'une page d'atlas sur la HD 4600).
+6. Ressenti (F5 normal, sans arguments) : jouer en an 2 à 1 s/sem avec et sans la touche A ;
+   survoler des espèces pendant la saison ne doit plus figer l'image.
+Conversion : moteur VM → PC ÷ 1,3 [mesure 2026-07-09] ; pour la vue, seul le rapport PC fait foi.
+
 ## Ce qui reste
-⑤ (+ décider : `_snapshot` (mémo `category_density` par plot côté sim, GC Python) ; GC .NET de
-la vue (régression ④) ; croissance de l'atlas / coût d'une page sur PC).
+Sprint CLOS. Suite = [D116](../../../../DETTE.md) (poste restant, à mesurer d'abord au PC) ; la
+file reprend à **D112 sprint B vue**. Rappel : « Vigueur infinie (test) » ON par défaut
+(`_vigueurInfinie`, `world/WorldView.Parametres.cs`) → repasser OFF avant le packaging.
 
 ## §REPRISE
-Lire `CLAUDE.md`, ce fichier, le doc de conception, puis le kickoff du premier tronçon
-« à faire » (⑤ `05_bilan.md`). Pont = **0.5.57**. Référence headless à re-mesurer avec
-`cd data/code && python3 -m tools.banc_cadence [--automate]` (≈ 3 min/run). Banc E : passer `-t 900` (le défaut 300 s ne suffit plus pour atteindre
-la semaine 90, ≈ 7 min/run). Lancement : `/sprint-auto sprint_fluidite_an2`.
+Sprint **CLOS** le 2026-10-23 (①→⑤). Pont = **0.5.57**, golden `fecccded…`. Rien à reprendre ici :
+attendre les 3 rapports PC de Nico (§F5) pour trancher D116, sinon passer à D112
+(`/conception` sprint B vue). Bancs : `cd data/code && python3 -m tools.banc_cadence [--automate]`
+(≈ 3 min/run) ; banc E avec `-t 900` (≈ 4-7 min/run) ; comparer avant/après en A/B ENTRELACÉ
+(la VM est partagée, les absolus dérivent avec la charge).
