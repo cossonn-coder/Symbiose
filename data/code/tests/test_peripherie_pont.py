@@ -94,7 +94,11 @@ def test_bloc():
 # --- AE. le snapshot du serveur --------------------------------------------
 def test_snapshot():
     print("\n[AE] snapshot : absent en smoke, présent dans les mondes de jeu")
-    check("protocole bumpé à 0.5.41", ENGINE_VERSION == "0.5.41", ENGINE_VERSION)
+    # Indépendant de la version courante (oracle périmé à chaque bump, D116 d) :
+    # le bloc `ceinture` existe depuis 0.5.41 → tout protocole ≥ 0.5.41 convient.
+    check("protocole ≥ 0.5.41 (bloc ceinture)",
+          tuple(int(x) for x in ENGINE_VERSION.split(".")) >= (0, 5, 41),
+          ENGINE_VERSION)
 
     smoke = _serveur("smoke").cmd_snapshot({})["snapshot"]
     check("smoke (fixture du golden) n'a AUCUN bloc `ceinture`",

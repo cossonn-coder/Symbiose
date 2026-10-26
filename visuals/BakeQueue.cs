@@ -117,8 +117,15 @@ namespace Symbiose
 		public override void _EnterTree() => AtlasPages.Hote = this;
 
 		// Banc PERF VUE ① : chronométré (PerfPostes), corps inchangé.
+		// Banc E en 3 phases, phase B (FLUIDITÉ PC ①) : le rendu est suspendu → une
+		// page d'atlas lancée ne serait jamais rendue, et sa « cuisson » validée à
+		// l'image suivante afficherait un rectangle vide. La file se fige pendant B
+		// (WorldView.Banc3Phases.cs encadre la bascule d'une image de garde).
+		public static bool Suspendue;
+
 		public override void _Process(double delta)
 		{
+			if (Suspendue) return;
 			long t0 = PerfPostes.Debut();
 			ulong u0 = Time.GetTicksUsec();
 			_commitUs = _releaseUs = _beginUsMax = 0;

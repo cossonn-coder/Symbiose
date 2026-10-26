@@ -36,13 +36,17 @@
 #     -R  monde rendu en PLEINE RÉSOLUTION 1920×1080 ×1 (mesure, PERF VUE ⑤)
 #     -a  automate branché pendant tout le banc (FLUIDITÉ AN 2 ①) : ouvert = touche A
 #         (onglet Automate affiché) ; ferme = branché puis panneau fermé
+#     -3  BANC E EN 3 PHASES (FLUIDITÉ PC ①) : durées A,B,C en s (défaut 25,25,20) —
+#         A normal / B rendu suspendu (steps seuls, ≥ 6) / C moteur en pause ; à
+#         combiner avec -A (sinon aucun step en A/B). Implique -E (durée de A).
+#   Exemple : tools/perf_vm.sh -3 25,25,20 -A 1 -W 90 -S 1521550718 -t 900
 #   Exemple : tools/perf_vm.sh -z 0.5 -x Ground
 #   Exemple : tools/perf_vm.sh -E 20 -z 4 -x MacroLife -O
 #   Journal complet : /tmp/perf_symbiose/godot.log
 set -euo pipefail
 
 . "$(dirname "${BASH_SOURCE[0]}")/lib_vm_godot.sh"   # DEPOT GODOT XROOT + vm_*
-BANC=full ZOOM="" CENTRE="" CACHER="" SAUT=4 N=8 DELAI=300 GRAINE="" SEMAINES="" TURBO="" BUILD=1 BANC_E="" OMBRES="" BANC_W="" CADENCE="" VENT="" PLEINE="" AUTOMATE=""
+BANC=full ZOOM="" CENTRE="" CACHER="" SAUT=4 N=8 DELAI=300 GRAINE="" SEMAINES="" TURBO="" BUILD=1 BANC_E="" OMBRES="" BANC_W="" CADENCE="" VENT="" PLEINE="" AUTOMATE="" TROIS=""
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -63,8 +67,9 @@ while [ $# -gt 0 ]; do
     -V) VENT="$2"; shift 2 ;;
     -R) PLEINE=1; shift ;;
     -a) AUTOMATE="$2"; shift 2 ;;
+    -3) TROIS="$2"; BANC_E="${2%%,*}"; shift 2 ;;
     --no-build) BUILD=0; shift ;;
-    -h|--help) sed -n '2,41p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,45p' "$0"; exit 0 ;;
     *) echo "option inconnue : $1" >&2; exit 2 ;;
   esac
 done
@@ -103,6 +108,7 @@ if [ -n "$BANC_E" ]; then Z=banc-zoom C=banc-centre; else Z=zoom C=centre; fi
 [ -n "$VENT" ] && ARGS+=(--capture-vent="$VENT")
 [ -n "$PLEINE" ] && ARGS+=(--capture-pleine-res=1)
 [ -n "$AUTOMATE" ] && ARGS+=(--capture-banc-automate="$AUTOMATE")
+[ -n "$TROIS" ] && ARGS+=(--capture-banc-3phases="$TROIS")
 DISPLAY="$ECRAN" LIBGL_ALWAYS_SOFTWARE=1 "$GODOT" --path "$DEPOT" \
   --rendering-driver opengl3 --resolution 1920x1080 --print-fps \
   -- "${ARGS[@]}" >"$LOG" 2>&1 &

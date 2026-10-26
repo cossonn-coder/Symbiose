@@ -779,7 +779,11 @@ from __future__ import annotations
 #       à 1e-3. `x_cm`/`y_cm` de la plante restent PLEINS (clé de diff côté vue +
 #       cible des gestes). `structure_to_dict()` (save/tests) inchangé. Réponse
 #       an 2 −37 % [n=3 runs]. Perception pure → golden INTACT.
-ENGINE_VERSION = "0.5.57"
+# 0.5.58 (FLUIDITÉ PC ①, instruments) : ajout rétro-compatible. La réponse `init`
+#       gagne `python {version, implementation, executable}` (perf.interpreteur) :
+#       le rapport de banc de la vue dit quel interpréteur tourne au PC. Hors tick →
+#       golden INTACT.
+ENGINE_VERSION = "0.5.58"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

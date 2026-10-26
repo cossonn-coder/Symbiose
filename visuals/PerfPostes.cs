@@ -3,8 +3,8 @@
 // de jeu, chaque famille de travail coûte au fil principal (vie macro, ombres,
 // soleil, vent, cuisson, dessin des plantes, application de semaine, tapis).
 // Le rapport du banc (touche E, WorldView.Etalonnage.cs) les met à côté du
-// temps d'image total : ce qui reste « non attribué » est le rendu lui-même
-// (envoi au pilote OpenGL, remplissage GPU) et le reste du moteur Godot.
+// temps d'image total et du rendu CPU mesuré par Godot : ce qui reste est
+// « inexpliqué » (reste du moteur Godot, pilote, ou CPU volé — FLUIDITÉ PC ①).
 //
 // 📖 Pédagogie (côté embarqué) : c'est l'équivalent d'un compteur de cycles
 // (DWT->CYCCNT sur Cortex-M) lu en entrée et en sortie de chaque routine, puis
@@ -16,7 +16,7 @@
 //  - Toujours actif (quelques additions par appel) ; `Reset()` ouvre une
 //    fenêtre de mesure, `Ligne(...)` la résume.
 //  - Les `_Draw` mesurés ne font qu'ENREGISTRER des commandes de dessin : le
-//    vrai coût de rendu de ces commandes tombe plus tard, dans le « non attribué ».
+//    vrai coût de rendu de ces commandes tombe plus tard, dans le « rendu CPU ».
 
 using System.Diagnostics;
 using System.Globalization;

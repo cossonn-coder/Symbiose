@@ -63,6 +63,13 @@ namespace Symbiose
 
 		public bool IsAlive => _proc != null && !_proc.HasExited;
 
+		// Identité du moteur lancé (FLUIDITÉ PC ①) : exécutable passé à l'OS (binaire
+		// gelé, `python3` ou `python`), puis — à l'init, pont ≥ 0.5.58 — la version du
+		// protocole et l'interpréteur Python effectif. Lus par le HUD et le rapport perf.
+		public string Lanceur { get; private set; } = "?";
+		public string EngineVersion { get; private set; } = "?";
+		public string Interpreteur { get; private set; } = "? (pont < 0.5.58)";
+
 		// -------------------------------------------------------------------
 		// CYCLE DE VIE DU SOUS-PROCESS
 		// -------------------------------------------------------------------
@@ -125,6 +132,7 @@ namespace Symbiose
 			try
 			{
 				_proc = Process.Start(psi);
+				Lanceur = fileName;
 				BaisserPriorite();
 				return true;
 			}
@@ -197,7 +205,14 @@ namespace Symbiose
 			if (carnetAnticipe.HasValue) msg["carnet_anticipe"] = carnetAnticipe.Value;
 			if (vigueurInfinie.HasValue) msg["vigueur_infinie"] = vigueurInfinie.Value;
 			var resp = Request(msg);
-			return resp?["world"].AsGodotDictionary();
+			if (resp == null) return null;
+			if (resp.ContainsKey("engine_version")) EngineVersion = resp["engine_version"].AsString();
+			if (resp.ContainsKey("python"))
+			{
+				var py = resp["python"].AsGodotDictionary();
+				Interpreteur = $"{py["implementation"].AsString()} {py["version"].AsString()} ({py["executable"].AsString()})";
+			}
+			return resp["world"].AsGodotDictionary();
 		}
 
 		/// <summary>Avance la simulation d'une semaine → snapshot, ou null.</summary>

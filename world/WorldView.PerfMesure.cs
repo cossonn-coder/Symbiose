@@ -33,6 +33,16 @@
 // On y ajoute le temps de rendu mesuré par le serveur de rendu Godot
 // (`ViewportSetMeasureRenderTime`) : CPU de rendu et, si le pilote le permet,
 // GPU — 0 = non disponible sur ce pilote.
+//
+// FLUIDITÉ PC ① — ATTRIBUTION : le rendu CPU est désormais DANS le bilan. La
+// ligne « inexpliqué » = moyenne − postes C# − rendu CPU (avant : « non attribué »
+// = moyenne − postes, qui contenait le rendu CPU, 27-34 ms au PC). Ce qui reste
+// est le temps que ni nos chronos ni le serveur de rendu ne voient : moteur Godot
+// hors postes, attente du pilote, ou fil principal privé de CPU (contention).
+// Le moniteur `TimeProcess` est RETIRÉ du rapport : Godot le publie une fois par
+// seconde et y met le MAXIMUM du temps de process de la seconde écoulée (main.cpp,
+// `process_max`), pas une valeur par image — sa moyenne par image dépassait donc
+// la durée moyenne d'image (176-197 ms contre 97-111 ms au PC, D116).
 
 using Godot;
 using System.Collections.Generic;
@@ -60,7 +70,7 @@ namespace Symbiose
 		// Fenêtre de DISTRIBUTION (banc PERF VUE ①) : null = pas de mesure en cours.
 		private List<double> _distMs;
 		private ulong _distDebutUs;
-		private double _distDraw, _distPrim, _distProcMs, _distRenduCpu, _distRenduGpu;
+		private double _distDraw, _distPrim, _distRenduCpu, _distRenduGpu;
 
 		// Appelé chaque frame depuis _Process (toutes phases).
 		private void MesurerPerfRendu()
@@ -101,7 +111,7 @@ namespace Symbiose
 		{
 			_distMs = new List<double>(4096);
 			_distDebutUs = Time.GetTicksUsec();
-			_distDraw = _distPrim = _distProcMs = _distRenduCpu = _distRenduGpu = 0;
+			_distDraw = _distPrim = _distRenduCpu = _distRenduGpu = 0;
 			RenderingServer.ViewportSetMeasureRenderTime(GetViewport().GetViewportRid(), true);
 			RenderingServer.ViewportSetMeasureRenderTime(_worldVp.GetViewportRid(), true);
 			PerfPostes.Reset();
@@ -114,7 +124,6 @@ namespace Symbiose
 			EchantillonAcoups(frameMs);
 			_distDraw += Performance.GetMonitor(Performance.Monitor.RenderTotalDrawCallsInFrame);
 			_distPrim += Performance.GetMonitor(Performance.Monitor.RenderTotalPrimitivesInFrame);
-			_distProcMs += 1000.0 * Performance.GetMonitor(Performance.Monitor.TimeProcess);
 			AjouterRendu(GetViewport().GetViewportRid());   // fenêtre (HUD + composition)
 			AjouterRendu(_worldVp.GetViewportRid());         // SubViewport monde
 		}
@@ -125,10 +134,12 @@ namespace Symbiose
 			_distRenduGpu += RenderingServer.ViewportGetMeasuredRenderTimeGpu(vp);
 		}
 
-		/// <summary>Ferme la fenêtre et écrit le bloc « distribution + postes ».</summary>
-		private void EcrireDistribution(StringBuilder sb)
+		/// <summary>Ferme la fenêtre et écrit le bloc « distribution + postes ».
+		/// Renvoie le résumé (moyenne, inexpliqué, images > 100 ms, FPS) pour la
+		/// synthèse du banc en 3 phases (WorldView.Banc3Phases.cs).</summary>
+		private (double Moy, double Inexpl, int Sup100, double Fps) EcrireDistribution(StringBuilder sb)
 		{
-			if (_distMs == null || _distMs.Count == 0) { sb.AppendLine("  (aucune image mesurée)"); return; }
+			if (_distMs == null || _distMs.Count == 0) { sb.AppendLine("  (aucune image mesurée)"); return (0, 0, 0, 0); }
 			var t = new List<double>(_distMs);
 			t.Sort();
 			int n = t.Count;
@@ -144,17 +155,19 @@ namespace Symbiose
 			sb.AppendLine(string.Create(ci,
 				$"  images > 33 ms : {sup33} · > 100 ms : {sup100} · draw calls {_distDraw / n:F0} · "
 				+ $"primitives {_distPrim / n:F0}"));
+			double postes = PerfPostes.TotalMs() / n, rendu = _distRenduCpu / n;
+			double inexpl = moy - postes - rendu;
 			sb.AppendLine(string.Create(ci,
-				$"  moniteur TimeProcess {_distProcMs / n:F2} ms/image · rendu CPU {_distRenduCpu / n:F2} · "
-				+ $"rendu GPU {_distRenduGpu / n:F2} ms/image (0 = non mesuré par ce pilote)"));
-			double postes = PerfPostes.TotalMs() / n;
+				$"  rendu CPU {rendu:F2} · rendu GPU {_distRenduGpu / n:F2} ms/image (0 = non mesuré par ce pilote)"));
 			sb.AppendLine(string.Create(ci,
-				$"  postes CPU (somme {postes:F2} ms/image, non attribué {moy - postes:F2}) :"));
+				$"  postes CPU (somme {postes:F2} ms/image) + rendu CPU {rendu:F2} → "
+				+ $"inexpliqué (hors postes et rendu CPU) {inexpl:F2} ms/image :"));
 			PerfPostes.Ecrire(sb, n, sec, moy);
 			EcrireAcoups(sb, n);
 			_distMs = null;
 			RenderingServer.ViewportSetMeasureRenderTime(GetViewport().GetViewportRid(), false);
 			RenderingServer.ViewportSetMeasureRenderTime(_worldVp.GetViewportRid(), false);
+			return (moy, inexpl, sup100, n / sec);
 		}
 
 		// Ligne « rendu » ajoutée à l'overlay F4 et au rapport presse-papier (C).

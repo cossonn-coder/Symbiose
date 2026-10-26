@@ -1,7 +1,6 @@
 # Sprint FLUIDITÉ PC (D116 + lisière D112 c/j) — carnet de conception
 
-> Phase : **A — challenge en cours** (`/conception D116`, ouverte le 2026-10-26).
-> Rien n'est figé. Sprint précédent : `sprints/perf/fluidite/sprint_fluidite_an2/00_etat.md`
+> Phase : **B — exécution** (`/sprint-auto`). Conception figée le 2026-10-26 ; ① FAIT. Sprint précédent : `sprints/perf/fluidite/sprint_fluidite_an2/00_etat.md`
 > (golden `fecccded…`, pont 0.5.57). Mesures PC de référence : `DETTE.md` D116.
 
 ## Cible (Nico, 2026-10-26)
@@ -58,12 +57,48 @@ PC (i5-4200H, 2 cœurs / 4 threads, HD 4600), an 2, 1 s/sem demandée → **≤ 
 ## Carte des tronçons (FIGÉE 2026-10-26)
 | # | Kickoff | Contenu | Golden | État |
 |---|---|---|---|---|
-| ① | `01_instruments_banc3.md` | banc E 3 phases (normal / rendu suspendu / moteur en pause) + ménage instruments + PollenLot + oracles périmés | intact | à faire |
+| ① | `01_instruments_banc3.md` | banc E 3 phases (normal / rendu suspendu / moteur en pause) + ménage instruments + PollenLot + oracles périmés | intact | **FAIT** |
 | ② | `02_lisiere_bug_coutures.md` | bug « il faut F10 » reproduit/corrigé + coutures | intact | à faire |
 | ③ | `03_lisiere_kit_foret.md` | atlas patchwork + prairie/friche + forêt | intact | à faire |
 | ④ | `04_lisiere_eau_roche_bilan.md` | rivière + falaise + bilan VM + protocole PC (1 run) + clôture | intact | à faire |
 
+## Bilan ① (2026-10-26) — golden intact `fecccded…`, pont **0.5.58**, `dotnet build` vert
+- **Banc 3 phases** : `--capture-banc-3phases=A,B,C` (`perf_vm.sh -3 25,25,20 -A 1 -W 90`),
+  `world/WorldView.Banc3Phases.cs`. Ordre **C → A → B** (écart au kickoff, mesuré : en A→B→C la
+  phase C voyait un jardin 24 sem. plus tard + la cuisson qui rattrapait B). B = `RenderLoopEnabled
+  = false` + `Engine.MaxFps = 60` (sans vsync la boucle tournait à vide) + file de cuisson figée
+  (`BakeQueue.Suspendue`, sinon pages « cuites » jamais rendues). B s'allonge jusqu'à 6 steps.
+  Synthèse A↔B / A↔C en fin de rapport. La phase C bloque les steps et fait rejouer la journée.
+- **Instruments** : rendu CPU dans le bilan (« inexpliqué = moyenne − postes − rendu CPU ») ;
+  `TimeProcess` retiré (Godot y publie le MAX du process de la seconde, pas une valeur par image) ;
+  `[machine]` dit « banc (arguments de capture) » ; ligne `[moteur]` = lanceur + pont + Python
+  (init du pont 0.5.58 : `python {version, implementation, executable}`) ; HUD : version du pont
+  reçue du serveur (`WorldView.Build` ne la porte plus).
+- **PollenLot / « butineurs _Draw » (constat 2 RÉFUTÉ)** : aucune invalidation parasite — au banc,
+  `GetCanvasTransform`/projection ne changent qu'au cadrage [n=2 runs instrumentés, VM]. Le
+  « 0 butineur » était lu en FIN de mesure : au début ~53 butineurs volent (redessin 24 Hz légitime)
+  + ~270 fleurs pollinisées. Le rapport donne maintenant butineurs et fleurs **début→fin**. En hiver
+  vrai (0 butineur, 0 pollen) : **0 appel/s** [n=1 run, VM]. Ajout : `ForagerLayer` ne se redessine
+  plus au snapshot s'il n'a rien à tracer. Avant : 5 appels/s à 4 FPS ; après, phase A : 4 appels/s
+  à 3,9-4,4 FPS [n=1 run avant / n=2 runs après, VM].
+- **Oracles** : `test_population` recalé `a60c4a31…` — dérive EXPLIQUÉE par 3 commits moteur
+  voulus, chacun ayant re-figé le golden (`db10b96` effondrement météo ①, `a9c1b82` bilan hydrique
+  ①, `b30806d` nectar par espèce ⑦ ; parcours commit par commit). `test_vent` 54/54 : oracle faux
+  (posait l'humidité-sol, `fungal_disease` lit `wetness_memory` depuis `8de6e21`) → feuillage
+  mouillé posé, pas de régression moteur, pas de dette. `test_peripherie_pont` : « ≥ 0.5.41 ».
+  `test_sim_server` 289/289. → **D116 (d) fermable**.
+- **Mesure VM** (`-3 25,25,20 -A 1 -W 90 -S 1521550718`, charge 4-6 → peu fiable, llvmpipe) :
+  A 2,51-2,79 s/sem, tick moteur 1124-1204 ms ; B 1,79 s/sem, tick 867-872 ms ; C moyenne
+  196-201 ms/image, inexpliqué 63-71 ms ; A moyenne 226-254 ms, inexpliqué 85-90 ms [n=2 runs, VM].
+  Même sur 16 threads, le rendu llvmpipe ralentit le moteur ~1,3× [n=2 runs, VM] — les absolus ne
+  valent pas le PC.
+- Taille : `core/SimBridge.cs` 324 LDC (🟡, une responsabilité : le pont) ; reste ≤ 300.
+
 ## §REPRISE
 Conception FIGÉE → doc `docs/perf/fluidite/conception_fluidite_pc.md`. Exécution :
-`/sprint-auto sprint_fluidite_pc` (tronçon suivant = le premier « à faire »). Après le sprint :
+`/sprint-auto sprint_fluidite_pc` — **tronçon suivant = ② `02_lisiere_bug_coutures.md`**.
+Pour le protocole PC du ④ : lancer le jeu avec `-- --capture-banc=full --capture-seed=1521550718
+--capture-etalonnage=25 --capture-banc-3phases=25,25,20 --capture-banc-cadence=1
+--capture-banc-semaine=90` (mêmes arguments que `perf_vm.sh -3 … -A 1 -W 90`), rapport au
+presse-papier puis le jeu quitte. Après le sprint :
 Nico fait 1 run PC → 2ᵉ `/conception D116` (leviers moteur/vue + arbitrage cadence ↔ images).

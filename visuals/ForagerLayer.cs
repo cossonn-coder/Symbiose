@@ -97,7 +97,9 @@ namespace Symbiose
 		private bool _lastZoomOk;
 
 		/// <summary>Nombre de butineurs affichés (overlay perfs F4).</summary>
+		private bool _dessinNonVide = true;   // le dernier _Draw a-t-il pu tracer ?
 		public int Count => _entries.Count;
+		public int FleursPollen => _pollen.Fleurs;   // rapport de banc (FLUIDITÉ PC ①)
 
 		/// <summary>Densité d'abeilles près d'un point MONDE (cm) : nb d'agents
 		/// `abeille` VIVANTS dont l'ANCRE est dans `rayonCm`. Sert la piqûre temps
@@ -217,7 +219,8 @@ namespace Symbiose
 				if (kv.Value.DyingAt < 0f && !seen.Contains(kv.Key))
 					kv.Value.DyingAt = now;
 			_pollen.Elaguer(plantsByName);
-			QueueRedraw();
+			// Rien vu, rien à voir (hiver) : pas de redessin (FLUIDITÉ PC ①).
+			if (_entries.Count > 0 || _dessinNonVide) QueueRedraw();
 		}
 
 		// Les K fleurs conspécifiques les plus proches de l'ancre (dans HopRadius),
@@ -301,6 +304,7 @@ namespace Symbiose
 
 		private void DessinerButineurs()
 		{
+			_dessinNonVide = false;
 			if (WorldView.CurrentZoom < MinZoom) return;
 			if (_entries.Count == 0) return;
 			Rect2 vis = (GetCanvasTransform().AffineInverse()
@@ -363,6 +367,7 @@ namespace Symbiose
 				}
 			}
 			if (gone != null) foreach (string k in gone) _entries.Remove(k);
+			_dessinNonVide = _entries.Count > 0;
 		}
 	}
 }

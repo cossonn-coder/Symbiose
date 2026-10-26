@@ -21,6 +21,10 @@
 // ombres ; `-A` la cadence pendant la mesure, PERF VUE ④). En capture, le rapport s'imprime entre `[banc] DEBUT` et `[banc] FIN`
 // puis le jeu quitte.
 //
+// BANC EN 3 PHASES (FLUIDITÉ PC ①) : `--capture-banc-3phases=A,B,C` (secondes ;
+// `perf_vm.sh -3 A,B,C`) enchaîne au même point de banc C moteur en pause → A normal
+// → B rendu suspendu. Machine à états prolongée dans WorldView.Banc3Phases.cs.
+//
 // 📖 Pédagogie (côté embarqué) : une petite machine à états pilotée par la boucle
 // principale (`_Process`), comme une séquence de test de production : chaque état
 // attend sa condition (semaine atteinte, délai écoulé), jamais de blocage.
@@ -45,7 +49,8 @@ namespace Symbiose
 		private const float EtalonReposSec = 8f;
 		private const float EtalonMesureSec = 20f;
 
-		private enum EtatBanc { Inactif, Avance, Repos, Mesure }
+		// PhaseC / VersB / PhaseB : banc en 3 phases (WorldView.Banc3Phases.cs).
+		private enum EtatBanc { Inactif, Avance, Repos, Mesure, PhaseC, VersB, PhaseB }
 		private EtatBanc _banc = EtatBanc.Inactif;
 		private double _bancT0;                 // début de l'état courant (s, horloge murale)
 		private float _bancMesureSec = EtalonMesureSec;
@@ -97,6 +102,7 @@ namespace Symbiose
 				return;
 			}
 			if (!float.IsNaN(CaptureEtalonnage) && CaptureEtalonnage > 0f) _bancMesureSec = CaptureEtalonnage;
+			PreparerBanc3();   // durées A/B/C si `--capture-banc-3phases` (Banc3Phases.cs)
 			_bancSpwAvant = DebugSecondsPerWeek;
 			_bancModeAvant = _simMode;
 			_simMode = SimMode.Turbo;
@@ -129,10 +135,12 @@ namespace Symbiose
 					PoserCadenceMesure();
 					_banc = EtatBanc.Mesure;
 					_bancT0 = Maintenant;
+					if (Banc3Actif) { EntrerPhaseC(); return; }   // C d'abord (Banc3Phases.cs)
 					GD.Print($"[banc] mesure {_bancMesureSec} s.");
 					return;
 				case EtatBanc.Mesure:
 					if (Maintenant - _bancT0 < _bancMesureSec) return;
+					if (Banc3Actif) { TerminerPhaseA(); return; }   // → phase B (Banc3Phases.cs)
 					var sb = new StringBuilder();
 					sb.AppendLine(string.Create(CultureInfo.InvariantCulture,
 						$"[banc {NomBanc}] semaine moteur {SemaineMoteur} · zoom ×{ZoomSteps[_zoomIndex]} · "
@@ -142,6 +150,9 @@ namespace Symbiose
 					EcrireDistribution(sb);
 					EcrirePostesAccelere(sb);
 					FinBanc(ConstruireRapportPerf(sb.ToString()));
+					return;
+				default:
+					AvancerBanc3();   // PhaseC, VersB, PhaseB
 					return;
 			}
 		}
@@ -164,8 +175,10 @@ namespace Symbiose
 			float cad = CadenceMesure;
 			string consigne = float.IsNaN(cad) ? "nominale 60 s/semaine"
 				: cad <= 0f ? "turbo (au plus vite)" : $"{cad:F1} s/semaine (continu)";
+			// Durée RÉELLE de la fenêtre (la phase B du banc 3 phases peut s'allonger
+			// pour atteindre son minimum de steps).
 			string obtenue = n > 0
-				? string.Create(CultureInfo.InvariantCulture, $" → {_bancMesureSec / n:F2} s/semaine obtenues") : "";
+				? string.Create(CultureInfo.InvariantCulture, $" → {(Maintenant - _bancT0) / n:F2} s/semaine obtenues") : "";
 			sb.AppendLine($"  cadence {consigne} : {n} semaines appliquées{obtenue}"
 				+ $" · dernier tick vu par la vue {_lastTickMs:F0} ms");
 		}
@@ -199,6 +212,7 @@ namespace Symbiose
 		{
 			_banc = EtatBanc.Inactif;
 			_distMs = null;
+			RetablirRenduBanc3();   // abandon pendant la phase B : rendu et cuisson rétablis
 			DebugSecondsPerWeek = _bancSpwAvant;
 			_simMode = _bancModeAvant;
 			SetPhase(Phase.Planification);
@@ -236,7 +250,7 @@ namespace Symbiose
 		{
 			if (CaptureOmbres == "0" && ShadowsOn) ToggleShadows();
 			BrancherAutomateBanc();
-			if (!float.IsNaN(CaptureEtalonnage)) ToggleEtalonnage();
+			if (!float.IsNaN(CaptureEtalonnage) || CaptureBanc3 != null) ToggleEtalonnage();
 		}
 	}
 }

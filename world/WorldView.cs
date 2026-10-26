@@ -90,7 +90,9 @@ namespace Symbiose
 		// droite de l'écran + imprimé en console au lancement : si la version à
 		// l'écran n'est pas celle annoncée par Claude, le circuit VM → sync
 		// Nextcloud → build Godot n'est pas passé (piège connu depuis t3).
-		public const string Build = "Jardinier automate F5 (A brancher · Maj+A objectif démo) — pont 0.5.30 — 2026-07-18";
+		// La version du PONT n'est plus écrite ici (figée à 0.5.30 pendant 27 bumps) :
+		// le HUD affiche celle que le serveur annonce à l'init (FLUIDITÉ PC ①).
+		public const string Build = "Fluidité PC ① instruments (banc E 3 phases) — 2026-10-26";
 
 		// -------------------------------------------------------------------
 		// RÉGLAGES (exportés : ajustables dans l'inspecteur sans recompiler)
@@ -625,6 +627,9 @@ namespace Symbiose
 			// ni fields en vol (maître/esclave 1↔1 — une requête d'instrument
 			// retarde la semaine d'une frame ou deux, jamais elle ne corrompt
 			// le tube).
+			// Banc E 3 phases, phase C (WorldView.Banc3Phases.cs) : la semaine due ne
+			// part pas, la journée rejoue (soleil et vent bougent comme en phase A).
+			if (_timeAccum >= spw && BancMoteurEnPause) _timeAccum = 0f;
 			NoterRetardStep((float)delta, spw);   // banc accéléré : semaine due mais retenue
 			// FLUIDITÉ AN 2 ④ : le step peut partir PENDANT l'application de la
 			// semaine précédente (VuePrete, WorldView.Etalement.cs).

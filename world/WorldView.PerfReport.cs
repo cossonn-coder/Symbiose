@@ -33,7 +33,11 @@ namespace Symbiose
 			sb.AppendLine($"[machine] {OS.GetName()} · {OS.GetProcessorName()} "
 				+ $"({OS.GetProcessorCount()} threads) · GPU {RenderingServer.GetVideoAdapterName()} "
 				+ $"· pilote {RenderingServer.GetCurrentRenderingDriverName()} "
-				+ $"· {(CaptureActive ? "banc VM (capture)" : "F5")}");
+				+ $"· {(CaptureActive ? "banc (arguments de capture)" : "F5")}");
+			// Moteur lancé par le pont (FLUIDITÉ PC ①) : le tick ne se compare qu'à
+			// interpréteur égal (la VM et le PC n'ont pas forcément le même Python).
+			sb.AppendLine($"[moteur] lancé par « {_bridge?.Lanceur ?? "?"} » · pont {_bridge?.EngineVersion ?? "?"} "
+				+ $"· {_bridge?.Interpreteur ?? "?"}");
 			if (blocBanc != null) sb.Append(blocBanc);
 			// Ligne CLIENT (ce que la vue mesure : pipe+parse inclus).
 			string tick = _lastTickMs < 0 ? "—" : $"{_lastTickMs:F0} ms";

@@ -140,15 +140,16 @@ namespace Symbiose
 
 			// Témoin de build (coin haut-droit) : LA réponse à « est-ce que je
 			// fais tourner la bonne version ? ». Discret mais toujours visible.
+			string temoin = $"{Build} — pont {_bridge?.EngineVersion ?? "?"}";
 			var build = new Label
 			{
-				Text = Build,
+				Text = temoin,
 				Position = new Vector2(1920f - 16f, 10f),
 				// Ancré à droite : on aligne la FIN du texte sur x=1904 en
 				// décalant de sa largeur estimée — un Label n'a pas d'ancrage
 				// droit sans Container ; à 14 px, ~7 px/caractère suffit.
 			};
-			build.Position -= new Vector2(Build.Length * 7f, 0f);
+			build.Position -= new Vector2(temoin.Length * 7f, 0f);
 			build.AddThemeFontSizeOverride("font_size", 14);
 			build.AddThemeColorOverride("font_color", new Color(1f, 1f, 1f, 0.65f));
 			build.AddThemeColorOverride("font_outline_color", Colors.Black);

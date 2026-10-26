@@ -42,6 +42,14 @@ namespace Symbiose
 		private double _baPipe, _baPipeMax, _baParse, _baParseMax, _baOctets;
 		private double _baRetardStep, _baRetardEtale;   // secondes
 		private double _baLecture, _baLectureMax;       // lecture des plantes (pool, FLUIDITÉ AN 2 ④)
+		// Butineurs et fleurs pollinisées au DÉBUT de la fenêtre (FLUIDITÉ PC ①) : le
+		// rapport ne lisait que l'état FINAL — « 0 butineur » en fin de mesure alors
+		// qu'ils volaient (et se redessinaient à 24 Hz) au début (D116, faux indice).
+		private int _baButineurs0 = -1, _baPollen0 = -1;
+
+		// Fenêtre où les steps sont comptés : mesure avec images, ou phase B du banc
+		// en 3 phases (rendu suspendu, aucune image — WorldView.Banc3Phases.cs).
+		private bool MesureStepsActive => _distMs != null || _banc == EtatBanc.PhaseB;
 
 		private void DemarrerPostesAccelere()
 		{
@@ -50,12 +58,14 @@ namespace Symbiose
 			_baPipe = _baPipeMax = _baParse = _baParseMax = _baOctets = 0;
 			_baRetardStep = _baRetardEtale = 0;
 			_baLecture = _baLectureMax = 0;
+			_baButineurs0 = _foragerLayer?.Count ?? -1;
+			_baPollen0 = _foragerLayer?.FleursPollen ?? -1;
 		}
 
 		/// <summary>Appelé par _Process à chaque step consommé (no-op hors mesure).</summary>
 		private void NoterStepBanc(SemaineRecue s)
 		{
-			if (_distMs == null || s == null || _bridge == null) return;
+			if (!MesureStepsActive || s == null || _bridge == null) return;
 			GDict snap = s.Snap;
 			Cumul(ref _baLecture, ref _baLectureMax, s.LectureMs);   // plantes lues (pool, ④)
 			_baSteps++;
@@ -80,7 +90,7 @@ namespace Symbiose
 		/// est due (`_timeAccum ≥ spw`) mais ne part pas → on compte ce retard.</summary>
 		private void NoterRetardStep(float delta, float spw)
 		{
-			if (_distMs == null || _timeAccum < spw) return;
+			if (!MesureStepsActive || _timeAccum < spw) return;
 			if (_pendingStep != null) _baRetardStep += delta;      // moteur pas fini
 			else if (!VuePrete) _baRetardEtale += delta;          // vue pas finie (réserve pleine / bascule)
 		}
@@ -96,7 +106,8 @@ namespace Symbiose
 				$"    parse JSON (thread du pool) {_baParse / n:F1} / {_baParseMax:F1} ms · lecture plantes (pool) {_baLecture / n:F1} / {_baLectureMax:F1} ms · réponse {_baOctets / n / 1024.0:F0} Ko"
 				+ $" · retard de cadence : step en vol {_baRetardStep:F1} s, semaine en application {_baRetardEtale:F1} s"));
 			sb.AppendLine($"  priorité du moteur lue par l'OS : {_bridge?.PrioriteEffective() ?? "—"}"
-				+ $" · butineurs {(_foragerLayer == null ? "—" : _foragerLayer.Count.ToString())}");
+				+ $" · butineurs début→fin {_baButineurs0}→{_foragerLayer?.Count ?? -1}"
+				+ $" · fleurs pollinisées {_baPollen0}→{_foragerLayer?.FleursPollen ?? -1}");
 		}
 	}
 }

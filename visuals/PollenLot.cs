@@ -45,6 +45,8 @@ namespace Symbiose
 
 		public PollenLot() { ShowBehindParent = true; }
 
+		public int Fleurs => _pollen.Count;   // rapport de banc (FLUIDITÉ PC ①)
+
 		public static (int, int) Cle(Vector2 p) =>
 			((int)Mathf.Round(p.X), (int)Mathf.Round(p.Y));
 

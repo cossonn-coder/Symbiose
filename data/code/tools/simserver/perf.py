@@ -17,6 +17,8 @@ from __future__ import annotations
 
 import json
 import os
+import platform
+import sys
 
 # `resource` est POSIX-only. La VM (Debian) et la cible de jeu (le F5 de Nico)
 # l'ont ; on blinde tout de même l'import pour ne jamais casser le snapshot si un
@@ -54,6 +56,17 @@ def perf_block(ms_tick: float | None, n_plants: int) -> dict:
         "n_plants": n_plants,
         "rss_mo": rss_mo(),
     }
+
+
+def interpreteur() -> dict:
+    """Quel Python fait tourner le moteur (FLUIDITÉ PC ①, D116) : version et
+    exécutable lancés par le pont. Au PC de Nico, `python` peut être un autre
+    interpréteur que celui de la VM (version, build) — le rapport de banc doit le
+    dire pour comparer les ticks. Binaire gelé (PyInstaller) : `executable` = le
+    binaire lui-même. Lu UNE fois à l'init → coût nul, golden NEUTRE (hors tick)."""
+    return {"version": platform.python_version(),
+            "implementation": platform.python_implementation(),
+            "executable": sys.executable}
 
 
 # --- Capture des pires ticks (demande Nico 2026-07-05) -----------------------

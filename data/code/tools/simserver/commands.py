@@ -263,6 +263,7 @@ class CommandsMixin:
         if encyclo:
             _amorcer_encyclo(game_state, game_state["current_player"], encyclo)
         return {"ok": True, "engine_version": ENGINE_VERSION,
+                "python": perf.interpreteur(),   # FLUIDITÉ PC ① (0.5.58)
                 "world": self._world_static()}
 
     def cmd_list_bancs(self, msg: dict) -> dict:

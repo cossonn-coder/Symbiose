@@ -304,6 +304,10 @@ def test_assechement_protecteur():
             for c in range(6):
                 p = tile.add_plant(Tomato, r, c)   # Solanacée = susc. max
                 p.age_weeks = 20; p.current_stage = 3
+                # Feuillage MOUILLÉ : depuis l'humectation foliaire ② (8de6e21),
+                # fungal_disease lit `wetness_memory` et non plus l'humidité du sol
+                # (défaut 0 → pression nulle → oracle rouge 0 = 0, D116 d).
+                p.wetness_memory = 1.0
                 for week in range(1, 60):
                     if fungal_disease(p, tile, eco, 7, week, vent_local, (0.0, 0.0)):
                         n += 1
