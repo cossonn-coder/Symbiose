@@ -1,6 +1,6 @@
 # Sprint FLUIDITÉ PC — LEVIERS (2ᵉ `/conception D116`) — carnet de conception
 
-> Phase : **FIGÉE le 2026-10-26** (GO Nico). Doc : `docs/perf/fluidite/conception_fluidite_pc_leviers.md`.
+> Phase : **CLOS le 2026-10-26** (①→⑤ faits, golden intact `fecccded…`, pont 0.6.0) — attend le run PC (§F5). Doc : `docs/perf/fluidite/conception_fluidite_pc_leviers.md`.
 > Sprint précédent (diagnostic) : `sprints/perf/fluidite/sprint_fluidite_pc/00_etat.md`
 > (golden `fecccded…`, pont 0.5.58). Cible inchangée : PC, 1 s/sem demandée → ≤ 2 s/sem
 > effectives, aucune image > 100 ms.
@@ -44,11 +44,11 @@ l'extraire en zoomant/dézoomant.
 ## Carte des tronçons (FIGÉE 2026-10-26)
 | # | Kickoff | Contenu | Golden | État |
 |---|---|---|---|---|
-| ① | `01_outil_zoom.md` | journal + rapport copiable des changements de palier, balayage VM, chiffres « avant » | intact | **fait** (non commité) |
-| ② | `02_butineurs_pollen_lot.md` | butineurs + pollen en un lot `LotTriangles` | intact | **fait** (non commité) |
-| ③ | `03_paliers_prets.md` | décor : une maille par palier ; plantes : pas de vectoriel direct au zoom (si mesuré) | intact | **fait** (non commité) |
-| ④ | `04_pont_delta.md` | pont en delta opt-in (semaine de naissance, segments changés, gènes 1 fois), 0.6.0 | intact | **fait** (non commité) |
-| ⑤ | `05_lisiere_devant_bilan.md` | lisière côté caméra devant le jardin + bilan VM + protocole PC + clôture | intact | à faire |
+| ① | `01_outil_zoom.md` | journal + rapport copiable des changements de palier, balayage VM, chiffres « avant » | intact | **fait** (07c703b) |
+| ② | `02_butineurs_pollen_lot.md` | butineurs + pollen en un lot `LotTriangles` | intact | **fait** (b25718f) |
+| ③ | `03_paliers_prets.md` | décor : une maille par palier ; plantes : pas de vectoriel direct au zoom (si mesuré) | intact | **fait** (837b7e0) |
+| ④ | `04_pont_delta.md` | pont en delta opt-in (semaine de naissance, segments changés, gènes 1 fois), 0.6.0 | intact | **fait** (efff211) |
+| ⑤ | `05_lisiere_devant_bilan.md` | lisière côté caméra devant le jardin + bilan VM + protocole PC + clôture | intact | **fait** (non commité) |
 
 Dette déjà inscrite à la conception : D112 (k) décor animé, (l) soleil sur les plantes,
 (m) cohérence DA inter-paliers ; D116 mise à jour (run PC + conception).
@@ -168,5 +168,74 @@ Dette déjà inscrite à la conception : D112 (k) décor animé, (l) soleil sur 
 - F5 Nico : HUD « pont 0.6.0 », aucun changement visuel attendu (plantes, survol des gènes,
   dossier, taille au clic, rotation).
 
+## ⑤ Lisière devant + bilan — FAIT (2026-10-26)
+- **Lisière** : `visuals/DecorLayer.Devant.cs` (nouveau) — les pièces HAUTES des 2 bords
+  côté caméra (forêt/friche : sous-bois + arbres ; falaise entière hors tapis ; rivière :
+  berges à roseaux) vont dans un 2ᵉ lot → `Maille.MeshDevant`, dessiné par un enfant
+  `DecorDevant` (Node2D, signal Draw, **z 30 absolu** > plantes 20-24, bâches 12,
+  butineurs 11). Assise, tapis, lit d'eau, bords du fond : inchangés (z −5). « Côté
+  caméra » = normale sortante du bord qui descend à l'écran (`WorldToScreenOffset`) →
+  suit la rotation D35 (Build jette les mailles, déjà le cas). Tranches et tâche de fond
+  du ③ inchangées (2 lots par tranche). +1 draw call. Ancien `DessinerToutLot` : tout
+  reste dans un lot (`_lotHaut` null).
+- **Écart au kickoff** : la boussole N/S/E/O (Labels au sol) disparaissait derrière la
+  lisière devant → `l.ZIndex = 31` (`world/WorldView.Monde.cs`). Pas de tri arbre ↔
+  plante : les arbres sont au-delà de la frontière (profondeur > AmplitudeCm), donc tout
+  point du jardin dans la même colonne d'écran est derrière eux (raisonnement, vérifié en
+  capture).
+- **Captures** `captures_05/` [VM, full graine 1521550718, warmup 12, ×1, banc décor F10,
+  coin bas d'écran de chaque rotation] : `avant_rN`/`apres_rN` (N=0..3) + `avant_pont_r0`/
+  `apres_pont_r0` (ceinture du pont, sans F10). Avant : tuiles par-dessus houppiers et
+  face de falaise ; après : arbres/falaise devant les tuiles, bords du fond inchangés.
+- Effet de bord vu : une forêt côté caméra masque une bande du jardin à ×1 (houppiers
+  larges) → dette D112 (n).
+
+## Bilan VM du sprint (avant → après ①→⑤)
+[VM llvmpipe, n=1 run par case, graine 1521550718 `full` ; « avant » = mesures « avant »
+de chaque tronçon (charges VM différentes : ④ avant à loadavg ~9, après à ~2-4)]
+
+| mesure | avant | après | source avant |
+|---|---|---|---|
+| banc 3 phases, A : s/sem (1 s demandée) | 2,80 | **2,10** | ④ avant |
+| B (rendu suspendu) : s/sem | 1,67 | **1,32** | ④ avant |
+| B : réponse / parse / lecture plantes | 2 383 Ko / 188 / 247 ms | **909 Ko / 119 / 61 ms** | ④ avant |
+| B : tick moteur moy. | — | 833 ms | — |
+| C (moteur en pause) : moy. image | 197,7 ms | 208,5 ms [bruit VM ±10] | ② avant |
+| C : draw calls | 1 037 | **648** | ② avant |
+| C : butineurs _Draw | 2,16 ms/image | **0,36** | ② avant |
+| C : rendu CPU | 118 ms/image | 111 | ② avant |
+| balayage zoom (12 crans, `-Z 4 -w 90 -c 1650,950`) : pire image moyenne | 292 ms | **249 ms** | ① |
+| décor _Draw au cran ≤ ×4 | 27-37 ms | **0,0** | ① |
+| pire image ×8→×4 / ×16→×8 | 271 / 286 ms | 357 / 240 ms | ① |
+
+Lecture : la vue a gagné sur le pont et les draw calls, la cadence VM passe sous 2 s/sem
+en A ; mais **toutes les images restent > 100 ms sur VM** (rendu llvmpipe ~100-120 ms +
+cuisson au cran 60-85 ms dans la pire image ; file non vidée en 4 s ≤ ×8). Les deux
+réponses vraies sont au PC.
+
+## §F5 — protocole PC (UN run) + questions
+**Main Run Args** (Godot → Projet → Paramètres → Run → Main Run Args), F5, ne rien
+toucher jusqu'à `[banc] FIN` (~2 min), puis copier le rapport (console) :
+```
+--capture-banc=full --capture-seed=1521550718 --capture-etalonnage=25 --capture-banc-3phases=25,25,20 --capture-banc-cadence=1 --capture-banc-semaine=90
+```
+Puis (même session, après le banc, ou un 2ᵉ F5 sans arguments) : zoomer/dézoomer en
+molette ×0,5 → ×32 → ×0,5 en marquant ~2 s par palier, puis **touche Z** → coller le
+rapport des à-coups de zoom.
+Questions :
+1. (②) butineurs et pollen à ×4 / ×8 « comme avant » ? (grains losange/octogone au lieu
+   de disques)
+2. (③) l'à-coup au zoom a-t-il baissé ? Juste après un cran, une plante pas encore
+   cuite garde son dessin au palier précédent agrandi/réduit (traits plus fins/épais)
+   jusqu'à sa cuisson : acceptable ?
+3. (④) HUD « pont 0.6.0 » ; rien ne doit changer à l'écran (plantes, survol des gènes,
+   dossier, taille au clic, rotation).
+4. (⑤) au SE (et après rotation, sur les 2 bords du bas d'écran) les arbres / falaise /
+   roseaux de lisière passent-ils DEVANT les tuiles et les plantes ? Les bords du haut
+   restent-ils derrière ? La boussole reste-t-elle lisible ? La part de jardin masquée
+   par une forêt côté caméra gêne-t-elle (D112 n) ?
+
 ## §REPRISE
-Exécution : `/sprint-auto sprint_fluidite_pc_leviers` (tronçon suivant = ⑤ ; ①②③④ faits, ④ à commiter par l'orchestrateur). Après : 1 run PC de Nico → 3ᵉ temps D116 (levier moteur si 2 s/sem non tenu).
+Sprint **CLOS** (①→⑤ faits ; ⑤ à commiter par l'orchestrateur + journal). Suite : **1 run
+PC de Nico** (§F5) → 3ᵉ temps D116 (levier moteur si 2 s/sem non tenu ; cuisson au cran à
+relire), puis D112 vue.

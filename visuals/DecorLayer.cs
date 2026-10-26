@@ -210,7 +210,7 @@ namespace Symbiose
 
 		public override void _Draw()
 		{
-			if (!_built || WorldView.CurrentZoom > MaxZoom) return;
+			if (!_built || WorldView.CurrentZoom > MaxZoom) { PublierDevant(null); return; }
 			// 2 passes. Passe 1 : l'ASSISE de chaque secteur (aplats volumés T4) —
 			// le fond sur lequel les motifs se détachent. Passe 2 : le MOTIF détaillé
 			// (T5) peint par-dessus. On sépare les passes pour que les aplats voisins
@@ -225,6 +225,7 @@ namespace Symbiose
 			long t0 = System.Diagnostics.Stopwatch.GetTimestamp();
 			Maille m = MailleImmediate(WorldView.CurrentZoom, out bool construite);
 			if (m.Mesh != null) DrawMesh(m.Mesh, KitTexture);
+			PublierDevant(m);   // LEVIERS ⑤ : pièces hautes côté caméra, couche au-dessus du jardin
 			PublierEau(m);      // étincelles de CE palier (couche animée, DecorLayer.Eau.cs)
 			TracerDessin(t0, m.Sommets, construite);   // console : coût (DecorLayer.Banc.cs)
 		}
@@ -254,14 +255,16 @@ namespace Symbiose
 			switch (s.Motif)
 			{
 				// FLUIDITÉ PC ③ : tapis du kit (DecorLayer.Patchwork.cs) sous les arbres.
-				case Motif.Foret:   DrawTapis(s, Tapis.OurletForet); DrawForet(s); break;
+				// LEVIERS ⑤ : EnHaut = pièces hautes, devant le jardin si le bord est côté
+				// caméra (DecorLayer.Devant.cs) ; le tapis reste au sol, derrière.
+				case Motif.Foret:   DrawTapis(s, Tapis.OurletForet); EnHaut(s, () => DrawForet(s)); break;
 				case Motif.Riviere: DrawRiviere(s);     break;
-				case Motif.Falaise: DrawTapis(s, Tapis.Pierrier); DrawFalaise(s); break;
+				case Motif.Falaise: DrawTapis(s, Tapis.Pierrier); EnHaut(s, () => DrawFalaise(s)); break;
 				// FRICHE (D73 ⑦) : l'ourlet fleuri de la prairie PLUS les ligneux
 				// épars (DrawForet, dont la densité et la taille viennent du moteur —
 				// une friche à 0.20 de densité et sans canopée donne des ronciers
 				// rabougris, pas une futaie).
-				case Motif.Friche:  DrawTapis(s, Tapis.Friche); DrawForet(s); break;
+				case Motif.Friche:  DrawTapis(s, Tapis.Friche); EnHaut(s, () => DrawForet(s)); break;
 				default:            DrawTapis(s, Tapis.Prairie); break;
 			}
 		}

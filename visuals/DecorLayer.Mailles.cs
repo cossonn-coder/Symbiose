@@ -46,7 +46,8 @@ namespace Symbiose
 		private sealed class Maille
 		{
 			public ArrayMesh Mesh;
-			public int Sommets;
+			public ArrayMesh MeshDevant;   // LEVIERS ⑤ : pièces hautes côté caméra (DecorLayer.Devant.cs)
+			public int Sommets;            // total des deux mailles
 			public readonly List<Vector2> Pts = new();
 			public readonly List<uint> H = new();
 			public void Ajouter(Vector2 p, uint h) { Pts.Add(p); H.Add(h); }
@@ -71,20 +72,24 @@ namespace Symbiose
 			_fondPalier = -1;
 			_fondMaille = null;
 			_affichee = null;
+			PublierDevant(null);   // LEVIERS ⑤ : l'ancienne partie haute ne vaut plus
 		}
 
 		// Une tranche du palier z dans `lot` : l'assise (t < 4) ou le motif (t ≥ 4)
 		// d'un secteur. On bascule _lot / ZoomConstr / _eauCible le temps de la tranche.
-		private void Tranche(LotTriangles lot, Maille m, float z, int t)
+		// LEVIERS ⑤ : `haut` reçoit les pièces hautes des bords côté caméra (EnHaut).
+		private void Tranche(LotTriangles lot, LotTriangles haut, Maille m, float z, int t)
 		{
 			LotTriangles lotAvant = _lot;
 			float zAvant = ZoomConstr;
 			_lot = lot;
+			_lotHaut = haut;
 			ZoomConstr = z;
 			_eauCible = m;
 			if (t < 4) DrawAssise(_profile.Secteurs[t]);   // DecorLayer.Patchwork.cs
 			else DrawMotif(_profile.Secteurs[t - 4]);
 			_lot = lotAvant;
+			_lotHaut = null;
 			ZoomConstr = zAvant;
 			_eauCible = null;
 		}
@@ -95,10 +100,11 @@ namespace Symbiose
 			lot.UvUni = UvBlanc;   // aplats = texel blanc de l'atlas (DecorLayer.Kit.cs)
 		}
 
-		private static void Figer(LotTriangles lot, Maille m)
+		private static void Figer(LotTriangles lot, LotTriangles haut, Maille m)
 		{
-			m.Sommets = lot.Sommets;
+			m.Sommets = lot.Sommets + haut.Sommets;
 			m.Mesh = lot.Figer(avecUv: true);
+			m.MeshDevant = haut.Figer(avecUv: true);   // null si aucun bord côté caméra n'a de pièce haute
 		}
 
 		/// <summary>Maille du palier z, construite d'un bloc si absente (palier courant
@@ -110,8 +116,9 @@ namespace Symbiose
 			if (i >= 0 && _mailles[i] != null) return _mailles[i];
 			var m = new Maille();
 			Ouvrir(_lot);
-			for (int t = 0; t < Tranches; t++) Tranche(_lot, m, z, t);
-			Figer(_lot, m);
+			Ouvrir(_lotDevant);
+			for (int t = 0; t < Tranches; t++) Tranche(_lot, _lotDevant, m, z, t);
+			Figer(_lot, _lotDevant, m);
 			construite = true;
 			if (i < 0) return m;   // palier hors liste (capture exotique) : pas de cache
 			_mailles[i] = m;
@@ -138,12 +145,12 @@ namespace Symbiose
 			while (true)
 			{
 				if (_fondPalier < 0 && !ChoisirFond()) return;
-				Tranche(_lotFond, _fondMaille, PaliersDecor[_fondPalier], _fondTranche++);
+				Tranche(_lotFond, _lotFondDevant, _fondMaille, PaliersDecor[_fondPalier], _fondTranche++);
 				double ms = (System.Diagnostics.Stopwatch.GetTimestamp() - t0) * 1000.0
 						  / System.Diagnostics.Stopwatch.Frequency;
 				if (_fondTranche == Tranches)
 				{
-					Figer(_lotFond, _fondMaille);
+					Figer(_lotFond, _lotFondDevant, _fondMaille);
 					_mailles[_fondPalier] = _fondMaille;
 					GD.Print($"[DecorLayer] maille ×{PaliersDecor[_fondPalier]} prête en tâche de fond :"
 						   + $" {_fondMaille.Sommets} sommets, {_fondMs + ms:F1} ms en {Tranches} tranches"
@@ -176,6 +183,7 @@ namespace Symbiose
 					_fondMaille = new Maille();
 					_fondMs = _fondPireMs = 0;
 					Ouvrir(_lotFond);
+					Ouvrir(_lotFondDevant);
 					return true;
 				}
 			return false;

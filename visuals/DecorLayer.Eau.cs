@@ -30,6 +30,7 @@ namespace Symbiose
 		{
 			_scintille = new EauScintillement { Name = "Scintillement" };
 			AddChild(_scintille);
+			CreerDevant();   // LEVIERS ⑤ : couche des pièces hautes côté caméra (DecorLayer.Devant.cs)
 		}
 
 		// Axe sinueux du lit (profondeur cm depuis le bord) à l'abscisse u.
@@ -69,7 +70,7 @@ namespace Symbiose
 					_lot.PolygoneConvexe(new[] { g[i, b], g[i + 1, b], g[i + 1, b + 1], g[i, b + 1] }, c);
 				}
 			DrawReflets(s, half - lis);
-			DrawBerges(s, half, berge);
+			EnHaut(s, () => DrawBerges(s, half, berge));   // roseaux : devant si côté caméra (⑤)
 		}
 
 		// REFLETS : tirets HORIZONTAUX de 2-6 px internes, 1 px de haut, calés sur la

@@ -104,6 +104,9 @@ namespace Symbiose
 			// Position d'un Label = son coin haut-gauche → recentrage à la
 			// louche sur le point projeté (instrument debug, pas de la typo).
 			l.Position = WorldToScreen(xCm, yCm) - new Vector2(14f, 30f);
+			// FLUIDITÉ PC LEVIERS ⑤ : au-dessus de la lisière côté caméra (DecorDevant,
+			// z 30) — sinon les arbres/falaise de devant cachent le S ou le E.
+			l.ZIndex = 31;
 			_ground.AddChild(l);
 		}
 
