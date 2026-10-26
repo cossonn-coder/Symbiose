@@ -27,13 +27,15 @@ namespace Symbiose
 	public partial class DecorLayer : Node2D
 	{
 		// Formes du kit. Chaque forme existe en plusieurs TAILLES (px) × 3 variantes.
-		private enum Piece { Herbe, HerbeHaute, Fleur, Roncier, SousBois, Feuillu, Conifere }
+		private enum Piece { Herbe, HerbeHaute, Fleur, Roncier, SousBois, Feuillu, Conifere,
+							 Galet, Bloc, Roseau }   // ④ : berges de rivière et éboulis
 
 		// Teintes cuites : une rampe par entrée (RampeKit). L'index est la clé d'atlas.
 		private enum Teinte
 		{
 			PrairieClair, Prairie, Paille, Roncier, SousBois, FleurBlanc, FleurJaune,
 			Chene, Hetre, Bouleau, Charme, Sapin,
+			Galet, Roche, RocheClaire, Roseau,   // FLUIDITÉ PC ④ (eau, roche)
 		}
 
 		private static readonly Color[] TeintesBase =
@@ -42,6 +44,7 @@ namespace Symbiose
 			new Color("557a40"), new Color("44694a"), Palette16.FleurPrairieBlanc,
 			Palette16.FleurPrairieJaune, Palette16.FeuillageChene, Palette16.FeuillageHetre,
 			Palette16.FeuillageBouleau, Palette16.FeuillageCharme, Palette16.FeuillageSapin,
+			Palette16.BergeGalet, Palette16.RocheMedian, Palette16.RocheClair, new Color("6d8a3e"),
 		};
 
 		// Tailles (largeur, hauteur) par forme, de la plus petite à la plus grande.
@@ -58,8 +61,11 @@ namespace Symbiose
 			// l'écran (pas du palier) → un houppier compte toujours ~10-30 bouquets.
 			new Vector2I[] { new(7, 6), new(11, 9), new(15, 12), new(19, 15), new(25, 20) },  // Feuillu
 			new Vector2I[] { new(5, 7), new(9, 11), new(13, 15), new(17, 19), new(21, 25) },  // Conifere
+			new Vector2I[] { new(3, 2), new(5, 3), new(7, 4) },     // Galet
+			new Vector2I[] { new(5, 4), new(7, 5), new(11, 7) },    // Bloc (éboulis anguleux)
+			new Vector2I[] { new(4, 7), new(5, 10), new(7, 13) },   // Roseau
 		};
-		private const int NbPieces = 7, NbTaillesMax = 5;
+		private const int NbPieces = 10, NbTaillesMax = 5;
 		private const int Variantes = 3;
 		private const int AtlasW = 512;
 		private const float LumSeuil = 0.30f, OmbreSeuil = -0.25f;
@@ -171,6 +177,12 @@ namespace Symbiose
 			}
 			if (f == Piece.Herbe || f == Piece.HerbeHaute)
 				PeindreBrins(niv, w, hh, v, f == Piece.HerbeHaute);
+			else if (f == Piece.Roseau)
+				PeindreRoseau(niv, w, hh, v);
+			else if (f == Piece.Bloc)
+				PeindreBloc(niv, w, hh, v);
+			else if (f == Piece.Galet)
+				PeindreGalet(niv, w, hh);
 			else
 				PeindreMasse(niv, f, w, hh, v);
 			// Contour sombre d'1 px dès 7 px (lisible au-delà). Herbes : tout autour
@@ -178,8 +190,58 @@ namespace Symbiose
 			// l'opposé du soleil SO) — un anneau complet sur chaque bouquet faisait
 			// des « bulles » cerclées de noir au F5 VM (capture ③, 1er essai).
 			if (w >= 7)
-				ContourNiveaux(niv, w, hh, f == Piece.Herbe || f == Piece.HerbeHaute);
+				ContourNiveaux(niv, w, hh, f == Piece.Herbe || f == Piece.HerbeHaute || f == Piece.Bloc);
 			return niv;
+		}
+
+		// ROSEAU (④) : brins presque DROITS, longs, éclairés à gauche ; un brin sur
+		// deux porte une MASSETTE (2 px au niveau contour = brun-olive sombre).
+		private static void PeindreRoseau(byte[] niv, int w, int hh, int v)
+		{
+			int nb = w <= 4 ? 2 : 3;
+			for (int b = 0; b < nb; b++)
+			{
+				int x0 = Mathf.Clamp(Mathf.RoundToInt((b + 0.5f) * w / nb - 0.5f), 0, w - 1);
+				float pente = (H01(Piece.Roseau, w, v, b) - 0.5f) * 0.25f;
+				int lg = Mathf.RoundToInt(hh * (0.70f + 0.30f * H01(Piece.Roseau, w, v, b + 9)));
+				bool massette = ((b + v) & 1) == 0 && lg >= 6;
+				for (int k = 0; k < lg; k++)
+				{
+					int px = Mathf.Clamp((int)(x0 + pente * k), 0, w - 1), py = hh - 1 - k;
+					bool tete = massette && k >= lg - 3 && k < lg - 1;
+					niv[py * w + px] = tete ? (byte)1 : b == 0 ? (byte)4 : (byte)3;
+				}
+			}
+		}
+
+		// GALET (④) : une ellipse pleine qui remplit la case, ombrée par sa normale
+		// (lumière du SO) — le caillou poli de la berge, sans arête.
+		private static void PeindreGalet(byte[] niv, int w, int hh)
+		{
+			for (int py = 0; py < hh; py++)
+				for (int px = 0; px < w; px++)
+				{
+					var n = new Vector2((px + 0.5f) / w * 2f - 1f, (py + 0.5f) / hh * 2f - 1f);
+					if (n.LengthSquared() > 1.15f) continue;
+					float s = n.Dot(Lumiere);
+					niv[py * w + px] = s > LumSeuil ? (byte)4 : s < OmbreSeuil ? (byte)2 : (byte)3;
+				}
+		}
+
+		// BLOC (④) : pierre ANGULEUSE d'éboulis — dessus éclairé (lumière du SO),
+		// flanc gauche à la base, flanc droit à l'ombre, coins abattus au hash.
+		private static void PeindreBloc(byte[] niv, int w, int hh, int v)
+		{
+			int dessus = Mathf.Max(1, Mathf.RoundToInt(hh * (0.30f + 0.15f * H01(Piece.Bloc, w, v, 1))));
+			int arete = Mathf.RoundToInt(w * (0.45f + 0.20f * H01(Piece.Bloc, w, v, 2)));
+			int pan = 1 + (int)(H01(Piece.Bloc, w, v, 3) * 2f);   // coin abattu (px)
+			for (int py = 0; py < hh; py++)
+				for (int px = 0; px < w; px++)
+				{
+					int dx = Mathf.Min(px, w - 1 - px), dy = Mathf.Min(py, hh - 1 - py);
+					if (dx + dy < pan) continue;
+					niv[py * w + px] = py < dessus ? (byte)4 : px < arete ? (byte)3 : (byte)2;
+				}
 		}
 
 		// BRINS : 3-5 brins partent du pied (bas-centre) en éventail ; brins de
@@ -277,7 +339,7 @@ namespace Symbiose
 		/// mélange que les bits BAS quand les clés ne diffèrent que du dernier
 		/// caractère (cf. D92) — d'où la forêt O « 13 bouleaux au bout SO » du
 		/// bilan ②. Tout tirage du kit passe donc par Melange.</summary>
-		private static uint Melange(uint h)
+		internal static uint Melange(uint h)
 		{
 			h ^= h >> 16; h *= 0x85ebca6bu;
 			h ^= h >> 13; h *= 0xc2b2ae35u;

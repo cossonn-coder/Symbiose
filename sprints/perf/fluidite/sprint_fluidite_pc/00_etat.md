@@ -1,6 +1,6 @@
 # Sprint FLUIDITÉ PC (D116 + lisière D112 c/j) — carnet de conception
 
-> Phase : **B — exécution** (`/sprint-auto`). Conception figée le 2026-10-26 ; ① ② ③ FAITS. Sprint précédent : `sprints/perf/fluidite/sprint_fluidite_an2/00_etat.md`
+> Phase : **B — exécution** (`/sprint-auto`). Conception figée le 2026-10-26 ; ① ② ③ ④ FAITS — **sprint CLOS, attend le rapport PC**. Sprint précédent : `sprints/perf/fluidite/sprint_fluidite_an2/00_etat.md`
 > (golden `fecccded…`, pont 0.5.57). Mesures PC de référence : `DETTE.md` D116.
 
 ## Cible (Nico, 2026-10-26)
@@ -60,7 +60,7 @@ PC (i5-4200H, 2 cœurs / 4 threads, HD 4600), an 2, 1 s/sem demandée → **≤ 
 | ① | `01_instruments_banc3.md` | banc E 3 phases (normal / rendu suspendu / moteur en pause) + ménage instruments + PollenLot + oracles périmés | intact | **FAIT** |
 | ② | `02_lisiere_bug_coutures.md` | bug « il faut F10 » reproduit/corrigé + coutures | intact | **FAIT** (F10 non reproduit → trace console ; coutures corrigées) |
 | ③ | `03_lisiere_kit_foret.md` | atlas patchwork + prairie/friche + forêt | intact | **FAIT** (kit + rideau ; redessin hebdo supprimé) |
-| ④ | `04_lisiere_eau_roche_bilan.md` | rivière + falaise + bilan VM + protocole PC (1 run) + clôture | intact | à faire |
+| ④ | `04_lisiere_eau_roche_bilan.md` | rivière + falaise + bilan VM + protocole PC (1 run) + clôture | intact | **FAIT** |
 
 ## Bilan ① (2026-10-26) — golden intact `fecccded…`, pont **0.5.58**, `dotnet build` vert
 - **Banc 3 phases** : `--capture-banc-3phases=A,B,C` (`perf_vm.sh -3 25,25,20 -A 1 -W 90`),
@@ -170,13 +170,71 @@ PC (i5-4200H, 2 cœurs / 4 threads, HD 4600), an 2, 1 s/sem demandée → **≤ 
   lire la ligne `[DecorLayer] _Draw` au changement de palier (pic PC à noter, jamais par semaine).
 - Saison du décor : NON faite (le décor n'a pas d'information de saison aujourd'hui).
 
+## Bilan ④ (2026-10-26) — golden intact `fecccded…`, `dotnet build` vert, pont inchangé (0.5.58)
+- **Rivière** (`visuals/DecorLayer.Eau.cs`) : prairie du kit sur les deux rives, puis LIT en grille
+  aux sommets partagés (berge | liseré d'ombre | eau claire | eau profonde | eau claire | liseré |
+  berge), limites claire/profonde qui ondulent (plus de damier rayé) ; reflets = tirets horizontaux
+  2-6 px calés au pixel ; berges en pièces neuves du kit (galets, massifs de roseaux à massette,
+  herbe de berge). Largeur toujours pilotée par `FacteurLit` (ligne d'eau du pont). Fond de l'assise
+  rivière : bleu → prairie (le bleu au-delà du lit se lisait comme de l'eau).
+- **Scintillement** (`visuals/EauScintillement.cs`, nœud ENFANT du décor) : ~1 point d'eau sur 4
+  allumé par phase, 3 phases/s, tiré au hash (point, phase). Le décor n'est PAS redessiné (2 `_Draw`
+  décor sur 40 images) ; redessin des étincelles **0,27 ms** pour 75 points [n=1 run, 30 redessins, VM].
+- **Falaise** (`visuals/DecorLayer.Roche.cs`) : tapis « pierrier » au sol (cailloux + herbe sèche,
+  `Tapis.Pierrier`), plateau en parcelles semé d'herbe/cailloux + lèvre de touffes, face en grille
+  strates × pas découpée en BLOCS de 1-3 pas (valeur par bloc + joints sombres), contours (pied
+  sombre, lits de strate, lèvre claire). **3 pentes par la géométrie** : douce = strates qui reculent
+  (gradins), verticale, déversante = strates qui avancent (surplomb, ombre au pied élargie).
+  **Face claire / ombre selon le soleil du MONDE** (SO, ne tourne pas avec D35) : falaise au N ou à
+  l'E = face au soleil, au S ou à l'O = face d'ombre. Éboulis en pièces (`Bloc` anguleux, `Galet`),
+  densité = `SeuilEboulis` (entaille du pont). Kit : +3 formes (`Galet`, `Bloc`, `Roseau`), +4 teintes.
+- **Écart au kickoff** : les anciennes `DrawRiviere`/`DrawFalaise` ne sont pas supprimées mais
+  CONSERVÉES en `DrawRiviereAplats`/`DrawFalaiseAplats` dans `DecorLayer.Aplats.cs` (règle « on ne
+  jette pas de code »). Hors orientation 2, une falaise au S cache son plateau sous le jardin
+  (géométrie d'avant ④, non changée) : c'est le tapis pierrier qui l'habille.
+- **Captures** (`captures_04/`, banc F10 4 motifs `capture_vm.sh -B`, graine 1521550718) :
+  `riviere_E_x1_avant/apres.png`, `riviere_E_x2_apres.png`, `falaise_S_x1_avant.png`,
+  `falaise_S_x1_r2_apres.png` / `_x2_r2_apres.png` (rotation 2 : la face vers la caméra),
+  `banc_x0.5_apres.png`. Jugées : plus d'aplat uni sur rivière ni falaise à ×0,5 / ×1. Reste (F5) :
+  à ×2 les blocs de la face sont de grands pans unis ; galets peu visibles à ×0,5.
+- **Redessin du décor** (`[DecorLayer] _Draw`, uniquement build / palier / rotation) : banc 4 motifs
+  ×0,5 29,5 ms · ×1 48-65 ms · ×2 66-106 ms (1er dessin JIT+atlas 205-316 ms) [n=1-3 runs, VM
+  chargée] ; terrain normal 1521550718 (sans rivière ni falaise) ×0,5 18-22 ms, **×4 164-165 ms**
+  [n=2 runs, VM charge 8-14] → le budget « aucune image > 100 ms » est dépassé AU CHANGEMENT DE
+  PALIER (×2 avec rivière+falaise, ×4 toujours) — jamais en régime. À trancher en 2ᵉ conception.
+- **Banc 3 phases VM** (`perf_vm.sh -3 25,25,20 -A 1 -W 90 -S 1521550718`) [n=2 runs, VM charge
+  8-14, llvmpipe — absolus non transposables au PC] :
+
+  | phase | ① (avant ②③) | ④ (après) |
+  |---|---|---|
+  | A cadence | 2,51-2,79 s/sem | 2,51-2,51 s/sem |
+  | A tick moteur | 1124-1204 ms | 1091-1118 ms |
+  | A moyenne image | 226-254 ms | 226-228 ms |
+  | A rendu CPU | non relevé | 118-155 ms/image |
+  | A draw calls | non relevé | 493-551 |
+  | B cadence | 1,79 s/sem | 1,67-1,67 s/sem |
+  | C moyenne image | 196-201 ms | 202-210 ms |
+  | C inexpliqué | 63-71 ms | 70-70 ms |
+
+  → aucune hausse mesurable due à la lisière (le décor est 1 draw call et ne se redessine plus en
+  régime) ; les écarts restent dans le bruit d'une VM chargée.
+- LDC : `DecorLayer.cs` 215, `Kit` 261, `Roche` 134, `Patchwork` 119, `Aplats` 95, `Eau` 94,
+  `EauScintillement` 65 — tous ≤ 300.
+
+## §F5 — protocole PC (UN seul run), puis ressenti
+1. `git pull` (dépôt cossonn-coder/Symbiose).
+2. Godot → Projet → Paramètres → Éditeur → Main Run Args, coller exactement :
+   `--capture-banc=full --capture-seed=1521550718 --capture-etalonnage=25 --capture-banc-3phases=25,25,20 --capture-banc-cadence=1 --capture-banc-semaine=90`
+3. F5, ne pas toucher (~1 min 30 : phases C puis A puis B) ; le rapport part au presse-papier et le
+   jeu quitte. **Coller le rapport** dans la conversation.
+4. **Vider Main Run Args** (ne pas committer `project.godot`).
+5. Ressenti, F5 normal : (a) au démarrage, la lisière est-elle juste SANS F10 ? noter la 1re ligne
+   console `[DecorLayer] profil …` ; (b) « la lisière, c'est mieux ? » (×0,5 / ×1 surtout ; F10 = banc
+   4 motifs pour voir rivière et falaise) ; (c) l'à-coup au changement de palier (ligne
+   `[DecorLayer] _Draw ×z : … ms`, surtout ×4).
+
 ## §REPRISE
-Conception FIGÉE → doc `docs/perf/fluidite/conception_fluidite_pc.md`. Exécution :
-`/sprint-auto sprint_fluidite_pc` — **tronçon suivant = ④ `04_lisiere_eau_roche_bilan.md`** (lire le bilan ③ : kit dans
-`DecorLayer.Kit.cs`, poser des pièces = `PoserPiece` ; la rivière et la falaise utilisent encore
-les aplats ; le bilan VM doit noter le pic de redessin du décor au changement de palier).
-Pour le protocole PC du ④ : lancer le jeu avec `-- --capture-banc=full --capture-seed=1521550718
---capture-etalonnage=25 --capture-banc-3phases=25,25,20 --capture-banc-cadence=1
---capture-banc-semaine=90` (mêmes arguments que `perf_vm.sh -3 … -A 1 -W 90`), rapport au
-presse-papier puis le jeu quitte. Après le sprint :
-Nico fait 1 run PC → 2ᵉ `/conception D116` (leviers moteur/vue + arbitrage cadence ↔ images).
+**Sprint CLOS le 2026-10-26 (①→④), attendre le rapport PC de Nico** (protocole §F5 ci-dessus).
+Ensuite : 2ᵉ `/conception D116` sur les chiffres PC (leviers moteur/vue + arbitrage cadence ↔
+images ; y verser le pic de redessin du décor au changement de palier). Conception :
+`docs/perf/fluidite/conception_fluidite_pc.md`.

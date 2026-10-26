@@ -28,7 +28,7 @@ namespace Symbiose
 {
 	public partial class DecorLayer : Node2D
 	{
-		private enum Tapis { Prairie, Friche, OurletForet }
+		private enum Tapis { Prairie, Friche, OurletForet, Pierrier }
 
 		private const int RangsAssise = 9;          // rangs de fond (≈ 100 cm chacun)
 		private const float OurletCm = 220f;        // profondeur de l'ourlet dense
@@ -125,6 +125,12 @@ namespace Symbiose
 				case Tapis.OurletForet:
 					if (roll < 50) { f = Piece.SousBois; t = Teinte.SousBois; }
 					else if (roll < 62) { f = Piece.Roncier; t = Teinte.Roncier; }
+					else { f = Piece.Herbe; t = Teinte.Prairie; }
+					break;
+				case Tapis.Pierrier:   // ④ : pied et dessus de falaise, herbe sèche et cailloux
+					if (roll < 22) { f = Piece.Galet; t = (h >> 6 & 1u) == 0u ? Teinte.Roche : Teinte.RocheClaire; }
+					else if (roll < 30) { f = Piece.Bloc; t = Teinte.Roche; }
+					else if (roll < 70) { f = Piece.Herbe; t = Teinte.Paille; }
 					else { f = Piece.Herbe; t = Teinte.Prairie; }
 					break;
 				default:
