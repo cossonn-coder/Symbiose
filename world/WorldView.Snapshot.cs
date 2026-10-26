@@ -33,10 +33,12 @@ namespace Symbiose
 		// silhouette et segments en (dé)zoomant. Ponctuel (~500 QueueRedraw par cran).
 		// Jardin vivant T2 : la pompe INVALIDE (plante « sale ») au lieu de redessiner ;
 		// la BakeQueue recuit quelques plantes par frame, celles près de l'écran d'abord.
-		private void RedrawAllPlants()
+		// `changementPalier` (LEVIERS ③) : molette / balayage — une plante sans image
+		// garde son tracé vectoriel du palier précédent jusqu'à sa cuisson.
+		private void RedrawAllPlants(bool changementPalier = false)
 		{
 			foreach (var node in _plantNodes.Values)
-				if (IsInstanceValid(node)) node.Invalidate();   // T2 : file de cuisson, pas de pic
+				if (IsInstanceValid(node)) node.Invalidate(changementPalier);   // T2 : file de cuisson, pas de pic
 			_tapisSale = true;   // le seuil du tapis dépend du palier (D106 T5)
 		}
 		// Phéromone d'alarme apienne (⑦ §J, snapshot 0.4.1) : par tuile, les plots

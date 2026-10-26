@@ -77,7 +77,7 @@ namespace Symbiose
 		// Une partie d'entre eux devient aussi le support des étincelles animées.
 		private void DrawReflets(Secteur s, float demiEau)
 		{
-			float z = WorldView.CurrentZoom;
+			float z = ZoomConstr;
 			float pas = Mathf.Max(PasTouffeMinCm, PasRefletPx / (z * WorldView.PxPerCmX));
 			int nU = Mathf.CeilToInt(WorldView.WorldCm / pas);
 			var uv = new Rect2(UvBlanc, Vector2.Zero);
@@ -94,7 +94,7 @@ namespace Symbiose
 					int lg = 2 + (int)(h >> 24 & 3u) + (r == 0 ? 2 : 0);   // plus longs au fil de l'eau
 					_lot.Quad(new Rect2(p, new Vector2(lg, 1f) / z), uv, (h >> 26 & 1u) == 0u ? Palette16.EauReflet : clair);
 					if ((h >> 27 & 1u) == 0u)
-						_scintille?.Ajouter(p + new Vector2(lg * 0.5f, 0f) / z, Melange(h));
+						_eauCible?.Ajouter(p + new Vector2(lg * 0.5f, 0f) / z, Melange(h));
 				}
 		}
 
@@ -103,7 +103,7 @@ namespace Symbiose
 		// sur le haut de rive. Pose triée nord → sud, comme le tapis.
 		private void DrawBerges(Secteur s, float half, float berge)
 		{
-			float z = WorldView.CurrentZoom;
+			float z = ZoomConstr;
 			float pas = Mathf.Max(PasTouffeMinCm, PasTouffePx / (z * WorldView.PxPerCmX));
 			int nU = Mathf.CeilToInt(WorldView.WorldCm / pas);
 			_poses.Clear();

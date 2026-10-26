@@ -83,8 +83,15 @@ namespace Symbiose
 
 		/// <summary>Ce qui est dessiné a changé (croissance, symptôme, palier de
 		/// zoom…) : la plante devient « sale ». Si elle a déjà une image, elle la
-		/// garde jusqu'à sa re-cuisson ; sinon elle se redessine en direct.</summary>
-		public void Invalidate()
+		/// garde jusqu'à sa re-cuisson ; sinon elle se redessine en direct — sauf au
+		/// CHANGEMENT DE PALIER (LEVIERS ③, `changementPalier`) : une plante qui a déjà
+		/// un tracé vectoriel enregistré le GARDE (palier précédent, mis à l'échelle
+		/// par la caméra, exactement comme une image cuite gardée) jusqu'à ce que la
+		/// file la cuise (Commit) ou constate qu'elle est trop grande (Begin raté) —
+		/// les deux la redessinent. Mesuré [VM, balayage ①] : à chaque cran, des
+		/// centaines de plantes encore sans image retraçaient tout leur vectoriel
+		/// dans l'image du cran (« plantes vectoriel » 45-95 ms à ×2→×32).</summary>
+		public void Invalidate(bool changementPalier = false)
 		{
 			_empriseSale = true;   // la boîte de dessin a pu changer (T4)
 			PlantShadow.MarquerSale();   // emprise ou tapis ont pu changer → lot d'ombres (③)
@@ -100,15 +107,23 @@ namespace Symbiose
 				return;
 			}
 			BakeQueue.MarkDirty(this);
-			if (!HasBakedImage) QueueRedraw();
+			if (!HasBakedImage && !(changementPalier && _traceVecteur)) QueueRedraw();
 		}
 
+		// Vrai si le dernier _Draw a enregistré le tracé VECTORIEL direct (pas une
+		// image, pas le tapis) : ce tracé peut servir d'attente au palier suivant.
+		private bool _traceVecteur;
+
 		// Banc PERF VUE ① : chronométré (PerfPostes), corps inchangé.
+		// LEVIERS ③ : le tracé VECTORIEL direct (plante du monde sans image) est compté
+		// à part (« plantes vectoriel ») — c'est lui qu'on soupçonne au changement de
+		// palier ; « plantes _Draw » garde les images cuites et le reste.
 		public override void _Draw()
 		{
+			bool vecteur = Bakeable && !_enTapis && !HasBakedImage;
 			long t0 = PerfPostes.Debut();
 			DessinerPlante();
-			PerfPostes.Fin(PerfPostes.Poste.PlanteDraw, t0);
+			PerfPostes.Fin(vecteur ? PerfPostes.Poste.PlanteVecteur : PerfPostes.Poste.PlanteDraw, t0);
 		}
 
 		private void DessinerPlante()
@@ -121,6 +136,8 @@ namespace Symbiose
 										  _structure?.Segments.Count ?? 0);
 				return;
 			}
+			// LEVIERS ③ : retient si le tracé enregistré est le vectoriel direct.
+			_traceVecteur = !_enTapis && !HasBakedImage;
 			if (_enTapis) return;   // rendue par le tapis de son plot (T5)
 			if (!HasBakedImage) { DrawVector(); return; }
 			_baker.DrawImage(_pose);   // T3 : la pose de flexion courante (WindWave)

@@ -123,7 +123,7 @@ namespace Symbiose
 			_camera.Zoom = ZoomCamera(ZoomSteps[zoomIndex]);
 			CurrentZoom = ZoomSteps[zoomIndex];
 			_camera.Position = ClampToWorld(position);
-			RedrawAllPlants();
+			RedrawAllPlants(changementPalier: true);   // LEVIERS ③
 			CullPlants();
 			if (avant != CurrentZoom) NoterChangementPalier(avant, CurrentZoom);   // ZoomJournal.cs
 		}

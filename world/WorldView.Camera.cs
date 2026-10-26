@@ -112,7 +112,7 @@ namespace Symbiose
 			// toutes les plantes au changement de palier — sans quoi une plante dessinée
 			// en segments RESTERAIT en segments après un dézoom. ~500 QueueRedraw,
 			// ponctuel (un cran de molette), invisible.
-			RedrawAllPlants();
+			RedrawAllPlants(changementPalier: true);   // LEVIERS ③
 			// Culling préventif (tronçon ②) : le zoom change l'étendue visible → une
 			// plante peut sortir/entrer du cadre. Réévalué au même cran de molette.
 			CullPlants();

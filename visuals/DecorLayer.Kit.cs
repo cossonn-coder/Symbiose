@@ -89,7 +89,7 @@ namespace Symbiose
 		/// = variation par pièce, bornée aux tailles existantes.</summary>
 		private static int TailleZoom(Piece f, int decal = 0)
 		{
-			float z = WorldView.CurrentZoom;
+			float z = ZoomConstr;
 			int i = z <= 0.5f ? 0 : z <= 1f ? 1 : 2;
 			return Mathf.Clamp(i + decal, 0, Tailles[(int)f].Length - 1);
 		}
@@ -101,7 +101,7 @@ namespace Symbiose
 		{
 			AssurerKitDecor();
 			var r = _kitRects[IndexKit((int)t, (int)f, taille, (int)(h % Variantes))];
-			float z = WorldView.CurrentZoom;
+			float z = ZoomConstr;
 			Vector2 coin = (pied * z - new Vector2(r.Size.X * 0.5f, r.Size.Y)).Round() / z;
 			_lot.Quad(new Rect2(coin, (Vector2)r.Size / z),
 					  new Rect2((Vector2)r.Position / _kitTaille, (Vector2)r.Size / _kitTaille), mod);
@@ -109,7 +109,7 @@ namespace Symbiose
 
 		/// <summary>Taille d'une pièce en px canvas (pour espacer les poses).</summary>
 		private static Vector2 TaillePiece(Piece f, int taille) =>
-			(Vector2)Tailles[(int)f][taille] / WorldView.CurrentZoom;
+			(Vector2)Tailles[(int)f][taille] / ZoomConstr;
 
 		// --- Génération de l'atlas -----------------------------------------
 		// Étagères : chaque pièce de chaque teinte posée de gauche à droite, 1 px de

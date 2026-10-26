@@ -59,19 +59,19 @@ namespace Symbiose
 		}
 
 		/// <summary>Trace console d'un REDESSIN du décor (FLUIDITÉ PC ③) : zoom,
-		/// sommets du lot (un seul DrawMesh = 1 draw call) et temps CPU du _Draw.
-		/// Le décor est inerte : cette ligne ne sort qu'au build, au changement de
-		/// palier, à la rotation ou quand la ceinture du moteur change.</summary>
-		private void TracerDessin(long t0)
+		/// sommets de la maille (un seul DrawMesh = 1 draw call) et temps CPU du _Draw.
+		/// LEVIERS ③ : `construite` = maille faite d'un bloc dans ce _Draw (1er dessin,
+		/// après Build) ; sinon simple PERMUTATION d'une maille prête (DecorLayer.Mailles.cs).</summary>
+		private void TracerDessin(long t0, int sommets, bool construite)
 		{
 			double ms = (System.Diagnostics.Stopwatch.GetTimestamp() - t0) * 1000.0
 					  / System.Diagnostics.Stopwatch.Frequency;
 			// Capté par l'outil à-coup de zoom (WorldView.ZoomJournal.cs, LEVIERS ①).
 			DernierDessinMs = ms;
-			DernierDessinSommets = _lot.Sommets;
+			DernierDessinSommets = sommets;
 			Dessins++;
-			GD.Print($"[DecorLayer] _Draw ×{WorldView.CurrentZoom} : {_lot.Sommets} sommets,"
-				   + $" {ms:F1} ms");
+			GD.Print($"[DecorLayer] _Draw ×{WorldView.CurrentZoom} : {sommets} sommets,"
+				   + $" {ms:F1} ms ({(construite ? "maille construite" : "maille prête")})");
 		}
 
 		// Profil de DÉMONSTRATION : un motif par bord cardinal (forêt N, rivière E,

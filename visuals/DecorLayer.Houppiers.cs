@@ -32,7 +32,7 @@ namespace Symbiose
 		/// (1 devant, plus sombre au cœur du bois).</summary>
 		private void DrawArbreKit(Vector2 basePos, TreeSilhouette sil, float scale, Color mod, uint hb)
 		{
-			float z = WorldView.CurrentZoom;
+			float z = ZoomConstr;
 			float trunkH = sil.TrunkHeightCm * WorldView.PxPerCmZ * scale;
 			float r = sil.CanopyRadiusCm * WorldView.PxPerCmX * scale;
 			Vector2 apex = basePos + Vector2.Up * trunkH;
@@ -102,7 +102,7 @@ namespace Symbiose
 		/// la densité ligneuse du pont : une clairière s'éclaircit aussi au sol.</summary>
 		private void DrawSousBois(Secteur s, float kDensite)
 		{
-			float z = WorldView.CurrentZoom;
+			float z = ZoomConstr;
 			float pas = Mathf.Max(PasTouffeMinCm * 2f, 2.5f * PasTouffePx / (z * WorldView.PxPerCmX));
 			int nU = Mathf.CeilToInt(WorldView.WorldCm / pas);
 			int nD = Mathf.CeilToInt((DepthCm - OurletCm) / pas);

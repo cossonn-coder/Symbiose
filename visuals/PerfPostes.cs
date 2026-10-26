@@ -31,6 +31,7 @@ namespace Symbiose
 			MacroProcess, MacroDraw, OmbreDraw, Soleil, Vent,
 			CuissonFile, PlanteDraw, Etalement, Attente, Tapis,
 			ForagerProcess, ForagerDraw,   // butineurs (banc accéléré, PLANTE ASSEMBLÉE ③)
+			PlanteVecteur,   // plantes SANS image, tracé vectoriel direct (LEVIERS ③)
 		}
 
 		// Libellés du rapport, dans l'ordre de l'enum.
@@ -39,6 +40,7 @@ namespace Symbiose
 			"vie macro _Process", "vie macro _Draw", "ombres _Draw", "soleil (UpdateSun)",
 			"vent (poses)", "cuisson (file)", "plantes _Draw", "semaine (étalement)",
 			"attente (marge)", "tapis/sol", "butineurs _Process", "butineurs _Draw",
+			"plantes vectoriel",
 		};
 
 		private static readonly int N = Noms.Length;

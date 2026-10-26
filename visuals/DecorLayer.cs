@@ -94,7 +94,7 @@ namespace Symbiose
 		// px, invisibles au dézoom et calibrés vue proche — ne se peignent qu'à partir
 		// de ce seuil. Recale l'échelle détail/distance ET allège le dessin au dézoom.
 		private const float DetailZoom = 2f;
-		private static bool DetailsVisibles => WorldView.CurrentZoom >= DetailZoom;
+		private static bool DetailsVisibles => ZoomConstr >= DetailZoom;
 
 		private SurroundingsProfile _profile;
 		private bool _built;
@@ -181,6 +181,7 @@ namespace Symbiose
 					 : _ceinture != null ? BuildFromBridge(_ceinture, seed)
 					 : BuildProfile(seed);
 			TracerSource();   // console F5 : d'où vient le profil (DecorLayer.Banc.cs)
+			InvaliderMailles();   // LEVIERS ③ : profil/rotation/banc changés → mailles à refaire
 			_built = true;
 			QueueRedraw();
 		}
@@ -202,6 +203,9 @@ namespace Symbiose
 				_lastZoom = WorldView.CurrentZoom;
 				QueueRedraw();
 			}
+			// LEVIERS ③ : les mailles des autres paliers se préparent par tranches
+			// (DecorLayer.Mailles.cs) — le prochain cran de molette n'aura qu'à permuter.
+			AvancerFond();
 		}
 
 		public override void _Draw()
@@ -214,7 +218,22 @@ namespace Symbiose
 			// PLANTE ASSEMBLÉE ① : tout part en UN lot (LotTriangles) — les triangles
 			// gardent l'ordre des anciens appels, donc l'ordre des passes (~1 100 draw
 			// calls → 1 à ×4 [VM]). On ne change que COMMENT, pas QUAND on redessine.
+			// FLUIDITÉ PC LEVIERS ③ : le lot n'est plus reconstruit à chaque palier —
+			// une maille FIGÉE par palier (DecorLayer.Mailles.cs) ; changer de palier =
+			// redessiner la maille prête (un DrawMesh). Construite d'un bloc ici
+			// seulement si elle manque encore (1er dessin, juste après Build).
 			long t0 = System.Diagnostics.Stopwatch.GetTimestamp();
+			Maille m = MailleImmediate(WorldView.CurrentZoom, out bool construite);
+			if (m.Mesh != null) DrawMesh(m.Mesh, KitTexture);
+			PublierEau(m);      // étincelles de CE palier (couche animée, DecorLayer.Eau.cs)
+			TracerDessin(t0, m.Sommets, construite);   // console : coût (DecorLayer.Banc.cs)
+		}
+
+		// ⚠️ CONSERVÉ, plus appelé depuis LEVIERS ③ (remplacé par la maille par
+		// palier) : l'ancien redessin complet du décor à chaque palier, référence.
+		private void DessinerToutLot()
+		{
+			ZoomConstr = WorldView.CurrentZoom;   // le semis lit le palier construit
 			_lot.Vider();
 			_lot.UvUni = UvBlanc;   // aplats = texel blanc de l'atlas (DecorLayer.Kit.cs)
 			_scintille?.Vider();    // FLUIDITÉ PC ④ : DrawReflets y range les étincelles
@@ -224,10 +243,10 @@ namespace Symbiose
 				DrawMotif(s);
 			_lot.Dessiner(this, KitTexture);
 			_scintille?.Publier();  // couche animée à part (DecorLayer.Eau.cs)
-			TracerDessin(t0);   // console : coût du redessin (DecorLayer.Banc.cs)
 		}
 
-		private readonly LotTriangles _lot = new();
+		// Lot de travail : réaffecté le temps d'une tranche de fond (Mailles.cs).
+		private LotTriangles _lot = new();
 
 		// Dispatch du MOTIF détaillé d'un secteur (T5), peint sur son assise.
 		private void DrawMotif(Secteur s)

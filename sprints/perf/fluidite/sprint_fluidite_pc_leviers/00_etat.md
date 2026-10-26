@@ -46,7 +46,7 @@ l'extraire en zoomant/dézoomant.
 |---|---|---|---|---|
 | ① | `01_outil_zoom.md` | journal + rapport copiable des changements de palier, balayage VM, chiffres « avant » | intact | **fait** (non commité) |
 | ② | `02_butineurs_pollen_lot.md` | butineurs + pollen en un lot `LotTriangles` | intact | **fait** (non commité) |
-| ③ | `03_paliers_prets.md` | décor : une maille par palier ; plantes : pas de vectoriel direct au zoom (si mesuré) | intact | à faire |
+| ③ | `03_paliers_prets.md` | décor : une maille par palier ; plantes : pas de vectoriel direct au zoom (si mesuré) | intact | **fait** (non commité) |
 | ④ | `04_pont_delta.md` | pont en delta opt-in (semaine de naissance, segments changés, gènes 1 fois), 0.6.0 | intact | à faire |
 | ⑤ | `05_lisiere_devant_bilan.md` | lisière côté caméra devant le jardin + bilan VM + protocole PC + clôture | intact | à faire |
 
@@ -103,5 +103,41 @@ Dette déjà inscrite à la conception : D112 (k) décor animé, (l) soleil sur 
   (images identiques) → à juger au F5.
 - F5 Nico : butineurs et pollen à ×4 / ×8 « comme avant » ? (losange/octogone vs disque).
 
+## ③ Paliers prêts — FAIT (2026-10-26)
+- **Décor** : `visuals/DecorLayer.Mailles.cs` (126 LDC) — une `ArrayMesh` FIGÉE par palier
+  (×0,5 ×1 ×2 ×4, `LotTriangles.Figer`). Changer de palier = un `DrawMesh` de la maille
+  prête. Palier courant manquant (1er dessin, après `Build`) = construit d'un bloc comme
+  avant ; les autres en tâche de fond (`_Process`, 8 tranches = assise/motif par secteur,
+  budget 8 ms, le plus proche du palier courant d'abord). Le semis du kit / détails fins /
+  calage au pixel lisent `ZoomConstr` (palier construit) au lieu de `CurrentZoom` (sed
+  dans Kit/Patchwork/Houppiers/Roche/Eau). Points d'eau du scintillement stockés par
+  maille, publiés à la permutation. Invalidation : `Build()` (ceinture changée, rotation,
+  F10) jette les 4 mailles. Fil principal seulement (TriangulatePolygon + listes partagées).
+  Ancien redessin conservé (`DessinerToutLot`, non appelé).
+- **Plantes — mesure d'abord** : nouveau poste `plantes vectoriel` (PerfPostes) = tracé
+  direct des plantes sans image. Diagnostic temporaire (retiré) : au cran, les plantes
+  sans image sont celles que la file n'a pas encore cuites (VM : file jamais vidée en 4 s
+  ≤ ×8) ; « trop grandes » (> 2048 px) seulement à ×16/×32 (≤ 47). Levier : au CHANGEMENT
+  DE PALIER (`RedrawAllPlants(changementPalier: true)`, molette + `PoserCamera`, pas la
+  capture), une plante sans image qui a déjà un tracé vectoriel le GARDE (mis à l'échelle
+  par la caméra, comme une image cuite gardée) jusqu'au Commit de sa cuisson ou au Begin
+  raté (trop grande) qui la redessinent (`PlantRenderer.Bake.cs`, `_traceVecteur`).
+- **Mesures** [VM llvmpipe, n=1 balayage chacun, `-Z 4 -S 1521550718 -w 90 -c 1650,950`] :
+  décor _Draw au cran **27-37 ms → 0,0 ms** (12/12 crans) ; mailles de fond : ×1 39 ms /
+  ×2 22 / ×4 21 en 8 tranches, pire image de fond 21 ms [au démarrage, > budget 8 ms : une
+  tranche forêt ×1 dépasse] ; `plantes vectoriel` dans la pire image du cran **45-95 ms
+  (×2→×32, ×32→×4) → ≤ 5 ms**, sauf ×16→×8 58,6 ms (dézoom : plantes libérées hors champ
+  qui rentrent, chemin ReleaseOffscreen non touché). Pire image moyenne des 12 crans
+  292 → 279 ms [VM, n=1 : dominée par le rendu llvmpipe ~100-150 ms + cuisson, qui devient
+  le poste dominant de la pire image, 15-168 ms]. Banc 3 phases (`-3 25,25,20 -A 1 -W 90`)
+  phase C : moy. 197,5 ms (② : 187,6) [bruit VM ±10], draw calls 626 (② 608), plantes
+  _Draw 2,44 + vectoriel 1,61 ms/image. Captures `captures_03/` ×2 avant/après :
+  **identiques à l'octet** (PNG, Movie Maker).
+- Reste visible au cran : la **cuisson (file)** (jusqu'à 80-168 ms dans une image [VM])
+  et le rendu ; hors périmètre ③ — à relire sur le run PC.
+- F5 Nico : zoomer/dézoomer → l'à-coup a-t-il baissé ? touche Z à coller. Juste après un
+  cran, une plante pas encore cuite montre une image au palier précédent agrandie/réduite
+  (traits plus fins ou plus épais) jusqu’à sa cuisson [VM : plusieurs s ; PC : non mesuré] : acceptable ?
+
 ## §REPRISE
-Exécution : `/sprint-auto sprint_fluidite_pc_leviers` (tronçon suivant = ③ ; ① et ② faits, à commiter par l'orchestrateur). Après : 1 run PC de Nico → 3ᵉ temps D116 (levier moteur si 2 s/sem non tenu).
+Exécution : `/sprint-auto sprint_fluidite_pc_leviers` (tronçon suivant = ④ ; ①②③ faits, ③ à commiter par l'orchestrateur). Après : 1 run PC de Nico → 3ᵉ temps D116 (levier moteur si 2 s/sem non tenu).

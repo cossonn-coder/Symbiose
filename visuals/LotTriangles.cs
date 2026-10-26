@@ -171,6 +171,22 @@ namespace Symbiose
 		}
 
 
+		/// <summary>FIGE le lot accumulé dans un ArrayMesh NEUF, à garder et à
+		/// redessiner tel quel (FLUIDITÉ PC LEVIERS ③ : une maille de décor par
+		/// palier). null si le lot est vide.</summary>
+		public ArrayMesh Figer(bool avecUv)
+		{
+			if (_sommets.Count == 0) return null;
+			var arrays = new Godot.Collections.Array();
+			arrays.Resize((int)Mesh.ArrayType.Max);
+			arrays[(int)Mesh.ArrayType.Vertex] = _sommets.ToArray();
+			arrays[(int)Mesh.ArrayType.Color] = _couleurs.ToArray();
+			if (avecUv) arrays[(int)Mesh.ArrayType.TexUV] = _uvs.ToArray();
+			var m = new ArrayMesh();
+			m.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, arrays);
+			return m;
+		}
+
 		/// <summary>Envoie le lot accumulé : UN DrawMesh sur `ci` (à appeler
 		/// depuis son _Draw). Rien à peindre → aucun envoi. `texture` (optionnelle)
 		/// = l'atlas des pièces posées par Quad ; sans elle, les UV ne partent pas.</summary>

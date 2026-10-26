@@ -77,7 +77,7 @@ namespace Symbiose
 		// TAPIS : semis des pièces du kit sur un secteur, trié puis posé.
 		private void DrawTapis(Secteur s, Tapis mode)
 		{
-			float z = WorldView.CurrentZoom;
+			float z = ZoomConstr;
 			float pas = Mathf.Max(PasTouffeMinCm, PasTouffePx / (z * WorldView.PxPerCmX));
 			float seuilW = DepthCm * 0.06f;
 			float fin = mode == Tapis.OurletForet ? OurletCm : DepthCm;

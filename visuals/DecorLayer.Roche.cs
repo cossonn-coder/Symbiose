@@ -47,7 +47,7 @@ namespace Symbiose
 			float dTop = dFront + recul * strates;
 			float Wob(float u) => AmplitudeCm * 0.4f * Ondulation(s.SeedSecteur, u / 120f);
 			int steps = Mathf.CeilToInt(WorldView.WorldCm / StepCm);
-			float z = WorldView.CurrentZoom, trait = 1f / z;
+			float z = ZoomConstr, trait = 1f / z;
 
 			// 1) OMBRE PORTÉE au pied, côté jardin.
 			Color ombreCol = Assombrir(Palette16.RocheOmbre, -0.25f);
@@ -116,7 +116,7 @@ namespace Symbiose
 		// entaillée) : la cicatrice d'`entailler` se lit au pied.
 		private void DrawEboulis(Secteur s, float dFront, float ombreW, System.Func<float, float> wob)
 		{
-			float z = WorldView.CurrentZoom;
+			float z = ZoomConstr;
 			float pas = Mathf.Max(PasTouffeMinCm, PasEboulisPx / (z * WorldView.PxPerCmX));
 			int nU = Mathf.CeilToInt(WorldView.WorldCm / pas);
 			uint seuil = SeuilEboulis(s);
@@ -145,7 +145,7 @@ namespace Symbiose
 		// sèche et de cailloux sur le plateau — jamais d'aplat uni.
 		private void DrawLevre(Secteur s, float dTop, Vector2 up, System.Func<float, float> wob)
 		{
-			float z = WorldView.CurrentZoom;
+			float z = ZoomConstr;
 			float pas = Mathf.Max(PasTouffeMinCm, 1.5f * PasTouffePx / (z * WorldView.PxPerCmX));
 			int nU = Mathf.CeilToInt(WorldView.WorldCm / pas);
 			_poses.Clear();
