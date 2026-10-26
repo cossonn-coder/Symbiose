@@ -34,6 +34,25 @@ namespace Symbiose
 			GD.Print($"[DecorLayer] F10 → banc décor {(_banc ? "ON (4 motifs)" : "OFF (seed)")}.");
 		}
 
+		// Dernière trace console (FLUIDITÉ PC ②) : Build tourne à CHAQUE snapshot,
+		// on n'écrit que quand la source ou un motif change.
+		private string _derniereTrace;
+
+		/// <summary>Trace console du profil construit : source (banc F10 / pont /
+		/// repli local par seed) et motifs des 4 bords. Posée pour le bug « il faut
+		/// F10 ×2 » (D112 c), NON reproduit sur VM : au F5, la 1re ligne dit si le
+		/// décor de démarrage vient bien du pont.</summary>
+		private void TracerSource()
+		{
+			string source = _banc ? "banc F10" : _ceinture != null ? "pont" : "repli (seed)";
+			var m = _profile.Secteurs;
+			string trace = $"[DecorLayer] profil {source} : N {m[0].Motif} · E {m[1].Motif}"
+						 + $" · S {m[2].Motif} · O {m[3].Motif}";
+			if (trace == _derniereTrace) return;
+			_derniereTrace = trace;
+			GD.Print(trace);
+		}
+
 		// Profil de DÉMONSTRATION : un motif par bord cardinal (forêt N, rivière E,
 		// falaise S, prairie O). La falaise est en pente Verticale (face bien lisible).
 		// Graines de secteur dérivées de HashKey (tracé sinueux stable, zéro Random,

@@ -1,6 +1,6 @@
 # Sprint FLUIDITÉ PC (D116 + lisière D112 c/j) — carnet de conception
 
-> Phase : **B — exécution** (`/sprint-auto`). Conception figée le 2026-10-26 ; ① FAIT. Sprint précédent : `sprints/perf/fluidite/sprint_fluidite_an2/00_etat.md`
+> Phase : **B — exécution** (`/sprint-auto`). Conception figée le 2026-10-26 ; ① ② FAITS. Sprint précédent : `sprints/perf/fluidite/sprint_fluidite_an2/00_etat.md`
 > (golden `fecccded…`, pont 0.5.57). Mesures PC de référence : `DETTE.md` D116.
 
 ## Cible (Nico, 2026-10-26)
@@ -58,7 +58,7 @@ PC (i5-4200H, 2 cœurs / 4 threads, HD 4600), an 2, 1 s/sem demandée → **≤ 
 | # | Kickoff | Contenu | Golden | État |
 |---|---|---|---|---|
 | ① | `01_instruments_banc3.md` | banc E 3 phases (normal / rendu suspendu / moteur en pause) + ménage instruments + PollenLot + oracles périmés | intact | **FAIT** |
-| ② | `02_lisiere_bug_coutures.md` | bug « il faut F10 » reproduit/corrigé + coutures | intact | à faire |
+| ② | `02_lisiere_bug_coutures.md` | bug « il faut F10 » reproduit/corrigé + coutures | intact | **FAIT** (F10 non reproduit → trace console ; coutures corrigées) |
 | ③ | `03_lisiere_kit_foret.md` | atlas patchwork + prairie/friche + forêt | intact | à faire |
 | ④ | `04_lisiere_eau_roche_bilan.md` | rivière + falaise + bilan VM + protocole PC (1 run) + clôture | intact | à faire |
 
@@ -94,9 +94,43 @@ PC (i5-4200H, 2 cœurs / 4 threads, HD 4600), an 2, 1 s/sem demandée → **≤ 
   valent pas le PC.
 - Taille : `core/SimBridge.cs` 324 LDC (🟡, une responsabilité : le pont) ; reste ≤ 300.
 
+## Bilan ② (2026-10-26) — golden intact `fecccded…`, `dotnet build` vert, pont inchangé (0.5.58)
+- **Bug « il faut F10 ×2 » : NON reproduit sur VM.** Nouvel argument `--capture-decor-f10=<s>`
+  (`capture_vm.sh -D SEC`) qui rejoue F10 ×2 après s secondes. Même image à la même frame
+  avec/sans F10 ×2 : graine 1521550718 ×0,5 (écart = animation du jardin), graine 42 ×0,5
+  (4 px), rotation D35 1 + 1 semaine turbo (0 px) [n=1 run par cas, VM]. Pistes (a)(b)(c)
+  réfutées au code et à la mesure : à l'ouverture, `Build(Seed)` pose un profil de repli,
+  `ApplySnapshot` le remplace par le pont AVANT la 1re image ; tous les snapshots `full`
+  portent `ceinture` ; projection pure (orientation seule). → **ligne console** posée
+  (`DecorLayer.Banc.cs` `TracerSource`) : `[DecorLayer] profil pont : N … · E … · S … · O …`,
+  écrite seulement quand source ou motif change.
+- **Coutures : cause observée = arrondi des sommets au pixel** (`snap_2d_vertices_to_pixel`
+  du SubViewport). Snap coupé (essai jetable) → pointillés disparus. Mécanisme : la frange et
+  le seuil étaient EMPILÉS sur le fond, avec des bords latéraux colinéaires aux extrémités
+  différentes ; arrondis, ils divergent d'½ px et le fond transparaît en pointillé le long des
+  pentes iso. Un 1er essai (pas chevauchants de 10 cm) n'a fait que DÉPLACER les pointillés —
+  abandonné. Correctif : bandes JOINTIVES (seuil | frange | fond) dans `DrawSecteur`, et eau /
+  liserés jointifs dans `DrawRiviere`. Même nombre de triangles, toujours 1 lot.
+  Falaise : aucun empilement colinéaire (strates aux sommets partagés), non touchée.
+- **Captures** (`captures_02/`) : `coutures_x05_avant_apres.png` (bord O ×0,5, gauche avant :
+  2 lignes pointillées + pointillés dans le seuil ; droite après : aucun) ;
+  `bord_O_x2_avant_apres.png` (×2, haut avant : ~6 fils, bas après : aucun) ;
+  `riviere_x2_avant.png` / `_apres.png` (banc `peripherie` ×2 : pointillés bleus dans les
+  liserés puis disparus). Restent des RAIES de teinte (jitter par pas) = style → ③.
+- **Trouvé pour ③ (non corrigé, style/hash)** : `BuildFromBridge` tire `SeedSecteur` de
+  `ceinture|{cote}|{type}` SANS le seed du terrain → tous les terrains ont la même lisière
+  pour un même type de bord (philo #7) ; et le hash djb2 des arbres brasse mal : forêt O de
+  la graine 1521550718 = 13 arbres, TOUS des bouleaux, TOUS au bout SO du bord (densité moteur
+  0,635) — c'est la « masse sombre sans arbre » du constat 6. Le kit patchwork ③ doit
+  semer avec un hash brassé (cf. D92) et une graine qui inclut le seed du terrain.
+- LDC : `DecorLayer.cs` 299, `DecorLayer.Banc.cs` 34, `WorldView.Capture.cs` 151.
+- **F5 Nico** : (1) au démarrage, lire la 1re ligne `[DecorLayer] profil …` dans la console
+  Godot : `pont` attendu. Si le décor est faux, noter cette ligne puis celle qui suit F10 ×2 ;
+  (2) les fils fins de couture doivent avoir disparu (×0,5 à ×4).
+
 ## §REPRISE
 Conception FIGÉE → doc `docs/perf/fluidite/conception_fluidite_pc.md`. Exécution :
-`/sprint-auto sprint_fluidite_pc` — **tronçon suivant = ② `02_lisiere_bug_coutures.md`**.
+`/sprint-auto sprint_fluidite_pc` — **tronçon suivant = ③ `03_lisiere_kit_foret.md`** (lire « Trouvé pour ③ » du bilan ②).
 Pour le protocole PC du ④ : lancer le jeu avec `-- --capture-banc=full --capture-seed=1521550718
 --capture-etalonnage=25 --capture-banc-3phases=25,25,20 --capture-banc-cadence=1
 --capture-banc-semaine=90` (mêmes arguments que `perf_vm.sh -3 … -A 1 -W 90`), rapport au

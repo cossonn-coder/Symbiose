@@ -180,6 +180,7 @@ namespace Symbiose
 			_profile = _banc ? BancProfile()
 					 : _ceinture != null ? BuildFromBridge(_ceinture)
 					 : BuildProfile(seed);
+			TracerSource();   // console F5 : d'où vient le profil (DecorLayer.Banc.cs)
 			_built = true;
 			QueueRedraw();
 		}
@@ -266,21 +267,28 @@ namespace Symbiose
 				float jitter = (Ondulation(s.SeedSecteur * 2654435761u, u0 / 90f)) * 0.05f;
 				Color inner = near; inner = Assombrir(inner, -jitter);
 				Color outer = far;  outer = Assombrir(outer, jitter);
-				// Deux triangles remplis (quad). L'inner sur le bord jardin, l'outer
-				// au fond : on peint le fond puis la frange claire par-dessus.
-				_lot.Polygone(new[] { p0, p1, p2, p3 }, outer);
-				// Frange de lisière (bande claire côté jardin), 1/3 de la profondeur.
-				Vector2 m2 = EdgePoint(s.Cote, u1, DepthCm * 0.34f + b1 * 0.66f);
-				Vector2 m3 = EdgePoint(s.Cote, u0, DepthCm * 0.34f + b0 * 0.66f);
-				_lot.Polygone(new[] { p0, p1, m2, m3 }, inner);
-				// LISIÈRE NETTE (T4) : un seuil SOMBRE franc collé au tracé sinueux,
-				// côté décor, sur les 4 motifs → la frontière jardin/décor se LIT au
-				// lieu de fondre (rang d'ombre bas en forêt, ourlet de prairie, etc.).
-				// Rivière/falaise ont déjà leur bord franc (berge/éboulis peints en
-				// passe 2), ce seuil passe dessous sans les gêner. Suit la sinuosité.
+				// Trois bandes JOINTIVES sur la profondeur, du bord jardin vers le fond :
+				// seuil sombre | frange claire | fond. Frange de lisière ≈ 1/3 de la
+				// profondeur ; LISIÈRE NETTE (T4) : un seuil SOMBRE franc collé au tracé
+				// sinueux, côté décor, sur les 4 motifs → la frontière jardin/décor se
+				// LIT au lieu de fondre. Rivière/falaise ont déjà leur bord franc
+				// (berge/éboulis peints en passe 2), ce seuil passe dessous.
+				// 📖 FLUIDITÉ PC ② — POURQUOI jointives et plus EMPILÉES : avant, le fond
+				// couvrait tout le pas et la frange puis le seuil se peignaient
+				// par-dessus. Leurs bords latéraux étaient alors COLINÉAIRES mais avec
+				// des extrémités différentes (p3 pour le fond, m3 pour la frange). Le
+				// SubViewport arrondit chaque sommet au pixel (snap_2d_vertices_to_pixel)
+				// → m3 quitte la droite p0-p3 d'un demi-pixel, et le liseré du fond qui
+				// dépasse se lit en POINTILLÉ sombre le long des pentes iso (les « fils
+				// de couture »). Jointives, deux bandes voisines partagent EXACTEMENT
+				// leurs sommets → aucune arête à demi recouverte, rien ne transparaît.
 				float seuilW = DepthCm * 0.06f;
 				Vector2 e2 = EdgePoint(s.Cote, u1, b1 + seuilW);
 				Vector2 e3 = EdgePoint(s.Cote, u0, b0 + seuilW);
+				Vector2 m2 = EdgePoint(s.Cote, u1, DepthCm * 0.34f + b1 * 0.66f);
+				Vector2 m3 = EdgePoint(s.Cote, u0, DepthCm * 0.34f + b0 * 0.66f);
+				_lot.Polygone(new[] { m3, m2, p2, p3 }, outer);
+				_lot.Polygone(new[] { e3, e2, m2, m3 }, inner);
 				_lot.Polygone(new[] { p0, p1, e2, e3 }, Assombrir(near, -0.24f));
 			}
 		}
@@ -322,9 +330,12 @@ namespace Symbiose
 				uint hd = (uint)i * 2654435761u ^ s.SeedSecteur;
 				Color eauA = (hd & 1u) == 0u ? Palette16.EauProfonde : Palette16.EauSurface;
 				Color eauB = (hd & 1u) == 0u ? Palette16.EauSurface  : Palette16.EauProfonde;
-				Bande(s.Cote, u0, u1, ax0 - half, ax1 - half, ax0, ax1, eauA);
-				Bande(s.Cote, u0, u1, ax0, ax1, ax0 + half, ax1 + half, eauB);
 				// -- Ombre de berge : liseré d'eau plus sombre le long des deux rives.
+				// Liserés et eau JOINTIFS, jamais empilés (FLUIDITÉ PC ② : un bord à
+				// demi recouvert se lit en pointillé une fois les sommets arrondis au
+				// pixel — cf. DrawSecteur).
+				Bande(s.Cote, u0, u1, ax0 - half + liseré, ax1 - half + liseré, ax0, ax1, eauA);
+				Bande(s.Cote, u0, u1, ax0, ax1, ax0 + half - liseré, ax1 + half - liseré, eauB);
 				Bande(s.Cote, u0, u1, ax0 - half, ax1 - half, ax0 - half + liseré, ax1 - half + liseré, eauSombre);
 				Bande(s.Cote, u0, u1, ax0 + half - liseré, ax1 + half - liseré, ax0 + half, ax1 + half, eauSombre);
 				// -- Reflet orienté courant : un streak clair 1 case sur 2, tracé le

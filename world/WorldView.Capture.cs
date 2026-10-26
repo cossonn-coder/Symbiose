@@ -93,6 +93,10 @@ namespace Symbiose
 		// --capture-planche=<s> : planche des paliers (touche L), s secondes de jeu par
 		// palier, sur la plante la plus proche du point visé — D106 T7.
 		private static readonly float CapturePlanche = ParseFloat(ArgCapture("planche"));
+		// --capture-decor-f10=<s> : s secondes de jeu après le montage, rejoue F10 ×2
+		// (banc décor ON puis OFF = reconstruction forcée du décor) — FLUIDITÉ PC ②,
+		// pour comparer l'image de démarrage à celle « réparée » par F10 (D112 c).
+		private static readonly float CaptureDecorF10 = ParseFloat(ArgCapture("decor-f10"));
 		private int _captureTurboRestant;
 
 		// --- Pleine résolution, MESURE seulement (PERF VUE ⑤) ----------------
@@ -235,6 +239,9 @@ namespace Symbiose
 			AppliquerCaptureBanc();   // ombres / banc d'étalonnage (WorldView.Etalonnage.cs)
 			LancerBancSeuil();        // seuil de visibilité des signes (WorldView.BancSeuil.cs)
 			LancerBancVivant();       // captures info-bulle bête / carpophore (WorldView.BancVivant.cs)
+			if (!float.IsNaN(CaptureDecorF10))   // F10 ×2 programmé (FLUIDITÉ PC ②)
+				GetTree().CreateTimer(CaptureDecorF10).Timeout += () =>
+				{ _decorLayer?.ToggleBanc(); _decorLayer?.ToggleBanc(); };
 		}
 
 		// Appelé à chaque step consommé (_Process) : décompte des semaines turbo du
