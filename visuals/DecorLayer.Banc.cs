@@ -53,6 +53,18 @@ namespace Symbiose
 			GD.Print(trace);
 		}
 
+		/// <summary>Trace console d'un REDESSIN du décor (FLUIDITÉ PC ③) : zoom,
+		/// sommets du lot (un seul DrawMesh = 1 draw call) et temps CPU du _Draw.
+		/// Le décor est inerte : cette ligne ne sort qu'au build, au changement de
+		/// palier, à la rotation ou quand la ceinture du moteur change.</summary>
+		private void TracerDessin(long t0)
+		{
+			double ms = (System.Diagnostics.Stopwatch.GetTimestamp() - t0) * 1000.0
+					  / System.Diagnostics.Stopwatch.Frequency;
+			GD.Print($"[DecorLayer] _Draw ×{WorldView.CurrentZoom} : {_lot.Sommets} sommets,"
+				   + $" {ms:F1} ms");
+		}
+
 		// Profil de DÉMONSTRATION : un motif par bord cardinal (forêt N, rivière E,
 		// falaise S, prairie O). La falaise est en pente Verticale (face bien lisible).
 		// Graines de secteur dérivées de HashKey (tracé sinueux stable, zéro Random,

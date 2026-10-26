@@ -178,7 +178,7 @@ namespace Symbiose
 			//  2. le PONT (D73 ⑦) : la ceinture du moteur, vérité du jeu ;
 			//  3. le repli local par seed (binaire ancien, monde sans périphérie).
 			_profile = _banc ? BancProfile()
-					 : _ceinture != null ? BuildFromBridge(_ceinture)
+					 : _ceinture != null ? BuildFromBridge(_ceinture, seed)
 					 : BuildProfile(seed);
 			TracerSource();   // console F5 : d'où vient le profil (DecorLayer.Banc.cs)
 			_built = true;
@@ -186,19 +186,20 @@ namespace Symbiose
 		}
 
 		private bool _lastZoomOk;
-		private bool _lastDetailOk;
+		private float _lastZoom;
 
 		public override void _Process(double delta)
 		{
 			if (!Visible || !_built) return;
-			// Inerte : on ne redessine qu'aux DEUX basculements de LOD — apparition au
-			// dézoom (MaxZoom) et bascule masse↔détails fins (DetailZoom).
+			// Inerte : on ne redessine qu'au basculement de LOD (apparition au dézoom,
+			// MaxZoom) et, tant qu'il est visible, au CHANGEMENT DE PALIER — depuis
+			// FLUIDITÉ PC ③ les pièces du kit gardent leurs px internes, leur semis
+			// dépend donc du palier (et la bascule DetailZoom en fait partie).
 			bool zoomOk = WorldView.CurrentZoom <= MaxZoom;
-			bool detailOk = DetailsVisibles;
-			if (zoomOk != _lastZoomOk || detailOk != _lastDetailOk)
+			if (zoomOk != _lastZoomOk || (zoomOk && WorldView.CurrentZoom != _lastZoom))
 			{
 				_lastZoomOk = zoomOk;
-				_lastDetailOk = detailOk;
+				_lastZoom = WorldView.CurrentZoom;
 				QueueRedraw();
 			}
 		}
@@ -213,12 +214,15 @@ namespace Symbiose
 			// PLANTE ASSEMBLÉE ① : tout part en UN lot (LotTriangles) — les triangles
 			// gardent l'ordre des anciens appels, donc l'ordre des passes (~1 100 draw
 			// calls → 1 à ×4 [VM]). On ne change que COMMENT, pas QUAND on redessine.
+			long t0 = System.Diagnostics.Stopwatch.GetTimestamp();
 			_lot.Vider();
+			_lot.UvUni = UvBlanc;   // aplats = texel blanc de l'atlas (DecorLayer.Kit.cs)
 			foreach (var s in _profile.Secteurs)
-				DrawSecteur(s);
+				DrawAssise(s);      // FLUIDITÉ PC ③ : patchwork (DecorLayer.Patchwork.cs)
 			foreach (var s in _profile.Secteurs)
 				DrawMotif(s);
-			_lot.Dessiner(this);
+			_lot.Dessiner(this, KitTexture);
+			TracerDessin(t0);   // console : coût du redessin (DecorLayer.Banc.cs)
 		}
 
 		private readonly LotTriangles _lot = new();
@@ -228,18 +232,21 @@ namespace Symbiose
 		{
 			switch (s.Motif)
 			{
-				case Motif.Foret:   DrawForet(s);       break;   // DecorLayer.Arbres.cs
+				// FLUIDITÉ PC ③ : tapis du kit (DecorLayer.Patchwork.cs) sous les arbres.
+				case Motif.Foret:   DrawTapis(s, Tapis.OurletForet); DrawForet(s); break;
 				case Motif.Riviere: DrawRiviere(s);     break;
 				case Motif.Falaise: DrawFalaise(s);     break;
 				// FRICHE (D73 ⑦) : l'ourlet fleuri de la prairie PLUS les ligneux
 				// épars (DrawForet, dont la densité et la taille viennent du moteur —
 				// une friche à 0.20 de densité et sans canopée donne des ronciers
 				// rabougris, pas une futaie).
-				case Motif.Friche:  DrawPrairie(s); DrawForet(s); break;
-				default:            DrawPrairie(s);     break;
+				case Motif.Friche:  DrawTapis(s, Tapis.Friche); DrawForet(s); break;
+				default:            DrawTapis(s, Tapis.Prairie); break;
 			}
 		}
 
+		// ⚠️ CONSERVÉ, plus appelé depuis FLUIDITÉ PC ③ (remplacé par DrawAssise,
+		// DecorLayer.Patchwork.cs) : l'assise en 3 aplats par pas, référence.
 		// Un secteur : une bande extérieure le long d'un bord cardinal du jardin,
 		// bornée côté jardin par une frontière SINUEUSE. On construit un ruban de
 		// quads (le long du bord) rempli en aplat volumé (2 valeurs, hue-shift sud).
@@ -455,6 +462,7 @@ namespace Symbiose
 			}
 		}
 
+		// ⚠️ CONSERVÉ, plus appelé depuis FLUIDITÉ PC ③ (fleurettes du kit, DrawTapis).
 		// PRAIRIE : sur l'assise verte, un SEMIS déterministe de petites fleurs
 		// (points blancs/jaunes), densité modérée, échantillonnage stable par hash.
 		private void DrawPrairie(Secteur s)

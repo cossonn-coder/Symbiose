@@ -72,12 +72,14 @@ namespace Symbiose
 		{
 			// Grille d'échantillonnage : pas assez fin pour une futaie crédible,
 			// assez grossier pour rester quelques centaines d'arbres au plus.
-			const float cellU = 130f, cellDepth = 150f;
+			// FLUIDITÉ PC ③ : grille resserrée (130×150 → 100×120 cm) pour un RIDEAU
+			// continu sur toute la longueur du bord (houppiers qui se chevauchent).
+			const float cellU = 100f, cellDepth = 120f;
 			int nU = Mathf.CeilToInt(WorldView.WorldCm / cellU);
 			int nD = Mathf.CeilToInt(DepthCm / cellDepth);
 			// On collecte d'abord (base monde, essence, taille) pour trier par Y
 			// ÉCRAN avant de peindre (peintre : lointain d'abord).
-			var arbres = new System.Collections.Generic.List<(Vector2 basePos, TreeSilhouette sil, float scale)>();
+			var arbres = new System.Collections.Generic.List<(Vector2 basePos, TreeSilhouette sil, float scale, Color mod, uint h)>();
 			// État MOTEUR du secteur (D73 ⑦) : la densité règle COMBIEN d'arbres se
 			// posent, la hauteur de canopée règle leur TAILLE. Hors pont, les deux
 			// facteurs valent 1 → le semis d'avant, au pixel près. C'est ici que le
@@ -86,14 +88,20 @@ namespace Symbiose
 			float kDensite = FacteurDensite(s);
 			float kTaille = FacteurTaille(s);
 			if (kDensite <= 0f || kTaille <= 0f) return;   // secteur rase : rien à peindre
+			// Sous-bois sombre posé AVANT les arbres : il se voit entre les troncs.
+			// Une friche n'a pas de sous-bois (pas de canopée) — son tapis le remplace.
+			if (s.Motif == Motif.Foret) DrawSousBois(s, kDensite);
 			for (int iu = 0; iu < nU; iu++)
 			for (int id = 0; id < nD; id++)
 			{
-				uint h = HashKey($"tree|{s.SeedSecteur}|{iu}|{id}");
+				// FLUIDITÉ PC ③ : hash BRASSÉ (Melange) — le djb2 seul ne mélangeait
+				// pas les bits hauts (essence, taille) : forêt O de la graine
+				// 1521550718 = 13 arbres, tous bouleaux, tous au bout SO (bilan ②).
+				uint h = HashCase(s.SeedSecteur, iu, id, 17u);
 				// Profondeur normalisée 0 (bord jardin) → 1 (fond). La densité
 				// CROÎT vers le fond : proba d'occupation = 0.25 au bord → 0.92 au cœur.
 				float dn = nD > 1 ? id / (float)(nD - 1) : 0f;
-				float proba = Mathf.Lerp(0.25f, 0.92f, dn) * kDensite;
+				float proba = Mathf.Lerp(0.35f, 0.95f, dn) * kDensite;
 				if (h % 1000u / 1000f > proba) continue;
 				// Jitter de position DANS la cellule (déterministe, jamais aligné).
 				float ju = (h >> 4 & 0xff) / 255f - 0.5f;
@@ -110,11 +118,13 @@ namespace Symbiose
 				// Taille : ±20 % autour de l'adulte (hétérogénéité, philo #7),
 				// mise à l'échelle de la canopée réelle du secteur.
 				float scale = (0.8f + (h >> 20 & 0xff) / 255f * 0.4f) * kTaille;
-				arbres.Add((EdgePoint(s.Cote, u, depth), Silhouettes[esp], scale));
+				// Plan du rideau : devant clair (1), cœur du bois plus sombre (0,72).
+				float m = Mathf.Lerp(1f, 0.72f, dn);
+				arbres.Add((EdgePoint(s.Cote, u, depth), Silhouettes[esp], scale, new Color(m, m, m), h));
 			}
 			arbres.Sort((a, b) => a.basePos.Y.CompareTo(b.basePos.Y));
-			foreach (var (basePos, sil, scale) in arbres)
-				DrawArbre(basePos, sil, scale);
+			foreach (var (basePos, sil, scale, mod, h) in arbres)
+				DrawArbreKit(basePos, sil, scale, mod, h);   // DecorLayer.Houppiers.cs
 		}
 
 		// L'essence DOMINANTE du secteur (moteur), ou null s'il n'y en a pas / si le
@@ -142,6 +152,9 @@ namespace Symbiose
 			return (roll & 1) == 0 ? "chene" : "hetre";
 		}
 
+		// ⚠️ CONSERVÉ, plus appelé depuis FLUIDITÉ PC ③ : l'arbre VECTORIEL d'avant le
+		// kit (ellipses lisses, ~3 000 sommets) — remplacé par DrawArbreKit
+		// (DecorLayer.Houppiers.cs). Gardé comme référence (règle : on ne jette pas).
 		// Un arbre = tronc fuselé + houppier (amas d'ellipses volumées). Tout en
 		// px ÉCRAN : la base vient de WorldToScreen (suit la rotation D35), la
 		// hauteur/rayon montent en px via PxPerCmZ (échelle iso verticale).

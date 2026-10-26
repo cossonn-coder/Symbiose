@@ -97,6 +97,9 @@ namespace Symbiose
 		// (banc décor ON puis OFF = reconstruction forcée du décor) — FLUIDITÉ PC ②,
 		// pour comparer l'image de démarrage à celle « réparée » par F10 (D112 c).
 		private static readonly float CaptureDecorF10 = ParseFloat(ArgCapture("decor-f10"));
+		// --capture-decor-banc=1 : banc décor F10 ON dès le montage (4 motifs côte à
+		// côte) — FLUIDITÉ PC ③, contrôle visuel du kit sur la rivière et la falaise.
+		private static readonly bool CaptureDecorBanc = ArgCapture("decor-banc") == "1";
 		private int _captureTurboRestant;
 
 		// --- Pleine résolution, MESURE seulement (PERF VUE ⑤) ----------------
@@ -242,6 +245,7 @@ namespace Symbiose
 			if (!float.IsNaN(CaptureDecorF10))   // F10 ×2 programmé (FLUIDITÉ PC ②)
 				GetTree().CreateTimer(CaptureDecorF10).Timeout += () =>
 				{ _decorLayer?.ToggleBanc(); _decorLayer?.ToggleBanc(); };
+			if (CaptureDecorBanc) _decorLayer?.ToggleBanc();   // banc décor ON (③)
 		}
 
 		// Appelé à chaque step consommé (_Process) : décompte des semaines turbo du

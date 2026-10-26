@@ -41,12 +41,22 @@ namespace Symbiose
 		private readonly List<Vector2> _sommets = new();
 		private readonly List<Color> _couleurs = new();
 		private readonly ArrayMesh _mesh = new();
+		// UV par sommet (FLUIDITÉ PC ③, kit du décor) : n'est ENVOYÉ que si
+		// Dessiner reçoit une texture. Les triangles « unis » prennent `UvUni`,
+		// qui doit viser un texel BLANC de l'atlas : couleur de sommet × blanc =
+		// la couleur, donc pièces texturées et aplats restent dans UN SEUL envoi.
+		private readonly List<Vector2> _uvs = new();
+		public Vector2 UvUni = Vector2.Zero;
+
+		/// <summary>Nombre de sommets accumulés (trace de coût, DecorLayer).</summary>
+		public int Sommets => _sommets.Count;
 
 		/// <summary>Repart à vide en gardant la capacité des listes.</summary>
 		public void Vider()
 		{
 			_sommets.Clear();
 			_couleurs.Clear();
+			_uvs.Clear();
 		}
 
 		/// <summary>≡ DrawColoredPolygon(pts, col).</summary>
@@ -54,6 +64,18 @@ namespace Symbiose
 		{
 			foreach (int i in Geometry2D.TriangulatePolygon(pts))
 				Ajouter(pts[i], col);
+		}
+
+		/// <summary>Polygone CONVEXE en éventail depuis pts[0] (FLUIDITÉ PC ③) : même
+		/// couverture que Polygone pour un convexe, sans l'appel natif
+		/// Geometry2D.TriangulatePolygon (marshalling coûteux quand on en fait des
+		/// milliers par redessin — mesuré sur l'assise et les arbres du décor).</summary>
+		public void PolygoneConvexe(Vector2[] pts, Color col)
+		{
+			for (int i = 1; i + 1 < pts.Length; i++)
+			{
+				Ajouter(pts[0], col); Ajouter(pts[i], col); Ajouter(pts[i + 1], col);
+			}
 		}
 
 		/// <summary>≡ DrawCircle(centre, r, col) (plein, sans antialiasing).</summary>
@@ -99,25 +121,43 @@ namespace Symbiose
 			Ajouter(a, col); Ajouter(b, col); Ajouter(c, col);
 		}
 
-		private void Ajouter(Vector2 p, Color c)
+		/// <summary>Un rectangle TEXTURÉ (pièce d'atlas) : `dst` en coordonnées
+		/// du canvas, `uv` en fraction de la texture, `mod` multiplie la pièce
+		/// (blanc = telle quelle). Même diagonale que SolMaillage.Quad.</summary>
+		public void Quad(Rect2 dst, Rect2 uv, Color mod)
+		{
+			Vector2 a = dst.Position, c = dst.End;
+			Vector2 ua = uv.Position, uc = uv.End;
+			Vector2 b = new(a.X, c.Y), d = new(c.X, a.Y);
+			Vector2 ub = new(ua.X, uc.Y), ud = new(uc.X, ua.Y);
+			Ajouter(a, ua, mod); Ajouter(b, ub, mod); Ajouter(c, uc, mod);
+			Ajouter(d, ud, mod); Ajouter(a, ua, mod); Ajouter(c, uc, mod);
+		}
+
+		private void Ajouter(Vector2 p, Color c) => Ajouter(p, UvUni, c);
+
+		private void Ajouter(Vector2 p, Vector2 uv, Color c)
 		{
 			_sommets.Add(p);
+			_uvs.Add(uv);
 			_couleurs.Add(c);
 		}
 
 
 		/// <summary>Envoie le lot accumulé : UN DrawMesh sur `ci` (à appeler
-		/// depuis son _Draw). Rien à peindre → aucun envoi.</summary>
-		public void Dessiner(CanvasItem ci)
+		/// depuis son _Draw). Rien à peindre → aucun envoi. `texture` (optionnelle)
+		/// = l'atlas des pièces posées par Quad ; sans elle, les UV ne partent pas.</summary>
+		public void Dessiner(CanvasItem ci, Texture2D texture = null)
 		{
 			if (_sommets.Count == 0) return;
 			var arrays = new Godot.Collections.Array();
 			arrays.Resize((int)Mesh.ArrayType.Max);
 			arrays[(int)Mesh.ArrayType.Vertex] = _sommets.ToArray();
 			arrays[(int)Mesh.ArrayType.Color] = _couleurs.ToArray();
+			if (texture != null) arrays[(int)Mesh.ArrayType.TexUV] = _uvs.ToArray();
 			_mesh.ClearSurfaces();
 			_mesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, arrays);
-			ci.DrawMesh(_mesh, null);
+			ci.DrawMesh(_mesh, texture);
 		}
 	}
 }

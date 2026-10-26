@@ -65,7 +65,32 @@ namespace Symbiose
 		public void SetCeinture(GArray ceinture)
 		{
 			_ceinture = ceinture != null && ceinture.Count > 0 ? ceinture : null;
-			if (_built) Build(_seed);   // reconstruit le profil, puis QueueRedraw
+			if (!_built) return;
+			// FLUIDITÉ PC ③ : le snapshot arrive CHAQUE semaine, la ceinture change
+			// rarement (un geste, une recolonisation lente). Avant, chaque snapshot
+			// redessinait le décor entier ; avec le kit, un redessin coûte des
+			// dizaines de ms [VM] → on ne reconstruit que si le profil a CHANGÉ.
+			if (!_banc && _ceinture != null && MemeProfil(BuildFromBridge(_ceinture, _seed), _profile))
+				return;
+			Build(_seed);   // reconstruit le profil, puis QueueRedraw
+		}
+
+		// Deux profils dessinent-ils la même chose ? Champ à champ (struct avec une
+		// chaîne : on n'utilise pas l'Equals par réflexion de ValueType).
+		private static bool MemeProfil(SurroundingsProfile a, SurroundingsProfile b)
+		{
+			if (a.Secteurs == null || b.Secteurs == null) return false;
+			for (int i = 0; i < 4; i++)
+			{
+				Secteur x = a.Secteurs[i], y = b.Secteurs[i];
+				if (x.Motif != y.Motif || x.Pente != y.Pente || x.SeedSecteur != y.SeedSecteur
+					|| x.DuPont != y.DuPont || x.DensiteLigneuse != y.DensiteLigneuse
+					|| x.HauteurCanopeeCm != y.HauteurCanopeeCm || x.LigneEauCm != y.LigneEauCm
+					|| x.AltitudeRelativeCm != y.AltitudeRelativeCm || x.EntailleCm != y.EntailleCm
+					|| x.Essence != y.Essence)
+					return false;
+			}
+			return true;
 		}
 
 		/// <summary>
@@ -73,7 +98,7 @@ namespace Symbiose
 		/// Alimente la MÊME struct que `BuildProfile(seed)` — les tracés ne savent pas
 		/// d'où vient le profil, et c'était toute l'intention de la couture D58·T4.
 		/// </summary>
-		private static SurroundingsProfile BuildFromBridge(GArray ceinture)
+		private static SurroundingsProfile BuildFromBridge(GArray ceinture, int seed)
 		{
 			var secteurs = new Secteur[4];
 			// Le repli sert de FOND : un bloc partiel (côté manquant) laisse une
@@ -95,8 +120,11 @@ namespace Symbiose
 					// La PENTE ne vient pas du moteur (il n'a pas ce champ) : on la
 					// dérive du seed du secteur, comme avant — c'est un détail de
 					// tracé, pas une donnée écologique.
-					Pente = (PenteFalaise)(HashKey($"pente|{cote}|{type}") % 3u),
-					SeedSecteur = HashKey($"ceinture|{cote}|{type}"),
+					// FLUIDITÉ PC ③ : la graine inclut le SEED DU TERRAIN (avant, deux
+					// terrains au même type de bord avaient la même lisière — philo
+					// #7) et passe par Melange (djb2 seul : bits hauts mal brassés).
+					Pente = (PenteFalaise)(Melange(HashKey($"pente|{seed}|{cote}|{type}")) % 3u),
+					SeedSecteur = Melange(HashKey($"ceinture|{seed}|{cote}|{type}")),
 					DuPont = true,
 					DensiteLigneuse = Reel(d, "densite_ligneuse"),
 					HauteurCanopeeCm = Reel(d, "hauteur_canopee"),

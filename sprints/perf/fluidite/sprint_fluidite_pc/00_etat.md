@@ -1,6 +1,6 @@
 # Sprint FLUIDITÉ PC (D116 + lisière D112 c/j) — carnet de conception
 
-> Phase : **B — exécution** (`/sprint-auto`). Conception figée le 2026-10-26 ; ① ② FAITS. Sprint précédent : `sprints/perf/fluidite/sprint_fluidite_an2/00_etat.md`
+> Phase : **B — exécution** (`/sprint-auto`). Conception figée le 2026-10-26 ; ① ② ③ FAITS. Sprint précédent : `sprints/perf/fluidite/sprint_fluidite_an2/00_etat.md`
 > (golden `fecccded…`, pont 0.5.57). Mesures PC de référence : `DETTE.md` D116.
 
 ## Cible (Nico, 2026-10-26)
@@ -59,7 +59,7 @@ PC (i5-4200H, 2 cœurs / 4 threads, HD 4600), an 2, 1 s/sem demandée → **≤ 
 |---|---|---|---|---|
 | ① | `01_instruments_banc3.md` | banc E 3 phases (normal / rendu suspendu / moteur en pause) + ménage instruments + PollenLot + oracles périmés | intact | **FAIT** |
 | ② | `02_lisiere_bug_coutures.md` | bug « il faut F10 » reproduit/corrigé + coutures | intact | **FAIT** (F10 non reproduit → trace console ; coutures corrigées) |
-| ③ | `03_lisiere_kit_foret.md` | atlas patchwork + prairie/friche + forêt | intact | à faire |
+| ③ | `03_lisiere_kit_foret.md` | atlas patchwork + prairie/friche + forêt | intact | **FAIT** (kit + rideau ; redessin hebdo supprimé) |
 | ④ | `04_lisiere_eau_roche_bilan.md` | rivière + falaise + bilan VM + protocole PC (1 run) + clôture | intact | à faire |
 
 ## Bilan ① (2026-10-26) — golden intact `fecccded…`, pont **0.5.58**, `dotnet build` vert
@@ -128,9 +128,53 @@ PC (i5-4200H, 2 cœurs / 4 threads, HD 4600), an 2, 1 s/sem demandée → **≤ 
   Godot : `pont` attendu. Si le décor est faux, noter cette ligne puis celle qui suit F10 ×2 ;
   (2) les fils fins de couture doivent avoir disparu (×0,5 à ×4).
 
+## Bilan ③ (2026-10-26) — golden intact `fecccded…`, `dotnet build` vert, pont inchangé (0.5.58)
+- **Atlas du kit** (`visuals/DecorLayer.Kit.cs`) : 7 formes (herbe, herbe haute, fleurette,
+  roncier, sous-bois, bouquet feuillu, bouquet d'aiguilles) × 1-5 tailles × 3 variantes, peintes
+  en NIVEAUX (langage de `PlantRenderer.Kit`) puis teintées par `PlantRenderer.RampeKit` en
+  12 teintes, dans UNE texture (+ texel blanc pour les aplats). Contour complet pour les herbes,
+  côté OMBRE seulement pour les masses (anneau complet = « bulles » cerclées au 1er essai VM).
+- **Assise** (`DecorLayer.Patchwork.cs` `DrawAssise`) : grille à sommets PARTAGÉS (coutures ②
+  toujours fermées), parcelles 120×200 cm de 4 valeurs, limite frange/fond au hash par parcelle
+  → plus de raies. **Tapis** (`DrawTapis`) : ourlet dense (pas ≈ 6 px internes, borné 15 cm) +
+  fond plus calme ; prairie = herbe + fleurettes, friche = herbes sèches + ronciers, forêt =
+  ourlet de sous-bois. **Forêt** (`DecorLayer.Houppiers.cs`) : grille 100×120 cm, sous-bois
+  sombre sous les arbres, arbre = ombre + tronc cerné + enveloppe d'ombre + bouquets en spirale
+  de Fibonacci (taille du bouquet selon la taille de l'arbre À L'ÉCRAN, ≤ 40), plan du rideau
+  modulé (devant 1 → cœur 0,72). Densité/taille toujours pilotées par le pont.
+- **Défauts ② traités** : `SeedSecteur`/pente du pont = `Melange(HashKey("ceinture|{seed}|…"))`
+  (graine du terrain incluse, philo #7) ; tirages du semis par `HashCase` (fmix32). Forêt O de
+  1521550718 : rideau sur toute la longueur, essences mêlées (avant : 13 bouleaux au bout SO).
+  Repli `BuildProfile` NON touché (D92 : Python est la source de la distribution).
+- **Coût** : toujours **1 DrawMesh** (désormais texturé, `LotTriangles.Quad` + `Dessiner(ci,
+  tex)`). Sommets avant → après (graine 1521550718) : ×0,5 80 568 → 43 299 ; ×1 80 568 →
+  94 773 ; ×2 102 348 → 112 221. `_Draw` (2ᵉ appel, JIT tiède, build Debug) : ×0,5 15 → 11-16 ms ;
+  ×1 14 → 35-41 ms ; ×2 21 → 55-58 ms [n=2-3 runs, VM]. **Mais** avant ③ le décor se
+  redessinait à CHAQUE snapshot hebdo (`SetCeinture` → `Build`) : 8 redessins en 7 semaines
+  turbo ; après (`MemeProfil`), 0 redessin hebdo, seulement build / palier / rotation / ceinture
+  modifiée [n=1 run turbo 8 sem., VM]. Le décor ne coûte donc plus rien en régime, au prix d'un
+  pic au changement de palier (le 1er dessin ~100 ms inclut JIT + génération de l'atlas).
+  `LotTriangles.PolygoneConvexe` (éventail C#) remplace `TriangulatePolygon` natif sur l'assise
+  et les arbres. Instrument : ligne console `[DecorLayer] _Draw ×z : N sommets, t ms`.
+- **Captures** (`captures_03/`) : `bord_O_x{0.5,1,2}_{avant,apres}.png` (graine 1521550718,
+  forêt O), `friche_S_x1_apres.png`, `graine42_x0.5_apres.png` (prairie N/S, friche E/O),
+  `banc_F10_x0.5_apres.png` (nouvel argument `--capture-decor-banc=1` / `capture_vm.sh -B`).
+  Jugées : plus aucune zone unie à ×0,5 / ×1 ; restent visibles (non traités, ④ ou F5) : le vert
+  uni AU-DELÀ de la bande (900 cm), les ombres au pied en 10-gones à ×2, les troncs de bouleau
+  longs et unis (proportions d'avant ③).
+- **Conservé (non appelé)** : `DrawSecteur`, `DrawPrairie` (DecorLayer.cs), `DrawArbre` &
+  houppier à ellipses (DecorLayer.Arbres.cs) — étiquetés « CONSERVÉ ».
+- LDC : `DecorLayer.cs` **301** (🟡, +2 lignes de trace ; une responsabilité), `Kit` 208,
+  `Patchwork` 113, `Houppiers` 108, `Arbres` 176, `Pont` 108, `LotTriangles` 90.
+- **F5 Nico** : une question, « la lisière, c'est mieux ? » (×0,5 / ×1 surtout). Accessoire :
+  lire la ligne `[DecorLayer] _Draw` au changement de palier (pic PC à noter, jamais par semaine).
+- Saison du décor : NON faite (le décor n'a pas d'information de saison aujourd'hui).
+
 ## §REPRISE
 Conception FIGÉE → doc `docs/perf/fluidite/conception_fluidite_pc.md`. Exécution :
-`/sprint-auto sprint_fluidite_pc` — **tronçon suivant = ③ `03_lisiere_kit_foret.md`** (lire « Trouvé pour ③ » du bilan ②).
+`/sprint-auto sprint_fluidite_pc` — **tronçon suivant = ④ `04_lisiere_eau_roche_bilan.md`** (lire le bilan ③ : kit dans
+`DecorLayer.Kit.cs`, poser des pièces = `PoserPiece` ; la rivière et la falaise utilisent encore
+les aplats ; le bilan VM doit noter le pic de redessin du décor au changement de palier).
 Pour le protocole PC du ④ : lancer le jeu avec `-- --capture-banc=full --capture-seed=1521550718
 --capture-etalonnage=25 --capture-banc-3phases=25,25,20 --capture-banc-cadence=1
 --capture-banc-semaine=90` (mêmes arguments que `perf_vm.sh -3 … -A 1 -W 90`), rapport au
