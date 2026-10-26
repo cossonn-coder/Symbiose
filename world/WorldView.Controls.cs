@@ -93,6 +93,7 @@ namespace Symbiose
 						else TogglePerf();
 						break;
 					case Key.C:        CopyPerfReport();  break;  // presse-papier perf
+					case Key.Z:        CopierRapportZoom(); break; // à-coups de zoom (ZoomJournal.cs)
 					// E = banc d'étalonnage perf (PERF VUE ①) ; Maj+E = banc ACCÉLÉRÉ
 					// (×8, continu 3 s/semaine — PLANTE ASSEMBLÉE ③). Re-E = abandon.
 					case Key.E:        ToggleEtalonnage(k.ShiftPressed); break;

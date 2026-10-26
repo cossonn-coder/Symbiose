@@ -118,12 +118,14 @@ namespace Symbiose
 		// redraw (le LOD dépend du palier) et le culling (l'étendue visible change).
 		private void PoserCamera(int zoomIndex, Vector2 position)
 		{
+			float avant = ZoomSteps[_zoomIndex];
 			_zoomIndex = zoomIndex;
 			_camera.Zoom = ZoomCamera(ZoomSteps[zoomIndex]);
 			CurrentZoom = ZoomSteps[zoomIndex];
 			_camera.Position = ClampToWorld(position);
 			RedrawAllPlants();
 			CullPlants();
+			if (avant != CurrentZoom) NoterChangementPalier(avant, CurrentZoom);   // ZoomJournal.cs
 		}
 
 		// Encart texte (écran, CanvasLayer "Hud") — créé à la première planche.

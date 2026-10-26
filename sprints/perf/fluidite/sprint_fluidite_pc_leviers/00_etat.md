@@ -44,7 +44,7 @@ l'extraire en zoomant/dézoomant.
 ## Carte des tronçons (FIGÉE 2026-10-26)
 | # | Kickoff | Contenu | Golden | État |
 |---|---|---|---|---|
-| ① | `01_outil_zoom.md` | journal + rapport copiable des changements de palier, balayage VM, chiffres « avant » | intact | à faire |
+| ① | `01_outil_zoom.md` | journal + rapport copiable des changements de palier, balayage VM, chiffres « avant » | intact | **fait** (non commité) |
 | ② | `02_butineurs_pollen_lot.md` | butineurs + pollen en un lot `LotTriangles` | intact | à faire |
 | ③ | `03_paliers_prets.md` | décor : une maille par palier ; plantes : pas de vectoriel direct au zoom (si mesuré) | intact | à faire |
 | ④ | `04_pont_delta.md` | pont en delta opt-in (semaine de naissance, segments changés, gènes 1 fois), 0.6.0 | intact | à faire |
@@ -53,6 +53,37 @@ l'extraire en zoomant/dézoomant.
 Dette déjà inscrite à la conception : D112 (k) décor animé, (l) soleil sur les plantes,
 (m) cohérence DA inter-paliers ; D116 mise à jour (run PC + conception).
 
+## ① Outil à-coup de zoom — FAIT (2026-10-26)
+- `world/WorldView.ZoomJournal.cs` (147 LDC) : fenêtre ~1 s (≥ 3 images) après chaque
+  palier changé (molette `StepZoom`, planche L et balayage via `PoserCamera`), 40 derniers
+  gardés. **Touche Z** (F8 réservé par l'éditeur Godot = Stop → écarté) = rapport copié
+  (ligne par changement + synthèse par paire). Décor capté via `DecorLayer.Dessins/
+  DernierDessinMs` (posés dans `TracerDessin`), file via `BakeQueue.FileEligibles`.
+- Balayage : `tools/perf_vm.sh -Z SEC` (→ `--capture-zoom-balayage`), temps réel (pas le
+  Movie Maker, qui fausse les temps d'image). Limite : le rendu CPU de la pire image n'est
+  pas relevé (mesure Godot inactive hors banc E) → pire − postes = rendu + hors postes.
+- **Tableau « avant » (référence ② ③)** [VM llvmpipe, n=1 balayage, 4 s/palier, graine
+  1521550718 `full`, warmup 90 → semaine moteur 91 = automne an 2 s13 (pas été), centre
+  1650,950, 590 plantes, régime VM hors cran 100-210 ms/image] :
+
+| cran | pire (ms) | images >100 / fenêtre | décor _Draw (ms) | file départ | poste dominant pire image |
+|---|---|---|---|---|---|
+| ×0,5→×1 | 442 | 4/4 | 37,3 | 580 | cuisson 77 |
+| ×1→×2 | 316 | 6/6 | 34,0 | 311 | cuisson 55 |
+| ×2→×4 | 330 | 5/5 | 29,9 | 220 | cuisson 72 |
+| ×4→×8 | 338 | 5/5 | — | 164 | plantes _Draw 73 |
+| ×8→×16 | 252 | 6/6 | — | 80 | cuisson 98 |
+| ×16→×32 | 274 | 5/9 | — | 38 (vidée 1,2 s) | plantes _Draw 65 |
+| ×32→×16 | 238 | 7/7 | — | 56 (vidée 4,1 s) | plantes _Draw 80 |
+| ×16→×8 | 286 | 5/5 | — | 126 | plantes _Draw 87 |
+| ×8→×4 | 271 | 5/5 | 31,4 | 200 | cuisson 16 |
+| ×4→×2 | 233 | 6/6 | 29,2 | 271 | cuisson 15 |
+| ×2→×1 | 258 | 6/6 | 27,2 | 483 | cuisson 15 |
+| ×1→×0,5 | 271 | 6/6 | 10,3 | 574 | plantes _Draw 28 |
+
+  Lecture : chaque cran invalide les 590 plantes ; la file de cuisson ne se vide pas en
+  4 s aux paliers ≤ ×8 [VM] ; le décor recoud ~30 ms à chaque cran ≤ ×4 (cible ③) ; au
+  zoom avant ×4→×32 le dessin direct des plantes (pas encore cuites) domine (cible ③).
+
 ## §REPRISE
-Exécution : `/sprint-auto sprint_fluidite_pc_leviers` (tronçon suivant = le premier « à
-faire »). Après : 1 run PC de Nico → 3ᵉ temps D116 (levier moteur si 2 s/sem non tenu).
+Exécution : `/sprint-auto sprint_fluidite_pc_leviers` (tronçon suivant = ② ; ① fait, à commiter par l'orchestrateur). Après : 1 run PC de Nico → 3ᵉ temps D116 (levier moteur si 2 s/sem non tenu).

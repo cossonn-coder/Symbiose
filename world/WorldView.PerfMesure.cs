@@ -86,6 +86,7 @@ namespace Symbiose
 			_pmObj += Performance.GetMonitor(Performance.Monitor.RenderTotalObjectsInFrame);
 			_pmPrim += Performance.GetMonitor(Performance.Monitor.RenderTotalPrimitivesInFrame);
 			if (_distMs != null) EchantillonDistribution(frameMs);
+			EchantillonZoom(frameMs);   // fenêtre après un changement de palier (ZoomJournal.cs)
 			double temps = (now - _pmDebutUs) / 1e6;
 			if (temps < PerfFenetreSec) return;
 

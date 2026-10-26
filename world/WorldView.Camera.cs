@@ -116,6 +116,7 @@ namespace Symbiose
 			// Culling préventif (tronçon ②) : le zoom change l'étendue visible → une
 			// plante peut sortir/entrer du cadre. Réévalué au même cran de molette.
 			CullPlants();
+			NoterChangementPalier(oldZ, newZ);   // outil à-coup de zoom (ZoomJournal.cs)
 			GD.Print($"[WorldView] zoom ×{newZ}.");
 		}
 

@@ -56,6 +56,8 @@
 //                            (MESURE seulement, PERF VUE ⑤ ; le défaut ne change pas)
 //   --capture-seuil=… / --capture-seuil-pose=… / --capture-palette=1  banc du seuil
 //                            de visibilité des signes (INFO-BULLE ②, WorldView.BancSeuil.cs)
+//   --capture-zoom-balayage=<s>  balayage ×0,5 → ×32 → ×0,5, s s par palier, rapport
+//                            des à-coups de zoom imprimé puis sortie (WorldView.ZoomJournal.cs)
 //   --capture-vivant=… / --capture-vivant-png=…  captures de l'info-bulle d'une bête
 //                            ou d'un carpophore (INFO-BULLE ③, WorldView.BancVivant.cs)
 
@@ -246,6 +248,7 @@ namespace Symbiose
 				GetTree().CreateTimer(CaptureDecorF10).Timeout += () =>
 				{ _decorLayer?.ToggleBanc(); _decorLayer?.ToggleBanc(); };
 			if (CaptureDecorBanc) _decorLayer?.ToggleBanc();   // banc décor ON (③)
+			LancerBalayageZoom();   // --capture-zoom-balayage (ZoomJournal.cs, FLUIDITÉ PC LEVIERS ①)
 		}
 
 		// Appelé à chaque step consommé (_Process) : décompte des semaines turbo du

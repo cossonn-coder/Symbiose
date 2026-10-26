@@ -78,6 +78,8 @@ namespace Symbiose
 
 		/// <summary>Toutes les plantes cuisables (lu par l'onde de vent, T3).</summary>
 		public static IReadOnlyCollection<PlantRenderer> All => _all;
+		/// <summary>Plantes sales ET dans la marge = la file à cuire (outil à-coup de zoom).</summary>
+		public static int FileEligibles => _eligibles.Count;
 		public static void Register(PlantRenderer p) => _all.Add(p);
 		public static void Unregister(PlantRenderer p)
 		{

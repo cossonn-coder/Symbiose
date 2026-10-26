@@ -38,6 +38,11 @@ namespace Symbiose
 		// on n'écrit que quand la source ou un motif change.
 		private string _derniereTrace;
 
+		// Dernier redessin du décor (LEVIERS ①) : un compteur + sa durée et ses sommets.
+		public static long Dessins { get; private set; }
+		public static double DernierDessinMs { get; private set; }
+		public static int DernierDessinSommets { get; private set; }
+
 		/// <summary>Trace console du profil construit : source (banc F10 / pont /
 		/// repli local par seed) et motifs des 4 bords. Posée pour le bug « il faut
 		/// F10 ×2 » (D112 c), NON reproduit sur VM : au F5, la 1re ligne dit si le
@@ -61,6 +66,10 @@ namespace Symbiose
 		{
 			double ms = (System.Diagnostics.Stopwatch.GetTimestamp() - t0) * 1000.0
 					  / System.Diagnostics.Stopwatch.Frequency;
+			// Capté par l'outil à-coup de zoom (WorldView.ZoomJournal.cs, LEVIERS ①).
+			DernierDessinMs = ms;
+			DernierDessinSommets = _lot.Sommets;
+			Dessins++;
 			GD.Print($"[DecorLayer] _Draw ×{WorldView.CurrentZoom} : {_lot.Sommets} sommets,"
 				   + $" {ms:F1} ms");
 		}

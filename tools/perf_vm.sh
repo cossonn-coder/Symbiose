@@ -39,6 +39,10 @@
 #     -3  BANC E EN 3 PHASES (FLUIDITÉ PC ①) : durées A,B,C en s (défaut 25,25,20) —
 #         A normal / B rendu suspendu (steps seuls, ≥ 6) / C moteur en pause ; à
 #         combiner avec -A (sinon aucun step en A/B). Implique -E (durée de A).
+#     -Z  BALAYAGE DE ZOOM (FLUIDITÉ PC LEVIERS ①) : ×0,5 → ×32 → ×0,5, Z s par palier
+#         sur le point -c ; imprime le rapport des à-coups de zoom (même texte que la
+#         touche Z du F5 : une ligne par changement + synthèse par paire de paliers).
+#   Exemple : tools/perf_vm.sh -Z 4 -S 1521550718 -w 90 -c 1650,950 -t 900
 #   Exemple : tools/perf_vm.sh -3 25,25,20 -A 1 -W 90 -S 1521550718 -t 900
 #   Exemple : tools/perf_vm.sh -z 0.5 -x Ground
 #   Exemple : tools/perf_vm.sh -E 20 -z 4 -x MacroLife -O
@@ -46,7 +50,7 @@
 set -euo pipefail
 
 . "$(dirname "${BASH_SOURCE[0]}")/lib_vm_godot.sh"   # DEPOT GODOT XROOT + vm_*
-BANC=full ZOOM="" CENTRE="" CACHER="" SAUT=4 N=8 DELAI=300 GRAINE="" SEMAINES="" TURBO="" BUILD=1 BANC_E="" OMBRES="" BANC_W="" CADENCE="" VENT="" PLEINE="" AUTOMATE="" TROIS=""
+BANC=full ZOOM="" CENTRE="" CACHER="" SAUT=4 N=8 DELAI=300 GRAINE="" SEMAINES="" TURBO="" BUILD=1 BANC_E="" OMBRES="" BANC_W="" CADENCE="" VENT="" PLEINE="" AUTOMATE="" TROIS="" BALAYAGE=""
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -68,8 +72,9 @@ while [ $# -gt 0 ]; do
     -R) PLEINE=1; shift ;;
     -a) AUTOMATE="$2"; shift 2 ;;
     -3) TROIS="$2"; BANC_E="${2%%,*}"; shift 2 ;;
+    -Z) BALAYAGE="$2"; shift 2 ;;
     --no-build) BUILD=0; shift ;;
-    -h|--help) sed -n '2,45p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,49p' "$0"; exit 0 ;;
     *) echo "option inconnue : $1" >&2; exit 2 ;;
   esac
 done
@@ -109,6 +114,7 @@ if [ -n "$BANC_E" ]; then Z=banc-zoom C=banc-centre; else Z=zoom C=centre; fi
 [ -n "$PLEINE" ] && ARGS+=(--capture-pleine-res=1)
 [ -n "$AUTOMATE" ] && ARGS+=(--capture-banc-automate="$AUTOMATE")
 [ -n "$TROIS" ] && ARGS+=(--capture-banc-3phases="$TROIS")
+[ -n "$BALAYAGE" ] && ARGS+=(--capture-zoom-balayage="$BALAYAGE")
 DISPLAY="$ECRAN" LIBGL_ALWAYS_SOFTWARE=1 "$GODOT" --path "$DEPOT" \
   --rendering-driver opengl3 --resolution 1920x1080 --print-fps \
   -- "${ARGS[@]}" >"$LOG" 2>&1 &
@@ -124,6 +130,16 @@ if [ -n "$BANC_E" ]; then
     read -rt 1 <> <(:) || true
   done
   sed -n '/^\[banc\] DEBUT/,/^\[banc\] FIN/p' "$LOG"
+  exit 0
+fi
+# Balayage de zoom : idem, marqueurs [zoom] (WorldView.ZoomJournal.cs).
+if [ -n "$BALAYAGE" ]; then
+  until grep -q '^\[zoom\] FIN' "$LOG"; do
+    kill -0 $GPID 2>/dev/null || { echo "Godot s'est arrêté (cf. $LOG)" >&2; exit 1; }
+    [ $SECONDS -lt $FIN ] || { echo "délai $DELAI s dépassé (cf. $LOG)" >&2; exit 1; }
+    read -rt 1 <> <(:) || true
+  done
+  sed -n '/^\[zoom\] DEBUT/,/^\[zoom\] FIN/p' "$LOG"
   exit 0
 fi
 while [ "$(grep -c '^\[perf\]' "$LOG" || true)" -lt $((SAUT + N)) ]; do
