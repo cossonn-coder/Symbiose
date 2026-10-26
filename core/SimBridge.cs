@@ -63,6 +63,14 @@ namespace Symbiose
 
 		public bool IsAlive => _proc != null && !_proc.HasExited;
 
+		// Pont EN DELTA (FLUIDITÉ PC LEVIERS ④, protocole 0.6.0) : les requêtes qui
+		// rapportent un snapshot (step_week / snapshot / action) demandent les segments
+		// en delta ; `PontDelta` les remet au format complet DANS le snapshot (clé
+		// `segs_lus`). Désactivable (smoke test console, qui lit `segments`). Un moteur
+		// < 0.6.0 ignore la demande et répond complet : rien à faire, c'est toléré.
+		public bool ModeDelta { get; set; } = true;
+		private readonly PontDelta _delta = new();
+
 		// Identité du moteur lancé (FLUIDITÉ PC ①) : exécutable passé à l'OS (binaire
 		// gelé, `python3` ou `python`), puis — à l'init, pont ≥ 0.5.58 — la version du
 		// protocole et l'interpréteur Python effectif. Lus par le HUD et le rapport perf.
@@ -204,6 +212,7 @@ namespace Symbiose
 			if (encycloDemarrage != null) msg["encyclo_demarrage"] = encycloDemarrage;
 			if (carnetAnticipe.HasValue) msg["carnet_anticipe"] = carnetAnticipe.Value;
 			if (vigueurInfinie.HasValue) msg["vigueur_infinie"] = vigueurInfinie.Value;
+			_delta.Oublier();   // nouveau monde : le 1er snapshot delta sera complet
 			var resp = Request(msg);
 			if (resp == null) return null;
 			if (resp.ContainsKey("engine_version")) EngineVersion = resp["engine_version"].AsString();
@@ -591,11 +600,18 @@ namespace Symbiose
 			// sérialiser, seul l'accès au tube l'exige.
 			string line;
 			long t0 = Stopwatch.GetTimestamp();
+			// Delta (0.6.0) : demande posée et rang pris SOUS le verrou → l'ordre des
+			// tickets est l'ordre du tube, quel que soit le fil qui parse ensuite.
+			string cmd = msg["cmd"].AsString();
+			bool delta = ModeDelta && (cmd == "step_week" || cmd == "snapshot" || cmd == "action");
+			long ticket = -1;
 			lock (_ioLock)
 			{
+				if (delta) _delta.Marquer(msg);
 				_proc.StandardInput.WriteLine(Json.Stringify(msg));
 				_proc.StandardInput.Flush();     // symétrique du flush=True Python
 				line = _proc.StandardOutput.ReadLine();
+				if (delta && line != null) ticket = _delta.Ticket();
 			}
 			if (line == null)                    // EOF = le serveur est mort
 			{
@@ -606,19 +622,24 @@ namespace Symbiose
 			long t1 = Stopwatch.GetTimestamp();
 			Variant parsed = Json.ParseString(line);
 			pipeMs = (t1 - t0) * 1000.0 / Stopwatch.Frequency;
-			parseMs = (Stopwatch.GetTimestamp() - t1) * 1000.0 / Stopwatch.Frequency;
 			octets = line.Length;
+			GDict resp = null;
 			if (parsed.VariantType != Variant.Type.Dictionary)
-			{
 				GD.PrintErr($"[SimBridge] Réponse non-JSON : {line}");
-				return null;
-			}
-			var resp = parsed.AsGodotDictionary();
-			if (!resp["ok"].AsBool())
+			else
 			{
-				GD.PrintErr($"[SimBridge] Erreur moteur : {resp["error"].AsString()}");
-				return null;
+				resp = parsed.AsGodotDictionary();
+				if (!resp["ok"].AsBool())
+				{
+					GD.PrintErr($"[SimBridge] Erreur moteur : {resp["error"].AsString()}");
+					resp = null;
+				}
 			}
+			// TOUTE réponse à ticket passe par Appliquer (null compris → resynchro),
+			// sinon les suivantes attendraient leur tour pour toujours. Le temps de
+			// reconstitution des segments est compté dans `parse` (coût de la réponse).
+			if (ticket >= 0) _delta.Appliquer(ticket, resp);
+			parseMs = (Stopwatch.GetTimestamp() - t1) * 1000.0 / Stopwatch.Frequency;
 			return resp;
 		}
 
@@ -631,7 +652,7 @@ namespace Symbiose
 		public static void SmokeTest()
 		{
 			GD.Print("[SimBridge] — smoke test du pont Python —");
-			using var bridge = new SimBridge();
+			using var bridge = new SimBridge { ModeDelta = false };   // lit `segments`
 			if (!bridge.Start()) return;
 
 			var world = bridge.Init(seed: 42);

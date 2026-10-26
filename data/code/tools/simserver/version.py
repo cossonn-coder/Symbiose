@@ -783,7 +783,15 @@ from __future__ import annotations
 #       gagne `python {version, implementation, executable}` (perf.interpreteur) :
 #       le rapport de banc de la vue dit quel interpréteur tourne au PC. Hors tick →
 #       golden INTACT.
-ENGINE_VERSION = "0.5.58"
+# 0.6.0 (FLUIDITÉ PC LEVIERS ④, pont en delta) : OPT-IN. Une requête `step_week` /
+#       `snapshot` / `action` qui porte `"delta": true` (ou `"complet"` = resynchro)
+#       reçoit, pour chaque plante du SOL, `pid` + `segd` (opérations recopie / saut /
+#       segment littéral avec sa SEMAINE DE NAISSANCE) au lieu de `segments`, `genes`
+#       au premier envoi seulement, et au snapshot `delta {complet, disparues}` (cf.
+#       `pont_delta.py`). Sans la clé : snapshot complet INCHANGÉ (tests, outils).
+#       Conteneurs : format complet. Mineure bumpée = nouveau mode de protocole.
+#       Hors tick → golden INTACT.
+ENGINE_VERSION = "0.6.0"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

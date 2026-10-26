@@ -35,6 +35,7 @@ from bancs import (BANCS, BANC_WEEK_DEPART, BANC_SEED, BANC_POST_INIT,
                    banc_categorie)
 
 from .version import ENGINE_VERSION
+from .pont_delta import mode_delta   # segments en delta, opt-in (0.6.0)
 from .maitrise_pont import observer_apres_tick  # chaîne de maîtrise après tick (voix ①)
 from sim.vision import clore_si_echue as clore_vision   # fin de vision (sol qui respire ⑥)
 from . import perf   # capture des pires ticks + dump diagnostique (demande Nico 2026-07-05)
@@ -238,6 +239,9 @@ class CommandsMixin:
         # session précédente pointait l'ancien engine → on le démonte (opt-in :
         # la vue le ré-arme via `automate on` si elle le veut). Golden intact.
         self._automate = None
+        # Pont en delta (0.6.0) : nouveau monde → l'état « dernier envoyé » de
+        # l'ancien n'a plus de sens ; le premier snapshot delta sera complet.
+        self._delta.oublier()
         # Traqueur des pires ticks (demande Nico) : mémoire des K ticks les plus
         # longs + dump diagnostique sur disque au record. Neuf à chaque init.
         self._worst = perf.WorstTicks()
@@ -338,12 +342,12 @@ class CommandsMixin:
         # privilégiée, philo #2) ; leur effet est visible au snapshot ci-dessous.
         if self._automate is not None:
             self._automate.jouer_tick(self.engine)
-        return {"ok": True, "snapshot": self._snapshot()}
+        return {"ok": True, "snapshot": self._snapshot(mode_delta(self, msg))}
 
     def cmd_snapshot(self, msg: dict) -> dict:
         if self.engine is None:
             return {"ok": False, "error": "snapshot avant init"}
-        return {"ok": True, "snapshot": self._snapshot()}
+        return {"ok": True, "snapshot": self._snapshot(mode_delta(self, msg))}
 
     def cmd_perf_report(self, msg: dict) -> dict:
         """Rapport perf enrichi (demande Nico) : les K pires ticks accumulés (avec

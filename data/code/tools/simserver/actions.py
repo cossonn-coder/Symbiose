@@ -27,6 +27,7 @@ from .multiplication_route import (
 )
 from .peripherie_route import route_peripherie, VERBES as PERIPHERIE_VERBES
 from .plante_route import route_plante, VERBES as PLANTE_VERBES
+from .pont_delta import mode_delta   # segments en delta, opt-in (0.6.0)
 from .structures_route import route_structure, VERBES as STRUCTURE_VERBES
 from .maitrise_pont import (
     decouvrir_a_usage,         # D60 ③ : découverte du geste à la 1ʳᵉ utilisation réussie
@@ -90,7 +91,8 @@ class ActionsMixin:
                 result["debloques"] = nouveaux
         # Snapshot frais TOUJOURS joint : l'effet (plante disparue, etc.) est
         # visible en un seul aller-retour — pas de 2e requête à inventer.
-        return {"ok": True, "result": result, "snapshot": self._snapshot()}
+        return {"ok": True, "result": result,
+                "snapshot": self._snapshot(mode_delta(self, msg))}
 
     def _do_action(self, verb: str, target: dict, params: dict) -> dict:
         gs = self.engine.game_state

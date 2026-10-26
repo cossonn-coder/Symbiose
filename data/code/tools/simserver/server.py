@@ -19,6 +19,7 @@ from .palette_cmd import PaletteCmdMixin
 from .automate_cmd import AutomateCmdMixin
 from .vision_cmds import VisionCmdsMixin
 from .segments_pont import SegmentsVue
+from .pont_delta import DeltaPont
 
 
 class SimServer(CommandsMixin, ActionsMixin, CiblesMixin, SerializeMixin, VoixMixin,
@@ -35,6 +36,9 @@ class SimServer(CommandsMixin, ActionsMixin, CiblesMixin, SerializeMixin, VoixMi
         # flottants arrondis, vecteurs en cache (cf. segments_pont).
         # `structure_to_dict()` reste le format complet (save/tests).
         self._segments_vue = SegmentsVue()
+        # Segments EN DELTA (FLUIDITÉ PC LEVIERS ④, 0.6.0) : « dernier envoyé » à la
+        # vue, servi seulement aux requêtes qui portent `delta` (cf. pont_delta).
+        self._delta = DeltaPont()
 
 
 def main() -> int:

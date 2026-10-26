@@ -218,12 +218,28 @@ namespace Symbiose
 						LectureSnap.F(f, "masse")));
 				}
 			}
-			using (var segs = LectureSnap.Tab(plant, "segments"))
-				for (int i = 0; i < segs.Count; i++)
-				{
-					using var seg = LectureSnap.Dico(segs, i);
-					ps.Segments.Add(ParseSegment(seg));
-				}
+			// Pont en delta (0.6.0) : segments déjà reconstitués par PontDelta en un
+			// tableau plat (`segs_lus`, PontDelta.Pas flottants par segment) ; sinon
+			// la liste JSON historique (`segments` : conteneurs, serveur < 0.6.0).
+			if (LectureSnap.A(plant, "segs_lus"))
+			{
+				float[] f = SegsLus(plant);
+				for (int o = 0; o + PontDelta.Pas <= f.Length; o += PontDelta.Pas)
+					ps.Segments.Add(new Segment(
+						Base: new Vector3(f[o], f[o + 1], f[o + 2]),
+						Dir: new Vector3(f[o + 3], f[o + 4], f[o + 5]),
+						LengthCm: f[o + 6],
+						ThicknessCm: f[o + 7],
+						IsApex: f[o + 8] != 0f,
+						AgeWeeks: (int)f[o + 9]));
+			}
+			else
+				using (var segs = LectureSnap.Tab(plant, "segments"))
+					for (int i = 0; i < segs.Count; i++)
+					{
+						using var seg = LectureSnap.Dico(segs, i);
+						ps.Segments.Add(ParseSegment(seg));
+					}
 			if (ps.Segments.Count > 0)
 				ps.ColletCm = ps.Segments[0].Base;
 			return ps;
@@ -248,6 +264,13 @@ namespace Symbiose
 				ThicknessCm: LectureSnap.F(seg, "thickness_cm"),
 				IsApex: LectureSnap.B(seg, "is_apex"),
 				AgeWeeks: LectureSnap.A(seg, "age_weeks") ? LectureSnap.I(seg, "age_weeks") : 0);
+		}
+
+		/// <summary>Le tableau plat `segs_lus` posé par PontDelta (copie .NET).</summary>
+		public static float[] SegsLus(Godot.Collections.Dictionary plant)
+		{
+			using Variant v = plant[LectureSnap.Cle("segs_lus")];
+			return v.AsFloat32Array();
 		}
 
 		private static Vector3 ParseVec3(Godot.Collections.Array a) =>

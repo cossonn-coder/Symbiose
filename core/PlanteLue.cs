@@ -53,7 +53,10 @@ namespace Symbiose
 			l.X = (float)x;
 			l.Y = (float)y;
 			l.Key = Cle(l.Tile, l.Species, x, y);
-			using (var segs = LectureSnap.Tab(p, "segments")) l.NSegs = segs.Count;
+			if (LectureSnap.A(p, "segs_lus"))   // pont en delta (0.6.0, core/PontDelta.cs)
+				l.NSegs = StructureLoader.SegsLus(p).Length / PontDelta.Pas;
+			else
+				using (var segs = LectureSnap.Tab(p, "segments")) l.NSegs = segs.Count;
 			l.Dead = LectureSnap.A(p, "dead") && LectureSnap.B(p, "dead");
 			if (l.NSegs == 0) return l;
 

@@ -71,6 +71,27 @@ class SegmentsVue:
         """Permute les générations : ce qui n'a pas resservi est oublié."""
         self._ancien, self._neuf = self._neuf, {}
 
+    def entrees(self, segments) -> list:
+        """Les entrées de cache (mêmes arrondis que `segments`) d'une liste de
+        segments, pour le pont en DELTA (`pont_delta`, 0.6.0) : indices 5-8 =
+        base, dir, longueur, épaisseur arrondies. Même garde que `segments`."""
+        ancien_get, neuf = self._ancien.get, self._neuf
+        out = []
+        for s in segments:
+            b, d, lg, ep = s.base, s.dir, s.length_cm, s.thickness_cm
+            e = ancien_get(id(s))
+            if (e is None or e[0] is not s or e[1] is not b or e[2] is not d
+                    or e[3] != lg or e[4] != ep):
+                e = (s, b, d, lg, ep,
+                     [round(b[0] * 100) / 100, round(b[1] * 100) / 100,
+                      round(b[2] * 100) / 100],
+                     [round(d[0] * 1000) / 1000, round(d[1] * 1000) / 1000,
+                      round(d[2] * 1000) / 1000],
+                     round(lg * 100) / 100, round(ep * 100) / 100)
+            neuf[id(s)] = e
+            out.append(e)
+        return out
+
     def segments(self, segments) -> list:
         """Liste de dicts segment pour le snapshot (format `Segment.to_dict()` SANS
         `auxin` ni `has_bud`, flottants arrondis). Mêmes clés que celles lues par

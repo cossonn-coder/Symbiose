@@ -95,6 +95,7 @@ from tests.simserver.bouture import test_bouture_pont
 from tests.simserver.greffe import test_greffe_pont
 from tests.simserver.palette import test_palette_pont
 from tests.simserver.vent import test_vent_pont
+from tests.simserver.delta import test_delta_pont
 
 
 def main() -> int:
@@ -117,6 +118,7 @@ def main() -> int:
     test_greffe_pont()       # section 20 : greffer au pont (0.5.25)
     test_palette_pont()      # section 21 : palette de gestes ⑤ au pont (0.5.26)
     test_vent_pont()         # section 22 : vent au pont (jardin vivant T3, 0.5.44)
+    test_delta_pont()        # section 23 : pont en delta, opt-in (leviers ④, 0.6.0)
 
     # --- bilan ----------------------------------------------------------------
     n_fail = sum(1 for _, ok in harness._results if not ok)

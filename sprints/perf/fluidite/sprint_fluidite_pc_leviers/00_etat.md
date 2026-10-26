@@ -47,7 +47,7 @@ l'extraire en zoomant/dézoomant.
 | ① | `01_outil_zoom.md` | journal + rapport copiable des changements de palier, balayage VM, chiffres « avant » | intact | **fait** (non commité) |
 | ② | `02_butineurs_pollen_lot.md` | butineurs + pollen en un lot `LotTriangles` | intact | **fait** (non commité) |
 | ③ | `03_paliers_prets.md` | décor : une maille par palier ; plantes : pas de vectoriel direct au zoom (si mesuré) | intact | **fait** (non commité) |
-| ④ | `04_pont_delta.md` | pont en delta opt-in (semaine de naissance, segments changés, gènes 1 fois), 0.6.0 | intact | à faire |
+| ④ | `04_pont_delta.md` | pont en delta opt-in (semaine de naissance, segments changés, gènes 1 fois), 0.6.0 | intact | **fait** (non commité) |
 | ⑤ | `05_lisiere_devant_bilan.md` | lisière côté caméra devant le jardin + bilan VM + protocole PC + clôture | intact | à faire |
 
 Dette déjà inscrite à la conception : D112 (k) décor animé, (l) soleil sur les plantes,
@@ -139,5 +139,34 @@ Dette déjà inscrite à la conception : D112 (k) décor animé, (l) soleil sur 
   cran, une plante pas encore cuite montre une image au palier précédent agrandie/réduite
   (traits plus fins ou plus épais) jusqu’à sa cuisson [VM : plusieurs s ; PC : non mesuré] : acceptable ?
 
+## ④ Pont en delta — FAIT (2026-10-26)
+- **Python** `tools/simserver/pont_delta.py` (76 LDC) : opt-in `"delta": true|"complet"` sur
+  `step_week`/`snapshot`/`action` ; sans la clé, snapshot complet inchangé. Plantes du SOL :
+  `pid` + `segd` (entier > 0 recopie, < 0 saut, liste de 11 = littéral `[parent, base3, dir3,
+  long, ép, apex, semaine de naissance]`), `genes` au 1er envoi, bloc `delta {complet,
+  disparues}`. Conteneurs : format complet. Identité d'un segment = l'OBJET `Segment` (vérifié
+  au code : croissance en fin de liste, taille/élagage `_rebuild` gardent l'ordre des
+  survivants) ; recopie seulement si même objet ET même charge arrondie → exact par
+  construction. Semaine de naissance dérivée côté pont (`week − age_weeks`), `sim/` intact.
+  `SegmentsVue.entrees` (mêmes arrondis). `cmd_init` oublie l'état. Pont **0.6.0**.
+- **Test** `tests/simserver/delta.py` (section 23, 11 checks) : 2 serveurs même graine, client
+  miroir ; reconstruction == complet sur 36 réponses (taille au segment, déracinement →
+  `disparues`, resynchro). Aussi vérifié monde `full` s92→s99 (8/8 semaines égales).
+- **C#** `core/PontDelta.cs` (121 LDC) : cache par `pid`, matérialise DANS le snapshot
+  (`segs_lus` PackedFloat32Array 10/segment, âge = semaine − naissance ; `genes` remis) →
+  rotation / dossier / étalement relisent sans état caché. Ordre garanti par TICKET pris sous
+  `_ioLock` (le parse se fait hors verrou, sur 2 fils). Incohérence / réponse perdue →
+  requête suivante en `complet`. `SimBridge.ModeDelta` (défaut vrai ; smoke console faux),
+  `Init` → `Oublier`. `PlantStructure.FromSnapshot` / `PlanteLue` lisent `segs_lus` sinon
+  `segments`. Temps de reconstitution compté dans `parse`.
+- **Mesures** [VM chargée (stockfish, loadavg ~9), n=1 run chacun, banc 3 phases
+  `-3 25,25,20 -A 1 -W 90 -S 1521550718`] phase B avant → après : réponse **2 383 → 915 Ko**,
+  parse **188 → 118 ms** (reconstitution comprise), lecture plantes **247 → 63 ms**, step vu
+  par la vue 1 673 → 1 345 ms, **1,67 → 1,39 s/sem** ; phase A 2,80 → 2,09 s/sem. Python
+  in-process [n=8 semaines, s92-99] : `json.dumps` 138 → 52 ms, octets 2,30 → 0,86 Mo ; le
+  codage delta coûte ~+20 ms au `_snapshot` [bruit VM].
+- F5 Nico : HUD « pont 0.6.0 », aucun changement visuel attendu (plantes, survol des gènes,
+  dossier, taille au clic, rotation).
+
 ## §REPRISE
-Exécution : `/sprint-auto sprint_fluidite_pc_leviers` (tronçon suivant = ④ ; ①②③ faits, ③ à commiter par l'orchestrateur). Après : 1 run PC de Nico → 3ᵉ temps D116 (levier moteur si 2 s/sem non tenu).
+Exécution : `/sprint-auto sprint_fluidite_pc_leviers` (tronçon suivant = ⑤ ; ①②③④ faits, ④ à commiter par l'orchestrateur). Après : 1 run PC de Nico → 3ᵉ temps D116 (levier moteur si 2 s/sem non tenu).

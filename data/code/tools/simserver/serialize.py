@@ -105,7 +105,7 @@ class SerializeMixin:
                       "height_cm": house.height_cm},
         }
 
-    def _snapshot(self) -> dict:
+    def _snapshot(self, delta=None) -> dict:
         """Snapshot v0 minimal (kickoff tranche 1) : horloge + plantes vivantes.
         `week` = compteur moteur (prochaine semaine à simuler, 1 = rien simulé) ;
         year/season en sont dérivés. Par plante : position continue LOCALE à sa
@@ -119,6 +119,10 @@ class SerializeMixin:
         # Segments allégés + cache de vecteurs arrondis (③, cf. segments_pont).
         segv = self._segments_vue
         segv.nouvelle_passe()
+        # Pont en DELTA (FLUIDITÉ PC LEVIERS ④, 0.6.0) : OPT-IN de la requête
+        # (`delta` = DeltaPont, cf. pont_delta). None → format complet historique.
+        if delta is not None:
+            delta.debut(week)
         plants = []
         for tile in gs["tiles"]:
             eco = gs["eco"][tile.tile_id]
@@ -137,7 +141,6 @@ class SerializeMixin:
                     "stage_name": p.stage.name,
                     # 0,1 cm : silhouette LOD, la vue ne fait que dessiner (③, 0.5.57).
                     "height_cm": round(p.current_height, 1),
-                    "segments": segv.segments(p.segments),
                     # Luxuriance par stratification (D65, sprint LUXURIANCE ⑥) —
                     # trois descripteurs PUR RENDU, lecture seule (hors _PLANT_ATTRS
                     # du golden → golden INTACT). Tous dérivés d'un état déjà calculé :
@@ -154,6 +157,13 @@ class SerializeMixin:
                     "silhouette": cls.silhouette_base(),
                     "clonal_mode": cls.clonal_mode,
                 }
+                # Segments : liste complète, ou `pid` + `segd` en delta (0.6.0) ;
+                # `neuve` = premier envoi de la plante → seul cas où partent les gènes.
+                if delta is None:
+                    base["segments"] = segv.segments(p.segments)
+                    neuve = True
+                else:
+                    neuve = delta.plante(base, p, segv)
                 # SQUELETTES post-mortem (décompo·compost ②B) : la mort ne retire
                 # plus la plante — `engine._tick_skeletons` la garde TANT QU'il
                 # reste du bois (seules les vivaces LIGNEUSES persistent ici ; les
@@ -226,7 +236,8 @@ class SerializeMixin:
                 # l'instance (`p.genes`, tiré au founder ①/hérité) : aucune écriture
                 # moteur → golden NEUTRE (le snapshot n'est pas figé par test_golden).
                 # `p.genes` est {} pour une plante neutre (pré-①) → dict vide toléré.
-                base["genes"] = {g: round(v, 3) for g, v in p.genes.items()}
+                if neuve:
+                    base["genes"] = {g: round(v, 3) for g, v in p.genes.items()}
                 # Sémiologie foliaire (D33, tronçon ①) : LISTE triée de symptômes
                 # `[{cause, intensity}]` — généralise le bool `chlorose` du ⑨ à TOUS
                 # les stresseurs chroniques (chlorose/sécheresse/asphyxie/ravageurs/
@@ -795,6 +806,8 @@ class SerializeMixin:
         # de la trace/objectifs déjà écrits par la boucle (hors tick) → golden NEUTRE.
         if getattr(self, "_automate", None) is not None:
             snap["automate"] = self.automate_block(gs)
+        if delta is not None:
+            snap["delta"] = delta.fin()   # {complet, disparues} (pont_delta)
         return snap
 
     def _containers_snapshot(self, gs: dict, saison: str) -> list:
