@@ -95,6 +95,10 @@ namespace Symbiose
 		private readonly PollenLot _pollen = new() { Name = "Pollen" };
 		private float _animAccum;
 		private bool _lastZoomOk;
+		// FLUIDITÉ PC LEVIERS ② : corps + pollen porté en UN lot (un DrawMesh),
+		// grains pixel-art (LotTriangles.Grain) au lieu de DrawCircle. L'ordre
+		// d'émission (corps puis pollen, insecte par insecte) = ordre de peinture.
+		private readonly LotTriangles _lot = new();
 
 		/// <summary>Nombre de butineurs affichés (overlay perfs F4).</summary>
 		private bool _dessinNonVide = true;   // le dernier _Draw a-t-il pu tracer ?
@@ -305,6 +309,7 @@ namespace Symbiose
 		private void DessinerButineurs()
 		{
 			_dessinNonVide = false;
+			_lot.Vider();
 			if (WorldView.CurrentZoom < MinZoom) return;
 			if (_entries.Count == 0) return;
 			Rect2 vis = (GetCanvasTransform().AffineInverse()
@@ -359,13 +364,14 @@ namespace Symbiose
 				if (!vis.HasPoint(scr)) continue;
 
 				col.A = BaseAlpha * alpha;
-				DrawCircle(scr, radiusPx, col);
+				_lot.Grain(scr, radiusPx, col);
 				if (e.Carrying)
 				{
 					var pc = PollenCol; pc.A = alpha;
-					DrawCircle(scr + new Vector2(0f, -radiusPx), 1.2f, pc);
+					_lot.Grain(scr + new Vector2(0f, -radiusPx), 1.2f, pc);
 				}
 			}
+			_lot.Dessiner(this);
 			if (gone != null) foreach (string k in gone) _entries.Remove(k);
 			_dessinNonVide = _entries.Count > 0;
 		}

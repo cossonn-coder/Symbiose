@@ -121,6 +121,33 @@ namespace Symbiose
 			Ajouter(a, col); Ajouter(b, col); Ajouter(c, col);
 		}
 
+		/// <summary>Un GRAIN pixel-art (FLUIDITÉ PC LEVIERS ②, pollen + butineurs) à
+		/// la place d'un DrawCircle de rayon r ≤ ~3 px : au pixel près, un cercle
+		/// aussi petit ne montre pas ses 64 côtés. r &lt; 2 → losange (2 triangles :
+		/// mêmes pixels « en croix » que le cercle de r 1,3) ; sinon octogone
+		/// (6 triangles, sommets à 22,5° → silhouette ronde à 2-3 px). Pas
+		/// d'écart à l'image hors bord du disque d'un pixel au plus.</summary>
+		public void Grain(Vector2 c, float r, Color col)
+		{
+			if (r < 2f)
+			{
+				Vector2 h = new(0f, -r), b = new(0f, r), g = new(-r, 0f), d = new(r, 0f);
+				Triangle(c + h, c + d, c + b, col);
+				Triangle(c + h, c + b, c + g, col);
+				return;
+			}
+			// Octogone en éventail depuis le sommet 0 (convexe).
+			Vector2 p0 = c + Octo(r, 0);
+			for (int i = 1; i < 7; i++)
+				Triangle(p0, c + Octo(r, i), c + Octo(r, i + 1), col);
+		}
+
+		private static Vector2 Octo(float r, int i)
+		{
+			float a = (i + 0.5f) * (Mathf.Tau / 8f);
+			return new Vector2(Mathf.Cos(a) * r, Mathf.Sin(a) * r);
+		}
+
 		/// <summary>Un rectangle TEXTURÉ (pièce d'atlas) : `dst` en coordonnées
 		/// du canvas, `uv` en fraction de la texture, `mod` multiplie la pièce
 		/// (blanc = telle quelle). Même diagonale que SolMaillage.Quad.</summary>

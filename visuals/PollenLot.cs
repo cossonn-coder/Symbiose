@@ -42,6 +42,9 @@ namespace Symbiose
 		private Transform2D _canvasVu;
 		private Vector2 _projVue = new(float.NaN, float.NaN);
 		private bool _zoomVu;
+		// FLUIDITÉ PC LEVIERS ② : tous les grains en UN lot (un DrawMesh) au lieu
+		// d'un DrawCircle (polygone 64 côtés, une commande) par grain.
+		private readonly LotTriangles _lot = new();
 
 		public PollenLot() { ShowBehindParent = true; }
 
@@ -121,6 +124,7 @@ namespace Symbiose
 
 		private void Dessiner()
 		{
+			_lot.Vider();
 			if (WorldView.CurrentZoom < MinZoom || _pollen.Count == 0) return;
 			Rect2 vis = (GetCanvasTransform().AffineInverse()
 						 * GetViewportRect()).Grow(MargeCullPx);
@@ -134,9 +138,10 @@ namespace Symbiose
 					float rad = PasSpiraleCm * Mathf.Sqrt(i);
 					Vector2 off = WorldView.WorldToScreenOffset(
 						rad * Mathf.Cos(a), rad * Mathf.Sin(a));
-					DrawCircle(c + off, PointPx, Couleur);
+					_lot.Grain(c + off, PointPx, Couleur);
 				}
 			}
+			_lot.Dessiner(this);
 		}
 	}
 }

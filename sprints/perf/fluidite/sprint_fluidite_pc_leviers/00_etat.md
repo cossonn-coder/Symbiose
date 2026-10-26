@@ -45,7 +45,7 @@ l'extraire en zoomant/dézoomant.
 | # | Kickoff | Contenu | Golden | État |
 |---|---|---|---|---|
 | ① | `01_outil_zoom.md` | journal + rapport copiable des changements de palier, balayage VM, chiffres « avant » | intact | **fait** (non commité) |
-| ② | `02_butineurs_pollen_lot.md` | butineurs + pollen en un lot `LotTriangles` | intact | à faire |
+| ② | `02_butineurs_pollen_lot.md` | butineurs + pollen en un lot `LotTriangles` | intact | **fait** (non commité) |
 | ③ | `03_paliers_prets.md` | décor : une maille par palier ; plantes : pas de vectoriel direct au zoom (si mesuré) | intact | à faire |
 | ④ | `04_pont_delta.md` | pont en delta opt-in (semaine de naissance, segments changés, gènes 1 fois), 0.6.0 | intact | à faire |
 | ⑤ | `05_lisiere_devant_bilan.md` | lisière côté caméra devant le jardin + bilan VM + protocole PC + clôture | intact | à faire |
@@ -85,5 +85,23 @@ Dette déjà inscrite à la conception : D112 (k) décor animé, (l) soleil sur 
   4 s aux paliers ≤ ×8 [VM] ; le décor recoud ~30 ms à chaque cran ≤ ×4 (cible ③) ; au
   zoom avant ×4→×32 le dessin direct des plantes (pas encore cuites) domine (cible ③).
 
+## ② Butineurs + pollen en lot — FAIT (2026-10-26)
+- `LotTriangles.Grain(c, r, col)` : grain pixel-art (r < 2 → losange 2 triangles ; sinon
+  octogone 6 triangles) au lieu d'un `DrawCircle` 64 côtés. `PollenLot` et `ForagerLayer`
+  accumulent dans leur lot et envoient UN `DrawMesh` par nœud (ordre corps → pollen porté
+  conservé ; nœuds, `ShowBehindParent`, ZIndex, LOD, cadences, culling inchangés). Logique
+  de vol/dépôt non touchée. LDC : Forager 271, PollenLot 102, LotTriangles 108.
+- Mesure banc 3 phases VM [n=1 run chacun, llvmpipe, `-3 25,25,20 -A 1 -W 90 -S 1521550718`,
+  ~270 fleurs pollinisées, 53 butineurs] — phase C (moteur en pause) avant → après :
+  draw calls **1 037 → 608**, primitives 146 752 → 120 602, butineurs _Draw **2,16 → 0,32**
+  ms/image, moyenne image 197,7 → 187,6 ms [bruit VM ± ~10 ms], rendu CPU 118 → 119 ms
+  (inchangé : llvmpipe, dominé ailleurs) ; phase A : draw calls 483 → 314, butineurs _Draw
+  1,08 → 0,19. Alloc. nouvelle 172 Ko/s (ToArray du lot), GC sans effet visible.
+- Captures `captures_02/` (×4, ×8, image 39, avant/après + loupe ×4) : les butineurs
+  bougent en temps réel (`Time.GetTicksMsec`) → captures non comparables au pixel ; à ×4
+  les tas de pollen restent des blocs crème pixel-art. ×8 : aucun butineur dans le cadre
+  (images identiques) → à juger au F5.
+- F5 Nico : butineurs et pollen à ×4 / ×8 « comme avant » ? (losange/octogone vs disque).
+
 ## §REPRISE
-Exécution : `/sprint-auto sprint_fluidite_pc_leviers` (tronçon suivant = ② ; ① fait, à commiter par l'orchestrateur). Après : 1 run PC de Nico → 3ᵉ temps D116 (levier moteur si 2 s/sem non tenu).
+Exécution : `/sprint-auto sprint_fluidite_pc_leviers` (tronçon suivant = ③ ; ① et ② faits, à commiter par l'orchestrateur). Après : 1 run PC de Nico → 3ᵉ temps D116 (levier moteur si 2 s/sem non tenu).
