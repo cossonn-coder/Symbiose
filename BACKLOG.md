@@ -24,7 +24,7 @@
 1. ~~**Sprint A « le sol qui respire »**~~ CLOS 2026-10-23 (moteur, [D111](DETTE.md)) → `/conception` : bilan hydrique (le sol
    se dessèche), champignons (bois mort au sol, fructification la semaine après la pluie, ~10 espèces
    comestibles / vénéneuses / psychédéliques avec leurs voix), nectar par espèce. Puis re-mesurer D110 (g).
-1bis. ~~**URGENT — perf du tick**~~ CLOS 2026-10-23 (sprint FLUIDITÉ AN 2, D114 close → [D116](DETTE.md) : rapports PC à fournir).
+1bis. ~~**URGENT — perf du tick**~~ CLOS 2026-10-23 (sprint FLUIDITÉ AN 2, D114 close → [D116](DETTE.md) : rapports PC à fournir) ; **rapports PC reçus le 2026-10-26** : 3,33-3,75 s/sem [n=3 runs, PC], cible recadrée à ≤ 2 s/sem → `/conception` D116 + lisière D112 (c)(j).
 2. **Sprint B « ce qui est cassé à l'écran »** (vue, [D112](DETTE.md)) : bêtes et carpophores non dessinés,
    maison en verre, périphérie qui exige F10, bugs de la heatmap du vent + vent en tête de F6, jauges Maj+F3,
    F11 « spray ».
