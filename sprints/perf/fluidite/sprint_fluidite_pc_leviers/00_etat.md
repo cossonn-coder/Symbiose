@@ -246,7 +246,26 @@ Questions :
   Hypothèses NON mesurées : GPU (Intel HD 4600, mesure GPU à 0 sous ANGLE), envoi de textures /
   mailles au GPU au cran, ou rendu CPU hors postes. Postes attribués réels : `plantes _Draw`
   jusqu'à 83 ms (×16→×8), `plantes vectoriel` jusqu'à 56 ms (×16→×32).
-- **Résultats du banc 3 phases (s/sem, FPS) : NON reçus** — seul le rapport Z a été collé.
+- Banc 3 phases : voir section suivante (reçu le 2026-10-27).
+
+## Run PC du 2026-10-27 — banc E 3 phases (s90 an 2, ×4, graine 1521550718, 1 s/sem demandée) [n=1 run, PC]
+| Phase | Avant (2026-10-26) | Après leviers |
+|---|---|---|
+| B rendu suspendu | 2,27 s/sem · tick 1 572 · step vu 2 454 ms | **1,19 s/sem** · tick 842 · step vu 1 214 ms |
+| A normal | 6,26 s/sem · tick 3 179 · images 108 ms moy. | **2,78 s/sem** · tick 1 819 · images 59,6 ms moy., FPS 16,8, 56/420 > 100 ms |
+| C moteur en pause | 245 ms moy. · 4,1 FPS | **30,9 ms moy. · 32,4 FPS** · 22/649 > 100 ms (p99 126) |
+- **Cible PC (≤ 2 s/sem en A, aucune image > 100 ms) : NON tenue** — 2,78 s/sem en A.
+- **Surcoût du pont** (step vu − tick) : B 882 → 372 ms ; A 726 ms (parse 130, lecture 70, réponse 840 Ko).
+- **Le rendu double toujours le tick** : A 1 819 / B 842 ms (× 2,2). Moteur sans rendu = 1,19 s/sem :
+  la cadence se perd dans le **partage du CPU** (2 cœurs physiques, moteur en BelowNormal), pas
+  dans le moteur seul. « Inexpliqué » vue : A 34,8 / C 15,8 ms/image = signature de contention.
+- **Images lentes restantes** : pics de `plantes _Draw` 25-61 ms dans les pires images (C et A) ;
+  dans les pires images de C (220 ms) seuls ~67 ms sont attribués.
+- Biais : phases jouées sur des semaines différentes (C/A ≈ s90-99, B jusqu'à s120 ; 255 → 20
+  fleurs pollinisées au fil des phases). Comparaison avant/après = même protocole, 1 run chacun.
+- **3ᵉ temps D116** : deux familles de leviers à arbitrer en `/conception` — (1) moteur Python
+  (tick plus court : gain direct, se double sous contention) ; (2) partage du CPU vue ↔ moteur
+  (plafond de FPS en Saison, priorité du moteur — arbitrage cadence ↔ images). Hypothèses NON mesurées.
 
 ## Retours F5 Nico (2026-10-27)
 ① ② butineurs/pollen même aspect à ×4/×8, « plus polygonaux, moins ronds » (pas de gêne dite) ·
@@ -258,6 +277,9 @@ avec le reste de D112. **Pic de 21 ms au démarrage** (construction du décor en
 s'il reste ponctuel → clos.
 
 ## §REPRISE
+**[2026-10-27]** run PC reçu (rapport Z + banc 3 phases ci-dessus) : cible cadence non tenue en A
+(2,78 s/sem) → **prochain = `/conception D116` 3ᵉ temps**.
+
 Sprint **CLOS** (①→⑤ faits ; ⑤ à commiter par l'orchestrateur + journal). Suite : **1 run
 PC de Nico** (§F5) → 3ᵉ temps D116 (levier moteur si 2 s/sem non tenu ; cuisson au cran à
 relire), puis D112 vue.
