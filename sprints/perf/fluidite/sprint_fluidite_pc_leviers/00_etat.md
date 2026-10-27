@@ -235,6 +235,28 @@ Questions :
    restent-ils derrière ? La boussole reste-t-elle lisible ? La part de jardin masquée
    par une forêt côté caméra gêne-t-elle (D112 n) ?
 
+## Run PC du 2026-10-27 — rapport Z (aller-retour ×0,5 → ×32 → ×0,5, automne an 1) [n=1 aller-retour, PC]
+- **Bas paliers ×0,5 ↔ ×4 (6 crans)** : pire image 44-82 ms, **0 image > 100 ms** → cible tenue.
+  Décor 0,0 ms à chaque cran (③ confirmé au PC). File de cuisson souvent non vidée en ~1 s
+  (×0,5 : 174 en file) mais coût faible par image (cuisson 4-15 ms).
+- **Hauts paliers ×4 ↔ ×32 (6 crans)** : pire 99-453 ms, 21 images > 100 ms au total. Pire cran :
+  **×8 → ×4 = 453 ms**. Moyenne des 12 pires images : 157 ms [pas d'« avant » PC : l'outil date de ①].
+- **Le gros du pire n'est dans AUCUN poste instrumenté** : ×8→×4 453 ms dont 10 ms attribués ;
+  ×16→×8 301 dont 116 ; ×16→×32 266 dont 62 ; ×8→×16 222 dont 49 ; ×4→×8 161 dont 41.
+  Hypothèses NON mesurées : GPU (Intel HD 4600, mesure GPU à 0 sous ANGLE), envoi de textures /
+  mailles au GPU au cran, ou rendu CPU hors postes. Postes attribués réels : `plantes _Draw`
+  jusqu'à 83 ms (×16→×8), `plantes vectoriel` jusqu'à 56 ms (×16→×32).
+- **Résultats du banc 3 phases (s/sem, FPS) : NON reçus** — seul le rapport Z a été collé.
+
+## Retours F5 Nico (2026-10-27)
+① ② butineurs/pollen même aspect à ×4/×8, « plus polygonaux, moins ronds » (pas de gêne dite) ·
+③ à-coup « a réduit » ; pas de gêne signalée pour la plante agrandie/réduite avant cuisson ·
+④ HUD pont 0.6.0, rien de changé à l'écran · ⑤ lisière devant dans les 4 rotations, boussole
+lisible. **D112 (n) tranchée** : la touche **H** doit rendre la lisière côté caméra transparente
+comme elle le fait pour la maison (`WorldView.Controls.cs:100` → `ToggleHouseGhost`) — à faire
+avec le reste de D112. **Pic de 21 ms au démarrage** (construction du décor en fond) : accepté
+s'il reste ponctuel → clos.
+
 ## §REPRISE
 Sprint **CLOS** (①→⑤ faits ; ⑤ à commiter par l'orchestrateur + journal). Suite : **1 run
 PC de Nico** (§F5) → 3ᵉ temps D116 (levier moteur si 2 s/sem non tenu ; cuisson au cran à
