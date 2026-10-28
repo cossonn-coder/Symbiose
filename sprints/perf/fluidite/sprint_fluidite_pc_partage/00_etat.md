@@ -50,8 +50,8 @@
 |---|---|---|---|---|
 | ① | `01_moteur_gc_snapshot.md` | moteur bit-identique : `gc.freeze` + seuils, `_snapshot` mémoïsé par plante ; banc headless n=3 | intact | **fait** (80ea965) |
 | ② | `02_regulateur_banc_partage.md` | régulateur de cadence (15 FPS si semaine en retard, plein en Planification / caméra qui bouge) + banc de partage (4 sous-phases A : régulateur off/on × priorité BelowNormal/Normal) | intact | **fait** (1a7eeeb) |
-| ③ | `03_hauts_paliers.md` | hauts paliers : mesurer l'envoi au GPU (mémoire vidéo, textures créées par image) au cran ×4↔×32, levier si trouvé | intact | **fait** (mesure ; levier inerte retiré ; non commité) |
-| ④ | `04_bilan_protocole.md` | bilan VM + protocole d'un run PC + clôture | intact | à faire |
+| ③ | `03_hauts_paliers.md` | hauts paliers : mesurer l'envoi au GPU (mémoire vidéo, textures créées par image) au cran ×4↔×32, levier si trouvé | intact | **fait** (9828dee ; mesure, levier inerte retiré) |
+| ④ | `04_bilan_protocole.md` | bilan VM + protocole d'un run PC + clôture | intact | **fait** (2026-10-28, non commité) |
 
 ## §1 — ① moteur : ramasse-miettes + `_snapshot` (2026-10-28)
 **Fait** (tout dans `tools/`, rien dans `sim/`, pont 0.6.0 inchangé, golden `fecccded…` intact) :
@@ -161,8 +161,75 @@ du PC (×8→×4 453 ms dont 10 attribués) = destruction des pages dédiées da
 de destruction étalée pour les pages dédiées, et/ou budget de pixels cuits par image à ×8+.
 Note D116 posée dans `DETTE.md`.
 
+## §4 — ④ bilan VM + protocole PC (2026-10-28)
+Golden `fecccded…` intact (vérifié en fin de tronçon), `dotnet build` vert, aucun code touché.
+
+### Bilan VM du sprint (avant → après ①→③)
+[VM llvmpipe, graine 1521550718 `full` ; « avant » = « Bilan VM du sprint » de
+`sprint_fluidite_pc_leviers/00_etat.md` ou mesure « avant » du ① ; charges VM différentes]
+| mesure | avant | après | limite |
+|---|---|---|---|
+| A (1 s demandée), s/sem — A1 = régulateur OFF | 2,10 | 2,01 | [n=1 run chacun, charge 0,9→4,5] |
+| A3 (régulateur 15, = le jeu livré), s/sem | — | 1,82 | [n=1 run, VM ; régulé 0 %] |
+| B (rendu suspendu), s/sem | 1,32 | 1,56 | [n=1 run chacun ; B joué ~s133-149 (an 3), monde plus gros : ~20 700 seg.] |
+| B : tick moteur moy. | 833 ms | 940 ms | [idem] |
+| C (moteur en pause) : moy. image | 208,5 ms | 193,0 ms | [n=1 run, bruit VM ±10] |
+| C : draw calls | 648 | 519 | [n=1 run chacun] |
+| régulateur engagé (A3 / A4) | — | 0 % / 1 % | [n=1 run, VM : delta Godot plafonné, cf. §2] |
+| balayage zoom 12 crans : pire image moyenne | 249 ms | 263 ms | [n=1 aller-retour chacun, charge 3,8→4,3] |
+| headless an 1 (`--delta`), gc moy/max | 39/217 ms (① avant) | 4/95 ms (gc off même run : 30/202) | [n=3 runs, charge 1→9 : peu fiable] |
+| headless an 1 (`--delta`), `_snapshot` moy/max | 196/423 ms (① avant) | 166/384 ms | [idem] |
+| headless an 1 (`--delta`), tick moy/max | 872/1 679 ms (① avant) | 1 014/1 600 ms | [idem : charge montée à 9] |
+| headless an 1 complet (sans `--delta`), tick / snapshot / gc moy. | — | 739 / 124 / 2 ms | [n=3 runs, charge 4,3→1,1] |
+
+Lecture : sur la VM, rien ne départage les 4 sous-phases (1,82-2,02 s/sem, images 212-217 ms
+[n=1 run]) : priorité Normal refusée sous Linux (A2/A4 = BelowNormal en fait) et régulateur
+~jamais engagé. Seuls résultats VM solides : GC sans pics (moy. 30 → 4 ms/sem, pire 202 → 95 ms
+[n=3+3 runs même session, charge 1→9]) et `_snapshot` −15 % (§1). Hauts paliers : même
+signature qu'au ③ (×8→×16 : 11 pages dédiées détruites ; ×16→×32 : 10, −272 Mo), pires images
+VM sans mouvement GPU (rendu llvmpipe partout). **Tout se tranche au run PC.**
+
+### §F5 — protocole d'UN run PC
+1. Godot → Projet → Paramètres → Run → **Main Run Args** :
+```
+--capture-banc=full --capture-seed=1521550718 --capture-etalonnage=25 --capture-banc-3phases=25,25,20 --capture-banc-partage=20 --capture-banc-cadence=1 --capture-banc-semaine=90
+```
+   F5, ne rien toucher jusqu'à `[banc] FIN` (~4-5 min sur la VM, amorçage compris ; au PC
+   probablement moins), puis copier **tout le rapport console** à partir de `── phase C`
+   jusqu'à `[banc] FIN` (le bloc « synthèse partage » est indispensable).
+2. Vider les Main Run Args, 2ᵉ F5 : en Planification, molette **×0,5 → ×32 → ×0,5** en
+   marquant ~2 s par palier (sans bouger la souris entre crans), puis **touche Z** → copier
+   le rapport (lignes « GPU fenêtre … | pire image … » comprises).
+
+### Comment lire le run PC pour décider
+- **Régulateur** (A3 contre A1, BelowNormal tous deux) : si A3 ≤ 2 s/sem et nettement sous
+  A1 → régulateur **gardé tel quel** (c'est le défaut livré). Si A3 ≈ A1 avec « régulé »
+  ≥ 20 % → l'hypothèse « le rendu vole le CPU / le TDP » est **réfutée** : régulateur
+  inoffensif, on le garde ou on le retire (choix Nico), la cadence doit venir du moteur.
+- **Régulateur jamais engagé** (« régulé » ≈ 0 % en A3/A4 alors que s/sem > 1,2) → le
+  constat VM du §2 (`_timeAccum` en retard sur l'horloge) vaut aussi au PC : passer la
+  condition « semaine due » à l'horloge murale (petit tronçon vue), puis refaire ce run.
+- **Priorité** (A2 contre A1, A4 contre A3) : si Normal gagne ≥ 0,3 s/sem sans faire
+  monter « img moy » de plus de ~10 ms ni le p99 au-delà de 100 ms → **priorité Normal par
+  défaut** ; si le gain se paie en images (> 100 ms en hausse) → BelowNormal reste. Vérifier
+  que la ligne `(priorité : Normal posée)` apparaît (sinon « non applicable » = rien testé).
+- **Cible** : la meilleure sous-phase ≤ 2 s/sem **et** p99 < 100 ms → D116 cadence close.
+  Sinon le reste se joue côté moteur (tick) ou avec l'enchaînement anticipé (écarté par
+  Nico pour 2 s de latence — ne se rouvre qu'avec son accord).
+- **Hauts paliers** (rapport Z) : pour ×8→×4, ×16→×8, ×16→×32, comparer la pire image et sa
+  colonne « détruites … dont N dédiées ». Si la pire image porte les destructions de pages
+  dédiées et que le non-attribué ≈ la pire image → levier candidat (file de destruction
+  étalée des pages dédiées, note D116). Si la pire image n'a aucun mouvement GPU → piste
+  pages dédiées réfutée au PC aussi, la cause reste hors instruments.
+
+### Questions F5 (ressenti seul)
+1. En Saison, quand le moteur est en retard, la vue passe à 15 FPS : gênant à l'œil ?
+2. La caméra (molette, glisser, rotation) reste-t-elle fluide (plein régime ~1 s après) ?
+3. L'à-coup aux hauts zooms (×8 ↔ ×32) : plus, moins ou pareil qu'avant ?
+4. HUD « pont 0.6.0 » inchangé, rien d'autre ne change à l'écran.
+
 ## §REPRISE
-① (80ea965) et ② (1a7eeeb) commités ; ③ fait (mesure + note D116, non commité). Prochain : tronçon ④
-`04_bilan_protocole.md` — inclure au protocole PC le rapport Z (aller-retour ×0,5 → ×32 → ×0,5)
-et lire les colonnes « GPU » : pages dédiées détruites dans la pire image ↔ non-attribué.
-Chaque tronçon ajoute ici sa section §N (fait, mesures, écarts) et met à jour la carte.
+①②③ commités (80ea965, 1a7eeeb, 9828dee) ; ④ fait (bilan VM, protocole PC, note D116,
+BACKLOG ; non commité, journal laissé à l'orchestrateur). **Sprint clos côté code.**
+Prochain : **le run PC de Nico** (§4 « §F5 — protocole d'UN run PC »), lu avec §4 « Comment
+lire le run PC » → décision régulateur / priorité / condition « due » / pages dédiées.
