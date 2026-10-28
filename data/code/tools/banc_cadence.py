@@ -6,6 +6,8 @@
 #   - tick      : le tick moteur pur (`srv._last_ms_tick`, posé par cmd_step_week) ;
 #   - automate  : la durée de `jouer_tick` (si l'automate est branché) ;
 #   - snapshot  : la durée de `_snapshot()` (la photo envoyée à Godot) ;
+#   - gc        : le temps passé dans le ramasse-miettes pendant la semaine (tick +
+#                 snapshot), mesuré par `gc.callbacks` (start/stop) — PARTAGE ① ;
 #   - Ko        : la taille du JSON de la réponse, sérialisé EXACTEMENT comme le pont
 #                 (`sort_keys`, séparateurs compacts — cf. simserver/server.py) ;
 #   - plantes   : plantes vivantes après la semaine.
@@ -24,13 +26,18 @@
 #
 # Usage (depuis data/code/) :
 #   python3 -m tools.banc_cadence [--runs N] [--seed S] [--semaines W] [--automate]
+#                                 [--delta] [--gc on|off]
 #     --runs     N : runs successifs (défaut 3)
 #     --seed     S : graine du monde (défaut 1521550718, référence du sprint)
 #     --semaines W : semaines simulées par run (défaut 156 = 3 ans)
 #     --automate   : branche l'automate (profil de la touche A : désherbage curatif)
+#     --delta      : demande les semaines EN DELTA, comme le F5 (pont 0.6.0)
+#     --gc on|off  : réglage du ramasse-miettes du serveur (`simserver/gc_pont`,
+#                    défaut on = comme en jeu ; off = comportement CPython d'origine)
 
 from __future__ import annotations
 import argparse
+import gc
 import json
 import statistics
 import time
@@ -66,36 +73,61 @@ def _sonder(srv, nom: str, releve: dict, cle: str) -> None:
     setattr(srv, nom, enveloppe)
 
 
-def un_run(seed: int, semaines: int, automate: bool) -> list[dict]:
+def _sonde_gc(releve: dict):
+    """Branche sur `gc.callbacks` un chronomètre de collecte : chaque passe du
+    ramasse-miettes ajoute sa durée (ms) à `releve["gc"]` (sonde, rien de modifié).
+    Renvoie le rappel, à retirer en fin de run."""
+    t0 = [0.0]
+
+    def rappel(phase, info):
+        if phase == "start":
+            t0[0] = time.perf_counter()
+        else:
+            releve["gc"] += (time.perf_counter() - t0[0]) * 1000.0
+
+    gc.callbacks.append(rappel)
+    return rappel
+
+
+def un_run(seed: int, semaines: int, automate: bool, delta: bool = False,
+           gc_on: bool = True) -> list[dict]:
     """Monte `full` via le serveur (même fabrique que le F5), puis `semaines`
     appels `cmd_step_week`. Renvoie une ligne de relevés par semaine."""
+    try:                     # absent d'un arbre antérieur à PARTAGE ① (mesure « avant »)
+        from tools.simserver import gc_pont
+        gc_pont.ACTIF = gc_on
+    except ImportError:
+        pass
     from tools.simserver.server import SimServer
     srv = SimServer()
     rep = srv.cmd_init({"config": "full", "seed": seed})
     if not rep.get("ok"):
         raise RuntimeError(f"cmd_init a échoué : {rep}")
-    releve = {"automate": 0.0, "snapshot": 0.0}
+    releve = {"automate": 0.0, "snapshot": 0.0, "gc": 0.0}
     if automate:
         rep = srv.cmd_automate({"op": "on", "profil": {"desherbage": "curatif"}})
         if not rep.get("ok"):
             raise RuntimeError(f"automate on a échoué : {rep}")
         _sonder(srv._automate, "jouer_tick", releve, "automate")
     _sonder(srv, "_snapshot", releve, "snapshot")
+    rappel = _sonde_gc(releve)
 
     lignes = []
     for _ in range(semaines):
-        releve["automate"] = releve["snapshot"] = 0.0
-        rep = srv.cmd_step_week({})
+        releve["automate"] = releve["snapshot"] = releve["gc"] = 0.0
+        rep = srv.cmd_step_week({"delta": True} if delta else {})
         if not rep.get("ok"):
             raise RuntimeError(f"step_week a échoué : {rep}")
         octets = len(json.dumps(rep, sort_keys=True, separators=(",", ":")).encode())
         lignes.append({"semaine": srv.engine.week - 1, "tick": srv._last_ms_tick,
                        "automate": releve["automate"], "snapshot": releve["snapshot"],
+                       "gc": releve["gc"],
                        "ko": octets / 1024.0, "plantes": _plantes_vivantes(srv.engine)})
+    gc.callbacks.remove(rappel)
     return lignes
 
 
-COLONNES = ("tick", "automate", "snapshot", "ko", "plantes")
+COLONNES = ("tick", "automate", "snapshot", "gc", "ko", "plantes")
 
 
 def _par_an(lignes: list[dict]) -> dict[int, dict]:
@@ -111,11 +143,12 @@ def _par_an(lignes: list[dict]) -> dict[int, dict]:
 def _imprimer(titre: str, table: dict[int, dict]) -> None:
     print(titre)
     print("  an  sem  tick moy/max ms   automate moy/max   snapshot moy/max   "
-          "réponse moy/max Ko   plantes moy/max")
+          "gc moy/max   réponse moy/max Ko   plantes moy/max")
     for an, r in table.items():
         cell = lambda c, f: f"{r[c][0]:{f}}/{r[c][1]:{f}}"
         print(f"  {an:>2}  {r['n']:>3}  {cell('tick', '6.0f'):>15}   "
               f"{cell('automate', '5.1f'):>16}   {cell('snapshot', '5.0f'):>16}   "
+              f"{cell('gc', '4.0f'):>10}   "
               f"{cell('ko', '7.0f'):>18}   {cell('plantes', '4.0f'):>15}")
 
 
@@ -125,10 +158,13 @@ def main() -> int:
     ap.add_argument("--seed", type=int, default=1521550718)
     ap.add_argument("--semaines", type=int, default=156)
     ap.add_argument("--automate", action="store_true")
+    ap.add_argument("--delta", action="store_true")
+    ap.add_argument("--gc", choices=("on", "off"), default="on")
     a = ap.parse_args()
 
     print(f"banc_cadence : monde full · graine {a.seed} · {a.semaines} semaines · "
-          f"automate {'ON (curatif)' if a.automate else 'OFF'} · {a.runs} run(s) en série")
+          f"automate {'ON (curatif)' if a.automate else 'OFF'} · "
+          f"{'delta' if a.delta else 'complet'} · gc {a.gc} · {a.runs} run(s) en série")
     tous = []
     for i in range(a.runs):
         charge = _charge_vm()
@@ -136,7 +172,7 @@ def main() -> int:
             print(f"⚠️  charge VM {charge:.2f} > {CHARGE_MAX:.0f} au départ du run {i + 1} : "
                   "mesure peu fiable.")
         t0 = time.perf_counter()
-        lignes = un_run(a.seed, a.semaines, a.automate)
+        lignes = un_run(a.seed, a.semaines, a.automate, a.delta, a.gc == "on")
         tous.append(lignes)
         _imprimer(f"\nrun {i + 1}/{a.runs} ({time.perf_counter() - t0:.0f} s, "
                   f"charge départ {charge:.2f}, fin {_charge_vm():.2f})", _par_an(lignes))

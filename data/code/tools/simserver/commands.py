@@ -36,6 +36,7 @@ from bancs import (BANCS, BANC_WEEK_DEPART, BANC_SEED, BANC_POST_INIT,
 
 from .version import ENGINE_VERSION
 from .pont_delta import mode_delta   # segments en delta, opt-in (0.6.0)
+from .gc_pont import regler_gc       # ramasse-miettes du serveur (PARTAGE ①)
 from .maitrise_pont import observer_apres_tick  # chaîne de maîtrise après tick (voix ①)
 from sim.vision import clore_si_echue as clore_vision   # fin de vision (sol qui respire ⑥)
 from . import perf   # capture des pires ticks + dump diagnostique (demande Nico 2026-07-05)
@@ -266,6 +267,8 @@ class CommandsMixin:
         encyclo = msg.get("encyclo_demarrage")
         if encyclo:
             _amorcer_encyclo(game_state, game_state["current_player"], encyclo)
+        # Monde monté : on le fige hors du ramasse-miettes (PARTAGE ①, cf. gc_pont).
+        regler_gc()
         return {"ok": True, "engine_version": ENGINE_VERSION,
                 "python": perf.interpreteur(),   # FLUIDITÉ PC ① (0.5.58)
                 "world": self._world_static()}

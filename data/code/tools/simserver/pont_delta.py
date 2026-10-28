@@ -57,7 +57,7 @@ class DeltaPont:
     """État « dernier envoyé » du client (un serveur = un client, la vue)."""
 
     def __init__(self):
-        self._etat: dict = {}      # id(plante) → (plante, pid, [(segment, charge)])
+        self._etat: dict = {}      # id(plante) → (plante, pid, [(segment, charge, brut)])
         self._vus: dict = {}       # même forme, rempli pendant la passe courante
         self._prochain_pid = 1
         self._complet = True       # rien envoyé encore = la prochaine passe est complète
@@ -86,14 +86,13 @@ class DeltaPont:
         semaine = self._semaine
         actuel = []
         ops = []
+        copies = 0               # recopies en attente (fusionnées en UN entier)
         j = 0                    # curseur dans l'ancienne liste
         index = None             # id(segment) → indice ancien, construit au 1er écart
         n_anc = len(ancien)
-        for s, e in zip(p.segments, segv.entrees(p.segments)):
-            b, d = e[5], e[6]
-            charge = (s.parent, b[0], b[1], b[2], d[0], d[1], d[2], e[7], e[8],
-                      1 if s.is_apex else 0, semaine - s.age_weeks)
-            actuel.append((s, charge))
+        for s in p.segments:
+            brut = (s.base, s.dir, s.length_cm, s.thickness_cm, s.parent,
+                    s.is_apex, semaine - s.age_weeks)
             if j < n_anc and ancien[j][0] is s:
                 m = j
             else:
@@ -104,14 +103,39 @@ class DeltaPont:
                     m = -1
             if m >= j:
                 if m > j:                                  # anciens retirés
+                    if copies:
+                        _pousser(ops, copies)
+                        copies = 0
                     _pousser(ops, j - m)
                     j = m
                 j += 1
-                if ancien[m][1] == charge:
-                    _pousser(ops, 1)
+                a = ancien[m]
+                # Chemin rapide (PARTAGE ①) : grandeurs BRUTES inchangées (base, dir,
+                # longueur, épaisseur, parent, apex, naissance — une seule égalité de
+                # tuple, faite en C) ⇒ charge arrondie inchangée par construction →
+                # recopie, sans arrondi ni passage par le cache de `segments_pont`.
+                if a[2] == brut:
+                    actuel.append(a)
+                    copies += 1
                     continue
+                charge = _charge(segv.entree(s), brut)
+                actuel.append((s, charge, brut))
+                if a[1] == charge:                         # arrondi identique
+                    copies += 1
+                    continue
+                if copies:
+                    _pousser(ops, copies)
+                    copies = 0
                 _pousser(ops, -1)                          # l'ancien changé est sauté
+            else:
+                charge = _charge(segv.entree(s), brut)
+                actuel.append((s, charge, brut))
+                if copies:
+                    _pousser(ops, copies)
+                    copies = 0
             ops.append(list(charge))                       # nouveau ou changé
+        if copies:
+            _pousser(ops, copies)
         self._vus[id(p)] = (p, pid, actuel)
         base["pid"] = pid
         base["segd"] = ops
@@ -125,6 +149,15 @@ class DeltaPont:
         self._etat, self._vus = vus, {}
         self._complet = False
         return bloc
+
+
+def _charge(e: tuple, brut: tuple) -> tuple:
+    """Charge utile d'un segment (format d'un littéral `segd`) depuis son entrée de
+    cache `segments_pont` (indices 5-8 = base, dir, longueur, épaisseur arrondies)
+    et ses grandeurs brutes (indices 4-6 = parent, apex, semaine de naissance)."""
+    b, d = e[5], e[6]
+    return (brut[4], b[0], b[1], b[2], d[0], d[1], d[2], e[7], e[8],
+            1 if brut[5] else 0, brut[6])
 
 
 def _pousser(ops: list, k: int) -> None:
