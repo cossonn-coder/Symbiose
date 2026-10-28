@@ -60,6 +60,7 @@ namespace Symbiose
 			_baLecture = _baLectureMax = 0;
 			_baButineurs0 = _foragerLayer?.Count ?? -1;
 			_baPollen0 = _foragerLayer?.FleursPollen ?? -1;
+			RemettreRegulateur();   // part du temps régulé (WorldView.Regulateur.cs)
 		}
 
 		/// <summary>Appelé par _Process à chaque step consommé (no-op hors mesure).</summary>
@@ -108,6 +109,7 @@ namespace Symbiose
 			sb.AppendLine($"  priorité du moteur lue par l'OS : {_bridge?.PrioriteEffective() ?? "—"}"
 				+ $" · butineurs début→fin {_baButineurs0}→{_foragerLayer?.Count ?? -1}"
 				+ $" · fleurs pollinisées {_baPollen0}→{_foragerLayer?.FleursPollen ?? -1}");
+			sb.AppendLine(LigneRegulateur(_bancT0));
 		}
 	}
 }

@@ -39,18 +39,23 @@
 #     -3  BANC E EN 3 PHASES (FLUIDITÉ PC ①) : durées A,B,C en s (défaut 25,25,20) —
 #         A normal / B rendu suspendu (steps seuls, ≥ 6) / C moteur en pause ; à
 #         combiner avec -A (sinon aucun step en A/B). Implique -E (durée de A).
+#     -P  BANC DE PARTAGE (FLUIDITÉ PC PARTAGE ②) : la phase A du banc 3 phases devient
+#         4 sous-phases de P s (régulateur OFF/15 FPS × moteur BelowNormal/Normal) +
+#         tableau côte à côte en fin de rapport. Implique -3 (défaut 25,25,20) ; sur la
+#         VM le passage en Normal est refusé (nice) → rapporté « non applicable ».
 #     -Z  BALAYAGE DE ZOOM (FLUIDITÉ PC LEVIERS ①) : ×0,5 → ×32 → ×0,5, Z s par palier
 #         sur le point -c ; imprime le rapport des à-coups de zoom (même texte que la
 #         touche Z du F5 : une ligne par changement + synthèse par paire de paliers).
 #   Exemple : tools/perf_vm.sh -Z 4 -S 1521550718 -w 90 -c 1650,950 -t 900
 #   Exemple : tools/perf_vm.sh -3 25,25,20 -A 1 -W 90 -S 1521550718 -t 900
+#   Exemple : tools/perf_vm.sh -3 25,25,20 -P 20 -A 1 -W 90 -S 1521550718 -t 900
 #   Exemple : tools/perf_vm.sh -z 0.5 -x Ground
 #   Exemple : tools/perf_vm.sh -E 20 -z 4 -x MacroLife -O
 #   Journal complet : /tmp/perf_symbiose/godot.log
 set -euo pipefail
 
 . "$(dirname "${BASH_SOURCE[0]}")/lib_vm_godot.sh"   # DEPOT GODOT XROOT + vm_*
-BANC=full ZOOM="" CENTRE="" CACHER="" SAUT=4 N=8 DELAI=300 GRAINE="" SEMAINES="" TURBO="" BUILD=1 BANC_E="" OMBRES="" BANC_W="" CADENCE="" VENT="" PLEINE="" AUTOMATE="" TROIS="" BALAYAGE=""
+BANC=full ZOOM="" CENTRE="" CACHER="" SAUT=4 N=8 DELAI=300 GRAINE="" SEMAINES="" TURBO="" BUILD=1 BANC_E="" OMBRES="" BANC_W="" CADENCE="" VENT="" PLEINE="" AUTOMATE="" TROIS="" BALAYAGE="" PARTAGE=""
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -73,11 +78,14 @@ while [ $# -gt 0 ]; do
     -a) AUTOMATE="$2"; shift 2 ;;
     -3) TROIS="$2"; BANC_E="${2%%,*}"; shift 2 ;;
     -Z) BALAYAGE="$2"; shift 2 ;;
+    -P) PARTAGE="$2"; shift 2 ;;
     --no-build) BUILD=0; shift ;;
-    -h|--help) sed -n '2,49p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,54p' "$0"; exit 0 ;;
     *) echo "option inconnue : $1" >&2; exit 2 ;;
   esac
 done
+# -P implique le banc 3 phases (durées par défaut si -3 absent).
+if [ -n "$PARTAGE" ] && [ -z "$TROIS" ]; then TROIS=25,25,20; BANC_E=25; fi
 
 # 0. Charge de la VM d'abord : une mesure sous charge ne vaut rien. Un run
 #    llvmpipe pousse lui-même la charge à ~10-15 (16 cœurs, rendu multi-fil) :
@@ -114,6 +122,7 @@ if [ -n "$BANC_E" ]; then Z=banc-zoom C=banc-centre; else Z=zoom C=centre; fi
 [ -n "$PLEINE" ] && ARGS+=(--capture-pleine-res=1)
 [ -n "$AUTOMATE" ] && ARGS+=(--capture-banc-automate="$AUTOMATE")
 [ -n "$TROIS" ] && ARGS+=(--capture-banc-3phases="$TROIS")
+[ -n "$PARTAGE" ] && ARGS+=(--capture-banc-partage="$PARTAGE")
 [ -n "$BALAYAGE" ] && ARGS+=(--capture-zoom-balayage="$BALAYAGE")
 DISPLAY="$ECRAN" LIBGL_ALWAYS_SOFTWARE=1 "$GODOT" --path "$DEPOT" \
   --rendering-driver opengl3 --resolution 1920x1080 --print-fps \

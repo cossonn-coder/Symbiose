@@ -513,6 +513,9 @@ namespace Symbiose
 			//   (la semaine courante est lue) et AVANT le lancement du step suivant
 			//   (il coupe le turbo à la semaine cible, sans semaine de trop).
 			AvancerEtalonnage();
+			// 1·sexies) Régulateur de cadence (FLUIDITÉ PC PARTAGE ②) : 15 FPS tant
+			//   qu'une semaine due attend le moteur (WorldView.Regulateur.cs).
+			RegulerCadence(delta);
 
 			// 1b) Consommer une action terminée (volet B) : afficher l'ACK/NAK
 			//     métier et appliquer le snapshot frais joint (un déracinement
@@ -621,8 +624,7 @@ namespace Symbiose
 			//     l'état moteur (alarme + densité abeille). Coût nul hors foyer.
 			TickPiqure((float)delta);
 			_timeAccum += (float)delta;
-			float spw = DebugSecondsPerWeek > 0f ? DebugSecondsPerWeek : SecondsPerWeek;
-			if (_simMode == SimMode.Turbo) spw = 0f;   // step dès que le pont répond
+			float spw = SpwCourant;   // turbo = 0 : step dès que le pont répond (Regulateur.cs)
 			// Le step ne part que si le PIPE est libre : ni step, ni action,
 			// ni fields en vol (maître/esclave 1↔1 — une requête d'instrument
 			// retarde la semaine d'une frame ou deux, jamais elle ne corrompt

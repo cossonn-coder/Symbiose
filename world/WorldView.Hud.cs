@@ -352,7 +352,7 @@ namespace Symbiose
 				+ $"ombres {(ShadowsOn ? "ON" : "OFF")} · "
 				+ $"zoom ×{ZoomSteps[_zoomIndex]}\n"
 				+ $"serveur (banc perf) — tick moteur {srvTick} · "
-				+ $"N plantes {srvN} · RSS {srvRss}\n"
+				+ $"N plantes {srvN} · RSS {srvRss} · {EtatRegulateur()}\n"
 				+ LignePerfRendu();   // draw calls + temps de frame (WorldView.PerfMesure.cs)
 		}
 

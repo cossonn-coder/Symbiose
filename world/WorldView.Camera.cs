@@ -65,6 +65,7 @@ namespace Symbiose
 			if (Input.IsKeyPressed(Key.Up))    dir.Y -= 1f;
 			if (Input.IsKeyPressed(Key.Down))  dir.Y += 1f;
 			if (dir == Vector2.Zero) return;
+			NoterCameraBouge();   // plein régime ~1 s (WorldView.Regulateur.cs)
 			// PanSpeedPx est en px ÉCRAN/s ; la Position caméra vit en canvas
 			// → diviser par le zoom donne un ressenti identique à tout palier.
 			_camera.Position = ClampToWorld(_camera.Position
@@ -93,6 +94,7 @@ namespace Symbiose
 			if (_camera == null) return;
 			int idx = Mathf.Clamp(_zoomIndex + dir, 0, ZoomSteps.Length - 1);
 			if (idx == _zoomIndex) return;   // déjà au palier extrême
+			NoterCameraBouge();   // plein régime ~1 s (WorldView.Regulateur.cs)
 			float oldZ = ZoomSteps[_zoomIndex];
 			float newZ = ZoomSteps[idx];
 			_zoomIndex = idx;
@@ -169,6 +171,7 @@ namespace Symbiose
 		{
 			if (_lastSnap == null) return;   // monde pas encore construit
 			_orientation = (_orientation + dir + 4) % 4;
+			NoterCameraBouge();   // plein régime ~1 s (WorldView.Regulateur.cs)
 			GD.Print($"[WorldView] rotation vue → orientation {_orientation} "
 					 + $"({_orientation * 90}° anti-horaire).");
 			RebuildWorld();

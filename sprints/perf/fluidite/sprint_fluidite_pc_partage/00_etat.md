@@ -48,8 +48,8 @@
 ## Carte des tronçons (FIGÉE 2026-10-28)
 | # | Kickoff | Contenu | Golden | État |
 |---|---|---|---|---|
-| ① | `01_moteur_gc_snapshot.md` | moteur bit-identique : `gc.freeze` + seuils, `_snapshot` mémoïsé par plante ; banc headless n=3 | intact | **fait** (non commité) |
-| ② | `02_regulateur_banc_partage.md` | régulateur de cadence (15 FPS si semaine en retard, plein en Planification / caméra qui bouge) + banc de partage (4 sous-phases A : régulateur off/on × priorité BelowNormal/Normal) | intact | à faire |
+| ① | `01_moteur_gc_snapshot.md` | moteur bit-identique : `gc.freeze` + seuils, `_snapshot` mémoïsé par plante ; banc headless n=3 | intact | **fait** (80ea965) |
+| ② | `02_regulateur_banc_partage.md` | régulateur de cadence (15 FPS si semaine en retard, plein en Planification / caméra qui bouge) + banc de partage (4 sous-phases A : régulateur off/on × priorité BelowNormal/Normal) | intact | **fait** (non commité) |
 | ③ | `03_hauts_paliers.md` | hauts paliers : mesurer l'envoi au GPU (mémoire vidéo, textures créées par image) au cran ×4↔×32, levier si trouvé | intact | à faire |
 | ④ | `04_bilan_protocole.md` | bilan VM + protocole d'un run PC + clôture | intact | à faire |
 
@@ -84,6 +84,47 @@ neuf gc on ×2) → empreintes delta ET complet identiques chaque semaine. Le d�
   auto-invalidante bon marché sans toucher `sim/`, non fait.
 - Tick : non comparable (charge VM montée pendant les runs « après »).
 
+## §2 — ② régulateur de cadence + banc de partage (2026-10-28)
+**Fait** (vue C# seule, golden `fecccded…` intact, pont inchangé, `dotnet build` vert) :
+- `world/WorldView.Regulateur.cs` (neuf) : `RegulerCadence` appelé dans `_Process` juste
+  après `AvancerEtalonnage` → `Engine.MaxFps = 15` si Saison ∧ `_pendingStep != null` ∧
+  `_timeAccum ≥ SpwCourant` ∧ pas de caméra depuis 1 s ; sinon plafond d'origine (lu à la
+  1ʳᵉ image). Ne touche rien pendant la phase B (`_b3RenduCoupe`). `SpwCourant` remplace le
+  calcul de `spw` dans `_Process` (une seule règle). `NoterCameraBouge()` dans
+  `UpdateCameraPan` / `StepZoom` / `RotateView` (pas de glisser caméra au code). F4 : état
+  « régulé 15 FPS / libre » ; rapport de banc : ligne « régulateur ON/OFF : x % du temps régulé ».
+- `core/SimBridge.cs` : `PoserPriorite(bool normale)` (BelowNormal ↔ Normal à chaud ; refus
+  → « non applicable »). Défaut du jeu inchangé (BelowNormal). Fichier à 345 LDC 🟡.
+- `world/WorldView.BancPartage.cs` (neuf) : `--capture-banc-partage=SEC` → A devient
+  A1..A4 (OFF/15 × BelowNormal/Normal), tableau côte à côte + rappel C et B ; réglages du jeu
+  rétablis avant B et à l'abandon. `Banc3Phases.cs` branché (4 points), `PerfMesure.cs` garde
+  le p99. `tools/perf_vm.sh -P SEC` (implique `-3` par défaut).
+- **Argument exact du run PC** : `--capture-banc=full --capture-seed=1521550718
+  --capture-etalonnage=25 --capture-banc-3phases=25,25,20 --capture-banc-partage=20
+  --capture-banc-cadence=1 --capture-banc-semaine=90`
+
+**Mesure VM** (`perf_vm.sh -3 25,25,20 -P 20 -A 1 -W 90 -S 1521550718`) [n=1 run, VM llvmpipe, charge 8-10 : peu fiable] :
+| | s/sem | tick | step vu | img moy | p99 | FPS | régulé |
+|---|---|---|---|---|---|---|---|
+| A1 OFF·BelowNormal | 2,01 | 1 097 | 1 756 | 223 | 424 | 4,5 | 0 % |
+| A2 OFF·Normal* | 1,83 | 1 033 | 1 705 | 216 | 303 | 4,6 | 0 % |
+| A3 15·BelowNormal | 1,83 | 1 045 | 1 772 | 218 | 331 | 4,6 | 0 % |
+| A4 15·Normal* | 2,02 | 1 085 | 1 960 | 220 | 287 | 4,5 | 1 % |
+C 199 ms/image, 5,0 FPS · B 1,67 s/sem, tick 958 ms. *Normal refusé sous Linux
+(« Permission denied ») → A2/A4 sont en fait BelowNormal : leurs écarts avec A1/A3 sont du bruit.
+- Le banc tourne de bout en bout, le régulateur s'engage (A4 1 %) et se dégage ; rien d'autre
+  n'est prouvé sur la VM.
+- **Écart au kickoff** : sur la VM le régulateur ne s'engage presque jamais. Explication la plus
+  probable (déduite des chiffres, non vérifiée au code Godot) : avec des images de ~220 ms, le
+  `delta` de Godot semble plafonné à ~133 ms (8 pas physiques de 1/60 s). `_timeAccum` avance
+  alors ~0,6 fois moins vite que l'horloge murale, donc la semaine « due » arrive juste quand le
+  step revient : « retard step en vol » vaut 0,0-1,4 s en A alors qu'on obtient ~2 s/sem pour
+  1 demandée. Au PC (~60 ms par image) ce plafond n'agit pas, donc le régulateur devrait
+  s'engager. Si le run PC montre « régulé ≈ 0 % » avec s/sem > 1, il faut passer la
+  condition « due » à l'horloge murale (à trancher au ④).
+- Bruit en sortie de Godot (`Can't emit non-existing signal`, `Pages in use…`) après
+  `[banc] FIN` : bruit d'arrêt, le rapport est complet.
+
 ## §REPRISE
-① fait (non commité par le sous-agent). Prochain : tronçon ② `02_regulateur_banc_partage.md`.
+① commité (80ea965), ② fait (non commité par le sous-agent). Prochain : tronçon ③ `03_hauts_paliers.md`.
 Chaque tronçon ajoute ici sa section §N (fait, mesures, écarts) et met à jour la carte.

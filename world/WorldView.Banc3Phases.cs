@@ -61,7 +61,7 @@ namespace Symbiose
 		// Résumé d'une phase pour la synthèse finale.
 		private struct Bilan3
 		{
-			public double Moy, Inexpl, Fps, TickSrv, StepVu, SecSem;
+			public double Moy, Inexpl, Fps, TickSrv, StepVu, SecSem, P99, Regule;
 			public int Sup100, Steps;
 		}
 
@@ -81,6 +81,7 @@ namespace Symbiose
 				if (!float.IsNaN(d) && d > 0f) _b3Durees[i] = d;
 			}
 			_bancMesureSec = _b3Durees[0];
+			PreparerPartage();   // banc de partage : A → 4 sous-phases (BancPartage.cs)
 		}
 
 		// Fin du repos (Etalonnage.cs) : distribution ouverte, cadence posée → phase C.
@@ -99,11 +100,18 @@ namespace Symbiose
 		// Fin de la fenêtre A (état Mesure) : bloc A écrit, cuisson figée, → VersB.
 		private void TerminerPhaseA()
 		{
-			_b3Sb.AppendLine("── phase A — normal (rendu actif, steps à la cadence demandée)");
-			EcrireCadenceMesure(_b3Sb);
-			var d = EcrireDistribution(_b3Sb);
-			EcrirePostesAccelere(_b3Sb);
-			_b3A = Bilan(d);
+			if (PartageActif)
+			{
+				if (!TerminerSousPhase()) return;   // A1..A3 → sous-phase suivante (BancPartage.cs)
+			}
+			else
+			{
+				_b3Sb.AppendLine("── phase A — normal (rendu actif, steps à la cadence demandée)");
+				EcrireCadenceMesure(_b3Sb);
+				var d = EcrireDistribution(_b3Sb);
+				EcrirePostesAccelere(_b3Sb);
+				_b3A = Bilan(d);
+			}
 			BakeQueue.Suspendue = true;
 			_b3Image = Engine.GetProcessFrames();
 			_banc = EtatBanc.VersB;
@@ -127,6 +135,7 @@ namespace Symbiose
 					_bancSemaineMesure = SemaineMoteur;
 					_bancT0 = Maintenant;
 					_banc = EtatBanc.Mesure;
+					if (PartageActif) { EntrerSousPhase(0); return; }   // A1 (BancPartage.cs)
 					GD.Print($"[banc] phase A (normal) {_bancMesureSec} s.");
 					return;
 				case EtatBanc.VersB:
@@ -150,6 +159,7 @@ namespace Symbiose
 					EcrirePostesAccelere(_b3Sb);
 					_b3B = Bilan((0, 0, 0, 0));
 					EcrireSynthese3(_b3Sb);
+					if (PartageActif) EcrireSynthesePartage(_b3Sb);
 					FinBanc(ConstruireRapportPerf(_b3Sb.ToString()));   // rétablit le rendu
 					return;
 			}
@@ -164,6 +174,7 @@ namespace Symbiose
 				Moy = d.Moy, Inexpl = d.Inexpl, Sup100 = d.Sup100, Fps = d.Fps,
 				Steps = _baSteps, TickSrv = _baSrv / n, StepVu = _baClient / n,
 				SecSem = sem > 0 ? (Maintenant - _bancT0) / sem : double.NaN,
+				P99 = _distP99, Regule = PartReguleePct(_bancT0),
 			};
 		}
 
@@ -193,6 +204,7 @@ namespace Symbiose
 				_b3RenduCoupe = false;
 			}
 			BakeQueue.Suspendue = false;
+			RetablirPartage();   // abandon pendant le banc de partage (BancPartage.cs)
 		}
 	}
 }

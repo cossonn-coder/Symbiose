@@ -176,6 +176,22 @@ namespace Symbiose
 			}
 		}
 
+		/// <summary>FLUIDITÉ PC PARTAGE ② (banc de partage) : bascule à chaud le moteur
+		/// en BelowNormal (défaut du jeu) ou Normal. Windows : sans droit particulier.
+		/// Linux : remonter un `nice` exige des droits → refus rapporté « non
+		/// applicable », jamais une erreur. Renvoie l'état pour le rapport.</summary>
+		public string PoserPriorite(bool normale)
+		{
+			if (!IsAlive) return "moteur absent";
+			var voulue = normale ? ProcessPriorityClass.Normal : ProcessPriorityClass.BelowNormal;
+			try
+			{
+				_proc.PriorityClass = voulue;
+				return $"{voulue} posée";
+			}
+			catch (System.Exception e) { return $"{voulue} non applicable ({e.Message})"; }
+		}
+
 		public void Quit()
 		{
 			if (!IsAlive) return;

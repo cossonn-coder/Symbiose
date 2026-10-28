@@ -71,6 +71,7 @@ namespace Symbiose
 		private List<double> _distMs;
 		private ulong _distDebutUs;
 		private double _distDraw, _distPrim, _distRenduCpu, _distRenduGpu;
+		private double _distP99;                // p99 de la dernière fenêtre (banc de partage)
 
 		// Appelé chaque frame depuis _Process (toutes phases).
 		private void MesurerPerfRendu()
@@ -147,6 +148,7 @@ namespace Symbiose
 			double sec = (Time.GetTicksUsec() - _distDebutUs) / 1e6;
 			double moy = 1000.0 * sec / n;
 			double P(double q) => t[System.Math.Min(n - 1, (int)System.Math.Floor(q * n))];
+			_distP99 = P(0.99);   // synthèse du banc de partage (BancPartage.cs)
 			int sup33 = 0, sup100 = 0;
 			foreach (double v in t) { if (v > 33.0) sup33++; if (v > 100.0) sup100++; }
 			var ci = CultureInfo.InvariantCulture;
