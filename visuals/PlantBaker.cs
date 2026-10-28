@@ -51,6 +51,9 @@ namespace Symbiose
 		public static int TotalImages => AtlasPages.Pages;
 		// Banc PERF VUE ④ : cuissons lancées et poses cuites (moyenne poses/cuisson).
 		public static long Cuissons, PosesCuites;
+		// FLUIDITÉ PC PARTAGE ③ : surface CUMULÉE peinte (px des cellules réellement
+		// cuites) — le volume rastérisé au GPU par la cuisson, lu par le rapport Z.
+		public static long PixelsCuits;
 
 		private readonly PlantRenderer _owner;
 
@@ -124,6 +127,7 @@ namespace Symbiose
 				bool peinte = k < _nextUtiles;
 				cell.Brushes[k].Visible = peinte;
 				if (!peinte) continue;
+				PixelsCuits += (long)cells[k].Size.X * cells[k].Size.Y;
 				_owner.CopyDrawStateTo(cell.Brushes[k]);
 				cell.Brushes[k].SetBrushPose(k);   // cellule k = flexion k/7
 			}

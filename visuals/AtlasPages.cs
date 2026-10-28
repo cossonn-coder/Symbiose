@@ -79,7 +79,7 @@ namespace Symbiose
 			// Une nouvelle image = un nouveau rendu de page : on oublie les rectangles
 			// du rendu précédent (leurs pinceaux sont masqués, les gommer les viderait).
 			ulong f = Engine.GetProcessFrames();
-			if (f != _frame) { _rects.Clear(); _frame = f; }
+			if (f != _frame) { _rects.Clear(); _frame = f; AtlasPages.Rendus++; }
 			_rects.Add(r);
 			QueueRedraw();
 		}
@@ -230,12 +230,23 @@ namespace Symbiose
 		// par BakeQueue à chaque image, imprimé avec une image de cuisson lente).
 		public static long CreationUs;
 		public static int Creees;
+		// Compteurs CUMULÉS, jamais remis à zéro (FLUIDITÉ PC PARTAGE ③, rapport Z) :
+		// le journal de zoom en fait des deltas par image. « Rendus » = pages rendues
+		// (une page rendue une fois par image où au moins une cuisson l'a touchée).
+		// « Dédiées » = pages à la taille exacte d'une grande plante (jamais en réserve).
+		public static long CreeesTotal, CreationUsTotal, ReutiliseesTotal, DetruitesTotal, Rendus;
+		public static long DedieesCreeesTotal, DedieesDetruitesTotal;
 
 		private static AtlasPage NouvellePage(Vector2I taille, float zoom, bool dediee)
 		{
 			ulong t0 = Time.GetTicksUsec();
 			try { return CreerPage(taille, zoom, dediee); }
-			finally { CreationUs += (long)(Time.GetTicksUsec() - t0); Creees++; }
+			finally
+			{
+				long us = (long)(Time.GetTicksUsec() - t0);
+				CreationUs += us; Creees++;
+				CreationUsTotal += us; CreeesTotal++;
+			}
 		}
 
 		// RÉSERVE de pages vides (FLUIDITÉ AN 2 ④). Mesuré au banc E VM : créer une
@@ -261,9 +272,11 @@ namespace Symbiose
 				r.Gomme.Scale = new Vector2(1f / zoom, 1f / zoom);
 				r.Vp.CanvasTransform = new Transform2D(0f, new Vector2(zoom, zoom), 0f, Vector2.Zero);
 				_pages.Add(r);
+				ReutiliseesTotal++;
 				return r;
 			}
 			var p = new AtlasPage { Zoom = zoom, Dediee = dediee };
+			if (dediee) DedieesCreeesTotal++;
 			p.Vp = new SubViewport
 			{
 				Size = taille,
@@ -305,6 +318,8 @@ namespace Symbiose
 				return;
 			}
 			TotalBytes -= p.Bytes;
+			DetruitesTotal++;
+			if (p.Dediee) DedieesDetruitesTotal++;
 			if (GodotObject.IsInstanceValid(p.Vp)) p.Vp.QueueFree();
 		}
 	}

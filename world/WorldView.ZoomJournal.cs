@@ -13,6 +13,10 @@
 //  - `--capture-zoom-balayage=<s>` (tools/perf_vm.sh -Z) : balayage scripté
 //    ×0,5 → ×32 → ×0,5, s secondes par palier, rapport imprimé puis sortie.
 // C'est la MESURE « avant » des tronçons ② ③ : il ne corrige rien.
+// FLUIDITÉ PC PARTAGE ③ : colonnes « GPU » — ce qui part vers la carte graphique
+// au cran (WorldView.ZoomGpu.cs) : mémoire vidéo / textures / tampons, pages
+// d'atlas créées / réutilisées / détruites, rendus de page, cuissons, pixels cuits,
+// sur la fenêtre ET dans la pire image.
 //
 // 📖 Pédagogie (côté embarqué) : même idée que PerfAcoups.cs — un « trigger »
 // d'oscilloscope, mais déclenché par un ÉVÉNEMENT (le changement de palier) et non
@@ -43,12 +47,15 @@ namespace Symbiose
 			public long DecorDessins0;
 			public bool Fenetre = true, SuiviFile = true;
 			public readonly long[] PostesPire = new long[PerfPostes.Nombre];
+			public CompteursGpu Gpu0, GpuFin, GpuPire;   // départ, dernier relevé, delta de la pire image
+			public double VramPic;                        // pic de mémoire vidéo − départ (octets)
 		}
 
 		private readonly List<ChangementPalier> _zj = new();
 		private ChangementPalier _zjCour;
 		private readonly long[] _zjPrec = new long[PerfPostes.Nombre];
 		private readonly long[] _zjTmp = new long[PerfPostes.Nombre];
+		private CompteursGpu _zjGpuPrec;
 
 		/// <summary>Un palier vient de changer (appelé APRÈS redraw + culling, pour que
 		/// la file de cuisson de départ soit déjà remplie).</summary>
@@ -63,6 +70,7 @@ namespace Symbiose
 				DecorDessins0 = DecorLayer.Dessins,
 			};
 			c.FileMax = c.FileDepart;
+			c.Gpu0 = c.GpuFin = _zjGpuPrec = CompteursGpu.Lire();
 			_zj.Add(c);
 			if (_zj.Count > ZoomJournalMax) _zj.RemoveAt(0);
 			_zjCour = c;
@@ -79,6 +87,9 @@ namespace Symbiose
 			if (c.Fenetre)
 			{
 				PerfPostes.Copier(_zjTmp);
+				var gpu = CompteursGpu.Lire();
+				c.GpuFin = gpu;
+				if (gpu.Vram - c.Gpu0.Vram > c.VramPic) c.VramPic = gpu.Vram - c.Gpu0.Vram;
 				c.Images++;
 				c.SommeMs += frameMs;
 				if (frameMs > 33.0) c.Sup33++;
@@ -87,7 +98,9 @@ namespace Symbiose
 				{
 					c.PireMs = frameMs;
 					for (int i = 0; i < PerfPostes.Nombre; i++) c.PostesPire[i] = _zjTmp[i] - _zjPrec[i];
+					c.GpuPire = gpu.Moins(_zjGpuPrec);
 				}
+				_zjGpuPrec = gpu;
 				System.Array.Copy(_zjTmp, _zjPrec, PerfPostes.Nombre);
 				if (DecorLayer.Dessins != c.DecorDessins0)
 				{
@@ -121,6 +134,8 @@ namespace Symbiose
 				+ $"· plantes {_plantNodes.Count} · monde « {_configLancee} » seed {Seed}");
 			sb.AppendLine("  fenêtre = ~1 s après le changement (≥ 3 images) ; décor = dernier _Draw du "
 				+ "décor dans la fenêtre (— = pas de redessin) ; file = plantes à cuire à l'écran/marge");
+			sb.AppendLine("  GPU = deltas (vidéo/textures/tampons en Mo, Godot) ; pages créées neuves "
+				+ "(ms de création) / réservées resservies / détruites ; rendus = pages rendues ; Mpx = surface cuite");
 			foreach (var c in _zj)
 			{
 				string decor = c.DecorMs < 0 ? "—" : string.Create(ci, $"{c.DecorMs:F1} ms ({c.DecorSommets} sommets)");
@@ -131,6 +146,8 @@ namespace Symbiose
 					$"  ×{c.Avant}→×{c.Apres} : pire {c.PireMs:F1} ms · somme {c.SommeMs:F0} ms / {c.Images} images · "
 					+ $">33 : {c.Sup33} · >100 : {c.Sup100} · décor {decor} · invalidées {c.Invalidees} · "
 					+ $"file {c.FileDepart} (max {c.FileMax}) {vide} · pire image : {PerfPostes.Detail(c.PostesPire, 0.5)}"));
+				sb.AppendLine("      GPU fenêtre : " + c.GpuFin.Moins(c.Gpu0).Texte(c.VramPic)
+					+ " | pire image : " + c.GpuPire.Texte(-1));
 			}
 			EcrireSyntheseZoom(sb);
 			return sb.ToString();
