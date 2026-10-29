@@ -28,6 +28,10 @@
 2. **Sprint B « ce qui est cassé à l'écran »** (vue, [D112](DETTE.md)) : bêtes et carpophores non dessinés,
    maison en verre, périphérie qui exige F10, bugs de la heatmap du vent + vent en tête de F6, jauges Maj+F3,
    F11 « spray ».
+   **CONÇU le 2026-10-29** (`/conception D112`, périmètre = tout D112 + brief DA 16 bits de Nico) → sprint
+   `sprints/rendu/pixelart/sprint_casse_ecran/` (7 tronçons, golden intact : charte + banc de mesure, défauts,
+   palette indexée + éclat côté soleil, paliers hauts dans la même grammaire, faune en icônes, lisière animée,
+   bilan) — **prochain = `/sprint-auto sprint_casse_ecran`**. Nuit → [D117](DETTE.md).
 3. **À concevoir ensuite** : rosace des vents (objet à débloquer à l'atelier : direction + force) ;
    refonte esthétique de la périphérie (falaise / rivière / forêt sans continuité) ; zooms forts trop loin
    de la forme réelle des feuilles.

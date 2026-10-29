@@ -201,6 +201,7 @@ pointeur ci-dessous. Ne plus écrire le contenu des entrées ici.
 - [2026-10-26 — Sprint **FLUIDITÉ PC** (D116 + lisière D112 c/j) — CLOS (`/sprint-auto`, ①→④) : banc E en 3 phases + instruments réparés, bug F10 tracé, lisière DA SNES en patchwork (prairie, friche, forêt, rivière scintillante, falaise en strates) toujours 1 draw call ; golden intact `fecccded…`, pont 0.5.58 ; attend 1 run PC → 2ᵉ `/conception D116`](journal/159_2026-10-26_sprint-fluidite-pc-CLOS.md)
 - [2026-10-26 — Sprint **FLUIDITÉ PC LEVIERS** (2ᵉ temps D116) — CLOS (`/sprint-auto`, ①→⑤) : outil à-coup de zoom (touche Z), butineurs+pollen en lot, décor prêt par palier, pont delta 0.6.0 (2,4 → 0,9 Mo), lisière côté caméra devant le jardin ; VM 2,80 → 2,10 s/sem [n=1 run] ; golden intact `fecccded…` ; attend 1 run PC → 3ᵉ temps D116](journal/160_2026-10-26_sprint-fluidite-pc-leviers-CLOS.md)
 - [2026-10-28 — Sprint **FLUIDITÉ PC PARTAGE** (3ᵉ temps D116) — CLOS (`/sprint-auto`, ①→④) : gc.freeze + `_snapshot` mémoïsé par segment, régulateur 15 FPS + banc de partage, instrumentation GPU du rapport Z (pages dédiées), bilan VM A 2,10 → 1,82 s/sem [n=1 run, VM] ; golden intact `fecccded…` ; attend 1 run PC](journal/161_2026-10-28_sprint-fluidite-pc-partage-CLOS.md)
+- [2026-10-29 — Conception **CE QUI EST CASSÉ À L'ÉCRAN** (D112) — FIGÉE : tout D112 + brief DA 16 bits de Nico ; recette par espèce identique à tous les paliers, éclat côté soleil, palette indexée, faune en icônes, lisière animée ; 7 tronçons, golden intact](journal/162_2026-10-29_conception-casse-ecran-FIGEE.md)
 
 ---
 
