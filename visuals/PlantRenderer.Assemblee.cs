@@ -53,8 +53,9 @@ namespace Symbiose
 		private static int _kitLargeur;
 
 		/// <summary>Vrai pendant le dessin d'un pinceau qui cuit en palette indexée
-		/// (③) : les couleurs posées sont des CODES, pas des couleurs.</summary>
-		private bool Indexe => IsBrush && PaletteIndexee.Active && WorldView.CurrentZoom < PaliersHautsMinZoom;
+		/// (③) : les couleurs posées sont des CODES, pas des couleurs. Depuis ④, à
+		/// TOUS les paliers (même grammaire ×0,5 → ×32, PlantRenderer.Motifs.cs).</summary>
+		private bool Indexe => IsBrush && PaletteIndexee.Active;
 
 		// Couleur littérale → son code de palette quand le pinceau cuit indexé.
 		private Color Lit(Color c) => Indexe ? PaletteIndexee.Litterale(c) : c;

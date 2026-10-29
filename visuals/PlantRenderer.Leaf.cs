@@ -142,7 +142,7 @@ namespace Symbiose
 			// Plancher de rayon : feuille trop petite → 1 ellipse 1 valeur nue.
 			if (rx < LeafFloorRadiusPx)
 			{
-				DrawEllipse(c, rx, ry, col);
+				DrawEllipse(c, rx, ry, Lit(col));   // code au pinceau indexé (④)
 				return;
 			}
 
@@ -218,7 +218,7 @@ namespace Symbiose
 		// Plante vivante : NervureLargeurPx (fine à ×16, cf. PaliersHauts) au lieu
 		// d'1 px canvas = 16 px internes à ×16, aussi large que la tige.
 		private void DrawVein(Vector2 a, Vector2 b, Color col) =>
-			DrawLine(a, b, col, _structure != null ? NervureLargeurPx : 1f, antialiased: false);
+			DrawLine(a, b, Lit(col), _structure != null ? NervureLargeurPx : 1f, antialiased: false);
 
 		// --- Penninerve (Elliptique / Lanceolee / Cordee) --------------------
 		// 1 médiane qui suit l'axe + 2-4 latérales obliques par paires opposées,

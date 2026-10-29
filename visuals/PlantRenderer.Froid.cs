@@ -101,19 +101,19 @@ namespace Symbiose
 					}
 					float depth = 0.45f + 0.25f * Hash01(67 + k, i, j);
 					pts[2] = c + new Vector2(Mathf.Cos(a) * rx, Mathf.Sin(a) * ry) * (1f - depth);
-					DrawColoredPolygon(pts, LeafHoleColor);
+					DrawColoredPolygon(pts, Trou(LeafHoleColor));
 				}
 			}
 			// Givre : liseré clair sur une part des feuilles (les mêmes, au hash).
 			if (fin && _frost > 0f && Hash01(59, i, j) < 0.4f + 0.6f * _frost)
-				DrawEllipseOutline(c, rx, ry, FrostEdge, Px(r * 0.08f));
+				DrawEllipseOutline(c, rx, ry, Lit(FrostEdge), Px(r * 0.08f));
 			// Neige : calotte sur le dessus, plus probable en haut de la plante.
 			float top = Mathf.Clamp(z / Mathf.Max(_heightCm, 1f), 0f, 1f);
 			if (_snow > 0f && Hash01(47, i, j) < _snow * (0.55f + 0.45f * top))
 			{
 				Vector2 cap = c - new Vector2(0f, ry * 0.55f);
-				DrawEllipse(cap, rx * 0.95f, ry * 0.55f, SnowShade);
-				DrawEllipse(cap - new Vector2(0f, ry * 0.12f), rx * 0.8f, ry * 0.4f, SnowColor);
+				DrawEllipse(cap, rx * 0.95f, ry * 0.55f, Lit(SnowShade));
+				DrawEllipse(cap - new Vector2(0f, ry * 0.12f), rx * 0.8f, ry * 0.4f, Lit(SnowColor));
 			}
 		}
 
@@ -126,7 +126,7 @@ namespace Symbiose
 			if (Hash01(53, k, 0) >= _snow * (0.25f + 0.75f * horiz)) return;
 			float sw = Px(Mathf.Max(w * 0.5f, 0.5f));
 			Vector2 up = new Vector2(0f, -(w + sw) * 0.5f);
-			DrawLine(p1 + up, p2 + up, SnowColor, sw, antialiased: false);
+			DrawLine(p1 + up, p2 + up, Lit(SnowColor), sw, antialiased: false);
 		}
 
 		/// <summary>Calotte de neige sur la couronne des paliers bas (×0,5-×2, D106 T5) :

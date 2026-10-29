@@ -512,6 +512,8 @@ namespace Symbiose
 		private void DrawSegments()
 		{
 			Vector3 collet = _structure.ColletCm;
+			// CASSÉ À L'ÉCRAN ④ : racines en éventail + halo dithéré sous un arbre.
+			DrawAncrage();
 
 			// Tri par épaisseur DÉCROISSANTE : le bois épais (tronc) se dessine
 			// d'abord (dessous), les fines brindilles par-dessus — comme _panel.
@@ -584,7 +586,7 @@ namespace Symbiose
 				Vector2 p1 = Iso(s.Base.X - collet.X, s.Base.Y - collet.Y, s.Base.Z * zf);
 				Vector2 p2 = Iso(tip.X - collet.X, tip.Y - collet.Y, tip.Z * zf);
 				float w = Mathf.Max(1f, Mathf.Round(s.ThicknessCm * WorldView.PxPerCmX * WoodWidthFactor));
-				DrawLine(p1, p2, DeadWoodColor, w, antialiased: false);
+				DrawLine(p1, p2, Lit(DeadWoodColor), w, antialiased: false);
 			}
 		}
 

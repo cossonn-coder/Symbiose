@@ -261,6 +261,8 @@ namespace Symbiose
 			// 1) masse pleine ombrée.
 			var full = new Vector2[norm.Length];
 			for (int k = 0; k < norm.Length; k++) full[k] = ToScreen(norm[k], 1f, Vector2.Zero);
+			// CASSÉ À L'ÉCRAN ④ : le contour fidèle est rempli de motifs (Motifs.cs).
+			if (_motifs) { RemplirMotif(c, full, baseCol); return; }
 			DrawColoredPolygon(full, shade);
 
 			// 2) calotte éclairée : copie réduite décalée au sud (comme la calotte

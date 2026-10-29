@@ -33,6 +33,10 @@ void fragment() {
 	vec4 t = texture(TEXTURE, UV);
 	if (t.a < 0.5) {
 		COLOR = vec4(0.0);
+	} else if (int(round(t.b * 255.0)) < 128) {
+		// ④ filet : pixel sans drapeau « indexé » (tracé resté littéral) → sa couleur
+		// telle quelle (image prémultipliée, remise en alpha droit).
+		COLOR = vec4(t.rgb / t.a, 1.0) * v_mod;
 	} else {
 		ivec3 o = ivec3(round(t.rgb * 255.0));
 		int id = o.r + 256 * o.g;

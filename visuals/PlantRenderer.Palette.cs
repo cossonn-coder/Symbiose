@@ -200,6 +200,10 @@ namespace Symbiose
 		// (dessinés hors de cette fenêtre) gardent leur calotte normale.
 		private void DrawVolumeEllipse(Vector2 center, float rx, float ry, Color baseCol)
 		{
+			// CASSÉ À L'ÉCRAN ④ (Motifs.cs) : limbe = motifs en dôme ; petit organe
+			// cuit indexé = dôme plein qui s'éclaire côté soleil.
+			if (_motifs) { RemplirMotif(center, EllipsePoints(center, rx, ry, 10), baseCol); return; }
+			if (Indexe) { RemplirDome(center, rx, ry, baseCol, false); return; }
 			DrawEllipse(center, rx, ry, HueShift(baseCol, -OrganShade));
 			DrawEllipse(center + SouthDir() * (ry * 0.5f),
 						rx * _litFactor, ry * _litFactor, HueShift(baseCol, OrganLit));
@@ -207,6 +211,8 @@ namespace Symbiose
 
 		private void DrawVolumeCircle(Vector2 center, float rad, Color baseCol)
 		{
+			// ④ : fleur / fruit = tache pure en dôme, contour du ton le plus sombre.
+			if (Indexe) { RemplirDome(center, rad, rad, baseCol, true); return; }
 			DrawCircle(center, rad, HueShift(baseCol, -OrganShade));
 			DrawCircle(center + SouthDir() * (rad * 0.32f),
 					   rad * 0.72f, HueShift(baseCol, OrganLit));
@@ -218,6 +224,8 @@ namespace Symbiose
 		// sud — seulement si le trait est assez large pour le montrer (≥3 px).
 		private void DrawBranch(Vector2 p1, Vector2 p2, Color col, float w)
 		{
+			// ④ : stries + flancs orientés (Motifs.cs) — même recette indexée/littérale.
+			if (AuPalier(PaliersHautsMinZoom)) { DrawEcorce(p1, p2, col, w); return; }
 			DrawLine(p1, p2, HueShift(col, -BranchShade), w, antialiased: false);
 			if (w >= 3f)
 			{

@@ -126,7 +126,7 @@ namespace Symbiose
 			// Recuisson SUR PLACE : jusqu'au Commit, on n'affiche que les cellules
 			// peintes à la fois avant et après (jamais une cellule vidée cette frame).
 			_nextUtiles = _owner.BakePosesUtiles;
-			_nextIndexee = PaletteIndexee.Active && zoom < PlantRenderer.PaliersHautsMinZoom;
+			_nextIndexee = PaletteIndexee.Active;   // tous paliers depuis CASSÉ À L'ÉCRAN ④
 			cell.Utiles = cell == _shown ? Mathf.Min(cell.Utiles, _nextUtiles) : _nextUtiles;
 			for (int k = 0; k < poses; k++)
 			{

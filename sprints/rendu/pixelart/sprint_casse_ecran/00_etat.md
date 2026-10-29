@@ -25,7 +25,7 @@ Perf : `tools/perf_vm.sh`.
 | ① | `01_charte_banc_mesure.md` | **fait** (2026-10-29, non commité) |
 | ② | `02_defauts.md` — (b)(n)(e)(d)(h) | **fait** (2026-10-29, non commité) |
 | ③ | `03_palette_indexee_soleil.md` — (f)(l), paliers bas | **fait** (2026-10-29, non commité) |
-| ④ | `04_paliers_hauts.md` — (i)(m) | à faire |
+| ④ | `04_paliers_hauts.md` — (i)(m) | **fait** (2026-10-30, non commité ; à-coup de cran +27 % à confirmer) |
 | ⑤ | `05_faune_icones.md` — (a) | à faire |
 | ⑥ | `06_lisiere_decor.md` — (k) + résidus lisière | à faire |
 | ⑦ | `07_bilan_ecran.md` — planche, mesures, protocole F5 | à faire |
@@ -171,8 +171,52 @@ Perf : `tools/perf_vm.sh`.
 - **F5 Nico** : ×1/×2 au lever, midi, coucher ; tourner la caméra (R) ; F11 avant/après ;
   vérifier le fondu d'apparition et le flash d'action sur une plante cuite.
 
+### ④ Paliers hauts — fait
+- **Grammaire unique** — `visuals/PlantRenderer.Motifs.cs` (nouveau, 228 LDC) : à ×4+ chaque limbe
+  (et chaque masse ×4, et le contour fidèle ×16+) est REMPLI d'une texture de motifs (feuille ≈ 3×4,
+  4 formes au hash, creux = ton 0 dans les interstices, plus nombreux vers le bas), calée 1 texel =
+  1 px interne → le motif garde sa taille à l'écran, la feuille en porte plus en zoomant. Masse de
+  valeur = DÔME : cœur (orientations mêlées) + couronne de quads orientés vers l'extérieur. Coût
+  CONSTANT par feuille quel que soit le palier (1 polygone + ~10 quads ; la texture 2560×512 porte
+  les motifs, générée une fois en octets bruts). Bois : flancs orientés + stries 2-3 tons au hash.
+  Arbres : racines en éventail (4-5) + halo de sol dithéré #2c3c1e. Fleurs/fruits : dôme pur +
+  contour du ton 0 de LEUR rampe (`DrawPoint` à ×4). Trous du limbe = creux de la rampe du limbe.
+- **Indexé à TOUS les paliers** : `Indexe` et `PlantBaker._nextIndexee` ne testent plus le palier ;
+  tous les tracés ×4+ passent par `Lit()`/`Ton()` (Leaf, Flower, Froid, Meteo, PaliersHauts, Organs,
+  squelette). Filet ajouté au shader : pixel sans bit 7 = littéral tel quel. Dessin DIRECT (plante >
+  2048 px internes : arbres dès ×8) = même recette en littéral, soleil fixe haut-gauche.
+- ⚠️ **Prescription réfutée (orchestrateur/①)** : le cerisier invisible à ×16 n'est PAS un défaut de
+  rendu — la planche cadrait le centre de la boîte d'un houppier clairsemé (un trou). Corrigé dans
+  `WorldView.Planche.cs` : dès ×8, visée = axe du collet à mi-hauteur (×2/×4 co-centrés gardés pour
+  la continuité). Vérifié : aulne ×16 visible (`/tmp/claude-1000/da/c4/ap_foret/`).
+- ⚠️ **Écart** : pas d'estampille « un tracé par motif » (∝ zoom², explosait ×16/×32) → texture
+  UV-mappée ; ④b non nécessaire. `capture_vm.sh -r 1 -z 2` (défaut d'outil signalé en ③) NON traité.
+- **Banc** (luxuriance, planche sur une violette, paire test/réf `-O -x Weather,MacroLife,House`
+  [n=1 capture par cellule], avant = stash du même arbre) :
+
+| palier | aplat méd (> 24 px) avant → après | tons lus méd | éclat côté soleil |
+|---|---|---|---|
+| ×4 | 86 px (5/5) → 34 px (4/5 ; le reste = tuteur) | 4 → 11 | 4/5 → 4/5 |
+| ×8 | 15 (12/390) → 1 (2/124) | 1 → 2 | 88/390 → 67/124 |
+| ×16 | 66 (211/270) → 14 (7/215) | 1 → 1 | 43/270 → 67/215 |
+| ×32 | 15 488 → 2 079 (1 sprite) | 5 → 15 | 0/1 → 1/1 |
+
+  ×8/×16 : la paire isole mal (centaines de « sprites » = sol/tapis) — médianes bruitées.
+  **Continuité ×2→×4** (script hors dépôt, ΔE OKLab moyen ×4 réduit vs ×2 flouté 4×4, sur le
+  masque plante) : 0,119 → 0,111 [n=1, 52 blocs, petite violette] — baisse MODESTE, pas « nette » :
+  la géométrie diffère encore (×2 = touffes le long des rameaux, ×4 = limbes déportés). Piste ⑦/dette.
+- **Perf** (même build, avant = stash) : banc E ×4 frame 92,8 → 98,3 ms (+6 % [n=1, charge VM 15 vs
+  1,4]) ; draw calls 102 → 98. Balayage Z : pire cran 341 ms → 435 ms (+27 % [2ᵉ run, 1ᵉʳ run
+  aberrant à 3,2 s sous charge 5,6 ; n=1 chacun]) — ×2→×4 315 → 431, ×8→×4 306 → 435. **Hors
+  budget « pas pire qu'avant » si confirmé** : à remesurer au PC (cuisson des limbes ~5× plus de
+  tracés). Captures : `/tmp/claude-1000/da/c4/`.
+- **F5 Nico** : zoomer ×2 → ×32 sur un pommier et une touffe (« même plante, plus de détails ») ;
+  tourner le soleil (éclat des limbes et des troncs) ; F11 avant/après ; regarder le halo au pied
+  d'un arbre (taille réglable `AncrageMaxPx`) et l'à-coup de zoom ×2↔×4.
+
 ## §REPRISE
-Lire `CLAUDE.md` + ce fichier + le kickoff du premier tronçon « à faire » (④ `04_paliers_hauts.md`).
-④ réutilise l'encodage ③ (§Notes ③) : cuire les paliers hauts en codes + `PaletteIndexee`.
+Lire `CLAUDE.md` + ce fichier + le kickoff du premier tronçon « à faire » (⑤ `05_faune_icones.md`).
+⑤ réutilise l'encodage ③ (§Notes ③) et `Ton()`/`RemplirDome()` de ④ (`PlantRenderer.Motifs.cs`).
+Reste ouvert de ④ : à-coup de cran ×2↔×4 (+27 % VM, à confirmer) et continuité ×2→×4 modeste.
 Lancement : `/sprint-auto sprint_casse_ecran`. Valider chaque tronçon visuel au banc :
 protocole et ligne de base en §Notes ① (`tools/mesure_da.py`, `capture_vm.sh -O -F`).

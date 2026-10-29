@@ -84,7 +84,7 @@ namespace Symbiose
 				float rad = 1.5f + 4f * t;                    // rayon croissant
 				Vector2 p = head + new Vector2(Mathf.Cos(a) * rad, Mathf.Sin(a) * rad)
 							- new Vector2(0f, t * 6f);        // léger tirage vers le haut
-				DrawLine(prev, p, TendrilColor, 1.2f);
+				DrawLine(prev, p, Lit(TendrilColor), 1.2f);
 				prev = p;
 			}
 		}
@@ -260,6 +260,9 @@ namespace Symbiose
 				// point de devenir illisible côté nord. Sain (`_colorAmount=0`) → 1
 				// (SS² plein). Remis à 1 après la boucle (branches/fruits/fleurs intacts).
 				_coolShiftScale = Mathf.Lerp(1f, ColorCoolShiftFloor, _colorAmount);
+				// CASSÉ À L'ÉCRAN ④ : les volumes de la fenêtre feuilles deviennent des
+				// motifs estampillés (PlantRenderer.Motifs.cs), masses ×4 comprises.
+				_motifs = true;
 				// Palier ×4 (D106 T6) : des MASSES de feuillage, pas chaque feuille.
 				if (!AuPalier(PalierOrganesZoom))
 					DrawMassesFeuillage(collet, pal, automne, density);
@@ -307,6 +310,7 @@ namespace Symbiose
 			// Fin de la fenêtre feuilles : on REMET la calotte par défaut pour que
 			// fleurs/fruits (DrawVolumeCircle, plus bas) ne soient PAS étiolés.
 			_litFactor = LitFactorDefault;
+			_motifs = false;
 			// … et le froid PLEIN pour fruits/fleurs/silhouette (repli T3 limbe-only).
 			_coolShiftScale = 1f;
 
@@ -451,7 +455,7 @@ namespace Symbiose
 			// On s'arrête un peu avant le centre du limbe : le limbe (dessiné juste
 			// après) recouvre la jonction, seule la base du pétiole reste visible.
 			Vector2 petTip = insert.Lerp(leaf, 0.75f);
-			DrawLine(insert, petTip, green, w, antialiased: false);
+			DrawLine(insert, petTip, Lit(green), w, antialiased: false);
 		}
 
 		// Génère les sommets d'une ellipse alignée écran (partagés entre le plein et

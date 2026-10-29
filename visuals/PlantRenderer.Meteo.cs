@@ -77,10 +77,10 @@ namespace Symbiose
 			float z = WorldView.CurrentZoom;
 			float s = Mathf.Max(1f, Mathf.Round(r * 0.1f * z)) / z;
 			Vector2 at = ((c + SouthDir() * (r * 0.35f) - new Vector2(0f, r * 0.2f)) * z).Floor() / z;
-			DrawRect(new Rect2(at, new Vector2(s, s)), GlintColor);
+			DrawRect(new Rect2(at, new Vector2(s, s)), Lit(GlintColor));
 			// Deuxième pixel en goutte qui perle, sur une feuille sur deux.
 			if (Hash01(43, i, j) < 0.5f)
-				DrawRect(new Rect2(at + new Vector2(s, s), new Vector2(s, s)), GlintColor);
+				DrawRect(new Rect2(at + new Vector2(s, s), new Vector2(s, s)), Lit(GlintColor));
 		}
 	}
 }

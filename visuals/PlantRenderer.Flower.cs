@@ -131,7 +131,7 @@ namespace Symbiose
 				DrawVolumeCircle(c + new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * (r * 0.9f),
 								 r * 0.65f, pal.Flower);
 			}
-			DrawCircle(c, r * 0.5f, FlowerHeart);
+			DrawCircle(c, r * 0.5f, Lit(FlowerHeart));
 		}
 
 		// --- Ombelle (Apiaceae) : N petites taches au bout de pédicelles --------
@@ -147,7 +147,7 @@ namespace Symbiose
 				float a = Mathf.Tau * k / n;
 				float len = spread * (0.7f + 0.5f * Hash01(53, i, j + k));
 				Vector2 tip = c + new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * len;
-				DrawLine(c, tip, pedicel, 1f, antialiased: false);
+				DrawLine(c, tip, Lit(pedicel), 1f, antialiased: false);
 				DrawVolumeCircle(tip, r * 0.32f, pal.Flower); // fleuron au bout
 			}
 		}
@@ -169,7 +169,7 @@ namespace Symbiose
 			}
 			// disque central : cœur de fleurons bruns-dorés (2 valeurs).
 			DrawVolumeCircle(c, r * 0.6f, FruitRotten); // cœur sombre du capitule
-			DrawCircle(c, r * 0.3f, FlowerHeart);       // centre lumineux
+			DrawCircle(c, r * 0.3f, Lit(FlowerHeart));       // centre lumineux
 		}
 
 		// --- Papilionacée (Fabaceae) : étendard + 2 ailes + carène --------------
@@ -185,7 +185,7 @@ namespace Symbiose
 			DrawVolumeCircle(c + cross * (r * 0.6f), r * 0.5f, pal.Flower);          // aile droite
 			DrawVolumeCircle(c - cross * (r * 0.6f), r * 0.5f, pal.Flower);          // aile gauche
 			DrawEllipse(c - axis * (r * 0.45f),
-						r * 0.9f * p.Aspect, r * 0.75f, HueShift(pal.Flower, OrganLit)); // étendard éclairé
+						r * 0.9f * p.Aspect, r * 0.75f, Lit(HueShift(pal.Flower, OrganLit))); // étendard éclairé
 		}
 
 		// --- Épi (Lamiaceae/Brassicaceae) : pile verticale de fleurons ----------

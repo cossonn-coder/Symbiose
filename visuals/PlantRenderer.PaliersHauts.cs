@@ -112,7 +112,7 @@ namespace Symbiose
 			{
 				Vector2 c = Iso(sites[k].X - collet.X, sites[k].Y - collet.Y, sites[k].Z);
 				if (organes) DrawFlowerShape(c, pal, 71, k);
-				else DrawCircle(c, PointFleurPx, pal.Flower);
+				else DrawPoint(c, PointFleurPx, pal.Flower);
 			}
 		}
 
@@ -132,13 +132,23 @@ namespace Symbiose
 				// masse → rayon (FRUIT_MASSE=0.15 côté moteur → ~4.5 px ; borné).
 				float rad = 3.0f + Mathf.Min(f.Masse, 0.3f) * 10f;
 				Color col = FruitColor(pal, f.Maturite);
-				if (!organes) { DrawCircle(c, rad * PointFruitPart, col); continue; }
-				// SS② : globe en 2 valeurs, PUIS le reflet spéculaire blanc.
+				if (!organes) { DrawPoint(c, rad * PointFruitPart, col); continue; }
+				// SS② : globe en 2 valeurs, PUIS le reflet spéculaire blanc. ④ indexé :
+				// le globe est un dôme qui s'éclaire côté soleil — pas de reflet fixe.
 				DrawVolumeCircle(c, rad, col);
-				DrawCircle(c - new Vector2(rad * 0.3f, rad * 0.3f),
-						   rad * 0.3f, new Color(1f, 1f, 1f, 0.45f));
+				if (!Indexe)
+					DrawCircle(c - new Vector2(rad * 0.3f, rad * 0.3f),
+							   rad * 0.3f, new Color(1f, 1f, 1f, 0.45f));
 				if (pruine) DrawSemis(c, rad * 0.8f, rad * 0.8f, 8, 101, k, 0, PruineColor);
 			}
+		}
+
+		// Point de fleur / de fruit (×4) — CASSÉ À L'ÉCRAN ④ : tache de couleur PURE,
+		// contour 1 px du ton le plus sombre de sa propre rampe (brief : petits objets).
+		private void DrawPoint(Vector2 c, float r, Color col)
+		{
+			DrawCircle(c, r + PixelInterne, Ton(col, 0));
+			DrawCircle(c, r, Ton(col, PaletteIndexee.TonBase));
 		}
 
 		// ---------------------------------------------------------------------------
@@ -164,20 +174,20 @@ namespace Symbiose
 			int holes = Mathf.CeilToInt(bite * 4f);          // 0 à 4 morsures
 			for (int k = 0; k < holes; k++)
 				DrawCircle(PointDansLimbe(c, r, 23 + k, 29 + k, i, j, 0.3f, 0.55f),
-						   r * 0.22f, LeafHoleColor);
+						   r * 0.22f, Trou(LeafHoleColor));
 			if (_gel > 0f)
-				DrawEllipseOutline(c, r * 1.15f, r * 0.65f, GelEdgeColor, Mathf.Max(1f, _gel * 2.5f));
+				DrawEllipseOutline(c, r * 1.15f, r * 0.65f, Lit(GelEdgeColor), Mathf.Max(1f, _gel * 2.5f));
 			// Sécheresse : nécrose MARGINALE (le bord sèche d'abord), après le gel
 			// pour qu'un gel plus fort reste lisible au-dessus d'elle.
 			else if (_drought > 0f)
-				DrawEllipseOutline(c, r * 1.15f, r * 0.65f * LeafOpen, SecheEdgeColor,
+				DrawEllipseOutline(c, r * 1.15f, r * 0.65f * LeafOpen, Lit(SecheEdgeColor),
 								   Mathf.Max(PixelInterne, r * 0.15f * _drought));
 			// maladie : salt NEUF (37/41) ≠ criblage (23/29) → jamais superposés ;
 			// rayon r*0.12 << r*0.22 du criblage (ponctuation, pas morsure).
 			int spots = Mathf.CeilToInt(_maladie * 5f);      // 0 à 5 taches
 			for (int k = 0; k < spots; k++)
 				DrawCircle(PointDansLimbe(c, r, 37 + k, 41 + k, i, j, 0.2f, 0.65f),
-						   r * 0.12f, LeafSpotColor);
+						   r * 0.12f, Lit(LeafSpotColor));
 		}
 
 		// Un point du limbe au hash : angle (canal ca), rayon relatif dans
@@ -237,8 +247,8 @@ namespace Symbiose
 				var u = new Vector2(Mathf.Cos(a), Mathf.Sin(a));
 				Vector2 bord = c + new Vector2(u.X * r * 1.15f, u.Y * r * 0.65f);
 				Vector2 pointe = bord + u * r * (glandes ? 0.4f : 0.18f);
-				DrawLine(bord, pointe, glandes ? pal.FruitRipe : PoilColor, px, antialiased: false);
-				if (glandes) DrawCircle(pointe, 1.5f * px, GluColor);
+				DrawLine(bord, pointe, Lit(glandes ? pal.FruitRipe : PoilColor), px, antialiased: false);
+				if (glandes) DrawCircle(pointe, 1.5f * px, Lit(GluColor));
 			}
 		}
 
@@ -252,7 +262,7 @@ namespace Symbiose
 				float a = Hash01(canal, i, j * 31 + k) * Mathf.Tau;
 				float d = Mathf.Sqrt(Hash01(canal + 1, i, j * 31 + k));
 				Vector2 p = c + new Vector2(Mathf.Cos(a) * rx * d, Mathf.Sin(a) * ry * d);
-				DrawRect(new Rect2(p, new Vector2(px, px)), col);
+				DrawRect(new Rect2(p, new Vector2(px, px)), Lit(col));
 			}
 		}
 
@@ -271,9 +281,9 @@ namespace Symbiose
 				for (int side = -1; side <= 1; side += 2)
 				{
 					Vector2 bout = ancre + (cross * side + axis * 0.3f).Normalized() * reach;
-					DrawLine(ancre, bout, vein, px, antialiased: false);
+					DrawLine(ancre, bout, Lit(vein), px, antialiased: false);
 					DrawLine(bout, bout + (cross * side - axis * 0.4f).Normalized() * reach * 0.4f,
-							 vein, px, antialiased: false);
+							 Lit(vein), px, antialiased: false);
 				}
 			}
 		}
@@ -293,8 +303,8 @@ namespace Symbiose
 					{
 						float a = Mathf.Tau * (k + 0.5f) / 8f;
 						Vector2 bout = c + new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * r * 0.45f;
-						DrawLine(c, bout, FlowerHeart, px, antialiased: false);
-						DrawRect(new Rect2(bout, new Vector2(px, px) * 2f), anthere);
+						DrawLine(c, bout, Lit(FlowerHeart), px, antialiased: false);
+						DrawRect(new Rect2(bout, new Vector2(px, px) * 2f), Lit(anthere));
 					}
 					break;
 				case FlowerShape.Capitule:
@@ -302,12 +312,12 @@ namespace Symbiose
 					{
 						float a = k * 2.39996f, d = r * 0.5f * Mathf.Sqrt((k + 0.5f) / 21f);
 						DrawRect(new Rect2(c + new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * d,
-										   new Vector2(px, px) * 2f), anthere);
+										   new Vector2(px, px) * 2f), Lit(anthere));
 					}
 					break;
 				case FlowerShape.Clochette:
 					Vector2 bouche = c + SouthDir() * (r * 0.75f);
-					DrawLine(bouche, bouche + SouthDir() * (r * 0.3f), FlowerHeart, px, antialiased: false);
+					DrawLine(bouche, bouche + SouthDir() * (r * 0.3f), Lit(FlowerHeart), px, antialiased: false);
 					break;
 			}
 		}

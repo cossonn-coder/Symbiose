@@ -87,8 +87,12 @@ namespace Symbiose
 		{
 			_plancheStep = step;
 			var (zoom, info) = Planche[step];
-			PoserCamera(System.Array.IndexOf(ZoomSteps, zoom),
-				_plancheCible.EmpriseCanvas.GetCenter());
+			// CASSÉ À L'ÉCRAN ④ : aux paliers hauts, le centre de la boîte d'un arbre
+			// clairsemé tombe dans le vide entre deux charpentières (cerisier ×16 : 0 px
+			// de l'arbre à l'écran, ①) → on vise l'axe du collet, à mi-hauteur de la boîte.
+			Vector2 vise = _plancheCible.EmpriseCanvas.GetCenter();
+			if (zoom >= PlantRenderer.PalierOrganesZoom) vise.X = _plancheCible.Position.X;   // ×2↔×4 restent co-centrés (banc de continuité)
+			PoserCamera(System.Array.IndexOf(ZoomSteps, zoom), vise);
 			string espece = _plancheCible.GetMeta(LectureSnap.Meta("species"), "?").AsString();
 			EncartPlanche($"palier ×{zoom} · {info}   —   {espece} "
 				+ $"({step + 1}/{Planche.Length}){suffixe}");
