@@ -154,6 +154,13 @@ namespace Symbiose
 			};
 		private static readonly OrganPalette DefaultPalette =
 			new OrganPalette("469a3f", "ead85a", "6fae45", "cf3a2e");
+		// Lecture seule pour la charte DA (RampesDa.Plante, CASSÉ À L'ÉCRAN ①) : les
+		// teintes d'espèce restent la SOURCE UNIQUE, la charte les décline en rampes.
+		internal static (Color Feuille, Color Fleur, Color Fruit) TeintesEspece(string espece)
+		{
+			var pal = espece != null && Palettes.TryGetValue(espece, out var p) ? p : DefaultPalette;
+			return (pal.Leaf, pal.Flower, pal.FruitRipe);
+		}
 		private static readonly Color[] AutumnLeaves =
 		{
 			new Color("c9a23a"), new Color("c4762a"), new Color("a8392a"),

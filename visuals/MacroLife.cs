@@ -89,6 +89,9 @@ namespace Symbiose
 		// Espèce inconnue d'un futur protocole : un pixel gris, pas un crash.
 		private static readonly (Color, float, float) EspeceInconnue =
 			(new Color("999999"), 1f, 1f);
+		// Lecture seule pour la charte DA (RampesDa.Faune, CASSÉ À L'ÉCRAN ①).
+		internal static Color CouleurEspece(string guilde) =>
+			(guilde != null && Especes.TryGetValue(guilde, out var g) ? g : EspeceInconnue).Item1;
 
 		// Espèces IGNORÉES ici : les pollinisateurs sont des AGENTS butineurs
 		// (ForagerLayer) ; le lombric vit sous terre. Le serveur 0.5.45 leur envoie
