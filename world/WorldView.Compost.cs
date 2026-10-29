@@ -111,6 +111,7 @@ namespace Symbiose
 													colonisation)
 					{
 						Position = WorldToScreen(cx, cy),
+						ZIndex = ZObjet(cx, cy),   // tri avec la maison (D112 ②)
 						Name = $"struct_{tileId}_{r}_{c}_{kind}",
 					};
 					_objects.AddChild(node);

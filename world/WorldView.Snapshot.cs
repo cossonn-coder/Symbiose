@@ -177,11 +177,10 @@ namespace Symbiose
 				Vector2 screenPos = PositionPlante(l, out float wx, out float wy);
 				var renderer = new PlantRenderer
 				{
-					Position = screenPos,
-					// Empilement multi-strates (luxuriance ⑥) : biais de ZIndex par
-					// strate → le couvre-sol passe sous la potagère/grimpante. À strate
-					// égale, le y-sort du parent "Objects" départage (intra-strate).
-					ZIndex = PlantZIndex(l.Strate),
+					// Tri Y de "Objects" (maison comprise, D112 ②) ; à pied égal le
+					// biais de strate passe le couvre-sol sous la haute (luxuriance ⑥).
+					Position = screenPos + new Vector2(0f, PlantYBias(l.Strate)),
+					ZIndex = ZObjet(wx, wy),   // derrière la maison → sous elle (Maison.cs)
 					Name = $"{l.Tile}_{l.Species}_{_plantSeq++}",
 				};
 				// Métadonnées de picking (volet B) : position MONDE pour la
@@ -232,7 +231,7 @@ namespace Symbiose
 		///  · Symptomes (D33, 0.5.1) : {cause, intensité} triés par le moteur ;
 		///  · Vitalite (0.5.28) : fond global d'usure ∈ [0,1], défaut 1 ;
 		///  · SupportKind (0.5.18) : type d'appui accroché → vrille ;
-		///  · Strate / Silhouette (0.5.19) : ZIndex par strate, forme au LOD couronne ;
+		///  · Strate / Silhouette (0.5.19) : biais de Y par strate, forme au LOD couronne ;
 		///  · Emitteur (D67, 0.5.21) : teinte de l'overlay F9 seulement ;
 		///  · Abri (0.5.44) : facteur d'abri au vent, défaut 1.
 		/// Clés absentes (snapshot ancien) → défauts neutres, aucun crash.</summary>
@@ -249,9 +248,10 @@ namespace Symbiose
 			node.SetStrate(l.Strate);          // port arbre/grimpante (paliers bas, D106 T5)
 			node.SetEmitter(l.Emitteur);       // teinte overlay LOD F9 (D67)
 			node.SetWindAnchor(wx, wy, l.Abri);  // onde de vent (T3)
-			node.ZIndex = PlantZIndex(l.Strate);  // empilement par strate (luxuriance ⑥)
 			node.SetMeta(LectureSnap.Meta("tag"), l.Tag);   // le stade évolue (étiquette nette)
-			node.Position = screenPos;         // suit le relief du sol (D57 ②)
+			// suit le relief du sol (D57 ②) ; biais de strate = départage du tri Y (D112 ②)
+			node.Position = screenPos + new Vector2(0f, PlantYBias(l.Strate));
+			node.ZIndex = ZObjet(wx, wy);      // derrière la maison → sous elle (D112 ②)
 			_tapisSale = true;                 // agrégat du tapis à refaire (WorldView.Tapis.cs)
 		}
 

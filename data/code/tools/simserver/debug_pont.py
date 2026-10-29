@@ -21,6 +21,9 @@ from sim.pages_corpus import PAGES
 from sim.signes_corpus import SIGNES
 from fields.faune_encyclo import FAUNE_ENCYCLO
 from fields.fongique import REGISTRE_FONGIQUE
+from sim.champignon_manger import pousser_debug
+
+from .champignon_route import carpophores_compacts
 
 from .maitrise_pont import _CLE_DE_CLASSE, _CONCEPT_REPRO_BIPARENTAL
 
@@ -73,3 +76,24 @@ def observer_toutes_presentes(game_state: dict, player: str) -> int:
             if cle and observer(game_state, player, cle):
                 n += 1
     return n
+
+
+def pousser_carpophore(game_state: dict, tile_id, r, c, espece: str = "psilocybe") -> dict:
+    """DEBUG (D112 ②) : fait pousser un carpophore `espece` au plot `(r, c)` de la
+    tuile, pour la semaine affichée, par la mémoire de perception de
+    `sim/champignon_manger` → info-bulle, cueillette, vision et overdose comme en
+    jeu. Réponse : `{ok, carpophores}` (bloc complet, format du snapshot, pour que
+    la vue l'affiche sans attendre la semaine suivante) ou `{ok: False, error}`."""
+    tile = next((t for t in game_state["tiles"] if t.tile_id == tile_id), None)
+    if tile is None:
+        return {"ok": False, "error": f"tuile introuvable : {tile_id!r}"}
+    if espece not in REGISTRE_FONGIQUE:
+        return {"ok": False, "error": f"espèce fongique inconnue : {espece!r}"}
+    eco = game_state["eco"][tile_id]
+    if (not all(isinstance(v, int) and not isinstance(v, bool) for v in (r, c))
+            or not (0 <= r < eco.rows and 0 <= c < eco.cols)):
+        return {"ok": False, "error": f"plot hors tuile : {(r, c)!r}"}
+    pousser_debug(game_state, tile_id, r, c, espece)
+    return {"ok": True, "espece": espece,
+            "carpophores": {t.tile_id: carpophores_compacts(game_state, t)
+                            for t in game_state["tiles"]}}

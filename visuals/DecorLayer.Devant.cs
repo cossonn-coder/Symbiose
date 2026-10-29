@@ -8,7 +8,7 @@
 // l'écran est plus PRÈS de l'œil. Un arbre planté au-delà du bord sud-est est donc
 // DEVANT le jardin : son houppier, qui monte à l'écran, doit recouvrir les tuiles
 // et les plantes qu'il cache. Avec tout le décor en ZIndex −5, le sol (0) et les
-// plantes (Objects 10 + strate) passaient par-dessus → les tuiles « coupaient » les
+// plantes (Objects 10) passaient par-dessus → les tuiles « coupaient » les
 // arbres (bug F5 Nico 2026-10-26). Les bords du fond, eux, sont derrière : leurs
 // arbres montent VERS le haut de l'écran, loin du jardin, ils restent dessous.
 //
@@ -30,12 +30,13 @@ namespace Symbiose
 {
 	public partial class DecorLayer : Node2D
 	{
-		// Au-dessus des plantes (Objects 10 + strate 10..14 = 20..24 en relatif),
-		// des bâches (12) et des butineurs (11). Absolu : ne dépend pas du −5 parent.
+		// Au-dessus des plantes et de la maison (Objects 10, tri Y — D112 ②), des
+		// bâches (12) et des butineurs (11). Absolu : ne dépend pas du −5 parent.
 		private const int ZDevant = 30;
 
 		private Node2D _devant;          // la couche « devant » (enfant, dessinée via son signal Draw)
 		private Maille _devantMaille;    // maille dont la partie haute est affichée (null = rien)
+		private float _devantAlpha = 1f; // opacité « maison transparente » (touche H, D112 ②)
 
 		// Lot où partent les pièces hautes d'un bord côté caméra pendant une tranche.
 		// null (ancien redessin DessinerToutLot) = tout reste dans _lot, comme avant.
@@ -46,13 +47,24 @@ namespace Symbiose
 		/// <summary>Crée la couche « devant » (appelé depuis _Ready).</summary>
 		private void CreerDevant()
 		{
-			_devant = new Node2D { Name = "DecorDevant", ZIndex = ZDevant, ZAsRelative = false };
+			_devant = new Node2D { Name = "DecorDevant", ZIndex = ZDevant, ZAsRelative = false,
+				Modulate = new Color(1f, 1f, 1f, _devantAlpha) };
 			// Un simple Node2D : il peint dans le signal Draw (pas de classe dédiée).
 			_devant.Draw += () =>
 			{
 				if (_devantMaille?.MeshDevant != null) _devant.DrawMesh(_devantMaille.MeshDevant, KitTexture);
 			};
 			AddChild(_devant);
+		}
+
+		/// <summary>Touche H (D112 ②) : la lisière côté caméra devient translucide avec
+		/// la maison — elle aussi masque le jardin. L'alpha est mémorisé : la couche
+		/// est (re)créée avec lui, et une rotation D35 (Build) ne fait que changer sa
+		/// maille, le nœud et sa Modulate survivent.</summary>
+		public void SetDevantAlpha(float alpha)
+		{
+			_devantAlpha = alpha;
+			if (_devant != null) _devant.Modulate = new Color(1f, 1f, 1f, alpha);
 		}
 
 		/// <summary>Affiche la partie haute de `m` (null = décor éteint au gros plan).

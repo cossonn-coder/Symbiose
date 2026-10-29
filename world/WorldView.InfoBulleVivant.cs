@@ -98,10 +98,20 @@ namespace Symbiose
 			if (_infoTechnique)
 			{
 				Ligne(sb, role != null ? $"{nom} — {role}" : nom);
-				Ligne(sb, champi
-					? $"clé {p.Cle} · rôle {p.Role ?? "?"} · densité {p.Densite:F2}"
-					: $"clé {p.Cle} · abondance {p.Abondance} · activite "
-					  + (p.Nourriture >= 0f ? p.Nourriture.ToString("F2") : "—"));
+				Ligne(sb, champi ? $"clé {p.Cle} · rôle {p.Role ?? "?"}"
+								 : $"clé {p.Cle} · abondance {p.Abondance}");
+				// Jauges (D112 ②), sens par clé : réseau d'un carpophore → bon = dense
+				// (mal = 1 − densité, seuil = « réseau dense », pastille F6 mycelium) ;
+				// nourriture d'une bête → bon = abondante (mal = 1 − activité, seuil =
+				// « suffisante », pastille = la heatmap F6 de l'espèce). L'abondance
+				// reste un chiffre : son « bon » dépend du rôle (ravageur ou auxiliaire),
+				// que la vue ne décide pas.
+				if (champi)
+					Jauge(sb, "réseau", 1f - p.Densite, 1f - _reseauDense, p.Densite,
+						  JaugesInfoBulle.PastilleDe("mycelium"));
+				else if (p.Nourriture >= 0f)
+					Jauge(sb, "nourriture", 1f - p.Nourriture, 1f - _nourSuffisante, p.Nourriture,
+						  JaugesInfoBulle.PastilleDe(p.Cle));
 				return;
 			}
 			string vu = champi ? (Lib(_vuChampiEspece, p.Cle) ?? _vuChampignon)

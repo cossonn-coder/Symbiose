@@ -58,6 +58,8 @@
 //                            de visibilité des signes (INFO-BULLE ②, WorldView.BancSeuil.cs)
 //   --capture-zoom-balayage=<s>  balayage ×0,5 → ×32 → ×0,5, s s par palier, rapport
 //                            des à-coups de zoom imprimé puis sortie (WorldView.ZoomJournal.cs)
+//   --capture-maison=1 / --capture-f6=1  maison + lisière transparentes (touche H) /
+//                            heatmap F6 ouverte (1er champ du cycle) — CASSÉ À L'ÉCRAN ②
 //   --capture-vivant=… / --capture-vivant-png=…  captures de l'info-bulle d'une bête
 //                            ou d'un carpophore (INFO-BULLE ③, WorldView.BancVivant.cs)
 
@@ -119,6 +121,9 @@ namespace Symbiose
 		// Info-bulle (PLANTE ASSEMBLÉE ⑦) : debug palier3 au montage / mode technique.
 		private static readonly bool CapturePalier3 = ArgCapture("palier3") == "1";
 		private static readonly bool CaptureTechnique = ArgCapture("technique") == "1";
+		// CASSÉ À L'ÉCRAN ② : touche H et heatmap F6 au montage (vérif (n) et (d)).
+		private static readonly bool CaptureMaison = ArgCapture("maison") == "1";
+		private static readonly bool CaptureF6 = ArgCapture("f6") == "1";
 		private static float EchelleCamera => CapturePleineRes ? 2f : 1f;
 
 		// Zoom de la Camera2D pour un palier logique (seul écrivain : les 4 poses).
@@ -241,6 +246,8 @@ namespace Symbiose
 			if (CaptureKit) AfficherPlancheKit();   // planche du kit (PLANTE ASSEMBLÉE ④)
 			if (CapturePalier3) DebugMaitrise("palier3");   // info-bulle apprise (⑦)
 			if (CaptureTechnique) ToggleInfoTechnique();    // info-bulle technique (⑦)
+			if (CaptureMaison) ToggleHouseGhost();          // maison + lisière (D112 ②)
+			if (CaptureF6) ToggleFieldOverlay();            // heatmap, champ de tête (D112 ②)
 			AppliquerCaptureBanc();   // ombres / banc d'étalonnage (WorldView.Etalonnage.cs)
 			LancerBancSeuil();        // seuil de visibilité des signes (WorldView.BancSeuil.cs)
 			LancerBancVivant();       // captures info-bulle bête / carpophore (WorldView.BancVivant.cs)

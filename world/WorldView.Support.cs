@@ -47,6 +47,7 @@ namespace Symbiose
 					var node = new SupportRenderer(kind, height)
 					{
 						Position = WorldToScreen(o.X + lx, o.Y + ly),
+						ZIndex = ZObjet(o.X + lx, o.Y + ly),   // tri avec la maison (D112 ②)
 						Name = $"support_{tileId}_{kind}_{_supportNodes.Count}",
 					};
 					_objects.AddChild(node);

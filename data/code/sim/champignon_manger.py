@@ -21,12 +21,20 @@ remise à zéro quand la semaine change (bornée), jamais lue par le tick.
 Les pertes passent par `vigueur.spend` (seul point de débit) : l'interrupteur de test
 « Vigueur infinie » les masque donc, comme toute dépense.
 
+DEBUG (D112 ②, geste « faire pousser un champignon ») : `pousser_debug` ajoute un
+carpophore d'une espèce choisie à la même liste de perception, mémoire
+`game_state["carpophores_debug"] = {semaine, cles: [[tuile, r, c, espèce], …]}`
+bornée à la semaine comme celle des mangés → snapshot, info-bulle, cueillette,
+vision et overdose le voient EXACTEMENT comme un carpophore poussé. Clé absente
+(tout le jeu normal, le golden) → no-op.
+
 Couche `sim`, hors tick → golden NEUTRE. Zéro RNG.
 """
 from __future__ import annotations
 
 from fields.population import sample_carpophores
-from fields.population.perception import CARPO_DENS_REF
+from fields.population import Carpophore
+from fields.population.perception import CARPO_DENS_REF, CARPO_PAR_PLOT
 from fields.fongique import (REGISTRE_FONGIQUE, COMESTIBLE, VENENEUX, MORTEL,
                              PSYCHEDELIQUE, IMMANGEABLE)
 from sim.champignon_role import racines_par_plot, pluie_semaine_precedente
@@ -41,6 +49,7 @@ PERTE_VENENEUX = 0.5
 PERTE_MORTEL = 0.9
 
 _CLE_MEMOIRE = "carpophores_manges"
+_CLE_DEBUG = "carpophores_debug"
 
 
 def _manges(game_state: dict, tile_id) -> set:
@@ -61,10 +70,32 @@ def carpophores_tuile(game_state: dict, tile, pluie_prec: bool | None = None):
     racines = racines_par_plot(tile.plants) if pluie_prec else {}
     week_in_year = ((game_state["week"] - 1) % 52) + 1
     carpos = sample_carpophores(eco, game_state["seed"], week_in_year, pluie_prec, racines)
+    carpos += _debug_tuile(game_state, tile.tile_id)
     manges = _manges(game_state, tile.tile_id)
     if manges:
         carpos = [k for k in carpos if (k.row, k.col, k.slot) not in manges]
     return carpos, racines
+
+
+def _debug_tuile(game_state: dict, tile_id) -> list:
+    """Carpophores DEBUG de la semaine sur la tuile (lecture pure). Slot ≥
+    CARPO_PAR_PLOT : jamais en collision avec un quantum échantillonné du plot ;
+    densité = plot plein (CARPO_DENS_REF), posé au centre du plot."""
+    mem = game_state.get(_CLE_DEBUG)
+    if not mem or mem["semaine"] != game_state["week"]:
+        return []
+    return [Carpophore(row=r, col=c, slot=CARPO_PAR_PLOT + i, x_frac=0.5, y_frac=0.5,
+                       densite=CARPO_DENS_REF, espece=esp)
+            for i, (t, r, c, esp) in enumerate(mem["cles"]) if t == tile_id]
+
+
+def pousser_debug(game_state: dict, tile_id, r: int, c: int, espece: str) -> None:
+    """DEBUG : fait pousser un carpophore `espece` au plot pour la semaine affichée."""
+    mem = game_state.get(_CLE_DEBUG)
+    if not mem or mem["semaine"] != game_state["week"]:
+        mem = {"semaine": game_state["week"], "cles": []}
+        game_state[_CLE_DEBUG] = mem
+    mem["cles"].append([tile_id, r, c, espece])
 
 
 def _memoriser(game_state: dict, tile_id, k) -> None:

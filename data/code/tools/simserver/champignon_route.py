@@ -11,7 +11,20 @@ foi (carpophore encore visible ? comestibilité, Vigueur, vision).
 """
 from __future__ import annotations
 
-from sim.champignon_manger import manger_carpophore
+from sim.champignon_manger import manger_carpophore, carpophores_tuile
+from sim.champignon_role import role_carpophore
+
+
+def carpophores_compacts(gs: dict, tile, pluie_prec: bool | None = None) -> list:
+    """Bloc `carpophores` d'une tuile au format COMPACT du snapshot :
+    `[r, c, x_frac, y_frac, densite, rôle, espèce, slot]` (cf. serialize.py). Source
+    unique : le snapshot ET la réponse du geste debug `carpophore` (D112 ②)."""
+    carpos, racines = carpophores_tuile(gs, tile, pluie_prec)
+    eco = gs["eco"][tile.tile_id]
+    return [[k.row, k.col, round(k.x_frac, 3), round(k.y_frac, 3),
+             round(k.densite, 3), role_carpophore(eco, racines, k.row, k.col),
+             k.espece, k.slot]
+            for k in carpos]
 
 
 def route_carpophore(gs: dict, player: str, target: dict, bilan) -> dict:

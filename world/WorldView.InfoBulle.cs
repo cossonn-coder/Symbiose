@@ -13,6 +13,9 @@
 //     l'info-bulle nomme la cause AU MÊME MOMENT.
 //   - Maj+F3 = AFFICHAGE TECHNIQUE (comme F6) : cause brute + intensité, clé
 //     d'espèce. Seul endroit avec des chiffres (philo #5), étiqueté comme tel.
+//     D112 ② : chaque valeur y porte une JAUGE (visuals/JaugesInfoBulle.cs, sens
+//     fixe vert = bon / rouge = mauvais, repère au seuil de visibilité) + un mot
+//     léger/marqué/grave ; le chiffre brut reste entre parenthèses.
 //
 // Bête / carpophore : WorldView.InfoBulleVivant.cs (INFO-BULLE DU VIVANT ③).
 //
@@ -38,6 +41,7 @@ namespace Symbiose
 	public partial class WorldView : Node2D
 	{
 		private Label _infoBulle;
+		private JaugesInfoBulle _jauges;   // barres du mode technique (D112 ②)
 		private bool _infoTechnique;   // Maj+F3
 
 		// Légende statique du pont (commande `legende`) : signe → (vu, cause) ; bête → vu.
@@ -61,6 +65,8 @@ namespace Symbiose
 			_infoBulle.AddThemeColorOverride("font_color", new Color(1f, 0.95f, 0.82f, 0.95f));
 			_infoBulle.AddThemeColorOverride("font_outline_color", Colors.Black);
 			_infoBulle.AddThemeConstantOverride("outline_size", 5);
+			_jauges = new JaugesInfoBulle();
+			_infoBulle.AddChild(_jauges);
 			_plantLabels.AddChild(_infoBulle);
 			ChargerLegende(_bridge?.Legende());
 		}
@@ -127,6 +133,7 @@ namespace Symbiose
 
 			var bete = BeteSousSouris();
 			var sb = new StringBuilder();
+			_jauges.Vider();
 			if (_labelMode != LabelMode.Aucune)
 			{
 				if (_infoTechnique) sb.Append(MentionTechnique);
@@ -169,19 +176,25 @@ namespace Symbiose
 		{
 			if (_infoTechnique)
 			{
+				// Sens par clé (mal ∈ [0,1], 0 = bon) : vitalité → 1 − v (seuil = la
+				// borne « vert franc ») ; automne → avancement de la sénescence de
+				// saison (normal, mais c'est le feuillage qui s'en va) ; symptôme →
+				// son intensité (seuil = seuil de visibilité mesuré, pastille = champ
+				// F6 qui le cause).
+				Jauge(sb, "vitalité", 1f - plante.Vitalite, 1f - PlantRenderer.VitaliteFranche,
+					  plante.Vitalite, null);
+				Jauge(sb, "automne", plante.Automne, PlantRenderer.SeuilAutomne, plante.Automne, null);
 				var syms = plante.Symptomes;
-				Ligne(sb, $"vitalité {plante.Vitalite:F2} · automne {plante.Automne:F2}");
-				Ligne(sb, "symptômes : ");
-				if (syms.Count == 0) sb.Append("aucun");
-				for (int i = 0; i < syms.Count; i++)
+				if (syms.Count == 0) Ligne(sb, "symptômes : aucun");
+				foreach (var (c, it) in syms)
 				{
-					var (c, it) = syms[i];
-					sb.Append(i > 0 ? " · " : "").Append($"{c} {it:F2}");
+					Jauge(sb, c, it, PlantRenderer.SeuilSigne(c), it,
+						  JaugesInfoBulle.PastilleDe(ChampDuSigne.GetValueOrDefault(c)));
 					// Pourquoi il se tait ici : trop faible à tout palier, ou palier trop bas.
 					if (!PlantRenderer.SigneVisible(c, it, CurrentZoom))
 						sb.Append(PlantRenderer.SigneVisible(c, it, 32f) ? " (hors palier)" : " (sous seuil)");
 				}
-				if (signe != null) sb.Append($"  (visible ici : {signe})");
+				if (signe != null) Ligne(sb, $"visible ici : {signe}");
 				return;
 			}
 			if (signe == null)
@@ -200,6 +213,27 @@ namespace Symbiose
 		{
 			if (sb.Length > 0) sb.Append('\n');
 			sb.Append(texte);
+		}
+
+		// Champ F6 qui CAUSE le signe (pastille de la jauge = couleur de sa heatmap).
+		// Signe sans champ d'origine lisible (sénescence, acclimatation, ravageurs,
+		// grêle) → pas de pastille.
+		private static readonly Dictionary<string, string> ChampDuSigne = new()
+		{
+			["chlorose"] = "n", ["secheresse"] = "humidite", ["asphyxie"] = "eau_surface",
+			["maladie"] = "inoculum", ["ombre"] = "lumiere", ["gel"] = "temperature",
+			["rongeur_racinaire"] = "campagnol",
+		};
+
+		// Ligne technique jaugée (D112 ②) : « clé brut · mot », jauge posée sur la
+		// ligne qu'on vient d'écrire. `mal` ∈ [0,1] (0 = bon), `seuil` même échelle.
+		private void Jauge(StringBuilder sb, string cle, float mal, float seuil, float brut,
+						   Color? pastille)
+		{
+			Ligne(sb, $"{cle} ({brut:F2}) · {JaugesInfoBulle.MotDe(Mathf.Clamp(mal, 0f, 1f))}");
+			int ligne = 0;
+			for (int i = 0; i < sb.Length; i++) if (sb[i] == '\n') ligne++;
+			_jauges.Ajouter(ligne, mal, seuil, pastille);
 		}
 
 		// Envoie l'observation du signe au pont, une fois par (espèce, signe, saison)

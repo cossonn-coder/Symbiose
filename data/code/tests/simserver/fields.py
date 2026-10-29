@@ -39,6 +39,16 @@ def test_champs_debug():
                                   for v in g.get("values", [])))
         check(f"grille {nom} : par tuile, row-major, dimensions exactes",
               ok_grille)
+    # D112 ② (+ D99) : vent/lisière/turbulence TOUJOURS au registre ; un champ
+    # paresseux encore None répond une grille neutre SANS être créé.
+    check("registre : vent, lisiere, turbulence toujours présents",
+          {"vent", "lisiere", "turbulence"} <= set(noms))
+    for nom, neutre in (("lisiere", 0.0), ("turbulence", 1.0)):
+        r = s11.send(cmd="fields", field=nom)
+        vals = [v for g in r.get("tiles", {}).values() for v in g.get("values", [])]
+        check(f"grille {nom} servie (neutre {neutre} si jamais calculée)",
+              r.get("ok") is True and len(vals) > 0
+              and all(isinstance(v, (int, float)) for v in vals))
     r = s11.send(cmd="fields", field="le_flux_vital")
     check("champ inconnu → ok:false", r.get("ok") is False)
     check("le serveur survit (fields répond encore)",

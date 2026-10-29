@@ -139,6 +139,7 @@ namespace Symbiose
 												  fondOuvert, rootBound)
 				{
 					Position = WorldToScreen(cx, cy),
+					ZIndex = ZObjet(cx, cy),   // tri avec la maison (D112 ②)
 					Name = $"container_{id}",
 				};
 				_objects.AddChild(node);
@@ -180,6 +181,7 @@ namespace Symbiose
 				var renderer = new PlantRenderer
 				{
 					Position = worldPos,
+					ZIndex = ZObjet(cx, cy),   // même plan que son conteneur (D112 ②)
 					Name = $"potplant_{_plantSeq++}",
 				};
 				_objects.AddChild(renderer);

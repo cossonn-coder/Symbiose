@@ -31,6 +31,38 @@ namespace Symbiose
 		private Polygon2D _houseShadow;
 		private float _hx0, _hy0, _hx1, _hy1, _hWallCm, _hHeightCm;
 
+		// 📖 D112 ② « maison en verre » — trier un GROS objet parmi des petits.
+		// "Objects" trie ses enfants par Y (pied = profondeur iso). La maison est
+		// ancrée à son coin AVANT (le plus bas à l'écran) : tout ce qui a un pied plus
+		// haut passe dessous. Juste DERRIÈRE elle, mais FAUX pour une plante plantée
+		// devant un mur latéral : son pied est plus haut que le coin avant, elle
+		// serait cachée par un mur qu'elle précède. Remède : la maison ET ce qui est
+		// réellement derrière elle vivent un cran plus bas (ZIndex relatif −1, triés
+		// entre eux par Y) ; tout le reste (devant, à côté) reste à 0 → toujours
+		// dessiné par-dessus la maison. « Derrière » = pied au-dessus (à l'écran) du
+		// PIED DES DEUX MURS CÔTÉ CAMÉRA, dans la largeur de la maison (± une marge
+		// pour les houppiers qui débordent sur son bord). Pour deux objets dans la
+		// même colonne d'écran, celui à ZIndex 0 est toujours le plus proche de
+		// l'œil : l'ordre reste cohérent entre plantes.
+		private const int ZDerriereMaison = -1;
+		private const float MargeDerriereMaisonPx = 80f;   // ≈ 1 m de houppier débordant à ×1
+		private Vector2[] _hBordAvant;   // pied des murs côté caméra : 3 coins écran triés en x
+
+		/// <summary>ZIndex relatif d'un enfant de "Objects" dont le pied est au point
+		/// MONDE (wx, wy) : ZDerriereMaison s'il est caché derrière la maison, sinon 0.</summary>
+		private int ZObjet(float wx, float wy)
+		{
+			var b = _hBordAvant;
+			if (b == null) return 0;
+			Vector2 p = WorldToScreen(wx, wy);   // pied au sol, sans relief (comme les coins)
+			if (p.X < b[0].X - MargeDerriereMaisonPx || p.X > b[2].X + MargeDerriereMaisonPx) return 0;
+			float x = Mathf.Clamp(p.X, b[0].X, b[2].X);
+			int i = x <= b[1].X ? 0 : 1;
+			float dx = b[i + 1].X - b[i].X;
+			float yBord = Mathf.Lerp(b[i].Y, b[i + 1].Y, dx > 0f ? (x - b[i].X) / dx : 0f);
+			return p.Y < yBord ? ZDerriereMaison : 0;
+		}
+
 		// -------------------------------------------------------------------
 		// MAISON — normande granite + ardoise (rendu délégué à HouseNode).
 		// On lit l'empreinte au sol + la hauteur du snapshot, on projette les 4
@@ -66,7 +98,10 @@ namespace Symbiose
 				if (scr[i].Y > scr[front].Y) front = i;
 
 			Vector2 anchor = scr[front];
-			_house = new Node2D { Name = "House", Position = anchor };
+			_house = new Node2D { Name = "House", Position = anchor, ZIndex = ZDerriereMaison };
+			// Pied des 2 murs côté caméra = coin avant + ses 2 voisins (cf. ZObjet).
+			_hBordAvant = new[] { scr[(front + 3) % 4], scr[front], scr[(front + 1) % 4] };
+			System.Array.Sort(_hBordAvant, (a, b) => a.X.CompareTo(b.X));
 
 			// Coins locaux au nœud + vecteur haut-de-mur.
 			var c = new Vector2[4];

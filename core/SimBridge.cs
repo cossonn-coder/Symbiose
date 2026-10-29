@@ -504,6 +504,13 @@ namespace Symbiose
 		public void Debug(string op)
 			=> Request(new GDict { ["cmd"] = "debug", ["op"] = op });
 
+		/// <summary>DEBUG (D112 ②, pont ≥ 0.6.1) : fait pousser un carpophore
+		/// `espece` au plot `(r, c)` de `tile` pour la semaine affichée. Réponse =
+		/// `{ok, carpophores}` (bloc complet du snapshot) ou null.</summary>
+		public GDict DebugCarpophore(string tile, int r, int c, string espece = "psilocybe")
+			=> Request(new GDict { ["cmd"] = "debug", ["op"] = "carpophore",
+								   ["tile"] = tile, ["r"] = r, ["c"] = c, ["espece"] = espece });
+
 		/// <summary>
 		/// Persiste le LAYOUT de palette du joueur (palette de gestes ⑤, 0.5.26) :
 		/// `slots` = verbes curés (colonne ④), `macros` = liste de {nom, sequence}

@@ -127,6 +127,7 @@ namespace Symbiose
 					case Key.P:        DebugMaitrise("palier3");       break;  // Palier 3
 					case Key.V:        DebugMaitrise("observer_tout"); break;  // Voir tout
 					case Key.R:        DebugMaitrise("reset");         break;  // Reset maîtrise
+					case Key.U:        DebugPsilocybe();               break;  // champignon psilocybe au plot visé (D112 ②)
 					// T = « temps » : sauter DebugSkipWeeks semaines d'un coup (debug).
 					case Key.T:        SkipWeeks(DebugSkipWeeks);     break;
 					// A = jardinier automate F5 (⑥) : brancher/débrancher l'automate
@@ -276,10 +277,14 @@ namespace Symbiose
 		// réglage rend les 5 polygones de la maison fantomatiques. L'ombre
 		// portée n'est PAS affectée (elle vit dans _ground) : une maison
 		// transparente ombre toujours — c'est le moteur qui décide, pas la vue.
+		// D112 ② (n) : la lisière CÔTÉ CAMÉRA (DecorDevant) masque elle aussi le
+		// jardin → même opacité, même touche.
 		private void ApplyHouseGhost()
 		{
+			float alpha = _houseGhost ? 0.15f : 1f;
 			if (_house != null)
-				_house.Modulate = new Color(1f, 1f, 1f, _houseGhost ? 0.15f : 1f);
+				_house.Modulate = new Color(1f, 1f, 1f, alpha);
+			_decorLayer?.SetDevantAlpha(alpha);
 		}
 
 		// --- Raccourcis DEBUG (retour F5 voix, pont 0.5.12) --------------------

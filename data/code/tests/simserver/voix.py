@@ -17,8 +17,8 @@ def test_voix():
     print("[voix narratives — pont ①]")
     s = ServerProc()
     init = s.send(cmd="init", config="full", seed=7)
-    check("protocole bumpé à 0.6.0 (pont en delta, leviers ④)",
-          init["engine_version"] == "0.6.0", init.get("engine_version"))
+    check("protocole bumpé à 0.6.1 (casse écran ②, D112)",
+          init["engine_version"] == "0.6.1", init.get("engine_version"))
     import platform
     check("init porte la version de Python du moteur (fluidité PC ①)",
           init.get("python", {}).get("version") == platform.python_version(),
@@ -136,6 +136,21 @@ def test_voix():
     check("debug reset → magazine muet + index vide",
           len(s.send(cmd="magazine")["offres"]) == 0
           and len(s.send(cmd="encyclopedie")["index"]) == 0)
+    # D112 ② (h) : faire pousser un psilocybe → visible au snapshot, cueillable.
+    tid0 = next(iter(s.send(cmd="snapshot")["snapshot"]["carpophores"]))
+    car = s.send(cmd="debug", op="carpophore", tile=tid0, r=1, c=1)
+    psilo = [k for k in car.get("carpophores", {}).get(tid0, [])
+             if k[0] == 1 and k[1] == 1 and k[6] == "psilocybe"]
+    check("debug carpophore → psilocybe au plot visé", car.get("ok") and len(psilo) == 1, car)
+    snap_c = s.send(cmd="snapshot")["snapshot"]["carpophores"][tid0]
+    check("debug carpophore → présent au snapshot", any(k[6] == "psilocybe" for k in snap_c))
+    m = s.send(cmd="action", verb="manger",
+               target={"tile": tid0, "carpophore": [1, 1, psilo[0][7]]}) if psilo else {}
+    check("debug carpophore → mangé = vision",
+          m.get("result", {}).get("vision") == "vision", m.get("result"))
+    check("debug carpophore espèce inconnue → ok:false",
+          s.send(cmd="debug", op="carpophore", tile=tid0, r=1, c=1,
+                 espece="_x_")["ok"] is False)
     check("debug op inconnue → ok:false, serveur survit",
           s.send(cmd="debug", op="_inconnu_")["ok"] is False)
 

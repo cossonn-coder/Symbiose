@@ -17,8 +17,8 @@
 // en éventail), dessiné par DrawMesh. C'est le « vertex buffer unique » de
 // l'embarqué : on remplit un tampon, on l'envoie une fois. ⚠️ Mesuré au banc E
 // (VM, 2026-10-19) : la même géométrie passée par CanvasItemAddTriangleArray
-// coûtait +55 ms de rendu par image (chemin lent du pilote) — d'où le maillage. Le nœud vit dans "Objects" avec un ZIndex relatif −1 : SOUS toutes
-// les plantes (ZIndex 10 + strate) mais au-dessus de la maison, du sol, de la
+// coûtait +55 ms de rendu par image (chemin lent du pilote) — d'où le maillage. Le nœud vit dans "Objects" avec un ZIndex relatif −2 : SOUS toutes
+// les plantes et la maison (ZIndex relatif 0 / −1 derrière la maison, tri Y — D112 ②), au-dessus du sol, de la
 // vie macro — hors du tri en Y des plantes, qui ne sont plus coupées en deux
 // lots par leurs ombres.
 //
@@ -57,7 +57,7 @@ namespace Symbiose
 		{
 			_plantes = plantes;
 			Name = "Ombres";
-			ZIndex = -1;          // relatif à Objects : sous toutes les plantes
+			ZIndex = -2;          // relatif à Objects : sous toutes les plantes ET la maison (−1, D112 ②)
 			MarquerSale();
 		}
 

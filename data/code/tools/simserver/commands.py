@@ -51,6 +51,14 @@ from . import perf   # capture des pires ticks + dump diagnostique (demande Nico
 # `paille` — une source de ravitaillement amorçable tôt, sans passer par l'Atelier.
 BANQUE_DEPART = ("tournesol", "tomate", "basilic", "ble", "chanvre")
 
+# Champs PARESSEUX servis TOUJOURS par `cmd_fields` (D112 ②, D99), avec leur valeur
+# NEUTRE quand le moteur ne les a pas encore alloués (None) — la valeur que leur
+# lecteur moteur suppose déjà : vent 0.0 (aucune force locale, repos de
+# `EcoFields`) ; lisiere 0.0 (aucun effet de lisière : `PopulationField.tick` saute
+# le terme) ; turbulence 1.0 (multiplicateur de rafale NEUTRE : `_wind_damage` lit
+# 1.0 quand le champ est None). L'ordre = l'ordre voulu en tête du cycle F6.
+CHAMPS_NEUTRES = {"vent": 0.0, "lisiere": 0.0, "turbulence": 1.0}
+
 
 def _vider_seedbank_ferale(sb) -> None:
     """Vide la banque de graines FÉRALE d'un `EcoField` (banc « monde propre », ①).
@@ -386,6 +394,9 @@ class CommandsMixin:
             extra = ["vitalite"]
             if getattr(eco0, "inoculum", None) is not None:
                 extra.append("inoculum")
+            # D112 ② (+ D99) : vent/lisière/turbulence TOUJOURS au registre, même
+            # tant que le champ paresseux est None (servi neutre ci-dessous).
+            direct = sorted(set(direct) | set(CHAMPS_NEUTRES))
             return {"ok": True,
                     "fields": direct + list(eco0.populations.keys()) + extra}
         tiles_out = {}
@@ -413,6 +424,15 @@ class CommandsMixin:
                                for c in range(eco.cols)]}
                 continue
             obj = vars(eco).get(field)
+            if obj is None and field in CHAMPS_NEUTRES:
+                # Champ paresseux jamais calculé (aucune ceinture / aucun tick
+                # d'abri) : grille NEUTRE en réponse, SANS créer le champ — le
+                # moteur garde son None (son lecteur lit le même neutre) → D99,
+                # neutralité golden. PURE lecture.
+                tiles_out[tile.tile_id] = {
+                    "rows": eco.rows, "cols": eco.cols,
+                    "values": [CHAMPS_NEUTRES[field]] * (eco.rows * eco.cols)}
+                continue
             if not isinstance(obj, GridField):
                 obj = eco.populations.get(field) if isinstance(field, str) else None
             if not isinstance(obj, GridField):

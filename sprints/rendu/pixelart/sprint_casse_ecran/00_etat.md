@@ -23,7 +23,7 @@ Perf : `tools/perf_vm.sh`.
 | # | Kickoff | État |
 |---|---|---|
 | ① | `01_charte_banc_mesure.md` | **fait** (2026-10-29, non commité) |
-| ② | `02_defauts.md` — (b)(n)(e)(d)(h) | à faire |
+| ② | `02_defauts.md` — (b)(n)(e)(d)(h) | **fait** (2026-10-29, non commité) |
 | ③ | `03_palette_indexee_soleil.md` — (f)(l), paliers bas | à faire |
 | ④ | `04_paliers_hauts.md` — (i)(m) | à faire |
 | ⑤ | `05_faune_icones.md` — (a) | à faire |
@@ -83,7 +83,39 @@ Perf : `tools/perf_vm.sh`.
   de l'arbre (0 sprite, image vérifiée) → à regarder en ④.
 - Captures de la ligne de base (hors dépôt, effacées au reboot) : `/tmp/claude-1000/da/base2/`.
 
+### ② Défauts — fait
+- **(b) maison en verre** — ⚠️ prescription du kickoff RÉFUTÉE en partie : retirer le
+  biais de ZIndex de strate (tri Y pur, maison ancrée au coin avant) cachait les plantes
+  plantées DEVANT un mur latéral (pied plus haut que le coin avant, vu en capture : tuteur
+  disparu). Retenu : plantes sans biais de ZIndex (strate = biais de Y infime 0,001 px/rang,
+  `PlantYBias`, départage à pied égal → invariant luxuriance ⑥) + **deux plans** dans
+  `Objects` : la maison ET ce qui est derrière elle (pied au-dessus du pied des 2 murs côté
+  caméra, dans sa largeur ± 80 px) en ZIndex relatif −1, le reste à 0
+  (`WorldView.Maison.cs` `ZObjet`, appliqué aux plantes, plantes en pot, supports,
+  conteneurs, compost) ; ombres des plantes −1 → −2. Effet : ×1 orient 0 / 2, 1 900 /
+  7 528 px changés [n=1 capture chacune], tous sur le toit/mur (les plantes de derrière ne
+  le traversent plus) ; ×4 : plantes derrière cachées, tuteur devant visible.
+- **(n)** `DecorLayer.SetDevantAlpha` : H rend la lisière côté caméra translucide (même
+  alpha 0,15 ; mémorisé, survit à la rotation). Capture ×0,5 : arbres S/E fondus.
+- **(e)** `visuals/JaugesInfoBulle.cs` : barre 2 px (pas 1 : illisible en 1080p), remplie
+  du « mal » vert→rouge, repère au seuil de visibilité, pastille = couleur F6 du champ lié,
+  mot léger/marqué/grave, chiffre brut gardé entre parenthèses. Sens par clé commenté dans
+  `InfoBulle.cs`/`InfoBulleVivant.cs` ; abondance d'une bête laissée en chiffre (son « bon »
+  dépend du rôle). Captures plante (PoaAnnua, 5 jauges) et limace lues.
+- **(d)** pont 0.6.1 : `fields` sert toujours `vent`/`lisiere`/`turbulence` (neutres 0/0/1
+  sans créer le champ, `CHAMPS_NEUTRES`) ; vue : `FieldOverlay.OrdreCycle` met le vent en
+  tête (avant : « alarme » en tête), palettes à bornes fixes 0..1,2 / 0..1 / 1..2.
+- **(h)** op debug `carpophore` (touche **U**, plot sous la souris, psilocybe) :
+  ⚠️ un carpophore n'a PAS d'état (perception recalculée) → ajout d'une mémoire de
+  perception `carpophores_debug` (bornée à la semaine) dans `sim/champignon_manger.py`
+  (hors `tools/simserver/`, hors tick, clé absente = no-op, golden intact) : snapshot,
+  cueillette, vision passent par `carpophores_tuile` comme en jeu. Format compact factorisé
+  (`champignon_route.carpophores_compacts`, serialize −6 LDC). Test pont : mangé → vision.
+- Outils : `capture_vm.sh -H` (touche H) et `-6` (F6 au montage). Tests pont mis à 0.6.1
+  + checks (d)(h) ; `test_sim_server` 307 ✅, `test_vision` 38/38, golden `fecccded…` PASS.
+- Captures (hors dépôt) : `/tmp/claude-1000/da/c2/` (`avant_*` / `apres_*`).
+
 ## §REPRISE
-Lire `CLAUDE.md` + ce fichier + le kickoff du premier tronçon « à faire » (② `02_defauts.md`).
+Lire `CLAUDE.md` + ce fichier + le kickoff du premier tronçon « à faire » (③ `03_palette_indexee_soleil.md`).
 Lancement : `/sprint-auto sprint_casse_ecran`. Valider chaque tronçon visuel au banc :
 protocole et ligne de base en §Notes ① (`tools/mesure_da.py`, `capture_vm.sh -O -F`).

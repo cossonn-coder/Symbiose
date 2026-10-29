@@ -28,9 +28,8 @@ from sim import maitrise as M
 # densité → entités (fields/population.py §3). L'échantillonnage se fait CÔTÉ
 # SERVEUR — la vue n'a pas besoin de _hash_noise (kickoff t6 §4).
 from fields.population import peindre_presence
-from sim.champignon_role import (role_carpophore,   # D110 b + D111 ③
-                                 pluie_semaine_precedente)   # rôle carpophore (D110 b)
-from sim.champignon_manger import carpophores_tuile   # carpophores visibles non mangés (⑥)
+from sim.champignon_role import pluie_semaine_precedente   # D111 ③
+from .champignon_route import carpophores_compacts   # format compact (D112 ② : partagé avec le debug)
 from .vision_cmds import bloc_vision, bloc_voix   # vision du jardinier (sol qui respire ⑥)
 # LOD des émetteurs d'ombre (D67, sprint perf-lod-ombre ③) : on relit le SEUIL de
 # pouvoir ombrageant pour DÉRIVER, par plante, si elle émet une ombre (miroir exact
@@ -383,12 +382,7 @@ class SerializeMixin:
             # SOL QUI RESPIRE ⑧ (0.5.56) : 8ᵉ champ = SLOT (rang du quantum dans le
             # plot, `Carpophore.slot`) — clé `target.carpophore [r, c, slot]` du geste
             # `manger` ; le rang dans la liste ne le donne plus dès qu'un est mangé.
-            carpos, racines = carpophores_tuile(gs, tile, pluie_prec)
-            carpophores[tile.tile_id] = [
-                [k.row, k.col, round(k.x_frac, 3), round(k.y_frac, 3),
-                 round(k.densite, 3), role_carpophore(eco, racines, k.row, k.col),
-                 k.espece, k.slot]
-                for k in carpos]
+            carpophores[tile.tile_id] = carpophores_compacts(gs, tile, pluie_prec)
             # Butineurs déterministes (arc pollinisation §F, 0.3.9) : agents
             # échantillonnés/marchés par engine._tick_butineurs (eco.foragers, déjà
             # rempli par le tick). Format COMPACT (cf. `sprites`) par tuile :

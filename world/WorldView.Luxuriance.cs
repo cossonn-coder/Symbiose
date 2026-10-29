@@ -1,19 +1,24 @@
 // SYMBIOSE — WorldView.Luxuriance.cs (partial de WorldView, sprint LUXURIANCE ⑥, D65)
 // Le câblage VUE de la luxuriance par stratification : applique le bloc
-// `couverture` du snapshot (tapis au sol) et fournit le BIAIS DE ZINDEX PAR STRATE
-// qui rend l'empilement multi-strates lisible. Lecture seule (protocole 0.5.19) —
-// la donnée (couverture, strate) vient du moteur, Python reste source de vérité :
-// ici on ne fait que PROJETER et ORDONNER, jamais recalculer (Godot est « bête »).
+// `couverture` du snapshot (tapis au sol) et fournit le BIAIS DE Y PAR STRATE
+// qui départage l'empilement multi-strates à pied égal. Lecture seule (protocole
+// 0.5.19) — la donnée (couverture, strate) vient du moteur, Python reste source de
+// vérité : ici on ne fait que PROJETER et ORDONNER, jamais recalculer.
 //
-// 📖 Pédagogie — l'ordre de dessin par strate :
+// 📖 Pédagogie — l'ordre de dessin par strate (révisé D112 ②, « maison en verre ») :
 // le nœud "Objects" est YSortEnabled → Godot trie ses enfants par Position.Y
-// (profondeur iso). Mais on veut EN PLUS que le couvre-sol passe SOUS la potagère,
-// SOUS la grimpante, même quand leurs collets sont à la même profondeur. Dans
-// Godot, le ZIndex prime sur le tri Y : deux plantes de même Y mais de ZIndex
-// différents se départagent par le ZIndex. On donne donc à chaque PlantRenderer un
-// petit biais de ZIndex ∝ sa strate (sol < basse < moyenne < haute < grimpante).
-// Le biais est PETIT (bande dédiée sous +10 des objets) → à l'INTÉRIEUR d'une même
-// strate, le tri Y reprend la main (y-sort intra-strate, cf. kickoff §B).
+// (profondeur iso). PIÈGE Godot 4 : le tri Y ne vaut qu'ENTRE enfants de MÊME
+// ZIndex ; un ZIndex différent sépare les nœuds en couches et PRIME sur le Y.
+// L'ancien biais de ZIndex par strate (10..14) posait donc TOUTES les plantes par-
+// dessus la maison (z 0 relatif) — la maison paraissait en verre — et toute haute
+// par-dessus tout couvre-sol, même devant elle. Désormais tout ce qui vit dans
+// "Objects" (maison, plantes, supports, conteneurs, compost) se trie PAR Y dans
+// deux plans seulement : 0, et −1 pour la maison et ce qui est caché derrière elle
+// (ZObjet, WorldView.Maison.cs) ; la strate ne départage qu'à Y quasi égal, par un
+// biais de Y infime (rang × 0,001 px monde : ×32 → 0,13 px écran au pire, jamais
+// visible) — à pied égal le couvre-sol passe SOUS la haute (invariant ⑥), et à
+// quelques pixels d'écart c'est la profondeur réelle qui décide (un trèfle DEVANT
+// le tomate cache bien la base de sa tige).
 
 using Godot;
 using System.Collections.Generic;
@@ -34,12 +39,9 @@ namespace Symbiose
 		// Lit le bloc `allelopathie` (foyers > ALLELO_FLOOR côté serveur).
 		private AllelopathieLayer _allelopathieLayer;
 
-		// Biais de ZIndex par strate : rang 0..4 dans l'ordre arrière→avant. Le nœud
-		// "Objects" est en ZIndex 10 ; on décale chaque plante de son rang (10..14)
-		// pour que le couvre-sol (sol=10) passe SOUS la potagère (basse/moyenne) et la
-		// grimpante (14). Bande étroite (5 valeurs) : à strate ÉGALE, le y-sort du
-		// parent départage (intra-strate). Strate inconnue (snapshot pré-0.5.19) →
-		// rang « moyenne » (neutre : tout au même plan, comportement d'avant).
+		// Rang de strate 0..4 dans l'ordre arrière→avant (sol < basse < moyenne <
+		// haute < grimpante). Strate inconnue (snapshot pré-0.5.19) → rang « moyenne »
+		// (neutre : comportement d'avant).
 		private static readonly Dictionary<string, int> StrateRang = new()
 		{
 			["sol"]       = 0,
@@ -49,13 +51,15 @@ namespace Symbiose
 			["grimpante"] = 4,
 		};
 
-		// ZIndex d'un PlantRenderer d'après sa strate (lue au snapshot). Base = ZIndex
-		// des objets (10) + rang de strate. Défaut « moyenne » (2) si strate absente/
-		// inconnue → aucune régression sur un snapshot ancien.
-		private static int PlantZIndex(string strate)
+		// Biais de Y (px monde) d'un PlantRenderer d'après sa strate : le départage
+		// à pied égal du tri Y de "Objects" (cf. en-tête). Plus haut rang = plus
+		// grand Y = dessiné APRÈS (devant). Infime par construction : il ne change
+		// l'ordre qu'entre plantes au même pied, jamais la position visible.
+		private const float BiaisYParRang = 0.001f;
+		private static float PlantYBias(string strate)
 		{
 			int rang = strate != null && StrateRang.TryGetValue(strate, out int r) ? r : 2;
-			return 10 + rang;
+			return rang * BiaisYParRang;
 		}
 
 		// Applique le bloc `couverture` (lecture tolérante : un snapshot pré-0.5.19

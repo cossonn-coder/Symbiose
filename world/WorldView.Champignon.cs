@@ -36,5 +36,28 @@ namespace Symbiose
 			};
 			return true;
 		}
+
+		// DEBUG (D112 ②, touche U) : un psilocybe pousse au plot sous la souris,
+		// pour la semaine affichée — même liste de perception que les carpophores
+		// poussés (Python) → info-bulle, cueillette `manger`, vision, overdose comme
+		// en jeu. Le bloc renvoyé est appliqué tout de suite (pas d'attente du tick).
+		// Visible au zoom ≥ ×4 (LOD de CarpophoreLayer).
+		private void DebugPsilocybe()
+		{
+			if (_bridge == null) return;
+			if (!FindPlot(ScreenToWorld(WorldMouseCanvas()), out string tile, out int r, out int c))
+			{
+				GD.Print("[WorldView] DEBUG champignon : aucun plot sous la souris.");
+				return;
+			}
+			var resp = _bridge.DebugCarpophore(tile, r, c);
+			if (resp == null || !resp["ok"].AsBool())
+			{
+				GD.PrintErr($"[WorldView] DEBUG champignon refusé : {resp?["error"]}");
+				return;
+			}
+			_carpophoreLayer?.SetCarpophores(resp["carpophores"].AsGodotDictionary(), _origins, fade: false);
+			GD.Print($"[WorldView] DEBUG champignon : psilocybe en {tile} ({r},{c}).");
+		}
 	}
 }

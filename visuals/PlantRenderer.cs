@@ -154,6 +154,11 @@ namespace Symbiose
 				? zoom >= PalierSanteZoom && intensite >= seuil
 				: MarquesFines.Contains(cause) && zoom >= PalierSymptomesZoom && intensite > 0f;
 
+		/// <summary>Seuil de visibilité (intensité) du signe `cause` — repère des
+		/// jauges Maj+F3 (D112 ②). Marques fines : visibles dès i > 0 → 0.</summary>
+		public static float SeuilSigne(string cause)
+			=> SeuilTeinte.TryGetValue(cause, out float seuil) ? seuil : 0f;
+
 		/// <summary>La santé (vitalité + teinte de symptôme) est-elle dessinée à ce
 		/// palier ? Sous ×2 non : la voix saine ne parle alors que de l'automne.</summary>
 		public static bool SanteVisible(float zoom) => zoom >= PalierSanteZoom;

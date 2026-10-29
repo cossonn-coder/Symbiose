@@ -582,6 +582,7 @@ namespace Symbiose
 					_fieldNames = new string[arr.Count];
 					for (int i = 0; i < arr.Count; i++)
 						_fieldNames[i] = arr[i].AsString();
+					_fieldNames = FieldOverlay.OrdreCycle(_fieldNames);   // vent en tête (D112 ②)
 					GD.Print($"[WorldView] fields : {_fieldNames.Length} champs au registre.");
 					// la grille du champ courant part au prochain tour (stale).
 				}

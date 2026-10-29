@@ -791,7 +791,14 @@ from __future__ import annotations
 #       `pont_delta.py`). Sans la clé : snapshot complet INCHANGÉ (tests, outils).
 #       Conteneurs : format complet. Mineure bumpée = nouveau mode de protocole.
 #       Hors tick → golden INTACT.
-ENGINE_VERSION = "0.6.0"
+# 0.6.1 (CASSÉ À L'ÉCRAN ②, D112) : ajouts rétro-compatibles. (d) `fields` sert
+#       TOUJOURS `vent`/`lisiere`/`turbulence` au registre ; un champ paresseux
+#       encore None répond une grille NEUTRE (0.0 / 0.0 / 1.0) sans être créé (D99).
+#       (h) `debug` gagne l'op `carpophore` {tile, r, c, espece=psilocybe} : un
+#       champignon pousse au plot pour la semaine affichée (mémoire de perception
+#       `carpophores_debug`, même liste que le snapshot et la cueillette) ; réponse
+#       = bloc `carpophores` complet. Hors tick, pont opt-in → golden INTACT.
+ENGINE_VERSION = "0.6.1"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

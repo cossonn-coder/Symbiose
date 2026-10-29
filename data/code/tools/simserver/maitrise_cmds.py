@@ -113,7 +113,9 @@ class MaitriseCmdsMixin:
                 "reseau": {"libelles": dict(SC.RESEAU), "dense": CARPO_DENS_REF}}
 
     def cmd_debug(self, msg: dict) -> dict:
-        """Raccourcis DEBUG (F5) : `msg.op` ∈ {palier3, observer_tout, reset}.
+        """Raccourcis DEBUG (F5) : `msg.op` ∈ {palier3, observer_tout, reset,
+        carpophore}. `carpophore` (D112 ②) : `tile`, `r`, `c`, `espece` (défaut
+        psilocybe) → un champignon pousse au plot pour la semaine affichée.
         Hors golden (pont opt-in). Étiqueté debug côté vue."""
         if self.engine is None:
             return {"ok": False, "error": "debug avant init"}
@@ -128,4 +130,8 @@ class MaitriseCmdsMixin:
         if op == "reset":
             D.reset_maitrise(gs, player)
             return {"ok": True, "op": op}
+        if op == "carpophore":
+            return {"op": op, **D.pousser_carpophore(
+                gs, msg.get("tile"), msg.get("r"), msg.get("c"),
+                msg.get("espece") or "psilocybe")}
         return {"ok": False, "error": f"op debug inconnue : {op!r}"}

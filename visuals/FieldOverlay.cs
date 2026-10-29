@@ -18,6 +18,7 @@
 // problème : lui redessine souvent peu de points, ici rarement tout le sol.
 
 using Godot;
+using System.Linq;
 using GDict = Godot.Collections.Dictionary;
 
 namespace Symbiose
@@ -90,6 +91,15 @@ namespace Symbiose
 			["soil_memory_fast"] = (new Color("c8c8c8"), new Color("6f6fb8"), "jeune", "récent", float.NaN, float.NaN),
 			["soil_memory_deep"] = (new Color("c8c8c8"), new Color("3a3a8f"), "jeune", "profond", float.NaN, float.NaN),
 			["disturbance"]      = (new Color("d8d8d0"), new Color("a83a78"), "calme", "perturbé", 0f, 1f),
+			// Vent spatialisé + périphérie (D112 ②, D99) — en TÊTE du cycle F6, bornes
+			// FIXES (leçon D45c : jamais d'auto-échelle sur un champ souvent uniforme).
+			// vent = facteur d'abri × force de la masse d'air ∈ [0, 1 + venturi 0,15]
+			// → 0..1,2 ; lisiere ∈ [0,1] (GridField) ; turbulence = multiplicateur de
+			// rafale ≥ 1, plafond moteur TURBULENCE_PLAFOND = 2 → 1..2 (neutre 1 =
+			// pôle bas : « aucune rafale de décollement »).
+			["vent"]             = (new Color("d8dce0"), new Color("3a5f8f"), "calme", "venté", 0f, 1.2f),
+			["lisiere"]          = (new Color("e0d8c4"), new Color("3f6a2f"), "ouvert", "lisière", 0f, 1f),
+			["turbulence"]       = (new Color("d8dce0"), new Color("8f3a5a"), "laminaire", "rafales", 1f, 2f),
 			// Vitalité du SOL (sprint calibration réaliste ③) : synthèse DÉRIVÉE
 			// (méthode moteur eco.vitalite, matérialisée à la demande par le pont),
 			// jamais un GridField. Borne HAUTE 0.8f = plage recalibrée au ① (jeune
@@ -162,6 +172,19 @@ namespace Symbiose
 			["moustique"]        = (new Color("e8e2d4"), new Color("6a5f57"), "absent", "nuée", 0f, 1f),
 			["libellule"]        = (new Color("e8e2d4"), new Color("2f9f8f"), "absent", "en vol", 0f, 1f),
 		};
+		// Tête du cycle Maj+F6 (D112 ②) : le vent d'abord — le champ qu'on vient
+		// chercher dans l'overlay — puis la périphérie qui le module. Le reste garde
+		// l'ordre du registre serveur.
+		private static readonly string[] TeteDeCycle = { "vent", "lisiere", "turbulence" };
+
+		/// <summary>Registre serveur réordonné pour le cycle F6 : TeteDeCycle (si
+		/// présents) puis les autres noms dans leur ordre d'arrivée.</summary>
+		public static string[] OrdreCycle(string[] registre)
+		{
+			return TeteDeCycle.Where(registre.Contains)
+				.Concat(registre.Where(n => !TeteDeCycle.Contains(n))).ToArray();
+		}
+
 		// Champ inconnu de la table (futur champ moteur ramassé par
 		// l'introspection) : bleu→rouge générique en échelle auto, jamais un
 		// crash.
@@ -174,6 +197,10 @@ namespace Symbiose
 					   float FixMin, float FixMax)
 			PaletteOf(string field) =>
 			field != null && Palettes.TryGetValue(field, out var p) ? p : DefaultPalette;
+
+		/// <summary>Le champ a-t-il une palette propre (sinon DefaultPalette) ?
+		/// Lu par les jauges Maj+F3 (pastille de champ, D112 ②).</summary>
+		public static bool APalette(string field) => field != null && Palettes.ContainsKey(field);
 
 		/// <summary>Nom du champ affiché (HUD) ; null si aucune grille.</summary>
 		public string FieldName { get; private set; }
