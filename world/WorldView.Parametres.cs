@@ -14,6 +14,11 @@
 //      - Carnet interprétatif anticipé (OUI / NON) ;
 //      - Vigueur infinie (réglage de TEST, défaut OUI pendant la phase de test).
 //
+// Depuis le 2026-10-29 (demande Nico) le panneau s'ouvre AUSSI en jeu (touche X) :
+// même construction, mais SANS la famille INIT (elle n'a de sens qu'avant
+// `cmd_init`). Il porte en plus la case « Régulateur de cadence » (sprint
+// FLUIDITÉ PC PARTAGE ②, WorldView.Regulateur.cs), décochée par défaut.
+//
 // ⚠️ Périmètre volontairement RESTREINT (Simplicity First + D-A7) : les overlays
 // debug PUREMENT runtime (heatmaps F6, température sol F7, vie macro I, LOD F9)
 // dépendent de couches construites APRÈS le lancement — ils n'ont pas de cible au
@@ -53,20 +58,29 @@ namespace Symbiose
 		// Codes d'encyclopédie dans l'ordre des items de l'OptionButton.
 		private static readonly string[] EncycloCodes = { "vierge", "amorcee", "fournie" };
 
+		// Panneau du launcher : caché, révélé par le bouton « Paramètres… ». Ancré à
+		// DROITE du panneau launcher (320 de large + marge) pour ne pas le recouvrir.
 		private void BuildParametres()
 		{
-			_parametres = new PanelContainer { Visible = false };
-			// Ancré à DROITE du panneau launcher (320 de large + marge) pour ne pas
-			// le recouvrir ; défile si le contenu déborde en hauteur.
-			_parametres.SetAnchorsPreset(Control.LayoutPreset.TopLeft);
-			_parametres.Position = new Vector2(352, 16);
-			_parametres.CustomMinimumSize = new Vector2(300, 0);
-			_selecteur.AddChild(_parametres);
+			_parametres = ConstruireParametres(_selecteur, new Vector2(352, 16), enJeu: false);
+			_parametres.Visible = false;
+		}
+
+		// Construit le panneau sous `parent`. `enJeu` = sans la famille INIT.
+		// 📖 Reconstruit à chaque ouverture en jeu (cf. ToggleParametresJeu) : les
+		// cases relisent l'état courant (ex. ombres basculées entre-temps par O).
+		private PanelContainer ConstruireParametres(Node parent, Vector2 position, bool enJeu)
+		{
+			var panneau = new PanelContainer();
+			panneau.SetAnchorsPreset(Control.LayoutPreset.TopLeft);
+			panneau.Position = position;
+			panneau.CustomMinimumSize = new Vector2(300, 0);
+			parent.AddChild(panneau);
 
 			// Contenu enveloppé dans un ScrollContainer borné (patron T1
 			// `UiScroll.Envelopper`) : défile SI le panneau déborde en hauteur.
 			var vbox = new VBoxContainer { CustomMinimumSize = new Vector2(300, 0) };
-			_parametres.AddChild(UiScroll.Envelopper(vbox, 420f));
+			panneau.AddChild(UiScroll.Envelopper(vbox, 420f));
 
 			vbox.AddChild(new Label
 			{
@@ -101,6 +115,23 @@ namespace Symbiose
 			};
 			vbox.AddChild(ombres);
 
+			// --- Confort : régulateur de cadence (WorldView.Regulateur.cs) ---
+			// TooltipText = info-bulle native de Godot, affichée au survol.
+			var regulateur = new CheckButton
+			{
+				Text = "Régulateur de cadence",
+				ButtonPressed = _regChoix,
+				TooltipText = "Pendant la saison, si la simulation prend du retard, l'affichage\n"
+					+ "ralentit à 15 images/s pour laisser plus de calcul au moteur.\n"
+					+ "Il reprend sa vitesse normale en planification ou dès que tu\n"
+					+ "bouges la caméra. Décoché : l'image la plus fluide possible,\n"
+					+ "au prix d'une simulation un peu plus lente.",
+			};
+			regulateur.Toggled += on => { _regChoix = on; _regActif = on; };
+			vbox.AddChild(regulateur);
+
+			if (enJeu) return panneau;   // INIT : sans objet une fois le monde lancé
+
 			vbox.AddChild(new HSeparator());
 
 			// --- Init : encyclopédie de démarrage ---
@@ -130,6 +161,7 @@ namespace Symbiose
 			};
 			vigueur.Toggled += on => _vigueurInfinie = on;
 			vbox.AddChild(vigueur);
+			return panneau;
 		}
 
 		private void MajVitesseLabel()
@@ -141,6 +173,30 @@ namespace Symbiose
 		private void ToggleParametres()
 		{
 			if (_parametres != null) _parametres.Visible = !_parametres.Visible;
+		}
+
+		// --- Panneau EN JEU (touche X, Échap le ferme) ---
+		// Son propre CanvasLayer (écran, au-dessus du HUD comme la consultation) :
+		// le panneau ne bouge pas avec la caméra. Un Control capte les clics
+		// (MouseFilter Stop par défaut) → pas de geste déclenché à travers lui,
+		// car les gestes passent par _UnhandledInput.
+		private CanvasLayer _parametresJeu;
+
+		private bool ParametresJeuOuvert =>
+			_parametresJeu != null && IsInstanceValid(_parametresJeu);
+
+		private void ToggleParametresJeu()
+		{
+			if (ParametresJeuOuvert) { FermerParametresJeu(); return; }
+			_parametresJeu = new CanvasLayer { Name = "ParametresJeu", Layer = 11 };
+			AddChild(_parametresJeu);
+			ConstruireParametres(_parametresJeu, new Vector2(810, 200), enJeu: true);
+		}
+
+		private void FermerParametresJeu()
+		{
+			if (ParametresJeuOuvert) _parametresJeu.QueueFree();
+			_parametresJeu = null;
 		}
 	}
 }

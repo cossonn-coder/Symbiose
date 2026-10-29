@@ -195,7 +195,7 @@ namespace Symbiose
 			legend.Text = "Espace lancer/pause · flèches déplacer"
 				+ " · molette zoom · PageUp/PageDown pivoter\n"
 				+ "F3 étiquettes (Maj+F3 info-bulle technique) · F4 perfs (Maj+F4 couches) · C copier perfs · Z copier à-coups de zoom · E banc perf (≈2 min, rapport copié ; Maj+E banc accéléré) · H maison transparente · F6 heatmap debug (Maj+F6 champ)"
-				+ " · F7 carte T sol · G survol gènes · L planche des paliers · I vie macro (1 bête par espèce et par tuile + pullulations, taille réelle : les petites aux forts zooms) · O ombres · M mode simu · A jardinier automate (Maj+A objectif démo)\n"
+				+ " · F7 carte T sol · G survol gènes · L planche des paliers · I vie macro (1 bête par espèce et par tuile + pullulations, taille réelle : les petites aux forts zooms) · O ombres · X paramètres · M mode simu · A jardinier automate (Maj+A objectif démo)\n"
 				+ "palette de gestes = colonne d'icônes à GAUCHE (clic) · Tab/1..9 accélérateurs · S graine (planter) · B substrat (poser pot/bac) · N nature (pailler) · clic gauche = agir"
 				+ " — geste courant affiché en haut à gauche";
 			hud.AddChild(legend);

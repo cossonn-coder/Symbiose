@@ -86,12 +86,12 @@ namespace Symbiose
 			return true;
 		}
 
-		// Fin de banc, abandon ou entrée en B : réglages du jeu (régulateur ON,
-		// moteur BelowNormal). Idempotent.
+		// Fin de banc, abandon ou entrée en B : réglages du jeu (régulateur = choix
+		// du joueur dans Paramètres, moteur BelowNormal). Idempotent.
 		private void RetablirPartage()
 		{
 			if (!_bpTouche) return;
-			_regActif = true;
+			_regActif = _regChoix;
 			_bridge?.PoserPriorite(normale: false);
 			_bpTouche = false;
 		}

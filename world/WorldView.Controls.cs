@@ -53,10 +53,13 @@ namespace Symbiose
 				// méthode assure qu'on ne recharge pas pendant l'écran de sélection.
 				if (k.Keycode == Key.Escape)
 				{
-					// Précédence (T3 s'insère AVANT la consultation) : le dossier de
+					// Précédence : le panneau Paramètres en jeu (touche X) se ferme
+					// d'abord. Puis (T3 s'insère AVANT la consultation) le dossier de
 					// plante debug se ferme d'abord, puis un panneau de consultation,
 					// et seulement sinon → retour à l'accueil.
-					if (_dossier != null && IsInstanceValid(_dossier))
+					if (ParametresJeuOuvert)
+						FermerParametresJeu();
+					else if (_dossier != null && IsInstanceValid(_dossier))
 						FermerDossier();
 					else if (_consultation != null && IsInstanceValid(_consultation))
 						_consultation.Fermer();
@@ -99,6 +102,7 @@ namespace Symbiose
 					case Key.E:        ToggleEtalonnage(k.ShiftPressed); break;
 					case Key.H:        ToggleHouseGhost(); break;
 					case Key.O:        ToggleShadows();   break;
+					case Key.X:        ToggleParametresJeu(); break;  // panneau Paramètres en jeu
 					case Key.I:        ToggleMacroLife(); break;
 					case Key.F6:
 						if (k.ShiftPressed) CycleField();

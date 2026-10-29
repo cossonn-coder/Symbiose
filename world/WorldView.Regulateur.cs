@@ -34,7 +34,12 @@ namespace Symbiose
 		private const int RegulateurFps = 15;           // plancher accepté par Nico
 		private const double RegulateurCameraSec = 1.0; // plein régime après la caméra
 
-		private bool _regActif = true;          // le banc de partage le coupe (A1/A2)
+		// Choix du joueur (case « Régulateur de cadence » de Paramètres). Défaut OFF
+		// depuis le run PC du 2026-10-29 : son gain n'est pas démontré [n=1 run, PC]
+		// et sans lui l'image est la plus fluide. `_regActif` = état effectif ; le
+		// banc de partage le force par sous-phase puis le rend au choix du joueur.
+		private bool _regChoix = false;
+		private bool _regActif = false;
 		private int _regOrigine = -1;           // plafond d'origine (première image)
 		private bool _regEngage;                // état courant (overlay F4, rapport)
 		private double _regCameraT = -1e9;      // dernière interaction caméra (s)
@@ -77,7 +82,7 @@ namespace Symbiose
 
 		/// <summary>État court pour l'overlay F4.</summary>
 		private string EtatRegulateur() =>
-			!_regActif ? "régulateur coupé (banc)"
+			!_regActif ? "régulateur coupé"
 			: _regEngage ? $"régulé {RegulateurFps} FPS (moteur en retard)" : "libre";
 
 		/// <summary>Ligne du rapport de banc (E, Maj+E, chaque phase du banc 3 phases).</summary>
