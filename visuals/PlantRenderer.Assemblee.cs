@@ -17,6 +17,14 @@
 //    on PERMUTE ombre et lumière dans la rampe au lieu de retourner la pièce : un
 //    retournement ferait pendre les feuilles dressées (ail, poireau).
 //
+// CASSÉ À L'ÉCRAN ③ — PALETTE INDEXÉE (PaletteIndexee.cs) : dans le PINCEAU de
+// cuisson, chaque pièce est posée en UN tracé avec la texture des CODES (canal G
+// du kit : ton + orientation de face) × modulate = n° de palette de la plante ;
+// tiges, neige, fleurons passent aussi par un n° de palette. La lumière (et la
+// permutation ombre/lumière selon la rotation D35) est alors l'affaire du shader
+// de lecture, côté soleil réel. Le dessin DIRECT (plante pas encore cuite) et F11
+// OFF gardent le chemin littéral ci-dessous, inchangé.
+//
 // 📖 Pédagogie Godot : le kit est en NIVEAUX (indices). Plutôt que créer une
 // texture par couleur de plante, on fabrique UNE fois une texture « masques »
 // (une bande blanche par niveau) et on dessine chaque pièce niveau par niveau
@@ -41,8 +49,19 @@ namespace Symbiose
 		private const float SemisPx2 = 30f;
 		private const int SemisMax = 12;
 
-		private static ImageTexture _kitMasques;
+		private static ImageTexture _kitMasques, _kitCodes;
 		private static int _kitLargeur;
+
+		/// <summary>Vrai pendant le dessin d'un pinceau qui cuit en palette indexée
+		/// (③) : les couleurs posées sont des CODES, pas des couleurs.</summary>
+		private bool Indexe => IsBrush && PaletteIndexee.Active && WorldView.CurrentZoom < PaliersHautsMinZoom;
+
+		// Couleur littérale → son code de palette quand le pinceau cuit indexé.
+		private Color Lit(Color c) => Indexe ? PaletteIndexee.Litterale(c) : c;
+
+		// Graine INDIVIDUELLE (hash de position du pied, _swayPhase) : deux voisins
+		// de même structure ne tirent pas les mêmes variantes de touffes (③).
+		private int GraineIndividu => (int)(_swayPhase * 9973f);
 
 		private readonly record struct Touffe(float Prof, Vector2 Pos, int Taille, int Variante, int Seg, int K);
 
@@ -54,12 +73,14 @@ namespace Symbiose
 			DrawTigesAssemblees(z);
 			Color[] rampe = RampeKit(c);
 			if (SouthDir().Y < 0f) (rampe[KitOmbre], rampe[KitLumiere]) = (rampe[KitLumiere], rampe[KitOmbre]);
+			int palette = Indexe ? PaletteIndexee.Palette(c) : -1;
 			if (!LeafProfiles.TryGetValue(_structure.SpeciesName, out var prof)) prof = DefaultLeaf;
 			var touffes = PlacerTouffes(z, TailleTouffe(z));
 			touffes.Sort((a, b) => a.Prof.CompareTo(b.Prof));
 			foreach (var t in touffes)
 			{
-				DrawPiece(KitTouffe(prof.Shape, t.Taille, t.Variante), t.Pos, z, rampe, KitContour, KitLumiere);
+				if (palette >= 0) DrawPieceIndexee(KitTouffe(prof.Shape, t.Taille, t.Variante), t.Pos, z, palette, -1);
+				else DrawPiece(KitTouffe(prof.Shape, t.Taille, t.Variante), t.Pos, z, rampe, KitContour, KitLumiere);
 				if (_snow > 0f && Hash01(77, t.Seg, t.K) < _snow)
 				{
 					float demi = t.Taille * 0.5f / z;
@@ -82,7 +103,7 @@ namespace Symbiose
 				Vector3 tip = s.Base + s.Dir * s.LengthCm;
 				float w = Mathf.Max(1f / z, Mathf.Round(s.ThicknessCm * WorldView.PxPerCmX * WoodWidthFactor));
 				DrawLine(Iso(s.Base.X - c.X, s.Base.Y - c.Y, s.Base.Z),
-						 Iso(tip.X - c.X, tip.Y - c.Y, tip.Z), WoodRamp(Lignification(s)), w, antialiased: false);
+						 Iso(tip.X - c.X, tip.Y - c.Y, tip.Z), Lit(WoodRamp(Lignification(s))), w, antialiased: false);
 			}
 		}
 
@@ -147,13 +168,13 @@ namespace Symbiose
 
 		// Profondeur iso = Y écran de la projection AU SOL (nord-projeté d'abord),
 		// la hauteur départageant (le haut d'une même verticale passe devant).
-		private static Touffe NouvelleTouffe(Vector3 rel, Vector2 pos, int taille, int i, int k)
+		private Touffe NouvelleTouffe(Vector3 rel, Vector2 pos, int taille, int i, int k)
 		{
 			float prof = WorldView.WorldToScreenOffset(rel.X, rel.Y).Y + rel.Z * 1e-3f;
-			int t = taille;
-			if (t > KitTailles[0] && Hash01(79, i, k) < 0.33f)
+			int t = taille, g = GraineIndividu;
+			if (t > KitTailles[0] && Hash01(79, i + g, k) < 0.33f)
 				t = KitTailles[System.Array.IndexOf(KitTailles, t) - 1];
-			int v = Mathf.Min(KitVariantes - 1, (int)(Hash01(81, i, k) * KitVariantes));
+			int v = Mathf.Min(KitVariantes - 1, (int)(Hash01(81, i, k + g) * KitVariantes));
 			return new Touffe(prof, pos, t, v, i, k);
 		}
 
@@ -165,14 +186,30 @@ namespace Symbiose
 			if (_structure.Floraison < FloraisonSeuil) return;
 			if (!Palettes.TryGetValue(_structure.SpeciesName, out var pal)) pal = DefaultPalette;
 			Color[] rampe = RampeKit(pal.Flower);
+			int palFleur = Indexe ? PaletteIndexee.Palette(pal.Flower) : -1;
+			int palCoeur = Indexe ? PaletteIndexee.Palette(FlowerHeart) : -1;
 			foreach (var t in touffes)
 			{
 				if (Hash01(83, t.Seg, t.K) >= _structure.Floraison * 0.6f) continue;
 				Fleuron f = t.Taille >= 9 ? Fleuron.Etoile : t.Taille >= 7 ? Fleuron.Bouton : Fleuron.Point;
 				var pos = t.Pos + new Vector2((Hash01(85, t.Seg, t.K) - 0.5f) * t.Taille * 0.5f,
 											  -t.Taille * 0.25f) / z;
-				DrawPiece(KitFleuron(f), pos, z, rampe, KitBase, KitCoeur);
+				if (palFleur >= 0) DrawPieceIndexee(KitFleuron(f), pos, z, palFleur, palCoeur);
+				else DrawPiece(KitFleuron(f), pos, z, rampe, KitBase, KitCoeur);
 			}
+		}
+
+		// Pièce INDEXÉE (③) : un tracé pour le corps (codes du kit × n° de palette),
+		// un second pour le cœur d'un fleuron (sa propre palette) si `palCoeur` ≥ 0.
+		private void DrawPieceIndexee(Rect2I r, Vector2 centre, float z, int palette, int palCoeur)
+		{
+			AssurerMasques();
+			Vector2 coin = ((centre * z) - (Vector2)r.Size * 0.5f).Round() / z;
+			var dst = new Rect2(coin, (Vector2)r.Size / z);
+			DrawTextureRectRegion(_kitCodes, dst, (Rect2)r, PaletteIndexee.ModulatePiece(palette));
+			if (palCoeur >= 0)
+				DrawTextureRectRegion(_kitCodes, dst, new Rect2(r.Position.X + _kitLargeur, r.Position.Y,
+					r.Size.X, r.Size.Y), PaletteIndexee.ModulatePiece(palCoeur));
 		}
 
 		// Une pièce du kit centrée en `centre` (px canvas locaux), calée sur la
@@ -204,6 +241,19 @@ namespace Symbiose
 				}
 			_kitLargeur = w;
 			_kitMasques = ImageTexture.CreateFromImage(img);
+			// Codes indexés (③) : bande 0 = tout sauf le cœur, bande 1 = le cœur ;
+			// texel = (1, 1, code, 1) → × modulate (palette, palette, 1, 1) = pixel encodé.
+			var codes = Image.CreateEmpty(w * 2, h, false, Image.Format.Rgba8);
+			for (int y = 0; y < h; y++)
+				for (int x = 0; x < w; x++)
+				{
+					Color p = niv.GetPixel(x, y);
+					int code = (int)Mathf.Round(p.G * 255f);
+					if (code == 0) continue;
+					bool coeur = (int)Mathf.Round(p.R * 255f) == KitCoeur;
+					codes.SetPixel((coeur ? w : 0) + x, y, new Color(1f, 1f, code / 255f, 1f));
+				}
+			_kitCodes = ImageTexture.CreateFromImage(codes);
 		}
 	}
 }

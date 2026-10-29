@@ -35,7 +35,9 @@ namespace Symbiose
 {
 	public partial class PlantShadow : Node2D
 	{
-		private static readonly Color ShadowColor = new Color(0f, 0f, 0f, 0.18f);
+		// CASSÉ À L'ÉCRAN ③ : ombre TEINTÉE vert-noir (#071010, brief DA : jamais de
+		// noir), alpha 0,2 ≈ même assombrissement qu'un noir à 0,18 sur un sol moyen.
+		private static readonly Color ShadowColor = new Color(0.027f, 0.063f, 0.063f, 0.2f);
 		private const int N = 8;                     // sommets par demi-cercle (+1)
 		private const int SommetsParCapsule = 2 * (N + 1);
 

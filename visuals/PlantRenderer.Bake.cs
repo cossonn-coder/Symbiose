@@ -139,6 +139,12 @@ namespace Symbiose
 			// LEVIERS ③ : retient si le tracé enregistré est le vectoriel direct.
 			_traceVecteur = !_enTapis && !HasBakedImage;
 			if (_enTapis) return;   // rendue par le tapis de son plot (T5)
+			// CASSÉ À L'ÉCRAN ③ : une image cuite en palette indexée se lit avec le
+			// shader de la LUT (partagé → envois toujours regroupés) ; le dessin
+			// direct et les images littérales (paliers hauts, F11 OFF) gardent
+			// l'ancien matériau. Affectation seulement au changement.
+			Material mat = HasBakedImage && _baker.ImageIndexee ? PaletteIndexee.Materiau : BakeQueue.Unpremultiply;
+			if (Material != mat) Material = mat;
 			if (!HasBakedImage) { DrawVector(); return; }
 			_baker.DrawImage(_pose);   // T3 : la pose de flexion courante (WindWave)
 			// Surbrillance de taille : interactive (survol souris) → dessinée EN

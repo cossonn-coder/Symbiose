@@ -63,6 +63,7 @@ namespace Symbiose
 		// à moitié allouée). Même géométrie → on recuit sur place.
 		private Cell _shown, _next;
 		private int _nextUtiles = 1;   // cellules peintes par la cuisson en vol (D109 c)
+		private bool _nextIndexee;     // cuisson en vol en palette indexée (③)
 
 		private sealed class Cell
 		{
@@ -72,6 +73,7 @@ namespace Symbiose
 			public Vector2I[] Origins;   // par pose : px du collet dans SA cellule
 			public float Zoom;
 			public int Utiles = 1;       // cellules peintes (≤ Poses), D109 c
+			public bool Indexee;         // pixels = codes de palette indexée (③), lus par son shader
 			public int Poses => Cells.Length;
 
 			// Même découpage (tailles, ancrages, zoom) → on recuit sur place, sauf
@@ -85,6 +87,9 @@ namespace Symbiose
 		public PlantBaker(PlantRenderer owner) => _owner = owner;
 
 		public bool HasImage => _shown != null;
+		/// <summary>L'image affichée est en palette indexée (CASSÉ À L'ÉCRAN ③) :
+		/// cuite aux paliers bas, F11 ON → à lire avec PaletteIndexee.Materiau.</summary>
+		public bool ImageIndexee => _shown != null && _shown.Indexee;
 		public bool InFlight => _next != null;
 
 		/// <summary>Lance la cuisson au zoom `zoom` (rendue en fin de frame).
@@ -121,6 +126,7 @@ namespace Symbiose
 			// Recuisson SUR PLACE : jusqu'au Commit, on n'affiche que les cellules
 			// peintes à la fois avant et après (jamais une cellule vidée cette frame).
 			_nextUtiles = _owner.BakePosesUtiles;
+			_nextIndexee = PaletteIndexee.Active && zoom < PlantRenderer.PaliersHautsMinZoom;
 			cell.Utiles = cell == _shown ? Mathf.Min(cell.Utiles, _nextUtiles) : _nextUtiles;
 			for (int k = 0; k < poses; k++)
 			{
@@ -151,6 +157,7 @@ namespace Symbiose
 			if (_shown != null && _shown != _next) Free(_shown);
 			_shown = _next;
 			_shown.Utiles = _nextUtiles;
+			_shown.Indexee = _nextIndexee;
 			_next = null;
 			// Rendu fait : les pixels restent dans la page, les pinceaux se taisent
 			// (sinon le prochain rendu de la page les rejouerait pour rien).

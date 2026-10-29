@@ -135,8 +135,9 @@ namespace Symbiose
 		{
 			if (_snow <= 0f) return;
 			Vector2 cap = center - new Vector2(0f, ry * 0.5f);
-			DrawEllipse(cap, rx * (0.5f + 0.4f * _snow), ry * 0.45f, SnowShade);
-			DrawEllipse(cap - new Vector2(0f, ry * 0.08f), rx * (0.4f + 0.35f * _snow), ry * 0.32f, SnowColor);
+			// Lit() : code de palette quand le pinceau cuit indexé (③), sinon littéral.
+			DrawEllipse(cap, rx * (0.5f + 0.4f * _snow), ry * 0.45f, Lit(SnowShade));
+			DrawEllipse(cap - new Vector2(0f, ry * 0.08f), rx * (0.4f + 0.35f * _snow), ry * 0.32f, Lit(SnowColor));
 		}
 	}
 }

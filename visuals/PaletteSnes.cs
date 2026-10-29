@@ -1,4 +1,8 @@
 // SYMBIOSE — PaletteSnes.cs (sprint JARDIN VIVANT, T1)
+// ⚠️ DÉBRANCHÉ au sprint CASSÉ À L'ÉCRAN ③ : la quantification plein écran n'est plus
+// sur le chemin de rendu (F11 bascule désormais la palette indexée, PaletteIndexee.cs).
+// Fichier GARDÉ (règle Nico) : il porte toujours le shader de VISION du psilocybe
+// (`vision.gdshader`, Vision()) et reste joignable par le banc du seuil (--capture-palette=1).
 // Branche le shader de quantification SNES (`palette_snes.gdshader`) sur le
 // SubViewportContainer qui affiche le monde, et lui passe la palette maître
 // (Palette16.Maitre = source UNIQUE des couleurs). Bascule debug avant/après.

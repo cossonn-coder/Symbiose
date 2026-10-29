@@ -29,6 +29,7 @@
 #         images, postes CPU) au lieu de la moyenne [perf]. -z / -c remplacent zoom
 #         et centre ; -x MacroLife masque la vie macro ; -O coupe les ombres.
 #     -O  ombres coupées (comme la touche O)
+#     -L  palette indexée coupée (F11) : mesure « avant » A/B — CASSÉ À L'ÉCRAN ③
 #     -A  cadence PENDANT la mesure du banc E (PERF VUE ④) : 0 = turbo, s = s par
 #         semaine (1 = défaut de test de Nico) ; absent = nominale 60 s/semaine
 #     -V  vent imposé (force[,direction rad], 0 = calme) — comme --capture-vent
@@ -71,6 +72,7 @@ while [ $# -gt 0 ]; do
     -T) TURBO="$2"; shift 2 ;;
     -E) BANC_E="$2"; shift 2 ;;
     -O) OMBRES=0; shift ;;
+    -L) SANSLUT=1; shift ;;
     -W) BANC_W="$2"; shift 2 ;;
     -A) CADENCE="$2"; shift 2 ;;
     -V) VENT="$2"; shift 2 ;;
@@ -80,7 +82,7 @@ while [ $# -gt 0 ]; do
     -Z) BALAYAGE="$2"; shift 2 ;;
     -P) PARTAGE="$2"; shift 2 ;;
     --no-build) BUILD=0; shift ;;
-    -h|--help) sed -n '2,54p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,55p' "$0"; exit 0 ;;
     *) echo "option inconnue : $1" >&2; exit 2 ;;
   esac
 done
@@ -116,6 +118,7 @@ if [ -n "$BANC_E" ]; then Z=banc-zoom C=banc-centre; else Z=zoom C=centre; fi
 [ -n "$TURBO" ] && ARGS+=(--capture-turbo="$TURBO")
 [ -n "$BANC_E" ] && ARGS+=(--capture-etalonnage="$BANC_E")
 [ -n "$OMBRES" ] && ARGS+=(--capture-ombres=0)
+[ -n "${SANSLUT:-}" ] && ARGS+=(--capture-lut=0)
 [ -n "$BANC_W" ] && ARGS+=(--capture-banc-semaine="$BANC_W")
 [ -n "$CADENCE" ] && ARGS+=(--capture-banc-cadence="$CADENCE")
 [ -n "$VENT" ] && ARGS+=(--capture-vent="$VENT")

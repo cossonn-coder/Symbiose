@@ -52,9 +52,28 @@ namespace Symbiose
 		// c'est ~1 redraw/s ; à 3 s debug, ~15/s — toujours trivial).
 		// -------------------------------------------------------------------
 
+		// CASSÉ À L'ÉCRAN ③ : le soleil éclaire AUSSI les plantes (palette indexée,
+		// PaletteIndexee.MajSoleil) → il est calculé même ombres coupées (O) ; seule
+		// la re-projection des ombres est sautée. Banc : --capture-heure=<deg> impose
+		// l'angle horaire (−90 matin, 0 midi, +90 soir), quelle que soit la phase.
+		private static readonly float CaptureHeure = ParseFloat(ArgCapture("heure"));
+
 		private void UpdateSun()
 		{
-			if (!ShadowsOn) return;        // ombres coupées (O) : zéro travail
+			ApplySun();
+			PaletteIndexee.MajSoleil();   // chaque image : suit aussi la rotation D35
+			// Banc : angle ÉCRAN du soleil (convention mesure_da.py --soleil) au changement.
+			float ang = PaletteIndexee.AngleSoleilDeg;
+			if (!float.IsNaN(CaptureHeure) && !float.IsNaN(ang) && (float.IsNaN(_angleSoleilLog) || Mathf.Abs(ang - _angleSoleilLog) > 0.5f))
+			{
+				_angleSoleilLog = ang;
+				GD.Print($"[Soleil] écran {ang:F0}° (0 = droite, 90 = haut)");
+			}
+		}
+		private float _angleSoleilLog = float.NaN;
+
+		private void ApplySun()
+		{
 			if (_season == null) return;   // pas encore de snapshot
 			float spw = DebugSecondsPerWeek > 0f ? DebugSecondsPerWeek : SecondsPerWeek;
 
@@ -69,7 +88,9 @@ namespace Symbiose
 			// Angle horaire courant : la jauge intra-semaine devient l'heure du
 			// jour. Temps figé (Planification), plein régime (Turbo) → midi.
 			float h;
-			if (_phase == Phase.Planification || _simMode == SimMode.Turbo || spw <= 0f)
+			if (!float.IsNaN(CaptureHeure))
+				h = Mathf.Clamp(CaptureHeure, -hSet + SunriseMarginDeg, hSet - SunriseMarginDeg);
+			else if (_phase == Phase.Planification || _simMode == SimMode.Turbo || spw <= 0f)
 				h = 0f;
 			else
 				h = Mathf.Lerp(-hSet + SunriseMarginDeg, hSet - SunriseMarginDeg,
@@ -99,6 +120,9 @@ namespace Symbiose
 			SunShadowDir = new Vector2(-Mathf.Sin(az), Mathf.Cos(az));
 			SunInvTan = Mathf.Min(cosElev / sinElev, MaxInvTan);
 			SunStrength = sinElev;
+			if (!float.IsNaN(CaptureHeure))
+				GD.Print($"[Soleil] heure {h:F0}° · élévation {Mathf.RadToDeg(elev):F0}° · ombre monde {SunShadowDir}");
+			if (!ShadowsOn) return;        // ombres coupées (O) : pas de re-projection
 
 			// Re-projeter les ombres : maison (polygone) + lot des ombres de
 			// plantes (PERF VUE ③ : une commande, jamais les segments des plantes).

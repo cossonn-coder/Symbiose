@@ -39,6 +39,9 @@
 #     -O  ombres portées coupées (touche O) — CASSÉ À L'ÉCRAN ① (masque des sprites)
 #     -H  maison + lisière transparentes (touche H) au montage — CASSÉ À L'ÉCRAN ②
 #     -6  heatmap F6 ouverte au montage (1er champ du cycle) — CASSÉ À L'ÉCRAN ②
+#     -j  angle horaire du soleil imposé en degrés (−90 matin, 0 midi, 90 soir) ;
+#         le journal donne l'angle ÉCRAN pour mesure_da.py --soleil — CASSÉ À L'ÉCRAN ③
+#     -L  palette indexée coupée (F11) : la capture « avant » de ③
 #     -n  nombre d'images              (défaut 3)
 #     -f  images/s simulées            (défaut 10 → 3 images = 0,3 s de jeu)
 #   Sortie : DOSSIER/frame00000000.png, frame00000001.png, … (1920×1080).
@@ -60,7 +63,7 @@
 set -euo pipefail
 
 . "$(dirname "${BASH_SOURCE[0]}")/lib_vm_godot.sh"   # DEPOT GODOT XROOT + vm_* (D106 T1)
-SORTIE=/tmp/capture_symbiose BANC=smoke ZOOM="" CENTRE="" SOURIS="" GESTE="" VENT="" METEO="" SEMAINES="" DEFILE="" GRAINE="" ORIENT="" CACHER="" TURBO="" PAN="" PLANCHE="" AIDE="" KIT="" PAL3="" TECH="" DECORF10="" DECORBANC="" PALETTE="" OMBRES="" MAISON="" F6="" FRAMES=3 FPS=10 BUILD=1
+SORTIE=/tmp/capture_symbiose BANC=smoke ZOOM="" CENTRE="" SOURIS="" GESTE="" VENT="" METEO="" SEMAINES="" DEFILE="" GRAINE="" ORIENT="" CACHER="" TURBO="" PAN="" PLANCHE="" AIDE="" KIT="" PAL3="" TECH="" DECORF10="" DECORBANC="" PALETTE="" OMBRES="" MAISON="" F6="" HEURE="" SANSLUT="" FRAMES=3 FPS=10 BUILD=1
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -89,11 +92,13 @@ while [ $# -gt 0 ]; do
     -O) OMBRES=1; shift ;;
     -H) MAISON=1; shift ;;
     -6) F6=1; shift ;;
+    -j) HEURE="$2"; shift 2 ;;
+    -L) SANSLUT=1; shift ;;
     -D) DECORF10="$2"; shift 2 ;;
     -B) DECORBANC=1; shift ;;
     -P) PAL3=1; shift ;;
     -t) TECH=1; shift ;;
-    -h|--help) sed -n '2,56p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,59p' "$0"; exit 0 ;;
     *) echo "option inconnue : $1" >&2; exit 2 ;;
   esac
 done
@@ -133,6 +138,8 @@ ARGS=(--capture-banc="$BANC")
 [ -n "$OMBRES" ] && ARGS+=(--capture-ombres=0)
 [ -n "$MAISON" ] && ARGS+=(--capture-maison=1)
 [ -n "$F6" ] && ARGS+=(--capture-f6=1)
+[ -n "$HEURE" ] && ARGS+=(--capture-heure="$HEURE")
+[ -n "$SANSLUT" ] && ARGS+=(--capture-lut=0)
 DISPLAY="$ECRAN" LIBGL_ALWAYS_SOFTWARE=1 "$GODOT" --path "$DEPOT" \
   --rendering-driver opengl3 --resolution 1920x1080 \
   --write-movie "$SORTIE/frame.png" --fixed-fps "$FPS" --quit-after "$FRAMES" \

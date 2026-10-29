@@ -129,6 +129,9 @@ namespace Symbiose
 		{
 			if (Suspendue) return;
 			long t0 = PerfPostes.Debut();
+			// ③ : palettes ajoutées à l'image précédente par les pinceaux → LUT au GPU avant
+			// qu'une image validée ci-dessous (Commit) ne s'affiche (filet du différé).
+			PaletteIndexee.Televerser();
 			ulong u0 = Time.GetTicksUsec();
 			_commitUs = _releaseUs = _beginUsMax = 0;
 			_beginMaxSegs = _beginNb = 0;

@@ -13,6 +13,14 @@
 // Lumière côté SUD = vers le BAS de la pièce (sud de l'orientation 0 projeté :
 // le kit est cuit une fois, il ne suit pas la rotation D35 — cf. 00_etat ④).
 //
+// CASSÉ À L'ÉCRAN ③ — 2ᵉ canal (G) : le CODE de palette indexée de chaque pixel
+// (PaletteIndexee.cs : 128 | ton << 4 | orientation de face). Le canal R (niveaux
+// ci-dessus, éclairés vers le bas) ne sert plus qu'à la planche du kit et au rendu
+// littéral (F11 OFF, dessin direct) ; les plantes cuites lisent G : la lumière
+// vient du shader, côté soleil réel. Masses SANS contour en G (anneau extérieur
+// vide) ; trous intérieurs = ton « creux » teinté, jamais le fond. Calcul des
+// codes : PlantRenderer.KitCodes.cs.
+//
 // 📖 Pédagogie Godot/C# : une `Image` est un tableau de pixels en MÉMOIRE CPU
 // (pas encore une texture GPU). On y écrit les niveaux en format R8 (1 octet par
 // pixel, comme un buffer d'indices de palette en embarqué) ; `TeindreKit` en fait
@@ -49,7 +57,7 @@ namespace Symbiose
 		internal const int KitPasRangee = KitPas;
 		internal static string[] KitFormes => System.Enum.GetNames(typeof(LeafShape));
 
-		/// <summary>Atlas des niveaux (R8), généré une seule fois.</summary>
+		/// <summary>Atlas des niveaux (R) et des codes indexés (G), généré une seule fois.</summary>
 		internal static Image KitNiveaux { get { AssurerKit(); return _kitNiveaux; } }
 
 		private static Rect2I KitTouffe(LeafShape s, int taille, int variante)
@@ -95,7 +103,7 @@ namespace Symbiose
 			var formes = (LeafShape[])System.Enum.GetValues(typeof(LeafShape));
 			int largeur = 0;
 			foreach (int t in KitTailles) largeur += (t + 1) * KitVariantes;
-			var img = Image.CreateEmpty(largeur, KitPas * (formes.Length + 1), false, Image.Format.R8);
+			var img = Image.CreateEmpty(largeur, KitPas * (formes.Length + 1), false, Image.Format.Rg8);
 			for (int r = 0; r < formes.Length; r++)
 			{
 				int x = 0;
@@ -103,7 +111,8 @@ namespace Symbiose
 					for (int v = 0; v < KitVariantes; v++, x += t + 1)
 					{
 						var rect = new Rect2I(x, r * KitPas, t, t);
-						Poser(img, rect.Position, PeindreTouffe(formes[r], t, v), t);
+						var (niv, codes) = PeindreTouffe(formes[r], t, v);
+						Poser(img, rect.Position, niv, codes, t);
 						_kitTouffes[(formes[r], t, v)] = rect;
 					}
 			}
@@ -118,17 +127,17 @@ namespace Symbiose
 			{
 				int t = f + 1;
 				_kitFleurons[f] = new Rect2I(xF, yF, t, t);
-				Poser(img, new Vector2I(xF, yF), fleurons[f], t);
+				Poser(img, new Vector2I(xF, yF), fleurons[f], CodesFleuron(fleurons[f], t), t);
 				xF += t + 1;
 			}
 			_kitNiveaux = img;
 		}
 
-		private static void Poser(Image img, Vector2I o, byte[] niv, int t)
+		private static void Poser(Image img, Vector2I o, byte[] niv, byte[] codes, int t)
 		{
 			for (int y = 0; y < t; y++)
 				for (int x = 0; x < t; x++)
-					img.SetPixel(o.X + x, o.Y + y, new Color(niv[y * t + x] / 255f, 0f, 0f));
+					img.SetPixel(o.X + x, o.Y + y, new Color(niv[y * t + x] / 255f, codes[y * t + x] / 255f, 0f));
 		}
 
 		// --- Une touffe ------------------------------------------------------
@@ -137,7 +146,7 @@ namespace Symbiose
 		// `Rond` = rayon des formes rondes (lobée), centrées en B + A·L.
 		private readonly record struct KitFeuille(Vector2 B, Vector2 A, float L, float Rond, float Epais);
 
-		private static byte[] PeindreTouffe(LeafShape forme, int n, int variante)
+		private static (byte[] niv, byte[] codes) PeindreTouffe(LeafShape forme, int n, int variante)
 		{
 			int marge = n >= KitContourMin ? 1 : 0;
 			float r = n * 0.5f - marge;
@@ -147,6 +156,7 @@ namespace Symbiose
 
 			var proprio = new int[n * n];
 			var score = new float[n * n];
+			var face = new Vector2[n * n];
 			for (int y = 0; y < n; y++)
 				for (int x = 0; x < n; x++)
 				{
@@ -157,6 +167,7 @@ namespace Symbiose
 						var p = new Vector2(x + 0.5f, y + 0.5f);
 						proprio[y * n + x] = k;   // la dernière (la plus au sud) gagne
 						score[y * n + x] = Eclairement(forme, feuilles[k], p, c, r, n, variante);
+						face[y * n + x] = Face(forme, feuilles[k], p, c, r);
 					}
 				}
 
@@ -172,7 +183,7 @@ namespace Symbiose
 			if (n >= KitContourMin)
 				for (int i = 0; i < n * n; i++)
 					if (proprio[i] < 0 && VoisinPlein(proprio, n, i)) niv[i] = KitContour;
-			return niv;
+			return (niv, CodesTouffe(proprio, face, n, variante));
 		}
 
 		// Placement des feuilles par forme (nombre, éventail, longueur) + jitter au

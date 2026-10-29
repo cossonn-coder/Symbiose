@@ -76,15 +76,18 @@ namespace Symbiose
 		//    (110° → 133° en 2 crans d'ombre, 110° → 87° en 2 crans de clair).
 		//  - TeinteChaude 105° = jaune (#f4e559) ; TeinteFroide 230° = bleu froid. On
 		//    tourne par le PLUS COURT chemin : un vert s'ombre en bleu-vert, un rouge en
-		//    pourpre. EXCEPTION des jaunes (à < 30° du jaune) : leur ombre vire à
-		//    l'ORANGÉ (brief, épi jaune), jamais au vert.
+		//    pourpre. EXCEPTION des jaunes (à < 12° du jaune) : leur ombre vire à
+		//    l'ORANGÉ (brief, épi jaune), jamais au vert. 12° et non 30° (corrigé à ③,
+		//    mesuré au banc) : les verts olive des feuilles (OKLab 118-126°) tombaient
+		//    dans la zone → ombre orangée, dérive à l'envers (−6,5° médiane) ; les vrais
+		//    jaunes du brief (#caa704 94°, #e5cf49 100°, #f4e559 103°) y restent.
 		//  - Anti-noir : sous L 0,33 (zone quasi-noire du banc), la chroma est relevée à
 		//    ≥ 0,08 × L → l'ombre la plus sombre reste colorée (#071010 vaut 0,085).
 		private const float DlSombre = 0.11f, DlClair = 0.09f;
 		private const float LMin = 0.20f, LMax = 0.96f;
 		private const float PasTeinte = 6f;
 		private const float TeinteChaude = 105f, TeinteFroide = 230f;
-		private const float ZoneJaune = 30f;
+		private const float ZoneJaune = 12f;
 		private const float ChromaNeutre = 0.02f;   // sous ce seuil la teinte n'a pas de sens
 		private const float LQuasiNoir = 0.33f, ChromaAntiNoir = 0.08f;
 

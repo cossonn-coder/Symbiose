@@ -24,7 +24,7 @@ Perf : `tools/perf_vm.sh`.
 |---|---|---|
 | ① | `01_charte_banc_mesure.md` | **fait** (2026-10-29, non commité) |
 | ② | `02_defauts.md` — (b)(n)(e)(d)(h) | **fait** (2026-10-29, non commité) |
-| ③ | `03_palette_indexee_soleil.md` — (f)(l), paliers bas | à faire |
+| ③ | `03_palette_indexee_soleil.md` — (f)(l), paliers bas | **fait** (2026-10-29, non commité) |
 | ④ | `04_paliers_hauts.md` — (i)(m) | à faire |
 | ⑤ | `05_faune_icones.md` — (a) | à faire |
 | ⑥ | `06_lisiere_decor.md` — (k) + résidus lisière | à faire |
@@ -115,7 +115,64 @@ Perf : `tools/perf_vm.sh`.
   + checks (d)(h) ; `test_sim_server` 307 ✅, `test_vision` 38/38, golden `fecccded…` PASS.
 - Captures (hors dépôt) : `/tmp/claude-1000/da/c2/` (`avant_*` / `apres_*`).
 
+### ③ Palette indexée + soleil (paliers bas) — fait
+- **Encodage (pour ④⑤⑥)** — `visuals/PaletteIndexee.cs` (en-tête) : pixel d'atlas RGBA8 =
+  R/G n° de palette (14 bits), B = `128 | ton<<4 | orientation` (ton 0..4 creux·ombre·BASE·
+  clair·éclat ; orientation 0..7 = k×45° repère ÉCRAN, 0 droite / 2 bas / 6 haut, 8 = plat),
+  A = 0/1. Palette = `RampesDa.Deriver(base)` (5 tons, ton 2 = couleur d'origine), une par
+  couleur DISTINCTE quantifiée 6 bits/canal, mémoïsée dans une LUT 512×256 (16 384 palettes ;
+  pleine → vidée + recuisson générale, journalisé). Shader unique
+  `visuals/palette_indexee.gdshader` (cos face·soleil > 0,3 → +1, > 0,8 → +2 éclat, < −0,3 →
+  −1 ; modulate du nœud par-dessus : fondus, flash, teinte LOD survivent).
+- **Kit** : atlas RG8 — R = niveaux d'avant (planche du kit, décor `DecorLayer.Kit`, rendu
+  littéral : INCHANGÉS), G = code indexé (`PlantRenderer.KitCodes.cs` : normale = dôme de la
+  touffe + pli de la feuille ; séparation = ombre plate ; trous intérieurs = creux plat ; grain
+  hash 12 % → ton 1 ; **pas d'anneau de contour**). Fleurons : 4 coins/bras orientés, cœur =
+  palette `FlowerHeart`. Pièce indexée = UN tracé (texture des codes × modulate palette) au
+  lieu de 4 bandes. `Eclairement()` (bas éclairé) ne nourrit plus que R.
+- **Qui encode** : seul le PINCEAU de cuisson sous ×4 avec F11 ON (`Indexe`, `Lit()` :
+  tiges, bois nu, neige des touffes, fleurons). Dessin direct (plante pas encore cuite) et
+  paliers ≥ ×4 = littéral inchangé. Matériau choisi au `_Draw` : `PlantBaker.ImageIndexee`
+  → `PaletteIndexee.Materiau`, sinon `Unpremultiply`. Météo/santé/givre/automne = dans la
+  couleur de base (→ autre palette) ; vent = poses inchangées ; fondu/flash = modulate.
+- **Soleil** : `PaletteIndexee.MajSoleil` chaque image = −ombre monde projetée (suit D35) ×
+  cos(élév.) + haut écran × sin(élév.) ; `WorldView.Soleil.cs` calcule le soleil même ombres
+  coupées (O). 0 recuisson au mouvement du soleil.
+- **F11** = palette indexée ON/OFF (avant/après). `PaletteSnes.cs` + `palette_snes.gdshader`
+  débranchés (en-tête), gardés : vision du psilocybe intacte, banc du seuil `--capture-palette`.
+- **Ombres teintées** : `PlantShadow` #071010 α 0,2 (ex-noir 0,18) ; maison `Palette16.Ombre`
+  #071010 α 0,18 (ex-noir 0,16).
+- **Voisins** : variante/taille de touffe tirées avec une graine individuelle (`_swayPhase`).
+- ⚠️ **Prescription réfutée (①)** : `RampesDa.ZoneJaune` 30° → 12° — les verts olive
+  (OKLab 118-126°) étaient traités en « jaunes » → ombre orangée, dérive à l'envers (mesuré
+  −6,5° méd. luxuriance ×2) ; après : +26,6°. `--charte` 0 défaut.
+- **Outils** : `capture_vm.sh -j DEG` (angle horaire ; journal `[Soleil] écran N°` à passer
+  à `mesure_da.py --soleil`) et `-L` (LUT coupée = « avant ») ; `perf_vm.sh -L`.
+- **Banc** (paire test/réf, `-O -x Weather,MacroLife,House`, [n=1 capture par cellule]) :
+
+| scène | palier | soleil écran | avant (LUT off) | après |
+|---|---|---|---|---|
+| luxuriance | ×2 | 13° (matin) | couleurs brutes 23-43/sprite, dérive 40,3°, éclat 3/8 | brutes 5-8, tons 5, dérive 26,6°, éclat 3/6, voisins id. 0 |
+| diversité | ×1 | 13° | tons 4, dérive 26,3°, éclat 1/3 | tons 5, dérive 35,2°, éclat **3/3** |
+| | ×1 | 122° / 133° (midi / soir) | — | éclat 2/3 · 1/3 |
+| | ×2 | 13° | tons 4, dérive 36,2°, éclat 11/18 | tons 5, dérive 27,3°, éclat 8/18 |
+| | ×2 | 122° / 133° | — | éclat **15/18 · 13/18**, voisins id. 0/153 |
+
+  Partout : quasi-noir 0 %, contour noir 0 %, aplats ≤ 5 px. Visuel lu : la sunflower ×2
+  s'éclaire à droite le matin, en haut-gauche le soir (crops `cdiv_h-60/h60.png`). ×0,5 :
+  plantes sous le seuil du banc (0 sprite, tapis). Le banc sur une plante de 50 px est
+  bruité (5 % le plus clair = 2-3 px) : le matin (soleil rasant à droite) ×2 reste 8/18.
+  Rotation 1 non mesurable : `-r 1 -z 2` cadre en ×1 sur luxuriance (0 sprite) — outil, pas rendu.
+- **Perf** (`perf_vm.sh` full ×1, A/B entrelacé LUT off/on, même build) : frame 89,5 → 92,4 ms
+  et 83,0 → 85,5 ms (+3 % [n=2 paires, VM chargée 1-3,5]) ; draw calls 78 = 78. ×2 : 62,0 →
+  65,4 ms (+5,5 % [n=1, charges différentes]), draw calls 69 = 69.
+- **Écarts / reste** : éclat par TOUFFE (le shader ne connaît pas le centre de la plante) ;
+  petites fleurs ≥ ×4 (`Flower.cs`) non touchées → ④. Captures : `/tmp/claude-1000/da/c3/`.
+- **F5 Nico** : ×1/×2 au lever, midi, coucher ; tourner la caméra (R) ; F11 avant/après ;
+  vérifier le fondu d'apparition et le flash d'action sur une plante cuite.
+
 ## §REPRISE
-Lire `CLAUDE.md` + ce fichier + le kickoff du premier tronçon « à faire » (③ `03_palette_indexee_soleil.md`).
+Lire `CLAUDE.md` + ce fichier + le kickoff du premier tronçon « à faire » (④ `04_paliers_hauts.md`).
+④ réutilise l'encodage ③ (§Notes ③) : cuire les paliers hauts en codes + `PaletteIndexee`.
 Lancement : `/sprint-auto sprint_casse_ecran`. Valider chaque tronçon visuel au banc :
 protocole et ligne de base en §Notes ① (`tools/mesure_da.py`, `capture_vm.sh -O -F`).

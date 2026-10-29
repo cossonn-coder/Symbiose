@@ -60,6 +60,9 @@
 //                            des à-coups de zoom imprimé puis sortie (WorldView.ZoomJournal.cs)
 //   --capture-maison=1 / --capture-f6=1  maison + lisière transparentes (touche H) /
 //                            heatmap F6 ouverte (1er champ du cycle) — CASSÉ À L'ÉCRAN ②
+//   --capture-lut=0          palette indexée coupée (comme F11) : capture « avant » ③
+//   --capture-heure=<deg>    angle horaire du soleil imposé (−90 matin, 0 midi, +90 soir,
+//                            borné au lever/coucher) — CASSÉ À L'ÉCRAN ③ (WorldView.Soleil.cs)
 //   --capture-vivant=… / --capture-vivant-png=…  captures de l'info-bulle d'une bête
 //                            ou d'un carpophore (INFO-BULLE ③, WorldView.BancVivant.cs)
 
@@ -194,6 +197,7 @@ namespace Symbiose
 			GD.Print($"[Capture] banc « {CaptureBanc} », zoom {CaptureZoom}, centre {CaptureCentre ?? "monde"}.");
 			if (!float.IsNaN(CaptureOrient) && (int)CaptureOrient % 4 != 0)
 				RotateView((int)CaptureOrient % 4);
+			if (ArgCapture("lut") == "0" && PaletteIndexee.Active) PaletteIndexee.Basculer();   // ③ : avant
 
 			if (CaptureCentre != null)
 			{

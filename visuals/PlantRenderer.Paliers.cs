@@ -258,7 +258,7 @@ namespace Symbiose
 				Vector3 tip = s.Base + s.Dir * s.LengthCm;
 				float w = Mathf.Max(min, Mathf.Round(s.ThicknessCm * WorldView.PxPerCmX * WoodWidthFactor));
 				DrawLine(Iso(s.Base.X - c.X, s.Base.Y - c.Y, s.Base.Z * zf),
-						 Iso(tip.X - c.X, tip.Y - c.Y, tip.Z * zf), col, w, antialiased: false);
+						 Iso(tip.X - c.X, tip.Y - c.Y, tip.Z * zf), Lit(col), w, antialiased: false);   // code indexé au pinceau (③)
 			}
 		}
 

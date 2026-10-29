@@ -1,4 +1,6 @@
 // SYMBIOSE — palette_snes.gdshader (sprint JARDIN VIVANT, T1)
+// ⚠️ DÉBRANCHÉ au sprint CASSÉ À L'ÉCRAN ③ (remplacé par la palette indexée des plantes,
+// palette_indexee.gdshader) ; gardé, joignable par le banc du seuil (--capture-palette=1).
 // Quantification SNES de l'image du monde : chaque pixel du SubViewport
 // 960×540 est ramené à la PALETTE MAÎTRE (Palette16.Maitre, ~32 couleurs),
 // avec un tramage ordonné Bayer 4×4 entre ses deux couleurs les plus proches.

@@ -218,8 +218,9 @@ namespace Symbiose
 			container.Size = GetViewport().GetVisibleRect().Size;
 			GetViewport().SizeChanged += () =>
 				container.Size = GetViewport().GetVisibleRect().Size;
-			// Palette SNES ~32 couleurs + tramage Bayer sur TOUT le monde affiché
-			// (jardin vivant T1, F11 bascule) ; curseur + losange de survol.
+			// Matériau du conteneur : vision du psilocybe (la palette SNES plein écran
+			// est débranchée depuis CASSÉ À L'ÉCRAN ③, F11 = palette indexée) ; curseur
+			// + losange de survol.
 			AppliquerPleineRes(container);   // option de mesure PERF VUE ⑤ (Capture.cs)
 			PaletteSnes.Appliquer(container);
 			InitCurseur();

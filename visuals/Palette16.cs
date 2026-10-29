@@ -90,8 +90,9 @@ namespace Symbiose
 			new Color("d6cfbe"), // pan sud
 			new Color("c9c2b1"), // pan ouest
 		};
-		// Ombre portée (maison) : noir translucide, non opaque (assombrit le sol).
-		public static readonly Color Ombre = new Color(0f, 0f, 0f, 0.16f);
+		// Ombre portée (maison) : vert-noir #071010 translucide (CASSÉ À L'ÉCRAN ③, ex-noir
+		// α 0,16 ; brief DA : jamais de noir) — α 0,18 ≈ même assombrissement du sol.
+		public static readonly Color Ombre = new Color(0.027f, 0.063f, 0.063f, 0.18f);
 
 		// === MAISON NORMANDE — granite + ardoise (T3 RENDU AMBIANCE) ==========
 		// Réf. Nico (maçon-couvreur, Cotentin/Montmartin-sur-Mer). PAS de
