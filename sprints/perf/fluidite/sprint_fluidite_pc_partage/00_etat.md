@@ -233,3 +233,36 @@ VM sans mouvement GPU (rendu llvmpipe partout). **Tout se tranche au run PC.**
 BACKLOG ; non commité, journal laissé à l'orchestrateur). **Sprint clos côté code.**
 Prochain : **le run PC de Nico** (§4 « §F5 — protocole d'UN run PC »), lu avec §4 « Comment
 lire le run PC » → décision régulateur / priorité / condition « due » / pages dédiées.
+
+## Run PC du 2026-10-29 — banc partage + rapport Z (lecture orchestrateur)
+### Banc E 3 phases + partage (s90 an 2 → s141 an 3, ×4, graine 1521550718) [n=1 run, PC]
+| sous-phase | semaines jouées | s/sem | tick | step vu | img moy | p99 | FPS | régulé |
+|---|---|---|---|---|---|---|---|---|
+| C pause | s90 | — | — | — | 34,1 | 158,8 | 29,3 | 0 % |
+| A1 OFF · BelowNormal | ~s90-97 | 2,86 | 1 783 | 2 443 | 56,3 | 185,6 | 17,8 | 0 % |
+| A2 OFF · Normal | ~s97-106 | 2,23 | 1 711 | 2 341 | 89,2 | 231,0 | 11,2 | 0 % |
+| A3 15 · BelowNormal | ~s106-115 | 2,24 | 1 460 | 2 327 | 141,0 | 433,4 | 7,1 | 33 % |
+| A4 15 · Normal | ~s115-123 | 2,51 | 1 520 | 2 314 | 169,9 | 337,0 | 5,9 | 22 % |
+| B rendu suspendu | ~s123-141 | 1,39 | 921 | 1 420 | — | — | — | — |
+- **Cible NON tenue** : meilleure sous-phase 2,23 s/sem, p99 > 100 ms partout (C compris).
+- **Le régulateur s'engage au PC** (22-33 %) → la piste « semaine due à l'horloge murale » est
+  inutile. Mais FPS réel 6-7, très sous le plafond 15 : le plafond ne mord presque jamais.
+- **Banc inapte à départager régulateur / priorité** : chaque sous-phase joue d'autres
+  semaines, et le monde n'est pas stationnaire (segments ~11 000 à s95 → 20 862 à s141 ;
+  ticks lourds groupés en s91-s102). Les images se dégradent de A1 à A4 quel que soit le
+  réglage, la cadence s'améliore de A1 à A3 : tendances indissociables des semaines jouées.
+- **Seul constat robuste** : rendu actif, le tick vaut ~1,5-2,1 s (s91-s102, ~11 000 seg.) ;
+  rendu suspendu ~0,9 s (s123-141, ~20 000 seg., même saison). Le rendu prend ~la moitié du
+  moteur [n=1 run, saisons comparables, monde PLUS gros en B].
+- Images moteur en pause (C) : 16 ms/image hors postes et hors rendu CPU sur 34 → probable
+  attente GPU (pilote ANGLE ne mesure pas le GPU) [hypothèse, non mesurée].
+- Pics isolés : cuisson 581 ms (A2), 297 ms (A3) ; une image de 1 931 ms (A3) sans poste.
+- Chaque plante est redessinée ~1×/semaine (~210-280 `_Draw`/s ≈ 661 plantes / 2,3 s), à
+  ~0,6-0,7 ms par redessin [calcul orchestrateur sur ce run].
+### Rapport Z (seed 42, 117 plantes, été an 1, 40 crans) [n=3-4 par paire, PC]
+- Pire de tous les crans 173 ms (×4→×2) ; 6 images > 100 ms en ~3 allers-retours. Le
+  ×8→×4 = 453 ms du 2026-10-27 n'est pas reproduit (médiane 97, pire 129) — ③ n'a rien
+  changé au rendu : écart attribué à l'état du monde (été vs automne), non expliqué.
+- **Piste pages dédiées réfutée pour les plus gros pics** : ×4→×2 173, ×16→×8 146, ×8→×4 129
+  ont 0 mouvement GPU. Elles accompagnent seulement les pics ×16→×32 (69-103 ms, −75 à
+  −188 Mo) et ×8→×16 (65-102 ms, 4-6 pages dédiées créées, 18-34 ms de création).
