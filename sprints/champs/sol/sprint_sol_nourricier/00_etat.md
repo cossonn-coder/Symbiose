@@ -26,7 +26,7 @@ bêtes « affamées » à populations stables ; hérisson sur 619/1 188 plots (�
 |---|---|---|---|
 | ① | `01_recharge_sol.md` | re-figé `7791bfb8…` | **FAIT** 2026-10-30 |
 | ② | `02_croissance_nutrition.md` | re-figé `4c696821…` | **FAIT** 2026-10-30 |
-| ③ | `03_voix_justes.md` | inchangé | à faire |
+| ③ | `03_voix_justes.md` | inchangé `4c696821…` | **FAIT** 2026-10-30 |
 | ④ | `04_mare_nord_est.md` | inchangé | à faire |
 | ⑤ | `05_vue_mare_voix.md` | inchangé | à faire |
 
@@ -108,7 +108,44 @@ bêtes « affamées » à populations stables ; hérisson sur 619/1 188 plots (�
   2 échecs pioneer). Banc `carence_npk` NON retouché (son oracle `n < 0,3` reste à
   réviser ; la sonde ② couvre le critère croissance).
 
+### ③ Voix justes — FAIT (2026-10-30, non commité)
+- **Plante** (`sim/voix_etres.py`) : « faim » = `_ramp(1 − facteur, 0, 1 − PLANCHER)`
+  depuis `nutrition_plante` (②), nutriment cité = son limitant ; plus de lecture NPK
+  / `FIELD_NORM` propre (`SEUIL_FAIM` supprimé). Dite ⇔ croissance escomptée ≥ 15 %.
+- **Bête** (`fields/population/field.py`, grilles de rendu jamais relues par la
+  dynamique) : `faim = (pop − cible)/pop × part_lieu` si la guilde décline, où
+  `part_lieu` = part de la baisse de ce tick venant de la capacité (nourriture +
+  habitat) vs de la survie (froid/photopériode/prédateurs/perturbation), au prorata
+  des baisses relatives ; sans baisse nouvelle l'imputation précédente tient. Lu par
+  `PopulationField.faim(r, c)` ; rampe voix `(0 ; 0,4)` → dite dès cible ≥ 10 % sous
+  la population. `faim_fleurs`/`faim_proies` suivent la même grandeur.
+- **Écart au kickoff (hypothèse réfutée par la mesure)** : la définition prescrite
+  (déficit face à la seule capacité, puis face à `capacité×survie` avec partage
+  log statique) donnait soit 0 % partout (pop ≪ capacité : la survie la tient
+  toujours sous la capacité), soit 89 % d'affamés au déclin d'automne (froid imputé
+  au lieu car la capacité est toujours < 1). D'où l'imputation par BAISSE du tick
+  (3 grilles de rendu en plus : capacité/survie précédentes, part imputée).
+- Mesures [seed 42, n=1] — **plantes**, voix dominante « faim » avant → après ③ :
+  s0 32 % → 0 % · s52 89 % → 14 % · s104 92 % → 36 % · s156 92 % → 54 % (P méd.
+  0,26 = carence réelle, cible de croissance vraiment escomptée). Sonde
+  `sonde_nutrition.py` (colonne ajoutée) : sol riche 0/26 sem. faim dite (haricot) ;
+  carencé maintenu 26/26 ; carencé libre 11/26 [1 banc, n=1].
+- **Bêtes** (`sonde_betes.py` adaptée : présence > 0,05, déclin = densité < 97 % de
+  la semaine précédente) : dit faim avant③ → après③ : s26 95 % → 0 % (déclin 5 %,
+  pucerons qui déclinent sous les prédateurs : 0 % affamés) · s40 (automne) 95 % →
+  13 % (déclin 96 % : rapace 92 %, coccinelle 43 %, papillon 93 % — proies/fleurs
+  qui s'effondrent ; abeilles/bourdons/syrphes ≈ 0-1 % : photopériode) · s78 79 % →
+  0 %. Affamés qui déclinent vraiment : 100 % (81 % papillon s40).
+- Perf (`full` seed 42, 78 sem., runs alternés) : avant 747,2 / 693,3 ms → après 687,1 / 721,4 ms ; écart dans le bruit [n=2, bruit inter-runs ±4 %] → budget ≤ +2 % non contredit.
+- Golden **inchangé** `4c696821…` ; `population_hash` inchangé `3416d328…`. Suites
+  population / vision / infobulle_vivant / peripherie_voix / sim_server / vigueur vertes.
+- Constat hors périmètre (pas touché) : dans `sonde_nutrition.py`, tournesol et
+  basilic sont morts dès ~4 sem. sur les DEUX tuiles (riche comme carencée) — la
+  mention « tous vivants à mi-course » du ② ne tient pas ; sans lien avec la carence.
+
 ## §REPRISE
-Lire `CLAUDE.md` + ce fichier + le kickoff du premier tronçon « à faire » (③ après
-commit de ②). Golden courant `4c696821…`. ③ relit `sim.nutrition_plante.nutrition_plante`.
+Lire `CLAUDE.md` + ce fichier + le kickoff du premier tronçon « à faire » (④ après
+commit de ③). Golden courant `4c696821…` (intact attendu ④⑤). ⑤ : la voix bête lit
+`PopulationField.faim` (grille de rendu, pas de version de pont à changer : le pont
+ne sert que les phrases).
 Lancement : `/sprint-auto sprint_sol_nourricier`.

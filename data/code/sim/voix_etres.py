@@ -5,9 +5,10 @@ phrases à la 1ʳᵉ personne, GÉNÉRÉES depuis les vrais besoins mesurés au 
 
 📖 Pédagogie — deux étages, comme un diagnostic :
   1. `besoins_*` MESURE : chaque thème reçoit une intensité ∈ [0,1] lue sur l'état
-     persistant (mémoires de sécheresse/ombre/asphyxie de la plante, Liebig N/P/K et
-     pH sous ses racines, allélopathie effective, racines voisines, rongeur/parasite,
-     ravageurs, vent local ; pour une bête : ressource, abri, prédateurs, humidité).
+     persistant (mémoires de sécheresse/ombre/asphyxie de la plante, facteur de
+     nutrition N/P/K de sa croissance (D120 ③) et pH sous ses racines,
+     allélopathie effective, racines voisines, rongeur/parasite, ravageurs, vent local ; pour une bête : excès de population sur ce que le lieu
+     porte, abri, prédateurs, humidité).
      Un thème n'est dit que s'il dépasse SEUIL_DIRE — la voix ne ment jamais.
      Les seuils de PAROLE sont plus bas que ceux de DÉGÂT de la sémiologie : un être
      sent un manque avant d'en porter le signe sur ses feuilles.
@@ -24,13 +25,19 @@ from fields.noise import _hash_noise, stable_str_hash
 from fields.ecofields.constants import ALLELO_GERM_K
 from fields.population import build_pollinator_registry
 from sim import semiologie as S
-from sim.vigueur_plante import FIELD_NORM
+from sim.nutrition_plante import nutrition_plante, NUTRITION_PLANCHER
 from sim.voix_etres_corpus import (PLANTE, BETE, CHAMPIGNON, NUTRIMENTS, FAMILLES_FR,
                                    NOMS_BETES, BETES_HYGROPHILES)
 
 SEUIL_DIRE = 0.25        # intensité minimale d'un besoin pour qu'il soit dit
 MAX_PHRASES = 3
-SEUIL_FAIM = 0.4         # part de FIELD_NORM sous laquelle le nutriment limitant manque
+# Faim plante (D120 ③) : intensité = escompte de croissance `1 − facteur_nutrition`,
+# pleine au plancher (1 − PLANCHER = 0,6) → dite (≥ SEUIL_DIRE) dès que la carence
+# retire ≥ 15 % à la cible de croissance : ce que la plante dit, elle le SUBIT.
+FAIM_PLEINE = 1.0 - NUTRITION_PLANCHER
+# Faim bête (D120 ③) : part du déclin de la population que le lieu explique
+# (`PopulationField.faim`) ; dite dès que le lieu explique une cible ≥ 10 % sous la population (déclin ≥ ~4,5 %/sem.).
+FAIM_BETE_APPARITION, FAIM_BETE_PLEINE = 0.0, 0.4
 _ramp = S._ramp          # même rampe bornée que la sémiologie (DRY)
 
 # Préférences florales des pollinisateurs (donnée du registre, lue une fois).
@@ -93,11 +100,13 @@ def besoins_plante(plant, tile, eco, saison, ctx: dict | None = None) -> list[tu
         voisin = _ombreur(plant, ctx)
         out.append((ombre, "ombre", {"voisin": voisin}) if voisin
                    else (ombre, "ombre_anonyme", {}))
-    # Sol : Liebig (le nutriment le plus rare commande), sans N pour une carnivore.
-    elems = ("p", "k") if getattr(cls, "carnivore", False) else ("n", "p", "k")
-    x, elem = min((_moyenne(eco, getattr(eco, e), plots) / FIELD_NORM, e) for e in elems)
-    out.append((_ramp(SEUIL_FAIM - x, 0.0, SEUIL_FAIM), "faim",
-                {"nutriment": NUTRIMENTS[elem]}))
+    # Sol : UNE source de vérité avec la croissance (D120 ③) — le facteur de nutrition
+    # qui escompte vraiment sa cible (Liebig relatif à la roche, poids du stade, sans N
+    # pour une carnivore, P mycorhizé) et le nutriment limitant de ce même calcul.
+    facteur, limitant = nutrition_plante(plant, eco, plots)
+    if limitant is not None:
+        out.append((_ramp(1.0 - facteur, 0.0, FAIM_PLEINE), "faim",
+                    {"nutriment": NUTRIMENTS[limitant.lower()]}))
     ph = _moyenne(eco, eco.ph, plots)
     ecart = _ramp(abs(ph - cls.ph_opt) / cls.ph_tol, 0.6, 1.0)
     out.append((max(ecart, S.chlorose(plant, eco, saison)), "ph",
@@ -131,7 +140,7 @@ def besoins_bete(cle: str, tile, eco, r: int, c: int, cache: dict | None = None)
         return []
     spec = field.spec
     out = []
-    faim = _ramp(1.0 - field.activite(r, c), 0.6, 1.0)
+    faim = _ramp(field.faim(r, c), FAIM_BETE_APPARITION, FAIM_BETE_PLEINE)
     proies = sorted(n for n, f in eco.populations.items() if cle in f.spec.predators)
     if cle in _GOUTS:
         fam = max(sorted(_GOUTS[cle]), key=lambda f: _GOUTS[cle][f])

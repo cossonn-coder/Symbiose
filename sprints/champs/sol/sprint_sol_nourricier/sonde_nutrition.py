@@ -1,14 +1,17 @@
-"""D120 ② — sonde : même espèce sur sol à l'équilibre vs sol carencé, 26 semaines.
+"""D120 ②③ — sonde : même espèce sur sol à l'équilibre vs sol carencé, 26 semaines.
 Deux tuiles terre JUMELLES (mêmes humidité/microbiome), 3 plantes chacune. Mode
 `maintenu` : le stock N/P/K de la tuile carencée est remis à 0,05 chaque semaine
 (sol épuisé chronique, la recharge ① ne le comble pas). Mode `libre` : la recharge
 joue. Lecture seule hors forçage du banc. Lancer depuis data/code (PYTHONPATH=.) :
     python3 ../../sprints/champs/sol/sprint_sol_nourricier/sonde_nutrition.py [maintenu|libre]
+③ : colonne `faim dite` = semaines (plante vivante, stade avec besoin) où la voix
+« faim » franchit SEUIL_DIRE, sur le total de semaines vivantes.
 """
 import sys
 from plants import Sunflower, Basil, Bean
 from bancs.base import build_banc_tile, monde
 from sim.engine import Engine
+from sim.voix_etres import besoins_plante, SEUIL_DIRE
 
 mode = sys.argv[1] if len(sys.argv) > 1 else "maintenu"
 CAR, SEM, DEPART = 0.05, 26, 14          # semaine 14 = printemps
@@ -22,6 +25,7 @@ for t in (riche, carence):
     for e, r, c in especes:
         suivies[(t.tile_id, e.__name__)] = t.add_plant(e, r, c)
 pic = {k: (0.0, 0) for k in suivies}       # (hauteur max, segments max) sur la run
+dite = {k: [0, 0] for k in suivies}         # (semaines faim dite, semaines vivantes)
 tiles, ecos, house, banque = monde([riche, carence],
                                    {riche.tile_id: eco_r, carence.tile_id: eco_c})
 gs = {"tiles": tiles, "eco": ecos, "scores": {}, "current_player": "j",
@@ -38,6 +42,11 @@ for w in range(SEM):
     for k, p in suivies.items():
         h, n = pic[k]
         pic[k] = (max(h, p.current_height), max(n, len(p.segments)))
+        if p.is_alive:
+            t = riche if k[0] == riche.tile_id else carence
+            b = besoins_plante(p, t, ecos[t.tile_id], "ete")
+            dite[k][0] += any(th == "faim" and i >= SEUIL_DIRE for i, th, _ in b)
+            dite[k][1] += 1
 
 print(f"mode={mode} · {SEM} sem dès s{DEPART} · (h à mi-course / h max / segments max)")
 for t, eco in ((riche, eco_r), (carence, eco_c)):
@@ -46,4 +55,4 @@ for t, eco in ((riche, eco_r), (carence, eco_c)):
         k = (t.tile_id, e.__name__)
         p = suivies[k]
         print(f"    {e.__name__}: h_mi={mi[k]:.1f} h_max={pic[k][0]:.1f} seg_max={pic[k][1]} "
-              f"gf={p.growth_factor:.2f} vivant={p.is_alive}")
+              f"gf={p.growth_factor:.2f} vivant={p.is_alive} faim dite {dite[k][0]}/{dite[k][1]} sem.")

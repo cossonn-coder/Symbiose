@@ -36,6 +36,13 @@ class PopulationField(GridField):
         self.activite_grid: list[list[float]] = [
             [0.0] * cols for _ in range(rows)
         ]
+        # FAIM (D120 ③, pur rendu, jamais relu par la dynamique) : grille servie au
+        # scalaire `faim`, + mémoire du tick précédent (capacité, survie) et part du
+        # déclin imputée au lieu — de quoi dire POURQUOI la guilde décline.
+        self.faim_grid = [[0.0] * cols for _ in range(rows)]
+        self._cap_prec = [[0.0] * cols for _ in range(rows)]
+        self._surv_prec = [[0.0] * cols for _ in range(rows)]
+        self._part_lieu = [[0.0] * cols for _ in range(rows)]
 
     def tick(self, eco, tile, plants, predator_fields: list["PopulationField"],
              week_in_year: int = W_SOLSTICE_ETE) -> None:
@@ -79,8 +86,13 @@ class PopulationField(GridField):
         temp_data, dist_data = eco.temperature.data, eco.disturbance.data
         lis_data = lis.data if lis is not None else None
         pred_datas = [pf.data for pf in predator_fields]
+        # Grilles de FAIM (D120 ③, pur rendu) : elles ne font que LIRE `pop`,
+        # `capacite`, `survie` déjà calculés — aucune expression de `row[c]` ne
+        # change → dynamique bit-identique.
         for r in range(self.rows):
             row = self.data[r]
+            faim_row, part_row = self.faim_grid[r], self._part_lieu[r]
+            cap_prec_row, surv_prec_row = self._cap_prec[r], self._surv_prec[r]
             temp_row, dist_row = temp_data[r], dist_data[r]
             res_row, hab_row = res[r], hab[r]
             sig_row = sig[r] if sig else None
@@ -112,6 +124,22 @@ class PopulationField(GridField):
                           * (1.0 - min(1.0, pred_w * predation))
                           * (1.0 - min(1.0, disturb_w * disturb)))
                 cible = capacite * survie
+                # FAIM = la part du DÉCLIN que le lieu explique. La guilde décline
+                # quand sa cible tombe sous elle : (pop − cible)/pop. Cette cible
+                # (capacité × survie) est tombée parce que l'un des deux facteurs a
+                # BAISSÉ : le lieu (nourriture + habitat) ou la survie (froid,
+                # photopériode, prédateurs, perturbation). On impute le déclin au
+                # prorata des baisses relatives de ce tick ; sans baisse nouvelle,
+                # l'imputation précédente tient (la décrue d'une chute passée se
+                # poursuit). Le déclin d'automne (survie) ou sous les crocs n'est
+                # PAS de la faim ; une guilde stable, même rare, n'a pas faim.
+                cp, sp = cap_prec_row[c], surv_prec_row[c]
+                d_cap = (cp - capacite) / cp if capacite < cp else 0.0
+                d_surv = (sp - survie) / sp if survie < sp else 0.0
+                if d_cap + d_surv > 0.0:
+                    part_row[c] = d_cap / (d_cap + d_surv)
+                cap_prec_row[c], surv_prec_row[c] = capacite, survie
+                faim_row[c] = (pop - cible) / pop * part_row[c] if pop > cible else 0.0
                 # Inertie ASYMÉTRIQUE (§4) : décrue rapide / montée au rythme calibré.
                 inertie = inertia_decay if cible < pop else inertia
                 row[c] = max(0.0, min(
@@ -127,4 +155,16 @@ class PopulationField(GridField):
         """
         if 0 <= r < self.rows and 0 <= c < self.cols:
             return self.activite_grid[r][c]
+        return 0.0
+
+    def faim(self, r: int, c: int) -> float:
+        """
+        Scalaire de FAIM [0,1] (D120 ③) — écart relatif population → cible au
+        dernier tick, imputé au lieu (nourriture + habitat) au prorata de sa
+        baisse (0 = la guilde est stable ou croît, même rare ; ou décline de
+        froid / de prédation).
+        Lu par la voix des bêtes (`sim/voix_etres`). PUR rendu, zéro impact simulation.
+        """
+        if 0 <= r < self.rows and 0 <= c < self.cols:
+            return self.faim_grid[r][c]
         return 0.0
