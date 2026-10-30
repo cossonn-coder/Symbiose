@@ -36,20 +36,11 @@ namespace Symbiose
 			float trunkH = sil.TrunkHeightCm * WorldView.PxPerCmZ * scale;
 			float r = sil.CanopyRadiusCm * WorldView.PxPerCmX * scale;
 			Vector2 apex = basePos + Vector2.Up * trunkH;
-			// Ombre au pied, décalée NE (soleil au SO), comme avant ③.
+			// Ombre au pied, décalée NE (soleil au SO), comme avant ③. Immobile au vent.
+			// ⑥ : en tissage (le halo d'ancrage du brief, pas une flaque unie).
+			Aplats(OrientTissage, 0, "couvert_olive");   // « sous les arbres » : creux du couvert
 			EllipseBasse(basePos + new Vector2(r * 0.10f, -r * 0.06f), r * 0.70f, r * 0.22f,
 						 Assombrir(Palette16.DecorForetFond, -0.30f), 10);
-			// Tronc cerné : un fuseau sombre élargi d'1 px interne, puis l'écorce.
-			float w = Mathf.Max(1.5f / z, r * 0.14f);
-			Fuseau(basePos + Vector2.Down / z, apex, w + 1f / z, Palette16.EcorceLenticelle * mod);
-			Fuseau(basePos, apex, w, sil.Ecorce * mod);
-			if (sil.Port == TreePort.Elance && DetailsVisibles)   // bouleau : lenticelles
-				for (float tl = 0.2f; tl < 0.95f; tl += 0.18f)
-				{
-					Vector2 c = basePos.Lerp(apex, tl);
-					_lot.Ligne(c + Vector2.Left * w * 0.6f, c + Vector2.Right * w * 0.2f, Palette16.EcorceLenticelle, 1f / z);
-				}
-			// Enveloppe du port puis bouquets.
 			bool conique = sil.Port == TreePort.Conique;
 			(float up, float rx, float ry) = sil.Port switch
 			{
@@ -59,14 +50,37 @@ namespace Symbiose
 				TreePort.Conique => (0.95f, 0.80f, 1.10f),
 				_                => (0.40f, 1.20f, 0.80f),
 			};
+			// ⑥ : tout ce qui suit plie au vent, nul au pied → max au sommet du houppier.
+			VentArbre(basePos, trunkH + r * (up + ry), hb);
+			// Tronc : contour = ton CREUX de SA rampe (règle des petits objets, jamais un
+			// gris étranger), puis l'écorce en deux flancs ORIENTÉS (le soleil réel éclaire
+			// l'un, ombre l'autre — DecorLayer.Indexe.cs).
+			float w = Mathf.Max(1.5f / z, r * 0.14f);
+			Aplats(OPlat, 0);
+			Fuseau(basePos + Vector2.Down / z, apex, w + 1f / z, sil.Ecorce * mod);
+			Aplats(OrientEcorceG);
+			FuseauDemi(basePos, apex, w, -1f, sil.Ecorce * mod);
+			Aplats(OrientEcorceD);
+			FuseauDemi(basePos, apex, w, 1f, sil.Ecorce * mod);
+			Aplats(OPlat);
+			if (sil.Port == TreePort.Elance && DetailsVisibles)   // bouleau : lenticelles
+				for (float tl = 0.2f; tl < 0.95f; tl += 0.18f)
+				{
+					Vector2 c = basePos.Lerp(apex, tl);
+					_lot.Ligne(c + Vector2.Left * w * 0.6f, c + Vector2.Right * w * 0.2f, Palette16.EcorceLenticelle, 1f / z);
+				}
+			// Enveloppe du port (fond du houppier, en TISSAGE du dialecte 2, ton d'ombre)
+			// puis bouquets.
 			Vector2 c0 = apex + Vector2.Up * r * up;
 			rx *= r; ry *= r;
 			Teinte t = TeinteFeuillage(sil.Feuillage);
-			Color ombre = Assombrir(sil.Feuillage, -0.25f) * mod;
+			Color ombre = sil.Feuillage * mod;   // ⑥ : l'ombre = ton 1 de SA palette (tissage)
+			Aplats(OrientTissage, 1);
 			if (conique)
 				_lot.Triangle(c0 + new Vector2(0f, -ry), c0 + new Vector2(rx, ry), c0 + new Vector2(-rx, ry), ombre);
 			else
 				EllipseBasse(c0, rx * 0.92f, ry * 0.92f, ombre, 12);
+			Aplats(OPlat);
 			Piece f = conique ? Piece.Conifere : Piece.Feuillu;
 			// Taille des bouquets : la plus grande qui tient ~2,5 fois dans le rayon du
 			// houppier À L'ÉCRAN (px internes) → un gros arbre est fait de gros
@@ -95,6 +109,7 @@ namespace Symbiose
 				_bouquets.Add(new Pose(p + new Vector2(0f, sz.Y * 0.5f), f, taille, h, t, mod));
 			}
 			PoserTriees(_bouquets);
+			FinArbre();
 		}
 
 		/// <summary>SOUS-BOIS : pièces sombres semées dans toute la bande de forêt,
@@ -143,6 +158,11 @@ namespace Symbiose
 			}
 			_lot.PolygoneConvexe(pts, col);
 		}
+
+		// ⑥ : demi-fuseau (côté −1 gauche / +1 droite de l'axe) — un flanc de tronc.
+		private void FuseauDemi(Vector2 pied, Vector2 apex, float w, float cote, Color col) =>
+			_lot.PolygoneConvexe(new[] { pied, pied + Vector2.Right * w * cote,
+								  apex + Vector2.Right * w * 0.5f * cote, apex }, col);
 
 		// Fuseau de tronc : large au sol, moitié moins sous le houppier.
 		private void Fuseau(Vector2 pied, Vector2 apex, float w, Color col) =>

@@ -44,6 +44,9 @@ namespace Symbiose
 		private const int DrapeauIndexe = 128;
 
 		private static readonly Dictionary<int, int> _parCouleur = new();
+		// ⑥ : palettes NOMMÉES (rampe exacte du brief, pas dérivée) — décor dialecte 2.
+		private static readonly Dictionary<string, int> _parNom = new();
+		private static int _nb;   // palettes allouées (dérivées + nommées)
 		private static Image _lut;
 		private static ImageTexture _tex;
 		private static bool _sale;
@@ -68,6 +71,7 @@ namespace Symbiose
 				Assurer();
 				_mat = new ShaderMaterial { Shader = GD.Load<Shader>(ShaderPath) };
 				_mat.SetShaderParameter("lut", _tex);
+				if (!float.IsNaN(_soleil.X)) _mat.SetShaderParameter("soleil", _soleil);   // ⑥
 				return _mat;
 			}
 		}
@@ -85,10 +89,42 @@ namespace Symbiose
 			int cle = Quant(baseCol.R) << 12 | Quant(baseCol.G) << 6 | Quant(baseCol.B);
 			if (_parCouleur.TryGetValue(cle, out int id)) return id;
 			Assurer();
-			if (_parCouleur.Count >= Capacite) Vider();
-			id = _parCouleur.Count;
+			if (_nb >= Capacite) Vider();
+			id = _nb++;
 			_parCouleur[cle] = id;
-			Color[] rampe = RampesDa.Deriver(new Color(Dequant(cle >> 12), Dequant(cle >> 6), Dequant(cle)));
+			Ecrire(id, RampesDa.Deriver(new Color(Dequant(cle >> 12), Dequant(cle >> 6), Dequant(cle))));
+			return id;
+		}
+
+		/// <summary>⑥ : n° de la palette d'une matière du brief, rampe EXACTE
+		/// (`RampesDa.Matieres[nom]`, pas dérivée). 5 tons tels quels ; 4 tons =
+		/// [0, 0, 1, 2, 3] (le plus sombre sert de creux ET d'ombre, base = 2ᵉ ton :
+		/// 3 tons + éclat, « pierre ») ; 6 tons = sans l'avant-dernier (éclat isolé gardé).</summary>
+		public static int PaletteNommee(string nom)
+		{
+			if (_parNom.TryGetValue(nom, out int id)) return id;
+			Assurer();
+			if (_nb >= Capacite) Vider();
+			id = _nb++;
+			_parNom[nom] = id;
+			Color[] m = RampesDa.Matieres[nom];
+			Color[] r = m.Length switch
+			{
+				>= 6 => new[] { m[0], m[1], m[2], m[3], m[m.Length - 1] },
+				5 => m,
+				4 => new[] { m[0], m[0], m[1], m[2], m[3] },
+				_ => RampesDa.Deriver(m[m.Length / 2]),
+			};
+			Ecrire(id, r);
+			return id;
+		}
+
+		/// <summary>⑥ : direction écran vers le soleil courante (NaN avant la 1ʳᵉ
+		/// MajSoleil) — le décor la pose sur son propre matériau.</summary>
+		public static Vector2 Soleil => _soleil;
+
+		private static void Ecrire(int id, Color[] rampe)
+		{
 			int x0 = id % PalettesParLigne * TexelsParPalette, y = id / PalettesParLigne;
 			for (int t = 0; t < TexelsParPalette; t++)
 				_lut.SetPixel(x0 + t, y, rampe[Mathf.Min(t, rampe.Length - 1)]);
@@ -98,8 +134,10 @@ namespace Symbiose
 				// Téléversement groupé en fin d'image (avant le rendu), une fois.
 				Callable.From(Televerser).CallDeferred();
 			}
-			return id;
 		}
+
+		/// <summary>⑥ : la LUT (texture) — le matériau du décor la lit aussi.</summary>
+		public static Texture2D Lut { get { Assurer(); return _tex; } }
 
 		/// <summary>Couleur ENCODÉE à passer comme couleur de dessin (DrawLine, modulate
 		/// d'une pièce de kit…) : n° de palette, ton, orientation.</summary>
@@ -130,7 +168,7 @@ namespace Symbiose
 		/// l'écran). Appelé chaque image, n'écrit l'uniform qu'au changement.</summary>
 		public static void MajSoleil()
 		{
-			if (_mat == null) return;
+			// ⑥ : calculé même sans matériau de plante (le décor lit `Soleil`).
 			float sinE = Mathf.Clamp(WorldView.SunStrength, 0f, 1f);
 			float cosE = Mathf.Sqrt(1f - sinE * sinE);
 			Vector2 d = WorldView.SunShadowDir;
@@ -139,7 +177,7 @@ namespace Symbiose
 			s = s.LengthSquared() > 1e-8f ? s.Normalized() : new Vector2(0f, -1f);
 			if (s.IsEqualApprox(_soleil)) return;
 			_soleil = s;
-			_mat.SetShaderParameter("soleil", s);
+			_mat?.SetShaderParameter("soleil", s);
 		}
 
 		/// <summary>Angle écran du soleil (0° = droite, 90° = haut : convention de
@@ -160,6 +198,8 @@ namespace Symbiose
 		private static void Vider()
 		{
 			_parCouleur.Clear();
+			_parNom.Clear();
+			_nb = 0;
 			Generation++;
 			GD.Print($"[PaletteIndexee] LUT pleine ({Capacite} palettes) → vidée, recuisson générale.");
 			foreach (var p in BakeQueue.All) p.Invalidate();

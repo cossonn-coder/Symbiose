@@ -17,6 +17,9 @@
 // MONDE (il ne tourne pas avec la caméra D35). Une falaise au nord ou à l'est du
 // jardin tourne sa face vers le sud / l'ouest → au soleil ; au sud ou à l'ouest,
 // sa face regarde le nord / l'est → à l'ombre. Même rampe, décalée d'un cran.
+// ⚠️ ⑥ (CASSÉ À L'ÉCRAN) : remplacé — la face part au shader avec son orientation
+// ÉCRAN (FaceEcran) et s'éclaire au soleil RÉEL ; la grille de blocs est procédurale
+// au pixel interne (decor_indexe.gdshader, « roche »), plus de grands blocs unis.
 //
 // La hauteur (roche restante, `entailler`) et la densité d'éboulis (entaille
 // cumulée, EntailleRefCm) viennent toujours du pont (DecorLayer.Pont.cs).
@@ -51,12 +54,14 @@ namespace Symbiose
 
 			// 1) OMBRE PORTÉE au pied, côté jardin.
 			Color ombreCol = Assombrir(Palette16.RocheOmbre, -0.25f);
+			Aplats(OrientTissage);   // ⑥ : ombre tissée, pas une bande unie
 			for (int i = 0; i < steps; i++)
 			{
 				float u0 = i * StepCm, u1 = Mathf.Min(u0 + StepCm, WorldView.WorldCm);
 				Bande(s.Cote, u0, u1, dFront - ombreW + Wob(u0), dFront - ombreW + Wob(u1),
 					  dFront + Wob(u0), dFront + Wob(u1), ombreCol);
 			}
+			Aplats(OPlat);
 			// Grilles aux sommets partagés : face (strates + 1 rangs) et plateau (4 rangs).
 			var face = new Vector2[steps + 1, strates + 1];
 			var plat = new Vector2[steps + 1, 4];
@@ -69,46 +74,77 @@ namespace Symbiose
 				for (int r = 0; r < 4; r++)
 					plat[i, r] = EdgePoint(s.Cote, u, dTop + w + DepthCm * 0.55f * r / 3f) + up;
 			}
-			float[] ecarts = { -0.06f, -0.02f, 0.02f, 0.06f };
 			// 2) PLATEAU végétalisé, en parcelles (3 pas × 1 rang).
 			for (int i = 0; i < steps; i++)
 				for (int r = 0; r < 3; r++)
 				{
 					uint hp = HashCase(s.SeedSecteur, i / 3, r, 51u);
+					Aplats(OrientTissage, (hp & 3u) == 3u ? 3 : TonB);   // ⑥ : herbe rase tissée
 					_lot.PolygoneConvexe(new[] { plat[i, r], plat[i + 1, r], plat[i + 1, r + 1], plat[i, r + 1] },
-										 Assombrir(Palette16.DecorRocheHaut, ecarts[hp & 3u]));
+										 Palette16.DecorRocheHaut);
 				}
-			// 3) FACE : strate k = valeur de base (le pied le plus sombre), découpée
-			//    en BLOCS de 1-3 pas, chaque bloc décalé d'un écart de valeur.
+			Aplats(OPlat);
+			// 3) FACE (⑥) : chaque strate est un aplat de ROCHE procédurale (blocs 8×4 px
+			//    à joints, au pixel interne du palier → plus de « grands blocs unis » à ×2,
+			//    résidu b) dans la rampe « pierre » du brief ; pied d'un ton plus sombre.
+			//    La FACE RÉELLE (vers le jardin, projetée à l'écran) part dans le canal B du
+			//    sommet : le shader l'éclaire au soleil réel, comme une pièce. Remplace la
+			//    face claire/ombre figée sur un soleil fixe au sud-ouest (en-tête).
+			_ventB = (FaceEcran(s.Cote) + 0.5f) / 16f;
 			for (int k = 0; k < strates; k++)
 			{
-				Color baseK = rampe[Mathf.Min(2, k * 3 / strates)];
+				Aplats(OrientRoche, k == 0 ? 1 : TonB, "pierre");
+				for (int i = 0; i < steps; i++)
+					_lot.PolygoneConvexe(new[] { face[i, k], face[i + 1, k], face[i + 1, k + 1], face[i, k + 1] },
+										 Palette16.RocheMedian);
+			}
+			_ventB = 0f;
+			// 4) BORDS : pied = creux de la rampe (l'ombre sous le bord), lèvre = clair.
+			//    Les traits de joints et de lits d'avant ⑥ (contours sur une masse, que le
+			//    brief interdit) sont conservés derrière TraitsFalaiseAvant, éteints.
+			if (TraitsFalaiseAvant) DrawTraitsFalaise(s, face, strates, steps, rampe, trait);
+			for (int i = 0; i < steps; i++)
+			{
+				Aplats(OPlat, 0, "pierre");
+				_lot.Ligne(face[i, 0], face[i + 1, 0], Palette16.RocheOmbre, trait);
+				Aplats(OPlat, 3, "pierre");
+				_lot.Ligne(face[i, strates], face[i + 1, strates], Palette16.RocheClair, trait);
+			}
+			Aplats(OPlat);
+			DrawEboulis(s, dFront, ombreW, Wob);
+			DrawLevre(s, dTop, up, Wob);
+		}
+
+		private static readonly bool TraitsFalaiseAvant = false;   // ⑥ : traits d'avant, éteints
+
+		// ⚠️ CONSERVÉ, éteint depuis ⑥ : joints verticaux et lits de strate tracés en
+		// traits sombres (contours sur une masse) — la roche procédurale les remplace.
+		private void DrawTraitsFalaise(Secteur s, Vector2[,] face, int strates, int steps, Color[] rampe, float trait)
+		{
+			Color lit = Assombrir(rampe[0], -0.15f);
+			for (int k = 0; k < strates; k++)
+			{
 				uint hb = HashCase(s.SeedSecteur, 0, k, 53u);
 				int bloc = 1 + (int)(hb >> 8 & 1u) + (int)(hb >> 9 & 1u);
-				for (int i = 0; i < steps; i++)
-				{
-					if (i > 0 && --bloc <= 0)
+				for (int i = 1; i < steps; i++)
+					if (--bloc <= 0)
 					{
 						hb = HashCase(s.SeedSecteur, i, k, 53u);
 						bloc = 1 + (int)(hb >> 8 & 1u) + (int)(hb >> 9 & 1u);
-						// Joint vertical sombre entre deux blocs.
 						_lot.Ligne(face[i, k], face[i, k + 1], Assombrir(rampe[0], -0.22f), trait);
 					}
-					_lot.PolygoneConvexe(new[] { face[i, k], face[i + 1, k], face[i + 1, k + 1], face[i, k + 1] },
-										 Assombrir(baseK, ecarts[hb & 3u]));
-				}
 			}
-			// 4) CONTOURS : pied sombre, lits de strate (trait d'ombre), lèvre claire.
-			Color lit = Assombrir(rampe[0], -0.15f);
 			for (int i = 0; i < steps; i++)
-			{
-				_lot.Ligne(face[i, 0], face[i + 1, 0], Assombrir(Palette16.RocheOmbre, -0.25f), trait);
 				for (int k = 1; k < strates; k++)
 					_lot.Ligne(face[i, k], face[i + 1, k], lit, trait);
-				_lot.Ligne(face[i, strates], face[i + 1, strates], Palette16.RocheClair, trait);
-			}
-			DrawEboulis(s, dFront, ombreW, Wob);
-			DrawLevre(s, dTop, up, Wob);
+		}
+
+		// ⑥ : orientation ÉCRAN (0..7) de la face d'une falaise du bord `cote` — elle
+		// regarde le jardin (−normale sortante), projetée comme tout le monde (D35).
+		private static int FaceEcran(int cote)
+		{
+			(float dx, float dy) = cote switch { 0 => (0f, 1f), 1 => (-1f, 0f), 2 => (0f, -1f), _ => (1f, 0f) };
+			return OrientDe(WorldView.WorldToScreenOffset(dx, dy));
 		}
 
 		// ÉBOULIS : blocs anguleux près de la face, galets plus loin, en pièces du kit.

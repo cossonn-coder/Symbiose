@@ -43,12 +43,22 @@ namespace Symbiose
 		// seuil sombre collé au tracé sinueux (la frontière se LIT) ; rangs suivants
 		// = frange claire puis fond, la limite entre les deux suivant les parcelles
 		// (jamais une droite).
+		// ⑥ DIALECTE 2 : chaque cellule est un aplat en TISSAGE (chevrons 2×3 px
+		// procéduraux, decor_indexe.gdshader) — plus aucun aplat uni ; les parcelles
+		// ne varient plus par une couleur voisine mais par le TON de base (patchs plus
+		// clairs du brief). Forêt = couvert olive EXACT du brief (près ton 2, fond ton 1).
+		// Résidu (a) : un rang de plus prolonge la bande jusqu'à FondCm (bord du cadre au
+		// dézoom maximal) et le coin extérieur entre ce bord et le suivant est couvert.
+		private const float FondCm = 3600f;   // ≥ cadre ×0,5 caméra au bout de sa butée
+
 		private void DrawAssise(Secteur s)
 		{
 			(Color near, Color far) = MotifColors(s.Motif);
+			string mat = s.Motif == Motif.Foret ? "couvert_olive" : null;
+			int tonFond = s.Motif == Motif.Foret ? 1 : TonB;
 			int steps = Mathf.CeilToInt(WorldView.WorldCm / StepCm);
 			float seuilW = DepthCm * 0.06f;
-			var g = new Vector2[steps + 1, RangsAssise + 2];
+			var g = new Vector2[steps + 1, RangsAssise + 3];
 			for (int i = 0; i <= steps; i++)
 			{
 				float u = Mathf.Min(i * StepCm, WorldView.WorldCm);
@@ -56,22 +66,34 @@ namespace Symbiose
 				g[i, 0] = EdgePoint(s.Cote, u, b);
 				for (int k = 1; k <= RangsAssise + 1; k++)
 					g[i, k] = EdgePoint(s.Cote, u, Mathf.Lerp(b + seuilW, DepthCm, (k - 1) / (float)RangsAssise));
+				g[i, RangsAssise + 2] = EdgePoint(s.Cote, u, FondCm);
 			}
-			float[] ecarts = { -0.07f, -0.02f, 0.03f, 0.07f };
 			for (int i = 0; i < steps; i++)
-				for (int k = 0; k <= RangsAssise; k++)
+				for (int k = 0; k <= RangsAssise + 1; k++)
 				{
 					uint hp = HashCase(s.SeedSecteur, i / 3, (k + 1) / 2, 7u);
 					Color col;
-					if (k == 0) col = Assombrir(near, -0.24f + ecarts[hp & 3u] * 0.5f);
+					int ton;
+					if (k == 0) { col = near; ton = 1; }
+					else if (k > RangsAssise) { col = far; ton = 1; }   // au-delà de la bande
 					else
 					{
 						float frac = (k - 0.5f) / RangsAssise;
 						float seuil = 0.30f + 0.16f * ((hp >> 8 & 0xff) / 255f - 0.5f);
-						col = Assombrir(frac < seuil ? near : far, ecarts[hp & 3u]);
+						bool pres = frac < seuil;
+						col = pres ? near : far;
+						ton = (hp & 3u) == 3u ? 3 : pres ? TonB : tonFond;
 					}
+					Aplats(OrientTissage, ton, mat);
 					_lot.PolygoneConvexe(new[] { g[i, k], g[i + 1, k], g[i + 1, k + 1], g[i, k + 1] }, col);
 				}
+			// Coin extérieur entre ce bord et le suivant (sens horaire : NE, SE, SO, NO).
+			float W = WorldView.WorldCm;
+			(float x0, float y0) = s.Cote switch { 0 => (W, -FondCm), 1 => (W, W), 2 => (-FondCm, W), _ => (-FondCm, -FondCm) };
+			Aplats(OrientTissage, 1, mat);
+			_lot.PolygoneConvexe(new[] { WorldView.WorldToScreen(x0, y0), WorldView.WorldToScreen(x0 + FondCm, y0),
+										 WorldView.WorldToScreen(x0 + FondCm, y0 + FondCm), WorldView.WorldToScreen(x0, y0 + FondCm) }, far);
+			Aplats(OPlat);
 		}
 
 		// TAPIS : semis des pièces du kit sur un secteur, trié puis posé.
@@ -157,6 +179,7 @@ namespace Symbiose
 			for (int i = 0; i < n; i++)
 				PoserPiece(_tri[i].F, _tri[i].Taille, _tri[i].H, _tri[i].T, _tri[i].Pied, _tri[i].Mod);
 			poses.Clear();
+			if (!_ventArbre) Vent(0f, 0f, 1f, 0f);   // ⑥ : le vent des pièces ne fuit pas sur les aplats suivants
 		}
 	}
 }

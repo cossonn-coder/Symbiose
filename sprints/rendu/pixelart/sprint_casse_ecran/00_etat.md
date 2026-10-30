@@ -27,7 +27,7 @@ Perf : `tools/perf_vm.sh`.
 | ③ | `03_palette_indexee_soleil.md` — (f)(l), paliers bas | **fait** (2026-10-29, non commité) |
 | ④ | `04_paliers_hauts.md` — (i)(m) | **fait** (2026-10-30, non commité ; à-coup de cran +27 % à confirmer) |
 | ⑤ | `05_faune_icones.md` — (a) | **fait** (2026-10-30, non commité) |
-| ⑥ | `06_lisiere_decor.md` — (k) + résidus lisière | à faire |
+| ⑥ | `06_lisiere_decor.md` — (k) + résidus lisière | **fait** (2026-10-30, non commité) |
 | ⑦ | `07_bilan_ecran.md` — planche, mesures, protocole F5 | à faire |
 
 ## Notes de tronçon
@@ -262,9 +262,70 @@ Perf : `tools/perf_vm.sh`.
 - **F5 Nico** : trouver un merle, un hérisson, une coccinelle (×16/×32) ; tourner le soleil (éclat) ;
   F11 avant/après ; un geste près d'une bête (sursaut) ; papillon/abeille en vol.
 
+### ⑥ Lisière et décor — fait
+- **Pipeline indexé du décor** — `visuals/DecorLayer.Indexe.cs` (149 LDC) : atlas du kit écrit en
+  CODES (R/G = n° de palette de la teinte, B = ton + orientation, encodage ③) + bande de 32 lignes
+  de **texels-codes** pour les aplats (palette de la couleur, ton, orientation, alloués à la demande) ;
+  **hook `LotTriangles.Encodeur`** : chaque sommet du décor est réécrit (aplat → UV de son texel-code ;
+  couleur de sommet = R valeur du plan · G amplitude du vent · B phase au hash · A alpha). Les motifs
+  ne règlent que l'état (`Aplats(orient, ton, matière)`, `Vent(...)`). Vidage de LUT → atlas réécrit
+  sur place (mêmes UV). `PaletteIndexee` : palettes NOMMÉES à rampe exacte du brief
+  (`PaletteNommee`, ex. `couvert_olive`, `touffe_claire`, `pierre`), `Soleil`/`Lut` exposés, soleil
+  calculé même sans matériau de plante.
+- **Shader unique** `visuals/decor_indexe.gdshader` (fond + couche devant) : lecture LUT + soleil réel ;
+  grains procéduraux au PIXEL INTERNE du palier : orientation 9 = **tissage en chevrons 2×3** (assise,
+  plateau, enveloppe des houppiers, ombres au pied), 10 = **roche** en blocs 8×4 à joints (face de
+  falaise, face réelle dans le canal B → éclairée au soleil), 11/12 = **écorce** (stries, flanc G/D).
+  ⚠️ **`texelFetch` obligatoire** : avec `texture()` le DrawMesh filtre en LINÉAIRE → codes lus décalés
+  d'un cran (rivière brune, tissage perdu — mesuré : palette 75 lue 74). À retenir pour tout atlas de
+  codes en maille.
+- **Dialecte 2** — `visuals/DecorLayer.KitCodes.cs` (116 LDC) : masses (sous-bois, ronciers, bouquets)
+  sans contour, grain en chevrons 2×3, bord haut clair, grains creusés au hash ; touffe = 3-5 grains
+  obliques 2×3 ; galets/blocs = orientation par pixel (3 tons + éclat au soleil) + ombre sous le bord,
+  0 contour noir. Sous-bois = rampe EXACTE `couvert_olive` (#302806…#aab164), herbe claire =
+  `touffe_claire`, roche = `pierre`. Assise forêt = couvert olive (près ton 2, fond ton 1). Troncs : 2
+  flancs orientés + contour = ton creux de LEUR rampe (fini le gris `EcorceLenticelle`).
+- **Vent** — `visuals/DecorLayer.Vent.cs` (62 LDC) : le vertex shader rejoue `WindWave.PoseFor`
+  (mêmes constantes, même temps `WindWave.Temps`, mêmes risées, phase monde projetée par
+  `ScreenToWorld` → **mêmes fronts que les plantes**) ; amplitude au sommet : arbre 3 % de sa hauteur
+  (nul au pied), sous-bois 0,40 · roseaux/herbe haute 0,30 · herbe 0,25 · roncier 0,20 × hauteur de
+  pièce ; roche/galets 0. Déplacement arrondi au px interne. **Aucun redessin CPU** ; calme = force 0.
+- **Résidus** : (a) bande prolongée jusqu'à `FondCm` 3 600 cm + 4 coins extérieurs, en tissage
+  (capture `-c -900,-900` ×0,5 : plus de vert uni) ; (b) face de falaise = roche procédurale (traits de
+  joints/lits d'avant conservés derrière `TraitsFalaiseAvant`, éteints) ; (c) ⚠️ **prescription
+  réfutée** : le pic « 165 ms au changement de palier ×4 » n'existe plus depuis LEVIERS ③ (mailles
+  prêtes) — mesuré AVANT ⑥ : redessin décor **0,0 ms** à chaque cran ; les pics du balayage Z sont
+  la cuisson des plantes (×2→×4 : plantes _Draw 166 ms + cuisson 84 ms). Rien à réduire côté décor.
+- **Mesures** (banc décor F10 `-B`, `-O -x Weather`, [n=1 capture par cellule]) — `mesure_da.py`
+  paire test/réf (réf = `-x Weather,Decor`, `--pas 2`, zone hors HUD) :
+
+| scène | avant | après |
+|---|---|---|
+| falaise ×2 | aplat 29 517 px, contour noir 2,6 %, qnoir 0,2 %, dérive 1,1° | aplat méd **4 px**, contour noir **0 %**, qnoir 0 %, dérive 1,7° |
+| forêt ×2 | 56 sprites (aplats > 24 : 56/56, méd 93 px), tons 2, 77 voisins identiques | 1 masse connexe : plus grand aplat 2 339 px (ombres au pied sombres : ±1 ton peu lisible au creux), tons 16, dérive 28,7° |
+
+  Soleil (forêt ×2, plantes masquées, `-j −60` vs `-j 60`, soleil écran 329° / 155°) : **jardin 0 %**
+  de px changés, **tronc 90 %**, sol olive 23 % → l'éclat du décor suit le soleil réel. Vent (×1 forêt,
+  plantes masquées, 8 images à 5 fps) : `-v 0,8` → 91 k à 241 k px changés vs image 0 ; `-v 0` → **0**
+  (rien n'anime au calme). Rotations `-r 1..3` ×0,5 lues : coins et décor corrects.
+- **Perf** : balayage Z (seed 1521550718, `-c 1650,950`) : redessin décor au cran 0,0 ms → 0,0-0,6 ms ;
+  construction ×0,5 au 1er dessin 157 → 178 ms (+13 % [n=1]) ; tranches de fond pire image 16,2 →
+  16,8 ms ; sommets ×4 113 877 → 115 665. `perf_vm.sh -z 0.5` : **draw calls 77 = 77** (décor 1 + 1
+  devant inchangés) ; frame 96,8 → 76,4 ms [n=1 run chacun, charge VM 3,7-4,3 : écart = bruit].
+- **Écarts / restes** : décor TOUJOURS indexé (F11 n'agit pas sur lui ; avant/après = stash) ; la
+  rivière (eau) reste en aplats plats (hors dialecte 2) ; ombres au pied encore sombres et peu
+  grainées ; ⚠️ soupçon hors tronçon : `FauneIcones` (⑤) lit son atlas de codes via le matériau des
+  plantes (`texture()`) — si ses quads sont filtrés comme ici, palettes décalées possibles : à
+  vérifier en ⑦. Captures : `/tmp/claude-1000/da/c6/` (`av_*` / `ap_*`).
+- **F5 Nico** : lisière par vent calme puis fort (`-v`), au fil de la journée (le flanc éclairé des
+  troncs et des rochers tourne) ; touche H (lisière devant translucide) ; zoom ×0,5 → ×4 ; rotation R ;
+  bord du cadre au dézoom (plus de vert uni).
+
 ## §REPRISE
-Lire `CLAUDE.md` + ce fichier + le kickoff du premier tronçon « à faire » (⑥ `06_lisiere_decor.md`).
+Lire `CLAUDE.md` + ce fichier + le kickoff du premier tronçon « à faire » (⑦ `07_bilan_ecran.md`).
 Encodage indexé : §Notes ③ ; `Ton()`/`RemplirDome()` ④ ; atlas de portraits à la demande ⑤
-(`FauneIcones`, réutilisable pour d'autres petits objets). Restes ouverts : à-coup de cran ×2↔×4 (④),
+(`FauneIcones`, réutilisable pour d'autres petits objets) ; décor indexé + grains + vent en shader ⑥
+(`DecorLayer.Indexe.cs`, `decor_indexe.gdshader` — `texelFetch` pour un atlas de codes). Restes ouverts :
+soupçon de filtrage linéaire sur l'atlas de faune (⑥ notes), à-coup de cran ×2↔×4 (④),
 continuité ×2→×4 modeste (④). Lancement : `/sprint-auto sprint_casse_ecran`. Valider chaque tronçon
 visuel au banc : protocole et ligne de base en §Notes ① (`tools/mesure_da.py`, `capture_vm.sh -O -F`).

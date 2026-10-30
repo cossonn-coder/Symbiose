@@ -12,6 +12,9 @@
 // TEINTE (PlantRenderer.RampeKit : même hue-shift que les plantes → le décor et
 // le jardin parlent la même langue). Lumière venue du SUD-OUEST = bas-gauche de
 // la pièce (la calotte claire des anciens houppiers, le soleil de la maison).
+// ⚠️ ⑥ (CASSÉ À L'ÉCRAN) : l'atlas n'est plus écrit en couleurs mais en CODES de
+// palette indexée, pièces repeintes en dialecte 2 (DecorLayer.KitCodes.cs) ; la lumière
+// est le soleil RÉEL (orientation par pixel), plus ce sud-ouest fixe.
 //
 // 📖 Pédagogie — POURQUOI une seule texture : le GPU paie les ENVOIS, pas les
 // pixels. Toutes les pièces, dans toutes leurs teintes, vivent dans le même
@@ -103,6 +106,7 @@ namespace Symbiose
 			var r = _kitRects[IndexKit((int)t, (int)f, taille, (int)(h % Variantes))];
 			float z = ZoomConstr;
 			Vector2 coin = (pied * z - new Vector2(r.Size.X * 0.5f, r.Size.Y)).Round() / z;
+			VentPiece(f, pied, r.Size.Y, h);   // ⑥ : amplitude de vent (DecorLayer.Vent.cs)
 			_lot.Quad(new Rect2(coin, (Vector2)r.Size / z),
 					  new Rect2((Vector2)r.Position / _kitTaille, (Vector2)r.Size / _kitTaille), mod);
 		}
@@ -114,49 +118,40 @@ namespace Symbiose
 		// --- Génération de l'atlas -----------------------------------------
 		// Étagères : chaque pièce de chaque teinte posée de gauche à droite, 1 px de
 		// jour entre pièces ; on passe à la ligne quand la largeur est pleine.
+		// ⑥ : l'atlas est écrit en CODES de la palette indexée (DecorLayer.Indexe.cs,
+		// peints par DecorLayer.KitCodes.cs) ; une bande de SwatchRangs lignes sous les
+		// étagères reçoit les texels-codes des aplats. L'ancienne écriture en couleurs
+		// est CONSERVÉE (AtlasLitteral, DecorLayer.Aplats.cs), plus appelée.
 		private static void AssurerKitDecor()
 		{
 			if (_kitTex != null) return;
-			var niveaux = new Dictionary<(Piece, int, int), byte[]>();
+			var codes = new Dictionary<(Piece, int, int), byte[]>();
 			for (int f = 0; f < NbPieces; f++)
 				for (int i = 0; i < Tailles[f].Length; i++)
 					for (int v = 0; v < Variantes; v++)
-						niveaux[((Piece)f, i, v)] = PeindrePiece((Piece)f, Tailles[f][i].X, Tailles[f][i].Y, v);
+						codes[((Piece)f, i, v)] = CoderPiece((Piece)f, Tailles[f][i].X, Tailles[f][i].Y, v);
 			_kitRects = new Rect2I[TeintesBase.Length * NbPieces * NbTaillesMax * Variantes];
-			var places = new List<(Rect2I r, byte[] niv, Color[] rampe)>();
-			int x = 3, y = 0, hRang = 3;   // (0..1, 0..1) = texel blanc
+			_kitCodes.Clear();
+			int x = 3, y = 0, hRang = 3;   // (0..1, 0..1) = texel blanc (repère des aplats)
 			for (int t = 0; t < TeintesBase.Length; t++)
 			{
-				Color[] rampe = PlantRenderer.RampeKit(TeintesBase[t]);
-				foreach (var ((f, i, v), niv) in niveaux)
+				long src = SourceTeinte(t);
+				foreach (var ((f, i, v), c) in codes)
 				{
 					Vector2I s = Tailles[(int)f][i];
 					if (x + s.X > AtlasW) { x = 0; y += hRang; hRang = 0; }
 					var r = new Rect2I(x, y, s.X, s.Y);
 					_kitRects[IndexKit(t, (int)f, i, v)] = r;
-					places.Add((r, niv, rampe));
+					_kitCodes.Add((r, c, src));
 					x += s.X + 1;
 					hRang = Mathf.Max(hRang, s.Y + 1);
 				}
 			}
 			int hauteur = y + hRang;
-			var data = new byte[AtlasW * hauteur * 4];
-			foreach (int i in new[] { 0, 1, AtlasW, AtlasW + 1 })
-				for (int c = 0; c < 4; c++) data[i * 4 + c] = 255;            // texel blanc
-			foreach (var (r, niv, rampe) in places)
-				for (int py = 0; py < r.Size.Y; py++)
-					for (int px = 0; px < r.Size.X; px++)
-					{
-						byte n = niv[py * r.Size.X + px];
-						if (n == 0) continue;
-						Color c = rampe[n];
-						int o = ((r.Position.Y + py) * AtlasW + r.Position.X + px) * 4;
-						data[o] = (byte)c.R8; data[o + 1] = (byte)c.G8;
-						data[o + 2] = (byte)c.B8; data[o + 3] = 255;
-					}
-			var img = Image.CreateFromData(AtlasW, hauteur, false, Image.Format.Rgba8, data);
-			_kitTaille = new Vector2(AtlasW, hauteur);
-			_kitTex = ImageTexture.CreateFromImage(img);
+			_kitTaille = new Vector2(AtlasW, hauteur + SwatchRangs);
+			EcrireAtlasCodes(hauteur);
+			_kitTex = ImageTexture.CreateFromImage(_kitImg);
+			_kitSale = false;
 		}
 
 		// Hash entier stable d'une pièce (forme, taille, variante, canal) ∈ [0,1).

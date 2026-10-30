@@ -5,6 +5,7 @@
 // de comparaison (règle « on ne jette pas de code »), comme DrawSecteur/DrawPrairie.
 
 using Godot;
+using System.Collections.Generic;
 
 namespace Symbiose
 {
@@ -151,6 +152,53 @@ namespace Symbiose
 				float d = dFront - ombreW * ((hh >> 3 & 7u) / 7f);
 				_lot.Cercle(EdgePoint(s.Cote, u, d + Wob(u)), 1.5f + (hh & 1u), Palette16.RocheClair);
 			}
+		}
+	
+		// ⚠️ CONSERVÉ, plus appelé depuis CASSÉ À L'ÉCRAN ⑥ : l'atlas du kit écrit en
+		// COULEURS (niveaux de PeindrePiece × PlantRenderer.RampeKit), remplacé par
+		// l'atlas en codes indexés (DecorLayer.Kit.cs AssurerKitDecor + Indexe.cs).
+		private static void AtlasLitteral()
+		{
+			var niveaux = new Dictionary<(Piece, int, int), byte[]>();
+			for (int f = 0; f < NbPieces; f++)
+				for (int i = 0; i < Tailles[f].Length; i++)
+					for (int v = 0; v < Variantes; v++)
+						niveaux[((Piece)f, i, v)] = PeindrePiece((Piece)f, Tailles[f][i].X, Tailles[f][i].Y, v);
+			_kitRects = new Rect2I[TeintesBase.Length * NbPieces * NbTaillesMax * Variantes];
+			var places = new List<(Rect2I r, byte[] niv, Color[] rampe)>();
+			int x = 3, y = 0, hRang = 3;   // (0..1, 0..1) = texel blanc
+			for (int t = 0; t < TeintesBase.Length; t++)
+			{
+				Color[] rampe = PlantRenderer.RampeKit(TeintesBase[t]);
+				foreach (var ((f, i, v), niv) in niveaux)
+				{
+					Vector2I s = Tailles[(int)f][i];
+					if (x + s.X > AtlasW) { x = 0; y += hRang; hRang = 0; }
+					var r = new Rect2I(x, y, s.X, s.Y);
+					_kitRects[IndexKit(t, (int)f, i, v)] = r;
+					places.Add((r, niv, rampe));
+					x += s.X + 1;
+					hRang = Mathf.Max(hRang, s.Y + 1);
+				}
+			}
+			int hauteur = y + hRang;
+			var data = new byte[AtlasW * hauteur * 4];
+			foreach (int i in new[] { 0, 1, AtlasW, AtlasW + 1 })
+				for (int c = 0; c < 4; c++) data[i * 4 + c] = 255;            // texel blanc
+			foreach (var (r, niv, rampe) in places)
+				for (int py = 0; py < r.Size.Y; py++)
+					for (int px = 0; px < r.Size.X; px++)
+					{
+						byte n = niv[py * r.Size.X + px];
+						if (n == 0) continue;
+						Color c = rampe[n];
+						int o = ((r.Position.Y + py) * AtlasW + r.Position.X + px) * 4;
+						data[o] = (byte)c.R8; data[o + 1] = (byte)c.G8;
+						data[o + 2] = (byte)c.B8; data[o + 3] = 255;
+					}
+			var img = Image.CreateFromData(AtlasW, hauteur, false, Image.Format.Rgba8, data);
+			_kitTaille = new Vector2(AtlasW, hauteur);
+			_kitTex = ImageTexture.CreateFromImage(img);
 		}
 	}
 }

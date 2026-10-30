@@ -28,6 +28,7 @@ namespace Symbiose
 
 		public override void _Ready()
 		{
+			Material = MateriauDecor;   // ⑥ : palette indexée + dialecte 2 + vent (DecorLayer.Indexe.cs)
 			_scintille = new EauScintillement { Name = "Scintillement" };
 			AddChild(_scintille);
 			CreerDevant();   // LEVIERS ⑤ : couche des pièces hautes côté caméra (DecorLayer.Devant.cs)

@@ -68,6 +68,12 @@ namespace Symbiose
 		private static float _gustMean = 1f;
 		private static double _t;   // temps animé (s), accumulateur déterministe
 
+		// ⑥ (décor animé au vent) : le shader du décor rejoue PoseFor côté GPU — il lit
+		// ici les MÊMES constantes, le même temps et les mêmes risées (mêmes fronts).
+		public static double Temps => _t;
+		public static float Risee(int i) => _gusts[i & 3] / _gustMean;
+		public const float OndeLambdaCm = LambdaCm, OndeFreqHz = FreqHz;
+
 		// Forçage du banc de capture (--capture-vent) : NaN = inactif.
 		private static float _overForce = float.NaN, _overDir = float.NaN;
 		private static float _lastForce, _lastDir;

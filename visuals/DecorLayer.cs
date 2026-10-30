@@ -206,6 +206,7 @@ namespace Symbiose
 			// LEVIERS ③ : les mailles des autres paliers se préparent par tranches
 			// (DecorLayer.Mailles.cs) — le prochain cran de molette n'aura qu'à permuter.
 			AvancerFond();
+			MajUniformes();   // ⑥ : soleil, palier, vent → shader (DecorLayer.Vent.cs)
 		}
 
 		public override void _Draw()
@@ -224,6 +225,7 @@ namespace Symbiose
 			// seulement si elle manque encore (1er dessin, juste après Build).
 			long t0 = System.Diagnostics.Stopwatch.GetTimestamp();
 			Maille m = MailleImmediate(WorldView.CurrentZoom, out bool construite);
+			TeleverserKit();   // ⑥ : texels-codes neufs / vidage de LUT → atlas au GPU
 			if (m.Mesh != null) DrawMesh(m.Mesh, KitTexture);
 			PublierDevant(m);   // LEVIERS ⑤ : pièces hautes côté caméra, couche au-dessus du jardin
 			PublierEau(m);      // étincelles de CE palier (couche animée, DecorLayer.Eau.cs)

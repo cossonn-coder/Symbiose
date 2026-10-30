@@ -86,6 +86,8 @@ namespace Symbiose
 			_lotHaut = haut;
 			ZoomConstr = z;
 			_eauCible = m;
+			Brancher(lot); Brancher(haut);   // ⑥ : sommets encodés (DecorLayer.Indexe.cs)
+			EtatDefaut();
 			if (t < 4) DrawAssise(_profile.Secteurs[t]);   // DecorLayer.Patchwork.cs
 			else DrawMotif(_profile.Secteurs[t - 4]);
 			_lot = lotAvant;

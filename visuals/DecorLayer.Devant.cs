@@ -48,7 +48,7 @@ namespace Symbiose
 		private void CreerDevant()
 		{
 			_devant = new Node2D { Name = "DecorDevant", ZIndex = ZDevant, ZAsRelative = false,
-				Modulate = new Color(1f, 1f, 1f, _devantAlpha) };
+				Modulate = new Color(1f, 1f, 1f, _devantAlpha), Material = MateriauDecor };   // ⑥
 			// Un simple Node2D : il peint dans le signal Draw (pas de classe dédiée).
 			_devant.Draw += () =>
 			{

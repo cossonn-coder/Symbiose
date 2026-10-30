@@ -161,9 +161,27 @@ namespace Symbiose
 			Ajouter(d, ud, mod); Ajouter(a, ua, mod); Ajouter(c, uc, mod);
 		}
 
-		private void Ajouter(Vector2 p, Color c) => Ajouter(p, UvUni, c);
+		/// <summary>CASSÉ À L'ÉCRAN ⑥ (décor indexé) : hook optionnel qui RÉÉCRIT chaque
+		/// sommet avant stockage — `uni` = triangle sans texture (aplat). Le décor y
+		/// change la couleur d'un aplat en (UV d'un texel-code de sa palette, couleur de
+		/// sommet = valeur · vent · phase · alpha). null = comportement d'avant.</summary>
+		public delegate void EncodeurSommet(Vector2 p, bool uni, ref Vector2 uv, ref Color c);
+		public EncodeurSommet Encodeur;
+
+		private void Ajouter(Vector2 p, Color c)
+		{
+			Vector2 uv = UvUni;
+			Encodeur?.Invoke(p, true, ref uv, ref c);
+			Stocker(p, uv, c);
+		}
 
 		private void Ajouter(Vector2 p, Vector2 uv, Color c)
+		{
+			Encodeur?.Invoke(p, false, ref uv, ref c);
+			Stocker(p, uv, c);
+		}
+
+		private void Stocker(Vector2 p, Vector2 uv, Color c)
 		{
 			_sommets.Add(p);
 			_uvs.Add(uv);
