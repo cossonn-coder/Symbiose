@@ -765,6 +765,37 @@ BESOIN = {
 # unique (0.999). PLACEHOLDERS, calibrage post-test.
 LEACHING = {"N": 0.12, "P": 0.005, "K": 0.05}
 
+# Lessivage LIÉ À L'EAU (sprint SOL NOURRICIER ①, D120 §3.1) : la fraction passive
+# `LEACHING[i]·(1 − cec)` n'est plus subie CHAQUE semaine mais PONDÉRÉE par l'eau qui
+# a réellement drainé ce tick (`drainage_norm` ∈ [0,1], cf. DRAINAGE_PERTE_REF) :
+#     rétention = 1 − LEACHING[i]·(1 − cec)·drainage_norm
+# Sans drainage (sol sec, été) → rien ne part : un ion ne quitte la zone racinaire
+# qu'emporté par l'eau qui descend. L'amplification par l'orage (`facteur_pluie`,
+# plafonné FACTEUR_PLUIE_CAP) s'applique ensuite en puissance, inchangée.
+
+# RECHARGE vers l'ÉQUILIBRE DE LA ROCHE (sprint SOL NOURRICIER ①, D120 §3.1).
+# Un sol ne se vide jamais jusqu'à zéro : l'altération de la roche-mère, les apports
+# atmosphériques (azote des orages, poussières) et la fixation libre par les bactéries
+# du sol le ramènent LENTEMENT vers l'état hérité de son `soil_type` (équilibre =
+# NUTRIENT_INIT_PAR_SOL — la roche, PAS la valeur de départ du plot, qui peut avoir été
+# forcée par `fertilite=` ou modulée par la catena). Par plot et par nutriment :
+#     si stock < eq : stock += RECHARGE[i] · (eq − stock)      (sinon rien)
+# Une relaxation exponentielle : demi-vie de remontée = ln2 / RECHARGE (en semaines).
+# Hiérarchie biologique : N revient vite (fixation, pluie), K moyen (argiles,
+# feldspaths), P très lent (apatite, quasi insoluble). Un sol plus riche que sa
+# roche (compost, fumure) n'est PAS rabattu : la recharge ne fait que combler.
+# Seuls les sols POSÉS SUR LA ROCHE rechargent : un pot/bac (mini-sol confiné) n'a
+# pas de roche-mère sous lui → il s'épuise (cf. `tick_decomposition(recharge_roche=)`).
+# Valeurs = ln2 / (52 · demi-vie en années), calibrées sur `mesure_faim.py`.
+# CALIBRAGE (D120 ①, 2026-10-30) : la conception visait des demi-vies de JACHÈRE de
+# N ≈ 1 an, K ≈ 2-3 ans, P ≈ 5 ans ; mesurées dans le monde `full`, elles laissent le
+# prélèvement racinaire (~700-900 plantes) vider le sol à ~12-17 % de l'équilibre en
+# an 2 (cible ≥ 40 %). Le stock d'équilibre sous culture vaut `eq − prélèvement/RECHARGE`
+# → il faut une remontée ~5-10× plus rapide. Retenu : N ≈ 10 sem., K ≈ 13 sem.,
+# P ≈ 26 sem. (hiérarchie N > K > P conservée ; P est le moins tiré par les plantes).
+RECHARGE_DEMI_VIE_ANS = {"N": 0.2, "P": 0.5, "K": 0.25}
+RECHARGE = {e: 0.6931 / (52.0 * a) for e, a in RECHARGE_DEMI_VIE_ANS.items()}
+
 # Capacité d'échange cationique (CEC) — facteur DÉRIVÉ (jamais un champ) texture
 # + humus, modulant le lessivage (ici) et plus tard le tampon pH (volet A) :
 #     cec = CEC_PAR_SOL[soil_type] + CEC_OM_COEF · om_stable_norm   (borné [0,1])

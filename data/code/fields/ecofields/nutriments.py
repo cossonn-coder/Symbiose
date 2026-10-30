@@ -18,7 +18,11 @@ Trois services au cœur du re-figé du tronçon ③ :
 
   3. `leach_factor(nutrient, cec_norm)` — facteur multiplicatif de lessivage
      hebdomadaire d'un nutriment, modulé par la CEC : N très mobile, P quasi nul,
-     K moyen. Remplace le `LEACHING_LOSS` unique.
+     K moyen. Remplace le `LEACHING_LOSS` unique. Depuis D120 ①, pondéré par
+     l'eau drainée (sans drainage → rien ne part).
+
+  4. `recharge(stock, eq, taux)` — remontée lente d'un stock vers l'équilibre de
+     la roche-mère (D120 ①) ; `equilibre_roche(soil_type)` donne cet équilibre.
 
 La loi de Liebig elle-même (le `min` des disponibilités) n'a pas besoin d'helper :
 elle se lit directement sur les trois champs (cf. `vigueur_plante.qi_local`). Le
@@ -32,7 +36,7 @@ from __future__ import annotations
 from math import exp
 
 from .constants import (NPK_RELEASE, LEACHING, CEC_PAR_SOL, CEC_OM_COEF,
-                        PH_OPT, PH_WIDTH, FAIM_N_COEF)
+                        PH_OPT, PH_WIDTH, FAIM_N_COEF, NUTRIENT_INIT_PAR_SOL)
 
 
 def bell(ph: float, opt: float, tol: float) -> float:
@@ -83,8 +87,26 @@ def cec_norm_at(soil_type: str, om_stable_norm: float) -> float:
     return min(1.0, cec)
 
 
-def leach_factor(nutrient: str, cec_norm: float) -> float:
+def leach_factor(nutrient: str, cec_norm: float, drainage_norm: float = 1.0) -> float:
     """Facteur multiplicatif de rétention après lessivage d'un nutriment ce tick :
-    `1 − LEACHING[i]·(1 − cec_norm)`. À CEC pleine (1.0) → 1.0 (rien ne lessive) ;
-    à CEC nulle → 1 − LEACHING[i] (lessivage maximal). `champ_i *= ce_facteur`."""
-    return 1.0 - LEACHING[nutrient] * (1.0 - cec_norm)
+    `1 − LEACHING[i]·(1 − cec_norm)·drainage_norm`. À CEC pleine (1.0) → 1.0 (rien ne
+    lessive) ; à CEC nulle et drainage plein → 1 − LEACHING[i] (lessivage maximal).
+    `drainage_norm` (D120 ①) = eau réellement drainée ce tick ∈ [0,1] : sans eau qui
+    descend, aucun ion ne quitte la zone racinaire (→ 1.0). `champ_i *= ce_facteur`."""
+    return 1.0 - LEACHING[nutrient] * (1.0 - cec_norm) * drainage_norm
+
+
+def equilibre_roche(soil_type: str) -> tuple[float, float, float]:
+    """(N, P, K) d'équilibre hérités de la roche-mère (`NUTRIENT_INIT_PAR_SOL`,
+    repli « terre »). C'est la cible de la recharge — PAS la valeur initiale du plot
+    (forcée par `fertilite=` ou modulée par la catena)."""
+    return NUTRIENT_INIT_PAR_SOL.get(soil_type, NUTRIENT_INIT_PAR_SOL["terre"])
+
+
+def recharge(stock: float, eq: float, taux: float) -> float:
+    """Stock après une semaine de remontée vers l'équilibre de la roche (D120 ①) :
+    relaxation exponentielle `stock + taux·(eq − stock)` SI le stock est sous
+    l'équilibre, sinon inchangé (un sol enrichi n'est pas rabattu). Pur, zéro RNG."""
+    if stock >= eq:
+        return stock
+    return stock + taux * (eq - stock)

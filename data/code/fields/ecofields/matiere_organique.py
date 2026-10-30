@@ -16,7 +16,8 @@ from .constants import *          # constantes de calibration écologique
 from .litiere import *            # Parcelle, Structure, TISSU, MATUR_*, COLONISATION_*…
 from .litiere import _fusion_parcelle, _lisser_ages   # helpers privés (hors import *)
 from .litiere import BOIS_DIAM_DEFAUT, facteur_grosseur   # grosseur du bois (⑦bis)
-from .nutriments import split_miner, cec_norm_at, leach_factor, dispo   # chimie N/P/K pure
+from .nutriments import (split_miner, cec_norm_at, leach_factor, dispo,   # chimie N/P/K pure
+                         equilibre_roche, recharge)
 from .thermique import microbe_clim_factor as _microbe_clim_factor      # cloche T × humidité (météo→champs ④)
 
 
@@ -107,7 +108,7 @@ class MatiereOrganiqueMixin:
         speed *= (1.0 - MARAIS_DECOMP_MALUS * self.marais_memory.at_plot(r, c))
         return speed
 
-    def tick_decomposition(self) -> None:
+    def tick_decomposition(self, recharge_roche: bool = True) -> None:
         """
         Cycle biogéochimique hebdomadaire — cascade OM v4 (fresh → active → stable).
 
@@ -128,8 +129,12 @@ class MatiereOrganiqueMixin:
 
         La litière feuillue nourrit surtout l'azote, le fruit la potasse, le bois
         peu (immobilisation). Puis lessivage DIFFÉRENCIÉ par nutriment, modulé par
-        la CEC dérivée (texture + humus) : N≫K>P (§2.4/§2.5).
+        la CEC dérivée (texture + humus) : N≫K>P (§2.4/§2.5), PONDÉRÉ par l'eau
+        drainée (D120 ① : sans drainage, rien ne part). Enfin RECHARGE lente vers
+        l'équilibre de la roche-mère (D120 ①) si `recharge_roche` — False pour un
+        mini-sol de conteneur, qui n'a pas de roche sous lui.
         """
+        eq_n, eq_p, eq_k = equilibre_roche(self.soil_type)
         worms = self.populations["lombric"] if self.populations else None
         for r in range(self.rows):
             for c in range(self.cols):
@@ -241,9 +246,20 @@ class MatiereOrganiqueMixin:
                 # Hiérarchie de mobilité N≫K>P : N pleine amplification, K atténué, P
                 # ÉPARGNÉ (puissance 1 — le phosphore est quasi immobile, §2.4).
                 facteur_k = 1.0 + (facteur_pluie - 1.0) * LESSIVAGE_K_ATTENUATION
-                self.n.data[r][c] *= leach_factor("N", cn) ** facteur_pluie
-                self.p.data[r][c] *= leach_factor("P", cn)
-                self.k.data[r][c] *= leach_factor("K", cn) ** facteur_k
+                # LESSIVAGE LIÉ À L'EAU (D120 ①) : la fraction passive est pondérée par
+                # `drainage_norm` → un sol qui ne draine pas (sec, été) ne perd rien.
+                self.n.data[r][c] *= leach_factor("N", cn, drainage_norm) ** facteur_pluie
+                self.p.data[r][c] *= leach_factor("P", cn, drainage_norm)
+                self.k.data[r][c] *= leach_factor("K", cn, drainage_norm) ** facteur_k
+
+                # RECHARGE vers l'équilibre de la ROCHE (D120 ①) — APRÈS lessivage, et
+                # avant l'uptake (étape 8 de la boucle) : la plante lit le sol rechargé
+                # du tick, rien ne l'annule entre-temps. Équilibre = `soil_type` (roche),
+                # jamais la valeur initiale du plot. Un sol au-dessus n'est pas rabattu.
+                if recharge_roche:
+                    self.n.data[r][c] = recharge(self.n.data[r][c], eq_n, RECHARGE["N"])
+                    self.p.data[r][c] = recharge(self.p.data[r][c], eq_p, RECHARGE["P"])
+                    self.k.data[r][c] = recharge(self.k.data[r][c], eq_k, RECHARGE["K"])
 
     # --- Épaisseur de sol visible (D57, ①a) ---
 

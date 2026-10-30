@@ -20,7 +20,7 @@ Lancement (depuis data/code/) : python3 -m tests.test_scatter_lumiere_sol
 import sys
 
 from constants import PLOT_CM
-from fields.light import (LightField, LIGHT_FLOOR, SILHOUETTE_SECHE,
+from fields.light import (LightField, LIGHT_FLOOR, SILHOUETTE_SECHE, SHADING_POWER_MIN,
                           _point_in_capsule, _point_in_swept_rect,
                           _wall_albedo_bonus, WALL_ALBEDO_RADIUS_CM)
 from world import House
@@ -71,6 +71,12 @@ def _gather_ground(lf, infos, slices, house, origin):
                     att = 1.0
                     for qx, qy, qh, qr, qd in infos:
                         if qd <= 0.0:
+                            continue
+                        # LOD émetteur D67 (miroir de `light.compute`) : une ombre
+                        # trop faible (h × rayon × densité < seuil) n'est pas projetée.
+                        # Oubli de la référence révélé au D120 ① (monde smoke différent
+                        # → une petite plante sous le seuil tombe sur un plot testé).
+                        if qh * qr * qd < SHADING_POWER_MIN:
                             continue
                         if _point_in_capsule(cx, cy, qx, qy, sdx, sdy, qh * inv_tan, qr):
                             att *= (1.0 - qd)

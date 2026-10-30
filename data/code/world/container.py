@@ -159,7 +159,9 @@ class Container:
         # 4. Décomposition confinée — libère la litière pré-chargée (lasagnes/mycélium)
         #    dans la cascade om_fresh→active→stable→NPK. La faim d'azote du bois/substrat
         #    frais bride l'azote au départ puis se lève à mesure que la litière mûrit.
-        eco.tick_decomposition()
+        #    `recharge_roche=False` (D120 ①) : un mini-sol confiné n'a PAS de roche-mère
+        #    sous lui → aucune remontée vers l'équilibre, le substrat s'épuise vraiment.
+        eco.tick_decomposition(recharge_roche=False)
         # 4b. Maturation des structures posées : un mini-sol n'en porte aucune (un pot
         #     n'accueille pas de bac à compost) → no-op strict (liste vide).
         eco.tick_structures()
