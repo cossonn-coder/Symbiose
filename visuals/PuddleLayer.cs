@@ -166,6 +166,7 @@ namespace Symbiose
 			if (!Visible) return;
 			// Inerte entre snapshots : on ne redessine qu'au basculement de LOD.
 			MajZoomEau();   // ② : grain de l'eau calé au palier (uniform)
+			MajSignaux();   // ③ : vent, pluie, gobages (PuddleLayer.Signaux.cs)
 			bool zoomOk = WorldView.CurrentZoom >= MinZoom;
 			if (zoomOk != _lastZoomOk || _margeVersion != MargeVue.Version)
 			{

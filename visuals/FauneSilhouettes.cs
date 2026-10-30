@@ -154,8 +154,10 @@ namespace Symbiose
 			{
 				P(0.32f, 0.55f, 0.13f, 0.5f, 1, 3, miroir: true),            // ailes antérieures
 				P(0.08f, 0.55f, 0.13f, 0.5f, 1, 3, miroir: true),            // ailes postérieures
-				P(-0.15f, 0f, 0.85f, 0.07f, motif: MotifFaune.Segments),    // abdomen
-				P(0.82f, 0f, 0.12f, 0.14f),                                  // tête, gros yeux
+				// Abdomen ÉPAISSI (0,07 → 0,11, MARE VIVANTE ③) : à 1 px il se noyait
+				// dans l'eau sombre et la libellule se lisait « bâtonnet gris » d'ailes.
+				P(-0.15f, 0f, 0.85f, 0.11f, motif: MotifFaune.Segments),    // abdomen
+				P(0.82f, 0f, 0.12f, 0.18f),                                  // tête, gros yeux
 			}),
 			// ── Butineurs (ForagerLayer) ──
 			["abeille"] = new(C("e9c83c", "f0f0e8"), new[]

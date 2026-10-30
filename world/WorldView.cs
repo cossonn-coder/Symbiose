@@ -137,6 +137,8 @@ namespace Symbiose
 		// du sol, sous les plantes. Enfant direct de WorldView : il survit à
 		// RebuildWorld (il se re-projette seul à chaque dessin d'animation).
 		private MacroLife _macroLife;
+		/// <summary>Vie macro (lecture) : la mare y lit ses gobages (MARE VIVANTE ③).</summary>
+		internal MacroLife Macro => _macroLife;
 		// Eau de surface + marécage (hydrologie ⑧) : UN nœud pour flaques + voile de
 		// tourbe (cf. PuddleLayer.cs). ZIndex 2 = au ras du sol, sous la macro/plantes.
 		// Recalé sur le relief via la vue. Survit à RebuildWorld (se re-projette seul).

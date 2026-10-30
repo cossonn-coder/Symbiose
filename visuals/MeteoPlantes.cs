@@ -52,6 +52,10 @@ namespace Symbiose
 		/// elle-même avec son décalage (PlantRenderer.Froid.cs).</summary>
 		public static float SnowRaw { get; private set; }
 
+		/// <summary>Averse en cours (Pluie prolongée / Orage) : sa charge ∈ [0,25 ; 1],
+		/// 0 sinon. Lue par les ronds de pluie de la mare (MARE VIVANTE ③).</summary>
+		public static float Pluie { get; private set; }
+
 		private static bool _raining, _snowing, _freezing;
 		private static float _wetRaw, _frostRaw, _snowLoad, _scan;
 		private static int _waves;      // vagues de re-cuisson (mesure, log)
@@ -68,6 +72,7 @@ namespace Symbiose
 			_snowing = kind == "Neige";
 			_freezing = kind == "Gelée tardive";
 			if (_raining) _wetRaw = 1f;
+			Pluie = _raining ? Load(intensity) : 0f;
 			if (_freezing) _frostRaw = Load(intensity);
 			if (_snowing) SnowRaw = _snowLoad = Load(intensity);
 			bool changed = canicule != Canicule;

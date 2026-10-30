@@ -317,6 +317,7 @@ namespace Symbiose
 			_groupes = null;
 			_seen = null;
 			_dirty = true;
+			MajMare();   // MARE VIVANTE ③ : gobages + nuée (MacroLife.Mare.cs)
 			return true;
 		}
 
@@ -395,10 +396,12 @@ namespace Symbiose
 			float now = NowSec();
 			foreach (var e in _entries.Values)
 			{
+				if (EnNuee(e.Guild)) continue;   // ③ : dessiné en nuée (NueeMoustiques)
 				var (col, longCm, largCm) =
 					Especes.TryGetValue(e.Guild, out var g) ? g : EspeceInconnue;
 				// Taille réelle : invisible tant qu'elle fait moins d'1 px interne.
 				float w = longCm * WorldView.PxPerCmX;
+				w = Mathf.Max(w, PlancherPx(e.Guild, zoom) * px1);   // ③ libellule lisible dès ×1
 				if (w < px1) continue;
 				float h = Mathf.Max(largCm * WorldView.PxPerCmY, px1);
 				float alpha = Mathf.Clamp((now - e.BornAt) / FadeInSec, 0f, 1f);

@@ -43,9 +43,11 @@ C# : `dotnet build Symbiose.csproj`. Pont de départ **0.6.1**.
 ## Tronçons
 | # | Kickoff | Golden | État |
 |---|---|---|---|
-| ① | `01_moteur_pont.md` | inchangé ✅ | **fait** (non commité) |
-| ② | `02_eau_da.md` | inchangé ✅ | **fait** (non commité) |
-| ③ | `03_signaux_faune.md` | inchangé | à faire |
+| ① | `01_moteur_pont.md` | inchangé ✅ | **fait** (`e4ab37b`) |
+| ② | `02_eau_da.md` | inchangé ✅ | **fait** (`cac163b`) |
+| ③ | `03_signaux_faune.md` | inchangé ✅ | **fait** (non commité) |
+
+**SPRINT CLOS le 2026-10-30** (①②③) — reste le F5 de Nico (liste en fin de note ③).
 
 ## Notes de tronçon
 
@@ -129,10 +131,66 @@ SEUIL_FLAQUE = 0,10** → vase luisante sous lame mince ; au centre ~2,4-3,0 [n=
   rampes ; lisibilité de la vase luisante vs eau peu profonde. Constat annexe : à s26 la
   mare montre une encoche (un plot du fond non installé / hors emprise) — donnée moteur.
 
+### ③ signaux + faune de mare (2026-10-30) — golden `4c696821…` INTACT, `dotnet build` vert
+- **Signaux DANS `eau_mare.gdshader`** (eau libre seulement : branche `b < m`, jamais
+  glace ni vase ; UN lot, UN draw call conservés), uniforms posés par le nouveau
+  `visuals/PuddleLayer.Signaux.cs` (écrits seulement au changement) :
+  1. **rides** : vaguelettes 2 px (creux sombre `eau[0]` + crête claire `eau[4]`) en
+     tirets, qui filent vers l'aval ; écart 13→7 px et densité ↑ avec la force ; calme
+     (`!WindWave.Active`) → aucune ride. Source = `WindWave` (comme `DecorLayer.Vent`).
+     **Écart kickoff** : la crête doit être perpendiculaire au vent SUR LE SOL puis
+     projetée en iso → uniform `vent_dir` = gradient écran de la coordonnée aval MONDE
+     (calcul `onde_k` de DecorLayer), pas `WorldToScreenOffset(aval)` (1ᵉʳ essai : traits
+     verticaux qui se lisaient « pluie »).
+  2. **ronds de pluie** : cellules 14×9 px en quinconce, densité ∝ charge, anneau iso 2:1
+     qui vit 0,6 s par cycle de 1,1-2 s. **Écart** : la source n'est pas `WeatherLayer`
+     (pas d'accès statique) mais `MeteoPlantes.Pluie` (nouvelle propriété : charge
+     [0,25;1] si « Pluie prolongée »/« Orage », même lecture du bloc `weather`, suit
+     `--capture-meteo`). Grêle/neige : pas de ronds (non demandé).
+  3. **gobage** : `MacroLife.ProiesDeMare` = 1 point monde PAR PLOT où moustique ou
+     libellule est peint (≤ 8 envoyés, `n_gobages`) ; un rond (impact puis anneau, R 7 px)
+     visible 1,5 s toutes les 6 s, déphasé au hash de la position. Relu au snapshot
+     (`VersionMare`) ou à la rotation seulement. Un point hors eau (nuée posée sur la
+     berge) ne donne rien — voulu.
+- **Nuée de moustiques** : `visuals/NueeMoustiques.cs` (Node2D enfant de MacroLife, créé
+  au 1ᵉʳ snapshot par `MacroLife.Mare.cs`) — 4 « moucherons » de 2 px (corps `6a5f57` +
+  aile `c8c4c0` qui bat) par moustique envoyé, danse en sinus déphasés, redessin 12 Hz
+  et seulement si nuée à l'écran et zoom ≥ ×4. Le peintre principal saute le moustique
+  (`EnNuee`) ; picking/info-bulle inchangés (les entrées restent).
+- **Libellule** : vérifiée à l'image — à ×4 (taille réelle 11 px) elle se lisait
+  « bâtonnet gris » (ailes de chant, abdomen 1 px noyé dans l'eau). Corrigé : **taille
+  plancher croissante** `PlancherPx` 8 px à ×1 → 20 px à ×4 (taille réelle au-delà,
+  22 px à ×8) + **abdomen épaissi** dans `FauneSilhouettes` (rv 0,07→0,11, tête
+  0,14→0,18 — touche aussi la planche faune). Se lit libellule à ×4 et ×8.
+- **Captures** (full, seed 42, -w 25 → été s26, centre 1725,425, souris écartée) dans
+  `mesures/t3_*.png` : calme ×1/×4/×8, `t3_gobage_x4` + zooms `t3_zoom_gobage_nuee_x4`
+  (rond sous la nuée), `t3_zoom_libellule_nuee_x4`, `t3_zoom_libellule_x8` ; vent 0,9
+  ×1/×4/×8 + `t3_vent_faible_autre_dir_x4` (0,4, autre direction : rides en diagonale
+  iso) ; pluie ×1/×4/×8 ; `t3_glace_vent_pluie_x4` (s6, mare prise, vent + pluie : AUCUN
+  signal sur la glace, vérifié). Vu : rides, ronds de pluie, gobage sous libellule et
+  nuée, nuée, libellule. ×1 : rides lisibles, ronds de pluie quasi illisibles (2-3 px).
+- **Perf** [VM llvmpipe, n=8 relevés, charge ~2,5] : banc full ×4 mare 13,4 FPS / 66 draw
+  calls ; avec Puddle masquée 11,8 FPS / 65 → écart dans le bruit. +1 draw call (nuée)
+  seulement quand elle est à l'écran. Pas de comparaison avant/après stricte.
+- Taille (LDC) : `eau_mare.gdshader` 140, `PuddleLayer.Signaux.cs` 50, `NueeMoustiques.cs`
+  64, `MacroLife.Mare.cs` 32, `MacroLife.cs` 311 (🟡, +3, déjà en vigilance avant ③).
+
+### Points F5 pour Nico (sprint entier)
+1. **Glace** : arrive en semaines 3-11 étiquetées « printemps » (calendrier, cf. ①) —
+   trancher le calendrier ; aspect de la glace partielle (anneau) et prise.
+2. **Marnage** : vase luisante vs eau peu profonde lisibles ? encoche à s26 (donnée moteur).
+3. **Scintillement** au repos : densité/vitesse (raretés 17/37/29, `VIF` 0,9).
+4. **Rides** : lisibilité selon la direction du vent (avec le vent du snapshot seed 42 elles
+   sont presque verticales à l'écran et peuvent évoquer la pluie) ; vitesse de dérive
+   (5+16·f px/s) ; densité (25 %→70 % de tirets).
+5. **Ronds de pluie** : densité (15 %→60 % des cellules), durée 0,6 s ; illisibles à ×1.
+6. **Gobage** : fréquence (1 rond / 6 s / plot) — assez « de temps en temps » ?
+7. **Nuée** : lisible dès ×4 sans faire « mouches noires » ? cadence 12 Hz, amplitude.
+8. **Libellule** : taille plancher (8/12/20 px à ×1/×2/×4) — trop grosse à ×1 ? contraste
+   teal sur eau sombre.
+9. Dit = peint : en automne/hiver, plus de moustique/libellule nommés (voix, carnet).
+
 ## §REPRISE
-① fait (commit `e4ab37b`), ② fait (non commité au moment de l'écriture). Prochain : **③**
-`03_signaux_faune.md` (C#) — les rides/ronds s'ajoutent dans `eau_mare.gdshader` (branche
-codée, eau libre seulement : pixel non gelé et `b < m`), uniforms posés par
-`PuddleLayer.Eau.cs` ; lire d'abord les notes ① (format `marais`) et ② ci-dessus.
-Lire `CLAUDE.md` + ce fichier + le kickoff du premier tronçon « à faire ».
-Lancement : `/sprint-auto sprint_mare_vivante`.
+**Sprint MARE VIVANTE CLOS** (①`e4ab37b`, ②`cac163b`, ③ à committer par l'orchestrateur).
+Plus de tronçon à lancer. Reste : F5 de Nico (liste ci-dessus) ; fin de sprint =
+journal + DETTE (D121) + BACKLOG à mettre à jour par l'orchestrateur.
