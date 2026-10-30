@@ -5,8 +5,8 @@ Impact météo SPATIALEMENT hétérogène (sprint effondrement météo ①).
 Un événement météo reste GLOBAL (un seul tirage), mais son IMPACT est désormais
 hétérogène au plot : sous un même hiver catastrophe, un coin abrité tient, un coin
 exposé flanche (philo #7 — le jardin ne meurt plus d'un bloc). On exerce le collapse
-CONNU de la conception : seed 12345, année 26 semaine 10 (`week=1310`), une grêle
-d'intensité 1.94 (`scope="local"`). Avant ①, la grêle frappait les 8 secteurs à
+CONNU de la conception : seed 12345, année 5 semaine 10 (`week=218`), une grêle
+d'intensité 2.0 (`scope="local"`). Avant ①, la grêle frappait les 8 secteurs à
 l'identique (variance spatiale de survie nulle) ; désormais elle ne frappe qu'un
 PATCH déterministe (`weather.patch_local`).
 
@@ -29,7 +29,7 @@ from sim.seeds import semer_fondateur
 from sim.weather import patch_local
 
 SEED = 12345          # seed du collapse connu (conception §0/§1.3)
-WEEK = 1310           # année 26, semaine 10 → Grêle i=1.94 scope="local"
+WEEK = 218           # année 5, semaine 10 → Grêle i=2.0 scope="local" (D122 ③ : ex-1310)
 ROWS, COLS = 16, 11   # tuile du scénario de conception
 
 
@@ -49,7 +49,7 @@ def _tuile_semee(paillage: int = 0):
 
 
 def _collapse(paillage: int = 0):
-    """Joue LE tick du collapse (seed 12345, week 1310) et renvoie la liste des
+    """Joue LE tick du collapse (seed 12345, week 218) et renvoie la liste des
     instances plantées (on garde les références : un mort est retiré de la tuile
     mais son `is_alive` reste False sur l'objet)."""
     tile, eco, plants = _tuile_semee(paillage)

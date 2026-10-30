@@ -27,6 +27,7 @@ from dataclasses import dataclass
 
 from fields import _hash_noise, hash_gauss, climate_stress
 from fields.ecofields.constants import NEBULOSITE   # table météo→nébulosité (④, donnée PURE côté fields)
+from calendrier import W_T_MIN, saison_de, wiy_de   # calendrier UNIQUE (D122, couche basse)
 
 
 # --- Canaux-sentinelles ----------------------------------------------------
@@ -58,8 +59,9 @@ PATCH_FRAC = 0.42
 P_EVENT = 0.15
 
 # --- Climat normal saisonnier (docs/champs/climat/conception_meteo.md §1.1) -------------------
-# Normale de température : sinusoïde Normandie océanique. Minimum ~semaine 4
-# (fin janvier), maximum ~semaine 30 (fin juillet). Faible amplitude (hivers
+# Normale de température : sinusoïde Normandie océanique. Minimum en wiy
+# `W_T_MIN` = 45 (≈ fin janvier, convention équinoxe D122 — `calendrier.py`),
+# maximum 26 semaines plus tard, wiy ≈ 19 (≈ fin juillet). Faible amplitude (hivers
 # doux, étés frais). T_MOY/T_AMP = calibrage post-test.
 T_MOY = 11.0   # °C — moyenne annuelle
 T_AMP = 7.0    # °C — demi-amplitude saisonnière
@@ -114,20 +116,22 @@ class WeatherEvent:
 CALME = WeatherEvent("Beau temps", 0.0, 1, "global")
 
 # Catalogue §1.3 — (kind, scope, durée, fenêtre saisonnière en week_in_year).
-# Calendrier du moteur : printemps 1-13, été 14-26, automne 27-39, hiver 40-52.
-# Les fenêtres collent à ce calendrier (les semaines « p.ex. » de la spec étaient
-# indicatives). Distinction ponctuel (durée 1) vs état climatique (durée > 1).
+# Calendrier UNIQUE (D122, `calendrier.py`) : wiy 1 ≈ 20 mars ; printemps 1-13,
+# été 14-26, automne 27-39, hiver 40-52. Fenêtres recalées au MOIS RÉEL (D122 ③,
+# conception_calendrier_unique §4-§5, Normandie océanique) : 1ᵉʳ avr 3 · 1ᵉʳ mai 7 ·
+# 1ᵉʳ juin 11 · 1ᵉʳ juil 16 · 1ᵉʳ août 20 · 1ᵉʳ sept 24 · 1ᵉʳ oct 29 · 1ᵉʳ déc 37 ·
+# 1ᵉʳ janv 42 · 1ᵉʳ mars 50. Distinction ponctuel (durée 1) vs état (durée > 1).
 _CATALOGUE = [
     # kind,              scope,    durée, fenêtre (lo, hi)
-    ("Gelée tardive",    "global", 1,     (8, 15)),    # fin de printemps
-    ("Canicule",         "global", 2,     (16, 26)),   # été
-    ("Sécheresse",       "global", 4,     (18, 32)),   # été → début automne (état)
+    ("Gelée tardive",    "global", 1,     (2, 9)),     # avril → saints de glace (mi-mai)
+    ("Canicule",         "global", 2,     (12, 24)),   # juin → août
+    ("Sécheresse",       "global", 4,     (12, 28)),   # juin → sept. (état)
     ("Tempête",          "global", 1,     (27, 52)),   # automne + hiver
-    ("Grêle",            "local",  1,     (10, 26)),   # orages de fin printemps/été
+    ("Grêle",            "local",  1,     (7, 22)),    # mai → août (orages)
     ("Pluie prolongée",  "global", 3,     (27, 52)),   # automne + hiver (état)
     ("Redoux",           "global", 1,     (40, 52)),   # hiver
-    ("Neige",            "global", 2,     (44, 52)),   # ⑦ cœur de l'hiver (état multi-semaines, dépose le manteau)
-    ("Orage",            "local",  1,     (16, 30)),   # ⑦ été (orages convectifs : pluie battante + vent)
+    ("Neige",            "global", 2,     (38, 49)),   # ⑦ déc. → fév. (état multi-semaines, dépose le manteau)
+    ("Orage",            "local",  1,     (8, 24)),    # ⑦ mai → août (orages convectifs : pluie battante + vent)
 ]
 
 
@@ -155,9 +159,8 @@ PLUIE_INTENSITE_MAX = 0.75
 
 def _saison_meteo(wiy: int) -> str:
     """Saison du calendrier moteur (printemps 1-13, été 14-26, automne 27-39, hiver
-    40-52). Dupliquée ici (2 lignes) car `sim.engine.calendrier` est une couche HAUTE
-    (engine importe weather → import inverse = cycle)."""
-    return ("printemps", "ete", "automne", "hiver")[min(3, (wiy - 1) // 13)]
+    40-52). Lit le calendrier UNIQUE racine (D122) — plus de copie locale."""
+    return saison_de(wiy)
 
 
 def _pluie_ordinaire(seed: int, week: int, wiy: int) -> WeatherEvent:
@@ -226,13 +229,13 @@ def temp_norm(week_in_year: int, year_fraction: float | None = None,
               phase: float = 0.0) -> float:
     """
     Température NORMALE de la semaine (°C) — toile de fond lisse, 100 % prévisible
-    (docs/champs/climat/conception_meteo.md §1.1) : `T_MOY − T_AMP·cos(2π·(w − 4)/52)`.
+    (docs/champs/climat/conception_meteo.md §1.1) : `T_MOY − T_AMP·cos(2π·(w − W_T_MIN)/52)`.
 
     `week_in_year` ∈ [1, 52]. Si `year_fraction` est fourni, on superpose la dérive
     interannuelle `climate_stress` (§1.2, `phase` dérivée du seed) → certaines
     années plus fraîches/douces, sur plusieurs ans. Fonction PURE (pas de RNG).
     """
-    base = T_MOY - T_AMP * math.cos(2.0 * math.pi * (week_in_year - 4) / 52.0)
+    base = T_MOY - T_AMP * math.cos(2.0 * math.pi * (week_in_year - W_T_MIN) / 52.0)
     if year_fraction is not None:
         base += climate_stress(year_fraction, phase) * DRIFT_TEMP
     return base
@@ -322,8 +325,8 @@ def humidite_air(seed: int, week: int, event: WeatherEvent | None = None) -> flo
     imposee = HR_EVENT.get(ev.kind)
     if imposee is not None:
         return imposee
-    wiy = ((week - 1) % 52) + 1
-    base = HR_MOY + HR_AMP * math.cos(2.0 * math.pi * (wiy - 4) / 52.0)
+    wiy = wiy_de(week)
+    base = HR_MOY + HR_AMP * math.cos(2.0 * math.pi * (wiy - W_T_MIN) / 52.0)
     base += HR_BRUIT * (2.0 * _hash_noise(seed, week, *K_HR) - 1.0)
     return round(max(0.0, min(1.0, base)), 4)
 

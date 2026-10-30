@@ -27,7 +27,7 @@ def _monter(nom: str, week_depart: int = 1):
     Reproduit le câblage minimal de `cmd_init` (mêmes clés `game_state`) pour que
     l'état soit bit-identique à celui du serveur.
 
-    `week_depart` (défaut 1 = hiver, comme `cmd_init` — aucun banc existant impacté)
+    `week_depart` (défaut 1 = équinoxe de printemps depuis D122, comme `cmd_init`)
     choisit la SAISON d'observation : certains phénomènes n'ont de fenêtre qu'à une
     saison donnée (p.ex. la levée thermique du semis potager, qui exige un sol chaud
     → observation en plein été). C'est la couche oracle qui décide QUAND observer, le

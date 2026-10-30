@@ -48,9 +48,12 @@ n'utilise `random`.
 La « toile de fond » : des **normales** fonction de `week_in_year` (1–52), pas
 des événements. Deux sinusoïdes calées sur la Normandie :
 
-- **Température normale** : minimum ~semaine 4 (fin janvier), maximum
-  ~semaine 30 (fin juillet).
-  `temp_norm(w) = T_moy − T_amp · cos(2π·(w − 4)/52)` — p.ex. `T_moy ≈ 11 °C`,
+- **Température normale** : minimum semaine `W_T_MIN` = 45 (≈ fin janvier),
+  maximum ~semaine 19 (≈ fin juillet). Convention **équinoxe** : wiy 1 ≈ 20 mars
+  (D122, source unique `data/code/calendrier.py`, table mois → semaine dans
+  [`conception_calendrier_unique.md`](conception_calendrier_unique.md) §4 ; avant
+  D122 le minimum était en wiy 4, calendrier au 1ᵉʳ janvier).
+  `temp_norm(w) = T_moy − T_amp · cos(2π·(w − W_T_MIN)/52)` — p.ex. `T_moy ≈ 11 °C`,
   `T_amp ≈ 7 °C` (océanique = faible amplitude, hivers doux, étés frais).
 - **Pluviométrie normale** : océanique → pluie toute l'année, **maximum
   automne/hiver**, minimum fin de printemps. Sinusoïde décalée, jamais nulle.

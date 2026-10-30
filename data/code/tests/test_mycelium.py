@@ -248,7 +248,7 @@ from fields import sample_carpophores
 from fields.population import (CARPO_MYCEL_MIN, CARPO_HUMIDE_MIN)
 
 # D111 ③ : la fructification suit la PLUIE (pas l'automne seul) et l'espèce vient
-# de la niche. Sol riche (om_active) = niche humus du coprin, fenêtre sem. 8-45.
+# de la niche. Sol riche (om_active) = niche humus du coprin, fenêtre sem. 8-37 (D122 ③).
 _WIY_AUTOMNE = 30                              # coprin en fenêtre
 _WIY_ETE = 50                                  # hors fenêtre du coprin (hiver)
 _SEED_C = 0x5AB1057E
@@ -301,7 +301,7 @@ e_dense2 = _eco_carpo(0.8, 2.5)
 pos_a = {(k.row, k.col, k.slot): (k.x_frac, k.y_frac)
          for k in sample_carpophores(e_dense2, _SEED_C, _WIY_AUTOMNE, True)}
 pos_b = {(k.row, k.col, k.slot): (k.x_frac, k.y_frac)
-         for k in sample_carpophores(e_dense2, _SEED_C, 40, True)}
+         for k in sample_carpophores(e_dense2, _SEED_C, 36, True)}   # D122 ③ : 40 hors fenêtre coprin (8-37)
 check("CARPOPHORES : positions indépendantes de la semaine (slot stable)",
       pos_a == pos_b)
 

@@ -269,6 +269,13 @@ def _monoculture_grid(eco, tile, plants) -> list[list[float]]:
     """
     Plancher d'habitat du ravageur = monoculture (faible biodiversité locale).
     1 famille → monoculture forte ; 3+ familles → régulée par la diversité.
+
+    SOL NU → 0 (D122 ③, décision Nico C5bis, 2026-10-30) : « les ravageurs viennent
+    quand il y a déjà des plantes pour les nourrir ». Avant, 0 famille donnait
+    1 − 0 = 1 (monoculture « maximale ») → le puceron tenait une capacité 0,45 sur
+    tout le sol nu, puis tombait d'emblée sur chaque semis. Désormais le puceron
+    n'a d'habitat QUE sous un feuillage hôte : il colonise après l'installation des
+    plantes, au rythme de l'inertie de montée (pas de bonus/malus plante, philo #2).
     """
     fams: list[list[set]] = [[set() for _ in range(eco.cols)] for _ in range(eco.rows)]
     for p in plants:
@@ -282,7 +289,7 @@ def _monoculture_grid(eco, tile, plants) -> list[list[float]]:
     for r in range(eco.rows):
         for c in range(eco.cols):
             n = len(fams[r][c])
-            g[r][c] = 1.0 - min(1.0, n / MONO_REF)
+            g[r][c] = 1.0 - min(1.0, n / MONO_REF) if n else 0.0   # sol nu : pas d'hôte
     return g
 
 

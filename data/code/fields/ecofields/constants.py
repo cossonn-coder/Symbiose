@@ -625,9 +625,12 @@ ECRASER_FRAG_BOOST = 0.50  # part de `bois_restant` libérée d'un coup quand on
 # l'import public). Déterministe : le gène vient d'un hash, aucun RNG.
 ABSCISSION_WEEKS  = (38, 39)   # (héritage) 2 dernières semaines d'automne (saison = 27..39)
 ABSCISSION_FRAC   = 0.15       # part de la nécromasse-hauteur larguée à l'abscission
-ABSCISSION_BASE   = 38         # semaine-pivot du largage (dans l'automne 27..39)
+# D122 ③ (calendrier unique, wiy 1 ≈ 20 mars) : chute réelle mi-octobre → novembre
+# (1ᵉʳ nov = wiy 33, 1ᵉʳ déc = 37) → fenêtre 30-36 ; pivot 38 → 34 (≈ 8 nov) sinon
+# il tomberait HORS de la fenêtre et la borne haute ferait tout le travail.
+ABSCISSION_BASE   = 34         # semaine-pivot du largage (≈ début novembre)
 ABSCISSION_JITTER = 15.0       # ±σ(0.10) sur le gène ⇒ ±1.5 sem de décalage
-ABSCISSION_MIN, ABSCISSION_MAX = 34, 39   # fenêtre d'automne bornée du largage
+ABSCISSION_MIN, ABSCISSION_MAX = 30, 36   # mi-oct. → fin nov. (D122 ③)
 # Sprint DÉSYNC PHÉNOLOGIE ② (pont) : rampe de COLORATION automnale par-plante,
 # hint PUR RENDU exporté par le snapshot (serialize.py). `automne ∈ [0,1]` monte
 # linéairement sur les AUTOMNE_RAMP semaines qui PRÉCÈDENT la semaine d'abscission

@@ -5,7 +5,7 @@ SYMBIOSE — fields/population/field.py
 """
 from fields.grids import GridField
 from fields.population.constants import (
-    POP_MAX, T_COLD_ZERO, T_WARM_FULL, W_SOLSTICE_ETE,
+    POP_MAX, W_SOLSTICE_ETE,
     _clamp01, _smoothstep, daylength,
 )
 from fields.population.spec import TrophicSpec
@@ -82,6 +82,9 @@ class PopulationField(GridField):
         pred_w, disturb_w = spec.pred_w, spec.disturb_w
         inertia, inertia_decay = spec.inertia, spec.inertia_decay
         lisiere_w = spec.lisiere_w
+        # Rampe thermique PAR GUILDE (D122 ③) — défaut = rampe globale, même
+        # expression `(temp − t0) / (t1 − t0)` → bit-identique pour les autres guildes.
+        t_cold_zero, t_warm_full = spec.t_cold_zero, spec.t_warm_full
         max_val = self.max_val
         temp_data, dist_data = eco.temperature.data, eco.disturbance.data
         lis_data = lis.data if lis is not None else None
@@ -103,7 +106,7 @@ class PopulationField(GridField):
             pred_seul = pred_rows[0] if len(pred_rows) == 1 else None
             for c in range(self.cols):
                 temp = temp_row[c]
-                warmth = _clamp01((temp - T_COLD_ZERO) / (T_WARM_FULL - T_COLD_ZERO))
+                warmth = _clamp01((temp - t_cold_zero) / (t_warm_full - t_cold_zero))
                 disturb = dist_row[c]
                 # `sum` conservé tel quel dès 2 prédateurs (Python ≥ 3.12 : somme
                 # flottante compensée, départ entier 0) → même résultat au bit près.

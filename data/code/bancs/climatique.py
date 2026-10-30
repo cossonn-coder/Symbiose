@@ -206,27 +206,27 @@ def _gmf_tile(label: str, espece: str, *, temperature_sol: float, ph: float,
 # chaîne des trois tronçons : l'encart « état du ciel » VIRE AU PLOMB à l'approche
 # (convergence ②), puis la ZONE ABRITÉE survit pendant que l'EXPOSÉE est frappée
 # (impact hétérogène ① + couvertures ③). Le collapse est celui, DÉTERMINISTE, de
-# `seed 12345` : la Grêle sévère (i≈1.94) tombe SEMAINE 1310 (an 26, s10) et son
+# `seed 12345` : la Grêle sévère (i≈2.0) tombe SEMAINE 218 (an 5, s10) et son
 # `scope="local"` la confine à un PATCH de la tuile (tronçon ①). Ce banc DOIT donc
 # tourner avec ce seed (BANC_SEED) et démarre juste avant (BANC_WEEK_DEPART), pour
 # que les quelques pas de simulation traversent la fenêtre de convergence (le ciel
-# s'assombrit aux semaines 1307-1309) avant la frappe.
+# s'assombrit aux semaines 215-217) avant la frappe.
 #
 # Hétérogénéité mise en scène : une tuile 16×11 entièrement SEMÉE de basilics
 # fondateurs (`semer_fondateur` → tissu tendre déjà segmenté, donc DESSINÉ, et
 # fragile face à la grêle, comme dans tests/test_couvertures) ; la MOITIÉ GAUCHE
 # (colonnes < 6) est ABRITÉE sous un VOILE d'hivernage posé (`couvert_pose`,
 # tronçon ③) — la vue y dessine le placeholder de voile ET la grêle médiée y est
-# amortie ; la moitié droite reste NUE. Le patch de grêle (seed 12345, semaine 1310)
+# amortie ; la moitié droite reste NUE. Le patch de grêle (seed 12345, semaine 218)
 # STRADDLE les deux moitiés → là où il recouvre le voile la plante tient, là où il
 # frappe la terre nue elle est fauchée : « l'exposé flanche, l'abrité tient et
 # re-sème ». Bien ARROSÉE (humidite=1.5) pour que la sécheresse/le froid ne
 # CONFONDENT pas le signal grêle (le seul stress discriminant reste la grêle × voile).
 # AUCUNE mécanique nouvelle (compose l'état moteur + pose une couverture par la
 # façade éco) → golden NEUTRE (jamais monté pour smoke/full ; le golden tourne hors
-# serveur). ⚠️ CALIBRAGE F5 : la fenêtre départ (BANC_WEEK_DEPART=1309) est un
+# serveur). ⚠️ CALIBRAGE F5 : la fenêtre départ (BANC_WEEK_DEPART=217) est un
 # compromis — assez tôt pour que le ciel soit déjà lourd à l'arrivée (convergence
-# 1.94), assez tard pour que les semis n'aient pas durci avant la frappe (chaque
+# 2.0), assez tard pour que les semis n'aient pas durci avant la frappe (chaque
 # tick de croissance les rend plus résistants → le contraste mort/vif se dilue).
 # Reculer le départ montre le ciel VIRER (clair→plomb) mais adoucit la fauche ;
 # Nico ajuste au F5.
@@ -238,12 +238,12 @@ EFF_FOUNDER_SEED = 42     # graine des gènes fondateurs (déterministe)
 def effondrement():
     """Banc « l'hiver de tous les dangers » (effondrement météo ④) : une tuile 16×11
     de basilics fondateurs, moitié gauche ABRITÉE sous voile, moitié droite NUE, sous
-    le collapse déterministe du seed 12345 (Grêle locale sévère semaine 1310). À
+    le collapse déterministe du seed 12345 (Grêle locale sévère semaine 218). À
     l'écran : l'encart du ciel est déjà au plomb à l'arrivée (convergence ②) et le
     reste, puis la zone voilée garde un noyau vivant là où la nue est fauchée (impact
     hétérogène ① + couvertures ③). Banc F5 (pas d'oracle dédié : la MÉCANIQUE est
     couverte par tests/test_meteo_heterogene + test_couvertures ; ici on COMPOSE le
-    décor observable). DOIT tourner avec seed 12345 (BANC_SEED) ; démarre semaine 1309
+    décor observable). DOIT tourner avec seed 12345 (BANC_SEED) ; démarre semaine 217
     (BANC_WEEK_DEPART) — deux pas avant la frappe, ciel déjà lourd."""
     tile, eco = build_banc_tile("EFFONDREMENT", "terre", EFF_ROWS, EFF_COLS,
                                 humidite=1.5, fertilite=1.0, microbiome=0.3)

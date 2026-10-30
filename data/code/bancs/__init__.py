@@ -76,7 +76,7 @@ BANC_POST_INIT = {"palette_gestes": _palette_gestes.post_init,
 # Seed IMPOSÉ par banc (effondrement météo ④). La plupart des bancs sont neutres au
 # seed (ils forcent leur condition par composition) → repli sur le défaut du serveur.
 # `effondrement` fait EXCEPTION : il met en scène le collapse DÉTERMINISTE du seed
-# 12345 (Grêle locale sévère semaine 1310) — sans ce seed, la météo seedée ne pose
+# 12345 (Grêle locale sévère semaine 218) — sans ce seed, la météo seedée ne pose
 # aucune catastrophe à la fenêtre observée. Lu par `cmd_init` (banc absent → défaut
 # serveur → comportement inchangé ; un `msg["seed"]` explicite reste prioritaire pour
 # l'oracle/tests). golden NEUTRE : smoke/full ne sont pas des bancs.
@@ -85,8 +85,10 @@ BANC_SEED = {"effondrement": 12345}
 # Semaine de départ par banc (retour F5 Nico 2026-07-04). La plupart démarrent à
 # `week=1` (début printemps) — repli par défaut. `grimpantes` observe des FRILEUSES
 # (haricot/jasmin) qu'un départ début printemps fige sous le seuil de croissance
-# (~5 °C) pendant des semaines : on le décale à MI-PRINTEMPS (T ~6 °C) pour voir la
-# grimpe tout de suite. Lu par `cmd_init` (banc absent → 1 → comportement inchangé,
+# (~5 °C) pendant des semaines : on le décale à MI-PRINTEMPS pour voir la grimpe
+# tout de suite. D122 ③ (année depuis l'équinoxe) : s9 ≈ mi-mai, T ≈ 13 °C — encore
+# le printemps, au-dessus de tous les seuils de croissance → départs 9 / 12 / 20
+# conservés (intentions écrites toujours remplies). Lu par `cmd_init` (banc absent → 1 → comportement inchangé,
 # golden NEUTRE : smoke/full ne sont pas des bancs).
 # `diversite_fondatrice` sème du TOURNESOL (t_germ_opt=20, sol chaud requis) : un
 # départ début printemps fige la levée sous le seuil thermique pendant des semaines.
@@ -98,13 +100,15 @@ BANC_SEED = {"effondrement": 12345}
 # pour lire chaque PORT habillé (le banc n'observe PAS le rythme phénologique).
 BANC_WEEK_DEPART = {"grimpantes": 9, "luxuriance": 9, "diversite_fondatrice": 9,
                     "foret_ports": 20,
-                    # `effondrement` (④) démarre SEMAINE 1309 (an 26) : le ciel est
-                    # déjà au plomb à l'arrivée (convergence 1.94) et le reste ; deux
-                    # pas de simulation amènent la frappe de Grêle locale (semaine 1310)
+                    # `effondrement` (④) démarre SEMAINE 217 (an 5) : le ciel est
+                    # déjà au plomb à l'arrivée (convergence 2.0) et le reste ; deux
+                    # pas de simulation amènent la frappe de Grêle locale (semaine 218)
                     # → la moitié voilée garde un noyau vivant, la moitié nue est fauchée.
                     # Compromis contraste/anticipation (cf. climatique.effondrement) —
                     # calibrage F5.
-                    "effondrement": 1309,
+                    # D122 ③ : ex-1309/1310 — les fenêtres d'aléas au mois réel ont fait
+                    # de la frappe de 1310 un Orage ; 218 = Grêle i=2.0, ciel à 2.0 dès 215.
+                    "effondrement": 217,
                     # `courrier` (D79 ⑤) démarre SEMAINE 12 (fin de printemps, sol
                     # réchauffé) : les lettres sont POSÉES au post_init (pas via les
                     # jalons de saison), mais un départ tardif évite de figer lavande /

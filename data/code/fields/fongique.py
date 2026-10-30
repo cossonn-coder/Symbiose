@@ -61,51 +61,54 @@ class EspeceFongique:
     parasite: bool = False      # niche RACINES seulement sur hôte affaibli
 
 
-# Calendrier moteur : printemps 1-13 · été 14-26 · automne 27-39 · hiver 40-52.
-# Fenêtres (conception §3.2) : la collybie est SEULE au cœur de l'hiver (sem. 44-52
-# et 1-4, après les premiers gels), la morille SEULE au printemps (sem. 5-13) ; le
-# reste fructifie de l'été à la fin novembre (sem. 43).
+# Calendrier UNIQUE (D122, `calendrier.py`) : wiy 1 ≈ 20 mars ; printemps 1-13 · été
+# 14-26 · automne 27-39 · hiver 40-52. Fenêtres au MOIS RÉEL (D122 ③, conception
+# calendrier_unique §5 ; 1ᵉʳ mai 7 · 1ᵉʳ juil 16 · 1ᵉʳ août 20 · 1ᵉʳ sept 24 ·
+# 1ᵉʳ oct 29 · 1ᵉʳ nov 33 · 1ᵉʳ déc 37 · fin fév. 49) : la morille SEULE au printemps
+# (avril-mai, sem. 3-10), la collybie au cœur de l'hiver (nov.-mars, après les gels,
+# sem. 34-52 et 1-2) ; le reste fructifie de l'été à fin novembre (sem. 37) — le
+# pleurote jusqu'en février (sem. 48).
 REGISTRE_FONGIQUE: dict[str, EspeceFongique] = {e.cle: e for e in (
     # --- Bois mort (saprophytes) : les trois sosies + le pleurote ---------------
     EspeceFongique("pleurote", "Pleurote en huître", "bois", (BOIS,),
-                   fenetres=((30, 43),), comestibilite=(COMESTIBLE,)),
+                   fenetres=((29, 48),), comestibilite=(COMESTIBLE,)),
     EspeceFongique("hypholome", "Hypholome en touffes", "bois", (BOIS,),
-                   fenetres=((20, 43),), comestibilite=(VENENEUX,)),
+                   fenetres=((20, 41),), comestibilite=(VENENEUX,)),
     EspeceFongique("collybie", "Collybie à pied velouté", "bois", (BOIS,),
-                   fenetres=((40, 52), (1, 4)), comestibilite=(COMESTIBLE,)),
+                   fenetres=((34, 52), (1, 2)), comestibilite=(COMESTIBLE,)),
     # --- Humus : répond aux gestes (compost, sol riche) -------------------------
     EspeceFongique("coprin", "Coprin chevelu", "humus", (HUMUS,),
-                   fenetres=((16, 43),), comestibilite=(COMESTIBLE,)),
+                   fenetres=((8, 37),), comestibilite=(COMESTIBLE,)),
     # --- Prairie : graminées vivantes (laisser l'herbe) -------------------------
     EspeceFongique("rose_des_pres", "Rosé des prés", "prairie", (RACINES,),
-                   hotes=("Poaceae",), fenetres=((22, 40),),
+                   hotes=("Poaceae",), fenetres=((20, 33),),
                    comestibilite=(COMESTIBLE,)),
     EspeceFongique("clitocybe", "Clitocybe blanchâtre", "prairie", (RACINES,),
-                   hotes=("Poaceae",), fenetres=((22, 40),),
+                   hotes=("Poaceae",), fenetres=((16, 37),),
                    comestibilite=(MORTEL,)),
     EspeceFongique("psilocybe", "Psilocybe lancéolé", "prairie", (RACINES,),
-                   hotes=("Poaceae",), fenetres=((30, 43),),
+                   hotes=("Poaceae",), fenetres=((25, 37),),
                    comestibilite=(PSYCHEDELIQUE,)),
     # --- Verger : seul champignon de printemps ---------------------------------
     EspeceFongique("morille", "Morille", "verger", (RACINES,),
-                   hotes=("Pommier", "Cerisier"), fenetres=((5, 13),),
+                   hotes=("Pommier", "Cerisier"), fenetres=((3, 10),),
                    comestibilite=(COMESTIBLE,)),
     # --- Mycorhiziens : hôtes vivants ------------------------------------------
     EspeceFongique("cepe", "Cèpe", "mycorhize", (RACINES,),
-                   hotes=("Fagaceae",), fenetres=((18, 40),),
+                   hotes=("Fagaceae",), fenetres=((16, 33),),
                    comestibilite=(COMESTIBLE,)),
     EspeceFongique("amanite_phalloide", "Amanite phalloïde", "mycorhize", (RACINES,),
-                   hotes=("Fagaceae",), fenetres=((18, 40),),
+                   hotes=("Fagaceae",), fenetres=((16, 33),),
                    comestibilite=(MORTEL,)),
     EspeceFongique("amanite_tue_mouches", "Amanite tue-mouches", "mycorhize",
-                   (RACINES,), hotes=("Bouleau", "Pinaceae"), fenetres=((27, 43),),
+                   (RACINES,), hotes=("Bouleau", "Pinaceae"), fenetres=((20, 37),),
                    comestibilite=(PSYCHEDELIQUE, VENENEUX)),
     # --- Parasites : hôte affaibli (racines) puis souche (bois) ----------------
     EspeceFongique("armillaire", "Armillaire couleur de miel", "parasite",
                    (BOIS, RACINES), hotes=("Pommier", "Cerisier", "Fagaceae"),
-                   fenetres=((32, 43),), comestibilite=(COMESTIBLE,), parasite=True),
+                   fenetres=((25, 37),), comestibilite=(COMESTIBLE,), parasite=True),
     EspeceFongique("polypore_bouleau", "Polypore du bouleau", "parasite", (RACINES,),
-                   hotes=("Bouleau",), fenetres=((20, 43),),
+                   hotes=("Bouleau",), fenetres=((20, 37),),
                    comestibilite=(IMMANGEABLE,), parasite=True),
 )}
 

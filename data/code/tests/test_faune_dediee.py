@@ -367,16 +367,18 @@ def test_phenologie_hivernale():
         s = specs[nom]
         return _smoothstep(daylength(week), s.daylen_min, s.daylen_full)
 
-    # Solstice d'hiver (w=51, jour le plus court ≈ 8 h) : tout le monde dormant.
+    # Semaines en convention ÉQUINOXE (D122, wiy 1 ≈ 20 mars ; avant : 1ᵉʳ janvier,
+    # d'où le décalage −11 : 51→40, 7→48, 25→14).
+    # Solstice d'hiver (w=40, jour le plus court ≈ 8 h) : tout le monde dormant.
     for nom in ("puceron", "doryphore"):
-        _check(phen(nom, 51) == 0.0, f"`{nom}` : phénologie NULLE au solstice d'hiver")
-    # Début de printemps (w≈7, jour ≈ 9,6 h) : le lombric (fenêtre 8,5/10) s'éveille
-    # déjà alors que le puceron (10/13) dort encore → « quasi annuel » vs estival.
-    _check(phen("puceron", 7) == 0.0, "puceron : encore dormant au jour court de printemps")
-    _check(phen("lombric", 7) > 0.0, "lombric : déjà actif au jour court (fenêtre large)")
-    # Plein été (w=25, ≈ 16 h) : tout le monde au maximum.
+        _check(phen(nom, 40) == 0.0, f"`{nom}` : phénologie NULLE au solstice d'hiver")
+    # Fin d'hiver (w≈48, mi-février, jour ≈ 9,6 h) : le lombric (fenêtre 8,5/10)
+    # s'éveille déjà alors que le puceron (10/13) dort encore → « quasi annuel » vs estival.
+    _check(phen("puceron", 48) == 0.0, "puceron : encore dormant au jour court de fin d'hiver")
+    _check(phen("lombric", 48) > 0.0, "lombric : déjà actif au jour court (fenêtre large)")
+    # Plein été (w=14, solstice, ≈ 16 h) : tout le monde au maximum.
     for nom in ESPECES:
-        _check(phen(nom, 25) == 1.0, f"`{nom}` : phénologie pleine au solstice d'été")
+        _check(phen(nom, 14) == 1.0, f"`{nom}` : phénologie pleine au solstice d'été")
 
 
 # ---------------------------------------------------------------------------

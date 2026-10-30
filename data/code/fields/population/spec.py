@@ -11,6 +11,7 @@ from fields.lifecycle import LifeCycleBridge
 from fields.population.constants import (
     DEF_RESOURCE_W, DEF_HABITAT_W, DEF_PRED_W, DEF_DISTURB_W,
     POP_INERTIA, POP_INERTIA_DECAY, DEF_DAYLEN_MIN, DEF_DAYLEN_FULL,
+    T_COLD_ZERO, T_WARM_FULL,
 )
 
 
@@ -62,6 +63,14 @@ class TrophicSpec:
     # Fenêtre phénologique de la guilde (heures de jour) : porte saisonnière §3.
     daylen_min: float = DEF_DAYLEN_MIN
     daylen_full: float = DEF_DAYLEN_FULL
+    # Rampe THERMIQUE de la guilde (°C, D122 ③, décision Nico C5) : `warmth` = 0 sous
+    # `t_cold_zero`, 1 au-dessus de `t_warm_full`. Défaut = rampe globale 3→15 °C →
+    # toute guilde qui ne la déclare pas est BIT-IDENTIQUE. Les insectes ravageurs la
+    # surchargent : leur pullulation suit la chaleur (développement des pucerons et
+    # doryphores lent sous ~10 °C), pas la longueur du jour — depuis que l'année
+    # commence à l'équinoxe, les jours sont déjà longs quand le sol est encore frais.
+    t_cold_zero: float = T_COLD_ZERO
+    t_warm_full: float = T_WARM_FULL
     # Métadonnée d'ENCYCLOPÉDIE (④e, CONCEPTION_FAUNE_DEDIEE §1.1) — DONNÉE PURE,
     # jamais lue par `tick` → golden NEUTRE. `blurb` = texte naturaliste ; rendu = ⑥.
     # `interconnexions` = graphe relationnel §3 (source : fields/faune_encyclo.py).

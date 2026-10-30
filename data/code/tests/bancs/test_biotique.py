@@ -23,7 +23,7 @@ _results = []
 # et on suit 16 semaines d'été — le temps que les lignées franchissent chacune leur
 # seuil de forçage floral. Départ hors saison = fleurs jamais ouvertes (jour trop
 # court), d'où ce démarrage estival (l'oracle décide QUAND observer).
-ETAL_WEEK_DEPART = 16
+ETAL_WEEK_DEPART = 5
 ETAL_SEMAINES = 16
 ETAL_SEUIL_OUVERTURE = 0.5      # `floraison > 0.5` = fleur franchement ouverte
 ETAL_MIN_SEMAINES = 3          # étalement RÉEL : ≥ 3 semaines de franchissement distinctes

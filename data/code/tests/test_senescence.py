@@ -22,6 +22,8 @@ from plants import AppleTree
 from fields import init_eco, SENESCENCE_ONSET
 from sim.engine import Engine
 import sim.engine.boucle as _boucle
+import sim.wind as _wind
+import sim.champignon_role as _champ_role
 from sim.weather import CALME
 
 MAX_YEARS = 110   # garde-fou : longévité 70 ans → mort attendue bien avant
@@ -72,6 +74,13 @@ def run_until_apple_death():
     # _meteo_labo en tête de module). Surgical — on ne touche que ce double de
     # test ; le moteur (et donc le golden) reste intact.
     _boucle.weather_state = _meteo_labo
+    # Fuites de la météo réelle bouchées (D122 ③) : le VENT (`sim.wind`, tempêtes/
+    # orages → arrachage, transpiration) et le rôle fongique lisaient encore le
+    # catalogue d'aléas. Recalé au mois réel, il a fait mourir le pommier de
+    # sécheresse à 58,3 ans au lieu de la sénescence à 59,8 — une isolation
+    # incomplète, pas un défaut de la sénescence. Beau temps partout.
+    _wind.weather_at = lambda seed, week: CALME
+    _champ_role.weather_state = _meteo_labo
     apple = tile.add_plant(AppleTree, 3, 3)
     tag = f"{apple.name}@{apple.position}"   # identité exacte dans les logs
     game_state = {

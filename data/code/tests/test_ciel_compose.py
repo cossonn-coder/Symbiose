@@ -3,8 +3,8 @@ SYMBIOSE — tests/test_ciel_compose.py
 Préavis dramatique du composé + « ciel de la semaine » (sprint effondrement météo ②).
 
 On vérifie la LECTURE agrégée de la météo (aucun champ de simulation touché) :
-  1. Convergence : à l'approche du collapse connu (seed 12345, an 26 → Grêle i≈1.94
-     en semaine 1310), la convergence est STRICTEMENT supérieure à une semaine calme.
+  1. Convergence : à l'approche du collapse connu (seed 12345, an 5 → Grêle i≈2.0
+     en semaine 218), la convergence est STRICTEMENT supérieure à une semaine calme.
   2. Pureté : `ciel_semaine` renvoie deux structures ÉGALES sur deux appels (déterminisme,
      philo #3, zéro RNG vivant).
   3. Masque de maîtrise (§4.3/§5) : le NOM du composé n'apparaît qu'au palier ≥ seuil ;
@@ -20,14 +20,14 @@ from sim.ciel import (
 )
 
 SEED = 12345
-# Semaine d'observation À L'APPROCHE du collapse : la Grêle i≈1.94 tombe en 1310,
-# elle entre donc dans le `forecast` court observé depuis 1308 (an 26).
-WEEK_APPROCHE = 1308
+# Semaine d'observation À L'APPROCHE du collapse : la Grêle i≈2.0 tombe en 218,
+# elle entre donc dans le `forecast` court observé depuis 216 (an 5).
+WEEK_APPROCHE = 216   # D122 ③ : ex-1308 (fenêtres d'aléas recalées au mois réel)
 WEEK_CALME = 1300     # aucune convergence : ciel dégagé les semaines suivantes
 
 
 def test_convergence_superieure_a_semaine_calme():
-    """À l'approche de l'an 26, la convergence dépasse strictement une semaine calme."""
+    """À l'approche de l'an 5, la convergence dépasse strictement une semaine calme."""
     approche = convergence(SEED, WEEK_APPROCHE)
     calme = convergence(SEED, WEEK_CALME)
     assert approche > calme, (

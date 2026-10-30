@@ -12,6 +12,7 @@ l'engine (coût de robustesse côté convalescence).
 from __future__ import annotations
 import math
 
+from calendrier import SEMAINE_HIVER, wiy_de   # calendrier UNIQUE (D122)
 from fields import _hash_noise, form_seed_at
 from .constantes import (AUXIN_PROD_FLOOR, AUXIN_RELEASE_SCALE, AUXIN_DECAY,
                          AUXIN_INHIB_THRESHOLD, THICKNESS_INIT,
@@ -182,13 +183,12 @@ def _mk(parent: int, base: tuple, direction: tuple, auxin: float):
 
 
 # ---------------------------------------------------------------------------
-# Facteur saisonnier (placeholder local — pas d'import engine, anti-cycle)
+# Facteur saisonnier (lit le calendrier unique racine, D122)
 # ---------------------------------------------------------------------------
 
 def _season_factor(week: int) -> float:
     """Croissance ralentie en hiver (semaines 40-52). Levier à calibrer."""
-    wiy = ((week - 1) % 52) + 1
-    return 0.25 if wiy >= 40 else 1.0
+    return 0.25 if wiy_de(week) >= SEMAINE_HIVER else 1.0
 
 
 # ---------------------------------------------------------------------------

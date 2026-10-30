@@ -8,6 +8,8 @@ registry) ; ICI uniquement ce qui est partagé par plusieurs.
 """
 import math
 
+from calendrier import W_SOLSTICE_ETE   # calendrier UNIQUE (D122) : wiy 14 ≈ 21 juin
+
 
 POP_MAX = 1.0          # densité normalisée par plot ∈ [0, POP_MAX]
 POP_INERTIA = 0.85     # inertie de MONTÉE (la pop croît vers sa cible à ce rythme)
@@ -36,10 +38,10 @@ T_WARM_FULL = 15.0     # °C : au-dessus, chaleur maximale (warmth = 1)
 # La DORMANCE/le RÉVEIL des guildes se pilotent par la LONGUEUR DU JOUR, pas par
 # la température seule : un signal anticipateur fiable et déterministe (le jour
 # court ne ment pas, un redoux si). `daylength(wiy)` est une sinusoïde 8 h↔16 h
-# à ~49°N, pic au solstice d'été (wiy≈25, qui PRÉCÈDE le pic thermique wiy≈30 —
+# à ~49°N, pic au solstice d'été (wiy≈14, qui PRÉCÈDE le pic thermique wiy≈19 —
 # le déphasage saisonnier réel). Chaque guilde a ensuite sa propre FENÊTRE
 # d'activité (seuils en heures de jour) — voir TrophicSpec.daylen_min/full.
-W_SOLSTICE_ETE = 25    # semaine du jour le plus long
+# `W_SOLSTICE_ETE` (semaine du jour le plus long) vit dans `calendrier.py`.
 DAYLEN_MOY_H   = 12.0  # longueur de jour moyenne (équinoxes), heures
 DAYLEN_AMP_H   = 4.0   # demi-amplitude → 8 h (solstice hiver) ↔ 16 h (solstice été)
 # Fenêtre phénologique PAR DÉFAUT (heures de jour) — surchargée par guilde.

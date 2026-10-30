@@ -12,6 +12,7 @@ déjà dense). Aucun état propre : opère sur `self`. Comportement bit-identiqu
 
 from __future__ import annotations
 
+from calendrier import W_SOLSTICE_ETE   # défaut = « jour le plus long » (D122)
 from fields.population import POLLINATOR_NAMES, build_lifecycle_bridges, daylength
 from fields.lifecycle import tick_bridges
 
@@ -21,7 +22,7 @@ class VieMacroMixin:
 
     # --- Vie macroscopique (D31.1) ---
 
-    def tick_populations(self, tile, plants, week_in_year: int = 25) -> None:
+    def tick_populations(self, tile, plants, week_in_year: int = W_SOLSTICE_ETE) -> None:
         """
         Ticke les 4 champs de population dans l'ordre trophique. Le ravageur
         d'abord (il lit l'auxiliaire de la semaine précédente → décalage proie-
@@ -49,7 +50,7 @@ class VieMacroMixin:
         f = self.populations.get(name)
         return f if f is not None else self.larvae.get(name)
 
-    def tick_lifecycle_bridges(self, tile, plants, week_in_year: int = 25) -> None:
+    def tick_lifecycle_bridges(self, tile, plants, week_in_year: int = W_SOLSTICE_ETE) -> None:
         """Ticke les ponts de cycle de vie (§D, tronçon ⑤) — APRÈS les guildes et
         les butineurs (ordre §K.2). Délègue au tick PUR `fields.lifecycle.tick_bridges`
         (ponte/maturation/famine/métamorphose), en lui passant la photopériode du

@@ -52,6 +52,13 @@ _SALT_COULEUVRE     = 0x2B1001   # super-prédateur terrestre (sommet trophique 
 _SALT_MOUSTIQUE     = 0x2B2001   # proie aquatique de mare (hydrologie ④)
 _SALT_LIBELLULE     = 0x2B3001   # auxiliaire prédateur du moustique (hydrologie ④)
 
+# Rampe thermique des INSECTES ravageurs (D122 ③, décision Nico C5) : pucerons et
+# doryphores ne pullulent qu'au chaud (développement lent sous ~10 °C) ; la porte
+# photopériodique seule les éveillait à l'équinoxe, sur des semis frais. La limace,
+# active dès 5 °C par temps humide, garde la rampe globale.
+T_RAV_COLD = 9.0     # °C : warmth = 0 (avril frais : wiy 1-3 ≈ 7-8,5 °C)
+T_RAV_FULL = 19.0    # °C : warmth = 1 (cœur de l'été)
+
 
 def build_population_specs() -> list[TrophicSpec]:
     """
@@ -79,6 +86,7 @@ def build_population_specs() -> list[TrophicSpec]:
             # Prédateurs nommés (④c) + syrphe_larve (pont ⑤, déjà résolu).
             predators=("coccinelle", "chrysope", "syrphe_larve"),
             daylen_min=10.0, daylen_full=13.0,   # fenêtre estivale
+            t_cold_zero=T_RAV_COLD, t_warm_full=T_RAV_FULL,   # réveil thermique (C5)
             **encyclo_meta("puceron"),
         ),
         TrophicSpec(
@@ -97,6 +105,7 @@ def build_population_specs() -> list[TrophicSpec]:
             resource_fn=_foliage_solanaceae_grid, habitat_fn=_solanaceae_grid,
             predators=("carabe",),               # ④c (inactif jusque-là)
             daylen_min=10.0, daylen_full=13.0,   # fenêtre estivale
+            t_cold_zero=T_RAV_COLD, t_warm_full=T_RAV_FULL,   # réveil thermique (C5)
             **encyclo_meta("doryphore"),
         ),
         # --- Catégorie `detritivore` : 2 espèces nommées (scission ④d, doc §2) ----

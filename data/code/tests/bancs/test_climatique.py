@@ -43,7 +43,9 @@ def test_acclimatation():
     """Basilic sous déficit hydrique DOUX et prolongé : il s'endurcit (sur-expression
     plastique → feuillage glauque) SANS souffrir. Le signe `acclimatation` est
     présent ET seul — aucun signe de dégât concurrent ne le masque."""
-    game_state, _ = run_banc("acclimatation", semaines=6)
+    # D122 ③ : semaine climatique figée (−11, règle de ②) — ex-départ s1 (hiver de
+    # l'ancien calendrier) ; s1 est désormais l'équinoxe, faune déjà éveillée.
+    game_state, _ = run_banc("acclimatation", semaines=6, week_depart=42)
     plante = premiere_plante(game_state)
     signes = signes_du_plot(game_state, plante)
     check("acclimatation — plante vivante", plante.is_alive, f"alive={plante.is_alive}")
@@ -127,7 +129,8 @@ def test_germination_multifacteur():
     taux de levée (tendances/bornes, jamais d'égalité fragile). Fenêtre = 1 tick :
     le gradient de T_sol forcée n'est net qu'avant que la thermique ne le relaxe."""
     # 1 tick : le gradient de T_sol forcée est encore distinct (relaxe ensuite).
-    game_state, _ = run_banc("germination_multifacteur", semaines=1)
+    # D122 ③ : semaine climatique figée (−11) — l'air froid de l'ex-s1 (= s42).
+    game_state, _ = run_banc("germination_multifacteur", semaines=1, week_depart=42)
     taux = _levees_par_tuile(game_state)
 
     def t_levee(esp, t):  return taux[f"GMF_T_{t:g}_{esp}"]

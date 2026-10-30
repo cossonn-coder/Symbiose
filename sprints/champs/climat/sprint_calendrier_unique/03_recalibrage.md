@@ -12,6 +12,40 @@ juste (②) ; ici on réaligne ce qui s'y rapporte.
 
 ## À faire
 
+0. **Réveil THERMIQUE des ravageurs (décision Nico C5, 2026-10-30 — option 1, philo #2)**.
+   Cause des 7 suites rouges de ② (cf. `00_etat.md` « Entrées de ③ » §1) : la porte
+   photopériodique ouvre les ravageurs dès wiy 1 (jours ≥ 12 h à l'équinoxe) → pression
+   0,02-0,04 > seuil létal 0,015 de `sim/effects/perturbations.herbivory_pressure` →
+   semis morts en 3-4 semaines.
+   - **Vérifié au code** : il existe DÉJÀ une rampe thermique instantanée `warmth`
+     (`T_COLD_ZERO` 3 °C → `T_WARM_FULL` 15 °C, `fields/population/constants.py`),
+     GLOBALE à toutes les guildes, multipliée à `phenology` dans
+     `fields/population/field.py` `tick()`. Elle ne suffit pas à retenir les ravageurs
+     au printemps frais.
+   - **Intention** (le moyen est à trancher par mesure, l'hypothèse est réfutable) : les
+     guildes `category="ravageur"` (puceron, limace, doryphore — `registry.py`) se
+     réveillent sur un signal **thermique propre** (dans la réalité, l'éclosion des
+     pucerons suit une somme de degrés-jours, pas la longueur du jour). Piste la plus
+     simple d'abord : une rampe thermique PAR GUILDE dans `TrophicSpec` (même schéma que
+     `daylen_min/full`, défaut = valeurs globales actuelles → autres guildes
+     bit-identiques). Si la rampe instantanée ne suffit pas, passer à une somme de
+     degrés-jours (état déterministe, remis à zéro en wiy 1).
+   - **Interdit** (option 2 écartée par Nico) : relever le seuil 0,015 ou toucher la
+     formule de `herbivory_pressure` — on agit sur le FLUX (la population), pas sur
+     l'effet sur la plante.
+   - **Critère** (mesuré, `[n=… ans, VM]`) : pression ravageur < 0,015 sur les plots
+     semés en wiy 1-6 ; ravageurs bien présents fin printemps → été (la boucle
+     ravageur → auxiliaire doit rester observable) ; les 7 suites rouges redeviennent
+     vertes SANS les isoler ni les contourner. Si une suite reste rouge pour une AUTRE
+     cause, la consigner, ne pas forcer.
+   - **Précision Nico (C5bis)** : une mortalité PARTIELLE des semis est acceptable
+     (génétique, météo, emplacement, ravageurs) ; seule l'hécatombe systématique est
+     refusée. Et surtout : « les ravageurs viennent quand il y a déjà des plantes pour
+     les nourrir » → la population suit la ressource hôte avec un délai de
+     colonisation (vérifier le plancher `habitat_w·habitat` et l'inertie), en plus de
+     la porte thermique ou à sa place.
+   - Faire ce point **en premier** (il conditionne toutes les mesures suivantes).
+
 1. **Fenêtres au mois réel** (conception §5 — les propositions y sont chiffrées) :
    - aléas `sim/weather._CATALOGUE` (gelée tardive 2-9, canicule 12-24, sécheresse
      12-28, grêle 7-22, orage 8-24, neige 38-49, autres inchangés) + son commentaire

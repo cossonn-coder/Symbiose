@@ -23,6 +23,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 
+from calendrier import W_T_MIN, wiy_de   # calendrier UNIQUE (D122, couche basse)
 from fields import _hash_noise
 from fields.ecofields.constants import NEBULOSITE   # table figée météo→nébulosité (§2.3)
 from sim.weather import weather_at, CALME
@@ -124,14 +125,14 @@ def wind_at(seed: int, week: int) -> WindState:
     haute, Beau temps laisse la brise de fond). `week` est ABSOLUE (le vent varie
     d'une année sur l'autre) ; `week_in_year` ne sert qu'à la saisonnalité.
     """
-    wiy = ((week - 1) % 52) + 1
+    wiy = wiy_de(week)
 
     # Force de fond : tirage comprimé + saisonnalité (max au cœur de l'hiver).
     base = _hash_noise(seed, week, *K_WIND) * WIND_BASE_SCALE
-    saison = WIND_SEASON_AMP * math.cos(2.0 * math.pi * (wiy - 4) / 52.0)
-    # NB : +cos(... (wiy-4) ...) est l'OPPOSÉ de la normale de température
+    saison = WIND_SEASON_AMP * math.cos(2.0 * math.pi * (wiy - W_T_MIN) / 52.0)
+    # NB : +cos(... (wiy-W_T_MIN) ...) est l'OPPOSÉ de la normale de température
     # (`temp_norm = T_MOY − T_AMP·cos(...)`) → venteux quand il fait froid (hiver,
-    # wiy≈4/52), calme l'été (wiy≈30). Cohérent §2.1 (automne/hiver plus venteux).
+    # wiy≈45), calme l'été (wiy≈19). Cohérent §2.1 (automne/hiver plus venteux).
     force = max(0.0, base + saison)
 
     # Un événement venteux écrase la force de fond (on continuise le dégât ponctuel).

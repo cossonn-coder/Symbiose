@@ -3,8 +3,8 @@ SYMBIOSE — tests/test_couvertures.py
 Couvertures posées : voile / cloche / ombrière (sprint effondrement météo ③).
 
 Prouve que la PRÉPARATION atténue réellement l'effondrement (tronçon ①). On rejoue
-le collapse CONNU (seed 12345, année 26 semaine 10 = `week=1310`, une Grêle
-d'intensité 1.94, `scope="local"`) : sous le même hiver catastrophe, les plots
+le collapse CONNU (seed 12345, année 5 semaine 10 = `week=218`, une Grêle
+d'intensité 2.0, `scope="local"`) : sous le même hiver catastrophe, les plots
 DÉCOUVERTS s'effondrent tandis que les plots protégés d'un VOILE gardent un noyau
 vivant — sans aucun bonus direct sur la plante (le voile relève un CHAMP du milieu,
 `eco.couvert_pose`, lu par la grêle médiée). Deux garde-fous accompagnent :
@@ -27,7 +27,7 @@ from sim.actions.couvertures import (
 )
 
 SEED = 12345          # seed du collapse connu (conception §0/§1.3)
-WEEK = 1310           # année 26, semaine 10 → Grêle i=1.94 scope="local"
+WEEK = 218           # année 5, semaine 10 → Grêle i=2.0 scope="local" (D122 ③ : ex-1310)
 ROWS, COLS = 16, 11   # tuile du scénario de conception
 
 
@@ -44,7 +44,7 @@ def _tuile_semee():
 
 
 def _collapse(voile: bool = False):
-    """Joue LE tick du collapse (seed 12345, week 1310). Si `voile`, on tend un voile
+    """Joue LE tick du collapse (seed 12345, week 218). Si `voile`, on tend un voile
     (écran `couvert_pose`) sur TOUS les plots AVANT le tick. Renvoie (plants, eco)."""
     tile, eco, plants = _tuile_semee()
     if voile:

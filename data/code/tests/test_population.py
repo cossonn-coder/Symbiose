@@ -25,6 +25,7 @@ from fields import (init_eco, POP_MAX, SPRITES_PAR_PLOT_MAX,
                     sample_sprites, PopulationField, build_population_specs,
                     daylength)
 from sim.engine import Engine
+from calendrier import W_SOLSTICE_ETE   # convention équinoxe (D122)
 
 N_WEEKS = 60
 SEED = 0x5AB1057E
@@ -105,15 +106,31 @@ def _mean_density(ecos, guild) -> float:
     return tot / n if n else 0.0
 
 
+def _mean_density_hote(ecos, tiles, guild) -> float:
+    """Densité moyenne d'une guilde sur les seuls plots portant une plante VIVANTE.
+    D122 ③ (C5bis) : le puceron n'a plus d'habitat sur sol nu (« les ravageurs
+    viennent quand il y a des plantes pour les nourrir ») → sa moyenne sur TOUTE la
+    tuile se dilue dans le sol nu ; son décollage se juge là où il peut vivre."""
+    tot = n = 0
+    for t in tiles:
+        f = ecos[t.tile_id].populations[guild]
+        for (r, c) in {p.position for p in t.plants if p.is_alive}:
+            tot += f.at_plot(r, c); n += 1
+    return tot / n if n else 0.0
+
+
 def _run_trace(n_weeks=110):
-    """Simule n_weeks et renvoie {guilde: (pic_annuel, max_hiver_profond)}.
-    Hiver profond = wiy 44-49 (porte photopériodique fermée pour les guildes
-    estivales)."""
+    """Simule n_weeks et renvoie {guilde: (pic_annuel, max_hiver_profond,
+    pic_annuel_sur_plots_plantés)}.
+    Hiver profond = wiy 33-38 (jours les plus courts, porte photopériodique
+    fermée pour les guildes estivales). Convention ÉQUINOXE (D122) : l'ancienne
+    fenêtre 44-49 (calendrier au 1ᵉʳ janvier) décalée de −11 → même climat vu."""
     tiles, ecos = build_world()
     gs = {"tiles": tiles, "eco": ecos, "scores": {},
           "current_player": "joueur_1", "week": 1, "log": [], "seed": SEED}
     engine = Engine(gs)
     peak = {g: 0.0 for g in GUILDS}
+    peak_hote = {g: 0.0 for g in GUILDS}
     hiver = {g: [] for g in GUILDS}
     for _ in range(n_weeks):
         engine.tick_semaine()
@@ -122,9 +139,10 @@ def _run_trace(n_weeks=110):
         for g in GUILDS:
             m = _mean_density(ecos, g)
             peak[g] = max(peak[g], m)
-            if 44 <= wiy <= 49:
+            peak_hote[g] = max(peak_hote[g], _mean_density_hote(ecos, tiles, g))
+            if 33 <= wiy <= 38:
                 hiver[g].append(m)
-    return {g: (peak[g], max(hiver[g])) for g in GUILDS}
+    return {g: (peak[g], max(hiver[g]), peak_hote[g]) for g in GUILDS}
 
 
 def test_saisonnalite_dormance_reveil():
@@ -135,7 +153,7 @@ def test_saisonnalite_dormance_reveil():
     décolle que si le jardin fleurit pour de vrai."""
     res = _run_trace()
     for g in ("puceron", "coccinelle", "abeille"):
-        peak, hiv = res[g]
+        _peak, hiv, peak = res[g]   # décollage jugé sur les plots plantés (D122 ③)
         assert peak > 0.05, f"{g} ne décolle jamais (pic {peak:.3f})"
         assert hiv < 0.02, f"{g} grouille encore en hiver (max {hiv:.3f})"
     print("[pop] dormance hivernale + réveil saisonnier (3 guildes) : OK")
@@ -145,7 +163,7 @@ def test_vers_insensibles_photoperiode():
     """Le lombric (fenêtre LARGE 8.5/10) garde une fraction hivernale bien plus
     grande que les espèces estivales → la fenêtre par espèce fonctionne."""
     res = _run_trace()
-    peak, hiv = res["lombric"]
+    peak, hiv, _ = res["lombric"]
     assert peak > 0.05, f"vers ne décolle jamais (pic {peak:.3f})"
     assert hiv > 0.25 * peak, \
         f"vers trop éteint en hiver ({hiv:.3f} vs pic {peak:.3f}) — devrait rester actif"
@@ -154,20 +172,26 @@ def test_vers_insensibles_photoperiode():
 
 def test_photoperiode_verrouille_redoux():
     """Un REDOUX hivernal (température estivale en plein hiver) ne réveille PAS
-    le puceron : phenology(wiy=46)=0 annule la cible quelle que soit la chaleur.
-    Test signature de la valeur ajoutée (lumière ≠ température)."""
-    assert daylength(46) < 9.0 < daylength(30), "photopériode hiver/été incohérente"
+    le puceron : phenology(wiy=35)=0 annule la cible quelle que soit la chaleur.
+    Test signature de la valeur ajoutée (lumière ≠ température). Semaines en
+    convention ÉQUINOXE (D122 : ancien 46/30/25 − 11 → 35/19/14)."""
+    assert daylength(35) < 9.0 < daylength(19), "photopériode hiver/été incohérente"
 
     def _tick_warm(wiy):
         eco = init_eco("R", 6, 8, humidite=1.5, fertilite=1.0, microbiome=0.3)
         rav = eco.populations["puceron"]
         rav.fill(0.5)
         eco.temperature.fill(20.0)   # redoux : chaud comme en été
-        eco.tick_populations(Tile(tile_id="R", soil_type="terre"), [], week_in_year=wiy)
+        # Un HÔTE sur le plot lu (D122 ③, C5bis) : sans plante, le puceron n'a plus
+        # d'habitat (sol nu → 0) et les deux saisons s'éteindraient À ÉGALITÉ — le
+        # test ne distinguerait plus la photopériode. Même hôte été comme hiver.
+        tile = Tile(tile_id="R", soil_type="terre")
+        hote = tile.add_plant(Basil, 3, 4)
+        eco.tick_populations(tile, [hote], week_in_year=wiy)
         return rav.at_plot(3, 4)
 
-    hiver = _tick_warm(46)
-    ete   = _tick_warm(25)
+    hiver = _tick_warm(35)
+    ete   = _tick_warm(W_SOLSTICE_ETE)
     assert hiver < 0.5, "le puceron ne devrait pas se maintenir au redoux hivernal"
     assert ete > hiver, "à chaleur égale, l'été doit préserver mieux que l'hiver"
     print(f"[pop] photopériode verrouille le redoux (hiver {hiver:.3f} < été {ete:.3f}) : OK")
@@ -311,7 +335,7 @@ def test_super_predateur_nul_sans_proie():
     eco.populations["campagnol"].fill(0.0)
     eco.populations["merle"].fill(0.0)
     for _ in range(20):                          # on ne ticke QUE le rapace : proies figées à 0
-        rap.tick(eco, tile, [], [], week_in_year=25)
+        rap.tick(eco, tile, [], [], week_in_year=W_SOLSTICE_ETE)   # plein été (D122 : ex-25)
     m = max(rap.at_plot(r, c) for r in range(rap.rows) for c in range(rap.cols))
     assert m < 1e-6, f"rapace décolle sans proie (max {m:.4f})"
     print("[pop] rapace nul sans proie (piloté par le bas, habitat_w=0) : OK")
@@ -326,7 +350,7 @@ def test_super_predateur_monte_avec_proie():
     camp, rap = eco.populations["campagnol"], eco.populations["rapace"]
     for _ in range(30):
         camp.fill(0.8)                       # proie maintenue abondante (source externe)
-        eco.tick_populations(tile, [], week_in_year=25)
+        eco.tick_populations(tile, [], week_in_year=W_SOLSTICE_ETE)   # plein été (D122 : ex-25)
     m = max(rap.at_plot(r, c) for r in range(rap.rows) for c in range(rap.cols))
     assert m > 0.05, f"rapace ne s'installe pas malgré une proie abondante (max {m:.3f})"
     print(f"[pop] rapace s'installe sur une proie abondante (max {m:.3f}) : OK")
@@ -345,7 +369,7 @@ def test_super_predateur_puits_top_down():
         eco.populations["campagnol"].fill(0.3)
         if avec_rapace:
             eco.populations["rapace"].fill(0.5)
-        eco.tick_populations(tile, tile.plants, week_in_year=25)
+        eco.tick_populations(tile, tile.plants, week_in_year=W_SOLSTICE_ETE)   # plein été (D122 : ex-25)
         f = eco.populations["campagnol"]
         return max(f.at_plot(r, c) for r in range(f.rows) for c in range(f.cols))
 
@@ -372,12 +396,31 @@ def test_faune_mare_presente_et_categorie():
     print("[pop] moustique + libellule présents (catégorie aquatique) : OK")
 
 
+_PLUVIEUX = {"Pluie prolongée", "Orage", "Grêle", "Neige"}   # apports d'eau du ciel
+
+
 def test_moustique_nul_sans_flaque():
     """Sans eau de surface ni marais (repos du smoke), le moustique ne décolle
     jamais : sa ressource (`_eau_stagnante_grid`) ET son habitat (`_mare_habitat_grid`)
     sont nuls → densité nulle. Prouve que la faune de mare est bien gatée par l'eau
-    stagnante (golden de population NEUTRE hors flaque)."""
-    tiles, ecos = _run(*build_world())
+    stagnante (golden de population NEUTRE hors flaque).
+
+    D122 (calendrier équinoxe) : le monde du smoke forme désormais une petite
+    flaque de fin d'hiver (sol gorgé après les semaines froides 40-52) → on ne
+    s'appuie plus sur « le smoke n'a jamais de flaque » : on COUPE LA PLUIE
+    (événements pluvieux → temps calme, température inchangée) le temps du test,
+    pour garantir l'absence d'eau stagnante."""
+    import sim.engine.boucle as _boucle
+    from sim.weather import CALME
+    orig = _boucle.weather_state
+    def _sans_pluie(seed, week, pluie_forcee=False):
+        ev, t, neb = orig(seed, week, pluie_forcee)
+        return (CALME if ev.kind in _PLUVIEUX else ev), t, neb
+    _boucle.weather_state = _sans_pluie
+    try:
+        tiles, ecos = _run(*build_world())
+    finally:
+        _boucle.weather_state = orig
     for tile in tiles:
         f = ecos[tile.tile_id].populations["moustique"]
         m = max(f.at_plot(r, c) for r in range(f.rows) for c in range(f.cols))
@@ -395,7 +438,7 @@ def test_moustique_monte_avec_eau_surface():
     mous = eco.populations["moustique"]
     for _ in range(30):
         eco.eau_surface.fill(SEUIL_FLAQUE + 0.5)   # flaque maintenue (source externe)
-        eco.tick_populations(tile, [], week_in_year=25)
+        eco.tick_populations(tile, [], week_in_year=W_SOLSTICE_ETE)   # plein été (D122 : ex-25)
     m = max(mous.at_plot(r, c) for r in range(mous.rows) for c in range(mous.cols))
     assert m > 0.05, f"moustique ne s'installe pas malgré une flaque (max {m:.3f})"
     print(f"[pop] moustique s'installe sur l'eau stagnante (max {m:.3f}) : OK")
@@ -413,7 +456,7 @@ def test_libellule_suit_le_moustique():
     for _ in range(30):
         eco.eau_surface.fill(SEUIL_FLAQUE + 0.5)   # flaque (habitat de la libellule)
         mous.fill(0.8)                             # proie maintenue abondante
-        eco.tick_populations(tile, [], week_in_year=25)
+        eco.tick_populations(tile, [], week_in_year=W_SOLSTICE_ETE)   # plein été (D122 : ex-25)
     m = max(lib.at_plot(r, c) for r in range(lib.rows) for c in range(lib.cols))
     assert m > 0.05, f"la libellule ne suit pas le moustique (max {m:.3f})"
     print(f"[pop] libellule suit le moustique (max {m:.3f}) : OK")

@@ -24,7 +24,7 @@ from sim.growth import (grow_plant, shade_tolerance_effective, branches_ombragee
                         couper_branches, seuil_et_age, fenetre_ouverte)
 from sim.growth.constantes import CLADO_PAR_FENETRE
 
-SEMAINE_HIVER = 40      # cf. sim/engine/calendrier.SAISONS (couche haute : non importée)
+from calendrier import SEMAINE_HIVER, wiy_de   # calendrier UNIQUE (D122, couche basse)
 
 
 def pre_croitre(plant, seed: int, annees: float) -> None:
@@ -38,7 +38,7 @@ def pre_croitre(plant, seed: int, annees: float) -> None:
     for w in range(1, n + 1):
         grow_plant(plant, seed, w)
         if cls.ligneux and fenetre_ouverte(plant, seed, w):
-            saison = "hiver" if (w - 1) % 52 + 1 >= SEMAINE_HIVER else "ete"
+            saison = "hiver" if wiy_de(w) >= SEMAINE_HIVER else "ete"
             densite = cls.foliage_density_at(plant, saison)
             if densite > 0.0:
                 seuil, age_min = seuil_et_age(shade_tolerance_effective(plant))

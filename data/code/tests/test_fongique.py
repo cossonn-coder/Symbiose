@@ -40,12 +40,16 @@ check("tue-mouches psychédélique ET toxique",
       set(R["amanite_tue_mouches"].comestibilite) == {"psychedelique", "veneneux"})
 check("parasites = armillaire + polypore",
       {k for k, e in R.items() if e.parasite} == {"armillaire", "polypore_bouleau"})
-check("morille seule au printemps (sem. 5-13), jamais ailleurs",
-      {k for w in range(5, 14) for k in especes_de_saison(w)} == {"morille"}
-      and all(not en_saison(R["morille"], w) for w in range(14, 53)),
-      str(sorted({k for w in range(5, 14) for k in especes_de_saison(w)})))
-check("collybie seule au cœur de l'hiver (sem. 44-52 et 1-4)",
-      all(especes_de_saison(w) == ("collybie",) for w in list(range(44, 53)) + [1, 2, 3, 4]))
+# Semaines au calendrier UNIQUE (D122 ③, wiy 1 ≈ 20 mars) : la morille est SEULE
+# en avril (sem. 3-7, avant le coprin de mai) et n'existe qu'en avril-mai (3-10) ;
+# la collybie est SEULE au cœur de l'hiver (mars, fin fév. : 49-52 et 1-2) — le
+# pleurote la côtoie jusqu'en février (≤ 48).
+check("morille seule en avril (sem. 3-7), jamais hors avril-mai (3-10)",
+      {k for w in range(3, 8) for k in especes_de_saison(w)} == {"morille"}
+      and all(not en_saison(R["morille"], w) for w in list(range(11, 53)) + [1, 2]),
+      str(sorted({k for w in range(3, 8) for k in especes_de_saison(w)})))
+check("collybie seule au cœur de l'hiver (sem. 49-52 et 1-2)",
+      all(especes_de_saison(w) == ("collybie",) for w in list(range(49, 53)) + [1, 2]))
 
 # --- B. Sosies : niches réellement partagées ---------------------------------
 def _meme_niche(a, b):
@@ -61,12 +65,12 @@ check("sosie phalloïde / cèpe : même Fagacée", _meme_niche("amanite_phalloid
 eco = init_eco("fongique", 3, 3)
 eco.litiere[0][0].append(Parcelle("bois", 1.0))      # bois mort au plot (0,0)
 eco.om_active.set(1, 1, 2.0)                          # humus riche au plot (1,1)
-saison_aut = especes_de_saison(34)
+saison_aut = especes_de_saison(32)   # ≈ fin octobre (avant la collybie, 34+)
 cand_bois = candidates_du_plot(eco, 0, 0, set(), saison_aut)
 check("plot BOIS, automne : pleurote + hypholome + armillaire (sosies ensemble)",
       set(cand_bois) == {"pleurote", "hypholome", "armillaire"}, str(cand_bois))
 check("plot BOIS, plein hiver : collybie seule",
-      candidates_du_plot(eco, 0, 0, set(), especes_de_saison(48)) == ["collybie"])
+      candidates_du_plot(eco, 0, 0, set(), especes_de_saison(50)) == ["collybie"])
 check("plot HUMUS riche : coprin",
       candidates_du_plot(eco, 1, 1, set(), saison_aut) == ["coprin"])
 check("plot nu sans racines : aucune espèce",
