@@ -1,8 +1,9 @@
 # Sprint CALENDRIER UNIQUE (D122) — état partagé
 
 **Conception** : `docs/champs/climat/conception_calendrier_unique.md` (figée le 2026-10-30).
-**Où on en est** : ① FAIT (banc + `mesures/avant.md`, golden intact) ; ② FAIT ; ③ FAIT
-(② et ③ NON commités, à committer par l'orchestrateur) ; ④ à lancer.
+**Où on en est** : **SPRINT CLOS côté code** (①→④). ①②③ commités (`e38ae8a`, `6dadf4d`) ;
+④ fait (vue auditée, golden intact `bfe6f889…`, `dotnet build` vert) — à committer par
+l'orchestrateur. **Attend le F5 de Nico** (§F5).
 
 ## Décisions clés (Nico, 2026-10-30)
 
@@ -29,7 +30,7 @@
 | ① | `01_banc_mesure.md` — banc `bancs/mesure_calendrier.py` + `mesures/avant.md` | intact | **fait** |
 | ② | `02_calendrier_unique.md` — `calendrier.py` + décalage des 4 courbes + `mesures/apres_decalage.md` | **re-figé LARGE** `4c696821…` → `a3dfbec3…` | **fait** |
 | ③ | `03_recalibrage.md` — fenêtres au mois réel (aléas, champignons, abscission) + seuils sur écarts mesurés + bancs F5 + `mesures/apres_recalibrage.md` | **re-figé** `a3dfbec3…` → `bfe6f889…` | **fait** |
-| ④ | `04_vue.md` — audit C# saisonnier, `dotnet build`, protocole F5 « une année » | intact | à faire |
+| ④ | `04_vue.md` — audit C# saisonnier, `dotnet build`, protocole F5 « une année » | intact `bfe6f889…` | **fait** |
 
 ## Chiffres AVANT (①, `mesures/avant.md`)
 
@@ -121,12 +122,51 @@
 - `effondrement` re-calé à 217 : contraste voile/nu à revoir au F5 (comme avant).
 - `resources.py` 379 LDC (🟡, +1 ligne) — préexistant, responsabilité unique.
 
+## ④ — résultat (vue)
+
+- **Audit C#** : aucune phase « 1ᵉʳ janvier » écrite en dur côté vue — tout lit le pont.
+  `WorldView.Snapshot.cs` : `_weekInSeason = ((week_in_year − 1) % 13) + 1` et
+  `CurrentSeason = snap["season"]` → justes avec C1 (étiquettes 1-13/14-26/27-39/40-52
+  inchangées) ; seul le commentaire pointait vers l'ancien `sim/engine.py saison_de` →
+  recâblé vers `data/code/calendrier.py` (1 ligne de commentaire). `WorldView.Soleil.cs`
+  `DeclinationOf` = `fields/light.SOLAR_DECLINATION` à l'identique (C4). `SaisonObservee`
+  (`Observation.cs`) = paquets de 13 semaines moteur, même formule que la note Python →
+  intact. Teintes d'automne (`PlantRenderer.Paliers/Organs`) lisent `automne` par plante
+  (pont), glace/neige/gelée lisent le pont (`PuddleLayer.Mare`, `SnowLayer`,
+  `MeteoPlantes`). `BancAccelere.AccelSemaine = 35` = cas perf (automne aux deux
+  calendriers) → inchangé.
+- **Code mort signalé, NON supprimé** : `core/LightField.cs` + `core/EcoFields.cs` (tables
+  d'ombre par saison) — `EcoFields` n'est jamais instancié, `PlantCatalogue.EvaluateIndicators`
+  (seul lecteur) n'est jamais appelé. Reliquat du portage C# abandonné (Option B).
+- **Pont** : `serialize.py` exporte `week_in_year` (= `wiy_de`) + `season` via
+  `sim.engine.saison_de` (ré-export de `calendrier.py`) → aucun champ ajouté, pas de bump.
+- `DebugSecondsPerWeek` vaut **1** dans `WorldView.cs` (préexistant, pas 0 comme le dit son
+  commentaire) — non touché ; à remettre à 0 avant packaging (comme la Vigueur infinie).
+
+## §F5 — protocole « une année » (ressenti seul, le calibrage est mesuré en ③)
+
+1. Partie neuve, `DebugSecondsPerWeek` = 1-3 s (actuellement 1, cf. ci-dessus) ou mode
+   Continu ; laisser filer 52 semaines (≈ 1-3 min) en lisant le HUD « saison · semaine ».
+2. **Printemps (s1-13)** : mare **sans glace** ; au plus une gelée tardive en début de
+   saison (avril) ; le pommier fleurit **vers s5-6** — chercher des butineurs en même temps
+   (l'an 1 peut en manquer : colonisation depuis zéro, point ouvert) ; les semis ne sont
+   pas rasés d'emblée par les pucerons (pertes partielles acceptées, C5bis).
+3. **Été (s14-26)** : jours longs (ombres courtes à midi), canicule/orages/sécheresse
+   possibles, **jamais de gel**.
+4. **Automne (s27-39)** : les caducs jaunissent puis tombent **dès s31** (≈ fin octobre) ;
+   champignons (coprin) qui sortent après la pluie.
+5. **Hiver (s40-52)** : glace sur la mare (froid le plus vif ≈ s43-45), neige possible,
+   croissance arrêtée.
+6. Remettre `DebugSecondsPerWeek` à 0 (rythme design 60 s/sem) avant packaging.
+
 ## Ce qui reste
 
-④ (vue C# + protocole F5 « une année »). Garde-fous : ne JAMAIS lancer
-`tests/test_epaisseur_500ans.py` ; mesures ≤ 3 ans.
+Rien côté code. Reste le **F5 de Nico** (§F5) → fermer D122 ou ouvrir une dette ciblée.
+Candidats déjà notés : recouvrement fleur×butineurs an 1, gelée d'avril, contraste
+`effondrement` 217. Garde-fous : ne JAMAIS lancer `tests/test_epaisseur_500ans.py`.
 
 ## §REPRISE
 
-Lire `CLAUDE.md` + ce fichier + `04_vue.md`. ② et ③ sont dans l'arbre de travail, non
-commités. Lancer : `/sprint-auto sprint_calendrier_unique` (reprend à ④).
+Sprint clos côté code. ④ (commentaire `WorldView.Snapshot.cs` + docs) dans l'arbre de
+travail, à committer. Prochaine étape : F5 de Nico selon §F5, puis D118 / D119
+(cf. `BACKLOG.md`).

@@ -112,7 +112,7 @@ namespace Symbiose
 			GDict snap = e.Snap;
 			_lastSnap = snap;   // gardé pour RebuildWorld (rotation)
 
-			// Horloge (52 sem/an, saisons de 13 — sim/engine.py saison_de).
+			// Horloge (52 sem/an, saisons de 13 — data/code/calendrier.py, D122 : wiy 1 = équinoxe de printemps).
 			_year = snap["year"].AsInt32();
 			int weekInYear = snap["week_in_year"].AsInt32();
 			_weekInSeason = ((weekInYear - 1) % 13) + 1;
