@@ -19,8 +19,7 @@
 //
 // 📖 Pédagogie — UN lot, redessiné rarement. Godot GARDE les commandes de dessin
 // d'un CanvasItem tant qu'on ne rappelle pas QueueRedraw : la carte graphique
-// rejoue la liste (quelques centaines de rectangles, regroupés en très peu de
-// draw calls) sans que _Draw ne repasse. On ne redessine donc qu'au snapshot, au
+// rejoue la liste (quelques centaines de quads, UN seul draw call) sans que _Draw ne repasse. On ne redessine donc qu'au snapshot, au
 // changement de palier, au ré-ancrage de la marge (pan/zoom, MargeVue), à la
 // rotation, et pendant une animation de SIGNAL — brève, puis la bête se fige.
 // Au repos, elle mange : c'est la DA « l'animation est un signal ».
@@ -28,6 +27,12 @@
 // 📖 Pédagogie — signaux animés : (1) apparition / disparition = fondus (le même
 // langage que les plantes) ; (2) un GESTE du joueur près d'elle (Signal) = un
 // bref sursaut qui s'amortit. Pas d'errance continue, pas de Random.
+//
+// 📖 CASSÉ À L'ÉCRAN ⑤ : chaque bête est une petite ICÔNE pixel-art (portrait
+// précuit par espèce, taille et cap — FauneIcones / FauneSilhouettes), en pixels
+// indexés : le shader de la palette indexée ③ la modèle selon le soleil réel.
+// Sous ~3 px elle reste un point de sa couleur. F11 (palette coupée) = l'ancien
+// rectangle de couleur, pour comparer avant/après.
 
 using Godot;
 using System.Collections.Generic;
@@ -72,8 +77,10 @@ namespace Symbiose
 			// Auxiliaires
 			["coccinelle"] = (new Color("c43a2e"), 0.7f, 0.5f),    // ×4
 			["chrysope"]   = (new Color("9fd86e"), 1.5f, 0.8f),    // ×2
-			["carabe"]     = (new Color("2e3a44"), 2.5f, 1f),      // ×2
-			["merle"]      = (new Color("1e1e22"), 25f, 8f),       // ×0,5
+			// Merle / carabe : « noirs » COLORÉS (⑤ — ex-#1e1e22 / #2e3a44, quasi-noirs
+			// neutres au banc ①) : noir bleuté, bleu-violet métallique.
+			["carabe"]     = (new Color("2a3a52"), 2.5f, 1f),      // ×2
+			["merle"]      = (new Color("2b2a3a"), 25f, 8f),       // ×0,5
 			["herisson"]   = (new Color("8a6a4a"), 25f, 15f),      // ×0,5
 			// Détritivores (le lombric, souterrain, n'est jamais envoyé)
 			["cloporte"]   = (new Color("8a8a8a"), 1.5f, 0.7f),    // ×2
@@ -92,6 +99,10 @@ namespace Symbiose
 		// Lecture seule pour la charte DA (RampesDa.Faune, CASSÉ À L'ÉCRAN ①).
 		internal static Color CouleurEspece(string guilde) =>
 			(guilde != null && Especes.TryGetValue(guilde, out var g) ? g : EspeceInconnue).Item1;
+		// Lecture seule pour la planche de la faune (PlancheFaune, ⑤) : espèces et longueur.
+		internal static IEnumerable<string> EspecesConnues => Especes.Keys;
+		internal static float LongueurCm(string guilde) =>
+			(guilde != null && Especes.TryGetValue(guilde, out var g) ? g : EspeceInconnue).Item2;
 
 		// Espèces IGNORÉES ici : les pollinisateurs sont des AGENTS butineurs
 		// (ForagerLayer) ; le lombric vit sous terre. Le serveur 0.5.45 leur envoie
@@ -123,6 +134,10 @@ namespace Symbiose
 		private float _lastZoom = -1f;
 		private int _margeVersion = -1;
 		private Vector2 _lastOrient = new(float.NaN, float.NaN);
+		// ⑤ : icônes en UN lot texturé (atlas FauneIcones) ; `_icones` = palette
+		// indexée active (F11) au dernier redessin — sinon les rectangles d'avant.
+		private readonly LotTriangles _lot = new();
+		private bool _icones;
 
 		/// <summary>Nombre de bêtes connues (overlay de perfs F4).</summary>
 		public int Count => _entries.Count;
@@ -330,8 +345,10 @@ namespace Symbiose
 			if (!Visible) return;              // touche I : aucun dessin
 			Vector2 orient = WorldView.WorldToScreen(0f, 0f);   // signature de rotation
 			if (WorldView.CurrentZoom != _lastZoom || _margeVersion != MargeVue.Version
-				|| orient != _lastOrient)
+				|| orient != _lastOrient || _icones != PaletteIndexee.Active)
 			{
+				_icones = PaletteIndexee.Active;
+				Material = _icones ? PaletteIndexee.Materiau : null;
 				_lastZoom = WorldView.CurrentZoom;
 				_margeVersion = MargeVue.Version;
 				_lastOrient = orient;
@@ -369,6 +386,7 @@ namespace Symbiose
 
 		private void DessinerMacro()
 		{
+			_lot.Vider();
 			if (_entries.Count == 0) return;
 			float zoom = Mathf.Max(WorldView.CurrentZoom, 0.01f);
 			float px1 = 1f / zoom;   // 1 pixel interne, en px canvas
@@ -399,9 +417,19 @@ namespace Symbiose
 				}
 				Vector2 scr = WorldView.WorldToScreen(wx, wy);
 				if (!vis.HasPoint(scr)) continue;
+				if (_icones)
+				{
+					FauneIcones.Poser(_lot, e.Guild, scr, w * zoom, new Vector2(w, h), px1,
+									  e.Phase, alpha);   // icône OPAQUE au repos : un alpha
+					// partiel mêlerait le sol au pixel (le merle virait au gris neutre, banc ⑤)
+					continue;
+				}
 				col.A = BaseAlpha * alpha;
 				DrawRect(new Rect2(scr.X - w * 0.5f, scr.Y - h * 0.5f, w, h), col);
 			}
+			if (!_icones) return;
+			FauneIcones.Televerser();
+			_lot.Dessiner(this, FauneIcones.Texture);
 		}
 	}
 }

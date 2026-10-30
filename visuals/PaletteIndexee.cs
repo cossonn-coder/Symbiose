@@ -54,6 +54,10 @@ namespace Symbiose
 		/// d'avant ③ (comparer avant/après au F5).</summary>
 		public static bool Active { get; private set; } = true;
 
+		/// <summary>Compteur de vidages de la LUT (⑤) : un atlas qui a mémorisé des n° de
+		/// palette (portraits de faune) se recuit quand il change.</summary>
+		public static int Generation { get; private set; }
+
 		/// <summary>Matériau de LECTURE, partagé par toutes les plantes affichant une
 		/// image indexée (un seul matériau → Godot garde le regroupement des envois).</summary>
 		public static ShaderMaterial Materiau
@@ -156,6 +160,7 @@ namespace Symbiose
 		private static void Vider()
 		{
 			_parCouleur.Clear();
+			Generation++;
 			GD.Print($"[PaletteIndexee] LUT pleine ({Capacite} palettes) → vidée, recuisson générale.");
 			foreach (var p in BakeQueue.All) p.Invalidate();
 		}

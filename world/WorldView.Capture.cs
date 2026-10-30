@@ -50,6 +50,8 @@
 //                            s > 0 = s par semaine ; absent = 60 s (nominale) — PERF VUE ④
 //   --capture-kit=1          planche du kit d'éléments (touffes, fleurons) par-dessus
 //                            le monde — PLANTE ASSEMBLÉE ④ (WorldView.PlancheKit.cs)
+//   --capture-faune=1        planche de la faune (icônes ×2→×16, fond uni) — CASSÉ À
+//                            L'ÉCRAN ⑤ (visuals/PlancheFaune.cs)
 //   --capture-palier3=1 / --capture-technique=1  info-bulle apprise / technique
 //                            (debug palier3 au montage ; Maj+F3) — PLANTE ASSEMBLÉE ⑦
 //   --capture-pleine-res=1   monde rendu en 1920×1080 ×1 au lieu de 960×540 ×2
@@ -127,6 +129,8 @@ namespace Symbiose
 		// CASSÉ À L'ÉCRAN ② : touche H et heatmap F6 au montage (vérif (n) et (d)).
 		private static readonly bool CaptureMaison = ArgCapture("maison") == "1";
 		private static readonly bool CaptureF6 = ArgCapture("f6") == "1";
+		// CASSÉ À L'ÉCRAN ⑤ : planche de la faune par-dessus le monde (fond uni).
+		private static readonly bool CaptureFaune = ArgCapture("faune") == "1";
 		private static float EchelleCamera => CapturePleineRes ? 2f : 1f;
 
 		// Zoom de la Camera2D pour un palier logique (seul écrivain : les 4 poses).
@@ -248,6 +252,13 @@ namespace Symbiose
 			if (!float.IsNaN(CapturePlanche)) TogglePlanche(CapturePlanche, parSouris: false);   // D106 T7
 			if (CaptureAide) { _hudTextMode = 2; ApplyHudTextMode(); }   // F1 mode Aide
 			if (CaptureKit) AfficherPlancheKit();   // planche du kit (PLANTE ASSEMBLÉE ④)
+			if (CaptureFaune)   // planche de la faune (D112 ⑤) : calque au-dessus du HUD
+			{
+				var calque = new CanvasLayer { Layer = 100 };
+				AddChild(calque);
+				calque.AddChild(new ColorRect { Color = Palette16.SolTerre, Size = new Vector2(1920f, 1080f) });
+				calque.AddChild(new PlancheFaune());
+			}
 			if (CapturePalier3) DebugMaitrise("palier3");   // info-bulle apprise (⑦)
 			if (CaptureTechnique) ToggleInfoTechnique();    // info-bulle technique (⑦)
 			if (CaptureMaison) ToggleHouseGhost();          // maison + lisière (D112 ②)

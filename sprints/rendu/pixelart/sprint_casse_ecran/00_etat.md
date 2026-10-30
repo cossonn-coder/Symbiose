@@ -26,7 +26,7 @@ Perf : `tools/perf_vm.sh`.
 | ② | `02_defauts.md` — (b)(n)(e)(d)(h) | **fait** (2026-10-29, non commité) |
 | ③ | `03_palette_indexee_soleil.md` — (f)(l), paliers bas | **fait** (2026-10-29, non commité) |
 | ④ | `04_paliers_hauts.md` — (i)(m) | **fait** (2026-10-30, non commité ; à-coup de cran +27 % à confirmer) |
-| ⑤ | `05_faune_icones.md` — (a) | à faire |
+| ⑤ | `05_faune_icones.md` — (a) | **fait** (2026-10-30, non commité) |
 | ⑥ | `06_lisiere_decor.md` — (k) + résidus lisière | à faire |
 | ⑦ | `07_bilan_ecran.md` — planche, mesures, protocole F5 | à faire |
 
@@ -214,9 +214,57 @@ Perf : `tools/perf_vm.sh`.
   tourner le soleil (éclat des limbes et des troncs) ; F11 avant/après ; regarder le halo au pied
   d'un arbre (taille réglable `AncrageMaxPx`) et l'à-coup de zoom ×2↔×4.
 
+### ⑤ Faune en icônes — fait
+- **Portraits** : `visuals/FauneSilhouettes.cs` (données, 159 LDC) = 19 bêtes + pollen décrites en
+  ellipses dans le repère du corps (u tête +1 / queue −1, v travers ; ton −1 = dôme orienté, 0..4 =
+  ton fixe ; `Fin` = détail dès 8 px ; `Miroir` = paires ; motifs Bandes/Segments/Piquants/Ecailles ;
+  couleuvre = axe ondulé). `visuals/FauneIcones.cs` (198 LDC) = rastériseur + atlas 1024² en pixels
+  INDEXÉS (encodage ③), cuit à la demande par (espèce, taille px exacte, cap 0..7 au hash), mémoïsé ;
+  > 128 px → cuisson réduite posée en blocs entiers k×k. Contour 1 px = ton 0 de la rampe de la partie
+  (dès 8 px) ; « plumage » 4×3 en appareil de briques dès 24 px (anti-aplat). Sous 3 px = point de la
+  couleur du corps (texel de l'atlas). Pose = 1 quad dans le lot → **1 DrawMesh par couche**.
+- **Branché** : `MacroLife` (taille réelle inchangée) et `ForagerLayer` (taille = diamètre de l'ancien
+  grain ; pollen porté = icône « pollen ») ; matériau = `PaletteIndexee.Materiau` (éclat côté soleil
+  réel). **F11 off = rectangles/grains d'avant** (A/B). `PaletteIndexee.Generation` (++ au vidage de
+  LUT) → l'atlas se recuit. Icônes OPAQUES au repos (fondus gardés).
+- ⚠️ **Écarts au kickoff** : (1) vue OBLIQUE écrasement 0,7 et non iso 0,5 (à 0,5 le merle de profil =
+  un cigare, vu à la planche) ; (2) `BaseAlpha` 0,9 abandonné pour les icônes : l'alpha partiel mêlait
+  le vert du sol au merle → 23 % de quasi-noirs neutres mesurés à ×4 (0 % après) ; (3) merle
+  #1e1e22 → #2b2a3a (noir bleuté), carabe #2e3a44 → #2a3a52 (bleu-violet) — quasi-noirs neutres au
+  banc ① ; `FieldOverlay` garde les anciens hex (heatmap, non touchée) ; (4) l'orientation des caps est
+  écran (pas monde) : ne tourne pas avec la rotation D35.
+- **Banc** : `capture_vm.sh -K` = planche de la faune (`visuals/PlancheFaune.cs`, rangées dans l'ordre
+  du journal `[PlancheFaune]`, ×2 ×4 ×8 ×16 cap 0 + ×8 caps 1/6, `mesure_da.py --pas 1`). Planche
+  [n=1 capture par cellule, 61 sprites] : avant (`-L`, rectangles) tons 1, aplat 378 px (63/63 > 24),
+  éclat 0/63, 26 paires de voisins identiques → après : tons 7 (multi-rampes : corps+ailes+bec), qnoir
+  0 %, contour noir 0 %, dérive 9,1°, aplat méd 21 px (29/61 > 24, les très grandes ×16), éclat 50/61
+  (soleil 329°) · 29/61 (soleil 155°), voisins identiques 0.
+  Monde (luxuriance, planche L, paire `-O -x Weather,House,Objects` / `+,MacroLife,ForagerLayer`
+  [n=1 capture par cellule]) :
+
+| palier | sprites | tons lus avant → après | éclat côté soleil avant → après | aplat méd |
+|---|---|---|---|---|
+| ×2 | 3 | 1 → 5 | 0/3 → 1/3 | 9 → 9 |
+| ×4 | 6 | 1 → 6 | 1/6 → 4/6 | 8 → 12 (> 24 : 2/6 → 0/6) |
+| ×8 | 1 | 1 → 6 | 0/1 → 1/1 | 38 → 17 |
+| ×16 | 2-3 | 1 → 5 | 1/3 → 2/2 | 18 → 14 |
+
+  Quasi-noir 0 % partout après ; ×4 avant correctif d'alpha : merle 22,9 % qnoir. Reconnaissance (Read
+  des captures) : merle (bec orange, queue), hérisson (dôme de piquants + museau clair), couleuvre
+  (ondulée), limace, abeilles/bourdon rayés, papillon 4 ailes lisibles dès ×4 ; coccinelle/doryphore/
+  chrysope restent minuscules à taille réelle (coccinelle 4 px à ×16, points dès ×32).
+  Captures : `/tmp/claude-1000/da/c5/` (`pf_*` planche faune, `pl_*` planche L monde).
+- **Perf** (banc E ×4, `perf_vm.sh -E 20 -O`, `-L` = avant, même build, [n=1 run chacun, charge VM
+  2,7-7]) : draw calls 105 → 102 ; vie macro `_Draw` 0,00 ms → 0,00 ms (18 bêtes au banc) ; frame
+  89,6 → 99,5 ms (écart dominé par la charge VM : postes faune nuls). Cuisson d'un portrait non mesurée
+  isolément (à la demande, une fois par espèce × taille × cap).
+- `MacroLife.cs` 308 LDC (🟡, une seule responsabilité) ; `ForagerLayer.cs` 292.
+- **F5 Nico** : trouver un merle, un hérisson, une coccinelle (×16/×32) ; tourner le soleil (éclat) ;
+  F11 avant/après ; un geste près d'une bête (sursaut) ; papillon/abeille en vol.
+
 ## §REPRISE
-Lire `CLAUDE.md` + ce fichier + le kickoff du premier tronçon « à faire » (⑤ `05_faune_icones.md`).
-⑤ réutilise l'encodage ③ (§Notes ③) et `Ton()`/`RemplirDome()` de ④ (`PlantRenderer.Motifs.cs`).
-Reste ouvert de ④ : à-coup de cran ×2↔×4 (+27 % VM, à confirmer) et continuité ×2→×4 modeste.
-Lancement : `/sprint-auto sprint_casse_ecran`. Valider chaque tronçon visuel au banc :
-protocole et ligne de base en §Notes ① (`tools/mesure_da.py`, `capture_vm.sh -O -F`).
+Lire `CLAUDE.md` + ce fichier + le kickoff du premier tronçon « à faire » (⑥ `06_lisiere_decor.md`).
+Encodage indexé : §Notes ③ ; `Ton()`/`RemplirDome()` ④ ; atlas de portraits à la demande ⑤
+(`FauneIcones`, réutilisable pour d'autres petits objets). Restes ouverts : à-coup de cran ×2↔×4 (④),
+continuité ×2→×4 modeste (④). Lancement : `/sprint-auto sprint_casse_ecran`. Valider chaque tronçon
+visuel au banc : protocole et ligne de base en §Notes ① (`tools/mesure_da.py`, `capture_vm.sh -O -F`).

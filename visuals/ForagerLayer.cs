@@ -29,6 +29,11 @@
 // l'ancre ; le sprite les visite en boucle. Si l'espèce a disparu (plante morte
 // entre deux semaines), repli sur l'ancre : l'insecte hésite sur place, il ne
 // disparaît pas brutalement.
+//
+// 📖 CASSÉ À L'ÉCRAN ⑤ : chaque butineur est une petite ICÔNE pixel-art (corps +
+// ailes claires, FauneSilhouettes) en pixels indexés, à la TAILLE de son ancien
+// grain (diamètre 2 × rayon) ; le pollen porté = un grain en dôme. F11 (palette
+// coupée) = les grains d'avant.
 
 using Godot;
 using System.Collections.Generic;
@@ -72,6 +77,10 @@ namespace Symbiose
 		private static readonly (Color, float, float) GuildeInconnue =
 			(new Color("cccccc"), 2.2f, 2.2f);
 		private static readonly Color PollenCol = new("fff2a8");
+		// Lecture seule pour la planche de la faune (PlancheFaune, ⑤).
+		internal static IEnumerable<string> GuildesConnues => Guilds.Keys;
+		internal static float RayonPx(string guilde) =>
+			(Guilds.TryGetValue(guilde, out var g) ? g : GuildeInconnue).Item2;
 
 		private class Entry
 		{
@@ -99,6 +108,7 @@ namespace Symbiose
 		// grains pixel-art (LotTriangles.Grain) au lieu de DrawCircle. L'ordre
 		// d'émission (corps puis pollen, insecte par insecte) = ordre de peinture.
 		private readonly LotTriangles _lot = new();
+		private bool _icones;   // ⑤ : palette indexée active (F11) au dernier redessin
 
 		/// <summary>Nombre de butineurs affichés (overlay perfs F4).</summary>
 		private bool _dessinNonVide = true;   // le dernier _Draw a-t-il pu tracer ?
@@ -273,6 +283,12 @@ namespace Symbiose
 		private void ProcessButineurs(double delta)
 		{
 			if (!Visible) return;
+			if (_icones != PaletteIndexee.Active)
+			{
+				_icones = PaletteIndexee.Active;
+				Material = _icones ? PaletteIndexee.Materiau : null;
+				QueueRedraw();
+			}
 			bool zoomOk = WorldView.CurrentZoom >= MinZoom;
 			if (zoomOk != _lastZoomOk) { _lastZoomOk = zoomOk; QueueRedraw(); }
 			if (_entries.Count == 0) return;
@@ -363,6 +379,16 @@ namespace Symbiose
 				scr.Y += lift;
 				if (!vis.HasPoint(scr)) continue;
 
+				if (_icones)
+				{
+					float z = WorldView.CurrentZoom, px1 = 1f / z;
+					FauneIcones.Poser(_lot, e.Guild, scr, 2f * radiusPx * z, Vector2.One * px1,
+									  px1, e.Phase, alpha);   // opaque au repos (cf. MacroLife)
+					if (e.Carrying)
+						FauneIcones.Poser(_lot, "pollen", scr + new Vector2(0f, -radiusPx), 2.4f * z,
+										  Vector2.One * px1, px1, 0u, alpha);
+					continue;
+				}
 				col.A = BaseAlpha * alpha;
 				_lot.Grain(scr, radiusPx, col);
 				if (e.Carrying)
@@ -371,7 +397,8 @@ namespace Symbiose
 					_lot.Grain(scr + new Vector2(0f, -radiusPx), 1.2f, pc);
 				}
 			}
-			_lot.Dessiner(this);
+			if (_icones) FauneIcones.Televerser();
+			_lot.Dessiner(this, _icones ? FauneIcones.Texture : null);
 			if (gone != null) foreach (string k in gone) _entries.Remove(k);
 			_dessinNonVide = _entries.Count > 0;
 		}
