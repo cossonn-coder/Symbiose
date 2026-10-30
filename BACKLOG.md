@@ -40,6 +40,7 @@
    ×32 (7 FPS) et à-coups ; [D119](DETTE.md) faune (densités réelles : le hérisson est un visiteur, ~0,01 individu
    attendu sur 400 m² ; bêtes qui s'activent) ; [D120](DETTE.md) monde `full` (tout a faim, carence K, mare au NE).
    **Prochain = choix de Nico** entre D120 (moteur, rapide), D118 (A) (conception morphologique, gros) et D119.
+   **D120 CONÇUE le 2026-10-30** → `sprints/champs/sol/sprint_sol_nourricier/` (5 tronçons) — **prochain = `/sprint-auto sprint_sol_nourricier`**.
 3. **À concevoir ensuite** : rosace des vents (objet à débloquer à l'atelier : direction + force) ;
    refonte esthétique de la périphérie (falaise / rivière / forêt sans continuité) ; zooms forts trop loin
    de la forme réelle des feuilles.
