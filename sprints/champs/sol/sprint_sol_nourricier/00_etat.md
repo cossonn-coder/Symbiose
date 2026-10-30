@@ -27,7 +27,7 @@ bêtes « affamées » à populations stables ; hérisson sur 619/1 188 plots (�
 | ① | `01_recharge_sol.md` | re-figé `7791bfb8…` | **FAIT** 2026-10-30 |
 | ② | `02_croissance_nutrition.md` | re-figé `4c696821…` | **FAIT** 2026-10-30 |
 | ③ | `03_voix_justes.md` | inchangé `4c696821…` | **FAIT** 2026-10-30 |
-| ④ | `04_mare_nord_est.md` | inchangé | à faire |
+| ④ | `04_mare_nord_est.md` | inchangé `4c696821…` | **FAIT** 2026-10-30 |
 | ⑤ | `05_vue_mare_voix.md` | inchangé | à faire |
 
 ## Notes de tronçon
@@ -143,9 +143,46 @@ bêtes « affamées » à populations stables ; hérisson sur 619/1 188 plots (�
   basilic sont morts dès ~4 sem. sur les DEUX tuiles (riche comme carencée) — la
   mention « tous vivants à mi-course » du ② ne tient pas ; sans lien avec la carence.
 
+### ④ Mare remplie et peuplée (tuile NE, `full`) — FAIT (2026-10-30, non commité)
+- `sim/mare_initiale.py` (neuf, 42 LDC) : `poser_mare(tile, eco, seed)` appelé par
+  `main.build_world_full` (donc `full`, `propre` et démo). Fond 3×3 (7..9, 4..6) plat
+  à 2 cm, berge-anneau à 12 cm ; fond saturé + lame 1,2 + `marais_memory` 0,85 + état
+  marais ; pH 4,8 (fond+berge) ; moustique 0,10 / libellule 0,05 amorcés ; semis
+  fondateurs : 2 aulnes (berge sud), 3 sphaignes, 2 rossolis (sortis du stade semis).
+- **Écart au kickoff n°1 (hypothèse réfutée par la mesure)** : le patron `tourbiere`
+  seul ne tient PAS — cuvette sèche en 4 sem., plus marais vers s24-32 [seed 42] (lame
+  évaporée 20 %/sem., sable qui boit). Ajout d'une **source** = nappe affleurante
+  ponctuelle : `fields/ecofields/source.py` (`SourceMixin.tick_source`, 11 LDC, même
+  geste d'affleurement que `tick_berge`), champ `EcoFields.sources` (liste, défaut
+  None ⇒ no-op), appel `eco.tick_source()` juste après `tick_berge` dans
+  `sim/engine/boucle.py`. Débits placeholders : fond 0,30, berge 0,03 /sem. Aucun
+  paramètre d'hydrologie ni de population modifié. **À valider par Nico** (mécanisme
+  neuf, philo #2 tenue : on écrit de l'eau dans le milieu, le marais émerge).
+- **Écart n°2** : placement hors du coin nord-est de la tuile. Ce coin est à < 150 cm
+  des bords nord/est du monde → sous la nappe de ceinture : au seed 1 (rivière en creux
+  au nord, −75 cm) il était sec dès s16 (centre en eau 6/104 sem.). Au sud de la tuile
+  (lignes ≥ 3, colonnes ≤ 7 : hors portée) la mare tient sur tous les seeds testés.
+- Fond plat (pas de pente vers le centre) : la fraction ruisselée ne dépend que du
+  signe de la pente → un fond creusé vidait 8 plots dans le central (3/9 en eau).
+- Mesures `sonde_mare.py` (104 sem.) [seeds 42/1/2, n=3] — plot central lame>flaque
+  ET marais : 104/104 sem. sur les 3 seeds ; semaines avec ≥ 5/9 plots du fond lame+
+  marais : 98 / 90 / 100 sur 104 ; aulnes vivants an 2 (vitalité 1,0 ×2, 3 seeds) ;
+  moustique et libellule présents en été an 1 (s16-36, dens. max 0,25-0,46) et an 2
+  (s68-88, 0,23-0,44), absents l'hiver (photopériode) ; sphaignes vivantes et qui se
+  ressèment ; 1 rossolis mort s63 au seed 1 (ombre 0,6), sinon 7/7 vivants.
+- Golden **inchangé** `4c696821…`. Tests : `test_sim_server` 2 checks du monde `full`
+  mis à jour (88 plantes = 81 + 7 ; marais à l'init = 9 plots NE seulement) → 307/307 ;
+  `test_population`, `test_marais`, `bancs.test_hydrologie`, `test_bois_mort`,
+  `test_automate_*`, `test_peripherie_pont`, `test_signes_legende` verts. Pas de C#.
+- Pour ⑤ : la mare est en (7..9, 4..6) de la tuile NE (monde x 1650-1800, y 350-500
+  cm), PAS dans le coin nord-est (le kickoff ⑤ dit « au nord-est » : vrai à l'échelle
+  du monde). Les aulnes grandiront et ombreront vers le nord (cultures lignes 0..5 de
+  la tuile NE) à long terme — conséquence émergente, à surveiller au F5.
+
 ## §REPRISE
-Lire `CLAUDE.md` + ce fichier + le kickoff du premier tronçon « à faire » (④ après
-commit de ③). Golden courant `4c696821…` (intact attendu ④⑤). ⑤ : la voix bête lit
+Lire `CLAUDE.md` + ce fichier + le kickoff du premier tronçon « à faire » (⑤ après
+commit de ④). Golden courant `4c696821…` (intact attendu ⑤). Mare : fond
+(7..9, 4..6) de la tuile NE, source `eco.sources`, sonde `sonde_mare.py`. ⑤ : la voix bête lit
 `PopulationField.faim` (grille de rendu, pas de version de pont à changer : le pont
 ne sert que les phrases).
 Lancement : `/sprint-auto sprint_sol_nourricier`.

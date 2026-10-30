@@ -50,6 +50,7 @@ from .couverture import CouvertureMixin
 from .paillage import PaillageMixin
 from .couvertures_posees import CouverturePoseeMixin   # voile/cloche/ombrière posées (effondrement météo ③)
 from .bordure import BordureMixin   # conditions aux limites de la ceinture (périphérie ③)
+from .source import SourceMixin     # nappe affleurante ponctuelle (mare NE, SOL NOURRICIER ④)
 
 
 # Noms acceptés par `EcoFields.get_field` (chaque nom = un attribut GridField).
@@ -65,7 +66,8 @@ _CHAMPS_NOMMES = frozenset((
 @dataclass
 class EcoFields(MatiereOrganiqueMixin, HydrologieMixin, RuissellementMixin,
                 MaraisMixin, UptakeMixin, VieMacroMixin, SolMixin, TicksMixin,
-                CouvertureMixin, PaillageMixin, CouverturePoseeMixin, BordureMixin):
+                CouvertureMixin, PaillageMixin, CouverturePoseeMixin, BordureMixin,
+                SourceMixin):
     tile_id:    str
     rows:       int
     cols:       int
@@ -274,6 +276,11 @@ class EcoFields(MatiereOrganiqueMixin, HydrologieMixin, RuissellementMixin,
     # entretenu par `tick_marais`, lu par `est_marais`. Sépare l'ÉTAT (niche, vue) du
     # DOSAGE des flux (décompo/pH lisent la mémoire continue). False partout au repos.
     marais_etat:      list = field(default=None)
+    # SOURCES (sprint SOL NOURRICIER ④) : plots où une nappe AFFLEURE, liste
+    # `[(r, c, debit), …]` lue par `tick_source` (mixin `SourceMixin`). Posée à
+    # l'init du monde `full` seulement (mare NE, `sim/mare_initiale.py`). None ⇒
+    # no-op strict ⇒ golden smoke, bancs et conteneurs bit-identiques.
+    sources:          list = field(default=None)
     # Couverture du sol (sprint LUXURIANCE ①, D65 §2.1) — fraction ∈ [0,1] du plot
     # couverte par le feuillage des strates BASSES (sol+basse), RECALCULÉE chaque tick
     # par SCATTER (`tick_couverture`, mixin `CouvertureMixin`). NULLE au repos (aucune

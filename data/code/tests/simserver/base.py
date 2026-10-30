@@ -116,9 +116,10 @@ def test_v0_contract():
     r = s4.send(cmd="snapshot")
     snap = r.get("snapshot", {})
     # 53 cultivées de base + 28 de la démo « planche paillée plein sud » (équilibre
-    # invasion ⑧ : 4 cultures × 7 plots pré-mulchés sur la tuile S) = 81.
-    check("81 plantes posées (semaine 1, rien simulé)",
-          len(snap.get("plants", [])) == 81, f"n={len(snap.get('plants', []))}")
+    # invasion ⑧ : 4 cultures × 7 plots pré-mulchés sur la tuile S) = 81, + 7 de la
+    # mare NE (SOL NOURRICIER ④ : 2 aulnes, 3 sphaignes, 2 rossolis) = 88.
+    check("88 plantes posées (semaine 1, rien simulé)",
+          len(snap.get("plants", [])) == 88, f"n={len(snap.get('plants', []))}")
     # Mesure full (critère kickoff t2 : noter la taille dans 00_etat.md)
     r = s4.send(cmd="step_week")
     size = len(json.dumps(r, sort_keys=True, separators=(",", ":")))

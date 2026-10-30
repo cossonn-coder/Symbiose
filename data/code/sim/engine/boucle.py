@@ -305,6 +305,11 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
             #     rivière simulée. Sans ceinture → no-op strict.
             eco.tick_berge(self.game_state.get("ceinture"),
                            tile_origin=(tile.origin_x_cm, tile.origin_y_cm))
+            # 2e-ter. SOURCES ponctuelles (SOL NOURRICIER ④) — même patron que la
+            #     berge, en un point : la nappe qui affleure au fond d'une mare
+            #     alimente les pores puis la lame ; le marais émerge du circuit.
+            #     Aucune source (smoke, bancs) → no-op strict → golden intact.
+            eco.tick_source()
 
             # 2e-bis. ÉROSION de bordure (PÉRIPHÉRIE ⑤, D73, §4.5) — un secteur dénudé
             #     (coupe rase) ou une falaise entaillée dépose ses colluvions sur les

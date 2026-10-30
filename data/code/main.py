@@ -37,6 +37,7 @@ from fields.ecofields.constants import PAILLAGE_DOSE   # dose du mulch de la dé
 from sim.engine import Engine
 from sim import actions as ACT, vigueur as VIG
 from sim.seeds import PlayerSeedBank, Seed, semer_fondateur
+from sim.mare_initiale import poser_mare
 
 # Seed global du terrain (déterminisme, philo #3) — celui que l'Engine prend par
 # défaut. Partagé par les semis directs FONDATEURS (sprint DIVERSITÉ FONDATRICE ①).
@@ -118,6 +119,11 @@ def build_world_full():
         for r in range(2, 9):                # 7 plots par culture, lignes 2..8
             semer_fondateur(s_tile, PLANT_CATALOGUE[crop], r, col, SEED)
             s_eco.poser_mulch(r, col, "paille", PAILLAGE_DOSE)
+
+    # Mare du nord-est (SOL NOURRICIER ④, D120) : cuvette alimentée par une source,
+    # déjà remplie et peuplée (aulne, sphaigne, rossolis, moustique, libellule) dans
+    # le coin libre de la tuile NE (sable ; plant_garden n'occupe que 0..6).
+    poser_mare(tiles_by_id["NE"], ecos["NE"], SEED)
 
     house = House()   # défauts : centrée (1000,1000), 8×8×6 m, calcaire 0.35
     return tiles, ecos, aux_tiles, house

@@ -59,14 +59,16 @@ def test_conteneurs():
                                    for v in flat_a),
               f"{len(grid_a)}×{len(grid_a[0]) if grid_a else 0}")
     # Marais (hydrologie & marécages ③, 0.5.27) : bloc `marais` = liste CREUSE par
-    # tuile des plots dont `marais_memory > MARAIS_OFF`. VIDE à l'init (aucune flaque
-    # durable) → golden neutre. La vue « noircit » le sol ∝ intensité (philo #5).
+    # tuile des plots dont `marais_memory > MARAIS_OFF`. À l'init du monde `full`, seul
+    # le fond 3×3 de la mare NE (SOL NOURRICIER ④) est déjà un marais ; partout
+    # ailleurs VIDE (aucune flaque durable). La vue « noircit » le sol ∝ intensité.
     marais = snap0.get("marais")
     check("snapshot expose `marais` (bloc par tuile)",
           isinstance(marais, dict) and len(marais) > 0, type(marais).__name__)
-    check("marais : liste creuse VIDE à l'init (aucune flaque durable)",
+    check("marais : seul le fond de la mare NE (9 plots) à l'init",
           isinstance(marais, dict)
-          and all(v == [] for v in marais.values()),
+          and len(marais.get("NE", [])) == 9
+          and all(v == [] for k, v in marais.items() if k != "NE"),
           {k: len(v) for k, v in (marais or {}).items()})
 
     # --- poser_pot par position monde --------------------------------------
