@@ -21,12 +21,16 @@
 //     INSTALLÉ (`etat`) et EN EAU n'est plus une flaque mais de l'EAU PERMANENTE —
 //     eau sombre opaque, reflets, rive de vase ; ses voisins marécageux secs
 //     deviennent BERGE humide moussue. Aucun champ neuf : on croise deux blocs lus.
+//     MARE VIVANTE ② : le bloc `marais` 0.6.2 porte aussi la LAME brute et la GLACE
+//     de chaque plot → la mare est peinte par un SHADER (`eau_mare.gdshader`,
+//     branché par `PuddleLayer.Eau.cs`) : marnage continu, scintillement, glace.
 //
 // 📖 Pédagogie — MÊME patron que CouvertureLayer/LitterLayer : UN CanvasItem
 // redessine tout dans son _Draw (losanges en lot, pas un Node2D par plot), la
 // rotation D35 est gratuite (re-projection par WorldToScreen à chaque dessin), et
 // l'ensemble est inerte entre snapshots → on ne QueueRedraw qu'à l'arrivée d'un
-// snapshot (l'eau ne s'anime pas ici — le miroitement est statique, calibrage F5).
+// snapshot. Le scintillement de la mare (②) ne redessine RIEN côté CPU : il vit
+// dans le shader (TIME), la géométrie reste figée entre deux snapshots.
 
 using Godot;
 using System.Collections.Generic;
@@ -72,6 +76,8 @@ namespace Symbiose
 			// Identité du plot (classement mare/berge par voisinage, ⑤).
 			public string TileId;
 			public int R, C;
+			// Marais 0.6.2 (②) : lame brute (−1 = absente, snapshot 0.6.1) et glace.
+			public float Lame, Glace;
 			// Mare : bits des voisins qui sont AUSSI de la mare (1 = r−1, 2 = c+1,
 			// 4 = r+1, 8 = c−1) → les arêtes sans voisin portent la rive.
 			public int Voisins;
@@ -85,7 +91,11 @@ namespace Symbiose
 		// Référence à la vue pour le recalage relief (ReliefRiseAtPlot) : la flaque
 		// se pose SUR la surface extrudée, comme les plantes. Posée à la construction.
 		private WorldView _view;
-		public void Init(WorldView view) => _view = view;
+		public void Init(WorldView view)
+		{
+			_view = view;
+			Material = MateriauEau;   // ② : shader de la mare (littéral ailleurs)
+		}
 
 		/// <summary>Applique les blocs `marais` (0.5.27) PUIS `eau_surface` (0.5.18)
 		/// d'un snapshot. Reconstruction simple (inerte entre snapshots, pas de
@@ -112,7 +122,11 @@ namespace Symbiose
 						var e = pv.AsGodotArray();
 						int r = e[0].AsInt32(), c = e[1].AsInt32();
 						float m = Mathf.Clamp((float)e[2].AsDouble(), 0f, 1f);
-						_marais.Add(MakeWet(tileId, o, r, c, m, true));
+						var w = MakeWet(tileId, o, r, c, m, true);
+						// 0.6.2 (②) : lame + glace ; 0.6.1 → lame absente (−1).
+						w.Lame = e.Count > 4 ? (float)e[4].AsDouble() : -1f;
+						w.Glace = e.Count > 5 ? (float)e[5].AsDouble() : 0f;
+						_marais.Add(w);
 						if (e.Count > 3 && e[3].AsBool()) _installes.Add((tileId, r, c));
 					}
 				}
@@ -151,6 +165,7 @@ namespace Symbiose
 		{
 			if (!Visible) return;
 			// Inerte entre snapshots : on ne redessine qu'au basculement de LOD.
+			MajZoomEau();   // ② : grain de l'eau calé au palier (uniform)
 			bool zoomOk = WorldView.CurrentZoom >= MinZoom;
 			if (zoomOk != _lastZoomOk || _margeVersion != MargeVue.Version)
 			{
@@ -168,7 +183,7 @@ namespace Symbiose
 		{
 			_lot.Vider();
 			Peindre();
-			_lot.Dessiner(this);
+			_lot.Dessiner(this, TexBlanche);   // ② : texture → les UV codés partent
 		}
 
 		private void Peindre()

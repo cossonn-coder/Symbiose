@@ -121,6 +121,16 @@ namespace Symbiose
 			Ajouter(a, col); Ajouter(b, col); Ajouter(c, col);
 		}
 
+		/// <summary>MARE VIVANTE ② : triangle CODÉ — une couleur par sommet (que le
+		/// shader de la couche lit comme des PARAMÈTRES, interpolés) et un UV commun
+		/// qui marque le triangle pour ce shader. N'a de sens que si Dessiner reçoit
+		/// une texture (sinon les UV ne partent pas).</summary>
+		public void TriangleCode(Vector2 a, Color ca, Vector2 b, Color cb,
+								 Vector2 c, Color cc, Vector2 uv)
+		{
+			Ajouter(a, uv, ca); Ajouter(b, uv, cb); Ajouter(c, uv, cc);
+		}
+
 		/// <summary>Un GRAIN pixel-art (FLUIDITÉ PC LEVIERS ②, pollen + butineurs) à
 		/// la place d'un DrawCircle de rayon r ≤ ~3 px : au pixel près, un cercle
 		/// aussi petit ne montre pas ses 64 côtés. r &lt; 2 → losange (2 triangles :

@@ -61,6 +61,12 @@ namespace Symbiose
 			// Décor crème : « deux tons (crème, gris pâle) » ; le gris pâle non mesuré =
 			// Deriver(#c7c797) ton −1, figé ici.
 			["creme"] = Hex("a9a374", "c7c797"),
+			// MARE VIVANTE ② (eau_mare.gdshader) — non mesurées au brief, choisies hors
+			// quasi-noir (L OKLab ≥ 0,37, da_image) : eau stagnante bleu-vert (creux →
+			// éclat isolé du reflet), vase de berge brun-olive, glace blanc-bleuté.
+			["eau_mare"] = Hex("1f4a5c", "24566b", "2f6f85", "5f9aae", "a8d4e0", "d8f4f4"),
+			["vase"] = Hex("4a3d28", "5a4a2c", "6f5d3a", "8a7a52"),
+			["glace"] = Hex("7f9fb4", "a9c6d6", "cfe3ec", "eef8fb"),
 		};
 
 		/// <summary>Trait d'un petit objet (règle 7) : le ton le plus sombre de SA rampe.</summary>

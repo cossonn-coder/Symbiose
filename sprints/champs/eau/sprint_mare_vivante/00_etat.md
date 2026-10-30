@@ -44,7 +44,7 @@ C# : `dotnet build Symbiose.csproj`. Pont de départ **0.6.1**.
 | # | Kickoff | Golden | État |
 |---|---|---|---|
 | ① | `01_moteur_pont.md` | inchangé ✅ | **fait** (non commité) |
-| ② | `02_eau_da.md` | inchangé | à faire |
+| ② | `02_eau_da.md` | inchangé ✅ | **fait** (non commité) |
 | ③ | `03_signaux_faune.md` | inchangé | à faire |
 
 ## Notes de tronçon
@@ -89,8 +89,50 @@ SEUIL_FLAQUE = 0,10** → vase luisante sous lame mince ; au centre ~2,4-3,0 [n=
 (binaire 0.6.1) → lame ABSENTE (garder le rendu d'avant), glace = 0. Le bloc
 `eau_surface` (`[[r,c,lame]]` si lame > SEUIL_FLAQUE) est inchangé.
 
+### ② eau DA 16 bits (2026-10-30) — golden `4c696821…` INTACT, `dotnet build` vert
+- **Shader** `visuals/eau_mare.gdshader` posé sur la couche `PuddleLayer` (branché par
+  `visuals/PuddleLayer.Eau.cs`) : **un seul lot, un seul draw call** conservé. Prescription
+  « shader sur un Node2D dessiné par LotTriangles » faisable telle quelle ; ajustement :
+  les triangles de mare se signalent au shader par leur **UV (x ≥ 1)** → il faut passer
+  une **texture blanche 1×1** à `LotTriangles.Dessiner` pour que les UV partent (les
+  triangles littéraux — flaques, tourbe, berge, rive — restent inchangés : couleur × blanc).
+  Nouvelle méthode `LotTriangles.TriangleCode` (couleur PAR SOMMET = paramètres).
+- **Contrat de sommet** (triangles codés) : R = lame/3, G = glace, B = bord (1 aux coins qui
+  touchent la terre, ½ au centre d'un plot de rive, 0 au cœur). Chaque plot = 4 triangles
+  (centre + coins) ; valeurs MOYENNÉES aux coins entre plots voisins → champ continu,
+  marnage sans bascule par plot. Grain au pixel interne `floor(VERTEX × clamp(zoom,1,4))`.
+- **Rendu** : eau 3 tons tramés Bayer 4×4 (plus sombre ∝ lame) ; eau peu profonde = trame
+  eau/vase ; vase luisante (éclats d'eau clairs) → vase sèche (tons clairs) ; reflets =
+  traits 5×2 px internes au hash (1/17 cellules en eau profonde, 1/37 peu profonde, 1/29
+  sur vase mouillée) qui s'allument/s'éteignent via `TIME` (≈ 7 s/cycle, déphasés) ;
+  glace = rampe `glace` tramée + larges bandes diagonales immobiles + fêlures iso,
+  scintillement coupé ; prise partielle = **anneau gelé le long de la rive** (seuil
+  abaissé par B). Rampes `eau_mare` / `vase` / `glace` ajoutées à `RampesDa.Matieres`
+  (uniforms, source unique ; L OKLab ≥ 0,37, aucun quasi-noir).
+- **Emprise de la mare** (0.6.2) = plots marais INSTALLÉS dont la lame > SEUIL_FLAQUE OU
+  voisin (8-c.) d'un tel plot → un bord qui se découvre reste mare (vase), plus de bascule
+  « eau → terre brune ». 0.6.1 (lame absente) : ancienne règle. **Écart** : le moteur met
+  glace = 0 sur un plot découvert ; mare prise, la moyenne aux coins ouvrait un faux trou
+  d'eau libre → un plot de mare découvert prend la glace max de ses voisins de mare (vue).
+- **Captures** (full, seed 42, centre 1725,425, souris écartée ; le losange blanc vu dans
+  les 1ʳᵉˢ captures = survol souris, pas l'eau) dans `mesures/` : `t2_ete_s26_x1/x2/x4/x8.png`
+  (marnage : (8,4) profonde bleu nuit → vase brune luisante au SE, reflets visibles dès ×1),
+  `t2_glace_partielle_s2_x2.png` (anneau de glace, eau libre scintillante au centre),
+  `t2_glace_prise_s6_x1/x4.png` (mare prise, coins découverts en vase). Mesures
+  `da_image` : 0 quasi-noir sur les 5 zones ; été ×4 = 3 tons d'eau dominants + 2 tons
+  de reflet ; scintillement : 285 → 424 px de la mare changent entre t et t+1..4 s
+  [×2, n=1, ciel couvert/pluie dans la capture ⇒ inclut des gouttes].
+- Taille (LDC) : `PuddleLayer.Mare.cs` 173, `PuddleLayer.cs` 142, `PuddleLayer.Eau.cs` 48,
+  `eau_mare.gdshader` 81 — tout 🟢.
+- **F5 Nico** : densité/vitesse du scintillement (`reflet` : raretés 17/37/29, `VIF` 0,9) ;
+  plafond du grain `clamp(zoom,1,4)` (à ×8+ le tramage reste à 2 px écran) ; teinte des
+  rampes ; lisibilité de la vase luisante vs eau peu profonde. Constat annexe : à s26 la
+  mare montre une encoche (un plot du fond non installé / hors emprise) — donnée moteur.
+
 ## §REPRISE
-① fait (non commité au moment de l'écriture). Prochain : **②** `02_eau_da.md` (C#),
-lire d'abord « Format du bloc `marais` (0.6.2) » ci-dessus.
+① fait (commit `e4ab37b`), ② fait (non commité au moment de l'écriture). Prochain : **③**
+`03_signaux_faune.md` (C#) — les rides/ronds s'ajoutent dans `eau_mare.gdshader` (branche
+codée, eau libre seulement : pixel non gelé et `b < m`), uniforms posés par
+`PuddleLayer.Eau.cs` ; lire d'abord les notes ① (format `marais`) et ② ci-dessus.
 Lire `CLAUDE.md` + ce fichier + le kickoff du premier tronçon « à faire ».
 Lancement : `/sprint-auto sprint_mare_vivante`.
