@@ -30,7 +30,12 @@ void vertex() {
 }
 
 void fragment() {
-	vec4 t = texture(TEXTURE, UV);
+	// ⑦ : texelFetch et non texture() — un code est un ENTIER, lu tel quel. Avec
+	// texture(), les quads de l'atlas de faune (⑤, dans un DrawMesh) lisaient au bord
+	// des cellules le texel voisin : contour 1 px perdu, yeux d'une autre palette
+	// (mesuré ⑦ : 2 480 px changés à ×4, tous sur la faune ; plantes 0 px). Même
+	// leçon que decor_indexe.gdshader (⑥).
+	vec4 t = texelFetch(TEXTURE, ivec2(floor(UV * vec2(textureSize(TEXTURE, 0)))), 0);
 	if (t.a < 0.5) {
 		COLOR = vec4(0.0);
 	} else if (int(round(t.b * 255.0)) < 128) {

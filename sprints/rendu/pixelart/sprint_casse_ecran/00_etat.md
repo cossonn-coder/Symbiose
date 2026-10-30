@@ -28,7 +28,7 @@ Perf : `tools/perf_vm.sh`.
 | ④ | `04_paliers_hauts.md` — (i)(m) | **fait** (2026-10-30, non commité ; à-coup de cran +27 % à confirmer) |
 | ⑤ | `05_faune_icones.md` — (a) | **fait** (2026-10-30, non commité) |
 | ⑥ | `06_lisiere_decor.md` — (k) + résidus lisière | **fait** (2026-10-30, non commité) |
-| ⑦ | `07_bilan_ecran.md` — planche, mesures, protocole F5 | à faire |
+| ⑦ | `07_bilan_ecran.md` — planche, mesures, protocole F5 | **fait** (2026-10-30, non commité ; perf : à-coups de zoom +20 % à confirmer au PC) |
 
 ## Notes de tronçon
 (chaque tronçon ajoute ici : ce qui est fait, mesures avant/après, écarts au kickoff)
@@ -321,11 +321,93 @@ Perf : `tools/perf_vm.sh`.
   troncs et des rochers tourne) ; touche H (lisière devant translucide) ; zoom ×0,5 → ×4 ; rotation R ;
   bord du cadre au dézoom (plus de vert uni).
 
+### ⑦ Bilan à l'écran — fait
+- **Correctif trivial et localisé (soupçon ⑥ confirmé)** : `palette_indexee.gdshader` lit son
+  atlas par `texelFetch` (et non `texture()`). A/B même capture (luxuriance ×4, déterministe :
+  contrôle A/A = 0 px) : **2 480 px changés, tous sur la faune** (plantes 0 px) — contour 1 px
+  du hérisson rétabli, œil du papillon de nouveau de sa palette. L'atlas des plantes (③) n'avait
+  pas le défaut (dessin aligné au pixel) ; le correctif ne le change pas.
+- **Planche complète** (banc `full`, seed 42, `-c 648,1474 -w 24`) lue au Read : paliers ×0,5→×32
+  (`-l`), 4 rotations × 3 heures à ×2 (`-r 0..3 -j −60/0/60`), ×8/×32 en rotations 1 et 3, vent
+  calme/fort à ×1 ; + planche L (luxuriance, forêt, diversité) et planche faune (`-K`). Lu : maison
+  opaque, plantes devant/derrière justes ; ×16 « même tournesol » (limbes à motifs, tête en dôme) ;
+  ombres qui tournent avec l'heure ; bêtes reconnaissables (merle, hérisson, couleuvre, papillon,
+  abeilles rayées). `capture_vm.sh -r 1 -z 2` (défaut d'outil signalé en ③) **non reproduit** sur
+  `full` (cadre bien ×2). Captures : `/tmp/claude-1000/da/c7/` (`ap/` paires, `full/`).
+- **Rapport final du banc ①** (même protocole que `base2.sh` : paire test/réf `-O -x Weather,
+  MacroLife,House[,Objects]`, planche `-l 2`, soleil de mesure 135° comme la ligne de base ;
+  chaque cellule [n=1 capture]) :
+
+| critère | scène · palier | avant (①) | après (⑦) |
+|---|---|---|---|
+| tons lus (méd) | luxuriance ×1 / ×2 / ×4 / ×16 | 4 / 6 / 5 / 2 | 6 / 6 / 11 / 9 |
+| | faune ×4 | 1 | 9 |
+| | planche faune (61 sprites) | 1 [`-L`, ⑤] | 8 |
+| #000 / quasi-noir | toutes plantes | 0 % / 0 % | 0 % / 0 % |
+| | faune ×4 | **3/8 sprites à 100 %** | **0/8** |
+| contour noir | toutes scènes | 0 % | 0 % (falaise ⑥ : 2,6 % → 0 %) |
+| dérive ombre→éclat (méd) | luxuriance ×1 / ×2 / ×4 / ×16 | 25,8° / 43,0° / 2,2° / 10,7° | 34,8° / 16,6° / 51,4° / −0,4° |
+| | diversité ×2 | 40,1° | 38,8° |
+| aplat > 24 px | luxuriance ×4 | 13/15 (méd 94 px) | 9/14 (méd 50 px) |
+| | luxuriance ×16 | 6/6 (méd 190 px) | 3/10 (méd 14 px) |
+| | faune ×4 | 3/8 | 0/8 |
+| voisins identiques | diversité ×2 (tournesols) | **10/138 paires** | **0/136** |
+| | faune ×4 | 1/3 | 1/1 (2 icônes de même espèce, même taille, même cap au hash) |
+| éclat côté soleil (cos > 0) | luxuriance ×4 | 7/15 | 11/14 |
+| | diversité ×2 | 0/18 | 6/18 [soleil 135° fixe ; au soleil réel ③ : 15/18 midi] |
+| | faune ×4 | 3/8 | 7/8 |
+| continuité ×2→×4 (ΔE OKLab, ×4 réduit vs ×2 flouté) | luxuriance, planche | 0,120 [136 blocs] | 0,102 [114 blocs] |
+
+  Lecture : les cibles du brief sont tenues sur les plantes seules et la faune (noir 0, voisins 0,
+  éclat majoritairement au soleil, aplats divisés par 2 à 13 aux paliers hauts). Restes : dérive
+  ×16 ≈ 0 (le tracé direct des grandes plantes reste à soleil fixe, ④) ; forêt ×2/×4 = tons 1 car
+  la paire isole surtout l'**ombre d'un arbre nu** (couleur unie, identique avant/après : pas une
+  régression, artefact du banc) ; luxuriance ×4 « 1 voisin identique » = deux flancs de tuile, pas
+  des plantes ; continuité −15 % seulement (la géométrie ×2 ≠ ×4 demeure).
+- **Vent** (×1 `full`, plantes/faune/météo masquées, images 3→5 à 5 fps [n=1 capture chacune]) :
+  calme **0 px** changé, fort (`-v 0,9`) 15 475 px → la lisière bouge au vent, rien n'anime au calme.
+- **Perf** — A/B entrelacé avec l'état de DÉPART du sprint (worktree `985a388`, même VM, même
+  minute ; charge 2,9-6,0 : peu fiable) :
+
+| mesure | départ | fin de sprint | limite |
+|---|---|---|---|
+| banc partage A, s/sem (A1·A2·A3·A4) | 2,91 · 2,24 · 2,02 · 2,24 | 2,88 · 2,01 · 2,02 · 2,57 / 2,86 · 2,26 · 2,53 · 2,51 | [n=1 / n=2 runs, VM] |
+| A, médiane des 4 sous-phases | 2,24 | 2,30 / 2,51 (+3 % / +12 %) | [idem] |
+| C (moteur en pause), image moy. | 227 ms | 235 / 299 ms | [idem ; 2ᵉ run sous charge 6] |
+| C, draw calls | 648 | 673 / 811 | [idem] |
+| balayage Z, moyenne des 12 pires images | 291 ms | 340 / 348 ms (**+17 / +20 %**) | [n=1 / n=2 aller-retour] |
+| Z, ×2→×4 · ×8→×4 · ×16→×8 | 313 · 282 · 285 ms | 504/427 · 453/460 · 390/461 ms | [idem] |
+| banc E ×4 (`-E 20 -O`) | 89,6-92,8 ms (③-⑤, notes) | 100,8 ms, draw calls 102 | [n=1 run, charge 4,3] |
+
+  **Verdict** : régime établi dans le bruit (≤ +12 % [n=2, VM]) ; **à-coups de zoom +20 %**
+  [n=1 vs n=2, VM] = au-delà du budget 10 %, cohérent avec le +27 % du ④ et localisé à l'ENTRÉE
+  des paliers ×4/×8 (postes : plantes `_Draw` 152 ms + cuisson 76 ms à ×2→×4). Non corrigé
+  (consigne ⑦) → note D112 (o), à confirmer au PC avant toute action.
+- **Taille** : `compte_ldc.py` sur les 78 fichiers touchés par le sprint : aucun > 400 LDC →
+  pas de `/refactor`. 🟡 : `serialize.py` 392 (398 avant), `SimBridge.cs` 348 (345 avant),
+  `MacroLife.cs` 308 (289 avant, signalé ⑤).
+- **Restes consignés** (D112, pas de dette nouvelle) : (o) à-coups de zoom ; (p) orientation des
+  icônes faune en repère écran (ne tourne pas avec R, ⑤) ; (q) ombres au pied des arbres de
+  lisière sombres et peu grainées, F11 sans effet sur le décor (⑥) ; (r) dérive nulle ×16 en
+  dessin direct ; (s) à ×32 une abeille peut passer devant le mur de la maison (couche faune
+  au-dessus des objets — vu une fois, `z32_r3`, non investigué).
+
+## §F5 — protocole de Nico (ressenti seul, ~10 min, aucune mesure)
+1. **Maison** : tourner autour (R) — aucune plante ne traverse les murs ; **H** rend maison ET
+   lisière côté caméra translucides.
+2. **Maj+F3** sur une plante puis une bête : jauges colorées lisibles (léger/marqué/grave).
+3. **F6** : le premier champ est le **vent**.
+4. **U** sous la souris fait pousser un psilocybe → le cueillir/manger → la vision se déclenche.
+5. Zoomer **×2 → ×32** sur un tournesol puis un pommier : « la même plante, plus de détails ».
+   Noter si le passage ×2→×4 ou ×8→×4 accroche (à-coup).
+6. **Soleil** : au lever puis au coucher, les touffes et troncs s'éclairent du côté du soleil
+   (F11 = avant/après).
+7. **Bêtes** : reconnaître merle, hérisson, papillon, abeille, couleuvre (×4-×16).
+8. **Lisière** : par vent fort elle ondule avec les plantes, au calme elle est immobile.
+
 ## §REPRISE
-Lire `CLAUDE.md` + ce fichier + le kickoff du premier tronçon « à faire » (⑦ `07_bilan_ecran.md`).
-Encodage indexé : §Notes ③ ; `Ton()`/`RemplirDome()` ④ ; atlas de portraits à la demande ⑤
-(`FauneIcones`, réutilisable pour d'autres petits objets) ; décor indexé + grains + vent en shader ⑥
-(`DecorLayer.Indexe.cs`, `decor_indexe.gdshader` — `texelFetch` pour un atlas de codes). Restes ouverts :
-soupçon de filtrage linéaire sur l'atlas de faune (⑥ notes), à-coup de cran ×2↔×4 (④),
-continuité ×2→×4 modeste (④). Lancement : `/sprint-auto sprint_casse_ecran`. Valider chaque tronçon
-visuel au banc : protocole et ligne de base en §Notes ① (`tools/mesure_da.py`, `capture_vm.sh -O -F`).
+**Sprint TERMINÉ côté code (①→⑦).** Reste : **F5 de Nico** (§F5 ci-dessus) puis commit de ⑦
+(orchestrateur). Restes consignés en D112 (o)→(s) — à trancher après le F5 ; à-coups de zoom
++20 % [VM] à confirmer au PC. Encodage indexé : §Notes ③ ; `Ton()`/`RemplirDome()` ④ ; atlas de
+portraits ⑤ ; décor indexé ⑥ — **tout atlas de codes se lit en `texelFetch`** (⑥ décor, ⑦ plantes
+et faune). Banc : protocole ①, campagne ⑦ (`/tmp/claude-1000/da/c7/`, hors dépôt).

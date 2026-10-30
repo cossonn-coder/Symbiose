@@ -32,6 +32,9 @@
    `sprints/rendu/pixelart/sprint_casse_ecran/` (7 tronçons, golden intact : charte + banc de mesure, défauts,
    palette indexée + éclat côté soleil, paliers hauts dans la même grammaire, faune en icônes, lisière animée,
    bilan) — **prochain = `/sprint-auto sprint_casse_ecran`**. Nuit → [D117](DETTE.md).
+   **Sprint CLOS côté code le 2026-10-30** (①→⑦, golden intact `fecccded…`, pont 0.6.1) — **attend le F5 de Nico**
+   (protocole `sprints/rendu/pixelart/sprint_casse_ecran/00_etat.md` §F5) ; restes (o)→(s) en [D112](DETTE.md), dont
+   à-coups de zoom +20 % [VM] à confirmer au PC.
 3. **À concevoir ensuite** : rosace des vents (objet à débloquer à l'atelier : direction + force) ;
    refonte esthétique de la périphérie (falaise / rivière / forêt sans continuité) ; zooms forts trop loin
    de la forme réelle des feuilles.
