@@ -203,3 +203,9 @@ Texte intégral des lignes fermées :
 | Code | Motif de fermeture | Preuve |
 |---|---|---|
 | D120 | F5 Nico 2026-10-30 : « les plantes ont l'air mieux », mode psilo « vraiment trop fun » ; écarts du sprint acceptés (recharge N≈10 sem./K≈13/P≈26, nappe affleurante, mare au sud de la tuile NE). Retours sur la mare → **D121** ; aulnes sans houppier → **D118** (A). | Sprint `sprints/champs/sol/sprint_sol_nourricier/` (commits 45ff728→0a4dffb), journal 164. |
+
+## Lot L — F5 de Nico sur le sprint MARE VIVANTE (2026-10-30)
+
+| Code | Motif de fermeture | Preuve |
+|---|---|---|
+| D121 | F5 Nico 2026-10-30 : « les animations sur la mare c'est super, c'est exactement ce que je veux » — vent, pluie, animaux, glace ; rides « top » ; nuée de moustiques vue ; libellule « bien pour l'instant » ; voix hors saison OK. Glace qui scintille au soleil + ombres superflues → **D118** ; saisons décalées → **D122**. | Sprint `sprints/champs/eau/sprint_mare_vivante/` (commits e4ab37b→b62ff8d), journal 165. |
