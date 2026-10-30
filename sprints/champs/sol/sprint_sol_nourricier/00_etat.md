@@ -25,7 +25,7 @@ bêtes « affamées » à populations stables ; hérisson sur 619/1 188 plots (�
 | # | Kickoff | Golden | État |
 |---|---|---|---|
 | ① | `01_recharge_sol.md` | re-figé `7791bfb8…` | **FAIT** 2026-10-30 |
-| ② | `02_croissance_nutrition.md` | re-figé annoncé | à faire |
+| ② | `02_croissance_nutrition.md` | re-figé `4c696821…` | **FAIT** 2026-10-30 |
 | ③ | `03_voix_justes.md` | inchangé | à faire |
 | ④ | `04_mare_nord_est.md` | inchangé | à faire |
 | ⑤ | `05_vue_mare_voix.md` | inchangé | à faire |
@@ -68,7 +68,47 @@ bêtes « affamées » à populations stables ; hérisson sur 619/1 188 plots (�
   ⚠ pour ② : le banc `carence_npk` (n=p=k 0,05) va désormais REMONTER vers l'éq. en
   12 sem. (oracle « n < 0,3 » faux) → le banc devra couper la recharge ou se réviser.
 
+### ② Croissance escomptée par la nutrition — FAIT (2026-10-30, non commité)
+- `sim/nutrition_plante.py` (neuf, 39 LDC) : `nutrition_plante(plant, eco, roots)` →
+  `(facteur ∈ [0,4 ; 1], nutriment limitant | None)` + `facteur_nutrition` (facteur
+  seul). Par nutriment : `ratio = min(1, stock moyen sous racines / equilibre_roche
+  (eco.soil_type))` ; poids = `BESOIN[nut][stade] / max BESOIN[stade]` ; `sat = 1 −
+  poids·(1 − ratio)` ; Liebig = min ; rampe `0,4 + 0,6·min(1, s/0,6)`. Carnivore : N
+  ignoré ; P amplifié par la mycorhize (miroir `qi_local`). Stade sans besoin (≥ 4) → 1.
+  **API prête pour ③** (le limitant est rendu ; voix = `1 − facteur`).
+- `sim/engine/croissance.py` : `target_g *= facteur_nutrition(plant, eco, roots)` juste
+  après l'escompte allélopathique, sur la MÊME liste `roots` (pas de relecture). Import
+  `sim.nutrition_plante` depuis `sim.engine` : sens des couches respecté.
+- Constantes placeholders locales au module : `NUTRITION_PLANCHER 0.4`,
+  `NUTRITION_SEUIL_PLEIN 0.6`.
+- **Sonde** `sonde_nutrition.py` (neuve, ce dossier ; tuiles terre jumelles, éq. vs
+  n=p=k 0,05, 26 sem. dès s14). Mode `maintenu` (stock remis à 0,05 chaque semaine) —
+  h max riche → carencé : haricot 198 → 121 cm (−39 %, segments 6 → 5, gf 0,93 → 0,44) ;
+  tournesol 48,8 → 42,4 ; basilic 24,9 → 21,3 ; tous vivants à mi-course (plancher
+  tient). Mode `libre` (recharge ① active) : haricot 162 cm. **Avant ② : carencé ≡
+  riche au cm près** (croissance aveugle). [1 seed de banc, n=1]
+- **Effet en jeu** (`full` seed 42, 156 sem., espion sur le facteur) : part des
+  lectures < 1 : 44 % (s0-25) → 81 % (s78-103) → 96 % (s130-155) ; facteur médian 1,00 →
+  0,74 → 0,65 ; plancher 0,40 atteint ; limitant cité P 59 k / N 26 k / K 3 k (P =
+  semis, stade 0 qui demande surtout P). [seed 42, n=1]
+- `mesure_faim.py` (156 sem.) — plantes / vitalité méd., avant② → après② :
+  seed 42 : an1 466→465, an2 988→999, an3 1074→1088 · seed 1 : 335→338, 706→719,
+  838→868 · seed 2 : 411→423, 862→885, 944→968 ; vitalité méd. 0,73-0,80 inchangée.
+  Population viable (critère ≥ 50 % tenu : ≈ 101-103 %) [seeds 42/1/2, n=3]. NPK méd.
+  quasi inchangés. ⚠ la population ne baisse PAS : la carence ralentit la taille des
+  individus, pas le recrutement (germination/succession non touchées — voulu, philo #2).
+- Perf (`full` seed 42, 104 sem., runs alternés) : avant 812,6 / 773,7 ms → après 803,8 / 793,0 ms ; moyenne +0,7 % [n=2, bruit inter-runs ±2,5 %] → budget ≤ +3 % tenu. Le monde « après » porte +1-3 % de plantes (inclus dans la mesure).
+- Golden `7791bfb8…` → **`4c696821ed69d323165c5638021d69bde0930c4af546d4bf971ddcdca0daeea1`**
+  (smoke : facteur < 1 sur 48 % des lectures an 0, 70 % an 1, méd. 0,79, min 0,40 →
+  `growth_factor` des plantes change — objet du tronçon). `population_hash.txt`
+  re-figé avec (`b3ff9d4b…` → `3416d328…`, même cause). Suites `tests/test_*.py` toutes
+  vertes (hors 500 ans, non lancé).
+- Pré-existants inchangés : `test_edaphique` IndexError (même ligne : le TÉMOIN du banc
+  `carence_npk` n'a plus de plante — rien à voir avec ②) ; `test_succession` 4/6 (mêmes
+  2 échecs pioneer). Banc `carence_npk` NON retouché (son oracle `n < 0,3` reste à
+  réviser ; la sonde ② couvre le critère croissance).
+
 ## §REPRISE
-Lire `CLAUDE.md` + ce fichier + le kickoff du premier tronçon « à faire » (② après
-commit de ①). Golden courant `7791bfb8…`.
+Lire `CLAUDE.md` + ce fichier + le kickoff du premier tronçon « à faire » (③ après
+commit de ②). Golden courant `4c696821…`. ③ relit `sim.nutrition_plante.nutrition_plante`.
 Lancement : `/sprint-auto sprint_sol_nourricier`.
