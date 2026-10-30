@@ -35,6 +35,11 @@
    **Sprint CLOS côté code le 2026-10-30** (①→⑦, golden intact `fecccded…`, pont 0.6.1) — **attend le F5 de Nico**
    (protocole `sprints/rendu/pixelart/sprint_casse_ecran/00_etat.md` §F5) ; restes (o)→(s) en [D112](DETTE.md), dont
    à-coups de zoom +20 % [VM] à confirmer au PC.
+   **F5 de Nico le 2026-10-30 → D112 FERMÉE** (archive lot J). Retours répartis en 3 dettes ouvertes en échange de
+   D112/D99/D110 : [D118](DETTE.md) DA partout + **fiche morphologique par espèce → sprite** + rivière Est animée + perf
+   ×32 (7 FPS) et à-coups ; [D119](DETTE.md) faune (densités réelles : le hérisson est un visiteur, ~0,01 individu
+   attendu sur 400 m² ; bêtes qui s'activent) ; [D120](DETTE.md) monde `full` (tout a faim, carence K, mare au NE).
+   **Prochain = choix de Nico** entre D120 (moteur, rapide), D118 (A) (conception morphologique, gros) et D119.
 3. **À concevoir ensuite** : rosace des vents (objet à débloquer à l'atelier : direction + force) ;
    refonte esthétique de la périphérie (falaise / rivière / forêt sans continuité) ; zooms forts trop loin
    de la forme réelle des feuilles.
