@@ -798,7 +798,14 @@ from __future__ import annotations
 #       champignon pousse au plot pour la semaine affichée (mémoire de perception
 #       `carpophores_debug`, même liste que le snapshot et la cueillette) ; réponse
 #       = bloc `carpophores` complet. Hors tick, pont opt-in → golden INTACT.
-ENGINE_VERSION = "0.6.1"
+# 0.6.2 (MARE VIVANTE ①, D121) : ajout rétro-compatible. Chaque entrée du bloc
+#       `marais` passe de 4 à 6 champs `[r, c, marais, etat, lame, glace]` : `lame` =
+#       `eau_surface` brute du plot (3 déc., MÊME sous SEUIL_FLAQUE — le marnage se lit
+#       progressivement), `glace` ∈ [0,1] (nouvel état `eco.glace`, prend par nuits de
+#       gel, fond au dégel). Un binaire 0.6.1 n'émet que 4 champs → la vue prend lame =
+#       ABSENTE (repli : rendu d'avant) et glace = 0. Bloc `eau_surface` inchangé.
+#       `glace` n'a aucun effet en retour → golden INTACT.
+ENGINE_VERSION = "0.6.2"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

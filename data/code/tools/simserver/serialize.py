@@ -558,9 +558,13 @@ class SerializeMixin:
             # (`est_marais`). La plupart des plots sont SECS → liste courte (patron
             # `eau_surface`). PURE lecture (champ déjà tické par `tick_marais`) → aucun
             # impact golden. Champ optionnel côté vue (tolérance pré-0.5.27 → pas de marais).
+            # MARE VIVANTE ① (0.6.2) : + `lame` (5ᵉ, `eau_surface` BRUTE, même sous
+            # SEUIL_FLAQUE → la vue dessine le marnage progressif : vase luisante sous
+            # une lame mince) et `glace` (6ᵉ, ∈ [0,1], `tick_glace`). Pré-0.6.2 : 4 champs.
             mmem = getattr(eco, "marais_memory", None)
             marais_by_tile[tile.tile_id] = [
-                [r, c, round(mmem.data[r][c], 3), eco.est_marais(r, c)]
+                [r, c, round(mmem.data[r][c], 3), eco.est_marais(r, c),
+                 round(eco.eau_surface.data[r][c], 3), round(eco.glace.data[r][c], 3)]
                 for r in range(eco.rows) for c in range(eco.cols)
                 if mmem is not None and mmem.data[r][c] > MARAIS_OFF]
             # Carte de COUVERTURE DU SOL par tuile (sprint LUXURIANCE ①, D65 §2.1,

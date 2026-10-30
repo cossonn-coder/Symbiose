@@ -23,7 +23,7 @@ from __future__ import annotations
 
 from fields.noise import _hash_noise, stable_str_hash
 from fields.ecofields.constants import ALLELO_GERM_K
-from fields.population import build_pollinator_registry
+from fields.population import build_pollinator_registry, est_peinte
 from sim import semiologie as S
 from sim.nutrition_plante import nutrition_plante, NUTRITION_PLANCHER
 from sim.voix_etres_corpus import (PLANTE, BETE, CHAMPIGNON, NUTRIMENTS, FAMILLES_FR,
@@ -132,16 +132,31 @@ def _nom(cle: str) -> str:
     return NOMS_BETES.get(cle, cle)
 
 
+def _peinte(nom: str, tile, eco, cache: dict | None) -> bool:
+    """Dit = peint (MARE VIVANTE ①) : une bête n'est NOMMÉE que si l'écran la montre
+    sur la tuile (`perception.est_peinte`, seule source). Mémoïsé dans `cache`."""
+    key = (tile.tile_id, "peinte", nom)
+    if cache is not None and key in cache:
+        return cache[key]
+    vu = est_peinte(eco.populations[nom])
+    if cache is not None:
+        cache[key] = vu
+    return vu
+
+
 def besoins_bete(cle: str, tile, eco, r: int, c: int, cache: dict | None = None) -> list[tuple]:
     """[(intensité, thème, champs)] d'une bête au plot (r, c). `cache` (optionnel)
-    mémoïse la grille d'habitat par (tuile, espèce) le temps d'un snapshot."""
+    mémoïse la grille d'habitat par (tuile, espèce) le temps d'un snapshot.
+    Proies et prédateurs ne comptent que s'ils sont PEINTS sur la tuile : une faim
+    sans proie visible se dit sans nom (« faim »), un prédateur invisible ne rôde pas."""
     field = (eco.populations or {}).get(cle)
     if field is None:
         return []
     spec = field.spec
     out = []
     faim = _ramp(field.faim(r, c), FAIM_BETE_APPARITION, FAIM_BETE_PLEINE)
-    proies = sorted(n for n, f in eco.populations.items() if cle in f.spec.predators)
+    proies = sorted(n for n, f in eco.populations.items()
+                    if cle in f.spec.predators and _peinte(n, tile, eco, cache))
     if cle in _GOUTS:
         fam = max(sorted(_GOUTS[cle]), key=lambda f: _GOUTS[cle][f])
         out.append((faim, "faim_fleurs", {"famille": FAMILLES_FR.get(fam, fam)}))
@@ -159,7 +174,7 @@ def besoins_bete(cle: str, tile, eco, r: int, c: int, cache: dict | None = None)
             cache[key] = hab
     out.append((_ramp(1.0 - hab[r][c], 0.7, 1.0), "abri", {}))
     preds = [(eco.populations[n].at_plot(r, c), n) for n in spec.predators
-             if n in eco.populations]
+             if n in eco.populations and _peinte(n, tile, eco, cache)]
     if preds:
         _, pred = max(preds)
         out.append((_ramp(sum(d for d, _ in preds), 0.2, 0.8), "predation",
@@ -180,8 +195,14 @@ def _parler(corpus: dict, besoins: list, seed: int, week: int, ident: str) -> li
                   key=lambda b: (-b[0], b[1]))[:MAX_PHRASES]
     if not dits:
         dits = [(1.0, "bien", {})]
-    return [_variante(corpus[t], seed, week, ident, t).format(**champs)
+    return [_majuscule(_variante(corpus[t], seed, week, ident, t).format(**champs))
             for _, t, champs in dits]
+
+
+def _majuscule(phrase: str) -> str:
+    """Les noms insérés sont en minuscule (« le moustique ») pour vivre en milieu
+    de phrase ; seule la tête de phrase prend la capitale."""
+    return phrase[:1].upper() + phrase[1:]
 
 
 def phrases_plante(plant, tile, eco, saison: str, seed: int, week: int,

@@ -51,6 +51,7 @@ from .paillage import PaillageMixin
 from .couvertures_posees import CouverturePoseeMixin   # voile/cloche/ombrière posées (effondrement météo ③)
 from .bordure import BordureMixin   # conditions aux limites de la ceinture (périphérie ③)
 from .source import SourceMixin     # nappe affleurante ponctuelle (mare NE, SOL NOURRICIER ④)
+from .glace import GlaceMixin       # glace sur l'eau libre en hiver (MARE VIVANTE ①)
 
 
 # Noms acceptés par `EcoFields.get_field` (chaque nom = un attribut GridField).
@@ -67,7 +68,7 @@ _CHAMPS_NOMMES = frozenset((
 class EcoFields(MatiereOrganiqueMixin, HydrologieMixin, RuissellementMixin,
                 MaraisMixin, UptakeMixin, VieMacroMixin, SolMixin, TicksMixin,
                 CouvertureMixin, PaillageMixin, CouverturePoseeMixin, BordureMixin,
-                SourceMixin):
+                SourceMixin, GlaceMixin):
     tile_id:    str
     rows:       int
     cols:       int
@@ -276,6 +277,10 @@ class EcoFields(MatiereOrganiqueMixin, HydrologieMixin, RuissellementMixin,
     # entretenu par `tick_marais`, lu par `est_marais`. Sépare l'ÉTAT (niche, vue) du
     # DOSAGE des flux (décompo/pH lisent la mémoire continue). False partout au repos.
     marais_etat:      list = field(default=None)
+    # GLACE sur l'eau libre (sprint MARE VIVANTE ①) ∈ [0,1] par plot : prend par nuits
+    # de gel, fond au dégel, nulle hors lame (`tick_glace`, `glace.py`). Lue par la
+    # VUE seule (bloc `marais` du pont) — aucun effet en retour → golden NEUTRE.
+    glace:            GridField = field(default=None)
     # SOURCES (sprint SOL NOURRICIER ④) : plots où une nappe AFFLEURE, liste
     # `[(r, c, debit), …]` lue par `tick_source` (mixin `SourceMixin`). Posée à
     # l'init du monde `full` seulement (mare NE, `sim/mare_initiale.py`). None ⇒
@@ -489,6 +494,9 @@ class EcoFields(MatiereOrganiqueMixin, HydrologieMixin, RuissellementMixin,
         # État de marais (③) — False partout au repos (mémoire nulle < MARAIS_OFF).
         if self.marais_etat is None:
             self.marais_etat = [[False] * self.cols for _ in range(self.rows)]
+        # Glace (MARE VIVANTE ①) — NULLE au repos, bornée [0,1], écrite par `tick_glace`.
+        if self.glace is None:
+            self.glace = GridField(self.rows, self.cols, max_val=1.0)
         # Couverture du sol (sprint LUXURIANCE ①) — NULLE au repos, bornée [0,1],
         # écrite chaque tick par `tick_couverture` (scatter des empreintes basses).
         if self.couverture_sol is None:

@@ -84,15 +84,16 @@ FAMILLES_FR = {
     "Solanaceae": "solanacées", "Oleaceae": "jasmins", "Araliaceae": "lierres",
 }
 
-# Noms d'affichage des bêtes (proie / prédateur cités).
+# Noms d'affichage des bêtes (proie / prédateur cités), en MINUSCULE : ils s'insèrent
+# aussi en milieu de phrase ; `voix_etres._majuscule` capitalise la tête de phrase.
 NOMS_BETES = {
-    "puceron": "Le puceron", "limace": "La limace", "doryphore": "Le doryphore",
-    "lombric": "Le ver de terre", "cloporte": "Le cloporte", "campagnol": "Le campagnol",
-    "coccinelle": "La coccinelle", "chrysope": "La chrysope", "carabe": "Le carabe",
-    "merle": "Le merle", "herisson": "Le hérisson", "rapace": "Le rapace",
-    "couleuvre": "La couleuvre", "moustique": "Le moustique", "libellule": "La libellule",
-    "abeille": "L'abeille", "syrphe": "Le syrphe", "papillon": "Le papillon",
-    "bourdon": "Le bourdon", "osmie": "L'osmie",
+    "puceron": "le puceron", "limace": "la limace", "doryphore": "le doryphore",
+    "lombric": "le ver de terre", "cloporte": "le cloporte", "campagnol": "le campagnol",
+    "coccinelle": "la coccinelle", "chrysope": "la chrysope", "carabe": "le carabe",
+    "merle": "le merle", "herisson": "le hérisson", "rapace": "le rapace",
+    "couleuvre": "la couleuvre", "moustique": "le moustique", "libellule": "la libellule",
+    "abeille": "l'abeille", "syrphe": "le syrphe", "papillon": "le papillon",
+    "bourdon": "le bourdon", "osmie": "l'osmie",
 }
 
 # Bêtes dont la vie dépend de l'humidité du sol (peau perméable, larve aquatique).

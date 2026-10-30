@@ -25,6 +25,8 @@ dans le sol : son N est INTERNE (via les proies), il ne profite pas aux voisines
 
 from __future__ import annotations
 
+from fields.population.perception import SEUIL_PRESENCE   # dit = peint (MARE VIVANTE ①)
+
 # Fraction de la densité `moustique` capturée par tick sur chaque plot foliaire
 # d'une Drosera. Petit (une rosette ne vide pas une mare) mais OBSERVABLE : la
 # nuée se creuse localement autour des rossolis. Knob de calibrage (F5, overlay
@@ -51,18 +53,21 @@ class CarnivoreMixin:
         for plant in tile.plants:
             if not plant.is_alive or not getattr(plant.plant_class, "carnivore", False):
                 continue
-            preleve = 0.0
+            preleve, vue = 0.0, False
             for (r, c) in plant.foliar_plots:
                 if not (0 <= r < moustique.rows and 0 <= c < moustique.cols):
                     continue
                 dens = moustique.at_plot(r, c)
+                vue = vue or dens >= SEUIL_PRESENCE
                 capture = CARNIVORE_CAPTURE * dens
                 if capture > 0.0:
                     moustique.set(r, c, dens - capture)   # borné ≥ 0 par le clamp
                     preleve += capture
             # Première capture d'une plante donnée → événement (voix §9). Le seuil
             # 1e-4 évite un log sur une capture infinitésimale (bruit numérique).
-            if preleve > 1e-4 and not plant.a_capture:
+            # Dit = peint (MARE VIVANTE ①) : le carnet ne parle de « la nuée » que si
+            # elle est VISIBLE au-dessus de la plante (densité ≥ SEUIL_PRESENCE).
+            if preleve > 1e-4 and vue and not plant.a_capture:
                 plant.a_capture = True
                 log.append(f"    🪰 Capture {plant.name}@{plant.position} "
                            f"→ moustique −{preleve:.3f} (proies → azote interne)")

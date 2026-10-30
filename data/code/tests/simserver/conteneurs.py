@@ -15,7 +15,7 @@ def test_conteneurs():
     s = ServerProc()
     # "full" : monde réel (maison → ombre) + banque de départ (planter_conteneur).
     init = s.send(cmd="init", config="full", seed=42)
-    check("engine_version 0.6.1", init.get("engine_version") == "0.6.1",
+    check("engine_version 0.6.2", init.get("engine_version") == "0.6.2",
           init.get("engine_version"))
     snap0 = s.send(cmd="snapshot")["snapshot"]
     check("snapshot expose `containers` VIDE à l'init (golden neutre)",
@@ -70,6 +70,14 @@ def test_conteneurs():
           and len(marais.get("NE", [])) == 9
           and all(v == [] for k, v in marais.items() if k != "NE"),
           {k: len(v) for k, v in (marais or {}).items()})
+    # MARE VIVANTE ① (0.6.2) : chaque entrée = [r, c, marais, etat, lame, glace] ;
+    # lame ≥ 0 (brute, même sous le seuil de flaque), glace ∈ [0,1] (nulle à l'init).
+    ne = (marais or {}).get("NE", [])
+    check("marais 0.6.2 : 6 champs, lame ≥ 0, glace nulle à l'init",
+          bool(ne) and all(len(e) == 6 and e[4] >= 0.0 and e[5] == 0.0 for e in ne),
+          ne[:2])
+    check("marais 0.6.2 : le centre de la mare (8,5) porte une lame",
+          any(e[0] == 8 and e[1] == 5 and e[4] > 0.1 for e in ne), ne)
 
     # --- poser_pot par position monde --------------------------------------
     rp = s.send(cmd="action", verb="poser_pot",

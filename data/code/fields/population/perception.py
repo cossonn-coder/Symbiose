@@ -142,6 +142,19 @@ GRAPPE_RAYON = 0.08         # demi-étendue d'une grappe, en fraction de plot (4
 _SALT_GRAPPE = 0x80         # canal _hash_noise des décalages de grappe
 
 
+def est_peinte(field: PopulationField) -> bool:
+    """Vrai si `peindre_presence` peint au moins un individu de l'espèce sur cette
+    tuile (MARE VIVANTE ①, D121) : MÊMES règles (espèce peignable + un plot ≥
+    SEUIL_PRESENCE). C'est LA source du « ce qui est dit = ce qui est peint » : la voix
+    d'une bête ne nomme une proie ou un prédateur que s'il est visible à l'écran — hors
+    saison (moustique, libellule en hiver) l'espèce se tait. Les butineurs (agents d'un
+    autre bloc) ne sont jamais cités comme proie/prédateur. PURE, golden-neutre."""
+    spec = field.spec
+    if spec.name in NON_PEINTS or spec.category in CATEGORIES_NON_PEINTES:
+        return False
+    return any(d >= SEUIL_PRESENCE for row in field.data for d in row)
+
+
 def peindre_presence(field: PopulationField, seed: int) -> list[SpriteSample]:
     """
     Sprites PEINTS d'une espèce sur une tuile (conception PERF VUE §3.5) :

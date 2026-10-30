@@ -344,6 +344,10 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
             #     qui LISENT la mémoire du tick (anaérobie → tourbe, acidification).
             #     No-op strict tant qu'aucune flaque ne dure → golden NEUTRE hors banc.
             eco.tick_marais()
+            # 3d. Glace sur l'eau libre (MARE VIVANTE ①) : prend par nuits de gel,
+            #     fond au dégel, sur la lame du tick (posée en 3/3b). Lue par la vue
+            #     SEULE (bloc `marais` du pont) → aucun effet en retour, golden NEUTRE.
+            eco.tick_glace(temp_now, nebul)
 
             # 4. Décomposition biogéochimique (OM → fertilite, pertes C)
             eco.tick_decomposition()
