@@ -17,6 +17,11 @@
 //     indice diégétique, pas un chiffre). Dessous de la flaque (le marais est le
 //     milieu, l'eau la surface).
 //
+//   · MARE (sol nourricier ⑤, `PuddleLayer.Mare.cs`) : un plot à la fois MARAIS
+//     INSTALLÉ (`etat`) et EN EAU n'est plus une flaque mais de l'EAU PERMANENTE —
+//     eau sombre opaque, reflets, rive de vase ; ses voisins marécageux secs
+//     deviennent BERGE humide moussue. Aucun champ neuf : on croise deux blocs lus.
+//
 // 📖 Pédagogie — MÊME patron que CouvertureLayer/LitterLayer : UN CanvasItem
 // redessine tout dans son _Draw (losanges en lot, pas un Node2D par plot), la
 // rotation D35 est gratuite (re-projection par WorldToScreen à chaque dessin), et
@@ -64,6 +69,12 @@ namespace Symbiose
 			public float RisePx;
 			public float Depth;
 			public bool IsMarais;
+			// Identité du plot (classement mare/berge par voisinage, ⑤).
+			public string TileId;
+			public int R, C;
+			// Mare : bits des voisins qui sont AUSSI de la mare (1 = r−1, 2 = c+1,
+			// 4 = r+1, 8 = c−1) → les arêtes sans voisin portent la rive.
+			public int Voisins;
 		}
 
 		private readonly List<Wet> _flaques = new();
@@ -85,6 +96,9 @@ namespace Symbiose
 		{
 			_flaques.Clear();
 			_marais.Clear();
+			_mare.Clear();
+			_berge.Clear();
+			_installes.Clear();
 			// MARÉCAGE d'abord (dessous) : `[r, c, marais, etat]`. On lit l'intensité
 			// (marais_memory) pour l'opacité ; `etat` (hystérèse) n'est pas rendu ici
 			// (l'intensité continue suffit à la lecture diégétique, philo #5).
@@ -99,6 +113,7 @@ namespace Symbiose
 						int r = e[0].AsInt32(), c = e[1].AsInt32();
 						float m = Mathf.Clamp((float)e[2].AsDouble(), 0f, 1f);
 						_marais.Add(MakeWet(tileId, o, r, c, m, true));
+						if (e.Count > 3 && e[3].AsBool()) _installes.Add((tileId, r, c));
 					}
 				}
 			// FLAQUE ensuite (dessus) : `[r, c, lame]`. Profondeur normalisée.
@@ -115,6 +130,7 @@ namespace Symbiose
 						_flaques.Add(MakeWet(tileId, o, r, c, lame, false));
 					}
 				}
+			ClasserMare();
 			QueueRedraw();
 		}
 
@@ -128,6 +144,7 @@ namespace Symbiose
 			RisePx = _view != null ? _view.ReliefRiseAtPlot(tileId, r, c) : 0f,
 			Depth = depth,
 			IsMarais = isMarais,
+			TileId = tileId, R = r, C = c,
 		};
 
 		public override void _Process(double delta)
@@ -157,13 +174,16 @@ namespace Symbiose
 		private void Peindre()
 		{
 			if (WorldView.CurrentZoom < MinZoom) return;
-			if (_flaques.Count == 0 && _marais.Count == 0) return;
+			if (_flaques.Count == 0 && _marais.Count == 0 && _mare.Count == 0) return;
 			// Culling (T4) : cadre de marge COMMUN et stable (world/MargeVue.cs),
 			// + notre marge d'objet ; redessiné au ré-ancrage (pan/zoom), pas par frame.
 			Rect2 vis = MargeVue.CadreCouche(CullMarginPx);
 			// Marais SOUS la flaque (le milieu d'abord, l'eau ensuite).
 			foreach (var w in _marais) DrawWet(w, vis);
+			// Berge (⑤) au rang du voile (c'est du milieu), mare au rang de l'eau.
+			foreach (var w in _berge) DrawBerge(w, vis);
 			foreach (var w in _flaques) DrawWet(w, vis);
+			foreach (var w in _mare) DrawMare(w, vis);
 		}
 
 		// Dessine un losange mouillé au plot, recalé de RisePx vers le haut (surface

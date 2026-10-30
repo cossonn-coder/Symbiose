@@ -28,7 +28,7 @@ bêtes « affamées » à populations stables ; hérisson sur 619/1 188 plots (�
 | ② | `02_croissance_nutrition.md` | re-figé `4c696821…` | **FAIT** 2026-10-30 |
 | ③ | `03_voix_justes.md` | inchangé `4c696821…` | **FAIT** 2026-10-30 |
 | ④ | `04_mare_nord_est.md` | inchangé `4c696821…` | **FAIT** 2026-10-30 |
-| ⑤ | `05_vue_mare_voix.md` | inchangé | à faire |
+| ⑤ | `05_vue_mare_voix.md` | inchangé `4c696821…` | **FAIT** 2026-10-30 |
 
 ## Notes de tronçon
 (chaque tronçon : fait, mesures avant/après, hash golden, écarts au kickoff)
@@ -179,9 +179,61 @@ bêtes « affamées » à populations stables ; hérisson sur 619/1 188 plots (�
   du monde). Les aulnes grandiront et ombreront vers le nord (cultures lignes 0..5 de
   la tuile NE) à long terme — conséquence émergente, à surveiller au F5.
 
+### ⑤ Vue : mare lisible + voix vérifiées — FAIT (2026-10-30, non commité)
+- `visuals/PuddleLayer.Mare.cs` (neuf, partial, 112 LDC) + `PuddleLayer.cs` (133 LDC) :
+  un plot `marais` à `etat` vrai ET en eau (`eau_surface`) = **MARE** → eau opaque
+  `24566b` (cœur `1f4a5c` si 4 voisins d'eau), 2 reflets horizontaux placés par hash
+  entier du plot (pas `string.GetHashCode`, randomisé en .NET), **rive** de vase sur
+  les arêtes sans voisin d'eau (coins MONDE projetés → suit la rotation D35). Plot
+  marais voisin (8-connexité) d'une mare = **BERGE** (terre mouillée + mousse).
+  Aucun champ neuf, aucun changement de pont (blocs `marais` [avec `etat`] et
+  `eau_surface` déjà sérialisés). Même lot → **+0 draw call** (par construction).
+- **Écarts au kickoff** : (a) chemin `tools/simserver/serialize.py` = en fait
+  `data/code/tools/simserver/serialize.py` ; (b) le banc de capture n'a pas d'option
+  pour ALLUMER la vision côté Python (`--capture-vision` n'impose que l'effet écran)
+  → les voix sont relevées par les fonctions mêmes que sert `cmd_parler`
+  (`sim/voix_etres`), script hors dépôt ; (c) la berge-anneau du ④ (lignes 6/10,
+  colonnes 3/7) n'a PAS de `marais_memory` → la vue ne la dessine pas en berge (pas
+  de donnée) : seule la rive l'évoque ; les plots du FOND à sec (marais sans lame)
+  deviennent berge de vase.
+- Captures [seed 42, `full`, été an 1 s25, centre 1725,425] ×1, ×2, ×4, ×8, ×16 :
+  la mare se lit (eau sombre fermée par sa rive, reflets) ; 5/9 plots en eau à cet
+  instant, 4 en vase. Libellule vue sur l'eau (×8). Quasi-noir dans le cadre de la
+  mare : 0,00 % ×1/×2/×4 (avant ⑤ ×4 : 0,00 %) ; ×8 0,09 % = le merle posé au bord,
+  hors eau (couleurs mare vérifiées L OKLab ≥ 0,39, `da_image.quasi_noir` faux).
+- Plantes de mare : aulnes (×2) rendus en arbre ; rossolis = rosette à fleur blanche
+  bien visible à ×16 ; **sphaigne = tapis translucide quasi invisible** (disques
+  vert pâle, info-bulle « Sphagnum · tapis » au survol) → point F5, pas retouché
+  (`PlantRenderer`, hors périmètre ⑤).
+- Voix [seed 42, n=1, s61 printemps / s79 automne an 2] — plantes : faim DITE
+  (≥ `SEUIL_DIRE`) 49 % / 62 %, faim DOMINANTE 27 % / 11 % (dominantes s79 :
+  ravageurs 589, concurrence 120, faim 95 sur 888) ; bêtes présentes > 0,05 : faim
+  dite 0 % (s61, 0 plot) / 0,3 % (53/17 519, s79). 10 phrases relevées :
+  1. Minette (N) « Je suis bien ici. L'eau, la lumière, le sol : tout me va. »
+  2. Trèfle (NO) « Trop de racines autour des miennes. Minette boit ce que je voudrais boire. »
+  3. Trèfle (S) « On se bat sous terre, et Haricot y a le dessus. » / « Je cherche le phosphore sous moi, il n'y en a presque plus. »
+  4. Trèfle (NE) « Mes feuilles sont criblées. J'attends mes alliés. » / « Il me manque le phosphore. Le reste du sol ne sert à rien sans lui. »
+  5. Pâturin (O) « Je cherche l'azote sous moi, il n'y en a presque plus. »
+  6. Trèfle (E) « La lumière ne m'arrive qu'en miettes. J'en voudrais plus. »
+  7. lombric (NO) « Ce coin de jardin me convient. »
+  8. coccinelle (NO) « Il y a de quoi vivre ici. Je reste. »
+  9. moustique (mare NE 7,6) « J'ai senti La libellule. Il faut que je me terre. »
+  10. hérisson (NO) « Je ne trouve pas où me cacher. Le sol est trop nu, trop remué. »
+  ⚠ cloporte (NO 9,4) dit encore « rien à me mettre sous la dent » (compté hors
+  faim D120, phrase de nourriture d'une autre source — à regarder au F5). Majuscule
+  fautive « J'ai senti La libellule » (corpus voix, hors ⑤).
+- Golden **inchangé** `4c696821…`. `dotnet build` vert (0 avertissement). Aucun
+  processus Xvfb/Godot laissé.
+- **F5 Nico** : mare reconnue au nord-est (tuile NE, sud de la tuile) à ×1-×4 ;
+  libellules/moustiques sur l'eau en été ; sphaigne lisible ? ; sous vision (U),
+  les plantes ne crient plus toutes famine ; un coin exploité réclame encore et
+  pousse moins ; rive/reflets à calibrer (couleurs placeholders).
+
+**SPRINT CLOS** (①→⑤ faits, ⑤ non commité au moment de l'écriture).
+
 ## §REPRISE
-Lire `CLAUDE.md` + ce fichier + le kickoff du premier tronçon « à faire » (⑤ après
-commit de ④). Golden courant `4c696821…` (intact attendu ⑤). Mare : fond
+Sprint CLOS : reste le F5 de Nico (liste en note ⑤) puis DETTE/BACKLOG/journal.
+Lire `CLAUDE.md` + ce fichier. Golden courant `4c696821…` (intact attendu ⑤). Mare : fond
 (7..9, 4..6) de la tuile NE, source `eco.sources`, sonde `sonde_mare.py`. ⑤ : la voix bête lit
 `PopulationField.faim` (grille de rendu, pas de version de pont à changer : le pont
 ne sert que les phrases).
