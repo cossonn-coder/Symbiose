@@ -90,7 +90,7 @@ dans la carte : leur nom est déductible du dossier.
 | `sol/` | `conception_decomposition_compost.md`, `conception_epaisseur_sol.md`, `conception_sol_nutriments_npk.md`, `conception_sol_ph.md`, `conception_sol_structure.md`, `etude_sol_vivant.md`, `etude_physicochimie_sol.md` |
 | `lumiere/` | `conception_eclairement.md` *(extrait au ④ — cf. §5.3)*, `conception_maison_ombre.md` |
 | `eau/` | `conception_hydrologie_marecage.md` |
-| `climat/` | `conception_meteo.md`, `conception_meteo_champs.md`, `conception_thermique_microclimat.md`, `conception_vent_evapotranspiration.md` |
+| `climat/` | `conception_calendrier_unique.md`, `conception_meteo.md`, `conception_meteo_champs.md`, `conception_thermique_microclimat.md`, `conception_vent_evapotranspiration.md` |
 | `peripherie/` | `conception_peripherie.md` |
 
 ### `vegetal/` — physiologie et populations végétales
