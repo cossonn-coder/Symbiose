@@ -1,7 +1,7 @@
 # Sprint AUTOMNE VISIBLE (D123 + D118 (A) arbres) — état partagé
 
 **Conception** : `docs/rendu/ambiance/conception_automne_visible.md` (figée le 2026-11-02).
-**Où on en est** : ① à ⑥ clos et commités, golden `ac48b170…`, sprint clos côté code. Reste le F5 de Nico.
+**Où on en est** : ① à ⑥ clos et commités, golden `ac48b170…`, sprint clos, F5 validé par Nico le 2026-11-02 (D123 fermée, retour en D124).
 
 ## Décisions clés (Nico, 2026-11-02)
 

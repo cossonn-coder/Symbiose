@@ -21,3 +21,6 @@ cerisier à vitalité 0,73 après 3 ans [n=1 run, VM] ; bouleau sans tapis en s3
 indexée ; mortalité de `foret_ports` signalée au ④, non reproduite à l'orchestrateur, non tranchée.
 
 Attend le **F5 de Nico** (protocole « une année », `00_etat.md` §F5).
+
+**F5 de Nico, le 2026-11-02** : automne, neige, fonte et tapis validés. D123 fermée. Retour : les feuillus de
+lisière n'ont pas de branches une fois nus → D124, qui reprend aussi les limites ci-dessus.

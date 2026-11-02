@@ -215,3 +215,9 @@ Texte intégral des lignes fermées :
 | Code | Motif de fermeture | Preuve |
 |---|---|---|
 | D122 | F5 Nico 2026-11-02, protocole « une année » : mare sans glace au printemps, pucerons qui ne rasent plus les semis, pas de gel en été, glace et neige en hiver, banc `effondrement` ok. Fermée (golden `bfe6f889…`). Retours : butineurs absents l'an 1 → **D119 (c)** ; automne invisible → **D123**. | `sprints/champs/climat/sprint_calendrier_unique/00_etat.md` |
+
+## Lot N — F5 de Nico sur le sprint AUTOMNE VISIBLE (2026-11-02)
+
+| Code | Motif de fermeture | Preuve |
+|---|---|---|
+| D123 | F5 Nico 2026-11-02 : « l'automne c'est très stylé » ; « la neige qui tombe petit à petit en hiver c'est super et la fonte au printemps trop cool » ; « le parterre de feuilles j'aime bien ». Retour restant et limites versés en **D124**. Golden `ac48b170…`. | `sprints/rendu/ambiance/sprint_automne_visible/00_etat.md` ; `journal/167_2026-11-02_sprint-automne-visible-CLOS.md` ; commits `3fd2b62`→`07218ce` |
