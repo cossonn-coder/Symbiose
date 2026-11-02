@@ -23,7 +23,7 @@ mixins frères (croissance.py / mortalite.py / decompo.py).
 from __future__ import annotations
 from dataclasses import dataclass
 from plants import PLANT_CATALOGUE
-from fields import (_hash_noise, ABSCISSION_MIN, ABSCISSION_MAX,
+from fields import (_hash_noise, ABSCISSION_MIN, ABSCISSION_MAX, CHUTE_SEMAINES,
                     PRECIP_NORM, PLUIE_APPORT)
 from fields.ecofields.thermique import t_min_nuit_at  # gel nocturne localisé (⑥)
 from fields.peripherie import tick_repousse, tick_ouvrages  # ceinture : repousse (④) + ouvrages d'eau (⑤)
@@ -631,8 +631,10 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
 
             # 15b. Abscission d'automne (②C.1 ; DÉSYNC PHÉNOLOGIE ①) — caducs
             # vivants → litière feuille. Fenêtre d'automne complète : chaque plante
-            # largue à SA semaine propre (gène-tempo), pas au rendez-vous global.
-            if saison == "automne" and ABSCISSION_MIN <= week_in_year <= ABSCISSION_MAX:
+            # largue à SA semaine propre (gène-tempo), pas au rendez-vous global, et
+            # sur CHUTE_SEMAINES (AUTOMNE VISIBLE ③), d'où la borne haute élargie.
+            if saison == "automne" and (ABSCISSION_MIN <= week_in_year
+                                        <= ABSCISSION_MAX + CHUTE_SEMAINES - 1):
                 alog = self._abscission(tile, eco, week_in_year)
                 if alog: log += alog
 

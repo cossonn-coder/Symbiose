@@ -10,10 +10,12 @@ Comportement identique à l'ancien engine.py.
 """
 
 from __future__ import annotations
+import math
 from plants import Fruit, organ_sites
-from fields import (T_SECHE, FRAG_RATE, NECROMASS_PER_CM, ABSCISSION_FRAC,
-                    ABSCISSION_BASE, ABSCISSION_JITTER, ABSCISSION_MIN,
-                    ABSCISSION_MAX, FRUIT_MASSE, FRUIT_DMAT, MATURITE_CHUTE)
+from fields import (T_SECHE, FRAG_RATE, ABSCISSION_BASE,
+                    ABSCISSION_JITTER, ABSCISSION_MIN, ABSCISSION_MAX,
+                    CHUTE_SEMAINES, FEUILLE_PAR_PLOT, FRUIT_MASSE, FRUIT_DMAT,
+                    MATURITE_CHUTE)
 from fields.ecofields.constants import BOIS_MORT_PAR_CM3   # D111 ② (sous-paquet propriétaire)
 from fields.ecofields.litiere import BOIS_DIAM_DEFAUT      # grosseur inconnue (⑦bis)
 from constants import PLOT_CM
@@ -48,6 +50,20 @@ def semaine_abscission(plant) -> int:
     g = plant.gene("phenologie_florale")
     w = round(ABSCISSION_BASE - ABSCISSION_JITTER * (g - 1.0))
     return max(ABSCISSION_MIN, min(ABSCISSION_MAX, w))
+
+
+def masse_feuillage(plant, plots_tuile: list) -> float:
+    """Masse de feuilles qu'un caduc rend à SA tuile sur une année (AUTOMNE VISIBLE ③).
+
+    Elle suit la surface de la couronne : `FEUILLE_PAR_PLOT` par plot-équivalent couvert.
+    `plots_tuile` = les plots de `foliar_plots` situés sur la tuile. La part de couronne
+    qui déborde tombe sur le chemin ou chez le voisin, que le moteur ne simule pas : elle
+    n'est ni déposée ailleurs, ni reportée sur les plots restants (sinon les bords de
+    tuile recevraient le double). Une petite couronne compte sa vraie surface, pas un
+    plot entier : un semis ne fait pas un tapis."""
+    rayon = plant.plant_class.canopy_radius_at(plant)
+    surface_plots = math.pi * rayon * rayon / (PLOT_CM * PLOT_CM)
+    return FEUILLE_PAR_PLOT * surface_plots * len(plots_tuile) / len(plant.foliar_plots)
 
 
 def frac_nouaison(pollen_recu: float) -> float:
@@ -125,23 +141,29 @@ class DecompoMixin:
         return log
 
     def _abscission(self, tile, eco, week_in_year):
-        """Abscission d'automne (décompo·compost ②, phase C.1 ; DÉSYNC PHÉNOLOGIE ①) :
-        les caducs VIVANTS (deciduous, PerennialWoody) larguent leur feuillage →
-        litière `feuille` (∝ nécromasse-hauteur). Événement léger, borné, sans RNG.
-        Appelé sur TOUTE la fenêtre d'automne [ABSCISSION_MIN, ABSCISSION_MAX], mais
-        chaque plante ne largue qu'à SA semaine propre (`semaine_abscission`, dérivée
-        du gène-tempo) → largages DÉSYNCHRONISÉS entre individus. Dépôt UNIQUE annuel
-        (∝ ABSCISSION_FRAC). Persistants : rien."""
+        """Abscission d'automne (décompo·compost ②, phase C.1 ; DÉSYNC PHÉNOLOGIE ① ;
+        AUTOMNE VISIBLE ③) : les caducs VIVANTS (deciduous, PerennialWoody) larguent leur
+        feuillage → litière `feuille`, sous TOUTE leur couronne (plots de la tuile) et sur
+        CHUTE_SEMAINES à partir de leur semaine propre (`semaine_abscission`, dérivée du
+        gène-tempo). Sans RNG, persistants : rien.
+
+        La ligne 🍂 ne sort qu'à la PREMIÈRE semaine : le ledger des voix (`sim/evenements`)
+        en fait UN événement carnet par ligne, et un arbre perd ses feuilles une fois l'an."""
         log = []
         for plant in tile.plants:
             if not plant.is_alive or not plant.plant_class.deciduous:
                 continue
-            if week_in_year != semaine_abscission(plant):
+            depuis = week_in_year - semaine_abscission(plant)
+            if not 0 <= depuis < CHUTE_SEMAINES:
                 continue
-            r, c = plant.position
-            masse = plant.current_height * NECROMASS_PER_CM * ABSCISSION_FRAC
-            if masse > 0.0:
-                eco.deposer_litiere(r, c, "feuille", masse)
+            plots = [rc for rc in plant.foliar_plots if tile.is_valid_plot(*rc)]
+            masse = masse_feuillage(plant, plots)
+            if masse <= 0.0:
+                continue
+            part = masse / (CHUTE_SEMAINES * len(plots))
+            for r, c in plots:
+                eco.deposer_litiere(r, c, "feuille", part)
+            if depuis == 0:
                 log.append(f"    🍂 Abscission {plant.name}@{plant.position} "
                            f"→ feuille +{masse:.3f}")
         return log

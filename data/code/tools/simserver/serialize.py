@@ -44,6 +44,7 @@ from fields.ecofields.constants import (SEUIL_FLAQUE, COUVERTURE_RENDU_SEUIL,
 # dans l'engine) : le pont la RÉUTILISE — pas de duplication de formule — pour
 # tracer la rampe `automne` par-plante vers son largage. Fonction PURE.
 from sim.engine.decompo import semaine_abscission
+from sim.engine.transpiration import feuillage_visible
 # Sémiologie foliaire (D33) : détecteurs PURS des stresseurs chroniques, miroirs
 # fidèles des seuils des mécaniques qui blessent. Remplace le bool `chlorose` du ⑨
 # par la liste `leaf_symptoms`. Recalcul pur côté serveur (moteur = source de
@@ -287,6 +288,10 @@ class SerializeMixin:
                     base["automne"] = round(max(0.0, min(1.0, automne)), 3)
                 else:
                     base["automne"] = 0.0
+                # Part de la couronne encore en place (AUTOMNE VISIBLE ③, 0.6.3) : la vue
+                # éclaircit la couronne au rythme du largage. Lecture pure → golden neutre.
+                base["feuillage"] = round(
+                    feuillage_visible(p, saison, week_in_year), 3)
                 # Fruits traçables (③, D19) : VRAI état moteur (≠ proxy `organ`).
                 # Index implicite = position dans la liste (clé du geste `manger`
                 # ciblé). `segment` = ancrage structurel pour que la vue place le
@@ -465,11 +470,15 @@ class SerializeMixin:
                     # MÊME sous des feuilles dominantes → la vue (⑧) dessine la branche
                     # et son stade de décompo. Fusion par tissu ⇒ ≤ 1 parcelle `bois`.
                     bois = next((p for p in surface if p.tissu == "bois"), None)
+                    # Masse de feuilles (AUTOMNE VISIBLE ③, 0.6.3) MÊME sous un autre
+                    # tissu dominant : le tapis de ⑤ ne dépend plus du tissu dominant.
+                    feuille = next((p for p in surface if p.tissu == "feuille"), None)
                     plots.append([r, c, dominant.tissu,
                                   round(total, 4), round(age_moy, 3),
                                   round(bois.masse, 4) if bois else 0.0,
                                   round(bois.age_sem, 3) if bois else 0.0,
-                                  round(bois.diam_cm, 2) if bois else 0.0])
+                                  round(bois.diam_cm, 2) if bois else 0.0,
+                                  round(feuille.masse, 4) if feuille else 0.0])
             litiere[tile.tile_id] = plots
             # Phéromone d'alarme apienne (⑦, §J, 0.4.1) : liste CREUSE des plots en
             # alarme `[r, c, intensite]` (foyers > 0 seulement). Godot lit l'intensité

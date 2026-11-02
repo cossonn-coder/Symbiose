@@ -631,6 +631,15 @@ ABSCISSION_FRAC   = 0.15       # part de la nécromasse-hauteur larguée à l'ab
 ABSCISSION_BASE   = 34         # semaine-pivot du largage (≈ début novembre)
 ABSCISSION_JITTER = 15.0       # ±σ(0.10) sur le gène ⇒ ±1.5 sem de décalage
 ABSCISSION_MIN, ABSCISSION_MAX = 30, 36   # mi-oct. → fin nov. (D122 ③)
+# AUTOMNE VISIBLE ③ : le largage ne tombe plus d'un coup sur le plot du tronc. Il
+# s'étale sur CHUTE_SEMAINES à partir de `semaine_abscission` (dernier largage possible :
+# ABSCISSION_MAX + CHUTE_SEMAINES − 1 = s39, dernière semaine d'automne) et se répartit
+# sous la couronne. La masse suit la SURFACE de la couronne (FEUILLE_PAR_PLOT = masse
+# annuelle d'un plot entièrement couvert) : c'est ce qui garde une masse par plot à peu
+# près stable d'un arbre à l'autre, là où l'ancienne formule (hauteur × ABSCISSION_FRAC)
+# diluait une couronne large. ABSCISSION_FRAC reste exporté, sans lecteur dans ce chemin.
+CHUTE_SEMAINES    = 4
+FEUILLE_PAR_PLOT  = 0.30       # calibré par mesure (mesures/apres_feuilles.md)
 # Sprint DÉSYNC PHÉNOLOGIE ② (pont) : rampe de COLORATION automnale par-plante,
 # hint PUR RENDU exporté par le snapshot (serialize.py). `automne ∈ [0,1]` monte
 # linéairement sur les AUTOMNE_RAMP semaines qui PRÉCÈDENT la semaine d'abscission

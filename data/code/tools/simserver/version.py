@@ -805,7 +805,14 @@ from __future__ import annotations
 #       gel, fond au dégel). Un binaire 0.6.1 n'émet que 4 champs → la vue prend lame =
 #       ABSENTE (repli : rendu d'avant) et glace = 0. Bloc `eau_surface` inchangé.
 #       `glace` n'a aucun effet en retour → golden INTACT.
-ENGINE_VERSION = "0.6.2"
+# 0.6.3 (AUTOMNE VISIBLE ③, D123) : ajouts rétro-compatibles. Chaque entrée du bloc
+#       `litiere` gagne un 9ᵉ champ = masse de la parcelle `feuille` du plot, MÊME si un
+#       autre tissu domine (0.0 sans feuilles ; les plots vides restent omis). Chaque
+#       plante vivante gagne `feuillage` ∈ [0,1] : part de la couronne encore en place
+#       (1 avant `semaine_abscission`, baisse linéaire sur CHUTE_SEMAINES, 0 jusqu'au
+#       débourrement ; persistants : 1). Le moteur change, lui : le largage s'étale sur
+#       la couronne et 4 semaines → golden re-figé.
+ENGINE_VERSION = "0.6.3"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

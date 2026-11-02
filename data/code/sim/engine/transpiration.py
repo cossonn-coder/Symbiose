@@ -20,6 +20,7 @@ la saison et la météo du tick lui sont passées par la boucle.
 
 from __future__ import annotations
 
+from fields import CHUTE_SEMAINES
 from .decompo import semaine_abscission
 
 # --- Coefficient de transpiration par TYPE DE FEUILLAGE (constante d'espèce) ---
@@ -76,6 +77,25 @@ def feuillage_present(plant, saison: str, week_in_year: int) -> float:
             and week_in_year >= semaine_abscission(plant):
         return 0.0
     return 1.0
+
+
+def feuillage_visible(plant, saison: str, week_in_year: int) -> float:
+    """Part de la couronne encore en place à montrer ∈ [0,1], hint de pont PUR (AUTOMNE
+    VISIBLE ③). Persistant ou non caduc : 1. Caduc : 1 avant sa semaine d'abscission, baisse
+    linéaire au rythme du largage, 0 jusqu'au débourrement (rampe de `feuillage_present`).
+    `week_in_year` = la semaine que le snapshot s'apprête à simuler : à `semaine_abscission`
+    rien n'est encore tombé (1), une semaine plus tard le premier quart est au sol.
+
+    Distinct de `feuillage_present`, qui tombe à 0 d'un coup pour l'eau, et de
+    `foliage_density_at` (lumière), réglée sur l'entrée en hiver : la couronne peut donc
+    paraître dégarnie alors que son ombre moteur reste pleine (limite assumée, conception
+    §3.3)."""
+    if not plant.plant_class.deciduous:
+        return 1.0
+    if saison == "automne":
+        reste = 1.0 - (week_in_year - semaine_abscission(plant)) / CHUTE_SEMAINES
+        return max(0.0, min(1.0, reste))
+    return feuillage_present(plant, saison, week_in_year)
 
 
 def facteur_transpiration(plant, saison: str, week_in_year: int,

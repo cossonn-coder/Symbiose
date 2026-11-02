@@ -58,8 +58,10 @@ def test_litiere():
     check("la litière du plot du pommier apparaît (1 plot non vide)",
           len(lit) == 1, lit)
     entry = lit[0] if lit else None
-    check("format compact [r, c, tissu, masse, age_sem, bois_masse, bois_age, bois_diam] (0.5.55)",
-          entry is not None and len(entry) == 8, entry)
+    check("format compact [r, c, tissu, masse, age_sem, bois_masse, bois_age, bois_diam, feuille] (0.6.3)",
+          entry is not None and len(entry) == 9, entry)
+    check("masse de feuilles exposée (0.6.3 : 9ᵉ champ, ici tissu dominant)",
+          entry is not None and entry[8] > 0.0, entry)
     check("bois_diam ≥ 0 (⑦bis : grosseur du bois mort exposée)",
           entry is not None and entry[7] >= 0.0, entry)
     check("bois_masse/bois_age ≥ 0 (D111 ② : bois mort exposé sous les feuilles)",

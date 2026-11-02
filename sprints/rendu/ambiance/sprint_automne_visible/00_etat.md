@@ -1,7 +1,7 @@
 # Sprint AUTOMNE VISIBLE (D123 + D118 (A) arbres) — état partagé
 
 **Conception** : `docs/rendu/ambiance/conception_automne_visible.md` (figée le 2026-11-02).
-**Où on en est** : ① et ② faits (② non commité au moment de cette note), ③ à lancer.
+**Où on en est** : ①, ② et ③ faits (③ non commité au moment de cette note), ④ à lancer.
 
 ## Décisions clés (Nico, 2026-11-02)
 
@@ -16,7 +16,7 @@
 |---|---|---|---|
 | ① | `01_fiches_banc.md` — fiches des 11 arbres + banc `bancs/mesure_arbres.py` + `mesures/avant.md` | intact | **fait** |
 | ② | `02_port_arbres.md` — port par fiche, hauteur qui ne s'effondre plus, arbres âgés et caducs de démo | **re-figé** `82d522c8…` | **fait** |
-| ③ | `03_feuilles_moteur.md` — largage étalé sous la couronne + pont (masse de feuilles, `feuillage`) | **re-figé annoncé** | à faire |
+| ③ | `03_feuilles_moteur.md` — largage étalé sous la couronne + pont (masse de feuilles, `feuillage`) | **re-figé** `ac48b170…` | **fait** |
 | ④ | `04_vue_arbres.md` — recettes d'arbres, couleur d'automne par espèce, couronne qui s'éclaircit | intact | à faire |
 | ⑤ | `05_vue_tapis_chute.md` — tapis lisible dès ×1 + animation de chute | intact | à faire |
 | ⑥ | `06_vue_lisiere.md` — lisière 4 saisons + signes macro + protocole F5 | intact | à faire |
@@ -69,12 +69,27 @@ mesure], et un plafond ôté fait exploser le temps de calcul (arrêté après 3
 - **Tests adaptés** : `base.py` (91 plantes), `test_croissance` (couronne du sapin), `test_bois_mort` (plafond 8, un
   plafond à 2 ne laisse plus tomber de bois puisque la flèche est protégée).
 
+## Bilan ③ (chiffres et limites : `mesures/apres_feuilles.md`)
+
+- **Largage** : réparti sur `foliar_plots` de la tuile, étalé sur `CHUTE_SEMAINES` = 4 (dernier dépôt s39, fenêtre de
+  `boucle.py` élargie). Masse = `FEUILLE_PAR_PLOT` (0,30) × surface de couronne. Pont **0.6.3** : 9ᵉ champ de `litiere`
+  (masse `feuille`) et `feuillage` par plante vivante, lue par ④ et ⑤. Le pont delta ne porte que les segments ; `_snapshot` n'a pas de cache de
+  plante : rien à adapter.
+- **Golden** : `82d522c8…` → `ac48b170…`. Raison : la litière de feuilles se redistribue et augmente sous les caducs.
+- **Décisions hors kickoff** : la ligne 🍂 ne sort qu'à la 1ʳᵉ semaine, sinon `sim/evenements` en ferait 4 événements carnet
+  par arbre ; la part de couronne hors tuile n'est pas déposée, pour ne pas doubler la masse sur les bords.
+- **Limites** : critère s36 partiel, car `semaine_abscission` n'a pas de composante par espèce (bouleau 0/70 plots en s36,
+  6 arbres sur 6 couverts en s37 [n=1 run, VM]) ; `foliage_density_at` inchangée (§3.3). Pour ⑤ : `LeafLitterLayer.MasseRef` = 2,5
+  est loin de la masse par plot réelle (médiane 0,145 [s37, n=1 run, VM]), à recaler.
+- **Vigilance** : `tools/simserver/serialize.py` à 398 LDC, tout près de 400 → `/refactor` en fin de sprint.
+- **Tests** : `tests/test_feuilles_automne.py` (14/14), `tests/simserver` (310/310), version 0.6.3 consignée dans leurs checks.
+
 ## Ce qui reste
 
-Tronçons ③ à ⑥. Garde-fous : ne JAMAIS lancer `tests/test_epaisseur_500ans.py` ; mesures ≤ 3 ans de jeu.
+Tronçons ④ à ⑥. Garde-fous : ne JAMAIS lancer `tests/test_epaisseur_500ans.py` ; mesures ≤ 3 ans de jeu.
 `test_succession` et `test_edaphique` sont rouges AVANT ce sprint (vérifié le 2026-10-30).
 
 ## §REPRISE
 
 Lire `CLAUDE.md` + ce fichier + le kickoff du premier tronçon « à faire ».
-Lancer : `/sprint-auto sprint_automne_visible` (reprend au ③). Rejouer le banc : `python3 -m bancs.mesure_arbres`.
+Lancer : `/sprint-auto sprint_automne_visible` (reprend au ④). Rejouer les bancs : `python3 -m bancs.mesure_arbres`, `python3 -m bancs.mesure_feuilles 3`.
