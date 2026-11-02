@@ -234,6 +234,18 @@ def _children(segs: list) -> dict:
     return ch
 
 
+def chemin_fleche(segs: list) -> set:
+    """Indices du chemin collet → point le plus haut (AUTOMNE VISIBLE ②). Tant qu'il
+    reste entier, l'arbre garde sa hauteur : ce que protègent le plafond de segments
+    et la mort de branches."""
+    i = max(range(len(segs)), key=lambda j: (_tip(segs[j])[2], -j))
+    chemin = set()
+    while i is not None:
+        chemin.add(i)
+        i = segs[i].parent
+    return chemin
+
+
 def _subtree(root: int, ch: dict) -> list:
     out, stack = [], [root]
     while stack:

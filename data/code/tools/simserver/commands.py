@@ -28,6 +28,7 @@ from fields.grids import GridField
 from fields.peripherie import generer_ceinture
 from sim.bois_initial import poser_bois_initial   # D111 ②bis : bois mort dès la semaine 0
 from sim.precroissance import pre_croitre         # D111 ②ter : structure des pré-vieillis
+from plants.perennials import PerennialWoody      # AUTOMNE VISIBLE ② : les arbres à pré-vieillir
 # Registre des bancs d'essai (sprint dédié) : mondes paramétrés montés par
 # `init config="<banc>"` pour forcer/observer un signe. Import au niveau module
 # (paquet `bancs/` au sommet, peut tout importer) ; jamais monté pour smoke/full.
@@ -49,6 +50,10 @@ from . import perf   # capture des pires ticks + dump diagnostique (demande Nico
 # `ble`/`chanvre` = graines à PAILLE au départ (moyens d'agir ③, canal 2, cycle
 # INTERNE cultivé) : les cultiver puis `recolter_paille` alimente le stock de mulch
 # `paille` — une source de ravitaillement amorçable tôt, sans passer par l'Atelier.
+# Âge des arbres fondateurs de la démo (`full`/`propre`), ans : assez pour une couronne
+# (conception AUTOMNE VISIBLE §3.1, cible 10-12 ans).
+AGE_ARBRES_DEMO = 11.0
+
 BANQUE_DEPART = ("tournesol", "tomate", "basilic", "ble", "chanvre")
 
 # Champs PARESSEUX servis TOUJOURS par `cmd_fields` (D112 ②, D99), avec leur valeur
@@ -94,17 +99,18 @@ def _amorcer_encyclo(game_state: dict, player: str, mode: str) -> None:
         M.decouvrir(game_state, player, cle)
 
 
-def _pre_vieillir_fruitiers(tiles: list, seed: int) -> None:
-    """Démo/F5 (`full`/`propre`) : les fruitiers du verger démarrent à leur âge de
-    maturité (`maturity_years`) pour NOUER dès le 1er été — et, depuis D111 ②ter
-    (ferme D105), avec la STRUCTURE de cet âge (morphogénèse déroulée hors tick).
+def _pre_vieillir_ligneux(tiles: list, seed: int) -> None:
+    """Démo/F5 (`full`/`propre`) : tous les arbres fondateurs démarrent à
+    AGE_ARBRES_DEMO ans (AUTOMNE VISIBLE ②), donc avec une couronne : le pommier
+    NOUE dès le 1er été (âge ≥ `maturity_years`) et, depuis D111 ②ter (ferme D105),
+    chacun a la STRUCTURE de cet âge (morphogénèse déroulée hors tick). Un noyer ou
+    un chêne resterait stérile à cet âge, mais aucun n'est semé à l'init.
     Déterministe ; le monde garde ses plantes (on vieillit, on n'ajoute pas)."""
     for _t in tiles:
         for _p in _t.plants:
-            if getattr(_p.plant_class, "fruitier", False):
-                ans = float(_p.plant_class.maturity_years)
-                pre_croitre(_p, seed, ans)
-                _p.age_years = ans
+            if issubclass(_p.plant_class, PerennialWoody):
+                pre_croitre(_p, seed, AGE_ARBRES_DEMO)
+                _p.age_years = AGE_ARBRES_DEMO
 
 
 def _banque_initiale(config: str) -> PlayerSeedBank:
@@ -141,23 +147,23 @@ class CommandsMixin:
             # SECTORS plantées + maison) — import, pas de copie, même principe.
             from main import build_world_full
             tiles, ecos, _aux_tiles, house = build_world_full()
-            # Démo/F5 (vue·rattrapage 02) : pré-vieillir le(s) fruitier(s) du
-            # verger à leur âge de maturité (`maturity_years`) pour qu'ils NOUENT
-            # des fruits dès le 1er début d'été (semaine 14) au lieu de l'an 6 —
+            # Démo/F5 (vue·rattrapage 02, étendu aux arbres au sprint AUTOMNE
+            # VISIBLE ②) : pré-vieillir les arbres à AGE_ARBRES_DEMO pour qu'ils
+            # aient une couronne et que le pommier NOUE dès le 1er début d'été
+            # (semaine 14) au lieu de l'an 6 —
             # on teste fruits + `manger` sans dérouler 5 ans en Turbo. PUR réglage
             # d'init côté serveur, config "full" SEULEMENT : la démo 500 ans de
             # main.py et le golden smoke (config "smoke") ne le voient jamais.
             # `age_years` n'altère que la courbe d'âge et la grille de nouaison ;
-            # déterministe (constante), monde toujours 53 plantes (on vieillit, on
-            # n'ajoute pas).
+            # déterministe (constante), on vieillit sans ajouter de plante.
             # D111 ②ter (ferme D105) : on PRÉ-CROÎT aussi la structure sur ces
             # années (`sim/precroissance.py`, hors tick) → un arbre de son âge, plus
-            # une pousse de 22 cm. No-op pour les fruitiers non procéduraux.
-            _pre_vieillir_fruitiers(tiles, seed)
+            # une pousse de 22 cm.
+            _pre_vieillir_ligneux(tiles, seed)
         elif config == "propre":
             # Banc « monde propre » (sprint équilibre invasion ①, D69) : MÊME monde
             # que "full" (mêmes 8 tuiles + maison + cultivées + pré-vieillissement
-            # des fruitiers), MAIS sans pression férale — pour observer les cultivées
+            # des arbres), MAIS sans pression férale — pour observer les cultivées
             # SEULES (F5) et isoler la perf à N maîtrisé (mesure onset/plateau ②).
             # Deux coupures, toutes deux HORS TICK (config d'init) :
             #   1. seedbank férale VIDÉE (densités d'archétypes + pool espèce à 0) →
@@ -168,7 +174,7 @@ class CommandsMixin:
             # "full"/"smoke"/bancs n'ont pas le flag (absent → False) → intacts.
             from main import build_world_full
             tiles, ecos, _aux_tiles, house = build_world_full()
-            _pre_vieillir_fruitiers(tiles, seed)
+            _pre_vieillir_ligneux(tiles, seed)
             for _eco in ecos.values():
                 _vider_seedbank_ferale(_eco.seed_bank)
         elif config in BANCS:

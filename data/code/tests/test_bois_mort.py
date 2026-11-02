@@ -87,12 +87,12 @@ check("liste vide : aucun dépôt", deposer_bois_tombe(p, [], eco2) == 0.0)
 
 # --- D. bout en bout : plafond de segments forcé sur un pommier ---
 class PommierBride(AppleTree):
-    max_segments = 2
+    max_segments = 8      # AUTOMNE VISIBLE ② : à 2, la flèche protégée occupe tout le plafond
 
 arbre = PlantInstance(plant_class=PommierBride, position=(2, 2))
 eco3 = init_eco("nul", 4, 4)
 total = 0.0
-for w in range(1, 157):
+for w in range(1, 417):   # 8 ans : le plafond n'est atteint qu'avec les premiers latéraux
     total += deposer_bois_tombe(arbre, grow_plant(arbre, 1, w), eco3)
 somme = sum(_bois(eco3, r, c) for r in range(4) for c in range(4))
 check("pommier bridé : du bois tombe au sol", total > 0.0, f"{total:.4f}")

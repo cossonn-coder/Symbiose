@@ -55,13 +55,17 @@ class PerennialWoody(PlantBase):
     # arbre NON migré garde son age_curve interpolée ; ces défauts ne sont alors lus par
     # personne (structure de segments inerte). Golden NEUTRE (seul AppleTree est ligneux
     # dans le smoke, et il surcharge tous ces champs).
-    emit_length_cm        = 50.0    # flèche en peu de segments (comme le pommier)
+    emit_length_cm        = 50.0    # flèche en peu de segments
     max_segments          = 70
     wood_persistence      = 4000    # ~la vie de l'arbre (sinon charpentières meurent en 1 an)
     branch_angle          = 70.0    # insertion assez horizontale → étalement
     foliage_halfwidth     = 50.0    # SURVIE hydrique (racines multi-plots) — départ, à ajuster F5
     port_archetype        = "etale"
     apical_dominance_base = 2.0
+    # PORT par espèce (AUTOMNE VISIBLE ②) : cibles = docs/vegetal/croissance/fiches_arbres.md,
+    # grille de réglage et chiffres = mesures/apres_port.md du sprint. `port_archetype` n'est
+    # lu par aucun code : le port naît de dominance × release_scale × angle × vitesse. Vitesse
+    # ≈ H(10 ans) / 422 (cm/tick : 10 ans valent ~422 ticks pleins, hiver à ×0,25).
 
     # Fenêtre thermique de levée (sprint germination thermique ③) : défaut LIGNEUX
     # TEMPÉRÉ — un arbre de climat tempéré (pommier, cerisier, noyer, chêne) lève sur
@@ -167,11 +171,9 @@ class Fig(PerennialWoody):
     # --- Croissance procédurale (D91 ②) — buissonnant, BAS & LARGE ---------------
     # Cas atypique : le figuier ne fait PAS de flèche dominante, il DÉBOURRE tôt et
     # ramifie bas → port `buissonnant` étalé. On l'obtient par une dominance apicale
-    # MODÉRÉE (< 2.0 des autres arbres) : l'apex ne bride pas ses latéraux, la
-    # couronne s'ouvre dès le jeune âge. auxin_release_scale reste au défaut (400) :
-    # inutile de tenir un leader qu'on ne veut pas. Calibré (sonde §C, 520 ticks)
-    # pour l'allure age_curve à l'an 10 (~421 cm haut / ~256 couronne ; cible 400/250).
-    # Bas : gabarit plafonné à 500 cm (age_curve figuier plafonne à 20 ans). Large :
+    # MODÉRÉE : l'apex ne bride pas ses latéraux, la couronne s'ouvre dès le jeune âge.
+    # auxin_release_scale au défaut (400) : inutile de tenir un leader qu'on ne veut pas.
+    # Fiche : 400/250 à l'an 10. Bas : gabarit plafonné à 550 cm. Large :
     # foliage_halfwidth généreux (houppier dense de figuier + survie hydrique).
     # max_segments RELEVÉ à 90 : un buissonnant ramifie légitimement plus qu'une flèche
     # decurrent ; au défaut 70 le cap AMPUTAIT la charpente (couronne non monotone). 90
@@ -179,13 +181,13 @@ class Fig(PerennialWoody):
     # Segment(parent=None) — le multi-tronc est une OPTION F5 différée. HORS golden.
     procedural_growth     = True
     port_archetype        = "buissonnant"
-    apical_dominance_base = 1.9       # MODÉRÉ (< 2.0) : débourre tôt → ramifie bas
-    growth_speed          = 1.0       # bas (plafond age_curve ~500 cm)
-    auxin_release_scale   = 450.0     # court : pas de leader séculaire à tenir
-    max_height_cm         = 500.0     # plafond = dernier point age_curve (20 ans)
-    max_extent_cm         = 300.0
+    apical_dominance_base = 1.4       # MODÉRÉ : débourre tôt → ramifie bas
+    growth_speed          = 0.95      # bas
+    auxin_release_scale   = 400.0     # court : pas de leader séculaire à tenir
+    max_height_cm         = 550.0
+    max_extent_cm         = 400.0
     max_segments          = 90        # buissonnant ramifié → cap relevé (borné, cf. ci-dessus)
-    foliage_halfwidth     = 95.0      # houppier large de figuier + survie hydrique
+    foliage_halfwidth     = 90.0      # houppier large de figuier + survie hydrique
 
 
 class AppleTree(PerennialWoody):
@@ -214,16 +216,16 @@ class AppleTree(PerennialWoody):
     # 520 ticks) pour approcher ~350/~200 à l'an 10, montée monotone et bornée :
     #   • growth_speed=0.83 : l'apex monte ~0.83 cm/tick d'été → ~351 cm à l'an 10
     #     (et non vers l'an 5 comme à 1.5) sans atteindre le plafond max_height_cm ;
-    #   • emit_length_cm=50 : une flèche de 350 cm en ~7 segments → dominance facile
-    #     à tenir (≠ 44 segments à 8 cm, physiquement hors plafond) ;
-    #   • max_segments=70 : flèche + charpentières dans le plafond ; à l'an 10 ~55
+    #   • emit_length_cm=40 : une flèche de 350 cm en ~9 segments, tronc court
+    #     (AUTOMNE VISIBLE ② : 50 → 40, les premières charpentières partent plus bas) ;
+    #   • max_segments=70 : flèche + charpentières dans le plafond ; à l'an 10 ~54
     #     segments → marge confortable (le filet dur n'ampute jamais la flèche) ;
     #   • wood_persistence=4000 sem. (~la vie de l'arbre) : sans ça les charpentières
     #     d'un arbre sans apex actif mourraient en ~1 an → couronne effondrée ;
-    #   • apical_dominance_base=2.0 : flèche tenue ~7 segments puis relâchée avec l'âge
-    #     (AUXIN_RELEASE_SCALE) → l'étalement `etale` (couronne large) ÉMERGE vers l'an 7 ;
+    #   • apical_dominance_base=1.2, auxin_release_scale=500 (AUTOMNE VISIBLE ②, ex 2.0
+    #     et 400) : des latéraux dès l'an 5 au lieu de l'an 7, le bâton devient un arbre ;
     #   • branch_angle=70° : insertion latérale assez horizontale → étalement marqué ;
-    #   • foliage_halfwidth=50 : couronne isolée ~197 cm à l'an 10 (cible 200, -1,5 %).
+    #   • foliage_halfwidth=70 (ex 50) : couronne isolée ~200 cm à l'an 10 (fiche).
     #     CRITIQUE pour la SURVIE : root_r = PROC_ROOT_RATIO·canopy_r (k=1.0) et la
     #     jeune flèche n'a quasi pas de latéraux avant l'an 7 → à 30 la couronne ET
     #     les racines tiennent dans 1 plot ; tout le prélèvement d'eau (_apply_uptake,
@@ -235,15 +237,14 @@ class AppleTree(PerennialWoody):
     procedural_growth     = True
     port_archetype        = "etale"   # decurrent : dominance relâchée avec l'âge → couronne large
     growth_speed          = 0.83
-    apical_dominance_base = 2.0
+    apical_dominance_base = 1.2
+    auxin_release_scale   = 500.0
     branch_angle          = 70.0
     max_height_cm         = 700.0     # plafond (point 50 ans) — non atteint à l'an 10
     max_extent_cm         = 350.0     # plafond d'extension (point 50 ans) — non atteint à l'an 10
-    emit_length_cm        = 50.0
-    max_segments          = 70
-    wood_persistence      = 4000
+    emit_length_cm        = 40.0
     girth_max_cm          = 18.0      # tronc mûr ~18 cm (pipe model, sprint lisibilité ligneuse — SEULE espèce qui l'exerce aujourd'hui, procedural_growth=True) ; placeholder → F5
-    foliage_halfwidth     = 50.0      # couronne non nulle + racines viables (cf. ci-dessus)
+    foliage_halfwidth     = 70.0      # couronne non nulle + racines viables (cf. ci-dessus)
     organ_site            = "lateral" # fructification latérale (lu au tronçon 5)
     fruitier              = True      # porte des fruits traçables (③ ; 1re fructif. à maturity_years=5)
     oidium_susceptibility = 0.3       # second porteur d'oïdium (humectation ④) — tavelure ET oïdium
@@ -277,20 +278,19 @@ class CherryTree(PerennialWoody):
     girth_max_cm = 15.0        # tronc mûr ~15 cm (pipe model, procédural)
     age_curve = [(0, 40, 25), (5, 250, 150), (10, 500, 280),
                  (20, 700, 380), (50, 900, 450), (100, 1000, 500)]
-    # --- Croissance procédurale (D91 ①) — feuillu étalé, patron pommier ---
-    # Calibré (sonde §C, 520 ticks) pour reproduire l'allure age_curve à l'an 10
-    # (~504 cm haut / ~276 couronne ; cible 500/280). Défauts d'arbre hérités de
-    # PerennialWoody ; on surcharge gabarit + vitesse + release_scale + couronne.
-    # auxin_release_scale=600 : au défaut 400 la flèche s'étale trop tôt et sature le
-    # cap segments (couronne effondrée, non monotone) ; à 600 le leader tient jusqu'à
-    # ~500 cm puis débourre → étalement `etale` propre. foliage_halfwidth=140 porte la
-    # couronne à ~276 ET garantit des racines multi-plots (survie hydrique). HORS golden.
+    # --- Croissance procédurale (AUTOMNE VISIBLE ②) — ovoïde étagé -----------------
+    # Fiche : 500/250 à l'an 10. Angle 50° (branches montantes, ≠ pommier étalé) ; le
+    # filet de `_elaguer` ne coupant plus la flèche, le plafond n'effondre plus la
+    # couronne, le release_scale peut redescendre pour brancher dès l'an 4-5. HORS golden.
     procedural_growth   = True
-    growth_speed        = 1.20
-    max_height_cm       = 1000.0    # plafond = dernier point age_curve (100 ans) — non atteint à 10 ans
+    port_archetype      = "ovoide_etage"
+    growth_speed        = 1.18
+    apical_dominance_base = 1.2
+    auxin_release_scale = 400.0
+    branch_angle        = 50.0
+    max_height_cm       = 1000.0
     max_extent_cm       = 500.0
-    auxin_release_scale = 600.0     # leader tenu jusqu'à ~500 cm avant de s'étaler
-    foliage_halfwidth   = 140.0     # couronne ~276 + survie hydrique (racines multi-plots)
+    foliage_halfwidth   = 60.0      # couronne ~250 ; les latéraux portent les racines
 
 
 class WalnutTree(PerennialWoody):
@@ -333,17 +333,19 @@ class WalnutTree(PerennialWoody):
     girth_max_cm = 30.0        # tronc mûr ~30 cm (pipe model, procédural)
     age_curve = [(0, 40, 25), (5, 300, 200), (10, 600, 350),
                  (20, 1000, 550), (50, 1500, 750), (100, 2500, 1000)]
-    # --- Croissance procédurale (D91 ①) — grand feuillu ouvert, patron pommier ---
-    # Calibré (sonde §C) pour ~620 cm haut / ~352 couronne à l'an 10 (cible 600/350).
-    # Noyer = essence de longue vie (200 ans) → release_scale un peu au-dessus du
-    # cerisier (leader dressé jusqu'à ~600 cm). foliage_halfwidth=160 pour sa large
-    # couronne ouverte + racines multi-plots. HORS golden.
+    # --- Croissance procédurale (AUTOMNE VISIBLE ②) — tête ronde et large ----------
+    # Fiche : 600/350 à l'an 10. Gabarit tenu à l'échelle du jardin (12 m × 5,5 m de
+    # rayon, ex 25 m × 10 m, l'age_curve n'est plus lue). Relâchement court + angle 70° +
+    # entre-nœuds longs (70 cm) : peu de grosses branches, ouvertes tôt. HORS golden.
     procedural_growth   = True
-    growth_speed        = 1.50
-    max_height_cm       = 2500.0    # plafond = dernier point age_curve (100 ans)
-    max_extent_cm       = 1000.0
-    auxin_release_scale = 650.0     # longévif → flèche tenue jusqu'à ~600 cm
-    foliage_halfwidth   = 160.0     # couronne ouverte ~352 + survie hydrique
+    port_archetype      = "arrondi_large"
+    growth_speed        = 1.42
+    apical_dominance_base = 2.8
+    auxin_release_scale = 300.0
+    emit_length_cm      = 70.0
+    max_height_cm       = 1200.0
+    max_extent_cm       = 550.0
+    foliage_halfwidth   = 55.0      # couronne ~350, portée par les branches
 
 
 class OakTree(PerennialWoody):
@@ -365,23 +367,20 @@ class OakTree(PerennialWoody):
     girth_max_cm = 40.0        # tronc mûr ~40 cm (pipe model, procédural)
     age_curve = [(0, 30, 20), (5, 200, 150), (10, 400, 300),
                  (20, 700, 450), (50, 1500, 800), (100, 3000, 1200)]
-    # --- Croissance procédurale (D91 ①) — sujet centenaire, jeune chêne large-bas ---
-    # Calibré (sonde §C) pour ~398 cm haut / ~307 couronne à l'an 10 (le chêne est
-    # LENT en hauteur jeune, il prend son ampleur sur des siècles). L'ampleur
-    # centenaire est portée par max_height_cm=3000 / max_extent_cm=1200 (age_curve
-    # 100 ans), atteints sur la durée. NOTE calibrage (décision imprévue, cf. rapport) :
-    # un auxin_release_scale très élevé (1500, suggéré au kickoff) fabrique un POTEAU
-    # nu (l'apex ne relâche jamais → zéro latéral → couronne = foliage_halfwidth),
-    # ce qui contredit `etale` et « grand & LARGE ». On garde release_scale modéré
-    # (500 → couronne qui s'ouvre) et on porte la LARGEUR par foliage_halfwidth=185
-    # (double dividende : survie hydrique du jeune chêne à racines encore courtes).
-    # HORS golden.
+    # --- Croissance procédurale (AUTOMNE VISIBLE ②) — étalé tortueux ---------------
+    # Fiche : 400/280 à l'an 10, plus large et plus rapide que le réel. Pas de poteau :
+    # le relâchement COURT (250) ouvre la couronne dès l'an 4-5 malgré une dominance
+    # haute, qui étage les charpentières sur un tronc court. Gabarit à l'échelle du
+    # jardin (11 m × 5,5 m). Angle 75° : branches maîtresses presque à plat. HORS golden.
     procedural_growth   = True
+    port_archetype      = "etale_tortueux"
     growth_speed        = 0.95
-    max_height_cm       = 3000.0    # plafond = dernier point age_curve (100 ans)
-    max_extent_cm       = 1200.0
-    auxin_release_scale = 500.0     # couronne qui s'ouvre (≠ poteau fastigié)
-    foliage_halfwidth   = 185.0     # jeune chêne large-bas ~307 + survie hydrique
+    apical_dominance_base = 2.8
+    auxin_release_scale = 250.0
+    branch_angle        = 75.0
+    max_height_cm       = 1100.0
+    max_extent_cm       = 550.0
+    foliage_halfwidth   = 55.0      # couronne ~280, portée par les branches
 
 
 # ---------------------------------------------------------------------------
@@ -415,18 +414,18 @@ class BeechTree(PerennialWoody):
     girth_max_cm = 35.0        # tronc mûr ~35 cm (pipe model, procédural)
     age_curve = [(0, 30, 18), (5, 200, 130), (10, 400, 260),
                  (20, 700, 400), (50, 1500, 650), (100, 2800, 950)]
-    # --- Croissance procédurale (D91 ①) — grand houppier ample, ombre profonde ---
-    # Calibré (sonde §C) pour ~398 cm haut / ~262 couronne à l'an 10 (cible 400/260).
-    # Même arbitrage que le chêne (cf. rapport) : release_scale modéré (500) pour que
-    # le houppier s'ouvre (un rs élevé ferait un poteau), largeur portée par
-    # foliage_halfwidth=140. L'ampleur cathédrale séculaire vient de max_extent=950.
-    # HORS golden.
+    # --- Croissance procédurale (AUTOMNE VISIBLE ②) — ovoïde dense -----------------
+    # Fiche : 400/220 à l'an 10. Branches montantes (55°). Gabarit à l'échelle du jardin
+    # (12 m × 5 m). HORS golden.
     procedural_growth   = True
+    port_archetype      = "ovoide_dense"
     growth_speed        = 0.95
-    max_height_cm       = 2800.0    # plafond = dernier point age_curve (100 ans)
-    max_extent_cm       = 950.0
-    auxin_release_scale = 500.0     # houppier qui s'ouvre (≠ poteau fastigié)
-    foliage_halfwidth   = 140.0     # houppier ample ~262 + survie hydrique
+    apical_dominance_base = 1.4
+    auxin_release_scale = 400.0
+    branch_angle        = 55.0
+    max_height_cm       = 1200.0
+    max_extent_cm       = 500.0
+    foliage_halfwidth   = 60.0      # houppier ~220, porté par les branches
 
 
 class BirchTree(PerennialWoody):
@@ -457,22 +456,23 @@ class BirchTree(PerennialWoody):
                  (20, 1300, 300), (50, 1800, 420), (90, 2000, 480)]
     # --- Croissance procédurale (D91 ③) — pionnier élancé + port PLEUREUR ------------
     # Betula pendula : flèche DRESSÉE (leader net) + rameaux DISTAUX qui RETOMBENT
-    # (levier gravitropique `gravitropism_gain`, seul le bouleau le règle). Calibré
-    # (sonde §C) : ~783 cm haut / ~270 couronne à l'an 10 (cible age_curve 800/200 ;
-    # couronne volontairement un peu au-dessus de 200 → voir NOTE hydrique). Leader
-    # tenu par une dominance haute (2.7) + un release_scale long (800, comme l'aulne
-    # pionnier T2) : « pionnier rapide » se lit sur la VITESSE d'élongation, pas sur
-    # un étalement précoce qui casserait la flèche élancée. HORS golden.
+    # (levier gravitropique `gravitropism_gain`). Fiche : 750/180 à l'an 10. Leader
+    # tenu par une dominance haute (2.8) + un release_scale long (800) : « pionnier
+    # rapide » se lit sur la VITESSE, pas sur un étalement précoce. Coût assumé : les
+    # latéraux n'arrivent qu'après l'an 5 (plus tôt, à cette vitesse, ils dépassent
+    # le rayon de la fiche). Angle 60° + extension 2,5 m : le gain ploie les rameaux
+    # dès l'an 10 (il croît avec l'éloignement rapporté à `max_extent_cm`). HORS golden.
     procedural_growth   = True
-    growth_speed        = 1.9       # pionnier rapide
-    max_height_cm       = 2000.0    # plafond = dernier point age_curve (90 ans)
-    max_extent_cm       = 400.0     # houppier LÉGER, élancé (plus étroit qu'un grand feuillu)
-    apical_dominance_base = 2.7     # flèche élancée — leader net, houppier resserré
+    port_archetype      = "dresse_pleureur"
+    growth_speed        = 1.78      # pionnier rapide
+    max_height_cm       = 1500.0
+    max_extent_cm       = 250.0     # houppier LÉGER, élancé (plus étroit qu'un grand feuillu)
+    apical_dominance_base = 2.8     # flèche élancée — leader net, houppier resserré
     auxin_release_scale = 800.0     # leader dressé longtemps (élancé, ≠ étalement précoce)
-    foliage_halfwidth   = 70.0      # NOTE hydrique (état §3) : bouleau grêle = LE plus exposé
-                                    # (root_r = canopy_r) → fhw généreux (>50 du pommier qui
-                                    # survit) pour couvrir plusieurs plots au jeune âge ;
-                                    # élargit un peu la couronne (270 vs 200) → arbitrage F5.
+    branch_angle        = 60.0
+    foliage_halfwidth   = 50.0      # NOTE hydrique : bouleau grêle = LE plus exposé
+                                    # (root_r = canopy_r), à surveiller sur sable (mesuré
+                                    # dans le monde de démo, cf. apres_port.md).
     gravitropism_gain   = 1.0       # rameaux distaux PENDANTS (Betula pendula) ; SEULE espèce
                                     # à régler ce levier (prépare le saule D23) — calibrer F5.
 
@@ -502,16 +502,18 @@ class HornbeamTree(PerennialWoody):
     girth_max_cm = 18.0        # tronc mûr ~18 cm (pipe model, procédural)
     age_curve = [(0, 40, 20), (5, 250, 120), (10, 500, 220),
                  (20, 900, 340), (50, 1500, 520), (100, 2000, 650)]
-    # --- Croissance procédurale (D91 ①) — port moyen ovoïde du bocage ---
-    # Calibré (sonde §C) pour ~504 cm haut / ~236 couronne à l'an 10 (cible 500/220).
-    # Ovoïde plus étroit que le cerisier : même vitesse/release_scale mais
-    # foliage_halfwidth plus modeste (100 vs 140) → houppier plus fermé. HORS golden.
+    # --- Croissance procédurale (AUTOMNE VISIBLE ②) — ovoïde régulier du bocage ----
+    # Fiche : 450/220 à l'an 10. Ramure fine et serrée, branches à 50°. Gabarit à
+    # l'échelle du jardin (12 m × 5 m). HORS golden.
     procedural_growth   = True
-    growth_speed        = 1.20
-    max_height_cm       = 2000.0    # plafond = dernier point age_curve (100 ans)
-    max_extent_cm       = 650.0
-    auxin_release_scale = 600.0     # leader tenu jusqu'à ~500 cm avant de s'étaler
-    foliage_halfwidth   = 100.0     # ovoïde moyen ~236 + survie hydrique
+    port_archetype      = "ovoide"
+    growth_speed        = 1.07
+    apical_dominance_base = 1.6
+    auxin_release_scale = 400.0
+    branch_angle        = 50.0
+    max_height_cm       = 1200.0
+    max_extent_cm       = 500.0
+    foliage_halfwidth   = 60.0      # ovoïde ~220, porté par les branches
 
 
 # ---------------------------------------------------------------------------
@@ -558,22 +560,21 @@ class FirTree(PerennialWoody):
     # Cas atypique : le sapin garde une FLÈCHE dominante toute sa vie → port conique
     # `fleche` (≠ l'étalement `etale` des feuillus). On l'obtient par dominance apicale
     # HAUTE + relâchement d'auxine TRÈS long : le leader ne s'ouvre jamais vraiment, la
-    # couronne reste ÉTROITE. Croissance LENTE (conifère). Calibré (sonde §C, 520 ticks)
-    # pour l'allure age_curve à l'an 10 (~398 cm haut / ~130 couronne étroite ; cible
-    # 400/130). foliage_halfwidth : cas le PLUS exposé à la mort hydrique (§1.3) — une
-    # flèche sans latéraux a canopy_r ≈ foliage_halfwidth, donc root_r ≈ fhw. On le porte
-    # à 110 pour que les racines couvrent ~2,2 plots (survie) TOUT en tenant la cible
-    # étroite cr130 (la flèche n'ajoute quasi pas de spread latéral). deciduous=False /
+    # couronne reste ÉTROITE. Fiche : 450/130 à l'an 10, deux fois plus vite que le réel.
+    # Latéraux à 85° (étages horizontaux), courts car tardifs (après l'an 5). foliage_
+    # halfwidth 50 (ex 110) : ce sont maintenant ces étages qui portent la couronne ; un
+    # jeune sapin reste LE cas exposé à la mort hydrique (root_r ≈ fhw). deciduous=False /
     # mulch_source / ph_opt INCHANGÉS (rôles D69). Aiguilles + verticille = rendu (T4).
     # HORS golden.
     procedural_growth     = True
     port_archetype        = "fleche"
-    apical_dominance_base = 2.8       # HAUT : flèche tenue → cône serré
-    growth_speed          = 0.95      # LENT (conifère)
-    auxin_release_scale   = 700.0     # TRÈS long : reste dressé (jamais decurrent)
-    max_height_cm         = 3000.0    # plafond = dernier point age_curve (100 ans)
-    max_extent_cm         = 500.0
-    foliage_halfwidth     = 110.0     # cône étroit cr130 + racines multi-plots (survie)
+    apical_dominance_base = 2.4       # HAUT : flèche tenue → cône serré
+    growth_speed          = 1.07
+    auxin_release_scale   = 650.0     # long : reste dressé (jamais decurrent)
+    branch_angle          = 85.0
+    max_height_cm         = 1200.0
+    max_extent_cm         = 250.0
+    foliage_halfwidth     = 50.0      # cône étroit cr~130 (cf. ci-dessus)
 
 
 # ---------------------------------------------------------------------------
@@ -627,24 +628,21 @@ class Alder(PerennialWoody):
     girth_max_cm = 16.0              # tronc mûr ~16 cm (pipe model, procédural)
     age_curve = [(0, 40, 20), (5, 350, 120), (10, 700, 200),
                  (20, 1200, 320), (50, 2000, 450), (100, 2500, 550)]
-    # --- Croissance procédurale (D91 ②) — pionnier étalé ÉLANCÉ de berge ----------
-    # Cas atypique : l'aulne pousse VITE (pionnier) et HAUT (h10 ~700, le plus grand
-    # des jeunes arbres migrés), houppier moyen ÉLANCÉ (`etale` mais plus étroit que le
-    # chêne). Calibré (sonde §C, 520 ticks) : ~680 cm haut / ~233 couronne à l'an 10
-    # (cible 700/200). growth_speed élevé (pionnier) ; auxin_release_scale MODÉRÉ (800) :
-    # assez pour tenir une flèche de 7 m (à rs plus bas le leader s'étalait trop tôt,
-    # saturait le cap segments et la hauteur stagnait à ~200), mais bien EN DEÇÀ du
-    # séculaire — l'aulne est un pionnier à vie moyenne. foliage_halfwidth ÉTROIT (50)
-    # pour la couronne élancée ; racines viables via le spread des latéraux (root_r ≈
-    # cr ≈ 233, ~4,6 plots). Les family_effects (fixation N₂ Frankia) et
-    # asphyxie_tolerance_base sont INDÉPENDANTS de la morphologie → INCHANGÉS (rôle hydro
-    # D61 préservé, vérifié en test). HORS golden.
+    # --- Croissance procédurale (AUTOMNE VISIBLE ②) — conique de berge -------------
+    # Fiche : 650/170 à l'an 10. Pousse VITE (pionnier), tronc suivi jusqu'à la cime,
+    # branches courtes à 55° : dominance haute + release_scale long, latéraux après
+    # l'an 5 (même coût assumé que le bouleau). Les family_effects (fixation N₂ Frankia)
+    # et asphyxie_tolerance_base sont INDÉPENDANTS de la morphologie → INCHANGÉS (rôle
+    # hydro D61 préservé, vérifié en test). HORS golden.
     procedural_growth   = True
-    growth_speed        = 1.65        # pionnier rapide (h10 ~680)
-    max_height_cm       = 2500.0      # plafond = dernier point age_curve (100 ans)
-    max_extent_cm       = 550.0
-    auxin_release_scale = 800.0       # tient la flèche de 7 m sans saturer le cap segments
-    foliage_halfwidth   = 50.0        # houppier élancé cr~233 ; racines via spread latéral
+    port_archetype      = "conique"
+    growth_speed        = 1.54        # pionnier rapide
+    apical_dominance_base = 2.4
+    auxin_release_scale = 800.0       # tient la flèche sans saturer le cap segments
+    branch_angle        = 55.0
+    max_height_cm       = 1500.0
+    max_extent_cm       = 350.0
+    foliage_halfwidth   = 55.0        # houppier élancé cr~170 ; racines via spread latéral
     # Fixation N₂ actinorhizienne (Frankia) — même route générique que l'azote de
     # l'ortie/minette. `amount` légèrement au-dessus de la minette (0.04) : l'aulne
     # est un gros améliorateur ligneux. Réparti sur l'empreinte racinaire (cible
@@ -718,16 +716,17 @@ class Willow(PerennialWoody):
     girth_max_cm = 22.0              # fût épais (une trogne épaissit) ; placeholder → F5
     age_curve = [(0, 50, 25), (5, 600, 220), (10, 1100, 380),
                  (20, 1700, 520), (50, 2200, 650), (80, 2400, 700)]
-    # --- Croissance procédurale (patron aulne/bouleau) — pionnier PLEUREUR ---------
-    # ⚠️ Valeurs NON calibrées à la sonde §C (le saule n'est semé nulle part : ni
-    # golden, ni banc) — PLACEHOLDERS cohérents avec l'aulne (même stature, même
-    # milieu) poussés d'un cran en vitesse, à recalibrer au F5 le jour où le joueur en
-    # plante un. `gravitropism_gain` > celui du bouleau : rameaux franchement PENDANTS.
+    # --- Croissance procédurale (AUTOMNE VISIBLE ②) — grande tête ample et souple ---
+    # Fiche : 800/300 à l'an 10, le plus rapide du catalogue. Saule blanc, pas pleureur :
+    # `gravitropism_gain` < bouleau, extrémités retombantes seulement (ex 1.4).
+    # Le saule n'est semé nulle part (ni golden, ni monde de démo) : banc seul.
     procedural_growth   = True
-    growth_speed        = 2.1        # le plus rapide du catalogue ligneux
-    max_height_cm       = 2400.0     # plafond = dernier point age_curve (80 ans)
-    max_extent_cm       = 700.0
-    apical_dominance_base = 2.2
-    auxin_release_scale = 750.0      # tient la flèche, puis s'ouvre en houppier ample
-    foliage_halfwidth   = 60.0       # houppier lâche + racines multi-plots (survie)
-    gravitropism_gain   = 1.4        # rameaux PENDANTS (port pleureur) — calibrer F5
+    port_archetype      = "arrondi_souple"
+    growth_speed        = 1.89       # le plus rapide du catalogue ligneux
+    max_height_cm       = 1500.0
+    max_extent_cm       = 600.0
+    apical_dominance_base = 2.8
+    auxin_release_scale = 300.0      # s'ouvre tôt en houppier ample
+    branch_angle        = 60.0
+    foliage_halfwidth   = 100.0      # houppier lâche + racines multi-plots (survie)
+    gravitropism_gain   = 0.8        # extrémités retombantes (calibrer au F5)

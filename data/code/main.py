@@ -32,6 +32,7 @@ from collections import Counter
 from world import Tile, House
 from plants import (Tomato, Basil, Sunflower, Bean, Clover, Pepper,
                     Yarrow, Phacelia, AppleTree, PLANT_CATALOGUE)
+from plants.perennials import BirchTree, CherryTree, HornbeamTree   # caducs de démo
 from fields import init_eco
 from fields.ecofields.constants import PAILLAGE_DOSE   # dose du mulch de la démo paillée sud (⑧)
 from sim.engine import Engine
@@ -56,6 +57,15 @@ SECTORS = [
     ("S",  "terre",  11, 16,  600, 1450, True),
     ("SE", "argile", 11, 11, 1450, 1450, False),
 ]
+
+# Caducs de démo (AUTOMNE VISIBLE ②) : couleurs d'automne distinctes (jaune d'or,
+# rouge-orangé, jaune-roux). Tout au sud de tuiles qui n'ont pas de potager : pas
+# d'ombrage inter-tuiles, donc celui de la tuile S reste au soleil. `plant_garden`
+# n'occupe que les lignes 0..5 ; hors des angles (un arbre d'angle a moins de plots
+# où puiser, cf. sim/mare_initiale.py). (tuile, classe, ligne, colonne)
+CADUCS_DEMO = [("SO", BirchTree, 8, 5), ("O", CherryTree, 12, 5),
+               ("SE", HornbeamTree, 8, 5)]
+
 
 def build_tile(name, soil, rows, cols, ox, oy):
     tile = Tile(tile_id=name, soil_type=soil, grid_rows=rows, grid_cols=cols,
@@ -103,6 +113,8 @@ def build_world_full():
     # sénescence (~70 ans) demande « python3 main.py 100 » (cf. tests/test_senescence).
     tiles_by_id = {t.tile_id: t for t in tiles}
     semer_fondateur(tiles_by_id["S"], AppleTree, 0, 7, SEED)
+    for tuile, classe, r, c in CADUCS_DEMO:
+        semer_fondateur(tiles_by_id[tuile], classe, r, c, SEED)
 
     # Démo « planche paillée plein sud » (sprint équilibre invasion ⑧, D7/D69) :
     # démonstrateur VIVANT du levier paillage au F5. La tuile "S" (terre, plein sud)

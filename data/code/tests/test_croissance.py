@@ -567,8 +567,10 @@ def test_sapin_fleche_etroit():
     cr_oak = OakTree.canopy_radius_at(oak)
     check("sapin: couronne étroite (< feuillu étalé du même âge)", cr_fir < cr_oak,
           f"sapin cr={cr_fir:.1f} < chêne cr={cr_oak:.1f}")
-    check("sapin: couronne ≈ foliage_halfwidth (flèche sans spread)",
-          cr_fir <= FirTree.foliage_halfwidth + 40.0, f"cr={cr_fir:.1f}")
+    # AUTOMNE VISIBLE ② : à l'an 10 le sapin a ses premiers étages, la couronne n'est
+    # plus le seul foliage_halfwidth. Le contrat devient la cible de sa fiche (130).
+    check("sapin: couronne étroite de sa fiche (~130 à l'an 10)",
+          cr_fir <= 150.0, f"cr={cr_fir:.1f}")
 
 
 def test_aulne_role_hydro_preserve():

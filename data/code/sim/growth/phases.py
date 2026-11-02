@@ -21,7 +21,7 @@ from .constantes import (AUXIN_PROD_FLOOR, AUXIN_RELEASE_SCALE, AUXIN_DECAY,
 from .geometrie import (_tip, _horiz, _lateral_dir, _phototropic_bias,
                         _gravitropic_droop, _apex_z_floor, _depths, _children,
                         _subtree, _apex_in_subtree, _rebuild, taper_thickness,
-                        ordre_enfants_dabord)
+                        ordre_enfants_dabord, chemin_fleche)
 
 
 # ---------------------------------------------------------------------------
@@ -161,7 +161,12 @@ def _elaguer(plant, wood_persistence: int, max_segments: int) -> list:
             (i for i in range(len(segs))
              if segs[i].parent is not None),
             key=lambda i: -depth[i])
-        for i in improd + deepest:
+        coupes = improd + deepest
+        if plant.plant_class.ligneux:
+            _tailler_ligneux(segs, ch, coupes, kill, max_segments)
+            alive = len(segs) - len(kill)
+            coupes = deepest          # dernier recours : plafond plus bas que la flèche
+        for i in coupes:
             if alive <= max_segments:
                 break
             if i in kill:
@@ -172,6 +177,36 @@ def _elaguer(plant, wood_persistence: int, max_segments: int) -> list:
     if kill:
         _rebuild(plant, kill)
     return tombes
+
+
+def _tailler_ligneux(segs: list, ch: dict, candidats: list, kill: set,
+                     max_segments: int) -> None:
+    """Plafond d'un ligneux (AUTOMNE VISIBLE ②) : l'arbre se renouvelle par ses bouts.
+    Deux règles, qui ferment les deux causes d'effondrement mesurées au ① :
+      1. le chemin collet → point le plus haut n'est jamais coupé : la hauteur ne
+         baisse plus d'elle-même (`axe_porteur` suit le plus épais, pas le plus haut) ;
+      2. on ne retire jamais plus que l'excédent : une charpentière improductive ne
+         tombe plus d'un bloc pour un seul segment en trop, et l'arbre ne repart plus
+         de sa souche. Les rameaux sèchent depuis la pointe, un par un, et le bourgeon
+         réveillé sous la coupe renouvelle le bois fin qui porte les feuilles.
+    Pédagogie (Nico) : c'est le même plafond dur qu'avant, seul le choix de la coupe
+    change. Parents avant enfants dans `segs` (append) → les tailles se lisent en une
+    passe inverse, O(n) par tick au plafond, comme les tris de `_elaguer`."""
+    fleche = chemin_fleche(segs)
+    taille = [1] * len(segs)
+    for j in range(len(segs) - 1, 0, -1):
+        taille[segs[j].parent] += taille[j]
+    alive = len(segs) - len(kill)
+    for i in candidats:
+        if alive <= max_segments:
+            return
+        if i in kill or i in fleche or taille[i] > alive - max_segments:
+            continue
+        coupe = set(_subtree(i, ch)) - kill
+        kill.update(coupe)
+        alive -= len(coupe)
+        if not segs[i].is_apex:               # rameau sec coupé : un bourgeon se réveille dessous
+            segs[segs[i].parent].has_bud = True
 
 
 def _mk(parent: int, base: tuple, direction: tuple, auxin: float):

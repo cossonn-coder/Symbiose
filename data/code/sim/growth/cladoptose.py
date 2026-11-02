@@ -24,14 +24,16 @@ import math
 from fields import _hash_noise
 from .constantes import (CLADO_OPACITE_GRAPPE, CLADO_DZ_CM, CLADO_RAYON_CM,
                          CLADO_SEUIL, CLADO_AGE_MIN, CLADO_FENETRE)
-from .geometrie import _tip, _children, _subtree, _rebuild
+from .geometrie import _tip, _children, _subtree, _rebuild, chemin_fleche
 
 
 def axe_porteur(segs: list, ch: dict) -> set:
     """Indices du tronc + flèche : depuis le collet, on suit à chaque nœud l'enfant
     le plus ÉPAIS (à égalité, le plus petit indice = le plus ancien). Protégé de
-    toute mort de branche (l'arbre ne s'étête pas tout seul)."""
-    axe, i = set(), 0
+    toute mort de branche (l'arbre ne s'étête pas tout seul). AUTOMNE VISIBLE ② : le
+    chemin vers le point le plus haut l'est aussi. Le plus épais n'y mène pas toujours :
+    une rafale ramenait un cerisier de 500 à 211 cm [seed 42, n=1, VM]."""
+    axe, i = chemin_fleche(segs), 0
     while True:
         axe.add(i)
         if not ch[i]:
