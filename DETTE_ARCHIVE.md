@@ -227,3 +227,9 @@ Texte intégral des lignes fermées :
 | Code | Motif de fermeture | Preuve |
 |---|---|---|
 | D124 | F5 Nico 2026-11-02 : « les taches de fleurs font plus naturel » ; « ya des insectes dessus » ; « la lisière est superbe. chaque saison a son identité » ; « les branches apparaissent en lisière c'est super ». Retours restants et limites versés en **D125**. Golden `ac48b170…`. | `sprints/rendu/ambiance/sprint_lisiere_nue/00_etat.md` ; `journal/168_2026-11-02_sprint-lisiere-nue-CLOS.md` ; commits `0ae40ab`, `67edf20`, `4d5c7b0` |
+
+## Lot P — F5 de Nico sur les retours de la lisière (2026-11-02)
+
+| Code | Motif de fermeture | Preuve |
+|---|---|---|
+| D125 | F5 Nico 2026-11-02 : « le quadrillage a disparu. ça reste fluide » ; « très bien la neige ». Brume sans grille, décor visible à ×8, ×16 et ×32, neige = pluie sous 1,5 °C. Inondation et champignons de l'an 9 expliqués et appréciés, pas un défaut. Reste versé en **D126**. Golden `ac48b170…`. | `journal/169_2026-11-02_retours-lisiere-D125-CLOS.md` ; commits `649b5a2`, `0a954af` |
