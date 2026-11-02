@@ -269,10 +269,13 @@ vec4 lisiere(vec3 c, int id, int classe, bool fleur, bool pierre, bool enveloppe
 	}
 	// Brumes : tramage par nappes, jamais un voile uniforme sur tout le décor.
 	if (m_brume_froide + m_brume_chaude > 0.001) {
-		float v = bayer(ip);
+		// Avant D125 : float v = bayer(ip); matrice 4×4 fixe, donc tous les pixels de brume
+		// tombaient sur la même grille (« quadrillage de points blancs » au F5). Hash = sans grille.
+		float v = h01(ip.x, ip.y);
 		float nappe = smoothstep(0.4, 0.7, bruit(vec2(ip) / vec2(40.0, 14.0)));
-		if (v < m_brume_froide * 0.3 * nappe * (1.0 - hauteur)) c = ton_lut(lut, r_brume_froide, 3);
-		if ((classe != 0 || pierre) && v < m_brume_chaude * 0.22 * nappe) c = ton_lut(lut, r_brume_chaude, 3);
+		// Avant D125 : densités 0.3 et 0.22, ton 3. Sans la grille, ces valeurs faisaient du sel sur la prairie.
+		if (v < m_brume_froide * 0.12 * nappe * (1.0 - hauteur)) c = ton_lut(lut, r_brume_froide, 2);
+		if ((classe != 0 || pierre) && v < m_brume_chaude * 0.09 * nappe) c = ton_lut(lut, r_brume_chaude, 2);
 	}
 	return vec4(c, present);
 }

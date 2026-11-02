@@ -86,9 +86,12 @@ namespace Symbiose
 		private const float DepthCm     = 900f;   // profondeur de la bande hors-jardin
 		private const float AmplitudeCm = 140f;   // amplitude de l'ondulation de frontière
 		private const float StepCm      = 40f;    // pas d'échantillonnage du tracé sinueux
-		// LOD : le décor cadre la vue d'ensemble → visible dès le dézoom (contraire
-		// de la litière). On l'éteint au gros plan (on est « dans » le jardin).
+		// Palier le plus fin du décor : la maille ×4 sert aussi à ×8, ×16 et ×32 (D125).
+		// Avant, le décor s'éteignait au-delà ; il restait un fond vert uni (« après ya pu
+		// rien » au F5). Sa géométrie est en px canvas, elle grossit donc d'elle-même : ses
+		// pixels internes deviennent juste plus gros, sans une maille de plus.
 		private const float MaxZoom = 4f;
+		private static float ZoomMaille => Mathf.Min(WorldView.CurrentZoom, MaxZoom);
 		// LOD DÉTAIL à 2 niveaux (T4) : la MASSE (assises, houppiers, surface d'eau,
 		// face de falaise) se dessine sur toute la plage visible ; les DÉTAILS FINS
 		// (reflets de courant, fleurs de prairie, chevrons du bouleau, éboulis) — 1-2
@@ -187,7 +190,6 @@ namespace Symbiose
 			QueueRedraw();
 		}
 
-		private bool _lastZoomOk;
 		private float _lastZoom;
 
 		public override void _Process(double delta)
@@ -197,11 +199,9 @@ namespace Symbiose
 			// MaxZoom) et, tant qu'il est visible, au CHANGEMENT DE PALIER — depuis
 			// FLUIDITÉ PC ③ les pièces du kit gardent leurs px internes, leur semis
 			// dépend donc du palier (et la bascule DetailZoom en fait partie).
-			bool zoomOk = WorldView.CurrentZoom <= MaxZoom;
-			if (zoomOk != _lastZoomOk || (zoomOk && WorldView.CurrentZoom != _lastZoom))
+			if (ZoomMaille != _lastZoom)
 			{
-				_lastZoomOk = zoomOk;
-				_lastZoom = WorldView.CurrentZoom;
+				_lastZoom = ZoomMaille;
 				QueueRedraw();
 			}
 			// LEVIERS ③ : les mailles des autres paliers se préparent par tranches
@@ -213,7 +213,7 @@ namespace Symbiose
 
 		public override void _Draw()
 		{
-			if (!_built || WorldView.CurrentZoom > MaxZoom) { PublierDevant(null); return; }
+			if (!_built) { PublierDevant(null); return; }
 			// 2 passes. Passe 1 : l'ASSISE de chaque secteur (aplats volumés T4) —
 			// le fond sur lequel les motifs se détachent. Passe 2 : le MOTIF détaillé
 			// (T5) peint par-dessus. On sépare les passes pour que les aplats voisins
@@ -226,7 +226,7 @@ namespace Symbiose
 			// redessiner la maille prête (un DrawMesh). Construite d'un bloc ici
 			// seulement si elle manque encore (1er dessin, juste après Build).
 			long t0 = System.Diagnostics.Stopwatch.GetTimestamp();
-			Maille m = MailleImmediate(WorldView.CurrentZoom, out bool construite);
+			Maille m = MailleImmediate(ZoomMaille, out bool construite);
 			TeleverserKit();   // ⑥ : texels-codes neufs / vidage de LUT → atlas au GPU
 			if (m.Mesh != null) DrawMesh(m.Mesh, KitTexture);
 			PublierDevant(m);   // LEVIERS ⑤ : pièces hautes côté caméra, couche au-dessus du jardin

@@ -22,7 +22,7 @@ namespace Symbiose
 	public partial class ForagerLayer
 	{
 		private const float BordZoomMin = 1f;     // en dessous, un point sur une fleur : illisible
-		private const float BordZoomMax = 4f;     // au-delà, le décor n'est plus peint
+		private const float BordZoomMax = 32f;    // tout le gros plan : le décor y est peint (D125)
 		private const int BordFleurs = 4;         // fleurs visitées en boucle par un insecte
 		private const float BordRayonVol = 0.85f; // part de l'ellipse où il vole
 		private const float BordHauteurPx = 5f;   // au-dessus des fleurs, px canvas
