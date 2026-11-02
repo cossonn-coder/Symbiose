@@ -25,3 +25,5 @@ Limites ouvertes :
   Cause non isolée.
 
 Attend le **F5 de Nico** (`00_etat.md` §F5, 2 minutes). D124 fermée seulement après.
+
+**F5 de Nico, le 2026-11-02** : taches de fleurs, insectes, lisière des 4 saisons et branches validés. D124 fermée. Retours versés en D125 : points blancs en quadrillage l'été (trame `bayer` de la brume chaude, arrivée avec AUTOMNE VISIBLE ⑥), décor absent au-delà de ×4 (`DecorLayer.MaxZoom`), un peu plus de neige.

@@ -1,7 +1,7 @@
 # Sprint LISIÈRE NUE (D124) — état partagé
 
 **Conception** : `docs/rendu/ambiance/conception_lisiere_nue.md` (figée le 2026-11-02).
-**Où on en est** : ①, ② et ③ faits et commités (`0ae40ab`, `67edf20`, `4d5c7b0`), journal et dette à jour. Reste le F5 de Nico, puis la fermeture de D124.
+**Où on en est** : ①, ② et ③ faits et commités (`0ae40ab`, `67edf20`, `4d5c7b0`), journal et dette à jour. F5 validé le 2026-11-02 : D124 fermée, retours en D125. Sprint terminé.
 
 ## Décisions clés (Nico, 2026-11-02)
 
@@ -99,10 +99,10 @@ Lancer une partie, avancer sur une année, regarder la lisière, sans plus :
 
 ## Ce qui reste
 
-F5 de Nico, puis fermeture de D124 (`DETTE.md`, `BACKLOG.md`, retour dans le journal). D119 (c) reste ouverte, voir le bilan ①.
+Rien dans ce sprint. Suite en D125. D119 (c) reste ouverte, voir le bilan ①.
 Garde-fous : ne JAMAIS lancer `tests/test_epaisseur_500ans.py` ; mesures ≤ 3 ans de jeu.
 `test_succession` et `test_edaphique` étaient rouges avant le sprint AUTOMNE VISIBLE.
 
 ## §REPRISE
 
-Code des 3 tronçons fait. Lire `CLAUDE.md` + ce fichier, puis fermeture de D124 après le §F5.
+Code des 3 tronçons fait. Lire `CLAUDE.md` + ce fichier, sprint terminé, suite en D125.

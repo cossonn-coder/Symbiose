@@ -221,3 +221,9 @@ Texte intégral des lignes fermées :
 | Code | Motif de fermeture | Preuve |
 |---|---|---|
 | D123 | F5 Nico 2026-11-02 : « l'automne c'est très stylé » ; « la neige qui tombe petit à petit en hiver c'est super et la fonte au printemps trop cool » ; « le parterre de feuilles j'aime bien ». Retour restant et limites versés en **D124**. Golden `ac48b170…`. | `sprints/rendu/ambiance/sprint_automne_visible/00_etat.md` ; `journal/167_2026-11-02_sprint-automne-visible-CLOS.md` ; commits `3fd2b62`→`07218ce` |
+
+## Lot O — F5 de Nico sur le sprint LISIÈRE NUE (2026-11-02)
+
+| Code | Motif de fermeture | Preuve |
+|---|---|---|
+| D124 | F5 Nico 2026-11-02 : « les taches de fleurs font plus naturel » ; « ya des insectes dessus » ; « la lisière est superbe. chaque saison a son identité » ; « les branches apparaissent en lisière c'est super ». Retours restants et limites versés en **D125**. Golden `ac48b170…`. | `sprints/rendu/ambiance/sprint_lisiere_nue/00_etat.md` ; `journal/168_2026-11-02_sprint-lisiere-nue-CLOS.md` ; commits `0ae40ab`, `67edf20`, `4d5c7b0` |
