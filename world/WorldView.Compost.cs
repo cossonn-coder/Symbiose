@@ -32,6 +32,10 @@ namespace Symbiose
 		// bloc snapshot `litiere`, mais ne retient que le tissu dominant `feuille`.
 		private LeafLitterLayer _leafLitterLayer;
 
+		// CHUTE des feuilles (AUTOMNE VISIBLE ⑤) : au-dessus des plantes (Objects = 10),
+		// comme les butineurs. Nourri par MajPlante, à l'arrêt hors des semaines de chute.
+		private LeafFallLayer _leafFallLayer;
+
 		// BOIS MORT au sol (sol qui respire ⑧) : brindilles / branches / souches à
 		// stades de décompo, lues aux index 5-7 du MÊME bloc `litiere`. Entre les amas
 		// et les feuilles (même bande ZIndex 1) : les feuilles tombent SUR le bois.
@@ -54,12 +58,20 @@ namespace Symbiose
 			AddWorld(_deadWoodLayer);
 			_leafLitterLayer = new LeafLitterLayer { Name = "LeafLitter", ZIndex = 1 };
 			AddWorld(_leafLitterLayer);
+			_leafFallLayer = new LeafFallLayer
+			{
+				Name = "LeafFall", ZIndex = 11,
+				// Le banc de capture reste en planification : sans cette exception, ni
+				// image animée ni mesure de perf en pleine chute à semaine fixe.
+				TempsCourt = () => _phase == Phase.Saison || CaptureBanc != null,
+			};
+			AddWorld(_leafFallLayer);
 		}
 
 		// Applique le bloc `litiere` (lecture tolérante : un snapshot pré-0.3.7
 		// n'a pas la clé → pas de litière dessinée, jamais de crash). Les deux
 		// layers lisent le MÊME bloc : LitterLayer pose tous les tissus en amas,
-		// LeafLitterLayer ne retient que `feuille` et en fait des silhouettes (⑥).
+		// LeafLitterLayer ne retient que la masse de `feuille` et en fait un tapis (⑤).
 		private void ApplyLitiere(GDict litiere)
 		{
 			_litterLayer?.SetLitiere(litiere, _origins);

@@ -1,7 +1,7 @@
 # Sprint AUTOMNE VISIBLE (D123 + D118 (A) arbres) — état partagé
 
 **Conception** : `docs/rendu/ambiance/conception_automne_visible.md` (figée le 2026-11-02).
-**Où on en est** : ①, ②, ③ et ④ faits (④ non commité au moment de cette note), ⑤ à lancer.
+**Où on en est** : ① à ⑤ faits (⑤ non commité au moment de cette note), ⑥ à lancer.
 
 ## Décisions clés (Nico, 2026-11-02)
 
@@ -18,7 +18,7 @@
 | ② | `02_port_arbres.md` — port par fiche, hauteur qui ne s'effondre plus, arbres âgés et caducs de démo | **re-figé** `82d522c8…` | **fait** |
 | ③ | `03_feuilles_moteur.md` — largage étalé sous la couronne + pont (masse de feuilles, `feuillage`) | **re-figé** `ac48b170…` | **fait** |
 | ④ | `04_vue_arbres.md` — recettes d'arbres, couleur d'automne par espèce, couronne qui s'éclaircit | intact | **fait** |
-| ⑤ | `05_vue_tapis_chute.md` — tapis lisible dès ×1 + animation de chute | intact | à faire |
+| ⑤ | `05_vue_tapis_chute.md` — tapis lisible dès ×1 + animation de chute | intact | **fait** |
 | ⑥ | `06_vue_lisiere.md` — lisière 4 saisons + signes macro + protocole F5 | intact | à faire |
 
 ## Diagnostic ① : pourquoi la hauteur s'effondre (vérifié, pour le ②)
@@ -95,12 +95,20 @@ mesure], et un plafond ôté fait exploser le temps de calcul (arrêté après 3
 - **Limites** : les 11 arbres n'ont été vus en automne qu'en forçant la semaine de départ de `foret_ports` (34, 36, édition temporaire annulée), car `foret_ports` tue 9 arbres sur 11 avant s27 [seed 42, n=1 run, VM], cause non cherchée : ce banc ne sert donc pas tel quel au F5. Dans `full`, seuls 5 arbres sont présents.
 - **Pour le F5** : ×4 reste plus clairsemé que ×1 (masses non densifiées) ; apex vert vif sur un arbre roux ; le port (bouleau aux branches qui touchent le sol, rejets au pied du cerisier) vient du moteur ② ; l'info-bulle dit « prend ses couleurs d'automne » sur un arbre nu en hiver.
 
+## Bilan ⑤ (chiffres et limites : `mesures/apres_tapis.md`)
+
+- **Tapis** (`LeafLitterLayer`) : lit le 9ᵉ champ de `litiere`, repli sur le tissu dominant. Dès ×1 ; grains en lot à ×1-×2, feuilles à 2 tons dès ×4, silhouettes `DrawLitterLeaf` seulement dès ×16. `MasseRef` = 0,20, pas 0,30 : le pic réel plafonne là. `MinZoom` = 1.
+- **Chute** : `visuals/LeafFallLayer.cs`, un lot, position recalculée de l'horloge, tons d'automne de l'espèce (`PlantRenderer.TonChute`), vent de `WindWave`. Nourri par `MajPlante` ; même semaine = état conservé (geste, rotation).
+- **Écarts au kickoff** : `age_sem` est faussé par le bois mort (médiane 54 semaines en s37 [n=1 run, VM]), la vue retire la part du bois ; « palette indexée » non tenue au sens du shader, un lot sans texture ne le traverse pas : couleurs littérales, tons plats ; `TempsCourt` vrai aussi en mode capture, sinon pas d'animation mesurable à semaine fixe.
+- **Limites** : couleur par espèce du tapis impossible (D50) ; grains vieillis très sombres sur le sable en s56 ; feuilles et tapis ignorent le relief ; une feuille passe devant la maison (ZIndex 11). Pause et planification non vues aux captures, à juger au F5.
+- **Pour le F5** : chute sans gêne (`VChuteCmS`, `CmParFeuille`) ; tapis à ×1 (`MaxGrains`) ; arrêt en pause ; disparition en hiver et au printemps.
+
 ## Ce qui reste
 
-Tronçons ⑤ à ⑥. Garde-fous : ne JAMAIS lancer `tests/test_epaisseur_500ans.py` ; mesures ≤ 3 ans de jeu.
+Tronçon ⑥. Garde-fous : ne JAMAIS lancer `tests/test_epaisseur_500ans.py` ; mesures ≤ 3 ans de jeu.
 `test_succession` et `test_edaphique` sont rouges AVANT ce sprint (vérifié le 2026-10-30).
 
 ## §REPRISE
 
 Lire `CLAUDE.md` + ce fichier + le kickoff du premier tronçon « à faire ».
-Lancer : `/sprint-auto sprint_automne_visible` (reprend au ⑤). Rejouer les bancs : `python3 -m bancs.mesure_arbres`, `python3 -m bancs.mesure_feuilles 3`.
+Lancer : `/sprint-auto sprint_automne_visible` (reprend au ⑥). Rejouer les bancs : `python3 -m bancs.mesure_arbres`, `python3 -m bancs.mesure_feuilles 3`.

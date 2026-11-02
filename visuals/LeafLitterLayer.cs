@@ -6,9 +6,17 @@
 // aplaties au sol, sur la parcelle, à la manière de `MacroLife`/`LitterLayer`
 // (échantillonnage STABLE par hash, zéro Random — philo #3, condition du golden).
 //
-// On ne traite QUE les plots dont le tissu DOMINANT du snapshot `litiere` est
-// `"feuille"` (les autres — herbacé, fruit, bois — restent à `LitterLayer`, qui
-// pose ses amas terreux). L'espèce d'origine N'EST PAS traçable côté moteur (la
+// AUTOMNE VISIBLE ⑤ : on lit la MASSE DE FEUILLES du plot (9ᵉ champ de `litiere`, pont
+// 0.6.3), même si un autre tissu domine : un tapis sous un arbre ne s'interrompt
+// plus là où l'herbe morte pèse davantage. Repli sans ce champ : les seuls plots à
+// tissu dominant `"feuille"`, comme avant. Le tapis est un SEMIS EN LOT : un grain
+// aux paliers bas (×1, ×2, zoom de jeu), une petite feuille à deux tons dès ×4 ; les
+// silhouettes ne s'y ajoutent qu'aux gros plans (ZoomSilhouette), où peu de plots sont à
+// l'écran. Il fond tout seul : le moteur décompose la masse, le semis s'éclaircit.
+// Couleurs littérales : un lot sans texture ne passe pas par le shader indexé, et ces
+// tons sont plats (ils ne suivent pas le soleil), donc rien n'est perdu.
+//
+// L'espèce d'origine N'EST PAS traçable côté moteur, D50 (la
 // parcelle est typée par TISSU, pas par espèce) → repli `Elliptique` assumé
 // (§6.3) : on passe une espèce vide à `DrawLitterLeaf`, qui retombe sur le profil
 // par défaut. Une litière de pommier perd donc sa silhouette de pommier — limite
@@ -28,7 +36,7 @@
 //
 // 📖 Pédagogie — MÊME patron batché que `LitterLayer`/`MacroLife` : UN seul
 // CanvasItem redessine toute la litière de feuilles dans son `_Draw` (pas un
-// Node2D par feuille). La litière est INERTE (matière morte) : on ne QueueRedraw
+// Node2D par feuille), et le semis part en un seul envoi. La litière est INERTE (matière morte) : on ne QueueRedraw
 // qu'à l'arrivée d'un snapshot et au basculement de LOD — le canvas dort sinon.
 
 using Godot;
@@ -39,21 +47,35 @@ namespace Symbiose
 {
 	public partial class LeafLitterLayer : PlantRenderer
 	{
-		// Le tissu de SURFACE qui nous concerne (TISSU_ORDER côté moteur). Toute
-		// autre valeur (herbace/fruit/bois/fleur) est laissée à LitterLayer.
+		// Le tissu de SURFACE qui nous concerne (TISSU_ORDER côté moteur) : repli
+		// d'un pont pré-0.6.3, qui n'expose pas la masse de feuilles à part.
 		private const string TissuFeuille = "feuille";
 
-		// LOD : aligné sur LitterLayer (un détail de sol qu'on lit en s'approchant).
-		// Sous ce zoom, on n'affiche rien — et la forme de feuille (§2) retombe de
-		// toute façon sur l'ellipse au repli LOD interne de DrawShapeBySpecies.
-		private const float MinZoom = 2f;
+		// LOD : visible dès ×1, le zoom de jeu du joueur. Dès ZoomFeuille le grain devient
+		// une feuille, dès ZoomSilhouette s'y ajoutent les silhouettes DrawLitterLeaf
+		// (plusieurs envois par feuille, tenable seulement quand peu de plots sont à l'écran).
+		private const float MinZoom = 1f;
+		private const float ZoomFeuille = 4f;
+		private const float ZoomSilhouette = 16f;
 		// Marge de culling (px canvas) : couvre l'étalement du semis dans le plot.
 		private const float CullMarginPx = 64f;
 
-		// Référence de masse pour saturer la densité (cf. LitterLayer.MasseRef) :
-		// au-delà, l'amas est « plein » (nombre de feuilles plafonné). Calibrage F5.
-		private const float MasseRef = 2.5f;
-		// Bornes du nombre de feuilles par plot (∝ masse, comme la pop macro) :
+		// Référence de masse pour saturer la densité. Le moteur dépose FEUILLE_PAR_PLOT
+		// (0,30) étalé sur 4 semaines pendant que ça se décompose : le pic réel d'un plot
+		// est plus bas, ~0,20 (mesures/apres_tapis.md). Au-delà, le tapis est plein.
+		private const float MasseRef = 0.20f;
+		// En deçà, plus rien à voir : le tapis a fondu (sinon un grain par plot resterait
+		// toute l'année, la moindre feuille d'herbacée en poserait un).
+		private const float MasseMin = 0.01f;
+		// Semis du tapis par plot à saturation. Un plot fait 380 px² à ×1 : 60 grains de
+		// 2 px² en couvrent ~32 %. Dès ZoomFeuille, 40 feuilles suffisent, elles sont plus grandes.
+		private const int MaxGrains = 60, MaxFeuilles = 40;
+		// Le semis couvre tout le plot (un plot = 50 cm) pour que le tapis soit continu.
+		private const float SemisDemiCm = 25f;
+		private const float GrainPx = 1f;
+		// Feuille à plat : demi-longueur et demi-largeur en cm, projetées par la vue.
+		private const float FeuilleDemiCm = 7f, FeuilleLargeCm = 3f;
+		// Bornes du nombre de SILHOUETTES par plot (∝ masse, comme la pop macro) :
 		// au moins 1 (une trace se voit), au plus MaxLeaves (densité plafonnée).
 		private const int MinLeaves = 1;
 		private const int MaxLeaves = 6;
@@ -75,8 +97,24 @@ namespace Symbiose
 		private static readonly Color HumusLeaf = new Color("5a4630");   // brun sombre désaturé = humus
 		// Âge (semaines) au-delà duquel la feuille a entièrement fondu dans l'humus
 		// (teinte = HumusLeaf pleine). En deçà, interpolation linéaire. Calibrage F5.
-		private const float AgeFullDecompSem = 12f;
-		// Opacité : plancher (une trace ténue se voit) + part ∝ masse, comme
+		private const float AgeFullDecompSem = 16f;
+		// Tons chauds du semis, du plus jaune au plus brun : l'œil lit un mélange de feuilles,
+		// pas une teinte unie. Ils virent à l'humus par paliers (TonsSemis), pas en continu.
+		private static readonly Color[] TonsFrais =
+		{
+			new("d3a23a"), new("c98a2e"), new("b5622a"), new("8f4a24"),
+		};
+		private const int NbStades = 4;
+		private static readonly Color[,] TonsSemis = CalculerTonsSemis();
+		private static Color[,] CalculerTonsSemis()
+		{
+			var t = new Color[NbStades, TonsFrais.Length];
+			for (int s = 0; s < NbStades; s++)
+				for (int i = 0; i < TonsFrais.Length; i++)
+					t[s, i] = TonsFrais[i].Lerp(HumusLeaf, s / (NbStades - 1f));
+			return t;
+		}
+		// Opacité des silhouettes : plancher (une trace ténue se voit) + part ∝ masse, comme
 		// LitterLayer — la litière fraîche dense est plus présente que deux feuilles.
 		private const float AlphaFloor = 0.55f;
 		private const float AlphaSpan  = 0.45f;
@@ -89,6 +127,8 @@ namespace Symbiose
 			public float Cx, Cy;
 			public Color Col;
 			public int Count;
+			public float Sat;    // masse / MasseRef ∈ [0, 1], règle la densité du semis
+			public int Stade;    // 0 fraîche → NbStades − 1 humus
 			public float Alpha;
 			public uint Hash;
 		}
@@ -96,6 +136,7 @@ namespace Symbiose
 		private readonly List<Patch> _patches = new();
 		private bool _lastZoomOk;
 		private int _margeVersion = -1;   // cadre commun déjà dessiné (MargeVue, T4)
+		private readonly LotTriangles _lot = new();
 
 		// Hash djb2-xor (même choix que LitterLayer/MacroLife : jamais GetHashCode
 		// pour du visuel stable, jamais de Random — philo #3).
@@ -114,7 +155,7 @@ namespace Symbiose
 
 		/// <summary>
 		/// Applique le bloc `litiere` d'un snapshot (liste creuse par tuile), en ne
-		/// retenant QUE les plots dont le tissu dominant est `feuille`. `origins` =
+		/// retenant QUE les plots qui portent des feuilles. `origins` =
 		/// origin_cm par tuile (le même cache que plantes/macro/LitterLayer).
 		/// Reconstruction simple : la litière est inerte (pas de diff/fondu à tenir)
 		/// et un snapshot ne tombe qu'à la semaine — pas de churn.
@@ -130,16 +171,16 @@ namespace Symbiose
 				using var plots = tileKv.Value.AsGodotArray();
 				for (int i = 0; i < plots.Count; i++)
 				{
-					// Format compact 0.5.6 : [r, c, tissu_dominant, masse, age_sem].
+					// Format compact : [r, c, tissu_dominant, masse, age_sem, bois × 3,
+					// masse_feuille (0.6.3)].
 					using var e = LectureSnap.Tab(plots, i);   // PERF VUE ④ : sans finaliseur
-					string tissu = LectureSnap.S(e, 2);
-					if (tissu != TissuFeuille) continue;   // herbacé/fruit/bois → LitterLayer
+					float masse;
+					if (e.Count > 8) masse = (float)e[8].AsDouble();
+					else if (LectureSnap.S(e, 2) == TissuFeuille) masse = (float)e[3].AsDouble();
+					else continue;   // pont pré-0.6.3, autre tissu dominant → LitterLayer
+					if (masse < MasseMin) continue;
 					int r = e[0].AsInt32(), c = e[1].AsInt32();
-					float masse = (float)e[3].AsDouble();
-					// age_sem (5ᵉ champ, pont 0.5.6) : proxy de décompo. Lecture
-					// TOLÉRANTE — un snapshot pré-0.5.6 n'a que 4 champs → âge 0
-					// (litière fraîche, brun-roux vif), jamais de crash.
-					float ageSem = e.Count > 4 ? (float)e[4].AsDouble() : 0f;
+					float ageSem = AgeHorsBois(e);
 
 					float sat = Mathf.Clamp(masse / MasseRef, 0f, 1f);
 					float decomp = Mathf.Clamp(ageSem / AgeFullDecompSem, 0f, 1f);
@@ -155,6 +196,8 @@ namespace Symbiose
 						Count = Mathf.Clamp(
 							MinLeaves + Mathf.RoundToInt((MaxLeaves - MinLeaves) * sat),
 							MinLeaves, MaxLeaves),
+						Sat = sat,
+						Stade = Mathf.RoundToInt(decomp * (NbStades - 1)),
 						Alpha = AlphaFloor + AlphaSpan * sat,
 						Hash = HashKey(tileId + "|" + r + "|" + c),
 					});
@@ -163,11 +206,27 @@ namespace Symbiose
 			QueueRedraw();
 		}
 
+		// age_sem (5ᵉ champ, pont 0.5.6) = âge moyen de TOUTE la surface du plot : le bois
+		// mort y pèse lourd et vieux (médiane 54 semaines en s37, la feuille de l'automne
+		// semblait déjà humus [n=1 run, VM]). On retire la part du bois, connue (index
+		// 5-6) ; reste l'âge feuilles + herbacées (médiane 2,3 semaines en s37). Lecture
+		// TOLÉRANTE : pré-0.5.6 → 0 (fraîche), pré-0.5.51 → l'âge moyen tel quel.
+		private static float AgeHorsBois(Godot.Collections.Array e)
+		{
+			if (e.Count <= 4) return 0f;
+			float age = (float)e[4].AsDouble();
+			if (e.Count <= 6) return age;
+			float total = (float)e[3].AsDouble(), bois = (float)e[5].AsDouble();
+			if (total - bois <= 1e-6f) return age;
+			return Mathf.Max(0f, (total * age - bois * (float)e[6].AsDouble()) / (total - bois));
+		}
+
 		public override void _Process(double delta)
 		{
 			if (!Visible) return;
 			// La litière ne s'anime pas : on ne redessine qu'au basculement de LOD
-			// (zoom franchit MinZoom) — sinon le canvas dort.
+			// (zoom franchit MinZoom) et au ré-ancrage, qu'un changement de palier
+			// déclenche aussi (la taille du cadre change) — sinon le canvas dort.
 			bool zoomOk = WorldView.CurrentZoom >= MinZoom;
 			if (zoomOk != _lastZoomOk || _margeVersion != MargeVue.Version)
 			{
@@ -181,10 +240,50 @@ namespace Symbiose
 		// le semis de litière de feuilles. Même patron batché que LitterLayer.
 		public override void _Draw()
 		{
+			_lot.Vider();
 			if (_patches.Count == 0 || WorldView.CurrentZoom < MinZoom) return;
 			// Culling (T4) : cadre de marge COMMUN et stable (world/MargeVue.cs),
 			// + notre marge d'objet ; redessiné au ré-ancrage (pan/zoom), pas par frame.
 			Rect2 vis = MargeVue.CadreCouche(CullMarginPx);
+			DessinerSemis(vis);
+			if (WorldView.CurrentZoom >= ZoomSilhouette) DessinerSilhouettes(vis);
+		}
+
+		// Le tapis, en un seul envoi. Offsets calculés sur la base projetée de la vue
+		// (une combinaison linéaire suffit) : il pivote avec elle sans glisser (D35).
+		private void DessinerSemis(Rect2 vis)
+		{
+			bool feuille = WorldView.CurrentZoom >= ZoomFeuille;
+			int max = feuille ? MaxFeuilles : MaxGrains;
+			Vector2 bx = WorldView.WorldToScreenOffset(1f, 0f);
+			Vector2 by = WorldView.WorldToScreenOffset(0f, 1f);
+			foreach (var p in _patches)
+			{
+				Vector2 center = WorldView.WorldToScreen(p.Cx, p.Cy);
+				if (!vis.HasPoint(center)) continue;
+				int semis = Mathf.Max(1, Mathf.RoundToInt(max * p.Sat));
+				for (int i = 0; i < semis; i++)
+				{
+					uint h = LeafFallLayer.Melange(p.Hash + (uint)i * 0x9e3779b1u);
+					float dx = SemisDemiCm * ((h & 0xff) / 127.5f - 1f);
+					float dy = SemisDemiCm * ((h >> 8 & 0xff) / 127.5f - 1f);
+					Vector2 c = center + bx * dx + by * dy;
+					Color col = TonsSemis[p.Stade, (h >> 16) % (uint)TonsFrais.Length];
+					if (!feuille) { _lot.Grain(c, GrainPx, col); continue; }
+					float a = (h >> 18 & 0xff) * (Mathf.Tau / 256f);
+					float cs = Mathf.Cos(a), sn = Mathf.Sin(a);
+					Vector2 d = (bx * cs + by * sn) * FeuilleDemiCm;
+					Vector2 l = (by * cs - bx * sn) * FeuilleLargeCm;
+					_lot.Triangle(c - d, c + l, c + d, col);
+					_lot.Triangle(c - d, c + d, c - l, col.Darkened(0.2f));
+				}
+			}
+			_lot.Dessiner(this);
+		}
+
+		// Gros plan : la vraie forme de feuille, par-dessus le semis.
+		private void DessinerSilhouettes(Rect2 vis)
+		{
 			foreach (var p in _patches)
 			{
 				Vector2 center = WorldView.WorldToScreen(p.Cx, p.Cy);

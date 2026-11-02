@@ -111,6 +111,14 @@ namespace Symbiose
 		/// (espèce + saison, gris bois si morte).</summary>
 		internal Color TeinteTapis => TeinteSaison();
 
+		/// <summary>Ton d'automne de l'espèce au hash `h` : la couleur des feuilles qui
+		/// tombent de cette plante (LeafFallLayer, AUTOMNE VISIBLE ⑤).</summary>
+		internal Color TonChute(float h)
+		{
+			if (!Palettes.TryGetValue(_structure.SpeciesName, out var pal)) pal = DefaultPalette;
+			return pal.Automne(h);
+		}
+
 		// ---------------------------------------------------------------------------
 		// COULEUR — espèce + saison (×0,5), puis santé par-dessus (×2)
 		// ---------------------------------------------------------------------------
