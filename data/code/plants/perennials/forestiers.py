@@ -1,0 +1,236 @@
+"""
+SYMBIOSE — plants/perennials/forestiers.py
+Les arbres de forêt : chêne, hêtre, bouleau, charme, sapin.
+"""
+
+from __future__ import annotations
+from plants.perennials.base import PerennialWoody
+
+
+class OakTree(PerennialWoody):
+    family = "Fagaceae"
+    genus  = "Quercus"
+    name   = "Chêne"
+    feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
+    nectar = 0.0  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
+    shade_tolerance = 0.90  # D111 ②ter : intermédiaire (jeune : supporte une ombre légère) (= défaut strate haute, explicité)
+    rarity = "Sentinelle"
+    keywords = ["Lisière", "Sujet structurant", "Centenaire"]
+    foliage_density = 0.75
+    fragilite_bois = 0.6           # D111 ②bis : bois dur, branches solides
+    pollination_mode = "wind"        # anémophile (chatons)
+    pollination_radius_cm = 800.0
+    reproduction_rate = 0.08   # glandée (mast) rare
+    longevity_years = 500
+    maturity_years = 25
+    girth_max_cm = 40.0        # tronc mûr ~40 cm (pipe model, procédural)
+    age_curve = [(0, 30, 20), (5, 200, 150), (10, 400, 300),
+                 (20, 700, 450), (50, 1500, 800), (100, 3000, 1200)]
+    # --- Croissance procédurale (AUTOMNE VISIBLE ②) — étalé tortueux ---------------
+    # Fiche : 400/280 à l'an 10, plus large et plus rapide que le réel. Pas de poteau :
+    # le relâchement COURT (250) ouvre la couronne dès l'an 4-5 malgré une dominance
+    # haute, qui étage les charpentières sur un tronc court. Gabarit à l'échelle du
+    # jardin (11 m × 5,5 m). Angle 75° : branches maîtresses presque à plat. HORS golden.
+    procedural_growth   = True
+    port_archetype      = "etale_tortueux"
+    growth_speed        = 0.95
+    apical_dominance_base = 2.8
+    auxin_release_scale = 250.0
+    branch_angle        = 75.0
+    max_height_cm       = 1100.0
+    max_extent_cm       = 550.0
+    foliage_halfwidth   = 55.0      # couronne ~280, portée par les branches
+
+
+# ---------------------------------------------------------------------------
+# 3 ESSENCES FORESTIÈRES NORMANDES (sprint RENDU AMBIANCE T1, D58) — silhouettes
+# du décor (T5) + acquisition future canal #3 (friche). CONTENU pur : pas de
+# mécanique neuve, gabarit = OakTree. HORS scénario smoke → golden NEUTRE.
+# ---------------------------------------------------------------------------
+
+class BeechTree(PerennialWoody):
+    """
+    Fagus sylvatica — Hêtre (Fagaceae, comme le chêne). Grand arbre de la hêtraie
+    cathédrale : port OVOÏDE dense, houppier haut et fermé qui fait une ombre
+    profonde (foliage_density élevée). Anémophile. Stature grande mais un peu en
+    deçà du chêne (adulte ~2500-3000 cm), longévité séculaire.
+    """
+    family = "Fagaceae"
+    genus  = "Fagus"
+    name   = "Hêtre"
+    feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
+    nectar = 0.0  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
+    shade_tolerance = 1.30  # D111 ②ter : sciaphile (l'arbre d'ombre par excellence) (≠ défaut strate haute 0,90)
+    rarity = "Climacique"
+    keywords = ["Lisière", "Ombre dense", "Structurant"]
+    foliage_density = 0.85            # houppier fermé → ombre profonde de hêtraie
+    fragilite_bois = 0.7           # D111 ②bis : bois dur
+    pollination_mode = "wind"        # anémophile (chatons)
+    pollination_radius_cm = 700.0
+    reproduction_rate = 0.08         # faînée (mast) irrégulière
+    longevity_years = 300
+    maturity_years = 30
+    girth_max_cm = 35.0        # tronc mûr ~35 cm (pipe model, procédural)
+    age_curve = [(0, 30, 18), (5, 200, 130), (10, 400, 260),
+                 (20, 700, 400), (50, 1500, 650), (100, 2800, 950)]
+    # --- Croissance procédurale (AUTOMNE VISIBLE ②) — ovoïde dense -----------------
+    # Fiche : 400/220 à l'an 10. Branches montantes (55°). Gabarit à l'échelle du jardin
+    # (12 m × 5 m). HORS golden.
+    procedural_growth   = True
+    port_archetype      = "ovoide_dense"
+    growth_speed        = 0.95
+    apical_dominance_base = 1.4
+    auxin_release_scale = 400.0
+    branch_angle        = 55.0
+    max_height_cm       = 1200.0
+    max_extent_cm       = 500.0
+    foliage_halfwidth   = 60.0      # houppier ~220, porté par les branches
+
+
+class BirchTree(PerennialWoody):
+    """
+    Betula pendula — Bouleau (Betulaceae, famille NEUVE déclarée à l'espèce comme
+    l'a fait FirTree pour Pinaceae). PIONNIER de lisière : croissance rapide,
+    stature moyenne (~1500-2000 cm), houppier LÉGER et clairsemé (foliage_density
+    faible → ombre légère, sous-bois clair), écorce blanche, port élancé pleureur.
+    Vie brève pour un arbre.
+    """
+    family = "Betulaceae"
+    genus  = "Betula"
+    name   = "Bouleau"
+    feuillage = "fin"  # transpiration (D111 ①) : type de feuillage d'espèce
+    nectar = 0.0  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
+    shade_tolerance = 0.75  # D111 ②ter : héliophile pionnier (le plus exigeant en lumière) (≠ défaut strate haute 0,90)
+    rarity = "Établie"
+    keywords = ["Pionnière", "Lisière", "Ombre légère"]
+    foliage_density = 0.45           # houppier léger → sous-bois clair
+    fragilite_bois = 1.5           # D111 ②bis : bois cassant, branches fines
+    pollination_mode = "wind"        # anémophile (chatons)
+    pollination_radius_cm = 600.0
+    reproduction_rate = 0.20         # graines ailées abondantes, dispersion large
+    longevity_years = 90
+    maturity_years = 10
+    girth_max_cm = 14.0        # tronc mûr ~14 cm (pipe model, procédural) ; placeholder → F5
+    age_curve = [(0, 40, 15), (5, 400, 120), (10, 800, 200),
+                 (20, 1300, 300), (50, 1800, 420), (90, 2000, 480)]
+    # --- Croissance procédurale (D91 ③) — pionnier élancé + port PLEUREUR ------------
+    # Betula pendula : flèche DRESSÉE (leader net) + rameaux DISTAUX qui RETOMBENT
+    # (levier gravitropique `gravitropism_gain`). Fiche : 750/180 à l'an 10. Leader
+    # tenu par une dominance haute (2.8) + un release_scale long (800) : « pionnier
+    # rapide » se lit sur la VITESSE, pas sur un étalement précoce. Coût assumé : les
+    # latéraux n'arrivent qu'après l'an 5 (plus tôt, à cette vitesse, ils dépassent
+    # le rayon de la fiche). Angle 60° + extension 2,5 m : le gain ploie les rameaux
+    # dès l'an 10 (il croît avec l'éloignement rapporté à `max_extent_cm`). HORS golden.
+    procedural_growth   = True
+    port_archetype      = "dresse_pleureur"
+    growth_speed        = 1.78      # pionnier rapide
+    max_height_cm       = 1500.0
+    max_extent_cm       = 250.0     # houppier LÉGER, élancé (plus étroit qu'un grand feuillu)
+    apical_dominance_base = 2.8     # flèche élancée — leader net, houppier resserré
+    auxin_release_scale = 800.0     # leader dressé longtemps (élancé, ≠ étalement précoce)
+    branch_angle        = 60.0
+    foliage_halfwidth   = 50.0      # NOTE hydrique : bouleau grêle = LE plus exposé
+                                    # (root_r = canopy_r), à surveiller sur sable (mesuré
+                                    # dans le monde de démo, cf. apres_port.md).
+    gravitropism_gain   = 1.0       # rameaux distaux PENDANTS (Betula pendula) ; SEULE espèce
+                                    # à régler ce levier (prépare le saule D23) — calibrer F5.
+
+
+class HornbeamTree(PerennialWoody):
+    """
+    Carpinus betulus — Charme (Betulaceae, comme le bouleau). Arbre du BOCAGE au
+    bois très dur, tronc CANNELÉ sinueux (« musclé »). Stature moyenne, houppier
+    de densité moyenne, longévité intermédiaire. Supporte bien la taille (haies
+    bocagères, charmilles) — mais ici, contenu de catalogue, pas de mécanique.
+    """
+    family = "Betulaceae"
+    genus  = "Carpinus"
+    name   = "Charme"
+    feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
+    nectar = 0.0  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
+    shade_tolerance = 1.15  # D111 ②ter : semi-sciaphile (sous-étage de chênaie) (≠ défaut strate haute 0,90)
+    rarity = "Établie"
+    keywords = ["Bocage", "Haie", "Structurant"]
+    foliage_density = 0.65           # houppier moyen
+    fragilite_bois = 0.6           # D111 ②bis : bois très dur (« bois de fer »)
+    pollination_mode = "wind"        # anémophile (chatons)
+    pollination_radius_cm = 550.0
+    reproduction_rate = 0.12         # samares en grappes
+    longevity_years = 150
+    maturity_years = 15
+    girth_max_cm = 18.0        # tronc mûr ~18 cm (pipe model, procédural)
+    age_curve = [(0, 40, 20), (5, 250, 120), (10, 500, 220),
+                 (20, 900, 340), (50, 1500, 520), (100, 2000, 650)]
+    # --- Croissance procédurale (AUTOMNE VISIBLE ②) — ovoïde régulier du bocage ----
+    # Fiche : 450/220 à l'an 10. Ramure fine et serrée, branches à 50°. Gabarit à
+    # l'échelle du jardin (12 m × 5 m). HORS golden.
+    procedural_growth   = True
+    port_archetype      = "ovoide"
+    growth_speed        = 1.07
+    apical_dominance_base = 1.6
+    auxin_release_scale = 400.0
+    branch_angle        = 50.0
+    max_height_cm       = 1200.0
+    max_extent_cm       = 500.0
+    foliage_halfwidth   = 60.0      # ovoïde ~220, porté par les branches
+
+
+# ---------------------------------------------------------------------------
+# CONIFÈRE PERSISTANT (sprint équilibre invasion ⑤, D10) — source de BRF/aiguilles
+# ---------------------------------------------------------------------------
+
+class FirTree(PerennialWoody):
+    """
+    Abies alba — Sapin (Pinaceae, famille NEUVE déclarée à l'espèce).
+    Conifère PERSISTANT (`deciduous=False` → il projette son ombre même l'hiver,
+    ≠ les fruitiers caducs : levier d'ombrage permanent au nord) à croissance lente
+    et longévité séculaire. Deux sources de mulch :
+      • ses AIGUILLES tombées, récoltées (`mulch_source="aiguilles"`), font un mulch
+        ACIDIFIANT (nature "aiguilles" : `ph_shift=-0.10`, `allelo=0.3` — il freine
+        la levée férale ET fait baisser le pH, à réserver aux acidophiles type
+        myrtille, cf. interconnexion avec la fenêtre pH) ;
+      • ses rameaux ligneux BROYÉS (geste `broyer` sur son squelette) donnent du BRF.
+    Anémophile (cônes mâles au vent). Sa fenêtre pH tire vers l'acide (`ph_opt=5.5`)
+    — un conifère de sol acide, cohérent avec sa litière. HORS golden → NEUTRE.
+    """
+    family = "Pinaceae"
+    genus  = "Abies"
+    name   = "Sapin"
+    feuillage = "aiguilles"  # transpiration (D111 ①) : type de feuillage d'espèce
+    nectar = 0.0  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
+    shade_tolerance = 1.25  # D111 ②ter : sciaphile (sapin pectiné : régénère sous couvert) (≠ défaut strate haute 0,90)
+    rarity = "Établie"
+    keywords = ["Conifère", "Persistant", "Aiguilles", "Brise-vent"]
+    deciduous = False                # PERSISTANT : ombre projetée toute l'année
+    winter_strategy = "evergreen"
+    foliage_density = 0.70           # houppier dense et sombre
+    pollination_mode = "wind"        # cônes anémophiles
+    pollination_radius_cm = 600.0
+    reproduction_rate = 0.06         # cônes irréguliers
+    ph_opt = 5.5                     # tire vers l'acide (conifère de sol acide)
+    ph_tol = 1.3
+    mulch_source = "aiguilles"       # récolté → stock aiguilles (④/⑤)
+    longevity_years = 250
+    maturity_years = 20
+    girth_max_cm = 25.0        # tronc mûr ~25 cm (pipe model, procédural)
+    age_curve = [(0, 30, 15), (5, 200, 80), (10, 400, 130),
+                 (20, 800, 200), (50, 1800, 350), (100, 3000, 500)]
+    # --- Croissance procédurale (D91 ②) — FLÈCHE conique, conifère lent -----------
+    # Cas atypique : le sapin garde une FLÈCHE dominante toute sa vie → port conique
+    # `fleche` (≠ l'étalement `etale` des feuillus). On l'obtient par dominance apicale
+    # HAUTE + relâchement d'auxine TRÈS long : le leader ne s'ouvre jamais vraiment, la
+    # couronne reste ÉTROITE. Fiche : 450/130 à l'an 10, deux fois plus vite que le réel.
+    # Latéraux à 85° (étages horizontaux), courts car tardifs (après l'an 5). foliage_
+    # halfwidth 50 (ex 110) : ce sont maintenant ces étages qui portent la couronne ; un
+    # jeune sapin reste LE cas exposé à la mort hydrique (root_r ≈ fhw). deciduous=False /
+    # mulch_source / ph_opt INCHANGÉS (rôles D69). Aiguilles + verticille = rendu (T4).
+    # HORS golden.
+    procedural_growth     = True
+    port_archetype        = "fleche"
+    apical_dominance_base = 2.4       # HAUT : flèche tenue → cône serré
+    growth_speed          = 1.07
+    auxin_release_scale   = 650.0     # long : reste dressé (jamais decurrent)
+    branch_angle          = 85.0
+    max_height_cm         = 1200.0
+    max_extent_cm         = 250.0
+    foliage_halfwidth     = 50.0      # cône étroit cr~130 (cf. ci-dessus)

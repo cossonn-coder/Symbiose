@@ -39,7 +39,7 @@ structurel, 2026-06-03), est la **source de vérité écologique** du jeu :
 - `plants/` — `genetics.py` (gènes, `clamp_gene`, `species_compatible`),
   `base.py` (`GrowthStage`/`PlantInstance`/`ConflictNotification`/`PlantBase`
   + 5 familles + empreintes + registre d'effets), `species.py`,
-  `perennials.py`, `catalogue.py`
+  `perennials/`, `catalogue.py`
 - `world/` — `tile.py` (`Tile`, `StakeSlot`, `RONDELLE_TYPES`), `building.py`
   (`House` paramétrable, ombre + albédo espalier)
 - `fields/` — `noise.py` (fondation déterministe), `grids.py`, `light.py`,
