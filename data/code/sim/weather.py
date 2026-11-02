@@ -44,7 +44,6 @@ K_PATCH_R = (90_006, 0)  # centre du patch d'un événement local — ligne (gr�
 K_PATCH_C = (90_007, 0)  # centre du patch d'un événement local — colonne
 K_PLUIE   = (90_008, 0)  # épisode de pluie ORDINAIRE (sprint sol qui respire ①, D111)
 K_HR      = (90_009, 0)  # bruit hebdo de l'humidité de l'air (rosée, ①)
-K_NEIGE   = (90_010, 0)  # neige ORDINAIRE d'une semaine calme et sèche (D125)
 
 # Rayon du patch d'un événement `scope="local"`, en fraction de la plus grande
 # dimension de la tuile (sprint effondrement météo ①, §2). ~0.42 → le patch couvre
@@ -156,15 +155,10 @@ P_PLUIE_SAISON = {"printemps": 0.27, "ete": 0.16, "automne": 0.22, "hiver": 0.35
 # (`sim/ciel.py` SEUIL_SEVERE = 0.8) → une averse ordinaire n'alimente jamais
 # « l'hiver de tous les dangers » ; seule la « Pluie prolongée »-ALÉA peut le faire.
 PLUIE_INTENSITE_MAX = 0.75
-# Neige ordinaire (D125, Nico : « je veux bien qu'il neige plus souvent en hiver »). Les
-# aléas seuls donnaient 0,51 semaine de neige par an et 93 années sans neige sur 150
-# [30 graines × 5 ans, météo pure]. Même patron que la pluie : un canal dédié, consulté
-# seulement les semaines restées calmes ET sèches, donc aucun autre événement ne change.
-# Probabilité conditionnelle dans la fenêtre de « Neige » du catalogue.
-P_NEIGE_ORDINAIRE = 0.08
-
-
-_NEIGE_CATALOGUE = next(e for e in _CATALOGUE if e[0] == "Neige")
+# Neige = précipitation par temps froid (D125, Nico : « c'est par définition une pluie
+# quand il fait froid »). La pluie de la semaine devient neige si T_air, averse comprise,
+# passe sous ce seuil. Limite pluie-neige usuelle, et cible d'environ une semaine de neige par an.
+SEUIL_NEIGE_C = 1.5
 
 
 def _saison_meteo(wiy: int) -> str:
@@ -173,25 +167,26 @@ def _saison_meteo(wiy: int) -> str:
     return saison_de(wiy)
 
 
-def _neige_ordinaire(seed: int, week: int, wiy: int) -> WeatherEvent:
-    """Neige d'une semaine calme et sèche, ou `CALME`. Pur (hash). Intensité bornée comme
-    la pluie ordinaire : elle n'alimente pas « l'hiver de tous les dangers » (`sim/ciel.py`)."""
-    kind, scope, duration, (debut, fin) = _NEIGE_CATALOGUE
-    if not debut <= wiy <= fin or _hash_noise(seed, week, *K_NEIGE) >= P_NEIGE_ORDINAIRE:
-        return CALME
-    inten = PLUIE_INTENSITE_MAX * _hash_noise(seed, week, *K_MAG)
-    return WeatherEvent(kind, round(inten, 3), duration, scope)
+def _pluie_ou_neige(seed: int, week: int, wiy: int, ev: WeatherEvent) -> WeatherEvent:
+    """Une pluie assez froide tombe en neige, à intensité et durée égales. Pur."""
+    if ev.kind != "Pluie prolongée":
+        return ev
+    phase = (seed & 0xFFFF) / 0xFFFF * 2.0 * math.pi
+    t_air = temp_norm(wiy, (week - 1) / 52.0, phase) + temperature_delta(ev)
+    if t_air >= SEUIL_NEIGE_C:
+        return ev
+    return WeatherEvent("Neige", ev.intensity, ev.duration_weeks, "global")
 
 
 def _pluie_ordinaire(seed: int, week: int, wiy: int) -> WeatherEvent:
     """Épisode de pluie ordinaire d'une semaine CALME, ou `CALME`. Pur (hash)."""
     saison = _saison_meteo(wiy)
     if _hash_noise(seed, week, *K_PLUIE) >= P_PLUIE_SAISON[saison]:
-        return _neige_ordinaire(seed, week, wiy)
+        return CALME
     kind = "Orage" if saison == "ete" else "Pluie prolongée"
     scope = "local" if kind == "Orage" else "global"
     inten = PLUIE_INTENSITE_MAX * _hash_noise(seed, week, *K_MAG)
-    return WeatherEvent(kind, round(inten, 3), 1, scope)
+    return _pluie_ou_neige(seed, week, wiy, WeatherEvent(kind, round(inten, 3), 1, scope))
 
 
 def weather_at(seed: int, week: int) -> WeatherEvent:
@@ -220,7 +215,7 @@ def weather_at(seed: int, week: int) -> WeatherEvent:
     pick = _hash_noise(seed, week, *K_PICK)
     kind, scope, duration, _ = cands[int(pick * len(cands)) % len(cands)]
     mag = abs(hash_gauss(seed, week, K_MAG[0], K_MAG[1]))
-    return WeatherEvent(kind, round(mag, 3), duration, scope)
+    return _pluie_ou_neige(seed, week, wiy, WeatherEvent(kind, round(mag, 3), duration, scope))
 
 
 def patch_local(seed: int, week: int, rows: int, cols: int):
