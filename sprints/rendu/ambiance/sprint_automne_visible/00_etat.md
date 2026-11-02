@@ -1,7 +1,7 @@
 # Sprint AUTOMNE VISIBLE (D123 + D118 (A) arbres) — état partagé
 
 **Conception** : `docs/rendu/ambiance/conception_automne_visible.md` (figée le 2026-11-02).
-**Où on en est** : ① à ⑥ faits (⑥ non commité au moment de cette note). Reste le F5 de Nico et la clôture du sprint.
+**Où on en est** : ① à ⑥ clos et commités, golden `ac48b170…`, sprint clos côté code. Reste le F5 de Nico.
 
 ## Décisions clés (Nico, 2026-11-02)
 
@@ -129,11 +129,11 @@ Rappels des bilans ④ : ×4 plus clairsemé que ×1, apex vert sur un arbre rou
 
 ## Ce qui reste
 
-F5 ci-dessus. `/refactor` en fin de sprint : `plants/perennials.py` (419 LDC), `tools/simserver/serialize.py` (398 LDC). À trancher (bilan ②) : population −19 % en an 2, vitalité du cerisier.
+F5 ci-dessus. `/refactor` fait : `plants/perennials.py` → paquet `plants/perennials/`, golden inchangé ; `tools/simserver/serialize.py` (398 LDC) reste sous le seuil. À trancher (bilan ②) : population −19 % en an 2, vitalité du cerisier.
 Garde-fous : ne JAMAIS lancer `tests/test_epaisseur_500ans.py` ; mesures ≤ 3 ans de jeu.
 `test_succession` et `test_edaphique` sont rouges AVANT ce sprint (vérifié le 2026-10-30).
 
 ## §REPRISE
 
-Lire `CLAUDE.md` + ce fichier. Tous les tronçons sont faits : plus de `/sprint-auto` à lancer sur ce sprint, reste la clôture (journal, DETTE, BACKLOG) et le §F5.
+Lire `CLAUDE.md` + ce fichier. Sprint clos côté code (journal, DETTE et BACKLOG à jour) : plus de `/sprint-auto` à lancer, reste le §F5.
 Rejouer les bancs : `python3 -m bancs.mesure_arbres`, `python3 -m bancs.mesure_feuilles 3`. Lisière : `tools/capture_vm.sh -b smoke -B -z 0.5 -w 44 -m "Neige,1"`.

@@ -208,6 +208,7 @@ pointeur ci-dessous. Ne plus écrire le contenu des entrées ici.
 - [2026-10-30 — Sprint **CALENDRIER UNIQUE** (D122) — CLOS côté code (①→④) : année à l'équinoxe de printemps, `calendrier.py` unique en couche basse, climat décalé de 11 sem., fenêtres recalées au mois réel, réveil thermique des ravageurs ; golden re-figé annoncé ②③ → `bfe6f889…` ; vue saine sans retouche ; attend le F5 de Nico](journal/166_2026-10-30_sprint-calendrier-unique-CLOS.md)
 
 ---
+- [2026-11-02 — Sprint **AUTOMNE VISIBLE** (D123 + D118 (A) arbres) — CLOS côté code (①→⑥) : flèche protégée et ports d'après fiches, feuilles sous la couronne (pont 0.6.3), tons d'automne par espèce, tapis lisible dès ×1, chute animée, lisière 4 saisons + signes macro ; golden re-figé annoncé `bfe6f889…` → `ac48b170…` ; attend le F5](journal/167_2026-11-02_sprint-automne-visible-CLOS.md)
 
 > Tout le contenu détaillé est dans les fichiers liés ci-dessus
 > (`journal/` et `journal_archive/`). La dette est dans [`DETTE.md`](DETTE.md).
