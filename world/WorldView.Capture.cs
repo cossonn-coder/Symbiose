@@ -150,7 +150,7 @@ namespace Symbiose
 
 		// Vrai quand le jeu est lancé par le banc de capture (WorldView._Ready
 		// saute alors le sélecteur de monde).
-		private static bool CaptureActive => CaptureBanc != null;
+		internal static bool CaptureActive => CaptureBanc != null;
 
 		private static string ArgCapture(string cle)
 		{

@@ -207,6 +207,7 @@ namespace Symbiose
 			// (DecorLayer.Mailles.cs) — le prochain cran de molette n'aura qu'à permuter.
 			AvancerFond();
 			MajUniformes();   // ⑥ : soleil, palier, vent → shader (DecorLayer.Vent.cs)
+			MajSaison((float)delta);   // AUTOMNE ⑥ : saison et météo → shader (DecorLayer.Saison.cs)
 		}
 
 		public override void _Draw()

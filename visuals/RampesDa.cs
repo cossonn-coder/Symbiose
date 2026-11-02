@@ -61,6 +61,23 @@ namespace Symbiose
 			// Décor crème : « deux tons (crème, gris pâle) » ; le gris pâle non mesuré =
 			// Deriver(#c7c797) ton −1, figé ici.
 			["creme"] = Hex("a9a374", "c7c797"),
+			// AUTOMNE VISIBLE ⑥ (decor_indexe.gdshader) — saison et météo de la lisière, non
+			// mesurées au brief : ombres chaudes, pour qu'un hiver ne vire pas au vert.
+			["lisiere_tendre"] = Hex("3f6a2a", "5a8a38", "79a94a", "9cc65e", "c4dd7c"),
+			["lisiere_jaune"] = Hex("6b5a1e", "957b24", "c49e30", "dcbc48", "efd873"),
+			["lisiere_orange"] = Hex("6a3e18", "8e5720", "b9752a", "d3933c", "e8b55c"),
+			["lisiere_roux"] = Hex("4f2a14", "6e3a1a", "92502a", "ad6a38", "c88a50"),
+			["lisiere_terne"] = Hex("3e3626", "544a36", "6c614a", "857a60", "9d9278"),
+			["lisiere_regain"] = Hex("57572a", "767636", "97964a", "b1ad5c", "c8c478"),
+			["lisiere_paille"] = Hex("5c5030", "7c6c42", "9c8b58", "b7a56e", "cdbd88"),
+			["lisiere_grille"] = Hex("5a4620", "7c6230", "a0803f", "b99a54", "d1b56f"),
+			["lisiere_sombre"] = Hex("263e26", "365436", "4b7043", "5f8a50", "78a364"),
+			["lisiere_givre"] = Hex("6f8590", "8fa4ad", "adc1c8", "c8d9de", "e2edf0"),
+			["lisiere_neige"] = Hex("8e9fb0", "b0bfca", "cfd9df", "e4ebee", "f5f8f8"),
+			["lisiere_brume_chaude"] = Hex("a9a285", "c4bda0", "d8d0b0", "e3dcc0", "efe8d2"),
+			["lisiere_brume_froide"] = Hex("8f9ca2", "a9b5ba", "c0cbcf", "d2dbde", "e3e9eb"),
+			["lisiere_fleur_b"] = Hex("bdb9a6", "d2cebb", "e7e3d2", "f0ecdc", "f8f6ec"),
+			["lisiere_fleur_j"] = Hex("a88a1e", "c8a632", "e6c24a", "f0d468", "f8e68c"),
 			// MARE VIVANTE ② (eau_mare.gdshader) — non mesurées au brief, choisies hors
 			// quasi-noir (L OKLab ≥ 0,37, da_image) : eau stagnante bleu-vert (creux →
 			// éclat isolé du reflet), vase de berge brun-olive, glace blanc-bleuté.

@@ -53,6 +53,7 @@ namespace Symbiose
 			_lastWeather = weather;
 			weather = DefileOverride(CaptureMeteoOverride(weather));   // bancs (T4, T5)
 			_weatherLayer?.SetWeather(weather);
+			_decorLayer?.SetMeteo(weather);   // la lisière montre le temps (AUTOMNE ⑥)
 			MeteoPlantes.SetWeather(weather.ContainsKey("kind") ? weather["kind"].AsString() : "",
 				weather.ContainsKey("intensity") ? (float)weather["intensity"].AsDouble() : 0f);
 			var w = weather.ContainsKey("wind") ? weather["wind"].AsGodotDictionary() : null;
@@ -62,8 +63,11 @@ namespace Symbiose
 		}
 
 		// Bloc `temperature` (lecture tolérante : pré-0.5.0 → pas de manteau).
-		private void ApplySnow(GDict temperature) =>
+		private void ApplySnow(GDict temperature)
+		{
 			_snowLayer?.SetSnow(temperature, _origins);
+			_decorLayer?.SetManteau(temperature);   // AUTOMNE ⑥
+		}
 
 		// Bloc `temperature.t_sol` → heatmap T sol (⑩). Même GDict que ApplySnow ;
 		// l'overlay ne redessine que s'il est visible (coût nul quand caché).

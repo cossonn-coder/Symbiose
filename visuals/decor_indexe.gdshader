@@ -20,6 +20,19 @@
 //   R = valeur (plan du rideau, 1 devant → plus sombre au fond)   G = amplitude du vent
 //   B = phase au hash (ou orientation de la face pour la roche)  A = alpha (touche H)
 //
+// TEXEL de l'atlas (AUTOMNE VISIBLE ⑥) : les 2 bits hauts de G, libres (n° de palette
+// ≤ 63 en octet haut), portent la CLASSE de la matière, posée à la construction :
+//   0 = inerte (eau, galets, écorce) · 1 = feuillu · 2 = prairie, sous-bois, roseaux
+//   3 = sapin et roche (pas de saison, mais la neige et le givre s'y posent)
+// Orientation 13 = FLEUR de prairie (éclairée à plat).
+//
+// 4. SAISON ET MÉTÉO DE LA LISIÈRE (⑥) : couleurs choisies par pied, sans reconstruire
+//    la maille (uniforms de DecorLayer.Saison.cs). La phase B sert de hash du pied : il
+//    décale sa semaine et son roux, d'où une saison qui gagne le bois pied par pied.
+//    La rampe d'arrivée est lue à la VALEUR du texel d'origine : une hêtraie sombre
+//    reste plus sombre qu'un bouleau, et tout reste dans la LUT (palette 16 bits).
+//    Semaines (wiy 1 = équinoxe de printemps) à calibrer ici : conception §3.5.
+//
 // 📖 Pédagogie : c'est la même astuce qu'un registre de configuration multiplexé en
 // embarqué — 4 octets par sommet, dont le SENS est fixé par un contrat (en-tête), pas
 // par leur nom (« color »). Le GPU s'en moque : ce sont 4 nombres interpolés.
@@ -38,11 +51,42 @@ uniform float onde_f = 0.2;              // fréquence × échelle de force (Hz)
 uniform float temps = 0.0;               // WindWave.Temps (s)
 uniform vec4 risees = vec4(1.0);         // risées normées (cycle n → risees[n mod 4])
 
+// --- saison et météo (posés par DecorLayer.Saison.cs ; défaut = été, temps calme) ---
+uniform float semaine = 20.0;            // week_in_year lissée
+uniform float m_seche = 0.0;             // prairie grillée
+uniform float m_humide = 0.0;            // prairie sombre
+uniform float m_givre = 0.0;
+uniform float m_neige = 0.0;
+uniform float m_brume_chaude = 0.0;      // voile + tremblement de chaleur
+uniform float m_brume_froide = 0.0;      // brume rasante
+uniform int r_tendre = 0;
+uniform int r_jaune = 0;
+uniform int r_orange = 0;
+uniform int r_roux = 0;
+uniform int r_terne = 0;
+uniform int r_regain = 0;
+uniform int r_paille = 0;
+uniform int r_grille = 0;
+uniform int r_sombre = 0;
+uniform int r_givre = 0;
+uniform int r_neige = 0;
+uniform int r_brume_chaude = 0;
+uniform int r_brume_froide = 0;
+uniform int r_fleur_b = 0;
+uniform int r_fleur_j = 0;
+
 const float AMP_MAX = 32.0;              // px canvas pour G = 1
 const float SEUIL = 0.3;
 const float SEUIL_ECLAT = 0.8;
 const int PALETTES_PAR_LIGNE = 64;
 const int TEXELS_PAR_PALETTE = 8;
+const int CLASSE_FEUILLU = 1;
+const int CLASSE_PRAIRIE = 2;
+const int CLASSE_SANS_SAISON = 3;
+const int ORIENT_FLEUR = 13;
+const float DECALAGE_PIED = 5.0;         // semaines d'écart entre le plus précoce et le plus tardif
+const float DEGARNI_MAX = 0.85;          // part de couronne absente en plein hiver
+const float PRAIRIE_LUM_MIN = 0.30;      // plus sombre : sous-bois, pas de fleurs
 
 varying vec4 v_mod;
 varying vec2 v_pos;
@@ -72,6 +116,11 @@ void vertex() {
 		float flex = clamp(f * (fond + 0.8 * enveloppe(cyc - n) * risee(n)) + sway, 0.0, 1.0);
 		// Calé au pixel INTERNE : la pièce glisse d'un nombre entier de px (Nearest net).
 		VERTEX += round(vent_dir * amp * flex * zoom) / zoom;
+	}
+	// Brume de chaleur (⑥) : le végétal tremble d'1 px interne, jamais la roche (amp = 0).
+	if (m_brume_chaude > 0.01 && amp > 0.0) {
+		float s = sin(TIME * 2.5 + VERTEX.y * 0.25 + COLOR.b * 6.2831853);
+		VERTEX.x += round(s * 1.5 * m_brume_chaude) / zoom;
 	}
 	v_pos = VERTEX;   // après le vent : le grain d'un houppier suit le houppier
 }
@@ -119,6 +168,92 @@ int ecorce(ivec2 ip) {
 	return (h & 3u) == 0u ? -1 : ((h >> 2u & 7u) == 0u ? 1 : 0);
 }
 
+vec3 ton_lut(sampler2D table, int id, int ton) {
+	return texelFetch(table, ivec2((id % PALETTES_PAR_LIGNE) * TEXELS_PAR_PALETTE + ton, id / PALETTES_PAR_LIGNE), 0).rgb;
+}
+
+float clarte(vec3 c) { return dot(c, vec3(0.3, 0.59, 0.11)); }
+
+// La rampe d'arrivée, au ton le plus proche de la valeur d'origine.
+vec3 rampe(sampler2D table, int id, float lum) {
+	return ton_lut(table, id, int(clamp((lum - 0.12) / 0.8 * 4.0 + 0.5, 0.0, 4.0)));
+}
+
+float h01(int x, int y) { return float(hache(x, y) & 255u) / 255.0; }
+
+// Bruit de valeur (4 hashes lissés) : des nappes aux contours organiques, sans blocs.
+float bruit(vec2 p) {
+	ivec2 i = ivec2(floor(p));
+	vec2 f = fract(p);
+	f = f * f * (3.0 - 2.0 * f);
+	return mix(mix(h01(i.x, i.y), h01(i.x + 1, i.y), f.x),
+			   mix(h01(i.x, i.y + 1), h01(i.x + 1, i.y + 1), f.x), f.y);
+}
+
+// Matrice de Bayer 4×4 : un voile en tramage, sans couleur hors palette.
+float bayer(ivec2 p) {
+	int x = p.x & 3, y = p.y & 3;
+	int v = (y == 0) ? (x == 0 ? 0 : x == 1 ? 8 : x == 2 ? 2 : 10)
+		: (y == 1) ? (x == 0 ? 12 : x == 1 ? 4 : x == 2 ? 14 : 6)
+		: (y == 2) ? (x == 0 ? 3 : x == 1 ? 11 : x == 2 ? 1 : 9)
+		: (x == 0 ? 15 : x == 1 ? 7 : x == 2 ? 13 : 5);
+	return (float(v) + 0.5) / 16.0;
+}
+
+// Saison puis météo d'un texel de la lisière. Renvoie la couleur, alpha = texel présent.
+vec4 lisiere(vec3 c, int classe, bool fleur, bool pierre, ivec2 ip, float ph, float hauteur) {
+	float l = clarte(c);
+	float present = 1.0;
+	float w = mod(semaine + (ph - 0.5) * DECALAGE_PIED, 52.0);
+	// Grain en plaques : grosses taches + détail. Calculé seulement s'il sert.
+	float grain = 2.0;
+	if (m_seche + m_humide + m_givre + m_neige > 0.001) {
+		vec2 q = vec2(ip);
+		grain = smoothstep(0.2, 0.8, 0.75 * bruit(q / vec2(14.0, 8.0)) + 0.25 * h01(ip.x >> 1, ip.y >> 1));
+	}
+	if (classe == CLASSE_FEUILLU) {
+		if (w < 2.0 || w >= 37.0) c = rampe(lut, r_terne, l);
+		else if (w < 10.0) c = rampe(lut, r_tendre, l);
+		else if (w >= 33.0) c = rampe(lut, ph < 0.5 ? r_roux : r_orange, l);
+		else if (w >= 29.0) c = rampe(lut, ph < 0.4 ? r_orange : r_jaune, l);
+		else if (ph < m_seche * 0.25) c = rampe(lut, r_jaune, l);   // canicule : quelques pieds jaunissent
+		float degarni = w >= 33.0 ? smoothstep(33.0, 40.0, w) : 1.0 - smoothstep(0.0, 5.0, w);
+		if (h01(ip.x >> 2, ip.y >> 2) < degarni * DEGARNI_MAX) present = 0.0;
+	} else if (classe == CLASSE_PRAIRIE) {
+		// Rampe de la saison ; l'été garde sa couleur d'origine (r_sombre pour la pluie).
+		bool ete = w >= 12.0 && w < 27.0;
+		int rp = (w < 1.5 || w >= 38.0) ? r_paille : (w < 12.0 ? r_tendre : (ete ? r_sombre : r_regain));
+		if (!ete) c = rampe(lut, rp, l);
+		// Pluie : la prairie s'assombrit dans SA rampe, un hiver pluvieux ne reverdit pas.
+		if (grain < m_humide) c = rampe(lut, rp, ete ? l : l - 0.2);
+		if (grain < m_seche) c = rampe(lut, r_grille, l);
+		// Printemps : un pixel de fleur par-ci par-là, sans pièce de plus dans la maille.
+		if (w >= 1.5 && w < 12.0 && l > PRAIRIE_LUM_MIN && m_neige < 0.5) {
+			uint hf = hache(ip.x / 6, ip.y / 4);
+			if ((hf & 15u) == 0u && (ip.x % 6) == 3 && (ip.y % 4) == 2)
+				c = ton_lut(lut, (hf >> 4u & 1u) == 0u ? r_fleur_b : r_fleur_j, 3);
+		}
+	} else if (fleur) {
+		float part = (w < 1.5 || w >= 36.0) ? 0.0 : (w >= 27.0 ? 0.3 : 1.0);
+		if (ph >= part || m_neige > 0.5) present = 0.0;
+	}
+	if (classe != 0 || pierre) {
+		if (classe != CLASSE_PRAIRIE && !pierre && grain < m_givre * 0.3 && l > 0.2) c = rampe(lut, r_givre, l + 0.2);
+		if (classe == CLASSE_PRAIRIE && grain < m_givre * 0.4) c = rampe(lut, r_givre, l + 0.1);
+		// Neige : pleine sur la prairie, sur les faces claires ailleurs.
+		if (classe == CLASSE_PRAIRIE) { if (grain < m_neige * 1.1) c = rampe(lut, r_neige, l + 0.25); }
+		else if (l > 0.18 && grain < m_neige * 0.75) c = rampe(lut, r_neige, l + 0.3);
+	}
+	// Brumes : tramage par nappes, jamais un voile uniforme sur tout le décor.
+	if (m_brume_froide + m_brume_chaude > 0.001) {
+		float v = bayer(ip);
+		float nappe = smoothstep(0.4, 0.7, bruit(vec2(ip) / vec2(40.0, 14.0)));
+		if (v < m_brume_froide * 0.3 * nappe * (1.0 - hauteur)) c = ton_lut(lut, r_brume_froide, 3);
+		if ((classe != 0 || pierre) && v < m_brume_chaude * 0.22 * nappe) c = ton_lut(lut, r_brume_chaude, 3);
+	}
+	return vec4(c, present);
+}
+
 void fragment() {
 	// texelFetch (accès tableau, sans filtrage) : un code est un ENTIER, un texel
 	// voisin mêlé par le filtrage le rendrait faux (n° de palette, ton décalés).
@@ -131,10 +266,13 @@ void fragment() {
 			// Filet : texel littéral (aucun aujourd'hui) → tel quel.
 			COLOR = vec4(t.rgb * v_mod.r, v_mod.a);
 		} else {
-			int id = o.r + 256 * o.g;
+			int id = o.r + 256 * (o.g & 63);
+			int classe = o.g >> 6;
 			int ton = (o.b >> 4) & 7;
 			int orient = o.b & 15;
 			ivec2 ip = ivec2(floor(v_pos * zoom));
+			bool pierre = orient == 10;
+			bool fleur = orient == ORIENT_FLEUR;
 			if (orient == 9) {
 				ton += tissage(ip);
 			} else if (orient == 10) {
@@ -150,8 +288,8 @@ void fragment() {
 				ton += d > SEUIL_ECLAT ? 2 : (d > SEUIL ? 1 : (d < -SEUIL ? -1 : 0));
 			}
 			ton = clamp(ton, 0, 4);
-			ivec2 px = ivec2((id % PALETTES_PAR_LIGNE) * TEXELS_PAR_PALETTE + ton, id / PALETTES_PAR_LIGNE);
-			COLOR = vec4(texelFetch(lut, px, 0).rgb * v_mod.r, v_mod.a);
+			vec4 l = lisiere(ton_lut(lut, id, ton), classe, fleur, pierre, ip, pierre ? 0.0 : v_mod.b, clamp(v_mod.g * 12.0, 0.0, 1.0));
+			COLOR = vec4(l.rgb * v_mod.r, v_mod.a * l.a);
 		}
 	}
 }

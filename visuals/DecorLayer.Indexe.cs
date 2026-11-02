@@ -82,7 +82,7 @@ namespace Symbiose
 			Teinte.PrairieClair => SourceNom("touffe_claire"),
 			Teinte.Roche => SourceNom("pierre"),
 			_ => SourceCouleur(TeintesBase[t]),
-		};
+		} | (long)ClasseTeinte((Teinte)t) << DecalageClasse;   // ⑥, DecorLayer.Saison.cs
 
 		/// <summary>Écrit l'atlas en codes (appelé par AssurerKitDecor, puis à chaque
 		/// vidage de LUT). `hKit` = hauteur des étagères du kit.</summary>
@@ -98,25 +98,28 @@ namespace Symbiose
 			foreach (var (r, codes, src) in _kitCodes)
 			{
 				int id = IdSource(src);
+				int classe = (int)(src >> DecalageClasse & 3);
 				for (int py = 0; py < r.Size.Y; py++)
 					for (int px = 0; px < r.Size.X; px++)
 					{
 						byte b = codes[py * r.Size.X + px];
-						if (b != 0) Texel(r.Position.X + px, r.Position.Y + py, id, b);
+						if (b != 0) Texel(r.Position.X + px, r.Position.Y + py, id, b, classe);
 					}
 			}
 			foreach (var (x, y, cle) in _swatches)
-				Texel(x, y, IdSource(cle & 0x1fffff), PaletteIndexee.OctetB((int)(cle >> 24 & 7), (int)(cle >> 28 & 15)));
+				Texel(x, y, IdSource(cle & 0x1fffff), PaletteIndexee.OctetB((int)(cle >> 24 & 7), (int)(cle >> 28 & 15)),
+					  (int)(cle >> DecalageClasse & 3));
 			_kitSale = true;
 		}
 
-		private static void Texel(int x, int y, int id, byte b) =>
-			_kitImg.SetPixel(x, y, new Color((id & 255) / 255f, (id >> 8) / 255f, b / 255f, 1f));
+		// ⑥ : classe de la matière dans les 2 bits hauts de G (n° de palette ≤ 63 en octet haut).
+		private static void Texel(int x, int y, int id, byte b, int classe) =>
+			_kitImg.SetPixel(x, y, new Color((id & 255) / 255f, ((id >> 8) | classe << 6) / 255f, b / 255f, 1f));
 
 		/// <summary>UV du texel-code (source, ton, orientation), alloué au besoin.</summary>
 		private static Vector2 UvSwatch(long src, int ton, int orient)
 		{
-			long cle = src | (long)ton << 24 | (long)orient << 28;
+			long cle = src | (long)ton << 24 | (long)orient << 28;   // src porte la classe (⑥)
 			if (_swatchUv.TryGetValue(cle, out Vector2 uv)) return uv;
 			int n = _swatches.Count;
 			if (n >= AtlasW * SwatchRangs)
@@ -126,7 +129,7 @@ namespace Symbiose
 			}
 			int x = n % AtlasW, y = _swatchY0 + n / AtlasW;
 			_swatches.Add((x, y, cle));
-			Texel(x, y, IdSource(src), PaletteIndexee.OctetB(ton, orient));
+			Texel(x, y, IdSource(src), PaletteIndexee.OctetB(ton, orient), (int)(src >> DecalageClasse & 3));
 			_kitSale = true;
 			uv = new Vector2(x + 0.5f, y + 0.5f) / _kitTaille;
 			_swatchUv[cle] = uv;
@@ -177,6 +180,7 @@ namespace Symbiose
 		private void EtatDefaut()
 		{
 			Aplats(OPlat);
+			ClasseAplats(ClasseInerte);
 			Vent(0f, 0f, 1f, 0f);
 			_ventArbre = false;
 		}
@@ -194,7 +198,7 @@ namespace Symbiose
 				: Mathf.Min(1f, _ventAmpPx * Mathf.Clamp((_ventPiedY - p.Y) / _ventHautPx, 0f, 1f) / AmpMaxPx);
 			if (uni || uv == _uvBlanc)
 			{
-				long src = _srcAplat >= 0 ? _srcAplat : SourceCouleur(c);
+				long src = (_srcAplat >= 0 ? _srcAplat : SourceCouleur(c)) | (long)_classeAplat << DecalageClasse;
 				long cle = src | (long)_tonAplat << 24 | (long)_orientAplat << 28;
 				if (cle != _derCle) { _derUv = UvSwatch(src, _tonAplat, _orientAplat); _derCle = cle; }
 				uv = _derUv;

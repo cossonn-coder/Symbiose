@@ -58,6 +58,9 @@ namespace Symbiose
 			int tonFond = s.Motif == Motif.Foret ? 1 : TonB;
 			int steps = Mathf.CeilToInt(WorldView.WorldCm / StepCm);
 			float seuilW = DepthCm * 0.06f;
+			// ⑥ : tout le sol vivant suit la saison, parcelle par parcelle (phase au hash) ;
+			// sous la falaise, le fond reste de la roche.
+			int classeFond = s.Motif == Motif.Falaise ? ClasseInerte : ClassePrairie;
 			var g = new Vector2[steps + 1, RangsAssise + 3];
 			for (int i = 0; i <= steps; i++)
 			{
@@ -84,15 +87,21 @@ namespace Symbiose
 						col = pres ? near : far;
 						ton = (hp & 3u) == 3u ? 3 : pres ? TonB : tonFond;
 					}
+					ClasseAplats(col == far ? classeFond : ClassePrairie);
+					Vent(0f, 0f, 1f, (hp >> 16 & 0xff) / 255f);
 					Aplats(OrientTissage, ton, mat);
 					_lot.PolygoneConvexe(new[] { g[i, k], g[i + 1, k], g[i + 1, k + 1], g[i, k + 1] }, col);
 				}
 			// Coin extérieur entre ce bord et le suivant (sens horaire : NE, SE, SO, NO).
 			float W = WorldView.WorldCm;
 			(float x0, float y0) = s.Cote switch { 0 => (W, -FondCm), 1 => (W, W), 2 => (-FondCm, W), _ => (-FondCm, -FondCm) };
+			Vent(0f, 0f, 1f, 0.5f);
+			ClasseAplats(classeFond);
 			Aplats(OrientTissage, 1, mat);
 			_lot.PolygoneConvexe(new[] { WorldView.WorldToScreen(x0, y0), WorldView.WorldToScreen(x0 + FondCm, y0),
 										 WorldView.WorldToScreen(x0 + FondCm, y0 + FondCm), WorldView.WorldToScreen(x0, y0 + FondCm) }, far);
+			ClasseAplats(ClasseInerte);
+			Vent(0f, 0f, 1f, 0f);
 			Aplats(OPlat);
 		}
 

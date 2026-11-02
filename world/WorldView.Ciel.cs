@@ -43,6 +43,7 @@ namespace Symbiose
 		{
 			_lastCiel = ciel;
 			if (!DefileActif) _skyPanel?.SetSky(ciel);
+			if (!DefileActif) _decorLayer?.SetSignes(ciel);   // AUTOMNE ⑥
 		}
 		private GDict _lastCiel;
 

@@ -116,6 +116,7 @@ namespace Symbiose
 			_year = snap["year"].AsInt32();
 			int weekInYear = snap["week_in_year"].AsInt32();
 			if (_leafFallLayer != null) _leafFallLayer.Semaine = _year * 52 + weekInYear;
+			_decorLayer?.SetSemaine(weekInYear);   // la lisière suit la saison (AUTOMNE ⑥)
 			_weekInSeason = ((weekInYear - 1) % 13) + 1;
 			string season = snap["season"].AsString();
 			CurrentSeason = season;   // AVANT les SetStructure (couleur feuilles t6·A)

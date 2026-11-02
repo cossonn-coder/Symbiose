@@ -75,6 +75,7 @@ namespace Symbiose
 					plat[i, r] = EdgePoint(s.Cote, u, dTop + w + DepthCm * 0.55f * r / 3f) + up;
 			}
 			// 2) PLATEAU végétalisé, en parcelles (3 pas × 1 rang).
+			ClasseAplats(ClassePrairie);   // ⑥ : l'herbe rase suit la saison, pas la roche
 			for (int i = 0; i < steps; i++)
 				for (int r = 0; r < 3; r++)
 				{
@@ -83,6 +84,7 @@ namespace Symbiose
 					_lot.PolygoneConvexe(new[] { plat[i, r], plat[i + 1, r], plat[i + 1, r + 1], plat[i, r + 1] },
 										 Palette16.DecorRocheHaut);
 				}
+			ClasseAplats(ClasseInerte);
 			Aplats(OPlat);
 			// 3) FACE (⑥) : chaque strate est un aplat de ROCHE procédurale (blocs 8×4 px
 			//    à joints, au pixel interne du palier → plus de « grands blocs unis » à ×2,

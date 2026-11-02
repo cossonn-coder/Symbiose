@@ -41,8 +41,9 @@ namespace Symbiose
 			{
 				case Piece.Fleur:
 					// Étoile 3×3 : pétales base, pétale bas à l'ombre, cœur = éclat.
-					byte p = C(2, PaletteIndexee.OrientPlat);
-					return new byte[] { 0, p, 0, p, C(4, PaletteIndexee.OrientPlat), p, 0, C(1, OBas), 0 };
+					// ⑥ : orientation « fleur » (plate), que la saison sait reconnaître.
+					byte p = C(2, OrientFleur);
+					return new byte[] { 0, p, 0, p, C(4, OrientFleur), p, 0, C(1, OrientFleur), 0 };
 				case Piece.Herbe: CoderTouffe(c, w, hh, v); break;
 				case Piece.HerbeHaute:
 				case Piece.Roseau: CoderBrins(c, f, w, hh, v); break;

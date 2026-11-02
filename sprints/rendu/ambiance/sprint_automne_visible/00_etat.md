@@ -1,7 +1,7 @@
 # Sprint AUTOMNE VISIBLE (D123 + D118 (A) arbres) — état partagé
 
 **Conception** : `docs/rendu/ambiance/conception_automne_visible.md` (figée le 2026-11-02).
-**Où on en est** : ① à ⑤ faits (⑤ non commité au moment de cette note), ⑥ à lancer.
+**Où on en est** : ① à ⑥ faits (⑥ non commité au moment de cette note). Reste le F5 de Nico et la clôture du sprint.
 
 ## Décisions clés (Nico, 2026-11-02)
 
@@ -19,7 +19,7 @@
 | ③ | `03_feuilles_moteur.md` — largage étalé sous la couronne + pont (masse de feuilles, `feuillage`) | **re-figé** `ac48b170…` | **fait** |
 | ④ | `04_vue_arbres.md` — recettes d'arbres, couleur d'automne par espèce, couronne qui s'éclaircit | intact | **fait** |
 | ⑤ | `05_vue_tapis_chute.md` — tapis lisible dès ×1 + animation de chute | intact | **fait** |
-| ⑥ | `06_vue_lisiere.md` — lisière 4 saisons + signes macro + protocole F5 | intact | à faire |
+| ⑥ | `06_vue_lisiere.md` — lisière 4 saisons + signes macro + protocole F5 | intact | **fait** |
 
 ## Diagnostic ① : pourquoi la hauteur s'effondre (vérifié, pour le ②)
 
@@ -103,12 +103,37 @@ mesure], et un plafond ôté fait exploser le temps de calcul (arrêté après 3
 - **Limites** : couleur par espèce du tapis impossible (D50) ; grains vieillis très sombres sur le sable en s56 ; feuilles et tapis ignorent le relief ; une feuille passe devant la maison (ZIndex 11). Pause et planification non vues aux captures, à juger au F5.
 - **Pour le F5** : chute sans gêne (`VChuteCmS`, `CmParFeuille`) ; tapis à ×1 (`MaxGrains`) ; arrêt en pause ; disparition en hiver et au printemps.
 
+## Bilan ⑥
+
+- **Saison** : `visuals/decor_indexe.gdshader` choisit la rampe par pied (phase B au hash, ±2,5 semaines), à la valeur du texel d'origine, sans reconstruire la maille. Uniforms dans `visuals/DecorLayer.Saison.cs`, 15 rampes `lisiere_*` écrites à la main dans `RampesDa` (toutes OK à `mesure_da --charte`). Masque : classe de matière dans les 2 bits hauts de G du texel (n° de palette ≤ 63 en octet haut), posée à la construction ; orientation 13 = fleur.
+- **Signes** : `visuals/SignesLisiere.cs`, table libellé → effet, lue de `weather.kind` et des signes `signed` du bloc `ciel` ; libellé inconnu sans effet. Transitions lissées (3 et 4 s), nettes en capture.
+- **Été** : 103 pixels logiques changés sur 518 400 [`smoke` banc décor, s20, ×0,5, n=1], le pétale bas des fleurs est désormais plat. Temps calme : aucune autre différence.
+- **Perf** : `full` ×1, s34 : avant 6,6 FPS, 171 draw calls ; après 6,5 FPS, 174 draw calls [n=5 relevés, 1 run par côté, VM, charge 1-5, avant la retouche pluie du shader, hors pluie sans effet]. Les objets varient aussi (2 950 / 3 010) : l'écart de 3 ne vient pas de la lisière, qui garde sa maille.
+- **Captures** : 4 saisons, Canicule, Gelée tardive, Pluie prolongée, Neige au banc décor `smoke`, ×0,5 ; s34, s45 et Canicule à ×1 ; s34 dans `full` à ×1. Mesure à l'œil sur PNG, `mesure_da` non passé sur les images.
+- **Écarts au kickoff** : la ceinture n'a pas d'état `snow` ; la lisière lit la moyenne de `temperature[tuile].snow` (×2, plafonné à 1). Rampes dérivées abandonnées : `RampesDa.Deriver` vire au vert dans les ombres, un hiver reverdissait à ×1. `WorldView.CaptureActive` passe `internal`.
+- **Limites** : les feuillus de lisière n'ont pas de branches : en hiver on voit des troncs et des touffes résiduelles. La neige couvre par plaques tant que le manteau n'est pas plein. Brume et tremblement de chaleur non vus en mouvement (captures de 2 images).
+- **`data/code` non touché**, golden `ac48b170…` intact. `tools/simserver/serialize.py` non touché.
+
+## §F5 : une année (ressenti, le calibrage est mesuré)
+
+Lancer le jeu normalement, cadence libre, et regarder sans lire le HUD.
+
+1. **Printemps** : lisière vert tendre, quelques fleurs. Reconnaît-on la saison d'un coup d'œil ?
+2. **Été** : comme avant. Si une canicule passe : prairie grillée, quelques arbres jaunes, végétal qui tremble. La brume en tramage gêne-t-elle ?
+3. **Automne, lisière** : le bois vire pied par pied, jaune puis roux, sans bascule. Le vert-paille de la prairie convient-il ?
+4. **Automne, jardin** : couronnes roux par espèce, feuilles qui tombent sans gêner, tapis lisible à ×1, arrêt en pause.
+5. **Hiver** : troncs nus crédibles, ou forêt morte ? Sapins inchangés, tapis disparu au printemps. Neige en plaques : joli ou camouflage ?
+6. **Gelée** : le givre se lit-il comme du givre, pas comme de la neige ? C'est l'effet le plus fort, le premier à baisser (`m_givre` dans le shader).
+
+Rappels des bilans ④ : ×4 plus clairsemé que ×1, apex vert sur un arbre roux, info-bulle « prend ses couleurs » sur un arbre nu.
+
 ## Ce qui reste
 
-Tronçon ⑥. Garde-fous : ne JAMAIS lancer `tests/test_epaisseur_500ans.py` ; mesures ≤ 3 ans de jeu.
+F5 ci-dessus. `/refactor` en fin de sprint : `plants/perennials.py` (419 LDC), `tools/simserver/serialize.py` (398 LDC). À trancher (bilan ②) : population −19 % en an 2, vitalité du cerisier.
+Garde-fous : ne JAMAIS lancer `tests/test_epaisseur_500ans.py` ; mesures ≤ 3 ans de jeu.
 `test_succession` et `test_edaphique` sont rouges AVANT ce sprint (vérifié le 2026-10-30).
 
 ## §REPRISE
 
-Lire `CLAUDE.md` + ce fichier + le kickoff du premier tronçon « à faire ».
-Lancer : `/sprint-auto sprint_automne_visible` (reprend au ⑥). Rejouer les bancs : `python3 -m bancs.mesure_arbres`, `python3 -m bancs.mesure_feuilles 3`.
+Lire `CLAUDE.md` + ce fichier. Tous les tronçons sont faits : plus de `/sprint-auto` à lancer sur ce sprint, reste la clôture (journal, DETTE, BACKLOG) et le §F5.
+Rejouer les bancs : `python3 -m bancs.mesure_arbres`, `python3 -m bancs.mesure_feuilles 3`. Lisière : `tools/capture_vm.sh -b smoke -B -z 0.5 -w 44 -m "Neige,1"`.

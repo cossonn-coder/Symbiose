@@ -75,11 +75,13 @@ namespace Symbiose
 			rx *= r; ry *= r;
 			Teinte t = TeinteFeuillage(sil.Feuillage);
 			Color ombre = sil.Feuillage * mod;   // ⑥ : l'ombre = ton 1 de SA palette (tissage)
+			ClasseAplats(conique ? ClasseSansSaison : ClasseFeuillu);   // ⑥ : la couronne suit la saison
 			Aplats(OrientTissage, 1);
 			if (conique)
 				_lot.Triangle(c0 + new Vector2(0f, -ry), c0 + new Vector2(rx, ry), c0 + new Vector2(-rx, ry), ombre);
 			else
 				EllipseBasse(c0, rx * 0.92f, ry * 0.92f, ombre, 12);
+			ClasseAplats(ClasseInerte);
 			Aplats(OPlat);
 			Piece f = conique ? Piece.Conifere : Piece.Feuillu;
 			// Taille des bouquets : la plus grande qui tient ~2,5 fois dans le rayon du
