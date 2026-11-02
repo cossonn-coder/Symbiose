@@ -126,7 +126,7 @@ namespace Symbiose
 		private static readonly HashSet<string> Arbres = new()
 		{
 			"AppleTree", "Fig", "CherryTree", "WalnutTree", "OakTree",
-			"BeechTree", "HornbeamTree", "BirchTree", "FirTree", "Alder",
+			"BeechTree", "HornbeamTree", "BirchTree", "FirTree", "Alder", "Willow",
 		};
 		private static readonly Dictionary<string, RecetteDa> _plantes = new();
 		private static readonly Dictionary<string, Color[]> _faune = new();

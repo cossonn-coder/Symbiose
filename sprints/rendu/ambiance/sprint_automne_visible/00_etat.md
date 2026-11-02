@@ -1,7 +1,7 @@
 # Sprint AUTOMNE VISIBLE (D123 + D118 (A) arbres) — état partagé
 
 **Conception** : `docs/rendu/ambiance/conception_automne_visible.md` (figée le 2026-11-02).
-**Où on en est** : ①, ② et ③ faits (③ non commité au moment de cette note), ④ à lancer.
+**Où on en est** : ①, ②, ③ et ④ faits (④ non commité au moment de cette note), ⑤ à lancer.
 
 ## Décisions clés (Nico, 2026-11-02)
 
@@ -17,7 +17,7 @@
 | ① | `01_fiches_banc.md` — fiches des 11 arbres + banc `bancs/mesure_arbres.py` + `mesures/avant.md` | intact | **fait** |
 | ② | `02_port_arbres.md` — port par fiche, hauteur qui ne s'effondre plus, arbres âgés et caducs de démo | **re-figé** `82d522c8…` | **fait** |
 | ③ | `03_feuilles_moteur.md` — largage étalé sous la couronne + pont (masse de feuilles, `feuillage`) | **re-figé** `ac48b170…` | **fait** |
-| ④ | `04_vue_arbres.md` — recettes d'arbres, couleur d'automne par espèce, couronne qui s'éclaircit | intact | à faire |
+| ④ | `04_vue_arbres.md` — recettes d'arbres, couleur d'automne par espèce, couronne qui s'éclaircit | intact | **fait** |
 | ⑤ | `05_vue_tapis_chute.md` — tapis lisible dès ×1 + animation de chute | intact | à faire |
 | ⑥ | `06_vue_lisiere.md` — lisière 4 saisons + signes macro + protocole F5 | intact | à faire |
 
@@ -84,12 +84,23 @@ mesure], et un plafond ôté fait exploser le temps de calcul (arrêté après 3
 - **Vigilance** : `tools/simserver/serialize.py` à 398 LDC, tout près de 400 → `/refactor` en fin de sprint.
 - **Tests** : `tests/test_feuilles_automne.py` (14/14), `tests/simserver` (310/310), version 0.6.3 consignée dans leurs checks.
 
+## Bilan ④
+
+- **Couleurs** : tons d'automne par espèce dans `Palettes` (`OrganPalette.Automne`, lus par `LeafColor` et `TeinteSaison`) ; la palette indexée en dérive, donc F11 ON suit. `AutumnLeaves` reste le repli des autres espèces. Saule ajouté (`Palettes`, `LeafProfiles`, `RampesDa`), il n'y était pas.
+- **Éclaircissement** : `PlantStructure.Feuillage` (absent → 1) et `DensiteVisible` = densité × feuillage, lue partout où `FoliageDensity` servait à montrer des feuilles (et mouillure, givre).
+- **Recuisson** : rien à ajouter. `MajPlante` appelle toujours `SetStructure`, donc `Invalidate`, à chaque snapshot ; une plante hors marge attend d'être visible. Vu aux captures s33 → s37 → s42 du monde `full`.
+- **Écart au kickoff** : `Port()`/`Couronne()` ne dessinent plus rien depuis PLANTE ASSEMBLÉE ⑤ (picking et boîte de cuisson). `PlantRenderer.Arbres.cs` y met les ratios par arbre, mais le visible vient d'ailleurs : grain des touffes, retombée, taille de feuille, écorce, et 2 touffes voisines par emplacement aux paliers bas (sans elles, on voyait des branches à ×1).
+- **Hors kickoff** : saule ajouté à `foret_ports` (11 arbres).
+- **Perf** : `full` ×1, s33 : avant 6,5 FPS, 116 draw calls ; après 7,5 FPS, 111 draw calls [n=5 relevés, 1 run par côté, VM, charge 3-4] ; stable, l'écart est du bruit.
+- **Limites** : les 11 arbres n'ont été vus en automne qu'en forçant la semaine de départ de `foret_ports` (34, 36, édition temporaire annulée), car `foret_ports` tue 9 arbres sur 11 avant s27 [seed 42, n=1 run, VM], cause non cherchée : ce banc ne sert donc pas tel quel au F5. Dans `full`, seuls 5 arbres sont présents.
+- **Pour le F5** : ×4 reste plus clairsemé que ×1 (masses non densifiées) ; apex vert vif sur un arbre roux ; le port (bouleau aux branches qui touchent le sol, rejets au pied du cerisier) vient du moteur ② ; l'info-bulle dit « prend ses couleurs d'automne » sur un arbre nu en hiver.
+
 ## Ce qui reste
 
-Tronçons ④ à ⑥. Garde-fous : ne JAMAIS lancer `tests/test_epaisseur_500ans.py` ; mesures ≤ 3 ans de jeu.
+Tronçons ⑤ à ⑥. Garde-fous : ne JAMAIS lancer `tests/test_epaisseur_500ans.py` ; mesures ≤ 3 ans de jeu.
 `test_succession` et `test_edaphique` sont rouges AVANT ce sprint (vérifié le 2026-10-30).
 
 ## §REPRISE
 
 Lire `CLAUDE.md` + ce fichier + le kickoff du premier tronçon « à faire ».
-Lancer : `/sprint-auto sprint_automne_visible` (reprend au ④). Rejouer les bancs : `python3 -m bancs.mesure_arbres`, `python3 -m bancs.mesure_feuilles 3`.
+Lancer : `/sprint-auto sprint_automne_visible` (reprend au ⑤). Rejouer les bancs : `python3 -m bancs.mesure_arbres`, `python3 -m bancs.mesure_feuilles 3`.

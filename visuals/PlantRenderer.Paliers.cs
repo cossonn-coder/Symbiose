@@ -126,7 +126,7 @@ namespace Symbiose
 			Color c = pal.Leaf;
 			float automne = Mathf.Clamp(_structure.Automne, 0f, 1f);
 			if (automne > 0f)
-				c = c.Lerp(AutumnLeaves[(int)(_swayPhase * AutumnLeaves.Length) % AutumnLeaves.Length], automne);
+				c = c.Lerp(pal.Automne(_swayPhase), automne);
 			float dens = Mathf.Clamp(_structure.FoliageDensity, 0f, 1f);
 			return c.Lerp(WoodColor, (1f - dens) * BoisTransparait);
 		}
@@ -165,7 +165,7 @@ namespace Symbiose
 				? (h * 0.5f, r * px, h * 0.5f * pz)                       // tache
 				: Port() switch
 				{
-					"arbre"     => (h * 0.66f, r * px, h * 0.34f * pz),
+					"arbre"     => CouronneArbre(h, r, px, pz),
 					"buisson"   => (h * 0.5f, r * px, h * 0.5f * pz),
 					"dressee"   => (h * 0.55f, r * 0.5f * px, h * 0.45f * pz),
 					"grimpante" => (h * 0.5f, r * 0.35f * px, h * 0.5f * pz),
@@ -179,6 +179,13 @@ namespace Symbiose
 			return (Iso(0f, 0f, zc), rx, ry);
 		}
 
+		// Couronne d'un arbre selon sa recette (AUTOMNE VISIBLE ④) ; arbre sans recette :
+		// les ratios communs d'avant.
+		private (float zc, float rx, float ry) CouronneArbre(float h, float r, float px, float pz) =>
+			RecetteDeLaPlante(out var a)
+				? (h * a.CentreZ, r * a.Largeur * px, h * a.DemiHaut * pz)
+				: (h * 0.66f, r * px, h * 0.34f * pz);
+
 		// ---------------------------------------------------------------------------
 		// DESSIN — appelé par DrawVector sous PaliersHautsMinZoom
 		// ---------------------------------------------------------------------------
@@ -187,7 +194,7 @@ namespace Symbiose
 		{
 			// Bois nu : squelette mort, ou caduc défeuillé (l'hiver se lit au bois).
 			bool mort = !string.IsNullOrEmpty(_deadStade);
-			if (mort || _structure.FoliageDensity <= 0f)
+			if (mort || _structure.DensiteVisible <= 0f)
 			{
 				DrawBoisNu(mort ? DeadWoodColor : WoodColor, _deadStade == "couchee" ? CoucheeFlatten : 1f);
 				return;
@@ -253,12 +260,14 @@ namespace Symbiose
 		{
 			Vector3 c = _structure.ColletCm;
 			float min = 1f / WorldView.CurrentZoom;
+			bool mort = !string.IsNullOrEmpty(_deadStade);
 			foreach (var s in _structure.Segments)
 			{
 				Vector3 tip = s.Base + s.Dir * s.LengthCm;
 				float w = Mathf.Max(min, Mathf.Round(s.ThicknessCm * WorldView.PxPerCmX * WoodWidthFactor));
 				DrawLine(Iso(s.Base.X - c.X, s.Base.Y - c.Y, s.Base.Z * zf),
-						 Iso(tip.X - c.X, tip.Y - c.Y, tip.Z * zf), Lit(col), w, antialiased: false);   // code indexé au pinceau (③)
+						 Iso(tip.X - c.X, tip.Y - c.Y, tip.Z * zf),
+						 Lit(mort ? col : AvecEcorce(col, s)), w, antialiased: false);   // code indexé au pinceau (③)
 			}
 		}
 

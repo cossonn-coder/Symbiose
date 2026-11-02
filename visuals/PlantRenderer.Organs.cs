@@ -94,10 +94,21 @@ namespace Symbiose
 		private readonly struct OrganPalette
 		{
 			public readonly Color Leaf, Flower, FruitUnripe, FruitRipe;
-			public OrganPalette(string leaf, string flower, string unripe, string ripe)
+			// Tons d'automne propres à l'espèce (AUTOMNE VISIBLE ④, 11 arbres) ; vide =
+			// la palette chaude commune (`AutumnLeaves`).
+			private readonly Color[] _automne;
+			public OrganPalette(string leaf, string flower, string unripe, string ripe, params string[] automne)
 			{
 				Leaf = new Color(leaf); Flower = new Color(flower);
 				FruitUnripe = new Color(unripe); FruitRipe = new Color(ripe);
+				_automne = new Color[automne.Length];
+				for (int i = 0; i < automne.Length; i++) _automne[i] = new Color(automne[i]);
+			}
+			/// <summary>Ton d'automne au hash `h` ∈ [0,1).</summary>
+			public Color Automne(float h)
+			{
+				Color[] tons = _automne.Length > 0 ? _automne : AutumnLeaves;
+				return tons[(int)(h * tons.Length) % tons.Length];
 			}
 		}
 		// Teinte de base par espèce (E3-couleur, doc §3.1). La clé = nom de CLASSE
@@ -136,19 +147,21 @@ namespace Symbiose
 				["Lavender"]  = new OrganPalette("6a8270", "8f7fc8", "7a9070", "8a8fa0"), // lavande : feuillage gris-vert, épi violet
 				// --- Sous-arbrisseau acidophile -------------------------------------
 				["Vaccinium"] = new OrganPalette("3a7a44", "ead8e0", "6f9a55", "30407a"), // myrtille : vert profond, baie bleu-nuit
-				// --- Pérennes ligneuses (vergers) -----------------------------------
-				["AppleTree"]  = new OrganPalette("3f8e3a", "f3e0e8", "82ae4f", "cc382e"), // pommier : vert mat, fleur rosée, pomme rouge
-				["Fig"]        = new OrganPalette("3a7d3c", "e0e6d2", "6f9a48", "5a3a52"), // figuier : grand limbe vert sombre, figue pourpre
-				["CherryTree"] = new OrganPalette("3f8a3e", "f2dde2", "7fae50", "a01f28"), // cerisier : vert franc, fleur rose pâle, cerise rouge profond
-				["WalnutTree"] = new OrganPalette("4a8240", "dfe2cc", "7aa84f", "4a3a22"), // noyer : vert olive, brou brun
-				["OakTree"]    = new OrganPalette("46823c", "d6cf9a", "78a64a", "7a5a2e"), // chêne : vert mat lobé, gland brun
+				// --- Les arbres (fiches docs/vegetal/croissance/fiches_arbres.md, AUTOMNE VISIBLE ④) :
+				// limbe d'été, fleur, fruit vert, fruit mûr, puis les tons d'automne de la fiche.
+				["AppleTree"]  = new OrganPalette("4f8a45", "f3e0e8", "82ae4f", "cc382e", "b8a040", "a08838", "c0a84a"), // pommier : vert terne, fleur rosée ; jaune-brun sans éclat
+				["Fig"]        = new OrganPalette("3a6f3c", "e0e6d2", "6f9a48", "5a3a52", "d8c040", "ccb238", "e0cc50"), // figuier : vert sombre mat, figue pourpre ; jaune
+				["CherryTree"] = new OrganPalette("2f7a38", "f6f0ee", "7fae50", "a01f28", "e8722e", "dc5a2a", "ec8a30"), // cerisier : vert franc sombre, fleur blanc pur ; rouge-orangé vif
+				["WalnutTree"] = new OrganPalette("4a8240", "a8b070", "7aa84f", "4a3a22", "a89a48", "8c7a3a", "6a5a30"), // noyer : vert olive, chatons verts, brou ; jaune terne virant au brun-noir
+				["OakTree"]    = new OrganPalette("3f7436", "b8b860", "78a64a", "7a5a2e", "a8642a", "8f5226", "b87a34"), // chêne : vert soutenu mat, chatons jaune-vert ; roux
 				// --- Essences migrées en croissance procédurale (D91 T4) -------------
-				["BeechTree"]  = new OrganPalette("4a8a3e", "e6ddbe", "6fa04a", "6a4a2a"), // hêtre : vert frais lisse, faîne brune
-				["HornbeamTree"] = new OrganPalette("3f7d38", "9aaa60", "7a9a50", "8a7a4a"), // charme : vert sombre, chatons vert-jaune, samares
-				["BirchTree"]  = new OrganPalette("5aa048", "9ab060", "78b050", "9a8a4a"), // bouleau : vert clair vif, chatons pendants (jaunit en automne)
-				["FirTree"]    = new OrganPalette("2f5a3a", "6a5a4a", "4a6a4a", "5a3a28"), // sapin : vert conifère bleu-sombre, cônes dressés brun-pourpre
+				["BeechTree"]  = new OrganPalette("4f9a3e", "c8c078", "6fa04a", "6a4a2a", "b86e2c", "c4803a", "9c5a26"), // hêtre : vert franc brillant, faîne ; cuivré
+				["HornbeamTree"] = new OrganPalette("3f7d38", "9aaa60", "7a9a50", "8a7a4a", "c49a38", "b4822e", "cca848"), // charme : vert sombre, chatons vert-jaune ; jaune-roux
+				["BirchTree"]  = new OrganPalette("6fae4a", "d8c850", "78b050", "9a8a4a", "e8c22e", "f0d040", "d4aa28"), // bouleau : vert clair, chatons jaunes ; jaune d'or
+				["FirTree"]    = new OrganPalette("2f5a3a", "6a5a4a", "4a6a4a", "5a3a28"), // sapin : vert conifère sombre, cônes ; persistant, aucun ton d'automne
+				["Willow"]     = new OrganPalette("7a9a78", "e0d060", "8aa880", "d8d8c0", "d8cf70", "cfc860", "e0d888"), // saule : vert gris argenté, chatons jaunes, capsules cotonneuses ; jaune pâle
 				// --- Guilde marécageuse (sprint HYDROLOGIE & MARÉCAGES ⑤/⑥) ----------
-				["Alder"]      = new OrganPalette("3a6e3f", "6a7a4a", "5a8a4a", "4a3020"), // aulne : vert sombre de berge, chatons vert-brun, strobiles (cônes) brun-noir
+				["Alder"]      = new OrganPalette("3a6e3f", "6a3a4a", "5a8a4a", "4a3020", "4f7440", "5a7a3e", "64783e"), // aulne : vert sombre de berge, chatons pourpres, strobiles brun-noir ; largue presque vert
 				["Sphagnum"]   = new OrganPalette("7aae6a", "9abf7a", "8fc07a", "9a8f5a"), // sphaigne : tapis vert-jaune clair de tourbière (pas de fleur, spores)
 				["Drosera"]    = new OrganPalette("4a8a52", "eef0e8", "6fae5a", "c43a2e"), // drosera : rosette verte MAIS poils/glu ROUGES (fruit=rouge carnivore, fleur blanche discrète)
 			};
@@ -195,7 +208,8 @@ namespace Symbiose
 		// moteur `automne ∈ [0,1]` PAR-PLANTE (② `_structure.Automne`) — chaque caduc
 		// se colore à SA semaine propre, dispersée par son gène tempo. On interpole
 		// continûment la teinte d'été (`pal.Leaf`) vers une teinte automnale piochée
-		// dans la palette chaude AU HASH par-feuille (variété inter-limbes conservée) :
+		// dans les tons de l'espèce (AUTOMNE VISIBLE ④) AU HASH par-feuille (variété
+		// inter-limbes conservée) :
 		//  · automne = 0 → été plein (identité, comportement estival d'avant) ;
 		//  · automne monte → rougissement PROGRESSIF et étalé entre individus ;
 		//  · automne = 1 → pleinement automnal, juste avant que FoliageDensity ne
@@ -206,8 +220,7 @@ namespace Symbiose
 		private static Color LeafColor(OrganPalette pal, float automne, float h)
 		{
 			if (automne <= 0f) return pal.Leaf;   // été (défaut/persistants)
-			Color autumn = AutumnLeaves[(int)(h * AutumnLeaves.Length) % AutumnLeaves.Length];
-			return pal.Leaf.Lerp(autumn, Mathf.Clamp(automne, 0f, 1f));
+			return pal.Leaf.Lerp(pal.Automne(h), Mathf.Clamp(automne, 0f, 1f));
 		}
 
 		// Un segment porte des feuilles s'il est jeune/fin (rameau) ou un apex —
@@ -242,7 +255,9 @@ namespace Symbiose
 			// hiver → 0, on ne dessine rien). densité < 1 → SOUS-ÉCHANTILLONNAGE
 			// au hash (canal 17) : un feuillage léger (0.35) garde ~1 feuille
 			// sur 3, toujours LES MÊMES (stabilité inter-frames).
-			float density = _structure.FoliageDensity;
+			// AUTOMNE VISIBLE ④ : `DensiteVisible` compte aussi la couronne qui s'éclaircit
+			// (`feuillage`) ; même hash, donc les feuilles restantes sont déjà présentes avant.
+			float density = _structure.DensiteVisible;
 			if (density > 0f)
 			{
 				// Sémiologie `ombre` (T1, étiolement) — DÉCISION DE DESIGN (option a
@@ -288,7 +303,7 @@ namespace Symbiose
 						// plancher (§1) à l'émergence (1 valeur nue, pas de nervure),
 						// il franchit le plancher en grandissant → volume puis nervures.
 						// La feuille se construit visuellement, gratuitement (DrawLeafShape).
-						float r = LeafSizeCm * WorldView.PxPerCmX * leafGrowth;
+						float r = LeafSizeCm * TailleFeuilleEspece * WorldView.PxPerCmX * leafGrowth;
 						// ④ PÉTIOLE (doc §5.3) — court trait vert reliant le point
 						// d'insertion sur l'axe au limbe. Tracé AVANT le limbe : le limbe
 						// se pose dessus, le pétiole n'affleure qu'à sa base.
@@ -344,7 +359,7 @@ namespace Symbiose
 			float h2 = Hash01(11, i, j);
 			float side = Hash01(7, i, j) < 0.5f ? 1f : -1f;
 			float off = LeafOffsetCm * (0.5f + h2);
-			float lz = p.Z + (h2 - 0.5f) * LeafOffsetCm - LeafDropCm(p.Z);
+			float lz = p.Z + (h2 - 0.5f) * LeafOffsetCm - LeafDropCm(p.Z) - RetombeeCm;
 			Vector2 c = Iso(p.X + perp.X * off * side - collet.X, p.Y + perp.Y * off * side - collet.Y, lz);
 			insert = Iso(p.X - collet.X, p.Y - collet.Y, p.Z);
 			return insert.Lerp(c, leafGrowth);

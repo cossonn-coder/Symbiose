@@ -89,6 +89,7 @@ namespace Symbiose
 				["BirchTree"]  = new(LeafShape.Cordee,    1.2f, 0, true),   // bouleau : triangulaire, base tronquée
 				["Alder"]      = new(LeafShape.Elliptique, 1.3f, 0, false), // aulne : obovale arrondi de berge
 				["FirTree"]    = new(LeafShape.Aciculaire, 3.0f, 0, false), // SAPIN : aiguilles (touffes fines) — pas de limbe
+				["Willow"]     = new(LeafShape.Lanceolee, 3.2f, 0, false),  // saule : étroite et lancéolée (AUTOMNE VISIBLE ④)
 			};
 		private static readonly LeafProfile DefaultLeaf =
 			new(LeafShape.Elliptique, 1.15f / 0.65f, 0, true); // = proportions de l'ellipse historique

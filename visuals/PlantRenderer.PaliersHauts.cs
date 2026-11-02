@@ -73,7 +73,7 @@ namespace Symbiose
 				var s = _structure.Segments[i];
 				if (!IsLeafy(s)) continue;
 				float growth = LeafGrowthFactor(s);
-				float r = LeafSizeCm * WorldView.PxPerCmX * growth;
+				float r = LeafSizeCm * TailleFeuilleEspece * WorldView.PxPerCmX * growth;
 				int n = NbFeuilles(s);
 				Vector2 perp = PerpFeuilles(s);
 				for (int j0 = 0; j0 < n; j0 += MasseFeuilles)

@@ -87,6 +87,12 @@ namespace Symbiose
 		// recalcule AUCUNE phénologie (moteur = source de vérité, philo #3).
 		public float Floraison;  // 0..1, scalaire moteur — pilote la densité de fleurs
 		public float Automne;    // 0..1, phénophase de coloration foliaire (caducs)
+		// Part de la couronne encore en place (AUTOMNE VISIBLE ③, pont 0.6.3) : 1 sauf
+		// débourrement, largage et hiver d'un caduc. Absent du snapshot → 1.
+		public float Feuillage = 1f;
+		// Ce que la vue garde au hash : densité de l'espèce × part encore en place.
+		// `FoliageDensity` seule resterait pleine jusqu'à l'hiver (elle règle la lumière).
+		public float DensiteVisible => FoliageDensity * Feuillage;
 	}
 
 	// ---------------------------------------------------------------------------
@@ -204,6 +210,8 @@ namespace Symbiose
 				ps.Floraison = LectureSnap.F(plant, "floraison");
 			if (LectureSnap.A(plant, "automne"))
 				ps.Automne = LectureSnap.F(plant, "automne");
+			if (LectureSnap.A(plant, "feuillage"))
+				ps.Feuillage = LectureSnap.F(plant, "feuillage");
 			// Fruits tracés (③, 0.3.4) : lecture tolérante (un snapshot pré-0.3.4
 			// ou une plante morte n'a pas la clé → liste vide, rien à dessiner).
 			if (LectureSnap.A(plant, "fruits"))

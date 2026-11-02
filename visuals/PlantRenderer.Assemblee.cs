@@ -45,6 +45,9 @@ namespace Symbiose
 		// Espacement des touffes le long d'un rameau, en fraction de leur taille.
 		private const float TouffePas = 0.6f;
 		private const int TouffesParSegmentMax = 8;
+		// Couronne des arbres (④) : touffes voisines par emplacement, rayon du volume (cm).
+		private const int TouffesAutourArbre = 2;
+		private const float EtalementTouffesCm = 28f;
 		// Semis au sol (port sans rameau feuillé) : une touffe par ~SemisPx2 px².
 		private const float SemisPx2 = 30f;
 		private const int SemisMax = 12;
@@ -104,7 +107,7 @@ namespace Symbiose
 				Vector3 tip = s.Base + s.Dir * s.LengthCm;
 				float w = Mathf.Max(1f / z, Mathf.Round(s.ThicknessCm * WorldView.PxPerCmX * WoodWidthFactor));
 				DrawLine(Iso(s.Base.X - c.X, s.Base.Y - c.Y, s.Base.Z),
-						 Iso(tip.X - c.X, tip.Y - c.Y, tip.Z), Lit(WoodRamp(Lignification(s))), w, antialiased: false);
+						 Iso(tip.X - c.X, tip.Y - c.Y, tip.Z), Lit(AvecEcorce(WoodRamp(Lignification(s)), s)), w, antialiased: false);
 			}
 		}
 
@@ -114,7 +117,8 @@ namespace Symbiose
 			float emprise = EmpriseInternePx();
 			int i = z < PalierPortZoom ? 0 : z < PalierSanteZoom ? 1 : 2;
 			if (emprise >= TouffeGrandePx) i++;
-			i = Mathf.Min(i, KitTailles.Length - 1);
+			if (RecetteDeLaPlante(out var recette)) i += recette.CranTouffe;   // grain du feuillage (④)
+			i = Mathf.Clamp(i, 0, KitTailles.Length - 1);
 			while (i > 0 && KitTailles[i] > emprise * 0.6f) i--;
 			return KitTailles[i];
 		}
@@ -126,7 +130,9 @@ namespace Symbiose
 		{
 			var liste = new List<Touffe>();
 			Vector3 c = _structure.ColletCm;
-			float dens = Mathf.Clamp(_structure.FoliageDensity, 0f, 1f);
+			float dens = Mathf.Clamp(_structure.DensiteVisible, 0f, 1f);
+			float retombee = RetombeeCm;
+			int autour = RecetteDeLaPlante(out _) ? TouffesAutourArbre : 0;
 			bool feuille = false;
 			for (int i = 0; i < _structure.Segments.Count; i++)
 			{
@@ -143,11 +149,27 @@ namespace Symbiose
 					if (Hash01(71, i, k) >= dens) continue;
 					float u = 1f - k * pas / Mathf.Max(p1.DistanceTo(p2), 1e-4f);
 					Vector3 p = s.Base + s.Dir * (s.LengthCm * Mathf.Max(u, 0f));
-					liste.Add(NouvelleTouffe(p - c, Iso(p.X - c.X, p.Y - c.Y, p.Z), taille, i, k));
+					liste.Add(NouvelleTouffe(p - c, Iso(p.X - c.X, p.Y - c.Y, p.Z - retombee), taille, i, k));
+					for (int m = 1; m <= autour; m++)
+						AjouterTouffeAutour(liste, p, c, retombee, taille, i, k + m * TouffesParSegmentMax);
 				}
 			}
 			if (!feuille) SemerTouffes(liste, z, taille);
 			return liste;
+		}
+
+		// Couronne d'un ARBRE aux paliers bas (AUTOMNE VISIBLE ④) : une touffe sur un rameau ne
+		// fait que 5-9 px pour une couronne de 100-200 px, on voyait les branches et non un
+		// feuillage. Chaque emplacement gardé porte donc des touffes voisines, déportées au hash
+		// dans un volume autour du rameau. Clé `kh` propre : même présence d'une cuisson à l'autre.
+		private void AjouterTouffeAutour(List<Touffe> liste, Vector3 p, Vector3 c, float retombee,
+										 int taille, int i, int kh)
+		{
+			float a = Mathf.Tau * Hash01(73, i, kh), d = EtalementTouffesCm * Mathf.Sqrt(Hash01(75, i, kh));
+			float dz = EtalementTouffesCm * (Hash01(77, i, kh) - 0.5f);
+			float x = p.X - c.X + d * Mathf.Cos(a), y = p.Y - c.Y + d * Mathf.Sin(a), z = p.Z + dz;
+			if (z < 0f) return;   // pas de feuillage sous le sol
+			liste.Add(NouvelleTouffe(new Vector3(x, y, z - c.Z), Iso(x, y, z - retombee), taille, i, kh));
 		}
 
 		// Port sans rameau feuillé exploitable (tapis, rosette très plate) : semis
@@ -157,7 +179,7 @@ namespace Symbiose
 			float r = Mathf.Max(_rayonReelCm, 1f);
 			float aire = Mathf.Pi * r * WorldView.PxPerCmX * r * WorldView.PxPerCmY * z * z;
 			int n = Mathf.Clamp((int)(aire / SemisPx2), 1, SemisMax);
-			float dens = Mathf.Clamp(_structure.FoliageDensity, 0f, 1f);
+			float dens = Mathf.Clamp(_structure.DensiteVisible, 0f, 1f);
 			for (int k = 0; k < n; k++)
 			{
 				if (k > 0 && Hash01(71, -1, k) >= dens) continue;

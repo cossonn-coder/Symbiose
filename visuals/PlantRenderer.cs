@@ -537,7 +537,7 @@ namespace Symbiose
 				// lieu du binaire apex/bois. Les symptômes colorants ne teintent que
 				// la part VIVANTE (verte) : le bois mûr (lig→1) ne se décolore pas.
 				float lig = Lignification(s);
-				Color baseCol = WoodRamp(lig);
+				Color baseCol = AvecEcorce(WoodRamp(lig), s);   // écorce de la fiche (AUTOMNE VISIBLE ④)
 				Color col = baseCol.Lerp(SymptomTint(baseCol), 1f - lig);
 
 				DrawBranch(p1, p2, col, w);

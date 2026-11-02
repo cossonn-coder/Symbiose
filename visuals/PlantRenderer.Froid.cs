@@ -60,7 +60,7 @@ namespace Symbiose
 		{
 			bool exposee = vivante && !_covered;
 			float snow = exposee ? MeteoPlantes.SnowLevelFor(_swayPhase) : 0f;
-			float frost = exposee && _structure.FoliageDensity > 0f ? MeteoPlantes.Frost : 0f;
+			float frost = exposee && _structure.DensiteVisible > 0f ? MeteoPlantes.Frost : 0f;
 			if (snow == _snow && frost == _frost) return false;
 			_snow = snow;
 			_frost = frost;
