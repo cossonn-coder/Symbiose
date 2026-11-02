@@ -170,3 +170,7 @@ Candidats déjà notés : recouvrement fleur×butineurs an 1, gelée d'avril, co
 Sprint clos côté code. ④ (commentaire `WorldView.Snapshot.cs` + docs) dans l'arbre de
 travail, à committer. Prochaine étape : F5 de Nico selon §F5, puis D118 / D119
 (cf. `BACKLOG.md`).
+
+## F5 reçu (Nico, 2026-11-02) — SPRINT CLOS
+
+Printemps, été, hiver et `effondrement` validés → D122 fermée. Automne invisible → D123 ; butineurs dès l'an 1 → D119 (c).

@@ -209,3 +209,9 @@ Texte intégral des lignes fermées :
 | Code | Motif de fermeture | Preuve |
 |---|---|---|
 | D121 | F5 Nico 2026-10-30 : « les animations sur la mare c'est super, c'est exactement ce que je veux » — vent, pluie, animaux, glace ; rides « top » ; nuée de moustiques vue ; libellule « bien pour l'instant » ; voix hors saison OK. Glace qui scintille au soleil + ombres superflues → **D118** ; saisons décalées → **D122**. | Sprint `sprints/champs/eau/sprint_mare_vivante/` (commits e4ab37b→b62ff8d), journal 165. |
+
+## Lot M — F5 de Nico sur le sprint CALENDRIER UNIQUE (2026-11-02)
+
+| Code | Motif de fermeture | Preuve |
+|---|---|---|
+| D122 | F5 Nico 2026-11-02, protocole « une année » : mare sans glace au printemps, pucerons qui ne rasent plus les semis, pas de gel en été, glace et neige en hiver, banc `effondrement` ok. Fermée (golden `bfe6f889…`). Retours : butineurs absents l'an 1 → **D119 (c)** ; automne invisible → **D123**. | `sprints/champs/climat/sprint_calendrier_unique/00_etat.md` |
