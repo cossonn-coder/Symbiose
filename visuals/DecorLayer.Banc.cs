@@ -82,9 +82,9 @@ namespace Symbiose
 		{
 			var s = new Secteur[4];
 			s[0] = new Secteur { Cote = 0, Motif = Motif.Foret,   Pente = PenteFalaise.Douce,     SeedSecteur = HashKey("banc|foret") };
-			s[1] = new Secteur { Cote = 1, Motif = Motif.Riviere, Pente = PenteFalaise.Douce,     SeedSecteur = HashKey("banc|riviere") };
+			s[1] = new Secteur { Cote = 1, Motif = Motif.Riviere, Pente = PenteFalaise.Douce,     SeedSecteur = HashKey("banc|riviere"), Colonies = ColoniesBancRiviere };
 			s[2] = new Secteur { Cote = 2, Motif = Motif.Falaise, Pente = PenteFalaise.Verticale, SeedSecteur = HashKey("banc|falaise") };
-			s[3] = new Secteur { Cote = 3, Motif = Motif.Prairie, Pente = PenteFalaise.Douce,     SeedSecteur = HashKey("banc|prairie") };
+			s[3] = new Secteur { Cote = 3, Motif = Motif.Prairie, Pente = PenteFalaise.Douce,     SeedSecteur = HashKey("banc|prairie"), Colonies = ColoniesBancPrairie };
 			return new SurroundingsProfile { Secteurs = s };
 		}
 	}

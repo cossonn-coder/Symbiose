@@ -74,6 +74,10 @@ uniform int r_brume_chaude = 0;
 uniform int r_brume_froide = 0;
 uniform int r_fleur_b = 0;
 uniform int r_fleur_j = 0;
+// --- floraison des colonies (LISIÈRE NUE ②, pont `floraison`, DecorLayer.Colonies.cs) ---
+uniform float f_blanc = 0.0;
+uniform float f_jaune = 0.0;
+uniform int i_fleur_jaune = -1;          // n° de palette de la teinte « fleur jaune »
 
 const float AMP_MAX = 32.0;              // px canvas pour G = 1
 const float SEUIL = 0.3;
@@ -201,7 +205,7 @@ float bayer(ivec2 p) {
 }
 
 // Saison puis météo d'un texel de la lisière. Renvoie la couleur, alpha = texel présent.
-vec4 lisiere(vec3 c, int classe, bool fleur, bool pierre, ivec2 ip, float ph, float hauteur) {
+vec4 lisiere(vec3 c, int id, int classe, bool fleur, bool pierre, ivec2 ip, float ph, float hauteur) {
 	float l = clarte(c);
 	float present = 1.0;
 	float w = mod(semaine + (ph - 0.5) * DECALAGE_PIED, 52.0);
@@ -227,14 +231,17 @@ vec4 lisiere(vec3 c, int classe, bool fleur, bool pierre, ivec2 ip, float ph, fl
 		// Pluie : la prairie s'assombrit dans SA rampe, un hiver pluvieux ne reverdit pas.
 		if (grain < m_humide) c = rampe(lut, rp, ete ? l : l - 0.2);
 		if (grain < m_seche) c = rampe(lut, r_grille, l);
-		// Printemps : un pixel de fleur par-ci par-là, sans pièce de plus dans la maille.
-		if (w >= 1.5 && w < 12.0 && l > PRAIRIE_LUM_MIN && m_neige < 0.5) {
-			uint hf = hache(ip.x / 6, ip.y / 4);
-			if ((hf & 15u) == 0u && (ip.x % 6) == 3 && (ip.y % 4) == 2)
-				c = ton_lut(lut, (hf >> 4u & 1u) == 0u ? r_fleur_b : r_fleur_j, 3);
-		}
+		// Avant LISIÈRE NUE ② : un pixel de fleur au printemps. C'était une vraie grille, lue
+		// en quadrillage au F5 ; les fleurs viennent désormais des colonies du moteur.
+		// if (w >= 1.5 && w < 12.0 && l > PRAIRIE_LUM_MIN && m_neige < 0.5) {
+		// 	uint hf = hache(ip.x / 6, ip.y / 4);
+		// 	if ((hf & 15u) == 0u && (ip.x % 6) == 3 && (ip.y % 4) == 2)
+		// 		c = ton_lut(lut, (hf >> 4u & 1u) == 0u ? r_fleur_b : r_fleur_j, 3);
+		// }
 	} else if (fleur) {
-		float part = (w < 1.5 || w >= 36.0) ? 0.0 : (w >= 27.0 ? 0.3 : 1.0);
+		// Avant LISIÈRE NUE ② : float part = (w < 1.5 || w >= 36.0) ? 0.0 : (w >= 27.0 ? 0.3 : 1.0);
+		// La part en fleur vient du pont, par couleur ; le hash du pied décale chaque fleur.
+		float part = id == i_fleur_jaune ? f_jaune : f_blanc;
 		if (ph >= part || m_neige > 0.5) present = 0.0;
 	}
 	if (classe != 0 || pierre) {
@@ -288,7 +295,7 @@ void fragment() {
 				ton += d > SEUIL_ECLAT ? 2 : (d > SEUIL ? 1 : (d < -SEUIL ? -1 : 0));
 			}
 			ton = clamp(ton, 0, 4);
-			vec4 l = lisiere(ton_lut(lut, id, ton), classe, fleur, pierre, ip, pierre ? 0.0 : v_mod.b, clamp(v_mod.g * 12.0, 0.0, 1.0));
+			vec4 l = lisiere(ton_lut(lut, id, ton), id, classe, fleur, pierre, ip, pierre ? 0.0 : v_mod.b, clamp(v_mod.g * 12.0, 0.0, 1.0));
 			COLOR = vec4(l.rgb * v_mod.r, v_mod.a * l.a);
 		}
 	}

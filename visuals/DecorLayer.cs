@@ -67,6 +67,7 @@ namespace Symbiose
 			public float AltitudeRelativeCm;   // roche au-dessus du jardin (falaise)
 			public float EntailleCm;           // roche RETIRÉE cumulée (irréversible)
 			public string Essence;             // essence dominante, ou null
+			public ColonieBord[] Colonies;     // taches de fleurs (pont 0.6.4), ou null
 		}
 
 		// La COUTURE d'extensibilité : le placement complet des zones. Calculée
@@ -378,7 +379,7 @@ namespace Symbiose
 		// (u, depth) du repère local d'un bord → point cm MONDE → écran. `u` court
 		// le long du bord (0..WorldCm), `depth` s'éloigne du jardin vers l'extérieur
 		// (depth peut être négatif = mordre DANS le jardin, pour la frontière).
-		private static Vector2 EdgePoint(int cote, float u, float depth)
+		internal static Vector2 EdgePoint(int cote, float u, float depth)
 		{
 			float W = WorldView.WorldCm;
 			(float x, float y) = cote switch

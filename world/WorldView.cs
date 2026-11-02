@@ -377,7 +377,8 @@ namespace Symbiose
 			_macroLife = new MacroLife { Name = "MacroLife", ZIndex = 5 };
 			AddWorld(_macroLife);
 
-			_foragerLayer = new ForagerLayer { Name = "ForagerLayer", ZIndex = 11 };
+			_foragerLayer = new ForagerLayer { Name = "ForagerLayer", ZIndex = 11,
+				TempsCourt = () => _phase == Phase.Saison || CaptureBanc != null };
 			AddWorld(_foragerLayer);
 
 			// Carpophores (mycélium ④/⑥) : champignons au ras du sol (ZIndex 4,

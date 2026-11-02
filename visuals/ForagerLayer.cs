@@ -291,14 +291,15 @@ namespace Symbiose
 			}
 			bool zoomOk = WorldView.CurrentZoom >= MinZoom;
 			if (zoomOk != _lastZoomOk) { _lastZoomOk = zoomOk; QueueRedraw(); }
-			if (_entries.Count == 0) return;
+			ProcessBord(delta);   // LISIÈRE NUE ② (ForagerLayer.Bord.cs)
+			if (_entries.Count == 0 && !BordVisible) return;
 			_animAccum += (float)delta;
 			if (_animAccum < 1f / AnimHz) return;
 			_animAccum = 0f;
 			// Les dépôts s'accumulent même DÉZOOMÉ (le LOD ne masque que le dessin) :
 			// le pollen reflète l'activité réelle de butinage, pas ce qu'on regarde.
 			AccumulatePollen();
-			if (zoomOk) QueueRedraw();
+			if (zoomOk || BordVisible) QueueRedraw();
 		}
 
 		// Détecte les atterrissages et dépose le pollen. Un cycle de saut = un entier
@@ -326,14 +327,15 @@ namespace Symbiose
 		{
 			_dessinNonVide = false;
 			_lot.Vider();
-			if (WorldView.CurrentZoom < MinZoom) return;
-			if (_entries.Count == 0) return;
+			bool jardin = WorldView.CurrentZoom >= MinZoom && _entries.Count > 0;
+			if (!jardin && !BordVisible) return;
 			Rect2 vis = (GetCanvasTransform().AffineInverse()
 						 * GetViewportRect()).Grow(CullMarginPx);
 			float now = NowSec();
 			List<string> gone = null;
 			foreach (var kv in _entries)
 			{
+				if (!jardin) break;   // dézoomé : seuls les insectes de bord (ForagerLayer.Bord.cs)
 				var e = kv.Value;
 				float alpha = Mathf.Clamp((now - e.BornAt) / FadeInSec, 0f, 1f);
 				if (e.DyingAt >= 0f)
@@ -397,10 +399,11 @@ namespace Symbiose
 					_lot.Grain(scr + new Vector2(0f, -radiusPx), 1.2f, pc);
 				}
 			}
+			bool bord = PoserBord(vis);
 			if (_icones) FauneIcones.Televerser();
 			_lot.Dessiner(this, _icones ? FauneIcones.Texture : null);
 			if (gone != null) foreach (string k in gone) _entries.Remove(k);
-			_dessinNonVide = _entries.Count > 0;
+			_dessinNonVide = _entries.Count > 0 || bord;
 		}
 	}
 }

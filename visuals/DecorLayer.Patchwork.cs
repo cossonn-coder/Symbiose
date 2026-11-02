@@ -2,8 +2,8 @@
 // Partial de DecorLayer : remplace les APLATS peints de la lisière (3 bandes unies
 // par pas, lues comme des « raies » au F5) par un PATCHWORK :
 //  • l'ASSISE (DrawAssise) : une grille (u le long du bord × rangs en profondeur)
-//    de cellules aux sommets PARTAGÉS, teintées par grandes pièces de 120 × 200 cm
-//    (3 pas × 2 rangs) — des parcelles, pas des rayures ;
+//    de cellules aux sommets PARTAGÉS, teintées par des nappes de bruit basse fréquence
+//    (LISIÈRE NUE ② : les parcelles de 120 × 200 cm se lisaient en damier) ;
 //  • le TAPIS (DrawTapis) : des pièces du kit (DecorLayer.Kit.cs) semées au hash —
 //    ourlet DENSE de touffes collé au jardin, fond plus calme mais tramé. Prairie
 //    = herbe + fleurettes ; friche = herbes sèches qui versent + ronciers ;
@@ -50,10 +50,38 @@ namespace Symbiose
 		// Résidu (a) : un rang de plus prolonge la bande jusqu'à FondCm (bord du cadre au
 		// dézoom maximal) et le coin extérieur entre ce bord et le suivant est couvert.
 		private const float FondCm = 3600f;   // ≥ cadre ×0,5 caméra au bout de sa butée
+		// Nappes de l'assise (LISIÈRE NUE ②), en cellules : pas de 40 cm, rangs de 100 cm.
+		private const float NappeTonPas = 11f, NappeTonRangs = 3.5f;
+		private const float NappePhasePas = 14f, NappePhaseRangs = 4.5f;
+		private const float SeuilTonClair = 0.60f;   // ≈ 1/4 de cellules plus claires
+		private const float BordFondAmpCm = 160f;
+		private const float CouturePas = 12f;        // friche : cellules effilochées à chaque bout
+
+		// Bruit de valeur (4 hashes lissés) : des nappes aux contours souples, stables au
+		// seed, sans bloc. Même recette que `bruit` du shader, côté construction.
+		private static float BruitValeur(uint graine, float x, float y, uint canal)
+		{
+			int ix = Mathf.FloorToInt(x), iy = Mathf.FloorToInt(y);
+			float fx = x - ix, fy = y - iy;
+			fx = fx * fx * (3f - 2f * fx);
+			fy = fy * fy * (3f - 2f * fy);
+			float V(int i, int j) => (HashCase(graine, i, j, canal) >> 8 & 0xffff) / 65535f;
+			return Mathf.Lerp(Mathf.Lerp(V(ix, iy), V(ix + 1, iy), fx),
+							  Mathf.Lerp(V(ix, iy + 1), V(ix + 1, iy + 1), fx), fy);
+		}
+
+		// Limite extérieure de la bande : sinueuse, sinon une longue droite iso se lit au
+		// dézoom, là où le tapis s'arrête et où commence le rang du fond.
+		private static float BordFond(Secteur s, float u) =>
+			DepthCm - BordFondAmpCm * (0.5f + 0.5f * Ondulation(s.SeedSecteur ^ 0x7a3du, u / 170f));
 
 		private void DrawAssise(Secteur s)
 		{
 			(Color near, Color far) = MotifColors(s.Motif);
+			// Le fond d'une friche (lisière de bois) ne continue pas au-delà de sa bande : sinon
+			// sa limite avec la prairie voisine file en droite jusqu'au bord du cadre.
+			bool friche = s.Motif == Motif.Friche;
+			Color farLoin = friche ? Palette16.DecorPrairie : far;
 			string mat = s.Motif == Motif.Foret ? "couvert_olive" : null;
 			int tonFond = s.Motif == Motif.Foret ? 1 : TonB;
 			int steps = Mathf.CeilToInt(WorldView.WorldCm / StepCm);
@@ -68,27 +96,42 @@ namespace Symbiose
 				float b = AmplitudeCm * Ondulation(s.SeedSecteur, u / 200f);
 				g[i, 0] = EdgePoint(s.Cote, u, b);
 				for (int k = 1; k <= RangsAssise + 1; k++)
-					g[i, k] = EdgePoint(s.Cote, u, Mathf.Lerp(b + seuilW, DepthCm, (k - 1) / (float)RangsAssise));
+					g[i, k] = EdgePoint(s.Cote, u, Mathf.Lerp(b + seuilW, BordFond(s, u), (k - 1) / (float)RangsAssise));
 				g[i, RangsAssise + 2] = EdgePoint(s.Cote, u, FondCm);
 			}
 			for (int i = 0; i < steps; i++)
 				for (int k = 0; k <= RangsAssise + 1; k++)
 				{
-					uint hp = HashCase(s.SeedSecteur, i / 3, (k + 1) / 2, 7u);
+					// ⚠️ Avant LISIÈRE NUE ② : uint hp = HashCase(s.SeedSecteur, i / 3, (k + 1) / 2, 7u),
+					// blocs de 120 × 200 cm pour le ton, le seuil et la phase de saison : un damier.
+					// Ici, trois nappes indépendantes, et un hash par cellule qui effiloche leurs limites.
+					float g0 = (HashCase(s.SeedSecteur, i, k, 7u) >> 8 & 0xff) / 255f - 0.5f;
+					float nappeTon = BruitValeur(s.SeedSecteur, i / NappeTonPas, k / NappeTonRangs, 7u);
+					float nappePhase = BruitValeur(s.SeedSecteur, i / NappePhasePas, k / NappePhaseRangs, 8u);
 					Color col;
 					int ton;
 					if (k == 0) { col = near; ton = 1; }
-					else if (k > RangsAssise) { col = far; ton = 1; }   // au-delà de la bande
+					else if (k > RangsAssise) { col = farLoin; ton = tonFond; }   // au-delà de la bande
 					else
 					{
 						float frac = (k - 0.5f) / RangsAssise;
-						float seuil = 0.30f + 0.16f * ((hp >> 8 & 0xff) / 255f - 0.5f);
+						// La frange claire ondule le long du bord, sans marche de bloc.
+						float seuil = 0.30f + 0.20f * Ondulation(s.SeedSecteur ^ 0x51edu, i * StepCm / 300f) + 0.10f * g0;
 						bool pres = frac < seuil;
 						col = pres ? near : far;
-						ton = (hp & 3u) == 3u ? 3 : pres ? TonB : tonFond;
+						// Aux deux bouts du bord, la friche s'effiloche dans la prairie, sans couture droite.
+						if (friche && !pres)
+						{
+							float bout = 1f - Mathf.Min(i, steps - 1 - i) / CouturePas;
+							if (bout > 0f && BruitValeur(s.SeedSecteur, i / 4f, k / 2f, 9u) + 0.2f * g0 < bout)
+								col = farLoin;
+						}
+						ton = nappeTon + 0.12f * g0 > SeuilTonClair ? 3 : pres ? TonB : tonFond;
 					}
-					ClasseAplats(col == far ? classeFond : ClassePrairie);
-					Vent(0f, 0f, 1f, (hp >> 16 & 0xff) / 255f);
+					ClasseAplats(col == far || col == farLoin ? classeFond : ClassePrairie);
+					// Le rang du fond a des cellules de 40 cm × 27 m : une phase propre à chacune
+					// les rendait visibles en longues barres aux semaines de transition.
+					Vent(0f, 0f, 1f, k > RangsAssise ? 0.5f : Mathf.Clamp(nappePhase + 0.25f * g0, 0f, 1f));
 					Aplats(OrientTissage, ton, mat);
 					_lot.PolygoneConvexe(new[] { g[i, k], g[i + 1, k], g[i + 1, k + 1], g[i, k + 1] }, col);
 				}
@@ -97,9 +140,9 @@ namespace Symbiose
 			(float x0, float y0) = s.Cote switch { 0 => (W, -FondCm), 1 => (W, W), 2 => (-FondCm, W), _ => (-FondCm, -FondCm) };
 			Vent(0f, 0f, 1f, 0.5f);
 			ClasseAplats(classeFond);
-			Aplats(OrientTissage, 1, mat);
+			Aplats(OrientTissage, tonFond, mat);
 			_lot.PolygoneConvexe(new[] { WorldView.WorldToScreen(x0, y0), WorldView.WorldToScreen(x0 + FondCm, y0),
-										 WorldView.WorldToScreen(x0 + FondCm, y0 + FondCm), WorldView.WorldToScreen(x0, y0 + FondCm) }, far);
+										 WorldView.WorldToScreen(x0 + FondCm, y0 + FondCm), WorldView.WorldToScreen(x0, y0 + FondCm) }, farLoin);
 			ClasseAplats(ClasseInerte);
 			Vent(0f, 0f, 1f, 0f);
 			Aplats(OPlat);
@@ -127,13 +170,14 @@ namespace Symbiose
 					if (u < 0f || u > WorldView.WorldCm) continue;
 					float d = dd + ((h >> 16 & 0xff) / 255f - 0.5f) * pas * k * 0.9f;
 					float b = AmplitudeCm * Ondulation(s.SeedSecteur, u / 200f);
-					if (b + d > DepthCm - 10f) continue;
+					if (b + d > BordFond(s, u) - 10f) continue;
 					ChoisirPiece(mode, h, dd, out Piece f, out int taille, out Teinte t);
 					float m = 1f - 0.20f * Mathf.Clamp(dd / DepthCm, 0f, 1f);
 					_poses.Add(new Pose(EdgePoint(s.Cote, u, b + d), f, taille, Melange(h), t, new Color(m, m, m)));
 				}
 				dd += pas * k;
 			}
+			SemerColonies(s);   // LISIÈRE NUE ② : les fleurs ne viennent plus que des colonies
 			PoserTriees(_poses);
 		}
 
@@ -144,12 +188,12 @@ namespace Symbiose
 			int decal = (h >> 20 & 3u) == 0u ? -1 : 0;   // un quart des touffes plus petites
 			bool ourlet = dd < OurletCm;
 			Teinte herbe = ourlet || (h >> 4 & 3u) == 0u ? Teinte.PrairieClair : Teinte.Prairie;
-			Teinte fleur = (h >> 6 & 1u) == 0u ? Teinte.FleurBlanc : Teinte.FleurJaune;
+			// ⚠️ Avant LISIÈRE NUE ② : Teinte fleur = (h >> 6 & 1u) == 0u ? Teinte.FleurBlanc : Teinte.FleurJaune;
 			switch (mode)
 			{
 				case Tapis.Friche:
-					if (roll < 5) { f = Piece.Fleur; t = fleur; }
-					else if (roll < 42) { f = Piece.HerbeHaute; t = Teinte.Paille; }
+					// ⚠️ Avant LISIÈRE NUE ② : if (roll < 5) { f = Piece.Fleur; t = fleur; } (fleurs partout)
+					if (roll < 42) { f = Piece.HerbeHaute; t = Teinte.Paille; }
 					else if (roll < (ourlet ? 52 : 62)) { f = Piece.Roncier; t = Teinte.Roncier; }
 					else { f = Piece.Herbe; t = herbe; }
 					break;
@@ -165,8 +209,8 @@ namespace Symbiose
 					else { f = Piece.Herbe; t = Teinte.Prairie; }
 					break;
 				default:
-					if (roll < 9) { f = Piece.Fleur; t = fleur; }
-					else { f = Piece.Herbe; t = herbe; }
+					// ⚠️ Avant LISIÈRE NUE ② : if (roll < 9) { f = Piece.Fleur; t = fleur; } (fleurs partout)
+					f = Piece.Herbe; t = herbe;
 					break;
 			}
 			taille = TailleZoom(f, decal);

@@ -65,6 +65,7 @@ namespace Symbiose
 		public void SetCeinture(GArray ceinture)
 		{
 			_ceinture = ceinture != null && ceinture.Count > 0 ? ceinture : null;
+			LireFloraison(_ceinture);   // LISIÈRE NUE ② : par semaine, sans toucher la maille
 			if (!_built) return;
 			// FLUIDITÉ PC ③ : le snapshot arrive CHAQUE semaine, la ceinture change
 			// rarement (un geste, une recolonisation lente). Avant, chaque snapshot
@@ -87,7 +88,7 @@ namespace Symbiose
 					|| x.DuPont != y.DuPont || x.DensiteLigneuse != y.DensiteLigneuse
 					|| x.HauteurCanopeeCm != y.HauteurCanopeeCm || x.LigneEauCm != y.LigneEauCm
 					|| x.AltitudeRelativeCm != y.AltitudeRelativeCm || x.EntailleCm != y.EntailleCm
-					|| x.Essence != y.Essence)
+					|| x.Essence != y.Essence || !MemesColonies(x.Colonies, y.Colonies))
 					return false;
 			}
 			return true;
@@ -134,6 +135,7 @@ namespace Symbiose
 					Essence = d.ContainsKey("essence")
 						&& d["essence"].VariantType != Variant.Type.Nil
 						? d["essence"].AsString() : null,
+					Colonies = LireColonies(d),
 				};
 			}
 			return new SurroundingsProfile { Secteurs = secteurs };

@@ -45,6 +45,7 @@ namespace Symbiose
 		private void ApplyCeinture(GArray ceinture)
 		{
 			_decorLayer?.SetCeinture(ceinture);
+			_foragerLayer?.SetColoniesBord(ceinture);   // LISIÈRE NUE ② : butineurs de bord
 		}
 
 		/// <summary>

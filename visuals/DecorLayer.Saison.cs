@@ -86,6 +86,7 @@ namespace Symbiose
 				_saisonGen = PaletteIndexee.Generation;
 				foreach (string nom in Rampes)
 					m.SetShaderParameter("r_" + nom, PaletteIndexee.PaletteNommee("lisiere_" + nom));
+				m.SetShaderParameter("i_fleur_jaune", IdSource(SourceTeinte((int)Teinte.FleurJaune)));
 			}
 			// Bancs : pas de transition, la capture doit montrer l'état demandé.
 			bool net = WorldView.CaptureActive;
@@ -100,6 +101,7 @@ namespace Symbiose
 					m.SetShaderParameter("semaine", _semaine);
 				}
 			}
+			MajFloraison(m, net, dt);   // LISIÈRE NUE ② (DecorLayer.Colonies.cs)
 			EffetLisiere cible = _etat.Max(_signes).Max(_manteau);
 			float a = net || !_meteoPosee ? 1f : 1f - Mathf.Exp(-dt / TauMeteoS);
 			if (_semaineCible > 0f) _meteoPosee = true;

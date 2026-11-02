@@ -1,7 +1,7 @@
 # Sprint LISIÈRE NUE (D124) — état partagé
 
 **Conception** : `docs/rendu/ambiance/conception_lisiere_nue.md` (figée le 2026-11-02).
-**Où on en est** : ① fait côté moteur (non commité à l'écriture de cette ligne), ② et ③ à faire.
+**Où on en est** : ① et ② faits (② non commité à l'écriture de cette ligne), ③ à faire.
 
 ## Décisions clés (Nico, 2026-11-02)
 
@@ -16,7 +16,7 @@
 | # | Kickoff | Golden | État |
 |---|---|---|---|
 | ① | `01_colonies_moteur.md` — colonies, nourriture, pont 0.6.4, mesure sur 3 ans | intact, vérifié (`ac48b170…`) | **fait** |
-| ② | `02_vue_fleurs_damier.md` — fleurs en colonies, butineurs de bord, damier | intact | à faire |
+| ② | `02_vue_fleurs_damier.md` — fleurs en colonies, butineurs de bord, damier | intact, vérifié (`ac48b170…`) | **fait**, F5 à faire |
 | ③ | `03_vue_branches.md` — branches, couronne d'hiver, protocole F5 | intact | à faire |
 
 ## Bilan ① (pour le tronçon ②)
@@ -48,9 +48,22 @@
 
 **Tests.** `tests/test_fleurs_lisiere` vert. `test_parasite` rouge aussi sur l'arbre d'avant : pas lié. `registry.py` à 304 LDC (301 avant) : zone de vigilance.
 
+## Bilan ② (pour le tronçon ③)
+
+**Code.** `DecorLayer.Colonies.cs` (lecture, semis, floraison), `ForagerLayer.Bord.cs` (insectes, `TempsCourt`), `DrawAssise` en nappes de bruit (`BruitValeur`, `BordFond`). Le shader reçoit `f_blanc`, `f_jaune`, `i_fleur_jaune` ; `lisiere()` prend l'`id` de palette, utile au ③ pour la marcescence. `DrawArbreKit` non touché.
+
+**Écarts au kickoff.**
+- Banc F10 sans pont : colonies fixes et fenêtres recopiées (`ColoniesBanc*`, `FloraisonBanc`), sinon le banc n'aurait aucune fleur. Jamais utilisés en jeu. Pas d'insectes sur ce banc.
+- Insectes de ×1 à ×4 (le jardin : ×4 seulement) ; aucun à ×0,5. Hors `_entries` : ni survol, ni piqûre, ni pollen. Espèce au hash : le pont ne donne qu'un compte.
+- En plus : rang du fond, limite de bande et couture de friche (`mesures/apres_vue.md`). La friche ne prolonge plus son fond au-delà de sa bande.
+
+**Mesures** (`mesures/apres_vue.md`) : draw calls ×0,5 78 → 78, ×1 79 → 80 [n=1 run par côté, VM] ; sommets ×0,5 +13 %, ×1 +11 % [seed 42, s12, VM].
+
+**F5 à valider.** Taches crédibles, plus de quadrillage ; insectes sur les fleurs à ×1, ×2, ×4, figés en pause ; prairie sans rectangles ; contour de la friche en été ; givre de printemps (plaques marquées, non touché ici).
+
 ## Ce qui reste
 
-② et ③. D119 (c) reste ouverte, voir le bilan ①.
+③. D119 (c) reste ouverte, voir le bilan ①.
 Garde-fous : ne JAMAIS lancer `tests/test_epaisseur_500ans.py` ; mesures ≤ 3 ans de jeu.
 `test_succession` et `test_edaphique` étaient rouges avant le sprint AUTOMNE VISIBLE.
 
