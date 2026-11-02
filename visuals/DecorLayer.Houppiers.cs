@@ -73,6 +73,8 @@ namespace Symbiose
 			// puis bouquets.
 			Vector2 c0 = apex + Vector2.Up * r * up;
 			rx *= r; ry *= r;
+			// LISIÈRE NUE ③ : la charpente, cachée l'été, révélée par le dégarnissement du shader.
+			if (!conique) DrawBranches(apex, c0, rx, ry, w, sil.Port, sil.Ecorce * mod, hb);
 			Teinte t = TeinteFeuillage(sil.Feuillage);
 			Color ombre = sil.Feuillage * mod;   // ⑥ : l'ombre = ton 1 de SA palette (tissage)
 			ClasseAplats(conique ? ClasseSansSaison : ClasseFeuillu);   // ⑥ : la couronne suit la saison

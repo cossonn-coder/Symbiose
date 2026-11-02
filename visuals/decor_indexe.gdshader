@@ -78,6 +78,8 @@ uniform int r_fleur_j = 0;
 uniform float f_blanc = 0.0;
 uniform float f_jaune = 0.0;
 uniform int i_fleur_jaune = -1;          // n° de palette de la teinte « fleur jaune »
+// --- couronne d'hiver (LISIÈRE NUE ③) ---
+uniform int i_bouleau = -1;              // n° de palette du bouleau, seul feuillu tout nu
 
 const float AMP_MAX = 32.0;              // px canvas pour G = 1
 const float SEUIL = 0.3;
@@ -89,7 +91,12 @@ const int CLASSE_PRAIRIE = 2;
 const int CLASSE_SANS_SAISON = 3;
 const int ORIENT_FLEUR = 13;
 const float DECALAGE_PIED = 5.0;         // semaines d'écart entre le plus précoce et le plus tardif
-const float DEGARNI_MAX = 0.85;          // part de couronne absente en plein hiver
+// Avant LISIÈRE NUE ③ : 0.85. Il faut > 1 : h01 peut valoir 1, et l'hiver ne laisse plus rien.
+const float DEGARNI_MAX = 1.02;          // part de couronne absente en plein hiver
+const float ENVELOPPE_VITE = 1.4;        // l'enveloppe part avant les bouquets : les branches se voient en automne
+const float SEC_BAS = 0.28;              // part de feuilles sèches en bas de couronne
+const float SEC_HAUT = 0.10;             // ... et en haut
+const float SEC_DEGARNI = 0.6;           // sous ce dégarnissement, les feuilles sèches sont tombées (débourrement)
 const float PRAIRIE_LUM_MIN = 0.30;      // plus sombre : sous-bois, pas de fleurs
 
 varying vec4 v_mod;
@@ -205,7 +212,7 @@ float bayer(ivec2 p) {
 }
 
 // Saison puis météo d'un texel de la lisière. Renvoie la couleur, alpha = texel présent.
-vec4 lisiere(vec3 c, int id, int classe, bool fleur, bool pierre, ivec2 ip, float ph, float hauteur) {
+vec4 lisiere(vec3 c, int id, int classe, bool fleur, bool pierre, bool enveloppe, ivec2 ip, float ph, float hauteur) {
 	float l = clarte(c);
 	float present = 1.0;
 	float w = mod(semaine + (ph - 0.5) * DECALAGE_PIED, 52.0);
@@ -222,7 +229,16 @@ vec4 lisiere(vec3 c, int id, int classe, bool fleur, bool pierre, ivec2 ip, floa
 		else if (w >= 29.0) c = rampe(lut, ph < 0.4 ? r_orange : r_jaune, l);
 		else if (ph < m_seche * 0.25) c = rampe(lut, r_jaune, l);   // canicule : quelques pieds jaunissent
 		float degarni = w >= 33.0 ? smoothstep(33.0, 40.0, w) : 1.0 - smoothstep(0.0, 5.0, w);
-		if (h01(ip.x >> 2, ip.y >> 2) < degarni * DEGARNI_MAX) present = 0.0;
+		// L'enveloppe (fond plein du houppier) part la première : sans elle, plus de disque en hiver.
+		float masque = h01(ip.x >> 2, ip.y >> 2);
+		if (masque < degarni * (enveloppe ? ENVELOPPE_VITE : DEGARNI_MAX)) present = 0.0;
+		// Marcescence : hêtre, charme et chêne gardent quelques feuilles rousses, plus en bas,
+		// en touches de 2 px sur 2, plus ou moins selon le pied.
+		if (!enveloppe && id != i_bouleau && degarni > SEC_DEGARNI
+				&& h01(ip.x >> 1, ip.y >> 1) < mix(SEC_BAS, SEC_HAUT, hauteur) * (0.6 + 0.8 * ph)) {
+			c = rampe(lut, r_roux, l + 0.1);
+			present = 1.0;
+		}
 	} else if (classe == CLASSE_PRAIRIE) {
 		// Rampe de la saison ; l'été garde sa couleur d'origine (r_sombre pour la pluie).
 		bool ete = w >= 12.0 && w < 27.0;
@@ -280,6 +296,7 @@ void fragment() {
 			ivec2 ip = ivec2(floor(v_pos * zoom));
 			bool pierre = orient == 10;
 			bool fleur = orient == ORIENT_FLEUR;
+			bool enveloppe = orient == 9 && classe == CLASSE_FEUILLU;
 			if (orient == 9) {
 				ton += tissage(ip);
 			} else if (orient == 10) {
@@ -295,7 +312,7 @@ void fragment() {
 				ton += d > SEUIL_ECLAT ? 2 : (d > SEUIL ? 1 : (d < -SEUIL ? -1 : 0));
 			}
 			ton = clamp(ton, 0, 4);
-			vec4 l = lisiere(ton_lut(lut, id, ton), id, classe, fleur, pierre, ip, pierre ? 0.0 : v_mod.b, clamp(v_mod.g * 12.0, 0.0, 1.0));
+			vec4 l = lisiere(ton_lut(lut, id, ton), id, classe, fleur, pierre, enveloppe, ip, pierre ? 0.0 : v_mod.b, clamp(v_mod.g * 12.0, 0.0, 1.0));
 			COLOR = vec4(l.rgb * v_mod.r, v_mod.a * l.a);
 		}
 	}

@@ -87,6 +87,9 @@ namespace Symbiose
 				foreach (string nom in Rampes)
 					m.SetShaderParameter("r_" + nom, PaletteIndexee.PaletteNommee("lisiere_" + nom));
 				m.SetShaderParameter("i_fleur_jaune", IdSource(SourceTeinte((int)Teinte.FleurJaune)));
+				// LISIÈRE NUE ③ : le seul feuillu sans feuilles sèches. L'id d'un bouquet vient de
+				// l'atlas : constant par essence à tout palier (le plan du rideau passe par R).
+				m.SetShaderParameter("i_bouleau", IdSource(SourceTeinte((int)Teinte.Bouleau)));
 			}
 			// Bancs : pas de transition, la capture doit montrer l'état demandé.
 			bool net = WorldView.CaptureActive;

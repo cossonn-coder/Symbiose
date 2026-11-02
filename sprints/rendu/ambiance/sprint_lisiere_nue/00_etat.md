@@ -1,7 +1,7 @@
 # Sprint LISIÈRE NUE (D124) — état partagé
 
 **Conception** : `docs/rendu/ambiance/conception_lisiere_nue.md` (figée le 2026-11-02).
-**Où on en est** : ① et ② faits (② non commité à l'écriture de cette ligne), ③ à faire.
+**Où on en est** : ①, ② et ③ faits (③ non commité à l'écriture de cette ligne), reste le F5 de Nico et la clôture.
 
 ## Décisions clés (Nico, 2026-11-02)
 
@@ -17,7 +17,7 @@
 |---|---|---|---|
 | ① | `01_colonies_moteur.md` — colonies, nourriture, pont 0.6.4, mesure sur 3 ans | intact, vérifié (`ac48b170…`) | **fait** |
 | ② | `02_vue_fleurs_damier.md` — fleurs en colonies, butineurs de bord, damier | intact, vérifié (`ac48b170…`) | **fait**, F5 à faire |
-| ③ | `03_vue_branches.md` — branches, couronne d'hiver, protocole F5 | intact | à faire |
+| ③ | `03_vue_branches.md` — branches, couronne d'hiver, protocole F5 | intact, vérifié (`ac48b170…`) | **fait**, F5 à faire |
 
 ## Bilan ① (pour le tronçon ②)
 
@@ -59,15 +59,50 @@
 
 **Mesures** (`mesures/apres_vue.md`) : draw calls ×0,5 78 → 78, ×1 79 → 80 [n=1 run par côté, VM] ; sommets ×0,5 +13 %, ×1 +11 % [seed 42, s12, VM].
 
-**F5 à valider.** Taches crédibles, plus de quadrillage ; insectes sur les fleurs à ×1, ×2, ×4, figés en pause ; prairie sans rectangles ; contour de la friche en été ; givre de printemps (plaques marquées, non touché ici).
+## Bilan ③
+
+**Code.** `DecorLayer.Branches.cs` (nouveau, 93 LDC) : charpentières puis axe, formes par `TreePort`, tout ramené dans l'ellipse de l'enveloppe. Dans `decor_indexe.gdshader` : `DEGARNI_MAX` 0,85 → 1,02, l'enveloppe (orientation 9, classe feuillu) part 1,4 fois plus vite, touches rousses de 2×2 px. Uniform `i_bouleau` dans `DecorLayer.Saison.cs` : l'id d'un bouquet vient de l'atlas, donc constant à tout palier ; le plan du rideau passe par R.
+
+**Écarts au kickoff.**
+- Palier ×0,5 allégé d'emblée (3 charpentières, sans fourche, axe en un seul polygone). Fourches ajoutées à ×1 et plus, sinon l'arbre nu n'a que quelques traits.
+- L'axe est posé après les charpentières : il couvre leurs racines carrées, visibles à ×2.
+- `hauteur` sature à environ 88 px au-dessus du pied : le gradient ne joue que dans le bas des couronnes. Suffisant, non modifié (les brumes le lisent aussi).
+- Feuilles sèches tombées à `degarni` < 0,6 : à un seuil plus bas, elles se lisaient en baies rouges sur le vert tendre.
+- Règle shader « tout sauf le bouleau » : l'aulne (teinte charme) et le noyer (teinte chêne) gardent donc des feuilles sèches, le saule (teinte bouleau) est nu. Réalisme discutable pour l'aulne, à juger au F5.
+
+**Mesures** (`perf_vm.sh -b full -w 12 -k 3 -n 5`, seed 42, llvmpipe, FPS non transposables au PC) :
+
+| Palier | Draw calls avant → après | Sommets du décor avant → après | FPS avant → après |
+|---|---|---|---|
+| ×0,5 | 79 → 78 à 83 [n=1 → n=3 runs, VM] | 42 126 → 43 764 (+3,9 %) [seed 42, s12, VM] | 8,6 → 7,3 à 8,6 [n=1 → n=3 runs, VM, charge 0,5 → 2 à 5] |
+| ×1 | 81 → 80 [n=1 → n=2 runs, VM] | 101 538 → 104 904 (+3,3 %) [seed 42, s12, VM] | 8,0 → 7,4 à 8,2 [n=1 → n=2 runs, VM, charge 1,8 → 4 à 6] |
+
+Sommets ×2 108 534 → 114 798, ×4 111 516 → 117 780 [seed 42, s12, VM]. Cette graine compte peu de feuillus : terrain à 4 forêts non mesuré. Draw calls : les écarts suivent le nombre d'objets du jardin, la maille reste une seule. Aucune donnée ajoutée par semaine.
+
+**Captures lues** (`smoke -B`, bord N ; ×1 s20 s34 s40 s46 s55 s62, ×0,5 s20 s36 s46, ×2 s46, neige et gelée à ×1 s46) :
+- s20 : couronnes pleines, branches invisibles. ×0,5 : un point clair minuscule dans une couronne, à l'œil au F5.
+- s34 : les bouleaux, en avance, montrent déjà leurs branches dans l'orange ; hêtres et chênes encore pleins.
+- s36 ×0,5 : couronnes rousses trouées, charpente visible, bois encore dense.
+- s40, s46 : plus aucun disque. Bouleaux nus ; chênes et hêtres en branches avec des points roux. À ×0,5 les points se lisent bien, à ×2 certains flottent loin d'une branche.
+- Neige : plaques blanches sur charpentières et axes, troncs non touchés. Gelée : givre sur les branches, plus la trame de brume froide, très marquée.
+- s55 (printemps) : couronnes qui se reforment, aucun point roux. s62 : couronnes pleines.
+- Aperçu non traité : sous la neige, l'ombre au pied reste un aplat sombre sans neige.
+
+## F5 (ressenti, 2 minutes)
+
+Lancer une partie, avancer sur une année, regarder la lisière, sans plus :
+
+1. **Printemps** : les taches de fleurs font-elles naturel, sans quadrillage ? Des insectes dessus en zoomant ? Le givre sur la prairie n'est-il pas trop marqué ?
+2. **Été** : prairie sans rectangles, contour de la friche correct ?
+3. **Automne** : les branches apparaissent-elles peu à peu ?
+4. **Hiver** : un vrai bois nu ? Les feuilles sèches plaisent-elles ou font-elles des points parasites ? La neige sur les branches se voit-elle ?
 
 ## Ce qui reste
 
-③. D119 (c) reste ouverte, voir le bilan ①.
+F5 de Nico, puis clôture (journal, `DETTE.md` D124, `BACKLOG.md`). D119 (c) reste ouverte, voir le bilan ①.
 Garde-fous : ne JAMAIS lancer `tests/test_epaisseur_500ans.py` ; mesures ≤ 3 ans de jeu.
 `test_succession` et `test_edaphique` étaient rouges avant le sprint AUTOMNE VISIBLE.
 
 ## §REPRISE
 
-Lire `CLAUDE.md` + ce fichier + le kickoff du premier tronçon « à faire ».
-Lancer : `/sprint-auto sprint_lisiere_nue`.
+Code des 3 tronçons fait. Lire `CLAUDE.md` + ce fichier, puis clôture du sprint après le §F5.
