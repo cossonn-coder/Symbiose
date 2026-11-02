@@ -812,7 +812,11 @@ from __future__ import annotations
 #       (1 avant `semaine_abscission`, baisse linéaire sur CHUTE_SEMAINES, 0 jusqu'au
 #       débourrement ; persistants : 1). Le moteur change, lui : le largage s'étale sur
 #       la couronne et 4 semaines → golden re-figé.
-ENGINE_VERSION = "0.6.3"
+# 0.6.4 (LISIÈRE NUE ①, D124) : chaque secteur du bloc `ceinture` gagne `floraison`
+#       {blanc, jaune} ∈ [0,1] de la semaine, et `colonies` : liste de {u, depth, ru,
+#       rd (cm, repère `DecorLayer.EdgePoint`), couleur, graine, butineurs (0..10)}.
+#       Lecture pure, géométrie stable, seuls `floraison` et `butineurs` varient.
+ENGINE_VERSION = "0.6.4"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

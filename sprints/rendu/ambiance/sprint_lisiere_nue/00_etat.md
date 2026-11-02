@@ -1,7 +1,7 @@
 # Sprint LISIÈRE NUE (D124) — état partagé
 
 **Conception** : `docs/rendu/ambiance/conception_lisiere_nue.md` (figée le 2026-11-02).
-**Où on en est** : conception figée, aucun tronçon lancé.
+**Où on en est** : ① fait côté moteur (non commité à l'écriture de cette ligne), ② et ③ à faire.
 
 ## Décisions clés (Nico, 2026-11-02)
 
@@ -15,13 +15,42 @@
 
 | # | Kickoff | Golden | État |
 |---|---|---|---|
-| ① | `01_colonies_moteur.md` — colonies, nourriture, pont 0.6.4, mesure sur 3 ans | intact attendu (smoke sans ceinture) | à faire |
+| ① | `01_colonies_moteur.md` — colonies, nourriture, pont 0.6.4, mesure sur 3 ans | intact, vérifié (`ac48b170…`) | **fait** |
 | ② | `02_vue_fleurs_damier.md` — fleurs en colonies, butineurs de bord, damier | intact | à faire |
 | ③ | `03_vue_branches.md` — branches, couronne d'hiver, protocole F5 | intact | à faire |
 
+## Bilan ① (pour le tronçon ②)
+
+**Format du pont 0.6.4.** Chaque secteur du bloc `ceinture` garde ses 10 champs et gagne :
+
+```json
+"floraison": {"blanc": 1.0, "jaune": 0.0},
+"colonies": [{"u": 374.2, "depth": 383.6, "ru": 183.1, "rd": 163.8,
+              "couleur": "blanc", "graine": 1424507651, "butineurs": 6}]
+```
+
+- `u`, `depth` : centre en cm, repère de `DecorLayer.EdgePoint(cote, u, depth)`. `ru` le long du bord, `rd` en profondeur : demi-axes en cm.
+- `graine` : pour les bords irréguliers côté vue. La géométrie du moteur est une ellipse lisse.
+- `floraison` : identique sur les 4 secteurs, lire le premier. Horloge = `week_in_year` du snapshot. Fenêtres : jaune wiy 4-14, blanc wiy 7-19.
+- `butineurs` : 0 à 10, 0 sans floraison. Seuls `floraison` et `butineurs` changent par semaine.
+- Le bloc part chaque semaine, mais `MemeProfil` (`DecorLayer.Pont.cs`) ne compare que ses champs : le décor ne se reconstruit pas. Pour ②, y ajouter les colonies en comparant la géométrie, jamais `butineurs`.
+- Forêt, falaise : `colonies` vide. Rivière : 0 ou 1 colonie, côté jardin (depth 70-100 cm, `rd` 50-70) ; elle peut frôler la berge, à couper à la peinture.
+
+**Code.** `fields/fleurs_lisiere.py` (géométrie, floraison, nourriture, compte de vue), `BordureMixin.maj_fleurs_bord` (carte mémoïsée, scalaire par semaine), `eco.fleurs_bord` lu par `_make_nectar_grid`. Effet de bord voulu : le miel des ruches en profite, il lit la même grille.
+
+**Écarts au kickoff.**
+- `bancs/mesure_calendrier` lit un banc sans ceinture : il ne peut pas voir les colonies. Mesure faite par `mesures/mesure_butineurs_bord.py`.
+- Liste clairsemée de plots plutôt que grille pleine, même sens, moins de travail.
+
+**Mesures** (`mesures/apres_moteur.md`) : tick an 2 +4,7 % [n=2 par côté, VM, une mesure sous charge 7,13], plantes an 3 660 → 690 [seed 42, n=1 graine].
+
+**D119 (c) reste ouverte** : pommier × butineurs en an 1 de 0/2 à 1/2 semaines [`full`, seed 42, n=1 graine, marge 0,002 sur le seuil], pollen toujours 0 pendant la floraison. Le pommier fleurit avant les colonies et par temps froid ; nourrir plus n'y change rien. À trancher par Nico : population de départ (touche le golden) ou fenêtre plus précoce.
+
+**Tests.** `tests/test_fleurs_lisiere` vert. `test_parasite` rouge aussi sur l'arbre d'avant : pas lié. `registry.py` à 304 LDC (301 avant) : zone de vigilance.
+
 ## Ce qui reste
 
-Tout. D119 (c) (butineurs dès l'an 1) se ferme si la mesure du ① le confirme.
+② et ③. D119 (c) reste ouverte, voir le bilan ①.
 Garde-fous : ne JAMAIS lancer `tests/test_epaisseur_500ans.py` ; mesures ≤ 3 ans de jeu.
 `test_succession` et `test_edaphique` étaient rouges avant le sprint AUTOMNE VISIBLE.
 

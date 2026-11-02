@@ -23,6 +23,7 @@ No-op strict sans ceinture (`None`) ⇒ champs bit-identiques ⇒ golden INTACT.
 
 from __future__ import annotations
 
+from fields.fleurs_lisiere import fleurs_actives, plots_nourris
 from fields.grids import GridField
 from fields.peripherie import (plots_de_bord, DENSITE_FORET, NOMS_COTES,
                                erosion_secteur)
@@ -156,6 +157,23 @@ class BordureMixin:
                 valeur = intensite * poids
                 if valeur > self.lisiere.data[r][c]:
                     self.lisiere.set(r, c, valeur)
+
+    # --- Colonies de fleurs : le garde-manger des butineurs (D124, §3.2) --------
+
+    def maj_fleurs_bord(self, ceinture, seed: int, week_in_year: int,
+                        tile_origin: tuple = (0.0, 0.0)) -> None:
+        """Publie `eco.fleurs_bord` pour la semaine : ce que les colonies en fleur
+        offrent à cette tuile, ou `None`. La carte des plots est MÉMOÏSÉE sur la
+        ceinture (patron `maj_lisiere`) ; seul le scalaire de floraison change chaque
+        semaine. Sans ceinture : `None`, ressource bit-identique, golden INTACT."""
+        if not ceinture:
+            return
+        sig = (seed, tuple((s["cote"], s["type"]) for s in ceinture), tile_origin)
+        if sig != self._fleurs_sig:
+            self._fleurs_sig = sig
+            self._fleurs_plots = plots_nourris(seed, ceinture, self.rows, self.cols,
+                                               tile_origin)
+        self.fleurs_bord = fleurs_actives(self._fleurs_plots, week_in_year)
 
     # --- Érosion de bordure : les colluvions (§4.5) -------------------------
 

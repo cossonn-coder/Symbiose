@@ -7,6 +7,7 @@ assemblent le tout pour le `PopulationField`. Extrait de `population.py`
 """
 from typing import Callable
 
+from fields.fleurs_lisiere import ajouter_nourriture
 from fields.foragers import ForagerParams
 from fields.lifecycle import LifeCycleBridge
 from fields.faune_encyclo import encyclo_meta
@@ -361,7 +362,9 @@ def _make_nectar_grid(attractivite: dict, defaut: float,
     floraison (①) : une phacélie nourrit tout le monde, une tomate le seul bourdon.
 
     Invariant golden : floraison = 0 partout (aucune plante en fleur) ⇒ grille
-    nulle ⇒ champ pollinisateur nul (comme une absence de fleur)."""
+    nulle ⇒ champ pollinisateur nul (comme une absence de fleur). Les colonies des
+    bords (D124) s'ajoutent ensuite si `eco.fleurs_bord` n'est pas None : hors saison
+    ou sans ceinture, il l'est, et l'invariant tient."""
     def _grid(eco, tile, plants) -> list[list[float]]:
         g = _zero_grid(eco.rows, eco.cols)
         for p in plants:
@@ -374,6 +377,8 @@ def _make_nectar_grid(attractivite: dict, defaut: float,
         for r in range(eco.rows):
             for c in range(eco.cols):
                 g[r][c] = min(1.0, g[r][c] / FLOWER_REF)
+        if eco.fleurs_bord is not None:
+            ajouter_nourriture(g, eco.fleurs_bord, attractivite, defaut)
         return g
     return _grid
 

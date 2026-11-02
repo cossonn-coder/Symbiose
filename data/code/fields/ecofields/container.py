@@ -226,6 +226,10 @@ class EcoFields(MatiereOrganiqueMixin, HydrologieMixin, RuissellementMixin,
     # capacité de charge bit-identique → golden INTACT sans ceinture. Hors `summary()`
     # (grandeur géométrique du milieu, comme `vent`/`turbulence`).
     lisiere:          GridField = field(default=None)
+    # Colonies de fleurs des bords en fleur cette semaine (LISIÈRE NUE ①, D124) :
+    # [(famille, floraison, [(r, c, poids)])] ou None (aucune ceinture, hors saison).
+    # Écrit par `maj_fleurs_bord`, lu par la ressource des butineurs.
+    fleurs_bord:      list = field(default=None)
     # Épaisseur de sol visible (D57, sprint épaisseur de sol ①a) — cm de sol
     # foisonnant au-dessus de la roche-mère, PAR PLOT. Champ STOCKÉ (persisté) qui
     # RELAXE vers une cible bulk-density dérivée des `om_*` (litière fraîche
@@ -534,6 +538,8 @@ class EcoFields(MatiereOrganiqueMixin, HydrologieMixin, RuissellementMixin,
         # ne reconstruit `eco.lisiere` que si les types de secteurs (ou l'offset de la
         # tuile) ont changé : la ceinture est quasi statique, donc coût ≈ 0 par tick.
         self._lisiere_sig = None
+        self._fleurs_sig = None      # idem pour la carte des colonies (`maj_fleurs_bord`)
+        self._fleurs_plots = None
 
     def _init_heterogene(self, grid: GridField, plancher: float) -> None:
         """Pose `plancher` sur `grid` avec une HÉTÉROGÉNÉITÉ spatiale déterministe

@@ -266,6 +266,10 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
             #     None → capacité de charge des guildes bit-identique.
             eco.maj_lisiere(self.game_state.get("ceinture"),
                             tile_origin=(tile.origin_x_cm, tile.origin_y_cm))
+            # Colonies de fleurs des bords (LISIÈRE NUE ①, D124) : même patron, lu par
+            # la ressource des butineurs dans `tick_populations`.
+            eco.maj_fleurs_bord(self.game_state.get("ceinture"), seed, week_in_year,
+                                tile_origin=(tile.origin_x_cm, tile.origin_y_cm))
 
             # 2b. Microclimat de surface T_sol (sprint thermique ①) — APRÈS la
             #     lumière (il la lit), AVANT l'hydrologie (qui lit T_sol). Surchauffe

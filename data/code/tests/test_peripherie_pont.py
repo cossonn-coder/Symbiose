@@ -67,7 +67,8 @@ def test_bloc():
     bloc = ceinture_block({"ceinture": ceinture})
     check("4 secteurs", len(bloc) == 4, f"{len(bloc)}")
     check("un secteur = exactement les champs de la vue",
-          all(tuple(s) == CHAMPS_VUE for s in bloc), f"{tuple(bloc[0])}")
+          all(tuple(s) == CHAMPS_VUE + ("floraison", "colonies") for s in bloc),
+          f"{tuple(bloc[0])}")
     check("`cote` conservé dans l'ordre",
           [s["cote"] for s in bloc] == list(COTES))
     check("valeurs MIROIRS de l'état moteur (aucun recalcul)",

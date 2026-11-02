@@ -25,6 +25,8 @@ résout la DÉSIGNATION (un entier de côté) et on traduit le retour en JSON.
 """
 from __future__ import annotations
 
+from fields.fleurs_lisiere import (COULEURS, butineurs_par_colonie, colonies_secteur,
+                                   floraison_couleur)
 from fields.peripherie import COTES, NOMS_COTES
 from sim import actions as A
 
@@ -62,8 +64,11 @@ def ceinture_block(game_state: dict):
 
     OPT-IN STRICT : un monde sans `ceinture` (le smoke, un banc thématique) ne
     produit AUCUNE clé → la vue retombe sur `DecorLayer.BuildProfile(seed)`, son
-    repli local. Volume négligeable (4 entrées de 10 champs) — contrairement au bloc
-    `sprites`, la question du format compact ne se pose pas ici.
+    repli local. Volume négligeable (4 entrées de 10 champs + quelques colonies) —
+    contrairement au bloc `sprites`, la question du format compact ne se pose pas ici.
+    Depuis 0.6.4 (D124) chaque secteur porte aussi `floraison` {couleur: [0,1]} et
+    `colonies` (cf. `_colonie`) ; le compte `butineurs` change chaque semaine, la
+    géométrie jamais tant que la ceinture ne change pas de type.
 
     PURE lecture (aucune écriture moteur) → golden NEUTRE : le golden tourne hors
     serveur et n'a pas de clé `ceinture`.
@@ -71,7 +76,23 @@ def ceinture_block(game_state: dict):
     ceinture = game_state.get("ceinture")
     if not ceinture:
         return None
-    return [{champ: s.get(champ) for champ in CHAMPS_VUE} for s in ceinture]
+    seed = game_state.get("seed", 0)
+    wiy = (game_state.get("week", 1) - 1) % 52 + 1
+    floraison = {coul: round(floraison_couleur(coul, wiy), 3) for coul in COULEURS}
+    comptes = butineurs_par_colonie(game_state)
+    return [{**{champ: s.get(champ) for champ in CHAMPS_VUE},
+             "floraison": floraison,
+             "colonies": [_colonie(col, comptes.get(col, 0))
+                          for col in colonies_secteur(seed, s["cote"], s["type"])]}
+            for s in ceinture]
+
+
+def _colonie(col, butineurs: int) -> dict:
+    """Une colonie pour la vue (0.6.4) : `u`/`depth` = repère de `DecorLayer.EdgePoint`,
+    en cm ; `ru`/`rd` = demi-axes de la tache ; `graine` = hash de ses bords irréguliers."""
+    return {"u": round(col.u_cm, 1), "depth": round(col.depth_cm, 1),
+            "ru": round(col.rayon_u_cm, 1), "rd": round(col.rayon_d_cm, 1),
+            "couleur": col.couleur, "graine": col.graine, "butineurs": butineurs}
 
 
 def _cote(target: dict):
