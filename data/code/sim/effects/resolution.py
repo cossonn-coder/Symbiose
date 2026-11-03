@@ -91,8 +91,18 @@ def resolve(effect: dict, plant: PlantInstance, tile: Tile,
             if not plots:
                 plots = [(r, c)]
             share = amount / len(plots)
+            # Clé optionnelle `sature_a` (D126 ①) : le flux décroît linéairement avec
+            # le champ qu'il nourrit, plein à 0, nul à `sature_a`. C'est le frein de
+            # nodulation d'une légumineuse sur sol déjà riche. Sans la clé, flux constant.
+            sature_a = effect.get("sature_a")
+            champ = eco.get_field(variable) if sature_a is not None else None
             for rr, cc in plots:
-                mutations.append(InjectField(tile.tile_id, variable, share, rr, cc,
+                part = share
+                if champ is not None:
+                    part *= max(0.0, 1.0 - champ.at_plot(rr, cc) / sature_a)
+                    if part <= 0.0:
+                        continue
+                mutations.append(InjectField(tile.tile_id, variable, part, rr, cc,
                                              source=f"{plant.name}"))
         elif cible == "global" and eco:
             mutations.append(InjectField(tile.tile_id, variable, amount,

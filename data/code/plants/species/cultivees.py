@@ -217,6 +217,9 @@ class Clover(Fabaceae):
     winter_strategy = "dormant"
     foliage_density = 0.40
     reproduction_rate = 0.35   # ressemis (M7) — vivace sans archétype
+    # Pied court (D126 ①) : les vieux stolons meurent pendant que les neufs avancent,
+    # la colonie se déplace. La sénescence existante (mortalite.py) rend le pied au sol.
+    longevity_years = 2
     # Couvre-sol stolonifère réel (sprint LUXURIANCE ②) : le trèfle tapisse par ramets
     # (stolons rampants) autant que par graine → arbitrage émergent graines ↔ ramets.
     # `stolon` = besoin de lumière au sol pour s'établir (le stolon ne prend pas sous

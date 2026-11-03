@@ -479,6 +479,10 @@ class Fabaceae(PlantBase):
             "variable": "n",
             "amount": 0.03,
             "cible": "local",
+            # Nodulation freinée sur sol riche (D126 ①) : plein à N=0, nul à N=1,5.
+            # Repère : la roche-mère la plus riche tient N=1,0 (terre) ; sous trèfle le
+            # sol mesure ~0,8 en moyenne et culmine vers 2,2 [`full`, seed 42, n=1 graine, VM].
+            "sature_a": 1.5,
             "description": "Fixation N₂ — enrichit la fertilité du sol"
         }
     ]

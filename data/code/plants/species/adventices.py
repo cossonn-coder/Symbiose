@@ -102,7 +102,7 @@ class MedicagoLupulina(PlantBase):
                 {
                     "type": "permanent", "trigger": "weekly",
                     "action": "inject_field", "variable": "n",
-                    "amount": 0.04, "cible": "local",
+                    "amount": 0.04, "cible": "local", "sature_a": 1.5,
                     "description": "Fixation N₂ — fertilité"
                 },
                 {
@@ -118,7 +118,7 @@ class MedicagoLupulina(PlantBase):
         {
             "type": "permanent", "trigger": "weekly",
             "action": "inject_field", "variable": "n",
-            "amount": 0.03, "cible": "local",
+            "amount": 0.03, "cible": "local", "sature_a": 1.5,
             "description": "Fixation N₂ familiale"
         }
     ]
