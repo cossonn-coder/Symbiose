@@ -48,6 +48,10 @@ Evenement = namedtuple("Evenement", "kind tile_id pos espece cause")
 # --- Reverse mappings, DÉRIVÉS des catalogues moteur (jamais dupliqués) -------
 _CATALOGUE = {**PLANT_CATALOGUE, **PERENNIAL_CATALOGUE}
 _CLE_DE_NOM = {cls.name: cle for cle, cls in _CATALOGUE.items()}     # log → clé
+# Espèces dont la levée dit quelque chose du sol (cause → concept du carnet) : molène sur
+# terre viciée (inoculum ③), flore de prairie selon l'azote (trèfle dominant ②).
+_CAUSE_LEVEE = {"molene": "sol_vicie", "dactyle": "sol_riche", "ortie": "sol_riche",
+                "fetuque": "sol_maigre"}
 
 # --- Parsing du log (les marqueurs que le tick émet déjà) --------------------
 _POS = re.compile(r"@\((\d+),\s*(\d+)\)")           # @(r, c) — advance/stagnation/repro/mort/…
@@ -264,7 +268,7 @@ def evenements(log: list[str]) -> list[Evenement]:
                 # toute autre espèce garde cause None (concept « succession »).
                 cle_germ = _CLE_DE_NOM.get(m.group(1).strip())
                 out.append(Evenement("germination", tile_id, pos, cle_germ,
-                                     "sol_vicie" if cle_germ == "molene" else None))
+                                     _CAUSE_LEVEE.get(cle_germ)))
         elif "🌰" in line:
             m = _RE_REPRO.search(line)
             tag = _RE_TAG.search(line)

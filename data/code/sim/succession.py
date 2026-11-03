@@ -13,7 +13,8 @@ Extrait d'engine.py (Sprint refactor structurel) — la méthode Engine
 from __future__ import annotations
 
 from constants import PLOT_CM
-from plants import WEED_CATALOGUE, PLANT_CATALOGUE, PERENNIAL_CATALOGUE
+from plants import (WEED_CATALOGUE, PLANT_CATALOGUE, PERENNIAL_CATALOGUE,
+                    FLORE_SPONTANEE)
 from fields import (SEED_ARCHETYPES, GRADIENT_ARCHETYPES, _hash_noise,
                     founder_genes, form_seed_at)
 from fields.lifecycle import _smoothstep
@@ -137,6 +138,21 @@ def choisir_archetype(candidates: list[str],
     return min(candidates,
                key=lambda a: (abs(SEED_ARCHETYPES.index(a) - rang_cible),
                               -SEED_ARCHETYPES.index(a)))
+
+
+def choisir_espece(archetype: str, azote: float, seed: int, week: int,
+                   r: int, c: int) -> type | None:
+    """Espèce qui lève une fois l'archétype choisi (sprint TRÈFLE DOMINANT ②) : tirage
+    uniforme par hash parmi celles dont la fenêtre d'azote contient celui du plot
+    (dactyle et ortie sur sol riche, cf. `FLORE_SPONTANEE`). Canal de hash `week × 61`,
+    dédié : il ne biaise ni la germination (`week × 7 + arch`) ni l'offset (× 53, × 59).
+    Archétype sans flore (pioneer, nitrogen_fixer, disease_indicator) → sa tête seule,
+    sans tirage. Pur, déterministe, zéro RNG (philo #3)."""
+    flore = FLORE_SPONTANEE.get(archetype)
+    if flore is None:
+        return WEED_CATALOGUE.get(archetype)
+    eligibles = [cls for cls, n_min, n_max in flore if n_min <= azote < n_max]
+    return eligibles[int(_hash_noise(seed, week * 61, r, c) * len(eligibles)) % len(eligibles)]
 
 
 def _lever_grains_en_attente(game_state: dict, tile, eco, week: int, seed: int,
@@ -473,7 +489,8 @@ def succession(game_state: dict, tile, eco, week: int) -> list[str]:
             # Choisir l'archétype ∝ maturité du sol (gradient succession)
             chosen = choisir_archetype(candidates, soil_deep, fertilite)
 
-            plant_class = WEED_CATALOGUE.get(chosen)
+            plant_class = choisir_espece(chosen, eco.n.at_plot(r, c),
+                                         seed, week, r, c)
             if not plant_class:
                 continue
 

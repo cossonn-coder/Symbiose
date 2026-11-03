@@ -129,7 +129,7 @@ def test_alignement_cles():
     check("toutes les espèces catalogue ont une fiche",
           sans_fiche == [], f"muettes : {sans_fiche}")
     # 48 depuis le sprint PÉRIPHÉRIE ⑥ (ajout du saule, décision D-5).
-    check("corpus = 48 fiches", len(FICHES) == 48, f"{len(FICHES)}")
+    check("corpus = 51 fiches", len(FICHES) == 51, f"{len(FICHES)}")
 
 
 # ---------------------------------------------------------------------------

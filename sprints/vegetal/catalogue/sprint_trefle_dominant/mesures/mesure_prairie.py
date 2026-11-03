@@ -20,6 +20,7 @@ import json
 import os
 import statistics
 import sys
+import time
 
 sys.path.insert(0, os.getcwd())
 
@@ -50,6 +51,11 @@ def _bilan_annuel(engine, morts: int) -> dict:
     azote_sous = [engine.game_state["eco"][tid].n.at_plot(r, c)
                   for tid, r, c in plots_trefle]
     ages = [p.age_years for _, p in trefles]
+    # L'ombre du dactyle ferme-t-elle la porte des stolons (CLONAL_LIGHT_SEUIL) sur son plot ?
+    plots_dactyle = {(t.tile_id, *p.position) for t, p in plantes
+                     if p.name == "Dactyle" and p.current_stage > 0}
+    sous_seuil = [pl for pl in plots_dactyle
+                  if engine.game_state["eco"][pl[0]].lumiere.at_plot(pl[1], pl[2]) < 0.30]
     return {
         "semaine": engine.week - 1,
         "plantes": len(plantes),
@@ -70,6 +76,8 @@ def _bilan_annuel(engine, morts: int) -> dict:
         "age_trefle": {"moy": round(statistics.fmean(ages), 2),
                        "max": round(max(ages), 2)} if ages else None,
         "liste_plots_trefle": plots_trefle,
+        "plots_dactyle_adulte": len(plots_dactyle),
+        "plots_dactyle_sous_seuil": len(sous_seuil),
     }
 
 
@@ -92,6 +100,7 @@ def main() -> int:
 
     annees = []
     morts = 0
+    t_annee = time.perf_counter()
     avant = {id(p): p for _, p in _vivants(srv.engine) if p.name == NOM_TREFLE}
     for sem in range(1, a.ans * 52 + 1):
         if a.moteur_seul:
@@ -105,7 +114,10 @@ def main() -> int:
         morts += sum(1 for i in avant if i not in apres)
         avant = apres
         if sem % 52 == 0:
+            secondes = time.perf_counter() - t_annee   # temps du tick seul, bilan exclu
             annees.append(_bilan_annuel(srv.engine, morts))
+            annees[-1]["secondes_annee"] = round(secondes, 2)
+            t_annee = time.perf_counter()
             morts = 0
             print(f"an {sem // 52} : {annees[-1]['plantes']} plantes, "
                   f"trèfle {annees[-1]['trefle']} sur {annees[-1]['plots_trefle']} plots",

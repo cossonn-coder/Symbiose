@@ -21,7 +21,7 @@
 from __future__ import annotations
 from dataclasses import dataclass
 
-from plants.catalogue import PLANT_CATALOGUE, PERENNIAL_CATALOGUE, WEED_CATALOGUE
+from plants.catalogue import PLANT_CATALOGUE, PERENNIAL_CATALOGUE, ESPECES_SPONTANEES
 
 CLE_OBJECTIFS = "automate_objectifs"
 
@@ -154,4 +154,4 @@ def est_atteignable(game_state: dict, obj: Objectif) -> bool:
     bank = game_state.get("player_seed_bank")
     if bank is not None and bank.count(obj.cible) > 0:
         return True
-    return cls in WEED_CATALOGUE.values()
+    return cls in ESPECES_SPONTANEES

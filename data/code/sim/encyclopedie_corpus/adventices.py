@@ -46,6 +46,34 @@ FICHES_ADVENTICES: dict[str, dict[int, str]] = {
            "ressources de nectar pour les abeilles au sortir de l'hiver. Indicatrice de "
            "sol tassé.",
     },
+    "dactyle": {
+        1: "Haute graminée en touffe serrée, épis en petits paquets denses au bout des "
+           "tiges.",
+        2: "Vivace nitrophile : elle lève sur les terres riches, souvent là où des "
+           "légumineuses ont fixé de l'azote. Sa touffe dense et ses racines fibreuses "
+           "prennent la lumière et l'eau à son pied.",
+        3: "Elle fait tourner la prairie. L'azote laissé par le trèfle la nourrit, son "
+           "ombre arrête les stolons qui avançaient, et le trèfle se retire là où il l'a "
+           "fait venir. Quand elle a vidé le sol, le trèfle revient. Bon fourrage, "
+           "grande productrice de litière.",
+    },
+    "fetuque": {
+        1: "Gazon fin aux feuilles filiformes, épillets teintés de rouge.",
+        2: "Vivace sobre des sols moyens et pauvres ; elle talle sous le pied et supporte "
+           "la fauche. Elle lève mal là où la terre est grasse, laissée aux grandes "
+           "graminées.",
+        3: "Elle tient les terres maigres sans les épuiser : peu d'ombre, peu de soif, et "
+           "le trèfle cohabite à son pied. Sa présence dit un sol encore modeste en azote.",
+    },
+    "plantain": {
+        1: "Rosette plaquée de feuilles étroites à nervures saillantes, épi brun et court "
+           "au bout d'une tige nue.",
+        2: "Vivace à souche courte, indifférente à la richesse du sol ; pollinisée par le "
+           "vent. Elle encaisse le piétinement et la fauche.",
+        3: "Compagne des chemins et des prairies usées : ses feuilles restent sous la lame "
+           "et sous le pas, et elle garde sa place quand les grandes herbes reculent. "
+           "Ancienne plante de soin des plaies et des piqûres.",
+    },
     "molene": {
         1: "Grande rosette de feuilles épaisses couvertes d'un duvet blanc laineux ; "
            "l'an suivant, une haute hampe dressée constellée de fleurs jaunes.",

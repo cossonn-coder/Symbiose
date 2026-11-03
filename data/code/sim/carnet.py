@@ -119,6 +119,11 @@ CONCEPT_DE: dict[tuple[str, str | None], str] = {
     # NEUF « maladie ». Concept propre au carnet (comme carnivorie/sénescence, hors
     # `encyclopedie_types.CONCEPTS`) : reste descriptif tant que non maîtrisé.
     ("germination", "sol_vicie"): "maladie",
+    # Flore de prairie (sprint TRÈFLE DOMINANT ②) : la levée dit l'azote du plot. Dactyle
+    # et ortie lèvent sur sol riche, la fétuque sur sol moyen ou pauvre (`FLORE_SPONTANEE`).
+    # Concept « azote », propre au carnet comme « maladie » ; c'est lui qui révèle le cycle.
+    ("germination", "sol_riche"): "azote",
+    ("germination", "sol_maigre"): "azote",
     # PAYSAGE de la ceinture (sprint PÉRIPHÉRIE ⑥) : les gestes de lisière, d'eau et de
     # roche, et les réponses du terrain. Quatre concepts NEUFS propres au carnet (comme
     # carnivorie/maladie, hors `encyclopedie_types.CONCEPTS`) → la note reste descriptive
@@ -180,6 +185,10 @@ GABARIT: dict[tuple[str, str | None, str], str] = {
     # au seuil « maladie » (le sol chargé d'inoculum qu'il faut faire reposer/tourner).
     ("germination", "sol_vicie", _D): "Une rosette laineuse de {e} s'est installée {l}, là où le reste peine.",
     ("germination", "sol_vicie", _I): "{e} lève {l} : elle prospère sur cette terre lasse que les maladies passées ont chargée — le signe qu'il faut la laisser reposer, ou y tourner les familles.",
+    ("germination", "sol_riche", _D): "{e} a levé {l}, drue et d'un vert sombre.",
+    ("germination", "sol_riche", _I): "{e} lève {l} : la terre y est grasse d'azote, souvent celui du trèfle. Son ombre le fera reculer, puis le sol s'appauvrira et il reviendra.",
+    ("germination", "sol_maigre", _D): "Une herbe fine, {e}, a levé {l}.",
+    ("germination", "sol_maigre", _I): "{e} lève {l} : le sol y est encore maigre en azote, et elle s'en contente.",
 
     ("stagnation", "sec", _D): "Le plant de {e} {l} fait grise mine, feuilles molles.",
     ("stagnation", "sec", _I): "Encore la soif {l} — ce sol draine trop vite pour {e}, je le sais maintenant.",

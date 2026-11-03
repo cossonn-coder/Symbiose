@@ -88,7 +88,9 @@ CONCEPTS: dict[str, dict[int, str]] = {
            "le sol est assez riche, elles lèvent, dépassent les pionnières et les "
            "brident. La friche bascule alors en prairie. Un sol nu qui reste nu, ou une "
            "seule espèce qui verrouille tout, signale une succession bloquée : il manque "
-           "le pont d'humus qui ouvre la porte aux suivantes.",
+           "le pont d'humus qui ouvre la porte aux suivantes. Et la prairie ne s'arrête "
+           "pas là : le trèfle enrichit le sol en azote, les grandes graminées y lèvent "
+           "et l'ombrent, il recule, le sol s'appauvrit, il revient.",
     },
     # Phénologie florale (sprint bugs d'émergence, S2) : pourquoi les fleurs d'une même
     # espèce ne s'ouvrent pas toutes la même semaine. La voix qui rend lisible l'ÉTALEMENT

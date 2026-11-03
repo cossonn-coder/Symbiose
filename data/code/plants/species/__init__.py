@@ -26,6 +26,8 @@ Orientation :
                         Jasmin/Oleaceae sarmenteux — sprint Grimpantes ⑤)
   - `mulch_sources.py`— sources de mulch annuelles (Blé/Poaceae, Chanvre/Cannabaceae
                         NEUVE) → paille (sprint équilibre invasion ⑤)
+  - `prairie.py`      — flore spontanée sous les archétypes grass/competitor (Dactyle,
+                        Fétuque rouge, Plantain lancéolé — sprint TRÈFLE DOMINANT ②)
 """
 
 from .adventices import BursaPastoris, MedicagoLupulina, PoaAnnua, Taraxacum, Molene
@@ -37,6 +39,7 @@ from .sauvages import (Nettle, Vaccinium, Raspberry, RunningBamboo, SweetViolet,
                        Mugwort, Sphagnum, Drosera)
 from .grimpantes import Ivy, Jasmine
 from .mulch_sources import Wheat, Hemp, Rye
+from .prairie import Dactyle, FetuqueRouge, PlantainLanceole
 
 __all__ = [
     "BursaPastoris", "MedicagoLupulina", "PoaAnnua", "Taraxacum", "Molene",
@@ -47,4 +50,5 @@ __all__ = [
     "Raspberry", "RunningBamboo", "SweetViolet", "Mugwort", "Sphagnum", "Drosera",
     "Ivy", "Jasmine",
     "Wheat", "Hemp", "Rye",
+    "Dactyle", "FetuqueRouge", "PlantainLanceole",
 ]

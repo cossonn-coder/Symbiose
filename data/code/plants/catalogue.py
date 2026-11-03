@@ -11,7 +11,7 @@ from plants.species import (Tomato, Pepper, Bean, Clover, Sunflower, Basil,
                             Vaccinium, Raspberry, RunningBamboo, SweetViolet, Garlic,
                             Ivy, Jasmine, Wheat, Hemp, Rye, Mugwort, Sphagnum, Drosera,
                             BursaPastoris, MedicagoLupulina, PoaAnnua, Taraxacum,
-                            Molene)
+                            Molene, Dactyle, FetuqueRouge, PlantainLanceole)
 from plants.perennials import (Fig, AppleTree, CherryTree, WalnutTree, OakTree,
                                FirTree, BeechTree, BirchTree, HornbeamTree, Alder,
                                Willow)
@@ -83,6 +83,11 @@ PLANT_CATALOGUE: dict[str, type] = {
     # `arch_inoculum`), pas par le gradient de succession. Aussi dans WEED_CATALOGUE
     # (archétype `disease_indicator`) ; ici pour ses voix (encyclopédie, magazine, maîtrise).
     "molene":         Molene,
+    # Flore de prairie (sprint TRÈFLE DOMINANT ②) : hors WEED_CATALOGUE, levée par la
+    # sous-sélection `FLORE_SPONTANEE` ci-dessous ; ici pour leurs voix.
+    "dactyle":        Dactyle,
+    "fetuque":        FetuqueRouge,
+    "plantain":       PlantainLanceole,
 }
 
 # Catalogue des adventices uniquement (pour la succession)
@@ -96,6 +101,28 @@ WEED_CATALOGUE: dict[str, type] = {
     # sur sol sain → golden NEUTRE. Cf. `choisir_archetype` (priorité indicatrice).
     "disease_indicator": Molene,
 }
+
+# Sous-sélection d'espèce dans un archétype (sprint TRÈFLE DOMINANT ②). La banque de
+# graines reste par archétype, et ses portes (pH, température, allélopathie, ombre) se
+# calculent sur la tête `WEED_CATALOGUE`. Une fois l'archétype levé, l'espèce se décide
+# par l'azote du plot puis par hash : (classe, azote_min inclus, azote_max exclu).
+# AZOTE_RICHE : sous un tapis de trèfle, le N moyen du plot tourne autour de 0,5 (lui
+# prélève autant qu'il fixe) : à 0,6, le dactyle ne levait presque que sur les tuiles déjà
+# riches au départ, sans lien avec le trèfle. Mesures : mesures/apres_flore.md du sprint.
+AZOTE_RICHE = 0.45
+_SANS_BORNE = float("inf")
+FLORE_SPONTANEE: dict[str, tuple[tuple[type, float, float], ...]] = {
+    "grass": ((PoaAnnua, 0.0, _SANS_BORNE),
+              (FetuqueRouge, 0.0, AZOTE_RICHE),
+              (Dactyle, AZOTE_RICHE, _SANS_BORNE)),
+    "competitor": ((Taraxacum, 0.0, _SANS_BORNE),
+                   (PlantainLanceole, 0.0, _SANS_BORNE),
+                   (Nettle, AZOTE_RICHE, _SANS_BORNE)),
+}
+
+# Toutes les espèces qui peuvent lever seules, têtes d'archétype et flore comprises.
+ESPECES_SPONTANEES: frozenset[type] = frozenset(WEED_CATALOGUE.values()) | frozenset(
+    cls for flore in FLORE_SPONTANEE.values() for cls, _, _ in flore)
 
 PERENNIAL_CATALOGUE: dict[str, type] = {
     "figuier":  Fig,

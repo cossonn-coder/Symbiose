@@ -447,6 +447,9 @@ ce qu'il ouvre. (Les **seuils numériques** — `completude_ratio` exact, `K`, `
 - N3 : Colonise et **réamorce** les sols maigres en y fixant de l'azote ; fourrage et
   nectar discrets. Premier maillon vers une prairie plus riche.
 
+**Dactyle, Fétuque rouge, Plantain lancéolé** (sprint trèfle dominant ②) : fiches dans
+`sim/encyclopedie_corpus/adventices.py`, page P48 pour le plantain.
+
 **Pâturin annuel** (Poaceae · sol)
 - N1 : Petite graminée touffue, épillets verts clairs.
 - N2 : Graminée annuelle ultra-pionnière, germe et grenaille en continu ; colonise tout

@@ -28,5 +28,5 @@ from plants.perennials import (
     PerennialWoody, Fig, AppleTree, CherryTree, WalnutTree, OakTree, FirTree,
 )
 from plants.catalogue import (
-    PLANT_CATALOGUE, WEED_CATALOGUE, PERENNIAL_CATALOGUE,
+    PLANT_CATALOGUE, WEED_CATALOGUE, PERENNIAL_CATALOGUE, FLORE_SPONTANEE,
 )

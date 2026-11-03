@@ -402,11 +402,22 @@ _ENTREES = [
      "une onde dans l'eau. Et ces chapeaux blancs, si pareils au rosé qu'on cueille "
      "pour l'omelette, sont de ceux qui tuent. Regarde les lames : rose, tu manges ; "
      "blanc, tu passes. Les fées n'y sont pour rien."),
+
+    # Plantain lancéolé (sprint TRÈFLE DOMINANT ②) : lore de la plante des chemins.
+    ("P48", "D", "succession", 3, "hasard",
+     "L'herbe aux cinq coutures, on la trouve où l'on marche : aux seuils, aux "
+     "ornières, le long des chemins de vaches. Plus on la foule, mieux elle se plaque. "
+     "Les bergers en froissaient une feuille sur la piqûre d'abeille ou la coupure de "
+     "serpe, et la douleur passait le temps de finir la journée. On disait qu'elle "
+     "suivait les pas de l'homme d'un pays à l'autre, et c'est vrai : là où un sentier "
+     "s'ouvre, elle est déjà dessus. Quand tu ne sais plus où passait un vieux chemin, "
+     "cherche-la."),
 ]
 
 # Titres recopiés du doc §7 (gras de chaque entrée), indexés par id — gardés à
 # part pour ne pas alourdir le tuple éditorial et rester relisibles.
 _TITRES = {
+    "P48": "L'herbe aux cinq coutures",
     "P01": "Ne rien faire est le travail le plus difficile",
     "P02": "La graine et la boue",
     "P03": "L'ombre du fruitier",
