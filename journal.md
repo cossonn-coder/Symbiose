@@ -211,6 +211,7 @@ pointeur ci-dessous. Ne plus écrire le contenu des entrées ici.
 - [2026-11-02 — Sprint **AUTOMNE VISIBLE** (D123 + D118 (A) arbres) — CLOS côté code (①→⑥) : flèche protégée et ports d'après fiches, feuilles sous la couronne (pont 0.6.3), tons d'automne par espèce, tapis lisible dès ×1, chute animée, lisière 4 saisons + signes macro ; golden re-figé annoncé `bfe6f889…` → `ac48b170…` ; F5 validé, D123 fermée, D124 ouverte](journal/167_2026-11-02_sprint-automne-visible-CLOS.md)
 - [2026-11-02 — Sprint **LISIÈRE NUE** (D124) — CLOS côté code (①→③) : colonies de fleurs au moteur et butineurs nourris (pont 0.6.4), fleurs en taches et damier cassé, branches et couronne d'hiver ; golden intact `ac48b170…` ; D119 (c) reste ouverte ; F5 validé, D124 fermée, D125 ouverte](journal/168_2026-11-02_sprint-lisiere-nue-CLOS.md)
 - [2026-11-02 — Retours F5 de la lisière (D125) — CLOS : brume sans quadrillage, décor visible au-delà de ×4, neige = pluie sous 1,5 °C ; golden intact `ac48b170…` ; F5 validé, D126 ouverte (trèfle)](journal/169_2026-11-02_retours-lisiere-D125-CLOS.md)
+- [2026-11-02 — Conception **TRÈFLE DOMINANT** (D126) — FIGÉE : le trèfle n'exclut pas les autres, le plafond est de 5 espèces spontanées ; cycle azote, 4 espèces en plus, trèfle à quatre feuilles récoltable, vue ; 4 tronçons](docs/vegetal/catalogue/conception_trefle_dominant.md)
 
 > Tout le contenu détaillé est dans les fichiers liés ci-dessus
 > (`journal/` et `journal_archive/`). La dette est dans [`DETTE.md`](DETTE.md).
