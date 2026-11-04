@@ -125,4 +125,4 @@ Le F5 de ④, et l'arbitrage sur les 2 critères ratés de ②. Garde-fous : ne 
 
 ## §REPRISE
 
-④ fait, à commiter (pas le `__pycache__` de `sprint_optim_vie_macro`). Tous les tronçons sont faits. Reste la clôture : F5 de Nico (§F5 ci-dessus), arbitrage sur les 2 critères ratés de ②, puis `journal.md`, `DETTE.md`, `BACKLOG.md`.
+Code clos le 2026-11-04, journal, dette et backlog à jour. Reste le F5 de Nico (§F5 ci-dessus) et son arbitrage sur les 2 critères ratés de ②, puis fermeture de D126.
