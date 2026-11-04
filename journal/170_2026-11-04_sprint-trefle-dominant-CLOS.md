@@ -12,3 +12,15 @@ Kickoffs : `sprints/vegetal/catalogue/sprint_trefle_dominant/`. Bilans et écart
 **Écarts** : `population_hash` re-figé au ① et au ②, non prévu par les kickoffs, même cause que le golden. La référence 729 / 434 de la conception a été mesurée sans automate : le vrai « avant » est 834 / 537 [n=1 graine, VM]. Correctif de l'orchestrateur au ② : borne `% len` dans `choisir_espece` (`_hash_noise` peut valoir 1,0), hash intacts.
 
 Refactor auto-léger : rien à scinder, `serialize.py` est pile à 400 LDC. Attend le F5 de Nico.
+
+## Suite du 2026-11-04 : F5, rapport perf, rejeu
+
+**F5 de Nico** : « ça me convient tel quel pour la prairie ». D126 fermée, correction de la banque des vivaces non retenue, reste versé en D127.
+
+**Rapport PC, an 25** : trèfle 26,5 % des plantes, 18 espèces [n=1 run, PC, automate débranché]. **Rejeu VM jusqu'à s925, sans automate** : le trèfle remonte, 188 → 252 entre an 7 et an 8, 160 → 203 entre an 15 et an 17 ; plots neufs de la dominante 19 à 43 % par an dès l'an 3 [n=1 rejeu, VM]. Le retour manquait à 5 ans : il faut plus longtemps pour le voir.
+
+**Rapport C enrichi** (`606f32e`, pont 0.6.6), à la demande de Nico (« c'est ça qu'il faut changer ») : sonde serveur `perf_tick.py`, bilan par an `perf_annees.py`, RSS Windows.
+
+**Tick de 62 s** : s921 fait 62 568 ms au PC [n=1 run, PC, Python 3.14], 1 820 ms au rejeu [n=1 rejeu, VM, Python 3.13]. Non reproduit, cause ouverte en D127.
+
+**Piège de mesure** : le rejeu montrait des ticks médians de 3,9 à 4,9 s en ans 5 à 7, CPU compris. Rejoué plus tard : 1,1 à 1,6 s, s260 9 763 → 1 101 ms [n=2 rejeux, VM]. Des `stockfish` occupaient la VM (charge relevée jusqu'à 17,9). Mesurer le temps sur cette VM exige de regarder sa charge.

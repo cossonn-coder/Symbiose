@@ -125,4 +125,4 @@ Le F5 de ④, et l'arbitrage sur les 2 critères ratés de ②. Garde-fous : ne 
 
 ## §REPRISE
 
-Code clos le 2026-11-04, journal, dette et backlog à jour. Reste le F5 de Nico (§F5 ci-dessus) et son arbitrage sur les 2 critères ratés de ②, puis fermeture de D126.
+Sprint clos. F5 validé par Nico le 2026-11-04 pour la prairie, D126 fermée, reste en D127.

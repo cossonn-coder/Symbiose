@@ -18,6 +18,14 @@ ci-dessous répond à une hypothèse précise :
     le coût ne dépend pas du nombre d'appels, contrairement à cProfile.
   - `echantillons` / `attendus` : très en dessous → le processus entier était gelé.
 
+⚠️ Limites constatées au rejeu du 2026-11-04 :
+  - un CPU élevé ne prouve PAS une cause dans la simulation. Une machine chargée le
+    gonfle aussi : s260 a pris 9 763 ms puis 1 101 ms au rejeu suivant, identique par
+    déterminisme [n=2 rejeux, VM chargée puis moins]. L'indice est alors une hausse
+    répartie sur toutes les phases. Seul un rejeu tranche.
+  - `echantillons` / `attendus` tourne autour de 0,7 sur un tick normal [n=5 ticks, VM] :
+    la période réelle dépasse 50 ms. N'y voir un gel que très en dessous.
+
 Golden NEUTRE : le golden tourne hors serveur. Le fil ne fait que lire des piles.
 """
 from __future__ import annotations
