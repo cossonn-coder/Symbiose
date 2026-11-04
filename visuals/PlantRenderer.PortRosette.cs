@@ -9,7 +9,7 @@
 // applique la flexion du vent, sans code de vent ici. On trie les feuilles par Y écran : le
 // peintre pose celles du fond d'abord, comme à la main.
 //
-// Échelle cumulative (conception_rendu_visible.md §4 D4) : santé et ombre de feuille dès ×2,
+// Échelle cumulative (conception_rendu_visible.md §4 D4) : santé dès ×2, ombre de feuille et
 // nervure dès ×8, marques (duvet, gouttes, pli) dès ×8. À ×1, on lit une masse et une couleur.
 
 using Godot;
@@ -42,12 +42,16 @@ namespace Symbiose
 			FormeFeuille.Dentee => ContourDente,
 			FormeFeuille.Spatule => ContourSpatule,
 			FormeFeuille.Lobee => ContourLobe,
+			FormeFeuille.Coeur => ContourCoeur,
+			FormeFeuille.Scie => ContourScie,
+			FormeFeuille.Lanceolee => ProfilLanceole,
 			_ => ContourOvale,
 		};
 
 		// Ce qui décrit une feuille à poser : rassemblé pour ne pas traîner 8 paramètres.
+		// `Org` : point d'attache sur le sol (rosette : le collet ; tige : le nœud de l'axe).
 		private readonly record struct FeuillePosee(Vector2 U, float Long, float Large, float BaseZ, float HautZ,
-			float Dressee, int Ton, int K);
+			float Dressee, int Ton, int K, Vector2 Org = default);
 		private readonly List<(float Prof, FeuillePosee F)> _feuillesPort = new();
 
 		// Sous-couche, hampe et feuilles, dans l'ordre où elles se recouvrent.
@@ -123,8 +127,9 @@ namespace Symbiose
 			float pix = PixelInterne;
 			_contourPrairie.Clear();
 			foreach (Vector2 q in ContourDe(f.Feuille)) _contourPrairie.Add(PointFeuille(fe, q.X, q.Y));
-			// Ombre portée de la feuille sur la feuille d'en dessous : c'est elle qui les sépare.
-			if (AuPalier(PalierSanteZoom)) PoserEventail(_contourPrairie, new Vector2(0f, pix), Ton(col, 0));
+			// Ombre portée de la feuille sur la feuille d'en dessous, dès ×8 : à ×4, les tons
+			// et l'orientation séparent déjà les feuilles, et elle doublait le coût (③).
+			if (AuPalier(PalierOrganesZoom)) PoserEventail(_contourPrairie, new Vector2(0f, pix), Ton(col, 0));
 			PoserEventail(_contourPrairie, Vector2.Zero,
 				Ton(col, fe.Ton, Orientation(WorldView.WorldToScreenOffset(fe.U.X, fe.U.Y))));
 			if (!AuPalier(PalierOrganesZoom)) return;
@@ -140,7 +145,7 @@ namespace Symbiose
 			float d = fe.Dressee;
 			Vector2 m = fe.U * (lg * fe.Long * (1f - 0.6f * d)) + v * (lr * fe.Large);
 			float monte = d * lg * (2f - lg) + (1f - d) * lg * lg;
-			return Iso(m.X, m.Y, (fe.BaseZ + 0.4f + fe.HautZ * monte) * AplatMort);
+			return Iso(fe.Org.X + m.X, fe.Org.Y + m.Y, (fe.BaseZ + 0.4f + fe.HautZ * monte) * AplatMort);
 		}
 
 		// Plume (carotte, ×1 : un petit nuage) : une tache loin, un rachis et ses lanières près.
@@ -154,9 +159,10 @@ namespace Symbiose
 				return;
 			}
 			_lotPrairie.Ligne(PointFeuille(fe, 0f, 0f), PointFeuille(fe, 1f, 0f), c, pix);
-			for (int i = 1; i <= 5; i++)
+			int paires = AuPalier(PalierOrganesZoom) ? 5 : 3;   // ×4 : la découpe, pas le détail
+			for (int i = 1; i <= paires; i++)
 			{
-				float t = 0.2f + i * 0.14f, lr = 1f - t * 0.75f;
+				float t = 0.2f + i * 0.7f / paires, lr = 1f - t * 0.75f;
 				Vector2 axe = PointFeuille(fe, t, 0f);
 				_lotPrairie.Ligne(axe, PointFeuille(fe, t + 0.12f, lr), c, pix);
 				_lotPrairie.Ligne(axe, PointFeuille(fe, t + 0.12f, -lr), c, pix);

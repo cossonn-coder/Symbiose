@@ -132,8 +132,10 @@ namespace Symbiose
 			{
 				long t0 = Stopwatch.GetTimestamp();
 				DrawVector();
-				BakeQueue.RecordBrushDraw(Stopwatch.GetElapsedTime(t0).TotalMilliseconds,
-										  _structure?.Segments.Count ?? 0);
+				double ms = Stopwatch.GetElapsedTime(t0).TotalMilliseconds;
+				BakeQueue.RecordBrushDraw(ms, _structure?.Segments.Count ?? 0);
+				if (BakeQueue.TraceCout)
+					GD.Print($"[cout] {_structure?.SpeciesName} {ms:F3} {_lotPrairie?.Sommets ?? 0}");
 				return;
 			}
 			// LEVIERS ③ : retient si le tracé enregistré est le vectoriel direct.

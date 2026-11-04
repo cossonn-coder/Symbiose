@@ -17,7 +17,7 @@ Golden attendu : **inchangé partout**, `a10b7225…` à l'ouverture. Vérifié 
 |---|---|---|---|
 | ① | `01_banc_fiches.md` | Banc, mesure des silhouettes, « avant », 36 fiches | **fait, code non committé** |
 | ② | `02_socle_rosettes.md` | Socle des ports, taille, rosettes (7) | **fait, code non committé** |
-| ③ | `03_tiges.md` | Tiges à feuilles étagées (12) | à faire |
+| ③ | `03_tiges.md` | Tiges à feuilles étagées (12) | **fait, code non committé** |
 | ④ | `04_chaumes_tapis_buissons.md` | Chaumes, couvre-sols, buissons, courgette (13) | à faire |
 | ⑤ | `05_squelette_moteur.md` | Plus de squelette pour les herbacées à port, perf | à faire |
 | ⑥ | `06_grimpantes_grammaire_bilan.md` | Haricot, tomate, lierre, jasmin, fleurs et feuilles SNES, bilan | à faire |
@@ -57,6 +57,20 @@ Golden attendu : **inchangé partout**, `a10b7225…` à l'ouverture. Vérifié 
 - **Pour les suivants** : ajouter une ligne à `FichesPort` et un `case` dans `DessinerPort` ; la taille au pied, l'ombre, le vent et la recuisson suivent seuls. `BakeCost` compte encore les segments : à revoir au ⑤, où ils disparaissent. Espèces non encore à port : gardent le segment et une palette nouvelle dès ce tronçon.
 - **F5** : rosettes en jeu (reconnaissance, hampe qui monte) ; tailler et pincer un pied (se rabat, perd sa tête, repousse) ; clic sur une hampe de molène ; plus de surlignage de segment sur prairie et rosettes.
 
+### ③ Tiges à feuilles étagées
+
+- **Fait** : `visuals/PlantRenderer.PortTige.cs` (collecte axes, rameaux, feuilles ; ordre du peintre), `PortTigeFormes.cs` (losange loin, palmée, gaufrage, soleil, étoile, grappe pendante), 12 lignes `FichesPort` et `FicheTige`, `tools/cout_cuisson.py`. Vue pure, aucune fonction par espèce : tournesol = 1 axe sans rameau, moutarde = 1 axe à 9 rameaux. Golden intact `a10b7225…`, build vert. Moteur non touché. `Mugwort`, `Hemp`, `Mint` : palettes assombries (fiche : colonne sombre, flèche sombre, plaque terne).
+- **Silhouettes** : paires ×4 15→3, ×1 7→1 [seed 42, n=1 capture, VM] ; aucune des 12 dans une paire, menthe/basilic séparés ; restent bambou, pâturin, seigle, haricot, myrtille, thym (④⑥). Hauteur hors tolérance ×4 23→15 [idem], ×1 : 16 sur 40 [idem]. Dans les 12 : consoude 78 cm dessinés pour 50 [×4, n=1 capture] assumée (la boîte compte sa nappe de 32 cm, masse plus large que haute, fiche) ; à ×1 seuls moutarde 77 pour 60 et poivron 97 pour 80 dépassent de 1 à 2 cm [n=1 capture], arrondi au pixel.
+- **PNG lus** : banc ×1, ×4, ×8 ; `full` s26 et s46, ×1 à ×16 [seed 42, n=1 run, VM] : tournesol et poivron lisibles, plus de 88 cm de bois partout. Les autres tiges ne sont vues que sur le banc à ces dates et à ce cadrage.
+- **Garde-fou de cuisson : NON TENU, hors d'atteinte sans perdre les silhouettes. À arbitrer par Nico, seuil non touché.** `full`, `perf_vm.sh -E 20 -z 4`, A/B au même build : pinceau 0,11-0,12 → 0,17-0,21 ms/plante [n=3 runs par côté en alternance, charge de départ 1,8 à 4,9, le premier à 1,8, avant les derniers réglages de rayons de 3 fiches], soit environ +60 % contre +10 % visés. Sans les allègements de ce tronçon : 0,23-0,26 [n=3].
+- **Pourquoi** : c'est un effet de mélange, pas de port lourd. Une petite plante à segments coûte 0,04 ms en médiane [`full`, n=3 runs, VM], un port du même âge 0,11 (tournesol, 84 sommets) à 0,19 (basilic, poivron) [`full`, n=3 runs, VM] : l'envoi seul du lot en prend 0,04 à 0,06 [n=1 run, VM]. À l'adulte, c'est l'inverse : médiane des 12 tiges 0,90 → 0,62 ms, des 7 rosettes 0,50 → 0,35 ms contre 0,84-0,92 pour les 13 génériques [banc, ×4, n=6 à 16 coups par espèce, à froid, 1 passe par côté].
+- **Allégé** (silhouettes conservées, PNG lus) : `LotTriangles.DessinerSansMaille` (triangle array, ports et prairie, sans ArrayMesh, env. −0,05 ms par coup [n=3 contre n=2 runs, `full`]) ; disques et ellipses à 4 ou 6 côtés sous 4 px ; ombre de feuille et plume complète dès ×8 seulement. Effet visible à ×4 : rosettes un peu moins séparées par l'ombre, à juger au F5.
+- **Le reste de la perf ne se dégrade pas** : FPS 9,4-11,0 → 11,1-11,4 [n=3 par côté, dans le bruit], draw calls 92-96 → 87-90 [n=3 par côté], `cache` non comparable (ligne lue en début de run). Options pour Nico : assouplir le seuil, le rapporter à l'adulte, ou le mesurer en durée totale de cuisson ; repli possible : garder les segments sous un stade.
+- **`mesure_da`** ×4 : tournesol, ortie, chanvre : tons lus méd. 3, 6, 3 ; noir 0 % ; dérive 15°, 34°, 16° [n=1 capture, VM]. Grammaire au ⑥.
+- **Écarts au kickoff** : `cout_cuisson.py` et la trace `SYMBIOSE_COUT_CUISSON` ajoutés pour isoler le coût. Formes neuves : cœur, scie, palmée ; lancéolée reprise du plantain. Poivron : moteur non `fruitier`, donc organe `fruit` montré par une **marque de stade** ronde et rouge, sans état ni récolte. Tête de tournesol fanée idem. **Hiver : les 12 ne sont pas `deciduous`, le tournesol reste feuillu en s46** [`full`, n=1 run], faute de signal moteur. Clic : la bande de tige vaut pour toute tige.
+- **Pour les suivants** : `PoserEllipse`, `PoserDisque` s'allègent seuls ; `DessinerSansMaille` pour tout lot de pinceau. `tools/cout_cuisson.py --zoom 4` donne le coût par espèce. Lire le A/B au même build : charge variable sinon.
+- **F5** : reconnaître les 12 en jeu ; vent sur chanvre et tournesol (feuilles attachées à l'axe plié) ; tailler et pincer basilic et ortie ; clic sur une tige de chanvre ; pieds morts ; rosettes à ×4 sans ombre de feuille.
+
 ## §REPRISE
 
-Lire `CLAUDE.md`, ce fichier, la conception, puis le prochain kickoff « à faire » : ③ `03_tiges.md`. Patron d'un port : `visuals/PlantRenderer.PortRosette.cs`. Rejouer la mesure : `mesures/avant.md`. Point ouvert : durée de cuisson (bilan ②).
+Lire `CLAUDE.md`, ce fichier, la conception, puis le prochain kickoff « à faire » : ④ `04_chaumes_tapis_buissons.md`. Patron d'un port : `visuals/PlantRenderer.PortTige.cs`. Rejouer la mesure : `mesures/avant.md`. Point ouvert : **seuil de durée de cuisson à arbitrer par Nico** (bilan ③).

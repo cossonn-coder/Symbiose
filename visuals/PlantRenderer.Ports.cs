@@ -124,10 +124,11 @@ namespace Symbiose
 			Color col = TeintePrairie();
 			switch (f.Forme)
 			{
-				default: DessinerRosette(f, col); break;   // ③④⑥ : tiges, chaumes, tapis…
+				case FormePort.Tige: DessinerTige(f, col); break;
+				default: DessinerRosette(f, col); break;   // ④⑥ : chaumes, tapis…
 			}
 			PoserFruitsPort(f);
-			_lotPrairie.Dessiner(this);
+			_lotPrairie.DessinerSansMaille(this);
 			PoserDetailsPrairie(col);
 			return true;
 		}
@@ -212,7 +213,7 @@ namespace Symbiose
 		// La tige fine d'un port haut se vise aussi : bande verticale au-dessus du collet.
 		private bool HampeSous(Vector2 local)
 		{
-			if (FicheDeLaPlante is not { } f || !HampeLevee(f)) return false;
+			if (FicheDeLaPlante is not { } f || (f.Forme != FormePort.Tige && !HampeLevee(f))) return false;
 			float demi = Mathf.Max(4f / WorldView.CurrentZoom, f.EpaisseurTigeCm * WorldView.PxPerCmX);
 			return Mathf.Abs(local.X) <= demi && local.Y <= 0f
 				&& local.Y >= -_hauteurReelCm * WorldView.PxPerCmZ - f.TeteCm * WorldView.PxPerCmX;

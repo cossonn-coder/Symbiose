@@ -215,6 +215,18 @@ namespace Symbiose
 			return m;
 		}
 
+		/// <summary>Même dessin, UN envoi aussi, sans passer par un ArrayMesh (FORMES DES PLANTES ③,
+		/// lot d'UN pinceau, sans texture ni UV). Mesuré à cuisson égale : créer une surface de
+		/// maillage coûte un forfait, quel que soit le nombre de sommets, et c'est lui qui rendait
+		/// une petite plante à port 4 fois plus chère que ses segments. Sans indices : les
+		/// triangles se suivent dans les tableaux.</summary>
+		public void DessinerSansMaille(CanvasItem ci)
+		{
+			if (_sommets.Count == 0) return;
+			RenderingServer.CanvasItemAddTriangleArray(ci.GetCanvasItem(), System.Array.Empty<int>(),
+				_sommets.ToArray(), _couleurs.ToArray());
+		}
+
 		/// <summary>Envoie le lot accumulé : UN DrawMesh sur `ci` (à appeler
 		/// depuis son _Draw). Rien à peindre → aucun envoi. `texture` (optionnelle)
 		/// = l'atlas des pièces posées par Quad ; sans elle, les UV ne partent pas.</summary>

@@ -72,6 +72,9 @@ namespace Symbiose
 				case FormeTete.Grappe: PoserGrappe(sommet, r, c, graine); break;
 				case FormeTete.Chapelet: PoserChapelet(pied, sommet, r, c, graine); break;
 				case FormeTete.Epi: PoserEpi(pied, sommet, r, c, graine); break;
+				case FormeTete.Soleil: PoserSoleil(sommet, r, c); break;
+				case FormeTete.Etoile: PoserEtoile(sommet, r, c); break;
+				case FormeTete.Pendante: PoserPendante(sommet, r, c, graine); break;
 				default: PoserOmbelle(pied, sommet, r, c, graine); break;
 			}
 		}
@@ -80,7 +83,7 @@ namespace Symbiose
 		// au pixel de l'ancien draw_ellipse) coûtent 5 fois plus de sommets pour le même dessin.
 		private void PoserEllipse(Vector2 c, float rx, float ry, Color col)
 		{
-			const int N = 12;
+			int N = CotesPour(Mathf.Max(rx, ry), 12);
 			Vector2 prem = c + new Vector2(rx, 0f), prec = prem;
 			for (int i = 1; i < N; i++)
 			{
@@ -89,6 +92,14 @@ namespace Symbiose
 				if (i > 1) _lotPrairie.Triangle(prem, prec, cour, col);
 				prec = cour;
 			}
+		}
+
+		// Côtés utiles à ce rayon : sous 1,5 px d'écran un disque est un losange, sous 4 px un
+		// hexagone, mêmes pixels à un près (FORMES DES PLANTES ③, coût de cuisson au sommet).
+		private static int CotesPour(float r, int max)
+		{
+			float px = r * WorldView.CurrentZoom;
+			return px < 1.5f ? 4 : px < 4f ? 6 : max;
 		}
 
 		private Color FleurDe() =>

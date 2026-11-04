@@ -165,7 +165,7 @@ namespace Symbiose
 				case PortPrairie.Dactyle: DessinerDactyle(col); break;
 				default: DessinerFetuque(col); break;
 			}
-			_lotPrairie.Dessiner(this);
+			_lotPrairie.DessinerSansMaille(this);
 			PoserDetailsPrairie(col);
 			return true;
 		}
@@ -372,7 +372,7 @@ namespace Symbiose
 
 		private void PoserDisque(Vector2 c, float r, Color col)
 		{
-			const int N = 8;
+			int N = CotesPour(r, 8);
 			Vector2 prem = c + new Vector2(r, 0f), prec = prem;
 			for (int i = 1; i < N; i++)
 			{

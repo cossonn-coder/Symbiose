@@ -108,6 +108,11 @@ namespace Symbiose
 			else _eligibles.Remove(p);
 		}
 
+		// Trace du coût par espèce (FORMES DES PLANTES ③, tools/cout_cuisson.py) : une ligne
+		// `[cout]` par coup de pinceau, seulement si la variable d'environnement est posée.
+		internal static readonly bool TraceCout =
+			System.Environment.GetEnvironmentVariable("SYMBIOSE_COUT_CUISSON") == "1";
+
 		public static void RecordBrushDraw(double ms, int segs)
 		{
 			_drawMsSum += ms;
