@@ -92,9 +92,16 @@ namespace Symbiose
 		// Part de la couronne encore en place (AUTOMNE VISIBLE ③, pont 0.6.3) : 1 sauf
 		// débourrement, largage et hiver d'un caduc. Absent du snapshot → 1.
 		public float Feuillage = 1f;
+		// Nom du stade moteur (FORMES DES PLANTES ②) : une bisannuelle lit sa hampe ici.
+		public string StageName = "";
+		// Coupe et pincement montrés (FORMES ②, pont 0.6.7) : 1 la semaine du geste, retour
+		// à 0. Espèces non migrées seulement, clés absentes si nulles.
+		public float Rabattu, Pince;
+		// Moins de feuilles après une coupe, plus touffu après un pincement (conception §4.4).
+		public float FacteurTaille => (1f - 0.5f * Rabattu) * (1f + 0.3f * Pince);
 		// Ce que la vue garde au hash : densité de l'espèce × part encore en place.
 		// `FoliageDensity` seule resterait pleine jusqu'à l'hiver (elle règle la lumière).
-		public float DensiteVisible => FoliageDensity * Feuillage;
+		public float DensiteVisible => FoliageDensity * Feuillage * FacteurTaille;
 	}
 
 	// ---------------------------------------------------------------------------
@@ -215,6 +222,9 @@ namespace Symbiose
 				ps.Automne = LectureSnap.F(plant, "automne");
 			if (LectureSnap.A(plant, "feuillage"))
 				ps.Feuillage = LectureSnap.F(plant, "feuillage");
+			ps.StageName = LectureSnap.S(plant, "stage_name");
+			if (LectureSnap.A(plant, "rabattu")) ps.Rabattu = LectureSnap.F(plant, "rabattu");
+			if (LectureSnap.A(plant, "pince")) ps.Pince = LectureSnap.F(plant, "pince");
 			// Fruits tracés (③, 0.3.4) : lecture tolérante (un snapshot pré-0.3.4
 			// ou une plante morte n'a pas la clé → liste vide, rien à dessiner).
 			if (LectureSnap.A(plant, "fruits"))

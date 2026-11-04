@@ -80,7 +80,7 @@ import sys
 from tests.simserver import harness
 from tests.simserver.base import test_v0_contract
 from tests.simserver.actions import test_actions_v1
-from tests.simserver.taille import test_taille_au_segment
+from tests.simserver.taille import test_taille_au_segment, test_hints_taille
 from tests.simserver.organes import test_hints_organes
 from tests.simserver.macro import test_vie_macro
 from tests.simserver.fields import test_champs_debug
@@ -102,6 +102,7 @@ def main() -> int:
     test_v0_contract()       # sections 1–6 : forme, robustesse, déterminisme, arrêt, full
     test_actions_v1()        # section 7
     test_taille_au_segment() # sections 8 + 8b
+    test_hints_taille()
     test_hints_organes()     # section 9
     test_vie_macro()         # section 10
     test_champs_debug()      # section 11

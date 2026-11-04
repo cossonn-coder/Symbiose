@@ -115,6 +115,12 @@ class PlantInstance:
     # Trèfle à quatre feuilles déjà cueilli (TRÈFLE DOMINANT ③) : bonus unique par pied,
     # posé par le geste `recolter` (`sim/quatre_feuilles.py`). Hors `_PLANT_ATTRS` du golden.
     quatre_feuilles_cueilli: bool = False
+    # Semaine de la dernière coupe et du dernier pincement (FORMES DES PLANTES ②), -1 = jamais.
+    # Écrites par `sim/actions/gestes.py` sur les espèces non migrées, lues par le pont pour
+    # que le port dessiné MONTRE le geste (hints `rabattu`, `pince`). Aucune loi ne les lit :
+    # hors `_PLANT_ATTRS` du golden.
+    semaine_coupe: int = -1
+    semaine_pince: int = -1
     # Structure morphologique (croissance procédurale, D29 réorienté, tronçon 1).
     # Vide à la déclaration ⇒ une plante naît avec UN segment apex au collet
     # (cf. __post_init__). INERTE à ce tronçon : poussée par sim/growth.py mais

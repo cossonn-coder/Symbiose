@@ -38,8 +38,7 @@ from .vision_cmds import bloc_vision, bloc_voix   # vision du jardinier (sol qui
 from fields import light
 # Seuil de perception d'une flaque (sprint hydrologie & marécages ②) : la liste
 # creuse `eau_surface` ne consigne que les plots dont la lame le dépasse.
-from fields.ecofields.constants import (SEUIL_FLAQUE, COUVERTURE_RENDU_SEUIL,
-                                         MARAIS_OFF, ALLELO_FLOOR, AUTOMNE_RAMP)
+from fields.ecofields.constants import SEUIL_FLAQUE, COUVERTURE_RENDU_SEUIL, MARAIS_OFF, ALLELO_FLOOR, AUTOMNE_RAMP
 # Semaine d'abscission PROPRE à un caduc (sprint DÉSYNC PHÉNOLOGIE ①, factorisée
 # dans l'engine) : le pont la RÉUTILISE — pas de duplication de formule — pour
 # tracer la rampe `automne` par-plante vers son largage. Fonction PURE.
@@ -74,6 +73,7 @@ from .peripherie_route import ceinture_block
 # d'abri par plante (lu SEULEMENT si le champ d'abri est déjà calculé). Pur.
 from .vent_pont import wind_block, abri_facteur
 from .quatre_feuilles_pont import marquer_quatre_feuilles
+from .taille_pont import marquer_taille
 
 
 def _activite_butineur(eco, agent) -> float:
@@ -292,8 +292,8 @@ class SerializeMixin:
                     base["automne"] = 0.0
                 # Part de la couronne encore en place (AUTOMNE VISIBLE ③, 0.6.3) : la vue
                 # éclaircit la couronne au rythme du largage. Lecture pure → golden neutre.
-                base["feuillage"] = round(
-                    feuillage_visible(p, saison, week_in_year), 3)
+                base["feuillage"] = round(feuillage_visible(p, saison, week_in_year), 3)
+                marquer_taille(base, p, week)   # coupe et pincement montrés (FORMES ②, 0.6.7)
                 # Fruits traçables (③, D19) : VRAI état moteur (≠ proxy `organ`).
                 # Index implicite = position dans la liste (clé du geste `manger`
                 # ciblé). `segment` = ancrage structurel pour que la vue place le

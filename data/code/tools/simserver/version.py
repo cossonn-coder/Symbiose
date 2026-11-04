@@ -822,7 +822,11 @@ from __future__ import annotations
 # 0.6.6 (rapport perf) : `perf_report` gagne `annees` (bilan par an) ; chaque dump gagne
 #       `saison`, `meteo`, `temperature` et `sonde` (temps CPU, ramasse-miettes, défauts
 #       de page, phases du tick). Lecture pure, clés neuves ignorées par un ancien client.
-ENGINE_VERSION = "0.6.6"
+# 0.6.7 (formes des plantes ②) : une plante d'espèce non migrée gagne `rabattu` (retour à 0 en
+#       8 semaines) et `pince` (12 semaines), clés absentes si nulles : la vue montre la coupe
+#       sur le port dessiné. Plus `target.segment` pour ces plantes côté vue (repli serveur
+#       `params.cible`). Lecture pure, golden neutre.
+ENGINE_VERSION = "0.6.7"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

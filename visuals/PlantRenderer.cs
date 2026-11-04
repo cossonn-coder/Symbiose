@@ -262,6 +262,7 @@ namespace Symbiose
 		// FLUIDITÉ AN 2 ④ : symptômes déjà LUS hors fil principal (core/PlanteLue.cs).
 		public void SetSymptoms(IReadOnlyList<(string Cause, float Intensite)> symptoms)
 		{
+			if (MemesSymptomes(symptoms)) return;   // rien de neuf : pas de cuisson (Ports.cs)
 			_colorTint = default;
 			_colorAmount = 0f;
 			_ravageurs = _gel = _grele = _drought = _ombre = _maladie = 0f;
@@ -396,6 +397,7 @@ namespace Symbiose
 			}
 			MesurerPort();        // taille réelle → port et tapis (Paliers.cs, T5)
 			ComputeStiffness();   // raideur au vent suit la croissance (T3)
+			if (DessinInchange()) return;   // port dessiné identique : pas de cuisson (Ports.cs)
 			Invalidate(); // re-cuisson à venir (T2) — l'ancienne image reste d'ici là
 		}
 
@@ -491,6 +493,8 @@ namespace Symbiose
 
 			// Prairie (TRÈFLE DOMINANT ④) : port dessiné, à tous les paliers.
 			if (DessinerPrairie()) return;
+			// Ports des herbacées (FORMES DES PLANTES ②) : même chemin, depuis une fiche.
+			if (DessinerPort()) return;
 
 			// Paliers BAS ×0,5-×2 (D106 T5, PlantRenderer.Paliers.cs) : chaque palier
 			// porte SON information (présence+saison / port / santé), squelette et
@@ -621,6 +625,7 @@ namespace Symbiose
 		{
 			if (_structure == null) return false;
 			Vector2 local = ToLocal(canvasPos);
+			if (HampeSous(local)) return true;   // un port se vise aussi à sa hampe (Ports.cs)
 			var (center, rx, ry) = Couronne();   // PlantRenderer.Paliers.cs (T5)
 			if (rx <= 0f || ry <= 0f) return false;
 			Vector2 d = local - center;

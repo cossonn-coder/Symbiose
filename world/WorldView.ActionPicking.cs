@@ -33,6 +33,22 @@ namespace Symbiose
 			return best;
 		}
 
+		/// <summary>Port dessiné sous le curseur, quand aucun collet n'est à portée : la
+		/// souris est re-projetée au sol, et le haut d'une hampe de molène tombe bien
+		/// au-delà de PickRadiusCm. Le plus proche du collet à l'écran, ou null.</summary>
+		private PlantRenderer FindPortSous(Vector2 canvasMouse)
+		{
+			PlantRenderer best = null;
+			float bestD = float.MaxValue;
+			foreach (var node in _plantNodes.Values)
+			{
+				if (!node.TailleAuPied || !node.ContientCurseur(canvasMouse)) continue;
+				float d = node.Position.DistanceSquaredTo(canvasMouse);
+				if (d < bestD) { bestD = d; best = node; }
+			}
+			return best;
+		}
+
 		/// <summary>Tuile + plot contenant le point MONDE (cm). False si le
 		/// point tombe entre les tuiles (chemins) ou sur la maison.</summary>
 		private bool FindPlot(Vector2 w, out string tileId, out int r, out int c)
@@ -81,6 +97,7 @@ namespace Symbiose
 			Vector2 w = ScreenToWorld(canvasMouse);
 			foreach (var node in _plantNodes.Values)
 			{
+				if (node.TailleAuPied) continue;   // port dessiné : on vise la plante, pas un segment
 				float dx = (float)node.GetMeta(LectureSnap.Meta("wx")).AsDouble() - w.X;
 				float dy = (float)node.GetMeta(LectureSnap.Meta("wy")).AsDouble() - w.Y;
 				float ext = node.PickExtentCm;

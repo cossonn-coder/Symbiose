@@ -274,6 +274,14 @@ def _segment_cible(plant, cible: str) -> int | None:
     return target if segs[target].parent is not None else None   # collet (parent None) → rien à couper
 
 
+def _noter_geste_vu(game_state: dict, plant, champ: str) -> None:
+    """Note la semaine d'une coupe ou d'un pincement (FORMES DES PLANTES ②). Espèces non
+    migrées seulement : leur port est dessiné, les segments n'y montrent plus la coupe.
+    Migrées (arbres, tomate, lierre, jasmin) : la coupe se voit à leurs segments."""
+    if not plant.plant_class.procedural_growth:
+        setattr(plant, champ, game_state.get("week", 0))
+
+
 def tailler(game_state: dict, player: str, plant, eco, *, cible: str = "apex",
             segment_id: int | None = None) -> bool:
     """Tailler (écimage si `cible='apex'`, égourmandage si `'branche'`) — geste DIRECT
@@ -301,6 +309,7 @@ def tailler(game_state: dict, player: str, plant, eco, *, cible: str = "apex",
     cost = cout_action(game_state, player, "tailler", _objets_action("tailler", plant))
     if spend(game_state, player, cost) < 1.0:
         return False                          # Vigueur insuffisante → rien n'est écrit (structure intacte)
+    _noter_geste_vu(game_state, plant, "semaine_coupe")
     seg_id = None
     if segment_id is not None:
         segs = plant.segments
@@ -342,6 +351,7 @@ def pincer(game_state: dict, player: str, plant, eco, *, cible: str = "apex",
     cost = cout_action(game_state, player, "pincer", _objets_action("pincer", plant))
     if spend(game_state, player, cost) < 1.0:
         return False                          # Vigueur insuffisante → structure intacte
+    _noter_geste_vu(game_state, plant, "semaine_pince")
     seg_id = None
     if segment_id is not None:
         segs = plant.segments
@@ -373,6 +383,7 @@ def arracher(game_state: dict, player: str, plant, eco, *, cible: str = "apex",
     cost = cout_action(game_state, player, "arracher", _objets_action("arracher", plant))
     if spend(game_state, player, cost) < 1.0:
         return False                          # Vigueur insuffisante → rien n'est écrit
+    _noter_geste_vu(game_state, plant, "semaine_coupe")
     seg_id = None
     if segment_id is not None:
         segs = plant.segments

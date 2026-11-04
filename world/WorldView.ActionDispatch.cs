@@ -45,7 +45,7 @@ namespace Symbiose
 					if (verb == "tailler")
 						node = FindSegmentGlobal(canvasPos, out segIdx);
 					if (node == null)
-						node = FindPlant(w, PickRadiusCm);
+						node = FindPlant(w, PickRadiusCm) ?? FindPortSous(canvasPos);
 					if (node == null)
 					{
 						if (verb == "manger" && CibleCarpophore(w, MacroPickRadiusCm, out target)) break;

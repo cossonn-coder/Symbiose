@@ -175,6 +175,7 @@ namespace Symbiose
 			brush._strate = _strate;           // port (paliers bas, D106 T5)
 			brush._rayonReelCm = _rayonReelCm;
 			brush._hauteurReelCm = _hauteurReelCm;
+			brush._hauteurLisseeCm = _hauteurLisseeCm;
 			brush._epaisseurMaxCm = _epaisseurMaxCm;
 			brush._swayPhase = _swayPhase;     // teinte d'automne stable par pied
 			brush._heat = _heat;           // variante météo (T4)
@@ -195,6 +196,7 @@ namespace Symbiose
 		{
 			if (_structure == null || _structure.Segments.Count == 0) return default;
 			if (BoitePrairie(out Rect2 prairie)) return prairie;   // port dessiné (Prairie.cs)
+			if (BoitePort(out Rect2 port)) return port;   // port à fiche (Ports.cs)
 			Vector3 c = _structure.ColletCm;
 			var r = new Rect2(Vector2.Zero, Vector2.Zero);
 			foreach (var s in _structure.Segments)

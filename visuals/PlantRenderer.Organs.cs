@@ -408,7 +408,7 @@ namespace Symbiose
 			float bestD = float.MaxValue;
 			for (int i = 0; i < _structure.Fruits.Count; i++)
 			{
-				Vector3 p3 = FruitPoint(_structure.Fruits[i]);
+				Vector3 p3 = FicheDeLaPlante != null ? PointFruitPort(i) : FruitPoint(_structure.Fruits[i]);
 				Vector2 c = Iso(p3.X - collet.X, p3.Y - collet.Y, p3.Z);
 				float d = local.DistanceSquaredTo(c);
 				if (d < bestD) { bestD = d; best = i; }

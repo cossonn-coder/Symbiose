@@ -146,3 +146,49 @@ def test_taille_au_segment():
     a8.close(); b8.close()
     check("2 runs écraser-plante même seed → byte-identiques",
           a8.raw_lines == b8.raw_lines)
+
+
+def test_hints_taille():
+    # --- FORMES DES PLANTES ② : la coupe se voit sur le port dessiné ---------
+    print("[hints rabattu / pince]")
+    s = ServerProc()
+    s.send(cmd="init", seed=42)
+    proie = None
+    for _ in range(30):
+        snap = s.send(cmd="step_week")["snapshot"]
+        proie = next((p for p in snap["plants"] if not p["dead"]
+                      and p["species"] not in ("Tomato", "Ivy", "Jasmine")), None)
+        if proie:
+            break
+    check("une plante d'espèce non migrée existe", proie is not None)
+    pos = {"tile": proie["tile"], "x_cm": proie["x_cm"], "y_cm": proie["y_cm"]}
+
+    def meme_plante(snapshot):
+        return next(p for p in snapshot["plants"] if p["tile"] == pos["tile"]
+                    and p["x_cm"] == pos["x_cm"] and p["y_cm"] == pos["y_cm"])
+
+    check("sans geste, ni `rabattu` ni `pince`",
+          "rabattu" not in proie and "pince" not in proie)
+    # Clic sur la plante : pas de `target.segment`, repli serveur `params.cible`.
+    r = s.send(cmd="action", verb="tailler", target=pos, params={"cible": "apex"})
+    check("tailler sans segment appliqué", r["result"]["applied"] is True, r["result"]["message"])
+    apres = meme_plante(r["snapshot"] if "snapshot" in r else s.send(cmd="snapshot")["snapshot"])
+    check("`rabattu` = 1 la semaine de la coupe", apres.get("rabattu") == 1.0, apres.get("rabattu"))
+    check("tailler ne note pas `pince`", "pince" not in apres)
+    r = s.send(cmd="action", verb="pincer", target=pos, params={"cible": "apex"})
+    check("pincer appliqué", r["result"]["applied"] is True, r["result"]["message"])
+    apres = meme_plante(s.send(cmd="snapshot")["snapshot"])
+    check("`pince` = 1 la semaine du pincement", apres.get("pince") == 1.0, apres.get("pince"))
+    apres = meme_plante(s.send(cmd="step_week")["snapshot"])
+    check("une semaine plus tard, `rabattu` = 7/8",
+          apres.get("rabattu") == 0.875, apres.get("rabattu"))
+    check("une semaine plus tard, `pince` = 11/12",
+          apres.get("pince") == 0.917, apres.get("pince"))
+    for _ in range(8):
+        snap = s.send(cmd="step_week")["snapshot"]
+    apres = next((p for p in snap["plants"] if p["tile"] == pos["tile"]
+                  and p["x_cm"] == pos["x_cm"] and p["y_cm"] == pos["y_cm"]), None)
+    if apres is not None:   # la plante a pu mourir en 8 semaines
+        check("`rabattu` retiré après 8 semaines", "rabattu" not in apres, apres.get("rabattu"))
+    s.send(cmd="quit")
+    check("quit hints taille → exit 0", s.close() == 0)

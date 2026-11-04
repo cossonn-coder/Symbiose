@@ -16,7 +16,7 @@ Golden attendu : **inchangé partout**, `a10b7225…` à l'ouverture. Vérifié 
 | # | Kickoff | Contenu | État |
 |---|---|---|---|
 | ① | `01_banc_fiches.md` | Banc, mesure des silhouettes, « avant », 36 fiches | **fait, code non committé** |
-| ② | `02_socle_rosettes.md` | Socle des ports, taille, rosettes (7) | à faire |
+| ② | `02_socle_rosettes.md` | Socle des ports, taille, rosettes (7) | **fait, code non committé** |
 | ③ | `03_tiges.md` | Tiges à feuilles étagées (12) | à faire |
 | ④ | `04_chaumes_tapis_buissons.md` | Chaumes, couvre-sols, buissons, courgette (13) | à faire |
 | ⑤ | `05_squelette_moteur.md` | Plus de squelette pour les herbacées à port, perf | à faire |
@@ -44,6 +44,19 @@ Golden attendu : **inchangé partout**, `a10b7225…` à l'ouverture. Vérifié 
 - **Pour les suivants** : point visé reculé d'une demi-hauteur (`centre_de`), la plante entière tient au cadre à ×4 jusqu'à 300 cm. Un dossier partiel se mesure (`--especes` à la capture), en supprimant `descripteurs_x*.json` pour recalculer. Espèces qui tiennent mal : début des fiches (ail, pissenlit, minette, consoude, bambou). Fruits sans état moteur à trancher : poivron, bourse-à-pasteur.
 - **F5** : rien à valider pour ce tronçon, banc de mesure.
 
+### ② Socle, taille, rosettes
+
+- **Fait** : `visuals/PlantRenderer.Ports.cs` (dispatch, mesure, boîte, lissage, recuisson, fruits, clic), `PortsFiches.cs` (table + 14 palettes manquantes, dont lierre et jasmin), `PortRosette.cs`, `PortTetes.cs`. Moteur : `semaine_coupe`, `semaine_pince` sur `PlantInstance`, `tools/simserver/taille_pont.py`, pont **0.6.7**, test `test_hints_taille`. Golden intact `a10b7225…`, `test_sim_server` 321/321, build vert. Aucune sérialisation de `PlantInstance` à part le snapshot (pas de save à casser).
+- **Mesure** : les 7 rosettes dans aucune paire confondue et dans la tolérance de hauteur, ×1 et ×4 [seed 42, n=1 capture, VM]. Paires : ×4 28→15, ×1 14→7 [mêmes conditions, 33 espèces encore génériques] ; hauteur hors tolérance ×4 30→23 [idem]. PNG lus : les 7 se reconnaissent à ×4 et ×8.
+- **Effet en jeu** : `full` s26 et s46, ×1 à ×16 : pissenlit et bourse lisibles, plus de 88 cm de bois [seed 42, n=1 run, VM]. Molène, mâche, carotte, ail absents de `full` à ces semaines : vus sur le banc seul. Hampe du pissenlit non vue dans `full`, sa floraison y reste sous le seuil à ces dates.
+- **Saut de hauteur** : visible, lissage retenu (⅙ de la cible par semaine, 2 cm minimum). Molène 20→150, seigle 40→140, chanvre 80→250, tournesol 50→180 cm d'un stade à l'autre [catalogue, gènes neutres]. Lissage non capturé en jeu : le banc pose une seule semaine.
+- **Perf** (`perf_vm.sh -E 20 -z 4`, `full`) : draw calls 92→83 [n=1 run par côté, VM]. Cache 93,4→77,4 Mo, pages 5→4 [idem]. FPS 11,1→10,3 et 11,6 [n=1 run avant, 2 après, charge 2 à 6, dans le bruit]. **Garde-fou non tenu** : pinceau 0,12→0,19 ms/plante, soit +58 % contre +10 % visés [n=1 run par côté, charge variable], malgré des ellipses à 12 côtés (0,20 sans). Coût par espèce non isolé. À revoir à ③, le poids des rosettes y est le moyen de trancher, ou à Nico d'assouplir le seuil.
+- **Recuisson** : `SetStructure` ne salit plus un port si sa clé (hauteur au cm, stade, densité, floraison, automne, hints, fruits, organe) est inchangée, prairie comprise ; `SetSymptoms` sort si la liste est identique. Écrit, compilé, **gain non chiffré** : le banc E applique 0 semaine.
+- **`mesure_da`** sur pissenlit, molène à ×4 : tons lus méd. 10 et 8, dérive 51° et 38°, aplat 111 et 68 px [n=1 capture, VM]. Hors grammaire du brief (cible 3-6 tons) : la grammaire reste au ⑥.
+- **Écarts au kickoff** : fruits sur port écrits (`PointFruitPort`, `FindFruitNear`) mais **jamais exécutés** : aucune rosette n'est `fruitier`, à vérifier au ④ sur fraisier, courgette, framboisier. Taille non capturée, couverte par le test simserver : l'effet visible de `rabattu` et `pince` reste au F5. Hiver : les 7 ne sont pas `deciduous`, donc le moteur les garde pleines ; pissenlit s46 vérifié en capture, cohérent pour une rosette. **Pour ③ et ④ : consoude, ortie, menthe restent aussi pleines l'hiver, faute de signal moteur.** Clic : `FindPortSous` ajouté, le haut d'une hampe tombait hors de `PickRadiusCm`. Bourse : silicules et tête en graine dessinées comme marques de stade, sans état moteur. `serialize.py` à 400 LDC pile (un import remis sur une ligne pour compenser).
+- **Pour les suivants** : ajouter une ligne à `FichesPort` et un `case` dans `DessinerPort` ; la taille au pied, l'ombre, le vent et la recuisson suivent seuls. `BakeCost` compte encore les segments : à revoir au ⑤, où ils disparaissent. Espèces non encore à port : gardent le segment et une palette nouvelle dès ce tronçon.
+- **F5** : rosettes en jeu (reconnaissance, hampe qui monte) ; tailler et pincer un pied (se rabat, perd sa tête, repousse) ; clic sur une hampe de molène ; plus de surlignage de segment sur prairie et rosettes.
+
 ## §REPRISE
 
-Lire `CLAUDE.md`, ce fichier, la conception, puis le prochain kickoff « à faire » : ② `02_socle_rosettes.md`. Rejouer la mesure : `mesures/avant.md`.
+Lire `CLAUDE.md`, ce fichier, la conception, puis le prochain kickoff « à faire » : ③ `03_tiges.md`. Patron d'un port : `visuals/PlantRenderer.PortRosette.cs`. Rejouer la mesure : `mesures/avant.md`. Point ouvert : durée de cuisson (bilan ②).

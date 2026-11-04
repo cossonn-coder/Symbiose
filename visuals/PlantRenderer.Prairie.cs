@@ -103,13 +103,13 @@ namespace Symbiose
 		private (float R, float H) MesurePrairie(PortPrairie port)
 		{
 			float h = _structure.HeightCm, g = CroissancePrairie(port);
-			return port switch
+			return AvecTaille(port switch
 			{
 				PortPrairie.Trefle => (RayonTrefleCm * g, Mathf.Clamp(h * 0.8f, 1f, HauteurTrefleCm)),
 				PortPrairie.Dactyle => (Mathf.Clamp(h * 0.42f, 3f, 34f), Mathf.Clamp(h, 4f, 100f)),
 				PortPrairie.Fetuque => (Mathf.Clamp(h * 0.6f, 2f, 16f), Mathf.Clamp(h, 2f, 30f)),
 				_ => (RayonPlantainCm * g, Mathf.Clamp(h, 3f, 36f)),
-			};
+			});
 		}
 
 		/// <summary>Appelé par MesurerPort : les mesures de port et d'ombre suivent ce
