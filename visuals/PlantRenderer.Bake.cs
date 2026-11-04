@@ -31,8 +31,11 @@ namespace Symbiose
 		private PlantBaker _baker;
 		internal PlantBaker Baker => _baker ??= new PlantBaker(this);
 		internal bool HasBakedImage => _baker != null && _baker.HasImage;
-		// Coût estimé d'une cuisson (budget de la file) = nombre de segments.
-		internal int BakeCost => _structure?.Segments.Count ?? 0;
+		// Coût estimé d'une cuisson (budget de la file) = nombre de segments. Un port n'en a
+		// plus qu'un : il compte pour un buisson de squelette moyen, soit 4 ports par image.
+		// Le port adulte coûte 0,62 ms [`cout_cuisson.py`, banc adulte, ×4, n=7 à 17 coups, 1 passe].
+		private const int CoutCuissonPort = 20;
+		internal int BakeCost => TailleAuPied ? CoutCuissonPort : _structure?.Segments.Count ?? 0;
 
 		/// <summary>Semaine paresseuse (D106 T4) : la plante est hors marge et sa
 		/// dernière donnée n'est pas encore appliquée (WorldView.Attente.cs). La file

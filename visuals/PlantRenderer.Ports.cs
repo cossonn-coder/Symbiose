@@ -207,8 +207,21 @@ namespace Symbiose
 		// RECUISSON — seulement si ce qui est dessiné a changé
 		// ---------------------------------------------------------------------------
 
+		// Une bouture de trèfle ne couvre pas tout de suite : sa taille suit l'âge du collet, seul
+		// segment du moteur depuis FORMES ⑤. 25 semaines : ce que mettait le squelette à pousser
+		// ses 6 segments d'alors [`grow_plant` isolé, gf 0,6 à 1, 20 à 35 semaines].
+		private const float SemainesPiedEtabli = 25f;
+		private const float PartPiedNeuf = 1f / 6f;
+
+		// 1/6 pour un pied neuf, 1 pour un pied établi, comme le comptage de segments d'avant.
+		private float EtablissementTrefle()
+		{
+			int age = _structure.Segments.Count > 0 ? _structure.Segments[0].AgeWeeks : 0;
+			return Mathf.Lerp(PartPiedNeuf, 1f, Mathf.Min(age / SemainesPiedEtabli, 1f));
+		}
+
 		private readonly record struct ClePort(int HauteurCm, int Densite, int Floraison, int Automne,
-			int Rabattu, int Pince, int Fruits, int Segments, bool QuatreFeuilles, string Stade, string Organe);
+			int Rabattu, int Pince, int Fruits, int Etablissement, bool QuatreFeuilles, string Stade, string Organe);
 		private ClePort _clePort;
 
 		private ClePort CleDuPort()
@@ -220,7 +233,7 @@ namespace Symbiose
 			return new ClePort(Mathf.RoundToInt(h), Mathf.RoundToInt(s.DensiteVisible * 40f),
 				Mathf.RoundToInt(s.Floraison * 20f), Mathf.RoundToInt(s.Automne * 20f),
 				Mathf.RoundToInt(s.Rabattu * 16f), Mathf.RoundToInt(s.Pince * 24f), fruits,
-				FicheDeLaPlante != null ? 0 : s.Segments.Count,   // le trèfle lit son nombre de segments
+				PortDeLaPlante == PortPrairie.Trefle ? Mathf.RoundToInt(EtablissementTrefle() * 20f) : 0,   // le trèfle lit l'âge
 				s.QuatreFeuilles, s.StageName, s.Organ);
 		}
 

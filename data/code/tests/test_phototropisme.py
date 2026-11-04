@@ -35,14 +35,17 @@ def check(name, cond, detail=""):
     print(f"  {flag} {name}" + (f" — {detail}" if detail else ""))
 
 
-# --- profils d'intensité (sous-classes : n'override QUE la sensibilité) ------
+# --- profils d'intensité (sous-classes : la sensibilité, et le squelette que le
+# basilic n'a plus depuis FORMES ⑤ : `procedural_growth` le lui rend pour ce test) ------
 
 class _Marked(Basil):
     phototropism_strength = 0.30   # défaut MARQUÉ
+    procedural_growth = True
 
 
 class _Subtle(Basil):
     phototropism_strength = 0.10   # comparaison maquette (tronçon 4)
+    procedural_growth = True
 
 
 # --- helpers ---------------------------------------------------------------

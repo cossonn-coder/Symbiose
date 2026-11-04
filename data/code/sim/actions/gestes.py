@@ -37,6 +37,7 @@ from sim.quatre_feuilles import cueillir   # trèfle à quatre feuilles : bonus 
 from .couts import cout_action, _objets_action, OBJETS_TOUCHES, URGENCE_MULT
 from .paillage import stock_disponible, prelever_stock   # matériau du mulch (④) : stock par nature
 from .autopaillage import auto_pailler   # couplage planter+pailler par maîtrise (⑦, D12)
+from .taille_herbacee import deposer_rabattu   # coupe d'une espèce sans squelette (formes ⑤)
 
 # Malus de microbiome local du bêchage (CONCEPTION_VIGUEUR §3.2, « biner/bêcher :
 # microbiome ↓ » — la conception ne chiffrait pas l'ampleur). Knob sobre, calibrage
@@ -309,6 +310,8 @@ def tailler(game_state: dict, player: str, plant, eco, *, cible: str = "apex",
     cost = cout_action(game_state, player, "tailler", _objets_action("tailler", plant))
     if spend(game_state, player, cost) < 1.0:
         return False                          # Vigueur insuffisante → rien n'est écrit (structure intacte)
+    if plant.plant_class.sans_squelette():    # rien à retirer : la masse vient de la hauteur rabattue
+        deposer_rabattu(game_state, plant, eco)
     _noter_geste_vu(game_state, plant, "semaine_coupe")
     seg_id = None
     if segment_id is not None:
@@ -345,7 +348,8 @@ def pincer(game_state: dict, player: str, plant, eco, *, cible: str = "apex",
     Sélection de cible identique à `tailler` (`segment_id` explicite du clic, sinon
     `_segment_cible` via `cible`). Binaire tout-ou-rien (modèle `deraciner`) : le
     seam n'est appelé QUE si le coût est intégralement payé — forcer le geste à vide
-    draine la Vigueur sans rien pincer. `eco` reçu par symétrie de signature avec les
+    draine la Vigueur sans rien pincer. Espèce sans squelette (formes ⑤) : plus d'apex à
+    pincer, le geste reste payé et sa semaine notée, `pince` en est la lecture visible. `eco` reçu par symétrie de signature avec les
     autres gestes structurels (non utilisé : le pincement n'écrit aucun champ écolo).
     Renvoie True si le geste a été pleinement payé (et donc appliqué)."""
     cost = cout_action(game_state, player, "pincer", _objets_action("pincer", plant))
@@ -383,6 +387,8 @@ def arracher(game_state: dict, player: str, plant, eco, *, cible: str = "apex",
     cost = cout_action(game_state, player, "arracher", _objets_action("arracher", plant))
     if spend(game_state, player, cost) < 1.0:
         return False                          # Vigueur insuffisante → rien n'est écrit
+    if plant.plant_class.sans_squelette():    # rien à retirer : la masse vient de la hauteur rabattue
+        deposer_rabattu(game_state, plant, eco)
     _noter_geste_vu(game_state, plant, "semaine_coupe")
     seg_id = None
     if segment_id is not None:

@@ -6,6 +6,16 @@ hors tick ». Le golden ÉCOLO est testé à part (`tests/test_golden.py`) : ici
 vérifie les CONTRATS Vigueur (coût/binaire/gain) et la réponse émergente.
 """
 from plants import Basil, Bean, Sunflower, PoaAnnua
+
+
+class _TournesolASquelette(Sunflower):
+    """Écimage au segment avec les traits du tournesol : `fruitier` le garde hors de
+    `sans_squelette` (FORMES ⑤), le vrai tournesol n'a plus que son collet."""
+    fruitier = True
+
+
+class _BasilicASquelette(Basil):
+    fruitier = True   # idem
 from fields import DENSITE_PAR_SPRITE, VITALITE_STEP
 from sim.growth import grow_plant, f_lignification, COUPE_NETTE, SEUIL_DEGAT
 from sim import vigueur as V
@@ -195,8 +205,8 @@ def test_ecraser():
 
 def test_ecraser_plante():
     print("\n[A8b] ecraser_plante : déformation / écimage / mort (sentier), par traits")
-    gs, tile, eco = _gs_with((PoaAnnua, 1, 1), (Sunflower, 2, 2),
-                             (Basil, 3, 3), (Bean, 4, 4))
+    gs, tile, eco = _gs_with((PoaAnnua, 1, 1), (_TournesolASquelette, 2, 2),
+                             (_BasilicASquelette, 3, 3), (Bean, 4, 4))
     st = V.ensure_player(gs, "joueur_1"); st["max_base"] = 10_000.0; st["courante"] = 10_000.0
 
     # (a) DOUX — pâturin ÉTABLI (résistance 0.9 × âge plein) : intensité 0.1 < seuil.

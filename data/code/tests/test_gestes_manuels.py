@@ -16,12 +16,12 @@ from sim import vigueur as V
 from sim import actions as ACT
 
 from tests.vigueur.harness import check, _gs_with, _construire, _results
-from plants import Sunflower
+from plants import Zucchini   # garde ses segments : le tournesol n'en a plus (formes ⑤)
 
 
 def test_pincer():
     print("\n[①a] pincer : DOUX — auxine ↓, aucun retrait, coût FAIBLE")
-    gs, tile, eco = _gs_with((Sunflower, 2, 2))
+    gs, tile, eco = _gs_with((Zucchini, 2, 2))
     plant = _construire(tile.plants[0], 12)   # chaîne de segments + auxine réelle
     check("pincer < COUPE_NETTE (régime DOUX)", ACT.PINCER_INTENSITE < COUPE_NETTE,
           f"intensité={ACT.PINCER_INTENSITE}")
@@ -47,13 +47,13 @@ def test_pincer():
     # Objets : famille taille SANS outil (la maîtrise taille atténue, aucun outil).
     objets = ACT._objets_action("pincer", plant)
     check("objets = taille (SANS sécateur) + clé d'espèce",
-          "taille" in objets and "sécateur" not in objets and "tournesol" in objets,
+          "taille" in objets and "sécateur" not in objets and "courgette" in objets,
           f"objets={objets}")
 
 
 def test_pincer_binaire():
     print("\n[①b] pincer : binaire — Vigueur insuffisante → rien pincé")
-    gs, tile, eco = _gs_with((Sunflower, 2, 2))
+    gs, tile, eco = _gs_with((Zucchini, 2, 2))
     plant = _construire(tile.plants[0], 12)
     st = V.ensure_player(gs, "joueur_1"); st["courante"] = ACT.FAIBLE - 1.0
     from sim.actions.gestes import _segment_cible
@@ -70,15 +70,15 @@ def test_pincer_binaire():
 def test_arracher():
     print("\n[①c] arracher : NET — écime + litière `bois` + `erode`, coût ELEVE, "
           "aucun gain")
-    gs, tile, eco = _gs_with((Sunflower, 2, 2))
+    gs, tile, eco = _gs_with((Zucchini, 2, 2))
     plant = _construire(tile.plants[0], 12)
-    check("tournesol a une chaîne (≥ 2 segments)", len(plant.segments) >= 2,
+    check("courgette a une chaîne (≥ 2 segments)", len(plant.segments) >= 2,
           f"{len(plant.segments)} segments")
     st = V.ensure_player(gs, "joueur_1"); st["courante"] = 100.0
     n_av = len(plant.segments)
     vit_av = plant.vitalite
     r, c = plant.position[0], plant.position[1]
-    # Litière totale du plot AVANT (le tournesol est le seul déposant ici → toute
+    # Litière totale du plot AVANT (la courgette est la seule déposante ici → toute
     # hausse est le `bois` arraché, MÊME calcul que `tailler`). On désigne un segment
     # INTERNE À LONGUEUR (l'apex meneur est un bourgeon de longueur 0 → 0 bois, comme
     # pour `tailler` : c'est le sous-arbre RETIRÉ qui pèse) pour exercer le dépôt.
@@ -104,14 +104,14 @@ def test_arracher():
           f"{lit_av:.3f} → {lit_ap:.3f}")
     objets = ACT._objets_action("arracher", plant)
     check("objets = taille (SANS sécateur) + clé d'espèce",
-          "taille" in objets and "sécateur" not in objets and "tournesol" in objets,
+          "taille" in objets and "sécateur" not in objets and "courgette" in objets,
           f"objets={objets}")
 
 
 def test_arracher_binaire():
     print("\n[①d] arracher : binaire — Vigueur insuffisante → structure ET "
           "vitalité intactes")
-    gs, tile, eco = _gs_with((Sunflower, 2, 2))
+    gs, tile, eco = _gs_with((Zucchini, 2, 2))
     plant = _construire(tile.plants[0], 12)
     st = V.ensure_player(gs, "joueur_1"); st["courante"] = ACT.ELEVE - 1.0
     n_av, vit_av = len(plant.segments), plant.vitalite

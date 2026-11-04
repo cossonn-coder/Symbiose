@@ -352,6 +352,25 @@ class PlantBase(ABC):
     # couches : `plants` est la couche la plus basse, n'importe jamais `fields`).
     allelopathie_sensibilite: float = 1.0
 
+    # --- Squelette (FORMES DES PLANTES ⑤) ---
+
+    @classmethod
+    def sans_squelette(cls) -> bool:
+        """Vrai si l'espèce ne fait plus pousser de segments, seul son collet vieillit : sa
+        vue dessine un port, et aucun lecteur écologique n'a besoin de sa structure. Restent
+        donc hors du retrait :
+          - les espèces migrées, dont l'empreinte est dérivée de la structure ;
+          - les ligneux, lus par le bois sec et le squelette à la mort ;
+          - les grimpantes, lues par `sim/grimpe.py` ;
+          - les fruitières : `organ_sites` y compte ses apex. Un fraisier de 2 ans noue
+            jusqu'à 10 fruits, le collet seul n'en donnerait qu'un, et le fruit est de
+            l'écologie (litière, Vigueur).
+        Pédagogie (Nico) : le golden et le monde `full` ne contiennent ni fraisier ni
+        courgette, ils ne verraient pas cette dernière dérive : `test_squelette_herbacees`
+        la garde."""
+        return not (cls.procedural_growth or cls.ligneux
+                    or cls.mode_grimpe is not None or cls.fruitier)
+
     # --- Interface lumière (polymorphe) ---
 
     @classmethod

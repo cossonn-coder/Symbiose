@@ -298,7 +298,7 @@ def test_seam_determinisme():
 
 def test_temoin_non_migre():
     """Une espèce NON migrée (Basil) garde l'ancien chemin (empreinte = stades) :
-    sa structure pousse mais n'est jamais lue (footprint reste None)."""
+    elle ne pousse plus de structure (FORMES ⑤) et footprint reste None."""
     check("témoin: Tomato migrée (procedural_growth)", Tomato.procedural_growth)
     check("témoin: Basil non migrée", not Basil.procedural_growth)
     b = PlantInstance(plant_class=Basil, position=POS)
@@ -306,8 +306,10 @@ def test_temoin_non_migre():
     b.growth_factor = 1.0
     for k in range(20):
         G.grow_plant(b, SEED, 1 + k)
-    check("témoin: structure pousse quand même", len(b.segments) > 1,
+    check("témoin: sans squelette, le collet seul (FORMES ⑤)", len(b.segments) == 1,
           f"len={len(b.segments)}")
+    check("témoin: le collet vieillit (âge du pied)", b.segments[0].age_weeks == 20,
+          f"age={b.segments[0].age_weeks}")
     check("témoin: empreinte = stades (inchangée par la structure)",
           Basil.canopy_radius_at(b) == cr_avant, f"cr={Basil.canopy_radius_at(b)}")
     check("témoin: cache d'empreinte jamais peuplé", b.footprint is None)

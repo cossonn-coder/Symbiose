@@ -58,8 +58,6 @@ namespace Symbiose
 		private const float DensitePleineTrefle = 0.4f;
 		private const int PomponsMax = 5;
 		private const float RayonPomponCm = 2.3f;
-		// Une bouture ne couvre pas tout de suite : la taille suit le nb de segments.
-		private const int SegmentsPiedEtabli = 6;
 		// Plancher des feuilles d'un pied dormant ou mort : la couronne reste lisible.
 		private const float DensitePlancher = 0.15f;
 		private const int PosesMaxTapis = 2;
@@ -84,14 +82,13 @@ namespace Symbiose
 		// Feuilles de devant, où posent marques fines et météo une fois le lot envoyé.
 		private readonly List<(Vector2 C, float R, int I, float Z)> _sitesPrairie = new();
 
-		// Taille d'un pied (0..1) : hauteur moteur, et nombre de segments pour le trèfle.
+		// Taille d'un pied (0..1) : hauteur moteur, et âge du collet pour le trèfle.
 		private float CroissancePrairie(PortPrairie port)
 		{
 			float h = _structure.HeightCm;
 			return port switch
 			{
-				PortPrairie.Trefle => Mathf.Clamp(h / 10f, 0.2f, 1f) * Mathf.Lerp(0.55f, 1f,
-					Mathf.Min(_structure.Segments.Count / (float)SegmentsPiedEtabli, 1f)),
+				PortPrairie.Trefle => Mathf.Clamp(h / 10f, 0.2f, 1f) * Mathf.Lerp(0.55f, 1f, EtablissementTrefle()),
 				PortPrairie.Plantain => Mathf.Clamp(h / 20f, 0.2f, 1f),
 				PortPrairie.Fetuque => Mathf.Clamp(h / 15f, 0.25f, 1f),
 				_ => Mathf.Clamp(h / 60f, 0.15f, 1f),

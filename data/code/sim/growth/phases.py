@@ -276,7 +276,9 @@ def grow_plant(plant, seed: int, week: int, light_field=None,
 
     Tronçon 2 : pour une espèce MIGRÉE (`procedural_growth`), l'empreinte est
     recalculée en fin de passe (update_footprint, §G) → height_at/canopy_radius_at…
-    la liront. Pour une espèce non migrée, la structure reste INERTE (non lue).
+    la liront. Une espèce non migrée mais non `sans_squelette` (arbuste, haricot,
+    fraisier, courgette) pousse sa structure pour ses seuls lecteurs (bois sec, grimpe,
+    sites de fruits) ; son empreinte vient des stades.
 
     RENVOIE les segments élagués ce tick (D111 ② bois mort, cf. `_elaguer`) ; les
     appelants qui l'ignorent gardent leur comportement historique.
@@ -287,6 +289,10 @@ def grow_plant(plant, seed: int, week: int, light_field=None,
     cls = plant.plant_class
     for s in segs:
         s.age_weeks += 1
+    # FORMES DES PLANTES ⑤ : le collet seul vieillit (gestes.py y lit l'âge du pied). Le reste
+    # de la passe ferait pousser un squelette que personne ne dessine ni ne lit.
+    if cls.sans_squelette():
+        return []
     speed = cls.growth_speed * plant.growth_factor * _season_factor(week) * confinement
     # Étiolement (Q7) : un héliophile ombragé file vers la lumière — élongation
     # axiale accrue. Émergent : combiné au phototropisme (_elongate_emit), l'apex
