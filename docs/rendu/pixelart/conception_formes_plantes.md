@@ -30,10 +30,11 @@ Restent 36 espèces. Les 11 arbres et les 4 de prairie (trèfle, dactyle, fétuq
 - **F1 Port dessiné par la vue.** 33 espèces passent à des ports dessinés depuis une fiche, sans dessiner leurs segments. Tomate, lierre et jasmin (`procedural_growth`) gardent leurs segments, avec feuilles et fleurs revues.
 - **F2 Taille : clic sur la plante, coupe visible.** Le pied dessiné se rabat puis repousse. Arbres, tomate, lierre et jasmin gardent la taille au segment.
 - **F3 Formes seules.** Les 36 espèces, leurs fleurs, feuilles et vrilles en grammaire SNES, et des ombres à la vraie hauteur. Le reste de D118 demeure dans une D118 réduite. La perf est un garde-fou par tronçon.
+- **F4 Plus de squelette pour les herbacées à port** (ajouté le 2026-11-04 après le rapport perf de l'an 8). Voir §4.6.
 
 ## 3. Pourquoi la vue, pas le moteur
 
-Ces segments ne pèsent presque pas dans la simulation : l'empreinte des espèces non migrées suit leurs stades. Patcher en mémoire `max_height_cm`, `max_extent_cm`, `emit_length_cm` et `max_segments` laisse le golden identique [smoke] et la population identique [`full`, seed 42, 2 ans, n=1 run par côté, VM].
+Ces segments ne pèsent presque pas dans l'écologie (ils coûtent en revanche du CPU, §4.6) : l'empreinte des espèces non migrées suit leurs stades. Patcher en mémoire `max_height_cm`, `max_extent_cm`, `emit_length_cm` et `max_segments` laisse le golden identique [smoke] et la population identique [`full`, seed 42, 2 ans, n=1 run par côté, VM].
 
 Régler les segments ne donnerait pas la forme : le patch laisse le tournesol à 37 cm de bois pour 112 cm de hauteur [`full` an 2, n=1 run, VM], et une rosette n'est pas un axe qui s'allonge. Migrer ces espèces en `procedural_growth` déplacerait leur empreinte, donc toute l'écologie.
 
@@ -75,7 +76,7 @@ La hauteur moteur saute au changement de stade (`height_at`). Le ② mesure l'am
 
 ### 4.4 La taille (F2)
 
-Python reste la vérité : `tailler` et `arracher` notent la semaine de coupe s'ils ont retiré du bois, `pincer` note la sienne. Le pont envoie, pour les espèces non migrées seulement et si non nuls, deux hints décroissants (patron de `feuillage`) :
+Python reste la vérité : `tailler` et `arracher` notent la semaine de coupe dès que le geste est payé, `pincer` note la sienne (rien à retirer une fois le squelette parti, §4.6). Le pont envoie, pour les espèces non migrées seulement et si non nuls, deux hints décroissants (patron de `feuillage`) :
 
 - `rabattu` ∈ [0,1], retour à 0 en 8 semaines `[choix]` : hauteur × (1 − 0,6 × rabattu), moins de feuilles.
 - `pince` ∈ [0,1], retour à 0 en 12 semaines `[choix]` : hauteur × (1 − 0,15 × pince), rayon × (1 + 0,2 × pince), plus touffu. Le basilic pincé ramifie.
@@ -87,6 +88,25 @@ Le clic vise toute la plante, sans `target.segment` et sans surlignage de segmen
 ### 4.5 Grammaire
 
 Le brief s'applique, dialecte 3 (« chaque plante est une icône lisible à 3 ou 4 tons ») : motif estampillé plutôt que contour rempli, 3 à 5 tons, éclat côté soleil, ombre colorée, contour sélectif sur fleurs et fruits. Repris de D118 (B) : fleurs, spires du haricot, ovales vert uni et nervures grossières à ×32.
+
+### 4.6 Plus de squelette pour les herbacées à port (F4)
+
+Une fois dessinées sans leurs segments, ces espèces n'ont plus de raison de les faire pousser.
+
+| `full`, an 3 [seed 42, n=1 run par côté, VM, charge plus haute côté « sans »] | Avec | Sans |
+|---|---|---|
+| CPU sur l'année | 120 s | 71 s |
+| Tick médian | 2 264 ms | 1 365 ms |
+| Segments | 15 468 | 1 299 |
+| Plantes / espèces en fin d'année | 694 / 20 | 694 / 20 |
+
+Golden identique au même essai [smoke, `grow_plant` coupé en mémoire]. Origine du gain non isolée : le rapport PC ne donne que 5 à 14 % à `grow_plant` [n=5 ticks, échantillonnés, PC].
+
+**Concernées** : `not procedural_growth and not ligneux and mode_grimpe is None`. Les ligneux non migrés (thym, lavande, myrtille, framboisier) et le haricot gardent leurs segments : bois sec, chute des arbustes et `sim/grimpe.py` les lisent.
+
+**Reste vrai** : le collet demeure et continue de vieillir, car `sim/actions/gestes.py` déduit l'âge du pied de `s.age_weeks`. Une plante garde un segment, donc la structure du snapshot reste valide.
+
+**Ce qui change volontairement** : une taille d'herbacée ne retire plus de segment. Pour garder le retour au sol, la masse déposée se déduit de la hauteur rabattue, même ordre de grandeur qu'aujourd'hui, à mesurer. Pas d'effet attendu sans geste.
 
 ## 5. Philo de design
 
@@ -115,10 +135,10 @@ Perf, à chaque tronçon sur `full`, `tools/perf_vm.sh` avant/après :
 - boîtes de cuisson plus petites attendues, à mesurer (une violette ne réserve plus 85 cm d'atlas) ;
 - recuisson seulement si ce qui est dessiné a changé (aujourd'hui `SetStructure` invalide à chaque appel).
 
-Moteur : deux entiers par plante, écrits à la coupe. Tick inchangé attendu.
+Moteur : deux entiers par plante, écrits à la coupe. Le tronçon squelette vise le gain du §4.6, re-mesuré des deux côtés à charge comparable.
 
 ## 7. Hors périmètre
 
 D118 réduite : encart météo, heatmap vent, mention des Options, ombres OFF par défaut, reliquats D112 (p)(q)(r)(s), scintillement de glace, rivière Est, perf ×32 et à-coups de zoom, D110 (c)(f).
 
-Opportunité notée, non traitée : les segments de ces 33 espèces ne servent plus à l'écran, or ils pèsent 6 887 segments sur 7 258 [`full` an 2, seed 42, n=1 run, VM]. Les retirer du pont, voire du moteur, relève de D118 (D) et de la perf, et demande de revoir `sim/grimpe.py`, `diam_pondere` et la chute des arbustes.
+Hors du tronçon squelette : les ligneux non migrés et le haricot. Migrer ou alléger leurs segments relève de D118 (D).

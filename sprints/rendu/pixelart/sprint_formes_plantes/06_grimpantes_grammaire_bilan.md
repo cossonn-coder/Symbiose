@@ -1,4 +1,4 @@
-# ⑤ Haricot, tomate, lierre, jasmin, grammaire, bilan — golden INTACT
+# ⑥ Haricot, tomate, lierre, jasmin, grammaire, bilan — golden INTACT
 
 **Lire d'abord** : `CLAUDE.md`, `00_etat.md` (tous les bilans), conception §4.2, §4.5, §6, §7 ; `docs/rendu/pixelart/etude_brief_da_16bits.md` ; `sim/grimpe.py` et le champ `support` du pont ; `PlantRenderer.Flower.cs`, `PlantRenderer.Leaf.cs`.
 
@@ -15,7 +15,7 @@ Les 4 dernières espèces justes, et fleurs et feuilles en grammaire SNES partou
 5. **Mesure finale** : `mesures/apres.md`, en regard de `avant.md` : `mesure_silhouettes` sur les 40, à ×1 et ×4, cible conception §6 ; hauteur dessinée / `height_cm` ; `mesure_da` ; `perf_vm.sh` avant sprint / après sprint sur `full`. Captures de `full` à ×1, ×4, ×8, ×16, ×32, s9, s20, s34, s45. Lire les PNG et dire ce qui reste faible, sans arrondir vers le succès.
 6. **Chiffre d'effet en jeu** : combien d'espèces présentes dans `full` en an 2 passent par un port, et capture d'une tuile à ×4 où on les distingue.
 7. `dotnet build Symbiose.csproj` vert, golden, `tests/simserver`.
-8. **Clôture** : `00_etat.md` §F5 (ressenti, court : une minute par palier, reconnaît-on sans info-bulle basilic, tournesol, blé, fraisier, lavande, courgette, haricot ? ombres ? tailler une menthe). `journal.md` + entrée `journal/` ; `DETTE.md` (D118 réduite à son §7 de conception, limite « taille sur trèfle » retirée de D127 si vérifiée) ; `BACKLOG.md`.
+8. **Clôture** : `00_etat.md` §F5 (ressenti, court : une minute par palier, reconnaît-on sans info-bulle basilic, tournesol, blé, fraisier, lavande, courgette, haricot ? ombres ? tailler une menthe). `journal.md` + entrée `journal/` ; `DETTE.md` (D118 réduite au §7 de la conception, limite « taille sur trèfle » retirée de D127 si vérifiée, cadence et CPU du ⑤ reportés) ; `BACKLOG.md`.
 
 ## Golden
 
@@ -23,4 +23,4 @@ Les 4 dernières espèces justes, et fleurs et feuilles en grammaire SNES partou
 
 ## NE PAS
 
-Traiter le hors-périmètre (conception §7), même « au passage ». Retirer les segments du pont. Lancer `tests/test_epaisseur_500ans.py`.
+Traiter le hors-périmètre (conception §7), même « au passage ». Lancer `tests/test_epaisseur_500ans.py`.
