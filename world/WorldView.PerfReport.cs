@@ -76,6 +76,7 @@ namespace Symbiose
 					AppendDump(sb, wv.AsGodotDictionary());
 				sb.AppendLine("--- état courant ---");
 				AppendDump(sb, rep["current"].AsGodotDictionary());
+				if (rep.ContainsKey("annees")) AppendAnnees(sb, rep["annees"].AsGodotArray());
 			}
 			return sb.ToString();
 		}
@@ -119,6 +120,63 @@ namespace Symbiose
 			foreach (var kv in pe)
 				especes.Append($"{kv.Key.AsString()}×{kv.Value.AsInt32()}  ");
 			sb.AppendLine($"    espèces : {especes.ToString().TrimEnd()}");
+			if (d.ContainsKey("sonde") && d["sonde"].VariantType != Variant.Type.Nil)
+				AppendSonde(sb, d, d["sonde"].AsGodotDictionary());
+		}
+
+		// Ce que la sonde a vu pendant ce tick (tools/simserver/perf_tick.py). L'attente
+		// est le temps où le moteur ne calculait pas : c'est elle qui sépare une cause
+		// dans la simulation d'une machine occupée ou endormie.
+		private static void AppendSonde(StringBuilder sb, GDict d, GDict s)
+		{
+			double attente = d["ms_tick"].AsDouble() - s["cpu_ms"].AsDouble();
+			string defauts = s["defauts_page"].VariantType == Variant.Type.Nil
+				? "—" : s["defauts_page"].AsInt32().ToString();
+			sb.AppendLine($"    contexte : {d["saison"].AsString()} · {d["meteo"].AsString()} "
+				+ $"· {d["temperature"].AsDouble():F1} °C · à {s["heure"].AsString()}");
+			sb.AppendLine($"    temps : CPU {s["cpu_ms"].AsDouble():F0} ms · attente {attente:F0} ms "
+				+ $"· GC {s["gc_ms"].AsDouble():F0} ms ({s["gc_passes"].AsInt32()} passes, "
+				+ $"{s["gc_gen2"].AsInt32()} complètes) · défauts de page {defauts} "
+				+ $"· échantillons {s["echantillons"].AsInt32()}/{s["attendus"].AsInt32()}");
+			sb.AppendLine($"    phases : {Classement(s["phases"].AsGodotArray())}");
+			sb.AppendLine($"    feuilles : {Classement(s["feuilles"].AsGodotArray())}");
+		}
+
+		private static string Classement(Godot.Collections.Array lignes)
+		{
+			var texte = new StringBuilder();
+			foreach (var l in lignes)
+			{
+				var paire = l.AsGodotArray();
+				texte.Append($"{paire[0].AsString()} {paire[1].AsInt32()} %  ");
+			}
+			return texte.Length == 0 ? "—" : texte.ToString().TrimEnd();
+		}
+
+		// Une ligne par an, relevée à la même date : la tendance que les pires ticks
+		// ne peuvent pas montrer (tools/simserver/perf_annees.py).
+		private static void AppendAnnees(StringBuilder sb, Godot.Collections.Array annees)
+		{
+			sb.AppendLine("--- bilan par an (dernière semaine de l'année) ---");
+			foreach (var av in annees)
+			{
+				var a = av.AsGodotDictionary();
+				var top = new StringBuilder();
+				foreach (var t in a["top"].AsGodotArray())
+				{
+					var paire = t.AsGodotArray();
+					top.Append($"{paire[0].AsString()}×{paire[1].AsInt32()} ");
+				}
+				string rss = a["rss_mo"].VariantType == Variant.Type.Nil
+					? "—" : $"{a["rss_mo"].AsDouble():F0} Mo";
+				string neufs = a["plots_neufs_pct"].VariantType == Variant.Type.Nil
+					? "—" : $"{a["plots_neufs_pct"].AsInt32()} %";
+				sb.AppendLine($"  an {a["an"].AsInt32()} : tick médian {a["tick_median_ms"].AsDouble():F0} ms "
+					+ $"· max {a["tick_max_ms"].AsDouble():F0} ms · total {a["total_s"].AsDouble():F0} s "
+					+ $"(CPU {a["cpu_s"].AsDouble():F0} s, GC {a["gc_s"].AsDouble():F0} s) · RSS {rss} "
+					+ $"· {a["plantes"].AsInt32()} pl · {a["especes"].AsInt32()} espèces "
+					+ $"· {top.ToString().TrimEnd()} · plots dominante {a["dominante_plots"].AsInt32()}, neufs {neufs}");
+			}
 		}
 	}
 }

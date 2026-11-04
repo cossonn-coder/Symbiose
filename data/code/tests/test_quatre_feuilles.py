@@ -202,7 +202,7 @@ def test_pont() -> None:
     print("[7] pont")
     srv = SimServer()
     rep = srv.cmd_init({"config": "full", "seed": SEED})
-    check("version 0.6.5", rep.get("engine_version") == ENGINE_VERSION == "0.6.5")
+    check("version courante", rep.get("engine_version") == ENGINE_VERSION)
     gs = srv.engine.game_state
     tile = gs["tiles"][0]
     p = tile.add_plant(Clover, 0, 0)

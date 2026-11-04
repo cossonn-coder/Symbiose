@@ -819,7 +819,10 @@ from __future__ import annotations
 # 0.6.5 (trèfle dominant ③, D126) : hint `plant.quatre_feuilles` = true, clé présente
 #       seulement sur un trèfle adulte à quatre feuilles pas encore cueilli
 #       (`sim/quatre_feuilles.py`). Lecture pure.
-ENGINE_VERSION = "0.6.5"
+# 0.6.6 (rapport perf) : `perf_report` gagne `annees` (bilan par an) ; chaque dump gagne
+#       `saison`, `meteo`, `temperature` et `sonde` (temps CPU, ramasse-miettes, défauts
+#       de page, phases du tick). Lecture pure, clés neuves ignorées par un ancien client.
+ENGINE_VERSION = "0.6.6"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

@@ -15,10 +15,14 @@ jamais pour lui.
 """
 from __future__ import annotations
 
+import ctypes
 import json
 import os
 import platform
 import sys
+
+from sim.engine import saison_de
+from sim.weather import weather_state
 
 # `resource` est POSIX-only. La VM (Debian) et la cible de jeu (le F5 de Nico)
 # l'ont ; on blinde tout de même l'import pour ne jamais casser le snapshot si un
@@ -27,6 +31,48 @@ try:
     import resource
 except ImportError:            # pragma: no cover — plateforme non-POSIX
     resource = None
+
+
+class _CompteursMemoireWindows(ctypes.Structure):
+    """`PROCESS_MEMORY_COUNTERS` de l'API Windows, dans l'ordre exact de ses champs."""
+    _fields_ = [("cb", ctypes.c_ulong),
+                ("PageFaultCount", ctypes.c_ulong),
+                ("PeakWorkingSetSize", ctypes.c_size_t),
+                ("WorkingSetSize", ctypes.c_size_t),
+                ("QuotaPeakPagedPoolUsage", ctypes.c_size_t),
+                ("QuotaPagedPoolUsage", ctypes.c_size_t),
+                ("QuotaPeakNonPagedPoolUsage", ctypes.c_size_t),
+                ("QuotaNonPagedPoolUsage", ctypes.c_size_t),
+                ("PagefileUsage", ctypes.c_size_t),
+                ("PeakPagefileUsage", ctypes.c_size_t)]
+
+
+def _memoire_windows() -> _CompteursMemoireWindows | None:
+    """Compteurs mémoire sous Windows, où `resource` n'existe pas. Instrument : tout
+    échec rend None, jamais une exception qui casserait le snapshot."""
+    if sys.platform != "win32":
+        return None
+    try:
+        kernel32 = ctypes.windll.kernel32
+        kernel32.GetCurrentProcess.restype = ctypes.c_void_p
+        kernel32.K32GetProcessMemoryInfo.argtypes = (
+            ctypes.c_void_p, ctypes.POINTER(_CompteursMemoireWindows), ctypes.c_ulong)
+        c = _CompteursMemoireWindows()
+        c.cb = ctypes.sizeof(c)
+        ok = kernel32.K32GetProcessMemoryInfo(
+            kernel32.GetCurrentProcess(), ctypes.byref(c), c.cb)
+        return c if ok else None
+    except (AttributeError, OSError):
+        return None
+
+
+def defauts_de_page() -> int | None:
+    """Compteur cumulé de défauts de page : défauts majeurs sous POSIX, tous les
+    défauts sous Windows. None si la plateforme ne l'expose pas."""
+    if resource is not None:
+        return resource.getrusage(resource.RUSAGE_SELF).ru_majflt
+    c = _memoire_windows()
+    return None if c is None else c.PageFaultCount
 
 
 def rss_mo() -> float | None:
@@ -39,7 +85,8 @@ def rss_mo() -> float | None:
     se STABILISER une fois N borné (③) : si elle grimpe encore linéairement à N
     constant, c'est une fuite à re-investiguer (mais ① n'en a trouvé aucune)."""
     if resource is None:
-        return None
+        c = _memoire_windows()   # même sens que `ru_maxrss` : le pic
+        return None if c is None else round(c.PeakWorkingSetSize / (1024.0 * 1024.0), 1)
     kb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
     return round(kb / 1024.0, 1)
 
@@ -85,12 +132,13 @@ def interpreteur() -> dict:
 PERF_DUMP_DIR = "perf_dumps"
 
 
-def diagnostic(engine, ms_tick: float) -> dict:
+def diagnostic(engine, ms_tick: float, mesure: dict | None = None) -> dict:
     """État global CONDENSÉ au tick courant : de quoi comprendre pourquoi il a
     coûté cher (répartition des plantes et des segments — les deux moteurs du
     coût lumière+empreintes, cf. profile_monde). Lit directement `game_state`
     (pas le snapshot sérialisé) : self-suffisant et bon marché. Appelé RAREMENT
-    (nouveau record uniquement) → coût négligeable, `len(p.segments)` = O(1)."""
+    (nouveau record uniquement) → coût négligeable, `len(p.segments)` = O(1).
+    `mesure` = sonde du tick (`perf_tick.py`), None pour l'état courant du rapport."""
     gs = engine.game_state
     # Le tick mesuré est la semaine qu'on VIENT de simuler : `week` est déjà
     # incrémenté (boucle.py) → la semaine du tick est `week - 1` (cf. commands.py).
@@ -110,9 +158,13 @@ def diagnostic(engine, ms_tick: float) -> dict:
         par_tuile[tile.tile_id] = {"plants": tp, "segments": ts}
         n_plants += tp
         n_segments += ts
+    event, temp, _ = weather_state(gs.get("seed", 42), week)
     return {
         "ms_tick": round(ms_tick, 1),
         "week": week, "year": (week - 1) // 52 + 1,
+        "saison": saison_de(((week - 1) % 52) + 1),
+        "meteo": event.kind, "temperature": round(temp, 1),
+        "sonde": mesure,
         "n_plants": n_plants, "n_segments": n_segments,
         "rss_mo": rss_mo(),
         "par_tuile": par_tuile,
@@ -131,7 +183,8 @@ class WorstTicks:
         self.k = k
         self.dumps: list[dict] = []   # triés par ms_tick décroissant
 
-    def consider(self, ms_tick: float | None, engine) -> dict | None:
+    def consider(self, ms_tick: float | None, engine,
+                 mesure: dict | None = None) -> dict | None:
         """Soumet la durée du dernier tick. Ne construit le dump (coûteux) QUE si
         le tick entre dans le top-K — les ticks ordinaires ne paient rien. Écrit
         sur disque seulement pour un nouveau record ABSOLU (rang 0) → peu de
@@ -142,7 +195,7 @@ class WorstTicks:
         if len(self.dumps) >= self.k and ms_tick <= self.dumps[-1]["ms_tick"]:
             return None
         is_record = not self.dumps or ms_tick > self.dumps[0]["ms_tick"]
-        dump = diagnostic(engine, ms_tick)
+        dump = diagnostic(engine, ms_tick, mesure)
         self.dumps.append(dump)
         self.dumps.sort(key=lambda d: -d["ms_tick"])
         del self.dumps[self.k:]

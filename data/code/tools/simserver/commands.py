@@ -41,6 +41,8 @@ from .gc_pont import regler_gc       # ramasse-miettes du serveur (PARTAGE ①)
 from .maitrise_pont import observer_apres_tick  # chaîne de maîtrise après tick (voix ①)
 from sim.vision import clore_si_echue as clore_vision   # fin de vision (sol qui respire ⑥)
 from . import perf   # capture des pires ticks + dump diagnostique (demande Nico 2026-07-05)
+from .perf_tick import SONDE_TICK         # où passe le temps d'un tick
+from .perf_annees import HistoriqueAnnees  # bilan du rapport perf, une ligne par an
 
 # Kit de démarrage déposé dans la banque-joueur, UNIQUEMENT en config "full" (le
 # monde de jeu réel, celui du F5) : une graine de chaque, pour tester `planter`
@@ -260,6 +262,7 @@ class CommandsMixin:
         # Traqueur des pires ticks (demande Nico) : mémoire des K ticks les plus
         # longs + dump diagnostique sur disque au record. Neuf à chaque init.
         self._worst = perf.WorstTicks()
+        self._annees = HistoriqueAnnees()
         # Brancher la Vigueur joueur (tranche 4) : l'OPT-IN se fait ICI, pas
         # dans le moteur. Dès que la clé `vigueur` existe, le tick existant
         # (engine.py, gardé par `if "vigueur" in game_state`) fait seul la
@@ -316,14 +319,17 @@ class CommandsMixin:
         # monotone haute résolution, immune aux sauts d'heure système. La valeur
         # est simplement STOCKÉE sur self ; `_snapshot()` (serialize.py) la
         # relit pour composer le bloc `perf`. Aucune écriture moteur.
+        SONDE_TICK.debut()
         _t0 = time.perf_counter()
         with contextlib.redirect_stdout(sys.stderr):
             self.engine.tick_semaine()
         self._last_ms_tick = (time.perf_counter() - _t0) * 1000.0
+        _mesure = SONDE_TICK.fin()
+        self._annees.ajouter(self.engine, self._last_ms_tick, _mesure)
         # Capture des pires ticks (demande Nico) : soumet la durée mesurée ; le
         # traqueur ne construit un dump QUE si ce tick entre dans le top-K → coût
         # nul sur les ticks ordinaires. Hors tick moteur → golden intact.
-        self._worst.consider(self._last_ms_tick, self.engine)
+        self._worst.consider(self._last_ms_tick, self.engine, _mesure)
         # Voix narratives ② : consigner le `log` du tick au ledger AVANT de le
         # vider — hors tick, après la simulation, exactement comme un hook
         # `detecter()`/`tick_player_vigueur()`. L'OPT-IN se fait ici (le serveur
@@ -375,6 +381,7 @@ class CommandsMixin:
             return {"ok": False, "error": "perf_report avant init"}
         return {"ok": True,
                 "worst": self._worst.dumps,
+                "annees": self._annees.lignes(),
                 "current": perf.diagnostic(
                     self.engine, getattr(self, "_last_ms_tick", None) or 0.0)}
 
