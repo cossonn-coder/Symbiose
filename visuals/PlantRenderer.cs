@@ -495,6 +495,8 @@ namespace Symbiose
 			if (DessinerPrairie()) return;
 			// Ports des herbacées (FORMES DES PLANTES ②) : même chemin, depuis une fiche.
 			if (DessinerPort()) return;
+			// Tomate, lierre, jasmin vivants : leurs segments, leurs feuilles (FORMES ⑥).
+			if (DessinerLiane()) return;
 
 			// Paliers BAS ×0,5-×2 (D106 T5, PlantRenderer.Paliers.cs) : chaque palier
 			// porte SON information (présence+saison / port / santé), squelette et
@@ -562,11 +564,6 @@ namespace Symbiose
 			// tailler se redessine PAR-DESSUS, après tout le bois.
 			DrawHighlight(collet);
 
-			// Vrille / indice d'accroche (grimpantes ⑥) : une petite spirale au sommet
-			// d'une grimpante ACCROCHÉE — l'organe qui tient le support. Rendu différé
-			// RENDU_FEUILLAGE §7/E6, débloqué par la mécanique ①→④. Discret (philo #5) :
-			// on ne surligne pas, on suggère la prise. No-op si la plante est libre.
-			DrawTendrils(collet);
 		}
 
 		// Aplatissement de la silhouette « couchée » : le moteur ne ré-oriente PAS

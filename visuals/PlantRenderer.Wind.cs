@@ -82,7 +82,7 @@ namespace Symbiose
 			_maxPoseLive = Mathf.Clamp(Mathf.CeilToInt(7f * _raideur * FlexCap), 1, MaxPoses - 1);
 			// Le tapis de trèfle ne se couche pas : deux poses de frémissement suffisent,
 			// et une colonie ne cuit pas 8 cellules par pied (TRÈFLE DOMINANT ④).
-			if (PortDeLaPlante == PortPrairie.Trefle || PortPlaque) _maxPoseLive = Mathf.Min(_maxPoseLive, PosesMaxTapis);
+			if (PortDeLaPlante == PortPrairie.Trefle || PortPlaque || VolubileAccrochee) _maxPoseLive = Mathf.Min(_maxPoseLive, PosesMaxTapis);
 		}
 
 		/// <summary>Une frame d'onde (WindWave, plantes près de l'écran seulement).</summary>

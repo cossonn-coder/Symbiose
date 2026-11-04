@@ -232,7 +232,7 @@ namespace Symbiose
 		///  · StadeMort (0.3.6) : squelette sur place, "seche"/"couchee", sinon null ;
 		///  · Symptomes (D33, 0.5.1) : {cause, intensité} triés par le moteur ;
 		///  · Vitalite (0.5.28) : fond global d'usure ∈ [0,1], défaut 1 ;
-		///  · SupportKind (0.5.18) : type d'appui accroché → vrille ;
+		///  · SupportKind (0.5.18) : type d'appui accroché → spires, crampons, liens ;
 		///  · Strate / Silhouette (0.5.19) : biais de Y par strate, forme au LOD couronne ;
 		///  · Emitteur (D67, 0.5.21) : teinte de l'overlay F9 seulement ;
 		///  · Abri (0.5.44) : facteur d'abri au vent, défaut 1.
@@ -246,7 +246,7 @@ namespace Symbiose
 			node.SetSkeleton(l.StadeMort);     // ou vient de mourir / s'est couchée
 			node.SetSymptoms(l.Symptomes);     // teinte + texture des symptômes (D33)
 			node.SetVitality(l.Vitalite);      // fond global d'usure (santé ④, 0.5.28)
-			node.SetSupport(l.SupportKind);    // vrille d'accroche (grimpantes ⑥)
+			node.SetSupport(l.SupportKind, l.SupportHauteurCm, l.SupportDxCm, l.SupportDyCm);   // accroche (grimpantes ⑥, FORMES ⑥)
 			node.SetSilhouette(l.Silhouette);  // forme au LOD couronne (luxuriance ⑥)
 			node.SetStrate(l.Strate);          // port arbre/grimpante (paliers bas, D106 T5)
 			node.SetEmitter(l.Emitteur);       // teinte overlay LOD F9 (D67)

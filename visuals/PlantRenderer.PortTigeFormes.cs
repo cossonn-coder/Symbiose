@@ -29,6 +29,8 @@ namespace Symbiose
 			{
 				case FormeFeuille.Palmee: PoserPalmee(fe, c); return;
 				case FormeFeuille.Plume: PoserPlume(fe, col); return;
+				case FormeFeuille.Triade: PoserTriade(f, fe, col, c); return;
+				case FormeFeuille.Composee: PoserComposee(f, fe, col, c); return;
 			}
 			_contourPrairie.Clear();
 			foreach (Vector2 q in ContourDe(f.Feuille)) _contourPrairie.Add(PointFeuille(fe, q.X, q.Y));
@@ -40,7 +42,9 @@ namespace Symbiose
 			if (f.Marque == MarqueFeuille.Eclat)   // limbe luisant : un éclat franc par feuille, dès ×4
 				_lotPrairie.Ligne(PointFeuille(fe, 0.35f, 0.3f), PointFeuille(fe, 0.6f, 0.3f), Ton(col, 4), pix);
 			if (!pres) return;
+			DetaillerLimbe(fe, col);
 			_lotPrairie.Ligne(PointFeuille(fe, 0.05f, 0f), PointFeuille(fe, 0.9f, 0f), Ton(col, Mathf.Min(fe.Ton + 2, 4)), pix);
+			if (f.Marque == MarqueFeuille.Nervures) PoserNervuresLierre(fe, col);
 			if (f.Marque == MarqueFeuille.Duvet) PoserDuvet(fe, col);
 			if (f.Marque == MarqueFeuille.Gaufre) PoserGaufrage(fe, col);
 		}
@@ -118,6 +122,7 @@ namespace Symbiose
 			if (col != FleurDe()) { PoserDisque(c, r, Ton(col, PaletteIndexee.TonBase)); return; }
 			if (!AuPalier(PaliersHautsMinZoom)) { PoserDisque(c, r, Ton(col, 3)); return; }
 			Color ton = Ton(col, PaletteIndexee.TonBase), eclat = Ton(col, 3);
+			if (AuPalier(PalierOrganesZoom)) PoserDisque(c, r * 0.55f + PixelInterne, Ton(col, 0));   // contour sélectif
 			for (int k = 0; k < 5; k++)
 			{
 				float a = k * Mathf.Tau / 5f - Mathf.Pi * 0.5f;

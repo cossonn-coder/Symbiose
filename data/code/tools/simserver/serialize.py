@@ -74,6 +74,7 @@ from .peripherie_route import ceinture_block
 from .vent_pont import wind_block, abri_facteur
 from .quatre_feuilles_pont import marquer_quatre_feuilles
 from .taille_pont import marquer_taille
+from .accroche_pont import marquer_accroche
 
 
 def _activite_butineur(eco, agent) -> float:
@@ -305,25 +306,9 @@ class SerializeMixin:
                      "masse": f.masse}
                     for f in p.fruits
                 ]
-                # Accroche de grimpe (D49 volet A, 0.5.18) : état `support` de la
-                # plante — absent (libre / non-grimpante) ou {type, height_cm}.
-                # `plant.support = (ref, height_appui)` où `ref` est un Support posé
-                # (→ son `support_type`), la sentinelle MUR (str → "mur") ou une
-                # PlantInstance HÔTE vivante (③ → "hote"). Duck-typing LOCAL (pas
-                # d'import de sim/grimpe) : str = mur ; possède `support_type` = Support
-                # posé ; sinon = hôte vivant. La vue en tire l'indice d'accroche + les
-                # vrilles (⑥). PURE lecture → golden NEUTRE (aucune grimpante accrochée
-                # dans le smoke → clé absente).
-                if p.support is not None:
-                    ref, h_appui = p.support
-                    if isinstance(ref, str):
-                        sup_type = "mur"
-                    elif hasattr(ref, "support_type"):
-                        sup_type = ref.support_type
-                    else:
-                        sup_type = "hote"
-                    base["support"] = {"type": sup_type,
-                                       "height_cm": round(h_appui, 2)}
+                # Accroche de grimpe (D49 volet A, 0.5.18 ; point d'appui 0.6.8) : clé absente si
+                # la plante est libre, cf. `tools/simserver/accroche_pont.py`. Lecture pure.
+                marquer_accroche(base, p)
                 plants.append(base)
         # Vie macro (tranche 6·B, kickoff §4) : sprites échantillonnés depuis
         # les champs de population — PURE lecture (sample_sprites ne modifie

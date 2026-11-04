@@ -47,10 +47,10 @@ namespace Symbiose
 		// Points (×4) : rayon d'un point de fleur / part du rayon d'un fruit.
 		private const float PointFleurPx = 1f;
 		private const float PointFruitPart = 0.5f;
-		// Nervures (×16) d'une plante vivante : largeur en px canvas (2 px internes
-		// à ×16, 4 à ×32 — elles grandissent avec la feuille) et contraste de
-		// teinte assez fort pour survivre à la quantification SNES (palette 34).
-		private const float NervureLargeurPx = 0.125f;
+		// Nervures (×16) d'une plante vivante : largeur à l'échelle (FORMES ⑥), 1 px interne
+		// jusqu'à ×16, 2 à ×32 (avant : 4 à ×32, grossières) ; et contraste de teinte
+		// assez fort pour survivre à la quantification SNES (palette 34).
+		private static float NervureLargeur => Mathf.Max(PixelInterne, 0.0625f);
 		private const float NervureShift = 0.45f;
 		// Nécrose de sécheresse (×16) : bord brûlé beige-brun.
 		private static readonly Color SecheEdgeColor = new Color("8a6a3a");
@@ -102,18 +102,20 @@ namespace Symbiose
 
 		// Fleurs : VRAI état moteur (`floraison` par plante ≥ FloraisonSeuil, à SA
 		// semaine propre — désync ③). ×4 : un point couleur de fleur par site ;
-		// ×8 : la silhouette par FAMILLE (DrawFlowerShape, Flower.cs).
+		// ×8 : la tache en grammaire SNES (PoserFleurSnes, FORMES ⑥).
 		private void DrawFleurs(Vector3 collet, OrganPalette pal)
 		{
 			if (_structure.Floraison < FloraisonSeuil) return;
 			bool organes = AuPalier(PalierOrganesZoom);
 			var sites = OrganSites();
+			if (organes) { _lotPrairie ??= new LotTriangles(); _lotPrairie.Vider(); }
 			for (int k = 0; k < sites.Count; k++)
 			{
 				Vector2 c = Iso(sites[k].X - collet.X, sites[k].Y - collet.Y, sites[k].Z);
-				if (organes) DrawFlowerShape(c, pal, 71, k);
+				if (organes) PoserFleurSnes(c, pal.Flower, k);   // PlantRenderer.FleurSnes.cs
 				else DrawPoint(c, PointFleurPx, pal.Flower);
 			}
+			if (organes) _lotPrairie.DessinerSansMaille(this);
 		}
 
 		// Fruits tracés : un par entrée de `_structure.Fruits` (état moteur ③ :
@@ -272,7 +274,7 @@ namespace Symbiose
 		private void DrawNervuresSecondaires(Vector2 c, float rx, float ry, Color vein, int i, int j)
 		{
 			var (axis, cross) = LeafFrame();
-			float px = NervureLargeurPx * 0.5f;
+			float px = Mathf.Max(PixelInterne, NervureLargeur * 0.5f);
 			int n = 4 + (int)(Hash01(97, i, j) * 2.99f);
 			for (int k = 0; k < n; k++)
 			{

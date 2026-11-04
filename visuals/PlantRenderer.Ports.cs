@@ -78,7 +78,8 @@ namespace Symbiose
 
 		// (rayon, hauteur) du port dessiné, en cm, comme MesurePrairie.
 		private (float R, float H) MesurePort(FichePort f) =>
-			AvecTaille((f.RayonCm * CroissancePort(f), HampeLevee(f) ? _hauteurLisseeCm : HauteurFeuilles(f)));
+			AvecTaille((f.RayonCm * CroissancePort(f),
+				f.Forme == FormePort.Volubile ? HauteurVolubile(f) : HampeLevee(f) ? _hauteurLisseeCm : HauteurFeuilles(f)));
 
 		/// <summary>Appelé par MesurerPort (Paliers.cs) : tapis, ombre, picking et vent suivent
 		/// le port dessiné, plus les segments. L'ombre retrouve la vraie hauteur.</summary>
@@ -107,6 +108,7 @@ namespace Symbiose
 				r = r.Expand(Iso(rayon, -rayon, z)).Expand(Iso(-rayon, rayon, z))
 					 .Expand(Iso(rayon, rayon, z)).Expand(Iso(-rayon, -rayon, z));
 			}
+			if (f.Forme == FormePort.Volubile) r = EtendreBoiteVolubile(r, f, rayon, h);
 			r = r.Grow(MargePrairiePx + f.TeteCm * WorldView.PxPerCmX);
 			return true;
 		}
@@ -129,6 +131,7 @@ namespace Symbiose
 				case FormePort.Tapis: DessinerTapis(f, col); break;
 				case FormePort.Buisson: DessinerBuisson(f, col); break;
 				case FormePort.Rampante: DessinerRampante(f, col); break;
+				case FormePort.Volubile: DessinerVolubile(f, col); break;
 				default: DessinerRosette(f, col); break;
 			}
 			PoserFruitsPort(f);
@@ -264,9 +267,9 @@ namespace Symbiose
 		private bool HampeSous(Vector2 local)
 		{
 			if (FicheDeLaPlante is not { } f) return false;
-			if (f.Forme is not (FormePort.Tige or FormePort.Chaume or FormePort.Buisson) && !HampeLevee(f)) return false;
+			if (f.Forme is not (FormePort.Tige or FormePort.Chaume or FormePort.Buisson or FormePort.Volubile) && !HampeLevee(f)) return false;
 			float demi = Mathf.Max(4f / WorldView.CurrentZoom, f.EpaisseurTigeCm * WorldView.PxPerCmX);
-			return Mathf.Abs(local.X) <= demi && local.Y <= 0f
+			return Mathf.Abs(local.X - AxeVolubileEcranX(f)) <= demi + RayonSpireEcran(f) && local.Y <= 0f
 				&& local.Y >= -_hauteurReelCm * WorldView.PxPerCmZ - f.TeteCm * WorldView.PxPerCmX;
 		}
 

@@ -45,6 +45,7 @@ namespace Symbiose
 			FormeFeuille.Coeur => ContourCoeur,
 			FormeFeuille.Scie => ContourScie,
 			FormeFeuille.Lanceolee => ProfilLanceole,
+			FormeFeuille.Lierre => ContourLierre,
 			_ => ContourOvale,
 		};
 
@@ -133,6 +134,7 @@ namespace Symbiose
 			PoserEventail(_contourPrairie, Vector2.Zero,
 				Ton(col, fe.Ton, Orientation(WorldView.WorldToScreenOffset(fe.U.X, fe.U.Y))));
 			if (!AuPalier(PalierOrganesZoom)) return;
+			DetaillerLimbe(fe, col);
 			_lotPrairie.Ligne(PointFeuille(fe, 0.05f, 0f), PointFeuille(fe, 0.9f, 0f), Ton(col, Mathf.Min(fe.Ton + 2, 4)), pix);
 			if (f.Marque == MarqueFeuille.Duvet) PoserDuvet(fe, col);
 		}

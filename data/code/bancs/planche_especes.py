@@ -31,6 +31,7 @@ from __future__ import annotations
 from plants import Fruit, organ_sites
 from plants.catalogue import PLANT_CATALOGUE
 from fields import FRUIT_MASSE
+from world import Support
 from sim.growth import grow_plant
 from .base import build_banc_tile, monde, vieillir
 
@@ -112,3 +113,36 @@ def planche_especes():
     """Banc « planche des espèces » : les 40 adultes séparés, fleurs et fruits posés.
     Instrument de mesure et d'observation F5 ; pas d'oracle à seuil."""
     return composer()
+
+
+def accroches_adultes():
+    """Banc « accroches adultes » (FORMES ⑥) : le haricot adulte sur chaque appui (tuteur à
+    40 cm du pied, treillis, pergola, tournesol vivant) et sans appui, le jasmin palissé, le
+    lierre sur treillis. `grimpantes` montre la grimpe émerger, mais ses pieds n'y vivent pas
+    assez [D64] : ici, un état posé, à capturer à `--capture-semaines=0`."""
+    tuile, eco = build_banc_tile("ACCROCHES", "terre", 24, 12, float(BRAS_CM), 0.0,
+                                 humidite=1.2, fertilite=1.2, microbiome=0.6)
+    tuteur = Support(support_type="tuteur", x_cm=165.0, y_cm=325.0, height_cm=200.0, finesse="fin")
+    treillis = Support(support_type="treillis", x_cm=425.0, y_cm=325.0, height_cm=180.0, finesse="surface")
+    pergola = Support(support_type="pergola", x_cm=125.0, y_cm=625.0, height_cm=220.0, finesse="surface")
+    palissage = Support(support_type="treillis", x_cm=425.0, y_cm=925.0, height_cm=180.0, finesse="surface")
+    support_lierre = Support(support_type="treillis", x_cm=125.0, y_cm=925.0, height_cm=180.0, finesse="surface")
+    tuile.supports.extend([tuteur, treillis, pergola, palissage, support_lierre])
+    ox, oy = tuile.origin_x_cm, tuile.origin_y_cm
+    def poser(nom, x, y, appui=None):
+        plante = _poser_adulte(tuile, PLANT_CATALOGUE[nom], int(ox + x), int(oy + y))
+        _forcer_fleurs_fruits(plante)
+        if appui is not None:
+            plante.support = (appui, appui.height_cm if isinstance(appui, Support) else appui.current_height)
+        return plante
+    poser("haricot", 125, 325, tuteur)
+    poser("haricot", 425, 325, treillis)
+    poser("haricot", 125, 625, pergola)
+    hote = poser("tournesol", 425, 625)
+    poser("haricot", 475, 625, hote)
+    poser("haricot", 275, 475)                         # sans appui : le tas
+    poser("jasmin", 425, 925, palissage)
+    poser("lierre", 125, 925, support_lierre)
+    poser("tomate", 275, 775)
+    eco.seed_bank.germination_candidates = lambda *a, **k: []
+    return monde([tuile], {tuile.tile_id: eco})

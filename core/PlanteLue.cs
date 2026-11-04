@@ -29,6 +29,7 @@ namespace Symbiose
 		public bool Dead;
 		public PlantStructure Structure;
 		public string StadeMort, SupportKind, Strate, Silhouette;
+		public float SupportHauteurCm, SupportDxCm, SupportDyCm;   // appui du haricot (FORMES ⑥, 0.6.8)
 		public float Vitalite = 1f, Abri = 1f;
 		public bool Emitteur = true;
 		public readonly List<(string Cause, float Intensite)> Symptomes = new();
@@ -70,7 +71,16 @@ namespace Symbiose
 					LireSymptomes(syms, l.Symptomes);
 			if (LectureSnap.A(p, "vitalite")) l.Vitalite = LectureSnap.F(p, "vitalite");
 			if (LectureSnap.A(p, "support"))
-				using (var sup = LectureSnap.Dico(p, "support")) l.SupportKind = LectureSnap.S(sup, "type");
+				using (var sup = LectureSnap.Dico(p, "support"))
+				{
+					l.SupportKind = LectureSnap.S(sup, "type");
+					l.SupportHauteurCm = LectureSnap.F(sup, "height_cm");
+					if (LectureSnap.A(sup, "dx_cm"))
+					{
+						l.SupportDxCm = LectureSnap.F(sup, "dx_cm");
+						l.SupportDyCm = LectureSnap.F(sup, "dy_cm");
+					}
+				}
 			if (LectureSnap.A(p, "strate")) l.Strate = LectureSnap.S(p, "strate");
 			if (LectureSnap.A(p, "silhouette")) l.Silhouette = LectureSnap.S(p, "silhouette");
 			if (LectureSnap.A(p, "emitteur")) l.Emitteur = LectureSnap.B(p, "emitteur");

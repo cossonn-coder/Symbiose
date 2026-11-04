@@ -102,11 +102,13 @@ Une fois dessinées sans leurs segments, ces espèces n'ont plus de raison de le
 
 Golden identique au même essai [smoke, `grow_plant` coupé en mémoire]. Origine du gain non isolée : le rapport PC ne donne que 5 à 14 % à `grow_plant` [n=5 ticks, échantillonnés, PC].
 
-**Concernées** : `not procedural_growth and not ligneux and mode_grimpe is None`. Les ligneux non migrés (thym, lavande, myrtille, framboisier) et le haricot gardent leurs segments : bois sec, chute des arbustes et `sim/grimpe.py` les lisent.
+**Correction au bilan du ⑤ : ce tableau surestime le gain, ne pas en tirer −41 %.** Son A/B était à charges différentes. Re-mesuré en parallèle à charge comparable, le gain en an 3 est d'environ −8 % au tick et −12 % à la semaine avec snapshot [`full`, seed 42, n=2 runs par côté, charge 5 à 10, CPU `process_time`], −1 % et −1 % en an 1, −4 % et −5 % en an 2 [mêmes runs]. Le nombre de segments, lui, est confirmé [n=3 runs par côté].
+
+**Concernées** : `not procedural_growth and not ligneux and mode_grimpe is None`, **sauf fraisier et courgette**, restés à squelette (écart décidé au ⑤) : `organ_sites` compte leurs apex, le collet seul leur donnerait 1 fruit à vie. Soit 30 espèces. Les ligneux non migrés (thym, lavande, myrtille, framboisier) et le haricot gardent leurs segments : bois sec, chute des arbustes et `sim/grimpe.py` les lisent.
 
 **Reste vrai** : le collet demeure et continue de vieillir, car `sim/actions/gestes.py` déduit l'âge du pied de `s.age_weeks`. Une plante garde un segment, donc la structure du snapshot reste valide.
 
-**Ce qui change volontairement** : une taille d'herbacée ne retire plus de segment. Pour garder le retour au sol, la masse déposée se déduit de la hauteur rabattue, même ordre de grandeur qu'aujourd'hui, à mesurer. Pas d'effet attendu sans geste.
+**Ce qui change volontairement** : une taille d'herbacée ne retire plus de segment. Pour garder le retour au sol, la masse déposée se déduit de la hauteur rabattue, même ordre de grandeur qu'aujourd'hui, à mesurer. Pas d'effet attendu sans geste. **Bilan du ⑤** : pas d'effet sans geste, digests identiques sur 156 semaines [`full`, seed 42, n=3 runs par côté] ; sous automate curatif, masse cumulée sur 3 ans 3,87 → 31,68, soit ×8 [n=1 run par côté], à valider par Nico.
 
 ## 5. Philo de design
 

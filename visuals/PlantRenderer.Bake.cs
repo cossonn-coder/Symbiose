@@ -189,6 +189,9 @@ namespace Symbiose
 			brush._frost = _frost;
 			brush._raideur = _raideur;
 			brush._supportKind = _supportKind;
+			brush._appuiHauteurCm = _appuiHauteurCm;
+			brush._appuiDxCm = _appuiDxCm;
+			brush._appuiDyCm = _appuiDyCm;
 			brush._highlightSegment = -1;
 			brush.QueueRedraw();
 		}

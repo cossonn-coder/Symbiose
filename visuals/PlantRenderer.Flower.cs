@@ -1,4 +1,6 @@
 // SYMBIOSE — PlantRenderer.Flower.cs (partial de PlantRenderer)
+// [FORMES ⑥ : les fleurs passent par PlantRenderer.FleurSnes.cs. Ces tracés de corolle ne sont
+// plus appelés, conservés ; la table `FlowerProfiles` reste lue.]
 // FORME DE FLEUR PAR FAMILLE BOTANIQUE (tronçon T2, sprint RENDU AMBIANCE §3).
 //
 // Trou comblé : jusqu'ici TOUTE fleur était une corolle générique à 5 pétales

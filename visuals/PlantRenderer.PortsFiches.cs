@@ -16,10 +16,10 @@ namespace Symbiose
 {
 	public partial class PlantRenderer
 	{
-		private enum FormePort { Rosette, Tige, Chaume, Tapis, Buisson, Rampante }   // ⑥ volubile
-		private enum FormeFeuille { Dentee, Spatule, Lobee, Ovale, Cuillere, Plume, Ruban, Coeur, Scie, Lanceolee, Palmee, Paume }
-		private enum FormeTete { Capitule, Bouquet, Chapelet, Epi, Ombelle, Boule, Grappe, Soleil, Etoile, Pendante, Corolle, Trompette, Aucune }
-		private enum MarqueFeuille { Aucune, Duvet, Gouttes, Pli, Eclat, Gaufre, Revers }
+		private enum FormePort { Rosette, Tige, Chaume, Tapis, Buisson, Rampante, Volubile }
+		private enum FormeFeuille { Dentee, Spatule, Lobee, Ovale, Cuillere, Plume, Ruban, Coeur, Scie, Lanceolee, Palmee, Paume, Triade, Composee, Lierre }
+		private enum FormeTete { Capitule, Bouquet, Chapelet, Epi, Ombelle, Boule, Grappe, Soleil, Etoile, Pendante, Corolle, Trompette, Papillon, Aucune }
+		private enum MarqueFeuille { Aucune, Duvet, Gouttes, Pli, Eclat, Gaufre, Revers, Nervures }
 
 		/// <summary>La grammaire du port tige (PlantRenderer.PortTige.cs). `Axes` tiges partent du
 		/// pied, sur `EcartPied` du rayon, et s'écartent en montant de `Evase` du rayon. Feuilles
@@ -195,6 +195,10 @@ namespace Symbiose
 			["Zucchini"] = new(FormePort.Rampante, RayonCm: 60f, HautFeuillesCm: 45f, HauteurAdulteCm: 40f, Feuilles: 7,
 				FormeFeuille.Paume, LargeurFeuille: 0.95f, Dressee: 0.2f, FormeTete.Trompette, TeteCm: 5f, Hampes: 0, EpaisseurTigeCm: 2f,
 				Fruit: new(3.2f, Allonge: 3f, DBas: 0.12f, DHaut: 0.5f, ZBas: 0.05f, ZHaut: 0.2f)),
+			// --- Volubile ⑥ : HautFeuillesCm = le tas, tenu debout sans appui (`hauteur_autoportante`). -
+			["Bean"] = new(FormePort.Volubile, RayonCm: 25f, HautFeuillesCm: 35f, HauteurAdulteCm: 150f, Feuilles: 16,
+				FormeFeuille.Triade, LargeurFeuille: 0.42f, Dressee: 1f, FormeTete.Papillon, TeteCm: 1.4f, Hampes: 0, EpaisseurTigeCm: 0.5f,
+				Tige: new(1, 0f, 0f, 0f, 0f, false, 11f, 7f, -0.2f, new Color("6fae4a"), TetesAisselle: 5)),
 		};
 
 		// Espèces du catalogue sans palette (limbe, fleur, fruit vert, fruit mûr).

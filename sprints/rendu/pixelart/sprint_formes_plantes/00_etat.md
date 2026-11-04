@@ -15,12 +15,12 @@ Golden attendu : **inchangé partout**, `a10b7225…` à l'ouverture. Vérifié 
 
 | # | Kickoff | Contenu | État |
 |---|---|---|---|
-| ① | `01_banc_fiches.md` | Banc, mesure des silhouettes, « avant », 36 fiches | **fait, code non committé** |
-| ② | `02_socle_rosettes.md` | Socle des ports, taille, rosettes (7) | **fait, code non committé** |
-| ③ | `03_tiges.md` | Tiges à feuilles étagées (12) | **fait, code non committé** |
-| ④ | `04_chaumes_tapis_buissons.md` | Chaumes, couvre-sols, buissons, courgette (13) | **fait, code non committé** |
-| ⑤ | `05_squelette_moteur.md` | Plus de squelette pour les herbacées à port, perf | **fait, code non committé** |
-| ⑥ | `06_grimpantes_grammaire_bilan.md` | Haricot, tomate, lierre, jasmin, fleurs et feuilles SNES, bilan | à faire |
+| ① | `01_banc_fiches.md` | Banc, mesure des silhouettes, « avant », 36 fiches | **fait** |
+| ② | `02_socle_rosettes.md` | Socle des ports, taille, rosettes (7) | **fait** |
+| ③ | `03_tiges.md` | Tiges à feuilles étagées (12) | **fait** |
+| ④ | `04_chaumes_tapis_buissons.md` | Chaumes, couvre-sols, buissons, courgette (13) | **fait** |
+| ⑤ | `05_squelette_moteur.md` | Plus de squelette pour les herbacées à port, perf | **fait** |
+| ⑥ | `06_grimpantes_grammaire_bilan.md` | Haricot, tomate, lierre, jasmin, fleurs et feuilles SNES, bilan | **fait** |
 
 ## Garde-fous
 
@@ -28,6 +28,8 @@ Golden attendu : **inchangé partout**, `a10b7225…` à l'ouverture. Vérifié 
 - Déjà rouges avant ce sprint : `test_succession`, `test_edaphique`, `test_parasite`.
 - Vérifier la charge VM (`uptime`) avant toute mesure de temps. Chaque chiffre porte sa limite entre crochets.
 - `PlantRenderer.Prairie.cs` (301 LDC) et `PlantRenderer.Organs.cs` (292) ne doivent pas grossir : code neuf dans des partials neufs.
+
+**Commits** : ① `b86ca27`, ② `f916f40`, ③ `fa8aea0`, ④ `a699c42`, ⑤ `2bf85b1`, ⑥ commit de clôture.
 
 ## Bilans
 
@@ -109,6 +111,25 @@ Golden attendu : **inchangé partout**, `a10b7225…` à l'ouverture. Vérifié 
 - **F5** : colonies de trèfle (taille selon l'âge, bouture qui grandit en 25 semaines) ; tailler et pincer une herbacée, aucun changement attendu à l'œil ; cuisson d'un monde chargé (`BakeCost` à 20 change le débit de la file).
 - **Pour ⑥** : `bancs/planche_especes.py` pousse encore 52 semaines ces espèces : sans effet pour elles, utile aux 7 non procédurales hors retrait. `visuals/PlantRenderer.Ports.cs` passe à 193 LDC, `Prairie.cs` à 299.
 
+### ⑥ Grimpantes, grammaire, bilan
+
+- **Fait** : `visuals/PlantRenderer.PortVolubile.cs` (haricot : spires autour de l'appui, tas sans appui, triades, papillons, gousses en marque de stade), `PlantRenderer.Lianes.cs` (tomate, lierre, jasmin : segments gardés, tiges fines, vraies feuilles à tous les paliers, crampons, liens, fruit à la taille de la fiche), `PlantRenderer.FleurSnes.cs` (fleurs d'arbre en tache à contour, chatons, `DetaillerLimbe` dès ×16), plancher de feuille en px internes, nervures à 1-2 px. Golden intact `a10b7225…`, `test_sim_server` 321/321, build vert, `test_grimpe`, `test_squelette_herbacees`, `test_planche_especes`, `test_accroche_pont` verts.
+- **Écart au kickoff, décidé d'emblée : le ⑥ n'est pas « vue pure ».** Le pont n'envoyait que type et hauteur ; or une grimpante s'accroche jusqu'à 75 cm de son pied et n'est pas déplacée, donc spiraler autour du collet la ferait monter à côté du tuteur. **Pont 0.6.8** : `support` gagne `dx_cm`, `dy_cm`, lecture pure (`tools/simserver/accroche_pont.py`, sorti de `serialize.py`, 392 LDC). Hors golden, aucune grimpante accrochée dans le smoke.
+- **Banc neuf** `accroches_adultes` (`bancs/planche_especes.py`) : `grimpantes` ne garde que 2 pieds affichés sur 9 posés en s17 [départ s9, n=1 run, VM], on n'y voit pas de haricot adulte. État posé, à capturer à `-w 0`.
+- **Cause des ovales unis à ×32** : `LeafFloorRadiusPx` comparé en px canvas : une feuille de 2 px canvas restait une ellipse d'une valeur à ×32. Passé en px internes pour les plantes vivantes ; la litière garde l'ancien.
+- **Mesure finale** : `mesures/apres.md`. Paires ×4 28 → 0, ×1 14 → 1 (fraisier / violette) [seed 42, n=1 capture, VM], cible tenue. Hauteur hors tolérance ×4 30 → 9, ×1 28 → 10 [idem], dont le haricot au tas, volontaire. Draw calls 90-104 → 81-82, FPS 9,2-11,4 → 9,7-10,9 [n=3 runs par côté, charge 3,9 à 8,3, dans le bruit].
+- **Effet en jeu** : 16 espèces sur 21 passent par un port en fin d'an 2, 621 pieds sur 627 [`full`, seed 42, sans automate, n=1 run, VM]. Aucune liane vivante à cette date, et **aucun haricot accroché vu dans `full`** ; spires vues au banc seul.
+- **Reste faible, sans arrondir** (détail `apres.md`) : arbres à ×4 et ×8 toujours en pompons ovales, ce que l'œil voit d'abord ; disques verts translucides au sol, origine non vérifiée ; ×32 de `full` tombé sur le sol nu ; chatons jamais vus en capture ; fleurs d'arbre plus discrètes à ×8 ; jasmin palissé resté au sol sur le banc.
+- **Repris tels quels des tronçons précédents, à arbitrer par Nico** : (1) **garde-fou de cuisson non tenu, seuil non modifié** : pinceau environ +60 % contre +10 % visés [n=3 runs par côté en alternance, charge de départ 1,8 à 4,9, au ③], 0,12 → 0,24 ms/plante sur le dernier couple [n=1 run par côté, charge 7]. (2) **Gain du ⑤ très inférieur à −41 %** : −8 % au tick, −12 % à la semaine en an 3 [`full`, seed 42, n=2 runs par côté, charge 5 à 10] ; corrigé dans la conception §4.6 et D127. (3) **Fraisier et courgette restés à squelette**. (4) **Masse de coupe sous automate curatif** : 3,87 → 31,68 cumulés sur 3 ans, ×8 [n=1 run par côté]. (5) **Mortalité du banc notée au ①** : 38 pieds sur 40 morts en s26 si la saison tourne [départ s20, n=1 run, VM], non diagnostiquée, reportée à D127.
+- **Code conservé, plus appelé** (règle de Nico, à toi de décider) : corolles de `PlantRenderer.Flower.cs`, `DrawTendrils` d'`Organs.cs`. La table `FlowerProfiles` garde des lignes d'espèces passées aux ports.
+- **Dette** : D118 réduite au §7, limite « taille sur trèfle » retirée de D127 (`TailleAuPied` vaut pour la prairie, test `test_hints_taille` ; non vu au F5).
+
+## §F5
+
+Ressenti, court : une minute par palier. Reconnaît-on sans info-bulle basilic, tournesol, blé, fraisier, lavande, courgette, haricot ? Ombres à la bonne hauteur ? Tailler une menthe (se rabat, repousse).
+
+Banc `accroches_adultes` : haricot autour du tuteur, du treillis, de la pergola, du tournesol ; le tas sans appui ; tomate, lierre, jasmin (plus de bonsaï ?). Tailler la tomate au segment. Verger en fleur : les fleurs se voient-elles assez à ×8 ?
+
 ## §REPRISE
 
-Lire `CLAUDE.md`, ce fichier, la conception, puis le prochain kickoff « à faire » : ⑥ `06_grimpantes_grammaire_bilan.md`. Patron d'un port : `visuals/PlantRenderer.PortTige.cs`. Récolte : `tools/capture_vm.sh -C`. Rejouer la mesure : `mesures/avant.md`. Points ouverts : **seuil de durée de cuisson à arbitrer par Nico** (bilan ③) ; **masse de coupe ×8 sous automate à valider**, et gain F4 à −8 à −12 % au lieu de −41 % (bilan ⑤).
+Sprint clos côté code (①→⑥), rien à committer d'autre que ce tronçon. Attendus de Nico : F5 (§F5) ; arbitrage du seuil de cuisson (bilan ③) ; validation de la masse de coupe ×8 sous automate (bilan ⑤). Suite : D119, cf. `project_file_priorisee`.

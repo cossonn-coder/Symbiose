@@ -62,6 +62,7 @@ namespace Symbiose
 			if (AuPalier(PaliersHautsMinZoom)) PoserEventail(_contourPrairie, new Vector2(0f, pix * 2f), Ton(col, 0));
 			PoserEventail(_contourPrairie, Vector2.Zero, Ton(col, fe.Ton, Orientation(WorldView.WorldToScreenOffset(fe.U.X, fe.U.Y))));
 			if (!AuPalier(PalierOrganesZoom)) return;
+			DetaillerLimbe(fe, col);
 			// Marbrure argent le long des nervures, le signe de l'espèce de près.
 			Color argent = Ton(col, 4);
 			_lotPrairie.Ligne(attache, PointFeuille(fe, 0.9f, 0f), argent, pix);

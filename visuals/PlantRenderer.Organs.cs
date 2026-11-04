@@ -51,16 +51,23 @@ namespace Symbiose
 
 		// Reçoit l'état `support` du snapshot (0.5.18) : le TYPE d'appui accroché
 		// (tuteur/treillis/pergola/mur/hote), ou null si la plante est libre (non
-		// accrochée / non-grimpante). Ne pilote qu'un DÉTAIL de vue (la vrille) ; la
-		// grimpe elle-même vient de la géométrie des segments (décision A). Early-out
-		// si inchangé (comme SetSkeleton) : pas de redraw inutile.
-		public void SetSupport(string kind)
+		// accrochée / non-grimpante). Pour le haricot, il décide du port et de ses spires
+		// (PlantRenderer.PortVolubile.cs) ; pour lierre et jasmin, crampons et liens
+		// (PlantRenderer.Lianes.cs). Early-out si inchangé (comme SetSkeleton).
+		public void SetSupport(string kind, float hauteurCm = 0f, float dxCm = 0f, float dyCm = 0f)
 		{
-			if (_supportKind == kind) return;
+			if (_supportKind == kind && _appuiHauteurCm == hauteurCm && _appuiDxCm == dxCm && _appuiDyCm == dyCm) return;
 			_supportKind = kind;
+			_appuiHauteurCm = hauteurCm;
+			_appuiDxCm = dxCm;
+			_appuiDyCm = dyCm;
+			MesurerPort();         // le haricot change de hauteur en s'accrochant
+			ComputeStiffness();
 			Invalidate();
 		}
 
+		// [Conservé, plus appelé depuis FORMES ⑥ : ni haricot, ni lierre, ni jasmin n'ont de
+		// vrilles (fiches), et ces spires de 1,2 px canvas étaient hors grammaire.]
 		// Une petite VRILLE en spirale au sommet de la grimpante accrochée : l'organe
 		// d'accroche qui « tient » le support. Déterministe (spirale paramétrique,
 		// zéro RNG → même tête, même vrille). Posée au tip le PLUS HAUT de la structure
@@ -471,7 +478,7 @@ namespace Symbiose
 			green.A = 0.95f;
 			// Largeur en px INTERNES (D106 T6 : l'ancien 2 px canvas valait 16 px
 			// internes à ×8 — un moignon carré) : celle des nervures, qui suit la feuille.
-			float w = NervureLargeurPx;
+			float w = NervureLargeur;
 			// On s'arrête un peu avant le centre du limbe : le limbe (dessiné juste
 			// après) recouvre la jonction, seule la base du pétiole reste visible.
 			Vector2 petTip = insert.Lerp(leaf, 0.75f);

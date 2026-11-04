@@ -88,6 +88,7 @@ namespace Symbiose
 				foreach (Vector2 q in ContourDe(f.Feuille)) _contourPrairie.Add(PointFeuille(fo, q.X, q.Y));
 				if (pres) PoserEventail(_contourPrairie, new Vector2(0f, PixelInterne), Ton(col, 0));
 				PoserEventail(_contourPrairie, Vector2.Zero, c);
+				if (pres) DetaillerLimbe(fo, col);
 				if (pres && f.Marque == MarqueFeuille.Gaufre) PoserGaufrage(fo, col);
 			}
 		}
@@ -168,6 +169,7 @@ namespace Symbiose
 			float pix = PixelInterne;
 			if (col != FleurDe() || !AuPalier(PaliersHautsMinZoom)) { PoserDisque(c, r, Ton(col, 3)); return; }
 			Color petale = Ton(col, 3);
+			if (AuPalier(PalierOrganesZoom)) PoserDisque(c, r * 1.1f + pix, Ton(col, 0));   // contour sélectif
 			PoserDisque(c, r, Ton(col, PaletteIndexee.TonBase));
 			for (int k = 0; k < 5; k++)
 			{

@@ -77,6 +77,7 @@ namespace Symbiose
 				case FormeTete.Pendante: PoserPendante(sommet, r, c, graine); break;
 				case FormeTete.Corolle: PoserCorolle(sommet, r, c); break;
 				case FormeTete.Trompette: PoserTrompette(sommet, r, c); break;
+				case FormeTete.Papillon: PoserPapillons(sommet, r, c, graine); break;
 				case FormeTete.Aucune: break;
 				default: PoserOmbelle(pied, sommet, r, c, graine); break;
 			}

@@ -826,7 +826,10 @@ from __future__ import annotations
 #       8 semaines) et `pince` (12 semaines), clés absentes si nulles : la vue montre la coupe
 #       sur le port dessiné. Plus `target.segment` pour ces plantes côté vue (repli serveur
 #       `params.cible`). Lecture pure, golden neutre.
-ENGINE_VERSION = "0.6.7"
+# 0.6.8 (formes des plantes ⑥) : `support` gagne `dx_cm`, `dy_cm` (appui par rapport au pied,
+#       absents pour le mur) : la vue dessine le haricot autour de son tuteur. Lecture pure,
+#       clés neuves ignorées par un ancien client, golden neutre.
+ENGINE_VERSION = "0.6.8"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les
