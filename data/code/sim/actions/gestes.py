@@ -33,6 +33,7 @@ from fields.ecofields import CREUSER_DELTA, DRAINER_ASSECHE   # terrassement jou
 from fields.population import DENSITE_PAR_SPRITE   # « un geste = un individu = un quantum » (D31.3 §5)
 from fields.alarme import declencher_alarme, ALARME_DEPOT   # phéromone d'alarme apienne (⑦ §J)
 from fields.seedbank import GrainEnAttente          # dépôt de `planter` (germination différée, distinct de la banque-sol)
+from sim.quatre_feuilles import cueillir   # trèfle à quatre feuilles : bonus de la récolte
 from .couts import cout_action, _objets_action, OBJETS_TOUCHES, URGENCE_MULT
 from .paillage import stock_disponible, prelever_stock   # matériau du mulch (④) : stock par nature
 from .autopaillage import auto_pailler   # couplage planter+pailler par maîtrise (⑦, D12)
@@ -207,12 +208,16 @@ def recolter(game_state: dict, player: str, plant, eco) -> float:
     plante reste VIVANTE. Si la Vigueur ne couvre pas le coût, l'effort est
     tronqué : gain ET résidu × ratio (récolte partielle). Sur du mûr, net positif
     (gain ≫ coût) — le canal de ressourcement légitime.
+    Un trèfle à quatre feuilles rapporte en plus son bonus unique, dès qu'il y a eu
+    un effort : à Vigueur nulle (ratio 0) rien n'est cueilli, il reste pour plus tard.
     Renvoie le ratio d'effort réalisé ∈ [0, 1]."""
     cost = cout_action(game_state, player, "recolter", _objets_action("recolter", plant))
     ratio = spend(game_state, player, cost)
     gain(game_state, player, HARVEST_GAIN_FULL * maturite(plant) * ratio)
     biomass = (plant.current_stage + 1.0) * 0.4   # même barème que le tick récolte
     eco.add_necromass(*plant.position, biomass * ratio, harvested=True)
+    if ratio > 0.0:
+        cueillir(game_state, player, plant, eco)
     return ratio
 
 

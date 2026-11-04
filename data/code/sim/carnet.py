@@ -124,6 +124,9 @@ CONCEPT_DE: dict[tuple[str, str | None], str] = {
     # Concept « azote », propre au carnet comme « maladie » ; c'est lui qui révèle le cycle.
     ("germination", "sol_riche"): "azote",
     ("germination", "sol_maigre"): "azote",
+    # Trèfle à quatre feuilles cueilli (sprint TRÈFLE DOMINANT ③, `sim/quatre_feuilles.py`) :
+    # une variation d'un seul pied, que ses stolons ne reçoivent pas → « reproduction ».
+    ("quatre_feuilles", None):     "reproduction",
     # PAYSAGE de la ceinture (sprint PÉRIPHÉRIE ⑥) : les gestes de lisière, d'eau et de
     # roche, et les réponses du terrain. Quatre concepts NEUFS propres au carnet (comme
     # carnivorie/maladie, hors `encyclopedie_types.CONCEPTS`) → la note reste descriptive
@@ -189,6 +192,8 @@ GABARIT: dict[tuple[str, str | None, str], str] = {
     ("germination", "sol_riche", _I): "{e} lève {l} : la terre y est grasse d'azote, souvent celui du trèfle. Son ombre le fera reculer, puis le sol s'appauvrira et il reviendra.",
     ("germination", "sol_maigre", _D): "Une herbe fine, {e}, a levé {l}.",
     ("germination", "sol_maigre", _I): "{e} lève {l} : le sol y est encore maigre en azote, et elle s'en contente.",
+    ("quatre_feuilles", None, _D): "Un trèfle à quatre feuilles {l}. Je l'ai cueilli, et ma fatigue est tombée d'un coup.",
+    ("quatre_feuilles", None, _I): "Un trèfle à quatre feuilles {l}, seul de son tapis. Une variation de ce pied-là : ses stolons n'en héritent pas et le sol n'y est pour rien. Je l'ai cueilli quand même, et ma fatigue est tombée d'un coup.",
 
     ("stagnation", "sec", _D): "Le plant de {e} {l} fait grise mine, feuilles molles.",
     ("stagnation", "sec", _I): "Encore la soif {l} — ce sol draine trop vite pour {e}, je le sais maintenant.",

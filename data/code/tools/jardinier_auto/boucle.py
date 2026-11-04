@@ -22,6 +22,7 @@ from sim import vigueur as V
 from sim.engine.calendrier import saison_de
 
 from .perception import percevoir
+from sim.quatre_feuilles import est_quatre_feuilles
 from .diagnostic import facteur_limitant
 from .proposition import proposer
 from .impasses import Impasse, GESTE_VERROUILLE, OBJECTIF_INATTEIGNABLE
@@ -95,10 +96,14 @@ class JardinierAutomate:
                     plans.append((cle, tile, eco, plant, prop))
         return plans, impasses
 
-    def _appliquer_part_recoltee(self, plans):
+    def _appliquer_part_recoltee(self, plans, seed):
         """Slider `part_recoltee` (§4/Q5) : ne garder que `round(part×n)` des récoltes
         (ordre stable) ; le reste TOMBE (fruit non cueilli → faune/décompo). Défaut
-        1.0 → tout gardé (comportement ①). N'affecte QUE les gestes `recolter`."""
+        1.0 → tout gardé (comportement ①). N'affecte QUE les gestes `recolter`.
+        Un trèfle à quatre feuilles tombe d'abord : sa cueillette est une trouvaille du
+        joueur, l'automate ne doit pas l'empocher à sa place."""
+        plans = [p for p in plans if not (p[4].verbe == "recolter"
+                                          and est_quatre_feuilles(p[3], seed))]
         recoltes = sorted((p for p in plans if p[4].verbe == "recolter"),
                           key=lambda p: p[0])
         garde = self.profil.n_a_recolter(len(recoltes))
@@ -165,7 +170,7 @@ class JardinierAutomate:
         actifs = OBJ.objectifs_actifs(gs)
 
         plans, impasses = self._collecter(engine, cultivees)
-        plans = self._appliquer_part_recoltee(plans)
+        plans = self._appliquer_part_recoltee(plans, gs.get("seed", 0))
 
         # Étage CRÉATIF (③) — le PLANIFICATEUR (②) propose le prochain geste d'ADVENUE
         # par objectif (planter/acheter/favoriser). NO-OP strict sans objectif (actifs

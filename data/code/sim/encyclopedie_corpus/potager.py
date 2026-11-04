@@ -50,7 +50,9 @@ FICHES_POTAGER: dict[str, dict[int, str]] = {
         2: "Légumineuse fixatrice d'azote, vivace ou annuelle ; couvre-sol dense, "
            "fleurs très mellifères.",
         3: "Engrais vert et paillis vivant par excellence : enrichit en azote, protège "
-           "le sol nu, nourrit abeilles et bourdons. Base d'une prairie fertile.",
+           "le sol nu, nourrit abeilles et bourdons. Base d'une prairie fertile. Il arrive "
+           "qu'un pied porte quatre folioles au lieu de trois : un seul dans le tapis, "
+           "que les stolons voisins ne copient pas. On le trouve en regardant ses pieds.",
     },
     "tournesol": {
         1: "Grande tige unique, large capitule jaune tourné vers le soleil.",

@@ -1,7 +1,7 @@
 # Sprint TRÈFLE DOMINANT (D126) — état partagé
 
 **Conception** : `docs/vegetal/catalogue/conception_trefle_dominant.md` (figée le 2026-11-02).
-**Où on en est** : ② fait, non commité. Golden `c23f70d9…` → `a10b7225…`. Deux critères §5 ratés (voir ②). Prochain : ③.
+**Où on en est** : ① et ② commités, ③ fait, non commité, golden intact `a10b7225…`. Deux critères §5 de ② restent ratés. Prochain : ④.
 
 ## Décisions clés (Nico, 2026-11-02)
 
@@ -16,7 +16,7 @@
 |---|---|---|---|
 | ① | `01_cycle_azote.md` — fixation freinée, renouvellement des stolons | re-figé `c23f70d9…` | **fait** |
 | ② | `02_flore_spontanee.md` — 3 espèces neuves + ortie, 5 voix, mesure de l'effet | re-figé `a10b7225…` | **fait, 2 critères ratés** |
-| ③ | `03_quatre_feuilles.md` — fonction pure, récolte, bonus, pont | intact | à faire |
+| ③ | `03_quatre_feuilles.md` — fonction pure, récolte, bonus, pont | intact `a10b7225…` | **fait** |
 | ④ | `04_vue_prairie.md` — tapis, quatre feuilles, formes, protocole F5 | intact | à faire |
 
 ## ① : ce qui a été fait
@@ -45,6 +45,24 @@
 
 **Critères §5 après ②** [n=1 graine, VM] : part 44,6 %, **raté** ; plots neufs 29 %, **raté** (perdus 45 %) ; 20 espèces, tenu ; les 4 présentes, tenu ; N 0,17 à 0,80, tenu ; tick an 2 sous +10 %, tenu. Cause : l'ombre marche (41 plots à dactyle sur 41 sous la porte, an 5), mais ~40 dactyles face à ~300 trèfles. Les vivaces à archétype ne réalimentent pas leur banque (`mortalite.py`), et la levée férale reste rare. Le retour du trèfle n'est pas observé. **Arbitrage de Nico attendu**, pistes dans `apres_flore.md`.
 
+## ③ : ce qui a été fait
+
+- `sim/quatre_feuilles.py` (neuf) : `est_quatre_feuilles(plant, seed)`, pure, hash de `form_seed` + position ; `cueillir`, Vigueur pleine, prochaine page due, note au ledger. `PROBA_QUATRE_FEUILLES` = 0,005.
+- `recolter` appelle `cueillir` si l'effort est non nul ; champ `quatre_feuilles_cueilli` hors `_PLANT_ATTRS`. Le trèfle est récoltable : `recolter` est un geste de base, route `plante_route.py`.
+- Automate : `_appliquer_part_recoltee` écarte ces pieds. Le filtre passe avant `part_recoltee`.
+- Voix : fiche trèfle N3, gabarits carnet `quatre_feuilles`, page **P49**.
+- Pont 0.6.5 : `tools/simserver/quatre_feuilles_pont.py`, clé présente seulement si vraie.
+- `tests/test_quatre_feuilles.py`. Mesure dans `mesures/apres_quatre_feuilles.md` : 2 pieds vus en an 3, 1,98 à la fois en moyenne [n=1 graine, VM].
+
+**Écarts au kickoff et choix à relire** :
+
+1. P34 était prise, P48 aussi : la page est **P49**. Elle n'a pas été recopiée dans le §7 de `conception_voix_narratives.md`.
+2. Concept carnet et page = `reproduction` (variation d'un pied que ses stolons ne reçoivent pas). Le kickoff n'en fixait pas.
+3. À Vigueur nulle (ratio 0), rien n'est cueilli : le pied reste pour plus tard. Choix non prévu.
+4. Le message du geste annonce la trouvaille (« un trèfle à quatre feuilles ! ») : `plante_route.py`. Ce n'est pas du HUD permanent, mais c'est un ajout.
+5. `serialize.py` passe de 398 à **400 LDC**, au plafond de la bande. Le prochain ajout impose un découpage.
+6. Trèfle en pot : pas de hint (`_containers_snapshot` non touché), et `route_plante` ne résout que les plantes de tuile. Hors périmètre, à trancher si le cas compte.
+
 ## Écarts à connaître pour la suite
 
 1. **La référence du kickoff n'avait pas d'automate.** 729 / 434 / 274 viennent de `tick_semaine()` direct ; l'automate joue dans `cmd_step_week`. Le tableau §1 de la conception a la même limite. Pour ② et les suivants, mesurer avec `mesures/mesure_prairie.py` ; le vrai « avant » an 5 est 834 plantes, trèfle 537 sur 345 plots [n=1 graine, VM].
@@ -56,8 +74,8 @@
 
 ## Ce qui reste
 
-③, ④, et l'arbitrage sur les 2 critères ratés de ②. Garde-fous : ne JAMAIS lancer `tests/test_epaisseur_500ans.py` ; mesures ≤ 5 ans de jeu. Déjà rouges avant ce sprint : `test_succession`, `test_edaphique`, `test_parasite` (`IndexError` dans `deposer_litiere`).
+④, et l'arbitrage sur les 2 critères ratés de ②. Garde-fous : ne JAMAIS lancer `tests/test_epaisseur_500ans.py` ; mesures ≤ 5 ans de jeu. Déjà rouges avant ce sprint : `test_succession`, `test_edaphique`, `test_parasite` (`IndexError` dans `deposer_litiere`).
 
 ## §REPRISE
 
-② fait, à commiter (`mesures/` compris, pas le `__pycache__` de `sprint_optim_vie_macro`). Lire `CLAUDE.md` + ce fichier + le kickoff du premier tronçon « à faire ». Lancer : `/sprint-auto sprint_trefle_dominant`.
+③ fait, à commiter (`mesures/` compris, pas le `__pycache__` de `sprint_optim_vie_macro`). Lire `CLAUDE.md` + ce fichier + le kickoff du premier tronçon « à faire ». Lancer : `/sprint-auto sprint_trefle_dominant`.

@@ -81,9 +81,13 @@ def route_plante(gs: dict, player: str, verb: str,
                      f"mangé : {cible} (+{g:.1f} Vigueur — "
                      f"gain ∝ maturité de l'organe)")
     if verb == "recolter":
+        deja = plant.quatre_feuilles_cueilli
         ratio = A.recolter(gs, player, plant, eco)
         msg = ("récolté : " + plant.name if ratio >= 1.0
                else f"récolte partielle ({ratio:.0%}) : {plant.name}")
+        # Quatre feuilles (TRÈFLE DOMINANT ③) : le retour du geste, seul signe à la cueillette.
+        if plant.quatre_feuilles_cueilli and not deja:
+            msg = "un trèfle à quatre feuilles !"
         return bilan(ratio > 0.0, cost, 0.0, msg)
     if verb == "deraciner":
         ok = A.deraciner(gs, player, plant, eco)

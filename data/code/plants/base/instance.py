@@ -112,6 +112,9 @@ class PlantInstance:
     # `_PLANT_ATTRS` du golden : agissent via les `segments`, déjà comparés.
     form_seed: int = 0        # identité morphologique héritable ; 0 = non posé (repli)
     branch_count: int = 0     # ordinal monotone de branches émises (index stable du patron)
+    # Trèfle à quatre feuilles déjà cueilli (TRÈFLE DOMINANT ③) : bonus unique par pied,
+    # posé par le geste `recolter` (`sim/quatre_feuilles.py`). Hors `_PLANT_ATTRS` du golden.
+    quatre_feuilles_cueilli: bool = False
     # Structure morphologique (croissance procédurale, D29 réorienté, tronçon 1).
     # Vide à la déclaration ⇒ une plante naît avec UN segment apex au collet
     # (cf. __post_init__). INERTE à ce tronçon : poussée par sim/growth.py mais

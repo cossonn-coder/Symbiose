@@ -73,6 +73,7 @@ from .peripherie_route import ceinture_block
 # Vent au pont (JARDIN VIVANT T3, 0.5.44) : masse d'air `weather.wind` + facteur
 # d'abri par plante (lu SEULEMENT si le champ d'abri est déjà calculé). Pur.
 from .vent_pont import wind_block, abri_facteur
+from .quatre_feuilles_pont import marquer_quatre_feuilles
 
 
 def _activite_butineur(eco, agent) -> float:
@@ -277,6 +278,7 @@ class SerializeMixin:
                 #    (gène + week_in_year, zéro RNG). On NE touche PAS foliage_density_at
                 #    (il sert la sim / fields/light.py) : on ne fait qu'ajouter un hint.
                 base["floraison"] = round(p.floraison, 3)
+                marquer_quatre_feuilles(base, p, gs.get("seed", 0))   # trèfle rare (0.6.5)
                 # Abri local au vent (T3, 0.5.44) : clé OMISE si le champ d'abri
                 # n'a jamais été calculé (la vue prend alors 1.0, pleine exposition).
                 abri = abri_facteur(eco, p)

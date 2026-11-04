@@ -816,7 +816,10 @@ from __future__ import annotations
 #       {blanc, jaune} ∈ [0,1] de la semaine, et `colonies` : liste de {u, depth, ru,
 #       rd (cm, repère `DecorLayer.EdgePoint`), couleur, graine, butineurs (0..10)}.
 #       Lecture pure, géométrie stable, seuls `floraison` et `butineurs` varient.
-ENGINE_VERSION = "0.6.4"
+# 0.6.5 (trèfle dominant ③, D126) : hint `plant.quatre_feuilles` = true, clé présente
+#       seulement sur un trèfle adulte à quatre feuilles pas encore cueilli
+#       (`sim/quatre_feuilles.py`). Lecture pure.
+ENGINE_VERSION = "0.6.5"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

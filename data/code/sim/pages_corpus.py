@@ -412,12 +412,25 @@ _ENTREES = [
      "suivait les pas de l'homme d'un pays à l'autre, et c'est vrai : là où un sentier "
      "s'ouvre, elle est déjà dessus. Quand tu ne sais plus où passait un vieux chemin, "
      "cherche-la."),
+
+    # Trèfle à quatre feuilles (sprint TRÈFLE DOMINANT ③) : le folklore du pied rare.
+    # Id P49 : le kickoff prévoyait P34, déjà prise (« Ne comble pas la flaque »).
+    ("P49", "C", "reproduction", 3, "hasard",
+     "Chez nous on ne cherchait pas le trèfle à quatre feuilles. Qui se met à quatre "
+     "pattes pour ça rentre bredouille avec les genoux verts. On le trouvait en menant "
+     "les vaches, en regardant ailleurs. Une feuille pour la foi, une pour l'espoir, une "
+     "pour l'amour, et la quatrième pour la chance, disaient les Irlandaises de passage. "
+     "Ma tante le glissait dans le soulier droit de qui partait au loin, et le séchait "
+     "dans le missel pour les autres. Il n'en vient jamais deux au même endroit : j'ai "
+     "retourné dix fois le pied de celui que j'avais trouvé, l'année d'après il n'y "
+     "avait que des trois. Ne le cherche pas. Quand tu l'as, baisse-toi, et remercie."),
 ]
 
 # Titres recopiés du doc §7 (gras de chaque entrée), indexés par id — gardés à
 # part pour ne pas alourdir le tuple éditorial et rester relisibles.
 _TITRES = {
     "P48": "L'herbe aux cinq coutures",
+    "P49": "Celui qu'on ne cherche pas",
     "P01": "Ne rien faire est le travail le plus difficile",
     "P02": "La graine et la boue",
     "P03": "L'ombre du fruitier",
