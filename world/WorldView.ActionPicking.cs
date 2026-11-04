@@ -49,6 +49,20 @@ namespace Symbiose
 			return best;
 		}
 
+		/// <summary>Plante à port dont un fruit est dessiné sous le curseur, ou null. Passe avant
+		/// le collet : la souris re-projetée au sol tombe chez un voisin sous une framboise haute.</summary>
+		private PlantRenderer FindFruitPortSous(Vector2 canvasMouse)
+		{
+			PlantRenderer best = null;
+			float bestD = float.PositiveInfinity;
+			foreach (var node in _plantNodes.Values)
+			{
+				float d = node.DistanceFruitPort(canvasMouse);
+				if (d < bestD) { bestD = d; best = node; }
+			}
+			return best;
+		}
+
 		/// <summary>Tuile + plot contenant le point MONDE (cm). False si le
 		/// point tombe entre les tuiles (chemins) ou sur la maison.</summary>
 		private bool FindPlot(Vector2 w, out string tileId, out int r, out int c)

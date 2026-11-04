@@ -65,6 +65,8 @@
 //   --capture-lut=0          palette indexée coupée (comme F11) : capture « avant » ③
 //   --capture-heure=<deg>    angle horaire du soleil imposé (−90 matin, 0 midi, +90 soir,
 //                            borné au lever/coucher) — CASSÉ À L'ÉCRAN ③ (WorldView.Soleil.cs)
+//   --capture-cueillette=1   clic « manger » sur chaque fruit du port visé, verdict au
+//                            journal (FORMES DES PLANTES ④, WorldView.BancCueillette.cs)
 //   --capture-vivant=… / --capture-vivant-png=…  captures de l'info-bulle d'une bête
 //                            ou d'un carpophore (INFO-BULLE ③, WorldView.BancVivant.cs)
 
@@ -265,6 +267,7 @@ namespace Symbiose
 			if (CaptureF6) ToggleFieldOverlay();            // heatmap, champ de tête (D112 ②)
 			AppliquerCaptureBanc();   // ombres / banc d'étalonnage (WorldView.Etalonnage.cs)
 			LancerBancSeuil();        // seuil de visibilité des signes (WorldView.BancSeuil.cs)
+			LancerBancCueillette();   // manger au clic sur un fruit de port (WorldView.BancCueillette.cs)
 			LancerBancVivant();       // captures info-bulle bête / carpophore (WorldView.BancVivant.cs)
 			if (!float.IsNaN(CaptureDecorF10))   // F10 ×2 programmé (FLUIDITÉ PC ②)
 				GetTree().CreateTimer(CaptureDecorF10).Timeout += () =>

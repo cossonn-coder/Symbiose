@@ -125,7 +125,11 @@ namespace Symbiose
 			switch (f.Forme)
 			{
 				case FormePort.Tige: DessinerTige(f, col); break;
-				default: DessinerRosette(f, col); break;   // ④⑥ : chaumes, tapis…
+				case FormePort.Chaume: DessinerChaume(f, col); break;
+				case FormePort.Tapis: DessinerTapis(f, col); break;
+				case FormePort.Buisson: DessinerBuisson(f, col); break;
+				case FormePort.Rampante: DessinerRampante(f, col); break;
+				default: DessinerRosette(f, col); break;
 			}
 			PoserFruitsPort(f);
 			_lotPrairie.DessinerSansMaille(this);
@@ -137,33 +141,66 @@ namespace Symbiose
 		// FRUITS — ceux du moteur, placés sur le port au hash de leur index
 		// ---------------------------------------------------------------------------
 
+		// Espèce sans ligne de fruit (repli : le moteur en poserait sur une espèce imprévue).
+		private static readonly FicheFruit FruitParDefaut = new(1.5f);
+		// Masse d'un fruit nominal (FRUIT_MASSE du moteur) : le rayon de la fiche vaut à cette masse.
+		private const float FruitMasseNominale = 0.15f;
+
 		// Point d'un fruit (cm, repère de la tuile, comme FruitPoint). Index = celui du moteur,
-		// donc la récolte au clic (FindFruitNear) vise ce qui est dessiné ici. Les fruits
-		// pendent dans le bas du port : le haut de la fiche porte la tête ou les fleurs.
+		// donc la récolte au clic (FindFruitNear) vise ce qui est dessiné ici. Sur une canne s'il y
+		// en a, sinon au hash dans le volume que la fiche lui donne.
 		private Vector3 PointFruitPort(int i)
 		{
-			var (rayon, h) = MesurePort(FicheDeLaPlante);
+			FichePort f = FicheDeLaPlante;
+			var (rayon, h) = MesurePort(f);
+			if (f.Buisson is { Cannes: > 0 } b) return _structure.ColletCm + PointFruitCanne(f, b, i, rayon, h);
+			FicheFruit fr = f.Fruit ?? FruitParDefaut;
 			int ig = GraineIndividu;
-			float a = Mathf.Tau * Hash01(351, ig, i), d = rayon * Mathf.Lerp(0.3f, 0.8f, Hash01(353, ig, i));
+			float a = Mathf.Tau * Hash01(351, ig, i), d = rayon * Mathf.Lerp(fr.DBas, fr.DHaut, Hash01(353, ig, i));
 			return _structure.ColletCm + new Vector3(d * Mathf.Cos(a), d * Mathf.Sin(a),
-				h * Mathf.Lerp(0.15f, 0.55f, Hash01(355, ig, i)));
+				h * Mathf.Lerp(fr.ZBas, fr.ZHaut, Hash01(355, ig, i)));
 		}
 
 		private void PoserFruitsPort(FichePort f)
 		{
 			if (_structure.Fruits.Count == 0) return;
 			if (!Palettes.TryGetValue(_structure.SpeciesName, out var pal)) pal = DefaultPalette;
+			FicheFruit fr = f.Fruit ?? FruitParDefaut;
 			Vector3 collet = _structure.ColletCm;
 			for (int i = 0; i < _structure.Fruits.Count; i++)
 			{
 				var fruit = _structure.Fruits[i];
 				Vector3 p = PointFruitPort(i);
 				Vector2 c = Iso(p.X - collet.X, p.Y - collet.Y, p.Z);
-				// masse → rayon, comme DrawFruits (FRUIT_MASSE 0,15 → ~4,5 px ; borné).
-				float rad = 3f + Mathf.Min(fruit.Masse, 0.3f) * 10f;
-				PoserDisque(c, rad + PixelInterne, Ton(FruitColor(pal, fruit.Maturite), 0));
-				PoserDisque(c, rad, Ton(FruitColor(pal, fruit.Maturite), PaletteIndexee.TonBase));
+				PoserFruit(c, RayonFruit(fr, fruit.Masse), fr.Allonge, FruitColor(pal, fruit.Maturite), i);
 			}
+		}
+
+		// Au moins un pixel : à ×1, c'est le point rouge qui fait reconnaître le fraisier (fiche).
+		// La racine carrée garde l'échelle entre un fruit qui grossit et le port qui le porte.
+		private static float RayonFruit(FicheFruit fr, float masse) =>
+			Mathf.Max(fr.RayonCm * WorldView.PxPerCmX * Mathf.Sqrt(Mathf.Min(masse, 0.3f) / FruitMasseNominale), PixelInterne);
+
+		// Rond, ou long et couché (courgette), avec son contour sombre, un éclat dès ×4.
+		private void PoserFruit(Vector2 c, float r, float allonge, Color col, int i)
+		{
+			Color base_ = Ton(col, PaletteIndexee.TonBase), bord = Ton(col, 0), eclat = Ton(col, 4);
+			float pix = PixelInterne;
+			if (allonge <= 1f)
+			{
+				PoserDisque(c, r + pix, bord);
+				PoserDisque(c, r, base_);
+				if (AuPalier(PaliersHautsMinZoom)) PoserDisque(c - new Vector2(r, r) * 0.3f, Mathf.Max(r * 0.3f, pix), eclat);
+				return;
+			}
+			float a = Mathf.Tau * Hash01(359, GraineIndividu, i);
+			Vector2 demi = new Vector2(Mathf.Cos(a), Mathf.Sin(a) * 0.5f) * r * allonge * 0.5f;
+			_lotPrairie.Ligne(c - demi, c + demi, bord, (r + pix) * 2f);
+			_lotPrairie.Ligne(c - demi, c + demi, base_, r * 2f);
+			PoserDisque(c - demi, r, base_);
+			PoserDisque(c + demi, r, base_);
+			if (AuPalier(PaliersHautsMinZoom))
+				_lotPrairie.Ligne(c - demi * 0.7f - new Vector2(0f, r * 0.4f), c + demi * 0.7f - new Vector2(0f, r * 0.4f), eclat, Mathf.Max(r * 0.3f, pix));
 		}
 
 		// ---------------------------------------------------------------------------
@@ -213,10 +250,39 @@ namespace Symbiose
 		// La tige fine d'un port haut se vise aussi : bande verticale au-dessus du collet.
 		private bool HampeSous(Vector2 local)
 		{
-			if (FicheDeLaPlante is not { } f || (f.Forme != FormePort.Tige && !HampeLevee(f))) return false;
+			if (FicheDeLaPlante is not { } f) return false;
+			if (f.Forme is not (FormePort.Tige or FormePort.Chaume or FormePort.Buisson) && !HampeLevee(f)) return false;
 			float demi = Mathf.Max(4f / WorldView.CurrentZoom, f.EpaisseurTigeCm * WorldView.PxPerCmX);
 			return Mathf.Abs(local.X) <= demi && local.Y <= 0f
 				&& local.Y >= -_hauteurReelCm * WorldView.PxPerCmZ - f.TeteCm * WorldView.PxPerCmX;
 		}
+
+		// Tolérance d'un clic sur un fruit, en px d'écran.
+		private const float ToleranceFruitPx = 6f;
+
+		/// <summary>Distance² (canvas) au fruit de port le plus proche, s'il est sous le clic ;
+		/// l'infini sinon. Le clic re-projeté au sol tombe loin du pied dès que le fruit est haut,
+		/// et sur le pied d'un voisin : pour manger, ce qui est dessiné sous la souris passe avant.</summary>
+		internal float DistanceFruitPort(Vector2 canvasPos)
+		{
+			if (FicheDeLaPlante is not { } f || _structure.Fruits.Count == 0) return float.PositiveInfinity;
+			int i = FindFruitNear(canvasPos);
+			float d2 = PointFruitLocal(i).DistanceSquaredTo(ToLocal(canvasPos));
+			float r = RayonFruit(f.Fruit ?? FruitParDefaut, _structure.Fruits[i].Masse) * (f.Fruit ?? FruitParDefaut).Allonge;
+			float tol = Mathf.Max(ToleranceFruitPx / WorldView.CurrentZoom, r);
+			return d2 <= tol * tol ? d2 : float.PositiveInfinity;
+		}
+
+		private Vector2 PointFruitLocal(int i)
+		{
+			Vector3 p = PointFruitPort(i), collet = _structure.ColletCm;
+			return Iso(p.X - collet.X, p.Y - collet.Y, p.Z);
+		}
+
+		internal int NombreFruits => _structure?.Fruits.Count ?? 0;
+		internal string Espece => _structure?.SpeciesName;
+
+		/// <summary>Banc de cueillette : là où le fruit `i` est dessiné, en canvas.</summary>
+		internal Vector2 PointFruitCanvas(int i) => ToGlobal(PointFruitLocal(i));
 	}
 }

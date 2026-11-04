@@ -76,8 +76,8 @@ namespace Symbiose
 				Vector3 p = pied.Lerp(cime, Mathf.Lerp(t.BasNu, 1f - t.HautNu, s));
 				float l = Mathf.Lerp(t.FeuilleBasCm, t.FeuilleHautCm, s) * Mathf.Lerp(0.4f, 1f, g);
 				float a = azimut + i * (t.Opposees ? Mathf.Pi * 0.5f : AngleOr);
-				AjouterFeuilleTige(f, p, a, l, s, rayon, dens, graine + i * 2);
-				if (t.Opposees) AjouterFeuilleTige(f, p, a + Mathf.Pi, l, s, rayon, dens, graine + i * 2 + 1);
+				AjouterFeuilleTige(f, p, a, l, s, rayon, dens, graine + i * 2, t.Penche);
+				if (t.Opposees) AjouterFeuilleTige(f, p, a + Mathf.Pi, l, s, rayon, dens, graine + i * 2 + 1, t.Penche);
 				if (i >= n - t.TetesAisselle)
 					_tetesTige.Add((p, new Vector2(Mathf.Cos(a), Mathf.Sin(a)), graine + i));
 			}
@@ -108,12 +108,12 @@ namespace Symbiose
 				{
 					float sr = (j + 0.6f) / t.FeuillesRameau;
 					float ar = a + (j % 2 == 0 ? 1f : -1f) * 1.1f;
-					AjouterFeuilleTige(f, p.Lerp(bout, sr), ar, taille, Mathf.Max(s, sr), rayon, dens, graine + i * 13 + j);
+					AjouterFeuilleTige(f, p.Lerp(bout, sr), ar, taille, Mathf.Max(s, sr), rayon, dens, graine + i * 13 + j, t.Penche);
 				}
 			}
 		}
 
-		private void AjouterFeuilleTige(FichePort f, Vector3 p, float a, float l, float s, float rayon, float dens, int k)
+		private void AjouterFeuilleTige(FichePort f, Vector3 p, float a, float l, float s, float rayon, float dens, int k, float penche)
 		{
 			if (dens < 1f && Hash01(369, k, 0) > dens) return;   // défeuillé : la tige reste
 			var u = new Vector2(Mathf.Cos(a), Mathf.Sin(a));
@@ -122,7 +122,7 @@ namespace Symbiose
 			l = Mathf.Min(l, Mathf.Max(rayon - org.Length(), l * 0.5f));
 			// Pas de ton 1 ici : le soleil retire déjà un ton à contre-jour, le limbe tournerait au noir.
 			int ton = s < 0.6f ? PaletteIndexee.TonBase : 3;
-			var fe = new FeuillePosee(u, l, l * f.LargeurFeuille, p.Z, l * f.Tige.Penche, 0f, ton, k, org);
+			var fe = new FeuillePosee(u, l, l * f.LargeurFeuille, p.Z, l * penche, 0f, ton, k, org);
 			Vector2 ecran = WorldView.WorldToScreenOffset(org.X + u.X * l, org.Y + u.Y * l);
 			// Du fond et du bas vers l'avant et le haut : vue d'au-dessus, le haut couvre le bas.
 			_feuillesPort.Add((ecran.Y + p.Z * WorldView.PxPerCmZ * 0.5f, fe));
@@ -134,6 +134,13 @@ namespace Symbiose
 			Color tige = MortPrairie ? col : t.Tige;
 			float souche = Mathf.Max(rayon * t.EcartPied * 0.5f * WorldView.PxPerCmX, PixelInterne * 2f);
 			PoserEllipse(Vector2.Zero, souche, souche * 0.5f, Ton(col, 1));
+			PeindreFeuillesEtAxes(f, col, tige);
+			PoserTetesPort(f, col, t.EpiCm);
+		}
+
+		// Commun aux ports à axes (tige, chaume, buisson) : `_feuillesPort` triées, `_axesTige`.
+		private void PeindreFeuillesEtAxes(FichePort f, Color col, Color tige)
+		{
 			// Fond d'abord : ce qui part vers le nord de l'écran est derrière la tige.
 			foreach (var (_, fe) in _feuillesPort)
 				if (WorldView.WorldToScreenOffset(fe.U.X, fe.U.Y).Y < 0f) PoserFeuilleTige(f, fe, col);
@@ -147,7 +154,6 @@ namespace Symbiose
 				if (devant++ % 3 == 0)
 					_sitesPrairie.Add((PointFeuille(fe, 0.6f, 0f), Mathf.Max(fe.Large * 0.8f, 1.2f) * WorldView.PxPerCmX, fe.K, fe.BaseZ));
 			}
-			PoserTetesTige(f, col);
 		}
 
 		private void PoserAxe(Vector3 a, Vector3 b, float large, Color tige)
@@ -166,16 +172,17 @@ namespace Symbiose
 
 		// Têtes : seulement en fleur, en bouton ou en fruit, et pas sur un pied coupé. Le chemin
 		// des couleurs est celui des hampes de rosette. Ces états viennent de la structure
-		// moteur (`floraison`, `organ`), rien n'est inventé pour faire joli.
-		private void PoserTetesTige(FichePort f, Color col)
+		// moteur (`floraison`, `organ`), rien n'est inventé pour faire joli. Une espèce fruitière
+		// a ses vrais fruits : sa tête ne sert qu'à la fleur. `epiCm` : ce qui porte une tête allongée.
+		private void PoserTetesPort(FichePort f, Color col, float epiCm)
 		{
-			bool fruit = _structure.Organ.StartsWith("fruit", System.StringComparison.Ordinal);
+			bool fruit = f.Fruit == null && _structure.Organ.StartsWith("fruit", System.StringComparison.Ordinal);
 			if (MortPrairie || _structure.Rabattu > RabattuTete
-				|| (_structure.Floraison < FloraisonHampe && !fruit)) return;
+				|| (_structure.Floraison < (f.Fruit != null ? FloraisonSeuil : FloraisonHampe) && !fruit)) return;
 			if (!Palettes.TryGetValue(_structure.SpeciesName, out var pal)) pal = DefaultPalette;
 			Color tete = _structure.Floraison >= FloraisonSeuil ? pal.Flower : fruit ? pal.FruitRipe : pal.FruitUnripe;
 			// Le « pied » d'une tête allongée (épi, ombelle) : sous le sommet, dans le sens de la tige.
-			float sousTete = f.Tige.EpiCm * WorldView.PxPerCmZ;
+			float sousTete = epiCm * WorldView.PxPerCmZ;
 			foreach (var (p, sens, graine) in _tetesTige)
 			{
 				Vector2 c = Iso(p.X, p.Y, p.Z);

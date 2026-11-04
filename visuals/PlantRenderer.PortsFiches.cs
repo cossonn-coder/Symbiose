@@ -16,9 +16,9 @@ namespace Symbiose
 {
 	public partial class PlantRenderer
 	{
-		private enum FormePort { Rosette, Tige }   // ④ chaumes, tapis, buissons, rampante, ⑥ volubile
-		private enum FormeFeuille { Dentee, Spatule, Lobee, Ovale, Cuillere, Plume, Ruban, Coeur, Scie, Lanceolee, Palmee }
-		private enum FormeTete { Capitule, Bouquet, Chapelet, Epi, Ombelle, Boule, Grappe, Soleil, Etoile, Pendante }
+		private enum FormePort { Rosette, Tige, Chaume, Tapis, Buisson, Rampante }   // ⑥ volubile
+		private enum FormeFeuille { Dentee, Spatule, Lobee, Ovale, Cuillere, Plume, Ruban, Coeur, Scie, Lanceolee, Palmee, Paume }
+		private enum FormeTete { Capitule, Bouquet, Chapelet, Epi, Ombelle, Boule, Grappe, Soleil, Etoile, Pendante, Corolle, Trompette, Aucune }
 		private enum MarqueFeuille { Aucune, Duvet, Gouttes, Pli, Eclat, Gaufre, Revers }
 
 		/// <summary>La grammaire du port tige (PlantRenderer.PortTige.cs). `Axes` tiges partent du
@@ -34,6 +34,40 @@ namespace Symbiose
 			int Rameaux = 0, float RameauDes = 0.5f, float RameauLong = 0.8f, float RameauFin = 1f,
 			float RameauMonte = 0.8f, int FeuillesRameau = 0, int TetesAisselle = 0);
 
+		/// <summary>La grammaire du chaume (PlantRenderer.PortChaume.cs). `Brins` droits, sur
+		/// `EcartPied` du rayon, s'écartant de `Evase`. `Rubans` feuilles de `RubanCm` de large à la
+		/// base. Épi de `EpiCm` sur `EpiLargeCm`, `Penche` 0 droit → 1 couché, `BarbeCm` de barbes ;
+		/// `Panicule` : triangle ajouré au lieu d'un épi. Bambou : `Noeuds` par canne et
+		/// `Panaches` rameaux à 3 feuilles de `PanacheCm`.</summary>
+		private sealed record FicheChaume(
+			int Brins, float EcartPied, float Evase, Color Couleur, int Rubans, float RubanCm,
+			float EpiCm = 0f, float EpiLargeCm = 0f, float Penche = 0f, float BarbeCm = 0f,
+			bool Panicule = false, int Noeuds = 0, int Panaches = 0, float PanacheCm = 0f);
+
+		/// <summary>La grammaire du couvre-sol (PlantRenderer.PortTapis.cs). Feuilles de `FeuilleCm`
+		/// à `Folioles` folioles sur `Couvre` du rayon, `Fleurs` au plus juste au-dessus. `SousCouche` :
+		/// feuillage sombre qui ferme le tapis. `Stolons` qui courent jusqu'au rayon, `Plantules` à leur
+		/// bout. `Grains` &gt; 0 : coussin sans feuille (sphaigne).</summary>
+		private sealed record FicheTapis(
+			int Folioles, float FeuilleCm, float Couvre, int Fleurs = 0, bool SousCouche = true,
+			int Stolons = 0, Color Stolon = default, bool Plantules = false, int Grains = 0);
+
+		/// <summary>La grammaire du buisson (PlantRenderer.PortBuisson.cs). `BoisBas` bois au pied ;
+		/// masse de `Grains` grains de `GrainCm`, sur la hauteur de feuilles de la fiche, `FleursMasse`
+		/// têtes posées dessus. `Cannes` sur `Ecart` du rayon, écartées de `Evase`, `Arc` 0 droites →
+		/// 1 arquées, chacune à `FeuillesCanne` feuilles et `Rameaux` de `RameauLong` du rayon.
+		/// `EpiCm` : ce qui porte la tête. Une tête par canne.</summary>
+		private sealed record FicheBuisson(
+			Color Bois, int BoisBas = 0, int Grains = 0, float GrainCm = 0f, int FleursMasse = 0,
+			int Cannes = 0, float Ecart = 0f, float Evase = 0f, float Arc = 0f, int FeuillesCanne = 0,
+			float FeuilleBasCm = 0f, float FeuilleHautCm = 0f, float Penche = 0f, float BasNu = 0f,
+			int Rameaux = 0, float RameauLong = 0f, float EpiCm = 0f);
+
+		/// <summary>Un fruit du moteur sur son port : rayon à masse nominale, `Allonge` long / large,
+		/// point entre `DBas`-`DHaut` du rayon et `ZBas`-`ZHaut` de la hauteur.</summary>
+		private sealed record FicheFruit(float RayonCm, float Allonge = 1f,
+			float DBas = 0.3f, float DHaut = 0.8f, float ZBas = 0.15f, float ZHaut = 0.55f);
+
 		/// <summary>Une ligne de table : ce qu'il faut pour dessiner un port. Hauteurs en cm ;
 		/// `HauteurAdulteCm` = `height_cm` moteur du stade feuillé adulte (taille du pied) ;
 		/// `Dressee` 0 plaquée → 1 dressée ; `LargeurFeuille` = demi-largeur / longueur ;
@@ -44,7 +78,8 @@ namespace Symbiose
 			FormeFeuille Feuille, float LargeurFeuille, float Dressee, FormeTete Tete, float TeteCm,
 			int Hampes, float EpaisseurTigeCm, string[] StadesHampe = null, int FeuillesHampe = 0,
 			float MelangeFruit = 0f, MarqueFeuille Marque = MarqueFeuille.Aucune, string Pied = null,
-			FicheTige Tige = null);
+			FicheTige Tige = null, FicheChaume Chaume = null, FicheTapis Tapis = null, FicheBuisson Buisson = null,
+			FicheFruit Fruit = null);
 
 		private static readonly Dictionary<string, FichePort> FichesPort = new()
 		{
@@ -111,6 +146,55 @@ namespace Symbiose
 			["Mint"] = new(FormePort.Tige, RayonCm: 18f, HautFeuillesCm: 30f, HauteurAdulteCm: 30f, Feuilles: 4,
 				FormeFeuille.Scie, LargeurFeuille: 0.5f, Dressee: 1f, FormeTete.Epi, TeteCm: 1.1f, Hampes: 0, EpaisseurTigeCm: 0.4f, Marque: MarqueFeuille.Gaufre,
 				Tige: new(6, 0.75f, 0.05f, 0.1f, 0.05f, true, 7f, 4f, -0.05f, new Color("6a4f78"), EpiCm: 12f)),
+			// --- Chaumes ④ : TeteCm = portée de l'épi, pour la boîte de cuisson. --------------
+			["Wheat"] = new(FormePort.Chaume, RayonCm: 15f, HautFeuillesCm: 35f, HauteurAdulteCm: 35f, Feuilles: 0,
+				FormeFeuille.Ruban, LargeurFeuille: 0f, Dressee: 1f, FormeTete.Aucune, TeteCm: 4f, Hampes: 1, EpaisseurTigeCm: 0.6f,
+				StadesHampe: new[] { "épiaison", "mature" },
+				Chaume: new(7, 0.45f, 0.25f, new Color("7aa850"), 9, 1.5f, EpiCm: 9f, EpiLargeCm: 2.3f, Penche: 0.04f)),
+			["Rye"] = new(FormePort.Chaume, RayonCm: 15f, HautFeuillesCm: 40f, HauteurAdulteCm: 40f, Feuilles: 0,
+				FormeFeuille.Ruban, LargeurFeuille: 0f, Dressee: 1f, FormeTete.Aucune, TeteCm: 16f, Hampes: 1, EpaisseurTigeCm: 0.35f,
+				StadesHampe: new[] { "épiaison", "mature" },
+				Chaume: new(6, 0.35f, 0.3f, new Color("6f9a70"), 7, 1f, EpiCm: 13f, EpiLargeCm: 0.7f, Penche: 0.7f, BarbeCm: 5f)),
+			["PoaAnnua"] = new(FormePort.Chaume, RayonCm: 10f, HautFeuillesCm: 12f, HauteurAdulteCm: 30f, Feuilles: 0,
+				FormeFeuille.Ruban, LargeurFeuille: 0f, Dressee: 1f, FormeTete.Aucune, TeteCm: 4f, Hampes: 1, EpaisseurTigeCm: 0.2f,
+				Chaume: new(4, 0.3f, 0.45f, new Color("7ab060"), 14, 0.6f, EpiCm: 11f, Panicule: true)),
+			["RunningBamboo"] = new(FormePort.Chaume, RayonCm: 30f, HautFeuillesCm: 250f, HauteurAdulteCm: 250f, Feuilles: 0,
+				FormeFeuille.Lanceolee, LargeurFeuille: 0.16f, Dressee: 1f, FormeTete.Aucune, TeteCm: 4f, Hampes: 0, EpaisseurTigeCm: 3f,
+				Chaume: new(4, 0.4f, 0.12f, new Color("a8b85a"), 0, 0f, Noeuds: 8, Panaches: 6, PanacheCm: 14f)),
+			// --- Couvre-sols ④ : Dressee 0, deux poses de vent. --------------------------------
+			["Strawberry"] = new(FormePort.Tapis, RayonCm: 18f, HautFeuillesCm: 15f, HauteurAdulteCm: 15f, Feuilles: 11,
+				FormeFeuille.Scie, LargeurFeuille: 0.5f, Dressee: 0f, FormeTete.Corolle, TeteCm: 1.3f, Hampes: 0, EpaisseurTigeCm: 0.3f, Marque: MarqueFeuille.Gaufre,
+				Tapis: new(3, 4f, 0.72f, Fleurs: 5, Stolons: 4, Stolon: new Color("a8443a"), Plantules: true),
+				Fruit: new(1.6f, DBas: 0.15f, DHaut: 0.62f, ZBas: 0.55f, ZHaut: 0.95f)),
+			["SweetViolet"] = new(FormePort.Tapis, RayonCm: 14f, HautFeuillesCm: 12f, HauteurAdulteCm: 12f, Feuilles: 16,
+				FormeFeuille.Coeur, LargeurFeuille: 0.85f, Dressee: 0f, FormeTete.Corolle, TeteCm: 1.6f, Hampes: 0, EpaisseurTigeCm: 0.2f,
+				Tapis: new(1, 4.5f, 0.95f, Fleurs: 6)),
+			["MedicagoLupulina"] = new(FormePort.Tapis, RayonCm: 25f, HautFeuillesCm: 18f, HauteurAdulteCm: 30f, Feuilles: 18,
+				FormeFeuille.Ovale, LargeurFeuille: 0.42f, Dressee: 0f, FormeTete.Boule, TeteCm: 1.1f, Hampes: 0, EpaisseurTigeCm: 0.2f,
+				Tapis: new(3, 2f, 0.95f, Fleurs: 7, SousCouche: false, Stolons: 7, Stolon: new Color("6a8a48"))),
+			["Sphagnum"] = new(FormePort.Tapis, RayonCm: 25f, HautFeuillesCm: 6f, HauteurAdulteCm: 6f, Feuilles: 0,
+				FormeFeuille.Ovale, LargeurFeuille: 0f, Dressee: 0f, FormeTete.Aucune, TeteCm: 0f, Hampes: 0, EpaisseurTigeCm: 0.2f,
+				Tapis: new(0, 0f, 0.95f, Grains: 46)),
+			// --- Buissons ④ -------------------------------------------------------------------
+			["Thyme"] = new(FormePort.Buisson, RayonCm: 25f, HautFeuillesCm: 25f, HauteurAdulteCm: 25f, Feuilles: 0,
+				FormeFeuille.Ovale, LargeurFeuille: 0f, Dressee: 0.5f, FormeTete.Bouquet, TeteCm: 1.8f, Hampes: 0, EpaisseurTigeCm: 1.2f,
+				Buisson: new(new Color("6a4f38"), BoisBas: 5, Grains: 56, GrainCm: 1.9f, FleursMasse: 8)),
+			["Lavender"] = new(FormePort.Buisson, RayonCm: 40f, HautFeuillesCm: 30f, HauteurAdulteCm: 50f, Feuilles: 0,
+				FormeFeuille.Ruban, LargeurFeuille: 0f, Dressee: 0.5f, FormeTete.Epi, TeteCm: 1.5f, Hampes: 1, EpaisseurTigeCm: 0.3f,
+				Buisson: new(new Color("7a8a68"), BoisBas: 4, Grains: 80, GrainCm: 8f, Cannes: 14, Ecart: 0.3f, Evase: 0.55f, EpiCm: 25f)),
+			["Vaccinium"] = new(FormePort.Buisson, RayonCm: 30f, HautFeuillesCm: 40f, HauteurAdulteCm: 40f, Feuilles: 0,
+				FormeFeuille.Ovale, LargeurFeuille: 0.5f, Dressee: 1f, FormeTete.Pendante, TeteCm: 0.8f, Hampes: 0, EpaisseurTigeCm: 0.5f,
+				Buisson: new(new Color("5f9048"), Cannes: 5, Ecart: 0.2f, Evase: 0.45f, FeuillesCanne: 4, FeuilleBasCm: 4.5f, FeuilleHautCm: 3.5f,
+					Penche: 0.05f, BasNu: 0.2f, Rameaux: 3, RameauLong: 0.4f)),
+			["Raspberry"] = new(FormePort.Buisson, RayonCm: 30f, HautFeuillesCm: 150f, HauteurAdulteCm: 150f, Feuilles: 0,
+				FormeFeuille.Scie, LargeurFeuille: 0.5f, Dressee: 1f, FormeTete.Corolle, TeteCm: 1f, Hampes: 0, EpaisseurTigeCm: 0.9f, Marque: MarqueFeuille.Revers,
+				Buisson: new(new Color("7a5a3a"), Cannes: 6, Ecart: 0.2f, Evase: 0.78f, Arc: 1f, FeuillesCanne: 7, FeuilleBasCm: 13f, FeuilleHautCm: 6f,
+					Penche: -0.2f, BasNu: 0.15f),
+				Fruit: new(1.4f)),
+			// --- Grande rampante ④ : un seul port, qui ne court pas. ----------------------------
+			["Zucchini"] = new(FormePort.Rampante, RayonCm: 60f, HautFeuillesCm: 45f, HauteurAdulteCm: 40f, Feuilles: 7,
+				FormeFeuille.Paume, LargeurFeuille: 0.95f, Dressee: 0.2f, FormeTete.Trompette, TeteCm: 5f, Hampes: 0, EpaisseurTigeCm: 2f,
+				Fruit: new(3.2f, Allonge: 3f, DBas: 0.12f, DHaut: 0.5f, ZBas: 0.05f, ZHaut: 0.2f)),
 		};
 
 		// Espèces du catalogue sans palette (limbe, fleur, fruit vert, fruit mûr).
