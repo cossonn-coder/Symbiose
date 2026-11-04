@@ -121,10 +121,10 @@ Le calibrage se valide par mesure, le F5 ne juge que le ressenti.
 
 - **Banc** `planche_especes` : les 40 espèces adultes séparées.
 - **`tools/mesure_silhouettes.py`** : masques des sprites (`mesure_da --ref`), comparés par paires.
-- **Paire confondue** : mêmes proportions et même gabarit à 15 % près, recouvrement des masques > 0,7, et teinte moyenne ΔE OKLab < 0,05 `[choix, à recalibrer au ① sur la mesure « avant »]`.
-- **Cible** : 0 paire confondue à ×4, au plus 3 à ×1 `[choix]`.
+- **Paire confondue** : mêmes proportions et même gabarit à 15 % près, recouvrement des masques > 0,7 (grille 16×16 à ×4, 4×4 à ×1), et teinte moyenne ΔE OKLab < 0,05 `[choix, recalibré au ① : mesures/avant.md]`.
+- **Cible** : 0 paire confondue à ×4, au plus 3 à ×1 `[choix]`. Avant : 28 à ×4, 14 à ×1 [seed 42, n=1 capture, VM].
 - **Effet en jeu** : captures de `full`, pas seulement du banc.
-- **Hauteur dessinée** : `height_cm` à ±20 % par port `[choix]`.
+- **Hauteur dessinée** : `height_cm` à ±20 % ou ±15 cm, le plus large, par port `[choix, recalibré au ①]`. Avant : 30 espèces sur 40 hors tolérance à ×4 [seed 42, n=1 capture, VM].
 - **`tools/mesure_da.py`** sur chaque port : tons, noir, contour, aplat.
 
 Perf, à chaque tronçon sur `full`, `tools/perf_vm.sh` avant/après :
