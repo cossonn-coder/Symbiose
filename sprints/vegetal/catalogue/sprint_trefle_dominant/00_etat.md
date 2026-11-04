@@ -1,7 +1,7 @@
 # Sprint TRÈFLE DOMINANT (D126) — état partagé
 
 **Conception** : `docs/vegetal/catalogue/conception_trefle_dominant.md` (figée le 2026-11-02).
-**Où on en est** : ① et ② commités, ③ fait, non commité, golden intact `a10b7225…`. Deux critères §5 de ② restent ratés. Prochain : ④.
+**Où on en est** : ① à ③ commités, ④ fait, non commité, golden intact `a10b7225…`. Deux critères §5 de ② restent ratés. Reste : F5 de Nico et son arbitrage sur ces critères.
 
 ## Décisions clés (Nico, 2026-11-02)
 
@@ -17,7 +17,7 @@
 | ① | `01_cycle_azote.md` — fixation freinée, renouvellement des stolons | re-figé `c23f70d9…` | **fait** |
 | ② | `02_flore_spontanee.md` — 3 espèces neuves + ortie, 5 voix, mesure de l'effet | re-figé `a10b7225…` | **fait, 2 critères ratés** |
 | ③ | `03_quatre_feuilles.md` — fonction pure, récolte, bonus, pont | intact `a10b7225…` | **fait** |
-| ④ | `04_vue_prairie.md` — tapis, quatre feuilles, formes, protocole F5 | intact | à faire |
+| ④ | `04_vue_prairie.md` — tapis, quatre feuilles, formes, protocole F5 | intact `a10b7225…` | **fait, F5 attendu** |
 
 ## ① : ce qui a été fait
 
@@ -63,6 +63,54 @@
 5. `serialize.py` passe de 398 à **400 LDC**, au plafond de la bande. Le prochain ajout impose un découpage.
 6. Trèfle en pot : pas de hint (`_containers_snapshot` non touché), et `route_plante` ne résout que les plantes de tuile. Hors périmètre, à trancher si le cas compte.
 
+## ④ : ce qui a été fait
+
+- `visuals/PlantRenderer.Prairie.cs` (neuf) : table des ports, dispatch dans `DrawVector`, trèfle. `visuals/PlantRenderer.Graminees.cs` (neuf) : dactyle, fétuque, plantain. Tout passe en un lot `LotTriangles` par plante, avec les codes de palette (`Ton`).
+- **Le trèfle ne lit plus ses segments** : le moteur les monte à ~40 cm pour une `height_cm` de 14. Le port dessiné vient de `height_cm`, du nombre de segments, de `foliage_density`, de `floraison`. `MesurerPrairie` aligne dessus l'ombre, le tapis, le picking et la boîte de cuisson.
+- **Le tapis** : 22 feuilles sur un disque de 19 cm de rayon + une sous-couche sombre. Aucune couche neuve. Dans une colonie dense les disques se recouvrent, ailleurs on voit des taches.
+- **Quatre feuilles** : `plant.quatre_feuilles` lu dans `PlantStructure.QuatreFeuilles`, toutes les feuilles du pied en portent quatre, calées en X. Aucun marqueur HUD.
+- **Clic** : `FindPlant` prend le pied à quatre feuilles si le point est dans son disque, sinon un collet voisin l'emportait. Le survol en profite aussi. Vérifié à la lecture, pas au clic : la VM ne clique pas.
+- Registres : palettes (Dactyle, FetuqueRouge, PlantainLanceole, Nettle), fleur du trèfle passée au blanc, `LeafProfiles`, `LeafOutlines`. Pose de vent du trèfle plafonnée à 3 cellules.
+
+**Golden intact** `a10b7225…`, population intacte `0556d1c1…`. Build C# vert.
+
+**Écarts au kickoff et choix à relire** :
+
+1. Le kickoff prévoyait un lot « existant » : le lot est neuf par plante, à la cuisson seulement. À l'affichage la plante reste un quad d'atlas.
+2. 34 puis 28 feuilles se recouvraient : à ×8 on ne voyait que des cœurs. D'où 22 feuilles et une couverture d'environ 55 % du disque (calcul, pas mesure), complétée par la sous-couche.
+3. Le `FindPlant` modifié touche aussi le survol. Choix non prévu.
+4. **Ortie** : elle ne se lit pas comme une ortie, c'est le port générique tige et masses de toute plante non traitée. Seule sa palette a changé. Renvoyée à D118.
+5. La lupuline (`MedicagoLupulina`), voisine du trèfle, garde l'ancien port et se voit à côté. D118 aussi.
+6. **Taille armée** sur un trèfle : `DrawHighlight` et `FindSegmentNear` lisent encore les segments du moteur, donc une tige invisible de ~40 cm se surligne. Non corrigé.
+7. `SeuilTeinte` (`PlantRenderer.cs`) a été mesuré sur un témoin Clover de l'ancien dessin. Non remesuré : l'info-bulle peut annoncer un signe un peu tôt ou tard sur le trèfle.
+8. `PlantRenderer.Prairie.cs` : 301 LDC, tout juste en bande 🟡, une seule responsabilité. `PlantRenderer.Graminees.cs` : 205 LDC.
+
+**Mesures** (`tools/perf_vm.sh -b full -w 72 -c 1600,1100`, régime établi). « Avant » = `main` avant ce tronçon :
+
+| Palier | Draw calls avant | Draw calls après | FPS avant | FPS après |
+|---|---|---|---|---|
+| ×4 | 280 [n=1 run, VM] | 170 [n=1 run, VM] | 6,8 [n=8 relevés, VM] | 7,3 [n=8 relevés, VM] |
+| ×1 | 264 [n=1 run, VM] | 215 [n=1 run, VM] | 6,8 [n=8 relevés, VM] | 6,2 [n=8 relevés, VM] |
+| ×8 | 207 [n=1 run, VM] | 101 [n=1 run, VM] | 9,6 [n=8 relevés, VM] | 9,4 [n=8 relevés, VM] |
+
+Budget tenu : les draw calls baissent. Les FPS ne départagent rien : un autre run du même code a donné ×1 4,6 avec 8 gels et ×8 7,4 [n=8 relevés, VM chargée par un processus tiers]. Quatre semaines en Turbo à ×4 : 474 → 198 draw calls, pire image 321 → 210 ms, gels 2 → 0 [n=1 run, VM ; « avant » = table des ports vidée, nouvelles palettes gardées].
+
+**Captures lues** (`full`, ×1, ×4, ×8, ×16 ; s9, s20, s34, an 3) :
+
+- ×8, ×16 : feuilles à trois folioles, sous-couche continue, boules blanches sur tige. ×4 : tapis lisible. ×1 : taches vertes.
+- Le hint arrive bien : 3 pieds en an 3, aux positions du moteur (tuile E, NO, S) [n=1 graine, VM]. Le pied de la tuile E, vu à ×8, se compte à quatre folioles à côté de pieds à trois. À ×4, sur un rendu forcé, la différence est à peine visible.
+- Le pied de la tuile NO est sous la maison, celui de la tuile E en partie sous le feuillage de ses voisins : un pied peut être caché.
+- Dactyle, fétuque, plantain se distinguent à ×4 et ×8 : touffe haute à panicules, brins fins à panicule rousse, rosette à épis bruns. À ×1 le dactyle reste une touffe lisible.
+- s9 et s20 : peu de trèfle dans le cadre, la lecture du tapis vient surtout de l'an 2 et de l'an 3.
+
+## §F5 de clôture (ressenti, 2 minutes)
+
+Lancer F5, monde `full`, laisser tourner ou passer en Turbo jusqu'à l'été an 2 ou 3, zoomer à ×8 sur la tuile E :
+
+1. La prairie bouge-t-elle d'une année à l'autre ?
+2. Le trèfle ressemble-t-il à du trèfle ?
+3. Trouver un trèfle à quatre feuilles fait-il plaisir ? Il faut le chercher à ×8. Le récolter doit rendre la Vigueur, écrire au carnet et afficher « un trèfle à quatre feuilles ! ».
+
 ## Écarts à connaître pour la suite
 
 1. **La référence du kickoff n'avait pas d'automate.** 729 / 434 / 274 viennent de `tick_semaine()` direct ; l'automate joue dans `cmd_step_week`. Le tableau §1 de la conception a la même limite. Pour ② et les suivants, mesurer avec `mesures/mesure_prairie.py` ; le vrai « avant » an 5 est 834 plantes, trèfle 537 sur 345 plots [n=1 graine, VM].
@@ -70,12 +118,11 @@
 3. **4 tuiles sur 8 sans aucun trèfle** en 5 ans (N, O, SO, SE) [n=1 graine, VM], cause non isolée.
 4. Le trèfle porte désormais le signe de sénescence dès ~1,4 an (`sim/semiologie.py`, miroir de la mortalité) : à regarder au F5.
 5. `plants/species/cultivees.py` : 366 lignes de code pur, bande 🟡 (une seule responsabilité). Ne pas l'y faire gonfler.
-6. Vue (④) : les 3 neuves n'ont pas encore de forme ni d'entrée C# ; dactyle, fétuque et plantain sont déjà dans les snapshots du pont.
 
 ## Ce qui reste
 
-④, et l'arbitrage sur les 2 critères ratés de ②. Garde-fous : ne JAMAIS lancer `tests/test_epaisseur_500ans.py` ; mesures ≤ 5 ans de jeu. Déjà rouges avant ce sprint : `test_succession`, `test_edaphique`, `test_parasite` (`IndexError` dans `deposer_litiere`).
+Le F5 de ④, et l'arbitrage sur les 2 critères ratés de ②. Garde-fous : ne JAMAIS lancer `tests/test_epaisseur_500ans.py` ; mesures ≤ 5 ans de jeu. Déjà rouges avant ce sprint : `test_succession`, `test_edaphique`, `test_parasite` (`IndexError` dans `deposer_litiere`).
 
 ## §REPRISE
 
-③ fait, à commiter (`mesures/` compris, pas le `__pycache__` de `sprint_optim_vie_macro`). Lire `CLAUDE.md` + ce fichier + le kickoff du premier tronçon « à faire ». Lancer : `/sprint-auto sprint_trefle_dominant`.
+④ fait, à commiter (pas le `__pycache__` de `sprint_optim_vie_macro`). Tous les tronçons sont faits. Reste la clôture : F5 de Nico (§F5 ci-dessus), arbitrage sur les 2 critères ratés de ②, puis `journal.md`, `DETTE.md`, `BACKLOG.md`.

@@ -86,6 +86,8 @@ namespace Symbiose
 		// le jardin au tick du passage de saison. La vue LIT ces scalaires, elle ne
 		// recalcule AUCUNE phénologie (moteur = source de vérité, philo #3).
 		public float Floraison;  // 0..1, scalaire moteur — pilote la densité de fleurs
+		// Pied à quatre feuilles (TRÈFLE DOMINANT ③, 0.6.5) : clé présente seulement si vraie.
+		public bool QuatreFeuilles;
 		public float Automne;    // 0..1, phénophase de coloration foliaire (caducs)
 		// Part de la couronne encore en place (AUTOMNE VISIBLE ③, pont 0.6.3) : 1 sauf
 		// débourrement, largage et hiver d'un caduc. Absent du snapshot → 1.
@@ -208,6 +210,7 @@ namespace Symbiose
 			// automnale = comportement d'été neutre). La vue ne recalcule rien.
 			if (LectureSnap.A(plant, "floraison"))
 				ps.Floraison = LectureSnap.F(plant, "floraison");
+			ps.QuatreFeuilles = LectureSnap.A(plant, "quatre_feuilles");
 			if (LectureSnap.A(plant, "automne"))
 				ps.Automne = LectureSnap.F(plant, "automne");
 			if (LectureSnap.A(plant, "feuillage"))

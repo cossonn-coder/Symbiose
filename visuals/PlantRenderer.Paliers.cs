@@ -91,6 +91,7 @@ namespace Symbiose
 				_hauteurReelCm = Mathf.Max(_hauteurReelCm, tip.Z - c.Z);
 				_epaisseurMaxCm = Mathf.Max(_epaisseurMaxCm, s.ThicknessCm);
 			}
+			MesurerPrairie();   // port dessiné, pas le bois du moteur (Prairie.cs)
 		}
 
 		/// <summary>Emprise projetée en px INTERNES au zoom courant (largeur ou

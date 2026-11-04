@@ -194,6 +194,7 @@ namespace Symbiose
 		private Rect2 StraightBounds()
 		{
 			if (_structure == null || _structure.Segments.Count == 0) return default;
+			if (BoitePrairie(out Rect2 prairie)) return prairie;   // port dessiné (Prairie.cs)
 			Vector3 c = _structure.ColletCm;
 			var r = new Rect2(Vector2.Zero, Vector2.Zero);
 			foreach (var s in _structure.Segments)

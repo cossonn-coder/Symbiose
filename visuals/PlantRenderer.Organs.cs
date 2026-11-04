@@ -126,7 +126,7 @@ namespace Symbiose
 				["Tomato"]    = new OrganPalette("3f9e3a", "e8d24a", "5fae3f", "d8392a"), // tomate : vert franc, fleur jaune, fruit rouge
 				["Pepper"]    = new OrganPalette("357f33", "f0ead2", "63ad3c", "d4451f"), // poivron : vert sombre, fleur blanche, fruit rouge-orangé
 				["Bean"]      = new OrganPalette("4aa845", "eef0e8", "6fb24a", "8aa83f"), // haricot : vert tendre clair, fleur blanchâtre, gousse verte
-				["Clover"]    = new OrganPalette("4f9e4b", "d98fb0", "6fb255", "5fa848"), // trèfle : vert vif, fleur rose
+				["Clover"]    = new OrganPalette("4f9e4b", "f2efe4", "6fb255", "5fa848"), // trèfle blanc : vert vif, boule blanche (D126 ④)
 				["Sunflower"] = new OrganPalette("3d7a36", "f2c12e", "63953f", "5a4326"), // tournesol : vert mat, capitule jaune d'or, graines brunes
 				["Carrot"]    = new OrganPalette("4a9b54", "ecefe2", "6fb060", "c87a2e"), // carotte : vert frais bleuté, ombelle blanche
 				["Zucchini"]  = new OrganPalette("3a8c41", "f2cf3a", "5aaa44", "2f7a34"), // courgette : vert profond, fleur jaune, fruit vert sombre
@@ -136,6 +136,11 @@ namespace Symbiose
 				// --- Sauvages fleuries (sprint FLORAISON ③ : leur saison est devenue observable) --
 				["SweetViolet"] = new OrganPalette("3f7a44", "7a54a8", "6f9a55", "5a4a80"), // violette : feuille cordée sombre, fleur violette (printemps précoce)
 				["Mugwort"]    = new OrganPalette("7a8a6a", "b7b06a", "8a9a66", "7a7a4a"), // armoise : feuillage gris-vert argenté, capitules jaune-verdâtre ternes (automne)
+				// --- Prairie spontanée (TRÈFLE DOMINANT ④) ----------------------------
+				["Dactyle"]   = new OrganPalette("4b8a58", "a8996a", "8a9a66", "c8b888"), // dactyle : vert bleuté, glomérules paille
+				["FetuqueRouge"] = new OrganPalette("5b9460", "a8603c", "8a8a58", "b07a50"), // fétuque : vert fin, panicule rousse
+				["PlantainLanceole"] = new OrganPalette("47803f", "5a4630", "7a8a50", "efe8c8"), // plantain : vert sombre, épi brun, anthères claires
+				["Nettle"]    = new OrganPalette("2f6e38", "9aa86a", "5f8a48", "6f7a48"), // ortie : vert sombre, grappes verdâtres
 				// --- Compagnes / mellifères / engrais verts -------------------------
 				["Yarrow"]    = new OrganPalette("4f8a55", "f0efe6", "6fa564", "8a9a66"), // achillée : vert grisé, corymbe blanc
 				["Phacelia"]  = new OrganPalette("4a8e58", "8f7fc4", "6aa860", "7a8a66"), // phacélie : vert moyen, fleur mauve-bleu

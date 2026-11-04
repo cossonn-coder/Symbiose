@@ -66,6 +66,10 @@ namespace Symbiose
 				["Zucchini"]  = new(LeafShape.Lobee,     1.0f, 5, true),  // grande feuille palmilobée
 				["CornSalad"] = new(LeafShape.Elliptique, 1.6f, 0, true), // rosette de spatules
 				["Garlic"]    = new(LeafShape.Lanceolee, 3.2f, 0, false), // long ruban dressé
+				// --- Prairie spontanée (TRÈFLE DOMINANT ④) : formes de leur litière --
+				["Dactyle"]   = new(LeafShape.Lanceolee, 5.0f, 0, false), // limbe large de graminée
+				["FetuqueRouge"] = new(LeafShape.Aciculaire, 3.0f, 0, false), // brin filiforme
+				["PlantainLanceole"] = new(LeafShape.Lanceolee, 3.2f, 0, false), // lancéolée à nervures parallèles
 				// --- Compagnes / mellifères / engrais verts -------------------
 				["Yarrow"]    = new(LeafShape.Composee,  1.3f, 5, false), // feuillage plumeux finement divisé
 				["Phacelia"]  = new(LeafShape.Composee,  1.4f, 5, false), // feuille pennatiséquée

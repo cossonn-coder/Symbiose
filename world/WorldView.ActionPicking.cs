@@ -25,6 +25,9 @@ namespace Symbiose
 				float dx = (float)node.GetMeta(LectureSnap.Meta("wx")).AsDouble() - w.X;
 				float dy = (float)node.GetMeta(LectureSnap.Meta("wy")).AsDouble() - w.Y;
 				float d = dx * dx + dy * dy;
+				// Pied à quatre feuilles : ses feuilles couvrent un disque où d'autres
+				// collets sont plus proches. Viser une de ces feuilles, c'est le viser.
+				if (node.QuatreFeuillesSous(d)) d = 0f;
 				if (d < bestD) { bestD = d; best = node; }
 			}
 			return best;

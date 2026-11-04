@@ -489,6 +489,9 @@ namespace Symbiose
 			// le lot d'ombres (PlantShadow, PERF VUE ③) — le balayage du soleil
 			// ne redessine qu'elle, jamais ces segments-ci.
 
+			// Prairie (TRÈFLE DOMINANT ④) : port dessiné, à tous les paliers.
+			if (DessinerPrairie()) return;
+
 			// Paliers BAS ×0,5-×2 (D106 T5, PlantRenderer.Paliers.cs) : chaque palier
 			// porte SON information (présence+saison / port / santé), squelette et
 			// caduc d'hiver compris. Le détail (segments + organes) commence à ×4.

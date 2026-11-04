@@ -97,6 +97,9 @@ namespace Symbiose
 				["BursaPastoris"] = new(1.8f, LeafMargin.Lobee, 5, 0.5f, 0.6f, 0.1f, 0), // rosette lyrée-pennatifide
 				["MedicagoLupulina"] = new(1.0f, LeafMargin.Dentee, 0, 0f, 0.4f, 0.2f, 3), // trifoliolée (lupuline)
 				["Taraxacum"] = new(2.6f, LeafMargin.Lobee,  5, 0.6f, 0.7f, 0.1f, 0), // pissenlit runciné (dents « lion »)
+				["Dactyle"]   = new(5.0f, LeafMargin.Entiere, 0, 0f,  0.9f, 0.0f, 0), // graminée à limbe large
+				["FetuqueRouge"] = new(9.0f, LeafMargin.Entiere, 0, 0f, 0.9f, 0.0f, 0), // limbe filiforme
+				["PlantainLanceole"] = new(4.0f, LeafMargin.Entiere, 0, 0f, 0.7f, 0.0f, 0), // lancéolée entière
 				// --- Aromatiques persistantes (Lamiacées evergreen) ----------
 				["Thyme"]     = new(2.8f, LeafMargin.Entiere, 0, 0f,  0.6f, 0.0f, 0), // micro-feuille linéaire
 				["Lavender"]  = new(3.5f, LeafMargin.Entiere, 0, 0f,  0.7f, 0.0f, 0), // étroite gris-vert
