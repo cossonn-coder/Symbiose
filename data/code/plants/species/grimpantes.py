@@ -64,12 +64,19 @@ class Ivy(PlantBase):
     fungal_susceptibility = 0.25
     bouturable = True                    # liane ligneuse : un fragment reprend aisément (palette ②)
     # --- Profil de croissance procédurale (grimpe géométrique ①②) ---
-    # PLACEHOLDERS : le lierre monte haut sur un mur mais reste étroit (canopée
-    # plaquée). Gabarit calibré à la maquette (⑥).
+    # PLACEHOLDERS : gabarit calibré à la maquette (⑥), plafonds relevés au sprint HOUPPIER ①.
     procedural_growth = True
     port_archetype    = "fleche"         # une pousse chercheuse d'appui (descriptif)
-    max_height_cm     = 300.0            # peut tapisser haut une paroi
-    max_extent_cm     = 40.0             # couronne étroite (plaquée au support)
+    max_height_cm     = 2000.0           # plus un plafond d'espèce : c'est l'appui et le cap 80 qui bornent
+    max_extent_cm     = 2000.0           # idem : la liane court sur son appui, pas de couronne imposée
+    # 📖 Tenue (sprint HOUPPIER ①) : une liane est une longue tige qui se renouvelle.
+    # Avec 40 segments de 8 cm, elle plafonnait à 320 cm de bois : chaque semaine
+    # l'élagage rognait ce qu'elle venait de pousser, et elle régressait sans raison.
+    emit_length_cm    = 20.0             # segment émis plus long : même budget, 2,5 × plus de bois
+    max_segments      = 80               # 80 × 20 = 1 600 cm au mieux, ensuite plateau : elle se renouvelle sans s'allonger
+    wood_persistence  = 4000             # le vieux bois sans apex reste en place (~77 ans) : la liane garde sa charpente
+    fragilite_bois    = 0.3              # bois souple qui plie : la tempête et la neige cassent moins (défaut 1,0)
+    girth_max_cm      = 6.0              # tige âgée qui grossit encore (défaut 1,5 : tige d'herbacée)
     foliage_halfwidth = 20.0
     organ_site        = "lateral"
     growth_stages = [
@@ -143,11 +150,19 @@ class Jasmine(PlantBase):
     bouturable = True                      # sarment souple : bouture de tige d'été (palette ②)
     # --- Profil de croissance procédurale (grimpe géométrique ①②) ---
     # PLACEHOLDERS : sarments longs et souples qui s'étalent large SANS palissage
-    # (max_extent élevé) et montent une fois palissés.
+    # et montent une fois palissés. Plafonds relevés au sprint HOUPPIER ①.
     procedural_growth = True
     port_archetype    = "fleche"           # sarment chercheur (descriptif)
-    max_height_cm     = 250.0
-    max_extent_cm     = 50.0               # sarments souples qui s'étalent si non palissés
+    max_height_cm     = 2000.0           # plus un plafond d'espèce : c'est l'appui et le cap 80 qui bornent
+    max_extent_cm     = 2000.0           # idem ; le sarment non palissé s'étale, le cap 80 le borne
+    # 📖 Tenue (sprint HOUPPIER ①) : une liane est une longue tige qui se renouvelle.
+    # Avec 40 segments de 8 cm, elle plafonnait à 320 cm de bois : chaque semaine
+    # l'élagage rognait ce qu'elle venait de pousser, et elle régressait sans raison.
+    emit_length_cm    = 20.0             # segment émis plus long : même budget, 2,5 × plus de bois
+    max_segments      = 80               # 80 × 20 = 1 600 cm au mieux, ensuite plateau : elle se renouvelle sans s'allonger
+    wood_persistence  = 4000             # le vieux bois sans apex reste en place (~77 ans) : la liane garde sa charpente
+    fragilite_bois    = 0.3              # sarment souple qui plie : la tempête et la neige cassent moins (défaut 1,0)
+    girth_max_cm      = 6.0              # tige âgée qui grossit encore (défaut 1,5 : tige d'herbacée)
     foliage_halfwidth = 18.0
     organ_site        = "lateral"
     growth_stages = [

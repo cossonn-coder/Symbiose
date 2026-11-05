@@ -23,7 +23,7 @@ namespace Symbiose
 	{
 		/// <summary>L'habillage d'une liane. `Organes` : feuille, marque, tête, fruit et couleur de
 		/// tige, lus par les fonctions des ports (`Feuilles` = folioles). `LongCm` : feuille adulte ;
-		/// `EspaceCm` : une feuille tous les… ; `TigeMaxCm` : plafond de l'épaisseur montrée ;
+		/// `EspaceCm` : une feuille tous les… ; `TigeMaxCm` : plafond de l'épaisseur montrée (lierre = `girth_max_cm` du moteur, sinon il ne grossit pas à l'écran) ;
 		/// `Nappe` : le feuillage serré ferme une plaque sombre (lierre) ; `Crampons` : son accroche.</summary>
 		private sealed record FicheLiane(FichePort Organes, float LongCm, float EspaceCm, bool Opposees, float TigeMaxCm,
 			bool Nappe = false, bool Crampons = false, int FleursSite = 1);
@@ -37,11 +37,11 @@ namespace Symbiose
 			["Ivy"] = new(new FichePort(FormePort.Tige, 0f, 0f, 1f, Feuilles: 0, FormeFeuille.Lierre, LargeurFeuille: 0.9f, Dressee: 0f,
 				FormeTete.Boule, TeteCm: 1.6f, Hampes: 0, EpaisseurTigeCm: 1f, Marque: MarqueFeuille.Nervures,
 				Tige: new(1, 0f, 0f, 0f, 0f, false, 0f, 0f, -0.1f, new Color("6a5a3e"))),
-				LongCm: 7f, EspaceCm: 5f, Opposees: false, TigeMaxCm: 1.6f, Nappe: true, Crampons: true),
+				LongCm: 7f, EspaceCm: 5f, Opposees: false, TigeMaxCm: 6f, Nappe: true, Crampons: true),
 			["Jasmine"] = new(new FichePort(FormePort.Tige, 0f, 0f, 1f, Feuilles: 7, FormeFeuille.Composee, LargeurFeuille: 0.42f, Dressee: 0f,
 				FormeTete.Etoile, TeteCm: 1f, Hampes: 0, EpaisseurTigeCm: 0.4f,
 				Tige: new(1, 0f, 0f, 0f, 0f, false, 0f, 0f, -0.3f, new Color("5f9a48"))),
-				LongCm: 7f, EspaceCm: 7f, Opposees: true, TigeMaxCm: 0.5f, FleursSite: 3),
+				LongCm: 7f, EspaceCm: 7f, Opposees: true, TigeMaxCm: 2f, FleursSite: 3),
 		};
 
 		// Lierre : 5 lobes en triangle, base échancrée. Étoilé depuis la base, comme la paume.
@@ -96,7 +96,9 @@ namespace Symbiose
 				if (l.Nappe)
 					_lotPrairie.Ligne(Iso(a.X, a.Y, a.Z), Iso(b.X, b.Y, b.Z), Ton(col, 1), l.LongCm * 1.1f * WorldView.PxPerCmX);
 				float g = LeafGrowthFactor(s);
-				int n = Mathf.Max(1, (int)(s.LengthCm / espace));
+				// Arrondi, pas troncature : à emit 20 (HOUPPIER ①) la troncature perdait jusqu'à une
+				// feuille par segment, le jasmin à ×4 passait d'une feuille tous les 8 cm à 20.
+				int n = Mathf.Max(1, Mathf.RoundToInt(s.LengthCm / espace));
 				float az = Mathf.Atan2(PerpFeuilles(s).Y, PerpFeuilles(s).X);
 				for (int j = 0; j < n; j++)
 				{

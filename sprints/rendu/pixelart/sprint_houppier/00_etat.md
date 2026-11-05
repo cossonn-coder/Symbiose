@@ -6,7 +6,7 @@
 
 | # | Kickoff | État |
 |---|---|---|
-| ① | `01_grimpantes_tenue.md` | à faire |
+| ① | `01_grimpantes_tenue.md` | **fait**, golden `a10b7225…` intact, F5 à faire |
 | ② | `02_grimpantes_sans_fin.md` | à faire |
 | ③ | `03_fruits_arbres.md` | à faire |
 | ④ | `04_gerbes_cuisson.md` | à faire |
@@ -82,10 +82,38 @@ Retour F5 de Nico, 2026-11-05 (D118) : arbres, beaucoup plus de feuilles dans le
 
 **Date des fruits : cause isolée.** `FRUIT_DMAT` 0,08 commun à toutes (mûr en ~12,5 semaines, chute à ~16). Le pommier ne peut pas arriver à l'automne, le cerisier reste trop longtemps. Levier : durée de maturation par espèce, défaut = valeur actuelle (tomate, framboise, fraise, courgette inchangées).
 
+## Bilan ① Tenue (2026-11-05)
+
+Réglages posés sur `Ivy` et `Jasmine` (vérifié : portés par les classes). Golden `a10b7225…` intact, `test_bancs_grimpe`, `test_grimpe` 10/10, `test_squelette_herbacees` 42/42, `test_sim_server` 321/321, build C# vert.
+
+Tous les chiffres : [`accroches_adultes`, seed 42, n=1 run, VM].
+
+| | Avant s156 | Après s52 → s156 |
+|---|---|---|
+| Lierre, longueur | 234 cm | 1 303 → 1 342 cm |
+| Jasmin, longueur | 270 cm | 1 294 → 1 526 cm |
+| Épaisseur max, les deux | 1,27 cm | 3,30 → 4,18 cm |
+| Chutes > 15 %, lierre | 8 | 1 (neige, s128) |
+| Chutes > 15 %, jasmin | 6 | 3 (tempête s53 et s81 ; s112 élagage + ombre) |
+
+Creux restants, attendus du plateau : lierre 977 cm [s130], jasmin 1 000 cm [s130]. Coupes cumulées : élagage lierre 4 229, jasmin 3 039 cm. Nouveau : la cladoptose coupe, lierre 459, jasmin 441 cm (0 avant).
+
+**Tick du banc** : médiane 99,8 et 101,8 ms contre 97,5 et 98,0 ms, soit +2 à +4 % [n=2 runs par côté, charge 2 à 3, `process_time`].
+
+**Vue (`PlantRenderer.Lianes.cs`), hors prescription stricte** :
+- `(int)` → `RoundToInt` sur le nombre de feuilles par segment : à emit 20 la troncature perdait des feuilles (jasmin ×4 : une tous les 20 cm contre 8).
+- `TigeMaxCm` lierre 1,6 → 6, jasmin 0,5 → 2 [choix] : sinon le grossissement du moteur ne se voyait pas.
+
+**Effets de bord à arbitrer ou traités plus loin** :
+- `canopy_r` et `root_r` : lierre 61 → 103 cm, jasmin 65 → 108 cm en s156 ; hauteur 89 → 320 et 125 → 440 cm. `canopy_r` est le disque de l'extension maximale : une seule longue branche donne tout le disque d'ombre, nettement visible à ×4. Effet sur les voisines non mesuré.
+- Rameaux raides qui partent en l'air loin du treillis, port en buisson plus qu'en nappe [captures ×4 et ×8].
+- **Sans appui** (supports retirés en mémoire) : lierre 320 cm et jasmin 412 cm de haut en s156, contre 56 et 10 cm avant. Une liane libre tient debout jusqu'au ② (`L_crit`). Le ② doit le vérifier explicitement.
+- Pied nu : 93 à 98 % de la longueur reste feuillée, `IsLeafy` coupe au-dessus de 2,5 cm. Laissé tel quel, un vieux lierre a le pied nu.
+
 ## Hors périmètre sauf avis contraire
 
 Reste de D118 : piquants d'ortie, fleurs, point de pollen, gestes, DA hors plantes.
 
 ## REPRISE
 
-Lire `CLAUDE.md` + ce fichier, puis `visuals/PlantRenderer.Assemblee.cs`, `PaliersHauts.cs`, `Organs.cs`. Prochaine étape : `/sprint-auto sprint_houppier`, tronçon ①. Sondes : recopiées au §Audit, le scratchpad ne survit pas.
+Lire `CLAUDE.md` + ce fichier, puis `visuals/PlantRenderer.Assemblee.cs`, `PaliersHauts.cs`, `Organs.cs`. ① fait (voir Bilan). Prochaine étape : `/sprint-auto sprint_houppier`, tronçon ②. Sondes : recopiées au §Audit, le scratchpad ne survit pas.
