@@ -68,10 +68,10 @@ namespace Symbiose
 		// DrawOrgans.
 		private void DrawMassesFeuillage(Vector3 collet, OrganPalette pal, float automne, float density)
 		{
-			for (int i = 0; i < _structure.Segments.Count; i++)
+			foreach (var s in _structure.Segments)
 			{
-				var s = _structure.Segments[i];
 				if (!IsLeafy(s)) continue;
+				int i = CleSegment(s);   // stable : une coupe ailleurs ne déplace rien (HOUPPIER ④)
 				float growth = LeafGrowthFactor(s);
 				float r = LeafSizeCm * TailleFeuilleEspece * WorldView.PxPerCmX * growth;
 				int n = NbFeuilles(s);

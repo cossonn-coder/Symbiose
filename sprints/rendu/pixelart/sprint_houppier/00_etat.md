@@ -9,7 +9,7 @@
 | ① | `01_grimpantes_tenue.md` | **fait**, golden `a10b7225…` intact, F5 à faire |
 | ② | `02_grimpantes_sans_fin.md` | **fait**, golden `a10b7225…` intact, F5 à faire |
 | ③ | `03_fruits_arbres.md` | **fait**, golden `a10b7225…` intact, F5 à faire |
-| ④ | `04_gerbes_cuisson.md` | à faire |
+| ④ | `04_gerbes_cuisson.md` | **fait**, golden `a10b7225…` intact, F5 à faire ; recuissons peu réduites, voir Bilan |
 | ⑤ | `05_houppier_vue.md` | à faire |
 
 ## Sujet
@@ -199,10 +199,65 @@ Figuier repassé en `insect` : 0 fruit en 52 semaines [seed 42], le constat du k
 
 **À juger au F5** : les 4 arbres portent à la bonne saison ; taille et couleur des cerises, figues et noix, non vérifiées ici (dessin au ⑤). Banc : `init config="verger_mur"` ; semaines à regarder, an 1 : s17 cerises, s25 figues et pommes, s29 noix.
 
+## Bilan ④ Clé stable, gerbes, cuisson (2026-11-05)
+
+Neuf : `PlantRenderer.CleStable.cs` (clé de segment, recuisson des arbres), `PlantRenderer.Gerbes.cs` (atlas), `WorldView.Chargement.cs` (écran), bancs `houppiers` et `houppiers_25` (`bancs/houppiers.py`), banc `WorldView.BancCleStable.cs` + `PlantRenderer.BancCleStable.cs` (`capture_vm.sh -Y`), planche `capture_vm.sh -G`, `-J` (écran en capture), `perf_vm.sh -C`, ligne `[perf]` : `sem`, `cuissons`, `sales`, `pinceauMs`, `cacheMo`, `vramMo`. Golden `a10b7225…` intact, `test_sim_server` 321/321, `test_verger_mur`, build C# vert (0 avertissement). Aucun fichier du moteur touché hors `bancs/`. Les gerbes ne sont posées sur aucun arbre : c'est le ⑤.
+
+**Clé stable.** Vérifié au code : `base` et `dir` ne sont posés qu'à la création (`phases.py` l. 221, restauration `instance.py` l. 215), aucune affectation ensuite, seul `length_cm` grandit. Clé = base relative au collet (0,1 cm) + direction (1e-3). Oracle `[CleStable]`, vrai clic `tailler` Maj, vrai `_rebuild` :
+
+| Cas | Segments | Feuillage | Déplacés |
+|---|---|---|---|
+| Pommier 10 ans, ×2 | 60 → 57 | 332 → 314 | 0 |
+| Cerisier 25 ans, ×4 | 70 → 67 | 41 → 37 | 0 |
+| Pommier 25 ans, ×8 | 69 → 67 | 37 → 34 | 0 |
+| Figuier 10 ans, ×1 | 55 → 52 | 336 → 321 | 0 |
+| Lierre, ×4 | 35 → 32 | 78 → 72 | 0 |
+| Jasmin, ×8 | 26 → 23 | 70 → 66 | 0 |
+| **Témoin : clé = indice**, pommier ×2 | 60 → 57 | 369 → 345 | **187** |
+
+[n=1 coupe par cas, seed 42, VM]. Tous les feuillages changent une fois de tirage : effet attendu, seul aspect modifié.
+
+**Gerbes.** RAM chiffrée avant de fixer : côtés 8, 14, 24, 48 px (×0,5 à ×4), ~30 cm, 6 formes × 4 variantes × 2 couches. Mesuré : 1024×221 px, **0,86 Mo**, 192 pièces, 55 à 77 ms de génération [n=5, VM, charge 1 à 6]. Pas de gerbe à ×8 (le ⑤ y pose de vraies feuilles) ni au-delà. Planche vue : bois et feuilles lisibles séparément ; feuillage encore clairsemé dans la pièce ×4, à régler au ⑤ selon le remplissage. **Non fait** : chemin littéral (masques) pour F11 OFF et dessin direct, à décider au ⑤ (repli sur les touffes, ou masques à la demande). `DrawGerbeIndexee` compile mais n'est pas encore exercé.
+
+**Écran de chargement.** Reconfirmé : aucun n'existait. Écran sur fond de sol, une touffe, « Le jardin se prépare », sans chiffre. Séquence : écran, atlas, montage, cuisson du cadre (budget de file relevé), ouverture ; filet à 30 s. Poses du vent : rien à ajouter, `Begin` ne peint que `BakePosesUtiles`. Vu en capture (`-J`), jamais par le sélecteur réel : **le chemin du clic « Lancer » reste à valider au F5**.
+
+| Monde | Montage [inclut pont et warmup] | Cuisson du cadre | Cuissons |
+|---|---|---|---|
+| `houppiers_25`, ×1 | 6,7 s | 1,06 s | 11 |
+| `full`, cadrage ×0,5 | 8,2 s | 1,34 s | 99 |
+
+[n=1 à 2, VM, llvmpipe, charge 1 à 5]. Sans écran, `full` mettait 3,2 à 3,3 s à vider cette file, plantes en dessin direct [n=2, mêmes conditions].
+
+**Recuisson : effet modeste, à dire clairement.**
+- Le kickoff prescrivait une clé quantifiée. **Prémisse fausse** : un arbre change vraiment chaque semaine (apex, cladoptose, plafond). Clé exacte quantifiée : 0,91 miss/arbre/semaine [`houppiers_25`, seed 42, 2 ans, modèle Python de la clé, pas le C#]. Remplacée par une comparaison au bois de la dernière cuisson : recuit si ≥ 15 % des segments ont changé, ou après 8 semaines, longueur au pas de 10 cm [choix] ; densité, floraison, automne, fruits à l'échelon (1/10). Un geste du joueur recuit tout de suite (`WorldView.cs`, cible de l'action). Prix : une image peut garder jusqu'à 8 semaines de retard sur un rameau qui pousse ou une branche tombée.
+- Automne et santé **ne sont pas gratuits** : le n° de palette de la teinte est écrit dans les pixels à la cuisson. Ils restent donc dans la clé, contrairement à l'hypothèse du kickoff.
+- `Invalidate` sur les 11 arbres, 25 semaines de turbo, sem 20 à 45, vent 0 [n=1 run par côté, VM, charge 4] : **675 → 396**. `SetStructure` 286 → 209, `SetSymptoms` 270 → 63, `RefreshMeteo` 82 → 91 (bruit, pluie). Hors vent : `Apply` (WindWave) salit tout le monde à chaque saute, 154 sur le run à vent réel, non touché.
+- **Cuissons/semaine en turbo : inchangées, non concluant.** `houppiers_25` ×1 7,5 → 7,5 ; `houppiers` ×1 11,5 → 11,4 ; `full` ×1 34,3 → 33,0 [n=1, 24 semaines, charge 2 à 6 ; série `full` et `houppiers` faite avant la tolérance]. La file est saturée : 186 cuissons en 186 images, un arbre par image à 5,5 FPS. La demande reste supérieure au débit de la VM. Mesure à cadence non saturée tentée via `-E -A`, inexploitable (semaine figée par ce banc, deux runs superposés). **Critère « recuissons par semaine » non démontré.**
+
+**Référence pour le ⑤** [n=1 par ligne, avant ④, VM, llvmpipe, charge 4 à 6] :
+
+| Scène | FPS | Plantes cuites, durée | Pinceau cumulé | Cache | VRAM |
+|---|---|---|---|---|---|
+| `houppiers_25` ×1, turbo 25 sem | 5,5 | 186 en 32,4 s | 80 ms | 64 Mo | 276 Mo |
+| `houppiers` ×1, turbo 25 sem | 6,0 | 279 en 31,5 s | 125 ms | 64 Mo | 271 Mo |
+| `houppiers_25` ×2, statique | 13,5 | 8 en 1,1 s | 9 ms | 64 Mo | 267 Mo |
+| `houppiers_25` ×4, statique | 15,5 | 3 en 0,5 s | 10 ms | 48 Mo | 242 Mo |
+| `full` ×1, turbo 25 sem | 7,5 | 833 en 39,2 s | 332 ms | 32 Mo | 213 Mo |
+| `full` ×0,5, statique | 11,2 | 99 en 3,3 s | 23 ms | 16 Mo | 175 Mo |
+
+Après ④, avant la tolérance, mêmes scènes : FPS 5,6, 6,0, 15,0, 15,6, 7,4, 11,4 ; cache et VRAM égaux à 5 Mo près [charge 2 à 7]. Aucune dérive lisible, comparaison non fiable au-delà. **Non refait après la tolérance**, sauf `houppiers_25` ×1 turbo : 5,6 FPS, pinceau 104 ms.
+
+**Écarts au kickoff** :
+- Deux mondes, `houppiers` (10 ans) et `houppiers_25` : 22 couronnes ne tiennent pas dans 20×20 m hors maison. Figuier de 25 ans, rayon 424 cm à x 275 : déborde du monde.
+- Pinceau cuit à la CPU seulement : `pinceauMs` ne compte ni la préparation ni le raster GPU. La durée murale est plafonnée par les FPS de la VM.
+- Tirages encore liés à un indice, hors portée : `DrawSnowOnBranch` (indice du tri), `OrganSites` sous-échantillonné par position, `FruitPoint` (`SegmentId` best-effort). Fleurs et fruits peuvent encore sauter à une coupe : `OrganSites` et `FruitPoint` sont au ⑤.
+
+**À juger au F5** : écran de chargement par le vrai sélecteur ; retard de 8 semaines et 15 % de tolérance visibles ou non ; clic `tailler` qui recuit aussitôt.
+
 ## Hors périmètre sauf avis contraire
 
 Reste de D118 : piquants d'ortie, fleurs, point de pollen, gestes, DA hors plantes.
 
 ## REPRISE
 
-Lire `CLAUDE.md` + ce fichier, puis `visuals/PlantRenderer.Assemblee.cs`, `PaliersHauts.cs`, `Organs.cs`. ①, ② et ③ faits (voir Bilans). Prochaine étape : `/sprint-auto sprint_houppier`, tronçon ④. Sondes : recopiées au §Audit, le scratchpad ne survit pas.
+Lire `CLAUDE.md` + ce fichier, puis `visuals/PlantRenderer.Assemblee.cs`, `PaliersHauts.cs`, `Organs.cs`. ①, ②, ③ et ④ faits (voir Bilans). Prochaine étape : `/sprint-auto sprint_houppier`, tronçon ⑤ ; lire aussi `PlantRenderer.Gerbes.cs`, `.CleStable.cs`. Sondes : recopiées au §Audit, le scratchpad ne survit pas.

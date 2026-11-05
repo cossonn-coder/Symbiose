@@ -47,6 +47,8 @@
 #     -Z  BALAYAGE DE ZOOM (FLUIDITÉ PC LEVIERS ①) : ×0,5 → ×32 → ×0,5, Z s par palier
 #         sur le point -c ; imprime le rapport des à-coups de zoom (même texte que la
 #         touche Z du F5 : une ligne par changement + synthèse par paire de paliers).
+#     -C  écran de chargement au montage (HOUPPIER ④) : `[Chargement]` au journal, durées de
+#         l'atlas, du montage et de la cuisson du cadre de départ
 #   Exemple : tools/perf_vm.sh -Z 4 -S 1521550718 -w 90 -c 1650,950 -t 900
 #   Exemple : tools/perf_vm.sh -3 25,25,20 -A 1 -W 90 -S 1521550718 -t 900
 #   Exemple : tools/perf_vm.sh -3 25,25,20 -P 20 -A 1 -W 90 -S 1521550718 -t 900
@@ -81,6 +83,7 @@ while [ $# -gt 0 ]; do
     -3) TROIS="$2"; BANC_E="${2%%,*}"; shift 2 ;;
     -Z) BALAYAGE="$2"; shift 2 ;;
     -P) PARTAGE="$2"; shift 2 ;;
+    -C) CHARGEMENT=1; shift ;;
     --no-build) BUILD=0; shift ;;
     -h|--help) sed -n '2,55p' "$0"; exit 0 ;;
     *) echo "option inconnue : $1" >&2; exit 2 ;;
@@ -127,6 +130,7 @@ if [ -n "$BANC_E" ]; then Z=banc-zoom C=banc-centre; else Z=zoom C=centre; fi
 [ -n "$TROIS" ] && ARGS+=(--capture-banc-3phases="$TROIS")
 [ -n "$PARTAGE" ] && ARGS+=(--capture-banc-partage="$PARTAGE")
 [ -n "$BALAYAGE" ] && ARGS+=(--capture-zoom-balayage="$BALAYAGE")
+[ -n "${CHARGEMENT:-}" ] && ARGS+=(--capture-chargement=1)
 DISPLAY="$ECRAN" LIBGL_ALWAYS_SOFTWARE=1 "$GODOT" --path "$DEPOT" \
   --rendering-driver opengl3 --resolution 1920x1080 --print-fps \
   -- "${ARGS[@]}" >"$LOG" 2>&1 &

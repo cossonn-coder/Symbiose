@@ -36,6 +36,15 @@ namespace Symbiose
 		private const int PlantsPerFrame = 6;
 		private const int SegmentsPerFrame = 80;
 		private const long BudgetUs = 4000;   // temps max de préparation par image (PERF VUE ④)
+		// Écran de chargement (HOUPPIER ④) : personne ne regarde la fluidité, la file peut remplir
+		// une image entière. Le budget de temps reste celui d'une image à 30 FPS sur le PC.
+		private const int PlantsPerFrameChargement = 64, SegmentsPerFrameChargement = 1600;
+		private const long BudgetUsChargement = 33000;
+		internal static bool ModeChargement;
+		private static int BudgetPlantes => ModeChargement ? PlantsPerFrameChargement : PlantsPerFrame;
+		private static int BudgetSegments => ModeChargement ? SegmentsPerFrameChargement : SegmentsPerFrame;
+		/// <summary>Plus rien à cuire qui puisse l'être, et rien en vol : le cadre est prêt.</summary>
+		internal static bool AuRepos { get; private set; }
 		// Libération des images hors champ : balayage espacé (pas chaque frame).
 		private const int ReleaseEveryFrames = 15;
 
@@ -95,9 +104,13 @@ namespace Symbiose
 			_eligibles.Remove(p);
 		}
 
+		/// <summary>Plantes salies depuis le lancement, doublons de la file exclus (HOUPPIER ④) : la
+		/// demande de recuisson, là où `Cuissons` plafonne au débit de la file.</summary>
+		internal static long Salissures;
+
 		public static void MarkDirty(PlantRenderer p)
 		{
-			_dirty.Add(p);
+			if (_dirty.Add(p)) Salissures++;
 			if (p.Visible) _eligibles.Add(p);
 		}
 
@@ -113,9 +126,13 @@ namespace Symbiose
 		internal static readonly bool TraceCout =
 			System.Environment.GetEnvironmentVariable("SYMBIOSE_COUT_CUISSON") == "1";
 
+		/// <summary>Temps CPU cumulé des coups de pinceau depuis le lancement (HOUPPIER ④).</summary>
+		internal static double PinceauMsCumul;
+
 		public static void RecordBrushDraw(double ms, int segs)
 		{
 			_drawMsSum += ms;
+			PinceauMsCumul += ms;
 			_drawCount++;
 			if (ms > _drawMsMax) { _drawMsMax = ms; _drawMaxSegs = segs; }
 		}
@@ -143,6 +160,7 @@ namespace Symbiose
 			AtlasPages.CreationUs = 0;
 			AtlasPages.Creees = 0;
 			ProcessFile();
+			AuRepos = _inFlight.Count == 0 && (_eligibles.Count == 0 || _pick.Count == 0);
 			long us = (long)(Time.GetTicksUsec() - u0);
 			if (us > ImageLenteUs)
 				GD.Print($"[Cuisson] image lente {us / 1000.0:F1} ms : rendu→affiché {_commitUs / 1000.0:F1} ms, "
@@ -170,7 +188,7 @@ namespace Symbiose
 			_pick.Clear();
 			_pickSegs = 0;
 			PickInto(onScreenOnly: true);
-			if (_pick.Count < PlantsPerFrame && _pickSegs < SegmentsPerFrame)
+			if (_pick.Count < BudgetPlantes && _pickSegs < BudgetSegments)
 				PickInto(onScreenOnly: false);
 			if (_pick.Count == 0) { EndBurst(frame); return; }
 			if (_burstCount == 0)
@@ -186,7 +204,7 @@ namespace Symbiose
 				// une même image (préparation de l'atlas, pinceaux). Au-delà du budget,
 				// les plantes restantes gardent leur ancienne image et passent à l'image
 				// suivante (toujours au moins une par image : jamais de famine).
-				if (p != _pick[0] && (long)(Time.GetTicksUsec() - t0) >= BudgetUs) break;
+				if (p != _pick[0] && (long)(Time.GetTicksUsec() - t0) >= (ModeChargement ? BudgetUsChargement : BudgetUs)) break;
 				_dirty.Remove(p);
 				_eligibles.Remove(p);
 				ulong tb = Time.GetTicksUsec();
@@ -206,7 +224,7 @@ namespace Symbiose
 		{
 			foreach (var p in _eligibles)
 			{
-				if (_pick.Count >= PlantsPerFrame || _pickSegs >= SegmentsPerFrame) return;
+				if (_pick.Count >= BudgetPlantes || _pickSegs >= BudgetSegments) return;
 				// IsVisibleInTree reste testé : le masque de couches (Maj+F4) cache le
 				// parent « Objects » sans toucher au Visible propre de la plante.
 				if (!GodotObject.IsInstanceValid(p) || !p.IsVisibleInTree() || p.EnAttente
@@ -214,7 +232,7 @@ namespace Symbiose
 				if (onScreenOnly && !OnScreen(p)) continue;
 				// Une plante qui ferait déborder le budget attend la frame suivante
 				// (sauf si c'est la première : jamais de famine pour un gros arbre).
-				if (_pick.Count > 0 && _pickSegs + p.BakeCost > SegmentsPerFrame) continue;
+				if (_pick.Count > 0 && _pickSegs + p.BakeCost > BudgetSegments) continue;
 				_pick.Add(p);
 				_pickSegs += p.BakeCost;
 			}

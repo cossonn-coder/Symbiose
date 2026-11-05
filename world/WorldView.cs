@@ -253,7 +253,13 @@ namespace Symbiose
 			// par `_started` tant qu'on n'a pas lancé. Voir WorldView.Selecteur.cs.
 			// Mode capture VM (T0 jardin vivant) : monde imposé par argument, pas
 			// de menu. Inactif sans `--capture-banc=` (cf. WorldView.Capture.cs).
-			if (CaptureActive) { PreparerCapture(); StartSimulation(CaptureBanc); return; }
+			if (CaptureActive)
+			{
+				PreparerCapture();
+				if (CaptureChargement) LancerAvecChargement(CaptureBanc);   // mesure, WorldView.Chargement.cs
+				else StartSimulation(CaptureBanc);
+				return;
+			}
 			BuildSelecteur();
 		}
 
@@ -407,7 +413,9 @@ namespace Symbiose
 			AppliquerCapture();   // no-op hors mode capture (WorldView.Capture.cs)
 			// Monde construit → on débloque la boucle (_Process) et les entrées
 			// (_UnhandledInput), gardées par `_started` pendant l'écran de sélection.
-			_started = true;
+			// Sous l'écran de chargement, c'est sa fin qui les débloque (WorldView.Chargement.cs).
+			if (_ecranChargement != null) DebuterCuissonDepart();
+			else _started = true;
 			// Le process Python reste OUVERT, au repos en Planification : c'est
 			// le mapping de la boucle hybride. Fermé à _ExitTree.
 		}
@@ -432,8 +440,8 @@ namespace Symbiose
 		public override void _Process(double delta)
 		{
 			// Écran de sélection (⑤) : rien à animer tant que le monde n'est pas
-			// construit (StartSimulation pose _started).
-			if (!_started) return;
+			// construit (StartSimulation pose _started). L'écran de chargement, lui, avance.
+			if (!_started) { AvancerChargement(); return; }
 
 			// 0) Caméra : pan aux flèches — actif dans TOUTES les phases (la
 			//    caméra n'interagit jamais avec la machine à états).
@@ -542,6 +550,8 @@ namespace Symbiose
 							 + $"Vigueur {res["vigueur"].AsDouble():F1}).");
 					if (!applied) FlashActionLabel();
 					ApplySnapshot(act.Result["snapshot"].AsGodotDictionary());
+					// Un arbre tolère de petits écarts avant de recuire (CleStable.cs) ; pas le geste du joueur.
+					if (applied && targetNode != null && IsInstanceValid(targetNode)) targetNode.Invalidate();
 					// Flash de la plante ciblée — APRÈS ApplySnapshot : si elle
 					// vient de mourir (déraciner), son fondu de sortie anime
 					// déjà modulate, on ne lui dispute pas la propriété.

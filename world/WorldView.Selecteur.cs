@@ -174,7 +174,7 @@ namespace Symbiose
 			GD.Print($"[WorldView] sélecteur → lancement config « {config} ».");
 			_selecteur.QueueFree();   // le menu disparaît (plus aucun clic capté)
 			_selecteur = null;
-			StartSimulation(config);
+			LancerAvecChargement(config);   // écran, atlas de gerbes, monde, cadre cuit (HOUPPIER ④)
 		}
 	}
 }

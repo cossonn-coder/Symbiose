@@ -66,6 +66,24 @@ namespace Symbiose
 				+ $"{nbFormes} formes × {PlantRenderer.KitTailles.Length} tailles × {PlantRenderer.KitVariantes} variantes.");
 		}
 
+		// HOUPPIER ④ : l'atlas de gerbes, en deux teintes : le bois seul se lit aussi, c'est l'hiver.
+		private static readonly bool CaptureGerbes = ArgCapture("gerbes") == "1";
+
+		private void AfficherPlancheGerbes()
+		{
+			var hud = new CanvasLayer { Layer = 100 };
+			AddChild(hud);
+			var racine = new Control { MouseFilter = Control.MouseFilterEnum.Ignore };
+			racine.AddChild(new ColorRect { Color = Palette16.SolTerre, Size = new Vector2(1920f, 1080f) });
+			hud.AddChild(racine);
+			var atlas = PlantRenderer.GerbesNiveaux;
+			var tout = new Rect2I(0, 0, atlas.GetWidth(), atlas.GetHeight());
+			var tex = ImageTexture.CreateFromImage(PlantRenderer.TeindreKit(tout, PlantRenderer.RampeKit(PlancheKitTeintes[0]), atlas));
+			Piece(racine, tex, new Vector2(16f, 16f), 1.8f);
+			Piece(racine, tex, new Vector2(16f, 16f + atlas.GetHeight() * 1.8f + 16f), 1f);
+			GD.Print($"[Kit] planche des gerbes : atlas {atlas.GetWidth()}×{atlas.GetHeight()} px.");
+		}
+
 		private static void Piece(Control parent, Texture2D tex, Vector2 o, float echelle) =>
 			parent.AddChild(new TextureRect
 			{

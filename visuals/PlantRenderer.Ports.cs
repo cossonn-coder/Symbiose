@@ -244,6 +244,7 @@ namespace Symbiose
 		/// cuisson en attente de ce même dessin. Tout autre état passe par Invalidate.</summary>
 		private bool DessinInchange()
 		{
+			if (RecetteDeLaPlante(out _)) return ArbreInchange();   // PlantRenderer.CleStable.cs (HOUPPIER ④)
 			if (!TailleAuPied) return false;
 			ClePort cle = CleDuPort();
 			if (cle == _clePort) return true;
@@ -253,6 +254,7 @@ namespace Symbiose
 
 		private bool MemesSymptomes(IReadOnlyList<(string Cause, float Intensite)> symptomes)
 		{
+			if (symptomes != null && RecetteDeLaPlante(out _)) return MemesSymptomesArbre(symptomes);   // HOUPPIER ④
 			if (symptomes == null || symptomes.Count != _symptomes.Count) return false;
 			for (int i = 0; i < symptomes.Count; i++)
 				if (symptomes[i] != _symptomes[i]) return false;

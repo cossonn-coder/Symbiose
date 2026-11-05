@@ -50,6 +50,9 @@
 //                            s > 0 = s par semaine ; absent = 60 s (nominale) — PERF VUE ④
 //   --capture-kit=1          planche du kit d'éléments (touffes, fleurons) par-dessus
 //                            le monde — PLANTE ASSEMBLÉE ④ (WorldView.PlancheKit.cs)
+//   --capture-gerbes=1       planche de l'atlas de gerbes, bois et feuilles — HOUPPIER ④
+//   --capture-chargement=1   écran de chargement au montage, durées au journal — HOUPPIER ④
+//   --capture-cle-stable=<espèce>  coupe une branche, compare le feuillage — HOUPPIER ④
 //   --capture-faune=1        planche de la faune (icônes ×2→×16, fond uni) — CASSÉ À
 //                            L'ÉCRAN ⑤ (visuals/PlancheFaune.cs)
 //   --capture-palier3=1 / --capture-technique=1  info-bulle apprise / technique
@@ -254,6 +257,7 @@ namespace Symbiose
 			if (!float.IsNaN(CapturePlanche)) TogglePlanche(CapturePlanche, parSouris: false);   // D106 T7
 			if (CaptureAide) { _hudTextMode = 2; ApplyHudTextMode(); }   // F1 mode Aide
 			if (CaptureKit) AfficherPlancheKit();   // planche du kit (PLANTE ASSEMBLÉE ④)
+			if (CaptureGerbes) AfficherPlancheGerbes();   // planche des gerbes (HOUPPIER ④)
 			if (CaptureFaune)   // planche de la faune (D112 ⑤) : calque au-dessus du HUD
 			{
 				var calque = new CanvasLayer { Layer = 100 };
@@ -269,6 +273,7 @@ namespace Symbiose
 			LancerBancSeuil();        // seuil de visibilité des signes (WorldView.BancSeuil.cs)
 			LancerBancCueillette();   // manger au clic sur un fruit de port (WorldView.BancCueillette.cs)
 			LancerBancVivant();       // captures info-bulle bête / carpophore (WorldView.BancVivant.cs)
+			LancerBancCleStable();    // couper une branche ne déplace aucune feuille (WorldView.BancCleStable.cs)
 			if (!float.IsNaN(CaptureDecorF10))   // F10 ×2 programmé (FLUIDITÉ PC ②)
 				GetTree().CreateTimer(CaptureDecorF10).Timeout += () =>
 				{ _decorLayer?.ToggleBanc(); _decorLayer?.ToggleBanc(); };

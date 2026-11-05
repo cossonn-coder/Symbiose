@@ -134,9 +134,8 @@ namespace Symbiose
 			float retombee = RetombeeCm;
 			int autour = RecetteDeLaPlante(out _) ? TouffesAutourArbre : 0;
 			bool feuille = false;
-			for (int i = 0; i < _structure.Segments.Count; i++)
+			foreach (var s in _structure.Segments)
 			{
-				var s = _structure.Segments[i];
 				if (!IsLeafy(s)) continue;
 				feuille = true;
 				Vector3 tip = s.Base + s.Dir * s.LengthCm;
@@ -144,14 +143,15 @@ namespace Symbiose
 				Vector2 p2 = Iso(tip.X - c.X, tip.Y - c.Y, tip.Z);
 				float pas = taille * TouffePas / z;
 				int n = Mathf.Min(TouffesParSegmentMax, 1 + (int)(p1.DistanceTo(p2) / pas));
+				int cle = CleSegment(s);   // stable : une coupe ailleurs ne déplace rien (HOUPPIER ④)
 				for (int k = 0; k < n; k++)
 				{
-					if (Hash01(71, i, k) >= dens) continue;
+					if (Hash01(71, cle, k) >= dens) continue;
 					float u = 1f - k * pas / Mathf.Max(p1.DistanceTo(p2), 1e-4f);
 					Vector3 p = s.Base + s.Dir * (s.LengthCm * Mathf.Max(u, 0f));
-					liste.Add(NouvelleTouffe(p - c, Iso(p.X - c.X, p.Y - c.Y, p.Z - retombee), taille, i, k));
+					liste.Add(NouvelleTouffe(p - c, Iso(p.X - c.X, p.Y - c.Y, p.Z - retombee), taille, cle, k));
 					for (int m = 1; m <= autour; m++)
-						AjouterTouffeAutour(liste, p, c, retombee, taille, i, k + m * TouffesParSegmentMax);
+						AjouterTouffeAutour(liste, p, c, retombee, taille, cle, k + m * TouffesParSegmentMax);
 				}
 			}
 			if (!feuille) SemerTouffes(liste, z, taille);

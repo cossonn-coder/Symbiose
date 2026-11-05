@@ -35,6 +35,10 @@
 #     -D  F10 ×2 (reconstruction forcée du décor) après SEC s de jeu — FLUIDITÉ PC ②
 #     -B  banc décor F10 ON dès le montage (4 motifs côte à côte) — FLUIDITÉ PC ③
 #     -k  planche du kit d'éléments (touffes, fleurons) — PLANTE ASSEMBLÉE ④
+#     -J  écran de chargement au montage (premières images) — HOUPPIER ④
+#     -G  planche de l'atlas de gerbes (bois + feuilles, 4 paliers) — HOUPPIER ④
+#     -Y  ESPECE : banc de la clé stable, coupe une branche d'un pied de cette espèce, verdict
+#         `[CleStable]` dans godot.log — HOUPPIER ④ (prévoir -n ≥ 120)
 #     -F  palette SNES (F11) allumée au montage — CASSÉ À L'ÉCRAN ① (banc mesure_da)
 #     -O  ombres portées coupées (touche O) — CASSÉ À L'ÉCRAN ① (masque des sprites)
 #     -H  maison + lisière transparentes (touche H) au montage — CASSÉ À L'ÉCRAN ②
@@ -91,6 +95,9 @@ while [ $# -gt 0 ]; do
     -l) PLANCHE="$2"; shift 2 ;;
     -a) AIDE=1; shift ;;
     -k) KIT=1; shift ;;
+    -G) GERBES=1; shift ;;
+    -J) CHARGEMENT=1; shift ;;
+    -Y) CLESTABLE="$2"; shift 2 ;;
     -F) PALETTE=1; shift ;;
     -O) OMBRES=1; shift ;;
     -H) MAISON=1; shift ;;
@@ -135,6 +142,9 @@ ARGS=(--capture-banc="$BANC")
 [ -n "$PLANCHE" ] && ARGS+=(--capture-planche="$PLANCHE")
 [ -n "$AIDE" ] && ARGS+=(--capture-aide=1)
 [ -n "$KIT" ] && ARGS+=(--capture-kit=1)
+[ -n "${GERBES:-}" ] && ARGS+=(--capture-gerbes=1)
+[ -n "${CHARGEMENT:-}" ] && ARGS+=(--capture-chargement=1)
+[ -n "${CLESTABLE:-}" ] && ARGS+=(--capture-cle-stable="$CLESTABLE")
 [ -n "$PAL3" ] && ARGS+=(--capture-palier3=1)
 [ -n "$TECH" ] && ARGS+=(--capture-technique=1)
 [ -n "$DECORF10" ] && ARGS+=(--capture-decor-f10="$DECORF10")

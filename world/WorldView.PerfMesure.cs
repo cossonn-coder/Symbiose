@@ -100,7 +100,11 @@ namespace Symbiose
 				GD.Print(string.Create(CultureInfo.InvariantCulture,
 					$"[perf] fps={1000.0 / _pmFrameMs:F1} ms={_pmFrameMs:F1} "
 					+ $"draw={_pmDrawMoy:F0} obj={_pmObjMoy:F0} prim={_pmPrimMoy:F0} "
-					+ $"max={_pmMaxMs:F0} gels={_pmGels} couches={NomCasCouches()}"));
+					+ $"max={_pmMaxMs:F0} gels={_pmGels} couches={NomCasCouches()} "
+					// HOUPPIER ④ : cumuls de la cuisson, pour la durée totale et les recuissons/semaine.
+					+ $"sem={SemaineMoteur} cuissons={PlantBaker.Cuissons} sales={BakeQueue.Salissures} pinceauMs={BakeQueue.PinceauMsCumul:F0} "
+					+ $"cacheMo={PlantBaker.TotalBytes / 1048576.0:F1} "
+					+ $"vramMo={Performance.GetMonitor(Performance.Monitor.RenderVideoMemUsed) / 1048576.0:F1}"));
 			_pmDraw = _pmObj = _pmPrim = 0;
 			_pmMaxMs = 0;
 			_pmGels = 0;

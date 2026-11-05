@@ -314,6 +314,7 @@ namespace Symbiose
 		{
 			v = Mathf.Clamp(v, 0f, 1f);
 			if (Mathf.IsEqualApprox(v, _vitalite)) return;   // early-out : pas de redraw
+			if (RecetteDeLaPlante(out _) && Echelon(v) == Echelon(_vitalite)) return;   // arbre : HOUPPIER ④
 			_vitalite = v;
 			Invalidate();
 		}

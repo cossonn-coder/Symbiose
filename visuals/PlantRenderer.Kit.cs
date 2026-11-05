@@ -81,9 +81,9 @@ namespace Symbiose
 		};
 
 		/// <summary>Région de l'atlas teintée par une rampe (image RGBA8).</summary>
-		internal static Image TeindreKit(Rect2I r, Color[] rampe)
+		internal static Image TeindreKit(Rect2I r, Color[] rampe, Image atlas = null)
 		{
-			var src = KitNiveaux;
+			var src = atlas ?? KitNiveaux;
 			var img = Image.CreateEmpty(r.Size.X, r.Size.Y, false, Image.Format.Rgba8);
 			for (int y = 0; y < r.Size.Y; y++)
 				for (int x = 0; x < r.Size.X; x++)

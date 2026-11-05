@@ -85,9 +85,9 @@ namespace Symbiose
 			float espace = l.EspaceCm * (loin ? 1.6f : 1f);
 			FicheTige t = l.Organes.Tige;
 			var segs = _structure.Segments;
-			for (int i = 0; i < segs.Count; i++)
+			foreach (var s in segs)
 			{
-				var s = segs[i];
+				int i = CleSegment(s);   // stable : une coupe ailleurs ne déplace rien (HOUPPIER ④)
 				Vector3 a = s.Base - new Vector3(collet.X, collet.Y, 0f);
 				Vector3 b = a + s.Dir * s.LengthCm;
 				float large = Mathf.Clamp(s.ThicknessCm, 0.1f, l.TigeMaxCm) * WorldView.PxPerCmX;
@@ -108,7 +108,7 @@ namespace Symbiose
 					float cote = (i + j) % 2 == 0 ? 1f : -1f;
 					float ang = az + (cote < 0f ? Mathf.Pi : 0f) + (Hash01(421, i, j) - 0.5f) * 1.1f;
 					float lg = Mathf.Max(l.LongCm * g * Mathf.Lerp(0.7f, 1f, Hash01(423, i, j)), 1f);
-					int k = i * 41 + j * 2;
+					int k = (i & 0xFFFFF) * 41 + j * 2;   // i = clé stable : borné, jamais négatif
 					// Rayon infini : une liane n'a pas de rayon de port, sa feuille garde sa taille. Densité déjà tirée.
 					AjouterFeuilleTige(l.Organes, p, ang, lg, Hash01(13, i, j), float.MaxValue, 1f, k, t.Penche);
 					if (l.Opposees) AjouterFeuilleTige(l.Organes, p, ang + Mathf.Pi, lg, Hash01(13, i, j + 7), float.MaxValue, 1f, k + 1, t.Penche);

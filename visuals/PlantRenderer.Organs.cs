@@ -293,10 +293,10 @@ namespace Symbiose
 				// Palier ×4 (D106 T6) : des MASSES de feuillage, pas chaque feuille.
 				if (!AuPalier(PalierOrganesZoom))
 					DrawMassesFeuillage(collet, pal, automne, density);
-				else for (int i = 0; i < _structure.Segments.Count; i++)
+				else foreach (var s in _structure.Segments)
 				{
-					var s = _structure.Segments[i];
 					if (!IsLeafy(s)) continue;
+					int i = CleSegment(s);   // stable : une coupe ailleurs ne déplace rien (HOUPPIER ④)
 					// ⑤ Facteur de croissance des feuilles de CE segment (doc §4.2) :
 					// rampe linéaire de l'âge du segment, écrêtée à 1. Un segment établi
 					// (age ≥ maturité) → 1 = feuilles pleines d'emblée (pas de pop-in au
