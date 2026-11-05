@@ -33,7 +33,7 @@ from plants.catalogue import PLANT_CATALOGUE
 from fields import FRUIT_MASSE
 from world import Support
 from sim.growth import grow_plant
-from .base import build_banc_tile, monde, vieillir
+from .base import build_banc_tile, monde, vieillir, sans_herbivorie, banque_de
 
 # Du plus haut au plus bas [`height_cm` au dernier stade] : l'ordre des emplacements,
 # du nord au sud. Toute espèce ajoutée au catalogue doit entrer ici (test).
@@ -145,4 +145,6 @@ def accroches_adultes():
     poser("lierre", 125, 925, support_lierre)
     poser("tomate", 275, 775)
     eco.seed_bank.germination_candidates = lambda *a, **k: []
-    return monde([tuile], {tuile.tile_id: eco})
+    sans_herbivorie(eco)                               # D127 : 0 vivant sur 9 à +5 sinon
+    return monde([tuile], {tuile.tile_id: eco},
+                 banque=banque_de("haricot", "tomate", "lierre", "jasmin", "tournesol"))

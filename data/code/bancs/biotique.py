@@ -23,7 +23,7 @@ from plants.genetics import clamp_gene
 from fields.seedbank import GrainEnAttente
 from sim.seeds import PlayerSeedBank, Seed
 from world import House, Support, MUR
-from .base import build_banc_tile, monde, force_faune, vieillir
+from .base import build_banc_tile, monde, force_faune, vieillir, sans_herbivorie, banque_de
 
 # ─────────────────────────── 1. infestation ravageur ─────────────────────────
 # Densité `puceron` (catégorie `ravageur`) pré-chargée BIEN au-dessus du floor du
@@ -295,6 +295,7 @@ def grimpantes():
     # (létalité trop brutale), suivi en dette D64, hors périmètre du banc.
     for tuile, eco in ((grimpe, eco_g), (mur_tile, eco_m), (sud, eco_s)):
         eco.seed_bank.germination_candidates = lambda *a, **k: []   # banc ISOLÉ
+        sans_herbivorie(eco)                                        # D127 : 0 vivant sur 9 à +7 sinon
         for stake in tuile.stakes:                                  # paillage → anti-gel
             while stake.add("paillage"):
                 pass
@@ -302,7 +303,8 @@ def grimpantes():
     return monde([grimpe, mur_tile, sud],
                  {grimpe.tile_id: eco_g, mur_tile.tile_id: eco_m,
                   sud.tile_id: eco_s},
-                 house=house)
+                 house=house,
+                 banque=banque_de("haricot", "tomate", "lierre", "jasmin", "tournesol"))
 
 
 # ─────────────────── 6. floraison des saisons (sprint FLORAISON ③) ─────────────

@@ -23,7 +23,7 @@ from __future__ import annotations
 
 from world import Tile, House
 from fields import init_eco
-from sim.seeds import PlayerSeedBank
+from sim.seeds import PlayerSeedBank, Seed
 from sim.precroissance import pre_croitre
 
 # Graine de la morphogénèse pré-déroulée par `vieillir` (la forme ne dépend pas
@@ -64,6 +64,24 @@ def monde(tiles, ecos, house=None, banque=None):
     haute/proche pour forcer l'ombre, cf. ③). `banque=None` → banque-joueur vide
     (le branchement `cmd_init` retombe alors sur la banque smoke)."""
     return (tiles, ecos, house or House(), banque or PlayerSeedBank())
+
+
+def sans_herbivorie(eco) -> None:
+    """Banc d'observation : les ravageurs ne mordent plus. Seule la lecture par
+    `category_density` est coupée, le champ continue de vivre et de se dessiner. Patron de
+    `germination_candidates` coupé sur le banc isolé : l'instrument montre autre chose.
+    La mort d'un pied sain à faible densité reste à comprendre, cf. D127."""
+    densite = eco.category_density
+    eco.category_density = lambda cat, r, c: 0.0 if cat == "ravageur" else densite(cat, r, c)
+
+
+def banque_de(*especes, par_espece: int = 5) -> PlayerSeedBank:
+    """Banque-joueur garnie : `par_espece` graines de chaque espèce, pour semer au F5."""
+    banque = PlayerSeedBank()
+    for espece in especes:
+        for _ in range(par_espece):
+            banque.add(Seed(species=espece))
+    return banque
 
 
 def force_memoire(plant, nom: str, valeur: float) -> None:

@@ -132,4 +132,4 @@ Banc `accroches_adultes` : haricot autour du tuteur, du treillis, de la pergola,
 
 ## §REPRISE
 
-Sprint clos côté code (①→⑥). **F5 du 2026-11-05 : rendu validé par Nico**, retours versés à D118 (arbres, ortie, fleurs, nectar). **Grimpes non testées** : `accroches_adultes` et `grimpantes` n'ont plus aucune plante vivante après 5 et 7 semaines [seed 42, n=1 run par banc, VM], par herbivorie, et le joueur n'y a aucune graine (D127). Attendus de Nico : voir les grimpes en planification, temps figé, ou décider de la correction des bancs ; arbitrage du seuil de cuisson (bilan ③) ; validation de la masse de coupe ×8 sous automate (bilan ⑤). Suite : D119, cf. `project_file_priorisee`.
+Sprint clos côté code (①→⑥). **F5 du 2026-11-05 : rendu validé par Nico**, retours versés à D118 (arbres, ortie, fleurs, point de pollen). Arbitrages rendus : cuisson mesurée en durée totale (non encore mesurée), masse de coupe ×8 validée. **Bancs de grimpe corrigés** (herbivorie coupée, 5 espèces en banque de graines ; cause moteur dans D127). Reste : F5 des grimpes sur `accroches_adultes` et `grimpantes`. Suite : D119, cf. `project_file_priorisee`.
