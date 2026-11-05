@@ -198,6 +198,10 @@ class PlantInstance:
     # TOUJOURS None à ce tronçon (aucun support n'existe encore). Hors `_PLANT_ATTRS`
     # du golden.
     support: object | None = None
+    # Dernier relais d'appui (sprint HOUPPIER ②) : (ref, x_cm, y_cm) en repère tuile, le
+    # point vers lequel la tige se rapproche. Sans effet si `support` ne vise plus `ref`.
+    # Hors `_PLANT_ATTRS` du golden.
+    relais: tuple | None = None
 
     def __post_init__(self):
         if self.x_cm is None or self.y_cm is None:

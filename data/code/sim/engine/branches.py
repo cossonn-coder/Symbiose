@@ -16,6 +16,8 @@ bois (③④) d'un flux CONTINU, pas seulement à la mort des arbres.
      les PERSISTANTS (sapin, lierre : le feuillage gardé retient la neige).
   4. ARBUSTES non procéduraux (framboisier, thym, lavande, myrtille) — bois mort
      largué une fois l'an à la semaine d'espèce (`bois_chute_*`), au plot du pied.
+  5. EFFONDREMENT (HOUPPIER ②) — liane à `rigidite_tige` : ce qui pend au-delà de sa
+     longueur critique tombe (`sim/growth/tige_libre.py`).
 
 La coupe structurelle est PURE (`sim/growth`) ; ici on lit le milieu (lumière,
 vent, neige) et on dépose. Zéro RNG : k arrondi par `_hash_noise`.
@@ -29,6 +31,7 @@ from sim.growth import (shade_tolerance_effective, branches_ombragees,
                         branches_a_casser, couper_branches, seuil_et_age,
                         fenetre_ouverte)
 from sim.growth.constantes import CLADO_PAR_FENETRE
+from sim.growth.tige_libre import effondrer
 from .decompo import deposer_bois_tombe
 
 # --- Tempête (vent local × rafale × turbulence, même lecture que _wind_damage) ---
@@ -135,7 +138,8 @@ def mort_des_branches(tile, eco, saison: str, week: int, week_in_year: int,
             continue
         causes = (("ombre", _cladoptose(plant, eco, saison, seed, week)),
                   ("tempête", _casse_vent(plant, eco, gust_peak, seed, week)),
-                  ("neige", _casse_neige(plant, eco, seed, week) if is_neige else []))
+                  ("neige", _casse_neige(plant, eco, seed, week) if is_neige else []),
+                  ("effondrement", effondrer(plant)))
         for cause, tombes in causes:
             if deposer_bois_tombe(plant, tombes, eco) > 1e-4:
                 log.append(f"    🪵 Branche morte ({cause}) {plant.name}@{plant.position}")

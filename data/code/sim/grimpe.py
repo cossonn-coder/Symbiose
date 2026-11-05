@@ -18,30 +18,36 @@ projetée sur l'hôte plus bas), philo #2 (flux → contrainte → réponse), z�
 Déterministe, ZÉRO RNG (philo #3) : départage distance PUIS identité stable.
 Le biais de grimpe lui-même (relèvement du plancher d'apex quand accroché) vit
 dans `sim/growth/geometrie.py` (`_apex_z_floor`), déjà en place depuis ①.
+
+RELAIS (sprint HOUPPIER ②) : une liane à `rigidite_tige` déjà accrochée, dont l'apex a
+dépassé l'appui, en cherche un autre depuis cet apex (`relais_appui`). Sinon sa tige
+continue sans appui, plie et tombe (`sim/growth/tige_libre.py`).
 """
 
 from __future__ import annotations
 import math
 
 from constants import PLOT_CM
-from world import support_compatible, MUR, HOTE
+from sim.growth.geometrie import _tip
+from world import support_compatible, relais_compatible, MUR, HOTE
 
 # Rayon de recherche d'accroche : plot-foyer + son voisinage immédiat (§4, ~50 cm).
 # 1.5 plot couvre le foyer et déborde sur les plots adjacents où un support proche
 # peut être posé. Placeholder de calibrage (maquette ⑥).
 RAYON_ACCROCHE_CM = 1.5 * PLOT_CM
+PERIODE_RELAIS = 4   # semaines entre deux recherches de relais [choix]
 
 
-def _mur_appui(plant, house, tile_origin) -> tuple | None:
-    """Point d'appui du MUR maison le plus proche de la plante, s'il tombe dans le
+def _mur_appui(x_cm: float, y_cm: float, house, tile_origin) -> tuple | None:
+    """Point d'appui du MUR maison le plus proche de (x_cm, y_cm), s'il tombe dans le
     rayon d'accroche. Renvoie `(dist_cm, height_cm, x_world, y_world)` ou None.
-    La plante est en repère TUILE-local ; on la projette en repère MONDE (offset
-    `tile_origin`) pour la comparer à `house.footprint_bounds` (repère monde). Le
+    Le point est en repère TUILE-local ; on le projette en repère MONDE (offset
+    `tile_origin`) pour le comparer à `house.footprint_bounds` (repère monde). Le
     point d'appui = le point du RECTANGLE-empreinte le plus proche (clamp)."""
     if house is None:
         return None
     ox, oy = tile_origin
-    px, py = plant.x_cm + ox, plant.y_cm + oy
+    px, py = x_cm + ox, y_cm + oy
     x0, y0, x1, y1 = house.footprint_bounds
     cx = min(max(px, x0), x1)                        # point du rectangle le plus proche
     cy = min(max(py, y0), y1)
@@ -150,7 +156,7 @@ def chercher_support(plant, tile, house=None) -> None:
     # aux candidats avec la clé stable -1 (prioritaire au départage strictement
     # égal, cas de bord).
     if support_compatible(mode, MUR):
-        mur = _mur_appui(plant, house, (tile.origin_x_cm, tile.origin_y_cm))
+        mur = _mur_appui(plant.x_cm, plant.y_cm, house, (tile.origin_x_cm, tile.origin_y_cm))
         if mur is not None:
             d, h, _, _ = mur
             candidats.append((d, -1, MUR, h))
@@ -160,3 +166,52 @@ def chercher_support(plant, tile, house=None) -> None:
     # Le plus proche ; départage déterministe par la clé stable (distance, clé).
     d, _, ref, height_appui = min(candidats, key=lambda t: (t[0], t[1]))
     plant.support = (ref, height_appui)
+
+
+def _candidats_relais(plant, tile, house, x: float, y: float, z: float) -> list:
+    """Appuis plus hauts que la pointe (x, y, z), dans le rayon d'accroche, sur la tuile :
+    tuples (distance, clé_stable, ref, hauteur, x_appui, y_appui) en repère tuile. La clé
+    est un rang dans la tuile (-1 mur, puis structures, puis plantes) et pas `id()`, qui
+    change d'un lancement à l'autre (philo #3). Une grimpante n'est jamais hôte de relais :
+    deux lianes ne se porteraient l'une l'autre qu'en cycle."""
+    mode = plant.plant_class.mode_grimpe
+    out: list[tuple] = []
+    for i, sup in enumerate(tile.supports):
+        if sup.height_cm > z and relais_compatible(mode, sup.support_type):
+            d = math.hypot(x - sup.x_cm, y - sup.y_cm)
+            if d <= RAYON_ACCROCHE_CM:
+                out.append((d, i, sup, sup.height_cm, sup.x_cm, sup.y_cm))
+    if relais_compatible(mode, HOTE):
+        for j, other in enumerate(tile.plants):
+            if not other.is_alive or other.plant_class.mode_grimpe is not None:
+                continue
+            d = math.hypot(x - other.x_cm, y - other.y_cm)
+            if d <= RAYON_ACCROCHE_CM and (h := other.current_height) > z:
+                out.append((d, len(tile.supports) + j, other, h, other.x_cm, other.y_cm))
+    if relais_compatible(mode, MUR):
+        ox, oy = tile.origin_x_cm, tile.origin_y_cm
+        mur = _mur_appui(x, y, house, (ox, oy))
+        if mur is not None and mur[1] > z:
+            out.append((mur[0], -1, MUR, mur[1], mur[2] - ox, mur[3] - oy))
+    return out
+
+
+def relais_appui(plant, tile, house, week: int) -> None:
+    """Une liane accrochée dont un apex a dépassé l'appui passe sur le plus proche appui
+    plus haut que cet apex, s'il y en a un. No-op sans `rigidite_tige` : ni scan, ni effet
+    sur les autres grimpantes. Une fois toutes les PERIODE_RELAIS semaines : la tige pousse
+    de 2 cm par semaine, chercher plus souvent ne change rien. Tous les apex au-dessus de
+    l'appui cherchent, et pas le seul plus haut : au plafond de segments, celui-ci est
+    souvent loin de l'appui voisin que frôle un autre."""
+    if (plant.plant_class.rigidite_tige is None or plant.support is None
+            or week % PERIODE_RELAIS):
+        return
+    h_appui = plant.support[1]
+    candidats: list[tuple] = []
+    for s in plant.segments:
+        if s.is_apex and (pointe := _tip(s))[2] > h_appui:
+            candidats.extend(_candidats_relais(plant, tile, house, *pointe))
+    if candidats:
+        _, _, ref, h, ax, ay = min(candidats, key=lambda t: (t[0], t[1]))
+        plant.support = (ref, h)
+        plant.relais = (ref, ax, ay)

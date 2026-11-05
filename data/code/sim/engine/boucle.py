@@ -38,7 +38,7 @@ from .transpiration import demande_climatique   # transpiration foliaire (D111 �
 from sim.wind import wind_at, gust_profile
 from sim.vigueur import tick_player_vigueur, refill_saison
 from sim.growth import grow_plant
-from sim.grimpe import chercher_support
+from sim.grimpe import chercher_support, relais_appui
 from sim.clonal import emettre_ramets
 from .calendrier import (SAISONS, saison_de, est_debut_saison, est_fin_saison,
                         est_phase_floraison, est_phase_recolte)
@@ -457,6 +457,7 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
             for plant in tile.plants:
                 if plant.is_alive:
                     chercher_support(plant, tile, house)
+                    relais_appui(plant, tile, house, week)   # HOUPPIER ② : no-op sans `rigidite_tige`
                     # D111 ② : les branches élaguées d'un LIGNEUX tombent en litière
                     # `bois` sous elles (no-op pour les herbacées / rien d'élagué).
                     tombes = grow_plant(plant, seed, week, eco.lumiere)

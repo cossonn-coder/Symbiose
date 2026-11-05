@@ -64,6 +64,14 @@ DROOP_Z               = -0.10                # composante z visée quand l'apex 
 # plus la montée). Placeholder de calibrage (maquette ⑥).
 GRIMPE_Z              = 0.85                  # composante z visée en montée accrochée
 
+# Tige libre d'une liane (sprint HOUPPIER ②, `tige_libre.py`). Tous [choix], à juger au F5.
+LIGNIF_TIGE_MIN       = 0.25   # part de L_crit acquise sans lignification (jeune tige)
+PLIAGE_Z              = -0.70  # composante z visée par une tige pliée : elle pend
+PLIAGE_GAIN           = 0.35   # courbure par segment émis : l'arc se fait en 3 à 4 segments
+MARGE_EFFONDREMENT    = 1.5    # libre > L_crit × marge → la partie pliée tombe
+RELAIS_BIAIS          = 0.5    # force du rapprochement horizontal vers un nouvel appui
+RELAIS_CONTACT_CM     = 15.0   # en deçà, la tige est contre son appui : plus de biais
+
 # --- Étiolement (compétition intra-plot, Q7 — « filer vers la lumière ») -----
 # Un HÉLIOPHILE (tolérance à l'ombre effective < 1) ombragé (lumière effective
 # sous le seuil) ALLONGE plus vite en axial (tige grêle, entre-nœuds longs) :

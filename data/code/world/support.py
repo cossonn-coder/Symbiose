@@ -60,6 +60,20 @@ def support_compatible(mode_grimpe: str | None, support_type: str) -> bool:
     return support_type in _COMPATIBILITE.get(mode_grimpe, frozenset())
 
 
+# Relais d'appui (sprint HOUPPIER ②, `sim/grimpe.relais_appui`) : une liane DÉJÀ accrochée
+# dont la tige dépasse son appui en cherche un autre. Le sarmenteux n'a pas d'organe
+# d'accroche, mais ses cannes s'appuient sur ce qu'elles rencontrent : structures et
+# plantes. Le mur nu ne lui offre rien, il reste au geste `palisser`.
+_RELAIS_SARMENTEUX = frozenset({HOTE, "tuteur", "treillis", "pergola"})
+
+
+def relais_compatible(mode_grimpe: str | None, support_type: str) -> bool:
+    """Comme `support_compatible`, pour le relais : seul le sarmenteux y diffère."""
+    if mode_grimpe == "sarmenteux":
+        return support_type in _RELAIS_SARMENTEUX
+    return support_compatible(mode_grimpe, support_type)
+
+
 # ---------------------------------------------------------------------------
 # Structure-support posable
 # ---------------------------------------------------------------------------

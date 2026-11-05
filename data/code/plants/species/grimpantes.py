@@ -45,6 +45,7 @@ class Ivy(PlantBase):
     nectar = 0.8  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     resilience_base = 1.25         # S — liane ligneuse persistante, extrêmement rustique
     mode_grimpe            = "crampon"   # crampons adhésifs → escalade le mur nu (②)
+    rigidite_tige          = 120.0       # L_crit à 1 cm : 1,2 m de tige libre [choix] (HOUPPIER ②)
     hauteur_autoportante   = 15.0        # rampe bas ; au-delà, libre → l'apex retombe (①)
     shade_tolerance        = 1.4         # SCIAPHILE : prospère à l'ombre (pied de mur nord)
     resistance_ecrasement  = 0.7         # liane coriace, repart de la souche
@@ -117,8 +118,10 @@ class Jasmine(PlantBase):
     """
     Jasminum officinale — Jasmin (Oleaceae).
     Grimpante SARMENTEUSE : ses tiges souples ne s'agrippent PAS seules — sans
-    palissage elles retombent et s'étalent (affalement géométrique, ①). Le SEUL
-    canal d'accroche est le geste `palisser` (④), qui l'attache à un support posé.
+    palissage elles retombent et s'étalent (affalement géométrique, ①). La PREMIÈRE
+    accroche passe par le geste `palisser` (④), qui l'attache à un support posé ; le mur
+    reste réservé à ce geste. Une fois palissées, ses cannes passent d'elles-mêmes sur
+    une structure ou une plante voisine plus haute (relais, HOUPPIER ②).
     C'est LE démonstrateur du palissage. Floraison estivale mellifère et parfumée
     (nectar pour l'abeille et surtout le papillon). `archetype=None` ⇒ hors
     succession spontanée.
@@ -131,6 +134,7 @@ class Jasmine(PlantBase):
     nectar = 0.5  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     resilience_base = 1.0          # intermédiaire — sarment ligneux, mais rameaux tendres au froid
     mode_grimpe            = "sarmenteux"  # ne s'accroche que par palissage (④)
+    rigidite_tige          = 80.0          # plus souple que le lierre [choix] (HOUPPIER ②)
     hauteur_autoportante   = 25.0          # sarments souples : retombent vite sans appui (①)
     resistance_ecrasement  = 0.4           # tige souple, casse mais rejette
     stimulation_ecrasement = 0.3

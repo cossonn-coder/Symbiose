@@ -23,6 +23,7 @@ from __future__ import annotations
 from sim.growth import (grow_plant, shade_tolerance_effective, branches_ombragees,
                         couper_branches, seuil_et_age, fenetre_ouverte)
 from sim.growth.constantes import CLADO_PAR_FENETRE
+from sim.growth.tige_libre import effondrer
 
 from calendrier import SEMAINE_HIVER, wiy_de   # calendrier UNIQUE (D122, couche basse)
 
@@ -37,6 +38,7 @@ def pre_croitre(plant, seed: int, annees: float) -> None:
         return
     for w in range(1, n + 1):
         grow_plant(plant, seed, w)
+        effondrer(plant)                 # liane à `rigidite_tige` : même port qu'en jeu, sinon no-op
         if cls.ligneux and fenetre_ouverte(plant, seed, w):
             saison = "hiver" if wiy_de(w) >= SEMAINE_HIVER else "ete"
             densite = cls.foliage_density_at(plant, saison)

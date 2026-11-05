@@ -22,6 +22,7 @@ from .luxuriance import luxuriance
 from .diversite import diversite_fondatrice
 from .modele_spatial import modele_spatial
 from .planche_especes import planche_especes, accroches_adultes
+from .lianes import liane_relais
 from . import palette_gestes as _palette_gestes
 from . import courrier as _courrier
 from . import peripherie as _peripherie
@@ -53,6 +54,7 @@ BANCS = {
     "modele_spatial": modele_spatial,
     "planche_especes": planche_especes,
     "accroches_adultes": accroches_adultes,
+    "liane_relais": liane_relais,
     "palette_gestes": _palette_gestes.palette_gestes,
     "courrier": _courrier.courrier,
     "peripherie": _peripherie.peripherie,
@@ -106,6 +108,8 @@ BANC_WEEK_DEPART = {"grimpantes": 9, "luxuriance": 9, "diversite_fondatrice": 9,
                     # `planche_especes` (FORMES DES PLANTES ①) : plein été, même raison.
                     "planche_especes": 20,
                     "accroches_adultes": 20,
+                    # `liane_relais` (HOUPPIER ②) : même raison, feuillage et lianes en pleine pousse.
+                    "liane_relais": 20,
                     # `effondrement` (④) démarre SEMAINE 217 (an 5) : le ciel est
                     # déjà au plomb à l'arrivée (convergence 2.0) et le reste ; deux
                     # pas de simulation amènent la frappe de Grêle locale (semaine 218)

@@ -7,7 +7,7 @@
 | # | Kickoff | État |
 |---|---|---|
 | ① | `01_grimpantes_tenue.md` | **fait**, golden `a10b7225…` intact, F5 à faire |
-| ② | `02_grimpantes_sans_fin.md` | à faire |
+| ② | `02_grimpantes_sans_fin.md` | **fait**, golden `a10b7225…` intact, F5 à faire |
 | ③ | `03_fruits_arbres.md` | à faire |
 | ④ | `04_gerbes_cuisson.md` | à faire |
 | ⑤ | `05_houppier_vue.md` | à faire |
@@ -110,10 +110,58 @@ Creux restants, attendus du plateau : lierre 977 cm [s130], jasmin 1 000 cm [s13
 - **Sans appui** (supports retirés en mémoire) : lierre 320 cm et jasmin 412 cm de haut en s156, contre 56 et 10 cm avant. Une liane libre tient debout jusqu'au ② (`L_crit`). Le ② doit le vérifier explicitement.
 - Pied nu : 93 à 98 % de la longueur reste feuillée, `IsLeafy` coupe au-dessus de 2,5 cm. Laissé tel quel, un vieux lierre a le pied nu.
 
+## Bilan ② Grimpantes sans fin (2026-11-05)
+
+Neuf : `sim/growth/tige_libre.py` (L_crit, pliage, effondrement, biais de relais), `relais_appui` dans `sim/grimpe.py`, `relais_compatible` dans `world/support.py`, cause `effondrement` dans `mort_des_branches`, banc `liane_relais` (`bancs/lianes.py`, départ s20), `tests/bancs/test_liane_relais.py`. Golden `a10b7225…` intact, `test_liane_relais`, `test_bancs_grimpe`, `test_grimpe` 10/10, `test_squelette_herbacees` 42/42, `test_bois_mort` 42/42, `test_sim_server` 321/321. Aucun C# touché, build non concerné.
+
+Réglages [choix] : `rigidite_tige` lierre 120, jasmin 80 ; marge d'effondrement 1,5 ; `PLIAGE_Z` −0,7 ; relais toutes les 4 semaines.
+
+Tous les chiffres : [seed 42, n=1 run, 156 semaines, VM, charge 1 à 3].
+
+| `liane_relais` | zmax dès s4 | Appui en s156 | Longueur s156 |
+|---|---|---|---|
+| Lierre, treillis seul | 205 cm (320 au ①) | treillis | 1 159 cm |
+| Jasmin, treillis seul | 177 cm | treillis | 1 160 cm |
+| Lierre, treillis + mur | 207 cm | mur, passé en s27 au plus tard | 1 247 cm |
+| Jasmin, treillis + mur | 198 cm | treillis : le mur lui reste fermé | 1 207 cm |
+| Lierre, treillis + arbre | 253 cm | pommier, dès s21 | 1 172 cm |
+| Jasmin, treillis + arbre | 274 cm | pommier, dès s65 | 1 263 cm |
+| Lierre, sans appui | 162 cm (320 au ①) | aucun | 1 164 cm |
+| Jasmin, sans appui | 135 cm (412 au ①) | aucun | 690 cm |
+
+Effondrements : jasmin sans appui 30 sur 156 semaines, lierre sans appui 7, et 0 sur les six pieds accrochés. Au plafond de 80 segments, `_elaguer` coupe d'abord les bouts les plus profonds : sur une liane accrochée, le pliage et l'effondrement ne se voient pas à 3 ans, à regarder au F5.
+
+`accroches_adultes`, à comparer au ① : lierre 1 330 → 1 151 cm, 1 chute > 15 %, zmax 203 cm ; jasmin 1 278 → 1 505 cm, 2 chutes, zmax 175 cm. Épaisseur max inchangée, 4,18 cm.
+
+Hôte : vitalité du pommier sous le lierre 1,0 sur 3 ans. Sous le jasmin, minimum 0,733, sans preuve que le jasmin en soit la cause. Aucun étranglement constaté à 3 ans.
+
+Tick du banc : médiane 98,2 et 97,8 ms → 100,2 et 99,1 ms, soit +1 à +2 % [n=2 runs par côté, charge 1 à 3, `process_time`].
+
+**Écarts au kickoff, vérifiés** :
+- **Haricot** : digests DIFFÉRENTS sur `accroches_adultes`. Le critère ne pouvait pas tenir : la liane change de port, donc l'ombre et le sol du haricot. Le vrai test d'inertie est vert : `rigidite_tige` coupé en mémoire, haricot ET lianes bit-identiques à HEAD sur 156 semaines.
+- **`DROOP_Z` ne plie pas** : un plancher laisse telle quelle une pointe qui monte. Ajout de `plier()`, qui courbe vers `PLIAGE_Z`.
+- **`d` au départ de la partie libre** : le pipe model y additionne toutes les tiges, 4,18 cm au collet d'une liane sans appui, donc 3 m de tenue. `epaisseur_tige` retire la part du faisceau.
+- **`axe_porteur` non respecté** : il protège le chemin vers le point le plus haut, celui qui doit tomber. La coupe part du point de pliage ; le collet et le bois sous l'appui ne sont jamais touchés.
+- **`support_compatible`** refuse tout au sarmenteux : le jasmin n'aurait jamais relayé. `relais_compatible` lui ouvre structures et plantes, pas le mur.
+- **Scan depuis tous les apex au-dessus de l'appui**, pas le seul plus haut : le jasmin n'atteignait jamais l'arbre.
+- **Repère 2 m à 1 cm non retenu** : à 200, le lierre sur treillis gardait 320 cm et ne pliait jamais. 120 [choix] est à juger au F5.
+- **Pré-croissance** : `pre_croitre` joue aussi `effondrer`, sinon une liane pré-vieillie arrive avec ses tiges pliées jusqu'au sol.
+
+**Rapprochement gardé** (`vers_relais`) : jasmin, pointes au-dessus de 180 cm à 48 cm de l'appui contre 66 sans le biais, en médiane ; lierre 49 contre 48, mais 546 relevés contre 260. Seul le relais l'active, l'accroche initiale ne change pas.
+
+**Limites et trous laissés** :
+- Distance au TRONC pour un hôte : une pointe dans la couronne, à 111 cm du tronc, ne relaie pas. Le banc pose donc l'arbre du côté où pousse le jasmin.
+- Le relais ne part que d'une liane déjà accrochée. Une liane libre reste à `chercher_support`, qui mesure depuis le pied.
+- `_hote_candidats` garde `id(other)` et admet une grimpante comme hôte (préexistant, hors périmètre). Le relais, lui, utilise un rang stable et exclut les grimpantes.
+- Longueur libre mesurée sur la seule hauteur : un rameau parti loin du treillis mais sous 180 cm reste « appuyé ».
+- Pont : `dx_cm`/`dy_cm` peuvent dépasser 75 cm après un relais. Non vérifié côté dessin.
+
+**À juger au F5** : port en cascade et `rigidite_tige` ; montée sur l'arbre et le mur ; `canopy_r` ; le banc n'est pas encore très lisible à ×2. Capture : `tools/capture_vm.sh -b liane_relais -w 104 -z 2 -c 1680,1000`.
+
 ## Hors périmètre sauf avis contraire
 
 Reste de D118 : piquants d'ortie, fleurs, point de pollen, gestes, DA hors plantes.
 
 ## REPRISE
 
-Lire `CLAUDE.md` + ce fichier, puis `visuals/PlantRenderer.Assemblee.cs`, `PaliersHauts.cs`, `Organs.cs`. ① fait (voir Bilan). Prochaine étape : `/sprint-auto sprint_houppier`, tronçon ②. Sondes : recopiées au §Audit, le scratchpad ne survit pas.
+Lire `CLAUDE.md` + ce fichier, puis `visuals/PlantRenderer.Assemblee.cs`, `PaliersHauts.cs`, `Organs.cs`. ① et ② faits (voir Bilans). Prochaine étape : `/sprint-auto sprint_houppier`, tronçon ③. Sondes : recopiées au §Audit, le scratchpad ne survit pas.

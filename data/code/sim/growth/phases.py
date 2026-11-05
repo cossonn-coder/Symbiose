@@ -17,11 +17,12 @@ from fields import _hash_noise, form_seed_at
 from .constantes import (AUXIN_PROD_FLOOR, AUXIN_RELEASE_SCALE, AUXIN_DECAY,
                          AUXIN_INHIB_THRESHOLD, THICKNESS_INIT,
                          JITTER_RAD, ETIOLEMENT_LIGHT_SEUIL, ETIOLEMENT_GAIN,
-                         GIRTH_TAU, TAPER_EXP)
+                         GIRTH_TAU, TAPER_EXP, PLIAGE_Z)
 from .geometrie import (_tip, _horiz, _lateral_dir, _phototropic_bias,
                         _gravitropic_droop, _apex_z_floor, _depths, _children,
                         _subtree, _apex_in_subtree, _rebuild, taper_thickness,
                         ordre_enfants_dabord, chemin_fleche)
+from .tige_libre import apex_plies, plier, vers_relais
 
 
 # ---------------------------------------------------------------------------
@@ -74,6 +75,7 @@ def _elongate_emit(plant, speed: float, max_height: float, max_extent: float,
     # (base_z + dir_z·longueur), sans construire le triplet (FLUIDITÉ AN 2 ②).
     max_z = max((s.base[2] + s.dir[2] * s.length_cm for s in segs), default=0.0)
     z_floor = _apex_z_floor(plant, max_z)
+    plies = apex_plies(plant)                     # HOUPPIER ② : vide hors lianes à `rigidite_tige`
     new_segs = []
     for i, s in enumerate(list(segs)):  # snapshot : indices stables (on append)
         if not s.is_apex:
@@ -87,14 +89,18 @@ def _elongate_emit(plant, speed: float, max_height: float, max_extent: float,
             s.length_cm = emit_length             # cap → le segment devient du bois
             s.is_apex = False
             tip = _tip(s)
-            new_dir = _phototropic_bias(s.dir, tip[0], tip[1], light_field,
-                                        strength, z_floor)
+            new_dir = _phototropic_bias(s.dir, tip[0], tip[1], light_field, strength,
+                                        PLIAGE_Z if i in plies else z_floor)
             if gain > 0.0:
                 # Éloignement horizontal du porteur à l'axe du tronc, normalisé par le
                 # gabarit de couronne : 0 sur l'axe (flèche dressée), →1 au bord (rameau
                 # distal pendant). Discriminant géométrique leader/rameau (cf. helper).
                 off_axis = min(1.0, _horiz(tip, collet) / max_extent) if max_extent > 0 else 0.0
                 new_dir = _gravitropic_droop(new_dir, off_axis, gain)  # retombée APRÈS phototropisme
+            if i in plies:
+                new_dir = plier(new_dir)          # au-delà de L_crit, la tige ne tient plus
+            elif plant.relais is not None:
+                new_dir = vers_relais(new_dir, tip, plant)
             new_segs.append(_mk(i, tip, new_dir, s.auxin))  # apex penché / affalé selon le plancher
     segs.extend(new_segs)
 

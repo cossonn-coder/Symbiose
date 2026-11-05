@@ -306,6 +306,9 @@ class PlantBase(ABC):
     # un support (tronçon ②) relèvera à nouveau le plancher → grimpe.
     hauteur_autoportante:  float | None = None  # cm tenus debout SANS appui ; None = non-grimpante
     mode_grimpe:           str | None   = None  # None|"crampon"|"vrille_volubile"|"sarmenteux" — gouverne (②) quels supports sont valides
+    # Raideur de tige (sprint HOUPPIER ②, `sim/growth/tige_libre.py`) : L_crit en cm pour une
+    # tige lignifiée de 1 cm. None → levier inerte : ni relais, ni pliage, ni effondrement.
+    rigidite_tige:         float | None = None
 
     # --- Réponse à l'écrasement (volet 2, CONCEPTION_ECRASEMENT §5) ---
     # DEUX axes indépendants, LUS UNIQUEMENT par sim.actions.ecraser_plante (geste
