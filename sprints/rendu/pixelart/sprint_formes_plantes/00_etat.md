@@ -132,4 +132,4 @@ Banc `accroches_adultes` : haricot autour du tuteur, du treillis, de la pergola,
 
 ## §REPRISE
 
-Sprint clos côté code (①→⑥). **F5 du 2026-11-05 : rendu validé par Nico**, retours versés à D118 (arbres, ortie, fleurs, point de pollen). Arbitrages rendus : cuisson mesurée en durée totale (non encore mesurée), masse de coupe ×8 validée. **Bancs de grimpe corrigés** (herbivorie coupée, 5 espèces en banque de graines ; cause moteur dans D127). Reste : F5 des grimpes sur `accroches_adultes` et `grimpantes`. Suite : D119, cf. `project_file_priorisee`.
+Sprint clos côté code (①→⑥). **F5 du 2026-11-05 : rendu validé par Nico**, retours versés à D118 (arbres, ortie, fleurs, point de pollen). Arbitrages rendus : cuisson mesurée en durée totale (non encore mesurée), masse de coupe ×8 validée. **Bancs de grimpe corrigés** (herbivorie coupée, 5 espèces en banque de graines ; cause moteur dans D127). F5 des grimpes fait le 2026-11-05, validé, reliquats (lierre, ergonomie des gestes, DA hors plantes) versés à D118. **Sprint clos, F5 compris.** Suite décidée par Nico : conception des arbres.
