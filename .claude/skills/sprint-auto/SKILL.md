@@ -149,19 +149,17 @@ jamais `git add -A` aveugle (ajoute les fichiers du tronçon nommément).
 3. Mets à jour la mémoire auto si des **décisions de design / feedback notables**
    ont émergé (sinon, rien — pas de bruit).
 4. Supprime `HANDOFF.md` s'il existe et est devenu obsolète.
-5. **Mesure de coût du run (automatique).** Lance l'analyseur **déterministe**
-   (arithmétique pure sur les `usage`, **sans LLM, quasi gratuit**) :
-   `python3 ~/.claude/skills/analyzer/scripts/report.py --latest`. Il recolle
+5. **Mesure de coût du run (automatique).** Lance l'analyseur :
+   `python3 ~/.claude/skills/analyzer/scripts/report.py --latest --deep`. Il recolle
    l'orchestrateur + tous les sous-agents de **ce** run (le coût que tu ne vois
    pas), écrit le JSON d'historique dans `~/skills-lab/` (permet l'avant/après
-   entre sprints) et imprime la ventilation. **Commit ce JSON** dans `~/skills-lab`
-   (dépôt git dédié), message court. Le **deep-dive qualitatif DeepSeek** (le skill
-   `/analyzer` complet : *pourquoi* un maillon a coûté) **consomme des tokens à
-   chaque appel** → ne le déclenche **que** si un maillon est **anormal**
-   (≈ > 2× la médiane des tronçons, ou une grappe d'échecs golden/build) ; sinon
-   note « coûts nominaux, pas de deep-dive ». **Jamais** de `Read` direct sur un
-   `.jsonl` de transcript (des dizaines de M de tokens) — le *pourquoi* passe par
-   `ask-deepseek` sur le chemin du transcript (règle dure du skill `/analyzer`).
+   entre sprints) et imprime la ventilation, par arithmétique pure sur les `usage`.
+   `--deep` confie à **DeepSeek** le *pourquoi* des maillons anormaux (> 2× la médiane
+   des tronçons, ou grappe d'échecs d'outil), sur leurs transcripts allégés, et verse
+   sa réponse en `.deepseek.md`. Rien d'anormal = aucun appel, il affiche « coûts
+   nominaux ». **Commit ces fichiers** dans `~/skills-lab` (dépôt git dédié), message
+   court. **Jamais** de `Read` direct sur un `.jsonl` de transcript (des dizaines de M
+   de tokens).
 6. **Push** : `git push origin main` (règle Nico 2026-10-23 : on pousse quand le
    travail est fini, sans demander — c'est ainsi que le F5 Windows reçoit le code).
 7. **Rapport final à Nico** : tronçons faits, hash golden final, **scissions

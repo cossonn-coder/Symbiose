@@ -311,6 +311,10 @@ Neuf : `PlantRenderer.Rameaux.cs` (table par espèce, rameaux et brindilles dér
 - `liane_relais`, an 3 : cascade et relais lisibles ? (Non validé ici.)
 - Écran de chargement et fluidité réelle sur le PC, surtout à ×1 quand beaucoup d'arbres recuisent.
 
+## Retour F5 de Nico (2026-11-05, premier passage)
+
+Les arbres ressemblent plus à des arbres. `liane_relais` : les lianes montent bien dans les arbres. Tous les fruits d'un arbre ne se laissent pas manger : versé à D118. Rapport C `verger_mur` an 5, ×4 : 29 FPS, frame 32,3 ms, 5 256 objets, tick moteur 224 ms [n=1 relevé, i5-4200H, HD 4600, 3 s/semaine].
+
 ## Hors périmètre sauf avis contraire
 
 Reste de D118 : piquants d'ortie, fleurs, point de pollen, gestes, DA hors plantes.
