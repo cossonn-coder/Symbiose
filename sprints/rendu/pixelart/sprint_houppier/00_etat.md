@@ -1,0 +1,91 @@
+# Sprint HOUPPIER (arbres + lierre, D118) — état
+
+**Conception figée le 2026-11-05** : `docs/rendu/pixelart/conception_houppier.md`. 5 tronçons, à exécuter par `/sprint-auto sprint_houppier`. Golden `a10b7225…` attendu intact partout, aucun re-figeage prévu.
+
+## Tronçons
+
+| # | Kickoff | État |
+|---|---|---|
+| ① | `01_grimpantes_tenue.md` | à faire |
+| ② | `02_grimpantes_sans_fin.md` | à faire |
+| ③ | `03_fruits_arbres.md` | à faire |
+| ④ | `04_gerbes_cuisson.md` | à faire |
+| ⑤ | `05_houppier_vue.md` | à faire |
+
+## Sujet
+
+Retour F5 de Nico, 2026-11-05 (D118) : arbres, beaucoup plus de feuilles dans le houppier et de petites branches pour les porter (précise le point (4) de D118, « masses ovales en pompon sur rameaux verts »). Et D118 (a) : lierre qui régresse ; attendu de Nico : hors coupe, il continue de grandir et de grossir.
+
+## Constats vérifiés (2026-11-05, HEAD `20dbea5`, golden `a10b7225…`)
+
+**Arbres**
+
+- Le moteur plafonne à 70 segments (90 pour le figuier), dont 19 à 33 apex à 10-25 ans sauf jeunes ports [`mesure_arbres`, seed 42, sans lumière, VM] ; 31 à 77 % des segments portent des feuilles [mêmes conditions]. Un segment fait 40-50 cm : c'est la charpente, il n'y a aucun rameau fin.
+- Vue : ×4 = une ellipse par paquet de 3 feuilles (`DrawMassesFeuillage`) → les pompons. ×2 = touffes le long des segments feuillés, 2 touffes voisines à 28 cm (`AjouterTouffeAutour`) → bouts garnis, milieu vide. Bois : `Lignification` = apex 0 → `ApexColor` vert vif sur tout le segment apex de 40-50 cm → les rameaux fluo.
+- `Hash01(…, i, …)` est indexé sur l'indice du segment. `_rebuild` réindexe à chaque coupe : les présences au hash sautent. Peu visible aujourd'hui, très visible si on densifie.
+- Cuisson d'un arbre aujourd'hui, ms par coup de pinceau : ×2 0,35 à 3,48 ; ×4 0,96 à 6,98 ; ×8 7,25 à 78,35 (figuier) [`foret_ports`, an 10, n=1 coup par espèce, 3 à 11 espèces selon le cadre, VM, charge 1 à 5]. ×16 non mesuré, aucun arbre cuit dans le cadre.
+- `foret_ports` n'est pas un banc lisible : la maison et les bords du monde gênent (figuier à 1275,775 ; arbres à x 2275 > 2000).
+
+**Lierre** [`accroches_adultes`, seed 42, n=1 run, VM, 156 semaines, ablations en mémoire, charge 2 à 10]
+
+- Base : longueur totale 132 à 252 cm, hauteur 89 cm en s156, 8 chutes de plus de 15 % en une semaine.
+- Causes : plafond `max_segments` 40 × `emit_length_cm` 8 = 320 cm de bois au mieux, coupe chaque semaine dès le plafond, apex compris ; tempête 5 fois, −342 cm ; neige 3 fois, −91 cm. Cladoptose : aucune sur ce run de base.
+- Essais : `emit` 20 + `cap` 80 + `wood_persistence` 4000 → s156 1 097 cm, hauteur 302, 2 chutes. Épaisseur max 0,98 → 1,27 cm en 3 ans, `girth_max_cm` 1,5 par défaut.
+- Golden identique avec lierre et jasmin patchés (emit 20, cap 80, wp 4000, fragilité 0,3, girth 6) [smoke].
+- **Non résolu** : jasmin aux mêmes réglages 857 → 436 cm entre s26 et s156, 5 chutes [mêmes conditions], cause non isolée. Lierre à 302 et jasmin à 251 cm dépassent leur treillis de 180 cm, à vérifier.
+
+## Décisions arrêtées (Nico, 2026-11-05)
+
+1. **Rameaux et brindilles dans la vue seule**, à la cuisson, dans `canopy_r`, table par espèce. **Audit demandé** du coût s'ils étaient au moteur.
+2. **Clé de hash stable** : la base du segment, plus son indice.
+3. **Lierre : girth relevé vers 6 cm [choix], bois moins cassant.**
+4. **Grimpantes sans fin de pousse** : au sommet de l'appui elles continuent, cherchent un support à proximité (arbre, autre plante, mur) et s'y accrochent. Au-delà d'une longueur sans support, la tige plie vers le sol ; cette longueur dépend de la lignification et de la dureté du bois ou de la fibre. La partie effondrée meurt.
+5. **Jasmin dans le sprint.**
+6. Questions de Nico à instruire : cuire au chargement, ou tout précuire et monter en RAM au lancement ? Fruits non vus à la dernière mise à jour. Fleurs qui manquent de détails.
+
+## Audit : rameaux en vrais segments moteur (patch mémoire, rien d'écrit)
+
+| Plafond, longueur de segment | Segments par arbre | `grow_plant` ms/arbre/sem | Cladoptose ms/arbre/passe | Plantes en JSON, `full` |
+|---|---|---|---|---|
+| Actuel (70, 40-50 cm) | 71 | 0,73 | 0,62 | 223 Ko |
+| 200, 20 cm | 198 | 2,40 | 2,05 | 344 Ko |
+| 400, 12 cm | 400 | 4,36 | 6,48 | 530 Ko |
+| 800, 8 cm | 800 | 14,81 | 36,69 | 892 Ko |
+
+[11 arbres à 20 ans, sans lumière pour les deux colonnes de temps, 6 arbres vieillis de 20 ans dans `full` pour le JSON, seed 42, n=1 run, VM, charge jusqu'à 19 sur la ligne 800, CPU `process_time`]
+
+`full` an 2, plafond 400 contre actuel [seed 42, n=1 run par côté, VM, charge 3 à 17] : tick médian 890 → 1 031 ms, soit +16 % avec 736 plantes contre 627 ; pommier 405 → 261 cm, rayon 285 → 141 ; golden changé (`2979f0ff…`). Verdict : au plafond 400 le CPU reste supportable ; l'obstacle est le recalibrage des 11 arbres, l'écologie déplacée, le golden et le JSON ×2,4. Correction de la réponse précédente, qui présentait le calcul d'ombre comme l'obstacle principal.
+
+## Constats sur fruits et cuisson
+
+- **Fruits** : parmi les 11 arbres, seul le pommier a `fruitier` (cerisier, figuier, noyer non). `full` : un pommier, 8 à 10 fruits de s7 à s22 et de s59 à s74, plus 1 ou 2 tomates [seed 42, n=1 run, VM]. Fiche : pommes en sept.-oct. (s23-s30). Le rendu fonctionne : pomme vue à ×4 en s15 [n=1 capture], grosse, tout en haut.
+- **Cuisson** : image propre à chaque individu, `SetStructure` salit un arbre à chaque snapshot (seuls les ports ont `DessinInchange`). `KitTouffe` existe déjà : pièces générées une fois, en codes de palette, teinte libre. `BakeQueue` : cuisson limitée au cadre et à sa marge.
+
+## Arbitrages rendus (Nico, 2026-11-05)
+
+7. **Rameaux en vue seule confirmés** après l'audit.
+8. **Précuisson** : pièces (gerbes) à l'écran de chargement + cadre de départ cuit avant d'ouvrir le jeu + recuisson seulement si le dessin change.
+9. **Fruits et fleurs dans le sprint** : cerisier, figuier, noyer fruitiers, fleurs des arbres sur les brindilles, date du pommier corrigée. Fleurs herbacées : restent à D118.
+10. **Cap 80 conservé** (OK du 2026-11-05) : plateau de longueur accepté.
+
+## Instruit après arbitrages (2026-11-05, patchs mémoire, rien d'écrit)
+
+**Jasmin : cause réduite à deux réglages.** À emit 20, cap 80, wp 4000, fragilité 0,3, girth 6, il ne chute plus : 985 cm en s26, 1 142 en s156 [`accroches_adultes`, seed 42, n=1 run, VM, charge 2 à 6]. L'essai à 857 → 436 n'avait ni la fragilité ni le girth : l'un des deux, ou les deux, supprime la chute, non séparés.
+
+**Lierre aux mêmes réglages : encore 866 → 670 cm** [mêmes conditions], plafonné par `max_height`/`max_extent` (zmax figé à 302). Plafonds relevés à 2000 : lierre 1 262 → 1 342 cm, jasmin 1 337 → 1 526 cm entre s26 et s156 [mêmes conditions] ; épaisseur max 3,03 → 4,18 cm [mêmes conditions]. Longueur en plateau au cap 80 (× 20 cm = 1 600 cm au mieux) : élagage cumulé lierre 4 232 cm, jasmin 3 039 cm [mêmes conditions].
+
+**Treillis : dépassement confirmé.** zmax 251 à 302 cm pour un treillis de 180 : au sommet, `_apex_z_floor` repasse à `MIN_APEX_Z` et l'apex monte sans appui jusqu'à `max_height`. La décision 4 traite ce cas.
+
+**Trous de la recherche d'appui** : `chercher_support` ne scanne que les plantes libres et mesure depuis le pied (`plant.x_cm`), pas l'apex ; rayon 75 cm. Deux lianes pourraient s'accrocher l'une à l'autre : à exclure.
+
+**Fruits** : `fruitier=True` sur cerisier, figuier, noyer, figuier en `self` → golden identique `a10b7225…` [smoke]. Figuier `nectar = 0` et mode `insect` par défaut : sans `self`, 0 fruit attendu (non mesuré), et la figue commune se passe de pollinisation. `full`, 2 ans : cerisier 9-10 fruits, apparus entre s9 et s12, tombés entre s25 et s28, pommier 8-10, apparus entre s5 et s8, tombés entre s21 et s24 [seed 42, n=1 run, relevé toutes les 4 semaines, VM, charge 3 à 5] ; figuier et noyer absents de `full` sur ces 2 ans → banc requis, noyer `maturity_years` 15.
+
+**Date des fruits : cause isolée.** `FRUIT_DMAT` 0,08 commun à toutes (mûr en ~12,5 semaines, chute à ~16). Le pommier ne peut pas arriver à l'automne, le cerisier reste trop longtemps. Levier : durée de maturation par espèce, défaut = valeur actuelle (tomate, framboise, fraise, courgette inchangées).
+
+## Hors périmètre sauf avis contraire
+
+Reste de D118 : piquants d'ortie, fleurs, point de pollen, gestes, DA hors plantes.
+
+## REPRISE
+
+Lire `CLAUDE.md` + ce fichier, puis `visuals/PlantRenderer.Assemblee.cs`, `PaliersHauts.cs`, `Organs.cs`. Prochaine étape : `/sprint-auto sprint_houppier`, tronçon ①. Sondes : recopiées au §Audit, le scratchpad ne survit pas.
