@@ -31,3 +31,5 @@
   litière…) au franchissement de seuils avec hystérésis, variantes d'atlas dans le
   maillage par tuile. Prérequis : T2 du sprint RENDU VISIBLE
   (`sprints/perf/lod/sprint_rendu_visible/`).
+
+- **`sprint_houppier` CLOS côté code le 2026-11-05** (`sprints/rendu/pixelart/sprint_houppier/`, ①→⑤, golden `a10b7225…`) : lianes sans fin de pousse, fruits des arbres, clé stable, gerbes, houppier sur rameaux dérivés. F5 attendu, cf. `00_etat.md` §F5.

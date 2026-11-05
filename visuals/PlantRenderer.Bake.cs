@@ -216,6 +216,7 @@ namespace Symbiose
 			}
 			// Paliers bas (T5) : la couronne (tache / port) déborde des segments.
 			if (WorldView.CurrentZoom < PaliersHautsMinZoom) r = EtendrePalierBas(r);
+			if (Houppier) r = EtendreHouppier(r);   // rameaux dérivés, à toute azimut (⑤)
 			return r.Grow(BakePadPx);
 		}
 	}

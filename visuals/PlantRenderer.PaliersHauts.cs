@@ -124,6 +124,7 @@ namespace Symbiose
 		// ×8 : globe 2 valeurs + reflet ; ×32 : pruine des espèces pruinées.
 		private void DrawFruits(Vector3 collet, OrganPalette pal)
 		{
+			if (Houppier) { DrawFruitsHouppier(); return; }   // brindilles, taille en cm (HOUPPIER ⑤)
 			bool organes = AuPalier(PalierOrganesZoom);
 			bool pruine = AuPalier(PalierIntimeZoom) && SurfaceDe() == Surface.Pruine;
 			for (int k = 0; k < _structure.Fruits.Count; k++)

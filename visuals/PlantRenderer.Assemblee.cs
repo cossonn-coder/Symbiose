@@ -102,12 +102,14 @@ namespace Symbiose
 			Vector3 c = _structure.ColletCm;
 			var segs = new List<Segment>(_structure.Segments);
 			segs.Sort((a, b) => b.ThicknessCm.CompareTo(a.ThicknessCm));
+			bool houppier = Houppier;
 			foreach (var s in segs)
 			{
 				Vector3 tip = s.Base + s.Dir * s.LengthCm;
 				float w = Mathf.Max(1f / z, Mathf.Round(s.ThicknessCm * WorldView.PxPerCmX * WoodWidthFactor));
 				DrawLine(Iso(s.Base.X - c.X, s.Base.Y - c.Y, s.Base.Z),
-						 Iso(tip.X - c.X, tip.Y - c.Y, tip.Z), Lit(AvecEcorce(WoodRamp(Lignification(s)), s)), w, antialiased: false);
+						 Iso(tip.X - c.X, tip.Y - c.Y, tip.Z), Lit(AvecEcorce(WoodRamp(LigVue(s, houppier)), s)), w, antialiased: false);
+				if (houppier) DrawBoutTendre(s, c);
 			}
 		}
 

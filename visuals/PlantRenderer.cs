@@ -529,6 +529,7 @@ namespace Symbiose
 			// d'abord (dessous), les fines brindilles par-dessus — comme _panel.
 			var segs = new List<Segment>(_structure.Segments);
 			segs.Sort((a, b) => b.ThicknessCm.CompareTo(a.ThicknessCm));
+			bool houppier = Houppier;   // HOUPPIER ⑤ : bois à sa vraie épaisseur, bout seul tendre
 
 			for (int k = 0; k < segs.Count; k++)
 			{
@@ -542,15 +543,19 @@ namespace Symbiose
 				// Largeur ∝ épaisseur, ARRONDIE au pixel (pixel art). NB : à un vrai
 				// zoom ×N, 1 px logique = N px écran ; l'arrondi entier ici donne un
 				// trait net au palier. min 1 px pour rester visible.
-				float w = Mathf.Max(1f, Mathf.Round(s.ThicknessCm * WorldView.PxPerCmX * WoodWidthFactor));
+				float z = WorldView.CurrentZoom;
+				float w = houppier
+					? Mathf.Max(BoisArbreMinPx / z, Mathf.Round(s.ThicknessCm * WorldView.PxPerCmX * WoodWidthFactor * z) / z)
+					: Mathf.Max(1f, Mathf.Round(s.ThicknessCm * WorldView.PxPerCmX * WoodWidthFactor));
 				// SS② : rampe de lignification vert-tendre → brun (∝ épaisseur), au
 				// lieu du binaire apex/bois. Les symptômes colorants ne teintent que
 				// la part VIVANTE (verte) : le bois mûr (lig→1) ne se décolore pas.
-				float lig = Lignification(s);
+				float lig = LigVue(s, houppier);
 				Color baseCol = AvecEcorce(WoodRamp(lig), s);   // écorce de la fiche (AUTOMNE VISIBLE ④)
 				Color col = baseCol.Lerp(SymptomTint(baseCol), 1f - lig);
 
 				DrawBranch(p1, p2, col, w);
+				if (houppier) DrawBoutTendre(s, collet);
 				DrawSnowOnBranch(p1, p2, w, s, k);   // neige posée sur le bois (T5)
 			}
 

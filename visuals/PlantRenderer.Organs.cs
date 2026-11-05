@@ -164,7 +164,7 @@ namespace Symbiose
 				["AppleTree"]  = new OrganPalette("4f8a45", "f3e0e8", "82ae4f", "cc382e", "b8a040", "a08838", "c0a84a"), // pommier : vert terne, fleur rosée ; jaune-brun sans éclat
 				["Fig"]        = new OrganPalette("3a6f3c", "e0e6d2", "6f9a48", "5a3a52", "d8c040", "ccb238", "e0cc50"), // figuier : vert sombre mat, figue pourpre ; jaune
 				["CherryTree"] = new OrganPalette("2f7a38", "f6f0ee", "7fae50", "a01f28", "e8722e", "dc5a2a", "ec8a30"), // cerisier : vert franc sombre, fleur blanc pur ; rouge-orangé vif
-				["WalnutTree"] = new OrganPalette("4a8240", "a8b070", "7aa84f", "4a3a22", "a89a48", "8c7a3a", "6a5a30"), // noyer : vert olive, chatons verts, brou ; jaune terne virant au brun-noir
+				["WalnutTree"] = new OrganPalette("4a8240", "a8b070", "7aa84f", "5f7f3a", "a89a48", "8c7a3a", "6a5a30"), // noyer : vert olive, chatons verts, brou vert sur l'arbre (fiche : il noircit au sol) ; jaune terne virant au brun-noir
 				["OakTree"]    = new OrganPalette("3f7436", "b8b860", "78a64a", "7a5a2e", "a8642a", "8f5226", "b87a34"), // chêne : vert soutenu mat, chatons jaune-vert ; roux
 				// --- Essences migrées en croissance procédurale (D91 T4) -------------
 				["BeechTree"]  = new OrganPalette("4f9a3e", "c8c078", "6fa04a", "6a4a2a", "b86e2c", "c4803a", "9c5a26"), // hêtre : vert franc brillant, faîne ; cuivré
@@ -270,6 +270,13 @@ namespace Symbiose
 			// AUTOMNE VISIBLE ④ : `DensiteVisible` compte aussi la couronne qui s'éclaircit
 			// (`feuillage`) ; même hash, donc les feuilles restantes sont déjà présentes avant.
 			float density = _structure.DensiteVisible;
+			// HOUPPIER ⑤ : un arbre garde son petit bois en toute saison ; à ×4, des gerbes, pas des masses.
+			bool houppier = Houppier;
+			if (houppier)
+			{
+				DrawPetitBois();
+				if (!AuPalier(PalierOrganesZoom)) DrawGerbesPalierMasses(pal, automne, density);
+			}
 			if (density > 0f)
 			{
 				// Sémiologie `ombre` (T1, étiolement) — DÉCISION DE DESIGN (option a
@@ -292,8 +299,11 @@ namespace Symbiose
 				_motifs = true;
 				// Palier ×4 (D106 T6) : des MASSES de feuillage, pas chaque feuille.
 				if (!AuPalier(PalierOrganesZoom))
-					DrawMassesFeuillage(collet, pal, automne, density);
-				else foreach (var s in _structure.Segments)
+				{
+					if (!houppier) DrawMassesFeuillage(collet, pal, automne, density);
+				}
+				else if (houppier) DrawFeuillesHouppier(collet, pal, automne, density);
+				if (AuPalier(PalierOrganesZoom) && !houppier) foreach (var s in _structure.Segments)
 				{
 					if (!IsLeafy(s)) continue;
 					int i = CleSegment(s);   // stable : une coupe ailleurs ne déplace rien (HOUPPIER ④)
@@ -403,6 +413,12 @@ namespace Symbiose
 			return s.Base + s.Dir * s.LengthCm;
 		}
 
+		/// <summary>Où est dessiné le fruit `i` : source unique du dessin et du clic `manger`.</summary>
+		private Vector3 PointDuFruit(int i) =>
+			FicheDeLaPlante != null ? PointFruitPort(i)
+			: Houppier ? PointFruitArbre(i)
+			: FruitPoint(_structure.Fruits[i]);
+
 		/// <summary>Index (= ordre du snapshot = clé `manger` moteur) du fruit le
 		/// plus proche de `canvasPos`, ou −1 si la plante n'a aucun fruit. MÊME
 		/// projection que DrawFruits → on cible exactement ce qu'on voit.</summary>
@@ -415,7 +431,7 @@ namespace Symbiose
 			float bestD = float.MaxValue;
 			for (int i = 0; i < _structure.Fruits.Count; i++)
 			{
-				Vector3 p3 = FicheDeLaPlante != null ? PointFruitPort(i) : FruitPoint(_structure.Fruits[i]);
+				Vector3 p3 = PointDuFruit(i);
 				Vector2 c = Iso(p3.X - collet.X, p3.Y - collet.Y, p3.Z);
 				float d = local.DistanceSquaredTo(c);
 				if (d < bestD) { bestD = d; best = i; }
@@ -429,6 +445,7 @@ namespace Symbiose
 		// Plafonné à MaxFruits par sous-échantillonnage régulier (anti-fouillis).
 		private List<Vector3> OrganSites()
 		{
+			if (Houppier) return SitesFleursHouppier();   // sur les brindilles, à tous les paliers (⑤)
 			var apex = new List<Segment>();
 			foreach (var s in _structure.Segments)
 				if (s.IsApex) apex.Add(s);

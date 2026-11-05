@@ -1,8 +1,7 @@
 // SYMBIOSE — PlantRenderer.Gerbes.cs (partial, sprint HOUPPIER ④)
 // L'ATLAS DE GERBES : une gerbe est un petit rameau garni, brindilles et feuilles déjà montées,
-// en une seule pièce. Le ⑤ en couvrira le houppier d'un arbre à bas prix : poser une gerbe = un
-// seul tracé, là où les mêmes feuilles posées une à une en coûteraient des dizaines.
-// Ce tronçon la génère sans encore la poser : aucun arbre ne change d'aspect.
+// en une seule pièce. Elle couvre le houppier d'un arbre à bas prix (Houppier.cs) : poser une gerbe =
+// un seul tracé, là où les mêmes feuilles posées une à une en coûteraient des dizaines.
 //
 //  • UNE GERBE par forme de feuille × palier (×0,5, ×1, ×2, ×4) × variante au hash.
 //    À ×8 et au-delà, pas de gerbe : la feuille se dessine vraiment, sur rameaux dérivés.
@@ -39,9 +38,11 @@ namespace Symbiose
 		private static readonly int[] GerbeLargeurs = { 1, 1, 1, 2 };
 		internal const int GerbeVariantes = 4;
 		private const int GerbeAtlasLargeur = 1024;
+		// Touffes semées en plus dans le volume de la gerbe (palier ×4 : clairsemé sinon, ④).
+		private static readonly int[] GerbeSemis = { 1, 2, 6, 16 };
 
 		private static Image _gerbesNiveaux;
-		private static ImageTexture _gerbesCodes;
+		private static ImageTexture _gerbesCodes, _gerbesMasques;
 		private static readonly Dictionary<(LeafShape, int, int, CoucheGerbe), Rect2I> _gerbes = new();
 
 		/// <summary>Atlas des niveaux (R) et des codes (G), généré une seule fois.</summary>
@@ -62,11 +63,52 @@ namespace Symbiose
 
 		/// <summary>Pose indexée d'une gerbe, pied en `pied` (px canvas locaux), calée sur la grille
 		/// des px internes, comme DrawPieceIndexee.</summary>
-		private void DrawGerbeIndexee(LeafShape s, int palier, int variante, CoucheGerbe couche, Vector2 pied, float z, int palette)
+		/// <remarks>`miroir` et `pend` retournent la pièce par un rectangle source de taille négative,
+		/// sans autre atlas. `pend` : le pied passe en haut, la gerbe tombe de son point d'attache.</remarks>
+		private void DrawGerbeIndexee(LeafShape s, int palier, int variante, CoucheGerbe couche, Vector2 pied, float z, int palette,
+			bool miroir = false, bool pend = false)
 		{
 			Rect2I r = GerbeRect(s, palier, variante, couche);
-			Vector2 coin = ((pied * z) - (Vector2)GerbePied(r.Size.X)).Round() / z;
-			DrawTextureRectRegion(_gerbesCodes, new Rect2(coin, (Vector2)r.Size / z), (Rect2)r, PaletteIndexee.ModulatePiece(palette));
+			Vector2I pp = GerbePied(r.Size.X);
+			Vector2 coin = ((pied * z) - new Vector2(pp.X, pend ? 0f : pp.Y)).Round() / z;
+			var src = new Rect2(r.Position, new Vector2(miroir ? -r.Size.X : r.Size.X, pend ? -r.Size.Y : r.Size.Y));
+			DrawTextureRectRegion(_gerbesCodes, new Rect2(coin, (Vector2)r.Size / z), src, PaletteIndexee.ModulatePiece(palette));
+		}
+
+		/// <summary>Pose littérale (dessin direct, F11 OFF) : la même pièce, niveau par niveau, en couleur de
+		/// rampe, comme DrawPiece. Une plante pas encore cuite garde ainsi sa densité : pas de saut à la cuisson.</summary>
+		private void DrawGerbeLitterale(LeafShape s, int palier, int variante, CoucheGerbe couche, Vector2 pied, float z, Color[] rampe,
+			bool miroir = false, bool pend = false)
+		{
+			AssurerMasquesGerbes();
+			Rect2I r = GerbeRect(s, palier, variante, couche);
+			Vector2I pp = GerbePied(r.Size.X);
+			Vector2 coin = ((pied * z) - new Vector2(pp.X, pend ? 0f : pp.Y)).Round() / z;
+			var dst = new Rect2(coin, (Vector2)r.Size / z);
+			var taille = new Vector2(miroir ? -r.Size.X : r.Size.X, pend ? -r.Size.Y : r.Size.Y);
+			for (int n = KitContour; n <= KitLumiere; n++)
+				DrawTextureRectRegion(_gerbesMasques, dst, new Rect2(r.Position + new Vector2I((n - KitContour) * GerbeAtlasLargeur, 0), taille), rampe[n]);
+		}
+
+		// Une bande de l'atlas par niveau, blanc opaque là où le niveau vaut n. 4 bandes de 1024×221 RGBA8,
+		// soit 3,5 Mo, contre 0,86 pour les codes : à la demande seulement. Sans le filtre, ce serait
+		// recopier l'atlas des masques du kit ; même technique, même lecture (DrawPiece).
+		private static void AssurerMasquesGerbes()
+		{
+			if (_gerbesMasques != null) return;
+			AssurerGerbes();
+			int h = _gerbesNiveaux.GetHeight(), bandes = KitLumiere - KitContour + 1;
+			byte[] rg = _gerbesNiveaux.GetData();
+			var rgba = new byte[GerbeAtlasLargeur * bandes * h * 4];
+			for (int y = 0; y < h; y++)
+				for (int x = 0; x < GerbeAtlasLargeur; x++)
+				{
+					int n = rg[(y * GerbeAtlasLargeur + x) * 2];
+					if (n < KitContour || n > KitLumiere) continue;
+					int i = (y * GerbeAtlasLargeur * bandes + (n - KitContour) * GerbeAtlasLargeur + x) * 4;
+					rgba[i] = rgba[i + 1] = rgba[i + 2] = rgba[i + 3] = 255;
+				}
+			_gerbesMasques = ImageTexture.CreateFromImage(Image.CreateFromData(GerbeAtlasLargeur * bandes, h, false, Image.Format.Rgba8, rgba));
 		}
 
 		/// <summary>La pièce de l'écran de chargement : une touffe du kit, teintée.</summary>
@@ -133,7 +175,7 @@ namespace Symbiose
 			float hg(int canal, int k) => Hash01(canal, graine, v * 64 + k);
 			Rect2I bois = _gerbes[(forme, p, v, CoucheGerbe.Bois)], feuilles = _gerbes[(forme, p, v, CoucheGerbe.Feuilles)];
 			Vector2 pied = (Vector2)GerbePied(n) + new Vector2(0.5f, 0.5f);
-			float axe = -Mathf.Pi * 0.5f + (hg(501, 0) - 0.5f) * 0.7f;
+			float axe = -Mathf.Pi * 0.5f + (hg(501, 0) - 0.5f) * 1.8f;   // large : posée seule, la gerbe nue ne fait pas un peigne
 			Vector2 bout = Dans(pied + new Vector2(Mathf.Cos(axe), Mathf.Sin(axe)) * n * 0.82f, n, t);
 			TracerBois(rg, h, bois, pied, bout, GerbeLargeurs[p], KitOmbre);
 			var sites = new List<Vector2> { bout };
@@ -151,6 +193,12 @@ namespace Symbiose
 				sites.Add(depart.Lerp(fin, 0.55f));
 			}
 			sites.Add(pied.Lerp(bout, 0.62f));
+			Vector2 milieu = pied.Lerp(bout, 0.6f);
+			for (int k = 0; k < GerbeSemis[p]; k++)
+			{
+				float a = Mathf.Tau * hg(513, k), d = n * 0.42f * Mathf.Sqrt(hg(515, k));
+				sites.Add(Dans(milieu + new Vector2(Mathf.Cos(a), Mathf.Sin(a) * 0.85f) * d, n, t));
+			}
 			sites.Sort((a, b) => a.Y.CompareTo(b.Y));   // du fond vers l'avant, comme les touffes
 			for (int k = 0; k < sites.Count; k++)
 			{

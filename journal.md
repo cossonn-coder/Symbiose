@@ -216,6 +216,7 @@ pointeur ci-dessous. Ne plus écrire le contenu des entrées ici.
 - [2026-11-04 — Conception **FORMES DES PLANTES** (reste de D118 (A)) — FIGÉE : 39 espèces sur 40 partagent le même squelette, 33 passent à 7 ports dessinés d'après fiche, taille d'un clic avec coupe visible, plus de squelette pour ces herbacées ; 6 tronçons, golden intact visé](journal/171_2026-11-04_conception-formes-plantes-FIGEE.md)
 - [2026-11-05 — Sprint **FORMES DES PLANTES** (reste de D118 (A)) — CLOS côté code (①→⑥) : 7 ports, 36 espèces, paires confondues ×4 28 → 0, haricot autour de son appui, fleurs et limbes en SNES, pont 0.6.8 ; golden intact `a10b7225…` ; garde-fou de cuisson non tenu, à arbitrer ; F5 attendu](journal/172_2026-11-05_sprint-formes-plantes-CLOS.md)
 - [2026-11-05 — Conception **HOUPPIER** (D118) — FIGÉE : rameaux en vue seule après audit, gerbes précuites, grimpantes sans fin de pousse, fruits des arbres ; 5 tronçons, golden intact attendu](journal/173_2026-11-05_conception-houppier-FIGEE.md)
+- [2026-11-05 — Sprint **HOUPPIER** (D118) — CLOS côté code (①→⑤) : lianes sans fin de pousse, fruits des arbres, clé stable, gerbes, rameaux dérivés, limbes d'espèce ; golden `a10b7225…` intact, F5 attendu](journal/174_2026-11-05_sprint-houppier-CLOS.md)
 
 > Tout le contenu détaillé est dans les fichiers liés ci-dessus
 > (`journal/` et `journal_archive/`). La dette est dans [`DETTE.md`](DETTE.md).

@@ -283,17 +283,19 @@ namespace Symbiose
 		/// et sur le pied d'un voisin : pour manger, ce qui est dessiné sous la souris passe avant.</summary>
 		internal float DistanceFruitPort(Vector2 canvasPos)
 		{
-			if (FicheDeLaPlante is not { } f || _structure.Fruits.Count == 0) return float.PositiveInfinity;
+			// HOUPPIER ⑤ : un fruit d'arbre est haut, le collet n'est pas sous le clic non plus.
+			FicheFruit fr = FicheDeLaPlante is { } f ? f.Fruit ?? FruitParDefaut : Houppier ? FicheFruitArbre : null;
+			if (fr == null || _structure.Fruits.Count == 0) return float.PositiveInfinity;
 			int i = FindFruitNear(canvasPos);
 			float d2 = PointFruitLocal(i).DistanceSquaredTo(ToLocal(canvasPos));
-			float r = RayonFruit(f.Fruit ?? FruitParDefaut, _structure.Fruits[i].Masse) * (f.Fruit ?? FruitParDefaut).Allonge;
+			float r = RayonFruit(fr, _structure.Fruits[i].Masse) * fr.Allonge;
 			float tol = Mathf.Max(ToleranceFruitPx / WorldView.CurrentZoom, r);
 			return d2 <= tol * tol ? d2 : float.PositiveInfinity;
 		}
 
 		private Vector2 PointFruitLocal(int i)
 		{
-			Vector3 p = PointFruitPort(i), collet = _structure.ColletCm;
+			Vector3 p = PointDuFruit(i), collet = _structure.ColletCm;
 			return Iso(p.X - collet.X, p.Y - collet.Y, p.Z);
 		}
 

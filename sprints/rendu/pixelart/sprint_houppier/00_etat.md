@@ -10,7 +10,7 @@
 | ② | `02_grimpantes_sans_fin.md` | **fait**, golden `a10b7225…` intact, F5 à faire |
 | ③ | `03_fruits_arbres.md` | **fait**, golden `a10b7225…` intact, F5 à faire |
 | ④ | `04_gerbes_cuisson.md` | **fait**, golden `a10b7225…` intact, F5 à faire ; recuissons peu réduites, voir Bilan |
-| ⑤ | `05_houppier_vue.md` | à faire |
+| ⑤ | `05_houppier_vue.md` | **fait**, golden `a10b7225…` intact, F5 à faire |
 
 ## Sujet
 
@@ -254,10 +254,67 @@ Après ④, avant la tolérance, mêmes scènes : FPS 5,6, 6,0, 15,0, 15,6, 7,4,
 
 **À juger au F5** : écran de chargement par le vrai sélecteur ; retard de 8 semaines et 15 % de tolérance visibles ou non ; clic `tailler` qui recuit aussitôt.
 
+## Bilan ⑤ Houppier à l'écran (2026-11-05)
+
+Neuf : `PlantRenderer.Rameaux.cs` (table par espèce, rameaux et brindilles dérivés, mémoïsés sur la référence du snapshot), `PlantRenderer.Houppier.cs` (gerbes ×0,5 à ×4, limbes ×8+, petit bois, fleurs et fruits). Golden `a10b7225…` intact, `test_sim_server` 321/321, `test_verger_mur`, build C# vert (0 avertissement). Moteur et pont non touchés. `PlantRenderer.Organs.cs` à 311 LDC : 🟡, une responsabilité, à signaler.
+
+**Remplissage** : part de pixels hors fond dans l'ellipse de couronne, HUD exclu, sol et maison masqués [n=1 capture par case, seed 42, VM, charge 1 à 4, moyenne sur les pieds cadrés] :
+
+| Banc | Palier | Été | Automne | Hiver |
+|---|---|---|---|---|
+| `houppiers` s20/s32/s40 | ×1 [5 pieds] | 26 → 35 % | 28 → 38 % | 14 → 31 % |
+| | ×2 [2 pieds] | 18 → 42 % | 18 → 43 % | 9 → 29 % |
+| | ×4 [charme] | 25 → 54 % | 25 → 51 % | 13 → 34 % |
+| | ×8 [charme, partie cadrée] | 22 → 47 % | 22 → 46 % | 16 → 21 % |
+
+`verger_mur` s25 / s39 : ×1 15 → 29 % / 5 → 18 % [4 pieds, mesuré avant l'éclaircie ×0,5-×1, donc un peu haut] ; ×2 12 → 35 % / 7 → 17 % [2 pieds]. ×4 et ×8 de ce banc **non retenus** : le pommier était en dessin direct dans le « avant » et le disque déborde sur son voisin (90 % à ×4 en s10, invraisemblable). L'été reste sous 60 % partout : couronne plus dense, pas fermée ; les trous suivent les charpentières du moteur.
+
+**FPS, cuisson, RAM**, contre la référence du ④ [n=1 par ligne, VM, llvmpipe, charge 2 à 4 ; référence charge 4 à 6, comparaison grossière] :
+
+| Scène | FPS | Pinceau par cuisson | Cache / VRAM |
+|---|---|---|---|
+| `houppiers_25` ×1, turbo | 5,5 → **4,1** | ~0,43 → ~1,3 ms [relevé avant l'éclaircie] | 64/276 → 48/250 Mo [idem] |
+| `houppiers` ×1, turbo | 6,0 → **4,5** | ~0,45 → ~1,3 ms [idem] | 64/271 → 64/283 Mo [idem] |
+| `houppiers_25` ×2, statique | 13,5 → 12,5 | ~1,1 → ~1,5 ms | 64/267 → **86/320 Mo** |
+| `houppiers_25` ×4, statique | 15,5 → 16,0 | ~3,3 → ~4 ms [avant boîte serrée] | non relu |
+| `houppiers_25` ×8, statique | 10,5 [pas de référence, boîte large] | arbre non cuit, dessin direct | 0/154 Mo |
+| `full` ×1, turbo | 7,5 → 7,1 | ~0,43 → ~0,34 ms | 32/213 → 16/176 Mo [autre instant] |
+| `full` ×0,5, statique | 11,2 → 11,3 [boîte large] | ~0,23 → ~0,29 ms | 16/175 → 16/181 Mo |
+
+**La dérive se dit** : en turbo, cuisson saturée, −25 % de FPS sur des bancs d'arbres seuls, et le pinceau CPU par cuisson est environ triplé à ×1. Cause : chaque pose du vent repeint l'arbre (jusqu'à 8), 5 000 à 6 700 objets par image. Deux réductions faites : boîte de cuisson sur les vrais bouts de bois (×4 11,1 → 16,3 FPS [n=1 par côté]), une gerbe sur trois en moins à ×0,5 et ×1 (3,6 → 4,1 FPS, remplissage ×1 39 → 35 % [n=1 par côté]). `ParMetre` non réduit : le remplissage est déjà sous l'objectif. Le rythme normal (60 s/semaine) n'a pas été mesuré, et la VM (rendu logiciel) ne vaut pas le PC.
+
+**Fruits** : un fruit par site du moteur, 10 au plus, posé sur une brindille de son segment, à sa taille en cm (pomme 3,5, cerise 1, figue 3, noix 2,2 de rayon [odg]), vu dès ×1. Banc `-C` sur le pommier ×4 : position → index 9/9, 2 clics `manger` réels, 9 → 8 → 7 [n=1 run, seed 42]. Palette : brou de noix vert sur l'arbre (était brun-noir, la fiche le noircit au sol) ; pomme, cerise, figue conformes. Cerisier et noyer ne sont pas passés par `-C`.
+
+**Fleurs** : sur les bouts de brindille (une sur deux, 120 au plus). Vues à ×2 sur pommier et cerisier, `verger_mur` s8 [n=1 capture]. ×4 et ×8 non capturés en pleine floraison.
+
+**Lianes** : capture `liane_relais` ×4 faite ; ni cascade ni relais lisibles sur ce cadre, le treillis est presque nu et le lierre part hors champ. **Non validé**, à regarder au F5.
+
+**Écarts au kickoff** :
+- **Limbes ×8+** : pas `DrawLeafShape`. L'ovale à motifs, même réduit à 9 cm, se lisait encore en pompon. Les arbres passent au peintre de limbes des lianes (contour d'espèce en triangles, un envoi), table `Limbe`, `LimbeCm` relevés d'environ un tiers [choix]. Conséquence : ×8+ a un ton de feuille tiré par orientation, très contrasté ; symptômes fins sur une feuille sur six.
+- **Gain de densité 1,6 [choix]** sur la présence : `DensiteVisible` vaut 0,45 à 0,85 en été selon l'espèce, une brindille sur deux restait nue en juillet. La proportion à l'automne est gardée, l'écart d'une espèce à l'autre aussi, plafonné.
+- **Chemin littéral (④)** : masques de gerbes à la demande, 3,5 Mo calculés [4 bandes de l'atlas ; non mesuré], pas le repli sur touffes, essayé et visiblement trop clairsemé : l'arbre pas encore cuit paraissait nu.
+- **Atlas retouché** : touffes semées en plus, axe de gerbe plus ouvert. Taille d'atlas inchangée.
+- **`DistanceFruitPort` étendu aux arbres** : sans lui le clic sur un fruit haut retombait au sol, chez un voisin.
+
+**Limites** :
+- `SegmentId` reste best-effort : une coupe qui réindexe peut déplacer un fruit (le pont n'a pas d'identité de fruit).
+- `OrganSite` `lateral` n'est plus lu pour les fleurs des arbres, seul le moteur le suit pour les fruits.
+- Bois de ×4+ plus fin que `DrawHighlight` : la surbrillance de taille est plus large que la branche.
+- Canopée des pommier et figuier de `verger_mur` pâle, déjà pâle avant ce tronçon, cause non cherchée.
+- `DrawSnowOnBranch` : tirage encore sur l'indice du tri (④).
+
+## §F5 (ressenti, une minute par palier)
+
+- `init config="houppiers"` : ×1, ×2, ×4, ×8 en été. Un arbre, plus des pompons ? Rameaux trop bruns ou trop droits ? Contraste des feuilles à ×8 ; ×16 et ×32 (aucune capture ici, plus de 2 000 feuilles possibles en dessin direct : surveiller le FPS).
+- Même banc, automne (s32) et hiver (s40) : tons, dentelle, gerbes de bois en peigne ou non.
+- `verger_mur`, an 1 : s8 fleurs, s17 cerises, s25 figues et pommes, s29 noix. Taille, couleur ; clic `manger` sur chacun.
+- `liane_relais`, an 3 : cascade et relais lisibles ? (Non validé ici.)
+- Écran de chargement et fluidité réelle sur le PC, surtout à ×1 quand beaucoup d'arbres recuisent.
+
 ## Hors périmètre sauf avis contraire
 
 Reste de D118 : piquants d'ortie, fleurs, point de pollen, gestes, DA hors plantes.
 
 ## REPRISE
 
-Lire `CLAUDE.md` + ce fichier, puis `visuals/PlantRenderer.Assemblee.cs`, `PaliersHauts.cs`, `Organs.cs`. ①, ②, ③ et ④ faits (voir Bilans). Prochaine étape : `/sprint-auto sprint_houppier`, tronçon ⑤ ; lire aussi `PlantRenderer.Gerbes.cs`, `.CleStable.cs`. Sondes : recopiées au §Audit, le scratchpad ne survit pas.
+Lire `CLAUDE.md` + ce fichier. ①→⑤ faits côté code (voir Bilans), sprint clos sous réserve du F5 de Nico (§F5). Prochaine étape : F5 de Nico, puis D119 (`project_file_priorisee_20261022`, à l'orchestrateur). Réglages : tables de `visuals/PlantRenderer.Rameaux.cs`, constantes de `visuals/PlantRenderer.Houppier.cs`.

@@ -207,6 +207,7 @@ namespace Symbiose
 			if (mort || _structure.DensiteVisible <= 0f)
 			{
 				DrawBoisNu(mort ? DeadWoodColor : WoodColor, _deadStade == "couchee" ? CoucheeFlatten : 1f);
+				if (Houppier) DrawHouppierNu();   // l'hiver, la dentelle (HOUPPIER ⑤)
 				return;
 			}
 			bool sante = WorldView.CurrentZoom >= PalierSanteZoom;
@@ -219,7 +220,8 @@ namespace Symbiose
 			// DrawCouronne / DrawTige / DrawTachesFleurs ci-dessous ne sont plus
 			// appelés (conservés, règle « ne jamais jeter de code ») ; Couronne()
 			// reste le contour du picking et de la boîte de cuisson.
-			DrawPlanteAssemblee(c, sante);
+			if (Houppier) DrawHouppierBas(c, sante);   // gerbes sur rameaux dérivés (HOUPPIER ⑤)
+			else DrawPlanteAssemblee(c, sante);
 		}
 
 		// [Avant ⑤] Couronne en volume 2 valeurs (même recette que DrawVolumeEllipse : base
