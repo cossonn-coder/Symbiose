@@ -21,7 +21,7 @@ Couvre :
      (maturité ≈ 0) sur ses sites reproducteurs (`organ_sites`).
   2. Gate d'âge : sous `maturity_years`, AUCUN fruit (→ neutralité golden).
   3. Cohorte annuelle : une nouvelle nouaison fait chuter l'ancienne en litière.
-  4. Maturation : `maturite += FRUIT_DMAT` à chaque tick.
+  4. Maturation : `maturite += 1 / fruit_semaines_maturation` à chaque tick (pommier).
   5. Chute : un fruit sur-mûr (> MATURITE_CHUTE) tombe → litière `fruit`.
   6. Déterminisme : deux runs identiques → fruits identiques (zéro RNG).
   7. Modes de pollinisation : `insect` sans pollen → 0 fruit (sans plancher) ;
@@ -38,12 +38,16 @@ import sys
 from world import Tile
 from plants import AppleTree, Fruit, organ_sites
 from plants.base import Segment
-from fields import init_eco, FRUIT_MASSE, FRUIT_DMAT, MATURITE_CHUTE
+from fields import init_eco, FRUIT_MASSE, MATURITE_CHUTE
 from sim.engine import Engine
 from sim.engine.decompo import frac_nouaison
 from sim import actions as ACT
 from sim import vigueur as V
 from sim.vigueur_plante import vigueur_plante
+
+# Le pommier a sa propre durée de maturation (sprint HOUPPIER ③) ; `FRUIT_DMAT` reste le
+# défaut des autres fruitières, vérifié par `tests/bancs/test_verger_mur.py`.
+DMAT_POMMIER = 1.0 / AppleTree.fruit_semaines_maturation
 
 _results = []
 
@@ -86,7 +90,7 @@ def _nouer(eng, tile, eco, plant, pollen=100.0, w=1):
     """Force une nouaison « en fin de floraison » : pleine floraison (arme
     `a_fleuri`) puis fanaison (déclenche la nouaison). `pollen` alimente la dose
     entomophile (insect → frac=g(pollen)). Le 2e pas mûrit la cohorte d'un cran
-    (maturité ≈ FRUIT_DMAT), comme l'ancienne nouaison à pas unique."""
+    (maturité ≈ un pas), comme l'ancienne nouaison à pas unique."""
     plant.floraison = 1.0
     eng._tick_fruits(tile, eco, w)         # arme a_fleuri (pleine floraison)
     plant.floraison = 0.0
@@ -105,7 +109,7 @@ def test_nouaison():
     check("nombre de fruits = nombre de sites", len(apple.fruits) == attendu,
           f"{len(apple.fruits)} fruits / {attendu} sites")
     check("fruits verts (mûris d'un seul pas)",
-          apple.fruits and all(abs(f.maturite - FRUIT_DMAT) < 1e-9 for f in apple.fruits),
+          apple.fruits and all(abs(f.maturite - DMAT_POMMIER) < 1e-9 for f in apple.fruits),
           f"maturité={apple.fruits[0].maturite:.3f}")
     check("masse initiale = FRUIT_MASSE",
           all(abs(f.masse - FRUIT_MASSE) < 1e-9 for f in apple.fruits))
@@ -146,21 +150,21 @@ def test_cohorte():
     check("cohorte précédente versée en litière `fruit`", apres > avant,
           f"litière {avant:.3f} → {apres:.3f}")
     check("cohorte renouvelée (verte)",
-          len(apple.fruits) == n1 and apple.fruits[0].maturite <= FRUIT_DMAT + 1e-9)
+          len(apple.fruits) == n1 and apple.fruits[0].maturite <= DMAT_POMMIER + 1e-9)
 
 
 # ---------------------------------------------------------------------------
 # 4. Maturation
 # ---------------------------------------------------------------------------
 def test_maturation():
-    print("\n[4] maturation : maturité += FRUIT_DMAT par tick ordinaire")
+    print("\n[4] maturation : maturité += 1 / durée de l'espèce par tick ordinaire")
     gs, tile, eco, apple, eng = _monde(age_years=6.0, n_apex=1)
     _nouer(eng, tile, eco, apple)        # nouaison (cohorte verte, +1 pas)
     m0 = apple.fruits[0].maturite
     eng._tick_fruits(tile, eco, 2)       # tick ordinaire (floraison=0, a_fleuri faux)
     m1 = apple.fruits[0].maturite
-    check("la maturité augmente d'un pas", abs((m1 - m0) - FRUIT_DMAT) < 1e-9,
-          f"{m0:.3f} → {m1:.3f} (+{FRUIT_DMAT})")
+    check("la maturité augmente d'un pas", abs((m1 - m0) - DMAT_POMMIER) < 1e-9,
+          f"{m0:.3f} → {m1:.3f} (+{DMAT_POMMIER:.3f})")
 
 
 # ---------------------------------------------------------------------------
@@ -170,7 +174,7 @@ def test_chute():
     print("\n[5] chute : un fruit sur-mûr (> MATURITE_CHUTE) tombe → litière `fruit`")
     gs, tile, eco, apple, eng = _monde(age_years=6.0, n_apex=1)
     # Fruit posé juste SOUS le seuil ; un pas le pousse au-delà → chute.
-    apple.fruits = [Fruit(0, MATURITE_CHUTE - FRUIT_DMAT / 2, FRUIT_MASSE)]
+    apple.fruits = [Fruit(0, MATURITE_CHUTE - DMAT_POMMIER / 2, FRUIT_MASSE)]
     avant = _litiere_fruit(eco, 3, 3)
     eng._tick_fruits(tile, eco, 1)
     apres = _litiere_fruit(eco, 3, 3)

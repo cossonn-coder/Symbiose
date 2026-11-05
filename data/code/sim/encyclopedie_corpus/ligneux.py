@@ -20,14 +20,16 @@ FICHES_LIGNEUX: dict[str, dict[int, str]] = {
         2: "Pérenne caduc méditerranéen, résistant à la sécheresse une fois établi ; "
            "aime la chaleur réverbérée d'un mur. Méridional, il ne lève spontanément de "
            "graine que sur sol bien chaud — contrairement aux ligneux tempérés qui "
-           "germent au frais du printemps.",
+           "germent au frais du printemps. Figue commune : elle noue sans pollinisateur et mûrit "
+           "de la fin d'été au début de l'automne.",
         3: "Idéal en espalier sud (microclimat chaud, albédo du mur) ; figues = manne "
            "pour oiseaux et insectes en fin d'été. Ombre dense estivale.",
     },
     "pommier": {
         1: "Arbre à houppier arrondi, floraison blanche-rosée au printemps, pommes.",
         2: "Pérenne caduc nécessitant du froid hivernal (vernalisation) et une "
-           "pollinisation croisée (deux variétés). Longévité de plusieurs décennies.",
+           "pollinisation croisée (deux variétés). Pommes mûres en septembre-octobre. "
+           "Longévité de plusieurs décennies.",
         3: "Cœur du verger : fleurs = ressource pollinisatrice majeure du printemps ; "
            "sensible au carpocapse (guetter les auxiliaires/mésanges). Porte tout un "
            "cortège d'espèces.",
@@ -36,14 +38,15 @@ FICHES_LIGNEUX: dict[str, dict[int, str]] = {
         1: "Arbre élancé, écorce annelée brillante, floraison blanche abondante, "
            "cerises.",
         2: "Pérenne caduc à floraison très précoce, sensible aux gelées tardives ; "
-           "croissance rapide.",
+           "croissance rapide. Cerises mûres dès le début de l'été, vite tombées.",
         3: "Sa floraison hâtive est une des premières grandes tables des "
            "pollinisateurs ; cerises = aimant à oiseaux (dispersion des noyaux).",
     },
     "noyer": {
         1: "Grand arbre à large couronne, feuilles composées aromatiques, noix en brou.",
         2: "Pérenne caduc de grande taille, croissance lente, longévité séculaire ; "
-           "émet de la juglone.",
+           "émet de la juglone. Pollen porté par le vent : un noyer seul noue peu. Noix "
+           "mûres en automne.",
         3: "Allélopathique : la juglone inhibe nombre de plantes sous sa couronne — crée "
            "une niche particulière. Ombre profonde ; noix nourrissent la faune.",
     },

@@ -53,6 +53,9 @@ class Fig(PerennialWoody):
     max_extent_cm         = 400.0
     max_segments          = 90        # buissonnant ramifié → cap relevé (borné, cf. ci-dessus)
     foliage_halfwidth     = 90.0      # houppier large de figuier + survie hydrique
+    fruitier              = True      # figues traçables (HOUPPIER ③)
+    pollination_mode      = "self"    # figue commune : noue sans pollinisateur (et `nectar` 0 n'attire aucun butineur)
+    fruit_semaines_maturation = 9     # [choix] noue s15-17 → mûre s23-25, tombe s26-28 [3 seeds] (fiche : août-oct.)
 
 
 class AppleTree(PerennialWoody):
@@ -112,6 +115,7 @@ class AppleTree(PerennialWoody):
     foliage_halfwidth     = 70.0      # couronne non nulle + racines viables (cf. ci-dessus)
     organ_site            = "lateral" # fructification latérale (lu au tronçon 5)
     fruitier              = True      # porte des fruits traçables (③ ; 1re fructif. à maturity_years=5)
+    fruit_semaines_maturation = 17    # [choix] noue s8-11 → mûre s24-27, tombe s30-33 [3 seeds] (fiche : sept.-oct.)
     oidium_susceptibility = 0.3       # second porteur d'oïdium (humectation ④) — tavelure ET oïdium
     # Floraison PRINTANIÈRE (sprint FLORAISON & FRUCTIFICATION ①). L'ancien patch
     # `gdd_floraison=130` (qui plaçait la floraison en début d'automne, D84) est
@@ -156,6 +160,8 @@ class CherryTree(PerennialWoody):
     max_height_cm       = 1000.0
     max_extent_cm       = 500.0
     foliage_halfwidth   = 60.0      # couronne ~250 ; les latéraux portent les racines
+    fruitier            = True      # cerises traçables (HOUPPIER ③)
+    fruit_semaines_maturation = 7   # [choix] noue s9-12 → mûre s16-19, tombe s18-21 [3 seeds] (fiche : juin-juil.)
 
 
 class WalnutTree(PerennialWoody):
@@ -211,3 +217,7 @@ class WalnutTree(PerennialWoody):
     max_height_cm       = 1200.0
     max_extent_cm       = 550.0
     foliage_halfwidth   = 55.0      # couronne ~350, portée par les branches
+    fruitier            = True      # noix traçables (HOUPPIER ③) ; nouaison par le vent
+    # [choix] noue s20-21 → mûre s28-29, tombe s31-32 [3 seeds] (fiche : sept.-oct.). Court : l'arbre
+    # fleurit tard dans le moteur (défaut 60 degrés-jours, s13-18), la durée compense.
+    fruit_semaines_maturation = 9

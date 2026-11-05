@@ -77,6 +77,11 @@ class PlantBase(ABC):
     # Gate complet (engine._tick_fruits) = `fruitier ET age_years >= maturity_years`
     # → un jeune plant (pommier < 5 ans) ne fructifie pas. Défaut False = inerte.
     fruitier: bool = False
+    # Durée de maturation d'un fruit, en semaines de la nouaison à la maturité 1,0
+    # (sprint HOUPPIER ③). `None` = `FRUIT_DMAT`, la valeur commune historique. Le fruit
+    # tombe à `MATURITE_CHUTE`, donc 0,3 × cette durée plus tard : la durée règle à la
+    # fois la date du fruit mûr et le temps qu'il reste sur l'arbre.
+    fruit_semaines_maturation: float | None = None
     # Phénologie florale (sprint FLORAISON & FRUCTIFICATION ① — CONCEPTION §2).
     # FORÇAGE THERMIQUE ÉVÉNEMENTIEL : la floraison est ARMÉE au franchissement d'un
     # seuil de chaleur cumulée `bloom_forcing_gdd` propre à l'espèce (bas → franchi

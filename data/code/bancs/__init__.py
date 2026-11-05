@@ -23,6 +23,7 @@ from .diversite import diversite_fondatrice
 from .modele_spatial import modele_spatial
 from .planche_especes import planche_especes, accroches_adultes
 from .lianes import liane_relais
+from .verger_mur import verger_mur
 from . import palette_gestes as _palette_gestes
 from . import courrier as _courrier
 from . import peripherie as _peripherie
@@ -55,6 +56,7 @@ BANCS = {
     "planche_especes": planche_especes,
     "accroches_adultes": accroches_adultes,
     "liane_relais": liane_relais,
+    "verger_mur": verger_mur,
     "palette_gestes": _palette_gestes.palette_gestes,
     "courrier": _courrier.courrier,
     "peripherie": _peripherie.peripherie,

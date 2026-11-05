@@ -8,7 +8,7 @@
 |---|---|---|
 | ① | `01_grimpantes_tenue.md` | **fait**, golden `a10b7225…` intact, F5 à faire |
 | ② | `02_grimpantes_sans_fin.md` | **fait**, golden `a10b7225…` intact, F5 à faire |
-| ③ | `03_fruits_arbres.md` | à faire |
+| ③ | `03_fruits_arbres.md` | **fait**, golden `a10b7225…` intact, F5 à faire |
 | ④ | `04_gerbes_cuisson.md` | à faire |
 | ⑤ | `05_houppier_vue.md` | à faire |
 
@@ -158,10 +158,51 @@ Tick du banc : médiane 98,2 et 97,8 ms → 100,2 et 99,1 ms, soit +1 à +2 % [n
 
 **À juger au F5** : port en cascade et `rigidite_tige` ; montée sur l'arbre et le mur ; `canopy_r` ; le banc n'est pas encore très lisible à ×2. Capture : `tools/capture_vm.sh -b liane_relais -w 104 -z 2 -c 1680,1000`.
 
+## Bilan ③ Fruits des arbres (2026-11-05)
+
+Neuf : levier `fruit_semaines_maturation` (`familles.py`, lu par `_tick_fruits`, défaut `FRUIT_DMAT`), `fruitier` sur cerisier, figuier, noyer, figuier en `self`, banc `verger_mur` (`bancs/verger_mur.py`), `tests/bancs/test_verger_mur.py`, phrases de fruits des 4 fiches (`ligneux.py`). `test_fruits.py` suit la durée du pommier. Golden `a10b7225…` intact, `test_verger_mur`, `test_fruits` 24/24, `test_sim_server` 321/321, automate, attraction, floraison, vent, catalogue, biotique verts. Aucun C#, build non concerné.
+
+Durées [choix] : cerisier 7, figuier 9, noyer 9, pommier 17 semaines. Maturité commune inchangée pour tomate, fraise, framboise, courgette.
+
+`verger_mur`, nouaison → premier fruit mûr → dernière semaine sur l'arbre [seeds 42, 7, 1516, 3 ans chacune, VM] :
+
+| Espèce | Nouaison | Mûr | Sur l'arbre jusqu'à | Fiche | Fruits/an |
+|---|---|---|---|---|---|
+| Cerisier | s9-12 | s16-19 | s17-20 | juin-juil. (s11-19) | 4 à 10 |
+| Figuier | s15-17 | s23-25 | s25-27 | août-oct. (s20-32) | 10 |
+| Pommier | s8-11 | s24-27 | s29-32 | sept.-oct. (s24-32) | 1 à 10 |
+| Noyer | s20-21 | s28-29 | s30-31 | sept.-oct. | 0 à 6, voir plus bas |
+
+Figuier repassé en `insect` : 0 fruit en 52 semaines [seed 42], le constat du kickoff tient.
+
+**Noyer : il noue mal, avant et après deux pieds.** Un noyer seul : 1, 1, 1 fruits [seed 42, an 1 à 3], 0, 0, 3 [seed 7], 0, 0, 1 [seed 1516]. Deux noyers à 450 cm, gardés au banc : 0 à 6 par pied, 5 années-pied sur 6 sans fruit au seed 1516 [mêmes seeds]. Dose reçue 0,004 à 1,6, contre 48 à 110 pour un pommier en insectes [mêmes runs]. `frac_nouaison` non touché, comme prescrit. Cause de la faiblesse du vent local non isolée (hypothèse non testée : l'arbre s'abrite lui-même). Un noyer ne portera donc souvent presque rien : à arbitrer.
+
+**Effet en jeu, `full`, seed 42, 3 ans, avant → après** [n=1 run par côté, VM] :
+- Fruits : pommier mûr s19-22 → s23-26, sur l'arbre jusqu'à s22-25 → s28-31 ; cerisier 0 → 9-10 fruits, mûr s16-18. Le pommier de `full` noue plus tôt qu'au banc (s7-10) : mûr dès s23, une semaine avant la fiche [seed 42].
+- Figuier, noyer : absents de `full`, ou pas mûrs. Rien en jeu sur 3 ans.
+- Litière `fruit` tombée, par an : 1,5 → 2,85 à 3,0.
+- Faune sur le plot de l'arbre, an 2 : merle au cerisier s20 0,177 → 0,219, s24 0,169 → 0,204 ; cloporte s28 0,116 → 0,186. Pommier, pic du merle déplacé, s26 0,233 → 0,204. Moyenne par tuile : aucun écart lisible [s26, s36].
+- Population s26, 154, 567, 708 plantes : identique à l'unité, 2 arbres.
+- Tick médian 1 032 → 871 ms [charge 2 à 8, inégale entre les deux runs] : aucun surcoût visible, comparaison non fiable au-delà.
+
+**Automate** : `but_satisfait` exige désormais un fruit mûr sur ces arbres, vérifié à la lecture. Aucun objectif de l'automate ne vise ces arbres aujourd'hui, donc pas exercé ; suites `test_automate_*` vertes.
+
+**Écarts au kickoff et à la conception** :
+- Noyer 9 semaines, pas « long » (conception §4). Le moteur le fait fleurir tard (défaut 60 degrés-jours, s13-18, fiche : mai) : une durée longue le ferait mûrir après la fiche. Avancer sa floraison serait l'autre levier, hors périmètre.
+- Cerisier 7 et non 6 : à 6, le fruit ne reste mûr qu'une semaine, cumul flottant compris.
+- `butineurs présents` : la pré-charge d'abeilles meurt avant les fleurs (0,002 en s12) ; le banc pose 3 rondelles `pollinisateur`, habitat réel.
+- Arbres à 15-16 ans : à 6 ans un pommier a 8 segments, trop peu de sites.
+
+**Trous vus, non traités** :
+- Un arbre mort garde ses fruits, gelés sur le cadavre : `_tick_fruits` saute les morts (pommier mort en s133, seed 1516, 6 fruits, cause non cherchée). Préexistant, à voir au dessin (⑤).
+- Titre de la page `P03` (« L'ombre du fruitier ») sans rapport avec son texte (paille). Préexistant.
+
+**À juger au F5** : les 4 arbres portent à la bonne saison ; taille et couleur des cerises, figues et noix, non vérifiées ici (dessin au ⑤). Banc : `init config="verger_mur"` ; semaines à regarder, an 1 : s17 cerises, s25 figues et pommes, s29 noix.
+
 ## Hors périmètre sauf avis contraire
 
 Reste de D118 : piquants d'ortie, fleurs, point de pollen, gestes, DA hors plantes.
 
 ## REPRISE
 
-Lire `CLAUDE.md` + ce fichier, puis `visuals/PlantRenderer.Assemblee.cs`, `PaliersHauts.cs`, `Organs.cs`. ① et ② faits (voir Bilans). Prochaine étape : `/sprint-auto sprint_houppier`, tronçon ③. Sondes : recopiées au §Audit, le scratchpad ne survit pas.
+Lire `CLAUDE.md` + ce fichier, puis `visuals/PlantRenderer.Assemblee.cs`, `PaliersHauts.cs`, `Organs.cs`. ①, ② et ③ faits (voir Bilans). Prochaine étape : `/sprint-auto sprint_houppier`, tronçon ④. Sondes : recopiées au §Audit, le scratchpad ne survit pas.

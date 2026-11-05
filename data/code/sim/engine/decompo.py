@@ -185,7 +185,8 @@ class DecompoMixin:
              reproducteurs (`organ_sites`, borné MAX_ORGANS) ; `pollen_recu` est
              remis à 0 (cohorte suivante repart de zéro). Les fruits non récoltés
              de l'an passé chutent d'abord en litière `fruit`.
-          2. Maturation hebdomadaire : `maturite += FRUIT_DMAT`.
+          2. Maturation hebdomadaire : `maturite += FRUIT_DMAT`, ou 1 / durée pour
+             une espèce à `fruit_semaines_maturation` (sprint HOUPPIER ③).
           3. Chute (§2.4) : un fruit dont la maturité dépasse MATURITE_CHUTE est
              sur-mûr → tombe en litière `fruit` (déclenche la cascade fertilité).
 
@@ -228,9 +229,11 @@ class DecompoMixin:
                                f"→ {len(plant.fruits)} fruits (frac {frac:.2f})")
             # 2-3. Maturation + chute des sur-mûrs.
             if plant.fruits:
+                duree = cls.fruit_semaines_maturation
+                dmat = FRUIT_DMAT if duree is None else 1.0 / duree
                 survivors = []
                 for f in plant.fruits:
-                    f.maturite += FRUIT_DMAT
+                    f.maturite += dmat
                     if f.maturite > MATURITE_CHUTE:
                         eco.deposer_litiere(r, c, "fruit", f.masse)
                         log.append(f"    🍂 Chute fruit (mûr {f.maturite:.2f}) "
