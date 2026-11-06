@@ -138,8 +138,24 @@ namespace Symbiose
 				+ $"· GC {s["gc_ms"].AsDouble():F0} ms ({s["gc_passes"].AsInt32()} passes, "
 				+ $"{s["gc_gen2"].AsInt32()} complètes) · défauts de page {defauts} "
 				+ $"· échantillons {s["echantillons"].AsInt32()}/{s["attendus"].AsInt32()}");
+			AppendMachine(sb, s);
 			sb.AppendLine($"    phases : {Classement(s["phases"].AsGodotArray())}");
 			sb.AppendLine($"    feuilles : {Classement(s["feuilles"].AsGodotArray())}");
+		}
+
+		// Qui occupait le processeur pendant le tick (D127, `charge_machine.py`) : charge
+		// de toute la machine, puis CPU de Godot et des autres processus, en ms-cœur.
+		// Charge proche de 100 % avec une grosse attente → le moteur, en BelowNormal,
+		// cédait sa place ; la colonne la plus lourde nomme le coupable.
+		private static void AppendMachine(StringBuilder sb, GDict s)
+		{
+			if (!s.ContainsKey("machine") || s["machine"].VariantType == Variant.Type.Nil)
+				return;
+			var m = s["machine"].AsGodotDictionary();
+			string godot = m["godot_ms"].VariantType == Variant.Type.Nil
+				? "—" : $"{m["godot_ms"].AsInt32()} ms";
+			sb.AppendLine($"    machine : charge {m["charge_pct"].AsInt32()} % sur {m["coeurs"].AsInt32()} cœurs "
+				+ $"· CPU Godot {godot} · autres processus {m["autres_ms"].AsInt32()} ms");
 		}
 
 		private static string Classement(Godot.Collections.Array lignes)

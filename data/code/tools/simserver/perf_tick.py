@@ -17,6 +17,8 @@ ci-dessous répond à une hypothèse précise :
     On échantillonne plutôt qu'on instrumente : aucune ligne du moteur ne change, et
     le coût ne dépend pas du nombre d'appels, contrairement à cProfile.
   - `echantillons` / `attendus` : très en dessous → le processus entier était gelé.
+  - `machine` : charge de la machine et CPU de Godot pendant le tick, pour nommer ce
+    qui prenait le processeur quand le moteur attendait (`charge_machine.py`, D127).
 
 ⚠️ Limites constatées au rejeu du 2026-11-04 :
   - un CPU élevé ne prouve PAS une cause dans la simulation. Une machine chargée le
@@ -37,6 +39,7 @@ import threading
 import time
 from collections import Counter
 
+from . import charge_machine
 from .perf import defauts_de_page
 
 PERIODE_S = 0.05
@@ -71,6 +74,7 @@ class SondeTick:
         self._gc_passes = self._gc_gen2 = 0
         self._defauts0 = defauts_de_page()
         self._heure = time.strftime("%H:%M:%S")
+        self._machine0 = charge_machine.releve()
         self._cpu0 = time.process_time()
         self._mur0 = time.perf_counter()
         self._actif.set()
@@ -82,6 +86,7 @@ class SondeTick:
     def fin(self) -> dict:
         mur = time.perf_counter() - self._mur0
         cpu = time.process_time() - self._cpu0
+        machine = charge_machine.bilan(self._machine0, charge_machine.releve(), cpu)
         self._actif.clear()
         defauts = defauts_de_page()
         n = sum(self._phases.values())
@@ -97,6 +102,7 @@ class SondeTick:
             "attendus": int(mur / PERIODE_S),
             "phases": _classement(self._phases, n),
             "feuilles": _classement(self._feuilles, n),
+            "machine": machine,
         }
 
     def _sur_gc(self, etape: str, info: dict) -> None:
