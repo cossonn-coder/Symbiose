@@ -77,6 +77,15 @@ namespace Symbiose
 				sb.AppendLine("--- état courant ---");
 				AppendDump(sb, rep["current"].AsGodotDictionary());
 				if (rep.ContainsKey("annees")) AppendAnnees(sb, rep["annees"].AsGodotArray());
+				// Chronique des espèces (D127, pont ≥ 0.6.10) : effectifs, causes de mort,
+				// disparitions. Le texte est composé côté Python (tools/simserver/
+				// chronique.py, première ligne « [chronique] … ») et recopié TEL QUEL :
+				// la vue ne recalcule rien. Pont plus ancien sans la clé → rien.
+				if (rep.ContainsKey("chronique"))
+				{
+					sb.AppendLine("--- chronique des espèces ---");
+					sb.AppendLine(rep["chronique"].AsGodotDictionary()["texte"].AsString());
+				}
 			}
 			return sb.ToString();
 		}

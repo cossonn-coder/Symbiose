@@ -13,7 +13,7 @@ INTACT sur tout le sprint ; pont 0.6.9 → 0.6.10 au ②.
 | ① | `01_causes_de_mort.md` — espèce + cause canonique des morts, carnet, aide, tests | FAIT 2026-11-06 (golden `a10b7225…` intact, non commité) |
 | ② | `02_chronique.md` — module serveur, `cmd_perf_report`, pont 0.6.10 | FAIT 2026-11-06 (golden `a10b7225…` intact, non commité) |
 | ③ | `03_outil_sans_ecran.md` — `tools/chronique_run.py` + run `verger_mur` 200 ans → D127 | FAIT 2026-11-06 (golden `a10b7225…` intact, non commité) |
-| ④ | `04_vue_rapport_c.md` — section `[chronique]` touche C, `dotnet build`, clôture | à faire |
+| ④ | `04_vue_rapport_c.md` — section `[chronique]` touche C, `dotnet build`, clôture | FAIT côté code 2026-11-06 (golden intact, build vert 0 avert., F5 attendu) ; clôture journal/DETTE/BACKLOG = orchestrateur |
 
 ## Constats vérifiés au code (2026-11-06)
 1. `tools/simserver/perf_annees.py` : `MAX_ANNEES = 60` → un run de 192 ans ne
@@ -149,7 +149,19 @@ Coût : ① nul dans le tick ; ② comptage O(N) par tick ≤ ~1 ms [estimation,
 - Écart : seed explicite 42 (le défaut serveur est `0x5AB1057E`) pour coller au run
   PC de D127 — même compte d'arbres en an 15 (9).
 
+## Tronçon ④ — fait côté code (2026-11-06)
+- `world/WorldView.PerfReport.cs` : après `AppendAnnees`, si `rep` contient
+  `chronique`, ligne `--- chronique des espèces ---` puis `texte` recopié tel
+  quel. Pont < 0.6.10 sans la clé → rien. Aucun calcul C#.
+- Écart au kickoff : le `texte` Python commence DÉJÀ par `[chronique] …` → pas
+  de second en-tête `[chronique]` côté C# ; séparateur `---` au style des autres
+  sections du rapport.
+- `dotnet build` vert (0 avertissement, 0 erreur) ; golden `a10b7225…` PASS.
+- F5 Nico : run turbo `verger_mur`, C après quelques années, coller le rapport →
+  section en fin de rapport (bilans tous les 10 ans + années marquées `*` +
+  registre des disparitions/retours).
+
 ## §REPRISE
-Lire ce fichier + D127 (`DETTE.md`). ①, ② et ③ faits. Prochaine étape : tronçon ④
-`04_vue_rapport_c.md` (section `[chronique]` dans `WorldView.PerfReport.cs`,
-`dotnet build`, clôture du sprint).
+Lire ce fichier + D127 (`DETTE.md`). ①②③④ faits côté code. Reste : clôture du
+sprint (journal.md + entrée `journal/`, DETTE D127, BACKLOG, commit) par
+l'orchestrateur, puis F5 Nico (touche C).
