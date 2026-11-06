@@ -42,8 +42,13 @@ from plants.catalogue import PLANT_CATALOGUE, PERENNIAL_CATALOGUE
 # Un événement typé issu d'UNE ligne de log. `pos` = (r, c) plot-foyer ou None ;
 # `tile_id` = id de tuile courante (lignes `[T0]`) ou None ; `espece` = clé du
 # catalogue (ou None pour un événement sans plante : aléa météo, ravageur de
-# saison) ; `cause` = sous-type string (sec/noyé/sénescence/conflit/…) ou None.
-Evenement = namedtuple("Evenement", "kind tile_id pos espece cause")
+# saison) ; `cause` = sous-type string (sec/noyé/sénescence/herbivorie/…) ou None.
+# `raison` (chronique des espèces ①) = la raison BRUTE du log, gardée SEULEMENT
+# quand une mort tombe en cause `autre` (pour que la chronique dise de quoi, même
+# sans classement) ; None partout ailleurs. Champ à défaut → `Evenement(k, t, p, e, c)`
+# à 5 arguments reste valide (les lecteurs existants ne changent pas).
+Evenement = namedtuple("Evenement", "kind tile_id pos espece cause raison",
+                       defaults=(None,))
 
 # --- Reverse mappings, DÉRIVÉS des catalogues moteur (jamais dupliqués) -------
 _CATALOGUE = {**PLANT_CATALOGUE, **PERENNIAL_CATALOGUE}
@@ -62,7 +67,42 @@ _RE_REPRO = re.compile(r"Reproduction\s*:\s*(.+?)\s+@")   # 🌰 Reproduction : 
 _RE_TAG = re.compile(r"\b(auto|biparental|introgr\.)\b")  # tag de reproduction
 # Élargissement carnet (doc §1.2) : marqueurs que la détection ignorait.
 _RE_MORT = re.compile(r"🪦\s+(.+?)@")               # 🪦 <nom>@(r, c) meurt …
-_RE_CONFLIT = re.compile(r"✗\s+(.+?)@")             # ✗ <nom>@(r, c) meurt (conflit)
+_RE_CONFLIT = re.compile(r"✗\s+(.+?)@")             # (historique, plus utilisé ci-dessous)
+# Mort par coup de santé (chronique des espèces ①). Plus aucune mort « par conflit »
+# n'existe (`regress()` retiré, mortalite.py) : chaque `✗` est un `ReduceHealth`
+# résolu (`sim/effects/resolution.py`), au format EXACT
+#     `  ✗ Santé <Nom>@(r, c) -<n> [<raison>] → meurt`
+# (le `!` du même format = dégât NON mortel, jamais lu ici). On retire le préfixe
+# « Santé », on capture le nom puis la raison entre crochets (gourmand jusqu'au
+# dernier `]` avant la flèche, au cas où une description en contiendrait).
+_RE_MORT_SANTE = re.compile(r"✗\s+(?:Santé\s+)?(.+?)@\(\d+,\s*\d+\).*?\[(.*)\]\s*→\s*meurt")
+# Fin de cycle (chronique ①) : l'annuelle tuée par l'hiver et la bisannuelle après
+# ses graines de l'an 2 (`mortalite.py`, `❄ <Nom>@pos meurt (annual)` /
+# `✿ <Nom>@pos meurt (bisannuelle, an 2)`). Le ❄ est polysémique → on exige « meurt ».
+_RE_FIN_CYCLE = re.compile(r"(?:❄|✿)\s+(.+?)@\(\d+,\s*\d+\)\s+meurt\b")
+
+# Raison du log → CAUSE CANONIQUE de mort (conception chronique §2). Préfixes
+# comparés en minuscules (`casefold`), dans l'ordre : la 1ʳᵉ qui colle gagne. Les
+# raisons viennent de `ReduceHealth(reason=…)` (perturbations.py, aleas.py,
+# mortalite.py) et de la `description` des effets `reduce_health` d'espèce (seule à
+# ce jour : le mildiou familial des Solanacées, plants/base/familles.py). Toute
+# raison absente de la table → `autre` (JAMAIS `conflit`, qui n'a plus de source).
+CAUSE_DE_RAISON: tuple[tuple[str, str], ...] = (
+    ("herbivorie", "herbivorie"),        # herbivorie foliaire (perturbations)
+    ("limaces", "herbivorie"),           # aléa ravageur de saison
+    ("chenilles", "herbivorie"),         # aléa ravageur de saison
+    ("maladie fongique", "maladie"),
+    ("oïdium", "maladie"),
+    ("fonte des semis", "maladie"),      # champignon du semis (pythium & co)
+    ("sensibilité familiale au mildiou", "maladie"),   # effet d'espèce Solanacées
+    ("gel", "gel"),                      # « gel (tissu tendre) »
+    ("gelée tardive", "gel"),
+    ("grêle", "grele"),
+    ("vent", "vent"),                    # « vent (tige cassée) »
+    ("stress hydrique", "secheresse"),
+    ("carence lumineuse", "ombre"),
+    ("mortalité de fond", "usure"),
+)
 _RE_NOUAISON = re.compile(r"🍎\s+Nouaison\s+(.+?)@")  # 🍎 Nouaison <nom>@(r, c) …
 _RE_ABSCISSION = re.compile(r"🍂\s+Abscission\s+(.+?)@")  # 🍂 Abscission <nom>@(r, c) …
 # Émission clonale (sprint LUXURIANCE ②/④) : 🌿 Ramet (<mode>) : <nom> @(r, c) …
@@ -117,14 +157,23 @@ def _raison_stagnation(line: str) -> str | None:
 
 def _raison_mort(line: str) -> str | None:
     """Cause d'une mort 🪦 lue dans le texte qui suit (sénescence/asphyxie). Les
-    morts par conflit portent un marqueur distinct (✗) traité à part ; la mort
-    hivernale annuelle (❄ … (annual)) et la monocarpie bisannuelle (✿) n'ont pas
-    de cause au sens du carnet (§5.0) → non parsées ici (cf. TODO)."""
+    morts par coup de santé (✗) et les fins de cycle (❄ annual / ✿ bisannuelle)
+    ont leurs branches propres dans `evenements()` (chronique des espèces ①)."""
     if "meurt de sénescence" in line:
         return "sénescence"
     if "meurt asphyxié" in line:
         return "asphyxie"
     return None
+
+
+def cause_de_raison(raison: str) -> str:
+    """Cause canonique d'une raison brute de `ReduceHealth` (table ci-dessus),
+    `autre` si aucune entrée ne colle. Pure ; exposée pour la chronique ②."""
+    r = raison.strip().casefold()
+    for prefixe, cause in CAUSE_DE_RAISON:
+        if r.startswith(prefixe):
+            return cause
+    return "autre"
 
 
 def _evenements(log: list[str]):
@@ -283,10 +332,20 @@ def evenements(log: list[str]) -> list[Evenement]:
                                      _CLE_DE_NOM.get(m.group(1).strip()),
                                      _raison_mort(line)))
         elif "✗" in line:
-            m = _RE_CONFLIT.search(line)
+            # Mort par coup de santé : espèce (préfixe « Santé » retiré) + cause lue
+            # dans `[raison]`. Ligne sans « → meurt » (format inconnu) → ignorée.
+            m = _RE_MORT_SANTE.search(line)
+            if m:
+                raison = m.group(2).strip()
+                cause = cause_de_raison(raison)
+                out.append(Evenement("mort", tile_id, pos,
+                                     _CLE_DE_NOM.get(m.group(1).strip()), cause,
+                                     raison if cause == "autre" else None))
+        elif ("❄" in line or "✿" in line) and "meurt" in line:
+            m = _RE_FIN_CYCLE.search(line)
             if m:
                 out.append(Evenement("mort", tile_id, pos,
-                                     _CLE_DE_NOM.get(m.group(1).strip()), "conflit"))
+                                     _CLE_DE_NOM.get(m.group(1).strip()), "fin_de_cycle"))
         elif "🍎" in line and "Nouaison" in line:
             m = _RE_NOUAISON.search(line)
             if m:

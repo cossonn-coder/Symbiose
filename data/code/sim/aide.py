@@ -37,6 +37,15 @@ REMEDE: dict[tuple[str, str | None], str] = {
     ("mort", "asphyxie"):     "Drainer d'urgence : l'excès d'eau prolongé étouffe les racines.",
     ("mort", "gel"):          "Protéger du gel les espèces peu rustiques.",
     ("mort", "conflit"):      "Éclaircir : trop de concurrence pour la lumière et les ressources.",
+    # Causes lues dans `[raison]` (chronique des espèces ①). Gestes de MILIEU
+    # (philo #1). Pas de remède pour la fin de cycle, la sénescence, l'usure (aléa
+    # de fond) ni `autre` (cause inconnue) : rien à corriger.
+    ("mort", "herbivorie"):   "Accueillir les auxiliaires (haie, abris, fleurs) pour tenir les brouteurs en respect.",
+    ("mort", "maladie"):      "Aérer, ne pas mouiller le feuillage, tourner les familles sur ce sol.",
+    ("mort", "grele"):        "Pailler et poser un voile sur les semis tendres quand le ciel menace.",
+    ("mort", "vent"):         "Abriter derrière une haie ou un brise-vent ; laisser les semis s'endurcir au vent doux.",
+    ("mort", "secheresse"):   "Pailler et couvrir le sol pour qu'il garde son eau ; arroser en profondeur.",
+    ("mort", "ombre"):        "Éclaircir le couvert alentour ou semer cette espèce plus au soleil.",
 }
 
 

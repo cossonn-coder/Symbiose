@@ -10,7 +10,7 @@ INTACT sur tout le sprint ; pont 0.6.9 → 0.6.10 au ②.
 ## Tronçons
 | # | kickoff | état |
 |---|---|---|
-| ① | `01_causes_de_mort.md` — espèce + cause canonique des morts, carnet, aide, tests | à faire |
+| ① | `01_causes_de_mort.md` — espèce + cause canonique des morts, carnet, aide, tests | FAIT 2026-11-06 (golden `a10b7225…` intact, non commité) |
 | ② | `02_chronique.md` — module serveur, `cmd_perf_report`, pont 0.6.10 | à faire |
 | ③ | `03_outil_sans_ecran.md` — `tools/chronique_run.py` + run `verger_mur` 200 ans → D127 | à faire |
 | ④ | `04_vue_rapport_c.md` — section `[chronique]` touche C, `dotnet build`, clôture | à faire |
@@ -78,5 +78,26 @@ Tronçons (golden INTACT partout) :
   telle quelle ; `dotnet build` ; F5 = Nico presse C sur un run.
 Coût : ① nul dans le tick ; ② comptage O(N) par tick ≤ ~1 ms [estimation, non mesurée].
 
+## Tronçon ① — fait (2026-11-06)
+- `sim/evenements.py` : `Evenement` gagne un 6ᵉ champ `raison` (défaut None ;
+  rempli SEULEMENT pour une mort `autre` = raison brute, pour la chronique ②).
+  Table `CAUSE_DE_RAISON` (préfixes casefold) + `cause_de_raison(raison)` publique
+  (réutilisable par ②). Branche `✗` : regex `_RE_MORT_SANTE` (préfixe « Santé »
+  retiré, exige `→ meurt`). Branche `❄`/`✿ … meurt` → `fin_de_cycle`. Plus aucune
+  production de `conflit` (`_RE_CONFLIT` gardé, inutilisé). `_evenements` intact.
+- Seul effet d'espèce `reduce_health` au code : « Sensibilité familiale au
+  mildiou » (Solanacées) → `maladie`.
+- `sim/carnet.py` : concepts (herbivorie→ravageurs, maladie→maladie, grele/vent→
+  météo, secheresse→eau, ombre→lumière, fin_de_cycle→sénescence ; usure/autre sans
+  concept → fallback `observation`) + gabarits D/I. `sim/aide.py` : remèdes milieu
+  pour herbivorie/maladie/grele/vent/secheresse/ombre (pas usure/autre/fin_de_cycle).
+- Tests : `test_evenements` 42/42 (format réel via `apply_mutations`), carnet,
+  maitrise_detection, journal, peripherie_voix, inoculum, flore_spontanee, vent verts.
+- Hors log (non lus, à savoir pour ②) : annélation campagnol (`vitalite=0` direct,
+  `perturbations.root_herbivory`) et gestes joueur → morts « hors tick ».
+- Effet de bord : les annuelles mortes à l'hiver produisent désormais une entrée
+  carnet `fin_de_cycle` (le ledger se remplit un peu plus vite, borné JOURNAL_MAX).
+
 ## §REPRISE
-Lire ce fichier + D127 (`DETTE.md`). Prochaine étape : `/sprint-auto sprint_chronique_especes` → tronçon ①.
+Lire ce fichier + D127 (`DETTE.md`). ① fait. Prochaine étape : tronçon ②
+`02_chronique.md` (consommer `evenements(log)` ; cause `autre` → champ `raison`).

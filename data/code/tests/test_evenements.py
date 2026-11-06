@@ -55,8 +55,22 @@ def _l_mort_asphyxie(nom, r, c):
     return f"    🪦 {nom}@({r}, {c}) meurt asphyxié (excès d'eau soutenu)"
 
 
-def _l_mort_conflit(nom, r, c):
-    return f"    ✗ {nom}@({r}, {c}) meurt (conflit)."
+def _l_mort_sante(nom, r, c, raison, n="1"):
+    # Format EXACT de `sim/effects/resolution.py` (✗ + repr de ReduceHealth) :
+    # le cas `✗ <nom>@pos meurt (conflit)` n'est plus émis (chronique ①).
+    return f"  ✗ Santé {nom}@({r}, {c}) -{n} [{raison}] → meurt"
+
+
+def _l_degat_sante(nom, r, c, raison):
+    return f"  ! Santé {nom}@({r}, {c}) -1 [{raison}] → vitalité=0.30"
+
+
+def _l_mort_annuelle(nom, r, c):
+    return f"    ❄ {nom}@({r}, {c}) meurt (annual) — nécromasse +0.12 OM"
+
+
+def _l_mort_bisannuelle(nom, r, c):
+    return f"    ✿ {nom}@({r}, {c}) meurt (bisannuelle, an 2) — nécromasse +0.12 OM"
 
 
 def _l_nouaison(nom, r, c):
@@ -128,7 +142,7 @@ def test_kinds_elargis():
            _l_repro("Haricot", 4, 4, "auto"),
            _l_mort_senescence("Pommier", 6, 6),
            _l_mort_asphyxie("Courgette", 7, 7),
-           _l_mort_conflit("Tournesol", 8, 8),
+           _l_mort_sante("Tournesol", 8, 8, "herbivorie p=0.040"),
            _l_nouaison("Pommier", 6, 6),
            _l_abscission("Pommier", 6, 6),
            _l_ravageur()]
@@ -141,8 +155,8 @@ def test_kinds_elargis():
           Evenement("mort", "T1", (6, 6), "pommier", "sénescence") in out)
     check("mort asphyxie",
           Evenement("mort", "T1", (7, 7), "courgette", "asphyxie") in out)
-    check("mort conflit (marqueur ✗)",
-          Evenement("mort", "T1", (8, 8), "tournesol", "conflit") in out)
+    check("mort ✗ : espèce lue (préfixe Santé retiré) + cause herbivorie",
+          Evenement("mort", "T1", (8, 8), "tournesol", "herbivorie") in out, f"{out}")
     check("nouaison",
           Evenement("nouaison", "T1", (6, 6), "pommier", None) in out)
     check("abscission",
@@ -177,6 +191,58 @@ def test_disambiguation_emojis():
           len(stag) == 1 and stag[0].cause == "froid", f"stag={stag}")
 
 
+def test_causes_de_mort():
+    print("\n[B5] evenements() — causes de mort lues dans [raison] (chronique ①)")
+    cas = [("herbivorie p=0.040", "herbivorie"), ("Limaces", "herbivorie"),
+           ("Chenilles", "herbivorie"), ("maladie fongique", "maladie"),
+           ("oïdium", "maladie"), ("fonte des semis", "maladie"),
+           ("Sensibilité familiale au mildiou", "maladie"),
+           ("gel (tissu tendre)", "gel"), ("Gelée tardive", "gel"),
+           ("grêle (feuillage)", "grele"), ("vent (tige cassée)", "vent"),
+           ("stress hydrique sévère", "secheresse"), ("carence lumineuse", "ombre"),
+           ("mortalité de fond (noise=0.004)", "usure")]
+    for raison, attendu in cas:
+        out = evenements([_entete(), _l_mort_sante("Tomate", 2, 2, raison)])
+        check(f"[{raison}] → {attendu}",
+              out == [Evenement("mort", "T0", (2, 2), "tomate", attendu)], f"{out}")
+    # Raison inconnue → `autre`, raison brute gardée ; JAMAIS `conflit`.
+    out = evenements([_entete(), _l_mort_sante("Tomate", 2, 2, "cause inédite")])
+    check("raison inconnue → autre + raison brute",
+          out == [Evenement("mort", "T0", (2, 2), "tomate", "autre", "cause inédite")],
+          f"{out}")
+    # `!` = dégât non mortel → aucun événement.
+    out = evenements([_entete(), _l_degat_sante("Tomate", 2, 2, "oïdium")])
+    check("ligne ! (dégât non mortel) ignorée", out == [], f"{out}")
+    # Fins de cycle : annuelle à l'hiver (❄) et bisannuelle (✿).
+    out = evenements([_entete(), _l_mort_annuelle("Tomate", 1, 1),
+                      _l_mort_bisannuelle("Tomate", 3, 3),
+                      _l_stagne("Tomate", 4, 4, "froid")])
+    check("❄ annual → mort fin_de_cycle",
+          Evenement("mort", "T0", (1, 1), "tomate", "fin_de_cycle") in out, f"{out}")
+    check("✿ bisannuelle → mort fin_de_cycle",
+          Evenement("mort", "T0", (3, 3), "tomate", "fin_de_cycle") in out, f"{out}")
+    check("❄ stagne (froid) reste une stagnation",
+          Evenement("stagnation", "T0", (4, 4), "tomate", "froid") in out, f"{out}")
+    check("aucune cause conflit produite",
+          all(e.cause != "conflit" for e in out))
+
+
+def test_format_reel_moteur():
+    print("\n[B6] format RÉEL : une vraie ReduceHealth résolue puis relue")
+    from plants.catalogue import PLANT_CATALOGUE
+    from sim.effects.mutations import ReduceHealth
+    from sim.effects.resolution import apply_mutations
+    from world.tile import Tile
+    tile = Tile(tile_id="T0", soil_type="terre", grid_rows=4, grid_cols=4)
+    plant = tile.add_plant(PLANT_CATALOGUE["tomate"], 1, 2)
+    log = apply_mutations([ReduceHealth(plant, 1000, reason="vent (tige cassée)")],
+                          {"tiles": [tile], "eco": {}})
+    out = evenements(["[T0]"] + log)
+    check("la plante est morte", not plant.is_alive, f"log={log}")
+    check("la ligne du moteur se relit : tomate, vent",
+          Evenement("mort", "T0", (1, 2), "tomate", "vent") in out, f"log={log} out={out}")
+
+
 def test_ramet_clonal():
     print("\n[B4] evenements() — émission clonale (🌿 Ramet) par mode (luxuriance ④)")
     log = [_entete("T0"),
@@ -203,6 +269,8 @@ if __name__ == "__main__":
     test_parite_historique()
     test_kinds_elargis()
     test_disambiguation_emojis()
+    test_causes_de_mort()
+    test_format_reel_moteur()
     test_ramet_clonal()
     test_floraison_acclimatation_absentes()
 

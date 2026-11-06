@@ -88,7 +88,18 @@ CONCEPT_DE: dict[tuple[str, str | None], str] = {
     ("mort", "sénescence"):       "sénescence",
     ("mort", "asphyxie"):         "eau",
     ("mort", "gel"):              "météo",
-    ("mort", "conflit"):          "compétition",
+    ("mort", "conflit"):          "compétition",   # plus produit (chronique ①), gardé
+    # Causes de mort lues dans `[raison]` des lignes ✗ (chronique des espèces ①,
+    # `evenements.CAUSE_DE_RAISON`). Concepts EXISTANTS : ravageurs, maladie (propre
+    # au carnet), météo, eau, lumière, sénescence. `usure` (mortalité de fond) et
+    # `autre` (raison non classée) n'ont PAS de concept → CONCEPT_FALLBACK.
+    ("mort", "herbivorie"):       "ravageurs",
+    ("mort", "maladie"):          "maladie",
+    ("mort", "grele"):            "météo",
+    ("mort", "vent"):             "météo",
+    ("mort", "secheresse"):       "eau",
+    ("mort", "ombre"):            "lumière",
+    ("mort", "fin_de_cycle"):     "sénescence",
     ("ravageur", None):           "ravageurs",
     # Herbivorie RACINAIRE du campagnol (sommet trophique ①) : même concept de
     # maîtrise « ravageurs » que le nuisible de saison — le joueur y apprend la
@@ -238,6 +249,27 @@ GABARIT: dict[tuple[str, str | None, str], str] = {
     ("mort", "gel", _I): "Le gel {l} a eu {e} — au-delà de sa rusticité, rien à faire.",
     ("mort", "conflit", _D): "{e} {l} a cédé la place à plus vigoureux.",
     ("mort", "conflit", _I): "Éclaircissage naturel {l} : {e} a perdu la course à la lumière et aux ressources.",
+    # Causes lues dans `[raison]` (chronique des espèces ①). Descriptif = ce que je
+    # VOIS au pied mort (philo #5) ; interprétatif = la cause comprise au seuil du
+    # concept, première personne. `usure`/`autre` sans concept : même texte, sobre.
+    ("mort", "herbivorie", _D): "{e} {l} n'est plus qu'une tige rongée ; elle n'a pas repris.",
+    ("mort", "herbivorie", _I): "Mangée {l} : les brouteurs ont eu {e} plus vite qu'elle ne repoussait — personne ne les tenait en respect.",
+    ("mort", "maladie", _D): "{e} {l} s'est tachée, a noirci, puis s'est affaissée.",
+    ("mort", "maladie", _I): "La maladie a emporté {e} {l} : l'humidité stagnante et un sol chargé d'inoculum lui ont donné prise.",
+    ("mort", "grele", _D): "{e} {l} gît hachée après l'averse de grêle.",
+    ("mort", "grele", _I): "La grêle {l} a eu {e} — un plant tendre et découvert, rien ne l'abritait.",
+    ("mort", "vent", _D): "{e} {l} est cassée net au collet après le coup de vent.",
+    ("mort", "vent", _I): "Le vent {l} a brisé {e} : une tige filée, jamais secouée, sans abri pour casser la rafale.",
+    ("mort", "secheresse", _D): "{e} {l} s'est desséchée sur pied.",
+    ("mort", "secheresse", _I): "La soif {l} a tué {e} : le sol nu a perdu son eau plus vite qu'il ne la recevait.",
+    ("mort", "ombre", _D): "{e} {l}, pâle et filante, a fini par s'éteindre.",
+    ("mort", "ombre", _I): "Affamée de lumière {l} : sous le couvert des plus grands, {e} n'a jamais pu se nourrir.",
+    ("mort", "usure", _D): "{e} {l} s'est éteinte sans signe clair.",
+    ("mort", "usure", _I): "{e} {l} s'est éteinte sans signe clair.",
+    ("mort", "fin_de_cycle", _D): "{e} {l} a séché sur pied après avoir donné ses graines.",
+    ("mort", "fin_de_cycle", _I): "{e} {l} a fini son cycle : ses graines sont au sol, la lignée attend le printemps.",
+    ("mort", "autre", _D): "{e} {l} est morte.",
+    ("mort", "autre", _I): "{e} {l} est morte, d'une cause que je ne sais pas encore lire.",
 
     ("ravageur", None, _D): "Des bestioles s'affairent sur {e} {l}.",
     ("ravageur", None, _I): "Pression de ravageurs {l} — si les auxiliaires sont là, l'équilibre se rétablit seul.",
