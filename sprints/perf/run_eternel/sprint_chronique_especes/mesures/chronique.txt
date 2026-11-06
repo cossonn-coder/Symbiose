@@ -1,0 +1,97 @@
+[chronique] 200 bilans annuels, 3 disparitions/retours
+An 10 : 7 plantes, 4 espèces
+  vivants : cerisier 1 · figuier 1 · noyer 3 · pommier 2
+  morts   : -
+  levées  : -
+An 20 : 11 plantes, 4 espèces
+  vivants : cerisier 1 · figuier 3 · noyer 4 · pommier 3
+  morts   : -
+  levées  : -
+An 30 : 10 plantes, 4 espèces
+  vivants : cerisier 1 · figuier 4 · noyer 4 · pommier 1
+  morts   : -
+  levées  : -
+An 32 : 10 plantes, 3 espèces *
+  vivants : figuier 4 · noyer 5 · pommier 1
+  morts   : cerisier sénescence 1
+  levées  : noyer 1
+An 40 : 12 plantes, 3 espèces
+  vivants : figuier 3 · noyer 8 · pommier 1
+  morts   : -
+  levées  : figuier 1
+An 41 : 11 plantes, 2 espèces *
+  vivants : figuier 3 · noyer 8
+  morts   : pommier sénescence 1
+  levées  : -
+An 50 : 11 plantes, 2 espèces
+  vivants : figuier 6 · noyer 5
+  morts   : -
+  levées  : -
+An 60 : 9 plantes, 2 espèces
+  vivants : figuier 5 · noyer 4
+  morts   : figuier ombre 1
+  levées  : -
+An 70 : 6 plantes, 2 espèces
+  vivants : figuier 2 · noyer 4
+  morts   : figuier ombre 1
+  levées  : -
+An 80 : 6 plantes, 2 espèces
+  vivants : figuier 2 · noyer 4
+  morts   : -
+  levées  : -
+An 90 : 6 plantes, 2 espèces
+  vivants : figuier 1 · noyer 5
+  morts   : -
+  levées  : -
+An 100 : 7 plantes, 2 espèces
+  vivants : figuier 1 · noyer 6
+  morts   : -
+  levées  : -
+An 103 : 7 plantes, 1 espèces *
+  vivants : noyer 7
+  morts   : figuier sénescence 1
+  levées  : noyer 1
+An 110 : 8 plantes, 1 espèces
+  vivants : noyer 8
+  morts   : -
+  levées  : -
+An 120 : 4 plantes, 1 espèces
+  vivants : noyer 4
+  morts   : -
+  levées  : -
+An 130 : 3 plantes, 1 espèces
+  vivants : noyer 3
+  morts   : -
+  levées  : -
+An 140 : 4 plantes, 1 espèces
+  vivants : noyer 4
+  morts   : -
+  levées  : -
+An 150 : 3 plantes, 1 espèces
+  vivants : noyer 3
+  morts   : -
+  levées  : -
+An 160 : 2 plantes, 1 espèces
+  vivants : noyer 2
+  morts   : -
+  levées  : -
+An 170 : 2 plantes, 1 espèces
+  vivants : noyer 2
+  morts   : -
+  levées  : -
+An 180 : 2 plantes, 1 espèces
+  vivants : noyer 2
+  morts   : -
+  levées  : -
+An 190 : 2 plantes, 1 espèces
+  vivants : noyer 2
+  morts   : -
+  levées  : -
+An 200 : 1 plantes, 1 espèces
+  vivants : noyer 1
+  morts   : -
+  levées  : -
+Registre des disparitions et retours :
+  an 32 (sem 1652) : cerisier disparaît, dernière mort : sénescence, 2432 sem d'âge, tuile VERGER_MUR
+  an 41 (sem 2114) : pommier disparaît, dernière mort : sénescence, 2894 sem d'âge, tuile VERGER_MUR
+  an 103 (sem 5312) : figuier disparaît, dernière mort : sénescence, 3245 sem d'âge, tuile VERGER_MUR

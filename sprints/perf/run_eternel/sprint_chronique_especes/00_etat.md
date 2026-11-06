@@ -12,7 +12,7 @@ INTACT sur tout le sprint ; pont 0.6.9 → 0.6.10 au ②.
 |---|---|---|
 | ① | `01_causes_de_mort.md` — espèce + cause canonique des morts, carnet, aide, tests | FAIT 2026-11-06 (golden `a10b7225…` intact, non commité) |
 | ② | `02_chronique.md` — module serveur, `cmd_perf_report`, pont 0.6.10 | FAIT 2026-11-06 (golden `a10b7225…` intact, non commité) |
-| ③ | `03_outil_sans_ecran.md` — `tools/chronique_run.py` + run `verger_mur` 200 ans → D127 | à faire |
+| ③ | `03_outil_sans_ecran.md` — `tools/chronique_run.py` + run `verger_mur` 200 ans → D127 | FAIT 2026-11-06 (golden `a10b7225…` intact, non commité) |
 | ④ | `04_vue_rapport_c.md` — section `[chronique]` touche C, `dotnet build`, clôture | à faire |
 
 ## Constats vérifiés au code (2026-11-06)
@@ -133,7 +133,23 @@ Coût : ① nul dans le tick ; ② comptage O(N) par tick ≤ ~1 ms [estimation,
 - Observé au passage (full, seed 42, 3 ans) : morts du trèfle surtout herbivorie
   (180/an 2) et vent (57) ; `non_consignee` présent (7 trèfles an 2).
 
+## Tronçon ③ — fait (2026-11-06)
+- `tools/chronique_run.py` (46 LDC) : `cmd_init` puis `cmd_step_week` × 52·N (MÊME
+  chemin que le serveur → chronique identique au rapport C), écrit `chronique.txt`
+  (`texte()`) + `chronique.json` (`brut()`), progression stderr tous les 10 ans.
+  Snapshot jeté = 6,4 % du pas [verger_mur an 1, n=1, VM] < 30 % → pas de
+  factorisation du post-tick.
+- Run court `--config smoke --annees 2` OK (7 s). Run `verger_mur --seed 42
+  --annees 200` : 93 min [n=1 run, VM, charge 0,65 → 8,8], sorties dans `mesures/`.
+- Faits (détail dans D127) [seed 42, n=1 run, VM] : cerisier an 32, pommier an 41,
+  figuier an 103 disparaissent tous par sénescence du dernier pied ; 30 recrues
+  (noyer 18, figuier 9, pommier 3) ; 25 morts sur 34 par ombre ; 1 noyer en an 200.
+  Hypothèse vieillesse tranchée pour les fondateurs ; point écologique ouvert dans
+  D127 (recrues tuées par l'ombre, pas de relève), moteur NON corrigé.
+- Écart : seed explicite 42 (le défaut serveur est `0x5AB1057E`) pour coller au run
+  PC de D127 — même compte d'arbres en an 15 (9).
+
 ## §REPRISE
-Lire ce fichier + D127 (`DETTE.md`). ① et ② faits. Prochaine étape : tronçon ③
-`03_outil_sans_ecran.md` (piloter `SimServer` hors écran, afficher
-`cmd_perf_report()["chronique"]["texte"]` tel quel ; run `verger_mur` 200 ans).
+Lire ce fichier + D127 (`DETTE.md`). ①, ② et ③ faits. Prochaine étape : tronçon ④
+`04_vue_rapport_c.md` (section `[chronique]` dans `WorldView.PerfReport.cs`,
+`dotnet build`, clôture du sprint).
