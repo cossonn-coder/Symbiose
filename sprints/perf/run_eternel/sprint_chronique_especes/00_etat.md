@@ -1,0 +1,82 @@
+# sprint_chronique_especes — état du sprint (D127, outillage des runs longs)
+
+**Sujet** : outiller les runs longs (D127, Nico 2026-11-06 : « il faut s'outiller
+pour ») — savoir QUAND une espèce disparaît et DE QUOI.
+**Phase** : conception FIGÉE le 2026-11-06 (accord Nico), prête pour
+`/sprint-auto sprint_chronique_especes`. Conception :
+`docs/perf/run_eternel/conception_chronique_especes.md`. Golden `a10b7225…`
+INTACT sur tout le sprint ; pont 0.6.9 → 0.6.10 au ②.
+
+## Tronçons
+| # | kickoff | état |
+|---|---|---|
+| ① | `01_causes_de_mort.md` — espèce + cause canonique des morts, carnet, aide, tests | à faire |
+| ② | `02_chronique.md` — module serveur, `cmd_perf_report`, pont 0.6.10 | à faire |
+| ③ | `03_outil_sans_ecran.md` — `tools/chronique_run.py` + run `verger_mur` 200 ans → D127 | à faire |
+| ④ | `04_vue_rapport_c.md` — section `[chronique]` touche C, `dotnet build`, clôture | à faire |
+
+## Constats vérifiés au code (2026-11-06)
+1. `tools/simserver/perf_annees.py` : `MAX_ANNEES = 60` → un run de 192 ans ne
+   montre que les 60 dernières années. « Plus que des noyers dès l'an 132 » de
+   D127 est très probablement le BORD DE LA FENÊTRE, pas un fait écologique.
+2. Bilan annuel = `top` 3 espèces seulement → une espèce minoritaire qui
+   s'éteint est invisible.
+3. Causes de mort : le moteur ne journalise la mort que par le `log` texte.
+   `sim/evenements.py` lit `🪦` (sénescence/asphyxie) et range TOUT `✗` en
+   « conflit ». Or plus aucune mort par conflit n'existe (`mortalite.py:254`,
+   `regress()` retiré) : chaque `✗` est un `ReduceHealth` (herbivorie, maladie,
+   gel, grêle, vent, stress hydrique, carence lumineuse, fonte des semis,
+   mortalité de fond, limaces/chenilles). Le `[reason]` est DÉJÀ dans la ligne
+   (`Santé X@pos -n [reason] → meurt`). Conséquence jeu : le carnet écrit « a
+   cédé la place à plus vigoureux » pour une plante mangée. `❄` (annuelle à
+   l'hiver) et `✿` (bisannuelle) sans cause. Gestes (`gestes.py`, greffe)
+   hors log ✗.
+4. Golden = hash du `log` + digest final → changer le TEXTE du log re-fige ;
+   lire `[reason]` côté `evenements.py` est golden NEUTRE.
+5. Outils existants : `tools/diag_population.py` (headless, top 6 tous les 26
+   ticks, sans causes), rapport C (touche C, `cmd_perf_report`), bancs
+   `bancs/verger_mur.py`.
+
+## Décisions arrêtées
+- A1 (Q1) chronique VM + rapport C, MÊME code de comptage : outil headless que
+  Claude lance seul (200 ans en fond) + section au rapport C des runs PC.
+- A2 (Q2) la lecture des causes se corrige UNE fois dans `sim/evenements.py`
+  (lire `[reason]` des `✗`) ; le carnet et l'aide en profitent (textes par
+  cause). Golden intact.
+- A3 (Q3) périmètre = toutes les espèces végétales ; faune renvoyée à D119.
+
+## Constats complémentaires (2026-11-06)
+6. Sur une ligne `✗ Santé Pommier@(3, 4) -1 [herbivorie …] → meurt`,
+   `evenements()` rend `espece=None` (préfixe « Santé » non retiré) ET
+   `cause="conflit"` (vérifié en Python). `tests/test_evenements.py` teste un
+   format `✗ Tournesol@(8, 8) meurt (conflit)` que le moteur n'émet plus.
+7. Raisons `ReduceHealth` relevées : `herbivorie p=…`, `Limaces`, `Chenilles`,
+   `maladie fongique`, `oïdium`, description d'effet d'espèce (mildiou…),
+   `fonte des semis`, `gel (tissu tendre)`, `Gelée tardive`, grêle,
+   `vent (tige cassée)`, `stress hydrique sévère`, `carence lumineuse`,
+   `mortalité de fond (noise=…)`. Précédent de lecture : `tests/diag_morts_field.py`.
+8. `verger_mur` : levées coupées, herbivorie coupée. Longévités : cerisier 60,
+   pommier 70, figuier 80, noyer 200, onset 0,7, plantés à 15-16 ans → hypothèse
+   (non mesurée) : fruitiers morts de vieillesse vers l'an 30-65 du run, d'où
+   « plus que des noyers ». Mais 2 → 5 noyers prouve un recrutement par une
+   autre voie (dépôt génétique de `_reproduction`) : à trancher par le run ③.
+
+## Proposition validée (OK Nico 2026-11-06)
+Causes canoniques : herbivorie · maladie · gel · grêle · vent · sécheresse ·
+ombre · usure (mortalité de fond) · sénescence · asphyxie · fin_de_cycle
+(`❄`/`✿`) · autre (raison brute gardée, jamais « conflit » par défaut). Concept
+carnet : herbivorie→ravageurs, maladie→maladie, gel/grêle/vent→météo,
+sécheresse→eau, ombre→lumière (noms à vérifier au code par le tronçon).
+Tronçons (golden INTACT partout) :
+- ① causes lues : `sim/evenements.py` + textes carnet D/I + remèdes `aide.py` + tests.
+- ② chronique : module côté serveur (effectifs/an toutes espèces, morts/an
+  espèce×cause, levées/an, registre des disparitions et retours non borné),
+  alimenté après le tick ; section texte composée côté Python, rendue dans
+  `cmd_perf_report` ; pont bump.
+- ③ outil sans écran `tools/` + premier run `verger_mur` 200 ans VM → faits dans D127.
+- ④ vue : le rapport C (touche C, `WorldView.PerfReport.cs`) affiche la section
+  telle quelle ; `dotnet build` ; F5 = Nico presse C sur un run.
+Coût : ① nul dans le tick ; ② comptage O(N) par tick ≤ ~1 ms [estimation, non mesurée].
+
+## §REPRISE
+Lire ce fichier + D127 (`DETTE.md`). Prochaine étape : `/sprint-auto sprint_chronique_especes` → tronçon ①.

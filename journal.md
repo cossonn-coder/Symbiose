@@ -218,6 +218,7 @@ pointeur ci-dessous. Ne plus écrire le contenu des entrées ici.
 - [2026-11-05 — Conception **HOUPPIER** (D118) — FIGÉE : rameaux en vue seule après audit, gerbes précuites, grimpantes sans fin de pousse, fruits des arbres ; 5 tronçons, golden intact attendu](journal/173_2026-11-05_conception-houppier-FIGEE.md)
 - [2026-11-05 — Sprint **HOUPPIER** (D118) — CLOS côté code (①→⑤) : lianes sans fin de pousse, fruits des arbres, clé stable, gerbes, rameaux dérivés, limbes d'espèce ; golden `a10b7225…` intact, F5 attendu](journal/174_2026-11-05_sprint-houppier-CLOS.md)
 - [2026-11-06 — Sprint **VERGER VIVANT** (D129) — CLOS côté code (①→④) : bourgeons dormants, floraison réaliste, fruits par cohortes (pont 0.6.9), fleurs denses et pétales au sol ; golden `a10b7225…` intact, F5 attendu](journal/175_2026-11-06_sprint-verger-vivant-CLOS.md)
+- [2026-11-06 — Conception **CHRONIQUE DES ESPÈCES** (D127) — FIGÉE : outiller les runs longs (quand une espèce disparaît, et de quoi) ; bug carnet trouvé (toute mort ✗ lue « conflit », sans espèce) ; 4 tronçons, golden intact](journal/176_2026-11-06_conception-chronique-especes-FIGEE.md)
 
 > Tout le contenu détaillé est dans les fichiers liés ci-dessus
 > (`journal/` et `journal_archive/`). La dette est dans [`DETTE.md`](DETTE.md).
