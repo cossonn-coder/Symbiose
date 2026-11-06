@@ -7,8 +7,8 @@
 | # | Kickoff | État |
 |---|---|---|
 | ① | `01_bourgeons_dormants.md` | **fait** (commité `951c294`, golden intact) |
-| ② | `02_floraison_realiste.md` | **fait** (non commité, golden intact) |
-| ③ | `03_fruits_cohortes.md` | à faire |
+| ② | `02_floraison_realiste.md` | **fait** (commité `3b706bd`, golden intact) |
+| ③ | `03_fruits_cohortes.md` | **fait** (non commité, golden intact, pont 0.6.9) |
 | ④ | `04_vue_fleurs_fruits.md` | à faire |
 
 ## Décisions (Nico, 2026-11-05)
@@ -30,7 +30,7 @@
 
 ## §REPRISE
 
-`/sprint-auto sprint_verger_vivant` : ① commité, ② fait (à commiter par l'orchestrateur), **reprendre au ③** (`03_fruits_cohortes.md`). Le ③ part d'un noyer à floraison courte : `pollen_recu` divisé par ~2 (voir bilan ②), à recaler. Chaque tronçon met à jour ce tableau et ajoute son bilan ci-dessous.
+`/sprint-auto sprint_verger_vivant` : ①② commités, ③ fait (à commiter par l'orchestrateur), **reprendre au ④** (`04_vue_fleurs_fruits.md`). Le ④ part du pont 0.6.9 : chaque fruit porte `nombre` ; `masse` = masse d'UN fruit d'espèce (cerise 0,005, figue 0,04, noix 0,05, pomme 0,09), plus 0,15 : `RayonFruit` (C#, `FruitMasseNominale` 0,15) rétrécit donc les fruits d'arbre jusqu'au pixel plancher, et un arbre porte 13 à 38 cohortes au lieu de ≤ 10. À reprendre dans la vue (voir bilan ③). Chaque tronçon met à jour ce tableau et ajoute son bilan ci-dessous.
 
 ## Bilans
 
@@ -65,3 +65,29 @@ Sources : fiches du projet + connaissances générales (pépiniéristes, Ctifl),
 **Écart signalé, non traité** : les autres ligneux anémophiles (chêne, hêtre, bouleau, charme, sapin, aulne) gardent le défaut 60/6, soit une floraison de juin sur 6 semaines, alors que la fiche les place en avril-mai (aulne févr.-mars, inatteignable : le forçage repart à 0 au 20 mars). Hors périmètre du verger ; toucher leurs dates change leur nouaison au vent. Candidat dette.
 **Gène-tempo** : avec un seuil de 5, un cerisier à `phenologie_florale` > 1,25 a un seuil négatif et fleurit dès s1 (≈ 2,5 σ).
 **Suites** : golden `a10b7225…` INTACT ; `test_desync_phenologie` 7/7, `test_floraison_forcage` 9/9, `test_flore_spontanee`, `test_fruits` 24/24, `test_catalogue_lot2` 20/20, `test_vent` 54/54, `test_croissance` 134/134, `test_dormance` 7/7, `bancs.test_verger_mur` : verts. Pas de C#.
+
+### ③ Fruits par cohorte + noyer (2026-11-06)
+
+**Code** : `Fruit.nombre` (défaut 1, `plants/base/stades.py`) ; `organ_sites(plant, plafond=MAX_ORGANS)`, `None` = tous les apex. Leviers d'espèce (`familles.py`, défaut `None` = comportement d'avant) : `fruits_par_site`, `fruit_masse`, `anemo_dose`. `sim/engine/decompo.py` : `nouer` (sans levier : 1 fruit sur `round(frac × sites)` sites ≤ 10 ; avec levier : `round(frac × fruits_par_site × apex)` fruits répartis sur tous les apex) et `deposer_fruits` (`nombre × masse`). `manger` retire un fruit, la cohorte part avec le dernier. Pont 0.6.9 : `nombre` par fruit (pleine terre et conteneurs), `fruit_index` vise toujours une cohorte. Lecteurs vérifiés au `grep` : la faune lit la litière `fruit` du sol, jamais `plant.fruits` ; l'automate teste `maturite` ; le ledger ignore `Chute fruit`. Pas de C#.
+**Leviers** `[odg]`, de mémoire et non revérifiés en ligne ; 1 unité de litière ≈ 250 g de MS (FEUILLE_PAR_PLOT 0,30 par plot de 0,25 m², soit ~300 g/m²/an) :
+- cerisier : 90 par site, 0,005 (≈ 2 000-3 000 cerises de 7 g) ;
+- pommier : 10 par site, 0,09 (≈ 200-300 pommes de 150 g) ;
+- figuier : 8 par site, 0,04 (≈ 200-300 figues) ;
+- noyer : 60 par site, 0,05 (≈ 1 000-1 500 noix à nouaison pleine).
+**Écart au kickoff (décision)** : la litière fruit d'un arbre tombe sous **toute la couronne** (plots de la tuile, comme l'abscission), plus au pied. Sinon on aurait 10 à 40 unités sur un seul plot, alors que le signal faune sature à 0,45. Les herbacées déposent toujours au pied. Conséquence : `test_verger_mur` ne compte plus que la part du plot du tronc (0,38 à 1,64, > 0, vert).
+**Noyer** : `anemo_dose` 6 → 12 (espèce seule, `ANEMO_DOSE_COEF` intact). Part nouée an 1/2/3 sur `verger_mur` [seed 42, n=1 run par dose, VM] :
+- dose 6 : noyer sous le vent 0,46/0,34/0,65 ; noyer au vent 0,18/0,12/0,33 ;
+- dose 12 : sous le vent 0,63/0,51/0,79 ; au vent 0,31/0,21/0,50 ;
+- dose 15 : sous le vent 0,68/0,57/0,83 ; au vent 0,36/0,25/0,55.
+Un noyer seul (le voisin retiré) reçoit au pollen près la dose du noyer au vent : celui-ci ne reçoit que son propre pollen. Avec ce modèle de panache, les deux arbres d'une paire ne peuvent pas nouer à moitié si un isolé reste à 0,2-0,35. Cible lue ainsi : l'arbre sous le vent ≥ 0,5, l'isolé ~0,2-0,35, d'où 12. Ce choix compense exactement le ÷2 du ②.
+**Effet, fruits max par arbre et par an** (an 1/2/3) :
+- `verger_mur` [seed 42, n=1 run par côté, VM] : cerisier 9/10/10 → 2 009/2 001/2 237 ; pommier 0/9/9 → 0/218/158 ; figuier 10 → 280/232/168 ; noyer sous le vent 5/3/7 → 747/520/617 ; noyer au vent 2/1/3 → 396/281/416.
+- `full` [mêmes conditions] : cerisier 0/10/10 → 0/2 054/2 052 ; pommier 9/9/10 → 296/274/249.
+**Garde-fou de masse** (an 1→3) [mêmes conditions] :
+- `verger_mur` : litière fruit 3,9-5,9/an → 78-84/an, contre 112-135 de feuilles (ratio 0,6-0,7). Sol, fin an 3 : N 629 → 631, om_stable 238 → 243, om_active 63 → 86 (+38 %, le seul écart notable : la MO fraîche des fruits). Faune quasi identique (cloporte 8,9 → 9,0, merle 6,7 → 6,8).
+- `full` : fruit 1,7-3,0 → 27-35, contre 83-102 de feuilles. Fin an 3 : N 505,5 → 505,8, om_stable 304,5 → 306,6, om_active 824 → 833 ; faune identique à 0,1 près.
+Pas de dérive du sol ni de la faune : les masses physiques sont gardées.
+**Coût** : tick médian, A/B en parallèle (leviers coupés contre actifs, même processus) [seed 42, n=1 run par côté, VM, charge 2-4] : `verger_mur` 487/494 → 502/504 ms (+2-3 %) ; `full` 548/927/1 062 → 552/940/1 062 ms (+0-1 %). Snapshot JSON `verger_mur` +0 à +4 % (152 → 162 ko au pic) ; `full` +0,2 %.
+**Suites** : golden `a10b7225…` INTACT ; `test_fruits` 30/30 (une section cohortes ajoutée, chute mesurée sur la tuile) ; `test_sim_server` 322/322 (version 0.6.9, clé `nombre` > 1 sur le pommier de `full`) ; `test_verger_mur`, `test_catalogue_lot2`, `test_floraison_forcage` 9/9, `test_vent` 54/54, `test_desync_phenologie` 7/7, `test_automate_planif` 24/24, `test_squelette_herbacees`, `bancs.test_planche_especes`, `bancs.test_biotique` 12/12 : verts.
+**Pour le ④** : (a) `RayonFruit` normalise par 0,15 : les fruits d'arbre se dessinent petits (cerise ×0,18 de rayon, jusqu'au pixel plancher). Normaliser par espèce, ou ignorer `masse` pour les arbres qui ont une fiche. (b) Dessiner `nombre` avec un plafond. (c) Jusqu'à 38 cohortes par arbre, contre 10 avant.
+**Taille** : `serialize.py` 394 LDC (392 avant, déjà en bande de vigilance, responsabilité unique) ; `decompo.py` 145.

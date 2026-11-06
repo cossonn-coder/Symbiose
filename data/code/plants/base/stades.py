@@ -102,12 +102,19 @@ class Segment:
 # réconcilié quand Godot reprendra). Le MOTEUR ne lit JAMAIS segment_id : seules
 # `masse` (litière à la chute) et `maturite` (gain de `manger`, seuil de chute)
 # pèsent sur la simulation → déterminisme et golden indépendants de la structure.
+#
+# COHORTE (sprint VERGER VIVANT ③) : un `Fruit` est l'ensemble des fruits noués
+# ensemble sur UN site, `nombre` d'entre eux, tous au même âge. Un cerisier porte
+# des milliers de cerises sans des milliers d'objets ni de lignes JSON. `masse` est
+# la masse d'UN fruit : la chute dépose `nombre × masse`, `manger` en retire un.
+# Herbacées et espèces sans levier : `nombre` = 1, comportement d'avant.
 
 @dataclass
 class Fruit:
     segment_id: int       # index du segment porteur à la nouaison (repère VUE)
     maturite: float       # 0→1 (mûr), puis >1 = sur-mûr (tombe au-delà du seuil)
-    masse:    float       # masse de litière `fruit` déposée à la chute
+    masse:    float       # masse de litière `fruit` d'UN fruit de la cohorte
+    nombre:   int = 1     # fruits de la cohorte (VERGER VIVANT ③), ≥ 1 tant qu'elle existe
 
 # Plafond d'organes reproducteurs portés simultanément (anti-fouillis ET borne de
 # la dérive litière). Aligné sur le MAX_FRUITS du rendu (tools/render_structure) ;
@@ -115,13 +122,14 @@ class Fruit:
 # que `sim` importe `tools` (frontière de couches, CLAUDE.md).
 MAX_ORGANS = 10
 
-def organ_sites(plant) -> list:
+def organ_sites(plant, plafond: int | None = MAX_ORGANS) -> list:
     """Sites reproducteurs d'une plante = (index de segment porteur, position 3D
     cm en repère tuile-local). PURE géométrie déterministe sur `plant.segments`
     (zéro RNG) selon le profil `organ_site` de l'espèce :
       - `terminal` : tous les apex (bouts de flèche) ;
       - `lateral`  : les apex SAUF le meneur (cime) → fructification sur rameaux.
-    Plafonné/sous-échantillonné à MAX_ORGANS (régulier). Source unique des sites,
+    Plafonné/sous-échantillonné à `plafond` (régulier, MAX_ORGANS par défaut ;
+    `None` = tous les apex, les arbres à cohortes, VERGER VIVANT ③). Source unique des sites,
     partagée par engine._tick_fruits (état moteur) — miroir de la dérivation
     visuelle `_organ_sites` du rendu (tools), qui reste le proxy de la VUE."""
     apex_idx = [i for i, s in enumerate(plant.segments) if s.is_apex]
@@ -141,7 +149,7 @@ def organ_sites(plant) -> list:
                s.base[1] + s.dir[1] * s.length_cm,
                s.base[2] + s.dir[2] * s.length_cm)
         sites.append((i, tip))
-    if len(sites) > MAX_ORGANS:
-        step = len(sites) / MAX_ORGANS
-        sites = [sites[int(k * step)] for k in range(MAX_ORGANS)]
+    if plafond is not None and len(sites) > plafond:
+        step = len(sites) / plafond
+        sites = [sites[int(k * step)] for k in range(plafond)]
     return sites

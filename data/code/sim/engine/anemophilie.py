@@ -79,6 +79,9 @@ class AnemophilieMixin:
                 continue
             radius_cm = groupe[0].plant_class.pollination_radius_cm
             radius2 = radius_cm * radius_cm
+            # Dose d'espèce si posée (VERGER VIVANT ③ : noyer), sinon commune.
+            dose = groupe[0].plant_class.anemo_dose
+            coef = ANEMO_DOSE_COEF if dose is None else dose
             for cible in groupe:
                 r, c = cible.position
                 vent = eco.vent.at_plot(r, c) if eco.vent else 0.0
@@ -96,4 +99,4 @@ class AnemophilieMixin:
                     if dx * wx + dy * wy > 0.0:        # src est au vent de la cible
                         amont += src.floraison
                 if amont > 0.0:
-                    cible.pollen_recu += ANEMO_DOSE_COEF * vent * amont
+                    cible.pollen_recu += coef * vent * amont

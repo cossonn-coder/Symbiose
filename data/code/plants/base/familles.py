@@ -62,6 +62,9 @@ class PlantBase(ABC):
     # Pollinisation (D22) — pilote l'appariement biparental (reproduction.py)
     pollination_mode: str = "insect"     # "wind" | "insect" | "self"
     pollination_radius_cm: float = 150.0 # portée de croisement (distance euclidienne)
+    # Dose anémophile d'espèce (VERGER VIVANT ③) : remplace ANEMO_DOSE_COEF pour une
+    # espèce à `wind`. None = la dose commune (noisetier, chêne, graminées intacts).
+    anemo_dose: float | None = None
     # Dispersion des GRAINES (sprint VENT ⑤, §5.3 — orthogonal à la POLLINISATION).
     # "barochore" : la graine tombe au pied (gravité, défaut). "anemochore" : graine
     # ailée/plumée (samare, aigrette) emportée SOUS LE VENT → le dépôt génétique de
@@ -82,6 +85,13 @@ class PlantBase(ABC):
     # tombe à `MATURITE_CHUTE`, donc 0,3 × cette durée plus tard : la durée règle à la
     # fois la date du fruit mûr et le temps qu'il reste sur l'arbre.
     fruit_semaines_maturation: float | None = None
+    # Fruits par COHORTE (sprint VERGER VIVANT ③). `fruits_par_site` = fruits noués sur
+    # UN site (apex) à nouaison pleine ; posé, l'espèce prend TOUS ses apex pour sites
+    # (sans le plafond MAX_ORGANS) et la nouaison répartit `frac × fruits_par_site ×
+    # sites` fruits sur eux. `fruit_masse` = litière d'UN fruit (None = FRUIT_MASSE).
+    # `None` partout = 1 fruit par cohorte sur ≤ MAX_ORGANS sites : herbacées intactes.
+    fruits_par_site: int | None = None
+    fruit_masse: float | None = None
     # Phénologie florale (sprint FLORAISON & FRUCTIFICATION ① — CONCEPTION §2).
     # FORÇAGE THERMIQUE ÉVÉNEMENTIEL : la floraison est ARMÉE au franchissement d'un
     # seuil de chaleur cumulée `bloom_forcing_gdd` propre à l'espèce (bas → franchi

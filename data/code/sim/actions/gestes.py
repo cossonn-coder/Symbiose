@@ -61,7 +61,7 @@ def manger(game_state: dict, player: str, plant, eco, *, fruit_index=None) -> fl
     Deux modes (③ absorbe D19) :
 
     • CIBLÉ (`fruit_index` fourni) — on consomme UN fruit traçable précis
-      (`plant.fruits[fruit_index]`). Gain ∝ **maturité de CE fruit** : un fruit
+      (`plant.fruits[fruit_index]`, un fruit de la cohorte). Gain ∝ **maturité de CE fruit** : un fruit
       vert nourrit peu, un fruit éclatant beaucoup. Le fruit DISPARAÎT ensuite
       (déplétion réelle D19) → il ne tombera pas en litière et ne sera pas
       remangé. La valeur reprend les autres facteurs de la façade `vigueur_plante`
@@ -87,7 +87,12 @@ def manger(game_state: dict, player: str, plant, eco, *, fruit_index=None) -> fl
 
     Renvoie la valeur de l'organe consommé (gain nominal, avant plafonnement)."""
     if fruit_index is not None and 0 <= fruit_index < len(plant.fruits):
-        fruit = plant.fruits.pop(fruit_index)   # déplétion réelle (D19) : l'organe disparaît
+        # Cohorte (VERGER VIVANT ③) : on mange UN fruit ; la cohorte disparaît avec
+        # son dernier fruit (déplétion réelle D19, index des suivants décalé comme avant).
+        fruit = plant.fruits[fruit_index]
+        fruit.nombre -= 1
+        if fruit.nombre <= 0:
+            plant.fruits.pop(fruit_index)
         gain_organe = (HARVEST_GAIN_FULL * sante(plant) * fruit.maturite
                        * qi_local(plant, eco) * plant.gene("vigueur"))
     else:

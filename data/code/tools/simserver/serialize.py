@@ -299,11 +299,13 @@ class SerializeMixin:
                 # Index implicite = position dans la liste (clé du geste `manger`
                 # ciblé). `segment` = ancrage structurel pour que la vue place le
                 # sprite ; `maturite` pilote le rendu (vert→mûr→sur-mûr) et le gain
-                # à la consommation ; `masse` la taille du sprite.
+                # à la consommation ; `masse` la taille du sprite (masse d'UN fruit) ;
+                # `nombre` les fruits de la cohorte (VERGER VIVANT ③, 0.6.9).
                 base["fruits"] = [
                     {"segment": f.segment_id,
                      "maturite": f.maturite,
-                     "masse": f.masse}
+                     "masse": f.masse,
+                     "nombre": f.nombre}
                     for f in p.fruits
                 ]
                 # Accroche de grimpe (D49 volet A, 0.5.18 ; point d'appui 0.6.8) : clé absente si
@@ -833,7 +835,8 @@ class SerializeMixin:
                     pd["etat"] = p.etat
                     pd["leaf_symptoms"] = semiologie.leaf_symptoms(p, eco, saison)
                     pd["fruits"] = [{"segment": f.segment_id, "maturite": f.maturite,
-                                     "masse": f.masse} for f in p.fruits]
+                                     "masse": f.masse, "nombre": f.nombre}
+                                    for f in p.fruits]
                 cplants.append(pd)
             out.append({
                 "id": ctn.container_id, "kind": ctn.kind,

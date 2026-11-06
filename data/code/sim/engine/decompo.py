@@ -73,6 +73,49 @@ def frac_nouaison(pollen_recu: float) -> float:
     return pollen_recu / (pollen_recu + POLLEN_DEMI)
 
 
+def nouer(plant, frac: float) -> list:
+    """Cohortes nouées à la fanaison, `frac` = part des fleurs fécondées (VERGER VIVANT ③).
+
+    Sans levier `fruits_par_site` (herbacées) : comportement d'avant, un fruit sur
+    chacun des `round(frac × sites)` premiers sites (≤ MAX_ORGANS). Avec levier (arbres) :
+    tous les apex sont des sites et `round(frac × fruits_par_site × sites)` fruits s'y
+    répartissent, le reste de la division sur les premiers sites ; un site sans fruit
+    ne porte pas de cohorte. Peu de pollen = peu de fruits, sur tout l'arbre. Zéro RNG."""
+    cls = plant.plant_class
+    par_site = cls.fruits_par_site
+    if par_site is None:
+        sites = organ_sites(plant)
+        return [Fruit(seg_id, 0.0, FRUIT_MASSE)
+                for seg_id, _pos in sites[:round(frac * len(sites))]]
+    sites = organ_sites(plant, plafond=None)
+    if not sites:
+        return []
+    masse = FRUIT_MASSE if cls.fruit_masse is None else cls.fruit_masse
+    base, reste = divmod(round(frac * par_site * len(sites)), len(sites))
+    cohortes = [Fruit(seg_id, 0.0, masse, base + (1 if k < reste else 0))
+                for k, (seg_id, _pos) in enumerate(sites)]
+    return [f for f in cohortes if f.nombre > 0]
+
+
+def deposer_fruits(plant, tile, eco, fruit) -> None:
+    """Litière `fruit` d'une cohorte qui tombe : `nombre × masse`.
+
+    Herbacées (sans `fruits_par_site`) : au plot du pied, comme avant. Arbres : sous
+    toute la couronne (plots de la tuile, patron de l'abscission) ; les fruits tombent
+    des branches, pas du tronc, et des centaines de fruits sur un seul plot satureraient
+    la faune et le sol de ce plot. Toute la masse reste sur les plots de la tuile."""
+    masse = fruit.nombre * fruit.masse
+    if plant.plant_class.fruits_par_site is None:
+        eco.deposer_litiere(*plant.position, "fruit", masse)
+        return
+    plots = [rc for rc in plant.foliar_plots if tile.is_valid_plot(*rc)]
+    if not plots:
+        plots = [plant.position]
+    part = masse / len(plots)
+    for r, c in plots:
+        eco.deposer_litiere(r, c, "fruit", part)
+
+
 def deposer_bois_tombe(plant, tombes, eco) -> float:
     """Bois mort qui TOMBE (D111 ②) : les segments que la croissance vient d'élaguer
     (`grow_plant` les renvoie) deviennent de la litière `bois` au sol, au lieu de
@@ -180,9 +223,9 @@ class DecompoMixin:
              (frac=1, nouaison pleine sans vecteur) ; `insect` lit la dose
              `pollen_recu` des butineurs (§F), `wind` celle du panache anémophile
              (⑤, §5.3) — les deux via g() SANS plancher (0 dose → 0 fruit, §B.2).
-             On pose un fruit vert
-             (maturité 0) sur les `round(frac × |sites|)` premiers sites
-             reproducteurs (`organ_sites`, borné MAX_ORGANS) ; `pollen_recu` est
+             On pose des cohortes vertes
+             (maturité 0) sur les sites reproducteurs (`nouer` : 1 fruit par site
+             pour une herbacée, `fruits_par_site` répartis pour un arbre) ; `pollen_recu` est
              remis à 0 (cohorte suivante repart de zéro). Les fruits non récoltés
              de l'an passé chutent d'abord en litière `fruit`.
           2. Maturation hebdomadaire : `maturite += FRUIT_DMAT`, ou 1 / durée pour
@@ -203,14 +246,13 @@ class DecompoMixin:
             cls = plant.plant_class
             if not getattr(cls, "fruitier", False):
                 continue
-            r, c = plant.position
             # 1. Armement à la pleine floraison, nouaison à la fanaison (par plante).
             if plant.floraison >= SEUIL_FLEURI:
                 plant.a_fleuri = True
             if (plant.a_fleuri and plant.floraison < SEUIL_NOUAISON
                     and plant.age_years >= cls.maturity_years):
                 for f in plant.fruits:          # cohorte précédente non récoltée
-                    eco.deposer_litiere(r, c, "fruit", f.masse)
+                    deposer_fruits(plant, tile, eco, f)
                 # Fraction nouée selon le mode (philo #2 : flux de pollinisation →
                 # contrainte → fruits). `insect` lit la dose des butineurs (§F),
                 # `wind` lit la dose ANÉMOPHILE déposée par le vent (⑤, §5.3) — les
@@ -218,15 +260,13 @@ class DecompoMixin:
                 # (`self`) court-circuite (frac=1, nouaison pleine sans vecteur).
                 frac = (1.0 if cls.pollination_mode == "self"
                         else frac_nouaison(plant.pollen_recu))
-                sites = organ_sites(plant)
-                n = round(frac * len(sites))
-                plant.fruits = [Fruit(seg_id, 0.0, FRUIT_MASSE)
-                                for seg_id, _pos in sites[:n]]
+                plant.fruits = nouer(plant, frac)
                 plant.a_fleuri = False          # cohorte posée → ré-armée l'an prochain
                 plant.pollen_recu = 0.0         # nouvelle cohorte repart de zéro (§B.1)
                 if plant.fruits:
                     log.append(f"    🍎 Nouaison {plant.name}@{plant.position} "
-                               f"→ {len(plant.fruits)} fruits (frac {frac:.2f})")
+                               f"→ {sum(f.nombre for f in plant.fruits)} fruits "
+                               f"(frac {frac:.2f})")
             # 2-3. Maturation + chute des sur-mûrs.
             if plant.fruits:
                 duree = cls.fruit_semaines_maturation
@@ -235,9 +275,10 @@ class DecompoMixin:
                 for f in plant.fruits:
                     f.maturite += dmat
                     if f.maturite > MATURITE_CHUTE:
-                        eco.deposer_litiere(r, c, "fruit", f.masse)
+                        deposer_fruits(plant, tile, eco, f)
                         log.append(f"    🍂 Chute fruit (mûr {f.maturite:.2f}) "
-                                   f"{plant.name}@{plant.position} → fruit +{f.masse:.3f}")
+                                   f"{plant.name}@{plant.position} → fruit "
+                                   f"+{f.nombre * f.masse:.3f}")
                     else:
                         survivors.append(f)
                 plant.fruits = survivors

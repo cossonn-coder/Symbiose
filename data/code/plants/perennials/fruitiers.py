@@ -56,6 +56,12 @@ class Fig(PerennialWoody):
     fruitier              = True      # figues traçables (HOUPPIER ③)
     pollination_mode      = "self"    # figue commune : noue sans pollinisateur (et `nectar` 0 n'attire aucun butineur)
     fruit_semaines_maturation = 9     # [choix] noue s15-17 → mûre s23-25, tombe s26-28 [3 seeds] (fiche : août-oct.)
+    # VERGER VIVANT ③ : cohortes. Figuier de jardin 4 m : 10-15 kg de figues de ~50 g, soit
+    # ~200-300 figues [odg] ; ~30 apex → 8 par site. Masse : 1 unité de litière ≈ 250 g
+    # de matière sèche (FEUILLE_PAR_PLOT 0,30 = ~300 g/m²/an de feuilles) ; figue 50 g
+    # fraîche à ~20 % de MS = 10 g → 0,04 [odg].
+    fruits_par_site = 8
+    fruit_masse     = 0.04
 
 
 class AppleTree(PerennialWoody):
@@ -119,6 +125,11 @@ class AppleTree(PerennialWoody):
     # fanaison plus longue) fait nouer s11-13 ; à 17 les pommes tombaient en s34, après
     # la fenêtre de la fiche. À 15 : mûre s26-28, tombe ≤ s33 [verger_mur, seed 42, 3 ans].
     fruit_semaines_maturation = 15    # [choix] fiche : sept.-oct.
+    # VERGER VIVANT ③ : cohortes. Pommier demi-tige de 3,5 m : 30-50 kg, soit ~200-300
+    # pommes de ~150 g [odg] ; ~25 sites latéraux → 10 par site. Pomme 150 g fraîche à
+    # ~15 % de MS = 22 g → 0,09 (1 unité ≈ 250 g de MS, cf. figuier) [odg].
+    fruits_par_site = 10
+    fruit_masse     = 0.09
     oidium_susceptibility = 0.3       # second porteur d'oïdium (humectation ④) — tavelure ET oïdium
     # Floraison PRINTANIÈRE (sprint FLORAISON & FRUCTIFICATION ①). L'ancien patch
     # `gdd_floraison=130` (qui plaçait la floraison en début d'automne, D84) est
@@ -176,6 +187,11 @@ class CherryTree(PerennialWoody):
     foliage_halfwidth   = 60.0      # couronne ~250 ; les latéraux portent les racines
     fruitier            = True      # cerises traçables (HOUPPIER ③)
     fruit_semaines_maturation = 7   # [choix] noue s9-12 → mûre s16-19, tombe s18-21 [3 seeds] (fiche : juin-juil.)
+    # VERGER VIVANT ③ : cohortes. Cerisier de 5 m : 15-25 kg de cerises de ~7 g, soit
+    # ~2 000-3 000 cerises [odg] ; ~27 apex → 90 par site. Cerise 7 g fraîche à ~17 %
+    # de MS = 1,2 g → 0,005 (1 unité ≈ 250 g de MS, cf. figuier) [odg].
+    fruits_par_site = 90
+    fruit_masse     = 0.005
 
 
 class WalnutTree(PerennialWoody):
@@ -199,6 +215,13 @@ class WalnutTree(PerennialWoody):
     foliage_density = 0.80
     pollination_mode = "wind"        # anémophile (chatons)
     pollination_radius_cm = 600.0
+    # VERGER VIVANT ③ : dose anémophile 6 → 12. Les chatons de mai sur 2 semaines (②)
+    # avaient divisé le pollen reçu par ~2. Mesure `verger_mur` (2 noyers à 4,5 m), part
+    # nouée an 1/2/3 : noyer sous le vent 0,63/0,51/0,79, noyer isolé (ou au vent de
+    # l'autre, qui ne reçoit que son propre pollen) 0,31/0,21/0,50 [seed 42, n=1 run par
+    # dose, VM]. Cible [choix] : une paire noue au moins à moitié, un isolé ~0,2-0,35
+    # (dichogamie). À 15, l'isolé monte à 0,25-0,55.
+    anemo_dose = 12.0
     reproduction_rate = 0.10   # glandée (mast) plus rare
     longevity_years = 200
     maturity_years = 15
@@ -244,3 +267,8 @@ class WalnutTree(PerennialWoody):
     # floraison de juin (défaut 60 degrés-jours) ; fleuri en mai, le noyer noue s12-14 et
     # mûrit fin sept.-oct. [verger_mur, seed 42, 3 ans].
     fruit_semaines_maturation = 15
+    # VERGER VIVANT ③ : cohortes. Noyer de 15-20 ans : 10-20 kg de noix, soit ~1 000-1 500
+    # noix [odg] ; ~20 apex → 60 par site à nouaison pleine (le vent en noue la moitié
+    # dans une paire). Noix avec son brou ~13 g de MS → 0,05 (1 unité ≈ 250 g de MS) [odg].
+    fruits_par_site = 60
+    fruit_masse     = 0.05

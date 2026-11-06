@@ -141,8 +141,10 @@ def test_pommier_fruite():
           pommier and f"{len(pommier.get('fruits', []))} fruits @ S{snap['week']}")
     if pommier and pommier.get("fruits"):
         f0 = pommier["fruits"][0]
-        check("un fruit porte {segment, maturite, masse}",
-              all(k in f0 for k in ("segment", "maturite", "masse")),
+        check("un fruit porte {segment, maturite, masse, nombre}",
+              all(k in f0 for k in ("segment", "maturite", "masse", "nombre")),
               str(f0))
+        check("cohorte d'arbre : plusieurs fruits par site (VERGER VIVANT ③, 0.6.9)",
+              f0.get("nombre", 0) > 1, str(f0))
     s.send(cmd="quit")
     check("quit pommier fruité → exit 0", s.close() == 0)

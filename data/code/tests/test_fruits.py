@@ -29,6 +29,8 @@ Couvre :
   8. manger ciblé : gain ∝ maturité du fruit visé, l'organe DISPARAÎT (D19).
   9. manger générique : sans `fruit_index` (ou index hors-borne) → façade
      plante entière (chemin legacy, tests vigueur D1-D4 préservés).
+ 10. Cohortes (VERGER VIVANT ③) : `nombre` fruits par site, manger en retire un,
+     sans levier d'espèce 1 fruit par site sous MAX_ORGANS.
 
 Usage (depuis data/code/) :
   python3 -m tests.test_fruits
@@ -86,6 +88,11 @@ def _litiere_fruit(eco, r, c):
     return sum(p.masse for p in eco.litiere[r][c] if p.tissu == "fruit")
 
 
+def _litiere_fruit_tuile(eco):
+    """Litière `fruit` de toute la tuile : un arbre la répand sous sa couronne (③)."""
+    return sum(_litiere_fruit(eco, r, c) for r in range(eco.rows) for c in range(eco.cols))
+
+
 def _nouer(eng, tile, eco, plant, pollen=100.0, w=1):
     """Force une nouaison « en fin de floraison » : pleine floraison (arme
     `a_fleuri`) puis fanaison (déclenche la nouaison). `pollen` alimente la dose
@@ -111,8 +118,12 @@ def test_nouaison():
     check("fruits verts (mûris d'un seul pas)",
           apple.fruits and all(abs(f.maturite - DMAT_POMMIER) < 1e-9 for f in apple.fruits),
           f"maturité={apple.fruits[0].maturite:.3f}")
-    check("masse initiale = FRUIT_MASSE",
-          all(abs(f.masse - FRUIT_MASSE) < 1e-9 for f in apple.fruits))
+    check("masse initiale = masse d'un fruit de l'espèce (VERGER VIVANT ③)",
+          all(abs(f.masse - AppleTree.fruit_masse) < 1e-9 for f in apple.fruits))
+    check("cohortes : fruits_par_site × frac par site",
+          sum(f.nombre for f in apple.fruits)
+          == round(frac_nouaison(100.0) * AppleTree.fruits_par_site * attendu),
+          f"{[f.nombre for f in apple.fruits]}")
 
 
 # ---------------------------------------------------------------------------
@@ -174,13 +185,13 @@ def test_chute():
     print("\n[5] chute : un fruit sur-mûr (> MATURITE_CHUTE) tombe → litière `fruit`")
     gs, tile, eco, apple, eng = _monde(age_years=6.0, n_apex=1)
     # Fruit posé juste SOUS le seuil ; un pas le pousse au-delà → chute.
-    apple.fruits = [Fruit(0, MATURITE_CHUTE - DMAT_POMMIER / 2, FRUIT_MASSE)]
-    avant = _litiere_fruit(eco, 3, 3)
+    apple.fruits = [Fruit(0, MATURITE_CHUTE - DMAT_POMMIER / 2, FRUIT_MASSE, 5)]
+    avant = _litiere_fruit_tuile(eco)
     eng._tick_fruits(tile, eco, 1)
-    apres = _litiere_fruit(eco, 3, 3)
+    apres = _litiere_fruit_tuile(eco)
     check("le fruit a quitté la plante", apple.fruits == [])
-    check("masse déposée en litière `fruit`",
-          abs((apres - avant) - FRUIT_MASSE) < 1e-9, f"+{apres - avant:.3f}")
+    check("masse déposée en litière `fruit` = nombre × masse (cohorte ③)",
+          abs((apres - avant) - 5 * FRUIT_MASSE) < 1e-9, f"+{apres - avant:.3f}")
 
 
 # ---------------------------------------------------------------------------
@@ -264,6 +275,42 @@ def test_manger_generique():
     check("index hors-borne : fruits INTACTS", len(apple.fruits) == 1)
 
 
+# ---------------------------------------------------------------------------
+# 10. Cohortes (VERGER VIVANT ③)
+# ---------------------------------------------------------------------------
+def test_cohortes():
+    print("\n[10] cohortes : manger retire UN fruit ; sans levier, 1 fruit par site")
+    gs, tile, eco, apple, eng = _monde(age_years=6.0, n_apex=1)
+    apple.fruits = [Fruit(0, 0.9, FRUIT_MASSE, 3)]
+    ACT.manger(gs, "joueur_1", apple, eco, fruit_index=0)
+    check("cohorte de 3 mangée une fois → 2", apple.fruits and apple.fruits[0].nombre == 2)
+    ACT.manger(gs, "joueur_1", apple, eco, fruit_index=0)
+    ACT.manger(gs, "joueur_1", apple, eco, fruit_index=0)
+    check("dernier fruit mangé → cohorte retirée", apple.fruits == [])
+    # Sans levier (chemin des herbacées) : comportement d'avant, plafond MAX_ORGANS.
+    gs, tile, eco, apple, eng = _monde(age_years=6.0, n_apex=14)
+    par_site, masse = AppleTree.fruits_par_site, AppleTree.fruit_masse
+    try:
+        AppleTree.fruits_par_site, AppleTree.fruit_masse = None, None
+        _nouer(eng, tile, eco, apple)
+        check("sans levier : ≤ MAX_ORGANS cohortes d'un fruit à FRUIT_MASSE",
+              len(apple.fruits) == len(organ_sites(apple)) == 10
+              and all(f.nombre == 1 and f.masse == FRUIT_MASSE for f in apple.fruits),
+              f"{len(apple.fruits)} cohortes")
+    finally:
+        AppleTree.fruits_par_site, AppleTree.fruit_masse = par_site, masse
+    gs, tile, eco, apple, eng = _monde(age_years=6.0, n_apex=14)
+    _nouer(eng, tile, eco, apple)
+    check("avec levier : tous les apex latéraux sont des sites (sans plafond)",
+          len(apple.fruits) == len(organ_sites(apple, plafond=None)) == 13,
+          f"{len(apple.fruits)} cohortes")
+    _nouer(eng, tile, eco, apple, pollen=0.05)
+    n = sum(f.nombre for f in apple.fruits)
+    check("peu de pollen : peu de fruits, sur moins de sites",
+          0 < n == round(frac_nouaison(0.05) * AppleTree.fruits_par_site * 13)
+          and len(apple.fruits) <= 13, f"{n} fruits, {len(apple.fruits)} cohortes")
+
+
 def main():
     test_nouaison()
     test_gate_age()
@@ -274,6 +321,7 @@ def main():
     test_modes()
     test_manger_cible()
     test_manger_generique()
+    test_cohortes()
 
     print("\n" + "=" * 60)
     total = len(_results)
