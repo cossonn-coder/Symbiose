@@ -23,6 +23,8 @@ from .geometrie import (_tip, _horiz, _lateral_dir, _phototropic_bias,
                         _subtree, _apex_in_subtree, _rebuild, taper_thickness,
                         ordre_enfants_dabord, chemin_fleche)
 from .tige_libre import apex_plies, plier, vers_relais
+from .cladoptose import seuil_et_age
+from .dormance import peut_reveiller, reveiller_bourgeon
 
 
 # ---------------------------------------------------------------------------
@@ -242,6 +244,18 @@ def shade_tolerance_effective(plant) -> float:
     return plant.plant_class.shade_tolerance_base() * plant.expressed_gene("tolerance_ombre")
 
 
+def _reveil_dormant(plant, week: int, light_field) -> None:
+    """Lit le milieu pour `dormance.reveiller_bourgeon` : lumière de la plante (1.0 sans
+    champ, comme la cladoptose de la pré-croissance), densité de feuillage en saison
+    feuillée, seuil de cladoptose dérivé de la tolérance à l'ombre effective."""
+    if not peut_reveiller(plant, week):
+        return
+    l_plante = light_field.light_received(plant) if light_field is not None else 1.0
+    densite = plant.plant_class.foliage_density_at(plant, "ete")
+    seuil, _age = seuil_et_age(shade_tolerance_effective(plant))
+    reveiller_bourgeon(plant, week, l_plante, densite, seuil)
+
+
 def est_etiole(plant, light_field) -> bool:
     """Vrai si la plante S'ÉTIOLE ce tick : héliophile (tolérance effective < 1)
     sous une lumière effective < ETIOLEMENT_LIGHT_SEUIL. light_field None ⇒ False
@@ -314,6 +328,10 @@ def grow_plant(plant, seed: int, week: int, light_field=None,
     _elongate_emit(plant, speed, cls.max_height_cm, cls.max_extent_cm,
                    cls.emit_length_cm, light_field, cls.phototropism_strength,
                    cls.gravitropism_gain)
+    # Bourgeons dormants (D129 ①) : un ligneux amputé réveille un bourgeon latent là où
+    # sa couronne reçoit encore assez de lumière ; `_debourrement` le fait partir ci-dessous.
+    if cls.ligneux and cls.procedural_growth and _season_factor(week) == 1.0:
+        _reveil_dormant(plant, week, light_field)
     _debourrement(plant, seed, week, math.radians(cls.branch_angle),
                   cls.apical_dominance_base)
     tombes = _elaguer(plant, cls.wood_persistence, cls.max_segments)
