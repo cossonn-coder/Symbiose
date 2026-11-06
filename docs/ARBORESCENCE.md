@@ -104,6 +104,7 @@ dans la carte : leur nom est déductible du dossier.
 | `allelopathie/` | `conception_allelopathie.md` |
 | `grimpantes/` | `conception_grimpantes.md`, `conception_luxuriance_stratification.md` |
 | `catalogue/` | `conception_catalogue_enrichi.md`, `conception_competition_intraplot.md` |
+| `regeneration/` | `conception_releve_ligneuse.md` |
 
 ### `faune/` — vie animale et fongique
 
