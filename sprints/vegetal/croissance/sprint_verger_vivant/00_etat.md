@@ -124,3 +124,7 @@ Pas de dérive du sol ni de la faune : les masses physiques sont gardées.
 - s13-s16 : cerises par grappes de 2-3, nombre, taille ; clic `manger` sur plusieurs grappes.
 - s23-s26 : figues ; s27-s31 : noix ; an 2 s24-s30 : pommes (pas de pomme l'an 1 sur ce banc).
 - Fluidité réelle ×8-×16 en pleine floraison sur le PC.
+
+## §F5 (sprint clos côté code le 2026-11-06)
+
+Sur `verger_mur`, an 1 : s5 cerisier au pic (blanc de ×1 à ×32) ; s7-s9 pommier, boutons roses puis fleurs blanc rosé, pétales au sol sous le cerisier ; s13-s16 cerises en grappes, à manger au clic ; s24 figues ; s28 noix ; an 2 pommes. Fluidité à juger à ×8-×16 au PC. Sur 5 ans, les couronnes doivent rester fournies.
