@@ -93,6 +93,12 @@ class PlantBase(ABC):
     # tabule GDD→semaine : 6→S14, 13→S16, 40→S20, 60→S22, 130→S29, 180→S33.
     bloom_forcing_gdd: float = 60.0   # seuil de forçage (bas→printemps … haut→automne)
     bloom_duration:    int   = 6      # durée de floraison, en semaines, FIXE par espèce
+    # Vitesse d'OUVERTURE des fleurs, par espèce (sprint VERGER VIVANT ②). `None` =
+    # la montée commune `FLORAISON_MONTEE` (0,35) de `sim/engine/floraison.py` : les
+    # herbacées ne bougent pas. Un arbre à floraison COURTE (3 semaines) n'atteint que
+    # 0,73 à cette vitesse ; une montée vive (~0,6) le porte au-dessus de 0,9, la vraie
+    # pleine floraison d'un cerisier. Après d semaines : 1 − (1 − montée)^d.
+    floraison_montee: float | None = None
     fungal_susceptibility: float = 0.5   # sensibilité aux maladies fongiques [0-1]
     # --- Guilde OÏDIUM (sprint HUMECTATION FOLIAIRE ④, §2.4) ---
     # ADDITIF (pas un enum de guilde) : sensibilité à l'oïdium — l'EXCEPTION

@@ -90,5 +90,8 @@ class FloraisonMixin:
             en_fleur = (plant.bloom_week >= 0
                         and week_in_year < plant.bloom_week + cls.bloom_duration)
             cible = 1.0 if en_fleur else 0.0
-            taux = FLORAISON_MONTEE if cible > plant.floraison else FLORAISON_DESCENTE
+            # Montée PAR ESPÈCE si l'espèce la règle (arbres, VERGER VIVANT ②), sinon
+            # la commune. La fanaison reste commune.
+            montee = cls.floraison_montee or FLORAISON_MONTEE
+            taux = montee if cible > plant.floraison else FLORAISON_DESCENTE
             plant.floraison += (cible - plant.floraison) * taux

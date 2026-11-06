@@ -6,8 +6,8 @@
 
 | # | Kickoff | État |
 |---|---|---|
-| ① | `01_bourgeons_dormants.md` | **fait** (non commité, golden intact) |
-| ② | `02_floraison_realiste.md` | à faire |
+| ① | `01_bourgeons_dormants.md` | **fait** (commité `951c294`, golden intact) |
+| ② | `02_floraison_realiste.md` | **fait** (non commité, golden intact) |
 | ③ | `03_fruits_cohortes.md` | à faire |
 | ④ | `04_vue_fleurs_fruits.md` | à faire |
 
@@ -30,7 +30,7 @@
 
 ## §REPRISE
 
-`/sprint-auto sprint_verger_vivant` : ① fait (à commiter par l'orchestrateur), **reprendre au ②** (`02_floraison_realiste.md`). Chaque tronçon met à jour ce tableau et ajoute son bilan ci-dessous.
+`/sprint-auto sprint_verger_vivant` : ① commité, ② fait (à commiter par l'orchestrateur), **reprendre au ③** (`03_fruits_cohortes.md`). Le ③ part d'un noyer à floraison courte : `pollen_recu` divisé par ~2 (voir bilan ②), à recaler. Chaque tronçon met à jour ce tableau et ajoute son bilan ci-dessous.
 
 ## Bilans
 
@@ -47,3 +47,21 @@
 **Tick médian `full`** (ms, an 1→5) : avant 549/889/1073/1100/988, après 552/918/1132/1117/1006, soit +0 à +5 % [seed 42, n=1 run par côté lancés en parallèle, VM, charge 2-4 sur 16 cœurs]. Couronnes plus fournies = plus de segments à éclairer.
 **Suites** : golden `a10b7225…` INTACT ; `test_croissance` 134/134, `test_bois_mort` 42/42, `test_dormance` (neuf) 7/7, `test_verger_mur`, `test_phototropisme`, `test_competition`, `test_quetes`, `test_grimpe`, `test_desync_phenologie`, `test_fruits`, `test_squelette_herbacees`, bancs grimpe/planche/liane : verts. Pas de C#.
 **Reste / à savoir** : les noyers du banc fondent encore, par le VENT (102 segments cassés en 3 ans pour les deux, contre 25 par l'ombre [n=1 run]) : coin nord-est exposé, `CASSE_*` hors périmètre. Un bourgeon par 4 semaines ne suit pas une tempête. À regarder au ② (noyer) ou en dette si Nico veut un verger abrité.
+
+### ② Floraison réaliste (2026-11-06)
+
+**Code** : levier d'espèce `floraison_montee` (`plants/base/familles.py`, défaut `None` = `FLORAISON_MONTEE` 0,35 commune, herbacées inchangées) lu par `sim/engine/floraison.py` à la montée seulement. Leviers dans `plants/perennials/fruitiers.py` :
+- cerisier : seuil 12 → 5, durée 3, montée 0,6 (mi-avril, avant le pommier) [odg, `fiches_arbres.md` « avr., avant les feuilles »] ;
+- pommier : seuil 8 → 15, durée 3, montée 0,6 (fin avril - mi-mai) [odg, fiche « avr.-mai » ; pommiers à cidre normands début-mi-mai] ;
+- noyer : défaut 60/6 → seuil 28, durée 2, montée 0,7 (mai, chatons 1-2 semaines) [odg, fiche « mai » ; Franquette mi-fin mai]. Dichogamie non modélisée ;
+- figuier : inchangé (conception §5).
+Sources : fiches du projet + connaissances générales (pépiniéristes, Ctifl), **non revérifiées en ligne**.
+
+**Effet, `verger_mur`** (semaine d'armement, pic de `floraison`), an 1/2/3 [seed 42, n=1 run par côté, VM] :
+- avant : cerisier s6/s6/s8 pic 0,73 ; pommier s5/s5/s7 pic 0,73 (avant le cerisier) ; noyer s13/s12/s13 pic 0,92, 6 semaines au-dessus de 0,35.
+- après : cerisier s3/s4/s6 pic 0,94 ; pommier s6/s7/s8 pic 0,94 (toujours après le cerisier) ; noyer s9/s8/s10 pic 0,91, 2 semaines ≥ 0,7.
+**Couplages** [mêmes conditions] : butineurs, `pollen_recu` max annuel cerisier 20,9/29,1/21,8 → 20,9/29,1/20,1 ; pommier 17,1/17,1/7,2 → 17,1/17,1/7,2 (recouvrement intact malgré la date plus précoce). Noyer (vent) 1,89-2,91 et 0,49-0,76 → 0,52-1,89 et 0,14-0,49 : environ ÷2, noix max/an 7-8 et 4-5 → 3-7 et 1-3. **À recaler au ③** (point 5 du kickoff ③).
+**Nouaison** : pic plus haut → la fanaison sous `SEUIL_NOUAISON` 0,2 prend 3 semaines au lieu de 2 ; le pommier noue s11-13, le noyer s12-14 (avant s19-23). Maturations recalées pour tenir les fenêtres de fiche de `test_verger_mur` : pommier 17 → 15 semaines (sinon chute en s34), noyer 9 → 15 (le 9 compensait la floraison de juin ; sinon mûr dès s20). Résultat (mûr dès, dernier sur l'arbre) : cerisier s15-s19, pommier s27-s31, figuier s24-s27, noyer s27-s32 [seed 42, 3 ans, n=1].
+**Écart signalé, non traité** : les autres ligneux anémophiles (chêne, hêtre, bouleau, charme, sapin, aulne) gardent le défaut 60/6, soit une floraison de juin sur 6 semaines, alors que la fiche les place en avril-mai (aulne févr.-mars, inatteignable : le forçage repart à 0 au 20 mars). Hors périmètre du verger ; toucher leurs dates change leur nouaison au vent. Candidat dette.
+**Gène-tempo** : avec un seuil de 5, un cerisier à `phenologie_florale` > 1,25 a un seuil négatif et fleurit dès s1 (≈ 2,5 σ).
+**Suites** : golden `a10b7225…` INTACT ; `test_desync_phenologie` 7/7, `test_floraison_forcage` 9/9, `test_flore_spontanee`, `test_fruits` 24/24, `test_catalogue_lot2` 20/20, `test_vent` 54/54, `test_croissance` 134/134, `test_dormance` 7/7, `bancs.test_verger_mur` : verts. Pas de C#.

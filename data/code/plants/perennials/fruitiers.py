@@ -115,7 +115,10 @@ class AppleTree(PerennialWoody):
     foliage_halfwidth     = 70.0      # couronne non nulle + racines viables (cf. ci-dessus)
     organ_site            = "lateral" # fructification latérale (lu au tronçon 5)
     fruitier              = True      # porte des fruits traçables (③ ; 1re fructif. à maturity_years=5)
-    fruit_semaines_maturation = 17    # [choix] noue s8-11 → mûre s24-27, tombe s30-33 [3 seeds] (fiche : sept.-oct.)
+    # VERGER VIVANT ② : 17 → 15. La floraison recalée (plus tardive, pic plus haut donc
+    # fanaison plus longue) fait nouer s11-13 ; à 17 les pommes tombaient en s34, après
+    # la fenêtre de la fiche. À 15 : mûre s26-28, tombe ≤ s33 [verger_mur, seed 42, 3 ans].
+    fruit_semaines_maturation = 15    # [choix] fiche : sept.-oct.
     oidium_susceptibility = 0.3       # second porteur d'oïdium (humectation ④) — tavelure ET oïdium
     # Floraison PRINTANIÈRE (sprint FLORAISON & FRUCTIFICATION ①). L'ancien patch
     # `gdd_floraison=130` (qui plaçait la floraison en début d'automne, D84) est
@@ -124,8 +127,14 @@ class AppleTree(PerennialWoody):
     # la vraie vie. `bloom_duration=3` : floraison courte (les pétales tombent vite).
     # Golden : le pommier du smoke a < 5 ans (maturity_years=5) → is_seed_bearing
     # False → floraison reste 0 quel que soit le seuil.
-    bloom_forcing_gdd     = 8.0       # printemps précoce (~S14-15)
-    bloom_duration        = 3         # floraison courte
+    # VERGER VIVANT ② : floraison fin avril à mi-mai, APRÈS le cerisier [odg, fiche
+    # `fiches_arbres.md` « avr.-mai, avec les feuilles » ; pommiers à cidre normands
+    # en pleine fleur début-mi-mai]. Seuil 8 → 15 : armé s6 à s8 selon l'année (wiy 1 ≈
+    # 20 mars) au lieu de s5-s7, avant le cerisier [verger_mur, seed 42, 3 ans, n=1].
+    # Montée 0,6 : pic 0,94 en 3 semaines (0,73 avant), la vraie pleine floraison.
+    bloom_forcing_gdd     = 15.0      # fin avril - mi-mai
+    bloom_duration        = 3         # floraison courte (~3 semaines bouton → chute) [odg]
+    floraison_montee      = 0.6       # pleine floraison atteinte (pic ≥ 0,9) [choix]
 
 
 class CherryTree(PerennialWoody):
@@ -142,8 +151,13 @@ class CherryTree(PerennialWoody):
     longevity_years = 60
     maturity_years = 5
     greffable = True           # ligneux fruitier greffé (palette ③, D8) ; Rosaceae → compatible pommier/framboisier
-    bloom_forcing_gdd = 12.0   # printemps (~S16) — floraison de cerisier légèrement après le pommier (①)
-    bloom_duration = 3         # floraison courte
+    # VERGER VIVANT ② : le cerisier fleurit AVANT le pommier, mi-avril [odg, fiche
+    # `fiches_arbres.md` « avr., avant les feuilles » ; merisier/cerisier en Normandie,
+    # pleine fleur ~10-20 avril]. Seuil 12 → 5 : armé s3-s5 (avant : s6-s8, après le
+    # pommier, faux). Montée 0,6 : pic 0,94 au lieu de 0,73.
+    bloom_forcing_gdd = 5.0    # mi-avril, avant le pommier
+    bloom_duration = 3         # floraison courte (~2-3 semaines) [odg]
+    floraison_montee = 0.6     # pleine floraison atteinte (pic ≥ 0,9) [choix]
     girth_max_cm = 15.0        # tronc mûr ~15 cm (pipe model, procédural)
     age_curve = [(0, 40, 25), (5, 250, 150), (10, 500, 280),
                  (20, 700, 380), (50, 900, 450), (100, 1000, 500)]
@@ -188,6 +202,14 @@ class WalnutTree(PerennialWoody):
     reproduction_rate = 0.10   # glandée (mast) plus rare
     longevity_years = 200
     maturity_years = 15
+    # VERGER VIVANT ② : chatons et fleurs femelles en MAI, sur 1 à 2 semaines [odg, fiche
+    # `fiches_arbres.md` « chatons pendants verts, mai » ; Franquette, variété tardive
+    # répandue en France, mi-fin mai]. Avant : défaut 60/6 → juin, 7 semaines. Seuil 28
+    # → armé s8-s10 (début-fin mai) ; montée 0,7 → pic 0,91 en 2 semaines. Dichogamie non
+    # modélisée. La dose anémophile se recale au ③ sur cette floraison.
+    bloom_forcing_gdd = 28.0   # mai
+    bloom_duration = 2         # chatons brefs [odg]
+    floraison_montee = 0.7     # pic ≥ 0,9 en 2 semaines [choix]
     allelopathie_emission = 0.20     # FORT (juglone) — emblème ; arme l'autotox ④
     allelopathie_sensibilite = 0.05  # AUTO-TOLÉRANT : ne s'auto-inhibe pas (D2)
     family_effects = [
@@ -218,6 +240,7 @@ class WalnutTree(PerennialWoody):
     max_extent_cm       = 550.0
     foliage_halfwidth   = 55.0      # couronne ~350, portée par les branches
     fruitier            = True      # noix traçables (HOUPPIER ③) ; nouaison par le vent
-    # [choix] noue s20-21 → mûre s28-29, tombe s31-32 [3 seeds] (fiche : sept.-oct.). Court : l'arbre
-    # fleurit tard dans le moteur (défaut 60 degrés-jours, s13-18), la durée compense.
-    fruit_semaines_maturation = 9
+    # [choix] fiche : sept.-oct. VERGER VIVANT ② : 9 → 15. Les 9 semaines compensaient une
+    # floraison de juin (défaut 60 degrés-jours) ; fleuri en mai, le noyer noue s12-14 et
+    # mûrit fin sept.-oct. [verger_mur, seed 42, 3 ans].
+    fruit_semaines_maturation = 15
