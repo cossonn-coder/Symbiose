@@ -242,6 +242,14 @@ class PlantBase(ABC):
     clonal_mode: str = "none"            # "none" | "stolon" | "rhizome" | "drageon"
     clonal_radius_cm: float = 60.0       # portée d'un ramet (offset ≤ ce rayon)
     clonal_interval: int = 4             # cadence : 1 chance d'émission toutes N semaines
+    # FERTILITÉ DE LA GRAINE sous condition climatique (relève ligneuse ③, D130).
+    # Une espèce dont la graine exige un POLLINISATEUR OBLIGATOIRE à aire climatique
+    # limitée (figuier ↔ blastophage) déclare ici le mois le plus froid minimal (°C)
+    # où ce pollinisateur passe l'hiver. Sous ce seuil : fleurs et fruits OUI, graine
+    # fertile NON (lu par `sim.reproduction.graine_fertile`). Une CONDITION, pas un
+    # « non » codé en dur → un autre climat rend la graine fertile. DÉFAUT None =
+    # aucune condition (toutes les autres espèces) → golden inchangé. Littéral seul.
+    graine_si_hiver_min_c: float | None = None
     # BOUTURE (sprint PALETTE DE GESTES ②) — multiplication végétative PAR LE JOUEUR :
     # `bouturable=True` marque les espèces qui reprennent réellement d'un fragment
     # (ligneuses souples, aromatiques : saule/menthe/lavande/figuier/framboisier…) →

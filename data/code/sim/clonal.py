@@ -64,10 +64,14 @@ _MODES_HELIOPHILES = ("stolon", "drageon")
 
 
 def _mature(plant) -> bool:
-    """La plante est-elle assez avancée pour émettre un ramet ? Réutilise le
-    critère de maturité de stade (dernier stade atteint pour une non-ligneuse ;
-    les clonales visées — trèfle, futures rampantes — ne sont pas des arbres)."""
-    stages = plant.plant_class.growth_stages
+    """La plante est-elle assez avancée pour émettre un ramet ? Non-ligneuse :
+    dernier stade atteint. ARBRE (`age_curve`, relève ③ — rejets du figuier) :
+    un seul stade « arbre » → le critère de stade le dirait mûr dès sa naissance ;
+    on lit donc l'âge de maturité (`maturity_years`), miroir de `is_seed_bearing`."""
+    cls = plant.plant_class
+    if hasattr(cls, "age_curve"):
+        return plant.age_years >= getattr(cls, "maturity_years", 0.0)
+    stages = cls.growth_stages
     return plant.current_stage >= len(stages) - 1
 
 

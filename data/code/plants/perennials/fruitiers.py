@@ -25,6 +25,14 @@ class Fig(PerennialWoody):
     foliage_density = 0.75
     fragilite_bois = 1.4           # D111 ②bis : bois tendre et cassant
     reproduction_rate = 0.15   # dispersion (M7) — gated par la lumière
+    # Relève ligneuse ③ (D130) : la figue commune ne donne de graine FERTILE que
+    # pollinisée par le blastophage (*Blastophaga psenes*), guêpe de l'aire
+    # méditerranéenne qui ne passe pas un hiver plus froid que ~7 °C de moyenne au
+    # mois le plus froid [ordre de grandeur]. En Normandie (≈ 4 °C) : figues sans
+    # graine fertile → propagation par REJETS DE SOUCHE (drageon, à ~1 m du tronc).
+    graine_si_hiver_min_c = 7.0
+    clonal_mode = "drageon"
+    clonal_radius_cm = 100.0   # rejets à ~1 m du tronc [choix de conception]
     longevity_years = 80
     maturity_years = 5
     bouturable = True          # ligneux à bouture proverbiale : un rameau piqué reprend (palette ②)

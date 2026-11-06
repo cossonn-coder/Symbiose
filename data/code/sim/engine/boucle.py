@@ -30,7 +30,7 @@ from fields.peripherie import tick_repousse, tick_ouvrages  # ceinture : repouss
 from fields.apiculture import tick_ruches   # ruches : capture essaim + miel (⑥, §H/§I)
 from fields.alarme import tick_alarme       # phéromone d'alarme apienne : décroissance (⑦, §J)
 from sim.effects import resolve_plant_turn, apply_disturbances
-from sim.reproduction import is_seed_bearing, child_expression
+from sim.reproduction import is_seed_bearing, child_expression, graine_fertile
 from sim.seeds import Seed
 from sim.succession import succession
 from sim.weather import weather_state, K_PEST, TEMP_DRIVEN, patch_local, humidite_air
@@ -526,7 +526,9 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
                         # emporte le priming maternel (`child_expression`, atténué par
                         # PRIMING_FRAC). Filtré aux entrées non-neutres → graine d'une
                         # mère non acclimatée = neutre (save lisible).
-                        if player_bank is not None and is_seed_bearing(plant):
+                        # Graine stérile sous ce climat (figuier, relève ③) → rien.
+                        if (player_bank is not None and is_seed_bearing(plant)
+                                and graine_fertile(plant.plant_class)):
                             key = _SPECIES_KEY.get(plant.plant_class)
                             if key:
                                 expr = {g: v for g, v in child_expression(plant).items()

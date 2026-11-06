@@ -92,7 +92,7 @@ Doc : `docs/vegetal/regeneration/conception_releve_ligneuse.md`. Golden
 |---|---|---|
 | ① | `01_banque_de_semis.md` — seuil d'ombre d'un ligneux monte avec la petitesse (`seuil_ombre`), signe `ombre` aligné | **fait** (golden `a10b7225…` intact) |
 | ② | `02_pose_coherente.md` — arbre : rayon de chute = couronne, seuil de pose = survie d'un semis | **fait** (golden `a10b7225…` intact) |
-| ③ | `03_figuier_realiste.md` — graine fertile si climat du blastophage, rejets `drageon`, `_mature` d'arbre, voix | à faire |
+| ③ | `03_figuier_realiste.md` — graine fertile si climat du blastophage, rejets `drageon`, `_mature` d'arbre, voix | **fait** (golden `a10b7225…` intact) |
 | ④ | `04_mesure_releve.md` — `tools/diag_releve.py`, verger_mur 200 ans, perf `full`, calibrage borné | à faire |
 | ⑤ | `05_vue_godot.md` — voix `attente` du semis, rejets visibles, `dotnet build`, F5 | à faire |
 
@@ -134,6 +134,30 @@ Doc : `docs/vegetal/regeneration/conception_releve_ligneuse.md`. Golden
   `test_maitrise_detection`, `test_stress_chronique`, `bancs.test_verger_mur` verts.
   C# non concerné.
 
+## Tronçon 3 — fait (2026-11-06)
+- `plants/base/familles.py` : `graine_si_hiver_min_c = None` (près des `clonal_*`).
+  `Fig` : `graine_si_hiver_min_c = 7.0` (blastophage, ordre de grandeur),
+  `clonal_mode = "drageon"`, `clonal_radius_cm = 100`.
+- `sim/reproduction.py` : `graine_fertile(cls)` lit `sim.weather` via le MODULE
+  (`T_MOY − T_AMP` = 4 °C → figuier stérile) ; exporté dans `sim/__init__.py`.
+  Pas de cycle (`sim/weather.py` n'importe que `fields`/`calendrier`).
+- Gates : `_reproduction` saute le parent stérile (ni banque-sol ni recrue) ;
+  `boucle.py` récolte → banque-joueur : pas de `Seed`. `is_seed_bearing` intact
+  (floraison, nouaison, paternité inchangées).
+- `sim/clonal.py` `_mature` : arbre (`age_curve`) → `age_years ≥ maturity_years`.
+- Voix : encyclopédie `figuier` niveau 2 (blastophage, graines vides, rejets).
+  Carnet : `("ramet","drageon")` déjà câblé (cause « reproduction » + gabarits
+  descriptif/interprétatif) → un rejet de figuier est lu, rien ajouté.
+- Test neuf `tests/test_figuier_realiste.py` (a/b/c verts). Contre-factuels :
+  sans gate, dépôt 1,0 en banque ; ancien `_mature`, 864 rejets à 1 an.
+- **Point pour le ④** [labo, plein soleil 0,9, couverture jamais recalculée,
+  n=1 run, VM] : figuier mûr = 35 rejets en 200 semaines (cadence 1/4 sem). En
+  jeu, le gate `couverture_sol` (0,85) et la lumière au sol (0,30) bornent ; à
+  mesurer au ④ (fourré de figuiers ?). Les rejets ne sèment pas avant 5 ans.
+- Golden `a10b7225…` inchangé ; `test_banque_semis`, `test_evenements`,
+  `test_phototropisme`, `test_quatre_feuilles`, `test_stress_chronique`,
+  `test_encyclopedie`, `test_carnet`, `bancs.test_verger_mur` verts. C# non concerné.
+
 ## §REPRISE
 Exécution : `/sprint-auto sprint_releve_ligneuse`. Prochain tronçon = le premier
-« à faire » du tableau (③ `03_figuier_realiste.md` au 2026-11-06). Chaque tronçon met à jour sa ligne + un § « Tronçon N — fait ».
+« à faire » du tableau (④ `04_mesure_releve.md` au 2026-11-06). Chaque tronçon met à jour sa ligne + un § « Tronçon N — fait ».

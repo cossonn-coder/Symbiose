@@ -24,6 +24,7 @@ from __future__ import annotations
 from plants import (species_compatible, GENE_NAMES, MUTATION_SIGMA, clamp_gene,
                     ADAPTOGENIC_GENES, PRIMING_FRAC)
 from fields import _hash_noise, hash_gauss
+from sim import weather as _weather   # normales climatiques (même couche, sans cycle)
 
 # Modulation insecte du rayon de croisement (mode "insect" uniquement).
 INSECT_BASE_REACH   = 0.5   # rayon effectif sans pollinisateurs (× rayon nominal)
@@ -38,6 +39,20 @@ def is_seed_bearing(plant) -> bool:
     if hasattr(cls, "age_curve"):        # pérenne ligneuse (courbe d'âge)
         return plant.age_years >= getattr(cls, "maturity_years", 0.0)
     return plant.current_stage >= len(cls.growth_stages) - 1
+
+
+def graine_fertile(cls) -> bool:
+    """La graine de l'espèce est-elle FERTILE sous le climat courant ? (relève
+    ligneuse ③, D130). Vrai si l'espèce ne déclare aucune condition
+    (`graine_si_hiver_min_c` None), sinon si le mois le plus froid des normales
+    (`T_MOY − T_AMP`, `sim.weather`) atteint le seuil — l'hiver où son pollinisateur
+    obligatoire survit (figuier ↔ blastophage). Lu via le MODULE (pas copié à
+    l'import) → un autre climat le change. NE gate PAS `is_seed_bearing` : la
+    plante fleurit et fructifie quand même, seule la graine est stérile."""
+    seuil = getattr(cls, "graine_si_hiver_min_c", None)
+    if seuil is None:
+        return True
+    return _weather.T_MOY - _weather.T_AMP >= seuil
 
 
 def _euclid2(a, b) -> float:

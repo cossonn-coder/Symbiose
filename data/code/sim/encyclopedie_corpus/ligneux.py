@@ -21,7 +21,10 @@ FICHES_LIGNEUX: dict[str, dict[int, str]] = {
            "aime la chaleur réverbérée d'un mur. Méridional, il ne lève spontanément de "
            "graine que sur sol bien chaud — contrairement aux ligneux tempérés qui "
            "germent au frais du printemps. Figue commune : elle noue sans pollinisateur et mûrit "
-           "de la fin d'été au début de l'automne.",
+           "de la fin d'été au début de l'automne. Mais sa graine n'est fertile que "
+           "fécondée par le blastophage, une minuscule guêpe des pays à hiver doux ; "
+           "loin d'elle, la figue n'a que des graines vides et l'arbre se propage par "
+           "les rejets que sa souche pousse à ses pieds.",
         3: "Idéal en espalier sud (microclimat chaud, albédo du mur) ; figues = manne "
            "pour oiseaux et insectes en fin d'été. Ombre dense estivale.",
     },
