@@ -16,6 +16,7 @@ from fields import (_hash_noise, SENESCENCE_ONSET, SEN_ONSET_JITTER, SEN_RATE,
                     HEAL_RATE, HEAL_SEN_CUTOFF, ASPHYXIE_HEALTH_SEUIL,
                     ASPHYXIE_RATE, RESEED_RADIUS_CM, VITALITE_STEP)
 from sim.effects import apply_mutations, ReduceHealth, deposer_mort
+from sim.effects.perturbations import SEUIL_SEMIS
 from sim.reproduction import (find_father, child_genes, child_expression,
                               is_seed_bearing)
 from sim.capacite import recrutement_bloque
@@ -224,8 +225,22 @@ class MortaliteMixin:
             if not is_tree and (cls.life_cycle != "perennial"
                                 or cls.archetype is not None):
                 continue
-            best, best_light = None, 0.35   # seuil de viabilité d'un semis
-            for (r, c) in sorted(tile.plots_within_radius(pr, pc, radius_plots)):
+            # Pose COHÉRENTE (relève ligneuse ②, D130). Arbre : le fruit tombe sous
+            # la COURONNE du parent (rayon de chute = rayon de couronne, +1 plot de
+            # roulé) et le semis ne s'installe que là où il SURVIT à l'ombre : seuil
+            # = 1 − SEUIL_SEMIS, la lumière qui tient la `shade_memory` d'un semis
+            # sous son seuil de dégât (①). Avant : rayon fixe 150 cm < couronne d'un
+            # adulte et seuil 0,35 sous le seuil de dégât d'un héliophile → le moteur
+            # posait la recrue là où il la tuait ensuite. Non-arbre : inchangé.
+            # Le plot le plus lumineux gagne : abstraction « parmi les graines tombées,
+            # celle la mieux placée s'installe » (pas de multi-semis à suivre).
+            if is_tree:
+                rayon = int(cls.canopy_radius_at(parent) // 50) + 1
+                best, best_light = None, 1.0 - SEUIL_SEMIS
+            else:
+                rayon = radius_plots
+                best, best_light = None, 0.35   # seuil de viabilité d'un semis
+            for (r, c) in sorted(tile.plots_within_radius(pr, pc, rayon)):
                 if (r, c) in occupied or not tile.is_valid_plot(r, c):
                     continue
                 light = eco.lumiere.at_plot(r, c)

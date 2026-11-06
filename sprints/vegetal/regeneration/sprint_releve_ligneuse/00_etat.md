@@ -91,7 +91,7 @@ Doc : `docs/vegetal/regeneration/conception_releve_ligneuse.md`. Golden
 | # | kickoff | état |
 |---|---|---|
 | ① | `01_banque_de_semis.md` — seuil d'ombre d'un ligneux monte avec la petitesse (`seuil_ombre`), signe `ombre` aligné | **fait** (golden `a10b7225…` intact) |
-| ② | `02_pose_coherente.md` — arbre : rayon de chute = couronne, seuil de pose = survie d'un semis | à faire |
+| ② | `02_pose_coherente.md` — arbre : rayon de chute = couronne, seuil de pose = survie d'un semis | **fait** (golden `a10b7225…` intact) |
 | ③ | `03_figuier_realiste.md` — graine fertile si climat du blastophage, rejets `drageon`, `_mature` d'arbre, voix | à faire |
 | ④ | `04_mesure_releve.md` — `tools/diag_releve.py`, verger_mur 200 ans, perf `full`, calibrage borné | à faire |
 | ⑤ | `05_vue_godot.md` — voix `attente` du semis, rejets visibles, `dotnet build`, F5 | à faire |
@@ -115,6 +115,25 @@ Doc : `docs/vegetal/regeneration/conception_releve_ligneuse.md`. Golden
 - Golden `a10b7225…` inchangé ; `test_stress_chronique`, `test_signes`,
   `test_signes_legende`, `test_plasticite` verts. C# non concerné.
 
+## Tronçon 2 — fait (2026-11-06)
+- `sim/engine/mortalite.py` `_reproduction` bloc 3 : arbre (`age_curve`) → rayon
+  de recherche `int(canopy_radius_at(parent) // 50) + 1` plots, seuil de pose
+  `1 − SEUIL_SEMIS` (0,25, import `sim.effects.perturbations`, couche sim→sim OK) ;
+  non-arbre inchangé (`radius_plots`, 0,35). Plot le plus lumineux conservé
+  (commenté). Banque-sol et anémochorie non touchées.
+- `tests/test_banque_semis.py` (d) recrue à 350 cm sous une couronne imposée de
+  400 cm (hors de l'ancien rayon 150 cm + 1 plot → contre-factuel : 0 recrue avant) ;
+  (e) tuile à lumière < 0,25 → 0 recrue.
+- `canopy_radius_at` vérifié en cm, non nul : pommier labo 70 cm de 1 à 5 ans,
+  100 cm à 6 ans, 112 cm à 7 ans [labo, n=1 run, VM].
+- **Point pour le ④** : un fruitier à peine mûr (couronne ~70 cm → rayon 2 plots)
+  sème désormais PLUS PRÈS (2 plots) qu'avant (4 plots), et sous un seuil plus BAS
+  (0,25 < 0,35) : la recrue naît sous la couronne, en banque de semis (①). C'est
+  la conception ; à mesurer au ④ (taux de remplacement, fourré éventuel).
+- Golden `a10b7225…` inchangé ; `test_banque_semis` (a-e), `test_evenements`,
+  `test_maitrise_detection`, `test_stress_chronique`, `bancs.test_verger_mur` verts.
+  C# non concerné.
+
 ## §REPRISE
 Exécution : `/sprint-auto sprint_releve_ligneuse`. Prochain tronçon = le premier
-« à faire » du tableau (② `02_pose_coherente.md` au 2026-11-06). Chaque tronçon met à jour sa ligne + un § « Tronçon N — fait ».
+« à faire » du tableau (③ `03_figuier_realiste.md` au 2026-11-06). Chaque tronçon met à jour sa ligne + un § « Tronçon N — fait ».

@@ -12,6 +12,11 @@ tue quand même — le seuil monte, il ne disparaît pas.
   (b) le même à lumière 0,10                     → MEURT ;
   (c) `seuil_ombre` d'un ligneux haut (≥ H_GAULE) et d'une herbacée = 0,55.
 
+Tronçon ② (pose cohérente, recrutement direct `_reproduction`) :
+  (d) arbre mûr isolé, couronne 400 cm : la recrue tombe SOUS la couronne (au-delà
+      de l'ancien rayon fixe 150 cm, à distance ≤ couronne + 1 plot) ;
+  (e) tuile entière à lumière < 1 − SEUIL_SEMIS → AUCUNE recrue.
+
 Climat de LABORATOIRE repris de tests/test_stress_chronique.py (`_lab_tile` :
 météo douce constante, germination/ravageurs/campagnol/risée neutralisés) ;
 l'ombre est imposée en surchargeant `eco.lumiere.light_received`.
@@ -20,8 +25,11 @@ Lancement (depuis data/code/) :
   python3 -m tests.test_banque_semis
 """
 
+import math
 import sys
 
+from world import Tile
+from fields import init_eco
 from plants import AppleTree, Zucchini
 from sim.engine import Engine
 from sim.effects.perturbations import (seuil_ombre, H_GAULE, SEUIL_SEMIS,
@@ -98,11 +106,65 @@ def test_seuil_ombre_bornes():
           f"semis {seuil_ombre(arbre):.3f} (hauteur {h0:.1f} cm)")
 
 
+COURONNE_CM = 400.0   # couronne imposée du parent (tests d/e)
+
+
+def run_pose(lumiere_de):
+    """Un pommier MÛR isolé au centre d'une tuile 20×20, couronne imposée à
+    COURONNE_CM, fructification forcée (reproduction_rate 1) ; la lumière au sol
+    est imposée par plot (`lumiere_de(r, c)`). Un seul appel à `_reproduction`.
+    Renvoie (parent, liste des recrues)."""
+    tile = Tile(tile_id="T0", soil_type="terre", grid_rows=20, grid_cols=20)
+    eco = init_eco("T0", 20, 20, humidite=1.0, fertilite=1.0, microbiome=0.3)
+    parent = tile.add_plant(AppleTree, 10, 10)
+    parent.age_years = AppleTree.maturity_years + 1.0
+    eco.lumiere.at_plot = lumiere_de
+    gs = {"tiles": [tile], "eco": {"T0": eco}, "scores": {},
+          "current_player": "j1", "week": 1, "log": []}
+    engine = Engine(gs)
+    orig_r, orig_rate = AppleTree.canopy_radius_at, AppleTree.reproduction_rate
+    try:
+        AppleTree.canopy_radius_at = classmethod(lambda cls, inst: COURONNE_CM)
+        AppleTree.reproduction_rate = 1.0
+        engine._reproduction(tile, eco, week=1)
+    finally:
+        AppleTree.canopy_radius_at, AppleTree.reproduction_rate = orig_r, orig_rate
+    return parent, [p for p in tile.plants if p is not parent]
+
+
+def _dist_cm(a, b) -> float:
+    (ar, ac), (br, bc) = a.position, b.position
+    return 50.0 * math.hypot(ar - br, ac - bc)
+
+
+def test_pose_sous_couronne():
+    """(d) Seul plot vivable : à 7 plots (350 cm) du parent — hors de l'ancien
+    rayon fixe (150 cm + 1 plot), sous la couronne de 400 cm → la recrue y naît."""
+    cible = (10, 17)
+    parent, recrues = run_pose(lambda r, c: 0.9 if (r, c) == cible else 0.05)
+    assert len(recrues) == 1, f"{len(recrues)} recrue(s) au lieu d'une"
+    d = _dist_cm(parent, recrues[0])
+    assert recrues[0].position == cible, recrues[0].position
+    assert d <= COURONNE_CM + 50.0, f"recrue à {d:.0f} cm > couronne {COURONNE_CM}"
+    print(f"[banque-semis (d)] PASS — recrue @{recrues[0].position} à {d:.0f} cm "
+          f"(couronne {COURONNE_CM:.0f} cm)")
+
+
+def test_pas_de_pose_a_l_ombre():
+    """(e) Toute la tuile sous la lumière de survie d'un semis → aucune recrue."""
+    seuil = 1.0 - SEUIL_SEMIS
+    _parent, recrues = run_pose(lambda r, c: seuil - 0.01)
+    assert not recrues, f"{len(recrues)} recrue(s) posée(s) à lumière < {seuil:.2f}"
+    print(f"[banque-semis (e)] PASS — aucune recrue à lumière < {seuil:.2f}")
+
+
 if __name__ == "__main__":
     try:
         test_seuil_ombre_bornes()
         test_semis_tient_ombre_moyenne()
         test_semis_meurt_ombre_profonde()
+        test_pose_sous_couronne()
+        test_pas_de_pose_a_l_ombre()
     except AssertionError as e:
         print(f"[banque-semis] FAIL — {e}")
         sys.exit(1)
