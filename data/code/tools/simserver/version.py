@@ -832,7 +832,11 @@ from __future__ import annotations
 # 0.6.9 (VERGER VIVANT ③) : chaque fruit gagne `nombre`, les fruits de la cohorte (un site,
 #       un âge ; 1 pour les herbacées). `masse` reste celle d'UN fruit ; `fruit_index` vise
 #       toujours une cohorte, `manger` en retire un fruit. Clé neuve ignorée par un ancien client.
-ENGINE_VERSION = "0.6.9"
+# 0.6.10 (chronique des espèces ②, D127) : `perf_report` gagne `chronique` = {texte, brut} :
+#       vivants/morts par cause/levées de TOUTES les espèces par an + registre non borné des
+#       disparitions et retours. `texte` est composé en Python, la vue l'affiche tel quel.
+#       Clé neuve ignorée par un ancien client, golden neutre.
+ENGINE_VERSION = "0.6.10"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

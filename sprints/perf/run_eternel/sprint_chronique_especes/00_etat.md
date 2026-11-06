@@ -11,7 +11,7 @@ INTACT sur tout le sprint ; pont 0.6.9 → 0.6.10 au ②.
 | # | kickoff | état |
 |---|---|---|
 | ① | `01_causes_de_mort.md` — espèce + cause canonique des morts, carnet, aide, tests | FAIT 2026-11-06 (golden `a10b7225…` intact, non commité) |
-| ② | `02_chronique.md` — module serveur, `cmd_perf_report`, pont 0.6.10 | à faire |
+| ② | `02_chronique.md` — module serveur, `cmd_perf_report`, pont 0.6.10 | FAIT 2026-11-06 (golden `a10b7225…` intact, non commité) |
 | ③ | `03_outil_sans_ecran.md` — `tools/chronique_run.py` + run `verger_mur` 200 ans → D127 | à faire |
 | ④ | `04_vue_rapport_c.md` — section `[chronique]` touche C, `dotnet build`, clôture | à faire |
 
@@ -98,6 +98,42 @@ Coût : ① nul dans le tick ; ② comptage O(N) par tick ≤ ~1 ms [estimation,
 - Effet de bord : les annuelles mortes à l'hiver produisent désormais une entrée
   carnet `fin_de_cycle` (le ledger se remplit un peu plus vite, borné JOURNAL_MAX).
 
+## Tronçon ② — fait (2026-11-06)
+- `tools/simserver/chronique.py` (classe `Chronique`, 121 LDC) : comptage par
+  IDENTITÉ des plantes vivantes (`id(p)`→p, référence tenue), DEUX recensements par
+  semaine : `avant_tick` (hors chrono) → morts entre deux ticks = `hors_tick`
+  (gestes joueur/automate) ; `apres_tick(engine, log)` → morts du tick appariées à
+  l'événement `mort` de `evenements(log)` par (tuile, plot, espèce), sinon
+  `non_consignee` (annélation campagnol). Levées = plantes NOUVELLES entre deux
+  recensements, toutes voies. Raisons brutes des morts `autre` → `autres`.
+  Bilan clos à `semaine % 52 == 0` ; année d'une semaine = `ceil(s/52)` (même n°
+  que `perf_annees`). Registre non borné disparition (semaine, espèce, cause, âge,
+  tuile) / retour. `texte()` = seul formateur ; `brut()` = {annees, registre}.
+- `commands.py` : `Chronique()` à l'init ; `avant_tick` avant `SONDE_TICK.debut()` ;
+  `apres_tick` juste après `J.consigner`, avant `gs["log"].clear()` ;
+  `perf_report.chronique = {texte, brut}`. Pont 0.6.10 (`version.py` + 4 tests
+  `tests/simserver/` qui épinglent la version).
+- Écarts au kickoff : (a) levées NON lues au flux — l'événement `germination` est
+  toute avance de stade 🌱 (pas une levée), la germination férale n'a pas de
+  marqueur ; la différence d'identité est exacte. (b) `evenements(log)` est lu une
+  3ᵉ fois (après `consigner` et `observer_apres_tick`) : partager le flux changerait
+  `sim.journal.consigner` (moteur). (c) Périmètre = plantes des tuiles (pas des
+  conteneurs, comme `perf_annees`) ; une plante déplacée hors tuile vivante compte
+  comme mort `hors_tick`. (d) Pas d'« arrivée » d'une espèce jamais vue : seuls
+  disparitions et retours.
+- Tests : `tests/test_chronique.py` 14/14 ; `test_sim_server` 322/322 ;
+  `test_perf_sonde` vert ; golden `a10b7225…` PASS.
+- Coût mesuré (full seed 42, semaines 157-182 ≈ an 3, ~690 plantes, VM 16 cœurs
+  charge ~1-3) : chronique 3,9 ms/tick médiane [n=26, VM] (max 4,8) pour un tick
+  de 879 ms → 0,45 % [n=26, VM]. Un parse complet du log (~2 500-3 300 lignes)
+  coûtait 12,8 ms [n=10, VM] → `apres_tick` ne passe à `evenements` que les lignes
+  contenant « meurt » + les en-têtes `[T…]` (0,7 ms, mêmes événements `mort`).
+  Écart à l'estimation de la conception (~1 ms) : deux recensements de ~1 ms
+  chacun.
+- Observé au passage (full, seed 42, 3 ans) : morts du trèfle surtout herbivorie
+  (180/an 2) et vent (57) ; `non_consignee` présent (7 trèfles an 2).
+
 ## §REPRISE
-Lire ce fichier + D127 (`DETTE.md`). ① fait. Prochaine étape : tronçon ②
-`02_chronique.md` (consommer `evenements(log)` ; cause `autre` → champ `raison`).
+Lire ce fichier + D127 (`DETTE.md`). ① et ② faits. Prochaine étape : tronçon ③
+`03_outil_sans_ecran.md` (piloter `SimServer` hors écran, afficher
+`cmd_perf_report()["chronique"]["texte"]` tel quel ; run `verger_mur` 200 ans).

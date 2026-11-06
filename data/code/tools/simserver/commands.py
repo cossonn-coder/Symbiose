@@ -43,6 +43,7 @@ from sim.vision import clore_si_echue as clore_vision   # fin de vision (sol qui
 from . import perf   # capture des pires ticks + dump diagnostique (demande Nico 2026-07-05)
 from .perf_tick import SONDE_TICK         # où passe le temps d'un tick
 from .perf_annees import HistoriqueAnnees  # bilan du rapport perf, une ligne par an
+from .chronique import Chronique           # disparitions et causes de mort par espèce (D127)
 
 # Kit de démarrage déposé dans la banque-joueur, UNIQUEMENT en config "full" (le
 # monde de jeu réel, celui du F5) : une graine de chaque, pour tester `planter`
@@ -263,6 +264,7 @@ class CommandsMixin:
         # longs + dump diagnostique sur disque au record. Neuf à chaque init.
         self._worst = perf.WorstTicks()
         self._annees = HistoriqueAnnees()
+        self._chronique = Chronique()
         # Brancher la Vigueur joueur (tranche 4) : l'OPT-IN se fait ICI, pas
         # dans le moteur. Dès que la clé `vigueur` existe, le tick existant
         # (engine.py, gardé par `if "vigueur" in game_state`) fait seul la
@@ -319,6 +321,9 @@ class CommandsMixin:
         # monotone haute résolution, immune aux sauts d'heure système. La valeur
         # est simplement STOCKÉE sur self ; `_snapshot()` (serialize.py) la
         # relit pour composer le bloc `perf`. Aucune écriture moteur.
+        # Chronique des espèces (D127) : recensement AVANT le tick, hors chrono →
+        # les morts survenues depuis le tick précédent sont des gestes (`hors_tick`).
+        self._chronique.avant_tick(self.engine)
         SONDE_TICK.debut()
         _t0 = time.perf_counter()
         with contextlib.redirect_stdout(sys.stderr):
@@ -340,6 +345,10 @@ class CommandsMixin:
         # semaine qu'on vient de simuler est `week - 1` ; le log consigné lui
         # appartient.
         J.consigner(gs, gs["current_player"], gs["log"], gs["week"] - 1)
+        # Chronique (D127) : 3ᵉ lecture du MÊME log (après `consigner` et
+        # `observer_apres_tick`) — partager le flux changerait la signature de
+        # `sim.journal.consigner` (moteur, hors périmètre) ; coût mesuré au ②.
+        self._chronique.apres_tick(self.engine, gs["log"])
         # Chaîne de MAÎTRISE (sprint UI voix ①) : hooks A (observer, découverte) +
         # B (detecter, crédit de palier) + révélation d'une page au palier 3. Lit
         # le MÊME `log` en lecture seule (ordre indifférent vs `consigner`), AVANT
@@ -382,6 +391,8 @@ class CommandsMixin:
         return {"ok": True,
                 "worst": self._worst.dumps,
                 "annees": self._annees.lignes(),
+                "chronique": {"texte": self._chronique.texte(),
+                              "brut": self._chronique.brut()},
                 "current": perf.diagnostic(
                     self.engine, getattr(self, "_last_ms_tick", None) or 0.0)}
 
