@@ -426,6 +426,7 @@ namespace Symbiose
 		{
 			if (_structure == null || _structure.Fruits.Count == 0) return -1;
 			Vector2 local = ToLocal(canvasPos);
+			if (FicheDeLaPlante == null && Houppier) return FruitArbreProche(local, out _, out _);   // fruits dessinés (VERGER ④)
 			Vector3 collet = _structure.ColletCm;
 			int best = -1;
 			float bestD = float.MaxValue;
@@ -445,7 +446,6 @@ namespace Symbiose
 		// Plafonné à MaxFruits par sous-échantillonnage régulier (anti-fouillis).
 		private List<Vector3> OrganSites()
 		{
-			if (Houppier) return SitesFleursHouppier();   // sur les brindilles, à tous les paliers (⑤)
 			var apex = new List<Segment>();
 			foreach (var s in _structure.Segments)
 				if (s.IsApex) apex.Add(s);

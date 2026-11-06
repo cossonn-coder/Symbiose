@@ -284,6 +284,8 @@ namespace Symbiose
 		internal float DistanceFruitPort(Vector2 canvasPos)
 		{
 			// HOUPPIER ⑤ : un fruit d'arbre est haut, le collet n'est pas sous le clic non plus.
+			// VERGER VIVANT ④ : une cohorte est dessinée en plusieurs fruits, on mesure au plus proche.
+			if (FicheDeLaPlante == null && Houppier) return DistanceFruitArbre(canvasPos);
 			FicheFruit fr = FicheDeLaPlante is { } f ? f.Fruit ?? FruitParDefaut : Houppier ? FicheFruitArbre : null;
 			if (fr == null || _structure.Fruits.Count == 0) return float.PositiveInfinity;
 			int i = FindFruitNear(canvasPos);

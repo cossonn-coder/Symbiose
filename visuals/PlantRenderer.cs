@@ -377,6 +377,7 @@ namespace Symbiose
 		public void SetStructure(PlantStructure s)
 		{
 			_structure = s;
+			NoterFloraison();   // pic de la floraison en cours : montée ou descente (FleursArbre.cs)
 			// Les index de segments changent à chaque snapshot (une coupe
 			// réindexe la structure côté moteur) : une surbrillance gardée
 			// pointerait la mauvaise branche — le survol la re-résout au

@@ -105,6 +105,7 @@ namespace Symbiose
 		// ×8 : la tache en grammaire SNES (PoserFleurSnes, FORMES ⑥).
 		private void DrawFleurs(Vector3 collet, OrganPalette pal)
 		{
+			if (Houppier) { DrawFleursHouppier(collet, pal); return; }   // bouquets continus (VERGER VIVANT ④)
 			if (_structure.Floraison < FloraisonSeuil) return;
 			bool organes = AuPalier(PalierOrganesZoom);
 			var sites = OrganSites();

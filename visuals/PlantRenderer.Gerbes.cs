@@ -66,9 +66,12 @@ namespace Symbiose
 		/// <remarks>`miroir` et `pend` retournent la pièce par un rectangle source de taille négative,
 		/// sans autre atlas. `pend` : le pied passe en haut, la gerbe tombe de son point d'attache.</remarks>
 		private void DrawGerbeIndexee(LeafShape s, int palier, int variante, CoucheGerbe couche, Vector2 pied, float z, int palette,
-			bool miroir = false, bool pend = false)
+			bool miroir = false, bool pend = false) =>
+			PoserGerbeIndexee(GerbeRect(s, palier, variante, couche), pied, z, palette, miroir, pend);
+
+		// Les deux poses prennent aussi un rectangle quelconque de l'atlas : gerbes de fleurs (GerbesFleurs.cs).
+		private void PoserGerbeIndexee(Rect2I r, Vector2 pied, float z, int palette, bool miroir, bool pend)
 		{
-			Rect2I r = GerbeRect(s, palier, variante, couche);
 			Vector2I pp = GerbePied(r.Size.X);
 			Vector2 coin = ((pied * z) - new Vector2(pp.X, pend ? 0f : pp.Y)).Round() / z;
 			var src = new Rect2(r.Position, new Vector2(miroir ? -r.Size.X : r.Size.X, pend ? -r.Size.Y : r.Size.Y));
@@ -78,10 +81,12 @@ namespace Symbiose
 		/// <summary>Pose littérale (dessin direct, F11 OFF) : la même pièce, niveau par niveau, en couleur de
 		/// rampe, comme DrawPiece. Une plante pas encore cuite garde ainsi sa densité : pas de saut à la cuisson.</summary>
 		private void DrawGerbeLitterale(LeafShape s, int palier, int variante, CoucheGerbe couche, Vector2 pied, float z, Color[] rampe,
-			bool miroir = false, bool pend = false)
+			bool miroir = false, bool pend = false) =>
+			PoserGerbeLitterale(GerbeRect(s, palier, variante, couche), pied, z, rampe, miroir, pend);
+
+		private void PoserGerbeLitterale(Rect2I r, Vector2 pied, float z, Color[] rampe, bool miroir, bool pend)
 		{
 			AssurerMasquesGerbes();
-			Rect2I r = GerbeRect(s, palier, variante, couche);
 			Vector2I pp = GerbePied(r.Size.X);
 			Vector2 coin = ((pied * z) - new Vector2(pp.X, pend ? 0f : pp.Y)).Round() / z;
 			var dst = new Rect2(coin, (Vector2)r.Size / z);
@@ -131,6 +136,8 @@ namespace Symbiose
 				for (int p = 0; p < GerbeCotes.Length; p++)
 					for (int v = 0; v < GerbeVariantes; v++)
 						PeindreGerbe(rg, hauteur, forme, p, v, touffes);
+			PeindreGerbesFleurs(rg);   // fleurs d'arbre, VERGER VIVANT ④ (GerbesFleurs.cs)
+			PeindrePiecesFleur(rg);    // et leurs fleurs de près (PiecesFleur.cs)
 			_gerbesNiveaux = Image.CreateFromData(GerbeAtlasLargeur, hauteur, false, Image.Format.Rg8, rg);
 			// Texel = (1, 1, code, 1) : × modulate (palette, palette, 1, 1) = pixel encodé, comme _kitCodes.
 			var rgba = new byte[GerbeAtlasLargeur * hauteur * 4];
@@ -162,7 +169,7 @@ namespace Symbiose
 						}
 				x = 0; y += n + 1;
 			}
-			return y;
+			return RangerPiecesFleur(RangerGerbesFleurs(y));   // fleurs d'arbre, VERGER VIVANT ④
 		}
 
 		// Un rameau qui monte depuis le pied, des brindilles alternées, une touffe au bout de chacune

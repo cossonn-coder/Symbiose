@@ -220,7 +220,7 @@ namespace Symbiose
 			// DrawCouronne / DrawTige / DrawTachesFleurs ci-dessous ne sont plus
 			// appelés (conservés, règle « ne jamais jeter de code ») ; Couronne()
 			// reste le contour du picking et de la boîte de cuisson.
-			if (Houppier) DrawHouppierBas(c, sante);   // gerbes sur rameaux dérivés (HOUPPIER ⑤)
+			if (Houppier) DrawHouppierBas(c);   // gerbes sur rameaux dérivés (HOUPPIER ⑤)
 			else DrawPlanteAssemblee(c, sante);
 		}
 

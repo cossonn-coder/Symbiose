@@ -244,6 +244,7 @@ namespace Symbiose
 			node.SetStructure(l.Structure);   // la plante a poussé
 			_leafFallLayer?.Noter(l.Key, node, wx, wy, l.Structure.Feuillage);   // chute (⑤)
 			node.SetSkeleton(l.StadeMort);     // ou vient de mourir / s'est couchée
+			_petalLayer?.Noter(l.Key, node, wx, wy);   // pétales au sol à la défloraison (VERGER ④)
 			node.SetSymptoms(l.Symptomes);     // teinte + texture des symptômes (D33)
 			node.SetVitality(l.Vitalite);      // fond global d'usure (santé ④, 0.5.28)
 			node.SetSupport(l.SupportKind, l.SupportHauteurCm, l.SupportDxCm, l.SupportDyCm);   // accroche (grimpantes ⑥, FORMES ⑥)

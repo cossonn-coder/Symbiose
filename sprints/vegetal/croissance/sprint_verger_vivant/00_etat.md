@@ -8,8 +8,8 @@
 |---|---|---|
 | ① | `01_bourgeons_dormants.md` | **fait** (commité `951c294`, golden intact) |
 | ② | `02_floraison_realiste.md` | **fait** (commité `3b706bd`, golden intact) |
-| ③ | `03_fruits_cohortes.md` | **fait** (non commité, golden intact, pont 0.6.9) |
-| ④ | `04_vue_fleurs_fruits.md` | à faire |
+| ③ | `03_fruits_cohortes.md` | **fait** (commité `67e9f0b`, golden intact, pont 0.6.9) |
+| ④ | `04_vue_fleurs_fruits.md` | **fait** (non commité, golden intact, vue seule, F5 à faire) |
 
 ## Décisions (Nico, 2026-11-05)
 
@@ -30,7 +30,7 @@
 
 ## §REPRISE
 
-`/sprint-auto sprint_verger_vivant` : ①② commités, ③ fait (à commiter par l'orchestrateur), **reprendre au ④** (`04_vue_fleurs_fruits.md`). Le ④ part du pont 0.6.9 : chaque fruit porte `nombre` ; `masse` = masse d'UN fruit d'espèce (cerise 0,005, figue 0,04, noix 0,05, pomme 0,09), plus 0,15 : `RayonFruit` (C#, `FruitMasseNominale` 0,15) rétrécit donc les fruits d'arbre jusqu'au pixel plancher, et un arbre porte 13 à 38 cohortes au lieu de ≤ 10. À reprendre dans la vue (voir bilan ③). Chaque tronçon met à jour ce tableau et ajoute son bilan ci-dessous.
+①②③ commités, ④ fait côté code (à commiter par l'orchestrateur). Sprint clos sous réserve du F5 de Nico (§F5 du bilan ④). Réglages : constantes de `visuals/PlantRenderer.FleursArbre.cs`, `GerbesFleurs.cs`, `PiecesFleur.cs`, `FruitsArbre.cs`, `PetalLayer.cs`.
 
 ## Bilans
 
@@ -91,3 +91,36 @@ Pas de dérive du sol ni de la faune : les masses physiques sont gardées.
 **Suites** : golden `a10b7225…` INTACT ; `test_fruits` 30/30 (une section cohortes ajoutée, chute mesurée sur la tuile) ; `test_sim_server` 322/322 (version 0.6.9, clé `nombre` > 1 sur le pommier de `full`) ; `test_verger_mur`, `test_catalogue_lot2`, `test_floraison_forcage` 9/9, `test_vent` 54/54, `test_desync_phenologie` 7/7, `test_automate_planif` 24/24, `test_squelette_herbacees`, `bancs.test_planche_especes`, `bancs.test_biotique` 12/12 : verts.
 **Pour le ④** : (a) `RayonFruit` normalise par 0,15 : les fruits d'arbre se dessinent petits (cerise ×0,18 de rayon, jusqu'au pixel plancher). Normaliser par espèce, ou ignorer `masse` pour les arbres qui ont une fiche. (b) Dessiner `nombre` avec un plafond. (c) Jusqu'à 38 cohortes par arbre, contre 10 avant.
 **Taille** : `serialize.py` 394 LDC (392 avant, déjà en bande de vigilance, responsabilité unique) ; `decompo.py` 145.
+
+### ④ Vue : fleurs et fruits (2026-11-06)
+
+**Code** (vue seule, moteur et pont non touchés) :
+- `PlantRenderer.FleursArbre.cs` (neuf) : densité continue `(floraison − 0,15) / 0,7` × 0,85 des bouts de bois ; boutons à la montée (tous fermés sous 0,5, tous ouverts à 0,9) ; détecteur de pic `_floraisonPic` (copié au pinceau) pour savoir si la floraison fane ; bouquets cerisier 3-5, pommier 3-5, au bout et au milieu des brindilles, 1 500 fleurs au plus à ×8+.
+- `PlantRenderer.GerbesFleurs.cs` (neuf) : de ×0,5 à ×4, une gerbe de 4 à 14 fleurs par tracé, trois couches (fleurs, cœurs dès ×2, boutons), même atlas que les gerbes de feuilles.
+- `PlantRenderer.PiecesFleur.cs` (neuf) : ×8/×16/×32, une fleur = une pièce de 13, 25, 49 px (5 pétales à plat, liseré, cœur, étamines dès ×16 ; bouton). Couleurs : cerisier blanc pur, bouton blanc verdâtre ; pommier blanc rosé, liseré rose, bouton rose franc.
+- `PetalLayer.cs` (neuf, branché dans `WorldView.Compost.cs`/`Snapshot.cs`) : pétales au sol sous la couronne, quantité `(1 − f/pic) × min(1, f/0,05)`, semis emboîté au hash, ~6 semaines.
+- `PlantRenderer.FruitsArbre.cs` (neuf, sorti de `Houppier.cs`) : `nombre` lu (`FruitData.Nombre`, `PlantStructure.cs`), 500 fruits au plus par arbre en gardant la proportion entre cohortes, grappes (cerise 3 sur queue de 4 cm, pomme 2, figue 1, noix 2), queues dessinées dès ×8, rayon = fiche × maturité (nouaison 45 %) au lieu de la masse rapportée à 0,15. Clic `manger` et `DistanceFruitPort` relisent les fruits dessinés.
+- Clé de recuisson (`CleStable.cs`) : `Nombre` par cohorte et drapeau « fane » ajoutés.
+
+**Écarts au kickoff** :
+- Prescription « `KitFleuron` enrichi » **non tenue telle quelle** : des fleurs une à une ne blanchissaient pas le houppier (544 fleurs à ×2, couronne encore verte [capture]). Remplacée par les gerbes de fleurs (×0,5-×4) et des pièces d'atlas (×8+). Le kit n'est pas modifié.
+- Premier essai ×8+ en disques de triangles : primitives 66 k → 138 k, FPS 9,1 → 4,6 [`verger_mur` ×8, s5, n=1 relevé de 5 s par côté] ; d'où les pièces.
+- Pétales : un jeu chargé en pleine défloraison ne montre ses pétales qu'à la semaine suivante (le pic n'a pas été vu). Même limite pour les boutons (une semaine de boutons possible à la descente).
+
+**Coût de cuisson, cerisier, ms par coup de pinceau** [`verger_mur`, seed 42, `SYMBIOSE_COUT_CUISSON`, n=1 coup par run, VM, charge 1 à 4] :
+- pic des fleurs (s5) : ×1 1,3-1,8 → 1,5-1,9 [n=4 avant, 6 après] ; ×2 3,3-3,7 → 3,0-3,7 [idem] ; ×4 5,4-6,4 → 3,8-4,2 [idem] (l'ancien point par fleur à ×4 coûtait plus que les gerbes).
+- pleins fruits (s14, ~2 000 cerises) : ×1 2,2 → 3,9-4,0 ; ×2 3,1-3,6 → 5,1-5,3 ; ×4 3,9-4,3 → 6,7-6,9 [n=2 runs par côté] : +2 à +3 ms, prix des 500 fruits.
+- ×8 et plus : arbre en dessin direct, pas de cuisson.
+
+**FPS ×8/×16, cadré sur le cerisier** [`perf_vm.sh`, n=5 relevés de 1 s, VM llvmpipe, charge 1 à 3,6] : pic s5 ×8 9,1 → 8,1, ×16 10,1 → 9,1 (objets 3 500 → 9 500) ; fruits s14 ×8 7,1 → 6,6, ×16 8,2 → 8,1.
+
+**Effet vu en capture** (Xvfb, seed 42) : cerisier au pic blanc à ×1, ×2, ×4 ; bouquets à ×8 ; cinq pétales, cœur et étamines à ×16/×32 ; pommier en boutons roses puis blanc rosé ; pétales au sol après le pic (vus avec `-w 4 -T 3`) ; cerises par grappes sur leurs queues à ×8, figues nombreuses, noix vertes (peu lisibles dans le feuillage, palette du ⑤). Cueillette `-C` cerisier ×4 : position → index 25/25, deux clics `manger` réels réussis.
+
+**Suites** : golden `a10b7225…` INTACT ; `dotnet build` vert, 0 avertissement. Fichiers neufs tous ≤ 130 LDC ; `Organs.cs` 311 LDC (🟡, déjà signalé au houppier ⑤, −1 ligne ici).
+
+**§F5 pour Nico** (`init config="verger_mur"`, an 1 ; la semaine de l'en-tête suit l'état moteur) :
+- s4-s6 printemps : cerisier qui blanchit, au pic en s5 ; ×1, ×2, ×4 : paraît-il blanc ? ×8, ×16 : bouquets, pétales, étamines.
+- s7-s8 : pommier en boutons roses (s7) puis blanc rosé (s8-s9) ; sous le cerisier, pétales au sol qui s'éclaircissent jusqu'à ~s11.
+- s13-s16 : cerises par grappes de 2-3, nombre, taille ; clic `manger` sur plusieurs grappes.
+- s23-s26 : figues ; s27-s31 : noix ; an 2 s24-s30 : pommes (pas de pomme l'an 1 sur ce banc).
+- Fluidité réelle ×8-×16 en pleine floraison sur le PC.

@@ -39,15 +39,6 @@ namespace Symbiose
 		// été selon l'espèce : elle règle aussi la lumière. Prise telle quelle, une brindille sur deux restait nue en juillet.
 		// Le gain garde la proportion à l'automne et la couronne fermée en été [choix].
 		private const float GainDensite = 1.6f;
-		// Fleurs d'arbre : une brindille sur… , bornées (le coût d'une fleur à ×8 n'est pas nul).
-		private const float PartFleurs = 0.5f;
-		private const int FleursArbreMax = 120;
-		private const float FruitPenduCm = 1f;
-		// La fiche : pomme 6-8 cm, cerise 2 cm, figue 4-8 cm, noix ~4,5 cm de diamètre [odg].
-		private static readonly Dictionary<string, FicheFruit> FruitsArbres = new()
-		{
-			["AppleTree"] = new(3.5f), ["CherryTree"] = new(1f), ["Fig"] = new(3f), ["WalnutTree"] = new(2.2f),
-		};
 
 		/// <summary>Part ligneuse d'un segment telle qu'on la peint (arbre : jamais tendre sur toute sa longueur).</summary>
 		private float LigVue(in Segment s, bool houppier) =>
@@ -132,21 +123,23 @@ namespace Symbiose
 			return rampe;
 		}
 
-		/// <summary>Paliers bas, arbre feuillé : tiges, petit bois, gerbes, fleurons (×2), fruits.</summary>
-		private void DrawHouppierBas(Color c, bool sante)
+		/// <summary>Paliers bas, arbre feuillé : tiges, petit bois, gerbes, fleurons (dès ×0,5), fruits.</summary>
+		private void DrawHouppierBas(Color c)
 		{
 			DrawTigesAssemblees(WorldView.CurrentZoom);
 			DrawPetitBois();
 			DrawGerbes(new[] { c }, Mathf.Clamp(_structure.DensiteVisible, 0f, 1f));
-			if (sante) DrawFleuronsHouppier();
+			DrawFleuronsHouppier();
 			DrawFruitsHouppier();
 		}
 
-		/// <summary>Paliers bas, arbre nu : le bois fin par-dessus les segments, gerbes sans feuilles.</summary>
+		/// <summary>Paliers bas, arbre nu : le bois fin par-dessus les segments, gerbes sans feuilles.
+		/// Les fleurs aussi : le cerisier fleurit avant ses feuilles (VERGER VIVANT ②).</summary>
 		private void DrawHouppierNu()
 		{
 			DrawPetitBois();
 			DrawGerbes(new[] { WoodColor }, 0f);
+			DrawFleuronsHouppier();
 			DrawFruitsHouppier();
 		}
 
@@ -207,80 +200,6 @@ namespace Symbiose
 			PoserDetailsPrairie(tons[0]);
 		}
 
-		// ---------------------------------------------------------------------------
-		// FLEURS ET FRUITS — SUR LES BRINDILLES
-		// ---------------------------------------------------------------------------
-
-		/// <summary>Les bouts de brindille qui fleurissent, au hash, source unique de tous les paliers.</summary>
-		private List<Vector3> SitesFleursHouppier()
-		{
-			var sites = new List<Vector3>();
-			foreach (var e in BoisDuHouppier())
-			{
-				if (e.EstRameau || Hash01(543, e.Cle, e.Rang) >= PartFleurs) continue;
-				sites.Add(e.B);
-				if (sites.Count >= FleursArbreMax) break;
-			}
-			return sites;
-		}
-
-		private void DrawFleuronsHouppier()
-		{
-			if (_structure.Floraison < FloraisonSeuil || _structure.SpeciesName == "Fig") return;   // figue : fleur cachée (fiche)
-			if (!Palettes.TryGetValue(_structure.SpeciesName, out var pal)) pal = DefaultPalette;
-			float z = WorldView.CurrentZoom;
-			Vector3 c = _structure.ColletCm;
-			Color[] rampe = RampeKit(pal.Flower);
-			foreach (var p in SitesFleursHouppier())
-			{
-				Vector2 pos = Iso(p.X - c.X, p.Y - c.Y, p.Z);
-				if (Indexe) DrawPieceIndexee(KitFleuron(Fleuron.Bouton), pos, z, PaletteIndexee.Palette(pal.Flower), PaletteIndexee.Palette(FlowerHeart));
-				else DrawPiece(KitFleuron(Fleuron.Bouton), pos, z, rampe, KitBase, KitCoeur);
-			}
-		}
-
-		// Le fruit sur une brindille de SON segment. `rang` : parmi les fruits du même segment, pour que
-		// deux fruits ne se superposent pas. `SegmentId` reste un repère best-effort du moteur : une coupe
-		// qui réindexe peut encore déplacer un fruit (non résolu, le pont n'a pas d'identité de fruit).
-		private Vector3 PointFruitArbre(int i)
-		{
-			var fruits = _structure.Fruits;
-			var segs = _structure.Segments;
-			if (segs.Count == 0) return _structure.ColletCm;
-			int id = Mathf.Clamp(fruits[i].SegmentId, 0, segs.Count - 1), rang = 0;
-			for (int k = 0; k < i; k++)
-				if (Mathf.Clamp(fruits[k].SegmentId, 0, segs.Count - 1) == id) rang++;
-			Segment s = segs[id];
-			int cle = CleSegment(s), n = 0;
-			var bois = BoisDuHouppier();
-			foreach (var e in bois) if (e.Cle == cle && !e.EstRameau) n++;
-			if (n == 0) return s.Base + s.Dir * s.LengthCm;
-			int vise = (rang + (int)(Hash01(545, cle, 0) * n)) % n;
-			foreach (var e in bois)
-				if (e.Cle == cle && !e.EstRameau && vise-- == 0)
-					return e.B - new Vector3(0f, 0f, FruitPenduCm);
-			return s.Base + s.Dir * s.LengthCm;
-		}
-
-		private FicheFruit FicheFruitArbre =>
-			FruitsArbres.TryGetValue(_structure.SpeciesName, out var f) ? f : FruitParDefaut;
-
-		/// <summary>Fruits d'un arbre, à leur taille en cm, à tous les paliers : au moins un point à ×1.</summary>
-		private void DrawFruitsHouppier()
-		{
-			if (_structure.Fruits.Count == 0) return;
-			if (!Palettes.TryGetValue(_structure.SpeciesName, out var pal)) pal = DefaultPalette;
-			FicheFruit fr = FicheFruitArbre;
-			Vector3 collet = _structure.ColletCm;
-			_lotPrairie ??= new LotTriangles();
-			_lotPrairie.Vider();
-			for (int i = 0; i < _structure.Fruits.Count; i++)
-			{
-				var f = _structure.Fruits[i];
-				Vector3 p = PointFruitArbre(i);
-				PoserFruit(Iso(p.X - collet.X, p.Y - collet.Y, p.Z), RayonFruit(fr, f.Masse), fr.Allonge, FruitColor(pal, f.Maturite), i);
-			}
-			_lotPrairie.DessinerSansMaille(this);
-		}
+		// Fleurs : PlantRenderer.FleursArbre.cs ; fruits : PlantRenderer.FruitsArbre.cs (VERGER VIVANT ④).
 	}
 }

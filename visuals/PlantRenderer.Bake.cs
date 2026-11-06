@@ -183,6 +183,7 @@ namespace Symbiose
 			brush._hauteurLisseeCm = _hauteurLisseeCm;
 			brush._epaisseurMaxCm = _epaisseurMaxCm;
 			brush._swayPhase = _swayPhase;     // teinte d'automne stable par pied
+			brush._floraisonPic = _floraisonPic;   // boutons ou fleurs fanées (VERGER VIVANT ④)
 			brush._heat = _heat;           // variante météo (T4)
 			brush._wet = _wet;
 			brush._snow = _snow;           // variante froide (T5)

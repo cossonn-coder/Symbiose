@@ -36,6 +36,10 @@ namespace Symbiose
 		// comme les butineurs. Nourri par MajPlante, à l'arrêt hors des semaines de chute.
 		private LeafFallLayer _leafFallLayer;
 
+		// PÉTALES au sol sous un arbre qui défleurit (VERGER VIVANT ④) : bande du sol (ZIndex 1),
+		// après les feuilles mortes. Nourri par MajPlante, à l'arrêt hors défloraison.
+		private PetalLayer _petalLayer;
+
 		// BOIS MORT au sol (sol qui respire ⑧) : brindilles / branches / souches à
 		// stades de décompo, lues aux index 5-7 du MÊME bloc `litiere`. Entre les amas
 		// et les feuilles (même bande ZIndex 1) : les feuilles tombent SUR le bois.
@@ -58,6 +62,8 @@ namespace Symbiose
 			AddWorld(_deadWoodLayer);
 			_leafLitterLayer = new LeafLitterLayer { Name = "LeafLitter", ZIndex = 1 };
 			AddWorld(_leafLitterLayer);
+			_petalLayer = new PetalLayer { Name = "Petales", ZIndex = 1 };
+			AddWorld(_petalLayer);
 			_leafFallLayer = new LeafFallLayer
 			{
 				Name = "LeafFall", ZIndex = 11,

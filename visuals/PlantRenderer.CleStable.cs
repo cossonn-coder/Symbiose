@@ -69,7 +69,7 @@ namespace Symbiose
 		private const int SemainesSansCuissonMax = 8;
 		private const float LongueurPasCm = 10f;
 
-		private readonly record struct CleArbre(int Densite, int Floraison, int Automne, int Fruits, string Stade);
+		private readonly record struct CleArbre(int Densite, int Floraison, bool Fane, int Automne, int Fruits, string Stade);
 		private CleArbre _cleArbre;
 		private HashSet<int> _boisCuit = new(), _boisNeuf = new();
 		private int _semainesSansCuisson;
@@ -96,8 +96,9 @@ namespace Symbiose
 				fruits = Melange(fruits, fr.SegmentId);
 				fruits = Melange(fruits, Echelon(fr.Maturite));
 				fruits = Melange(fruits, Echelon(fr.Masse));
+				fruits = Melange(fruits, fr.Nombre);   // une cerise mangée se voit (VERGER VIVANT ④)
 			}
-			return new CleArbre(Echelon(s.DensiteVisible), Echelon(s.Floraison), Echelon(s.Automne), fruits, s.StageName);
+			return new CleArbre(Echelon(s.DensiteVisible), Echelon(s.Floraison), FloraisonFane, Echelon(s.Automne), fruits, s.StageName);
 		}
 
 		private bool ArbreInchange()

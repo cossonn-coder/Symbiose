@@ -47,7 +47,8 @@ namespace Symbiose
 	public readonly record struct FruitData(
 		int SegmentId,       // segment porteur (index dans Segments, best-effort)
 		float Maturite,      // 0→1 (mûr), >1.3 = sur-mûr/fermenté → teinte brune
-		float Masse);        // masse → taille du sprite
+		float Masse,         // masse d'UN fruit → taille du sprite (herbacées)
+		int Nombre = 1);     // fruits de la cohorte (verger ③, 0.6.9) ; absent = 1
 
 	// ---------------------------------------------------------------------------
 	// PLANT STRUCTURE — un spécimen exporté (DTO)
@@ -236,7 +237,8 @@ namespace Symbiose
 					ps.Fruits.Add(new FruitData(
 						LectureSnap.I(f, "segment"),
 						LectureSnap.F(f, "maturite"),
-						LectureSnap.F(f, "masse")));
+						LectureSnap.F(f, "masse"),
+						LectureSnap.A(f, "nombre") ? System.Math.Max(1, LectureSnap.I(f, "nombre")) : 1));
 				}
 			}
 			// Pont en delta (0.6.0) : segments déjà reconstitués par PontDelta en un
