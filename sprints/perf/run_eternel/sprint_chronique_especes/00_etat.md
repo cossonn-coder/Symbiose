@@ -2,18 +2,17 @@
 
 **Sujet** : outiller les runs longs (D127, Nico 2026-11-06 : « il faut s'outiller
 pour ») — savoir QUAND une espèce disparaît et DE QUOI.
-**Phase** : conception FIGÉE le 2026-11-06 (accord Nico), prête pour
-`/sprint-auto sprint_chronique_especes`. Conception :
+**Phase** : sprint **CLOS le 2026-11-06** (`/sprint-auto`, ①→④), F5 rapport C attendu. Conception :
 `docs/perf/run_eternel/conception_chronique_especes.md`. Golden `a10b7225…`
 INTACT sur tout le sprint ; pont 0.6.9 → 0.6.10 au ②.
 
 ## Tronçons
 | # | kickoff | état |
 |---|---|---|
-| ① | `01_causes_de_mort.md` — espèce + cause canonique des morts, carnet, aide, tests | FAIT 2026-11-06 (golden `a10b7225…` intact, non commité) |
-| ② | `02_chronique.md` — module serveur, `cmd_perf_report`, pont 0.6.10 | FAIT 2026-11-06 (golden `a10b7225…` intact, non commité) |
-| ③ | `03_outil_sans_ecran.md` — `tools/chronique_run.py` + run `verger_mur` 200 ans → D127 | FAIT 2026-11-06 (golden `a10b7225…` intact, non commité) |
-| ④ | `04_vue_rapport_c.md` — section `[chronique]` touche C, `dotnet build`, clôture | FAIT côté code 2026-11-06 (golden intact, build vert 0 avert., F5 attendu) ; clôture journal/DETTE/BACKLOG = orchestrateur |
+| ① | `01_causes_de_mort.md` — espèce + cause canonique des morts, carnet, aide, tests | FAIT `ca46b34` |
+| ② | `02_chronique.md` — module serveur, `cmd_perf_report`, pont 0.6.10 | FAIT `30e9a61` |
+| ③ | `03_outil_sans_ecran.md` — `tools/chronique_run.py` + run `verger_mur` 200 ans → D127 | FAIT `1ca5c9d` |
+| ④ | `04_vue_rapport_c.md` — section `[chronique]` touche C, `dotnet build`, clôture | FAIT `40f350a` (build vert, F5 attendu) |
 
 ## Constats vérifiés au code (2026-11-06)
 1. `tools/simserver/perf_annees.py` : `MAX_ANNEES = 60` → un run de 192 ans ne
@@ -162,6 +161,4 @@ Coût : ① nul dans le tick ; ② comptage O(N) par tick ≤ ~1 ms [estimation,
   registre des disparitions/retours).
 
 ## §REPRISE
-Lire ce fichier + D127 (`DETTE.md`). ①②③④ faits côté code. Reste : clôture du
-sprint (journal.md + entrée `journal/`, DETTE D127, BACKLOG, commit) par
-l'orchestrateur, puis F5 Nico (touche C).
+Sprint CLOS (journal 177). Reste : F5 Nico (touche C sur un run turbo `verger_mur` ≥ 10 ans) ; question écologique de la relève à l'ombre consignée dans D127, à concevoir à part.

@@ -219,6 +219,7 @@ pointeur ci-dessous. Ne plus écrire le contenu des entrées ici.
 - [2026-11-05 — Sprint **HOUPPIER** (D118) — CLOS côté code (①→⑤) : lianes sans fin de pousse, fruits des arbres, clé stable, gerbes, rameaux dérivés, limbes d'espèce ; golden `a10b7225…` intact, F5 attendu](journal/174_2026-11-05_sprint-houppier-CLOS.md)
 - [2026-11-06 — Sprint **VERGER VIVANT** (D129) — CLOS côté code (①→④) : bourgeons dormants, floraison réaliste, fruits par cohortes (pont 0.6.9), fleurs denses et pétales au sol ; golden `a10b7225…` intact, F5 attendu](journal/175_2026-11-06_sprint-verger-vivant-CLOS.md)
 - [2026-11-06 — Conception **CHRONIQUE DES ESPÈCES** (D127) — FIGÉE : outiller les runs longs (quand une espèce disparaît, et de quoi) ; bug carnet trouvé (toute mort ✗ lue « conflit », sans espèce) ; 4 tronçons, golden intact](journal/176_2026-11-06_conception-chronique-especes-FIGEE.md)
+- [2026-11-06 — Sprint **CHRONIQUE DES ESPÈCES** (D127) — CLOS (①→④) : causes de mort lues dans `[reason]` (fin du « conflit »), chronique serveur + rapport C (pont 0.6.10), `tools/chronique_run.py` ; run 200 ans : fruitiers éteints par vieillesse (an 32/41/103), relève morte à l'ombre ; golden `a10b7225…` intact, F5 attendu](journal/177_2026-11-06_sprint-chronique-especes-CLOS.md)
 
 > Tout le contenu détaillé est dans les fichiers liés ci-dessus
 > (`journal/` et `journal_archive/`). La dette est dans [`DETTE.md`](DETTE.md).
