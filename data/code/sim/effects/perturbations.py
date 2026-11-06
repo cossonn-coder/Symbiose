@@ -346,12 +346,40 @@ def drought_stress_damage(plant: PlantInstance, eco,
 SHADE_DAMAGE_THRESHOLD = 0.55  # shade_memory au-delà de laquelle le tissu souffre
 SHADE_DAMAGE_RATE      = 0.10  # probabilité de base (plafonnée par l'invariant sciaphile, §test_stress_chronique)
 
+# --- Banque de semis : le seuil d'ombre d'un LIGNEUX monte avec sa petitesse (D130 ①) ---
+# Point de compensation lumineux : la lumière sous laquelle une plante ne couvre
+# plus ses dépenses de respiration. Il MONTE avec la taille — un semis de 20 cm a
+# peu de tissus à entretenir (quelques feuilles, une racine pivot), un arbre de 6 m
+# entretient tronc, branches et racines. Un jeune ligneux sous couvert peut donc
+# VÉGÉTER des années (la « banque de semis » des forestiers) là où un grand de la
+# même espèce dépérirait. Ici : la `shade_memory` à partir de laquelle le tissu
+# souffre glisse de SEUIL_SEMIS (semis, ombre ~0,25 de lumière tenue) à
+# SHADE_DAMAGE_THRESHOLD (gaule de H_GAULE et plus). Pas de prime : c'est toujours
+# la lumière REÇUE qui décide (philo #2), seule la tolérance du tissu suit la
+# taille. La REPRISE à la trouée existe déjà : `growth_factor` (lumière intégrée)
+# règle la vitesse de `grow_plant` → le semis qui attendait repart quand la
+# lumière revient. Les herbacées gardent le seuil fixe (pas de banque de semis).
+H_GAULE     = 200.0   # cm — au-delà, plus d'avantage de semis [choix, calibré au ④]
+SEUIL_SEMIS = 0.75    # shade_memory de dégât d'un semis (lumière ~0,25) [choix, calibré au ④]
+
+
+def seuil_ombre(plant: PlantInstance) -> float:
+    """`shade_memory` au-delà de laquelle `plant` souffre de l'ombre.
+    Herbacée : SHADE_DAMAGE_THRESHOLD. Ligneux : de SEUIL_SEMIS (hauteur 0) à
+    SHADE_DAMAGE_THRESHOLD (hauteur ≥ H_GAULE), linéaire en la petitesse."""
+    cls = plant.plant_class
+    if not cls.ligneux:
+        return SHADE_DAMAGE_THRESHOLD
+    petitesse = min(1.0, max(0.0, 1.0 - cls.height_at(plant) / H_GAULE))
+    return SHADE_DAMAGE_THRESHOLD + (SEUIL_SEMIS - SHADE_DAMAGE_THRESHOLD) * petitesse
+
 
 def shade_stress_damage(plant: PlantInstance, eco,
                         seed: int, week: int) -> list[Mutation]:
     """
     Dégât de la carence lumineuse chronique (miroir de `drought_stress_damage`).
 
+        seuil    = seuil_ombre(plant)  (fixe pour une herbacée, plus haut pour un petit ligneux)
         sévérité = (shade_memory − seuil) / (1 − seuil)        [0,1] au-delà du seuil
         suscept. = 1 / (shade_tolerance_base × gene("tolerance_ombre"))
         effectif = SHADE_DAMAGE_RATE × sévérité × suscept.
@@ -363,13 +391,14 @@ def shade_stress_damage(plant: PlantInstance, eco,
     if not plant.is_alive:
         return []
     sm = plant.shade_memory
-    if sm <= SHADE_DAMAGE_THRESHOLD:
+    seuil = seuil_ombre(plant)   # monte avec la petitesse d'un ligneux (banque de semis)
+    if sm <= seuil:
         return []
     tol = (plant.plant_class.shade_tolerance_base()
            * plant.expressed_gene("tolerance_ombre"))
     if tol <= 0.0:
         return []
-    sev = (sm - SHADE_DAMAGE_THRESHOLD) / (1.0 - SHADE_DAMAGE_THRESHOLD)
+    sev = (sm - seuil) / (1.0 - seuil)
     p = SHADE_DAMAGE_RATE * sev / tol
     r, c = plant.position
     if _hash_noise(seed, week * 41, r, c) < p:

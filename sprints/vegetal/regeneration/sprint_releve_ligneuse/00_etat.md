@@ -90,12 +90,31 @@ Doc : `docs/vegetal/regeneration/conception_releve_ligneuse.md`. Golden
 
 | # | kickoff | état |
 |---|---|---|
-| ① | `01_banque_de_semis.md` — seuil d'ombre d'un ligneux monte avec la petitesse (`seuil_ombre`), signe `ombre` aligné | à faire |
+| ① | `01_banque_de_semis.md` — seuil d'ombre d'un ligneux monte avec la petitesse (`seuil_ombre`), signe `ombre` aligné | **fait** (golden `a10b7225…` intact) |
 | ② | `02_pose_coherente.md` — arbre : rayon de chute = couronne, seuil de pose = survie d'un semis | à faire |
 | ③ | `03_figuier_realiste.md` — graine fertile si climat du blastophage, rejets `drageon`, `_mature` d'arbre, voix | à faire |
 | ④ | `04_mesure_releve.md` — `tools/diag_releve.py`, verger_mur 200 ans, perf `full`, calibrage borné | à faire |
 | ⑤ | `05_vue_godot.md` — voix `attente` du semis, rejets visibles, `dotnet build`, F5 | à faire |
 
+## Tronçon 1 — fait (2026-11-06)
+- `sim/effects/perturbations.py` : `H_GAULE` 200 cm, `SEUIL_SEMIS` 0,75,
+  `seuil_ombre(plant)` (herbacée 0,55 ; ligneux : 0,75 → 0,55 linéaire en la
+  hauteur `height_at`) ; `shade_stress_damage` l'utilise (seuil + sévérité).
+- `sim/semiologie.py` : signe `ombre` rampe de `seuil_ombre(plant)` à 1.
+- Test neuf `tests/test_banque_semis.py` (a/b/c verts). Contre-factuel : avec
+  l'ancien seuil 0,55 le pommier à lumière 0,35 meurt S153 ; avec `seuil_ombre`
+  il vit 5 ans.
+- **Point pour le ④** [labo, lumière imposée, n=1 run, VM] : à lumière 0,35 le
+  semis POUSSE (~28 cm/an, `growth_factor`) ; `shade_memory` d'été plafonne à 0,64
+  et le seuil le rejoint vers ~130 cm (an 5, vitalité 0,20 en fin d'an 5) → à
+  0,35 constant la banque est un SURSIS (~6 ans), pas une attente indéfinie.
+  L'ombre fait donc pousser le semis jusqu'à sa propre mort : à trancher au
+  calibrage (`H_GAULE`, ou croissance freinée sous ombre).
+- La dormance hivernale fait redescendre `shade_memory` (−0,05/sem,
+  `mortalite.py`) : le test lit le MAX de saison, pas l'état final.
+- Golden `a10b7225…` inchangé ; `test_stress_chronique`, `test_signes`,
+  `test_signes_legende`, `test_plasticite` verts. C# non concerné.
+
 ## §REPRISE
 Exécution : `/sprint-auto sprint_releve_ligneuse`. Prochain tronçon = le premier
-« à faire » du tableau. Chaque tronçon met à jour sa ligne + un § « Tronçon N — fait ».
+« à faire » du tableau (② `02_pose_coherente.md` au 2026-11-06). Chaque tronçon met à jour sa ligne + un § « Tronçon N — fait ».

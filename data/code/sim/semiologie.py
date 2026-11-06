@@ -44,7 +44,7 @@ from fields.ecofields import (CHLOROSE_PH, SEUIL_ACIDOPHILE, PH_MAX,
 #   DROUGHT_DAMAGE_THRESHOLD — drought_memory au-delà de laquelle le tissu souffre
 #   HERBIVORY_GAIN — gain densité→pression, sert à exprimer le floor du détecteur
 from sim.effects.perturbations import (DROUGHT_DAMAGE_THRESHOLD, HERBIVORY_GAIN,
-                                       SHADE_DAMAGE_THRESHOLD)
+                                       seuil_ombre)
 # Bornes de la dynamique d'expression plastique (plasticité ①) : le signe
 # d'acclimatation rampe de EXPR_MIN (génotype nu, pas d'endurcissement) à
 # EXPR_MAX (durcissement maximal) — DRY, pas de nombre dupliqué.
@@ -108,11 +108,13 @@ def ombre(plant, eco, saison) -> float:
     """Carence lumineuse chronique : étiolement — limbe pâle, tiges filées, port
     avachi vers le peu de lumière. Miroir de `shade_stress_damage` — même
     `shade_memory` (intégration lente de l'ombre vécue) et même seuil
-    SHADE_DAMAGE_THRESHOLD : le signe apparaît quand une ombre INSTALLÉE (pas un
+    `seuil_ombre(plant)` : le signe apparaît quand une ombre INSTALLÉE (pas un
     passage nuageux) commence à abîmer le tissu. Plein à mémoire d'ombre saturée.
     Un sciaphile n'en souffrant pas dans le moteur, le signe traduit le DÉGÂT réel
-    (suscept. = 1/tolérance) — c'est l'héliophile mal placé qu'on voit s'étioler."""
-    return _ramp(plant.shade_memory, SHADE_DAMAGE_THRESHOLD, 1.0)
+    (suscept. = 1/tolérance) — c'est l'héliophile mal placé qu'on voit s'étioler.
+    Banque de semis (D130 ①) : un petit ligneux a un seuil plus haut → le semis
+    qui ATTEND sous couvert ne montre pas de souffrance tant qu'il ne meurt pas."""
+    return _ramp(plant.shade_memory, seuil_ombre(plant), 1.0)
 
 
 def asphyxie(plant, eco, saison) -> float:
