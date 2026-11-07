@@ -93,7 +93,7 @@ Doc : `docs/vegetal/regeneration/conception_releve_ligneuse.md`. Golden
 | ① | `01_banque_de_semis.md` — seuil d'ombre d'un ligneux monte avec la petitesse (`seuil_ombre`), signe `ombre` aligné | **fait** (golden `a10b7225…` intact) |
 | ② | `02_pose_coherente.md` — arbre : rayon de chute = couronne, seuil de pose = survie d'un semis | **fait** (golden `a10b7225…` intact) |
 | ③ | `03_figuier_realiste.md` — graine fertile si climat du blastophage, rejets `drageon`, `_mature` d'arbre, voix | **fait** (golden `a10b7225…` intact) |
-| ④ | `04_mesure_releve.md` — `tools/diag_releve.py`, verger_mur 200 ans, perf `full`, calibrage borné | à faire |
+| ④ | `04_mesure_releve.md` — `tools/diag_releve.py`, verger_mur 200 ans, perf `full`, calibrage borné | **fait** — remplacement OK, **fourré de figuiers RATÉ** (hors bornes, décision Nico) ; golden `a10b7225…` intact |
 | ⑤ | `05_vue_godot.md` — voix `attente` du semis, rejets visibles, `dotnet build`, F5 | à faire |
 
 ## Tronçon 1 — fait (2026-11-06)
@@ -158,6 +158,53 @@ Doc : `docs/vegetal/regeneration/conception_releve_ligneuse.md`. Golden
   `test_phototropisme`, `test_quatre_feuilles`, `test_stress_chronique`,
   `test_encyclopedie`, `test_carnet`, `bancs.test_verger_mur` verts. C# non concerné.
 
+## Tronçon 4 — fait (2026-11-07)
+- Outil gardé : `data/code/tools/diag_releve.py` (suivi par `id(p)` des ligneux,
+  voie graine/ramet lue au log, cause de mort appariée comme la chronique, relevé
+  toutes les 13 sem, fourré = ligneux < `H_GAULE` sous la couronne d'un adulte).
+  Se greffe sur `Chronique.apres_tick` car `cmd_step_week` vide le log en place.
+- **verger_mur, seed 42, 200 ans, valeurs ①** (`H_GAULE` 200, `SEUIL_SEMIS` 0,75)
+  [n=1 run, VM] :
+  | espèce | fondateurs | recrues | recrues mûres | remplacement | vivants an 200 |
+  |---|---|---|---|---|---|
+  | cerisier | 1 | 58 graine | 53 | 53 [n=1 run] | 6 |
+  | pommier | 1 | 36 graine | 31 | 31 [n=1 run] | **0** (dernier mort sem 9521) |
+  | noyer | 2 | 32 graine | 14 | 7 [n=1 run] | 2 |
+  | figuier | 1 | 9 169 ramets | 2 900 | ≥ 1 rejet mûr ✓ | 342 |
+  Recrues mûres à ~5 ans (pommier, cerisier), 15 ans (noyer) [méd., n=1 run].
+  Le cerisier (0 recrue au run D127) a 58 recrues : le point connu est levé par ②.
+- **Critère remplacement ≥ 1 : ATTEINT** pour les 3 espèces à graine fertile et le
+  figuier. Le sursis ~6 ans du ① ne bloque pas : la pose au plot le plus lumineux
+  dans la couronne + 1 plot trouve assez de lumière.
+- **Critère fourré ≤ 10 : RATÉ, à cause du figuier** : fourré max 193 petits
+  ligneux sous une couronne de figuier (sem 7449) [n=1 run]. Les rejets `drageon`
+  du ③ envahissent le verger : 25 figuiers à l'an 20, 273 à l'an 100, 342 à l'an
+  200, jusqu'à 15 m du fondateur ; 1 573 rejets nés à moins de 3 m du pommier
+  fondateur ; population ligneuse 350 à l'an 200 (contre 5 au départ) [n=1 run].
+  Le pommier s'éteint en an 183 (dernière recrue, sénescence) dans le verger envahi.
+  Sans le figuier, le fourré de SEMIS reste petit : ≤ 4 semis-graine < 200 cm à
+  moins de 300 cm d'un adulte non-figuier [approx. hors outil : rayon fixe 300 cm
+  au lieu de la couronne, relevé toutes les 117 sem, n=1 run].
+- **Calibrage** (3 runs parallèles, mêmes seed et durée) [n=1 run chacun, VM] :
+  `H_GAULE` 400 : pommier éteint sem 5595, noyer éteint sem 10194, fourré figuier
+  221, 555 ligneux à l'an 200. `H_GAULE` 400 + `SEUIL_SEMIS` 0,85 : pommier éteint
+  sem 5859, fourré 356, 806 ligneux. Plus de survie de semis = plus de rejets de
+  figuier survivants = pire. **Valeurs ① conservées** (aucune constante modifiée).
+  Le fourré ne dépend pas de ces deux leviers : il vient de la cadence et de la
+  portée des rejets (`sim/clonal.py`, `Fig.clonal_radius_cm`), hors des bornes du ④.
+- **Perf `full`** tick médian an 3/4/5 : avant (worktree `d676989`) 932/925/877 ms,
+  après 897/896/858 ms, soit −2 à −4 % [seed 42, n=1 run par côté lancés en
+  parallèle, VM, charge ~1-4] → critère ≤ +10 % tenu. Le `verger_mur` 200 ans, lui,
+  a coûté 198 min [n=1 run, VM, 3 runs parallèles] contre ~90 min prévues : effet
+  de la population de figuiers.
+- **Décision pour Nico** (reliquat D130) : freiner les rejets du figuier
+  (cadence, portée, gate de densité, ou mortalité des rejets sous la mère) — sort
+  des bornes autorisées du ④ ; à trancher en conception. Autres constats à lire :
+  les 2 noyers fondateurs meurent d'ombre (sem 2899 et 3869) ; ombre = 1ʳᵉ cause de
+  mort des recrues de toutes les espèces.
+- Golden `a10b7225…` inchangé ; `test_banque_semis`, `test_figuier_realiste`,
+  `test_stress_chronique`, `bancs.test_verger_mur` verts. C# non concerné.
+
 ## §REPRISE
 Exécution : `/sprint-auto sprint_releve_ligneuse`. Prochain tronçon = le premier
-« à faire » du tableau (④ `04_mesure_releve.md` au 2026-11-06). Chaque tronçon met à jour sa ligne + un § « Tronçon N — fait ».
+« à faire » du tableau (⑤ `05_vue_godot.md` au 2026-11-07). Fourré de figuiers (④) = décision Nico, en reliquat de D130. Chaque tronçon met à jour sa ligne + un § « Tronçon N — fait ».
