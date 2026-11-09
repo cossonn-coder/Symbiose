@@ -25,6 +25,7 @@ from fields.noise import _hash_noise, stable_str_hash
 from fields.ecofields.constants import ALLELO_GERM_K
 from fields.population import build_pollinator_registry, est_peinte
 from sim import semiologie as S
+from sim.effects.perturbations import seuil_ombre
 from sim.nutrition_plante import nutrition_plante, NUTRITION_PLANCHER
 from sim.voix_etres_corpus import (PLANTE, BETE, CHAMPIGNON, NUTRIMENTS, FAMILLES_FR,
                                    NOMS_BETES, BETES_HYGROPHILES)
@@ -97,9 +98,14 @@ def besoins_plante(plant, tile, eco, saison, ctx: dict | None = None) -> list[tu
            (S.ravageurs(plant, eco, saison), "ravageurs", {})]
     ombre = _ramp(plant.shade_memory, 0.2, 0.8)
     if ombre >= SEUIL_DIRE:
+        # Relève ligneuse (D130) : un ligneux ombragé SOUS son `seuil_ombre` ne souffre
+        # pas encore — il attend une trouée (banque de semis). Au-delà, il souffre :
+        # `ombre` comme avant. Une herbacée n'attend pas : toujours `ombre`.
+        theme = ("attente" if plant.plant_class.ligneux
+                 and plant.shade_memory <= seuil_ombre(plant) else "ombre")
         voisin = _ombreur(plant, ctx)
-        out.append((ombre, "ombre", {"voisin": voisin}) if voisin
-                   else (ombre, "ombre_anonyme", {}))
+        out.append((ombre, theme, {"voisin": voisin}) if voisin
+                   else (ombre, theme + "_anonyme", {}))
     # Sol : UNE source de vérité avec la croissance (D120 ③) — le facteur de nutrition
     # qui escompte vraiment sa cible (Liebig relatif à la roche, poids du stade, sans N
     # pour une carnivore, P mycorhizé) et le nutriment limitant de ce même calcul.

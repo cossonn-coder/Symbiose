@@ -2,7 +2,7 @@
 
 **Sujet** : la relève des arbres meurt toujours à l'ombre de ses parents (D130,
 Nico 2026-11-06, après la chronique 200 ans de D127).
-**Phase** : conception FIGÉE le 2026-11-06, prêt pour `/sprint-auto`.
+**Phase** : **CLOS** le 2026-11-09 — ①-④ faits ici, ⑤ absorbé et fait par `sprint_frein_rejets_figuier` ⑤.
 
 ## Constats vérifiés au code (2026-11-06)
 1. Recrutement direct ligneux = `MortaliteMixin._reproduction`
@@ -94,7 +94,7 @@ Doc : `docs/vegetal/regeneration/conception_releve_ligneuse.md`. Golden
 | ② | `02_pose_coherente.md` — arbre : rayon de chute = couronne, seuil de pose = survie d'un semis | **fait** (golden `a10b7225…` intact) |
 | ③ | `03_figuier_realiste.md` — graine fertile si climat du blastophage, rejets `drageon`, `_mature` d'arbre, voix | **fait** (golden `a10b7225…` intact) |
 | ④ | `04_mesure_releve.md` — `tools/diag_releve.py`, verger_mur 200 ans, perf `full`, calibrage borné | **fait** — remplacement OK, **fourré de figuiers RATÉ** (hors bornes, décision Nico) ; golden `a10b7225…` intact |
-| ⑤ | `05_vue_godot.md` — voix `attente` du semis, rejets visibles, `dotnet build`, F5 | **absorbé** par `sprint_frein_rejets_figuier` ⑤ (décision Nico 2026-11-09) — ne pas lancer ici |
+| ⑤ | `05_vue_godot.md` — voix `attente` du semis, rejets visibles, `dotnet build`, F5 | **absorbé** par `sprint_frein_rejets_figuier` ⑤ (décision Nico 2026-11-09) — **fait** là-bas le 2026-11-09 |
 
 ## Tronçon 1 — fait (2026-11-06)
 - `sim/effects/perturbations.py` : `H_GAULE` 200 cm, `SEUIL_SEMIS` 0,75,

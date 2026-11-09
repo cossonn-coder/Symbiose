@@ -1,6 +1,6 @@
 # sprint_frein_rejets_figuier — état (reliquat D130 : rejets de souche)
 
-**Phase** : conception FIGÉE le 2026-11-09 (OK Nico), prêt pour `/sprint-auto`.
+**Phase** : **CLOS côté code** le 2026-11-09 (①→⑤) — reste F5 Nico (§Tronçon 5).
 Doc : `docs/vegetal/regeneration/conception_rejets_de_souche.md`.
 Golden `a10b7225…` **INCHANGÉ** attendu sur les 5 tronçons.
 
@@ -32,7 +32,7 @@ Golden `a10b7225…` **INCHANGÉ** attendu sur les 5 tronçons.
 | ② | `02_souche_a_la_mort.md` — trait `rejet_souche`, souche vivante, rejets à la mort, figuier sans drageon | **fait** 2026-11-09 |
 | ③ | `03_perte_de_couronne.md` — mémoire `perte_couronne`, rejets d'un arbre vivant (taille = recépage) | **fait** 2026-11-09 |
 | ④ | `04_voix_et_mesure.md` — événement, carnet, encyclopédie, `diag_releve` voie `rejet`, 200 ans | **fait** 2026-11-09 — 3 critères tenus |
-| ⑤ | `05_vue_godot.md` — voix `attente` (relève ⑤) + rejets visibles, `dotnet build`, F5, clôture D130 | à faire |
+| ⑤ | `05_vue_godot.md` — voix `attente` (relève ⑤) + rejets visibles, `dotnet build`, F5, clôture D130 | **fait** 2026-11-09 — F5 attendu |
 
 ## Tronçon 1 — fait (2026-11-09)
 - `sim/clonal.py::emettre_ramets` : retour immédiat si `saison_de(wiy_de(week))
@@ -144,6 +144,35 @@ Golden `a10b7225…` **INCHANGÉ** attendu sur les 5 tronçons.
   91/91, `test_journal`, `test_pages`, `test_figuier_realiste`, `test_dormance_clonale`.
   Tailles : `sim/evenements.py` 211 LDC, `sim/carnet.py` 239, `diag_releve` 165.
 
+## Tronçon 5 — fait (2026-11-09)
+- **Voix `attente`** (`sim/voix_etres.py::besoins_plante`) : un ligneux ombragé dont
+  `shade_memory` ≤ `seuil_ombre(plant)` dit `attente` au lieu de `ombre` (même
+  intensité, même rampe 0,2→0,8) ; au-delà du seuil → `ombre` ; herbacée → `ombre`.
+  Import `sim.effects.perturbations.seuil_ombre` (même couche `sim`, pas de cycle :
+  rien dans `sim.effects` n'importe `voix_etres`). **Écart** : `attente_anonyme` ajouté
+  (sans ombreur identifié, sinon le gabarit `{voisin}` manquait) — miroir de
+  `ombre_anonyme`. Corpus : 2 thèmes × 2 variantes (`sim/voix_etres_corpus.py`).
+  Note : la règle vaut pour tout ligneux, pas seulement les semis (un grand arbre
+  ombragé sous 0,55 dit aussi qu'il attend une trouée) — conforme au kickoff.
+- **Voix d'un rejet** : `voix_etres` n'a AUCUN thème d'origine/naissance (que des
+  besoins mesurés) et l'instance ne garde pas sa voie de naissance → rien inventé.
+- **Rendu** : un rejet = `tile.add_plant` (clone), sérialisé par la même boucle
+  `tile.plants` que toute plante (`tools/simserver/serialize.py`), aucun filtre
+  ramet/clone côté pont ni C# → **aucun code C#**. Pont **inchangé** (aucun champ
+  du snapshot ne bouge, pas de bump).
+- Test neuf `tests/test_voix_attente.py` 10/10 (hauteurs posées dans le contexte :
+  un arbre non poussé mesure ~1 cm). Verts : `test_sim_server` 322/322,
+  `test_mare_vivante` 14/14, `test_infobulle_vivant` 31/31, `test_vision` 38/38,
+  `test_rejets_souche`. Golden `a10b7225…` **INCHANGÉ**. `dotnet build` vert (0 erreur).
+  Tailles : `voix_etres.py` 145 LDC, corpus 74.
+- Clôture faite : `DETTE.md` D130 « code fait, reste F5 » + reliquat chiffré (figuier
+  et pommier éteints ~an 173-176, à trancher par Nico) ; `BACKLOG.md` ; relève → CLOS.
+  **Reste à l'orchestrateur** : entrée `journal/` + index `journal.md`, commit.
+- **F5 Nico** : (1) turbo `verger_mur` : plus de colonie de figuiers, le figuier
+  reste seul ; (2) tailler sévèrement le figuier → au printemps, quelques rejets au
+  pied ; (3) mort d'un fruitier âgé → rejets au pied du squelette (sauf sapin et
+  arbre mort d'ombre) ; (4) survoler un jeune arbre sous un fruitier → « j'attends… ».
+
 ## §REPRISE
-Exécution : `/sprint-auto sprint_frein_rejets_figuier`. Prochain tronçon = le
-premier « à faire » (⑤ `05_vue_godot.md` ; l'événement `rejet` du ④ porte la position de l'ARBRE). Chaque tronçon met à jour sa ligne + un § « Tronçon N — fait ».
+Sprint CLOS côté code. Reste : F5 Nico (§Tronçon 5) ; le reliquat D130 (extinction
+figuier/pommier vers l'an 173-176) est à trancher par Nico. Suite : D42 (dispersion animale).

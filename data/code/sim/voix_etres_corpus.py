@@ -25,6 +25,11 @@ PLANTE: dict[str, tuple[str, ...]] = {
               "Je vis à l'ombre ; {voisin} me la porte. Mes feuilles pâlissent."),
     "ombre_anonyme": ("Quelque chose me cache le soleil. Je file, je m'épuise.",
                       "La lumière ne m'arrive qu'en miettes. J'en voudrais plus."),
+    # Ligneux ombragé sous son seuil de dégât (relève ligneuse, D130) : il attend.
+    "attente": ("J'attends sous {voisin}. Je pousse à peine ; qu'une trouée s'ouvre et je partirai.",
+                "{voisin} me tient à l'ombre. Je garde mes forces et j'attends mon heure."),
+    "attente_anonyme": ("J'attends à l'ombre. Je pousse à peine ; qu'une trouée s'ouvre et je partirai.",
+                        "La lumière ne me vient qu'en miettes. Je garde mes forces et j'attends."),
     "faim": ("Il me manque {nutriment}. Le reste du sol ne sert à rien sans lui.",
              "Je cherche {nutriment} sous moi, il n'y en a presque plus."),
     "ph": ("Ce sol est trop {sens} pour moi ; ce que j'y bois me nourrit mal.",
