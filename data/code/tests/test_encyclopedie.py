@@ -128,8 +128,9 @@ def test_alignement_cles():
     sans_fiche = [k for k in cat if k not in FICHES]
     check("toutes les espèces catalogue ont une fiche",
           sans_fiche == [], f"muettes : {sans_fiche}")
-    # 48 depuis le sprint PÉRIPHÉRIE ⑥ (ajout du saule, décision D-5).
-    check("corpus = 51 fiches", len(FICHES) == 51, f"{len(FICHES)}")
+    # 48 depuis le sprint PÉRIPHÉRIE ⑥ (ajout du saule, décision D-5) ; 52 depuis
+    # ZOOCHORIE ③ (ajout du noisetier).
+    check("corpus = 52 fiches", len(FICHES) == 52, f"{len(FICHES)}")
 
 
 # ---------------------------------------------------------------------------

@@ -14,7 +14,7 @@ from plants.species import (Tomato, Pepper, Bean, Clover, Sunflower, Basil,
                             Molene, Dactyle, FetuqueRouge, PlantainLanceole)
 from plants.perennials import (Fig, AppleTree, CherryTree, WalnutTree, OakTree,
                                FirTree, BeechTree, BirchTree, HornbeamTree, Alder,
-                               Willow)
+                               Willow, HazelTree)
 
 
 PLANT_CATALOGUE: dict[str, type] = {
@@ -145,4 +145,7 @@ PERENNIAL_CATALOGUE: dict[str, type] = {
     # (Salicaceae NEUVE) : rejette de souche, se bouture seul, ripisylve, et fleurit
     # avant de feuiller (1ʳᵉ table des butineurs). Incarne le geste `eteter`.
     "saule":    Willow,
+    # Arbuste des CACHES (sprint ZOOCHORIE ③, D42) — Noisetier (Betulaceae) : cépée de
+    # taillis, chatons précoces, noisettes traçables que geai, écureuil et mulot cachent.
+    "noisetier": HazelTree,
 }

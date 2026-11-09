@@ -61,7 +61,7 @@ Golden de départ `a10b7225…` ; **re-figé au ⑥ seulement** (mulot → rapac
 |---|---|---|---|
 | ① | `01_grain_sauvage.md` — `GrainEnAttente` sauvage : dormance, péremption, plafond | inchangé | **fait** 2026-11-09 |
 | ② | `02_chute_unifiee.md` — fruit tombé → grains ; `_reproduction` coupée pour les fruitiers pérennes ; chêne/hêtre fruitiers ; glandée ; recalibrage relève | inchangé | **fait** 2026-11-09 |
-| ③ | `03_noisetier.md` — espèce neuve + 5 voix | inchangé | à faire |
+| ③ | `03_noisetier.md` — espèce neuve + 5 voix | inchangé | **fait** 2026-11-09 |
 | ④ | `04_merle_perchoirs.md` — `sim/zoochorie.py`, prise saturante, grille perchoir, tampon monde, geste `poser_perchoir` | inchangé | à faire |
 | ⑤ | `05_geai_ecureuil.md` — 2 guildes `disperseur`, caches + oubli, apport ceinture | inchangé | à faire |
 | ⑥ | `06_mulot.md` — guilde, prédation saturante des grains, caches ; proie rapace/couleuvre | **RE-FIGÉ annoncé** | à faire |
@@ -120,7 +120,36 @@ pondéré par plot sur une grille « perchoir » (couronnes ligneuses) déjà co
   0,6 → 2,9 pendant la mesure].
 - LDC : decompo 177, reproduction 82, mortalite 257, familles 294, forestiers 161 (🟢).
 
+## Tronçon 3 — fait (2026-11-09)
+- `HazelTree` dans `plants/perennials/forestiers.py` (199 LDC 🟢, section « arbuste de
+  haie »), clé catalogue `"noisetier"`, ré-export `plants.perennials`, ajouté aux bancs
+  `houppiers` (12ᵉ place (27,35)) et `foret_ports`. Betulaceae, cépée approchée par
+  `buissonnant` (pas d'archétype multi-tiges, mono-collet comme le figuier),
+  `rejet_souche` 0,9, `maturity_years` 8, `glandee_periode_ans` 2, `fruits_par_site` 25
+  (~40-45 sites à 10 ans [1 forme par banc]), 0,006, maturation 18 sem.
+- **Prémisse réfutée — chatons en février impossibles** : wiy 1 = équinoxe et le forçage
+  floral (`gdd_accum`) repart à 0 à wiy 1 → aucune espèce ne fleurit avant fin mars.
+  Retenu : `bloom_forcing_gdd` 1,0 → chatons wiy 1 (saule wiy 3) [seed 42]. Février
+  demanderait de faire courir le forçage d'une année sur l'autre (mécanisme neuf) :
+  reliquat pour ⑧/F5, pas de dette ouverte.
+- **Pollen précoce aux butineurs** : aucun canal par espèce (`pollen_vibre` = par
+  famille, bourdon seul ; brancher Betulaceae toucherait bouleau/charme du monde `full`)
+  → non branché, noté dans la docstring.
+- **Événements** : nouaison et abscission couvertes ; la floraison n'a pas de marqueur
+  par plante (TODO(voix) existant d'`evenements.py`) et la ligne `Chute fruit` n'est pas
+  parsée → à poser au ⑦ avec `dispersion`. Carnet : `CONCEPT_DE` indexé par (kind, cause),
+  rien à ajouter. Signes et voix des êtres non indexés par espèce. Magazine : automatique
+  (famille Betulaceae + fiche).
+- Voix : fiche encyclopédique 3 niveaux (`ligneux.py`, test corpus 51 → 52), page P50
+  « La baguette de coudrier » (voix C, concept `eau`).
+- Effet en jeu (2 pieds de 10 ans, 2,5 ans, [1 scénario seed 42]) : nouaisons 182 /
+  691 / 48 fruits (glandée maigre-forte-maigre), noisettes tombées wiy 28 (~début oct.),
+  1 semis de noisetier levé l'an 2.
+- Tests : `test_noisetier` 4/4 ; encyclopedie 70/70, carnet 19/19, evenements 46/46,
+  pages 77/77, croissance 134/134, magazine, peripherie_voix, chute_seme, grain_sauvage
+  verts. Golden `a10b7225…` INCHANGÉ.
+
 ## §REPRISE
-Prochain : ③ `03_noisetier.md` (noisetier : `glandee_periode_ans ≈ 2`, fruitier → unifié d'office). Lire `CLAUDE.md`, ce fichier, le doc de conception, puis le premier kickoff « à
+Prochain : ④ `04_merle_perchoirs.md`. Le noisetier (clé `"noisetier"`) existe pour le geai/écureuil du ⑤. Lire `CLAUDE.md`, ce fichier, le doc de conception, puis le premier kickoff « à
 faire » du tableau. Chaque tronçon met à jour sa ligne + une section « Tronçon N —
 fait » courte (constats chiffrés avec leur limite entre crochets).

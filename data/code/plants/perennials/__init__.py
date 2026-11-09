@@ -18,5 +18,5 @@ génétique/reproduction, pas ici.
 from plants.perennials.base import PerennialWoody
 from plants.perennials.fruitiers import Fig, AppleTree, CherryTree, WalnutTree
 from plants.perennials.forestiers import (OakTree, BeechTree, BirchTree,
-                                          HornbeamTree, FirTree)
+                                          HornbeamTree, FirTree, HazelTree)
 from plants.perennials.rives import Alder, Willow

@@ -424,11 +424,23 @@ _ENTREES = [
      "dans le missel pour les autres. Il n'en vient jamais deux au même endroit : j'ai "
      "retourné dix fois le pied de celui que j'avais trouvé, l'année d'après il n'y "
      "avait que des trois. Ne le cherche pas. Quand tu l'as, baisse-toi, et remercie."),
+
+    # Noisetier (sprint ZOOCHORIE ③) : le coudrier des sourciers, savoir paysan.
+    ("P50", "C", "eau", 3, "hasard",
+     "Le sourcier de chez nous coupait sa baguette dans le coudrier, jamais ailleurs : "
+     "une fourche de l'année, prise au levant, avant que la sève monte. Il la tenait "
+     "les paumes en l'air, les coudes au corps, et marchait le pré à pas comptés. Là "
+     "où la pointe plongeait, il plantait un piquet, et le puisatier creusait. Mon père "
+     "disait que c'était le bois qui savait, pas l'homme ; ma mère, que l'homme "
+     "regardait surtout où poussaient les joncs. Toujours est-il que le noisetier aime "
+     "les pieds frais, et qu'on trouve de l'eau plus souvent sous une haie de coudriers "
+     "que sous une lande d'ajoncs."),
 ]
 
 # Titres recopiés du doc §7 (gras de chaque entrée), indexés par id — gardés à
 # part pour ne pas alourdir le tuple éditorial et rester relisibles.
 _TITRES = {
+    "P50": "La baguette de coudrier",
     "P48": "L'herbe aux cinq coutures",
     "P49": "Celui qu'on ne cherche pas",
     "P01": "Ne rien faire est le travail le plus difficile",

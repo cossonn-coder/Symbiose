@@ -34,7 +34,8 @@ from sim.growth import grow_plant
 from fields import init_eco
 from plants import AppleTree
 from plants.perennials import (Fig, CherryTree, WalnutTree, OakTree, BeechTree,
-                               BirchTree, HornbeamTree, FirTree, Alder, Willow)
+                               BirchTree, HornbeamTree, FirTree, Alder, Willow,
+                               HazelTree)
 from .base import monde
 
 # Années de morphogénèse déroulées à l'init pour bâtir la couronne. À ~15 ans la
@@ -112,7 +113,7 @@ def build_and_grow():
 # Les 10 ports, dans l'ordre de lecture (grille 5×2) : rangée haute = feuillus
 # étalés migrés en T1 + pommier témoin ; rangée basse = atypiques T2/T3.
 FORET_PORTS = [AppleTree, CherryTree, HornbeamTree, BeechTree, WalnutTree,
-               OakTree, Alder, Fig, FirTree, BirchTree, Willow]
+               OakTree, Alder, Fig, FirTree, BirchTree, Willow, HazelTree]
 # Graine de forme FIXE : la ramification hash-based (form_seed) en dérive → forêt
 # reproductible d'un lancement à l'autre (philo #3).
 FORET_SEED = 20260724
@@ -128,7 +129,7 @@ FORET_MARGE = 5          # plots de marge sur les bords
 
 
 def foret_ports():
-    """Banc « forêt de ports » (D91 ④) : les 11 arbres procéduraux (pommier + les
+    """Banc « forêt de ports » (D91 ④) : les 12 ligneux procéduraux (pommier + noisetier + les
     10 migrés) déroulés `FORET_WARMUP_ANS` ans de morphogénèse PURE, espacés en
     grille sur une tuile fertile, pour observer chaque PORT à maturité. Instrument
     F5 : oracle visuel = l'œil de Nico (flèche, étalé, pleureur, buissonnant…).

@@ -1,6 +1,7 @@
 """
 SYMBIOSE — plants/perennials/forestiers.py
-Les arbres de forêt : chêne, hêtre, bouleau, charme, sapin.
+Les arbres de forêt : chêne, hêtre, bouleau, charme, sapin ; et le noisetier
+(arbuste de haie et de sous-bois, zoochorie ③).
 """
 
 from __future__ import annotations
@@ -198,6 +199,81 @@ class HornbeamTree(PerennialWoody):
     max_height_cm       = 1200.0
     max_extent_cm       = 500.0
     foliage_halfwidth   = 60.0      # ovoïde ~220, porté par les branches
+
+
+# ---------------------------------------------------------------------------
+# ARBUSTE DE HAIE ET DE SOUS-BOIS (sprint ZOOCHORIE ③, D42) — l'espèce des caches
+# d'écureuil, de mulot et de geai. Ajout « le catalogue grandit avec les idées ».
+# ---------------------------------------------------------------------------
+
+class HazelTree(PerennialWoody):
+    """
+    Corylus avellana — Noisetier, coudrier (Betulaceae, comme le bouleau et le
+    charme). Arbuste en CÉPÉE de 4-6 m, des lisières et des sous-bois clairs.
+    Trois signatures, toutes portées par des leviers existants :
+
+      • TAILLIS — `rejet_souche` fort : recépé tous les 7-10 ans, il repart de souche
+        (la souche vit bien plus longtemps que les tiges).
+      • CHATONS PRÉCOCES — anémophile, il fleurit le premier de l'année. Limite du
+        moteur : le forçage floral repart à 0 à l'équinoxe (wiy 1, `floraison.py`),
+        donc AUCUNE espèce ne peut fleurir avant fin mars ; seuil minimal → il ouvre
+        dès la 1ʳᵉ semaine du printemps (le réel : février). Pas de nectar ; le pollen
+        offert aux butineurs n'a pas de canal par espèce au moteur (≠ `pollen_vibre`,
+        par famille et réservé au bourdon) → noté, pas inventé.
+      • NOISETTES traçables (`fruitier`) : nourriture du geai, de l'écureuil, du mulot
+        (disperseurs ④-⑥) ; tombées, elles sèment (`recrue_par_fruits`, unifié ②).
+    HORS scénario smoke et hors `full` → golden NEUTRE.
+    """
+    family = "Betulaceae"
+    genus  = "Corylus"
+    name   = "Noisetier"
+    feuillage = "moyen"  # transpiration (D111 ①) : grandes feuilles rondes, molles
+    nectar = 0.0         # anémophile : aucun nectar (D111 ⑦)
+    shade_tolerance = 1.05  # D111 ②ter : semi-sciaphile (sous-bois clair, lisière) (≠ défaut 0,90)
+    rarity = "Établie"
+    keywords = ["Haie", "Lisière", "Taillis", "Noisettes"]
+    foliage_density = 0.70           # cépée feuillue, ombre assez dense en été
+    fragilite_bois = 1.0           # D111 ②bis : bois souple (on en tresse les gaules)
+    pollination_mode = "wind"        # chatons mâles au vent, fleurs femelles minuscules
+    pollination_radius_cm = 500.0
+    reproduction_rate = 0.08         # inerte : la relève passe par les noisettes (②)
+    # Chatons au tout début du printemps du moteur (cf. docstring). 1,0 °C·sem : franchi
+    # dès la 1ʳᵉ semaine douce après l'équinoxe ; un gène tardif (σ ≈ 0,1) le recule
+    # de ~2 sem. Le saule (4,0) ouvre juste après.
+    bloom_forcing_gdd = 1.0
+    bloom_duration = 3               # chatons qui pendent ~3 semaines [odg]
+    # NOISETTES traçables. Noisetier de haie : ~1-2 kg de noisettes une bonne année,
+    # soit ~1 000 fruits de ~1,5 g [odg] ; ~40-45 sites à 10 ans (bancs houppiers et
+    # foret_ports, [1 forme chacun]) → 25 par site (~1 100 fruits une année forte). Noisette ~1,5 g de MS
+    # (coque comprise) → 0,006 (1 unité ≈ 250 g de MS) [odg]. Nouaison à la fanaison des
+    # chatons (~wiy 4-5) ; 18 sem → mûre début septembre, tombée (×1,3) vers la mi-octobre.
+    fruitier = True
+    fruit_semaines_maturation = 18
+    fruits_par_site = 25
+    fruit_masse     = 0.006
+    graine_viabilite_ans = 1.0       # la noisette ne se garde pas : levée l'an suivant ou rien
+    glandee_periode_ans = 2.0        # alternance forte/maigre ~1 an sur 2 [odg]
+    longevity_years = 80             # les tiges ; la souche, recépée, bien plus
+    rejet_souche = 0.9       # souche ② (D130) : le taillis par excellence, recépé tous les 7-10 ans [ordre de grandeur]
+    maturity_years = 8
+    girth_max_cm = 8.0         # tige mûre ~8 cm (cépée de perches minces) ; placeholder → F5
+    age_curve = [(0, 30, 15), (5, 250, 120), (10, 400, 200),
+                 (20, 500, 250), (50, 550, 280), (80, 550, 280)]
+    # --- Croissance procédurale — cépée, approchée par `buissonnant` -----------------
+    # Pas d'archétype multi-tiges au moteur (MONO-COLLET, cf. figuier) : le port le plus
+    # proche est le BUISSONNANT du figuier — dominance apicale modérée, débourrement bas,
+    # couronne ouverte tôt. Gabarit 5 m × 2,5 m. Branches redressées (45°) : les perches
+    # d'une cépée montent droit. HORS golden.
+    procedural_growth     = True
+    port_archetype        = "buissonnant"
+    apical_dominance_base = 1.3
+    growth_speed          = 1.0
+    auxin_release_scale   = 400.0
+    branch_angle          = 45.0
+    max_height_cm         = 550.0
+    max_extent_cm         = 300.0
+    max_segments          = 90        # buissonnant ramifié (même borne que le figuier)
+    foliage_halfwidth     = 70.0
 
 
 # ---------------------------------------------------------------------------

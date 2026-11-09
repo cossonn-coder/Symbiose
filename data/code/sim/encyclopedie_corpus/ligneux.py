@@ -98,6 +98,27 @@ FICHES_LIGNEUX: dict[str, dict[int, str]] = {
            "se décomposer et ses nombreux hôtes (insectes, champignons) amorcent le "
            "sol forestier. Arbre de lisière par excellence.",
     },
+    # Arbuste des caches (sprint ZOOCHORIE ③, D42). N1 = ce qu'on voit, le recépage et
+    # le rôle des noisettes oubliées ne viennent qu'aux niveaux suivants (philo #6).
+    "noisetier": {
+        1: "Arbuste en touffe de nombreuses tiges droites et lisses, brun-gris luisant, "
+           "grandes feuilles rondes et duveteuses ; en plein hiver, sur le bois nu, "
+           "pendent des chatons jaunes qui fument de pollen au moindre souffle.",
+        2: "Pérenne caduc de lisière et de sous-bois clair, il supporte une ombre "
+           "légère. Anémophile et le premier à fleurir de l'année : les chatons mâles "
+           "lâchent leur pollen au vent, qui le porte jusqu'aux fleurs femelles, "
+           "minuscules bourgeons d'où sortent quelques filaments rouges. Un pied seul "
+           "noue mal ; plusieurs pieds proches se fécondent. Les noisettes, vertes "
+           "dans leur collerette, mûrissent en septembre et tombent en octobre, "
+           "abondantes une année sur deux. Coupée au ras, la souche repart en gerbe.",
+        3: "Garde-manger de la faune : écureuil, mulot et geai récoltent les noisettes "
+           "et les cachent pour l'hiver ; celles qu'ils oublient lèvent au printemps, "
+           "loin du pied — ce sont ces étourderies qui plantent les haies. Recépé tous "
+           "les sept à dix ans, il donne des perches droites (piquets, vannerie, "
+           "claies) et repart plus dru : la souche vit des siècles quand les tiges ne "
+           "passent pas le demi-siècle. Ses chatons précoces sont aussi la première "
+           "manne de pollen des abeilles à la sortie de l'hiver.",
+    },
     "charme": {
         1: "Arbre moyen au tronc CANNELÉ, sinueux et « musclé », écorce grise lisse, "
            "feuilles ovales plissées et doublement dentées, fruits en grappes d'ailettes.",
