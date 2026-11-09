@@ -32,6 +32,7 @@ from sim.growth import (shade_tolerance_effective, branches_ombragees,
                         fenetre_ouverte)
 from sim.growth.constantes import CLADO_PAR_FENETRE
 from sim.growth.tige_libre import effondrer
+from sim.souche import noter_perte_couronne   # mémoire de perte de couronne (rejets ③)
 from .decompo import deposer_bois_tombe
 
 # --- Tempête (vent local × rafale × turbulence, même lecture que _wind_damage) ---
@@ -145,4 +146,7 @@ def mort_des_branches(tile, eco, saison: str, week: int, week_in_year: int,
                 log.append(f"    🪵 Branche morte ({cause}) {plant.name}@{plant.position}")
         if any(t for _, t in causes):
             plant.update_footprint()      # couronne amputée → empreinte à jour
+            # Rejets ③ : toutes causes de la semaine ensemble, rapportées au bois
+            # d'avant la semaine (restant + tombé) → la souche jugera au tick.
+            noter_perte_couronne(plant, [s for _, t in causes for s in t])
     return log

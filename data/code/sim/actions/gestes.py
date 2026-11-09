@@ -21,6 +21,7 @@ from sim.vigueur import spend, gain
 from sim.vigueur_plante import maturite, vigueur_plante, sante, qi_local   # facteurs partagés (mutualisés, pas dupliqués)
 from sim.growth import (atteindre_segment,   # seam de perturbation §F (sim→sim, pas de cycle : growth n'importe pas actions)
                         f_lignification, INTENSITE_PIED, SEUIL_DEGAT, COUPE_NETTE)  # calibrage écrasement (volet 2)
+from sim.souche import noter_perte_couronne   # taille sévère = recépage émergent (rejets ③)
 from sim.effects import deposer_mort   # mort → squelette persistant (②B), point d'entrée unique
 from fields.ecofields import BOIS_PAR_CM, ECRASER_FRAG_BOOST   # litière `bois` (taille/écimage) + boost fragmentation (②)
 from fields.ecofields.litiere import diam_pondere, BOIS_DIAM_DEFAUT   # grosseur du bois déposé (⑦bis)
@@ -327,6 +328,7 @@ def tailler(game_state: dict, player: str, plant, eco, *, cible: str = "apex",
         seg_id = _segment_cible(plant, cible)
     if seg_id is not None:
         removed = atteindre_segment(plant, seg_id, intensite=1.0)   # ≥ COUPE_NETTE → écimage du sous-arbre ciblé
+        noter_perte_couronne(plant, removed)   # grosse taille → la souche rejettera (③, `sim.souche`)
         masse_bois = sum(s.length_cm for s in removed) * BOIS_PAR_CM
         eco.deposer_litiere(*plant.position, "bois", masse_bois,    # no-op si masse_bois ≤ 0
                             diam_pondere(removed))                   # grosseur ⑦bis

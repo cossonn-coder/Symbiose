@@ -158,6 +158,11 @@ class PlantInstance:
     # rejets a eu lieu (une seule par mort, `sim.souche`). Défauts → golden inchangé.
     souche_vivante: bool = False
     souche_traitee: bool = False
+    perte_couronne: float = 0.0     # part de la couronne perdue récemment [0-1] (③) :
+                                    # ⊕= bois perdu / bois avant la perte (casse, cladoptose,
+                                    # effondrement, taille) ; s'oublie en ~1 an de végétation.
+                                    # ≥ seuil sur une souche vivante → une vague de rejets
+                                    # (`sim.souche`) puis remise à 0. Défaut 0 → golden inchangé.
     # Organes-fruits traçables (décompo·compost ③, absorbe D19). Vide → aucun
     # fruit (défaut : golden inchangé tant que rien ne noue). Peuplé à la nouaison
     # par engine._tick_fruits (espèces `fruitier` parvenues à `maturity_years`),

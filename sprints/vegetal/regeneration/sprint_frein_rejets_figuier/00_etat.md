@@ -30,7 +30,7 @@ Golden `a10b7225…` **INCHANGÉ** attendu sur les 5 tronçons.
 |---|---|---|
 | ① | `01_dormance_clonale.md` — pas d'émission clonale en hiver (toutes clonales) | **fait** 2026-11-09 |
 | ② | `02_souche_a_la_mort.md` — trait `rejet_souche`, souche vivante, rejets à la mort, figuier sans drageon | **fait** 2026-11-09 |
-| ③ | `03_perte_de_couronne.md` — mémoire `perte_couronne`, rejets d'un arbre vivant (taille = recépage) | à faire |
+| ③ | `03_perte_de_couronne.md` — mémoire `perte_couronne`, rejets d'un arbre vivant (taille = recépage) | **fait** 2026-11-09 |
 | ④ | `04_voix_et_mesure.md` — événement, carnet, encyclopédie, `diag_releve` voie `rejet`, 200 ans | à faire |
 | ⑤ | `05_vue_godot.md` — voix `attente` (relève ⑤) + rejets visibles, `dotnet build`, F5, clôture D130 | à faire |
 
@@ -79,6 +79,33 @@ Golden `a10b7225…` **INCHANGÉ** attendu sur les 5 tronçons.
 - Taille : `sim/engine/boucle.py` passe à 301 LDC (bande vigilance, une seule
   responsabilité) — à surveiller au `/refactor` de fin de sprint.
 
+## Tronçon 3 — fait (2026-11-09)
+- `PlantInstance.perte_couronne` (`plants/base/instance.py`, défaut 0).
+- `sim/souche.py` : `noter_perte_couronne(plant, tombes)` (volume `l × ép²`, forme
+  de `deposer_bois_tombe` ; bois avant = restant + tombé) ; émission étendue aux
+  arbres vivants (`_vague` factorisée), `boucle.py` NON touché (même étape 9f).
+- Sites d'incrément vérifiés au code (pas de point commun propre : `_rebuild` sert
+  aussi l'élagage de croissance) : `sim/engine/branches.py::mort_des_branches`
+  (toutes causes de la semaine en un appel) + `sim/actions/gestes.py::tailler`.
+  L'élagage naturel de `grow_plant` (9c) ne compte PAS (pas dans la liste du kickoff).
+- **Écart 1** : composition `1 − (1−m)(1−f)` au lieu de `m += f` — la somme
+  surestimait une taille en plusieurs coupes (0,89 pour 0,71 réellement ôté).
+- **Écart 2** : l'oubli (×0,94/sem, `PERTE_COURONNE_OUBLI`) n'a lieu QU'HORS hiver
+  (l'oubli = la couronne qui repousse) ; sinon une taille d'hiver serait oubliée
+  avant le printemps (×0,94¹³ ≈ 0,45 → 0,7 tombait sous 0,5). Pas de drapeau neuf.
+- Déclencheur ≥ `SEUIL_PERTE_COURONNE` 0,5, hors hiver : épisode consommé
+  (mémoire → 0) même si la souche est épuisée ; N = round(rejet_souche × 4 × m).
+  Tuile saturée → l'épisode attend. Chemin mort : `return` → `continue` (équivalent).
+- **Log** (à parser au ④) : `    🌳 Rejet de souche : {nom} @{plot} ×{n} [perte de
+  couronne de @{plot_arbre}]` ; la mort garde `[souche de @…]`.
+- Mesure [labo, figuier/sapin de 10 ans, n=1 arbre] : figuier taillé au ras en
+  hiver → perte 0,72, 2 rejets au 1ᵉʳ printemps (sem. 53), aucun en 2 ans ensuite ;
+  sapin au ras (0,70) → 0 ; casse de 2 branches (`branches_a_casser`) → 0,058, 0.
+- Tests `test_rejets_souche` (f)(g)(h)(i) ajoutés, (a)-(e) verts. Golden
+  `a10b7225…` **INCHANGÉ**. Verts : `test_bois_mort`, `test_vigueur`,
+  `test_evenements`, `test_figuier_realiste`, `test_dormance_clonale`,
+  `test_squelette_herbacees`, `test_croissance`, `bancs.test_verger_mur`.
+
 ## §REPRISE
 Exécution : `/sprint-auto sprint_frein_rejets_figuier`. Prochain tronçon = le
-premier « à faire » (③ `03_perte_de_couronne.md` — réutiliser `souche_vivante` et `sim/souche.py`). Chaque tronçon met à jour sa ligne + un § « Tronçon N — fait ».
+premier « à faire » (④ `04_voix_et_mesure.md` — parser les DEUX causes du log 🌳 : `[souche de @…]` et `[perte de couronne de @…]`). Chaque tronçon met à jour sa ligne + un § « Tronçon N — fait ».
