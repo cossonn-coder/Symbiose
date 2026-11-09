@@ -94,7 +94,7 @@ Doc : `docs/vegetal/regeneration/conception_releve_ligneuse.md`. Golden
 | ② | `02_pose_coherente.md` — arbre : rayon de chute = couronne, seuil de pose = survie d'un semis | **fait** (golden `a10b7225…` intact) |
 | ③ | `03_figuier_realiste.md` — graine fertile si climat du blastophage, rejets `drageon`, `_mature` d'arbre, voix | **fait** (golden `a10b7225…` intact) |
 | ④ | `04_mesure_releve.md` — `tools/diag_releve.py`, verger_mur 200 ans, perf `full`, calibrage borné | **fait** — remplacement OK, **fourré de figuiers RATÉ** (hors bornes, décision Nico) ; golden `a10b7225…` intact |
-| ⑤ | `05_vue_godot.md` — voix `attente` du semis, rejets visibles, `dotnet build`, F5 | à faire |
+| ⑤ | `05_vue_godot.md` — voix `attente` du semis, rejets visibles, `dotnet build`, F5 | **absorbé** par `sprint_frein_rejets_figuier` ⑤ (décision Nico 2026-11-09) — ne pas lancer ici |
 
 ## Tronçon 1 — fait (2026-11-06)
 - `sim/effects/perturbations.py` : `H_GAULE` 200 cm, `SEUIL_SEMIS` 0,75,
@@ -206,5 +206,5 @@ Doc : `docs/vegetal/regeneration/conception_releve_ligneuse.md`. Golden
   `test_stress_chronique`, `bancs.test_verger_mur` verts. C# non concerné.
 
 ## §REPRISE
-Exécution : `/sprint-auto sprint_releve_ligneuse`. Prochain tronçon = le premier
-« à faire » du tableau (⑤ `05_vue_godot.md` au 2026-11-07). Fourré de figuiers (④) = décision Nico, en reliquat de D130. Chaque tronçon met à jour sa ligne + un § « Tronçon N — fait ».
+Exécution : `/sprint-auto sprint_releve_ligneuse`. Plus rien à lancer ici : le ⑤ est absorbé et le fourré de figuiers est conçu dans
+`../sprint_frein_rejets_figuier/` (2026-11-09) ; ce sprint se clôt avec lui. Chaque tronçon met à jour sa ligne + un § « Tronçon N — fait ».
