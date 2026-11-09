@@ -20,6 +20,10 @@ from fields.ecofields.constants import BOIS_MORT_PAR_CM3   # D111 ② (sous-paqu
 from fields.ecofields.litiere import BOIS_DIAM_DEFAUT      # grosseur inconnue (⑦bis)
 from constants import PLOT_CM
 from sim.effects.perturbations import frac_bois_mort
+from sim.reproduction import (find_father, child_genes, child_expression,
+                              recrue_par_fruits, facteur_glandee)
+from fields import _hash_noise
+from fields.seedbank import grain_sauvage, deposer_grain_sauvage
 
 # Nouaison « en fin de floraison, par plante » (arc pollinisation ④ — §B.2).
 # `floraison` (état floral ∈[0,1], écrit par engine._tick_floraison) monte vers 1
@@ -38,6 +42,15 @@ SEUIL_NOUAISON = 0.2
 # dose donne g(1.55)=0.61 (≥0.5, cible du kickoff) SANS toucher l'invariant (0→0)
 # ni le débit des butineurs. Levier unique, le plus simple (§ démarche perf-first).
 POLLEN_DEMI    = 1.0
+# Part des fruits tombés dont la graine devient un GRAIN SAUVAGE en terre (zoochorie ②,
+# D42). La plupart sont mangés, pourrissent ou ne lèvent jamais ; le grain gardé lève
+# ensuite par la niche (`_lever_grains_en_attente`). Levier unique de la relève des
+# fruitiers pérennes, calibré sur le critère D130 (`tools/diag_releve.py`, verger_mur,
+# seed 42, 200 ans [n=1 run par valeur]) : 0,02 → fourré 18 (cerisier) ; 0,008 → 12 ;
+# 0,005 → fourré 9, remplacement noyer 2,5 / pommier 31 / cerisier 322 (≥ 1).
+P_GRAIN_CHUTE  = 0.005
+# Canal de hash des grains de chute : `week * 73` (aucun autre canal `week * 73`).
+_CANAL_CHUTE   = 73
 
 
 def semaine_abscission(plant) -> int:
@@ -97,16 +110,21 @@ def nouer(plant, frac: float) -> list:
     return [f for f in cohortes if f.nombre > 0]
 
 
-def deposer_fruits(plant, tile, eco, fruit) -> None:
+def deposer_fruits(plant, tile, eco, fruit, seed: int, week: int) -> None:
     """Litière `fruit` d'une cohorte qui tombe : `nombre × masse`.
 
     Herbacées (sans `fruits_par_site`) : au plot du pied, comme avant. Arbres : sous
     toute la couronne (plots de la tuile, patron de l'abscission) ; les fruits tombent
     des branches, pas du tronc, et des centaines de fruits sur un seul plot satureraient
-    la faune et le sol de ce plot. Toute la masse reste sur les plots de la tuile."""
+    la faune et le sol de ce plot. Toute la masse reste sur les plots de la tuile.
+
+    Fruitier pérenne à graine fertile (zoochorie ②) : la chute SÈME aussi
+    (`semer_chute`) — même plots que la chair."""
     masse = fruit.nombre * fruit.masse
     if plant.plant_class.fruits_par_site is None:
         eco.deposer_litiere(*plant.position, "fruit", masse)
+        if recrue_par_fruits(plant.plant_class):
+            semer_chute(plant, tile, eco, fruit, [plant.position], seed, week)
         return
     plots = [rc for rc in plant.foliar_plots if tile.is_valid_plot(*rc)]
     if not plots:
@@ -114,6 +132,38 @@ def deposer_fruits(plant, tile, eco, fruit) -> None:
     part = masse / len(plots)
     for r, c in plots:
         eco.deposer_litiere(r, c, "fruit", part)
+    if recrue_par_fruits(plant.plant_class):
+        semer_chute(plant, tile, eco, fruit, plots, seed, week)
+
+
+def semer_chute(plant, tile, eco, fruit, plots: list, seed: int, week: int) -> int:
+    """Grains SAUVAGES (`origine="chute"`) d'une cohorte qui tombe (zoochorie ②, D42).
+
+    `n = nombre × P_GRAIN_CHUTE`, la partie fractionnaire tranchée par hash ; chaque
+    grain va sur un plot tiré par hash parmi `plots` (couronne de l'arbre, ou pied
+    d'une herbacée). Gènes = `child_genes(mère, find_father)`, priming =
+    `child_expression(mère)` — l'héritage de l'ancien `_reproduction`. Un plot plein
+    (plafond ①) refuse le grain : il est perdu. Position sous-plot : None → offset
+    féral déterministe à la levée. Renvoie le nombre de grains déposés. Zéro RNG."""
+    pr, pc = plant.position
+    sel = pr * 1009 + fruit.segment_id      # décorrèle les cohortes d'une même mère
+    attendu = fruit.nombre * P_GRAIN_CHUTE
+    n = int(attendu)
+    if _hash_noise(seed, week * _CANAL_CHUTE, sel, pc) < attendu - n:
+        n += 1
+    if n == 0:
+        return 0
+    father = find_father(plant, tile.plants, tile, eco, seed, week)
+    genes = child_genes(plant, father, seed, week)
+    expr = child_expression(plant)
+    ordre = sorted(plots)
+    poses = 0
+    for k in range(n):
+        h = _hash_noise(seed, week * _CANAL_CHUTE, sel, pc * 1009 + k + 1)
+        r, c = ordre[min(int(h * len(ordre)), len(ordre) - 1)]
+        grain = grain_sauvage(plant.plant_class, genes, expr, "chute", week, None, None)
+        poses += deposer_grain_sauvage(tile, r, c, grain)
+    return poses
 
 
 def deposer_bois_tombe(plant, tombes, eco) -> float:
@@ -240,6 +290,7 @@ class DecompoMixin:
         `fruitier` mûre ne fleurit dans la fenêtre (tomate : meurt w2-3 ;
         AppleTree : maturity_years=5 > 2 ans simulés → floraison nulle)."""
         log = []
+        seed, week = self.game_state.get("seed", 42), self.week
         for plant in tile.plants:
             if not plant.is_alive:
                 continue
@@ -252,7 +303,7 @@ class DecompoMixin:
             if (plant.a_fleuri and plant.floraison < SEUIL_NOUAISON
                     and plant.age_years >= cls.maturity_years):
                 for f in plant.fruits:          # cohorte précédente non récoltée
-                    deposer_fruits(plant, tile, eco, f)
+                    deposer_fruits(plant, tile, eco, f, seed, week)
                 # Fraction nouée selon le mode (philo #2 : flux de pollinisation →
                 # contrainte → fruits). `insect` lit la dose des butineurs (§F),
                 # `wind` lit la dose ANÉMOPHILE déposée par le vent (⑤, §5.3) — les
@@ -260,6 +311,9 @@ class DecompoMixin:
                 # (`self`) court-circuite (frac=1, nouaison pleine sans vecteur).
                 frac = (1.0 if cls.pollination_mode == "self"
                         else frac_nouaison(plant.pollen_recu))
+                # Glandée (zoochorie ②) : année forte ×1, maigre ×GLANDEE_MAIGRE,
+                # synchrone pour toute l'espèce. Sans masting → ×1 (inchangé).
+                frac *= facteur_glandee(cls, (week - 1) // 52, seed)
                 plant.fruits = nouer(plant, frac)
                 plant.a_fleuri = False          # cohorte posée → ré-armée l'an prochain
                 plant.pollen_recu = 0.0         # nouvelle cohorte repart de zéro (§B.1)
@@ -275,7 +329,7 @@ class DecompoMixin:
                 for f in plant.fruits:
                     f.maturite += dmat
                     if f.maturite > MATURITE_CHUTE:
-                        deposer_fruits(plant, tile, eco, f)
+                        deposer_fruits(plant, tile, eco, f, seed, week)
                         log.append(f"    🍂 Chute fruit (mûr {f.maturite:.2f}) "
                                    f"{plant.name}@{plant.position} → fruit "
                                    f"+{f.nombre * f.masse:.3f}")

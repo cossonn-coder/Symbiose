@@ -61,7 +61,9 @@ FICHES_LIGNEUX: dict[str, dict[int, str]] = {
         1: "Arbre massif à couronne étalée, feuilles lobées, glands.",
         2: "Pérenne caduc de très longue vie, croissance lente ; symbiose "
            "ectomycorhizienne étendue. Recépé, sa souche rejette fort : c'est l'arbre "
-           "des taillis-sous-futaie.",
+           "des taillis-sous-futaie. Ses glands mûrissent à l'automne et tombent au "
+           "pied ; certaines années, tous les chênes en croulent ensemble (glandée), "
+           "puis plusieurs années maigres suivent.",
         3: "Espèce clé de voûte : héberge une biodiversité immense (insectes, oiseaux, "
            "champignons) ; glands = ressource majeure ; pivot du wood-wide-web de la "
            "lisière.",
@@ -74,7 +76,9 @@ FICHES_LIGNEUX: dict[str, dict[int, str]] = {
            "anémophile (chatons). Son houppier fermé projette une ombre profonde : "
            "peu de choses poussent sous une hêtraie. Aime les sols frais et bien "
            "drainés ; marcescent, il garde souvent ses feuilles rousses tout l'hiver. "
-           "Sa souche rejette mal : on recèpe un charme, pas un hêtre.",
+           "Sa souche rejette mal : on recèpe un charme, pas un hêtre. Ses faînes "
+           "tombent à l'automne, abondantes une année sur plusieurs (faînée), rares "
+           "entre deux.",
         3: "Bâtisseur de la « hêtraie cathédrale » : son ombre dense trie la flore du "
            "sous-bois (sciaphiles strictes) et étouffe la concurrence. Ses faînes "
            "nourrissent la faune les années de fainée ; sa litière lente et son réseau "

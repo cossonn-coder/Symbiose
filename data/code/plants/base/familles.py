@@ -266,6 +266,11 @@ class PlantBase(ABC):
     # sèche ou pourrit en un hiver). Rubus/Fragaria font une banque persistante (plus
     # long). N'affecte PAS les graines plantées par le joueur. Littéral seul.
     graine_viabilite_ans: float = 1.0
+    # GLANDÉE (masting, zoochorie ②, D42) — période moyenne (ans) entre deux années de
+    # forte fructification, SYNCHRONE pour tous les pieds de l'espèce
+    # (`sim.reproduction.facteur_glandee`). None = pas de masting (nouaison inchangée).
+    # Chêne ~4, hêtre ~6 [ordre de grandeur]. Littéral seul.
+    glandee_periode_ans: float | None = None
     # BOUTURE (sprint PALETTE DE GESTES ②) — multiplication végétative PAR LE JOUEUR :
     # `bouturable=True` marque les espèces qui reprennent réellement d'un fragment
     # (ligneuses souples, aromatiques : saule/menthe/lavande/figuier/framboisier…) →

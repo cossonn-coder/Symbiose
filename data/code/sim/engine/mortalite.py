@@ -18,7 +18,8 @@ from fields import (_hash_noise, SENESCENCE_ONSET, SEN_ONSET_JITTER, SEN_RATE,
 from sim.effects import apply_mutations, ReduceHealth, deposer_mort
 from sim.effects.perturbations import SEUIL_SEMIS
 from sim.reproduction import (find_father, child_genes, child_expression,
-                              is_seed_bearing, graine_fertile)
+                              is_seed_bearing, graine_fertile,
+                              recrue_par_fruits)
 from sim.capacite import recrutement_bloque
 from sim.growth import est_etiole
 from .racines import eau_percue
@@ -200,6 +201,10 @@ class MortaliteMixin:
             # Graine stérile sous ce climat (figuier sans blastophage, relève ③) :
             # ni dépôt banque-sol ni recrue directe ; la relève passe par les rejets.
             if not graine_fertile(cls):
+                continue
+            # Fruitier pérenne (zoochorie ②, D42) : sa relève naît de ses VRAIS fruits
+            # qui tombent (`decompo.semer_chute`) → ni pool banque-sol ni recrue directe.
+            if recrue_par_fruits(cls):
                 continue
             rate = getattr(cls, "reproduction_rate", 0.0)
             if rate <= 0.0:

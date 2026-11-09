@@ -16,6 +16,9 @@ Tronçon ② (pose cohérente, recrutement direct `_reproduction`) :
   (d) arbre mûr isolé, couronne 400 cm : la recrue tombe SOUS la couronne (au-delà
       de l'ancien rayon fixe 150 cm, à distance ≤ couronne + 1 plot) ;
   (e) tuile entière à lumière < 1 − SEUIL_SEMIS → AUCUNE recrue.
+  Depuis la zoochorie ② (D42) le pommier ne passe plus par ce chemin (relève par
+  ses fruits tombés, `tests/test_chute_seme.py`) : (d)/(e) l'exercent sur un charme,
+  arbre non fruitier dont la recrue directe subsiste.
 
 Climat de LABORATOIRE repris de tests/test_stress_chronique.py (`_lab_tile` :
 météo douce constante, germination/ravageurs/campagnol/risée neutralisés) ;
@@ -31,6 +34,7 @@ import sys
 from world import Tile
 from fields import init_eco
 from plants import AppleTree, Zucchini
+from plants.perennials.forestiers import HornbeamTree
 from sim.engine import Engine
 from sim.effects.perturbations import (seuil_ombre, H_GAULE, SEUIL_SEMIS,
                                        SHADE_DAMAGE_THRESHOLD)
@@ -107,28 +111,29 @@ def test_seuil_ombre_bornes():
 
 
 COURONNE_CM = 400.0   # couronne imposée du parent (tests d/e)
+ARBRE_POSE = HornbeamTree   # zoochorie ② : le pommier sème par ses fruits
 
 
 def run_pose(lumiere_de):
-    """Un pommier MÛR isolé au centre d'une tuile 20×20, couronne imposée à
+    """Un charme MÛR isolé (non fruitier : recrue directe) au centre d'une tuile 20×20, couronne imposée à
     COURONNE_CM, fructification forcée (reproduction_rate 1) ; la lumière au sol
     est imposée par plot (`lumiere_de(r, c)`). Un seul appel à `_reproduction`.
     Renvoie (parent, liste des recrues)."""
     tile = Tile(tile_id="T0", soil_type="terre", grid_rows=20, grid_cols=20)
     eco = init_eco("T0", 20, 20, humidite=1.0, fertilite=1.0, microbiome=0.3)
-    parent = tile.add_plant(AppleTree, 10, 10)
-    parent.age_years = AppleTree.maturity_years + 1.0
+    parent = tile.add_plant(ARBRE_POSE, 10, 10)
+    parent.age_years = ARBRE_POSE.maturity_years + 1.0
     eco.lumiere.at_plot = lumiere_de
     gs = {"tiles": [tile], "eco": {"T0": eco}, "scores": {},
           "current_player": "j1", "week": 1, "log": []}
     engine = Engine(gs)
-    orig_r, orig_rate = AppleTree.canopy_radius_at, AppleTree.reproduction_rate
+    orig_r, orig_rate = ARBRE_POSE.canopy_radius_at, ARBRE_POSE.reproduction_rate
     try:
-        AppleTree.canopy_radius_at = classmethod(lambda cls, inst: COURONNE_CM)
-        AppleTree.reproduction_rate = 1.0
+        ARBRE_POSE.canopy_radius_at = classmethod(lambda cls, inst: COURONNE_CM)
+        ARBRE_POSE.reproduction_rate = 1.0
         engine._reproduction(tile, eco, week=1)
     finally:
-        AppleTree.canopy_radius_at, AppleTree.reproduction_rate = orig_r, orig_rate
+        ARBRE_POSE.canopy_radius_at, ARBRE_POSE.reproduction_rate = orig_r, orig_rate
     return parent, [p for p in tile.plants if p is not parent]
 
 

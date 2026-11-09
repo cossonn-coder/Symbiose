@@ -20,6 +20,7 @@ Déterministe : appariement et mutation via les hash (_hash_noise / hash_gauss).
 Aucun RNG live (règle de design #3).
 """
 from __future__ import annotations
+import zlib
 
 from plants import (species_compatible, GENE_NAMES, MUTATION_SIGMA, clamp_gene,
                     ADAPTOGENIC_GENES, PRIMING_FRAC)
@@ -53,6 +54,43 @@ def graine_fertile(cls) -> bool:
     if seuil is None:
         return True
     return _weather.T_MOY - _weather.T_AMP >= seuil
+
+
+def recrue_par_fruits(cls) -> bool:
+    """La relève de l'espèce passe-t-elle par ses VRAIS fruits ? (zoochorie ②, D42).
+
+    Vrai pour un fruitier PÉRENNE à graine fertile : ses graines naissent des fruits
+    qui tombent (`decompo.semer_chute`, grains sauvages au pied), et le tirage
+    abstrait de `_reproduction` est coupé pour lui. Faux pour le figuier (graine
+    stérile : rejets seuls), les annuelles fruitières (tomate, courgette) et tout
+    non-fruitier (chemin `_reproduction` inchangé). Prédicat UNIQUE lu aux deux bouts."""
+    return (getattr(cls, "fruitier", False) and cls.life_cycle == "perennial"
+            and graine_fertile(cls))
+
+
+# Glandée (masting, zoochorie ②) : part d'une année MAIGRE dans la nouaison d'une
+# espèce à masting. Les années fortes nouent pleinement (×1). Un chêne nourrit tous
+# ses consommateurs une année, les affame les suivantes : les prédateurs de graines
+# (mulot ⑥) ne suivent pas, et la relève passe les années fortes [ordre de grandeur].
+GLANDEE_MAIGRE = 0.15
+# Canal de hash propre à la glandée (r de `_hash_noise`) — l'année tient la place de
+# `week`, l'espèce celle de `c` : aucun canal `week * N` n'y collisionne.
+_CANAL_GLANDEE = 7907
+
+
+def facteur_glandee(cls, annee: int, seed: int) -> float:
+    """Facteur de nouaison de l'année pour l'espèce (1,0 ou GLANDEE_MAIGRE). PUR.
+
+    `glandee_periode_ans` None → 1,0 (pas de masting). Sinon année forte avec une
+    probabilité 1/période. Le hash ne dépend QUE de (seed, année, espèce) → tous les
+    pieds de l'espèce sont SYNCHRONES, comme une vraie glandée. Espèce identifiée par
+    un CRC de son nom (stable d'un process à l'autre, contrairement à `hash()`)."""
+    periode = getattr(cls, "glandee_periode_ans", None)
+    if periode is None:
+        return 1.0
+    id_espece = zlib.crc32(cls.name.encode("utf-8")) & 0xFFFF
+    forte = _hash_noise(seed, annee, _CANAL_GLANDEE, id_espece) < 1.0 / periode
+    return 1.0 if forte else GLANDEE_MAIGRE
 
 
 def _euclid2(a, b) -> float:

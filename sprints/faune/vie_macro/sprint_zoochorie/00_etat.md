@@ -60,7 +60,7 @@ Golden de départ `a10b7225…` ; **re-figé au ⑥ seulement** (mulot → rapac
 | # | kickoff | golden | état |
 |---|---|---|---|
 | ① | `01_grain_sauvage.md` — `GrainEnAttente` sauvage : dormance, péremption, plafond | inchangé | **fait** 2026-11-09 |
-| ② | `02_chute_unifiee.md` — fruit tombé → grains ; `_reproduction` coupée pour les fruitiers pérennes ; chêne/hêtre fruitiers ; glandée ; recalibrage relève | inchangé | à faire |
+| ② | `02_chute_unifiee.md` — fruit tombé → grains ; `_reproduction` coupée pour les fruitiers pérennes ; chêne/hêtre fruitiers ; glandée ; recalibrage relève | inchangé | **fait** 2026-11-09 |
 | ③ | `03_noisetier.md` — espèce neuve + 5 voix | inchangé | à faire |
 | ④ | `04_merle_perchoirs.md` — `sim/zoochorie.py`, prise saturante, grille perchoir, tampon monde, geste `poser_perchoir` | inchangé | à faire |
 | ⑤ | `05_geai_ecureuil.md` — 2 guildes `disperseur`, caches + oubli, apport ceinture | inchangé | à faire |
@@ -92,7 +92,35 @@ pondéré par plot sur une grille « perchoir » (couronnes ligneuses) déjà co
   encyclopedie, planter, plasticite, paillage, bancs.test_verger_mur verts.
 - `plants/base/familles.py` à 293 LDC (🟢).
 
+## Tronçon 2 — fait (2026-11-09)
+- Prédicat unique `recrue_par_fruits(cls)` (`sim/reproduction.py`) = fruitier ∧ pérenne
+  ∧ `graine_fertile` : pommier, cerisier, noyer, fraisier, framboisier, chêne, hêtre.
+  `_reproduction` : `continue` pour eux (ni pool banque-sol ni recrue directe).
+- `decompo.semer_chute` appelé par `deposer_fruits(…, seed, week)` : `n = nombre ×
+  P_GRAIN_CHUTE`, fraction par hash canal `week*73`, plots foliaires (arbre) / pied
+  (herbacée), gènes `child_genes(mère, find_father)`, `child_expression`, x/y None.
+- Glandée : trait `glandee_periode_ans` (chêne 4, hêtre 6), `facteur_glandee` (CRC du
+  nom, canal r=7907), `GLANDEE_MAIGRE` 0,15, multiplie `frac` avant `nouer`.
+- Chêne/hêtre fruitiers : 80 glands/site × 0,012, 150 faînes/site × 0,002 ;
+  **maturation 7 sem (pas 15)** : le moteur noue le chêne vers wiy 21 [1 scénario] ;
+  à 15 sem le gland tombait wiy 40 (hiver), à 7 il tombe wiy ~30 (mi-oct.).
+  Encyclopédie niveau 2 chêne/hêtre : glands/faînes + glandée.
+- **Calibrage** (`diag_releve` verger_mur, seed 42, 200 ans, [n=1 run par valeur]) :
+  P 0,02 → fourré 18 ✗ ; 0,008 → fourré 12 ✗ ; **0,005 retenu** → fourré 9 [marge 1],
+  remplacement noyer 2,5 · pommier 31 · cerisier 322 ; vivants an 200 : cerisier 47,
+  noyer 3, pommier 0, figuier 1. Les grains lèvent bien dans ce banc.
+- **À surveiller** : fraisier/framboisier (herbacées, 1 fruit = 1 cohorte) ne sèment
+  presque plus (400 fruits pour 2 grains) — leur relève reste clonale (stolons,
+  drageons) ; un chêne de lab (structure neuve) noue ~10 glands [1 scénario].
+- Tests : `test_chute_seme.py` 4/4 ; `test_banque_semis` (d)/(e) portés sur un
+  charme (recrue directe toujours vivante pour les non-fruitiers) ; grain_sauvage,
+  fruits, encyclopedie, evenements, carnet, genetique, figuier_realiste,
+  bancs.test_verger_mur verts. Golden `a10b7225…` INCHANGÉ.
+- Perf `full` 5 ans, tick médian an 3-5 : 1006,5 → 1011,9 ms (+0,5 %) [n=1, charge VM
+  0,6 → 2,9 pendant la mesure].
+- LDC : decompo 177, reproduction 82, mortalite 257, familles 294, forestiers 161 (🟢).
+
 ## §REPRISE
-Prochain : ② `02_chute_unifiee.md`. Lire `CLAUDE.md`, ce fichier, le doc de conception, puis le premier kickoff « à
+Prochain : ③ `03_noisetier.md` (noisetier : `glandee_periode_ans ≈ 2`, fruitier → unifié d'office). Lire `CLAUDE.md`, ce fichier, le doc de conception, puis le premier kickoff « à
 faire » du tableau. Chaque tronçon met à jour sa ligne + une section « Tronçon N —
 fait » courte (constats chiffrés avec leur limite entre crochets).

@@ -20,7 +20,19 @@ class OakTree(PerennialWoody):
     fragilite_bois = 0.6           # D111 ②bis : bois dur, branches solides
     pollination_mode = "wind"        # anémophile (chatons)
     pollination_radius_cm = 800.0
-    reproduction_rate = 0.08   # glandée (mast) rare
+    reproduction_rate = 0.08   # glandée (mast) rare — inerte depuis la zoochorie ② (relève par les glands)
+    # GLANDS traçables (zoochorie ②, D42) : la relève naît des glands qui tombent.
+    # Le moteur noue le chêne à la fanaison, ~wiy 21 [1 scénario, seed 42] : 7 semaines
+    # → gland mûr wiy 28 (début oct.), tombé wiy ~31 (mi-oct.). À 15 il tombait wiy 40.
+    # Chêne de jardin (~11 m) : ~2 000 glands une bonne année [odg] ; ~25 apex →
+    # 80 par site. Gland ~3 g de MS → 0,012 (1 unité ≈ 250 g de MS) [odg].
+    # Anémophile : la dose vient du panache des AUTRES chênes (`anemophilie`) —
+    # un chêne isolé peut ne rien nouer, c'est le modèle.
+    fruitier = True
+    fruit_semaines_maturation = 7
+    fruits_par_site = 80
+    fruit_masse     = 0.012
+    glandee_periode_ans = 4.0   # glandée forte ~1 an sur 4 [odg]
     longevity_years = 500
     rejet_souche = 0.8       # souche ② (D130) : essence de taillis-sous-futaie classique : la souche recépée rejette fort [ordre de grandeur]
     maturity_years = 25
@@ -68,7 +80,16 @@ class BeechTree(PerennialWoody):
     fragilite_bois = 0.7           # D111 ②bis : bois dur
     pollination_mode = "wind"        # anémophile (chatons)
     pollination_radius_cm = 700.0
-    reproduction_rate = 0.08         # faînée (mast) irrégulière
+    reproduction_rate = 0.08         # faînée (mast) irrégulière — inerte depuis la zoochorie ②
+    # FAÎNES traçables (zoochorie ②, D42). Nouaison ~wiy 21 au moteur [1 scénario] →
+    # 7 semaines : faîne mûre début oct., tombée mi-oct.
+    # Hêtre de jardin : quelques milliers de faînes une bonne année [odg] ; ~25 apex
+    # → 150 par site. Faîne ~0,25 g de MS (+ cupule) → 0,002 (1 unité ≈ 250 g) [odg].
+    fruitier = True
+    fruit_semaines_maturation = 7
+    fruits_par_site = 150
+    fruit_masse     = 0.002
+    glandee_periode_ans = 6.0   # faînée forte ~1 an sur 6 [odg]
     longevity_years = 300
     rejet_souche = 0.2       # souche ② (D130) : rejette mal de souche — on recèpe un charme, pas un hêtre [ordre de grandeur]
     maturity_years = 30
