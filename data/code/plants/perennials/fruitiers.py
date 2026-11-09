@@ -89,6 +89,7 @@ class AppleTree(PerennialWoody):
     reproduction_rate = 0.15
     longevity_years = 70
     rejet_souche = 0.5       # souche ② (D130) : rejette de souche, mais moins qu'une essence de taillis (et souvent du porte-greffe) [ordre de grandeur]
+    graine_viabilite_ans = 2.0   # zoochorie ① (D42) : pépin viable ~2 ans en sol [ordre de grandeur]
     maturity_years = 5
     greffable = True           # ligneux fruitier greffé par excellence (palette ③, D8) ; même famille Rosaceae que cerisier/framboisier
     age_curve = [(0, 30, 20), (5, 200, 120), (10, 350, 200),
@@ -174,6 +175,7 @@ class CherryTree(PerennialWoody):
     reproduction_rate = 0.15
     longevity_years = 60
     rejet_souche = 0.8       # souche ② (D130) : drageonne et rejette fort de souche (merisier : essence de taillis) [ordre de grandeur]
+    graine_viabilite_ans = 2.0   # zoochorie ① (D42) : noyau viable ~2 ans en sol [ordre de grandeur]
     maturity_years = 5
     greffable = True           # ligneux fruitier greffé (palette ③, D8) ; Rosaceae → compatible pommier/framboisier
     # VERGER VIVANT ② : le cerisier fleurit AVANT le pommier, mi-avril [odg, fiche

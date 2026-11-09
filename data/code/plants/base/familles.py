@@ -259,6 +259,13 @@ class PlantBase(ABC):
     # « non » codé en dur → un autre climat rend la graine fertile. DÉFAUT None =
     # aucune condition (toutes les autres espèces) → golden inchangé. Littéral seul.
     graine_si_hiver_min_c: float | None = None
+    # VIABILITÉ D'UNE GRAINE SAUVAGE en sol (zoochorie ①, D42) — durée (ans) pendant
+    # laquelle un `GrainEnAttente` sauvage (tombé ou porté par une bête) reste capable
+    # de lever ; au-delà il meurt sans lever (`perime_a`, lu par `fields.seedbank.
+    # grain_sauvage`). Défaut 1 an : graine RÉCALCITRANTE (gland, faîne, noix — elle
+    # sèche ou pourrit en un hiver). Rubus/Fragaria font une banque persistante (plus
+    # long). N'affecte PAS les graines plantées par le joueur. Littéral seul.
+    graine_viabilite_ans: float = 1.0
     # BOUTURE (sprint PALETTE DE GESTES ②) — multiplication végétative PAR LE JOUEUR :
     # `bouturable=True` marque les espèces qui reprennent réellement d'un fragment
     # (ligneuses souples, aromatiques : saule/menthe/lavande/figuier/framboisier…) →

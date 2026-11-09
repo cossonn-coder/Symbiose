@@ -59,7 +59,7 @@ Golden de départ `a10b7225…` ; **re-figé au ⑥ seulement** (mulot → rapac
 ## Tronçons
 | # | kickoff | golden | état |
 |---|---|---|---|
-| ① | `01_grain_sauvage.md` — `GrainEnAttente` sauvage : dormance, péremption, plafond | inchangé | à faire |
+| ① | `01_grain_sauvage.md` — `GrainEnAttente` sauvage : dormance, péremption, plafond | inchangé | **fait** 2026-11-09 |
 | ② | `02_chute_unifiee.md` — fruit tombé → grains ; `_reproduction` coupée pour les fruitiers pérennes ; chêne/hêtre fruitiers ; glandée ; recalibrage relève | inchangé | à faire |
 | ③ | `03_noisetier.md` — espèce neuve + 5 voix | inchangé | à faire |
 | ④ | `04_merle_perchoirs.md` — `sim/zoochorie.py`, prise saturante, grille perchoir, tampon monde, geste `poser_perchoir` | inchangé | à faire |
@@ -73,7 +73,26 @@ Frugivorie : boucle sur les fruitiers mûrs (quelques plantes) ; pose : un tirag
 pondéré par plot sur une grille « perchoir » (couronnes ligneuses) déjà connue
 (`foliar_plots`). Grains : plafond par plot. Attendu ≪ +10 % de tick.
 
+## Tronçon 1 — fait (2026-11-09)
+- `GrainEnAttente` + `origine`/`levee_des`/`perime_a` (défauts = grain joueur, au bit
+  près) ; `grain_sauvage(cls, …)` et `deposer_grain_sauvage(tile, r, c, grain)` dans
+  `fields/seedbank.py`, plafond `GRAINS_SAUVAGES_MAX_PLOT = 3` (sauvages seuls).
+- **Écart au kickoff** : `species` porte la **clé catalogue** (« pommier »), pas
+  `cls.__name__` — la levée lit `PLANT_CATALOGUE.get(species)`. Résolue par reverse
+  lookup (import local de `plants` dans `grain_sauvage`).
+- Dormance : `levee_des` = wiy 1 de l'année suivante (un dépôt PILE au wiy 1 attend
+  un an). Trait `graine_viabilite_ans` (défaut 1 ; pommier/cerisier 2, fraisier 3,
+  framboisier 5 [ordres de grandeur]).
+- Levée : purge des périmés (`week >= perime_a`, silencieuse), plus ancien grain
+  éligible (ordre d'insertion), log `🌱 Levée (semé par <origine>)` hors joueur.
+- Sauvegarde : `grains_en_attente` n'est sérialisé nulle part (ni save ni pont) →
+  rien à porter.
+- `tests/test_grain_sauvage.py` 18/18 ; contre-factuel (e) : levée semaine 4, ancien
+  et nouveau code [1 scénario]. Golden `a10b7225…` INCHANGÉ ; evenements, carnet,
+  encyclopedie, planter, plasticite, paillage, bancs.test_verger_mur verts.
+- `plants/base/familles.py` à 293 LDC (🟢).
+
 ## §REPRISE
-Lire `CLAUDE.md`, ce fichier, le doc de conception, puis le premier kickoff « à
+Prochain : ② `02_chute_unifiee.md`. Lire `CLAUDE.md`, ce fichier, le doc de conception, puis le premier kickoff « à
 faire » du tableau. Chaque tronçon met à jour sa ligne + une section « Tronçon N —
 fait » courte (constats chiffrés avec leur limite entre crochets).

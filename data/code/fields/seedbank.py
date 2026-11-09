@@ -8,6 +8,7 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass, field
 
+from calendrier import wiy_de
 from fields.noise import _hash_noise, hash_gauss, stable_str_hash
 from fields.peripherie import plots_de_bord
 from plants.genetics import clamp_gene, GENE_NAMES, GENE_INIT_SIGMA
@@ -171,6 +172,54 @@ class GrainEnAttente:
     semaine_depot: int = 0
     x_cm: float | None = None                   # pixel cliqué exact (① placement sous-plot)
     y_cm: float | None = None
+    # GRAIN SAUVAGE (zoochorie ①, D42) — défauts = grain PLANTÉ, comportement d'avant
+    # au bit près (levée immédiate possible, jamais périmé).
+    origine: str = "joueur"     # "joueur" | "chute" | "merle" | "geai" | "ecureuil" | "mulot" | "ceinture"
+    levee_des: int = 0          # semaine ABSOLUE minimale de levée (dormance)
+    perime_a: int | None = None # semaine ABSOLUE où le grain meurt sans lever (None = jamais)
+
+
+# Plafond de grains SAUVAGES par plot (zoochorie ①) : borne la mémoire et le coût
+# (un merle perché sème au même endroit toute une saison). Les grains PLANTÉS par le
+# joueur n'y comptent pas et n'y sont pas soumis.
+GRAINS_SAUVAGES_MAX_PLOT = 3
+
+
+def grain_sauvage(cls, genes: dict, expression: dict, origine: str, semaine: int,
+                  x_cm: float | None, y_cm: float | None) -> GrainEnAttente:
+    """Construit un grain SAUVAGE (tombé ou porté par une bête), PUR et déterministe.
+
+    - Dormance : levée au plus tôt au PREMIER PRINTEMPS STRICTEMENT APRÈS le dépôt
+      (wiy 1 de l'année suivante, calendrier unique D122 : l'année commence à
+      l'équinoxe). Un fruit d'été sème une graine qui passe l'hiver en terre — la
+      stratification froide du pépin, du noyau, du gland.
+    - Péremption : `semaine + round(viabilité × 52)`, viabilité = trait d'espèce
+      `graine_viabilite_ans` (défaut 1 an, graine récalcitrante).
+    - `cultive=False` : une graine semée par la nature donne une plante FÉRALE."""
+    # Import local (comme `ecofields/container.py`) : `plants` est sous `fields`,
+    # mais le catalogue agrège toutes les espèces — on ne le charge qu'au besoin.
+    # `species` porte la CLÉ catalogue (« pommier »), lue par la levée.
+    from plants import PLANT_CATALOGUE, PERENNIAL_CATALOGUE
+    cle = next(k for k, v in {**PLANT_CATALOGUE, **PERENNIAL_CATALOGUE}.items()
+               if v is cls)
+    debut_annee_suivante = semaine - wiy_de(semaine) + 1 + 52
+    viab = getattr(cls, "graine_viabilite_ans", 1.0)
+    return GrainEnAttente(
+        species=cle, genes=dict(genes), expression=dict(expression),
+        cultive=False, player="", semaine_depot=semaine, x_cm=x_cm, y_cm=y_cm,
+        origine=origine, levee_des=debut_annee_suivante,
+        perime_a=semaine + round(viab * 52))
+
+
+def deposer_grain_sauvage(tile, r: int, c: int, grain: GrainEnAttente) -> bool:
+    """Dépose un grain sauvage sur le plot (r, c) de la tuile. Refuse (False) si le
+    plot porte déjà `GRAINS_SAUVAGES_MAX_PLOT` grains sauvages — la graine en trop
+    est perdue (mangée, pourrie) : pas de file d'attente infinie."""
+    grains = tile.grains_en_attente.setdefault((r, c), [])
+    if sum(1 for g in grains if g.origine != "joueur") >= GRAINS_SAUVAGES_MAX_PLOT:
+        return False
+    grains.append(grain)
+    return True
 
 
 class GeneStat:

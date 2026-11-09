@@ -180,6 +180,14 @@ def _lever_grains_en_attente(game_state: dict, tile, eco, week: int, seed: int,
     for (r, c), grains in tile.grains_en_attente.items():
         if not grains:
             continue
+        # Péremption (zoochorie ①) : un grain SAUVAGE trop vieux meurt en terre sans
+        # lever (pourri, mangé). Grain planté : `perime_a=None` → jamais purgé. Purge
+        # silencieuse (pas de spam de log ; les voix liront les levées, ⑦).
+        if any(g.perime_a is not None and week >= g.perime_a for g in grains):
+            grains[:] = [g for g in grains
+                         if g.perime_a is None or week < g.perime_a]
+            if not grains:
+                continue
         if not tile.is_valid_plot(r, c):
             continue
         # Verrou d'occupation LEVÉ (compétition intra-plot, Q1/Q4) : un grain lève
@@ -198,11 +206,18 @@ def _lever_grains_en_attente(game_state: dict, tile, eco, week: int, seed: int,
         disturbance = eco.disturbance.at_plot(r, c)
         soil_deep   = eco.soil_memory_deep.at_plot(r, c)
 
-        grain = grains[0]
+        # Le PLUS ANCIEN grain ÉLIGIBLE (sorti de dormance, `week >= levee_des`) —
+        # ordre d'insertion = ordre de dépôt. Un grain sauvage en dormance en tête
+        # ne bloque pas un grain éligible derrière lui. Grains plantés : `levee_des=0`
+        # → toujours éligibles → c'est `grains[0]` comme avant (FIFO au bit près).
+        i_grain = next((i for i, g in enumerate(grains) if week >= g.levee_des), None)
+        if i_grain is None:
+            continue                           # tous en dormance → attendre le printemps
+        grain = grains[i_grain]
         plant_class = (PLANT_CATALOGUE.get(grain.species)
                        or PERENNIAL_CATALOGUE.get(grain.species))
         if plant_class is None:
-            grains.pop(0)                      # espèce inconnue (ne devrait pas arriver) → grain jeté
+            grains.pop(i_grain)                # espèce inconnue (ne devrait pas arriver) → grain jeté
             continue
 
         niche = eco.seed_bank.niche_index(
@@ -260,7 +275,7 @@ def _lever_grains_en_attente(game_state: dict, tile, eco, week: int, seed: int,
         new_plant = tile.add_plant(plant_class, r, c)
         if new_plant is None:
             continue
-        grains.pop(0)                          # FIFO : la plus ancienne levée
+        grains.pop(i_grain)                    # le grain levé (le plus ancien éligible)
         # Placement sous-plot (① MODÈLE SPATIAL) — AVANT toute lecture de
         # root_plots/foliar_plots (mémoïsés sur (x_cm, y_cm, rayon) : écrire la
         # position ici invalide le cache par changement de clé). Un grain PLANTÉ
@@ -287,8 +302,11 @@ def _lever_grains_en_attente(game_state: dict, tile, eco, week: int, seed: int,
         occupied_roots.add(new_plant.position)
         if grain.cultive:
             marquer_replante(game_state, grain.player, tile.tile_id, r, c)
+        # Format lu par les voix (⑦) : « (planté) » pour le joueur, sinon
+        # « (semé par <origine>) » — chute, merle, geai, ecureuil, mulot, ceinture.
+        quoi = "planté" if grain.origine == "joueur" else f"semé par {grain.origine}"
         log.append(
-            f"    🌱 Levée (planté) : {plant_class.name} @({r},{c}) "
+            f"    🌱 Levée ({quoi}) : {plant_class.name} @({r},{c}) "
             f"[niche={niche:.3f}]"
         )
     return log
