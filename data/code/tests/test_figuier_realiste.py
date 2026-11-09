@@ -4,13 +4,16 @@ Test ciblé, lancé À LA DEMANDE (hors smoke test). Sprint RELÈVE LIGNEUSE ③
 
 Le figuier ne fait de graine FERTILE que là où son pollinisateur obligatoire, le
 blastophage, passe l'hiver (condition climatique `graine_si_hiver_min_c`) ; sinon
-il se propage par REJETS DE SOUCHE (`clonal_mode = "drageon"`).
+il se propage par REJETS DE SOUCHE — depuis frein_rejets_figuier ②, seulement
+APRÈS PERTE de la partie aérienne (`rejet_souche`, `sim/souche.py`, testé dans
+`tests/test_rejets_souche.py`), plus en continu (`clonal_mode` → "none").
 
   (a) `graine_fertile(Fig)` faux sous les normales actuelles (`sim.weather`),
       vrai sous un climat doux (T_MOY/T_AMP surchargés) ; pommier toujours vrai ;
   (b) figuier mûr qui fructifie : RIEN en banque-sol, aucune recrue directe ;
-  (c) figuier de 1 an : aucun rejet ; figuier mûr : au moins un rejet en
-      200 semaines (déterministe, `emettre_ramets`).
+  (c) RÉÉCRIT au frein_rejets_figuier ② : figuier VIVANT, jeune ou mûr, plein
+      soleil, 200 semaines → 0 rejet de fond (`emettre_ramets`) ; avant le ②,
+      le figuier mûr en émettait (29 en 200 sem.).
 
 Lancement (depuis data/code/) :
   python3 -m tests.test_figuier_realiste
@@ -82,12 +85,13 @@ def _rejets(age_years: float) -> int:
 
 
 def test_rejets_de_souche():
-    """(c) Jeune figuier (1 an) : pas de rejet ; figuier mûr : au moins un."""
+    """(c) Figuier vivant (1 an ou mûr) : aucun rejet de fond — la souche ne
+    rejette qu'à la perte de la partie aérienne (`tests.test_rejets_souche`)."""
     jeune = _rejets(1.0)
     mur = _rejets(Fig.maturity_years + 2.0)
     assert jeune == 0, f"figuier de 1 an émet {jeune} rejet(s)"
-    assert mur >= 1, "figuier mûr n'émet aucun rejet en 200 semaines"
-    print(f"[figuier (c)] PASS — 1 an : 0 rejet ; mûr : {mur} rejet(s) "
+    assert mur == 0, f"figuier mûr vivant émet {mur} rejet(s) de fond"
+    print(f"[figuier (c)] PASS — vivant, 1 an et mûr : 0 rejet de fond "
           f"en {SEMAINES_RAMET} semaines")
 
 

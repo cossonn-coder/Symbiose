@@ -29,11 +29,15 @@ class Fig(PerennialWoody):
     # pollinisée par le blastophage (*Blastophaga psenes*), guêpe de l'aire
     # méditerranéenne qui ne passe pas un hiver plus froid que ~7 °C de moyenne au
     # mois le plus froid [ordre de grandeur]. En Normandie (≈ 4 °C) : figues sans
-    # graine fertile → propagation par REJETS DE SOUCHE (drageon, à ~1 m du tronc).
+    # graine fertile → propagation par REJETS DE SOUCHE, au pied, APRÈS PERTE de la
+    # partie aérienne (mort, puis perte de couronne au ③), PAS en continu
+    # (sprint frein_rejets_figuier ② : l'ancien drageon de fond émettait 164 rejets
+    # en 25 ans, tous en hiver). Porté par `rejet_souche` ci-dessous, lu par `sim.souche`.
     graine_si_hiver_min_c = 7.0
-    clonal_mode = "drageon"
-    clonal_radius_cm = 100.0   # rejets à ~1 m du tronc [choix de conception]
+    # clonal_mode = "none" (défaut hérité) : plus d'émission de fond. `clonal_radius_cm`
+    # retiré (inutile sans mode clonal) ; la portée des rejets est `sim.souche.RAYON_REJET_CM`.
     longevity_years = 80
+    rejet_souche = 0.8       # souche ② (D130) : rejette vigoureusement du pied après gel ou coupe — la touffe normande repart de souche [ordre de grandeur]
     maturity_years = 5
     bouturable = True          # ligneux à bouture proverbiale : un rameau piqué reprend (palette ②)
     greffable = True           # ligneux fruitier : porte-greffe/greffon de greffe (palette ③, D8)
@@ -84,6 +88,7 @@ class AppleTree(PerennialWoody):
     foliage_density = 0.60
     reproduction_rate = 0.15
     longevity_years = 70
+    rejet_souche = 0.5       # souche ② (D130) : rejette de souche, mais moins qu'une essence de taillis (et souvent du porte-greffe) [ordre de grandeur]
     maturity_years = 5
     greffable = True           # ligneux fruitier greffé par excellence (palette ③, D8) ; même famille Rosaceae que cerisier/framboisier
     age_curve = [(0, 30, 20), (5, 200, 120), (10, 350, 200),
@@ -168,6 +173,7 @@ class CherryTree(PerennialWoody):
     foliage_density = 0.60
     reproduction_rate = 0.15
     longevity_years = 60
+    rejet_souche = 0.8       # souche ② (D130) : drageonne et rejette fort de souche (merisier : essence de taillis) [ordre de grandeur]
     maturity_years = 5
     greffable = True           # ligneux fruitier greffé (palette ③, D8) ; Rosaceae → compatible pommier/framboisier
     # VERGER VIVANT ② : le cerisier fleurit AVANT le pommier, mi-avril [odg, fiche
@@ -232,6 +238,7 @@ class WalnutTree(PerennialWoody):
     anemo_dose = 12.0
     reproduction_rate = 0.10   # glandée (mast) plus rare
     longevity_years = 200
+    rejet_souche = 0.5       # souche ② (D130) : rejette de souche jeune, capacité qui faiblit avec l'âge [ordre de grandeur]
     maturity_years = 15
     # VERGER VIVANT ② : chatons et fleurs femelles en MAI, sur 1 à 2 semaines [odg, fiche
     # `fiches_arbres.md` « chatons pendants verts, mai » ; Franquette, variété tardive

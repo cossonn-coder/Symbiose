@@ -152,6 +152,12 @@ class PlantInstance:
     bois_restant: float = 0.0    # réservoir de bois à fragmenter en litière `bois`
     bois_diam_cm: float = 0.0    # grosseur moyenne de ce bois (cm, ⑦bis) ; 0 = inconnue
     semaines_mort: int = 0       # compteur sèche→couchée
+    # Souche (sprint frein_rejets_figuier ②) : figée à la mort par `deposer_mort`
+    # (critère pur `souche_vivante`, lu tant que l'état de la plante est intact).
+    # `souche_vivante` = la souche peut rejeter ; `souche_traitee` = sa vague de
+    # rejets a eu lieu (une seule par mort, `sim.souche`). Défauts → golden inchangé.
+    souche_vivante: bool = False
+    souche_traitee: bool = False
     # Organes-fruits traçables (décompo·compost ③, absorbe D19). Vide → aucun
     # fruit (défaut : golden inchangé tant que rien ne noue). Peuplé à la nouaison
     # par engine._tick_fruits (espèces `fruitier` parvenues à `maturity_years`),

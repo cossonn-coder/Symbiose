@@ -40,6 +40,7 @@ from sim.vigueur import tick_player_vigueur, refill_saison
 from sim.growth import grow_plant
 from sim.grimpe import chercher_support, relais_appui
 from sim.clonal import emettre_ramets
+from sim.souche import emettre_rejets_souche   # rejets à la mort (frein_rejets_figuier ②)
 from .calendrier import (SAISONS, saison_de, est_debut_saison, est_fin_saison,
                         est_phase_floraison, est_phase_recolte)
 from .aleas import (appliquer_alea, ALEAS_RAVAGEURS, WEATHER_ALEA, ORAGE_VENT,
@@ -498,6 +499,11 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
             # cap perf) et le gate de lumière au sol (stolon/drageon). Déterministe.
             # NEUTRE hors trèfle stolonifère du smoke → golden RE-FIGÉ maîtrisé.
             log += emettre_ramets(tile, eco, seed, week)
+
+            # 9f. Rejets de souche (frein_rejets_figuier ②) : un arbre mort dont la
+            # souche est restée vivante fait partir quelques clones au pied, une fois,
+            # hors hiver. Inerte tant qu'aucun ligneux à `rejet_souche` ne meurt.
+            log += emettre_rejets_souche(tile, seed, week)
 
             # 10. Floraison
             if est_phase_floraison(week_in_year, saison):

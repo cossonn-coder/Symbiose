@@ -29,7 +29,7 @@ Golden `a10b7225…` **INCHANGÉ** attendu sur les 5 tronçons.
 | # | kickoff | état |
 |---|---|---|
 | ① | `01_dormance_clonale.md` — pas d'émission clonale en hiver (toutes clonales) | **fait** 2026-11-09 |
-| ② | `02_souche_a_la_mort.md` — trait `rejet_souche`, souche vivante, rejets à la mort, figuier sans drageon | à faire |
+| ② | `02_souche_a_la_mort.md` — trait `rejet_souche`, souche vivante, rejets à la mort, figuier sans drageon | **fait** 2026-11-09 |
 | ③ | `03_perte_de_couronne.md` — mémoire `perte_couronne`, rejets d'un arbre vivant (taille = recépage) | à faire |
 | ④ | `04_voix_et_mesure.md` — événement, carnet, encyclopédie, `diag_releve` voie `rejet`, 200 ans | à faire |
 | ⑤ | `05_vue_godot.md` — voix `attente` (relève ⑤) + rejets visibles, `dotnet build`, F5, clôture D130 | à faire |
@@ -51,6 +51,34 @@ Golden `a10b7225…` **INCHANGÉ** attendu sur les 5 tronçons.
 - Le figuier n'émet désormais plus que hors hiver (en verger_mur : 0 attendu,
   mesure du 2026-11-09) — transitoire jusqu'au ②.
 
+## Tronçon 2 — fait (2026-11-09)
+- Trait `rejet_souche` (`plants/base/familles.py`, défaut 0) ; valeurs du kickoff
+  sur les 11 arbres (`perennials/`), sapin laissé au défaut (commenté).
+- Figuier : `clonal_mode` hérité `"none"`, `clonal_radius_cm` **retiré** (inutile) ;
+  commentaire relève ③ réécrit.
+- Critère pur `souche_vivante(plant)` dans `sim/effects/perturbations.py` (à côté
+  de `seuil_ombre`, évite un cycle d'import) ; figé dans `deposer_mort` sur
+  l'instance (`souche_vivante`, `souche_traitee`, `plants/base/instance.py`).
+  Seuils lus au code : ombre `seuil_ombre`, sécheresse `DROUGHT_DAMAGE_THRESHOLD`
+  0,6, asphyxie `ASPHYXIE_HEALTH_SEUIL` 0,10. **Écart** : racines rongées et
+  pourridié n'ont PAS de seuil de nuisance (rabot de l'eau dès 0, `engine/racines.py`)
+  → `SEUIL_RACINES_ATTEINTES = 0,2` = début du signe « parasite » (`voix_etres`).
+- `sim/souche.py::emettre_rejets_souche`, câblé `sim/engine/boucle.py` étape 9f
+  juste après `emettre_ramets`. N = round(rejet_souche×4) (figuier 3, pommier 2,
+  bouleau 1), rayon 60 cm, plot valide seulement (ni lumière ni couverture), clones,
+  hashs week·67/71 (+k). Le squelette porte la souche (vérifié : retrait à bois
+  ~épuisé, décroissance géométrique ⇒ bien plus d'un hiver) — pas de liste tuile.
+- **Log** : `    🌳 Rejet de souche : {nom} @{plot} ×{n} [souche de @{plot_mort}]`.
+  **Écart** : 🌳 et non 🌱 — `sim/evenements` lit toute ligne 🌱 comme une avance
+  (germination fantôme) ; 🌳 y est ignoré. Le ④ doit parser CE format.
+- Tests : `test_rejets_souche` neuf (a-e verts) ; `test_figuier_realiste` (c)
+  réécrit (vivant ⇒ 0 rejet de fond) ; `test_dormance_clonale` porté sur le
+  framboisier (le figuier n'est plus clonal ; revérifié rouge sans la garde : 8).
+  `test_banque_semis`, `test_evenements` 42/42, `test_stress_chronique`,
+  `bancs.test_verger_mur` verts. Golden `a10b7225…` **INCHANGÉ**.
+- Taille : `sim/engine/boucle.py` passe à 301 LDC (bande vigilance, une seule
+  responsabilité) — à surveiller au `/refactor` de fin de sprint.
+
 ## §REPRISE
 Exécution : `/sprint-auto sprint_frein_rejets_figuier`. Prochain tronçon = le
-premier « à faire » (② `02_souche_a_la_mort.md`). Chaque tronçon met à jour sa ligne + un § « Tronçon N — fait ».
+premier « à faire » (③ `03_perte_de_couronne.md` — réutiliser `souche_vivante` et `sim/souche.py`). Chaque tronçon met à jour sa ligne + un § « Tronçon N — fait ».

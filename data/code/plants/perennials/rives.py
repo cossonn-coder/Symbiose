@@ -53,6 +53,7 @@ class Alder(PerennialWoody):
     t_germ_opt = 12.0               # lève au frais des sols humides de printemps
     t_germ_tol = 11.0
     longevity_years = 100
+    rejet_souche = 0.8       # souche ② (D130) : rejette fort de souche (aulnaies traitées en taillis) [ordre de grandeur]
     maturity_years = 10
     bouturable = True                # rameau de saule/aulne piqué au bord de l'eau reprend
     girth_max_cm = 16.0              # tronc mûr ~16 cm (pipe model, procédural)
@@ -139,6 +140,7 @@ class Willow(PerennialWoody):
     t_germ_opt = 12.0                # lève au frais des berges de printemps
     t_germ_tol = 10.0
     longevity_years = 80
+    rejet_souche = 0.8       # souche ② (D130) : rejet de souche et bouture proverbiaux (saule têtard, osier) [ordre de grandeur]
     maturity_years = 5
     bouturable = True                # bouture PROVERBIALE : un rameau piqué reprend seul
     bloom_forcing_gdd = 4.0          # fleurit AVANT les feuilles (~fin d'hiver) : 1ʳᵉ table

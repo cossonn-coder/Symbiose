@@ -22,6 +22,7 @@ class OakTree(PerennialWoody):
     pollination_radius_cm = 800.0
     reproduction_rate = 0.08   # glandée (mast) rare
     longevity_years = 500
+    rejet_souche = 0.8       # souche ② (D130) : essence de taillis-sous-futaie classique : la souche recépée rejette fort [ordre de grandeur]
     maturity_years = 25
     girth_max_cm = 40.0        # tronc mûr ~40 cm (pipe model, procédural)
     age_curve = [(0, 30, 20), (5, 200, 150), (10, 400, 300),
@@ -69,6 +70,7 @@ class BeechTree(PerennialWoody):
     pollination_radius_cm = 700.0
     reproduction_rate = 0.08         # faînée (mast) irrégulière
     longevity_years = 300
+    rejet_souche = 0.2       # souche ② (D130) : rejette mal de souche — on recèpe un charme, pas un hêtre [ordre de grandeur]
     maturity_years = 30
     girth_max_cm = 35.0        # tronc mûr ~35 cm (pipe model, procédural)
     age_curve = [(0, 30, 18), (5, 200, 130), (10, 400, 260),
@@ -109,6 +111,7 @@ class BirchTree(PerennialWoody):
     pollination_radius_cm = 600.0
     reproduction_rate = 0.20         # graines ailées abondantes, dispersion large
     longevity_years = 90
+    rejet_souche = 0.2       # souche ② (D130) : rejette faiblement, souche de courte vie ; se régénère surtout par graine [ordre de grandeur]
     maturity_years = 10
     girth_max_cm = 14.0        # tronc mûr ~14 cm (pipe model, procédural) ; placeholder → F5
     age_curve = [(0, 40, 15), (5, 400, 120), (10, 800, 200),
@@ -157,6 +160,7 @@ class HornbeamTree(PerennialWoody):
     pollination_radius_cm = 550.0
     reproduction_rate = 0.12         # samares en grappes
     longevity_years = 150
+    rejet_souche = 0.8       # souche ② (D130) : l'essence de taillis par excellence (charmille, cépées) [ordre de grandeur]
     maturity_years = 15
     girth_max_cm = 18.0        # tronc mûr ~18 cm (pipe model, procédural)
     age_curve = [(0, 40, 20), (5, 250, 120), (10, 500, 220),
@@ -211,6 +215,7 @@ class FirTree(PerennialWoody):
     ph_tol = 1.3
     mulch_source = "aiguilles"       # récolté → stock aiguilles (④/⑤)
     longevity_years = 250
+    # rejet_souche = 0 (défaut) : résineux, la souche coupée ne rejette pas (souche ②, D130)
     maturity_years = 20
     girth_max_cm = 25.0        # tronc mûr ~25 cm (pipe model, procédural)
     age_curve = [(0, 30, 15), (5, 200, 80), (10, 400, 130),

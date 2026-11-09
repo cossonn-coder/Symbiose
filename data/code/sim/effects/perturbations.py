@@ -28,7 +28,7 @@ from fields import (_hash_noise, MORTALITY_RATE, climate_stress,
 # rythme. `sim` importe depuis `fields.ecofields` (couche basse), comme
 # `sim/vigueur_plante.py` le fait pour `MICROBE_EFFECT_REF` — pas via `fields`
 # (le ré-export plat ne l'expose pas ; on va droit au sous-paquet propriétaire).
-from fields.ecofields import MICROBE_RHYTHM_REF
+from fields.ecofields import MICROBE_RHYTHM_REF, ASPHYXIE_HEALTH_SEUIL
 from fields.ecofields.litiere import diam_pondere   # grosseur du squelette (⑦bis)
 from .mutations import ReduceHealth, Mutation
 from .resolution import apply_mutations
@@ -105,6 +105,10 @@ def deposer_mort(plant: PlantInstance, eco) -> float:
     if fb > 0.0:
         plant.bois_diam_cm = diam_pondere(plant.segments)
     plant.semaines_mort = 0
+    # Souche (frein_rejets_figuier ②) : lue ICI, seul instant où les mémoires de la
+    # plante sont encore celles de sa vie. Figée sur l'instance ; `sim.souche` en
+    # tire une vague de rejets à la saison de végétation suivante.
+    plant.souche_vivante = souche_vivante(plant)
     return mous
 
 
@@ -372,6 +376,36 @@ def seuil_ombre(plant: PlantInstance) -> float:
         return SHADE_DAMAGE_THRESHOLD
     petitesse = min(1.0, max(0.0, 1.0 - cls.height_at(plant) / H_GAULE))
     return SHADE_DAMAGE_THRESHOLD + (SEUIL_SEMIS - SHADE_DAMAGE_THRESHOLD) * petitesse
+
+
+# --- Souche vivante (sprint frein_rejets_figuier ②, D130) ---
+# Une souche rejette sur ses RÉSERVES racinaires. Elle est morte avec l'arbre si
+# celui-ci est mort « par le pied » : réserves épuisées (ombre installée) ou racines
+# détruites (sécheresse, asphyxie, racines rongées, pourridié). On ne lit pas une
+# CAUSE de mort (le moteur n'en garde pas) mais l'ÉTAT : les mémoires de dommage au
+# pied, chacune comparée au seuil où elle commence à blesser dans son module :
+#   shade_memory     > seuil_ombre(plant)          (ci-dessus, shade_stress_damage)
+#   drought_memory   > DROUGHT_DAMAGE_THRESHOLD 0,6 (drought_stress_damage)
+#   asphyxie_memory  > ASPHYXIE_HEALTH_SEUIL 0,10   (voie santé, engine/mortalite.py)
+#   root_herbivory_memory, pourriture_memory > SEUIL_RACINES_ATTEINTES : ces deux-là
+#     rabotent l'eau perçue DÈS 0 (engine/racines.py, pas de seuil propre) ; on prend
+#     le seuil où leur signe « parasite » commence à se voir (voix_etres, rampe 0,2→0,8).
+# Les mémoires de la partie AÉRIENNE (froid, vent, infection) et la sénescence
+# n'empêchent pas : la souche survit à une couronne gelée, cassée ou malade.
+SEUIL_RACINES_ATTEINTES = 0.2
+
+
+def souche_vivante(plant: PlantInstance) -> bool:
+    """La souche de `plant` peut-elle rejeter ? Vrai ssi l'espèce rejette de souche
+    (`rejet_souche > 0`) ET aucune mémoire de dommage au pied ne dépasse son seuil.
+    Pure, sans RNG. Lue à la mort (`deposer_mort`), réutilisée au ③ (perte de couronne)."""
+    if getattr(plant.plant_class, "rejet_souche", 0.0) <= 0.0:
+        return False
+    return not (plant.shade_memory > seuil_ombre(plant)
+                or plant.drought_memory > DROUGHT_DAMAGE_THRESHOLD
+                or plant.asphyxie_memory > ASPHYXIE_HEALTH_SEUIL
+                or plant.root_herbivory_memory > SEUIL_RACINES_ATTEINTES
+                or plant.pourriture_memory > SEUIL_RACINES_ATTEINTES)
 
 
 def shade_stress_damage(plant: PlantInstance, eco,

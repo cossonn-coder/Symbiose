@@ -242,6 +242,15 @@ class PlantBase(ABC):
     clonal_mode: str = "none"            # "none" | "stolon" | "rhizome" | "drageon"
     clonal_radius_cm: float = 60.0       # portée d'un ramet (offset ≤ ce rayon)
     clonal_interval: int = 4             # cadence : 1 chance d'émission toutes N semaines
+    # REJET DE SOUCHE (sprint frein_rejets_figuier ②, D130) — capacité d'un LIGNEUX à
+    # faire repartir des bourgeons dormants de sa souche QUAND sa partie aérienne est
+    # perdue (mort, puis perte de couronne au ③). ≠ `clonal_mode` (émission de fond
+    # d'une plante vivante) : ici la réserve racinaire répond à une PERTE, une fois.
+    # ∈ [0,1] : 0 = ne rejette jamais (sapin) ; ~0,8 = taillis proverbial (charme,
+    # saule). Lu par `sim.souche` (nombre de rejets ∝ ce trait) et par le critère de
+    # souche vivante (`sim.effects.perturbations.souche_vivante`). DÉFAUT 0 ⇒ aucune
+    # espèce non marquée ne rejette. Littéral seul (couche `plants` la plus basse).
+    rejet_souche: float = 0.0
     # FERTILITÉ DE LA GRAINE sous condition climatique (relève ligneuse ③, D130).
     # Une espèce dont la graine exige un POLLINISATEUR OBLIGATOIRE à aire climatique
     # limitée (figuier ↔ blastophage) déclare ici le mois le plus froid minimal (°C)
