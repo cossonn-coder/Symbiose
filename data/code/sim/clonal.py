@@ -31,6 +31,7 @@ from __future__ import annotations
 
 import math
 
+from calendrier import saison_de, wiy_de
 from constants import PLOT_CM
 from fields import _hash_noise
 from sim.vigueur_plante import vigueur_plante
@@ -120,6 +121,14 @@ def emettre_ramets(tile, eco, seed: int, week: int) -> list[str]:
     Déterministe (philo #3). No-op si aucune clonale mature → golden NEUTRE hors
     trèfle stolonifère du smoke. Renvoie les lignes de log (diégétiques)."""
     log = []
+    # DORMANCE CLONALE (sprint frein_rejets_figuier ①) : rien ne s'enracine en
+    # hiver — ni stolon, ni rhizome, ni drageon. Les deux portes d'établissement
+    # (lumière au sol, couverture) sont calibrées pour la saison FEUILLÉE : en
+    # hiver, caduc nu + herbe rase les ouvrent grand, et l'émission tournait à
+    # contre-saison (mesure 2026-11-09, verger_mur : 164 rejets de figuier en
+    # 25 ans, TOUS nés en hiver). Test placé AVANT tout tirage/lecture d'état.
+    if saison_de(wiy_de(week)) == "hiver":
+        return log
     # Backstop PUR-perf (sprint PERF ③) : tuile au cap dur → aucun ramet ce tick.
     # Disjoncteur jamais atteint en jeu normal (cf. sim/capacite.py).
     if recrutement_bloque(tile):
