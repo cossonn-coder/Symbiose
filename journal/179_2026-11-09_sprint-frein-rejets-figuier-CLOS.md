@@ -31,3 +31,6 @@ Perf `full` tick médian ans 3/4/5 : 1087/1095/1039 → 992/1071/1030 ms [n=1 ru
 1. Turbo verger_mur : plus de colonie de figuiers. 2. Taille sévère du figuier →
 rejets au pied au printemps suivant. 3. Mort d'un fruitier âgé → rejets au pied
 (sauf sapin, sauf mort d'ombre). 4. Info-bulle d'un jeune arbre ombragé : « j'attends… ».
+
+## F5 validé (2026-11-09)
+Nico : « ça fonctionne », après `git pull`. Sa taille large (342 → 139 segments) n'a pas fait rejeter, et c'est attendu : les 60 % de segments les plus fins ne pèsent que 0 à 3 % du bois [an 8, n=1 run, VM]. Recéper = couper au ras du tronc. D130 fermée (lot Q de `DETTE_ARCHIVE.md`) ; extinction ~an 175 et seuil d'étêtage acceptés tels quels.

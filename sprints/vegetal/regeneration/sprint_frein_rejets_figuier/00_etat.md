@@ -1,6 +1,6 @@
 # sprint_frein_rejets_figuier — état (reliquat D130 : rejets de souche)
 
-**Phase** : **CLOS côté code** le 2026-11-09 (①→⑤) — reste F5 Nico (§Tronçon 5).
+**Phase** : **CLOS** le 2026-11-09 (①→⑤), **F5 validé** par Nico le même jour, D130 fermée (lot Q).
 Doc : `docs/vegetal/regeneration/conception_rejets_de_souche.md`.
 Golden `a10b7225…` **INCHANGÉ** attendu sur les 5 tronçons.
 
@@ -32,7 +32,7 @@ Golden `a10b7225…` **INCHANGÉ** attendu sur les 5 tronçons.
 | ② | `02_souche_a_la_mort.md` — trait `rejet_souche`, souche vivante, rejets à la mort, figuier sans drageon | **fait** 2026-11-09 |
 | ③ | `03_perte_de_couronne.md` — mémoire `perte_couronne`, rejets d'un arbre vivant (taille = recépage) | **fait** 2026-11-09 |
 | ④ | `04_voix_et_mesure.md` — événement, carnet, encyclopédie, `diag_releve` voie `rejet`, 200 ans | **fait** 2026-11-09 — 3 critères tenus |
-| ⑤ | `05_vue_godot.md` — voix `attente` (relève ⑤) + rejets visibles, `dotnet build`, F5, clôture D130 | **fait** 2026-11-09 — F5 attendu |
+| ⑤ | `05_vue_godot.md` — voix `attente` (relève ⑤) + rejets visibles, `dotnet build`, F5, clôture D130 | **fait** 2026-11-09 — F5 validé |
 
 ## Tronçon 1 — fait (2026-11-09)
 - `sim/clonal.py::emettre_ramets` : retour immédiat si `saison_de(wiy_de(week))
@@ -176,3 +176,6 @@ Golden `a10b7225…` **INCHANGÉ** attendu sur les 5 tronçons.
 ## §REPRISE
 Sprint CLOS côté code. Reste : F5 Nico (§Tronçon 5) ; le reliquat D130 (extinction
 figuier/pommier vers l'an 173-176) est à trancher par Nico. Suite : D42 (dispersion animale).
+
+## F5 — validé (2026-11-09)
+Nico : « ça fonctionne » (verger_mur, seed 42, an 9, après `git pull`). Une taille large des rameaux ne fait pas rejeter (0 à 3 % du bois [an 8, n=1 run, VM]) : il faut recéper au ras du tronc. Reliquats acceptés : extinction ~an 175, étêtage selon la part de bois perdue.
