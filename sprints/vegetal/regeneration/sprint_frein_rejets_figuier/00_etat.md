@@ -31,7 +31,7 @@ Golden `a10b7225…` **INCHANGÉ** attendu sur les 5 tronçons.
 | ① | `01_dormance_clonale.md` — pas d'émission clonale en hiver (toutes clonales) | **fait** 2026-11-09 |
 | ② | `02_souche_a_la_mort.md` — trait `rejet_souche`, souche vivante, rejets à la mort, figuier sans drageon | **fait** 2026-11-09 |
 | ③ | `03_perte_de_couronne.md` — mémoire `perte_couronne`, rejets d'un arbre vivant (taille = recépage) | **fait** 2026-11-09 |
-| ④ | `04_voix_et_mesure.md` — événement, carnet, encyclopédie, `diag_releve` voie `rejet`, 200 ans | à faire |
+| ④ | `04_voix_et_mesure.md` — événement, carnet, encyclopédie, `diag_releve` voie `rejet`, 200 ans | **fait** 2026-11-09 — 3 critères tenus |
 | ⑤ | `05_vue_godot.md` — voix `attente` (relève ⑤) + rejets visibles, `dotnet build`, F5, clôture D130 | à faire |
 
 ## Tronçon 1 — fait (2026-11-09)
@@ -106,6 +106,44 @@ Golden `a10b7225…` **INCHANGÉ** attendu sur les 5 tronçons.
   `test_evenements`, `test_figuier_realiste`, `test_dormance_clonale`,
   `test_squelette_herbacees`, `test_croissance`, `bancs.test_verger_mur`.
 
+## Tronçon 4 — fait (2026-11-09)
+- **Événement** `sim/evenements.py` : `_RE_REJET` lit les DEUX formats 🌳
+  (`[souche de @…]` → cause `souche`, `[perte de couronne de @…]` → `perte_couronne`),
+  kind `rejet`, **pos = l'arbre** (2ᵉ @), pas le 1ᵉʳ rejet. L'API historique
+  `_evenements` reste muette sur 🌳. Test `test_evenements` [B6] (46/46).
+- **Carnet** : `("rejet", souche|perte_couronne)` → concept existant `rejet_de_souche`
+  + 4 gabarits D/I (le mort d'ombre/soif ne repart pas ; taillé au ras = recépé).
+- **Encyclopédie** (N2) : une phrase de capacité par arbre à `rejet_souche > 0`
+  (figuier, pommier, cerisier, noyer, chêne, hêtre, bouleau, charme, aulne ; saule
+  déjà couvert au N3) ; sapin « ne rejette pas » ; figuier corrigé (rejets après
+  mort/perte de tête, pas en continu).
+- **Outil** `tools/diag_releve.py` : voie `rejet` = événement `rejet` même tuile,
+  même espèce, ≤ `PORTEE_REJET_PLOTS` 2 plots de l'arbre (le log ne porte que le
+  1ᵉʳ rejet).
+- **Mesure verger_mur, seed 42, 200 ans** [n=1 run, VM charge ~0,6-3, 102 min] :
+  | espèce | fondateurs (morts) | recrues | mûres | remplacement | vivants an 200 |
+  |---|---|---|---|---|---|
+  | cerisier | 1 (1) | 76 graine + 23 rejet | 67 | 67 [n=1 run] | 12 |
+  | pommier | 1 (1) | 54 graine + 6 rejet | 50 | 50 [n=1 run] | 0 (dernier mort sem 8972) |
+  | noyer | 2 (2) | 61 graine + 2 rejet | 24 | 12 [n=1 run] | 7 |
+  | figuier | 1 (1) | 6 rejet | 5 | 5 [n=1 run] | **0** (dernier mort sem 9133) |
+  Fourré max **4** (cerisier, sem 2873) contre 193 au ④ de la relève ; ligneux
+  vivants 7-29 sur tout le run (350 à l'an 200 avant). **Les 3 critères sont tenus,
+  aucun calibrage.** Cascade du figuier freinée : 2 vagues de 3 rejets (mort du
+  fondateur sem 2690 par sénescence, puis d'un rejet sem 5986 par sénescence) ;
+  les 6 autres rejets meurent d'ombre → souche morte → plus de rejet.
+- **Constat pour Nico** : le figuier (et le pommier) s'éteignent avant l'an 200
+  [n=1 run]. « ≤ 10 » est tenu, mais 0 n'est pas « une poignée ». Cohérent avec le
+  modèle (un arbre mort d'ombre ne repart pas, pas de graine fertile) ; à lire au F5,
+  pas un calibrage du ④.
+- **Perf `full`** tick médian an 3/4/5 : avant (worktree `ac9f758`) 1087/1095/1039 ms,
+  après 992/1071/1030 ms, soit −9/−2/−1 % [seed 42, n=1 run par côté lancés en
+  parallèle, VM charge ~3] → critère ≤ +10 % tenu.
+- Golden `a10b7225…` **INCHANGÉ**. Verts : `test_evenements` 46/46, `test_carnet`
+  19/19, `test_encyclopedie` 70/70, `test_rejets_souche`, `test_peripherie_voix`
+  91/91, `test_journal`, `test_pages`, `test_figuier_realiste`, `test_dormance_clonale`.
+  Tailles : `sim/evenements.py` 211 LDC, `sim/carnet.py` 239, `diag_releve` 165.
+
 ## §REPRISE
 Exécution : `/sprint-auto sprint_frein_rejets_figuier`. Prochain tronçon = le
-premier « à faire » (④ `04_voix_et_mesure.md` — parser les DEUX causes du log 🌳 : `[souche de @…]` et `[perte de couronne de @…]`). Chaque tronçon met à jour sa ligne + un § « Tronçon N — fait ».
+premier « à faire » (⑤ `05_vue_godot.md` ; l'événement `rejet` du ④ porte la position de l'ARBRE). Chaque tronçon met à jour sa ligne + un § « Tronçon N — fait ».

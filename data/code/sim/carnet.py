@@ -154,6 +154,11 @@ CONCEPT_DE: dict[tuple[str, str | None], str] = {
     #     de l'irréversible.
     ("coupe", "abattre"):         "brise_vent",
     ("coupe", "receper"):         "rejet_de_souche",
+    # Rejets de souche SPONTANÉS (sprint frein rejets figuier ④) : même leçon que le
+    # recépage — la souche vit ou meurt. Cause `souche` = l'arbre est mort ;
+    # `perte_couronne` = il vit mais a perdu sa tête (casse, neige, taille au ras).
+    ("rejet", "souche"):          "rejet_de_souche",
+    ("rejet", "perte_couronne"):  "rejet_de_souche",
     ("coupe", "eteter"):          "lisiere",
     ("terrassement", "endiguer"): "eau",
     ("terrassement", "deriver"):  "eau",
@@ -308,6 +313,12 @@ GABARIT: dict[tuple[str, str | None, str], str] = {
     ("coupe", "abattre", _I): "Abattu, ce bord de {e} : avec lui tombe l'écran qui coupait le vent — ce qui reste debout prendra les rafales de plein fouet, et la trouée mettra une vie d'homme à se refermer.",
     ("coupe", "receper", _D): "J'ai recépé un bord au ras du sol — {e}. Il ne reste que les souches.",
     ("coupe", "receper", _I): "Recépé, ce bord de {e} : la souche est vivante, elle relancera des rejets plus drus que la tige que j'ai prise — couper, chez lui, c'est faire durer.",
+    # Rejets de souche (frein rejets ④) — descriptif = ce que je VOIS au pied ;
+    # interprétatif = la réserve racinaire, et la souche épuisée qui ne repart pas.
+    ("rejet", "souche", _D): "Des rejets de {e} partent au pied de l'arbre mort {l}.",
+    ("rejet", "souche", _I): "La souche de {e} repart {l} : l'arbre est tombé, mais ses racines gardaient leurs réserves. Un arbre mort d'ombre ou de soif, lui, ne repart pas — sa souche s'est épuisée avec lui.",
+    ("rejet", "perte_couronne", _D): "Des rejets de {e} ont jailli au pied de l'arbre {l}, depuis qu'il a perdu sa tête.",
+    ("rejet", "perte_couronne", _I): "{e} a perdu sa couronne {l}, et la souche répond par des rejets : les racines, trop grandes pour ce qui reste, relancent du bois neuf. Taillé au ras, il se recèpe ; épuisé, il ne répondrait plus.",
     ("coupe", "eteter", _D): "J'ai rabattu la tête des arbres d'un bord — {e}. Les troncs sont restés debout.",
     ("coupe", "eteter", _I): "Étêté, ce bord de {e} : le rideau tient, le sol reste couvert, et la tête sera refaite dans quelques années — c'est le prélèvement qui ne défait rien.",
 

@@ -9,7 +9,10 @@
 # gardée → l'id ne peut pas être réutilisé) :
 #   - fondateurs = ligneux vivants au départ ; recrues = ligneux apparus ensuite ;
 #   - voie de naissance : `ramet` si le log du tick porte un événement `ramet` de
-#     la même espèce au même plot (figuier : rejets `drageon`), sinon `graine` ;
+#     la même espèce au même plot (clonales : stolon/rhizome/drageon) ; `rejet` si le
+#     log porte un événement `rejet` (souche, frein rejets ④) de la même espèce sur la
+#     même tuile à ≤ PORTEE_REJET_PLOTS plots de l'arbre (le log ne donne que le plot
+#     du 1ᵉʳ rejet et celui de l'arbre ; rayon 60 cm ⇒ ≤ 2 plots) ; sinon `graine` ;
 #   - cause de mort : appariée à l'événement `mort` du log (tuile, plot, espèce),
 #     comme la chronique du rapport C ;
 #   - toutes les 13 semaines : lumière reçue, `shade_memory`, hauteur de chaque
@@ -37,11 +40,23 @@ from sim.evenements import evenements
 from tools.simserver.chronique import _cle
 
 PAS_ECHANTILLON = 13      # semaines entre deux relevés (une saison)
+PORTEE_REJET_PLOTS = 2    # ceil(RAYON_REJET_CM 60 / PLOT_CM 50) : plots autour de l'arbre
 
 
 def _ligneux_vivants(engine) -> dict[int, tuple]:
     return {id(p): (p, t.tile_id) for t in engine.game_state["tiles"]
             for p in t.plants if p.is_alive and p.plant_class.ligneux}
+
+
+def _voie(tuile, pos, espece, ramets, rejets) -> str:
+    """Voie de naissance d'une recrue d'après les événements du tick."""
+    if (tuile, pos, espece) in ramets:
+        return "ramet"
+    for t, (r, c), e in rejets:
+        if t == tuile and e == espece and max(abs(pos[0] - r), abs(pos[1] - c)) \
+                <= PORTEE_REJET_PLOTS:
+            return "rejet"
+    return "graine"
 
 
 class Releve:
@@ -66,6 +81,7 @@ class Releve:
         """Naissances (voie), morts (cause), puis relevé saisonnier."""
         evs = evenements(log)
         ramets = {(e.tile_id, e.pos, e.espece) for e in evs if e.kind == "ramet"}
+        rejets = [(e.tile_id, e.pos, e.espece) for e in evs if e.kind == "rejet"]
         causes = defaultdict(list)
         for e in evs:
             if e.kind == "mort":
@@ -79,7 +95,7 @@ class Releve:
                 f["cause"] = pile.pop(0) if pile else "non_consignee"
         for i, (p, tuile) in maintenant.items():
             if i not in self.indiv:
-                voie = "ramet" if (tuile, p.position, _cle(p)) in ramets else "graine"
+                voie = _voie(tuile, p.position, _cle(p), ramets, rejets)
                 self.indiv[i] = self._fiche(p, tuile, semaine, voie)
         self.vivants = maintenant
         for i, (p, _) in maintenant.items():

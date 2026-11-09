@@ -109,6 +109,15 @@ _RE_ABSCISSION = re.compile(r"🍂\s+Abscission\s+(.+?)@")  # 🍂 Abscission <n
 # La cause de l'événement = le MODE clonal (stolon/rhizome/drageon) → le carnet
 # distingue le tapissage stolonifère de la colonie rhizomateuse.
 _RE_RAMET = re.compile(r"🌿\s+Ramet\s+\((\w+)\)\s*:\s*(.+?)\s+@")
+# Rejet de souche (sprint frein rejets figuier ②/③/④) — format de `sim/souche.py` :
+#   🌳 Rejet de souche : <nom> @(r, c) ×<n> [souche de @(rm, cm)]            (arbre mort)
+#   🌳 Rejet de souche : <nom> @(r, c) ×<n> [perte de couronne de @(rm, cm)] (arbre vivant)
+# Emoji 🌳 et non 🌱 (🌱 = avance de stade → germination fantôme). La position de
+# l'événement est celle de l'ARBRE (le 2ᵉ @, la souche), pas du 1ᵉʳ rejet : le carnet
+# parle du pied qui repart. Cause = `souche` ou `perte_couronne`.
+_RE_REJET = re.compile(r"🌳\s+Rejet de souche\s*:\s*(.+?)\s+@.*?"
+                       r"\[(souche|perte de couronne) de @\((\d+),\s*(\d+)\)\]")
+_CAUSE_REJET = {"souche": "souche", "perte de couronne": "perte_couronne"}
 # Capture carnivore (hydrologie & marécages ⑥) : 🪰 Capture <nom>@(r, c) → … . La
 # 1ʳᵉ capture d'une plante est consignée UNE fois (drapeau moteur `a_capture`).
 _RE_CAPTURE = re.compile(r"🪰\s+Capture\s+(.+?)@")
@@ -372,6 +381,15 @@ def evenements(log: list[str]) -> list[Evenement]:
             if m:
                 out.append(Evenement("ramet", tile_id, pos,
                                      _CLE_DE_NOM.get(m.group(2).strip()), m.group(1)))
+        elif "🌳" in line and "Rejet de souche" in line:
+            # Rejets de souche (frein rejets ④) : concept « rejet_de_souche » au carnet
+            # (la souche vit ou meurt) ; `diag_releve` y lit la voie de naissance `rejet`.
+            m = _RE_REJET.search(line)
+            if m:
+                out.append(Evenement("rejet", tile_id,
+                                     (int(m.group(3)), int(m.group(4))),
+                                     _CLE_DE_NOM.get(m.group(1).strip()),
+                                     _CAUSE_REJET[m.group(2)]))
         else:
             raison = _raison_stagnation(line)
             if raison:

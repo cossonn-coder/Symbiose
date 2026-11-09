@@ -255,6 +255,29 @@ def test_ramet_clonal():
           Evenement("ramet", "T0", (5, 5), "menthe", "rhizome") in out, f"{out}")
 
 
+def _l_rejet(nom, r, c, n, cause, ra, ca):
+    # Format EXACT émis par sim/souche.py::emettre_rejets_souche (frein rejets ②/③).
+    return f"    🌳 Rejet de souche : {nom} @({r}, {c}) ×{n} [{cause} de @({ra}, {ca})]"
+
+
+def test_rejet_souche():
+    print("\n[B6] evenements() — rejets de souche (🌳), deux causes (frein rejets ④)")
+    from sim.carnet import CONCEPT_DE
+    log = [_entete("T0"),
+           _l_rejet("Figuier", 3, 4, 3, "souche", 3, 5),
+           _l_rejet("Pommier", 1, 1, 1, "perte de couronne", 2, 2)]
+    out = evenements(log)
+    check("arbre mort → rejet/souche, position = l'ARBRE (2ᵉ @)",
+          Evenement("rejet", "T0", (3, 5), "figuier", "souche") in out, f"{out}")
+    check("arbre vivant → rejet/perte_couronne",
+          Evenement("rejet", "T0", (2, 2), "pommier", "perte_couronne") in out, f"{out}")
+    check("🌳 ne produit ni germination ni avance (API historique muette)",
+          len(out) == 2 and list(_evenements(log)) == [], f"{out}")
+    check("carnet : les deux causes → concept rejet_de_souche",
+          CONCEPT_DE.get(("rejet", "souche")) == CONCEPT_DE.get(
+              ("rejet", "perte_couronne")) == "rejet_de_souche")
+
+
 def test_floraison_acclimatation_absentes():
     print("\n[B3] floraison (header seul) et acclimatation (pas de marqueur) → rien")
     log = [_entete(), "  🌸 Floraison :"]
@@ -272,6 +295,7 @@ if __name__ == "__main__":
     test_causes_de_mort()
     test_format_reel_moteur()
     test_ramet_clonal()
+    test_rejet_souche()
     test_floraison_acclimatation_absentes()
 
     print("\n" + "=" * 60)

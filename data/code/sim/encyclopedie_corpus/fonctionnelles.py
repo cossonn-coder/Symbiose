@@ -124,7 +124,8 @@ FICHES_FONCTIONNELLES: dict[str, dict[int, str]] = {
         2: "Pérenne PERSISTANT (jamais nu) à croissance lente et longévité "
            "séculaire ; anémophile (cônes). Contrairement aux fruitiers caducs, il "
            "projette son ombre TOUTE l'année — utile au nord, gênant au sud. Aime "
-           "les sols plutôt ACIDES ; sa litière d'aiguilles acidifie le sol sous lui.",
+           "les sols plutôt ACIDES ; sa litière d'aiguilles acidifie le sol sous lui. "
+           "Coupé, il ne rejette pas : comme les autres résineux, sa souche meurt.",
         3: "Deux ressources pour le sol : ses AIGUILLES tombées font un paillis "
            "ACIDIFIANT, légèrement allélopathique — à réserver au pied des "
            "acidophiles (myrtille), à éviter ailleurs ; ses rameaux ligneux broyés "

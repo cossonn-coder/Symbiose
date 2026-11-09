@@ -23,8 +23,10 @@ FICHES_LIGNEUX: dict[str, dict[int, str]] = {
            "germent au frais du printemps. Figue commune : elle noue sans pollinisateur et mûrit "
            "de la fin d'été au début de l'automne. Mais sa graine n'est fertile que "
            "fécondée par le blastophage, une minuscule guêpe des pays à hiver doux ; "
-           "loin d'elle, la figue n'a que des graines vides et l'arbre se propage par "
-           "les rejets que sa souche pousse à ses pieds.",
+           "loin d'elle, la figue n'a que des graines vides et l'arbre ne se renouvelle "
+           "que par sa souche : il ne drageonne pas en continu, mais quand il meurt ou "
+           "perd sa tête (gel, casse, coupe au ras), elle relance de vigoureux rejets "
+           "à ses pieds — si elle n'est pas elle-même épuisée.",
         3: "Idéal en espalier sud (microclimat chaud, albédo du mur) ; figues = manne "
            "pour oiseaux et insectes en fin d'été. Ombre dense estivale.",
     },
@@ -32,7 +34,8 @@ FICHES_LIGNEUX: dict[str, dict[int, str]] = {
         1: "Arbre à houppier arrondi, floraison blanche-rosée au printemps, pommes.",
         2: "Pérenne caduc nécessitant du froid hivernal (vernalisation) et une "
            "pollinisation croisée (deux variétés). Pommes mûres en septembre-octobre. "
-           "Longévité de plusieurs décennies.",
+           "Longévité de plusieurs décennies. Coupé ou tombé, il rejette un peu de "
+           "souche — moins qu'une essence de taillis.",
         3: "Cœur du verger : fleurs = ressource pollinisatrice majeure du printemps ; "
            "sensible au carpocapse (guetter les auxiliaires/mésanges). Porte tout un "
            "cortège d'espèces.",
@@ -41,7 +44,8 @@ FICHES_LIGNEUX: dict[str, dict[int, str]] = {
         1: "Arbre élancé, écorce annelée brillante, floraison blanche abondante, "
            "cerises.",
         2: "Pérenne caduc à floraison très précoce, sensible aux gelées tardives ; "
-           "croissance rapide. Cerises mûres dès le début de l'été, vite tombées.",
+           "croissance rapide. Cerises mûres dès le début de l'été, vite tombées. "
+           "Sa souche rejette fort quand l'arbre meurt ou qu'on le coupe.",
         3: "Sa floraison hâtive est une des premières grandes tables des "
            "pollinisateurs ; cerises = aimant à oiseaux (dispersion des noyaux).",
     },
@@ -49,14 +53,15 @@ FICHES_LIGNEUX: dict[str, dict[int, str]] = {
         1: "Grand arbre à large couronne, feuilles composées aromatiques, noix en brou.",
         2: "Pérenne caduc de grande taille, croissance lente, longévité séculaire ; "
            "émet de la juglone. Pollen porté par le vent : un noyer seul noue peu. Noix "
-           "mûres en automne.",
+           "mûres en automne. Il rejette un peu de souche, surtout jeune.",
         3: "Allélopathique : la juglone inhibe nombre de plantes sous sa couronne — crée "
            "une niche particulière. Ombre profonde ; noix nourrissent la faune.",
     },
     "chene": {
         1: "Arbre massif à couronne étalée, feuilles lobées, glands.",
         2: "Pérenne caduc de très longue vie, croissance lente ; symbiose "
-           "ectomycorhizienne étendue.",
+           "ectomycorhizienne étendue. Recépé, sa souche rejette fort : c'est l'arbre "
+           "des taillis-sous-futaie.",
         3: "Espèce clé de voûte : héberge une biodiversité immense (insectes, oiseaux, "
            "champignons) ; glands = ressource majeure ; pivot du wood-wide-web de la "
            "lisière.",
@@ -68,7 +73,8 @@ FICHES_LIGNEUX: dict[str, dict[int, str]] = {
         2: "Pérenne caduc de grande taille, croissance lente et longévité séculaire ; "
            "anémophile (chatons). Son houppier fermé projette une ombre profonde : "
            "peu de choses poussent sous une hêtraie. Aime les sols frais et bien "
-           "drainés ; marcescent, il garde souvent ses feuilles rousses tout l'hiver.",
+           "drainés ; marcescent, il garde souvent ses feuilles rousses tout l'hiver. "
+           "Sa souche rejette mal : on recèpe un charme, pas un hêtre.",
         3: "Bâtisseur de la « hêtraie cathédrale » : son ombre dense trie la flore du "
            "sous-bois (sciaphiles strictes) et étouffe la concurrence. Ses faînes "
            "nourrissent la faune les années de fainée ; sa litière lente et son réseau "
@@ -80,7 +86,8 @@ FICHES_LIGNEUX: dict[str, dict[int, str]] = {
         2: "Pérenne caduc PIONNIER à croissance rapide et vie brève (pour un arbre) ; "
            "anémophile. Ses graines ailées, produites en masse, colonisent au loin les "
            "sols nus et remués. Houppier clairsemé → ombre légère, sous-bois lumineux. "
-           "Rustique, frugal, il s'installe là où rien d'autre ne tient encore.",
+           "Rustique, frugal, il s'installe là où rien d'autre ne tient encore. Sa "
+           "souche rejette peu : il revient par la graine plus que par le pied.",
         3: "Éclaireur de la succession forestière : premier arbre à gagner une friche "
            "ou une trouée, il abrite et ombrage légèrement les essences climaciques "
            "(chêne, hêtre) qui le remplaceront. Son couvert clair, sa litière rapide à "
@@ -93,7 +100,8 @@ FICHES_LIGNEUX: dict[str, dict[int, str]] = {
         2: "Pérenne caduc du bocage, à bois très dur et dense ; anémophile. Houppier de "
            "densité moyenne, ombre modérée. Supporte remarquablement la taille répétée — "
            "d'où son emploi ancestral en haies et charmilles. Marcescent comme le hêtre. "
-           "Croissance moyenne, longévité intermédiaire.",
+           "Croissance moyenne, longévité intermédiaire. Coupé au ras, sa souche "
+           "rejette en cépée : c'est l'essence de taillis par excellence.",
         3: "Charpente vivante du bocage normand : conduit en haie ou en têtard, il "
            "structure le paysage, brise le vent et abrite une faune dense (oiseaux "
            "nicheurs, auxiliaires). Compagnon fréquent du chêne dans la chênaie-charmaie. "
@@ -109,7 +117,7 @@ FICHES_LIGNEUX: dict[str, dict[int, str]] = {
            "Il pousse LES PIEDS DANS L'EAU là où les autres arbres pourrissent : ses "
            "racines abritent des nodosités où vit la bactérie Frankia, qui FIXE "
            "l'azote de l'air — comme une légumineuse, mais un arbre. Il enrichit ainsi "
-           "un sol pauvre et noyé.",
+           "un sol pauvre et noyé. Recépé ou tombé, sa souche rejette fort.",
         3: "Bâtisseur des ripisylves : il stabilise les berges, ombrage l'eau, et sa "
            "fixation d'azote AMÉLIORE le sol autour de lui — un vrai pionnier "
            "améliorateur des terrains humides que rien ne colonise. Sa litière et son "
