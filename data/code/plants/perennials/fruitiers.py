@@ -290,3 +290,4 @@ class WalnutTree(PerennialWoody):
     # dans une paire). Noix avec son brou ~13 g de MS → 0,05 (1 unité ≈ 250 g de MS) [odg].
     fruits_par_site = 60
     fruit_masse     = 0.05
+    mange_par = ("geai", "ecureuil")   # zoochorie ⑤ : cueilli sur l'arbre, caché, parfois oublié

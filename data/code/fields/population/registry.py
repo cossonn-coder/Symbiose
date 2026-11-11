@@ -23,6 +23,9 @@ from fields.population.resources import (
     _racine_grid, _proies_grid, _rapace_habitat_grid, _habitat_nul_grid,
     _eau_stagnante_grid, _mare_habitat_grid,
 )
+from fields.population.disperseurs import (
+    _geai_food_grid, _geai_habitat_grid, _ecureuil_food_grid, _ecureuil_habitat_grid,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -52,6 +55,8 @@ _SALT_RAPACE        = 0x2B0001   # super-prédateur aérien (sommet trophique �
 _SALT_COULEUVRE     = 0x2B1001   # super-prédateur terrestre (sommet trophique ②)
 _SALT_MOUSTIQUE     = 0x2B2001   # proie aquatique de mare (hydrologie ④)
 _SALT_LIBELLULE     = 0x2B3001   # auxiliaire prédateur du moustique (hydrologie ④)
+_SALT_GEAI          = 0x2B4001   # disperseur de glands, terrain découvert (zoochorie ⑤)
+_SALT_ECUREUIL      = 0x2B5001   # disperseur de noisettes, cimes connexes (zoochorie ⑤)
 
 # Rampe thermique des INSECTES ravageurs (D122 ③, décision Nico C5) : pucerons et
 # doryphores ne pullulent qu'au chaud (développement lent sous ~10 °C) ; la porte
@@ -208,6 +213,32 @@ def build_population_specs() -> list[TrophicSpec]:
             daylen_min=9.0, daylen_full=12.0,    # nocturne→large
             lisiere_w=0.30,                      # le plus lié au bord : gîte d'hibernation en haie
             **encyclo_meta("herisson"),
+        ),
+        # --- Catégorie NEUVE `disperseur` : geai + écureuil (zoochorie ⑤, D42) ---
+        # Ils cueillent les fruits à coque sur l'arbre, les cachent et en oublient
+        # (`sim/zoochorie.py`). Catégorie lue par PERSONNE : ni `auxiliaire` (qui
+        # réglerait les ravageurs), ni `herbivore_vertebre` (dégâts racinaires du
+        # campagnol). Proies de personne dans ce tronçon → ordre de tick neutre ;
+        # placés avant les sommets pour qu'un futur lien rapace→écureuil les lise
+        # frais. Fenêtre LARGE et rampe thermique basse : sang chaud, résidents,
+        # actifs l'hiver (l'écureuil vit de ses caches, le geai aussi).
+        TrophicSpec(
+            name="geai", category="disperseur", salt=_SALT_GEAI,
+            resource_fn=_geai_food_grid, habitat_fn=_geai_habitat_grid,
+            predators=(),
+            daylen_min=8.5, daylen_full=10.0,
+            t_cold_zero=-5.0, t_warm_full=5.0,
+            lisiere_w=0.35,                      # niche en forêt, vient au jardin
+            **encyclo_meta("geai"),
+        ),
+        TrophicSpec(
+            name="ecureuil", category="disperseur", salt=_SALT_ECUREUIL,
+            resource_fn=_ecureuil_food_grid, habitat_fn=_ecureuil_habitat_grid,
+            predators=(),
+            daylen_min=8.5, daylen_full=10.0,
+            t_cold_zero=-5.0, t_warm_full=5.0,
+            lisiere_w=0.20,                      # vient du bois par les haies
+            **encyclo_meta("ecureuil"),
         ),
         # --- Catégorie NEUVE `super_predateur` : rapace + couleuvre (sommet ②) ---
         # Insérés en TOUTE FIN d'ordre de tick : ils lisent toutes leurs proies

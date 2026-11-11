@@ -42,6 +42,7 @@ from sim.grimpe import chercher_support, relais_appui
 from sim.clonal import emettre_ramets
 from sim.souche import emettre_rejets_souche   # rejets à la mort (frein_rejets_figuier ②)
 from sim.zoochorie import merle_prend, merle_seme   # le merle cueille et sème (zoochorie ④)
+from sim.caches import caches_prennent, caches_sement   # geai/écureuil cachent et oublient (⑤)
 from .calendrier import (SAISONS, saison_de, est_debut_saison, est_fin_saison,
                         est_phase_floraison, est_phase_recolte)
 from .aleas import (appliquer_alea, ALEAS_RAVAGEURS, WEATHER_ALEA, ORAGE_VENT,
@@ -667,6 +668,11 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
             # fruit mûr d'une espèce `mange_par` (cas du golden) → digest intact.
             mlog = merle_prend(self.game_state, tile, eco, seed, week)
             if mlog: log += mlog
+            # 15c-ter. GEAI puis ÉCUREUIL cueillent les fruits à coque mûrs (zoochorie
+            # ⑤) et en oublient une part → tampon monde, semé en 17a-ter. No-op sans
+            # gland/faîne/noix/noisette mûrs sur l'arbre (cas du golden).
+            clog = caches_prennent(self.game_state, tile, eco, seed, week)
+            if clog: log += clog
 
             # 15d. Transport ÉOLIEN de la litière (sprint VENT ⑦, §5.6) — APRÈS tous
             # les dépôts de litière du tick (décompo 4, abscission 15b, fruits 15c) :
@@ -732,6 +738,10 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
         # de tick du MONDE ENTIER, donc l'ordre des tuiles ne décide rien et une graine
         # cueillie sur une tuile peut tomber sur une autre. Tampon vide → no-op.
         log += merle_seme(self.game_state, seed, week)
+        # 17a-ter. Caches oubliées du geai (découvert du monde) et de l'écureuil
+        # (lisière des couronnes, ≤ 15 m) + glands de la ceinture `foret` portés par
+        # le geai l'automne (⑤). Tampon vide et pas de ceinture → no-op (golden).
+        log += caches_sement(self.game_state, seed, week)
 
         # 17b. Conteneurs (sprint pots/bacs ②+③) — pots/bacs posés par le joueur,
         # chacun un mini-sol `EcoFields` qui ticke SA chimie ISOLÉE (drainage du

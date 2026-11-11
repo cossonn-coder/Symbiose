@@ -34,6 +34,7 @@ class OakTree(PerennialWoody):
     fruits_par_site = 80
     fruit_masse     = 0.012
     glandee_periode_ans = 4.0   # glandée forte ~1 an sur 4 [odg]
+    mange_par = ("geai", "ecureuil")   # zoochorie ⑤ : cueilli sur l'arbre, caché, parfois oublié
     longevity_years = 500
     rejet_souche = 0.8       # souche ② (D130) : essence de taillis-sous-futaie classique : la souche recépée rejette fort [ordre de grandeur]
     maturity_years = 25
@@ -91,6 +92,7 @@ class BeechTree(PerennialWoody):
     fruits_par_site = 150
     fruit_masse     = 0.002
     glandee_periode_ans = 6.0   # faînée forte ~1 an sur 6 [odg]
+    mange_par = ("geai", "ecureuil")   # zoochorie ⑤ : cueilli sur l'arbre, caché, parfois oublié
     longevity_years = 300
     rejet_souche = 0.2       # souche ② (D130) : rejette mal de souche — on recèpe un charme, pas un hêtre [ordre de grandeur]
     maturity_years = 30
@@ -253,6 +255,7 @@ class HazelTree(PerennialWoody):
     fruit_masse     = 0.006
     graine_viabilite_ans = 1.0       # la noisette ne se garde pas : levée l'an suivant ou rien
     glandee_periode_ans = 2.0        # alternance forte/maigre ~1 an sur 2 [odg]
+    mange_par = ("geai", "ecureuil")   # zoochorie ⑤ : cueilli sur l'arbre, caché, parfois oublié
     longevity_years = 80             # les tiges ; la souche, recépée, bien plus
     rejet_souche = 0.9       # souche ② (D130) : le taillis par excellence, recépé tous les 7-10 ans [ordre de grandeur]
     maturity_years = 8

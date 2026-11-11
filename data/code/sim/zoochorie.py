@@ -62,11 +62,12 @@ TAMPON = "zoochorie_tampon"
 _CANAL = 83
 
 
-def _entier(x: float, seed: int, week: int, a: int, b: int) -> int:
+def _entier(x: float, seed: int, week: int, a: int, b: int, decal: int = 0) -> int:
     """Arrondi entier déterministe : partie entière + 1 avec la probabilité de la
-    partie fractionnaire, tranchée par hash. Espérance exacte, zéro RNG."""
+    partie fractionnaire, tranchée par hash. Espérance exacte, zéro RNG. `decal`
+    sépare les canaux des disperseurs (merle 0 ; geai, écureuil : `sim/caches.py`)."""
     n = int(x)
-    if _hash_noise(seed, week * _CANAL, a, b) < x - n:
+    if _hash_noise(seed, week * _CANAL + decal, a, b) < x - n:
         n += 1
     return n
 
@@ -80,22 +81,23 @@ def _plots_plante(plant, tile) -> list:
     return plots or [plant.position]
 
 
-def merle_prend(game_state: dict, tile, eco, seed: int, week: int) -> list:
-    """Le merle cueille les fruits mûrs de la tuile ; les graines vont au tampon.
+def prendre(tile, eco, nom: str, taux: float, appetit: float,
+            seed: int, week: int, decal: int = 0) -> list:
+    """Le disperseur `nom` cueille les fruits mûrs de la tuile : `[(plante, n_pris)]`.
 
-    Par cohorte mûre : `demande = nombre × TAUX_PRISE × d̄`, d̄ = densité moyenne du
-    champ `merle` sur les plots de la plante. Si la demande totale de la tuile
-    dépasse `APPETIT × Σ densité`, toutes les prises sont réduites au prorata.
-    Graines : `prise × P_TRANSIT`, gènes `child_genes(mère, père)`. Renvoie le log
-    (une ligne par plante et par semaine de prise). No-op sans champ `merle`."""
-    champ = (eco.populations or {}).get("merle")
+    Par cohorte mûre d'une espèce qu'il mange (`nom in mange_par`) : `demande =
+    nombre × taux × d̄`, d̄ = densité moyenne du champ `nom` sur les plots de la
+    plante. Si la demande totale de la tuile dépasse `appetit × Σ densité`, toutes
+    les prises sont réduites au prorata (Holling II : une glandée rassasie, le reste
+    tombe). Le fruit pris est RETIRÉ de sa cohorte. No-op sans champ `nom`."""
+    champ = (eco.populations or {}).get(nom)
     if champ is None:
         return []
     demandes = []                 # (plante, cohorte, demande)
     for plant in tile.plants:
         cls = plant.plant_class
         if (not plant.is_alive or not plant.fruits
-                or "merle" not in cls.mange_par or not recrue_par_fruits(cls)):
+                or nom not in cls.mange_par or not recrue_par_fruits(cls)):
             continue
         mures = [f for f in plant.fruits if f.maturite >= MUR]
         if not mures:
@@ -103,26 +105,33 @@ def merle_prend(game_state: dict, tile, eco, seed: int, week: int) -> list:
         plots = _plots_plante(plant, tile)
         d = sum(champ.get(r, c) for r, c in plots) / len(plots)
         for f in mures:
-            demandes.append((plant, f, f.nombre * TAUX_PRISE * d))
+            demandes.append((plant, f, f.nombre * taux * d))
     total = sum(dem for _p, _f, dem in demandes)
     if total <= 0.0:
         return []
-    appetit = APPETIT * champ.total()
-    facteur = min(1.0, appetit / total)
+    facteur = min(1.0, appetit * champ.total() / total)
 
-    log, prises = [], {}          # id(plante) → (plante, fruits pris)
+    prises = {}                   # id(plante) → (plante, fruits pris)
     for plant, f, dem in demandes:
         pr, pc = plant.position
         prise = min(f.nombre, _entier(dem * facteur, seed, week,
-                                      pr * 1009 + f.segment_id, pc))
+                                      pr * 1009 + f.segment_id, pc, decal))
         if prise <= 0:
             continue
         f.nombre -= prise
         p, n = prises.get(id(plant), (plant, 0))
         prises[id(plant)] = (p, n + prise)
-    tampon = None
-    for plant, n_pris in prises.values():
+    for plant, _n in prises.values():
         plant.fruits = [f for f in plant.fruits if f.nombre > 0]
+    return list(prises.values())
+
+
+def merle_prend(game_state: dict, tile, eco, seed: int, week: int) -> list:
+    """Le merle cueille les fruits mûrs de la tuile (`prendre`) ; les graines vont
+    au tampon : `prise × P_TRANSIT`, gènes `child_genes(mère, père)`. Renvoie le log
+    (une ligne par plante et par semaine de prise). No-op sans champ `merle`."""
+    log, tampon = [], None
+    for plant, n_pris in prendre(tile, eco, "merle", TAUX_PRISE, APPETIT, seed, week):
         log.append(f"    🐦 Merle : {n_pris} fruits pris sur "
                    f"{plant.name}@{plant.position}")
         pr, pc = plant.position

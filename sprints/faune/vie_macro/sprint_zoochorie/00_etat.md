@@ -63,7 +63,7 @@ Golden de départ `a10b7225…` ; **re-figé au ⑥ seulement** (mulot → rapac
 | ② | `02_chute_unifiee.md` — fruit tombé → grains ; `_reproduction` coupée pour les fruitiers pérennes ; chêne/hêtre fruitiers ; glandée ; recalibrage relève | inchangé | **fait** 2026-11-09 |
 | ③ | `03_noisetier.md` — espèce neuve + 5 voix | inchangé | **fait** 2026-11-09 |
 | ④ | `04_merle_perchoirs.md` — `sim/zoochorie.py`, prise saturante, grille perchoir, tampon monde, geste `poser_perchoir` | inchangé | **fait** 2026-11-11 |
-| ⑤ | `05_geai_ecureuil.md` — 2 guildes `disperseur`, caches + oubli, apport ceinture | inchangé | à faire |
+| ⑤ | `05_geai_ecureuil.md` — 2 guildes `disperseur`, caches + oubli, apport ceinture | inchangé | **fait** 2026-11-11 |
 | ⑥ | `06_mulot.md` — guilde, prédation saturante des grains, caches ; proie rapace/couleuvre | **RE-FIGÉ annoncé** | à faire |
 | ⑦ | `07_voix_mesure.md` — événements, carnet `dispersion`, signes ; 200 ans verger_mur + banc `nucleation` ; calibrage | inchangé depuis ⑥ | à faire |
 | ⑧ | `08_vue_godot.md` — faune, fruits à coque, noisetier, perchoir, banc F5 ; clôture D42 | inchangé | à faire |
@@ -177,7 +177,40 @@ pondéré par plot sur une grille « perchoir » (couronnes ligneuses) déjà co
   Golden `a10b7225…` INCHANGÉ. C# non touché (glyphe/rendu du perchoir au ⑧).
 - `geste_corpus.py` 353 LDC 🟡 (corpus, une seule responsabilité).
 
+## Tronçon 5 — fait (2026-11-11)
+- Guildes `geai`, `ecureuil` (catégorie neuve `disperseur`, lue par personne — grep
+  `category_density(` vérifié), sels 0x2B4001/0x2B5001, insérées avant les super-prédateurs,
+  fenêtre large, rampe thermique −5→5 °C, `lisiere_w` 0,35 / 0,20. Ressource/habitat dans
+  **`fields/population/disperseurs.py`** (neuf, 57 LDC) : `resources.py` (379 LDC) aurait
+  passé 400. `registry.py` 327 LDC 🟡 (registre, une responsabilité).
+- **Écart au kickoff** : « cimes connexes » = voisinage 3×3 touché par ≥ 2 couronnes
+  DISTINCTES (ligneux vivants ≥ 300 cm). La règle « ≥ 2 voisins foliaires » rendait tout
+  grand arbre isolé habitable (couronne de chêne 10 ans ≈ 97 plots).
+- `mange_par = ("geai", "ecureuil")` sur chêne, hêtre, noyer, noisetier. `sim/zoochorie.py`
+  : prise généralisée en `prendre(…, nom, taux, appétit, decal)` (merle bit-identique,
+  18/18). **`sim/caches.py`** (neuf, 154 LDC) : `caches_prennent` (15c-ter, geai puis
+  écureuil sur le reste) + `caches_sement` (17a-ter : découvert monde / anneau de lisière
+  ≤ 1500 cm + apport ceinture). Canaux `week*83 + 2…7`. Tampon `zoochorie_caches`, retiré
+  au vidage. Placeholders ⑦ : TAUX 0,15, APPÉTIT geai 40 / écureuil 30, P_OUBLI 0,10,
+  LUM_DECOUVERT 0,5, BONUS_REPERE 2, APPORT_CEINTURE 15 (4 → 0 gland en 4 ans).
+- Ceinture : chêne toujours + hêtre si essence `hetre` (y compris ripisylve : non filtré),
+  gènes `founder_genes` au plot, `origine="ceinture"`.
+- Effet `full` seed 42, 5 ans [n=1 run] : **inerte** — aucun arbre à coque, ceinture sans
+  `foret` ; geai moyen ≤ 0,10, écureuil ≤ 0,08 (aucun lecteur). Perf ans 3-5 avec / sans :
+  1437/1418/1388 vs 1401/1425/1371 ms [n=1, charge VM 2 à 15] → bruit.
+- Effet `verger_mur` (2 noyers) + ceinture nord `foret`/hêtre 0,9, 4 ans [n=1 run, seed
+  42] : noix prises geai 172 / écureuil 111 (an 4 cumulé), 14 + 13 oubliées, levées
+  geai 5 · écureuil 5 ; ceinture 17 glands/faînes (dont 15 l'an 4 = glandée), 2 levées.
+- **À calibrer (⑦)** : la satiation ne mord qu'au-delà de ~267 fruits par plot de couronne
+  (APPÉTIT/TAUX) — aucune glandée du moteur actuel n'y arrive ; test (e) en scénario forcé.
+- Pont : `sprites` porte 2 espèces de plus (22) ; C# retombe sur `EspeceInconnue`
+  (glyphe à faire au ⑧). Pas de bump de version. C# non touché.
+- Tests : `test_geai_ecureuil` 18/18 ; faune_dediee, population, merle_seme, peripherie
+  71/71, sim_server 322/322, signes_legende, infobulle_vivant, encyclopedie, evenements,
+  carnet, fruits, attraction, chute_seme, grain_sauvage, noisetier, banque_semis verts.
+  Golden `a10b7225…` INCHANGÉ.
+
 ## §REPRISE
-Prochain : ⑤ `05_geai_ecureuil.md`. `sim/zoochorie.py` porte le patron prise saturante + tampon monde + grille de dépôt (à généraliser par disperseur) ; le noisetier (clé `"noisetier"`) existe. Lire `CLAUDE.md`, ce fichier, le doc de conception, puis le premier kickoff « à
+Prochain : ⑥ `06_mulot.md`. `sim/zoochorie.prendre` = prise saturante générique ; `sim/caches.py` = caches + oubli + `_semer` (grille pondérée, gènes fondateurs si `None`) ; catégorie `disperseur` à réutiliser pour le mulot. Lire `CLAUDE.md`, ce fichier, le doc de conception, puis le premier kickoff « à
 faire » du tableau. Chaque tronçon met à jour sa ligne + une section « Tronçon N —
 fait » courte (constats chiffrés avec leur limite entre crochets).

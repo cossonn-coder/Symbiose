@@ -72,16 +72,22 @@ SUPER_PREDATEURS = ("rapace", "couleuvre")
 # sur l'eau stagnante (moustique proie → libellule prédateur). Elles SONT dans le
 # sous-graphe symétrique (moustique cite libellule, libellule cite moustique).
 FAUNE_MARE = ("moustique", "libellule")
+# Disperseurs de fruits à coque (zoochorie ⑤) : catégorie NEUVE `disperseur`, lue par
+# personne. Ni proies ni prédateurs : leurs liens d'encyclopédie pointent vers les
+# ARBRES qu'ils plantent (clés catalogue), admis comme tokens de milieu ci-dessous.
+DISPERSEURS = ("geai", "ecureuil")
 ESPECES_QUATRE = RAVAGEURS + AUXILIAIRES + DETRITIVORES   # les 10 espèces de ④
 # Toutes les espèces trophiques consommatrices : ④ (10) + campagnol (①) + sommet (②)
 # + faune de mare (hydrologie ④) = 15
-ESPECES = ESPECES_QUATRE + HERBIVORES_VERTEBRES + SUPER_PREDATEURS + FAUNE_MARE
+ESPECES = (ESPECES_QUATRE + HERBIVORES_VERTEBRES + SUPER_PREDATEURS + FAUNE_MARE
+           + DISPERSEURS)
 CATEGORIES = ("ravageur", "auxiliaire", "detritivore",
-              "herbivore_vertebre", "super_predateur", "aquatique")
+              "herbivore_vertebre", "super_predateur", "aquatique", "disperseur")
 # Tokens du graphe §3 qui ne sont PAS des espèces trophiques nommées (éléments du
 # milieu + champ larvaire du pont ⑤) — admis dans `interconnexions`. `eau`/`marais`
 # = la niche hydrique de la faune de mare (hydrologie ④).
-_MILIEU_TOKENS = {"fruit", "pile", "ail", "eau", "marais"}
+_MILIEU_TOKENS = {"fruit", "pile", "ail", "eau", "marais",
+                  "chene", "hetre", "noyer", "noisetier"}   # arbres plantés (⑤)
 
 
 def _eco(plants_specs=()):

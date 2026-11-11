@@ -128,6 +128,22 @@ FAUNE_ENCYCLO: dict[str, tuple[str, tuple[str, ...]]] = {
         "l'eau où, larve carnassière, elle-même a grandi.",
         ("moustique", "eau", "marais"),
     ),
+    # --- catégorie disperseur (zoochorie ⑤, D42) ----------------------------
+    # Ils cachent des fruits à coque et en oublient : liés aux ARBRES qu'ils
+    # plantent (clés catalogue chene/hetre/noyer/noisetier), pas à des proies. Hors
+    # du sous-graphe trophique symétrique (aucune espèce animale citée).
+    "geai": (
+        "Oiseau criard au miroir d'ailes bleu ; à l'automne il fait la navette, le "
+        "jabot gonflé de glands, et les enfouit un à un en terrain découvert, au "
+        "pied d'un repère. Il en oublie plus qu'on ne croit.",
+        ("chene", "hetre", "noyer", "noisetier"),
+    ),
+    "ecureuil": (
+        "Petit roux à queue en panache qui court de cime en cime sans toucher terre ; "
+        "il enterre noisettes et noix à la lisière des arbres et ne les retrouve "
+        "pas toutes.",
+        ("noisetier", "noyer", "hetre", "chene"),
+    ),
     # --- pollinisateurs (catalogue enrichi ⑤/⑥) ------------------------------
     # Liés à la FLORAISON qu'ils fécondent (→ `fruit`, nouaison), et selon le
     # type à un stade larvaire (pont ⑤ : `chenille`, `syrphe_larve`), une niche

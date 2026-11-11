@@ -231,7 +231,8 @@ def test_corridor():
     # 3. Le registre : les bons noms, et surtout PAS les ravageurs (#2).
     poids = {s.name: s.lisiere_w
              for s in build_population_specs() + build_pollinator_specs()}
-    attendus = ("carabe", "merle", "herisson", "chrysope", "coccinelle", "syrphe")
+    attendus = ("carabe", "merle", "herisson", "chrysope", "coccinelle", "syrphe",
+                "geai", "ecureuil")   # zoochorie ⑤ : disperseurs venus du bois
     check("les auxiliaires liés au bord portent un poids de lisière",
           all(poids[n] > 0.0 for n in attendus),
           " · ".join(f"{n} {poids[n]}" for n in attendus))
