@@ -176,6 +176,7 @@ class CherryTree(PerennialWoody):
     longevity_years = 60
     rejet_souche = 0.8       # souche ② (D130) : drageonne et rejette fort de souche (merisier : essence de taillis) [ordre de grandeur]
     graine_viabilite_ans = 2.0   # zoochorie ① (D42) : noyau viable ~2 ans en sol [ordre de grandeur]
+    mange_par = ("merle",)       # zoochorie ④ : la cerise est cueillie, le noyau semé sous les perchoirs
     maturity_years = 5
     greffable = True           # ligneux fruitier greffé (palette ③, D8) ; Rosaceae → compatible pommier/framboisier
     # VERGER VIVANT ② : le cerisier fleurit AVANT le pommier, mi-avril [odg, fiche

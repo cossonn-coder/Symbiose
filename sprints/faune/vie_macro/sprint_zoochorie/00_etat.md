@@ -62,7 +62,7 @@ Golden de départ `a10b7225…` ; **re-figé au ⑥ seulement** (mulot → rapac
 | ① | `01_grain_sauvage.md` — `GrainEnAttente` sauvage : dormance, péremption, plafond | inchangé | **fait** 2026-11-09 |
 | ② | `02_chute_unifiee.md` — fruit tombé → grains ; `_reproduction` coupée pour les fruitiers pérennes ; chêne/hêtre fruitiers ; glandée ; recalibrage relève | inchangé | **fait** 2026-11-09 |
 | ③ | `03_noisetier.md` — espèce neuve + 5 voix | inchangé | **fait** 2026-11-09 |
-| ④ | `04_merle_perchoirs.md` — `sim/zoochorie.py`, prise saturante, grille perchoir, tampon monde, geste `poser_perchoir` | inchangé | à faire |
+| ④ | `04_merle_perchoirs.md` — `sim/zoochorie.py`, prise saturante, grille perchoir, tampon monde, geste `poser_perchoir` | inchangé | **fait** 2026-11-11 |
 | ⑤ | `05_geai_ecureuil.md` — 2 guildes `disperseur`, caches + oubli, apport ceinture | inchangé | à faire |
 | ⑥ | `06_mulot.md` — guilde, prédation saturante des grains, caches ; proie rapace/couleuvre | **RE-FIGÉ annoncé** | à faire |
 | ⑦ | `07_voix_mesure.md` — événements, carnet `dispersion`, signes ; 200 ans verger_mur + banc `nucleation` ; calibrage | inchangé depuis ⑥ | à faire |
@@ -149,7 +149,35 @@ pondéré par plot sur une grille « perchoir » (couronnes ligneuses) déjà co
   pages 77/77, croissance 134/134, magazine, peripherie_voix, chute_seme, grain_sauvage
   verts. Golden `a10b7225…` INCHANGÉ.
 
+## Tronçon 4 — fait (2026-11-11)
+- `sim/zoochorie.py` (118 LDC) : `merle_prend` (par tuile, 15c-bis après `_tick_fruits`)
+  + `merle_seme` (une fois, 17a-bis après la boucle des tuiles). Trait `mange_par`
+  (défaut `()`, `familles.py` 295 LDC) = `("merle",)` sur cerisier, framboisier, fraisier.
+  Placeholders `TAUX_PRISE` 0,15, `APPETIT` 25 fruits/unité de densité/sem, `P_TRANSIT`
+  0,05 (calibrage ⑦). Seuil mûr `1 − 1e-9` (7 × 1/7 < 1,0 en flottant). Canal `week*83`.
+- **Écart au kickoff** : TOUTES les graines passent par le tampon (pas seulement celles
+  d'une autre tuile), et la grille perchoir est calculée au vidage, sur l'état de fin de
+  tick du monde : l'ordre des tuiles ne décide rien (testé). Clé `zoochorie_tampon`
+  créée au besoin et retirée au vidage (rien au save). Log par plante `🐦 Merle : <n>
+  fruits pris sur <espèce>@<pos>` + une ligne de semis par tick `🐦 Merle : <n>
+  graine(s) semée(s) sous les perchoirs`.
+- Geste `poser_perchoir` (200 cm, « fin ») : coût MODÉRÉ, technique `perchoir`
+  (TECHNIQUES + fiche 3 niveaux), fiche geste, déblocage `action poser_tuteur` ou
+  `maitrise perchoir 1`. `support_compatible("…", "perchoir")` → False (aucune grimpante
+  ne s'y accroche, aucun plantage). **Prémisse réfutée** : `poser_tuteur` n'a AUCUNE
+  route au pont (réponse « verbe inconnu ») ; `poser_perchoir` reçoit sa propre branche
+  dans `tools/simserver/actions.py` (342 LDC 🟡), pont **0.6.11**. Tuteur/treillis/pergola
+  restent non routés : à trancher (⑧ ou dette).
+- Effet `full` seed 42, 5 ans [n=1 run] : cerises prises 136 / 133 / 126 / 83 (ans 2-5),
+  23 graines semées, 10 grains `merle` en attente en fin de run.
+- Perf `full`, tick médian ans 3-5 : avec 852 / 890 / 900 ms, sans 949 / 900 / 882 ms
+  [n=1, charge VM 2 à 5] → écart dans le bruit.
+- Tests : `test_merle_seme` 18/18 ; encyclopedie 70/70, deblocage 24/24, grimpe, chute_seme,
+  grain_sauvage, fruits 30/30, acquisition_outils, test_sim_server 322/322 verts.
+  Golden `a10b7225…` INCHANGÉ. C# non touché (glyphe/rendu du perchoir au ⑧).
+- `geste_corpus.py` 353 LDC 🟡 (corpus, une seule responsabilité).
+
 ## §REPRISE
-Prochain : ④ `04_merle_perchoirs.md`. Le noisetier (clé `"noisetier"`) existe pour le geai/écureuil du ⑤. Lire `CLAUDE.md`, ce fichier, le doc de conception, puis le premier kickoff « à
+Prochain : ⑤ `05_geai_ecureuil.md`. `sim/zoochorie.py` porte le patron prise saturante + tampon monde + grille de dépôt (à généraliser par disperseur) ; le noisetier (clé `"noisetier"`) existe. Lire `CLAUDE.md`, ce fichier, le doc de conception, puis le premier kickoff « à
 faire » du tableau. Chaque tronçon met à jour sa ligne + une section « Tronçon N —
 fait » courte (constats chiffrés avec leur limite entre crochets).

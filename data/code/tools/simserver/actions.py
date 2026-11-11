@@ -481,6 +481,26 @@ class ActionsMixin:
                          f"marais {mem_avant:.2f} → {mem_apres:.2f}" if ok
                          else "Vigueur insuffisante — rien drainé")
 
+        # Perchoir à oiseaux (zoochorie ④, protocole 0.6.11) : POSITION tuile-locale
+        # {tile, x_cm, y_cm}, comme `planter`. Hors tuile → refus sans coût. La façade
+        # fait foi (coût, pose binaire). NB : poser_tuteur/treillis/pergola n'ont pas
+        # (encore) de route au pont — même branche le jour où la vue les enverra.
+        if verb == "poser_perchoir":
+            tile, _eco = tile_cible()
+            if tile is None:
+                return bilan(False, 0.0, 0.0,
+                             f"tuile introuvable : {target.get('tile')!r}")
+            if self._plot_at(tile, target.get("x_cm"), target.get("y_cm")) is None:
+                return bilan(False, 0.0, 0.0,
+                             f"position hors tuile : x={target.get('x_cm')!r}, "
+                             f"y={target.get('y_cm')!r}")
+            cost = A.cout_action(gs, player, verb, A.OBJETS_TOUCHES[verb])
+            sup = A.poser_perchoir(gs, player, tile, float(target["x_cm"]),
+                                   float(target["y_cm"]))
+            return bilan(sup is not None, cost, 0.0,
+                         "perchoir planté — les oiseaux viendront s'y poser"
+                         if sup is not None else "Vigueur insuffisante — rien posé")
+
         # Structures posables & compostage (⑤, protocole 0.3.5 ; ruche ⑥ §H/§I) :
         # routage délégué au module `structures_route` (garde ce routeur court).
         # Poser désigne un PLOT {r,c}, les gestes sur structure existante la

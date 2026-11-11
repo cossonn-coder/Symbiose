@@ -338,6 +338,21 @@ FICHES_TECHNIQUE: dict[str, dict[int, str]] = {
            "de la lisière — celui qui prend sans défaire.",
     },
 
+    "perchoir": {
+        1: "Donner aux oiseaux un endroit où se poser, pour qu'ils sèment dessous les "
+           "graines des fruits qu'ils ont mangés.",
+        2: "Le merle avale la cerise, la framboise, la fraise des bois, et rejette le "
+           "noyau ou la graine plus loin, là où il se pose : sous un arbre, sur un "
+           "piquet, sur une branche morte. Une partie seulement des graines ressort "
+           "capable de germer. Sans perchoir, il ne s'arrête pas au milieu de "
+           "l'herbe et rien n'est semé.",
+        3: "Les forestiers appellent cela la nucléation : un perchoir isolé dans une "
+           "friche devient le noyau d'un bosquet. Les premiers buissons à baies "
+           "attirent d'autres oiseaux, qui apportent d'autres graines, et le "
+           "bosquet s'élargit à partir de ce point. Un arbre mort debout ou une haie "
+           "jouent le même rôle sans qu'on ait rien à planter.",
+    },
+
     "palissage": {
         1: "Guider une grimpante le long d'un appui et, s'il le faut, l'y attacher. "
            "La tige, au lieu de ramper au sol, s'élève et s'étale contre le support.",

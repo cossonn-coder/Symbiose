@@ -77,6 +77,9 @@ TECHNIQUES: frozenset[str] = frozenset({
     # voile/cloche/ombrière pour tempérer gel/grêle/canicule. Technique, pas un objet
     # qu'on prend en main → rangée ici (sinon elle tomberait dans OUTILS par défaut).
     "protection-climatique",
+    # Nucléation par les oiseaux (zoochorie ④) : planter un perchoir pour que les
+    # frugivores sèment dessous. Un savoir-faire, pas un outil.
+    "perchoir",
 })
 
 # Tous les membres statiques touchés par un geste (union des tuples), puis les

@@ -271,6 +271,9 @@ class PlantBase(ABC):
     # (`sim.reproduction.facteur_glandee`). None = pas de masting (nouaison inchangée).
     # Chêne ~4, hêtre ~6 [ordre de grandeur]. Littéral seul.
     glandee_periode_ans: float | None = None
+    # FRUGIVORES (zoochorie ④, D42) — disperseurs qui CUEILLENT les fruits mûrs de
+    # l'espèce sur la plante (`sim.zoochorie`). `()` = aucun. Littéral seul.
+    mange_par: tuple = ()
     # BOUTURE (sprint PALETTE DE GESTES ②) — multiplication végétative PAR LE JOUEUR :
     # `bouturable=True` marque les espèces qui reprennent réellement d'un fragment
     # (ligneuses souples, aromatiques : saule/menthe/lavande/figuier/framboisier…) →

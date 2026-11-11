@@ -85,7 +85,7 @@ class Support:
     maximale. `finesse` ∈ {"fin","surface"} qualifie la prise (pieu fin vs grille
     ou paroi) — INERTE au tronçon ② (aucun consommateur ne le lit encore ; la
     pergola occulteuse et le rendu le liront plus tard)."""
-    support_type: str            # "tuteur" | "treillis" | "pergola"
+    support_type: str            # "tuteur" | "treillis" | "pergola" | "perchoir" (zoochorie ④)
     x_cm: float
     y_cm: float
     height_cm: float

@@ -90,6 +90,9 @@ GESTE_UNLOCK: dict[str, list] = {
     "poser_treillis": [("maitrise", "palissage", 1)],
     "poser_pergola":  [("maitrise", "palissage", 1)],
     "palisser":       [("action", "poser_tuteur")],
+    # perchoir (zoochorie ④) : on le comprend en ayant planté un tuteur (les oiseaux
+    # s'y posent), ou par la maîtrise de la technique elle-même.
+    "poser_perchoir": [("action", "poser_tuteur"), ("maitrise", "perchoir", 1)],
 
     # paillage
     "pailler": [("maitrise", "paillage", 1)],

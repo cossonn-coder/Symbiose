@@ -41,6 +41,7 @@ from sim.growth import grow_plant
 from sim.grimpe import chercher_support, relais_appui
 from sim.clonal import emettre_ramets
 from sim.souche import emettre_rejets_souche   # rejets à la mort (frein_rejets_figuier ②)
+from sim.zoochorie import merle_prend, merle_seme   # le merle cueille et sème (zoochorie ④)
 from .calendrier import (SAISONS, saison_de, est_debut_saison, est_fin_saison,
                         est_phase_floraison, est_phase_recolte)
 from .aleas import (appliquer_alea, ALEAS_RAVAGEURS, WEATHER_ALEA, ORAGE_VENT,
@@ -658,6 +659,14 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
             # appelé chaque semaine (le front de floraison est détecté par plante).
             flog = self._tick_fruits(tile, eco, week_in_year)
             if flog: log += flog
+            # 15c-bis. Le MERLE cueille les fruits mûrs (zoochorie ④, D42) — APRÈS
+            # `_tick_fruits` : les cohortes de la semaine sont à jour (les sur-mûrs
+            # viennent de tomber). Le fruit pris ne tombera plus ; ses graines vont au
+            # tampon monde, semées APRÈS la boucle (17a-bis). Un grain posé ne lève
+            # jamais la semaine même (dormance ① : printemps suivant). No-op sans
+            # fruit mûr d'une espèce `mange_par` (cas du golden) → digest intact.
+            mlog = merle_prend(self.game_state, tile, eco, seed, week)
+            if mlog: log += mlog
 
             # 15d. Transport ÉOLIEN de la litière (sprint VENT ⑦, §5.6) — APRÈS tous
             # les dépôts de litière du tick (décompo 4, abscission 15b, fruits 15c) :
@@ -717,6 +726,12 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
                 f"soil={s['soil_memory']:.3f} vit={s['vitalite']:.3f} "
                 f"stress={stress_avg:.3f}"
             )
+
+        # 17a-bis. Le merle SÈME sous les perchoirs (zoochorie ④) — APRÈS la boucle
+        # des tuiles : la grille « perchoir » est calculée une fois sur l'état de fin
+        # de tick du MONDE ENTIER, donc l'ordre des tuiles ne décide rien et une graine
+        # cueillie sur une tuile peut tomber sur une autre. Tampon vide → no-op.
+        log += merle_seme(self.game_state, seed, week)
 
         # 17b. Conteneurs (sprint pots/bacs ②+③) — pots/bacs posés par le joueur,
         # chacun un mini-sol `EcoFields` qui ticke SA chimie ISOLÉE (drainage du

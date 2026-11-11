@@ -82,6 +82,7 @@ COUTS = {
     "poser_treillis":       MODERE,            # pose un treillis (planification, grimpantes ④ §6)
     "poser_pergola":        MODERE,            # pose une pergola (planification, grimpantes ④ §6)
     "palisser":             MODERE,            # noue une canne sarmenteuse à un support (grimpantes ④ §6)
+    "poser_perchoir":       MODERE,            # plante un perchoir à oiseaux (zoochorie ④, D42 §4.7)
     # Sylviculture périphérique (PÉRIPHÉRIE ④, §4.3/§5) — coût justifié par l'EFFORT
     # PHYSIQUE, pas par « action directe sur le vivant » (l'arbre périphérique est un
     # agrégat de secteur, pas une `PlantInstance`). Placeholders de calibrage F5.
@@ -147,6 +148,7 @@ OBJETS_TOUCHES = {
     "poser_treillis":       ("palissage", "treillis"),
     "poser_pergola":        ("palissage", "pergola"),
     "palisser":             ("palissage",),                    # technique seule ; la cible vivante est ajoutée par _objets_action
+    "poser_perchoir":       ("perchoir",),                     # technique de nucléation (zoochorie ④) — sans état moteur → neutre 1.0
     # Sylviculture périphérique (PÉRIPHÉRIE ④) : technique + outil, AUCUNE cible
     # vivante (on agit sur un secteur agrégé, pas sur une `PlantInstance`). Les trois
     # techniques reçoivent leurs voix au tronçon ⑥ ; sans état moteur → neutre 1.0.

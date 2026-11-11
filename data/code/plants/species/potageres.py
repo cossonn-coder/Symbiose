@@ -204,6 +204,7 @@ class Strawberry(PlantBase):
     # Cf. table D65 §2.2 — même mode que le trèfle, portée plus courte.
     clonal_mode = "stolon"
     graine_viabilite_ans = 3.0   # zoochorie ① (D42) : akènes viables quelques années en sol [ordre de grandeur]
+    mange_par = ("merle",)       # zoochorie ④ : la fraise des bois est cueillie, l'akène semé sous les perchoirs
     clonal_radius_cm = 45.0        # stolon court (défaut 60) — la fille s'enracine près
     growth_stages = [
         GrowthStage(

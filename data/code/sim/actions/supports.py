@@ -6,8 +6,12 @@ grimpante sarmenteuse. Modelés sur la famille pose (`compost.poser_bac`,
 `conteneurs.poser_pot`) — phase PLANIFICATION, coût MODÉRÉ, geste BINAIRE (posé
 QUE si la Vigueur est intégralement payée ; un geste à vide draine sans rien poser).
 
-Quatre gestes :
+Cinq gestes :
   - `poser_tuteur`  : pieu FIN vertical (une grimpante à vrille l'enroule).
+  - `poser_perchoir`: piquet à oiseaux (zoochorie ④, D42 §4.7). Le merle s'y pose et
+    sème dessous les graines des baies avalées (`sim/zoochorie.py`) : nucléation.
+    Aucune grimpante ne s'y accroche seule (`support_compatible` ne connaît pas ce
+    type → False, sans erreur).
   - `poser_treillis`: grille SURFACE (support fin étendu, mêmes prises).
   - `poser_pergola` : structure SURFACE haute (couvre, prises hautes).
   - `palisser`      : attache À LA MAIN une grimpante `sarmenteux` (jasmin) à un
@@ -46,6 +50,7 @@ _GABARITS: dict[str, tuple[float, str]] = {
     "tuteur":   (180.0, "fin"),      # pieu vertical grêle
     "treillis": (180.0, "surface"),  # grille verticale étendue
     "pergola":  (220.0, "surface"),  # structure haute couvrante
+    "perchoir": (200.0, "fin"),      # piquet à oiseaux (zoochorie ④)
 }
 
 
@@ -83,6 +88,12 @@ def poser_pergola(game_state: dict, player: str, tile,
                   x_cm: float, y_cm: float) -> Support | None:
     """Poser une PERGOLA (structure haute) à `(x_cm, y_cm)` (§6). Cf. `_poser_support`."""
     return _poser_support(game_state, player, tile, "pergola", x_cm, y_cm)
+
+
+def poser_perchoir(game_state: dict, player: str, tile,
+                   x_cm: float, y_cm: float) -> Support | None:
+    """Poser un PERCHOIR à `(x_cm, y_cm)` (zoochorie ④, §4.7). Cf. `_poser_support`."""
+    return _poser_support(game_state, player, tile, "perchoir", x_cm, y_cm)
 
 
 def palisser(game_state: dict, player: str, plant, tile) -> bool:

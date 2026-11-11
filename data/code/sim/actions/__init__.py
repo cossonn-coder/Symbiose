@@ -63,7 +63,7 @@ from .conteneurs import (
 )
 # Supports de grimpe (grimpantes ④) : pose de structures + palissage manuel.
 from .supports import (
-    poser_tuteur, poser_treillis, poser_pergola, palisser,
+    poser_tuteur, poser_treillis, poser_pergola, poser_perchoir, palisser,
 )
 # Couvertures climatiques (effondrement météo ③) : voile/cloche/ombrière posées —
 # modificateurs de MILIEU qui atténuent gel/grêle/canicule (préparation §6).
@@ -123,7 +123,7 @@ __all__ = [
     "CONCEPT_ABEILLES", "SEUIL_EQUIPEMENT", "MIEL_VIGUEUR_RATIO", "RECOLTE_SANS_EQUIP",
     "poser_ruche", "equipe", "recolter_miel",
     "poser_pot", "poser_bac_culture", "deplacer_pot",
-    "poser_tuteur", "poser_treillis", "poser_pergola", "palisser",
+    "poser_tuteur", "poser_treillis", "poser_pergola", "poser_perchoir", "palisser",
     "GESTES_BASE", "GESTE_UNLOCK", "DECLENCHEURS", "init_gestes_debloques", "est_debloque",
     "marquer_action", "marquer_evenement", "evaluer_deblocages", "gestes_debloques",
     "BOUTURE_STRESS_COST", "BOUTURE_VIGUEUR_SEUIL", "peut_bouturer", "bouturer",

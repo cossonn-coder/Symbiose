@@ -836,7 +836,10 @@ from __future__ import annotations
 #       vivants/morts par cause/levées de TOUTES les espèces par an + registre non borné des
 #       disparitions et retours. `texte` est composé en Python, la vue l'affiche tel quel.
 #       Clé neuve ignorée par un ancien client, golden neutre.
-ENGINE_VERSION = "0.6.10"
+# 0.6.11 (zoochorie ④, D42) : verbe `action` neuf `poser_perchoir`, cible {tile, x_cm, y_cm}
+#       (tuile-locale). Le bloc `supports` peut porter `type: "perchoir"` (200 cm, fin) ; un
+#       ancien client le dessine comme un tuteur (repli). Golden neutre.
+ENGINE_VERSION = "0.6.11"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

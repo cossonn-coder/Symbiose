@@ -435,6 +435,20 @@ FICHES_GESTE: dict[str, dict[int, str]] = {
            "désirée l'été condamne à l'ombre perpétuelle ce qu'elle recouvre.",
     },
 
+    "poser_perchoir": {
+        1: "Planter un piquet sec, haut comme un homme, au milieu d'un coin nu, là où "
+           "un oiseau voudra se poser.",
+        2: "Poser un perchoir, c'est offrir une halte au merle qui a mangé des baies : "
+           "il se pose, digère, et laisse tomber les graines sous lui. Sous le piquet, "
+           "des cerisiers, des ronces et des fraisiers lèvent au printemps suivant, "
+           "là où personne ne les a semés.",
+        3: "Le perchoir sème par les oiseaux ce que le jardinier n'aurait pas semé "
+           "lui-même : il ouvre un îlot de buissons à baies dans une prairie ou une "
+           "friche, et l'îlot appelle d'autres oiseaux. On ne choisit pas les "
+           "espèces, on choisit l'endroit. Un arbre mort laissé debout fait le même "
+           "office, sans rien poser.",
+    },
+
     # --- Gestes manuels de BASE (palette de gestes ①) ---------------------------
     "pincer": {
         1: "Ôter un bourgeon ou une jeune pousse entre deux doigts, sans outil. La "
