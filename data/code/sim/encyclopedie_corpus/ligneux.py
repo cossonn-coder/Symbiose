@@ -47,7 +47,10 @@ FICHES_LIGNEUX: dict[str, dict[int, str]] = {
            "croissance rapide. Cerises mûres dès le début de l'été, vite tombées. "
            "Sa souche rejette fort quand l'arbre meurt ou qu'on le coupe.",
         3: "Sa floraison hâtive est une des premières grandes tables des "
-           "pollinisateurs ; cerises = aimant à oiseaux (dispersion des noyaux).",
+           "pollinisateurs ; cerises = aimant à oiseaux. Le merle les avale sur "
+           "l'arbre et rend les noyaux sous ses perchoirs — grands arbres, arbres "
+           "morts debout, piquets : c'est là, loin de la mère, que lèvent les jeunes "
+           "cerisiers, quand le mulot ne les a pas trouvés avant.",
     },
     "noyer": {
         1: "Grand arbre à large couronne, feuilles composées aromatiques, noix en brou.",
@@ -55,7 +58,9 @@ FICHES_LIGNEUX: dict[str, dict[int, str]] = {
            "émet de la juglone. Pollen porté par le vent : un noyer seul noue peu. Noix "
            "mûres en automne. Il rejette un peu de souche, surtout jeune.",
         3: "Allélopathique : la juglone inhibe nombre de plantes sous sa couronne — crée "
-           "une niche particulière. Ombre profonde ; noix nourrissent la faune.",
+           "une niche particulière. Ombre profonde ; noix nourrissent la faune : "
+           "l'écureuil les enterre à la lisière des arbres, le geai plus loin, et les "
+           "noix oubliées font les jeunes noyers.",
     },
     "chene": {
         1: "Arbre massif à couronne étalée, feuilles lobées, glands.",
@@ -66,7 +71,10 @@ FICHES_LIGNEUX: dict[str, dict[int, str]] = {
            "puis plusieurs années maigres suivent.",
         3: "Espèce clé de voûte : héberge une biodiversité immense (insectes, oiseaux, "
            "champignons) ; glands = ressource majeure ; pivot du wood-wide-web de la "
-           "lisière.",
+           "lisière. Le geai enterre les glands un à un en terrain découvert et en "
+           "oublie : c'est lui qui plante la chênaie, jusque dans la prairie. Le mulot "
+           "mange presque tout ce qui tombe — sauf les années de glandée, trop "
+           "abondantes pour lui : c'est alors que les chênes lèvent.",
     },
     # Essences forestières normandes (sprint RENDU AMBIANCE T1, D58)
     "hetre": {
@@ -82,7 +90,9 @@ FICHES_LIGNEUX: dict[str, dict[int, str]] = {
         3: "Bâtisseur de la « hêtraie cathédrale » : son ombre dense trie la flore du "
            "sous-bois (sciaphiles strictes) et étouffe la concurrence. Ses faînes "
            "nourrissent la faune les années de fainée ; sa litière lente et son réseau "
-           "ectomycorhizien tissent un humus forestier profond — climax de nos forêts.",
+           "ectomycorhizien tissent un humus forestier profond — climax de nos forêts. "
+           "Geai et écureuil cachent ses faînes et en oublient ; les années de faînée "
+           "rassasient les mulots, et la relève passe.",
     },
     "bouleau": {
         1: "Arbre élancé à écorce blanche se détachant en lambeaux, houppier léger et "

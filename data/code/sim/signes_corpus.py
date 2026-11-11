@@ -224,7 +224,7 @@ FAUNE_ROLE: dict[str, str] = {
     "coccinelle": "mange les pucerons",
     "chrysope":   "sa larve dévore les pucerons",
     "carabe":     "chasse limaces et cloportes au sol",
-    "merle":      "mange les vers et fruits tombés",
+    "merle":      "mange vers et baies, sème noyaux",
     "herisson":   "mange limaces, cloportes et vers",
     "lombric":    "digère la litière en humus",
     "cloporte":   "fragmente la litière humide",

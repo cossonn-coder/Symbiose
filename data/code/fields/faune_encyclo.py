@@ -63,9 +63,10 @@ FAUNE_ENCYCLO: dict[str, tuple[str, tuple[str, ...]]] = {
     ),
     "merle": (
         "Oiseau résident omnivore : il sonde la terre pour en tirer les vers et "
-        "picore volontiers les fruits tombés ; guette pourtant le ciel, où plane "
-        "plus grand que lui.",
-        ("lombric", "fruit", "rapace"),
+        "picore volontiers les fruits tombés ; l'été il se gave de cerises et de "
+        "framboises sur la branche, et sous ses perchoirs pointent des noyaux. Il "
+        "guette pourtant le ciel, où plane plus grand que lui.",
+        ("lombric", "fruit", "rapace", "cerisier", "framboisier", "fraisier"),
     ),
     "herisson": (
         "Insectivore nocturne friand de limaces, de cloportes et de vers ; ne "

@@ -43,11 +43,15 @@ from sim.zoochorie import prendre, _entier, HAUTEUR_PERCHOIR_CM
 
 # (nom, part d'une cohorte mûre prise / sem. par un champ saturé, appétit en fruits
 # par unité de densité / sem., part des fruits cachés OUBLIÉE, décalage de canal).
-# Placeholders, calibrage au ⑦. Un geai cache des milliers de glands par automne et
-# en oublie une part notable ; l'écureuil retrouve mieux les siennes (odorat) [odg].
+# Un geai cache des milliers de glands par automne et en oublie une part notable ;
+# l'écureuil retrouve mieux les siennes (odorat) [odg]. APPÉTIT calibré au ⑦
+# (40 → 0,5 ; 30 → 2,0) : la capacité de la tuile (appétit × Σ densité) dépassait la
+# demande d'un facteur ~60 (geai) et ~6 à 12 (écureuil) sur les noyers de
+# `verger_mur` [seed 42, 10 ans, n=1 run] → satiation jamais atteinte. Calée pour
+# mordre les semaines des meilleures années, pas les maigres.
 DISPERSEURS = (
-    ("geai",     0.15, 40.0, 0.10, 2),
-    ("ecureuil", 0.15, 30.0, 0.10, 3),
+    ("geai",     0.15, 0.5, 0.10, 2),
+    ("ecureuil", 0.15, 2.0, 0.10, 3),
 )
 # Rayon de cache de l'écureuil autour de l'arbre source (cm).
 R_ECUREUIL_CM = 1500.0

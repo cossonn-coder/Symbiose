@@ -26,7 +26,7 @@ from sim import vigueur as V
 from sim.actions import poser_perchoir, poser_tuteur
 from sim.engine import Engine
 from sim.precroissance import pre_croitre
-from sim.zoochorie import (merle_prend, merle_seme, grille_perchoirs, TAMPON,
+from sim.zoochorie import (merle_prend, merle_seme, grille_perchoirs, TAMPON, RAYON_SUPPORT,
                            TAUX_PRISE, APPETIT)
 
 SEED = 42
@@ -145,7 +145,8 @@ def test_d_perchoir_pose_loin():
     merle_seme(gs, SEED, WEEK)
     gr = _grains(tile)
     check("(d) le perchoir lointain reçoit des grains",
-          gr and all(rc == (17, 17) for rc, _g in gr),
+          gr and all(max(abs(rc[0] - 17), abs(rc[1] - 17)) <= RAYON_SUPPORT
+                     for rc, _g in gr),
           f"{len(gr)} grains (plafond 3), log {log}")
 
 

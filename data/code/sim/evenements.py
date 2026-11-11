@@ -122,6 +122,27 @@ _CAUSE_REJET = {"souche": "souche", "perte de couronne": "perte_couronne"}
 # 1ʳᵉ capture d'une plante est consignée UNE fois (drapeau moteur `a_capture`).
 _RE_CAPTURE = re.compile(r"🪰\s+Capture\s+(.+?)@")
 
+# --- Marqueurs de la ZOOCHORIE (sprint zoochorie ⑦) --------------------------
+# Levée d'un grain SAUVAGE (format posé au ①, `succession._lever_grains_en_attente`) :
+#   `🌱 Levée (semé par <origine>) : <Nom> @(r,c) [niche=…]`
+# origine ∈ chute/merle/geai/ecureuil/mulot/ceinture. La levée « (planté) » du joueur
+# n'est PAS captée ici : elle garde son chemin historique (`germination`).
+_RE_LEVEE_SAUVAGE = re.compile(r"🌱\s+Levée \(semé par (\w+)\)\s*:\s*(.+?)\s+@")
+# Prise sur la plante (④ merle, ⑤ geai/écureuil) : une ligne PAR PLANTE ET PAR SEMAINE
+#   `🐦 Merle : <n> fruits pris sur <Nom>@(r, c)` · `🐦 Geai : <n> fruits cachés depuis …`
+# → AGRÉGÉE à un événement par bête et par tick (le carnet n'en est pas noyé : une
+# cerisaie en saison donnerait sinon une note par arbre et par semaine).
+_RE_PRISE = re.compile(r"(?:🐦|🐿)\s+(Merle|Geai|Écureuil)\s*:\s*\d+\s+fruits\s+"
+                       r"(?:pris sur|cachés depuis)\s+(.+?)@")
+_BETE = {"Merle": "merle", "Geai": "geai", "Écureuil": "ecureuil"}
+# Mulot (⑥) : une ligne par tuile et par semaine, toute l'année — trop fréquente pour
+# le carnet. On ne retient que les semaines où il a CACHÉ des grains (rares) : c'est
+# la face « planteur » du prédateur, celle qui fait lever un chêne sous la haie.
+_RE_MULOT = re.compile(r"🐭\s+Mulot\s*:\s*\d+ graines mangées,\s*(\d+) cachées")
+# Glandée (⑦, `decompo._tick_fruits`) : une ligne par espèce et par an, SANS @pos
+#   `🌰 Glandée : <Nom> (année forte)` — le 🌰 n'est lu comme Reproduction qu'AVEC @pos.
+_RE_GLANDEE = re.compile(r"🌰\s+Glandée\s*:\s*(.+?)\s+\(")
+
 # --- Marqueurs de PAYSAGE (sprint PÉRIPHÉRIE ④/⑤) ----------------------------
 # Quatre marqueurs émis à la maille du SECTEUR de ceinture (ou de la tuile pour
 # l'éboulis), tous SANS `@(r, c)` : ils sont donc traités AVANT le test de position
@@ -238,6 +259,7 @@ def evenements(log: list[str]) -> list[Evenement]:
     carnet et ses tests itèrent plusieurs fois dessus."""
     out: list[Evenement] = []
     tile_id = None
+    prises_vues: set[str] = set()       # agrégation des prises : une par bête et par tick
     for line in log:
         stripped = line.strip()
         m_tile = _RE_TILE.match(stripped)
@@ -295,6 +317,19 @@ def evenements(log: list[str]) -> list[Evenement]:
                     out.append(Evenement("terrassement", tile_id, None, None,
                                          _VERBE_TERRE[libelle]))
             continue
+        # --- ZOOCHORIE (⑦) : marqueurs SANS @pos (glandée, caches du mulot) ---
+        if "🌰" in line and "Glandée" in line:
+            m = _RE_GLANDEE.search(line)
+            if m:
+                out.append(Evenement("glandee", tile_id, None,
+                                     _CLE_DE_NOM.get(m.group(1).strip()), None))
+            continue
+        if "🐭" in line:
+            m = _RE_MULOT.search(line)
+            if m and int(m.group(1)) > 0 and "mulot" not in prises_vues:
+                prises_vues.add("mulot")
+                out.append(Evenement("cache", tile_id, None, None, "mulot"))
+            continue
         if "🚧" in line and "rompu" in line:
             out.append(Evenement("rupture", tile_id, None, None, None))
             continue
@@ -314,7 +349,13 @@ def evenements(log: list[str]) -> list[Evenement]:
             continue
         pos = (int(m_pos.group(1)), int(m_pos.group(2)))
 
-        if "🌱" in line:
+        if "🌱" in line and "semé par" in line:
+            # Levée d'un grain sauvage (⑦) : espèce + ORIGINE (qui l'a semé).
+            m = _RE_LEVEE_SAUVAGE.search(line)
+            if m:
+                out.append(Evenement("semis_spontane", tile_id, pos,
+                                     _CLE_DE_NOM.get(m.group(2).strip()), m.group(1)))
+        elif "🌱" in line:
             m = _RE_AVANCE.search(line)
             if m:
                 # germination/levée — le moteur n'émet qu'un seul marqueur 🌱
@@ -373,6 +414,14 @@ def evenements(log: list[str]) -> list[Evenement]:
             if m:
                 out.append(Evenement("carnivorie", tile_id, pos,
                                      _CLE_DE_NOM.get(m.group(1).strip()), None))
+        elif ("🐦" in line or "🐿" in line) and "fruits" in line:
+            # Prise sur la plante (④/⑤), agrégée : 1ʳᵉ plante de la bête dans le tick.
+            m = _RE_PRISE.search(line)
+            if m and _BETE[m.group(1)] not in prises_vues:
+                prises_vues.add(_BETE[m.group(1)])
+                out.append(Evenement("frugivorie", tile_id, pos,
+                                     _CLE_DE_NOM.get(m.group(2).strip()),
+                                     _BETE[m.group(1)]))
         elif "🌿" in line and "Ramet" in line:
             # Émission clonale (luxuriance ②/④) : espèce = groupe 2, cause = mode
             # clonal (groupe 1). Le carnet gate ce fait sous le concept

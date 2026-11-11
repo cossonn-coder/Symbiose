@@ -65,7 +65,7 @@ Golden de départ `a10b7225…` ; **re-figé au ⑥ seulement** (mulot → rapac
 | ④ | `04_merle_perchoirs.md` — `sim/zoochorie.py`, prise saturante, grille perchoir, tampon monde, geste `poser_perchoir` | inchangé | **fait** 2026-11-11 |
 | ⑤ | `05_geai_ecureuil.md` — 2 guildes `disperseur`, caches + oubli, apport ceinture | inchangé | **fait** 2026-11-11 |
 | ⑥ | `06_mulot.md` — guilde, prédation saturante des grains, caches ; proie rapace/couleuvre | **RE-FIGÉ** `b4a921f8…` | **fait** 2026-11-11 |
-| ⑦ | `07_voix_mesure.md` — événements, carnet `dispersion`, signes ; 200 ans verger_mur + banc `nucleation` ; calibrage | inchangé depuis ⑥ | à faire |
+| ⑦ | `07_voix_mesure.md` — événements, carnet `dispersion`, signes ; 200 ans verger_mur + banc `nucleation` ; calibrage | inchangé `b4a921f8…` | **fait côté code** 2026-11-11 — **critère D130 RATÉ (pommier) → décision Nico** |
 | ⑧ | `08_vue_godot.md` — faune, fruits à coque, noisetier, perchoir, banc F5 ; clôture D42 | inchangé | à faire |
 
 ## Coût perf (estimé)
@@ -248,7 +248,54 @@ pondéré par plot sur une grille « perchoir » (couronnes ligneuses) déjà co
   `mulot` → `EspeceInconnue` jusqu'au ⑧).
 - LDC : registry 338 🟡 (registre), signes_corpus 227, boucle 311.
 
+## Tronçon 7 — fait côté code (2026-11-11) — critère D130 raté, décision Nico
+- **Voix** (`sim/evenements.py` 242 LDC) : `semis_spontane` (cause = origine, lu sur
+  `🌱 Levée (semé par …)` ; « (planté) » garde `germination`), `frugivorie` (merle/geai/
+  écureuil, AGRÉGÉ : 1 par bête et par tick), `cache` (mulot, seulement les semaines où il
+  cache — sa ligne hebdo noierait le carnet), `glandee`. Ligne `🌰 Glandée : <Nom> (année
+  forte)` dans `_tick_fruits`, 1 par espèce et par an (mémoire `glandee_annoncee`, créée
+  au 1ᵉʳ besoin). Carnet : concept neuf `dispersion` (glandée rattachée : un 2ᵉ concept
+  serait un 2ᵉ palier jamais crédité) ; `semis_spontane/chute` → `reproduction` ; 22
+  gabarits D/I. **Aucune route ne crédite `dispersion`** (maîtrise = stagnations seules) →
+  ajouté à **D95**, pas de route inventée. Encyclo niveau 3 cerisier/chêne/hêtre/noyer +
+  blurb merle (faune = mono-niveau) ; `FAUNE_ROLE` merle. Geai/écureuil/mulot avaient déjà
+  leurs signes (⑤⑥). Pas de page secrète (concept jamais crédité).
+- **Outil** : `diag_releve` lit l'origine (sinon `directe`) et la distance au semencier
+  conspécifique mûr le plus proche (PROXY, borne basse : le grain ne garde pas sa mère).
+- **Calibrage** : `P_TRANSIT` 0,05 → 0,20 ; support posé = poids `POIDS_SUPPORT` 4 sur 3×3
+  (à 1 sur un plot, le piquet pesait 0,4 % de la grille perchoir du banc, la lisière ~65 %) ;
+  APPÉTIT geai 40 → 0,5, écureuil 30 → 2,0 (capacité ≈ 60× / 6-12× la demande des noyers
+  de `verger_mur` [10 ans, n=1 run]). Mulot non touché. `_MILIEU_TOKENS` du test faune +
+  framboisier/fraisier ; test merle (d) au rayon du support.
+- **Banc `nucleation`** (sans herbivorie — sinon le cerisier meurt en 4 sem. ; 3 rondelles).
+  **Prémisse réfutée** : un mort debout tombe après `T_SECHE` = 6 semaines → perchoir quasi
+  inopérant en jeu ; banc forcé (`semaines_mort = -20`). `test_nucleation` 4 ans 7/7 :
+  piquet 9/108 noyaux, mort debout 4, 75/108 à > 5 m, 10 cerisiers merle levés, 9 glands/
+  faînes [n=1 run]. **Réfuté** : « chênes côté nord » — la maison ombre la moitié nord à
+  l'automne, le geai vise le découvert ensoleillé (1 dépôt sur 9 au nord). 50 ans [n=1] :
+  levées merle 556, chute 82, mulot 81, ceinture 41 ; vivants an 50 : 114 cerisiers,
+  6 chênes, 4 hêtres (fourré de cerisiers à surveiller au F5).
+- **200 ans `verger_mur`, seed 42** [n=1 run par calibrage] — A (avant calibrage) / B (après) :
+  noyer remplacement 22 / 26, 116/261 et 125/273 recrues à > 5 m, vivants fin 20 / 26 ;
+  cerisier remplacement 7 / 6 mais **0 vivant en fin** (lignée éteinte vers l'an 50,
+  recrues mortes d'ombre) ; part > 5 m 2/6 / 4/6 ; **pommier 0 recrue, mort d'ombre an
+  18-19** ; figuier mort d'ombre ; fourré max 3 / 5 (≤ 10 ✓). **Critère RATÉ** pour le
+  pommier (et la lignée cerisier) dans les DEUX runs → indépendant du calibrage ⑦ :
+  geai + écureuil sèment ~270 noyers qui ombragent les héliophiles ; le pommier n'a aucun
+  disperseur (mammifères = dette) et ses grains de chute vont au mulot. STOP selon le
+  kickoff : décision Nico (pistes : `P_OUBLI` noyer, pommier mangé par le merle/renard,
+  `PRED_MAX`).
+- Perf `full` tick médian ans 3-5, avant sprint (`78c53e0`) / après : 1742/1434/1369 vs
+  1856/1453/1288 ms → +1,1 % [n=1, charge VM ~11, runs simultanés].
+- Tests : voix_dispersion 34/34 (neuf), bancs.test_nucleation 7/7, evenements 46/46, carnet
+  19/19, encyclopedie 70/70, signes 8/8, signes_legende 42/42, faune_dediee, merle_seme
+  18/18, geai_ecureuil 18/18, mulot 12/12, grain_sauvage, chute_seme, noisetier, fruits
+  30/30, journal, pages, magazine, deblocage, maitrise_detection, peripherie_voix,
+  infobulle, sim_server 322/322, bancs.test_verger_mur verts. Golden `b4a921f8…` INCHANGÉ.
+  C# non touché.
+
 ## §REPRISE
-Prochain : ⑦ `07_voix_mesure.md` (golden `b4a921f8…`). `sim/mulot.py` = prédation des grains (17a-quater) ; placeholders mulot à calibrer avec ceux de ④⑤. `sim/zoochorie.prendre` = prise saturante générique ; `sim/caches.py` = caches + oubli + `_semer` (grille pondérée, gènes fondateurs si `None`) ;. Lire `CLAUDE.md`, ce fichier, le doc de conception, puis le premier kickoff « à
-faire » du tableau. Chaque tronçon met à jour sa ligne + une section « Tronçon N —
-fait » courte (constats chiffrés avec leur limite entre crochets).
+**Décision Nico 2026-11-11 : ⑦ commité tel quel, critère D130 raté versé en dette D132** (pommier sans disperseur, noyers envahissants ; à reprendre en `/conception`). Puis ⑧
+`08_vue_godot.md` (golden `b4a921f8…`) : glyphes geai/écureuil/mulot, perchoir, et au F5
+le fourré de cerisiers du banc `nucleation`, le mort debout de 6 semaines. Lire `CLAUDE.md`,
+ce fichier, le doc de conception, puis le premier kickoff « à faire » du tableau.

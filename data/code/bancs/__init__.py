@@ -28,6 +28,7 @@ from .houppiers import houppiers, houppiers_25
 from . import palette_gestes as _palette_gestes
 from . import courrier as _courrier
 from . import peripherie as _peripherie
+from . import nucleation as _nucleation
 
 BANCS = {
     "secheresse_sable": secheresse_sable,
@@ -63,6 +64,7 @@ BANCS = {
     "palette_gestes": _palette_gestes.palette_gestes,
     "courrier": _courrier.courrier,
     "peripherie": _peripherie.peripherie,
+    "nucleation": _nucleation.nucleation,  # zoochorie ⑦ : perchoir, mort debout, hêtraie
 }
 
 # Hook POST-INIT par banc (palette de gestes ⑤) : callback OPTIONNEL `(game_state,
@@ -81,7 +83,9 @@ BANC_POST_INIT = {"palette_gestes": _palette_gestes.post_init,
                   "peripherie": _peripherie.post_init,
                   # `pluie_continue` (D111 ①e) : pose `pluie_forcee` → pluie chaque
                   # semaine (banc de TEST ; jamais en jeu, D-pluie).
-                  "pluie_continue": pluie_continue_post_init}
+                  "pluie_continue": pluie_continue_post_init,
+                  # `nucleation` (zoochorie ⑦) : pose une hêtraie au nord (apport geai).
+                  "nucleation": _nucleation.post_init}
 
 # Seed IMPOSÉ par banc (effondrement météo ④). La plupart des bancs sont neutres au
 # seed (ils forcent leur condition par composition) → repli sur le défaut du serveur.

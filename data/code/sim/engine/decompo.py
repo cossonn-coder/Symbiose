@@ -313,7 +313,9 @@ class DecompoMixin:
                         else frac_nouaison(plant.pollen_recu))
                 # Glandée (zoochorie ②) : année forte ×1, maigre ×GLANDEE_MAIGRE,
                 # synchrone pour toute l'espèce. Sans masting → ×1 (inchangé).
-                frac *= facteur_glandee(cls, (week - 1) // 52, seed)
+                annee = (week - 1) // 52
+                glandee = facteur_glandee(cls, annee, seed)
+                frac *= glandee
                 plant.fruits = nouer(plant, frac)
                 plant.a_fleuri = False          # cohorte posée → ré-armée l'an prochain
                 plant.pollen_recu = 0.0         # nouvelle cohorte repart de zéro (§B.1)
@@ -321,6 +323,14 @@ class DecompoMixin:
                     log.append(f"    🍎 Nouaison {plant.name}@{plant.position} "
                                f"→ {sum(f.nombre for f in plant.fruits)} fruits "
                                f"(frac {frac:.2f})")
+                    # Voix de la glandée (⑦) : UNE ligne par espèce et par année
+                    # forte (pas par pied), au 1ᵉʳ pied qui noue. Mémoire minimale
+                    # `glandee_annoncee[nom] = année`, créée au premier besoin.
+                    vues = self.game_state.get("glandee_annoncee", {})
+                    if (glandee == 1.0 and getattr(cls, "glandee_periode_ans", None)
+                            and vues.get(cls.name) != annee):
+                        self.game_state.setdefault("glandee_annoncee", {})[cls.name] = annee
+                        log.append(f"    🌰 Glandée : {cls.name} (année forte)")
             # 2-3. Maturation + chute des sur-mûrs.
             if plant.fruits:
                 duree = cls.fruit_semaines_maturation

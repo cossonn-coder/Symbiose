@@ -48,11 +48,22 @@ TAUX_PRISE = 0.15
 # ordinaire doit laisser tomber une part des cerises.
 APPETIT = 25.0
 # Part des graines avalées qui ressortent viables (transit intestinal, noyaux
-# régurgités). Une cerise = un noyau. Placeholder, calibrage au ⑦.
-P_TRANSIT = 0.05
+# régurgités). Une cerise = un noyau. Calibré au ⑦ : 0,05 → 0,20 (banc
+# `nucleation` : à 0,05 le merle ne semait que ~6 noyaux par an [seed 42], aucun
+# sous le piquet en 6 ans). Le noyau d'une drupe ressort en grande partie viable
+# [ordre de grandeur] ; la perte réelle se joue ensuite (mulot, niche).
+P_TRANSIT = 0.20
 # Seuil « mûr » d'une cohorte (maturité 1,0 ; la chute vient à MATURITE_CHUTE). La
 # tolérance absorbe l'arrondi d'une maturation en 1/7 par semaine (7 × 1/7 < 1).
 MUR = 1.0 - 1e-9
+# Poids d'un SUPPORT posé (piquet, tuteur…) dans la grille perchoir, sur les plots
+# à ≤ `RAYON_SUPPORT` plots de son pied (Chebyshev). Calibré au ⑦ : à 1 sur un seul
+# plot, le piquet pesait 0,4 % de la grille du banc `nucleation` (la lisière de la
+# ceinture, étalée sur tout un jardin de 20 m, en pèse ~65 %) → invisible. Un poste
+# isolé en terrain ouvert est le reposoir PRÉFÉRÉ des oiseaux : la pluie de graines
+# y est bien plus dense que sur l'herbe voisine [littérature nucléation, odg].
+POIDS_SUPPORT = 4.0
+RAYON_SUPPORT = 1
 # Hauteur minimale d'un ligneux vivant pour servir de perchoir (cm).
 HAUTEUR_PERCHOIR_CM = 150.0
 # Clé du tampon monde dans `game_state` (créée au besoin, retirée par `merle_seme`
@@ -151,8 +162,8 @@ def grille_perchoirs(game_state: dict) -> list:
 
     Poids d'un plot = 1 sous la couronne d'un ligneux vivant haut (≥ 150 cm) + 1 sous
     un mort debout (`stade_mort == "seche"` : son ancienne couronne, à défaut son
-    pied) + 1 au pied d'un `Support` posé (tout type : tuteur, treillis, pergola,
-    perchoir) + `eco.lisiere` si la ceinture est posée. Ordre stable (tuiles du
+    pied) + `POIDS_SUPPORT` autour d'un `Support` posé (tout type : tuteur, treillis,
+    pergola, perchoir ; ⑦) + `eco.lisiere` si la ceinture est posée. Ordre stable (tuiles du
     monde, puis lignes, colonnes) → tirage reproductible."""
     grille = []
     for tile in game_state["tiles"]:
@@ -174,9 +185,11 @@ def grille_perchoirs(game_state: dict) -> list:
                 morts.update(plots or [p.position])
         ajouter(couronnes)
         ajouter(morts)
-        ajouter({(min(tile.grid_rows - 1, max(0, int(s.y_cm // PLOT_CM))),
-                  min(tile.grid_cols - 1, max(0, int(s.x_cm // PLOT_CM))))
-                 for s in tile.supports})
+        pieds = {(int(s.y_cm // PLOT_CM), int(s.x_cm // PLOT_CM)) for s in tile.supports}
+        ajouter({(r + dr, c + dc) for r, c in pieds
+                 for dr in range(-RAYON_SUPPORT, RAYON_SUPPORT + 1)
+                 for dc in range(-RAYON_SUPPORT, RAYON_SUPPORT + 1)
+                 if tile.is_valid_plot(r + dr, c + dc)}, POIDS_SUPPORT)
         if eco.lisiere is not None:
             for r in range(tile.grid_rows):
                 for c in range(tile.grid_cols):

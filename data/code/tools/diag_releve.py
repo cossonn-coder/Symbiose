@@ -13,6 +13,13 @@
 #     log porte un événement `rejet` (souche, frein rejets ④) de la même espèce sur la
 #     même tuile à ≤ PORTEE_REJET_PLOTS plots de l'arbre (le log ne donne que le plot
 #     du 1ᵉʳ rejet et celui de l'arbre ; rayon 60 cm ⇒ ≤ 2 plots) ; sinon `graine` ;
+#   - ORIGINE d'une recrue `graine` (zoochorie ⑦) : lue au log de levée
+#     `🌱 Levée (semé par <origine>)` (événement `semis_spontane`, même tuile/plot/
+#     espèce) — chute/merle/geai/ecureuil/mulot/ceinture ; sinon `directe` (recrue
+#     abstraite des non-zoochores, `_reproduction`) ;
+#   - DISTANCE À LA MÈRE (proxy) : le grain ne garde pas la position de sa mère →
+#     on mesure la distance au SEMENCIER conspécifique mûr vivant le plus proche à
+#     la naissance (coordonnées MONDE). C'est une borne BASSE de la vraie distance ;
 #   - cause de mort : appariée à l'événement `mort` du log (tuile, plot, espèce),
 #     comme la chronique du rapport C ;
 #   - toutes les 13 semaines : lumière reçue, `shade_memory`, hauteur de chaque
@@ -41,6 +48,7 @@ from tools.simserver.chronique import _cle
 
 PAS_ECHANTILLON = 13      # semaines entre deux relevés (une saison)
 PORTEE_REJET_PLOTS = 2    # ceil(RAYON_REJET_CM 60 / PLOT_CM 50) : plots autour de l'arbre
+LOIN_CM = 500             # « née loin de la mère » (critère ⑦ : > 5 m)
 
 
 def _ligneux_vivants(engine) -> dict[int, tuple]:
@@ -65,6 +73,7 @@ class Releve:
     def __init__(self, engine):
         self.engine = engine
         self.vivants = _ligneux_vivants(engine)
+        self._tuiles = {t.tile_id: t for t in engine.game_state["tiles"]}
         self.indiv: dict[int, dict] = {}
         for i, (p, tuile) in self.vivants.items():
             self.indiv[i] = self._fiche(p, tuile, 0, "fondateur")
@@ -72,7 +81,7 @@ class Releve:
 
     @staticmethod
     def _fiche(p, tuile, semaine, voie) -> dict:
-        return {"espece": _cle(p), "tuile": tuile, "pos": list(p.position),
+        return {"espece": _cle(p), "tuile": tuile, "origine": None, "dist_mere_cm": None, "pos": list(p.position),
                 "x_cm": round(p.x_cm), "y_cm": round(p.y_cm), "ne": semaine,
                 "voie": voie, "mort": None, "cause": None, "age_mort_sem": None,
                 "mur": None, "echantillons": [], "_p": p}
@@ -82,6 +91,8 @@ class Releve:
         evs = evenements(log)
         ramets = {(e.tile_id, e.pos, e.espece) for e in evs if e.kind == "ramet"}
         rejets = [(e.tile_id, e.pos, e.espece) for e in evs if e.kind == "rejet"]
+        semis = {(e.tile_id, e.pos, e.espece): e.cause for e in evs
+                 if e.kind == "semis_spontane"}
         causes = defaultdict(list)
         for e in evs:
             if e.kind == "mort":
@@ -96,7 +107,10 @@ class Releve:
         for i, (p, tuile) in maintenant.items():
             if i not in self.indiv:
                 voie = _voie(tuile, p.position, _cle(p), ramets, rejets)
-                self.indiv[i] = self._fiche(p, tuile, semaine, voie)
+                f = self.indiv[i] = self._fiche(p, tuile, semaine, voie)
+                if voie == "graine":
+                    f["origine"] = semis.get((tuile, p.position, f["espece"]), "directe")
+                    f["dist_mere_cm"] = self._dist_semencier(p, tuile, f["espece"])
         self.vivants = maintenant
         for i, (p, _) in maintenant.items():
             f = self.indiv[i]
@@ -104,6 +118,20 @@ class Releve:
                 f["mur"] = semaine
         if semaine % PAS_ECHANTILLON == 0:
             self._echantillonner(semaine)
+
+    def _monde(self, p, tuile) -> tuple[float, float]:
+        t = self._tuiles[tuile]
+        return t.origin_x_cm + p.x_cm, t.origin_y_cm + p.y_cm
+
+    def _dist_semencier(self, p, tuile, espece) -> float | None:
+        """Distance MONDE (cm) au conspécifique mûr vivant le plus proche (proxy de la
+        mère, borne basse) ; None s'il n'y en a aucun (graine venue de la ceinture)."""
+        x, y = self._monde(p, tuile)
+        ds = [math.hypot(x - mx, y - my) for i, (m, tm) in self.vivants.items()
+              if m is not p and self.indiv[i]["espece"] == espece
+              and m.age_years >= m.plant_class.maturity_years
+              for mx, my in (self._monde(m, tm),)]
+        return round(min(ds)) if ds else None
 
     def _echantillonner(self, semaine: int) -> None:
         eco_de = self.engine.game_state["eco"]
@@ -133,6 +161,7 @@ class Releve:
         cause, remplacement (recrues mûres / fondateurs), vivants en fin de run."""
         par = defaultdict(lambda: {"fondateurs": 0, "fondateurs_morts": 0,
                                    "recrues": defaultdict(int), "recrues_mures": 0,
+                                   "origines": defaultdict(int), "loin": 0, "dist_connue": 0,
                                    "morts": defaultdict(int), "vivants_fin": 0,
                                    "ages_mort_recrues_ans": []})
         for f in self.indiv.values():
@@ -143,6 +172,11 @@ class Releve:
                 b["fondateurs_morts"] += f["mort"] is not None
             else:
                 b["recrues"][f["voie"]] += 1
+                if f["origine"]:
+                    b["origines"][f["origine"]] += 1
+                if f["dist_mere_cm"] is not None:
+                    b["dist_connue"] += 1
+                    b["loin"] += f["dist_mere_cm"] > LOIN_CM
                 b["recrues_mures"] += f["mur"] is not None
                 if f["mort"] is not None:
                     b["ages_mort_recrues_ans"].append(round(f["age_mort_sem"] / 52, 1))
@@ -154,6 +188,7 @@ class Releve:
             b["remplacement"] = (b["recrues_mures"] / b["fondateurs"]
                                  if b["fondateurs"] else None)
             b["recrues"], b["morts"] = dict(b["recrues"]), dict(b["morts"])
+            b["origines"] = dict(b["origines"])
         return {"especes": dict(par), "fourre_max": self.fourre_max}
 
     def brut(self) -> list[dict]:
@@ -168,6 +203,9 @@ def _texte(bilan: dict, annees: int) -> str:
         out.append(f"  {esp} : fondateurs {b['fondateurs']} (morts {b['fondateurs_morts']})"
                    f" · recrues {b['recrues']} · mûres {b['recrues_mures']}"
                    f" · remplacement {rem} · vivants fin {b['vivants_fin']}")
+        out.append(f"      origines des graines {b['origines']} · nées à > "
+                   f"{LOIN_CM / 100:.0f} m du semencier le plus proche {b['loin']}"
+                   f"/{b['dist_connue']}")
         out.append(f"      morts {b['morts']} · âge de mort des recrues (ans) "
                    f"min {min(ages) if ages else '-'} méd "
                    f"{sorted(ages)[len(ages) // 2] if ages else '-'} max "

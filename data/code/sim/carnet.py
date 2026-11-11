@@ -166,6 +166,24 @@ CONCEPT_DE: dict[tuple[str, str | None], str] = {
     ("terrassement", "entailler"): "erosion",
     ("rupture", None):            "eau",
     ("eboulis", None):            "erosion",
+    # ZOOCHORIE (sprint zoochorie ⑦) — concept neuf `dispersion` : qui sème quoi, où.
+    # La graine tombée au PIED de la mère (`chute`) n'est pas une dispersion : c'est la
+    # lignée qui se ressème → `reproduction` (la voix qu'avait la recrue abstraite
+    # `🌰 Reproduction` de ces espèces avant le ②). La GLANDÉE est rattachée à
+    # `dispersion` plutôt qu'à un concept à part : elle n'a de sens que par ce qu'elle
+    # fait aux mangeurs de graines (satiation → les glands échappent et lèvent) ; un
+    # 2ᵉ concept serait un 2ᵉ palier jamais crédité (cf. D95).
+    ("semis_spontane", "chute"):    "reproduction",
+    ("semis_spontane", "merle"):    "dispersion",
+    ("semis_spontane", "geai"):     "dispersion",
+    ("semis_spontane", "ecureuil"): "dispersion",
+    ("semis_spontane", "mulot"):    "dispersion",
+    ("semis_spontane", "ceinture"): "dispersion",
+    ("frugivorie", "merle"):        "dispersion",
+    ("frugivorie", "geai"):         "dispersion",
+    ("frugivorie", "ecureuil"):     "dispersion",
+    ("cache", "mulot"):             "dispersion",
+    ("glandee", None):              "dispersion",
 }
 
 # Concept de la « levée (reprise) » : doc §5.0 dit « = la cause (eau / lumière /
@@ -339,6 +357,31 @@ GABARIT: dict[tuple[str, str | None, str], str] = {
 
     ("carnivorie", None, _D): "La nuée de moustiques se raréfie au-dessus de {e} {l}.",
     ("carnivorie", None, _I): "{e} chasse {l} : ses feuilles gluantes piègent les insectes, et cet azote de proies la nourrit là où le sol tourbeux, trop pauvre, n'offre rien — elle mange ce qu'elle ne peut puiser.",
+
+    # Zoochorie (⑦) — descriptif = ce que je VOIS (un jeune arbre que je n'ai pas
+    # semé, une bête dans les fruits) ; interprétatif = qui l'a semé, et comment.
+    ("semis_spontane", "chute", _D): "Un jeune {e} a levé {l}, sous la couronne de ses aînés.",
+    ("semis_spontane", "chute", _I): "{e} se ressème {l} : le fruit tombé a donné sa graine au pied de la mère — à l'ombre de son parent, le jeune devra attendre qu'une trouée s'ouvre.",
+    ("semis_spontane", "merle", _D): "Un jeune {e} a levé {l} — je n'en ai pas semé.",
+    ("semis_spontane", "merle", _I): "{e} a levé {l} : le merle a mangé les fruits et rendu le noyau sous un perchoir — un arbre, un piquet, un mort debout. Là où l'oiseau se pose, le bois revient.",
+    ("semis_spontane", "geai", _D): "Un petit {e} a percé {l}, en terrain découvert, loin des arbres.",
+    ("semis_spontane", "geai", _I): "{e} lève {l} : un geai a enterré là sa récolte d'automne et ne l'a jamais reprise. La forêt avance ainsi, à la vitesse de ses oublis.",
+    ("semis_spontane", "ecureuil", _D): "Un jeune {e} a levé {l}, au bord d'une couronne.",
+    ("semis_spontane", "ecureuil", _I): "{e} lève {l} : l'écureuil cache ses provisions à la lisière des arbres et en oublie toujours — le bosquet appelle l'écureuil, l'écureuil plante le bosquet.",
+    ("semis_spontane", "mulot", _D): "Un jeune {e} a levé {l}, sous le couvert.",
+    ("semis_spontane", "mulot", _I): "{e} lève {l}, d'une cache de mulot oubliée sous la litière : le mangeur de graines en plante aussi, quand il ne peut tout finir.",
+    ("semis_spontane", "ceinture", _D): "Un jeune {e} a levé {l} — aucun arbre de son espèce ne pousse au jardin.",
+    ("semis_spontane", "ceinture", _I): "{e} lève {l} : la forêt du bord est entrée chez moi, portée par le geai. Le jardin se boise par ses lisières.",
+    ("frugivorie", "merle", _D): "Le merle se gave des fruits de {e} {l}.",
+    ("frugivorie", "merle", _I): "Le merle mange les fruits de {e} {l} : il emporte les noyaux et les sèmera sous ses perchoirs.",
+    ("frugivorie", "geai", _D): "Un geai emporte les fruits de {e} {l}, un à un.",
+    ("frugivorie", "geai", _I): "Le geai récolte {e} {l} pour ses caches d'hiver : il en oubliera, et l'oubli fait des arbres.",
+    ("frugivorie", "ecureuil", _D): "Un écureuil s'affaire dans {e} {l}.",
+    ("frugivorie", "ecureuil", _I): "L'écureuil cueille {e} {l} et enterre sa récolte alentour — ce qu'il ne retrouve pas lèvera au printemps.",
+    ("cache", "mulot", _D): "Sous la litière, des graines ont disparu ; quelques-unes sont enterrées un peu plus loin.",
+    ("cache", "mulot", _I): "Le mulot fait ses provisions : il mange presque tout ce qui tombe au sol, et ne cache que ce qu'il ne peut finir.",
+    ("glandee", None, _D): "{e} ploie sous les fruits cette année, tous les pieds à la fois.",
+    ("glandee", None, _I): "Année de glandée chez {e} : tous les pieds chargent ensemble, et les mangeurs de graines n'en viennent pas à bout — c'est l'année où la relève passe.",
 }
 
 # Signes OBSERVÉS au survol (sprint PLANTE ASSEMBLÉE ⑥, `sim/signes.py`) : une note

@@ -88,7 +88,8 @@ CATEGORIES = ("ravageur", "auxiliaire", "detritivore",
 # = la niche hydrique de la faune de mare (hydrologie ④).
 _MILIEU_TOKENS = {"fruit", "pile", "ail", "eau", "marais",
                   "chene", "hetre", "noyer", "noisetier",   # arbres plantés (⑤)
-                  "cerisier"}                               # noyaux rongés (mulot ⑥)
+                  "cerisier",                               # noyaux rongés (mulot ⑥)
+                  "framboisier", "fraisier"}                # baies du merle (⑦)
 
 
 def _eco(plants_specs=()):
