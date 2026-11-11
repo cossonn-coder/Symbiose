@@ -26,6 +26,7 @@ from fields.population.resources import (
 from fields.population.disperseurs import (
     _geai_food_grid, _geai_habitat_grid, _ecureuil_food_grid, _ecureuil_habitat_grid,
 )
+from fields.population.mulot import _mulot_food_grid, _mulot_habitat_grid
 
 
 # ---------------------------------------------------------------------------
@@ -57,6 +58,7 @@ _SALT_MOUSTIQUE     = 0x2B2001   # proie aquatique de mare (hydrologie ④)
 _SALT_LIBELLULE     = 0x2B3001   # auxiliaire prédateur du moustique (hydrologie ④)
 _SALT_GEAI          = 0x2B4001   # disperseur de glands, terrain découvert (zoochorie ⑤)
 _SALT_ECUREUIL      = 0x2B5001   # disperseur de noisettes, cimes connexes (zoochorie ⑤)
+_SALT_MULOT         = 0x2B6001   # prédateur de graines sous couvert, proie des sommets (⑥)
 
 # Rampe thermique des INSECTES ravageurs (D122 ③, décision Nico C5) : pucerons et
 # doryphores ne pullulent qu'au chaud (développement lent sous ~10 °C) ; la porte
@@ -240,6 +242,19 @@ def build_population_specs() -> list[TrophicSpec]:
             lisiere_w=0.20,                      # vient du bois par les haies
             **encyclo_meta("ecureuil"),
         ),
+        # MULOT (zoochorie ⑥) : mange les graines tombées, en cache quelques-unes
+        # (`sim/mulot.py`). PROIE des deux sommets → placé AVANT eux (ils le lisent
+        # frais) ; lui lit leur densité de la semaine précédente. Nocturne, actif
+        # toute l'année (fenêtre large, rampe thermique basse : il ne s'engourdit pas).
+        TrophicSpec(
+            name="mulot", category="disperseur", salt=_SALT_MULOT,
+            resource_fn=_mulot_food_grid, habitat_fn=_mulot_habitat_grid,
+            predators=("rapace", "couleuvre"),
+            daylen_min=8.5, daylen_full=10.0,
+            t_cold_zero=-5.0, t_warm_full=5.0,
+            lisiere_w=0.25,                      # sort de l'ourlet la nuit
+            **encyclo_meta("mulot"),
+        ),
         # --- Catégorie NEUVE `super_predateur` : rapace + couleuvre (sommet ②) ---
         # Insérés en TOUTE FIN d'ordre de tick : ils lisent toutes leurs proies
         # (campagnol/merle/limace) FRAÎCHEMENT mises à jour ce tick, et les proies
@@ -255,7 +270,7 @@ def build_population_specs() -> list[TrophicSpec]:
         # jamais (philo #2 : c'est le BAS de la chaîne qui le nourrit).
         TrophicSpec(
             name="rapace", category="super_predateur", salt=_SALT_RAPACE,
-            resource_fn=_proies_grid(("campagnol", "merle"), _rapace_habitat_grid),
+            resource_fn=_proies_grid(("campagnol", "merle", "mulot"), _rapace_habitat_grid),
             habitat_fn=_habitat_nul_grid, habitat_w=0.0,
             predators=(),
             daylen_min=9.0, daylen_full=11.0,    # LARGE : chasseur résident quasi toute l'année
@@ -263,7 +278,7 @@ def build_population_specs() -> list[TrophicSpec]:
         ),
         TrophicSpec(
             name="couleuvre", category="super_predateur", salt=_SALT_COULEUVRE,
-            resource_fn=_proies_grid(("campagnol", "limace"), _undisturbed_structure_grid),
+            resource_fn=_proies_grid(("campagnol", "limace", "mulot"), _undisturbed_structure_grid),
             habitat_fn=_habitat_nul_grid, habitat_w=0.0,
             predators=(),
             daylen_min=11.0, daylen_full=13.0,   # HÉLIOPHILE : n'émerge qu'aux beaux jours d'été

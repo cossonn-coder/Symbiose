@@ -64,7 +64,7 @@ Golden de départ `a10b7225…` ; **re-figé au ⑥ seulement** (mulot → rapac
 | ③ | `03_noisetier.md` — espèce neuve + 5 voix | inchangé | **fait** 2026-11-09 |
 | ④ | `04_merle_perchoirs.md` — `sim/zoochorie.py`, prise saturante, grille perchoir, tampon monde, geste `poser_perchoir` | inchangé | **fait** 2026-11-11 |
 | ⑤ | `05_geai_ecureuil.md` — 2 guildes `disperseur`, caches + oubli, apport ceinture | inchangé | **fait** 2026-11-11 |
-| ⑥ | `06_mulot.md` — guilde, prédation saturante des grains, caches ; proie rapace/couleuvre | **RE-FIGÉ annoncé** | à faire |
+| ⑥ | `06_mulot.md` — guilde, prédation saturante des grains, caches ; proie rapace/couleuvre | **RE-FIGÉ** `b4a921f8…` | **fait** 2026-11-11 |
 | ⑦ | `07_voix_mesure.md` — événements, carnet `dispersion`, signes ; 200 ans verger_mur + banc `nucleation` ; calibrage | inchangé depuis ⑥ | à faire |
 | ⑧ | `08_vue_godot.md` — faune, fruits à coque, noisetier, perchoir, banc F5 ; clôture D42 | inchangé | à faire |
 
@@ -210,7 +210,45 @@ pondéré par plot sur une grille « perchoir » (couronnes ligneuses) déjà co
   carnet, fruits, attraction, chute_seme, grain_sauvage, noisetier, banque_semis verts.
   Golden `a10b7225…` INCHANGÉ.
 
+## Tronçon 6 — fait (2026-11-11)
+- Guilde `mulot` (catégorie `disperseur`, sel 0x2B6001, avant les sommets, fenêtre large,
+  rampe −5→5 °C, `lisiere_w` 0,25, `predators=("rapace","couleuvre")`). Ressource/habitat
+  dans **`fields/population/mulot.py`** (neuf, 38 LDC) : grains sauvages/3 + fruit tombé
+  (tout âge) ×0,5 + banque-sol LUE ×0,3 ; habitat = couronnes ligneuses 0,30 + piles,
+  décoré `_avec_abri_paillage`. Rapace et couleuvre : `"mulot"` ajouté à `_proies_grid`.
+  Encyclo faune `mulot` (liens symétriques rapace/couleuvre + 5 arbres), `FAUNE_VU`/
+  `FAUNE_ROLE` (+ rôle couleuvre « chasse rongeurs et limaces »).
+- **Écart au kickoff** : la prédation vit dans **`sim/mulot.py`** (neuf, 79 LDC), pas
+  dans `sim/zoochorie.py` (autre responsabilité), appelée UNE fois par tick à l'étape
+  **17a-quater**, APRÈS `caches_sement` : tous les dépôts du jour (chute 15c, merle,
+  caches, ceinture) sont posés. Tuiles indépendantes (cache dans la même tuile).
+  Placeholders ⑦ : `PRED_MAX` 0,5, `A_SATIATION` 40 grains/tuile, `P_CACHE_MULOT` 0,15,
+  `R_CACHE_CM` 300 ; couvert de cache = max(couverture_sol, habitat), sans couvert → mangé.
+  Canal `week*89` (libre, grep). Grain caché : `origine="mulot"`, dormance/péremption
+  conservées ; plafond ① refuse → mangé. Grains `joueur` jamais touchés.
+- **Golden re-figé** `a10b7225…` → `b4a921f8…` ; `population_hash` `0556d1c1…` →
+  `5a6b5135…`. Dérive smoke (moyennes/plot, an 1 / an 2, avant → après) : rapace
+  0,0273→0,0285 / 0,0216→0,0247 ; couleuvre 0,0187→0,0197 / 0,0175→0,0202 ; campagnol
+  0,0936→0,0932 / 0,1003→0,0991 ; limace 0,0373→0,0372 / 0,0608→0,0603 ; merle −0,1 %.
+  Digest : aucune plante ne change de stade/vie ; `growth_factor` ~1e-4, 4 `vitalite`
+  au 1e-4, `soil_memory`/`k`/`p` au 3ᵉ décimale. Aucun grain sauvage au smoke (0 ligne
+  mulot). **Contre-factuel** : mulot gardé mais retiré des proies → hash = `a10b7225…`
+  exact → dérive 100 % chaîne rapace/couleuvre.
+- Effet `full` seed 42, 5 ans [n=1 run] : grains mangés 1/12/15/14/11, cachés 0/1/1/2/0 ;
+  grains sauvages en attente en fin d'an 0-2 (sans prédation : 13/27/31/24). **À calibrer
+  au ⑦** : hors glandée le mulot vide presque tout le stock — vérifier que la relève D130
+  (200 ans verger_mur) tient.
+- Perf : grilles mulot 3,8 ms/tick + passe 0,01 ms [n=20 itérations, monde full] ;
+  la mesure macro avec/sans (1433-1532 vs 929-976 ms) est faussée par la charge VM
+  (15 → 4 pendant la mesure), non concluante.
+- Tests : `test_mulot` 12/12 ; faune_dediee (DISPERSEURS + jeton `cerisier`), population
+  (hash re-capturé), signes_legende 42/42, sim_server 322/322 (23 espèces), stress_chronique,
+  evenements 46/46, geai_ecureuil, merle_seme, encyclopedie 70/70, infobulle 31/31,
+  grain_sauvage, chute_seme, carnet, bancs.test_verger_mur verts. C# non touché (sprite
+  `mulot` → `EspeceInconnue` jusqu'au ⑧).
+- LDC : registry 338 🟡 (registre), signes_corpus 227, boucle 311.
+
 ## §REPRISE
-Prochain : ⑥ `06_mulot.md`. `sim/zoochorie.prendre` = prise saturante générique ; `sim/caches.py` = caches + oubli + `_semer` (grille pondérée, gènes fondateurs si `None`) ; catégorie `disperseur` à réutiliser pour le mulot. Lire `CLAUDE.md`, ce fichier, le doc de conception, puis le premier kickoff « à
+Prochain : ⑦ `07_voix_mesure.md` (golden `b4a921f8…`). `sim/mulot.py` = prédation des grains (17a-quater) ; placeholders mulot à calibrer avec ceux de ④⑤. `sim/zoochorie.prendre` = prise saturante générique ; `sim/caches.py` = caches + oubli + `_semer` (grille pondérée, gènes fondateurs si `None`) ;. Lire `CLAUDE.md`, ce fichier, le doc de conception, puis le premier kickoff « à
 faire » du tableau. Chaque tronçon met à jour sa ligne + une section « Tronçon N —
 fait » courte (constats chiffrés avec leur limite entre crochets).

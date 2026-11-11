@@ -43,6 +43,7 @@ from sim.clonal import emettre_ramets
 from sim.souche import emettre_rejets_souche   # rejets à la mort (frein_rejets_figuier ②)
 from sim.zoochorie import merle_prend, merle_seme   # le merle cueille et sème (zoochorie ④)
 from sim.caches import caches_prennent, caches_sement   # geai/écureuil cachent et oublient (⑤)
+from sim.mulot import mulot_mange   # le mulot mange les grains sauvages, en cache (⑥)
 from .calendrier import (SAISONS, saison_de, est_debut_saison, est_fin_saison,
                         est_phase_floraison, est_phase_recolte)
 from .aleas import (appliquer_alea, ALEAS_RAVAGEURS, WEATHER_ALEA, ORAGE_VENT,
@@ -742,6 +743,12 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
         # (lisière des couronnes, ≤ 15 m) + glands de la ceinture `foret` portés par
         # le geai l'automne (⑤). Tampon vide et pas de ceinture → no-op (golden).
         log += caches_sement(self.game_state, seed, week)
+        # 17a-quater. Le MULOT trouve les grains SAUVAGES au sol (zoochorie ⑥) — APRÈS
+        # tous les dépôts du jour (chute 15c, merle 17a-bis, caches/ceinture 17a-ter) :
+        # une graine posée cette semaine court le risque cette nuit. Il en mange, en
+        # cache une part sous couvert ; satiation Holling II par tuile (la glandée le
+        # rassasie). Grains du joueur intacts. Aucun grain sauvage → no-op.
+        log += mulot_mange(self.game_state, seed, week)
 
         # 17b. Conteneurs (sprint pots/bacs ②+③) — pots/bacs posés par le joueur,
         # chacun un mini-sol `EcoFields` qui ticke SA chimie ISOLÉE (drainage du

@@ -102,14 +102,14 @@ FAUNE_ENCYCLO: dict[str, tuple[str, tuple[str, ...]]] = {
         "Silhouette en croix haut dans le ciel, immobile face au vent puis piqué "
         "foudroyant : il fond sur ce qui court à découvert, rongeur au ras du sol "
         "comme oiseau imprudent. Sa seule ombre fige le jardin.",
-        ("campagnol", "merle"),
+        ("campagnol", "merle", "mulot"),
     ),
     "couleuvre": (
         "Longue et lustrée, elle se love au soleil sur une pierre chaude ou près "
         "d'un tas de bois, immobile des heures ; à la fraîche, elle glisse traquer "
         "le rongeur dans sa galerie et la limace sous la litière. Inoffensive pour "
         "qui la laisse filer.",
-        ("campagnol", "limace"),
+        ("campagnol", "limace", "mulot"),
     ),
     # --- catégorie aquatique : faune de mare (hydrologie ④) -----------------
     # Mini-chaîne de l'eau stagnante : le moustique (proie, pond dans la flaque et
@@ -143,6 +143,14 @@ FAUNE_ENCYCLO: dict[str, tuple[str, tuple[str, ...]]] = {
         "il enterre noisettes et noix à la lisière des arbres et ne les retrouve "
         "pas toutes.",
         ("noisetier", "noyer", "hetre", "chene"),
+    ),
+    # Le MULOT (⑥) mange les graines tombées et en cache sous couvert : lié aux
+    # arbres dont il vit les graines ET à ses deux prédateurs (symétrique).
+    "mulot": (
+        "Petit rongeur aux grands yeux noirs et aux longues oreilles, qui file la "
+        "nuit sous les feuilles mortes ; au matin on trouve des noisettes percées "
+        "d'un trou net, des noyaux rongés, et sous le bois mort une réserve oubliée.",
+        ("rapace", "couleuvre", "chene", "hetre", "noisetier", "noyer", "cerisier"),
     ),
     # --- pollinisateurs (catalogue enrichi ⑤/⑥) ------------------------------
     # Liés à la FLORAISON qu'ils fécondent (→ `fruit`, nouaison), et selon le
