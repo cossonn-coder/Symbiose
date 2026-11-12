@@ -31,6 +31,8 @@ from constants import PLOT_CM
 from fields.peripherie import COTES, NORD, secteur_neutre
 from plants import AppleTree, CherryTree
 from sim.effects.perturbations import deposer_mort
+from sim import maitrise as M
+from sim.actions import deblocage as DEBL
 from world.support import Support
 from .base import build_banc_tile, monde, vieillir, sans_herbivorie
 
@@ -81,6 +83,13 @@ def ceinture_foret_nord() -> list[dict]:
 
 
 def post_init(game_state: dict, player: str) -> None:
-    """POSE la ceinture (la fabrique ne porte pas `game_state`). Hors tick → golden
-    intact (jamais appelé pour smoke/full)."""
+    """POSE la ceinture (la fabrique ne porte pas `game_state`) et OUVRE le geste
+    `poser_perchoir` (zoochorie ⑧, point F5 « le geste se trouve-t-il ? ») : maîtrise
+    `perchoir` 1, puis `evaluer_deblocages` — même forçage de BANC que `palette_gestes`.
+    Sans lui le geste reste fermé : en jeu, aucune route ne crédite `perchoir` et
+    `poser_tuteur` n'a pas de route au pont (dette D133). Hors tick → golden intact
+    (jamais appelé pour smoke/full)."""
     game_state["ceinture"] = ceinture_foret_nord()
+    M.ensure_player_maitrise(game_state, player)["objets"]["perchoir"] = {
+        "palier": 1, "preuves": 0}
+    DEBL.evaluer_deblocages(game_state, player)

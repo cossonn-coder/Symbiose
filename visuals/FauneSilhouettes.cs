@@ -114,6 +114,41 @@ namespace Symbiose
 				P(0.95f, 0f, 0.07f, 0.07f, 1, 0, fin: true),                 // truffe
 				P(0.72f, 0.12f, 0.05f, 0.05f, 1, 0, fin: true, miroir: true), // yeux
 			}),
+			// ── Disperseurs de graines (zoochorie ⑧, D42) ──
+			// Geai : beige-rosé, la BANDE BLEUE barrée à l'aile (le signe du geai),
+			// queue et moustache sombres, croupion blanc vu de dessus.
+			["geai"] = new(C("c09a88", "3a78c8", "3a3040", "f0ece4"), new[]
+			{
+				P(-0.74f, 0f, 0.3f, 0.12f, 2),                               // queue sombre
+				P(-0.05f, 0f, 0.56f, 0.3f),                                  // corps beige-rosé
+				P(-0.2f, 0.2f, 0.42f, 0.12f, 2, miroir: true),               // ailes sombres
+				P(0.05f, 0.24f, 0.11f, 0.07f, 1, 2, miroir: true),           // bande bleue
+				P(-0.48f, 0f, 0.1f, 0.1f, 3, 3, fin: true),                  // croupion blanc
+				P(0.56f, 0f, 0.21f, 0.19f),                                  // tête
+				P(0.66f, 0.1f, 0.07f, 0.03f, 2, 0, fin: true, miroir: true), // moustache noire
+				P(0.83f, 0f, 0.1f, 0.05f, 2, 1),                             // bec
+			}),
+			// Écureuil : roux, la QUEUE en panache aussi large que le corps (sa
+			// silhouette de dessus), oreilles à pinceaux.
+			["ecureuil"] = new(C("b8582a", "e8d8c0"), new[]
+			{
+				P(-0.58f, 0f, 0.42f, 0.24f, motif: MotifFaune.Piquants),    // panache de la queue
+				P(0.08f, 0f, 0.4f, 0.2f),                                    // corps roux
+				P(0.52f, 0f, 0.17f, 0.15f),                                  // tête
+				P(0.5f, 0.11f, 0.05f, 0.04f, 0, 1, miroir: true),            // pinceaux des oreilles
+				P(0.62f, 0.08f, 0.03f, 0.03f, 1, 3, fin: true, miroir: true), // cercle clair de l'œil
+			}),
+			// Mulot : brun-fauve, ventre clair qui déborde du flanc, GRANDES oreilles et
+			// gros yeux (≠ campagnol trapu à oreilles cachées), queue aussi longue que lui.
+			["mulot"] = new(C("a87a48", "e8dcc0"), new[]
+			{
+				P(-0.55f, 0f, 0.45f, 0.03f, 0, 2, fin: true),                // longue queue
+				P(0.02f, 0f, 0.42f, 0.24f, 1, 3),                            // ventre clair (flancs)
+				P(0.02f, 0f, 0.4f, 0.19f),                                   // dos fauve
+				P(0.42f, 0f, 0.15f, 0.13f),                                  // tête
+				P(0.36f, 0.13f, 0.09f, 0.08f, 0, 2, miroir: true),           // grandes oreilles
+				P(0.5f, 0.07f, 0.035f, 0.035f, 0, 0, fin: true, miroir: true), // gros yeux
+			}),
 			// ── Détritivore ──
 			["cloporte"] = new(C("8a8a8a"), new[]
 			{

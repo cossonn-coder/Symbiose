@@ -27,6 +27,7 @@ namespace Symbiose
 		private static readonly System.Collections.Generic.HashSet<string> Chatons = new()
 		{
 			"WalnutTree", "OakTree", "BeechTree", "HornbeamTree", "BirchTree", "Alder", "Willow", "FirTree",
+			"HazelTree",   // noisetier : chatons jaunes en fin d'hiver (zoochorie ⑧)
 		};
 
 		/// <summary>Une fleur d'arbre en `c` : chaton pendant, ou tache ronde à 5 lobes de près.</summary>

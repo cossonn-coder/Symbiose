@@ -162,6 +162,11 @@ namespace Symbiose
 			["osmie"]            = (new Color("e8e2d4"), new Color("b5651d"), "absent", "butinant", 0f, 1f),
 			// Herbivore vertébré (category="herbivore_vertebre") — sommet trophique ③
 			["campagnol"]        = (new Color("e8e2d4"), new Color("9a6a3a"), "absent", "galeries", 0f, 1f),
+			// Disperseurs de graines (category="disperseur", zoochorie ⑧) — pôle haut
+			// = couleur MacroLife de l'espèce, comme les autres.
+			["geai"]             = (new Color("e8e2d4"), new Color("c09a88"), "absent", "en lisière", 0f, 1f),
+			["ecureuil"]         = (new Color("e8e2d4"), new Color("b8582a"), "absent", "dans les cimes", 0f, 1f),
+			["mulot"]            = (new Color("e8e2d4"), new Color("a87a48"), "absent", "sous couvert", 0f, 1f),
 			// Super-prédateurs (category="super_predateur") — ferment le sommet
 			["rapace"]           = (new Color("e8e2d4"), new Color("b58a4a"), "absent", "en chasse", 0f, 1f),
 			["couleuvre"]        = (new Color("e8e2d4"), new Color("5a7a3a"), "absent", "au soleil", 0f, 1f),

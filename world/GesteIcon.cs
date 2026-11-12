@@ -126,6 +126,7 @@ namespace Symbiose
 			"poser_pot" or "poser_bac_culture" or "deplacer_pot" => 'p',   // pot (terracotta)
 			"poser_tuteur" or "poser_treillis" or "poser_pergola" or "palisser"
 				=> 's',                  // support (gris clair)
+			"poser_perchoir" => 'T',     // perchoir à oiseaux (zoochorie ⑧) : piquet en T
 			"poser_ruche" or "recolter_miel" => 'h',   // ruche (miel)
 			"deraciner" => 'r',          // racine arrachée (brun)
 			// PAYSAGE de la ceinture (périphérie D73 ⑦) : trois glyphes pour trois
@@ -157,6 +158,7 @@ namespace Symbiose
 			't' => new Color(0.55f, 0.42f, 0.28f),   // compost/tas
 			'p' => new Color(0.8f, 0.45f, 0.3f),     // pot
 			's' => new Color(0.75f, 0.75f, 0.78f),   // support
+			'T' => new Color(0.72f, 0.58f, 0.4f),    // perchoir (bois posé)
 			'h' => new Color(0.95f, 0.75f, 0.3f),    // ruche
 			'r' => new Color(0.6f, 0.45f, 0.35f),    // déraciner
 			'z' => new Color(0.72f, 0.62f, 0.45f),   // paysage : bois coupé
@@ -253,6 +255,11 @@ namespace Symbiose
 					DrawLine(new Vector2(mid + 6f, lo), new Vector2(mid + 6f, hi), c, 2f);
 					DrawLine(new Vector2(lo, mid - 6f), new Vector2(hi, mid - 6f), c, 2f);
 					DrawLine(new Vector2(lo, mid + 6f), new Vector2(hi, mid + 6f), c, 2f);
+					break;
+				case 'T':   // perchoir : piquet + traverse en tête, un oiseau posé dessus
+					DrawLine(new Vector2(mid, hi), new Vector2(mid, mid - 2f), c, 2.5f);
+					DrawLine(new Vector2(lo + 2f, mid - 2f), new Vector2(hi - 2f, mid - 2f), c, 2.5f);
+					DrawCircle(new Vector2(mid + 5f, mid - 7f), 4f, c);
 					break;
 				case 'h':   // ruche : deux arcs empilés
 					DrawArc(new Vector2(mid, mid + 4f), 10f, Mathf.Pi, Mathf.Tau, 20, c, 3f);

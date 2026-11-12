@@ -35,6 +35,7 @@ namespace Symbiose
 			["BeechTree"]    = new(0.60f, 0.90f, 0.42f, 1.0f,  0,  0f, new Color("a8a8a0")), // ovoïde dense ; gris clair lisse
 			["BirchTree"]    = new(0.58f, 0.75f, 0.42f, 0.7f, -1, 18f, new Color("e4e2d8")), // dressé pleureur ; blanc
 			["HornbeamTree"] = new(0.60f, 0.90f, 0.40f, 1.0f,  0,  0f, new Color("8a8a80")), // ovoïde ; gris lisse
+			["HazelTree"]    = new(0.55f, 1.00f, 0.48f, 1.1f,  0,  0f, new Color("8a6a50")), // cépée en gerbe ; brun-rouge lustré
 			["Alder"]        = new(0.52f, 0.70f, 0.48f, 0.9f,  0,  0f, new Color("4f3f30")), // conique ; brun sombre
 			["Willow"]       = new(0.62f, 1.00f, 0.38f, 1.0f, -1, 12f, new Color("7a6e5c")), // arrondi souple ; gris-brun
 			["Fig"]          = new(0.50f, 1.05f, 0.50f, 1.7f,  1,  0f, new Color("a09e90")), // buissonnant ; gris clair

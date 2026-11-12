@@ -120,6 +120,7 @@ namespace Symbiose
 				["BeechTree"]  = new(1.7f, LeafMargin.Dentee, 0, 0f,  0.7f, 0.1f, 0), // hêtre : ovale ondulé-denté
 				["BirchTree"]  = new(1.2f, LeafMargin.Dentee, 0, 0f,  0.8f, 0.3f, 0), // bouleau : triangulaire denté
 				["HornbeamTree"] = new(1.7f, LeafMargin.Dentee, 0, 0f, 0.8f, 0.2f, 0), // charme : ovale doublement denté
+				["HazelTree"]  = new(1.2f, LeafMargin.Dentee, 0, 0f,  0.7f, 0.6f, 0), // noisetier : ronde cordée, doublement dentée
 				["Alder"]      = new(1.3f, LeafMargin.Dentee, 0, 0f,  0.1f, 0.1f, 0), // aulne : obovale à sommet tronqué/échancré, denté
 				// FirTree (sapin) : PAS de contour authoré → repli sur l'archétype
 				// Aciculaire de Leaf.cs (aiguilles). Un conifère n'a pas de limbe à

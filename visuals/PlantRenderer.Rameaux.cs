@@ -41,6 +41,7 @@ namespace Symbiose
 			["BeechTree"]    = new(8f, 60f, 1.15f, -0.15f, 3, 7, FormeFeuille.Ovale, 10f, 0.55f),      // plans horizontaux ; ovale, 5-10 cm
 			["BirchTree"]    = new(8f, 75f, 0.55f, -0.85f, 3, 9, FormeFeuille.Scie, 7f, 0.6f),         // pendant ; triangulaire, 3-7 cm
 			["HornbeamTree"] = new(7f, 60f, 0.80f,  0.15f, 3, 7, FormeFeuille.Scie, 10f, 0.5f),        // ovoïde ; doublement dentée, 5-10 cm
+			["HazelTree"]    = new(7f, 55f, 0.60f,  0.30f, 3, 6, FormeFeuille.Coeur, 10f, 0.85f),      // cépée de perches érigées ; ronde cordée, 6-12 cm
 			["Alder"]        = new(7f, 50f, 0.70f,  0.20f, 3, 7, FormeFeuille.Coeur, 9f, 0.75f),       // ronde échancrée, 4-9 cm
 			["Willow"]       = new(8f, 80f, 0.55f, -0.65f, 3, 8, FormeFeuille.Lanceolee, 10f, 0.2f),   // retombée ; étroite, 5-10 cm
 			["Fig"]          = new(5f, 60f, 1.00f,  0.25f, 3, 2, FormeFeuille.Palmee, 22f, 0.9f),      // palmée, 10-25 cm : peu de feuilles

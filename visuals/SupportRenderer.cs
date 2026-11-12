@@ -1,7 +1,9 @@
 // SYMBIOSE — SupportRenderer.cs
 // Le PLACEHOLDER procédural d'un support de GRIMPE posable (sprint grimpantes ⑥,
 // D49 volet A, vue). Un tuteur (pieu fin), un treillis (grille) ou une pergola
-// (portique) posé sur un plot — ils vivent dans la couche YSort des objets
+// (portique) posé sur un plot ; depuis la zoochorie ⑧, aussi le PERCHOIR à
+// oiseaux (piquet fin + traverse en tête), qui ne porte aucune grimpante mais
+// où le merle se pose et sème — ils vivent dans la couche YSort des objets
 // (`_objects`), donc s'occultent correctement avec les plantes et la maison,
 // comme tout volume au sol (même modèle que CompostStructure : un nœud chacun,
 // peu nombreux, reconstruits à chaque snapshot).
@@ -33,8 +35,9 @@ namespace Symbiose
 		private const float TuteurHalfCm  = 3f;    // pieu fin
 		private const float TreillisHalfCm = 18f;  // panneau large
 		private const float PergolaHalfCm = 22f;   // portique enjambant le plot
+		private const float TraverseHalfCm = 15f;  // perchoir : barre de 30 cm où l'oiseau se pose
 
-		private readonly string _kind;       // "tuteur" | "treillis" | "pergola"
+		private readonly string _kind;       // "tuteur" | "treillis" | "pergola" | "perchoir"
 		private readonly float _heightCm;    // hauteur d'appui (extrusion verticale)
 
 		public SupportRenderer(string kind, float heightCm)
@@ -53,6 +56,7 @@ namespace Symbiose
 			{
 				case "treillis": DrawTreillis(); break;
 				case "pergola":  DrawPergola();  break;
+				case "perchoir": DrawPerchoir(); break;
 				default:         DrawTuteur();   break;   // "tuteur" (défaut sobre)
 			}
 		}
@@ -68,6 +72,19 @@ namespace Symbiose
 			DrawLine(Vector2.Zero, top, BoisFonce, 1.5f);
 			// Petite pointe en haut (repère d'appui maximal).
 			DrawCircle(top, 1.6f, BoisOmbre);
+		}
+
+		// PERCHOIR (zoochorie ⑧) : le pieu du tuteur, plus une TRAVERSE en tête
+		// perpendiculaire (un « T ») — la barre où le merle se pose. Lecture voulue :
+		// un piquet d'oiseau, pas un tuteur (aucune grimpante ne s'y accroche).
+		// La traverse suit la rotation de vue (offset monde, comme la pergola).
+		private void DrawPerchoir()
+		{
+			DrawTuteur();
+			Vector2 top = Up(_heightCm);
+			Vector2 t = WorldView.WorldToScreenOffset(0f, TraverseHalfCm);
+			DrawLine(top - t, top + t, BoisOmbre, 2f);
+			DrawLine(top - t + Up(1f), top + t + Up(1f), BoisClair, 1f);   // arête éclairée
 		}
 
 		// TREILLIS : un panneau-grille dressé face à la caméra. Deux montants + des

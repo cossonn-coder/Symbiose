@@ -167,7 +167,10 @@ namespace Symbiose
 				["WalnutTree"] = new OrganPalette("4a8240", "a8b070", "7aa84f", "5f7f3a", "a89a48", "8c7a3a", "6a5a30"), // noyer : vert olive, chatons verts, brou vert sur l'arbre (fiche : il noircit au sol) ; jaune terne virant au brun-noir
 				["OakTree"]    = new OrganPalette("3f7436", "b8b860", "78a64a", "7a5a2e", "a8642a", "8f5226", "b87a34"), // chêne : vert soutenu mat, chatons jaune-vert ; roux
 				// --- Essences migrées en croissance procédurale (D91 T4) -------------
-				["BeechTree"]  = new OrganPalette("4f9a3e", "c8c078", "6fa04a", "6a4a2a", "b86e2c", "c4803a", "9c5a26"), // hêtre : vert franc brillant, faîne ; cuivré
+				["BeechTree"]  = new OrganPalette("4f9a3e", "c8c078", "6fa04a", "8a5230", "b86e2c", "c4803a", "9c5a26"), // hêtre : vert franc brillant, faîne en bogue brun-roux (zoochorie ⑧) ; cuivré
+				// Noisetier (zoochorie ③⑧) : vert tendre mat, chatons JAUNES, noisette vert pâle →
+				// brun clair (aveline mûre) ; automne jaune beurre.
+				["HazelTree"]  = new OrganPalette("5a9446", "e0c848", "b4c878", "a87a44", "d8b840", "c8a838", "e0c860"),
 				["HornbeamTree"] = new OrganPalette("3f7d38", "9aaa60", "7a9a50", "8a7a4a", "c49a38", "b4822e", "cca848"), // charme : vert sombre, chatons vert-jaune ; jaune-roux
 				["BirchTree"]  = new OrganPalette("6fae4a", "d8c850", "78b050", "9a8a4a", "e8c22e", "f0d040", "d4aa28"), // bouleau : vert clair, chatons jaunes ; jaune d'or
 				["FirTree"]    = new OrganPalette("2f5a3a", "6a5a4a", "4a6a4a", "5a3a28"), // sapin : vert conifère sombre, cônes ; persistant, aucun ton d'automne

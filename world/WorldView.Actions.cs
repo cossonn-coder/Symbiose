@@ -115,6 +115,11 @@ namespace Symbiose
 			//    target.x_cm/y_cm), MÊME tuile. La façade Python fait foi (gates).
 			("bouturer",           "bouturer",       'b'),   // mère → plot (2 clics)
 			("greffer",            "greffer",        'g'),   // greffon → porte-greffe (2 clics)
+			// Perchoir à oiseaux (zoochorie ④⑧, protocole 0.6.11) : un POINT de milieu
+			// {tile, x_cm, y_cm} LOCAL, exactement la cible de `planter`/`arroser` → kind
+			// 'm', sans params. Agir sur le milieu (philo #1) : le merle s'y pose et sème
+			// dessous. Gaté côté moteur (après `poser_tuteur` ou maîtrise `perchoir`).
+			("poser_perchoir",     "perchoir",       'm'),
 		};
 		// Nature de mulch courante pour `pailler` (touche N). Cycle sur les 3 natures
 		// du moteur (NATURES_MULCH) — le stock de la nature choisie doit être alimenté

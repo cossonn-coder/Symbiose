@@ -30,15 +30,19 @@ namespace Symbiose
 		private const float FruitNoueTaille = 0.45f;   // rayon à la nouaison, part du rayon mûr
 		private const float FruitEcartCm = 1.6f;       // écart des fruits d'une grappe autour du point d'attache
 		// La fiche : pomme 6-8 cm, cerise 2 cm, figue 4-8 cm, noix ~4,5 cm de diamètre [odg].
+		// Fruits à coque (zoochorie ⑧) : gland ~2 cm, faîne en bogue ~2 cm, noisette ~1,8 cm [odg].
 		private static readonly Dictionary<string, FicheFruit> FruitsArbres = new()
 		{
 			["AppleTree"] = new(3.5f), ["CherryTree"] = new(1f), ["Fig"] = new(3f), ["WalnutTree"] = new(2.2f),
+			["OakTree"] = new(1f), ["BeechTree"] = new(1f), ["HazelTree"] = new(0.9f),
 		};
 		// Grappe : fruits au plus par point d'attache ; queue : longueur du pédoncule, en cm [odg].
 		// Cerises par 2 ou 3 sur de longues queues, pommes par 1 ou 2, figue seule, noix par 1 ou 2.
 		private static readonly Dictionary<string, (int Grappe, float QueueCm)> GrappesFruits = new()
 		{
 			["CherryTree"] = (3, 4f), ["AppleTree"] = (2, 2f), ["Fig"] = (1, 0.5f), ["WalnutTree"] = (2, 0.5f),
+			// Glands du pédonculé au bout d'un long pédoncule ; faînes par 2 ; noisettes en bouquets.
+			["OakTree"] = (3, 4f), ["BeechTree"] = (2, 1f), ["HazelTree"] = (3, 0.5f),
 		};
 
 		/// <summary>Un fruit dessiné : sa cohorte (index moteur, clé de `manger`), son point, son attache.</summary>

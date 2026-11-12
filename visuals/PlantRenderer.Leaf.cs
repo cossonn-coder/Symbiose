@@ -90,6 +90,7 @@ namespace Symbiose
 				// --- Essences migrées en croissance procédurale (D91 T4) -----
 				["BeechTree"]  = new(LeafShape.Elliptique, 1.7f, 0, true),  // hêtre : ovale ondulé-denté
 				["HornbeamTree"] = new(LeafShape.Elliptique, 1.7f, 0, true),// charme : ovale doublement denté
+				["HazelTree"]  = new(LeafShape.Cordee,    1.2f, 0, true),   // noisetier : ronde à base cordée
 				["BirchTree"]  = new(LeafShape.Cordee,    1.2f, 0, true),   // bouleau : triangulaire, base tronquée
 				["Alder"]      = new(LeafShape.Elliptique, 1.3f, 0, false), // aulne : obovale arrondi de berge
 				["FirTree"]    = new(LeafShape.Aciculaire, 3.0f, 0, false), // SAPIN : aiguilles (touffes fines) — pas de limbe

@@ -82,6 +82,12 @@ namespace Symbiose
 			["carabe"]     = (new Color("2a3a52"), 2.5f, 1f),      // ×2
 			["merle"]      = (new Color("2b2a3a"), 25f, 8f),       // ×0,5
 			["herisson"]   = (new Color("8a6a4a"), 25f, 15f),      // ×0,5
+			// Disperseurs de graines (zoochorie ⑧) : position = habitat du moteur —
+			// geai en lisière découverte, écureuil sous les cimes connexes, mulot sous
+			// couvert. Pas d'altitude ni de nuit inventées côté vue (D117).
+			["geai"]       = (new Color("c09a88"), 34f, 12f),      // ×0,5
+			["ecureuil"]   = (new Color("b8582a"), 40f, 10f),      // ×0,5 (queue comprise)
+			["mulot"]      = (new Color("a87a48"), 18f, 3.5f),     // ×0,5 (queue comprise)
 			// Détritivores (le lombric, souterrain, n'est jamais envoyé)
 			["cloporte"]   = (new Color("8a8a8a"), 1.5f, 0.7f),    // ×2
 			// Herbivore vertébré

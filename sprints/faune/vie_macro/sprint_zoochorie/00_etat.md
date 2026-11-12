@@ -66,7 +66,7 @@ Golden de départ `a10b7225…` ; **re-figé au ⑥ seulement** (mulot → rapac
 | ⑤ | `05_geai_ecureuil.md` — 2 guildes `disperseur`, caches + oubli, apport ceinture | inchangé | **fait** 2026-11-11 |
 | ⑥ | `06_mulot.md` — guilde, prédation saturante des grains, caches ; proie rapace/couleuvre | **RE-FIGÉ** `b4a921f8…` | **fait** 2026-11-11 |
 | ⑦ | `07_voix_mesure.md` — événements, carnet `dispersion`, signes ; 200 ans verger_mur + banc `nucleation` ; calibrage | inchangé `b4a921f8…` | **fait côté code** 2026-11-11 — **critère D130 RATÉ (pommier) → décision Nico** |
-| ⑧ | `08_vue_godot.md` — faune, fruits à coque, noisetier, perchoir, banc F5 ; clôture D42 | inchangé | à faire |
+| ⑧ | `08_vue_godot.md` — faune, fruits à coque, noisetier, perchoir, banc F5 ; clôture D42 | inchangé `b4a921f8…` | **fait côté code** 2026-11-12 — F5 attendu |
 
 ## Coût perf (estimé)
 Frugivorie : boucle sur les fruitiers mûrs (quelques plantes) ; pose : un tirage
@@ -294,8 +294,33 @@ pondéré par plot sur une grille « perchoir » (couronnes ligneuses) déjà co
   infobulle, sim_server 322/322, bancs.test_verger_mur verts. Golden `b4a921f8…` INCHANGÉ.
   C# non touché.
 
+## Tronçon 8 — fait côté code (2026-11-12) — F5 attendu
+- **Faune** : `geai` (beige-rosé, bande bleue, croupion blanc), `ecureuil` (roux, panache),
+  `mulot` (fauve, ventre clair, grandes oreilles, longue queue) dans `FauneSilhouettes`,
+  `MacroLife.Especes` (34 / 40 / 18 cm) et `FieldOverlay` (heatmap F6). Le pont envoie déjà
+  leurs sprites (catégorie `disperseur` peinte). **Pas d'altitude ni de nuit** : la position
+  vient de l'habitat moteur (cimes connexes, couvert) et le rendu n'a pas de nuit (D117).
+  Planche VM `-K` : les trois se distinguent [1 capture].
+- **Arbres** : `HazelTree` dans les 8 tables par espèce (organes, rameaux, recette d'arbre,
+  contours, limbe, chatons, rampe DA, fruits) ; fiches de fruit gland / faîne / noisette
+  (1 / 1 / 0,9 cm de rayon, grappes 3 / 2 / 3) — avant, chêne et hêtre tombaient sur la masse
+  (point minuscule). Faîne mûre brun-roux (`8a5230`).
+- **Perchoir** : `SupportRenderer` type `perchoir` (piquet + traverse en T), glyphe dédié
+  `'T'` (`GesteIcon`), geste `("poser_perchoir", "perchoir", 'm')` en fin de `Gestes[]`
+  (cible = point local, comme `planter`). Route et version du pont : déjà là (0.6.11), aucune
+  version attendue côté C# → rien à aligner. Capture `nucleation` ×1 : le T se lit au nord-ouest.
+- **Écart au kickoff** : en jeu le geste n'est **jamais ouvert** — `poser_tuteur` n'a pas de
+  route au pont et rien ne crédite la maîtrise `perchoir`. Forçage de BANC : `nucleation.post_init`
+  ouvre `poser_perchoir` (patron `palette_gestes`). Dette **D133** ouverte. Le banc était déjà
+  lançable (registre `BANCS` + liste dynamique du sélecteur) : rien à faire côté C#.
+- Dettes §7 du doc regroupées en **D134** (mammifères des pommes = D132 existante).
+- Golden `b4a921f8…` INCHANGÉ ; `dotnet build` 0 avertissement, 0 erreur ; test_nucleation 7/7,
+  test_deblocage 24/24, test_sim_server 322/322.
+
 ## §REPRISE
-**Décision Nico 2026-11-11 : ⑦ commité tel quel, critère D130 raté versé en dette D132** (pommier sans disperseur, noyers envahissants ; à reprendre en `/conception`). Puis ⑧
-`08_vue_godot.md` (golden `b4a921f8…`) : glyphes geai/écureuil/mulot, perchoir, et au F5
-le fourré de cerisiers du banc `nucleation`, le mort debout de 6 semaines. Lire `CLAUDE.md`,
-ce fichier, le doc de conception, puis le premier kickoff « à faire » du tableau.
+**Sprint CLOS côté code le 2026-11-12** (①→⑧, golden `b4a921f8…`). Reste le **F5 de Nico**,
+banc `nucleation` : (1) semis de cerisier lisibles sous le perchoir et le mort debout (l'an 2) ;
+(2) geai, écureuil, mulot reconnaissables à ×8 ; (3) glands / noisettes visibles en septembre ;
+(4) geste perchoir trouvable (11ᵉ geste ouvert du banc → hors des 10 slots : clic droit sur un
+slot pour l'assigner) ; (5) fourré de cerisiers à 50 ans ; (6) mort debout tombé après 6 sem.
+Puis D132 (relève du verger) en `/conception`.
