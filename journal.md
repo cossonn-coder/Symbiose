@@ -224,6 +224,7 @@ pointeur ci-dessous. Ne plus écrire le contenu des entrées ici.
 - [2026-11-09 — Sprint **FREIN REJETS FIGUIER** (reliquat D130) — CLOS côté code (①→⑤) : pas de clonage en hiver, rejets de souche à la mort ou à la perte de couronne (taille = recépage), trait `rejet_souche`, voix `attente` ; 200 ans : fourré 193→4, mais figuier/pommier éteints ~an 175 (à trancher) ; golden `a10b7225…` intact, F5 validé](journal/179_2026-11-09_sprint-frein-rejets-figuier-CLOS.md)
 - [2026-11-09 — Conception **ZOOCHORIE** (D42) — FIGÉE : merle, geai, écureuil, mulot ; recrue unifiée sur les vrais fruits ; perchoir ; glandée ; noisetier ; 8 tronçons, golden re-figé au ⑥ seulement](journal/180_2026-11-09_conception-zoochorie-FIGEE.md)
 - [2026-11-12 — Sprint **ZOOCHORIE** (D42) — CLOS côté code (①→⑧) : grains sauvages, chute unifiée, glandée, noisetier, merle + perchoir, geai/écureuil, mulot, voix `dispersion`, banc `nucleation`, vue Godot ; golden re-figé au ⑥ seulement (`b4a921f8…`) ; D132/D133/D134 ouvertes, F5 attendu](journal/181_2026-11-12_sprint-zoochorie-CLOS.md)
+- [2026-11-12 — Conception **REFONTE DE L'ACCÈS AUX GESTES** (D133, D118 b-e) — FIGÉE : 20 gestes gatés sur 32 jamais ouverts (audit) ; portes des techniques, pressentis, tiroir par familles, icônes DA + curseur animé ; 3 sprints, golden intact](journal/182_2026-11-12_conception-refonte-palette-FIGEE.md)
 
 > Tout le contenu détaillé est dans les fichiers liés ci-dessus
 > (`journal/` et `journal_archive/`). La dette est dans [`DETTE.md`](DETTE.md).

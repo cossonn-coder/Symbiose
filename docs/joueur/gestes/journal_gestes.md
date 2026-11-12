@@ -11,3 +11,4 @@
 - [2026-06-13 — Sprint planter/arroser · Session B : `arroser` + modèle « eau » (asphyxie) — golden RE-FIGÉ T0+T1 (maîtrisé)](../../../journal/43_2026-06-13_sprint-planter-arroser-session-b-arroser-modèle.md)
 - [2026-06-13 — Sprint planter/arroser · Session C : pont `sim_server.py` (protocole 0.3.3) — sprint CLOS](../../../journal/44_2026-06-13_sprint-planter-arroser-session-c-pont-sim_server.md)
 - [2026-07-11 — Sprint PALETTE DE GESTES PERSONNALISABLE (①→⑤) — SPRINT TERMINÉ](../../../journal/113_2026-07-11_sprint-palette-gestes-CLOS-sprint-terminé.md)
+- [2026-11-12 — Conception **REFONTE DE L'ACCÈS AUX GESTES** (D133, D118 b-e) — FIGÉE : 20 gestes gatés sur 32 jamais ouverts (audit) ; portes des techniques, pressentis, tiroir par familles, icônes DA + curseur animé ; 3 sprints, golden intact](../../../journal/182_2026-11-12_conception-refonte-palette-FIGEE.md)

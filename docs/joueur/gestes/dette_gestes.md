@@ -8,3 +8,4 @@
 | Dette | Libellé court |
 |---|---|
 | [D19](../../../DETTE.md) | Organes comestibles (« manger ») : déplétion, repousse, valeur nutritive |
+| [D133](../../../DETTE.md) | Perchoir inaccessible → refonte de l'accès aux gestes, conçue le 2026-11-12 (3 sprints) |
