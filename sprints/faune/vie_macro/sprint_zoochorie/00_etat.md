@@ -324,3 +324,9 @@ banc `nucleation` : (1) semis de cerisier lisibles sous le perchoir et le mort d
 (4) geste perchoir trouvable (11ᵉ geste ouvert du banc → hors des 10 slots : clic droit sur un
 slot pour l'assigner) ; (5) fourré de cerisiers à 50 ans ; (6) mort debout tombé après 6 sem.
 Puis D132 (relève du verger) en `/conception`.
+
+## Verdict F5 (Nico, 2026-11-12) — sprint CLOS
+- ✅ Geai et mulot observés ; mort debout OK ; glands et noisettes visibles.
+- ❌ Écureuil non observé ; à placer dans les arbres, oiseaux aussi ; mustélidé chasseur à ajouter → **D135**.
+- ❌ Geste perchoir inaccessible → **D133**, à traiter dans le prochain chantier palette de gestes.
+- D42 fermée.
