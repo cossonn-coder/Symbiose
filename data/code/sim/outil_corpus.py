@@ -310,6 +310,26 @@ FICHES_OUTIL: dict[str, dict[int, str]] = {
            "pas : on la prend en sachant que le geste sera là après nous.",
     },
 
+    # --- Le VOILE (sprint ACCÈS AUX GESTES ②) ---------------------------------
+    # Vendu à l'Atelier (`sim/outils.py`), il est la porte de la technique
+    # `protection-climatique` : sans fiche, l'outil qu'on vient d'acheter resterait
+    # muet à l'encyclopédie. Les quatre autres outils neufs de l'Atelier (broyeur,
+    # pots, tuteurs, greffoir) parlent déjà par les fiches `broyeur`, `pot`, `tuteur`
+    # et `greffoir` ci-dessus.
+    "voile": {
+        1: "Une étoffe blanche, fine et légère, qu'on étend sur les rangs sans "
+           "l'attacher serré. Elle laisse passer la pluie et la lumière.",
+        2: "Le voile sert la PROTECTION CLIMATIQUE : posé avant une nuit claire, il "
+           "retient la tiédeur que le sol rend après le coucher du soleil, et les "
+           "jeunes pousses passent le gel dessous. Tendu avant l'orage, il amortit "
+           "la grêle. Il agit sur l'air qui entoure la plante, jamais sur la plante.",
+        3: "Le voile se pose sur un signe du ciel et se retire dès que le risque "
+           "passe : laissé trop longtemps, il attendrit ce qu'il abrite. Une haie "
+           "qui coupe le vent, un mur qui rend sa chaleur la nuit, une plante semée "
+           "à son heure font le même office sans qu'on y pense. Le jardin abrité "
+           "par sa propre forme n'a plus besoin d'étoffe.",
+    },
+
     "pergola": {
         1: "Une structure haute, poteaux et traverses, sous laquelle on passe et sur "
            "laquelle une grimpante court en hauteur, formant une voûte de feuillage.",

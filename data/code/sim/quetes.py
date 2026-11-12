@@ -409,7 +409,7 @@ def evaluer_declencheurs(game_state: dict, player: str) -> list:
 def _appliquer_recompense(game_state: dict, player: str, recompense) -> None:
     """Verse UNE récompense (V3) — appelée à l'accomplissement, hors tick. Deux classes :
     SIMPLES (état JOUEUR via les API EXISTANTES : banque de graines, pages, Vigueur D11,
-    maîtrise D12) et MATÉRIELLES rares (④ : `vivace`/`structure` → un ACTEUR neuf apparaît
+    maîtrise D12, technique enseignée) et MATÉRIELLES rares (④ : `vivace`/`structure` → un ACTEUR neuf apparaît
     dans le monde). Aucun buff plante (#2) : on ne dope aucune plante en terre — on crédite
     le joueur OU on fait naître un cadeau. `None` = plaisir pur → no-op. Un contexte minimal
     (banque/monde absents) fait échouer silencieusement le canal concerné (pas de destination)."""
@@ -430,7 +430,50 @@ def _appliquer_recompense(game_state: dict, player: str, recompense) -> None:
     elif tag == "vivace":                         # ④ récompense MATÉRIELLE rare
         _offrir_vivace(game_state, recompense[1], recompense[2])
     elif tag == "structure":                      # ④ récompense MATÉRIELLE rare
-        _offrir_structure(game_state, recompense[1])
+        _offrir_structure(game_state, recompense[1], player)
+    elif tag == "technique":                      # le courrier ENSEIGNE (accès aux gestes ②)
+        _enseigner(game_state, player, *recompense[1:])
+
+
+# --- Le courrier ENSEIGNE (sprint ACCÈS AUX GESTES ②, conception
+# `docs/joueur/gestes/conception_refonte_palette.md` §3.3) ----------------------
+# Une lettre dont le désir est comblé peut transmettre un SAVOIR-FAIRE. C'est l'une
+# des quatre portes des techniques (`PORTES_TECHNIQUE`, `sim/actions/deblocage.py`),
+# la seule qui passe par un voisin. Toujours de l'état JOUEUR, jamais une plante (#2).
+def _reevaluer_gestes(game_state: dict, player: str) -> None:
+    """Fait relire les portes et les gestes après une récompense, et range les gestes
+    NOUVELLEMENT ouverts là où le pont les ramasse pour sa notification
+    (`gestes_debloques_recents`, vidé au snapshot suivant). On FUSIONNE avec ce que
+    le hook de maîtrise a pu y poser la même semaine, au lieu de l'écraser.
+
+    Import LOCAL : `sim.actions` est un gros paquet qui n'a pas à être chargé pour
+    lire une lettre, et on garde ainsi `quetes` importable sans lui (même précaution
+    que les imports locaux d'`_offrir_vivace`)."""
+    from sim.actions.deblocage import evaluer_deblocages
+    nouveaux = evaluer_deblocages(game_state, player)
+    if nouveaux:
+        recents = game_state.setdefault("gestes_debloques_recents", {})
+        recents[player] = sorted(set(recents.get(player, ())) | set(nouveaux))
+
+
+def _enseigner(game_state: dict, player: str, technique: str,
+               marqueur: str | None = None) -> None:
+    """Récompense `("technique", objet)` ou `("technique", objet, marqueur)`.
+
+    Deux formes, une seule logique en aval (la réévaluation des portes) :
+      - SANS marqueur : la lettre suffit. La technique est découverte ici (palier 1),
+        et ses gestes d'entrée s'ouvrent à la réévaluation.
+      - AVEC marqueur : la lettre pose un événement au ledger du joueur
+        (`lettre_greffe`, `lettre_essaim`) et c'est la PORTE de la technique qui
+        décide. Pour l'essaim la lettre suffit, la technique est découverte aussitôt.
+        Pour la greffe la porte exige AUSSI le greffoir : découvrir la technique ici
+        ouvrirait `greffer` sans l'outil, ce que la conception refuse (§3.2)."""
+    if marqueur is None:
+        maitrise.decouvrir(game_state, player, technique)
+    else:
+        from sim.actions.deblocage import marquer_evenement
+        marquer_evenement(game_state, player, marqueur)
+    _reevaluer_gestes(game_state, player)
 
 
 # --- ④ Récompenses MATÉRIELLES rares (V3) : un ACTEUR neuf apparaît, jamais un
@@ -474,13 +517,19 @@ def _offrir_vivace(game_state: dict, espece: str, annees: float) -> None:
     tile.plants.append(plant)
 
 
-def _offrir_structure(game_state: dict, kind: str) -> None:
+def _offrir_structure(game_state: dict, kind: str, player: str | None = None) -> None:
     """Pose une structure permanente `kind` (un `bac` à compost) en cadeau — un ACTEUR
     posé, pas un buff. On ajoute la `Structure` à `eco.structures` EXACTEMENT comme le
     fait `poser_bac` après paiement, MAIS sans facturer de Vigueur : un cadeau est GRATUIT
     (appeler `poser_bac` prélèverait la Vigueur du joueur — absurde pour un présent). On
     respecte l'unicité par tuile (au plus un bac, comme `poser_bac`) : si la tuile en porte
-    déjà un, le cadeau retombe silencieusement. Silencieux hors d'un vrai monde."""
+    déjà un, le cadeau retombe silencieusement. Silencieux hors d'un vrai monde.
+
+    POSSÉDER VAUT AVOIR POSÉ (accès aux gestes ②, conception §3.1) : le bac offert
+    consigne pour `player` le même marqueur d'action que le geste de pose
+    (`poser_bac`). Sans cela le cadeau restait inutilisable : `composter`, `retourner`
+    et `epandre` attendent `("action", "poser_bac")`. Le marqueur n'est posé que si la
+    structure l'a réellement été, et seulement pour un verbe que les tables lisent."""
     tile = _tuile_cadeau(game_state)
     ecos = game_state.get("eco")
     if tile is None or not ecos:
@@ -493,6 +542,11 @@ def _offrir_structure(game_state: dict, kind: str) -> None:
     if structure_de_tuile(eco, kind) is not None:
         return                                     # déjà une structure de ce type (unicité tuile)
     eco.structures.append(Structure(kind=kind, plot=(0, 0)))
+    from sim.actions.deblocage import DECLENCHEURS, marquer_action
+    verbe_pose = f"poser_{kind}"
+    if player is not None and verbe_pose in DECLENCHEURS:
+        marquer_action(game_state, player, verbe_pose)
+        _reevaluer_gestes(game_state, player)
 
 
 # --- ⑤ Vue read-only : alimentation du panneau « courrier » ------------------

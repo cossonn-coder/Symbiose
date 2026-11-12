@@ -72,6 +72,41 @@ OUTILS: dict[str, dict] = {
         "cout_vigueur": 60.0,   # placeholder, calibrage F5
         "offre": True,
     },
+    # --- Outils des PORTES de technique (sprint ACCÈS AUX GESTES ②, conception
+    # `docs/joueur/gestes/conception_refonte_palette.md` §3.2) -------------------
+    # Cinq entrées, zéro logique, même règle que plus haut : Vigueur SEULE, aucune
+    # maîtrise (sinon poule et œuf). Chaque marqueur est LU par `PORTES_TECHNIQUE`
+    # ou `GESTE_UNLOCK` (`sim/actions/deblocage.py`) : l'acheter DÉCOUVRE la
+    # technique, qui ouvre ses gestes d'entrée. Coûts = PLACEHOLDERS de calibrage
+    # F5, tous payables sur la Vigueur de base (100) ; le petit matériel (pots,
+    # tuteurs) est le moins cher, la machine (broyeur) la plus chère.
+    "broyeur": {
+        "marqueur": "posseder_broyeur",    # ouvre `broyer` directement (l'outil fait le geste)
+        "cout_vigueur": 60.0,   # placeholder, calibrage F5
+        "offre": True,
+    },
+    "pots": {
+        "marqueur": "posseder_pots",       # porte de `jardinage_hors_sol`
+        "cout_vigueur": 30.0,   # placeholder, calibrage F5
+        "offre": True,
+    },
+    "tuteurs": {
+        "marqueur": "posseder_tuteurs",    # porte de `palissage`
+        "cout_vigueur": 30.0,   # placeholder, calibrage F5
+        "offre": True,
+    },
+    # Le greffoir seul n'ouvre RIEN : la porte de la greffe demande aussi le savoir,
+    # qui vient d'une lettre (`lettre_greffe`, `sim/quetes_corpus.py`).
+    "greffoir": {
+        "marqueur": "posseder_greffoir",
+        "cout_vigueur": 45.0,   # placeholder, calibrage F5
+        "offre": True,
+    },
+    "voile": {
+        "marqueur": "posseder_voile",      # porte de `protection-climatique`
+        "cout_vigueur": 40.0,   # placeholder, calibrage F5
+        "offre": True,
+    },
 }
 
 

@@ -23,9 +23,8 @@ from sim.carnet import carnet_lire
 from sim.encyclopedie import encyclopedie_index, encyclopedie_lire
 from sim.magazine import magazine_offres, magazine_fiche, magazine_articles
 from sim.outils import (
-    OUTILS, MATERIAUX, offre_outils, offre_materiaux,
-)   # Atelier (acquisition des moyens d'agir ②/③) : registres + offres
-from sim.actions.deblocage import est_debloque  # possession sécateur DÉRIVÉE (couper ouvert)
+    OUTILS, MATERIAUX, offre_outils, offre_materiaux, _possede,
+)   # Atelier (acquisition des moyens d'agir ②/③) : registres + offres + possession
 from sim.pages import pages_trouvees
 from sim.pages_corpus import PAGES, ORDRE
 from sim.aide import aide_espece
@@ -111,15 +110,15 @@ class VoixMixin:
             return {"ok": False, "error": "atelier avant init"}
         gs = self.engine.game_state
         player = gs["current_player"]
-        # `est_debloque(couper)` ⇔ le marqueur `posseder_secateur` a été posé
-        # (`acquerir_outil` ouvre `couper` par la chaîne) → possession dérivée, on ne
-        # duplique aucun état. Pour un futur outil sans geste ouvert, on retomberait
-        # sur False (l'outil n'apparaît juste pas « possédé » — inoffensif).
+        # Possession = le MARQUEUR de l'outil est posé (`outils._possede`, lecture pure
+        # de `actions_faites`) — la même question que se pose `acquerir_outil` pour
+        # refuser un second achat. Avant le sprint ACCÈS AUX GESTES ② elle n'était
+        # calculée que pour le sécateur (dérivée de `couper` ouvert) et valait False en
+        # dur pour tous les autres : la vitrine reproposait un outil déjà acheté.
         outils = [
             {"cle": cle,
              "cout_vigueur": OUTILS[cle]["cout_vigueur"],
-             "possede": est_debloque(gs, player, "couper")
-                        if cle == "secateur" else False}
+             "possede": _possede(gs, player, OUTILS[cle]["marqueur"])}
             for cle in offre_outils(gs, player)
         ]
         materiaux = [

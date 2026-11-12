@@ -59,7 +59,7 @@ def main() -> int:
                     help="crédite la maîtrise (déverrouillages/paliers tracés) — preset BRIDE")
     ap.add_argument("--amorce-maitrise", metavar="OBJET", default=None,
                     help="accorde le palier 1 d'un concept (dev only) pour démontrer un "
-                         "déverrouillage — ex. 'paillage' ouvre pailler/broyer")
+                         "déverrouillage — ex. 'paillage' ouvre pailler")
     ap.add_argument("--objectif", metavar="GESTE:QTE:CIBLE", action="append", default=[],
                     help="objectif injecté au début (④) — ex. 'recolter:3:tomate' ; "
                          "répétable. L'onglet de chaque objectif est imprimé en fin.")

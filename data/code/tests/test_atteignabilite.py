@@ -19,6 +19,8 @@ Une condition est « franchissable » quand tout ce qu'elle cite est à portée 
 marqueur d'outil vendu à l'Atelier, geste déjà ouvert, événement observable…
 
 Vérifie :
+  0. Les hypothèses du point fixe : tout marqueur d'outil cité est vendu, tout
+     événement cité a un poseur réel (resserré au tronçon ②).
   1. Tout verbe de `COUTS` est de base ou atteignable.
   2. Toute technique GATANTE (citée par un `("maitrise", t, 1)` et qu'aucun geste de
      base ne fait découvrir) a une porte, et aucune porte ne passe par un geste de
@@ -31,13 +33,17 @@ Lancement : depuis `data/code/`, `python3 -m tests.test_atteignabilite`.
 """
 from __future__ import annotations
 
+import inspect
 import sys
 
 from fields.ecofields import NATURES_MULCH, PAILLAGE_DOSE
 from sim import maitrise as M
 from sim.actions import deblocage as D
 from sim.actions.couts import COUTS, OBJETS_TOUCHES
+from sim.actions import bouture as bouture_mod
 from sim.outils import OUTILS
+from sim.quetes_corpus import QUETES_CORPUS
+from tools.simserver.maitrise_pont import MARQUEURS_OBSERVATION
 
 _results = []
 
@@ -53,20 +59,23 @@ def check(name, cond, detail=""):
 # paliers sont tenus pour atteignables à tout niveau.
 CONCEPTS_DU_TICK = frozenset({"eau", "lumière", "météo", "pollinisation"})
 
-# Marqueurs d'outil « PROMIS PAR LE TRONÇON ② » : les portes les lisent déjà, mais
-# l'Atelier ne les vend pas encore (`sim/outils.py`). À RESSERRER au ② : quand les
-# outils sont dans `OUTILS`, vider cet ensemble — le test `[0]` le rappelle.
-MARQUEURS_PROMIS_PAR_2 = frozenset({
-    "posseder_broyeur", "posseder_pots", "posseder_tuteurs",
-    "posseder_greffoir", "posseder_voile",
-})
+# RESSERRÉ au tronçon ② : plus de liste « promis par ② ». Les marqueurs d'outil
+# sont ceux que l'Atelier VEND (`OUTILS`), et un événement n'est atteignable que si
+# quelqu'un le POSE. Trois poseurs, lus dans le code réel :
+#   - les OBSERVATIONS du pont (`maitrise_pont.MARQUEURS_OBSERVATION`) ;
+#   - les LETTRES qui enseignent : récompense `("technique", objet, marqueur)` du
+#     corpus (`sim/quetes_corpus.py`) ;
+#   - la bouture spontanée, posée par le geste `bouturer` (`sim/actions/bouture.py`).
+def _marqueurs_lettres() -> frozenset:
+    return frozenset(q.recompense[2] for q in QUETES_CORPUS.values()
+                     if q.recompense and q.recompense[0] == "technique"
+                     and len(q.recompense) > 2)
 
-# Événements tenus pour atteignables : observations (marqueurs posés par le pont
-# après le tick), lettres du courrier (posés au ②), et la bouture spontanée.
-EVENEMENTS_ATTEIGNABLES = frozenset({
-    "bouture_spontanee", "merle_seme", "grimpante_sans_appui",
-    "lettre_greffe", "lettre_essaim",
-})
+
+def _evenements_poses() -> frozenset:
+    bouture = ({"bouture_spontanee"}
+               if '"bouture_spontanee"' in inspect.getsource(bouture_mod) else set())
+    return MARQUEURS_OBSERVATION | _marqueurs_lettres() | bouture
 
 # Qui remplit le stock de chaque nature de mulch : un GESTE (qui doit être ouvert)
 # ou l'Atelier (`None` = achat, toujours possible).
@@ -74,7 +83,7 @@ SOURCE_STOCK = {"feuilles": "glaner", "paille": None}
 
 
 def _marqueurs_outils() -> frozenset:
-    return frozenset(spec["marqueur"] for spec in OUTILS.values()) | MARQUEURS_PROMIS_PAR_2
+    return frozenset(spec["marqueur"] for spec in OUTILS.values() if spec.get("offre"))
 
 
 def _franchissable(cond, ouverts, techniques) -> bool:
@@ -92,7 +101,7 @@ def _franchissable(cond, ouverts, techniques) -> bool:
     if forme == "action":
         return cond[1] in ouverts or cond[1] in _marqueurs_outils()
     if forme == "evenement":
-        return cond[1] in EVENEMENTS_ATTEIGNABLES
+        return cond[1] in _evenements_poses()
     if forme == "stock":
         nature = cond[1]
         if nature not in SOURCE_STOCK:
@@ -137,9 +146,18 @@ def _techniques_gatantes() -> set[str]:
 
 def test_hypotheses():
     print("\n[0] hypothèses du test encore justes")
-    vendus = {spec["marqueur"] for spec in OUTILS.values()}
-    check("aucun marqueur « promis par ② » n'est déjà vendu (sinon : le retirer)",
-          not (MARQUEURS_PROMIS_PAR_2 & vendus), f"{sorted(MARQUEURS_PROMIS_PAR_2 & vendus)}")
+    # Tout marqueur d'outil cité par les tables est VENDU à l'Atelier.
+    cites = {a for a in D._cites("action") if a.startswith("posseder_")}
+    non_vendus = sorted(cites - _marqueurs_outils())
+    check("tout marqueur `posseder_*` cité est vendu à l'Atelier", not non_vendus,
+          f"{non_vendus}")
+    # Tout événement cité par les tables a un POSEUR dans le code.
+    sans_poseur = sorted(D._cites("evenement") - _evenements_poses())
+    check("tout événement cité a un poseur (observation, lettre ou geste)",
+          not sans_poseur, f"{sans_poseur}")
+    check("les lettres posent bien `lettre_greffe` et `lettre_essaim`",
+          {"lettre_greffe", "lettre_essaim"} <= _marqueurs_lettres(),
+          f"{sorted(_marqueurs_lettres())}")
     check("natures de SOURCE_STOCK connues de NATURES_MULCH",
           set(SOURCE_STOCK) <= set(NATURES_MULCH))
 

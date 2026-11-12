@@ -141,7 +141,10 @@ OBJETS_TOUCHES = {
     # climatique` (technique, comme `paillage`/`terrassement`) — AUCUNE cible vivante
     # (on écrit un CHAMP du milieu), aucun outil nommé (patron `pailler`). Sans état
     # moteur → M.palier == 0 → atténuation neutre 1.0.
-    "poser_voile":          ("protection-climatique",),
+    # Accès aux gestes ② : le VOILE est désormais un outil nommé (vendu à l'Atelier,
+    # fiche dans `sim/outil_corpus.py`) → il rejoint le tuple de `poser_voile`, comme
+    # `tuteur` celui de `poser_tuteur`. Cloche et ombrière restent sans outil nommé.
+    "poser_voile":          ("protection-climatique", "voile"),
     "poser_cloche":         ("protection-climatique",),
     "poser_ombriere":       ("protection-climatique",),
     "poser_tuteur":         ("palissage", "tuteur"),           # technique + outil (grimpantes ④ §6) — sans état moteur → neutre 1.0

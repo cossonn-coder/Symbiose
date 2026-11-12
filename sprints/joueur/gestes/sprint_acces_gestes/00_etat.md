@@ -29,7 +29,7 @@ jamais re-figer.
 | # | Kickoff | Golden | État |
 |---|---|---|---|
 | ① | `01_portes_atteignabilite.md` — table des portes, conditions `stock`/`compte`, test du point fixe | intact | **FAIT** 2026-11-12 |
-| ② | `02_atelier_courrier_observations.md` — outils neufs, récompense `technique`, lettres, marqueurs d'observation | intact | à faire |
+| ② | `02_atelier_courrier_observations.md` — outils neufs, récompense `technique`, lettres, marqueurs d'observation | intact | **FAIT** 2026-11-12 |
 | ③ | `03_pressentis_familles_pont.md` — pressentis + phrases, familles, routes supports/couvertures, snapshot, bump pont | intact | à faire |
 | ④ | `04_vue_minimale_banc.md` — gestes manquants dans `Gestes[]`, banc F5 | intact | à faire |
 
@@ -66,6 +66,53 @@ jamais re-figer.
   acquisition_outils 16/16 ; voisines (paillage, automate ②, périphérie ×3,
   progression_geste, vision, bouture) vertes.
 
+### ② (2026-11-12) — golden intact `b4a921f8…`
+- **Atelier** : `broyeur`, `pots`, `tuteurs`, `greffoir`, `voile` dans `OUTILS` (coûts
+  placeholders 30 à 60). `broyer` s'ouvre donc en jeu. `cmd_atelier` calcule
+  `possede` par `outils._possede` pour tous les outils. `AtelierPanel.cs` liste ce
+  que le pont envoie : les cinq outils y paraissent sans toucher au C# (libellé = clé
+  brute, à habiller au sprint palette).
+- **Fiches** : `broyeur`, `pot`, `tuteur`, `greffoir` existaient. Seul le **voile**
+  manquait. Le test d'encyclopédie exige fiche ⇔ membre d'`OBJETS_TOUCHES` : `voile`
+  a donc rejoint le tuple de `poser_voile` (`sim/actions/couts.py`), ce que le kickoff
+  ne prévoyait pas. Effet : état joueur seul (découverte et crédit d'usage du voile).
+- **Récompense `technique`** — écart au kickoff : `("technique", objet)` découvre la
+  technique ; `("technique", objet, marqueur)` pose SEULEMENT le marqueur et laisse la
+  porte décider. Raison : découvrir `greffe` à la lettre ouvrirait `greffer` sans le
+  greffoir, contre la conception §3.2 (« lettre ET greffoir »). L'essaim, lui, ouvre
+  l'apiculture dans le même appel (sa porte ne lit que la lettre).
+- Réévaluation placée dans `sim/quetes.py` (`_reevaluer_gestes`, import local de
+  `sim.actions.deblocage`, pas de cycle). Elle FUSIONNE les gestes ouverts dans
+  `gestes_debloques_recents` (notification du snapshot) au lieu de l'écraser.
+- **Bac d'Odette** : `_offrir_structure` marque `poser_bac` si le bac est réellement
+  posé (pas de monde, ou tuile déjà pourvue → pas de marqueur).
+- **Lettres** : `lettre_pots_amelie` (sem. 6), `lettre_haricots_rames_gaston` (10),
+  `lettre_greffe_augustin` (20, donneur NEUF, ancien pépiniériste),
+  `lettre_essaim_bertrand` (24). **À surveiller** : le plafond est de 6 lettres
+  actives et `lettre_kiwi_reve` occupe une place pour toujours (cible hors
+  catalogue). Sans désir comblé, les lettres de greffe et d'essaim n'arrivent pas ;
+  or la greffe n'a QUE la porte « lettre et greffoir ». Atteignable, mais derrière
+  d'autres désirs à combler. Non mesuré en jeu.
+- **Observations** (`tools/simserver/maitrise_pont.py`, registre
+  `MARQUEURS_OBSERVATION`) : `merle_seme` sur l'événement `frugivorie` du merle (ligne
+  « fruits pris », pas la ligne « semée sous les perchoirs » qui supposerait un
+  perchoir) ; `grimpante_sans_appui` par lecture de l'état après tick : grimpante
+  vivante, libre, plus haute que sa hauteur autoportante, d'une espèce déjà survolée
+  par le joueur. Balayage arrêté une fois le marqueur posé. Sonde hors monde : haricot,
+  lierre et jasmin libres dépassent ce seuil [3 espèces, croissance plein soleil].
+  Non vérifié dans une partie réelle (lierre accroché au mur de la maison ?).
+- **Test** : `MARQUEURS_PROMIS_PAR_2` retiré ; le cas `[0]` vérifie que tout
+  `posseder_*` cité est vendu et que tout événement cité a un poseur. Cas neufs dans
+  `tests/test_courrier_enseigne.py` (fichier créé plutôt que d'étendre
+  `test_quetes.py`, déjà à 314 LDC) et `test_acquisition_outils.py` (chaîne tuteurs →
+  `poser_tuteur` → `palisser` + `poser_perchoir` : D133).
+- Aide d'`automate_demo.py` corrigée (« paillage ouvre pailler »).
+- `sim/quetes.py` est à 300 LDC, bord de la bande verte.
+- **Pour le ③** : l'achat d'un outil ne remonte pas `debloques` dans la réponse de
+  `cmd_action` (`acquerir_outil` consomme la liste, antérieur au sprint) ; consigner
+  dans `version.py` le changement de sens de `possede` et les récompenses neuves.
+- Aucune fouille DeepSeek. Aucun C# touché.
+
 ## §REPRISE
 Lire `CLAUDE.md`, ce fichier, le doc de conception, puis le premier kickoff « à faire ».
-Prochain : **②** `02_atelier_courrier_observations.md` (① fait, non commité par le sous-agent).
+Prochain : **③** `03_pressentis_familles_pont.md` (① commité ; ② fait, non commité par le sous-agent).

@@ -38,6 +38,16 @@ buff #2) :
                                      `annees` ans (instanciée puis poussée par le vrai
                                      chemin de croissance) apparaît dans le jardin ;
   - `("structure", kind)`         → une structure permanente (`bac` à compost) posée.
+    Posséder vaut avoir posé : le bac offert ouvre les gestes du compost.
+LE COURRIER ENSEIGNE (sprint ACCÈS AUX GESTES ②, conception
+`docs/joueur/gestes/conception_refonte_palette.md` §3.3) — un savoir-faire transmis,
+jamais donné sans désir comblé :
+  - `("technique", objet)`           → la technique est découverte, ses gestes
+                                        d'entrée s'ouvrent ;
+  - `("technique", objet, marqueur)` → la lettre pose un marqueur (`lettre_greffe`,
+                                        `lettre_essaim`) que la PORTE de la technique
+                                        lit : l'essaim suffit à ouvrir l'apiculture,
+                                        la greffe attend en plus le greffoir de l'Atelier.
 """
 from __future__ import annotations
 
@@ -162,4 +172,71 @@ QUETES_CORPUS: dict[str, Quete] = {
         condition=("recolte_cumulee", "recolter", 5, "tomate"),
         recompense=("structure", "bac"),           # structure permanente posée (④)
         declencheur=("saison", 12)),
+
+    # --- Le courrier ENSEIGNE (accès aux gestes ②) ------------------------------
+    # Quatre lettres, quatre savoir-faire. Chacune pose un DÉSIR (famille de
+    # condition déjà démontrée, le mini-catalogue de `sim/quetes.py` reste fermé) et
+    # promet un GESTE DU VOISIN : il vient, il montre. La lettre ne nomme ni le geste
+    # du jeu ni la manière de combler le désir (philo #6). Les jalons de saison sont
+    # ÉTALÉS : le plafond de lettres actives borne ce qui arrive en même temps.
+    "lettre_pots_amelie": Quete(
+        id="lettre_pots_amelie",
+        donneur="Amélie",
+        texte_lettre=(
+            "Chez ma mère il y avait toujours un pot de basilic sur l'appui de la "
+            "fenêtre, et toute la cuisine en sentait bon. J'en ferais volontiers un "
+            "pistou, si tu avais quelques bouquets de trop. Je t'apporterai en "
+            "retour ses vieux pots de terre, et je te montrerai comment elle les "
+            "garnissait : c'était tout un art.\n"
+            "— Ta voisine Amélie"),
+        condition=("recolte_cumulee", "recolter", 3, "basilic"),
+        recompense=("technique", "jardinage_hors_sol"),
+        declencheur=("saison", 6)),
+
+    "lettre_haricots_rames_gaston": Quete(
+        id="lettre_haricots_rames_gaston",
+        donneur="Gaston",
+        texte_lettre=(
+            "Voisin, chez nous on ne semait pas un haricot sans avoir d'abord coupé "
+            "ses rames dans la haie de noisetiers. Les miens ne lèvent plus guère, "
+            "mes genoux non plus. Une belle troupe de haricots chez toi, voilà qui "
+            "me ferait plaisir à voir. Ce jour-là je passerai avec une brassée de "
+            "rames, et je te montrerai comment mon père les dressait.\n"
+            "— Le vieux Gaston"),
+        condition=("nombre_vivant_min", "haricot", 3),
+        recompense=("technique", "palissage"),
+        declencheur=("saison", 10)),
+
+    # Donneur NEUF : aucun des six voisins n'était arboriculteur de métier (Gaston a
+    # un verger, il ne greffe pas). Augustin apporte le SAVOIR ; l'outil, le greffoir,
+    # reste à trouver à l'Atelier — la porte de la greffe demande les deux.
+    "lettre_greffe_augustin": Quete(
+        id="lettre_greffe_augustin",
+        donneur="Augustin",
+        texte_lettre=(
+            "J'ai tenu pépinière quarante ans, et il me reste, au frais dans du "
+            "sable, des rameaux d'une reinette que plus personne ne multiplie. Il "
+            "leur faudrait un jeune pommier déjà bien en tige pour les accueillir. "
+            "Si le tien prend de la hauteur, je viendrai avec ma boîte, et je te "
+            "montrerai ce que mes mains savent encore.\n"
+            "— Augustin, l'ancien pépiniériste"),
+        condition=("hauteur_min", "pommier", 1.5),
+        recompense=("technique", "greffe", "lettre_greffe"),
+        declencheur=("saison", 20)),
+
+    # L'essaim offert ENSEIGNE l'apiculture ; il ne pose PAS de ruche (le joueur la
+    # posera lui-même, c'est le geste que la lettre ouvre).
+    "lettre_essaim_bertrand": Quete(
+        id="lettre_essaim_bertrand",
+        donneur="Bertrand",
+        texte_lettre=(
+            "Un essaim s'est posé dans mon vieux poirier, et mes ruches sont déjà "
+            "pleines. Je ne le confierais pas à un jardin sans fleurs : les abeilles "
+            "s'en iraient au premier matin. Si la phacélie bleuit chez toi, je te "
+            "l'apporterai un soir dans sa caisse, et je te dirai comment on les "
+            "approche.\n"
+            "— Ton oncle Bertrand"),
+        condition=("floraison_min", "phacelie", 4),
+        recompense=("technique", "apiculture", "lettre_essaim"),
+        declencheur=("saison", 24)),
 }

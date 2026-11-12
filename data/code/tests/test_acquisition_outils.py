@@ -140,10 +140,79 @@ def test_idempotence():
 def test_hors_offre():
     print("\n[②F] outil inconnu — refus sans effet")
     gs = _gs(100.0)
-    ok = outils.acquerir_outil(gs, P, "greffoir")   # pas au registre
+    # (Le greffoir servait d'exemple d'outil absent ; il est vendu depuis le sprint
+    # ACCÈS AUX GESTES ② → on prend un nom qui n'entrera pas au registre.)
+    ok = outils.acquerir_outil(gs, P, "tondeuse")   # pas au registre
     check("acquisition d'un outil inconnu refusée", not ok)
     check("aucune Vigueur débitée",
           vigueur.ensure_player(gs, P)["courante"] == 100.0)
+
+
+# ---------------------------------------------------------------------------
+# G. Outils des PORTES de technique (sprint ACCÈS AUX GESTES ②)
+# ---------------------------------------------------------------------------
+
+def test_outils_des_portes():
+    print("\n[②G] outils des portes — l'achat découvre la technique et ouvre ses gestes")
+    from sim import maitrise as M
+    for outil in ("broyeur", "pots", "tuteurs", "greffoir", "voile"):
+        check(f"{outil} est offert, payable sur la Vigueur de base",
+              outil in outils.offre_outils({}, P)
+              and outils.OUTILS[outil]["cout_vigueur"] <= vigueur.MAX_BASE)
+    # Chaîne complète du palissage — la fermeture de D133 (`poser_perchoir` ne
+    # s'ouvrait jamais) : tuteurs → poser_tuteur → (pose) → palisser + poser_perchoir.
+    gs = _gs(100.0)
+    check("achat des tuteurs réussi", outils.acquerir_outil(gs, P, "tuteurs"))
+    check("la technique palissage est découverte", M.palier(gs, P, "palissage") == 1)
+    check("poser_tuteur, poser_treillis, poser_pergola ouverts",
+          all(deblocage.est_debloque(gs, P, v)
+              for v in ("poser_tuteur", "poser_treillis", "poser_pergola")))
+    check("palisser et poser_perchoir encore fermés (aucun tuteur posé)",
+          not deblocage.est_debloque(gs, P, "palisser")
+          and not deblocage.est_debloque(gs, P, "poser_perchoir"))
+    deblocage.marquer_action(gs, P, "poser_tuteur")      # le pont marque la pose réussie
+    nouveaux = deblocage.evaluer_deblocages(gs, P)
+    check("après la pose : palisser et poser_perchoir s'ouvrent (D133)",
+          nouveaux == ["palisser", "poser_perchoir"], f"{nouveaux}")
+    # Les autres portes d'Atelier.
+    gs = _gs(100.0)
+    outils.acquerir_outil(gs, P, "broyeur")
+    check("broyeur → broyer", deblocage.est_debloque(gs, P, "broyer"))
+    gs = _gs(100.0)
+    outils.acquerir_outil(gs, P, "pots")
+    check("pots → poser_pot et poser_bac_culture",
+          deblocage.est_debloque(gs, P, "poser_pot")
+          and deblocage.est_debloque(gs, P, "poser_bac_culture"))
+    gs = _gs(100.0)
+    outils.acquerir_outil(gs, P, "voile")
+    check("voile → les trois couvertures",
+          all(deblocage.est_debloque(gs, P, v)
+              for v in ("poser_voile", "poser_cloche", "poser_ombriere")))
+    gs = _gs(100.0)
+    outils.acquerir_outil(gs, P, "greffoir")
+    check("greffoir SEUL → greffer reste fermé (il manque la lettre)",
+          not deblocage.est_debloque(gs, P, "greffer"))
+
+
+def test_possession_vitrine():
+    print("\n[②H] vitrine de l'Atelier — `possede` vrai pour tout outil acquis")
+    from tools.simserver.voix import VoixMixin
+
+    class _Moteur:
+        game_state = None
+
+    srv = VoixMixin()
+    srv.engine = _Moteur()
+    gs = _gs(100.0)
+    gs["current_player"] = P
+    srv.engine.game_state = gs
+    avant = {o["cle"]: o["possede"] for o in srv.cmd_atelier({})["outils"]}
+    check("rien n'est possédé au départ", not any(avant.values()), f"{avant}")
+    outils.acquerir_outil(gs, P, "tuteurs")
+    outils.acquerir_outil(gs, P, "secateur")
+    apres = {o["cle"]: o["possede"] for o in srv.cmd_atelier({})["outils"]}
+    check("tuteurs et sécateur possédés, les autres non",
+          {k for k, v in apres.items() if v} == {"tuteurs", "secateur"}, f"{apres}")
 
 
 if __name__ == "__main__":
@@ -156,6 +225,8 @@ if __name__ == "__main__":
     test_fonds_insuffisants()
     test_idempotence()
     test_hors_offre()
+    test_outils_des_portes()
+    test_possession_vitrine()
 
     print("\n" + "=" * 60)
     passed = sum(1 for _, ok in _results if ok)

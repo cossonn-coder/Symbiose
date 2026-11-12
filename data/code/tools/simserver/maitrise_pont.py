@@ -32,7 +32,10 @@ from sim import maitrise_detection as MD
 from sim import pages
 from sim.evenements import evenements
 from sim.signes import crediter_saison
-from sim.actions.deblocage import evaluer_deblocages   # palette ① : voie savoir
+from sim.actions.deblocage import (
+    evaluer_deblocages,    # palette ① : voie savoir
+    marquer_evenement,     # accès aux gestes ② : marqueurs d'OBSERVATION
+)
 
 # Reverse mapping classe → clé de catalogue (objet → clé), DÉRIVÉ des catalogues
 # moteur (jamais dupliqué) : sert à retrouver la clé d'espèce d'une plante du monde
@@ -53,6 +56,18 @@ _CLE_DE_NOM = {cls.__name__: cle
 # pollinisation. Les stagnations sec/ombre/froid réutilisent le mapping canonique
 # de `maitrise_detection` (source unique).
 _CONCEPT_REPRO_BIPARENTAL = "pollinisation"
+
+# Marqueurs d'OBSERVATION (sprint ACCÈS AUX GESTES ②, conception
+# `docs/joueur/gestes/conception_refonte_palette.md` §3.2) : deux phénomènes du
+# jardin qui, une fois VUS, franchissent une porte de technique
+# (`PORTES_TECHNIQUE`, `sim/actions/deblocage.py`). Ils sont posés ICI, après le
+# tick, jamais dedans : on lit le journal et l'état que le tick a laissés.
+#   - `merle_seme`           → porte de `perchoir` (le merle a pris des fruits) ;
+#   - `grimpante_sans_appui` → porte de `palissage` (une grimpante connue du joueur
+#                              a dépassé ce qu'elle tient debout seule, sans appui).
+# Registre explicite : `tests/test_atteignabilite.py` vérifie que tout événement
+# d'observation cité par une porte a bien un poseur ici.
+MARQUEURS_OBSERVATION: frozenset[str] = frozenset({"merle_seme", "grimpante_sans_appui"})
 
 # Palier qui déclenche la révélation d'une page « récompense » (micro-décision B,
 # §2) : atteindre la MAÎTRISE d'un objet (palier 3) libère une belle page de son
@@ -78,6 +93,8 @@ def observer_apres_tick(game_state: dict, player: str, log: list[str]) -> None:
     découverte, set de pages) — jamais le cœur écolo (golden intact)."""
     semaine = game_state["week"] - 1
     _observer(game_state, player, log)                          # hook A (découverte)
+    if _grimpante_sans_appui(game_state, player):               # observation (portes ②)
+        marquer_evenement(game_state, player, "grimpante_sans_appui")
     zones_creditees: list = []                                  # ③ volet succès
     promos = MD.detecter(game_state, player, log, semaine,      # hook B (crédit palier)
                          zones_creditees=zones_creditees)
@@ -206,3 +223,41 @@ def _observer(game_state: dict, player: str, log: list[str]) -> None:
                 observer(game_state, player, concept)
         elif ev.kind == "reproduction" and ev.cause == "biparental":
             observer(game_state, player, _CONCEPT_REPRO_BIPARENTAL)
+        elif ev.kind == "frugivorie" and ev.cause == "merle":
+            # Le tick a écrit « 🐦 Merle : n fruits pris sur … » (`sim/zoochorie.py`,
+            # non touché). On n'en retient qu'un fait : le merle emporte des fruits,
+            # donc des graines. C'est la porte de la technique `perchoir` ; la
+            # réévaluation des déblocages suit dans `observer_apres_tick`.
+            marquer_evenement(game_state, player, "merle_seme")
+
+
+def _grimpante_sans_appui(game_state: dict, player: str) -> bool:
+    """Y a-t-il au jardin une grimpante que le joueur CONNAÎT et qui pousse sans
+    appui ? Lecture de l'état laissé par le tick (aucune écriture, rien dans le tick).
+
+    Trois conditions, toutes déjà exposées par le moteur :
+      - l'espèce est une grimpante (`mode_grimpe`, `hauteur_autoportante`) ;
+      - la plante est LIBRE (`plant.support is None`) et dépasse sa hauteur
+        autoportante. C'est le critère exact de `sim/grimpe.chercher_support` : à
+        partir de là elle cherche un appui, et faute d'en trouver sa tige retombe ;
+      - le joueur a SURVOLÉ l'espèce (palier ≥ 1) : voir une plante n'est pas
+        l'observer. Sans cela le marqueur tomberait pour un lierre de la succession
+        que personne n'a regardé.
+
+    Le balayage s'arrête au premier cas et ne tourne plus une fois le marqueur posé
+    (un marqueur ne se retire jamais) : on ne recalcule pas ce qui est acquis."""
+    if "grimpante_sans_appui" in (game_state.get("marqueurs_ecolo") or {}).get(player, ()):
+        return False
+    for tile in game_state.get("tiles", ()):
+        for plant in getattr(tile, "plants", ()):
+            cls = plant.plant_class
+            hp = getattr(cls, "hauteur_autoportante", None)
+            if (getattr(cls, "mode_grimpe", None) is None or hp is None
+                    or plant.support is not None or not plant.is_alive):
+                continue
+            if M.palier(game_state, player, _CLE_DE_CLASSE.get(cls)) < 1:
+                continue
+            if max((s.base[2] + s.dir[2] * s.length_cm for s in plant.segments),
+                   default=0.0) > hp:
+                return True
+    return False
