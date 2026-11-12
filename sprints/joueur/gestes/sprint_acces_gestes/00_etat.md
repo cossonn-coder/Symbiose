@@ -30,7 +30,7 @@ jamais re-figer.
 |---|---|---|---|
 | ① | `01_portes_atteignabilite.md` — table des portes, conditions `stock`/`compte`, test du point fixe | intact | **FAIT** 2026-11-12 |
 | ② | `02_atelier_courrier_observations.md` — outils neufs, récompense `technique`, lettres, marqueurs d'observation | intact | **FAIT** 2026-11-12 |
-| ③ | `03_pressentis_familles_pont.md` — pressentis + phrases, familles, routes supports/couvertures, snapshot, bump pont | intact | à faire |
+| ③ | `03_pressentis_familles_pont.md` — pressentis + phrases, familles, routes supports/couvertures, snapshot, bump pont | intact | **FAIT** 2026-11-12 (pont **0.6.12**) |
 | ④ | `04_vue_minimale_banc.md` — gestes manquants dans `Gestes[]`, banc F5 | intact | à faire |
 
 ## Interdits communs à tous les tronçons
@@ -113,6 +113,53 @@ jamais re-figer.
   dans `version.py` le changement de sens de `possede` et les récompenses neuves.
 - Aucune fouille DeepSeek. Aucun C# touché.
 
+### ③ (2026-11-12) — golden intact `b4a921f8…`, pont **0.6.12**
+- **Modules neufs** : `sim/pressentis.py` (table `INDICES_TECHNIQUE`,
+  `PHRASE_PRESSENTI`, `gestes_pressentis`, `bloc_pressentis`), `sim/actions/familles.py`
+  (`FAMILLES`, `FAMILLE_GESTE`, `BLOC_FAMILLES`), `tools/simserver/supports_route.py`.
+  Rien ajouté à `sim/quetes.py` ni à `sim/geste_corpus.py` (353 LDC).
+- **Lettre active** : ni condition neuve dans `deblocage`, ni marqueur. Les pressentis
+  vivent dans `sim/` au-dessus de `deblocage` et de `quetes`, et lisent
+  `Q.quetes_actives` : une lettre active dont la récompense est `("technique", t…)`.
+  Deux formes d'indice locales : `("lettre", t)` et `("geste", verbe)`.
+  `deblocage` gagne seulement l'alias public `condition_remplie`.
+- **Technique d'un geste** : le 1ᵉʳ élément d'`OBJETS_TOUCHES` est fiable sur les 32
+  gestes gatés (vérifié par test) ; seul `planter_conteneur` est nommé à la main.
+- **Phrases** : 15, une par technique de geste gaté (pas seulement les 8 portes),
+  pour qu'aucun pressenti ne parte sans phrase. Toutes à la première personne ;
+  le test refuse chiffre, « Atelier », « lettre », tournure de consigne.
+- **Écart — forme de `familles`** : `{ordre: [...], gestes: {famille: [verbes]}}` et
+  non `{ordre, de: {verbe: famille}}`. Le serveur sérialise en clés triées
+  (`sort_keys`) : un dict perdrait l'ordre d'affichage dans la famille.
+  Envoyé à chaque snapshot (`SimBridge.Init` ne rend que `world` à la vue).
+- **Écart — gating au pont** : le pont n'applique `est_debloque` sur AUCUN geste de
+  tuile (choix documenté dans `deblocage.py` : pas de gating dur) ; seuls les gestes
+  de paysage le vérifient, dans leur façade. Les routes neuves suivent ce chemin :
+  un geste fermé envoyé à la main est exécuté. Le test du pont pose d'ailleurs un
+  treillis sans l'avoir ouvert. À trancher par Nico si un refus dur est voulu
+  (il toucherait tous les gestes, pas ce tronçon).
+- **Routes** : `poser_perchoir` a déménagé dans `supports_route.py` (contrat
+  inchangé). `palisser` distingue quatre refus sans coût (pas de plante, pas un
+  sarmenteux, déjà attachée, aucun support à portée). `actions.py` : 345 → 335 LDC.
+- **Trou connu des indices** : `abattre`, `receper`, `eteter` n'ont aucun indice
+  (essartage, taillis, trogne). L'indice « outil vu à l'Atelier » de la conception
+  §3.4 n'a pas d'état pour le porter (rien ne note qu'on a ouvert l'Atelier). Ces
+  gestes passent d'inconnu à ouvert à l'achat. `entailler` est pressenti dès le
+  premier `creuser` (technique `terrassement` découverte à l'usage).
+- **À surveiller au F5** : avec l'encyclopédie « amorcée », toute espèce grimpante
+  déjà connue fait pressentir le palissage dès l'ouverture ; `couper`/`tailler` sont
+  pressentis dès le premier `pincer`. Non mesuré en partie réelle.
+- **Taille** : `tools/simserver/serialize.py` est à **398 LDC** (394 avant, +4) : au
+  bord du rouge, candidat `/refactor` avant tout ajout.
+- **Pour le ④** : la vue lit `player.gestes_pressentis` ([{verbe, phrase}]) et
+  `player.familles` ; cibles des verbes neufs dans `version.py` (0.6.12). Aucune
+  constante de version n'est vérifiée côté C# (`SimBridge` l'affiche seulement).
+- Suites : golden intact ; pressentis 49/49 (neuve) ; sim_server 349/349 (dont 27
+  neufs, section 24) ; atteignabilite 36/36 ; deblocage 24/24 ; palette 22/22 ;
+  courrier_enseigne 42/42 ; acquisition_outils 32/32 ; merle_seme 18/18 ; quetes
+  52/52 ; progression_geste 15/15 ; peripherie_pont, quatre_feuilles verts.
+- Aucune fouille DeepSeek. Aucun C# touché (pas de `dotnet build`).
+
 ## §REPRISE
 Lire `CLAUDE.md`, ce fichier, le doc de conception, puis le premier kickoff « à faire ».
-Prochain : **③** `03_pressentis_familles_pont.md` (① commité ; ② fait, non commité par le sous-agent).
+Prochain : **④** `04_vue_minimale_banc.md` (①② commités ; ③ fait, non commité par le sous-agent).

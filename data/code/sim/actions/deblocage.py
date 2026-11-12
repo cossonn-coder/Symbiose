@@ -325,6 +325,11 @@ def _cond_remplie(game_state: dict, player: str, cond: tuple) -> bool:
     return False
 
 
+# Nom PUBLIC de l'évaluateur, pour les modules au-dessus qui partagent la grammaire
+# (`sim/pressentis.py` évalue ses indices avec — accès aux gestes ③). Même fonction.
+condition_remplie = _cond_remplie
+
+
 def _verbe_ouvrable(game_state: dict, player: str, verbe: str,
                     conditions: list) -> bool:
     """Vrai ssi l'UNE des conditions ALTERNATIVES (OU) du geste est remplie."""

@@ -58,6 +58,8 @@ from sim.actions import deblocage as DEBL
 # Palette de gestes ⑤ (0.5.26) : expo au snapshot du LAYOUT curé + MACROS de
 # l'avatar courant. Lecture pure d'un état joueur (opt-in) → golden NEUTRE.
 from sim.actions import palette as PAL
+from sim.actions.familles import BLOC_FAMILLES   # accès aux gestes ③ : rangement du tiroir
+from sim.pressentis import bloc_pressentis        # accès aux gestes ③ : gestes entrevus
 # Table « stade reproducteur visible par saison » du prototype SVG (tranche 6,
 # volet A) : import OUTIL → OUTIL (render_structure est un outil, pas le
 # moteur), zéro duplication — la table validée visuellement au sprint
@@ -743,6 +745,13 @@ class SerializeMixin:
         # D1/D5). Persisté PAR AVATAR (D10) dans la save. Lecture PURE (opt-in) :
         # un avatar sans palette retombe sur le défaut SANS écrire → golden NEUTRE.
         palette_layout = PAL.palette_layout(gs, player)
+        # Accès aux gestes ③ (0.6.12) : deux blocs pour le futur tiroir de la palette.
+        # `gestes_pressentis` = gestes FERMÉS dont le joueur a entrevu l'existence,
+        # chacun avec sa phrase d'ambiance (`sim/pressentis.py`) — CALCULÉ ici à
+        # chaque snapshot (dans le dict plus bas), jamais stocké. `familles` = rangement des gestes par usage
+        # (`sim/actions/familles.py`), statique : quelques centaines d'octets, envoyés
+        # à chaque snapshot plutôt qu'à l'init (la vue ne garde que `world` de l'init).
+        # Lectures pures d'un état joueur → golden NEUTRE.
         # Banc d'observation perf (sprint « run éternel » ④) : bloc LECTURE SEULE
         # pour l'overlay debug F4 côté Godot — `ms_tick` (durée du dernier tick,
         # mesurée AUTOUR de tick_semaine() dans commands.py, None si rien encore
@@ -759,6 +768,8 @@ class SerializeMixin:
                            "seeds": seeds,
                            "gestes_debloques": gestes_ouverts,
                            "debloques_recents": recents,
+                           "gestes_pressentis": bloc_pressentis(gs, player),
+                           "familles": BLOC_FAMILLES,
                            "palette": palette_layout,
                            "appris": signes_appris(gs, player),
                            "vision": bloc_vision(gs, player)},

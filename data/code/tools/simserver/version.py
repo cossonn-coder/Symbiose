@@ -839,7 +839,22 @@ from __future__ import annotations
 # 0.6.11 (zoochorie ④, D42) : verbe `action` neuf `poser_perchoir`, cible {tile, x_cm, y_cm}
 #       (tuile-locale). Le bloc `supports` peut porter `type: "perchoir"` (200 cm, fin) ; un
 #       ancien client le dessine comme un tuteur (repli). Golden neutre.
-ENGINE_VERSION = "0.6.11"
+# 0.6.12 (ACCÈS AUX GESTES ③, D133) : le bloc `player` gagne `gestes_pressentis` =
+#       [{verbe, phrase}] (gestes FERMÉS dont le joueur a entrevu l'existence, calculés à
+#       chaque snapshot, jamais stockés — `sim/pressentis.py`) et `familles` = {ordre: [8
+#       familles], gestes: {famille: [verbes dans l'ordre d'affichage]}} (statique, `sim/actions/familles.py`). Verbes
+#       `action` neufs : `poser_tuteur`, `poser_treillis`, `poser_pergola` (cible {tile,
+#       x_cm, y_cm}, comme `poser_perchoir`), `palisser` (plante par position {tile, x_cm,
+#       y_cm}), `poser_voile`, `poser_cloche`, `poser_ombriere` (plot {tile, r, c}) —
+#       routés par `supports_route.py`, où `poser_perchoir` a déménagé (contrat inchangé).
+#       Hérité des tronçons ①② sans bump (à connaître côté vue) : `cmd_atelier.possede`
+#       est vrai pour TOUT outil acquis (plus seulement le sécateur) et l'Atelier liste
+#       cinq outils de plus (broyeur, pots, tuteurs, greffoir, voile) ; une lettre comblée
+#       peut enseigner une technique (récompense `technique`), les gestes ainsi ouverts
+#       arrivent dans `debloques_recents`. Limite connue : l'achat d'un outil ne remonte
+#       pas `result.debloques` (la façade consomme la liste) — lire `gestes_debloques`.
+#       Clés neuves ignorées par un ancien client, golden neutre.
+ENGINE_VERSION = "0.6.12"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

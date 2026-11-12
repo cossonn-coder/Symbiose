@@ -29,6 +29,7 @@ from .peripherie_route import route_peripherie, VERBES as PERIPHERIE_VERBES
 from .plante_route import route_plante, VERBES as PLANTE_VERBES
 from .pont_delta import mode_delta   # segments en delta, opt-in (0.6.0)
 from .structures_route import route_structure, VERBES as STRUCTURE_VERBES
+from .supports_route import route_support, VERBES as SUPPORT_VERBES
 from .maitrise_pont import (
     decouvrir_a_usage,         # D60 ③ : découverte du geste à la 1ʳᵉ utilisation réussie
     crediter_usage,            # D60 ③ : preuve légère d'usage réussi
@@ -487,25 +488,14 @@ class ActionsMixin:
                          f"marais {mem_avant:.2f} → {mem_apres:.2f}" if ok
                          else "Vigueur insuffisante — rien drainé")
 
-        # Perchoir à oiseaux (zoochorie ④, protocole 0.6.11) : POSITION tuile-locale
-        # {tile, x_cm, y_cm}, comme `planter`. Hors tuile → refus sans coût. La façade
-        # fait foi (coût, pose binaire). NB : poser_tuteur/treillis/pergola n'ont pas
-        # (encore) de route au pont — même branche le jour où la vue les enverra.
-        if verb == "poser_perchoir":
-            tile, _eco = tile_cible()
-            if tile is None:
-                return bilan(False, 0.0, 0.0,
-                             f"tuile introuvable : {target.get('tile')!r}")
-            if self._plot_at(tile, target.get("x_cm"), target.get("y_cm")) is None:
-                return bilan(False, 0.0, 0.0,
-                             f"position hors tuile : x={target.get('x_cm')!r}, "
-                             f"y={target.get('y_cm')!r}")
-            cost = A.cout_action(gs, player, verb, A.OBJETS_TOUCHES[verb])
-            sup = A.poser_perchoir(gs, player, tile, float(target["x_cm"]),
-                                   float(target["y_cm"]))
-            return bilan(sup is not None, cost, 0.0,
-                         "perchoir planté — les oiseaux viendront s'y poser"
-                         if sup is not None else "Vigueur insuffisante — rien posé")
+        # Supports de grimpe, perchoir, palissage et couvertures climatiques (accès aux
+        # gestes ③, protocole 0.6.12) : routage délégué au module `supports_route`
+        # (garde ce routeur court). `poser_perchoir` (0.6.11) y a rejoint
+        # tuteur/treillis/pergola ; `palisser` désigne une plante par position ;
+        # voile/cloche/ombrière désignent un plot. Les façades font foi.
+        if verb in SUPPORT_VERBES:
+            return route_support(gs, player, verb, target, bilan,
+                                 self._plot_at, self._plant_at)
 
         # Structures posables & compostage (⑤, protocole 0.3.5 ; ruche ⑥ §H/§I) :
         # routage délégué au module `structures_route` (garde ce routeur court).
