@@ -70,6 +70,8 @@
 //                            borné au lever/coucher) — CASSÉ À L'ÉCRAN ③ (WorldView.Soleil.cs)
 //   --capture-cueillette=1   clic « manger » sur chaque fruit du port visé, verdict au
 //                            journal (FORMES DES PLANTES ④, WorldView.BancCueillette.cs)
+//   --capture-acces=<o>[,<o>] achète ces outils à l'Atelier, palette relevée avant/après au
+//                            journal `[AccesGestes]` — ACCÈS AUX GESTES ④
 //   --capture-vivant=… / --capture-vivant-png=…  captures de l'info-bulle d'une bête
 //                            ou d'un carpophore (INFO-BULLE ③, WorldView.BancVivant.cs)
 
@@ -274,6 +276,7 @@ namespace Symbiose
 			LancerBancCueillette();   // manger au clic sur un fruit de port (WorldView.BancCueillette.cs)
 			LancerBancVivant();       // captures info-bulle bête / carpophore (WorldView.BancVivant.cs)
 			LancerBancCleStable();    // couper une branche ne déplace aucune feuille (WorldView.BancCleStable.cs)
+			LancerBancAccesGestes();  // acheter un outil, relever la palette (WorldView.BancAccesGestes.cs)
 			if (!float.IsNaN(CaptureDecorF10))   // F10 ×2 programmé (FLUIDITÉ PC ②)
 				GetTree().CreateTimer(CaptureDecorF10).Timeout += () =>
 				{ _decorLayer?.ToggleBanc(); _decorLayer?.ToggleBanc(); };

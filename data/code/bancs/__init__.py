@@ -29,6 +29,7 @@ from . import palette_gestes as _palette_gestes
 from . import courrier as _courrier
 from . import peripherie as _peripherie
 from . import nucleation as _nucleation
+from . import acces_gestes as _acces_gestes
 
 BANCS = {
     "secheresse_sable": secheresse_sable,
@@ -65,6 +66,8 @@ BANCS = {
     "courrier": _courrier.courrier,
     "peripherie": _peripherie.peripherie,
     "nucleation": _nucleation.nucleation,  # zoochorie ⑦ : perchoir, mort debout, hêtraie
+    # accès aux gestes ④ : toutes les portes à portée, RIEN d'ouvert d'avance.
+    "acces_gestes": _acces_gestes.acces_gestes,
 }
 
 # Hook POST-INIT par banc (palette de gestes ⑤) : callback OPTIONNEL `(game_state,
@@ -85,7 +88,9 @@ BANC_POST_INIT = {"palette_gestes": _palette_gestes.post_init,
                   # semaine (banc de TEST ; jamais en jeu, D-pluie).
                   "pluie_continue": pluie_continue_post_init,
                   # `nucleation` (zoochorie ⑦) : pose une hêtraie au nord (apport geai).
-                  "nucleation": _nucleation.post_init}
+                  "nucleation": _nucleation.post_init,
+                  # `acces_gestes` (④) : ceinture + Vigueur large, AUCUN déblocage.
+                  "acces_gestes": _acces_gestes.post_init}
 
 # Seed IMPOSÉ par banc (effondrement météo ④). La plupart des bancs sont neutres au
 # seed (ils forcent leur condition par composition) → repli sur le défaut du serveur.
@@ -135,7 +140,11 @@ BANC_WEEK_DEPART = {"grimpantes": 9, "luxuriance": 9, "diversite_fondatrice": 9,
                     # jalons de saison), mais un départ tardif évite de figer lavande /
                     # trèfle sous le seuil thermique — le panneau montre des avancements
                     # diégétiques qui bougent plutôt que « rien ne pousse ».
-                    "courrier": 12}
+                    "courrier": 12,
+                    # `acces_gestes` (④) démarre SEMAINE 24 (fin d'été) : tous les
+                    # jalons de saison des lettres qui enseignent sont passés (le
+                    # dernier, l'essaim, est à 24) → le courrier arrive tout de suite.
+                    "acces_gestes": 24}
 
 
 def banc_categorie(nom: str) -> str:

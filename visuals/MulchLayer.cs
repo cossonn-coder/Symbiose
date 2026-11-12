@@ -31,12 +31,14 @@ namespace Symbiose
 		// sèche, sobres — on lit « couverture de sol », pas un signal UI :
 		//  · paille = jaune-doré (chaume de céréale) ;
 		//  · brf    = brun ligneux (bois raméal fragmenté) ;
-		//  · aiguilles = brun-vert sombre (litière de conifère).
+		//  · aiguilles = brun-vert sombre (litière de conifère) ;
+		//  · feuilles = roux de feuille morte (litière glanée).
 		private static readonly Dictionary<string, Color> NatureColor = new()
 		{
 			["paille"]    = new Color("cbb35a"),
 			["brf"]       = new Color("6e5334"),
 			["aiguilles"] = new Color("5a6340"),
+			["feuilles"]  = new Color("8a5a2e"),
 		};
 		private static readonly Color NatureInconnue = new Color("9a9060");
 

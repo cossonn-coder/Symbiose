@@ -49,6 +49,8 @@
 #     -K  planche de la faune (icônes ×2→×16, fond uni ; mesure_da --pas 1) — ⑤
 #     -C  cueillette : clic « manger » sur chaque fruit du port le plus proche de -c,
 #         verdict `[Cueillette]` dans godot.log — FORMES DES PLANTES ④
+#     -A  OUTIL[,OUTIL] : achète ces outils à l'Atelier ; palette relevée avant et après au journal
+#         `[AccesGestes]`, menu du clic droit ouvert à l'image — ACCÈS AUX GESTES ④ (-n ≥ 240)
 #     -n  nombre d'images              (défaut 3)
 #     -f  images/s simulées            (défaut 10 → 3 images = 0,3 s de jeu)
 #   Sortie : DOSSIER/frame00000000.png, frame00000001.png, … (1920×1080).
@@ -70,7 +72,7 @@
 set -euo pipefail
 
 . "$(dirname "${BASH_SOURCE[0]}")/lib_vm_godot.sh"   # DEPOT GODOT XROOT + vm_* (D106 T1)
-SORTIE=/tmp/capture_symbiose BANC=smoke ZOOM="" CENTRE="" SOURIS="" GESTE="" VENT="" METEO="" SEMAINES="" DEFILE="" GRAINE="" ORIENT="" CACHER="" TURBO="" PAN="" PLANCHE="" AIDE="" KIT="" PAL3="" TECH="" DECORF10="" DECORBANC="" FAUNE="" PALETTE="" CUEILLETTE="" OMBRES="" MAISON="" F6="" HEURE="" SANSLUT="" FRAMES=3 FPS=10 BUILD=1
+SORTIE=/tmp/capture_symbiose BANC=smoke ZOOM="" CENTRE="" SOURIS="" GESTE="" VENT="" METEO="" SEMAINES="" DEFILE="" GRAINE="" ORIENT="" CACHER="" TURBO="" PAN="" PLANCHE="" AIDE="" KIT="" PAL3="" TECH="" DECORF10="" DECORBANC="" FAUNE="" PALETTE="" CUEILLETTE="" ACCES="" OMBRES="" MAISON="" F6="" HEURE="" SANSLUT="" FRAMES=3 FPS=10 BUILD=1
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -106,11 +108,12 @@ while [ $# -gt 0 ]; do
     -L) SANSLUT=1; shift ;;
     -K) FAUNE=1; shift ;;
     -C) CUEILLETTE=1; shift ;;
+    -A) ACCES="$2"; shift 2 ;;
     -D) DECORF10="$2"; shift 2 ;;
     -B) DECORBANC=1; shift ;;
     -P) PAL3=1; shift ;;
     -t) TECH=1; shift ;;
-    -h|--help) sed -n '2,61p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,63p' "$0"; exit 0 ;;
     *) echo "option inconnue : $1" >&2; exit 2 ;;
   esac
 done
@@ -157,6 +160,7 @@ ARGS=(--capture-banc="$BANC")
 [ -n "$SANSLUT" ] && ARGS+=(--capture-lut=0)
 [ -n "$FAUNE" ] && ARGS+=(--capture-faune=1)
 [ -n "$CUEILLETTE" ] && ARGS+=(--capture-cueillette=1)
+[ -n "$ACCES" ] && ARGS+=(--capture-acces="$ACCES")
 DISPLAY="$ECRAN" LIBGL_ALWAYS_SOFTWARE=1 "$GODOT" --path "$DEPOT" \
   --rendering-driver opengl3 --resolution 1920x1080 \
   --write-movie "$SORTIE/frame.png" --fixed-fps "$FPS" --quit-after "$FRAMES" \

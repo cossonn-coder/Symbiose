@@ -31,7 +31,7 @@ jamais re-figer.
 | ① | `01_portes_atteignabilite.md` — table des portes, conditions `stock`/`compte`, test du point fixe | intact | **FAIT** 2026-11-12 |
 | ② | `02_atelier_courrier_observations.md` — outils neufs, récompense `technique`, lettres, marqueurs d'observation | intact | **FAIT** 2026-11-12 |
 | ③ | `03_pressentis_familles_pont.md` — pressentis + phrases, familles, routes supports/couvertures, snapshot, bump pont | intact | **FAIT** 2026-11-12 (pont **0.6.12**) |
-| ④ | `04_vue_minimale_banc.md` — gestes manquants dans `Gestes[]`, banc F5 | intact | à faire |
+| ④ | `04_vue_minimale_banc.md` — gestes manquants dans `Gestes[]`, banc F5 | intact | **FAIT** 2026-11-12 (build C# vert, F5 attendu) |
 
 ## Interdits communs à tous les tronçons
 - Ne JAMAIS lancer `tests/test_epaisseur_500ans`.
@@ -160,6 +160,93 @@ jamais re-figer.
   52/52 ; progression_geste 15/15 ; peripherie_pont, quatre_feuilles verts.
 - Aucune fouille DeepSeek. Aucun C# touché (pas de `dotnet build`).
 
+### ④ (2026-11-12) — golden intact `b4a921f8…`, build C# vert (0 avertissement)
+- **Vue** : neuf entrées ajoutées en fin de `Gestes[]`, AUCUN kind neuf, donc
+  `WorldView.ActionDispatch.cs` (394 LDC) n'est pas touché. Supports `m`, `palisser`
+  `p`, couvertures et `poser_ruche` `q`, `recolter_miel` `s` (branche « retourner » :
+  on clique la ruche ; `FindStructureIndex` rend la structure du plot, le pont refuse
+  si ce n'est pas une ruche). Formes vérifiées contre `supports_route.py` et
+  `structures_route.py`, puis jouées par l'oracle.
+- **Mulch** : `Natures` = feuilles, paille, brf, aiguilles. Les feuilles sont en TÊTE
+  (seul mulch d'un débutant) : la nature par défaut de `pailler` change donc de paille
+  à feuilles. Couleur `feuilles` ajoutée à `MulchLayer` (elle tombait sur le repli).
+- **Pictogrammes** : un glyphe provisoire par geste neuf (sinon quatre cases
+  identiques). `GesteIcon.cs` passe à **312 LDC** (bande 300-400, une seule
+  responsabilité ; refait au sprint `icones_curseur`).
+- **Atelier, courrier** : rien à corriger, les deux panneaux listent ce que le pont
+  envoie (libellé d'outil = clé brute).
+- **Banc `acces_gestes`** (`bancs/acces_gestes.py`) : tuile 12×12 au coin sud-est
+  (au nord-ouest le toit de la maison la cache à l'écran), départ semaine 24. Deux
+  forçages étrangers au déblocage : ceinture (charmaie à l'est) et Vigueur 3000.
+  Aucune maîtrise, aucun marqueur, aucun geste posé.
+- **Oracle** `tests/bancs/test_acces_gestes.py` : 56/56. Il n'envoie JAMAIS un geste
+  fermé (assertion), sinon `bouturer` envoyé à la main s'ouvrirait seul. 46 verbes
+  ouverts à la fin (45 entrées de `Gestes[]` + `grelinette`).
+- **Écart — porte `grimpante_sans_appui`** : le kickoff prévoyait « une grimpante
+  sans appui » sans préciser. Un haricot semé à l'ouverture met 32 semaines à
+  dépasser sa hauteur autoportante [seed 42, n=1 run] (la sonde du ② était hors
+  monde, plein soleil). Le banc porte donc un JASMIN de trois ans : marqueur posé
+  1 semaine après son survol. En jeu réel, cette porte par le haricot est lente.
+- **Écart — durées** : « en quelques minutes » ne tient pas pour deux portes.
+  Phacélies en fleur (essaim) ~10 semaines, merle ~12 semaines après l'ouverture
+  [seed 42, n=1 run]. Turbo conseillé. Les autres portes sont immédiates.
+- **Constat F5 important** : les dix cases sont pleines dès l'ouverture (gestes de
+  base). Un geste qui s'ouvre n'entre donc dans aucune case et aucun flash ne le
+  signale (`FlashGesteDebloque` ne vise qu'un geste en case). On le trouve par clic
+  droit sur une case. Vu à la capture. C'est l'objet de `sprint_palette_tiroir`.
+- **Banc de vue** `world/WorldView.BancAccesGestes.cs` + option `-A` de
+  `tools/capture_vm.sh` (non prévus au kickoff, nécessaires pour la capture
+  « après ») : achète des outils par le pont, relève la palette au journal
+  `[AccesGestes]`. Captures REGARDÉES : menu du clic droit avant (creuser, drainer,
+  glaner) et après achat de tuteurs + voile (+ tuteur, treillis, pergola, voile,
+  cloche, ombrière), puis les six pictogrammes en case. NON vus à l'écran :
+  pictogrammes de `palisser`, `poser_ruche`, `recolter_miel` ; aucun des neuf gestes
+  n'a été CLIQUÉ dans la vue (seul le pont les a exécutés).
+- `Basilics` et `tomates` du banc sont des semis : les désirs à récolte (Amélie,
+  Odette) ne sont pas comblés vite ; pots et compostage ont leur autre porte.
+- Clôture : D133 close côté code (`DETTE.md`), `BACKLOG.md`,
+  `docs/joueur/gestes/backlog_gestes.md`, `journal/183_…`, index `journal.md`.
+- Suites : golden intact ; banc acces_gestes 56/56 ; sim_server 349/349 ;
+  atteignabilite 36/36 ; deblocage 24/24 ; palette 22/22 ; pressentis 49/49 ;
+  courrier_enseigne 42/42 ; nucleation 7/7. Aucune fouille DeepSeek.
+
 ## §REPRISE
-Lire `CLAUDE.md`, ce fichier, le doc de conception, puis le premier kickoff « à faire ».
-Prochain : **④** `04_vue_minimale_banc.md` (①② commités ; ③ fait, non commité par le sous-agent).
+Sprint **CLOS côté code** (①→④). Reste le **F5 de Nico**, puis
+`/sprint-auto sprint_palette_tiroir`.
+
+### Recette F5 — banc `acces_gestes`
+Au sélecteur de monde, choisir le banc **`acces_gestes`** (catégorie
+`acces_gestes`). La tuile est au coin sud-est. Hub de la maison → onglets
+**Atelier** et **Courrier**. Un geste ouvert n'entre pas seul dans la barre :
+**clic droit sur une case** → le choisir dans le menu. Vigueur 3000 au banc.
+
+Une ligne par porte (quoi faire → quoi voir) :
+1. **Départ** → le menu du clic droit ne propose que creuser, drainer, glaner.
+2. **Glaner ×3** sur le coin de feuilles mortes (ouest de la tuile) → `poser bac`,
+   `poser pile` et `pailler` au menu. Pailler : nature `feuilles` par défaut (N).
+3. **Poser un bac, une pile** → composter, retourner, épandre, empiler bois.
+4. **Creuser** un plot → endiguer, dériver.
+5. **Pincer ×6** une lavande + **planter ×6** → bouturer.
+6. **Atelier** : sécateur → couper (puis couper une lavande → tailler) ; broyeur →
+   broyer (le pommier mort) ; pots → poser pot, poser bac (puis poser un pot →
+   déplacer, planter en pot) ; tuteurs → tuteur, treillis, pergola (puis poser un
+   tuteur → palisser, perchoir) ; voile → voile, cloche, ombrière ; hache → abattre ;
+   serpe → recéper (puis recéper la forêt de l'est → étêter) ; pioche → entailler.
+7. **Courrier** : lancer la saison. Semaine 1 : lettre de Gaston comblée (palissage)
+   et d'Augustin comblée ; avec le **greffoir** de l'Atelier → greffer (cerisier
+   puis pommier). ~10 semaines (Turbo) : phacélies en fleur → essaim de Bertrand →
+   `poser ruche` ; poser une ruche → `récolter miel`.
+8. **Observation** : survoler le **jasmin** (nord de la tuile), passer une semaine →
+   palissage (si pas déjà ouvert par les tuteurs). ~12 semaines : le merle prend des
+   cerises → perchoir (si pas déjà ouvert par un tuteur).
+9. **Les neuf gestes neufs à CLIQUER** (jamais cliqués dans la vue) : tuteur,
+   treillis, pergola (un point de la tuile) ; palisser (cliquer le jasmin, un tuteur
+   à son pied) ; voile, cloche, ombrière (un plot) ; poser ruche (un plot) ; récolter
+   miel (cliquer la ruche). Vérifier que chaque objet posé se VOIT.
+
+Points à juger : lisibilité des pictogrammes provisoires ; paillis de feuilles
+visible (roux) ; gestes pressentis (non affichés par cette vue, sprint suivant) ;
+seuils des portes (R7) ; faut-il un refus dur du pont sur un geste fermé.
+
+Captures VM : `tools/capture_vm.sh -b acces_gestes -w 0 -z 2 -c 1700,1700 -A tuteurs,voile -n 240`
+Oracle : `cd data/code && python3 -m tests.bancs.test_acces_gestes`

@@ -120,11 +120,32 @@ namespace Symbiose
 			// 'm', sans params. Agir sur le milieu (philo #1) : le merle s'y pose et sème
 			// dessous. Gaté côté moteur (après `poser_tuteur` ou maîtrise `perchoir`).
 			("poser_perchoir",     "perchoir",       'm'),
+			// Les NEUF gestes que la vue ignorait (accès aux gestes ④, protocole
+			// 0.6.12). Aucun kind neuf : chacun réemploie la désignation qu'attend sa
+			// route au pont (`supports_route.py`, `structures_route.py`).
+			//  · supports = un POINT de la tuile, comme le perchoir → 'm' ;
+			//  · palisser = une PLANTE par position (un sarmenteux, à nouer au support
+			//    le plus proche — le moteur le cherche) → 'p' ;
+			//  · couvertures et ruche = un PLOT {tile, r, c} → 'q' ;
+			//  · récolter le miel = la STRUCTURE du plot cliqué → 's' (la branche
+			//    « retourner » du dispatch : on clique la ruche elle-même).
+			("poser_tuteur",       "tuteur",         'm'),
+			("poser_treillis",     "treillis",       'm'),
+			("poser_pergola",      "pergola",        'm'),
+			("palisser",           "palisser",       'p'),
+			("poser_voile",        "voile",          'q'),
+			("poser_cloche",       "cloche",         'q'),
+			("poser_ombriere",     "ombrière",       'q'),
+			("poser_ruche",        "poser ruche",    'q'),
+			("recolter_miel",      "récolter miel",  's'),
 		};
-		// Nature de mulch courante pour `pailler` (touche N). Cycle sur les 3 natures
+		// Nature de mulch courante pour `pailler` (touche N). Cycle sur les 4 natures
 		// du moteur (NATURES_MULCH) — le stock de la nature choisie doit être alimenté
-		// (broyer → brf ; récolter blé/chanvre → paille ; sapin → aiguilles).
-		private static readonly string[] Natures = { "paille", "brf", "aiguilles" };
+		// (glaner → feuilles ; broyer → brf ; récolter blé/chanvre ou Atelier → paille ;
+		// sapin → aiguilles). Les FEUILLES viennent en tête : c'est le seul mulch qu'un
+		// débutant possède (accès aux gestes ④ — elles manquaient ici, et le paillis
+		// glané restait inutilisable).
+		private static readonly string[] Natures = { "feuilles", "paille", "brf", "aiguilles" };
 		private int _natureIndex;
 		private int _gesteIndex = -1;              // aucun geste sélectionné
 		// Graines plantables du snapshot (player.seeds, lots non vides), triées

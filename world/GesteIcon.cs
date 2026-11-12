@@ -124,10 +124,19 @@ namespace Symbiose
 			"composter" or "empiler_bois" or "retourner" or "epandre"
 				or "poser_bac" or "poser_pile" => 't',   // tas (brun compost)
 			"poser_pot" or "poser_bac_culture" or "deplacer_pot" => 'p',   // pot (terracotta)
-			"poser_tuteur" or "poser_treillis" or "poser_pergola" or "palisser"
-				=> 's',                  // support (gris clair)
+			// Supports, couvertures, ruche (accès aux gestes ④) : un glyphe PAR geste,
+			// sinon quatre cases identiques dans la palette. Chiffres = glyphes
+			// provisoires (les icônes soignées sont le sprint `icones_curseur`).
+			"poser_treillis" => 's',     // support (gris clair) : treillis quadrillé
+			"poser_tuteur" => '1',       // un seul piquet
+			"poser_pergola" => '2',      // portique
+			"palisser" => '3',           // tige nouée au piquet
 			"poser_perchoir" => 'T',     // perchoir à oiseaux (zoochorie ⑧) : piquet en T
-			"poser_ruche" or "recolter_miel" => 'h',   // ruche (miel)
+			"poser_voile" => '4',        // voile tendu bas
+			"poser_cloche" => '5',       // cloche
+			"poser_ombriere" => '6',     // toile sur deux piquets
+			"poser_ruche" => 'h',        // ruche (miel)
+			"recolter_miel" => '7',      // ruche + goutte de miel
 			"deraciner" => 'r',          // racine arrachée (brun)
 			// PAYSAGE de la ceinture (périphérie D73 ⑦) : trois glyphes pour trois
 			// familles de geste, sinon les six gestes tomberaient sur la même
@@ -158,6 +167,9 @@ namespace Symbiose
 			't' => new Color(0.55f, 0.42f, 0.28f),   // compost/tas
 			'p' => new Color(0.8f, 0.45f, 0.3f),     // pot
 			's' => new Color(0.75f, 0.75f, 0.78f),   // support
+			'1' or '2' or '3' => new Color(0.75f, 0.75f, 0.78f),   // supports
+			'4' or '5' or '6' => new Color(0.8f, 0.88f, 0.92f),    // couvertures (toile claire)
+			'7' => new Color(0.95f, 0.75f, 0.3f),    // miel
 			'T' => new Color(0.72f, 0.58f, 0.4f),    // perchoir (bois posé)
 			'h' => new Color(0.95f, 0.75f, 0.3f),    // ruche
 			'r' => new Color(0.6f, 0.45f, 0.35f),    // déraciner
@@ -255,6 +267,40 @@ namespace Symbiose
 					DrawLine(new Vector2(mid + 6f, lo), new Vector2(mid + 6f, hi), c, 2f);
 					DrawLine(new Vector2(lo, mid - 6f), new Vector2(hi, mid - 6f), c, 2f);
 					DrawLine(new Vector2(lo, mid + 6f), new Vector2(hi, mid + 6f), c, 2f);
+					break;
+				case '1':   // tuteur : un piquet planté dans un trait de sol
+					DrawLine(new Vector2(mid, lo), new Vector2(mid, hi), c, 3f);
+					DrawLine(new Vector2(lo + 4f, hi), new Vector2(hi - 4f, hi), c, 2f);
+					break;
+				case '2':   // pergola : deux poteaux et leur traverse
+					DrawLine(new Vector2(lo + 3f, hi), new Vector2(lo + 3f, lo + 4f), c, 2.5f);
+					DrawLine(new Vector2(hi - 3f, hi), new Vector2(hi - 3f, lo + 4f), c, 2.5f);
+					DrawLine(new Vector2(lo, lo + 4f), new Vector2(hi, lo + 4f), c, 3f);
+					break;
+				case '3':   // palisser : piquet + tige qui s'y appuie, un lien au milieu
+					DrawLine(new Vector2(mid + 4f, lo), new Vector2(mid + 4f, hi), c, 2.5f);
+					DrawLine(new Vector2(lo + 2f, hi), new Vector2(mid + 4f, lo + 4f),
+							 new Color(0.5f, 0.85f, 0.4f), 2.5f);
+					DrawCircle(new Vector2(mid, mid + 1f), 3.5f, c);
+					break;
+				case '4':   // voile : arc bas et large posé au sol
+					DrawArc(new Vector2(mid, hi), (hi - lo) / 2f, Mathf.Pi, Mathf.Tau, 20, c, 3f);
+					DrawLine(new Vector2(lo, hi), new Vector2(hi, hi), c, 2f);
+					break;
+				case '5':   // cloche : dôme haut et étroit, bouton en tête
+					DrawArc(new Vector2(mid, mid + 2f), 8f, Mathf.Pi, Mathf.Tau, 16, c, 3f);
+					DrawLine(new Vector2(mid - 8f, mid + 2f), new Vector2(mid - 8f, hi), c, 3f);
+					DrawLine(new Vector2(mid + 8f, mid + 2f), new Vector2(mid + 8f, hi), c, 3f);
+					DrawCircle(new Vector2(mid, lo + 2f), 2.5f, c);
+					break;
+				case '6':   // ombrière : toile plate en biais sur deux piquets
+					DrawLine(new Vector2(lo + 3f, hi), new Vector2(lo + 3f, mid - 2f), c, 2f);
+					DrawLine(new Vector2(hi - 3f, hi), new Vector2(hi - 3f, lo + 4f), c, 2f);
+					DrawLine(new Vector2(lo, mid - 2f), new Vector2(hi, lo + 4f), c, 4f);
+					break;
+				case '7':   // miel : la ruche (un arc) et une goutte qui en tombe
+					DrawArc(new Vector2(mid, mid + 2f), 11f, Mathf.Pi, Mathf.Tau, 20, c, 3f);
+					DrawCircle(new Vector2(mid, hi - 3f), 4f, c);
 					break;
 				case 'T':   // perchoir : piquet + traverse en tête, un oiseau posé dessus
 					DrawLine(new Vector2(mid, hi), new Vector2(mid, mid - 2f), c, 2.5f);
