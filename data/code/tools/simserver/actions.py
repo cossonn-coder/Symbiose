@@ -35,6 +35,7 @@ from .maitrise_pont import (
 )
 from sim.actions.deblocage import (   # palette de gestes ① : déblocage event-driven
     DECLENCHEURS, marquer_action, evaluer_deblocages,
+    VERBES_COMPTES, compter_geste,    # accès aux gestes ① : forme `("compte", verbe, n)`
 )
 
 
@@ -86,6 +87,11 @@ class ActionsMixin:
             # vue. Opt-in joueur → golden intact (cmd_action jamais appelé au golden).
             if verb in DECLENCHEURS:
                 marquer_action(gs, player, verb)
+            # Accès aux gestes ① : certaines PORTES de technique comptent les réussites
+            # d'un geste de base (« trois glanages » découvre le compostage). On ne
+            # compte que les verbes cités par une condition `compte` (dérivé des tables).
+            if verb in VERBES_COMPTES:
+                compter_geste(gs, player, verb)
             nouveaux = evaluer_deblocages(gs, player)
             if nouveaux:
                 result["debloques"] = nouveaux

@@ -20,9 +20,19 @@ Aucun RNG (philo #3) : l'évaluation des conditions est déterministe.
 
 Import LÉGER de `sim.maitrise` (lecture de palier) uniquement — on n'importe
 JAMAIS les gestes eux-mêmes (respect des couches : ce module est data/état).
+
+PORTES DES TECHNIQUES (sprint ACCÈS AUX GESTES ①, 2026-11-12 —
+`docs/joueur/gestes/conception_refonte_palette.md` §3). `GESTE_UNLOCK` seul tournait
+en rond : une technique n'était découverte qu'en réussissant un geste… qu'elle
+verrouillait (20 gestes sur 32 jamais ouverts). La table `PORTES_TECHNIQUE` ajoute
+l'étage manquant : franchir une porte DÉCOUVRE la technique (palier 1), et les
+conditions `("maitrise", <technique>, 1)` deviennent vraies d'elles-mêmes. Le test
+`tests/test_atteignabilite.py` refait le point fixe et interdit le retour de l'impasse.
+Seul import ajouté : la constante `PAILLAGE_DOSE` de `fields` (couche plus basse).
 """
 from __future__ import annotations
 
+from fields.ecofields import PAILLAGE_DOSE   # unité du stock de mulch (une dose = un `pailler`)
 from sim import maitrise as M
 
 
@@ -60,6 +70,10 @@ GESTES_BASE: frozenset[str] = frozenset({
 #                                 écologique a été consigné au ledger du joueur (le
 #                                 MOTEUR le pose quand le phénomène se produit ; ici
 #                                 on ne fait que le LIRE).
+#   ("stock", nature, seuil)    — vrai si le stock de mulch de cette nature atteint
+#                                 `seuil` (on a de quoi faire) ;
+#   ("compte", verbe, n)        — vrai si le joueur a RÉUSSI `n` fois ce geste.
+# Ces deux dernières formes (accès aux gestes ①) servent surtout aux PORTES plus bas.
 # Conditions PROPOSÉES (calibrage F5, ajustable). Les clés `bouturer`/`greffer`
 # sont posées ICI ; le geste lui-même arrive en ②/③ (dispatch tolérant tant que
 # le verbe n'existe pas).
@@ -94,16 +108,19 @@ GESTE_UNLOCK: dict[str, list] = {
     # s'y posent), ou par la maîtrise de la technique elle-même.
     "poser_perchoir": [("action", "poser_tuteur"), ("maitrise", "perchoir", 1)],
 
-    # paillage
+    # paillage. `broyer` suit la règle « l'OUTIL fait le geste » (accès aux gestes ①) :
+    # il s'ouvrait sur la maîtrise du paillage, il s'ouvre sur le broyeur de l'Atelier
+    # (marqueur posé au tronçon ② — sa technique est `broyage`, pas `paillage`).
     "pailler": [("maitrise", "paillage", 1)],
-    "broyer":  [("maitrise", "paillage", 1)],
+    "broyer":  [("action", "posseder_broyeur")],
 
     # couvertures climatiques (effondrement météo ③) — la maîtrise du concept `météo`
     # (levée en lisant les signes de gel/froid, cf. CONCEPT_PAR_STAGNATION) ouvre les
-    # trois gestes de préparation.
-    "poser_voile":    [("maitrise", "météo", 1)],
-    "poser_cloche":   [("maitrise", "météo", 1)],
-    "poser_ombriere": [("maitrise", "météo", 1)],
+    # trois gestes de préparation. Seconde voie (accès aux gestes ①) : la technique
+    # `protection-climatique` elle-même, que la porte « voile de l'Atelier » découvre.
+    "poser_voile":    [("maitrise", "météo", 1), ("maitrise", "protection-climatique", 1)],
+    "poser_cloche":   [("maitrise", "météo", 1), ("maitrise", "protection-climatique", 1)],
+    "poser_ombriere": [("maitrise", "météo", 1), ("maitrise", "protection-climatique", 1)],
 
     # ruche
     "poser_ruche":   [("maitrise", "apiculture", 1)],
@@ -131,18 +148,75 @@ GESTE_UNLOCK: dict[str, list] = {
 }
 
 
+# --- Table data-driven `PORTES_TECHNIQUE` (accès aux gestes ①, conception §3.2) ---
+# Pour chaque TECHNIQUE qui verrouille des gestes : une LISTE de conditions
+# ALTERNATIVES (même grammaire que `GESTE_UNLOCK`, OU implicite). Une porte franchie
+# DÉCOUVRE la technique (palier 0 → 1, `M.decouvrir`) ; elle n'ouvre aucun geste
+# directement — c'est `GESTE_UNLOCK` qui le fait, à la passe suivante de
+# `evaluer_deblocages`. RÈGLE (R2) : aucune porte ne passe par un geste de sa propre
+# technique, sinon on retombe dans la poule et l'œuf.
+# Quatre familles de portes : l'ATELIER (`posseder_*`), un GESTE DE BASE voisin
+# (`compte`, `stock`), l'OBSERVATION (`evenement` posé par le pont après le tick) et
+# le COURRIER (`lettre_*`). Les marqueurs `posseder_*`, `lettre_*` et d'observation
+# sont POSÉS au tronçon ② ; ici on ne fait que les LIRE (comme `bouture_spontanee`).
+# Seuils = point de départ, calibrage F5 (R7). Les noms de technique sont ceux
+# d'`OBJETS_TOUCHES` (`sim/actions/couts.py`), vérifiés par le test d'atteignabilité.
+# `broyage` n'a pas de porte : son seul geste, `broyer`, s'ouvre par l'outil.
+PORTES_TECHNIQUE: dict[str, list] = {
+    # Trois glanages : on a un tas de feuilles, l'idée du compost vient seule. Ou bien
+    # on POSSÈDE un bac (celui qu'offre Odette pose le marqueur `poser_bac` au ② :
+    # « posséder vaut avoir posé »).
+    "compostage": [("compte", "glaner", 3), ("action", "poser_bac")],
+    # On a de quoi pailler (feuilles glanées, ou botte de paille de l'Atelier).
+    "paillage": [("stock", "feuilles", PAILLAGE_DOSE),
+                 ("stock", "paille", PAILLAGE_DOSE)],
+    "jardinage_hors_sol": [("action", "posseder_pots")],
+    "palissage": [("action", "posseder_tuteurs"),
+                  ("evenement", "grimpante_sans_appui")],
+    "perchoir": [("evenement", "merle_seme")],
+    # La greffe demande le savoir (la lettre) ET l'outil (le greffoir).
+    "greffe": [("et", [("evenement", "lettre_greffe"),
+                       ("action", "posseder_greffoir")])],
+    "apiculture": [("maitrise", "pollinisation", 2),
+                   ("evenement", "lettre_essaim")],
+    "protection-climatique": [("action", "posseder_voile")],
+}
+
+
+def _atomes(cond: tuple):
+    """Déplie une condition en ses formes ATOMIQUES (descend dans les `et`). Sert à
+    dériver des tables les ensembles que le pont doit surveiller."""
+    if cond[0] == "et":
+        for sous in cond[1]:
+            yield from _atomes(sous)
+    else:
+        yield cond
+
+
+def _cites(forme: str) -> frozenset[str]:
+    """Tous les noms cités par une condition de forme `forme` dans les DEUX tables."""
+    return frozenset(
+        atome[1]
+        for table in (GESTE_UNLOCK, PORTES_TECHNIQUE)
+        for conditions in table.values()
+        for cond in conditions
+        for atome in _atomes(cond)
+        if atome[0] == forme
+    )
+
+
 # Verbes-DÉCLENCHEURS (voie action §3.2·b) : seuls ces gestes, une fois RÉUSSIS,
 # ouvrent un autre geste → seuls eux méritent un `marquer_action` (couplage
-# minimal, kickoff). Dérivé de `GESTE_UNLOCK` : tout verbe cité dans une condition
-# `("action", …)`. `posseder_secateur` n'est pas un geste (marqueur d'outil posé
-# par le futur flux d'acquisition d'outils, calibrage F5) → mais on le laisse dans
-# l'ensemble pour que `marquer_action("posseder_secateur")` reste reconnu.
-DECLENCHEURS: frozenset[str] = frozenset(
-    cond[1]
-    for conditions in GESTE_UNLOCK.values()
-    for cond in conditions
-    if cond[0] == "action"
-)
+# minimal, kickoff). Dérivé des tables : tout nom cité dans une condition
+# `("action", …)`, y compris sous un `et` et dans les portes. Les `posseder_*` ne
+# sont pas des gestes (marqueurs d'outil posés par l'Atelier, `sim/outils.py`) → on
+# les laisse dans l'ensemble pour que `marquer_action("posseder_secateur")` reste
+# reconnu.
+DECLENCHEURS: frozenset[str] = _cites("action")
+
+# Verbes COMPTÉS : seuls les gestes cités par une condition `("compte", …)` méritent
+# un `compter_geste` au pont (même dérivation, même couplage minimal).
+VERBES_COMPTES: frozenset[str] = _cites("compte")
 
 
 # --- État joueur (miroir de M.ensure_player_maitrise) ------------------------
@@ -184,6 +258,28 @@ def marquer_action(game_state: dict, player: str, verbe: str) -> None:
     _actions_faites(game_state, player).add(verbe)
 
 
+def compter_geste(game_state: dict, player: str, verbe: str) -> int:
+    """Incrémente le compteur de RÉUSSITES d'un geste (forme `compte`) et renvoie le
+    nouveau total. À appeler par le pont, au même endroit que `marquer_action`, pour
+    les seuls verbes de `VERBES_COMPTES`. État opt-in créé à la volée
+    (`game_state["gestes_comptes"][player][verbe]`) → jamais matérialisé sans joueur."""
+    comptes = game_state.setdefault("gestes_comptes", {}).setdefault(player, {})
+    comptes[verbe] = comptes.get(verbe, 0) + 1
+    return comptes[verbe]
+
+
+def _compte(game_state: dict, player: str, verbe: str) -> int:
+    """Lecture pure du compteur (0 si rien n'a été compté). Ne crée aucune clé."""
+    return ((game_state.get("gestes_comptes") or {}).get(player) or {}).get(verbe, 0)
+
+
+def _stock(game_state: dict, nature: str) -> float:
+    """Lecture pure du stock de mulch d'une nature (0 sans stock). On lit le dict
+    DIRECTEMENT : `paillage.mulch_stock()` créerait la clé à la lecture, et importer
+    `sim.actions.paillage` d'ici brouillerait les couches (ce module est data/état)."""
+    return (game_state.get("mulch_stock") or {}).get(nature, 0.0)
+
+
 # --- Événements écologiques émergents (voie c, §3.2·c) -----------------------
 def marquer_evenement(game_state: dict, player: str, marqueur: str) -> None:
     """Consigne un MARQUEUR écologique émergent au ledger du joueur (voie
@@ -204,9 +300,9 @@ def _a_evenement(game_state: dict, player: str, marqueur: str) -> bool:
     return bool(m) and marqueur in m
 
 
-# --- Évaluateur de condition (récursif, 4 formes) ----------------------------
+# --- Évaluateur de condition (récursif, 6 formes) ----------------------------
 def _cond_remplie(game_state: dict, player: str, cond: tuple) -> bool:
-    """Vrai ssi la condition `cond` est satisfaite pour l'avatar. Couvre les 4
+    """Vrai ssi la condition `cond` est satisfaite pour l'avatar. Couvre les 6
     formes de la grammaire (§3.2). Récursif pour la forme composée `et`.
     Déterministe (aucun RNG). Une forme inconnue est traitée comme NON remplie
     (dégradation gracieuse : on n'ouvre jamais un geste par erreur de table)."""
@@ -218,6 +314,12 @@ def _cond_remplie(game_state: dict, player: str, cond: tuple) -> bool:
         return cond[1] in _actions_faites(game_state, player)
     if forme == "evenement":
         return _a_evenement(game_state, player, cond[1])
+    if forme == "stock":
+        _, nature, seuil = cond
+        return _stock(game_state, nature) >= seuil
+    if forme == "compte":
+        _, verbe, n = cond
+        return _compte(game_state, player, verbe) >= n
     if forme == "et":
         return all(_cond_remplie(game_state, player, sous) for sous in cond[1])
     return False
@@ -240,6 +342,15 @@ def evaluer_deblocages(game_state: dict, player: str) -> list[str]:
     un geste déjà ouvert n'est jamais re-signalé. Ne touche que l'état JOUEUR
     (opt-in) → golden intact."""
     ouverts = init_gestes_debloques(game_state, player)
+    # 1) Les PORTES d'abord (accès aux gestes ①) : toute technique encore inconnue
+    #    dont une porte est franchie est DÉCOUVERTE (palier 1). L'ordre compte : la
+    #    passe `GESTE_UNLOCK` qui suit lit ces paliers et ouvre les gestes d'entrée
+    #    dans le MÊME appel. Idempotent (`M.decouvrir` ne refait rien au palier ≥ 1).
+    for technique, portes in PORTES_TECHNIQUE.items():
+        if M.palier(game_state, player, technique) == 0 and _verbe_ouvrable(
+                game_state, player, technique, portes):
+            M.decouvrir(game_state, player, technique)
+    # 2) Puis les gestes.
     nouveaux: list[str] = []
     for verbe, conditions in GESTE_UNLOCK.items():
         if verbe not in ouverts and _verbe_ouvrable(game_state, player,
