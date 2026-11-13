@@ -43,6 +43,21 @@ namespace Symbiose
 		// CONSTRUCTION — appelée une fois dans _Ready (après BuildHud).
 		// -------------------------------------------------------------------
 
+		// ICÔNES & CURSEUR ② — contrôle de démarrage, en build DEBUG seulement (F5
+		// et banc VM ; un export « release » ne le paie pas). Tout verbe de Gestes[]
+		// doit avoir sa grille, bien formée ; sinon une erreur rouge par défaut dans
+		// la console Godot. Le jeu continue : un geste sans grille retombe sur
+		// l'ancien dessin (GesteIcon.Repli.cs), il n'y a rien à casser.
+		private static void VerifierIcones()
+		{
+			if (!OS.IsDebugBuild()) return;
+			var verbes = new List<string>();
+			foreach (var g in Gestes) verbes.Add(g.Verb);
+			List<string> defauts = IconeGeste.Defauts(verbes);
+			foreach (string d in defauts) GD.PushError($"[Icones] {d}");
+			GD.Print($"[Icones] {verbes.Count} gestes vérifiés, {defauts.Count} défaut(s).");
+		}
+
 		private void BuildPalette()
 		{
 			_paletteLayer = new CanvasLayer { Name = "Palette", Layer = 6 };
@@ -57,6 +72,7 @@ namespace Symbiose
 			ChargerSlotsPersistes();   // layout sauvegardé (par verbe) → indices
 			AutoRemplirSlots();        // complète les slots restés libres
 			BuildTiroir();             // bouton en bas de barre + panneau (WorldView.Tiroir.cs)
+			VerifierIcones();          // debug : chaque geste a sa grille 16×16 (ICÔNES ②)
 			RebuildPaletteIcons();
 		}
 

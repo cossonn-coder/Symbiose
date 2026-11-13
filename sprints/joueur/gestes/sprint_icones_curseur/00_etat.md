@@ -27,7 +27,7 @@ en main, et l'animer quand le geste s'exécute. Pure vue C#. Reprend D118 (d) et
 | # | Kickoff | État |
 |---|---|---|
 | ① | `01_moteur_icones_planche.md` — format de grille, cuisson, planche de contrôle, `GesteIcon` branché | **CLOS côté code 2026-11-13** (build vert, golden intact, planche regardée) |
-| ② | `02_les_icones.md` — les 45 icônes, par familles, vérifiées à la planche | à faire |
+| ② | `02_les_icones.md` — les 45 icônes, par familles, vérifiées à la planche | **CLOS côté code 2026-11-13** (45/45, build vert, golden intact, planche regardée) |
 | ③ | `03_curseur_geste.md` — curseur à l'icône du geste, point chaud, silhouettes | à faire |
 | ④ | `04_animations_execution.md` — animations d'exécution et de refus, clôture | à faire |
 
@@ -73,6 +73,31 @@ en main, et l'animer quand le geste s'exécute. Pure vue C#. Reprend D118 (d) et
 - **① — pour ②** : le sécateur témoin (`couper`) se lit comme une croix à ×2, trop proche
   de `ecraser` ; à redessiner. L'arrosoir et le bac se lisent.
 
+- **② — 45 icônes livrées** (+ `planter_conteneur`, qui n'est PAS dans `COUTS` mais est dans
+  `Gestes[]` et `FAMILLE_GESTE` : 46 grilles, 45 gestes vérifiés côté vue). Écart au kickoff :
+  `COUTS` a 45 verbes sans `planter_conteneur` ; la table des familles en a 46.
+- **② — fichiers** : 5 familles neuves (`IconesMain`, `IconesSol`, `IconesSemis`,
+  `IconesStructures`, `IconesPaysage`), `IconesTaille`/`IconesCompost` complétés, registre
+  `IconeGeste.Familles` à 8 familles. Plus aucun geste en repli sur l'ancien dessin.
+- **② — points chauds** : `visuals/icones/IconesPointsChauds.cs` (verbe → (X, Y) en pixels de
+  grille), à consommer au ③. Objets posés : milieu de la base.
+- **② — vérification de démarrage** : `IconeGeste.Defauts(verbes)` appelée par
+  `WorldView.VerifierIcones()` dans `BuildPalette`, debug seulement (`OS.IsDebugBuild`) :
+  grille présente, 16×16, alphabet, point chaud sur un pixel peint. Journal :
+  `[Icones] 45 gestes vérifiés, 0 défaut(s).`
+- **② — `couper` redessiné** : sécateur en diagonale, bec de métal en haut à gauche, poignées
+  rouges écartées ; ne se lit plus comme une croix. `pincer` = deux doigts gantés en pince sur
+  une tige ; `arracher` = poing ganté avec manche de cuir ; `tailler` = scie d'élagage.
+- **② — planche finale** (×4, silhouette ×4, ×2 sur terre + silhouette ×2) :
+  `sprints/joueur/gestes/sprint_icones_curseur/planche/planche_02_icones.png`.
+- **② — icônes encore faibles (F5)** : `palisser` (pelote de raphia, se lit comme une balle),
+  `endiguer` (digue chargée à ×2), `glaner` (feuilles + gant peu nets à ×2), `broyer` (chargé),
+  `pincer` (lisible à ×4, juste à ×2). Silhouettes proches : `planter` / `planter_conteneur` /
+  `bouturer` ; `poser_pot` / `palisser` / `poser_ruche` (formes rondes). La couleur départage.
+- **② — outil de travail** : un aperçu PNG hors Godot (Python pur, écrit dans le scratchpad,
+  non versionné) a servi d'itération rapide avant la planche Godot.
+- **② — `WorldView.Palette.cs`** passe à 210 LDC (vigilance OK).
+
 ## §REPRISE
 Lire `CLAUDE.md`, ce fichier, le doc de conception §5, puis le premier kickoff « à faire ».
-**Prochain : ② `02_les_icones.md`.** ① n'est pas committé par le sous-agent (l'orchestrateur commit).
+**Prochain : ③ `03_curseur_geste.md`** (points chauds dans `IconesPointsChauds.cs`). ② n'est pas committé par le sous-agent (l'orchestrateur commit).

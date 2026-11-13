@@ -63,12 +63,18 @@ namespace Symbiose
 
 		// REGISTRE : les familles dans l'ordre du tiroir, chacune son dictionnaire
 		// verbe → grille. Une famille absente n'a pas encore d'icône (repli :
-		// l'ancien dessin de GesteIcon). Complété au tronçon ②.
+		// l'ancien dessin de GesteIcon). Complet depuis le tronçon ② (8 familles,
+		// 46 gestes) : `Defauts` ci-dessous le vérifie à chaque démarrage en debug.
 		public static readonly (string Nom, Dictionary<string, string[]> Grilles)[] Familles =
 		{
+			("main", IconesMain.Grilles),
+			("sol", IconesSol.Grilles),
+			("semis", IconesSemis.Grilles),
 			("taille", IconesTaille.Grilles),
 			("eau", IconesEau.Grilles),
 			("compost", IconesCompost.Grilles),
+			("structures", IconesStructures.Grilles),
+			("paysage", IconesPaysage.Grilles),
 		};
 
 		private static readonly Dictionary<(string, int, bool), ImageTexture> _cache = new();
@@ -122,6 +128,37 @@ namespace Symbiose
 				}
 			img.Resize(Cote * echelle, Cote * echelle, Image.Interpolation.Nearest);
 			return ImageTexture.CreateFromImage(img);
+		}
+
+		/// <summary>VÉRIFICATION DE DÉMARRAGE (debug) : la liste des défauts du jeu
+		/// d'icônes, vide si tout est en ordre. Contrôle que chaque verbe de
+		/// `verbes` (la table `Gestes[]` de la vue) a sa grille, que chaque grille
+		/// fait 16×16 dans l'alphabet, et qu'elle a un point chaud posé sur un pixel
+		/// peint. Une grille fautive ne plante pas le jeu (pixel transparent) : sans
+		/// ce contrôle, la faute ne se verrait qu'en regardant la planche.</summary>
+		public static List<string> Defauts(IEnumerable<string> verbes)
+		{
+			var defauts = new List<string>();
+			foreach (string verbe in verbes)
+				if (!Existe(verbe)) defauts.Add($"{verbe} : aucune grille (repli sur l'ancien dessin)");
+			foreach (var (_, grilles) in Familles)
+				foreach (var (verbe, g) in grilles)
+				{
+					bool forme = g.Length == Cote;
+					foreach (string ligne in g)
+					{
+						forme &= ligne.Length == Cote;
+						foreach (char c in ligne)
+							if (c != '.' && !Alphabet.ContainsKey(c))
+								defauts.Add($"{verbe} : lettre '{c}' hors alphabet");
+					}
+					if (!forme) { defauts.Add($"{verbe} : grille qui n'est pas 16×16"); continue; }
+					if (!IconesPointsChauds.PointsChauds.TryGetValue(verbe, out var p))
+						defauts.Add($"{verbe} : pas de point chaud");
+					else if (p.X < 0 || p.X >= Cote || p.Y < 0 || p.Y >= Cote || g[p.Y][p.X] == '.')
+						defauts.Add($"{verbe} : point chaud ({p.X}, {p.Y}) hors du dessin");
+				}
+			return defauts;
 		}
 
 		/// <summary>Libère toutes les textures en cache (sortie du jeu).</summary>
