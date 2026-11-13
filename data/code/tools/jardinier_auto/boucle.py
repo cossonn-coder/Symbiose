@@ -26,7 +26,7 @@ from sim.quatre_feuilles import est_quatre_feuilles
 from .diagnostic import facteur_limitant
 from .proposition import proposer
 from .impasses import Impasse, GESTE_VERROUILLE, OBJECTIF_INATTEIGNABLE
-from .execution import executer
+from .execution import executer, point_vise
 from .trace import (consigner, entree, entree_impasse, entree_consequence,
                     entree_geste_coupe, entree_veille)
 from .tutelle import zones_cultivees, sous_tutelle
@@ -150,7 +150,8 @@ class JardinierAutomate:
         oid = _oid_pour_espece(actifs, cr.espece)
         resultat = executer(gs, player, eco, None, plan)
         consigner(gs, entree(semaine, tile_id, f"{cr.espece}@{tile_id}",
-                             plan.facteur, plan.verbe, resultat, oid))
+                             plan.facteur, plan.verbe, resultat, oid,
+                             point=point_vise(None, plan)))
 
     def jouer_tick(self, engine) -> None:
         """Un passage complet de la boucle sur l'état courant de `engine`.
@@ -220,7 +221,8 @@ class JardinierAutomate:
             servis = OBJ.objectifs_servis(actifs, plan.verbe, plant)
             oid = servis[0].id if servis else None
             consigner(gs, entree(semaine, tile.tile_id, cible, plan.facteur,
-                                 plan.verbe, resultat, oid))
+                                 plan.verbe, resultat, oid,
+                                 point=point_vise(plant, plan)))
             if resultat != "echec":
                 for o in servis:
                     if OBJ.incrementer(gs, o.id):

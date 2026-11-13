@@ -36,6 +36,7 @@ from sim.effects.perturbations import deposer_mort
 from sim.traces_sol import ecrire_trace
 from constants import PLOT_CM
 from .base import build_banc_tile, monde, sans_herbivorie, vieillir
+from .plan_test import plot, structure
 
 NOM = "SOLCANVAS"
 NOM_PLEIN = "SOLPLEIN"
@@ -65,6 +66,13 @@ DERACINE, DEBOUT = (5, 6), (5, 8)
 # Les cuvettes visent des plots HAUTS (altitude ≥ 15 cm, seed du banc) : sur un plot
 # déjà à 0 le moteur borne à 0, il n'y a pas de creux à voir.
 BAC, PILE = (8, 6), (8, 8)
+# PLAN DE TEST (gestes lisibles ⑤, touche B / `capture_vm.sh -R`) : quatre gestes sur la
+# rangée 2, vierge — on y voit naître chaque trace. Épandre = deux clics (le bac, le plot) ;
+# le dernier écrase un plot sans bête : le rapport doit dire ce que le moteur en pense.
+PLAN_TEST = (("becher", plot(NOM, 2, 1)),
+             ("arroser", plot(NOM, 2, 3)),
+             ("epandre", structure(NOM, "bac"), plot(NOM, 2, 5)),
+             ("ecraser", plot(NOM, 2, 7)))
 MASSE_PEU, MASSE_PLEIN = 1.0, 8.0
 
 

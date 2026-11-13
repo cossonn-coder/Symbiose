@@ -93,11 +93,13 @@ namespace Symbiose
 			// Onglet AUTOMATE dev-gated (A6) : présent uniquement s'il a été branché
 			// (touche A). Il NE met PAS en pause (on regarde la sim jouer, A2). On le
 			// « seed » avec le dernier bloc connu pour éviter un onglet vide à l'ouverture.
-			if (_automateOn)
+			// ⑤ : aussi quand le mode testeur a un rapport (automate débranché ou non).
+			if (_automateOn || _rapportTesteur.Count > 0)
 			{
 				_automateContent = new AutomateContent();
 				_automateContent.Construire();
-				if (_automateBlock != null) _automateContent.Rendre(_automateBlock);
+				_automateContent.PoserTesteur(_rapportTesteur);
+				_automateContent.Rendre(_automateOn ? _automateBlock : null);
 				onglets.Add(new ConsultationPanel.Onglet("Automate", _automateContent, false));
 			}
 

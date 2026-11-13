@@ -16,8 +16,14 @@
 
 from __future__ import annotations
 
+from constants import PLOT_CM
 from sim import actions as ACT
 from sim.magazine import acheter_au_magazine
+from sim.traces_sol import SORTE_DU_VERBE, ecrire_trace
+
+# Gestes sur le VIVANT d'autrui : le point visé est celui de `plan.cible_obj`, pas
+# celui de la cultivée en cours.
+_SUR_CIBLE = frozenset(("broyer", "recolter_paille", "deraciner", "tailler"))
 
 
 def _ratio(r: float) -> str:
@@ -29,7 +35,40 @@ def _ratio(r: float) -> str:
     return "tronque"
 
 
+def point_vise(plant, plan):
+    """GESTES LISIBLES ⑤ — le point `(x_cm, y_cm)` TUILE-LOCAL que vise le geste :
+    la plante touchée (sa position continue), ou le centre du plot d'un `planter`
+    créatif. None pour un geste sans lieu (achat au magazine, rondelle posée au
+    niveau de la tuile). Lecture pure : sert à la trace au sol ET au journal (la vue
+    y joue l'animation de l'outil)."""
+    if plan.verbe in _SUR_CIBLE:
+        cible = plan.cible_obj
+    elif plant is not None:
+        cible = plant
+    else:
+        cr = plan.cible_obj
+        if cr.tile is None or cr.r is None:
+            return None
+        return ((cr.c + 0.5) * PLOT_CM, (cr.r + 0.5) * PLOT_CM)
+    return (round(float(cible.x_cm), 1), round(float(cible.y_cm), 1))
+
+
 def executer(game_state: dict, player: str, eco, plant, plan) -> str:
+    """Joue le geste puis, s'il a porté, laisse sa TRACE au sol (GESTES LISIBLES ⑤ :
+    l'automate passe par les façades, pas par la route du pont qui écrit celle du
+    joueur — sans ceci ses gestes ne marqueraient pas le sol). Hors tick, comme
+    le reste de l'automate → golden neutre. Renvoie "ok" | "tronque" | "echec"."""
+    resultat = _jouer(game_state, player, eco, plant, plan)
+    sorte = SORTE_DU_VERBE.get(plan.verbe)
+    point = point_vise(plant, plan) if sorte and resultat != "echec" else None
+    if point is not None and eco is not None:
+        x, y = point
+        ecrire_trace(game_state, eco.tile_id, int(y // PLOT_CM), int(x // PLOT_CM),
+                     x, y, sorte)
+    return resultat
+
+
+def _jouer(game_state: dict, player: str, eco, plant, plan) -> str:
     """Joue le `verbe` du `plan`. `plant` = la cultivée en cours ; `plan.cible_obj` =
     la plante visée pour un geste sur le vivant (deraciner/tailler/broyer/
     recolter_paille). Renvoie "ok" | "tronque" | "echec"."""

@@ -87,6 +87,9 @@ def main() -> int:
                 # La boucle joue dans step_week (hors tick, H2) ; ceci ne fait que
                 # le contrôle. Opt-in → golden intact.
                 "automate": server.cmd_automate,
+                # Mode testeur (gestes lisibles ⑤) : plan de test du banc, en lecture ;
+                # la vue le joue ensuite geste par geste par `action` (chemin du clic).
+                "plan_test": server.cmd_plan_test,
                 "debug": server.cmd_debug}
     # 1 ligne lue = 1 réponse écrite. EOF (Godot mort sans quit) → fin de boucle.
     for line in sys.stdin:

@@ -77,12 +77,15 @@ def _commun(categorie: str, semaine: int, niveau: int, *,
 # ---------------------------------------------------------------------------------
 
 def entree(semaine: int, tile_id: str, cible: str, facteur: str,
-           geste: str, resultat: str, objectif_id: str | None = None) -> dict:
+           geste: str, resultat: str, objectif_id: str | None = None,
+           point: tuple | None = None) -> dict:
     """Entrée de journal pour un GESTE joué (dict JSON-sérialisable, ordre stable).
     `categorie="geste"` (niveau 0 = décision). `objectif_id` (④, §8) = l'objectif
     servi par ce geste, ou None — clé de filtrage de l'onglet (onglet.py). Les
     champs communs `niveau/espece/zone` sont ajoutés (espece/zone=None pour le
-    legacy : la position vivante est déjà encodée dans `cible`)."""
+    legacy : la position vivante est déjà encodée dans `cible`). `point` (GESTES
+    LISIBLES ⑤) = `(x_cm, y_cm)` TUILE-LOCAL visé par le geste, ou None (geste sans
+    lieu : achat, rondelle de tuile) — la vue y joue l'animation de l'outil."""
     return {
         "categorie": "geste",
         "semaine": semaine,
@@ -95,6 +98,7 @@ def entree(semaine: int, tile_id: str, cible: str, facteur: str,
         "geste": geste,
         "resultat": resultat,
         "objectif_id": objectif_id,
+        "point": list(point) if point is not None else None,
     }
 
 

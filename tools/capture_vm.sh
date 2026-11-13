@@ -62,6 +62,11 @@
 #     -E  VERBE[@X,Y] : arme VERBE à 4 s et 1er clic au point MONDE X,Y (cm) ; la souris revient
 #         sur -s (objet en main). `-E recolter` : clics fruit mûr / collet / fruit vert, journal
 #         `[ObjetEnMain]` — GESTES LISIBLES ④ (banc objet_en_main)
+#     -R  mode testeur : 4 s après le montage, le plan de test du banc (registre Python
+#         BANC_PLAN_TEST) est joué geste par geste comme des clics ; journal `[Testeur]`,
+#         onglet Automate ouvert à la fin — GESTES LISIBLES ⑤ (-n ≥ 30 + 40 par geste à 10 i/s)
+#     -U  ouvert|ferme : jardinier automate branché au montage (touche A ; « ferme » = onglet
+#         refermé, il joue quand même) — ses gestes sont joués au point visé — GESTES LISIBLES ⑤
 #     -n  nombre d'images              (défaut 3)
 #     -f  images/s simulées            (défaut 10 → 3 images = 0,3 s de jeu)
 #   Sortie : DOSSIER/frame00000000.png, frame00000001.png, … (1920×1080).
@@ -123,6 +128,8 @@ while [ $# -gt 0 ]; do
     -Q) TIROIR="$2"; shift 2 ;;
     -M) CLICMUR=1; shift ;;
     -E) OBJET="$2"; shift 2 ;;
+    -R) TESTEUR=1; shift ;;
+    -U) AUTOMATE="$2"; shift 2 ;;
     -I) ICONES=1; shift ;;
     -W) ICONES=2; shift ;;
     -D) DECORF10="$2"; shift 2 ;;
@@ -181,6 +188,8 @@ ARGS=(--capture-banc="$BANC")
 [ -n "$CLICMUR" ] && ARGS+=(--capture-clicmur=1)
 [ -n "${ICONES:-}" ] && ARGS+=(--capture-icones="$ICONES")
 [ -n "${OBJET:-}" ] && ARGS+=(--capture-objet="$OBJET")
+[ -n "${TESTEUR:-}" ] && ARGS+=(--capture-testeur=1)
+[ -n "${AUTOMATE:-}" ] && ARGS+=(--capture-banc-automate="$AUTOMATE")
 DISPLAY="$ECRAN" LIBGL_ALWAYS_SOFTWARE=1 "$GODOT" --path "$DEPOT" \
   --rendering-driver opengl3 --resolution 1920x1080 \
   --write-movie "$SORTIE/frame.png" --fixed-fps "$FPS" --quit-after "$FRAMES" \

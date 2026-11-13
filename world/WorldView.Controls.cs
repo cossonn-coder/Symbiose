@@ -143,6 +143,9 @@ namespace Symbiose
 						if (k.ShiftPressed) InjecterObjectifDemo();
 						else ToggleAutomate();
 						break;
+					// B = MODE TESTEUR (gestes lisibles ⑤) : déroule le plan de test du
+					// banc monté, geste par geste, comme des clics (WorldView.Testeur.cs).
+					case Key.B:        LancerTesteur();                break;
 					// F = filtre du log automate (⑤) : cycle la catégorie focus ;
 					// Maj+F la (dé)coche. Inerte tant que l'automate n'est pas branché.
 					case Key.F:

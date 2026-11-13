@@ -879,7 +879,13 @@ from __future__ import annotations
 #       (tiges portant des rondelles `auxiliaire`, n ∈ 1..3 ; toutes les tuiles, listes vides
 #       comprises) — la vue dessine l'habitat posé par `favoriser_auxiliaire`. Lecture pure,
 #       golden neutre.
-ENGINE_VERSION = "0.6.15"
+# 0.6.16 (GESTES LISIBLES ⑤) : commande neuve `plan_test` {banc} → `plan` = [{verbe, geste,
+#       maj, cible, clics}] (plan de test du banc, résolu en points MONDE, lecture pure ; la
+#       vue le joue par `action`). Les lignes `geste` du journal de l'automate (bloc
+#       `automate.trace`) gagnent `point` = [x_cm, y_cm] TUILE-LOCAL visé, ou null ; les gestes
+#       de l'automate laissent leur trace au sol (`traces_sol`) comme ceux du joueur. Clés
+#       neuves ignorées par un ancien client, golden neutre.
+ENGINE_VERSION = "0.6.16"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

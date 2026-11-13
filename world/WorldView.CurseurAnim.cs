@@ -28,11 +28,16 @@ namespace Symbiose
 		private int _animIndex;
 		private ulong _animEcheanceMs;
 		private Texture2D _curseurAnimTex;   // image montrée pendant l'animation (témoin de capture)
+		// Verdict de la dernière RÉPONSE du pont (Execution = appliqué, Refus = refusé ;
+		// null tant qu'aucune) — lu par le mode testeur (WorldView.Testeur.cs, ⑤).
+		private AnimationGeste.Sorte? _verdictGeste;
 
 		/// <summary>Lance une animation du curseur-geste (sans effet si aucune icône
 		/// de geste n'est en main : la main gantée garde son propre tap).</summary>
 		private void JouerAnimationCurseur(AnimationGeste.Sorte sorte)
 		{
+			if (sorte == AnimationGeste.Sorte.Execution || sorte == AnimationGeste.Sorte.Refus)
+				_verdictGeste = sorte;
 			if (!_curseurIcone) return;
 			var images = AnimationGeste.Images(_curseurVerbe, sorte, CurseurEchelle);
 			if (images == null) return;

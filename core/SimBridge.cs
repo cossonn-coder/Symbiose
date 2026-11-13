@@ -603,6 +603,11 @@ namespace Symbiose
 			return Request(msg);
 		}
 
+		/// <summary>MODE TESTEUR (gestes lisibles ⑤, pont 0.6.16) : le plan de test du banc
+		/// `banc`, résolu en points MONDE (`plan` = [{verbe, geste, maj, cible, clics}]).
+		/// Lecture pure ; null sur un binaire plus ancien (commande inconnue).</summary>
+		public GDict PlanTest(string banc) => Request(new GDict { ["cmd"] = "plan_test", ["banc"] = banc });
+
 		/// <summary>
 		/// Cœur du pont : écrit 1 ligne JSON, lit 1 ligne JSON (bloquant).
 		/// Retourne le message si ok:true, sinon null (+ erreur en console).

@@ -36,7 +36,7 @@ re-figeage prévu : un rééquilibrage qui le bougerait passe par une constante 
 | ② | `02_animations_curseur.md` — images précuites, rotation, icônes inversées | **FAIT** (golden intact, build vert, planche regardée) |
 | ③ | `03_sol_canvas.md` — couche de traces, paillis, cuvette, pile, pluie, craquelé | **FAIT** (golden intact, build vert, captures regardées) |
 | ④ | `04_objet_en_main_ergonomie.md` — objet en main, coccinelle, catalogue, fruit | **FAIT** (golden intact, build vert, pont 0.6.15, captures regardées) |
-| ⑤ | `05_automate.md` — actif fenêtre fermée, gestes visibles, mode testeur | à faire (après ②) |
+| ⑤ | `05_automate.md` — actif fenêtre fermée, gestes visibles, mode testeur | **FAIT** (golden intact, build vert, pont 0.6.16, captures regardées) |
 | ⑥ | `06_banc_recette.md` — banc `gestes_lisibles`, oracle, recette F5, clôture | à faire (après tous) |
 
 ## Interdits communs
@@ -198,8 +198,42 @@ PNG de capture avant de conclure un tronçon de vue.
   index) ; volants non testés à l'image (aucun volant à portée au banc) ; repli « plante entière »
   de `recolter`.
 
+### ⑤ automate (2026-11-13)
+- **Traces de l'automate (note du ①) : traitées.** `jardinier_auto/execution.executer` enveloppe
+  l'ancien corps (`_jouer`) et écrit la trace (`ecrire_trace`, `eco.tile_id`) d'un geste qui a porté
+  et qui marque le sol ; `point_vise(plant, plan)` = position continue de la plante touchée
+  (`cible_obj` pour broyer/recolter_paille/deraciner/tailler), centre du plot d'un `planter` créatif,
+  None sinon. Logique de décision intacte.
+- **Pont 0.6.16** : les lignes `geste` du journal gagnent `point` = [x_cm, y_cm] TUILE-LOCAL ou null
+  (`trace.entree(..., point=)`) ; commande `plan_test {banc}` → `plan` = [{verbe, geste, maj, cible,
+  clics}] (lecture, `automate_cmd.cmd_plan_test`). 4 suites pont passées à 0.6.16.
+- **Format du plan de test** : `bancs/plan_test.py` — un banc déclare `PLAN_TEST = ((verbe, cible[,
+  cible2]), …)`, inscrit dans `bancs.BANC_PLAN_TEST` ; cibles `plot(tuile, r, c)`, `plante(clé
+  catalogue[, tuile])` (1ʳᵉ vivante), `structure(tuile, kind)`, résolues à la demande en points MONDE ;
+  deux cibles = geste à deux temps ; `_PALETTE` mappe `grelinette` → case `becher` + Maj. Seul
+  `sol_canvas` a un plan (bêcher, arroser, épandre bac→plot, écraser, rangée 2).
+- **Vue** : touche **A** = seul interrupteur (fermer l'onglet le laisse tourner ; onglet fermé, la sim
+  suit phase/pause habituelles). `world/WorldView.AutomateGestes.cs` : gestes du DERNIER tick
+  (résultat ≠ échec, point non nul) joués en `visuals/GesteMonde.cs` (Sprite2D dans `Objects`,
+  `TexturesMonde(verbe, 1)`, point chaud sur le point, 2 passages + tenue 0,35 s), ≤ 6 vivants, départs
+  espacés de 0,45 s ; témoin = icône du dernier geste ×2 en haut à droite, visible si branché ; journal
+  `[Automate] semaine N : k geste(s)…`. **Touche B** = mode testeur (`world/WorldView.Testeur.cs`) :
+  geste armé, souris posée sur la cible, `TryAction` (même chemin qu'un clic), un geste / 3 s
+  (1 s entre deux clics), verdict lu sur la réponse (`_verdictGeste`, posé par
+  `JouerAnimationCurseur`) ou refus de la vue ; rapport `[Testeur]` + onglet Automate (présent aussi
+  automate débranché quand un rapport existe, ouvert en fin de plan). Aide F1 mise à jour.
+- **Capture** : `tools/capture_vm.sh -b sol_canvas -w 0 -z 2 -c 1650,1550 -R -n 230` (4/4 appliqués,
+  traces nées sur la rangée 2, rapport à l'image) ; nouvelle option `-U ouvert|ferme` (automate branché
+  au montage) : `-b full -w 2 -z 2 -c 1000,1300 -U ferme -T 6 -n 120` (sécateurs joués au pied des
+  plantes taillées, témoin visible).
+- Tests : `tests/test_automate_visible.py` (10/10, neuf) ; automate ×6 verts ; `test_gestes_lisibles`
+  36/36 ; `test_sim_server` 349/349. `SimBridge.cs` 348 → 349 LDC (déjà en vigilance, +1 méthode).
+- **Points F5** : taille des outils au monde (16 px de grille à ×1 de caméra) et durée (≈ 1 s) ; lisible
+  en Turbo ? témoin discret assez visible ? le testeur déplace la souris du joueur (voulu, à confirmer) ;
+  gestes sans icône ni point (achat magazine, rondelle) non joués ; un tick à > 6 gestes n'en montre que 6.
+
 ## §REPRISE
-① FAIT et commité (`52d2c02`) ; ② commité (`40110a7`) ; ③ commité (`e005c04`) ; ④ FAIT, non commité
-(golden `b4a921f8…` intact, pont 0.6.15). Prochain : ⑤ `05_automate.md` — peut utiliser
-`AnimationGeste.TexturesMonde(verbe, echelle)` ; l'automate joue par façades (pas de trace, cf. ①)
-et ne passe pas par `TryAction` : les deux temps de la vue ne le concernent pas.
+① FAIT et commité (`52d2c02`) ; ② commité (`40110a7`) ; ③ commité (`e005c04`) ; ④ commité (`f94dc02`) ;
+⑤ FAIT, non commité (golden `b4a921f8…` intact, pont 0.6.16). Prochain : ⑥ `06_banc_recette.md` — le
+mode testeur (touche B, `-R`) est l'outil : étendre `PLAN_TEST` (registre `BANC_PLAN_TEST`) aux gestes
+à observer ; `serialize.py` (409 LDC) toujours à scinder au `/refactor` de fin de sprint.

@@ -104,6 +104,10 @@ BANC_POST_INIT = {"palette_gestes": _palette_gestes.post_init,
                   # mûris, pot posé par sa façade.
                   "objet_en_main": _objet_en_main.post_init}
 
+# PLAN DE TEST par banc (gestes lisibles ⑤, `plan_test.py`) : liste ordonnée
+# `(verbe, cible[, cible2])` que la vue déroule comme des clics du joueur (touche B).
+# Banc sans plan → absent → la commande `plan_test` renvoie une liste vide.
+BANC_PLAN_TEST = {"sol_canvas": _sol_canvas.PLAN_TEST}
 # Seed IMPOSÉ par banc (effondrement météo ④). La plupart des bancs sont neutres au
 # seed (ils forcent leur condition par composition) → repli sur le défaut du serveur.
 # `effondrement` fait EXCEPTION : il met en scène le collapse DÉTERMINISTE du seed

@@ -37,6 +37,16 @@ namespace Symbiose
 		private readonly System.Collections.Generic.HashSet<string> _catsOff = new();
 		private int _catFocus;                 // index dans Cats de la catégorie focus
 		private GDict _dernierBloc;            // dernier bloc snapshot (re-rendu au filtrage)
+		// Rapport du MODE TESTEUR (gestes lisibles ⑤) : une ligne par geste du plan,
+		// écrite par WorldView.Testeur.cs ; vide hors test. Affiché sous le journal.
+		private System.Collections.Generic.IReadOnlyList<string> _testeur;
+
+		/// <summary>Pose le rapport du testeur et re-rend l'onglet.</summary>
+		public void PoserTesteur(System.Collections.Generic.IReadOnlyList<string> lignes)
+		{
+			_testeur = lignes;
+			Rendre(_dernierBloc);
+		}
 
 		/// <summary>Construit la surface (RichTextLabel défilant plein onglet).</summary>
 		public void Construire()
@@ -59,7 +69,7 @@ namespace Symbiose
 		public void CyclerCategorie()
 		{
 			_catFocus = (_catFocus + 1) % Cats.Length;
-			if (_dernierBloc != null) Rendre(_dernierBloc);
+			Rendre(_dernierBloc);
 		}
 
 		// Maj+F : (dé)coche la catégorie focus — filtrage d'AFFICHAGE, jamais une
@@ -68,17 +78,30 @@ namespace Symbiose
 		{
 			string cat = Cats[_catFocus];
 			if (!_catsOff.Remove(cat)) _catsOff.Add(cat);
-			if (_dernierBloc != null) Rendre(_dernierBloc);
+			Rendre(_dernierBloc);
 		}
 
 		// Met en page le bloc `automate` du snapshot. PURE mise en forme : profil,
 		// objectifs + progression (onglet du 1er objectif actif = son journal filtré),
 		// puis le journal récent FILTRÉ par catégories cochées (⑤).
+		// `block` null = automate débranché (onglet ouvert pour le seul rapport du testeur).
 		public void Rendre(GDict block)
 		{
 			if (_label == null) return;
 			_dernierBloc = block;   // mémorisé → re-rendu au (dé)cochage d'une catégorie
 			var sb = new StringBuilder();
+			if (block != null) RendreJournal(block, sb);
+			else sb.Append("[b]Jardinier automate[/b] — débranché (A pour le brancher)\n");
+			if (_testeur != null && _testeur.Count > 0)
+			{
+				sb.Append("\n[b]Testeur[/b] (plan du banc, B pour le relancer)\n");
+				foreach (var l in _testeur) sb.Append("  ").Append(l).Append('\n');
+			}
+			_label.Text = sb.ToString();
+		}
+
+		private void RendreJournal(GDict block, StringBuilder sb)
+		{
 			var profil = block["profil"].AsGodotDictionary();
 			sb.Append("[b]Jardinier automate[/b] — désherbage ");
 			sb.Append(profil["desherbage"].AsString());
@@ -134,8 +157,6 @@ namespace Symbiose
 			lignes.Reverse();   // ré-ordonner du plus ancien au plus récent
 			foreach (var l in lignes) sb.Append(l + "\n");
 			if (lignes.Count == 0) sb.Append("  (aucune ligne dans les catégories cochées)\n");
-
-			_label.Text = sb.ToString();
 		}
 
 		// Ligne d'en-tête du filtre : [x]/[ ] par catégorie, la focus en surbrillance.

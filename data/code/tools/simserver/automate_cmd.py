@@ -24,6 +24,8 @@ from tools.jardinier_auto import (JardinierAutomate, ProfilAutomate, LIBRE,
                                    ajouter_objectif)
 from tools.jardinier_auto.trace import CLE_JOURNAL
 from tools.jardinier_auto.objectifs import CLE_OBJECTIFS
+from bancs import BANC_PLAN_TEST
+from bancs.plan_test import resoudre_plan
 
 # Fenêtre de trace exposée au snapshot : les N dernières entrées du journal
 # (gestes, impasses, conséquences). Borne le volume — un run F5 long accumule des
@@ -114,3 +116,17 @@ class AutomateCmdMixin:
                 "profil": _profil_dict(self._automate_profil),
                 "trace": journal[-TRACE_MAX:],
                 "objectifs": objectifs}
+
+    # ---------------------------------------------------------------- testeur
+    def cmd_plan_test(self, msg: dict) -> dict:
+        """MODE TESTEUR (gestes lisibles ⑤) — LECTURE du plan de test du banc `msg.banc`
+        (registre `BANC_PLAN_TEST`), RÉSOLU sur le monde courant : `[{verbe, geste, maj,
+        cible, clics}]`, `clics` = points MONDE (cm) à cliquer dans l'ordre. La vue
+        déroule ensuite chaque geste par le chemin du clic joueur (`action`) : ce n'est
+        PAS l'automate (aucune décision ici, aucune écriture). Banc sans plan → `[]`."""
+        if self.engine is None:
+            return {"ok": False, "error": "plan_test avant init"}
+        banc = msg.get("banc")
+        plan = BANC_PLAN_TEST.get(banc, ())
+        return {"ok": True, "banc": banc,
+                "plan": resoudre_plan(self.engine.game_state, plan)}

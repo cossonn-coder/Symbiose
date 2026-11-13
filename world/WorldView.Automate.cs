@@ -9,6 +9,13 @@
 // lorsque la touche A l'a branché ; il vit dans `ConsultationPanel` (tiers droit),
 // à côté des voix. La sim TOURNE quand cet onglet est actif (pause par onglet, A2)
 // → on regarde l'automate jouer le jardin ENTRE deux ticks (invariant H2).
+//
+// GESTES LISIBLES ⑤ — l'automate reste ACTIF FENÊTRE FERMÉE : seule la touche A le
+// branche / débranche ; fermer l'onglet (bouton, Échap, autre onglet) ne fait que le
+// fermer. Onglet fermé, la sim suit ses PROPRES règles de pause (phase planification /
+// saison / pause, état d'avant ouverture restauré par ConsultationPanel) : l'automate
+// joue à chaque semaine qui passe. Ses gestes se voient dans le monde et un témoin dit
+// qu'il tourne (WorldView.AutomateGestes.cs).
 
 using Godot;
 using GDict = Godot.Collections.Dictionary;
@@ -21,40 +28,40 @@ namespace Symbiose
 		private AutomateContent _automateContent;  // contenu de l'onglet (null si absent)
 		private GDict _automateBlock;         // dernier bloc snapshot (seed à l'ouverture)
 
-		// Touche A : brancher/débrancher l'automate ET ouvrir/fermer son onglet.
-		//  - panneau ouvert sur l'onglet Automate ACTIF → débrancher + fermer (A8) ;
-		//  - sinon → brancher (si besoin) puis ouvrir/basculer sur l'onglet Automate.
+		// Touche A (⑤) : BRANCHER ou DÉBRANCHER, rien d'autre ne le débranche.
+		//  - branché → débrancher (et fermer la consultation si elle montre son onglet,
+		//    qui n'a plus lieu d'être) ;
+		//  - débranché → brancher puis ouvrir l'onglet Automate (on le voit démarrer).
+		// Fermer l'onglet ensuite le laisse tourner ; on le rouvre par la maison.
 		private void ToggleAutomate()
 		{
 			if (_bridge == null) return;
 
-			// Cas fermeture (A8) : l'onglet Automate est celui affiché → on coupe.
-			if (_consultation != null && IsInstanceValid(_consultation)
-				&& _automateContent != null && _automateContent.IsVisibleInTree())
+			if (_automateOn)
 			{
 				_bridge.Automate(false, null);
 				_automateOn = false;
-				_consultation.Fermer();       // onFerme remet _consultation/_automateContent à null
-				GD.Print("[WorldView] A → jardinier automate OFF (onglet fermé).");
+				if (_consultation != null && IsInstanceValid(_consultation) && _automateContent != null)
+					_consultation.Fermer();   // onFerme remet _consultation/_automateContent à null
+				MajTemoinAutomate();
+				GD.Print("[WorldView] A → jardinier automate OFF.");
 				return;
 			}
 
-			// Cas ouverture : brancher si pas déjà, puis (ré)ouvrir sur l'onglet Automate.
-			if (!_automateOn)
+			// Brancher, puis ouvrir sur l'onglet Automate.
+			// Profil par défaut = LIBRE + désherbage curatif (l'automate ne paie
+			// pas sa Vigueur → il joue chaque tick, retour visuel dense pour le F5).
+			var profil = new GDict { ["desherbage"] = "curatif" };
+			var resp = _bridge.Automate(true, profil);
+			if (resp == null)
 			{
-				// Profil par défaut = LIBRE + désherbage curatif (l'automate ne paie
-				// pas sa Vigueur → il joue chaque tick, retour visuel dense pour le F5).
-				var profil = new GDict { ["desherbage"] = "curatif" };
-				var resp = _bridge.Automate(true, profil);
-				if (resp == null)
-				{
-					GD.PrintErr("[WorldView] automate indisponible (moteur pré-0.5.30 ?).");
-					return;
-				}
-				_automateOn = true;
-				int cultivees = resp.ContainsKey("cultivees") ? resp["cultivees"].AsInt32() : 0;
-				GD.Print($"[WorldView] A → jardinier automate ON ({cultivees} cultivées sous tutelle).");
+				GD.PrintErr("[WorldView] automate indisponible (moteur pré-0.5.30 ?).");
+				return;
 			}
+			_automateOn = true;
+			MajTemoinAutomate();
+			int cultivees = resp.ContainsKey("cultivees") ? resp["cultivees"].AsInt32() : 0;
+			GD.Print($"[WorldView] A → jardinier automate ON ({cultivees} cultivées sous tutelle).");
 			OuvrirConsultation("Automate");
 		}
 
@@ -91,6 +98,7 @@ namespace Symbiose
 		private void ApplyAutomate(GDict block)
 		{
 			_automateBlock = block;
+			JouerGestesAutomate(block);   // onglet ouvert ou non (⑤, WorldView.AutomateGestes.cs)
 			if (_automateContent != null && IsInstanceValid(_automateContent)
 				&& _automateContent.IsVisibleInTree())
 				_automateContent.Rendre(block);
