@@ -84,7 +84,7 @@ def test_delta_pont():
 
     ref.send(cmd="init", seed=42)
     init = dlt.send(cmd="init", seed=42)
-    check("engine_version 0.6.12", init.get("engine_version") == "0.6.12",
+    check("engine_version 0.6.13", init.get("engine_version") == "0.6.13",
           init.get("engine_version"))
     # Opt-in : SANS la clé, le serveur delta répond au format complet historique.
     brut = dlt.send(cmd="snapshot")["snapshot"]

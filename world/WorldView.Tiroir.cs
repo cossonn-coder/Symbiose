@@ -146,6 +146,7 @@ namespace Symbiose
 			else _tiroirPanel.MarquerActif(_gesteIndex);
 			_tiroirPanel.Visible = true;
 			_tiroirBouton.Ouvert = true;
+			SynchroniserReglages();   // la rangée de réglages cède la place
 		}
 
 		private void FermerTiroir()
@@ -153,6 +154,7 @@ namespace Symbiose
 			if (_tiroirPanel == null) return;
 			_tiroirPanel.Visible = false;
 			_tiroirBouton.Ouvert = false;
+			SynchroniserReglages();   // … et revient
 		}
 
 		/// <summary>Ferme le tiroir s'il est ouvert. Vrai = il l'était (l'appelant

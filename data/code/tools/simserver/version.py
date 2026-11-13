@@ -854,7 +854,14 @@ from __future__ import annotations
 #       arrivent dans `debloques_recents`. Limite connue : l'achat d'un outil ne remonte
 #       pas `result.debloques` (la façade consomme la liste) — lire `gestes_debloques`.
 #       Clés neuves ignorées par un ancien client, golden neutre.
-ENGINE_VERSION = "0.6.12"
+# 0.6.13 (PALETTE & TIROIR ②) : le bloc `player` gagne `paillis_dispo` = [natures de mulch
+#       dont le stock couvre au moins un geste `pailler`] (noms triés, AUCUNE quantité).
+#       La vue estompe les autres dans la rangée de réglages. Lecture pure de
+#       `game_state["mulch_stock"]` (jamais créé par la lecture). Clé neuve ignorée par un
+#       ancien client ; absente (ancien serveur) → la vue n'estompe rien. Golden neutre.
+#       Et `graines_espece` = {clé de graine: nom d'espèce} pour les lots de `seeds` (la
+#       vue teinte la pastille de graine comme l'espèce ; absente → teinte par défaut).
+ENGINE_VERSION = "0.6.13"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

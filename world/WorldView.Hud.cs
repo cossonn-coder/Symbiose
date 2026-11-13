@@ -196,7 +196,7 @@ namespace Symbiose
 				+ " · molette zoom · PageUp/PageDown pivoter\n"
 				+ "F3 étiquettes (Maj+F3 info-bulle technique) · F4 perfs (Maj+F4 couches) · C copier perfs · Z copier à-coups de zoom · E banc perf (≈2 min, rapport copié ; Maj+E banc accéléré) · H maison et lisière transparentes · F6 heatmap debug (Maj+F6 champ)"
 				+ " · F7 carte T sol · G survol gènes · L planche des paliers · I vie macro (1 bête par espèce et par tuile + pullulations, taille réelle : les petites aux forts zooms) · O ombres · X paramètres · M mode simu · A jardinier automate (Maj+A objectif démo)\n"
-				+ "palette de gestes = colonne d'icônes à GAUCHE (clic) · Tab/1..9 accélérateurs · Q tiroir (tous les gestes) · S graine (planter) · B substrat (poser pot/bac) · N nature (pailler) · clic gauche = agir"
+				+ "palette de gestes = colonne d'icônes à GAUCHE (clic) · Tab/1..9 accélérateurs · Q tiroir (tous les gestes) · graine / substrat / paillis = pastilles à côté du geste (clic) · clic gauche = agir"
 				+ " — geste courant affiché en haut à gauche";
 			hud.AddChild(legend);
 			_legendLabel = legend;
@@ -280,26 +280,26 @@ namespace Symbiose
 				// tiroir sans case n'a pas de touche → rien (PALETTE & TIROIR ①).
 				int c = System.Array.IndexOf(_slots, _gesteIndex);
 				geste = c < 0 ? g.Nom : $"{g.Nom} [{(c + 1) % 10}]";
-				// `planter` affiche l'espèce courante (S cycle) — la cible attendue.
+				// `planter` affiche l'espèce courante (rangée de réglages) — la cible attendue.
 				if (g.Verb == "planter")
-					geste += _seeds.Count == 0 ? " : aucune graine (S)"
-						   : $" : {_seeds[_seedIndex].Key} (×{_seeds[_seedIndex].Count}, S)";
+					geste += _seeds.Count == 0 ? " : aucune graine"
+						   : $" : {_seeds[_seedIndex].Key}";
 				// `ameublir` rappelle la variante Maj (grelinette, global).
 				else if (g.Verb == "becher")
 					geste += " (Maj : grelinette)";
 				// `écraser` rappelle l'auto plante/nuisible.
 				else if (g.Verb == "ecraser")
 					geste += " (plante ou nuisible)";
-				// poser pot/bac : substrat courant (cycle B) joint à la pose.
+				// poser pot/bac : substrat courant (rangée de réglages) joint à la pose.
 				else if (g.Verb == "poser_pot" || g.Verb == "poser_bac_culture")
-					geste += $" : {Substrats[_substratIndex]} (B)";
+					geste += $" : {Substrats[_substratIndex]}";
 				// pailler : nature de mulch courante (cycle N) déposée au plot.
 				else if (g.Verb == "pailler")
-					geste += $" : {Natures[_natureIndex]} (N)";
+					geste += $" : {Natures[_natureIndex]}";
 				// planter dans un pot : même espèce que le cycle S.
 				else if (g.Verb == "planter_conteneur")
-					geste += _seeds.Count == 0 ? " : aucune graine (S)"
-						   : $" : {_seeds[_seedIndex].Key} (S)";
+					geste += _seeds.Count == 0 ? " : aucune graine"
+						   : $" : {_seeds[_seedIndex].Key}";
 				// déplacer : rappelle le geste à 2 temps + l'état de saisie.
 				else if (g.Verb == "deplacer_pot")
 					geste += _grabbedContainer >= 0

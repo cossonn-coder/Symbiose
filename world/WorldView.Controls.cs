@@ -79,9 +79,8 @@ namespace Symbiose
 				switch (k.Keycode)
 				{
 					case Key.Space:    TogglePhase();  break;
-					case Key.S:        CycleSeed();    break;   // espèce pour planter
-					case Key.B:        CycleSubstrat(); break;  // substrat (poser pot/bac)
-					case Key.N:        CycleNature();  break;   // nature du mulch (pailler ⑧)
+					// (S, B, N — graine, substrat, paillis — ne sont plus des touches :
+					//  ces choix se cliquent dans la rangée de réglages, WorldView.Reglages.cs.)
 					case Key.Q:        BasculerTiroir(); break; // tiroir des gestes (tous, par familles)
 					// Monde anti-horaire = la CAMÉRA orbite vers la droite
 					// (ressenti validé par Nico au 1er F5 t4).

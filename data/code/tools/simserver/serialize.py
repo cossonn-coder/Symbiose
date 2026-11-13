@@ -60,6 +60,8 @@ from sim.actions import deblocage as DEBL
 from sim.actions import palette as PAL
 from sim.actions.familles import BLOC_FAMILLES   # accès aux gestes ③ : rangement du tiroir
 from sim.pressentis import bloc_pressentis        # accès aux gestes ③ : gestes entrevus
+from fields.ecofields import PAILLAGE_DOSE        # palette & tiroir ② : un geste `pailler` en consomme une dose
+from plants.catalogue import PLANT_CATALOGUE      # palette & tiroir ② : clé de graine → espèce
 # Table « stade reproducteur visible par saison » du prototype SVG (tranche 6,
 # volet A) : import OUTIL → OUTIL (render_structure est un outil, pas le
 # moteur), zéro duplication — la table validée visuellement au sprint
@@ -770,6 +772,19 @@ class SerializeMixin:
                            "debloques_recents": recents,
                            "gestes_pressentis": bloc_pressentis(gs, player),
                            "familles": BLOC_FAMILLES,
+                           # Palette & tiroir ② (0.6.13) : natures de mulch dont le stock
+                           # couvre AU MOINS un geste `pailler`. Une LISTE DE NOMS, jamais
+                           # la quantité (philo #5 : pas de chiffre) — la vue estompe les
+                           # autres. `gs.get` et non `mulch_stock(gs)` : lecture PURE, on ne
+                           # crée pas la jauge en la regardant (golden neutre).
+                           # … et, pour chaque graine en banque, le NOM D'ESPÈCE (celui
+                           # des plantes du snapshot) : la vue y retrouve la teinte de
+                           # l'espèce pour dessiner la graine. Clé hors catalogue → omise.
+                           "graines_espece": {sp: PLANT_CATALOGUE[sp].__name__
+                                              for sp in seeds if sp in PLANT_CATALOGUE},
+                           "paillis_dispo": sorted(
+                               nat for nat, q in (gs.get("mulch_stock") or {}).items()
+                               if q >= PAILLAGE_DOSE),
                            "palette": palette_layout,
                            "appris": signes_appris(gs, player),
                            "vision": bloc_vision(gs, player)},

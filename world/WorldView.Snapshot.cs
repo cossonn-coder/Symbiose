@@ -464,6 +464,9 @@ namespace Symbiose
 				LireVision(pl);   // vision psychédélique (sol qui respire ⑧, Vision.cs)
 				// Graines plantables (0.3.3) → choix d'espèce pour `planter`.
 				// Lecture tolérante : un snapshot pré-0.3.3 n'a pas la clé.
+				// Nom d'espèce de chaque graine (0.6.13) — AVANT ApplySeeds, qui redessine.
+				ApplyGrainesEspece(pl.ContainsKey("graines_espece")
+					? pl["graines_espece"].AsGodotDictionary() : null);
 				if (pl.ContainsKey("seeds"))
 					ApplySeeds(pl["seeds"].AsGodotDictionary());
 				// Gestes débloqués (palette ④, 0.5.23) : liste des verbes OUVERTS
@@ -472,6 +475,9 @@ namespace Symbiose
 				// ApplyGestesDebloques(null) retombe sur « tout dispo » (tous les
 				// Verbs de Gestes[]). `debloques_recents` = verbes ouverts au dernier
 				// tick (voie savoir) → notification diégétique, consommé à la lecture.
+				// Natures de mulch en stock (0.6.13) → rangée de réglages de `pailler`.
+				ApplyPaillisDispo(pl.ContainsKey("paillis_dispo")
+					? pl["paillis_dispo"].AsGodotArray() : null);
 				// Rangement du tiroir (0.6.12) : lu AVANT les gestes ouverts, pour
 				// que le tiroir se compose d'emblée par familles. Absent → une rangée.
 				ApplyFamilles(pl.ContainsKey("familles")

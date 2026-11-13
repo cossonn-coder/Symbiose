@@ -25,7 +25,7 @@ Trouver un geste, savoir qu'il existe, voir ses réglages. Pure vue C#.
 | # | Kickoff | État |
 |---|---|---|
 | ① | `01_tiroir_familles.md` — panneau tiroir, sélection directe, mise en case | **CLOS** 2026-11-13 |
-| ② | `02_reglages_contextuels.md` — graines, substrats, paillis visibles et cliquables | à faire |
+| ② | `02_reglages_contextuels.md` — graines, substrats, paillis visibles et cliquables | **CLOS** 2026-11-13 (pont **0.6.13**) |
 | ③ | `03_pressentis_molette_finitions.md` — silhouettes, Ctrl+molette, D118 (b)(c), macros, banc, clôture | à faire |
 
 ## Interdits communs
@@ -51,6 +51,26 @@ Trouver un geste, savoir qu'il existe, voir ses réglages. Pure vue C#.
   Vérifié à l'image : tiroir ouvert (5 rangées sur ce banc), puis `glaner` choisi →
   tiroir fermé, bouton porteur. **Non vérifiable sur la VM (pas d'entrée souris/clavier
   au banc) : touche Q, Échap, clic ailleurs, menu clic droit → à voir au F5.**
+- **② (2026-11-13)** — `world/WorldView.Reglages.cs` (rangée de pastilles à droite de
+  la barre, à hauteur du geste actif ; lit/écrit `_seedIndex`/`_substratIndex`/
+  `_natureIndex`, mêmes `params` au pont) + `world/ReglagePastille.cs` (disque =
+  graine, carré = substrat, brins = paillis, cadre = banque vide). Touches S, B, N
+  retirées (`Cycle*` conservés, plus liés à rien) ; le HUD ne montre plus le nombre
+  de graines. La rangée s'efface quand le tiroir est ouvert.
+- **⚠️ Prémisse fausse du kickoff ②, écart au cadre « pure vue C# »** : le stock de
+  mulch par nature n'était PAS au snapshot (le bloc `paillage` est la profondeur au
+  sol par tuile) ; et les teintes d'espèce côté vue sont rangées par nom de classe
+  (`Basil`), la banque par clé (`basilic`). → **pont 0.6.13**, deux clés de LECTURE
+  PURE dans `player` (`tools/simserver/serialize.py`) : `paillis_dispo` (noms des
+  natures dont le stock couvre un geste, aucune quantité) et `graines_espece`
+  (clé → nom d'espèce). Aucun fichier de `sim/`, `fields/`, `plants/`, `world/`
+  touché ; golden `b4a921f8…` identique ; `test_sim_server` 349/349 (4 attentes de
+  version passées à 0.6.13). **Décision prise sans Nico — à valider ou à défaire**
+  (défaire = retirer les 2 clés : plus d'estompage, graines d'une seule teinte).
+- Vérifié à l'image : `planter` (5 graines, 1re encadrée), `pailler` (4 natures
+  estompées : stock vide sur ce banc, cadre du choix visible), `poser_pot` (5 substrats).
+  **Non vérifiable sur la VM : le clic sur une pastille → F5.** Les pastilles de
+  graines se ressemblent (disques verts) : placeholders, icônes au sprint ③ suivant.
 - Constat pour ③ : dans le tiroir, `recolter`/`manger` et `pincer`/`arracher` ont le
   même pictogramme (icônes par famille de cible) — sujet du sprint `icones_curseur`.
 

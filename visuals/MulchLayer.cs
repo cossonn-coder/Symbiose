@@ -41,6 +41,10 @@ namespace Symbiose
 			["feuilles"]  = new Color("8a5a2e"),
 		};
 		private static readonly Color NatureInconnue = new Color("9a9060");
+		/// <summary>Teinte d'une nature de mulch — source unique, relue par la rangée
+		/// de réglages de la palette (world/ReglagePastille.cs).</summary>
+		internal static Color CouleurNature(string nature)
+			=> NatureColor.TryGetValue(nature, out var col) ? col : NatureInconnue;
 
 		// LOD : invisible en vue d'ensemble (le mulch est un détail de sol qu'on lit
 		// en s'approchant), MÊME palier que la litière (2×) — la couverture de sol est

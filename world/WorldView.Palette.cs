@@ -169,6 +169,7 @@ namespace Symbiose
 				_paletteBox.AddChild(icon);
 			}
 			ReposerBoutonTiroir();   // tout en bas, après les cases (WorldView.Tiroir.cs)
+			SynchroniserReglages();  // la rangée suit la case du geste actif (WorldView.Reglages.cs)
 		}
 
 		// -------------------------------------------------------------------
@@ -207,6 +208,7 @@ namespace Symbiose
 					_slotIcons[s].Actif = (_slots[s] == _gesteIndex);
 			// Geste actif sans case → le bouton du tiroir le porte (WorldView.Tiroir.cs).
 			SynchroniserTiroir();
+			SynchroniserReglages();  // rangée de réglages du geste actif (WorldView.Reglages.cs)
 		}
 
 		// -------------------------------------------------------------------

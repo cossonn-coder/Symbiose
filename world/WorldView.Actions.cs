@@ -251,6 +251,9 @@ namespace Symbiose
 		// il parcourt les SLOTS occupés, pas Gestes[] brut, depuis le modèle de
 		// palette gérable T1.)
 
+		// NB (PALETTE & TIROIR ②) : les trois `Cycle*` ci-dessous ne sont plus liés à
+		// une touche — le choix se fait en cliquant la rangée de réglages
+		// (WorldView.Reglages.cs). Code conservé (règle : on ne jette rien).
 		// Espèce courante pour `planter` (touche S). Cycle sur les lots non vides
 		// du snapshot ; rien à faire si la banque est vide.
 		private void CycleSeed()
@@ -293,6 +296,7 @@ namespace Symbiose
 				_seeds.Add((k.AsString(), seeds[k].AsInt32()));
 			_seeds.Sort((a, b) => string.CompareOrdinal(a.Key, b.Key));
 			if (_seedIndex >= _seeds.Count) _seedIndex = 0;
+			SynchroniserReglages();   // la rangée de graines suit la banque (WorldView.Reglages.cs)
 		}
 	}
 }
