@@ -277,6 +277,7 @@ namespace Symbiose
 				AddChild(calque);
 				calque.AddChild(new PlancheIcones());
 			}
+			if (CaptureSouris != null) PoserTemoinCurseur();   // curseur visible au banc (ICÔNES & CURSEUR ③)
 			if (CapturePalier3) DebugMaitrise("palier3");   // info-bulle apprise (⑦)
 			if (CaptureTechnique) ToggleInfoTechnique();    // info-bulle technique (⑦)
 			if (CaptureMaison) ToggleHouseGhost();          // maison + lisière (D112 ②)

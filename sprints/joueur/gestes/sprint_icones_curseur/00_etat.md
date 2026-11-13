@@ -28,7 +28,7 @@ en main, et l'animer quand le geste s'exécute. Pure vue C#. Reprend D118 (d) et
 |---|---|---|
 | ① | `01_moteur_icones_planche.md` — format de grille, cuisson, planche de contrôle, `GesteIcon` branché | **CLOS côté code 2026-11-13** (build vert, golden intact, planche regardée) |
 | ② | `02_les_icones.md` — les 45 icônes, par familles, vérifiées à la planche | **CLOS côté code 2026-11-13** (45/45, build vert, golden intact, planche regardée) |
-| ③ | `03_curseur_geste.md` — curseur à l'icône du geste, point chaud, silhouettes | à faire |
+| ③ | `03_curseur_geste.md` — curseur à l'icône du geste, point chaud, silhouettes | **CLOS côté code 2026-11-13** (build vert, golden intact, captures regardées, F5 attendu) |
 | ④ | `04_animations_execution.md` — animations d'exécution et de refus, clôture | à faire |
 
 ## Interdits communs
@@ -98,6 +98,40 @@ en main, et l'animer quand le geste s'exécute. Pure vue C#. Reprend D118 (d) et
   non versionné) a servi d'itération rapide avant la planche Godot.
 - **② — `WorldView.Palette.cs`** passe à 210 LDC (vigilance OK).
 
+- **③ — mécanisme** (`world/WorldView.Curseur.cs`, 132 LDC) : DEUX formes de curseur système.
+  `Arrow` garde la main gantée ; `Cross` (`FormeGeste`) porte l'icône du geste armé (cache
+  `IconeGeste.Texture(verbe, 2)`, point chaud = `(X+½, Y+½)×2` depuis `IconesPointsChauds`).
+  `Input.SetDefaultCursorShape(Cross)` quand un geste est armé, `Arrow` sinon. Sur un Control
+  qui capte la souris (barre, tiroir, panneaux), Godot montre la forme du Control (Arrow) →
+  **la main revient seule sur l'interface, sans test de survol**. Le conteneur du monde est
+  `mouse_filter = Ignore` : il ne gêne pas.
+- **③ — écart au kickoff (mieux que prévu)** : le geste actif n'est pas suivi par un crochet
+  dans `SelectGeste` mais par une comparaison du verbe chaque image dans `UpdateCurseur`
+  (`SuivreGesteCurseur`) ; la texture n'est reposée qu'au changement. Raison : `_gesteIndex`
+  est écrit par 4 chemins (`SelectGeste`, `DrainMacro`, 2 bancs) — un seul point de suivi les
+  couvre tous.
+- **③ — tap** : `TapCurseur` ne fait rien quand une icône de geste est en main (image fixe ;
+  l'animation viendra au ④). Sans geste, tap 150 ms inchangé.
+- **③ — `LibererCurseur`** : vide aussi la forme `Cross` et remet la forme par défaut à Arrow
+  avant `IconeGeste.Liberer()` (la texture du curseur vient du même cache).
+- **③ — capture** : le curseur système n'apparaît PAS dans le Movie Maker. Témoin ajouté :
+  `world/WorldView.CurseurTemoin.cs` (25 LDC), un `Sprite2D` dans un calque 120, créé
+  seulement si `-s X,Y` est donné (1 ligne dans `WorldView.Capture.cs`). Il imite la règle :
+  main si `GuiGetHoveredControl() != null`, sinon icône du geste. **Il prouve la logique C#,
+  pas le rendu de l'OS** : le changement Cross/Arrow réel n'est vérifiable qu'au F5.
+- **③ — captures** (×4, souris au centre ; puis souris sur la barre) : `planche/curseur_03_*.png`
+  — panier (`recolter`), plantule déracinée (`deraciner`), botte (`ecraser`), et main + info-bulle
+  sur la barre avec `deraciner` armé. Les trois icônes se lisent à ×2 sur le monde.
+- **③ — à valider au F5** : (a) l'icône apparaît dès qu'on arme un geste, la main sans geste ;
+  (b) la main revient sur la barre, le tiroir, les panneaux (et l'icône au retour sur le jardin) ;
+  (c) le point chaud tombe où on vise (plante/plot choisi = sous le pixel actif) ; (d) sous
+  Windows, `Cross` personnalisé n'est pas remplacé par la croix système ; (e) taille ×2 lisible
+  sur l'écran de Nico (échelle d'écran Windows : le curseur OS n'est pas agrandi par Godot).
+
 ## §REPRISE
 Lire `CLAUDE.md`, ce fichier, le doc de conception §5, puis le premier kickoff « à faire ».
-**Prochain : ③ `03_curseur_geste.md`** (points chauds dans `IconesPointsChauds.cs`). ② n'est pas committé par le sous-agent (l'orchestrateur commit).
+**Prochain : ④ `04_animations_execution.md`**. Le curseur de geste vit sur la forme `Cross`
+(`FormeGeste`, `WorldView.Curseur.cs`) ; l'animation remplacera l'image fixe posée par
+`SuivreGesteCurseur` (et le `return` de `TapCurseur` quand `_curseurIcone`). Témoin capture :
+`WorldView.CurseurTemoin.cs` (à faire suivre l'image animée). ③ n'est pas committé par le
+sous-agent (l'orchestrateur commit).
