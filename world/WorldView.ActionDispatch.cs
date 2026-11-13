@@ -39,6 +39,12 @@ namespace Symbiose
 					// débordantes comprises) ; sans branche sous le curseur,
 					// repli sur le collet à 30 cm = comportement t4 inchangé.
 					int segIdx = -1;
+					// Récolter vise le FRUIT mûr dessiné (GESTES LISIBLES ④, WorldView.Recolte.cs).
+					if (verb == "recolter")
+					{
+						if (!CibleRecolte(canvasPos, w, out node, out target)) return;
+						break;
+					}
 					// Manger un CHAMPIGNON (⑧) : un carpophore tout près du clic passe
 					// avant la plante (WorldView.Champignon.cs).
 					if (verb == "manger" && CibleCarpophore(w, CarpoPrioriteCm, out target)) break;
@@ -99,7 +105,7 @@ namespace Symbiose
 						// son défaut (puceron). On teste l'ancre des points MacroLife
 						// dans un rayon large couvrant leur errance.
 						target = new GDict { ["tile"] = xTile, ["r"] = xr, ["c"] = xc };
-						string espece = _macroLife?.SpeciesNear(w, MacroPickRadiusCm);
+						string espece = _macroLife?.SpeciesNear(w, MacroPickRadiusCm, _volants);   // un volant n'est pas une cible (④)
 						if (espece != null) target["espece"] = espece;
 					}
 					else
@@ -141,6 +147,12 @@ namespace Symbiose
 					// (il le résout lui-même en plot via _plot_at) — PAS un (r,c).
 					// On trouve la tuile sous le clic, puis on convertit le point
 					// MONDE en coordonnées locales (point − origine de la tuile).
+					// `planter` sur un POT y sème la graine choisie (④, WorldView.DeuxTemps.cs).
+					if (verb == "planter" && CiblePotPourPlanter(w, prms, out target))
+					{
+						verb = "planter_conteneur";
+						break;
+					}
 					if (!FindPlot(w, out string mTile, out _, out _))
 					{
 						_lastActionMsg = $"{nom} : aucune tuile ici (chemin/maison)";
@@ -247,45 +259,8 @@ namespace Symbiose
 					}
 					break;
 
-				case 'E':   // ÉPANDRE à 2 temps (mycélium ⑥, §3.2) : 1er clic =
-					// SAISIR le bac/pile source (mémorise tuile + index) ; 2e clic =
-					// le PLOT cible OÙ restituer le compost mûr. Le moteur écrit le
-					// trio humus au plot (r,c) de la tuile DU BAC — donc la cible doit
-					// être sur la MÊME tuile que la source (le serveur résout un seul
-					// `eco`). On le vérifie côté vue pour un message clair. Patron
-					// exact du `deplacer_pot` 2 temps. params.q omis ⇒ tout le mûr.
-					if (_grabbedBac < 0)
-					{
-						int near = FindNearestStructureWorld(w, ContainerPickRadiusCm,
-							out string bTile, out int br, out int bc);
-						if (near < 0)
-						{
-							_lastActionMsg = "épandre : aucun tas ici (cliquez un bac ou une pile)";
-							UpdateActionHud(); FlashActionLabel();
-							return;
-						}
-						_grabbedBac = near;
-						_grabbedBacTile = bTile;
-						_lastActionMsg = $"tas #{near} saisi — cliquez le plot à amender";
-						UpdateActionHud();
-						return;   // on attend le 2e clic, aucune action envoyée
-					}
-					// 2e clic : destination = plot cliqué, exigé sur la tuile du bac.
-					if (!FindPlot(w, out string eTile, out int er, out int ec))
-					{
-						_lastActionMsg = "épandre : aucune tuile ici (chemin/maison)";
-						UpdateActionHud(); FlashActionLabel();
-						return;
-					}
-					if (eTile != _grabbedBacTile)
-					{
-						_lastActionMsg = "épandre : la cible doit être sur la tuile du tas saisi";
-						UpdateActionHud(); FlashActionLabel();
-						return;
-					}
-					target = new GDict { ["tile"] = eTile, ["structure"] = _grabbedBac,
-										 ["r"] = er, ["c"] = ec };
-					_grabbedBac = -1;   // saisie consommée
+				case 'E':   // ÉPANDRE à 2 temps : le tas, puis le plot (WorldView.DeuxTemps.cs).
+					if (!ResoudreEpandre(w, out target)) return;
 					break;
 
 				case 'P':   // POSER un conteneur (pot/bac ⑥b) au point MONDE du clic.
@@ -313,34 +288,10 @@ namespace Symbiose
 					break;
 
 				case 'C':   // CONTENEUR existant désigné par INDEX (déplacer/planter).
+					// Déplacer = 2 temps : le pot, puis sa place (WorldView.DeuxTemps.cs).
 					if (verb == "deplacer_pot")
 					{
-						// Geste à 2 temps (décision Nico : outil+clic, pas de drag).
-						// 1er clic = SAISIR le pot le plus proche ; 2e clic = le POSER
-						// au point MONDE cliqué. Le refus « immobile » (bac) est rendu
-						// par le serveur — on relaie son message.
-						if (_grabbedContainer < 0)
-						{
-							int near = FindNearestContainer(w, ContainerPickRadiusCm);
-							if (near < 0)
-							{
-								_lastActionMsg = "déplacer : aucun conteneur ici (cliquez un pot)";
-								UpdateActionHud(); FlashActionLabel();
-								return;
-							}
-							_grabbedContainer = near;
-							_lastActionMsg = $"pot #{near} saisi — cliquez la destination";
-							UpdateActionHud();
-							return;   // on attend le 2e clic, aucune action envoyée
-						}
-						// 2e clic : destination = point MONDE du clic.
-						target = new GDict
-						{
-							["container"] = _grabbedContainer,
-							["x_cm"] = w.X,
-							["y_cm"] = w.Y,
-						};
-						_grabbedContainer = -1;   // saisie consommée
+						if (!ResoudreDeplacerPot(w, out target)) return;
 						break;
 					}
 					// planter_conteneur : 1 clic = désigner le conteneur + graine du
@@ -395,90 +346,12 @@ namespace Symbiose
 					};
 					break;
 
-				case 'b':   // BOUTURER à 2 temps (②) : 1er clic = plante-mère (position
-					// continue), 2e clic = PLOT cible {r,c} de la MÊME tuile. Le serveur
-					// route la mère par target.x_cm/y_cm et la cible par params.r/c.
-					if (_grabbedMother == null)
-					{
-						node = FindPlant(w, PickRadiusCm);
-						if (node == null)
-						{
-							_lastActionMsg = "bouturer : aucune plante-mère à portée du clic";
-							UpdateActionHud(); FlashActionLabel();
-							return;
-						}
-						_grabbedMother = node;
-						_lastActionMsg = "mère saisie — cliquez le plot où enraciner la bouture";
-						UpdateActionHud();
-						return;   // on attend le 2e clic, aucune action envoyée
-					}
-					// 2e clic : plot cible, exigé sur la MÊME tuile que la mère (le
-					// moteur enracine le clone dans l'eco de la tuile de la mère).
-					if (!FindPlot(w, out string cutTile, out int cutR, out int cutC))
-					{
-						_lastActionMsg = "bouturer : aucune tuile ici (chemin/maison)";
-						UpdateActionHud(); FlashActionLabel();
-						return;
-					}
-					if (cutTile != _grabbedMother.GetMeta("tile").AsString())
-					{
-						_lastActionMsg = "bouturer : le plot doit être sur la tuile de la mère";
-						UpdateActionHud(); FlashActionLabel();
-						return;
-					}
-					target = new GDict
-					{
-						["tile"] = _grabbedMother.GetMeta("tile"),
-						["x_cm"] = _grabbedMother.GetMeta("lx"),
-						["y_cm"] = _grabbedMother.GetMeta("ly"),
-					};
-					prms["r"] = cutR;
-					prms["c"] = cutC;
-					node = _grabbedMother;
-					_grabbedMother = null;   // saisie consommée
+				case 'b':   // BOUTURER à 2 temps : la mère, puis le plot (WorldView.DeuxTemps.cs).
+					if (!ResoudreBouture(w, prms, out target, out node)) return;
 					break;
 
-				case 'g':   // GREFFER à 2 temps (③) : 1er clic = GREFFON (mémorisé en
-					// params.scion_x_cm/y_cm), 2e clic = PORTE-GREFFE (cible primaire
-					// target.x_cm/y_cm). Même tuile : le serveur résout un seul `eco`.
-					if (_grabbedScion == null)
-					{
-						node = FindPlant(w, PickRadiusCm);
-						if (node == null)
-						{
-							_lastActionMsg = "greffer : aucun greffon à portée du clic";
-							UpdateActionHud(); FlashActionLabel();
-							return;
-						}
-						_grabbedScion = node;
-						_grabbedScionTile = node.GetMeta("tile").AsString();
-						_lastActionMsg = "greffon saisi — cliquez le porte-greffe (même tuile)";
-						UpdateActionHud();
-						return;   // on attend le 2e clic, aucune action envoyée
-					}
-					// 2e clic : porte-greffe = plante sous le curseur, même tuile.
-					node = FindPlant(w, PickRadiusCm);
-					if (node == null)
-					{
-						_lastActionMsg = "greffer : aucun porte-greffe à portée du clic";
-						UpdateActionHud(); FlashActionLabel();
-						return;
-					}
-					if (node.GetMeta("tile").AsString() != _grabbedScionTile)
-					{
-						_lastActionMsg = "greffer : porte-greffe et greffon doivent être sur la même tuile";
-						UpdateActionHud(); FlashActionLabel();
-						return;
-					}
-					target = new GDict
-					{
-						["tile"] = node.GetMeta("tile"),
-						["x_cm"] = node.GetMeta("lx"),
-						["y_cm"] = node.GetMeta("ly"),
-					};
-					prms["scion_x_cm"] = _grabbedScion.GetMeta("lx");
-					prms["scion_y_cm"] = _grabbedScion.GetMeta("ly");
-					_grabbedScion = null;   // saisie consommée
+				case 'g':   // GREFFER à 2 temps : le greffon, puis le porte-greffe (DeuxTemps).
+					if (!ResoudreGreffe(w, prms, out target, out node)) return;
 					break;
 
 				// '-' : grelinette, pas de cible.

@@ -27,6 +27,8 @@ namespace Symbiose
 			if (!ReferenceEquals(_solCanvasOrigins, _origins)) MonterSolCanvas();
 			_tracesSol.Set(snap.ContainsKey("traces_sol") ? snap["traces_sol"].AsGodotDictionary() : null,
 				snap.ContainsKey("sol_sec") ? snap["sol_sec"].AsGodotDictionary() : null, _origins);
+			LireVolants(snap);       // ④ : un volant n'est pas une cible d'écraser
+			ApplyHabitats(snap);     // ④ : l'habitat d'auxiliaires posé se voit (0.6.15)
 		}
 
 		// (Re)crée les deux couches pour le monde courant. ZIndex 1 = bande du sol, et

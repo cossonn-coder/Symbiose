@@ -149,7 +149,7 @@ namespace Symbiose
 		private int _natureIndex;
 		private int _gesteIndex = -1;              // aucun geste sélectionné
 		// Graines plantables du snapshot (player.seeds, lots non vides), triées
-		// par clé pour un ordre de cycle STABLE ; l'espèce courante (S cycle) sert
+		// par nom affiché pour un ordre de cycle STABLE ; l'espèce courante (S cycle) sert
 		// de params.species à `planter`. Le serveur reste juge (catalogue + banque).
 		private readonly List<(string Key, int Count)> _seeds = new();
 		private int _seedIndex;
@@ -294,7 +294,7 @@ namespace Symbiose
 			_seeds.Clear();
 			foreach (var k in seeds.Keys)
 				_seeds.Add((k.AsString(), seeds[k].AsInt32()));
-			_seeds.Sort((a, b) => string.CompareOrdinal(a.Key, b.Key));
+			_seeds.Sort((a, b) => OrdreGraines(a.Key, b.Key));   // alphabétique affiché (Reglages, ④)
 			if (_seedIndex >= _seeds.Count) _seedIndex = 0;
 			SynchroniserReglages();   // la rangée de graines suit la banque (WorldView.Reglages.cs)
 		}

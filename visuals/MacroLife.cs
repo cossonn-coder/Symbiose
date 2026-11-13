@@ -160,22 +160,24 @@ namespace Symbiose
 		}
 
 		/// <summary>Espèce de la bête VIVANTE la plus proche du point MONDE (cm),
-		/// dans `rayonCm`, ou null. Sert l'écrasement ciblé (target.espece).</summary>
-		public string SpeciesNear(Vector2 wMonde, float rayonCm)
-			=> Near(wMonde, rayonCm)?.Cle;
+		/// dans `rayonCm`, ou null. Sert l'écrasement ciblé (target.espece) : les espèces
+		/// `exclues` (les volants, GESTES LISIBLES ④) ne sont pas des cibles.</summary>
+		public string SpeciesNear(Vector2 wMonde, float rayonCm, ICollection<string> exclues = null)
+			=> Near(wMonde, rayonCm, exclues)?.Cle;
 
 		/// <summary>La bête VIVANTE la plus proche (cf. MacroPick) : espèce, nombre
 		/// de ses congénères vivants dans le même plot, `activite`. Sert
 		/// l'observation et l'info-bulle : on désigne ce qu'on VOIT sous le curseur.
 		/// Appelé au changement de survol seulement (clé `_survolSale`) : le 2ᵉ
 		/// passage (compte du plot) est sur quelques centaines de bêtes.</summary>
-		public MacroPick? Near(Vector2 wMonde, float rayonCm)
+		public MacroPick? Near(Vector2 wMonde, float rayonCm, ICollection<string> exclues = null)
 		{
 			float bestD = rayonCm * rayonCm;
 			Entry best = null;
 			foreach (var e in _entries.Values)
 			{
 				if (e.DyingAt >= 0f) continue;   // en train de disparaître
+				if (exclues != null && exclues.Contains(e.Guild)) continue;
 				float dx = e.Wx - wMonde.X, dy = e.Wy - wMonde.Y;
 				float d = dx * dx + dy * dy;
 				if (d < bestD) { bestD = d; best = e; }

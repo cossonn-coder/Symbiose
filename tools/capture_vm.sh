@@ -59,6 +59,9 @@
 #         journal `[PlancheIcones]`) — ICÔNES & CURSEUR ①
 #     -W  planche des animations du curseur-geste (repos + images, ×4 et ×2, point chaud marqué
 #         en rouge ; ordre au journal `[PlancheAnimations]`) — ICÔNES & CURSEUR ④
+#     -E  VERBE[@X,Y] : arme VERBE à 4 s et 1er clic au point MONDE X,Y (cm) ; la souris revient
+#         sur -s (objet en main). `-E recolter` : clics fruit mûr / collet / fruit vert, journal
+#         `[ObjetEnMain]` — GESTES LISIBLES ④ (banc objet_en_main)
 #     -n  nombre d'images              (défaut 3)
 #     -f  images/s simulées            (défaut 10 → 3 images = 0,3 s de jeu)
 #   Sortie : DOSSIER/frame00000000.png, frame00000001.png, … (1920×1080).
@@ -119,13 +122,14 @@ while [ $# -gt 0 ]; do
     -A) ACCES="$2"; shift 2 ;;
     -Q) TIROIR="$2"; shift 2 ;;
     -M) CLICMUR=1; shift ;;
+    -E) OBJET="$2"; shift 2 ;;
     -I) ICONES=1; shift ;;
     -W) ICONES=2; shift ;;
     -D) DECORF10="$2"; shift 2 ;;
     -B) DECORBANC=1; shift ;;
     -P) PAL3=1; shift ;;
     -t) TECH=1; shift ;;
-    -h|--help) sed -n '2,67p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,70p' "$0"; exit 0 ;;
     *) echo "option inconnue : $1" >&2; exit 2 ;;
   esac
 done
@@ -176,6 +180,7 @@ ARGS=(--capture-banc="$BANC")
 [ -n "$TIROIR" ] && ARGS+=(--capture-tiroir="$TIROIR")
 [ -n "$CLICMUR" ] && ARGS+=(--capture-clicmur=1)
 [ -n "${ICONES:-}" ] && ARGS+=(--capture-icones="$ICONES")
+[ -n "${OBJET:-}" ] && ARGS+=(--capture-objet="$OBJET")
 DISPLAY="$ECRAN" LIBGL_ALWAYS_SOFTWARE=1 "$GODOT" --path "$DEPOT" \
   --rendering-driver opengl3 --resolution 1920x1080 \
   --write-movie "$SORTIE/frame.png" --fixed-fps "$FPS" --quit-after "$FRAMES" \

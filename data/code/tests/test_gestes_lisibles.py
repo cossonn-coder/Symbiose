@@ -10,7 +10,7 @@ Suites :
   B. RÈGLES   — `ecraser` sur un volant refusé sans dépense ; déraciné couché ;
                 pot hors du jardin refusé sans dépense ;
   C. MOTS     — les phrases des gestes appliqués ne portent aucun chiffre ;
-  D. EXPORT   — `sol_sec` et `volants` au snapshot.
+  D. EXPORT   — `sol_sec`, `volants` et `habitats_auxiliaires` (④) au snapshot.
 
 Usage (depuis data/code/) :
   python3 -m tests.test_gestes_lisibles
@@ -206,6 +206,14 @@ def test_export():
     check("volants : abeille, merle, libellule ; pas le puceron ni le lombric",
           {"abeille", "merle", "libellule"} <= set(snap["volants"])
           and not {"puceron", "lombric"} & set(snap["volants"]), snap["volants"])
+    hab = snap["habitats_auxiliaires"]
+    check("habitats : une entrée par tuile", set(hab) == {x.tile_id for x in gs["tiles"]})
+    avant = len(hab[t.tile_id])
+    r = _act(srv, "favoriser_auxiliaire", {"tile": t.tile_id})
+    apres = srv._snapshot()["habitats_auxiliaires"][t.tile_id]
+    check("favoriser_auxiliaire → une tige porte une rondelle de plus",
+          r["result"]["applied"] and sum(n for _, n in apres) == sum(
+              n for _, n in hab[t.tile_id]) + 1 and len(apres) >= avant, apres)
 
 
 def main():

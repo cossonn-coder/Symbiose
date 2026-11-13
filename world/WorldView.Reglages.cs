@@ -30,6 +30,11 @@ namespace Symbiose
 		// pont 0.6.13). null = clé absente (ancien serveur) → on n'estompe rien.
 		private HashSet<string> _paillisDispo;
 		private readonly Dictionary<string, string> _grainesEspece = new();
+		// CATALOGUE DES GRAINES (GESTES LISIBLES ④) : ouvert à l'armement de `planter`, il
+		// montre toute la banque ; il se REFERME au choix d'une graine et ne garde que la
+		// graine choisie (un clic dessus le rouvre).
+		private bool _catalogueOuvert;
+		private Reglage _reglagePrecedent = Reglage.Aucun;
 
 		// Teintes des substrats posables (fond, grain) — même ordre que `Substrats`.
 		// Placeholders lisibles : sombre = organique, clair = minéral ou mycélien.
@@ -88,6 +93,8 @@ namespace Symbiose
 		{
 			if (_paletteLayer == null) return;
 			var reglage = ReglageDuGesteActif();
+			if (reglage == Reglage.Graine && _reglagePrecedent != Reglage.Graine) _catalogueOuvert = true;
+			_reglagePrecedent = reglage;
 			// Tiroir ouvert : il occupe la même place à droite de la barre → la
 			// rangée s'efface le temps qu'on choisisse un geste.
 			if (reglage == Reglage.Aucun || TiroirOuvert)
@@ -109,7 +116,7 @@ namespace Symbiose
 			}
 			int courant = reglage switch
 			{
-				Reglage.Graine => _seedIndex,
+				Reglage.Graine => _catalogueOuvert ? _seedIndex : 0,   // fermé : la seule pastille
 				Reglage.Substrat => _substratIndex,
 				_ => _natureIndex,
 			};
@@ -128,7 +135,7 @@ namespace Symbiose
 				case Reglage.Graine:
 					var cles = new List<string>(_seeds.Count);
 					foreach (var (cle, _) in _seeds) cles.Add(cle);
-					return "g:" + string.Join(",", cles);
+					return (_catalogueOuvert ? "g+:" : $"g-{_seedIndex}:") + string.Join(",", cles);
 				case Reglage.Paillis:
 					return "p:" + (_paillisDispo == null ? "*" : string.Join(",", Sorted(_paillisDispo)));
 				default:
@@ -156,13 +163,17 @@ namespace Symbiose
 						vide.Estompe = true;
 						break;
 					}
-					for (int i = 0; i < _seeds.Count; i++)
+					// Fermé : la graine choisie seule, un clic rouvre le catalogue. Ouvert :
+					// toute la banque (déjà triée, ApplySeeds), un clic choisit et referme.
+					for (int i = _catalogueOuvert ? 0 : _seedIndex; i < _seeds.Count; i++)
 					{
 						int idx = i;                         // capture par valeur
 						var (feuille, _, fruit) = PlantRenderer.TeintesEspece(
 							_grainesEspece.TryGetValue(_seeds[i].Key, out var nom) ? nom : null);
-						AjouterPastille(ReglagePastille.Forme.Graine, _seeds[i].Key, feuille, fruit,
-										() => { _seedIndex = idx; });
+						AjouterPastille(ReglagePastille.Forme.Graine, NomGraine(_seeds[i].Key), feuille, fruit,
+										_catalogueOuvert ? () => { _seedIndex = idx; _catalogueOuvert = false; }
+														 : () => { _catalogueOuvert = true; });
+						if (!_catalogueOuvert) break;
 					}
 					break;
 				case Reglage.Substrat:
@@ -205,6 +216,24 @@ namespace Symbiose
 			_reglagesPastilles.Add(p);
 			_reglagesBox.AddChild(p);
 			return p;
+		}
+
+		// Nom AFFICHÉ d'une graine (info-bulle) : la clé de catalogue, sans soulignés.
+		private static string NomGraine(string cle) => cle.Replace('_', ' ');
+
+		// Ordre du catalogue : alphabétique sur le nom affiché, accents ignorés (« épinard »
+		// entre « endive » et « fenouil », pas après « z » comme en ordre ordinal).
+		private static int OrdreGraines(string a, string b) =>
+			string.CompareOrdinal(CleTri(NomGraine(a)), CleTri(NomGraine(b)));
+
+		private static string CleTri(string nom)
+		{
+			var sb = new System.Text.StringBuilder(nom.Length);
+			foreach (char ch in nom.Normalize(System.Text.NormalizationForm.FormD))
+				if (System.Globalization.CharUnicodeInfo.GetUnicodeCategory(ch)
+					!= System.Globalization.UnicodeCategory.NonSpacingMark)
+					sb.Append(char.ToLowerInvariant(ch));
+			return sb.ToString();
 		}
 
 		// À droite de la barre, à hauteur du geste actif : sa case s'il en a une,

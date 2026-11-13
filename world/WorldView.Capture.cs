@@ -298,6 +298,7 @@ namespace Symbiose
 			LancerBancVivant();       // captures info-bulle bête / carpophore (WorldView.BancVivant.cs)
 			LancerBancCleStable();    // couper une branche ne déplace aucune feuille (WorldView.BancCleStable.cs)
 			LancerBancAccesGestes();  // acheter un outil, relever la palette (WorldView.BancAccesGestes.cs)
+			LancerBancObjetEnMain();  // objet en main, récolte au fruit (WorldView.BancObjetEnMain.cs)
 			LancerBancClicMur();      // D118 (c) : le bois devant la maison est-il vu par le clic ? (WorldView.BancClicMur.cs)
 			if (!float.IsNaN(CaptureDecorF10))   // F10 ×2 programmé (FLUIDITÉ PC ②)
 				GetTree().CreateTimer(CaptureDecorF10).Timeout += () =>

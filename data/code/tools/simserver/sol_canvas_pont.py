@@ -11,7 +11,10 @@ Trois responsabilités de pont, toutes HORS tick (golden neutre) :
     signatures des gestes restent intactes ;
   - `sol_sec_par_tuile` : liste CREUSE des plots secs (craquelé, §3.2), lecture pure ;
   - `volants` : les espèces de faune qui volent (`TrophicSpec.vole`), pour que la vue
-    ne propose pas un sprite volant comme cible d'`ecraser` (tronçon ④).
+    ne propose pas un sprite volant comme cible d'`ecraser` (tronçon ④) ;
+  - `habitats_auxiliaires` : les rondelles `auxiliaire` portées par les tiges de
+    chaque tuile (`favoriser_auxiliaire`, pile de bois), pour que la vue DESSINE
+    l'habitat posé (tronçon ④, 0.6.15) au lieu d'un geste sans trace visible.
 """
 from __future__ import annotations
 
@@ -75,3 +78,13 @@ def volants(gs: dict) -> list:
     return sorted({nom for eco in gs["eco"].values()
                    for nom, champ in eco.populations.items()
                    if getattr(champ.spec, "vole", False)})
+
+
+def habitats_auxiliaires(gs: dict) -> dict:
+    """`{tuile: [[slot_id, n], …]}` des tiges qui portent des rondelles `auxiliaire`
+    (n ∈ 1..3), toutes les tuiles, listes vides comprises (patron `sol_sec`). La
+    rondelle est au niveau TUILE (pas de plot) : la vue place la tige d'après son
+    `slot_id`, rang fixe. Lecture pure de `tile.stakes`."""
+    return {tile.tile_id: [[s.slot_id, s.count] for s in tile.stakes
+                           if s.variable == "auxiliaire"]
+            for tile in gs["tiles"]}

@@ -74,7 +74,7 @@ from .version import DEFAULT_REPRO
 # routage des gestes de paysage — un module = « la périphérie au pont ».
 from .peripherie_route import ceinture_block
 # Sol-canvas (GESTES LISIBLES ①, 0.6.14) : traces de gestes, plots secs, faune volante.
-from .sol_canvas_pont import sol_sec_par_tuile, volants
+from .sol_canvas_pont import habitats_auxiliaires, sol_sec_par_tuile, volants
 from sim.traces_sol import traces_par_tuile
 # Vent au pont (JARDIN VIVANT T3, 0.5.44) : masse d'air `weather.wind` + facteur
 # d'abri par plante (lu SEULEMENT si le champ d'abri est déjà calculé). Pur.
@@ -810,7 +810,7 @@ class SerializeMixin:
                 "ombre_pose": ombre_pose_by_tile,
                 "ciel": ciel,
                 "traces_sol": traces_par_tuile(gs), "sol_sec": sol_sec_par_tuile(gs),
-                "volants": volants(gs),
+                "volants": volants(gs), "habitats_auxiliaires": habitats_auxiliaires(gs),
                 "containers": self._containers_snapshot(gs, saison)}
         # OVERDOSE (sol qui respire ⑥) : les phrases de TOUS les êtres, à chaque
         # snapshot, le temps de l'effet. Clé ABSENTE sinon (coût nul hors overdose).

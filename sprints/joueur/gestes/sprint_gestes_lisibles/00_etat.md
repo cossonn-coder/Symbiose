@@ -35,7 +35,7 @@ re-figeage prévu : un rééquilibrage qui le bougerait passe par une constante 
 | ① | `01_moteur_pont.md` — traces, volants, couché, pot, mots, rééquilibrage, pont 0.6.14 | **FAIT** (golden intact) |
 | ② | `02_animations_curseur.md` — images précuites, rotation, icônes inversées | **FAIT** (golden intact, build vert, planche regardée) |
 | ③ | `03_sol_canvas.md` — couche de traces, paillis, cuvette, pile, pluie, craquelé | **FAIT** (golden intact, build vert, captures regardées) |
-| ④ | `04_objet_en_main_ergonomie.md` — objet en main, coccinelle, catalogue, fruit | à faire |
+| ④ | `04_objet_en_main_ergonomie.md` — objet en main, coccinelle, catalogue, fruit | **FAIT** (golden intact, build vert, pont 0.6.15, captures regardées) |
 | ⑤ | `05_automate.md` — actif fenêtre fermée, gestes visibles, mode testeur | à faire (après ②) |
 | ⑥ | `06_banc_recette.md` — banc `gestes_lisibles`, oracle, recette F5, clôture | à faire (après tous) |
 
@@ -150,6 +150,56 @@ PNG de capture avant de conclure un tronçon de vue.
   ×2 ; ombre-ellipse encore large sous le gisant (étalement inchangé) ; l'info-bulle d'un mort dit
   « feuillage ferme » (pré-existant, hors ③).
 
+### ④ objet en main et ergonomie (2026-11-13)
+- **Pont 0.6.15** : clé `habitats_auxiliaires` = `{tuile: [[slot_id, n], …]}` (tiges portant des
+  rondelles `auxiliaire`, toutes tuiles) — `sol_canvas_pont.habitats_auxiliaires`, lecture pure ;
+  `serialize.py` reste à 409 LDC (même ligne). Tests : version 0.6.15 (4 suites pont) + 2 checks
+  dans `test_gestes_lisibles` (36/36) ; `test_sim_server` 349/349.
+- **Deux temps** sortis de `ActionDispatch` (394 → 283 LDC) vers `world/WorldView.DeuxTemps.cs` :
+  phrases sans numéro (« pelletée prise », « pot soulevé », « bouture prélevée », « greffon
+  prélevé ») ; un 2e clic hors cible REFUSE en gardant l'objet ; le pot ne se pose que sur une
+  tuile (comme `poser_pot`). HUD : « pot #N saisi » → « pot soulevé ».
+- **Objet en main** (`world/WorldView.ObjetEnMain.cs`, grilles `visuals/icones/ObjetsEnMain.cs`) :
+  bouture / greffon / pelletée = image ×2 portée en bas à droite de la pointe (calque 110) ; le
+  POT lui-même (et ses plantes) suit la souris au sol. Cibles : `visuals/ZoneCible.cs` éclaire les
+  plots de la tuile source (bouturer, épandre, greffer). Hors cible : silhouette d'une teinte
+  (pot à demi transparent). Échap (en tête de la chaîne) et clic droit reposent l'objet.
+- **Écart** : `composter` est à UN clic (la litière cliquée part au bac le plus proche de la
+  tuile) → aucun temps où l'on « tient » la brassée, pas d'objet en main ; ordre inchangé.
+- **Habitat** : `visuals/HabitatAuxiliaire.cs` + `world/WorldView.Habitats.cs` — une tige rouge
+  pointée de noir, 1 à 3 rondelles (nombre moteur). Placement = CONVENTION vue : `slot_id`
+  0..9 réparti le long du bord nord de la tuile (la rondelle est au niveau tuile, sans plot).
+- **Volants** : `volants` lu (SolCanvas) ; `MacroLife.SpeciesNear/Near` prennent des espèces
+  exclues → sous `ecraser`, un volant n'est pas désigné (le clic retombe sur le plot, défaut
+  serveur). Pas de surlignage propre à `ecraser` à éteindre. `MacroLife.cs` 314 → 315 LDC.
+- **Catalogue** : trié sur le nom affiché (clé sans soulignés, accents ignorés) — il l'était déjà
+  par clé ordinale, sans accent au catalogue actuel ; ouvert à l'armement de `planter` /
+  `planter_conteneur`, il se referme au choix sur la graine choisie (un clic la rouvre).
+- **`planter_conteneur`** était déjà à un clic : la réduction faite = `planter` armé + clic sur un
+  pot (rayon 30 cm) y sème la graine choisie (verbe envoyé `planter_conteneur`). Le geste
+  `planter (pot)` reste en palette (rien jeté).
+- **Récolter** (`world/WorldView.Recolte.cs`, `visuals/PlantRenderer.FruitMur.cs`) : fruit MÛR
+  (maturité moteur ≥ 1) dessiné sous le clic → récolte ; clic sur une plante qui porte des
+  fruits mais pas sur un mûr → refus en mots (« visez un fruit mûr, pas la plante » / « ses
+  fruits ne sont pas encore mûrs »). **Décidé seul, à confirmer au F5** : une plante SANS
+  fruit au snapshot (lavande, salade, trèfle à quatre feuilles) se récolte entière comme avant
+  — sinon le trèfle à quatre feuilles deviendrait incueillable.
+- **Pot hors du jardin** : ① a conclu « côté pont » ; côté vue, le 2e clic exige une tuile.
+- **Banc** `objet_en_main` (`data/code/bancs/objet_en_main.py`) + `-E VERBE[@X,Y]` au banc VM
+  (`world/WorldView.BancObjetEnMain.cs`). Verdicts : récolte fruit mûr → « récolté : Pommier »,
+  collet et fruit vert → refus en mots ; catalogue 6 graines → 1 pastille après choix ; `planter`
+  sur le pot → « … planté dans le pot ». Captures regardées : bouturer (zone éclairée), pot qui
+  suit (posé / grisé hors tuile), épandre, greffer grisé, catalogue, habitat ×2 et ×4.
+  `tools/capture_vm.sh -b objet_en_main -w 0 -z 2 -c 1650,1650 -E bouturer@1475,1475 -s 1000,560 -n 80`.
+- **Points F5** : lisibilité des objets ×2 (pelletée petite et sombre, bouture fine) ; voile de
+  zone discret sur terre claire ; habitat (tige + rondelles) lu comme un hôtel à insectes ?
+  objet en main décalé d'une image (sprite du jeu, pas curseur OS) ; pot porté dessiné sur la
+  pointe ; une graine dont le lot se vide fait glisser le choix sur la suivante (pré-existant,
+  index) ; volants non testés à l'image (aucun volant à portée au banc) ; repli « plante entière »
+  de `recolter`.
+
 ## §REPRISE
-① FAIT et commité (`52d2c02`) ; ② commité (`40110a7`) ; ③ FAIT, non commité (golden `b4a921f8…` intact).
-Prochain : ④ `04_objet_en_main_ergonomie.md` ; ⑤ peut utiliser `AnimationGeste.TexturesMonde(verbe, echelle)`.
+① FAIT et commité (`52d2c02`) ; ② commité (`40110a7`) ; ③ commité (`e005c04`) ; ④ FAIT, non commité
+(golden `b4a921f8…` intact, pont 0.6.15). Prochain : ⑤ `05_automate.md` — peut utiliser
+`AnimationGeste.TexturesMonde(verbe, echelle)` ; l'automate joue par façades (pas de trace, cf. ①)
+et ne passe pas par `TryAction` : les deux temps de la vue ne le concernent pas.

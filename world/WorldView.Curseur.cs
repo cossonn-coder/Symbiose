@@ -126,6 +126,7 @@ namespace Symbiose
 			_curseurIcone = false;
 			ArreterAnimationCurseur();
 			AnimationGeste.Liberer();   // images d'animation (④), hors cache d'IconeGeste
+			LibererObjetEnMain();       // objets en main (GESTES LISIBLES ④)
 			IconeGeste.Liberer();   // textures d'icônes en cache (palette, tiroir, planche,
 			                        // et celle du curseur : c'est le même cache)
 		}
@@ -149,6 +150,7 @@ namespace Symbiose
 			SuivreGesteCurseur();
 			AvancerAnimationCurseur();   // image suivante d'une animation de geste (④)
 			SuivreTemoinCurseur();   // capture VM seulement (WorldView.CurseurTemoin.cs)
+			SuivreObjetEnMain();     // ce qu'on tient entre deux clics (GESTES LISIBLES ④)
 			if (_plotHover == null)
 			{
 				// Enfant DIRECT du SubViewport : survit à RebuildWorld (rotation),

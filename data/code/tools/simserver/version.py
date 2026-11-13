@@ -875,7 +875,11 @@ from __future__ import annotations
 #       chiffre (quantités en mots, `mots.py`) — `cost`/`gain` restent numériques. Glaner
 #       ×2 (stock), miel ×100 à la ruche et ×2 en Vigueur (à l'excès, pour le test).
 #       Golden neutre.
-ENGINE_VERSION = "0.6.14"
+# 0.6.15 (GESTES LISIBLES ④) : clé neuve `habitats_auxiliaires` = {tuile: [[slot_id, n], …]}
+#       (tiges portant des rondelles `auxiliaire`, n ∈ 1..3 ; toutes les tuiles, listes vides
+#       comprises) — la vue dessine l'habitat posé par `favoriser_auxiliaire`. Lecture pure,
+#       golden neutre.
+ENGINE_VERSION = "0.6.15"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

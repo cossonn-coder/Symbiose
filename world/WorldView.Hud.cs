@@ -303,7 +303,7 @@ namespace Symbiose
 				// déplacer : rappelle le geste à 2 temps + l'état de saisie.
 				else if (g.Verb == "deplacer_pot")
 					geste += _grabbedContainer >= 0
-						? $" : pot #{_grabbedContainer} saisi → cliquez la destination"
+						? " : pot soulevé → cliquez où le poser"
 						: " (cliquez un pot, puis sa destination)";
 				// bouturer / greffer : gestes à 2 temps (palette ④), rappel de l'état
 				// de saisie (mère/greffon saisi → cliquez la cible).

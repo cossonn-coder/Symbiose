@@ -31,6 +31,7 @@ from . import peripherie as _peripherie
 from . import nucleation as _nucleation
 from . import acces_gestes as _acces_gestes
 from . import sol_canvas as _sol_canvas
+from . import objet_en_main as _objet_en_main
 
 BANCS = {
     "secheresse_sable": secheresse_sable,
@@ -71,6 +72,8 @@ BANCS = {
     "acces_gestes": _acces_gestes.acces_gestes,
     # gestes lisibles ③ : chaque trace au sol, paillis, cuvette, couché, sec, tas.
     "sol_canvas": _sol_canvas.sol_canvas,
+    # gestes lisibles ④ : objet en main, fruits mûrs/verts, pot, habitat, banque.
+    "objet_en_main": _objet_en_main.objet_en_main,
 }
 
 # Hook POST-INIT par banc (palette de gestes ⑤) : callback OPTIONNEL `(game_state,
@@ -96,7 +99,10 @@ BANC_POST_INIT = {"palette_gestes": _palette_gestes.post_init,
                   "acces_gestes": _acces_gestes.post_init,
                   # `sol_canvas` (gestes lisibles ③) : gestes joués par leur façade,
                   # traces écrites puis antidatées.
-                  "sol_canvas": _sol_canvas.post_init}
+                  "sol_canvas": _sol_canvas.post_init,
+                  # `objet_en_main` (gestes lisibles ④) : gestes savants ouverts, fruits
+                  # mûris, pot posé par sa façade.
+                  "objet_en_main": _objet_en_main.post_init}
 
 # Seed IMPOSÉ par banc (effondrement météo ④). La plupart des bancs sont neutres au
 # seed (ils forcent leur condition par composition) → repli sur le défaut du serveur.

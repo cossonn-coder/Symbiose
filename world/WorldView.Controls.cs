@@ -57,8 +57,10 @@ namespace Symbiose
 					// d'abord. Puis (T3 s'insère AVANT la consultation) le dossier de
 					// plante debug se ferme d'abord, puis un panneau de consultation,
 					// et seulement sinon → retour à l'accueil.
-					if (FermerTiroirSiOuvert())
-					{ }   // le tiroir des gestes se ferme en premier (WorldView.Tiroir.cs)
+					if (LacherObjetEnMain())
+					{ }   // un objet en main se repose d'abord (GESTES LISIBLES ④)
+					else if (FermerTiroirSiOuvert())
+					{ }   // le tiroir des gestes se ferme ensuite (WorldView.Tiroir.cs)
 					else if (ParametresJeuOuvert)
 						FermerParametresJeu();
 					else if (_dossier != null && IsInstanceValid(_dossier))
@@ -167,6 +169,8 @@ namespace Symbiose
 				{ if (PlancheActive) PlancheMolette(+1); else StepZoom(+1); }
 				if (mb.ButtonIndex == MouseButton.WheelDown)
 				{ if (PlancheActive) PlancheMolette(-1); else StepZoom(-1); }
+				// Clic droit : repose l'objet en main (GESTES LISIBLES ④), sinon rien.
+				if (mb.ButtonIndex == MouseButton.Right && LacherObjetEnMain()) return;
 				if (mb.ButtonIndex == MouseButton.Left)
 				{
 					// Tiroir ouvert : un clic AILLEURS (ceux du tiroir n'arrivent pas
