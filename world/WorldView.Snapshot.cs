@@ -482,6 +482,9 @@ namespace Symbiose
 				// que le tiroir se compose d'emblée par familles. Absent → une rangée.
 				ApplyFamilles(pl.ContainsKey("familles")
 					? pl["familles"].AsGodotDictionary() : null);
+				// Gestes pressentis (0.6.12) → silhouettes du tiroir.
+				ApplyPressentis(pl.ContainsKey("gestes_pressentis")
+					? pl["gestes_pressentis"].AsGodotArray() : null);
 				ApplyGestesDebloques(
 					pl.ContainsKey("gestes_debloques")
 						? pl["gestes_debloques"].AsGodotArray() : null,

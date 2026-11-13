@@ -19,6 +19,12 @@
 // PALETTE & TIROIR ① : `-Q` ouvre le tiroir au montage ; avec un VERBE, ce geste est
 // ensuite choisi comme par un clic dans le tiroir (qui se ferme : le bouton du bas de
 // barre doit alors porter son pictogramme s'il n'a pas de case). Journal `[Tiroir]`.
+//
+//   tools/capture_vm.sh -b acces_gestes -w 0 -A tuteurs -Q 1 -s 240,418 -n 118   (③)
+//
+// Avec `-A` : à 10 s (l'achat est passé, le menu du relevé est fermé) le journal liste
+// les gestes PRESSENTIS et leur phrase, et la souris est ramenée sur `-s` pour faire
+// lever l'info-bulle de la silhouette. Images utiles : 100 à 117.
 
 using Godot;
 using System.Collections.Generic;
@@ -39,6 +45,17 @@ namespace Symbiose
 			{
 				OuvrirTiroir();
 				GD.Print($"[Tiroir] ouvert · familles : {(_famillesOrdre == null ? "(aucune reçue)" : string.Join(",", _famillesOrdre))}");
+				if (CaptureAcces != null)
+					GetTree().CreateTimer(10f).Timeout += () =>
+					{
+						var lus = new List<string>();
+						foreach (var (v, phrase) in _pressentis) lus.Add($"{v} → « {phrase} »");
+						GD.Print($"[Tiroir] pressentis : {(lus.Count == 0 ? "(aucun)" : string.Join(" · ", lus))}");
+						if (CaptureSouris == null) return;
+						string[] s = CaptureSouris.Split(',');
+						if (s.Length == 2)   // +1 px : un vrai déplacement, donc un survol relu
+							Input.WarpMouse(new Vector2(ParseFloat(s[0]) + 1f, ParseFloat(s[1])));
+					};
 				int g = IndexDuVerbe(CaptureTiroir);
 				if (g >= 0)
 					Apres(() =>

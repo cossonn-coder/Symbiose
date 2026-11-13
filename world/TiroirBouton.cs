@@ -21,6 +21,7 @@ namespace Symbiose
 		private GesteIcon _porte;      // pictogramme du geste actif hors barre (ou null)
 		private string _verbPorte;
 		private bool _ouvert;
+		private Tween _battement;      // signal en cours (ou null)
 
 		/// <summary>Tiroir ouvert → cadre clair (le bouton « reste enfoncé »).</summary>
 		public bool Ouvert
@@ -37,6 +38,20 @@ namespace Symbiose
 			foreach (var etat in new[] { "normal", "hover", "pressed", "disabled", "focus" })
 				AddThemeStyleboxOverride(etat, new StyleBoxEmpty());
 			TooltipText = "tous les gestes";
+		}
+
+		/// <summary>SIGNAL : le bouton bat ~3 s (un geste vient de s'ouvrir, ou un
+		/// pressenti neuf est apparu dans le tiroir). Immobile le reste du temps —
+		/// l'animation est un signal, pas un décor.
+		/// 📖 Un Tween anime une propriété dans le temps sans code par image ;
+		/// SetLoops(4) rejoue la séquence aller-retour quatre fois puis s'arrête.</summary>
+		public void Battre()
+		{
+			_battement?.Kill();            // un signal en cours repart de zéro
+			Modulate = Colors.White;
+			_battement = CreateTween().SetLoops(4);
+			_battement.TweenProperty(this, "modulate", new Color(0.45f, 1f, 0.45f), 0.4f);
+			_battement.TweenProperty(this, "modulate", Colors.White, 0.4f);
 		}
 
 		/// <summary>Montre le geste actif sur le bouton (il n'a pas de case).</summary>

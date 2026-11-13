@@ -27,6 +27,7 @@ namespace Symbiose
 		private char _kind;
 		private bool _actif;
 		private bool _verrouille;
+		private bool _pressenti;
 
 		// Callback d'ÉDITION (T1) : le clic DROIT sur un slot ouvre le menu
 		// assigner/vider (branché par la palette, cf. WorldView.Palette.cs). On
@@ -52,6 +53,22 @@ namespace Symbiose
 				Disabled = value;
 				QueueRedraw();
 			}
+		}
+
+		/// <summary>Geste PRESSENTI (palette & tiroir ③) : le joueur en a entrevu
+		/// l'existence sans pouvoir l'employer. Une silhouette d'une seule teinte
+		/// sombre, inerte ; au survol, la PHRASE d'ambiance du pont et rien d'autre
+		/// (ni nom du geste, ni condition — philo #6). À appeler après Init.</summary>
+		public void MarquerPressenti(string phrase)
+		{
+			_pressenti = true;
+			Disabled = true;               // un Button désactivé n'émet plus `Pressed`
+			// SelfModulate multiplie TOUT ce que ce nœud dessine : certains glyphes ont
+			// leurs couleurs propres (une tige verte…), les assombrir d'un bloc donne
+			// une vraie silhouette, d'une seule valeur.
+			SelfModulate = new Color(0.42f, 0.46f, 0.50f);
+			TooltipText = phrase;          // … mais garde son info-bulle
+			QueueRedraw();
 		}
 
 		public void Init(string verb, string nom, char kind)
@@ -98,6 +115,8 @@ namespace Symbiose
 			// Le pictogramme, dans la teinte de la famille — estompé si verrouillé.
 			Color c = CouleurFamille(_verrouille ? '·' : PictoKind());
 			if (_verrouille) c = c.Darkened(0.5f) with { A = 0.55f };
+			// Pressenti : une seule teinte sombre, quelle que soit la famille.
+			if (_pressenti) c = new Color(0.75f, 0.75f, 0.75f);   // gris, assombri par SelfModulate
 			DessinerPicto(PictoKind(), c);
 		}
 

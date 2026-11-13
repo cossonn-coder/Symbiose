@@ -117,11 +117,13 @@ namespace Symbiose
 					case Key.F12:      ToggleDefile();    break;  // défilé météo « jardin vivant » (T5)
 					case Key.G:        ToggleGenesHover(); break;  // survol gènes debug (diversité fondatrice ③)
 					case Key.L:        TogglePlanche();   break;  // planche des paliers ×0,5→×32 (D106 T7)
-					// Macros de gestes (⑤, palette perso) : K enregistre une
-					// séquence (re-K pour finir + persister) ; J arme le rejeu de
-					// la macro au prochain clic (mêmes gestes, même point).
-					case Key.K:        ToggleMacroRecord(); break;
-					case Key.J:        ArmerMacro();        break;
+					// Macros de gestes (⑤, palette perso) : K enregistrait une séquence,
+					// J armait son rejeu. DÉBRANCHÉ le 2026-11 (R8 de la refonte de la
+					// palette : Nico ne s'en sert pas). Le code reste entier —
+					// WorldView.Macros.cs et sim/actions/palette.py — il suffit de rétablir
+					// ces deux lignes :
+					//   case Key.K:        ToggleMacroRecord(); break;
+					//   case Key.J:        ArmerMacro();        break;
 					// --- Raccourcis DEBUG voix (pont 0.5.12) : forcer la maîtrise
 					//     pour tester magazine/pages/carnet sans jouer. LETTRES libres
 					//     (⚠️ F5=Run, F8=Stop sont réservés par l'éditeur Godot et
@@ -152,6 +154,15 @@ namespace Symbiose
 			else if (ev is InputEventMouseButton mb && mb.Pressed)
 			{
 				// Planche L active : la molette garde la plante verrouillée au centre.
+				// Ctrl+molette (palette & tiroir ③) : fait défiler le GESTE ACTIF parmi
+				// les cases occupées de la barre, sans zoomer. Molette vers le bas =
+				// case suivante (la barre est verticale : on « descend » dedans).
+				if (mb.CtrlPressed && (mb.ButtonIndex == MouseButton.WheelUp
+									   || mb.ButtonIndex == MouseButton.WheelDown))
+				{
+					CycleSlots(mb.ButtonIndex == MouseButton.WheelDown ? +1 : -1);
+					return;
+				}
 				if (mb.ButtonIndex == MouseButton.WheelUp)
 				{ if (PlancheActive) PlancheMolette(+1); else StepZoom(+1); }
 				if (mb.ButtonIndex == MouseButton.WheelDown)

@@ -30,7 +30,9 @@ namespace Symbiose
 	{
 		/// <summary>Un geste à montrer : son index dans `Gestes[]` et de quoi
 		/// fabriquer son pictogramme (mêmes trois champs que la barre).</summary>
-		public readonly record struct Entree(int Geste, string Verb, string Nom, char Kind);
+		/// `Phrase` non nulle = geste PRESSENTI (silhouette inerte, la phrase au survol).
+		public readonly record struct Entree(int Geste, string Verb, string Nom, char Kind,
+											 string Phrase = null);
 
 		/// <summary>Clic gauche sur un geste (index dans `Gestes[]`).</summary>
 		public System.Action<int> OnChoisi;
@@ -58,7 +60,7 @@ namespace Symbiose
 		}
 
 		/// <summary>Remplace tout le contenu. `rangees` = (nom de famille, ses
-		/// gestes ouverts) dans l'ordre d'affichage ; une famille vide n'est pas
+		/// gestes ouverts puis pressentis) dans l'ordre d'affichage ; une famille vide n'est pas
 		/// transmise. À n'appeler que lorsque l'ensemble des gestes ouverts change.</summary>
 		public void Remplir(IList<(string Famille, List<Entree> Gestes)> rangees, int gesteActif)
 		{
@@ -84,6 +86,13 @@ namespace Symbiose
 				{
 					var icone = new GesteIcon();
 					icone.Init(e.Verb, e.Nom, e.Kind);
+					if (e.Phrase != null)
+					{
+						// Pressenti : ni clic, ni menu, ni nom — seulement la phrase.
+						icone.MarquerPressenti(e.Phrase);
+						ligne.AddChild(icone);
+						continue;
+					}
 					icone.TooltipText = $"{e.Nom} · {famille}";   // survol : geste + famille
 					icone.Actif = e.Geste == gesteActif;
 					int g = e.Geste;                     // capture par valeur

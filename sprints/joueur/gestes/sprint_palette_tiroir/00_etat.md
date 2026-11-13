@@ -1,4 +1,4 @@
-# Sprint PALETTE & TIROIR — état
+# Sprint PALETTE & TIROIR — état — **CLOS côté code le 2026-11-13, F5 attendu**
 
 > Sprint ② de la refonte de l'accès aux gestes. Conception figée le 2026-11-12 :
 > `docs/joueur/gestes/conception_refonte_palette.md` §4 (à lire en entier).
@@ -26,7 +26,7 @@ Trouver un geste, savoir qu'il existe, voir ses réglages. Pure vue C#.
 |---|---|---|
 | ① | `01_tiroir_familles.md` — panneau tiroir, sélection directe, mise en case | **CLOS** 2026-11-13 |
 | ② | `02_reglages_contextuels.md` — graines, substrats, paillis visibles et cliquables | **CLOS** 2026-11-13 (pont **0.6.13**) |
-| ③ | `03_pressentis_molette_finitions.md` — silhouettes, Ctrl+molette, D118 (b)(c), macros, banc, clôture | à faire |
+| ③ | `03_pressentis_molette_finitions.md` — silhouettes, Ctrl+molette, D118 (b)(c), macros, banc, clôture | **CLOS** 2026-11-13 |
 
 ## Interdits communs
 - Ne JAMAIS lancer `tests/test_epaisseur_500ans`. Pas de `ps aux` / `pgrep -f`.
@@ -71,8 +71,46 @@ Trouver un geste, savoir qu'il existe, voir ses réglages. Pure vue C#.
   estompées : stock vide sur ce banc, cadre du choix visible), `poser_pot` (5 substrats).
   **Non vérifiable sur la VM : le clic sur une pastille → F5.** Les pastilles de
   graines se ressemblent (disques verts) : placeholders, icônes au sprint ③ suivant.
-- Constat pour ③ : dans le tiroir, `recolter`/`manger` et `pincer`/`arracher` ont le
+- **③ (2026-11-13)** — silhouettes des gestes pressentis dans le tiroir
+  (`GesteIcon.MarquerPressenti` : inerte, assombri d'un bloc, la phrase du pont pour
+  seule info-bulle) ; le bouton du tiroir bat ~3 s à l'ouverture d'un geste ou à
+  l'apparition d'un pressenti (jamais à la toute première réception) ; Ctrl+molette =
+  case suivante/précédente, sans zoom ; D118 (b) : un geste rangé par un menu clic
+  droit (barre ou tiroir) est aussitôt en main ; macros K/J débranchées (code entier,
+  commentaire daté dans `Controls.cs`).
+- **D118 (c), cause isolée au banc `-M`** (`verger_mur`, w=0, bois nu) : la couronne
+  d'un ARBRE est une ellipse posée haut (centre aux 2/3 de la hauteur), tronc et
+  charpentières basses sont dessinés hors de l'ellipse → `ContientCurseur` faux →
+  le clic partait à la maison. Mesure : 13/15 milieux de segments vus avant [×2,
+  n=1 banc, 2 espèces], 15/15 après [×2 et ×4], 2/2 [×8 et ×16, pommier seul au
+  cadre]. Correctif : `BoisSous` teste le bois dessiné (plantes sans fiche de port),
+  dans `visuals/PlantRenderer.Clic.cs` (partial neuf : `PlantRenderer.cs` repassé
+  sous 300 LDC). **Limite : c'est la cause reproduite, pas forcément le cas exact vu
+  par Nico au F5** (une herbacée à fiche contre le mur passait déjà : figuier 13/13).
+- Vérifié à l'image : silhouette de `palisser` après achat des tuteurs, phrase au
+  survol, bouton qui bat. **Non vérifiable sur la VM : Ctrl+molette, menus clic droit.**
+- Tailles : `world/GesteIcon.cs` 322 LDC (🟡, une seule responsabilité, déjà au-dessus
+  de 300 avant le sprint ; il sera refait au sprint `icones_curseur`).
+- Constat pour le sprint suivant : dans le tiroir, `recolter`/`manger` et `pincer`/`arracher` ont le
   même pictogramme (icônes par famille de cible) — sujet du sprint `icones_curseur`.
 
+## Recette F5 (Nico)
+1. **Tiroir** : `Q` ou le bouton à 9 points en bas de la barre → panneau par familles.
+   `Échap` ou un clic ailleurs le ferme (le clic ailleurs n'agit pas sur le jardin).
+2. **Geste sans case** : clic gauche sur un geste du tiroir (ex. glaner) → il est en
+   main, le bouton du bas porte son pictogramme, le HUD le nomme sans numéro.
+3. **Mise en case** : clic droit sur un geste du tiroir → « case 1…0 » ; il prend la
+   case ET devient le geste actif. Relancer le jeu : la case est restée.
+4. **Clic droit sur une case de la barre** → choisir un geste : il est aussitôt actif.
+5. **Réglages** : `planter` → pastilles de graines à côté de la case, clic = choix ;
+   `pailler` (tiroir) → 4 natures, pâles si le stock est vide ; `poser pot` →
+   5 substrats. Les touches S, B, N ne font plus rien.
+6. **Ctrl+molette** : le geste actif descend/monte dans la barre ; la molette seule zoome.
+7. **Pressenti** : acheter les tuteurs à l'Atelier → le bouton du tiroir bat ; dans le
+   tiroir, rangée « structures », une silhouette sombre : la survoler donne une phrase.
+8. **Clic sur un tronc devant la maison** (verger_mur) : le geste part sur l'arbre, le
+   carnet ne s'ouvre pas.
+9. K et J ne font plus rien.
+
 ## §REPRISE
-Lire `CLAUDE.md`, ce fichier, le doc de conception §4, puis le premier kickoff « à faire ».
+Sprint clos. Suite : `/sprint-auto sprint_icones_curseur` après le F5.

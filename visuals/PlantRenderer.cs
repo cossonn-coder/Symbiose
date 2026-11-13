@@ -618,22 +618,5 @@ namespace Symbiose
 				Mathf.Round(s.ThicknessCm * WorldView.PxPerCmX * WoodWidthFactor) + 2f);
 			DrawLine(p1, p2, HighlightColor, w, antialiased: false);
 		}
-
-		/// <summary>Le curseur (canvas) touche-t-il le corps visible de la plante ?
-		/// Test de l'ellipse de couronne des paliers bas (Couronne, D106 T5 — même
-		/// géométrie que la tache / le port dessinés) → forgiving, cohérent à tout
-		/// zoom. Sert la priorité de clic plante > maison (WorldView.PointeUnePlante).
-		/// NB T5 : l'ancienne silhouette lisait CanopyRadiusCm, que le snapshot ne
-		/// porte pas (0) → ellipse vide, le test rendait toujours faux.</summary>
-		public bool ContientCurseur(Vector2 canvasPos)
-		{
-			if (_structure == null) return false;
-			Vector2 local = ToLocal(canvasPos);
-			if (HampeSous(local)) return true;   // un port se vise aussi à sa hampe (Ports.cs)
-			var (center, rx, ry) = Couronne();   // PlantRenderer.Paliers.cs (T5)
-			if (rx <= 0f || ry <= 0f) return false;
-			Vector2 d = local - center;
-			return d.X * d.X / (rx * rx) + d.Y * d.Y / (ry * ry) <= 1f;  // dans l'ellipse
-		}
 	}
 }

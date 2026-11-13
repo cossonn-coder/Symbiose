@@ -90,7 +90,11 @@ namespace Symbiose
 			// Flash discret d'un déblocage récent (voie savoir), si le geste occupe
 			// un slot visible. Non bloquant (philo #6 : pas de pop-up).
 			if (recents != null && _paletteBox != null)
+			{
 				foreach (var v in recents) FlashGesteDebloque(v.AsString());
+				// … et le bouton du tiroir bat : le geste neuf y est, même sans case.
+				if (recents.Count > 0) _tiroirBouton?.Battre();
+			}
 		}
 
 		private static List<string> Sorted(HashSet<string> set)
@@ -247,7 +251,10 @@ namespace Symbiose
 			_editSlot = -1;
 			PersisterSlots();
 			RebuildPaletteIcons();
-			UpdatePaletteSelection();
+			// D118 (b) : un geste choisi dans ce menu devient aussitôt le geste actif
+			// (avant, il était rangé sans être pris en main). Vider ne change rien.
+			if (id >= 0) SelectGeste((int)id);
+			else UpdatePaletteSelection();
 		}
 
 		// -------------------------------------------------------------------

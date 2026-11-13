@@ -39,6 +39,10 @@ namespace Symbiose
 		// repli : une seule rangée avec tous les gestes ouverts.
 		private string[] _famillesOrdre;
 		private Dictionary<string, string[]> _famillesGestes;
+		// Gestes PRESSENTIS (fermés mais entrevus) : verbe → phrase d'ambiance du
+		// pont (`player.gestes_pressentis`). Montrés en silhouette dans le tiroir.
+		private readonly Dictionary<string, string> _pressentis = new();
+		private string _pressentisEmpreinte;   // null = rien reçu encore
 		private PopupMenu _caseMenu;          // menu clic droit « mettre en case » (lazy)
 		private int _caseGeste = -1;          // geste que ce menu va ranger
 
@@ -89,6 +93,36 @@ namespace Symbiose
 			MarquerTiroirSale();
 		}
 
+		// Forme du pont : [{verbe, phrase}]. On ne refait le tiroir que si la LISTE des
+		// verbes change ; un pressenti NEUF (hors toute première réception, pour ne pas
+		// battre à chaque chargement) fait battre le bouton.
+		private void ApplyPressentis(Godot.Collections.Array bloc)
+		{
+			if (bloc == null) return;
+			var verbes = new List<string>();
+			var neufs = new Dictionary<string, string>();
+			foreach (var item in bloc)
+			{
+				var d = item.AsGodotDictionary();
+				if (!d.ContainsKey("verbe")) continue;
+				string verbe = d["verbe"].AsString();
+				verbes.Add(verbe);
+				neufs[verbe] = d.ContainsKey("phrase") ? d["phrase"].AsString() : "";
+			}
+			verbes.Sort(System.StringComparer.Ordinal);
+			string empreinte = string.Join(",", verbes);
+			if (empreinte == _pressentisEmpreinte) return;
+			bool apparition = false;
+			if (_pressentisEmpreinte != null)
+				foreach (string v in verbes)
+					if (!_pressentis.ContainsKey(v)) { apparition = true; break; }
+			_pressentisEmpreinte = empreinte;
+			_pressentis.Clear();
+			foreach (var (v, phrase) in neufs) _pressentis[v] = phrase;
+			MarquerTiroirSale();
+			if (apparition) _tiroirBouton?.Battre();
+		}
+
 		// L'ensemble des gestes ouverts (ou le rangement) a changé.
 		private void MarquerTiroirSale()
 		{
@@ -96,8 +130,8 @@ namespace Symbiose
 			if (TiroirOuvert) RemplirTiroir();
 		}
 
-		// Compose les rangées : familles dans l'ordre du pont, gestes OUVERTS
-		// seulement ; une famille sans geste ouvert n'a pas de rangée. Un geste que
+		// Compose les rangées : familles dans l'ordre du pont, gestes OUVERTS et
+		// PRESSENTIS ; une famille sans l'un ni l'autre n'a pas de rangée. Un geste que
 		// la vue connaît mais qu'aucune famille ne cite tombe dans « autres » — le
 		// tiroir ne doit oublier aucun geste ouvert.
 		private void RemplirTiroir()
@@ -113,8 +147,15 @@ namespace Symbiose
 						// Verbe sans entrée dans Gestes[] (ex. `grelinette`, qui est
 						// Maj+ameublir côté vue) → ignoré.
 						int g = IndexDuVerbe(verb);
-						if (g < 0 || !EstDebloque(g) || !ranges.Add(g)) continue;
-						ligne.Add(new TiroirPanel.Entree(g, Gestes[g].Verb, Gestes[g].Nom, Gestes[g].Kind));
+						if (g < 0) continue;
+						if (EstDebloque(g))
+						{
+							if (ranges.Add(g))
+								ligne.Add(new TiroirPanel.Entree(g, Gestes[g].Verb, Gestes[g].Nom, Gestes[g].Kind));
+						}
+						// Fermé mais pressenti → silhouette à sa place dans la famille.
+						else if (_pressentis.TryGetValue(verb, out string phrase))
+							ligne.Add(new TiroirPanel.Entree(g, Gestes[g].Verb, Gestes[g].Nom, Gestes[g].Kind, phrase));
 					}
 					if (ligne.Count > 0) rangees.Add((famille, ligne));
 				}
@@ -229,10 +270,11 @@ namespace Symbiose
 			for (int s = 0; s < SlotCount; s++)
 				if (_slots[s] == _caseGeste) _slots[s] = -1;
 			_slots[(int)id] = _caseGeste;
+			int g = _caseGeste;
 			_caseGeste = -1;
 			PersisterSlots();
 			RebuildPaletteIcons();
-			UpdatePaletteSelection();
+			SelectGeste(g);   // D118 (b) : rangé = aussitôt en main
 		}
 	}
 }
