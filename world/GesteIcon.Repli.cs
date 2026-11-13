@@ -1,0 +1,280 @@
+// SYMBIOSE — GesteIcon.Repli.cs (partial de GesteIcon — ANCIEN dessin, repli)
+// Le pictogramme PROCÉDURAL d'origine (palette de gestes ④, D11) : formes
+// primitives tracées dans `_Draw`, une par famille de geste. Depuis le sprint
+// ICÔNES & CURSEUR ①, un geste qui possède une grille dans `IconeGeste` affiche
+// sa texture cuite ; celui-ci ne sert plus que de REPLI pour les gestes dont
+// l'icône n'est pas encore dessinée. Code déplacé tel quel depuis GesteIcon.cs
+// (scission de taille, aucun changement de comportement) et CONSERVÉ : il reste
+// en place, inactif, une fois toutes les icônes livrées.
+//
+// 📖 Pédagogie C# : `partial` = une même classe écrite dans plusieurs fichiers ;
+// le compilateur les recolle. Ce fichier voit donc les champs privés de
+// GesteIcon.cs (`_kind`, `Verb`, `Taille`, `Marge`) comme s'il y était.
+
+using Godot;
+
+namespace Symbiose
+{
+	public partial class GesteIcon
+	{
+		// La famille de pictogramme : privilégie le VERBE (glyphe spécifique) puis
+		// retombe sur le Kind de cible. Un caractère-clé pilote forme ET couleur.
+		private char PictoKind() => Verb switch
+		{
+			"arroser" => 'o',            // goutte (bleu)
+			"planter" or "planter_conteneur" => 'n',   // graine/pousse (vert)
+			"tailler" or "couper" => 'i',   // ciseaux (gris) — coupe nette à l'outil
+			"pincer" => 'c',             // pincement (deux doigts qui se rejoignent)
+			"arracher" => 'e',           // arrachement (tige déchirée)
+			"glaner" => 'l',             // glanage (feuille ramassée)
+			"recolter" or "manger" => 'f',   // fruit/récolte (rouge)
+			"ecraser" => 'x',            // croix (rouge sombre)
+			"becher" => 'a',             // fourche/ameublir (brun)
+			"creuser" => 'k',            // cuvette creusée (brun terre)
+			"drainer" => 'j',            // écoulement/évacuation (bleu)
+			"pailler" => 'u',            // trait de mulch (paille)
+			"bouturer" => 'b',           // tige piquée (vert clair)
+			"greffer" => 'g',            // jonction en T (vert-brun)
+			"favoriser_auxiliaire" => 'w',   // insecte (jaune)
+			"broyer" => 'd',             // éclats de bois (brun)
+			"composter" or "empiler_bois" or "retourner" or "epandre"
+				or "poser_bac" or "poser_pile" => 't',   // tas (brun compost)
+			"poser_pot" or "poser_bac_culture" or "deplacer_pot" => 'p',   // pot (terracotta)
+			// Supports, couvertures, ruche (accès aux gestes ④) : un glyphe PAR geste,
+			// sinon quatre cases identiques dans la palette. Chiffres = glyphes
+			// provisoires (les icônes soignées sont le sprint `icones_curseur`).
+			"poser_treillis" => 's',     // support (gris clair) : treillis quadrillé
+			"poser_tuteur" => '1',       // un seul piquet
+			"poser_pergola" => '2',      // portique
+			"palisser" => '3',           // tige nouée au piquet
+			"poser_perchoir" => 'T',     // perchoir à oiseaux (zoochorie ⑧) : piquet en T
+			"poser_voile" => '4',        // voile tendu bas
+			"poser_cloche" => '5',       // cloche
+			"poser_ombriere" => '6',     // toile sur deux piquets
+			"poser_ruche" => 'h',        // ruche (miel)
+			"recolter_miel" => '7',      // ruche + goutte de miel
+			"deraciner" => 'r',          // racine arrachée (brun)
+			// PAYSAGE de la ceinture (périphérie D73 ⑦) : trois glyphes pour trois
+			// familles de geste, sinon les six gestes tomberaient sur la même
+			// pastille neutre du repli et seraient indistinguables au clic.
+			"abattre" or "receper" or "eteter" => 'z',   // lame de bois (hache/serpe)
+			"endiguer" or "deriver" => 'v',              // digue en travers de l'eau
+			"entailler" => 'y',                          // pointe dans la roche
+			_ => _kind,                  // repli par famille de cible
+		};
+
+		// Couleur par famille de pictogramme — cohérence visuelle à l'écran.
+		private static Color CouleurFamille(char k) => k switch
+		{
+			'o' => new Color(0.45f, 0.75f, 1f),      // eau
+			'n' => new Color(0.5f, 0.85f, 0.4f),     // planter
+			'i' => new Color(0.8f, 0.82f, 0.85f),    // taille (ciseaux)
+			'c' => new Color(0.75f, 0.85f, 0.75f),   // pincer (doux, vert pâle)
+			'e' => new Color(0.7f, 0.6f, 0.4f),      // arracher (déchiré, brun)
+			'l' => new Color(0.6f, 0.8f, 0.45f),     // glaner (litière feuilles)
+			'f' => new Color(0.9f, 0.4f, 0.4f),      // récolte/manger
+			'x' => new Color(0.85f, 0.3f, 0.3f),     // écraser
+			'a' => new Color(0.7f, 0.55f, 0.35f),    // ameublir
+			'u' => new Color(0.85f, 0.75f, 0.45f),   // paillage
+			'b' => new Color(0.6f, 0.9f, 0.55f),     // bouture
+			'g' => new Color(0.65f, 0.8f, 0.4f),     // greffe
+			'w' => new Color(0.95f, 0.85f, 0.35f),   // auxiliaire
+			'd' => new Color(0.65f, 0.5f, 0.3f),     // broyer
+			't' => new Color(0.55f, 0.42f, 0.28f),   // compost/tas
+			'p' => new Color(0.8f, 0.45f, 0.3f),     // pot
+			's' => new Color(0.75f, 0.75f, 0.78f),   // support
+			'1' or '2' or '3' => new Color(0.75f, 0.75f, 0.78f),   // supports
+			'4' or '5' or '6' => new Color(0.8f, 0.88f, 0.92f),    // couvertures (toile claire)
+			'7' => new Color(0.95f, 0.75f, 0.3f),    // miel
+			'T' => new Color(0.72f, 0.58f, 0.4f),    // perchoir (bois posé)
+			'h' => new Color(0.95f, 0.75f, 0.3f),    // ruche
+			'r' => new Color(0.6f, 0.45f, 0.35f),    // déraciner
+			'z' => new Color(0.72f, 0.62f, 0.45f),   // paysage : bois coupé
+			'v' => new Color(0.4f, 0.65f, 0.8f),     // paysage : eau détournée
+			'y' => new Color(0.68f, 0.64f, 0.58f),   // paysage : roche entaillée
+			_ => new Color(0.7f, 0.7f, 0.7f),        // neutre
+		};
+
+		// Un pictogramme MINIMAL par famille : formes primitives suffisantes à
+		// distinguer les gestes d'un coup d'œil (calibrage F5 : sprites dédiés plus
+		// tard). Le cadre utile est [Marge, Taille-Marge] pour laisser respirer.
+		private void DessinerPicto(char k, Color c)
+		{
+			float lo = Marge, hi = Taille - Marge, mid = Taille / 2f;
+			switch (k)
+			{
+				case 'o':   // goutte : triangle + arc bas
+					DrawColoredPolygon(new[]
+					{
+						new Vector2(mid, lo), new Vector2(hi, hi), new Vector2(lo, hi),
+					}, c);
+					DrawCircle(new Vector2(mid, hi - 3f), 6f, c);
+					break;
+				case 'n':   // pousse : tige verticale + 2 feuilles
+					DrawLine(new Vector2(mid, hi), new Vector2(mid, lo + 4f), c, 3f);
+					DrawCircle(new Vector2(mid - 6f, mid), 5f, c);
+					DrawCircle(new Vector2(mid + 6f, mid - 4f), 5f, c);
+					break;
+				case 'i':   // ciseaux : deux lames en X + anneaux
+					DrawLine(new Vector2(lo, lo), new Vector2(hi, hi), c, 2.5f);
+					DrawLine(new Vector2(hi, lo), new Vector2(lo, hi), c, 2.5f);
+					DrawCircle(new Vector2(lo + 3f, hi - 3f), 4f, c);
+					DrawCircle(new Vector2(hi - 3f, hi - 3f), 4f, c);
+					break;
+				case 'f':   // fruit : disque + petite queue
+					DrawCircle(new Vector2(mid, mid + 3f), (hi - lo) / 2.6f, c);
+					DrawLine(new Vector2(mid, lo + 2f), new Vector2(mid + 4f, lo - 2f), c, 2f);
+					break;
+				case 'x':   // écraser : grosse croix
+					DrawLine(new Vector2(lo, lo), new Vector2(hi, hi), c, 4f);
+					DrawLine(new Vector2(hi, lo), new Vector2(lo, hi), c, 4f);
+					break;
+				case 'a':   // ameublir : fourche à 3 dents
+					DrawLine(new Vector2(mid, lo), new Vector2(mid, mid), c, 3f);
+					for (int i = 0; i < 3; i++)
+					{
+						float x = lo + i * (hi - lo) / 2f;
+						DrawLine(new Vector2(x, mid), new Vector2(x, hi), c, 2.5f);
+					}
+					DrawLine(new Vector2(lo, mid), new Vector2(hi, mid), c, 2.5f);
+					break;
+				case 'u':   // paillage : trois traits horizontaux
+					for (int i = 0; i < 3; i++)
+					{
+						float y = lo + 4f + i * 7f;
+						DrawLine(new Vector2(lo, y), new Vector2(hi, y), c, 3f);
+					}
+					break;
+				case 'b':   // bouture : tige oblique piquée dans un trait de sol
+					DrawLine(new Vector2(lo + 4f, hi), new Vector2(hi - 6f, lo + 4f), c, 3f);
+					DrawLine(new Vector2(lo, hi), new Vector2(hi, hi), c, 2f);
+					DrawCircle(new Vector2(hi - 6f, lo + 4f), 4f, c);
+					break;
+				case 'g':   // greffe : jonction en T (scion sur porte-greffe)
+					DrawLine(new Vector2(mid, hi), new Vector2(mid, mid), c, 4f);
+					DrawLine(new Vector2(mid, mid), new Vector2(hi - 4f, lo + 4f), c, 3f);
+					DrawLine(new Vector2(lo + 3f, mid - 2f), new Vector2(hi - 3f, mid - 2f), c, 1.5f);
+					break;
+				case 'w':   // auxiliaire : corps + 2 antennes (insecte)
+					DrawCircle(new Vector2(mid, mid + 2f), 6f, c);
+					DrawLine(new Vector2(mid - 3f, mid - 3f), new Vector2(mid - 7f, lo), c, 2f);
+					DrawLine(new Vector2(mid + 3f, mid - 3f), new Vector2(mid + 7f, lo), c, 2f);
+					break;
+				case 'd':   // broyer : éclats (traits éparpillés)
+					DrawLine(new Vector2(lo, mid), new Vector2(mid, lo + 3f), c, 2.5f);
+					DrawLine(new Vector2(mid, hi - 3f), new Vector2(hi, mid), c, 2.5f);
+					DrawLine(new Vector2(lo + 4f, hi - 4f), new Vector2(hi - 4f, lo + 4f), c, 2f);
+					break;
+				case 't':   // tas : triangle plein (compost)
+					DrawColoredPolygon(new[]
+					{
+						new Vector2(mid, lo + 2f), new Vector2(hi, hi), new Vector2(lo, hi),
+					}, c);
+					break;
+				case 'p':   // pot : trapèze (large en haut)
+					DrawColoredPolygon(new[]
+					{
+						new Vector2(lo, mid - 4f), new Vector2(hi, mid - 4f),
+						new Vector2(hi - 5f, hi), new Vector2(lo + 5f, hi),
+					}, c);
+					break;
+				case 's':   // support : treillis (croix quadrillée)
+					DrawLine(new Vector2(mid - 6f, lo), new Vector2(mid - 6f, hi), c, 2f);
+					DrawLine(new Vector2(mid + 6f, lo), new Vector2(mid + 6f, hi), c, 2f);
+					DrawLine(new Vector2(lo, mid - 6f), new Vector2(hi, mid - 6f), c, 2f);
+					DrawLine(new Vector2(lo, mid + 6f), new Vector2(hi, mid + 6f), c, 2f);
+					break;
+				case '1':   // tuteur : un piquet planté dans un trait de sol
+					DrawLine(new Vector2(mid, lo), new Vector2(mid, hi), c, 3f);
+					DrawLine(new Vector2(lo + 4f, hi), new Vector2(hi - 4f, hi), c, 2f);
+					break;
+				case '2':   // pergola : deux poteaux et leur traverse
+					DrawLine(new Vector2(lo + 3f, hi), new Vector2(lo + 3f, lo + 4f), c, 2.5f);
+					DrawLine(new Vector2(hi - 3f, hi), new Vector2(hi - 3f, lo + 4f), c, 2.5f);
+					DrawLine(new Vector2(lo, lo + 4f), new Vector2(hi, lo + 4f), c, 3f);
+					break;
+				case '3':   // palisser : piquet + tige qui s'y appuie, un lien au milieu
+					DrawLine(new Vector2(mid + 4f, lo), new Vector2(mid + 4f, hi), c, 2.5f);
+					DrawLine(new Vector2(lo + 2f, hi), new Vector2(mid + 4f, lo + 4f),
+							 new Color(0.5f, 0.85f, 0.4f), 2.5f);
+					DrawCircle(new Vector2(mid, mid + 1f), 3.5f, c);
+					break;
+				case '4':   // voile : arc bas et large posé au sol
+					DrawArc(new Vector2(mid, hi), (hi - lo) / 2f, Mathf.Pi, Mathf.Tau, 20, c, 3f);
+					DrawLine(new Vector2(lo, hi), new Vector2(hi, hi), c, 2f);
+					break;
+				case '5':   // cloche : dôme haut et étroit, bouton en tête
+					DrawArc(new Vector2(mid, mid + 2f), 8f, Mathf.Pi, Mathf.Tau, 16, c, 3f);
+					DrawLine(new Vector2(mid - 8f, mid + 2f), new Vector2(mid - 8f, hi), c, 3f);
+					DrawLine(new Vector2(mid + 8f, mid + 2f), new Vector2(mid + 8f, hi), c, 3f);
+					DrawCircle(new Vector2(mid, lo + 2f), 2.5f, c);
+					break;
+				case '6':   // ombrière : toile plate en biais sur deux piquets
+					DrawLine(new Vector2(lo + 3f, hi), new Vector2(lo + 3f, mid - 2f), c, 2f);
+					DrawLine(new Vector2(hi - 3f, hi), new Vector2(hi - 3f, lo + 4f), c, 2f);
+					DrawLine(new Vector2(lo, mid - 2f), new Vector2(hi, lo + 4f), c, 4f);
+					break;
+				case '7':   // miel : la ruche (un arc) et une goutte qui en tombe
+					DrawArc(new Vector2(mid, mid + 2f), 11f, Mathf.Pi, Mathf.Tau, 20, c, 3f);
+					DrawCircle(new Vector2(mid, hi - 3f), 4f, c);
+					break;
+				case 'T':   // perchoir : piquet + traverse en tête, un oiseau posé dessus
+					DrawLine(new Vector2(mid, hi), new Vector2(mid, mid - 2f), c, 2.5f);
+					DrawLine(new Vector2(lo + 2f, mid - 2f), new Vector2(hi - 2f, mid - 2f), c, 2.5f);
+					DrawCircle(new Vector2(mid + 5f, mid - 7f), 4f, c);
+					break;
+				case 'h':   // ruche : deux arcs empilés
+					DrawArc(new Vector2(mid, mid + 4f), 10f, Mathf.Pi, Mathf.Tau, 20, c, 3f);
+					DrawArc(new Vector2(mid, hi), 12f, Mathf.Pi, Mathf.Tau, 20, c, 3f);
+					break;
+				case 'r':   // déraciner : Y renversé (racines arrachées)
+					DrawLine(new Vector2(mid, lo), new Vector2(mid, mid), c, 3f);
+					DrawLine(new Vector2(mid, mid), new Vector2(lo, hi), c, 2.5f);
+					DrawLine(new Vector2(mid, mid), new Vector2(hi, hi), c, 2.5f);
+					break;
+				case 'c':   // pincer : deux petits arcs qui se rejoignent (doigts)
+					DrawArc(new Vector2(mid - 5f, mid), 7f, -Mathf.Pi / 2f, Mathf.Pi / 2f, 14, c, 2.5f);
+					DrawArc(new Vector2(mid + 5f, mid), 7f, Mathf.Pi / 2f, 3f * Mathf.Pi / 2f, 14, c, 2.5f);
+					break;
+				case 'e':   // arracher : tige oblique cassée en zigzag (déchirure)
+					DrawLine(new Vector2(lo + 2f, hi), new Vector2(mid, mid + 2f), c, 3f);
+					DrawLine(new Vector2(mid, mid + 2f), new Vector2(mid - 3f, mid - 3f), c, 3f);
+					DrawLine(new Vector2(mid - 3f, mid - 3f), new Vector2(hi - 2f, lo + 2f), c, 3f);
+					break;
+				case 'l':   // glaner : feuille ramassée (ellipse + nervure) au-dessus du sol
+					DrawColoredPolygon(new[]
+					{
+						new Vector2(lo + 3f, mid), new Vector2(mid, lo + 3f),
+						new Vector2(hi - 3f, mid), new Vector2(mid, mid + 5f),
+					}, c);
+					DrawLine(new Vector2(lo + 3f, mid), new Vector2(hi - 3f, mid), c.Darkened(0.3f), 1.5f);
+					DrawLine(new Vector2(lo, hi), new Vector2(hi, hi), c, 2f);
+					break;
+				case 'z':   // bois coupé : tronc oblique + entaille en V au pied
+					DrawLine(new Vector2(lo + 2f, hi), new Vector2(hi - 4f, lo + 2f), c, 3f);
+					DrawLine(new Vector2(lo + 2f, hi), new Vector2(mid, mid + 2f),
+							 c.Darkened(0.35f), 2f);
+					DrawLine(new Vector2(lo, hi), new Vector2(hi, hi), c, 2f);
+					break;
+				case 'v':   // digue : barre en travers de deux vagues
+					DrawLine(new Vector2(lo, mid + 5f), new Vector2(hi, mid + 5f), c, 2f);
+					DrawLine(new Vector2(lo, hi - 2f), new Vector2(hi, hi - 2f), c, 2f);
+					DrawLine(new Vector2(mid, lo + 2f), new Vector2(mid, hi), c.Lightened(0.3f), 3f);
+					break;
+				case 'y':   // roche entaillée : bloc en escalier, un cran retiré
+					DrawColoredPolygon(new[]
+					{
+						new Vector2(lo, hi), new Vector2(lo, mid), new Vector2(mid, mid),
+						new Vector2(mid, lo + 3f), new Vector2(hi, lo + 3f),
+						new Vector2(hi, hi),
+					}, c);
+					DrawLine(new Vector2(mid, mid), new Vector2(hi - 2f, mid),
+							 c.Darkened(0.4f), 1.5f);
+					break;
+				default:    // repli : pastille pleine (le geste existe, forme neutre)
+					DrawCircle(new Vector2(mid, mid), (hi - lo) / 3f, c);
+					break;
+			}
+		}
+	}
+}

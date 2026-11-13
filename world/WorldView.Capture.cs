@@ -55,6 +55,8 @@
 //   --capture-cle-stable=<espèce>  coupe une branche, compare le feuillage — HOUPPIER ④
 //   --capture-faune=1        planche de la faune (icônes ×2→×16, fond uni) — CASSÉ À
 //                            L'ÉCRAN ⑤ (visuals/PlancheFaune.cs)
+//   --capture-icones=1       planche des icônes de gestes (×4, ×2, silhouettes) —
+//                            ICÔNES & CURSEUR ① (visuals/PlancheIcones.cs)
 //   --capture-palier3=1 / --capture-technique=1  info-bulle apprise / technique
 //                            (debug palier3 au montage ; Maj+F3) — PLANTE ASSEMBLÉE ⑦
 //   --capture-pleine-res=1   monde rendu en 1920×1080 ×1 au lieu de 960×540 ×2
@@ -138,6 +140,8 @@ namespace Symbiose
 		private static readonly bool CaptureF6 = ArgCapture("f6") == "1";
 		// CASSÉ À L'ÉCRAN ⑤ : planche de la faune par-dessus le monde (fond uni).
 		private static readonly bool CaptureFaune = ArgCapture("faune") == "1";
+		// ICÔNES & CURSEUR ① : planche des icônes de gestes par-dessus le monde.
+		private static readonly bool CaptureIcones = ArgCapture("icones") == "1";
 		private static float EchelleCamera => CapturePleineRes ? 2f : 1f;
 
 		// Zoom de la Camera2D pour un palier logique (seul écrivain : les 4 poses).
@@ -266,6 +270,12 @@ namespace Symbiose
 				AddChild(calque);
 				calque.AddChild(new ColorRect { Color = Palette16.SolTerre, Size = new Vector2(1920f, 1080f) });
 				calque.AddChild(new PlancheFaune());
+			}
+			if (CaptureIcones)   // planche des icônes de gestes : calque au-dessus du HUD
+			{
+				var calque = new CanvasLayer { Layer = 100 };
+				AddChild(calque);
+				calque.AddChild(new PlancheIcones());
 			}
 			if (CapturePalier3) DebugMaitrise("palier3");   // info-bulle apprise (⑦)
 			if (CaptureTechnique) ToggleInfoTechnique();    // info-bulle technique (⑦)

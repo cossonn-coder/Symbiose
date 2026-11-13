@@ -97,24 +97,14 @@ namespace Symbiose
 			_curseurRepos?.Dispose();
 			_curseurTap?.Dispose();
 			_curseurRepos = _curseurTap = null;
+			IconeGeste.Liberer();   // textures d'icônes en cache (palette, tiroir, planche)
 		}
 
-		private static ImageTexture CuireMain(string[] motif)
-		{
-			var img = Image.CreateEmpty(16, 16, false, Image.Format.Rgba8);
-			for (int y = 0; y < 16; y++)
-				for (int x = 0; x < 16; x++)
-					img.SetPixel(x, y, motif[y][x] switch
-					{
-						'K' => Palette16.MaitreSombre,
-						'W' => Palette16.MaitreBlanc,
-						'S' => Palette16.MaitreGranite,
-						'Y' => Palette16.MaitreJaune,
-						_   => Colors.Transparent,
-					});
-			img.Resize(16 * CurseurEchelle, 16 * CurseurEchelle, Image.Interpolation.Nearest);
-			return ImageTexture.CreateFromImage(img);
-		}
+		// Cuisson déléguée au moteur d'icônes (ICÔNES & CURSEUR ①) : les lettres
+		// K, W, S, Y de la main sont dans son alphabet, aux mêmes couleurs de la
+		// palette maître → rendu de la main inchangé.
+		private static ImageTexture CuireMain(string[] motif) =>
+			IconeGeste.Cuire(motif, CurseurEchelle);
 
 		/// <summary>Chaque frame (_Process) : fin du tap + losange du plot survolé.
 		/// Coût : un FindPlot (8 tuiles) + un déplacement de nœud, pas de redraw —
