@@ -55,7 +55,7 @@ def route_multiplication(gs: dict, player: str, verb: str,
                              A._objets_action("bouturer", mother))
         ok = A.bouturer(gs, player, mother, tile, eco, r, c)
         return bilan(ok, cost, 0.0,
-                     f"bouture de {mother.name} enracinée en ({r},{c})" if ok
+                     f"bouture de {mother.name} mise en terre" if ok
                      else f"rien bouturé ({mother.name} trop jeune/épuisée "
                           "ou Vigueur insuffisante)")
 

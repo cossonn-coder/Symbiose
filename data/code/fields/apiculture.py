@@ -33,7 +33,10 @@ from fields.population import build_pollinator_registry, _make_nectar_grid
 CAPTURE_RATE   = 0.30   # vitesse de peuplement par semaine ∝ abeille locale (saturant)
 ESSAIM_MIN     = 0.05   # densité abeille minimale pour qu'une ruche capture un essaim
 ESSAIM_FAMINE  = 0.04   # déclin hebdo de l'essaim quand l'abeille locale s'effondre
-MIEL_RATE      = 0.30   # miel produit / semaine = MIEL_RATE · essaim · nectar_local
+# GESTES LISIBLES ① (§5, À L'EXCÈS) : 0.30 → 30.0. Mesuré seed 42 : une ruche posée au
+# printemps n'avait que ~0,05 de miel après une saison (nectar LOCAL au plot ~0,05 ×
+# essaim ~0,3) → un miel qui ne « se sent » pas. Golden neutre : aucune ruche au smoke.
+MIEL_RATE      = 30.0   # miel produit / semaine = MIEL_RATE · essaim · nectar_local
 MIEL_MAX       = 10.0   # plafond de réserve d'une ruche
 
 

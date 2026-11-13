@@ -36,7 +36,7 @@ SEUIL_EQUIPEMENT  = 3
 # Conversion miel → Vigueur + pénalité sans équipement (placeholders, calibrage
 # post-test). Sans équipement la récolte est PARTIELLE (on n'ose pas tout prendre,
 # les abeilles défendent — l'alarme/piqûre §J viendra au ⑦).
-MIEL_VIGUEUR_RATIO = 3.0    # Vigueur rendue par unité de miel récoltée
+MIEL_VIGUEUR_RATIO = 6.0    # Vigueur rendue par unité de miel récoltée (GESTES LISIBLES ① : 3 → 6, à l'excès)
 RECOLTE_SANS_EQUIP = 0.30   # fraction récoltable sans équipement apicole
 
 

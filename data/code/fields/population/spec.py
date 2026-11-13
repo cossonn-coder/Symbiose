@@ -76,6 +76,11 @@ class TrophicSpec:
     # `interconnexions` = graphe relationnel §3 (source : fields/faune_encyclo.py).
     blurb: str = ""
     interconnexions: tuple[str, ...] = ()
+    # L'espèce VOLE (GESTES LISIBLES ①, conception §6) — DONNÉE PURE, jamais lue par
+    # `tick` → golden NEUTRE. Lue par le geste `ecraser` (un pied n'attrape pas ce qui
+    # s'envole : refus en amont, aucune Vigueur dépensée) et exportée au pont (la vue
+    # ne propose pas un sprite volant comme cible).
+    vole: bool = False
 
 
 @dataclass(frozen=True)

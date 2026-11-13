@@ -15,7 +15,7 @@ def test_conteneurs():
     s = ServerProc()
     # "full" : monde réel (maison → ombre) + banque de départ (planter_conteneur).
     init = s.send(cmd="init", config="full", seed=42)
-    check("engine_version 0.6.13", init.get("engine_version") == "0.6.13",
+    check("engine_version 0.6.14", init.get("engine_version") == "0.6.14",
           init.get("engine_version"))
     snap0 = s.send(cmd="snapshot")["snapshot"]
     check("snapshot expose `containers` VIDE à l'init (golden neutre)",
@@ -129,14 +129,15 @@ def test_conteneurs():
     # --- deplacer_pot : position + lumière recalculée ----------------------
     # Le pot #0 est sous l'ombre maison (1000,400). On le déplace au plein soleil
     # (loin) → le snapshot reflète la nouvelle position (la lumière se recalcule au
-    # tick — ici on prouve la MOBILITÉ + l'exposition de la position).
+    # tick — ici on prouve la MOBILITÉ + l'exposition de la position). GESTES
+    # LISIBLES ① : la cible reste DANS le jardin [0, 2000]² (2500 est refusé).
     rm = s.send(cmd="action", verb="deplacer_pot",
-                target={"container": 0, "x_cm": 2500.0, "y_cm": 2500.0})
+                target={"container": 0, "x_cm": 1900.0, "y_cm": 1900.0})
     check("deplacer_pot → applied + coût > 0",
           rm["result"]["applied"] and rm["result"]["cost"] > 0.0)
     moved = rm["snapshot"]["containers"][0]
     check("position du pot mise à jour au snapshot",
-          moved["x_cm"] == 2500.0 and moved["y_cm"] == 2500.0, moved)
+          moved["x_cm"] == 1900.0 and moved["y_cm"] == 1900.0, moved)
 
     # --- bac REFUSE le déplacement (immobile, sans coût) -------------------
     rbacmove = s.send(cmd="action", verb="deplacer_pot",

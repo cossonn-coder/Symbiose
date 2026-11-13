@@ -35,6 +35,14 @@ from .couts import cout_action, OBJETS_TOUCHES, _objets_action
 # `diffus` (exsudats DANS le sol, non ramassables — décision ⑤A du compost).
 TISSUS_GLANABLES = STRUCTURE_ACCEPTE["bac"]
 
+# Unités de STOCK de mulch par unité de masse de litière tendre glanée (GESTES
+# LISIBLES ①, §5 — rééquilibrage À L'EXCÈS pour le test, quitte à réduire). Même rôle
+# que `BROYAGE_RENDEMENT` : une conversion d'unités (des feuilles sèches en vrac
+# couvrent plus de sol que leur masse ne le dit), lue SEULEMENT par le geste → golden
+# neutre. Mesuré (seed 42, fin d'été) : un plot ordinaire glané = ~1,07 dose à 1.0
+# → ~2,1 doses à 2.0 (`sprints/joueur/gestes/sprint_gestes_lisibles/mesures/`).
+GLANAGE_RENDEMENT = 2.0
+
 
 def mulch_stock(game_state: dict) -> dict:
     """La jauge de stock de mulch du profil (`game_state["mulch_stock"]`), créée à la
@@ -131,7 +139,7 @@ def glaner(game_state: dict, player: str, eco, r: int, c: int) -> float:
     Coût FAIBLE (geste rustique). **Refus EN AMONT** (aucune Vigueur dépensée) si le
     plot n'a rien de tendre à glaner (`total ≤ 0` — sol propre) : ce n'est pas une
     maladresse, il n'y a simplement rien à ramasser (patron `broyer`/`epandre`).
-    Renvoie la masse de feuilles créditée au stock (0.0 = rien fait)."""
+    Renvoie le stock de feuilles crédité (masse × `GLANAGE_RENDEMENT`, 0.0 = rien fait)."""
     cell = eco.litiere[r][c]
     total = sum(p.masse for p in cell if p.masse > 0.0 and p.tissu in TISSUS_GLANABLES)
     if total <= 0.0:
@@ -140,5 +148,6 @@ def glaner(game_state: dict, player: str, eco, r: int, c: int) -> float:
     if spend(game_state, player, cost) < 1.0:
         return 0.0                            # Vigueur insuffisante → litière intacte
     eco.litiere[r][c] = [p for p in cell if p.tissu not in TISSUS_GLANABLES]
-    mulch_stock(game_state)["feuilles"] += total
-    return total
+    credit = total * GLANAGE_RENDEMENT
+    mulch_stock(game_state)["feuilles"] += credit
+    return credit

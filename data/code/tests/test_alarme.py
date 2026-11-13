@@ -70,15 +70,16 @@ def _somme(eco):
 
 # ---------------------------------------------------------------------------
 def test_ecraser():
-    print("\n[A] écraser une abeille pose l'alarme ; un ravageur n'en pose pas")
+    # GESTES LISIBLES ① (§6) : l'abeille VOLE → `ecraser` la refuse en amont ; le code
+    # d'alarme de `ecraser` reste en place mais n'est plus atteignable par ce chemin.
+    # L'alarme vit toujours par la récolte de miel sans équipement (suite [B]).
+    print("\n[A] écraser une abeille est refusé (elle vole) ; un ravageur ne pose pas d'alarme")
     tile, eco = _eco()
     gs = _gs()
     eco.populations["abeille"].fill(0.6)
     ok = ACT.ecraser(gs, "joueur_1", eco, RR, CC, guilde="abeille")
-    check("écraser abeille appliqué", ok)
-    check("alarme posée au plot écrasé", eco.alarme.data[RR][CC] == ALARME_DEPOT,
-          f"{eco.alarme.data[RR][CC]:.3f}")
-    check("alarme strictement LOCALE (ailleurs 0)", _somme(eco) == ALARME_DEPOT)
+    check("écraser abeille REFUSÉ (volant)", not ok)
+    check("aucune alarme posée (le pied n'a rien attrapé)", _somme(eco) == 0.0)
     # Écraser un NON-pollinisateur : aucune phéromone apienne.
     tile2, eco2 = _eco()
     gs2 = _gs()
@@ -151,8 +152,9 @@ def test_determinisme():
     def run():
         tile, eco = _eco()
         gs = _gs()
-        eco.populations["abeille"].fill(0.6)
-        ACT.ecraser(gs, "joueur_1", eco, RR, CC, guilde="abeille")
+        ruche = ACT.poser_ruche(gs, "joueur_1", eco, RR, CC)   # alarme par le miel nu
+        ruche.miel = 5.0
+        ACT.recolter_miel(gs, "joueur_1", ruche, eco)
         for _ in range(4):
             tick_alarme(eco)
         return round(eco.alarme.data[RR][CC], 9), round(_somme(eco), 9)

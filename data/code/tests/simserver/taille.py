@@ -59,8 +59,10 @@ def test_taille_au_segment():
     r = s7.send(cmd="action", verb="tailler", target={**pos, "segment": vise})
     check("tailler un segment explicite → applied:true",
           r["result"]["applied"] is True, r["result"]["message"])
-    check("le message nomme le segment",
-          f"segment {vise}" in r["result"]["message"])
+    # GESTES LISIBLES ① : plus de numéro de segment dans la phrase (aucun chiffre).
+    check("le message dit la branche visée, sans chiffre",
+          "branche visée" in r["result"]["message"]
+          and not any(ch.isdigit() for ch in r["result"]["message"]))
     apres = meme_plante(r["snapshot"])
     check("le snapshot JOINT perd exactement le sous-arbre ciblé",
           apres is not None

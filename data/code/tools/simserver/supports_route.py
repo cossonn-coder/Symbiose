@@ -104,5 +104,5 @@ def route_support(gs: dict, player: str, verb: str, target: dict, bilan,
     facade, reussi = _COUVERTURES[verb]
     ok = facade(gs, player, eco, r, c)
     return bilan(ok, cost, 0.0,
-                 f"{reussi} en ({r},{c}) sur {tile.tile_id}" if ok
+                 reussi if ok
                  else "Vigueur insuffisante — rien posé")

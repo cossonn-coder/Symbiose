@@ -200,7 +200,7 @@ def build_population_specs() -> list[TrophicSpec]:
             **encyclo_meta("carabe"),
         ),
         TrophicSpec(
-            name="merle", category="auxiliaire", salt=_SALT_MERLE,
+            name="merle", category="auxiliaire", salt=_SALT_MERLE, vole=True,
             resource_fn=_merle_food_grid, habitat_fn=_base_habitat_grid,
             predators=("rapace",),               # ② : le rapace fond sur l'oiseau à découvert
             daylen_min=8.5, daylen_full=10.0,    # toute saison (oiseau résident, fenêtre LARGE)
@@ -225,7 +225,7 @@ def build_population_specs() -> list[TrophicSpec]:
         # frais. Fenêtre LARGE et rampe thermique basse : sang chaud, résidents,
         # actifs l'hiver (l'écureuil vit de ses caches, le geai aussi).
         TrophicSpec(
-            name="geai", category="disperseur", salt=_SALT_GEAI,
+            name="geai", category="disperseur", salt=_SALT_GEAI, vole=True,
             resource_fn=_geai_food_grid, habitat_fn=_geai_habitat_grid,
             predators=(),
             daylen_min=8.5, daylen_full=10.0,
@@ -269,7 +269,7 @@ def build_population_specs() -> list[TrophicSpec]:
         # aucune capacité ne naît d'un terrain vide → un sommet SANS proie ne s'installe
         # jamais (philo #2 : c'est le BAS de la chaîne qui le nourrit).
         TrophicSpec(
-            name="rapace", category="super_predateur", salt=_SALT_RAPACE,
+            name="rapace", category="super_predateur", salt=_SALT_RAPACE, vole=True,
             resource_fn=_proies_grid(("campagnol", "merle", "mulot"), _rapace_habitat_grid),
             habitat_fn=_habitat_nul_grid, habitat_w=0.0,
             predators=(),
@@ -297,14 +297,14 @@ def build_population_specs() -> list[TrophicSpec]:
         # `category_density`) → golden neutre pour l'agrégat. Fenêtre estivale
         # (chaleur : le moustique éclot quand l'eau tiédit).
         TrophicSpec(
-            name="moustique", category="aquatique", salt=_SALT_MOUSTIQUE,
+            name="moustique", category="aquatique", salt=_SALT_MOUSTIQUE, vole=True,
             resource_fn=_eau_stagnante_grid, habitat_fn=_mare_habitat_grid,
             predators=("libellule",),
             daylen_min=11.0, daylen_full=13.5,   # fenêtre estivale (eau tiède)
             **encyclo_meta("moustique"),
         ),
         TrophicSpec(
-            name="libellule", category="aquatique", salt=_SALT_LIBELLULE,
+            name="libellule", category="aquatique", salt=_SALT_LIBELLULE, vole=True,
             resource_fn=_espece_grid("moustique"),   # chasse sa proie fraîche (ticke après)
             habitat_fn=_mare_habitat_grid,           # se reproduit AU-DESSUS de l'eau (larve aquatique)
             predators=(),                            # sommet de la mini-chaîne de mare
@@ -525,6 +525,7 @@ def build_pollinator_specs() -> list[TrophicSpec]:
             habitat_fn=ps.habitat_fn, predators=(),
             daylen_min=ps.daylen_min, daylen_full=ps.daylen_full,
             lisiere_w=ps.lisiere_w,              # périphérie ③ (0.0 sauf syrphe)
+            vole=True,                           # gestes lisibles ① : tous volent
             **encyclo_meta(ps.name),
         )
         for ps in build_pollinator_registry()

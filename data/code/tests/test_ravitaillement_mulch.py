@@ -26,6 +26,7 @@ from fields import init_eco
 from fields.ecofields import NATURES_MULCH, PAILLAGE_DOSE
 from sim import actions as ACT
 from sim import outils, vigueur
+from sim.actions.paillage import GLANAGE_RENDEMENT
 
 _results = []
 
@@ -68,8 +69,10 @@ def test_glaner_credite_stock():
     v_avant = vigueur.ensure_player(gs, P)["courante"]
     credit = ACT.glaner(gs, P, eco, 1, 1)
     stock = ACT.mulch_stock(gs)
-    check("A1 — glaner crédite la masse tendre (2.5) au stock feuilles",
-          abs(credit - 2.5) < 1e-9 and abs(stock["feuilles"] - 2.5) < 1e-9,
+    # GESTES LISIBLES ① : le stock crédité = masse tendre × GLANAGE_RENDEMENT.
+    attendu = 2.5 * GLANAGE_RENDEMENT
+    check("A1 — glaner crédite la masse tendre (2.5) × rendement au stock feuilles",
+          abs(credit - attendu) < 1e-9 and abs(stock["feuilles"] - attendu) < 1e-9,
           f"credit={credit}, stock={stock['feuilles']}")
     check("A2 — litière tendre RETIRÉE du sol après glanage",
           _masse_tendre(eco, 1, 1) == 0.0, f"tendre={_masse_tendre(eco, 1, 1)}")

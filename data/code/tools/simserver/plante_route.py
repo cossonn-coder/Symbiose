@@ -22,6 +22,7 @@ from __future__ import annotations
 from sim import actions as A      # façades des 7 gestes sur plante (foi métier)
 from sim import quetes as Q       # hook de comptage des quêtes joueur (D79 ①)
 from .champignon_route import route_carpophore   # `manger` un carpophore (sol qui respire ⑥)
+from .mots import vigueur_en_mots   # gain dit en ressenti, pas en chiffre (0.6.14)
 
 VERBES = ("manger", "recolter", "deraciner", "tailler", "couper",
           "pincer", "arracher")
@@ -74,17 +75,15 @@ def route_plante(gs: dict, player: str, verb: str,
                              f"fruit hors structure : {fidx} "
                              f"(la plante porte {len(plant.fruits)} fruits)")
         g = A.manger(gs, player, plant, eco, fruit_index=fidx)
-        # Gain nominal DANS le message (retour F5 Nico : « rien ne se
-        # passe » = organe immature, gain ≈ 0 — qu'on le LISE).
-        cible = f"fruit #{fidx}" if fidx is not None else plant.name
-        return bilan(True, 0.0, g,
-                     f"mangé : {cible} (+{g:.1f} Vigueur — "
-                     f"gain ∝ maturité de l'organe)")
+        # Gain DANS le message (retour F5 Nico : « rien ne se passe » = organe
+        # immature, gain ≈ 0 — qu'on le LISE), dit en mots depuis 0.6.14.
+        cible = "un fruit" if fidx is not None else plant.name
+        return bilan(True, 0.0, g, f"mangé : {cible} — {vigueur_en_mots(g)}")
     if verb == "recolter":
         deja = plant.quatre_feuilles_cueilli
         ratio = A.recolter(gs, player, plant, eco)
         msg = ("récolté : " + plant.name if ratio >= 1.0
-               else f"récolte partielle ({ratio:.0%}) : {plant.name}")
+               else f"récolte partielle, le bras manque de force : {plant.name}")
         # Quatre feuilles (TRÈFLE DOMINANT ③) : le retour du geste, seul signe à la cueillette.
         if plant.quatre_feuilles_cueilli and not deja:
             msg = "un trèfle à quatre feuilles !"
@@ -161,7 +160,7 @@ def route_plante(gs: dict, player: str, verb: str,
             return bilan(False, 0.0, 0.0,
                          "le collet est protégé — rien à couper ici")
     ok = A.tailler(gs, player, plant, eco, cible=cible, segment_id=seg)
-    quoi = f"segment {seg}" if seg is not None else cible
+    quoi = "la branche visée" if seg is not None else cible
     return bilan(ok, cost, 0.0,
                  f"taillé ({quoi}) : {plant.name}" if ok
                  else "Vigueur insuffisante — rien taillé")

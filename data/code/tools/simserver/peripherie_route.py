@@ -106,17 +106,17 @@ def _cote(target: dict):
 
 def _etat(secteur: dict) -> str:
     """Résumé DIAGNOSTIC d'un secteur pour le message d'ACK (lecture pure) : ce que
-    le geste a réellement produit, jamais ce qu'on avait prévu. Aucune jauge ni
-    compteur cumulé à l'écran (philo #5) — c'est une ligne de retour d'action, du
-    même rang que « arrosé (3,4) : humidité 0.42 → 0.88 »."""
+    le geste a réellement produit, jamais ce qu'on avait prévu. EN MOTS depuis
+    GESTES LISIBLES ① (0.6.14, philo #5) : plus de centimètres ni de densité chiffrée,
+    le paysage se lit dans la vue, la phrase ne fait que le nommer."""
     if secteur["type"] == "falaise":
-        return f"roche {secteur['altitude_relative']:.0f} cm"
+        return "la roche à nu"
     bits = []
     if secteur["hauteur_canopee"] > 0.0 or secteur["densite_ligneuse"] > 0.0:
-        bits.append(f"canopée {secteur['hauteur_canopee']:.0f} cm, "
-                    f"densité {secteur['densite_ligneuse']:.2f}")
+        bits.append("un couvert ligneux dense" if secteur["densite_ligneuse"] >= 0.5
+                    else "un couvert ligneux clair")
     if secteur["ligne_eau"] != 0.0:
-        bits.append(f"ligne d'eau {secteur['ligne_eau']:.0f} cm")
+        bits.append("une eau haute" if secteur["ligne_eau"] > 0.0 else "une eau basse")
     return " · ".join(bits) or "rien de ligneux"
 
 

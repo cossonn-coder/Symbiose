@@ -20,12 +20,21 @@ from sim import actions as A           # façades conteneurs (poser/deplacer)
 from sim import vigueur as V           # spend (planter_conteneur)
 from world import planter_dans         # place directe dans le mini-sol
 from world.substrat import SUBSTRATS   # validation du substrat
+from fields.peripherie import MONDE_CM # côté du jardin (cm) : un pot se pose DEDANS
 
 VERBES = ("poser_pot", "poser_bac_culture", "deplacer_pot", "planter_conteneur")
 
 
 def _num(v) -> bool:
     return isinstance(v, (int, float)) and not isinstance(v, bool)
+
+
+def _dans_jardin(x, y) -> bool:
+    """Le point MONDE (cm) est-il dans le jardin `[0, MONDE_CM]²` ? Un pot posé ou
+    déplacé au-delà (dans la ceinture, hors de la carte) est un refus de
+    DÉSIGNATION, qui ne coûte rien (GESTES LISIBLES ①, bug « pot hors du jardin » :
+    le pont acceptait n'importe quelle coordonnée)."""
+    return 0.0 <= x <= MONDE_CM and 0.0 <= y <= MONDE_CM
 
 
 def route_conteneur(gs: dict, player: str, verb: str,
@@ -46,6 +55,8 @@ def route_conteneur(gs: dict, player: str, verb: str,
         if not _num(vol) or vol <= 0.0 or not _num(x) or not _num(y):
             return bilan(False, 0.0, 0.0,
                          "volume/position invalides (volume>0, x_cm, y_cm requis)")
+        if not _dans_jardin(x, y):
+            return bilan(False, 0.0, 0.0, "hors du jardin — rien posé")
         cost = A.cout_action(gs, player, verb, A.OBJETS_TOUCHES[verb])
         if verb == "poser_pot":
             ctn = A.poser_pot(gs, player, substrat, float(vol), float(x), float(y))
@@ -59,9 +70,8 @@ def route_conteneur(gs: dict, player: str, verb: str,
             ctn = A.poser_bac_culture(gs, player, substrat, float(vol),
                                       float(x), float(y), rows=rows, cols=cols)
             quoi = "bac"
-        idx = (len(gs["containers"]) - 1) if ctn is not None else None
         return bilan(ctn is not None, cost, 0.0,
-                     f"{quoi} {substrat} posé (#{idx}) en ({x:.0f},{y:.0f}) cm"
+                     f"{quoi} de {substrat} posé"
                      if ctn is not None else "Vigueur insuffisante — rien posé")
 
     # deplacer_pot / planter_conteneur : cible par INDEX dans la liste monde.
@@ -83,11 +93,13 @@ def route_conteneur(gs: dict, player: str, verb: str,
         x, y = target.get("x_cm"), target.get("y_cm")
         if not _num(x) or not _num(y):
             return bilan(False, 0.0, 0.0, f"position invalide : x={x!r}, y={y!r}")
+        if not _dans_jardin(x, y):
+            return bilan(False, 0.0, 0.0, "hors du jardin — pot non déplacé")
         cost = A.cout_action(gs, player, "deplacer_pot",
                              A.OBJETS_TOUCHES["deplacer_pot"])
         ok = A.deplacer_pot(gs, player, ctn, float(x), float(y))
         return bilan(ok, cost, 0.0,
-                     f"pot {ctn.container_id} déplacé en ({x:.0f},{y:.0f}) cm"
+                     "pot déplacé, sa terre et ses plantes avec lui"
                      if ok else "Vigueur insuffisante — pot non déplacé")
 
     # planter_conteneur : place DIRECTEMENT une plante dans le mini-sol (un conteneur
@@ -106,6 +118,4 @@ def route_conteneur(gs: dict, player: str, verb: str,
         return bilan(False, cost, 0.0, "Vigueur insuffisante — graine conservée")
     bank.take(species)
     planter_dans(ctn, PLANT_CATALOGUE[species])
-    return bilan(True, cost, 0.0,
-                 f"{species} planté dans {ctn.container_id} "
-                 f"(now {len(ctn.plants)} plante(s))")
+    return bilan(True, cost, 0.0, f"{species} planté dans le {ctn.kind}")

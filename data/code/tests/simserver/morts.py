@@ -8,7 +8,7 @@ vue dessine la silhouette sèche/couchée. Les vivantes portent `dead=false`.
 Levier déterministe : `deraciner` met `vitalite=0` puis `deposer_mort` → squelette
 persistant pour une vivace LIGNEUSE (l'AppleTree de la config full ; une herbacée,
 bois=0, serait retirée au tick et jamais vue). Aucun step entre le déracinage et le
-snapshot : le squelette est observé frais (seche, semaines_mort=0).
+snapshot : le squelette est observé frais (couchee depuis GESTES LISIBLES ①, semaines_mort=0).
 """
 import json
 
@@ -55,8 +55,9 @@ def test_morts():
                  and abs(p["y_cm"] - tree["y_cm"]) < 0.1), None)
     check("le pommier déraciné persiste (squelette, non retiré)", mort is not None)
     check("le squelette porte dead=true", mort and mort.get("dead") is True)
-    check("stade_mort = 'seche' (debout, frais déraciné)",
-          mort and mort.get("stade_mort") == "seche", mort and mort.get("stade_mort"))
+    # GESTES LISIBLES ① : une plante arrachée gît au sol dès le geste.
+    check("stade_mort = 'couchee' (au sol, frais déraciné)",
+          mort and mort.get("stade_mort") == "couchee", mort and mort.get("stade_mort"))
     check("bois_restant > 0 (réservoir ligneux à fragmenter)",
           mort and mort.get("bois_restant", 0.0) > 0.0,
           mort and f"bois={mort.get('bois_restant')}")

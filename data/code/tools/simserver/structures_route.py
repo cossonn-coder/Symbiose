@@ -17,6 +17,8 @@ from __future__ import annotations
 
 from sim import actions as A      # façades structures/compostage/ruche (foi métier)
 
+from .mots import quantite_en_mots, vigueur_en_mots   # mots, pas chiffres (0.6.14)
+
 VERBES = ("poser_bac", "poser_pile", "composter", "empiler_bois",
           "retourner", "epandre", "poser_ruche", "recolter_miel")
 
@@ -68,8 +70,7 @@ def route_structure(gs: dict, player: str, verb: str,
             s = A.poser_ruche(gs, player, eco, r, c)   # ⑥ §H.1
             quoi = "ruche"
         return bilan(s is not None, cost, 0.0,
-                     f"{quoi} posé{'e' if verb == 'poser_ruche' else ''} "
-                     f"en ({r},{c}) sur {tile.tile_id}"
+                     f"{quoi} posé{'e' if verb == 'poser_ruche' else ''}"
                      if s is not None
                      else "Vigueur insuffisante — rien posé")
 
@@ -85,8 +86,8 @@ def route_structure(gs: dict, player: str, verb: str,
         g = A.recolter_miel(gs, player, struct, eco)   # eco → alarme §J si nu
         equipe = A.equipe(gs, player)
         return bilan(g > 0.0, cost, g,
-                     f"miel récolté (+{g:.1f} Vigueur"
-                     f"{'' if equipe else ' — récolte partielle, sans équipement'})"
+                     f"miel récolté : {vigueur_en_mots(g)}"
+                     f"{'' if equipe else ' (récolte partielle, sans équipement)'}"
                      if g > 0.0
                      else "rien récolté (réserve vide ou Vigueur insuffisante)")
     # Cohérence kind/geste : composter→bac, empiler→pile (refus de
@@ -109,12 +110,12 @@ def route_structure(gs: dict, player: str, verb: str,
     if verb == "composter":
         ok = A.composter(gs, player, eco, r, c, struct)
         return bilan(ok, cost, 0.0,
-                     f"litière tendre compostée ({r},{c}) → bac" if ok
+                     "litière tendre versée au bac" if ok
                      else "Vigueur insuffisante — rien composté")
     if verb == "empiler_bois":
         ok = A.empiler_bois(gs, player, eco, r, c, struct)
         return bilan(ok, cost, 0.0,
-                     f"bois empilé ({r},{c}) → pile" if ok
+                     "bois empilé sur la pile" if ok
                      else "Vigueur insuffisante — rien empilé")
     # epandre : params.q optionnel (None ⇒ tout le disponible).
     q = params.get("q")
@@ -123,6 +124,7 @@ def route_structure(gs: dict, player: str, verb: str,
         return bilan(False, 0.0, 0.0, f"quantité non numérique : {q!r}")
     epandu = A.epandre(gs, player, eco, r, c, struct, q=q)
     return bilan(epandu > 0.0, cost, 0.0,
-                 f"compost épandu en ({r},{c}) : {epandu:.2f} "
-                 f"(jauge restante {struct.compost_mur:.2f})" if epandu > 0.0
+                 f"compost épandu : {quantite_en_mots(epandu)}"
+                 + (" — il en reste" if struct.compost_mur > 0.0 else " — le tas est vide")
+                 if epandu > 0.0
                  else "rien épandu (jauge vide ou Vigueur insuffisante)")

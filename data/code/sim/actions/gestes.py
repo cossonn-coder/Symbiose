@@ -242,6 +242,10 @@ def deraciner(game_state: dict, player: str, plant, eco) -> bool:
         return False
     plant.vitalite = 0.0
     deposer_mort(plant, eco)   # squelette persistant (②B), point d'entrée unique
+    # GESTES LISIBLES ① (§3.1) : une plante ARRACHÉE gît au sol, elle ne reste pas
+    # debout comme un mort sur pied — le geste la couche d'emblée (fait moteur, hors
+    # tick). Couchée : n'ombre plus, ne sert plus de perchoir, se fragmente au sol.
+    plant.stade_mort = "couchee"
     return True
 
 
@@ -439,6 +443,12 @@ def ecraser(game_state: dict, player: str, eco, r: int, c: int,
     le raccourci s'use. Le canal vertueux symétrique est `favoriser_auxiliaire`.
     Renvoie True si le geste a été pleinement payé (et donc appliqué)."""
     if guilde not in eco.populations:
+        return False
+    # GESTES LISIBLES ① (§6) : un pied n'attrape pas ce qui VOLE (abeille, papillon,
+    # merle…). Refus EN AMONT, aucune Vigueur dépensée — ce n'est pas une maladresse,
+    # la bête s'envole. L'alarme abeille ci-dessous devient inatteignable par ce chemin
+    # (gardée : règle « ne rien jeter » ; le miel sans équipement la garde vivante).
+    if eco.populations[guilde].spec.vole:
         return False
     # Pas de cible vivante de catalogue (les guildes ne sont pas des espèces
     # câblées, D31) → terme 2 vide ; l'URGENCE reste un facteur SÉPARÉ par-dessus.

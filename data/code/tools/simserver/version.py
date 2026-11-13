@@ -861,7 +861,21 @@ from __future__ import annotations
 #       ancien client ; absente (ancien serveur) → la vue n'estompe rien. Golden neutre.
 #       Et `graines_espece` = {clé de graine: nom d'espèce} pour les lots de `seeds` (la
 #       vue teinte la pastille de graine comme l'espèce ; absente → teinte par défaut).
-ENGINE_VERSION = "0.6.13"
+# 0.6.14 (GESTES LISIBLES ①) : trois clés neuves au snapshot, toutes optionnelles côté vue —
+#       `traces_sol` = {tuile: [[r, c, x_cm, y_cm, sorte, age], …]} (traces de gestes PAYÉS au
+#       point cliqué, tuile-local ; sorte ∈ becher/grelinette/pas/epandre/arroser/creuser ; age
+#       en semaines, la vue estompe ; seules les tuiles marquées ; registre moteur
+#       `sim/traces_sol.py`, purgé à l'écriture et à l'export, jamais au tick) ;
+#       `sol_sec` = {tuile: [[r, c, humidite], …]} (plots sous 0.5, seuil du stress hydrique
+#       moteur ; toutes les tuiles, listes vides comprises) ; `volants` = [clés d'espèce de
+#       faune qui volent] (la vue ne les propose pas à `ecraser`). Règles : `ecraser` sur un
+#       volant est refusé sans dépense ; `deraciner` couche le cadavre (`stade_mort` =
+#       "couchee" d'emblée) ; `poser_pot`/`poser_bac_culture`/`deplacer_pot` hors du jardin
+#       `[0, 2000]²` sont refusés sans dépense. Les PHRASES de geste ne portent plus de
+#       chiffre (quantités en mots, `mots.py`) — `cost`/`gain` restent numériques. Glaner
+#       ×2 (stock), miel ×100 à la ruche et ×2 en Vigueur (à l'excès, pour le test).
+#       Golden neutre.
+ENGINE_VERSION = "0.6.14"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

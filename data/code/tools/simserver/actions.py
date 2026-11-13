@@ -28,6 +28,8 @@ from .multiplication_route import (
 from .peripherie_route import route_peripherie, VERBES as PERIPHERIE_VERBES
 from .plante_route import route_plante, VERBES as PLANTE_VERBES
 from .pont_delta import mode_delta   # segments en delta, opt-in (0.6.0)
+from .sol_canvas_pont import noter_trace_geste   # traces de gestes au sol (0.6.14)
+from .mots import quantite_en_mots   # quantités dites en mots, pas en chiffres (0.6.14)
 from .structures_route import route_structure, VERBES as STRUCTURE_VERBES
 from .supports_route import route_support, VERBES as SUPPORT_VERBES
 from .maitrise_pont import (
@@ -96,6 +98,9 @@ class ActionsMixin:
             nouveaux = evaluer_deblocages(gs, player)
             if nouveaux:
                 result["debloques"] = nouveaux
+            # Sol-canvas (GESTES LISIBLES ①) : le geste PAYÉ laisse sa trace au sol,
+            # au point cliqué. Un refus n'écrit rien. Hors tick → golden neutre.
+            noter_trace_geste(gs, verb, target, self._plot_at)
         # Snapshot frais TOUJOURS joint : l'effet (plante disparue, etc.) est
         # visible en un seul aller-retour — pas de 2e requête à inventer.
         return {"ok": True, "result": result,
@@ -242,7 +247,7 @@ class ActionsMixin:
                 ok = A.planter(gs, player, tile, eco, species, r, c,
                                x_cm=target.get("x_cm"), y_cm=target.get("y_cm"))
                 return bilan(ok, cost, 0.0,
-                             f"graine déposée ({species}) en ({r},{c}) — "
+                             f"graine déposée ({species}) — "
                              "germera au bon moment" if ok
                              else "Vigueur insuffisante — graine conservée")
             # arroser : phase saison ⇒ urgence (× URGENCE_MULT). Accepte
@@ -256,12 +261,10 @@ class ActionsMixin:
             cost = (A.cout_action(gs, player, "arroser",
                                   A.OBJETS_TOUCHES["arroser"])
                     * (A.URGENCE_MULT if urgence else 1.0))
-            h_avant = eco.humidite.at_plot(r, c)
             ok = A.arroser(gs, player, eco, r, c, urgence=urgence, feuillage=feuillage)
-            h_apres = eco.humidite.at_plot(r, c)
             return bilan(ok, cost, 0.0,
-                         f"arrosé ({r},{c}) : humidité {h_avant:.2f} → {h_apres:.2f}"
-                         + (" [feuillage]" if feuillage else "")
+                         ("arrosé, le feuillage ruisselle" if feuillage
+                          else "arrosé au pied, la terre boit")
                          + (" [urgence]" if urgence else "") if ok
                          else "Vigueur insuffisante — rien arrosé")
 
@@ -328,22 +331,24 @@ class ActionsMixin:
                 if espece not in eco.populations:
                     return bilan(False, 0.0, 0.0,
                                  f"espèce inconnue : {espece!r}")
+                # Un VOLANT s'envole avant que le pied ne retombe (GESTES LISIBLES ①,
+                # §6) : refus en amont, la façade refuse aussi, rien n'est dépensé.
+                if eco.populations[espece].spec.vole:
+                    return bilan(False, 0.0, 0.0,
+                                 "ça s'envole avant que le pied ne retombe")
                 cost = (A.cout_action(gs, player, "ecraser")
                         * (A.URGENCE_MULT if urgence else 1.0))
-                # Densité de l'espèce ciblée avant/après DANS le message (la vue
-                # confirme l'effet en un aller-retour). Lecture pure, zéro règle.
-                avant = eco.populations[espece].get(r, c)
+                # Mots au lieu des chiffres (GESTES LISIBLES ①, §5) : plus de densité
+                # avant/après dans la phrase — le sprite disparu dit l'effet.
                 ok = A.ecraser(gs, player, eco, r, c, guilde=espece, urgence=urgence)
-                apres = eco.populations[espece].get(r, c)
                 return bilan(ok, cost, 0.0,
-                             f"écrasé un {espece} en ({r},{c})"
-                             + (" [urgence]" if urgence else "")
-                             + f" — {espece} {avant:.2f} → {apres:.2f}" if ok
+                             f"écrasé un {espece}"
+                             + (" [urgence]" if urgence else "") if ok
                              else "Vigueur insuffisante — rien écrasé")
             cost = A.cout_action(gs, player, "becher", A.OBJETS_TOUCHES["becher"])
             ok = A.becher(gs, player, eco, r, c)
             return bilan(ok, cost, 0.0,
-                         f"bêché en ({r},{c})" if ok
+                         "bêché, la terre est retournée" if ok
                          else "Vigueur insuffisante — rien bêché")
 
         if verb == "favoriser_auxiliaire":
@@ -381,10 +386,9 @@ class ActionsMixin:
             cost = A.cout_action(gs, player, "pailler", A.OBJETS_TOUCHES["pailler"])
             avant = eco.paillage.at_plot(r, c)
             ok = A.pailler(gs, player, eco, r, c, nature=nature)
-            apres = eco.paillage.at_plot(r, c)
             return bilan(ok, cost, 0.0,
-                         f"paillé ({r},{c}) en {nature} : "
-                         f"profondeur {avant:.2f} → {apres:.2f}" if ok
+                         (f"le paillis de {nature} s'épaissit" if avant > 0.0
+                          else f"le sol se couvre de {nature}") if ok
                          else f"rien paillé (stock de {nature} vide ou "
                               "Vigueur insuffisante)")
 
@@ -406,7 +410,8 @@ class ActionsMixin:
             cost = A.cout_action(gs, player, "broyer", A.OBJETS_TOUCHES["broyer"])
             credit = A.broyer(gs, player, plant, eco)
             return bilan(credit > 0.0, cost, 0.0,
-                         f"bois broyé : +{credit:.2f} BRF au stock de mulch" if credit > 0.0
+                         f"bois broyé : {quantite_en_mots(credit)} de BRF au stock"
+                         if credit > 0.0
                          else "rien broyé (plus de bois ou Vigueur insuffisante)")
 
         # Glaner la litière tendre (moyens d'agir ③, canal 1) : geste sur le MILIEU au
@@ -429,9 +434,9 @@ class ActionsMixin:
             cost = A.cout_action(gs, player, "glaner", A.OBJETS_TOUCHES["glaner"])
             credit = A.glaner(gs, player, eco, r, c)
             return bilan(credit > 0.0, cost, 0.0,
-                         f"litière glanée ({r},{c}) : +{credit:.2f} feuilles au stock"
+                         f"litière glanée : {quantite_en_mots(credit)} de feuilles"
                          if credit > 0.0
-                         else f"rien à glaner en ({r},{c}) (sol propre) "
+                         else "rien à glaner ici (sol propre) "
                               "ou Vigueur insuffisante")
 
         if verb == "grelinette":
@@ -449,7 +454,7 @@ class ActionsMixin:
                                  A.OBJETS_TOUCHES["grelinette"])
             ok = A.grelinette(gs, player, eco, r, c)
             return bilan(ok, cost, 0.0,
-                         f"sol ameubli à la grelinette en ({r},{c})" if ok
+                         "sol ameubli à la grelinette" if ok
                          else "Vigueur insuffisante")
 
         # Terrassement (sprint hydrologie & marécages ⑦) : gestes sur le MILIEU au PLOT
@@ -472,20 +477,16 @@ class ActionsMixin:
                              f"plot hors tuile : r={r!r}, c={c!r}")
             cost = A.cout_action(gs, player, verb, A.OBJETS_TOUCHES[verb])
             if verb == "creuser":
-                alt_avant = eco.altitude.at_plot(r, c)
                 ok = A.creuser(gs, player, eco, r, c)
-                alt_apres = eco.altitude.at_plot(r, c)
                 return bilan(ok, cost, 0.0,
-                             f"cuvette creusée ({r},{c}) : altitude "
-                             f"{alt_avant:.1f} → {alt_apres:.1f} cm" if ok
+                             "une cuvette se creuse, la terre rejetée autour" if ok
                              else "Vigueur insuffisante — rien creusé")
             lame_avant = eco.eau_surface.at_plot(r, c)
-            mem_avant = eco.marais_memory.at_plot(r, c)
             ok = A.drainer(gs, player, eco, r, c)
-            mem_apres = eco.marais_memory.at_plot(r, c)
             return bilan(ok, cost, 0.0,
-                         f"drainé ({r},{c}) : flaque {lame_avant:.2f} → 0.00, "
-                         f"marais {mem_avant:.2f} → {mem_apres:.2f}" if ok
+                         ("drainé : la flaque s'écoule, le marais recule"
+                          if lame_avant > 0.0 else "drainé : le sol s'assèche")
+                         if ok
                          else "Vigueur insuffisante — rien drainé")
 
         # Supports de grimpe, perchoir, palissage et couvertures climatiques (accès aux
