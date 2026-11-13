@@ -204,7 +204,7 @@ namespace Symbiose
 		// L'ombre n'est plus un nœud enfant (PERF VUE ③) : toutes les capsules
 		// partent en UN lot (visuals/PlantShadow.cs), qui lit ces deux mesures.
 		internal float OmbreSpreadCm => _spreadCm;
-		internal float OmbreHeightCm => _heightCm;
+		internal float OmbreHeightCm => _gisant ? _heightCm * GisantRelief : _heightCm;   // un gisant n'ombre plus (③)
 
 		// Segment à surligner (index dans Segments = l'ordre du SNAPSHOT, le
 		// même que structure_to_dict() Python — c'est CET index qui part dans
@@ -234,10 +234,17 @@ namespace Symbiose
 		// aplatie). Posé par WorldView.ApplySnapshot d'après le `dead`/`stade_mort`
 		// du snapshot (0.3.6). Une fois mort, un nœud ne « ressuscite » jamais.
 		private string _deadStade;
+		// GESTES LISIBLES ③ : un mort « couché » GÎT — son axe vertical bascule au sol
+		// (Iso), dans une direction propre à l'individu (hash, jamais Random).
+		private bool _gisant;
+		private Vector2 _axeGisant;
 		public void SetSkeleton(string stadeMort)
 		{
 			if (_deadStade == stadeMort) return;   // early-out : pas de redraw inutile
 			_deadStade = stadeMort;
+			_gisant = stadeMort == "couchee";
+			float a = Mathf.Tau * Hash01(213, GraineIndividu, 0);
+			_axeGisant = new Vector2(Mathf.Cos(a), Mathf.Sin(a));
 			Invalidate();
 		}
 
@@ -418,6 +425,9 @@ namespace Symbiose
 		private Vector2 Iso(float dx, float dy, float dz)
 		{
 			if (_bendFlex > 0f && dz > 0f) Bend(ref dx, ref dy, ref dz);
+			// Couché (③) : la hauteur devient une longueur au sol ; il reste un relief
+			// d'épaisseur (GisantRelief) pour que la tige ne se fonde pas dans la terre.
+			if (_gisant) (dx, dy, dz) = (dx + dz * _axeGisant.X, dy + dz * _axeGisant.Y, dz * GisantRelief);
 			return WorldView.WorldToScreenOffset(dx, dy) - new Vector2(0f, dz * WorldView.PxPerCmZ);
 		}
 
@@ -577,7 +587,11 @@ namespace Symbiose
 		// les segments d'un squelette (stade_mort est un simple flag), on écrase
 		// donc la composante verticale à l'AFFICHAGE pour la lecture « à terre ».
 		// "sèche" garde sa hauteur (facteur 1).
-		private const float CoucheeFlatten = 0.18f;
+		// GESTES LISIBLES ③ : l'écrasement (0,18) faisait d'une tige de 2,5 m un moignon
+		// DEBOUT ; le mort couché est désormais COUCHÉ par Iso (axe basculé au sol) →
+		// pleine longueur, facteur neutre. Gardé pour ses lecteurs (Prairie, Graminées).
+		private const float CoucheeFlatten = 1f;
+		private const float GisantRelief = 0.06f;
 
 		// Squelette = mêmes segments que DrawSegments (même tri tronc-dessous, même
 		// projection Iso) mais en bois MORT uniforme, sans organes ni surbrillance,

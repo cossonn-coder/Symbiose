@@ -195,10 +195,15 @@ namespace Symbiose
 			for (int i = 1; i < 4; i++) if (g[i].Y > g[front].Y) front = i;
 			int right = (front + 3) % 4, left = front;
 
-			// Fond de caisse = top rhombus rempli de compost (alpha ∝ jauge) :
-			// la matière mûre « remplit » le bac vue d'en haut.
-			var fond = CompostCol; fond.A = 0.25f + 0.65f * sat;
-			DrawColoredPolygon(top, fond);
+			// GESTES LISIBLES ③ : le bac montre son VOLUME — intérieur sombre (vide),
+			// puis la surface du compost à une hauteur ∝ jauge : il se remplit à l'œil.
+			DrawColoredPolygon(top, BoisFonce);
+			if (sat > 0.01f)
+			{
+				Vector2 niveau = up * Mathf.Max(0.12f, sat);
+				DrawColoredPolygon(new[] { g[0] + niveau, g[1] + niveau, g[2] + niveau, g[3] + niveau },
+					CompostCol);
+			}
 
 			// 2 faces avant (planches claires), arêtes plus sombres.
 			foreach (int w in new[] { right, left })
@@ -220,18 +225,21 @@ namespace Symbiose
 			var humus = HumusCol; humus.A = 0.30f + 0.55f * sat;
 			DrawColoredPolygon(g, humus);
 
-			// Largeur d'un rondin = l'axe est-ouest de l'empreinte, projeté en
-			// offset → il pivote avec la vue. Trois assises décroissantes.
-			Vector2 ew = WorldView.WorldToScreenOffset(PileHalfCm, 0f);
-			float lift = 11f * WorldView.PxPerCmZ;
-			(float w, float y)[] rangs = { (1.0f, 0f), (0.7f, 1f), (0.4f, 2f) };
-			foreach (var (wf, yi) in rangs)
-			{
-				Vector2 cen = new Vector2(0f, -yi * lift - lift * 0.4f);
-				Vector2 half = ew * wf;
-				DrawLine(cen - half, cen + half, RondinCol, 7f);
-				DrawLine(cen - half, cen + half, BoisFonce, 7f * 0.18f);  // cœur cerné
-			}
+			// GESTES LISIBLES ③ : la pile GROSSIT avec sa quantité — 1 à 10 rondins,
+			// rangés en pyramide (4, 3, 2, 1) du bas vers le haut, côte à côte sur l'axe
+			// nord-sud. Rondin = l'axe est-ouest projeté en offset → pivote avec la vue.
+			Vector2 ew = WorldView.WorldToScreenOffset(PileHalfCm * 0.9f, 0f);
+			float lift = 9f * WorldView.PxPerCmZ;
+			int n = 1 + Mathf.RoundToInt(9f * sat);
+			for (int k = 0, rang = 0; k < n; rang++)
+				for (int i = 0; i < 4 - rang && k < n; i++, k++)
+				{
+					float v = (i - (3 - rang) * 0.5f) * 9f;   // cm, centré sur le rang
+					Vector2 cen = WorldView.WorldToScreenOffset(0f, v)
+						+ new Vector2(0f, -rang * lift - lift * 0.4f);
+					DrawLine(cen - ew, cen + ew, RondinCol, 5f);
+					DrawLine(cen - ew, cen + ew, BoisFonce, 1f);   // cœur cerné
+				}
 		}
 	}
 }

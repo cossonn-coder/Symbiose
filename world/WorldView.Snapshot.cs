@@ -382,6 +382,7 @@ namespace Symbiose
 			// snapshot pré-0.5.20 sans le bloc → pas de mulch dessiné, jamais de crash.
 			if (snap.ContainsKey("paillage"))
 				ApplyPaillage(snap["paillage"].AsGodotDictionary());
+			ApplySolCanvas(snap);   // traces de gestes + sol craquelé (GESTES LISIBLES ③, 0.6.14)
 		}
 
 		// Famille 4 — structures posées (bac/pile, supports de grimpe, conteneurs).

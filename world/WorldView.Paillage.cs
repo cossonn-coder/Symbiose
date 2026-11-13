@@ -29,7 +29,7 @@ namespace Symbiose
 		// (le mulch est inerte entre deux semaines, pas de fondu à tenir).
 		private void ApplyPaillage(GDict paillage)
 		{
-			_mulchLayer?.SetPaillage(paillage, _origins);
+			_mulchLayer?.SetPaillage(paillage, _origins, ReliefRiseAtPlot);   // posé sur le relief (③)
 		}
 	}
 }

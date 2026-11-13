@@ -215,5 +215,26 @@ namespace Symbiose
 			// FIN de tableau (le shader ne les trame jamais, cf. MaitreAccents).
 			new Color("b8323a"), MaitreJaune, new Color("de8ab0"), new Color("7c5cb0"),
 		};
+
+		// === SOL-CANVAS (GESTES LISIBLES ③) : traces de gestes, craquelé, pluie ===
+		// Aucune teinte neuve : ce sont des entrées de la palette MAÎTRE ci-dessus
+		// (rampe terre/bois, sable, eau), nommées par leur rôle au sol.
+		public static readonly Color SolHumus    = new Color("33261f"); // terre 0 : motte, fond de cuvette, compost
+		public static readonly Color SolSombre   = new Color("5a4030"); // terre 1 : terre retournée, mouillée, botte
+		public static readonly Color SolMotte    = new Color("836556"); // terre 2 : dessus éclairé d'une motte
+		public static readonly Color SolAmeubli  = new Color("b39d85"); // terre 4 : terre claire ameublie, rebord
+		public static readonly Color SolCroute   = new Color("c9c29a"); // sable 0 : croûte sèche
+		public static readonly Color Eclaboussure = new Color("a8cfe6"); // eau 2 : goutte qui rebondit
+
+		// === PAILLIS par nature (D69, repris au ③) : base + éclat de chaque matériau ===
+		// Les bases sont les teintes historiques de MulchLayer (rangées ici, hex inchangés).
+		public static readonly Color PaillePaille   = new Color("cbb35a"); // chaume doré
+		public static readonly Color PaillePailleEclat = new Color("e3dbb3"); // brin au soleil (sable 1)
+		public static readonly Color PailleBrf      = new Color("6e5334"); // copeau ligneux
+		public static readonly Color PailleBrfEclat = new Color("a9855c"); // aubier frais du copeau
+		public static readonly Color PailleAiguilles = new Color("5a6340"); // litière de conifère
+		public static readonly Color PailleFeuilles = new Color("8a5a2e"); // feuille morte rousse
+		public static readonly Color PailleFeuillesEclat = new Color("c77137"); // feuille rouille (argile 2)
+		public static readonly Color PailleInconnue = new Color("9a9060");
 	}
 }

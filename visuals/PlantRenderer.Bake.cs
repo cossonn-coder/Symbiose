@@ -167,6 +167,8 @@ namespace Symbiose
 			brush._spreadCm = _spreadCm;
 			brush._heightCm = _heightCm;
 			brush._deadStade = _deadStade;
+			brush._gisant = _gisant;           // mort couché (GESTES LISIBLES ③)
+			brush._axeGisant = _axeGisant;
 			brush._colorTint = _colorTint;
 			brush._colorAmount = _colorAmount;
 			brush._ravageurs = _ravageurs;

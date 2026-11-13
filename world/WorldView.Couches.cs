@@ -27,7 +27,7 @@ namespace Symbiose
 		// Weather ; Vignette = le dessin de l'encart ciel (SkyPanel).
 		private static readonly string[] CouchesMacro = { "MacroLife", "ForagerLayer", "Carpophores", "LeafFall" };
 		private static readonly string[] CouchesSol =
-			{ "Couverture", "Allelopathie", "Mulch", "Puddle", "Litter", "DeadWood", "LeafLitter", "Snow", "Covers" };
+			{ "Couverture", "Allelopathie", "TracesSol", "Mulch", "Puddle", "Eclaboussures", "Litter", "DeadWood", "LeafLitter", "Snow", "Covers" };
 		private static readonly string[] CouchesCiel = { "Weather", "Sky", "Vignette" };
 
 		private static readonly (string Nom, string[] Couches)[] CasCouches =

@@ -34,7 +34,7 @@ re-figeage prévu : un rééquilibrage qui le bougerait passe par une constante 
 |---|---|---|
 | ① | `01_moteur_pont.md` — traces, volants, couché, pot, mots, rééquilibrage, pont 0.6.14 | **FAIT** (golden intact) |
 | ② | `02_animations_curseur.md` — images précuites, rotation, icônes inversées | **FAIT** (golden intact, build vert, planche regardée) |
-| ③ | `03_sol_canvas.md` — couche de traces, paillis, cuvette, pile, pluie, craquelé | à faire (après ①) |
+| ③ | `03_sol_canvas.md` — couche de traces, paillis, cuvette, pile, pluie, craquelé | **FAIT** (golden intact, build vert, captures regardées) |
 | ④ | `04_objet_en_main_ergonomie.md` — objet en main, coccinelle, catalogue, fruit | à faire |
 | ⑤ | `05_automate.md` — actif fenêtre fermée, gestes visibles, mode testeur | à faire (après ②) |
 | ⑥ | `06_banc_recette.md` — banc `gestes_lisibles`, oracle, recette F5, clôture | à faire (après tous) |
@@ -118,7 +118,38 @@ PNG de capture avant de conclure un tronçon de vue.
   `poser_*` partagent la même chute ; `palisser` (pelote qui tourne) reste une balle.
 - Aucun fichier de `world/` touché (`WorldView.cs` toujours à 300 LDC) ; déclenchement inchangé.
 
+### ③ sol-canvas (2026-11-13)
+- **Clés lues** : `traces_sol`, `sol_sec`, `paillage`, `structures`, `weather` — conformes au ① (vérifié
+  au code). Branché par `world/WorldView.SolCanvas.cs` (couches créées au 1er snapshot, remises à zéro
+  à un nouveau monde) + 1 ligne dans `WorldView.Snapshot.cs` (295 LDC). `WorldView.cs` intact (300).
+- **Traces** : `visuals/TracesSolLayer.cs` (un nœud + un LotTriangles par tuile, redessiné seulement si
+  la signature de la tuile change : contenu + relief des plots marqués ; pivot/palier ×1) +
+  `visuals/TracesSolMotifs.cs` (bêche = mottes sur terre sombre, grelinette = raies claires, pas = botte
+  au point cliqué, épandre = voile de compost, arroser = auréole, creuser = couronne de mottes).
+  Estompage : −0,16 d'opacité/semaine, plancher 0,25 ; la vue ignore la durée de vie (le moteur purge).
+  Sous le paillis (même ZIndex 1, ordre d'enfant avant `Mulch`).
+- **Craquelé** : même couche ; apparaît sous **0,35**, s'efface quand le plot quitte `sol_sec` (0,5).
+- **Paillis** : `MulchLayer.cs` réécrit + `visuals/MulchMotifs.cs` — losange plein du plot (opacité ∝
+  profondeur), paille en brins, BRF en copeaux, aiguilles en traits, feuilles en taches ; posé sur le
+  relief ; chute de brins 0,9 s quand la profondeur d'un plot monte entre deux snapshots. Teintes
+  rangées dans `Palette16` (hex inchangés) + bloc sol-canvas (entrées de la palette maître).
+- **Cuvette** : le creux EST le relief (altitude −15 cm → marche de ~3 px à ×1) ; rien d'ajouté. Sur un
+  plot déjà à altitude 0 le moteur borne à 0 → pas de creux (le banc vise des plots hauts).
+- **Couché** : NE se couchait pas (écrasement ×0,18 = moignon debout) → `PlantRenderer.Iso` bascule
+  l'axe vertical au sol (direction par hash d'individu), `CoucheeFlatten` = 1, ombre réduite ; l'état
+  est copié au pinceau de cuisson (`Bake.cs`, sinon l'image cuite restait debout).
+- **Tas** : la quantité était déjà exportée (`contenu`, `compost_mur`) → pas de pont touché. Bac =
+  surface de compost à hauteur ∝ masse ; pile = 1 à 10 rondins en pyramide.
+- **Pluie** : `visuals/EclaboussuresLayer.cs`, ≤ 90 gouttes ∝ `MeteoPlantes.Pluie`, un lot, dort hors pluie.
+- **Banc** `sol_canvas` (`data/code/bancs/sol_canvas.py`, + post-init) : gestes joués par leurs façades,
+  traces antidatées. Capture : `tools/capture_vm.sh -b sol_canvas -w 0 -z 2 -c 1650,1550`
+  (`-m "Orage,2.0,60"` pour la pluie). Planches : `planche/planche_03_*.png`.
+- **Perf** : FPS non mesuré (`perf_vm.sh` pas lancé) ; coût par construction = 1 envoi par tuile marquée,
+  1 pour le paillis, 1 pour la pluie.
+- **Encore faibles (F5)** : cuvette peu lisible (marche de relief seule) ; empreintes de botte petites à
+  ×2 ; ombre-ellipse encore large sous le gisant (étalement inchangé) ; l'info-bulle d'un mort dit
+  « feuillage ferme » (pré-existant, hors ③).
+
 ## §REPRISE
-① FAIT et commité (`52d2c02`) ; ② FAIT, non commité (golden `b4a921f8…` intact).
-Prochain : ③ `03_sol_canvas.md` (lit `traces_sol`, `sol_sec`, `paillage` au snapshot) ;
-④ ensuite ; ⑤ peut utiliser `AnimationGeste.TexturesMonde(verbe, echelle)`.
+① FAIT et commité (`52d2c02`) ; ② commité (`40110a7`) ; ③ FAIT, non commité (golden `b4a921f8…` intact).
+Prochain : ④ `04_objet_en_main_ergonomie.md` ; ⑤ peut utiliser `AnimationGeste.TexturesMonde(verbe, echelle)`.

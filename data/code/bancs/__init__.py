@@ -30,6 +30,7 @@ from . import courrier as _courrier
 from . import peripherie as _peripherie
 from . import nucleation as _nucleation
 from . import acces_gestes as _acces_gestes
+from . import sol_canvas as _sol_canvas
 
 BANCS = {
     "secheresse_sable": secheresse_sable,
@@ -68,6 +69,8 @@ BANCS = {
     "nucleation": _nucleation.nucleation,  # zoochorie ⑦ : perchoir, mort debout, hêtraie
     # accès aux gestes ④ : toutes les portes à portée, RIEN d'ouvert d'avance.
     "acces_gestes": _acces_gestes.acces_gestes,
+    # gestes lisibles ③ : chaque trace au sol, paillis, cuvette, couché, sec, tas.
+    "sol_canvas": _sol_canvas.sol_canvas,
 }
 
 # Hook POST-INIT par banc (palette de gestes ⑤) : callback OPTIONNEL `(game_state,
@@ -90,7 +93,10 @@ BANC_POST_INIT = {"palette_gestes": _palette_gestes.post_init,
                   # `nucleation` (zoochorie ⑦) : pose une hêtraie au nord (apport geai).
                   "nucleation": _nucleation.post_init,
                   # `acces_gestes` (④) : ceinture + Vigueur large, AUCUN déblocage.
-                  "acces_gestes": _acces_gestes.post_init}
+                  "acces_gestes": _acces_gestes.post_init,
+                  # `sol_canvas` (gestes lisibles ③) : gestes joués par leur façade,
+                  # traces écrites puis antidatées.
+                  "sol_canvas": _sol_canvas.post_init}
 
 # Seed IMPOSÉ par banc (effondrement météo ④). La plupart des bancs sont neutres au
 # seed (ils forcent leur condition par composition) → repli sur le défaut du serveur.
