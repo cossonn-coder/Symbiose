@@ -327,5 +327,7 @@ Pour chaque geste, regarder **l'outil au curseur** (4 à 6 images), **la trace a
 
 ## §REPRISE
 **Sprint CLOS côté code** (①→⑥, golden `b4a921f8…` intact, pont 0.6.16) ; ⑥ non commité. Prochain =
-**F5 de Nico** : suivre §Recette F5 ci-dessus. Puis `/refactor` (`serialize.py` 409 LDC, `SimBridge.cs`
-349, `MacroLife.cs` 315) ; D136 (g)(h) et D137 restent ouverts.
+**F5 de Nico** : suivre §Recette F5 ci-dessus. `/refactor` FAIT le 2026-11-13 (`aab5c01`) :
+`serialize.py` 409 → 302 LDC (cartes de sol → `cartes_sol_pont.py`), snapshot identique octet pour
+octet. Restent en vigilance, non scindés : `SimBridge.cs` 349, `MacroLife.cs` 315 ; hors sprint,
+`tests/test_croissance.py` 424 (dette ancienne). D136 (g)(h) et D137 restent ouverts.
