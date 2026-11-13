@@ -37,7 +37,8 @@ namespace Symbiose
 			if (_curseurTemoin == null) return;
 			bool surInterface = GetViewport().GuiGetHoveredControl() != null;
 			bool icone = _curseurIcone && !surInterface;
-			Texture2D tex = icone ? IconeGeste.Texture(_curseurVerbe, CurseurEchelle) : _curseurRepos;
+			Texture2D tex = icone ? _curseurAnimTex ?? IconeGeste.Texture(_curseurVerbe, CurseurEchelle)
+				: _curseurRepos;   // image d'animation en cours (④), sinon l'icône
 			Vector2 hotspot = icone ? _curseurIconeHotspot : CurseurHotspot;
 			if (_curseurTemoin.Texture != tex) _curseurTemoin.Texture = tex;
 			_curseurTemoin.Position = GetViewport().GetMousePosition() - hotspot;

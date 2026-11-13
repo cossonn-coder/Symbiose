@@ -29,7 +29,9 @@ en main, et l'animer quand le geste s'exécute. Pure vue C#. Reprend D118 (d) et
 | ① | `01_moteur_icones_planche.md` — format de grille, cuisson, planche de contrôle, `GesteIcon` branché | **CLOS côté code 2026-11-13** (build vert, golden intact, planche regardée) |
 | ② | `02_les_icones.md` — les 45 icônes, par familles, vérifiées à la planche | **CLOS côté code 2026-11-13** (45/45, build vert, golden intact, planche regardée) |
 | ③ | `03_curseur_geste.md` — curseur à l'icône du geste, point chaud, silhouettes | **CLOS côté code 2026-11-13** (build vert, golden intact, captures regardées, F5 attendu) |
-| ④ | `04_animations_execution.md` — animations d'exécution et de refus, clôture | à faire |
+| ④ | `04_animations_execution.md` — animations d'exécution et de refus, clôture | **CLOS côté code 2026-11-13** (build vert, golden intact, planche regardée, F5 attendu) |
+
+**SPRINT CLOS CÔTÉ CODE le 2026-11-13** (①→④). Refonte de l'accès aux gestes close côté code.
 
 ## Interdits communs
 - Ne JAMAIS lancer `tests/test_epaisseur_500ans`. Pas de `ps aux` / `pgrep -f`.
@@ -128,10 +130,57 @@ en main, et l'animer quand le geste s'exécute. Pure vue C#. Reprend D118 (d) et
   Windows, `Cross` personnalisé n'est pas remplacé par la croix système ; (e) taille ×2 lisible
   sur l'écran de Nico (échelle d'écran Windows : le curseur OS n'est pas agrandi par Godot).
 
+- **④ — mécanisme** : table verbe → mouvement `visuals/icones/IconesMouvements.cs` (46 verbes,
+  7 mouvements ; `IconeGeste.Defauts` exige un mouvement par grille). Images fabriquées en
+  TRANSFORMANT l'icône (`visuals/AnimationGeste.cs`, 138 LDC) : recette par mouvement =
+  décalage du dessin + « avance » dirigée du centre vers le point chaud + pixels d'effet
+  autour du point chaud (reflétés s'ils sortent de la grille, peints derrière le dessin sauf
+  l'éclat de la coupe). Aucune grille dédiée n'a été nécessaire. Cache par (verbe, sorte,
+  échelle), libéré dans `LibererCurseur`. Lecture : `world/WorldView.CurseurAnim.cs` (43 LDC),
+  échéance en ms dans `UpdateCurseur` (aucun `_Process` en plus), 80 ms par image.
+- **④ — où arrive la réponse** (prémisse du kickoff corrigée) : pas dans
+  `WorldView.ActionDispatch.cs` (qui ne fait qu'envoyer) mais dans `_Process` de
+  `WorldView.cs`, bloc 1b (`res["applied"]`). Une ligne y lance `Execution` ou `Refus`.
+  `WorldView.cs` passe à **300 LDC** (limite haute de la norme, à surveiller).
+- **④ — coût du re-pose de curseur** (vérifié) : on donne à l'OS l'`Image` CPU, pas la
+  texture (une `ImageTexture` serait relue depuis la carte graphique à chaque appel). 2 à 5
+  appels `SetCustomMouseCursor` par action, aucun au repos.
+- **④ — décisions imprévues** : (1) au CLIC, geste armé, une image « tap » (l'outil appuie
+  d'un pixel vers sa cible, 80 ms) remplace l'image fixe du ③ : réponse immédiate même si le
+  pont tarde, et seul signe du premier clic des gestes à deux temps ; l'animation de réponse
+  l'interrompt et repart du début. (2) La secousse ne joue qu'au **refus du pont** ; les refus
+  de désignation côté vue (« aucune tuile ici ») gardent seulement le clignotement du message
+  (ils sont éparpillés dans `TryAction`, et `FlashActionLabel` sert aussi à la vision : pas un
+  point d'accroche sûr). (3) `remuer` = petit cercle, pas un va-et-vient (confusion avec le
+  refus). (4) Changer de geste pendant une animation l'arrête net.
+- **④ — planche** : `tools/capture_vm.sh -W` (= `--capture-icones=2`, `visuals/PlancheAnimations.cs`),
+  une ligne par mouvement puis refus et tap, deux témoins par ligne, repos + images à ×4 puis
+  ×2 sur terre, point chaud marqué en rouge (il ne bouge pas). Finale :
+  `planche/planche_04_animations.png`. Lu à la planche : verser (filet + éclaboussure),
+  couper (éclat au bec), frapper (bêche levée de 2 px puis miettes), poser (descente de 3 px),
+  ramasser (éclats jaunes/blancs) se lisent ; **faibles** : poussière de `poser` (deux pixels
+  aux coins), miettes de `remuer` souvent cachées derrière le tas, éclats de `abattre` (point
+  chaud au bord de la hache), refus ±1 px = 2 px écran, discret. Le témoin de capture suit
+  l'image animée, mais aucune capture du banc ne déclenche d'action : l'animation en jeu
+  n'est vue qu'à la planche.
+
+## RECETTE F5 (les trois points ③ (a)-(e) ci-dessus, plus)
+Armer chaque geste, cliquer une cible valide, regarder le curseur :
+1. **verser** : `arroser` un plot — l'eau coule de la pomme, éclabousse.
+2. **couper** : `couper` (ou `pincer`) une plante — la lame s'ouvre, mord, éclat au bec.
+3. **frapper** : `becher` un plot — l'outil se lève et frappe, miettes de terre.
+4. **poser** : `poser_bac` (ou `planter`) — l'objet descend et touche.
+5. **ramasser** : `recolter` une plante mûre — le panier plonge, éclats au-dessus.
+6. **remuer** : `composter` sur un bac — petit cercle.
+7. **écraser** : `ecraser` un nuisible — la botte se lève et retombe.
+8. **refus** : un geste refusé par le moteur (ex. `planter` sans Vigueur, `composter` sans
+   litière) — secousse gauche-droite, sans texte.
+9. **tap** : premier clic d'`epandre` sur un tas — l'icône appuie une fois, rien d'autre.
+À juger : vitesse (80 ms/image), lisibilité à ×2, aucun mouvement au repos, la main revient
+sur l'interface pendant/après une animation.
+
 ## §REPRISE
-Lire `CLAUDE.md`, ce fichier, le doc de conception §5, puis le premier kickoff « à faire ».
-**Prochain : ④ `04_animations_execution.md`**. Le curseur de geste vit sur la forme `Cross`
-(`FormeGeste`, `WorldView.Curseur.cs`) ; l'animation remplacera l'image fixe posée par
-`SuivreGesteCurseur` (et le `return` de `TapCurseur` quand `_curseurIcone`). Témoin capture :
-`WorldView.CurseurTemoin.cs` (à faire suivre l'image animée). ③ n'est pas committé par le
-sous-agent (l'orchestrateur commit).
+**Sprint CLOS côté code** (①→④, golden `b4a921f8…` intact). Reste le **F5 de Nico** (recette
+ci-dessus + points ③ (a)-(e)). Réglages possibles sans toucher à la logique : recettes dans
+`visuals/AnimationGeste.cs` (`Recettes`, `DureeImageMs`), table `IconesMouvements.cs`.
+④ n'est pas committé par le sous-agent (l'orchestrateur commit).

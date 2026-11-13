@@ -549,6 +549,8 @@ namespace Symbiose
 							 + $"{_lastActionMsg} (coût {res["cost"].AsDouble():F1}, "
 							 + $"Vigueur {res["vigueur"].AsDouble():F1}).");
 					if (!applied) FlashActionLabel();
+					// Le curseur-geste répond : son mouvement, ou le « non » (④).
+					JouerAnimationCurseur(applied ? AnimationGeste.Sorte.Execution : AnimationGeste.Sorte.Refus);
 					ApplySnapshot(act.Result["snapshot"].AsGodotDictionary());
 					// Un arbre tolère de petits écarts avant de recuire (CleStable.cs) ; pas le geste du joueur.
 					if (applied && targetNode != null && IsInstanceValid(targetNode)) targetNode.Invalidate();

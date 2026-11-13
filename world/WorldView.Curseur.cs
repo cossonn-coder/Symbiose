@@ -104,8 +104,9 @@ namespace Symbiose
 		/// <summary>Clic gauche dans le monde : la main « tape » brièvement.</summary>
 		private void TapCurseur()
 		{
-			// Geste armé : l'icône reste fixe (l'animation d'exécution viendra au ④).
-			if (_curseurIcone) return;
+			// Geste armé : pas de main qui tape, l'ICÔNE appuie d'un pixel (une image,
+			// ④) ; l'animation d'exécution suivra à la réponse du pont (CurseurAnim).
+			if (_curseurIcone) { JouerAnimationCurseur(AnimationGeste.Sorte.Tap); return; }
 			Input.SetCustomMouseCursor(_curseurTap, Input.CursorShape.Arrow, CurseurHotspot);
 			_tapFinMs = Time.GetTicksMsec() + TapDureeMs;
 		}
@@ -123,6 +124,8 @@ namespace Symbiose
 			Input.SetDefaultCursorShape(Input.CursorShape.Arrow);
 			_curseurVerbe = null;
 			_curseurIcone = false;
+			ArreterAnimationCurseur();
+			AnimationGeste.Liberer();   // images d'animation (④), hors cache d'IconeGeste
 			IconeGeste.Liberer();   // textures d'icônes en cache (palette, tiroir, planche,
 			                        // et celle du curseur : c'est le même cache)
 		}
@@ -144,6 +147,7 @@ namespace Symbiose
 				Input.SetCustomMouseCursor(_curseurRepos, Input.CursorShape.Arrow, CurseurHotspot);
 			}
 			SuivreGesteCurseur();
+			AvancerAnimationCurseur();   // image suivante d'une animation de geste (④)
 			SuivreTemoinCurseur();   // capture VM seulement (WorldView.CurseurTemoin.cs)
 			if (_plotHover == null)
 			{
@@ -177,6 +181,7 @@ namespace Symbiose
 			string verbe = _gesteIndex >= 0 && _gesteIndex < Gestes.Length ? Gestes[_gesteIndex].Verb : null;
 			if (verbe == _curseurVerbe) return;   // rien n'a changé : on ne touche à rien
 			_curseurVerbe = verbe;
+			ArreterAnimationCurseur();   // l'animation de l'ancien geste s'arrête net (④)
 			ImageTexture tex = IconeGeste.Texture(verbe, CurseurEchelle);
 			if (tex == null || !IconesPointsChauds.PointsChauds.TryGetValue(verbe, out var p))
 			{

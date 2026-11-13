@@ -114,7 +114,13 @@ namespace Symbiose
 		public static ImageTexture CuireSilhouette(string[] grille, int echelle) =>
 			Peindre(grille, echelle, silhouette: true);
 
-		private static ImageTexture Peindre(string[] grille, int echelle, bool silhouette)
+		private static ImageTexture Peindre(string[] grille, int echelle, bool silhouette) =>
+			ImageTexture.CreateFromImage(PeindreImage(grille, echelle, silhouette));
+
+		/// <summary>La grille peinte en `Image` CPU, sans la téléverser (④ : les images
+		/// d'animation du curseur sont données à l'OS sous cette forme — lui passer une
+		/// texture l'obligerait à la relire depuis la carte graphique).</summary>
+		public static Image PeindreImage(string[] grille, int echelle, bool silhouette = false)
 		{
 			var img = Image.CreateEmpty(Cote, Cote, false, Image.Format.Rgba8);
 			for (int y = 0; y < Cote; y++)
@@ -127,7 +133,7 @@ namespace Symbiose
 					img.SetPixel(x, y, silhouette ? TeinteSilhouette : Palette16.Maitre[rang]);
 				}
 			img.Resize(Cote * echelle, Cote * echelle, Image.Interpolation.Nearest);
-			return ImageTexture.CreateFromImage(img);
+			return img;
 		}
 
 		/// <summary>VÉRIFICATION DE DÉMARRAGE (debug) : la liste des défauts du jeu
@@ -153,6 +159,8 @@ namespace Symbiose
 								defauts.Add($"{verbe} : lettre '{c}' hors alphabet");
 					}
 					if (!forme) { defauts.Add($"{verbe} : grille qui n'est pas 16×16"); continue; }
+					if (!IconesMouvements.Mouvements.ContainsKey(verbe))
+						defauts.Add($"{verbe} : pas de mouvement d'animation (④)");
 					if (!IconesPointsChauds.PointsChauds.TryGetValue(verbe, out var p))
 						defauts.Add($"{verbe} : pas de point chaud");
 					else if (p.X < 0 || p.X >= Cote || p.Y < 0 || p.Y >= Cote || g[p.Y][p.X] == '.')

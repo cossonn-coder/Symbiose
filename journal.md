@@ -227,6 +227,7 @@ pointeur ci-dessous. Ne plus écrire le contenu des entrées ici.
 - [2026-11-12 — Conception **REFONTE DE L'ACCÈS AUX GESTES** (D133, D118 b-e) — FIGÉE : 20 gestes gatés sur 32 jamais ouverts (audit) ; portes des techniques, pressentis, tiroir par familles, icônes DA + curseur animé ; 3 sprints, golden intact](journal/182_2026-11-12_conception-refonte-palette-FIGEE.md)
 - [2026-11-12 — Sprint **ACCÈS AUX GESTES** (D133) — CLOS côté code (①→④) : portes des techniques, Atelier + courrier qui enseigne + observations, pressentis et familles, neuf gestes ajoutés à la vue, banc `acces_gestes` (oracle 56/56 : tous les gestes ouvrables en jouant) ; golden intact, pont 0.6.12, F5 attendu](journal/183_2026-11-12_sprint-acces-gestes-CLOS.md)
 - [2026-11-13 — Sprint **PALETTE & TIROIR** — CLOS côté code (①→③) : tiroir des gestes par familles, réglages cliquables (fin de S/B/N), silhouettes des pressentis, Ctrl+molette, D118 (b)(c) corrigés, macros débranchées ; golden intact, pont 0.6.13, F5 attendu](journal/184_2026-11-13_sprint-palette-tiroir-CLOS.md)
+- [2026-11-13 — Sprint **ICÔNES & CURSEUR** — CLOS côté code (①→④) : 46 icônes de gestes dessinées par le code dans la palette maître, curseur à l'icône du geste armé, animations d'exécution par mouvement et secousse de refus, D118 (d)(e) ; refonte de l'accès aux gestes close côté code ; golden intact, F5 attendu](journal/185_2026-11-13_sprint-icones-curseur-CLOS.md)
 
 > Tout le contenu détaillé est dans les fichiers liés ci-dessus
 > (`journal/` et `journal_archive/`). La dette est dans [`DETTE.md`](DETTE.md).
