@@ -13,26 +13,28 @@ namespace Symbiose
 	{
 		public static readonly Dictionary<string, string[]> Grilles = new()
 		{
-			// Pouce et index gantés, venus de la droite, qui se referment en pince
-			// sur le bourgeon du bout d'une jeune tige.
+			// GESTES LISIBLES ② (redessiné, l'ancienne pince de doigts n'était pas
+			// comprise) : une MAIN gantée entière, venue d'en haut à droite (manchette
+			// sombre), pouce et index refermés sur le bourgeon vert du bout d'une
+			// jeune tige à deux feuilles. On lit « des doigts qui pincent une pousse ».
 			["pincer"] = new[]
 			{
-				"................",
-				"...........KKK..",
-				".........KKWWWK.",
-				".......KKWWWWSK.",
-				"..KK..KWWWWKKK..",
-				".KVVKKWWKKK.....",
-				".KVGKKKK........",
-				".KVVKKWWKKK.....",
-				"..KGK.KWWWWKKK..",
-				"..KGK..KKWWWWSK.",
-				"..KGK....KKWSSK.",
-				"..KGK......KKK..",
-				"..KGK...........",
-				"..KGK...........",
-				"..KGK...........",
-				"...K............",
+				"..........KKKKK.",
+				"........KKWWWSNK",
+				"...KKKKKWWWWSSNK",
+				"..KWWWWWWWWWWSSK",
+				"..KKKKKKWWWWWSSK",
+				"..KVVK...KWWWSK.",
+				"..KKKKKKWWWWWSK.",
+				"..KWWWWWWWWWSK..",
+				"...KKKKKKKKKK...",
+				"....KGK.........",
+				".KK.KGK.KK......",
+				"KVVKKGKKVVK.....",
+				"KVGVKGKVGVK.....",
+				".KKKKGKKKK......",
+				"....KGK.........",
+				".....K..........",
 			},
 			// Poing ganté (la manche de cuir part à droite) serré sur une tige : la
 			// touffe verte dépasse au-dessus.
@@ -57,8 +59,10 @@ namespace Symbiose
 			},
 			// Sécateur (redessiné au ②, l'ancien se lisait comme une croix) : un bec
 			// de métal en haut à gauche, rivet jaune, deux poignées rouges écartées
-			// vers le bas et la droite.
-			["couper"] = new[]
+			// vers le bas et la droite. GESTES LISIBLES ② : outils INVERSÉS — le
+			// sécateur est l'outil de la TAILLE (rameaux fins), la scie celui de la
+			// COUPE (une branche entière).
+			["tailler"] = new[]
 			{
 				"................",
 				".KK.............",
@@ -78,7 +82,8 @@ namespace Symbiose
 				"....K...........",
 			},
 			// Scie d'élagage : longue lame courbe dentée, poignée de bois ajourée.
-			["tailler"] = new[]
+			// (GESTES LISIBLES ② : c'est l'icône de `couper`, cf. ci-dessus.)
+			["couper"] = new[]
 			{
 				"................",
 				".K..............",

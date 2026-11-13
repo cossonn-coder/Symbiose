@@ -33,7 +33,7 @@ re-figeage prévu : un rééquilibrage qui le bougerait passe par une constante 
 | # | Kickoff | État |
 |---|---|---|
 | ① | `01_moteur_pont.md` — traces, volants, couché, pot, mots, rééquilibrage, pont 0.6.14 | **FAIT** (golden intact) |
-| ② | `02_animations_curseur.md` — images précuites, rotation, icônes inversées | à faire |
+| ② | `02_animations_curseur.md` — images précuites, rotation, icônes inversées | **FAIT** (golden intact, build vert, planche regardée) |
 | ③ | `03_sol_canvas.md` — couche de traces, paillis, cuvette, pile, pluie, craquelé | à faire (après ①) |
 | ④ | `04_objet_en_main_ergonomie.md` — objet en main, coccinelle, catalogue, fruit | à faire |
 | ⑤ | `05_automate.md` — actif fenêtre fermée, gestes visibles, mode testeur | à faire (après ②) |
@@ -84,7 +84,41 @@ PNG de capture avant de conclure un tronçon de vue.
   rendement), suite pont (version, pot déplacé à 1900 au lieu de 2500, segment sans
   numéro, déraciné `couchee`). Test neuf : `tests/test_gestes_lisibles.py` (34 checks).
 
+### ② animations du curseur (2026-11-13)
+- **Moteur d'images** : `visuals/EtapeGeste.cs` (81 LDC) — une image = `Etape` (grille
+  dessinée OU icône ; rotation autour d'un pivot, angle + = horaire ; décalage ; effets aux
+  coordonnées ABSOLUES, derrière le dessin sauf `.Dessus()`, où '.' efface). Fabriques
+  `T`/`R`/`D`, patron partagé `Poser(bas)`, `Puis(...)`. **Rotation échantillonnée 4×4 à vote
+  majoritaire** (`K` pèse 1,5) : le voisin le plus proche simple dédoublait les contours
+  (vu à la planche) ; à `K`×2 tout noircissait.
+- **Suites** : 46/46 gestes, 4 à 6 images, un fichier par famille `visuals/icones/Anims*.cs`
+  (registre `AnimationGeste.Suites`). Grilles dessinées : coccinelle mi-ouverte/ouverte,
+  sécateur ouvert, main ouverte sur la touffe, trogne nue. Les recettes par mouvement
+  (`IconesMouvements.cs`) restent le REPLI d'un geste sans suite (aucun aujourd'hui).
+- **Icônes** : `tailler` = sécateur, `couper` = scie (grilles + points chauds échangés) ;
+  `pincer` redessiné (main gantée entière, pouce + index sur le bourgeon) ; `glaner`
+  redessiné (main d'en haut, manchette, feuille pincée au-dessus d'un tas de feuilles).
+- **Refus** : ±2 px de grille, 3 images (−2, +2, −2).
+- **API monde (pour ⑤)** : `AnimationGeste.TexturesMonde(string verbe, int echelle) →
+  Texture2D[]` (images d'exécution, même cache que le curseur — ne pas les libérer ;
+  null sans icône). Durée d'une image : `AnimationGeste.DureeImageMs` (80 ms).
+- **Vérification** : `IconeGeste.Defauts` exige une suite par grille ; `DefautsSuites`
+  contrôle 4-6 images, grilles 16×16 dans l'alphabet (`IconeGeste.Valide`), effets dans la
+  grille. Journal au banc : `[Icones] 45 gestes vérifiés, 0 défaut(s).`
+- **Planche** (`tools/capture_vm.sh -W -n 4`) : `PlancheAnimations.cs` réécrite — tous les
+  gestes + refus + tap, pages ALTERNÉES ×4 (frames 1/3) et ×2 (frames 0/2). Finales :
+  `planche/planche_02_animations_x4.png`, `planche/planche_02_animations_x2.png`.
+- **Écarts** : `grelinette`, `retourner`, `pailler` ont perdu leur rotation (outils ajourés
+  ou paille : brouillés même au vote) → décalages + mottes/brins ; `retourner` montre une
+  motte qui se RETOURNE (herbe dessus → dessous). `arroser` doit pencher jusqu'à 55° (l'icône
+  est déjà inclinée ~30°) et descend de 5 px vers la cible.
+- **Encore faibles à la planche (F5)** : `glaner` et `pincer` (icônes mieux mais encore
+  chargées à ×2) ; `arroser` penché un peu « bouilli » ; effets d'un pixel peu visibles à ×2
+  (rejets d'`eteter`, reflets de `drainer`/`deriver`, vapeur de `composter`, miel) ; tous les
+  `poser_*` partagent la même chute ; `palisser` (pelote qui tourne) reste une balle.
+- Aucun fichier de `world/` touché (`WorldView.cs` toujours à 300 LDC) ; déclenchement inchangé.
+
 ## §REPRISE
-① FAIT (moteur + pont 0.6.14, golden `b4a921f8…` intact, non commité par le sous-agent).
-Prochain : ② `02_animations_curseur.md` (indépendant de ①) ; ③ peut lire `traces_sol`,
-`sol_sec`, `paillage` au snapshot.
+① FAIT et commité (`52d2c02`) ; ② FAIT, non commité (golden `b4a921f8…` intact).
+Prochain : ③ `03_sol_canvas.md` (lit `traces_sol`, `sol_sec`, `paillage` au snapshot) ;
+④ ensuite ; ⑤ peut utiliser `AnimationGeste.TexturesMonde(verbe, echelle)`.

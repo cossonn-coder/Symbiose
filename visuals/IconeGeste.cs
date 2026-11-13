@@ -161,12 +161,28 @@ namespace Symbiose
 					if (!forme) { defauts.Add($"{verbe} : grille qui n'est pas 16×16"); continue; }
 					if (!IconesMouvements.Mouvements.ContainsKey(verbe))
 						defauts.Add($"{verbe} : pas de mouvement d'animation (④)");
+					if (AnimationGeste.Suite(verbe) == null)
+						defauts.Add($"{verbe} : pas de suite d'images (GESTES LISIBLES ②)");
 					if (!IconesPointsChauds.PointsChauds.TryGetValue(verbe, out var p))
 						defauts.Add($"{verbe} : pas de point chaud");
 					else if (p.X < 0 || p.X >= Cote || p.Y < 0 || p.Y >= Cote || g[p.Y][p.X] == '.')
 						defauts.Add($"{verbe} : point chaud ({p.X}, {p.Y}) hors du dessin");
 				}
+			defauts.AddRange(AnimationGeste.DefautsSuites(verbes));
 			return defauts;
+		}
+
+		/// <summary>Une grille 16×16 dont chaque lettre est dans l'alphabet (ou '.').</summary>
+		public static bool Valide(string[] g)
+		{
+			if (g.Length != Cote) return false;
+			foreach (string ligne in g)
+			{
+				if (ligne.Length != Cote) return false;
+				foreach (char c in ligne)
+					if (c != '.' && !Alphabet.ContainsKey(c)) return false;
+			}
+			return true;
 		}
 
 		/// <summary>Libère toutes les textures en cache (sortie du jeu).</summary>

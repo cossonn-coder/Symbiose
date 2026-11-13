@@ -1,4 +1,15 @@
-// SYMBIOSE — AnimationGeste.cs (sprint ICÔNES & CURSEUR ④ — animations du curseur)
+// SYMBIOSE — AnimationGeste.cs (sprint ICÔNES & CURSEUR ④, GESTES LISIBLES ②)
+//
+// GESTES LISIBLES ② — chaque geste a désormais SA PROPRE SUITE de 4 à 6 images
+// qui DÉCOMPOSE le mouvement (l'arrosoir se penche et l'eau coule, le pied monte
+// haut puis retombe, la main se ferme sur la touffe et tire…). Les suites vivent
+// dans `icones/Anims*.cs`, un fichier par famille (registre `Suites` ci-dessous) ;
+// une image y est une `Etape` (`EtapeGeste.cs` : grille dessinée, ou icône
+// tournée autour d'un pivot / décalée, plus des pixels d'effet). Les anciennes
+// recettes par mouvement (ci-dessous) restent le REPLI d'un geste sans suite.
+// Les mêmes images servent hors curseur (`TexturesMonde`, gestes de l'automate).
+//
+// --- en-tête d'origine (④) ---
 // LES IMAGES D'ANIMATION du curseur-geste. Quand le pont répond « appliqué »,
 // le curseur joue UNE FOIS 3 ou 4 images propres au MOUVEMENT du geste (table
 // `icones/IconesMouvements.cs`) ; quand il refuse, une secousse de 2 images,
@@ -116,11 +127,28 @@ namespace Symbiose
 			},
 		};
 
-		// « Non » : secousse horizontale de 2 images (±1 pixel), commune à tous.
-		private static readonly Pas[] Refus = { P(0, -1, 0), P(0, 1, 0) };
+		// « Non » : secousse horizontale (±2 pixels de grille, GESTES LISIBLES ② —
+		// ±1 se perdait à l'écran), aller-retour-aller, commune à tous.
+		private static readonly Pas[] Refus = { P(0, -2, 0), P(0, 2, 0), P(0, -2, 0) };
 		// Clic : l'outil appuie d'un pixel vers sa cible, le temps d'une image.
 		private static readonly Pas[] Tap = { P(1, 0, 0) };
 		private static readonly Pas[] Repos = { P(0, 0, 0) };
+
+		// LES SUITES PAR GESTE (GESTES LISIBLES ②), une table par famille du tiroir.
+		private static readonly Dictionary<string, Etape[]>[] Suites =
+		{
+			AnimsMain.Suites, AnimsSol.Suites, AnimsSemis.Suites, AnimsTaille.Suites,
+			AnimsEau.Suites, AnimsCompost.Suites, AnimsStructures.Suites, AnimsPaysage.Suites,
+		};
+
+		/// <summary>La suite d'images propre au geste, ou null (repli : recette du mouvement).</summary>
+		public static Etape[] Suite(string verbe)
+		{
+			if (verbe == null) return null;
+			foreach (var table in Suites)
+				if (table.TryGetValue(verbe, out Etape[] suite)) return suite;
+			return null;
+		}
 
 		private static readonly Dictionary<(string, Sorte, int), ImageCurseur[]> _cache = new();
 
@@ -132,18 +160,67 @@ namespace Symbiose
 			if (verbe == null) return null;
 			var cle = (verbe, sorte, echelle);
 			if (_cache.TryGetValue(cle, out ImageCurseur[] images)) return images;
-			Pas[] recette = Recette(verbe, sorte);
 			string[] grille = IconeGeste.Grille(verbe);
+			Etape[] suite = sorte == Sorte.Execution ? Suite(verbe) : null;
+			if (grille != null && suite != null)   // la suite propre au geste
+			{
+				images = new ImageCurseur[suite.Length];
+				for (int i = 0; i < suite.Length; i++)
+					images[i] = Cuire(EtapeGeste.Appliquer(grille, suite[i]), echelle);
+				_cache[cle] = images;
+				return images;
+			}
+			Pas[] recette = Recette(verbe, sorte);
 			if (recette == null || grille == null
 				|| !IconesPointsChauds.PointsChauds.TryGetValue(verbe, out var chaud)) return null;
 			images = new ImageCurseur[recette.Length];
 			for (int i = 0; i < recette.Length; i++)
-			{
-				Image img = IconeGeste.PeindreImage(Transformer(grille, chaud, recette[i]), echelle);
-				images[i] = new ImageCurseur(img, ImageTexture.CreateFromImage(img));
-			}
+				images[i] = Cuire(Transformer(grille, chaud, recette[i]), echelle);
 			_cache[cle] = images;
 			return images;
+		}
+
+		private static ImageCurseur Cuire(string[] grille, int echelle)
+		{
+			Image img = IconeGeste.PeindreImage(grille, echelle);
+			return new ImageCurseur(img, ImageTexture.CreateFromImage(img));
+		}
+
+		/// <summary>USAGE HORS CURSEUR (GESTES LISIBLES ②, branché au ⑤ : gestes de
+		/// l'automate joués comme un sprite du MONDE au point visé) : les images
+		/// d'exécution du geste en textures, à `echelle` px par pixel de grille. Même
+		/// cache que le curseur ; ne pas les libérer soi-même. Null sans icône.</summary>
+		public static Texture2D[] TexturesMonde(string verbe, int echelle)
+		{
+			ImageCurseur[] images = Images(verbe, Sorte.Execution, echelle);
+			if (images == null) return null;
+			var textures = new Texture2D[images.Length];
+			for (int i = 0; i < images.Length; i++) textures[i] = images[i].Tex;
+			return textures;
+		}
+
+		/// <summary>VÉRIFICATION (appelée par `IconeGeste.Defauts`, qui signale déjà un
+		/// geste sans suite) : chaque suite a 4 à 6 images, chaque grille dessinée est 16×16 dans l'alphabet
+		/// (contrôlé par `IconeGeste.Valide`), chaque effet tombe dans la grille.</summary>
+		public static List<string> DefautsSuites(IEnumerable<string> verbes)
+		{
+			var defauts = new List<string>();
+			foreach (string verbe in verbes)
+			{
+				Etape[] suite = Suite(verbe);
+				if (suite == null) continue;   // déjà signalé, grille par grille, par IconeGeste.Defauts
+				if (suite.Length < 4 || suite.Length > 6)
+					defauts.Add($"{verbe} : {suite.Length} images (4 à 6 attendues)");
+				foreach (Etape e in suite)
+				{
+					if (e.Grille != null && !IconeGeste.Valide(e.Grille))
+						defauts.Add($"{verbe} : grille d'animation mal formée");
+					foreach (var (x, y, _) in e.Effets)
+						if (x < 0 || x >= IconeGeste.Cote || y < 0 || y >= IconeGeste.Cote)
+							defauts.Add($"{verbe} : effet ({x}, {y}) hors de la grille");
+				}
+			}
+			return defauts;
 		}
 
 		private static Pas[] Recette(string verbe, Sorte sorte) => sorte switch

@@ -24,7 +24,7 @@ namespace Symbiose
 			// main
 			["recolter"] = (8, 8),              // l'ouverture du panier
 			["manger"] = (5, 9),                // la chair du fruit
-			["glaner"] = (7, 12),               // le creux du poing
+			["glaner"] = (7, 12),               // le tas de feuilles (② : redessiné)
 			["ecraser"] = (8, 12),              // sous la semelle
 			["favoriser_auxiliaire"] = (7, 9),  // le dos de la coccinelle
 			// sol
@@ -39,10 +39,10 @@ namespace Symbiose
 			["greffer"] = (8, 9),               // la ligature
 			["planter_conteneur"] = (7, 13),    // fond du pot
 			// taille
-			["pincer"] = (2, 5),                // là où les doigts se rejoignent
+			["pincer"] = (3, 5),                // le bourgeon entre les doigts (② : redessiné)
 			["arracher"] = (6, 10),             // le poing
-			["couper"] = (1, 1),                // pointe du bec
-			["tailler"] = (0, 2),               // pointe de la scie
+			["couper"] = (0, 2),                // pointe de la scie (② : outils inversés)
+			["tailler"] = (1, 1),               // pointe du bec du sécateur (② : inversés)
 			// eau
 			["arroser"] = (0, 5),               // la pomme de l'arrosoir
 			// compost

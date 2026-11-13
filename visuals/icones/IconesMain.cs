@@ -53,25 +53,29 @@ namespace Symbiose
 				"....KK..KK......",
 				"................",
 			},
-			// Poignée de feuilles mortes (une orangée, une jaune) tenue dans le gant.
+			// GESTES LISIBLES ② (redessiné, la poignée de feuilles se lisait comme un
+			// bouquet) : un TAS de feuilles mortes posé au sol, et la main gantée qui
+			// descend d'en haut, doigts vers le bas, en saisir une. On lit « ramasser
+			// des feuilles par terre ». La main a la manchette de cuir en haut, le
+			// pouce écarté à gauche, une feuille pincée au bout des doigts.
 			["glaner"] = new[]
 			{
-				"................",
-				"....KK....KK....",
-				"...KOOK..KYYK...",
-				"..KOOOOKKYYYYK..",
-				"..KOOBOKKYCYYK..",
-				"..KOOBOOKYCYYK..",
-				"...KOOBOKCYYK...",
-				"....KOOBKCYK....",
-				".....KOBKCK.....",
-				"....KKKBKCKK....",
-				"...KWWWKKKWSK...",
-				"...KWWWWWWSSK...",
-				"...KWWWWWSSSK...",
-				"....KWWWWSSK....",
-				".....KKKKKK.....",
-				"................",
+				"......KKKKK.....",
+				".....KCCCCCK....",
+				".....KKKKKKK....",
+				"..KK.KWWWWSK....",
+				".KWWKKWWWWSK....",
+				".KWWWKWWWWSK....",
+				"..KWWKWWWSSK....",
+				"...KKWKWKWSK....",
+				".....KWKWKSK....",
+				"......KOOKK.....",
+				"......KOOOK.....",
+				".....KKKOK..KK..",
+				"..KK.KYYKKKOOK..",
+				".KYOKKOBOKYOOK..",
+				"KTTTTTTTTTTTTTTK",
+				".KKKKKKKKKKKKKK.",
 			},
 			// Botte de cuir vue de profil, semelle sombre, éclats sous le talon.
 			["ecraser"] = new[]
