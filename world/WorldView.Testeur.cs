@@ -102,7 +102,13 @@ namespace Symbiose
 									System.Action envoye, System.Action refuse)
 		{
 			var p = clics[k].AsGodotArray();
-			Vector2 canvas = WorldToScreen((float)p[0].AsDouble(), (float)p[1].AsDouble());
+			var wPlan = new Vector2((float)p[0].AsDouble(), (float)p[1].AsDouble());
+			Vector2 canvas = WorldToScreen(wPlan.X, wPlan.Y);
+			// Récolter vise le FRUIT mûr dessiné, pas le pied (④) : le plan donne le pied
+			// (un point au sol), le testeur lève la visée sur un fruit mûr de cette plante.
+			if (Gestes[_gesteIndex].Verb == "recolter"
+				&& FindPlant(wPlan, PickRadiusCm) is { } pied && pied.IndexFruitMur() is var f and >= 0)
+				canvas = pied.PointFruitCanvas(f);
 			Input.WarpMouse(CanvasVersSouris(canvas));
 			bool dernier = k == clics.Count - 1;
 			if (dernier) { _verdictGeste = null; _lastActionMsg = ""; }

@@ -37,7 +37,7 @@ re-figeage prévu : un rééquilibrage qui le bougerait passe par une constante 
 | ③ | `03_sol_canvas.md` — couche de traces, paillis, cuvette, pile, pluie, craquelé | **FAIT** (golden intact, build vert, captures regardées) |
 | ④ | `04_objet_en_main_ergonomie.md` — objet en main, coccinelle, catalogue, fruit | **FAIT** (golden intact, build vert, pont 0.6.15, captures regardées) |
 | ⑤ | `05_automate.md` — actif fenêtre fermée, gestes visibles, mode testeur | **FAIT** (golden intact, build vert, pont 0.6.16, captures regardées) |
-| ⑥ | `06_banc_recette.md` — banc `gestes_lisibles`, oracle, recette F5, clôture | à faire (après tous) |
+| ⑥ | `06_banc_recette.md` — banc `gestes_lisibles`, oracle, recette F5, clôture | **FAIT** (golden intact, build vert, oracle 26/26, captures regardées) |
 
 ## Interdits communs
 Jamais `tests/test_epaisseur_500ans` ; pas de `ps aux` / `pgrep -f` ; GDScript interdit ;
@@ -232,8 +232,100 @@ PNG de capture avant de conclure un tronçon de vue.
   en Turbo ? témoin discret assez visible ? le testeur déplace la souris du joueur (voulu, à confirmer) ;
   gestes sans icône ni point (achat magazine, rondelle) non joués ; un tick à > 6 gestes n'en montre que 6.
 
+### ⑥ banc, recette, clôture (2026-11-13)
+- **Banc `gestes_lisibles`** (`data/code/bancs/gestes_lisibles.py`, inscrit dans `BANCS`, `BANC_POST_INIT`,
+  `BANC_PLAN_TEST`) : tuile 10×10 au coin sud-est ; trois tournesols, deux lavandes, un pommier à fruits
+  mûrs et verts, litière tendre + bois mort, bac (compost mûr), pile, ruche peuplée (miel), limaces et
+  MOUSTIQUES sur deux plots, plot détrempé, coin sec, pot posé, banque de graines. Gestes gatés ouverts
+  par forçage (`init_gestes_debloques().update`), paille + feuilles en stock. Plan : 25 gestes dans
+  l'ordre du kickoff (écraser deux fois : la limace, puis le moustique → refus attendu).
+- **`plan_test.py`** : cibles neuves `plante_en(tuile, r, c)` (le pied au plot — plusieurs pieds d'une
+  espèce), `bete(tuile, r, c, espece)` (le plot + la bête que la vue y voit, pour l'oracle), `pot(i)` ;
+  `_PALETTE["planter_conteneur"] = ("planter", False)` (chemin ④ : planter armé + clic sur le pot).
+- **Oracle** `tests/bancs/test_gestes_lisibles.py` : **26/26** — chaque geste du plan joué au pont dans
+  la forme de cible de la vue (`cible_vue`, miroir des Kinds de `WorldView.Actions.cs`) : verdict
+  attendu, +1 trace exactement pour arroser/bêcher/grelinette/écraser/creuser/épandre, 0 sinon,
+  aucune phrase appliquée à chiffre. Golden intact ; `test_automate_visible` 10/10,
+  `test_gestes_lisibles` 36/36, `test_sim_server` 349/349.
+- **Défauts trouvés et corrigés** (petits, dans le périmètre) :
+  1. **Grelinette cassée depuis la vue** : Maj+clic partait SANS cible (commentaire « global »
+     périmé), le pont la refusait « tuile introuvable ». `ActionDispatch` case `'a'` envoie le plot
+     cliqué dans les deux cas (283 LDC, inchangé).
+  2. **Écraser un volant** : la vue excluait les volants (④) → aucune `espece` → défaut pont
+     `puceron` → « écrasé un puceron » sur un plot sans puceron (Vigueur dépensée pour rien, vu à la
+     1ʳᵉ capture). Désormais un rampant passe d'abord, un volant seul est désigné et le pont répond
+     « ça s'envole… » sans dépense. **Décidé seul, à confirmer au F5.**
+  3. **Testeur et récolte** : le plan donne le pied, la vue refusait (« visez un fruit mûr ») ; le
+     testeur lève la visée sur le premier fruit mûr DESSINÉ de la plante
+     (`PlantRenderer.IndexFruitMur`, `PointFruitCanvas`).
+- **Écart** : l'**abeille** ne peut pas servir de volant au banc : les butineurs sont des agents des
+  fleurs (`ForagerLayer`), pas des sprites `MacroLife` de plot — la 1ʳᵉ capture l'a montré (aucune
+  désignation possible) ; le banc prend le **moustique**.
+- **Capture** : `tools/capture_vm.sh -b gestes_lisibles -w 0 -z 2 -c 1700,1700 -R -n 920 -f 10` —
+  24 appliqués + 1 refus attendu, rapport à l'image. Planches : `planche/planche_06_couper_x2.png`
+  (sécateur au pied, info-bulle par-dessus), `planche_06_recolte_fruit_x2.png` (panier sur un fruit
+  du houppier), `planche_06_traces_x2.png` (mottes, raies, cuvette, voile, paillis feuilles, pile
+  grossie, couché), `planche_06_rapport_testeur_x2.png`.
+- **Perf** (`perf_vm.sh -b gestes_lisibles -z 2 -c 1700,1700 -w 0`, VM llvmpipe, charge ~2) : **21,2 FPS
+  [VM logicielle, n=8 relevés de 1 s]**, 84 draw calls, pire image 55 ms, 0 gel > 250 ms.
+- Fichiers C# : `ActionDispatch.cs` 283, `Testeur.cs` 112, `PlantRenderer.FruitMur.cs` 35 LDC ;
+  `WorldView.cs` 300 intact.
+
+## Recette F5 (Nico)
+**Lancer** : au sélecteur de monde, le banc **`gestes_lisibles`** (catégorie `gestes_lisibles`), zoom ×2 sur la
+tuile du coin sud-est (devant la maison). **Appuyer sur B** : le testeur joue les 25 gestes, un toutes
+les ~3 s (la souris bouge toute seule — voulu) ; le rapport s'ouvre à la fin (onglet Automate), B le
+relance (sur un monde déjà touché : relancer le banc pour repartir propre).
+
+Pour chaque geste, regarder **l'outil au curseur** (4 à 6 images), **la trace au sol**, **la phrase** :
+| # | Geste | Curseur | Au monde | Phrase (sans chiffre) |
+|---|---|---|---|---|
+| 1 | arroser | arrosoir penché jusqu'à 55° | auréole mouillée | « arrosé au pied, la terre boit » |
+| 2 | pincer | main gantée, pouce + index | tournesol (1,0) pincé | « pincé : Tournesol » |
+| 3 | couper | scie | branche du pommier en moins | « branche coupée : Pommier » |
+| 4 | tailler | sécateur ouvert/fermé | apex du pommier | « taillé (apex) : Pommier » |
+| 5 | glaner | main + feuille pincée | litière (0,1) partie | « … une pleine charretée de feuilles » |
+| 6 | drainer | bêche/rigole | plot (8,9) qui sèche | « drainé : le sol s'assèche » |
+| 7 | bouturer | 2 clics : bouture EN MAIN puis plot éclairé | petite lavande en (6,3) | « bouture de Lavande mise en terre » |
+| 8 | arracher | main qui saisit la touffe | tournesol (3,0) écimé | « branche arrachée à la main » |
+| 9 | déraciner | traction vers le haut | tournesol (5,0) COUCHÉ au sol | « déraciné : Tournesol » |
+| 10 | retourner | fourche, motte qui se retourne | bac | « compost retourné… » |
+| 11 | écraser (limace) | le pied descend | botte au point, limace en moins | « écrasé un limace » ⚠ genre |
+| 12 | écraser (moustique) | secousse de REFUS | rien | « ça s'envole avant que le pied ne retombe » |
+| 13 | favoriser aux. | coccinelle qui ouvre les ailes | tige + rondelles au bord nord | « habitat auxiliaire posé… » |
+| 14 | bêcher | bêche | mottes sombres (6,5) | « bêché, la terre est retournée » |
+| 15 | grelinette | (Maj) grelinette | raies claires (6,6) | « sol ameubli à la grelinette » |
+| 16 | creuser | pelle | couronne de mottes + creux (8,7) | « une cuvette se creuse… » |
+| 17 | épandre | 2 clics : PELLETÉE en main, plots éclairés | voile de compost (6,7), bac vidé | « compost épandu : une pleine charretée — le tas est vide » |
+| 18 | empiler bois | bûche | bois (0,5) parti, pile plus haute | « bois empilé sur la pile » |
+| 19 | pailler | brassée | plot (8,4) couvert de feuilles | « le sol se couvre de feuilles » |
+| 20 | composter | brassée | litière (0,3) partie, bac plus haut | « litière tendre versée au bac » |
+| 21 | récolter | panier SUR un fruit mûr | — | « récolté : Pommier » |
+| 22 | récolter miel | pot de miel | ruche | « miel récolté : la force revient… » |
+| 23 | planter | graine | rien (graine en terre) | « graine déposée (ail)… » |
+| 24 | planter (pot) | graine sur le pot | — | « ail planté dans le pot » |
+| 25 | déplacer pot | 2 clics : le POT suit la souris | pot en (4,8) | « pot déplacé… » |
+
+**À voir seulement au F5** (le banc VM ne les montre pas) :
+- **Curseur OS** : l'animation joue-t-elle sur le vrai curseur (pas un sprite en retard) ? taille ×2 lisible ?
+  info-bulle de la plante qui recouvre l'outil (vu à la capture, `planche_06_couper_x2.png`) ?
+- **Objet en main** à la main : bouturer / épandre / déplacer pot ; Échap et clic droit reposent l'objet.
+- **Catalogue** de `planter` : trié, se referme au choix ; `planter` armé + clic sur le pot.
+- **Récolte au fruit** à la main : tronc → refus en mots ; fruit vert → « pas encore mûrs ». ⚠ les fruits
+  récoltés RESTENT dessinés sur l'arbre (le moteur ne les retire pas : D137).
+- **Écraser** : un volant seul sous le pied → « ça s'envole » (décision ⑥ à confirmer) ; les abeilles
+  (butineurs des fleurs) ne sont jamais désignées.
+- **Fenêtre automate fermée** : A branche l'automate, fermer l'onglet le laisse jouer, gestes en sprite
+  monde au pied des plantes, témoin en haut à droite ; Turbo lisible ?
+- **Pluie et sécheresse** sur le canvas : coin sec (9,0) craquelé ; lancer la saison sous la pluie →
+  éclaboussures ; en sécheresse, le craquelé gagne.
+- Reprendre les points F5 de ①-⑤ ci-dessus (glaner/pincer chargés à ×2, arroser « bouilli », effets d'un
+  pixel, cuvette peu lisible, botte petite, objets en main petits à ×2, habitat lu comme un hôtel à insectes ?,
+  repli « plante entière » de `recolter`, outils au monde 16 px, > 6 gestes par tick).
+- **Limites connues** : « écrasé UN limace » (phrase sans genre, pré-existant) ; Vigueur en chiffres au HUD
+  (pré-existant).
+
 ## §REPRISE
-① FAIT et commité (`52d2c02`) ; ② commité (`40110a7`) ; ③ commité (`e005c04`) ; ④ commité (`f94dc02`) ;
-⑤ FAIT, non commité (golden `b4a921f8…` intact, pont 0.6.16). Prochain : ⑥ `06_banc_recette.md` — le
-mode testeur (touche B, `-R`) est l'outil : étendre `PLAN_TEST` (registre `BANC_PLAN_TEST`) aux gestes
-à observer ; `serialize.py` (409 LDC) toujours à scinder au `/refactor` de fin de sprint.
+**Sprint CLOS côté code** (①→⑥, golden `b4a921f8…` intact, pont 0.6.16) ; ⑥ non commité. Prochain =
+**F5 de Nico** : suivre §Recette F5 ci-dessus. Puis `/refactor` (`serialize.py` 409 LDC, `SimBridge.cs`
+349, `MacroLife.cs` 315) ; D136 (g)(h) et D137 restent ouverts.

@@ -24,7 +24,8 @@ from constants import PLOT_CM
 from plants.catalogue import PLANT_CATALOGUE
 
 # Verbe moteur → (verbe de la case de palette, Maj enfoncé). Absent = lui-même, sans Maj.
-_PALETTE = {"grelinette": ("becher", True)}
+# `planter_conteneur` passe par la case `planter` (④ : `planter` armé + clic sur un pot).
+_PALETTE = {"grelinette": ("becher", True), "planter_conteneur": ("planter", False)}
 
 
 def _tuile(gs: dict, tuile: str):
@@ -59,6 +60,36 @@ def plante(espece: str, tuile: str | None = None):
                     return (tile.origin_x_cm + p.x_cm, tile.origin_y_cm + p.y_cm)
         return None
     resoudre.libelle = f"plante {espece}"
+    return resoudre
+
+
+def plante_en(tuile: str, r: int, c: int):
+    """Le pied de la plante VIVANTE dont le plot-foyer est `(r, c)` (banc à plusieurs
+    pieds d'une même espèce, un geste chacun — ⑥)."""
+    def resoudre(gs):
+        tile = _tuile(gs, tuile)
+        p = next((p for p in (tile.plants if tile else ())
+                  if p.position == (r, c) and p.vitalite > 0.0), None)
+        return (tile.origin_x_cm + p.x_cm, tile.origin_y_cm + p.y_cm) if p else None
+    resoudre.libelle = f"plante {tuile}({r},{c})"
+    return resoudre
+
+
+def bete(tuile: str, r: int, c: int, espece: str):
+    """Le plot `(r, c)` où vit `espece` : la vue y désigne le SPRITE sous la souris ;
+    `espece` dit, pour l'oracle, quelle bête la vue y voit (⑥)."""
+    resoudre = plot(tuile, r, c)
+    resoudre.libelle = f"{espece} {tuile}({r},{c})"
+    resoudre.espece = espece
+    return resoudre
+
+
+def pot(i: int):
+    """Le conteneur (pot/bac de culture) d'index `i`, à sa position MONDE (⑥)."""
+    def resoudre(gs):
+        conts = gs.get("containers") or []
+        return (conts[i].x_cm, conts[i].y_cm) if 0 <= i < len(conts) else None
+    resoudre.libelle = f"pot #{i}"
     return resoudre
 
 

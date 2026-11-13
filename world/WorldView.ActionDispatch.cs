@@ -105,7 +105,11 @@ namespace Symbiose
 						// son défaut (puceron). On teste l'ancre des points MacroLife
 						// dans un rayon large couvrant leur errance.
 						target = new GDict { ["tile"] = xTile, ["r"] = xr, ["c"] = xc };
-						string espece = _macroLife?.SpeciesNear(w, MacroPickRadiusCm, _volants);   // un volant n'est pas une cible (④)
+						// Un rampant passe d'abord (④) ; un VOLANT seul sous le pied est
+						// désigné quand même : le pont répond « ça s'envole » sans rien
+						// dépenser (⑥ — sans lui, le défaut puceron écrasait l'invisible).
+						string espece = _macroLife?.SpeciesNear(w, MacroPickRadiusCm, _volants)
+							?? _macroLife?.SpeciesNear(w, MacroPickRadiusCm);
 						if (espece != null) target["espece"] = espece;
 					}
 					else
@@ -118,17 +122,17 @@ namespace Symbiose
 					break;
 
 				case 'a':   // AMEUBLIR, geste unifié (retour F5 Nico) : clic =
-					// bêcher CE plot ; Maj+clic = grelinette, qui ameublit TOUT le
-					// jardin (geste global du moteur, sans cible). Le verbe envoyé
-					// dépend donc du Maj — d'où la réaffectation de `verb`.
-					if (shift) { verb = "grelinette"; break; }   // global, pas de cible
+					// bêcher CE plot ; Maj+clic = grelinette sur CE plot. Le verbe
+					// envoyé dépend donc du Maj — d'où la réaffectation de `verb`.
+					// (GESTES LISIBLES ⑥ : la grelinette partait SANS cible, que le
+					// pont refusait « tuile introuvable » — il attend {tile, r, c}.)
 					if (!FindPlot(w, out string aTile, out int ar, out int ac))
 					{
 						_lastActionMsg = $"{nom} : aucune tuile ici (chemin/maison)";
 						UpdateActionHud(); FlashActionLabel();
 						return;
 					}
-					verb = "becher";
+					verb = shift ? "grelinette" : "becher";
 					target = new GDict { ["tile"] = aTile, ["r"] = ar, ["c"] = ac };
 					break;
 

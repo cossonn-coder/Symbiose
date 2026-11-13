@@ -32,6 +32,15 @@ namespace Symbiose
 			}
 		}
 
+		/// <summary>Index du premier fruit mûr, -1 sans fruit mûr (visée du mode testeur, ⑥).</summary>
+		internal int IndexFruitMur()
+		{
+			if (_structure == null) return -1;
+			for (int i = 0; i < _structure.Fruits.Count; i++)
+				if (_structure.Fruits[i].Maturite >= MaturiteMure) return i;
+			return -1;
+		}
+
 		/// <summary>Distance² (canvas) au fruit MÛR dessiné sous le clic, l'infini sinon.
 		/// Le fruit le plus proche du clic doit être mûr : un clic sur un fruit vert ne
 		/// glisse pas vers un mûr voisin (on récolte ce qu'on vise).</summary>
