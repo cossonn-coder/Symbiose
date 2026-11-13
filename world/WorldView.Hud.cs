@@ -196,7 +196,7 @@ namespace Symbiose
 				+ " · molette zoom · PageUp/PageDown pivoter\n"
 				+ "F3 étiquettes (Maj+F3 info-bulle technique) · F4 perfs (Maj+F4 couches) · C copier perfs · Z copier à-coups de zoom · E banc perf (≈2 min, rapport copié ; Maj+E banc accéléré) · H maison et lisière transparentes · F6 heatmap debug (Maj+F6 champ)"
 				+ " · F7 carte T sol · G survol gènes · L planche des paliers · I vie macro (1 bête par espèce et par tuile + pullulations, taille réelle : les petites aux forts zooms) · O ombres · X paramètres · M mode simu · A jardinier automate (Maj+A objectif démo)\n"
-				+ "palette de gestes = colonne d'icônes à GAUCHE (clic) · Tab/1..9 accélérateurs · S graine (planter) · B substrat (poser pot/bac) · N nature (pailler) · clic gauche = agir"
+				+ "palette de gestes = colonne d'icônes à GAUCHE (clic) · Tab/1..9 accélérateurs · Q tiroir (tous les gestes) · S graine (planter) · B substrat (poser pot/bac) · N nature (pailler) · clic gauche = agir"
 				+ " — geste courant affiché en haut à gauche";
 			hud.AddChild(legend);
 			_legendLabel = legend;
@@ -272,11 +272,14 @@ namespace Symbiose
 				: $"Vigueur {_vigueur:F0}/{_vigueurMax:F0}";
 			string geste;
 			if (_gesteIndex < 0)
-				geste = "aucun (Tab ou 1..9)";
+				geste = "aucun (Tab, 1..9 ou Q)";
 			else
 			{
 				var g = Gestes[_gesteIndex];
-				geste = $"{g.Nom} [{_gesteIndex + 1}]";
+				// Entre crochets : la TOUCHE de sa case (1..9, 0). Un geste pris au
+				// tiroir sans case n'a pas de touche → rien (PALETTE & TIROIR ①).
+				int c = System.Array.IndexOf(_slots, _gesteIndex);
+				geste = c < 0 ? g.Nom : $"{g.Nom} [{(c + 1) % 10}]";
 				// `planter` affiche l'espèce courante (S cycle) — la cible attendue.
 				if (g.Verb == "planter")
 					geste += _seeds.Count == 0 ? " : aucune graine (S)"

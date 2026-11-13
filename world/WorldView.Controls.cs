@@ -57,7 +57,9 @@ namespace Symbiose
 					// d'abord. Puis (T3 s'insère AVANT la consultation) le dossier de
 					// plante debug se ferme d'abord, puis un panneau de consultation,
 					// et seulement sinon → retour à l'accueil.
-					if (ParametresJeuOuvert)
+					if (FermerTiroirSiOuvert())
+					{ }   // le tiroir des gestes se ferme en premier (WorldView.Tiroir.cs)
+					else if (ParametresJeuOuvert)
 						FermerParametresJeu();
 					else if (_dossier != null && IsInstanceValid(_dossier))
 						FermerDossier();
@@ -80,6 +82,7 @@ namespace Symbiose
 					case Key.S:        CycleSeed();    break;   // espèce pour planter
 					case Key.B:        CycleSubstrat(); break;  // substrat (poser pot/bac)
 					case Key.N:        CycleNature();  break;   // nature du mulch (pailler ⑧)
+					case Key.Q:        BasculerTiroir(); break; // tiroir des gestes (tous, par familles)
 					// Monde anti-horaire = la CAMÉRA orbite vers la droite
 					// (ressenti validé par Nico au 1er F5 t4).
 					case Key.Pageup:   RotateView(+1); break;
@@ -156,6 +159,9 @@ namespace Symbiose
 				{ if (PlancheActive) PlancheMolette(-1); else StepZoom(-1); }
 				if (mb.ButtonIndex == MouseButton.Left)
 				{
+					// Tiroir ouvert : un clic AILLEURS (ceux du tiroir n'arrivent pas
+					// ici) ne fait que le fermer — il n'agit pas sur le jardin.
+					if (FermerTiroirSiOuvert()) return;
 					TapCurseur();   // la main « tape » : signal du clic (jardin vivant T1)
 					var canvas = WorldMouseCanvas();
 					// Mode inspection (T3, touche F2) : le clic ouvre le dossier de la

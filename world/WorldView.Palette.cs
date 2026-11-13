@@ -56,6 +56,7 @@ namespace Symbiose
 			for (int s = 0; s < SlotCount; s++) _slots[s] = -1;
 			ChargerSlotsPersistes();   // layout sauvegardé (par verbe) → indices
 			AutoRemplirSlots();        // complète les slots restés libres
+			BuildTiroir();             // bouton en bas de barre + panneau (WorldView.Tiroir.cs)
 			RebuildPaletteIcons();
 		}
 
@@ -83,6 +84,7 @@ namespace Symbiose
 				PurgerSlotsVerrouilles();   // un slot devenu non débloqué se vide
 				AutoRemplirSlots();         // complète les slots libres
 				RebuildPaletteIcons();
+				MarquerTiroirSale();        // le tiroir liste les gestes ouverts : à refaire
 			}
 
 			// Flash discret d'un déblocage récent (voie savoir), si le geste occupe
@@ -147,6 +149,7 @@ namespace Symbiose
 			if (_paletteBox == null) return;
 			foreach (var c in _paletteBox.GetChildren())
 			{
+				if (c == _tiroirBouton) continue;   // le bouton du tiroir survit au vidage
 				_paletteBox.RemoveChild(c);
 				c.QueueFree();
 			}
@@ -165,6 +168,7 @@ namespace Symbiose
 				_slotIcons[s] = icon;
 				_paletteBox.AddChild(icon);
 			}
+			ReposerBoutonTiroir();   // tout en bas, après les cases (WorldView.Tiroir.cs)
 		}
 
 		// -------------------------------------------------------------------
@@ -201,6 +205,8 @@ namespace Symbiose
 			for (int s = 0; s < SlotCount; s++)
 				if (_slotIcons[s] != null)
 					_slotIcons[s].Actif = (_slots[s] == _gesteIndex);
+			// Geste actif sans case → le bouton du tiroir le porte (WorldView.Tiroir.cs).
+			SynchroniserTiroir();
 		}
 
 		// -------------------------------------------------------------------

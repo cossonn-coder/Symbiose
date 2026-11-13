@@ -472,6 +472,10 @@ namespace Symbiose
 				// ApplyGestesDebloques(null) retombe sur « tout dispo » (tous les
 				// Verbs de Gestes[]). `debloques_recents` = verbes ouverts au dernier
 				// tick (voie savoir) → notification diégétique, consommé à la lecture.
+				// Rangement du tiroir (0.6.12) : lu AVANT les gestes ouverts, pour
+				// que le tiroir se compose d'emblée par familles. Absent → une rangée.
+				ApplyFamilles(pl.ContainsKey("familles")
+					? pl["familles"].AsGodotDictionary() : null);
 				ApplyGestesDebloques(
 					pl.ContainsKey("gestes_debloques")
 						? pl["gestes_debloques"].AsGodotArray() : null,

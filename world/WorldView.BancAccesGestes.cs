@@ -12,6 +12,13 @@
 // la première case est ouvert : c'est lui qui liste les gestes ouverts hors case, donc
 // lui qui change à l'image (les dix cases sont déjà pleines des gestes de base). Une
 // dernière image range les gestes hors case dans les cases, pour voir leurs pictogrammes.
+//
+//   tools/capture_vm.sh -b acces_gestes -w 0 -Q 1 -n 20           (tiroir ouvert)
+//   tools/capture_vm.sh -b acces_gestes -w 0 -Q glaner -n 60      (puis geste choisi)
+//
+// PALETTE & TIROIR ① : `-Q` ouvre le tiroir au montage ; avec un VERBE, ce geste est
+// ensuite choisi comme par un clic dans le tiroir (qui se ferme : le bouton du bas de
+// barre doit alors porter son pictogramme s'il n'a pas de case). Journal `[Tiroir]`.
 
 using Godot;
 using System.Collections.Generic;
@@ -23,10 +30,23 @@ namespace Symbiose
 	{
 		private static readonly string CaptureAcces = ArgCapture("acces");
 		private const float AccesAttenteSec = 4f;
+		private static readonly string CaptureTiroir = ArgCapture("tiroir");
 
 		// Appelé en fin d'AppliquerCapture.
 		private void LancerBancAccesGestes()
 		{
+			if (CaptureTiroir != null)
+			{
+				OuvrirTiroir();
+				GD.Print($"[Tiroir] ouvert · familles : {(_famillesOrdre == null ? "(aucune reçue)" : string.Join(",", _famillesOrdre))}");
+				int g = IndexDuVerbe(CaptureTiroir);
+				if (g >= 0)
+					Apres(() =>
+					{
+						_tiroirPanel.OnChoisi(g);
+						GD.Print($"[Tiroir] choisi : {Gestes[g].Verb} · en case : {DansUnSlot(g)} · tiroir ouvert : {TiroirOuvert}");
+					});
+			}
 			if (CaptureAcces == null) return;
 			Apres(() =>
 			{
