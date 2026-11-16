@@ -329,7 +329,9 @@ Pour chaque geste, regarder **l'outil au curseur** (4 à 6 images), **la trace a
 **Sprint CLOS côté code** (①→⑥, golden `b4a921f8…` intact, pont 0.6.16). **F5 du banc (touche B) joué le
 2026-11-16** : 25 gestes exécutés, curseur bon, déraciné couché, volant épargné, automate fenêtre fermée en sprite
 monde — validés. Habitat d'auxiliaires INCOMPRIS (« pancarte rouge ») → reliquat D136 ; récolte invisible → D137.
-Prochain = **tests À LA MAIN** (catalogue, objet en main, pluie F12, craquelé) : plan dans §Test manuel. `/refactor` FAIT le 2026-11-13 (`aab5c01`) :
+Tests à la main faits le 2026-11-16 → **D136 (a)-(f) CLOS** ; reliquats d'ergonomie → D136 (i) ; météo au sol et
+sur les plantes → D138 ; survie au froid génétique (basilic vert en hiver) → D139 ; brouette → `outils_atelier`.
+**Sprint TERMINÉ.** `/refactor` FAIT le 2026-11-13 (`aab5c01`) :
 `serialize.py` 409 → 302 LDC (cartes de sol → `cartes_sol_pont.py`), snapshot identique octet pour
 octet. Restent en vigilance, non scindés : `SimBridge.cs` 349, `MacroLife.cs` 315 ; hors sprint,
 `tests/test_croissance.py` 424 (dette ancienne). D136 (g)(h) et D137 restent ouverts.
