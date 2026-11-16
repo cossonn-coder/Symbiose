@@ -22,7 +22,7 @@ Aucun RNG live (règle de design #3).
 from __future__ import annotations
 import zlib
 
-from plants import (species_compatible, GENE_NAMES, MUTATION_SIGMA, clamp_gene,
+from plants import (species_compatible, GENE_NAMES, MUTATION_SIGMA, borne,
                     ADAPTOGENIC_GENES, PRIMING_FRAC)
 from fields import _hash_noise, hash_gauss
 from sim import weather as _weather   # normales climatiques (même couche, sans cycle)
@@ -167,7 +167,7 @@ def child_genes(mother, father, seed, week) -> dict:
       introgression : père d'une autre espèce (même famille) → ses gènes décalent
                       l'enfant, qui reste de l'espèce de la mère.
     L'introgression peut pousser un gène HORS de la plage normale [0.7, 1.3]
-    (vigueur hybride) ; seul clamp_gene borne les limites dures.
+    (vigueur hybride) ; seule `borne` (par caractère) tient les limites dures.
     """
     r, c = mother.position
     genes = {}
@@ -178,7 +178,7 @@ def child_genes(mother, father, seed, week) -> dict:
         else:
             base, sigma = 0.5 * (m + father.gene(g)), MUTATION_SIGMA
         z = hash_gauss(seed, week * 29 + i, r, c, k=4 * i)
-        genes[g] = clamp_gene(base + z * sigma)
+        genes[g] = borne(g, base + z * sigma)
     return genes
 
 

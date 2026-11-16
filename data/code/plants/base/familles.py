@@ -62,6 +62,13 @@ class PlantBase(ABC):
     # Pollinisation (D22) — pilote l'appariement biparental (reproduction.py)
     pollination_mode: str = "insect"     # "wind" | "insect" | "self"
     pollination_radius_cm: float = 150.0 # portée de croisement (distance euclidienne)
+    # Génétique PAR ESPÈCE (D139 ①) : surcharge du registre des caractères
+    # (`plants/caracteres.py`), champ par champ — ex. {"autofecondation":
+    # {"neutre": 0.95}}. Seuls `neutre` (individu moyen de l'espèce) et `sigma_a`
+    # (sa diversité additive) se surchargent ; unité et bornes restent celles du
+    # caractère. Lu UNIQUEMENT via `caracteres.parametres_espece`. Défaut {} = la
+    # table telle quelle. Jamais muté (attribut de classe partagé).
+    genetique: dict = {}
     # Dose anémophile d'espèce (VERGER VIVANT ③) : remplace ANEMO_DOSE_COEF pour une
     # espèce à `wind`. None = la dose commune (noisetier, chêne, graminées intacts).
     anemo_dose: float | None = None

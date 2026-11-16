@@ -23,10 +23,26 @@ compromis) · ④ INTACT. Chaque re-figeage : dérive expliquée et consignée i
 ## Tronçons
 | # | Kickoff | État |
 |---|---|---|
-| ① | `01_registre.md` — registre des caractères, neutre par caractère, bornes | à faire |
+| ① | `01_registre.md` — registre des caractères, neutre par caractère, bornes | **FAIT** 2026-11-16, golden INTACT `b4a921f8…` |
 | ② | `02_heredite.md` — brassage, F, autofécondation, fondateurs, variétés, banque | à faire |
 | ③ | `03_unites_compromis.md` — °C et semaines, compromis, banc « réponse à la sélection » | à faire |
 | ④ | `04_vue.md` — pont (unités + F), survol G, voix « lignée », banc F5 `lignees` | à faire |
 
+## Notes ①
+- Registre = `plants/caracteres.py` (pur, sans import interne) : `Caractere` (unite, neutre,
+  sigma_a, bornes, adaptogene), table `CARACTERES` ordonnée, helpers `parametres_espece`
+  (helper UNIQUE neutre/σ_A effectifs), `neutre`, `sigma_a`, `borne`. Ré-exportés par
+  `plants.genetics` et `plants`. `GENE_NAMES = tuple(CARACTERES)` ; `GENE_INIT_SIGMA` et
+  `GENE_HARD_MIN/MAX` dérivés du registre.
+- `PlantBase.genetique = {}` (familles.py). `PlantInstance.gene()` : absent → `neutre(nom,
+  plant_class)`. ⚠ un nom hors registre lève désormais `KeyError` (avant : 1.0) — tous les
+  appelants actuels lisent des noms de `GENE_NAMES` (vérifié au grep).
+- `borne(nom, x)` remplace `clamp_gene` dans `child_genes`, `founder_genes`,
+  `sample_genes`, `expressed_gene`. `clamp_gene` reste exporté (bancs, tests).
+- `GeneStat` des gènes (banque-sol + `seed_founder_pool`) part de `neutre(g, espèce)`.
+  Non fait au ① (laissé au ②) : `founder_genes`/`seed_founder_pool` tirent encore autour
+  de 1.0 avec `GENE_INIT_SIGMA` global (pas encore le σ_A d'espèce).
+- Test neuf `tests/test_caracteres.py` (30/30). Suites génétique/plasticité/diversité/greffe vertes.
+
 ## REPRISE
-Lire `CLAUDE.md`, ce fichier, puis le kickoff du premier tronçon « à faire ».
+Lire `CLAUDE.md`, ce fichier, puis le kickoff du premier tronçon « à faire » (②).

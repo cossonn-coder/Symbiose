@@ -4,7 +4,11 @@ Vecteur de gènes héréditaire + compatibilité de croisement (D22).
 
 Fondation pure : aucun import interne au projet → tout le monde peut s'appuyer
 dessus sans créer de cycle (notamment fields/seedbank.py qui importe clamp_gene).
+Seule dépendance : le registre voisin `caracteres.py`, lui aussi pur.
 """
+
+from plants.caracteres import (CARACTERES, BORNES_FACTEUR, SIGMA_A_FACTEUR,  # noqa: F401
+                               Caractere, parametres_espece, neutre, sigma_a, borne)
 
 # Vecteur de gènes héréditaire (D22) — extensible sans refactor. Ajouter un gène
 # = l'ajouter ici ; `child_genes` (reproduction) le calcule alors automatiquement
@@ -61,18 +65,22 @@ dessus sans créer de cycle (notamment fields/seedbank.py qui importe clamp_gene
 #    AJOUTÉ EN QUEUE (même garde-fou de canal de hash que `germination_thermique` :
 #    `child_genes`/`sample_genes` indexent le bruit par POSITION → un ajout en queue
 #    ne décale aucun gène antérieur).
-GENE_NAMES = ("hauteur", "rusticite_froid", "vigueur",
-              "resistance_pathogene", "tolerance_secheresse",
-              "tolerance_ombre", "tolerance_asphyxie", "port_trapu",
-              "germination_thermique", "phenologie_florale")
+#
+# Depuis D139 ① la LISTE vit dans le registre des caractères (`caracteres.py`,
+# qui déclare aussi unité, neutre, σ_A, bornes) : GENE_NAMES en est DÉRIVÉ, dans
+# l'ordre de la table — les appelants (seedbank, reproduction, greffe, seeds,
+# semiologie, bancs) n'ont rien à changer. Ajouter un gène = l'ajouter EN QUEUE
+# du registre.
+GENE_NAMES = tuple(CARACTERES)
 
 # Plage « normale » du vecteur de gènes — gaussienne centrée 1.0, σ initial 0.10.
 # L'introgression inter-espèces peut pousser HORS de [GENE_MIN, GENE_MAX]
 # (vigueur hybride) → bornes dures plus larges au tirage.
-GENE_INIT_SIGMA = 0.10
+# (GENE_INIT_SIGMA et les bornes dures viennent du registre : mêmes valeurs.)
+GENE_INIT_SIGMA = SIGMA_A_FACTEUR
 MUTATION_SIGMA  = 0.05      # mutation gaussienne par génération
 GENE_MIN, GENE_MAX           = 0.70, 1.30
-GENE_HARD_MIN, GENE_HARD_MAX = 0.40, 1.60
+GENE_HARD_MIN, GENE_HARD_MAX = BORNES_FACTEUR
 
 
 # --- Plasticité / expression plastique des gènes (sprint plasticité ①) ---------

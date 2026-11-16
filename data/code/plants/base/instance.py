@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 
 from constants import PLOT_CM
 from ..genetics import (clamp_gene, ADAPTOGENIC_GENES,
-                        DEFENSE_COST, DEFENSE_PLANCHER)
+                        DEFENSE_COST, DEFENSE_PLANCHER, neutre, borne)
 from .empreintes import _plots_in_radius, PROC_ROOT_RATIO
 from .stades import GrowthStage, Segment
 
@@ -230,8 +230,14 @@ class PlantInstance:
             )]
 
     def gene(self, name: str) -> float:
-        """Facteur génétique pour un gène (1.0 = neutre si absent du vecteur)."""
-        return self.genes.get(name, 1.0)
+        """Valeur génétique d'un caractère. Absent du vecteur ⇒ le NEUTRE du
+        caractère pour l'espèce de la plante (registre `plants/caracteres.py`,
+        surchargeable par `PlantBase.genetique`) — 1.0 pour tout « facteur ».
+        Chemin rapide d'abord : un gène présent ne coûte qu'un accès dict."""
+        v = self.genes.get(name)
+        if v is not None:
+            return v
+        return neutre(name, self.plant_class)
 
     def expressed_gene(self, name: str) -> float:
         """Phénotype EFFECTIF d'un gène adaptogène = génotype × expression plastique
@@ -239,7 +245,7 @@ class PlantInstance:
         durcissement acquis sous stress vécu ; 1.0 (défaut) ⇒ phénotype = génotype.
         Le produit repasse par clamp_gene → jamais hors des limites physiologiques
         dures. Pour un gène NON adaptogène (absent d'`expression`) : == gene(name)."""
-        return clamp_gene(self.gene(name) * self.expression.get(name, 1.0))
+        return borne(name, self.gene(name) * self.expression.get(name, 1.0))
 
     def cout_defense(self) -> float:
         """Compromis croissance/défense (plasticité ③, conception §2.4 — philo #2).

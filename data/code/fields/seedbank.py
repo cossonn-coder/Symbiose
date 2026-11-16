@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from calendrier import wiy_de
 from fields.noise import _hash_noise, hash_gauss, stable_str_hash
 from fields.peripherie import plots_de_bord
-from plants.genetics import clamp_gene, GENE_NAMES, GENE_INIT_SIGMA
+from plants.genetics import GENE_NAMES, GENE_INIT_SIGMA, borne, neutre
 
 # ---------------------------------------------------------------------------
 # CONSTANTES — archétypes & pool génétique
@@ -138,7 +138,7 @@ def founder_genes(plant_class: type, seed: int, week: int,
     for i, g in enumerate(GENE_NAMES):
         z = hash_gauss(seed, week * 31 + i, r, c,
                        k=base + i * 7 + int(x_cm) + int(y_cm) * 13)
-        genes[g] = clamp_gene(1.0 + z * GENE_INIT_SIGMA)
+        genes[g] = borne(g, 1.0 + z * GENE_INIT_SIGMA)
     return genes
 
 
@@ -422,7 +422,10 @@ class SeedBank:
         for g, value in genes.items():
             stat = rec["genes"].get(g)
             if stat is None:
-                stat = GeneStat()
+                # Moyenne de départ = neutre du caractère pour l'espèce (D139 ①) ;
+                # sans effet sur le résultat (poids nul → le 1er dépôt l'écrase),
+                # mais cohérent quand le neutre n'est plus 1.0.
+                stat = GeneStat(mean=neutre(g, plant_class))
                 rec["genes"][g] = stat
             stat.add(value, density)
         if expression:
@@ -438,13 +441,13 @@ class SeedBank:
         """
         ENSEMENCE la banque-sol fondatrice (sprint DIVERSITÉ FONDATRICE ①, option A)
         d'une espèce sur un plot : pose directement, pour CHAQUE gène de GENE_NAMES,
-        un `GeneStat(mean=1.0, var=sigma², weight=density)`. Aucune moyenne à faire
+        un `GeneStat(mean=neutre, var=sigma², weight=density)`. Aucune moyenne à faire
         (banque vierge) → on écrit la distribution voulue en une passe.
 
         Effet : dès le tick 0, `sample_genes` tire avec une VARIANCE immédiate
         (`density > SPECIES_POOL_MIN_DENSITY`) — la germination férale n'est plus
         clonale, et la sélection darwinienne (`_germ_gene_mean`) a de quoi mordre
-        sans attendre N générations. `mean=1.0` : le pool part CENTRÉ (pas de biais),
+        sans attendre N générations. `mean=neutre` : le pool part CENTRÉ (pas de biais),
         seule la variance est fondatrice. Idempotent au sens où deux appels
         cumuleraient la densité (on n'appelle qu'une fois, à l'init).
         """
@@ -456,7 +459,7 @@ class SeedBank:
         rec["density"] += density
         var = sigma * sigma
         for g in GENE_NAMES:
-            rec["genes"][g] = GeneStat(mean=1.0, var=var, weight=density)
+            rec["genes"][g] = GeneStat(mean=neutre(g, plant_class), var=var, weight=density)
 
     def species_density(self, r: int, c: int, plant_class: type) -> float:
         rec = self.species[r][c].get(plant_class)
@@ -472,7 +475,7 @@ class SeedBank:
         rec = self.species[r][c].get(plant_class)
         if not rec or rec["density"] < SPECIES_POOL_MIN_DENSITY:
             return {}
-        return {g: clamp_gene(stat.sample(seed, week, r, c, k=2 * i))
+        return {g: borne(g, stat.sample(seed, week, r, c, k=2 * i))
                 for i, (g, stat) in enumerate(rec["genes"].items())}
 
     def sample_expression(self, r: int, c: int, plant_class: type) -> dict:
