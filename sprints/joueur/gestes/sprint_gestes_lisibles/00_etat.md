@@ -326,8 +326,32 @@ Pour chaque geste, regarder **l'outil au curseur** (4 à 6 images), **la trace a
   (pré-existant).
 
 ## §REPRISE
-**Sprint CLOS côté code** (①→⑥, golden `b4a921f8…` intact, pont 0.6.16) ; ⑥ non commité. Prochain =
-**F5 de Nico** : suivre §Recette F5 ci-dessus. `/refactor` FAIT le 2026-11-13 (`aab5c01`) :
+**Sprint CLOS côté code** (①→⑥, golden `b4a921f8…` intact, pont 0.6.16). **F5 du banc (touche B) joué le
+2026-11-16** : 25 gestes exécutés, curseur bon, déraciné couché, volant épargné, automate fenêtre fermée en sprite
+monde — validés. Habitat d'auxiliaires INCOMPRIS (« pancarte rouge ») → reliquat D136 ; récolte invisible → D137.
+Prochain = **tests À LA MAIN** (catalogue, objet en main, pluie F12, craquelé) : plan dans §Test manuel. `/refactor` FAIT le 2026-11-13 (`aab5c01`) :
 `serialize.py` 409 → 302 LDC (cartes de sol → `cartes_sol_pont.py`), snapshot identique octet pour
 octet. Restent en vigilance, non scindés : `SimBridge.cs` 349, `MacroLife.cs` 315 ; hors sprint,
 `tests/test_croissance.py` 424 (dette ancienne). D136 (g)(h) et D137 restent ouverts.
+
+## §Test manuel (après le F5 du 2026-11-16)
+Banc **`gestes_lisibles`**, relancé à neuf, **sans appuyer sur B** (l'automate touche le monde). Zoom ×2 sur la
+tuile du coin sud-est. Repères : bac / pile / ruche alignés sur le bord de la colonne 9 ; pommier au milieu ;
+deux lavandes ; pot posé près du bac ; coin sec = 3 plots au bout de la rangée 9, côté opposé au bac.
+1. **Craquelé** : les 3 plots du coin sec sont fendillés (le plus sec, le plus marqué). Arroser le plus fendillé
+   (+0,5 d'humidité → passe au-dessus du seuil 0,5) → son craquelé disparaît au snapshot suivant.
+2. **Pluie** : F12 (défilé météo, 10 s par étape) → 4ᵉ étape « Pluie » (vers 30 s) : des gouttes
+   rebondissent sur la tuile (zoom ×2 minimum). F12 de nouveau = arrêt.
+3. **Sécheresse qui gagne** : laisser tourner la saison (Turbo) quelques semaines sans arroser → d'autres
+   plots se fendillent si le temps est sec (la météo du moteur décide : pas garanti).
+4. **Catalogue** : armer `planter` → le catalogue des graines s'ouvre, trié par nom ; choisir une graine →
+   il se referme ; clic sur un plot nu = graine en terre ; clic sur le pot = « … planté dans le pot ».
+5. **Objet en main — bouturer** : clic sur une lavande → une bouture suit la pointe, plots de la tuile
+   éclairés ; clic hors tuile = refus, la bouture reste en main ; Échap → reposée ; refaire puis clic droit
+   → reposée ; refaire puis clic sur un plot éclairé → « bouture de Lavande mise en terre ».
+6. **Objet en main — épandre** : clic sur le bac → une pelletée en main ; clic sur un plot → voile de compost.
+7. **Objet en main — déplacer pot** : clic sur le pot → le pot suit la souris (grisé hors tuile) ; clic sur
+   un plot → « pot déplacé ».
+8. **Récolte au fruit** : armer récolter ; clic sur le tronc du pommier → refus en mots ; sur un fruit vert →
+   « pas encore mûrs » ; sur un fruit mûr → « récolté : Pommier » (le fruit reste dessiné : D137).
+Retour attendu : ce qui marche / ce qui n'est pas lu, numéro par numéro.
