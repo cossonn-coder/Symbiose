@@ -25,7 +25,7 @@ compromis) · ④ INTACT. Chaque re-figeage : dérive expliquée et consignée i
 |---|---|---|
 | ① | `01_registre.md` — registre des caractères, neutre par caractère, bornes | **FAIT** 2026-11-16, golden INTACT `b4a921f8…` |
 | ② | `02_heredite.md` — brassage, F, autofécondation, fondateurs, variétés, banque | **FAIT** 2026-11-16, golden RE-FIGÉ `b4a921f8…` → `07122393…` |
-| ③ | `03_unites_compromis.md` — °C et semaines, compromis, banc « réponse à la sélection » | à faire |
+| ③ | `03_unites_compromis.md` — °C et semaines, compromis, banc « réponse à la sélection » | **FAIT** 2026-11-16 (non commité), golden RE-FIGÉ `07122393…` → `3927690e…` |
 | ④ | `04_vue.md` — pont (unités + F), survol G, voix « lignée », banc F5 `lignees` | à faire |
 
 ## Notes ①
@@ -83,5 +83,71 @@ compromis) · ④ INTACT. Chaque re-figeage : dérive expliquée et consignée i
 - Taille : `fields/seedbank.py` passe de 278 à **308 LDC (🟡)** ; `sim/engine/boucle.py`
   de 311 à 316 (🟡, déjà au-dessus avant).
 
+## Notes ③
+- **Golden** `07122393…` → **`3927690e63786bafe77188881166e70c465d88952e77520dd8a1f64c02cdc2b3`**.
+  `tests/population_hash.txt` `da7c9133…` → `0c795eb9…`. Dérive **prouvée = unités +
+  compromis + tri** : en mémoire, avec (i) K_PREC neutralisé, (ii) σ_A germination ramené
+  à 0,35 °C (= l'ancien 3,5 °C × 0,10), (iii) `gdd_par_semaine` fixé à 2 °C·j (= l'ancien
+  FLORA_GENE_SHIFT 20 × 0,10) et (iv) le tri à la levée coupé, le log des 104 semaines est
+  identique au bit près à HEAD, le digest hors gènes aussi, et le hash population retombe
+  sur `da7c9133…`. Composition finale : T0 36 → 37 plantes (+1 bourse-à-pasteur), T1 21
+  inchangé.
+- Registre : `germination_thermique` = °C (neutre 0, σ_A 1,5, bornes ±6) ;
+  `phenologie_florale` = semaines d'avance (neutre 0, σ_A 1, bornes ±4).
+- **`sim/tempo.py` (neuf)** = la conversion partagée des 3 horloges : `seuil_floraison`
+  (seuil − avance × `gdd_par_semaine(espèce)`, °C·j d'une semaine à l'époque où l'espèce
+  fleurit, climat normal, mémoïsé par espèce), `semaine_abscission` et
+  `onset_senescence` (ancien calibrage, avance / `SEMAINES_PAR_TEMPO` = 10 → σ_A 1 sem =
+  l'ancien σ 0,10). Moteur (floraison, decompo, mortalité) ET miroir `semiologie` y
+  passent. `T_BASE_FLORAISON` y est déplacé (ré-exporté par floraison.py), et
+  `semaine_abscission` (ré-exporté par decompo.py, lu par le pont). `FLORA_GENE_SHIFT`,
+  `GERM_GENE_SHIFT` : OBSOLÈTES, conservés.
+- Calibrage mesuré : tournesol en moteur réel, avances −2/−1/0/+1/+2 sem. → floraison
+  S13/12/11/10/9 (exactement 1 semaine par unité). Taux : noisetier 1,0 · pommier 5,0 ·
+  phacélie 8,25 · tournesol 8,98 · la plupart 9,64 · armoise 11,2 °C·j/sem. Avant, σ 0,10
+  décalait la floraison de 2 °C·j ≈ 0,2 semaine en été : l'étalement est ×5.
+- Compromis : `PlantInstance.facteur_hauteur()` = gène hauteur × `facteur_precocite`
+  (1 − 0,03·avance, borné [0,5 ; 1,5]) ; lu par les 2 `height_at` (herbacées + ligneux).
+- Germination : lecture directe en °C (`t_germ_opt − gène`) aux 2 lecteurs de
+  `succession.py`, défaut = neutre de l'espèce (avant : 1.0 codé en dur).
+- Greffe : simple recopie de valeur, aucune hypothèse de neutre 1 → rien à changer.
+- **Décision hors kickoff (à valider par Nico) — tri thermique à la levée férale**
+  (`succession._levee_triee`) : la levée férale est décidée avec la MOYENNE du pool, puis
+  les gènes sont tirés au hasard → le gène de l'individu n'était jamais lu au moment où il
+  compte, la sélection ne pouvait pas mordre. Le semis est désormais tiré parmi les graines
+  que CE sol a réveillées (produit de 2 gaussiennes, exact, O(1), même tirage z, aucun
+  canal neuf). Réversible : une fonction + un appel.
+- **Banc** `mesures/banc_reponse_selection.py` (seed 42). (a) 10 ans de friche seule, 1
+  tuile 8×8 : témoin (T_MOY 11, gain solaire 15) → semis féraux moyens **+0,11 °C
+  [n=96]** ; parcelle froide (T_MOY 7, sans gain solaire) → **+0,02 °C [n=80]** ; pool
+  pondéré entre −0,18 et +0,06 °C. **Cible ≥ +1 °C NON atteinte : réponse nulle dans le
+  bruit.** Enquête : (1) trou structurel ci-dessus, corrigé par le tri ; (2) même trié, le
+  coefficient de tri σ²/(σ² + tol²/2) ≈ 0,05 (tolérances de levée 7-10 °C ≫ σ_A 1,5) ;
+  (3) les levées arrivent quand le sol est AU voisinage de l'optimum (la cloche filtre),
+  donc m* − μ ≈ 0 (moyenne opt − T_sol à la levée : −1,3 °C témoin, +2,3 °C froid) ;
+  (4) ≈ 8-10 levées férales par an sur 64 plots (vivaces installées), et lever plus tôt ne
+  rapporte rien ensuite (aucun avantage de saison). Ces leviers relèvent de la niche
+  thermique (sprint ②, `sprint_niche_thermique`) : à reprendre là, ou à arbitrer par Nico.
+  (b) 6 générations, 8 frères/génération : tomate F 0,50 → 0,66 → 0,88 → 0,94 → 0,97 →
+  **0,98**, variance de hauteur 0,0049 → **0,00016** (÷30) ; courgette F 0,00-0,09, variance
+  de hauteur 0,002-0,005 et de phénologie 0,2-0,7 sem² (reste bigarrée). La fixation des
+  lignées autogames répond comme prévu.
+- Tests : `tests/test_unites_compromis.py` neuf (19/19). Adaptés à la nouvelle unité :
+  `test_caracteres` (les 2 caractères en vraies unités), `test_desync_phenologie` (appelle
+  `sim/tempo` au lieu de recopier les formules en g − 1, + neutralité abscission),
+  `test_floraison_forcage` (cohorte −2…+2 sem. au lieu de 0,70…1,30), banc
+  `bancs/biotique.etalement_floraison` (±1,1 sem. ≈ même plage de seuils 29→47 °C·j).
+- Non touché : `sim/seeds.PlayerSeedBank.mean_gene` garde un défaut 1.0 (aucun appelant ;
+  juste pour un facteur). Le cache `gdd_par_semaine` suppose le climat normal : à revoir
+  quand le climat deviendra un choix du lieu (BACKLOG « climats et lieux »).
+- Batterie : 130/132 vertes. Rouges **préexistants à HEAD** : `test_peripherie` (connu) et
+  `tests.bancs.test_edaphique` (carence « n reste bas », n=0,424 à HEAD comme après ③).
+  Golden smoke : 5,3 s avant et après [1 run chacun, charge VM 0,5 puis 1,3].
+- Taille : `sim/succession.py` 223 → 245 LDC, `sim/tempo.py` 34 LDC ; tout ≤ 300.
+
 ## REPRISE
-Lire `CLAUDE.md`, ce fichier, puis le kickoff du premier tronçon « à faire » (③).
+Lire `CLAUDE.md`, ce fichier, puis le kickoff du premier tronçon « à faire » (④).
+③ commité. **Décision Nico 2026-11-16 (option A)** : tri thermique à la levée
+(`_levee_triee`) GARDÉ ; cible ≥ +1 °C du banc (a) NON tenue, reportée à
+`sprint_niche_thermique` (c'est lui qui crée la pression de sélection : coût du froid,
+avantage à lever tôt). Golden `3927690e…`.

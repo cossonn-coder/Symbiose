@@ -32,9 +32,9 @@ from plants.caracteres import (CARACTERES, BORNES_FACTEUR, SIGMA_A_FACTEUR,  # n
 #    compétition intra-plot). Lu en germination (lumière effective) et en
 #    croissance (growth_factor sur lumière corrigée).
 #  - `germination_thermique` : VARIABILITÉ intra-espèce de la fenêtre de levée
-#    thermique (sprint germination thermique ④). >1 = lève PLUS TÔT au froid →
-#    l'optimum effectif de germination est ABAISSÉ de `GERM_GENE_SHIFT·(gène−1)`
-#    (cf. succession.py). Neutre 1.0 (la plante prend `t_germ_opt` brut). C'est le
+#    thermique (sprint germination thermique ④). Depuis D139 ③ en °C : c'est
+#    directement l'ABAISSEMENT de l'optimum de levée (>0 = lève PLUS TÔT au froid,
+#    `t_opt_eff = t_germ_opt − gène`, cf. succession.py). Neutre 0 °C. C'est le
 #    support de la SÉLECTION DARWINIENNE ÉMERGENTE : sur un plot froid, les lignées
 #    « lève-tôt » dominent le pool-sol au fil des saisons, sans code de sélection
 #    dédié (reproduction + héritage + réensemencement déjà en place). AJOUTÉ EN
@@ -55,9 +55,9 @@ from plants.caracteres import (CARACTERES, BORNES_FACTEUR, SIGMA_A_FACTEUR,  # n
 #    dégât de vent abaissée). Neutre 1.0 (génotype = port standard). AJOUTÉ EN QUEUE
 #    (même garde-fou de canal de hash que `tolerance_asphyxie`).
 #  - `phenologie_florale` : VARIABILITÉ intra-espèce de la DATE de floraison (sprint
-#    bugs d'émergence ③, S2). >1 = fleurit PLUS TÔT → le seuil de forçage thermique
-#    floral effectif est ABAISSÉ de `FLORA_GENE_SHIFT·(gène−1)` (cf. floraison.py) ;
-#    < 1 = fleurit plus tard. Neutre 1.0 (la plante prend `gdd_floraison` brut).
+#    bugs d'émergence ③, S2). Depuis D139 ③ en SEMAINES D'AVANCE du tempo de vie
+#    (>0 = fleurit PLUS TÔT, abscission et sénescence suivent ; conversion par
+#    horloge dans `sim/tempo.py`). Neutre 0. Coûte de la taille (K_PREC).
 #    C'est le support de la SÉLECTION DARWINIENNE ÉMERGENTE qui DÉSYNCHRONISE la
 #    floraison : le pool-sol porte une variance de dates → nectar SOUTENU (au lieu
 #    d'un pic synchrone unique) → dynamique des pollinisateurs saine, sans code de
@@ -99,6 +99,17 @@ H_MUT = 0.01
 # Appliqué au MÊME endroit que `cout_defense` (croissance, convalescence) —
 # jamais un malus direct de santé (philo #2).
 DI = 0.3
+
+# Compromis PRÉCOCITÉ ↔ TAILLE (D139 ③, conception §6). Une plante qui fleurit
+# tôt a eu moins de semaines de croissance végétative avant de basculer ses
+# ressources vers la fleur : elle reste plus petite. Une tardive, l'inverse.
+#     facteur = 1 − K_PREC · avance        (avance = `phenologie_florale`, semaines)
+# K_PREC = 0,03 → une semaine d'avance coûte 3 % de hauteur. Borné à
+# [PREC_MIN, PREC_MAX] (garde-fou : aux bornes ±4 sem. du caractère le facteur
+# vaut 0,88-1,12, la borne ne mord jamais en pratique). C'est la sélection qui
+# arbitre : sur un plot froid à saison courte, fleurir tôt paie malgré la taille.
+K_PREC = 0.03
+PREC_MIN, PREC_MAX = 0.5, 1.5
 GENE_MIN, GENE_MAX           = 0.70, 1.30
 GENE_HARD_MIN, GENE_HARD_MAX = BORNES_FACTEUR
 
@@ -154,6 +165,12 @@ def clamp_gene(x: float) -> float:
     """Borne un facteur génétique aux limites dures (l'introgression peut sortir
     de la plage normale, mais jamais des limites physiologiques)."""
     return max(GENE_HARD_MIN, min(GENE_HARD_MAX, x))
+
+
+def facteur_precocite(avance_semaines: float) -> float:
+    """Facteur de hauteur du compromis précocité ↔ taille (cf. K_PREC) : < 1 pour
+    une plante précoce (avance > 0), > 1 pour une tardive. Neutre 0 → 1.0 exact."""
+    return max(PREC_MIN, min(PREC_MAX, 1.0 - K_PREC * avance_semaines))
 
 
 def neutral_genes(plant_class=None) -> dict:

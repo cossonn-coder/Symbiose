@@ -37,10 +37,11 @@ Couches : `sim` peut lire `sim.reproduction` (is_seed_bearing) — respect de
 
 from __future__ import annotations
 from sim.reproduction import is_seed_bearing
-
 # Base thermique du forçage floral (°C) — esprit de T_COLD_ZERO (population.py) :
-# en deçà, aucun degré-jour utile. Knob de calibrage (post-test).
-T_BASE_FLORAISON = 6.0
+# en deçà, aucun degré-jour utile. Knob de calibrage (post-test). Définie depuis
+# D139 ③ dans `sim/tempo.py` (la conversion semaines → degrés-jours en a besoin),
+# ré-exportée ici pour les lecteurs historiques.
+from sim.tempo import T_BASE_FLORAISON, seuil_floraison  # noqa: F401
 # Vitesses de relaxation de l'intensité florale. Montée (ouverture) plus douce que
 # la descente (fanaison plus vive) — knobs de calibrage (CONCEPTION §2).
 FLORAISON_MONTEE   = 0.35
@@ -57,6 +58,8 @@ FLORAISON_DESCENTE = 0.50
 # seuils BAS et par saison-cible (pommier 8, tournesol ~55), 200 rendrait un pied
 # précoce (g > 1) NÉGATIF (seuil sous 0 → floraison dès S1). ~20 donne ±~2 sem à
 # ±σ (σ≈0.10) tout en gardant `gdd_eff` positif partout — étalement visible.
+# OBSOLÈTE depuis D139 ③ : le gène est en semaines, `sim/tempo.seuil_floraison`
+# convertit l'avance en degrés-jours propres à l'espèce. Conservé (import public).
 FLORA_GENE_SHIFT   = 20.0
 
 
@@ -77,11 +80,10 @@ class FloraisonMixin:
                 plant.gdd_accum = 0.0
                 plant.bloom_week = -1
             plant.gdd_accum += max(0.0, temp - T_BASE_FLORAISON)
-            # Seuil INDIVIDUEL : le gène `phenologie_florale` (désync) DÉCALE le
-            # seuil de forçage propre à l'individu (gène > 1 → seuil abaissé →
-            # fleurit plus tôt). Neutre 1.0 ⇒ `gdd_eff == cls.bloom_forcing_gdd`.
-            gene = plant.gene("phenologie_florale")
-            gdd_eff = cls.bloom_forcing_gdd - FLORA_GENE_SHIFT * (gene - 1.0)
+            # Seuil INDIVIDUEL : le gène `phenologie_florale` (avance en semaines,
+            # D139 ③) ABAISSE le seuil de forçage de l'individu des degrés-jours
+            # d'autant de semaines (`sim/tempo`). Neutre 0 ⇒ seuil de l'espèce.
+            gdd_eff = seuil_floraison(plant)
             # ARMEMENT (1×/an) : au FRANCHISSEMENT du seuil par une plante MÛRE, on
             # fige la semaine de floraison → événement de durée bornée.
             if (plant.bloom_week < 0 and is_seed_bearing(plant)

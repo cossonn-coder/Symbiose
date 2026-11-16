@@ -35,11 +35,12 @@ import math
 # nombre : on importe la constante de calibrage de la mécanique elle-même.
 #   chlorose  : CHLOROSE_PH / SEUIL_ACIDOPHILE — miroir de vigueur_plante.qi_local
 #   asphyxie  : ASPHYXIE_HEALTH_SEUIL — seuil de la voie santé (mortalite.py)
-#   senescence: SENESCENCE_ONSET — début du déclin sénescent (mortalite.py)
+#   senescence: onset_senescence (sim/tempo, autour de SENESCENCE_ONSET) — mortalite.py
 #   chlorose plein : PH_MAX — plafond physique du champ pH (rampe 7.6 → 8.5)
 from fields.ecofields import (CHLOROSE_PH, SEUIL_ACIDOPHILE, PH_MAX,
-                             ASPHYXIE_HEALTH_SEUIL, SENESCENCE_ONSET,
-                             SEN_ONSET_JITTER)
+                             ASPHYXIE_HEALTH_SEUIL)
+# Début PROPRE du déclin sénescent : MÊME conversion que le moteur (D139 ③).
+from sim.tempo import onset_senescence
 # Mêmes seuils que la mécanique de DÉGÂT correspondante (sim, même couche) :
 #   DROUGHT_DAMAGE_THRESHOLD — drought_memory au-delà de laquelle le tissu souffre
 #   HERBIVORY_GAIN — gain densité→pression, sert à exprimer le floor du détecteur
@@ -167,8 +168,7 @@ def senescence(plant, eco, saison) -> float:
     L = plant.plant_class.longevity()
     if L == math.inf:
         return 0.0
-    g = plant.gene("phenologie_florale")
-    onset = max(0.05, min(0.95, SENESCENCE_ONSET - SEN_ONSET_JITTER * (g - 1.0)))
+    onset = onset_senescence(plant)      # même conversion que le moteur (D139 ③)
     denom = (1.0 - onset) * L
     if denom <= 0.0:
         return 0.0

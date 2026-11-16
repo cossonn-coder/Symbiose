@@ -100,7 +100,7 @@ class PerennialWoody(PlantBase):
         if cls.procedural_growth:
             return super().height_at(inst)
         h, _ = cls._interp(inst.age_years)
-        return h * inst.growth_factor * inst.gene("hauteur")
+        return h * inst.growth_factor * inst.facteur_hauteur()
 
     @classmethod
     def canopy_radius_at(cls, inst) -> float:

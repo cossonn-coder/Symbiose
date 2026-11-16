@@ -39,8 +39,9 @@ renomme jamais : un décalage changerait tous les tirages (golden).
 
 Tronçon ① = refactor PUR : toutes les entrées valent ce qui était codé en dur
 (facteur, neutre 1,0, σ_A 0,10, bornes [0,4 ; 1,6]). Tronçon ② : ajout en queue
-d'`autofecondation` (probabilité, neutre selon le mode de pollinisation). Les
-vraies unités des autres caractères arrivent au tronçon ③.
+d'`autofecondation` (probabilité, neutre selon le mode de pollinisation). Tronçon
+③ : `germination_thermique` en °C et `phenologie_florale` en semaines (neutre 0) ;
+les autres caractères restent des facteurs.
 """
 
 from dataclasses import dataclass
@@ -82,8 +83,20 @@ CARACTERES = {
     "tolerance_ombre":       _FACTEUR_ADAPTO,
     "tolerance_asphyxie":    _FACTEUR_ADAPTO,
     "port_trapu":            _FACTEUR_ADAPTO,
-    "germination_thermique": _FACTEUR,
-    "phenologie_florale":    _FACTEUR,
+    # D139 ③ — VRAIES UNITÉS. `germination_thermique` = ABAISSEMENT (°C) de
+    # l'optimum de levée de l'individu (+1,5 = lève à 1,5 °C plus froid que
+    # l'espèce). Neutre 0 ; σ_A 1,5 °C (avant : 3,5 °C × (g−1), σ 0,10 → ±0,35 °C,
+    # trop peu pour que la sélection morde) ; bornes ±6 °C = 4σ.
+    "germination_thermique": Caractere(
+        unite="°C", neutre=0.0, sigma_a=1.5, bornes=(-6.0, 6.0)),
+    # `phenologie_florale` = AVANCE (semaines) du TEMPO DE VIE, mesurée à la
+    # floraison (+1 = fleurit une semaine plus tôt). Pilote toujours les trois
+    # horloges (floraison, abscission, sénescence) via `sim/tempo.py`. Neutre 0 ;
+    # σ_A 1 semaine (calibré par construction : `sim/tempo.gdd_par_semaine`
+    # convertit une semaine en degrés-jours propres à l'espèce, vérifié par le
+    # banc ③) ; bornes ±4 semaines = 4σ.
+    "phenologie_florale": Caractere(
+        unite="semaines", neutre=0.0, sigma_a=1.0, bornes=(-4.0, 4.0)),
     # D139 ② — TAUX D'AUTOFÉCONDATION de la plante (probabilité qu'une graine naisse
     # de son propre pollen plutôt que d'un croisement). C'est le moteur de la
     # consanguinité F : une tomate (autogame, ≈ 95 %) fixe sa lignée en quelques

@@ -19,7 +19,7 @@ from __future__ import annotations
 from plants import (Basil, AppleTree, Phacelia, Bean, Sunflower, Ivy, Jasmine,
                     Tomato, Pepper, Borage, Mugwort)
 from plants.species.sauvages import SweetViolet
-from plants.genetics import clamp_gene
+from plants.genetics import borne
 from fields.seedbank import GrainEnAttente
 from sim.seeds import PlayerSeedBank, Seed
 from world import House, Support, MUR
@@ -152,7 +152,7 @@ def semis_tempere():
 # semaine ») fermé par une VARIABILITÉ intra-espèce, pure sélection/héritage (philo
 # #2), sans mécanique nouvelle. Comme `verger_floraison`, il compose un monde et
 # LAISSE le moteur (`_tick_floraison`) convertir chaque gène en un seuil de forçage
-# floral propre (`gdd_eff = gdd_floraison − FLORA_GENE_SHIFT·(gène−1)`) → l'individu
+# floral propre (`sim/tempo.seuil_floraison` : seuil − avance × °C·j/sem) → l'individu
 # « lève-tôt » franchit la porte florale AVANT le « lève-tard ». Golden NEUTRE.
 #
 # Monde MONO-ESPÈCE DENSE : un tapis de phacélie (engrais vert annuel très
@@ -166,16 +166,19 @@ def semis_tempere():
 #     FORÇAGE thermique par lignée (`gdd_eff`) qui devient la contrainte BINDANTE ;
 #   • `gdd_accum` PRÉ-CHARGÉ JUSTE SOUS le plus bas des seuils (ETAL_GDD_PRECHARGE)
 #     → l'accumulation naturelle balaie ensuite la plage des seuils par lignée
-#     `gdd_eff = bloom_forcing_gdd − FLORA_GENE_SHIFT·(gène−1)` (Phacelia : ~29→47
-#     pour genes 1.45→0.55) sur plusieurs semaines → l'individu « lève-tôt » (seuil
+#     `gdd_eff = seuil_floraison(plante)` (Phacelia : ~29→47 pour une avance
+#     +1,1→−1,1 sem.) sur plusieurs semaines → l'individu « lève-tôt » (seuil
 #     abaissé) FRANCHIT AVANT le « lève-tard » → étalement des dates. Recalibré au
 #     sprint FLORAISON & FRUCTIFICATION ① (forçage événementiel : plus de porte
 #     photopériode, seuils BAS → l'ancien précharge 100 overshootait tout).
 # La phacélie est déjà au catalogue et à l'encyclopédie (concept `phenologie_florale`
 # ajouté au ④) → aucune espèce neuve (règle catalogue/voix respectée).
 ETAL_ROWS = ETAL_COLS = 8       # 64 pieds : échantillon statistique stable des dates
-ETAL_GENE_LO = 0.55            # lignées « lève-tard » (seuil floral relevé)
-ETAL_GENE_HI = 1.45            # lignées « lève-tôt » (seuil floral abaissé)
+# D139 ③ : le gène est en SEMAINES d'avance (neutre 0). ±1,1 sem × 8,25 °C·j/sem
+# (taux de forçage de la phacélie, `sim/tempo.gdd_par_semaine`) ≈ ±9 °C·j → seuils
+# ~29→47, la MÊME plage qu'avec l'ancien facteur 0,55→1,45.
+ETAL_GENE_LO = -1.1            # lignées « tardives » (seuil floral relevé)
+ETAL_GENE_HI = 1.1             # lignées « précoces » (seuil floral abaissé)
 ETAL_GDD_PRECHARGE = 20.0      # forçage pré-armé JUSTE SOUS le plus bas seuil (~29) → balayage progressif
 
 
@@ -199,7 +202,8 @@ def etalement_floraison():
             # Gène ÉTALÉ déterministiquement (damier de lignées) : la fraction couvre
             # [LO, HI] de bout en bout → variance de dates garantie sans RNG (philo #3).
             frac = (k + 0.5) / total
-            gene = clamp_gene(ETAL_GENE_LO + (ETAL_GENE_HI - ETAL_GENE_LO) * frac)
+            gene = borne("phenologie_florale",
+                         ETAL_GENE_LO + (ETAL_GENE_HI - ETAL_GENE_LO) * frac)
             plante.genes = {"phenologie_florale": gene}
             plante.gdd_accum = ETAL_GDD_PRECHARGE   # forçage pré-armé (accélération)
             k += 1

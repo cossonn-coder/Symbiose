@@ -440,13 +440,14 @@ class PlantBase(ABC):
     def height_at(cls, inst: "PlantInstance") -> float:
         """Hauteur effective (cm). Voie procédurale (§G) : max(z) de la structure ×
         génétique (growth_factor déjà intégré dans la croissance). Sinon : potentiel
-        du stade × growth_factor × génétique."""
+        du stade × growth_factor × génétique. « Génétique » = `facteur_hauteur`
+        (gène `hauteur` × compromis précocité ↔ taille, D139 ③)."""
         if cls.procedural_growth:
-            return inst.footprint_value("height") * inst.gene("hauteur")
+            return inst.footprint_value("height") * inst.facteur_hauteur()
         st = inst.stage
         h = st.canopy_height if st.canopy_height is not None \
             else STRATE_DEFAULTS[st.strate]["height"]
-        return h * inst.growth_factor * inst.gene("hauteur")
+        return h * inst.growth_factor * inst.facteur_hauteur()
 
     @classmethod
     def canopy_radius_at(cls, inst: "PlantInstance") -> float:

@@ -10,19 +10,19 @@ et vérifie que les TROIS horloges phénologiques — floraison, fanaison
 Il capte donc une régression si un futur refactor ré-annulait la désync (ré-
 synchronisation = étalement nul).
 
-Les trois horloges dérivent du MÊME gène-tempo `phenologie_florale` (g > 1 =
-individu précoce partout), via des formules ∝ (g − 1) :
-  - floraison : seuil effectif `bloom_forcing_gdd − FLORA_GENE_SHIFT·(g − 1)`
-    (forçage thermique événementiel, sprint FLORAISON & FRUCTIFICATION ①) ;
-  - abscission : semaine `round(ABSCISSION_BASE − ABSCISSION_JITTER·(g − 1))`
-    bornée [ABSCISSION_MIN, ABSCISSION_MAX] (= `semaine_abscission`) ;
-  - sénescence : onset `clamp(SENESCENCE_ONSET − SEN_ONSET_JITTER·(g − 1), …)`.
+Les trois horloges dérivent du MÊME gène-tempo `phenologie_florale` (avance en
+semaines depuis D139 ③, > 0 = individu précoce partout), via la conversion
+PARTAGÉE `sim/tempo.py` (adapté au D139 ③ : avant, chaque test recopiait une
+formule en (g − 1)) :
+  - floraison : `seuil_floraison` (seuil d'espèce − avance × °C·j/semaine) ;
+  - abscission : `semaine_abscission` bornée [ABSCISSION_MIN, ABSCISSION_MAX] ;
+  - sénescence : `onset_senescence` bornée [0,05 ; 0,95].
 
 On teste au NIVEAU FORMULE (environnement-indépendant, robuste et court) : c'est
 le gène qui désynchronise, pas le climat. Déterministe (philo #3) : `semer_
 fondateur` tire les gènes par hash de position, aucun RNG vivant — SEED fixe.
 
-Neutralité à g = 1.0 : chaque formule redonne la valeur de base (aucun décalage).
+Neutralité à avance 0 : chaque horloge redonne la valeur de base (aucun décalage).
 
 Lancement (depuis data/code/) : python3 -m tests.test_desync_phenologie
 """
@@ -31,9 +31,9 @@ import sys
 import statistics as st
 
 from world import Tile
-from fields import (init_eco, SENESCENCE_ONSET, SEN_ONSET_JITTER)
-from sim.engine.floraison import FLORA_GENE_SHIFT
+from fields import init_eco, SENESCENCE_ONSET, ABSCISSION_BASE
 from sim.engine.decompo import semaine_abscission
+from sim.tempo import seuil_floraison, onset_senescence
 from sim.seeds import semer_fondateur
 from plants import Sunflower, Vaccinium
 
@@ -78,14 +78,10 @@ def test_variance_gene_tempo():
 
 def test_spread_floraison():
     """Étalement de la floraison : le seuil GDD EFFECTIF de floraison
-    (`bloom_forcing_gdd − FLORA_GENE_SHIFT·(g − 1)`) est DISTINCT entre individus →
-    ils ne fleurissent pas la même semaine (c'est le knob FLORA_GENE_SHIFT, recalibré
-    à 20 au sprint FLORAISON & FRUCTIFICATION ① — seuils bas — qui garde l'écart
-    perceptible sans rendre un pied précoce négatif)."""
+    (`seuil_floraison`) est DISTINCT entre individus → ils ne fleurissent pas la
+    même semaine."""
     plants = _cohorte(Sunflower)
-    base = Sunflower.bloom_forcing_gdd
-    seuils = [base - FLORA_GENE_SHIFT * (p.gene("phenologie_florale") - 1.0)
-              for p in plants]
+    seuils = [seuil_floraison(p) for p in plants]
     sd = st.pstdev(seuils)
     check("seuil floraison étalé (σ>0)", sd > 0.0,
           f"σ={sd:.2f} GDD, min={min(seuils):.0f} max={max(seuils):.0f}")
@@ -103,25 +99,25 @@ def test_spread_abscission():
 
 def test_spread_onset_senescence():
     """Étalement de l'onset de sénescence : l'onset propre à chaque individu
-    (`clamp(SENESCENCE_ONSET − SEN_ONSET_JITTER·(g − 1), …)`) est étalé."""
+    (`onset_senescence`) est étalé."""
     plants = _cohorte(Sunflower)
-    onsets = [max(0.05, min(0.95,
-                  SENESCENCE_ONSET - SEN_ONSET_JITTER
-                  * (p.gene("phenologie_florale") - 1.0)))
-              for p in plants]
+    onsets = [onset_senescence(p) for p in plants]
     sd = st.pstdev(onsets)
     check("onset de sénescence étalé (σ>0)", sd > 0.0,
           f"σ={sd:.4f}, min={min(onsets):.3f} max={max(onsets):.3f}")
 
 
 def test_neutralite_gene_1():
-    """À g = 1.0, les trois horloges redonnent EXACTEMENT leur valeur de base
-    (aucun décalage) — garantit qu'un individu neutre n'est pas perturbé."""
-    g = 1.0
-    seuil = Sunflower.bloom_forcing_gdd - FLORA_GENE_SHIFT * (g - 1.0)
-    onset = max(0.05, min(0.95, SENESCENCE_ONSET - SEN_ONSET_JITTER * (g - 1.0)))
-    check("floraison neutre à g=1", seuil == Sunflower.bloom_forcing_gdd)
-    check("onset neutre à g=1", onset == SENESCENCE_ONSET)
+    """À avance 0 (gène absent → neutre), les trois horloges redonnent EXACTEMENT
+    leur valeur de base — un individu neutre n'est pas perturbé."""
+    p = _cohorte(Sunflower)[0]
+    p.genes = {}
+    v = _cohorte(Vaccinium)[0]
+    v.genes = {}
+    check("floraison neutre à avance 0",
+          seuil_floraison(p) == Sunflower.bloom_forcing_gdd)
+    check("onset neutre à avance 0", onset_senescence(p) == SENESCENCE_ONSET)
+    check("abscission neutre à avance 0", semaine_abscission(v) == ABSCISSION_BASE)
 
 
 def main():

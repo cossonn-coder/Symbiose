@@ -12,7 +12,8 @@ from dataclasses import dataclass, field
 
 from constants import PLOT_CM
 from ..genetics import (clamp_gene, ADAPTOGENIC_GENES,
-                        DEFENSE_COST, DEFENSE_PLANCHER, DI, neutre, borne)
+                        DEFENSE_COST, DEFENSE_PLANCHER, DI, neutre, borne,
+                        facteur_precocite)
 from .empreintes import _plots_in_radius, PROC_ROOT_RATIO
 from .stades import GrowthStage, Segment
 
@@ -244,6 +245,13 @@ class PlantInstance:
         if v is not None:
             return v
         return neutre(name, self.plant_class)
+
+    def facteur_hauteur(self) -> float:
+        """Facteur GÉNÉTIQUE de hauteur effective : gène `hauteur` × compromis
+        précocité ↔ taille (D139 ③) — une avance de floraison (`phenologie_florale`
+        > 0, en semaines) coûte de la taille, un retard en donne. Lu par les
+        `height_at` (herbacées et ligneux) : un seul point de vérité."""
+        return self.gene("hauteur") * facteur_precocite(self.gene("phenologie_florale"))
 
     def expressed_gene(self, name: str) -> float:
         """Phénotype EFFECTIF d'un gène adaptogène = génotype × expression plastique

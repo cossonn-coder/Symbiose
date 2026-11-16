@@ -12,7 +12,7 @@ dans `_tick_skeletons` (decompo.py). Comportement identique à l'ancien engine.p
 
 from __future__ import annotations
 import math
-from fields import (_hash_noise, SENESCENCE_ONSET, SEN_ONSET_JITTER, SEN_RATE,
+from fields import (_hash_noise, SEN_RATE,
                     HEAL_RATE, HEAL_SEN_CUTOFF, ASPHYXIE_HEALTH_SEUIL,
                     ASPHYXIE_RATE, RESEED_RADIUS_CM, VITALITE_STEP)
 from sim.effects import apply_mutations, ReduceHealth, deposer_mort
@@ -21,6 +21,7 @@ from sim.reproduction import (find_father, heredite, child_expression,
                               is_seed_bearing, graine_fertile,
                               recrue_par_fruits)
 from sim.capacite import recrutement_bloque
+from sim.tempo import onset_senescence
 from sim.growth import est_etiole
 from .racines import eau_percue
 from .aleas import (PAILLAGE_PROTECT, DAMAGE_STEP, WIND_DAMAGE_SEUIL,
@@ -73,14 +74,13 @@ class MortaliteMixin:
             r, c = plant.position
             L = plant.plant_class.longevity()
             # Sénescence par âge. Onset PROPRE à l'individu (DÉSYNC PHÉNOLOGIE ①) :
-            # le gène-tempo `phenologie_florale` décale le début du déclin (gène > 1
-            # = précoce → sénesce plus tôt). Neutre 1.0 ⇒ onset == SENESCENCE_ONSET.
-            # MIROIR EXACT dans semiologie.senescence (même gène, même formule).
+            # le gène-tempo `phenologie_florale` (avance en semaines, D139 ③) décale
+            # le début du déclin (précoce → sénesce plus tôt). Neutre 0 ⇒ onset ==
+            # SENESCENCE_ONSET. MIROIR EXACT dans semiologie.senescence : les deux
+            # appellent la MÊME conversion `sim/tempo.onset_senescence`.
             sen = 0.0
             if L != math.inf:
-                g = plant.gene("phenologie_florale")
-                onset = max(0.05, min(0.95,
-                            SENESCENCE_ONSET - SEN_ONSET_JITTER * (g - 1.0)))
+                onset = onset_senescence(plant)
                 denom = (1.0 - onset) * L
                 if denom > 0:
                     sen = max(0.0, min(1.0,

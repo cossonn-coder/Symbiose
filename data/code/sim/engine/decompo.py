@@ -12,8 +12,8 @@ Comportement identique à l'ancien engine.py.
 from __future__ import annotations
 import math
 from plants import Fruit, organ_sites
-from fields import (T_SECHE, FRAG_RATE, ABSCISSION_BASE,
-                    ABSCISSION_JITTER, ABSCISSION_MIN, ABSCISSION_MAX,
+from sim.tempo import semaine_abscission  # noqa: F401  (D139 ③, ré-export)
+from fields import (T_SECHE, FRAG_RATE,
                     CHUTE_SEMAINES, FEUILLE_PAR_PLOT, FRUIT_MASSE, FRUIT_DMAT,
                     MATURITE_CHUTE)
 from fields.ecofields.constants import BOIS_MORT_PAR_CM3   # D111 ② (sous-paquet propriétaire)
@@ -53,16 +53,9 @@ P_GRAIN_CHUTE  = 0.005
 _CANAL_CHUTE   = 73
 
 
-def semaine_abscission(plant) -> int:
-    """Semaine de largage PROPRE à un caduc, dérivée de son gène-tempo
-    `phenologie_florale` (sprint DÉSYNC PHÉNOLOGIE ①). Convention partagée avec la
-    floraison/la sénescence : gène > 1 (individu PRÉCOCE) → largue plus tôt. Bornée
-    à la fenêtre d'automne [ABSCISSION_MIN, ABSCISSION_MAX]. Déterministe (le gène
-    vient d'un hash, aucun RNG). Factorisé ici pour que le pont (② `serialize.py`)
-    calcule la MÊME rampe `automne` sans dupliquer la formule."""
-    g = plant.gene("phenologie_florale")
-    w = round(ABSCISSION_BASE - ABSCISSION_JITTER * (g - 1.0))
-    return max(ABSCISSION_MIN, min(ABSCISSION_MAX, w))
+# `semaine_abscission` vit depuis D139 ③ dans `sim/tempo.py` (conversion PARTAGÉE
+# des trois horloges du tempo de vie) ; ré-exportée ici pour le pont (② serialize.py)
+# et les lecteurs historiques.
 
 
 def masse_feuillage(plant, plots_tuile: list) -> float:

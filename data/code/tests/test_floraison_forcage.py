@@ -13,7 +13,7 @@ haut → automne), sous la météo réelle du jeu. On vérifie TROIS propriété
   2. ÉTALEMENT — une cohorte d'une même espèce aux gènes `phenologie_florale`
      dispersés arme `bloom_week` sur plusieurs semaines (σ > 0) : la désync survit au
      nouveau chemin (le seuil individuel `gdd_eff` décale le franchissement).
-  3. NEUTRALITÉ g=1 — un pied neutre (gène 1.0) a `gdd_eff == bloom_forcing_gdd`
+  3. NEUTRALITÉ — un pied neutre (avance 0, D139 ③) a `gdd_eff == bloom_forcing_gdd`
      EXACTEMENT (aucun décalage) — l'invariant du gène-tempo.
 
 Déterministe (philo #3) : météo pure + seuils d'espèce + gène par hash, aucun RNG.
@@ -29,7 +29,8 @@ import statistics as st
 from world import Tile
 from fields import init_eco
 from sim.engine import Engine
-from sim.engine.floraison import FLORA_GENE_SHIFT
+from sim.tempo import seuil_floraison
+from plants import PlantInstance
 from sim.seeds import semer_fondateur
 from plants import AppleTree, Sunflower, Mugwort
 
@@ -98,9 +99,10 @@ def test_placement():
 # ---------------------------------------------------------------------------
 def test_etalement():
     print("\n[2] étalement : cohorte à gènes dispersés → bloom_week étalé (σ>0)")
-    # Cohorte de tournesols aux gènes `phenologie_florale` dispersés (lève-tôt g>1
-    # → seuil abaissé → franchit avant). On récolte la semaine d'armement de chacun.
-    genes = [0.70, 0.85, 1.00, 1.15, 1.30]
+    # Cohorte de tournesols aux gènes `phenologie_florale` dispersés (avance en
+    # semaines depuis D139 ③ — avant : facteurs 0,70→1,30 ; précoce > 0 → seuil
+    # abaissé → franchit avant). On récolte la semaine d'armement de chacun.
+    genes = [-2.0, -1.0, 0.0, 1.0, 2.0]
     weeks = [_bloom_week_of(Sunflower, gene=g) for g in genes]
     armes = [w for w in weeks if w > 0]
     sd = st.pstdev(weeks) if len(weeks) > 1 else 0.0
@@ -113,13 +115,13 @@ def test_etalement():
 
 
 # ---------------------------------------------------------------------------
-# 3. NEUTRALITÉ g=1 — gdd_eff == bloom_forcing_gdd exactement
+# 3. NEUTRALITÉ avance 0 — gdd_eff == bloom_forcing_gdd exactement
 # ---------------------------------------------------------------------------
 def test_neutralite():
-    print("\n[3] neutralité g=1 : gdd_eff == bloom_forcing_gdd (aucun décalage)")
+    print("\n[3] neutralité avance 0 : gdd_eff == bloom_forcing_gdd (aucun décalage)")
     for cls in (AppleTree, Sunflower, Mugwort):
-        gdd_eff = cls.bloom_forcing_gdd - FLORA_GENE_SHIFT * (1.0 - 1.0)
-        check(f"{cls.name} : seuil neutre à g=1", gdd_eff == cls.bloom_forcing_gdd,
+        gdd_eff = seuil_floraison(PlantInstance(plant_class=cls, position=(0, 0)))
+        check(f"{cls.name} : seuil neutre à avance 0", gdd_eff == cls.bloom_forcing_gdd,
               f"gdd_eff={gdd_eff}")
 
 

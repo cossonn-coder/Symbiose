@@ -90,8 +90,10 @@ def peut_greffer(scion, rootstock) -> bool:
 def _genes_greffes(scion, rootstock) -> dict:
     """Vecteur de gènes du porte-greffe APRÈS greffe : chaque gène pioché dans la
     BONNE source (aérien → greffon, racinaire/établissement → porte-greffe). On lit
-    via `.gene(name)` (1.0 si absent du vecteur) → jamais de KeyError, un vecteur
-    partiel se complète en neutre. Déterministe (philo #3)."""
+    via `.gene(name)` (neutre du caractère si absent du vecteur) → jamais de
+    KeyError, un vecteur partiel se complète en neutre. Simple RECOPIE de valeur :
+    aucun produit ni moyenne, donc valide quelle que soit l'unité (°C, semaines,
+    facteur — D139 ③). Déterministe (philo #3)."""
     return {
         g: (scion.gene(g) if g in GENES_AERIENS else rootstock.gene(g))
         for g in GENE_NAMES

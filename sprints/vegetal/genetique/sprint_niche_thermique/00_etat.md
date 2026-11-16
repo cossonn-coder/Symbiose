@@ -38,3 +38,12 @@ large** (dates de mort des annuelles) · ④ INTACT · ⑤ INTACT.
 
 ## REPRISE
 Lire `CLAUDE.md`, ce fichier, puis le kickoff du premier tronçon « à faire ».
+
+## Report du sprint ① (génétique infinitésimale, décision Nico 2026-11-16)
+La réponse à la sélection sur `germination_thermique` (banc
+`sprint_genetique_infinitesimale/mesures/banc_reponse_selection.py`, cas (a), parcelle
+froide 10 ans) est NULLE : +0,02 °C [n=80] vs témoin +0,11 °C [n=96], cible ≥ +1 °C.
+Le tri thermique à la levée (`_levee_triee`, `sim/succession.py`) existe déjà ; ce qui manque
+est la **pression** : tolérances de levée (7-10 °C) ≫ σ_A 1,5 ; levées près de l'optimum ;
+~9 levées/an ; aucun avantage à lever tôt. Ce sprint doit la créer et **re-mesurer avec ce
+banc** avant clôture (un tronçon inerte n'est pas un succès).

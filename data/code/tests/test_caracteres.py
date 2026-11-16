@@ -30,6 +30,13 @@ _ORDRE_HISTORIQUE = ("hauteur", "rusticite_froid", "vigueur",
                      "germination_thermique", "phenologie_florale")
 
 
+# D139 ③ : (unité, neutre, σ_A, bornes) des caractères passés en vraies unités.
+_VRAIES_UNITES = {
+    "germination_thermique": ("°C", 0.0, 1.5, (-6.0, 6.0)),
+    "phenologie_florale":    ("semaines", 0.0, 1.0, (-4.0, 4.0)),
+}
+
+
 def check(name, cond, detail=""):
     _results.append((name, bool(cond)))
     print(f"  [{'OK' if cond else 'KO'}] {name}" + (f" — {detail}" if detail and not cond else ""))
@@ -48,6 +55,11 @@ def test_valeurs_refactor_pur():
             ok = (car.unite == "probabilité" and car.bornes == (0.0, 1.0)
                   and car.sigma_a == 0.05 and not car.adaptogene)
             check(f"caractère neuf : {g}", ok, repr(car))
+            continue
+        if g in _VRAIES_UNITES:          # D139 ③ : vraies unités (neutre 0)
+            ok = (car.unite, car.neutre, car.sigma_a, car.bornes) == _VRAIES_UNITES[g] \
+                and not car.adaptogene
+            check(f"vraie unité : {g}", ok, repr(car))
             continue
         ok = (car.unite == "facteur" and car.neutre == 1.0
               and car.sigma_a == GENE_INIT_SIGMA == 0.10

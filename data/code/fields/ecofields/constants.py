@@ -145,6 +145,8 @@ T_GERM_FLOOR    = 5.0    # °C — sous ce seuil de T_sol, aucune germination (z
 # côté `sim` (succession), comme T_GERM_FLOOR (les `t_germ_opt/tol` restent
 # littéraux sur PlantBase — règle de couches). PLACEHOLDER, calibrage au banc ⑥.
 GERM_GENE_SHIFT = 3.5    # °C — abaissement d'optimum de germination par unité de gène
+#                          OBSOLÈTE depuis D139 ③ : le gène est en °C, lu tel quel
+#                          (`t_opt_eff = t_germ_opt − gène`). Conservé (import public).
 GAIN_SOLAIRE    = 15.0   # °C — surchauffe max d'un plot en plein soleil d'été (lum=1, été)
 THERMAL_INERTIA = 0.5    # lissage temporel de T_sol vers sa cible (1 = pas d'inertie ; petit = sol très tamponné)
 # Fraction du rayonnement d'été par saison : un soleil d'hiver chauffe moins le sol.
@@ -516,6 +518,8 @@ SENESCENCE_ONSET = 0.70   # début du déclin (× longévité)
 # < 1 le relève → plus tard. Neutre 1.0 ⇒ onset == SENESCENCE_ONSET (aucun
 # décalage). ±σ(0.10) sur le gène ⇒ ±0.05 de fraction de longévité. Déterministe
 # (le gène dérive d'un hash de position, aucun RNG vivant). Départ de calibrage.
+# D139 ③ : le gène est en semaines d'avance ; `sim/tempo.onset_senescence` le
+# ramène à l'ancienne échelle (avance / SEMAINES_PAR_TEMPO) → calibrage inchangé.
 SEN_ONSET_JITTER = 0.5
 SEN_RATE         = 0.04   # pente de la pression de sénescence (proba/sem à sen=1)
 HEAL_RATE        = 0.06   # proba de remontée de santé/sem en bon milieu (Q=1)
@@ -630,6 +634,8 @@ ABSCISSION_FRAC   = 0.15       # part de la nécromasse-hauteur larguée à l'ab
 # il tomberait HORS de la fenêtre et la borne haute ferait tout le travail.
 ABSCISSION_BASE   = 34         # semaine-pivot du largage (≈ début novembre)
 ABSCISSION_JITTER = 15.0       # ±σ(0.10) sur le gène ⇒ ±1.5 sem de décalage
+# D139 ③ : par unité de l'ANCIEN gène-facteur ; une semaine d'avance en vaut 1/10
+# (`sim/tempo.semaine_abscission`, SEMAINES_PAR_TEMPO) → σ_A 1 sem ⇒ ±1,5 sem.
 ABSCISSION_MIN, ABSCISSION_MAX = 30, 36   # mi-oct. → fin nov. (D122 ③)
 # AUTOMNE VISIBLE ③ : le largage ne tombe plus d'un coup sur le plot du tronc. Il
 # s'étale sur CHUTE_SEMAINES à partir de `semaine_abscission` (dernier largage possible :
