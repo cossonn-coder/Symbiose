@@ -98,7 +98,7 @@ dans la carte : leur nom est déductible du dossier.
 | Thème | Documents |
 |---|---|
 | `croissance/` | `conception_croissance.md`, `conception_hormones.md` |
-| `genetique/` | `conception_diversite_fondatrice.md`, `conception_plasticite_expression.md` |
+| `genetique/` | `conception_diversite_fondatrice.md`, `conception_plasticite_expression.md`, `etude_genetique_realiste.md`, `conception_genetique_infinitesimale.md`, `conception_niche_thermique.md`, `conception_caracteres_vivants.md` |
 | `sante/` | `conception_sante_resilience.md`, `conception_usure_letalite.md` |
 | `floraison/` | `conception_desync_phenologie.md`, `conception_floraison_fructification.md`, `conception_germination_thermique.md` |
 | `allelopathie/` | `conception_allelopathie.md` |
