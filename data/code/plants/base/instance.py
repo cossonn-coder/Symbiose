@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 
 from constants import PLOT_CM
 from ..genetics import (clamp_gene, ADAPTOGENIC_GENES,
-                        DEFENSE_COST, DEFENSE_PLANCHER, neutre, borne)
+                        DEFENSE_COST, DEFENSE_PLANCHER, DI, neutre, borne)
 from .empreintes import _plots_in_radius, PROC_ROOT_RATIO
 from .stades import GrowthStage, Segment
 
@@ -96,6 +96,12 @@ class PlantInstance:
     # Vecteur de gènes héréditaire (D22). Vide ⇒ tous neutres (1.0). Rempli à la
     # naissance (semis génétique : succession, renouvellement, semis joueur).
     genes: dict = field(default_factory=dict)
+    # Consanguinité F ∈ [0, 1] (D139 ②) : probabilité que deux allèles d'un même
+    # locus soient identiques par descendance. 0 = issue d'un croisement (ou
+    # fondateur sauvage) ; chaque autofécondation la rapproche de 1 (F ← (1+F)/2).
+    # Réduit le brassage de ses enfants et, chez une allogame, sa vigueur
+    # (`depression_consanguinite`). Un clone garde le F de sa mère.
+    F: float = 0.0
     # État d'EXPRESSION plastique (sprint plasticité ①, patron `symptom_marks`).
     # {gène adaptogène: facteur ∈ [EXPR_MIN, EXPR_MAX]}, défaut 1.0 = phénotype =
     # génotype. Glisse vers une cible pilotée par la mémoire de stress correspondante
@@ -259,6 +265,18 @@ class PlantInstance:
         (toutes expressions à 1.0) ⇒ 1.0 (non-régression du tick non acclimaté)."""
         surexpression = sum(max(0.0, e - 1.0) for e in self.expression.values())
         return max(DEFENSE_PLANCHER, 1.0 - DEFENSE_COST * surexpression)
+
+    def depression_consanguinite(self) -> float:
+        """Dépression de consanguinité (D139 ②, conception §6) — facteur ∈ ]0, 1]
+        multiplié sur la vigueur effective AUX MÊMES SITES que `cout_defense`
+        (croissance, convalescence) : `1 − DI · F · (1 − s)`, s = taux
+        d'autofécondation NEUTRE de l'espèce. Une allogame consanguine pousse moins ;
+        une autogame (s ≈ 0,95) a purgé ses allèles délétères → ≈ 1. Non consanguine
+        (F = 0, cas de tout fondateur et de tout croisement) ⇒ 1.0 sans calcul."""
+        if self.F <= 0.0:
+            return 1.0
+        s = neutre("autofecondation", self.plant_class)
+        return 1.0 - DI * self.F * (1.0 - s)
 
     def decay_symptoms(self, decay: float, epsilon: float = 0.02) -> None:
         """Estompe les marques de symptômes ÉVÉNEMENTIELS (sémiologie ②).

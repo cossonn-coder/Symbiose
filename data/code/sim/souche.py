@@ -127,6 +127,7 @@ def _vague(tile, souche, seed: int, week: int, n: int) -> list:
         if rejet is None:
             continue
         rejet.genes = dict(souche.genes)
+        rejet.F = souche.F                       # clone : même consanguinité (D139 ②)
         rejet.expression.update(souche.expression)
         rejet.form_seed = souche.form_seed
         rejet.x_cm, rejet.y_cm = tx, ty

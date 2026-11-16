@@ -30,7 +30,8 @@ from fields.peripherie import tick_repousse, tick_ouvrages  # ceinture : repouss
 from fields.apiculture import tick_ruches   # ruches : capture essaim + miel (⑥, §H/§I)
 from fields.alarme import tick_alarme       # phéromone d'alarme apienne : décroissance (⑦, §J)
 from sim.effects import resolve_plant_turn, apply_disturbances
-from sim.reproduction import is_seed_bearing, child_expression, graine_fertile
+from sim.reproduction import (is_seed_bearing, child_expression, graine_fertile,
+                              find_father, heredite)
 from sim.seeds import Seed
 from sim.succession import succession
 from sim.weather import weather_state, K_PEST, TEMP_DRIVEN, patch_local, humidite_air
@@ -542,7 +543,14 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
                             if key:
                                 expr = {g: v for g, v in child_expression(plant).items()
                                         if abs(v - 1.0) > 1e-9}
-                                player_bank.add(Seed(key, dict(plant.genes), expr))
+                                # D139 ② : la graine récoltée est un DESCENDANT (comme
+                                # son priming) → gènes et F par `heredite` : une lignée
+                                # de tomates ressemée se fixe, une courge reste brassée.
+                                graine = self.game_state.get("seed", 42)
+                                pere = find_father(plant, tile.plants, tile, eco,
+                                                   graine, week)
+                                genes, F = heredite(plant, pere, graine, week)
+                                player_bank.add(Seed(key, genes, expr, F))
 
             # 11b. Reproduction génétique (D17+D22) — saison des graines (automne).
             # Anémochorie (⑤, §5.3) : `vent_dir`/`vent_force` décalent le dépôt

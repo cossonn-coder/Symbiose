@@ -4,9 +4,10 @@ Héritage génétique biparental (D22).
 
 À la production de graines sur une plante mère fécondée :
   - on cherche un PÈRE compatible (même famille) à portée de pollinisation ;
-  - gène_enfant = moyenne(mère, père) + mutation gaussienne, par gène ;
-  - pas de partenaire / espèce autogame → AUTOFÉCONDATION (mère + mutation
-    réduite, consanguinité = faible diversité).
+  - gène_enfant = moyenne(mère, père) + BRASSAGE ½σ_A²(1−F̄) + filet de mutation
+    (modèle infinitésimal, D139 ②, cf. `heredite`) ;
+  - pas de partenaire / espèce autogame / tirage contre le gène `autofecondation`
+    → AUTOFÉCONDATION (F de l'enfant = (1+F_mère)/2 : la lignée se fixe).
 
 Pollinisation par espèce : `pollination_mode` (wind/insect/self) +
 `pollination_radius_cm`. En mode insecte, les rondelles `pollinisateur` et
@@ -20,9 +21,10 @@ Déterministe : appariement et mutation via les hash (_hash_noise / hash_gauss).
 Aucun RNG live (règle de design #3).
 """
 from __future__ import annotations
+import math
 import zlib
 
-from plants import (species_compatible, GENE_NAMES, MUTATION_SIGMA, borne,
+from plants import (species_compatible, GENE_NAMES, borne, neutre, sigma_a, H_MUT,
                     ADAPTOGENIC_GENES, PRIMING_FRAC)
 from fields import _hash_noise, hash_gauss
 from sim import weather as _weather   # normales climatiques (même couche, sans cycle)
@@ -31,7 +33,13 @@ from sim import weather as _weather   # normales climatiques (même couche, sans
 INSECT_BASE_REACH   = 0.5   # rayon effectif sans pollinisateurs (× rayon nominal)
 INSECT_FULL_BONUS   = 1.0   # bonus de rayon à saturation du champ pollinisateur
 POLLINATOR_SAT      = 0.40  # densité du champ pollinisateur saturant le bonus (knob, D31.2)
-SELFING_SIGMA_RATIO = 0.5   # mutation réduite en autofécondation (consanguinité)
+SELFING_SIGMA_RATIO = 0.5   # OBSOLÈTE depuis D139 ② (l'autofécondation réduit le
+                            # brassage via F, cf. `heredite`) — conservé, plus lu.
+# Canaux de hash de l'hérédité (D139 ②). Décalage de la coordonnée `r` : sépare le
+# tirage du FILET de mutation (z₂) et le choix croisé/autofécondé du canal historique
+# z₁ (`week*29 + i`, k = 4i), sans collision avec une vraie position (r < 100).
+_CANAL_FILET = 100_003
+_CANAL_CHOIX = 200_003
 
 
 def is_seed_bearing(plant) -> bool:
@@ -159,27 +167,57 @@ def find_father(mother, plants, tile, eco, seed, week):
     return tied[idx]
 
 
-def child_genes(mother, father, seed, week) -> dict:
+def heredite(mother, father, seed, week) -> tuple:
     """
-    Vecteur de gènes de l'enfant.
-      biparental    : moyenne(mère, père) + mutation gaussienne ;
-      autofécondation: gènes de la mère + mutation réduite ;
-      introgression : père d'une autre espèce (même famille) → ses gènes décalent
-                      l'enfant, qui reste de l'espèce de la mère.
-    L'introgression peut pousser un gène HORS de la plage normale [0.7, 1.3]
-    (vigueur hybride) ; seule `borne` (par caractère) tient les limites dures.
+    Hérédité INFINITÉSIMALE (D139 ②, conception §4) → `(gènes, F)` de l'enfant.
+
+    Croisé ou autofécondé ? Graine par graine, par hash contre le gène
+    `autofecondation` de la mère : même avec un père à portée, une tomate
+    (≈ 0,95) se féconde presque toujours elle-même. Sans père (espèce autogame,
+    pas de partenaire à portée — repli de `find_father`) → autofécondation.
+
+    Par caractère (σ_A = diversité additive de l'espèce MÈRE) :
+      croisé       : â = (a_m + a_p')/2 ; σ_s² = ½·σ_A²·(1 − (F_m+F_p)/2) ; F = 0
+      autofécondé  : â = a_m            ; σ_s² = ½·σ_A²·(1 − F_m)         ; F = (1+F_m)/2
+      a = borne(â + z₁·σ_s + z₂·√H_MUT·σ_A)
+    σ_s = BRASSAGE (échantillonnage mendélien) : il s'éteint quand la lignée se
+    fixe (F → 1) ; le FILET de mutation, lui, ne s'éteint jamais.
+
+    Introgression (père d'une AUTRE espèce de la même famille, l'enfant reste de
+    l'espèce de la mère) : le père contribue par son ÉCART à SON neutre, ajouté au
+    neutre de la mère — a_p' = neutre_m + (a_p − neutre_p). Pour un père de même
+    espèce, a_p' = a_p. Elle peut pousser un caractère hors de la plage normale
+    (vigueur hybride) ; seule `borne` tient les limites dures.
     """
     r, c = mother.position
+    if father is not None and _hash_noise(seed, week, r + _CANAL_CHOIX, c) \
+            < mother.gene("autofecondation"):
+        father = None                    # autofécondation malgré un père à portée
+    cls_m, F_m = mother.plant_class, mother.F
+    if father is None:
+        F_enfant, brassage = 0.5 * (1.0 + F_m), 0.5 * (1.0 - F_m)
+    else:
+        cls_p = father.plant_class
+        F_enfant, brassage = 0.0, 0.5 * (1.0 - 0.5 * (F_m + father.F))
     genes = {}
     for i, g in enumerate(GENE_NAMES):
-        m = mother.gene(g)
+        n_m, s_a = neutre(g, cls_m), sigma_a(g, cls_m)
+        a_m = mother.gene(g)
         if father is None:
-            base, sigma = m, MUTATION_SIGMA * SELFING_SIGMA_RATIO
+            base = a_m
         else:
-            base, sigma = 0.5 * (m + father.gene(g)), MUTATION_SIGMA
-        z = hash_gauss(seed, week * 29 + i, r, c, k=4 * i)
-        genes[g] = borne(g, base + z * sigma)
-    return genes
+            base = 0.5 * (a_m + n_m + father.gene(g) - neutre(g, cls_p))
+        z1 = hash_gauss(seed, week * 29 + i, r, c, k=4 * i)
+        z2 = hash_gauss(seed, week * 29 + i, r + _CANAL_FILET, c, k=4 * i)
+        genes[g] = borne(g, base + s_a * (z1 * math.sqrt(brassage)
+                                          + z2 * math.sqrt(H_MUT)))
+    return genes, F_enfant
+
+
+def child_genes(mother, father, seed, week) -> dict:
+    """Vecteur de gènes de l'enfant seul (cf. `heredite`, qui rend aussi son F).
+    Gardé pour les lecteurs qui n'ont pas besoin de la consanguinité."""
+    return heredite(mother, father, seed, week)[0]
 
 
 def child_expression(mother) -> dict:

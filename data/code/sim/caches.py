@@ -37,7 +37,7 @@ from fields.peripherie import plots_de_bord
 from fields.population.disperseurs import couronnes
 from fields.seedbank import (grain_sauvage, deposer_grain_sauvage, founder_genes)
 from plants import PERENNIAL_CATALOGUE
-from sim.reproduction import (find_father, child_genes, child_expression,
+from sim.reproduction import (find_father, heredite, child_expression,
                               facteur_glandee)
 from sim.zoochorie import prendre, _entier, HAUTEUR_PERCHOIR_CM
 
@@ -91,9 +91,10 @@ def caches_prennent(game_state: dict, tile, eco, seed: int, week: int) -> list:
                 continue
             father = find_father(plant, tile.plants, tile, eco, seed, week)
             source = (ox + (pc + 0.5) * PLOT_CM, oy + (pr + 0.5) * PLOT_CM)
+            genes, F = heredite(plant, father, seed, week)
             game_state.setdefault(TAMPON_CACHES, []).append(
-                (nom, plant.plant_class, child_genes(plant, father, seed, week),
-                 child_expression(plant), n, pr * 1009 + pc, source))
+                (nom, plant.plant_class, genes,
+                 child_expression(plant), n, pr * 1009 + pc, source, F))
     return log
 
 
@@ -152,9 +153,10 @@ def grille_lisiere_couronnes(game_state: dict) -> list:
 
 
 def _semer(grille: list, n: int, cls, genes, expr, origine: str,
-           seed: int, canal: int, sel: int, week: int) -> int:
+           seed: int, canal: int, sel: int, week: int, F: float = 0.0) -> int:
     """`n` graines tirées par hash sur `grille` pondérée ; renvoie le nombre posé.
-    `genes` None → gènes FONDATEURS au plot de dépôt (graine venue du dehors)."""
+    `genes` None → gènes FONDATEURS au plot de dépôt (graine venue du dehors).
+    `F` : consanguinité des graines (D139 ②, 0 pour un fondateur)."""
     if not grille or n <= 0:
         return 0
     cumul, acc = [], 0.0
@@ -169,7 +171,7 @@ def _semer(grille: list, n: int, cls, genes, expr, origine: str,
         gk = genes if genes is not None else founder_genes(
             cls, seed, week, r, c, (c + 0.5) * PLOT_CM, (r + 0.5) * PLOT_CM)
         poses += deposer_grain_sauvage(
-            tile, r, c, grain_sauvage(cls, gk, expr, origine, week, None, None))
+            tile, r, c, grain_sauvage(cls, gk, expr, origine, week, None, None, F))
     return poses
 
 
@@ -218,7 +220,7 @@ def caches_sement(game_state: dict, seed: int, week: int) -> list:
     tampon = game_state.pop(TAMPON_CACHES, None) or []
     poses = {"geai": 0, "ecureuil": 0}
     decouvert = lisiere = None
-    for nom, cls, genes, expr, n, sel, (sx, sy) in tampon:
+    for nom, cls, genes, expr, n, sel, (sx, sy), F in tampon:
         if nom == "geai":
             if decouvert is None:
                 decouvert = grille_decouvert(game_state)
@@ -230,7 +232,7 @@ def caches_sement(game_state: dict, seed: int, week: int) -> list:
                       if hypot(*(a - b for a, b in zip(_centre(*g[:3]), (sx, sy))))
                       <= R_ECUREUIL_CM]
             canal = week * 83 + 5
-        poses[nom] += _semer(grille, n, cls, genes, expr, nom, seed, canal, sel, week)
+        poses[nom] += _semer(grille, n, cls, genes, expr, nom, seed, canal, sel, week, F)
     ceinture = _apport_ceinture(game_state, seed, week)
     log = [f"  {_LOG[nom]} : {n} cache(s) oubliée(s)" for nom, n in poses.items() if n]
     if ceinture:

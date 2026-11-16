@@ -78,7 +78,27 @@ GENE_NAMES = tuple(CARACTERES)
 # (vigueur hybride) → bornes dures plus larges au tirage.
 # (GENE_INIT_SIGMA et les bornes dures viennent du registre : mêmes valeurs.)
 GENE_INIT_SIGMA = SIGMA_A_FACTEUR
-MUTATION_SIGMA  = 0.05      # mutation gaussienne par génération
+MUTATION_SIGMA  = 0.05      # OBSOLÈTE depuis D139 ② (ancienne mutation fixe par
+                            # génération) — conservé, plus lu par `child_genes`.
+
+# --- Hérédité infinitésimale (D139 ②, conception §4) ---------------------------
+# Un enfant = moyenne de ses parents + BRASSAGE (échantillonnage mendélien : les
+# deux parents transmettent chacun une moitié tirée au hasard de leurs allèles)
+# + un petit FILET de mutation. Variance du brassage = ½·σ_A²·(1 − F̄) : plus les
+# parents sont consanguins (F → 1, lignée fixée), moins leurs enfants diffèrent.
+# Le filet `H_MUT·σ_A²` empêche une lignée autogame de se figer pour toujours.
+# H_MUT = 0,01 est un choix de JEU (réel ≈ 0,001) : 10× plus vite qu'en nature.
+H_MUT = 0.01
+
+# Dépression de consanguinité (D139 ②, conception §6). Un individu consanguin
+# d'une espèce ALLOGAME exprime des allèles délétères récessifs habituellement
+# masqués → il pousse moins. Facteur sur la vigueur effective :
+#     1 − DI · F · (1 − s)        s = neutre d'`autofecondation` de l'espèce
+# Les autogames (s ≈ 0,95) ont « purgé » ces allèles au fil des générations :
+# facteur ≈ 1. Une ortie (s = 0,05) totalement consanguine perd ≈ 28 %.
+# Appliqué au MÊME endroit que `cout_defense` (croissance, convalescence) —
+# jamais un malus direct de santé (philo #2).
+DI = 0.3
 GENE_MIN, GENE_MAX           = 0.70, 1.30
 GENE_HARD_MIN, GENE_HARD_MAX = BORNES_FACTEUR
 
@@ -136,9 +156,10 @@ def clamp_gene(x: float) -> float:
     return max(GENE_HARD_MIN, min(GENE_HARD_MAX, x))
 
 
-def neutral_genes() -> dict:
-    """Vecteur de gènes neutre (tous les facteurs = 1.0)."""
-    return {g: 1.0 for g in GENE_NAMES}
+def neutral_genes(plant_class=None) -> dict:
+    """Vecteur de gènes neutre : chaque caractère à son NEUTRE (1.0 pour un
+    facteur ; selon le mode de pollinisation pour `autofecondation`, D139 ②)."""
+    return {g: neutre(g, plant_class) for g in GENE_NAMES}
 
 
 def species_compatible(a: type, b: type) -> bool:

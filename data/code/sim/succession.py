@@ -16,7 +16,7 @@ from constants import PLOT_CM
 from plants import (WEED_CATALOGUE, PLANT_CATALOGUE, PERENNIAL_CATALOGUE,
                     FLORE_SPONTANEE)
 from fields import (SEED_ARCHETYPES, GRADIENT_ARCHETYPES, _hash_noise,
-                    founder_genes, form_seed_at)
+                    founder_genes, variete_genes, form_seed_at)
 from fields.lifecycle import _smoothstep
 from fields.ecofields import (bell, T_GERM_FLOOR, GERM_GENE_SHIFT,
                               COUVERTURE_ADVENTICE_SEUIL, PAILLAGE_GERM_SEUIL,
@@ -290,12 +290,14 @@ def _lever_grains_en_attente(game_state: dict, tile, eco, week: int, seed: int,
         new_plant.form_seed = form_seed_at(seed, new_plant.x_cm, new_plant.y_cm, week)
         if grain.genes:
             new_plant.genes = dict(grain.genes)  # gènes PROPRES (≠ sample_genes du féral)
+            new_plant.F = grain.F                # consanguinité portée (D139 ②)
         else:
-            # Graine SANS lignée (sachet magazine / démo) → tirage FONDATEUR (sprint
-            # DIVERSITÉ FONDATRICE ①), plus un clone neutre. Une graine RÉCOLTÉE
-            # (gènes hérités présents) garde les siens (branche ci-dessus).
-            new_plant.genes = founder_genes(plant_class, seed, week, r, c,
-                                            new_plant.x_cm, new_plant.y_cm)
+            # Graine SANS lignée (sachet magazine / démo) → une VARIÉTÉ (D139 ②) :
+            # centre commun à l'espèce, F 0,9 si autogame. Une graine RÉCOLTÉE
+            # (gènes hérités présents) garde les siens (branche ci-dessus). Les
+            # grains sauvages portent toujours leurs gènes (`grain_sauvage`).
+            new_plant.genes, new_plant.F = variete_genes(
+                plant_class, seed, week, r, c, new_plant.x_cm, new_plant.y_cm)
         if grain.expression:                   # priming hérité (④) : la graine naît pré-armée
             new_plant.expression.update(grain.expression)
         occupied_roots.update(new_plant.root_plots)
@@ -532,6 +534,7 @@ def succession(game_state: dict, tile, eco, week: int) -> list[str]:
                     g = founder_genes(plant_class, seed, week, r, c,
                                       new_plant.x_cm, new_plant.y_cm)
                 new_plant.genes = g
+                new_plant.F = eco.seed_bank.sample_F(r, c, plant_class)   # D139 ②
                 e = eco.seed_bank.sample_expression(r, c, plant_class)
                 if e:
                     new_plant.expression.update(e)   # priming hérité (④)

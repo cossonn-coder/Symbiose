@@ -13,7 +13,7 @@ from sim.effects import (
 )
 from sim.seeds import Seed, PlayerSeedBank
 from sim.reproduction import (
-    find_father, child_genes, child_expression, is_seed_bearing, pollinator_reach,
+    find_father, heredite, child_genes, child_expression, is_seed_bearing, pollinator_reach,
     graine_fertile,
 )
 from sim.succession import choisir_archetype, succession

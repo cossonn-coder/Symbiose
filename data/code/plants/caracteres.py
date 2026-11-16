@@ -38,8 +38,9 @@ de cette table). On n'AJOUTE donc qu'EN QUEUE, on ne réordonne jamais, on ne
 renomme jamais : un décalage changerait tous les tirages (golden).
 
 Tronçon ① = refactor PUR : toutes les entrées valent ce qui était codé en dur
-(facteur, neutre 1,0, σ_A 0,10, bornes [0,4 ; 1,6]). Les vraies unités arrivent
-aux tronçons ② et ③.
+(facteur, neutre 1,0, σ_A 0,10, bornes [0,4 ; 1,6]). Tronçon ② : ajout en queue
+d'`autofecondation` (probabilité, neutre selon le mode de pollinisation). Les
+vraies unités des autres caractères arrivent au tronçon ③.
 """
 
 from dataclasses import dataclass
@@ -59,6 +60,11 @@ class Caractere:
     sigma_a: float = SIGMA_A_FACTEUR
     bornes: tuple = BORNES_FACTEUR
     adaptogene: bool = False
+    # Neutre DÉDUIT du mode de pollinisation de l'espèce (`pollination_mode` :
+    # "self" / "insect" / "wind"), quand le caractère en dépend (D139 ②,
+    # `autofecondation`). Évite de surcharger chaque classe à la main : le mode
+    # existe déjà sur les 52 espèces. Une surcharge `genetique` explicite gagne.
+    neutre_par_pollinisation: dict | None = None
 
 
 _FACTEUR = Caractere()
@@ -78,6 +84,15 @@ CARACTERES = {
     "port_trapu":            _FACTEUR_ADAPTO,
     "germination_thermique": _FACTEUR,
     "phenologie_florale":    _FACTEUR,
+    # D139 ② — TAUX D'AUTOFÉCONDATION de la plante (probabilité qu'une graine naisse
+    # de son propre pollen plutôt que d'un croisement). C'est le moteur de la
+    # consanguinité F : une tomate (autogame, ≈ 95 %) fixe sa lignée en quelques
+    # générations, une courge ou une ortie (allogames) restent brassées. Neutre
+    # selon le mode de pollinisation de l'espèce ; σ_A 0,05 (le taux lui-même
+    # évolue lentement). AJOUTÉ EN QUEUE (canaux de hash positionnels).
+    "autofecondation": Caractere(
+        unite="probabilité", neutre=0.15, sigma_a=0.05, bornes=(0.0, 1.0),
+        neutre_par_pollinisation={"self": 0.95, "insect": 0.15, "wind": 0.05}),
 }
 
 
@@ -87,12 +102,16 @@ def parametres_espece(plant_class, nom: str) -> tuple:
     en déclare une. `plant_class=None` → valeurs de la table (espèce « moyenne »).
     Helper UNIQUE : tout lecteur de neutre/σ_A passe par ici."""
     car = CARACTERES[nom]
+    neutre_base = car.neutre
+    if car.neutre_par_pollinisation and plant_class is not None:
+        mode = getattr(plant_class, "pollination_mode", None)
+        neutre_base = car.neutre_par_pollinisation.get(mode, car.neutre)
     surcharge = getattr(plant_class, "genetique", None)
     if surcharge:
         s = surcharge.get(nom)
         if s:
-            return (s.get("neutre", car.neutre), s.get("sigma_a", car.sigma_a))
-    return (car.neutre, car.sigma_a)
+            return (s.get("neutre", neutre_base), s.get("sigma_a", car.sigma_a))
+    return (neutre_base, car.sigma_a)
 
 
 def neutre(nom: str, plant_class=None) -> float:

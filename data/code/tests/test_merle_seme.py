@@ -112,7 +112,7 @@ def test_b_sous_perchoirs():
     check("(b) le mort debout et le tuteur sont des perchoirs",
           (15, 16) in perch and any(rc in perch for rc in mort.foliar_plots
                                     if tile.is_valid_plot(*rc)))
-    gs[TAMPON] = [(CherryTree, dict(arbre.genes), {}, 60, 1)]
+    gs[TAMPON] = [(CherryTree, dict(arbre.genes), {}, 60, 1, 0.0)]   # + F (D139 ②)
     merle_seme(gs, SEED, WEEK)
     gr = _grains(tile)
     check("(b) des grains merle sont posés", len(gr) > 0, f"{len(gr)} grains")
@@ -127,7 +127,7 @@ def test_c_sans_perchoir():
     _cerisier(tile, 10, 10, 4000)          # jeune : 1 cm, pas un perchoir
     eco.populations["merle"].fill(1.0)
     merle_prend(gs, tile, eco, SEED, WEEK)
-    check("(c) des graines partent au tampon", sum(n for *_x, n, _s in gs[TAMPON]) > 0)
+    check("(c) des graines partent au tampon", sum(n for *_x, n, _s, _f in gs[TAMPON]) > 0)
     merle_seme(gs, SEED, WEEK)
     check("(c) sans perchoir : aucun grain", not _grains(tile))
     check("(c) tampon vidé", TAMPON not in gs)

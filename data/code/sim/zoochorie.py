@@ -37,7 +37,7 @@ from __future__ import annotations
 from constants import PLOT_CM
 from fields import _hash_noise
 from fields.seedbank import grain_sauvage, deposer_grain_sauvage
-from sim.reproduction import (find_father, child_genes, child_expression,
+from sim.reproduction import (find_father, heredite, child_expression,
                               recrue_par_fruits)
 
 # Part d'une cohorte mûre prise en une semaine par un champ `merle` SATURÉ (densité
@@ -139,7 +139,7 @@ def prendre(tile, eco, nom: str, taux: float, appetit: float,
 
 def merle_prend(game_state: dict, tile, eco, seed: int, week: int) -> list:
     """Le merle cueille les fruits mûrs de la tuile (`prendre`) ; les graines vont
-    au tampon : `prise × P_TRANSIT`, gènes `child_genes(mère, père)`. Renvoie le log
+    au tampon : `prise × P_TRANSIT`, gènes et F `heredite(mère, père)`. Renvoie le log
     (une ligne par plante et par semaine de prise). No-op sans champ `merle`."""
     log, tampon = [], None
     for plant, n_pris in prendre(tile, eco, "merle", TAUX_PRISE, APPETIT, seed, week):
@@ -152,8 +152,9 @@ def merle_prend(game_state: dict, tile, eco, seed: int, week: int) -> list:
         father = find_father(plant, tile.plants, tile, eco, seed, week)
         if tampon is None:
             tampon = game_state.setdefault(TAMPON, [])
-        tampon.append((plant.plant_class, child_genes(plant, father, seed, week),
-                       child_expression(plant), n_graines, pr * 1009 + pc))
+        genes, F = heredite(plant, father, seed, week)
+        tampon.append((plant.plant_class, genes,
+                       child_expression(plant), n_graines, pr * 1009 + pc, F))
     return log
 
 
@@ -214,11 +215,11 @@ def merle_seme(game_state: dict, seed: int, week: int) -> list:
         acc += w
         cumul.append(acc)
     poses = 0
-    for cls, genes, expr, n, sel in tampon:
+    for cls, genes, expr, n, sel, F in tampon:
         for k in range(n):
             cible = _hash_noise(seed, week * _CANAL + 1, sel, k) * acc
             i = next((j for j, v in enumerate(cumul) if v > cible), len(cumul) - 1)
             tile, r, c, _w = grille[i]
-            grain = grain_sauvage(cls, genes, expr, "merle", week, None, None)
+            grain = grain_sauvage(cls, genes, expr, "merle", week, None, None, F)
             poses += deposer_grain_sauvage(tile, r, c, grain)
     return [f"  🐦 Merle : {poses} graine(s) semée(s) sous les perchoirs"] if poses else []

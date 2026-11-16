@@ -20,7 +20,7 @@ from fields.ecofields.constants import BOIS_MORT_PAR_CM3   # D111 ② (sous-paqu
 from fields.ecofields.litiere import BOIS_DIAM_DEFAUT      # grosseur inconnue (⑦bis)
 from constants import PLOT_CM
 from sim.effects.perturbations import frac_bois_mort
-from sim.reproduction import (find_father, child_genes, child_expression,
+from sim.reproduction import (find_father, heredite, child_expression,
                               recrue_par_fruits, facteur_glandee)
 from fields import _hash_noise
 from fields.seedbank import grain_sauvage, deposer_grain_sauvage
@@ -141,7 +141,7 @@ def semer_chute(plant, tile, eco, fruit, plots: list, seed: int, week: int) -> i
 
     `n = nombre × P_GRAIN_CHUTE`, la partie fractionnaire tranchée par hash ; chaque
     grain va sur un plot tiré par hash parmi `plots` (couronne de l'arbre, ou pied
-    d'une herbacée). Gènes = `child_genes(mère, find_father)`, priming =
+    d'une herbacée). Gènes et F = `heredite(mère, find_father)`, priming =
     `child_expression(mère)` — l'héritage de l'ancien `_reproduction`. Un plot plein
     (plafond ①) refuse le grain : il est perdu. Position sous-plot : None → offset
     féral déterministe à la levée. Renvoie le nombre de grains déposés. Zéro RNG."""
@@ -154,14 +154,14 @@ def semer_chute(plant, tile, eco, fruit, plots: list, seed: int, week: int) -> i
     if n == 0:
         return 0
     father = find_father(plant, tile.plants, tile, eco, seed, week)
-    genes = child_genes(plant, father, seed, week)
+    genes, F = heredite(plant, father, seed, week)
     expr = child_expression(plant)
     ordre = sorted(plots)
     poses = 0
     for k in range(n):
         h = _hash_noise(seed, week * _CANAL_CHUTE, sel, pc * 1009 + k + 1)
         r, c = ordre[min(int(h * len(ordre)), len(ordre) - 1)]
-        grain = grain_sauvage(plant.plant_class, genes, expr, "chute", week, None, None)
+        grain = grain_sauvage(plant.plant_class, genes, expr, "chute", week, None, None, F)
         poses += deposer_grain_sauvage(tile, r, c, grain)
     return poses
 

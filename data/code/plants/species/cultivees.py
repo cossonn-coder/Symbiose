@@ -14,6 +14,9 @@ from plants.base import (GrowthStage,
 class Tomato(Solanaceae):
     genus = "Solanum"
     name = "Tomate"
+    # AUTOGAME (D139 ②) : pollinisée par insecte au catalogue, mais s'autoféconde
+    # à ≈ 95 % en réalité (fleur cléistogame ou quasi) → lignée qui se FIXE.
+    genetique = {"autofecondation": {"neutre": 0.95}}
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.0  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     # Sensibilité EMBLÉMATIQUE à la juglone (sprint ALLÉLOPATHIE ⑤) : la tomate est
@@ -146,6 +149,9 @@ class Pepper(Solanaceae):
 class Bean(Fabaceae):
     genus = "Phaseolus"
     name = "Haricot"
+    # AUTOGAME (D139 ②) : pollinisée par insecte au catalogue, mais s'autoféconde
+    # à ≈ 95 % en réalité (fleur cléistogame ou quasi) → lignée qui se FIXE.
+    genetique = {"autofecondation": {"neutre": 0.95}}
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.25  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     resilience_base = 0.8          # R — annuelle tendre à tige volubile fragile

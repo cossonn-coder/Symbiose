@@ -29,7 +29,6 @@ from fields.grids import GridField, DisturbanceField
 from fields.noise import _hash_noise, stable_str_hash
 from fields.light import LightField
 from fields.seedbank import SeedBank, FOUNDER_POOL_DENSITY
-from plants.genetics import GENE_INIT_SIGMA
 from fields.population import (PopulationField, build_population_specs,
                                build_pollinator_specs, build_lifecycle_bridges)
 from fields.lifecycle import larval_field_names
@@ -752,7 +751,7 @@ def init_eco(tile_id: str, rows: int, cols: int,
     # Banque-sol FONDATRICE (sprint DIVERSITÉ FONDATRICE ①, option A) — SOUS le flag
     # `heterogene` (posé par les sites monde-réel : golden, main, pont, bancs). Pour
     # chaque plot × chaque adventice de WEED_CATALOGUE, on ENSEMENCE le pool
-    # génétique (`seed_founder_pool` : mean=1.0, var=GENE_INIT_SIGMA², densité
+    # génétique (`seed_founder_pool` : mean=neutre, var=σ_A² de l'espèce, D139 ②, densité
     # FOUNDER_POOL_DENSITY). Une vraie banque de graines du sol n'est JAMAIS
     # génétiquement uniforme (philo #4) → dès le tick 0, `sample_genes` tire la
     # germination férale avec une variance immédiate, et la sélection darwinienne a
@@ -765,7 +764,7 @@ def init_eco(tile_id: str, rows: int, cols: int,
             for c in range(cols):
                 for cls in WEED_CATALOGUE.values():
                     eco.seed_bank.seed_founder_pool(
-                        r, c, cls, GENE_INIT_SIGMA, FOUNDER_POOL_DENSITY)
+                        r, c, cls, None, FOUNDER_POOL_DENSITY)
     return eco
 
 

@@ -99,6 +99,7 @@ def bouturer(game_state: dict, player: str, mother, tile, eco,
     # à l'identique de `clonal.emettre_ramets` → le greffon naît dans l'état
     # d'acclimatation de la mère.
     ramet.genes = dict(mother.genes)
+    ramet.F = mother.F                        # clone : même consanguinité (D139 ②)
     ramet.expression.update(mother.expression)
     # Position : `add_plant(cls, r, c)` a déjà recentré le clone sur le plot cliqué
     # (`PlantInstance.__post_init__` pose x_cm/y_cm au centre du plot cible) → le

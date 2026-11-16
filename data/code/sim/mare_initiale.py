@@ -101,7 +101,7 @@ def poser_mare(tile, eco, seed: int) -> None:
                    + [(r, c, DEBIT_BERGE) for r, c in MARE_BERGE])
     for espece, r, c in SEMIS_MARE:
         cls = PLANT_CATALOGUE.get(espece) or PERENNIAL_CATALOGUE[espece]
-        p = semer_fondateur(tile, cls, r, c, seed)
+        p = semer_fondateur(tile, cls, r, c, seed, sauvage=True)   # flore sauvage (D139 ②)
         # Tapis de sphaigne et rosettes de rossolis DÉJÀ installés (la mare a des
         # années) : on les sort du stade semis, sans quoi la fonte des semis du sol
         # détrempé les emportait en ~6 semaines (mesuré). L'aulne reste un jeune

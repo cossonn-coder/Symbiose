@@ -39,6 +39,7 @@ class Seed:
     species: str                       # clé PLANT_CATALOGUE, ex: "tomate"
     genes: dict = field(default_factory=dict)
     expression: dict = field(default_factory=dict)
+    F: float = 0.0                     # consanguinité de la graine (D139 ②)
 
     @property
     def plant_class(self):
@@ -82,6 +83,8 @@ class PlayerSeedBank:
             d = {"species": s.species, "genes": s.genes}
             if s.expression:                 # omis si neutre (save lisible)
                 d["expression"] = s.expression
+            if s.F:                          # omis si non consanguine (save lisible)
+                d["F"] = s.F
             return d
         return {sp: [_seed(s) for s in lot]
                 for sp, lot in self.lots.items() if lot}
@@ -94,7 +97,8 @@ class PlayerSeedBank:
         bank = cls()
         for sp, lot in d.items():
             bank.lots[sp] = [Seed(species=s["species"], genes=dict(s["genes"]),
-                                  expression=dict(s.get("expression", {})))
+                                  expression=dict(s.get("expression", {})),
+                                  F=s.get("F", 0.0))     # save d'avant D139 ② → 0
                              for s in lot]
         return bank
 
@@ -108,16 +112,21 @@ class PlayerSeedBank:
 
 
 def semer_fondateur(tile, plant_class: type, r: int, c: int,
-                    seed: int, week: int = 0):
+                    seed: int, week: int = 0, sauvage: bool = False):
     """Semis DIRECT naturalisé (sprint DIVERSITÉ FONDATRICE ①) : plante l'espèce
-    (`tile.add_plant`) PUIS lui pose un patrimoine génétique FONDATEUR propre
-    (`founder_genes`, tiré sur la position continue de l'instance) au lieu du vecteur
-    neutre. Remplace les `add_plant` bruts des BANCS D'ESSAI monde-réel (golden,
+    (`tile.add_plant`) PUIS lui pose un patrimoine génétique propre au lieu du vecteur
+    neutre. Depuis D139 ② c'est une graine de VARIÉTÉ (`variete_genes`, tirée sur la
+    position continue de l'instance) : centre commun à l'espèce, dispersion et F
+    selon que l'espèce est autogame (lignée fixée) ou allogame. `sauvage=True` :
+    plante déjà installée par la nature (mare initiale) → fondateur SAUVAGE
+    (`founder_genes`, F = 0), pas une semence achetée. Remplace les `add_plant` bruts des BANCS D'ESSAI monde-réel (golden,
     main.py) → les 8 cultivées de démo ne sont plus des clones parfaits, comme la
     germination férale. `seed` = seed global du terrain (déterminisme, philo #3).
     Renvoie l'instance créée (ou None si le plot est invalide, comme `add_plant`)."""
-    from fields import founder_genes            # couche : sim ← fields
+    from fields import variete_genes, founder_genes    # couche : sim ← fields
     p = tile.add_plant(plant_class, r, c)
-    if p is not None:
+    if p is not None and sauvage:
         p.genes = founder_genes(plant_class, seed, week, r, c, p.x_cm, p.y_cm)
+    elif p is not None:
+        p.genes, p.F = variete_genes(plant_class, seed, week, r, c, p.x_cm, p.y_cm)
     return p

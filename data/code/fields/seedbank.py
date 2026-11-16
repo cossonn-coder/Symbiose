@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from calendrier import wiy_de
 from fields.noise import _hash_noise, hash_gauss, stable_str_hash
 from fields.peripherie import plots_de_bord
-from plants.genetics import GENE_NAMES, GENE_INIT_SIGMA, borne, neutre
+from plants.genetics import GENE_NAMES, borne, neutre, sigma_a
 
 # ---------------------------------------------------------------------------
 # CONSTANTES — archétypes & pool génétique
@@ -118,13 +118,13 @@ def apport_secteur(secteur: dict) -> tuple[str | None, float]:
 def founder_genes(plant_class: type, seed: int, week: int,
                   r: int, c: int, x_cm: float, y_cm: float) -> dict:
     """
-    Vecteur de gènes FONDATEUR d'une plante née SANS lignée (semis direct de démo,
-    graine `planter` sans hérédité, germination férale sur pool vide) — sprint
-    DIVERSITÉ FONDATRICE ①. Active enfin `GENE_INIT_SIGMA` (défini mais jamais
-    utilisé) : chaque gène est tiré ~ N(1.0, GENE_INIT_SIGMA²) de façon DÉTERMINISTE
-    (philo #3, zéro RNG), de sorte que deux plantes fondatrices ne soient plus des
-    CLONES neutres. La mutation par génération (`sim.reproduction.child_genes`)
-    prend ensuite le relais — on ne touche pas à celle-ci.
+    Vecteur de gènes FONDATEUR SAUVAGE d'une plante née SANS lignée (germination
+    férale sur pool vide, grain venu du dehors) — sprint DIVERSITÉ FONDATRICE ①,
+    recentré au D139 ② : chaque caractère est tiré ~ N(neutre, σ_A²) avec le neutre
+    et la diversité additive DE L'ESPÈCE (registre `plants/caracteres.py`), de façon
+    DÉTERMINISTE (philo #3, zéro RNG). F = 0 (le défaut de `PlantInstance.F`) : une
+    population sauvage n'est pas consanguine. L'hérédité par génération
+    (`sim.reproduction.heredite`) prend ensuite le relais.
 
     Canal de hash DÉCORRÉLÉ par (espèce, gène, POSITION CONTINUE, semaine) : le nom
     de classe (`stable_str_hash`) sépare deux espèces au même plot ; `x_cm/y_cm`
@@ -138,8 +138,41 @@ def founder_genes(plant_class: type, seed: int, week: int,
     for i, g in enumerate(GENE_NAMES):
         z = hash_gauss(seed, week * 31 + i, r, c,
                        k=base + i * 7 + int(x_cm) + int(y_cm) * 13)
-        genes[g] = borne(g, 1.0 + z * GENE_INIT_SIGMA)
+        genes[g] = borne(g, neutre(g, plant_class) + z * sigma_a(g, plant_class))
     return genes
+
+
+# Consanguinité d'une VARIÉTÉ de semence (D139 ②, conception §5) : une variété
+# d'espèce autogame est une lignée quasi fixée (F 0,9 : les tomates d'un sachet se
+# ressemblent) ; une variété d'allogame reste une population brassée (F 0 : les
+# courges d'un sachet diffèrent). Seuil sur le neutre d'`autofecondation`.
+F_VARIETE_AUTOGAME = 0.9
+SEUIL_AUTOGAME = 0.5
+# Canal de hash du CENTRE de la variété (même pour tout le sachet : r = c = 0 fixes).
+_CANAL_VARIETE = 7919
+
+
+def variete_genes(plant_class: type, seed: int, week: int,
+                  r: int, c: int, x_cm: float, y_cm: float) -> tuple:
+    """`(gènes, F)` d'une graine de SEMENCE CULTIVÉE sans lignée (cultivées de
+    démarrage, sachet `planter`) — une VARIÉTÉ (D139 ②, conception §5).
+
+    Toutes les graines d'une variété partagent un CENTRE `neutre + σ_A·z_variété`
+    (hash espèce + seed du monde seulement : même centre partout, toute la partie).
+    Autour, la dispersion individuelle vaut `σ_A·√(1 − F)` — même canal individuel
+    que `founder_genes`. F = 0,9 si l'espèce est autogame, 0 sinon."""
+    base = stable_str_hash(plant_class.__name__)
+    F = F_VARIETE_AUTOGAME if neutre("autofecondation", plant_class) >= SEUIL_AUTOGAME \
+        else 0.0
+    dispersion = math.sqrt(1.0 - F)
+    genes = {}
+    for i, g in enumerate(GENE_NAMES):
+        s_a = sigma_a(g, plant_class)
+        z_var = hash_gauss(seed, _CANAL_VARIETE + i, 0, 0, k=base + i * 7)
+        z_ind = hash_gauss(seed, week * 31 + i, r, c,
+                           k=base + i * 7 + int(x_cm) + int(y_cm) * 13)
+        genes[g] = borne(g, neutre(g, plant_class) + s_a * (z_var + dispersion * z_ind))
+    return genes, F
 
 
 @dataclass
@@ -177,6 +210,7 @@ class GrainEnAttente:
     origine: str = "joueur"     # "joueur" | "chute" | "merle" | "geai" | "ecureuil" | "mulot" | "ceinture"
     levee_des: int = 0          # semaine ABSOLUE minimale de levée (dormance)
     perime_a: int | None = None # semaine ABSOLUE où le grain meurt sans lever (None = jamais)
+    F: float = 0.0              # consanguinité portée par la graine (D139 ②)
 
 
 # Plafond de grains SAUVAGES par plot (zoochorie ①) : borne la mémoire et le coût
@@ -186,7 +220,8 @@ GRAINS_SAUVAGES_MAX_PLOT = 3
 
 
 def grain_sauvage(cls, genes: dict, expression: dict, origine: str, semaine: int,
-                  x_cm: float | None, y_cm: float | None) -> GrainEnAttente:
+                  x_cm: float | None, y_cm: float | None,
+                  F: float = 0.0) -> GrainEnAttente:
     """Construit un grain SAUVAGE (tombé ou porté par une bête), PUR et déterministe.
 
     - Dormance : levée au plus tôt au PREMIER PRINTEMPS STRICTEMENT APRÈS le dépôt
@@ -195,7 +230,9 @@ def grain_sauvage(cls, genes: dict, expression: dict, origine: str, semaine: int
       stratification froide du pépin, du noyau, du gland.
     - Péremption : `semaine + round(viabilité × 52)`, viabilité = trait d'espèce
       `graine_viabilite_ans` (défaut 1 an, graine récalcitrante).
-    - `cultive=False` : une graine semée par la nature donne une plante FÉRALE."""
+    - `cultive=False` : une graine semée par la nature donne une plante FÉRALE.
+    - `F` : consanguinité de la graine (D139 ②, `heredite`) ; 0 pour un grain
+      fondateur venu du dehors."""
     # Import local (comme `ecofields/container.py`) : `plants` est sous `fields`,
     # mais le catalogue agrège toutes les espèces — on ne le charge qu'au besoin.
     # `species` porte la CLÉ catalogue (« pommier »), lue par la levée.
@@ -208,7 +245,7 @@ def grain_sauvage(cls, genes: dict, expression: dict, origine: str, semaine: int
         species=cle, genes=dict(genes), expression=dict(expression),
         cultive=False, player="", semaine_depot=semaine, x_cm=x_cm, y_cm=y_cm,
         origine=origine, levee_des=debut_annee_suivante,
-        perime_a=semaine + round(viab * 52))
+        perime_a=semaine + round(viab * 52), F=F)
 
 
 def deposer_grain_sauvage(tile, r: int, c: int, grain: GrainEnAttente) -> bool:
@@ -396,7 +433,8 @@ class SeedBank:
     # --- Couche espèce + génétique (D22) ---
 
     def add_species(self, r: int, c: int, plant_class: type,
-                    density: float, genes: dict, expression: dict | None = None) -> None:
+                    density: float, genes: dict, expression: dict | None = None,
+                    F: float = 0.0) -> None:
         """
         Dépose des graines d'une espèce (avec leur vecteur de gènes) au plot.
         Met à jour la distribution moyenne+variance de chaque gène, pondérée par
@@ -411,6 +449,10 @@ class SeedBank:
         le plot se souvient du niveau d'endurcissement moyen des mères qui y ont
         grené (philo #4). Absent (None / mortes d'avant le ④) ⇒ rien stocké ⇒
         germination au neutre (rétro-compatible).
+
+        Consanguinité (D139 ②) : `F` des graines déposées, agrégé en MOYENNE
+        pondérée par densité dans `rec["F"]` (un `GeneStat`, variance ignorée) —
+        relu par `sample_F` à la germination.
         """
         cell = self.species[r][c]
         rec = cell.get(plant_class)
@@ -435,9 +477,10 @@ class SeedBank:
                     stat = GeneStat()
                     rec["expression"][g] = stat
                 stat.add(value, density)
+        rec.setdefault("F", GeneStat(mean=0.0)).add(F, density)
 
     def seed_founder_pool(self, r: int, c: int, plant_class: type,
-                          sigma: float, density: float) -> None:
+                          sigma: float | None, density: float) -> None:
         """
         ENSEMENCE la banque-sol fondatrice (sprint DIVERSITÉ FONDATRICE ①, option A)
         d'une espèce sur un plot : pose directement, pour CHAQUE gène de GENE_NAMES,
@@ -450,6 +493,10 @@ class SeedBank:
         sans attendre N générations. `mean=neutre` : le pool part CENTRÉ (pas de biais),
         seule la variance est fondatrice. Idempotent au sens où deux appels
         cumuleraient la densité (on n'appelle qu'une fois, à l'init).
+
+        D139 ② : `sigma=None` → la variance de chaque caractère est le σ_A² DE
+        L'ESPÈCE (registre) ; un `sigma` explicite force la même valeur pour tous
+        (bancs, tests historiques). F moyen = 0 (pool sauvage, non consanguin).
         """
         cell = self.species[r][c]
         rec = cell.get(plant_class)
@@ -457,9 +504,11 @@ class SeedBank:
             rec = {"density": 0.0, "genes": {}, "expression": {}}
             cell[plant_class] = rec
         rec["density"] += density
-        var = sigma * sigma
         for g in GENE_NAMES:
-            rec["genes"][g] = GeneStat(mean=neutre(g, plant_class), var=var, weight=density)
+            s_a = sigma_a(g, plant_class) if sigma is None else sigma
+            rec["genes"][g] = GeneStat(mean=neutre(g, plant_class), var=s_a * s_a,
+                                       weight=density)
+        rec["F"] = GeneStat(mean=0.0, weight=density)
 
     def species_density(self, r: int, c: int, plant_class: type) -> float:
         rec = self.species[r][c].get(plant_class)
@@ -477,6 +526,15 @@ class SeedBank:
             return {}
         return {g: borne(g, stat.sample(seed, week, r, c, k=2 * i))
                 for i, (g, stat) in enumerate(rec["genes"].items())}
+
+    def sample_F(self, r: int, c: int, plant_class: type) -> float:
+        """Consanguinité d'un semis spontané (D139 ②) : la MOYENNE de F des graines
+        déposées sur le plot (`add_species`). Sœur de `sample_genes`, lue au même
+        moment ; pool négligeable ou d'avant le ② ⇒ 0.0 (population non consanguine)."""
+        rec = self.species[r][c].get(plant_class)
+        if not rec or rec["density"] < SPECIES_POOL_MIN_DENSITY or "F" not in rec:
+            return 0.0
+        return rec["F"].mean
 
     def sample_expression(self, r: int, c: int, plant_class: type) -> dict:
         """
@@ -506,6 +564,8 @@ class SeedBank:
                         stat.weight *= perte
                     for stat in rec.get("expression", {}).values():
                         stat.weight *= perte
+                    if "F" in rec:
+                        rec["F"].weight *= perte
                     if rec["density"] < 1e-4:
                         dead.append(cls)
                 for cls in dead:

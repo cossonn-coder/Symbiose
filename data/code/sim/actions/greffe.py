@@ -47,6 +47,8 @@ from sim.actions.couts import cout_action, _objets_action
 #    - resistance_pathogene : sensibilité fongique du FEUILLAGE/fruit (aérien).
 #    - rusticite_froid      : résistance au gel des TISSUS aériens (couronne exposée).
 #    - port_trapu           : thigmomorphogénèse de la TIGE (port aérien).
+#    - autofecondation      : système de reproduction de la FLEUR (D139 ②) ; la
+#                             consanguinité F suit donc aussi le greffon.
 #
 #  RACINAIRES / ÉTABLISSEMENT (CONSERVÉS du PORTE-GREFFE — son sous-sol reste) :
 #    - tolerance_secheresse : tolérance hydrique des RACINES.
@@ -61,7 +63,7 @@ from sim.actions.couts import cout_action, _objets_action
 # ses gènes aériens changent.
 GENES_AERIENS: frozenset[str] = frozenset({
     "hauteur", "phenologie_florale", "resistance_pathogene",
-    "rusticite_froid", "port_trapu",
+    "rusticite_froid", "port_trapu", "autofecondation",
 })
 # Tout ce qui n'est PAS aérien reste au porte-greffe (dérivé → rien ne se perd si
 # un gène neuf s'ajoute en queue de GENE_NAMES : il tombe côté racinaire par défaut,
@@ -130,6 +132,7 @@ def greffer(game_state: dict, player: str, scion, rootstock, eco) -> bool:
     nouveaux_genes = _genes_greffes(scion, rootstock)
     rootstock.plant_class = scion.plant_class   # identité AÉRIENNE (rendu/floraison/fruit)
     rootstock.genes = nouveaux_genes
+    rootstock.F = scion.F                       # fleurs du greffon → sa consanguinité (D139 ②)
     # Âge / stade / racines / position du porte-greffe : INCHANGÉS (établissement
     # conservé → démarrage rapide, D8). On ne ré-initialise RIEN au stade graine.
 

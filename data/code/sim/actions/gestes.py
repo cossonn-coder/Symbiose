@@ -156,6 +156,7 @@ def planter(game_state: dict, player: str, tile, eco, species: str,
     tile.grains_en_attente.setdefault((r, c), []).append(
         GrainEnAttente(species=species, genes=dict(seed.genes),
                        expression=dict(seed.expression),   # priming porté par la graine (④)
+                       F=seed.F,                           # consanguinité (D139 ②)
                        cultive=True, player=player,
                        semaine_depot=game_state.get("week", 0),
                        x_cm=x_cm, y_cm=y_cm)   # pixel cliqué exact (① placement sous-plot)

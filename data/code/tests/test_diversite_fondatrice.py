@@ -16,7 +16,7 @@ Quatre vérifications :
 Usage (depuis data/code/) : python3 -m tests.test_diversite_fondatrice
 """
 
-from plants import Tomato, Basil, GENE_NAMES
+from plants import Tomato, Basil, GENE_NAMES, CARACTERES
 from plants.genetics import GENE_HARD_MIN, GENE_HARD_MAX, GENE_INIT_SIGMA
 from fields import SeedBank, founder_genes, FOUNDER_POOL_DENSITY
 from fields.ecofields import init_eco
@@ -70,7 +70,10 @@ def test_variance_bornee():
         for c in range(8):
             g = founder_genes(Tomato, SEED, 0, r, c,
                               c * 50 + 25.0, r * 50 + 25.0)
-            vals.extend(g.values())
+            # Caractères « facteur » seulement (neutre 1.0, bornes [0,4 ; 1,6]) ;
+            # `autofecondation` (probabilité, D139 ②) a son propre neutre et ses
+            # bornes [0, 1] — couvert par tests/test_heredite.py.
+            vals.extend(v for k, v in g.items() if CARACTERES[k].unite == "facteur")
     non_neutres = sum(1 for v in vals if abs(v - 1.0) > 1e-6)
     check("variance présente", non_neutres == len(vals),
           f"{non_neutres}/{len(vals)} gènes ≠ 1.0 (aucun clone)")

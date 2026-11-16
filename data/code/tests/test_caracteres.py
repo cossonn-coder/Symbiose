@@ -44,6 +44,11 @@ def test_registre_complet_et_ordonne():
 
 def test_valeurs_refactor_pur():
     for g, car in CARACTERES.items():
+        if g == "autofecondation":       # ajouté en queue au D139 ② (probabilité)
+            ok = (car.unite == "probabilité" and car.bornes == (0.0, 1.0)
+                  and car.sigma_a == 0.05 and not car.adaptogene)
+            check(f"caractère neuf : {g}", ok, repr(car))
+            continue
         ok = (car.unite == "facteur" and car.neutre == 1.0
               and car.sigma_a == GENE_INIT_SIGMA == 0.10
               and car.bornes == (GENE_HARD_MIN, GENE_HARD_MAX)

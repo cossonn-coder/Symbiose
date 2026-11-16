@@ -20,7 +20,7 @@ from fields.light import (
     CANOPY_SAMPLE_FRAC,
 )
 from fields.seedbank import (
-    SeedBank, GeneStat, GrainEnAttente, founder_genes,
+    SeedBank, GeneStat, GrainEnAttente, founder_genes, variete_genes,
     SEED_ARCHETYPES, GRADIENT_ARCHETYPES, SEED_VIABILITY_LOSS, SEED_DISTURBANCE_GAIN,
     SEED_LATE_GAIN, SEED_OM_FACILITATION_REF,
     SEED_OM_FIXER_GRASS_MIN, SEED_OM_COMPETITOR_MIN,

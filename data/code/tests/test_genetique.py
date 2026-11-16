@@ -182,6 +182,9 @@ def test_introgression():
     mere = _tomato(1.0, pos=(3, 3))
     pere_pepper = PlantInstance(Pepper, (3, 4), current_stage=2,
                                 genes={"hauteur": 1.3})
+    # D139 ② : la tomate est autogame (≈ 95 %) → on force le croisement pour
+    # tester l'introgression elle-même (sinon le hash choisit l'autofécondation).
+    mere.genes["autofecondation"] = 0.0
     g = child_genes(mere, pere_pepper, SEED, 11)["hauteur"]
     # L'enfant reste de l'espèce mère (créé par le moteur comme Tomato) mais ses
     # gènes sont décalés vers le père d'une autre espèce.

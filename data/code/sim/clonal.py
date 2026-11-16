@@ -159,6 +159,7 @@ def emettre_ramets(tile, eco, seed: int, week: int) -> list[str]:
         # (priming maternel) suit le même principe que la graine → le ramet naît
         # dans l'état d'acclimatation de la mère.
         ramet.genes = dict(mother.genes)
+        ramet.F = mother.F                      # clone : même consanguinité (D139 ②)
         ramet.expression.update(mother.expression)
         ramet.form_seed = mother.form_seed      # air de famille : même patron de branches
         # branch_count reste 0 : le ramet REJOUE la séquence de débourrement depuis le

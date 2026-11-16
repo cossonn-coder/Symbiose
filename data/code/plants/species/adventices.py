@@ -17,6 +17,9 @@ class BursaPastoris(PlantBase):
     family = "Brassicaceae"
     genus  = "Capsella"
     name   = "Bourse-à-pasteur"
+    # AUTOGAME (D139 ②) : pollinisée par insecte au catalogue, mais s'autoféconde
+    # à ≈ 95 % en réalité (fleur cléistogame ou quasi) → lignée qui se FIXE.
+    genetique = {"autofecondation": {"neutre": 0.95}}
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.2  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     resilience_base = 1.25         # S — pionnière rustique r-stratège, la rosette encaisse tout

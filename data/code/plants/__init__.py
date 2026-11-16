@@ -8,7 +8,7 @@ from plants.genetics import (
     GENE_MIN, GENE_MAX, GENE_HARD_MIN, GENE_HARD_MAX,
     clamp_gene, neutral_genes, species_compatible,
     ADAPTOGENIC_GENES, EXPR_GAIN, EXPR_MIN, EXPR_MAX, TAU_UP, TAU_DOWN,
-    PRIMING_FRAC,
+    PRIMING_FRAC, H_MUT, DI,
     CARACTERES, Caractere, parametres_espece, neutre, sigma_a, borne,
 )
 from plants.base import (

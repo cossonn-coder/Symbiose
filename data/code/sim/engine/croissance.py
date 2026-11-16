@@ -159,8 +159,11 @@ class CroissanceMixin:
             # vigueur accélère l'avancement de stade (gène >1 → durée requise réduite) ;
             # le coût de défense (plasticité ③) la freine : une plante sur-exprimant
             # ses tolérances a re-routé sa vigueur → croissance plus lente (compromis
-            # croissance/défense, neutre = 1.0 tant qu'aucune sur-expression).
-            needed = stage.duration_weeks / (plant.gene("vigueur") * plant.cout_defense())
+            # croissance/défense, neutre = 1.0 tant qu'aucune sur-expression). La
+            # dépression de consanguinité (D139 ②) freine de même une allogame
+            # consanguine (1.0 si F = 0).
+            needed = stage.duration_weeks / (plant.gene("vigueur") * plant.cout_defense()
+                                             * plant.depression_consanguinite())
             if plant.age_weeks >= needed and can_grow:
                 if _bolt_bloque(plant):
                     # Bisannuelle an 1 : reste en rosette (ne monte pas à fleur).

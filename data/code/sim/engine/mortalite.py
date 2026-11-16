@@ -17,7 +17,7 @@ from fields import (_hash_noise, SENESCENCE_ONSET, SEN_ONSET_JITTER, SEN_RATE,
                     ASPHYXIE_RATE, RESEED_RADIUS_CM, VITALITE_STEP)
 from sim.effects import apply_mutations, ReduceHealth, deposer_mort
 from sim.effects.perturbations import SEUIL_SEMIS
-from sim.reproduction import (find_father, child_genes, child_expression,
+from sim.reproduction import (find_father, heredite, child_expression,
                               is_seed_bearing, graine_fertile,
                               recrue_par_fruits)
 from sim.capacite import recrutement_bloque
@@ -134,7 +134,9 @@ class MortaliteMixin:
                 # vigueur accélère la convalescence (gène >1 → guérit plus vite) ;
                 # le coût de défense (plasticité ③) la freine : la vigueur re-routée
                 # vers la défense cicatrise moins vite (neutre = 1.0 sans sur-expression).
-                heal = Q * HEAL_RATE * plant.gene("vigueur") * plant.cout_defense()
+                # Dépression de consanguinité (D139 ②) : même site, même logique.
+                heal = (Q * HEAL_RATE * plant.gene("vigueur") * plant.cout_defense()
+                        * plant.depression_consanguinite())
                 # Coût de robustesse de l'étiolement (Q7) : un héliophile étiolé
                 # convalesce −10 % — la tige grêle est fragile ; s'il n'atteint pas
                 # la lumière (qui lèverait l'étiolement), il se rétablit moins bien
@@ -218,7 +220,7 @@ class MortaliteMixin:
             # MÈRE voyage avec la graine (`e_child`, déjà atténué par PRIMING_FRAC)
             # → la lignée éprouvée naît pré-armée à la germination (sample_expression).
             father = find_father(parent, tile.plants, tile, eco, seed, week)
-            g_child = child_genes(parent, father, seed, week)
+            g_child, f_child = heredite(parent, father, seed, week)
             e_child = child_expression(parent)
             # Anémochorie (⑤) : graine ailée → pool déposé SOUS LE VENT (clampé à la
             # tuile) ; barochore ou calme → au pied (dr, dc) = (pr, pc).
@@ -227,7 +229,7 @@ class MortaliteMixin:
                 tr, tc = _plot_sous_le_vent(pr, pc, wind_dir, wind_force)
                 if tile.is_valid_plot(tr, tc):
                     dr, dc = tr, tc
-            eco.seed_bank.add_species(dr, dc, cls, rate, g_child, e_child)
+            eco.seed_bank.add_species(dr, dc, cls, rate, g_child, e_child, f_child)
 
             # 3. Recrutement direct, domaine ex-M7 uniquement
             is_tree = hasattr(cls, "age_curve")
@@ -259,10 +261,13 @@ class MortaliteMixin:
                 child = tile.add_plant(cls, *best)
                 if child:
                     child.genes = g_child
+                    child.F = f_child
                     child.expression.update(e_child)   # priming direct (mère vivante, ④)
                     occupied.add(best)
                     occupied.update(child.root_plots)
-                    tag = "auto" if father is None else (
+                    # Autofécondé ⇔ F > 0 (D139 ② : le choix se fait dans
+                    # `heredite`, même quand un père est à portée).
+                    tag = "auto" if father is None or f_child > 0.0 else (
                         "introgr." if father.plant_class is not cls else "biparental")
                     log.append(f"    🌰 Reproduction : {cls.name} @{best} "
                                f"[lum={best_light:.2f} h={g_child.get('hauteur', 1.0):.2f} "

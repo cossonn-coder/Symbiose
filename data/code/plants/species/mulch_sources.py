@@ -32,6 +32,9 @@ class Wheat(Poaceae):
     """
     genus = "Triticum"
     name = "Blé"
+    # AUTOGAME (D139 ②) : anémophile au catalogue, mais s'autoféconde
+    # à ≈ 95 % en réalité (fleur cléistogame ou quasi) → lignée qui se FIXE.
+    genetique = {"autofecondation": {"neutre": 0.95}}
     feuillage = "fin"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.0  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     rarity = "Établie"
