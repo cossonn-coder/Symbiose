@@ -56,6 +56,12 @@ namespace Symbiose
 		public static readonly Color SymMaladie     = new Color("8a6a4a"); // brun tacheté (cryptogamique)
 		public static readonly Color SymOmbre       = new Color("c2c8a0"); // vert pâle délavé (étiolement)
 		public static readonly Color SymAcclimatation = new Color("9db8b0"); // glauque bleu-gris (durcissement)
+		// Paliers THERMIQUES (niche thermique ⑤, PlantRenderer.Thermique.cs) : froid → chaud.
+		public static readonly Color ThViolace     = new Color("7a5a86"); // anthocyanes du froid prolongé
+		public static readonly Color ThDetrempe    = new Color("8fa894"); // vert d'eau translucide (tissu détrempé)
+		public static readonly Color ThNoirci      = new Color("2e2a22"); // gelé, noirci
+		public static readonly Color ThBordsJaunis = new Color("d4bc4a"); // jaune de chaleur
+		public static readonly Color ThBrule       = new Color("8a4e26"); // roussi, brûlé
 		// Herbivorie RACINAIRE (campagnol, sommet trophique ③) : flétrissure par la
 		// BASE — la plante jaunit-brunit d'un jaune SALE, cause souterraine (collet
 		// rongé/écorcé). Distinct du beige sec de la sécheresse (plus chaud, teinté de

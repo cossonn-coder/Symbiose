@@ -31,10 +31,10 @@ large** (dates de mort des annuelles) · ④ INTACT · ⑤ INTACT.
 | # | Kickoff | État |
 |---|---|---|
 | ① | `01_temperatures_extremes.md` — nuit la plus froide, jour le plus chaud, T_feuille | **FAIT** 2026-11-18 (`8c55f4a`) |
-| ② | `02_niche_caracteres.md` — niches des 52 espèces, 3 caractères, plasticité, coût | **FAIT** 2026-11-18 (non commité) |
-| ③ | `03_reponse_mort.md` — dégâts gradués, fin de la mort calendaire, fin de cycle | **FAIT** 2026-11-18 (non commité) |
-| ④ | `04_signes.md` — posture thermique et marques, voix | **FAIT** 2026-11-18 (non commité) |
-| ⑤ | `05_vue.md` — postures et teintes, banc `niche_thermique`, recette F5 | à faire |
+| ② | `02_niche_caracteres.md` — niches des 52 espèces, 3 caractères, plasticité, coût | **FAIT** 2026-11-18 (`c5520e1`) |
+| ③ | `03_reponse_mort.md` — dégâts gradués, fin de la mort calendaire, fin de cycle | **FAIT** 2026-11-18 (`23c7822`) |
+| ④ | `04_signes.md` — posture thermique et marques, voix | **FAIT** 2026-11-18 (`b2d6f10`) |
+| ⑤ | `05_vue.md` — postures et teintes, banc `niche_thermique`, recette F5 | **FAIT** 2026-11-18 — sprint CLOS côté code, F5 attendu |
 
 ## ① FAIT (2026-11-18)
 - `fields/ecofields/thermique.py` : `t_min_nuit_at` = **nuit la plus froide** (nuit type −
@@ -178,8 +178,83 @@ large** (dates de mort des annuelles) · ④ INTACT · ⑤ INTACT.
 - Tests : `test_posture_thermique` (neuve, 17/17) ; `test_signes_legende` mis à jour
   (13 signes + 6 paliers, météo p3 = tous les signes météo ; 43/43) ; versions 0.6.18 dans `tests/simserver/` (voix, delta, conteneurs, structures). 119 suites vertes (hors `test_peripherie`, préexistant). Golden INTACT `88cca899…`.
 
+## ⑤ FAIT (2026-11-18)
+- Vue `visuals/PlantRenderer.Thermique.cs` (partial neuf) : posture QUANTIFIÉE (8 échelons
+  par demi-échelle → recuisson au changement, jamais par frame). Port : froid → feuilles
+  qui PENDENT (`LeafDropCm` + port des fiches `PointFeuille`, jusqu'à 10 cm à −1) ; chaud →
+  limbe REPLIÉ de profil (`LeafOpen`, même fermeture que la canicule). Teinte du palier
+  posée après le symptôme dominant (`SymptomTint`, tous les chemins : segments, fiches,
+  prairie, houppiers, paliers bas) : violacé, vert d'eau détrempé, noirci (effondré plus
+  fort) ; terne (flétri à midi), jaune, roux brûlé. 5 couleurs `Palette16.Th*`. Marques
+  `froid` (taches détrempées) et `brulure` (bord roussi) avec les marques fines (×16,
+  `DrawLeafDamage`, `MarquesFines`). Conteneurs compris.
+- Pont **0.6.19** : `plage_thermique` = {gel, froid, chaud, brulure, nuit, feuille} °C par
+  plante vivante (`genes_pont.plage_thermique`, lit `lim_*`, `t_nuit`, `t_feuille`) ;
+  réponse d'`init` d'un banc de `BANC_WARMUP` → `warmup`. Survol G : ligne « plage : gèle
+  < … · froid < … · chaud > … · brûle > … » + « vécu : nuit … · feuille … ».
+- Banc **`niche_thermique`** (`bancs/niche_thermique.py`, départ s20, warmup F5 **2**,
+  germination férale coupée au post_init, herbivorie coupée, survol G ouvert d'emblée).
+  (b) trois MÂCHES repiquées (stade adulte) : sable sec plein soleil · terre gorgée plein
+  soleil · sable sec à l'ombre du mur nord. (a) tuile AUTOMNE : basilics nu / paillé
+  (litière 3) / voilé, mâches, seigles.
+- **Écarts au kickoff** : (1) canicule NON forcée — il faudrait un drapeau moteur (patron
+  `pluie_forcee`) ; le banc vit la canicule du **seed 42** (s16, s24 ; la vue envoie toujours
+  `WorldView.Seed` = 42, `BANC_SEED` n'atteint donc jamais le F5 — préexistant). (2) Scène
+  (b) en **mâche**, pas en basilic : le basilic (lim_froid 10 °C) est « détrempé » par les
+  nuits de juin et masque le côté chaud ; la mâche (chaud 25 °C, brûle 42 °C) monte toute
+  la gamme chaude. (3) Warmup par banc (12 → 2) : avec 12 semaines la canicule passait
+  hors champ ; `BANC_WARMUP` côté Python, lu par la vue (une capture `-w` reste prioritaire).
+- Mesure (`mesures/mesure_banc_vue.py`, seed 42, chronologie = celle du F5) :
+  ouverture s22 → mâche sèche « bords jaunis », arrosée « repliée », ombre « flétrie à
+  midi » ; s24 (canicule, T_feuille sèche 46,0 °C) → mâche sèche **brûlée** (marque jusqu'à
+  s40), les deux autres jaunies ; basilics nu morts **s31**, paillés **s33**, voilés **s36**
+  (froid sans gel) ; mâche et seigle verts tout l'hiver. 2 basilics (col. 6) tués par la
+  **grêle** en s22 [seed 42]. Mâche et seigle de la scène (a), semés en été, meurent de **fin
+  de cycle** (fleuris en automne) en s42 / s48 — pas du froid.
+- Captures VM (`planche/planche_05_*.png`) : ouverture ×4, canicule ×4 (mâches sèches
+  rousses, arrosées vert-jaune), mâche brûlée ×16 + survol G, automne ×4 + survol G
+  (basilics nus pâles détrempés, voilés verts).
+- Golden INTACT `88cca899…` ; `test_sim_server` 349/349 ; `dotnet build` vert.
+  `tests/bancs/test_biotique` rouge **déjà sur HEAD** (IndexError, hors tronçon).
+- Taille : `core/SimBridge.cs` 351 LDC (🟡, était 349).
+
+## Recette F5 (Nico)
+Monde **niche_thermique** (sélecteur, catégorie « niche_thermique »). Le survol G est ouvert.
+1. **Ouverture (s22, été)**, au sud de la maison, deux tuiles : mâches sur **sable** (à
+   gauche) feuillage **jaune aux bords** ; sur **terre** (à droite) feuilles **repliées**
+   (limbe étroit) mais vertes. Survole : « plage : gèle < −10 °C · chaud > 25 °C · brûle
+   > 42 °C », « vécu : … feuille 3x °C ».
+2. Touche **H** (maison transparente) ou **Page↑** : derrière le mur nord, 3 mâches à
+   l'**ombre** — feuilles repliées / « flétries à midi » (terne), jamais brûlées.
+3. Lance la saison jusqu'à **s24 (canicule, ciel dégagé)** : les mâches du sable
+   **roussissent** (brûlées, une peut mourir) ; ×16 : bord roussi sur les feuilles ;
+   les arrosées et l'ombre restent jaunies, vivantes.
+4. Tuile **AUTOMNE** (sud-est) : basilics en 3 rangées (nu, paillé, voilé), mâches,
+   seigles. De **s23 à s36** : les basilics **pendent** (nuits < 13 °C), virent au **vert
+   d'eau pâle détrempé**, puis meurent : **sol nu d'abord (≈ s31), paillis ensuite (≈ s33),
+   voile en dernier (≈ s36)**. ×16 : taches détrempées. La mâche et le seigle restent
+   **verts** pendant tout ce temps (et au gel de décembre, s37-39).
+5. À juger : la teinte détrempée est-elle lisible (assez distincte du vert pâle
+   d'étiolement) ? la pendaison se voit-elle à ×4 ? le roux brûlé ×4 ? les anneaux
+   roussis ×16 (même dessin que le bord noirci du gel) ?
+Limites connues : mâche/seigle de l'automne meurent de fin de cycle en s42/s48 (semés en
+été dans le banc) ; brindilles de litière très visibles sur le sable (couche Litter,
+préexistant) ; pucerons visibles (densité seulement neutralisée).
+
 ## REPRISE
-Lire `CLAUDE.md`, ce fichier, puis le kickoff du premier tronçon « à faire » (⑤).
+**Régression ouverte (constat orchestrateur, 2026-11-18)** : `tests/bancs/test_biotique.py`
+(`test_infestation_ravageur`) est **rouge depuis ③** (vert à `c5520e1`) : les deux basilics
+du banc `infestation_ravageur` meurent du froid avant l'observation (départ s1). Monté à
+s20, l'infesté meurt, le témoin vit ; à s26 les deux vivent mais le témoin porte `froid` et
+`ravageurs` (faune naturelle d'été) ; à s30 les deux meurent en 2 semaines. → calibrage
+de la niche du basilic (froid en plein été normand ?) à trancher avec Nico, test non retouché.
+`test_peripherie` rouge depuis avant le sprint (inchangé). `test_population` : hash de champ
+re-capturé à ② et ③ (dérive annoncée).
+
+Sprint **CLOS côté code** (①→⑤). Reste : commit, F5 de Nico (recette ci-dessus), puis
+`sprint_caracteres_vivants`. Points ouverts pour la suite : calibrage `lim_gel` tomate
+(②), endurcissement du pommier (③ b), ombrière ↔ `light_received` (③ c), paillage
+`eco.paillage` (③ d), réponse à la sélection < cible (③).
 
 ## Report du sprint ① (génétique infinitésimale, décision Nico 2026-11-16)
 La réponse à la sélection sur `germination_thermique` (banc

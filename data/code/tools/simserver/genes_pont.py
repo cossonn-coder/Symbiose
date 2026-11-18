@@ -52,3 +52,20 @@ TABLE_CARACTERES = {
     "ordre": list(CARACTERES),
     "lignee": {"fixee": SEUIL_FIXEE, "melangee": SEUIL_MELANGEE},
 }
+
+
+def _c(v) -> float | None:
+    """°C arrondi au dixième ; None pour « aucune limite » (−∞) ou « pas encore lu »."""
+    return None if v is None or v != v or abs(v) == float("inf") else round(v, 1)
+
+
+def plage_thermique(p) -> dict:
+    """PLAGE VIVABLE de la plante en °C (D139 niche thermique ⑤), pour le survol G :
+    ses quatre limites EFFECTIVES (espèce + gènes + vécu, `PlantInstance.lim_*`, la
+    même source que les dégâts et les signes) et les deux températures qu'elle a
+    vécues cette semaine (nuit la plus froide, feuille au jour le plus chaud).
+    Chiffres de DEBUG seulement (philo #5) : la vue ne les montre qu'au survol G.
+    `froid` = None pour une espèce que le froid sans gel ne lèse pas. Lecture pure."""
+    return {"gel": _c(p.lim_gel()), "froid": _c(p.lim_froid()),
+            "chaud": _c(p.lim_chaud()), "brulure": _c(p.lim_brul()),
+            "nuit": _c(p.t_nuit), "feuille": _c(p.t_feuille)}

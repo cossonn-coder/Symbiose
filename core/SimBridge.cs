@@ -77,6 +77,9 @@ namespace Symbiose
 		public string Lanceur { get; private set; } = "?";
 		public string EngineVersion { get; private set; } = "?";
 		public string Interpreteur { get; private set; } = "? (pont < 0.5.58)";
+		/// <summary>Warmup F5 imposé par le banc monté (pont 0.6.19, clé `warmup` de
+		/// l'init) ; −1 = aucun, la vue garde son défaut (niche thermique ⑤).</summary>
+		public int WarmupBanc { get; private set; } = -1;
 
 		// -------------------------------------------------------------------
 		// CYCLE DE VIE DU SOUS-PROCESS
@@ -232,6 +235,7 @@ namespace Symbiose
 			var resp = Request(msg);
 			if (resp == null) return null;
 			if (resp.ContainsKey("engine_version")) EngineVersion = resp["engine_version"].AsString();
+			WarmupBanc = resp.ContainsKey("warmup") ? resp["warmup"].AsInt32() : -1;
 			if (resp.ContainsKey("python"))
 			{
 				var py = resp["python"].AsGodotDictionary();

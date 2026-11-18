@@ -307,11 +307,15 @@ namespace Symbiose
 
 			ulong t0 = Time.GetTicksMsec();
 			GDict snap = null;
-			for (int i = 0; i < WarmupWeeks; i++)
+			// Un banc peut imposer son warmup (niche thermique ⑤ : ouvrir juste avant la
+			// canicule) ; une capture VM (`-w`) reste prioritaire.
+			int warmup = _bridge.WarmupBanc >= 0 && float.IsNaN(CaptureSemaines)
+				? _bridge.WarmupBanc : WarmupWeeks;
+			for (int i = 0; i < warmup; i++)
 				snap = _bridge.StepWeek();
 			if (snap == null) snap = _bridge.GetSnapshot();
 			if (snap == null) { _bridge.Quit(); return; }
-			GD.Print($"[WorldView] warmup {WarmupWeeks} semaines en "
+			GD.Print($"[WorldView] warmup {warmup} semaines en "
 					 + $"{Time.GetTicksMsec() - t0} ms — semaine {snap["week"].AsInt32()}, "
 					 + $"{snap["season"].AsString()}.");
 
@@ -410,7 +414,8 @@ namespace Symbiose
 			ApplySnapshot(snap, fade: false);   // monde initial : pas de fondu
 
 			FrameCamera();
-			if (config == BancLignees) ToggleGenesHover();   // banc lignées : survol G ouvert (D139 ④)
+			// Bancs lignées (D139 ④) et niche thermique (⑤) : survol G ouvert d'emblée.
+			if (config == BancLignees || config == BancNicheThermique) ToggleGenesHover();
 			AppliquerCapture();   // no-op hors mode capture (WorldView.Capture.cs)
 			// Monde construit → on débloque la boucle (_Process) et les entrées
 			// (_UnhandledInput), gardées par `_started` pendant l'écran de sélection.

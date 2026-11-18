@@ -145,9 +145,13 @@ namespace Symbiose
 		{
 			var v = new Vector2(-fe.U.Y, fe.U.X);
 			float d = fe.Dressee;
-			Vector2 m = fe.U * (lg * fe.Long * (1f - 0.6f * d)) + v * (lr * fe.Large);
+			// Niche thermique ⑤ : repliée par la chaleur, la feuille se montre de profil
+			// (limbe étroit) ; par le froid, elle pend (Thermique.cs).
+			Vector2 m = fe.U * (lg * fe.Long * (1f - 0.6f * d)) + v * (lr * fe.Large * (1f - HeatFoldMax * PliThermique));
 			float monte = d * lg * (2f - lg) + (1f - d) * lg * lg;
-			return Iso(fe.Org.X + m.X, fe.Org.Y + m.Y, (fe.BaseZ + 0.4f + fe.HautZ * monte) * AplatMort);
+			float z = fe.BaseZ + 0.4f + HautZThermique(fe.HautZ * monte, lg, fe.Long);
+			if (PendThermique > 0f) z = Mathf.Max(z, 0.2f);   // le bout pendant touche le sol, pas dessous
+			return Iso(fe.Org.X + m.X, fe.Org.Y + m.Y, z * AplatMort);
 		}
 
 		// Plume (carotte, ×1 : un petit nuage) : une tache loin, un rachis et ses lanières près.

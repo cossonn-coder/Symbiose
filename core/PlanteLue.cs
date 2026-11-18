@@ -32,6 +32,11 @@ namespace Symbiose
 		public float SupportHauteurCm, SupportDxCm, SupportDyCm;   // appui du haricot (FORMES ⑥, 0.6.8)
 		public float Vitalite = 1f, Abri = 1f;
 		public bool Emitteur = true;
+		// Niche thermique (pont 0.6.18-0.6.19) : posture ∈ [−1, 1], palier (null = étalé),
+		// plage vivable en °C pour le survol G (null si absente ; NaN = valeur nulle).
+		public float Posture;
+		public string PalierTh;
+		public float[] Plage;
 		public readonly List<(string Cause, float Intensite)> Symptomes = new();
 
 		// Clé stable d'une plante = tuile + espèce + position. Culture INVARIANTE :
@@ -85,7 +90,37 @@ namespace Symbiose
 			if (LectureSnap.A(p, "silhouette")) l.Silhouette = LectureSnap.S(p, "silhouette");
 			if (LectureSnap.A(p, "emitteur")) l.Emitteur = LectureSnap.B(p, "emitteur");
 			if (LectureSnap.A(p, "abri")) l.Abri = LectureSnap.F(p, "abri");
+			if (LectureSnap.A(p, "posture_thermique")) l.Posture = LectureSnap.F(p, "posture_thermique");
+			l.PalierTh = ChaineOuNull(p, "palier_thermique");
+			if (LectureSnap.A(p, "plage_thermique"))
+				using (var pl = LectureSnap.Dico(p, "plage_thermique")) l.Plage = LirePlage(pl);
 			return l;
+		}
+
+		// Ordre de `PlantRenderer.PlageThermique` : limites puis températures vécues.
+		private static readonly string[] ClesPlage = { "gel", "froid", "chaud", "brulure", "nuit", "feuille" };
+
+		/// <summary>Plage vivable du pont (`plage_thermique`) en °C ; null JSON → NaN.</summary>
+		public static float[] LirePlage(GDict d)
+		{
+			var v = new float[ClesPlage.Length];
+			for (int i = 0; i < v.Length; i++)
+			{
+				string k = ClesPlage[i];
+				v[i] = float.NaN;
+				if (!LectureSnap.A(d, k)) continue;
+				using Godot.Variant x = d[LectureSnap.Cle(k)];
+				if (x.VariantType != Godot.Variant.Type.Nil) v[i] = (float)x.AsDouble();
+			}
+			return v;
+		}
+
+		/// <summary>Chaîne sous `k`, ou null si la clé manque ou vaut null (JSON).</summary>
+		public static string ChaineOuNull(GDict d, string k)
+		{
+			if (!LectureSnap.A(d, k)) return null;
+			using Godot.Variant x = d[LectureSnap.Cle(k)];
+			return x.VariantType == Godot.Variant.Type.Nil ? null : x.AsString();
 		}
 
 		/// <summary>Liste `leaf_symptoms` ({cause, intensity}) → couples C#.</summary>

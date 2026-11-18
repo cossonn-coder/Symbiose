@@ -32,7 +32,7 @@ from plants.perennials import PerennialWoody      # AUTOMNE VISIBLE ② : les ar
 # Registre des bancs d'essai (sprint dédié) : mondes paramétrés montés par
 # `init config="<banc>"` pour forcer/observer un signe. Import au niveau module
 # (paquet `bancs/` au sommet, peut tout importer) ; jamais monté pour smoke/full.
-from bancs import (BANCS, BANC_WEEK_DEPART, BANC_SEED, BANC_POST_INIT,
+from bancs import (BANCS, BANC_WEEK_DEPART, BANC_SEED, BANC_POST_INIT, BANC_WARMUP,
                    banc_categorie)
 
 from .version import ENGINE_VERSION
@@ -288,9 +288,12 @@ class CommandsMixin:
             _amorcer_encyclo(game_state, game_state["current_player"], encyclo)
         # Monde monté : on le fige hors du ramasse-miettes (PARTAGE ①, cf. gc_pont).
         regler_gc()
-        return {"ok": True, "engine_version": ENGINE_VERSION,
-                "python": perf.interpreteur(),   # FLUIDITÉ PC ① (0.5.58)
-                "world": self._world_static()}
+        rep = {"ok": True, "engine_version": ENGINE_VERSION,
+               "python": perf.interpreteur(),   # FLUIDITÉ PC ① (0.5.58)
+               "world": self._world_static()}
+        if config in BANC_WARMUP:   # warmup F5 propre au banc (0.6.19, niche thermique ⑤)
+            rep["warmup"] = BANC_WARMUP[config]
+        return rep
 
     def cmd_list_bancs(self, msg: dict) -> dict:
         """Liste des bancs d'essai montables par `init config="<nom>"` (sprint

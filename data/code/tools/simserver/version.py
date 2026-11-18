@@ -898,7 +898,14 @@ from __future__ import annotations
 #       `leaf_symptoms` peut porter les marques neuves `froid` et `brulure`. La légende
 #       (`legende`) et `observer` connaissent les 8 signes thermiques neufs. Clés neuves,
 #       golden neutre (snapshot comparé avant/après).
-ENGINE_VERSION = "0.6.18"
+# 0.6.19 (NICHE THERMIQUE ⑤, D139) : chaque plante vivante (pleine terre et conteneur)
+#       gagne `plage_thermique` = {gel, froid, chaud, brulure, nuit, feuille} en °C (1 déc. ;
+#       `froid` null si l'espèce ne craint pas le froid sans gel, nuit/feuille null avant
+#       le 1er tick) — limites EFFECTIVES `PlantInstance.lim_*`, lues par le survol G
+#       (debug). Banc neuf `niche_thermique` ; la réponse d'`init` d'un banc de `BANC_WARMUP`
+#       porte `warmup` (semaines simulées par la vue avant le 1er dessin). Clés neuves,
+#       golden neutre.
+ENGINE_VERSION = "0.6.19"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

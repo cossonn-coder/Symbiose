@@ -90,7 +90,7 @@ def test_delta_pont():
     # meurent de froid à l'équinoxe → plus de plante à 3 segments à tailler.
     ref.send(cmd="init", seed=42, config="full")
     init = dlt.send(cmd="init", seed=42, config="full")
-    check("engine_version 0.6.18", init.get("engine_version") == "0.6.18",
+    check("engine_version 0.6.19", init.get("engine_version") == "0.6.19",
           init.get("engine_version"))
     # Opt-in : SANS la clé, le serveur delta répond au format complet historique.
     brut = dlt.send(cmd="snapshot")["snapshot"]

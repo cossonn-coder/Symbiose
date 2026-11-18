@@ -60,14 +60,15 @@ namespace Symbiose
 		/// (permanente) + canicule + poids de l'eau (croît vers l'apex).</summary>
 		private float LeafDropCm(float z)
 		{
-			float drop = _drought * DroughtDroopCm + _heat * HeatDroopCm;
+			float drop = _drought * DroughtDroopCm + _heat * HeatDroopCm + PendThermiqueDropCm;
 			if (_wet > 0f)
 				drop += _wet * WetDroopCm * _raideur * Mathf.Clamp(z / _heightCm, 0f, 1f);
 			return drop;
 		}
 
 		/// <summary>Ouverture du limbe (facteur de largeur) : 1 = étalé.</summary>
-		private float LeafOpen => 1f - HeatFoldMax * _heat;
+		// La feuille repliée par la chaleur (niche thermique ⑤) se ferme comme à la canicule.
+		private float LeafOpen => 1f - HeatFoldMax * Mathf.Max(_heat, PliThermique);
 
 		/// <summary>Reflet humide : 1-2 pixels clairs côté lumière (sud écran)
 		/// sur une part des feuilles, choisie au hash (les mêmes à chaque cuisson).</summary>

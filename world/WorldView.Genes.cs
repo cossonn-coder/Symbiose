@@ -3,7 +3,9 @@
 // Le SURVOL GÈNES (debug). Pointer une plante affiche sa LIGNÉE (fixée / en voie de
 // fixation / mélangée, d'après sa consanguinité F) puis CHAQUE caractère dans son
 // unité : « optimum de levée −2,1 °C », « avance de floraison +1,0 sem. »,
-// « autofécondation 93 % », « vigueur ×1,04 ». Instrument d'observation, étiqueté
+// « autofécondation 93 % », « vigueur ×1,04 ». Niche thermique ⑤ : la PLAGE VIVABLE
+// en °C (gèle, froid, chaud, brûle) et la nuit / la feuille de la semaine, lues dans
+// `PlantRenderer.PlageThermique` (pont 0.6.19). Instrument d'observation, étiqueté
 // debug (philo #5 : chiffres tolérés hors HUD final), toggle G, caché par défaut.
 //
 // 📖 Pédagogie — on RÉUTILISE le picking de survol des étiquettes/observation
@@ -25,6 +27,7 @@ namespace Symbiose
 		// Banc F5 des lignées (registre Python `bancs/lignees.py`) : monté, il ouvre le
 		// survol G d'emblée (StartSimulation) — c'est l'instrument qu'il sert.
 		private const string BancLignees = "lignees";
+		private const string BancNicheThermique = "niche_thermique";
 
 		// Label du survol gènes (créé dans BuildHud, dans le CanvasLayer "Hud").
 		private Label _genesLabel;
@@ -80,6 +83,8 @@ namespace Symbiose
 			sb.Append($"[gènes] {species}");
 			if (node.HasMeta(LectureSnap.Meta("F")))
 				sb.Append($"\n  {Lignee(node.GetMeta(LectureSnap.Meta("F")).AsDouble())}");
+			if (node is PlantRenderer pr && pr.PlageThermique is { } plage)
+				sb.Append(PlageVivable(plage));
 			// Ordre du registre moteur quand la table le donne (le pont sérialise ses
 			// dicts clés triées : seule la liste `ordre` garde l'ordre du registre).
 			System.Collections.Generic.IEnumerable<Variant> ordre =
@@ -88,6 +93,28 @@ namespace Symbiose
 				if (genes.ContainsKey(g))
 					sb.Append($"\n  {FormatGene(g.AsString(), genes[g].AsDouble())}");
 			_genesLabel.Text = sb.ToString();
+		}
+
+		// Plage vivable (niche thermique ⑤, pont 0.6.19) : « gèle < −1,0 °C · froid
+		// < 10,0 °C · chaud > 35,0 °C · brûle > 45,0 °C », puis la nuit la plus froide
+		// et la feuille au jour le plus chaud vécues cette semaine. Valeur absente
+		// (espèce que le froid sans gel ne lèse pas, plante pas encore tiquée) → omise.
+		private static string PlageVivable(float[] p)
+		{
+			var sb = new System.Text.StringBuilder("\n  plage :");
+			Borne(sb, " gèle <", p[0]);
+			Borne(sb, " · froid <", p[1]);
+			Borne(sb, " · chaud >", p[2]);
+			Borne(sb, " · brûle >", p[3]);
+			sb.Append("\n  vécu :");
+			Borne(sb, " nuit", p[4]);
+			Borne(sb, " · feuille", p[5]);
+			return sb.ToString();
+		}
+
+		private static void Borne(System.Text.StringBuilder sb, string lib, float v)
+		{
+			if (!float.IsNaN(v)) sb.Append($"{lib} {Nombre(v, "F1")} °C");
 		}
 
 		// « lignée fixée (F 0,94) » — trois mots, seuils du pont.

@@ -192,6 +192,7 @@ namespace Symbiose
 			for (int k = 0; k < spots; k++)
 				DrawCircle(PointDansLimbe(c, r, 37 + k, 41 + k, i, j, 0.2f, 0.65f),
 						   r * 0.12f, Lit(LeafSpotColor));
+			DrawMarquesThermiques(c, r, i, j);   // froid détrempé, brûlure (niche thermique ⑤)
 		}
 
 		// Un point du limbe au hash : angle (canal ca), rayon relatif dans

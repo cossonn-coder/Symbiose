@@ -86,6 +86,7 @@ from .quatre_feuilles_pont import marquer_quatre_feuilles
 from .taille_pont import marquer_taille
 from .accroche_pont import marquer_accroche
 from .genes_pont import TABLE_CARACTERES   # D139 ④ : unités des caractères + seuils de F
+from .genes_pont import plage_thermique   # D139 ⑤ : plage vivable en °C (survol G)
 
 
 def _activite_butineur(eco, agent) -> float:
@@ -266,6 +267,7 @@ class SerializeMixin:
                 # Posture thermique ∈ [−1, 1] (froid < 0 < chaud) + palier nommé
                 # (None = feuilles étalées) — la vue la dessine en port de feuille (⑤).
                 base["posture_thermique"], base["palier_thermique"] = etat_thermique(p, eco)
+                base["plage_thermique"] = plage_thermique(p)   # survol G (debug, ⑤)
                 foliage_density = cls.foliage_density_at(p, saison)
                 base["foliage_density"] = round(foliage_density, 3)   # jauge [0,1] (③)
                 # ÉMETTEUR d'ombre (LOD D67, ③) : miroir EXACT de la métrique de
@@ -630,6 +632,7 @@ class SerializeMixin:
                     pd["etat"] = p.etat
                     pd["leaf_symptoms"] = semiologie.leaf_symptoms(p, eco, saison)
                     pd["posture_thermique"], pd["palier_thermique"] = etat_thermique(p, eco)
+                    pd["plage_thermique"] = plage_thermique(p)   # survol G (debug, ⑤)
                     pd["fruits"] = [{"segment": f.segment_id, "maturite": f.maturite,
                                      "masse": f.masse, "nombre": f.nombre}
                                     for f in p.fruits]

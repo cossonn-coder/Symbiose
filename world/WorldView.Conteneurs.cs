@@ -198,6 +198,12 @@ namespace Symbiose
 				// vivant en pleine terre. Tolérant à un snapshot pré-0.5.28 (→ 1.0).
 				if (p.ContainsKey("vitalite"))
 					renderer.SetVitality((float)p["vitalite"].AsDouble());
+				// Niche thermique ⑤ : même port, même teinte, même survol G qu'en pleine terre.
+				if (p.ContainsKey("posture_thermique"))
+					renderer.SetThermique((float)p["posture_thermique"].AsDouble(),
+										  PlanteLue.ChaineOuNull(p, "palier_thermique"));
+				if (p.ContainsKey("plage_thermique"))
+					renderer.PlageThermique = PlanteLue.LirePlage(p["plage_thermique"].AsGodotDictionary());
 				nodes.Add(renderer);
 			}
 			return nodes;

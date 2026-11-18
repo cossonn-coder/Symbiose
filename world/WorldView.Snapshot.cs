@@ -237,7 +237,9 @@ namespace Symbiose
 		///  · SupportKind (0.5.18) : type d'appui accroché → spires, crampons, liens ;
 		///  · Strate / Silhouette (0.5.19) : biais de Y par strate, forme au LOD couronne ;
 		///  · Emitteur (D67, 0.5.21) : teinte de l'overlay F9 seulement ;
-		///  · Abri (0.5.44) : facteur d'abri au vent, défaut 1.
+		///  · Abri (0.5.44) : facteur d'abri au vent, défaut 1 ;
+		///  · Posture / PalierTh (0.6.18) : port et teinte thermiques, défaut confort ;
+		///  · Plage (0.6.19) : plage vivable en °C pour le survol G (debug).
 		/// Clés absentes (snapshot ancien) → défauts neutres, aucun crash.</summary>
 		private void MajPlante(PlantRenderer node, PlanteLue l)
 		{
@@ -249,6 +251,8 @@ namespace Symbiose
 			_petalLayer?.Noter(l.Key, node, wx, wy);   // pétales au sol à la défloraison (VERGER ④)
 			node.SetSymptoms(l.Symptomes);     // teinte + texture des symptômes (D33)
 			node.SetVitality(l.Vitalite);      // fond global d'usure (santé ④, 0.5.28)
+			node.SetThermique(l.Posture, l.PalierTh);   // port + teinte du palier (niche thermique ⑤)
+			node.PlageThermique = l.Plage;     // plage vivable °C, survol G seulement (0.6.19)
 			node.SetSupport(l.SupportKind, l.SupportHauteurCm, l.SupportDxCm, l.SupportDyCm);   // accroche (grimpantes ⑥, FORMES ⑥)
 			node.SetSilhouette(l.Silhouette);  // forme au LOD couronne (luxuriance ⑥)
 			node.SetStrate(l.Strate);          // port arbre/grimpante (paliers bas, D106 T5)

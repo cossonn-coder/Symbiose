@@ -112,7 +112,7 @@ namespace Symbiose
 
 		// Causes à MARQUE FOLIAIRE fine sans teinte propre (criblage, bord noirci) :
 		// dessinées par DrawLeafDamage, donc visibles seulement dès ×16.
-		private static readonly HashSet<string> MarquesFines = new() { "ravageurs", "gel", "grele" };
+		private static readonly HashSet<string> MarquesFines = new() { "ravageurs", "gel", "grele", "froid", "brulure" };
 
 		// SEUILS DE VISIBILITÉ MESURÉS (INFO-BULLE DU VIVANT ②) — plus petite intensité
 		// dont la teinte change AU MOINS UN PIXEL de la plante témoin à l'écran, prise
@@ -273,6 +273,7 @@ namespace Symbiose
 			_colorTint = default;
 			_colorAmount = 0f;
 			_ravageurs = _gel = _grele = _drought = _ombre = _maladie = 0f;
+			_froidMarque = _brulureMarque = 0f;   // marques thermiques (Thermique.cs, ⑤)
 			_symptomes.Clear();
 			if (symptoms != null)
 				for (int i = 0; i < symptoms.Count; i++)
@@ -302,6 +303,10 @@ namespace Symbiose
 						// sur le limbe → distingue le ponctué de l'asphyxie uniforme
 						// (cf. DrawLeafDamage, PlantRenderer.PaliersHauts.cs).
 						case "maladie":   _maladie = it; break;
+						// froid sans gel / brûlure (niche thermique ⑤) : taches détrempées et
+						// bord roussi, PlantRenderer.Thermique.cs.
+						case "froid":     _froidMarque = it; break;
+						case "brulure":   _brulureMarque = it; break;
 					}
 				}
 			RefreshMeteo();   // la variante canicule suit `secheresse` (T4)
@@ -338,7 +343,8 @@ namespace Symbiose
 		private Color SymptomTint(Color tissue)
 		{
 			Color bg = ApplyVitality(tissue);
-			return _colorAmount > 0f ? bg.Lerp(_colorTint, _colorAmount) : bg;
+			// Palier thermique PAR-DESSUS (niche thermique ⑤) : identité au confort.
+			return TeinteThermique(_colorAmount > 0f ? bg.Lerp(_colorTint, _colorAmount) : bg);
 		}
 
 		// Silhouette d'espèce (luxuriance ⑥, descripteur data du moteur ③ : tapis/
