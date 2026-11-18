@@ -36,7 +36,7 @@ def check(name, cond, detail=""):
 
 
 def test_infestation_ravageur():
-    """Deux basilics jumeaux ; l'infesté (densité `puceron` forcée) montre le signe
+    """Deux mâches jumelles ; l'infesté (densité `puceron` forcée) montre le signe
     `ravageurs` (limbe criblé) en restant vivant, le témoin reste sain. Tranche
     D47-C3 : le criblage observé est-il RÉEL (oui, le moteur l'émet) ou un artefact
     de rendu ? Observation TÔT (2 sem) : le forçage-pulse décroît ensuite (hiver)."""

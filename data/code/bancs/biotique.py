@@ -16,7 +16,7 @@ même endroit que la vue Godot.
 """
 from __future__ import annotations
 
-from plants import (Basil, AppleTree, Phacelia, Bean, Sunflower, Ivy, Jasmine,
+from plants import (Basil, CornSalad, AppleTree, Phacelia, Bean, Sunflower, Ivy, Jasmine,
                     Tomato, Pepper, Borage, Mugwort)
 from plants.species.sauvages import SweetViolet
 from plants.genetics import borne
@@ -40,19 +40,23 @@ MICRO_NON_LETAL  = 1.0     # micro_norm ≈ 0.33 > 0.20 → herbivorie NON doubl
 
 
 def infestation_ravageur():
-    """Banc « criblage » (tranche D47-C3) : DEUX basilics jumeaux, l'un sous une
+    """Banc « criblage » (tranche D47-C3) : DEUX mâches jumelles, l'une sous une
     densité `puceron` forcée (limbe criblé/troué → signe `ravageurs`, signe de
     FORME), l'autre témoin SANS forçage (limbe sain). Isole le VRAI criblage du
     rendu normal des feuilles (« petits points » ≠ criblage). Oracle :
-    tests/bancs/test_biotique.py (observation TÔT, le forçage-pulse décroît)."""
+    tests/bancs/test_biotique.py (observation TÔT, le forçage-pulse décroît).
+    Hôte = MÂCHE (ex-basilic, D139 niche thermique) : le basilic est frileux — au
+    printemps il meurt de froid, l'été les pucerons SAUVAGES colonisent aussi le
+    témoin. Aucune date ne laisse un basilic vivant ET un témoin sain ; la mâche,
+    rustique, tient au printemps quand le puceron sauvage dort encore."""
     infeste, eco_i = build_banc_tile("INFESTE", "terre", 8, 8,
                                      humidite=1.3, fertilite=1.1,
                                      microbiome=MICRO_NON_LETAL)
     temoin, eco_t = build_banc_tile("TEMOIN", "terre", 8, 8, 500.0, 0.0,
                                     humidite=1.3, fertilite=1.1,
                                     microbiome=MICRO_NON_LETAL)
-    infeste.add_plant(Basil, 4, 4)
-    temoin.add_plant(Basil, 4, 4)
+    infeste.add_plant(CornSalad, 4, 4)
+    temoin.add_plant(CornSalad, 4, 4)
     force_faune(eco_i, RAVAGEUR_ESPECE, RAVAGEUR_DENSITE)
     return monde([infeste, temoin],
                  {infeste.tile_id: eco_i, temoin.tile_id: eco_t})

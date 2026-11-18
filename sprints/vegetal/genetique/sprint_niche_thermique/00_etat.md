@@ -242,12 +242,10 @@ Limites connues : mâche/seigle de l'automne meurent de fin de cycle en s42/s48 
 préexistant) ; pucerons visibles (densité seulement neutralisée).
 
 ## REPRISE
-**Régression ouverte (constat orchestrateur, 2026-11-18)** : `tests/bancs/test_biotique.py`
-(`test_infestation_ravageur`) est **rouge depuis ③** (vert à `c5520e1`) : les deux basilics
-du banc `infestation_ravageur` meurent du froid avant l'observation (départ s1). Monté à
-s20, l'infesté meurt, le témoin vit ; à s26 les deux vivent mais le témoin porte `froid` et
-`ravageurs` (faune naturelle d'été) ; à s30 les deux meurent en 2 semaines. → calibrage
-de la niche du basilic (froid en plein été normand ?) à trancher avec Nico, test non retouché.
+**`test_biotique` réparé (2026-11-18, décision Nico)** : rouge depuis ③ (basilic du banc
+`infestation_ravageur` mort de froid au printemps ; l'été les pucerons sauvages colonisent le
+témoin — aucune date ne passe) → hôte remplacé par la **mâche**, 12/12. Reliquats (sélection,
+pommier, ombrière, paillage, golden smoke, tomate) → **D139, dette pour plus tard**.
 `test_peripherie` rouge depuis avant le sprint (inchangé). `test_population` : hash de champ
 re-capturé à ② et ③ (dérive annoncée).
 
