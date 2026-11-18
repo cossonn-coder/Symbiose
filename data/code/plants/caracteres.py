@@ -70,6 +70,70 @@ class Caractere:
     # vigueur effective perdue PAR σ_A au-dessus du neutre (`cout_genetique`). 0 =
     # caractère gratuit (ou dont le compromis est STRUCTUREL, payé là où il est lu).
     cout: float = 0.0
+    # D140 B (départ du jardin ①) — le caractère est-il EXPRIMÉ par l'espèce ?
+    # Prédicat `exprime(plant_class) -> bool` ; None = toute espèce l'exprime. Un
+    # gène que NULLE mécanique ne lit pour l'espèce (nectar d'une anémophile,
+    # fixation d'azote d'une non-fixatrice) reste PORTÉ, hérité, muté — variation
+    # cryptique, comme dans le vivant — mais ne COÛTE rien (`cout_genetique`).
+    # Chaque prédicat recopie la condition de SES lecteurs (vérifiés au code,
+    # cf. commentaires des prédicats ci-dessous).
+    exprime: object = None
+
+
+# ── Prédicats d'EXPRESSION (D140 B). Lecture d'attributs de classe seulement
+# (`getattr`) : ce module reste une fondation sans import interne. ─────────────
+
+# Familles à ANTHÈRES PORICIDES : leur pollen est enfermé et seul un butineur qui
+# VIBRE (le bourdon, sonication) le libère. Trait de la FLEUR, donc ici ; c'est la
+# source unique dont `fields/population/registry._POLLEN_VIBRE_BOURDON` dérive.
+FAMILLES_ANTHERES_PORICIDES = frozenset({"Solanaceae"})
+
+
+def _offre_nectar(cls) -> bool:
+    """`nectar` est lu par `poids_floral` sous la forme `cls.nectar × gène` : une
+    espèce sans nectar (anémophiles, tomate) ne l'exprime pas."""
+    return getattr(cls, "nectar", 0.0) > 0.0
+
+
+def _offre_pollen(cls) -> bool:
+    """`pollen` est lu par l'anémophilie (espèces `wind`) et par la voie VIBRÉE
+    de `poids_floral` (anthères poricides). Ailleurs, aucun lecteur."""
+    return (getattr(cls, "pollination_mode", None) == "wind"
+            or getattr(cls, "family", None) in FAMILLES_ANTHERES_PORICIDES)
+
+
+def _nourrit_butineur(cls) -> bool:
+    """`taille_fleur` / `guide_nectar` : l'ATTRAIT de `poids_floral`, qui n'agit
+    que si la fleur offre une ressource (nectar, ou pollen vibré)."""
+    return (_offre_nectar(cls)
+            or getattr(cls, "family", None) in FAMILLES_ANTHERES_PORICIDES)
+
+
+def _sensible_froid(cls) -> bool:
+    """`limite_froid` décale `t_froid_lesion` (`PlantInstance.lim_froid`) ; espèce
+    non tropicale (None) → aucune nuit ne la lèse, le gène n'agit pas."""
+    return getattr(cls, "t_froid_lesion", None) is not None
+
+
+def _effets(cls):
+    """Tous les effets déclarés de l'espèce (famille + chaque stade)."""
+    yield from getattr(cls, "family_effects", ())
+    for st in getattr(cls, "growth_stages", ()):
+        yield from st.effects
+
+
+def _fixe_azote(cls) -> bool:
+    """`fixation_azote` est lu par l'effet `inject_field` qui le nomme dans sa clé
+    `gene` (`sim/effects/resolution.py`) : fixatrices seulement."""
+    return any(e.get("gene") == "fixation_azote" for e in _effets(cls))
+
+
+def _emet_allelochimiques(cls) -> bool:
+    """`allelopathie` est lu par toute émission du champ `allelopathie` (même
+    résolution) : espèces à exsudat seulement."""
+    return any(e.get("gene") == "allelopathie"
+               or (e.get("variable") == "allelopathie" and not e.get("gene"))
+               for e in _effets(cls))
 
 
 # Compromis TOLÉRANCE THERMIQUE ↔ CROISSANCE (D139 niche thermique ②, conception
@@ -136,7 +200,8 @@ CARACTERES = {
     # ≤ +3 °C) s'y ajoute. Bornes = 4σ. Chaque °C au-delà du neutre coûte de la
     # vigueur (`K_THERMO`, ci-dessus, via le champ `cout`).
     "limite_froid": Caractere(
-        unite="°C", neutre=0.0, sigma_a=1.0, bornes=(-4.0, 4.0), cout=K_THERMO * 1.0),
+        unite="°C", neutre=0.0, sigma_a=1.0, bornes=(-4.0, 4.0), cout=K_THERMO * 1.0,
+        exprime=_sensible_froid),
     "limite_chaud": Caractere(
         unite="°C", neutre=0.0, sigma_a=1.5, bornes=(-6.0, 6.0), adaptogene=True,
         cout=K_THERMO * 1.5),
@@ -153,12 +218,15 @@ CARACTERES = {
     #  - guide_nectar : contraste des guides (piste d'atterrissage) → visite plus
     #                   efficace — coût faible (un motif, pas une substance) ;
     #  - parfum       : attire de plus loin ET repousse une part des ravageurs.
-    "taille_fleur":  Caractere(sigma_a=0.15, cout=K_FLEUR),
-    "nectar":        Caractere(sigma_a=0.15, cout=K_FLEUR),
-    "pollen":        Caractere(sigma_a=0.15, cout=K_FLEUR),
+    "taille_fleur":  Caractere(sigma_a=0.15, cout=K_FLEUR, exprime=_nourrit_butineur),
+    "nectar":        Caractere(sigma_a=0.15, cout=K_FLEUR, exprime=_offre_nectar),
+    "pollen":        Caractere(sigma_a=0.15, cout=K_FLEUR, exprime=_offre_pollen),
     "couleur_fleur": Caractere(unite="position", neutre=0.0, sigma_a=0.15,
                                bornes=(-1.0, 1.0)),
-    "guide_nectar":  Caractere(sigma_a=0.15, cout=K_FLEUR / 2),
+    "guide_nectar":  Caractere(sigma_a=0.15, cout=K_FLEUR / 2,
+                               exprime=_nourrit_butineur),
+    # `parfum` : PAS de prédicat — il est lu aussi par la pression des ravageurs
+    # (`herbivory_pressure`, répulsion) sur TOUTE plante, fleurie ou non.
     "parfum":        Caractere(sigma_a=0.15, cout=K_FLEUR),
     # D139 caractères vivants ② — FRUITS ET COMESTIBILITÉ (conception §2.2), EN QUEUE.
     #  - taille_fruit : masse d'UN fruit × gène, NOMBRE de fruits ÷ gène
@@ -218,14 +286,35 @@ CARACTERES = {
     #                   nutrition y sature déjà, `sim/nutrition_plante.py`).
     "vigueur_clonale":   Caractere(sigma_a=0.15),
     "portee_graine":     Caractere(sigma_a=0.15),
-    "fixation_azote":    Caractere(sigma_a=0.15, cout=K_FLEUR),
-    "allelopathie":      Caractere(sigma_a=0.15, cout=K_FLEUR),
+    "fixation_azote":    Caractere(sigma_a=0.15, cout=K_FLEUR, exprime=_fixe_azote),
+    "allelopathie":      Caractere(sigma_a=0.15, cout=K_FLEUR,
+                                   exprime=_emet_allelochimiques),
     "mycorhization":     Caractere(sigma_a=0.15, cout=K_FLEUR),
 }
 
 # Caractères qui ont un coût d'excès (`cout` > 0), dans l'ordre du registre : seuls
 # ceux-là sont parcourus par `PlantInstance.cout_genetique` (O(9) par appel).
 CARACTERES_COUTEUX = tuple((nom, c.cout) for nom, c in CARACTERES.items() if c.cout > 0.0)
+
+# Mémo PAR ESPÈCE des caractères coûteux qu'elle EXPRIME (D140 B) : les prédicats
+# parcourent les effets déclarés — on ne les rejoue pas à chaque appel du tick.
+# Clé = la classe (immuable pendant la partie) : le cache ne s'invalide jamais.
+# Sans prédicat = lus pour TOUTE espèce (vérifié au code) : `rusticite_froid`
+# (`lim_gel`), `limite_chaud` (`lim_chaud`/`lim_brul`), `parfum` (ravageurs),
+# `coriacite_feuille` (grêle, ravageurs, litière), `mycorhization` (`myco_effectif`).
+_COUTEUX_PAR_ESPECE: dict = {}
+
+
+def couteux_exprimes(plant_class) -> tuple:
+    """Sous-ensemble de `CARACTERES_COUTEUX` que l'espèce exprime : seuls ceux-là
+    se paient dans `PlantInstance.cout_genetique`. `None` → tous (espèce moyenne)."""
+    t = _COUTEUX_PAR_ESPECE.get(plant_class)
+    if t is None:
+        t = tuple((nom, k) for nom, k in CARACTERES_COUTEUX
+                  if plant_class is None or CARACTERES[nom].exprime is None
+                  or CARACTERES[nom].exprime(plant_class))
+        _COUTEUX_PAR_ESPECE[plant_class] = t
+    return t
 
 
 def parametres_espece(plant_class, nom: str) -> tuple:

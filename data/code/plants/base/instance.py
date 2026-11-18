@@ -15,7 +15,7 @@ from ..genetics import (clamp_gene, ADAPTOGENIC_GENES,
                         DEFENSE_COST, DEFENSE_PLANCHER, DI, neutre, borne,
                         facteur_precocite, CARACTERES, EXPR_MAX,
                         ACCLIM_CHAUD_MAX, K_THERMO, CARACTERES_THERMIQUES,
-                        CARACTERES_COUTEUX, parametres_espece)
+                        couteux_exprimes, parametres_espece)
 from .empreintes import _plots_in_radius, PROC_ROOT_RATIO
 from .stades import GrowthStage, Segment
 
@@ -374,10 +374,12 @@ class PlantInstance:
         le neutre (une fleur pauvre ne pousse pas plus vite) : seul l'excès coûte,
         sinon la sélection pousserait tout au minimum. Les compromis STRUCTURELS
         (taille ↔ nombre de fruits…) ne sont pas ici, ils vivent où le caractère est
-        lu. Fondateur neutre (gènes absents ou au neutre) ⇒ 1.0 exactement."""
+        lu. Fondateur neutre (gènes absents ou au neutre) ⇒ 1.0 exactement.
+        D140 B : seuls les caractères que l'espèce EXPRIME se paient
+        (`couteux_exprimes`) — un gène muet (nectar d'une anémophile) est gratuit."""
         exces = 0.0
         cls = self.plant_class
-        for nom, k in CARACTERES_COUTEUX:
+        for nom, k in couteux_exprimes(cls):
             a = self.genes.get(nom)
             if a is None:                  # absent = neutre → aucun excès
                 continue

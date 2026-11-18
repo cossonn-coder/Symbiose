@@ -9,7 +9,7 @@ Seule dépendance : le registre voisin `caracteres.py`, lui aussi pur.
 
 from plants.caracteres import (CARACTERES, BORNES_FACTEUR, SIGMA_A_FACTEUR,  # noqa: F401
                                Caractere, parametres_espece, neutre, sigma_a, borne,
-                               K_THERMO, CARACTERES_COUTEUX)
+                               K_THERMO, CARACTERES_COUTEUX, couteux_exprimes)
 
 # Vecteur de gènes héréditaire (D22) — extensible sans refactor. Ajouter un gène
 # = l'ajouter ici ; `child_genes` (reproduction) le calcule alors automatiquement

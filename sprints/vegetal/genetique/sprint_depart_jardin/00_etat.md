@@ -29,18 +29,35 @@ ouvert mi-mai avec une plante mûre de chaque espèce, semis d'intérieur et rep
 - Semis (`planter` → `GrainEnAttente` + `bell(T_sol)`) et pots (`deplacer_pot`) existent.
 
 ## Golden
-Départ `db4d6b75…`. ① **RE-FIGÉ annoncé** · ② **RE-FIGÉ annoncé** (si tendres du smoke
+Départ `db4d6b75…` → après ① **`98a050cf…`** (re-figé : divergence 100 % due à B —
+A seul et la dérivation `_POLLEN_VIBRE_BOURDON` sont bit-identiques ; coût allégé dès s1
+chez achillée, haricot, phacélie, pommier, tournesol, trèfle (gènes muets `pollen`,
+`limite_froid`, `fixation_azote`, `allelopathie`) ; 1ʳᵉ divergence du log en s9 ;
+`population_hash`/`vigueur_hash` intacts). ① **RE-FIGÉ annoncé** · ② **RE-FIGÉ annoncé** (si tendres du smoke
 touchés) · ③④⑤⑥ **INTACT**.
 
 ## Tronçons
 | # | Kickoff | État |
 |---|---|---|
-| ① | `01_paturin_genes_muets.md` — pâturin + gènes muets | à faire |
+| ① | `01_paturin_genes_muets.md` — pâturin + gènes muets | **FAIT** 2026-11-18 (golden re-figé `98a050cf…`) |
 | ② | `02_froid_tendres.md` — borne du gel, audit des tendres, chronique | à faire |
 | ③ | `03_monde_full_complet.md` — semaine 10, 52 espèces mûres, garde-fou, perf | à faire |
 | ④ | `04_semis_interieur_repiquer.md` — pot dans la maison + `repiquer` | à faire |
 | ⑤ | `05_automate_repiquage.md` — repiquage différé par l'automate | à faire |
 | ⑥ | `06_vue_banc.md` — palette, pots visibles, banc `depart_jardin`, clôture | à faire |
 
+## Acquis du ①
+- Registre `plants/caracteres.py` : champ `exprime` (prédicat sur la classe, None = toutes)
+  + `couteux_exprimes(cls)` mémoïsé par espèce, lu par `cout_genetique`. Muets possibles :
+  `nectar` (nectar d'espèce 0), `taille_fleur`/`guide_nectar` (ni nectar ni anthères
+  poricides), `pollen` (ni vent ni poricide — la phacélie aussi !), `limite_froid`
+  (`t_froid_lesion` None), `fixation_azote`, `allelopathie` (effets déclarés). Universels
+  vérifiés au code : `rusticite_froid`, `limite_chaud`, `parfum` (ravageurs),
+  `coriacite_feuille`, `mycorhization`.
+- `FAMILLES_ANTHERES_PORICIDES` (caracteres.py) = source unique ; `registry._POLLEN_VIBRE_BOURDON`
+  en dérive.
+- Pâturin : `pollination_mode = "wind"`, autofécondation neutre 0,9 → fécondation ≥ 0,9.
+- Test : `tests/test_genes_muets.py` (18/18).
+
 ## REPRISE
-Lire `CLAUDE.md`, ce fichier, puis le kickoff du premier tronçon « à faire ».
+Lire `CLAUDE.md`, ce fichier, puis le kickoff du premier tronçon « à faire » (②).

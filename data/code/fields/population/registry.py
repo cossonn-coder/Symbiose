@@ -13,6 +13,7 @@ from fields.lifecycle import LifeCycleBridge
 from fields.faune_encyclo import encyclo_meta
 from fields.population.constants import _zero_grid, FLOWER_REF
 from fields.population.spec import TrophicSpec, PollinatorSpec
+from plants.caracteres import FAMILLES_ANTHERES_PORICIDES
 from plants.couleurs import (preferences, preference_couleur,
                              BLEU, VIOLET, JAUNE, ROSE, ROUGE, ORANGE, BLANC)
 from fields.population.resources import (
@@ -379,8 +380,10 @@ _ATTRACT_OSMIE = {        # abeille des vergers : Rosacées (arbres fruitiers) +
 # domestique ne sait pas le faire. Ce pollen est une vraie nourriture (protéines
 # des larves) : seconde ressource du bourdon, ∈ [0,1] comme le nectar. 0,7 = une
 # bonne table mais sans égaler une mellifère majeure (phacélie 1,0) ; le goût
-# Solanaceae 0,65 du bourdon (déjà porté, ⑤) reste le second facteur.
-_POLLEN_VIBRE_BOURDON = {"Solanaceae": 0.7}
+# Solanaceae 0,65 du bourdon (déjà porté, ⑤) reste le second facteur. Les familles
+# viennent de `FAMILLES_ANTHERES_PORICIDES` (trait de la fleur, `plants/caracteres`,
+# D140 B) : source unique, qui décide aussi si le gène `pollen` s'exprime.
+_POLLEN_VIBRE_BOURDON = {f: 0.7 for f in sorted(FAMILLES_ANTHERES_PORICIDES)}
 
 
 # Couleurs préférées PAR TYPE de butineur (D139 caractères vivants ①, conception

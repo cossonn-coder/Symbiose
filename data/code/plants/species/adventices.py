@@ -149,6 +149,12 @@ class PoaAnnua(PlantBase):
     t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -8.0, 12.0, 30.0, 44.0
     feuillage = "fin"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.0  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
+    # D140 A : graminée ANÉMOPHILE (elle hérite de PlantBase, pas de la classe
+    # Poaceae : le mode est posé en explicite, sinon défaut « insect » sans nectar →
+    # aucun pollen reçu) et surtout AUTOGAME (≈ 90 % d'autofécondation, comme les
+    # autogames du catalogue) — c'est ce qui en fait l'adventice universelle.
+    pollination_mode = "wind"
+    genetique = {"autofecondation": {"neutre": 0.9}}
     resilience_base = 1.25         # S — graminée fibreuse pionnière, coriace (elle hérite de
                                    # PlantBase et non de la classe Poaceae : valeur posée en
                                    # explicite pour éviter le défaut silencieux 1.0)
