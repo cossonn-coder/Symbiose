@@ -68,6 +68,9 @@ def _bloom_week_of(plant_class, *, age_years=0.0, mature=True, gene=None,
     gs = {"tiles": [tile], "eco": {"T": eco}, "scores": {},
           "current_player": "joueur_1", "week": 1, "log": []}
     eng = Engine(gs)
+    # Isole le PLACEMENT thermique de la floraison : un tournesol posé mûr à
+    # l'équinoxe mourrait du froid sans gel (D139 niche thermique ③) avant de fleurir.
+    eng._tick_nuit_froide = lambda *a, **k: []
     for _ in range(n_weeks):
         eng.tick_semaine()
         gs["log"].clear()

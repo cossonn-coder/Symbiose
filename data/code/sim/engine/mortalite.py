@@ -24,6 +24,7 @@ from sim.capacite import recrutement_bloque
 from sim.tempo import onset_senescence
 from sim.growth import est_etiole
 from .racines import eau_percue
+from .fin_de_cycle import fin_de_cycle, semer_fin_de_cycle
 from .aleas import (PAILLAGE_PROTECT, DAMAGE_STEP, WIND_DAMAGE_SEUIL,
                     WIND_SEVERITY_REF, WIND_ETIOLE_SUSCEPT)
 
@@ -55,8 +56,8 @@ class MortaliteMixin:
 
           Sénescence : au-delà de SENESCENCE_ONSET·longévité, une pression de
                        déclin croissante ∝ âge fait chuter la santé ; mort à 0.
-                       Sautée pour les annuelles (longévité = ∞, elles meurent
-                       à l'hiver).
+                       Sautée pour les annuelles (longévité = ∞) : elles
+                       s'éteignent par FIN DE CYCLE après leurs graines (D139 ③).
           Guérison   : en bon milieu (lumière × humidité, peu de perturbation)
                        et hors fin de vie (sen < HEAL_SEN_CUTOFF), la santé
                        remonte → fini les « zombies » bloqués à 1/3.
@@ -79,7 +80,21 @@ class MortaliteMixin:
             # SENESCENCE_ONSET. MIROIR EXACT dans semiologie.senescence : les deux
             # appellent la MÊME conversion `sim/tempo.onset_senescence`.
             sen = 0.0
-            if L != math.inf:
+            # Fin de cycle (D139 niche thermique ③) : annuelle/bisannuelle dont la 1ʳᵉ
+            # floraison est passée depuis floraison + maturation des graines → déclin
+            # INTERNE, un cran par semaine (décrément direct, comme la vieillesse), la
+            # convalescence coupée (sen = 1). Remplace la mort calendaire de l'hiver.
+            if fin_de_cycle(plant, self.week):
+                sen = 1.0
+                v = plant.vitalite - VITALITE_STEP
+                plant.vitalite = v if v > 1e-9 else 0.0
+                if not plant.is_alive:
+                    deaths.append(plant)
+                    semer_fin_de_cycle(plant, tile, eco, seed, week)
+                    log.append(f"    ✿ {plant.name}@{plant.position} meurt "
+                               f"(fin de cycle) — graines à la banque")
+                    continue
+            elif L != math.inf:
                 onset = onset_senescence(plant)
                 denom = (1.0 - onset) * L
                 if denom > 0:
@@ -323,50 +338,30 @@ class MortaliteMixin:
 
     def _winter_transition(self, tile, eco, week: int) -> list[str]:
         """
-        Transition hivernale — déclenchée semaines 48-52.
+        Transition hivernale — déclenchée aux DUREE_ENTREE_HIVER premières semaines de
+        l'hiver réel (`SEMAINE_HIVER`, ≈ fin décembre ; boucle.py étape 16). Avant le
+        D139 ③ : semaines 49-52 du calendrier unique, soit mi-février à mi-mars.
 
-        Annual  → mort + nécromasse + injection seed_bank
-        Dormant → métabolisme réduit, root_density relâchée
+        Dormant   → métabolisme réduit (stress_memory ↑)
         Evergreen → légère réduction métabolique
-
-        La libération progressive des racines (×0.85/semaine) ouvre les niches
-        pour la succession printanière.
+        Annuelle  → RIEN (D139 niche thermique ③, décision T1 « le moteur ne tue pas,
+                    la plante meurt ») : la mort calendaire `winter_strategy="die"` a
+                    disparu. Une annuelle frileuse meurt du gel ou du froid
+                    (`reponse_thermique.py`), une rustique (mâche, seigle) passe l'hiver,
+                    toutes s'éteignent après leurs graines (fin de cycle,
+                    `_tick_senescence_health`). Idem pour la bisannuelle de l'an 2.
         """
         log = []
 
         for plant in list(tile.plants):
             if not plant.is_alive:
                 continue
-
-            # Monocarpie bisannuelle (M3) : floraison/graines l'an 2 puis mort.
-            if (plant.plant_class.life_cycle == "biennial"
-                    and plant.age_years >= 2.0):
-                arch = getattr(plant.plant_class, "archetype", None)
-                rate = getattr(plant.plant_class, "reproduction_rate", 0.02)
-                if arch:
-                    eco.seed_bank.add(*plant.position, arch, rate)
-                deposited = deposer_mort(plant, eco)   # squelette (②B), pas de retrait
-                log.append(
-                    f"    ✿ {plant.plant_class.name}@{plant.position} meurt "
-                    f"(bisannuelle, an 2) — nécromasse +{deposited:.2f} OM"
-                )
-                continue
-
             ws = plant.plant_class.winter_strategy
-
-            if ws == "die":
-                # Graines dans la banque + mort → squelette persistant (②B)
-                arch = getattr(plant.plant_class, "archetype", None)
-                rate = getattr(plant.plant_class, "reproduction_rate", 0.02)
-                if arch:
-                    eco.seed_bank.add(*plant.position, arch, rate)
-                deposited = deposer_mort(plant, eco)
-                log.append(
-                    f"    ❄ {plant.plant_class.name}@{plant.position} "
-                    f"meurt (annual) — nécromasse +{deposited:.2f} OM"
-                )
-
-            elif ws == "dormant":
+            # HISTORIQUE (avant D139 ③) : ici la bisannuelle d'âge ≥ 2 et l'annuelle
+            # `die` mouraient, en déposant `seed_bank.add(position, archétype, taux)`.
+            # Remplacé par la fin de cycle (`_tick_senescence_health`), qui garde ce
+            # dépôt de graines à la mort.
+            if ws == "dormant":
                 # Métabolisme minimal — on marque via stress_memory élevé
                 plant.stress_memory = min(1.0, plant.stress_memory + 0.15)
                 plant.shade_memory  = max(0.0, plant.shade_memory  - 0.05)
@@ -378,14 +373,13 @@ class MortaliteMixin:
             elif ws == "evergreen":
                 plant.stress_memory = min(1.0, plant.stress_memory + 0.05)
 
-        # Pas de retrait ici (②B) : les morts hivernaux sont des squelettes,
-        # retirés par _tick_skeletons (herbacées sans bois → dès ce tick).
         return log
 
     def _mediated_damage(self, tile, eco, severity, reason, gene_name=None,
-                         severity_fn=None, cause="", species_base=None):
+                         severity_fn=None, cause="", species_base=None,
+                         seulement_semis=True):
         """
-        Dégât MÉDIÉ sur le tissu tendre exposé (stade « semis »), conforme à la
+        Dégât MÉDIÉ sur le tissu exposé (stade « semis » par défaut), conforme à la
         philo #2 (docs/champs/climat/conception_meteo.md §2.3) — remplace la voie `health` plate pour
         le gel et la grêle.
 
@@ -417,8 +411,11 @@ class MortaliteMixin:
           entière de `health` fait que le gène départage surtout aux seuils (une
           plante rustique encaisse 0 là où une fragile perd 1).
 
-        On vise le vrai stade « semis » (pas l'index 0) pour ne pas frapper le
-        stade perpétuel des pérennes ligneuses (même garde-fou que appliquer_alea).
+        - `seulement_semis` : la GRÊLE garde le filtre (vrai stade « semis », pas
+          l'index 0, pour ne pas frapper le stade perpétuel des pérennes ligneuses —
+          même garde-fou que appliquer_alea). Le GEL passe False (D139 niche
+          thermique ③, T5) : il frappe tous les stades, et c'est la limite `lim_gel`
+          ENDURCIE des ligneux (≈ −30 °C en hiver) qui les épargne, plus le stade.
         """
         log = []
         if severity_fn is None and severity <= 0:
@@ -426,7 +423,7 @@ class MortaliteMixin:
         protection = min(1.0, tile.get_rondelle_count("paillage") * PAILLAGE_PROTECT)
         newly_dead = []
         for p in tile.plants:
-            if not p.is_alive or p.stage.name != "semis":
+            if not p.is_alive or (seulement_semis and p.stage.name != "semis"):
                 continue
             sev = severity_fn(p) if severity_fn is not None else severity
             if sev <= 0:

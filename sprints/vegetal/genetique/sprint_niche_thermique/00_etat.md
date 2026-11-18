@@ -32,7 +32,7 @@ large** (dates de mort des annuelles) · ④ INTACT · ⑤ INTACT.
 |---|---|---|
 | ① | `01_temperatures_extremes.md` — nuit la plus froide, jour le plus chaud, T_feuille | **FAIT** 2026-11-18 (`8c55f4a`) |
 | ② | `02_niche_caracteres.md` — niches des 52 espèces, 3 caractères, plasticité, coût | **FAIT** 2026-11-18 (non commité) |
-| ③ | `03_reponse_mort.md` — dégâts gradués, fin de la mort calendaire, fin de cycle | à faire |
+| ③ | `03_reponse_mort.md` — dégâts gradués, fin de la mort calendaire, fin de cycle | **FAIT** 2026-11-18 (non commité) |
 | ④ | `04_signes.md` — posture thermique et marques, voix | à faire |
 | ⑤ | `05_vue.md` — postures et teintes, banc `niche_thermique`, recette F5 | à faire |
 
@@ -89,8 +89,71 @@ large** (dates de mort des annuelles) · ④ INTACT · ⑤ INTACT.
   `lim_gel ≤ 0`, ou σ_A plus petit. Non fait (hors spec).
 - Taille : `species/sauvages.py` 370 LDC (🟡, était ≈ 362).
 
+## ③ FAIT (2026-11-18)
+- `sim/engine/reponse_thermique.py` (mixin) : nuit la plus froide calculée 1×/plante ;
+  **gel tous stades** (`_mediated_damage(seulement_semis=False)` ; la grêle garde le
+  filtre) ; **froid sans gel** `FROID_LESION_K` 0,25 pt/°C sous `lim_froid` (cause
+  `froid`) ; **brûlure** `BRULURE_K` 0,5 pt/°C au-dessus de `lim_brul` (cause `brulure`).
+- `T_feuille` calculée 1×/sem. dans `_avancer_stades` (nouveau param `nebulosite`),
+  mémorisée `plant.t_feuille` (hors digest) ; relue par `heat_memory`, la brûlure et la
+  nouaison. Feuille > `lim_chaud` → pas d'avance de stade (log `🔥 … stagne (chaud`) et
+  **nouaison reportée** d'une semaine (`a_fleuri` gardé) dans `_tick_fruits`.
+- **Mort calendaire supprimée** : `_winter_transition` ne tue plus (branches `die` et
+  bisannuelle an 2 retirées, notées historiques) ; dormance/persistantes aux semaines
+  40-43 (`SEMAINE_HIVER` + `DUREE_ENTREE_HIVER` 4, même dose qu'avant).
+- **Fin de cycle** (`sim/engine/fin_de_cycle.py`) : annuelles ET bisannuelles,
+  horloge `floraison_abs` (semaine absolue de 1ʳᵉ floraison, jamais remise à zéro —
+  `bloom_week` l'est chaque s1) + `bloom_duration` + maturation (défaut 6) → −1/3 de
+  vitalité par semaine, convalescence coupée, log `✿ … meurt (fin de cycle)`. Carotte :
+  fleurit an 2 s12, meurt s26 → règle `age ≥ 2` retirée.
+- **Graines** : sans dépôt, une annuelle finie en été ne laisse rien (`_reproduction` ne
+  passe qu'en s39). Dépôt à la fin de cycle : archétype (à l'identique) + **gènes**
+  (`find_father`/`heredite`/priming, au pied). Banc 3 ans, pic de vivants/an :
+  bourse-à-pasteur [5, 9, 7] avec, [5, 8, 8] sans [n=1 seed] ; basilic, phacélie,
+  moutarde [1, 0, 0] dans les deux cas — sans archétype, la succession ne les relève
+  jamais (préexistant ; sur HEAD le [1,1,1] venait d'une annuelle qui ne mourait pas :
+  `deposer_mort` n'abaisse pas la vitalité).
+- Banc `mesures/banc_reponse_mort.py` (perturbations coupées pour nuit/basilic/canicule) :
+  nuits forcées 6/7/8 °C → basilic mort en 3/4/5 sem. (cible 3-5) ; basilic semé s12 :
+  nu mort s32, paillé (litière ≈ 1) s33, voilé s36 — tous de froid [seed 42] ; mâche et
+  seigle semés s27 passent l'hiver (vitalité min 0,17 / 0,33), fleurissent s12 an 2,
+  s'éteignent s25/s26 ; canicule 28 °C s16-19 : assoiffé au soleil T_f 50,8 °C → brûlé
+  à mort, arrosé (40,0 °C) et ombragé (43,2 °C) vivants sans croissance.
+- Perf [cProfile, 1 run, smoke neuf] : nuit froide 0,81 %, T_feuille + gate ≈ 0,2 %,
+  brûlure 0,14 %, fin de cycle + dépôt 0,13 % → ≈ +1,3 % (budget 2 %). Smoke 5,3-5,6 s
+  → 4,4 s [1 run] (moins de plantes).
+- Golden **RE-FIGÉ** `9e83a0cb…` → `88cca899abcfe6912d76e9f2bb8108a142c24b5e0acda8238cca56a236adbe22` :
+  1ʳᵉ divergence = W1, tomate/basilic/poivron tués par le froid sans gel (nuit ≈ 0 °C),
+  haricot et tournesol en S2-3 (10 morts « froid », 0 avant) ; plus de mort `(annual)`
+  (92 lignes, l'annuelle « mourait » 4×/hiver sans mourir) → 19 fins de cycle
+  (bourse-à-pasteur 18, phacélie 1) ; 97 semaines « stagne (chaud » (bourse, trèfle) ;
+  pommier gelé S04 an 1 (−0,29, rétabli). Vivants finaux 58 → 37. `population_hash.txt`
+  re-capturé `ca58ecb6…` → `a9106f3b…` (même cause ; le reste du test vert).
+- Tests : `test_reponse_thermique` (neuve, 16/16). Adaptés (le froid tue les semis
+  tendres posés à l'équinoxe, ce que ces tests ne mesurent pas) : `test_parasite`,
+  `test_stress_chronique`, `test_floraison_forcage` (froid neutralisé, commenté) ;
+  `test_catalogue_lot2` (courgette semée s11, « a dépassé le semis vivante ») ;
+  `simserver/taille.py` + `delta.py` (monde `full` : plus aucune plante du smoke n'atteint
+  2 segments). 124 suites : toutes vertes sauf `test_peripherie` (préexistant).
+- **Écarts au kickoff** : marques `froid`/`brulure` posées mais ignorées par
+  `leaf_symptoms` (pas de PRIORITE/corpus : ④) ; `CAUSE_DE_RAISON` ne les connaît pas
+  (→ « autre », ④). `heat_memory` lit la T_feuille de l'étape 6 (humidité avant uptake).
+- **Constats pour Nico / suite** : (a) le monde smoke perd toutes ses cultures en S1-3
+  (semis tendres à l'équinoxe) — couverture du golden à rediscuter (date de semis ou
+  voile) ; (b) endurcissement du pommier plafonné à `lim_gel` ≈ −14 °C (expression 1,09)
+  vs −30 °C visés (calibrage ②) ; (c) l'ombrière n'atténue que la lumière-SOL, pas
+  `light_received` (le banc force 0,3) ; (d) le geste `pailler` (`eco.paillage`) ne
+  réchauffe pas la nuit (seule la litière `om_fresh` compte) ; (e) tomate `lim_gel`
+  +2,8 °C : pas de mort aberrante mesurée, la tomate meurt du froid sans gel
+  (`lim_froid` 10 °C) bien avant.
+- **Réponse à la sélection** (banc ①, cas (a), 10 ans, seed 42) : semis féraux site froid
+  **+0,21 °C [n=85]** vs témoin −0,15 °C [n=126] (écart +0,36 °C ; avant ③ : +0,02 [n=80]
+  vs +0,11 [n=96]) ; vivants an 10 : +0,80 °C [n=25] vs −0,15 °C [n=28] ; pool banque
+  an 10 : +0,065 vs −0,372. Cible ≥ +1 °C **non atteinte** sur les semis ; la population
+  vivante, elle, dérive de ≈ +0,95 °C [1 seed].
+
 ## REPRISE
-Lire `CLAUDE.md`, ce fichier, puis le kickoff du premier tronçon « à faire » (③).
+Lire `CLAUDE.md`, ce fichier, puis le kickoff du premier tronçon « à faire » (④).
 
 ## Report du sprint ① (génétique infinitésimale, décision Nico 2026-11-16)
 La réponse à la sélection sur `germination_thermique` (banc

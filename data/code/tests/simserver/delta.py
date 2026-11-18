@@ -86,8 +86,10 @@ def test_delta_pont():
         _comparer(nom, r["snapshot"], d["snapshot"], miroir, stats)
         return r, d
 
-    ref.send(cmd="init", seed=42)
-    init = dlt.send(cmd="init", seed=42)
+    # Monde `full` : depuis D139 niche thermique ③, les semis tendres du monde smoke
+    # meurent de froid à l'équinoxe → plus de plante à 3 segments à tailler.
+    ref.send(cmd="init", seed=42, config="full")
+    init = dlt.send(cmd="init", seed=42, config="full")
     check("engine_version 0.6.17", init.get("engine_version") == "0.6.17",
           init.get("engine_version"))
     # Opt-in : SANS la clé, le serveur delta répond au format complet historique.
@@ -111,9 +113,12 @@ def test_delta_pont():
     r, d = deux("taille", cmd="action", verb="tailler", target={**pos, "segment": vise})
     check("taille au segment appliquée (liste réindexée)", r["result"]["applied"])
     for w in range(3):
-        deux(f"après taille {w}", cmd="step_week")
+        r, d = deux(f"après taille {w}", cmd="step_week")   # r = snapshot le plus récent
+    # Une HERBACÉE (un seul segment) : son squelette part au tick ; un arbre du
+    # monde full resterait squelette debout (pas « disparu »).
     autre = next(p for p in r["snapshot"]["plants"]
-                 if not p.get("dead") and (p["x_cm"], p["y_cm"]) != (pos["x_cm"], pos["y_cm"]))
+                 if not p.get("dead") and len(p["segments"]) <= 1
+                 and (p["x_cm"], p["y_cm"]) != (pos["x_cm"], pos["y_cm"]))
     n_disp = stats["disparues"]
     r, d = deux("déracinement", cmd="action", verb="deraciner",
                 target={"tile": autre["tile"], "x_cm": autre["x_cm"], "y_cm": autre["y_cm"]})

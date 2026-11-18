@@ -194,6 +194,17 @@ class PlantInstance:
     # `bloom_duration` semaines puis fane (durée BORNÉE, ≠ ancien état permanent
     # « GDD ≥ seuil » qui durait tout l'été). Petit int, hors `_PLANT_ATTRS`.
     bloom_week: int = -1
+    # Semaine ABSOLUE (`game_state["week"]`) de la PREMIÈRE floraison de la vie de la
+    # plante (D139 niche thermique ③). `bloom_week` est remis à -1 chaque semaine 1 :
+    # une annuelle qui fleurit tard (s45) perdrait son horloge au Nouvel An. Celle-ci
+    # ne se remet jamais à zéro → horloge de FIN DE CYCLE des annuelles/bisannuelles
+    # (sénescence après floraison + maturation des graines). Hors `_PLANT_ATTRS`.
+    floraison_abs: int = -1
+    # Température de la FEUILLE au jour le plus chaud de la semaine (°C), calculée
+    # UNE fois par semaine au gate de croissance (`_avancer_stades`) et relue par
+    # ses autres lecteurs du même tick : `heat_memory`, brûlure, nouaison (D139 ③).
+    # None = pas encore calculée (plante née ce tick). Hors `_PLANT_ATTRS`.
+    t_feuille: float | None = None
     # Dose de pollen conspécifique reçue (arc pollinisation, tronçon ③ — §B.1/§F.4).
     # Accumulateur PAR plante : incrémenté à CHAQUE dépôt d'un butineur (§F)
     # transportant du pollen de la MÊME espèce (constance florale mécanique), non

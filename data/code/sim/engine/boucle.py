@@ -25,7 +25,6 @@ from dataclasses import dataclass
 from plants import PLANT_CATALOGUE
 from fields import (_hash_noise, ABSCISSION_MIN, ABSCISSION_MAX, CHUTE_SEMAINES,
                     PRECIP_NORM, PLUIE_APPORT)
-from fields.ecofields.thermique import t_min_nuit_at  # gel nocturne localisé (⑥)
 from fields.peripherie import tick_repousse, tick_ouvrages  # ceinture : repousse (④) + ouvrages d'eau (⑤)
 from fields.apiculture import tick_ruches   # ruches : capture essaim + miel (⑥, §H/§I)
 from fields.alarme import tick_alarme       # phéromone d'alarme apienne : décroissance (⑦, §J)
@@ -45,19 +44,25 @@ from sim.souche import emettre_rejets_souche   # rejets à la mort (frein_rejets
 from sim.zoochorie import merle_prend, merle_seme   # le merle cueille et sème (zoochorie ④)
 from sim.caches import caches_prennent, caches_sement   # geai/écureuil cachent et oublient (⑤)
 from sim.mulot import mulot_mange   # le mulot mange les grains sauvages, en cache (⑥)
-from .calendrier import (SAISONS, saison_de, est_debut_saison, est_fin_saison,
+from .calendrier import (SEMAINE_HIVER, saison_de, est_debut_saison, est_fin_saison,
                         est_phase_floraison, est_phase_recolte)
 from .aleas import (appliquer_alea, ALEAS_RAVAGEURS, WEATHER_ALEA, ORAGE_VENT,
-                    FROST_SEVERITY_REF, HAIL_SEVERITY_REF)
+                    HAIL_SEVERITY_REF)
 from .croissance import CroissanceMixin
 from .mortalite import MortaliteMixin
 from .decompo import DecompoMixin, deposer_bois_tombe
 from .branches import mort_des_branches
 from .ceinture_bois import bois_de_lisiere
 from .floraison import FloraisonMixin
+from .reponse_thermique import ReponseThermiqueMixin
 from .butineurs import ButineurMixin
 from .anemophilie import AnemophilieMixin
 from .carnivore import CarnivoreMixin
+
+# Transition hivernale (étape 16) : nombre de semaines, à partir de l'entrée en
+# hiver (`SEMAINE_HIVER`), où dormantes et persistantes ralentissent (+stress_memory
+# par semaine). 4 = la dose de l'ancienne fenêtre 49-52, déplacée à l'hiver réel.
+DUREE_ENTREE_HIVER = 4
 
 # Pont récolte → banque-joueur (D17) : classe → clé catalogue (inverse).
 _SPECIES_KEY = {cls: key for key, cls in PLANT_CATALOGUE.items()}
@@ -65,7 +70,7 @@ _SPECIES_KEY = {cls: key for key, cls in PLANT_CATALOGUE.items()}
 
 @dataclass
 class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
-             ButineurMixin, AnemophilieMixin, CarnivoreMixin):
+             ButineurMixin, AnemophilieMixin, CarnivoreMixin, ReponseThermiqueMixin):
     game_state: dict
 
     def __post_init__(self):
@@ -136,38 +141,16 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
             # Accumule si Neige, fond sinon (∝ température). Scalaire par tuile.
             eco.tick_snow(temp_now, is_neige)
 
-        # Gel : dégât tissulaire MÉDIÉ, piloté par le MILIEU (température < 0), pas
-        # par le nom de l'événement (sous-sprint 03). Que le froid vienne d'une
-        # gelée tardive ou d'une dérive interannuelle froide, le tissu tendre
-        # souffre — modulé par la limite de gel de la plante × le paillage local.
-        # ⑥ : le gel est désormais LOCALISÉ au plot. T_air reste uniforme, mais
-        # T_min_nuit descend plus bas sur un coin nu/sous ciel clair (rayonnement)
-        # que sur un coin paillé (litière) ou sous nuages → un coin abrité peut
-        # rester au-dessus du seuil (sév 0, épargné) pendant qu'un coin nu gèle.
-        # D139 niche thermique ① : `t_min_nuit_at` est la nuit la PLUS FROIDE de la
-        # semaine. Une semaine douce en moyenne (T_air > 0) peut donc geler une nuit
-        # claire : l'ancien garde `T_air < 0` (8 semaines en 8 ans [seed 42]) est
-        # levé, chaque plot décide par sa propre nuit (sév 0 = épargné, sans log).
+        # Nuit la plus froide : GEL et FROID SANS GEL (D139 niche thermique ③,
+        # `reponse_thermique.py`). Piloté par le MILIEU (température), pas par le nom
+        # de l'événement. LOCALISÉ au plot : T_air est uniforme mais la nuit la plus
+        # froide (`t_min_nuit_at`) descend plus bas sur un coin nu sous ciel clair que
+        # sous litière, neige ou voile. Chaque plante gèle sous SA limite (`lim_gel` =
+        # espèce − rusticité génétique − endurcissement vécu), à TOUS les stades ; les
+        # tropicales s'abîment aussi sans gel sous `lim_froid`. Pas de garde `T_air < 0`
+        # (①) : chaque plot décide par sa propre nuit.
         for tile in self.tiles:
-            eco = self._eco(tile)
-            # D139 niche thermique ② : chaque plante gèle sous SA limite (`lim_gel` =
-            # espèce − rusticité génétique − endurcissement vécu, en °C), et non plus
-            # sous 0 °C pour tous, dégât divisé par un facteur de gène. Sévérité ∝
-            # l'écart de la nuit à cette limite. Filtre `semis` conservé (tombe au ③).
-            def frost_sev(p, eco=eco):
-                r, c = p.position
-                t_min = t_min_nuit_at(eco, r, c, temp_now, nebul)
-                return max(0.0, (p.lim_gel() - t_min) / FROST_SEVERITY_REF)
-            sevs = [frost_sev(p) for p in tile.plants
-                    if p.is_alive and p.stage.name == "semis"]
-            if not sevs or max(sevs) <= 0.0:
-                continue                     # aucun semis sous sa nuit de gel
-            log.append(f"  ❄  gel [{tile.tile_id}] t_air={temp_now:.1f}°C "
-                       f"sév {min(sevs):.2f}→{max(sevs):.2f}")
-            log += self._mediated_damage(tile, eco, 0.0,
-                                         "gel (tissu tendre)",
-                                         severity_fn=frost_sev,
-                                         cause="gel")
+            log += self._tick_nuit_froide(tile, self._eco(tile), temp_now, nebul)
 
         if event.kind != "Beau temps":
             log.append(f"  🌤  {event.kind} (T≈{temp_now:.1f}°C, i={event.intensity:.2f})")
@@ -422,7 +405,7 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
             eco.tick_diffusion()
 
             # 6. Avancement stades (conditionné lumière + humidité)
-            log += self._avancer_stades(tile, eco)
+            log += self._avancer_stades(tile, eco, nebul)   # + T_feuille du tick (D139 ③)
 
             # 7. Effets weekly des plantes (flux écologiques + discrets probabilistes)
             for plant in list(tile.plants):
@@ -439,6 +422,11 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
             # 9. Mise à jour mémoire physiologique. `nebul`/`pluie_event` (météo du
             #    tick, cf. lignes 95/114) alimentent l'humectation foliaire (①).
             self._update_physiology(tile, eco, nebulosite=nebul, pluie_event=pluie_event)
+
+            # 9a. Brûlure (D139 niche thermique ③) : feuille au jour le plus chaud
+            #     (`t_feuille`, posée à l'étape 6) au-delà de `lim_brul` → érosion.
+            #     APRÈS la physiologie : l'acclimatation (`heat_memory`) du tick compte.
+            log += self._tick_brulure(tile, eco)
 
             # 9b. Remise à plat de l'aspersion foliaire (sprint HUMECTATION FOLIAIRE ③) —
             #     carte transiente `eco.aspersion_last` posée par `arroser(feuillage=True)`.
@@ -711,8 +699,10 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
             #      no-op strict (décompo=0, rien reversé) → golden INTACT.
             eco.tick_paillage()
 
-            # 16. Transition hivernale (semaines 48-52)
-            if saison == "hiver" and week_in_year in SAISONS["hiver"] and (week_in_year - SAISONS["hiver"].start) >= 9:
+            # 16. Transition hivernale — ENTRÉE EN HIVER réelle (D139 ③ : semaines 40-43,
+            #     ≈ fin décembre ; avant : 49-52 = mi-février). Même dose de 4 semaines.
+            #     Ne tue plus personne (fin de la mort calendaire).
+            if SEMAINE_HIVER <= week_in_year < SEMAINE_HIVER + DUREE_ENTREE_HIVER:
                 wlog = self._winter_transition(tile, eco, week)
                 if wlog: log += wlog
 

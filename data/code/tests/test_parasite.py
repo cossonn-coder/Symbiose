@@ -124,6 +124,9 @@ def _run(myc: float, hum_max: float = 0.4, n: int = 104):
     gs = {"tiles": [tile], "eco": {"T0": e}, "scores": {}, "current_player": "j",
           "week": 1, "log": []}
     eng = Engine(gs)
+    # Isole le parasite : un pommier affaibli (0,6) posé à l'équinoxe, jamais endurci,
+    # prend le gel tardif d'avril (D139 niche thermique ③) et meurt sans réseau.
+    eng._tick_nuit_froide = lambda *a, **k: []
     orig = Engine._apply_uptake
 
     def force(self, t, ec, *a, **k):        # réseau et sol sec imposés (banc)
@@ -188,6 +191,9 @@ def _banc_mort(myc: float, vit: float, n: int = 156):
     gs = {"tiles": [tile], "eco": {"T0": e}, "scores": {}, "current_player": "j",
           "week": 1, "log": []}
     eng = Engine(gs)
+    # Isole le parasite : un pommier affaibli (0,6) posé à l'équinoxe, jamais endurci,
+    # prend le gel tardif d'avril (D139 niche thermique ③) et meurt sans réseau.
+    eng._tick_nuit_froide = lambda *a, **k: []
     orig = Engine._apply_uptake
 
     def force(self, t, ec, *a, **k):        # réseau imposé, sol NON plafonné (humide)

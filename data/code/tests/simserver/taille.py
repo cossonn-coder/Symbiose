@@ -13,9 +13,13 @@ def test_taille_au_segment():
     # --- 8. taille au segment (tranche 5) ------------------------------------
     print("[taille au segment]")
     s7 = ServerProc()
-    s7.send(cmd="init", seed=42)
+    # Monde `full` (arbres pré-vieillis) : depuis la fin de la mort calendaire et le
+    # froid sans gel (D139 niche thermique ③), les cultures tendres du monde `smoke`
+    # (haricot, tomate…) semées à l'équinoxe meurent de froid en 1-3 semaines — plus
+    # aucune plante n'y atteint 2 segments en 30 semaines.
+    s7.send(cmd="init", seed=42, config="full")
     # Avancer jusqu'à une plante à ≥ 3 segments (assez de bois pour qu'un
-    # sous-arbre ciblé se distingue du tout). Borné : le smoke en produit vite.
+    # sous-arbre ciblé se distingue du tout). Borné : le monde full en a dès s1.
     proie = None
     for _ in range(30):
         snap = s7.send(cmd="step_week")["snapshot"]
@@ -85,7 +89,7 @@ def test_taille_au_segment():
     # vise la plante, pas une guilde animale. Effet ÉMERGENT (déformée/écimée/meurt).
     print("[écraser une plante (volet 2)]")
     s8 = ServerProc()
-    s8.send(cmd="init", seed=42)
+    s8.send(cmd="init", seed=42, config="full")   # cf. section 8 (D139 ③)
     proie = None
     for _ in range(30):
         snap = s8.send(cmd="step_week")["snapshot"]
@@ -122,7 +126,7 @@ def test_taille_au_segment():
           r["result"]["message"])
     # La guilde animale reste routée par r/c+guilde (non-régression du volet 1).
     r = s8.send(cmd="action", verb="ecraser",
-                target={"tile": "T0", "r": 0, "c": 0, "guilde": "puceron"})
+                target={"tile": pos["tile"], "r": 0, "c": 0, "guilde": "puceron"})
     check("écraser une guilde par r/c → toujours routé guilde (volet 1 intact)",
           r["result"]["applied"] is True and "puceron" in r["result"]["message"],
           r["result"]["message"])
@@ -132,7 +136,7 @@ def test_taille_au_segment():
     # Déterminisme byte-à-byte de l'écrasement d'une plante (pas de RNG).
     def run_ecraser_plante(seed):
         s = ServerProc()
-        s.send(cmd="init", seed=seed)
+        s.send(cmd="init", seed=seed, config="full")   # cf. section 8 (D139 ③)
         snap = None
         for _ in range(30):
             snap = s.send(cmd="step_week")["snapshot"]
@@ -158,9 +162,12 @@ def test_hints_taille():
     proie = None
     for _ in range(30):
         snap = s.send(cmd="step_week")["snapshot"]
+        # D139 niche thermique ③ : les semis tendres du monde smoke (tournesol,
+        # haricot…) meurent de froid les premières semaines → on attend s4 pour
+        # viser une plante qui survivra à la semaine de mesure.
         proie = next((p for p in snap["plants"] if not p["dead"]
                       and p["species"] not in ("Tomato", "Ivy", "Jasmine")), None)
-        if proie:
+        if proie and snap["week"] >= 4:
             break
     check("une plante d'espèce non migrée existe", proie is not None)
     pos = {"tile": proie["tile"], "x_cm": proie["x_cm"], "y_cm": proie["y_cm"]}

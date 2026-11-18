@@ -47,13 +47,13 @@ def check(name, cond, detail=""):
     print(f"  {flag} {name}" + (f" — {detail}" if detail else ""))
 
 
-def _engine_with(tile, eco):
+def _engine_with(tile, eco, week=1):
     """Engine sur une tuile + eco, germination spontanée NEUTRALISÉE (on isole les
     plantes posées, pas la succession)."""
     eco.seed_bank.germination_candidates = lambda *a, **k: []
     game_state = {
         "tiles": [tile], "eco": {tile.tile_id: eco}, "scores": {},
-        "current_player": "joueur_1", "week": 1, "log": [],
+        "current_player": "joueur_1", "week": week, "log": [],
     }
     return Engine(game_state)
 
@@ -69,19 +69,29 @@ def test_catalogue_germination_lot2():
         check(f"{cle} présent/correct dans PLANT_CATALOGUE",
               PLANT_CATALOGUE.get(cle) is klass)
 
-    tile = Tile(tile_id="L2", soil_type="terre", grid_rows=6, grid_cols=10)
-    eco = init_eco("L2", 6, 10, humidite=1.5, fertilite=1.2, microbiome=0.3)
-    engine = _engine_with(tile, eco)
-    posees = {cle: tile.add_plant(klass, 1 + i, 1 + i)
-              for i, (cle, klass) in enumerate(especes.items())}
+    # Chaque espèce à SA saison de semis (D139 niche thermique ③) : une courgette
+    # semée à l'équinoxe (s1) meurt du froid sans gel (nuits < 10 °C), et la mâche
+    # ne pousse pas l'été (feuille > sa limite chaude) — comme au jardin. Les
+    # rustiques à l'équinoxe, la courgette début juin (s11).
+    for semaine, lot in ((1, ("carotte", "mache", "ortie", "ail")), (11, ("courgette",))):
+        tile = Tile(tile_id="L2", soil_type="terre", grid_rows=6, grid_cols=10)
+        eco = init_eco("L2", 6, 10, humidite=1.5, fertilite=1.2, microbiome=0.3)
+        engine = _engine_with(tile, eco, week=semaine)
+        posees = {cle: tile.add_plant(especes[cle], 1 + i, 1 + i)
+                  for i, cle in enumerate(lot)}
 
-    for _ in range(12):   # > durée des stades semis (2-3 sem) avec marge
-        engine.tick_semaine()
+        # « A dépassé le semis VIVANTE » à un moment des 12 semaines : l'été, une
+        # courgette isolée sans auxiliaires est ensuite dévorée (herbivorie, hors
+        # sujet de ce test de catalogue).
+        depasse = {cle: False for cle in posees}
+        for _ in range(12):   # > durée des stades semis (2-3 sem) avec marge
+            engine.tick_semaine()
+            for cle, inst in posees.items():
+                depasse[cle] |= inst.is_alive and inst.current_stage >= 1
 
-    for cle, inst in posees.items():
-        check(f"{cle} vivante et au-delà du semis",
-              inst.is_alive and inst.current_stage >= 1,
-              f"stade {inst.stage.name}")
+        for cle, inst in posees.items():
+            check(f"{cle} vivante et au-delà du semis", depasse[cle],
+                  f"stade {inst.stage.name}")
 
 
 # ---------------------------------------------------------------------------

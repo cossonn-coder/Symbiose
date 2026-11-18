@@ -87,6 +87,9 @@ def run_shade(tol_ombre: float, light: float = 0.1, weeks: int = MAX_WEEKS):
     gs = {"tiles": [tile], "eco": {"T0": eco}, "scores": {},
           "current_player": "j1", "week": 1, "log": []}
     engine = Engine(gs)
+    # Isole la voie OMBRE du froid (D139 niche thermique ③) : une courgette posée à
+    # l'équinoxe meurt de froid sans gel (nuits < 10 °C) avant que l'ombre ne s'installe.
+    engine._tick_nuit_froide = lambda *a, **k: []
     for wk in range(weeks):
         eco.lumiere.light_received = lambda p, _l=light: _l
         engine.tick_semaine()

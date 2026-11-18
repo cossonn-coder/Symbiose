@@ -89,6 +89,10 @@ class FloraisonMixin:
             if (plant.bloom_week < 0 and is_seed_bearing(plant)
                     and plant.gdd_accum >= gdd_eff):
                 plant.bloom_week = week_in_year
+                # Horloge de fin de cycle (D139 ③) : 1ʳᵉ floraison de la vie, en
+                # semaine ABSOLUE (jamais remise à zéro, ≠ `bloom_week`).
+                if plant.floraison_abs < 0:
+                    plant.floraison_abs = self.week
             en_fleur = (plant.bloom_week >= 0
                         and week_in_year < plant.bloom_week + cls.bloom_duration)
             cible = 1.0 if en_fleur else 0.0

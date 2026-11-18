@@ -293,8 +293,14 @@ class DecompoMixin:
             # 1. Armement à la pleine floraison, nouaison à la fanaison (par plante).
             if plant.floraison >= SEUIL_FLEURI:
                 plant.a_fleuri = True
+            # Pollen stérile à la chaleur (D139 niche thermique ③) : feuille au-delà
+            # de `lim_chaud` au jour le plus chaud → la nouaison attend une semaine
+            # plus fraîche (l'armement `a_fleuri` reste). Tomate en canicule : fleurs
+            # sans fruits. `t_feuille` est posée par `_avancer_stades` ce tick.
+            pollen_sterile = (plant.t_feuille is not None
+                              and plant.t_feuille > plant.lim_chaud())
             if (plant.a_fleuri and plant.floraison < SEUIL_NOUAISON
-                    and plant.age_years >= cls.maturity_years):
+                    and plant.age_years >= cls.maturity_years and not pollen_sterile):
                 for f in plant.fruits:          # cohorte précédente non récoltée
                     deposer_fruits(plant, tile, eco, f, seed, week)
                 # Fraction nouée selon le mode (philo #2 : flux de pollinisation →

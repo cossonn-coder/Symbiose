@@ -140,7 +140,7 @@ def _f_croissance_allelo(allelo: float, sensibilite: float) -> float:
 
 
 class CroissanceMixin:
-    def _avancer_stades(self, tile, eco):
+    def _avancer_stades(self, tile, eco, nebulosite: float = 0.0):
         log = []
         saison = saison_de(self.week)
         for plant in tile.plants:
@@ -148,11 +148,18 @@ class CroissanceMixin:
             plant.age_weeks += 1
             plant.age_years += 1.0 / 52.0   # âge total (courbe d'âge des pérennes)
             stage = plant.stage
-            if stage.duration_weeks == 0: continue
             r, c = plant.position
             hum   = eco.humidite.at_plot(r, c)
             light = eco.lumiere.light_received(plant)   # lumière reçue (canopée, auto-ombrage exclu)
             t_air = eco.temperature.at_plot(r, c)            # T_air (masse, uniforme — météo 02)
+            # Température de la FEUILLE au jour le plus chaud (D139 niche thermique ③),
+            # calculée ICI une fois par semaine et MÉMORISÉE : `heat_memory`, la brûlure
+            # et la nouaison la relisent (on ne recalcule pas dans un tick). Avant le
+            # `continue` du stade perpétuel : un arbre adulte a aussi des feuilles.
+            plant.t_feuille = t_feuille_de(t_max_jour(t_air, nebulosite), light,
+                                           eau_percue(plant, eco, hum))
+            trop_chaud = plant.t_feuille > plant.lim_chaud()
+            if stage.duration_weeks == 0: continue
             t_sol = eco.temperature_sol.at_plot(r, c)        # microclimat de surface local (①–④)
             temp  = T_PLANTE_ALPHA * t_air + (1.0 - T_PLANTE_ALPHA) * t_sol   # T ressentie (⑤)
             # Seuils de croissance : humidité ET lumière ET température suffisantes.
@@ -166,7 +173,9 @@ class CroissanceMixin:
                         and hum <= HUM_NOYE)
             ok_light = light >= 0.2   # trop d'ombre = stagnation
             ok_temp  = temp  >= plant.plant_class.temp_min_growth   # trop froid = stagnation
-            can_grow = ok_hum and ok_light and ok_temp
+            # Chaleur (D139 ③) : feuille au-delà de `lim_chaud` → la photosynthèse
+            # décroche, la plante ne pousse pas cette semaine (miroir haut de ok_temp).
+            can_grow = ok_hum and ok_light and ok_temp and not trop_chaud
             # vigueur accélère l'avancement de stade (gène >1 → durée requise réduite) ;
             # le coût de défense (plasticité ③) la freine : une plante sur-exprimant
             # ses tolérances a re-routé sa vigueur → croissance plus lente (compromis
@@ -185,6 +194,9 @@ class CroissanceMixin:
                                f"(hum={hum:.2f} lum={light:.2f} t={temp:.1f}°C)")
             elif not ok_temp:
                 log.append(f"    ❄ {plant.name}@{plant.position} stagne (froid t={temp:.1f}°C)")
+            elif trop_chaud:
+                log.append(f"    🔥 {plant.name}@{plant.position} stagne "
+                           f"(chaud feuille={plant.t_feuille:.1f}°C)")
             elif not ok_light:
                 log.append(f"    🌑 {plant.name}@{plant.position} stagne (ombre lum={light:.2f})")
             elif not ok_hum:
@@ -359,7 +371,10 @@ class CroissanceMixin:
             # Heat memory (niche thermique ②) : chaleur de la FEUILLE au jour le plus
             # chaud (soleil × soif, `sim/engine/feuille.py`), sur la lumière et
             # l'humidité ressentie déjà lues ci-dessus (rien n'est relu).
-            t_f = t_feuille_de(t_max_jour(t_air, nebulosite), light, hum_p)
+            # ③ : la valeur de la semaine est posée par `_avancer_stades` (même tick) ;
+            # recalcul seulement pour un appelant qui ne passe pas par lui.
+            t_f = (plant.t_feuille if plant.t_feuille is not None
+                   else t_feuille_de(t_max_jour(t_air, nebulosite), light, hum_p))
             seuil_chaud = plant.plant_class.t_chaud_stress - HEAT_ACCLIM_MARGE
             heat_sev = max(0.0, min(1.0, (t_f - seuil_chaud) / HEAT_SEVERITY_REF))
             plant.heat_memory += (heat_sev - plant.heat_memory) * HEAT_MEMORY_LERP

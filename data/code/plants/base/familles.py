@@ -523,7 +523,8 @@ class PlantBase(ABC):
     def longevity(cls) -> float:
         """
         Longévité (ans). Override explicite (longevity_years) sinon défaut par
-        cycle de vie : annuelle = ∞ (meurt à l'hiver, sénescence sans objet),
+        cycle de vie : annuelle = ∞ (s'éteint par fin de cycle après ses graines,
+        D139 ③ — sénescence d'âge sans objet),
         bisannuelle = 2, vivace herbacée = 5.
         """
         if cls.longevity_years is not None:
