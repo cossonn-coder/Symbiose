@@ -79,6 +79,10 @@ class FloraisonMixin:
             if week_in_year == 1:
                 plant.gdd_accum = 0.0
                 plant.bloom_week = -1
+                # Crédit paternel (D139 ①c) remis à 0 à l'année florale neuve, PAS à
+                # la fanaison : le père garde son crédit jusqu'à la mise en graine
+                # des mères (automne, fin de cycle d'une annuelle).
+                plant.pollen_donne = 0.0
             plant.gdd_accum += max(0.0, temp - T_BASE_FLORAISON)
             # Seuil INDIVIDUEL : le gène `phenologie_florale` (avance en semaines,
             # D139 ③) ABAISSE le seuil de forçage de l'individu des degrés-jours

@@ -85,10 +85,15 @@ def _build_flower_maps(plants, rows, cols, attractivite, defaut, pollen_vibre=No
     return species_grids, plants_at
 
 
-def _apply_deposits(deposits, plants_at, eco=None):
+def _apply_deposits(deposits, plants_at, eco=None, attr="pollen_recu"):
     """Applique les dépôts d'un type à `pollen_recu`. Un dépôt (espèce, r, c,
     charge) est réparti entre les plantes conspécifiques du plot ∝ leur poids
     floral (la plante la plus fleurie et la plus attirante en capte le plus).
+
+    Miroir MÂLE (D139 ①c, principe de Bateman) : appelée avec les `recharges` et
+    `attr="pollen_donne"`, elle crédite le pollen EMPORTÉ aux fleurs du plot, avec le
+    même partage ∝ poids floral et le même vent — la fleur la plus attirante exporte
+    le plus et sera le plus souvent tirée comme père (`find_father`).
 
     Butineurs cloués (⑤, §5.3) : la charge est ATTÉNUÉE par le vent LOCAL du plot
     (`_forager_wind_factor` lit `eco.vent`) — un coup de vent cloue l'insecte, donc
@@ -103,7 +108,7 @@ def _apply_deposits(deposits, plants_at, eco=None):
         vent = eco.vent.at_plot(r, c) if (eco and eco.vent) else 0.0
         charge = amount * _forager_wind_factor(vent)
         for (plant, fl) in bucket:
-            plant.pollen_recu += charge * (fl / total)
+            setattr(plant, attr, getattr(plant, attr) + charge * (fl / total))
 
 
 class ButineurMixin:
@@ -111,7 +116,7 @@ class ButineurMixin:
         """Fait marcher les butineurs de chaque type, dépose le pollen
         conspécifique et range les agents dans `eco.foragers` (§F).
 
-        N'émet aucun log et n'écrit que `pollen_recu`/`eco.foragers` → golden
+        N'émet aucun log et n'écrit que `pollen_recu`/`pollen_donne`/`eco.foragers` → golden
         NEUTRE. Appelée une fois par tuile et par semaine (boucle.py), APRÈS le
         tick des champs de population (les agents s'échantillonnent sur la densité
         fraîche)."""
@@ -128,8 +133,9 @@ class ButineurMixin:
                 ps.pref_couleur)
             if not species_grids:
                 continue
-            agents, deposits = sample_foragers(
+            agents, deposits, recharges = sample_foragers(
                 field, species_grids, ps.forager, seed, week_in_year)
             _apply_deposits(deposits, plants_at, eco)
+            _apply_deposits(recharges, plants_at, eco, "pollen_donne")
             agents_all.extend(agents)
         eco.foragers = agents_all

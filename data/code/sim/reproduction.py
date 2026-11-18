@@ -40,6 +40,8 @@ SELFING_SIGMA_RATIO = 0.5   # OBSOLÈTE depuis D139 ② (l'autofécondation réd
 # z₁ (`week*29 + i`, k = 4i), sans collision avec une vraie position (r < 100).
 _CANAL_FILET = 100_003
 _CANAL_CHOIX = 200_003
+# Canal de la loterie paternelle (D139 ①c) : `week * 79`, libre au 2026-11-18 (grep).
+_CANAL_PERE = 79
 
 
 def is_seed_bearing(plant) -> bool:
@@ -137,9 +139,15 @@ def pollinator_reach(mother, tile, eco) -> float:
 
 def find_father(mother, plants, tile, eco, seed, week):
     """
-    Père compatible (même famille) à portée, en âge de fleurir, le plus proche
-    prioritaire (tie-break déterministe par hash). None si la mère est autogame
-    ou si aucun partenaire n'est à portée → autofécondation.
+    Père compatible (même famille) à portée, en âge de fleurir. None si la mère
+    est autogame ou si aucun partenaire n'est à portée → autofécondation.
+
+    Loterie paternelle (D139 ①c, principe de Bateman) : le père est tiré au hash
+    (canal dédié `week * 79`) avec un poids `pollen_donne × (1 − d²/reach²)` — celui
+    dont le pollen ARRIVE, pas le plus proche. Une fleur attirante, plus visitée,
+    exporte plus de pollen et engendre plus de graines chez ses voisines : c'est ce
+    qui sélectionne les caractères floraux. Si tous les poids sont nuls (aucun
+    pollen exporté cette année), règle historique : le plus proche, départage au hash.
     """
     if mother.plant_class.pollination_mode == "self":
         return None
@@ -157,12 +165,25 @@ def find_father(mother, plants, tile, eco, seed, week):
             candidates.append((d2, p))
     if not candidates:
         return None
+    r, c = mother.position
+    poids = [p.pollen_donne * (1.0 - d2 / reach2) if reach2 > 0.0 else 0.0
+             for d2, p in candidates]
+    total = sum(poids)
+    if total > 0.0:
+        u = _hash_noise(seed, week * _CANAL_PERE, r, c) * total
+        for w, (_, p) in zip(poids, candidates):
+            if w <= 0.0:
+                continue
+            u -= w
+            if u < 0.0:
+                return p
+        return next(p for w, (_, p) in zip(reversed(poids), reversed(candidates))
+                    if w > 0.0)    # garde-fou d'arrondi : dernier poids non nul
     candidates.sort(key=lambda t: t[0])
     nearest = candidates[0][0]
     tied = [p for d2, p in candidates if d2 <= nearest * 1.0001]
     if len(tied) == 1:
         return tied[0]
-    r, c = mother.position
     idx = int(_hash_noise(seed, week * 23, r, c) * len(tied)) % len(tied)
     return tied[idx]
 

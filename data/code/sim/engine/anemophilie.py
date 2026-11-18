@@ -19,7 +19,10 @@ Tension réaliste enseignée (§5.3) : jour VENTEUX = bon pour la graminée (pol
 brassé), mauvais pour l'abeille (butineurs cloués, cf. butineurs.py). Jour CALME =
 l'inverse. Le joueur découvre qu'aérer un coin sert les anémophiles.
 
-GOLDEN NEUTRE par construction : on n'écrit QUE `pollen_recu` (hors `_PLANT_ATTRS`
+Fonction MÂLE (D139 ①c) : chaque émetteur cumule dans `pollen_donne` ce qu'il
+envoie, lu par la loterie paternelle (`sim.reproduction.find_father`).
+
+GOLDEN NEUTRE par construction (avant ①b/①c) : on n'écrit QUE `pollen_recu` (hors `_PLANT_ATTRS`
 du digest), lu UNIQUEMENT par la nouaison `_tick_fruits` en mode `wind` — or aucun
 fruitier anémophile n'atteint sa maturité dans le smoke (noyer 15 ans / chêne
 25 ans > 4 ans simulés), donc personne ne lit cette dose → bit-identique.
@@ -92,7 +95,13 @@ class AnemophilieMixin:
                 # D139 caractères vivants ① : chaque émetteur lâche un nuage ∝ son
                 # gène `pollen` (1 au neutre) — un noisetier riche en pollen féconde
                 # plus de voisins (et se paie en croissance, `cout_genetique`).
-                amont = ANEMO_AUTO_FRAC * cible.floraison * cible.gene("pollen")
+                # Paternité (D139 ①c) : chaque émetteur est crédité dans `pollen_donne`
+                # de ce qu'il ENVOIE à cette cible (part auto comprise : la cible
+                # se crédite elle-même) — `find_father` tire le père ∝ ce crédit.
+                k = coef * vent
+                auto = ANEMO_AUTO_FRAC * cible.floraison * cible.gene("pollen")
+                cible.pollen_donne += k * auto
+                amont = auto
                 for src in groupe:
                     if src is cible:
                         continue
@@ -100,6 +109,8 @@ class AnemophilieMixin:
                     if dx * dx + dy * dy > radius2:
                         continue
                     if dx * wx + dy * wy > 0.0:        # src est au vent de la cible
-                        amont += src.floraison * src.gene("pollen")
+                        envoi = src.floraison * src.gene("pollen")
+                        src.pollen_donne += k * envoi
+                        amont += envoi
                 if amont > 0.0:
-                    cible.pollen_recu += coef * vent * amont
+                    cible.pollen_recu += k * amont

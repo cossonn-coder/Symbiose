@@ -22,7 +22,8 @@ d'un compromis.
 - Règle : un gène n'entre que si une mécanique le lit ; tout ajout **en queue**.
 
 ## Golden
-Départ = hash de fin du sprint ②. ①, ①b (deux fois : scénario puis mécanique), ①c, ①d,
+Départ = hash de fin du sprint ②. ①, ①b (deux fois : scénario puis mécanique), ①d,
+(①c annoncé re-figé, resté **INTACT** : voir §①c),
 ②-④ **RE-FIGÉ annoncé** chacun (clés neuves + lecteurs)
 · ⑤ INTACT · ⑥ INTACT.
 
@@ -30,8 +31,8 @@ Départ = hash de fin du sprint ②. ①, ①b (deux fois : scénario puis méca
 | # | Kickoff | État |
 |---|---|---|
 | ① | `01_fleurs.md` — taille, nectar, pollen, couleur, guides, parfum + `cout_genetique` | **FAIT** (2026-11-18, commit `968704c`) — voir §① |
-| ①b | `01b_fecondation.md` — pommier mûr au smoke, `fecondation` à la fanaison, part autofécondée | **FAIT côté code** (2026-11-18, non commité) — voir §①b |
-| ①c | `01c_paternite.md` — compteur `pollen_donne`, père tiré ∝ pollen exporté | à faire |
+| ①b | `01b_fecondation.md` — pommier mûr au smoke, `fecondation` à la fanaison, part autofécondée | **FAIT** (2026-11-18, commit `b157ee6`) — voir §①b |
+| ①c | `01c_paternite.md` — compteur `pollen_donne`, père tiré ∝ pollen exporté | **FAIT côté code** (2026-11-18, non commité) — voir §①c |
 | ①d | `01d_levee_graines.md` — annuelles qui se ressèment, espèce spontanée ∝ son pool | à faire |
 | ② | `02_fruits_comestibilite.md` — taille des fruits, appétence feuille/fruit, Vigueur négative | à faire |
 | ③ | `03_feuille_gestes.md` — coriacité, repousse, bouture, dormance, dominance apicale | à faire |
@@ -136,6 +137,43 @@ Départ = hash de fin du sprint ②. ①, ①b (deux fois : scénario puis méca
   à 0 par l'automne → `semer_fin_de_cycle` ne dépose plus rien (elle a grené à s39 : un seul
   dépôt au lieu de deux). Conforme à « remise à 0 après le dernier lecteur », à garder en tête.
 
+## ①c Paternité — bilan (2026-11-18)
+- **Fait** : `PlantInstance.pollen_donne` (hors digest). Butineurs : `sample_foragers`
+  rend un 3ᵉ élément `recharges` (espèce, r, c, `params.recharge`) **à chaque visite** ;
+  `_apply_deposits(…, attr="pollen_donne")` les crédite ∝ poids floral, même vent que le
+  dépôt. Vent : chaque émetteur crédité de `coef × vent × floraison × gène pollen` qu'il
+  envoie à chaque cible, la cible de sa part auto (Σ donné = Σ reçu). Remise à 0 en
+  **semaine 1** dans `_tick_floraison` (avec `gdd_accum`/`bloom_week`). `find_father` :
+  poids `pollen_donne × (1 − d²/reach²)`, tirage au hash canal `week * 79` (vérifié libre),
+  repli « le plus proche » si Σ poids = 0 ; signature intacte.
+- **Écart au kickoff** : le crédit butineur n'est PAS le gain de `charge` — la charge n'est
+  jamais vidée au dépôt et sature à 1 dès la 2ᵉ visite (recharge 0,5) : seules les 2
+  premières fleurs d'une tournée auraient exporté. Crédit = `params.recharge` par visite.
+- **Golden INTACT** `db941814…` (kickoff : re-figé attendu). Vérifié non inerte : sur les
+  27 appels de `find_father` du smoke, **9 pères changent** (bourse s78-90, trèfle s91),
+  mais leurs graines vont aux pools (archétype/espèce) et aucune ne lève en 4 ans (levée
+  des pools = ①d) → digest final et log inchangés. `population_hash` non concerné.
+- **Tests** : `tests/test_paternite.py` 13/13 (recharge par visite, partage ∝ poids,
+  croît avec les visites, source au vent créditée, Σ donné = Σ reçu, gros donneur tiré
+  0,73 pour 0,75 attendu [n=200], poids nuls → plus proche, hors portée jamais tiré,
+  remise à 0 s1). Vertes : genetique, heredite, fecondation, caracteres(_fleurs), vent,
+  fruits, ruche, population, banque_semis, chute_seme, niche/réponse thermique,
+  biennial, lifecycle, faune_dediee, fleurs_lisiere, figuier, automate_determinisme.
+- **Banc** `mesures/banc_paternite.py` (mère neutre, pères à 100 cm, nectar+taille 1,3
+  contre 0,7, côtés alternés) : part attendue du père attirant **0,80** [n=6 mondes où il
+  survit ; 2 mondes sur 8 il n'exporte rien, part 0] ; moyenne brute 0,60 [n=8]. Tirages
+  réels 3 contre 4 [n=7 : **une seule mise en graine par mère et par an**, et un seul père
+  par événement — le pool est une statistique de gènes, pas des graines individuelles].
+  Banc fleurs (a) : banque-sol couleur **+0,016** (contre +0,032 au ①b, fondateurs +0,023)
+  → différentiel réalisé enfin négatif = vers le bleu préféré de l'abeille, −0,007
+  [n=16 pieds, 1 génération, 1 seed]. Plusieurs générations impossibles avant ①d
+  (la bourrache ne relève pas de son pool).
+- **Perf** : smoke 5,191 → 5,197 s, +0,1 % [n=5 paires alternées, bruit ±3 %].
+- Non traités (hors kickoff, toujours à arbitrer) : pollen déposé après la fanaison (même
+  biais côté mâle : un pied fané seul sur son plot reçoit tout le crédit de la recharge),
+  mode de pollinisation de `PoaAnnua`.
+- Taille : `sim/reproduction.py` 115 LDC, `fields/foragers.py` 109, `butineurs.py` 62.
+
 ## Conception FÉCONDATION (trou du ①) — ARBITRÉE et FIGÉE (Nico, 2026-11-18)
 Doc : `docs/vegetal/genetique/conception_caracteres_vivants.md` §6. Diagnostic : le nombre de
 graines ne dépendait ni des visites, ni ne faisait le nombre de descendants (annuelles
@@ -154,6 +192,7 @@ sans archétype : pool jamais levé) ; le père était le plus proche ; `pollen_
 Tronçons insérés avant ② : `01b_fecondation.md`, `01c_paternite.md`, `01d_levee_graines.md`.
 
 ## REPRISE
-①b fait côté code (non commité : deux hashes consignés au §①b). Lire `CLAUDE.md`, ce
-fichier, puis le kickoff du premier tronçon « à faire » (①c). Deux points à arbitrer avant
-ou pendant ①c : mode de pollinisation du pâturin annuel, pollen déposé après la fanaison.
+①c fait côté code (non commité, golden INTACT `db941814…`). Lire `CLAUDE.md`, ce
+fichier, puis le kickoff du premier tronçon « à faire » (①d). Deux points toujours à
+arbitrer : mode de pollinisation du pâturin annuel, pollen déposé/crédité après la fanaison
+(côtés femelle ET mâle).

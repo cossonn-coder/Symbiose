@@ -218,6 +218,12 @@ class PlantInstance:
     # lu par PERSONNE à ce tronçon (la nouaison §B le lira au tronçon ④, et le
     # remettra à 0 à la nouaison). Hors `_PLANT_ATTRS` du golden → golden NEUTRE.
     pollen_recu: float = 0.0
+    # Pollen EXPORTÉ cette année florale (D139 ①c, fonction mâle — principe de
+    # Bateman) : crédité quand un butineur se charge sur la fleur (∝ poids floral,
+    # `engine._tick_butineurs`) et par le panache anémophile (`_tick_anemophilie`).
+    # Lu par `sim.reproduction.find_father` (père tiré ∝ pollen_donne × (1 − d²/R²)).
+    # Remis à 0 en semaine 1 (`_tick_floraison`). Hors `_PLANT_ATTRS` du golden.
+    pollen_donne: float = 0.0
     # Front de floraison pour la nouaison « en fin de floraison, par plante »
     # (arc pollinisation, tronçon ④ — §B.2). Passe à True quand `floraison`
     # franchit le seuil de pleine floraison ; la nouaison (engine._tick_fruits)

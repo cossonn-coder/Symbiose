@@ -12,7 +12,8 @@ chaque tick depuis le champ (aucun état persistant inter-tick au-delà du champ
 §F.2).
 
 Cette fonction ne touche AUCUNE plante : elle rend des `deposits` que la couche
-sim applique à `pollen_recu` (engine._tick_butineurs) — la couche `fields`
+sim applique à `pollen_recu` et des `recharges` qu'elle crédite à `pollen_donne`
+(paternité, D139 ①c) (engine._tick_butineurs) — la couche `fields`
 n'écrit jamais dans `plants`. Découpé de `fields.population` (garde-fou taille :
 les agents sont un concept distinct des champs de population). Duck-typé sur le
 champ (pas d'import de `population` → aucun cycle ; `population` importe d'ICI
@@ -131,23 +132,29 @@ def sample_foragers(field, species_grids: dict, params: ForagerParams,
     plus de fleur de l'espèce à portée → re-ciblage (charge perdue, comme dans la
     nature → la constance émerge sans règle ad hoc).
 
-    Retourne (agents, deposits) :
-      - agents  : list[ForagerAgent] pour le snapshot ;
-      - deposits: list[(espèce, r, c, charge_déposée)] à appliquer par la couche sim.
+    Retourne (agents, deposits, recharges) :
+      - agents   : list[ForagerAgent] pour le snapshot ;
+      - deposits : list[(espèce, r, c, charge_déposée)] à appliquer par la couche sim ;
+      - recharges: list[(espèce, r, c, pollen_pris)] — fonction MÂLE (D139 ①c) : à
+        chaque visite le butineur emporte `params.recharge` de pollen de la fleur,
+        crédité par la couche sim à `pollen_donne` (le père est tiré ∝ ce crédit).
+        Pas le gain de `charge` : la charge n'est jamais vidée au dépôt et sature à 1
+        dès la 2ᵉ visite — elle ne dirait plus rien des fleurs visitées ensuite.
     """
     spec = field.spec
     rows, cols = field.rows, field.cols
     n_plots = rows * cols
     if n_plots == 0 or not species_grids:
-        return [], []
+        return [], [], []
     # Réservoir : effectif = round(densité_moyenne × n_max) (§F.2, pop bornée).
     mean_d = sum(field.data[r][c] for r in range(rows) for c in range(cols)) / n_plots
     n_agents = min(params.n_max, int(round(mean_d * params.n_max)))
     if n_agents <= 0:
-        return [], []
+        return [], [], []
     names = sorted(species_grids)            # ordre déterministe
     agents: list[ForagerAgent] = []
     deposits: list[tuple] = []
+    recharges: list[tuple] = []
     for aid in range(n_agents):
         salt = spec.salt + aid
         r = min(rows - 1, int(_hash_noise(seed, salt, week_in_year, _DRAW_ROW) * rows))
@@ -166,6 +173,7 @@ def sample_foragers(field, species_grids: dict, params: ForagerParams,
             if grid[r][c] > 0.0:              # visite d'une fleur de l'espèce-cible
                 if carried == target and charge > 0.0:
                     deposits.append((target, r, c, params.deposit * charge))
+                recharges.append((target, r, c, params.recharge))
                 carried = target
                 charge = min(1.0, charge + params.recharge)
             nr, nc, best = _best_in_perception(grid, r, c, params.perception,
@@ -181,4 +189,4 @@ def sample_foragers(field, species_grids: dict, params: ForagerParams,
             target=target or "",
             carrying=(carried is not None and charge > 0.0),
         ))
-    return agents, deposits
+    return agents, deposits, recharges
