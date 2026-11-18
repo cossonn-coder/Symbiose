@@ -33,6 +33,7 @@ from __future__ import annotations
 from fields.ecofields import (UPTAKE_MICRO_BONUS, MYCO_P_BONUS, bell,
                              CHLOROSE_PH, SEUIL_ACIDOPHILE, CHLOROSE_MALUS,
                              MICROBE_EFFECT_REF)
+from fields.ecofields.uptake import myco_effectif
 
 FIELD_NORM = 3.0   # normalisation canonique des champs fertilite/microbiome (cf. EcoFields)
 
@@ -81,12 +82,14 @@ def qi_local(plant, eco) -> float:
     # dans le sol (son N est INTERNE → ne profite pas aux voisines). NEUTRE : par
     # défaut `carnivore=False` → minimum N/P/K inchangé (aucune carnivore au smoke).
     carnivore = getattr(plant.plant_class, "carnivore", False)
+    gm = plant.gene("mycorhization")
     for (r, c) in plots:
         # ③ MYCORHIZE (miroir de `plant_uptake`) : là où le réseau touche la racine,
         # le P EFFECTIVEMENT prélevable est amplifié (P SEULEMENT). La façade doit
         # suivre l'uptake réel sinon la vigueur perçue ment — mais c'est une LECTURE,
         # aucune mutation de champ (read-only, cf. en-tête module).
-        p_eff = eco.p.at_plot(r, c) * (1.0 + MYCO_P_BONUS * eco.mycelium.at_plot(r, c))
+        p_eff = eco.p.at_plot(r, c) * (1.0 + MYCO_P_BONUS * myco_effectif(
+            eco.mycelium.at_plot(r, c), gm))           # × gène mycorhization (D139 ④)
         nutri = (min(p_eff, eco.k.at_plot(r, c)) if carnivore
                  else min(eco.n.at_plot(r, c), p_eff, eco.k.at_plot(r, c)))
         fert = min(1.0, nutri / FIELD_NORM)

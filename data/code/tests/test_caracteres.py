@@ -59,6 +59,12 @@ _FLORAUX = {
     "aptitude_bouture":  ("probabilité", 1.0, 0.10, (0.0, 1.0)),
     "dormance_graine":   ("facteur", 1.0, 0.15, (GENE_HARD_MIN, GENE_HARD_MAX)),
     "dominance_apicale": ("facteur", 1.0, 0.15, (GENE_HARD_MIN, GENE_HARD_MAX)),
+    # D139 caractères vivants ④ : sol et expansion.
+    "vigueur_clonale":   ("facteur", 1.0, 0.15, (GENE_HARD_MIN, GENE_HARD_MAX)),
+    "portee_graine":     ("facteur", 1.0, 0.15, (GENE_HARD_MIN, GENE_HARD_MAX)),
+    "fixation_azote":    ("facteur", 1.0, 0.15, (GENE_HARD_MIN, GENE_HARD_MAX)),
+    "allelopathie":      ("facteur", 1.0, 0.15, (GENE_HARD_MIN, GENE_HARD_MAX)),
+    "mycorhization":     ("facteur", 1.0, 0.15, (GENE_HARD_MIN, GENE_HARD_MAX)),
 }
 
 

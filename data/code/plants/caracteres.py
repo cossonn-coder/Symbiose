@@ -200,6 +200,27 @@ CARACTERES = {
                                    bornes=(0.0, 1.0)),
     "dormance_graine":   Caractere(sigma_a=0.15),
     "dominance_apicale": Caractere(sigma_a=0.15),
+    # D139 caractères vivants ④ — SOL ET EXPANSION (conception §2.4), EN QUEUE.
+    #  - vigueur_clonale : rejets plus fréquents et plus loin (cadence ET portée de
+    #                   `sim/clonal.py`). Prix STRUCTUREL : moins de graines
+    #                   (`PlantInstance.taux_graines`, clonales seulement) ;
+    #  - portee_graine : graine anémochore qui vole plus loin (`mortalite`). Prix
+    #                   STRUCTUREL : graine plus légère, levée plus rare
+    #                   (`SeedBank.densite_levable`, anémochores seulement) ;
+    #  - fixation_azote : multiplie l'injection d'azote des fixatrices (clé `gene`
+    #                   de l'effet, `sim/effects/resolution.py`), déjà freinée en sol
+    #                   riche (`sature_a`). Nourrir les nodosités coûte du sucre ;
+    #  - allelopathie : quantité d'allélochimiques émise (toute émission du champ
+    #                   `allelopathie`). Coût carbone ;
+    #  - mycorhization : partenariat avec le réseau mycélien (P relayé, racines
+    #                   compensées, `fields/ecofields/uptake.myco_effectif`). Cède du
+    #                   sucre au champignon ; le gain disparaît en sol riche (la
+    #                   nutrition y sature déjà, `sim/nutrition_plante.py`).
+    "vigueur_clonale":   Caractere(sigma_a=0.15),
+    "portee_graine":     Caractere(sigma_a=0.15),
+    "fixation_azote":    Caractere(sigma_a=0.15, cout=K_FLEUR),
+    "allelopathie":      Caractere(sigma_a=0.15, cout=K_FLEUR),
+    "mycorhization":     Caractere(sigma_a=0.15, cout=K_FLEUR),
 }
 
 # Caractères qui ont un coût d'excès (`cout` > 0), dans l'ordre du registre : seuls

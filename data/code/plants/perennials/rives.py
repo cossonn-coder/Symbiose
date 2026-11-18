@@ -86,6 +86,8 @@ class Alder(PerennialWoody):
             "type": "permanent", "trigger": "weekly",
             "action": "inject_field", "variable": "n",
             "amount": 0.05, "cible": "local",
+            # D139 ④ : × gène, et nodosités freinées en sol riche (comme la minette).
+            "sature_a": 1.5, "gene": "fixation_azote",
             "description": "Fixation N₂ actinorhizienne (Frankia) — enrichit le sol gorgé"
         }
     ]

@@ -74,6 +74,10 @@ GENES_AERIENS: frozenset[str] = frozenset({
     # sur le greffon. `repousse` (réserves du pied, bourgeons du collet) reste au
     # porte-greffe.
     "coriacite_feuille", "aptitude_bouture", "dormance_graine", "dominance_apicale",
+    # D139 caractères vivants ④ : la graine naît sur le greffon → `portee_graine` le
+    # suit. Rejets, nodosités, exsudats et mycorhizes sont RACINAIRES : ils restent
+    # au porte-greffe (vigueur_clonale, fixation_azote, allelopathie, mycorhization).
+    "portee_graine",
 })
 # Tout ce qui n'est PAS aérien reste au porte-greffe (dérivé → rien ne se perd si
 # un gène neuf s'ajoute en queue de GENE_NAMES : il tombe côté racinaire par défaut,

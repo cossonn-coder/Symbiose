@@ -24,7 +24,7 @@ d'un compromis.
 ## Golden
 Départ = hash de fin du sprint ②. ①, ①b (deux fois : scénario puis mécanique), ①d,
 (①c annoncé re-figé, resté **INTACT** : voir §①c),
-② (`c6fd8275…`), ③ (`5bfbd8a3…`), ④ **RE-FIGÉ annoncé** (clés neuves + lecteurs)
+② (`c6fd8275…`), ③ (`5bfbd8a3…`), ④ (`db4d6b75…`)
 · ⑤ INTACT · ⑥ INTACT.
 
 ## Tronçons
@@ -35,8 +35,8 @@ Départ = hash de fin du sprint ②. ①, ①b (deux fois : scénario puis méca
 | ①c | `01c_paternite.md` — compteur `pollen_donne`, père tiré ∝ pollen exporté | **FAIT** (2026-11-18, commit `96505f5`) — voir §①c |
 | ①d | `01d_levee_graines.md` — annuelles qui se ressèment, espèce spontanée ∝ son pool | **FAIT** (2026-11-18, commit `9fdcbe9`) — voir §①d |
 | ② | `02_fruits_comestibilite.md` — taille des fruits, appétence feuille/fruit, Vigueur négative | **FAIT** (2026-11-18, commit `0134bd5`) — voir §② |
-| ③ | `03_feuille_gestes.md` — coriacité, repousse, bouture, dormance, dominance apicale | **FAIT côté code** (2026-11-18, non commité) — voir §③ |
-| ④ | `04_sol_expansion.md` — clonalité, portée, fixation, allélopathie, mycorhization | à faire |
+| ③ | `03_feuille_gestes.md` — coriacité, repousse, bouture, dormance, dominance apicale | **FAIT** (2026-11-18, commit `bc22825`) — voir §③ |
+| ④ | `04_sol_expansion.md` — clonalité, portée, fixation, allélopathie, mycorhization | **FAIT côté code** (2026-11-18, non commité) — voir §④ |
 | ⑤ | `05_signes_pont.md` — export des signes visibles, voix | à faire |
 | ⑥ | `06_vue_banc.md` — rendu, banc `caracteres_vivants`, recette F5, clôture D139 | à faire |
 
@@ -331,6 +331,66 @@ Départ = hash de fin du sprint ②. ①, ①b (deux fois : scénario puis méca
 - **À valider F5 / arbitrer** : le pommier du smoke tire une coriacité à +3,9 σ (fondateur) ;
   pression des ravageurs ×2,5 à coriacité 0,4 ; repousse sans fenêtre pour la récolte.
 
+## ④ Sol et expansion — bilan (2026-11-18)
+- **Fait** : 5 caractères en queue (`plants/caracteres.py`, facteurs σ_A 0,15) :
+  `vigueur_clonale`, `portee_graine` (prix structurels), `fixation_azote`, `allelopathie`,
+  `mycorhization` (`cout` K_FLEUR). Lecteurs :
+  - clonalité (`sim/clonal.py`) : chance d'émission `gène / clonal_interval`, rayon ×
+    gène. Prix : `PlantInstance.taux_graines()` = `reproduction_rate ÷ gène` chez une
+    clonale seulement, lu aux 3 sites de mise en graine (`_reproduction`,
+    `semer_fin_de_cycle`, `SeedBank.tick_plant_production`). Ramet = gènes + F + expression
+    de la mère : **vérifié** (déjà au code).
+  - portée : `_plot_sous_le_vent(…, force × gène de la mère)`. Prix : `densite_levable`
+    ÷ moyenne du gène dans le pool, **anémochores seulement** (lue par S2 et S3).
+  - fixation : clé neuve `"gene"` d'un effet `inject_field` (`sim/effects/resolution.py`,
+    la plante émettrice y est déjà accessible) : `amount × plant.gene(clé)`. Posée sur
+    les 4 fixatrices (Fabaceae, minette, effet d'espèce de lupuline/`adventices` l.115,
+    aulne). Frein en sol riche = `sature_a` (D126) existant.
+  - allélopathie : toute émission du champ `allelopathie` lit le gène (règle par variable,
+    même endroit) → 6 émettrices sans retoucher leurs données ; l'autotoxicité suit.
+  - mycorhization : `fields/ecofields/uptake.myco_effectif(myc, gène) = min(1, myc × gène)`,
+    source unique des 4 lecteurs du réseau côté plante : P de `plant_uptake`,
+    `facteur_racinaire` (uptake ET `racines.eau_percue`), `qi_local`, `nutrition_plante`.
+    Param `mycorhization` de `plant_uptake` passé par la croissance et les conteneurs.
+    **Vérifié** : le gain est nul en sol riche (`nutrition_plante` sature à
+    `NUTRITION_SEUIL_PLEIN`) ; le prix (`cout_genetique`) est payé partout.
+  - Greffe : `portee_graine` suit le greffon ; les 4 autres (racinaires) restent au
+    porte-greffe.
+- **Écarts au kickoff** : (a) le prix de la portée est lu dans `densite_levable`
+  (`fields/seedbank.py`, appelée par `succession.py`), pas dans `succession.py` même :
+  même patron que la dormance, et deux côtés (graine lourde = lève mieux) ; (b) **aulne :
+  `sature_a` 1,5 ajouté** (il n'avait pas de frein ; hors smoke) ; (c) les numéros de
+  ligne du kickoff (`familles.py` ≈ 385/546) avaient dérivé.
+- **Golden RE-FIGÉ** `5bfbd8a3…` → `db4d6b7516685b33ba53ddc5fd0cc10107c4d4d74c28adf418c8c258a6eb0d85`.
+  1ʳᵉ divergence : **s1**, azote du haricot +0,013 → +0,014, allélopathie du tournesol
+  0,080 → 0,061, azote du trèfle 0,011 → 0,010 (gènes des fondateurs). Effet dominant :
+  le trèfle fondateur tire `vigueur_clonale` 1,185 → ramets 47 → 68, digest final trèfle
+  27 → 42 vivants (dactyle 3 → 2, plantain 3 → 2). Vérifié : `vigueur_clonale` neutralisé
+  ⇒ ramets 47, trèfle 27 (comme avant). `population_hash` RE-FIGÉ `9f7f348c…` →
+  `84cba4d08d6bb3ea37f51df1f9c60504ca8c108da4c4a2ac94a99ec84a731873`.
+- **Population** (`tools/diag_population.py`, `full`, 262 sem. [n=1 seed]) : pic an 2
+  hiver 598 → 751, an 3 été 813 → 915, tuile_max 290 → 334 (cap 800 loin) ; an 5 été
+  738 → 728, an 6 663 → 658 : pic de trèfle plus haut et plus tôt, puis même plateau.
+  Pas d'emballement → pas de dette.
+- **Perf** : lectures seules (vigueur_clonale neutralisé, même monde) 4,93 → 4,91 s
+  [n=5 paires alternées, VM chargée, bruit ±5 %] ; smoke réel ≈ +15 % [n=4, bruit ±15 %]
+  = le trèfle plus nombreux, pas le code.
+- **Tests** : `tests/test_caracteres_sol.py` 17/17 (ramets plus nombreux et plus loin,
+  héritage gènes + F, graines ÷ gène clonale seulement ; graine posée plus loin sous le
+  vent, pool léger lève moins, barochore non lue ; azote ∝ gène et freiné à N 1,2 ;
+  allélopathie ∝ gène ; P prélevé ↑, nutrition ↑ en sol pauvre seulement, coût).
+  Adaptés : `test_caracteres` (5 entrées), `test_caracteres_feuille` (ordre lu par
+  position, plus en queue). Toutes les suites `tests/test_*.py` vertes sauf
+  `test_peripherie` 70/71 (rouge avant) ; bancs rouges = les 4 mêmes (grimpe, climatique,
+  edaphique, verger_mur).
+- Taille : `plants/base/familles.py` **303 LDC** (🟡, 302 avant), `fields/seedbank.py`
+  **325** (🟡, 320), `resolution.py` 224, `uptake.py` 69, `instance.py` 262.
+- **À valider F5 / arbitrer** : trèfle fondateur à +1,2 σ de clonalité = +45 % de ramets
+  (le gène est fort sur la couvre-sol dominante) ; un caractère coûteux (fixation,
+  allélopathie, mycorhization) se paie aussi chez une espèce qui ne l'exprime pas
+  (sélection vers le neutre, comme `nectar` chez les anémophiles). Pont : 5 caractères
+  sans libellé dans la vue G (`genes_pont.py`) → ⑤.
+
 ## Conception FÉCONDATION (trou du ①) — ARBITRÉE et FIGÉE (Nico, 2026-11-18)
 Doc : `docs/vegetal/genetique/conception_caracteres_vivants.md` §6. Diagnostic : le nombre de
 graines ne dépendait ni des visites, ni ne faisait le nombre de descendants (annuelles
@@ -349,9 +409,9 @@ sans archétype : pool jamais levé) ; le père était le plus proche ; `pollen_
 Tronçons insérés avant ② : `01b_fecondation.md`, `01c_paternite.md`, `01d_levee_graines.md`.
 
 ## REPRISE
-③ fait côté code (non commité, golden RE-FIGÉ `5bfbd8a3…`, population RE-FIGÉ `9f7f348c…`).
+④ fait côté code (non commité, golden RE-FIGÉ `db4d6b75…`, population RE-FIGÉ `84cba4d0…`).
 Lire `CLAUDE.md`, ce fichier, puis le kickoff du
-premier tronçon « à faire » (④). Points à arbitrer : `RESSEMIS_DENSITE_REF` (écart ①d),
+premier tronçon « à faire » (⑤). Points à arbitrer : `RESSEMIS_DENSITE_REF` (écart ①d),
 extinction des annuelles ressemées sous la flore férale, mode de pollinisation du pâturin
 annuel (amplifié par S3), pollen déposé/crédité après la fanaison (côtés femelle ET mâle),
-calibrage du goût (`PERTE_TOXIQUE`, `1 + a`) et maîtrise du concept « comestibilité » (②), dominance sans « fleurs latérales » au moteur et repousse non lue par la récolte (③).
+calibrage du goût (`PERTE_TOXIQUE`, `1 + a`) et maîtrise du concept « comestibilité » (②), dominance sans « fleurs latérales » au moteur et repousse non lue par la récolte (③), trèfle très clonal au smoke et coût payé par les espèces qui n'expriment pas le caractère (④).

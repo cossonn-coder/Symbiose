@@ -36,6 +36,7 @@ from __future__ import annotations
 from fields.ecofields import MYCO_P_BONUS
 from fields.ecofields.constants import BESOIN
 from fields.ecofields.nutriments import equilibre_roche
+from fields.ecofields.uptake import myco_effectif
 
 # Rampe de nutrition — PLACEHOLDERS (calibrage mesuré au ②, cf. 00_etat.md).
 # PLANCHER : une plante affamée pousse encore (lentement) — jamais de croissance
@@ -64,9 +65,11 @@ def nutrition_plante(plant, eco, roots=None) -> tuple[float, str | None]:
     if b_max <= 0.0:                       # stade sans besoin : rien ne limite
         return 1.0, None
     n_tot = p_tot = k_tot = 0.0
+    gm = plant.gene("mycorhization")
     for (r, c) in roots:
         n_tot += eco.n.at_plot(r, c)
-        p_tot += eco.p.at_plot(r, c) * (1.0 + MYCO_P_BONUS * eco.mycelium.at_plot(r, c))
+        p_tot += eco.p.at_plot(r, c) * (1.0 + MYCO_P_BONUS * myco_effectif(
+            eco.mycelium.at_plot(r, c), gm))           # × gène mycorhization (D139 ④)
         k_tot += eco.k.at_plot(r, c)
     nb = len(roots)
     stocks = {"N": n_tot / nb, "P": p_tot / nb, "K": k_tot / nb}

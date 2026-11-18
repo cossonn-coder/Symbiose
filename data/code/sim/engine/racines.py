@@ -30,7 +30,7 @@ listée ; le mycélium n'est lu que pour un hôte affaibli (peu nombreux).
 """
 from __future__ import annotations
 
-from fields.ecofields.uptake import facteur_racinaire
+from fields.ecofields.uptake import facteur_racinaire, myco_effectif
 from fields.fongique import REGISTRE_FONGIQUE
 from plants.base.instance import SEUIL_SAIN, SEUIL_AFFAIBLI
 
@@ -114,5 +114,6 @@ def eau_percue(plant, eco, hum: float) -> float:
     if mem > 0.0:
         r, c = plant.position
         hum = hum * facteur_racinaire(mem, plant.plant_class.root_loss_tolerance_base,
-                                      eco.mycelium.at_plot(r, c))
+                                      myco_effectif(eco.mycelium.at_plot(r, c),
+                                                    plant.gene("mycorhization")))
     return hum * (1.0 - pourri) if pourri > 0.0 else hum

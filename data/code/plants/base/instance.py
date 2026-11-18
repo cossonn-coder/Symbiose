@@ -351,6 +351,16 @@ class PlantInstance:
         surexpression = sum(max(0.0, e - 1.0) for e in self.expression.values())
         return max(DEFENSE_PLANCHER, 1.0 - DEFENSE_COST * surexpression)
 
+    def taux_graines(self) -> float:
+        """Mise en graine hebdomadaire de l'espèce (`reproduction_rate`) ÷ le gène
+        `vigueur_clonale` chez une clonale (D139 caractères vivants ④) : une plante
+        qui investit dans ses stolons/rhizomes/drageons grène d'autant moins. Non
+        clonale ⇒ `reproduction_rate` brut (le gène n'y est lu nulle part)."""
+        cls = self.plant_class
+        if cls.clonal_mode == "none":
+            return cls.reproduction_rate
+        return cls.reproduction_rate / self.gene("vigueur_clonale")
+
     def cout_genetique(self) -> float:
         """Coût GÉNÉTIQUE des caractères qui se fabriquent (D139 caractères vivants
         ①, conception §3) — facteur ∈ [DEFENSE_PLANCHER, 1] multiplié sur la vigueur

@@ -597,6 +597,7 @@ class Fabaceae(PlantBase):
             # Repère : la roche-mère la plus riche tient N=1,0 (terre) ; sous trèfle le
             # sol mesure ~0,8 en moyenne et culmine vers 2,2 [`full`, seed 42, n=1 graine, VM].
             "sature_a": 1.5,
+            "gene": "fixation_azote",   # D139 ④ : × gène de la plante
             "description": "Fixation N₂ — enrichit la fertilité du sol"
         }
     ]

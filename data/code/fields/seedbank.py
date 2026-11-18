@@ -425,7 +425,7 @@ class SeedBank:
             if p.current_stage < 2:   # seulement adulte/mature
                 continue
             archetype = getattr(p.plant_class, "archetype", None)
-            rate = getattr(p.plant_class, "reproduction_rate", 0.02)
+            rate = p.taux_graines()      # clonale : ÷ vigueur_clonale (D139 ④)
             if archetype:
                 r, c = p.position
                 self.add(r, c, archetype, rate * 0.5)
@@ -518,14 +518,23 @@ class SeedBank:
         """Densité du pool qui peut LEVER cette semaine (D139 caractères vivants ③) :
         densité ÷ moyenne du gène `dormance_graine`. Prix de la dormance : un pool
         dormant dure plus (`tick_species_aging`) mais lève une part plus faible chaque
-        semaine → levée étalée. Gène absent ⇒ densité brute (`species_density`)."""
+        semaine → levée étalée. Gène absent ⇒ densité brute (`species_density`).
+
+        D139 ④ : chez une ANÉMOCHORE, aussi ÷ moyenne de `portee_graine` — la graine
+        qui vole loin est plus légère (moins de réserves) et lève moins souvent ; la
+        graine lourde, qui tombe près, lève mieux. Barochore : le gène n'est pas lu."""
         rec = self.species[r][c].get(plant_class)
         if not rec:
             return 0.0
+        d = rec["density"]
         dorm = rec["genes"].get("dormance_graine")
-        if dorm is None or dorm.mean == 1.0:
-            return rec["density"]
-        return rec["density"] / dorm.mean
+        if dorm is not None and dorm.mean != 1.0:
+            d = d / dorm.mean
+        if getattr(plant_class, "seed_dispersal", "barochore") == "anemochore":
+            port = rec["genes"].get("portee_graine")
+            if port is not None and port.mean != 1.0:
+                d = d / port.mean
+        return d
 
     def sample_genes(self, r: int, c: int, plant_class: type,
                      seed: int, week: int) -> dict:

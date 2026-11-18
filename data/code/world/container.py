@@ -298,7 +298,8 @@ class Container:
                 eco.plant_uptake(r, c, plant.current_stage,
                                  shade_memory=plant.shade_memory,
                                  drought_memory=plant.drought_memory,
-                                 share=share, volume_factor=vfac)
+                                 share=share, volume_factor=vfac,
+                                 mycorhization=plant.gene("mycorhization"))
             if descend:
                 # Uptake dans la TUILE (réservoir profond) — `volume_factor=1.0` (le
                 # sol n'est pas confiné) : la concentration n'y chute pas vite → la
@@ -307,7 +308,8 @@ class Container:
                 self.tile_eco.plant_uptake(tr, tc, plant.current_stage,
                                            shade_memory=plant.shade_memory,
                                            drought_memory=plant.drought_memory,
-                                           share=share, volume_factor=1.0)
+                                           share=share, volume_factor=1.0,
+                                           mycorhization=plant.gene("mycorhization"))
             # Physiologie minimale (drought/shade/growth_factor) — RÉPLIQUE allégée
             # de `_update_physiology` (côté `sim.engine`, non importable depuis `world`).
             # Ferme la boucle ressource→stress→croissance : un pot asséché élève la

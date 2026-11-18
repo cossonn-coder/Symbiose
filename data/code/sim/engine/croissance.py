@@ -240,7 +240,8 @@ class CroissanceMixin:
                                             root_herbivory_memory=plant.root_herbivory_memory,
                                             root_loss_tolerance=plant.plant_class.root_loss_tolerance_base,
                                             share=share,
-                                            transpiration=transp)
+                                            transpiration=transp,
+                                            mycorhization=plant.gene("mycorhization"))
                 for k, v in consumed.items():
                     total[k] = round(total.get(k, 0.0) + v, 3)
             if total:

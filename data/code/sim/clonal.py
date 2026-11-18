@@ -142,12 +142,15 @@ def emettre_ramets(tile, eco, seed: int, week: int) -> list[str]:
         r, c = mother.position
         # Cadence : une fenêtre d'émission toutes `clonal_interval` semaines
         # (porte hashée, pas un modulo de calendrier → indépendant du décalage).
-        if _hash_noise(seed, week * 41, r, c) >= 1.0 / max(1, cls.clonal_interval):
+        # Gène `vigueur_clonale` (D139 ④) : la chance par semaine ET la portée sont
+        # multipliées par le gène (prix : moins de graines, `taux_graines`).
+        vc = mother.gene("vigueur_clonale")
+        if _hash_noise(seed, week * 41, r, c) >= vc / max(1, cls.clonal_interval):
             continue
         # Vigueur : la mère doit avoir l'énergie de cloner (façade read-only).
         if vigueur_plante(mother, eco) < CLONAL_VIGUEUR_SEUIL:
             continue
-        dx, dy = _offset_hashe(mother, seed, week, cls.clonal_radius_cm)
+        dx, dy = _offset_hashe(mother, seed, week, cls.clonal_radius_cm * vc)
         tx, ty = mother.x_cm + dx, mother.y_cm + dy
         tr, tc = _plot_of(tx, ty)
         if not _peut_etablir(cls, tr, tc, tile, eco):

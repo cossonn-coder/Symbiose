@@ -60,7 +60,8 @@ def semer_fin_de_cycle(plant, tile, eco, seed: int, week: int) -> None:
     Au pied de la mère (pas de dérive sous le vent ici)."""
     cls = plant.plant_class
     # × fécondation de la dernière floraison (D139 ①b) : archétype ET pool.
-    rate = getattr(cls, "reproduction_rate", 0.02) * plant.fecondation
+    # Clonale : ÷ `vigueur_clonale` (D139 ④, `taux_graines`).
+    rate = plant.taux_graines() * plant.fecondation
     arch = getattr(cls, "archetype", None)
     if arch and rate > 0.0:
         eco.seed_bank.add(*plant.position, arch, rate)

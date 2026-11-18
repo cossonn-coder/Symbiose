@@ -230,7 +230,8 @@ class MortaliteMixin:
             # Fécondation (D139 ①b) : la dernière floraison a fécondé une part
             # `fecondation` des ovules → mise en graine `rate × fecondation` (porte
             # de hash ET densité déposée). Pas fleurie cette année → 0 → rien.
-            rate = getattr(cls, "reproduction_rate", 0.0) * parent.fecondation
+            # Clonale : ÷ `vigueur_clonale` (D139 ④, `taux_graines`).
+            rate = parent.taux_graines() * parent.fecondation
             if rate <= 0.0:
                 continue
             pr, pc = parent.position
@@ -248,7 +249,9 @@ class MortaliteMixin:
             # tuile) ; barochore ou calme → au pied (dr, dc) = (pr, pc).
             dr, dc = pr, pc
             if getattr(cls, "seed_dispersal", "barochore") == "anemochore" and wind_force > 0.0:
-                tr, tc = _plot_sous_le_vent(pr, pc, wind_dir, wind_force)
+                # Portée de vol × gène `portee_graine` de la mère (D139 ④).
+                tr, tc = _plot_sous_le_vent(pr, pc, wind_dir,
+                                            wind_force * parent.gene("portee_graine"))
                 if tile.is_valid_plot(tr, tc):
                     dr, dc = tr, tc
             eco.seed_bank.add_species(dr, dc, cls, rate, g_child, e_child, f_child)

@@ -82,6 +82,14 @@ def resolve(effect: dict, plant: PlantInstance, tile: Tile,
         variable = effect["variable"]
         amount   = effect.get("amount", 0.0)
         cible    = effect.get("cible", "local")
+        # Caractère génétique qui module le flux (D139 caractères vivants ④) : clé
+        # `gene` de l'effet (`fixation_azote` des fixatrices) ; toute émission du
+        # champ `allelopathie` lit le gène `allelopathie`. La quantité émise est
+        # celle de CETTE plante, pas de l'espèce moyenne.
+        gene = effect.get("gene") or ("allelopathie" if variable == "allelopathie"
+                                      else None)
+        if gene is not None:
+            amount *= plant.gene(gene)
         if cible == "local" and eco:
             # Enrichissement spatial (chantier B) : réparti sur l'empreinte
             # racinaire, pas sur le seul plot central. On répartit (share),

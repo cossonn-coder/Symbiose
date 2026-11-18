@@ -15,6 +15,18 @@ from .constants import *          # UPTAKE, BESOIN, HUM_EXCES, ASPHYXIE_*, STRUC
 from .nutriments import dispo, immobilise_n   # cloche pH + immobilisation N
 
 
+def myco_effectif(mycelium: float, gene: float = 1.0) -> float:
+    """Réseau mycorhizien EFFECTIF vu par une racine ∈ [0, 1] (D139 caractères
+    vivants ④) : le champ `mycelium` du plot × le gène `mycorhization` de la plante
+    (une lignée bien associée tire plus d'un réseau faible), plafonné au réseau
+    saturé. SOURCE UNIQUE des quatre lecteurs de la mycorhize côté plante : P relayé
+    (`plant_uptake`, `qi_local`, `nutrition_plante`) et racines compensées
+    (`facteur_racinaire`). Gène neutre ⇒ `mycelium` brut (bit-identique). Pure."""
+    if gene == 1.0:
+        return mycelium
+    return min(1.0, mycelium * gene)
+
+
 def facteur_racinaire(memoire: float, tolerance: float, mycelium: float) -> float:
     """Fonction racinaire restante ∈ [ROOT_UPTAKE_FLOOR, 1] d'une plante dont le chevelu
     est rongé (campagnol) ou pourri (parasite de faiblesse, D111 ④) : mémoire /
@@ -37,7 +49,8 @@ class UptakeMixin:
                       root_loss_tolerance: float = 1.0,
                       share: float = 1.0,
                       volume_factor: float = 1.0,
-                      transpiration: float = 1.0) -> dict[str, float]:
+                      transpiration: float = 1.0,
+                      mycorhization: float = 1.0) -> dict[str, float]:
         """
         Consommation racinaire modulée par la mémoire physiologique.
 
@@ -75,6 +88,9 @@ class UptakeMixin:
                         sans feuilles ne pompe plus l'eau, sa racine vit toujours).
                         C'est la demande atmosphérique qui TIRE l'eau du sol (flux,
                         philo #2). DÉFAUT 1.0 → historique bit-identique (conteneurs).
+        mycorhization → gène `mycorhization` de la plante (D139 ④) : multiplie le
+                        réseau vu par sa racine (`myco_effectif`), pour le P relayé ET
+                        la compensation des racines perdues. DÉFAUT 1.0 = neutre.
 
         Rétroaction rhizosphère : un microbiome riche améliore l'assimilation des
         nutriments (bonus borné UPTAKE_MICRO_BONUS) — la boucle vertueuse côté plante.
@@ -110,8 +126,8 @@ class UptakeMixin:
         #      rongée boit encore un minimum). mémoire = 0 (aucun campagnol) ⇒ root_factor
         #      = 1.0 ⇒ uptake bit-identique ⇒ golden NEUTRE. Philo #2 : on module un FLUX
         #      du sol vers la racine, jamais la plante.
-        root_factor = facteur_racinaire(root_herbivory_memory, root_loss_tolerance,
-                                        self.mycelium.at_plot(r, c))
+        myco = myco_effectif(self.mycelium.at_plot(r, c), mycorhization)
+        root_factor = facteur_racinaire(root_herbivory_memory, root_loss_tolerance, myco)
         asphyxie_factor *= root_factor
         consumed = {}
         for var, by_stage in UPTAKE.items():
@@ -178,7 +194,7 @@ class UptakeMixin:
             # `dispo(ph,"P")` reste limitant (le réseau ne déverrouille pas la fenêtre
             # pH). mycelium=0 ⇒ ×1.0 ⇒ uptake bit-identique à AVANT.
             if nut == "P":
-                besoin *= 1.0 + MYCO_P_BONUS * self.mycelium.at_plot(r, c)
+                besoin *= 1.0 + MYCO_P_BONUS * myco
             if besoin <= 0:
                 continue
             dispo_stock = fld.at_plot(r, c)

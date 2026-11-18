@@ -45,8 +45,10 @@ def _eco(tid="TF", n=6):
 
 
 def test_registre():
-    print("\n[0] cinq caractères en queue du registre")
-    noms = list(CARACTERES)[-5:]
+    print("\n[0] cinq caractères en queue du registre (suivis des ajouts du ④)")
+    tous = list(CARACTERES)
+    i = tous.index("coriacite_feuille")
+    noms = tous[i:i + 5]
     check("ordre en queue", noms == ["coriacite_feuille", "repousse", "aptitude_bouture",
                                      "dormance_graine", "dominance_apicale"], str(noms))
     p = PlantInstance(plant_class=Mint, position=(0, 0))
