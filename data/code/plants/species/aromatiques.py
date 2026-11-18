@@ -31,6 +31,8 @@ class Mint(Lamiaceae):
     """
     genus = "Mentha"
     name = "Menthe"
+    # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
+    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -5.0, 15.0, 32.0, 45.0
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.65  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     resilience_base = 1.25         # S — vivace robuste, repart du rhizome après un coup
@@ -85,6 +87,8 @@ class Thyme(Lamiaceae):
     """
     genus = "Thymus"
     name = "Thym"
+    # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
+    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -8.0, 10.0, 40.0, 52.0
     ligneux = True        # D111 ②bis : sous-arbrisseau — bois sec de la base, largué l'hiver
     bois_chute_cm3 = 40.0
     bois_chute_semaine = 48
@@ -138,6 +142,8 @@ class Lavender(Lamiaceae):
     """
     genus = "Lavandula"
     name = "Lavande"
+    # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
+    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -6.0, 10.0, 38.0, 50.0
     ligneux = True        # D111 ②bis : sous-arbrisseau — bois sec de la base, largué l'hiver
     bois_chute_cm3 = 80.0
     bois_chute_semaine = 48

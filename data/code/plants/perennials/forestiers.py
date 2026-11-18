@@ -12,6 +12,8 @@ class OakTree(PerennialWoody):
     family = "Fagaceae"
     genus  = "Quercus"
     name   = "Chêne"
+    # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
+    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -3.0, 30.0, 38.0, 48.0
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.0  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     shade_tolerance = 0.90  # D111 ②ter : intermédiaire (jeune : supporte une ombre légère) (= défaut strate haute, explicité)
@@ -73,6 +75,8 @@ class BeechTree(PerennialWoody):
     family = "Fagaceae"
     genus  = "Fagus"
     name   = "Hêtre"
+    # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
+    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -3.0, 30.0, 33.0, 45.0
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.0  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     shade_tolerance = 1.30  # D111 ②ter : sciaphile (l'arbre d'ombre par excellence) (≠ défaut strate haute 0,90)
@@ -124,6 +128,8 @@ class BirchTree(PerennialWoody):
     family = "Betulaceae"
     genus  = "Betula"
     name   = "Bouleau"
+    # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
+    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -4.0, 40.0, 32.0, 44.0
     feuillage = "fin"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.0  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     shade_tolerance = 0.75  # D111 ②ter : héliophile pionnier (le plus exigeant en lumière) (≠ défaut strate haute 0,90)
@@ -173,6 +179,8 @@ class HornbeamTree(PerennialWoody):
     family = "Betulaceae"
     genus  = "Carpinus"
     name   = "Charme"
+    # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
+    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -3.0, 30.0, 35.0, 46.0
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.0  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     shade_tolerance = 1.15  # D111 ②ter : semi-sciaphile (sous-étage de chênaie) (≠ défaut strate haute 0,90)
@@ -229,6 +237,8 @@ class HazelTree(PerennialWoody):
     family = "Betulaceae"
     genus  = "Corylus"
     name   = "Noisetier"
+    # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
+    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -4.0, 30.0, 35.0, 46.0
     feuillage = "moyen"  # transpiration (D111 ①) : grandes feuilles rondes, molles
     nectar = 0.0         # anémophile : aucun nectar (D111 ⑦)
     shade_tolerance = 1.05  # D111 ②ter : semi-sciaphile (sous-bois clair, lisière) (≠ défaut 0,90)
@@ -300,6 +310,8 @@ class FirTree(PerennialWoody):
     family = "Pinaceae"
     genus  = "Abies"
     name   = "Sapin"
+    # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
+    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -6.0, 25.0, 30.0, 44.0
     feuillage = "aiguilles"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.0  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     shade_tolerance = 1.25  # D111 ②ter : sciaphile (sapin pectiné : régénère sous couvert) (≠ défaut strate haute 0,90)

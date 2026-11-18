@@ -17,6 +17,8 @@ class BursaPastoris(PlantBase):
     family = "Brassicaceae"
     genus  = "Capsella"
     name   = "Bourse-à-pasteur"
+    # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
+    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -10.0, 8.0, 30.0, 44.0
     # AUTOGAME (D139 ②) : pollinisée par insecte au catalogue, mais s'autoféconde
     # à ≈ 95 % en réalité (fleur cléistogame ou quasi) → lignée qui se FIXE.
     genetique = {"autofecondation": {"neutre": 0.95}}
@@ -76,6 +78,8 @@ class MedicagoLupulina(PlantBase):
     family = "Fabaceae"
     genus  = "Medicago"
     name   = "Minette"
+    # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
+    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -8.0, 10.0, 32.0, 45.0
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.6  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     resilience_base = 1.25         # S — légumineuse pionnière rampante des sols pauvres, rustique
@@ -136,6 +140,8 @@ class PoaAnnua(PlantBase):
     family = "Poaceae"
     genus  = "Poa"
     name   = "Pâturin annuel"
+    # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
+    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -8.0, 12.0, 30.0, 44.0
     feuillage = "fin"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.0  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     resilience_base = 1.25         # S — graminée fibreuse pionnière, coriace (elle hérite de
@@ -185,6 +191,8 @@ class Taraxacum(PlantBase):
     family = "Asteraceae"
     genus  = "Taraxacum"
     name   = "Pissenlit"
+    # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
+    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -8.0, 20.0, 32.0, 46.0
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.7  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     resilience_base = 1.25         # S — pivot profond, rosette plaquée : repart de la racine
@@ -254,6 +262,8 @@ class Molene(PlantBase):
     family = "Scrophulariaceae"
     genus  = "Verbascum"
     name   = "Molène"
+    # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
+    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -8.0, 15.0, 35.0, 48.0
     feuillage = "cireux"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.05  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     resilience_base = 1.2          # S — pionnière rustique des sols pauvres/remués, rosette coriace

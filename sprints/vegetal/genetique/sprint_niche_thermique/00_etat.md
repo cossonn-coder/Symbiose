@@ -30,8 +30,8 @@ large** (dates de mort des annuelles) · ④ INTACT · ⑤ INTACT.
 ## Tronçons
 | # | Kickoff | État |
 |---|---|---|
-| ① | `01_temperatures_extremes.md` — nuit la plus froide, jour le plus chaud, T_feuille | **FAIT** 2026-11-18 (non commité) |
-| ② | `02_niche_caracteres.md` — niches des 52 espèces, 3 caractères, plasticité, coût | à faire |
+| ① | `01_temperatures_extremes.md` — nuit la plus froide, jour le plus chaud, T_feuille | **FAIT** 2026-11-18 (`8c55f4a`) |
+| ② | `02_niche_caracteres.md` — niches des 52 espèces, 3 caractères, plasticité, coût | **FAIT** 2026-11-18 (non commité) |
 | ③ | `03_reponse_mort.md` — dégâts gradués, fin de la mort calendaire, fin de cycle | à faire |
 | ④ | `04_signes.md` — posture thermique et marques, voix | à faire |
 | ⑤ | `05_vue.md` — postures et teintes, banc `niche_thermique`, recette F5 | à faire |
@@ -59,8 +59,38 @@ large** (dates de mort des annuelles) · ④ INTACT · ⑤ INTACT.
   microbiome_clim, signes_legende, humectation, caracteres, genetique, heredite, population.
 - F5 : la glace des mares prend plus souvent (lit la nuit la plus froide) — à regarder.
 
+## ② FAIT (2026-11-18)
+- Niche d'espèce : 5 attributs sur `PlantBase` (`familles.py`, défauts —/−6/10/32/45) +
+  une ligne par espèce sur les **52** (tableau §7, aucune absente, vérifié par le test).
+- Registre : `rusticite_froid` en °C (0, σ 1,5, ±6, adaptogène, même canal) ;
+  `limite_froid` (0, σ 1,0, ±4) et `limite_chaud` (0, σ 1,5, ±6, adaptogène) **en queue**.
+- `PlantInstance` : `lim_gel/lim_froid/lim_chaud/lim_brul` (source unique ③④ ; `lim_froid`
+  = −∞ si `t_froid_lesion` None), `plasticite_c(nom, ampleur)` = ampleur·(expr−1)/(EXPR_MAX−1),
+  `expressed_gene` renvoie le génotype seul pour un caractère non « facteur ».
+  `heat_memory` (signal T_feuille > `t_chaud_stress − 5`, réf 10 °C, lerp 0,05) ↔
+  `limite_chaud` dans `ADAPTOGENIC_GENES` (priming automatique), acclimatation ≤ 3 °C
+  (`ACCLIM_CHAUD_MAX`). T_feuille via `feuille.t_feuille_de` (cœur pur : lumière et
+  humidité ressentie déjà lues par `_update_physiology`, rien n'est relu).
+- Coût : `cout_thermique` = 1 − 0,02·Σ parts positives des 3 caractères, **multiplié
+  dans `cout_defense`** (donc mêmes sites croissance/convalescence, sans toucher aux appelants).
+- Gel des semis (`boucle.py`) : sév = (`lim_gel` − nuit)/6, plus de `gene_name` ; filtre
+  `semis` conservé. `TEMP_FROST_DAMAGE` n'est plus importé par `boucle.py` (constante gardée).
+- Voix : niveau 2 encyclopédie de basilic, tomate, poivron, courgette, haricot, mâche,
+  seigle (frilosité/rusticité en mots). Pont : libellés `limite_froid/limite_chaud`.
+- Golden **RE-FIGÉ** `72896cbd…` → `9e83a0cb0338b9d280b41114e855780aff94ce52c47a0db76ba8d6f4f9b3b477` :
+  1ʳᵉ divergence = gel W0 (chaque semis gèle sous SA limite ; 74 → 10 lignes de gel,
+  les rustiques ne gèlent plus à 0 °C), le reste en découle ; clés `limite_*` au digest.
+- Tests : `test_niche_thermique` (neuve, 24/24) ; `test_caracteres` mis à jour (33/33) ;
+  120 suites lancées : vertes sauf `test_peripherie` et `test_population`, **rouges déjà
+  sur HEAD `8c55f4a`** (pré-existant, hors tronçon, non diagnostiqué).
+- **À trancher (calibrage)** : σ_A 1,5 °C de `rusticite_froid` donne des variétés de
+  tomate à `lim_gel` **+2,8 °C** (golden : tirage −3,8 °C, F 0,9) — gel au-dessus de 0 °C,
+  physiquement douteux (le froid sans gel est le rôle de `lim_froid`). Piste : borner
+  `lim_gel ≤ 0`, ou σ_A plus petit. Non fait (hors spec).
+- Taille : `species/sauvages.py` 370 LDC (🟡, était ≈ 362).
+
 ## REPRISE
-Lire `CLAUDE.md`, ce fichier, puis le kickoff du premier tronçon « à faire » (②).
+Lire `CLAUDE.md`, ce fichier, puis le kickoff du premier tronçon « à faire » (③).
 
 ## Report du sprint ① (génétique infinitésimale, décision Nico 2026-11-16)
 La réponse à la sélection sur `germination_thermique` (banc

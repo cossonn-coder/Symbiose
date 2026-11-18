@@ -48,7 +48,7 @@ from sim.mulot import mulot_mange   # le mulot mange les grains sauvages, en cac
 from .calendrier import (SAISONS, saison_de, est_debut_saison, est_fin_saison,
                         est_phase_floraison, est_phase_recolte)
 from .aleas import (appliquer_alea, ALEAS_RAVAGEURS, WEATHER_ALEA, ORAGE_VENT,
-                    TEMP_FROST_DAMAGE, FROST_SEVERITY_REF, HAIL_SEVERITY_REF)
+                    FROST_SEVERITY_REF, HAIL_SEVERITY_REF)
 from .croissance import CroissanceMixin
 from .mortalite import MortaliteMixin
 from .decompo import DecompoMixin, deposer_bois_tombe
@@ -139,7 +139,7 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
         # Gel : dégât tissulaire MÉDIÉ, piloté par le MILIEU (température < 0), pas
         # par le nom de l'événement (sous-sprint 03). Que le froid vienne d'une
         # gelée tardive ou d'une dérive interannuelle froide, le tissu tendre
-        # souffre — modulé par le gène `rusticite_froid` × le paillage local.
+        # souffre — modulé par la limite de gel de la plante × le paillage local.
         # ⑥ : le gel est désormais LOCALISÉ au plot. T_air reste uniforme, mais
         # T_min_nuit descend plus bas sur un coin nu/sous ciel clair (rayonnement)
         # que sur un coin paillé (litière) ou sous nuages → un coin abrité peut
@@ -150,10 +150,14 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
         # levé, chaque plot décide par sa propre nuit (sév 0 = épargné, sans log).
         for tile in self.tiles:
             eco = self._eco(tile)
+            # D139 niche thermique ② : chaque plante gèle sous SA limite (`lim_gel` =
+            # espèce − rusticité génétique − endurcissement vécu, en °C), et non plus
+            # sous 0 °C pour tous, dégât divisé par un facteur de gène. Sévérité ∝
+            # l'écart de la nuit à cette limite. Filtre `semis` conservé (tombe au ③).
             def frost_sev(p, eco=eco):
                 r, c = p.position
                 t_min = t_min_nuit_at(eco, r, c, temp_now, nebul)
-                return max(0.0, (TEMP_FROST_DAMAGE - t_min) / FROST_SEVERITY_REF)
+                return max(0.0, (p.lim_gel() - t_min) / FROST_SEVERITY_REF)
             sevs = [frost_sev(p) for p in tile.plants
                     if p.is_alive and p.stage.name == "semis"]
             if not sevs or max(sevs) <= 0.0:
@@ -162,7 +166,6 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
                        f"sév {min(sevs):.2f}→{max(sevs):.2f}")
             log += self._mediated_damage(tile, eco, 0.0,
                                          "gel (tissu tendre)",
-                                         gene_name="rusticite_froid",
                                          severity_fn=frost_sev,
                                          cause="gel")
 

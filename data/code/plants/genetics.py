@@ -14,8 +14,11 @@ from plants.caracteres import (CARACTERES, BORNES_FACTEUR, SIGMA_A_FACTEUR,  # n
 # = l'ajouter ici ; `child_genes` (reproduction) le calcule alors automatiquement
 # sur un canal de hash décorrélé (l'index dans ce tuple), sans toucher aux autres.
 #  - `hauteur`        : module la hauteur effective (Sprint génétique).
-#  - `rusticite_froid`: résistance au gel (météo 03). >1 = plus rustique → moins
-#    de dégât tissulaire quand la température ambiante passe sous 0 °C. Neutre 1.0.
+#  - `rusticite_froid`: résistance au gel. Depuis D139 niche thermique ② en °C :
+#    ABAISSEMENT de la limite de gel du tissu tendre de l'espèce (>0 = gèle plus
+#    froid). Neutre 0. Lu par `PlantInstance.lim_gel`.
+#  - `limite_froid` / `limite_chaud` (D139 niche thermique ②, en °C, en queue) :
+#    décalages de la lésion par le froid sans gel et des seuils chauds de l'espèce.
 #  - `vigueur`        : fitness générale (Sprint gènes du vecteur). >1 = croît
 #    plus vite (avancement de stade accéléré) et se rétablit plus vite
 #    (convalescence). Sens PROVISOIRE : à recâbler sur la Vigueur universelle
@@ -125,7 +128,8 @@ ADAPTOGENIC_GENES = ("tolerance_secheresse",   # ↔ drought_memory   (existe)
                      "rusticite_froid",         # ↔ cold_memory      (①, à créer)
                      "resistance_pathogene",    # ↔ infection_memory (①, à créer)
                      "tolerance_asphyxie",       # ↔ asphyxie_memory  (existe)
-                     "port_trapu")               # ↔ wind_memory      (vent ④, à créer)
+                     "port_trapu",               # ↔ wind_memory      (vent ④, à créer)
+                     "limite_chaud")             # ↔ heat_memory      (niche thermique ②)
 
 # Dynamique d'expression (valeurs de DÉPART — calibrage itératif P6). cible(g) =
 # 1.0 + EXPR_GAIN × mémoire(g) ; l'expression glisse vers la cible en lerp lent à
@@ -159,6 +163,24 @@ DEFENSE_PLANCHER = 0.5     # plancher du facteur coût (vigueur jamais sous la m
 # Si le stress persiste → chaque génération recharge sa mémoire → le priming tient.
 # Valeur de DÉPART (calibrage itératif P2).
 PRIMING_FRAC = 0.4
+
+
+# --- Caractères THERMIQUES en °C (D139 niche thermique ②, conception §4.3-§4.5) ---
+# Pour un caractère en °C, l'expression plastique ne MULTIPLIE plus le génotype (un
+# décalage de 0 °C × 1,3 vaudrait toujours 0) : elle AJOUTE des degrés,
+#     plasticité = ampleur × (expression − 1)/(EXPR_MAX − 1)
+# où l'ampleur vaut `endurcissement_max` de l'espèce pour le froid et
+# ACCLIM_CHAUD_MAX pour la chaleur (protéines de choc thermique : quelques degrés,
+# jamais plus). Lu par `PlantInstance.plasticite_c`.
+ACCLIM_CHAUD_MAX = 3.0
+# Compromis TOLÉRANCE ↔ CROISSANCE : chaque °C de tolérance GÉNÉTIQUE au-delà du
+# neutre (somme des parts positives des trois caractères thermiques) coûte
+# K_THERMO de vigueur effective. Sucres de réserve, protéines antigel et de choc
+# thermique se fabriquent aux dépens de la croissance. La plasticité, elle, a déjà
+# son coût (`DEFENSE_COST`) : on ne la compte pas deux fois. Bornes des caractères
+# (6 + 4 + 6 °C) ⇒ facteur ≥ 0,68 : le coût ne peut jamais annuler la vigueur.
+K_THERMO = 0.02
+CARACTERES_THERMIQUES = ("rusticite_froid", "limite_froid", "limite_chaud")
 
 
 def clamp_gene(x: float) -> float:

@@ -36,6 +36,8 @@ _LIBELLES = {
     "germination_thermique": ("optimum de levée", -1),
     "phenologie_florale":    ("avance de floraison", 1),
     "autofecondation":       ("autofécondation", 1),
+    "limite_froid":          ("tolérance au froid", 1),
+    "limite_chaud":          ("tolérance à la chaleur", 1),
 }
 
 TABLE_CARACTERES = {

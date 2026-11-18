@@ -36,6 +36,8 @@ class Alder(PerennialWoody):
     family = "Betulaceae"
     genus  = "Alnus"
     name   = "Aulne"
+    # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
+    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -4.0, 35.0, 32.0, 44.0
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.0  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     shade_tolerance = 0.85  # D111 ②ter : pionnier de berge, héliophile modéré (≠ défaut strate haute 0,90)
@@ -124,6 +126,8 @@ class Willow(PerennialWoody):
     family = "Salicaceae"
     genus  = "Salix"
     name   = "Saule"
+    # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
+    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -4.0, 40.0, 33.0, 45.0
     feuillage = "fin"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.75  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     shade_tolerance = 0.80  # D111 ②ter : pionnier héliophile (≠ défaut strate haute 0,90)

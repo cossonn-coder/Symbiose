@@ -26,6 +26,8 @@ class Yarrow(Asteraceae):
     """
     genus = "Achillea"
     name = "Achillée millefeuille"
+    # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
+    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -8.0, 20.0, 35.0, 48.0
     feuillage = "fin"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.35  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     resilience_base = 1.25         # S — vivace rustique stolonifère, très encaissante
@@ -72,6 +74,8 @@ class Phacelia(PlantBase):
     family = "Boraginaceae"
     genus = "Phacelia"
     name = "Phacélie"
+    # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
+    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -6.0, 2.0, 32.0, 45.0
     feuillage = "fin"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 1.0  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     resilience_base = 0.8          # R — engrais vert annuel à tige tendre, cycle court
@@ -137,6 +141,8 @@ class Borage(PlantBase):
     family = "Boraginaceae"
     genus = "Borago"
     name = "Bourrache"
+    # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
+    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -4.0, 3.0, 32.0, 45.0
     feuillage = "large"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.95  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     resilience_base = 1.0          # intermédiaire — annuelle vigoureuse mais charnue/cassante
@@ -196,6 +202,8 @@ class Comfrey(PlantBase):
     family = "Boraginaceae"
     genus = "Symphytum"
     name = "Consoude"
+    # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
+    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -8.0, 20.0, 32.0, 45.0
     feuillage = "large"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.7  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     resilience_base = 1.25         # S — vivace pionnière à pivot profond, quasi indestructible
@@ -255,6 +263,8 @@ class Mustard(PlantBase):
     family = "Brassicaceae"
     genus = "Sinapis"
     name = "Moutarde"
+    # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
+    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -6.0, 4.0, 30.0, 44.0
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.65  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     resilience_base = 0.8          # R — engrais vert annuel à croissance éclair, tendre
@@ -319,6 +329,8 @@ class Garlic(Amaryllidaceae):
     """
     genus = "Allium"
     name = "Ail"
+    # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
+    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -8.0, 10.0, 30.0, 44.0
     feuillage = "cireux"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.3  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     resilience_base = 1.0          # intermédiaire — bisannuelle bulbeuse, tenue moyenne

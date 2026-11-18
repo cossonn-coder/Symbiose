@@ -204,6 +204,29 @@ class PlantBase(ABC):
     # Littéral seul, aucun import (règle de couches : `plants` est la couche la plus basse).
     carnivore: bool = False
     temp_min_growth: float = 5.0         # °C — seuil de croissance (météo 02) ; en deçà, stagnation. Extensible par espèce.
+    # --- Niche THERMIQUE d'espèce (D139 niche thermique ②, conception §4.1) ---
+    # La plage de températures où l'espèce VIT (≠ `temp_min_growth`, seuil de
+    # CROISSANCE). Cinq seuils en °C, couche 1 (données d'espèce) ; les gènes
+    # `rusticite_froid` / `limite_froid` / `limite_chaud` les décalent par individu
+    # (couche 2) et ce que la plante a vécu (endurcissement, acclimatation) par
+    # saison (couche 3). Les limites EFFECTIVES d'une plante se lisent sur
+    # `PlantInstance.lim_gel/lim_froid/lim_chaud/lim_brul` (source unique).
+    #   • `t_froid_lesion` : nuit la plus froide sous laquelle une espèce TROPICALE
+    #     s'abîme SANS gel (membranes qui figent — basilic noirci à 8 °C). None = non
+    #     sensible (toute espèce tempérée).
+    #   • `t_gel_tendre` : gel d'un tissu NON endurci (une pousse de printemps).
+    #   • `endurcissement_max` : °C gagnés quand la plante s'est endurcie au froid doux
+    #     (`cold_memory`, dormance comprise) — 0 chez le basilic, 30 chez le pommier.
+    #   • `t_chaud_stress` : T_feuille au-delà de laquelle la plante cesse de croître
+    #     et son pollen devient stérile.
+    #   • `t_brulure` : T_feuille au-delà de laquelle le tissu meurt (échaudage).
+    # Défauts = herbacée tempérée. Valeurs par espèce : conception §7 [ordres de
+    # grandeur horticoles, calibrage F5].
+    t_froid_lesion: float | None = None
+    t_gel_tendre: float = -6.0
+    endurcissement_max: float = 10.0
+    t_chaud_stress: float = 32.0
+    t_brulure: float = 45.0
     # Fenêtre pH d'espèce (sprint physico-chimie, tronçon ⑤). Cloche d'acidité
     # `bell(ph, ph_opt, ph_tol)` lue en germination/succession (porte) ET en
     # croissance/vigueur (façade `vigueur_plante`). DÉFAUT NEUTRE : `ph_tol` LARGE

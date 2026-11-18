@@ -24,6 +24,8 @@ from plants import EXPR_GAIN, EXPR_MIN, EXPR_MAX, TAU_UP, TAU_DOWN
 from .calendrier import saison_de
 from .transpiration import facteur_transpiration
 from .racines import eau_percue, pression_parasite, maj_pourriture
+from .feuille import t_feuille_de
+from fields.ecofields.thermique import t_max_jour
 from sim.nutrition_plante import facteur_nutrition
 
 # Sémiologie ② (docs/narration/semiologie/conception_semiologie_foliaire.md §2.5) — facteur de décroissance
@@ -55,6 +57,14 @@ INFECTION_MEMORY_LERP = 0.05  # intégration lente
 # transplantation). Knobs P4.
 WIND_MEMORY_REF  = 0.6    # vent local saturant le signal d'exposition (sév ≈ 1)
 WIND_MEMORY_LERP = 0.05   # intégration lente (miroir drought/asphyxie)
+# heat_memory (D139 niche thermique ②) : CHALEUR vécue par la feuille, miroir de
+# cold_memory. Signal = T_feuille du jour le plus chaud au-dessus de
+# `t_chaud_stress − HEAT_ACCLIM_MARGE` de l'espèce, normalisé par HEAT_SEVERITY_REF.
+# La plante s'acclimate AVANT d'atteindre son seuil de stress (protéines de choc
+# thermique), comme elle s'endurcit au froid doux avant le gel.
+HEAT_ACCLIM_MARGE  = 5.0    # °C sous t_chaud_stress où la chaleur commence à « compter »
+HEAT_SEVERITY_REF  = 10.0   # °C d'excès donnant une sévérité ≈ 1 (miroir COLD_SEVERITY_REF)
+HEAT_MEMORY_LERP   = 0.05   # intégration lente (miroir cold_memory)
 # Transpiration foliaire (§3) : le vent amplifie la demande évapotranspiratoire de la
 # plante exposée → renforce le stress hydrique foliaire des GRANDES feuilles par grand
 # vent. On MAJORE le `drought_stress` du tick ∝ (vent_local × surface foliaire), borné.
@@ -71,6 +81,7 @@ _EXPR_MEMOIRE = {
     "resistance_pathogene": "infection_memory",
     "tolerance_asphyxie":   "asphyxie_memory",
     "port_trapu":           "wind_memory",
+    "limite_chaud":         "heat_memory",
 }
 
 
@@ -345,6 +356,14 @@ class CroissanceMixin:
             cold_sev = max(0.0, min(1.0, (COLD_HARDENING_SEUIL - t_air) / COLD_SEVERITY_REF))
             plant.cold_memory += (cold_sev - plant.cold_memory) * COLD_MEMORY_LERP
             plant.cold_memory  = max(0.0, min(1.0, plant.cold_memory))
+            # Heat memory (niche thermique ②) : chaleur de la FEUILLE au jour le plus
+            # chaud (soleil × soif, `sim/engine/feuille.py`), sur la lumière et
+            # l'humidité ressentie déjà lues ci-dessus (rien n'est relu).
+            t_f = t_feuille_de(t_max_jour(t_air, nebulosite), light, hum_p)
+            seuil_chaud = plant.plant_class.t_chaud_stress - HEAT_ACCLIM_MARGE
+            heat_sev = max(0.0, min(1.0, (t_f - seuil_chaud) / HEAT_SEVERITY_REF))
+            plant.heat_memory += (heat_sev - plant.heat_memory) * HEAT_MEMORY_LERP
+            plant.heat_memory  = max(0.0, min(1.0, plant.heat_memory))
             # Humectation foliaire (sprint HUMECTATION FOLIAIRE ①, §2.2) : l'eau se POSE
             # sur le feuillage (rosée `capte` déjà calculée ci-dessus + pluie du tick)
             # puis SÈCHE (vent, soleil ciel clair). Le vent ne PÉNÈTRE pas un couvert

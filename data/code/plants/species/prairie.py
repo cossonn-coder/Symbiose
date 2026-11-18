@@ -24,6 +24,8 @@ class Dactyle(Poaceae):
     """
     genus = "Dactylis"
     name = "Dactyle"
+    # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
+    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -8.0, 15.0, 32.0, 45.0
     feuillage = "moyen"  # transpiration (D111 ①) : limbe large pour une graminée
     nectar = 0.0  # anémophile
     resistance_ecrasement = 0.6    # touffe dressée, repart de la souche
@@ -70,6 +72,8 @@ class FetuqueRouge(Poaceae):
     """
     genus = "Festuca"
     name = "Fétuque rouge"
+    # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
+    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -8.0, 15.0, 30.0, 44.0
     feuillage = "fin"  # feuilles filiformes
     nectar = 0.0  # anémophile
     resistance_ecrasement = 0.9    # gazon : talle sous le pied, comme le pâturin
@@ -116,6 +120,8 @@ class PlantainLanceole(PlantBase):
     family = "Plantaginaceae"
     genus = "Plantago"
     name = "Plantain lancéolé"
+    # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
+    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -8.0, 15.0, 33.0, 46.0
     feuillage = "moyen"
     nectar = 0.0
     resilience_base = 1.25         # S — rosette plaquée à souche courte, comme le pissenlit

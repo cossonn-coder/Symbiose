@@ -34,6 +34,8 @@ class Nettle(Urticaceae):
     """
     genus = "Urtica"
     name = "Ortie"
+    # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
+    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -6.0, 20.0, 30.0, 44.0
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.0  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     resilience_base = 1.25         # S — pionnière nitrophile robuste, quasi increvable
@@ -80,6 +82,8 @@ class Vaccinium(Ericaceae):
     """
     genus = "Vaccinium"
     name = "Myrtille"
+    # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
+    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -5.0, 25.0, 28.0, 42.0
     ligneux = True        # D111 ②bis : arbrisseau — rameaux âgés qui sèchent (hiver)
     bois_chute_cm3 = 60.0
     bois_chute_semaine = 46
@@ -141,6 +145,8 @@ class Raspberry(PlantBase):
     family = "Rosaceae"
     genus = "Rubus"
     name = "Framboisier"
+    # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
+    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -8.0, 25.0, 32.0, 45.0
     ligneux = True        # D111 ②bis : cannes de 2 ans qui meurent après fructification
     bois_chute_cm3 = 600.0
     bois_chute_semaine = 38
@@ -220,6 +226,8 @@ class RunningBamboo(Poaceae):
     """
     genus = "Phyllostachys"
     name = "Bambou traçant"
+    # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
+    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -8.0, 12.0, 38.0, 48.0
     feuillage = "fin"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.0  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     resistance_ecrasement  = 0.7   # chaume flexible, plie sans casser
@@ -275,6 +283,8 @@ class SweetViolet(Violaceae):
     """
     genus = "Viola"
     name = "Violette odorante"
+    # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
+    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -8.0, 15.0, 28.0, 42.0
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.3  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     resilience_base = 1.0          # intermédiaire — petit couvre-sol d'ombre vivace, tenue moyenne
@@ -336,6 +346,8 @@ class Mugwort(Asteraceae):
     """
     genus = "Artemisia"
     name = "Armoise"
+    # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
+    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -8.0, 20.0, 35.0, 48.0
     feuillage = "cireux"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.0  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     resilience_base = 1.25         # S — vivace rustique quasi-increvable, souche ligneuse
@@ -415,6 +427,8 @@ class Sphagnum(Sphagnaceae):
     """
     genus = "Sphagnum"
     name = "Sphaigne"
+    # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
+    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -5.0, 15.0, 28.0, 40.0
     feuillage = "fin"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.0  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     rarity = "Établie"
@@ -495,6 +509,8 @@ class Drosera(Droseraceae):
     """
     genus = "Drosera"
     name = "Rossolis"
+    # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
+    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -6.0, 15.0, 30.0, 42.0
     feuillage = "fin"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.1  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     rarity = "Ancienne"                # curiosité rare des tourbières

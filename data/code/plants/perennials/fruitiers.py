@@ -15,6 +15,8 @@ class Fig(PerennialWoody):
     family = "Moraceae"
     genus  = "Ficus"
     name   = "Figuier"
+    # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
+    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -3.0, 12.0, 40.0, 50.0
     feuillage = "large"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.0  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     shade_tolerance = 0.85  # D111 ②ter : héliophile (méditerranéen de plein soleil) (≠ défaut strate haute 0,90)
@@ -80,6 +82,8 @@ class AppleTree(PerennialWoody):
     family = "Rosaceae"
     genus  = "Malus"
     name   = "Pommier"
+    # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
+    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -3.0, 30.0, 35.0, 47.0
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.55  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     shade_tolerance = 0.85  # D111 ②ter : héliophile modéré (fruitier de lumière, supporte une mi-ombre) (≠ défaut strate haute 0,90)
@@ -166,6 +170,8 @@ class CherryTree(PerennialWoody):
     family = "Rosaceae"
     genus  = "Prunus"
     name   = "Cerisier"
+    # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
+    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -3.0, 27.0, 35.0, 47.0
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.55  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     shade_tolerance = 0.80  # D111 ②ter : héliophile (≠ défaut strate haute 0,90)
@@ -224,6 +230,8 @@ class WalnutTree(PerennialWoody):
     family = "Juglandaceae"
     genus  = "Juglans"
     name   = "Noyer"
+    # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
+    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -2.0, 25.0, 38.0, 48.0
     feuillage = "large"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.0  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     shade_tolerance = 0.80  # D111 ②ter : héliophile strict (≠ défaut strate haute 0,90)

@@ -19,7 +19,9 @@ FICHES_POTAGER: dict[str, dict[int, str]] = {
         2: "Annuelle gélive, thermophile — ne démarre qu'au-dessus de ~12 °C, "
            "fructifie tout l'été. Sa graine ne lève que lorsque le sol est franchement "
            "chaud au toucher : semée tôt en terre froide, elle attend, parfois en vain. "
-           "Gourmande en eau et en azote. Sensible au mildiou (familial Solanaceae).",
+           "Gourmande en eau et en azote. Sensible au mildiou (familial Solanaceae). "
+           "Fille des tropiques, elle ne s'endurcit jamais : les nuits fraîches de fin "
+           "d'été suffisent à la marquer, la première gelée la noircit.",
         3: "S'associe au basilic et aux Astéracées qui attirent ses auxiliaires ; à "
            "éloigner des autres Solanaceae (partage les mêmes maladies). Gros "
            "consommateur → épuise le sol, à faire suivre d'une légumineuse. TRÈS "
@@ -31,7 +33,8 @@ FICHES_POTAGER: dict[str, dict[int, str]] = {
         2: "Annuelle très thermophile, encore plus frileuse que la tomate ; cycle long, "
            "a besoin d'une saison chaude pleine pour mûrir. Sa levée est la plus "
            "tardive du potager : il lui faut un sol durablement chaud, sinon la graine "
-           "patiente sans germer. Même fragilité fongique familiale.",
+           "patiente sans germer. Même fragilité fongique familiale. Les nuits fraîches "
+           "l'abîment avant même le gel, et il ne s'y habitue pas.",
         3: "Même clan que tomate/aubergine — rotation et distance de rigueur. Profite "
            "des fleurs compagnes qui soutiennent prédateurs de pucerons. Levant après "
            "les rustiques, elle s'inscrit dans la deuxième vague de la saison, quand la "
@@ -40,7 +43,9 @@ FICHES_POTAGER: dict[str, dict[int, str]] = {
     "haricot": {
         1: "Tige volubile ou naine, feuilles trifoliées, gousses pendantes.",
         2: "Annuelle fixatrice d'azote — ses racines hébergent des rhizobiums en "
-           "nodules qui captent l'azote de l'air. Autofertile en azote, peu exigeante.",
+           "nodules qui captent l'azote de l'air. Autofertile en azote, peu exigeante. "
+           "Mais frileuse : venue d'Amérique chaude, elle souffre des nuits fraîches et "
+           "ne survit pas au premier gel.",
         3: "Pilier des « trois sœurs » (maïs-tuteur, courge-couvre-sol) ; laisse le sol "
            "plus riche en azote qu'elle ne l'a trouvé. Grimpante, elle cherche un "
            "support (cf. tuteurs).",
@@ -69,7 +74,9 @@ FICHES_POTAGER: dict[str, dict[int, str]] = {
         1: "Petit buisson de feuilles tendres très parfumées.",
         2: "Annuelle gélive thermophile ; floraison en épis à supprimer pour prolonger "
            "le feuillage. Aime chaleur et arrosages réguliers. Sa levée réclame un sol "
-           "chaud : il ne sert à rien de le semer tant que la terre reste fraîche.",
+           "chaud : il ne sert à rien de le semer tant que la terre reste fraîche. Le "
+           "plus frileux du potager : une simple nuit fraîche tache ses feuilles, la "
+           "moindre gelée le tue, et aucun froid vécu ne l'aguerrit.",
         3: "Compagnon classique de la tomate (brouille les ravageurs par son parfum, "
            "partage le même microclimat chaud) ; ses fleurs nourrissent les petits "
            "pollinisateurs.",
@@ -155,7 +162,8 @@ FICHES_POTAGER: dict[str, dict[int, str]] = {
         2: "Annuelle thermophile, monoïque (fleurs mâles et femelles séparées) → dépend "
            "des pollinisateurs pour nouer. Très gourmande en eau et matière organique. "
            "Sa graine attend un sol bien réchauffé pour lever — semée trop tôt, elle "
-           "pourrit plus qu'elle ne germe.",
+           "pourrit plus qu'elle ne germe. Frileuse : les nuits fraîches d'automne "
+           "flétrissent ses grandes feuilles bien avant le premier gel.",
         3: "Son feuillage couvre et ombre le sol (couvre-sol des « trois sœurs ») ; pas "
            "de butineurs = pas de courgettes — indicateur vivant de la santé "
            "pollinisatrice.",
@@ -176,7 +184,9 @@ FICHES_POTAGER: dict[str, dict[int, str]] = {
     "mache": {
         1: "Petites rosettes tendres au ras du sol.",
         2: "Annuelle très rustique au froid, cycle d'hiver ; se ressème spontanément. "
-           "Sa graine lève en sol seulement frais, bien avant les frileuses du potager.",
+           "Sa graine lève en sol seulement frais, bien avant les frileuses du potager. "
+           "Elle s'endurcit à mesure que l'automne fraîchit et traverse l'hiver sous le "
+           "gel ; c'est la chaleur d'été qui l'arrête, pas le froid.",
         3: "Couvre-sol hivernal qui occupe le terrain quand tout dort, limite le sol nu "
            "et le lessivage ; salade de soudure entre deux saisons. Levant au frais, "
            "elle fait partie des premières à ouvrir la saison, avant la grande vague de "

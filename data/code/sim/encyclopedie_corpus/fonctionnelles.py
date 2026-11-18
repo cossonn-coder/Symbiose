@@ -82,7 +82,8 @@ FICHES_FONCTIONNELLES: dict[str, dict[int, str]] = {
            "barbus portés haut sur des chaumes souples.",
         2: "Céréale annuelle LA PLUS RUSTIQUE : semée dense à l'automne, sa graine "
            "lève au froid quand rien d'autre ne démarre, et le couvert protège le sol "
-           "nu tout l'hiver. Anémophile (pollen au vent). Racines fibreuses "
+           "nu tout l'hiver. Endurci par les froids d'automne, il supporte des gels "
+           "qui tueraient presque toutes les annuelles. Anémophile (pollen au vent). Racines fibreuses "
            "assoiffées, comme toutes les graminées — mais tolérante à l'allélopathie.",
         3: "ENGRAIS VERT ALLÉLOPATHIQUE — le couvert nettoyant du permaculteur : ses "
            "racines exsudent des composés qui ÉTOUFFENT chimiquement la levée des "

@@ -35,6 +35,12 @@ _VRAIES_UNITES = {
     "germination_thermique": ("°C", 0.0, 1.5, (-6.0, 6.0)),
     "phenologie_florale":    ("semaines", 0.0, 1.0, (-4.0, 4.0)),
 }
+# D139 niche thermique ② : caractères thermiques en °C (adaptogène ou non).
+_THERMIQUES = {
+    "rusticite_froid": ("°C", 0.0, 1.5, (-6.0, 6.0), True),
+    "limite_froid":    ("°C", 0.0, 1.0, (-4.0, 4.0), False),
+    "limite_chaud":    ("°C", 0.0, 1.5, (-6.0, 6.0), True),
+}
 
 
 def check(name, cond, detail=""):
@@ -55,6 +61,11 @@ def test_valeurs_refactor_pur():
             ok = (car.unite == "probabilité" and car.bornes == (0.0, 1.0)
                   and car.sigma_a == 0.05 and not car.adaptogene)
             check(f"caractère neuf : {g}", ok, repr(car))
+            continue
+        if g in _THERMIQUES:             # niche thermique ② : °C
+            ok = ((car.unite, car.neutre, car.sigma_a, car.bornes, car.adaptogene)
+                  == _THERMIQUES[g]) and car.adaptogene == (g in ADAPTOGENIC_GENES)
+            check(f"caractère thermique : {g}", ok, repr(car))
             continue
         if g in _VRAIES_UNITES:          # D139 ③ : vraies unités (neutre 0)
             ok = (car.unite, car.neutre, car.sigma_a, car.bornes) == _VRAIES_UNITES[g] \

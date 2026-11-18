@@ -38,6 +38,8 @@ class Carrot(PlantBase):
     family = "Apiaceae"
     genus = "Daucus"
     name = "Carotte"
+    # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
+    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -5.0, 5.0, 30.0, 44.0
     feuillage = "fin"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.4  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     resilience_base = 0.8          # R — potagère bisannuelle exigeante, feuillage fin fragile
@@ -105,6 +107,8 @@ class Zucchini(PlantBase):
     family = "Cucurbitaceae"
     genus = "Cucurbita"
     name = "Courgette"
+    # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
+    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = 10.0, -1.0, 0.0, 35.0, 46.0
     feuillage = "large"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.6  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     resilience_base = 0.8          # R — annuelle gourmande à grandes feuilles molles
@@ -179,6 +183,8 @@ class Strawberry(PlantBase):
     family = "Rosaceae"
     genus = "Fragaria"
     name = "Fraisier"
+    # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
+    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -6.0, 12.0, 30.0, 44.0
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.35  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     resilience_base = 1.0          # intermédiaire — vivace couvre-sol stolonifère, tenue moyenne
@@ -249,6 +255,8 @@ class CornSalad(PlantBase):
     family = "Caprifoliaceae"
     genus = "Valerianella"
     name = "Mâche"
+    # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
+    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -10.0, 10.0, 25.0, 42.0
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.15  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     resilience_base = 0.8          # R — petite annuelle en rosette tendre de mi-saison

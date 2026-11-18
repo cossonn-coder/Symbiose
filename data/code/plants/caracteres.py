@@ -76,7 +76,13 @@ _FACTEUR_ADAPTO = Caractere(adaptogene=True)
 # `genetics.py` (au-dessus de GENE_NAMES) ; `adaptogene` recopie ADAPTOGENIC_GENES.
 CARACTERES = {
     "hauteur":               _FACTEUR,
-    "rusticite_froid":       _FACTEUR_ADAPTO,
+    # D139 niche thermique ② — EN °C : ABAISSEMENT de la limite de gel du tissu
+    # tendre de l'espèce (`t_gel_tendre`) : +1,5 = gèle à 1,5 °C plus froid. Neutre
+    # 0 ; σ_A 1,5 °C ; bornes ±6 °C = 4σ. Reste ADAPTOGÈNE : l'endurcissement vécu
+    # (`cold_memory`) s'y AJOUTE en °C (`PlantInstance.lim_gel`), il ne le multiplie
+    # plus. Même position (canal de hash inchangé), seule l'unité change.
+    "rusticite_froid":       Caractere(
+        unite="°C", neutre=0.0, sigma_a=1.5, bornes=(-6.0, 6.0), adaptogene=True),
     "vigueur":               _FACTEUR,
     "resistance_pathogene":  _FACTEUR_ADAPTO,
     "tolerance_secheresse":  _FACTEUR_ADAPTO,
@@ -106,6 +112,17 @@ CARACTERES = {
     "autofecondation": Caractere(
         unite="probabilité", neutre=0.15, sigma_a=0.05, bornes=(0.0, 1.0),
         neutre_par_pollinisation={"self": 0.95, "insect": 0.15, "wind": 0.05}),
+    # D139 niche thermique ② — deux limites de la plage vivable, EN °C, AJOUTÉES EN
+    # QUEUE. `limite_froid` ABAISSE le seuil de lésion par le froid sans gel
+    # (`t_froid_lesion`, espèces tropicales seulement) : +1 = supporte une nuit 1 °C
+    # plus froide. `limite_chaud` RELÈVE les seuils chauds (`t_chaud_stress` et
+    # `t_brulure`) ; adaptogène : l'acclimatation à la chaleur vécue (`heat_memory`,
+    # ≤ +3 °C) s'y ajoute. Bornes = 4σ. Chaque °C au-delà du neutre coûte de la
+    # vigueur (`K_THERMO`, `genetics.py`).
+    "limite_froid": Caractere(
+        unite="°C", neutre=0.0, sigma_a=1.0, bornes=(-4.0, 4.0)),
+    "limite_chaud": Caractere(
+        unite="°C", neutre=0.0, sigma_a=1.5, bornes=(-6.0, 6.0), adaptogene=True),
 }
 
 

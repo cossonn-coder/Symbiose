@@ -26,7 +26,8 @@ Température de la FEUILLE au jour le plus chaud (D139, sprint niche thermique �
 
 Couche : `sim.engine` (lit une plante ET l'humidité ressentie du frère `racines`).
 Pure : zéro RNG, n'écrit rien. Calculée à la demande, une fois par plante et par
-semaine par ses lecteurs (dégâts de chaleur, tronçon ③) — aucun lecteur à ce tronçon.
+semaine par ses lecteurs (dégâts de chaleur, tronçon ③). Niche ② : `heat_memory`
+(`_update_physiology`) la lit via `t_feuille_de`.
 """
 
 from __future__ import annotations
@@ -50,6 +51,13 @@ def soif(plant, eco) -> float:
     r, c = plant.position
     hum = eau_percue(plant, eco, eco.humidite.at_plot(r, c))
     return max(0.0, 1.0 - hum / HUM_CONFORT)
+
+
+def t_feuille_de(t_max: float, lumiere: float, hum_percue: float) -> float:
+    """Cœur PUR de `t_feuille`, pour un appelant qui a déjà la lumière reçue et
+    l'humidité ressentie de la plante (`_update_physiology`, niche thermique ②) :
+    on ne relit pas deux fois ce que le tick a déjà calculé."""
+    return t_max + ECHAUFF_FEUILLE * lumiere * max(0.0, 1.0 - hum_percue / HUM_CONFORT)
 
 
 def t_feuille(plant, eco, t_air: float, nebulosite: float) -> float:

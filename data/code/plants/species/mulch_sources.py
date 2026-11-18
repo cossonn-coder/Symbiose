@@ -32,6 +32,8 @@ class Wheat(Poaceae):
     """
     genus = "Triticum"
     name = "Blé"
+    # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
+    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -8.0, 12.0, 32.0, 44.0
     # AUTOGAME (D139 ②) : anémophile au catalogue, mais s'autoféconde
     # à ≈ 95 % en réalité (fleur cléistogame ou quasi) → lignée qui se FIXE.
     genetique = {"autofecondation": {"neutre": 0.95}}
@@ -106,6 +108,8 @@ class Rye(Poaceae):
     """
     genus = "Secale"
     name = "Seigle"
+    # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
+    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -8.0, 17.0, 30.0, 44.0
     feuillage = "fin"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.0  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     rarity = "Établie"
@@ -193,6 +197,8 @@ class Hemp(PlantBase):
     family = "Cannabaceae"
     genus = "Cannabis"
     name = "Chanvre"
+    # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
+    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -3.0, 1.0, 35.0, 47.0
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.0  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     resilience_base = 1.0          # intermédiaire — annuelle vigoureuse à tige fibreuse mais tendre jeune

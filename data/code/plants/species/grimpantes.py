@@ -40,6 +40,8 @@ class Ivy(PlantBase):
     family = "Araliaceae"
     genus = "Hedera"
     name = "Lierre"
+    # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
+    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -8.0, 10.0, 35.0, 46.0
     ligneux = True                       # D111 ②bis : liane ligneuse (tiges lignifiées) → bois mort
     feuillage = "cireux"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.8  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
@@ -129,6 +131,8 @@ class Jasmine(PlantBase):
     family = "Oleaceae"
     genus = "Jasminum"
     name = "Jasmin"
+    # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
+    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -5.0, 8.0, 35.0, 47.0
     ligneux = True                       # D111 ②bis : sarments ligneux → bois mort
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.5  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur

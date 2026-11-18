@@ -14,6 +14,8 @@ from plants.base import (GrowthStage,
 class Tomato(Solanaceae):
     genus = "Solanum"
     name = "Tomate"
+    # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
+    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = 10.0, -1.0, 0.0, 32.0, 45.0
     # AUTOGAME (D139 ②) : pollinisée par insecte au catalogue, mais s'autoféconde
     # à ≈ 95 % en réalité (fleur cléistogame ou quasi) → lignée qui se FIXE.
     genetique = {"autofecondation": {"neutre": 0.95}}
@@ -99,6 +101,8 @@ class Tomato(Solanaceae):
 class Pepper(Solanaceae):
     genus = "Capsicum"
     name = "Poivron"
+    # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
+    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = 10.0, -1.0, 0.0, 33.0, 45.0
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.05  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     t_germ_opt = 24.0              # la PLUS frileuse : tropicale, lève très tard (fenêtre ③)
@@ -149,6 +153,8 @@ class Pepper(Solanaceae):
 class Bean(Fabaceae):
     genus = "Phaseolus"
     name = "Haricot"
+    # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
+    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = 8.0, -1.0, 0.0, 32.0, 45.0
     # AUTOGAME (D139 ②) : pollinisée par insecte au catalogue, mais s'autoféconde
     # à ≈ 95 % en réalité (fleur cléistogame ou quasi) → lignée qui se FIXE.
     genetique = {"autofecondation": {"neutre": 0.95}}
@@ -209,6 +215,8 @@ class Bean(Fabaceae):
 class Clover(Fabaceae):
     genus = "Trifolium"
     name = "Trèfle"
+    # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
+    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -8.0, 10.0, 30.0, 44.0
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.85  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     resilience_base = 1.25         # S — couvre-sol vivace piétinable, repart du stolon
@@ -264,6 +272,8 @@ class Clover(Fabaceae):
 class Sunflower(Asteraceae):
     genus = "Helianthus"
     name = "Tournesol"
+    # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
+    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = 5.0, -3.0, 1.0, 36.0, 48.0
     feuillage = "large"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.6  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     # --- Allélopathie racinaire (sprint ALLÉLOPATHIE ⑤) ---
@@ -363,6 +373,8 @@ class Sunflower(Asteraceae):
 class Basil(Lamiaceae):
     genus = "Ocimum"
     name = "Basilic"
+    # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
+    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = 10.0, -1.0, 0.0, 35.0, 45.0
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.5  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     resilience_base = 0.8          # R — annuelle tendre frileuse, noircit au moindre stress

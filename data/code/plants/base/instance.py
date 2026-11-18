@@ -13,7 +13,8 @@ from dataclasses import dataclass, field
 from constants import PLOT_CM
 from ..genetics import (clamp_gene, ADAPTOGENIC_GENES,
                         DEFENSE_COST, DEFENSE_PLANCHER, DI, neutre, borne,
-                        facteur_precocite)
+                        facteur_precocite, CARACTERES, EXPR_MAX,
+                        ACCLIM_CHAUD_MAX, K_THERMO, CARACTERES_THERMIQUES)
 from .empreintes import _plots_in_radius, PROC_ROOT_RATIO
 from .stades import GrowthStage, Segment
 
@@ -54,6 +55,10 @@ class PlantInstance:
     cold_memory: float = 0.0        # intégration lente du froid sub-létal vécu [0-1]
                                     # (plasticité ① — cold hardening : signal température < seuil
                                     #  doux, AU-DELÀ du gel létal). Pilote l'expression de rusticite_froid.
+    heat_memory: float = 0.0        # intégration lente de la CHALEUR vécue par la feuille [0-1]
+                                    # (D139 niche thermique ② — T_feuille au-dessus de
+                                    #  `t_chaud_stress − 5`). Pilote l'expression de limite_chaud
+                                    #  (acclimatation, protéines de choc thermique, ≤ +3 °C).
     infection_memory: float = 0.0   # intégration lente de la pression pathogène vécue [0-1]
                                     # (plasticité ① — SAR / priming immunitaire). Pilote l'expression
                                     #  de resistance_pathogene.
@@ -258,8 +263,45 @@ class PlantInstance:
         (sprint plasticité). `expression[name]` ∈ [EXPR_MIN, EXPR_MAX] traduit le
         durcissement acquis sous stress vécu ; 1.0 (défaut) ⇒ phénotype = génotype.
         Le produit repasse par clamp_gene → jamais hors des limites physiologiques
-        dures. Pour un gène NON adaptogène (absent d'`expression`) : == gene(name)."""
+        dures. Pour un gène NON adaptogène (absent d'`expression`) : == gene(name).
+        Caractère EN °C (D139 niche thermique ②) : la plasticité ne multiplie pas un
+        décalage → renvoie le génotype seul ; l'endurcissement s'AJOUTE dans les
+        limites `lim_*` (via `plasticite_c`)."""
+        if CARACTERES[name].unite != "facteur":
+            return self.gene(name)
         return borne(name, self.gene(name) * self.expression.get(name, 1.0))
+
+    def plasticite_c(self, name: str, ampleur: float) -> float:
+        """Degrés (°C) gagnés par la plasticité d'un caractère thermique :
+        `ampleur × (expression − 1)/(EXPR_MAX − 1)` ∈ [0, ampleur]. 0 sans
+        acclimatation (expression 1.0), `ampleur` à expression maximale."""
+        return ampleur * (self.expression.get(name, 1.0) - 1.0) / (EXPR_MAX - 1.0)
+
+    # --- Limites thermiques EFFECTIVES (D139 niche thermique ②, conception §4.4) ---
+    # Source UNIQUE lue par les dégâts (③) et les signes (④) : espèce (couche 1)
+    # décalée par les gènes (couche 2) et par ce que la plante a vécu (couche 3).
+    def lim_gel(self) -> float:
+        """Nuit la plus froide sous laquelle la plante GÈLE (°C) : gel du tissu
+        tendre de l'espèce − rusticité génétique − endurcissement vécu."""
+        cls = self.plant_class
+        return (cls.t_gel_tendre - self.gene("rusticite_froid")
+                - self.plasticite_c("rusticite_froid", cls.endurcissement_max))
+
+    def lim_froid(self) -> float:
+        """Nuit sous laquelle une espèce TROPICALE s'abîme SANS gel (°C). Espèce non
+        sensible (`t_froid_lesion` None) → −∞ : aucune nuit ne la lèse."""
+        t = self.plant_class.t_froid_lesion
+        return -math.inf if t is None else t - self.gene("limite_froid")
+
+    def lim_chaud(self) -> float:
+        """T_feuille au-delà de laquelle la plante cesse de croître (°C)."""
+        return (self.plant_class.t_chaud_stress + self.gene("limite_chaud")
+                + self.plasticite_c("limite_chaud", ACCLIM_CHAUD_MAX))
+
+    def lim_brul(self) -> float:
+        """T_feuille au-delà de laquelle le tissu brûle (°C)."""
+        return (self.plant_class.t_brulure + self.gene("limite_chaud")
+                + self.plasticite_c("limite_chaud", ACCLIM_CHAUD_MAX))
 
     def cout_defense(self) -> float:
         """Compromis croissance/défense (plasticité ③, conception §2.4 — philo #2).
@@ -270,9 +312,20 @@ class PlantInstance:
         DANS LE TICK (croissance/convalescence) — PAS la façade read-only
         `vigueur_plante`. Désexprimer (expression ≤ 1.0) ne coûte JAMAIS ; borné par
         `DEFENSE_PLANCHER` (> 0) → la défense ne peut pas annuler la vigueur. Neutre
-        (toutes expressions à 1.0) ⇒ 1.0 (non-régression du tick non acclimaté)."""
+        (toutes expressions à 1.0) ⇒ 1.0 (non-régression du tick non acclimaté).
+        D139 niche thermique ② : multiplié par `cout_thermique` (tolérance génétique)."""
         surexpression = sum(max(0.0, e - 1.0) for e in self.expression.values())
-        return max(DEFENSE_PLANCHER, 1.0 - DEFENSE_COST * surexpression)
+        return max(DEFENSE_PLANCHER, 1.0 - DEFENSE_COST * surexpression) * self.cout_thermique()
+
+    def cout_thermique(self) -> float:
+        """Compromis TOLÉRANCE THERMIQUE ↔ croissance (D139 niche thermique ②,
+        conception §4.5) : `1 − K_THERMO × Σ max(0, caractère − neutre)` sur les trois
+        caractères thermiques GÉNÉTIQUES (la plasticité est déjà payée ci-dessus).
+        Appliqué DANS `cout_defense`, donc aux mêmes sites (croissance,
+        convalescence). Une plante frileuse ne gagne rien : seul l'excès coûte."""
+        exces = sum(max(0.0, self.gene(g) - neutre(g, self.plant_class))
+                    for g in CARACTERES_THERMIQUES)
+        return 1.0 - K_THERMO * exces
 
     def depression_consanguinite(self) -> float:
         """Dépression de consanguinité (D139 ②, conception §6) — facteur ∈ ]0, 1]
