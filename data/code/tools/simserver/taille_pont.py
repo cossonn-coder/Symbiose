@@ -9,7 +9,7 @@ Clé présente seulement si non nulle, comme `quatre_feuilles`. Lecture pure →
 """
 from __future__ import annotations
 
-from sim.actions.taille_herbacee import RABATTU_SEMAINES, decroissant
+from sim.actions.taille_herbacee import decroissant, semaines_rabattu
 
 # Semaines pour que le pied dessiné retrouve sa forme [choix, conception §4.4].
 PINCE_SEMAINES = 12
@@ -17,7 +17,7 @@ PINCE_SEMAINES = 12
 
 def marquer_taille(base: dict, plant, semaine: int) -> None:
     """Ajoute à `base` les hints non nuls de ce pied."""
-    rabattu = decroissant(plant.semaine_coupe, semaine, RABATTU_SEMAINES)
+    rabattu = decroissant(plant.semaine_coupe, semaine, semaines_rabattu(plant))
     if rabattu > 0.0:
         base["rabattu"] = rabattu
     pince = decroissant(plant.semaine_pince, semaine, PINCE_SEMAINES)

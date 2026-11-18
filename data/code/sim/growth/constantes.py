@@ -21,6 +21,12 @@ AUXIN_INHIB_THRESHOLD = 0.35    # sous ce niveau, un bourgeon peut débourrer
 AUXIN_PROD_FLOOR      = 0.15    # plancher de production (vieux sujet s'étale)
 AUXIN_RELEASE_SCALE   = 400.0   # semaines : échelle de relâchement avec l'âge
 
+# --- Reprise après un geste (D139 caractères vivants ③) ---------------------
+# Semaines après une coupe/un pincement pendant lesquelles l'élongation est × gène
+# `repousse` (réserves mobilisées vers les bourgeons). Même horloge que le rabattu
+# dessiné des herbacées (`sim/actions/taille_herbacee.RABATTU_SEMAINES`) [choix].
+REPRISE_SEMAINES = 8
+
 # --- Allongement & émission (§D.2) -----------------------------------------
 GROWTH_SPEED   = 2.0     # ↳ défaut PlantBase.growth_speed (cm/tick d'allongement)
 EMIT_LENGTH    = 8.0     # cm : au-delà, l'apex émet un segment axial

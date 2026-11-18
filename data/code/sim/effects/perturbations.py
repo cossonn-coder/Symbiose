@@ -95,7 +95,8 @@ def deposer_mort(plant: PlantInstance, eco) -> float:
     biomass = necromass_biomass(plant)
     fb = frac_bois_mort(plant)
     mous = biomass * (1.0 - fb)
-    eco.deposer_litiere(r, c, tissu_mort(plant), mous)
+    eco.deposer_litiere(r, c, tissu_mort(plant), mous,             # coriace → lente (D139 ③)
+                        lenteur=plant.gene("coriacite_feuille"))
     plant.morte = True
     plant.stade_mort = "seche"
     plant.bois_restant = biomass * fb
@@ -459,6 +460,8 @@ K_PARFUM_REPULSIF      = 0.5
 # feuillage amer ou toxique (tomate, lierre) les détourne. facteur =
 # max(PLANCHER, 1 + appetence_feuille) ∈ [0,2 ; 2] : jamais une immunité.
 APPETENCE_PLANCHER     = 0.2
+# Coriacité (D139 caractères vivants ③) : une feuille dure se mâche mal → pression
+# ÷ `coriacite_feuille`, bornée par les bornes du caractère [0,4 ; 1,6] ⇒ × [0,63 ; 2,5].
 HERBIVORY_LETHAL_AUX   = 0.20  # densité auxiliaire en dessous de laquelle un foyer non régulé tourne au létal
 # Seuil RE-DÉRIVÉ au sprint RYTHMES MO ② : la bascule normalise désormais le
 # microbiome par MICROBE_RHYTHM_REF (0.6) au lieu du /3.0 hérité. Sur cette échelle,
@@ -502,7 +505,8 @@ def herbivory_pressure(plant: PlantInstance, tile: Tile,
             if eco and "chenille" in getattr(eco, "larvae", {}) else 0.0)
     pressure = ((rav + chen) * HERBIVORY_GAIN
                 * (1.0 - K_PARFUM_REPULSIF * (plant.gene("parfum") - 1.0))
-                * max(APPETENCE_PLANCHER, 1.0 + plant.gene("appetence_feuille")))
+                * max(APPETENCE_PLANCHER, 1.0 + plant.gene("appetence_feuille"))
+                / plant.gene("coriacite_feuille"))
 
     # ───────── SUPPLANTÉ D31.2 — conservé pour mémoire ─────────
     # Ancien modèle (proxies sans entité visible). La pression dérivait de la

@@ -514,6 +514,19 @@ class SeedBank:
         rec = self.species[r][c].get(plant_class)
         return rec["density"] if rec else 0.0
 
+    def densite_levable(self, r: int, c: int, plant_class: type) -> float:
+        """Densité du pool qui peut LEVER cette semaine (D139 caractères vivants ③) :
+        densité ÷ moyenne du gène `dormance_graine`. Prix de la dormance : un pool
+        dormant dure plus (`tick_species_aging`) mais lève une part plus faible chaque
+        semaine → levée étalée. Gène absent ⇒ densité brute (`species_density`)."""
+        rec = self.species[r][c].get(plant_class)
+        if not rec:
+            return 0.0
+        dorm = rec["genes"].get("dormance_graine")
+        if dorm is None or dorm.mean == 1.0:
+            return rec["density"]
+        return rec["density"] / dorm.mean
+
     def sample_genes(self, r: int, c: int, plant_class: type,
                      seed: int, week: int) -> dict:
         """
@@ -553,12 +566,19 @@ class SeedBank:
         """Vieillissement du pool génétique (densité), purge des pools épuisés."""
         # `stat.weight *= perte` écrit en ligne = `stat.decay(perte)` sans l'appel de
         # méthode (~60 000 stats par tick en an 2 — FLUIDITÉ AN 2 ②). Même opération.
-        perte = SPECIES_SEED_VIABILITY_LOSS
+        # Dormance (D139 caractères vivants ③) : la perte d'un pool est ÷ la MOYENNE du
+        # gène `dormance_graine` de ses graines (une lecture par enregistrement, pas
+        # par stat). Gène absent ou neutre 1,0 ⇒ perte d'espèce exacte.
+        perte_base = SPECIES_SEED_VIABILITY_LOSS
         for r in range(self.rows):
             for c in range(self.cols):
                 cell = self.species[r][c]
                 dead = []
                 for cls, rec in cell.items():
+                    dorm = rec["genes"].get("dormance_graine")
+                    perte = perte_base
+                    if dorm is not None and dorm.mean != 1.0:
+                        perte = 1.0 - (1.0 - perte_base) / dorm.mean
                     rec["density"] *= perte
                     for stat in rec["genes"].values():
                         stat.weight *= perte

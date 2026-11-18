@@ -213,7 +213,7 @@ def choisir_espece(archetype: str, azote: float, seed: int, week: int,
         return WEED_CATALOGUE.get(archetype)
     eligibles = [cls for cls, n_min, n_max in flore if n_min <= azote < n_max]
     u = _hash_noise(seed, week * 61, r, c)
-    dens = ([banque.species_density(r, c, cls) for cls in eligibles]
+    dens = ([banque.densite_levable(r, c, cls) for cls in eligibles]   # ÷ dormance (③)
             if banque is not None else [])
     if not any(dens):
         return eligibles[int(u * len(eligibles)) % len(eligibles)]
@@ -288,9 +288,9 @@ def _ressemis(eco, r: int, c: int, seed: int, week: int, niche: float,
         return None
     especes, poids = [], []
     for cls in sorted(cell, key=lambda k: k.__name__):     # ordre stable (save/load)
-        d = cell[cls]["density"]
-        if d <= SPECIES_POOL_MIN_DENSITY or not _ressemable(cls):
+        if cell[cls]["density"] <= SPECIES_POOL_MIN_DENSITY or not _ressemable(cls):
             continue
+        d = eco.seed_bank.densite_levable(r, c, cls)    # pool dormant : lève moins (③)
         n = niche
         if light > 0.0:
             n = niche * (min(1.0, light * cls.shade_tolerance_base()) / light)

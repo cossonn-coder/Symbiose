@@ -70,6 +70,10 @@ GENES_AERIENS: frozenset[str] = frozenset({
     # D139 caractères vivants ② : fruits et feuillage naissent sur le greffon → leur
     # taille et leur goût suivent le greffon (une pomme greffée garde son goût).
     "taille_fruit", "appetence_fruit", "appetence_feuille",
+    # D139 caractères vivants ③ : feuille, port, bois à bouturer et graines naissent
+    # sur le greffon. `repousse` (réserves du pied, bourgeons du collet) reste au
+    # porte-greffe.
+    "coriacite_feuille", "aptitude_bouture", "dormance_graine", "dominance_apicale",
 })
 # Tout ce qui n'est PAS aérien reste au porte-greffe (dérivé → rien ne se perd si
 # un gène neuf s'ajoute en queue de GENE_NAMES : il tombe côté racinaire par défaut,

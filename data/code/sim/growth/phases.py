@@ -17,7 +17,7 @@ from fields import _hash_noise, form_seed_at
 from .constantes import (AUXIN_PROD_FLOOR, AUXIN_RELEASE_SCALE, AUXIN_DECAY,
                          AUXIN_INHIB_THRESHOLD, THICKNESS_INIT,
                          JITTER_RAD, ETIOLEMENT_LIGHT_SEUIL, ETIOLEMENT_GAIN,
-                         GIRTH_TAU, TAPER_EXP, PLIAGE_Z)
+                         GIRTH_TAU, TAPER_EXP, PLIAGE_Z, REPRISE_SEMAINES)
 from .geometrie import (_tip, _horiz, _lateral_dir, _phototropic_bias,
                         _gravitropic_droop, _apex_z_floor, _depths, _children,
                         _subtree, _apex_in_subtree, _rebuild, taper_thickness,
@@ -324,7 +324,14 @@ def grow_plant(plant, seed: int, week: int, light_field=None,
     if est_etiole(plant, light_field):
         gain = ETIOLEMENT_GAIN / plant.expressed_gene("port_trapu")
         speed *= (1.0 + gain)
-    _update_auxin(segs, cls.apical_dominance_base, cls.auxin_release_scale)
+    # Repousse (D139 caractères vivants ③) : dans les semaines qui suivent une coupe
+    # ou un pincement, la lignée à forte repousse allonge plus vite (elle le paie en
+    # fleurs, `sim/engine/floraison.py`). Hors fenêtre : vitesse inchangée.
+    if plant.semaine_reprise >= 0 and week - plant.semaine_reprise < REPRISE_SEMAINES:
+        speed *= plant.gene("repousse")
+    # Dominance apicale (D139 ③) : le gène module la force d'espèce → flèche ou buisson.
+    dominance = cls.apical_dominance_base * plant.gene("dominance_apicale")
+    _update_auxin(segs, dominance, cls.auxin_release_scale)
     _elongate_emit(plant, speed, cls.max_height_cm, cls.max_extent_cm,
                    cls.emit_length_cm, light_field, cls.phototropism_strength,
                    cls.gravitropism_gain)
@@ -332,8 +339,7 @@ def grow_plant(plant, seed: int, week: int, light_field=None,
     # sa couronne reçoit encore assez de lumière ; `_debourrement` le fait partir ci-dessous.
     if cls.ligneux and cls.procedural_growth and _season_factor(week) == 1.0:
         _reveil_dormant(plant, week, light_field)
-    _debourrement(plant, seed, week, math.radians(cls.branch_angle),
-                  cls.apical_dominance_base)
+    _debourrement(plant, seed, week, math.radians(cls.branch_angle), dominance)
     tombes = _elaguer(plant, cls.wood_persistence, cls.max_segments)
     # Rejet de souche : une plante vivante entièrement dormante (plus aucun apex,
     # ex. après senescence totale du vieux bois) reprend du collet → run éternel.

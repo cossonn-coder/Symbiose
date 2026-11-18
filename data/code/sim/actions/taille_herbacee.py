@@ -23,6 +23,13 @@ RABATTU_SEMAINES = 8
 RABATTU_PART = 0.6
 
 
+def semaines_rabattu(plant) -> float:
+    """Semaines pour que CE pied repousse après une coupe : `RABATTU_SEMAINES ÷ repousse`
+    (D139 caractères vivants ③). Une lignée à forte repousse repart plus vite ; lu par le
+    dépôt ci-dessous ET par le pont (le pied dessiné suit la même horloge)."""
+    return RABATTU_SEMAINES / plant.gene("repousse")
+
+
 def decroissant(semaine_geste: int, semaine: int, duree: int) -> float:
     """1 la semaine du geste, 0 après `duree` semaines ; 0 si le geste n'a jamais eu lieu."""
     if semaine_geste < 0:
@@ -35,7 +42,7 @@ def deposer_rabattu(game_state: dict, plant, eco) -> float:
     À appeler AVANT de noter la nouvelle coupe : on part de la hauteur déjà rabattue. Un
     second clic la même semaine ne dépose donc rien, et un clic 4 semaines plus tard ne rend
     que ce qui a repoussé. Une plante ne redépose jamais plus qu'elle n'a."""
-    deja = decroissant(plant.semaine_coupe, game_state.get("week", 0), RABATTU_SEMAINES)
+    deja = decroissant(plant.semaine_coupe, game_state.get("week", 0), semaines_rabattu(plant))
     masse = plant.current_height * RABATTU_PART * (1.0 - deja) * BOIS_PAR_CM
     eco.deposer_litiere(*plant.position, "bois", masse, THICKNESS_INIT)   # no-op si masse ≤ 0
     return masse

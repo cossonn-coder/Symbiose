@@ -102,9 +102,12 @@ def tick_transport(eco, wind_dir: float, wind_force: float) -> list:
                 # Conservation stricte : on REDÉPOSE exactement ce qui a pu être
                 # retiré (la masse vivante peut différer du snapshot si la décompo a
                 # déjà raboté la parcelle ce tick — improbable ici, mais sûr).
+                # La feuille emportée garde sa coriacité (D139 ③, `Parcelle.lenteur`).
+                src = next((p for p in eco.litiere[r][c] if p.tissu == t), None)
+                lenteur = src.lenteur if src is not None else 1.0
                 pris = eco.retirer_litiere(r, c, t, m)
                 if pris > 0.0:
-                    eco.deposer_litiere(ar, ac, t, pris)
+                    eco.deposer_litiere(ar, ac, t, pris, lenteur=lenteur)
                     deplace_total += pris
     if deplace_total >= TRANSPORT_LOG_SEUIL:
         return [f"    🍃 Le vent charrie la litière vers l'abri "

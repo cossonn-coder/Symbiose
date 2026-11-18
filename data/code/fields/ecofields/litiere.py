@@ -65,15 +65,20 @@ class Parcelle:
     # Diamètre moyen (cm) pondéré par la masse — lu par la décompo du SEUL `bois`
     # (⑦bis). Les autres tissus gardent le défaut, jamais lu.
     diam_cm: float = BOIS_DIAM_DEFAUT
+    # LENTEUR de décompo du tissu (D139 caractères vivants ③) : la `coriacite_feuille`
+    # de la plante qui l'a déposé, moyennée par la masse. Le taux du tissu est ÷ lenteur
+    # (une feuille coriace dure plus). 1.0 = taux du tissu inchangé (défaut, non lu).
+    lenteur: float = 1.0
 
 
 def _fusion_parcelle(parcelles: list, tissu: str, masse: float,
-                     diam_cm: float = BOIS_DIAM_DEFAUT) -> None:
+                     diam_cm: float = BOIS_DIAM_DEFAUT, lenteur: float = 1.0) -> None:
     """Fusion par tissu (bornage déterministe, §1.1) — PARTAGÉE litière ↔ structures.
 
     Si une parcelle de même `tissu` existe → masse cumulée, `age_sem` = moyenne
     pondérée par la masse (le dépôt neuf, d'âge 0, rajeunit le tas), `diam_cm`
-    idem (⑦bis : une brindille sur une souche affine le tas). Sinon append.
+    idem (⑦bis : une brindille sur une souche affine le tas), `lenteur` idem (③ :
+    une feuille tendre sur un tas coriace l'adoucit). Sinon append.
     Suppose `masse > 0` (l'appelant garde le no-op + tout filtre d'acceptation).
     """
     for p in parcelles:
@@ -83,10 +88,12 @@ def _fusion_parcelle(parcelles: list, tissu: str, masse: float,
                 # garde : deux grosseurs égales ne recalculent rien (pas de dérive
                 # flottante du défaut → décompo historique bit-identique)
                 p.diam_cm = (p.diam_cm * p.masse + diam_cm * masse) / total
+            if lenteur != p.lenteur and total > 0:      # même garde que diam_cm
+                p.lenteur = (p.lenteur * p.masse + lenteur * masse) / total
             p.age_sem = (p.age_sem * p.masse) / total if total > 0 else 0.0
             p.masse = total
             return
-    parcelles.append(Parcelle(tissu, masse, 0.0, diam_cm))
+    parcelles.append(Parcelle(tissu, masse, 0.0, diam_cm, lenteur))
 
 
 # ---------------------------------------------------------------------------

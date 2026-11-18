@@ -47,17 +47,19 @@ class MatiereOrganiqueMixin:
         return total / n
 
     def deposer_litiere(self, r: int, c: int, tissu: str, masse: float,
-                        diam_cm: float = BOIS_DIAM_DEFAUT) -> None:
+                        diam_cm: float = BOIS_DIAM_DEFAUT, lenteur: float = 1.0) -> None:
         """Point d'entrée UNIQUE pour tout écrivain de matière fraîche.
 
         Fusion par tissu (`_fusion_parcelle`, §1.1) : masse cumulée, `age_sem`
         moyenné par la masse (le dépôt neuf, d'âge 0, rajeunit le tas). `diam_cm`
         (⑦bis) = grosseur du bois déposé, moyennée de même ; ignorée hors `bois`.
+        `lenteur` (D139 ③) = coriacité de la feuille déposée, moyennée de même :
+        le taux du tissu est ÷ lenteur dans la décompo. Défaut 1.0 = inchangé.
         No-op si `masse ≤ 0`.
         """
         if masse <= 0.0:
             return
-        _fusion_parcelle(self.litiere[r][c], tissu, masse, diam_cm)
+        _fusion_parcelle(self.litiere[r][c], tissu, masse, diam_cm, lenteur)
 
     def retirer_litiere(self, r: int, c: int, tissu: str, masse: float) -> float:
         """Retire (au plus) `masse` de litière du `tissu` donné d'un plot — miroir
@@ -197,6 +199,11 @@ class MatiereOrganiqueMixin:
                         # diamètre par défaut garde le taux historique EXACT.
                         if p.diam_cm != BOIS_DIAM_DEFAUT:
                             d *= facteur_grosseur(p.diam_cm)
+                    # Coriacité (D139 caractères vivants ③) : une feuille épaisse et
+                    # cireuse résiste aux microbes. Lue sur la PARCELLE (posée au
+                    # dépôt), jamais sur la plante : O(1), défaut 1.0 ⇒ taux exact.
+                    if p.lenteur != 1.0:
+                        d /= p.lenteur
                     p.masse  -= d
                     p.age_sem += 1.0
                     fresh_humif += d * humif

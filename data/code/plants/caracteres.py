@@ -178,6 +178,28 @@ CARACTERES = {
                                    bornes=(-1.0, 1.0)),
     "appetence_feuille": Caractere(unite="goût", neutre=0.0, sigma_a=0.10,
                                    bornes=(-1.0, 1.0)),
+    # D139 caractères vivants ③ — FEUILLE ET GESTES (conception §2.3), EN QUEUE.
+    #  - coriacite_feuille : feuille épaisse et cireuse → encaisse la grêle et les
+    #                   ravageurs, et sa litière se décompose plus lentement (lignine,
+    #                   cuticule). Se fabrique : coût de croissance (`cout`) ;
+    #  - repousse     : vitesse de reprise après une coupe ou un broutage (réserves
+    #                   mobilisées vers les bourgeons). Prix STRUCTUREL : la floraison
+    #                   est réduite d'autant (`sim/engine/floraison.py`) ;
+    #  - aptitude_bouture : PROBABILITÉ qu'une bouture prenne. Neutre 1,0 = le
+    #                   comportement d'avant (reprise certaine) : σ_A ne peut que
+    #                   rogner vers le bas. Presque gratuit (pas de `cout`) ;
+    #  - dormance_graine : la graine dure plus longtemps dans la banque (vieillissement
+    #                   ÷ gène) mais lève moins chaque semaine (densité levable ÷ gène) :
+    #                   prix STRUCTUREL, une levée étalée ;
+    #  - dominance_apicale : multiplie `apical_dominance_base` de l'espèce → tige en
+    #                   flèche ou buisson. Prix STRUCTUREL (forme : moins de latérales
+    #                   ou vite ombragée).
+    "coriacite_feuille": Caractere(sigma_a=0.15, cout=K_FLEUR),
+    "repousse":          Caractere(sigma_a=0.15),
+    "aptitude_bouture":  Caractere(unite="probabilité", neutre=1.0, sigma_a=0.10,
+                                   bornes=(0.0, 1.0)),
+    "dormance_graine":   Caractere(sigma_a=0.15),
+    "dominance_apicale": Caractere(sigma_a=0.15),
 }
 
 # Caractères qui ont un coût d'excès (`cout` > 0), dans l'ordre du registre : seuls

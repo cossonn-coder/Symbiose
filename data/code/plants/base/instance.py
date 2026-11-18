@@ -134,6 +134,10 @@ class PlantInstance:
     # hors `_PLANT_ATTRS` du golden.
     semaine_coupe: int = -1
     semaine_pince: int = -1
+    # Semaine du dernier geste de coupe/pincement, TOUTES espèces (D139 caractères vivants
+    # ③) : ouvre la fenêtre de REPRISE où la croissance lit le gène `repousse`
+    # (`sim/growth/phases.grow_plant`). -1 = jamais. Hors `_PLANT_ATTRS` du golden.
+    semaine_reprise: int = -1
     # Structure morphologique (croissance procédurale, D29 réorienté, tronçon 1).
     # Vide à la déclaration ⇒ une plante naît avec UN segment apex au collet
     # (cf. __post_init__). INERTE à ce tronçon : poussée par sim/growth.py mais

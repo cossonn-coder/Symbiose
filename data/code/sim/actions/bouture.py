@@ -17,7 +17,8 @@ INVARIANTS (philo de design) :
           un malus direct. Le geste est DIRECT sur le vivant (permis mais coûteux,
           #1) : coût MODERE côté Vigueur joueur (`couts.cout_action`).
   #3    — DÉTERMINISTE, zéro RNG : la bouture est un ACTE joueur, pas un tirage.
-          Le clone est identique à la mère, la pose est le point du clic.
+          Le clone est identique à la mère, la pose est le point du clic. Depuis
+          D139 ③, la REPRISE est un tirage au hash contre `aptitude_bouture`.
   #6    — pas de punition d'une tentative impossible : refus EN AMONT (mère non
           bouturable / trop jeune / épuisée) SANS dépense (patron `planter`/lot vide).
 
@@ -30,6 +31,7 @@ clonage, réutilisés — pas de duplication).
 """
 from __future__ import annotations
 
+from fields import _hash_noise
 from sim.vigueur import spend
 from sim.vigueur_plante import vigueur_plante
 from sim.clonal import _mature, _plot_of, CLONAL_STRESS_COST, CLONAL_VIGUEUR_SEUIL
@@ -44,6 +46,16 @@ BOUTURE_STRESS_COST = CLONAL_STRESS_COST
 # Seuil de Vigueur de la mère pour supporter le prélèvement (même façade read-only
 # que le clonal ; une mère mourante — santé → 0 → façade nulle — refuse).
 BOUTURE_VIGUEUR_SEUIL = CLONAL_VIGUEUR_SEUIL
+# Canal de hash de la REPRISE d'une bouture (D139 caractères vivants ③) : `week × 131`
+# (libre au 2026-11-18, grep). Tirage par (graine du monde, semaine, plot cible).
+CANAL_REPRISE = 131
+
+
+def bouture_prend(mother, seed: int, week: int, r: int, c: int) -> bool:
+    """La bouture s'enracine-t-elle ? Tirage DÉTERMINISTE (hash, philo #3) contre le
+    gène `aptitude_bouture` de la mère (probabilité ; neutre 1,0 = toujours, le
+    comportement d'avant). Même mère, même plot, même semaine ⇒ même verdict."""
+    return _hash_noise(seed, week * CANAL_REPRISE, r, c) < mother.gene("aptitude_bouture")
 
 
 def peut_bouturer(mother, eco) -> bool:
@@ -72,6 +84,8 @@ def bouturer(game_state: dict, player: str, mother, tile, eco,
       1. gate `peut_bouturer` — refus AVANT toute dépense si la mère ne peut donner ;
       2. coût Vigueur joueur MODERE (`cout_action`) — si `spend < 1.0`, on renonce
          (le greffon n'est pas prélevé, la mère intacte) ;
+      2b. reprise (D139 ③) : tirage au hash contre `aptitude_bouture` ; échec ⇒
+         la mère est fatiguée quand même, aucun clone ;
       3. pose du CLONE via `tile.add_plant` au plot cliqué (position continue =
          point du clic) : gènes COPIÉS + expression (priming) héritée, EXACTEMENT
          comme `clonal.emettre_ramets` — aucun brassage (philo #3) ;
@@ -92,6 +106,13 @@ def bouturer(game_state: dict, player: str, mother, tile, eco,
     if spend(game_state, player, cost) < 1.0:
         return False                          # Vigueur insuffisante → greffon non prélevé
 
+    # Reprise (D139 ③) : le greffon est prélevé (Vigueur payée, mère fatiguée), mais
+    # il ne s'enracine que selon l'aptitude de la lignée. Un échec n'est pas une
+    # punition (philo #6) : c'est l'écosystème qui répond, et on peut retenter ailleurs.
+    if not bouture_prend(mother, game_state.get("seed", 42),
+                         game_state.get("week", 0), r, c):
+        mother.stress_memory = min(1.0, mother.stress_memory + BOUTURE_STRESS_COST)
+        return False
     ramet = tile.add_plant(mother.plant_class, r, c)
     if ramet is None:
         return False                          # plot invalide (add_plant a rendu None)

@@ -150,9 +150,12 @@ class MortaliteMixin:
                 # le coût de défense (plasticité ③) la freine : la vigueur re-routée
                 # vers la défense cicatrise moins vite (neutre = 1.0 sans sur-expression).
                 # Dépression de consanguinité (D139 ②) et coût génétique (D139
-                # caractères vivants ①) : même site, même logique.
+                # caractères vivants ①) : même site, même logique. `repousse` (③) :
+                # une plante qui mobilise vite ses réserves se remet plus vite d'un
+                # broutage ou d'un coup (elle le paie en fleurs, floraison.py).
                 heal = (Q * HEAL_RATE * plant.gene("vigueur") * plant.cout_defense()
-                        * plant.cout_genetique() * plant.depression_consanguinite())
+                        * plant.cout_genetique() * plant.depression_consanguinite()
+                        * plant.gene("repousse"))
                 # Coût de robustesse de l'étiolement (Q7) : un héliophile étiolé
                 # convalesce −10 % — la tige grêle est fragile ; s'il n'atteint pas
                 # la lumière (qui lèverait l'étiolement), il se rétablit moins bien
@@ -436,7 +439,11 @@ class MortaliteMixin:
                 suscept = 1.0 / p.expressed_gene(gene_name)
             elif species_base:
                 # Niche d'espèce (grêle) : coriace (>1) ⇒ susceptibilité < 1.
-                suscept = 1.0 / getattr(p.plant_class, species_base, 1.0)
+                # D139 caractères vivants ③ : la grêle lit aussi la coriacité
+                # héritée de la plante (une feuille épaisse se déchire moins). Seul
+                # `species_base` en usage = grêle (boucle.py).
+                suscept = 1.0 / (getattr(p.plant_class, species_base, 1.0)
+                                 * p.gene("coriacite_feuille"))
             else:
                 suscept = 1.0
             # Protection LOCALE = paillage-rondelle (tuile) + écran POSÉ au plot

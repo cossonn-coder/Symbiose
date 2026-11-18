@@ -325,7 +325,9 @@ def _segment_cible(plant, cible: str) -> int | None:
 def _noter_geste_vu(game_state: dict, plant, champ: str) -> None:
     """Note la semaine d'une coupe ou d'un pincement (FORMES DES PLANTES ②). Espèces non
     migrées seulement : leur port est dessiné, les segments n'y montrent plus la coupe.
-    Migrées (arbres, tomate, lierre, jasmin) : la coupe se voit à leurs segments."""
+    Migrées (arbres, tomate, lierre, jasmin) : la coupe se voit à leurs segments.
+    Toutes espèces : la semaine ouvre la fenêtre de REPRISE (gène `repousse`, D139 ③)."""
+    plant.semaine_reprise = game_state.get("week", 0)
     if not plant.plant_class.procedural_growth:
         setattr(plant, champ, game_state.get("week", 0))
 

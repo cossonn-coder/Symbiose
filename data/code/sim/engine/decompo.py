@@ -274,8 +274,9 @@ class DecompoMixin:
             if masse <= 0.0:
                 continue
             part = masse / (CHUTE_SEMAINES * len(plots))
+            lenteur = plant.gene("coriacite_feuille")   # feuille coriace → lente (D139 ③)
             for r, c in plots:
-                eco.deposer_litiere(r, c, "feuille", part)
+                eco.deposer_litiere(r, c, "feuille", part, lenteur=lenteur)
             if depuis == 0:
                 log.append(f"    🍂 Abscission {plant.name}@{plant.position} "
                            f"→ feuille +{masse:.3f}")

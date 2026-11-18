@@ -99,7 +99,10 @@ class FloraisonMixin:
                     plant.floraison_abs = self.week
             en_fleur = (plant.bloom_week >= 0
                         and week_in_year < plant.bloom_week + cls.bloom_duration)
-            cible = 1.0 if en_fleur else 0.0
+            # Prix de la REPOUSSE (D139 caractères vivants ③) : les réserves gardées
+            # pour repartir manquent aux fleurs → plafond `1 ÷ repousse` (seul l'excès
+            # coûte : sous le neutre, la floraison ne dépasse pas 1).
+            cible = min(1.0, 1.0 / plant.gene("repousse")) if en_fleur else 0.0
             # Montée PAR ESPÈCE si l'espèce la règle (arbres, VERGER VIVANT ②), sinon
             # la commune. La fanaison reste commune.
             montee = cls.floraison_montee or FLORAISON_MONTEE

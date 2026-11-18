@@ -189,8 +189,10 @@ def test_hints_taille():
     apres = meme_plante(s.send(cmd="snapshot")["snapshot"])
     check("`pince` = 1 la semaine du pincement", apres.get("pince") == 1.0, apres.get("pince"))
     apres = meme_plante(s.send(cmd="step_week")["snapshot"])
-    check("une semaine plus tard, `rabattu` = 7/8",
-          apres.get("rabattu") == 0.875, apres.get("rabattu"))
+    # D139 ③ : le pied repousse en `RABATTU_SEMAINES ÷ repousse` semaines (gène du
+    # pied, non exporté) → 7/8 au neutre, entre 0,80 et 0,95 sur les bornes [0,4 ; 1,6].
+    check("une semaine plus tard, `rabattu` ≈ 7/8 (selon la repousse)",
+          0.79 < (apres.get("rabattu") or 0) < 0.96, apres.get("rabattu"))
     check("une semaine plus tard, `pince` = 11/12",
           apres.get("pince") == 0.917, apres.get("pince"))
     for _ in range(8):

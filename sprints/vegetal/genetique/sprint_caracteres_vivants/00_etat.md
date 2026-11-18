@@ -24,7 +24,7 @@ d'un compromis.
 ## Golden
 Départ = hash de fin du sprint ②. ①, ①b (deux fois : scénario puis mécanique), ①d,
 (①c annoncé re-figé, resté **INTACT** : voir §①c),
-② (`c6fd8275…`), ③-④ **RE-FIGÉ annoncé** chacun (clés neuves + lecteurs)
+② (`c6fd8275…`), ③ (`5bfbd8a3…`), ④ **RE-FIGÉ annoncé** (clés neuves + lecteurs)
 · ⑤ INTACT · ⑥ INTACT.
 
 ## Tronçons
@@ -34,8 +34,8 @@ Départ = hash de fin du sprint ②. ①, ①b (deux fois : scénario puis méca
 | ①b | `01b_fecondation.md` — pommier mûr au smoke, `fecondation` à la fanaison, part autofécondée | **FAIT** (2026-11-18, commit `b157ee6`) — voir §①b |
 | ①c | `01c_paternite.md` — compteur `pollen_donne`, père tiré ∝ pollen exporté | **FAIT** (2026-11-18, commit `96505f5`) — voir §①c |
 | ①d | `01d_levee_graines.md` — annuelles qui se ressèment, espèce spontanée ∝ son pool | **FAIT** (2026-11-18, commit `9fdcbe9`) — voir §①d |
-| ② | `02_fruits_comestibilite.md` — taille des fruits, appétence feuille/fruit, Vigueur négative | **FAIT côté code** (2026-11-18, non commité) — voir §② |
-| ③ | `03_feuille_gestes.md` — coriacité, repousse, bouture, dormance, dominance apicale | à faire |
+| ② | `02_fruits_comestibilite.md` — taille des fruits, appétence feuille/fruit, Vigueur négative | **FAIT** (2026-11-18, commit `0134bd5`) — voir §② |
+| ③ | `03_feuille_gestes.md` — coriacité, repousse, bouture, dormance, dominance apicale | **FAIT côté code** (2026-11-18, non commité) — voir §③ |
 | ④ | `04_sol_expansion.md` — clonalité, portée, fixation, allélopathie, mycorhization | à faire |
 | ⑤ | `05_signes_pont.md` — export des signes visibles, voix | à faire |
 | ⑥ | `06_vue_banc.md` — rendu, banc `caracteres_vivants`, recette F5, clôture D139 | à faire |
@@ -271,6 +271,66 @@ Départ = hash de fin du sprint ②. ①, ①b (deux fois : scénario puis méca
   savoureuse ; le concept « comestibilité » n'est crédité par aucune détection de maîtrise
   (note toujours descriptive hors vision / réglage anticipé) — à brancher au ⑤ si voulu.
 
+## ③ Feuille et gestes — bilan (2026-11-18)
+- **Fait** : 5 caractères en queue (`plants/caracteres.py`) : `coriacite_feuille` (facteur,
+  σ_A 0,15, `cout` K_FLEUR), `repousse`, `dormance_graine`, `dominance_apicale` (facteurs,
+  σ_A 0,15, prix structurels), `aptitude_bouture` (probabilité, neutre 1,0 = reprise certaine
+  d'avant, σ_A 0,10, bornes [0, 1]). Lecteurs :
+  - coriacité : grêle `suscept = 1/(hail_resistance_base × gène)` (`mortalite._mediated_damage`,
+    branche `species_base`, seule utilisée par la grêle) ; ravageurs `÷ gène`
+    (`herbivory_pressure`, borné par les bornes du caractère ⇒ × [0,63 ; 2,5]) ; litière :
+    champ neuf `Parcelle.lenteur` (moyenné par la masse à la fusion, même garde que
+    `diam_cm`), taux du tissu `÷ lenteur` dans `tick_decomposition` ; posé au dépôt de la
+    mort (`perturbations`, parties molles) et de l'abscission (`decompo`) ; conservé par le
+    transport éolien (`transport.py`) et la copie de conteneur (`world/container.py`).
+  - repousse : champ neuf `PlantInstance.semaine_reprise` (hors digest) posé par
+    `_noter_geste_vu` (tailler, pincer, arracher ; TOUTES espèces) ; `grow_plant` × gène sur
+    l'élongation pendant `REPRISE_SEMAINES` = 8 ; herbacées sans squelette : rabattu sur
+    `semaines_rabattu(plant) = RABATTU_SEMAINES ÷ gène` (dépôt ET pont `taille_pont`) ;
+    convalescence `heal × gène` (toute convalescence, broutage compris). Prix : floraison
+    plafonnée à `min(1, 1 ÷ repousse)` (`floraison.py`, une lecture ; ≥ 0,625 donc toujours
+    « fleuri » au seuil 0,5).
+  - bouture : `bouture_prend` = `_hash_noise(seed, week × 131, r, c) < gène` (canal libre,
+    grep). Échec APRÈS paiement : Vigueur dépensée, mère fatiguée, aucun clone, pas de
+    marqueur D12.
+  - dormance : `tick_species_aging` perte du pool = `1 − (1 − 0,997) ÷ moyenne du gène`
+    (1 lecture par enregistrement) ; `SeedBank.densite_levable` = densité ÷ moyenne, lue par
+    S3 (`choisir_espece`) et S2 (`_ressemis` ; le seuil de pool reste sur la densité brute).
+  - dominance : `apical_dominance_base × gène` dans `_update_auxin` ET `_debourrement`.
+  - Greffe : coriacité, aptitude_bouture, dormance, dominance suivent le greffon ; repousse
+    reste au porte-greffe.
+- **Écarts au kickoff** : (a) « tige plus haute » : en isolé l'élongation de l'apex ne lit
+  pas l'auxine, la hauteur ne diffère qu'après ~70 semaines (tomate : 0,6 → 64 cm /
+  19 latérales ; 1,5 → 138 cm / 1 latérale), via l'élagage au plafond de segments ;
+  « moins de fleurs latérales » N'EXISTE PAS au moteur (la floraison n'est pas portée par
+  les segments) → prix de la dominance = forme seule. (b) Récolte non branchée à la repousse
+  (kickoff ne la listait pas). (c) La convalescence lit la repousse pour TOUT dégât, pas
+  seulement l'herbivorie (elle n'a pas de cause).
+- **Golden RE-FIGÉ** `c6fd8275…` → `5bfbd8a359cf07e60e1c4a8c5c6c133387d89213fd9ca16af52f1aace23f6728`
+  (5 clés neuves au digest). 1ʳᵉ divergence : **s6, rosée T1** 0,266 → 0,267 (coût de la
+  coriacité du pommier fondateur, 1,585 ≈ +3,9 σ → croissance −12 %) ; puis **nouaison du
+  pommier s7** au lieu de s8, 4 fruits (frac 0,28) au lieu de 10 (0,76) : sa `repousse` 1,25
+  plafonne la floraison à 0,80 → fanaison une semaine plus tôt, moins de pollen. s60 :
+  13 fruits (0,95) contre 13 (0,94). Vérifié : coriacité neutralisée ⇒ 1ʳᵉ divergence = s7.
+  Digest final 43 → 47 vivantes (trèfle 22 → 27, minette 8 → 5, pissenlit 0 → 2) : cascade.
+- **Perf** : smoke médiane 5,24 → 5,17 s [n=5 paires alternées, bruit ±10 %, monde
+  divergent] ; `tick_species_aging` 0,140 → 0,150 µs/stat [banc 2000 pools, meilleur de 7],
+  dont +5 stats/pool (gènes neufs) et ≈ 0,27 µs/pool pour la lecture de dormance.
+- **Tests** : `tests/test_caracteres_feuille.py` 18/18 (grêle, ravageurs, litière +
+  fusion, rabattu, élongation après coupe et sans coupe, plafond floral, bouture 0/0,5/1 +
+  déterminisme + échec, dormance persistance + levée, dominance).
+- **Adaptés** : `test_caracteres` (5 entrées du registre), `tests/simserver/taille.py`
+  (`rabattu` une semaine après = 7/8 au neutre, désormais ∈ ]0,79 ; 0,96[ selon la repousse
+  du pied, non exportée). `population_hash` **RE-FIGÉ** `20b81840…` →
+  `9f7f348c8159b4c22b638e02f5274d2ebc160ad3411a6e897580c9fa67ed1877` (monde divergent dès
+  s6 : coût de coriacité, repousse → floraison → nourriture florale). Toutes les suites
+  `tests/test_*.py` vertes (sim_server 349/349) sauf `test_peripherie` 70/71 (rouge avant).
+  Bancs `tests/bancs/` : rouges = `bancs_grimpe`, `climatique`, `edaphique`, `verger_mur`, les mêmes quatre que ceux constatés rouges à HEAD au ② (pas revérifiés au stash ce tronçon).
+- Taille : `fields/seedbank.py` **320 LDC** (🟡), `sim/effects/perturbations.py` **303** (🟡),
+  `sim/succession.py` 306 (🟡, inchangé), `sim/growth/phases.py` 186, `mortalite.py` 250.
+- **À valider F5 / arbitrer** : le pommier du smoke tire une coriacité à +3,9 σ (fondateur) ;
+  pression des ravageurs ×2,5 à coriacité 0,4 ; repousse sans fenêtre pour la récolte.
+
 ## Conception FÉCONDATION (trou du ①) — ARBITRÉE et FIGÉE (Nico, 2026-11-18)
 Doc : `docs/vegetal/genetique/conception_caracteres_vivants.md` §6. Diagnostic : le nombre de
 graines ne dépendait ni des visites, ni ne faisait le nombre de descendants (annuelles
@@ -289,9 +349,9 @@ sans archétype : pool jamais levé) ; le père était le plus proche ; `pollen_
 Tronçons insérés avant ② : `01b_fecondation.md`, `01c_paternite.md`, `01d_levee_graines.md`.
 
 ## REPRISE
-② fait côté code (non commité, golden RE-FIGÉ `c6fd8275…`, population intact `20b81840…`).
+③ fait côté code (non commité, golden RE-FIGÉ `5bfbd8a3…`, population RE-FIGÉ `9f7f348c…`).
 Lire `CLAUDE.md`, ce fichier, puis le kickoff du
-premier tronçon « à faire » (③). Points à arbitrer : `RESSEMIS_DENSITE_REF` (écart ①d),
+premier tronçon « à faire » (④). Points à arbitrer : `RESSEMIS_DENSITE_REF` (écart ①d),
 extinction des annuelles ressemées sous la flore férale, mode de pollinisation du pâturin
 annuel (amplifié par S3), pollen déposé/crédité après la fanaison (côtés femelle ET mâle),
-calibrage du goût (`PERTE_TOXIQUE`, `1 + a`) et maîtrise du concept « comestibilité » (②).
+calibrage du goût (`PERTE_TOXIQUE`, `1 + a`) et maîtrise du concept « comestibilité » (②), dominance sans « fleurs latérales » au moteur et repousse non lue par la récolte (③).

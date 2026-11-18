@@ -53,6 +53,12 @@ _FLORAUX = {
     "taille_fruit":      ("facteur", 1.0, 0.15, (GENE_HARD_MIN, GENE_HARD_MAX)),
     "appetence_fruit":   ("goût", 0.3, 0.10, (-1.0, 1.0)),
     "appetence_feuille": ("goût", 0.0, 0.10, (-1.0, 1.0)),
+    # D139 caractères vivants ③ : feuille et gestes.
+    "coriacite_feuille": ("facteur", 1.0, 0.15, (GENE_HARD_MIN, GENE_HARD_MAX)),
+    "repousse":          ("facteur", 1.0, 0.15, (GENE_HARD_MIN, GENE_HARD_MAX)),
+    "aptitude_bouture":  ("probabilité", 1.0, 0.10, (0.0, 1.0)),
+    "dormance_graine":   ("facteur", 1.0, 0.15, (GENE_HARD_MIN, GENE_HARD_MAX)),
+    "dominance_apicale": ("facteur", 1.0, 0.15, (GENE_HARD_MIN, GENE_HARD_MAX)),
 }
 
 
