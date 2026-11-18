@@ -21,6 +21,7 @@ from __future__ import annotations
 from plants.base import (GrowthStage, Urticaceae, Ericaceae, Poaceae,
                          Violaceae, Asteraceae, Sphagnaceae, Droseraceae,
                          PlantBase)
+from plants.couleurs import BLANC, ROSE, ROSE_PALE, VIOLET
 
 
 class Nettle(Urticaceae):
@@ -89,6 +90,7 @@ class Vaccinium(Ericaceae):
     bois_chute_semaine = 46
     feuillage = "cireux"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.6  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
+    axe_couleur = (ROSE_PALE, BLANC)  # couleur de fleur (D139 ①) : grelots rosés
     resilience_base = 1.25         # S — sous-arbrisseau ligneux de lande acide, lent et coriace
     ph_opt = 4.8                   # acidophile strict — fenêtre étroite (calcifuge)
     ph_tol = 0.8
@@ -152,6 +154,7 @@ class Raspberry(PlantBase):
     bois_chute_semaine = 38
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.8  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
+    axe_couleur = (BLANC, BLANC)  # couleur de fleur (D139 ①) : petites fleurs blanches
     resilience_base = 1.25         # S — ronce ligneuse drageonnante, repart du réseau souterrain
     resistance_ecrasement  = 0.4   # cannes ligneuses mais cassantes
     stimulation_ecrasement = 0.3
@@ -287,6 +290,7 @@ class SweetViolet(Violaceae):
     t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -8.0, 15.0, 28.0, 42.0
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.3  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
+    axe_couleur = (VIOLET, BLANC)  # couleur de fleur (D139 ①) : violette, parfois blanche
     resilience_base = 1.0          # intermédiaire — petit couvre-sol d'ombre vivace, tenue moyenne
     resistance_ecrasement  = 0.7   # rosette basse plaquée, encaisse le piétinement
     stimulation_ecrasement = 0.4
@@ -513,6 +517,7 @@ class Drosera(Droseraceae):
     t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -6.0, 15.0, 30.0, 42.0
     feuillage = "fin"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.1  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
+    axe_couleur = (BLANC, ROSE)  # couleur de fleur (D139 ①) : petites fleurs blanches à roses
     rarity = "Ancienne"                # curiosité rare des tourbières
     keywords = ["Carnivore", "Tourbière", "Acidophile", "Zone humide"]
     silhouette = "tapis"               # rosette plaquée au sol (pur descripteur rendu)

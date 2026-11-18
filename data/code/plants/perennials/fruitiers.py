@@ -5,6 +5,7 @@ Les fruitiers : figuier, pommier, cerisier, noyer.
 
 from __future__ import annotations
 from plants.perennials.base import PerennialWoody
+from plants.couleurs import BLANC, ROSE, ROSE_PALE
 
 
 # ---------------------------------------------------------------------------
@@ -86,6 +87,7 @@ class AppleTree(PerennialWoody):
     t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -3.0, 30.0, 35.0, 47.0
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.55  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
+    axe_couleur = (BLANC, ROSE)  # couleur de fleur (D139 ①) : blanc rosé
     shade_tolerance = 0.85  # D111 ②ter : héliophile modéré (fruitier de lumière, supporte une mi-ombre) (≠ défaut strate haute 0,90)
     rarity = "Établie"
     keywords = ["Fruitier", "Jardin", "Mellifère"]
@@ -174,6 +176,7 @@ class CherryTree(PerennialWoody):
     t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -3.0, 27.0, 35.0, 47.0
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.55  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
+    axe_couleur = (BLANC, ROSE_PALE)  # couleur de fleur (D139 ①) : blanc pur à rosé
     shade_tolerance = 0.80  # D111 ②ter : héliophile (≠ défaut strate haute 0,90)
     rarity = "Établie"
     keywords = ["Fruitier", "Intermédiaire", "Mellifère"]

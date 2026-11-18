@@ -6,6 +6,7 @@ grass, competitor). Données pures (niveau 3), s'appuient sur `plants.base`.
 
 from __future__ import annotations
 from plants.base import PlantBase, GrowthStage
+from plants.couleurs import BLANC, JAUNE, ORANGE
 
 
 class BursaPastoris(PlantBase):
@@ -24,6 +25,7 @@ class BursaPastoris(PlantBase):
     genetique = {"autofecondation": {"neutre": 0.95}}
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.2  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
+    axe_couleur = (BLANC, BLANC)  # couleur de fleur (D139 ①) : petites croix blanches
     resilience_base = 1.25         # S — pionnière rustique r-stratège, la rosette encaisse tout
     resistance_ecrasement  = 0.55  # hampe cassable, rosette survit (volet 2 §4)
     stimulation_ecrasement = 0.2
@@ -82,6 +84,7 @@ class MedicagoLupulina(PlantBase):
     t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -8.0, 10.0, 32.0, 45.0
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.6  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
+    axe_couleur = (JAUNE, JAUNE)  # couleur de fleur (D139 ①) : glomérules jaunes
     resilience_base = 1.25         # S — légumineuse pionnière rampante des sols pauvres, rustique
     resistance_ecrasement  = 0.7   # port bas rampant, encaisse (volet 2 §4)
     stimulation_ecrasement = 0.5
@@ -195,6 +198,7 @@ class Taraxacum(PlantBase):
     t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -8.0, 20.0, 32.0, 46.0
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.7  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
+    axe_couleur = (JAUNE, ORANGE)  # couleur de fleur (D139 ①) : capitule jaune d'or
     resilience_base = 1.25         # S — pivot profond, rosette plaquée : repart de la racine
     resistance_ecrasement  = 0.8   # rosette plaquée, encaisse, repart mou (volet 2 §4)
     stimulation_ecrasement = 0.4
@@ -266,6 +270,7 @@ class Molene(PlantBase):
     t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -8.0, 15.0, 35.0, 48.0
     feuillage = "cireux"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.05  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
+    axe_couleur = (JAUNE, JAUNE)  # couleur de fleur (D139 ①) : épi jaune
     resilience_base = 1.2          # S — pionnière rustique des sols pauvres/remués, rosette coriace
     resistance_ecrasement  = 0.5   # hampe cassable, rosette laineuse survit (volet 2 §4)
     stimulation_ecrasement = 0.2

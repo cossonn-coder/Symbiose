@@ -149,9 +149,10 @@ class MortaliteMixin:
                 # vigueur accélère la convalescence (gène >1 → guérit plus vite) ;
                 # le coût de défense (plasticité ③) la freine : la vigueur re-routée
                 # vers la défense cicatrise moins vite (neutre = 1.0 sans sur-expression).
-                # Dépression de consanguinité (D139 ②) : même site, même logique.
+                # Dépression de consanguinité (D139 ②) et coût génétique (D139
+                # caractères vivants ①) : même site, même logique.
                 heal = (Q * HEAL_RATE * plant.gene("vigueur") * plant.cout_defense()
-                        * plant.depression_consanguinite())
+                        * plant.cout_genetique() * plant.depression_consanguinite())
                 # Coût de robustesse de l'étiolement (Q7) : un héliophile étiolé
                 # convalesce −10 % — la tige grêle est fragile ; s'il n'atteint pas
                 # la lumière (qui lèverait l'étiolement), il se rétablit moins bien

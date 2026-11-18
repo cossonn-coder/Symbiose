@@ -117,7 +117,9 @@ def test_cout():
     p.genes = {"rusticite_froid": -3.0}
     check("frileux : aucun gain ni coût", p.cout_thermique() == 1.0)
     p.genes = {"limite_chaud": 1.0}
-    check("cout_defense intègre cout_thermique", p.cout_defense() == 1.0 - K_THERMO)
+    # D139 caractères vivants ① : rapatrié dans `cout_genetique` (même site moteur).
+    check("cout_genetique intègre le coût thermique",
+          abs(p.cout_genetique() - (1.0 - K_THERMO)) < 1e-12)
 
 
 def test_catalogue():

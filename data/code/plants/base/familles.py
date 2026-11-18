@@ -165,6 +165,13 @@ class PlantBase(ABC):
     # catalogue la déclare ; le défaut 0,3 (= `_ATTRACT_DEFAUT`, « fleur générique »)
     # ne sert qu'aux classes nues de test.
     nectar: float = 0.3
+    # `axe_couleur` (D139 caractères vivants ①, conception §2.1) : les DEUX couleurs
+    # extrêmes de la fleur de l'espèce, ((teinte °, saturation), (teinte °, sat.)) —
+    # palette dans `plants/couleurs.py` (données littérales ici : règle de couches).
+    # Le caractère `couleur_fleur` ∈ [−1, 1] place chaque plante sur ce segment, et
+    # chaque butineur préfère certaines couleurs (`poids_floral`). None = fleur
+    # sans couleur qui compte (anémophile, non florale) → préférence neutre 1.
+    axe_couleur: tuple | None = None
     # `root_loss_tolerance_base` (couche 1 — niche herbivorie racinaire, campagnol,
     # sprint santé & résilience ③) : capacité D'ESPÈCE à ENCAISSER la perte de chevelu
     # racinaire sans effondrer son uptake. DIVISE la perte dans `plant_uptake`. >1 =

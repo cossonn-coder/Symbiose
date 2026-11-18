@@ -181,8 +181,10 @@ class CroissanceMixin:
             # ses tolérances a re-routé sa vigueur → croissance plus lente (compromis
             # croissance/défense, neutre = 1.0 tant qu'aucune sur-expression). La
             # dépression de consanguinité (D139 ②) freine de même une allogame
-            # consanguine (1.0 si F = 0).
+            # consanguine (1.0 si F = 0). Le coût génétique (D139 caractères vivants
+            # ① : fleurs riches, tolérances thermiques) se paie au même endroit.
             needed = stage.duration_weeks / (plant.gene("vigueur") * plant.cout_defense()
+                                             * plant.cout_genetique()
                                              * plant.depression_consanguinite())
             if plant.age_weeks >= needed and can_grow:
                 if _bolt_bloque(plant):

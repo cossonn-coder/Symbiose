@@ -14,6 +14,7 @@ d'accumulatrice/engrais vert (injection locale de fertilité / matière organiqu
 
 from __future__ import annotations
 from plants.base import PlantBase, GrowthStage, Asteraceae, Amaryllidaceae
+from plants.couleurs import BLANC, BLEU, JAUNE, LAVANDE, ROSE, ROSE_PALE, VIOLET
 
 
 class Yarrow(Asteraceae):
@@ -30,6 +31,7 @@ class Yarrow(Asteraceae):
     t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -8.0, 20.0, 35.0, 48.0
     feuillage = "fin"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.35  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
+    axe_couleur = (BLANC, ROSE)  # couleur de fleur (D139 ①) : corymbes blancs à roses
     resilience_base = 1.25         # S — vivace rustique stolonifère, très encaissante
     resistance_ecrasement  = 0.75  # stolons, repart (volet 2 §4)
     stimulation_ecrasement = 0.6
@@ -78,6 +80,7 @@ class Phacelia(PlantBase):
     t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -6.0, 2.0, 32.0, 45.0
     feuillage = "fin"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 1.0  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
+    axe_couleur = (LAVANDE, BLANC)  # couleur de fleur (D139 ①) : cymes lavande à blanches
     resilience_base = 0.8          # R — engrais vert annuel à tige tendre, cycle court
     resistance_ecrasement  = 0.45  # tige tendre dressée, déformée (volet 2 §4)
     stimulation_ecrasement = 0.2
@@ -145,6 +148,7 @@ class Borage(PlantBase):
     t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -4.0, 3.0, 32.0, 45.0
     feuillage = "large"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.95  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
+    axe_couleur = (BLEU, ROSE)  # couleur de fleur (D139 ①) : étoile bleue, parfois rose
     resilience_base = 1.0          # intermédiaire — annuelle vigoureuse mais charnue/cassante
     resistance_ecrasement  = 0.4   # tige creuse charnue, casse net (volet 2 §4)
     stimulation_ecrasement = 0.2
@@ -206,6 +210,7 @@ class Comfrey(PlantBase):
     t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -8.0, 20.0, 32.0, 45.0
     feuillage = "large"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.7  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
+    axe_couleur = (VIOLET, BLANC)  # couleur de fleur (D139 ①) : clochettes pourpres à crème
     resilience_base = 1.25         # S — vivace pionnière à pivot profond, quasi indestructible
     root_loss_tolerance_base = 1.4 # niche campagnol (③) : pivot charnu profond → le chevelu rongé se refait, l'uptake tient
     resistance_ecrasement  = 0.65  # rosette charnue, repart du pivot (volet 2 §4)
@@ -267,6 +272,7 @@ class Mustard(PlantBase):
     t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -6.0, 4.0, 30.0, 44.0
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.65  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
+    axe_couleur = (JAUNE, JAUNE)  # couleur de fleur (D139 ①) : croix jaunes
     resilience_base = 0.8          # R — engrais vert annuel à croissance éclair, tendre
     resistance_ecrasement  = 0.45  # hampe tendre, casse (volet 2 §4)
     stimulation_ecrasement = 0.2
@@ -333,6 +339,7 @@ class Garlic(Amaryllidaceae):
     t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -8.0, 10.0, 30.0, 44.0
     feuillage = "cireux"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.3  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
+    axe_couleur = (BLANC, ROSE_PALE)  # couleur de fleur (D139 ①) : ombelle blanc rosé
     resilience_base = 1.0          # intermédiaire — bisannuelle bulbeuse, tenue moyenne
     root_loss_tolerance_base = 0.7 # niche campagnol (③) : bulbe & racines superficielles concentrés → le rongeur emporte l'organe de réserve d'un coup
     resistance_ecrasement  = 0.4   # hampe tendre, casse ; le bulbe survit sous terre

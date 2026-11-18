@@ -89,7 +89,10 @@ class AnemophilieMixin:
                     continue
                 # Σ floraison des congénères EN AMONT (projection > 0) à portée +
                 # auto-anémophilie (le panache retombe en partie sur soi).
-                amont = ANEMO_AUTO_FRAC * cible.floraison
+                # D139 caractères vivants ① : chaque émetteur lâche un nuage ∝ son
+                # gène `pollen` (1 au neutre) — un noisetier riche en pollen féconde
+                # plus de voisins (et se paie en croissance, `cout_genetique`).
+                amont = ANEMO_AUTO_FRAC * cible.floraison * cible.gene("pollen")
                 for src in groupe:
                     if src is cible:
                         continue
@@ -97,6 +100,6 @@ class AnemophilieMixin:
                     if dx * dx + dy * dy > radius2:
                         continue
                     if dx * wx + dy * wy > 0.0:        # src est au vent de la cible
-                        amont += src.floraison
+                        amont += src.floraison * src.gene("pollen")
                 if amont > 0.0:
                     cible.pollen_recu += coef * vent * amont

@@ -64,6 +64,9 @@ from sim.actions.couts import cout_action, _objets_action
 GENES_AERIENS: frozenset[str] = frozenset({
     "hauteur", "phenologie_florale", "resistance_pathogene",
     "rusticite_froid", "port_trapu", "autofecondation",
+    # D139 caractères vivants ① : la FLEUR est portée par le greffon (ses rameaux
+    # fleurissent) → ses six caractères suivent le greffon, pas le porte-greffe.
+    "taille_fleur", "nectar", "pollen", "couleur_fleur", "guide_nectar", "parfum",
 })
 # Tout ce qui n'est PAS aérien reste au porte-greffe (dérivé → rien ne se perd si
 # un gène neuf s'ajoute en queue de GENE_NAMES : il tombe côté racinaire par défaut,

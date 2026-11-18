@@ -14,7 +14,8 @@ from constants import PLOT_CM
 from ..genetics import (clamp_gene, ADAPTOGENIC_GENES,
                         DEFENSE_COST, DEFENSE_PLANCHER, DI, neutre, borne,
                         facteur_precocite, CARACTERES, EXPR_MAX,
-                        ACCLIM_CHAUD_MAX, K_THERMO, CARACTERES_THERMIQUES)
+                        ACCLIM_CHAUD_MAX, K_THERMO, CARACTERES_THERMIQUES,
+                        CARACTERES_COUTEUX, parametres_espece)
 from .empreintes import _plots_in_radius, PROC_ROOT_RATIO
 from .stades import GrowthStage, Segment
 
@@ -329,16 +330,42 @@ class PlantInstance:
         `vigueur_plante`. Désexprimer (expression ≤ 1.0) ne coûte JAMAIS ; borné par
         `DEFENSE_PLANCHER` (> 0) → la défense ne peut pas annuler la vigueur. Neutre
         (toutes expressions à 1.0) ⇒ 1.0 (non-régression du tick non acclimaté).
-        D139 niche thermique ② : multiplié par `cout_thermique` (tolérance génétique)."""
+        D139 caractères vivants ① : le coût thermique n'est plus multiplié ici, il
+        est compté par `cout_genetique` (appliqué aux mêmes sites)."""
         surexpression = sum(max(0.0, e - 1.0) for e in self.expression.values())
-        return max(DEFENSE_PLANCHER, 1.0 - DEFENSE_COST * surexpression) * self.cout_thermique()
+        return max(DEFENSE_PLANCHER, 1.0 - DEFENSE_COST * surexpression)
+
+    def cout_genetique(self) -> float:
+        """Coût GÉNÉTIQUE des caractères qui se fabriquent (D139 caractères vivants
+        ①, conception §3) — facteur ∈ [DEFENSE_PLANCHER, 1] multiplié sur la vigueur
+        effective AUX MÊMES SITES que `cout_defense` (croissance, convalescence) :
+
+            max(PLANCHER, 1 − Σ_g K_g · max(0, (a_g − neutre_g) / σ_A,g))
+
+        Chaque caractère coûteux (champ `cout` du registre : fleurs, thermiques)
+        compte son EXCÈS au-dessus du neutre de l'espèce, en σ_A : une fleur à gros
+        nectar, une plante rustique se paient en croissance. Rien n'est gagné sous
+        le neutre (une fleur pauvre ne pousse pas plus vite) : seul l'excès coûte,
+        sinon la sélection pousserait tout au minimum. Les compromis STRUCTURELS
+        (taille ↔ nombre de fruits…) ne sont pas ici, ils vivent où le caractère est
+        lu. Fondateur neutre (gènes absents ou au neutre) ⇒ 1.0 exactement."""
+        exces = 0.0
+        cls = self.plant_class
+        for nom, k in CARACTERES_COUTEUX:
+            a = self.genes.get(nom)
+            if a is None:                  # absent = neutre → aucun excès
+                continue
+            n, s = parametres_espece(cls, nom)
+            if a > n:
+                exces += k * (a - n) / s
+        return max(DEFENSE_PLANCHER, 1.0 - exces)
 
     def cout_thermique(self) -> float:
-        """Compromis TOLÉRANCE THERMIQUE ↔ croissance (D139 niche thermique ②,
+        """Part THERMIQUE seule du coût génétique (D139 niche thermique ②,
         conception §4.5) : `1 − K_THERMO × Σ max(0, caractère − neutre)` sur les trois
-        caractères thermiques GÉNÉTIQUES (la plasticité est déjà payée ci-dessus).
-        Appliqué DANS `cout_defense`, donc aux mêmes sites (croissance,
-        convalescence). Une plante frileuse ne gagne rien : seul l'excès coûte."""
+        caractères thermiques GÉNÉTIQUES. Depuis le D139 caractères vivants ① le
+        moteur applique `cout_genetique` (qui l'inclut) ; cette lecture reste pour
+        les tests et le diagnostic. Une plante frileuse ne gagne rien."""
         exces = sum(max(0.0, self.gene(g) - neutre(g, self.plant_class))
                     for g in CARACTERES_THERMIQUES)
         return 1.0 - K_THERMO * exces

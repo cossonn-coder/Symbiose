@@ -48,7 +48,8 @@ def _forager_wind_factor(vent_local: float) -> float:
     return max(FORAGER_WIND_FLOOR, 1.0 - vent_local / FORAGER_WIND_STOP)
 
 
-def _build_flower_maps(plants, rows, cols, attractivite, defaut, pollen_vibre=None):
+def _build_flower_maps(plants, rows, cols, attractivite, defaut, pollen_vibre=None,
+                       pref_couleur=None):
     """Construit, pour UN type de pollinisateur, la « carte des fleurs » perçue
     (floraison conspécifique × attractivité du type × nectar d'espèce — ou pollen
     vibré, D111 ⑦ : `poids_floral`, même source que le champ) ET l'index
@@ -58,13 +59,17 @@ def _build_flower_maps(plants, rows, cols, attractivite, defaut, pollen_vibre=No
       - species_grids : {nom_espèce → grille[r][c]} pondérée par la nourriture
         (les fleurs qui ne nourrissent pas CE type — anémophiles, tomate pour
         l'abeille — sont écartées : le type ne les butine pas) ;
-      - plants_at     : {nom_espèce → {(r,c) → [(plante, floraison), …]}} pour
-        répartir un dépôt entre les plantes conspécifiques d'un plot, ∝ floraison.
+      - plants_at     : {nom_espèce → {(r,c) → [(plante, poids), …]}} pour
+        répartir un dépôt entre les plantes conspécifiques d'un plot, ∝ leur
+        `poids_floral` (D139 caractères vivants ① : l'insecte visite d'abord la
+        fleur qui l'attire et le nourrit — avant, ∝ floraison seule ; à gènes
+        floraux égaux c'est la même répartition). C'est ce qui rend la SÉLECTION
+        individuelle possible : une bourrache plus bleue reçoit plus de pollen.
     """
     species_grids: dict = {}
     plants_at: dict = {}
     for p in plants:
-        contrib = poids_floral(p, attractivite, defaut, pollen_vibre)
+        contrib = poids_floral(p, attractivite, defaut, pollen_vibre, pref_couleur)
         if contrib <= 0.0:
             continue
         key = p.plant_class.name
@@ -76,14 +81,14 @@ def _build_flower_maps(plants, rows, cols, attractivite, defaut, pollen_vibre=No
         for (r, c) in p.foliar_plots:
             if 0 <= r < rows and 0 <= c < cols:
                 grid[r][c] += contrib
-                plants_at[key].setdefault((r, c), []).append((p, p.floraison))
+                plants_at[key].setdefault((r, c), []).append((p, contrib))
     return species_grids, plants_at
 
 
 def _apply_deposits(deposits, plants_at, eco=None):
     """Applique les dépôts d'un type à `pollen_recu`. Un dépôt (espèce, r, c,
-    charge) est réparti entre les plantes conspécifiques du plot ∝ leur floraison
-    (la plante la plus fleurie en capte le plus).
+    charge) est réparti entre les plantes conspécifiques du plot ∝ leur poids
+    floral (la plante la plus fleurie et la plus attirante en capte le plus).
 
     Butineurs cloués (⑤, §5.3) : la charge est ATTÉNUÉE par le vent LOCAL du plot
     (`_forager_wind_factor` lit `eco.vent`) — un coup de vent cloue l'insecte, donc
@@ -119,7 +124,8 @@ class ButineurMixin:
                 continue
             species_grids, plants_at = _build_flower_maps(
                 tile.plants, eco.rows, eco.cols,
-                ps.attractivite, ps.attractivite_defaut, ps.pollen_vibre)
+                ps.attractivite, ps.attractivite_defaut, ps.pollen_vibre,
+                ps.pref_couleur)
             if not species_grids:
                 continue
             agents, deposits = sample_foragers(

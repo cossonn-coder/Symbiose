@@ -107,6 +107,11 @@ class PollinatorSpec:
                               tomate n'offre aucun nectar mais nourrit le bourdon.
                               Nourriture = floraison × goût × max(nectar, pollen).
                               `None` = nectar seul (tous les autres types).
+      - pref_couleur        : (D139 caractères vivants ①) couleurs de fleur que
+                              CE type préfère, pré-calculées par
+                              `plants.couleurs.preferences` (points chroma +
+                              largeur). Lu par `poids_floral`. `None` = aveugle à
+                              la couleur (facteur 1).
     """
     name: str
     salt: int
@@ -119,3 +124,4 @@ class PollinatorSpec:
     bridge: LifeCycleBridge | None = None
     lisiere_w: float = 0.0
     pollen_vibre: dict | None = None
+    pref_couleur: tuple | None = None

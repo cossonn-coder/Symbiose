@@ -41,6 +41,15 @@ _THERMIQUES = {
     "limite_froid":    ("°C", 0.0, 1.0, (-4.0, 4.0), False),
     "limite_chaud":    ("°C", 0.0, 1.5, (-6.0, 6.0), True),
 }
+# D139 caractères vivants ① : la fleur (σ_A 0,15 ; couleur = position sur l'axe).
+_FLORAUX = {
+    "taille_fleur":  ("facteur", 1.0, 0.15, (GENE_HARD_MIN, GENE_HARD_MAX)),
+    "nectar":        ("facteur", 1.0, 0.15, (GENE_HARD_MIN, GENE_HARD_MAX)),
+    "pollen":        ("facteur", 1.0, 0.15, (GENE_HARD_MIN, GENE_HARD_MAX)),
+    "couleur_fleur": ("position", 0.0, 0.15, (-1.0, 1.0)),
+    "guide_nectar":  ("facteur", 1.0, 0.15, (GENE_HARD_MIN, GENE_HARD_MAX)),
+    "parfum":        ("facteur", 1.0, 0.15, (GENE_HARD_MIN, GENE_HARD_MAX)),
+}
 
 
 def check(name, cond, detail=""):
@@ -66,6 +75,11 @@ def test_valeurs_refactor_pur():
             ok = ((car.unite, car.neutre, car.sigma_a, car.bornes, car.adaptogene)
                   == _THERMIQUES[g]) and car.adaptogene == (g in ADAPTOGENIC_GENES)
             check(f"caractère thermique : {g}", ok, repr(car))
+            continue
+        if g in _FLORAUX:                # caractères vivants ① : la fleur
+            ok = (car.unite, car.neutre, car.sigma_a, car.bornes) == _FLORAUX[g] \
+                and not car.adaptogene
+            check(f"caractère floral : {g}", ok, repr(car))
             continue
         if g in _VRAIES_UNITES:          # D139 ③ : vraies unités (neutre 0)
             ok = (car.unite, car.neutre, car.sigma_a, car.bornes) == _VRAIES_UNITES[g] \

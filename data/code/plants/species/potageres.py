@@ -24,6 +24,7 @@ Deux temps « moteur » de ce lot :
 
 from __future__ import annotations
 from plants.base import PlantBase, GrowthStage
+from plants.couleurs import BLANC, BLEU_PALE, JAUNE, ORANGE, ROSE_PALE
 
 
 class Carrot(PlantBase):
@@ -42,6 +43,7 @@ class Carrot(PlantBase):
     t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -5.0, 5.0, 30.0, 44.0
     feuillage = "fin"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.4  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
+    axe_couleur = (BLANC, ROSE_PALE)  # couleur de fleur (D139 ①) : ombelle blanche, cœur pourpre
     resilience_base = 0.8          # R — potagère bisannuelle exigeante, feuillage fin fragile
     resistance_ecrasement  = 0.6   # rosette plaquée, encaisse mais la racine compte
     stimulation_ecrasement = 0.3
@@ -111,6 +113,7 @@ class Zucchini(PlantBase):
     t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = 10.0, -1.0, 0.0, 35.0, 46.0
     feuillage = "large"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.6  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
+    axe_couleur = (JAUNE, ORANGE)  # couleur de fleur (D139 ①) : grande corolle jaune-orangé
     resilience_base = 0.8          # R — annuelle gourmande à grandes feuilles molles
     hail_resistance_base = 0.6     # immenses limbes tendres exposés — la grêle les hache
     resistance_ecrasement  = 0.35  # tige creuse charnue, casse net
@@ -187,6 +190,7 @@ class Strawberry(PlantBase):
     t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -6.0, 12.0, 30.0, 44.0
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.35  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
+    axe_couleur = (BLANC, BLANC)  # couleur de fleur (D139 ①) : cinq pétales blancs
     resilience_base = 1.0          # intermédiaire — vivace couvre-sol stolonifère, tenue moyenne
     resistance_ecrasement  = 0.7   # rosette basse plaquée, encaisse le piétinement
     stimulation_ecrasement = 0.4
@@ -259,6 +263,7 @@ class CornSalad(PlantBase):
     t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -10.0, 10.0, 25.0, 42.0
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.15  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
+    axe_couleur = (BLANC, BLEU_PALE)  # couleur de fleur (D139 ①) : minuscules fleurs blanc bleuté
     resilience_base = 0.8          # R — petite annuelle en rosette tendre de mi-saison
     resistance_ecrasement  = 0.7   # rosette basse plaquée, encaisse le piétinement
     stimulation_ecrasement = 0.3

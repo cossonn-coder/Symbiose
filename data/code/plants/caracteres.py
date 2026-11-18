@@ -56,7 +56,7 @@ SIGMA_A_FACTEUR = 0.10       # = l'ancien GENE_INIT_SIGMA
 class Caractere:
     """Déclaration d'un caractère génétique (valeurs par défaut de l'espèce
     « moyenne » ; `neutre` et `sigma_a` surchargeables par espèce)."""
-    unite: str = "facteur"            # "facteur" | "°C" | "semaines" | "probabilité"
+    unite: str = "facteur"            # "facteur" | "°C" | "semaines" | "probabilité" | "position"
     neutre: float = 1.0
     sigma_a: float = SIGMA_A_FACTEUR
     bornes: tuple = BORNES_FACTEUR
@@ -66,7 +66,22 @@ class Caractere:
     # `autofecondation`). Évite de surcharger chaque classe à la main : le mode
     # existe déjà sur les 52 espèces. Une surcharge `genetique` explicite gagne.
     neutre_par_pollinisation: dict | None = None
+    # COÛT de l'excès (D139 caractères vivants ①, conception §3) : fraction de
+    # vigueur effective perdue PAR σ_A au-dessus du neutre (`cout_genetique`). 0 =
+    # caractère gratuit (ou dont le compromis est STRUCTUREL, payé là où il est lu).
+    cout: float = 0.0
 
+
+# Compromis TOLÉRANCE THERMIQUE ↔ CROISSANCE (D139 niche thermique ②, conception
+# §4.5), RAPATRIÉ ici au D139 caractères vivants ① : chaque °C de tolérance
+# GÉNÉTIQUE au-delà du neutre coûte K_THERMO de vigueur effective. Exprimé dans le
+# champ `cout` (par σ_A) des trois caractères thermiques : K_THERMO × σ_A.
+# `genetics.py` le ré-exporte (lecteurs historiques inchangés).
+K_THERMO = 0.02
+
+# Coût par σ_A d'un caractère floral « qui se fabrique » (sucre, carbone, pollen) :
+# valeur de départ de la conception §3 (≈ 0,03 par σ).
+K_FLEUR = 0.03
 
 _FACTEUR = Caractere()
 _FACTEUR_ADAPTO = Caractere(adaptogene=True)
@@ -82,7 +97,8 @@ CARACTERES = {
     # (`cold_memory`) s'y AJOUTE en °C (`PlantInstance.lim_gel`), il ne le multiplie
     # plus. Même position (canal de hash inchangé), seule l'unité change.
     "rusticite_froid":       Caractere(
-        unite="°C", neutre=0.0, sigma_a=1.5, bornes=(-6.0, 6.0), adaptogene=True),
+        unite="°C", neutre=0.0, sigma_a=1.5, bornes=(-6.0, 6.0), adaptogene=True,
+        cout=K_THERMO * 1.5),
     "vigueur":               _FACTEUR,
     "resistance_pathogene":  _FACTEUR_ADAPTO,
     "tolerance_secheresse":  _FACTEUR_ADAPTO,
@@ -118,12 +134,37 @@ CARACTERES = {
     # plus froide. `limite_chaud` RELÈVE les seuils chauds (`t_chaud_stress` et
     # `t_brulure`) ; adaptogène : l'acclimatation à la chaleur vécue (`heat_memory`,
     # ≤ +3 °C) s'y ajoute. Bornes = 4σ. Chaque °C au-delà du neutre coûte de la
-    # vigueur (`K_THERMO`, `genetics.py`).
+    # vigueur (`K_THERMO`, ci-dessus, via le champ `cout`).
     "limite_froid": Caractere(
-        unite="°C", neutre=0.0, sigma_a=1.0, bornes=(-4.0, 4.0)),
+        unite="°C", neutre=0.0, sigma_a=1.0, bornes=(-4.0, 4.0), cout=K_THERMO * 1.0),
     "limite_chaud": Caractere(
-        unite="°C", neutre=0.0, sigma_a=1.5, bornes=(-6.0, 6.0), adaptogene=True),
+        unite="°C", neutre=0.0, sigma_a=1.5, bornes=(-6.0, 6.0), adaptogene=True,
+        cout=K_THERMO * 1.5),
+    # D139 caractères vivants ① — LA FLEUR (conception §2.1), six caractères EN QUEUE.
+    # Tous lus par `poids_floral` (fields/population/registry.py), source unique de
+    # la nourriture des butineurs (champ ET agents) ; σ_A 0,15 (plus large que les
+    # facteurs historiques : les traits floraux varient beaucoup dans la nature).
+    #  - taille_fleur : attrait (fleur vue de plus loin) — se paie en croissance ;
+    #  - nectar       : multiplie le nectar d'ESPÈCE → nourriture, miel — sucre ;
+    #  - pollen       : pollen vibré du bourdon + dose ANÉMOPHILE — se paie aussi ;
+    #  - couleur_fleur: POSITION sur l'axe de couleur de l'espèce (−1 → première
+    #                   teinte, +1 → seconde, `PlantBase.axe_couleur`) ; gratuit, la
+    #                   sélection passe par la préférence de chaque butineur ;
+    #  - guide_nectar : contraste des guides (piste d'atterrissage) → visite plus
+    #                   efficace — coût faible (un motif, pas une substance) ;
+    #  - parfum       : attire de plus loin ET repousse une part des ravageurs.
+    "taille_fleur":  Caractere(sigma_a=0.15, cout=K_FLEUR),
+    "nectar":        Caractere(sigma_a=0.15, cout=K_FLEUR),
+    "pollen":        Caractere(sigma_a=0.15, cout=K_FLEUR),
+    "couleur_fleur": Caractere(unite="position", neutre=0.0, sigma_a=0.15,
+                               bornes=(-1.0, 1.0)),
+    "guide_nectar":  Caractere(sigma_a=0.15, cout=K_FLEUR / 2),
+    "parfum":        Caractere(sigma_a=0.15, cout=K_FLEUR),
 }
+
+# Caractères qui ont un coût d'excès (`cout` > 0), dans l'ordre du registre : seuls
+# ceux-là sont parcourus par `PlantInstance.cout_genetique` (O(9) par appel).
+CARACTERES_COUTEUX = tuple((nom, c.cout) for nom, c in CARACTERES.items() if c.cout > 0.0)
 
 
 def parametres_espece(plant_class, nom: str) -> tuple:

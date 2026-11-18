@@ -13,6 +13,8 @@ from fields.lifecycle import LifeCycleBridge
 from fields.faune_encyclo import encyclo_meta
 from fields.population.constants import _zero_grid, FLOWER_REF
 from fields.population.spec import TrophicSpec, PollinatorSpec
+from plants.couleurs import (preferences, preference_couleur,
+                             BLEU, VIOLET, JAUNE, ROSE, ROUGE, ORANGE, BLANC)
 from fields.population.resources import (
     _foliage_grid, _monoculture_grid, _limace_food_grid, _rosee_humide_litiere_grid,
     _foliage_solanaceae_grid, _solanaceae_grid, _soil_food_grid, _undisturbed_grid,
@@ -381,8 +383,23 @@ _ATTRACT_OSMIE = {        # abeille des vergers : Rosacées (arbres fruitiers) +
 _POLLEN_VIBRE_BOURDON = {"Solanaceae": 0.7}
 
 
+# Couleurs préférées PAR TYPE de butineur (D139 caractères vivants ①, conception
+# §2.1 — inspiré du réel). L'abeille voit l'ultraviolet mais pas le rouge : bleu,
+# violet, jaune. Le bourdon : bleu et violet. Le papillon voit le rouge : rose,
+# rouge, orange. Le syrphe (mouche) : jaune et blanc, les ombelles ouvertes.
+# L'osmie, abeille des vergers [choix de jeu, non tranché par la conception] : le
+# blanc des Rosacées, le jaune et le violet. Largeur de la cloche dans le plan chroma.
+LARGEUR_COULEUR = 0.35
+_PREF_ABEILLE  = preferences((BLEU, VIOLET, JAUNE), LARGEUR_COULEUR)
+_PREF_BOURDON  = preferences((BLEU, VIOLET), LARGEUR_COULEUR)
+_PREF_PAPILLON = preferences((ROSE, ROUGE, ORANGE), LARGEUR_COULEUR)
+_PREF_SYRPHE   = preferences((JAUNE, BLANC), LARGEUR_COULEUR)
+_PREF_OSMIE    = preferences((BLANC, JAUNE, VIOLET), LARGEUR_COULEUR)
+
+
 def poids_floral(p, attractivite: dict, defaut: float,
-                 pollen_vibre: dict | None = None) -> float:
+                 pollen_vibre: dict | None = None,
+                 pref_couleur: tuple | None = None) -> float:
     """Nourriture qu'UNE plante en fleur offre à UN type de butineur (D111 ⑦) :
     floraison × goût de famille × ressource de l'espèce. La ressource est le
     `nectar` de l'espèce (donnée, `plants/base/familles.py`) ; pour un type qui
@@ -390,18 +407,35 @@ def poids_floral(p, attractivite: dict, defaut: float,
     des deux, nectar ou pollen — la tomate sans nectar nourrit le bourdon, pas
     l'abeille. Source UNIQUE, lue par le champ (`_make_nectar_grid`) ET par les
     agents (`sim/engine/butineurs._build_flower_maps`) : l'insecte cherche ses
-    fleurs là où il trouve sa nourriture. 0 si la plante n'est pas en fleur."""
+    fleurs là où il trouve sa nourriture. 0 si la plante n'est pas en fleur.
+
+    D139 caractères vivants ① — la fleur de CHAQUE plante (ses gènes) :
+      - ressource × `nectar` (ou × `pollen` sur la voie vibrée) : ce qu'elle offre ;
+      - × √(`taille_fleur` × `parfum` × `guide_nectar`) : l'ATTRAIT (vue de plus
+        loin, sentie de plus loin) et l'EFFICACITÉ de la visite (piste
+        d'atterrissage). Racine : chaque caractère compte à demi, la nourriture
+        réelle (nectar) reste le premier levier ;
+      - × préférence de couleur du type (`pref_couleur`, `plants/couleurs.py`).
+    Fondateur neutre (gènes au neutre, espèce sans axe ou type aveugle) ⇒ la
+    valeur d'avant le tronçon, à la préférence de couleur près."""
     if not p.is_alive or p.floraison <= 0.0:
         return 0.0
-    famille = p.plant_class.family
-    ressource = p.plant_class.nectar
+    cls = p.plant_class
+    famille = cls.family
+    gout = attractivite.get(famille, defaut)
+    ressource = cls.nectar * p.gene("nectar")
     if pollen_vibre:
-        ressource = max(ressource, pollen_vibre.get(famille, 0.0))
-    return p.floraison * attractivite.get(famille, defaut) * ressource
+        ressource = max(ressource, pollen_vibre.get(famille, 0.0) * p.gene("pollen"))
+    if gout <= 0.0 or ressource <= 0.0:
+        return 0.0
+    attrait = (p.gene("taille_fleur") * p.gene("parfum") * p.gene("guide_nectar")) ** 0.5
+    couleur = preference_couleur(cls.axe_couleur, p.gene("couleur_fleur"), pref_couleur)
+    return p.floraison * gout * ressource * attrait * couleur
 
 
 def _make_nectar_grid(attractivite: dict, defaut: float,
-                      pollen_vibre: dict | None = None) -> Callable:
+                      pollen_vibre: dict | None = None,
+                      pref_couleur: tuple | None = None) -> Callable:
     """Fabrique la resource_fn d'un type de pollinisateur (§C.1) : nourriture
     perçue = Σ_plantes `poids_floral` (floraison × goût × nectar d'espèce, D111 ⑦)
     répartie sur l'empreinte canopée, normalisée par FLOWER_REF. Suit la VRAIE
@@ -414,7 +448,7 @@ def _make_nectar_grid(attractivite: dict, defaut: float,
     def _grid(eco, tile, plants) -> list[list[float]]:
         g = _zero_grid(eco.rows, eco.cols)
         for p in plants:
-            w = poids_floral(p, attractivite, defaut, pollen_vibre)
+            w = poids_floral(p, attractivite, defaut, pollen_vibre, pref_couleur)
             if w <= 0.0:
                 continue
             for (r, c) in p.foliar_plots:
@@ -468,6 +502,7 @@ def build_pollinator_registry() -> list[PollinatorSpec]:
             habitat_fn=_abeille_habitat_grid,    # rondelle + bump ruche peuplée (§H.2)
             daylen_min=11.5, daylen_full=14.0,   # été LARGE
             forager=_FORAGER_ABEILLE,
+            pref_couleur=_PREF_ABEILLE,  # D139 caractères vivants ①
         ),
         PollinatorSpec(
             name="syrphe", salt=_SALT_SYRPHE,
@@ -476,6 +511,7 @@ def build_pollinator_registry() -> list[PollinatorSpec]:
             daylen_min=10.5, daylen_full=13.0,   # printemps → été (précoce)
             forager=_FORAGER_SYRPHE, bridge=_BRIDGE_SYRPHE,
             lisiere_w=0.15,                      # hiverne hors des planches (périphérie ③)
+            pref_couleur=_PREF_SYRPHE,  # D139 caractères vivants ①
         ),
         PollinatorSpec(
             name="papillon", salt=_SALT_PAPILLON,
@@ -483,6 +519,7 @@ def build_pollinator_registry() -> list[PollinatorSpec]:
             habitat_fn=_pollinisateur_habitat_grid,
             daylen_min=12.5, daylen_full=14.5,   # été
             forager=_FORAGER_PAPILLON, bridge=_BRIDGE_PAPILLON,
+            pref_couleur=_PREF_PAPILLON,  # D139 caractères vivants ①
         ),
         # --- pollinisateurs B (catalogue enrichi ⑤) — sans pont larvaire --------
         PollinatorSpec(
@@ -492,6 +529,7 @@ def build_pollinator_registry() -> list[PollinatorSpec]:
             daylen_min=9.5, daylen_full=12.0,    # PRÉCOCE/frais : jours courts tolérés
             forager=_FORAGER_BOURDON,            # comble la fenêtre où l'abeille n'est pas
             pollen_vibre=_POLLEN_VIBRE_BOURDON,  # D111 ⑦ : la tomate le nourrit, sans nectar
+            pref_couleur=_PREF_BOURDON,  # D139 caractères vivants ①
         ),
         PollinatorSpec(
             name="osmie", salt=_SALT_OSMIE,
@@ -499,6 +537,7 @@ def build_pollinator_registry() -> list[PollinatorSpec]:
             habitat_fn=_osmie_habitat_grid,      # rondelle + niche-bois (pile, §5.3)
             daylen_min=10.0, daylen_full=12.5,   # printanier (abeille des vergers)
             forager=_FORAGER_OSMIE,
+            pref_couleur=_PREF_OSMIE,  # D139 caractères vivants ①
         ),
     ]
 
@@ -521,7 +560,7 @@ def build_pollinator_specs() -> list[TrophicSpec]:
         TrophicSpec(
             name=ps.name, category="pollinisateur", salt=ps.salt,
             resource_fn=_make_nectar_grid(ps.attractivite, ps.attractivite_defaut,
-                                          ps.pollen_vibre),
+                                          ps.pollen_vibre, ps.pref_couleur),
             habitat_fn=ps.habitat_fn, predators=(),
             daylen_min=ps.daylen_min, daylen_full=ps.daylen_full,
             lisiere_w=ps.lisiere_w,              # périphérie ③ (0.0 sauf syrphe)

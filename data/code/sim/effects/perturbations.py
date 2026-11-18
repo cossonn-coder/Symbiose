@@ -448,6 +448,12 @@ def shade_stress_damage(plant: PlantInstance, eco,
 # champ de population qui dessine les sprites) qui mord ; le champ qui DESSINE est
 # le champ qui AGIT.
 HERBIVORY_GAIN         = 0.20  # densité ravageur [0,1] → pression sur la santé (knob de calibrage, §8)
+# Parfum répulsif (D139 caractères vivants ①, conception §2.1) : les composés
+# volatils de la fleur et du feuillage (terpènes) détournent une part des ravageurs.
+# facteur = 1 − K_PARFUM_REPULSIF × (parfum − 1). Le caractère est borné [0,4 ; 1,6]
+# ⇒ facteur ∈ [0,7 ; 1,3] : borné par construction, jamais une immunité. Une plante
+# peu parfumée (< 1) est un peu PLUS broutée — symétrique, pas un bonus gratuit.
+K_PARFUM_REPULSIF      = 0.5
 HERBIVORY_LETHAL_AUX   = 0.20  # densité auxiliaire en dessous de laquelle un foyer non régulé tourne au létal
 # Seuil RE-DÉRIVÉ au sprint RYTHMES MO ② : la bascule normalise désormais le
 # microbiome par MICROBE_RHYTHM_REF (0.6) au lieu du /3.0 hérité. Sur cette échelle,
@@ -489,7 +495,8 @@ def herbivory_pressure(plant: PlantInstance, tile: Tile,
     # → +0 → pression strictement inchangée vs avant ⑤ (invariant golden §D.6).
     chen = (eco.larvae["chenille"].at_plot(r, c)
             if eco and "chenille" in getattr(eco, "larvae", {}) else 0.0)
-    pressure = (rav + chen) * HERBIVORY_GAIN
+    pressure = ((rav + chen) * HERBIVORY_GAIN
+                * (1.0 - K_PARFUM_REPULSIF * (plant.gene("parfum") - 1.0)))
 
     # ───────── SUPPLANTÉ D31.2 — conservé pour mémoire ─────────
     # Ancien modèle (proxies sans entité visible). La pression dérivait de la

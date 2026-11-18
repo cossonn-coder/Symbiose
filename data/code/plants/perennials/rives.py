@@ -5,6 +5,7 @@ Les arbres des milieux humides : aulne, saule.
 
 from __future__ import annotations
 from plants.perennials.base import PerennialWoody
+from plants.couleurs import JAUNE
 
 
 # ---------------------------------------------------------------------------
@@ -130,6 +131,7 @@ class Willow(PerennialWoody):
     t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -4.0, 40.0, 33.0, 45.0
     feuillage = "fin"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.75  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
+    axe_couleur = (JAUNE, JAUNE)  # couleur de fleur (D139 ①) : chatons jaunes nectarifères
     shade_tolerance = 0.80  # D111 ②ter : pionnier héliophile (≠ défaut strate haute 0,90)
     rarity = "Établie"
     keywords = ["Berge", "Trogne", "Bouture", "Mellifère précoce"]

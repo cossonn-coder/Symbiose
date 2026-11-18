@@ -67,7 +67,9 @@ def tick_ruches(eco, tile, plants) -> None:
 
     abeille = eco.populations.get("abeille")   # champ §E (peut manquer si registre nu)
     spec = next(s for s in build_pollinator_registry() if s.name == "abeille")
-    nectar = _make_nectar_grid(spec.attractivite, spec.attractivite_defaut)(eco, tile, plants)
+    # D139 caractères vivants ① : même nourriture que le champ abeille (couleur comprise).
+    nectar = _make_nectar_grid(spec.attractivite, spec.attractivite_defaut,
+                               spec.pollen_vibre, spec.pref_couleur)(eco, tile, plants)
 
     for ruche in ruches:
         r, c = ruche.plot

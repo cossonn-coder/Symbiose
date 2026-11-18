@@ -7,6 +7,7 @@ Lamiacées. Données pures, s'appuient sur les familles de `plants.base`.
 from __future__ import annotations
 from plants.base import (GrowthStage,
                          Solanaceae, Fabaceae, Asteraceae, Lamiaceae)
+from plants.couleurs import BLANC, JAUNE, LAVANDE, ORANGE, ROSE, ROUGE
 
 
 # --- Solanaceae ---
@@ -21,6 +22,7 @@ class Tomato(Solanaceae):
     genetique = {"autofecondation": {"neutre": 0.95}}
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.0  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
+    axe_couleur = (JAUNE, JAUNE)  # couleur de fleur (D139 ①) : la tomate reste jaune
     # Sensibilité EMBLÉMATIQUE à la juglone (sprint ALLÉLOPATHIE ⑤) : la tomate est
     # le cas d'école du dépérissement sous noyer. > 1 = plus sensible que le standard
     # (borné [0,1] par la rampe → une forte charge effondre sa niche/croissance).
@@ -105,6 +107,7 @@ class Pepper(Solanaceae):
     t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = 10.0, -1.0, 0.0, 33.0, 45.0
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.05  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
+    axe_couleur = (BLANC, BLANC)  # couleur de fleur (D139 ①) : étoiles blanches
     t_germ_opt = 24.0              # la PLUS frileuse : tropicale, lève très tard (fenêtre ③)
     t_germ_tol = 6.0               # la plus étroite des cultivées chaudes
     resistance_ecrasement  = 0.35  # buissonnant cassant, repart un peu (volet 2 §4)
@@ -160,6 +163,7 @@ class Bean(Fabaceae):
     genetique = {"autofecondation": {"neutre": 0.95}}
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.25  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
+    axe_couleur = (BLANC, ROUGE)  # couleur de fleur (D139 ①) : blanc (nain) à rouge (d'Espagne)
     resilience_base = 0.8          # R — annuelle tendre à tige volubile fragile
     t_germ_opt = 20.0              # FRILEUSE : sème « quand le sol est chaud au toucher » (③)
     t_germ_tol = 7.0               # étroite → pourrit en terre froide
@@ -219,6 +223,7 @@ class Clover(Fabaceae):
     t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -8.0, 10.0, 30.0, 44.0
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.85  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
+    axe_couleur = (BLANC, ROSE)  # couleur de fleur (D139 ①) : têtes blanches à roses
     resilience_base = 1.25         # S — couvre-sol vivace piétinable, repart du stolon
     t_germ_opt = 16.0              # tempérée : couvre-sol qui lève au mitan du printemps (③)
     t_germ_tol = 10.0              # tolérante (germe printemps comme arrière-saison)
@@ -276,6 +281,7 @@ class Sunflower(Asteraceae):
     t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = 5.0, -3.0, 1.0, 36.0, 48.0
     feuillage = "large"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.6  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
+    axe_couleur = (JAUNE, ORANGE)  # couleur de fleur (D139 ①) : ligules jaunes à orangées
     # --- Allélopathie racinaire (sprint ALLÉLOPATHIE ⑤) ---
     # Émission MODÉRÉE : le tournesol est notoirement allélopathique (composés
     # phénoliques des racines et feuilles) — il « espace » ses voisines sensibles.
@@ -377,6 +383,7 @@ class Basil(Lamiaceae):
     t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = 10.0, -1.0, 0.0, 35.0, 45.0
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.5  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
+    axe_couleur = (BLANC, LAVANDE)  # couleur de fleur (D139 ①) : épis blancs à mauves
     resilience_base = 0.8          # R — annuelle tendre frileuse, noircit au moindre stress
     t_germ_opt = 22.0              # FRILEUSE tropicale : exige la chaleur, lève tard (fenêtre ③)
     t_germ_tol = 6.0               # étroite → noircit au moindre coup de froid

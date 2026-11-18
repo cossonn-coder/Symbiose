@@ -23,6 +23,7 @@ sont des PLACEHOLDERS de calibrage — ajustées à la maquette F5 (tronçon ⑥
 
 from __future__ import annotations
 from plants.base import GrowthStage, PlantBase
+from plants.couleurs import BLANC, JAUNE, JAUNE_VERT
 
 
 class Ivy(PlantBase):
@@ -45,6 +46,7 @@ class Ivy(PlantBase):
     ligneux = True                       # D111 ②bis : liane ligneuse (tiges lignifiées) → bois mort
     feuillage = "cireux"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.8  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
+    axe_couleur = (JAUNE_VERT, JAUNE)  # couleur de fleur (D139 ①) : ombelles vert-jaune
     resilience_base = 1.25         # S — liane ligneuse persistante, extrêmement rustique
     mode_grimpe            = "crampon"   # crampons adhésifs → escalade le mur nu (②)
     rigidite_tige          = 120.0       # L_crit à 1 cm : 1,2 m de tige libre [choix] (HOUPPIER ②)
@@ -136,6 +138,7 @@ class Jasmine(PlantBase):
     ligneux = True                       # D111 ②bis : sarments ligneux → bois mort
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.5  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
+    axe_couleur = (BLANC, JAUNE)  # couleur de fleur (D139 ①) : blanc (officinal) à jaune (d'hiver)
     resilience_base = 1.0          # intermédiaire — sarment ligneux, mais rameaux tendres au froid
     mode_grimpe            = "sarmenteux"  # ne s'accroche que par palissage (④)
     rigidite_tige          = 80.0          # plus souple que le lierre [choix] (HOUPPIER ②)

@@ -8,7 +8,8 @@ Seule dépendance : le registre voisin `caracteres.py`, lui aussi pur.
 """
 
 from plants.caracteres import (CARACTERES, BORNES_FACTEUR, SIGMA_A_FACTEUR,  # noqa: F401
-                               Caractere, parametres_espece, neutre, sigma_a, borne)
+                               Caractere, parametres_espece, neutre, sigma_a, borne,
+                               K_THERMO, CARACTERES_COUTEUX)
 
 # Vecteur de gènes héréditaire (D22) — extensible sans refactor. Ajouter un gène
 # = l'ajouter ici ; `child_genes` (reproduction) le calcule alors automatiquement
@@ -179,7 +180,9 @@ ACCLIM_CHAUD_MAX = 3.0
 # thermique se fabriquent aux dépens de la croissance. La plasticité, elle, a déjà
 # son coût (`DEFENSE_COST`) : on ne la compte pas deux fois. Bornes des caractères
 # (6 + 4 + 6 °C) ⇒ facteur ≥ 0,68 : le coût ne peut jamais annuler la vigueur.
-K_THERMO = 0.02
+# D139 caractères vivants ① : K_THERMO vit désormais dans le registre
+# (`caracteres.py`, champ `cout` des caractères thermiques) et est importé
+# ci-dessus ; le coût est appliqué par `PlantInstance.cout_genetique`.
 CARACTERES_THERMIQUES = ("rusticite_froid", "limite_froid", "limite_chaud")
 
 
