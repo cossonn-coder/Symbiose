@@ -43,6 +43,7 @@ from sim import maitrise as M
 # ré-importé ici : la détection le consomme à l'identique (golden joueur
 # inchangé). Le module commun expose AUSSI `evenements()` (élargi) pour le carnet.
 from sim.evenements import _evenements
+from sim.lignee import CONCEPT as CONCEPT_LIGNEE, lire_semis   # D139 ④ (module pur)
 
 # --- Placeholders nommés — *calibrage D12.4 post-test* ----------------------
 # Largeur de la fenêtre d'imputation (§9.6) : un geste joueur en semaine t peut
@@ -231,6 +232,14 @@ def detecter(game_state: dict, player: str, log: list[str], semaine: int,
                 if tag == "biparental":
                     crediter("pollinisation", {"reproduction"})
                 signaler_zone(zone, semaine - FENETRE_IMPUTATION)   # geste imputé (③)
+
+    # Lignée (D139 ④) : chaque ressemis d'une graine RÉCOLTÉE est une preuve du
+    # concept « lignée » (crédité seulement s'il est déjà découvert — gate §9.6 ; la
+    # découverte se fait au 1er ressemis, hook A du pont). Garder et ressemer ses
+    # graines, saison après saison, c'est ce qui finit par faire comprendre la lignée.
+    for line in log:
+        if lire_semis(line):
+            crediter(CONCEPT_LIGNEE, {"reproduction"})
 
     # Naturalisation férale (§9.4(b)) + conjonction palier 5 : balayage de l'état
     # post-tick. Une recrue FÉRALE (zone non `replante`) qui s'établit (stade ≥

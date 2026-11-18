@@ -43,6 +43,8 @@ namespace Symbiose
 			public float[] Segs = System.Array.Empty<float>();
 			public Variant Genes;     // dict de gènes reçu au 1er envoi (gardé tel quel)
 			public bool AGenes;
+			public Variant F;         // consanguinité (pont 0.6.17), même règle que les gènes
+			public bool AF;
 		}
 
 		private readonly Dictionary<int, Entree> _plantes = new();
@@ -121,9 +123,13 @@ namespace Symbiose
 			if (!_plantes.TryGetValue(pid, out var e)) _plantes[pid] = e = new Entree();
 			// Gènes : reçus au 1er envoi seulement ; remis pour le survol / le dossier.
 			// Une plante morte n'en porte pas (même règle que le format complet).
+			bool morte = LectureSnap.A(p, "dead") && LectureSnap.B(p, "dead");
 			if (LectureSnap.A(p, "genes")) { e.Genes = p[LectureSnap.Cle("genes")]; e.AGenes = true; }
-			else if (e.AGenes && !(LectureSnap.A(p, "dead") && LectureSnap.B(p, "dead")))
+			else if (e.AGenes && !morte)
 				p[LectureSnap.Cle("genes")] = e.Genes;
+			if (LectureSnap.A(p, "F")) { e.F = p[LectureSnap.Cle("F")]; e.AF = true; }
+			else if (e.AF && !morte)
+				p[LectureSnap.Cle("F")] = e.F;
 
 			float[] anc = e.Segs;
 			using var ops = LectureSnap.Tab(p, "segd");

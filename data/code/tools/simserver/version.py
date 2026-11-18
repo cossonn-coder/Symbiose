@@ -885,7 +885,13 @@ from __future__ import annotations
 #       `automate.trace`) gagnent `point` = [x_cm, y_cm] TUILE-LOCAL visé, ou null ; les gestes
 #       de l'automate laissent leur trace au sol (`traces_sol`) comme ceux du joueur. Clés
 #       neuves ignorées par un ancien client, golden neutre.
-ENGINE_VERSION = "0.6.16"
+# 0.6.17 (GÉNÉTIQUE INFINITÉSIMALE ④, D139) : chaque plante NEUVE gagne `F` (consanguinité,
+#       0..1, 3 déc.) à côté de `genes` (même règle d'envoi : 1er envoi seulement en delta).
+#       Clé neuve de snapshot `caracteres` = {unites: {nom: {unite, libelle, sens}}, ordre: [noms],
+#       lignee: {fixee, melangee}} (table constante, `genes_pont.py`) : le survol G écrit
+#       chaque gène dans son unité et classe la lignée. Lecture pure, golden neutre
+#       (snapshot comparé avant/après : seules `caracteres` et `F` s'ajoutent).
+ENGINE_VERSION = "0.6.17"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

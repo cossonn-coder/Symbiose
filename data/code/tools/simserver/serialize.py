@@ -82,6 +82,7 @@ from .vent_pont import wind_block, abri_facteur
 from .quatre_feuilles_pont import marquer_quatre_feuilles
 from .taille_pont import marquer_taille
 from .accroche_pont import marquer_accroche
+from .genes_pont import TABLE_CARACTERES   # D139 ④ : unités des caractères + seuils de F
 
 
 def _activite_butineur(eco, agent) -> float:
@@ -245,8 +246,11 @@ class SerializeMixin:
                 # l'instance (`p.genes`, tiré au founder ①/hérité) : aucune écriture
                 # moteur → golden NEUTRE (le snapshot n'est pas figé par test_golden).
                 # `p.genes` est {} pour une plante neutre (pré-①) → dict vide toléré.
+                # `F` (D139 ④) = consanguinité de la plante, constante comme ses gènes
+                # → part avec eux (le cache delta de la vue la garde au même titre).
                 if neuve:
                     base["genes"] = {g: round(v, 3) for g, v in p.genes.items()}
+                    base["F"] = round(p.F, 3)
                 # Sémiologie foliaire (D33, tronçon ①) : LISTE triée de symptômes
                 # `[{cause, intensity}]` — généralise le bool `chlorose` du ⑨ à TOUS
                 # les stresseurs chroniques (chlorose/sécheresse/asphyxie/ravageurs/
@@ -586,6 +590,7 @@ class SerializeMixin:
         # de la trace/objectifs déjà écrits par la boucle (hors tick) → golden NEUTRE.
         if getattr(self, "_automate", None) is not None:
             snap["automate"] = self.automate_block(gs)
+        snap["caracteres"] = TABLE_CARACTERES   # D139 ④ : table constante, une fois par snapshot
         if delta is not None:
             snap["delta"] = delta.fin()   # {complet, disparues} (pont_delta)
         return snap

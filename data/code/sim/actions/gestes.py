@@ -21,6 +21,7 @@ from sim.vigueur import spend, gain
 from sim.vigueur_plante import maturite, vigueur_plante, sante, qi_local   # facteurs partagés (mutualisés, pas dupliqués)
 from sim.growth import (atteindre_segment,   # seam de perturbation §F (sim→sim, pas de cycle : growth n'importe pas actions)
                         f_lignification, INTENSITE_PIED, SEUIL_DEGAT, COUPE_NETTE)  # calibrage écrasement (volet 2)
+from sim.lignee import ligne_semis   # voix « lignée » : ressemis d'une graine récoltée (D139 ④)
 from sim.souche import noter_perte_couronne   # taille sévère = recépage émergent (rejets ③)
 from sim.effects import deposer_mort   # mort → squelette persistant (②B), point d'entrée unique
 from fields.ecofields import BOIS_PAR_CM, ECRASER_FRAG_BOOST   # litière `bois` (taille/écimage) + boost fragmentation (②)
@@ -162,6 +163,12 @@ def planter(game_state: dict, player: str, tile, eco, species: str,
                        x_cm=x_cm, y_cm=y_cm)   # pixel cliqué exact (① placement sous-plot)
     )
     auto_pailler(game_state, player, eco, species, r, c)   # ⑦ : mulch réflexe si maîtrisé + stock (no-op au golden)
+    # Voix « lignée » (D139 ④) : une graine qui porte des gènes vient de la RÉCOLTE
+    # (sachet magazine, récompense : gènes vides). Le carnet note ce ressemis ; la
+    # ligne passe par le canal `log` du serveur (absent hors serveur → rien).
+    log = game_state.get("log")
+    if seed.genes and log is not None:
+        log.append(ligne_semis(tile.tile_id, r, c, species, seed.F))
     return True
 
 

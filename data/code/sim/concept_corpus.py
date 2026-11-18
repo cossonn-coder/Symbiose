@@ -103,4 +103,28 @@ FICHES_CONCEPT: dict[str, dict[int, str]] = {
            "fruits ni de graines : la floraison du jardin est l'indicateur vivant de "
            "sa fertilité future.",
     },
+
+    # Lignée (D139 ④) : pourquoi des graines récoltées donnent des frères identiques
+    # (autogames) ou une descendance bigarrée (allogames). Ni chiffre ni F (philo #5) :
+    # le mécanisme est dit en mots, le chiffre reste au survol de debug.
+    "lignée": {
+        1: "Des graines tirées d'une même plante ne donnent pas toujours la même "
+           "chose. Ressemées, celles de la tomate ou du haricot lèvent en pieds "
+           "presque identiques ; celles de la courgette ou du maïs donnent des "
+           "frères qui ne se ressemblent guère.",
+        2: "Chaque graine reçoit la moitié de son héritage de chacun de ses parents. "
+           "Une fleur qui se féconde elle-même — la tomate, le haricot, le blé — "
+           "n'a qu'un seul parent : génération après génération, ses descendants "
+           "deviennent des copies les uns des autres, la lignée se fixe. Une fleur "
+           "qui reçoit le pollen d'un autre pied — courges, ortie, la plupart des "
+           "arbres — rebat les cartes à chaque génération : la lignée reste mêlée.",
+        3: "Une lignée fixée est fiable : on sait ce qu'on sèmera. Mais elle a perdu "
+           "sa réserve de différences, et si le climat ou le sol changent, rien en "
+           "elle ne peut s'ajuster. Une lignée mêlée, au contraire, offre au milieu "
+           "de quoi trier : chaque année le sol, le froid et les butineurs gardent "
+           "un peu plus les pieds qui leur conviennent. Chez les plantes qui se "
+           "croisent, trop de consanguinité affaiblit la descendance ; un pollen "
+           "venu d'ailleurs lui rend sa vigueur. Garder ses graines, c'est choisir "
+           "entre la constance et l'adaptation.",
+    },
 }

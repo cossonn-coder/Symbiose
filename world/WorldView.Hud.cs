@@ -131,7 +131,8 @@ namespace Symbiose
 			// Survol gènes (DIVERSITÉ FONDATRICE ③) : sous l'overlay de perfs, caché
 			// par défaut, toggle F7. Instrument d'observation (philo #5 : chiffres
 			// tolérés en HUD debug, hors HUD final). Cf. WorldView.Genes.cs.
-			_genesLabel = new Label { Position = new Vector2(16f, 300f), Visible = false };
+			// x = 72 (D139 ④) : à 16 px, la colonne de la palette de gestes le masquait.
+			_genesLabel = new Label { Position = new Vector2(72f, 300f), Visible = false };
 			_genesLabel.AddThemeFontSizeOverride("font_size", 16);
 			_genesLabel.AddThemeColorOverride("font_color", new Color(0.8f, 1f, 0.85f));
 			_genesLabel.AddThemeColorOverride("font_outline_color", Colors.Black);

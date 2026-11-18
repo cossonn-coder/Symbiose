@@ -410,6 +410,7 @@ namespace Symbiose
 			ApplySnapshot(snap, fade: false);   // monde initial : pas de fondu
 
 			FrameCamera();
+			if (config == BancLignees) ToggleGenesHover();   // banc lignées : survol G ouvert (D139 ④)
 			AppliquerCapture();   // no-op hors mode capture (WorldView.Capture.cs)
 			// Monde construit → on débloque la boucle (_Process) et les entrées
 			// (_UnhandledInput), gardées par `_started` pendant l'écran de sélection.

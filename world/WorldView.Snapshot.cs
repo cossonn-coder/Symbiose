@@ -203,6 +203,8 @@ namespace Symbiose
 				// un snapshot pré-③ (clé absente → dict vide → survol muet).
 				if (p.ContainsKey("genes"))
 					renderer.SetMeta(LectureSnap.Meta("genes"), p["genes"]);
+				if (p.ContainsKey("F"))   // consanguinité (pont 0.6.17) → « lignée » au survol G
+					renderer.SetMeta(LectureSnap.Meta("F"), p["F"]);
 				if (e.Fade) renderer.Modulate = new Color(1f, 1f, 1f, 0f);
 				_objects.AddChild(renderer);
 				MajPlante(renderer, l);   // squelette déjà mort au chargement (save) compris
@@ -498,6 +500,7 @@ namespace Symbiose
 					? pl["palette"].AsGodotDictionary() : null);
 			}
 			LireVoix(snap);   // overdose : phrases de tous les êtres (Murmures.cs)
+			LireCaracteres(snap);   // unités des gènes + seuils de lignée (survol G, 0.6.17)
 			UpdateActionHud();
 
 			// Jardinier automate (sprint jardinier_auto ⑥, snapshot 0.5.30) : bloc

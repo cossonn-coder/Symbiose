@@ -37,6 +37,7 @@ import re
 from collections import namedtuple
 
 from plants.catalogue import PLANT_CATALOGUE, PERENNIAL_CATALOGUE
+from sim.lignee import lire_semis   # ressemis d'une graine récoltée (D139 ④), module pur
 
 # --- Type partagé (doc §1.2) -------------------------------------------------
 # Un événement typé issu d'UNE ligne de log. `pos` = (r, c) plot-foyer ou None ;
@@ -265,6 +266,15 @@ def evenements(log: list[str]) -> list[Evenement]:
         m_tile = _RE_TILE.match(stripped)
         if m_tile:
             tile_id = m_tile.group(1)
+            continue
+
+        # Ressemis d'une graine RÉCOLTÉE (D139 ④, `planter`) : la ligne porte sa
+        # tuile (écrite hors tick, avant tout en-tête) ; cause = fixee/en_voie/melangee.
+        semis = lire_semis(line)
+        if semis:
+            t, pos_s, cle, cause = semis
+            out.append(Evenement("lignee", t, pos_s, cle if cle in _CATALOGUE else None,
+                                 cause))
             continue
 
         # Ravageur de saison : header global, SANS @pos ni espèce (aléa) — §5.0.

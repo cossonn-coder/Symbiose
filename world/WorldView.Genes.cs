@@ -1,31 +1,54 @@
-// SYMBIOSE — WorldView.Genes.cs (partial de WorldView, sprint DIVERSITÉ FONDATRICE ③)
-// Le SURVOL GÈNES (debug). Pointer une plante affiche son vecteur de gènes de
-// RYTHME (`vigueur`, `germination_thermique`, `phenologie_florale`) — l'outil qui
-// laisse Nico corréler au F5 « ce tournesol-ci est en avance » ↔ « ses gènes de
-// rythme ». Instrument d'observation, étiqueté debug (philo #5 : chiffres tolérés
-// hors HUD final), toggle G, caché par défaut.
+// SYMBIOSE — WorldView.Genes.cs (partial de WorldView, sprint DIVERSITÉ FONDATRICE ③,
+// refondu au sprint GÉNÉTIQUE INFINITÉSIMALE ④, D139)
+// Le SURVOL GÈNES (debug). Pointer une plante affiche sa LIGNÉE (fixée / en voie de
+// fixation / mélangée, d'après sa consanguinité F) puis CHAQUE caractère dans son
+// unité : « optimum de levée −2,1 °C », « avance de floraison +1,0 sem. »,
+// « autofécondation 93 % », « vigueur ×1,04 ». Instrument d'observation, étiqueté
+// debug (philo #5 : chiffres tolérés hors HUD final), toggle G, caché par défaut.
 //
 // 📖 Pédagogie — on RÉUTILISE le picking de survol des étiquettes/observation
 // (FindPlant sur la souris, WorldView.Actions.cs) : là on AFFICHE le nom, ici on
-// LIT la Meta "genes" posée à l'ApplySnapshot (WorldView.Snapshot.cs) et on la met
-// en texte. Zéro requête pont : le snapshot porte déjà les gènes (serialize.py ③).
-// Les gènes sont un DÉRIVÉ de l'état moteur (patrimoine de l'instance), la vue ne
-// les recalcule pas — elle les relit, comme le nom ou les symptômes.
+// LIT les Meta "genes" et "F" posées à l'ApplySnapshot (WorldView.Snapshot.cs) et on
+// les met en texte. Zéro requête pont. La vue NE CONNAÎT PAS les unités : le snapshot
+// porte une table `caracteres` (pont 0.6.17, `genes_pont.py`) qui dit, pour chaque
+// gène, son unité, son libellé et son sens d'affichage, plus les deux seuils de F.
+// Le moteur Python reste la seule source de vérité ; la vue ne fait que formater.
 
+using System.Globalization;
 using Godot;
+using GDict = Godot.Collections.Dictionary;
 
 namespace Symbiose
 {
 	public partial class WorldView : Node2D
 	{
+		// Banc F5 des lignées (registre Python `bancs/lignees.py`) : monté, il ouvre le
+		// survol G d'emblée (StartSimulation) — c'est l'instrument qu'il sert.
+		private const string BancLignees = "lignees";
+
 		// Label du survol gènes (créé dans BuildHud, dans le CanvasLayer "Hud").
 		private Label _genesLabel;
 		private bool _genesHoverOn;
 
-		// Gènes de RYTHME mis en avant (les autres restent lisibles au besoin, mais
-		// ce sont ces trois-là que le sprint donne à VOIR — cf. kickoff ③).
-		private static readonly string[] GenesRythme =
-			{ "vigueur", "germination_thermique", "phenologie_florale" };
+		// Table `caracteres.unites` du snapshot (null = serveur pré-0.6.17 → valeurs
+		// brutes) et seuils de lecture de F. Les seuils par défaut sont un REPLI pour un
+		// ancien serveur ; la valeur qui compte vient du pont (`sim/lignee.py`).
+		private GDict _unitesGenes;
+		private Godot.Collections.Array _ordreGenes;   // ordre du registre (JSON trié côté pont)
+		private double _seuilFixee = 0.75, _seuilMelangee = 0.25;
+
+		// Lit la table des caractères (constante : une lecture suffit). Tolérant à
+		// l'absence de la clé (ancien serveur) : le survol retombe sur les valeurs brutes.
+		private void LireCaracteres(GDict snap)
+		{
+			if (_unitesGenes != null || !snap.ContainsKey("caracteres")) return;
+			var c = snap["caracteres"].AsGodotDictionary();
+			_unitesGenes = c["unites"].AsGodotDictionary();
+			if (c.ContainsKey("ordre")) _ordreGenes = c["ordre"].AsGodotArray();
+			var l = c["lignee"].AsGodotDictionary();
+			_seuilFixee = l["fixee"].AsDouble();
+			_seuilMelangee = l["melangee"].AsDouble();
+		}
 
 		// Toggle G : affiche/masque le survol gènes (instrument debug).
 		private void ToggleGenesHover()
@@ -40,8 +63,8 @@ namespace Symbiose
 		}
 
 		// Appelée chaque frame (_Process) quand le survol gènes est actif : lit la
-		// plante sous le curseur et affiche ses gènes de rythme. Aucune plante sous
-		// la souris (ou sans gènes, snapshot pré-③) → ligne d'invite discrète.
+		// plante sous le curseur et affiche lignée + gènes. Aucune plante sous la
+		// souris (ou sans gènes) → ligne d'invite discrète.
 		private void UpdateGenesHover()
 		{
 			if (!_genesHoverOn || _genesLabel == null || !_survolSale) return;
@@ -55,11 +78,48 @@ namespace Symbiose
 			string species = node.GetMeta(LectureSnap.Meta("species"), "?").AsString();
 			var sb = new System.Text.StringBuilder();
 			sb.Append($"[gènes] {species}");
-			// Gènes de rythme d'abord (l'objet du sprint), formatés à 2 déc.
-			foreach (var g in GenesRythme)
+			if (node.HasMeta(LectureSnap.Meta("F")))
+				sb.Append($"\n  {Lignee(node.GetMeta(LectureSnap.Meta("F")).AsDouble())}");
+			// Ordre du registre moteur quand la table le donne (le pont sérialise ses
+			// dicts clés triées : seule la liste `ordre` garde l'ordre du registre).
+			System.Collections.Generic.IEnumerable<Variant> ordre =
+				_ordreGenes != null ? _ordreGenes : genes.Keys;
+			foreach (var g in ordre)
 				if (genes.ContainsKey(g))
-					sb.Append($"\n  {g} : {genes[g].AsDouble():F2}");
+					sb.Append($"\n  {FormatGene(g.AsString(), genes[g].AsDouble())}");
 			_genesLabel.Text = sb.ToString();
 		}
+
+		// « lignée fixée (F 0,94) » — trois mots, seuils du pont.
+		private string Lignee(double f)
+		{
+			string mot = f >= _seuilFixee ? "lignée fixée"
+				: f <= _seuilMelangee ? "lignée mélangée" : "lignée en voie de fixation";
+			return $"{mot} (F {Nombre(f, "F2")})";
+		}
+
+		// Un caractère dans son unité. Sans table (ancien serveur) → nom et valeur brute.
+		private string FormatGene(string nom, double v)
+		{
+			if (_unitesGenes == null || !_unitesGenes.ContainsKey(nom))
+				return $"{nom} : {Nombre(v, "F2")}";
+			var d = _unitesGenes[nom].AsGodotDictionary();
+			string lib = d["libelle"].AsString();
+			double x = v * d["sens"].AsDouble();
+			return d["unite"].AsString() switch
+			{
+				"°C" => $"{lib} {Signe(x, "F1")} °C",
+				"semaines" => $"{lib} {Signe(x, "F1")} sem.",
+				"probabilité" => $"{lib} {Nombre(x * 100.0, "F0")} %",
+				_ => $"{lib} ×{Nombre(x, "F2")}",   // facteur (multiplicateur sans dimension)
+			};
+		}
+
+		// Nombre à la française (virgule) ; Signe ajoute « + » ou le vrai moins « − ».
+		private static string Nombre(double v, string fmt) =>
+			v.ToString(fmt, CultureInfo.InvariantCulture).Replace('.', ',').Replace('-', '−');
+
+		private static string Signe(double v, string fmt) =>
+			(v >= 0 ? "+" : "") + Nombre(v, fmt);
 	}
 }

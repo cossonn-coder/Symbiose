@@ -26,7 +26,7 @@ compromis) · ④ INTACT. Chaque re-figeage : dérive expliquée et consignée i
 | ① | `01_registre.md` — registre des caractères, neutre par caractère, bornes | **FAIT** 2026-11-16, golden INTACT `b4a921f8…` |
 | ② | `02_heredite.md` — brassage, F, autofécondation, fondateurs, variétés, banque | **FAIT** 2026-11-16, golden RE-FIGÉ `b4a921f8…` → `07122393…` |
 | ③ | `03_unites_compromis.md` — °C et semaines, compromis, banc « réponse à la sélection » | **FAIT** 2026-11-16 (non commité), golden RE-FIGÉ `07122393…` → `3927690e…` |
-| ④ | `04_vue.md` — pont (unités + F), survol G, voix « lignée », banc F5 `lignees` | à faire |
+| ④ | `04_vue.md` — pont (unités + F), survol G, voix « lignée », banc F5 `lignees` | **FAIT** 2026-11-18 (non commité), golden INTACT `3927690e…`, pont 0.6.17 |
 
 ## Notes ①
 - Registre = `plants/caracteres.py` (pur, sans import interne) : `Caractere` (unite, neutre,
@@ -145,9 +145,60 @@ compromis) · ④ INTACT. Chaque re-figeage : dérive expliquée et consignée i
   Golden smoke : 5,3 s avant et après [1 run chacun, charge VM 0,5 puis 1,3].
 - Taille : `sim/succession.py` 223 → 245 LDC, `sim/tempo.py` 34 LDC ; tout ≤ 300.
 
+## Notes ④
+- Repris d'une session du 2026-11-16 restée inachevée : l'existant était juste, complété et
+  corrigé (ci-dessous). **Golden INTACT `3927690e…`** (moteur non touché hors voix).
+- **Pont 0.6.17** : `F` par plante neuve (à côté de `genes`, même règle d'envoi en delta,
+  cache `PontDelta.cs` + miroir `tests/simserver/delta.py`) ; clé de snapshot `caracteres`
+  = `{unites: {nom: {unite, libelle, sens}}, ordre: [registre], lignee: {fixee, melangee}}`
+  (`tools/simserver/genes_pont.py`, table construite une fois à l'import). Snapshot smoke
+  seed 42, 6 semaines, 90 plantes : **identique à HEAD** hors `caracteres`, `F` et `perf`
+  (chronos). Ajout de cette reprise : la liste `ordre` (le serveur sérialise avec
+  `sort_keys`, le survol sortait les gènes par ordre alphabétique).
+- **`sim/lignee.py`** (neuf, pur, sans import interne) : seuils F (0,75 / 0,25), catégorie,
+  ligne de log `🫘 Ressemis de ma récolte [T] @(r, c) : espèce, cause` écrite par
+  `planter` quand la graine porte des gènes (= récoltée ; sachets magazine/quêtes/bancs
+  sans gènes, vérifié au grep), relue par `evenements` (kind `lignee`) et
+  `maitrise_detection` (preuve « reproduction » du concept). Découverte au hook A du pont.
+- Voix : concept « lignée » dans `encyclopedie_types.CONCEPTS` + fiche 3 niveaux dans
+  **`sim/concept_corpus.py`** (écart au kickoff, qui citait
+  `sim/encyclopedie_corpus/concepts.py` : ce dernier porte les phénomènes climatiques ;
+  les concepts de MAÎTRISE vivent dans `concept_corpus.py`, aligné sur `CONCEPTS`).
+  Carnet : `CONCEPT_DE` + 6 gabarits (3 causes × descriptif/interprétatif).
+- **Survol G** (`WorldView.Genes.cs`) : lignée (« fixée / en voie de fixation / mélangée »,
+  F affiché) puis chaque caractère dans son unité (°C, sem., %, ×facteur), ordre du
+  registre. Label décalé à x = 72 (la palette de gestes le masquait).
+- **Banc `lignees`** (`bancs/lignees.py`, départ S10, survol G ouvert au montage) : 8 tomates
+  (6 générations précalculées par `heredite`) F 0,98, var. hauteur 0,00035 ; 8 courgettes
+  F 0,00 (une à 0,50), var. 0,0061 ; 8 basilics du pool fondateur, F 0, var. 0,0073.
+  **Correction de cette reprise** : sans garde, l'herbivorie tuait les 24 pieds en S15-S17,
+  avant la fin du warmup F5 (capture : 1 seule plante à l'écran) → `sans_herbivorie(eco)`,
+  patron de `houppiers`/`biotique` (D127). Après : 24/24 vivants à S22.
+- Planche `planche/planche_04_survol_{tomate,courgette,basilic}_x2.png` (capture VM, ×2) :
+  survol lisible, tomate « lignée fixée (F 0,98) · autofécondation 98 % », courgette
+  « lignée mélangée (F 0,00) · 12 % ». Constat : les tomates restent petites à S22 et
+  tous les pieds portent le signe « se fane par le pied, jaune-brun » (moteur, hors ④).
+- Tests : `tests/test_lignee_voix.py` neuf (17/17, dont palier → interprétatif et crédit
+  `detecter`) ; `test_sim_server` 349/349 ; heredite, unites_compromis, caracteres,
+  encyclopedie, carnet, evenements, maitrise, journal, voix (champignon, périphérie,
+  attente, dispersion), maitrise_detection, pages, magazine verts. `dotnet build` vert.
+- Taille : `tools/simserver/serialize.py` **305 LDC 🟡** et `world/WorldView.cs` **301 🟡**
+  (déjà au seuil, +2 et +1 lignes) ; tout le reste ≤ 300.
+
+## Recette F5 (Nico)
+Monter le banc **`lignees`** (le survol G s'ouvre seul ; G le bascule). À voir :
+1. **Tomates** (rangée du fond, côté maison) : pieds semblables, survol « lignée fixée
+   (F 0,98) », caractères presque identiques d'un pied à l'autre.
+2. **Courgettes** (milieu, en quinconce) : tailles et floraisons dispersées, « lignée
+   mélangée », valeurs qui varient d'un pied à l'autre.
+3. **Basilics** (rangée avant) : diversité du pool sauvage, F 0.
+4. Survol en unités : « optimum de levée −1,3 °C », « avance de floraison −1,0 sem. »,
+   « autofécondation 98 % », « hauteur ×0,96 ».
+5. Récolter une tomate puis la ressemer (`planter`) : au tick, le **carnet** note « J'ai
+   semé … des graines de tomate tirées de ma récolte… » et l'**encyclopédie** gagne le
+   concept « lignée ».
+
 ## REPRISE
-Lire `CLAUDE.md`, ce fichier, puis le kickoff du premier tronçon « à faire » (④).
-③ commité. **Décision Nico 2026-11-16 (option A)** : tri thermique à la levée
-(`_levee_triee`) GARDÉ ; cible ≥ +1 °C du banc (a) NON tenue, reportée à
-`sprint_niche_thermique` (c'est lui qui crée la pression de sélection : coût du froid,
-avantage à lever tôt). Golden `3927690e…`.
+**Sprint CLOS côté code** (①→④, golden `3927690e…`, pont 0.6.17). Reste : **F5 de Nico**
+(recette ci-dessus), puis commit de ④ et `sprint_niche_thermique`. Décisions à valider :
+celles de ② (a)(b) et le garde `sans_herbivorie` du banc `lignees`.

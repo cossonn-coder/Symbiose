@@ -184,6 +184,12 @@ CONCEPT_DE: dict[tuple[str, str | None], str] = {
     ("frugivorie", "ecureuil"):     "dispersion",
     ("cache", "mulot"):             "dispersion",
     ("glandee", None):              "dispersion",
+    # LIGNÉE (D139 ④) : le joueur ressème une graine de SA récolte (`planter`, ligne
+    # `sim/lignee`). Cause = où en est la lignée (F de la graine) ; concept neuf
+    # « lignée » (encyclopédie + palier), descriptif tant qu'il n'est pas maîtrisé.
+    ("lignee", "fixee"):            "lignée",
+    ("lignee", "en_voie"):          "lignée",
+    ("lignee", "melangee"):         "lignée",
 }
 
 # Concept de la « levée (reprise) » : doc §5.0 dit « = la cause (eau / lumière /
@@ -382,6 +388,15 @@ GABARIT: dict[tuple[str, str | None, str], str] = {
     ("cache", "mulot", _I): "Le mulot fait ses provisions : il mange presque tout ce qui tombe au sol, et ne cache que ce qu'il ne peut finir.",
     ("glandee", None, _D): "{e} ploie sous les fruits cette année, tous les pieds à la fois.",
     ("glandee", None, _I): "Année de glandée chez {e} : tous les pieds chargent ensemble, et les mangeurs de graines n'en viennent pas à bout — c'est l'année où la relève passe.",
+
+    # LIGNÉE (D139 ④) — descriptif = le geste et ce qu'on a vu chez les parents ;
+    # interprétatif = pourquoi les frères se ressemblent (ou pas), au seuil « lignée ».
+    ("lignee", "fixee", _D): "J'ai semé {l} des graines de {e} tirées de ma récolte. Les pieds dont elles viennent se ressemblaient comme des frères.",
+    ("lignee", "fixee", _I): "J'ai ressemé {e} {l} : cette lignée se féconde elle-même depuis des générations, elle est fixée. Ses enfants seront la copie des parents — fiables, mais elle ne saura plus s'adapter seule ; un croisement lui rendrait de la marge.",
+    ("lignee", "en_voie", _D): "J'ai semé {l} des graines de {e} tirées de ma récolte. Les parents commençaient à se ressembler.",
+    ("lignee", "en_voie", _I): "J'ai ressemé {e} {l} : la lignée se resserre à chaque génération qui se féconde elle-même. Encore quelques ressemis, et ses pieds seront tous pareils.",
+    ("lignee", "melangee", _D): "J'ai semé {l} des graines de {e} tirées de ma récolte. Les parents ne se ressemblaient guère : on verra ce qui lève.",
+    ("lignee", "melangee", _I): "J'ai ressemé {e} {l} : ses fleurs se croisent d'un pied à l'autre, la lignée reste mêlée. Chaque graine rebat les cartes — c'est sa réserve d'adaptation, et je peux trier en ne gardant que les meilleurs.",
 }
 
 # Signes OBSERVÉS au survol (sprint PLANTE ASSEMBLÉE ⑥, `sim/signes.py`) : une note

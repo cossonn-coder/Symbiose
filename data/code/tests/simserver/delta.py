@@ -12,11 +12,11 @@ semaines ordinaires. Le reste du snapshot (hors plantes / bloc delta) est identi
 """
 from .harness import check, ServerProc
 
-_SEG_PLANTE = ("pid", "segd", "segments", "genes")
+_SEG_PLANTE = ("pid", "segd", "segments", "genes", "F")
 
 
 class ClientMiroir:
-    """Miroir Python du `PontDelta` C# : pid → (charges, gènes)."""
+    """Miroir Python du `PontDelta` C# : pid → (charges, gènes, F)."""
 
     def __init__(self):
         self.etat = {}
@@ -29,9 +29,11 @@ class ClientMiroir:
         semaine = snap["week"]
         plantes = []
         for p in snap["plants"]:
-            anc_charges, genes = self.etat.get(p["pid"], ([], None))
+            anc_charges, genes, F = self.etat.get(p["pid"], ([], None, None))
             if "genes" in p:
                 genes = p["genes"]
+            if "F" in p:                      # consanguinité (0.6.17), même règle
+                F = p["F"]
             neuves, j = [], 0
             for op in p["segd"]:
                 if isinstance(op, list):
@@ -43,7 +45,7 @@ class ClientMiroir:
                     j += op
                 else:
                     j -= op
-            self.etat[p["pid"]] = (neuves, genes)
+            self.etat[p["pid"]] = (neuves, genes, F)
             q = {k: v for k, v in p.items() if k not in _SEG_PLANTE}
             q["segments"] = [
                 {"parent": c[0], "base": [c[1], c[2], c[3]], "dir": [c[4], c[5], c[6]],
@@ -51,6 +53,8 @@ class ClientMiroir:
                  "is_apex": bool(c[9])} for c in neuves]
             if genes is not None and not p.get("dead"):
                 q["genes"] = genes
+            if F is not None and not p.get("dead"):
+                q["F"] = F
             plantes.append(q)
         for pid in bloc["disparues"]:
             self.etat.pop(pid, None)
@@ -84,7 +88,7 @@ def test_delta_pont():
 
     ref.send(cmd="init", seed=42)
     init = dlt.send(cmd="init", seed=42)
-    check("engine_version 0.6.16", init.get("engine_version") == "0.6.16",
+    check("engine_version 0.6.17", init.get("engine_version") == "0.6.17",
           init.get("engine_version"))
     # Opt-in : SANS la clé, le serveur delta répond au format complet historique.
     brut = dlt.send(cmd="snapshot")["snapshot"]

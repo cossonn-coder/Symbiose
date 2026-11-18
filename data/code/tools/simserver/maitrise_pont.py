@@ -31,6 +31,7 @@ from sim import maitrise as M
 from sim import maitrise_detection as MD
 from sim import pages
 from sim.evenements import evenements
+from sim.lignee import CONCEPT as CONCEPT_LIGNEE
 from sim.signes import crediter_saison
 from sim.actions.deblocage import (
     evaluer_deblocages,    # palette ① : voie savoir
@@ -223,6 +224,9 @@ def _observer(game_state: dict, player: str, log: list[str]) -> None:
                 observer(game_state, player, concept)
         elif ev.kind == "reproduction" and ev.cause == "biparental":
             observer(game_state, player, _CONCEPT_REPRO_BIPARENTAL)
+        elif ev.kind == "lignee":
+            # Ressemis d'une graine récoltée (`planter`, D139 ④) → concept « lignée ».
+            observer(game_state, player, CONCEPT_LIGNEE)
         elif ev.kind == "frugivorie" and ev.cause == "merle":
             # Le tick a écrit « 🐦 Merle : n fruits pris sur … » (`sim/zoochorie.py`,
             # non touché). On n'en retient qu'un fait : le merle emporte des fruits,

@@ -20,6 +20,7 @@ from .succession import succession_bascule
 from .croissance import vieux_pommier, foret_ports
 from .luxuriance import luxuriance
 from .diversite import diversite_fondatrice
+from .lignees import lignees
 from .modele_spatial import modele_spatial
 from .planche_especes import planche_especes, accroches_adultes
 from .lianes import liane_relais
@@ -58,6 +59,8 @@ BANCS = {
     "foret_ports": foret_ports,
     "luxuriance": luxuriance,
     "diversite_fondatrice": diversite_fondatrice,
+    # génétique infinitésimale ④ (D139) : tomates fixées, courgettes mêlées, basilics du pool.
+    "lignees": lignees,
     "modele_spatial": modele_spatial,
     "planche_especes": planche_especes,
     "accroches_adultes": accroches_adultes,
@@ -141,6 +144,10 @@ BANC_SEED = {"effondrement": 12345}
 # pour lire chaque PORT habillé (le banc n'observe PAS le rythme phénologique).
 BANC_WEEK_DEPART = {"grimpantes": 9, "luxuriance": 9, "diversite_fondatrice": 9,
                     "foret_ports": 20,
+                    # `lignees` (D139 ④) : fin de printemps (≈ fin mai) ; avec les 12
+                    # semaines de warmup du F5, on arrive en fin d'été (S22), pieds en
+                    # fleurs et en fruits : hauteurs et floraisons se comparent.
+                    "lignees": 10,
                     # `planche_especes` (FORMES DES PLANTES ①) : plein été, même raison.
                     "planche_especes": 20,
                     "accroches_adultes": 20,

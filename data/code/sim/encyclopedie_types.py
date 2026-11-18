@@ -51,7 +51,10 @@ CHAMPIGNONS: frozenset[str] = frozenset(REGISTRE_FONGIQUE)
 # --- concept : concepts transversaux (crédités par la détection) -------------
 # Dérivé des causes de stagnation (eau/lumière/météo) + la pollinisation (créditée
 # à part par `detecter`, §3.3). Set unique → source de vérité de l'onglet concept.
-CONCEPTS: frozenset[str] = frozenset(CONCEPT_PAR_STAGNATION.values()) | {"pollinisation"}
+# `lignée` (D139 ④) : découverte au 1er ressemis d'une graine récoltée (pont, hook A),
+# créditée à chaque ressemis suivant (`maitrise_detection`) — clé de `sim/lignee`.
+CONCEPTS: frozenset[str] = (frozenset(CONCEPT_PAR_STAGNATION.values())
+                            | {"pollinisation", "lignée"})
 
 # --- technique vs outil : on démêle les tuples mélangés de OBJETS_TOUCHES -----
 # `OBJETS_TOUCHES` range dans un même tuple par geste une TECHNIQUE (un savoir-
