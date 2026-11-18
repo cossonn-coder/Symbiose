@@ -38,7 +38,7 @@ Départ = hash de fin du sprint ②. ①, ①b (deux fois : scénario puis méca
 | ③ | `03_feuille_gestes.md` — coriacité, repousse, bouture, dormance, dominance apicale | **FAIT** (2026-11-18, commit `bc22825`) — voir §③ |
 | ④ | `04_sol_expansion.md` — clonalité, portée, fixation, allélopathie, mycorhization | **FAIT** (2026-11-18, commit `dac1231`) — voir §④ |
 | ⑤ | `05_signes_pont.md` — export des signes visibles, voix | **FAIT** (2026-11-18, commit `5b17796`) — voir §⑤ |
-| ⑥ | `06_vue_banc.md` — rendu, banc `caracteres_vivants`, recette F5, clôture D139 | **FAIT côté code** (2026-11-18, non commité) — voir §⑥ |
+| ⑥ | `06_vue_banc.md` — rendu, banc `caracteres_vivants`, recette F5, clôture D139 | **FAIT** (2026-11-18, commit `df5a57f`) — voir §⑥ |
 
 ## ① Fleurs — bilan (2026-11-18)
 - **Fait** : 6 caractères en queue (`plants/caracteres.py`, σ_A 0,15 ; `couleur_fleur` en
@@ -492,7 +492,7 @@ sans archétype : pool jamais levé) ; le père était le plus proche ; `pollen_
 Tronçons insérés avant ② : `01b_fecondation.md`, `01c_paternite.md`, `01d_levee_graines.md`.
 
 ## REPRISE
-**Sprint CLOS côté code** (⑥ non commité, golden INTACT `db4d6b75…`, pont 0.6.20) → **F5 de Nico**
+**Sprint CLOS côté code** (①→⑥ commités, golden INTACT `db4d6b75…`, pont 0.6.20) → **F5 de Nico**
 (recette ci-dessus). D139 close côté code (DETTE/BACKLOG mis à jour). Points à arbitrer au F5 :
 `RESSEMIS_DENSITE_REF` (①d), extinction des annuelles ressemées sous la flore férale, mode de
 pollinisation du pâturin annuel, pollen déposé/crédité après la fanaison, calibrage du goût (②),
