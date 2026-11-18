@@ -16,6 +16,7 @@ class Fig(PerennialWoody):
     family = "Moraceae"
     genus  = "Ficus"
     name   = "Figuier"
+    genetique = {"appetence_feuille": {"neutre": -0.2}, "appetence_fruit": {"neutre": 0.8}}  # goût (D139 ②, conception §2.2)
     # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
     t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -3.0, 12.0, 40.0, 50.0
     feuillage = "large"  # transpiration (D111 ①) : type de feuillage d'espèce
@@ -83,6 +84,7 @@ class AppleTree(PerennialWoody):
     family = "Rosaceae"
     genus  = "Malus"
     name   = "Pommier"
+    genetique = {"appetence_fruit": {"neutre": 0.6}}  # goût (D139 ②, conception §2.2)
     # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
     t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -3.0, 30.0, 35.0, 47.0
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
@@ -172,6 +174,7 @@ class CherryTree(PerennialWoody):
     family = "Rosaceae"
     genus  = "Prunus"
     name   = "Cerisier"
+    genetique = {"appetence_feuille": {"neutre": -0.3}, "appetence_fruit": {"neutre": 0.7}}  # goût (D139 ②, conception §2.2)
     # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
     t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -3.0, 27.0, 35.0, 47.0
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
@@ -233,6 +236,7 @@ class WalnutTree(PerennialWoody):
     family = "Juglandaceae"
     genus  = "Juglans"
     name   = "Noyer"
+    genetique = {"appetence_feuille": {"neutre": -0.4}, "appetence_fruit": {"neutre": 0.6}}  # goût (D139 ②, conception §2.2)
     # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
     t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -2.0, 25.0, 38.0, 48.0
     feuillage = "large"  # transpiration (D111 ①) : type de feuillage d'espèce

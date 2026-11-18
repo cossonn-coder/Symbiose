@@ -109,6 +109,7 @@ class Zucchini(PlantBase):
     family = "Cucurbitaceae"
     genus = "Cucurbita"
     name = "Courgette"
+    genetique = {"appetence_feuille": {"neutre": -0.2}, "appetence_fruit": {"neutre": 0.5}}  # goût (D139 ②, conception §2.2)
     # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
     t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = 10.0, -1.0, 0.0, 35.0, 46.0
     feuillage = "large"  # transpiration (D111 ①) : type de feuillage d'espèce
@@ -186,6 +187,7 @@ class Strawberry(PlantBase):
     family = "Rosaceae"
     genus = "Fragaria"
     name = "Fraisier"
+    genetique = {"appetence_fruit": {"neutre": 0.8}}  # goût (D139 ②, conception §2.2)
     # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
     t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -6.0, 12.0, 30.0, 44.0
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
@@ -259,6 +261,7 @@ class CornSalad(PlantBase):
     family = "Caprifoliaceae"
     genus = "Valerianella"
     name = "Mâche"
+    genetique = {"appetence_feuille": {"neutre": 0.7}}  # goût (D139 ②, conception §2.2)
     # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
     t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -10.0, 10.0, 25.0, 42.0
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce

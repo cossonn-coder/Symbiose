@@ -41,7 +41,10 @@ def quantite_en_mots(q: float) -> str:
 
 
 def vigueur_en_mots(g: float) -> str:
-    """Un gain de Vigueur dit en ressenti."""
+    """Un gain de Vigueur dit en ressenti. Négatif = un organe toxique mangé
+    (D139 caractères vivants ②, `sim/gout.py`) : la force s'en va."""
+    if g < 0.0:
+        return "le ventre se noue, la force s'en va"
     for borne, mot in _PALIERS_VIGUEUR:
         if g < borne:
             return mot

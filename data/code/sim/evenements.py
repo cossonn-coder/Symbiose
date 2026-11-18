@@ -38,6 +38,7 @@ from collections import namedtuple
 
 from plants.catalogue import PLANT_CATALOGUE, PERENNIAL_CATALOGUE
 from sim.lignee import lire_semis   # ressemis d'une graine récoltée (D139 ④), module pur
+from sim.gout import lire_gout     # bouchée amère/toxique du jardinier (D139 caractères ②), module pur
 
 # --- Type partagé (doc §1.2) -------------------------------------------------
 # Un événement typé issu d'UNE ligne de log. `pos` = (r, c) plot-foyer ou None ;
@@ -275,6 +276,13 @@ def evenements(log: list[str]) -> list[Evenement]:
             t, pos_s, cle, cause = semis
             out.append(Evenement("lignee", t, pos_s, cle if cle in _CATALOGUE else None,
                                  cause))
+            continue
+        # Bouchée AMÈRE ou TOXIQUE (D139 caractères vivants ②, `manger`) : ligne écrite
+        # hors tick, tuile dans la ligne ; cause = `amer_feuille`, `toxique_fruit`…
+        bouchee = lire_gout(line)
+        if bouchee:
+            t, pos_g, nom, cause = bouchee
+            out.append(Evenement("gout", t, pos_g, _CLE_DE_NOM.get(nom.strip()), cause))
             continue
 
         # Ravageur de saison : header global, SANS @pos ni espèce (aléa) — §5.0.

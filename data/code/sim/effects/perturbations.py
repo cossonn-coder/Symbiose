@@ -454,6 +454,11 @@ HERBIVORY_GAIN         = 0.20  # densité ravageur [0,1] → pression sur la san
 # ⇒ facteur ∈ [0,7 ; 1,3] : borné par construction, jamais une immunité. Une plante
 # peu parfumée (< 1) est un peu PLUS broutée — symétrique, pas un bonus gratuit.
 K_PARFUM_REPULSIF      = 0.5
+# Goût du feuillage (D139 caractères vivants ②, conception §2.2) : un feuillage
+# savoureux (`appetence_feuille` > 0, basilic, mâche) attire les ravageurs, un
+# feuillage amer ou toxique (tomate, lierre) les détourne. facteur =
+# max(PLANCHER, 1 + appetence_feuille) ∈ [0,2 ; 2] : jamais une immunité.
+APPETENCE_PLANCHER     = 0.2
 HERBIVORY_LETHAL_AUX   = 0.20  # densité auxiliaire en dessous de laquelle un foyer non régulé tourne au létal
 # Seuil RE-DÉRIVÉ au sprint RYTHMES MO ② : la bascule normalise désormais le
 # microbiome par MICROBE_RHYTHM_REF (0.6) au lieu du /3.0 hérité. Sur cette échelle,
@@ -496,7 +501,8 @@ def herbivory_pressure(plant: PlantInstance, tile: Tile,
     chen = (eco.larvae["chenille"].at_plot(r, c)
             if eco and "chenille" in getattr(eco, "larvae", {}) else 0.0)
     pressure = ((rav + chen) * HERBIVORY_GAIN
-                * (1.0 - K_PARFUM_REPULSIF * (plant.gene("parfum") - 1.0)))
+                * (1.0 - K_PARFUM_REPULSIF * (plant.gene("parfum") - 1.0))
+                * max(APPETENCE_PLANCHER, 1.0 + plant.gene("appetence_feuille")))
 
     # ───────── SUPPLANTÉ D31.2 — conservé pour mémoire ─────────
     # Ancien modèle (proxies sans entité visible). La pression dérivait de la

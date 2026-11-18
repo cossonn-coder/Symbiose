@@ -56,7 +56,7 @@ SIGMA_A_FACTEUR = 0.10       # = l'ancien GENE_INIT_SIGMA
 class Caractere:
     """Déclaration d'un caractère génétique (valeurs par défaut de l'espèce
     « moyenne » ; `neutre` et `sigma_a` surchargeables par espèce)."""
-    unite: str = "facteur"            # "facteur" | "°C" | "semaines" | "probabilité" | "position"
+    unite: str = "facteur"            # "facteur" | "°C" | "semaines" | "probabilité" | "position" | "goût"
     neutre: float = 1.0
     sigma_a: float = SIGMA_A_FACTEUR
     bornes: tuple = BORNES_FACTEUR
@@ -160,6 +160,24 @@ CARACTERES = {
                                bornes=(-1.0, 1.0)),
     "guide_nectar":  Caractere(sigma_a=0.15, cout=K_FLEUR / 2),
     "parfum":        Caractere(sigma_a=0.15, cout=K_FLEUR),
+    # D139 caractères vivants ② — FRUITS ET COMESTIBILITÉ (conception §2.2), EN QUEUE.
+    #  - taille_fruit : masse d'UN fruit × gène, NOMBRE de fruits ÷ gène
+    #                   (`sim/engine/decompo.nouer`) : gros fruits OU nombreux petits,
+    #                   la masse totale portée reste ≈ la même. Compromis STRUCTUREL,
+    #                   payé là où il est lu → aucun `cout` ici (conception §3) ;
+    #  - appetence_fruit / appetence_feuille : GOÛT de l'organe, ∈ [−1, 1] (unité
+    #                   « goût » : > 0 savoureux, < 0 amer, < −0,3 toxique pour le
+    #                   jardinier). Neutre D'ESPÈCE (tomate : feuille −0,6, fruit +0,7 ;
+    #                   surcharges `genetique` des espèces) ; défauts feuille 0, fruit
+    #                   +0,3 (un fruit est fait pour être mangé). Lus par `manger`
+    #                   (`sim/gout.py`) et, pour la feuille, par la pression des
+    #                   ravageurs (`herbivory_pressure`). Le prix d'être savoureux est
+    #                   écologique (plus brouté, plus mangé), pas un `cout`.
+    "taille_fruit":      Caractere(sigma_a=0.15),
+    "appetence_fruit":   Caractere(unite="goût", neutre=0.3, sigma_a=0.10,
+                                   bornes=(-1.0, 1.0)),
+    "appetence_feuille": Caractere(unite="goût", neutre=0.0, sigma_a=0.10,
+                                   bornes=(-1.0, 1.0)),
 }
 
 # Caractères qui ont un coût d'excès (`cout` > 0), dans l'ordre du registre : seuls

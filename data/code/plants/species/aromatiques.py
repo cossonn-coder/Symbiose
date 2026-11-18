@@ -32,6 +32,7 @@ class Mint(Lamiaceae):
     """
     genus = "Mentha"
     name = "Menthe"
+    genetique = {"appetence_feuille": {"neutre": 0.4}}  # goût (D139 ②, conception §2.2)
     # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
     t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -5.0, 15.0, 32.0, 45.0
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
@@ -89,6 +90,7 @@ class Thyme(Lamiaceae):
     """
     genus = "Thymus"
     name = "Thym"
+    genetique = {"appetence_feuille": {"neutre": 0.3}}  # goût (D139 ②, conception §2.2)
     # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
     t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -8.0, 10.0, 40.0, 52.0
     ligneux = True        # D111 ②bis : sous-arbrisseau — bois sec de la base, largué l'hiver

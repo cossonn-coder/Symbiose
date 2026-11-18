@@ -190,6 +190,13 @@ CONCEPT_DE: dict[tuple[str, str | None], str] = {
     ("lignee", "fixee"):            "lignée",
     ("lignee", "en_voie"):          "lignée",
     ("lignee", "melangee"):         "lignée",
+    # GOÛT (D139 caractères vivants ②, `sim/gout.py`) : une bouchée amère ou toxique
+    # du jardinier (`manger`). Concept NEUF « comestibilité », propre au carnet (comme
+    # maladie) : descriptif = ce qu'on a senti ; interprétatif = la défense de la plante.
+    ("gout", "amer_feuille"):       "comestibilité",
+    ("gout", "amer_fruit"):         "comestibilité",
+    ("gout", "toxique_feuille"):    "comestibilité",
+    ("gout", "toxique_fruit"):      "comestibilité",
 }
 
 # Concept de la « levée (reprise) » : doc §5.0 dit « = la cause (eau / lumière /
@@ -397,6 +404,17 @@ GABARIT: dict[tuple[str, str | None, str], str] = {
     ("lignee", "en_voie", _I): "J'ai ressemé {e} {l} : la lignée se resserre à chaque génération qui se féconde elle-même. Encore quelques ressemis, et ses pieds seront tous pareils.",
     ("lignee", "melangee", _D): "J'ai semé {l} des graines de {e} tirées de ma récolte. Les parents ne se ressemblaient guère : on verra ce qui lève.",
     ("lignee", "melangee", _I): "J'ai ressemé {e} {l} : ses fleurs se croisent d'un pied à l'autre, la lignée reste mêlée. Chaque graine rebat les cartes — c'est sa réserve d'adaptation, et je peux trier en ne gardant que les meilleurs.",
+
+    # GOÛT (D139 caractères vivants ②) — descriptif = la bouche et le ventre ;
+    # interprétatif = la plante qui se défend, organe par organe, au seuil « comestibilité ».
+    ("gout", "amer_feuille", _D): "J'ai mâché une feuille de {e} {l}. C'était amer.",
+    ("gout", "amer_feuille", _I): "Feuille de {e} {l}, amère : la plante y met juste assez de défense pour décourager les brouteurs. Ça se mange, mais ça nourrit peu.",
+    ("gout", "amer_fruit", _D): "J'ai goûté un fruit de {e} {l}. C'était amer.",
+    ("gout", "amer_fruit", _I): "Fruit de {e} {l}, amer : ce pied-là ne gâte pas ses fruits. On peut garder les graines des plus doux.",
+    ("gout", "toxique_feuille", _D): "J'ai mâché une feuille de {e} {l}. J'ai eu mal au ventre, et la force s'en est allée.",
+    ("gout", "toxique_feuille", _I): "Feuille de {e} {l} : un poison de défense, qui détourne aussi les ravageurs. On ne la mange pas — même si le fruit, lui, peut être délicieux.",
+    ("gout", "toxique_fruit", _D): "J'ai goûté un fruit de {e} {l}. J'ai eu mal au ventre, et la force s'en est allée.",
+    ("gout", "toxique_fruit", _I): "Fruit de {e} {l} : toxique pour moi, pas pour les oiseaux, qui le mangent et sèment ses graines plus loin.",
 }
 
 # Signes OBSERVÉS au survol (sprint PLANTE ASSEMBLÉE ⑥, `sim/signes.py`) : une note

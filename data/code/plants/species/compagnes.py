@@ -144,6 +144,7 @@ class Borage(PlantBase):
     family = "Boraginaceae"
     genus = "Borago"
     name = "Bourrache"
+    genetique = {"appetence_feuille": {"neutre": 0.2}}  # goût (D139 ②, conception §2.2)
     # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
     t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -4.0, 3.0, 32.0, 45.0
     feuillage = "large"  # transpiration (D111 ①) : type de feuillage d'espèce
@@ -206,6 +207,7 @@ class Comfrey(PlantBase):
     family = "Boraginaceae"
     genus = "Symphytum"
     name = "Consoude"
+    genetique = {"appetence_feuille": {"neutre": -0.3}}  # goût (D139 ②, conception §2.2)
     # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
     t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -8.0, 20.0, 32.0, 45.0
     feuillage = "large"  # transpiration (D111 ①) : type de feuillage d'espèce

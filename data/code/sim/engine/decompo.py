@@ -106,18 +106,25 @@ def nouer(plant, frac: float) -> list:
     chacun des `round(frac × sites)` premiers sites (≤ MAX_ORGANS). Avec levier (arbres) :
     tous les apex sont des sites et `round(frac × fruits_par_site × sites)` fruits s'y
     répartissent, le reste de la division sur les premiers sites ; un site sans fruit
-    ne porte pas de cohorte. Peu de pollen = peu de fruits, sur tout l'arbre. Zéro RNG."""
+    ne porte pas de cohorte. Peu de pollen = peu de fruits, sur tout l'arbre. Zéro RNG.
+
+    Gène `taille_fruit` (D139 caractères vivants ②) : la masse d'UN fruit × gène, le
+    NOMBRE de fruits ÷ gène (arbres) — la plante a le même sucre à répartir, en gros
+    fruits ou en nombreux petits ; la masse totale reste ≈ la même (à l'arrondi
+    près). Herbacée (un fruit par site, le site est un organe) : seule la masse
+    change."""
     cls = plant.plant_class
     par_site = cls.fruits_par_site
+    taille = plant.gene("taille_fruit")
     if par_site is None:
         sites = organ_sites(plant)
-        return [Fruit(seg_id, 0.0, FRUIT_MASSE)
+        return [Fruit(seg_id, 0.0, FRUIT_MASSE * taille)
                 for seg_id, _pos in sites[:round(frac * len(sites))]]
     sites = organ_sites(plant, plafond=None)
     if not sites:
         return []
-    masse = FRUIT_MASSE if cls.fruit_masse is None else cls.fruit_masse
-    base, reste = divmod(round(frac * par_site * len(sites)), len(sites))
+    masse = (FRUIT_MASSE if cls.fruit_masse is None else cls.fruit_masse) * taille
+    base, reste = divmod(round(frac * par_site * len(sites) / taille), len(sites))
     cohortes = [Fruit(seg_id, 0.0, masse, base + (1 if k < reste else 0))
                 for k, (seg_id, _pos) in enumerate(sites)]
     return [f for f in cohortes if f.nombre > 0]

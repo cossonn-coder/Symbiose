@@ -35,6 +35,7 @@ class Nettle(Urticaceae):
     """
     genus = "Urtica"
     name = "Ortie"
+    genetique = {"appetence_feuille": {"neutre": 0.3}}  # goût (D139 ②, conception §2.2)
     # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
     t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -6.0, 20.0, 30.0, 44.0
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
@@ -83,6 +84,7 @@ class Vaccinium(Ericaceae):
     """
     genus = "Vaccinium"
     name = "Myrtille"
+    genetique = {"appetence_fruit": {"neutre": 0.8}}  # goût (D139 ②, conception §2.2)
     # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
     t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -5.0, 25.0, 28.0, 42.0
     ligneux = True        # D111 ②bis : arbrisseau — rameaux âgés qui sèchent (hiver)
@@ -147,6 +149,7 @@ class Raspberry(PlantBase):
     family = "Rosaceae"
     genus = "Rubus"
     name = "Framboisier"
+    genetique = {"appetence_fruit": {"neutre": 0.8}}  # goût (D139 ②, conception §2.2)
     # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
     t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -8.0, 25.0, 32.0, 45.0
     ligneux = True        # D111 ②bis : cannes de 2 ans qui meurent après fructification
@@ -350,6 +353,7 @@ class Mugwort(Asteraceae):
     """
     genus = "Artemisia"
     name = "Armoise"
+    genetique = {"appetence_feuille": {"neutre": -0.5}}  # goût (D139 ②, conception §2.2)
     # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
     t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -8.0, 20.0, 35.0, 48.0
     feuillage = "cireux"  # transpiration (D111 ①) : type de feuillage d'espèce

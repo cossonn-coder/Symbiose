@@ -194,6 +194,7 @@ class Taraxacum(PlantBase):
     family = "Asteraceae"
     genus  = "Taraxacum"
     name   = "Pissenlit"
+    genetique = {"appetence_feuille": {"neutre": 0.4}}  # goût (D139 ②, conception §2.2)
     # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
     t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -8.0, 20.0, 32.0, 46.0
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce

@@ -22,6 +22,7 @@ from sim.vigueur_plante import maturite, vigueur_plante, sante, qi_local   # fac
 from sim.growth import (atteindre_segment,   # seam de perturbation §F (sim→sim, pas de cycle : growth n'importe pas actions)
                         f_lignification, INTENSITE_PIED, SEUIL_DEGAT, COUPE_NETTE)  # calibrage écrasement (volet 2)
 from sim.lignee import ligne_semis   # voix « lignée » : ressemis d'une graine récoltée (D139 ④)
+from sim import gout   # goût de l'organe mangé : valeur signée + note du carnet (D139 caractères ②)
 from sim.souche import noter_perte_couronne   # taille sévère = recépage émergent (rejets ③)
 from sim.effects import deposer_mort   # mort → squelette persistant (②B), point d'entrée unique
 from fields.ecofields import BOIS_PAR_CM, ECRASER_FRAG_BOOST   # litière `bois` (taille/écimage) + boost fragmentation (②)
@@ -87,7 +88,16 @@ def manger(game_state: dict, player: str, plant, eco, *, fruit_index=None) -> fl
     NÉGATIF (manger un nuisible) relèvent de **D31**. NE cible JAMAIS le bourgeon
     apical : couper l'apex est l'action `tailler` (D29), pas manger.
 
-    Renvoie la valeur de l'organe consommé (gain nominal, avant plafonnement)."""
+    GOÛT (D139 caractères vivants ②, `sim/gout.py`) : la valeur est modulée par
+    l'appétence de l'organe — `appetence_fruit` en mode ciblé, `appetence_feuille`
+    en mode générique (on broute la plante). Savoureux → nourrit mieux ; amer →
+    moins ; TOXIQUE (sous −0,3) → la bouchée RETIRE de la Vigueur (débit par
+    `spend`, seul point de débit : l'interrupteur « Vigueur infinie » la masque). Le
+    geste, lui, reste gratuit. Un fruit nourrit aussi selon sa taille (gène
+    `taille_fruit`). Une bouchée amère ou toxique laisse une note au carnet.
+
+    Renvoie la valeur SIGNÉE de l'organe consommé (gain nominal avant plafonnement ;
+    négative = Vigueur perdue)."""
     if fruit_index is not None and 0 <= fruit_index < len(plant.fruits):
         # Cohorte (VERGER VIVANT ③) : on mange UN fruit ; la cohorte disparaît avec
         # son dernier fruit (déplétion réelle D19, index des suivants décalé comme avant).
@@ -95,12 +105,31 @@ def manger(game_state: dict, player: str, plant, eco, *, fruit_index=None) -> fl
         fruit.nombre -= 1
         if fruit.nombre <= 0:
             plant.fruits.pop(fruit_index)
-        gain_organe = (HARVEST_GAIN_FULL * sante(plant) * fruit.maturite
-                       * qi_local(plant, eco) * plant.gene("vigueur"))
+        base = (HARVEST_GAIN_FULL * sante(plant) * fruit.maturite
+                * qi_local(plant, eco) * plant.gene("vigueur") * plant.gene("taille_fruit"))
+        organe, appetence = gout.FRUIT, plant.gene("appetence_fruit")
     else:
-        gain_organe = HARVEST_GAIN_FULL * vigueur_plante(plant, eco)
-    gain(game_state, player, gain_organe)   # coût NUL → pas de spend
-    return gain_organe
+        base = HARVEST_GAIN_FULL * vigueur_plante(plant, eco)
+        organe, appetence = gout.FEUILLE, plant.gene("appetence_feuille")
+    valeur = gout.valeur_bouchee(base, appetence, HARVEST_GAIN_FULL)
+    if valeur >= 0.0:
+        gain(game_state, player, valeur)    # coût NUL → pas de spend
+    else:
+        spend(game_state, player, -valeur)  # l'ORGANE coûte, pas le geste
+    _noter_gout(game_state, plant, gout.cause(organe, appetence))
+    return valeur
+
+
+def _noter_gout(game_state: dict, plant, cause) -> None:
+    """Note du carnet d'une bouchée amère ou toxique : une ligne dans le canal `log`
+    du serveur (absent hors serveur → rien), relue par `evenements` (patron du
+    ressemis `ligne_semis`). La tuile est cherchée par identité de la plante."""
+    log = game_state.get("log")
+    if cause is None or log is None:
+        return
+    tile_id = next((t.tile_id for t in game_state.get("tiles") or ()
+                    if any(p is plant for p in t.plants)), None)
+    log.append(gout.ligne_gout(tile_id, *plant.position, plant.name, cause))
 
 
 def planter(game_state: dict, player: str, tile, eco, species: str,

@@ -19,7 +19,9 @@ class Tomato(Solanaceae):
     t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = 10.0, -1.0, 0.0, 32.0, 45.0
     # AUTOGAME (D139 ②) : pollinisée par insecte au catalogue, mais s'autoféconde
     # à ≈ 95 % en réalité (fleur cléistogame ou quasi) → lignée qui se FIXE.
-    genetique = {"autofecondation": {"neutre": 0.95}}
+    genetique = {"autofecondation": {"neutre": 0.95},
+                 # goût (D139 ②) : feuillage toxique (solanine), fruit savoureux
+                 "appetence_feuille": {"neutre": -0.6}, "appetence_fruit": {"neutre": 0.7}}
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.0  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     axe_couleur = (JAUNE, JAUNE)  # couleur de fleur (D139 ①) : la tomate reste jaune
@@ -103,6 +105,7 @@ class Tomato(Solanaceae):
 class Pepper(Solanaceae):
     genus = "Capsicum"
     name = "Poivron"
+    genetique = {"appetence_feuille": {"neutre": -0.4}, "appetence_fruit": {"neutre": 0.6}}  # goût (D139 ②, conception §2.2)
     # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
     t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = 10.0, -1.0, 0.0, 33.0, 45.0
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
@@ -379,6 +382,7 @@ class Sunflower(Asteraceae):
 class Basil(Lamiaceae):
     genus = "Ocimum"
     name = "Basilic"
+    genetique = {"appetence_feuille": {"neutre": 0.6}}  # goût (D139 ②, conception §2.2)
     # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
     t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = 10.0, -1.0, 0.0, 35.0, 45.0
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce

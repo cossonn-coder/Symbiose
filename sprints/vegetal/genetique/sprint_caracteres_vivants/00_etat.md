@@ -24,7 +24,7 @@ d'un compromis.
 ## Golden
 Départ = hash de fin du sprint ②. ①, ①b (deux fois : scénario puis mécanique), ①d,
 (①c annoncé re-figé, resté **INTACT** : voir §①c),
-②-④ **RE-FIGÉ annoncé** chacun (clés neuves + lecteurs)
+② (`c6fd8275…`), ③-④ **RE-FIGÉ annoncé** chacun (clés neuves + lecteurs)
 · ⑤ INTACT · ⑥ INTACT.
 
 ## Tronçons
@@ -33,8 +33,8 @@ Départ = hash de fin du sprint ②. ①, ①b (deux fois : scénario puis méca
 | ① | `01_fleurs.md` — taille, nectar, pollen, couleur, guides, parfum + `cout_genetique` | **FAIT** (2026-11-18, commit `968704c`) — voir §① |
 | ①b | `01b_fecondation.md` — pommier mûr au smoke, `fecondation` à la fanaison, part autofécondée | **FAIT** (2026-11-18, commit `b157ee6`) — voir §①b |
 | ①c | `01c_paternite.md` — compteur `pollen_donne`, père tiré ∝ pollen exporté | **FAIT** (2026-11-18, commit `96505f5`) — voir §①c |
-| ①d | `01d_levee_graines.md` — annuelles qui se ressèment, espèce spontanée ∝ son pool | **FAIT côté code** (2026-11-18, non commité) — voir §①d |
-| ② | `02_fruits_comestibilite.md` — taille des fruits, appétence feuille/fruit, Vigueur négative | à faire |
+| ①d | `01d_levee_graines.md` — annuelles qui se ressèment, espèce spontanée ∝ son pool | **FAIT** (2026-11-18, commit `9fdcbe9`) — voir §①d |
+| ② | `02_fruits_comestibilite.md` — taille des fruits, appétence feuille/fruit, Vigueur négative | **FAIT côté code** (2026-11-18, non commité) — voir §② |
 | ③ | `03_feuille_gestes.md` — coriacité, repousse, bouture, dormance, dominance apicale | à faire |
 | ④ | `04_sol_expansion.md` — clonalité, portée, fixation, allélopathie, mycorhization | à faire |
 | ⑤ | `05_signes_pont.md` — export des signes visibles, voix | à faire |
@@ -226,6 +226,51 @@ Départ = hash de fin du sprint ②. ①, ①b (deux fois : scénario puis méca
 - Taille : `sim/succession.py` **306 LDC** (🟡, 245 avant ; une seule responsabilité : la
   levée férale) — scission possible (portes + ressemis → module dédié) si elle grossit.
 
+## ② Fruits et comestibilité — bilan (2026-11-18)
+- **Fait** : 3 caractères en queue (`plants/caracteres.py`) : `taille_fruit` (facteur, σ_A
+  0,15, sans `cout` : compromis structurel), `appetence_fruit` / `appetence_feuille` (unité
+  neuve « goût », [−1, 1], σ_A 0,10, neutres 0,3 / 0). Neutres d'espèce du tableau §2.2 posés
+  en `genetique` sur les 20 espèces (tomate, poivron, courgette, lierre, armoise, consoude,
+  noyer, fraisier, myrtille, cerisier, basilic, mâche, menthe, thym, pissenlit, ortie,
+  bourrache, framboisier, figuier, pommier). Lecteurs : `decompo.nouer` (masse × g ; nombre
+  ÷ g chez les arbres, arrondi existant ; herbacées : masse seule) ; `herbivory_pressure` ×
+  `max(0,2, 1 + appetence_feuille)` ; `manger` via `sim/gout.py` (module pur) : valeur =
+  `base × (1 + a)`, sous `SEUIL_TOXIQUE` −0,3 la bouchée **retire** `PERTE_TOXIQUE 0,5 ×
+  HARVEST_GAIN_FULL × |a|` (débit par `spend`, seul point de débit ; geste toujours gratuit ;
+  « Vigueur infinie » masque la perte, comme les champignons). Fruit ciblé : aussi ×
+  `taille_fruit`. Carnet : ligne `👅 Goûté [T] @(r, c) : Nom, cause` écrite par `manger`
+  (canal `log`, patron `lignee`), relue par `evenements` (kind `gout`, causes
+  `amer|toxique` × `feuille|fruit`), 8 gabarits, concept NEUF « comestibilité » (propre au
+  carnet). Greffe : les 3 gènes suivent le greffon. Pont : `vigueur_en_mots` dit une valeur
+  négative (« le ventre se noue »).
+- **Vérifié, rien à faire** : zoochorie (`prendre`) ne lit que le NOMBRE de fruits (déjà ÷
+  taille), pas la masse ni le goût (oiseaux tolérants, §2.2) ; le mulot ne mange que des
+  graines au sol, aucun lecteur de fruit → `appetence_fruit` n'y est pas branchée.
+- **Golden RE-FIGÉ** `5d26af06…` → `c6fd82754af9f9624a38d2d339e545f7f601f3c942a92dbecf798628835c05da`
+  (3 clés neuves au digest). 1ʳᵉ divergence : **nouaison du pommier s8**, 8 → 10 fruits
+  (gène `taille_fruit` < 1 du fondateur) ; puis pression d'herbivorie s14 (`appetence_feuille`
+  du fondateur). Digest final 35 → 41 plantes vivantes (trèfle 15 → 22, minette 6 → 8,
+  pissenlit 1 → 0) : cascade, pas un effet ciblé. `population_hash` **INTACT** `20b81840…`.
+- **Tests** : `tests/test_caracteres_fruits.py` 21/21 (taille ↔ nombre, masse conservée ±5 % ;
+  feuille de tomate −4,5, basilic 16,8 contre 10,5 neutre, amer −0,2 nourrit moins ; fruit de
+  lierre −6 ; poivron fruit +, Vigueur infinie masque ; ligne → événement → note « mal au
+  ventre » ; bouchée savoureuse sans note ; pression croît avec l'appétence, plancher).
+  **Adaptés** : `test_caracteres` (3 entrées du registre), `tests/vigueur/manger.py` (D1, D2,
+  D4 mangeaient une feuille de tomate, désormais toxique → goût neutre forcé, le test porte sur
+  la façade). Toutes les suites `tests/test_*.py` vertes sauf `test_peripherie` 70/71 (rouge
+  avant). Bancs `tests/bancs/` : `climatique`, `edaphique`, `bancs_grimpe`, `verger_mur`
+  rouges **à HEAD aussi** (mêmes messages, vérifié sur un worktree de 9fdcbe9).
+- **Perf** : smoke 4,46 → 4,80 s [n=4 paires alternées ; monde divergent, 35 → 41 plantes,
+  surcoût des lectures non isolé] — les lectures ajoutées sont O(1) par plante.
+- Taille : `sim/effects/perturbations.py` **301 LDC** (🟡, 299 avant) ; `plants/species/cultivees.py`
+  384 (données, 381 avant) ; `sim/carnet.py` 293 ; `sim/actions/gestes.py` 282 ; `sim/gout.py` 28.
+- **Décisions de jeu prises ici (à valider F5)** : `1 + a` pour un organe mangeable (le fruit
+  neutre +0,3 nourrit donc 30 % de plus qu'avant ce tronçon) ; discontinuité assumée au seuil
+  (−0,29 → 0,71 × base, −0,31 → perte) = seuil de dose ; la perte ne dépend ni de la maturité
+  ni de la santé (la plante se défend à tout âge) ; pas de note de carnet pour une bouchée
+  savoureuse ; le concept « comestibilité » n'est crédité par aucune détection de maîtrise
+  (note toujours descriptive hors vision / réglage anticipé) — à brancher au ⑤ si voulu.
+
 ## Conception FÉCONDATION (trou du ①) — ARBITRÉE et FIGÉE (Nico, 2026-11-18)
 Doc : `docs/vegetal/genetique/conception_caracteres_vivants.md` §6. Diagnostic : le nombre de
 graines ne dépendait ni des visites, ni ne faisait le nombre de descendants (annuelles
@@ -244,8 +289,9 @@ sans archétype : pool jamais levé) ; le père était le plus proche ; `pollen_
 Tronçons insérés avant ② : `01b_fecondation.md`, `01c_paternite.md`, `01d_levee_graines.md`.
 
 ## REPRISE
-①d fait côté code (non commité, golden RE-FIGÉ `5d26af06…`, population `20b81840…`). Lire
-`CLAUDE.md`, ce fichier, puis le kickoff du premier tronçon « à faire » (②). Points à
-arbitrer : `RESSEMIS_DENSITE_REF` (écart ①d), extinction des annuelles ressemées sous la
-flore férale, mode de pollinisation du pâturin annuel (amplifié par S3), pollen
-déposé/crédité après la fanaison (côtés femelle ET mâle).
+② fait côté code (non commité, golden RE-FIGÉ `c6fd8275…`, population intact `20b81840…`).
+Lire `CLAUDE.md`, ce fichier, puis le kickoff du
+premier tronçon « à faire » (③). Points à arbitrer : `RESSEMIS_DENSITE_REF` (écart ①d),
+extinction des annuelles ressemées sous la flore férale, mode de pollinisation du pâturin
+annuel (amplifié par S3), pollen déposé/crédité après la fanaison (côtés femelle ET mâle),
+calibrage du goût (`PERTE_TOXIQUE`, `1 + a`) et maîtrise du concept « comestibilité » (②).

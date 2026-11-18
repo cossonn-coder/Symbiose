@@ -41,6 +41,7 @@ class Ivy(PlantBase):
     family = "Araliaceae"
     genus = "Hedera"
     name = "Lierre"
+    genetique = {"appetence_feuille": {"neutre": -0.8}, "appetence_fruit": {"neutre": -0.8}}  # goût (D139 ②, conception §2.2)
     # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
     t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -8.0, 10.0, 35.0, 46.0
     ligneux = True                       # D111 ②bis : liane ligneuse (tiges lignifiées) → bois mort

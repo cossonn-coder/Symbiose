@@ -49,6 +49,10 @@ _FLORAUX = {
     "couleur_fleur": ("position", 0.0, 0.15, (-1.0, 1.0)),
     "guide_nectar":  ("facteur", 1.0, 0.15, (GENE_HARD_MIN, GENE_HARD_MAX)),
     "parfum":        ("facteur", 1.0, 0.15, (GENE_HARD_MIN, GENE_HARD_MAX)),
+    # D139 caractères vivants ② : fruits et goût (appétence ∈ [−1, 1], neutre d'espèce).
+    "taille_fruit":      ("facteur", 1.0, 0.15, (GENE_HARD_MIN, GENE_HARD_MAX)),
+    "appetence_fruit":   ("goût", 0.3, 0.10, (-1.0, 1.0)),
+    "appetence_feuille": ("goût", 0.0, 0.10, (-1.0, 1.0)),
 }
 
 
@@ -76,7 +80,7 @@ def test_valeurs_refactor_pur():
                   == _THERMIQUES[g]) and car.adaptogene == (g in ADAPTOGENIC_GENES)
             check(f"caractère thermique : {g}", ok, repr(car))
             continue
-        if g in _FLORAUX:                # caractères vivants ① : la fleur
+        if g in _FLORAUX:                # caractères vivants ①② : fleur, fruits, goût
             ok = (car.unite, car.neutre, car.sigma_a, car.bornes) == _FLORAUX[g] \
                 and not car.adaptogene
             check(f"caractère floral : {g}", ok, repr(car))
