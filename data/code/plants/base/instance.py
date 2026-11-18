@@ -98,6 +98,17 @@ class PlantInstance:
                                     #  golden NEUTRE.
     stress_memory: float = 0.0      # intégration des perturbations subies [0-1]
                                     # stress↑ → croissance↓ mais résistance↑
+    # BILAN CARBONE (D140 G, sprint plante vivante ①) : la plante vit de ce qu'elle
+    # produit. `feuillage` = part INTACTE du feuillage attendu à ce moment de sa vie
+    # (un caduc nu en hiver a 1.0 : rien ne manque) ; `reserves` = fraction de sa
+    # capacité de réserve (`plants/physiologie.capacite_reserve`) ; `bilan_net` =
+    # dernier solde hebdomadaire P − E − X en semaines d'entretien (bancs, pont).
+    # Tenus par `sim/bilan.py` depuis `_update_physiology`. EN OMBRE au ① : lus par
+    # PERSONNE (vitalité dérivée au ②) ; hors `_PLANT_ATTRS` du golden. Défaut plein :
+    # la graine apporte son albumen, une plante posée arrive saine.
+    feuillage: float = 1.0
+    reserves: float = 1.0
+    bilan_net: float = 0.0
     # Marques de symptômes ÉVÉNEMENTIELS (sémiologie ②) : maladie/gel/grêle n'ont
     # PAS d'état persistant relisible (un coup ponctuel), contrairement aux
     # stresseurs chroniques recalculés à la volée. On les MÉMORISE donc ici, cause

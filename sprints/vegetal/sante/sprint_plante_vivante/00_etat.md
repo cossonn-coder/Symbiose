@@ -34,12 +34,43 @@ Perf de référence à mesurer au ① (tick `full` s10-s30, commit de départ).
 ## Tronçons
 | # | Kickoff | État |
 |---|---|---|
-| ① | `01_socle_bilan.md` — bilan en ombre + paramètres 52 espèces + banc | à faire |
+| ① | `01_socle_bilan.md` — bilan en ombre + paramètres 52 espèces + banc | **FAIT** (golden intact, non commité) |
 | ② | `02_bascule_vie.md` — vitalité dérivée, famine, `erode` = tissus | à faire |
 | ③ | `03_herbivorie_atteinte.md` — chaque ravageur mange ce qu'il atteint | à faire |
 | ④ | `04_souches_reserve.md` — réserve de souche, rejets sans souche propre | à faire |
 | ⑤ | `05_ouverture_mesure.md` — critères `full` s10→s30 + âge de la chronique | à faire |
 | ⑥ | `06_vue_banc.md` — pont, rendu du feuillage, info-bulle, banc, clôture | à faire |
+
+## Acquis du ① (2026-11-18)
+- `plants/physiologie.py` : 3 paramètres par forme de vie + `SURCHARGES` des 52 espèces
+  (commentées), `capacite_reserve` = reserve_semaines × facteur_stade (0,05 → 1,
+  linéaire sur l'index de stade ; sur `age_years/maturity_years` pour les arbres à
+  stade perpétuel — l'index seul ne bougeait pas pour eux).
+- `sim/bilan.py` (pur) appelé en fin de `_update_physiology` ; champs `feuillage`,
+  `reserves`, `bilan_net` dans `PlantInstance` (hors `_PLANT_ATTRS`). Lus par personne.
+- **Écarts à la conception (calibrage mesuré)** : (1) `f_T` côté chaud ferme de
+  `lim_chaud` à `lim_brul`, pas à `lim_chaud` — `t_feuille` est le pic du jour le plus
+  chaud, et la plupart des herbacées ont `lim_chaud` 28-30 °C sous un pic d'été
+  ordinaire de 29-30 °C : un arrêt net éteignait leur production tout l'été ;
+  (2) `LUM_SATURATION` 0,4 (sur `light_eff`) ; (3) sciaphile `photo_max` 2,5 (2,0
+  laissait violette/lierre en déficit au nord de la maison). Optimum thermique =
+  `temp_min_growth + 8 °C` (D139 n'a pas d'optimum explicite).
+- Banc `tests/test_bilan.py` vert : niche d'été > 0 pour les 43 espèces de
+  PLACEMENTS ; plantule sous ombre < 0 ; chêne adulte défolié en continu tient 20 sem
+  (réserves 0,29) ; semis de chêne (C = 3,5 sem) vide en 2 sem ; défolié une fois →
+  feuillage refait en 7 sem, réserves au plus bas 0,87 ; caduc en hiver ≤ 30 %.
+- `bilan_net` monde `full` s18 [seed 42, n=1, herbivorie neutralisée en mémoire,
+  `mesures/bilan_par_espece.py`] : négatifs **myrtille −0,46, menthe −0,19, saule
+  −0,12** (ombre de la maison/du sapin : lumière effective < 0,2 — placements hors
+  niche, **à surveiller au ⑤**) ; ble +0,05, violette +0,06, bambou +0,12, lierre
+  +0,13, consoude +0,16, framboisier +0,25 ; tous les autres +0,3 à +2,6 (tournesol).
+  Semaine de canicule s24 (T_air 24,9) : la plupart en négatif (−0,1 à −2), attendu.
+- Perf tick `full` s10→s30 [3 paires alternées, charge 1-2] : 9,27 s → 9,29 s (bruit).
+- Suites : tout vert sauf `test_peripherie` (70/71) et `test_population` — **déjà
+  rouges au commit de départ** (vérifié sur un worktree HEAD), sans lien.
+- À savoir pour ② : une plantule de vivace (C = 0,4 sem) dormant l'hiver dépense ~0,9
+  sem → elle mourrait de famine dès le branchement ; le facteur de stade des herbacées
+  ou `DORMANCE` (0,1) sera à revoir quand la vitalité lira les réserves.
 
 ## Diagnostic d'origine (2026-11-18, seed 42, n=1 par cas)
 Ouverture s10 → morts des 136 posées à s21 : tel quel 121 ; faune pré-roulée 130 ;
@@ -50,5 +81,5 @@ naissances par espèce/semaine via `SimServer().cmd_init({"config":"full","seed"
 puis `engine.tick_semaine()`.
 
 ## REPRISE
-Lire `CLAUDE.md`, ce fichier, la conception, puis le kickoff du premier tronçon
-« à faire ». Lancer : `/sprint-auto sprint_plante_vivante`.
+① fait (non commité au moment de l'écriture). Lire `CLAUDE.md`, ce fichier, la
+conception, puis `02_bascule_vie.md`. Lancer : `/sprint-auto sprint_plante_vivante`.

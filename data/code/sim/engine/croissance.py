@@ -21,12 +21,13 @@ from fields.ecofields.constants import (T_PLANTE_ALPHA, ROSEE_SURFACE_REF,
                                         RAD_WET_DRY, COUVERT_WET_SHELTER,
                                         ASPERSION_WET_GAIN, DOSE_ARROSAGE)
 from plants import EXPR_GAIN, EXPR_MIN, EXPR_MAX, TAU_UP, TAU_DOWN
-from .calendrier import saison_de
-from .transpiration import facteur_transpiration
+from .calendrier import saison_de, wiy_de
+from .transpiration import facteur_transpiration, feuillage_present
 from .racines import eau_percue, pression_parasite, maj_pourriture
 from .feuille import t_feuille_de
 from fields.ecofields.thermique import t_max_jour
 from sim.nutrition_plante import facteur_nutrition
+from sim.bilan import semaine_bilan
 
 # Sémiologie ② (docs/narration/semiologie/conception_semiologie_foliaire.md §2.5) — facteur de décroissance
 # des marques de symptômes ÉVÉNEMENTIELS par tick de plante. Couplé au gain
@@ -307,6 +308,8 @@ class CroissanceMixin:
         chaque gène adaptogène) — INERTE tant qu'aucun consommateur ne lit
         expressed_gene (tronçon ②).
         """
+        wiy = wiy_de(self.week)            # calendrier du bilan carbone (D140 G ①)
+        saison = saison_de(wiy)
         for plant in tile.plants:
             if not plant.is_alive: continue
             r, c = plant.position
@@ -483,13 +486,25 @@ class CroissanceMixin:
                      if 0 <= rr < eco.rows and 0 <= cc < eco.cols] or [(r, c)]
             allelo_rac = sum(eco.allelo_effectif(rr, cc, plant.plant_class)
                              for (rr, cc) in roots) / len(roots)
-            target_g *= _f_croissance_allelo(allelo_rac,
-                                             plant.plant_class.allelopathie_sensibilite)
+            f_allelo = _f_croissance_allelo(allelo_rac,
+                                            plant.plant_class.allelopathie_sensibilite)
+            target_g *= f_allelo
             # Escompte de NUTRITION (D120 ②) : même patron, même empreinte `roots`
             # (réutilisée, pas relue). Une racine qui explore un sol vidé SOUS
             # l'équilibre de sa roche (Liebig, pondéré par le besoin du stade) voit
             # son GAIN de croissance escompté ∈ [plancher, 1] — jamais sa santé
             # (philo #2), jamais de mort (D41). Cf. `sim/nutrition_plante.py`.
-            target_g *= facteur_nutrition(plant, eco, roots)
+            f_nut = facteur_nutrition(plant, eco, roots)
+            target_g *= f_nut
             plant.growth_factor += (target_g - plant.growth_factor) * 0.10
             plant.growth_factor  = max(0.3, min(1.0, plant.growth_factor))
+            # BILAN CARBONE (D140 G ①, `sim/bilan.py`) : P − E − X de la semaine sur
+            # les lectures DÉJÀ faites ci-dessus (lumière effective, eau ressentie,
+            # T_feuille, nutrition, allélopathie — rien n'est relu deux fois). EN
+            # OMBRE : `feuillage`/`reserves`/`bilan_net` ne sont lus par personne au ①.
+            temp = (T_PLANTE_ALPHA * t_air
+                    + (1.0 - T_PLANTE_ALPHA) * eco.temperature_sol.at_plot(r, c))
+            semaine_bilan(plant, saison=saison,
+                          presence=feuillage_present(plant, saison, wiy),
+                          light_eff=light_eff, hum_percue=hum_p, temp=temp,
+                          t_feuille=t_f, t_air=t_air, f_nut=f_nut, f_allelo=f_allelo)
