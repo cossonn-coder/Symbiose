@@ -12,11 +12,11 @@ semaines ordinaires. Le reste du snapshot (hors plantes / bloc delta) est identi
 """
 from .harness import check, ServerProc
 
-_SEG_PLANTE = ("pid", "segd", "segments", "genes", "F")
+_SEG_PLANTE = ("pid", "segd", "segments", "genes", "F", "signes_car")
 
 
 class ClientMiroir:
-    """Miroir Python du `PontDelta` C# : pid → (charges, gènes, F)."""
+    """Miroir Python du `PontDelta` C# : pid → (charges, gènes, F, signes)."""
 
     def __init__(self):
         self.etat = {}
@@ -29,11 +29,13 @@ class ClientMiroir:
         semaine = snap["week"]
         plantes = []
         for p in snap["plants"]:
-            anc_charges, genes, F = self.etat.get(p["pid"], ([], None, None))
+            anc_charges, genes, F, sig = self.etat.get(p["pid"], ([], None, None, None))
             if "genes" in p:
                 genes = p["genes"]
             if "F" in p:                      # consanguinité (0.6.17), même règle
                 F = p["F"]
+            if "signes_car" in p:             # signes dérivés des gènes (0.6.20), même règle
+                sig = p["signes_car"]
             neuves, j = [], 0
             for op in p["segd"]:
                 if isinstance(op, list):
@@ -45,7 +47,7 @@ class ClientMiroir:
                     j += op
                 else:
                     j -= op
-            self.etat[p["pid"]] = (neuves, genes, F)
+            self.etat[p["pid"]] = (neuves, genes, F, sig)
             q = {k: v for k, v in p.items() if k not in _SEG_PLANTE}
             q["segments"] = [
                 {"parent": c[0], "base": [c[1], c[2], c[3]], "dir": [c[4], c[5], c[6]],
@@ -55,6 +57,8 @@ class ClientMiroir:
                 q["genes"] = genes
             if F is not None and not p.get("dead"):
                 q["F"] = F
+            if sig is not None and not p.get("dead"):
+                q["signes_car"] = sig
             plantes.append(q)
         for pid in bloc["disparues"]:
             self.etat.pop(pid, None)
@@ -90,7 +94,7 @@ def test_delta_pont():
     # meurent de froid à l'équinoxe → plus de plante à 3 segments à tailler.
     ref.send(cmd="init", seed=42, config="full")
     init = dlt.send(cmd="init", seed=42, config="full")
-    check("engine_version 0.6.19", init.get("engine_version") == "0.6.19",
+    check("engine_version 0.6.20", init.get("engine_version") == "0.6.20",
           init.get("engine_version"))
     # Opt-in : SANS la clé, le serveur delta répond au format complet historique.
     brut = dlt.send(cmd="snapshot")["snapshot"]

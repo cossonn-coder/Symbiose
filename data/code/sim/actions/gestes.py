@@ -116,17 +116,25 @@ def manger(game_state: dict, player: str, plant, eco, *, fruit_index=None) -> fl
         gain(game_state, player, valeur)    # coût NUL → pas de spend
     else:
         spend(game_state, player, -valeur)  # l'ORGANE coûte, pas le geste
-    _noter_gout(game_state, plant, gout.cause(organe, appetence))
+    _noter_gout(game_state, player, plant, gout.cause(organe, appetence))
     return valeur
 
 
-def _noter_gout(game_state: dict, plant, cause) -> None:
+def _noter_gout(game_state: dict, player: str, plant, cause) -> None:
     """Note du carnet d'une bouchée amère ou toxique : une ligne dans le canal `log`
     du serveur (absent hors serveur → rien), relue par `evenements` (patron du
-    ressemis `ligne_semis`). La tuile est cherchée par identité de la plante."""
+    ressemis `ligne_semis`). La tuile est cherchée par identité de la plante.
+    PREMIÈRE FOIS seulement (D139 caractères ⑤) : une note par joueur, espèce et
+    cause (organe × amer/toxique) — la leçon se retient, la Vigueur perdue suffit
+    à la rappeler ensuite."""
     log = game_state.get("log")
     if cause is None or log is None:
         return
+    deja = game_state.setdefault("gouts_notes", {}).setdefault(player, [])
+    cle = f"{plant.name}|{cause}"
+    if cle in deja:
+        return
+    deja.append(cle)
     tile_id = next((t.tile_id for t in game_state.get("tiles") or ()
                     if any(p is plant for p in t.plants)), None)
     log.append(gout.ligne_gout(tile_id, *plant.position, plant.name, cause))

@@ -204,6 +204,8 @@ namespace Symbiose
 										  PlanteLue.ChaineOuNull(p, "palier_thermique"));
 				if (p.ContainsKey("plage_thermique"))
 					renderer.PlageThermique = PlanteLue.LirePlage(p["plage_thermique"].AsGodotDictionary());
+				if (p.ContainsKey("fecondation"))   // lignée vécue, survol G (caractères ⑤, 0.6.20)
+					renderer.FecondationVecue = PlanteLue.LireFecondation(p["fecondation"].AsGodotDictionary());
 				nodes.Add(renderer);
 			}
 			return nodes;

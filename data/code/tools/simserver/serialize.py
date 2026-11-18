@@ -87,6 +87,9 @@ from .taille_pont import marquer_taille
 from .accroche_pont import marquer_accroche
 from .genes_pont import TABLE_CARACTERES   # D139 ④ : unités des caractères + seuils de F
 from .genes_pont import plage_thermique   # D139 ⑤ : plage vivable en °C (survol G)
+from .genes_pont import fecondation_pont  # D139 caractères ⑤ : lignée vécue (survol G)
+from sim.signes_caracteres import signes_constants, rejets   # D139 caractères ⑤ : signes visibles
+from sim.fanaison import sans_graines                        # D139 caractères ⑤ : fleurs sans graines
 
 
 def _activite_butineur(eco, agent) -> float:
@@ -252,9 +255,19 @@ class SerializeMixin:
                 # `p.genes` est {} pour une plante neutre (pré-①) → dict vide toléré.
                 # `F` (D139 ④) = consanguinité de la plante, constante comme ses gènes
                 # → part avec eux (le cache delta de la vue la garde au même titre).
+                # `signes_car` (D139 caractères ⑤) = signes visibles DÉRIVÉS des gènes
+                # (teinte et taille des fleurs, guides, fruit, matité, port) : constants
+                # comme eux → même règle d'envoi (1er envoi seulement en delta).
                 if neuve:
                     base["genes"] = {g: round(v, 3) for g, v in p.genes.items()}
                     base["F"] = round(p.F, 3)
+                    base["signes_car"] = signes_constants(p)
+                # Signes VARIABLES (⑤) : rejets au pied (colonie mûre) et fleurs fanées
+                # sans graines (fécondation faible, de la fanaison à la récolte
+                # d'automne) ; `fecondation` = lignée vécue pour le survol G (debug).
+                base["rejets"] = rejets(p)
+                base["sans_graines"] = sans_graines(p)
+                base["fecondation"] = fecondation_pont(p)
                 # Sémiologie foliaire (D33, tronçon ①) : LISTE triée de symptômes
                 # `[{cause, intensity}]` — généralise le bool `chlorose` du ⑨ à TOUS
                 # les stresseurs chroniques (chlorose/sécheresse/asphyxie/ravageurs/
@@ -633,6 +646,11 @@ class SerializeMixin:
                     pd["leaf_symptoms"] = semiologie.leaf_symptoms(p, eco, saison)
                     pd["posture_thermique"], pd["palier_thermique"] = etat_thermique(p, eco)
                     pd["plage_thermique"] = plage_thermique(p)   # survol G (debug, ⑤)
+                    # Caractères vivants ⑤ : mêmes signes qu'en pleine terre (format complet).
+                    pd["signes_car"] = signes_constants(p)
+                    pd["rejets"] = rejets(p)
+                    pd["sans_graines"] = sans_graines(p)
+                    pd["fecondation"] = fecondation_pont(p)
                     pd["fruits"] = [{"segment": f.segment_id, "maturite": f.maturite,
                                      "masse": f.masse, "nombre": f.nombre}
                                     for f in p.fruits]

@@ -197,6 +197,10 @@ CONCEPT_DE: dict[tuple[str, str | None], str] = {
     ("gout", "amer_fruit"):         "comestibilité",
     ("gout", "toxique_feuille"):    "comestibilité",
     ("gout", "toxique_fruit"):      "comestibilité",
+    # Fleurs fanées SANS GRAINES (D139 caractères ⑤, `sim/fanaison.py`) : la cause se
+    # comprend au palier de la POLLINISATION (le manque de butineurs).
+    ("fanaison", "sans_graines"):   "pollinisation",
+    ("fanaison", "sans_graines_vent"): "pollinisation",
 }
 
 # Concept de la « levée (reprise) » : doc §5.0 dit « = la cause (eau / lumière /
@@ -415,6 +419,10 @@ GABARIT: dict[tuple[str, str | None, str], str] = {
     ("gout", "toxique_feuille", _I): "Feuille de {e} {l} : un poison de défense, qui détourne aussi les ravageurs. On ne la mange pas — même si le fruit, lui, peut être délicieux.",
     ("gout", "toxique_fruit", _D): "J'ai goûté un fruit de {e} {l}. J'ai eu mal au ventre, et la force s'en est allée.",
     ("gout", "toxique_fruit", _I): "Fruit de {e} {l} : toxique pour moi, pas pour les oiseaux, qui le mangent et sèment ses graines plus loin.",
+    ("fanaison", "sans_graines", _D): "{e} {l} a fleuri, mais n'a presque rien grainé : les fleurs ont fané à vide.",
+    ("fanaison", "sans_graines", _I): "{e} {l} a fané sans graines : peu de butineurs sont passés, ses fleurs n'ont pas reçu de pollen. Plus de fleurs alentour, un abri pour les abeilles, et elle grainerait.",
+    ("fanaison", "sans_graines_vent", _D): "{e} {l} a fleuri, mais n'a presque rien grainé : ses fleurs ont séché à vide.",
+    ("fanaison", "sans_graines_vent", _I): "{e} {l} a fané sans graines : son pollen voyage au vent, et trop peu de congénères poussent assez près — ou sous le vent — pour la féconder.",
 }
 
 # Signes OBSERVÉS au survol (sprint PLANTE ASSEMBLÉE ⑥, `sim/signes.py`) : une note

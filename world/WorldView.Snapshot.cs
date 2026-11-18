@@ -253,6 +253,7 @@ namespace Symbiose
 			node.SetVitality(l.Vitalite);      // fond global d'usure (santé ④, 0.5.28)
 			node.SetThermique(l.Posture, l.PalierTh);   // port + teinte du palier (niche thermique ⑤)
 			node.PlageThermique = l.Plage;     // plage vivable °C, survol G seulement (0.6.19)
+			node.FecondationVecue = l.Fecondation;   // lignée vécue, survol G seulement (0.6.20)
 			node.SetSupport(l.SupportKind, l.SupportHauteurCm, l.SupportDxCm, l.SupportDyCm);   // accroche (grimpantes ⑥, FORMES ⑥)
 			node.SetSilhouette(l.Silhouette);  // forme au LOD couronne (luxuriance ⑥)
 			node.SetStrate(l.Strate);          // port arbre/grimpante (paliers bas, D106 T5)

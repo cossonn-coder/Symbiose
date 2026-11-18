@@ -36,8 +36,8 @@ Départ = hash de fin du sprint ②. ①, ①b (deux fois : scénario puis méca
 | ①d | `01d_levee_graines.md` — annuelles qui se ressèment, espèce spontanée ∝ son pool | **FAIT** (2026-11-18, commit `9fdcbe9`) — voir §①d |
 | ② | `02_fruits_comestibilite.md` — taille des fruits, appétence feuille/fruit, Vigueur négative | **FAIT** (2026-11-18, commit `0134bd5`) — voir §② |
 | ③ | `03_feuille_gestes.md` — coriacité, repousse, bouture, dormance, dominance apicale | **FAIT** (2026-11-18, commit `bc22825`) — voir §③ |
-| ④ | `04_sol_expansion.md` — clonalité, portée, fixation, allélopathie, mycorhization | **FAIT côté code** (2026-11-18, non commité) — voir §④ |
-| ⑤ | `05_signes_pont.md` — export des signes visibles, voix | à faire |
+| ④ | `04_sol_expansion.md` — clonalité, portée, fixation, allélopathie, mycorhization | **FAIT** (2026-11-18, commit `dac1231`) — voir §④ |
+| ⑤ | `05_signes_pont.md` — export des signes visibles, voix | **FAIT côté code** (2026-11-18, non commité) — voir §⑤ |
 | ⑥ | `06_vue_banc.md` — rendu, banc `caracteres_vivants`, recette F5, clôture D139 | à faire |
 
 ## ① Fleurs — bilan (2026-11-18)
@@ -391,6 +391,40 @@ Départ = hash de fin du sprint ②. ①, ①b (deux fois : scénario puis méca
   (sélection vers le neutre, comme `nectar` chez les anémophiles). Pont : 5 caractères
   sans libellé dans la vue G (`genes_pont.py`) → ⑤.
 
+## ⑤ Signes et pont — bilan (2026-11-18)
+- **Fait** : `sim/signes_caracteres.py` (pur, une fonction par signe, bornés) : `teinte_fleur`
+  [°, sat] (axe d'espèce × `couleur_fleur`, None sans axe), `echelle_fleur` = √taille,
+  `contraste_guides` ∈ [0,1], `echelle_fruit` = ∛taille (fruitiers), `matite_feuille` ∈ [0,1]
+  (coriacité), `port` ∈ [−1,1] (dominance), `rejets` ∈ [0,1] (0 si non clonale ou immature,
+  même `_mature` que l'émission). `sim/fanaison.py` : `sans_graines` = 0 < fécondation < 0,35 ;
+  `noter_fanaisons` (HORS tick, pont avant `consigner`) = ligne `🥀 Fané sans graines`, une par
+  espèce et par an, cause `sans_graines` (insectes) / `sans_graines_vent` (anémophile).
+- **Pont 0.6.20** : plante neuve `signes_car` (constants, même règle que `genes` ; cache ajouté
+  dans `core/PontDelta.cs` et le miroir `tests/simserver/delta.py`) ; chaque plante vivante (sol
+  et conteneur) `rejets`, `sans_graines`, `fecondation` = {fec, donne, auto} (survol G). Table
+  `caracteres` : libellés des 20 caractères + `groupes`. Snapshot comparé avant/après (2 mondes ×
+  4 semaines, complet + delta) : seules ces clés s'ajoutent + 15 libellés changent.
+- **Survol G** (`WorldView.Genes.cs`) : groupes fleurs / fruits / feuille / gestes / sol /
+  chaleur et froid (+ « autres » de repli) ; unités « position » et « goût » en valeur signée
+  (fini le « × ») ; ligne « fécondation · pollen donné · autofécondées % » sous la lignée
+  (`PlantRenderer.Caracteres.cs`, `PlanteLue.Fecondation`).
+- **Voix** : carnet `("fanaison", cause)` → concept pollinisation, 4 gabarits D/I. Goût : la
+  note n'est écrite qu'à la **première** bouchée par (espèce, cause) (`gs["gouts_notes"]`).
+  Concept **« comestibilité »** (= « goût et défense » du kickoff, nom gardé du ②) entre à
+  l'encyclopédie (fiche 3 niveaux, découvert au hook A, crédité par `detecter`) — ferme le point
+  ouvert du ②. « Pollinisation guidée » versée dans la fiche **pollinisation** (N3 = guides à
+  nectar, ce que voit l'abeille ; N2 = fleur fanée sans visite), pas un concept neuf. « Lignée »
+  complétée (père = pollen qui a voyagé, autofécondation faute de visiteurs).
+- **Golden INTACT** `db4d6b75…`. Tests : `tests/test_caracteres_signes.py` 31/31 ; `test_*.py`
+  verts sauf `test_peripherie` 70/71 (rouge avant) ; bancs : les 4 mêmes rouges. dotnet build vert.
+- Taille : `tools/simserver/serialize.py` **322 LDC** (🟡, 311 avant, une seule responsabilité),
+  `sim/carnet.py` 299, `sim/actions/gestes.py` 288.
+- **Pour ⑥ / F5** : au monde `full`, `sans_graines` touche dès s21 achillée, minette, pissenlit,
+  aulne, bouleau, pâturin [n=1 run, 60 sem.] ; la fécondation reste posée jusqu'à la récolte
+  d'automne, donc une plante qui fane APRÈS la récolte (trèfle s41) garde le signe jusqu'à
+  l'automne suivant — la vue doit le croiser avec la saison / `floraison` (pas de semaine de
+  fanaison au moteur). Rejets : 7 → 186 plantes de s22 à s60 (trèfle).
+
 ## Conception FÉCONDATION (trou du ①) — ARBITRÉE et FIGÉE (Nico, 2026-11-18)
 Doc : `docs/vegetal/genetique/conception_caracteres_vivants.md` §6. Diagnostic : le nombre de
 graines ne dépendait ni des visites, ni ne faisait le nombre de descendants (annuelles
@@ -409,9 +443,12 @@ sans archétype : pool jamais levé) ; le père était le plus proche ; `pollen_
 Tronçons insérés avant ② : `01b_fecondation.md`, `01c_paternite.md`, `01d_levee_graines.md`.
 
 ## REPRISE
-④ fait côté code (non commité, golden RE-FIGÉ `db4d6b75…`, population RE-FIGÉ `84cba4d0…`).
-Lire `CLAUDE.md`, ce fichier, puis le kickoff du
-premier tronçon « à faire » (⑤). Points à arbitrer : `RESSEMIS_DENSITE_REF` (écart ①d),
+⑤ fait côté code (non commité, golden INTACT `db4d6b75…`, pont 0.6.20). Lire `CLAUDE.md`, ce
+fichier, puis le kickoff du premier tronçon « à faire » (⑥ : rendu des signes `signes_car`,
+`rejets`, `sans_graines`, banc, F5). Points à arbitrer : `RESSEMIS_DENSITE_REF` (écart ①d),
 extinction des annuelles ressemées sous la flore férale, mode de pollinisation du pâturin
 annuel (amplifié par S3), pollen déposé/crédité après la fanaison (côtés femelle ET mâle),
-calibrage du goût (`PERTE_TOXIQUE`, `1 + a`) et maîtrise du concept « comestibilité » (②), dominance sans « fleurs latérales » au moteur et repousse non lue par la récolte (③), trèfle très clonal au smoke et coût payé par les espèces qui n'expriment pas le caractère (④).
+calibrage du goût (`PERTE_TOXIQUE`, `1 + a`) (②), dominance sans « fleurs latérales » au
+moteur et repousse non lue par la récolte (③), trèfle très clonal au smoke et coût payé par
+les espèces qui n'expriment pas le caractère (④), signe « sans graines » qui dure jusqu'à
+l'automne suivant (⑤).

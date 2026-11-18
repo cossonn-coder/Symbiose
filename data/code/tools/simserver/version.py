@@ -905,7 +905,19 @@ from __future__ import annotations
 #       (debug). Banc neuf `niche_thermique` ; la réponse d'`init` d'un banc de `BANC_WARMUP`
 #       porte `warmup` (semaines simulées par la vue avant le 1er dessin). Clés neuves,
 #       golden neutre.
-ENGINE_VERSION = "0.6.19"
+# 0.6.20 (CARACTÈRES VIVANTS ⑤, D139) : signes visibles DÉRIVÉS des caractères, jamais
+#       les gènes bruts (`sim/signes_caracteres.py`). Plante NEUVE (même règle que
+#       `genes`) : `signes_car` = {matite_feuille ∈ [0,1], port ∈ [−1,1] (buisson → flèche),
+#       + si fleur colorée : teinte_fleur [°, sat], echelle_fleur (√ taille), contraste_guides
+#       ∈ [0,1] ; + si fruitier : echelle_fruit (∛ taille)}. Chaque plante vivante (sol et
+#       conteneur) : `rejets` ∈ [0,1] (colonie mûre), `sans_graines` (bool, fécondation
+#       < 0,35 de la fanaison à la récolte, `sim/fanaison.py`), `fecondation` = {fec, donne,
+#       auto} (survol G, debug). Table `caracteres` : libellés des 20 caractères vivants +
+#       `groupes` = [[titre, [noms]]…] (survol G groupé). Log : ligne « 🥀 Fané sans
+#       graines » (une par espèce et par an, hors tick) → carnet (concept pollinisation).
+#       Concept « comestibilité » à l'encyclopédie (découvert/crédité par les bouchées
+#       amères). Clés neuves, golden neutre (snapshot comparé avant/après).
+ENGINE_VERSION = "0.6.20"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

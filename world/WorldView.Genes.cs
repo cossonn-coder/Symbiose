@@ -15,6 +15,12 @@
 // porte une table `caracteres` (pont 0.6.17, `genes_pont.py`) qui dit, pour chaque
 // gène, son unité, son libellé et son sens d'affichage, plus les deux seuils de F.
 // Le moteur Python reste la seule source de vérité ; la vue ne fait que formater.
+//
+// Caractères vivants ⑤ (pont 0.6.20) : les 32 caractères sont RANGÉS par groupes
+// (fleurs, fruits, feuille, gestes, sol, chaleur et froid) — table `groupes` du pont,
+// la vue ne décide pas du classement. Deux unités neuves : « position » (couleur sur
+// l'axe de l'espèce, −1…+1) et « goût » (−1 toxique … +1 savoureux). Sous la lignée,
+// la LIGNÉE VÉCUE de l'année : fécondation, pollen donné, part autofécondée.
 
 using System.Globalization;
 using Godot;
@@ -38,6 +44,7 @@ namespace Symbiose
 		// ancien serveur ; la valeur qui compte vient du pont (`sim/lignee.py`).
 		private GDict _unitesGenes;
 		private Godot.Collections.Array _ordreGenes;   // ordre du registre (JSON trié côté pont)
+		private Godot.Collections.Array _groupesGenes;  // [[titre, [noms]]…] (pont 0.6.20)
 		private double _seuilFixee = 0.75, _seuilMelangee = 0.25;
 
 		// Lit la table des caractères (constante : une lecture suffit). Tolérant à
@@ -48,6 +55,7 @@ namespace Symbiose
 			var c = snap["caracteres"].AsGodotDictionary();
 			_unitesGenes = c["unites"].AsGodotDictionary();
 			if (c.ContainsKey("ordre")) _ordreGenes = c["ordre"].AsGodotArray();
+			if (c.ContainsKey("groupes")) _groupesGenes = c["groupes"].AsGodotArray();
 			var l = c["lignee"].AsGodotDictionary();
 			_seuilFixee = l["fixee"].AsDouble();
 			_seuilMelangee = l["melangee"].AsDouble();
@@ -83,17 +91,57 @@ namespace Symbiose
 			sb.Append($"[gènes] {species}");
 			if (node.HasMeta(LectureSnap.Meta("F")))
 				sb.Append($"\n  {Lignee(node.GetMeta(LectureSnap.Meta("F")).AsDouble())}");
-			if (node is PlantRenderer pr && pr.PlageThermique is { } plage)
+			var pr = node as PlantRenderer;
+			if (pr?.FecondationVecue is { } fv)
+				sb.Append(LigneeVecue(fv));
+			if (pr?.PlageThermique is { } plage)
 				sb.Append(PlageVivable(plage));
-			// Ordre du registre moteur quand la table le donne (le pont sérialise ses
-			// dicts clés triées : seule la liste `ordre` garde l'ordre du registre).
-			System.Collections.Generic.IEnumerable<Variant> ordre =
-				_ordreGenes != null ? _ordreGenes : genes.Keys;
-			foreach (var g in ordre)
-				if (genes.ContainsKey(g))
-					sb.Append($"\n  {FormatGene(g.AsString(), genes[g].AsDouble())}");
+			if (_groupesGenes != null)
+				AjouterGroupes(sb, genes);
+			else
+			{
+				// Ancien serveur : ordre du registre moteur quand la table le donne (le pont
+				// sérialise ses dicts clés triées : seule la liste `ordre` garde l'ordre).
+				System.Collections.Generic.IEnumerable<Variant> ordre =
+					_ordreGenes != null ? _ordreGenes : genes.Keys;
+				foreach (var g in ordre)
+					if (genes.ContainsKey(g))
+						sb.Append($"\n  {FormatGene(g.AsString(), genes[g].AsDouble())}");
+			}
 			_genesLabel.Text = sb.ToString();
 		}
+
+		// Caractères par GROUPE (pont 0.6.20) : un titre, puis ses caractères présents
+		// dans le vecteur de la plante. Un gène absent des groupes (registre plus récent
+		// que la table) tombe sous « autres » : aucune ligne n'est perdue.
+		private void AjouterGroupes(System.Text.StringBuilder sb, GDict genes)
+		{
+			var vus = new System.Collections.Generic.HashSet<string>();
+			foreach (var gv in _groupesGenes)
+			{
+				var grp = gv.AsGodotArray();
+				var lignes = new System.Text.StringBuilder();
+				foreach (var n in grp[1].AsGodotArray())
+				{
+					string nom = n.AsString();
+					vus.Add(nom);
+					if (genes.ContainsKey(n))
+						lignes.Append($"\n    {FormatGene(nom, genes[n].AsDouble())}");
+				}
+				if (lignes.Length > 0) sb.Append($"\n  — {grp[0].AsString()} —").Append(lignes);
+			}
+			var autres = new System.Text.StringBuilder();
+			foreach (var g in genes.Keys)
+				if (!vus.Contains(g.AsString()))
+					autres.Append($"\n    {FormatGene(g.AsString(), genes[g].AsDouble())}");
+			if (autres.Length > 0) sb.Append("\n  — autres —").Append(autres);
+		}
+
+		// Lignée VÉCUE de l'année (pont 0.6.20) : fécondation figée à la fanaison (0 = pas
+		// fleurie cette année), pollen donné à d'autres fleurs, part autofécondée.
+		private static string LigneeVecue(float[] f) =>
+			$"\n  fécondation {Nombre(f[0], "F2")} · pollen donné {Nombre(f[1], "F2")}"
+			+ $" · autofécondées {Nombre(f[2] * 100.0, "F0")} %";
 
 		// Plage vivable (niche thermique ⑤, pont 0.6.19) : « gèle < −1,0 °C · froid
 		// < 10,0 °C · chaud > 35,0 °C · brûle > 45,0 °C », puis la nuit la plus froide
@@ -138,6 +186,8 @@ namespace Symbiose
 				"°C" => $"{lib} {Signe(x, "F1")} °C",
 				"semaines" => $"{lib} {Signe(x, "F1")} sem.",
 				"probabilité" => $"{lib} {Nombre(x * 100.0, "F0")} %",
+				"position" => $"{lib} {Signe(x, "F2")}",   // couleur : −1 1ʳᵉ couleur … +1 seconde
+				"goût" => $"{lib} {Signe(x, "F2")}",       // −1 toxique … 0 neutre … +1 savoureux
 				_ => $"{lib} ×{Nombre(x, "F2")}",   // facteur (multiplicateur sans dimension)
 			};
 		}

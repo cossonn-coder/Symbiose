@@ -45,6 +45,8 @@ namespace Symbiose
 			public bool AGenes;
 			public Variant F;         // consanguinité (pont 0.6.17), même règle que les gènes
 			public bool AF;
+			public Variant Signes;    // signes visibles dérivés des gènes (0.6.20), même règle
+			public bool ASignes;
 		}
 
 		private readonly Dictionary<int, Entree> _plantes = new();
@@ -130,6 +132,9 @@ namespace Symbiose
 			if (LectureSnap.A(p, "F")) { e.F = p[LectureSnap.Cle("F")]; e.AF = true; }
 			else if (e.AF && !morte)
 				p[LectureSnap.Cle("F")] = e.F;
+			if (LectureSnap.A(p, "signes_car")) { e.Signes = p[LectureSnap.Cle("signes_car")]; e.ASignes = true; }
+			else if (e.ASignes && !morte)
+				p[LectureSnap.Cle("signes_car")] = e.Signes;
 
 			float[] anc = e.Segs;
 			using var ops = LectureSnap.Tab(p, "segd");

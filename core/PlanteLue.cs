@@ -37,6 +37,8 @@ namespace Symbiose
 		public float Posture;
 		public string PalierTh;
 		public float[] Plage;
+		// Lignée vécue (pont 0.6.20, D139 caractères ⑤) : [fec, donne, auto], survol G.
+		public float[] Fecondation;
 		public readonly List<(string Cause, float Intensite)> Symptomes = new();
 
 		// Clé stable d'une plante = tuile + espèce + position. Culture INVARIANTE :
@@ -94,6 +96,8 @@ namespace Symbiose
 			l.PalierTh = ChaineOuNull(p, "palier_thermique");
 			if (LectureSnap.A(p, "plage_thermique"))
 				using (var pl = LectureSnap.Dico(p, "plage_thermique")) l.Plage = LirePlage(pl);
+			if (LectureSnap.A(p, "fecondation"))
+				using (var fc = LectureSnap.Dico(p, "fecondation")) l.Fecondation = LireFecondation(fc);
 			return l;
 		}
 
@@ -114,6 +118,12 @@ namespace Symbiose
 			}
 			return v;
 		}
+
+		/// <summary>Lignée vécue du pont (`fecondation` = {fec, donne, auto}) → float[3].</summary>
+		public static float[] LireFecondation(GDict d) => new[]
+		{
+			LectureSnap.F(d, "fec"), LectureSnap.F(d, "donne"), LectureSnap.F(d, "auto"),
+		};
 
 		/// <summary>Chaîne sous `k`, ou null si la clé manque ou vaut null (JSON).</summary>
 		public static string ChaineOuNull(GDict d, string k)

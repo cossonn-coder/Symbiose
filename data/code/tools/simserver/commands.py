@@ -40,6 +40,7 @@ from .pont_delta import mode_delta   # segments en delta, opt-in (0.6.0)
 from .gc_pont import regler_gc       # ramasse-miettes du serveur (PARTAGE ①)
 from .maitrise_pont import observer_apres_tick  # chaîne de maîtrise après tick (voix ①)
 from sim.vision import clore_si_echue as clore_vision   # fin de vision (sol qui respire ⑥)
+from sim.fanaison import noter_fanaisons   # fleurs fanées sans graines → carnet (D139 caractères ⑤)
 from . import perf   # capture des pires ticks + dump diagnostique (demande Nico 2026-07-05)
 from .perf_tick import SONDE_TICK         # où passe le temps d'un tick
 from .perf_annees import HistoriqueAnnees  # bilan du rapport perf, une ligne par an
@@ -265,6 +266,7 @@ class CommandsMixin:
         self._worst = perf.WorstTicks()
         self._annees = HistoriqueAnnees()
         self._chronique = Chronique()
+        self._fanaisons = {}   # espèce → année déjà notée (« fané sans graines », ⑤)
         # Brancher la Vigueur joueur (tranche 4) : l'OPT-IN se fait ICI, pas
         # dans le moteur. Dès que la clé `vigueur` existe, le tick existant
         # (engine.py, gardé par `if "vigueur" in game_state`) fait seul la
@@ -347,6 +349,9 @@ class CommandsMixin:
         # `week` est DÉJÀ incrémenté par tick_semaine() (boucle.py:422) → la
         # semaine qu'on vient de simuler est `week - 1` ; le log consigné lui
         # appartient.
+        # Fleurs fanées sans graines (D139 caractères ⑤) : lignes écrites HORS tick,
+        # AVANT `consigner` (le carnet et la maîtrise les lisent dans le même log).
+        gs["log"].extend(noter_fanaisons(gs, self._fanaisons))
         J.consigner(gs, gs["current_player"], gs["log"], gs["week"] - 1)
         # Chronique (D127) : 3ᵉ lecture du MÊME log (après `consigner` et
         # `observer_apres_tick`) — partager le flux changerait la signature de

@@ -93,7 +93,9 @@ FICHES_CONCEPT: dict[str, dict[int, str]] = {
            "cherchant le nectar : ce faisant, ils fécondent. Certaines cultures — la "
            "courgette, monoïque, aux fleurs mâles et femelles séparées — en dépendent "
            "entièrement. Chaque fleur a ses visiteurs de prédilection, selon sa "
-           "forme, sa couleur, son parfum.",
+           "forme, sa couleur, son parfum. Une fleur que personne ne visite fane "
+           "quand même : elle ne garde alors que les rares graines qu'elle a pu "
+           "féconder elle-même.",
         3: "La pollinisation relie tout un cortège : des fleurs ÉTALÉES dans le temps "
            "tiennent une table de nectar soutenue qui nourrit les butineurs sans "
            "à-coup ; des butineurs nombreux et divers assurent en retour la "
@@ -101,7 +103,14 @@ FICHES_CONCEPT: dict[str, dict[int, str]] = {
            "ombellifères accessibles (achillée, carotte en fleur) sont les piliers de "
            "ce réseau. Pas de fleurs, pas de butineurs ; pas de butineurs, pas de "
            "fruits ni de graines : la floraison du jardin est l'indicateur vivant de "
-           "sa fertilité future.",
+           "sa fertilité future. Les fleurs, elles, guident leurs visiteurs : un "
+           "œil plus sombre au centre, des lignes qui convergent vers le nectar, "
+           "comme une piste d'atterrissage. Une part de ces guides ne se voit qu'en "
+           "ultraviolet — l'abeille les lit, pas nous. Elle préfère le bleu, le "
+           "violet et le jaune et ne voit pas le rouge, que le papillon recherche. "
+           "Une fleur bien guidée est visitée plus vite et plus fidèlement ; au fil "
+           "des graines, ce sont les butineurs qui choisissent la couleur des "
+           "fleurs du jardin.",
     },
 
     # Lignée (D139 ④) : pourquoi des graines récoltées donnent des frères identiques
@@ -117,7 +126,11 @@ FICHES_CONCEPT: dict[str, dict[int, str]] = {
            "n'a qu'un seul parent : génération après génération, ses descendants "
            "deviennent des copies les uns des autres, la lignée se fixe. Une fleur "
            "qui reçoit le pollen d'un autre pied — courges, ortie, la plupart des "
-           "arbres — rebat les cartes à chaque génération : la lignée reste mêlée.",
+           "arbres — rebat les cartes à chaque génération : la lignée reste mêlée. "
+           "Le père, lui, n'est pas forcément le voisin le plus proche : c'est le "
+           "pied dont le pollen a le plus voyagé, porté par les butineurs ou le "
+           "vent. Et quand les visiteurs manquent, la fleur se rabat sur son propre "
+           "pollen : moins de graines, et presque toutes d'un seul parent.",
         3: "Une lignée fixée est fiable : on sait ce qu'on sèmera. Mais elle a perdu "
            "sa réserve de différences, et si le climat ou le sol changent, rien en "
            "elle ne peut s'ajuster. Une lignée mêlée, au contraire, offre au milieu "
@@ -126,5 +139,28 @@ FICHES_CONCEPT: dict[str, dict[int, str]] = {
            "croisent, trop de consanguinité affaiblit la descendance ; un pollen "
            "venu d'ailleurs lui rend sa vigueur. Garder ses graines, c'est choisir "
            "entre la constance et l'adaptation.",
+    },
+
+    # Comestibilité, « goût et défense » (D139 caractères vivants ②/⑤) : l'amertume
+    # est une défense chimique, organe par organe ; ce que nous ne mangeons pas, un
+    # oiseau peut le manger et semer. Découverte à la 1ʳᵉ bouchée amère (hook A),
+    # créditée à chaque bouchée amère suivante (`maitrise_detection`). Sans chiffre.
+    "comestibilité": {
+        1: "Toutes les feuilles ne se valent pas sous la dent. Celle du basilic ou de "
+           "la mâche est douce ; celle de la tomate est amère, et en manger fait "
+           "mal au ventre. Un même pied peut porter une feuille amère et un fruit "
+           "délicieux.",
+        2: "L'amertume est une défense. La plante fabrique, organe par organe, des "
+           "substances qui découragent ceux qui la broutent : la feuille de tomate "
+           "protège la plante, son fruit mûr invite à être mangé pour semer ses "
+           "graines. Le goût se transmet : d'un pied à l'autre, une feuille est un "
+           "peu plus ou un peu moins amère, un fruit un peu plus ou moins doux.",
+        3: "Se défendre coûte, et ce coût se paie : une feuille amère est moins "
+           "rongée par les ravageurs, une feuille tendre et douce attire chenilles "
+           "et limaces. Ce qui est poison pour nous ne l'est pas pour tous — la "
+           "baie du lierre nourrit le merle, qui en sème les graines plus loin. En "
+           "gardant les graines des pieds les plus doux, le jardinier sélectionne "
+           "le goût ; en laissant faire le milieu, ce sont les brouteurs qui "
+           "trient, et la défense revient.",
     },
 }
