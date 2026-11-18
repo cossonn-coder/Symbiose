@@ -32,8 +32,8 @@ Départ = hash de fin du sprint ②. ①, ①b (deux fois : scénario puis méca
 |---|---|---|
 | ① | `01_fleurs.md` — taille, nectar, pollen, couleur, guides, parfum + `cout_genetique` | **FAIT** (2026-11-18, commit `968704c`) — voir §① |
 | ①b | `01b_fecondation.md` — pommier mûr au smoke, `fecondation` à la fanaison, part autofécondée | **FAIT** (2026-11-18, commit `b157ee6`) — voir §①b |
-| ①c | `01c_paternite.md` — compteur `pollen_donne`, père tiré ∝ pollen exporté | **FAIT côté code** (2026-11-18, non commité) — voir §①c |
-| ①d | `01d_levee_graines.md` — annuelles qui se ressèment, espèce spontanée ∝ son pool | à faire |
+| ①c | `01c_paternite.md` — compteur `pollen_donne`, père tiré ∝ pollen exporté | **FAIT** (2026-11-18, commit `96505f5`) — voir §①c |
+| ①d | `01d_levee_graines.md` — annuelles qui se ressèment, espèce spontanée ∝ son pool | **FAIT côté code** (2026-11-18, non commité) — voir §①d |
 | ② | `02_fruits_comestibilite.md` — taille des fruits, appétence feuille/fruit, Vigueur négative | à faire |
 | ③ | `03_feuille_gestes.md` — coriacité, repousse, bouture, dormance, dominance apicale | à faire |
 | ④ | `04_sol_expansion.md` — clonalité, portée, fixation, allélopathie, mycorhization | à faire |
@@ -174,6 +174,58 @@ Départ = hash de fin du sprint ②. ①, ①b (deux fois : scénario puis méca
   mode de pollinisation de `PoaAnnua`.
 - Taille : `sim/reproduction.py` 115 LDC, `fields/foragers.py` 109, `butineurs.py` 62.
 
+## ①d Levée des graines — bilan (2026-11-18)
+- **Fait** (`sim/succession.py`) : **S3** `choisir_espece(…, banque)` tire au hash (canal
+  `week × 61` inchangé) ∝ `PLUIE_EXTERIEURE + densité du pool` (0,02, levier non calibré) ;
+  aucun pool → tirage uniforme historique au bit près. **S2** `_ressemis` : sur un plot où
+  aucun archétype ne lève (pas de candidat, ou flore sans espèce éligible à cet azote),
+  chaque annuelle/bisannuelle sans archétype (= sans recrue directe, règle de
+  `_reproduction` : arbres et vivaces sans archétype seuls recrutés) dont le pool dépasse
+  `SPECIES_POOL_MIN_DENSITY` a `w = niche_eff × densité / RESSEMIS_DENSITE_REF` ; le plot lève
+  avec `1 − Π(1 − w)` (canal `week × 97`), l'espèce tirée ∝ `w` (canal `week × 101`, tous deux
+  vérifiés libres). Portes partagées sans doublon : `_porte_ph`, `_porte_temp`,
+  `_porte_allelo` servent aux `arch_*` ET au ressemis ; levée commune `_germer` (offset,
+  form_seed, gènes du pool + tri thermique, F, priming). Log `🌿 Germination : … [niche=… ressemis]`.
+- **Écart au kickoff (à arbitrer)** : `RESSEMIS_DENSITE_REF = 0,05` ajouté. La formule
+  `niche_eff × densité` brute ne faisait rien lever : le pool d'une espèce reçoit
+  `rate × fecondation` une fois par an (≈ 0,03-0,05 par mère) alors que la banque
+  d'archétype, nourrie chaque semaine, sature vers 1 → banc (g) **0 levée en 6 ans**
+  [16 bourraches, 1 seed]. Avec la référence (un pied qui a grené une fois remplit son
+  plot) : 7, 8, 2, 0, 0, 0 levées par an.
+- **Ordre vérifié** : fin de cycle (sénescence) et `_reproduction` (s39) déposent AVANT la
+  succession du même tick ; `tick_species_aging` (×0,997/sem, demi-vie ≈ 4,4 ans) s'applique
+  à tous les pools, annuelles comprises. Une levée ne vide pas le pool (comme pour
+  l'archétype) : un pool de 0,05 reste au-dessus du seuil ≈ 15 ans.
+- **Golden RE-FIGÉ** `db941814…` → `5d26af06bc79f4c5ad586cbfc3c1cb54c14441d355dad2b1e5890122d3a19351`.
+  1ʳᵉ divergence : **s23, ressemis S2 d'une phacélie** @(1,6) (pool déposé par sa fin de
+  cycle) ; puis s53 tirage S3 (plantain au lieu d'ortie, @(5,2)). 1 seul ressemis au smoke ;
+  digest final 35 plantes, même composition sauf ortie 1 → 0 / plantain 2 → 3. Sans la
+  référence (S3 seul), le hash était `1769f8d6…`. `population_hash` RE-FIGÉ `b76871ac…` →
+  `20b8184064f82317220b6b13ba0335518659e6d6ebe3574afb9f618625a39a7a` (cause S2 vérifiée :
+  référence neutralisée ⇒ ancien hash).
+- **Banc population** `mesures/banc_levee.py` (monde full, 10 ans, [n=1 seed]) : max pieds en
+  été 878 → 930, max/tuile 205 → 234 (cap 800 jamais atteint). Levées S3 cumulées : pâturin
+  annuel 212 → 276 (+30 %), pissenlit 84 → 116, dactyle 163 → 115, fétuque 83 → 51, plantain
+  119 → 92 (bourse, minette ≈). En été an 10 : pâturin 55 → 66, pissenlit 48 → 73, dactyle
+  60 → 57, trèfle 398 → 342 (pic an 4 : 499 → 574, effet indirect : le trèfle n'est pas dans
+  S3). **Pas d'emballement constaté** → pas de dette ouverte ; dérive « riche s'enrichit » vers
+  le pâturin (déjà mal typé `insect`, cf. ①b) et le pissenlit, à surveiller. S2 : **13 levées
+  de phacélie** (ans 1-3) puis extinction an 4 ; aucune autre annuelle dans ce monde.
+- **Banc sélection** `banc_fleurs.py g 6` (nouveau scénario) : fondateurs +0,023 ; pieds nés
+  an 1 −0,053, an 2 −0,136 ; pool +0,016 → **−0,047** (dérive vers le bleu de l'abeille,
+  critère d'acceptation atteint) [n=16 fondateurs, 1 seed] ; mais la lignée s'éteint an 4-5
+  (1 pied né an 3-4, 0 ensuite) : les levées ne survivent pas à la flore férale.
+- **Perf** : smoke 4,340 → 4,387 s, **+1,1 %** [n=5 paires alternées, bruit ±2 %] ; tick
+  moyen banc population 0,911 → 0,904 s [n=1 run chacun, VM chargée en parallèle : non
+  significatif].
+- **Tests** : `tests/test_levee_graines.py` 11/11 (S3 sans pool = uniforme, pool dominant
+  0,988, pluie extérieure ; S2 lève, pas sous ombre, pas hors pH (fenêtre resserrée : la
+  bourrache réelle a `ph_tol` 3), lève dans sa fenêtre, pool sous seuil, trèfle sans double
+  voie, archétype prioritaire). Toutes les suites vertes sauf `test_peripherie` 70/71
+  (rouge avant le sprint).
+- Taille : `sim/succession.py` **306 LDC** (🟡, 245 avant ; une seule responsabilité : la
+  levée férale) — scission possible (portes + ressemis → module dédié) si elle grossit.
+
 ## Conception FÉCONDATION (trou du ①) — ARBITRÉE et FIGÉE (Nico, 2026-11-18)
 Doc : `docs/vegetal/genetique/conception_caracteres_vivants.md` §6. Diagnostic : le nombre de
 graines ne dépendait ni des visites, ni ne faisait le nombre de descendants (annuelles
@@ -192,7 +244,8 @@ sans archétype : pool jamais levé) ; le père était le plus proche ; `pollen_
 Tronçons insérés avant ② : `01b_fecondation.md`, `01c_paternite.md`, `01d_levee_graines.md`.
 
 ## REPRISE
-①c fait côté code (non commité, golden INTACT `db941814…`). Lire `CLAUDE.md`, ce
-fichier, puis le kickoff du premier tronçon « à faire » (①d). Deux points toujours à
-arbitrer : mode de pollinisation du pâturin annuel, pollen déposé/crédité après la fanaison
-(côtés femelle ET mâle).
+①d fait côté code (non commité, golden RE-FIGÉ `5d26af06…`, population `20b81840…`). Lire
+`CLAUDE.md`, ce fichier, puis le kickoff du premier tronçon « à faire » (②). Points à
+arbitrer : `RESSEMIS_DENSITE_REF` (écart ①d), extinction des annuelles ressemées sous la
+flore férale, mode de pollinisation du pâturin annuel (amplifié par S3), pollen
+déposé/crédité après la fanaison (côtés femelle ET mâle).

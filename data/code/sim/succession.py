@@ -17,6 +17,7 @@ from plants import (WEED_CATALOGUE, PLANT_CATALOGUE, PERENNIAL_CATALOGUE,
                     FLORE_SPONTANEE, neutre, sigma_a, borne)
 from fields import (SEED_ARCHETYPES, GRADIENT_ARCHETYPES, _hash_noise,
                     founder_genes, variete_genes, form_seed_at)
+from fields.seedbank import SPECIES_POOL_MIN_DENSITY
 from fields.lifecycle import _smoothstep
 from fields.ecofields import (bell, T_GERM_FLOOR,
                               COUVERTURE_ADVENTICE_SEUIL, PAILLAGE_GERM_SEUIL,
@@ -54,6 +55,22 @@ GERM_PRESSION_FERALE = 0.30
 # CHIMIE du sol échantillonnée à 50 cm ne bouge pas. Fini le centrage systématique
 # des semis spontanés (chantier A du sprint).
 OFFSET_MIN = 10.0
+
+# Pluie de graines venues de DEHORS (D139 ①d, S3) : poids plancher de chaque espèce
+# éligible au tirage `choisir_espece`, ajouté à la densité de son pool sur le plot.
+# Sans lui, une espèce absente du pool ne lèverait plus jamais (le vent, les oiseaux,
+# les semelles en apportent toujours un peu). LEVIER non calibré : plus il est haut,
+# plus le tirage reste proche de l'uniforme ; à 0, l'espèce qui a le plus grené gagne.
+PLUIE_EXTERIEURE = 0.02
+
+# Densité de pool qui vaut « plot plein de graines » pour le ressemis S2 (D139 ①d).
+# Le pool d'une espèce reçoit `rate × fecondation` UNE fois par mise en graine (≈ 0,03
+# à 0,05 par mère et par an), alors que la banque d'ARCHÉTYPE est nourrie chaque
+# semaine et sature vers 1. Lue telle quelle, la densité d'espèce ne faisait presque
+# jamais lever une annuelle (banc fleurs (g) : 0 levée en 6 ans pour 16 bourraches).
+# La chance de levée lit donc `densité / RESSEMIS_DENSITE_REF` : un pied qui a grené
+# une fois remplit son plot. LEVIER non calibré, posé au banc (g).
+RESSEMIS_DENSITE_REF = 0.05
 
 
 def _offset_subplot(plant, seed: int, week: int) -> None:
@@ -179,18 +196,152 @@ def choisir_archetype(candidates: list[str],
 
 
 def choisir_espece(archetype: str, azote: float, seed: int, week: int,
-                   r: int, c: int) -> type | None:
+                   r: int, c: int, banque=None) -> type | None:
     """Espèce qui lève une fois l'archétype choisi (sprint TRÈFLE DOMINANT ②) : tirage
-    uniforme par hash parmi celles dont la fenêtre d'azote contient celui du plot
-    (dactyle et ortie sur sol riche, cf. `FLORE_SPONTANEE`). Canal de hash `week × 61`,
-    dédié : il ne biaise ni la germination (`week × 7 + arch`) ni l'offset (× 53, × 59).
+    par hash parmi celles dont la fenêtre d'azote contient celui du plot (dactyle et
+    ortie sur sol riche, cf. `FLORE_SPONTANEE`). Canal de hash `week × 61`, dédié : il
+    ne biaise ni la germination (`week × 7 + arch`) ni l'offset (× 53, × 59).
     Archétype sans flore (pioneer, nitrogen_fixer, disease_indicator) → sa tête seule,
-    sans tirage. Pur, déterministe, zéro RNG (philo #3)."""
+    sans tirage. Pur, déterministe, zéro RNG (philo #3).
+
+    D139 ①d (S3) : avec `banque` (la banque-sol du plot), le tirage est pondéré par
+    `PLUIE_EXTERIEURE + densité du pool de l'espèce` — l'espèce qui a le plus grené ici
+    a le plus de chances de lever. Aucun pool (ou `banque` absente) → tirage uniforme
+    historique, au bit près."""
     flore = FLORE_SPONTANEE.get(archetype)
     if flore is None:
         return WEED_CATALOGUE.get(archetype)
     eligibles = [cls for cls, n_min, n_max in flore if n_min <= azote < n_max]
-    return eligibles[int(_hash_noise(seed, week * 61, r, c) * len(eligibles)) % len(eligibles)]
+    u = _hash_noise(seed, week * 61, r, c)
+    dens = ([banque.species_density(r, c, cls) for cls in eligibles]
+            if banque is not None else [])
+    if not any(dens):
+        return eligibles[int(u * len(eligibles)) % len(eligibles)]
+    poids = [PLUIE_EXTERIEURE + d for d in dens]
+    return _tirer(eligibles, poids, u)
+
+
+def _tirer(items: list, poids: list[float], u: float):
+    """Tirage cumulatif ∝ `poids` avec le hash `u` ∈ [0, 1). Le dernier élément
+    rattrape l'arrondi flottant (u·Σ ne dépasse jamais Σ en exact)."""
+    cible = u * sum(poids)
+    for item, w in zip(items, poids):
+        cible -= w
+        if cible < 0.0:
+            return item
+    return items[-1]
+
+
+# --- Portes de levée PAR ESPÈCE (partagées archétypes ↔ ressemis S2, D139 ①d) ---
+# Une seule écriture de chaque formule : la levée férale les évalue sur la tête
+# d'archétype (`arch_*`), le ressemis sur la classe de l'espèce elle-même.
+
+def _porte_ph(ph: float, cls: type) -> float:
+    """Cloche d'acidité de l'espèce au pH du plot (tronçon ⑤)."""
+    return bell(ph, cls.ph_opt, cls.ph_tol)
+
+
+def _porte_temp(eco, r: int, c: int, cls: type, t_sol: float) -> float:
+    """Cloche thermique de levée, optimum décalé par la moyenne du gène
+    `germination_thermique` du pool (D139 ③). Plancher dur `T_GERM_FLOOR`."""
+    if t_sol < T_GERM_FLOOR:
+        return 0.0
+    return bell(t_sol, cls.t_germ_opt - _germ_gene_mean(eco, r, c, cls), cls.t_germ_tol)
+
+
+def _porte_allelo(eco, r: int, c: int, cls: type) -> float:
+    """Escompte allélopathique effectif (ambiant + autotoxicité) de l'espèce."""
+    return _f_allelo(eco.allelo_effectif(r, c, cls), cls.allelopathie_sensibilite)
+
+
+# Cache « l'espèce se ressème-t-elle depuis son pool ? » (attributs de classe figés).
+_RESSEMABLE: dict[type, bool] = {}
+
+
+def _ressemable(cls: type) -> bool:
+    """Annuelle ou bisannuelle SANS archétype (elle ne lève pas par la succession) et
+    SANS recrue directe : `_reproduction` (sim/engine/mortalite.py) ne recrute
+    directement que les arbres et les vivaces sans archétype. Les têtes d'archétype et
+    la flore spontanée lèvent déjà par le tirage S3 ; les vivaces ont leur recrue."""
+    v = _RESSEMABLE.get(cls)
+    if v is None:
+        v = (getattr(cls, "archetype", None) is None and not hasattr(cls, "age_curve")
+             and cls.life_cycle != "perennial")
+        _RESSEMABLE[cls] = v
+    return v
+
+
+def _ressemis(eco, r: int, c: int, seed: int, week: int, niche: float,
+              light: float, ph: float, t_sol: float) -> type | None:
+    """S2 (D139 ①d) — une annuelle du jardin se ressème depuis SON pool.
+
+    Appelé sur un plot où aucun archétype n'a levé ce tick. Chaque espèce ressemable
+    dont le pool dépasse `SPECIES_POOL_MIN_DENSITY` a une chance
+    `w = niche_eff(espèce) × densité / RESSEMIS_DENSITE_REF` (mêmes portes que la
+    levée férale : ombre, pH, T du sol, allélopathie, dans le même ordre que
+    `germination_candidates`). Une seule levée par plot : le plot lève avec la
+    probabilité qu'AU MOINS une espèce passe, `1 − Π(1 − w)` (canal `week × 97`), puis l'espèce est tirée ∝ `w`
+    (canal `week × 101`) — deux canaux libres au 2026-11-18 (grep). Dict d'espèces
+    du plot vide ou sans annuelle → retour immédiat (chemin courant, coût nul)."""
+    cell = eco.seed_bank.species[r][c]
+    if not cell:
+        return None
+    especes, poids = [], []
+    for cls in sorted(cell, key=lambda k: k.__name__):     # ordre stable (save/load)
+        d = cell[cls]["density"]
+        if d <= SPECIES_POOL_MIN_DENSITY or not _ressemable(cls):
+            continue
+        n = niche
+        if light > 0.0:
+            n = niche * (min(1.0, light * cls.shade_tolerance_base()) / light)
+        n *= _porte_ph(ph, cls)
+        n *= _porte_temp(eco, r, c, cls, t_sol)
+        n *= _porte_allelo(eco, r, c, cls)
+        w = min(1.0, n * d / RESSEMIS_DENSITE_REF)
+        if w > 0.0:
+            especes.append(cls)
+            poids.append(w)
+    if not especes:
+        return None
+    aucune = 1.0
+    for w in poids:
+        aucune *= 1.0 - w
+    if _hash_noise(seed, week * 97, r, c) >= 1.0 - aucune:
+        return None
+    return _tirer(especes, poids, _hash_noise(seed, week * 101, r, c))
+
+
+def _germer(tile, eco, plant_class: type, r: int, c: int, seed: int, week: int,
+            t_sol: float):
+    """Levée férale d'une espèce sur un plot (archétype S3 ou ressemis S2) : position
+    sous-plot, identité morphologique, gènes tirés du pool (ou fondateurs) puis tri
+    thermique, consanguinité et priming hérités. Rend la plante, ou None."""
+    new_plant = tile.add_plant(plant_class, r, c)
+    if not new_plant:
+        return None
+    # Placement sous-plot féral (① MODÈLE SPATIAL) — AVANT founder_genes
+    # (qui LIT x_cm/y_cm) : la lignée fondatrice suit la position RÉELLE,
+    # pas la position centrée. Plot-foyer inchangé (offset borné).
+    _offset_subplot(new_plant, seed, week)
+    # Identité morphologique héritable (② MODÈLE SPATIAL) — après la
+    # position férale, avant la génétique (indépendantes).
+    new_plant.form_seed = form_seed_at(seed, new_plant.x_cm, new_plant.y_cm, week)
+    # Gènes échantillonnés du pool génétique du plot (banque-sol féral). Pool vide
+    # → tirage FONDATEUR (sprint DIVERSITÉ FONDATRICE ①) : variance propre
+    # déterministe (position continue, philo #3).
+    g = eco.seed_bank.sample_genes(r, c, plant_class, seed, week)
+    depuis_pool = bool(g)
+    if not g:
+        g = founder_genes(plant_class, seed, week, r, c,
+                          new_plant.x_cm, new_plant.y_cm)
+    # Tri thermique : le semis est une graine que CE sol a réveillée.
+    _levee_triee(g, eco, r, c, plant_class, t_sol, depuis_pool)
+    new_plant.genes = g
+    new_plant.F = eco.seed_bank.sample_F(r, c, plant_class)   # D139 ②
+    e = eco.seed_bank.sample_expression(r, c, plant_class)
+    if e:
+        new_plant.expression.update(e)   # priming hérité (④)
+    return new_plant
 
 
 def _lever_grains_en_attente(game_state: dict, tile, eco, week: int, seed: int,
@@ -485,8 +636,7 @@ def succession(game_state: dict, tile, eco, week: int) -> list[str]:
             # par plot (le facteur dépend du pH du plot). Défaut NEUTRE (`ph_tol`
             # large) ⇒ ≈ 1.0 pour les adventices non spécifiées.
             ph = eco.ph.at_plot(r, c)
-            arch_ph = {a: bell(ph, cls.ph_opt, cls.ph_tol)
-                       for a, cls in WEED_CATALOGUE.items()}
+            arch_ph = {a: _porte_ph(ph, cls) for a, cls in WEED_CATALOGUE.items()}
 
             # Fenêtre thermique par espèce candidate (tronçon ②, typée au ③) : cloche de
             # l'archétype à la T_sol LOCALE → porte de niche dans germination_candidates.
@@ -500,14 +650,8 @@ def succession(game_state: dict, tile, eco, week: int) -> list[str]:
             # sélection : un plot froid voit son pool dériver vers les lève-tôt
             # (gène > 0), donc son `t_opt_eff` s'abaisse saison après saison.
             t_sol = eco.temperature_sol.at_plot(r, c)
-            if t_sol < T_GERM_FLOOR:
-                arch_temp = {a: 0.0 for a in WEED_CATALOGUE}
-            else:
-                arch_temp = {
-                    a: bell(t_sol,
-                            cls.t_germ_opt - _germ_gene_mean(eco, r, c, cls),
-                            cls.t_germ_tol)
-                    for a, cls in WEED_CATALOGUE.items()}
+            arch_temp = {a: _porte_temp(eco, r, c, cls, t_sol)
+                         for a, cls in WEED_CATALOGUE.items()}
 
             # Inhibition ALLÉLOPATHIQUE par espèce candidate (tronçon ②, EFFECTIVE au
             # ④) : escompte de niche `f_allelo = 1 − sensibilité · rampe(allelo)` (rampe
@@ -520,8 +664,7 @@ def succession(game_state: dict, tile, eco, week: int) -> list[str]:
             # ⑤). Champ nul (golden, aucun émetteur → autotox jamais armé) ⇒ f=1.0 pour
             # tous ⇒ germination férale STRICTEMENT inchangée. Philo #2 : le champ de sol
             # referme la niche, pas de malus direct sur la plante.
-            arch_allelo = {a: _f_allelo(eco.allelo_effectif(r, c, cls),
-                                        cls.allelopathie_sensibilite)
+            arch_allelo = {a: _porte_allelo(eco, r, c, cls)
                            for a, cls in WEED_CATALOGUE.items()}
 
             # Porte de RELÂCHE de la molène (sprint MÉMOIRE D'INOCULUM ③) : SEUL
@@ -542,47 +685,26 @@ def succession(game_state: dict, tile, eco, week: int) -> list[str]:
                 arch_allelo=arch_allelo, arch_inoculum=arch_inoculum
             )
 
-            if not candidates:
-                continue
-
-            # Choisir l'archétype ∝ maturité du sol (gradient succession)
-            chosen = choisir_archetype(candidates, soil_deep, fertilite)
-
-            plant_class = choisir_espece(chosen, eco.n.at_plot(r, c),
-                                         seed, week, r, c)
+            # Choisir l'archétype ∝ maturité du sol (gradient succession), puis
+            # l'espèce ∝ son pool (S3, D139 ①d).
+            plant_class = chosen = None
+            if candidates:
+                chosen = choisir_archetype(candidates, soil_deep, fertilite)
+                plant_class = choisir_espece(chosen, eco.n.at_plot(r, c),
+                                             seed, week, r, c, eco.seed_bank)
             if not plant_class:
-                continue
-
-            # Germination — gènes échantillonnés du pool génétique du plot
-            # (banque-sol féral). Pool vide → tirage FONDATEUR (sprint DIVERSITÉ
-            # FONDATRICE ①) : la plante née sans lignée n'est plus un clone neutre,
-            # elle reçoit sa variance propre déterministe (position continue,
-            # philo #3). La mutation par génération prend ensuite le relais.
-            new_plant = tile.add_plant(plant_class, r, c)
+                # Aucun archétype ne lève → les annuelles du jardin se ressèment
+                # depuis leur pool (S2, D139 ①d).
+                chosen = None
+                plant_class = _ressemis(eco, r, c, seed, week, niche, light, ph, t_sol)
+                if not plant_class:
+                    continue
+            new_plant = _germer(tile, eco, plant_class, r, c, seed, week, t_sol)
             if new_plant:
-                # Placement sous-plot féral (① MODÈLE SPATIAL) — AVANT founder_genes
-                # (qui LIT x_cm/y_cm) : la lignée fondatrice suit la position RÉELLE,
-                # pas la position centrée. Plot-foyer inchangé (offset borné).
-                _offset_subplot(new_plant, seed, week)
-                # Identité morphologique héritable (② MODÈLE SPATIAL) — après la
-                # position férale, avant la génétique (indépendantes).
-                new_plant.form_seed = form_seed_at(seed, new_plant.x_cm,
-                                                   new_plant.y_cm, week)
-                g = eco.seed_bank.sample_genes(r, c, plant_class, seed, week)
-                depuis_pool = bool(g)
-                if not g:
-                    g = founder_genes(plant_class, seed, week, r, c,
-                                      new_plant.x_cm, new_plant.y_cm)
-                # Tri thermique : le semis est une graine que CE sol a réveillée.
-                _levee_triee(g, eco, r, c, plant_class, t_sol, depuis_pool)
-                new_plant.genes = g
-                new_plant.F = eco.seed_bank.sample_F(r, c, plant_class)   # D139 ②
-                e = eco.seed_bank.sample_expression(r, c, plant_class)
-                if e:
-                    new_plant.expression.update(e)   # priming hérité (④)
+                quoi = f"arch={chosen}" if chosen else "ressemis"
                 log.append(
                     f"    🌿 Germination : {plant_class.name} @({r},{c}) "
-                    f"[niche={niche:.3f} arch={chosen}]"
+                    f"[niche={niche:.3f} {quoi}]"
                 )
 
     return log

@@ -11,6 +11,10 @@ Lancement (depuis data/code/) :
     `couleur_fleur` dans la banque-sol contre celle des fondateurs (différentiel
     de sélection réalisé). Une sélection par l'abeille (qui préfère le bleu) ferait
     descendre la moyenne.
+(g) BOURRACHES SUR PLUSIEURS GÉNÉRATIONS (①d) : même bac que (a), N ans ; chaque
+    année, pieds vivants (fondateurs / levés du pool), couleur moyenne des vivants
+    et du pool. Critère d'acceptation du trou du ① : la descendance LÈVE et la
+    moyenne de `couleur_fleur` dérive (vers le bleu préféré de l'abeille).
 (b) PHACÉLIES (4 pieds, sous la saturation du champ), 2 ans, nectar génétique forcé
     à 0,7 / 1,0 / 1,3 sur TOUS les pieds : nourriture offerte à l'abeille
     (Σ poids_floral), densité moyenne d'abeilles et pollen reçu par pied.
@@ -110,6 +114,31 @@ def scenario_a():
           " (différentiel réalisé = banque − fondateurs)")
 
 
+def scenario_g(n_ans: int = 6):
+    from plants import Borage
+    tile, eco, gs, eng = _monde(Borage, 16)
+    fondateurs = {id(p) for p in tile.plants}
+    m = lambda xs: st.mean(xs) if xs else float("nan")
+    print(f"(g) bourraches — {n_ans} ans, couleur_fleur (−1 bleu … +1 rose)")
+    print(f"  an 0 : 16 fondateurs, couleur moy. "
+          f"{m([p.gene('couleur_fleur') for p in tile.plants]):+.3f}")
+    for an in range(1, n_ans + 1):
+        leves, vus = 0, {}
+        for _ in range(52):
+            eng.tick_semaine()
+            for l in gs["log"]:
+                if "Germination : Bourrache" in l and "ressemis" in l:
+                    leves += 1
+            gs["log"].clear()
+            for p in tile.plants:
+                if p.is_alive and p.plant_class is Borage:
+                    vus[id(p)] = p
+        nes = [p for i, p in vus.items() if i not in fondateurs]
+        print(f"  an {an} : {leves} levées du pool, {len(nes)} pieds nés vus "
+              f"(couleur {m([p.gene('couleur_fleur') for p in nes]):+.3f}), "
+              f"pool {_pool(eco, 'couleur_fleur', 'Borage'):+.3f}", flush=True)
+
+
 def scenario_b():
     from plants import Phacelia
     from fields.population import poids_floral, build_pollinator_registry
@@ -142,5 +171,7 @@ if __name__ == "__main__":
     quoi = sys.argv[1] if len(sys.argv) > 1 else "tout"
     if quoi in ("a", "tout"):
         scenario_a()
+    if quoi == "g":
+        scenario_g(int(sys.argv[2]) if len(sys.argv) > 2 else 6)
     if quoi in ("b", "tout"):
         scenario_b()
