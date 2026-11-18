@@ -106,4 +106,5 @@ chez achillée, haricot, phacélie, pommier, tournesol, trèfle (gènes muets `p
   la taille ?) — à verser en dette / conception, pas dans ce sprint sans accord.
 
 ## REPRISE
+**SUSPENDU avant ④ (2026-11-18)** : hécatombe par herbivorie à l'ouverture, confirmée au F5 de Nico → DETTE.md D140 (G), à concevoir (`/conception`) avant de reprendre. Noms d'espèces en français → D141 (hors sprint).
 Lire `CLAUDE.md`, ce fichier, puis le kickoff du premier tronçon « à faire » (④).
