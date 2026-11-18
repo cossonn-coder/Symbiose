@@ -20,6 +20,11 @@ en parlent sans chiffre.
    révélé au palier de maîtrise de la pollinisation), « goût et défense » (amertume =
    défense), « lignée » (complété) dans l'encyclopédie et le carnet (`CONCEPT_DE`). Le carnet
    note la première fois qu'un organe est amer ou toxique.
+4. **Fécondation (①b-①d, conception §6)** : un signe dérivé « fleurs fanées sans graines »
+   quand `fecondation` est basse (peu de pollen reçu), exporté par plante ; voix carnet
+   (descriptive : « elle a fleuri mais n'a presque rien grainé ») puis interprétative au
+   palier pollinisation (le manque de butineurs). `fecondation`, `pollen_donne` et la part
+   autofécondée apparaissent au survol G (lignée).
 
 ## Tests
 - Test ciblé : chaque signe dérivé varie avec son gène et reste borné ; aucune clé de signe

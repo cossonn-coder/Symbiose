@@ -159,3 +159,69 @@ Perf : O(1) par lecture (une multiplication de plus là où le moteur lit déjà
 d'espèce). `poids_floral` est appelé par plante et par type de butineur : la préférence de
 couleur s'y calcule en O(1), sans boucle supplémentaire. Budget ≤ +2 % de tick par tronçon,
 mesuré au ①.
+
+## 6. Fécondation : des fleurs qui comptent (trou du ①, arbitré le 2026-11-18)
+
+### 6.1 Le trou
+Le tronçon ① a livré six caractères floraux, mais son banc a montré qu'aucune sélection
+n'avait lieu hors des fruitiers. Trois causes, vérifiées au code :
+1. **Côté mère** : la mise en graine (`_reproduction`, `semer_fin_de_cycle`) tire au hash
+   contre `reproduction_rate` et dépose une quantité fixe. `pollen_recu` n'est lu que par
+   la nouaison des fruitiers, qui le remet à 0 ; ailleurs il cumule à vie.
+2. **Le nombre de graines ne fait pas le nombre de descendants** : la levée férale lit la
+   densité d'archétype puis tire l'espèce uniformément (`choisir_espece`) ; la recrue
+   directe des vivaces fait au plus une recrue par an ; le pool des **annuelles sans
+   archétype** (bourrache, phacélie, moutarde, mâche, courgette) n'est jamais levé.
+3. **Côté père** : le père est le voisin compatible le plus proche, pas celui dont le
+   pollen arrive.
+
+### 6.2 Ce que dit la biologie
+- **Limitation par le pollen** : plus de visites, plus d'ovules fécondés, avec saturation.
+  La pression sur la fleur est forte là où les butineurs manquent, faible ailleurs.
+- **Principe de Bateman** : c'est surtout la fonction **mâle** qui gagne aux visites (une
+  fleur attirante exporte plus de pollen et engendre plus de graines chez les voisines,
+  sans saturation). C'est le principal moteur de l'évolution des fleurs.
+- **Assurance par l'autofécondation** : une plante partiellement autogame fait des graines
+  sans butineur, au prix de descendants consanguins.
+
+### 6.3 Le modèle
+**Fécondation (femelle).** À la fanaison (même armement que la nouaison des fruitiers :
+`floraison` au-dessus de `SEUIL_FLEURI` puis sous `SEUIL_NOUAISON`), **toute** plante en
+fleur fige
+`fecondation = a + (1 − a) · g(pollen_recu)`, avec `a` = gène `autofecondation` et `g` la
+rampe `frac_nouaison` existante ; mode `self` → 1. Puis `pollen_recu = 0`. Une plante qui
+n'a pas fleuri cette année n'a pas de graine (`fecondation = 0`). Lecteurs :
+`rate_eff = rate × fecondation` partout où la mise en graine lit `rate`, la nouaison des
+fruitiers (même fonction, remplace `g` seul) et la graine récoltée par le joueur
+(aucune si `fecondation = 0`). La **part autofécondée** des graines devient
+`a / fecondation` (au lieu de `a`) : sans butineur, toutes les graines sont autofécondées
+et la consanguinité monte.
+
+**Paternité (mâle).** Compteur `pollen_donne` : quand un butineur se charge sur un plot,
+la charge prise est créditée aux fleurs conspécifiques du plot ∝ leur poids floral (miroir
+exact du dépôt) ; dans le panache anémophile, chaque émetteur est crédité de ce qu'il
+envoie. Le père est tiré au hash parmi les candidats à portée, avec un poids
+`pollen_donne × (1 − d²/reach²)`. Si tous les poids sont nuls, on garde la règle actuelle
+(le plus proche).
+
+**Levée des graines.** (S2) Les annuelles et bisannuelles sans archétype se ressèment
+depuis leur pool : sur un plot libre où aucun archétype ne lève, l'espèce lève si
+`hash < niche_eff(espèce) × densité de son pool`, avec les mêmes portes que la levée
+férale (tolérance à l'ombre, pH, température du sol, allélopathie). (S3) Quand un
+archétype lève, l'espèce est tirée ∝ `ε + densité de son pool sur le plot` parmi les
+éligibles (ε = graines venues de l'extérieur). Si aucun pool n'est présent, le tirage
+reste uniforme.
+
+### 6.4 Risque assumé
+S3 récompense l'espèce qui grène le plus : un emballement du trèfle est probable. **Choix de
+Nico : on l'observe et on le corrigera plus tard en mettant davantage d'espèces en
+compétition.** Pas de garde-fou dans ce sprint, mais le tronçon ①d mesure la composition et
+le nombre de plantes (le tick croît avec la densité).
+
+### 6.5 Tronçons et golden
+| Tronçon | Contenu | Golden |
+|---|---|---|
+| ①b | pommier mûr dans le smoke, `fecondation`, part autofécondée | RE-FIGÉ deux fois (scénario, puis mécanique) |
+| ①c | `pollen_donne`, loterie paternelle | RE-FIGÉ |
+| ①d | ressemis des annuelles, espèce ∝ pool | RE-FIGÉ |
+| ⑤ | signe « fleurs fanées sans graines » (fécondation faible) | INTACT |

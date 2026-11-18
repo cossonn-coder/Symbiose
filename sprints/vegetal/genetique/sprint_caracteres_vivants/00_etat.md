@@ -22,13 +22,17 @@ d'un compromis.
 - Règle : un gène n'entre que si une mécanique le lit ; tout ajout **en queue**.
 
 ## Golden
-Départ = hash de fin du sprint ②. ①-④ **RE-FIGÉ annoncé** chacun (clés neuves + lecteurs)
+Départ = hash de fin du sprint ②. ①, ①b (deux fois : scénario puis mécanique), ①c, ①d,
+②-④ **RE-FIGÉ annoncé** chacun (clés neuves + lecteurs)
 · ⑤ INTACT · ⑥ INTACT.
 
 ## Tronçons
 | # | Kickoff | État |
 |---|---|---|
 | ① | `01_fleurs.md` — taille, nectar, pollen, couleur, guides, parfum + `cout_genetique` | **FAIT côté code** (2026-11-18, non commité) — voir §① |
+| ①b | `01b_fecondation.md` — pommier mûr au smoke, `fecondation` à la fanaison, part autofécondée | à faire |
+| ①c | `01c_paternite.md` — compteur `pollen_donne`, père tiré ∝ pollen exporté | à faire |
+| ①d | `01d_levee_graines.md` — annuelles qui se ressèment, espèce spontanée ∝ son pool | à faire |
 | ② | `02_fruits_comestibilite.md` — taille des fruits, appétence feuille/fruit, Vigueur négative | à faire |
 | ③ | `03_feuille_gestes.md` — coriacité, repousse, bouture, dormance, dominance apicale | à faire |
 | ④ | `04_sol_expansion.md` — clonalité, portée, fixation, allélopathie, mycorhization | à faire |
@@ -75,6 +79,22 @@ Départ = hash de fin du sprint ②. ①-④ **RE-FIGÉ annoncé** chacun (clés
 - Vue G : `couleur_fleur` (unité « position ») s'affiche en « × » par défaut et les 6
   caractères sans libellé (`tools/simserver/genes_pont.py`) — à traiter au ⑤.
 
+## Conception FÉCONDATION (trou du ①) — ARBITRÉE et FIGÉE (Nico, 2026-11-18)
+Doc : `docs/vegetal/genetique/conception_caracteres_vivants.md` §6. Diagnostic : le nombre de
+graines ne dépendait ni des visites, ni ne faisait le nombre de descendants (annuelles
+sans archétype : pool jamais levé) ; le père était le plus proche ; `pollen_recu` cumulait
+à vie hors fruitiers.
+- **Q1 = S3** : `fecondation` lue partout où `rate` l'est + annuelles qui se ressèment
+  depuis leur pool + espèce spontanée tirée ∝ (ε + densité de son pool). Emballement
+  possible du trèfle **assumé** : on l'observe, on le corrigera plus tard par davantage
+  d'espèces en compétition (pas de garde-fou dans ce sprint).
+- **Q2 = vrai compteur** `pollen_donne` (recharges des butineurs + panache anémophile),
+  père tiré au hash ∝ `pollen_donne × (1 − d²/reach²)`.
+- **Q3** : `fecondation = a + (1 − a)·g(pollen_recu)` pour toute plante, nouaison des
+  fruitiers comprise ; part autofécondée des graines = `a / fecondation`. **Un pommier
+  mûr entre dans le smoke** (pré-vieilli comme `cmd_init` « full ») pour que le golden
+  exerce la nouaison.
+Tronçons insérés avant ② : `01b_fecondation.md`, `01c_paternite.md`, `01d_levee_graines.md`.
+
 ## REPRISE
-Lire `CLAUDE.md`, ce fichier, puis le kickoff du premier tronçon « à faire » (②).
-**Avant ②** : trancher le trou de conception du ① (fitness des fleurs herbacées).
+Lire `CLAUDE.md`, ce fichier, puis le kickoff du premier tronçon « à faire » (①b).
