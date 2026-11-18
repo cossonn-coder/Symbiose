@@ -6,8 +6,10 @@ Isolé de `container.py` (déjà dense) comme `thermique.py` : le conteneur n'ex
 qu'une fine méthode `tick_rosee` qui délègue ici. Fonction pure, zéro RNG
 (déterminisme philo #3 — la météo est déjà tirée par `_hash_noise`).
 
-Le PIVOT physique (CONCEPTION_METEO_CHAMPS §3) : on réutilise le MÊME thermomètre
-nocturne que le gel (`t_min_nuit_at`). La nuit, un sol découvert sous un ciel clair
+Le PIVOT physique (CONCEPTION_METEO_CHAMPS §3) : on réutilise le thermomètre
+nocturne du gel, dans sa version nuit TYPE (`t_min_nuit_type_at`) — la rosée fait le
+bilan de toutes les nuits ; le gel, lui, lit la nuit la plus froide (D139). La nuit,
+un sol découvert sous un ciel clair
 rayonne sa chaleur et se refroidit. AVANT de geler, ce sol froid CONDENSE la vapeur
 de l'air — la rosée. Le même refroidissement produit donc un CONTINUUM lu sur un
 seul thermomètre :
@@ -45,13 +47,13 @@ from __future__ import annotations
 
 from .constants import (ECART_ROSEE_SEC, GAIN_HUM_ROSEE, ROSEE_PAR_DEGRE,
                         ROSEE_LOG_SEUIL, ECART_ROSEE_HR)
-from .thermique import t_min_nuit_at
+from .thermique import t_min_nuit_type_at
 
 
 def tick_rosee(eco, t_air: float, nebulosite: float,
                humidite_air: float | None = None) -> list[str]:
     """Dépose la rosée (régime liquide) ou accumule/fond le givre (régime gelée
-    blanche) sur chaque plot, depuis le thermomètre nocturne `t_min_nuit_at` et
+    blanche) sur chaque plot, depuis la nuit TYPE `t_min_nuit_type_at` (bilan de la semaine) et
     l'humidité du sol local. Écrit `eco.humidite` (rosée + fonte différée) et
     `eco.givre` (accumulation du dépôt gelé). Pur : zéro RNG, zéro autre effet.
 
@@ -80,7 +82,7 @@ def tick_rosee(eco, t_air: float, nebulosite: float,
         for c in range(eco.cols):
             if rosee_last is not None:
                 rosee_last.set(r, c, 0.0)   # transiente : on repart à plat ce tick
-            t_min    = t_min_nuit_at(eco, r, c, t_air, nebulosite)
+            t_min    = t_min_nuit_type_at(eco, r, c, t_air, nebulosite)
             if humidite_air is not None:   # air océanique (D111 ①)
                 t_rosee = t_air - ECART_ROSEE_HR * (1.0 - humidite_air)
             else:                          # historique : dérivé du sol local

@@ -30,14 +30,37 @@ large** (dates de mort des annuelles) · ④ INTACT · ⑤ INTACT.
 ## Tronçons
 | # | Kickoff | État |
 |---|---|---|
-| ① | `01_temperatures_extremes.md` — nuit la plus froide, jour le plus chaud, T_feuille | à faire |
+| ① | `01_temperatures_extremes.md` — nuit la plus froide, jour le plus chaud, T_feuille | **FAIT** 2026-11-18 (non commité) |
 | ② | `02_niche_caracteres.md` — niches des 52 espèces, 3 caractères, plasticité, coût | à faire |
 | ③ | `03_reponse_mort.md` — dégâts gradués, fin de la mort calendaire, fin de cycle | à faire |
 | ④ | `04_signes.md` — posture thermique et marques, voix | à faire |
 | ⑤ | `05_vue.md` — postures et teintes, banc `niche_thermique`, recette F5 | à faire |
 
+## ① FAIT (2026-11-18)
+- `fields/ecofields/thermique.py` : `t_min_nuit_at` = **nuit la plus froide** (nuit type −
+  `ECART_NUIT_FROIDE`·(1−couvert)·(1−nébul)) ; ancienne formule gardée en
+  `t_min_nuit_type_at` ; `t_max_jour(t_air, nebul)` = T_air + (`AMPLITUDE_DIURNE` +
+  `ECART_JOUR_CHAUD`)·(1−nébul). Constantes 3,0 / 7,0 / 5,0 dans `constants.py`.
+- Lecteurs : gel (`boucle.py`) et glace (`glace.py`) → nuit la plus froide ; **rosée/givre →
+  nuit type** (bilan de toutes les nuits, calibrage D111 conservé).
+- `sim/engine/feuille.py` : `t_feuille(plant, eco, t_air, nebul)` + `soif` = stress hydrique
+  instantané sur `eau_percue` (pas `drought_memory`, trop lente). Aucun lecteur (③).
+- **Écart au kickoff** : `t_max_jour` sans `eco, r, c` (l'air est uniforme ; soleil et soif
+  sont dans `t_feuille`). **Garde du gel levé** : `boucle.py` ne gelait que si T_air < 0
+  (8 sem./8 ans [seed 42]) → la nuit la plus froide n'aurait rien changé ; chaque plot
+  décide maintenant par sa nuit, log seulement si sév > 0.
+- Mesures (`mesures/mesure_extremes.py`, seed 42, 8 ans, sol nu sans vent) : nuits < 0 °C
+  54 → 113 semaines (6,8 → 14,1/an [n=1 seed]), min −7,8 → −10,6 °C ; jour le plus chaud
+  max 35,9 °C (T_air 24,9). Smoke 5,99 → 5,58 s [1 run chacun] ; voie gel ≈ 0,01 s [cProfile].
+- Golden **RE-FIGÉ** `3927690e…` → `72896cbd4fa9e596d23cf1c8ccc6101e744d694a0c7983e5c18bfea2fdd2c575` :
+  1ʳᵉ divergence = gel des semis en W1 (T_air 7,2 °C, nuit claire) ; 2 → 26 lignes de gel,
+  le reste en découle. Suites vertes : temperatures_extremes (neuve, 28/28), meteo_heterogene,
+  rosee, mare_vivante, couvertures, senescence, stress_chronique, evergreen, evenements,
+  microbiome_clim, signes_legende, humectation, caracteres, genetique, heredite, population.
+- F5 : la glace des mares prend plus souvent (lit la nuit la plus froide) — à regarder.
+
 ## REPRISE
-Lire `CLAUDE.md`, ce fichier, puis le kickoff du premier tronçon « à faire ».
+Lire `CLAUDE.md`, ce fichier, puis le kickoff du premier tronçon « à faire » (②).
 
 ## Report du sprint ① (génétique infinitésimale, décision Nico 2026-11-16)
 La réponse à la sélection sur `germination_thermique` (banc

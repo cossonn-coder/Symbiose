@@ -192,6 +192,28 @@ T_PLANTE_ALPHA = 0.5
 # nocturne séparée. RAYONNEMENT_NOCTURNE = chute max (ciel clair, sol nu).
 RAYONNEMENT_NOCTURNE = 5.0
 
+# Nuit la PLUS FROIDE et jour le PLUS CHAUD de la semaine (D139, sprint niche
+# thermique ①). Le tick est hebdomadaire : T_air est la MOYENNE de la semaine et
+# `t_min_nuit_type_at` sa nuit TYPE. Or une plante gèle sur la pire nuit, pas sur la
+# nuit moyenne, et grille sur le pire après-midi. On ajoute donc les EXTRÊMES, sans
+# changer le climat moyen (`temp_norm` intact) ni créer de champ de grille.
+#
+# - ECART_NUIT_FROIDE : °C de plus perdus par la nuit la plus froide par rapport à la
+#   nuit type, par ciel clair et sol nu. Même forme que le rayonnement nocturne
+#   (`·(1−couvert)·(1−nébulosité)`) : c'est la nuit claire et calme qui fait l'écart,
+#   et paillage, neige ou voile en protègent aussi. Mesuré (seed 42, 8 ans, sol nu
+#   sans vent) : 54 → 113 semaines avec une nuit < 0 °C, soit 6,8 → 14,1 par an
+#   [seed 42, n=1], minimum −7,8 → −10,6 °C. Cible conception : 12-15/an, ≈ −10 °C
+#   [ordre de grandeur Caen].
+# - AMPLITUDE_DIURNE : demi-amplitude diurne type (°C entre la moyenne et l'après-midi)
+#   par ciel clair ; un ciel couvert l'écrase. ECART_JOUR_CHAUD : °C de plus du jour
+#   le plus chaud sur le jour type, par ciel clair. Mesuré : semaine de canicule la
+#   plus chaude 24,9 °C d'air moyen → 35,9 °C au plus chaud [seed 42, 8 ans, n=1].
+#   Cible conception : 33-40 °C [Normandie 2019, été 2026].
+ECART_NUIT_FROIDE = 3.0
+AMPLITUDE_DIURNE  = 7.0
+ECART_JOUR_CHAUD  = 5.0
+
 # Manteau neigeux (tronçon ⑦) : la neige s'accumule en un état persistant `eco.snow`
 # ∈ [0,1] (manteau uniforme par tuile) qui ISOLE le sol — effet igloo. Un manteau
 # épais s'ajoute au couvert de litière dans T_min_nuit : sous la neige, le sol ne

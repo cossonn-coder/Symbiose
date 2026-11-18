@@ -144,23 +144,27 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
         # T_min_nuit descend plus bas sur un coin nu/sous ciel clair (rayonnement)
         # que sur un coin paillé (litière) ou sous nuages → un coin abrité peut
         # rester au-dessus du seuil (sév 0, épargné) pendant qu'un coin nu gèle.
-        if temp_now < TEMP_FROST_DAMAGE:
-            for tile in self.tiles:
-                eco = self._eco(tile)
-                def frost_sev(p, eco=eco):
-                    r, c = p.position
-                    t_min = t_min_nuit_at(eco, r, c, temp_now, nebul)
-                    return max(0.0, (TEMP_FROST_DAMAGE - t_min) / FROST_SEVERITY_REF)
-                sevs = [frost_sev(p) for p in tile.plants
-                        if p.is_alive and p.stage.name == "semis"]
-                if sevs:
-                    log.append(f"  ❄  gel [{tile.tile_id}] t_air={temp_now:.1f}°C "
-                               f"sév {min(sevs):.2f}→{max(sevs):.2f}")
-                log += self._mediated_damage(tile, eco, 0.0,
-                                             "gel (tissu tendre)",
-                                             gene_name="rusticite_froid",
-                                             severity_fn=frost_sev,
-                                             cause="gel")
+        # D139 niche thermique ① : `t_min_nuit_at` est la nuit la PLUS FROIDE de la
+        # semaine. Une semaine douce en moyenne (T_air > 0) peut donc geler une nuit
+        # claire : l'ancien garde `T_air < 0` (8 semaines en 8 ans [seed 42]) est
+        # levé, chaque plot décide par sa propre nuit (sév 0 = épargné, sans log).
+        for tile in self.tiles:
+            eco = self._eco(tile)
+            def frost_sev(p, eco=eco):
+                r, c = p.position
+                t_min = t_min_nuit_at(eco, r, c, temp_now, nebul)
+                return max(0.0, (TEMP_FROST_DAMAGE - t_min) / FROST_SEVERITY_REF)
+            sevs = [frost_sev(p) for p in tile.plants
+                    if p.is_alive and p.stage.name == "semis"]
+            if not sevs or max(sevs) <= 0.0:
+                continue                     # aucun semis sous sa nuit de gel
+            log.append(f"  ❄  gel [{tile.tile_id}] t_air={temp_now:.1f}°C "
+                       f"sév {min(sevs):.2f}→{max(sevs):.2f}")
+            log += self._mediated_damage(tile, eco, 0.0,
+                                         "gel (tissu tendre)",
+                                         gene_name="rusticite_froid",
+                                         severity_fn=frost_sev,
+                                         cause="gel")
 
         if event.kind != "Beau temps":
             log.append(f"  🌤  {event.kind} (T≈{temp_now:.1f}°C, i={event.intensity:.2f})")

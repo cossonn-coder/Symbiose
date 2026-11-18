@@ -31,8 +31,10 @@ déterministe — ne pas réordonner. La nébulosité, elle, est celle de l'év�
 météo DU tick (déjà tiré en 1, déterministe).
 
 Modèle diurne COMPLET (4 termes). Le gel NOCTURNE (tronçon ⑥) ajoute une carte
-SÉPARÉE `t_min_nuit_at` (helper pur ci-dessous) : la nuit le soleil ne joue plus,
+SÉPARÉE `t_min_nuit_type_at` (helper pur ci-dessous) : la nuit le soleil ne joue plus,
 seuls couvert (litière) et nébulosité protègent du rayonnement vers le ciel clair.
+Les EXTRÊMES de la semaine (D139 niche thermique ①) : `t_min_nuit_at` (nuit la plus
+froide, lue par le gel) et `t_max_jour` (jour le plus chaud, lu par `t_feuille`).
 """
 
 from __future__ import annotations
@@ -42,6 +44,7 @@ import math
 from .constants import (GAIN_SOLAIRE, THERMAL_INERTIA, INTENSITE_SAISON,
                         REFROID_EVAP, ISOLATION_COUVERT, LITIERE_REF,
                         K_NEBUL_DIURNE, RAYONNEMENT_NOCTURNE, WINDCHILL_COEF,
+                        ECART_NUIT_FROIDE, AMPLITUDE_DIURNE, ECART_JOUR_CHAUD,
                         SNOW_ACCUM, SNOW_MELT_BASE, SNOW_MELT_WARM,
                         MICROBE_T_OPT, MICROBE_T_TOL, MICROBE_HUM_OPT,
                         MICROBE_HUM_SAT_FLOOR, MICROBE_CLIM_FLOOR)
@@ -70,10 +73,48 @@ def tick_thermique(eco, saison: str, nebulosite: float = 0.0) -> None:
             t_sol.set(r, c, cur + (cible - cur) * THERMAL_INERTIA)
 
 
+def _couvert_nuit(eco, r: int, c: int) -> float:
+    """Couvert nocturne du plot ∈ [0,1] : litière + neige + écran posé (cf. ci-dessous)."""
+    return min(1.0, eco.om_fresh_at(r, c) / LITIERE_REF + eco.snow
+               + eco.couvert_at(r, c))
+
+
 def t_min_nuit_at(eco, r: int, c: int, t_air: float, nebulosite: float) -> float:
-    """Température minimale NOCTURNE estimée au plot (r,c) — borne basse de la
-    semaine, lue par le GEL (boucle.py), PAS par la croissance (qui reste sur la
-    T ressentie diurne ⑤).
+    """Nuit la PLUS FROIDE de la semaine au plot (r,c) (D139, niche thermique ①) —
+    lue par le GEL des plantes (boucle.py) et la GLACE des mares (glace.py).
+
+        T_nuit_froide = T_nuit_type − ECART_NUIT_FROIDE · (1 − couvert) · (1 − nébulosité)
+
+    📖 Le tick est hebdomadaire : la nuit TYPE (ci-dessous) est une nuit moyenne. Une
+    plante, elle, gèle la PIRE nuit de la semaine. L'écart a la même forme que le
+    rayonnement : la nuit la plus froide est une nuit claire et calme sur sol nu ; le
+    paillage, la neige et le voile en protègent autant que de la nuit type (sous un
+    couvert plein, les deux rejoignent T_air). Toujours ≤ la nuit type. Pure, zéro RNG.
+
+    La ROSÉE et le GIVRE restent sur la nuit type (`t_min_nuit_type_at`) : ils font le
+    BILAN de condensation de toutes les nuits de la semaine, pas de la pire."""
+    ecart = ECART_NUIT_FROIDE * (1.0 - _couvert_nuit(eco, r, c)) * (1.0 - nebulosite)
+    return t_min_nuit_type_at(eco, r, c, t_air, nebulosite) - ecart
+
+
+def t_max_jour(t_air: float, nebulosite: float) -> float:
+    """Jour le PLUS CHAUD de la semaine (°C d'air, D139 niche thermique ①) — miroir de
+    la nuit la plus froide :
+
+        T_max_jour = T_air + (AMPLITUDE_DIURNE + ECART_JOUR_CHAUD) · (1 − nébulosité)
+
+    T_air est la moyenne de la semaine ; l'après-midi type la dépasse de la demi-
+    amplitude diurne, le plus chaud de la semaine d'un écart de plus. Un ciel couvert
+    écrase les deux. Uniforme par tuile (c'est de l'AIR) : ce qui chauffe une feuille
+    plus qu'une autre — soleil et soif — est dans `t_feuille` (sim/engine/feuille.py).
+    Toujours ≥ T_air. Pure, zéro RNG."""
+    return t_air + (AMPLITUDE_DIURNE + ECART_JOUR_CHAUD) * (1.0 - nebulosite)
+
+
+def t_min_nuit_type_at(eco, r: int, c: int, t_air: float, nebulosite: float) -> float:
+    """Température minimale de la nuit TYPE (moyenne) de la semaine au plot (r,c) —
+    lue par la rosée/le givre (bilan de toutes les nuits) et base de la nuit la plus
+    froide (`t_min_nuit_at`). PAS lue par la croissance (T ressentie diurne ⑤).
 
     ⚠️ La logique s'INVERSE par rapport au diurne. La nuit, le soleil ne chauffe
     plus : ce ne sont PAS les plots ensoleillés qui gèlent, mais les plots
@@ -101,8 +142,7 @@ def t_min_nuit_at(eco, r: int, c: int, t_air: float, nebulosite: float) -> float
 
     Pure, zéro RNG, zéro effet de bord (philo #3 — lit `eco.snow`/`eco.vent`/
     `couvert_at`, ne les écrit pas)."""
-    couvert = min(1.0, eco.om_fresh_at(r, c) / LITIERE_REF + eco.snow
-                  + eco.couvert_at(r, c))
+    couvert = _couvert_nuit(eco, r, c)
     t_min = t_air - RAYONNEMENT_NOCTURNE * (1.0 - couvert) * (1.0 - nebulosite)
     return t_min - WINDCHILL_COEF * eco.vent.at_plot(r, c)
 
