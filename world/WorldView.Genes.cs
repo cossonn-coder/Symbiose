@@ -34,6 +34,7 @@ namespace Symbiose
 		// survol G d'emblée (StartSimulation) — c'est l'instrument qu'il sert.
 		private const string BancLignees = "lignees";
 		private const string BancNicheThermique = "niche_thermique";
+		private const string BancCaracteres = "caracteres_vivants";   // D139 caractères ⑥
 
 		// Label du survol gènes (créé dans BuildHud, dans le CanvasLayer "Hud").
 		private Label _genesLabel;

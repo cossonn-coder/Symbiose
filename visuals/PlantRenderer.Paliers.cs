@@ -117,7 +117,7 @@ namespace Symbiose
 		/// tombent de cette plante (LeafFallLayer, AUTOMNE VISIBLE ⑤).</summary>
 		internal Color TonChute(float h)
 		{
-			if (!Palettes.TryGetValue(_structure.SpeciesName, out var pal)) pal = DefaultPalette;
+			var pal = PaletteIndividu();   // palette de CE pied (caractères ⑥)
 			return pal.Automne(h);
 		}
 
@@ -132,7 +132,7 @@ namespace Symbiose
 		private Color TeinteSaison()
 		{
 			if (!string.IsNullOrEmpty(_deadStade)) return DeadWoodColor;
-			if (!Palettes.TryGetValue(_structure.SpeciesName, out var pal)) pal = DefaultPalette;
+			var pal = PaletteIndividu();   // palette de CE pied (caractères ⑥)
 			Color c = pal.Leaf;
 			float automne = Mathf.Clamp(_structure.Automne, 0f, 1f);
 			if (automne > 0f)
@@ -252,7 +252,7 @@ namespace Symbiose
 		private void DrawTachesFleurs(Vector2 centre, float rx, float ry)
 		{
 			if (_structure.Floraison < FloraisonSeuil) return;
-			if (!Palettes.TryGetValue(_structure.SpeciesName, out var pal)) pal = DefaultPalette;
+			var pal = PaletteIndividu();   // palette de CE pied (caractères ⑥)
 			int n = Mathf.Clamp(Mathf.RoundToInt(rx * ry * WorldView.CurrentZoom * WorldView.CurrentZoom
 				/ TacheFleurPx2 * _structure.Floraison), 1, TachesFleurMax);
 			float rad = 1f / WorldView.CurrentZoom;   // 1 px interne de rayon

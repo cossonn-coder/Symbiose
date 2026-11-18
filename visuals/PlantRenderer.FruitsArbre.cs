@@ -132,7 +132,7 @@ namespace Symbiose
 		private void DrawFruitsHouppier()
 		{
 			if (_structure.Fruits.Count == 0) return;
-			if (!Palettes.TryGetValue(_structure.SpeciesName, out var pal)) pal = DefaultPalette;
+			var pal = PaletteIndividu();   // palette de CE pied (caractères ⑥)
 			FicheFruit fr = FicheFruitArbre;
 			Vector3 c = _structure.ColletCm;
 			bool queues = AuPalier(PalierOrganesZoom);

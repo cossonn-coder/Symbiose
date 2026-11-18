@@ -78,7 +78,7 @@ namespace Symbiose
 
 		// (rayon, hauteur) du port dessiné, en cm, comme MesurePrairie.
 		private (float R, float H) MesurePort(FichePort f) =>
-			AvecTaille((f.RayonCm * CroissancePort(f),
+			AvecTaille((f.RayonCm * CroissancePort(f) * FacteurPort(f),   // port flèche/buisson (caractères ⑥)
 				f.Forme == FormePort.Volubile ? HauteurVolubile(f) : HampeLevee(f) ? _hauteurLisseeCm : HauteurFeuilles(f)));
 
 		/// <summary>Appelé par MesurerPort (Paliers.cs) : tapis, ombre, picking et vent suivent
@@ -134,6 +134,7 @@ namespace Symbiose
 				case FormePort.Volubile: DessinerVolubile(f, col); break;
 				default: DessinerRosette(f, col); break;
 			}
+			PoserRejets(f, col);   // rejets d'une colonie mûre (caractères ⑥)
 			PoserFruitsPort(f);
 			_lotPrairie.DessinerSansMaille(this);
 			PoserDetailsPrairie(col);
@@ -167,7 +168,7 @@ namespace Symbiose
 		private void PoserFruitsPort(FichePort f)
 		{
 			if (_structure.Fruits.Count == 0) return;
-			if (!Palettes.TryGetValue(_structure.SpeciesName, out var pal)) pal = DefaultPalette;
+			var pal = PaletteIndividu();   // palette de CE pied (caractères ⑥)
 			FicheFruit fr = f.Fruit ?? FruitParDefaut;
 			Vector3 collet = _structure.ColletCm;
 			for (int i = 0; i < _structure.Fruits.Count; i++)

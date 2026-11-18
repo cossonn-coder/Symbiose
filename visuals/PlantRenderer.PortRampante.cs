@@ -77,7 +77,7 @@ namespace Symbiose
 		private void PoserTrompettes(FichePort f, float h, float g, int ig)
 		{
 			if (MortPrairie || _structure.Rabattu > RabattuTete || _structure.Floraison < FloraisonSeuil) return;
-			if (!Palettes.TryGetValue(_structure.SpeciesName, out var pal)) pal = DefaultPalette;
+			var pal = PaletteIndividu();   // palette de CE pied (caractères ⑥)
 			int n = Mathf.Clamp(Mathf.CeilToInt(_structure.Floraison * 2f), 1, 2);
 			for (int k = 0; k < n; k++)
 			{

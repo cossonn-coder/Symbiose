@@ -172,7 +172,7 @@ namespace Symbiose
 		private Color TeintePrairie()
 		{
 			if (MortPrairie) return DeadWoodColor;
-			if (!Palettes.TryGetValue(_structure.SpeciesName, out var pal)) pal = DefaultPalette;
+			var pal = PaletteIndividu();   // palette de CE pied (caractères ⑥)
 			Color c = LeafColor(pal, Mathf.Clamp(_structure.Automne, 0f, 1f), _swayPhase);
 			if (WorldView.CurrentZoom >= PalierSanteZoom) c = SymptomTint(c);
 			c = Frosted(c);
@@ -235,7 +235,7 @@ namespace Symbiose
 				if (f >= feuilles.Count * 2 / 3)
 					_sitesPrairie.Add((Iso(p.X, p.Y, p.Z), taille * 0.7f * WorldView.PxPerCmX, k, p.Z));
 			}
-			if (FleuriPrairie(FloraisonSeuil * 0.4f)) PoserPompons(rayon, h, g, ig);
+			if (FleuriPrairie(FloraisonSeuil * 0.4f) || (_signeFane && AuPalier(PalierSanteZoom))) PoserPompons(rayon, h, g, ig);   // ⑥ : fanés
 		}
 
 		// Sous les feuilles, le feuillage qu'on ne détaille pas : une tache sombre au bord
@@ -334,7 +334,7 @@ namespace Symbiose
 		// Boules blanches sur tige nue, au-dessus des feuilles.
 		private void PoserPompons(float rayon, float h, float g, int ig)
 		{
-			if (!Palettes.TryGetValue(_structure.SpeciesName, out var pal)) pal = DefaultPalette;
+			var pal = PaletteIndividu();   // palette de CE pied (caractères ⑥)
 			int n = Mathf.Clamp(Mathf.CeilToInt(_structure.Floraison * g * PomponsMax), 1, PomponsMax);
 			Color tige = Ton(pal.Leaf, 3);
 			for (int k = 0; k < n; k++)
@@ -344,7 +344,9 @@ namespace Symbiose
 				float z = h * Mathf.Lerp(1.05f, 1.25f, Hash01(215, ig, k));
 				Vector2 c = Iso(x, y, z);
 				_lotPrairie.Ligne(Iso(x, y, 0f), c, tige, PixelInterne);
-				PoserBoule(c, RayonPomponCm * WorldView.PxPerCmX, pal.Flower, ig + k);
+				Color pompon = pal.Flower; float rp = RayonPomponCm * WorldView.PxPerCmX;
+				Faner(ref pompon, ref rp, FleuriPrairie(FloraisonSeuil * 0.4f));   // brun et rabougri, fané sans graines (caractères ⑥)
+				PoserBoule(c, rp, pompon, ig + k);
 			}
 		}
 

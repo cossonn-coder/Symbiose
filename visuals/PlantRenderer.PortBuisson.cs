@@ -173,7 +173,7 @@ namespace Symbiose
 		private void PoserFleursMasse(FichePort f, FicheBuisson b, float rayon, float z, float g, int ig)
 		{
 			if (b.FleursMasse == 0 || MortPrairie || _structure.Rabattu > RabattuTete || _structure.Floraison < FloraisonSeuil) return;
-			if (!Palettes.TryGetValue(_structure.SpeciesName, out var pal)) pal = DefaultPalette;
+			var pal = PaletteIndividu();   // palette de CE pied (caractères ⑥)
 			int n = Mathf.Clamp(Mathf.CeilToInt(_structure.Floraison * g * b.FleursMasse), 1, b.FleursMasse);
 			for (int k = 0; k < n; k++)
 			{

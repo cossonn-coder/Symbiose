@@ -415,7 +415,7 @@ namespace Symbiose
 
 			FrameCamera();
 			// Bancs lignées (D139 ④) et niche thermique (⑤) : survol G ouvert d'emblée.
-			if (config == BancLignees || config == BancNicheThermique) ToggleGenesHover();
+			if (config == BancLignees || config == BancNicheThermique || config == BancCaracteres) ToggleGenesHover();
 			AppliquerCapture();   // no-op hors mode capture (WorldView.Capture.cs)
 			// Monde construit → on débloque la boucle (_Process) et les entrées
 			// (_UnhandledInput), gardées par `_started` pendant l'écran de sélection.

@@ -111,7 +111,7 @@ namespace Symbiose
 
 		private void PoserPanicules(float h, float g, int ig)
 		{
-			if (!Palettes.TryGetValue(_structure.SpeciesName, out var pal)) pal = DefaultPalette;
+			var pal = PaletteIndividu();   // palette de CE pied (caractères ⑥)
 			int n = Mathf.Clamp(Mathf.CeilToInt(_structure.Floraison * g * 5f), 1, 5);
 			for (int k = 0; k < n; k++)
 			{
@@ -159,7 +159,7 @@ namespace Symbiose
 					_sitesPrairie.Add((Iso(ux * d, uy * d, hb * 0.7f), 1.2f * WorldView.PxPerCmX, k, hb));
 			}
 			if (!FleuriPrairie(FloraisonHampe)) return;
-			if (!Palettes.TryGetValue(_structure.SpeciesName, out var pal)) pal = DefaultPalette;
+			var pal = PaletteIndividu();   // palette de CE pied (caractères ⑥)
 			int nh = Mathf.Clamp(Mathf.CeilToInt(_structure.Floraison * g * 4f), 1, 4);
 			for (int k = 0; k < nh; k++)
 			{
@@ -232,7 +232,7 @@ namespace Symbiose
 
 		private void PoserHampes(float h, float g, int ig)
 		{
-			if (!Palettes.TryGetValue(_structure.SpeciesName, out var pal)) pal = DefaultPalette;
+			var pal = PaletteIndividu();   // palette de CE pied (caractères ⑥)
 			int n = Mathf.Clamp(Mathf.CeilToInt(_structure.Floraison * g * 4f), 1, 4);
 			float pxx = WorldView.PxPerCmX;
 			for (int k = 0; k < n; k++)

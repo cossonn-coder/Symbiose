@@ -147,7 +147,7 @@ namespace Symbiose
 			bool fruit = f.Fruit == null && _structure.Organ.StartsWith("fruit", System.StringComparison.Ordinal);
 			if (t.Fleurs == 0 || MortPrairie || _structure.Rabattu > RabattuTete
 				|| (_structure.Floraison < FloraisonSeuil && !fruit)) return;
-			if (!Palettes.TryGetValue(_structure.SpeciesName, out var pal)) pal = DefaultPalette;
+			var pal = PaletteIndividu();   // palette de CE pied (caractères ⑥)
 			Color tete = _structure.Floraison >= FloraisonSeuil ? pal.Flower : pal.FruitRipe;
 			int n = Mathf.Clamp(Mathf.CeilToInt(Mathf.Max(_structure.Floraison, fruit ? 0.5f : 0f) * g * t.Fleurs), 1, t.Fleurs);
 			for (int k = 0; k < n; k++)

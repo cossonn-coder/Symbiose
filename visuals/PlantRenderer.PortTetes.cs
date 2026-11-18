@@ -57,7 +57,10 @@ namespace Symbiose
 		private void PoserTete(FichePort f, Vector2 pied, Vector2 sommet, Color c, int graine)
 		{
 			float pix = PixelInterne, pxx = WorldView.PxPerCmX;
-			float r = Mathf.Max(f.TeteCm * pxx, pix);
+			bool fleur = c == FleurDe();
+			// Caractères ⑥ : fleur × √taille_fleur ; tête fanée sans graines brune et rabougrie.
+			float r = Mathf.Max(f.TeteCm * pxx * (fleur ? _echelleFleur : 1f), pix);
+			Faner(ref c, ref r, fleur);
 			switch (f.Tete)
 			{
 				case FormeTete.Capitule:
@@ -81,6 +84,7 @@ namespace Symbiose
 				case FormeTete.Aucune: break;
 				default: PoserOmbelle(pied, sommet, r, c, graine); break;
 			}
+			if (fleur) PoserGuides(sommet, r, c, f.Tete);   // guides à nectar (Caracteres.cs)
 		}
 
 		// Ellipse à 12 côtés : à la taille d'une tête, les 64 de LotTriangles.Ellipse (fidélité
@@ -106,8 +110,7 @@ namespace Symbiose
 			return px < 1.5f ? 4 : px < 4f ? 6 : max;
 		}
 
-		private Color FleurDe() =>
-			(Palettes.TryGetValue(_structure.SpeciesName, out var pal) ? pal : DefaultPalette).Flower;
+		private Color FleurDe() => PaletteIndividu().Flower;   // la fleur de CE pied (caractères ⑥)
 
 		// Petits points serrés autour du sommet.
 		private void PoserBouquet(Vector2 c, float r, Color col, int graine, int n)
@@ -133,7 +136,7 @@ namespace Symbiose
 		private void PoserChapelet(Vector2 pied, Vector2 sommet, float r, Color col, int graine)
 		{
 			float pix = PixelInterne;
-			if (!Palettes.TryGetValue(_structure.SpeciesName, out var pal)) pal = DefaultPalette;
+			var pal = PaletteIndividu();   // palette de CE pied (caractères ⑥)
 			PoserBouquet(sommet, r, pal.Flower, graine, 4);
 			Color sil = Ton(pal.FruitUnripe, 3), fil = Ton(pal.FruitUnripe, 1);
 			float s = Mathf.Max(r * 1.3f, pix);
@@ -167,7 +170,7 @@ namespace Symbiose
 		private void PoserOmbelle(Vector2 pied, Vector2 sommet, float r, Color col, int graine)
 		{
 			float pix = PixelInterne;
-			if (!Palettes.TryGetValue(_structure.SpeciesName, out var pal)) pal = DefaultPalette;
+			var pal = PaletteIndividu();   // palette de CE pied (caractères ⑥)
 			Vector2 foyer = sommet.Lerp(pied, 0.12f);
 			if (AuPalier(PaliersHautsMinZoom))
 				for (int k = 0; k < 7; k++)

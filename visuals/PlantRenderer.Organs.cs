@@ -111,6 +111,14 @@ namespace Symbiose
 				_automne = new Color[automne.Length];
 				for (int i = 0; i < automne.Length; i++) _automne[i] = new Color(automne[i]);
 			}
+			// La palette d'un INDIVIDU (D139 caractères ⑥) : limbe et fleur propres, le reste de l'espèce.
+			private OrganPalette(in OrganPalette espece, Color leaf, Color flower)
+			{
+				Leaf = leaf; Flower = flower;
+				FruitUnripe = espece.FruitUnripe; FruitRipe = espece.FruitRipe;
+				_automne = espece._automne;
+			}
+			public OrganPalette Individu(Color leaf, Color flower) => new(this, leaf, flower);
 			/// <summary>Ton d'automne au hash `h` ∈ [0,1).</summary>
 			public Color Automne(float h)
 			{
@@ -263,8 +271,7 @@ namespace Symbiose
 			// Teinte automnale PAR-PLANTE (désync ③) : plus de saison globale, on lit
 			// le scalaire moteur `automne` du snapshot (② `_structure.Automne`).
 			float automne = _structure.Automne;
-			if (!Palettes.TryGetValue(_structure.SpeciesName, out var pal))
-				pal = DefaultPalette;
+			var pal = PaletteIndividu();   // palette de CE pied (caractères ⑥)
 
 			// --- FEUILLES — densité saisonnière calculée côté Python (caduc
 			// hiver → 0, on ne dessine rien). densité < 1 → SOUS-ÉCHANTILLONNAGE

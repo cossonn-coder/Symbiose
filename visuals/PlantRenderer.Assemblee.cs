@@ -209,7 +209,7 @@ namespace Symbiose
 		private void DrawFleurons(List<Touffe> touffes, float z)
 		{
 			if (_structure.Floraison < FloraisonSeuil) return;
-			if (!Palettes.TryGetValue(_structure.SpeciesName, out var pal)) pal = DefaultPalette;
+			var pal = PaletteIndividu();   // palette de CE pied (caractères ⑥)
 			Color[] rampe = RampeKit(pal.Flower);
 			int palFleur = Indexe ? PaletteIndexee.Palette(pal.Flower) : -1;
 			int palCoeur = Indexe ? PaletteIndexee.Palette(FlowerHeart) : -1;

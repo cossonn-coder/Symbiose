@@ -243,7 +243,7 @@ namespace Symbiose
 			if (s == Surface.Pruine) { DrawSemis(c, r, r * 0.55f, 6, 103, i, j, PruineColor); return; }
 			if (s == Surface.Lisse) return;
 			bool glandes = s == Surface.Glandes;
-			if (!Palettes.TryGetValue(_structure.SpeciesName, out var pal)) pal = DefaultPalette;
+			var pal = PaletteIndividu();   // palette de CE pied (caractères ⑥)
 			int n = glandes ? 8 : 10;
 			float px = PixelInterne;
 			for (int k = 0; k < n; k++)

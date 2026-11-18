@@ -58,7 +58,7 @@ namespace Symbiose
 		// Sous-couche, hampe et feuilles, dans l'ordre où elles se recouvrent.
 		private void DessinerRosette(FichePort f, Color col)
 		{
-			if (!Palettes.TryGetValue(_structure.SpeciesName, out var pal)) pal = DefaultPalette;
+			var pal = PaletteIndividu();   // palette de CE pied (caractères ⑥)
 			if (!MortPrairie && f.MelangeFruit > 0f) col = col.Lerp(pal.FruitRipe, f.MelangeFruit);
 			var (rayon, h) = MesurePort(f);
 			float g = CroissancePort(f);

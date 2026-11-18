@@ -80,7 +80,7 @@ namespace Symbiose
 		}
 
 		internal Color TonPetale =>
-			Palettes.TryGetValue(_structure.SpeciesName, out var pal) ? pal.Flower : DefaultPalette.Flower;
+			PaletteIndividu().Flower;   // caractères ⑥
 
 		private FicheFleurArbre FicheFleurs(in OrganPalette pal) =>
 			FleursArbres.TryGetValue(_structure.SpeciesName, out var f) ? f : new(1, 2, 2.5f, pal.Flower.Darkened(0.1f), pal.Flower.Darkened(0.25f));
@@ -130,7 +130,7 @@ namespace Symbiose
 		/// <summary>Paliers bas (×0,5 à ×2) : gerbes de fleurs (GerbesFleurs.cs).</summary>
 		private void DrawFleuronsHouppier()
 		{
-			if (!Palettes.TryGetValue(_structure.SpeciesName, out var pal)) pal = DefaultPalette;
+			var pal = PaletteIndividu();   // palette de CE pied (caractères ⑥)
 			DrawGerbesFleurs(pal);
 		}
 

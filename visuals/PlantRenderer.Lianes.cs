@@ -167,7 +167,7 @@ namespace Symbiose
 		private void PoserFruitsLiane(FichePort f, Vector3 collet)
 		{
 			if (f.Fruit == null || _structure.Fruits.Count == 0) return;
-			if (!Palettes.TryGetValue(_structure.SpeciesName, out var pal)) pal = DefaultPalette;
+			var pal = PaletteIndividu();   // palette de CE pied (caractères ⑥)
 			for (int i = 0; i < _structure.Fruits.Count; i++)
 			{
 				var fr = _structure.Fruits[i];

@@ -191,6 +191,7 @@ namespace Symbiose
 			brush._snow = _snow;           // variante froide (T5)
 			brush._frost = _frost;
 			CopierThermique(brush);        // posture, palier, marques (niche thermique ⑤)
+			CopierCaracteres(brush);       // couleur, guides, port, rejets, fané (caractères ⑥)
 			brush._raideur = _raideur;
 			brush._supportKind = _supportKind;
 			brush._appuiHauteurCm = _appuiHauteurCm;

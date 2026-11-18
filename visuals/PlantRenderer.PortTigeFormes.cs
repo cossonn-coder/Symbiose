@@ -93,7 +93,7 @@ namespace Symbiose
 		// couronne de rayons. Fanée (autre couleur que la fleur) : le disque de graines seul.
 		private void PoserSoleil(Vector2 c, float r, Color col)
 		{
-			if (!Palettes.TryGetValue(_structure.SpeciesName, out var pal)) pal = DefaultPalette;
+			var pal = PaletteIndividu();   // palette de CE pied (caractères ⑥)
 			c += new Vector2(r * 0.35f, r * 0.2f);
 			float ry = r * 0.8f;
 			Color coeur = Ton(pal.FruitRipe, 1);

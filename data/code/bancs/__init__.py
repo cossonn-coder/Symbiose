@@ -35,6 +35,7 @@ from . import sol_canvas as _sol_canvas
 from . import objet_en_main as _objet_en_main
 from . import gestes_lisibles as _gestes_lisibles
 from . import niche_thermique as _niche_thermique
+from . import caracteres_vivants as _caracteres_vivants
 
 BANCS = {
     "secheresse_sable": secheresse_sable,
@@ -84,6 +85,8 @@ BANCS = {
     # niche thermique ⑤ (D139) : canicule (soleil sec / arrosé / ombre) + automne
     # (basilic nu / paillé / voilé, mâche, seigle).
     "niche_thermique": _niche_thermique.niche_thermique,
+    # caractères vivants ⑥ (D139) : une rangée par signe visible, triée par le caractère.
+    "caracteres_vivants": _caracteres_vivants.caracteres_vivants,
 }
 
 # Hook POST-INIT par banc (palette de gestes ⑤) : callback OPTIONNEL `(game_state,
@@ -183,7 +186,10 @@ BANC_WEEK_DEPART = {"grimpantes": 9, "luxuriance": 9, "diversite_fondatrice": 9,
                     # `niche_thermique` (D139 ⑤) : s20 + warmup court (BANC_WARMUP) → la vue
                     # ouvre en s22, deux semaines avant la canicule du seed 42 (s24) ; la
                     # canicule de s16 est passée avant la plantation, l'automne suit.
-                    "niche_thermique": 20}
+                    "niche_thermique": 20,
+                    # `caracteres_vivants` (D139 ⑥) : même départ que `lignees` → la vue
+                    # ouvre en s22, bourraches et phacélies en fleur, tomates nouées.
+                    "caracteres_vivants": 10}
 
 # WARMUP F5 par banc (niche thermique ⑤) : semaines que la vue simule avant le premier
 # dessin, à la place de son défaut (`WorldView.WarmupWeeks`, 12). Le pont le renvoie à

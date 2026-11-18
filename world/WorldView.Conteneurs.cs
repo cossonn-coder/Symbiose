@@ -206,6 +206,11 @@ namespace Symbiose
 					renderer.PlageThermique = PlanteLue.LirePlage(p["plage_thermique"].AsGodotDictionary());
 				if (p.ContainsKey("fecondation"))   // lignée vécue, survol G (caractères ⑤, 0.6.20)
 					renderer.FecondationVecue = PlanteLue.LireFecondation(p["fecondation"].AsGodotDictionary());
+				// Signes des caractères (D139 ⑥) : couleur, guides, port, rejets, fané sans graines.
+				renderer.SetCaracteres(
+					p.ContainsKey("signes_car") ? SignesCaracteres.Lire(p["signes_car"].AsGodotDictionary()) : null,
+					p.ContainsKey("rejets") ? (float)p["rejets"].AsDouble() : 0f,
+					p.ContainsKey("sans_graines") && p["sans_graines"].AsBool());
 				nodes.Add(renderer);
 			}
 			return nodes;

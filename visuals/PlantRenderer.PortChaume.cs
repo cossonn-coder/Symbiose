@@ -25,7 +25,7 @@ namespace Symbiose
 		private void DessinerChaume(FichePort f, Color col)
 		{
 			FicheChaume c = f.Chaume;
-			if (!Palettes.TryGetValue(_structure.SpeciesName, out var pal)) pal = DefaultPalette;
+			var pal = PaletteIndividu();   // palette de CE pied (caractères ⑥)
 			var (rayon, h) = MesurePort(f);
 			float g = CroissancePort(f);
 			int ig = GraineIndividu;

@@ -179,7 +179,7 @@ namespace Symbiose
 			bool fruit = f.Fruit == null && _structure.Organ.StartsWith("fruit", System.StringComparison.Ordinal);
 			if (MortPrairie || _structure.Rabattu > RabattuTete
 				|| (_structure.Floraison < (f.Fruit != null ? FloraisonSeuil : FloraisonHampe) && !fruit)) return;
-			if (!Palettes.TryGetValue(_structure.SpeciesName, out var pal)) pal = DefaultPalette;
+			var pal = PaletteIndividu();   // palette de CE pied (caractères ⑥)
 			Color tete = _structure.Floraison >= FloraisonSeuil ? pal.Flower : fruit ? pal.FruitRipe : pal.FruitUnripe;
 			// Le « pied » d'une tête allongée (épi, ombelle) : sous le sommet, dans le sens de la tige.
 			float sousTete = epiCm * WorldView.PxPerCmZ;

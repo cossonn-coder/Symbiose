@@ -37,8 +37,8 @@ Départ = hash de fin du sprint ②. ①, ①b (deux fois : scénario puis méca
 | ② | `02_fruits_comestibilite.md` — taille des fruits, appétence feuille/fruit, Vigueur négative | **FAIT** (2026-11-18, commit `0134bd5`) — voir §② |
 | ③ | `03_feuille_gestes.md` — coriacité, repousse, bouture, dormance, dominance apicale | **FAIT** (2026-11-18, commit `bc22825`) — voir §③ |
 | ④ | `04_sol_expansion.md` — clonalité, portée, fixation, allélopathie, mycorhization | **FAIT** (2026-11-18, commit `dac1231`) — voir §④ |
-| ⑤ | `05_signes_pont.md` — export des signes visibles, voix | **FAIT côté code** (2026-11-18, non commité) — voir §⑤ |
-| ⑥ | `06_vue_banc.md` — rendu, banc `caracteres_vivants`, recette F5, clôture D139 | à faire |
+| ⑤ | `05_signes_pont.md` — export des signes visibles, voix | **FAIT** (2026-11-18, commit `5b17796`) — voir §⑤ |
+| ⑥ | `06_vue_banc.md` — rendu, banc `caracteres_vivants`, recette F5, clôture D139 | **FAIT côté code** (2026-11-18, non commité) — voir §⑥ |
 
 ## ① Fleurs — bilan (2026-11-18)
 - **Fait** : 6 caractères en queue (`plants/caracteres.py`, σ_A 0,15 ; `couleur_fleur` en
@@ -425,6 +425,55 @@ Départ = hash de fin du sprint ②. ①, ①b (deux fois : scénario puis méca
   l'automne suivant — la vue doit le croiser avec la saison / `floraison` (pas de semaine de
   fanaison au moteur). Rejets : 7 → 186 plantes de s22 à s60 (trèfle).
 
+## ⑥ Vue et banc — bilan (2026-11-18)
+- **Fait (pure vue C# + un banc, golden INTACT `db4d6b75…`, pont inchangé 0.6.20)** :
+  `core/SignesCaracteres.cs` lit `signes_car` ; `PlanteLue` lit aussi `rejets`, `sans_graines` ;
+  `PlantRenderer.SetCaracteres` (Caracteres.cs, appelé après SetStructure en pleine terre ET en
+  conteneur) pose une **palette d'individu** (`PaletteIndividu()`, remplace la palette d'espèce aux
+  27 sites de lecture des partials) : fleur = HSV(teinte arrondie à 10°, saturation à 0,1 ×
+  0,75, valeur de l'espèce → blanc chaux quand la saturation tombe), limbe assombri (mat) ou
+  éclairci (luisant) par pas de 1/8 de matité. Têtes de port (`PoserTete`) : rayon × √taille en
+  fleur, **guides** sur les corolles ouvertes dès ×8 (œil pâle < 0,35, moyen, sombre + 5 lignes
+  ≥ 0,65), **tête fanée** brune (terre 2 de la palette maître) × 0,7 ; pompons du trèfle idem.
+  Port (Tige, Buisson) : rayon dessiné × (1 − 0,4·port). Rejets : 1 à 5 pousses à 3 brins au
+  pied (dès ×4). Recuisson seulement au changement (clé quantifiée), copie vers le pinceau (Bake.cs).
+- **« Sans graines » croisé avec la saison** : loquet par pied « vu en fleur depuis le dernier
+  hiver », remis à 0 en hiver ; signe = sans_graines ∧ loquet ∧ floraison < 0,5. Limite : un pied
+  chargé d'une sauvegarde après sa floraison ne montre pas le signe cette année.
+- **Écarts au kickoff** : (a) **pas de quantification sur la palette maître** : elle n'a que 4
+  accents de fleur (rouge, jaune, rose, violet) → la bourrache n'aurait que 2 teintes, contraire
+  au « dégradé visible » (Q7). Nuancier fini à la place (10°, 0,1), via la palette indexée ;
+  (b) **`echelle_fruit` non lu** : la masse des fruits du pont porte déjà `taille_fruit`, la vue la
+  dessine (`RayonFruit`) — le relire compterait le gène deux fois ; (c) taille des fleurs et
+  guides non branchés sur les fleurs d'ARBRE (pièces d'atlas), seule la couleur l'est.
+- **Banc** `bancs/caracteres_vivants.py` (départ s10, survol G ouvert) : 64 fondateurs par
+  rangée (`founder_genes`), 8 gardés aux quantiles du caractère montré, rangés gauche → droite :
+  bourraches couleur (r0) et guides (r1), phacélies couleur (r3), tomates taille de fruit (r4),
+  basilics dominance (r5), fraisiers clonalité (r7). Mesuré à s22 [n=1, seed 42] : bourrache
+  242° → 279°, guides 0,24 → 0,74, basilic port −0,48 → +0,55, fraisier rejets 0,15 → 0,62 ;
+  phacélie saturation 0,30 → 0,16 (dégradé faible) ; **tomates en fleur sans fruit à s22** (taille
+  des fruits à juger plus tard, Turbo) ; 1 basilic et 1 tomate morts avant s22.
+- **Captures** : `planche/banc_x8.png`, `planche/bourraches_x16.png` (étoiles violettes à œil,
+  survol G). FPS du banc : **0,8 FPS** [VM llvmpipe ×8, n=1, charge ≈ 6] — non représentatif du PC.
+- Tests : voir rapport ; `dotnet build` vert. Taille : `Organs.cs` 318 LDC (🟡, 312 avant),
+  `Prairie.cs` 301 (🟡, 299), `Caracteres.cs` 134, `PortTetes.cs` 152, `Ports.cs` 201.
+
+## Recette F5 (sprint entier) — banc `caracteres_vivants`, puis monde `full`
+1. Banc, ×8 puis ×16 : rangée 0 de la bourrache, la plus bleue à gauche, la plus rose à droite ;
+   le dégradé se voit-il d'un pied à l'autre ? Trop cru, trop terne (`SaturationVue` 0,75) ?
+2. Rangée 1 : œil pâle à gauche, œil sombre + lignes à droite (dès ×8). Lisible ?
+3. Rangée 3 phacélies : lavande → blanc (dégradé faible attendu, saturation de l'axe faible).
+4. Rangée 5 basilics : buisson large à gauche, flèche étroite à droite (±40 %). Assez marqué ?
+5. Rangée 7 fraisiers : de plus en plus de petites pousses au pied vers la droite.
+6. Feuilles : d'un pied à l'autre, plus mates/sombres ou plus claires — visible sans être bruit ?
+7. Tomates (r4) : Turbo jusqu'aux fruits ; gros fruits peu nombreux à droite.
+8. Survol G : groupes, « couleur sur l'axe », « goût », ligne fécondation · pollen donné · autofécondées.
+9. Monde `full`, été-automne : achillée, minette, pissenlit, trèfle aux têtes **brunes rabougries**
+   (fané sans graines) ; disparues l'hiver, pas réapparues avant la floraison suivante.
+10. Manger une feuille de tomate → « le ventre se noue », note de carnet à la 1ʳᵉ bouchée seulement.
+11. Carnet : « a fané sans graines » ; encyclopédie : concept « comestibilité », pollinisation N3.
+12. Calibrages ①-④ à juger (cf. §REPRISE).
+
 ## Conception FÉCONDATION (trou du ①) — ARBITRÉE et FIGÉE (Nico, 2026-11-18)
 Doc : `docs/vegetal/genetique/conception_caracteres_vivants.md` §6. Diagnostic : le nombre de
 graines ne dépendait ni des visites, ni ne faisait le nombre de descendants (annuelles
@@ -443,12 +492,10 @@ sans archétype : pool jamais levé) ; le père était le plus proche ; `pollen_
 Tronçons insérés avant ② : `01b_fecondation.md`, `01c_paternite.md`, `01d_levee_graines.md`.
 
 ## REPRISE
-⑤ fait côté code (non commité, golden INTACT `db4d6b75…`, pont 0.6.20). Lire `CLAUDE.md`, ce
-fichier, puis le kickoff du premier tronçon « à faire » (⑥ : rendu des signes `signes_car`,
-`rejets`, `sans_graines`, banc, F5). Points à arbitrer : `RESSEMIS_DENSITE_REF` (écart ①d),
-extinction des annuelles ressemées sous la flore férale, mode de pollinisation du pâturin
-annuel (amplifié par S3), pollen déposé/crédité après la fanaison (côtés femelle ET mâle),
-calibrage du goût (`PERTE_TOXIQUE`, `1 + a`) (②), dominance sans « fleurs latérales » au
-moteur et repousse non lue par la récolte (③), trèfle très clonal au smoke et coût payé par
-les espèces qui n'expriment pas le caractère (④), signe « sans graines » qui dure jusqu'à
-l'automne suivant (⑤).
+**Sprint CLOS côté code** (⑥ non commité, golden INTACT `db4d6b75…`, pont 0.6.20) → **F5 de Nico**
+(recette ci-dessus). D139 close côté code (DETTE/BACKLOG mis à jour). Points à arbitrer au F5 :
+`RESSEMIS_DENSITE_REF` (①d), extinction des annuelles ressemées sous la flore férale, mode de
+pollinisation du pâturin annuel, pollen déposé/crédité après la fanaison, calibrage du goût (②),
+dominance sans « fleurs latérales » et repousse non lue par la récolte (③), trèfle très clonal et
+coût payé par les espèces qui n'expriment pas le caractère (④), nuancier de fleurs hors palette
+maître et `echelle_fruit` non lu (⑥).

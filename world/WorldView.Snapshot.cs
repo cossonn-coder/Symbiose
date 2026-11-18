@@ -239,7 +239,8 @@ namespace Symbiose
 		///  · Emitteur (D67, 0.5.21) : teinte de l'overlay F9 seulement ;
 		///  · Abri (0.5.44) : facteur d'abri au vent, défaut 1 ;
 		///  · Posture / PalierTh (0.6.18) : port et teinte thermiques, défaut confort ;
-		///  · Plage (0.6.19) : plage vivable en °C pour le survol G (debug).
+		///  · Plage (0.6.19) : plage vivable en °C pour le survol G (debug) ;
+		///  · Signes / Rejets / SansGraines (0.6.20) : caractères visibles (D139 ⑥).
 		/// Clés absentes (snapshot ancien) → défauts neutres, aucun crash.</summary>
 		private void MajPlante(PlantRenderer node, PlanteLue l)
 		{
@@ -254,6 +255,7 @@ namespace Symbiose
 			node.SetThermique(l.Posture, l.PalierTh);   // port + teinte du palier (niche thermique ⑤)
 			node.PlageThermique = l.Plage;     // plage vivable °C, survol G seulement (0.6.19)
 			node.FecondationVecue = l.Fecondation;   // lignée vécue, survol G seulement (0.6.20)
+			node.SetCaracteres(l.Signes, l.Rejets, l.SansGraines);   // signes des caractères (D139 ⑥)
 			node.SetSupport(l.SupportKind, l.SupportHauteurCm, l.SupportDxCm, l.SupportDyCm);   // accroche (grimpantes ⑥, FORMES ⑥)
 			node.SetSilhouette(l.Silhouette);  // forme au LOD couronne (luxuriance ⑥)
 			node.SetStrate(l.Strate);          // port arbre/grimpante (paliers bas, D106 T5)

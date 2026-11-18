@@ -39,6 +39,11 @@ namespace Symbiose
 		public float[] Plage;
 		// Lignée vécue (pont 0.6.20, D139 caractères ⑤) : [fec, donne, auto], survol G.
 		public float[] Fecondation;
+		// Signes des caractères (pont 0.6.20, D139 caractères ⑥) : constants (null = ancien
+		// serveur ou plante morte), rejets au pied ∈ [0, 1], fleurs fanées sans graines.
+		public SignesCaracteres Signes;
+		public float Rejets;
+		public bool SansGraines;
 		public readonly List<(string Cause, float Intensite)> Symptomes = new();
 
 		// Clé stable d'une plante = tuile + espèce + position. Culture INVARIANTE :
@@ -98,6 +103,10 @@ namespace Symbiose
 				using (var pl = LectureSnap.Dico(p, "plage_thermique")) l.Plage = LirePlage(pl);
 			if (LectureSnap.A(p, "fecondation"))
 				using (var fc = LectureSnap.Dico(p, "fecondation")) l.Fecondation = LireFecondation(fc);
+			if (LectureSnap.A(p, "signes_car"))
+				using (var sc = LectureSnap.Dico(p, "signes_car")) l.Signes = SignesCaracteres.Lire(sc);
+			if (LectureSnap.A(p, "rejets")) l.Rejets = LectureSnap.F(p, "rejets");
+			l.SansGraines = LectureSnap.A(p, "sans_graines") && LectureSnap.B(p, "sans_graines");
 			return l;
 		}
 
