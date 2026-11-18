@@ -21,11 +21,13 @@ pas avant, pas après. La forme générale est une rampe :
 
 Deux régimes (depuis le tronçon ②) :
 - CHRONIQUE : détecteurs PURS recalculés à la volée (état persistant relu).
-- ÉVÉNEMENTIEL : marques maladie/gel/grêle MÉMORISÉES et décroissantes sur la
+- ÉVÉNEMENTIEL : marques maladie/gel/grêle (+ froid/brûlure, niche thermique ④) MÉMORISÉES et décroissantes sur la
   plante (PlantInstance.symptom_marks), écrites par les ReduceHealth à cause typée
   et estompées au tick. L'agrégateur `leaf_symptoms` FUSIONNE les deux avant le tri.
 Cette fusion ne CHANGE pas le golden : les marques ne sont pas dans _PLANT_ATTRS et
 ne rebouclent jamais sur santé/croissance — pur affichage (cf. §5 conception).
+La gamme CONTINUE froid → confort → chaud (posture thermique par paliers) vit à part,
+dans `sim/engine/posture_thermique.py` (elle relit les pentes de dégât du moteur).
 """
 from __future__ import annotations
 
@@ -220,7 +222,12 @@ PRIORITE = {
     # cachée : juste après le ravageur foliaire (même famille de morsure), avant les
     # carences lentes (chlorose/ombre/sénescence).
     "rongeur_racinaire": 3.5,
-    "gel": 4, "grele": 5, "chlorose": 6, "ombre": 7, "senescence": 8,
+    "gel": 4,
+    # Niche thermique ④ (D139) : FROID sans gel (tissu translucide, détrempé) juste
+    # après le gel (même famille, plus lent) ; BRÛLURE (échaudage) dégât aigu de
+    # canicule, rangée près de la sécheresse dont elle est le prolongement au soleil.
+    "froid": 4.5, "brulure": 1.5,
+    "grele": 5, "chlorose": 6, "ombre": 7, "senescence": 8,
     # L'acclimatation est une RÉPONSE (durcissement), pas une souffrance : à
     # intensité égale on montre toujours d'abord le signe de DÉGÂT, le durcissement
     # en dernier (le moins urgent à diagnostiquer).

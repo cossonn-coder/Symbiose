@@ -205,6 +205,11 @@ class PlantInstance:
     # ses autres lecteurs du même tick : `heat_memory`, brûlure, nouaison (D139 ③).
     # None = pas encore calculée (plante née ce tick). Hors `_PLANT_ATTRS`.
     t_feuille: float | None = None
+    # NUIT LA PLUS FROIDE de la semaine au plot de la plante (°C), posée par
+    # `_tick_nuit_froide` (D139 ④) pour la SÉMIOLOGIE seule (`posture_thermique`) :
+    # le snapshot n'a pas la météo de la semaine. Lue par AUCUN code du tick (le gel
+    # et le froid relisent leur propre calcul) → pur affichage, hors `_PLANT_ATTRS`.
+    t_nuit: float | None = None
     # Dose de pollen conspécifique reçue (arc pollinisation, tronçon ③ — §B.1/§F.4).
     # Accumulateur PAR plante : incrémenté à CHAQUE dépôt d'un butineur (§F)
     # transportant du pollen de la MÊME espèce (constance florale mécanique), non

@@ -891,7 +891,14 @@ from __future__ import annotations
 #       lignee: {fixee, melangee}} (table constante, `genes_pont.py`) : le survol G écrit
 #       chaque gène dans son unité et classe la lignée. Lecture pure, golden neutre
 #       (snapshot comparé avant/après : seules `caracteres` et `F` s'ajoutent).
-ENGINE_VERSION = "0.6.17"
+# 0.6.18 (NICHE THERMIQUE ④, D139) : chaque plante vivante (pleine terre et conteneur)
+#       gagne `posture_thermique` ∈ [−1, 1] (3 déc. ; < 0 froid, > 0 chaud, 0 confort) et
+#       `palier_thermique` ∈ {pendant, violace, froid, gel, effondre, replie, fletri_midi,
+#       bords_jaunis, brulure} ou null (feuilles étalées) — `sim/engine/posture_thermique.py`.
+#       `leaf_symptoms` peut porter les marques neuves `froid` et `brulure`. La légende
+#       (`legende`) et `observer` connaissent les 8 signes thermiques neufs. Clés neuves,
+#       golden neutre (snapshot comparé avant/après).
+ENGINE_VERSION = "0.6.18"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

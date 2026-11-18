@@ -49,6 +49,9 @@ from sim.engine.transpiration import feuillage_visible
 # par la liste `leaf_symptoms`. Recalcul pur côté serveur (moteur = source de
 # vérité, zéro recalcul C#) → golden NEUTRE.
 from sim import semiologie
+# Posture thermique par paliers (niche thermique ④, D139) : froid → confort → chaud,
+# lue sur les limites et pentes de dégât du moteur. Lecture pure → golden NEUTRE.
+from sim.engine.posture_thermique import etat_thermique
 # Légende des signes (PLANTE ASSEMBLÉE ⑥, 0.5.46) : ce que le joueur a APPRIS
 # (signes, bêtes), lecture pure → l'info-bulle à deux niveaux de la vue (⑦).
 from sim.signes import appris as signes_appris
@@ -260,6 +263,9 @@ class SerializeMixin:
                 # vide = plante saine. Lecture pure → golden NEUTRE (espèces neutres du
                 # smoke, sols drainants : aucun symptôme).
                 base["leaf_symptoms"] = semiologie.leaf_symptoms(p, eco, saison)
+                # Posture thermique ∈ [−1, 1] (froid < 0 < chaud) + palier nommé
+                # (None = feuilles étalées) — la vue la dessine en port de feuille (⑤).
+                base["posture_thermique"], base["palier_thermique"] = etat_thermique(p, eco)
                 foliage_density = cls.foliage_density_at(p, saison)
                 base["foliage_density"] = round(foliage_density, 3)   # jauge [0,1] (③)
                 # ÉMETTEUR d'ombre (LOD D67, ③) : miroir EXACT de la métrique de
@@ -623,6 +629,7 @@ class SerializeMixin:
                     pd["vitalite"] = round(p.vitalite, 3)
                     pd["etat"] = p.etat
                     pd["leaf_symptoms"] = semiologie.leaf_symptoms(p, eco, saison)
+                    pd["posture_thermique"], pd["palier_thermique"] = etat_thermique(p, eco)
                     pd["fruits"] = [{"segment": f.segment_id, "maturite": f.maturite,
                                      "masse": f.masse, "nombre": f.nombre}
                                     for f in p.fruits]

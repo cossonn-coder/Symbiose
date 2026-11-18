@@ -33,7 +33,7 @@ large** (dates de mort des annuelles) · ④ INTACT · ⑤ INTACT.
 | ① | `01_temperatures_extremes.md` — nuit la plus froide, jour le plus chaud, T_feuille | **FAIT** 2026-11-18 (`8c55f4a`) |
 | ② | `02_niche_caracteres.md` — niches des 52 espèces, 3 caractères, plasticité, coût | **FAIT** 2026-11-18 (non commité) |
 | ③ | `03_reponse_mort.md` — dégâts gradués, fin de la mort calendaire, fin de cycle | **FAIT** 2026-11-18 (non commité) |
-| ④ | `04_signes.md` — posture thermique et marques, voix | à faire |
+| ④ | `04_signes.md` — posture thermique et marques, voix | **FAIT** 2026-11-18 (non commité) |
 | ⑤ | `05_vue.md` — postures et teintes, banc `niche_thermique`, recette F5 | à faire |
 
 ## ① FAIT (2026-11-18)
@@ -152,8 +152,34 @@ large** (dates de mort des annuelles) · ④ INTACT · ⑤ INTACT.
   an 10 : +0,065 vs −0,372. Cible ≥ +1 °C **non atteinte** sur les semis ; la population
   vivante, elle, dérive de ≈ +0,95 °C [1 seed].
 
+## ④ FAIT (2026-11-18)
+- `sim/engine/posture_thermique.py` : `etat_thermique(plant, eco)` → (posture ∈ [−1, 1],
+  palier | None). Froid (nuit) : pendant (1ʳᵉ limite + 3 °C, = max(lim_froid, lim_gel)) →
+  violacé (× (1 + `cold_memory`)) → `froid` translucide (< lim_froid) → `gel` noirci
+  (< lim_gel) → effondré (gel + vitalité ≤ 1/3). Chaud (T_feuille) : replié (lim_chaud − 3)
+  → flétri à midi (× (1 + `soif`)) → bords jaunis (> lim_chaud) → `brulure` (> lim_brul).
+  Bandes de 0,25 ; rampes pleines à 1 point de dégât/sem. (`1/FROID_LESION_K`,
+  `FROST_SEVERITY_REF`, `1/BRULURE_K`) ; les marques prolongent les paliers de dégât.
+- **Écart au kickoff** : module dans `sim/engine/` et non `sim/semiologie.py` — il relit
+  les pentes de `reponse_thermique` et `feuille.soif` ; `sim/` n'importe pas `sim.engine`
+  (couches). Nuit mémorisée `plant.t_nuit` par `_tick_nuit_froide` (hors digest, lue par
+  aucun code du tick : le snapshot n'a pas la météo de la semaine) ; T_feuille = `t_feuille`
+  du ③. Palier nommé « pendant » (accord de « feuilles pendantes »).
+- Marques `froid` (prio 4,5) et `brulure` (1,5) dans `PRIORITE` → `leaf_symptoms`.
+- Corpus `sim/signes_corpus_thermique.py` (fusionné dans `SIGNES`) : froid, brulure +
+  6 paliers (pendant, violace, effondre, replie, fletri_midi, bords_jaunis), concept
+  `météo` → carnet D/I, encyclopédie, `observer` et `legende` les connaissent d'office.
+  1ʳᵉ observation = dédup existante (espèce, signe, **saison**) — pas « par vie ».
+- Pont **0.6.18** : `posture_thermique` + `palier_thermique` (pleine terre et conteneurs).
+  Snapshot smoke comparé HEAD/après (sem. 3 et 30) : seules ces 2 clés s'ajoutent.
+- Smoke 104 sem. [seed 42] : 2 233 plante·semaines ; replié 265, bords jaunis 125,
+  effondré 2, pendant 1 ; côté froid quasi muet (les cultures tendres meurent en S1-3).
+  Pommier « bords jaunis » à T_f 32,9 °C en S15 (lim_chaud du ②, à regarder).
+- Tests : `test_posture_thermique` (neuve, 17/17) ; `test_signes_legende` mis à jour
+  (13 signes + 6 paliers, météo p3 = tous les signes météo ; 43/43) ; versions 0.6.18 dans `tests/simserver/` (voix, delta, conteneurs, structures). 119 suites vertes (hors `test_peripherie`, préexistant). Golden INTACT `88cca899…`.
+
 ## REPRISE
-Lire `CLAUDE.md`, ce fichier, puis le kickoff du premier tronçon « à faire » (④).
+Lire `CLAUDE.md`, ce fichier, puis le kickoff du premier tronçon « à faire » (⑤).
 
 ## Report du sprint ① (génétique infinitésimale, décision Nico 2026-11-16)
 La réponse à la sélection sur `germination_thermique` (banc

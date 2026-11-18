@@ -18,9 +18,8 @@ La plante répond à SA plage vivable (D139, sprint niche thermique ③).
 
 Le moteur ne tue pas, la plante meurt (décision T1) : aucun verdict, une érosion de la
 vitalité ∝ l'écart à la limite, passée par `ReduceHealth` (→ `erode`, constitution
-d'espèce, marque de symptôme `gel`/`froid`/`brulure` pour la sémiologie). Les marques
-`froid` et `brulure` sont posées dès le ③ mais `leaf_symptoms` les ignore tant
-qu'elles n'ont ni priorité ni corpus (tronçon ④, signes par paliers).
+d'espèce, marque de symptôme `gel`/`froid`/`brulure` pour la sémiologie). Les signes
+par paliers (④) se lisent dans `posture_thermique.py`, sur les MÊMES limites et pentes.
 
 Mixin hérité par l'`Engine` (boucle.py). Déterministe, zéro RNG (philo #3).
 """
@@ -52,6 +51,10 @@ class ReponseThermiqueMixin:
                 for p in tile.plants if p.is_alive}
         if not nuit:
             return log
+        # Mémorisée pour les SIGNES (④, `posture_thermique`) — jamais relue au tick.
+        for p in tile.plants:
+            if p.is_alive:
+                p.t_nuit = nuit[id(p)]
 
         # 1. GEL — sévérité ∝ (lim_gel − nuit) / FROST_SEVERITY_REF, médiée par le
         #    couvert local dans `_mediated_damage` (paillage, voile). Plus de filtre

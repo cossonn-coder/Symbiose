@@ -3,13 +3,14 @@ SYMBIOSE — sim/signes_corpus.py
 CORPUS de la LÉGENDE DES SIGNES (sprint PLANTE ASSEMBLÉE ⑥, décision 4).
 Spec : `docs/rendu/pixelart/conception_plante_assemblee.md` §3 (décision 4) + §4.4.
 
-DONNÉE ÉDITORIALE PURE (aucun import, aucun état) : ce que le joueur VOIT d'un
+DONNÉE ÉDITORIALE PURE (aucun état ; seul import : le corpus thermique, même nature) : ce que le joueur VOIT d'un
 signe ou d'une bête AVANT de l'avoir appris, et ce qu'il en comprend APRÈS. Lu par
 `sim/signes.py` (observation, « appris »), `sim/carnet.py` (gabarits de la note) et
 `sim/encyclopedie.py` (fiche « signe »). Jamais lu par le tick → golden NEUTRE.
 
-Pour chacun des 11 signes de `sim/semiologie.py` (8 détecteurs chroniques +
-3 marques événementielles maladie/gel/grele) :
+Pour chacun des 13 signes de `sim/semiologie.py` (8 détecteurs chroniques +
+5 marques événementielles maladie/gel/grele/froid/brulure) et des 6 paliers de
+posture thermique (`sim/engine/posture_thermique.py`, corpus `signes_corpus_thermique`) :
   - `vu`      : ce qu'on VOIT, sans la cause (info-bulle descriptive, philo #5).
                 Doit coller à ce que DESSINE la vue (`PlantRenderer.cs` teintes de
                 symptôme ; `PlantRenderer.PaliersHauts.cs` marques ×16 : bord
@@ -185,6 +186,12 @@ SIGNES: dict[str, dict] = {
         },
     },
 }
+
+# Gamme THERMIQUE par paliers (niche thermique ④, D139) : marques `froid`/`brulure`
+# et paliers de posture, corpus à part (même schéma), fusionnés ici — source unique
+# pour `signes.py`, `carnet.py` et `encyclopedie.py`.
+from sim.signes_corpus_thermique import SIGNES_THERMIQUES   # noqa: E402
+SIGNES.update(SIGNES_THERMIQUES)
 
 # Description VISIBLE de chaque bête de la vie macro (clés de `FAUNE_ENCYCLO`), sans
 # son nom : ce que voit le naturaliste débutant. Le nom vient avec l'apprentissage.

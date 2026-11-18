@@ -4,7 +4,8 @@ Légende des signes côté Python (sprint PLANTE ASSEMBLÉE ⑥).
 Spec : `docs/rendu/pixelart/conception_plante_assemblee.md` §4.4 + kickoff
 `sprints/rendu/pixelart/sprint_plante_assemblee/06_signes_python.md`.
 
-  A. Exhaustivité : les 11 signes de `semiologie` et toutes les bêtes de
+  A. Exhaustivité : les 13 signes de `semiologie` (+ 6 paliers de posture
+     thermique, niche thermique ④) et toutes les bêtes de
      `FAUNE_ENCYCLO` ont leur corpus ; concepts existants ; aucun signe ne collide
      avec une clé classée par `encyclopedie_types.type_de`.
   B. Observation → une entrée ledger `kind="signe"` ; dédup (espèce, signe, saison) ;
@@ -21,6 +22,7 @@ from sim import carnet, encyclopedie, maitrise, semiologie
 from sim import signes as SG
 from sim import encyclopedie_types as ET
 from sim.signes_corpus import SIGNES, FAUNE_VU
+import sim.engine.posture_thermique as PT
 from sim.concept_corpus import FICHES_CONCEPT
 from sim.pages_corpus import PAGES
 from fields.faune_encyclo import FAUNE_ENCYCLO
@@ -42,12 +44,17 @@ def _poser_palier(gs, objet, p):
 
 def test_exhaustivite():
     print("\n[A] corpus exhaustif")
-    attendus = {c for c, _ in semiologie.DETECTEURS} | {"maladie", "gel", "grele"}
-    check("11 signes attendus", len(attendus) == 11, sorted(attendus))
-    check("corpus = exactement les 11 signes", set(SIGNES) == attendus,
-          sorted(set(SIGNES) ^ attendus))
+    marques = {"maladie", "gel", "grele", "froid", "brulure"}
+    attendus = {c for c, _ in semiologie.DETECTEURS} | marques
+    check("13 signes attendus", len(attendus) == 13, sorted(attendus))
+    # Paliers de posture thermique (④) : ce ne sont pas des `leaf_symptoms`, mais des
+    # signes observables ; translucide/noirci/brûlé SONT les marques froid/gel/brulure.
+    postures = set(PT.PALIERS) - marques
+    check("6 paliers de posture hors marques", len(postures) == 6, sorted(postures))
+    check("corpus = 13 signes + 6 paliers", set(SIGNES) == attendus | postures,
+          sorted(set(SIGNES) ^ (attendus | postures)))
     check("toutes les causes de PRIORITE ont un corpus",
-          set(semiologie.PRIORITE) == set(SIGNES))
+          set(semiologie.PRIORITE) == attendus and set(semiologie.PRIORITE) <= set(SIGNES))
     complet = all(s["vu"] and s["concept"] and set(s["fiche"]) == {1, 2, 3}
                   and set(s["carnet"]) == {"descriptif", "interprétatif"}
                   for s in SIGNES.values())
@@ -109,7 +116,9 @@ def test_appris():
     check("vide au départ", SG.appris(gs, P) == {"signes": [], "faune": [], "champignons": {}})
     check("lecture pure (aucune clé créée)", gs == {})
     _poser_palier(gs, "météo", 3)
-    check("météo p3 → gel + grêle appris", SG.appris(gs, P)["signes"] == ["gel", "grele"],
+    meteo = [s for s in SIGNES if SIGNES[s]["concept"] == "météo"]
+    check("météo p3 → gel, grêle et signes thermiques appris",
+          SG.appris(gs, P)["signes"] == meteo and {"gel", "grele", "froid"} <= set(meteo),
           SG.appris(gs, P))
     _poser_palier(gs, "coccinelle", 1)
     check("bête au palier 1 → pas apprise", SG.appris(gs, P)["faune"] == [])
@@ -153,7 +162,7 @@ def test_pont():
           notes["ok"] and any("liseré brun-noir" in n["texte"] for n in notes["entrees"]),
           [n["texte"] for n in notes.get("entrees", [])][-2:])
     lg = s.send(cmd="legende")
-    check("legende : 11 signes + toute la faune (vu)",
+    check("legende : tous les signes + toute la faune (vu)",
           lg["ok"] and set(lg["signes"]) == set(SIGNES) and set(lg["faune"]) == set(FAUNE_ENCYCLO)
           and lg["signes"]["gel"]["vu"] == SIGNES["gel"]["vu"])
     check("legende : nom de cause court (⑦ info-bulle apprise)",
@@ -167,8 +176,8 @@ def test_pont():
     ap = s.send(cmd="snapshot")["snapshot"]["player"]["appris"]
     # INFO-BULLE DU VIVANT ③ : palier3 crédite aussi les champignons (en dernier,
     # par espèce depuis le sol qui respire ⑤).
-    check("après palier3 : 11 signes + toute la faune + les 13 champignons",
-          len(ap["signes"]) == 11
+    check("après palier3 : 19 signes + toute la faune + les 13 champignons",
+          len(ap["signes"]) == 19
           and ap["faune"] == [*FAUNE_ENCYCLO, *REGISTRE_FONGIQUE]
           and set(ap["champignons"]) == set(REGISTRE_FONGIQUE), ap)
     s.send(cmd="quit")
