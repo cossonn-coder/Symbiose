@@ -41,7 +41,7 @@ chez achillée, haricot, phacélie, pommier, tournesol, trèfle (gènes muets `p
 |---|---|---|
 | ① | `01_paturin_genes_muets.md` — pâturin + gènes muets | **FAIT** 2026-11-18 (golden re-figé `98a050cf…`) |
 | ② | `02_froid_tendres.md` — borne du gel, audit des tendres, chronique | **FAIT** 2026-11-18 (golden re-figé `25671775…`) |
-| ③ | `03_monde_full_complet.md` — semaine 10, 52 espèces mûres, garde-fou, perf | à faire |
+| ③ | `03_monde_full_complet.md` — semaine 10, 52 espèces mûres, garde-fou, perf | **FAIT** 2026-11-18 (golden intact) |
 | ④ | `04_semis_interieur_repiquer.md` — pot dans la maison + `repiquer` | à faire |
 | ⑤ | `05_automate_repiquage.md` — repiquage différé par l'automate | à faire |
 | ⑥ | `06_vue_banc.md` — palette, pots visibles, banc `depart_jardin`, clôture | à faire |
@@ -73,5 +73,37 @@ chez achillée, haricot, phacélie, pommier, tournesol, trèfle (gènes muets `p
 - Tests : `test_niche_thermique` [1b] (30/30), `test_chronique` (froid/gel sans en-tête).
 - À noter : `brûlure (feuille échaudée)` tombe encore en `autre` (hors périmètre).
 
+## Acquis du ③
+- `sim/monde_complet.py` (neuf) : `SEMAINE_OUVERTURE = 10`, `AGE_ARBRES_DEMO` (déplacé de
+  commands.py), table `PLACEMENTS` (45 plantes : 7 arbres + 38 herbacées, plots libres,
+  niche par tuile), `SEMIS_OUVERTURE` (6 `GrainEnAttente` tuile S, dont haricot/courgette),
+  `ouvrir_monde_complet(tiles, seed, semaine)`, `especes_matures(tiles)`.
+  Herbacées : dernier stade + 1 an de squelette (lianes 3 ans, patron `planche_especes`) ;
+  arbres : âge = max(11, `maturity_years`) (charme 11 → 15, chêne 25, hêtre 30, sapin 20,
+  noyer 15). Pré-croissance prolongée de `semaine − 1` semaines (calendrier continu).
+- `cmd_init` : `start_week` calculé AVANT la fabrique ; `full` ET `propre` (même monde,
+  décidé) ouvrent en s10 ; `_pre_vieillir_ligneux` remplacé par `ouvrir_monde_complet`
+  (logique déplacée, pas perdue). `main.py` et le smoke intouchés.
+- Garde-fou : `tests/test_monde_full_complet.py` (7/7 ; « ajouter <espèce> au monde full »,
+  vérifié en retirant le thym). `tests/simserver/base.py` : 91 → 136 plantes posées.
+  `test_fleurs_lisiere` [5] : départ `week: 1` épinglé (son calendrier « mai-juin après
+  15 pas » datait du départ s1). Suites `full` toutes vertes (test_sim_server 349/349).
+- Vérifié : rien n'assume `week == 1` au 1er tick (chronique `_an` et `perf_annees`
+  en semaines absolues ; 1ʳᵉ année de bilan = s10-s52, plus courte).
+- Perf [3 paires alternées, charge VM 1,1-1,7 / 16 cœurs] : tick s10-s30 477 → 616 ms
+  (+29 % [n=3, écart ±20 ms], juste sous le seuil de 30 %) ; init 1,3 → 3,8 s (×2,9 —
+  pré-croissance des arbres de 15-30 ans). Vivants à s31 : 63 → 228.
+- ⚠️ CONSTAT pour Nico (non corrigé, hors périmètre) : ouvrir en s10 provoque une
+  HÉCATOMBE d'herbivorie dans les 6 premières semaines — DÉJÀ présente sur HEAD lancé
+  à `week: 10` (91 plantes initiales → 16 vivantes à s16 ; aulnes, bouleau, charme
+  morts « herbivorie »). Au départ s1 ils restent à vitalité 1,0. Cause mesurée :
+  plantes neuves sans `stress_memory` (≈ 0,12-0,15 chez un arbre à s10 après un départ
+  s1 ; gate `pressure > stress_memory·0,5`, perturbations.py) + auxiliaires à 0 à
+  l'init (0,39 à s10 après un départ s1). Essai : amorcer `stress_memory` à la
+  perturbation locale ne suffit pas (≈ 61/136 vs ≈ 40/136 à s17). Le chêne de 25 ans
+  meurt d'herbivorie comme un semis (aucun effet de taille). Décision de design à
+  trancher (amorcer la faune de saison ? la mémoire des plantes ? l'herbivorie selon
+  la taille ?) — à verser en dette / conception, pas dans ce sprint sans accord.
+
 ## REPRISE
-Lire `CLAUDE.md`, ce fichier, puis le kickoff du premier tronçon « à faire » (③).
+Lire `CLAUDE.md`, ce fichier, puis le kickoff du premier tronçon « à faire » (④).

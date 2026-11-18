@@ -127,7 +127,9 @@ def test_butineurs():
 def test_pont():
     print("\n[5] pont")
     srv = SimServer()
-    srv.cmd_init({"config": "full", "seed": 42})
+    # Départ semaine 1 épinglé : le calendrier du test (mai-juin après 15 pas, automne
+    # après 35) date d'avant l'ouverture du `full` en semaine 10 (départ du jardin ③).
+    srv.cmd_init({"config": "full", "seed": 42, "week": 1})
     bloc = srv.cmd_step_week({})["snapshot"]["ceinture"]
     check("colonies par secteur", all("colonies" in s and "floraison" in s for s in bloc))
     gs = srv.engine.game_state

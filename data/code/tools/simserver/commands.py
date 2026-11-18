@@ -27,8 +27,9 @@ from fields.grids import GridField
 # `cmd_init`). C'est ce branchement qui fait de la vue une CONSOMMATRICE (D92).
 from fields.peripherie import generer_ceinture
 from sim.bois_initial import poser_bois_initial   # D111 ②bis : bois mort dès la semaine 0
-from sim.precroissance import pre_croitre         # D111 ②ter : structure des pré-vieillis
-from plants.perennials import PerennialWoody      # AUTOMNE VISIBLE ② : les arbres à pré-vieillir
+# Ouverture du monde de jeu (D140 C, départ du jardin ③) : 52 espèces mûres, arbres à
+# l'âge de leur 1ʳᵉ fructification, graines semées, départ semaine 10.
+from sim.monde_complet import ouvrir_monde_complet, SEMAINE_OUVERTURE
 # Registre des bancs d'essai (sprint dédié) : mondes paramétrés montés par
 # `init config="<banc>"` pour forcer/observer un signe. Import au niveau module
 # (paquet `bancs/` au sommet, peut tout importer) ; jamais monté pour smoke/full.
@@ -54,10 +55,6 @@ from .chronique import Chronique           # disparitions et causes de mort par 
 # `ble`/`chanvre` = graines à PAILLE au départ (moyens d'agir ③, canal 2, cycle
 # INTERNE cultivé) : les cultiver puis `recolter_paille` alimente le stock de mulch
 # `paille` — une source de ravitaillement amorçable tôt, sans passer par l'Atelier.
-# Âge des arbres fondateurs de la démo (`full`/`propre`), ans : assez pour une couronne
-# (conception AUTOMNE VISIBLE §3.1, cible 10-12 ans).
-AGE_ARBRES_DEMO = 11.0
-
 BANQUE_DEPART = ("tournesol", "tomate", "basilic", "ble", "chanvre")
 
 # Champs PARESSEUX servis TOUJOURS par `cmd_fields` (D112 ②, D99), avec leur valeur
@@ -103,20 +100,6 @@ def _amorcer_encyclo(game_state: dict, player: str, mode: str) -> None:
         M.decouvrir(game_state, player, cle)
 
 
-def _pre_vieillir_ligneux(tiles: list, seed: int) -> None:
-    """Démo/F5 (`full`/`propre`) : tous les arbres fondateurs démarrent à
-    AGE_ARBRES_DEMO ans (AUTOMNE VISIBLE ②), donc avec une couronne : le pommier
-    NOUE dès le 1er été (âge ≥ `maturity_years`) et, depuis D111 ②ter (ferme D105),
-    chacun a la STRUCTURE de cet âge (morphogénèse déroulée hors tick). Un noyer ou
-    un chêne resterait stérile à cet âge, mais aucun n'est semé à l'init.
-    Déterministe ; le monde garde ses plantes (on vieillit, on n'ajoute pas)."""
-    for _t in tiles:
-        for _p in _t.plants:
-            if issubclass(_p.plant_class, PerennialWoody):
-                pre_croitre(_p, seed, AGE_ARBRES_DEMO)
-                _p.age_years = AGE_ARBRES_DEMO
-
-
 def _banque_initiale(config: str) -> PlayerSeedBank:
     bank = PlayerSeedBank()
     if config == "full":
@@ -140,6 +123,15 @@ class CommandsMixin:
         if not isinstance(seed, int):
             return {"ok": False, "error": f"seed doit être un entier (reçu {seed!r})"}
         banque = None   # renseignée par une fabrique de banc ; sinon helper plus bas
+        # Semaine de départ : `week=1` par défaut (début printemps, smoke). Les mondes
+        # de jeu `full`/`propre` ouvrent en SEMAINE_OUVERTURE (10, juste après les
+        # saints de glace — D140 C.1). Un banc peut démarrer plus tard via
+        # `BANC_WEEK_DEPART` (retour F5 : `grimpantes` observe des frileuses →
+        # départ mi-printemps). Override explicite `msg["week"]` prioritaire
+        # (oracle/tests). Calculée AVANT la fabrique : l'ouverture pré-croît les
+        # structures jusqu'à la veille de ce départ (continuité du calendrier).
+        start_week = msg.get("week", BANC_WEEK_DEPART.get(
+            config, SEMAINE_OUVERTURE if config in ("full", "propre") else 1))
         if config == "smoke":
             # Réutilise la fabrique du golden smoke test (2 tuiles terre/argile +
             # maison centrée) — même monde, même déterminisme, zéro duplication.
@@ -151,19 +143,13 @@ class CommandsMixin:
             # SECTORS plantées + maison) — import, pas de copie, même principe.
             from main import build_world_full
             tiles, ecos, _aux_tiles, house = build_world_full()
-            # Démo/F5 (vue·rattrapage 02, étendu aux arbres au sprint AUTOMNE
-            # VISIBLE ②) : pré-vieillir les arbres à AGE_ARBRES_DEMO pour qu'ils
-            # aient une couronne et que le pommier NOUE dès le 1er début d'été
-            # (semaine 14) au lieu de l'an 6 —
-            # on teste fruits + `manger` sans dérouler 5 ans en Turbo. PUR réglage
-            # d'init côté serveur, config "full" SEULEMENT : la démo 500 ans de
-            # main.py et le golden smoke (config "smoke") ne le voient jamais.
-            # `age_years` n'altère que la courbe d'âge et la grille de nouaison ;
-            # déterministe (constante), on vieillit sans ajouter de plante.
-            # D111 ②ter (ferme D105) : on PRÉ-CROÎT aussi la structure sur ces
-            # années (`sim/precroissance.py`, hors tick) → un arbre de son âge, plus
-            # une pousse de 22 cm.
-            _pre_vieillir_ligneux(tiles, seed)
+            # Ouverture du jardin (D140 C, départ du jardin ③ ; héritier du
+            # pré-vieillissement AUTOMNE VISIBLE ② et D111 ②ter) : une plante MATURE
+            # de chaque espèce du catalogue à sa niche, TOUS les arbres à l'âge de leur
+            # 1ʳᵉ fructification (structure pré-crue hors tick, le pommier noue dès le
+            # 1er été), quelques graines déjà semées. PUR réglage d'init, configs
+            # "full"/"propre" SEULEMENT : la démo main.py et le smoke ne le voient pas.
+            ouvrir_monde_complet(tiles, seed, start_week)
         elif config == "propre":
             # Banc « monde propre » (sprint équilibre invasion ①, D69) : MÊME monde
             # que "full" (mêmes 8 tuiles + maison + cultivées + pré-vieillissement
@@ -178,7 +164,7 @@ class CommandsMixin:
             # "full"/"smoke"/bancs n'ont pas le flag (absent → False) → intacts.
             from main import build_world_full
             tiles, ecos, _aux_tiles, house = build_world_full()
-            _pre_vieillir_ligneux(tiles, seed)
+            ouvrir_monde_complet(tiles, seed, start_week)
             for _eco in ecos.values():
                 _vider_seedbank_ferale(_eco.seed_bank)
         elif config in BANCS:
@@ -193,11 +179,6 @@ class CommandsMixin:
             return {"ok": False,
                     "error": f"config inconnue : {config!r} "
                              f"('smoke', 'full', 'propre' ou un banc : {', '.join(sorted(BANCS))})"}
-        # Semaine de départ : `week=1` par défaut (début printemps). Un banc peut
-        # démarrer plus tard via `BANC_WEEK_DEPART` (retour F5 : `grimpantes` observe
-        # des frileuses → départ mi-printemps). Override explicite `msg["week"]`
-        # prioritaire (oracle/tests). smoke/full absents du registre → 1 (inchangé).
-        start_week = msg.get("week", BANC_WEEK_DEPART.get(config, 1))
         game_state = {
             "tiles": tiles, "eco": ecos, "scores": {},
             "current_player": "joueur_1", "week": start_week, "log": [],
