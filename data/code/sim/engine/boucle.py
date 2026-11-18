@@ -532,7 +532,10 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
                         # PRIMING_FRAC). Filtré aux entrées non-neutres → graine d'une
                         # mère non acclimatée = neutre (save lisible).
                         # Graine stérile sous ce climat (figuier, relève ③) → rien.
+                        # Fleurs non fécondées (D139 ①b, `fecondation == 0`) →
+                        # pas de graine à récolter.
                         if (player_bank is not None and is_seed_bearing(plant)
+                                and plant.fecondation > 0.0
                                 and graine_fertile(plant.plant_class)):
                             key = _SPECIES_KEY.get(plant.plant_class)
                             if key:
@@ -553,6 +556,11 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
             if saison == "automne" and est_phase_recolte(week_in_year, saison):
                 rlog = self._reproduction(tile, eco, week, vent_dir, vent_force)
                 if rlog: log += rlog
+                # Fécondation consommée (D139 ①b) : APRÈS le dernier lecteur de
+                # l'année (récolte 11 puis reproduction 11b, même tick) → une
+                # plante qui ne refleurit pas l'an prochain n'a pas de graine.
+                for plant in tile.plants:
+                    plant.fecondation = 0.0
 
             # 12. Conflits
             clog = self._resoudre_conflits(tile, eco)

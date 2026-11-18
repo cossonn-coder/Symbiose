@@ -59,9 +59,10 @@ def semer_fin_de_cycle(plant, tile, eco, seed: int, week: int) -> None:
     Plus le dépôt d'ARCHÉTYPE de l'ancienne mort calendaire, à l'identique.
     Au pied de la mère (pas de dérive sous le vent ici)."""
     cls = plant.plant_class
-    rate = getattr(cls, "reproduction_rate", 0.02)
+    # × fécondation de la dernière floraison (D139 ①b) : archétype ET pool.
+    rate = getattr(cls, "reproduction_rate", 0.02) * plant.fecondation
     arch = getattr(cls, "archetype", None)
-    if arch:
+    if arch and rate > 0.0:
         eco.seed_bank.add(*plant.position, arch, rate)
     if rate <= 0.0 or not graine_fertile(cls):
         return

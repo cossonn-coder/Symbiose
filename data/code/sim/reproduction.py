@@ -172,7 +172,7 @@ def heredite(mother, father, seed, week) -> tuple:
     Hérédité INFINITÉSIMALE (D139 ②, conception §4) → `(gènes, F)` de l'enfant.
 
     Croisé ou autofécondé ? Graine par graine, par hash contre le gène
-    `autofecondation` de la mère : même avec un père à portée, une tomate
+    `autofecondation` de la mère, rapporté à sa `fecondation` (D139 ①b) : même avec un père à portée, une tomate
     (≈ 0,95) se féconde presque toujours elle-même. Sans père (espèce autogame,
     pas de partenaire à portée — repli de `find_father`) → autofécondation.
 
@@ -190,8 +190,14 @@ def heredite(mother, father, seed, week) -> tuple:
     (vigueur hybride) ; seule `borne` tient les limites dures.
     """
     r, c = mother.position
+    # Part autofécondée (D139 ①b) : sur une fécondation `fec`, la part `a` venue de
+    # la plante elle-même pèse `a / fec` des graines (sans butineur, fec = a → toutes
+    # autofécondées, la consanguinité monte). Hors cycle floral (fec = 0 : zoochorie,
+    # caches, fruit tombé après l'automne) → `a` seul, comme avant.
+    a, fec = mother.gene("autofecondation"), mother.fecondation
+    seuil_auto = min(1.0, a / fec) if fec > 0.0 else a
     if father is not None and _hash_noise(seed, week, r + _CANAL_CHOIX, c) \
-            < mother.gene("autofecondation"):
+            < seuil_auto:
         father = None                    # autofécondation malgré un père à portée
     cls_m, F_m = mother.plant_class, mother.F
     if father is None:

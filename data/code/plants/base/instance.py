@@ -225,6 +225,12 @@ class PlantInstance:
     # arme la cohorte suivante. Remplace le rendez-vous global FRUIT_NOUAISON_WEEK.
     # Hors `_PLANT_ATTRS` du golden → golden NEUTRE.
     a_fleuri: bool = False
+    # Part des ovules fécondés de la DERNIÈRE floraison (D139 ①b, conception §6.3),
+    # figée à la fanaison : `a + (1 − a)·g(pollen_recu)`, a = gène `autofecondation`
+    # (mode `self` → 1). Multiplie la mise en graine (`rate × fecondation`) et la
+    # nouaison des fruitiers ; remise à 0 après la mise en graine d'automne : une
+    # plante qui n'a pas fleuri cette année n'a pas de graine. Hors `_PLANT_ATTRS`.
+    fecondation: float = 0.0
     # Marque « a déjà capturé au moins une fois » (végétal-prédateur, sprint
     # HYDROLOGIE & MARÉCAGES ⑥). Reste False sur toute plante NON carnivore (seule la
     # drosera l'arme, au 1er prélèvement réel de moustique). Sert au hook carnivore à

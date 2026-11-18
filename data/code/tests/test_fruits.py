@@ -93,10 +93,16 @@ def _litiere_fruit_tuile(eco):
     return sum(_litiere_fruit(eco, r, c) for r in range(eco.rows) for c in range(eco.cols))
 
 
+def _fec(plant, pollen):
+    """Fécondation attendue (D139 ①b) : a + (1 − a)·g(pollen)."""
+    a = plant.gene("autofecondation")
+    return a + (1.0 - a) * frac_nouaison(pollen)
+
+
 def _nouer(eng, tile, eco, plant, pollen=100.0, w=1):
     """Force une nouaison « en fin de floraison » : pleine floraison (arme
     `a_fleuri`) puis fanaison (déclenche la nouaison). `pollen` alimente la dose
-    entomophile (insect → frac=g(pollen)). Le 2e pas mûrit la cohorte d'un cran
+    entomophile (insect → frac = a + (1 − a)·g(pollen), D139 ①b). Le 2e pas mûrit la cohorte d'un cran
     (maturité ≈ un pas), comme l'ancienne nouaison à pas unique."""
     plant.floraison = 1.0
     eng._tick_fruits(tile, eco, w)         # arme a_fleuri (pleine floraison)
@@ -122,7 +128,7 @@ def test_nouaison():
           all(abs(f.masse - AppleTree.fruit_masse) < 1e-9 for f in apple.fruits))
     check("cohortes : fruits_par_site × frac par site",
           sum(f.nombre for f in apple.fruits)
-          == round(frac_nouaison(100.0) * AppleTree.fruits_par_site * attendu),
+          == round(_fec(apple, 100.0) * AppleTree.fruits_par_site * attendu),
           f"{[f.nombre for f in apple.fruits]}")
 
 
@@ -217,11 +223,15 @@ def test_determinisme():
 # ---------------------------------------------------------------------------
 def test_modes():
     print("\n[7] modes : insect sans pollen → 0 fruit ; dose forte → plein ; self → plein sans pollen")
-    # insect, dose nulle → aucun fruit (sans plancher = pression écologique).
+    # insect, dose nulle → seule la part AUTOFÉCONDÉE noue (D139 ①b : frac =
+    # a + (1 − a)·g(pollen), a = gène `autofecondation`, 0,15 chez le pommier).
     gs, tile, eco, apple, eng = _monde(age_years=6.0, n_apex=3)
+    a = apple.gene("autofecondation")
     _nouer(eng, tile, eco, apple, pollen=0.0)
-    check("insect sans pollen : 0 fruit (sans plancher)", apple.fruits == [],
-          f"frac(0)={frac_nouaison(0.0):.3f}")
+    n0 = sum(f.nombre for f in apple.fruits)
+    attendu0 = round(a * AppleTree.fruits_par_site * len(organ_sites(apple, plafond=None)))
+    check("insect sans pollen : seule la part autofécondée noue", n0 == attendu0,
+          f"{n0} fruits (a={a:.2f})")
     # insect, dose forte → nouaison ≈ pleine.
     gs, tile, eco, apple, eng = _monde(age_years=6.0, n_apex=3)
     plein = len(organ_sites(apple))
@@ -307,7 +317,7 @@ def test_cohortes():
     _nouer(eng, tile, eco, apple, pollen=0.05)
     n = sum(f.nombre for f in apple.fruits)
     check("peu de pollen : peu de fruits, sur moins de sites",
-          0 < n == round(frac_nouaison(0.05) * AppleTree.fruits_par_site * 13)
+          0 < n == round(_fec(apple, 0.05) * AppleTree.fruits_par_site * 13)
           and len(apple.fruits) <= 13, f"{n} fruits, {len(apple.fruits)} cohortes")
 
 

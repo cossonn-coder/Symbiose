@@ -29,8 +29,8 @@ Départ = hash de fin du sprint ②. ①, ①b (deux fois : scénario puis méca
 ## Tronçons
 | # | Kickoff | État |
 |---|---|---|
-| ① | `01_fleurs.md` — taille, nectar, pollen, couleur, guides, parfum + `cout_genetique` | **FAIT côté code** (2026-11-18, non commité) — voir §① |
-| ①b | `01b_fecondation.md` — pommier mûr au smoke, `fecondation` à la fanaison, part autofécondée | à faire |
+| ① | `01_fleurs.md` — taille, nectar, pollen, couleur, guides, parfum + `cout_genetique` | **FAIT** (2026-11-18, commit `968704c`) — voir §① |
+| ①b | `01b_fecondation.md` — pommier mûr au smoke, `fecondation` à la fanaison, part autofécondée | **FAIT côté code** (2026-11-18, non commité) — voir §①b |
 | ①c | `01c_paternite.md` — compteur `pollen_donne`, père tiré ∝ pollen exporté | à faire |
 | ①d | `01d_levee_graines.md` — annuelles qui se ressèment, espèce spontanée ∝ son pool | à faire |
 | ② | `02_fruits_comestibilite.md` — taille des fruits, appétence feuille/fruit, Vigueur négative | à faire |
@@ -79,6 +79,63 @@ Départ = hash de fin du sprint ②. ①, ①b (deux fois : scénario puis méca
 - Vue G : `couleur_fleur` (unité « position ») s'affiche en « × » par défaut et les 6
   caractères sans libellé (`tools/simserver/genes_pont.py`) — à traiter au ⑤.
 
+## ①b Fécondation — bilan (2026-11-18)
+- **Fait** : smoke = pommier pré-vieilli à `maturity_years` (`tests/test_golden.py`) → il
+  noue s8 et s61 (« 🍎 Nouaison »). `PlantInstance.fecondation` (hors digest, défaut 0).
+  `decompo.feconder(plant)` = `a + (1 − a)·frac_nouaison(pollen_recu)` (`self` → 1), remet
+  `pollen_recu` à 0 et désarme ; appelée à la fanaison de **toute** plante fleurie dans
+  `_tick_fruits` (armement généralisé) et par la nouaison des fruitiers (`frac = feconder ×
+  glandée`). **Stérilité thermique étendue aux herbacées** (décision : un pollen stérile ne
+  féconde rien ; la fanaison attend une semaine plus fraîche). Lecteurs : `_reproduction`
+  (`rate × fecondation`, porte de hash ET densité), `semer_fin_de_cycle` (archétype ET pool),
+  récolte joueur (rien si `fecondation == 0`). Remise à 0 de toute la tuile juste après
+  `_reproduction` (11b), même tick que la récolte (11) → ordre vérifié. `heredite` : seuil
+  d'autofécondation `min(1, a/fecondation)`, `a` seul si `fecondation <= 0`.
+- **Appelants de `heredite`** (grep) : `mortalite._reproduction`, `fin_de_cycle.semer_fin_de_cycle`,
+  `boucle` (récolte joueur), `decompo.semer_chute`, `zoochorie` (merle), `caches` (geai/écureuil),
+  `reproduction.child_genes` ; hors moteur `bancs/lignees.py` + tests. Les trois chemins de
+  fruits tombés/emportés lisent `fecondation` tant qu'elle n'est pas remise à 0 (jusqu'à s39),
+  puis `a` seul.
+- **Golden RE-FIGÉ deux fois** (non commité, consigné ici — l'orchestrateur fera les deux
+  commits ou un seul) : (1) scénario `d05997a4…` → `3b727984fe6e6f1ad899c9216c0be2fe65171739664bfe1d817cf28991805a3f`
+  (vérifié reproductible depuis HEAD + seul `test_golden.py` changé) ; (2) mécanique →
+  `db9418142e1ca4baf101c5d1630ec0eb426b800aa21e0fa7324dc1cc6339a8b2`. 1ʳᵉ divergence (2) :
+  **nouaison du pommier s8** (frac 0,67 → 0,76, part autofécondée `a` = 0,15 ajoutée), avant
+  toute herbacée — attendu, la formule change aussi pour les fruitiers. `population_hash`
+  re-figé → `b76871aca851a70c3695cd3ea22c5fe502601f4d64e2d2266f3ba4b4f5aa15cc` (mécanique).
+- **Tests** : `tests/test_fecondation.py` 11/11 (self → 1, sans pollen → a, croît → 1, pollen
+  à 0, fanaison d'herbacée, non fleurie ne dépose rien, sans pollen F > 0). Adaptés :
+  `test_fruits` (nouaison sans pollen = part `a`), `test_banque_semis`, `test_chute_seme`,
+  `test_reponse_thermique` (parent marqué fécondé), `tests/simserver/planter.py` (la 1ʳᵉ graine
+  récoltée arrive à la récolte d'été s26, plus au printemps : boucle bornée à s45). Toutes
+  les suites vertes sauf `test_peripherie` (rouge avant).
+- **Inventaire de risque** (`mesures/banc_fecondation.py`, monde full, 3 ans [n=1 seed]) :
+  **aucune espèce ne perd toutes ses graines**. Mises en graine avant→après : bourse 327→228,
+  trèfle 643→453, lupuline 257→206, pâturin 86→63, plantain 32→21, autres ≈ (pieds sans
+  floraison fanée dans l'année). Doses à la fanaison (méd.) : pommier 7,0 (fec 0,91), cerisier
+  0,0 (fec 0,165 : seul, autostérile), trèfle 0,39 (0,42), achillée 0,34 (0,31), lupuline 3,1,
+  phacélie 13,6, pissenlit 7,2, graminées `wind` 2-6 (0,7-0,86). Saturation : `POLLEN_DEMI` = 1
+  est dépassé ×5-15 chez les bien visitées (fec ≈ 0,9) — non calibré (hors tronçon).
+  Sphaigne (`self`) fleurit au moteur et fait fec = 1 : pas d'exception nécessaire.
+  ⚠ **`PoaAnnua` est en mode `insect` sans nectar** : pollen 0 sur 68 fanaisons → fec = a
+  (0,085). Le pâturin annuel réel est anémophile/autogame : donnée à corriger (mode `wind`
+  ou neutre d'`autofecondation` haut) — **non corrigé**, à arbitrer.
+- ⚠ **Pollen après la fanaison** (constaté, non corrigé) : le dépôt des butineurs est réparti
+  ∝ poids floral parmi les conspécifiques DU PLOT, donc un pied seul capte toute la charge même
+  à `floraison` résiduelle (0,00x) ; ce pollen tardif s'accumule jusqu'à la fanaison de l'an
+  suivant (pommier du smoke : 4,5 reçus s23-26, fleurs fanées). Biais : la dose de l'an N
+  inclut la queue de l'an N−1. Piste : ne déposer que sur `floraison ≥ SEUIL_NOUAISON`, ou
+  remettre à 0 à l'armement — à trancher (①c touche ce code).
+- **Banc fleurs (a)** : fécondation moitié bleue **0,673** contre rose **0,631** [n=16 pieds,
+  1 génération], densité déposée/pied 0,0404 contre 0,0379 → le différentiel existe désormais
+  côté mère (+7 %). Banque-sol couleur +0,032 contre fondateurs +0,023 (paternité et levée
+  pas encore branchées : ①c, ①d).
+- **Perf** : smoke 4,351 s → 4,367 s, +0,4 % [n=5 paires alternées, bruit ±3 %].
+- Taille : `sim/engine/boucle.py` 306 LDC (🟡, 303 avant), `decompo.py` 192, `mortalite.py` 248.
+- Écart au kickoff : une annuelle qui finit son cycle APRÈS s39 voit sa `fecondation` remise
+  à 0 par l'automne → `semer_fin_de_cycle` ne dépose plus rien (elle a grené à s39 : un seul
+  dépôt au lieu de deux). Conforme à « remise à 0 après le dernier lecteur », à garder en tête.
+
 ## Conception FÉCONDATION (trou du ①) — ARBITRÉE et FIGÉE (Nico, 2026-11-18)
 Doc : `docs/vegetal/genetique/conception_caracteres_vivants.md` §6. Diagnostic : le nombre de
 graines ne dépendait ni des visites, ni ne faisait le nombre de descendants (annuelles
@@ -97,4 +154,6 @@ sans archétype : pool jamais levé) ; le père était le plus proche ; `pollen_
 Tronçons insérés avant ② : `01b_fecondation.md`, `01c_paternite.md`, `01d_levee_graines.md`.
 
 ## REPRISE
-Lire `CLAUDE.md`, ce fichier, puis le kickoff du premier tronçon « à faire » (①b).
+①b fait côté code (non commité : deux hashes consignés au §①b). Lire `CLAUDE.md`, ce
+fichier, puis le kickoff du premier tronçon « à faire » (①c). Deux points à arbitrer avant
+ou pendant ①c : mode de pollinisation du pâturin annuel, pollen déposé après la fanaison.

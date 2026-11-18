@@ -14,6 +14,9 @@ Petit monde, court horizon, mais qui exerce toujours le cœur du tick :
 succession + reproduction (automne) + transition hivernale + pérenne (pommier)
 + multi-sol (terre/argile).
 
+Depuis D139 ①b le pommier est PRÉ-VIEILLI à sa maturité : il fleurit, reçoit le
+pollen des butineurs et NOUE pendant le smoke (ligne « 🍎 Nouaison » du log).
+
 Ce qui NE rentre plus ici, par construction trop long :
   - sénescence du pommier (~70 ans) → `tests/test_senescence.py` (lancé à la demande).
   - ombre de la maison / phototropisme (tronçons 2-3) → tests ciblés dédiés.
@@ -90,8 +93,12 @@ def build_world():
             semer_fondateur(tile, Clover,   5, 4, SEED)
         tiles.append(tile)
         ecos[tid] = eco
-    # Pommier sur la tuile 0 (exerce les pérennes : dormance hivernale, age_curve)
-    semer_fondateur(tiles[0], AppleTree, 0, 7, SEED)
+    # Pommier sur la tuile 0 (exerce les pérennes : dormance hivernale, age_curve).
+    # PRÉ-VIEILLI à `maturity_years` (D139 ①b, comme `cmd_init` config « full ») :
+    # il fleurit et NOUE dès l'année 1 → le smoke exerce la nouaison et la
+    # fécondation (sinon 5 ans de maturité > 2 ans simulés → jamais de fruit).
+    pommier = semer_fondateur(tiles[0], AppleTree, 0, 7, SEED)
+    pommier.age_years = float(AppleTree.maturity_years)
     return tiles, ecos
 
 

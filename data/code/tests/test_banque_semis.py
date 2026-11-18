@@ -123,6 +123,7 @@ def run_pose(lumiere_de):
     eco = init_eco("T0", 20, 20, humidite=1.0, fertilite=1.0, microbiome=0.3)
     parent = tile.add_plant(ARBRE_POSE, 10, 10)
     parent.age_years = ARBRE_POSE.maturity_years + 1.0
+    parent.fecondation = 1.0   # a fleuri et été fécondé (D139 ①b)
     eco.lumiere.at_plot = lumiere_de
     gs = {"tiles": [tile], "eco": {"T0": eco}, "scores": {},
           "current_player": "j1", "week": 1, "log": []}

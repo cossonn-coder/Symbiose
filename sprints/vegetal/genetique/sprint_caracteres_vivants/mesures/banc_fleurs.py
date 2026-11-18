@@ -75,12 +75,24 @@ def scenario_a():
     tile, eco, gs, eng = _monde(Borage, 16)
     pieds = [p for p in tile.plants if p.plant_class is Borage]
     vu = {id(p): 0.0 for p in pieds}
+    fec = {id(p): 0.0 for p in pieds}
+    # Densité DÉPOSÉE par pied (①b) : on espionne `add_species` (plot → pied).
+    par_plot = {p.position: id(p) for p in pieds}
+    depose = {id(p): 0.0 for p in pieds}
+    orig_add = eco.seed_bank.add_species
+
+    def _espion(r, c, cls, amount, *a, **k):
+        if cls is Borage and (r, c) in par_plot:
+            depose[par_plot[(r, c)]] += amount
+        return orig_add(r, c, cls, amount, *a, **k)
+    eco.seed_bank.add_species = _espion
     print("(a) bourraches — couleur_fleur (−1 bleu … +1 rose), 1 génération")
     for _ in range(52):
         eng.tick_semaine()
         gs["log"].clear()
         for p in pieds:
-            vu[id(p)] = max(vu[id(p)], p.pollen_recu)   # pollen_recu cumule (non fruitier)
+            vu[id(p)] = max(vu[id(p)], p.pollen_recu)   # dose avant la fanaison (①b : remise à 0)
+            fec[id(p)] = max(fec[id(p)], p.fecondation)
     pieds.sort(key=lambda p: p.gene("couleur_fleur"))
     moitie = len(pieds) // 2
     bleues, roses = pieds[:moitie], pieds[moitie:]
@@ -90,6 +102,10 @@ def scenario_a():
           f"(couleur {m([p.gene('couleur_fleur') for p in bleues]):+.2f}) | "
           f"moitié rose {m([vu[id(p)] for p in roses]):.3f} "
           f"(couleur {m([p.gene('couleur_fleur') for p in roses]):+.2f})")
+    print(f"  fécondation (①b) : moitié bleue {m([fec[id(p)] for p in bleues]):.3f} | "
+          f"moitié rose {m([fec[id(p)] for p in roses]):.3f}")
+    print(f"  densité déposée/pied : moitié bleue {m([depose[id(p)] for p in bleues]):.4f} | "
+          f"moitié rose {m([depose[id(p)] for p in roses]):.4f}")
     print(f"  banque-sol après 1 an : couleur moy. {_pool(eco, 'couleur_fleur', 'Borage'):+.3f}"
           " (différentiel réalisé = banque − fondateurs)")
 

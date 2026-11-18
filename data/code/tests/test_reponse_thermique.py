@@ -119,6 +119,7 @@ def test_fin_de_cycle():
     eng, tile, eco, (b,) = lab(BursaPastoris)
     adulte(b)
     b.floraison_abs = 10
+    b.fecondation = 1.0   # fleurs fécondées à la fanaison (D139 ①b)
     fin = 10 + BursaPastoris.bloom_duration + MATURATION_DEFAUT
     eng.game_state["week"] = fin - 1
     eng._tick_senescence_health(tile, eco)

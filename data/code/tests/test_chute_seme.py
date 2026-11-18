@@ -78,6 +78,7 @@ def test_cerisier_seme_sous_couronne():
 
 def _recrues_directes(forcer_ancien: bool) -> int:
     engine, tile, eco, arbre = _monde(CherryTree)
+    arbre.fecondation = 1.0   # a fleuri et été fécondé (D139 ①b)
     eco.lumiere.at_plot = lambda r, c: 0.9
     orig_rate, orig_pred = CherryTree.reproduction_rate, mortalite.recrue_par_fruits
     try:

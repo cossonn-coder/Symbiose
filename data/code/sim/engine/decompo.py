@@ -79,6 +79,26 @@ def frac_nouaison(pollen_recu: float) -> float:
     return pollen_recu / (pollen_recu + POLLEN_DEMI)
 
 
+def feconder(plant) -> float:
+    """Fanaison d'une plante qui a fleuri (D139 ①b, conception §6.3) : fige sa
+    `fecondation`, puis la cohorte florale suivante repart de zéro.
+
+    📖 Limitation par le pollen + assurance par l'autofécondation : une part `a`
+    des ovules (gène `autofecondation`) se féconde elle-même, le reste attend le
+    pollen apporté (rampe saturante `frac_nouaison`). Sans butineur → `a` ; très
+    visitée → presque 1. Mode `self` (autogamie stricte) → 1. Une SEULE fonction,
+    lue par la nouaison des fruitiers et par la mise en graine de tous."""
+    if plant.plant_class.pollination_mode == "self":
+        fec = 1.0
+    else:
+        a = plant.gene("autofecondation")
+        fec = a + (1.0 - a) * frac_nouaison(plant.pollen_recu)
+    plant.fecondation = fec
+    plant.a_fleuri = False          # cohorte posée → ré-armée à la prochaine floraison
+    plant.pollen_recu = 0.0         # nouvelle cohorte repart de zéro (§B.1)
+    return fec
+
+
 def nouer(plant, frac: float) -> list:
     """Cohortes nouées à la fanaison, `frac` = part des fleurs fécondées (VERGER VIVANT ③).
 
@@ -279,45 +299,46 @@ class DecompoMixin:
         Le geste `manger` ciblé (sim.actions, D19) retire un fruit précis hors de
         ce pas. Déterministe : `floraison`/`pollen_recu`/`organ_sites` dérivent de
         la météo pure et des butineurs déterministes (zéro RNG), itération en
-        ordre `tile.plants`. NEUTRE pour le golden tant qu'aucune espèce
-        `fruitier` mûre ne fleurit dans la fenêtre (tomate : meurt w2-3 ;
-        AppleTree : maturity_years=5 > 2 ans simulés → floraison nulle)."""
+        ordre `tile.plants`. Depuis D139 ①b le smoke pré-vieillit son pommier :
+        il noue, et la fanaison de TOUTE plante fleurie y fige sa `fecondation`
+        (`feconder`, lue par la mise en graine)."""
         log = []
         seed, week = self.game_state.get("seed", 42), self.week
         for plant in tile.plants:
             if not plant.is_alive:
                 continue
             cls = plant.plant_class
-            if not getattr(cls, "fruitier", False):
-                continue
-            # 1. Armement à la pleine floraison, nouaison à la fanaison (par plante).
+            # 1. Armement à la pleine floraison, fanaison sous SEUIL_NOUAISON — pour
+            # TOUTE plante (D139 ①b : la fécondation fait les graines de chacune).
             if plant.floraison >= SEUIL_FLEURI:
                 plant.a_fleuri = True
             # Pollen stérile à la chaleur (D139 niche thermique ③) : feuille au-delà
-            # de `lim_chaud` au jour le plus chaud → la nouaison attend une semaine
+            # de `lim_chaud` au jour le plus chaud → la fanaison attend une semaine
             # plus fraîche (l'armement `a_fleuri` reste). Tomate en canicule : fleurs
-            # sans fruits. `t_feuille` est posée par `_avancer_stades` ce tick.
+            # sans fruits. Étendu aux herbacées au ①b (même biologie : un pollen
+            # stérile ne féconde rien). `t_feuille` est posée par `_avancer_stades`.
             pollen_sterile = (plant.t_feuille is not None
                               and plant.t_feuille > plant.lim_chaud())
-            if (plant.a_fleuri and plant.floraison < SEUIL_NOUAISON
-                    and plant.age_years >= cls.maturity_years and not pollen_sterile):
+            fane = (plant.a_fleuri and plant.floraison < SEUIL_NOUAISON
+                    and not pollen_sterile)
+            if not getattr(cls, "fruitier", False):
+                if fane:
+                    feconder(plant)             # graines sans fruit charnu suivi
+                continue
+            if fane and plant.age_years >= cls.maturity_years:
                 for f in plant.fruits:          # cohorte précédente non récoltée
                     deposer_fruits(plant, tile, eco, f, seed, week)
-                # Fraction nouée selon le mode (philo #2 : flux de pollinisation →
+                # Fraction nouée = fécondation (philo #2 : flux de pollinisation →
                 # contrainte → fruits). `insect` lit la dose des butineurs (§F),
-                # `wind` lit la dose ANÉMOPHILE déposée par le vent (⑤, §5.3) — les
-                # deux via g() SANS plancher (0 dose → 0 fruit). Seule l'autogamie
-                # (`self`) court-circuite (frac=1, nouaison pleine sans vecteur).
-                frac = (1.0 if cls.pollination_mode == "self"
-                        else frac_nouaison(plant.pollen_recu))
+                # `wind` la dose ANÉMOPHILE (⑤, §5.3), plus la part autofécondée `a`
+                # (①b) ; l'autogamie (`self`) court-circuite à 1.
+                frac = feconder(plant)
                 # Glandée (zoochorie ②) : année forte ×1, maigre ×GLANDEE_MAIGRE,
                 # synchrone pour toute l'espèce. Sans masting → ×1 (inchangé).
                 annee = (week - 1) // 52
                 glandee = facteur_glandee(cls, annee, seed)
                 frac *= glandee
                 plant.fruits = nouer(plant, frac)
-                plant.a_fleuri = False          # cohorte posée → ré-armée l'an prochain
-                plant.pollen_recu = 0.0         # nouvelle cohorte repart de zéro (§B.1)
                 if plant.fruits:
                     log.append(f"    🍎 Nouaison {plant.name}@{plant.position} "
                                f"→ {sum(f.nombre for f in plant.fruits)} fruits "

@@ -83,8 +83,10 @@ def test_planter_arroser():
     # et la Vigueur paie FAIBLE (5). Le passage de saison a remis la Vigueur au
     # plein → on lit un débit propre. La germination différée, elle, est couverte
     # par test_planter (la succession lève le grain au bon moment).
+    # D139 ①b : seule une plante FANÉE et fécondée donne des graines → la récolte
+    # de printemps (s13) est vide, la 1ʳᵉ graine arrive à celle d'été (s26).
     snap = s12.send(cmd="snapshot")["snapshot"]
-    while not snap["player"]["seeds"] and snap["week"] < 20:
+    while not snap["player"]["seeds"] and snap["week"] < 45:
         snap = s12.send(cmd="step_week")["snapshot"]
     seeds_av = snap["player"]["seeds"]
     check("la récolte d'automne a rempli la banque-joueur",
@@ -116,7 +118,7 @@ def test_planter_arroser():
         s = ServerProc()
         s.send(cmd="init", seed=seed)
         snap = s.send(cmd="snapshot")["snapshot"]
-        while not snap["player"]["seeds"] and snap["week"] < 20:
+        while not snap["player"]["seeds"] and snap["week"] < 45:
             snap = s.send(cmd="step_week")["snapshot"]
         sp = next(iter(snap["player"]["seeds"]), None)
         if sp:

@@ -224,7 +224,10 @@ class MortaliteMixin:
             # qui tombent (`decompo.semer_chute`) → ni pool banque-sol ni recrue directe.
             if recrue_par_fruits(cls):
                 continue
-            rate = getattr(cls, "reproduction_rate", 0.0)
+            # Fécondation (D139 ①b) : la dernière floraison a fécondé une part
+            # `fecondation` des ovules → mise en graine `rate × fecondation` (porte
+            # de hash ET densité déposée). Pas fleurie cette année → 0 → rien.
+            rate = getattr(cls, "reproduction_rate", 0.0) * parent.fecondation
             if rate <= 0.0:
                 continue
             pr, pc = parent.position
