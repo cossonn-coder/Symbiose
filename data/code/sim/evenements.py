@@ -100,6 +100,7 @@ CAUSE_DE_RAISON: tuple[tuple[str, str], ...] = (
     ("sensibilité familiale au mildiou", "maladie"),   # effet d'espèce Solanacées
     ("gel", "gel"),                      # « gel (tissu tendre) »
     ("gelée tardive", "gel"),
+    ("froid", "froid"),                  # « froid (lésion sans gel) » (D140 C.7)
     ("grêle", "grele"),
     ("vent", "vent"),                    # « vent (tige cassée) »
     ("stress hydrique", "secheresse"),

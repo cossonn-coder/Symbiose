@@ -153,6 +153,15 @@ _FACTEUR_ADAPTO = Caractere(adaptogene=True)
 # LA table. Ordre = ordre historique de GENE_NAMES (canaux de hash) — dict Python
 # ordonné par insertion. Le sens biologique de chaque gène est commenté dans
 # `genetics.py` (au-dessus de GENE_NAMES) ; `adaptogene` recopie ADAPTOGENIC_GENES.
+# D140 C.6 — diversité génétique RÉDUITE de la rusticité au gel chez les TENDRES
+# (espèces sans endurcissement, `endurcissement_max` = 0 : tomate, poivron, basilic,
+# haricot, courgette). Leur tissu ne s'acclimate pas : d'une variété à l'autre, le
+# point de gel varie de quelques dixièmes de degré, pas de ±4 °C. Avec le σ_A
+# général (1,5 °C), une variété fondatrice tirée à ±2,5 σ donnait un poivron tenant
+# −4,4 °C. σ_A 0,5 °C → variétés entre ≈ −2,3 et −0,5 °C (borne de la sève). Les
+# rustiques gardent le σ_A général. Surcharge déclarée par espèce (`genetique`).
+SIGMA_GEL_TENDRE = 0.5
+
 CARACTERES = {
     "hauteur":               _FACTEUR,
     # D139 niche thermique ② — EN °C : ABAISSEMENT de la limite de gel du tissu

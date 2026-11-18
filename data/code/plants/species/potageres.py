@@ -25,6 +25,7 @@ Deux temps « moteur » de ce lot :
 from __future__ import annotations
 from plants.base import PlantBase, GrowthStage
 from plants.couleurs import BLANC, BLEU_PALE, JAUNE, ORANGE, ROSE_PALE
+from plants.caracteres import SIGMA_GEL_TENDRE
 
 
 class Carrot(PlantBase):
@@ -109,7 +110,8 @@ class Zucchini(PlantBase):
     family = "Cucurbitaceae"
     genus = "Cucurbita"
     name = "Courgette"
-    genetique = {"appetence_feuille": {"neutre": -0.2}, "appetence_fruit": {"neutre": 0.5}}  # goût (D139 ②, conception §2.2)
+    genetique = {"appetence_feuille": {"neutre": -0.2}, "appetence_fruit": {"neutre": 0.5},  # goût (D139 ②, conception §2.2)
+                 "rusticite_froid": {"sigma_a": SIGMA_GEL_TENDRE}}  # tendre : point de gel peu variable (D140 C.6)
     # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
     t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = 10.0, -1.0, 0.0, 35.0, 46.0
     feuillage = "large"  # transpiration (D111 ①) : type de feuillage d'espèce

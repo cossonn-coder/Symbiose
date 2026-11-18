@@ -8,6 +8,7 @@ from __future__ import annotations
 from plants.base import (GrowthStage,
                          Solanaceae, Fabaceae, Asteraceae, Lamiaceae)
 from plants.couleurs import BLANC, JAUNE, LAVANDE, ORANGE, ROSE, ROUGE
+from plants.caracteres import SIGMA_GEL_TENDRE
 
 
 # --- Solanaceae ---
@@ -21,7 +22,8 @@ class Tomato(Solanaceae):
     # à ≈ 95 % en réalité (fleur cléistogame ou quasi) → lignée qui se FIXE.
     genetique = {"autofecondation": {"neutre": 0.95},
                  # goût (D139 ②) : feuillage toxique (solanine), fruit savoureux
-                 "appetence_feuille": {"neutre": -0.6}, "appetence_fruit": {"neutre": 0.7}}
+                 "appetence_feuille": {"neutre": -0.6}, "appetence_fruit": {"neutre": 0.7},
+                 "rusticite_froid": {"sigma_a": SIGMA_GEL_TENDRE}}  # tendre : point de gel peu variable (D140 C.6)
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.0  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     axe_couleur = (JAUNE, JAUNE)  # couleur de fleur (D139 ①) : la tomate reste jaune
@@ -105,7 +107,8 @@ class Tomato(Solanaceae):
 class Pepper(Solanaceae):
     genus = "Capsicum"
     name = "Poivron"
-    genetique = {"appetence_feuille": {"neutre": -0.4}, "appetence_fruit": {"neutre": 0.6}}  # goût (D139 ②, conception §2.2)
+    genetique = {"appetence_feuille": {"neutre": -0.4}, "appetence_fruit": {"neutre": 0.6},  # goût (D139 ②, conception §2.2)
+                 "rusticite_froid": {"sigma_a": SIGMA_GEL_TENDRE}}  # tendre : point de gel peu variable (D140 C.6)
     # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
     t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = 10.0, -1.0, 0.0, 33.0, 45.0
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
@@ -163,7 +166,7 @@ class Bean(Fabaceae):
     t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = 8.0, -1.0, 0.0, 32.0, 45.0
     # AUTOGAME (D139 ②) : pollinisée par insecte au catalogue, mais s'autoféconde
     # à ≈ 95 % en réalité (fleur cléistogame ou quasi) → lignée qui se FIXE.
-    genetique = {"autofecondation": {"neutre": 0.95}}
+    genetique = {"autofecondation": {"neutre": 0.95}, "rusticite_froid": {"sigma_a": SIGMA_GEL_TENDRE}}  # tendre : point de gel peu variable (D140 C.6)
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.25  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     axe_couleur = (BLANC, ROUGE)  # couleur de fleur (D139 ①) : blanc (nain) à rouge (d'Espagne)
@@ -281,7 +284,10 @@ class Sunflower(Asteraceae):
     genus = "Helianthus"
     name = "Tournesol"
     # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
-    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = 5.0, -3.0, 1.0, 36.0, 48.0
+    # D140 C.6 : PAS sensible au froid sans gel (`t_froid_lesion` None, avant 5 °C) —
+    # le tournesol germe dès 5-8 °C et sa plantule tient une petite gelée ; seul le
+    # gel (`t_gel_tendre`) l'atteint.
+    t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = None, -3.0, 1.0, 36.0, 48.0
     feuillage = "large"  # transpiration (D111 ①) : type de feuillage d'espèce
     nectar = 0.6  # nectar d'espèce (D111 ⑦) : nourriture offerte au butineur
     axe_couleur = (JAUNE, ORANGE)  # couleur de fleur (D139 ①) : ligules jaunes à orangées
@@ -382,7 +388,8 @@ class Sunflower(Asteraceae):
 class Basil(Lamiaceae):
     genus = "Ocimum"
     name = "Basilic"
-    genetique = {"appetence_feuille": {"neutre": 0.6}}  # goût (D139 ②, conception §2.2)
+    genetique = {"appetence_feuille": {"neutre": 0.6},  # goût (D139 ②, conception §2.2)
+                 "rusticite_froid": {"sigma_a": SIGMA_GEL_TENDRE}}  # tendre : point de gel peu variable (D140 C.6)
     # Niche thermique (D139 §7) : froid_lésion, gel tendre, endurcissement, chaud, brûlure (°C)
     t_froid_lesion, t_gel_tendre, endurcissement_max, t_chaud_stress, t_brulure = 10.0, -1.0, 0.0, 35.0, 45.0
     feuillage = "moyen"  # transpiration (D111 ①) : type de feuillage d'espèce

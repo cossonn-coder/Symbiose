@@ -116,7 +116,12 @@ class Chronique:
             if i in maintenant:
                 continue
             esp = _cle(p)
-            pile = causes.get((tuile, p.position, esp))
+            # Repli tuile inconnue (D140 C.7) : les dégâts écrits AVANT les en-têtes
+            # `[T0]` du tick (nuit froide, grêle, aléas — boucle.py) sortent sans
+            # tuile. Les tuiles y sont parcourues dans le même ordre que le
+            # recensement → on dépile dans l'ordre (FIFO), sans toucher au log
+            # (il entre dans le golden).
+            pile = causes.get((tuile, p.position, esp)) or causes.get((None, p.position, esp))
             cause, raison = pile.pop(0) if pile else (defaut, None)
             an["morts"][esp][cause] += 1
             if raison:

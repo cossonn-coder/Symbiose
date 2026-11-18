@@ -69,6 +69,26 @@ def test_limites():
           z.expressed_gene("limite_chaud") == 2.0)
 
 
+def test_borne_seve_tendres():
+    print("\n[1b] D140 C.6 : borne de la sève, tendres, tournesol")
+    from plants import Tomato, Pepper, Bean, Sunflower
+    from plants.base.instance import T_CONGELATION_SEVE
+    from plants.caracteres import sigma_a, SIGMA_GEL_TENDRE
+    t = _p(Tomato, {"rusticite_froid": -3.8})        # ancienne variété à +2,8 °C
+    check("rusticité très négative : gel plafonné à −0,5 °C",
+          t.lim_gel() == T_CONGELATION_SEVE, f"{t.lim_gel()}")
+    s = _p(Rye, {"rusticite_froid": -6.0})
+    check("même un rustique ne gèle pas au-dessus de −0,5 °C",
+          s.lim_gel() <= T_CONGELATION_SEVE, f"{s.lim_gel()}")
+    tendres = (Tomato, Pepper, Basil, Bean, Zucchini)
+    check("tendres : σ_A rusticité réduit",
+          all(sigma_a("rusticite_froid", c) == SIGMA_GEL_TENDRE for c in tendres))
+    check("rustique (seigle) : σ_A général 1,5 °C", sigma_a("rusticite_froid", Rye) == 1.5)
+    pire = Pepper.t_gel_tendre - 2.5 * SIGMA_GEL_TENDRE
+    check("poivron à +2,5 σ : gèle au-dessus de −3 °C", pire > -3.0, f"{pire}")
+    check("tournesol : pas de lésion sans gel", _p(Sunflower).lim_froid() == -math.inf)
+
+
 def test_heat_memory():
     print("\n[2] heat_memory monte sous une feuille chaude, pas à l'ombre fraîche")
     def lab(hum):
@@ -141,6 +161,7 @@ def test_catalogue():
 
 if __name__ == "__main__":
     test_limites()
+    test_borne_seve_tendres()
     test_heat_memory()
     test_heredite()
     test_cout()

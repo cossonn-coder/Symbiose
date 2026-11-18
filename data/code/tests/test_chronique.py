@@ -74,6 +74,27 @@ def test_logique():
     check("le log n'est pas touché", log == copie, log)
 
 
+def test_froid_sans_entete():
+    """D140 C.7 : la nuit froide est écrite AVANT les en-têtes `[T0]` du tick
+    (boucle.py) → lignes sans tuile. Deux tuiles, même tomate fondatrice au même
+    plot : chacune meurt avec sa cause (froid / gel), jamais `non_consignee`."""
+    a, b = _plante(2, 2, age=0), _plante(2, 2, age=0)
+    t0, t1 = NS(tile_id="T0", plants=[a]), NS(tile_id="T1", plants=[b])
+    engine = NS(game_state={"tiles": [t0, t1], "week": 1})
+    ch = Chronique()
+    ch.avant_tick(engine)
+    a.is_alive = b.is_alive = False
+    engine.game_state["week"] = 2
+    ch.apres_tick(engine, [
+        f"  ✗ Santé {TOMATE.name}@(2, 2) -2.8 [froid (lésion sans gel)] → meurt",
+        f"  ✗ Santé {TOMATE.name}@(2, 2) -1.9 [gel (tissu tendre)] → meurt",
+        "  [T0]", "  [T1]"])
+    morts = ch._annee["morts"]["tomate"]
+    check("mort par froid consignée « froid »", morts.get("froid") == 1, dict(morts))
+    check("mort par gel consignée « gel »", morts.get("gel") == 1, dict(morts))
+    check("aucune non_consignee", NON_CONSIGNEE not in morts, dict(morts))
+
+
 def test_serveur():
     from tools.simserver.server import SimServer
     srv = SimServer()
@@ -95,6 +116,7 @@ def test_serveur():
 
 if __name__ == "__main__":
     test_logique()
+    test_froid_sans_entete()
     test_serveur()
     print("ÉCHECS :", ECHECS if ECHECS else "aucun")
     raise SystemExit(1 if ECHECS else 0)

@@ -33,14 +33,14 @@ Départ `db4d6b75…` → après ① **`98a050cf…`** (re-figé : divergence 10
 A seul et la dérivation `_POLLEN_VIBRE_BOURDON` sont bit-identiques ; coût allégé dès s1
 chez achillée, haricot, phacélie, pommier, tournesol, trèfle (gènes muets `pollen`,
 `limite_froid`, `fixation_azote`, `allelopathie`) ; 1ʳᵉ divergence du log en s9 ;
-`population_hash`/`vigueur_hash` intacts). ① **RE-FIGÉ annoncé** · ② **RE-FIGÉ annoncé** (si tendres du smoke
-touchés) · ③④⑤⑥ **INTACT**.
+`population_hash`/`vigueur_hash` intacts). ① **RE-FIGÉ annoncé** · ② **RE-FIGÉ → `25671775…`** (1ʳᵉ divergence s1 : la tomate du smoke ne gèle plus à une nuit > −0,5 °C — borne de la sève — et le tournesol n'a plus de lésion de froid sans gel ; σ_A des tendres bit-identique sur le smoke, chronique neutre) ·
+③④⑤⑥ **INTACT**.
 
 ## Tronçons
 | # | Kickoff | État |
 |---|---|---|
 | ① | `01_paturin_genes_muets.md` — pâturin + gènes muets | **FAIT** 2026-11-18 (golden re-figé `98a050cf…`) |
-| ② | `02_froid_tendres.md` — borne du gel, audit des tendres, chronique | à faire |
+| ② | `02_froid_tendres.md` — borne du gel, audit des tendres, chronique | **FAIT** 2026-11-18 (golden re-figé `25671775…`) |
 | ③ | `03_monde_full_complet.md` — semaine 10, 52 espèces mûres, garde-fou, perf | à faire |
 | ④ | `04_semis_interieur_repiquer.md` — pot dans la maison + `repiquer` | à faire |
 | ⑤ | `05_automate_repiquage.md` — repiquage différé par l'automate | à faire |
@@ -59,5 +59,19 @@ touchés) · ③④⑤⑥ **INTACT**.
 - Pâturin : `pollination_mode = "wind"`, autofécondation neutre 0,9 → fécondation ≥ 0,9.
 - Test : `tests/test_genes_muets.py` (18/18).
 
+## Acquis du ②
+- `T_CONGELATION_SEVE = −0,5` (plants/base/instance.py) : `lim_gel` = min(borne, calcul) —
+  point unique lu par dégâts (`reponse_thermique`), signes (`posture_thermique`) et pont.
+- `SIGMA_GEL_TENDRE = 0,5` (caracteres.py) : σ_A de `rusticite_froid` surchargé
+  (`genetique`) chez les 5 tendres sans endurcissement (tomate, poivron, basilic,
+  haricot, courgette) → variétés entre ≈ −2,3 et −0,5 °C (poivron −4,4 → −2,1).
+- Tournesol : `t_froid_lesion` None.
+- Chronique : cause `froid` ajoutée à `CAUSE_DE_RAISON` ; la nuit froide (comme grêle,
+  aléas, ravageurs) est loguée AVANT les en-têtes `[T0]` (boucle.py) → lignes sans
+  tuile ; repli FIFO `(None, pos, espèce)` dans `chronique._appliquer` (log intact :
+  il entre dans le golden). Vérifié monde `full` s1 : tomate/basilic → `froid`.
+- Tests : `test_niche_thermique` [1b] (30/30), `test_chronique` (froid/gel sans en-tête).
+- À noter : `brûlure (feuille échaudée)` tombe encore en `autre` (hors périmètre).
+
 ## REPRISE
-Lire `CLAUDE.md`, ce fichier, puis le kickoff du premier tronçon « à faire » (②).
+Lire `CLAUDE.md`, ce fichier, puis le kickoff du premier tronçon « à faire » (③).

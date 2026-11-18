@@ -30,6 +30,13 @@ from .stades import GrowthStage, Segment
 SEUIL_SAIN     = 2.5 / 3.0   # au-dessus = sain (ancien health == 3)
 SEUIL_AFFAIBLI = 1.5 / 3.0   # au-dessus = affaibli, en dessous = malade
 
+# Borne PHYSIQUE du gel (D140 C.6) : la sève (eau + sucres et sels dissous) ne
+# congèle pas au-dessus d'environ −0,5 °C. Quelle que soit la dérive génétique
+# (`rusticite_froid` < 0), aucune plante ne GÈLE donc au-dessus de ce seuil — le
+# froid sans gel (lésion des tropicales, `lim_froid`) reste, lui, une voie à part.
+# Point UNIQUE : appliqué dans `lim_gel`, lu par les dégâts ET par les signes.
+T_CONGELATION_SEVE = -0.5
+
 # ---------------------------------------------------------------------------
 # INSTANCE DE PLANTE (avant PlantBase pour la forward ref)
 # ---------------------------------------------------------------------------
@@ -315,10 +322,12 @@ class PlantInstance:
     # décalée par les gènes (couche 2) et par ce que la plante a vécu (couche 3).
     def lim_gel(self) -> float:
         """Nuit la plus froide sous laquelle la plante GÈLE (°C) : gel du tissu
-        tendre de l'espèce − rusticité génétique − endurcissement vécu."""
+        tendre de l'espèce − rusticité génétique − endurcissement vécu, plafonnée
+        par la congélation de la sève (`T_CONGELATION_SEVE`, D140 C.6)."""
         cls = self.plant_class
-        return (cls.t_gel_tendre - self.gene("rusticite_froid")
-                - self.plasticite_c("rusticite_froid", cls.endurcissement_max))
+        return min(T_CONGELATION_SEVE,
+                   cls.t_gel_tendre - self.gene("rusticite_froid")
+                   - self.plasticite_c("rusticite_froid", cls.endurcissement_max))
 
     def lim_froid(self) -> float:
         """Nuit sous laquelle une espèce TROPICALE s'abîme SANS gel (°C). Espèce non
