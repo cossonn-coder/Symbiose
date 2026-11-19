@@ -53,6 +53,26 @@ namespace Symbiose
 				"................",
 				"................",
 			},
+			// Repiquage (départ du jardin ⑥) : la plantule sortie du pot, sa motte aux racines.
+			["repiquer"] = new[]
+			{
+				"................",
+				"....KK...KK.....",
+				"...KVVK.KVGK....",
+				"...KVVVKVGGK....",
+				"....KKVVGKK.....",
+				"......KVGK......",
+				"......KVGK......",
+				"....KKKVGKKK....",
+				"...KTTTTTTBTK...",
+				"...KTTBTTTTTK...",
+				"...KTTTTTBTTK...",
+				"....KTTTTBTK....",
+				".....KKKKKK.....",
+				"................",
+				"................",
+				"................",
+			},
 			// Pelletée de compost : un tas d'humus sombre, grumeleux, piqué de vert.
 			["epandre"] = new[]
 			{

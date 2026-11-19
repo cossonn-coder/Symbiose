@@ -93,6 +93,10 @@ namespace Symbiose
 			("poser_bac_culture",  "poser bac",      'P'),
 			("deplacer_pot",       "déplacer pot",   'C'),
 			("planter_conteneur",  "planter (pot)",  'C'),
+			// Repiquer (départ du jardin ⑥, pont 0.6.25) : geste à 2 temps, kind 'C'
+			// comme déplacer — 1er clic = le POT (index), 2e clic = le PLOT {tile, r, c}
+			// où la plante sort avec sa motte (WorldView.DeuxTemps.cs).
+			("repiquer",           "repiquer",       'C'),
 			// Paillage (équilibre invasion ⑧, protocole 0.5.20). Kind U = pailler un
 			// PLOT {tile, r, c} avec la NATURE courante (cycle touche N) — dépose du
 			// mulch, consomme le stock de cette nature (le serveur refuse si vide).
@@ -176,6 +180,10 @@ namespace Symbiose
 		// le POSER au nouveau point monde. -1 = aucun pot saisi (en attente du 1er
 		// clic). Réinitialisé si on change de geste.
 		private int _grabbedContainer = -1;
+		// Geste REPIQUER à 2 temps (départ du jardin ⑥), même modèle : index du pot
+		// dont on sort la plante, -1 = aucun. Champ distinct de `_grabbedContainer` :
+		// ici le pot RESTE en place, c'est la plante (motte) qui est en main.
+		private int _grabbedRepiquage = -1;
 		// Geste ÉPANDRE à 2 temps (mycélium ⑥, §3.2), même modèle : 1er clic =
 		// SAISIR le bac/pile source (mémorise son index DANS sa tuile + l'id de
 		// tuile, car `epandre` écrit le sol de CETTE tuile) ; 2e clic = le plot
@@ -239,6 +247,7 @@ namespace Symbiose
 			// déplacer pot, épandre) — sinon un 1er clic « saisir » resterait actif
 			// sous un autre outil, source de confusion.
 			_grabbedContainer = -1;
+			_grabbedRepiquage = -1;
 			_grabbedBac = -1;
 			_grabbedMother = null;
 			_grabbedScion = null;

@@ -60,7 +60,8 @@ namespace Symbiose
 		/// (permanente) + canicule + poids de l'eau (croît vers l'apex).</summary>
 		private float LeafDropCm(float z)
 		{
-			float drop = _drought * DroughtDroopCm + _heat * HeatDroopCm + PendThermiqueDropCm;
+			float drop = _drought * DroughtDroopCm + _heat * HeatDroopCm + PendThermiqueDropCm
+				+ PendRepiquageDropCm;   // choc de repiquage (départ ⑥)
 			if (_wet > 0f)
 				drop += _wet * WetDroopCm * _raideur * Mathf.Clamp(z / _heightCm, 0f, 1f);
 			return drop;

@@ -193,7 +193,9 @@ namespace Symbiose
 					// plante exécute le geste, jamais le hub — même si la maison est
 					// devant/derrière la plante. Le hub ne s'ouvre que sur un clic maison
 					// SANS plante sous le curseur.
-					if (!PointeUnePlante(canvas) && ClicSurMaison(canvas))
+					// Idem pot > maison quand un geste de pot est armé (godets de semis
+					// DANS la maison, départ du jardin ⑥ — WorldView.Conteneurs.cs).
+					if (!PointeUnePlante(canvas) && !PointeUnPot(canvas) && ClicSurMaison(canvas))
 						OuvrirConsultation("Carnet");
 					else
 						TryAction(canvas, mb.ShiftPressed);

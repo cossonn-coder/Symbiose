@@ -38,6 +38,7 @@ namespace Symbiose
 			["bouturer"] = (7, 13),             // fond du verre
 			["greffer"] = (8, 9),               // la ligature
 			["planter_conteneur"] = (7, 13),    // fond du pot
+			["repiquer"] = (8, 10),             // le dessous de la motte
 			// taille
 			["pincer"] = (3, 5),                // le bourgeon entre les doigts (② : redessiné)
 			["arracher"] = (6, 10),             // le poing

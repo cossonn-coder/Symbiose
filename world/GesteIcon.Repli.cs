@@ -22,7 +22,7 @@ namespace Symbiose
 		private char PictoKind() => Verb switch
 		{
 			"arroser" => 'o',            // goutte (bleu)
-			"planter" or "planter_conteneur" => 'n',   // graine/pousse (vert)
+			"planter" or "planter_conteneur" or "repiquer" => 'n',   // graine/pousse (vert)
 			"tailler" or "couper" => 'i',   // ciseaux (gris) — coupe nette à l'outil
 			"pincer" => 'c',             // pincement (deux doigts qui se rejoignent)
 			"arracher" => 'e',           // arrachement (tige déchirée)

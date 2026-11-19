@@ -1,7 +1,8 @@
 // SYMBIOSE — WorldView.DeuxTemps.cs (partial de WorldView, GESTES LISIBLES ④)
 // LES GESTES À DEUX TEMPS, sortis de WorldView.ActionDispatch.cs (qui dépassait la
 // bande de taille) : épandre (le tas, puis le plot), déplacer un pot (le pot, puis sa
-// place), bouturer (la mère, puis le plot), greffer (le greffon, puis le porte-greffe).
+// place), bouturer (la mère, puis le plot), greffer (le greffon, puis le porte-greffe),
+// repiquer (le pot, puis le plot de pleine terre — départ du jardin ⑥).
 // Le 1er clic SAISIT (la vue mémorise, rien ne part au pont, le serveur reste sans
 // état) ; le 2e clic désigne la cible et consomme la saisie.
 //
@@ -83,6 +84,27 @@ namespace Symbiose
 			{ RefusDeuxTemps("déplacer : posez le pot sur une tuile, pas sur le chemin"); return false; }
 			target = new GDict { ["container"] = _grabbedContainer, ["x_cm"] = w.X, ["y_cm"] = w.Y };
 			_grabbedContainer = -1;   // saisie consommée
+			return true;
+		}
+
+		/// <summary>REPIQUER (départ du jardin ⑥) : 1er clic = le pot (sa plante sort avec
+		/// sa motte), 2e clic = le PLOT {tile, r, c} de pleine terre. Le pot reste en place,
+		/// vidé. Refus (pot vide, plot hors tuile, Vigueur) rendus par le serveur.</summary>
+		private bool ResoudreRepiquer(Vector2 w, out GDict target)
+		{
+			target = null;
+			if (_grabbedRepiquage < 0)
+			{
+				int near = FindNearestContainer(w, ContainerPickRadiusCm);
+				if (near < 0) { RefusDeuxTemps("repiquer : aucun pot ici (cliquez un pot)"); return false; }
+				_grabbedRepiquage = near;
+				SaisieDeuxTemps("plant sorti avec sa motte — cliquez le plot où le mettre en terre");
+				return false;
+			}
+			if (!FindPlot(w, out string rTile, out int rr, out int rc))
+			{ RefusDeuxTemps("repiquer : cliquez un plot de tuile (pas le chemin ni la maison)"); return false; }
+			target = new GDict { ["container"] = _grabbedRepiquage, ["tile"] = rTile, ["r"] = rr, ["c"] = rc };
+			_grabbedRepiquage = -1;   // saisie consommée
 			return true;
 		}
 

@@ -30,6 +30,12 @@
 //    la vue à partir de volume + fond_ouvert + présence de plante) reçoit des
 //    RACINES TASSÉES affleurant la lèvre du pot. Grand volume / bac couplé (nain
 //    levé) → pas de marque. L'indice suggère la cause, il ne l'explique pas (#6).
+//
+// 📖 Départ du jardin ⑥ — POT DANS LA MAISON : un godet de semis posé dans l'emprise
+// de la maison est dessiné par-dessus elle (WorldView.Conteneurs.cs). Pour qu'on lise
+// « dedans, derrière la vitre » et non « un pot qui flotte sur le mur », il est posé
+// sur l'APPUI d'une petite fenêtre (mêmes granite, verre et menuiserie que les baies
+// de HouseNode). Rien d'autre ne change : lumière et chaleur sont au moteur.
 
 using Godot;
 using System.Collections.Generic;
@@ -85,11 +91,19 @@ namespace Symbiose
 		private readonly int _rows, _cols; // géométrie du mini-sol (bac N×M)
 		private readonly bool _fondOuvert; // ⑥c.A : communique avec la tuile dessous
 		private readonly bool _rootBound;  // ⑥c.B : nain non levé (petit volume confiné)
+		private readonly bool _interieur;  // départ ⑥ : dans la maison (sur l'appui d'une fenêtre)
+
+		// Fenêtre derrière un pot intérieur : hauteur du verre au-dessus de l'appui, et
+		// demi-largeur en multiple de la demi-largeur écran de la lèvre du pot.
+		private const float FenetreHautCm = 55f;
+		private const float FenetreLargeur = 1.5f;
 
 		public ContainerStructure(string kind, string substrat, float volume,
 								  int rows, int cols,
-								  bool fondOuvert = false, bool rootBound = false)
+								  bool fondOuvert = false, bool rootBound = false,
+								  bool interieur = false)
 		{
+			_interieur = interieur;
 			_kind = kind;
 			_substrat = substrat;
 			_volume = volume;
@@ -145,6 +159,7 @@ namespace Symbiose
 			int front = 0;
 			for (int i = 1; i < 4; i++) if (lipR[i].Y > lipR[front].Y) front = i;
 			int right = (front + 3) % 4, left = front;
+			if (_interieur) DrawFenetre(lipR);   // derrière le pot : peinte d'abord
 
 			foreach (int w in new[] { right, left })
 			{
@@ -164,6 +179,25 @@ namespace Symbiose
 			// avant. Le pot est toujours fond FERMÉ → pas de racine vers le sol.
 			if (_rootBound)
 				DrawRootBoundFringe(new[] { lipR[front], lipR[(front + 1) % 4] });
+		}
+
+		// Départ ⑥ — la fenêtre derrière un godet intérieur, rectangle ÉCRAN (une baie est
+		// verticale quelle que soit la rotation de vue) : encadrement granite, verre sombre,
+		// un meneau, une traverse, et l'appui clair sur lequel le pot est posé.
+		private void DrawFenetre(Vector2[] lipR)
+		{
+			float minX = lipR[0].X, maxX = lipR[0].X;
+			foreach (Vector2 p in lipR) { minX = Mathf.Min(minX, p.X); maxX = Mathf.Max(maxX, p.X); }
+			float demi = (maxX - minX) / 2f * FenetreLargeur, cx = (minX + maxX) / 2f;
+			float haut = -FenetreHautCm * WorldView.PxPerCmZ, cadre = Mathf.Max(1.5f, demi * 0.12f);
+			DrawRect(new Rect2(cx - demi - cadre, haut - cadre, 2f * (demi + cadre), -haut + cadre),
+					 Palette16.GraniteClair);
+			DrawRect(new Rect2(cx - demi, haut, 2f * demi, -haut), Palette16.VitreSombre);
+			DrawLine(new Vector2(cx, haut), new Vector2(cx, 0f), Palette16.MenuiserieSombre, cadre * 0.6f);
+			DrawLine(new Vector2(cx - demi, haut / 2f), new Vector2(cx + demi, haut / 2f),
+					 Palette16.MenuiserieSombre, cadre * 0.6f);
+			DrawRect(new Rect2(cx - demi - 2f * cadre, -cadre, 2f * (demi + 2f * cadre), 2f * cadre),
+					 Palette16.GraniteClair);   // appui de fenêtre
 		}
 
 		// Racines tassées (⑥c.B) : un court chevelu vertical le long de l'arête

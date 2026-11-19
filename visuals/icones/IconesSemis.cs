@@ -4,7 +4,8 @@
 // aucune logique. Pour retoucher une icône, modifier ses lettres puis regarder la
 // planche (`tools/capture_vm.sh -I`). Quatre jeunes pousses, quatre SUPPORTS :
 // la butte de terre (planter), le verre d'eau (bouturer), le tronc ligaturé
-// (greffer), le pot de terre cuite (planter en conteneur).
+// (greffer), le pot de terre cuite (planter en conteneur). Repiquer (départ du jardin
+// ⑥) : la plantule sort du pot renversé, sa motte de terre encore aux racines.
 
 using System.Collections.Generic;
 
@@ -93,6 +94,26 @@ namespace Symbiose
 				"...KOOOOOOOBK...",
 				"...KKKKKKKKKK...",
 				"................",
+			},
+			// Repiquage : la plantule tenue au-dessus de son pot couché, motte aux racines.
+			["repiquer"] = new[]
+			{
+				"....KK...KK.....",
+				"...KVVK.KVGK....",
+				"...KVVVKVGGK....",
+				"....KKVVGKK.....",
+				"......KVGK......",
+				"......KVGK......",
+				"....KKKVGKKK....",
+				"...KTTTTTTBTK...",
+				"...KTTBTTTTTK...",
+				"....KTTTTBTK....",
+				".....KKKKKK.....",
+				"........KKKKKK..",
+				"......KKOOOOOBK.",
+				".....KOOOOOOOBK.",
+				"......KKOOOOOBK.",
+				"........KKKKKK..",
 			},
 		};
 	}

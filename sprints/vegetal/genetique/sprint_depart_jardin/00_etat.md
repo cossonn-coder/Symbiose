@@ -35,7 +35,7 @@ chez achillée, haricot, phacélie, pommier, tournesol, trèfle (gènes muets `p
 `limite_froid`, `fixation_azote`, `allelopathie`) ; 1ʳᵉ divergence du log en s9 ;
 `population_hash`/`vigueur_hash` intacts). ① **RE-FIGÉ annoncé** · ② **RE-FIGÉ → `25671775…`** (1ʳᵉ divergence s1 : la tomate du smoke ne gèle plus à une nuit > −0,5 °C — borne de la sève — et le tournesol n'a plus de lésion de froid sans gel ; σ_A des tendres bit-identique sur le smoke, chronique neutre) ·
 ③④ **INTACT** (④ vérifié : `bce813af…`, golden courant après les sprints plante vivante /
-stress au bilan) · ⑤ **INTACT** (vérifié `bce813af…`) · ⑥ **INTACT** attendu.
+stress au bilan) · ⑤ **INTACT** (vérifié `bce813af…`) · ⑥ **INTACT** (vérifié `bce813af…`).
 
 ## Tronçons
 | # | Kickoff | État |
@@ -44,8 +44,8 @@ stress au bilan) · ⑤ **INTACT** (vérifié `bce813af…`) · ⑥ **INTACT** a
 | ② | `02_froid_tendres.md` — borne du gel, audit des tendres, chronique | **FAIT** 2026-11-18 (golden re-figé `25671775…`) |
 | ③ | `03_monde_full_complet.md` — semaine 10, 52 espèces mûres, garde-fou, perf | **FAIT** 2026-11-18 (golden intact) |
 | ④ | `04_semis_interieur_repiquer.md` — pot dans la maison + `repiquer` | **FAIT** 2026-11-19 (golden intact `bce813af…`, pont 0.6.25, commit `848dbd3`) |
-| ⑤ | `05_automate_repiquage.md` — repiquage différé par l'automate | **FAIT** 2026-11-19 (golden intact `bce813af…`, pont 0.6.26, non commité) |
-| ⑥ | `06_vue_banc.md` — palette, pots visibles, banc `depart_jardin`, clôture | à faire |
+| ⑤ | `05_automate_repiquage.md` — repiquage différé par l'automate | **FAIT** 2026-11-19 (golden intact `bce813af…`, pont 0.6.26, commit `836dfaa`) |
+| ⑥ | `06_vue_banc.md` — palette, pots visibles, banc `depart_jardin`, clôture | **FAIT** 2026-11-19 (golden intact `bce813af…`, pont 0.6.26 inchangé, `dotnet build` vert) |
 
 ## Acquis du ①
 - Registre `plants/caracteres.py` : champ `exprime` (prédicat sur la classe, None = toutes)
@@ -206,8 +206,71 @@ stress au bilan) · ⑤ **INTACT** (vérifié `bce813af…`) · ⑥ **INTACT** a
   récolte du tick (`recolter` priorité 20), puis épuisé (≈ 33 `tailler` en échec/sem). Les
   repiquages s15-s16 échouent ainsi faute de Vigueur et passent en s17-s18.
 
+## Acquis du ⑥ (2026-11-19)
+- **Geste `repiquer` dans la vue** : entrée `("repiquer", "repiquer", 'C')` de `Gestes[]`
+  (`world/WorldView.Actions.cs`) → palette et tiroir (famille `semis`, donnée par le pont).
+  Geste à 2 temps (`ResoudreRepiquer`, `world/WorldView.DeuxTemps.cs`) : 1er clic = le pot
+  (index), 2e clic = le plot `{tile, r, c}` ; saisie `_grabbedRepiquage` (distincte de
+  `deplacer_pot` : le pot reste en place), lâchée par Échap/clic droit, rappel au HUD.
+  Icône 16×16 (plantule et motte au-dessus du pot couché, `IconesSemis`), point chaud,
+  mouvement `Poser`, suite d'images, objet en main (la plantule et sa motte).
+- **Pots dans la maison** : un conteneur `interieur` est dessiné PAR-DESSUS la maison
+  (ZIndex +1, à sa vraie place) devant une petite fenêtre (granite, verre, croisillons,
+  appui — `ContainerStructure.DrawFenetre`) ; un clic sur un pot passe avant le hub de la
+  maison quand un geste de pot est armé (`PointeUnPot`, `WorldView.Controls.cs`). Vu à la
+  capture VM : `planche/banc_x4_godets.png`.
+- **Choc de repiquage visible** : le pont l'exportait déjà (`plants[].memoires.racines_coupees`,
+  0.6.25) → aucune clé ajoutée. `PlanteLue.LireRacinesCoupees` → `PlantRenderer.SetRepiquage`
+  (partial neuf `visuals/PlantRenderer.Repiquage.cs`) : feuilles abaissées de
+  `PendRepiquageCm` 6 × part manquante (chignon 0,70 → ≈ 4 cm), 4 échelons, s'efface
+  quand les racines repoussent (0,15/sem → ≈ 5 semaines).
+- **Banc `depart_jardin`** (`data/code/bancs/depart_jardin.py`, s3, warmup 0, seed 42) :
+  tuile DEPART au sud de la maison ; 2 godets de tomate DANS la maison (témoin à x 900,
+  « à repiquer » à x 1000), 1 godet dehors (plot (2,14)), 1 tomate repiquée à l'ouverture
+  au plot (2,2) par la façade `repiquer` (choc `chignon` 0,70), 2 haricots semés en
+  (2,10)/(2,11), plot cible du repiquage (2,6) ; gestes de pot ouverts au `post_init` ;
+  germination férale coupée. **Oracle** `tests/test_banc_depart_jardin.py` (4/4 PASS),
+  mesuré [seed 42, n=1] : tomate trop tôt morte **`froid`** en s5 (carnet ET chronique —
+  pas de `gel` : la nuit la plus froide n'atteint pas sa `lim_gel` −1,0 °C, la lésion de
+  froid sous `lim_froid` 10 °C suffit) ; haricots levés s5 et s8 ; godet (2) repiqué par le
+  pont en s15 vivant en s19 ; témoin vivant.
+- Vertes : golden, `test_gestes_lisibles` 26/26, `test_acces_gestes` 56/56,
+  `test_atteignabilite` 36/36, `test_repiquage` 19/19, `test_automate_repiquage` 16/16.
+  LDC : `WorldView.Snapshot.cs` 305 et `WorldView.Hud.cs` 303 (🟡, déjà au-dessus avant),
+  le reste < 300.
+- ⚠️ **Constats (non corrigés)** :
+  (a) **les plantules des godets ne se dessinent pas** : un plant de pot n'a aucun segment
+  (`BuildContainerPlants` saute « germination sans bois ») — le pot de tick ne fait pas
+  pousser de structure (rejoint ④ e) ; on voit les godets et la fenêtre, pas la tomate.
+  (b) **le godet de 2 L est dessiné large et plat** (empreinte fixe 32 cm, hauteur ∝ √volume
+  → ≈ 5 cm) : il se lit comme un plateau de semis. Peaufinage reporté (refonte du rendu).
+  (c) **T_sol du moteur à 13-14 °C début avril** [banc, seed 42] : les haricots lèvent dès
+  s5, l'« attente d'un sol chaud » est courte. Moteur, pas touché.
+  (d) Le pot dehors ne gèle pas (pas de météo dans `Container.tick` hors maison, ④ c) :
+  le banc le montre tel quel.
+
+## Recette F5 (Nico)
+1. **Banc `depart_jardin`** (sélecteur de bancs), ×4-×8 sur la façade sud de la maison :
+   deux godets sur l'appui de deux petites fenêtres (dedans), un godet sur la tuile (dehors),
+   une tomate en terre aux feuilles un peu tombantes (choc), deux plots semés.
+   - Lancer la saison : la tomate repiquée trop tôt ternit en s4 et **meurt de froid en s5** ;
+     carnet et chronique disent « froid ».
+   - Les haricots lèvent (s5 et s8).
+   - Avancer (Turbo) jusqu'en **s15** ; choisir `repiquer` (famille semis du tiroir) : clic sur
+     le godet de droite (x 1000) — la plantule et sa motte suivent le curseur —, puis clic sur
+     un plot de la tuile. Le plant est en terre, feuilles un peu tombantes ≈ 5 semaines, il vit.
+   - Le témoin reste dans la maison, vivant. Échap repose une motte en main.
+2. **Monde `full`** : ouverture fin mai (s10), une plante mûre de chaque espèce, arbres
+   adultes ; trois godets (tomate, basilic, poivron) sur l'appui des fenêtres sud ;
+   `repiquer` ouvert d'emblée ; à la main, ou **automate branché : les godets sortent en
+   s17-s18 (mi-juin)**, quand les nuits passent la limite de froid des tendres (10 °C) — pas
+   fin mai, c'est le moteur qui le dit ; morts de froid/gel consignées `froid`/`gel` dans la
+   chronique (plus de `non_consignee`).
+3. Ressenti à donner : lisibilité des godets « derrière la vitre », du choc (feuilles qui
+   pendent), de l'icône `repiquer` et du curseur.
+
 ## REPRISE
-**SUSPENDU avant ④ (2026-11-18)** : hécatombe par herbivorie à l'ouverture, confirmée au F5 de Nico → DETTE.md D140 (G), CONÇU le 2026-11-18 : attendre la clôture de `sprints/vegetal/sante/sprint_plante_vivante/` puis `sprint_stress_au_bilan/` (les plantes vivent d'un bilan carbone, plus de PV — le choc de repiquage du ④ doit s'exprimer en feuillage/réserves, relire `docs/vegetal/sante/conception_plante_vivante.md`). Noms d'espèces en français → D141 (hors sprint).
-④ FAIT (`848dbd3`), ⑤ FAIT (non commité). Lire `CLAUDE.md`, ce fichier (§Acquis du ④ et du ⑤), puis
-le kickoff ⑥ `06_vue_banc.md`. Au ⑥ : `repiquer` est déjà ouvert à l'init (point ④ d
-réglé) ; F5 automate = les godets sortent mi-juin (s17-s18), pas fin mai.
+**SPRINT CLOS CÔTÉ CODE le 2026-11-19** (①→⑥, golden `bce813af…`, pont 0.6.26). **F5 de Nico
+attendu** (recette ci-dessus). Constats ouverts : ③ hécatombe → D140 G (close côté code) ;
+④ a-e et ⑥ a-d ci-dessus ; Vigueur LIBRE de l'automate → DETTE D81 (c). D140 D, E, F restent
+ouverts.

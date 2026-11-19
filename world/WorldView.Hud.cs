@@ -306,6 +306,11 @@ namespace Symbiose
 					geste += _grabbedContainer >= 0
 						? " : pot soulevé → cliquez où le poser"
 						: " (cliquez un pot, puis sa destination)";
+				// repiquer : 2 temps (départ du jardin ⑥), le pot puis le plot.
+				else if (g.Verb == "repiquer")
+					geste += _grabbedRepiquage >= 0
+						? " : motte en main → cliquez le plot"
+						: " (cliquez un pot, puis le plot)";
 				// bouturer / greffer : gestes à 2 temps (palette ④), rappel de l'état
 				// de saisie (mère/greffon saisi → cliquez la cible).
 				else if (g.Verb == "bouturer")

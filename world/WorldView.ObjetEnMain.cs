@@ -44,6 +44,7 @@ namespace Symbiose
 		private string VerbeEnMain() =>
 			_grabbedBac >= 0 ? "epandre"
 			: _grabbedContainer >= 0 ? "deplacer_pot"
+			: _grabbedRepiquage >= 0 ? "repiquer"
 			: _grabbedMother != null && IsInstanceValid(_grabbedMother) ? "bouturer"
 			: _grabbedScion != null && IsInstanceValid(_grabbedScion) ? "greffer"
 			: null;
@@ -64,6 +65,7 @@ namespace Symbiose
 			return verbe switch
 			{
 				"deplacer_pot" => true,
+				"repiquer" => true,   // n'importe quel plot de tuile (le moteur juge)
 				"greffer" => FindPlant(_sourisMonde, PickRadiusCm) is { } p
 							 && p.GetMeta("tile").AsString() == _grabbedScionTile,
 				_ => tuile == TuileEnMain(verbe),
@@ -179,6 +181,7 @@ namespace Symbiose
 			if (VerbeEnMain() == null) return false;
 			_grabbedBac = -1;
 			_grabbedContainer = -1;
+			_grabbedRepiquage = -1;
 			_grabbedMother = null;
 			_grabbedScion = null;
 			_lastActionMsg = "objet reposé";

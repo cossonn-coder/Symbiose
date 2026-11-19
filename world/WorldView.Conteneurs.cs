@@ -65,6 +65,15 @@ namespace Symbiose
 		// nettement sous la pleine terre est rapetissée). Const = calibrage F5.
 		private const float NainVolumeSeuilL = 60f;
 
+		// 📖 Départ du jardin ⑥ — POT DANS LA MAISON (`interieur` au pont, 0.6.25). Le
+		// moteur pose les godets de semis DANS l'emprise de la maison : triés comme un
+		// objet ordinaire, ils seraient cachés par ses murs. Solution la plus simple, sans
+		// toucher la maison : un pot intérieur est dessiné PAR-DESSUS elle (ZIndex +1), à
+		// sa vraie place au sol, devant une petite fenêtre (ContainerStructure) — on le
+		// voit « à travers la vitre ». Le clic sur lui passe avant le hub de la maison
+		// quand un geste de pot est armé (PointeUnPot, WorldView.Controls.cs).
+		private const int ZPotInterieur = 1;
+
 		// Lit `eco_summary` (scalaires plot 0,0 du mini-sol) en ContainerInfo pour
 		// l'étiquette de survol. Tolérant : valeurs neutres si le bloc manque.
 		private ContainerInfo ReadInfo(GDict ct, string kind, string substrat,
@@ -134,12 +143,14 @@ namespace Symbiose
 				bool rootBound = !fondOuvert
 					&& volume <= NainVolumeSeuilL
 					&& HasLivingPlant(ct);
+				bool interieur = ct.ContainsKey("interieur") && ct["interieur"].AsBool();
+				int z = interieur ? ZPotInterieur : ZObjet(cx, cy);   // tri avec la maison (D112 ②)
 
 				var node = new ContainerStructure(kind, substrat, volume, rows, cols,
-												  fondOuvert, rootBound)
+												  fondOuvert, rootBound, interieur)
 				{
 					Position = WorldToScreen(cx, cy),
-					ZIndex = ZObjet(cx, cy),   // tri avec la maison (D112 ②)
+					ZIndex = z,
 					Name = $"container_{id}",
 				};
 				_objects.AddChild(node);
@@ -147,7 +158,7 @@ namespace Symbiose
 				// Plante(s) du mini-sol → PlantRenderer ancré autour du centre du
 				// conteneur (offset local − demi-grille, projeté en OFFSET → tourne
 				// avec la vue). On réutilise le diff/rendu PlantRenderer standard.
-				var plantNodes = BuildContainerPlants(ct, cx, cy, rows, cols);
+				var plantNodes = BuildContainerPlants(ct, cx, cy, rows, cols, z);
 				_containers.Add((idx, id, cx, cy, node, plantNodes,
 								 ReadInfo(ct, kind, substrat, volume, fondOuvert)));
 				idx++;
@@ -160,7 +171,7 @@ namespace Symbiose
 		// Pas de fondu (reconstruction pleine) ; pas de diff par clé (les conteneurs
 		// sont peu nombreux → on recrée). Tolérant à un conteneur sans plante.
 		private List<PlantRenderer> BuildContainerPlants(GDict ct, float cx, float cy,
-														 int rows, int cols)
+														 int rows, int cols, int z)
 		{
 			var nodes = new List<PlantRenderer>();
 			if (!ct.ContainsKey("plants")) return nodes;
@@ -181,7 +192,7 @@ namespace Symbiose
 				var renderer = new PlantRenderer
 				{
 					Position = worldPos,
-					ZIndex = ZObjet(cx, cy),   // même plan que son conteneur (D112 ②)
+					ZIndex = z,   // même plan que son conteneur (D112 ②, pot intérieur ⑥)
 					Name = $"potplant_{_plantSeq++}",
 				};
 				_objects.AddChild(renderer);
@@ -218,6 +229,14 @@ namespace Symbiose
 				nodes.Add(renderer);
 			}
 			return nodes;
+		}
+
+		/// <summary>Un geste de POT est armé et un pot est sous le clic : ce clic va au
+		/// geste, pas au hub de la maison (les godets de semis sont DANS la maison, ⑥).</summary>
+		private bool PointeUnPot(Vector2 canvasMouse)
+		{
+			if (_gesteIndex < 0 || Gestes[_gesteIndex].Kind != 'C') return false;
+			return FindNearestContainer(ScreenToWorld(canvasMouse), ContainerPickRadiusCm) >= 0;
 		}
 
 		/// <summary>

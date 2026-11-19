@@ -59,6 +59,7 @@ namespace Symbiose
 			["poser_ruche"] = Mouvement.Poser,
 			["planter"] = Mouvement.Poser,
 			["planter_conteneur"] = Mouvement.Poser,
+			["repiquer"] = Mouvement.Poser,
 			["deplacer_pot"] = Mouvement.Poser,
 			["palisser"] = Mouvement.Poser,
 			// ramasser : la main plonge, remonte, deux éclats

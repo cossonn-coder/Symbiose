@@ -16,6 +16,8 @@ namespace Symbiose
 			["planter"] = Puis(Poser(13), T(0, 0, (3, 0, 'Y'), (12, 0, 'Y'))),
 			// Même chose dans un pot.
 			["planter_conteneur"] = Puis(Poser(13), T(0, 0, (2, 0, 'Y'), (13, 0, 'Y'))),
+			// La motte descend dans le trou, touche, se tasse : la plantule est en terre.
+			["repiquer"] = Puis(Poser(13), T(0, 0, (3, 10, 'Y'), (12, 10, 'Y'))),
 			// La bouture plonge dans le verre (éclaboussure), des bulles montent et
 			// de petites racines blanches apparaissent au pied de la tige.
 			["bouturer"] = new[]

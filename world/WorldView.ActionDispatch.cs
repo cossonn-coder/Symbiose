@@ -298,6 +298,12 @@ namespace Symbiose
 						if (!ResoudreDeplacerPot(w, out target)) return;
 						break;
 					}
+					// Repiquer = 2 temps : le pot, puis le plot (départ du jardin ⑥).
+					if (verb == "repiquer")
+					{
+						if (!ResoudreRepiquer(w, out target)) return;
+						break;
+					}
 					// planter_conteneur : 1 clic = désigner le conteneur + graine du
 					// cycle S (symétrie avec `planter` sur tuile).
 					if (_seeds.Count == 0)
