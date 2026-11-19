@@ -30,12 +30,14 @@ def check(nom, ok, detail=""):
 TOMATE = PLANT_CATALOGUE["tomate"]
 
 
-def _plante(r, c, age=10):
-    return NS(plant_class=TOMATE, position=(r, c), is_alive=True, age_weeks=age)
+def _plante(r, c, age=10, ans=None):
+    """`age` = semaines DANS le stade (`age_weeks`) ; `ans` = âge vrai (`age_years`)."""
+    return NS(plant_class=TOMATE, position=(r, c), is_alive=True, age_weeks=age,
+              age_years=age / 52.0 if ans is None else ans)
 
 
 def test_logique():
-    a, b, c = _plante(1, 1), _plante(2, 2), _plante(3, 3, age=40)
+    a, b, c = _plante(1, 1), _plante(2, 2), _plante(3, 3, age=0, ans=2.5)
     tuile = NS(tile_id="T0", plants=[a, b, c])
     engine = NS(game_state={"tiles": [tuile], "week": 1})
     ch = Chronique()
@@ -58,7 +60,10 @@ def test_logique():
     r = ch.registre[-1] if ch.registre else {}
     check("disparition au registre (cause, âge, tuile)",
           r.get("quoi") == "disparition" and r.get("cause") == HORS_TICK
-          and r.get("age_sem") == 40 and r.get("tuile") == "T0", r)
+          and r.get("age_ans") == 2.5 and r.get("tuile") == "T0", r)
+    # D140 g1 : l'âge vrai (2,5 ans), pas les semaines du stade (0).
+    check("texte : âge vrai en années", "2,5 ans d'âge" in ch.texte(),
+          ch.texte())
 
     # Tick suivant : une tomate lève → levée comptée + retour au registre.
     tuile.plants.append(_plante(4, 4, age=0))

@@ -28,7 +28,7 @@ chêne), souches à réserve finie (fin de la cascade de rejets), ouverture du m
 ## Golden
 Départ `25671775…` (fin du ③ de `sprint_depart_jardin`). ① **INTACT** ·
 ② **RE-FIGÉ → `699edb51a320f784…`** (modèle de vie) · ③ **RE-FIGÉ → `8f2dd7add938b4cb…`** (herbivorie seule,
-preuve par neutralisation) · ④ intact attendu · ⑤ ⑥ **INTACT**.
+preuve par neutralisation) · ④ intact · ⑤ **INTACT** (vérifié) · ⑥ **INTACT**.
 Perf de référence à mesurer au ① (tick `full` s10-s30, commit de départ).
 
 ## Tronçons
@@ -38,7 +38,7 @@ Perf de référence à mesurer au ① (tick `full` s10-s30, commit de départ).
 | ② | `02_bascule_vie.md` — vitalité dérivée, famine, `erode` = tissus | **FAIT** (golden RE-FIGÉ `699edb51…`, non commité) |
 | ③ | `03_herbivorie_atteinte.md` — chaque ravageur mange ce qu'il atteint | **FAIT** (golden RE-FIGÉ `8f2dd7ad…`, non commité) |
 | ④ | `04_souches_reserve.md` — réserve de souche, rejets sans souche propre | **FAIT** (golden INTACT `8f2dd7ad…`, non commité) |
-| ⑤ | `05_ouverture_mesure.md` — critères `full` s10→s30 + âge de la chronique | à faire |
+| ⑤ | `05_ouverture_mesure.md` — critères `full` s10→s30 + âge de la chronique | **FAIT** (golden INTACT `8f2dd7ad…`, non commité) |
 | ⑥ | `06_vue_banc.md` — pont, rendu du feuillage, info-bulle, banc, clôture | à faire |
 
 ## Acquis du ① (2026-11-18)
@@ -173,6 +173,29 @@ Perf de référence à mesurer au ① (tick `full` s10-s30, commit de départ).
   À relire au ⑤ sur un horizon plus long si des arbres meurent.
 - LDC : `perturbations.py` 310 (🟡, était 303), `souche.py` 86, `instance.py` 286.
 
+## Acquis du ⑤ (2026-11-19)
+- Ouverture : `semer_fondateur` → réserves et feuillage à 1,0 par défaut ; la
+  pré-croissance (`pre_croitre`/`grow_plant`) ne touche ni l'un ni l'autre (vérifié :
+  136 plantes à l'init, min réserves 1,0, min feuillage 1,0). Rien à corriger.
+- Chronique (D140 g1) : le registre porte `age_ans` (= `age_years`, ex-`age_sem` =
+  `age_weeks`, semaines DANS le stade) ; texte « N sem » sous un an, « X,Y ans » au-delà.
+  Seul consommateur du registre brut : `tests/test_chronique` (adapté) ; la vue C# ne lit
+  que le texte. Pont non versionné (champ de rapport, pas de snapshot).
+- Banc `tests/test_ouverture_vivante.py` (≈ 15 s) — **3 critères TENUS**, aucun paramètre
+  d'espèce ni `K_HERB` touché [seed 42, n=1] : arbres posés morts **0/13** ; herbacées
+  posées mortes hors fin de cycle **19/123 = 15,4 %** (famine 15 : poivron 7, sphaigne 3,
+  drosera 2, tomate/basilic/mâche 1 — limitant `ombre` sauf mâche `chaud` ; herbivorie 3
+  tomate ; froid 1 basilic) ; fin de cycle 14 ; rejets **0** pour 0 arbre mort.
+- Horizon s10→s61 [même seed, n=1, hors banc] : morts posées fin de cycle 38, froid 38
+  (gel d'automne des tendres : tomate 12, basilic 11, poivron 8, haricot 7), famine 20,
+  herbivorie 3 ; famine trèfle 2, menthe 1, violette 1 — **myrtille, saule, bambou : aucune
+  mort de posée** (la famine trèfle/bambou du ③ comptait tous les pieds : elle porte sur ceux nés après l'ouverture — ramets ou semis, non distingués ici).
+  1 ligneux mort (non posé), 0 rejet → la fin de cascade reste prouvée par banc seul (④).
+- Perf tick `full` s10→s30 [3 paires alternées, worktree `4097067` vs ⑤, charge 0,8-1,0] :
+  10,38/10,22/9,27 s → 11,29/11,16/10,11 s = **+9 %** sur le sprint (budget ≤ +10 %/tronçon
+  tenu ; le +16 % du ③ ne se retrouve pas à cette charge).
+- LDC : `chronique.py` 127, `test_ouverture_vivante.py` 77.
+
 ## Diagnostic d'origine (2026-11-18, seed 42, n=1 par cas)
 Ouverture s10 → morts des 136 posées à s21 : tel quel 121 ; faune pré-roulée 130 ;
 prédateurs seuls pré-roulés 97 ; `stress_memory` amorcée 0,12 → 49. Semis de
@@ -182,6 +205,6 @@ naissances par espèce/semaine via `SimServer().cmd_init({"config":"full","seed"
 puis `engine.tick_semaine()`.
 
 ## REPRISE
-①②③④ faits (④ non commité). Lire `CLAUDE.md`, ce fichier, la conception, puis
-`05_ouverture_mesure.md` (prochain tronçon).
+①→⑤ faits (⑤ non commité). Lire `CLAUDE.md`, ce fichier, la conception, puis
+`06_vue_banc.md` (prochain tronçon).
 Golden courant `8f2dd7add938b4cb…`. Lancer : `/sprint-auto sprint_plante_vivante`.

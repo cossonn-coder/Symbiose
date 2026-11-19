@@ -127,7 +127,10 @@ class Chronique:
             if raison:
                 an["autres"][raison] += 1
             self._effectifs[esp] -= 1
-            dernieres[esp] = {"cause": cause, "age_sem": p.age_weeks, "tuile": tuile}
+            # Âge VRAI (`age_years`, D140 g1) : `age_weeks` ne compte que les semaines
+            # DANS le stade courant (`advance_stage` le remet à 0).
+            dernieres[esp] = {"cause": cause, "age_ans": round(p.age_years, 4),
+                              "tuile": tuile}
         for i, (p, _) in maintenant.items():
             if i not in avant:
                 esp = _cle(p)
@@ -180,8 +183,15 @@ class Chronique:
                 lignes.append(f"{tete} revient")
             else:
                 lignes.append(f"{tete} disparaît, dernière mort : {r['cause']}, "
-                              f"{r['age_sem']} sem d'âge, tuile {r['tuile']}")
+                              f"{_age_texte(r['age_ans'])} d'âge, tuile {r['tuile']}")
         return "\n".join(lignes)
+
+
+def _age_texte(ans: float) -> str:
+    """Âge lisible : en semaines sous un an, en années au-delà."""
+    if ans < 1.0:
+        return f"{int(round(ans * 52))} sem"
+    return f"{ans:.1f}".replace(".", ",") + " ans"
 
 
 def _bloc_annee(b: dict) -> list[str]:
