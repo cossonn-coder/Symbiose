@@ -239,6 +239,7 @@ pointeur ci-dessous. Ne plus écrire le contenu des entrées ici.
 - [2026-11-19 — sprint **PLANTE VIVANTE** (D140 G, A) CLOS côté code ①→⑥ : bilan carbone, famine, herbivorie par atteinte, souches à réserve finie ; posées mortes à s21 104 → 10 [n=1] ; golden `8f2dd7ad…`, pont 0.6.21 ; F5 attendu](journal/194_2026-11-19_sprint-plante-vivante-CLOS.md)
 - [2026-11-19 — sprint **LISIBILITÉ DU BILAN** CLOS côté code ①→③ : hauteur acquise, noms français (D141), tiges paille au sol, banc consoudes ; golden `e24a23d8…`, pont 0.6.23 ; F5 attendu](journal/195_2026-11-19_sprint-lisibilite-bilan-CLOS.md)
 - [2026-11-19 — sprint **STRESS AU BILAN** (D140 G, B) CLOS côté code ①②②bis③④⑤ : chaque stress retire ce qu'il retire (embolie, tissus gelés, grêle, mildiou, oïdium, racines), vieillesse et fin de cycle au bilan ; causes en mots, carnet qui dit la cause amont d'une famine, banc `stress_au_bilan` ; golden `bce813af…`, pont 0.6.24 ; F5 attendu ; D140 (G) close côté code](journal/196_2026-11-19_sprint-stress-au-bilan-CLOS.md)
+- [2026-11-19 — sprint **DÉPART DU JARDIN** (D140 A+B+C) CLOS côté code ①→⑥ : pâturin + gènes muets, borne de gel, monde `full` s10 à 52 espèces mûres, pot dans la maison + `repiquer` (choc au bilan), automate qui repique mi-juin, banc `depart_jardin` ; golden `bce813af…`, pont 0.6.26 ; F5 attendu](journal/197_2026-11-19_sprint-depart-jardin-CLOS.md)
 
 > Tout le contenu détaillé est dans les fichiers liés ci-dessus
 > (`journal/` et `journal_archive/`). La dette est dans [`DETTE.md`](DETTE.md).
