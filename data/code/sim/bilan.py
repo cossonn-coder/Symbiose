@@ -60,6 +60,17 @@ OIDIUM_RENDEMENT = 0.5
 # Part de la couverture qui s'efface chaque semaine : feuilles neuves indemnes, vieilles
 # feuilles tombées. Sans nouvelle contamination, une couverture se dissipe en ~2 mois.
 OIDIUM_EFFACE = 0.10
+# --- Vieillesse (stress au bilan ④) --------------------------------------------
+# Passé l'onset de sénescence (`sim/tempo.declin_senescent` ∈ [0, 1], 1 à la
+# longévité), le vieux sujet RAPPORTE moins (houppier qui se dégarnit, vaisseaux
+# vieillis, feuilles plus petites) et COÛTE plus (bois de cœur à entretenir, plaies
+# qui ne se ferment plus) : P × (1 − VIEIL_PHOTO·d), E × (1 + VIEIL_ENTRETIEN·d).
+# La mort n'est plus tirée au sort : elle vient du bilan, quand la production d'une
+# année ne couvre plus l'entretien (famine émergente). Pour un sujet qui produit ρ
+# fois son entretien sur l'année, le déficit arrive à d* = (ρ − 1)/(ρ + 1) : ρ = 3
+# → d* = 0,5, soit l'âge où l'ancien tirage `SEN_RATE` tuait (≈ 0,85 × longévité).
+VIEIL_PHOTO = 1.0
+VIEIL_ENTRETIEN = 1.0
 
 
 def _rampe(x: float, x0: float, x1: float) -> float:
@@ -130,14 +141,32 @@ def entretien(t_air: float, dormante: bool, presence: float = 1.0) -> float:
     return e * (DORMANCE + (1.0 - DORMANCE) * presence)
 
 
+def production(plant, presence: float, f_l: float, f_e: float, f_t: float,
+               f_nut: float, f_allelo: float, vieillesse: float = 0.0) -> float:
+    """P de la semaine (semaines d'entretien), rabotée par l'âge (④). PUR."""
+    return (parametres_bilan(plant.plant_class)["photo_max"] * plant.feuillage
+            * presence * f_l * f_e * f_t * f_nut * f_allelo
+            * (1.0 - OIDIUM_RENDEMENT * plant.oidium)      # feuilles feutrées (③)
+            * max(0.0, 1.0 - VIEIL_PHOTO * vieillesse))     # vieux houppier (④)
+
+
+def part_racinaire(plant, p: float) -> float:
+    """X = sucres envoyés sous terre : exsudats + PAIEMENT des champignons
+    mycorhiziens, ∝ production × gène `mycorhization` (une plante très mycorhizée
+    paie plus, et reçoit plus de phosphore/azote : `nutrition_plante`, uptake).
+    Depuis le ④, c'est cette part qui NOURRIT le dépôt d'exsudats du sol
+    (`croissance._apply_exudates`) : ce que la plante perd, le sol le reçoit. PUR."""
+    return K_EXSUD * p * plant.gene("mycorhization")
+
+
 def bilan(plant, presence: float, f_l: float, f_e: float, f_t: float,
-          f_nut: float, f_allelo: float, t_air: float, dormante: bool) -> float:
-    """Solde net P − E − X de la semaine (semaines d'entretien). PUR."""
-    p = (parametres_bilan(plant.plant_class)["photo_max"] * plant.feuillage
-         * presence * f_l * f_e * f_t * f_nut * f_allelo
-         * (1.0 - OIDIUM_RENDEMENT * plant.oidium))      # feuilles feutrées (③)
-    x = K_EXSUD * p * plant.gene("mycorhization")
-    return p - entretien(t_air, dormante, presence) - x
+          f_nut: float, f_allelo: float, t_air: float, dormante: bool,
+          vieillesse: float = 0.0) -> float:
+    """Solde net P − E − X de la semaine (semaines d'entretien). PUR.
+    `vieillesse` (④) = `declin_senescent` : P rabotée, entretien majoré."""
+    p = production(plant, presence, f_l, f_e, f_t, f_nut, f_allelo, vieillesse)
+    e = entretien(t_air, dormante, presence) * (1.0 + VIEIL_ENTRETIEN * vieillesse)
+    return p - e - part_racinaire(plant, p)
 
 
 def maj_bilan(plant, net: float, en_vegetation: bool) -> float:
@@ -174,7 +203,8 @@ def facteur_limitant(f_l: float, f_e: float, froid: float, chaud: float,
 def semaine_bilan(plant, *, saison: str, presence: float, light_eff: float,
                   hum_percue: float, temp: float, t_feuille: float, t_air: float,
                   f_nut: float, f_allelo: float, declin: bool = False,
-                  hum_sol: float | None = None) -> float | None:
+                  hum_sol: float | None = None,
+                  vieillesse: float = 0.0) -> float | None:
     """Une semaine de bilan pour `plant`, à partir des lectures DÉJÀ faites par la
     physiologie. Dormante = plus de feuilles (caduc nu) ou vivace qui dort l'hiver ;
     en végétation = hors hiver, feuillage en place, éveillée.
@@ -183,7 +213,9 @@ def semaine_bilan(plant, *, saison: str, presence: float, light_eff: float,
     production part dans ses GRAINES ; vieux sujet en sénescence avancée) : plus
     rien ne REMPLIT les réserves (seul un déficit les touche) — sans quoi les crans
     de fin de vie (`mortalite`, retraits de réserves) seraient rendus chaque semaine
-    par la photosynthèse et la plante ne finirait jamais.
+    par la photosynthèse et la plante ne finirait jamais. Depuis le ④, seule la fin
+    de cycle passe ici ; la vieillesse passe par `vieillesse` (P et E, voir
+    `VIEIL_PHOTO`) : le vieux sujet s'épuise de lui-même, sans gel des réserves.
 
     Renvoie le SURPLUS de croissance, ou None hors végétation (la croissance est
     gelée : un arbre ne « rapetisse » pas l'hiver). Mémorise le facteur limitant."""
@@ -197,7 +229,11 @@ def semaine_bilan(plant, *, saison: str, presence: float, light_eff: float,
                 or (saison == "hiver" and plant.plant_class.winter_strategy == "dormant"))
     plant.limitant = facteur_limitant(f_l, f_e, froid, chaud,
                                       hum_percue if hum_sol is None else hum_sol)
-    net = bilan(plant, presence, f_l, f_e, froid * chaud, f_nut, f_allelo, t_air, dormante)
+    p = production(plant, presence, f_l, f_e, froid * chaud, f_nut, f_allelo, vieillesse)
+    # Part racinaire mémorisée (④) : le dépôt d'exsudats du tick suivant la lit.
+    plant.part_racinaire = part_racinaire(plant, p)
+    net = (p - entretien(t_air, dormante, presence) * (1.0 + VIEIL_ENTRETIEN * vieillesse)
+           - plant.part_racinaire)
     # Oïdium (③) : la couverture lue ci-dessus s'efface avec le renouvellement des
     # feuilles ; un caduc nu (presence 0) a perdu ses feuilles feutrées.
     if plant.oidium > 0.0:

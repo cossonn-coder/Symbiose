@@ -27,11 +27,19 @@ from .racines import eau_percue, pression_parasite, maj_pourriture, pression_asp
 from .feuille import t_feuille_de
 from fields.ecofields.thermique import t_max_jour
 from sim.nutrition_plante import facteur_nutrition
-from sim.bilan import semaine_bilan
+from sim.bilan import semaine_bilan, K_EXSUD
+from plants.physiologie import parametres_bilan
 from sim.embolie import maj_embolie
 from .fin_de_cycle import fin_de_cycle
 from sim.tempo import declin_senescent
-from fields import HEAL_SEN_CUTOFF
+
+# Exsudats au bilan (stress au bilan ④) : régime de production de RÉFÉRENCE, en part
+# de `photo_max`, auquel l'exsudat vaut EXUDATE_BASE. La vraie production d'une saison
+# (froid de printemps, sec, ombre, nuits) tourne en moyenne à ~65 % du plein régime :
+# mesuré `full` seed 42 [n=1], Σ exsudats s10→s114 = 0,64 × l'ancien proxy à
+# référence 1,0. 0,65 garde l'échelle du sol calibrée (microbiome, D77) — seule la
+# RÉPARTITION change (qui produit vraiment, quand), pas la quantité moyenne.
+EXSUD_REGIME_REF = 0.65
 
 # Croissance au SURPLUS (D140 G ②) : cible du `growth_factor` = G_BASE à surplus nul,
 # 1 à SURPLUS_PLEIN semaine d'entretien de surplus et au-delà. G_BASE 0,6 = le plancher
@@ -268,9 +276,14 @@ class CroissanceMixin:
         Boucle rhizosphère (chantier A) — exsudats racinaires.
 
         Chaque plante vivante « paie » le sol en carbone : elle dépose des
-        exsudats proportionnels à sa photosynthèse (lumière reçue × surface
-        foliaire × santé) sur son empreinte racinaire. L'essentiel nourrit le
-        microbiome local, une fraction l'om_fresh.
+        exsudats proportionnels à sa photosynthèse sur son empreinte racinaire.
+        L'essentiel nourrit le microbiome local, une fraction l'om_fresh.
+        Depuis le stress au bilan ④, la quantité est la VRAIE part carbone du
+        bilan (`plant.part_racinaire` = X, payée la semaine d'avant, exsudats +
+        paiement mycorhizien) : ramenée à la production pleine de l'espèce
+        (X / (K_EXSUD × EXSUD_REGIME_REF × photo_max), gène `mycorhization`
+        neutre), × surface foliaire. Une plante nue, gelée, à l'ombre ou très
+        mycorhizée donne ce qu'elle a réellement payé.
 
         Borne (anti-emballement, piège n°1) : le dépôt de microbiome décroît à
         mesure que le microbiome local sature (×(1 − micro_norm)). La boucle
@@ -281,11 +294,15 @@ class CroissanceMixin:
         for plant in tile.plants:
             if not plant.is_alive:
                 continue
-            # Photosynthèse : lumière reçue (canopée, auto-ombrage exclu) × surface × santé
-            light = eco.lumiere.light_received(plant)
+            # SUPPLANTÉ (stress au bilan ④) — conservé pour mémoire : photosynthèse
+            # approchée par lumière reçue × surface × santé.
+            # light = eco.lumiere.light_received(plant)
+            # health_factor = plant.vitalite
+            # photo = light * leaf_factor * health_factor
             leaf_factor = min(1.0, len(plant.foliar_plots) / 5.0)
-            health_factor = plant.vitalite
-            photo = light * leaf_factor * health_factor
+            photo = (leaf_factor * plant.part_racinaire
+                     / (K_EXSUD * EXSUD_REGIME_REF
+                        * parametres_bilan(plant.plant_class)["photo_max"]))
             if photo <= 0.0:
                 continue
 
@@ -512,18 +529,23 @@ class CroissanceMixin:
             # le ② il FAIT la vie : vitalité lue, famine, croissance au surplus.
             temp = (T_PLANTE_ALPHA * t_air
                     + (1.0 - T_PLANTE_ALPHA) * eco.temperature_sol.at_plot(r, c))
-            # `declin` : horloge INTERNE de fin de vie — annuelle en fin de cycle (sa
-            # production part dans ses graines) ou vieux sujet passé HEAL_SEN_CUTOFF
-            # (il ne se remettait déjà plus) : ses réserves ne se remplissent plus,
-            # les crans de `mortalite` (retraits) ne sont donc plus rendus.
+            # `declin` : horloge INTERNE de fin de cycle — l'annuelle remobilise ses
+            # réserves vers ses graines (`mortalite`), elles ne se remplissent plus.
+            # `vieillesse` (stress au bilan ④) : le vieux sujet produit moins et
+            # coûte plus (`sim/bilan.VIEIL_*`) → il s'épuise de lui-même.
+            # SUPPLANTÉ (④) — conservé pour mémoire : le vieux sujet passé
+            # HEAL_SEN_CUTOFF ne remplissait plus ses réserves, que des crans au sort
+            # (`SEN_RATE`) vidaient.
+            # declin=(fin_de_cycle(plant, self.week)
+            #         or declin_senescent(plant) >= HEAL_SEN_CUTOFF)
             presence = feuillage_present(plant, saison, wiy)
             surplus = semaine_bilan(plant, saison=saison,
                                     presence=presence,
                                     light_eff=light_eff, hum_percue=hum_p, temp=temp,
                                     t_feuille=t_f, t_air=t_air, f_nut=f_nut,
                                     f_allelo=f_allelo, hum_sol=hum,
-                                    declin=(fin_de_cycle(plant, self.week)
-                                            or declin_senescent(plant) >= HEAL_SEN_CUTOFF))
+                                    declin=fin_de_cycle(plant, self.week),
+                                    vieillesse=declin_senescent(plant))
             # Hauteur ACQUISE (lisibilité du bilan ①) : on retient la tige bâtie AVANT que
             # le growth_factor ne bouge (ci-dessous) — il règle la vitesse de pousse, il ne
             # retire plus de taille. Seul le REPLI hivernal d'une vivace herbacée (dormante,

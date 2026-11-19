@@ -14,8 +14,10 @@ Sénescence de FIN DE CYCLE des annuelles et bisannuelles (D139 niche thermique 
       fin = 1ʳᵉ floraison (`floraison_abs`, semaine absolue)
             + durée de floraison de l'espèce (`bloom_duration`)
             + maturation des graines (`fruit_semaines_maturation`, défaut 6 semaines)
-  Au-delà, `_tick_senescence_health` (mortalite.py) décrémente la vitalité d'un cran
-  par semaine. Une plante qui n'a jamais fleuri n'a pas d'horloge : pas de filet de
+  Au-delà, `_tick_senescence_health` (mortalite.py) REMOBILISE un tiers de la
+  capacité de réserve par semaine vers les graines (stress au bilan ④ :
+  `plant.graines_reserves`) ; le nombre de graines semées suit ce qui a été
+  transféré — une annuelle épuisée à la fin de son cycle laisse moins de graines. Une plante qui n'a jamais fleuri n'a pas d'horloge : pas de filet de
   vieillesse arbitraire (T1).
 
   Bisannuelle : sa 1ʳᵉ floraison est celle de l'an 2 (le gate de montaison la tient en
@@ -47,7 +49,8 @@ def fin_de_cycle(plant, week: int) -> bool:
     return week >= plant.floraison_abs + cls.bloom_duration + maturation
 
 
-def semer_fin_de_cycle(plant, tile, eco, seed: int, week: int) -> None:
+def semer_fin_de_cycle(plant, tile, eco, seed: int, week: int,
+                       remplissage: float = 1.0) -> None:
     """Pluie de graines de la plante qui s'éteint → banque-sol, AVEC ses gènes.
 
     Mesuré au banc (`mesures/banc_reponse_mort.py graines`) : sans ce dépôt, une
@@ -57,11 +60,17 @@ def semer_fin_de_cycle(plant, tile, eco, seed: int, week: int) -> None:
     `_reproduction` (père à portée, hérédité, priming maternel) : la lignée et sa
     sélection continuent (la tolérance au froid des survivantes se transmet).
     Plus le dépôt d'ARCHÉTYPE de l'ancienne mort calendaire, à l'identique.
-    Au pied de la mère (pas de dérive sous le vent ici)."""
+    Au pied de la mère (pas de dérive sous le vent ici).
+
+    `remplissage` ∈ [0, 1] (stress au bilan ④) : part de la capacité de réserve
+    transférée aux graines pendant la remobilisation (`plant.graines_reserves`,
+    passé par `mortalite`). Des graines se remplissent de sucres : une mère à
+    réserves pleines en remplit autant qu'avant, une mère affamée moins. Défaut
+    1,0 = appel historique (bancs)."""
     cls = plant.plant_class
     # × fécondation de la dernière floraison (D139 ①b) : archétype ET pool.
     # Clonale : ÷ `vigueur_clonale` (D139 ④, `taux_graines`).
-    rate = plant.taux_graines() * plant.fecondation
+    rate = plant.taux_graines() * plant.fecondation * max(0.0, min(1.0, remplissage))
     arch = getattr(cls, "archetype", None)
     if arch and rate > 0.0:
         eco.seed_bank.add(*plant.position, arch, rate)

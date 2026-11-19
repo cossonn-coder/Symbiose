@@ -16,8 +16,7 @@ stress** : ce qu'il retire (feuilles, sucres, eau, racines, vaisseaux, bourgeons
   fin de cycle, vieillesse. Code supplanté commenté et conservé, jamais supprimé.
 
 ## Golden
-Départ = `e24a23d8cb09…` (fin de `sprint_lisibilite_bilan`). ① **INTACT** (vérifié, voir Acquis) · ② **RE-FIGÉ → `32355a1c8649…`** (preuve par neutralisation) · ③ **RE-FIGÉ → `bd5e11abf44f…`** (preuve par neutralisation) · ②bis **RE-FIGÉ → `f5876f5ae857…`** (preuve par neutralisation) · ④ **RE-FIGÉ annoncé** (dérive
-prouvée localisée par neutralisation du seul mécanisme du tronçon) · ⑤ **INTACT**.
+Départ = `e24a23d8cb09…` (fin de `sprint_lisibilite_bilan`). ① **INTACT** (vérifié, voir Acquis) · ② **RE-FIGÉ → `32355a1c8649…`** (preuve par neutralisation) · ③ **RE-FIGÉ → `bd5e11abf44f…`** (preuve par neutralisation) · ②bis **RE-FIGÉ → `f5876f5ae857…`** (preuve par neutralisation) · ④ **RE-FIGÉ → `bce813af376d…`** (preuve par neutralisation) · ⑤ **INTACT**.
 
 ## Tronçons
 | # | Kickoff | État |
@@ -26,7 +25,7 @@ prouvée localisée par neutralisation du seul mécanisme du tronçon) · ⑤ **
 | ② | `02_froid_gel_brulure.md` — feuilles détruites vs bourgeons/sève gelés | **FAIT** (golden RE-FIGÉ `32355a1c…`, non commité) |
 | ③ | `03_maladies_racines.md` — mildiou, oïdium, fonte, asphyxie, pourriture, campagnol | **FAIT** (golden RE-FIGÉ `bd5e11ab…`, non commité) |
 | ②bis | (pas de kickoff — décision Nico 2026-11-19) grêle sur toutes les plantes | **FAIT** (golden RE-FIGÉ `f5876f5a…`, non commité) |
-| ④ | `04_vieillesse_cycle_mycorhize.md` — vieillesse, fin de cycle, paiement fongique | à faire |
+| ④ | `04_vieillesse_cycle_mycorhize.md` — vieillesse, fin de cycle, paiement fongique | **FAIT** (golden RE-FIGÉ `bce813af…`, non commité) |
 | ⑤ | `05_vue.md` — signes, info-bulle, banc, clôture D140 G | à faire |
 
 ## Contrôle commun à chaque tronçon
@@ -207,7 +206,59 @@ perf tick `full` ≤ +10 % ; suites `tests/` vertes ; jamais `test_epaisseur_500
 - **Pour ⑤ (voix)** : la mort d'une plante hachée sort en `famine` ; la chronique ne dit
   pas que la grêle a retiré les feuilles. Calibrage `PART_EXPOSEE_ADULTE` à ressentir en F5.
 
+## Acquis du ④ (2026-11-19) — vieillesse, fin de cycle, paiement racinaire
+- **Vieillesse** (`sim/bilan.py`) : `production(plant, …, vieillesse)` et `part_racinaire(plant, p)`
+  (neufs, purs) ; `bilan(…, vieillesse=0)` et `semaine_bilan(…, vieillesse=0)` : P × (1 −
+  `VIEIL_PHOTO` 1,0 × d), E × (1 + `VIEIL_ENTRETIEN` 1,0 × d), d = `declin_senescent`. Mort au
+  déficit quand d ≥ (ρ−1)/(ρ+1) (ρ = production/entretien annuels). `croissance` passe
+  `vieillesse=declin_senescent(plant)` et `declin=fin_de_cycle(…)` SEUL (gel des réserves
+  passé `HEAL_SEN_CUTOFF` SUPPLANTÉ, commenté). Tirage `SEN_RATE` SUPPLANTÉ (commenté,
+  `mortalite._tick_senescence_health`). `_mort_de_faim` : famine après l'onset → ligne
+  « 🪦 X meurt de sénescence (épuisé par l'âge, âge=a/L ans, bilan …) » → cause EXISTANTE
+  `sénescence` (pas de clé neuve `vieillesse` — écart assumé, voix carnet existantes).
+- Longévités, arbres/vivaces isolés (labo de `test_senescence`, posés 1 an avant l'onset)
+  [n=1 par espèce] HEAD → ④ : cerisier 56,6 → 51,7 ; pommier 63,6 → 60,3 ; figuier 70,6 → 69,8 ;
+  noisetier 70,6 → 68,1 ; saule 70,6 → 69,8 ; bouleau 80,5 → 78,1 ; aulne 89,2 → 86,8 ;
+  charme 131,6 → 126,8 ; lierre 39,7 → 34,2 ; jasmin 17,8 → 17,6 ; consoude 10,5 → 9,2 ;
+  ortie 9,1 → 7,2 ; armoise 11,0 → 9,0 ; tous 0,80-0,92 L (HEAD 0,85-1,13 L, au sort).
+  `test_senescence` (pommier depuis la graine) : 60,4 ans, comme HEAD.
+- **Fin de cycle** : chaque cran (⅓ de capacité/sem.) part dans `PlantInstance.graines_reserves`
+  (NEUF, au plus ce qui reste) ; `semer_fin_de_cycle(…, remplissage=1.0)` (param NEUF, défaut
+  = appel historique) multiplie le taux de graines ; `mortalite` passe `graines_reserves`
+  (2 sites : cran et `_mort_de_faim`). Mesuré `full` [seed 42, n=1] : réserves à l'entrée en
+  fin de cycle médiane 0,75 (16/60 < 0,5), remplissage moyen **0,51** (le déficit de la
+  remobilisation mange aussi les réserves) → pluie de graines des annuelles ~÷2 ; vivantes
+  s114 257 (HEAD) → 262, sans effet visible à 2 ans. **À ressentir en F5.**
+- **Exsudats** : `_apply_exudates` lit `plant.part_racinaire` (NEUF, X du dernier bilan, posé
+  par `semaine_bilan`) : photo = surface × X / (K_EXSUD × `EXSUD_REGIME_REF` × photo_max).
+  `EXSUD_REGIME_REF` 0,65 (`croissance.py`) calibré : à 1,0, Σ exsudats `full` s10→s114 =
+  0,64 × HEAD et microbiome moyen 0,316 → 0,279 ; à 0,65 : 186 vs 193, microbiome 0,310.
+  L'ancien proxy lumière × surface × vitalité est commenté. Lecteurs des exsudats inchangés
+  (microbiome + litière diffuse). **Écart au kickoff** : le champ `mycelium` ne lit NI les
+  exsudats NI le microbiome (substrat = bois + om_active) — le « paiement lu par le champ
+  fongique » n'est donc qu'indirect (via om_fresh) ; brancher X sur le mycélium serait une
+  conception neuve (non fait).
+- Golden RE-FIGÉ `bce813af376df71d…` ; HEAD de `_tick_senescence_health`/`_mort_de_faim`/
+  `_apply_exudates` réinjectés en mémoire + `semaine_bilan` sans vieillesse avec l'ancien
+  `declin` → `f5876f5a…` exact (exsudats seuls → `523c33d0…`, vieillesse+cycle seuls →
+  `296e3297…` : les deux comptent). Smoke [seed 42, n=1] : vivantes s208 [46, 14] → [49, 14] ;
+  sénescence trèfle 5 → 3 ; exsudats Σ 31,5 → 22,7 (le smoke a plus d'hiver/annuelles).
+- Effet `full` s10→s62 : 1 mort « sénescence » (trèfle, L = 2) ; à s114 : 5 (trèfle, minette,
+  pâturin) vs 1. Le reste identique à ±3.
+- Banc NEUF `tests/test_vieillesse_cycle.py` (~22 s) : solde ↓ avec l'âge ; 6 longévités
+  (cerisier, pommier, lierre, lavande, consoude, ortie) mortes « de sénescence » à ±20 % de
+  onset + ½(L − onset) ; phacélie nourrie remobilise 1,0 en 3 sem, affamée 0,3 en 1 sem,
+  graines ∝ ; dépôt ∝ X, et ↑ avec le gène `mycorhization`.
+- `test_ouverture_vivante` tenu (0 arbre, 23/123 = 18,7 %, 0 rejet). Suites : rouges = celles
+  de HEAD seulement. Perf `full` s10→s30 [2 paires alternées, charge 5-10] : HEAD 11,7/11,4 s
+  → 10,9/11,0 s. Pas de C# touché.
+- LDC : `bilan.py` 101, `croissance.py` 274, `mortalite.py` 237, `fin_de_cycle.py` 23,
+  `instance.py` 299. Mesure : `mesures/controle_vieillesse.py` (morts, exsudats, remplissage).
+- **Pour ⑤ (voix)** : la mort de vieillesse sort « sénescence » (voix existantes) ; les graines
+  moins remplies d'une mère affamée n'ont aucun signe ; `part_racinaire`/`graines_reserves` non
+  exportés au pont.
+
 ## REPRISE
-①②②bis③ faits (non commités). Lire `CLAUDE.md`, ce fichier, l'`00_etat.md` du sprint A et de
+①②②bis③④ faits (non commités). Lire `CLAUDE.md`, ce fichier, l'`00_etat.md` du sprint A et de
 `sprint_lisibilite_bilan` (hauteur acquise), la conception, puis le kickoff du premier
-tronçon « à faire » (④). Golden courant `f5876f5ae857…` (②bis). Lancer : `/sprint-auto sprint_stress_au_bilan`.
+tronçon « à faire » (⑤). Golden courant `bce813af376d…` (④). Lancer : `/sprint-auto sprint_stress_au_bilan`.

@@ -131,6 +131,11 @@ class PlantInstance:
                                     # bilan ③) : feutrage qui baisse le rendement des feuilles
                                     # sans les tuer (`sim/bilan.py`) ; s'efface au renouvellement
                                     # des feuilles. Hors `_PLANT_ATTRS`, défaut 0 → P inchangé.
+    part_racinaire: float = 0.0     # X du dernier bilan (sem. d'entretien) : sucres payés au
+                                    # sol et aux mycorhizes (stress au bilan ④) — lu par le
+                                    # dépôt d'exsudats. Hors `_PLANT_ATTRS`.
+    graines_reserves: float = 0.0   # part de la capacité de réserve REMOBILISÉE vers les
+                                    # graines en fin de cycle (④) → nombre de graines semées.
     # Marques de symptômes ÉVÉNEMENTIELS (sémiologie ②) : maladie/gel/grêle n'ont
     # PAS d'état persistant relisible (un coup ponctuel), contrairement aux
     # stresseurs chroniques recalculés à la volée. On les MÉMORISE donc ici, cause

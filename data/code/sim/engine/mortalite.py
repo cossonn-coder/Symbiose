@@ -13,7 +13,7 @@ dans `_tick_skeletons` (decompo.py). Comportement identique à l'ancien engine.p
 from __future__ import annotations
 import math
 # ASPHYXIE_HEALTH_SEUIL / ASPHYXIE_RATE : lus désormais par `racines.py` (③).
-from fields import (_hash_noise, SEN_RATE, RESEED_RADIUS_CM, VITALITE_STEP)
+from fields import (_hash_noise, RESEED_RADIUS_CM, VITALITE_STEP)
 from sim.effects import apply_mutations, ReduceHealth, deposer_mort
 from sim.effects.perturbations import SEUIL_SEMIS
 from sim.reproduction import (find_father, heredite, child_expression,
@@ -63,9 +63,18 @@ class MortaliteMixin:
         remobilise — fin de cycle (ses graines partent à la banque, comme au retrait
         de `_tick_senescence_health`). Nécromasse déposée ici (point de mort unique)."""
         if fin_de_cycle(plant, self.week):
-            semer_fin_de_cycle(plant, tile, eco, self.game_state.get("seed", 42), self.week)
+            semer_fin_de_cycle(plant, tile, eco, self.game_state.get("seed", 42), self.week,
+                               remplissage=plant.graines_reserves)
             ligne = (f"    ✿ {plant.name}@{plant.position} meurt "
                      f"(fin de cycle) — graines à la banque")
+        elif declin_senescent(plant) > 0.0:
+            # Vieillesse (stress au bilan ④) : passé l'onset, c'est l'âge qui a creusé
+            # le déficit (production rabotée, entretien majoré) → cause `sénescence`
+            # (`sim.evenements._raison_mort`, voix carnet existantes).
+            L = plant.plant_class.longevity()
+            ligne = (f"    🪦 {plant.name}@{plant.position} meurt de sénescence "
+                     f"(épuisé par l'âge, âge={plant.age_years:.0f}/{L:.0f} ans, "
+                     f"bilan {plant.bilan_net:+.2f})")
         else:
             ligne = (f"    🪦 {plant.name}@{plant.position} meurt de faim "
                      f"(réserves épuisées, bilan {plant.bilan_net:+.2f})")
@@ -88,15 +97,15 @@ class MortaliteMixin:
         """
         Mortalité réaliste (D27) — santé dynamique.
 
-          Sénescence : au-delà de SENESCENCE_ONSET·longévité, une pression de
-                       déclin croissante ∝ âge fait chuter la santé ; mort à 0.
-                       Sautée pour les annuelles (longévité = ∞) : elles
-                       s'éteignent par FIN DE CYCLE après leurs graines (D139 ③).
+          Sénescence : SUPPLANTÉE (stress au bilan ④) — passé l'onset, le bilan
+                       rabote la production et majore l'entretien (`sim/bilan`) ;
+                       la mort vient du bilan (`_mort_de_faim`, « sénescence »).
+          Fin de cycle : annuelle/bisannuelle → remobilisation vers les graines.
           Guérison   : SUPPLANTÉE (D140 G ②) par la refeuillaison du bilan.
           Depuis le ②, déclin et fin de cycle RETIRENT DES RÉSERVES (la vitalité
           n'est plus qu'une lecture du bilan, `PlantInstance.vitalite`).
 
-        Déterministe via _hash_noise (flux week·3 déclin). Les sujets tués déposent leur nécromasse avant nettoyage.
+        Déterministe, sans tirage. Les sujets tués déposent leur nécromasse avant nettoyage.
         """
         log = []
         seed = self.game_state.get("seed", 42)
@@ -105,41 +114,37 @@ class MortaliteMixin:
         for plant in tile.plants:
             if not plant.is_alive:
                 continue
-            r, c = plant.position
-            L = plant.plant_class.longevity()
-            # Sénescence par âge. Onset PROPRE à l'individu (DÉSYNC PHÉNOLOGIE ①) :
-            # le gène-tempo `phenologie_florale` (avance en semaines, D139 ③) décale
-            # le début du déclin (précoce → sénesce plus tôt). Neutre 0 ⇒ onset ==
-            # SENESCENCE_ONSET. MIROIR EXACT dans semiologie.senescence : les deux
-            # appellent la MÊME conversion `sim/tempo.onset_senescence`.
-            sen = 0.0
+            # (Sénescence par âge : onset PROPRE à l'individu, `sim/tempo.onset_senescence`,
+            # lu désormais par le bilan via `declin_senescent` — ④.)
             # Fin de cycle (D139 niche thermique ③) : annuelle/bisannuelle dont la 1ʳᵉ
-            # floraison est passée depuis floraison + maturation des graines → déclin
-            # INTERNE, un cran par semaine (décrément direct, comme la vieillesse), la
-            # convalescence coupée (sen = 1). Remplace la mort calendaire de l'hiver.
+            # floraison est passée depuis floraison + maturation des graines → elle
+            # REMOBILISE (stress au bilan ④) : un cran de réserves par semaine part
+            # dans ses graines (`graines_reserves`, au plus ce qui reste), puis elle
+            # meurt. Le semis suit ce qui a été transféré. Remplace la mort calendaire.
             if fin_de_cycle(plant, self.week):
-                sen = 1.0
+                plant.graines_reserves += min(plant.reserves, VITALITE_STEP)
                 _retrait_reserves(plant, VITALITE_STEP)
                 if not plant.is_alive:
                     deaths.append(plant)
-                    semer_fin_de_cycle(plant, tile, eco, seed, week)
+                    semer_fin_de_cycle(plant, tile, eco, seed, week,
+                                       remplissage=plant.graines_reserves)
                     log.append(f"    ✿ {plant.name}@{plant.position} meurt "
                                f"(fin de cycle) — graines à la banque")
                     continue
-            elif L != math.inf:
-                sen = declin_senescent(plant)
-                if sen > 0.0 and _hash_noise(seed, week * 3, r, c) < sen * SEN_RATE:
-                    # Sénescence = horloge INTERNE de vieillissement (pas un stress
-                    # subi) → décrément DIRECT, hors `erode`/résilience (décision D5).
-                    # Snap anti-poussière (comme `erode`) : 1.0 − 3×(1/3) ≠ 0 en
-                    # flottant ; sans lui une plante « morte de vieillesse » lingérerait
-                    # à ~1e-16 (is_alive vrai). La vieillesse qui atteint le fond TUE.
-                    _retrait_reserves(plant, VITALITE_STEP)
-                    if not plant.is_alive:
-                        deaths.append(plant)
-                        log.append(f"    🪦 {plant.name}@{plant.position} meurt de "
-                                   f"sénescence (âge={plant.age_years:.0f}/{L:.0f} ans)")
-                        continue
+            # SUPPLANTÉ (stress au bilan ④) — conservé pour mémoire. La vieillesse
+            # ne retire plus des crans de réserves AU SORT (`SEN_RATE`, flux week·3) :
+            # passé l'onset, le vieux sujet produit moins et coûte plus (`sim/bilan`,
+            # `VIEIL_PHOTO`/`VIEIL_ENTRETIEN`) et finit par s'épuiser — la mort vient
+            # du bilan (`_mort_de_faim`, consignée « meurt de sénescence »).
+            # elif L != math.inf:
+            #     sen = declin_senescent(plant)
+            #     if sen > 0.0 and _hash_noise(seed, week * 3, r, c) < sen * SEN_RATE:
+            #         _retrait_reserves(plant, VITALITE_STEP)
+            #         if not plant.is_alive:
+            #             deaths.append(plant)
+            #             log.append(f"    🪦 {plant.name}@{plant.position} meurt de "
+            #                        f"sénescence (âge={plant.age_years:.0f}/{L:.0f} ans)")
+            #             continue
             # Asphyxie soutenue (palier 2, §2.3 b) — miroir HAUT de la sénescence :
             # quand la mémoire d'excès d'eau dépasse ASPHYXIE_HEALTH_SEUIL (« si ça
             # dure »), la santé chute par paliers, même forme probabiliste que le
