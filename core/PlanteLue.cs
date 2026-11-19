@@ -75,7 +75,9 @@ namespace Symbiose
 			if (l.NSegs == 0) return l;
 
 			l.Structure = StructureLoader.FromSnapshot(p);
-			l.Tag = $"{l.Species} · {LectureSnap.S(p, "stage_name")}";
+			// Nom AFFICHÉ (D141) : `name` = nom français du catalogue ; `Species` (nom de
+			// classe) reste l'identifiant. Repli sur l'identifiant si pont ancien.
+			l.Tag = $"{(l.Name.Length > 0 ? l.Name : l.Species)} · {LectureSnap.S(p, "stage_name")}";
 			// Lectures TOLÉRANTES (clé absente = snapshot ancien → défaut neutre),
 			// historique des clés dans MajPlante.
 			if (l.Dead) l.StadeMort = LectureSnap.S(p, "stade_mort");

@@ -47,7 +47,7 @@ class HistoriqueAnnees:
         for tile in engine.game_state["tiles"]:
             for p in tile.plants:
                 if p.is_alive:
-                    nom = p.plant_class.__name__
+                    nom = p.plant_class.name   # nom affiché, français (D141)
                     par_espece[nom] += 1
                     plots.setdefault(nom, set()).add((tile.tile_id, *p.position))
         n = sum(par_espece.values())

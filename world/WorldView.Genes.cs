@@ -89,7 +89,7 @@ namespace Symbiose
 			var genes = node.GetMeta(LectureSnap.Meta("genes")).AsGodotDictionary();
 			string species = node.GetMeta(LectureSnap.Meta("species"), "?").AsString();
 			var sb = new System.Text.StringBuilder();
-			sb.Append($"[gènes] {species}");
+			sb.Append($"[gènes] {node.GetMeta(LectureSnap.Meta("nom"), species).AsString()}");   // français (D141)
 			if (node.HasMeta(LectureSnap.Meta("F")))
 				sb.Append($"\n  {Lignee(node.GetMeta(LectureSnap.Meta("F")).AsDouble())}");
 			var pr = node as PlantRenderer;

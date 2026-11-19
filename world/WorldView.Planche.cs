@@ -93,7 +93,7 @@ namespace Symbiose
 			Vector2 vise = _plancheCible.EmpriseCanvas.GetCenter();
 			if (zoom >= PlantRenderer.PalierOrganesZoom) vise.X = _plancheCible.Position.X;   // ×2↔×4 restent co-centrés (banc de continuité)
 			PoserCamera(System.Array.IndexOf(ZoomSteps, zoom), vise);
-			string espece = _plancheCible.GetMeta(LectureSnap.Meta("species"), "?").AsString();
+			string espece = _plancheCible.GetMeta(LectureSnap.Meta("nom"), "?").AsString();   // français (D141)
 			EncartPlanche($"palier ×{zoom} · {info}   —   {espece} "
 				+ $"({step + 1}/{Planche.Length}){suffixe}");
 		}

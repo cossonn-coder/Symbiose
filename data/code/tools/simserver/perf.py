@@ -153,7 +153,7 @@ def diagnostic(engine, ms_tick: float, mesure: dict | None = None) -> dict:
                 continue
             tp += 1
             ts += len(p.segments)
-            nom = p.plant_class.__name__
+            nom = p.plant_class.name   # nom affiché, français (D141)
             par_espece[nom] = par_espece.get(nom, 0) + 1
         par_tuile[tile.tile_id] = {"plants": tp, "segments": ts}
         n_plants += tp

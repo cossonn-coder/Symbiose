@@ -151,8 +151,8 @@ class SerializeMixin:
                 # un vif. Tout le reste (organes, fruits) ne vaut que pour un vivant.
                 base = {
                     "tile": tile.tile_id,
-                    "species": cls.__name__,
-                    "name": p.name,
+                    "species": cls.__name__,   # IDENTIFIANT (ports, sprites, tables C#)
+                    "name": p.name,            # nom AFFICHÉ, français (`cls.name`, D141)
                     "x_cm": p.x_cm, "y_cm": p.y_cm,
                     "stage": p.current_stage,
                     "stage_name": p.stage.name,

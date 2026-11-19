@@ -71,7 +71,7 @@ namespace Symbiose
 			string nom = p.ContainsKey("name") ? p["name"].AsString() : espece;
 			float x = (float)p["x_cm"].AsDouble(), y = (float)p["y_cm"].AsDouble();
 			int pr = (int)(y / PlotCm), pc = (int)(x / PlotCm);
-			sb.Append($"[b]{nom}[/b]  [i]{espece}[/i]\n");
+			sb.Append($"[b]{nom}[/b]\n");   // nom français seul (D141) : jamais la classe
 			sb.Append($"tuile {p["tile"].AsString()} · plot ({pr},{pc}) · "
 					  + $"x={x:F0} y={y:F0}\n");
 

@@ -36,7 +36,7 @@
 | # | Kickoff | Golden | État |
 |---|---|---|---|
 | ① | `01_hauteur_acquise.md` — hauteur acquise (moteur) | RE-FIGÉ `8f2dd7ad…` → `e24a23d8…` | FAIT (non commité) |
-| ② | Noms français : table Python unique → pont → étiquette, info-bulle, rapport F4, chronique (ferme D141) — `02_noms_francais.md` | intact | à faire |
+| ② | Noms français : table Python unique → pont → étiquette, info-bulle, rapport F4, chronique (ferme D141) — `02_noms_francais.md` | intact `e24a23d8…` | FAIT (non commité) |
 | ③ | Vue + banc : litière herbacée visible (tiges paille → humus), consoudes broutées à 0,2 + réserves basses, info-bulles vérifiées par capture VM — `03_vue_banc.md` | intact | à faire |
 
 ## ① Hauteur acquise — fait (2026-11-19)
@@ -60,6 +60,26 @@
 - Test neuf `tests/test_hauteur_acquise.py` (ombre, dormance consoude, taille tomate,
   régression basilic) vert.
 
+## ② Noms français — fait (2026-11-19)
+- Pas de clé neuve : le pont envoyait déjà `name` = `PlantInstance.name` = `cls.name`
+  (français) par plante (sol + conteneur) → `name` = nom AFFICHÉ ; `species` reste
+  l'identifiant (commentaires posés dans `serialize.py`). Les 52 espèces ont un nom
+  français (seul « Dactyle » coïncide avec sa classe, légitime).
+- Python : `perf.py` / `perf_annees.py` comptent par `cls.name` (`par_espece`, `top`) ;
+  `chronique.py` : texte en noms affichés (`_nom`), `brut` garde les clés catalogue.
+  Pont **0.6.22** (aucune clé neuve, valeurs de nom changées), 4 tests de version suivis.
+- Inventaire `__name__` restants = IDENTIFIANTS, non touchés : `maitrise_pont`/`vision_cmds`
+  (classe → clé catalogue), `REPRO_BY_SEASON`, `graines_espece` (teinte), `server.py`
+  (type d'exception).
+- C# : `PlanteLue.Tag` = `Name · stade` (repli `Species`) ; `DossierPlantePanel` n'affiche
+  plus la classe en italique ; méta neuve `nom` (`WorldView.Snapshot.cs`) lue par l'encart
+  Planche et le survol gènes G. Restent en classe : logs `GD.Print` de bancs et le titre
+  debug de l'aide du carnet (`_filtreEspece`, clé du carnet — non vérifié).
+- Preuves : snapshot pont (init + 60 sem + snapshot, seed 42) byte-identique avant/après ;
+  seul `perf_report` change (noms + choix volatil des pires ticks). Section 25
+  `tests/simserver/noms.py` (catalogue, `name`, F4, chronique) ; `test_sim_server`
+  354/354, `test_chronique` vert ; `dotnet build` vert. Pas de capture VM faite.
+
 ## REPRISE
-① fait (à commiter). Lire `CLAUDE.md`, ce fichier, la conception, puis `02_noms_francais.md`.
+①② faits (② à commiter). Reste ③ `03_vue_banc.md`. D141 à fermer après F5 (étiquette « Consoude · adulte », F4 « Consoude×3 Chêne×4 »). Lire `CLAUDE.md`, ce fichier, la conception, puis `02_noms_francais.md`.
 Lancer : `/sprint-auto sprint_lisibilite_bilan`. Ensuite : `/sprint-auto sprint_stress_au_bilan`.

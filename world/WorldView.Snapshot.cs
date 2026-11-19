@@ -197,6 +197,8 @@ namespace Symbiose
 				// Espèce = NOM DE CLASSE (cls.__name__ du snapshot) : envoyé au pont
 				// à l'observation par survol (0.5.12). Python résout la clé catalogue.
 				renderer.SetMeta(LectureSnap.Meta("species"), p["species"]);
+				// Nom AFFICHÉ (français, D141) pour tout texte lu par le joueur (encarts).
+				renderer.SetMeta(LectureSnap.Meta("nom"), l.Name);
 				// Patrimoine génétique (DIVERSITÉ FONDATRICE ③) : le dict de gènes
 				// exposé par le snapshot, stocké tel quel en Meta → l'affichage debug
 				// de survol (WorldView.Genes.cs) le relit sans re-requêter. Tolérant à

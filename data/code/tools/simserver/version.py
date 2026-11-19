@@ -922,7 +922,13 @@ from __future__ import annotations
 #       phénologique 0.6.3) et `reserves` ∈ [0,1] (part de la capacité). Légende :
 #       `voix_bilan` {clairseme, epuise, refait} (info-bulle 1ᵉʳ niveau). Banc neuf
 #       `plante_vivante`. Clés neuves, golden neutre (snapshot comparé avant/après).
-ENGINE_VERSION = "0.6.21"
+# 0.6.22 (LISIBILITÉ DU BILAN ②, D141) : aucune clé neuve. Le nom AFFICHÉ d'une
+#       plante est `name` (= `cls.name`, français accentué) ; `species` reste le nom de
+#       classe, IDENTIFIANT seul. Valeurs changées : clés de `perf.par_espece` et noms
+#       de `perf_report.annees[].top` passent au nom affiché (« Consoude », plus
+#       « Comfrey ») ; le TEXTE de la chronique aussi (son `brut` garde les clés du
+#       catalogue). Golden neutre (snapshot comparé avant/après).
+ENGINE_VERSION = "0.6.22"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

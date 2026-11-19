@@ -38,9 +38,19 @@ from sim.evenements import evenements
 _CLE_DE_CLASSE = {cls: cle for d in (PLANT_CATALOGUE, PERENNIAL_CATALOGUE)
                   for cle, cls in d.items()}
 
+# Nom AFFICHÉ (D141) : la clé reste l'identifiant des données brutes, le texte
+# lisible parle en français accentué (`cls.name`, source unique du catalogue).
+_NOM_DE_CLE = {cle: cls.name for d in (PLANT_CATALOGUE, PERENNIAL_CATALOGUE)
+               for cle, cls in d.items()}
+
 HORS_TICK = "hors_tick"            # mort entre deux ticks (geste joueur / automate)
 NON_CONSIGNEE = "non_consignee"    # mort pendant le tick sans ligne de log
 PAS_TABLEAU = 10                   # une ligne de tableau tous les 10 ans
+
+
+def _nom(cle: str) -> str:
+    """Nom affiché d'une clé d'espèce (repli : la clé elle-même)."""
+    return _NOM_DE_CLE.get(cle, cle)
 
 
 def _an(semaine: int) -> int:
@@ -178,7 +188,7 @@ class Chronique:
         if not self.registre:
             lignes.append("  (aucun)")
         for r in self.registre:
-            tete = f"  an {_an(r['semaine'])} (sem {r['semaine']}) : {r['espece']}"
+            tete = f"  an {_an(r['semaine'])} (sem {r['semaine']}) : {_nom(r['espece'])}"
             if r["quoi"] == "retour":
                 lignes.append(f"{tete} revient")
             else:
@@ -199,11 +209,11 @@ def _bloc_annee(b: dict) -> list[str]:
     vivants = b["vivants"]
     out = [f"An {b['an']} : {sum(vivants.values())} plantes, {len(vivants)} espèces"
            + (" *" if b["marquante"] else ""),
-           "  vivants : " + (" · ".join(f"{e} {n}" for e, n in vivants.items()) or "-")]
-    morts = [f"{e} " + ", ".join(f"{c} {n}" for c, n in sorted(cs.items()))
+           "  vivants : " + (" · ".join(f"{_nom(e)} {n}" for e, n in vivants.items()) or "-")]
+    morts = [f"{_nom(e)} " + ", ".join(f"{c} {n}" for c, n in sorted(cs.items()))
              for e, cs in b["morts"].items()]
     out.append("  morts   : " + (" · ".join(morts) or "-"))
-    out.append("  levées  : " + (" · ".join(f"{e} {n}" for e, n in b["levees"].items())
+    out.append("  levées  : " + (" · ".join(f"{_nom(e)} {n}" for e, n in b["levees"].items())
                                  or "-"))
     if b["autres"]:
         out.append("  autres  : " + " · ".join(f"{r} {n}" for r, n in b["autres"].items()))
