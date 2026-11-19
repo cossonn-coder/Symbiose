@@ -21,12 +21,20 @@ courtes, meurt souvent de faim avant. La tolérance (gène `tolerance_secheresse
 EXPRIMÉ, plasticité comprise) abaisse le seuil extrême : il faut un sol plus sec
 encore pour la faire caviter (philo #2/#7 : pression de sélection sans bonus direct).
 
+**Gel-dégel** (stress au bilan ②, ligneux seulement) : quand la sève gèle dans les
+vaisseaux (nuit sous `T_CONGELATION_SEVE`) puis dégèle le jour, les gaz dissous
+ressortent en bulles et embolisent les vaisseaux. Un hiver normand en embolise une
+petite part, que le bois neuf du printemps dilue ; une succession de grands froids
+alternant avec des dégels peut affaiblir un arbre, jusqu'à la même défaillance.
+
 Seul l'état `plant.embolie` ∈ [0,1] est écrit (hors digest du golden). Il est lu par
 `sim/bilan.f_eau` (la conduction perdue rabote l'eau utile). Zéro RNG (philo #3).
 Couche `sim` : lit `plants` (instance) seulement, jamais `sim.engine`.
 """
 
 from __future__ import annotations
+
+from plants.base.instance import T_CONGELATION_SEVE
 
 # Seuil sec de la feuille (miroir de `sim/bilan.f_eau` : stomates fermés en dessous).
 SEUIL_SEC = 0.15
@@ -70,3 +78,21 @@ def maj_embolie(plant, hum_percue: float, presence: float,
     elif plant.embolie > 0.0 and surplus:
         plant.embolie *= 1.0 - RENOUV_BOIS * min(1.0, surplus)
     return plant.embolie >= SEUIL_EMBOLIE
+
+
+# Gel-dégel (②) : conduction perdue par semaine de gel-dégel PLEIN (nuit
+# `ECART_GEL_PLEIN` °C sous la congélation de la sève, journée au-dessus de 0 °C).
+# ~8 semaines de gel modéré par hiver normand → ~0,1 [ordre de grandeur : les
+# ligneux tempérés perdent 10-30 % de conduction l'hiver, regagnée au printemps].
+TAUX_GEL_DEGEL = 0.03
+ECART_GEL_PLEIN = 6.0      # miroir de `aleas.FROST_SEVERITY_REF` (couche sim.engine)
+
+
+def maj_gel_degel(plant, nuit: float, t_air: float) -> None:
+    """Une semaine de gel-dégel pour un LIGNEUX (l'appelant filtre) : la sève a gelé
+    la nuit (`nuit` < `T_CONGELATION_SEVE`) et dégelé le jour (`t_air` > 0) → embolie
+    ∝ la profondeur du gel. Pas de facteur feuillage : les vaisseaux d'un arbre nu
+    gèlent aussi. La mort éventuelle est lue par `maj_embolie` (physiologie du tick)."""
+    if nuit < T_CONGELATION_SEVE and t_air > 0.0:
+        sev = min(1.0, (T_CONGELATION_SEVE - nuit) / ECART_GEL_PLEIN)
+        plant.embolie = min(1.0, plant.embolie + TAUX_GEL_DEGEL * sev)

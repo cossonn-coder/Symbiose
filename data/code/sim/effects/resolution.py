@@ -278,8 +278,14 @@ def apply_mutations(mutations: list, game_state: dict) -> list[str]:
             # mort (`vitalite = 0` remet feuillage et réserves à zéro).
             m.plant.feuillage = max(0.0, m.plant.feuillage - m.feuillage)
             m.plant.reserves = max(0.0, m.plant.reserves - m.reserves)
-            if m.plant.reserves <= 0.0:
+            if m.plant.reserves <= 0.0 or m.destruction:
                 m.plant.vitalite = 0.0
+            # Stress au bilan ② : un tissu gelé/lésé/échaudé laisse sa marque foliaire,
+            # à la même échelle qu'un `ReduceHealth` (1 point = VITALITE_STEP de feuillage).
+            if m.cause:
+                marks = m.plant.symptom_marks
+                marks[m.cause] = min(1.0, marks.get(m.cause, 0.0)
+                                     + m.feuillage / VITALITE_STEP * SYMPTOM_MARK_GAIN)
             status = "meurt" if not m.plant.is_alive else f"vitalité={m.plant.vitalite:.2f}"
             log.append(f"  {'✗' if not m.plant.is_alive else '!'} {m} → {status}")
 

@@ -418,7 +418,7 @@ class MortaliteMixin:
 
     def _mediated_damage(self, tile, eco, severity, reason, gene_name=None,
                          severity_fn=None, cause="", species_base=None,
-                         seulement_semis=True):
+                         seulement_semis=True, reponse=None):
         """
         Dégât MÉDIÉ sur le tissu exposé (stade « semis » par défaut), conforme à la
         philo #2 (docs/champs/climat/conception_meteo.md §2.3) — remplace la voie `health` plate pour
@@ -457,6 +457,13 @@ class MortaliteMixin:
           même garde-fou que appliquer_alea). Le GEL passe False (D139 niche
           thermique ③, T5) : il frappe tous les stades, et c'est la limite `lim_gel`
           ENDURCIE des ligneux (≈ −30 °C en hiver) qui les épargne, plus le stade.
+        - `reponse(p, effectif) -> [mutations]` (stress au bilan ②) : ce que l'insulte
+          RETIRE vraiment. Le gel passe `_gel_tissus` (feuilles gelées, bourgeons et
+          collet gelés = destruction). None (grêle) = l'adaptateur `erode` via
+          `ReduceHealth` : feuilles hachées (perte de feuillage ÷ constitution), et
+          la seule mort directe est celle d'un SEMIS dont le coup dépasse la
+          vitalité — la grêle ne frappe que les semis (`seulement_semis`), ce qui
+          est exactement « pas de mort directe sauf plantule » (kickoff ②).
         """
         log = []
         if severity_fn is None and severity <= 0:
@@ -489,9 +496,13 @@ class MortaliteMixin:
             # Amount CONTINU (plus de plancher entier `int()` : l'érosion
             # fractionnaire est fidèle à la sévérité). La résolution applique
             # `amount * VITALITE_STEP` et `erode` borne à 0 → pas de `min(p.health…)`.
-            amount = effective / DAMAGE_STEP
-            if amount > 0:
-                log += apply_mutations([ReduceHealth(p, amount, reason, cause=cause)], self.game_state)
+            if reponse is not None:
+                muts = reponse(p, effective) if effective > 0 else []
+            else:
+                amount = effective / DAMAGE_STEP
+                muts = [ReduceHealth(p, amount, reason, cause=cause)] if amount > 0 else []
+            if muts:
+                log += apply_mutations(muts, self.game_state)
                 if not p.is_alive:
                     newly_dead.append(p)
         # Mort → squelette persistant (②B). `deposer_mort` est idempotent : les

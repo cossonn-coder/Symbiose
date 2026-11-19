@@ -16,14 +16,14 @@ stress** : ce qu'il retire (feuilles, sucres, eau, racines, vaisseaux, bourgeons
   fin de cycle, vieillesse. Code supplanté commenté et conservé, jamais supprimé.
 
 ## Golden
-Départ = `e24a23d8cb09…` (fin de `sprint_lisibilite_bilan`). ① **INTACT** (vérifié, voir Acquis) · ②③④ **RE-FIGÉ annoncé** chacun (dérive
+Départ = `e24a23d8cb09…` (fin de `sprint_lisibilite_bilan`). ① **INTACT** (vérifié, voir Acquis) · ② **RE-FIGÉ → `32355a1c8649…`** (preuve par neutralisation) · ③④ **RE-FIGÉ annoncé** chacun (dérive
 prouvée localisée par neutralisation du seul mécanisme du tronçon) · ⑤ **INTACT**.
 
 ## Tronçons
 | # | Kickoff | État |
 |---|---|---|
 | ① | `01_secheresse_embolie.md` — stomates + défaillance hydraulique | **FAIT** (golden INTACT `e24a23d8…`, non commité) |
-| ② | `02_froid_gel_brulure.md` — feuilles détruites vs bourgeons/sève gelés | à faire |
+| ② | `02_froid_gel_brulure.md` — feuilles détruites vs bourgeons/sève gelés | **FAIT** (golden RE-FIGÉ `32355a1c…`, non commité) |
 | ③ | `03_maladies_racines.md` — mildiou, oïdium, fonte, asphyxie, pourriture, campagnol | à faire |
 | ④ | `04_vieillesse_cycle_mycorhize.md` — vieillesse, fin de cycle, paiement fongique | à faire |
 | ⑤ | `05_vue.md` — signes, info-bulle, banc, clôture D140 G | à faire |
@@ -83,7 +83,49 @@ perf tick `full` ≤ +10 % ; suites `tests/` vertes ; jamais `test_epaisseur_500
   (conception §5) n'est PAS faite — ② peut réutiliser `plant.embolie` (accumuler depuis
   le gel) et la même mort.
 
+## Acquis du ② (2026-11-19)
+- `sim/engine/reponse_thermique.py` : froid sans gel et brûlure → `PerteTissus` de
+  feuillage (`FROID_FEUILLE_K` = `FROID_LESION_K`×⅓ = 1/12 /°C·sem, `BRULURE_FEUILLE_K` = 1/6
+  /°C), sans `resilience_base` (la tolérance est déjà dans `lim_*`). `FROID_LESION_K`/
+  `BRULURE_K` gardés (lus par `posture_thermique`). Anciens `ReduceHealth` commentés.
+- Gel : `_gel_tissus(plant, effectif)` passé à `_mediated_damage(reponse=…)` (paramètre
+  NEUF, `mortalite.py` ; None = ancien chemin `ReduceHealth`). Écart effectif (°C, après
+  paillage) = effectif × `FROST_SEVERITY_REF` ; feuillage gelé = écart / marge ;
+  écart ≥ marge → destruction (`PerteTissus(destruction=True)`, raison « gel (bourgeons
+  et collet gelés) » → cause `gel`). `MARGE_BOURGEONS` 4 °C (herbacées),
+  `MARGE_BOURGEONS_LIGNEUX` 8 °C (`plant_class.ligneux`). **Calibrage mesuré** : à 3 °C,
+  carotte/bourrache semées en janvier (bancs catalogue, nuit −8,2 °C s4) et chênes du
+  banc nucléation mouraient ; 4 °C tient tout sauf le chanvre (gel −3 °C, mort à −8 :
+  biologique) → `test_catalogue_mulch` sème le chanvre en avril, `test_evergreen` sème
+  ses 5 espèces en avril (bourrache).
+- `PerteTissus` (`sim/effects/mutations.py`) : champs NEUFS `cause` (marque foliaire,
+  gain = feuillage/VITALITE_STEP × `SYMPTOM_MARK_GAIN`, même échelle que `ReduceHealth`)
+  et `destruction` (→ `vitalite = 0`, la souche garde ses réserves) ; `resolution.py`.
+- Gel-dégel : `sim/embolie.maj_gel_degel(plant, nuit, t_air)` (ligneux ; nuit <
+  `T_CONGELATION_SEVE` et t_air > 0 → `TAUX_GEL_DEGEL` 0,03 × min(1, écart/6)), appelé
+  dans `_tick_nuit_froide` ; la mort passe par `maj_embolie` (physiologie, log
+  « dessèchement » → cause `secheresse` : une mort par gel-dégel serait mal nommée —
+  jamais observée). Inerte au golden (embolie hors digest, sol humide).
+- Grêle : INCHANGÉE volontairement. Elle passe par `erode` (feuilles hachées ÷
+  constitution) et ne frappe que les semis → « pas de mort directe sauf plantule » est
+  déjà vrai. **Question Nico** : étendre la grêle aux adultes (perte de feuillage seule) ?
+- Golden RE-FIGÉ `32355a1c86497409…` ; anciennes méthodes `_tick_nuit_froide`/`_tick_brulure`
+  de HEAD réinjectées en mémoire → `e24a23d8…` exact. Smoke [seed 42, n=1] : morts
+  thermiques froid 8 → 0, remplacées par famine (basilic 2, tomate 2, haricot 1) et gel
+  (haricot 1, tournesol 2) ; vivantes s104 [44, 13] → [44, 14].
+- Effet `full` s10→s62 [seed 42, n=1] : morts froid 40 → 0 ; famine 90 → 109, fin de
+  cycle 39 → 61 (les tendres d'automne perdent leurs feuilles et meurent par le bilan) ;
+  embolie de gel-dégel max 0,05 (bouleau). **À traiter en ⑤ (voix)** : la chronique dit
+  « faim » là où le joueur voit le froid — la famine ne dit pas ce qui a retiré les feuilles.
+- `test_ouverture_vivante` tenu (0 arbre, 18/123 = 14,6 %, 0 rejet). Perf tick `full`
+  s10→s30 [1 paire, charge ~2] : 0,55 → 0,55 s. Suites : `test_reponse_thermique` étendue
+  (22/22 : tomate gel léger vit / profond meurt, chêne endurci à −10 °C ne perd rien,
+  gelée d'avril dégarnit sans tuer, gel-dégel) ; rouges = les mêmes que HEAD seulement.
+- Le kickoff citait `test_niche_thermique` : il ne teste aucun dégât (limites seules) ;
+  les tests de dégât vivent dans `test_reponse_thermique`.
+- LDC : `reponse_thermique.py` 78, `mortalite.py` 254, `embolie.py` 26, `resolution.py` 235.
+
 ## REPRISE
-① fait (non commité). Lire `CLAUDE.md`, ce fichier, l'`00_etat.md` du sprint A et de
+① ② faits (non commités). Lire `CLAUDE.md`, ce fichier, l'`00_etat.md` du sprint A et de
 `sprint_lisibilite_bilan` (hauteur acquise), la conception, puis le kickoff du premier
-tronçon « à faire » (②). Golden courant `e24a23d8cb09…`. Lancer : `/sprint-auto sprint_stress_au_bilan`.
+tronçon « à faire » (③). Golden courant `32355a1c8649…`. Lancer : `/sprint-auto sprint_stress_au_bilan`.

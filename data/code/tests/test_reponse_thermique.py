@@ -62,9 +62,53 @@ def test_gel():
         log = eng._tick_nuit_froide(tile, eco, t_air, 0.0)
     finally:
         RT.t_min_nuit_at = RT_nuit
-    gel_b = any("Basilic" in l and "gel (tissu" in l for l in log)
-    check("le basilic ADULTE gèle", gel_b and b.vitalite < 1.0, f"vit {b.vitalite:.2f}")
+    # Stress au bilan ② : 8 °C sous sa limite, bourgeons et collet gèlent → détruit.
+    gel_b = any("Basilic" in l and "gel (bourgeons" in l for l in log)
+    check("le basilic ADULTE gèle", gel_b and not b.is_alive, f"vit {b.vitalite:.2f}")
     check("la mâche adulte ne gèle pas", m.vitalite == 1.0 and "gel" not in m.symptom_marks)
+
+
+def _nuit_forcee(eng, tile, eco, nuit, t_air):
+    RT_nuit = RT.t_min_nuit_at
+    RT.t_min_nuit_at = lambda *a: nuit
+    try:
+        return eng._tick_nuit_froide(tile, eco, t_air, 0.0)
+    finally:
+        RT.t_min_nuit_at = RT_nuit
+
+
+def test_gel_tissus():
+    print("\n[1b] gel : feuilles d'abord, bourgeons ensuite (stress au bilan ②)")
+    from plants import Tomato, OakTree
+    from plants.genetics import EXPR_MAX
+    eng, tile, eco, (t,) = lab(Tomato)
+    adulte(t)
+    r0 = t.reserves
+    _nuit_forcee(eng, tile, eco, t.lim_gel() - 1.5, 2.0)
+    # (Tropicale : la lésion par le froid de la même nuit s'ajoute — feuillage à 0.)
+    check("tomate, gel léger (−1,5 °C sous sa limite) : feuilles perdues, bourgeons vivants",
+          t.is_alive and t.feuillage < 1.0 and t.reserves == r0
+          and t.symptom_marks.get("gel", 0.0) > 0.0,
+          f"feuillage {t.feuillage:.2f}, réserves {t.reserves:.2f}")
+    eng, tile, eco, (t,) = lab(Tomato)
+    adulte(t)
+    log = _nuit_forcee(eng, tile, eco, t.lim_gel() - 4.5, 2.0)
+    check("tomate, gel profond (−4,5 °C sous sa limite) : bourgeons gelés, morte",
+          not t.is_alive and any("bourgeons et collet" in l and "meurt" in l for l in log))
+    eng, tile, eco, (c,) = lab(OakTree)
+    c.expression["rusticite_froid"] = EXPR_MAX
+    _nuit_forcee(eng, tile, eco, -10.0, 1.0)
+    check("chêne endurci à −10 °C : ne perd rien", c.feuillage == 1.0 and c.vitalite == 1.0,
+          f"lim_gel {c.lim_gel():.1f}")
+    check("… mais le gel-dégel embolise un peu ses vaisseaux", 0.0 < c.embolie < 0.05,
+          f"embolie {c.embolie:.3f}")
+    eng, tile, eco, (c,) = lab(OakTree)
+    _nuit_forcee(eng, tile, eco, c.lim_gel() - 5.0, 1.0)
+    check("chêne désendurci, gelée d'avril (−5 °C sous sa limite) : dégarni mais vivant",
+          c.is_alive and c.feuillage < 0.5, f"feuillage {c.feuillage:.2f}")
+    eng, tile, eco, (c,) = lab(OakTree)
+    _nuit_forcee(eng, tile, eco, -10.0, -3.0)
+    check("pas de dégel (journée sous 0 °C) : pas d'embolie de gel-dégel", c.embolie == 0.0)
 
 
 def test_froid():
@@ -158,6 +202,7 @@ def test_grele():
 
 if __name__ == "__main__":
     test_gel()
+    test_gel_tissus()
     test_froid()
     test_chaleur()
     test_hiver()

@@ -28,7 +28,14 @@ from sim.engine import Engine
 WEEKS_PAST_WINTER = 60   # > 52 → traverse la transition hivernale (semaines 49-52)
 
 
-def _engine_with(tile, eco):
+# Stress au bilan ② : semis posés en avril, pas en janvier. Le gel détruit
+# désormais bourgeons et collet sous `lim_gel − MARGE_BOURGEONS` : un chanvre ou une
+# bourrache NON ENDURCIS meurent à la nuit de −8 °C de la semaine 4 (seed 42) — c'est
+# la biologie, pas l'objet de ce test (germination et stade).
+SEMIS_PRINTEMPS = 14
+
+
+def _engine_with(tile, eco, week=1):
     """Engine sur une tuile + eco, germination spontanée NEUTRALISÉE (on isole le
     comportement des plantes posées, pas la succession)."""
     eco.seed_bank.germination_candidates = lambda *a, **k: []
@@ -43,7 +50,7 @@ def _engine_with(tile, eco):
     pert.herbivorie_atteinte = lambda *a, **k: []
     game_state = {
         "tiles": [tile], "eco": {tile.tile_id: eco}, "scores": {},
-        "current_player": "joueur_1", "week": 1, "log": [],
+        "current_player": "joueur_1", "week": week, "log": [],
     }
     return Engine(game_state)
 
@@ -77,7 +84,7 @@ def test_catalogue_germination():
 
     tile = Tile(tile_id="GE", soil_type="terre", grid_rows=6, grid_cols=8)
     eco = init_eco("GE", 6, 8, humidite=1.5, fertilite=1.2, microbiome=0.3)
-    engine = _engine_with(tile, eco)
+    engine = _engine_with(tile, eco, week=SEMIS_PRINTEMPS)
     posees = {cle: tile.add_plant(klass, 1 + i, 1 + i)
               for i, (cle, klass) in enumerate(especes.items())}
 

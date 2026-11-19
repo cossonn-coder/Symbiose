@@ -44,7 +44,11 @@ class PerteTissus:
     # par le bilan si elle ne refait pas ses feuilles, ou ici si ses réserves sont
     # vidées. Le `repr` garde le format « Santé <Nom>@pos … [raison] » que lit la
     # chronique (`sim/evenements._RE_MORT_SANTE`, cause « herbivorie »).
+    # Stress au bilan ② : `cause` = symptôme foliaire (gel/froid/brulure, sémiologie,
+    # comme `ReduceHealth.cause`) ; `destruction` = bourgeons et collet tués (gel
+    # profond) → `vitalite = 0` (la souche garde ses réserves, setter de l'instance).
     plant: PlantInstance; feuillage: float; reserves: float = 0.0; reason: str = ""
+    cause: str = ""; destruction: bool = False
     def __repr__(self):
         return (f"Santé {self.plant.name}@{self.plant.position} "
                 f"-{self.feuillage:.3f} feuillage -{self.reserves:.3f} réserves [{self.reason}]")

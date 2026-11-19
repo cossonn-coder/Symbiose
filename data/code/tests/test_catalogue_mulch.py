@@ -42,13 +42,21 @@ def check(name, cond, detail=""):
     print(f"  {flag} {name}" + (f" — {detail}" if detail else ""))
 
 
-def _engine_with(tile, eco):
+# Stress au bilan ② : le CHANVRE (annuelle d'été, gel à −3 °C) est semé en avril, pas
+# en janvier. Le gel détruit désormais bourgeons et collet sous `lim_gel −
+# MARGE_BOURGEONS` : non endurci, il meurt à la nuit de −8 °C de la semaine 4 (seed 42)
+# — c'est la biologie, pas l'objet de ce test (germination et stade). Blé et sapin
+# restent semés en janvier (le sapin semé en avril meurt aussi sur HEAD, autre sujet).
+SEMIS_PRINTEMPS = 14
+
+
+def _engine_with(tile, eco, week=1):
     """Engine sur une tuile, germination spontanée NEUTRALISÉE (on isole les
     plantes posées)."""
     eco.seed_bank.germination_candidates = lambda *a, **k: []
     gs = {
         "tiles": [tile], "eco": {tile.tile_id: eco}, "scores": {},
-        "current_player": "joueur_1", "week": 1, "log": [],
+        "current_player": "joueur_1", "week": week, "log": [],
     }
     V.ensure_player(gs, "joueur_1")
     gs["vigueur"]["joueur_1"]["courante"] = 300.0   # ample : ratio de spend = 1.0
@@ -70,9 +78,15 @@ def test_catalogue_germination():
     gs, engine = _engine_with(tile, eco)
     especes = {"ble": Wheat, "chanvre": Hemp, "sapin": FirTree}
     posees = {cle: tile.add_plant(klass, 1 + i, 1 + i)
-              for i, (cle, klass) in enumerate(especes.items())}
+              for i, (cle, klass) in enumerate(especes.items()) if cle != "chanvre"}
     for _ in range(12):
         engine.tick_semaine()
+    tile_p = Tile(tile_id="MP", soil_type="terre", grid_rows=6, grid_cols=10)
+    eco_p = init_eco("MP", 6, 10, humidite=1.5, fertilite=1.2, microbiome=0.3)
+    _, engine_p = _engine_with(tile_p, eco_p, week=SEMIS_PRINTEMPS)
+    posees["chanvre"] = tile_p.add_plant(Hemp, 2, 2)
+    for _ in range(12):
+        engine_p.tick_semaine()
     for cle, inst in posees.items():
         # arbre = stade unique perpétuel (current_stage reste 0) ; on vérifie la
         # VIE + une croissance (hauteur > semis) pour le sapin, le stade pour les annuelles.
