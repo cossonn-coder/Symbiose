@@ -28,6 +28,7 @@ from .feuille import t_feuille_de
 from fields.ecofields.thermique import t_max_jour
 from sim.nutrition_plante import facteur_nutrition
 from sim.bilan import semaine_bilan
+from sim.embolie import maj_embolie
 from .fin_de_cycle import fin_de_cycle
 from sim.tempo import declin_senescent
 from fields import HEAL_SEN_CUTOFF
@@ -513,8 +514,9 @@ class CroissanceMixin:
             # production part dans ses graines) ou vieux sujet passé HEAL_SEN_CUTOFF
             # (il ne se remettait déjà plus) : ses réserves ne se remplissent plus,
             # les crans de `mortalite` (retraits) ne sont donc plus rendus.
+            presence = feuillage_present(plant, saison, wiy)
             surplus = semaine_bilan(plant, saison=saison,
-                                    presence=feuillage_present(plant, saison, wiy),
+                                    presence=presence,
                                     light_eff=light_eff, hum_percue=hum_p, temp=temp,
                                     t_feuille=t_f, t_air=t_air, f_nut=f_nut,
                                     f_allelo=f_allelo,
@@ -539,4 +541,10 @@ class CroissanceMixin:
             # Famine (D140 G ②) : réserves vides → mort par le bilan (point unique).
             if not plant.is_alive:
                 log += self._mort_de_faim(plant, tile, eco)
+            # Défaillance HYDRAULIQUE (stress au bilan ①, `sim/embolie.py`) : sous une
+            # sécheresse extrême les vaisseaux cavitent (l'embolie rabote `f_eau` dès la
+            # semaine suivante) ; le bois neuf (surplus) les remplace lentement. Au-delà
+            # du seuil, la plante meurt desséchée — même sur des réserves pleines.
+            elif maj_embolie(plant, hum_p, presence, surplus):
+                log += self._mort_dessechee(plant, tile, eco)
         return log

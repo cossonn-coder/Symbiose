@@ -123,6 +123,10 @@ class PlantInstance:
     bilan_net: float = 0.0
     limitant: str = ""              # facteur de production le plus bas du dernier bilan
                                     # (ombre/sec/noyé/froid/chaud) → log « stagne (…) » (②)
+    embolie: float = 0.0            # part des vaisseaux embolisés [0-1] (stress au bilan ①,
+                                    # `sim/embolie.py`) : monte sous sécheresse EXTRÊME, ne
+                                    # baisse que par du bois neuf ; ≥ 0,9 = mort desséchée.
+                                    # Hors `_PLANT_ATTRS` (golden), défaut 0 → f_eau inchangé.
     # Marques de symptômes ÉVÉNEMENTIELS (sémiologie ②) : maladie/gel/grêle n'ont
     # PAS d'état persistant relisible (un coup ponctuel), contrairement aux
     # stresseurs chroniques recalculés à la volée. On les MÉMORISE donc ici, cause

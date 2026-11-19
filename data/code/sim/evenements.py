@@ -190,15 +190,17 @@ def _raison_stagnation(line: str) -> str | None:
 
 
 def _raison_mort(line: str) -> str | None:
-    """Cause d'une mort 🪦 lue dans le texte qui suit (sénescence/asphyxie/famine). Les
-    morts par coup de santé (✗) et les fins de cycle (❄ annual / ✿ bisannuelle)
-    ont leurs branches propres dans `evenements()` (chronique des espèces ①)."""
+    """Cause d'une mort 🪦 lue dans le texte qui suit (sénescence/asphyxie/famine/
+    dessèchement). Les morts par coup de santé (✗) et les fins de cycle (❄ annual /
+    ✿ bisannuelle) ont leurs branches propres dans `evenements()` (chronique des espèces ①)."""
     if "meurt de sénescence" in line:
         return "sénescence"
     if "meurt asphyxié" in line:
         return "asphyxie"
     if "meurt de faim" in line:     # famine carbonée, réserves vides (D140 G ②)
         return "famine"
+    if "meurt de dessèchement" in line:   # embolie, défaillance hydraulique (stress au
+        return "secheresse"               # bilan ①) — voix « secheresse » existantes
     return None
 
 

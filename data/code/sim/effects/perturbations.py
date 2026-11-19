@@ -310,6 +310,10 @@ DROUGHT_DAMAGE_RATE      = 0.10  # probabilité de base à mémoire de stress sa
 def drought_stress_damage(plant: PlantInstance, eco,
                           seed: int, week: int) -> list[Mutation]:
     """
+    SUPPLANTÉ (D140 G, stress au bilan ①) — conservé pour mémoire, plus appelé par le
+    tick : la sécheresse agit par le bilan (`f_eau`, famine) et l'embolie
+    (`sim/embolie.py`, défaillance hydraulique). Le seuil reste lu (souche, signes).
+
     Dégât du stress hydrique sévère prolongé (Sprint gènes du vecteur).
 
         sévérité = (drought_memory − seuil) / (1 − seuil)   [0,1] au-delà du seuil
@@ -742,8 +746,10 @@ def apply_disturbances(tile, eco, game_state: dict,
         # (capée comme le mildiou). À `oidium_susceptibility` nulle (défaut catalogue)
         # → sortie immédiate → invariant golden pour ce terme.
         chronic_muts += oidium_disease(plant, tile, eco, seed, week, vl, index)
-        # Stress hydrique sévère (voie sécheresse → santé, médiée par génotype)
-        chronic_muts += drought_stress_damage(plant, eco, seed, week)
+        # Stress hydrique sévère — SUPPLANTÉ (D140 G, stress au bilan ①), conservé pour
+        # mémoire : la sécheresse ferme les stomates (`f_eau` du bilan → famine lente)
+        # et, extrême, embolise les vaisseaux (`sim/embolie.py` → mort desséchée).
+        # chronic_muts += drought_stress_damage(plant, eco, seed, week)
         # SUPPLANTÉS (D140 G ②) — conservés pour mémoire : l'ombre tue désormais par
         # FAMINE (le bilan carbone, `sim/bilan.py`), et la mortalité de fond tirée au
         # sort disparaît (philo #3 : plus de mort au hasard).

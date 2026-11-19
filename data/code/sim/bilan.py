@@ -30,6 +30,7 @@ from __future__ import annotations
 
 from fields import HUM_NOYE
 from plants.physiologie import parametres_bilan, capacite_reserve
+from sim.embolie import conduction
 
 # --- Entretien ---------------------------------------------------------------
 Q10 = 2.0              # la respiration double tous les 10 °C (ordre de grandeur classique)
@@ -66,9 +67,14 @@ def f_lum(light_eff: float) -> float:
 def f_eau(plant, hum_percue: float) -> float:
     """Eau : rampe par le BAS sur le seuil sec du gène `tolerance_secheresse` (même
     seuil que `ok_hum`), par le HAUT au-delà de `HUM_NOYE` (sol noyé), amortie par
-    les tolérances à l'asphyxie (gène × constitution d'espèce : l'aulne y tient)."""
+    les tolérances à l'asphyxie (gène × constitution d'espèce : l'aulne y tient),
+    puis rabotée par la conduction perdue (embolie, stress au bilan ①)."""
     seuil_sec = 0.15 / plant.expressed_gene("tolerance_secheresse")
-    f = _rampe(hum_percue, seuil_sec, SEC_RAMPE * seuil_sec)
+    # Vaisseaux embolisés (stress au bilan ①, `sim/embolie.py`) : seule la part qui
+    # conduit encore fait monter l'eau → la feuille « voit » un sol plus sec et ferme
+    # ses stomates plus tôt. Sur sol bien arrosé, une embolie partielle ne coûte rien
+    # (marge de sécurité hydraulique) ; c'est au sec qu'elle pèse. Embolie 0 → ×1,0.
+    f = _rampe(hum_percue * conduction(plant), seuil_sec, SEC_RAMPE * seuil_sec)
     if hum_percue > HUM_NOYE:
         tol = (plant.expressed_gene("tolerance_asphyxie")
                * plant.plant_class.asphyxie_tolerance_base)

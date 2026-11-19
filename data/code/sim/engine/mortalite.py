@@ -73,6 +73,17 @@ class MortaliteMixin:
         return [ligne, f"    🍂 Nécromasse +{deposited:.2f} OM @{plant.position}"]
 
 
+    def _mort_dessechee(self, plant, tile, eco) -> list[str]:
+        """Défaillance hydraulique (stress au bilan ①) : la plante vivante a franchi
+        `SEUIL_EMBOLIE` → DESTRUCTION (setter `vitalite = 0` : la souche garde ses
+        réserves, ④ du sprint A). Cause lue par `sim.evenements` (« meurt de
+        dessèchement » → `secheresse`). Nécromasse déposée ici, comme la famine."""
+        plant.vitalite = 0
+        ligne = (f"    🪦 {plant.name}@{plant.position} meurt de dessèchement "
+                 f"(embolie {plant.embolie:.2f}, vaisseaux rompus)")
+        deposited = deposer_mort(plant, eco)
+        return [ligne, f"    🍂 Nécromasse +{deposited:.2f} OM @{plant.position}"]
+
     def _tick_senescence_health(self, tile, eco):
         """
         Mortalité réaliste (D27) — santé dynamique.
