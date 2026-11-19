@@ -256,7 +256,7 @@ naissances par espèce/semaine via `SimServer().cmd_init({"config":"full","seed"
 puis `engine.tick_semaine()`.
 
 ## REPRISE
-①→⑥ faits — **sprint A CLOS côté code** (⑥ non commité), F5 attendu (recette ci-dessus).
+①→⑥ faits — **sprint A CLOS côté code** (⑥ commité `7c3bfc1`), F5 attendu (recette ci-dessus).
 Golden courant `8f2dd7add938b4cb…`, pont 0.6.21. Suite : `/sprint-auto sprint_stress_au_bilan`
 (B, `sprints/vegetal/sante/sprint_stress_au_bilan/`), puis reprise de
 `sprints/vegetal/genetique/sprint_depart_jardin/` au ④.

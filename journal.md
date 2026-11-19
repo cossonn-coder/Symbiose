@@ -236,6 +236,7 @@ pointeur ci-dessous. Ne plus écrire le contenu des entrées ici.
 - [2026-11-18 — Sprint **CARACTÈRES VIVANTS** (D139, ③ sur 3) — CLOS côté code (①, ①b-①d, ②→⑥) : 20 caractères héritables, fécondation ∝ pollen reçu, père ∝ pollen donné, annuelles qui se ressèment, goût toxique, signes et vue ; golden `db4d6b75…`, pont 0.6.20, F5 attendu ; D139 close côté code](journal/191_2026-11-18_sprint-caracteres-vivants-CLOS.md)
 - [2026-11-18 — F5 de D139 joué → D139 close, retours en **D140** ; conception **DÉPART DU JARDIN** FIGÉE (D140 A+B+C) : pâturin anémophile, gènes muets gratuits, gel impossible > −0,5 °C, monde `full` ouvert semaine 10 avec une plante mûre de chaque espèce, semis d'intérieur + `repiquer` ; 6 tronçons](journal/192_2026-11-18_conception-depart-jardin-FIGEE.md)
 - [2026-11-18 — conception **PLANTE VIVANTE** FIGÉE (D140 G) : hécatombe d'ouverture due à la règle de dégât, pas à la faune ; les plantes vivent d'un bilan carbone (feuillage, réserves, famine), herbivorie par atteinte, souches à réserve finie ; sprints A (6) + B (5)](journal/193_2026-11-18_conception-plante-vivante-FIGEE.md)
+- [2026-11-19 — sprint **PLANTE VIVANTE** (D140 G, A) CLOS côté code ①→⑥ : bilan carbone, famine, herbivorie par atteinte, souches à réserve finie ; posées mortes à s21 104 → 10 [n=1] ; golden `8f2dd7ad…`, pont 0.6.21 ; F5 attendu](journal/194_2026-11-19_sprint-plante-vivante-CLOS.md)
 
 > Tout le contenu détaillé est dans les fichiers liés ci-dessus
 > (`journal/` et `journal_archive/`). La dette est dans [`DETTE.md`](DETTE.md).
