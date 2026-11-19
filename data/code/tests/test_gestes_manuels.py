@@ -94,10 +94,12 @@ def test_arracher():
           len(plant.segments) < n_av, f"{n_av} → {len(plant.segments)}")
     # `erode` divise le pas par la constitution d'espèce (résilience) : on suit la
     # constitution, pas le pas brut (sinon on figerait une magnitude arbitraire).
+    # D140 G ② : `erode` = PERTE DE TISSUS → le coup retire du FEUILLAGE (la
+    # vitalité, lecture du bilan, baisse de moitié moins : ½ + ½·feuillage).
     erosion = VITALITE_STEP / plant.plant_class.resilience_base
-    check("vitalité ÉRODÉE (différenciateur main/outil)",
-          abs(plant.vitalite - (vit_av - erosion)) < 1e-9,
-          f"vitalité {vit_av:.3f} → {plant.vitalite:.3f}")
+    check("tissus ÉRODÉS (différenciateur main/outil)",
+          abs(plant.feuillage - (1.0 - erosion)) < 1e-9 and plant.vitalite < vit_av,
+          f"vitalité {vit_av:.3f} → {plant.vitalite:.3f}, feuillage {plant.feuillage:.3f}")
     # Litière déposée au plot (masse > 0, comme tailler).
     lit_ap = eco.om_fresh_at(r, c)
     check("litière `bois` déposée au plot", lit_ap > lit_av,

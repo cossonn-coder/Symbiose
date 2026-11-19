@@ -100,3 +100,20 @@ def onset_senescence(plant) -> float:
     [0,05 ; 0,95] (précoce → sénesce plus tôt)."""
     return max(0.05, min(0.95,
                          SENESCENCE_ONSET - SEN_ONSET_JITTER * _ecart_ancien(plant)))
+
+
+
+def declin_senescent(plant) -> float:
+    """Avancée du déclin de fin de vie ∈ [0, 1] : 0 avant l'onset propre, 1 à la
+    longévité (vivaces/ligneux ; 0 pour une annuelle, longévité infinie). Lue par la
+    mortalité (proba du cran de vieillesse) et par le bilan (② : passé
+    HEAL_SEN_CUTOFF, le vieux sujet ne refait plus ses réserves — comme il ne
+    convalesçait plus d'antan)."""
+    L = plant.plant_class.longevity()
+    if L == float("inf"):
+        return 0.0
+    onset = onset_senescence(plant)
+    denom = (1.0 - onset) * L
+    if denom <= 0:
+        return 0.0
+    return max(0.0, min(1.0, (plant.age_years - onset * L) / denom))

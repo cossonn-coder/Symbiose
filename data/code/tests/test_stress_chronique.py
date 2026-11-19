@@ -106,14 +106,17 @@ def test_shade_kills_heliophile_spares_sciaphile():
     h_week, h_health, h_sm = run_shade(tol_ombre=0.4)   # héliophile
     s_week, s_health, s_sm = run_shade(tol_ombre=1.6)   # sciaphile
 
-    assert h_sm > 0.6, (
-        f"l'ombre ne s'installe pas (shade_memory héliophile {h_sm:.2f} ≤ 0.6)")
+    # D140 G ② : l'ombre ne tire plus de coups de santé sur `shade_memory` installée
+    # (`shade_stress_damage` SUPPLANTÉ) — elle AFFAME : la lumière manque, le bilan
+    # carbone est négatif, les réserves se vident. La mort vient donc plus tôt, avant
+    # que la mémoire d'ombre ne monte (on ne l'exige plus), et le sciaphile, qui
+    # produit davantage sous la même ombre, tient PLUS LONGTEMPS.
     assert h_week is not None, (
         f"l'héliophile SURVIT à l'ombre (santé {h_health}, shade_memory {h_sm:.2f}) "
-        f"— la voie carence lumineuse ne mord pas")
-    assert s_health > h_health or s_week is None, (
-        f"le sciaphile ne résiste pas mieux : héliophile santé={h_health} "
-        f"(mort S{h_week}) vs sciaphile santé={s_health} (mort S{s_week})")
+        f"— l'ombre n'affame pas")
+    assert s_week is None or s_week > h_week, (
+        f"le sciaphile ne résiste pas mieux : héliophile mort S{h_week} "
+        f"vs sciaphile mort S{s_week}")
     print(f"[stress-chronique ①] PASS — héliophile mort S{h_week} "
           f"(shade_memory {h_sm:.2f}) ; sciaphile santé={s_health} "
           f"(mort S{s_week}, shade_memory {s_sm:.2f})")

@@ -133,8 +133,10 @@ def test_taille():
     gs, eco, p, st = _taillable()
     vit = p.vitalite
     ACT.arracher(gs, "joueur_1", p, eco)
-    check("arracher érode toujours", abs(p.vitalite - (vit - VITALITE_STEP / p.plant_class.resilience_base)) < 1e-9,
-          f"{vit:.3f} → {p.vitalite:.3f}")
+    # D140 G ② : `erode` = perte de tissus → le coup retire du FEUILLAGE.
+    check("arracher érode toujours",
+          abs(p.feuillage - (1.0 - VITALITE_STEP / p.plant_class.resilience_base)) < 1e-9
+          and p.vitalite < vit, f"{vit:.3f} → {p.vitalite:.3f}")
     gs, eco, p, st = _taillable()
     st["courante"] = 0.0
     depots = _depots(eco)

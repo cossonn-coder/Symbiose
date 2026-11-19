@@ -244,10 +244,13 @@ def test_ecraser_plante():
     # divisé par la CONSTITUTION d'espèce `resilience_base` (② : tournesol fragile
     # 0.8 → il encaisse PLUS que la marche nominale 1/3). L'attendu suit donc la
     # constitution, plus le pas brut (sinon on re-figerait une magnitude pré-②).
+    # D140 G ② : `erode` = PERTE DE TISSUS → le coup retire du FEUILLAGE (vitalité
+    # = lecture du bilan, ½ + ½·feuillage à réserves pleines).
     erosion_attendue = VITALITE_STEP / sun.plant_class.resilience_base
     check("NET + stimulation basse (tournesol 0.05) → santé entamée (constitution 0.8)",
-          abs(sun.vitalite - (sante_av - erosion_attendue)) < 1e-9,
-          f"vitalité {sante_av:.3f} → {sun.vitalite:.3f}")
+          abs(sun.feuillage - (1.0 - erosion_attendue)) < 1e-9
+          and sun.vitalite < sante_av,
+          f"vitalité {sante_av:.3f} → {sun.vitalite:.3f}, feuillage {sun.feuillage:.3f}")
 
     # (c) NET — basilic (résistance 0.4) ÉPARGNÉ : écimé MAIS santé intacte car il
     #     PROFITE (stimulation 0.85 ≥ seuil d'épargne) → le pincement.
@@ -267,11 +270,26 @@ def test_ecraser_plante():
     #     souche n'a donc rien à ressusciter).
     semis = tile.plants[3]                          # Haricot jeune (fragile), 1 segment (collet)
     n_seg0 = len(semis.segments)
+    # D140 G ② : un écrasement retire du FEUILLAGE (adaptateur `erode`) ; 3 écrasements
+    #     dénudent le semis (vitalité lue ½ : il vit sur ses réserves), et c'est le
+    #     BILAN qui tue — écrasé chaque semaine, il ne refait pas ses feuilles et meurt
+    #     de faim en quelques semaines (mort émergente, plus un compte de PV).
+    from sim.bilan import semaine_bilan
     for i in range(3):
         ACT.ecraser_plante(gs, "joueur_1", semis, eco)   # cible défaut = collet
-    check("semis : 3 écrasements du collet → vitalité tombée à ~0",
-          semis.vitalite < 1e-9, f"vitalité={semis.vitalite}")
-    check("semis : mort émergente (is_alive False)", not semis.is_alive)
+    check("semis : 3 écrasements du collet → dénudé (feuillage ~0)",
+          semis.feuillage < 1e-9 and semis.is_alive, f"feuillage={semis.feuillage}")
+    for semaine in range(8):
+        if not semis.is_alive:
+            break
+        V.ensure_player(gs, "joueur_1")["courante"] = 100.0
+        ACT.ecraser_plante(gs, "joueur_1", semis, eco)
+        if semis.is_alive:
+            semaine_bilan(semis, saison="ete", presence=1.0, light_eff=1.0,
+                          hum_percue=1.5, temp=20.0, t_feuille=22.0, t_air=20.0,
+                          f_nut=1.0, f_allelo=1.0)
+    check("semis : mort émergente par le bilan (is_alive False)", not semis.is_alive,
+          f"réserves={semis.reserves:.2f} après {semaine + 1} sem.")
     check("collet protégé : structure JAMAIS retirée (mort par santé, pas structure)",
           len(semis.segments) == n_seg0, f"{n_seg0} → {len(semis.segments)}")
 

@@ -11,7 +11,7 @@ résolues sur l'instance Engine. Comportement identique à l'ancien `engine.py`.
 """
 
 from __future__ import annotations
-from fields import (EXUDATE_BASE, EXUDATE_OM_SHARE, HUM_NOYE, HUM_EXCES,
+from fields import (EXUDATE_BASE, EXUDATE_OM_SHARE, HUM_EXCES,
                     ASPHYXIE_MEMORY_LERP)
 from fields.ecofields.constants import (T_PLANTE_ALPHA, ROSEE_SURFACE_REF,
                                         ROSEE_FOLIAIRE_MAX, ROOT_HERBIVORY_MEMORY_LERP,
@@ -28,6 +28,17 @@ from .feuille import t_feuille_de
 from fields.ecofields.thermique import t_max_jour
 from sim.nutrition_plante import facteur_nutrition
 from sim.bilan import semaine_bilan
+from .fin_de_cycle import fin_de_cycle
+from sim.tempo import declin_senescent
+from fields import HEAL_SEN_CUTOFF
+
+# Croissance au SURPLUS (D140 G ②) : cible du `growth_factor` = G_BASE à surplus nul,
+# 1 à SURPLUS_PLEIN semaine d'entretien de surplus et au-delà. G_BASE 0,6 = le plancher
+# de l'ancienne cible lumière (0,6 + 0,4·light_eff) : l'amplitude de hauteur ne change
+# pas, c'est le bilan qui la pilote. 1 semaine : une plante en pleine saison produit
+# ~1 à 2 semaines d'entretien de plus qu'elle ne dépense (mesuré au ①).
+G_BASE = 0.6
+SURPLUS_PLEIN = 1.0
 
 # Sémiologie ② (docs/narration/semiologie/conception_semiologie_foliaire.md §2.5) — facteur de décroissance
 # des marques de symptômes ÉVÉNEMENTIELS par tick de plante. Couplé au gain
@@ -159,24 +170,16 @@ class CroissanceMixin:
             # `continue` du stade perpétuel : un arbre adulte a aussi des feuilles.
             plant.t_feuille = t_feuille_de(t_max_jour(t_air, nebulosite), light,
                                            eau_percue(plant, eco, hum))
-            trop_chaud = plant.t_feuille > plant.lim_chaud()
             if stage.duration_weeks == 0: continue
             t_sol = eco.temperature_sol.at_plot(r, c)        # microclimat de surface local (①–④)
             temp  = T_PLANTE_ALPHA * t_air + (1.0 - T_PLANTE_ALPHA) * t_sol   # T ressentie (⑤)
-            # Seuils de croissance : humidité ET lumière ET température suffisantes.
-            # tolerance_secheresse abaisse le seuil d'humidité (gène >1 → la plante
-            # continue de croître en sol plus sec avant de stagner).
-            # Humidité suffisante par le BAS (sécheresse, modulée par le gène) ET
-            # pas excessive par le HAUT (asphyxie « noyé » au-delà de HUM_NOYE,
-            # §2.3 b). La borne haute est inerte sous le seuil (toute tuile drainante
-            # / terre : hum ≤ HUM_NOYE → ok_hum inchangé, message « sec » conservé).
-            ok_hum   = (hum >= 0.15 / plant.expressed_gene("tolerance_secheresse")
-                        and hum <= HUM_NOYE)
-            ok_light = light >= 0.2   # trop d'ombre = stagnation
-            ok_temp  = temp  >= plant.plant_class.temp_min_growth   # trop froid = stagnation
-            # Chaleur (D139 ③) : feuille au-delà de `lim_chaud` → la photosynthèse
-            # décroche, la plante ne pousse pas cette semaine (miroir haut de ok_temp).
-            can_grow = ok_hum and ok_light and ok_temp and not trop_chaud
+            # Croissance (D140 G ②) : la plante avance si son DERNIER bilan est
+            # positif (`bilan_net`, posé par `_update_physiology` au tick précédent —
+            # l'avancement tourne avant elle dans la boucle). Les anciens seuils
+            # booléens (humidité / lumière ≥ 0,2 / T ≥ temp_min / feuille ≤ lim_chaud)
+            # sont devenus les RAMPES du bilan ; la stagnation est nommée par le
+            # facteur le plus bas (`plant.limitant`, `sim/bilan.facteur_limitant`).
+            can_grow = plant.bilan_net > 0.0
             # vigueur accélère l'avancement de stade (gène >1 → durée requise réduite) ;
             # le coût de défense (plasticité ③) la freine : une plante sur-exprimant
             # ses tolérances a re-routé sa vigueur → croissance plus lente (compromis
@@ -195,19 +198,28 @@ class CroissanceMixin:
                 elif plant.advance_stage():
                     log.append(f"    🌱 {plant.name}@{plant.position} → [{plant.stage.name}] "
                                f"(hum={hum:.2f} lum={light:.2f} t={temp:.1f}°C)")
-            elif not ok_temp:
-                log.append(f"    ❄ {plant.name}@{plant.position} stagne (froid t={temp:.1f}°C)")
-            elif trop_chaud:
-                log.append(f"    🔥 {plant.name}@{plant.position} stagne "
-                           f"(chaud feuille={plant.t_feuille:.1f}°C)")
-            elif not ok_light:
-                log.append(f"    🌑 {plant.name}@{plant.position} stagne (ombre lum={light:.2f})")
-            elif not ok_hum:
-                if hum > HUM_NOYE:
-                    log.append(f"    🌊 {plant.name}@{plant.position} stagne (noyé hum={hum:.2f})")
-                else:
-                    log.append(f"    ⏸  {plant.name}@{plant.position} stagne (sec hum={hum:.2f})")
+            elif not can_grow:
+                log.append(self._ligne_stagne(plant, hum, light, temp))
         return log
+
+    @staticmethod
+    def _ligne_stagne(plant, hum: float, light: float, temp: float) -> str:
+        """Ligne de log d'une stagnation, au format historique (lu par la maîtrise et
+        le carnet : « stagne (sec / ombre / froid / noyé »), nommée par le facteur
+        limitant du bilan ; « (bilan …) » si aucune rampe ne limite (déficit par
+        feuillage perdu, sol pauvre, allélopathie)."""
+        nom, pos, lim = plant.name, plant.position, plant.limitant
+        if lim == "froid":
+            return f"    ❄ {nom}@{pos} stagne (froid t={temp:.1f}°C)"
+        if lim == "chaud":
+            return f"    🔥 {nom}@{pos} stagne (chaud feuille={plant.t_feuille:.1f}°C)"
+        if lim == "ombre":
+            return f"    🌑 {nom}@{pos} stagne (ombre lum={light:.2f})"
+        if lim == "noyé":
+            return f"    🌊 {nom}@{pos} stagne (noyé hum={hum:.2f})"
+        if lim == "sec":
+            return f"    ⏸  {nom}@{pos} stagne (sec hum={hum:.2f})"
+        return f"    ⏸  {nom}@{pos} stagne (bilan {plant.bilan_net:+.2f})"
 
     def _apply_uptake(self, tile, eco, saison=None, week_in_year=None,
                       demande=None):
@@ -308,6 +320,7 @@ class CroissanceMixin:
         chaque gène adaptogène) — INERTE tant qu'aucun consommateur ne lit
         expressed_gene (tronçon ②).
         """
+        log = []
         wiy = wiy_de(self.week)            # calendrier du bilan carbone (D140 G ①)
         saison = saison_de(wiy)
         for plant in tile.plants:
@@ -462,13 +475,12 @@ class CroissanceMixin:
             # une fois par tick). Pas de gain ici (il vient des ReduceHealth, cf.
             # resolution.py) — uniquement la décroissance/cicatrisation.
             plant.decay_symptoms(SYMPTOM_DECAY)
-            # Growth factor : la lumière EFFECTIVE module la hauteur (feedback →
-            # ombre). Tolérance à l'ombre (Q6) = base d'espèce × gène individuel :
+            # Lumière EFFECTIVE (facteur lumière du bilan, ②). Tolérance à l'ombre (Q6)
+            # = base d'espèce × gène individuel :
             # un sciaphile garde sa croissance à l'ombre (light_eff relevé, cap 1.0),
             # un héliophile ombragé décroît (et s'étiole — tronçon 3).
             tol = plant.plant_class.shade_tolerance_base() * plant.expressed_gene("tolerance_ombre")
             light_eff = min(1.0, light * tol)
-            target_g = 0.6 + 0.4 * light_eff
             # Escompte ALLÉLOPATHIQUE de croissance (sprint ALLÉLOPATHIE ③, EFFECTIVE au
             # ④) : une plante sensible dont les racines explorent des plots chargés voit
             # son GAIN de croissance escompté (jamais sa santé décrémentée — philo #2).
@@ -476,35 +488,47 @@ class CroissanceMixin:
             # (`allelo_effectif` = ambiant + AUTOTOXICITÉ si la plante EST l'émetteur
             # récurrent du plot — la monoculture fatigue SA propre croissance) sur
             # l'empreinte RACINAIRE déjà dérivée (`plant.root_plots`, la même que
-            # l'uptake — RÉUTILISÉE, pas recalculée) et on rabote la cible du
-            # growth_factor par f_croissance ∈ [1−ESC_MAX, 1]. Le facteur EST stateful
-            # via le lerp (growth_factor converge, ne compound pas). Champ nul au repos
-            # (aucun émetteur avant ⑤ → autotox jamais armé) ⇒ moyenne 0 ⇒ f_croissance=1
-            # ⇒ target_g inchangé ⇒ golden NEUTRE. Court-circuité si l'empreinte ne
-            # touche que du sol propre (rampe 0 → 1.0).
+            # l'uptake — RÉUTILISÉE, pas recalculée) ; f_croissance ∈ [1−ESC_MAX, 1]
+            # rabote la PRODUCTION du bilan (② : plus la cible du growth_factor
+            # directement — elle suit le surplus, qui en hérite). Champ nul → 1.0.
             roots = [(rr, cc) for (rr, cc) in plant.root_plots
                      if 0 <= rr < eco.rows and 0 <= cc < eco.cols] or [(r, c)]
             allelo_rac = sum(eco.allelo_effectif(rr, cc, plant.plant_class)
                              for (rr, cc) in roots) / len(roots)
             f_allelo = _f_croissance_allelo(allelo_rac,
                                             plant.plant_class.allelopathie_sensibilite)
-            target_g *= f_allelo
             # Escompte de NUTRITION (D120 ②) : même patron, même empreinte `roots`
             # (réutilisée, pas relue). Une racine qui explore un sol vidé SOUS
             # l'équilibre de sa roche (Liebig, pondéré par le besoin du stade) voit
-            # son GAIN de croissance escompté ∈ [plancher, 1] — jamais sa santé
-            # (philo #2), jamais de mort (D41). Cf. `sim/nutrition_plante.py`.
+            # sa PRODUCTION escomptée ∈ [plancher, 1] (②, via le bilan) — jamais un
+            # coup de santé (philo #2). Cf. `sim/nutrition_plante.py`.
             f_nut = facteur_nutrition(plant, eco, roots)
-            target_g *= f_nut
-            plant.growth_factor += (target_g - plant.growth_factor) * 0.10
-            plant.growth_factor  = max(0.3, min(1.0, plant.growth_factor))
             # BILAN CARBONE (D140 G ①, `sim/bilan.py`) : P − E − X de la semaine sur
             # les lectures DÉJÀ faites ci-dessus (lumière effective, eau ressentie,
-            # T_feuille, nutrition, allélopathie — rien n'est relu deux fois). EN
-            # OMBRE : `feuillage`/`reserves`/`bilan_net` ne sont lus par personne au ①.
+            # T_feuille, nutrition, allélopathie — rien n'est relu deux fois). Depuis
+            # le ② il FAIT la vie : vitalité lue, famine, croissance au surplus.
             temp = (T_PLANTE_ALPHA * t_air
                     + (1.0 - T_PLANTE_ALPHA) * eco.temperature_sol.at_plot(r, c))
-            semaine_bilan(plant, saison=saison,
-                          presence=feuillage_present(plant, saison, wiy),
-                          light_eff=light_eff, hum_percue=hum_p, temp=temp,
-                          t_feuille=t_f, t_air=t_air, f_nut=f_nut, f_allelo=f_allelo)
+            # `declin` : horloge INTERNE de fin de vie — annuelle en fin de cycle (sa
+            # production part dans ses graines) ou vieux sujet passé HEAL_SEN_CUTOFF
+            # (il ne se remettait déjà plus) : ses réserves ne se remplissent plus,
+            # les crans de `mortalite` (retraits) ne sont donc plus rendus.
+            surplus = semaine_bilan(plant, saison=saison,
+                                    presence=feuillage_present(plant, saison, wiy),
+                                    light_eff=light_eff, hum_percue=hum_p, temp=temp,
+                                    t_feuille=t_f, t_air=t_air, f_nut=f_nut,
+                                    f_allelo=f_allelo,
+                                    declin=(fin_de_cycle(plant, self.week)
+                                            or declin_senescent(plant) >= HEAL_SEN_CUTOFF))
+            # Growth factor (D140 G ②) : la croissance suit le SURPLUS du bilan (ce
+            # qui reste une fois les réserves remplies), plus la lumière seule. Les
+            # escomptes d'allélopathie et de nutrition sont DÉJÀ dans la production
+            # (f_allelo, f_nut) : on ne les recompte pas. Gelé hors végétation (None).
+            if surplus is not None:
+                target_g = G_BASE + (1.0 - G_BASE) * min(1.0, surplus / SURPLUS_PLEIN)
+                plant.growth_factor += (target_g - plant.growth_factor) * 0.10
+                plant.growth_factor  = max(0.3, min(1.0, plant.growth_factor))
+            # Famine (D140 G ②) : réserves vides → mort par le bilan (point unique).
+            if not plant.is_alive:
+                log += self._mort_de_faim(plant, tile, eco)
+        return log

@@ -12,8 +12,7 @@ dans `_tick_skeletons` (decompo.py). Comportement identique à l'ancien engine.p
 
 from __future__ import annotations
 import math
-from fields import (_hash_noise, SEN_RATE,
-                    HEAL_RATE, HEAL_SEN_CUTOFF, ASPHYXIE_HEALTH_SEUIL,
+from fields import (_hash_noise, SEN_RATE, ASPHYXIE_HEALTH_SEUIL,
                     ASPHYXIE_RATE, RESEED_RADIUS_CM, VITALITE_STEP)
 from sim.effects import apply_mutations, ReduceHealth, deposer_mort
 from sim.effects.perturbations import SEUIL_SEMIS
@@ -21,9 +20,8 @@ from sim.reproduction import (find_father, heredite, child_expression,
                               is_seed_bearing, graine_fertile,
                               recrue_par_fruits)
 from sim.capacite import recrutement_bloque
-from sim.tempo import onset_senescence
+from sim.tempo import declin_senescent
 from sim.growth import est_etiole
-from .racines import eau_percue
 from .fin_de_cycle import fin_de_cycle, semer_fin_de_cycle
 from .aleas import (PAILLAGE_PROTECT, DAMAGE_STEP, WIND_DAMAGE_SEUIL,
                     WIND_SEVERITY_REF, WIND_ETIOLE_SUSCEPT)
@@ -49,7 +47,32 @@ def _plot_sous_le_vent(pr: int, pc: int, wind_dir: float, wind_force: float) -> 
     return (pr + round(dr), pc + round(dc))
 
 
+def _retrait_reserves(plant, part: float) -> None:
+    """Horloge INTERNE (sénescence, fin de cycle) : retire `part` de la capacité de
+    réserve (D140 G ②, conversion de l'ancien décrément direct de vitalité — même
+    déclencheur, même pas : 3 crans vident des réserves pleines). Snap anti-poussière
+    flottante : 1 − 3×(1/3) ≠ 0 ; sous 1e-9, les réserves sont vides (mort)."""
+    r = plant.reserves - part
+    plant.reserves = r if r > 1e-9 else 0.0
+
+
 class MortaliteMixin:
+    def _mort_de_faim(self, plant, tile, eco) -> list[str]:
+        """La plante vient de vider ses réserves au bilan (`_update_physiology`) :
+        mort par FAMINE carbonée (D140 G ②), ou — annuelle en fin de cycle qui
+        remobilise — fin de cycle (ses graines partent à la banque, comme au retrait
+        de `_tick_senescence_health`). Nécromasse déposée ici (point de mort unique)."""
+        if fin_de_cycle(plant, self.week):
+            semer_fin_de_cycle(plant, tile, eco, self.game_state.get("seed", 42), self.week)
+            ligne = (f"    ✿ {plant.name}@{plant.position} meurt "
+                     f"(fin de cycle) — graines à la banque")
+        else:
+            ligne = (f"    🪦 {plant.name}@{plant.position} meurt de faim "
+                     f"(réserves épuisées, bilan {plant.bilan_net:+.2f})")
+        deposited = deposer_mort(plant, eco)
+        return [ligne, f"    🍂 Nécromasse +{deposited:.2f} OM @{plant.position}"]
+
+
     def _tick_senescence_health(self, tile, eco):
         """
         Mortalité réaliste (D27) — santé dynamique.
@@ -58,12 +81,11 @@ class MortaliteMixin:
                        déclin croissante ∝ âge fait chuter la santé ; mort à 0.
                        Sautée pour les annuelles (longévité = ∞) : elles
                        s'éteignent par FIN DE CYCLE après leurs graines (D139 ③).
-          Guérison   : en bon milieu (lumière × humidité, peu de perturbation)
-                       et hors fin de vie (sen < HEAL_SEN_CUTOFF), la santé
-                       remonte → fini les « zombies » bloqués à 1/3.
+          Guérison   : SUPPLANTÉE (D140 G ②) par la refeuillaison du bilan.
+          Depuis le ②, déclin et fin de cycle RETIRENT DES RÉSERVES (la vitalité
+          n'est plus qu'une lecture du bilan, `PlantInstance.vitalite`).
 
-        Déterministe via _hash_noise (flux week·3 déclin / week·5 guérison,
-        décorrélés). Les sujets tués déposent leur nécromasse avant nettoyage.
+        Déterministe via _hash_noise (flux week·3 déclin). Les sujets tués déposent leur nécromasse avant nettoyage.
         """
         log = []
         seed = self.game_state.get("seed", 42)
@@ -86,8 +108,7 @@ class MortaliteMixin:
             # convalescence coupée (sen = 1). Remplace la mort calendaire de l'hiver.
             if fin_de_cycle(plant, self.week):
                 sen = 1.0
-                v = plant.vitalite - VITALITE_STEP
-                plant.vitalite = v if v > 1e-9 else 0.0
+                _retrait_reserves(plant, VITALITE_STEP)
                 if not plant.is_alive:
                     deaths.append(plant)
                     semer_fin_de_cycle(plant, tile, eco, seed, week)
@@ -95,19 +116,14 @@ class MortaliteMixin:
                                f"(fin de cycle) — graines à la banque")
                     continue
             elif L != math.inf:
-                onset = onset_senescence(plant)
-                denom = (1.0 - onset) * L
-                if denom > 0:
-                    sen = max(0.0, min(1.0,
-                              (plant.age_years - onset * L) / denom))
+                sen = declin_senescent(plant)
                 if sen > 0.0 and _hash_noise(seed, week * 3, r, c) < sen * SEN_RATE:
                     # Sénescence = horloge INTERNE de vieillissement (pas un stress
                     # subi) → décrément DIRECT, hors `erode`/résilience (décision D5).
                     # Snap anti-poussière (comme `erode`) : 1.0 − 3×(1/3) ≠ 0 en
                     # flottant ; sans lui une plante « morte de vieillesse » lingérerait
                     # à ~1e-16 (is_alive vrai). La vieillesse qui atteint le fond TUE.
-                    v = plant.vitalite - VITALITE_STEP
-                    plant.vitalite = v if v > 1e-9 else 0.0
+                    _retrait_reserves(plant, VITALITE_STEP)
                     if not plant.is_alive:
                         deaths.append(plant)
                         log.append(f"    🪦 {plant.name}@{plant.position} meurt de "
@@ -139,35 +155,39 @@ class MortaliteMixin:
                         log.append(f"    🪦 {plant.name}@{plant.position} meurt "
                                    f"asphyxié (excès d'eau soutenu)")
                         continue
-            # Guérison (convalescence) — coupée en fin de vie
-            if plant.etat != "sain" and sen < HEAL_SEN_CUTOFF:
-                light   = eco.lumiere.light_received(plant)
-                # Eau RESSENTIE (D111 ④) : racines pourries/rongées → convalescence ↓.
-                hum     = eau_percue(plant, eco, eco.humidite.at_plot(r, c))
-                disturb = eco.disturbance.local(r, c)
-                Q = light * min(1.0, hum) * max(0.0, 1.0 - disturb)
-                # vigueur accélère la convalescence (gène >1 → guérit plus vite) ;
-                # le coût de défense (plasticité ③) la freine : la vigueur re-routée
-                # vers la défense cicatrise moins vite (neutre = 1.0 sans sur-expression).
-                # Dépression de consanguinité (D139 ②) et coût génétique (D139
-                # caractères vivants ①) : même site, même logique. `repousse` (③) :
-                # une plante qui mobilise vite ses réserves se remet plus vite d'un
-                # broutage ou d'un coup (elle le paie en fleurs, floraison.py).
-                heal = (Q * HEAL_RATE * plant.gene("vigueur") * plant.cout_defense()
-                        * plant.cout_genetique() * plant.depression_consanguinite()
-                        * plant.gene("repousse"))
-                # Coût de robustesse de l'étiolement (Q7) : un héliophile étiolé
-                # convalesce −10 % — la tige grêle est fragile ; s'il n'atteint pas
-                # la lumière (qui lèverait l'étiolement), il se rétablit moins bien
-                # et dépérit par le déclin existant. Émergent, pas un verdict.
-                if est_etiole(plant, eco.lumiere):
-                    heal *= 0.90
-                if _hash_noise(seed, week * 5, r, c) < heal:
-                    # GAIN par pas 1/3 (décision ① : on garde le pas d'antan pour la
-                    # neutralité d'échelle — la finesse continue vient des dégâts
-                    # médiés, pas de la convalescence). Récupération pilotée par la
-                    # vigueur (dans `heal` ci-dessus), pas par la constitution.
-                    plant.vitalite = min(1.0, plant.vitalite + VITALITE_STEP)
+            # SUPPLANTÉ (D140 G ②) — conservé pour mémoire. La convalescence AU SORT
+            # (`heal`, tirage week·5) est remplacée par la REFEUILLAISON payée sur les
+            # réserves (`sim/bilan.maj_bilan`) : une plante se remet en refaisant ses
+            # feuilles, pas en gagnant un cran de vie à pile ou face (philo #3).
+            # # Guérison (convalescence) — coupée en fin de vie
+            # if plant.etat != "sain" and sen < HEAL_SEN_CUTOFF:
+            #     light   = eco.lumiere.light_received(plant)
+            #     # Eau RESSENTIE (D111 ④) : racines pourries/rongées → convalescence ↓.
+            #     hum     = eau_percue(plant, eco, eco.humidite.at_plot(r, c))
+            #     disturb = eco.disturbance.local(r, c)
+            #     Q = light * min(1.0, hum) * max(0.0, 1.0 - disturb)
+            #     # vigueur accélère la convalescence (gène >1 → guérit plus vite) ;
+            #     # le coût de défense (plasticité ③) la freine : la vigueur re-routée
+            #     # vers la défense cicatrise moins vite (neutre = 1.0 sans sur-expression).
+            #     # Dépression de consanguinité (D139 ②) et coût génétique (D139
+            #     # caractères vivants ①) : même site, même logique. `repousse` (③) :
+            #     # une plante qui mobilise vite ses réserves se remet plus vite d'un
+            #     # broutage ou d'un coup (elle le paie en fleurs, floraison.py).
+            #     heal = (Q * HEAL_RATE * plant.gene("vigueur") * plant.cout_defense()
+            #             * plant.cout_genetique() * plant.depression_consanguinite()
+            #             * plant.gene("repousse"))
+            #     # Coût de robustesse de l'étiolement (Q7) : un héliophile étiolé
+            #     # convalesce −10 % — la tige grêle est fragile ; s'il n'atteint pas
+            #     # la lumière (qui lèverait l'étiolement), il se rétablit moins bien
+            #     # et dépérit par le déclin existant. Émergent, pas un verdict.
+            #     if est_etiole(plant, eco.lumiere):
+            #         heal *= 0.90
+            #     if _hash_noise(seed, week * 5, r, c) < heal:
+            #         # GAIN par pas 1/3 (décision ① : on garde le pas d'antan pour la
+            #         # neutralité d'échelle — la finesse continue vient des dégâts
+            #         # médiés, pas de la convalescence). Récupération pilotée par la
+            #         # vigueur (dans `heal` ci-dessus), pas par la constitution.
+            #         plant.vitalite = min(1.0, plant.vitalite + VITALITE_STEP)
         for plant in deaths:
             deposited = deposer_mort(plant, eco)
             log.append(f"    🍂 Nécromasse +{deposited:.2f} OM @{plant.position}")

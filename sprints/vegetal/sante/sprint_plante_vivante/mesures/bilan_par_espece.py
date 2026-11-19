@@ -21,7 +21,7 @@ def _espion(plant, **kw):
     facteurs[id(plant)] = (bl.f_lum(kw["light_eff"]), bl.f_eau(plant, kw["hum_percue"]),
                            bl.f_temp(plant, kw["temp"], kw["t_feuille"]), kw["f_nut"],
                            kw["f_allelo"], kw["presence"], kw["t_air"])
-    _orig(plant, **kw)
+    return _orig(plant, **kw)
 
 
 cr.semaine_bilan = _espion

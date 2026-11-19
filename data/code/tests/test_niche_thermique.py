@@ -103,6 +103,9 @@ def test_heat_memory():
     eng, tile, eco, chaude = lab(0.0)          # sol sec, plein soleil
     eco.temperature.fill(25.0)
     for _ in range(20):
+        # D140 G ② : sur sol SEC la mâche mourrait de faim en 1-2 semaines (bilan) et
+        # sa mémoire cesserait d'intégrer ; on isole la MÉMOIRE de chaleur du bilan.
+        chaude.reserves = 1.0
         eng._update_physiology(tile, eco, nebulosite=0.0)
     eng2, tile2, eco2, fraiche = lab(2.5)      # sol frais
     eco2.temperature.fill(10.0)

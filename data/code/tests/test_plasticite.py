@@ -94,7 +94,8 @@ def test_acclimatation_vitesse_montee():
     # Saturation : après beaucoup de pas, asymptote vers la cible sans la dépasser
     for _ in range(500):
         p.drought_memory = 1.0
-        engine._update_physiology(tile, eco)
+        p.reserves = 1.0                # D140 G ② : à sec elle mourrait de faim ; on
+        engine._update_physiology(tile, eco)   # isole l'expression du bilan
     assert p.expression[_GENE] <= EXPR_MAX + _EPS, "expression dépasse EXPR_MAX"
     assert abs(p.expression[_GENE] - cible) < 1e-3, "n'asymptote pas vers la cible"
     print(f"[plasticité ①·montée] PASS — un pas = TAU_UP ({TAU_UP}), "
@@ -341,10 +342,18 @@ def _compte_degats_vent(plant, tile, eco, expression: float, gust_peak: float) -
     usuelle) pour mesurer la SUSCEPTIBILITÉ (amplitude du dégât médié CONTINU), pas un
     simple compte de tics. `_wind_damage` est pur : un appel suffit, la restauration
     borne la mesure."""
+    # D140 G ② : la vitalité est une LECTURE bornée à 1 (bilan) — un coup fort DÉTRUIT
+    # les deux semis et ne les distingue plus. On mesure donc le COUP REÇU par `erode`
+    # (amplitude du dégât médié, intercepté), plante restaurée pleine avant l'appel.
     plant.expression["port_trapu"] = expression
-    plant.vitalite = 9.0
-    engine_wind(plant, tile, eco, gust_peak)
-    return 9.0 - plant.vitalite
+    plant.vitalite = 1.0
+    coups = []
+    plant.erode = coups.append              # intercepte l'insulte (attribut d'instance)
+    try:
+        engine_wind(plant, tile, eco, gust_peak)
+    finally:
+        del plant.erode
+    return sum(coups)
 
 
 def engine_wind(plant, tile, eco, gust_peak):

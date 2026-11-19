@@ -75,6 +75,10 @@ def _colonie(annees: int):
                      "current_player": "joueur_1", "week": 1, "log": []})
     age_mort, photos = None, []
     for sem in range(1, annees * 52 + 1):
+        # D140 G ② : le labo n'a JAMAIS de pluie ; la colonie assèche le sol et, sans
+        # la convalescence au sort d'antan, le fondateur meurt de faim (sec) dès l'été
+        # 1. On arrose le labo (humidité de confort) pour isoler la VIEILLESSE.
+        eco.humidite.fill(1.5)
         engine.tick_semaine()
         engine.game_state["log"].clear()
         if age_mort is None and not fondateur.is_alive:

@@ -37,6 +37,11 @@ SEUIL_AFFAIBLI = 1.5 / 3.0   # au-dessus = affaibli, en dessous = malade
 # Point UNIQUE : appliqué dans `lim_gel`, lu par les dégâts ET par les signes.
 T_CONGELATION_SEVE = -0.5
 
+# Réserves « de confort » (D140 G ②, conception plante vivante §3) : au-dessus de la
+# moitié de sa capacité, une plante n'a pas l'air de manquer ; en dessous, sa vitalité
+# lue baisse avec ses réserves. `vitalite = min(1, reserves/R_CONFORT) × (½ + ½·feuillage)`.
+R_CONFORT = 0.5
+
 # ---------------------------------------------------------------------------
 # INSTANCE DE PLANTE (avant PlantBase pour la forward ref)
 # ---------------------------------------------------------------------------
@@ -48,8 +53,8 @@ class PlantInstance:
     current_stage: int = 0          # index dans plant_class.growth_stages
     age_weeks: int = 0              # âge dans le stade courant
     age_years: float = 0.0         # âge total (pérennes ligneuses : courbe d'âge)
-    vitalite: float = 1.0           # santé continue [0,1] : 1.0=sain neuf, 0.0=mort
-                                    # (remplace l'ancien `health` entier 0-3 ; cf. `etat`)
+    # `vitalite` n'est plus un champ (D140 G ②) : c'est une LECTURE dérivée du bilan
+    # carbone (`feuillage`, `reserves` ci-dessous) — cf. la propriété plus bas.
     growth_factor: float = 1.0      # intégration de la lumière reçue → module la hauteur
     # Position continue (cadrage hybride : lue par le LightField). Initialisée au
     # centre du plot-foyer si non fournie (cf. __post_init__).
@@ -103,12 +108,14 @@ class PlantInstance:
     # (un caduc nu en hiver a 1.0 : rien ne manque) ; `reserves` = fraction de sa
     # capacité de réserve (`plants/physiologie.capacite_reserve`) ; `bilan_net` =
     # dernier solde hebdomadaire P − E − X en semaines d'entretien (bancs, pont).
-    # Tenus par `sim/bilan.py` depuis `_update_physiology`. EN OMBRE au ① : lus par
-    # PERSONNE (vitalité dérivée au ②) ; hors `_PLANT_ATTRS` du golden. Défaut plein :
-    # la graine apporte son albumen, une plante posée arrive saine.
+    # Tenus par `sim/bilan.py` depuis `_update_physiology`. Depuis le ② ils FONT la
+    # vie : `vitalite` en est la lecture (propriété plus bas), `reserves = 0` = mort.
+    # Défaut plein : la graine apporte son albumen, une plante posée arrive saine.
     feuillage: float = 1.0
     reserves: float = 1.0
     bilan_net: float = 0.0
+    limitant: str = ""              # facteur de production le plus bas du dernier bilan
+                                    # (ombre/sec/noyé/froid/chaud) → log « stagne (…) » (②)
     # Marques de symptômes ÉVÉNEMENTIELS (sémiologie ②) : maladie/gel/grêle n'ont
     # PAS d'état persistant relisible (un coup ponctuel), contrairement aux
     # stresseurs chroniques recalculés à la volée. On les MÉMORISE donc ici, cause
@@ -543,9 +550,33 @@ class PlantInstance:
             self._root_cache = _plots_in_radius(self.x_cm, self.y_cm, r)
         return self._root_cache
 
+    # --- VITALITÉ = LECTURE du bilan (D140 G ②, conception §3) ------------------
+    # 📖 Une plante n'a plus de points de vie : elle a des RÉSERVES (ce qu'elle a mis
+    # de côté) et un FEUILLAGE (ce qui lui reste de feuilles). Ce qu'on appelle sa
+    # « vitalité » n'est qu'une lecture des deux : un chêne défeuillé à réserves
+    # pleines lit 0,5 (il a l'air malade : il est nu) mais vit ; il ne meurt qu'à
+    # réserves vides. Tous les lecteurs historiques (`is_alive`, `etat`, sémiologie,
+    # rendu, info-bulle, golden) continuent de lire `vitalite`, inchangés.
+    @property
+    def vitalite(self) -> float:
+        return min(1.0, self.reserves / R_CONFORT) * (0.5 + 0.5 * self.feuillage)
+
+    @vitalite.setter
+    def vitalite(self, v: float) -> None:
+        """Écrire 0 = DESTRUCTION (geste, greffe, régression, annélation) : plus de
+        réserves, plus de feuilles. Une écriture > 0 (bancs, tests qui posent un état)
+        règle des réserves qui RELISENT exactement `v`, feuillage intact."""
+        if v <= 0.0:
+            self.reserves = 0.0
+            self.feuillage = 0.0
+        else:
+            self.feuillage = 1.0
+            self.reserves = 1.0 if v >= 1.0 else v * R_CONFORT
+
     @property
     def is_alive(self) -> bool:
-        return self.vitalite > 0
+        # ≡ `vitalite > 0` (le facteur feuillage vaut au moins ½) — sans le calcul.
+        return self.reserves > 0
 
     @property
     def etat(self) -> str:
@@ -561,20 +592,20 @@ class PlantInstance:
         return "malade"
 
     def erode(self, amount: float) -> None:
-        """Primitive d'ÉROSION unique de la vitalité par une insulte EXTERNE.
-        Le dégât reçu est divisé par la CONSTITUTION d'espèce `resilience_base`
-        (« combien un coup qui passe me terrasse ») : une constitution robuste
-        encaisse mieux. Au tronçon ① aucune espèce ne définit `resilience_base`
-        → `getattr` renvoie 1.0 (no-op strict) ; le tronçon ② pose la table
-        complète et la division différencie enfin les espèces. Les décréments
-        DIRECTS (sénescence, gestes joueur) ne passent PAS par ici."""
+        """Primitive d'ÉROSION unique par une insulte EXTERNE = PERTE DE TISSUS
+        (D140 G ②, adaptateur §4). Le coup, divisé par la CONSTITUTION d'espèce
+        `resilience_base` (« combien un coup qui passe me terrasse »), retire du
+        FEUILLAGE ; la plante meurt ensuite PAR LE BILAN si elle ne peut pas refaire
+        ses feuilles (réserves épuisées). Un coup au moins égal à toute la vitalité
+        restante (fonte des semis, coup total) = DESTRUCTION. Étape transitoire :
+        le sprint B donne à chaque stress son vrai mécanisme. Les décréments de
+        l'horloge interne (sénescence, fin de cycle) ne passent PAS par ici."""
         resilience = getattr(self.plant_class, "resilience_base", 1.0)
-        v = self.vitalite - amount / resilience
-        # Snap anti-poussière flottante : N coups d'un pas exact 1/3 doivent
-        # TERMINER à 0 (mort), pas laisser une vitalité fantôme ~1e-16 qui
-        # garderait `is_alive` vrai (1.0 − 3×(1/3) ≠ 0 en flottant). Sous ce seuil
-        # la plante est morte — le résidu n'est pas une vitalité résiduelle réelle.
-        self.vitalite = v if v > 1e-9 else 0.0
+        perte = amount / resilience
+        if perte >= self.vitalite - 1e-9:   # tolérance : 3 × (1/3) ≠ 1 en flottant
+            self.vitalite = 0.0             # destruction
+        else:
+            self.feuillage = max(0.0, self.feuillage - perte)
 
     def regress(self) -> bool:
         """

@@ -421,7 +421,8 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
 
             # 9. Mise à jour mémoire physiologique. `nebul`/`pluie_event` (météo du
             #    tick, cf. lignes 95/114) alimentent l'humectation foliaire (①).
-            self._update_physiology(tile, eco, nebulosite=nebul, pluie_event=pluie_event)
+            #    + bilan carbone : famine consignée ici (D140 G ②).
+            log += self._update_physiology(tile, eco, nebulosite=nebul, pluie_event=pluie_event)
 
             # 9a. Brûlure (D139 niche thermique ③) : feuille au jour le plus chaud
             #     (`t_feuille`, posée à l'étape 6) au-delà de `lim_brul` → érosion.

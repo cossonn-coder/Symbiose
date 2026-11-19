@@ -27,7 +27,7 @@ chêne), souches à réserve finie (fin de la cascade de rejets), ouverture du m
 
 ## Golden
 Départ `25671775…` (fin du ③ de `sprint_depart_jardin`). ① **INTACT** ·
-② **RE-FIGÉ annoncé** (modèle de vie) · ③ **RE-FIGÉ annoncé** (herbivorie seule,
+② **RE-FIGÉ → `699edb51a320f784…`** (modèle de vie) · ③ **RE-FIGÉ annoncé** (herbivorie seule,
 preuve par neutralisation) · ④ intact attendu · ⑤ ⑥ **INTACT**.
 Perf de référence à mesurer au ① (tick `full` s10-s30, commit de départ).
 
@@ -35,7 +35,7 @@ Perf de référence à mesurer au ① (tick `full` s10-s30, commit de départ).
 | # | Kickoff | État |
 |---|---|---|
 | ① | `01_socle_bilan.md` — bilan en ombre + paramètres 52 espèces + banc | **FAIT** (golden intact, non commité) |
-| ② | `02_bascule_vie.md` — vitalité dérivée, famine, `erode` = tissus | à faire |
+| ② | `02_bascule_vie.md` — vitalité dérivée, famine, `erode` = tissus | **FAIT** (golden RE-FIGÉ `699edb51…`, non commité) |
 | ③ | `03_herbivorie_atteinte.md` — chaque ravageur mange ce qu'il atteint | à faire |
 | ④ | `04_souches_reserve.md` — réserve de souche, rejets sans souche propre | à faire |
 | ⑤ | `05_ouverture_mesure.md` — critères `full` s10→s30 + âge de la chronique | à faire |
@@ -72,6 +72,43 @@ Perf de référence à mesurer au ① (tick `full` s10-s30, commit de départ).
   sem → elle mourrait de famine dès le branchement ; le facteur de stade des herbacées
   ou `DORMANCE` (0,1) sera à revoir quand la vitalité lira les réserves.
 
+## Acquis du ② (2026-11-19)
+- `vitalite` = **propriété** (`plants/base/instance.py`) : `min(1, reserves/R_CONFORT 0,5) ×
+  (½ + ½·feuillage)` ; setter : ≤ 0 = destruction (réserves et feuillage à 0), > 0 = réserves
+  qui relisent `v` (bancs/tests) ; `is_alive` = `reserves > 0`. Aucun constructeur ne passait
+  `vitalite=` (vérifié au grep).
+- `erode` = perte de feuillage (÷ `resilience_base`) ; coup ≥ vitalité = destruction.
+- Famine : `_update_physiology` renvoie un log (boucle `log +=`) ; `_mort_de_faim`
+  (`mortalite.py`) → « 🪦 X meurt de faim » (cause `famine` dans `sim/evenements._raison_mort`,
+  textes carnet sans concept) ; annuelle en fin de cycle → ligne ✿ + graines.
+- Sénescence/fin de cycle : `_retrait_reserves(1/3)`. `background_mortality`,
+  `shade_stress_damage`, convalescence au sort : commentés (SUPPLANTÉ).
+- Croissance : `can_grow = bilan_net > 0` (bilan du tick précédent) ; stagnation nommée par
+  `plant.limitant` (`facteur_limitant`, ordre ombre/froid/chaud/eau) ; `growth_factor` vise
+  `0,6 + 0,4·min(1, surplus/1 sem)`, gelé hors végétation.
+- **Écarts au kickoff (mesurés, nécessaires)** : (1) `C_PLANTULE_MIN = 2` sem (albumen) dans
+  `capacite_reserve` — sinon semis de S01 morts de faim la 1re semaine, plantule de vivace
+  morte l'hiver ; (2) quiescence par le froid (T ≤ `temp_min_growth` ⇒ entretien × DORMANCE) —
+  thym persistant ; (3) entretien × (DORMANCE + (1−DORMANCE)·présence) pendant le
+  débourrement — semis de pommier, trèfle de printemps ; (4) refeuillaison ≤ ½ des réserves
+  courantes / sem (sinon suicide à bilan positif) ; (5) `declin` (fin de cycle OU
+  `declin_senescent ≥ HEAL_SEN_CUTOFF`, nouveau `sim/tempo.declin_senescent`) : le bilan ne
+  remplit plus les réserves — sinon fin de cycle et vieillesse jamais mortelles.
+- Golden : 3 premières divergences (S01) : haricot frappé de froid lit 0,62 au lieu de 0,25
+  (coup = feuillage) ; lignes « stagne (bilan +0,00) » (pas de bilan avant la 1re physiologie) ;
+  exsudats/compte de plantes. Smoke : vivantes s52 T0 44 (avant 25), s104 53/13 (avant 53/12) ;
+  33 morts de faim, 14 fins de cycle.
+- Tests adaptés (aucun supprimé) : eau, evergreen (herbivorie neutralisée : ancienne règle
+  ③), gestes_manuels, squelette_herbacees, vigueur/gestes, niche_thermique, plasticite,
+  reponse_thermique, parasite (hôte plafonné), stress_chronique (« l'ombre affame »),
+  trefle_cycle (labo arrosé). Tout vert sauf `test_peripherie`/`test_population` (pré-existants).
+- Contrôle `full` s10→s62 [seed 42, n=1, `mesures/controle_vie.py`] : 138 → 53 (s18) → 209
+  (s61) ; morts famine 90, herbivorie 69, froid 4, vent 2. Vague s15-s17 (famine 54 :
+  tournesol, basilic, poivron, tomate, trèfle) = défoliation par l'ANCIENNE herbivorie + printemps
+  froid → à revoir après ③. Perf tick s10-30 [2 paires] : 9,9 s → 9,1 s.
+- LDC : `boucle.py` 306, `perturbations.py` 301, `carnet.py` 301 (bande 🟡, une responsabilité).
+- Pots (`world/container.py`) : pas de bilan → pas de refeuillaison ni famine (inchangé, à noter).
+
 ## Diagnostic d'origine (2026-11-18, seed 42, n=1 par cas)
 Ouverture s10 → morts des 136 posées à s21 : tel quel 121 ; faune pré-roulée 130 ;
 prédateurs seuls pré-roulés 97 ; `stress_memory` amorcée 0,12 → 49. Semis de
@@ -81,5 +118,5 @@ naissances par espèce/semaine via `SimServer().cmd_init({"config":"full","seed"
 puis `engine.tick_semaine()`.
 
 ## REPRISE
-① fait (non commité au moment de l'écriture). Lire `CLAUDE.md`, ce fichier, la
-conception, puis `02_bascule_vie.md`. Lancer : `/sprint-auto sprint_plante_vivante`.
+①② faits (non commités). Lire `CLAUDE.md`, ce fichier, la conception, puis
+`03_herbivorie_atteinte.md`. Golden courant `699edb51…`. Lancer : `/sprint-auto sprint_plante_vivante`.

@@ -412,6 +412,9 @@ def souche_vivante(plant: PlantInstance) -> bool:
 def shade_stress_damage(plant: PlantInstance, eco,
                         seed: int, week: int) -> list[Mutation]:
     """
+    SUPPLANTÉ (D140 G ②) — conservé pour mémoire, plus appelé : l'ombre affame
+    (bilan carbone, `sim/bilan.py`), elle ne tire plus de coups de santé.
+
     Dégât de la carence lumineuse chronique (miroir de `drought_stress_damage`).
 
         seuil    = seuil_ombre(plant)  (fixe pour une herbacée, plus haut pour un petit ligneux)
@@ -601,6 +604,8 @@ def root_herbivory(plant: PlantInstance, tile: Tile,
 def background_mortality(plant: PlantInstance, eco,
                          seed: int, week: int) -> list[Mutation]:
     """
+    SUPPLANTÉ (D140 G ②) — conservé pour mémoire, plus appelé : plus de mort au sort.
+
     Micro-mortalité aléatoire déterministe.
     Bruit spatial → affaiblissement spontané (pas de mort brutale).
 
@@ -674,7 +679,7 @@ def apply_disturbances(tile, eco, game_state: dict,
       1. Oscillation climatique (modifie evaporation in-tick via growth_modifier)
       2. Herbivorie diffuse + ravageurs létaux (M6)
       3. Fonte des semis (M4) + maladies fongiques (M5)
-      4. Micro-mortalité déterministe
+      4. (Micro-mortalité déterministe : SUPPLANTÉE au D140 G ②)
       5. Mise à jour stress_memory des plantes
       6. Nécromasse ∝ hauteur (D27) pour les morts du tick, puis nettoyage
     """
@@ -730,10 +735,11 @@ def apply_disturbances(tile, eco, game_state: dict,
         chronic_muts += oidium_disease(plant, tile, eco, seed, week, vl, index)
         # Stress hydrique sévère (voie sécheresse → santé, médiée par génotype)
         chronic_muts += drought_stress_damage(plant, eco, seed, week)
-        # Carence lumineuse chronique (voie ombre → santé, médiée par tolerance_ombre)
-        chronic_muts += shade_stress_damage(plant, eco, seed, week)
-        # Mortalité de fond (chronique)
-        chronic_muts += background_mortality(plant, eco, seed, week)
+        # SUPPLANTÉS (D140 G ②) — conservés pour mémoire : l'ombre tue désormais par
+        # FAMINE (le bilan carbone, `sim/bilan.py`), et la mortalité de fond tirée au
+        # sort disparaît (philo #3 : plus de mort au hasard).
+        # chronic_muts += shade_stress_damage(plant, eco, seed, week)
+        # chronic_muts += background_mortality(plant, eco, seed, week)
         # Canal 1 — dépôt CONTINU de la mémoire d'inoculum (①, §2). Une plante
         # infectée vivante (infection_memory au-dessus du seuil) vicie SON plot dans
         # le bucket de SA famille, ∝ l'excès de charge. Piggyback sur cette passe

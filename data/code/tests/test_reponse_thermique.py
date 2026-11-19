@@ -93,6 +93,17 @@ def test_chaleur():
         eco.humidite.at_plot = lambda r, c, _h=hum: _h
         eco.lumiere.light_received = lambda q: 1.0
         stade = p.current_stage
+        # D140 G ② : l'avancement lit le DERNIER bilan (`bilan_net`, `limitant`,
+        # posés par la physiologie au tick précédent). On le pose « à blanc » avec les
+        # fonctions PURES de `sim.bilan` (sans débiter les réserves : à 30 °C sur sol
+        # sec, une semaine de vraie physiologie affamerait la plante — autre sujet).
+        from sim.bilan import f_lum, f_eau, rampes_thermiques, bilan, facteur_limitant
+        eng._avancer_stades(tile, eco, 0.0)          # pose T_feuille
+        p.age_weeks -= 1                              # (sans compter 2 semaines)
+        froid, chaud = rampes_thermiques(p, t_air, p.t_feuille)
+        fl, fe = f_lum(1.0), f_eau(p, hum)
+        p.bilan_net = bilan(p, 1.0, fl, fe, froid * chaud, 1.0, 1.0, t_air, False)
+        p.limitant = facteur_limitant(fl, fe, froid, chaud, hum)
         log = eng._avancer_stades(tile, eco, 0.0)
         return eng, tile, eco, p, stade, log
     _, _, _, p, stade, log = essai(15.0, 1.2)

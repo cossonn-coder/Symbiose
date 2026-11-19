@@ -304,6 +304,10 @@ GABARIT: dict[tuple[str, str | None, str], str] = {
     ("mort", "secheresse", _I): "La soif {l} a tué {e} : le sol nu a perdu son eau plus vite qu'il ne la recevait.",
     ("mort", "ombre", _D): "{e} {l}, pâle et filante, a fini par s'éteindre.",
     ("mort", "ombre", _I): "Affamée de lumière {l} : sous le couvert des plus grands, {e} n'a jamais pu se nourrir.",
+    # Famine carbonée (D140 G ②) : réserves vidées par un bilan négatif durable
+    # (ombre, défoliation, sécheresse). Pas de concept propre (repli observation).
+    ("mort", "famine", _D): "{e} {l} a pâli, s'est dégarnie, puis s'est éteinte.",
+    ("mort", "famine", _I): "{e} {l} s'est épuisée : elle dépensait plus qu'elle ne produisait, et ses réserves ont fini par manquer.",
     ("mort", "usure", _D): "{e} {l} s'est éteinte sans signe clair.",
     ("mort", "usure", _I): "{e} {l} s'est éteinte sans signe clair.",
     ("mort", "fin_de_cycle", _D): "{e} {l} a séché sur pied après avoir donné ses graines.",

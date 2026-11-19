@@ -209,12 +209,18 @@ def test_asphyxie_sante():
 def test_stagnation_noye():
     print("\n[6] stagnation « noyé » : croissance bloquée par le HAUT au-delà de HUM_NOYE")
     from sim.engine import Engine
-    gs, tile, eco = _state(humidite=HUM_NOYE + 0.2)
+    # D140 G ② : « noyé » n'est plus un booléen mais une RAMPE du bilan (f_eau baisse
+    # au-delà de HUM_NOYE) ; la croissance s'arrête quand le bilan devient négatif →
+    # sol SATURÉ (3,0 = borne du champ, f_eau = 0), une semaine de physiologie d'abord
+    # (l'avancement lit le DERNIER bilan, comme dans le tick).
+    from sim.bilan import HUM_SATURE
+    gs, tile, eco = _state(humidite=HUM_SATURE)
     plant = tile.add_plant(Tomato, 1, 1)
     eco.temperature.fill(20.0)   # chaud → ce n'est PAS un blocage température
     eng = Engine(gs)
     gs["week"] = 20
-    eco.humidite.fill(HUM_NOYE + 0.2)
+    eco.humidite.fill(HUM_SATURE)
+    eng._update_physiology(tile, eco)
     log = eng._avancer_stades(tile, eco)
     noye = any("noyé" in l for l in log)
     check("un message de stagnation « noyé » apparaît", noye,

@@ -113,6 +113,7 @@ def _run(myc: float, hum_max: float = 0.4, n: int = 104):
     from world import Tile
     from sim.engine import Engine
     from sim.precroissance import pre_croitre
+    from plants.base.instance import R_CONFORT
     tile = Tile(tile_id="T0", soil_type="terre", origin_x_cm=0, origin_y_cm=0)
     e = init_eco("T0", 6, 6, humidite=1.5, fertilite=1.0, microbiome=0.3,
                  soil_type="terre", heterogene=True)
@@ -140,6 +141,8 @@ def _run(myc: float, hum_max: float = 0.4, n: int = 104):
     deficit = 0.0
     try:
         for _ in range(n):
+            # D140 G ② : hôte MAINTENU affaibli (plafond de réserves), cf. `_banc_mort`.
+            p.reserves = min(p.reserves, 0.6 * R_CONFORT)
             eng.tick_semaine()
             gs["log"].clear()
             mem = max(mem, p.root_herbivory_memory)
@@ -177,6 +180,7 @@ check("H. eau perçue × (1 − pourridié), sans plafond",
 
 # I-J. banc moteur sur sol humide : le parasite TUE un hôte affaibli
 def _banc_mort(myc: float, vit: float, n: int = 156):
+    from plants.base.instance import R_CONFORT
     from world import Tile
     from sim.engine import Engine
     from sim.precroissance import pre_croitre
@@ -205,6 +209,11 @@ def _banc_mort(myc: float, vit: float, n: int = 156):
     mort, attaque = None, False
     try:
         for w in range(n):
+            # D140 G ② : la vitalité est une LECTURE du bilan — un hôte « posé » à 0,6
+            # referait ses réserves en quelques semaines et ne serait plus affaibli.
+            # On le MAINTIENT affaibli (plafond de réserves = stress chronique externe
+            # supposé) ; le parasite, lui, peut encore les faire baisser jusqu'à 0.
+            p.reserves = min(p.reserves, vit * R_CONFORT)
             if p.vitalite > SEUIL_SAIN and pression_parasite(p, e) > 0.0:
                 attaque = True             # garde-fou : un hôte sain n'est jamais attaqué
             eng.tick_semaine()

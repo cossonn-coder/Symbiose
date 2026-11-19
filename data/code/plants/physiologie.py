@@ -44,6 +44,14 @@ FEUILLAGE_HERBACEE = 2.0       # feuillage tendre, bon marché
 # arbustes) ou sur l'âge jusqu'à la 1re fructification (arbres à stade perpétuel) :
 # simple, monotone, et c'est l'organe de réserve qui grossit avec la plante.
 FACTEUR_PLANTULE = 0.05
+# PLANCHER ABSOLU de la capacité (semaines d'entretien), ajouté au ② quand la vitalité
+# s'est mise à lire les réserves. Pourquoi : l'albumen d'une graine nourrit sa plantule
+# une à deux semaines jusqu'à l'autonomie, QUELLE QUE SOIT la taille de l'adulte — ce
+# n'est pas 5 % d'une réserve d'adulte. Mesuré au ② (smoke, semis fondateurs de S01 à
+# ~8 °C) : sans plancher, une annuelle (C = 0,15 sem) mourait de faim dès la 1re semaine
+# froide, et une plantule de vivace (C = 0,4 sem) ne passait pas l'hiver (~0,5 sem
+# dépensées en dormance). Ne change rien au-delà de 2 sem (chêne semis 3,5, adultes).
+C_PLANTULE_MIN = 2.0
 
 # --- Surcharges par espèce (nom de classe → champs qui s'écartent du défaut) ---
 SURCHARGES: dict[str, dict] = {
@@ -161,5 +169,7 @@ def facteur_stade(plant) -> float:
 
 
 def capacite_reserve(plant) -> float:
-    """Capacité de réserve C (semaines d'entretien) = reserve_semaines × facteur_stade."""
-    return parametres_bilan(plant.plant_class)["reserve_semaines"] * facteur_stade(plant)
+    """Capacité de réserve C (semaines d'entretien) = reserve_semaines × facteur_stade,
+    jamais sous l'albumen d'une graine (`C_PLANTULE_MIN`, ②)."""
+    return max(C_PLANTULE_MIN,
+               parametres_bilan(plant.plant_class)["reserve_semaines"] * facteur_stade(plant))

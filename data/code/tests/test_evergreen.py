@@ -32,6 +32,11 @@ def _engine_with(tile, eco):
     """Engine sur une tuile + eco, germination spontanée NEUTRALISÉE (on isole le
     comportement des plantes posées, pas la succession)."""
     eco.seed_bank.germination_candidates = lambda *a, **k: []
+    # D140 G ② : l'ANCIENNE règle d'herbivorie (−1/3 de feuillage par semaine, refondue
+    # au ③) défolie le thym plus vite qu'il ne refait ses feuilles → il meurt de faim
+    # l'été, avant l'hiver que ce test examine. On l'isole (neutralisée EN MÉMOIRE).
+    import sim.effects.perturbations as pert
+    pert.herbivory_pressure = lambda *a, **k: []
     game_state = {
         "tiles": [tile], "eco": {tile.tile_id: eco}, "scores": {},
         "current_player": "joueur_1", "week": 1, "log": [],
