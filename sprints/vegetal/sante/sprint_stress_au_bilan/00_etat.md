@@ -302,7 +302,11 @@ perf tick `full` ≤ +10 % ; suites `tests/` vertes ; jamais `test_epaisseur_500
   `chronique.py` 140, `serialize.py` 331 (🟡, était 326), `carnet.py` 304 (🟡, était 301),
   `WorldView.InfoBulle.cs` 196, `PlantRenderer.cs` 292.
 
-## F5 pour Nico (banc `stress_au_bilan`, ouvre en s12)
+## F5 pour Nico (banc `stress_au_bilan`, ouvre en s12) — ✅ VALIDÉ 2026-11-19
+> Rapport perf PC conforme à l'oracle (pommier s14 asphyxie, phacélie s14, consoude s15,
+> poivron s19 ombre, dernier chêne s29 sécheresse). Visuel : chênes flétris, beiges, feuilles
+> ternes, ne se redressent pas ; textes d'info-bulle et de carnet justes ; ligne de cause
+> gardée telle quelle.
 1. HYDRAULIQUE (sud, 2ᵉ tuile) : deux chênes flétris, beiges ; info-bulle « desséchée, ses
    vaisseaux ne montent plus l'eau ». Ils NE se redressent PAS après une pluie. L'ouest meurt
    vers s15 encore feuillu ; l'est tient, puis meurt de faim (~s29).
