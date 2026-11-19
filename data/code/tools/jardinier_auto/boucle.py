@@ -32,6 +32,7 @@ from .trace import (consigner, entree, entree_impasse, entree_consequence,
 from .tutelle import zones_cultivees, sous_tutelle
 from .planification import avancer_plans, marquer_veille_signalee
 from .operateurs import FACTEUR_ADVENIR
+from .repiquage import proposer_repiquages
 from . import comptabilite as CPT
 from . import objectifs as OBJ
 
@@ -171,6 +172,9 @@ class JardinierAutomate:
         actifs = OBJ.objectifs_actifs(gs)
 
         plans, impasses = self._collecter(engine, cultivees)
+        # Repiquage différé (départ du jardin ⑤) : une règle réactive de plus, sur les
+        # plants en POT (hors tuiles) — même gating, même budget, même trace.
+        plans += proposer_repiquages(engine)
         plans = self._appliquer_part_recoltee(plans, gs.get("seed", 0))
 
         # Étage CRÉATIF (③) — le PLANIFICATEUR (②) propose le prochain geste d'ADVENUE

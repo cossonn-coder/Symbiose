@@ -38,12 +38,12 @@ def _ratio(r: float) -> str:
 def point_vise(plant, plan):
     """GESTES LISIBLES ⑤ — le point `(x_cm, y_cm)` TUILE-LOCAL que vise le geste :
     la plante touchée (sa position continue), ou le centre du plot d'un `planter`
-    créatif. None pour un geste sans lieu (achat au magazine, rondelle posée au
-    niveau de la tuile). Lecture pure : sert à la trace au sol ET au journal (la vue
-    y joue l'animation de l'outil)."""
+    créatif ou d'un `repiquer`. None pour un geste sans lieu (achat au magazine,
+    rondelle posée au niveau de la tuile). Lecture pure : sert à la trace au sol ET
+    au journal (la vue y joue l'animation de l'outil)."""
     if plan.verbe in _SUR_CIBLE:
         cible = plan.cible_obj
-    elif plant is not None:
+    elif plant is not None and plan.verbe != "repiquer":   # repiquer : le plot d'arrivée
         cible = plant
     else:
         cr = plan.cible_obj
@@ -121,6 +121,14 @@ def _jouer(game_state: dict, player: str, eco, plant, plan) -> str:
     if v == "favoriser_auxiliaire":
         # Habitat auxiliaire posé « au plus tôt » (C4) : rondelle persistante sur la tuile.
         return "ok" if ACT.favoriser_auxiliaire(game_state, player, plan.cible_obj.tile) else "echec"
+
+    if v == "repiquer":
+        # Repiquage différé (départ du jardin ⑤) : pot → pleine terre au plot choisi
+        # (`CibleRepiquage`, repiquage.py). Le geste renvoie la cause du choc, None
+        # si refusé (Vigueur, pot vide, plot hors tuile).
+        cr = plan.cible_obj
+        return "ok" if ACT.repiquer(game_state, player, cr.container, cr.tile,
+                                    cr.r, cr.c) else "echec"
 
     if v == "acheter_magazine":
         # Voie n°2 d'acquisition de graine (magazine, palier 3 famille). Sans lieu :

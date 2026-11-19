@@ -146,6 +146,10 @@ def repiquer(game_state: dict, player: str, container: Container, tile,
     container.plants.remove(plant)
     tile.plants.append(plant)
     cause = couper_racines(plant, serrage)
+    # Plant mis en terre par le joueur = CULTIVÉ (comme un semis qui lève,
+    # succession.py) — import local, même patron que la succession.
+    from sim.maitrise_detection import marquer_replante
+    marquer_replante(game_state, player, tile.tile_id, r, c)
     _noter_repiquage(game_state, player, tile.tile_id, r, c, plant, cause)
     return cause
 

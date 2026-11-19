@@ -98,12 +98,13 @@ def cultivees_vivantes(engine, sp, cultivees) -> list:
     return paires
 
 
-def plot_libre(engine):
-    """Premier plot LIBRE en balayage déterministe (T5, placement canonique) :
+def plots_libres(engine):
+    """Tous les plots LIBRES en balayage déterministe (T5, placement canonique) :
     `engine.tiles` dans l'ordre de la liste, puis `(r, c)` croissant. LIBRE = aucune
     plante vivante dont l'empreinte couvre le plot (`plants_at` vide) ET aucun grain
-    en attente (`(r, c) not in grains_en_attente`). Renvoie `(tile, r, c)` ou None si
-    le monde est saturé. Aucune écriture — c'est une lecture (philo #3)."""
+    en attente (`(r, c) not in grains_en_attente`). Générateur de `(tile, r, c)`.
+    Aucune écriture — c'est une lecture (philo #3). Partagé par `planter` (le premier)
+    et le repiquage (le plus lumineux, `repiquage.py`)."""
     for tile in engine.tiles:
         for r in range(tile.grid_rows):
             for c in range(tile.grid_cols):
@@ -111,8 +112,12 @@ def plot_libre(engine):
                     continue
                 if (r, c) in tile.grains_en_attente:
                     continue
-                return (tile, r, c)
-    return None
+                yield (tile, r, c)
+
+
+def plot_libre(engine):
+    """Premier plot LIBRE (`plots_libres`), ou None si le monde est saturé."""
+    return next(plots_libres(engine), None)
 
 
 # ---------------------------------------------------------------------------------

@@ -15,7 +15,7 @@ def test_conteneurs():
     s = ServerProc()
     # "full" : monde réel (maison → ombre) + banque de départ (planter_conteneur).
     init = s.send(cmd="init", config="full", seed=42)
-    check("engine_version 0.6.25", init.get("engine_version") == "0.6.25",
+    check("engine_version 0.6.26", init.get("engine_version") == "0.6.26",
           init.get("engine_version"))
     snap0 = s.send(cmd="snapshot")["snapshot"]
     # Départ du jardin ④ (0.6.25) : le monde `full` ouvre avec 3 godets de tendres

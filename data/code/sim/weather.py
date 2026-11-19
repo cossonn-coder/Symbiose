@@ -218,6 +218,14 @@ def weather_at(seed: int, week: int) -> WeatherEvent:
     return _pluie_ou_neige(seed, week, wiy, WeatherEvent(kind, round(mag, 3), duration, scope))
 
 
+def fenetre_evenement(kind: str) -> tuple[int, int]:
+    """Fenêtre saisonnière `(lo, hi)` (semaines de l'année, bornes incluses) où
+    l'événement `kind` du catalogue peut tomber — ex. « Gelée tardive » (2, 9).
+    Lecture pure de `_CATALOGUE` (aucun tirage) : le jardinier automate s'en sert
+    pour attendre la fin des gelées tardives avant de repiquer (départ du jardin ⑤)."""
+    return next(e[3] for e in _CATALOGUE if e[0] == kind)
+
+
 def patch_local(seed: int, week: int, rows: int, cols: int):
     """
     Masque spatial déterministe d'un événement `scope="local"` (grêle / orage, §2).

@@ -31,6 +31,7 @@ from sim.bois_initial import poser_bois_initial   # D111 ②bis : bois mort dès
 # Ouverture du monde de jeu (D140 C, départ du jardin ③) : 52 espèces mûres, arbres à
 # l'âge de leur 1ʳᵉ fructification, graines semées, départ semaine 10.
 from sim.monde_complet import ouvrir_monde_complet, pots_interieur, SEMAINE_OUVERTURE
+from sim.actions.deblocage import marquer_action, evaluer_deblocages   # godets de la fabrique (départ ⑤)
 # Registre des bancs d'essai (sprint dédié) : mondes paramétrés montés par
 # `init config="<banc>"` pour forcer/observer un signe. Import au niveau module
 # (paquet `bancs/` au sommet, peut tout importer) ; jamais monté pour smoke/full.
@@ -258,6 +259,13 @@ class CommandsMixin:
         # régen hebdo + le plein au passage de saison — rien d'autre à câbler.
         # Le golden écolo reste intact : il n'init jamais via ce serveur.
         V.ensure_player(game_state, game_state["current_player"])
+        # Départ du jardin ⑤ : les godets posés par la fabrique sont AU joueur —
+        # « posséder vaut avoir posé » (patron du bac offert, sim/quetes.py) → la porte
+        # `poser_pot` est franchie, `repiquer` est ouvert dès l'ouverture (joueur et
+        # automate). Sans pot (smoke, bancs) → rien ne bouge.
+        if game_state.get("containers"):
+            marquer_action(game_state, game_state["current_player"], "poser_pot")
+            evaluer_deblocages(game_state, game_state["current_player"])
         # Hook POST-INIT du banc (palette de gestes ⑤) : APRÈS l'opt-in Vigueur —
         # premier moment où l'état JOUEUR existe. Le banc « palette » y ouvre d'emblée
         # les gestes savants (bouturer/greffer) en forçant la maîtrise (la fabrique ne

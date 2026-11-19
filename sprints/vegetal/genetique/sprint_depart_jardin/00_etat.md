@@ -35,7 +35,7 @@ chez achillée, haricot, phacélie, pommier, tournesol, trèfle (gènes muets `p
 `limite_froid`, `fixation_azote`, `allelopathie`) ; 1ʳᵉ divergence du log en s9 ;
 `population_hash`/`vigueur_hash` intacts). ① **RE-FIGÉ annoncé** · ② **RE-FIGÉ → `25671775…`** (1ʳᵉ divergence s1 : la tomate du smoke ne gèle plus à une nuit > −0,5 °C — borne de la sève — et le tournesol n'a plus de lésion de froid sans gel ; σ_A des tendres bit-identique sur le smoke, chronique neutre) ·
 ③④ **INTACT** (④ vérifié : `bce813af…`, golden courant après les sprints plante vivante /
-stress au bilan) · ⑤⑥ **INTACT** attendus.
+stress au bilan) · ⑤ **INTACT** (vérifié `bce813af…`) · ⑥ **INTACT** attendu.
 
 ## Tronçons
 | # | Kickoff | État |
@@ -43,8 +43,8 @@ stress au bilan) · ⑤⑥ **INTACT** attendus.
 | ① | `01_paturin_genes_muets.md` — pâturin + gènes muets | **FAIT** 2026-11-18 (golden re-figé `98a050cf…`) |
 | ② | `02_froid_tendres.md` — borne du gel, audit des tendres, chronique | **FAIT** 2026-11-18 (golden re-figé `25671775…`) |
 | ③ | `03_monde_full_complet.md` — semaine 10, 52 espèces mûres, garde-fou, perf | **FAIT** 2026-11-18 (golden intact) |
-| ④ | `04_semis_interieur_repiquer.md` — pot dans la maison + `repiquer` | **FAIT** 2026-11-19 (golden intact `bce813af…`, pont 0.6.25, non commité) |
-| ⑤ | `05_automate_repiquage.md` — repiquage différé par l'automate | à faire |
+| ④ | `04_semis_interieur_repiquer.md` — pot dans la maison + `repiquer` | **FAIT** 2026-11-19 (golden intact `bce813af…`, pont 0.6.25, commit `848dbd3`) |
+| ⑤ | `05_automate_repiquage.md` — repiquage différé par l'automate | **FAIT** 2026-11-19 (golden intact `bce813af…`, pont 0.6.26, non commité) |
 | ⑥ | `06_vue_banc.md` — palette, pots visibles, banc `depart_jardin`, clôture | à faire |
 
 ## Acquis du ①
@@ -167,7 +167,47 @@ stress au bilan) · ⑤⑥ **INTACT** attendus.
   (e) Les plantes en pot n'ont toujours pas de bilan (inchangé) : réserves/feuillage pleins
   au repiquage.
 
+## Acquis du ⑤ (2026-11-19)
+- **Règle réactive** `tools/jardinier_auto/repiquage.py` (pas un opérateur de plan : aucun
+  objectif requis, décision relue chaque semaine) : `proposer_repiquages(engine)` →
+  plans `(cle, tile, eco, plant, Plan(verbe="repiquer", facteur="nuits_douces",
+  priorite=PRIO_REPIQUAGE 7))` ajoutés aux plans réactifs AVANT le tri dans
+  `boucle.jouer_tick` → même gating (`repiquer` gated), même budget, même trace.
+  `execution._jouer` câble `repiquer` (`CibleRepiquage(container, tile, r, c)`) ;
+  `point_vise` = centre du plot d'arrivée.
+- **Quand** : hors fenêtre « Gelée tardive » (`sim.weather.fenetre_evenement`, accesseur
+  pur ajouté, (2, 9)) sur toutes les semaines lues, ET nuit la plus froide
+  (`t_min_nuit_at` sur `weather_state`, même formule que le tick) de la semaine écoulée
+  + 2 prévues (`NUITS_RECENTES` 1, `HORIZON_NUITS` 2), au plot visé, ≥
+  `max(lim_froid, lim_gel)` + `MARGE_NUIT` 0,5 °C. Couvert du plot = celui du jour.
+- **Où** : `operateurs.plot_libre` scindé en générateur `plots_libres` (+ `plot_libre` =
+  le premier, inchangé) ; le repiquage prend le plot libre le PLUS LUMINEUX
+  (`eco.lumiere.at_plot`, tri stable), un balayage par tick partagé par tous les pots.
+  Écart au kickoff : `planter` n'a aucune notion de niche (premier plot libre) ; « niche »
+  = soleil ici (les plants élevés au chaud sont des cultures de soleil).
+- **Mesuré** (full seed 42, départ s4, LIBRE, n=1) : aucune tentative s4-s14 ; 1ʳᵉ
+  tentative s15 (nuits ≥ 10,5 °C : tomate/basilic/poivron ont `lim_froid` 10 °C) ;
+  tomate + basilic repiqués s17 (tuile N r0), poivron s18 (tuile O). Nuits du jardin :
+  7,9 °C en s10, > 10 °C seulement à partir de s14 → « fin mai » n'est pas atteignable
+  avec la limite actuelle des tendres (le moteur dit mi-juin).
+- **Déblocage (point du ④ d)** : l'automate PASSE par le déblocage (mode `paie_vigueur`,
+  `separer_verrouilles`). Corrigé à l'init du pont (`commands.cmd_init`) : si la fabrique
+  a posé des conteneurs, `marquer_action("poser_pot")` + `evaluer_deblocages` (« posséder
+  vaut avoir posé », patron du bac d'Odette) → `repiquer`, `planter_conteneur`,
+  `deplacer_pot` ouverts dès l'ouverture, pour le joueur aussi.
+- **Plant repiqué = cultivé** : `repiquer` (sim/actions/conteneurs.py) appelle
+  `marquer_replante` (comme un semis qui lève) → l'automate le soigne ensuite.
+- **Pont 0.6.26** : aucune clé neuve ; snapshot comparé (full seed 42, init + 2 sem.) :
+  seuls `gestes_debloques` (+3 verbes) et `gestes_pressentis` (−3) changent.
+- Tests : `tests/test_automate_repiquage.py` 16/16 (fenêtre, limite, init débloqué, rien
+  pendant la fenêtre, 3 réussis après, plots cultivés, OFF = godets pleins, déterminisme).
+- ⚠️ **Constat (pré-existant, non corrigé)** : en profil LIBRE la Vigueur n'est PAS
+  illimitée — le solde sentinelle 1e9 est rabattu au plafond par `vigueur.gain` dès la 1ʳᵉ
+  récolte du tick (`recolter` priorité 20), puis épuisé (≈ 33 `tailler` en échec/sem). Les
+  repiquages s15-s16 échouent ainsi faute de Vigueur et passent en s17-s18.
+
 ## REPRISE
 **SUSPENDU avant ④ (2026-11-18)** : hécatombe par herbivorie à l'ouverture, confirmée au F5 de Nico → DETTE.md D140 (G), CONÇU le 2026-11-18 : attendre la clôture de `sprints/vegetal/sante/sprint_plante_vivante/` puis `sprint_stress_au_bilan/` (les plantes vivent d'un bilan carbone, plus de PV — le choc de repiquage du ④ doit s'exprimer en feuillage/réserves, relire `docs/vegetal/sante/conception_plante_vivante.md`). Noms d'espèces en français → D141 (hors sprint).
-④ FAIT (non commité). Lire `CLAUDE.md`, ce fichier (§Acquis du ④ : nom du geste
-`repiquer`, signature, commande de pont), puis le kickoff ⑤ `05_automate_repiquage.md`.
+④ FAIT (`848dbd3`), ⑤ FAIT (non commité). Lire `CLAUDE.md`, ce fichier (§Acquis du ④ et du ⑤), puis
+le kickoff ⑥ `06_vue_banc.md`. Au ⑥ : `repiquer` est déjà ouvert à l'init (point ④ d
+réglé) ; F5 automate = les godets sortent mi-juin (s17-s18), pas fin mai.

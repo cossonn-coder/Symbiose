@@ -948,7 +948,14 @@ from __future__ import annotations
 #       gagne `racines_coupees` (chevelu perdu au repiquage, refait sur le bilan). Monde
 #       `full`/`propre` : 3 godets (tomate, basilic, poivron) dans la maison à
 #       l'ouverture → `containers` n'est plus vide à l'init. Golden neutre.
-ENGINE_VERSION = "0.6.25"
+# 0.6.26 (DÉPART DU JARDIN ⑤, D140 C.5) : aucune clé neuve. Monde `full`/`propre` : les
+#       godets de la fabrique franchissent la porte `poser_pot` (« posséder vaut avoir
+#       posé ») → `gestes_debloques` contient `repiquer`, `planter_conteneur`,
+#       `deplacer_pot` dès l'init (et `gestes_pressentis` les perd). Le jardinier
+#       automate repique les plants en pot quand les nuits passent la limite de froid
+#       de l'espèce, hors fenêtre des gelées tardives (journal : geste `repiquer`,
+#       facteur `nuits_douces`). Un plant repiqué est CULTIVÉ (zone `replante`).
+ENGINE_VERSION = "0.6.26"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les
