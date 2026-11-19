@@ -27,7 +27,7 @@ chêne), souches à réserve finie (fin de la cascade de rejets), ouverture du m
 
 ## Golden
 Départ `25671775…` (fin du ③ de `sprint_depart_jardin`). ① **INTACT** ·
-② **RE-FIGÉ → `699edb51a320f784…`** (modèle de vie) · ③ **RE-FIGÉ annoncé** (herbivorie seule,
+② **RE-FIGÉ → `699edb51a320f784…`** (modèle de vie) · ③ **RE-FIGÉ → `8f2dd7add938b4cb…`** (herbivorie seule,
 preuve par neutralisation) · ④ intact attendu · ⑤ ⑥ **INTACT**.
 Perf de référence à mesurer au ① (tick `full` s10-s30, commit de départ).
 
@@ -36,7 +36,7 @@ Perf de référence à mesurer au ① (tick `full` s10-s30, commit de départ).
 |---|---|---|
 | ① | `01_socle_bilan.md` — bilan en ombre + paramètres 52 espèces + banc | **FAIT** (golden intact, non commité) |
 | ② | `02_bascule_vie.md` — vitalité dérivée, famine, `erode` = tissus | **FAIT** (golden RE-FIGÉ `699edb51…`, non commité) |
-| ③ | `03_herbivorie_atteinte.md` — chaque ravageur mange ce qu'il atteint | à faire |
+| ③ | `03_herbivorie_atteinte.md` — chaque ravageur mange ce qu'il atteint | **FAIT** (golden RE-FIGÉ `8f2dd7ad…`, non commité) |
 | ④ | `04_souches_reserve.md` — réserve de souche, rejets sans souche propre | à faire |
 | ⑤ | `05_ouverture_mesure.md` — critères `full` s10→s30 + âge de la chronique | à faire |
 | ⑥ | `06_vue_banc.md` — pont, rendu du feuillage, info-bulle, banc, clôture | à faire |
@@ -109,6 +109,46 @@ Perf de référence à mesurer au ① (tick `full` s10-s30, commit de départ).
 - LDC : `boucle.py` 306, `perturbations.py` 301, `carnet.py` 301 (bande 🟡, une responsabilité).
 - Pots (`world/container.py`) : pas de bilan → pas de refeuillaison ni famine (inchangé, à noter).
 
+## Acquis du ③ (2026-11-19)
+- `sim/effects/herbivorie.py` (neuf) : table d'atteinte `RAVAGEURS` (puceron toute plante hors
+  hiver, ¼ défoliant + sucres `K_SUCRES` 1 sem ; limace = part sous 40 cm `min(1, 40/h)` ;
+  doryphore Solanaceae ; chenille = larve), `sommes_feuillage` (Σ poids par plot et par ravageur,
+  1×/tuile/tick, dicts creux — aucune grille équivalente côté population : `_foliage_grid`
+  pondère par vitalité ET normalise/clampe), `herbivorie_atteinte` → mutation neuve
+  `PerteTissus` (feuillage, réserves ; `mutations.py`, résolue dans `resolution.py`, réserves
+  vides = mort, log au format « ✗ Santé X@pos … [herbivorie …] → meurt » lu par la chronique).
+  Hors `_cap_chronique`. Porte `stress_memory` retirée. Hiver : rien sur un caduc nu.
+  Constantes parfum/appétence/bascule DÉPLACÉES de `perturbations.py` vers `herbivorie.py`
+  (ré-importées). `herbivory_pressure` conservée, SUPPLANTÉE (plus appelée).
+- **Écart au kickoff (mesuré, nécessaire)** : la formule littérale `K × moy(d × part)`, part =
+  w/S, donne la MÊME perte à un chêne seul et à un semis seul (part = 1) → banc chêne < 2 %
+  infaisable. Perte rapportée à la quantité de feuilles de la plante : `perte(plot) = atteinte ×
+  min(1, K_HERB·d / S)`, S = Σ feuillage × atteinte × `masse_foliaire` (= h/30 cm ∈ [0,1 ; 6]
+  couches). `K_HERB` 0,30.
+- Banc `tests/test_herbivorie_atteinte.py` 18/18 : semis limace 0,10 → 18 %/sem, nu en 12 sem ;
+  basilic 8 %, haricot 1 % (ravageurs 0,10) ; chêne 25 ans (600 cm, 109 plots) ravageurs 0,15
+  → max 1,7 %/sem ; limace ≤ part basse ; puceron vole plus de réserves qu'il ne défolie ;
+  doryphore spécialiste ; bascule ×2 ; appétence/coriacité ; partage à deux.
+- Golden : preuve par neutralisation [smoke, n=1] — HEAD ② avec `herbivory_pressure` neutralisée
+  = ③ avec `herbivorie_atteinte` neutralisée = `82a85962…` (identiques) → dérive due à la seule
+  herbivorie.
+- Contrôle `full` seed 42 [n=1, script jetable du même patron que `mesures/controle_vie.py`] :
+  vivantes s18 **152** (② : 53) ; posées mortes à s21 **10/136** (② : 104/136) ; à s30 33/136
+  (fin de cycle 14) ; morts s10→s61 : famine 93, froid 40 (gel d'automne s30-s40 : tomate,
+  basilic, haricot, poivron), fin de cycle 38, herbivorie 13. Famine en tête : trèfle 32,
+  bambou 19, menthe 9 → **à regarder au ⑤**.
+- Perf tick `full` s10→s30 [3 paires alternées, charge ~0,7] : 9,2 s → 10,7 s (**+16 %**,
+  > +5 %). Herbivorie elle-même ≈ 0,8 s sur 29 s profilés [cProfile, n=1] ≈ 3 % ; le reste =
+  3× plus de plantes vivantes (tick ∝ densité). À relire au ⑤ (critère d'ouverture).
+- Tests adaptés : `test_caracteres_{fleurs,feuille,fruits}` lisent `facteur_gout` (au lieu de
+  parser l'ancienne raison « p= »). `test_evergreen` (thym seul) et `test_trefle_cycle` (labo)
+  neutralisent EN MÉMOIRE `herbivorie_atteinte` : tuile sans auxiliaires, ravageurs non régulés
+  (puceron ~0,25, chenille ~0,3 l'été) → défolié puis mort de faim, hors de ce que ces tests
+  examinent (hiver, vieillesse). Suites : tout vert sauf `test_peripherie`/`test_population`
+  (pré-existants). `test_auxiliaires` (script 30 ans, sans assertion) enveloppait
+  `sim.effects.herbivory_pressure` — patch déjà sans effet avant ③ (perturbations lit son nom
+  local) ; laissé. Signe `semiologie.ravageurs` lit toujours la densité au plot-foyer (inchangé).
+
 ## Diagnostic d'origine (2026-11-18, seed 42, n=1 par cas)
 Ouverture s10 → morts des 136 posées à s21 : tel quel 121 ; faune pré-roulée 130 ;
 prédateurs seuls pré-roulés 97 ; `stress_memory` amorcée 0,12 → 49. Semis de
@@ -118,5 +158,6 @@ naissances par espèce/semaine via `SimServer().cmd_init({"config":"full","seed"
 puis `engine.tick_semaine()`.
 
 ## REPRISE
-①② faits (non commités). Lire `CLAUDE.md`, ce fichier, la conception, puis
-`03_herbivorie_atteinte.md`. Golden courant `699edb51…`. Lancer : `/sprint-auto sprint_plante_vivante`.
+①②③ faits (③ non commité). Lire `CLAUDE.md`, ce fichier, la conception, puis
+`04_souches_reserve.md` (prochain tronçon).
+Golden courant `8f2dd7add938b4cb…`. Lancer : `/sprint-auto sprint_plante_vivante`.

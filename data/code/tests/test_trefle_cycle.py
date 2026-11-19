@@ -13,6 +13,7 @@ import sys
 
 import sim.champignon_role as _champ_role
 import sim.engine.boucle as _boucle
+import sim.effects.perturbations as _perturbations
 import sim.wind as _wind
 from fields import init_eco
 from plants import Bean, Clover, MedicagoLupulina, Taraxacum
@@ -67,6 +68,10 @@ def _colonie(annees: int):
     _boucle.weather_state = _meteo_labo
     _wind.weather_at = lambda seed, week: CALME
     _champ_role.weather_state = _meteo_labo
+    # D140 G ③ : labo sans auxiliaires → ravageurs non régulés ; l'herbivorie par
+    # atteinte défolie le fondateur qui meurt de faim à ~1 an. On isole la VIEILLESSE
+    # (herbivorie neutralisée EN MÉMOIRE, comme `test_evergreen`).
+    _perturbations.herbivorie_atteinte = lambda *a, **k: []
     tile = Tile(tile_id="T0", soil_type="terre", grid_rows=6, grid_cols=6)
     eco = init_eco("T0", 6, 6, humidite=1.5, fertilite=1.2, microbiome=0.3)
     eco.seed_bank.germination_candidates = lambda *a, **k: []

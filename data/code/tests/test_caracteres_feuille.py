@@ -27,7 +27,7 @@ from sim import vigueur as V
 from sim import actions as A
 from sim.actions.bouture import bouture_prend
 from sim.actions.taille_herbacee import semaines_rabattu, RABATTU_SEMAINES
-from sim.effects.perturbations import herbivory_pressure
+from sim.effects.herbivorie import facteur_gout   # D140 G ③ : herbivorie par atteinte
 from sim.engine.mortalite import MortaliteMixin
 from sim.growth import grow_plant
 
@@ -82,8 +82,7 @@ def test_coriacite():
     def pression(g):
         p = tile.add_plant(Clover, 2, 2)
         p.genes = {"coriacite_feuille": g}
-        muts = herbivory_pressure(p, tile, {}, eco)
-        return float(muts[0].reason.split("p=")[1]) if muts else 0.0
+        return facteur_gout(p)   # facteur plante de la perte (D140 G ③)
     v = {g: pression(g) for g in (0.6, 1.0, 1.5)}
     check("ravageurs : pression ÷ coriacité", v[1.5] < v[1.0] < v[0.6], str(v))
 

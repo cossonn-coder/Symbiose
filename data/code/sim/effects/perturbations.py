@@ -452,34 +452,22 @@ def shade_stress_damage(plant: PlantInstance, eco,
 # champ de population qui dessine les sprites) qui mord ; le champ qui DESSINE est
 # le champ qui AGIT.
 HERBIVORY_GAIN         = 0.20  # densité ravageur [0,1] → pression sur la santé (knob de calibrage, §8)
-# Parfum répulsif (D139 caractères vivants ①, conception §2.1) : les composés
-# volatils de la fleur et du feuillage (terpènes) détournent une part des ravageurs.
-# facteur = 1 − K_PARFUM_REPULSIF × (parfum − 1). Le caractère est borné [0,4 ; 1,6]
-# ⇒ facteur ∈ [0,7 ; 1,3] : borné par construction, jamais une immunité. Une plante
-# peu parfumée (< 1) est un peu PLUS broutée — symétrique, pas un bonus gratuit.
-K_PARFUM_REPULSIF      = 0.5
-# Goût du feuillage (D139 caractères vivants ②, conception §2.2) : un feuillage
-# savoureux (`appetence_feuille` > 0, basilic, mâche) attire les ravageurs, un
-# feuillage amer ou toxique (tomate, lierre) les détourne. facteur =
-# max(PLANCHER, 1 + appetence_feuille) ∈ [0,2 ; 2] : jamais une immunité.
-APPETENCE_PLANCHER     = 0.2
-# Coriacité (D139 caractères vivants ③) : une feuille dure se mâche mal → pression
-# ÷ `coriacite_feuille`, bornée par les bornes du caractère [0,4 ; 1,6] ⇒ × [0,63 ; 2,5].
-HERBIVORY_LETHAL_AUX   = 0.20  # densité auxiliaire en dessous de laquelle un foyer non régulé tourne au létal
-# Seuil RE-DÉRIVÉ au sprint RYTHMES MO ② : la bascule normalise désormais le
-# microbiome par MICROBE_RHYTHM_REF (0.6) au lieu du /3.0 hérité. Sur cette échelle,
-# banc `full` 3 ans : sol vivant d'équilibre → micro_norm médian 0.18 (moy 0.21,
-# plage typique 0.08–0.40) ; sol BÊCHÉ/stérile → micro_norm ~0 (médian 0.0). L'ancien
-# 0.20 sur l'échelle /3.0 lisait micro_norm ~0.017 partout → « sol mort » TOUJOURS
-# vrai (doublement systématique, calibration cassée). Le nouveau seuil siège dans le
-# creux entre stérile (~0) et sain (≥0.08) → seul un sol réellement dégradé
-# (post-bêchage) fait sauter la bascule létale. Placeholder, calibrage F5.
-HERBIVORY_LETHAL_MICRO = 0.05  # microbiome normalisé (/0.6) sous lequel le sol mort ne tamponne plus
+# Parfum / appétence / coriacité / bascule létale : constantes DÉPLACÉES au D140 G ③
+# dans `herbivorie.py` (l'herbivorie par atteinte, qui les lit) — importées ici pour
+# l'ancienne règle conservée pour mémoire ci-dessous.
+from .herbivorie import (K_PARFUM_REPULSIF, APPETENCE_PLANCHER,
+                         HERBIVORY_LETHAL_AUX, HERBIVORY_LETHAL_MICRO,
+                         sommes_feuillage, herbivorie_atteinte)
 
 
 def herbivory_pressure(plant: PlantInstance, tile: Tile,
                        game_state: dict, eco) -> list[Mutation]:
     """
+    SUPPLANTÉ (D140 G ③) — conservé pour mémoire, plus appelé par le tick :
+    remplacé par `herbivorie.herbivorie_atteinte` (chaque ravageur mange ce qu'il
+    atteint, perte de tissus au prorata — plus de −1/3 de vitalité ni de porte
+    `stress_memory`).
+
     Pression herbivore = densité LOCALE du champ `ravageur` + de la `chenille`
     (larve du papillon, pont §D) (D31.2 + arc pollinisation ⑤).
 
@@ -714,11 +702,18 @@ def apply_disturbances(tile, eco, game_state: dict,
     # FLUIDITÉ AN 2) : les voisinages de fonte/mildiou/oïdium/spores y sont lus
     # au lieu de reparcourir la tuile pour chaque plante (O(N²) → O(N)).
     index = IndexVoisinage(tile)
+    # Herbivorie PAR ATTEINTE (D140 G ③) : somme des feuillages atteignables par
+    # plot et par ravageur, UNE fois par tuile et par tick (partage de ce qui est
+    # mangé). Les pertes de tissus ne sont PAS capées (`_cap_chronique` borne des
+    # crans de santé ; une perte de feuillage est déjà proportionnée).
+    sommes = sommes_feuillage(tile, eco, saison)
+    tissus_muts = []
     for plant in list(tile.plants):
         if not plant.is_alive:
             continue
-        # Herbivorie + ravageurs létaux (chronique)
-        chronic_muts += herbivory_pressure(plant, tile, game_state, eco)
+        # Herbivorie + ravageurs létaux — SUPPLANTÉ (D140 G ③), conservé pour mémoire :
+        # chronic_muts += herbivory_pressure(plant, tile, game_state, eco)
+        tissus_muts += herbivorie_atteinte(plant, eco, sommes, saison)
         # Herbivorie RACINAIRE (campagnol, canal dédié — sprint santé & résilience ③).
         # L'usure chronique est repliée sur l'UPTAKE (root_herbivory_memory, philo #2) ;
         # il ne reste ici que l'annélation LÉTALE, appliquée en mort mécanique DIRECTE
@@ -751,7 +746,8 @@ def apply_disturbances(tile, eco, game_state: dict,
                 r, c, plant.plant_class.family,
                 INOC_FROM_MEMORY * (plant.infection_memory - INOC_DEPOT_SEUIL))
 
-    log += apply_mutations(acute_muts + _cap_chronique(chronic_muts), game_state)
+    log += apply_mutations(acute_muts + tissus_muts + _cap_chronique(chronic_muts),
+                           game_state)
 
     # 4. Mise à jour stress_memory (intégration lente)
     for plant in tile.plants:

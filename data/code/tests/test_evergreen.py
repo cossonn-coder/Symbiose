@@ -35,8 +35,12 @@ def _engine_with(tile, eco):
     # D140 G ② : l'ANCIENNE règle d'herbivorie (−1/3 de feuillage par semaine, refondue
     # au ③) défolie le thym plus vite qu'il ne refait ses feuilles → il meurt de faim
     # l'été, avant l'hiver que ce test examine. On l'isole (neutralisée EN MÉMOIRE).
+    # D140 G ③ : l'herbivorie par atteinte le défolie aussi ici — thym SEUL sur une
+    # tuile sans auxiliaires, ravageurs non régulés (puceron ~0,25, chenille ~0,3 l'été)
+    # → nu fin d'été, mort de faim. Même isolement, sur la nouvelle fonction.
     import sim.effects.perturbations as pert
     pert.herbivory_pressure = lambda *a, **k: []
+    pert.herbivorie_atteinte = lambda *a, **k: []
     game_state = {
         "tiles": [tile], "eco": {tile.tile_id: eco}, "scores": {},
         "current_player": "joueur_1", "week": 1, "log": [],

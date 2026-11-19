@@ -16,7 +16,7 @@ from __future__ import annotations
 from plants import PlantInstance, EFFECT_REGISTRY, register_effect
 from world import Tile
 from fields import _hash_noise, VITALITE_STEP
-from .mutations import (AddRondelle, RemoveRondelle, ReduceHealth, AddScore,
+from .mutations import (AddRondelle, RemoveRondelle, ReduceHealth, PerteTissus, AddScore,
                         InjectField, PropagateDisease, Notification, Mutation)
 
 # Sémiologie ② (docs/narration/semiologie/conception_semiologie_foliaire.md §2.5) — gain de marque foliaire :
@@ -270,6 +270,16 @@ def apply_mutations(mutations: list, game_state: dict) -> list[str]:
             if m.cause:
                 marks = m.plant.symptom_marks
                 marks[m.cause] = min(1.0, marks.get(m.cause, 0.0) + m.amount * SYMPTOM_MARK_GAIN)
+            status = "meurt" if not m.plant.is_alive else f"vitalité={m.plant.vitalite:.2f}"
+            log.append(f"  {'✗' if not m.plant.is_alive else '!'} {m} → {status}")
+
+        elif isinstance(m, PerteTissus):
+            # D140 G ③ : tissus mangés (herbivorie par atteinte). Réserves vidées =
+            # mort (`vitalite = 0` remet feuillage et réserves à zéro).
+            m.plant.feuillage = max(0.0, m.plant.feuillage - m.feuillage)
+            m.plant.reserves = max(0.0, m.plant.reserves - m.reserves)
+            if m.plant.reserves <= 0.0:
+                m.plant.vitalite = 0.0
             status = "meurt" if not m.plant.is_alive else f"vitalité={m.plant.vitalite:.2f}"
             log.append(f"  {'✗' if not m.plant.is_alive else '!'} {m} → {status}")
 

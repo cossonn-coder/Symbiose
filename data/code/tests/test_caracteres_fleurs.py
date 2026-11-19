@@ -25,7 +25,7 @@ from plants.couleurs import (preferences, preference_couleur, couleur_sur_axe,
 from world import Tile
 from fields import init_eco
 from fields.population import poids_floral, build_pollinator_registry
-from sim.effects.perturbations import herbivory_pressure
+from sim.effects.herbivorie import facteur_gout   # D140 G ③ : herbivorie par atteinte
 
 _results = []
 
@@ -121,8 +121,7 @@ def test_parfum_ravageurs():
     def pression(parfum):
         p = tile.add_plant(Clover, 1, 1)
         p.genes = {"parfum": parfum}
-        muts = herbivory_pressure(p, tile, {}, eco)
-        return float(muts[0].reason.split("p=")[1]) if muts else 0.0
+        return facteur_gout(p)   # facteur plante de la perte (D140 G ③)
     neutre, fort, faible = pression(1.0), pression(1.6), pression(0.4)
     check("parfum fort : moins de pression", fort < neutre, f"{fort:.3f} < {neutre:.3f}")
     check("parfum faible : plus de pression", faible > neutre, f"{faible:.3f}")

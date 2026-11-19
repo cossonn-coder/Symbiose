@@ -28,7 +28,7 @@ from sim.engine.decompo import nouer
 from sim.evenements import evenements
 from sim.carnet import carnet_lire
 from sim.journal import consigner
-from sim.effects.perturbations import herbivory_pressure
+from sim.effects.herbivorie import facteur_gout   # D140 G ③ : herbivorie par atteinte
 
 _results = []
 
@@ -150,8 +150,7 @@ def test_ravageurs():
     def pression(a):
         p = tile.add_plant(Clover, 1, 1)
         p.genes = {"appetence_feuille": a}
-        muts = herbivory_pressure(p, tile, {}, eco)
-        return float(muts[0].reason.split("p=")[1]) if muts else 0.0
+        return facteur_gout(p)   # facteur plante de la perte (D140 G ③)
     vals = {a: pression(a) for a in (-1.0, -0.6, 0.0, 0.6)}
     check("croît avec l'appétence", vals[-0.6] < vals[0.0] < vals[0.6], str(vals))
     check("plancher : un feuillage très toxique reste un peu brouté", vals[-1.0] > 0.0,
