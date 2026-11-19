@@ -16,7 +16,7 @@ stress** : ce qu'il retire (feuilles, sucres, eau, racines, vaisseaux, bourgeons
   fin de cycle, vieillesse. Code supplanté commenté et conservé, jamais supprimé.
 
 ## Golden
-Départ = `e24a23d8cb09…` (fin de `sprint_lisibilite_bilan`). ① **INTACT** (vérifié, voir Acquis) · ② **RE-FIGÉ → `32355a1c8649…`** (preuve par neutralisation) · ③ **RE-FIGÉ → `bd5e11abf44f…`** (preuve par neutralisation) · ④ **RE-FIGÉ annoncé** (dérive
+Départ = `e24a23d8cb09…` (fin de `sprint_lisibilite_bilan`). ① **INTACT** (vérifié, voir Acquis) · ② **RE-FIGÉ → `32355a1c8649…`** (preuve par neutralisation) · ③ **RE-FIGÉ → `bd5e11abf44f…`** (preuve par neutralisation) · ②bis **RE-FIGÉ → `f5876f5ae857…`** (preuve par neutralisation) · ④ **RE-FIGÉ annoncé** (dérive
 prouvée localisée par neutralisation du seul mécanisme du tronçon) · ⑤ **INTACT**.
 
 ## Tronçons
@@ -25,6 +25,7 @@ prouvée localisée par neutralisation du seul mécanisme du tronçon) · ⑤ **
 | ① | `01_secheresse_embolie.md` — stomates + défaillance hydraulique | **FAIT** (golden INTACT `e24a23d8…`, non commité) |
 | ② | `02_froid_gel_brulure.md` — feuilles détruites vs bourgeons/sève gelés | **FAIT** (golden RE-FIGÉ `32355a1c…`, non commité) |
 | ③ | `03_maladies_racines.md` — mildiou, oïdium, fonte, asphyxie, pourriture, campagnol | **FAIT** (golden RE-FIGÉ `bd5e11ab…`, non commité) |
+| ②bis | (pas de kickoff — décision Nico 2026-11-19) grêle sur toutes les plantes | **FAIT** (golden RE-FIGÉ `f5876f5a…`, non commité) |
 | ④ | `04_vieillesse_cycle_mycorhize.md` — vieillesse, fin de cycle, paiement fongique | à faire |
 | ⑤ | `05_vue.md` — signes, info-bulle, banc, clôture D140 G | à faire |
 
@@ -182,7 +183,31 @@ perf tick `full` ≤ +10 % ; suites `tests/` vertes ; jamais `test_epaisseur_500
   (`voix_etres`, rampe sur `pourriture_memory`) parlera aussi pour des racines asphyxiées
   (aulne en marais ~0,3-0,6 à long terme). Oïdium : pas exporté au pont (rendu ⑤).
 
+## Acquis du ②bis (2026-11-19) — grêle sur toutes les plantes (décision Nico)
+- `sim/engine/reponse_grele.py` (neuf, pur) : `grele_tissus(plant, effectif)` passé à
+  `_mediated_damage(seulement_semis=False, reponse=grele_tissus)` par `boucle.py` (appels
+  d'avant commentés ; docstring de `_mediated_damage` mise à jour). Semis = ancienne voie
+  `ReduceHealth` (mort possible) ; adulte = `PerteTissus(min(feuillage, effectif/DAMAGE_STEP
+  × VITALITE_STEP × PART_EXPOSEE_ADULTE / resilience_base), cause="grele")`, jamais de
+  destruction. Médiation inchangée (patch local, `hail_resistance_base`, coriacité,
+  paillage, voile/cloche).
+- **Décision imprévue (calibrage mesuré)** : `PART_EXPOSEE_ADULTE` = 0,5 (couche externe
+  du feuillage exposée, le cœur abrité). À 1,0 (même échelle que le semis), la grêle s22
+  hachait ¾ du feuillage des annuelles, qui mouraient de faim en série :
+  `test_ouverture_vivante` 18 → 46/123 (critère ≤ 25 % rompu). À 0,5 : 23/123 = 18,7 % [n=1].
+- Golden RE-FIGÉ `f5876f5ae857…` ; `grele_tissus` neutralisé pour les seuls non-semis
+  (en mémoire) → `bd5e11abf44f…` exact.
+- Effet `full` s10→s62 [seed 42, n=1] : 1 grêle (s22, i=1,75) ; 56 adultes touchés
+  (+6 semis), feuillage perdu médiane 0,41, total 23,5 ; morts famine 109 → 106,
+  herbivorie 12 → 15, fin de cycle 61 → 60 ; vivantes s62 310 → 299. Perf s10→s62
+  [1 paire parallèle, charge ~2,5] : 34,3 → 33,8 s.
+- Test : `test_reponse_thermique` [6] réécrit (ancien commenté) — adulte haché vivant
+  réserves intactes, grêle extrême défolie sans tuer (semis tué), graduée, paillage. 25/25.
+- Suites : rouges = celles de HEAD seulement. LDC : `reponse_grele.py` 16, `boucle.py` 309 (🟡).
+- **Pour ⑤ (voix)** : la mort d'une plante hachée sort en `famine` ; la chronique ne dit
+  pas que la grêle a retiré les feuilles. Calibrage `PART_EXPOSEE_ADULTE` à ressentir en F5.
+
 ## REPRISE
-①②③ faits (③ non commité). Lire `CLAUDE.md`, ce fichier, l'`00_etat.md` du sprint A et de
+①②②bis③ faits (non commités). Lire `CLAUDE.md`, ce fichier, l'`00_etat.md` du sprint A et de
 `sprint_lisibilite_bilan` (hauteur acquise), la conception, puis le kickoff du premier
-tronçon « à faire » (④). Golden courant `bd5e11abf44f…`. Lancer : `/sprint-auto sprint_stress_au_bilan`.
+tronçon « à faire » (④). Golden courant `f5876f5ae857…` (②bis). Lancer : `/sprint-auto sprint_stress_au_bilan`.

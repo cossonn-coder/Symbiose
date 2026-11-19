@@ -55,6 +55,7 @@ from .branches import mort_des_branches
 from .ceinture_bois import bois_de_lisiere
 from .floraison import FloraisonMixin
 from .reponse_thermique import ReponseThermiqueMixin
+from .reponse_grele import grele_tissus   # grêle sur tous les stades (stress au bilan ②bis)
 from .butineurs import ButineurMixin
 from .anemophilie import AnemophilieMixin
 from .carnivore import CarnivoreMixin
@@ -170,13 +171,24 @@ class Engine(CroissanceMixin, MortaliteMixin, DecompoMixin, FloraisonMixin,
                         in_patch = patch_local(seed, week, eco.rows, eco.cols)
                         sev_fn = lambda p, s=hail_sev, f=in_patch: (
                             s if f(*p.position) else 0.0)
+                        # Stress au bilan ②bis : la grêle frappe TOUS les stades
+                        # (`grele_tissus` : semis = ancienne voie, adulte = feuilles
+                        # hachées sans mort directe). Appel d'avant (semis seuls) :
+                        # log += self._mediated_damage(
+                        #     tile, eco, 0.0, "grêle (feuillage)", cause="grele",
+                        #     severity_fn=sev_fn, species_base="hail_resistance_base")
                         log += self._mediated_damage(
                             tile, eco, 0.0, "grêle (feuillage)", cause="grele",
-                            severity_fn=sev_fn, species_base="hail_resistance_base")
+                            severity_fn=sev_fn, species_base="hail_resistance_base",
+                            seulement_semis=False, reponse=grele_tissus)
                     else:
+                        # log += self._mediated_damage(
+                        #     tile, eco, hail_sev, "grêle (feuillage)", cause="grele",
+                        #     species_base="hail_resistance_base")
                         log += self._mediated_damage(
                             tile, eco, hail_sev, "grêle (feuillage)", cause="grele",
-                            species_base="hail_resistance_base")
+                            species_base="hail_resistance_base",
+                            seulement_semis=False, reponse=grele_tissus)
             elif event.kind not in TEMP_DRIVEN:
                 meteo = WEATHER_ALEA[event.kind]
                 for tile in self.tiles:

@@ -191,13 +191,50 @@ def test_fin_de_cycle():
           and eco.seed_bank.data[r][c]["pioneer"] > 0.0)
 
 
+# Avant stress au bilan ②bis (grêle sur les semis seuls) — test supplanté, conservé :
+# def test_grele():
+#     print("\n[6] la grêle épargne les adultes")
+#     eng, tile, eco, (a, s) = lab(Basil, Basil)
+#     adulte(a)
+#     eng._mediated_damage(tile, eco, 1.0, "grêle (feuillage)", cause="grele")
+#     check("adulte épargné", a.vitalite == 1.0)
+#     check("semis touché", s.vitalite < 1.0, f"vit {s.vitalite:.2f}")
+
+
+def _grele(eng, tile, eco, sev):
+    from sim.engine.reponse_grele import grele_tissus
+    return eng._mediated_damage(tile, eco, sev, "grêle (feuillage)", cause="grele",
+                                species_base="hail_resistance_base",
+                                seulement_semis=False, reponse=grele_tissus)
+
+
 def test_grele():
-    print("\n[6] la grêle épargne les adultes")
+    print("\n[6] grêle sur tous les stades (stress au bilan ②bis)")
     eng, tile, eco, (a, s) = lab(Basil, Basil)
     adulte(a)
-    eng._mediated_damage(tile, eco, 1.0, "grêle (feuillage)", cause="grele")
-    check("adulte épargné", a.vitalite == 1.0)
-    check("semis touché", s.vitalite < 1.0, f"vit {s.vitalite:.2f}")
+    r0 = a.reserves
+    _grele(eng, tile, eco, 1.0)
+    check("adulte : feuilles hachées, vivant, réserves intactes",
+          a.is_alive and 0.0 < a.feuillage < 1.0 and a.reserves == r0
+          and a.symptom_marks.get("grele", 0.0) > 0.0, f"feuillage {a.feuillage:.2f}")
+    check("semis touché (ancienne voie)", s.vitalite < 1.0, f"vit {s.vitalite:.2f}")
+    perte_1 = 1.0 - a.feuillage
+    eng, tile, eco, (a, s) = lab(Basil, Basil)
+    adulte(a)
+    _grele(eng, tile, eco, 4.0)
+    check("grêle extrême : adulte défolié mais pas tué ; semis tué",
+          a.is_alive and a.feuillage == 0.0 and not s.is_alive)
+    eng, tile, eco, (a,) = lab(Basil)
+    adulte(a)
+    _grele(eng, tile, eco, 0.5)
+    check("graduée : grêle moitié moins forte, perte moitié moindre",
+          abs((1.0 - a.feuillage) - perte_1 / 2) < 1e-9, f"{1 - a.feuillage:.3f}")
+    eng, tile, eco, (a,) = lab(Basil)
+    adulte(a)
+    tile.get_rondelle_count = lambda v: 2 if v == "paillage" else 0
+    _grele(eng, tile, eco, 1.0)
+    check("paillage (2 rondelles) : la moitié du dégât",
+          abs((1.0 - a.feuillage) - perte_1 / 2) < 1e-9, f"{1 - a.feuillage:.3f}")
 
 
 if __name__ == "__main__":

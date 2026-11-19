@@ -465,11 +465,11 @@ class MortaliteMixin:
           ENDURCIE des ligneux (≈ −30 °C en hiver) qui les épargne, plus le stade.
         - `reponse(p, effectif) -> [mutations]` (stress au bilan ②) : ce que l'insulte
           RETIRE vraiment. Le gel passe `_gel_tissus` (feuilles gelées, bourgeons et
-          collet gelés = destruction). None (grêle) = l'adaptateur `erode` via
-          `ReduceHealth` : feuilles hachées (perte de feuillage ÷ constitution), et
-          la seule mort directe est celle d'un SEMIS dont le coup dépasse la
-          vitalité — la grêle ne frappe que les semis (`seulement_semis`), ce qui
-          est exactement « pas de mort directe sauf plantule » (kickoff ②).
+          collet gelés = destruction). None = l'adaptateur `erode` via
+          `ReduceHealth` (feuillage perdu ÷ constitution, mort si le coup dépasse
+          la vitalité). Depuis ②bis la GRÊLE passe `grele_tissus`
+          (`reponse_grele.py`, `seulement_semis=False`) : semis = cette même voie
+          `ReduceHealth`, adulte = feuilles hachées sans mort directe.
         """
         log = []
         if severity_fn is None and severity <= 0:
