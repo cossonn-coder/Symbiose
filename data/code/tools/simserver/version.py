@@ -928,7 +928,12 @@ from __future__ import annotations
 #       de `perf_report.annees[].top` passent au nom affiché (« Consoude », plus
 #       « Comfrey ») ; le TEXTE de la chronique aussi (son `brut` garde les clés du
 #       catalogue). Golden neutre (snapshot comparé avant/après).
-ENGINE_VERSION = "0.6.22"
+# 0.6.23 (LISIBILITÉ DU BILAN ③) : chaque entrée de `litiere` gagne 2 éléments en fin de
+#       tableau : `herbace_masse, herbace_age_sem` (index 9-10, 0.0 sans tiges) — la
+#       parcelle `herbace` du plot MÊME sous un autre tissu dominant. La vue
+#       (`StrawLitterLayer`) couche des tiges paille qui brunissent vers l'humus. Lecture
+#       pure, golden neutre (snapshot comparé avant/après, seuls les 2 champs ajoutés).
+ENGINE_VERSION = "0.6.23"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

@@ -1,6 +1,6 @@
 # Sprint LISIBILITÉ DU BILAN (retours F5 de plante_vivante + D141) — état
 
-> Phase : **CONCEPTION FIGÉE** le 2026-11-19 → `docs/vegetal/sante/conception_lisibilite_bilan.md`. Ouvert le 2026-11-19 sur retours F5
+> Phase : **CLOS CÔTÉ CODE** le 2026-11-19 (①②③, F5 attendu) — conception figée le 2026-11-19 → `docs/vegetal/sante/conception_lisibilite_bilan.md`. Ouvert le 2026-11-19 sur retours F5
 > de Nico après `sprint_plante_vivante` (A). Placé AVANT `sprint_stress_au_bilan` (B),
 > choix Nico.
 
@@ -35,9 +35,9 @@
 ## Tronçons
 | # | Kickoff | Golden | État |
 |---|---|---|---|
-| ① | `01_hauteur_acquise.md` — hauteur acquise (moteur) | RE-FIGÉ `8f2dd7ad…` → `e24a23d8…` | FAIT (non commité) |
-| ② | Noms français : table Python unique → pont → étiquette, info-bulle, rapport F4, chronique (ferme D141) — `02_noms_francais.md` | intact `e24a23d8…` | FAIT (non commité) |
-| ③ | Vue + banc : litière herbacée visible (tiges paille → humus), consoudes broutées à 0,2 + réserves basses, info-bulles vérifiées par capture VM — `03_vue_banc.md` | intact | à faire |
+| ① | `01_hauteur_acquise.md` — hauteur acquise (moteur) | RE-FIGÉ `8f2dd7ad…` → `e24a23d8…` | FAIT |
+| ② | Noms français : table Python unique → pont → étiquette, info-bulle, rapport F4, chronique (ferme D141) — `02_noms_francais.md` | intact `e24a23d8…` | FAIT |
+| ③ | Vue + banc : litière herbacée visible (tiges paille → humus), consoudes broutées à 0,2 + réserves basses, info-bulles vérifiées par capture VM — `03_vue_banc.md` | intact `e24a23d8…` | FAIT (non commité) |
 
 ## ① Hauteur acquise — fait (2026-11-19)
 - `PlantInstance.hauteur_acquise` (cm) + `retenir_hauteur(repli)` (`plants/base/instance.py`) ;
@@ -80,6 +80,46 @@
   `tests/simserver/noms.py` (catalogue, `name`, F4, chronique) ; `test_sim_server`
   354/354, `test_chronique` vert ; `dotnet build` vert. Pas de capture VM faite.
 
+## ③ Vue + banc — fait (2026-11-19)
+- **A. Tiges paille** : pont **0.6.23**, chaque entrée `litiere` gagne `herbace_masse,
+  herbace_age_sem` (index 9-10 ; masse et âge PROPRES de la parcelle `herbace`, même sous
+  un autre tissu dominant — l'âge moyen du plot mélange bois et feuilles). Calque neuf
+  `visuals/StrawLitterLayer.cs` (125 LDC) : grain sous ×4, tiges couchées dès ×4, paille →
+  humus en 12 sem, semis hashé en un lot ; câblé dans `WorldView.Compost.cs` (après
+  `LeafLitter`) + liste des couches au sol (`WorldView.Couches.cs`). `LitterLayer` garde
+  ses amas. Tissu retenu : `herbace` seul (`fleur` = pétales, rendu `PetalLayer`/amas).
+  Snapshot `full` 40 sem seed 42 identique avant/après hors les 2 champs (+ perf volatile).
+- `composter` ramasse bien la litière `herbace` d'un poivron mort (section 26
+  `tests/simserver/tiges.py`, avec `poser_bac` sur la tuile OMBRE : il FAUT un bac).
+- **B. Consoudes** : le 0,35 venait du **warmup d'une semaine** (refeuillaison 0,15/sem) →
+  `BANC_WARMUP["plante_vivante"] = 0` (la vue ouvre en s12 à 0,2). **Écart au kickoff** :
+  « réserves basses » pour les DEUX broutées tuerait la phrase « refait » (forces < 0,6 →
+  « épuisé » prioritaire) et la repousse ne s'étale pas sans mort : sous ~0,45 de feuillage
+  le bilan est négatif, à 0,08 de réserves la consoude meurt de faim, à 0,12 elle repousse
+  à pleine vitesse [seed 42, n=1]. Décision : 3 consoudes = témoin / broutée riche
+  (« refait », 6 sem) / broutée **à bout** (réserves 0,10 : 7 sem de repousse, ternie
+  11 sem, « à bout de forces »). Cible ≥ 10 sem tenue par la teinte, pas par la densité.
+  Densité à ×4 lisible en port rosette (capture 01) → port inchangé.
+- **Poivrons (seed 42)** : morts en s17-s19 (hauteur acquise ne les sauve pas à ce seed ;
+  au seed serveur par défaut ils tiennent jusqu'en s33 — le banc F5 est en 42).
+  Oracle `tests/test_banc_plante_vivante.py` mis à jour (il exigeait `warmup == 1` →
+  0 ; + retard de la broutée à bout en s16 : 0,62 contre 0,76).
+- **C. Captures VM** (`captures/`) : 01 s12 « feuillage clairsemé » ; 02 s14 « refait ses
+  feuilles » ; 03 s14 « à bout de forces » (consoude à bout) ; 04 s17 « à bout de forces »
+  (poivron, `-H`) ; 05 s21 tas de tiges paille au pied du mur. Survol par `-s` (souris
+  posée), pas de code de triche. Mesure : `mesures/consoudes.py`.
+- Tests : golden `e24a23d8…` intact ; `test_sim_server` (+ section 26) ; oracle banc vert ;
+  `dotnet build` vert.
+
+## F5 pour Nico (banc `plante_vivante`)
+1. REFEUILLE (sud) : d'ouest en est témoin dense / broutée qui « refait ses feuilles » /
+   broutée à bout, terne, plus lente (« à bout de forces »), différence visible ~11 sem.
+2. OMBRE (touche H) : poivrons « à bout de forces » vers s17, morts s17-s19, puis tas de
+   tiges paille au pied du mur nord qui brunissent vers l'humus.
+3. Poser un bac sur la tuile OMBRE puis `composter` sur un tas : les tiges disparaissent.
+4. Étiquettes « Consoude · adulte » / « Poivron · adulte » (D141) ; F4 en noms français.
+
 ## REPRISE
-①② faits (② à commiter). Reste ③ `03_vue_banc.md`. D141 à fermer après F5 (étiquette « Consoude · adulte », F4 « Consoude×3 Chêne×4 »). Lire `CLAUDE.md`, ce fichier, la conception, puis `02_noms_francais.md`.
-Lancer : `/sprint-auto sprint_lisibilite_bilan`. Ensuite : `/sprint-auto sprint_stress_au_bilan`.
+Sprint CLOS côté code (①②③). Reste : commit de ③, journal, F5 de Nico (recette ci-dessus),
+puis fermer D141 dans `DETTE.md` si l'étiquette/F4 sont validés. Suite :
+`/sprint-auto sprint_stress_au_bilan`.

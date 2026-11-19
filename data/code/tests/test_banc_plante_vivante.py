@@ -4,10 +4,12 @@ Oracle du banc `plante_vivante` (D140 G, sprint plante vivante ⑥), lancé À L
 
 Monte le banc par le SERVEUR (même chemin que la vue au F5 : seed 42, semaine de
 départ du banc), simule 8 semaines (s12 → s20) et vérifie que chaque scène montre ce
-qu'elle promet :
+qu'elle promet (s12 → s20) :
   (a) limaces : le semis de chêne meurt, le chêne de 25 ans garde ses feuilles ;
   (b) ombre : les trois poivrons au pied du mur nord meurent de faim ;
-  (c) refeuillaison : les consoudes broutées (0,2) ont refait leurs feuilles ;
+  (c) refeuillaison : la consoude broutée à réserves basses (③) refait ses feuilles
+      plus lentement que celle à réserves pleines (mesure en s16) ; à la fin, les deux
+      broutées (0,2) ont refait leurs feuilles ;
   (d) souche : le chêne coupé a rejeté, un nombre FINI de rejets (≤ N_REJETS_MAX) ;
 et que le snapshot porte `feuillage_bilan` / `reserves` (pont 0.6.21).
 
@@ -22,6 +24,7 @@ from sim.souche import N_REJETS_MAX
 from bancs.plante_vivante import AGE_CHENE_COUPE
 
 SEMAINES = 8
+MI_PARCOURS = 4      # s16 : la broutée à bout est en retard sur la broutée riche
 
 
 def _tuile(gs, nom):
@@ -31,12 +34,18 @@ def _tuile(gs, nom):
 def main():
     srv = SimServer()
     rep = srv.cmd_init({"config": "plante_vivante", "seed": 42})
-    assert rep["ok"] and rep.get("warmup") == 1, rep.get("warmup")
+    assert rep["ok"] and rep.get("warmup") == 0, rep.get("warmup")
     gs = srv.engine.game_state
     assert gs["week"] == 12, gs["week"]
     morts_faim = set()
-    for _ in range(SEMAINES):
+    retard = None
+    for i in range(SEMAINES):
         srv.engine.tick_semaine()
+        if i + 1 == MI_PARCOURS:
+            riche, a_bout = sorted(_tuile(gs, "REFEUILLE").plants,
+                                   key=lambda p: p.position)[1:3]
+            retard = (round(riche.feuillage, 2), round(a_bout.feuillage, 2),
+                      round(a_bout.reserves, 2))
         for ligne in gs["log"]:
             if "meurt de faim" in ligne and "Poivron" in ligne:
                 morts_faim.add(ligne)
@@ -57,7 +66,8 @@ def main():
     ref = sorted(_tuile(gs, "REFEUILLE").plants, key=lambda p: p.position)
     assert all(p.is_alive for p in ref) and all(p.feuillage > 0.9 for p in ref[1:]), \
         [(p.position, round(p.feuillage, 2)) for p in ref]
-    print(f"[c] PASS — consoudes broutées refaites : "
+    assert retard and retard[1] < retard[0] - 0.05 and retard[2] < 0.3, retard
+    print(f"[c] PASS — s16 riche/à bout/réserves à bout {retard} ; refaites : "
           f"{[round(p.feuillage, 2) for p in ref[1:]]}")
 
     sou = _tuile(gs, "SOUCHE").plants

@@ -98,6 +98,7 @@ from tests.simserver.vent import test_vent_pont
 from tests.simserver.delta import test_delta_pont
 from tests.simserver.supports import test_supports_pont
 from tests.simserver.noms import test_noms_francais
+from tests.simserver.tiges import test_tiges_herbace
 
 
 def main() -> int:
@@ -124,6 +125,7 @@ def main() -> int:
     test_delta_pont()        # section 23 : pont en delta, opt-in (leviers ④, 0.6.0)
     test_supports_pont()     # section 24 : pressentis, familles, supports, couvertures (0.6.12)
     test_noms_francais()     # section 25 : noms des espèces en français (D141, 0.6.22)
+    test_tiges_herbace()     # section 26 : tiges d'herbacée au sol + composter (0.6.23)
 
     # --- bilan ----------------------------------------------------------------
     n_fail = sum(1 for _, ok in harness._results if not ok)

@@ -195,9 +195,9 @@ BANC_WEEK_DEPART = {"grimpantes": 9, "luxuriance": 9, "diversite_fondatrice": 9,
                     # `caracteres_vivants` (D139 ⑥) : même départ que `lignees` → la vue
                     # ouvre en s22, bourraches et phacélies en fleur, tomates nouées.
                     "caracteres_vivants": 10,
-                    # `plante_vivante` (D140 G ⑥) : début juin, végétation pleine ; avec
-                    # un warmup d'une semaine la vue ouvre en s13 — semis de chêne mort
-                    # vers s16, poivrons à l'ombre s18-s20, consoudes refaites vers s18.
+                    # `plante_vivante` (D140 G ⑥) : début juin, végétation pleine ; sans
+                    # warmup (③) la vue ouvre en s12 — consoudes broutées à 0,2, poivrons
+                    # à l'ombre morts en s17-s19 [seed 42, n=1].
                     "plante_vivante": 12}
 
 # WARMUP F5 par banc (niche thermique ⑤) : semaines que la vue simule avant le premier
@@ -205,7 +205,10 @@ BANC_WEEK_DEPART = {"grimpantes": 9, "luxuriance": 9, "diversite_fondatrice": 9,
 # l'`init` (clé `warmup`) ; une capture VM (`-w`) reste prioritaire. Banc absent → le
 # défaut de la vue (comportement inchangé). `niche_thermique` ouvre JUSTE AVANT la
 # canicule : douze semaines de warmup la feraient passer hors champ.
-BANC_WARMUP = {"niche_thermique": 2, "plante_vivante": 1}
+# `plante_vivante` (③ lisibilité du bilan) : AUCUN warmup — la vue ouvre sur l'état
+# posé par la fabrique (consoudes broutées à 0,2 de feuillage) ; une semaine de warmup
+# les montrait déjà refaites à 0,35 (refeuillaison ≤ 0,15/sem, `sim/bilan.py`).
+BANC_WARMUP = {"niche_thermique": 2, "plante_vivante": 0}
 
 
 def banc_categorie(nom: str) -> str:

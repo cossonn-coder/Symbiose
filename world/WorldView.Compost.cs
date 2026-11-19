@@ -32,6 +32,11 @@ namespace Symbiose
 		// bloc snapshot `litiere`, mais ne retient que le tissu dominant `feuille`.
 		private LeafLitterLayer _leafLitterLayer;
 
+		// TIGES d'herbacée couchées (LISIBILITÉ DU BILAN ③) : lit paille qui brunit vers
+		// l'humus, lu aux index 9-10 du MÊME bloc `litiere` (pont 0.6.23). Même bande
+		// ZIndex 1, ajouté après les feuilles mortes : un pied mort tombe sur le tapis.
+		private StrawLitterLayer _strawLitterLayer;
+
 		// CHUTE des feuilles (AUTOMNE VISIBLE ⑤) : au-dessus des plantes (Objects = 10),
 		// comme les butineurs. Nourri par MajPlante, à l'arrêt hors des semaines de chute.
 		private LeafFallLayer _leafFallLayer;
@@ -62,6 +67,8 @@ namespace Symbiose
 			AddWorld(_deadWoodLayer);
 			_leafLitterLayer = new LeafLitterLayer { Name = "LeafLitter", ZIndex = 1 };
 			AddWorld(_leafLitterLayer);
+			_strawLitterLayer = new StrawLitterLayer { Name = "StrawLitter", ZIndex = 1 };
+			AddWorld(_strawLitterLayer);
 			_petalLayer = new PetalLayer { Name = "Petales", ZIndex = 1 };
 			AddWorld(_petalLayer);
 			_leafFallLayer = new LeafFallLayer
@@ -83,6 +90,7 @@ namespace Symbiose
 			_litterLayer?.SetLitiere(litiere, _origins);
 			_deadWoodLayer?.SetLitiere(litiere, _origins);
 			_leafLitterLayer?.SetLitiere(litiere, _origins);
+			_strawLitterLayer?.SetLitiere(litiere, _origins);
 		}
 
 		// Applique le bloc `structures` : reconstruction pleine. Les anciens nœuds

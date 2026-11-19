@@ -60,12 +60,19 @@ def cartes_sol(eco) -> dict:
             # Masse de feuilles (AUTOMNE VISIBLE ③, 0.6.3) MÊME sous un autre
             # tissu dominant : le tapis de ⑤ ne dépend plus du tissu dominant.
             feuille = next((p for p in surface if p.tissu == "feuille"), None)
+            # Tiges d'herbacée (LISIBILITÉ DU BILAN ③, 0.6.23) : masse + âge PROPRES de
+            # la parcelle `herbace` (≤ 1 par tissu), même sous un autre tissu dominant
+            # → la vue couche des tiges paille qui brunissent avec leur âge à elles
+            # (l'âge moyen du plot mélange le bois et les feuilles).
+            herbe = next((p for p in surface if p.tissu == "herbace"), None)
             plots.append([r, c, dominant.tissu,
                           round(total, 4), round(age_moy, 3),
                           round(bois.masse, 4) if bois else 0.0,
                           round(bois.age_sem, 3) if bois else 0.0,
                           round(bois.diam_cm, 2) if bois else 0.0,
-                          round(feuille.masse, 4) if feuille else 0.0])
+                          round(feuille.masse, 4) if feuille else 0.0,
+                          round(herbe.masse, 4) if herbe else 0.0,
+                          round(herbe.age_sem, 3) if herbe else 0.0])
     out["litiere"] = plots
     # Phéromone d'alarme apienne (⑦, §J, 0.4.1) : liste CREUSE des plots en
     # alarme `[r, c, intensite]` (foyers > 0 seulement). Godot lit l'intensité

@@ -15,12 +15,17 @@ d'info-bulle :
       pas.
   (b) OMBRE (au pied du mur nord de la maison) — trois poivrons repiqués, héliophiles,
       dans l'ombre portée : leur bilan glisse sous zéro (facteur limitant `ombre`), ils
-      puisent dans leurs réserves, ternissent et meurent de faim en ~6 semaines [seed
-      42, n=1] ; le même poivron au soleil tient (bilan +1,5 à +2 sem/sem).
-  (c) REFEUILLAISON (au sud-est, sans ravageur) — trois consoudes : la première
-      intacte (témoin), les deux autres ont perdu 80 % de leurs feuilles (broutées
-      avant l'ouverture) et les refont, payées sur leurs réserves (0,2 → 0,97 en
-      6 semaines [seed 42, n=1]).
+      puisent dans leurs réserves, ternissent (« à bout de forces » en s17) et meurent
+      de faim en s17-s19 [seed 42, n=1] ; le même poivron au soleil tient (bilan +1,5
+      à +2 sem/sem). Leur nécromasse reste au pied du mur : un tas de tiges paille
+      (~1,9-2,2 de litière `herbace` par plot, ~0,6 après 12 semaines [seed 42, n=1])
+      que le geste `composter` ramasse vers un bac posé sur la tuile.
+  (c) REFEUILLAISON (au sud-est, sans ravageur) — trois consoudes, d'ouest en est :
+      un témoin intact ; une broutée (80 % des feuilles perdues avant l'ouverture) à
+      réserves pleines, qui refait ses feuilles (0,2 → 0,97 en 6 semaines) ; une
+      broutée à réserves basses (0,10), qui les refait en 7 semaines et reste ternie
+      11 semaines [seed 42, n=1]. La vue ouvre SANS warmup (`BANC_WARMUP`) : on voit
+      bien 0,2 au premier dessin (une semaine de warmup les montrait déjà à 0,35).
   (d) SOUCHE (à l'est) — un chêne de 12 ans coupé à l'ouverture : sa souche a mis de
       la réserve de côté, elle rejette au premier tick hors hiver, un nombre FINI de
       rejets (réserve // coût d'un rejet), pas une cascade.
@@ -54,6 +59,13 @@ LIMACE_DENSITE = 0.15      # forte et uniforme : « les mêmes limaces » pour l
 AGE_CHENE = 25.0           # ans — couronne de ~6 m, des dizaines de plots de feuillage
 AGE_CHENE_COUPE = 12.0     # ans — souche lignifiée (≥ AGE_SOUCHE_PROPRE), réserve pleine
 FEUILLAGE_BROUTE = 0.2     # part des feuilles laissée aux consoudes « broutées »
+# Réserves de la consoude broutée « à bout » (③) : juste au-dessus du seuil où elle ne
+# peut plus payer la repousse — sous ~0,45 de feuillage son bilan est négatif, la
+# repousse est payée sur les seules réserves ; à 0,08 elle meurt de faim à 0,40 de
+# feuillage [seed 42, n=1]. À 0,10 : feuilles refaites en 7 semaines (6 pour la broutée
+# riche), vert terni (réserves < R_CONFORT) 11 semaines. La repousse ne peut pas
+# s'étaler davantage : au-dessus du seuil, elle file à REFEUIL_MAX (0,15/sem).
+RESERVES_A_BOUT = 0.10
 
 
 def _limaces():
@@ -79,7 +91,9 @@ def _ombre():
 
 
 def _refeuille():
-    """(c) Consoudes : un témoin intact, deux broutées qui refont leurs feuilles."""
+    """(c) Consoudes, d'ouest en est : un témoin intact ; une broutée à réserves
+    pleines (« refait ses feuilles ») ; une broutée à réserves basses (« à bout de
+    forces » : repousse plus lente, vert terni)."""
     tile, eco = build_banc_tile("REFEUILLE", "terre", 8, 8, OX_REFEUILLE, OY_SUD,
                                 humidite=1.2, fertilite=1.0, microbiome=0.4)
     sans_herbivorie(eco)          # rien ne les remange : on ne voit que la repousse
@@ -88,6 +102,8 @@ def _refeuille():
         p.advance_stage()         # pied installé : de vraies feuilles à voir repousser
         if c != 2:
             p.feuillage = FEUILLAGE_BROUTE
+        if c == 6:
+            p.reserves = RESERVES_A_BOUT
     return tile, eco
 
 
