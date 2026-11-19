@@ -56,6 +56,13 @@ class PlantInstance:
     # `vitalite` n'est plus un champ (D140 G ②) : c'est une LECTURE dérivée du bilan
     # carbone (`feuillage`, `reserves` ci-dessous) — cf. la propriété plus bas.
     growth_factor: float = 1.0      # intégration de la lumière reçue → module la hauteur
+    # Hauteur ACQUISE (cm, sprint lisibilité du bilan ①) : la plus grande hauteur bâtie
+    # par une espèce SANS structure de segments. Le `growth_factor` règle la VITESSE de
+    # croissance ; un déficit le fait baisser, mais la tige déjà bâtie reste debout :
+    # `height_at` ne descend jamais sous cette mémoire. Tenue une fois par tick par le
+    # moteur (`retenir_hauteur`, jamais dans un getter) ; remise à 0 par une destruction
+    # des parties aériennes (régression de stade, repli hivernal d'une vivace herbacée).
+    hauteur_acquise: float = 0.0
     # Position continue (cadrage hybride : lue par le LightField). Initialisée au
     # centre du plot-foyer si non fournie (cf. __post_init__).
     x_cm: float | None = None
@@ -526,7 +533,8 @@ class PlantInstance:
 
     @property
     def current_height(self) -> float:
-        """Hauteur effective (cm) = potentiel du stade/âge × growth_factor."""
+        """Hauteur effective (cm) = potentiel du stade/âge × growth_factor, jamais sous
+        la hauteur acquise (`hauteur_acquise`). Lecture PURE : aucune écriture ici."""
         return self.plant_class.height_at(self)
 
     @property
@@ -624,10 +632,25 @@ class PlantInstance:
         if self.current_stage > 0:
             self.current_stage -= 1
             self.age_weeks = 0
+            self.hauteur_acquise = 0.0      # parties aériennes perdues : la hauteur retombe
             return False
         else:
             self.vitalite = 0.0
             return True  # mort
+
+    def retenir_hauteur(self, repli: bool = False) -> None:
+        """Tient la hauteur ACQUISE (lisibilité du bilan ①), une fois par tick, APRÈS la
+        mise à jour du `growth_factor`. Une plante affamée ne rapetisse plus : le stress
+        ralentit la pousse, il ne retire pas de taille. `repli` = les parties aériennes
+        meurent (vivace herbacée en dormance d'hiver) : la mémoire tombe et la hauteur
+        revient au calcul du stade. Espèces procédurales : leur hauteur EST la structure
+        (max z des segments), seule une coupe ou une casse la réduit — rien à retenir."""
+        if self.plant_class.procedural_growth:
+            return
+        if repli:
+            self.hauteur_acquise = 0.0
+        else:
+            self.hauteur_acquise = self.current_height   # height_at = max(calcul, mémoire)
 
     def advance_stage(self) -> bool:
         """

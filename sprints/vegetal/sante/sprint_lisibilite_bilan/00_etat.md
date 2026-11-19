@@ -35,10 +35,31 @@
 ## Tronçons
 | # | Kickoff | Golden | État |
 |---|---|---|---|
-| ① | `01_hauteur_acquise.md` — hauteur acquise (moteur) | RE-FIGÉ annoncé (départ `8f2dd7ad…`) | à faire |
+| ① | `01_hauteur_acquise.md` — hauteur acquise (moteur) | RE-FIGÉ `8f2dd7ad…` → `e24a23d8…` | FAIT (non commité) |
 | ② | Noms français : table Python unique → pont → étiquette, info-bulle, rapport F4, chronique (ferme D141) — `02_noms_francais.md` | intact | à faire |
 | ③ | Vue + banc : litière herbacée visible (tiges paille → humus), consoudes broutées à 0,2 + réserves basses, info-bulles vérifiées par capture VM — `03_vue_banc.md` | intact | à faire |
 
+## ① Hauteur acquise — fait (2026-11-19)
+- `PlantInstance.hauteur_acquise` (cm) + `retenir_hauteur(repli)` (`plants/base/instance.py`) ;
+  `height_at` non procédural = `max(potentiel × gf × génétique, hauteur_acquise)`
+  (`plants/base/familles.py`, `plants/perennials/base.py`). Getter pur.
+- Tenue 1×/tick dans `_update_physiology` (`sim/engine/croissance.py`) **AVANT** la mise à
+  jour du `growth_factor` (et non après comme le kickoff le suggérait : sinon le 1ᵉʳ tick
+  perdait déjà 2 cm, 60 → 58) ; idem pots (`world/container.py`, sans repli).
+- Retombe : `regress()` (stade perdu) ; repli = hiver + vivace dormante non ligneuse.
+- Constats au code : taille/écrasement d'une espèce SANS structure ne changent PAS la
+  hauteur moteur (la coupe = hint de vue `rabattu`) — inchangé. Aucun repli aérien
+  n'existait : le repli ne fait retomber la hauteur qu'au calcul du stade (consoude 50 →
+  42 cm), pas à une rosette — un vrai repli à ras = mécanique neuve, non faite.
+- Procédurales : 0 baisse de hauteur en 104 sem de smoke [seed 42, n=1] → non touchées.
+- Golden re-figé `e24a23d8cb09…` ; neutralisé (`retenir_hauteur` no-op) → `8f2dd7add938…`
+  exact. Dérive : tiges qui restent hautes → plus de lumière/moins d'herbivorie basse →
+  moins de morts de faim (65 → 50 lignes) et plus de vivantes en an 2 (s104 : 42 → 57)
+  [smoke seed 42, n=1].
+- Banc OMBRE : poivrons à 60 cm constants jusqu'à la mort (avant 60 → 47).
+- Test neuf `tests/test_hauteur_acquise.py` (ombre, dormance consoude, taille tomate,
+  régression basilic) vert.
+
 ## REPRISE
-Lire `CLAUDE.md`, ce fichier, la conception, puis le kickoff du premier tronçon « à faire ».
+① fait (à commiter). Lire `CLAUDE.md`, ce fichier, la conception, puis `02_noms_francais.md`.
 Lancer : `/sprint-auto sprint_lisibilite_bilan`. Ensuite : `/sprint-auto sprint_stress_au_bilan`.

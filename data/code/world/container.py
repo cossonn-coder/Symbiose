@@ -323,6 +323,7 @@ class Container:
             drought_stress = max(0.0, 1.0 - hum / 0.5) if hum < 0.5 else 0.0
             plant.drought_memory += (drought_stress - plant.drought_memory) * 0.05
             plant.drought_memory = _clamp(plant.drought_memory, 0.0, 1.0)
+            plant.retenir_hauteur()   # hauteur ACQUISE avant que gf ne bouge (lisibilité du bilan ①)
             target_g = 0.6 + 0.4 * min(1.0, light)
             plant.growth_factor += (target_g - plant.growth_factor) * 0.10
             plant.growth_factor = _clamp(plant.growth_factor, 0.3, 1.0)

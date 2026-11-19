@@ -520,6 +520,14 @@ class CroissanceMixin:
                                     f_allelo=f_allelo,
                                     declin=(fin_de_cycle(plant, self.week)
                                             or declin_senescent(plant) >= HEAL_SEN_CUTOFF))
+            # Hauteur ACQUISE (lisibilité du bilan ①) : on retient la tige bâtie AVANT que
+            # le growth_factor ne bouge (ci-dessous) — il règle la vitesse de pousse, il ne
+            # retire plus de taille. Seul le REPLI hivernal d'une vivace herbacée (dormante,
+            # non ligneuse : ses parties aériennes meurent l'hiver, la souche repart) fait
+            # retomber la mémoire. L'hiver seul, pas la rampe de printemps.
+            cls = plant.plant_class
+            plant.retenir_hauteur(repli=(saison == "hiver" and not cls.ligneux
+                                         and cls.winter_strategy == "dormant"))
             # Growth factor (D140 G ②) : la croissance suit le SURPLUS du bilan (ce
             # qui reste une fois les réserves remplies), plus la lumière seule. Les
             # escomptes d'allélopathie et de nutrition sont DÉJÀ dans la production
