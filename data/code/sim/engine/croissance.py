@@ -23,7 +23,7 @@ from fields.ecofields.constants import (T_PLANTE_ALPHA, ROSEE_SURFACE_REF,
 from plants import EXPR_GAIN, EXPR_MIN, EXPR_MAX, TAU_UP, TAU_DOWN
 from .calendrier import saison_de, wiy_de
 from .transpiration import facteur_transpiration, feuillage_present
-from .racines import eau_percue, pression_parasite, maj_pourriture
+from .racines import eau_percue, pression_parasite, maj_pourriture, pression_asphyxie
 from .feuille import t_feuille_de
 from fields.ecofields.thermique import t_max_jour
 from sim.nutrition_plante import facteur_nutrition
@@ -456,8 +456,10 @@ class CroissanceMixin:
             # pourrit les racines d'un hôte DÉJÀ affaibli (0 sur hôte sain / non listé).
             # ⑦bis : la même pression CUMULE le pourridié du collet (sans plafond,
             # `maj_pourriture`) → un hôte affaibli attaqué durablement peut mourir.
+            # + ASPHYXIE (stress au bilan ③) : l'excès d'eau soutenu fait mourir les
+            # radicelles (même pourriture du chevelu) au lieu de crans de vitalité.
             pression = pression_parasite(plant, eco)
-            maj_pourriture(plant, pression)
+            maj_pourriture(plant, pression, pression_asphyxie(plant, exces_stress > 0.0))
             rong = min(1.0, eco.category_density("herbivore_vertebre", r, c)
                        + pression)
             plant.root_herbivory_memory += (rong - plant.root_herbivory_memory) * ROOT_HERBIVORY_MEMORY_LERP
@@ -519,7 +521,7 @@ class CroissanceMixin:
                                     presence=presence,
                                     light_eff=light_eff, hum_percue=hum_p, temp=temp,
                                     t_feuille=t_f, t_air=t_air, f_nut=f_nut,
-                                    f_allelo=f_allelo,
+                                    f_allelo=f_allelo, hum_sol=hum,
                                     declin=(fin_de_cycle(plant, self.week)
                                             or declin_senescent(plant) >= HEAL_SEN_CUTOFF))
             # Hauteur ACQUISE (lisibilité du bilan ①) : on retient la tige bâtie AVANT que

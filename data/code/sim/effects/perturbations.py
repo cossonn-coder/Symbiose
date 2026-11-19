@@ -30,7 +30,7 @@ from fields import (_hash_noise, MORTALITY_RATE, climate_stress,
 # (le ré-export plat ne l'expose pas ; on va droit au sous-paquet propriétaire).
 from fields.ecofields import MICROBE_RHYTHM_REF, ASPHYXIE_HEALTH_SEUIL
 from fields.ecofields.litiere import diam_pondere   # grosseur du squelette (⑦bis)
-from .mutations import ReduceHealth, Mutation
+from .mutations import ReduceHealth, PerteTissus, Oidium, Mutation
 from .resolution import apply_mutations
 from .voisinage import IndexVoisinage
 from plants.physiologie import capacite_reserve   # réserve de souche (D140 G ④)
@@ -162,9 +162,13 @@ def damping_off(plant: PlantInstance, tile: Tile, eco,
     # EXPRIMÉ — un semis dont la lignée a vécu l'infection est primé, plasticité ②).
     p /= plant.expressed_gene("resistance_pathogene")
     if _hash_noise(seed, week * 11, r, c) < p:
-        # Fonte = voie AIGÜE : tue net. L'amount (échelle entière) est calé pour que
-        # `× VITALITE_STEP` en résolution retire toute la vitalité restante → mort.
-        return [ReduceHealth(plant, plant.vitalite / VITALITE_STEP, reason="fonte des semis")]
+        # SUPPLANTÉ (stress au bilan ③) — conservé pour mémoire : le coup passait par
+        # `erode`, divisé par la constitution d'espèce → un semis de constitution > 1
+        # n'était PAS tué, il perdait des feuilles.
+        # return [ReduceHealth(plant, plant.vitalite / VITALITE_STEP, reason="fonte des semis")]
+        # Fonte = voie AIGÜE : le champignon pourrit le COLLET de la plantule → la
+        # tige s'effondre, DESTRUCTION (aucune constitution n'y résiste).
+        return [PerteTissus(plant, 0.0, reason="fonte des semis", destruction=True)]
     return []
 
 
@@ -249,7 +253,15 @@ def fungal_disease(plant: PlantInstance, tile: Tile, eco,
     if spore > 0.0:
         p *= 1.0 + FUNGAL_SPORE_GAIN * spore
     if _hash_noise(seed, week * 13, r, c) < p:
-        return [ReduceHealth(plant, 1, reason="maladie fongique", cause="maladie")]
+        # SUPPLANTÉ (stress au bilan ③) — conservé pour mémoire : un cran de santé
+        # (`erode`), qui DÉTRUISAIT la plante si le coup dépassait sa vitalité.
+        # return [ReduceHealth(plant, 1, reason="maladie fongique", cause="maladie")]
+        # Mildiou : les taches brunes NÉCROSENT des feuilles → perte de feuillage
+        # (même ampleur qu'un cran, ÷ constitution d'espèce) ; jamais une destruction.
+        # La plante meurt ensuite par le bilan si elle ne refait pas ses feuilles.
+        resil = getattr(plant.plant_class, "resilience_base", 1.0)
+        return [PerteTissus(plant, VITALITE_STEP / resil, reason="maladie fongique",
+                            cause="maladie")]
     return []
 
 
@@ -294,7 +306,11 @@ def oidium_disease(plant: PlantInstance, tile: Tile, eco,
                                 family=plant.plant_class.family)
     p *= oidium_sig * (0.4 + density) * susc
     if _hash_noise(seed, week * 47, r, c) < p:
-        return [ReduceHealth(plant, 1, reason="oïdium", cause="maladie")]
+        # SUPPLANTÉ (stress au bilan ③) — conservé pour mémoire :
+        # return [ReduceHealth(plant, 1, reason="oïdium", cause="maladie")]
+        # L'oïdium COUVRE les feuilles sans les tuer : une contamination feutre un
+        # tiers du feuillage (un cran), qui rend moins (`bilan.OIDIUM_RENDEMENT`).
+        return [Oidium(plant, VITALITE_STEP, reason="oïdium", cause="maladie")]
     return []
 
 
@@ -583,7 +599,7 @@ LIGNEUX_ANNELE_CM     = 250.0 # hauteur en deçà de laquelle l'écorce est anne
 
 
 def root_herbivory(plant: PlantInstance, tile: Tile,
-                   game_state: dict, eco, seed: int, week: int) -> list[Mutation]:
+                   game_state: dict, eco, seed: int, week: int) -> list[str]:
     """Annélation LÉTALE du campagnol (sprint santé & résilience ③, §3).
 
     L'usure chronique de l'herbivorie racinaire est repliée sur l'UPTAKE
@@ -594,7 +610,11 @@ def root_herbivory(plant: PlantInstance, tile: Tile,
     `vitalite = 0` DIRECT (bypass `erode` : un sectionnement ne se divise pas par la
     constitution d'espèce, cf. gestes joueur). La plante devient `not is_alive` → sa
     nécromasse est déposée par le balayage `deposer_mort` de fin de tick (point de
-    mort UNIQUE). Ne renvoie donc PLUS aucune mutation. Flux respecté (#1/#2)."""
+    mort UNIQUE). Ne renvoie donc PLUS aucune mutation. Flux respecté (#1/#2).
+
+    Stress au bilan ③ : la mort est une DESTRUCTION consignée — renvoie la ligne de
+    log « 🪦 X@pos meurt annelé (…) » (cause lue par `sim.evenements._raison_mort`) ;
+    [] sinon. Le setter `vitalite = 0` garde les réserves de la souche."""
     if not plant.is_alive or eco is None:
         return []
     r, c = plant.position
@@ -604,6 +624,8 @@ def root_herbivory(plant: PlantInstance, tile: Tile,
                      and plant.current_height <= LIGNEUX_ANNELE_CM)
     if jeune_ligneux and dens >= ROOT_HERBIVORY_LETHAL:
         plant.vitalite = 0.0   # mort mécanique directe (sectionnement) — bypass erode
+        return [f"    🪦 {plant.name}@{plant.position} meurt annelé "
+                f"(écorce rongée au collet, sève coupée)"]
     return []
 
 
@@ -729,23 +751,30 @@ def apply_disturbances(tile, eco, game_state: dict,
     for plant in list(tile.plants):
         if not plant.is_alive:
             continue
-        # Herbivorie + ravageurs létaux — SUPPLANTÉ (D140 G ③), conservé pour mémoire :
-        # chronic_muts += herbivory_pressure(plant, tile, game_state, eco)
-        tissus_muts += herbivorie_atteinte(plant, eco, sommes, saison)
         # Herbivorie RACINAIRE (campagnol, canal dédié — sprint santé & résilience ③).
         # L'usure chronique est repliée sur l'UPTAKE (root_herbivory_memory, philo #2) ;
         # il ne reste ici que l'annélation LÉTALE, appliquée en mort mécanique DIRECTE
         # (vitalite=0, aucune mutation renvoyée). À densité `herbivore_vertebre` nulle →
-        # aucune mort → invariant golden pour ce terme.
-        root_herbivory(plant, tile, game_state, eco, seed, week)
+        # aucune mort → invariant golden pour ce terme. Stress au bilan ③ : appelée EN
+        # PREMIER et consignée (ligne 🪦) — un sujet annelé ne reçoit plus d'autre coup
+        # ce tick (sinon une perte de feuilles le « re-tuait » : deux morts au carnet).
+        annele = root_herbivory(plant, tile, game_state, eco, seed, week)
+        if annele:
+            log += annele
+            continue
+        # Herbivorie + ravageurs létaux — SUPPLANTÉ (D140 G ③), conservé pour mémoire :
+        # chronic_muts += herbivory_pressure(plant, tile, game_state, eco)
+        tissus_muts += herbivorie_atteinte(plant, eco, sommes, saison)
         # Fonte des semis (AIGU, non capé) + maladies fongiques (chronique)
         acute_muts += damping_off(plant, tile, eco, seed, week, saison, index)
         vl = eco.vent.at_plot(*plant.position) if eco and eco.vent else 0.0
-        chronic_muts += fungal_disease(plant, tile, eco, seed, week, vl, wind_vec, index)
-        # Oïdium — SECONDE guilde, signal INVERSE (feuillage SEC × chaleur). Chronique
-        # (capée comme le mildiou). À `oidium_susceptibility` nulle (défaut catalogue)
+        # Stress au bilan ③ : mildiou et oïdium retirent/couvrent des FEUILLES
+        # (proportionné, comme l'herbivorie) → hors du cap des crans de santé.
+        tissus_muts += fungal_disease(plant, tile, eco, seed, week, vl, wind_vec, index)
+        # Oïdium — SECONDE guilde, signal INVERSE (feuillage SEC × chaleur). Couvre
+        # les feuilles (③ : plus capé, comme le mildiou). À `oidium_susceptibility` nulle (défaut catalogue)
         # → sortie immédiate → invariant golden pour ce terme.
-        chronic_muts += oidium_disease(plant, tile, eco, seed, week, vl, index)
+        tissus_muts += oidium_disease(plant, tile, eco, seed, week, vl, index)
         # Stress hydrique sévère — SUPPLANTÉ (D140 G, stress au bilan ①), conservé pour
         # mémoire : la sécheresse ferme les stomates (`f_eau` du bilan → famine lente)
         # et, extrême, embolise les vaisseaux (`sim/embolie.py` → mort desséchée).

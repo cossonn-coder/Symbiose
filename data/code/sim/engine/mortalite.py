@@ -12,8 +12,8 @@ dans `_tick_skeletons` (decompo.py). Comportement identique à l'ancien engine.p
 
 from __future__ import annotations
 import math
-from fields import (_hash_noise, SEN_RATE, ASPHYXIE_HEALTH_SEUIL,
-                    ASPHYXIE_RATE, RESEED_RADIUS_CM, VITALITE_STEP)
+# ASPHYXIE_HEALTH_SEUIL / ASPHYXIE_RATE : lus désormais par `racines.py` (③).
+from fields import (_hash_noise, SEN_RATE, RESEED_RADIUS_CM, VITALITE_STEP)
 from sim.effects import apply_mutations, ReduceHealth, deposer_mort
 from sim.effects.perturbations import SEUIL_SEMIS
 from sim.reproduction import (find_father, heredite, child_expression,
@@ -153,19 +153,25 @@ class MortaliteMixin:
             # (hélophytes ⑤ : aulne/sphaigne survivent au sol gorgé qui noie le pommier).
             # Défaut 1.0 → dénominateur inchangé. Branche ARMÉE seulement quand le sol
             # est durablement gorgé (jamais dans le smoke) → golden inchangé.
-            if plant.asphyxie_memory > ASPHYXIE_HEALTH_SEUIL:
-                tol = (plant.expressed_gene("tolerance_asphyxie")
-                       * plant.plant_class.asphyxie_tolerance_base)
-                pression = (plant.asphyxie_memory - ASPHYXIE_HEALTH_SEUIL) / tol
-                if _hash_noise(seed, week * 7, r, c) < pression * ASPHYXIE_RATE:
-                    # Insulte EXTERNE (excès d'eau) → passe par `erode` (la médiation
-                    # `tolerance_asphyxie` reste en amont sur la PRESSION ci-dessus).
-                    plant.erode(VITALITE_STEP)
-                    if not plant.is_alive:
-                        deaths.append(plant)
-                        log.append(f"    🪦 {plant.name}@{plant.position} meurt "
-                                   f"asphyxié (excès d'eau soutenu)")
-                        continue
+            # SUPPLANTÉ (stress au bilan ③) — conservé pour mémoire. L'asphyxie ne
+            # retire plus des crans de vitalité au sort : elle fait mourir des RACINES
+            # (`racines.pression_asphyxie` → `maj_pourriture`, même médiation par la
+            # tolérance) → eau ressentie en baisse ; le sol gorgé ferme déjà la
+            # production (`bilan.f_eau`, bord noyé). La mort vient du bilan (famine) ou
+            # de l'embolie (soif une fois le sol ressuyé, racines pas encore refaites).
+            # if plant.asphyxie_memory > ASPHYXIE_HEALTH_SEUIL:
+            #     tol = (plant.expressed_gene("tolerance_asphyxie")
+            #            * plant.plant_class.asphyxie_tolerance_base)
+            #     pression = (plant.asphyxie_memory - ASPHYXIE_HEALTH_SEUIL) / tol
+            #     if _hash_noise(seed, week * 7, r, c) < pression * ASPHYXIE_RATE:
+            #         # Insulte EXTERNE (excès d'eau) → passe par `erode` (la médiation
+            #         # `tolerance_asphyxie` reste en amont sur la PRESSION ci-dessus).
+            #         plant.erode(VITALITE_STEP)
+            #         if not plant.is_alive:
+            #             deaths.append(plant)
+            #             log.append(f"    🪦 {plant.name}@{plant.position} meurt "
+            #                        f"asphyxié (excès d'eau soutenu)")
+            #             continue
             # SUPPLANTÉ (D140 G ②) — conservé pour mémoire. La convalescence AU SORT
             # (`heal`, tirage week·5) est remplacée par la REFEUILLAISON payée sur les
             # réserves (`sim/bilan.maj_bilan`) : une plante se remet en refaisant ses

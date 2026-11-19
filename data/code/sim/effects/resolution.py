@@ -16,7 +16,7 @@ from __future__ import annotations
 from plants import PlantInstance, EFFECT_REGISTRY, register_effect
 from world import Tile
 from fields import _hash_noise, VITALITE_STEP
-from .mutations import (AddRondelle, RemoveRondelle, ReduceHealth, PerteTissus, AddScore,
+from .mutations import (AddRondelle, RemoveRondelle, ReduceHealth, PerteTissus, Oidium, AddScore,
                         InjectField, PropagateDisease, Notification, Mutation)
 
 # Sémiologie ② (docs/narration/semiologie/conception_semiologie_foliaire.md §2.5) — gain de marque foliaire :
@@ -161,8 +161,17 @@ def resolve(effect: dict, plant: PlantInstance, tile: Tile,
         else:
             p = base_p
         if _hash_noise(seed, week * 23, r, c) <= p:
-            mutations.append(ReduceHealth(plant, amount,
-                                          reason=effect.get("description", "")))
+            # SUPPLANTÉ (stress au bilan ③) — conservé pour mémoire : le coup de santé
+            # passait par `erode`, qui DÉTRUISAIT la plante quand le coup dépassait sa
+            # vitalité restante. Seul effet d'espèce `reduce_health` à ce jour : le
+            # mildiou familial des Solanacées — or le mildiou détruit des FEUILLES, pas
+            # le collet : perte de feuillage (÷ constitution, comme `erode`) ; la plante
+            # meurt ensuite par le bilan si elle ne peut pas les refaire.
+            # mutations.append(ReduceHealth(plant, amount,
+            #                               reason=effect.get("description", "")))
+            resil = getattr(plant.plant_class, "resilience_base", 1.0)
+            mutations.append(PerteTissus(plant, amount * VITALITE_STEP / resil,
+                                         reason=effect.get("description", "")))
 
     # --- score ---
     elif action == "score":
@@ -288,6 +297,16 @@ def apply_mutations(mutations: list, game_state: dict) -> list[str]:
                                      + m.feuillage / VITALITE_STEP * SYMPTOM_MARK_GAIN)
             status = "meurt" if not m.plant.is_alive else f"vitalité={m.plant.vitalite:.2f}"
             log.append(f"  {'✗' if not m.plant.is_alive else '!'} {m} → {status}")
+
+        elif isinstance(m, Oidium):
+            # Stress au bilan ③ : feutrage blanc sur les feuilles — rendement baissé
+            # (lu par le bilan), aucun tissu retiré, jamais mortel par lui-même.
+            m.plant.oidium = min(1.0, m.plant.oidium + m.couverture)
+            if m.cause:
+                marks = m.plant.symptom_marks
+                marks[m.cause] = min(1.0, marks.get(m.cause, 0.0)
+                                     + m.couverture / VITALITE_STEP * SYMPTOM_MARK_GAIN)
+            log.append(f"  ! {m} → couverture={m.plant.oidium:.2f}")
 
         elif isinstance(m, AddScore):
             scores = game_state.setdefault("scores", {})

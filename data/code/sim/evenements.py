@@ -201,6 +201,8 @@ def _raison_mort(line: str) -> str | None:
         return "famine"
     if "meurt de dessèchement" in line:   # embolie, défaillance hydraulique (stress au
         return "secheresse"               # bilan ①) — voix « secheresse » existantes
+    if "meurt annelé" in line:      # campagnol : écorce rongée au collet (stress au
+        return "herbivorie"         # bilan ③) — voix « herbivorie » existantes
     return None
 
 

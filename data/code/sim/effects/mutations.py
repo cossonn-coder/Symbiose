@@ -54,6 +54,18 @@ class PerteTissus:
                 f"-{self.feuillage:.3f} feuillage -{self.reserves:.3f} réserves [{self.reason}]")
 
 @dataclass
+class Oidium:
+    # Oïdium (stress au bilan ③) : le champignon COUVRE les feuilles d'un feutrage
+    # blanc sans les tuer — il ne retire aucun tissu, il en baisse le RENDEMENT.
+    # `couverture` s'ajoute à `PlantInstance.oidium` ∈ [0,1], lue par le bilan
+    # (`sim/bilan.py`, production × (1 − OIDIUM_RENDEMENT × oidium)). `cause` = marque
+    # foliaire (sémiologie « maladie »), même échelle qu'un `ReduceHealth`.
+    plant: PlantInstance; couverture: float; reason: str = ""; cause: str = ""
+    def __repr__(self):
+        return (f"Oïdium {self.plant.name}@{self.plant.position} "
+                f"+{self.couverture:.3f} couverture [{self.reason}]")
+
+@dataclass
 class AddScore:
     player_id: str; axis: str; amount: int; source: str = ""
     def __repr__(self): return f"+{self.amount} {self.axis} [{self.source}]"
@@ -83,5 +95,5 @@ class Notification:
     message: str; severity: str = "info"; plant: PlantInstance | None = None
     def __repr__(self): return f"[{self.severity.upper()}] {self.message}"
 
-Mutation = (AddRondelle | RemoveRondelle | ReduceHealth | PerteTissus |
+Mutation = (AddRondelle | RemoveRondelle | ReduceHealth | PerteTissus | Oidium |
             AddScore | InjectField | PropagateDisease | Notification)

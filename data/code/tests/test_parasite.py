@@ -233,8 +233,12 @@ check("I. hôte affaibli + réseau 0,4 → MEURT en quelques années", mort_a is
 check("I. sa mort laisse un squelette de bois (boucle → saprophytes)",
       pa.morte and pa.bois_restant > 0.0 and pa.bois_diam_cm > 1.0,
       f"bois {pa.bois_restant:.2f}, Ø {pa.bois_diam_cm:.1f} cm")
-check("I. même hôte SANS réseau → vit", mort_t is None and pt.pourriture_memory == 0.0,
-      f"vitalité {pt.vitalite:.2f}")
+# Stress au bilan ③ : l'asphyxie fait aussi mourir des radicelles (même `pourriture_memory`)
+# — ce sol humide hétérogène se gorge par épisodes de pluie (pression d'asphyxie ≤ 0,12) →
+# quelques racines perdues (max 0,08, mesuré [n=1]), sans commune mesure avec le pourridié
+# du parasite (0,99). Avant ③ : exactement 0.
+check("I. même hôte SANS réseau → vit", mort_t is None and pt.pourriture_memory < 0.1,
+      f"vitalité {pt.vitalite:.2f}, racines perdues {pt.pourriture_memory:.2f}")
 check("I. un hôte sain n'est jamais attaqué (pression 0 au-dessus de SEUIL_SAIN)", not att_a)
 check("J. déterminisme : même semaine de mort", _banc_mort(0.4, 0.6)[0] == mort_a)
 

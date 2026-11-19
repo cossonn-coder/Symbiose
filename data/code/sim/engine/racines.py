@@ -33,6 +33,7 @@ from __future__ import annotations
 from fields.ecofields.uptake import facteur_racinaire, myco_effectif
 from fields.fongique import REGISTRE_FONGIQUE
 from plants.base.instance import SEUIL_SAIN, SEUIL_AFFAIBLI
+from fields import ASPHYXIE_HEALTH_SEUIL
 
 # Labels (familles OU noms d'espèce) attaquables par AU MOINS un parasite du registre.
 # Calculé une fois à l'import, depuis les données (ajouter un parasite = une ligne
@@ -56,6 +57,14 @@ HOTES_PARASITES = frozenset(h for esp in REGISTRE_FONGIQUE.values() if esp.paras
 # m 0,51 puis guérit (m → 0). Knobs de calibrage.
 POURRI_TAUX     = 0.10
 POURRI_REPOUSSE = 0.02
+
+# Taux de mort des racines sous asphyxie (stress au bilan ③) = celui du pourridié : une
+# radicelle morte pourrit au même rythme, quoi qu'il l'ait tuée. Mesuré (labo, sol
+# épinglé à 2,95 en été, n=1 par espèce) : pommier 0,26 de racines perdues en 16 sem,
+# 0,57 en 32 (mort de faim vers 44 sem par le bord noyé du bilan) ; aulne 0,09 / 0,25,
+# réserves pleines. L'ancienne pente `ASPHYXIE_RATE` (0,04) laissait 0,11 au pommier
+# après un été gorgé : à peine une soif au ressuyage.
+ASPHYXIE_TAUX = POURRI_TAUX
 
 # Gain de la pression parasite (knob de calibrage, D111 ④). Mycélium du monde `full`
 # sous racines ~0,02-0,45 : à 2,0 un réseau moyen (0,25) sur un hôte « malade »
@@ -93,9 +102,41 @@ def pression_parasite(plant, eco) -> float:
     return min(1.0, PARASITE_K * myc * f)
 
 
-def maj_pourriture(plant, pression: float) -> None:
-    """Intègre le pourridié du collet (⑦bis) depuis la pression parasite du tick."""
+def pression_asphyxie(plant, gorge: bool = True) -> float:
+    """Pression de l'asphyxie sur les racines ∈ [0,1] (stress au bilan ③) : excès
+    d'eau SOUTENU au-delà de `ASPHYXIE_HEALTH_SEUIL` (« si ça dure »), divisé par la
+    tolérance (gène EXPRIMÉ `tolerance_asphyxie` × constitution d'espèce — aulne,
+    saule, sphaigne : aérenchyme). MÊME médiation que l'ancienne voie santé
+    (`mortalite._tick_senescence_health`, SUPPLANTÉE). `gorge` : le sol est-il
+    gorgé CETTE semaine ? Un sol ressuyé rend l'oxygène aux racines : elles cessent
+    de mourir tout de suite, même si la mémoire d'excès met des mois à retomber.
+    Pure, zéro RNG."""
+    if not gorge:
+        return 0.0
+    exces = plant.asphyxie_memory - ASPHYXIE_HEALTH_SEUIL
+    if exces <= 0.0:
+        return 0.0
+    tol = (plant.expressed_gene("tolerance_asphyxie")
+           * plant.plant_class.asphyxie_tolerance_base)
+    return min(1.0, exces / tol)
+
+
+def maj_pourriture(plant, pression: float, asphyxie: float = 0.0) -> None:
+    """Intègre le pourridié du collet (⑦bis) depuis la pression parasite du tick.
+
+    `asphyxie` (stress au bilan ③, `pression_asphyxie`) : un sol gorgé prive les
+    racines d'oxygène, les radicelles meurent et pourrissent (Pythium, Phytophthora
+    suivent l'anoxie) — la plante perd des racines au lieu de « perdre des PV ».
+    Mêmes racines perdues que le pourridié (`eau_percue` × (1 − m)) : une fois le
+    sol ressuyé, la plante a soif tant qu'elle n'a pas refait son chevelu. Le chevelu
+    REPOUSSE pendant l'engorgement (pas de parasite qui l'en empêche) → équilibre
+    ASPHYXIE_TAUX·p / (ASPHYXIE_TAUX·p + POURRI_REPOUSSE) : un pommier noyé (p ≈ 0,8)
+    vise ~0,8, un aulne au même sol (p ≈ 0,28, tolérance 3) ~0,6 — lentement (constante
+    de temps ~1 an : la mémoire d'asphyxie elle-même monte en ~20 sem). `asphyxie` = 0
+    → comportement d'avant ③ exactement."""
     m = plant.pourriture_memory
+    if asphyxie > 0.0:
+        m = min(1.0, m + ASPHYXIE_TAUX * asphyxie * (1.0 - m))
     if pression > 0.0:
         plant.pourriture_memory = min(1.0, m + POURRI_TAUX * pression * (1.0 - m))
     elif m > 0.0:

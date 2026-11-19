@@ -52,6 +52,14 @@ REFEUIL_MAX = 0.15     # part du feuillage refaite au plus par semaine (× gène
 # (②) : une plante ne se tue pas à refaire ses feuilles. Mesuré au ② : sans borne, une
 # bourse-à-pasteur broutée vidait ses réserves d'un coup (bilan pourtant positif).
 REFEUIL_PART_RESERVES = 0.5
+# --- Oïdium (stress au bilan ③) ----------------------------------------------
+# Une feuille entièrement feutrée d'oïdium perd environ la moitié de sa photosynthèse
+# (ombrage du mycélium + vol de sucres par ses suçoirs ; ordre de grandeur 30-60 %
+# relevé sur céréales et cucurbitacées) : elle reste verte et vivante, elle rend moins.
+OIDIUM_RENDEMENT = 0.5
+# Part de la couverture qui s'efface chaque semaine : feuilles neuves indemnes, vieilles
+# feuilles tombées. Sans nouvelle contamination, une couverture se dissipe en ~2 mois.
+OIDIUM_EFFACE = 0.10
 
 
 def _rampe(x: float, x0: float, x1: float) -> float:
@@ -64,21 +72,29 @@ def f_lum(light_eff: float) -> float:
     return min(1.0, light_eff / LUM_SATURATION)
 
 
-def f_eau(plant, hum_percue: float) -> float:
+def f_eau(plant, hum_percue: float, hum_sol: float | None = None) -> float:
     """Eau : rampe par le BAS sur le seuil sec du gène `tolerance_secheresse` (même
     seuil que `ok_hum`), par le HAUT au-delà de `HUM_NOYE` (sol noyé), amortie par
     les tolérances à l'asphyxie (gène × constitution d'espèce : l'aulne y tient),
-    puis rabotée par la conduction perdue (embolie, stress au bilan ①)."""
+    puis rabotée par la conduction perdue (embolie, stress au bilan ①).
+
+    `hum_sol` (stress au bilan ③) : l'humidité du SOL, pour le bord noyé. L'eau
+    RESSENTIE baisse quand les racines sont perdues (asphyxie, pourriture) — mais un
+    sol gorgé reste gorgé : des racines pourries ne rendent pas l'air au sol. Sans
+    cette distinction, une plante noyée qui perdait ses racines « sortait » de
+    l'excès d'eau et produisait mieux. None → `hum_percue` (appel historique)."""
+    if hum_sol is None:
+        hum_sol = hum_percue
     seuil_sec = 0.15 / plant.expressed_gene("tolerance_secheresse")
     # Vaisseaux embolisés (stress au bilan ①, `sim/embolie.py`) : seule la part qui
     # conduit encore fait monter l'eau → la feuille « voit » un sol plus sec et ferme
     # ses stomates plus tôt. Sur sol bien arrosé, une embolie partielle ne coûte rien
     # (marge de sécurité hydraulique) ; c'est au sec qu'elle pèse. Embolie 0 → ×1,0.
     f = _rampe(hum_percue * conduction(plant), seuil_sec, SEC_RAMPE * seuil_sec)
-    if hum_percue > HUM_NOYE:
+    if hum_sol > HUM_NOYE:
         tol = (plant.expressed_gene("tolerance_asphyxie")
                * plant.plant_class.asphyxie_tolerance_base)
-        exces = (hum_percue - HUM_NOYE) / (HUM_SATURE - HUM_NOYE) / tol
+        exces = (hum_sol - HUM_NOYE) / (HUM_SATURE - HUM_NOYE) / tol
         f *= max(0.0, 1.0 - exces)
     return f
 
@@ -118,7 +134,8 @@ def bilan(plant, presence: float, f_l: float, f_e: float, f_t: float,
           f_nut: float, f_allelo: float, t_air: float, dormante: bool) -> float:
     """Solde net P − E − X de la semaine (semaines d'entretien). PUR."""
     p = (parametres_bilan(plant.plant_class)["photo_max"] * plant.feuillage
-         * presence * f_l * f_e * f_t * f_nut * f_allelo)
+         * presence * f_l * f_e * f_t * f_nut * f_allelo
+         * (1.0 - OIDIUM_RENDEMENT * plant.oidium))      # feuilles feutrées (③)
     x = K_EXSUD * p * plant.gene("mycorhization")
     return p - entretien(t_air, dormante, presence) - x
 
@@ -156,7 +173,8 @@ def facteur_limitant(f_l: float, f_e: float, froid: float, chaud: float,
 
 def semaine_bilan(plant, *, saison: str, presence: float, light_eff: float,
                   hum_percue: float, temp: float, t_feuille: float, t_air: float,
-                  f_nut: float, f_allelo: float, declin: bool = False) -> float | None:
+                  f_nut: float, f_allelo: float, declin: bool = False,
+                  hum_sol: float | None = None) -> float | None:
     """Une semaine de bilan pour `plant`, à partir des lectures DÉJÀ faites par la
     physiologie. Dormante = plus de feuilles (caduc nu) ou vivace qui dort l'hiver ;
     en végétation = hors hiver, feuillage en place, éveillée.
@@ -169,7 +187,7 @@ def semaine_bilan(plant, *, saison: str, presence: float, light_eff: float,
 
     Renvoie le SURPLUS de croissance, ou None hors végétation (la croissance est
     gelée : un arbre ne « rapetisse » pas l'hiver). Mémorise le facteur limitant."""
-    f_l, f_e = f_lum(light_eff), f_eau(plant, hum_percue)
+    f_l, f_e = f_lum(light_eff), f_eau(plant, hum_percue, hum_sol)
     froid, chaud = rampes_thermiques(plant, temp, t_feuille)
     # Dormante : caduc nu, vivace qui dort l'hiver, OU (②) QUIESCENTE PAR LE FROID —
     # sous sa température de croissance, la plante ne produit rien et ralentit son
@@ -177,8 +195,14 @@ def semaine_bilan(plant, *, saison: str, presence: float, light_eff: float,
     # vidait l'hiver et un semis de printemps froid mourait de faim la 1re semaine.
     dormante = (presence <= 0.0 or froid <= 0.0
                 or (saison == "hiver" and plant.plant_class.winter_strategy == "dormant"))
-    plant.limitant = facteur_limitant(f_l, f_e, froid, chaud, hum_percue)
+    plant.limitant = facteur_limitant(f_l, f_e, froid, chaud,
+                                      hum_percue if hum_sol is None else hum_sol)
     net = bilan(plant, presence, f_l, f_e, froid * chaud, f_nut, f_allelo, t_air, dormante)
+    # Oïdium (③) : la couverture lue ci-dessus s'efface avec le renouvellement des
+    # feuilles ; un caduc nu (presence 0) a perdu ses feuilles feutrées.
+    if plant.oidium > 0.0:
+        o = 0.0 if presence <= 0.0 else plant.oidium * (1.0 - OIDIUM_EFFACE)
+        plant.oidium = o if o > 1e-6 else 0.0
     if declin:
         net = min(net, 0.0)
     en_veg = saison != "hiver" and not dormante

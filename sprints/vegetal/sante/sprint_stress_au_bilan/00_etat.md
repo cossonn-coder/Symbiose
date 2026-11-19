@@ -16,7 +16,7 @@ stress** : ce qu'il retire (feuilles, sucres, eau, racines, vaisseaux, bourgeons
   fin de cycle, vieillesse. Code supplanté commenté et conservé, jamais supprimé.
 
 ## Golden
-Départ = `e24a23d8cb09…` (fin de `sprint_lisibilite_bilan`). ① **INTACT** (vérifié, voir Acquis) · ② **RE-FIGÉ → `32355a1c8649…`** (preuve par neutralisation) · ③④ **RE-FIGÉ annoncé** chacun (dérive
+Départ = `e24a23d8cb09…` (fin de `sprint_lisibilite_bilan`). ① **INTACT** (vérifié, voir Acquis) · ② **RE-FIGÉ → `32355a1c8649…`** (preuve par neutralisation) · ③ **RE-FIGÉ → `bd5e11abf44f…`** (preuve par neutralisation) · ④ **RE-FIGÉ annoncé** (dérive
 prouvée localisée par neutralisation du seul mécanisme du tronçon) · ⑤ **INTACT**.
 
 ## Tronçons
@@ -24,7 +24,7 @@ prouvée localisée par neutralisation du seul mécanisme du tronçon) · ⑤ **
 |---|---|---|
 | ① | `01_secheresse_embolie.md` — stomates + défaillance hydraulique | **FAIT** (golden INTACT `e24a23d8…`, non commité) |
 | ② | `02_froid_gel_brulure.md` — feuilles détruites vs bourgeons/sève gelés | **FAIT** (golden RE-FIGÉ `32355a1c…`, non commité) |
-| ③ | `03_maladies_racines.md` — mildiou, oïdium, fonte, asphyxie, pourriture, campagnol | à faire |
+| ③ | `03_maladies_racines.md` — mildiou, oïdium, fonte, asphyxie, pourriture, campagnol | **FAIT** (golden RE-FIGÉ `bd5e11ab…`, non commité) |
 | ④ | `04_vieillesse_cycle_mycorhize.md` — vieillesse, fin de cycle, paiement fongique | à faire |
 | ⑤ | `05_vue.md` — signes, info-bulle, banc, clôture D140 G | à faire |
 
@@ -125,7 +125,64 @@ perf tick `full` ≤ +10 % ; suites `tests/` vertes ; jamais `test_epaisseur_500
   les tests de dégât vivent dans `test_reponse_thermique`.
 - LDC : `reponse_thermique.py` 78, `mortalite.py` 254, `embolie.py` 26, `resolution.py` 235.
 
+## Acquis du ③ (2026-11-19)
+- **Mildiou** (`fungal_disease` ET l'effet familial Solanacées `reduce_health` de
+  `resolution.resolve`) → `PerteTissus(feuillage = VITALITE_STEP / resilience_base)`,
+  jamais de destruction (l'ancien `erode` détruisait si le coup dépassait la vitalité).
+  Mildiou et oïdium passent dans `tissus_muts` (hors `_cap_chronique`, fonction conservée).
+- **Oïdium** : mutation NEUVE `Oidium(plant, couverture, reason, cause)` (`mutations.py`,
+  résolue dans `resolution.py`, marque « maladie » à la même échelle) ; champ NEUF
+  `PlantInstance.oidium` ∈ [0,1] (hors `_PLANT_ATTRS`) ; un coup = +1/3. `sim/bilan.py` :
+  P × (1 − `OIDIUM_RENDEMENT` 0,5 × oidium) ; `OIDIUM_EFFACE` 0,10/sem, remis à 0 si
+  presence = 0 (feuilles tombées). Feuillage jamais touché.
+- **Fonte** → `PerteTissus(0, destruction=True)` : tue désormais aussi une plantule de
+  constitution > 1 (trèfle 1,25 n'était pas tué par l'ancien `erode`).
+- **Asphyxie** : voie santé au sort de `_tick_senescence_health` SUPPLANTÉE (commentée).
+  `racines.pression_asphyxie(plant, gorge)` = (asphyxie_memory − SEUIL)/tolérance (même
+  médiation), **nulle si le sol n'est pas gorgé cette semaine** (`exces_stress > 0`) —
+  écart au kickoff, mesuré : sans cette porte, la mémoire (lerp 0,05) continuait de tuer
+  des racines ~30 sem après le ressuyage. `maj_pourriture(plant, pression, asphyxie=0)` :
+  asphyxie → mêmes racines perdues que le pourridié (`pourriture_memory` → `eau_percue`),
+  `ASPHYXIE_TAUX` = `POURRI_TAUX` 0,10, le chevelu repousse pendant l'engorgement
+  (équilibre pommier ~0,8 / aulne ~0,6, constante ~1 an). Labo (sol 2,95, été, n=1) :
+  pommier 0,26 en 16 sem, mort de faim ~44 sem (bord noyé du bilan) ; aulne 0,09, réserves
+  pleines. ASPHYXIE_* retirés de l'import de `mortalite.py`.
+- **Écart au kickoff (nécessaire)** : `f_eau(plant, hum_percue, hum_sol=None)` et
+  `semaine_bilan(…, hum_sol=None)` — le bord NOYÉ (et le nom « noyé » du limitant) lit
+  l'humidité du SOL : sinon des racines pourries « sortaient » la plante de l'excès d'eau
+  (eau ressentie < HUM_NOYE → production remontée). Appel moteur `hum_sol=hum`.
+- **Annélation** : `root_herbivory` renvoie désormais une ligne de log
+  « 🪦 X@pos meurt annelé (écorce rongée au collet, sève coupée) » (`list[str]`), appelée EN
+  PREMIER dans `apply_disturbances` (+ `continue` : plus de 2ᵉ mort au carnet par une perte
+  de feuilles le même tick) ; `_raison_mort` « meurt annelé » → cause `herbivorie`.
+- Pourriture/campagnol : déjà au flux (`eau_percue`, `plant_uptake`) — inchangés. Les
+  nutriments PERÇUS (`facteur_nutrition`) ne lisent pas les racines perdues (seul
+  l'uptake du sol le fait) — non fait, hors kickoff.
+- Golden RE-FIGÉ `bd5e11abf44f20df…` ; HEAD de `perturbations.py`/`resolution.py`/
+  `mortalite._tick_senescence_health` réinjectés en mémoire + `pression_asphyxie` → 0 +
+  `semaine_bilan` sans `hum_sol` → `32355a1c…` exact. Neutraliser les SEULES maladies
+  (perturbations + resolution) suffit → asphyxie/hum_sol inertes au smoke. Smoke [seed 42,
+  n=1] : maladie/poivron 2 → famine/poivron 2 (mildiou défolie, le bilan tue) ; fonte tue
+  2 semis de trèfle (avant : survivaient) ; vivantes s104 [44, 14] → [46, 14].
+- Effet `full` s10→s62 [seed 42, n=1] : 24 coups de mildiou familial, 1 fongique, 1 fonte,
+  0 oïdium (seule la courgette y est sensible), asphyxie max 0,38 → pourriture max 0,03 ;
+  morts : maladie 0 → 1 (fonte), herbivorie 11 → 12, le reste identique. Mécanismes
+  prouvés par banc `tests/test_maladies_racines.py` (5 cas, < 5 s).
+- Tests : `test_parasite` I adapté (« sans réseau » : pourriture < 0,1 au lieu de == 0 —
+  ce sol se gorge par épisodes, l'asphyxie y tue quelques radicelles, max 0,08 mesuré) ;
+  `test_inoculum`/`test_automate_determinisme` relisent `golden_hash.txt` (mis à jour).
+  Rouges = ceux de HEAD seulement. `test_ouverture_vivante` tenu (0/13, 18/123 = 14,6 %, 0).
+- Perf `full` s10→s30 [3 paires alternées, charge 1,2 → 7,6, bruitée] : HEAD 10,8/15,1/12,1 s
+  → 12,0/13,5/12,0 s (médianes égales).
+- LDC : `perturbations.py` 316 (🟡, était 309), `resolution.py` 243, `racines.py` 59,
+  `bilan.py` 88, `instance.py` 297, `mortalite.py` 242.
+- **Pour ⑤ (voix)** : plus aucune mort « asphyxie » ni « maladie » par mildiou — elles
+  sortent en `famine` (ou `secheresse` par embolie) ; la chronique ne dit pas que la
+  maladie ou l'eau stagnante ont retiré feuilles/racines. La voix « parasite »
+  (`voix_etres`, rampe sur `pourriture_memory`) parlera aussi pour des racines asphyxiées
+  (aulne en marais ~0,3-0,6 à long terme). Oïdium : pas exporté au pont (rendu ⑤).
+
 ## REPRISE
-① ② faits (non commités). Lire `CLAUDE.md`, ce fichier, l'`00_etat.md` du sprint A et de
+①②③ faits (③ non commité). Lire `CLAUDE.md`, ce fichier, l'`00_etat.md` du sprint A et de
 `sprint_lisibilite_bilan` (hauteur acquise), la conception, puis le kickoff du premier
-tronçon « à faire » (③). Golden courant `32355a1c8649…`. Lancer : `/sprint-auto sprint_stress_au_bilan`.
+tronçon « à faire » (④). Golden courant `bd5e11abf44f…`. Lancer : `/sprint-auto sprint_stress_au_bilan`.
