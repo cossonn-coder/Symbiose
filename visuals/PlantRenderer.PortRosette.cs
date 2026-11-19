@@ -83,7 +83,7 @@ namespace Symbiose
 		{
 			float loin = WorldView.CurrentZoom < PalierSanteZoom ? 0.7f : 1f;
 			float dens = MortPrairie ? DensitePlancher
-				: Mathf.Clamp(_structure.Feuillage * _structure.FacteurTaille, DensitePlancher, 1.3f);
+				: Mathf.Clamp(_structure.PartPortee, DensitePlancher, 1.3f);
 			int n = Mathf.Max(3, Mathf.RoundToInt(f.Feuilles * Mathf.Lerp(0.4f, 1f, g) * dens * loin));
 			float phase = Mathf.Tau * Hash01(301, ig, 0);
 			_feuillesPort.Clear();

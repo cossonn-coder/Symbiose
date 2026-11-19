@@ -39,7 +39,7 @@ Perf de référence à mesurer au ① (tick `full` s10-s30, commit de départ).
 | ③ | `03_herbivorie_atteinte.md` — chaque ravageur mange ce qu'il atteint | **FAIT** (golden RE-FIGÉ `8f2dd7ad…`, non commité) |
 | ④ | `04_souches_reserve.md` — réserve de souche, rejets sans souche propre | **FAIT** (golden INTACT `8f2dd7ad…`, non commité) |
 | ⑤ | `05_ouverture_mesure.md` — critères `full` s10→s30 + âge de la chronique | **FAIT** (golden INTACT `8f2dd7ad…`, non commité) |
-| ⑥ | `06_vue_banc.md` — pont, rendu du feuillage, info-bulle, banc, clôture | à faire |
+| ⑥ | `06_vue_banc.md` — pont, rendu du feuillage, info-bulle, banc, clôture | **FAIT** (golden INTACT `8f2dd7ad…`, build C# vert, non commité) |
 
 ## Acquis du ① (2026-11-18)
 - `plants/physiologie.py` : 3 paramètres par forme de vie + `SURCHARGES` des 52 espèces
@@ -196,6 +196,57 @@ Perf de référence à mesurer au ① (tick `full` s10-s30, commit de départ).
   tenu ; le +16 % du ③ ne se retrouve pas à cette charge).
 - LDC : `chronique.py` 127, `test_ouverture_vivante.py` 77.
 
+## Acquis du ⑥ (2026-11-19)
+- Pont **0.6.21** : `feuillage_bilan` + `reserves` (3 déc.) sur chaque plante vivante (sol et
+  conteneur) ; légende `voix_bilan` {clairseme, epuise, refait} (`sim/signes_corpus.py`).
+  **Écart au kickoff (nécessaire)** : la clé `feuillage` existait déjà (part de couronne en
+  place, phénologie, AUTOMNE VISIBLE 0.6.3, lue par la chute des feuilles `LeafFallLayer`) →
+  le feuillage du bilan sort sous `feuillage_bilan` (sinon une plante broutée « larguerait »
+  des feuilles à l'écran). Snapshot smoke + full (2 ticks) HEAD vs après : identiques hors
+  clés neuves (seul `perf.rss_mo` bouge). Tests `tests/simserver/*` bumpés, 349/349.
+- Vue : `PlantStructure.FeuillageBilan` + `PartPortee` (= phénologie × bilan × taille) lue par
+  les 8 sites de port et `DensiteVisible` → moins de feuilles, pas de teinte de dégât.
+  `visuals/PlantRenderer.Bilan.cs` (neuf) : `SetBilan` donne au canal de vitalité les FORCES
+  = min(1, réserves / R_CONFORT 0,5) au lieu de `vitalite` (qui compte déjà le feuillage :
+  un chêne défeuillé à réserves pleines paraît nu, pas malade) ; détecteur de hausse du
+  feuillage (1re valeur reçue ≠ variation) ; `EtatBilan` → clé de phrase (épuisé si forces
+  < 0,6 et teinte visible au palier ; refait si en hausse et < 0,95 ; clairsemé si < 0,6).
+  Info-bulle 1er niveau : la phrase du bilan prime sur « vert franc/terne » et s'ajoute
+  sous un signe ; Maj+F3 : jauges « réserves » et « feuillage » (remplacent « vitalité ») ;
+  dossier debug : ligne réserves/feuillage porté. Conteneurs : même branchement.
+- Banc `plante_vivante` (`bancs/plante_vivante.py`, départ s12, warmup 1) : (a) LIMACES
+  (sud-ouest) limace 0,15 uniforme, chêne 25 ans (5,3) + semis de chêne (5,13) ; (b) OMBRE
+  (pied du mur nord, maison transparente touche H) 3 poivrons ; (c) REFEUILLE (sud) 3
+  consoudes, (4,2) témoin, (4,4) et (4,6) à feuillage 0,2 ; (d) SOUCHE (sud-est) chêne de
+  12 ans coupé à l'ouverture. Germination férale coupée. **Écarts au kickoff (mesurés)** :
+  pas de laitue au catalogue et la mâche meurt l'été au lieu de refeuiller → **consoude** ;
+  tournesol/basilic gardent un bilan positif au pied du mur → **poivron** (affamé, limitant
+  `ombre` ; au soleil il tient, +1,5 à +2). Oracle `tests/test_banc_plante_vivante.py`
+  (≈ 2 s) : chêne feuillage 1,00 / semis mort ; 3 poivrons morts de faim ; consoudes 0,96 ;
+  3 rejets ≤ 4 ; clés au snapshot [seed 42, n=1, s12→s20].
+- Captures VM (`tools/capture_vm.sh -b plante_vivante`) : « feuillage clairsemé, des
+  feuilles ont disparu » (consoude broutée, s13), « refait ses feuilles » (s15, `-T 2`),
+  « à bout de forces, son vert se ternit » (poivron, s18) — phrases vérifiées ; la
+  différence de densité témoin/broutée se voit mais reste modeste à ×4.
+- LDC : `serialize.py` 326 (🟡, était 322), `PlantRenderer.Bilan.cs` 32, banc 56,
+  `WorldView.InfoBulle.cs` 186.
+- Hors périmètre, constaté : l'étiquette de survol affiche le nom de CLASSE (« Comfrey ·
+  adulte », « Pepper · adulte ») — préexistant (`PlanteLue.Tag`), relève de D141.
+
+## Recette F5 pour Nico (banc `plante_vivante`)
+Monter le banc, laisser défiler s13 → s20 en survolant (×4) :
+1. LIMACES (sud-ouest) : le semis de chêne se dégarnit (« feuillage clairsemé ») puis meurt
+   vers s16 ; le chêne de 25 ans, sous les mêmes limaces, ne perd rien.
+2. OMBRE (derrière la maison, touche H) : les 3 poivrons pâlissent ; vers s18 « à bout de
+   forces, son vert se ternit », puis morts de faim s18-s20. **À juger : la teinte
+   d'épuisement est-elle assez lisible ?** (planchers d'`ApplyVitality`).
+3. REFEUILLE : les 2 consoudes broutées sont nettement moins feuillues que le témoin à
+   gauche, puis « refait ses feuilles » et rattrapent le témoin vers s18. **À juger : la
+   densité réduite se lit-elle assez ?**
+4. SOUCHE (sud-est) : trois rejets autour du chêne coupé, pas de cascade.
+5. Monde `full` : une plante broutée paraît clairsemée, pas « malade » ; Maj+F3 montre les
+   jauges réserves/feuillage.
+
 ## Diagnostic d'origine (2026-11-18, seed 42, n=1 par cas)
 Ouverture s10 → morts des 136 posées à s21 : tel quel 121 ; faune pré-roulée 130 ;
 prédateurs seuls pré-roulés 97 ; `stress_memory` amorcée 0,12 → 49. Semis de
@@ -205,6 +256,7 @@ naissances par espèce/semaine via `SimServer().cmd_init({"config":"full","seed"
 puis `engine.tick_semaine()`.
 
 ## REPRISE
-①→⑤ faits (⑤ non commité). Lire `CLAUDE.md`, ce fichier, la conception, puis
-`06_vue_banc.md` (prochain tronçon).
-Golden courant `8f2dd7add938b4cb…`. Lancer : `/sprint-auto sprint_plante_vivante`.
+①→⑥ faits — **sprint A CLOS côté code** (⑥ non commité), F5 attendu (recette ci-dessus).
+Golden courant `8f2dd7add938b4cb…`, pont 0.6.21. Suite : `/sprint-auto sprint_stress_au_bilan`
+(B, `sprints/vegetal/sante/sprint_stress_au_bilan/`), puis reprise de
+`sprints/vegetal/genetique/sprint_depart_jardin/` au ④.

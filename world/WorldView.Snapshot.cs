@@ -233,7 +233,8 @@ namespace Symbiose
 		/// été lu par PlanteLue.Lire (thread du pool). Sens des champs :
 		///  · StadeMort (0.3.6) : squelette sur place, "seche"/"couchee", sinon null ;
 		///  · Symptomes (D33, 0.5.1) : {cause, intensité} triés par le moteur ;
-		///  · Vitalite (0.5.28) : fond global d'usure ∈ [0,1], défaut 1 ;
+		///  · Vitalite (0.5.28) : fond global d'usure ∈ [0,1], défaut 1 ; depuis 0.6.21
+		///    la teinte suit les Reserves (forces) et la densité le feuillage porté ;
 		///  · SupportKind (0.5.18) : type d'appui accroché → spires, crampons, liens ;
 		///  · Strate / Silhouette (0.5.19) : biais de Y par strate, forme au LOD couronne ;
 		///  · Emitteur (D67, 0.5.21) : teinte de l'overlay F9 seulement ;
@@ -251,7 +252,8 @@ namespace Symbiose
 			node.SetSkeleton(l.StadeMort);     // ou vient de mourir / s'est couchée
 			_petalLayer?.Noter(l.Key, node, wx, wy);   // pétales au sol à la défloraison (VERGER ④)
 			node.SetSymptoms(l.Symptomes);     // teinte + texture des symptômes (D33)
-			node.SetVitality(l.Vitalite);      // fond global d'usure (santé ④, 0.5.28)
+			// Bilan (⑥, 0.6.21) : teinte = forces (réserves), densité = feuillage porté.
+			node.SetBilan(l.Vitalite, l.Structure.FeuillageBilan, l.Reserves);
 			node.SetThermique(l.Posture, l.PalierTh);   // port + teinte du palier (niche thermique ⑤)
 			node.PlageThermique = l.Plage;     // plage vivable °C, survol G seulement (0.6.19)
 			node.FecondationVecue = l.Fecondation;   // lignée vécue, survol G seulement (0.6.20)

@@ -26,7 +26,7 @@ namespace Symbiose
 			int ig = GraineIndividu;
 			float souche = Mathf.Max(rayon * 0.2f * WorldView.PxPerCmX, PixelInterne * 2f);
 			PoserEllipse(Vector2.Zero, souche, souche * 0.5f, Ton(col, 0));   // « sol à peine visible » : l'ombre dense
-			float dens = MortPrairie ? DensitePlancher : Mathf.Clamp(_structure.Feuillage * _structure.FacteurTaille, DensitePlancher, 1f);
+			float dens = MortPrairie ? DensitePlancher : Mathf.Clamp(_structure.PartPortee, DensitePlancher, 1f);
 			int n = Mathf.Max(2, Mathf.RoundToInt(f.Feuilles * Mathf.Lerp(0.4f, 1f, g) * dens));
 			float phase = Mathf.Tau * Hash01(481, ig, 0);
 			_feuillesPort.Clear();

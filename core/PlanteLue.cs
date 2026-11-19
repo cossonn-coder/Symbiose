@@ -31,6 +31,7 @@ namespace Symbiose
 		public string StadeMort, SupportKind, Strate, Silhouette;
 		public float SupportHauteurCm, SupportDxCm, SupportDyCm;   // appui du haricot (FORMES ⑥, 0.6.8)
 		public float Vitalite = 1f, Abri = 1f;
+		public float Reserves = -1f;   // bilan carbone (⑥, 0.6.21) ; < 0 = absent (pont ancien)
 		public bool Emitteur = true;
 		// Niche thermique (pont 0.6.18-0.6.19) : posture ∈ [−1, 1], palier (null = étalé),
 		// plage vivable en °C pour le survol G (null si absente ; NaN = valeur nulle).
@@ -82,6 +83,7 @@ namespace Symbiose
 				using (var syms = LectureSnap.Tab(p, "leaf_symptoms"))
 					LireSymptomes(syms, l.Symptomes);
 			if (LectureSnap.A(p, "vitalite")) l.Vitalite = LectureSnap.F(p, "vitalite");
+			if (LectureSnap.A(p, "reserves")) l.Reserves = LectureSnap.F(p, "reserves");
 			if (LectureSnap.A(p, "support"))
 				using (var sup = LectureSnap.Dico(p, "support"))
 				{

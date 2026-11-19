@@ -196,8 +196,11 @@ namespace Symbiose
 					renderer.SetSymptoms(p["leaf_symptoms"].AsGodotArray());
 				// Vitalité continue (santé ④, 0.5.28) : même fond d'usure que le
 				// vivant en pleine terre. Tolérant à un snapshot pré-0.5.28 (→ 1.0).
+				// Depuis 0.6.21 (plante vivante ⑥) : teinte = forces (réserves), comme en
+				// pleine terre ; la densité lit `feuillage_bilan` via la structure.
 				if (p.ContainsKey("vitalite"))
-					renderer.SetVitality((float)p["vitalite"].AsDouble());
+					renderer.SetBilan((float)p["vitalite"].AsDouble(), structure.FeuillageBilan,
+						p.ContainsKey("reserves") ? (float)p["reserves"].AsDouble() : -1f);
 				// Niche thermique ⑤ : même port, même teinte, même survol G qu'en pleine terre.
 				if (p.ContainsKey("posture_thermique"))
 					renderer.SetThermique((float)p["posture_thermique"].AsDouble(),

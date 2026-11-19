@@ -49,6 +49,8 @@ namespace Symbiose
 		private readonly Dictionary<string, string> _legendeFaune = new();
 		// Voix saine (légende `voix_saine` ①) : franc / automne / terne → texte.
 		private readonly Dictionary<string, string> _voixSaine = new();
+		// Voix du bilan (légende `voix_bilan`, plante vivante ⑥) : clairsemé / épuisé / refait.
+		private readonly Dictionary<string, string> _voixBilan = new();
 		// Appris (snapshot `player.appris`), relus à chaque application de snapshot.
 		private readonly HashSet<string> _signesAppris = new(), _fauneApprise = new();
 		// Observations de signe déjà envoyées : "espèce|signe|saison" (dédup vue).
@@ -87,6 +89,9 @@ namespace Symbiose
 			if (lg.ContainsKey("voix_saine"))   // pont ≥ 0.5.47 ; absent → voix saine muette
 				foreach (var (k, v) in lg["voix_saine"].AsGodotDictionary())
 					_voixSaine[k.AsString()] = v.AsString();
+			if (lg.ContainsKey("voix_bilan"))   // pont ≥ 0.6.21 ; absent → voix du bilan muette
+				foreach (var (k, v) in lg["voix_bilan"].AsGodotDictionary())
+					_voixBilan[k.AsString()] = v.AsString();
 			ChargerLegendeVivant(lg);   // bêtes / carpophores (WorldView.InfoBulleVivant.cs)
 		}
 
@@ -172,6 +177,15 @@ namespace Symbiose
 			return cle != null && _voixSaine.TryGetValue(cle, out var t) ? t : null;
 		}
 
+		// Voix du bilan (plante vivante ⑥) : ce que l'œil voit du bilan carbone — moins
+		// de feuilles, un vert à bout de forces, des feuilles qui repoussent. La vue ne
+		// choisit que la clé (PlantRenderer.Bilan.cs), le texte vient de Python.
+		private string VoixBilan(PlantRenderer plante)
+		{
+			string cle = plante.EtatBilan(PlantRenderer.SanteVisible(CurrentZoom));
+			return cle != null && _voixBilan.TryGetValue(cle, out var t) ? t : null;
+		}
+
 		private void LignesPlante(StringBuilder sb, PlantRenderer plante, string signe)
 		{
 			if (_infoTechnique)
@@ -181,8 +195,12 @@ namespace Symbiose
 				// saison (normal, mais c'est le feuillage qui s'en va) ; symptôme →
 				// son intensité (seuil = seuil de visibilité mesuré, pastille = champ
 				// F6 qui le cause).
-				Jauge(sb, "vitalité", 1f - plante.Vitalite, 1f - PlantRenderer.VitaliteFranche,
-					  plante.Vitalite, null);
+				// Bilan (⑥) : la teinte suit les forces (réserves / R_CONFORT), la densité
+				// le feuillage porté — deux jauges, chacune au seuil de sa phrase.
+				Jauge(sb, "réserves", 1f - plante.Vitalite, 1f - PlantRenderer.SeuilEpuise,
+					  plante.Reserves, null);
+				Jauge(sb, "feuillage", 1f - plante.FeuillageBilan, 1f - PlantRenderer.SeuilClairseme,
+					  plante.FeuillageBilan, null);
 				Jauge(sb, "automne", plante.Automne, PlantRenderer.SeuilAutomne, plante.Automne, null);
 				var syms = plante.Symptomes;
 				if (syms.Count == 0) Ligne(sb, "symptômes : aucun");
@@ -197,16 +215,20 @@ namespace Symbiose
 				if (signe != null) Ligne(sb, $"visible ici : {signe}");
 				return;
 			}
+			string bilan = VoixBilan(plante);
 			if (signe == null)
 			{
-				string voix = VoixSaine(plante);
+				string voix = bilan ?? VoixSaine(plante);   // le bilan prime sur « vert franc/terne »
 				if (voix != null) Ligne(sb, voix);
 				return;
 			}
-			if (!_legendeSignes.TryGetValue(signe, out var lg)) return;
-			Ligne(sb, lg.Vu);
-			if (_signesAppris.Contains(signe) && lg.Cause.Length > 0)
-				sb.Append(" — ").Append(lg.Cause.ToLowerInvariant());
+			if (_legendeSignes.TryGetValue(signe, out var lg))
+			{
+				Ligne(sb, lg.Vu);
+				if (_signesAppris.Contains(signe) && lg.Cause.Length > 0)
+					sb.Append(" — ").Append(lg.Cause.ToLowerInvariant());
+			}
+			if (bilan != null) Ligne(sb, bilan);   // le signe dit la cause vue, le bilan l'effet
 		}
 
 		private static void Ligne(StringBuilder sb, string texte)

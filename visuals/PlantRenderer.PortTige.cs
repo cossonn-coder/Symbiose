@@ -44,7 +44,7 @@ namespace Symbiose
 
 			float largeTige = Mathf.Max(f.EpaisseurTigeCm * WorldView.PxPerCmX, PixelInterne * 1.25f);
 			float dens = MortPrairie ? DensitePlancher
-				: Mathf.Clamp(_structure.Feuillage * _structure.FacteurTaille, DensitePlancher, 1f);
+				: Mathf.Clamp(_structure.PartPortee, DensitePlancher, 1f);
 			int nAxes = Mathf.Max(1, Mathf.RoundToInt(t.Axes * Mathf.Lerp(0.5f, 1f, g)));
 			float phase = Mathf.Tau * Hash01(361, ig, 0);
 			for (int a = 0; a < nAxes; a++)

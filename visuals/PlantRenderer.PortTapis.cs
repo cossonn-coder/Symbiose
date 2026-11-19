@@ -49,7 +49,7 @@ namespace Symbiose
 		private void CollecterFeuillesTapis(FichePort f, float couvert, float h, float g, int ig)
 		{
 			FicheTapis t = f.Tapis;
-			float dens = MortPrairie ? DensitePlancher : Mathf.Clamp(_structure.Feuillage * _structure.FacteurTaille, DensitePlancher, 1f);
+			float dens = MortPrairie ? DensitePlancher : Mathf.Clamp(_structure.PartPortee, DensitePlancher, 1f);
 			float loin = AuPalier(PaliersHautsMinZoom) ? 1f : PartFeuillesLoinTapis;
 			int n = Mathf.Max(2, Mathf.RoundToInt(f.Feuilles * Mathf.Lerp(0.5f, 1f, g) * dens * loin));
 			float taille = t.FeuilleCm * Mathf.Lerp(0.6f, 1f, g);

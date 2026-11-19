@@ -268,6 +268,17 @@ VOIX_SAINE: dict[str, str] = {
     "terne":   "feuillage terne, sans signe distinct",
 }
 
+# Voix du BILAN (plante vivante ⑥, D140 G) : ce que l'œil voit du bilan carbone, au
+# 1ᵉʳ niveau de l'info-bulle, sans chiffre (philo #5) ni cause inventée — des feuilles
+# manquent (broutées, gelées, cassées : on ne dit pas qui), la plante s'épuise
+# (réserves basses), ou elle refait ses feuilles (feuillage en hausse). Seuils : vue
+# (`PlantRenderer.Bilan.cs`), qui garde la semaine précédente pour « refait ».
+VOIX_BILAN: dict[str, str] = {
+    "clairseme": "feuillage clairsemé, des feuilles ont disparu",
+    "epuise":    "à bout de forces, son vert se ternit",
+    "refait":    "refait ses feuilles",
+}
+
 # ABONDANCE d'une bête = nombre d'individus de l'espèce VUS dans le plot (peintre
 # `peindre_presence` : jusqu'à 6 en grappe pour les coloniales). Bornes : 1 → seule ;
 # 2-3 → quelques-unes ; ≥ 4 → nombreuses.

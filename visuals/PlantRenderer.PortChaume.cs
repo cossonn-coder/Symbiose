@@ -68,7 +68,7 @@ namespace Symbiose
 		private void CollecterBrins(FichePort f, FicheChaume c, float rayon, float h, float g, int ig)
 		{
 			float large = Mathf.Max(f.EpaisseurTigeCm * WorldView.PxPerCmX, PixelInterne * 1.25f);
-			float dens = MortPrairie ? 0f : Mathf.Clamp(_structure.Feuillage * _structure.FacteurTaille, 0f, 1f);
+			float dens = MortPrairie ? 0f : Mathf.Clamp(_structure.PartPortee, 0f, 1f);
 			int n = BrinsDe(c, g);
 			for (int a = 0; a < n; a++)
 			{
@@ -105,7 +105,7 @@ namespace Symbiose
 		private void PoserRubans(FicheChaume c, Color col, float rayon, float z, float g, int ig, bool devant)
 		{
 			if (c.Rubans == 0) return;
-			float dens = MortPrairie ? DensitePlancher : Mathf.Clamp(_structure.Feuillage * _structure.FacteurTaille, DensitePlancher, 1f);
+			float dens = MortPrairie ? DensitePlancher : Mathf.Clamp(_structure.PartPortee, DensitePlancher, 1f);
 			int n = Mathf.Max(3, Mathf.RoundToInt(c.Rubans * Mathf.Lerp(0.5f, 1f, g) * dens));
 			float phase = Mathf.Tau * Hash01(405, ig, 0);
 			for (int k = 0; k < n; k++)

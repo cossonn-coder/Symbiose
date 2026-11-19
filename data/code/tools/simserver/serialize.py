@@ -216,6 +216,14 @@ class SerializeMixin:
                 # pré-0.5.28 → la vue retombe sur le mapping par symptômes seul).
                 base["vitalite"] = round(p.vitalite, 3)
                 base["etat"] = p.etat
+                # Bilan carbone (PLANTE VIVANTE ⑥, 0.6.21) : les deux états dont
+                # `vitalite` est la lecture. `feuillage_bilan` = part des feuilles que la
+                # plante PORTE (broutée, gelée → moins ; refaite en saison) — distincte de
+                # `feuillage` (phénologie de la couronne, 0.6.3) ; `reserves` ∈ [0,1] de sa
+                # capacité. La vue dessine moins de feuilles et ternit à réserves basses,
+                # sans chiffre (philo #5). Lecture pure → golden neutre.
+                base["feuillage_bilan"] = round(p.feuillage, 3)
+                base["reserves"] = round(p.reserves, 3)
                 # Dossier de plante DEBUG (sprint retours UI/HUD T3, outil de test) :
                 # l'état physiologique COURANT lu par le panneau au clic d'inspection
                 # (WorldView.Dossier.cs → DossierPlantePanel). Trois ajouts LECTURE
@@ -643,6 +651,8 @@ class SerializeMixin:
                     # même descripteur global d'usure pour la plante d'un conteneur.
                     pd["vitalite"] = round(p.vitalite, 3)
                     pd["etat"] = p.etat
+                    pd["feuillage_bilan"] = round(p.feuillage, 3)   # bilan (⑥, 0.6.21)
+                    pd["reserves"] = round(p.reserves, 3)
                     pd["leaf_symptoms"] = semiologie.leaf_symptoms(p, eco, saison)
                     pd["posture_thermique"], pd["palier_thermique"] = etat_thermique(p, eco)
                     pd["plage_thermique"] = plage_thermique(p)   # survol G (debug, ⑤)

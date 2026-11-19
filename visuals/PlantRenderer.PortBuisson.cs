@@ -27,7 +27,7 @@ namespace Symbiose
 			float g = CroissancePort(f);
 			int ig = GraineIndividu;
 			// Sans plancher : un caduc d'hiver montre son bois nu, c'est ce qui le distingue.
-			float dens = MortPrairie ? 0f : Mathf.Clamp(_structure.Feuillage * _structure.FacteurTaille, 0f, 1f);
+			float dens = MortPrairie ? 0f : Mathf.Clamp(_structure.PartPortee, 0f, 1f);
 			Color bois = MortPrairie ? col : b.Bois;
 			_axesTige.Clear();
 			_tetesTige.Clear();

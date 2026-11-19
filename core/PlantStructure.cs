@@ -100,9 +100,16 @@ namespace Symbiose
 		public float Rabattu, Pince;
 		// Moins de feuilles après une coupe, plus touffu après un pincement (conception §4.4).
 		public float FacteurTaille => (1f - 0.5f * Rabattu) * (1f + 0.3f * Pince);
+		// Part des feuilles PORTÉES selon le bilan carbone (PLANTE VIVANTE ⑥, pont 0.6.21,
+		// clé `feuillage_bilan`) : broutées, gelées → moins ; refaites en saison → plus.
+		// Distincte de `Feuillage` (phénologie) : la chute d'automne a sa propre couche.
+		public float FeuillageBilan = 1f;
+		// Ce que les ports dessinent : phénologie × bilan × taille (moins de feuilles,
+		// jamais une teinte de dégât).
+		public float PartPortee => Feuillage * FeuillageBilan * FacteurTaille;
 		// Ce que la vue garde au hash : densité de l'espèce × part encore en place.
 		// `FoliageDensity` seule resterait pleine jusqu'à l'hiver (elle règle la lumière).
-		public float DensiteVisible => FoliageDensity * Feuillage * FacteurTaille;
+		public float DensiteVisible => FoliageDensity * PartPortee;
 	}
 
 	// ---------------------------------------------------------------------------
@@ -223,6 +230,8 @@ namespace Symbiose
 				ps.Automne = LectureSnap.F(plant, "automne");
 			if (LectureSnap.A(plant, "feuillage"))
 				ps.Feuillage = LectureSnap.F(plant, "feuillage");
+			if (LectureSnap.A(plant, "feuillage_bilan"))   // bilan carbone (⑥, 0.6.21)
+				ps.FeuillageBilan = LectureSnap.F(plant, "feuillage_bilan");
 			ps.StageName = LectureSnap.S(plant, "stage_name");
 			if (LectureSnap.A(plant, "rabattu")) ps.Rabattu = LectureSnap.F(plant, "rabattu");
 			if (LectureSnap.A(plant, "pince")) ps.Pince = LectureSnap.F(plant, "pince");

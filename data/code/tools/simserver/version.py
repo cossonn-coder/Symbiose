@@ -917,7 +917,12 @@ from __future__ import annotations
 #       graines » (une par espèce et par an, hors tick) → carnet (concept pollinisation).
 #       Concept « comestibilité » à l'encyclopédie (découvert/crédité par les bouchées
 #       amères). Clés neuves, golden neutre (snapshot comparé avant/après).
-ENGINE_VERSION = "0.6.20"
+# 0.6.21 (PLANTE VIVANTE ⑥, D140 G) : chaque plante vivante (sol et conteneur) gagne
+#       `feuillage_bilan` (part des feuilles portées, bilan carbone ; ≠ `feuillage`
+#       phénologique 0.6.3) et `reserves` ∈ [0,1] (part de la capacité). Légende :
+#       `voix_bilan` {clairseme, epuise, refait} (info-bulle 1ᵉʳ niveau). Banc neuf
+#       `plante_vivante`. Clés neuves, golden neutre (snapshot comparé avant/après).
+ENGINE_VERSION = "0.6.21"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

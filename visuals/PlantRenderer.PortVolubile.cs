@@ -66,7 +66,7 @@ namespace Symbiose
 			var (rayon, h) = MesurePort(f);
 			float g = CroissancePort(f);
 			int ig = GraineIndividu;
-			float dens = MortPrairie ? DensitePlancher : Mathf.Clamp(_structure.Feuillage * _structure.FacteurTaille, DensitePlancher, 1f);
+			float dens = MortPrairie ? DensitePlancher : Mathf.Clamp(_structure.PartPortee, DensitePlancher, 1f);
 			float large = Mathf.Max(f.EpaisseurTigeCm * WorldView.PxPerCmX, PixelInterne * 1.25f);
 			_axesTige.Clear();
 			_tetesTige.Clear();

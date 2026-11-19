@@ -104,6 +104,7 @@ class MaitriseCmdsMixin:
                                "roles": dict(SC.CHAMPIGNON_ROLE)},
                 "champignons": {k: f["vu"] for k, f in FICHES_CHAMPIGNON.items()},
                 "voix_saine": dict(SC.VOIX_SAINE),
+                "voix_bilan": dict(SC.VOIX_BILAN),   # plante vivante ⑥ (0.6.21)
                 "abondance": {"libelles": dict(SC.ABONDANCE),
                               "quelques": SC.ABONDANCE_QUELQUES,
                               "nombreuses": SC.ABONDANCE_NOMBREUSES},

@@ -91,6 +91,11 @@ namespace Symbiose
 				string etat = p.ContainsKey("etat") ? p["etat"].AsString() : "?";
 				sb.Append($"vitalité : {p["vitalite"].AsDouble():F2}  ({etat})\n");
 			}
+			// Bilan carbone (plante vivante ⑥, 0.6.21) : les deux états dont la vitalité
+			// est la lecture (panneau DEBUG : chiffres permis).
+			if (p.ContainsKey("reserves"))
+				sb.Append($"réserves : {p["reserves"].AsDouble():F2} · feuillage porté : "
+						  + $"{p["feuillage_bilan"].AsDouble():F2}\n");
 
 			AppendSymptomes(sb, p);
 			AppendMemoires(sb, p);
