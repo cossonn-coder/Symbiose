@@ -8,7 +8,7 @@ signe ou d'une bête AVANT de l'avoir appris, et ce qu'il en comprend APRÈS. Lu
 `sim/signes.py` (observation, « appris »), `sim/carnet.py` (gabarits de la note) et
 `sim/encyclopedie.py` (fiche « signe »). Jamais lu par le tick → golden NEUTRE.
 
-Pour chacun des 13 signes de `sim/semiologie.py` (8 détecteurs chroniques +
+Pour chacun des 14 signes de `sim/semiologie.py` (9 détecteurs chroniques, dont l'oïdium +
 5 marques événementielles maladie/gel/grele/froid/brulure) et des 6 paliers de
 posture thermique (`sim/engine/posture_thermique.py`, corpus `signes_corpus_thermique`) :
   - `vu`      : ce qu'on VOIT, sans la cause (info-bulle descriptive, philo #5).
@@ -159,6 +159,21 @@ SIGNES: dict[str, dict] = {
             3: "On prive la maladie de son terrain : faire tourner les familles, aérer les plantations, laisser reposer une terre lasse, diversifier les voisins.",
         },
     },
+    # Oïdium (stress au bilan ⑤) : feutrage blanc qui RABOTE la photosynthèse sans
+    # détruire la feuille (`sim/bilan.py`). Concept `maladie`, comme les taches.
+    "oidium": {
+        "vu": "feuilles poudrées d'un feutrage blanc",
+        "concept": "maladie",
+        "carnet": {
+            _D: "J'ai vu un feutrage blanc, comme de la farine, sur les feuilles de {e} {l}, semaine {s}.",
+            _I: "{e} {l} a l'oïdium : ce voile blanc lui vole la lumière, elle produit moins sans perdre une feuille.",
+        },
+        "fiche": {
+            1: "Le dessus des feuilles se couvre d'un voile blanc, poudreux, qui s'étend de feuille en feuille.",
+            2: "Oïdium : un champignon qui vit à la surface du limbe ; il ne le détruit pas mais le voile, et la feuille feutrée capte moins de lumière. Il aime les journées chaudes et les nuits humides.",
+            3: "On lui retire son climat : aérer les plantations, ne pas mouiller le feuillage, éloigner les espèces sensibles les unes des autres. Une feuille neuve repart sans voile.",
+        },
+    },
     "gel": {
         "vu": "liseré brun-noir au bord des feuilles",
         "concept": "météo",
@@ -277,6 +292,17 @@ VOIX_BILAN: dict[str, str] = {
     "clairseme": "feuillage clairsemé, des feuilles ont disparu",
     "epuise":    "à bout de forces, son vert se ternit",
     "refait":    "refait ses feuilles",
+}
+
+# Voix de la CAUSE (stress au bilan ⑤, D140 G) : ce que la plante a perdu, en mots,
+# au 1ᵉʳ niveau de l'info-bulle, sous la voix du bilan — sans chiffre (philo #5).
+# La clé est choisie par `sim/causes_bilan.voix_cause` (lecture pure de l'état qui
+# la mine : vaisseaux, bourgeons gelés, racines, âge) ; la vue ne fait que l'afficher.
+VOIX_CAUSE: dict[str, str] = {
+    "dessechee": "desséchée, ses vaisseaux ne montent plus l'eau",
+    "gelee":     "gelée au cœur, ses jeunes pousses ont noirci",
+    "racines":   "racines pourries, elle boit mal",
+    "age":       "à bout d'âge",
 }
 
 # ABONDANCE d'une bête = nombre d'individus de l'espèce VUS dans le plot (peintre

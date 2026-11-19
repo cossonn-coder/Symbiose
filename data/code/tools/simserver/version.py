@@ -933,7 +933,14 @@ from __future__ import annotations
 #       parcelle `herbace` du plot MÊME sous un autre tissu dominant. La vue
 #       (`StrawLitterLayer`) couche des tiges paille qui brunissent vers l'humus. Lecture
 #       pure, golden neutre (snapshot comparé avant/après, seuls les 2 champs ajoutés).
-ENGINE_VERSION = "0.6.23"
+# 0.6.24 (STRESS AU BILAN ⑤, D140 G) : chaque plante vivante (sol et conteneur) gagne
+#       `cause_bilan` ∈ {dessechee, gelee, racines, age} ou null (`sim/causes_bilan.voix_cause`
+#       : ce qui la mine) ; `memoires` gagne `embolie` et `oidium` (dossier debug). Légende :
+#       `voix_cause` (textes) et signe NEUF `oidium` (feutrage blanc, `leaf_symptoms`) ;
+#       le signe `secheresse` lit aussi l'embolie (reste flétri après la pluie). Carnet et
+#       chronique : une mort de famine prend sa cause amont (gel, grêle, maladie, ombre…),
+#       le log du moteur est inchangé. Clés neuves, golden neutre (snapshot comparé).
+ENGINE_VERSION = "0.6.24"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

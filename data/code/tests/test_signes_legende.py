@@ -4,7 +4,7 @@ Légende des signes côté Python (sprint PLANTE ASSEMBLÉE ⑥).
 Spec : `docs/rendu/pixelart/conception_plante_assemblee.md` §4.4 + kickoff
 `sprints/rendu/pixelart/sprint_plante_assemblee/06_signes_python.md`.
 
-  A. Exhaustivité : les 13 signes de `semiologie` (+ 6 paliers de posture
+  A. Exhaustivité : les 14 signes de `semiologie` (+ 6 paliers de posture
      thermique, niche thermique ④) et toutes les bêtes de
      `FAUNE_ENCYCLO` ont leur corpus ; concepts existants ; aucun signe ne collide
      avec une clé classée par `encyclopedie_types.type_de`.
@@ -46,12 +46,12 @@ def test_exhaustivite():
     print("\n[A] corpus exhaustif")
     marques = {"maladie", "gel", "grele", "froid", "brulure"}
     attendus = {c for c, _ in semiologie.DETECTEURS} | marques
-    check("13 signes attendus", len(attendus) == 13, sorted(attendus))
+    check("14 signes attendus (oïdium, stress au bilan ⑤)", len(attendus) == 14, sorted(attendus))
     # Paliers de posture thermique (④) : ce ne sont pas des `leaf_symptoms`, mais des
     # signes observables ; translucide/noirci/brûlé SONT les marques froid/gel/brulure.
     postures = set(PT.PALIERS) - marques
     check("6 paliers de posture hors marques", len(postures) == 6, sorted(postures))
-    check("corpus = 13 signes + 6 paliers", set(SIGNES) == attendus | postures,
+    check("corpus = 14 signes + 6 paliers", set(SIGNES) == attendus | postures,
           sorted(set(SIGNES) ^ (attendus | postures)))
     check("toutes les causes de PRIORITE ont un corpus",
           set(semiologie.PRIORITE) == attendus and set(semiologie.PRIORITE) <= set(SIGNES))
@@ -176,8 +176,8 @@ def test_pont():
     ap = s.send(cmd="snapshot")["snapshot"]["player"]["appris"]
     # INFO-BULLE DU VIVANT ③ : palier3 crédite aussi les champignons (en dernier,
     # par espèce depuis le sol qui respire ⑤).
-    check("après palier3 : 19 signes + toute la faune + les 13 champignons",
-          len(ap["signes"]) == 19
+    check("après palier3 : 20 signes (oïdium ⑤) + toute la faune + les 13 champignons",
+          len(ap["signes"]) == 20
           and ap["faune"] == [*FAUNE_ENCYCLO, *REGISTRE_FONGIQUE]
           and set(ap["champignons"]) == set(REGISTRE_FONGIQUE), ap)
     s.send(cmd="quit")

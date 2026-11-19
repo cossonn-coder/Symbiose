@@ -42,6 +42,13 @@ namespace Symbiose
 		public float FeuillageBilan => _feuillageBilan;
 		public float Reserves => _reserves;
 
+		/// <summary>Ce qui MINE la plante (stress au bilan ⑤, pont 0.6.24) : clé de la
+		/// légende `voix_cause` (dessechee, gelee, racines, age) choisie par le moteur
+		/// (`sim/causes_bilan.voix_cause`), null si rien. La vue ne fait que la dire —
+		/// elle ne dessine rien de plus : le dessèchement passe par le signe `secheresse`,
+		/// le gel par le palier noirci (Thermique.cs).</summary>
+		public string CauseBilan { get; set; }
+
 		/// <summary>Bilan de la semaine : `vitalite` (repli si le pont ne publie pas les
 		/// réserves, < 0 = absentes), `feuillage` ∈ [0,1], `reserves` ∈ [0,1].</summary>
 		public void SetBilan(float vitalite, float feuillage, float reserves)

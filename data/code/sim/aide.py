@@ -36,6 +36,7 @@ REMEDE: dict[tuple[str, str | None], str] = {
     ("ravageur", None):       "Favoriser les auxiliaires ; retirer les nuisibles à la main au besoin.",
     ("mort", "asphyxie"):     "Drainer d'urgence : l'excès d'eau prolongé étouffe les racines.",
     ("mort", "gel"):          "Protéger du gel les espèces peu rustiques.",
+    ("mort", "froid"):        "Voiler les frileuses quand les nuits fraîchissent, ou les semer plus tard.",
     ("mort", "conflit"):      "Éclaircir : trop de concurrence pour la lumière et les ressources.",
     # Causes lues dans `[raison]` (chronique des espèces ①). Gestes de MILIEU
     # (philo #1). Pas de remède pour la fin de cycle, la sénescence, l'usure (aléa

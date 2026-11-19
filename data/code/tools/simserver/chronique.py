@@ -33,6 +33,7 @@ from collections import Counter, defaultdict
 
 from plants.catalogue import PLANT_CATALOGUE, PERENNIAL_CATALOGUE
 from sim.evenements import evenements
+from sim.causes_bilan import affiner   # famine → cause amont (stress au bilan ⑤)
 
 # Clé d'espèce = celle du catalogue (comme `sim.evenements`), jamais `__name__`.
 _CLE_DE_CLASSE = {cls: cle for d in (PLANT_CATALOGUE, PERENNIAL_CATALOGUE)
@@ -98,6 +99,19 @@ class Chronique:
         # tombent dans le même bilan annuel que leur accumulateur).
         self._appliquer(maintenant, {}, engine.game_state["week"], HORS_TICK)
 
+    def morts_du_tick(self) -> dict:
+        """{(tuile, plot, clé espèce): plante} des plantes VIVANTES au dernier
+        recensement et mortes depuis (stress au bilan ⑤). À appeler après le tick,
+        AVANT `apres_tick` (qui remplace le recensement). Le moteur retire une herbacée
+        morte dans le tick même : seule la chronique en garde la référence. Clé doublée
+        en tuile `None` (dégâts écrits avant les en-têtes `[T0]`, cf. `_appliquer`)."""
+        morts = {}
+        for p, tuile in (self._vivants or {}).values():
+            if not p.is_alive:
+                morts.setdefault((tuile, p.position, _cle(p)), p)
+                morts.setdefault((None, p.position, _cle(p)), p)
+        return morts
+
     def apres_tick(self, engine, log: list[str]) -> None:
         """Après `tick_semaine()`, AVANT le vidage du log : morts appariées à leur
         cause, levées comptées, bilan clos la dernière semaine de l'année."""
@@ -108,7 +122,11 @@ class Chronique:
         # meurt) ; on garde aussi les en-têtes de tuile `[T0]`. Mêmes événements
         # `mort` qu'un parse complet, ~0,7 ms au lieu de ~13 ms (full an 3, VM, n=10).
         utiles = [l for l in log if "meurt" in l or l.lstrip().startswith("[")]
-        for ev in evenements(utiles):
+        # Une mort de FAMINE prend la cause qui a miné la plante (gel, grêle, maladie,
+        # ombre…), lue sur son état — le log, lui, reste « meurt de faim » (golden).
+        evs = affiner(evenements(utiles), self.morts_du_tick(),
+                      engine.game_state.get("eco") or {})
+        for ev in evs:
             if ev.kind == "mort":
                 causes[(ev.tile_id, ev.pos, ev.espece)].append((ev.cause, ev.raison))
         semaine = engine.game_state["week"] - 1   # `week` est déjà incrémenté

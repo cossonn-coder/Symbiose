@@ -201,6 +201,7 @@ namespace Symbiose
 				if (p.ContainsKey("vitalite"))
 					renderer.SetBilan((float)p["vitalite"].AsDouble(), structure.FeuillageBilan,
 						p.ContainsKey("reserves") ? (float)p["reserves"].AsDouble() : -1f);
+				renderer.CauseBilan = PlanteLue.ChaineOuNull(p, "cause_bilan");   // stress au bilan ⑤
 				// Niche thermique ⑤ : même port, même teinte, même survol G qu'en pleine terre.
 				if (p.ContainsKey("posture_thermique"))
 					renderer.SetThermique((float)p["posture_thermique"].AsDouble(),

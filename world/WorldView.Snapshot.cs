@@ -256,6 +256,7 @@ namespace Symbiose
 			node.SetSymptoms(l.Symptomes);     // teinte + texture des symptômes (D33)
 			// Bilan (⑥, 0.6.21) : teinte = forces (réserves), densité = feuillage porté.
 			node.SetBilan(l.Vitalite, l.Structure.FeuillageBilan, l.Reserves);
+			node.CauseBilan = l.CauseBilan;    // « desséchée », « gelée au cœur »… (stress au bilan ⑤)
 			node.SetThermique(l.Posture, l.PalierTh);   // port + teinte du palier (niche thermique ⑤)
 			node.PlageThermique = l.Plage;     // plage vivable °C, survol G seulement (0.6.19)
 			node.FecondationVecue = l.Fecondation;   // lignée vécue, survol G seulement (0.6.20)

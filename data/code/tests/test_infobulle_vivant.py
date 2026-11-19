@@ -128,7 +128,7 @@ def test_legende():
     print("\n[D] légende")
     rep = SimServer().cmd_legende({})
     attendues = {"ok", "signes", "faune", "faune_role", "champignon", "champignons",
-                 "voix_saine", "voix_bilan", "abondance", "nourriture", "reseau"}
+                 "voix_saine", "voix_bilan", "voix_cause", "abondance", "nourriture", "reseau"}
     check("clés attendues (anciennes + nouvelles)", set(rep) == attendues, sorted(rep))
     check("nourriture : bornes du corpus",
           rep["nourriture"]["suffisante"] == SC.NOURRITURE_SUFFISANTE

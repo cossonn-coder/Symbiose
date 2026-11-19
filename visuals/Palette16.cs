@@ -68,6 +68,9 @@ namespace Symbiose
 		// brun de collet blessé) et du jaune franc de la chlorose : le tissu se meurt
 		// par manque de sève montante, pas par carence assimilable.
 		public static readonly Color SymRongeurRacinaire = new Color("b39244"); // jaune-brun sale (flétri par le collet)
+		// Oïdium (stress au bilan ⑤) : feutrage BLANC farineux posé sur le limbe — un
+		// blanc cassé, un peu gris, qui voile le vert sans le brunir (la feuille vit).
+		public static readonly Color SymOidium = new Color("e4e6da"); // blanc farineux
 
 		// === TEXTURE FOLIAIRE =================================================
 		public static readonly Color PustuleMaladie = new Color("4a3320"); // tache brun foncé (semis cryptogamique)

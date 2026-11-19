@@ -29,7 +29,7 @@ namespace Symbiose
 		// couplage à WorldView.Projection pour un simple floor).
 		private const float PlotCm = 50f;
 
-		// Ordre + libellés lisibles des 8 mémoires physiologiques (serialize.py,
+		// Ordre + libellés lisibles des mémoires physiologiques (serialize.py,
 		// clé `memoires`). L'ordre suit celui de plants/base/instance.py.
 		private static readonly (string Cle, string Label)[] Memoires =
 		{
@@ -38,6 +38,10 @@ namespace Symbiose
 			("infection_memory", "infection"), ("wind_memory", "vent"),
 			("root_herbivory_memory", "racines rongées"),
 			("stress_memory", "stress"),
+			// Stress au bilan ⑤ (pont 0.6.24) : racines perdues (asphyxie, pourridié),
+			// vaisseaux embolisés (dessèchement, gel-dégel), feutrage d'oïdium.
+			("pourriture_memory", "racines pourries"), ("embolie", "vaisseaux embolisés"),
+			("oidium", "oïdium"),
 		};
 
 		private RichTextLabel _texte;

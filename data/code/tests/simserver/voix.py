@@ -17,8 +17,8 @@ def test_voix():
     print("[voix narratives — pont ①]")
     s = ServerProc()
     init = s.send(cmd="init", config="full", seed=7)
-    check("protocole bumpé à 0.6.23 (tiges d'herbacée au sol, ③)",
-          init["engine_version"] == "0.6.23", init.get("engine_version"))
+    check("protocole bumpé à 0.6.24 (causes en mots, stress au bilan ⑤)",
+          init["engine_version"] == "0.6.24", init.get("engine_version"))
     import platform
     check("init porte la version de Python du moteur (fluidité PC ①)",
           init.get("python", {}).get("version") == platform.python_version(),

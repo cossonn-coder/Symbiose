@@ -26,7 +26,7 @@ Départ = `e24a23d8cb09…` (fin de `sprint_lisibilite_bilan`). ① **INTACT** (
 | ③ | `03_maladies_racines.md` — mildiou, oïdium, fonte, asphyxie, pourriture, campagnol | **FAIT** (golden RE-FIGÉ `bd5e11ab…`, non commité) |
 | ②bis | (pas de kickoff — décision Nico 2026-11-19) grêle sur toutes les plantes | **FAIT** (golden RE-FIGÉ `f5876f5a…`, non commité) |
 | ④ | `04_vieillesse_cycle_mycorhize.md` — vieillesse, fin de cycle, paiement fongique | **FAIT** (golden RE-FIGÉ `bce813af…`, non commité) |
-| ⑤ | `05_vue.md` — signes, info-bulle, banc, clôture D140 G | à faire |
+| ⑤ | `05_vue.md` — signes, info-bulle, banc, clôture D140 G | **FAIT** (golden INTACT `bce813af…`, pont 0.6.24, non commité) |
 
 ## Contrôle commun à chaque tronçon
 Critères d'ouverture du sprint A toujours tenus (`tests/test_ouverture_vivante.py`) ;
@@ -258,7 +258,67 @@ perf tick `full` ≤ +10 % ; suites `tests/` vertes ; jamais `test_epaisseur_500
   moins remplies d'une mère affamée n'ont aucun signe ; `part_racinaire`/`graines_reserves` non
   exportés au pont.
 
+## Acquis du ⑤ (2026-11-19) — vue, causes en mots, banc, clôture
+- **Causes amont** : `sim/causes_bilan.py` (neuf, pur, 57 LDC). `cause_amont(plant, eco)` : la
+  famine prend la cause qui a miné la plante, dans l'ordre marque de tissus retirés (gel,
+  grêle, froid, brûlure, maladie) / oïdium > racines perdues (≥ 0,25 : asphyxie si sol
+  asphyxiant, sinon maladie) > embolie ≥ ½ seuil > **facteur limitant du dernier bilan**
+  (`plant.limitant` : ombre, sec, chaud, noyé, froid) > signe chronique. **Écart au kickoff
+  (mesuré)** : lire d'abord les signes donnait « herbivorie » au poivron mort à l'ombre (signe
+  « collet rongé » 0,25, signe d'ombre sous seuil) → le limitant passe avant les signes.
+  Le log du moteur est INCHANGÉ (il entre dans le golden) : l'affinage est fait par les
+  LECTEURS — `journal.consigner(…, affineur=None)` (param neuf), `Chronique.morts_du_tick()`
+  (le moteur retire une herbacée morte dans le tick même : seule la chronique en garde la
+  référence) et `apres_tick`. Carnet : `("mort", "froid")` D/I + concept météo + remède (aide).
+- **Signes** : `semiologie.secheresse` = max(soif, embolie / SEUIL_EMBOLIE) → la plante embolisée
+  reste beige et pendante après la pluie (posture `_drought` existante) ; détecteur NEUF
+  `oidium` (= `plant.oidium`, priorité 2,5) + corpus `SIGNES["oidium"]` (concept maladie,
+  carnet D/I, fiche 1-3) ; 14 signes (test_signes_legende mis à jour). Gel noirci : DÉJÀ rendu
+  (marque `gel` → palier « gel » → teinte `ThNoirci`, Thermique.cs) — rien à ajouter.
+- **Pont 0.6.24** : `cause_bilan` par plante vivante (sol + conteneur) ∈ {dessechee, gelee,
+  racines, age} ou null (`voix_cause` : embolie ≥ 0,45, marque gel ≥ 0,5, racines ≥ 0,25,
+  déclin sénescent ≥ 0,5 — **seuils non mesurés, réglage F5**) ; `memoires.embolie/oidium` ;
+  légende `voix_cause`. Snapshot `full` s10→s40 seed 42 avant/après : seules les 3 clés
+  ajoutées (207 plantes) + 4 plantes dont `leaf_symptoms` gagne `secheresse` (embolie de trèfle)
+  + perf volatile. 4 tests de version suivis + `test_infobulle_vivant` (clé de légende).
+- **C#** : `Palette16.SymOidium` (blanc farineux), `ColorantTints["oidium"]`, `SeuilTeinte["oidium"]
+  = 0,05` (**non mesuré** au banc seuil) ; `PlantRenderer.CauseBilan` (Bilan.cs), lu par
+  `PlanteLue`/`MajPlante` et les conteneurs ; info-bulle : ligne « voix de la cause » sous la
+  voix du bilan (Maj+F3 : `cause_bilan : clé`) ; dossier debug : racines pourries, vaisseaux
+  embolisés, oïdium. `dotnet build` vert.
+- **Banc `stress_au_bilan`** (s12, sans warmup, férale coupée) : FAMINE (poivron au mur nord),
+  DESTRUCTION (jeune chêne, campagnols 0,9), HYDRAULIQUE (2 chênes de 8 ans sur sable sec,
+  embolie 0,6 ; l'ouest SENSIBLE gène `tolerance_secheresse` 0,5), RACINES (pommier 6 ans,
+  argile gorgée, racines 0,85, réserves 0,06), FIN_DE_CYCLE (phacélie fleurie), VIEILLESSE
+  (consoude à 97 % de L, réserves 0,4). Morts [seed 42, n=1] : chêne annelé s12, pommier s14
+  (carnet asphyxie), phacélie s14, chêne sensible desséché s15 (réserves 0,84), consoude
+  sénescence s15, poivron s19 (carnet **ombre**), chêne tolérant de faim s29 (carnet
+  sécheresse). Oracle à la demande `tests/test_banc_stress_au_bilan.py` (vert) ; mesure
+  `mesures/banc_causes.py`. Test neuf `tests/test_causes_bilan.py` (20/20, < 1 s).
+- Contrôles : golden `bce813af…` INTACT ; `test_ouverture_vivante` tenu (0/13, 23/123 = 18,7 %, 0 rejet) ;
+  157 suites : rouges = celles de HEAD seulement (`test_peripherie`, `test_population`, 6 bancs) ;
+  `test_signes_legende` (14 / 20 signes) et `test_chronique` (game_state sans `eco` toléré) adaptés.
+- LDC : `causes_bilan.py` 57, `stress_au_bilan.py` 81, `semiologie.py` 87, `signes_corpus.py` 253,
+  `chronique.py` 140, `serialize.py` 331 (🟡, était 326), `carnet.py` 304 (🟡, était 301),
+  `WorldView.InfoBulle.cs` 196, `PlantRenderer.cs` 292.
+
+## F5 pour Nico (banc `stress_au_bilan`, ouvre en s12)
+1. HYDRAULIQUE (sud, 2ᵉ tuile) : deux chênes flétris, beiges ; info-bulle « desséchée, ses
+   vaisseaux ne montent plus l'eau ». Ils NE se redressent PAS après une pluie. L'ouest meurt
+   vers s15 encore feuillu ; l'est tient, puis meurt de faim (~s29).
+2. RACINES (3ᵉ tuile) : pommier « racines pourries, elle boit mal », mort vers s14 ; carnet
+   « Noyée… ».
+3. VIEILLESSE (5ᵉ tuile) : consoude « à bout d'âge », morte vers s15 ; carnet « vieux pied ».
+4. FIN_DE_CYCLE : phacélie sèche sur pied vers s14 ; DESTRUCTION : jeune chêne annelé dès s12.
+5. FAMINE (mur nord) : poivron « à bout de forces », mort vers s19 ; le carnet dit « affamée de
+   lumière » et non plus « épuisée ».
+6. À ressentir : seuils de `voix_cause` ; teinte et seuil de l'oïdium (aucune espèce du banc
+   n'en porte — le voir en jeu sur la courgette) ; ligne de cause dans l'info-bulle trop
+   bavarde ou non.
+
 ## REPRISE
-①②②bis③④ faits (non commités). Lire `CLAUDE.md`, ce fichier, l'`00_etat.md` du sprint A et de
-`sprint_lisibilite_bilan` (hauteur acquise), la conception, puis le kickoff du premier
-tronçon « à faire » (⑤). Golden courant `bce813af376d…` (④). Lancer : `/sprint-auto sprint_stress_au_bilan`.
+Sprint **CLOS côté code** (①②②bis③④⑤ ; ⑤ non commité). Golden `bce813af376d…`. Reste : commit
+de ⑤, F5 de Nico (recette ci-dessus) → D140 (G) close. Puis reprise de
+`sprints/vegetal/genetique/sprint_depart_jardin/` ④ (`/sprint-auto sprint_depart_jardin`).
+Dette ouverte au ⑤ : D142 (exsudats non lus par le réseau fongique ; longévités raccourcies
+par la vieillesse au bilan, ortie −21 % [n=1]).

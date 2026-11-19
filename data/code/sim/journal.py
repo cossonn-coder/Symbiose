@@ -53,7 +53,8 @@ def ensure_player(game_state: dict, player: str) -> dict:
 
 
 # --- Consignation hors tick (§1.4) -------------------------------------------
-def consigner(game_state: dict, player: str, log: list[str], semaine: int) -> int:
+def consigner(game_state: dict, player: str, log: list[str], semaine: int,
+              affineur=None) -> int:
     """Point d'entrée HORS TICK, appelé par le DRIVER après `tick_semaine()` et
     AVANT le vidage du `log`. Symétrique de `maitrise_detection.detecter()` et de
     `vigueur.tick_player_vigueur()`. PUR au sens golden : il LIT le `log`, n'avance
@@ -61,10 +62,16 @@ def consigner(game_state: dict, player: str, log: list[str], semaine: int) -> in
 
     Pour chaque `Evenement` du flux (`evenements.evenements(log)`), il appende une
     entrée bornée à la tranche du joueur. Renvoie le nombre d'entrées ajoutées
-    (utile aux tests ; sans valeur de gameplay)."""
+    (utile aux tests ; sans valeur de gameplay).
+
+    `affineur` (stress au bilan ⑤, optionnel) : `list[Evenement] -> list[Evenement]`
+    appliqué au flux avant consignation — le driver y passe `causes_bilan.affiner`
+    (une mort de famine prend la cause qui a miné la plante : gel, grêle, maladie…).
+    None = flux brut du log, comportement historique."""
     st = ensure_player(game_state, player)
     ajoutes = 0
-    for ev in evenements(log):
+    evs = evenements(log)
+    for ev in (affineur(evs) if affineur else evs):
         _appender(st, {
             "semaine": semaine,
             # `zone` = identité stable §1.3 : (tile_id, r, c). `pos` est (r, c) ou

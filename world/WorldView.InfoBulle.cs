@@ -51,6 +51,8 @@ namespace Symbiose
 		private readonly Dictionary<string, string> _voixSaine = new();
 		// Voix du bilan (légende `voix_bilan`, plante vivante ⑥) : clairsemé / épuisé / refait.
 		private readonly Dictionary<string, string> _voixBilan = new();
+		// Voix de la cause (légende `voix_cause`, stress au bilan ⑤) : desséchée / gelée…
+		private readonly Dictionary<string, string> _voixCause = new();
 		// Appris (snapshot `player.appris`), relus à chaque application de snapshot.
 		private readonly HashSet<string> _signesAppris = new(), _fauneApprise = new();
 		// Observations de signe déjà envoyées : "espèce|signe|saison" (dédup vue).
@@ -92,6 +94,9 @@ namespace Symbiose
 			if (lg.ContainsKey("voix_bilan"))   // pont ≥ 0.6.21 ; absent → voix du bilan muette
 				foreach (var (k, v) in lg["voix_bilan"].AsGodotDictionary())
 					_voixBilan[k.AsString()] = v.AsString();
+			if (lg.ContainsKey("voix_cause"))   // pont ≥ 0.6.24 ; absent → voix de la cause muette
+				foreach (var (k, v) in lg["voix_cause"].AsGodotDictionary())
+					_voixCause[k.AsString()] = v.AsString();
 			ChargerLegendeVivant(lg);   // bêtes / carpophores (WorldView.InfoBulleVivant.cs)
 		}
 
@@ -213,13 +218,16 @@ namespace Symbiose
 						sb.Append(PlantRenderer.SigneVisible(c, it, 32f) ? " (hors palier)" : " (sous seuil)");
 				}
 				if (signe != null) Ligne(sb, $"visible ici : {signe}");
+				if (plante.CauseBilan != null) Ligne(sb, $"cause_bilan : {plante.CauseBilan}");
 				return;
 			}
 			string bilan = VoixBilan(plante);
+			string cause = VoixCause(plante);
 			if (signe == null)
 			{
 				string voix = bilan ?? VoixSaine(plante);   // le bilan prime sur « vert franc/terne »
 				if (voix != null) Ligne(sb, voix);
+				if (cause != null) Ligne(sb, cause);
 				return;
 			}
 			if (_legendeSignes.TryGetValue(signe, out var lg))
@@ -229,7 +237,14 @@ namespace Symbiose
 					sb.Append(" — ").Append(lg.Cause.ToLowerInvariant());
 			}
 			if (bilan != null) Ligne(sb, bilan);   // le signe dit la cause vue, le bilan l'effet
+			if (cause != null) Ligne(sb, cause);   // et ce qui la mine, en mots (⑤)
 		}
+
+		// Voix de la cause (stress au bilan ⑤) : ce qui mine la plante — vaisseaux rompus,
+		// bourgeons gelés, racines pourries, grand âge. Clé choisie par le moteur, texte
+		// de la légende Python ; la vue ne décide rien.
+		private string VoixCause(PlantRenderer plante)
+			=> plante.CauseBilan != null && _voixCause.TryGetValue(plante.CauseBilan, out var t) ? t : null;
 
 		private static void Ligne(StringBuilder sb, string texte)
 		{

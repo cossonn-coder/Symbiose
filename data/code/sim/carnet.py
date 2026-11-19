@@ -96,6 +96,7 @@ CONCEPT_DE: dict[tuple[str, str | None], str] = {
     ("mort", "herbivorie"):       "ravageurs",
     ("mort", "maladie"):          "maladie",
     ("mort", "grele"):            "météo",
+    ("mort", "froid"):            "météo",   # famine après lésions de froid (stress au bilan ⑤)
     ("mort", "vent"):             "météo",
     ("mort", "secheresse"):       "eau",
     ("mort", "ombre"):            "lumière",
@@ -298,6 +299,8 @@ GABARIT: dict[tuple[str, str | None, str], str] = {
     ("mort", "maladie", _I): "La maladie a emporté {e} {l} : l'humidité stagnante et un sol chargé d'inoculum lui ont donné prise.",
     ("mort", "grele", _D): "{e} {l} gît hachée après l'averse de grêle.",
     ("mort", "grele", _I): "La grêle {l} a eu {e} — un plant tendre et découvert, rien ne l'abritait.",
+    ("mort", "froid", _D): "{e} {l}, ses feuilles détrempées par le froid, ne s'en est pas remise.",
+    ("mort", "froid", _I): "Le froid {l} a eu {e} : chaque nuit trop fraîche lui ôtait des feuilles, et sans feuilles elle s'est épuisée.",
     ("mort", "vent", _D): "{e} {l} est cassée net au collet après le coup de vent.",
     ("mort", "vent", _I): "Le vent {l} a brisé {e} : une tige filée, jamais secouée, sans abri pour casser la rafale.",
     ("mort", "secheresse", _D): "{e} {l} s'est desséchée sur pied.",

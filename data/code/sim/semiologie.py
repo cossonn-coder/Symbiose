@@ -52,6 +52,9 @@ from sim.effects.perturbations import (DROUGHT_DAMAGE_THRESHOLD, HERBIVORY_GAIN,
 # d'acclimatation rampe de EXPR_MIN (génotype nu, pas d'endurcissement) à
 # EXPR_MAX (durcissement maximal) — DRY, pas de nombre dupliqué.
 from plants.genetics import ADAPTOGENIC_GENES, EXPR_MIN, EXPR_MAX
+# Défaillance hydraulique (stress au bilan ①) : le dessèchement se lit jusqu'au seuil
+# même où la plante meurt (DRY : la constante de la mécanique, pas une copie).
+from sim.embolie import SEUIL_EMBOLIE
 
 # Densité locale `ravageur + chenille` sous laquelle `herbivory_pressure` ne fait
 # RIEN (son garde-fou `if pressure < 0.005`, avec pression = densité·HERBIVORY_GAIN).
@@ -103,8 +106,17 @@ def secheresse(plant, eco, saison) -> float:
     Miroir de `drought_stress_damage` — même `drought_memory` (intégration lente du
     déficit) et même seuil DROUGHT_DAMAGE_THRESHOLD : le signe apparaît quand un
     stress INSTALLÉ (pas une semaine sèche isolée) commence à abîmer le tissu.
-    Couvre la canicule (qui n'est qu'une chute d'humidité). Plein à mémoire saturée."""
-    return _ramp(plant.drought_memory, DROUGHT_DAMAGE_THRESHOLD, 1.0)
+    Couvre la canicule (qui n'est qu'une chute d'humidité). Plein à mémoire saturée.
+
+    DESSÈCHEMENT (stress au bilan ⑤) : depuis ①, la sécheresse extrême tue par
+    EMBOLIE (`sim/embolie.py`) et non plus par `drought_stress_damage` (supplanté).
+    Le signe prend donc le MAX des deux lectures : la mémoire de soif (le tissu a soif
+    maintenant) et l'embolie (vaisseaux rompus), en rampe de 0 au seuil de mort
+    `SEUIL_EMBOLIE`. L'embolie ne se répare pas à la pluie (seul le bois neuf la
+    dilue) : la plante embolisée RESTE flétrie après l'averse — c'est ce qu'on voit
+    d'une défaillance hydraulique (posture et teinte du signe `secheresse`, vue)."""
+    soif = _ramp(plant.drought_memory, DROUGHT_DAMAGE_THRESHOLD, 1.0)
+    return max(soif, _ramp(plant.embolie, 0.0, SEUIL_EMBOLIE))
 
 
 def ombre(plant, eco, saison) -> float:
@@ -177,6 +189,15 @@ def senescence(plant, eco, saison) -> float:
     return max(0.0, min(1.0, (plant.age_years - onset * L) / denom))
 
 
+def oidium(plant, eco, saison) -> float:
+    """Oïdium (stress au bilan ③/⑤) : feutrage BLANC farineux sur le limbe. Lecture
+    directe de `plant.oidium` ∈ [0,1] — la couverture même que le bilan lit pour
+    raboter la photosynthèse (`sim/bilan.py`, OIDIUM_RENDEMENT) : le signe est la
+    mécanique, il ne peut pas mentir. S'efface quand le feutrage s'efface (feuilles
+    neuves, ou tombées). Aucune espèce sensible au smoke ⇒ 0 (golden NEUTRE)."""
+    return min(1.0, plant.oidium)
+
+
 def acclimatation(plant, eco, saison) -> float:
     """Durcissement plastique VISIBLE (plasticité ⑤, P3 — philo #5/#6). Une plante
     qui a VÉCU un stress doux sur-exprime ses gènes adaptogènes (`expression` > 1) ;
@@ -210,6 +231,7 @@ DETECTEURS = (
     ("rongeur_racinaire", rongeur_racinaire),
     ("ombre", ombre),
     ("senescence", senescence),
+    ("oidium", oidium),
     ("acclimatation", acclimatation),
 )
 
@@ -218,6 +240,9 @@ DETECTEURS = (
 # ÉVÉNEMENTIELLES (maladie/gel/grele) que le ② viendra fusionner.
 PRIORITE = {
     "asphyxie": 0, "secheresse": 1, "maladie": 2, "ravageurs": 3,
+    # Oïdium (⑤) : maladie foliaire lente (rabote sans détruire) — juste après les
+    # taches cryptogamiques, avant la morsure.
+    "oidium": 2.5,
     # L'herbivorie racinaire est un dégât AIGU (collet rongé) mais dont la cause est
     # cachée : juste après le ravageur foliaire (même famille de morsure), avant les
     # carences lentes (chlorose/ombre/sénescence).

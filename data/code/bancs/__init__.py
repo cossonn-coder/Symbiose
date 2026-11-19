@@ -37,6 +37,7 @@ from . import gestes_lisibles as _gestes_lisibles
 from . import niche_thermique as _niche_thermique
 from . import caracteres_vivants as _caracteres_vivants
 from . import plante_vivante as _plante_vivante
+from . import stress_au_bilan as _stress_au_bilan
 
 BANCS = {
     "secheresse_sable": secheresse_sable,
@@ -90,6 +91,8 @@ BANCS = {
     "caracteres_vivants": _caracteres_vivants.caracteres_vivants,
     # plante vivante ⑥ (D140 G) : limaces (semis/chêne), ombre, refeuillaison, souche.
     "plante_vivante": _plante_vivante.plante_vivante,
+    # stress au bilan ⑤ (D140 G) : une plante par cause de mort, côte à côte.
+    "stress_au_bilan": _stress_au_bilan.stress_au_bilan,
 }
 
 # Hook POST-INIT par banc (palette de gestes ⑤) : callback OPTIONNEL `(game_state,
@@ -124,7 +127,9 @@ BANC_POST_INIT = {"palette_gestes": _palette_gestes.post_init,
                   # `niche_thermique` (D139 ⑤) : germination férale coupée (squelettes).
                   "niche_thermique": _niche_thermique.post_init,
                   # `plante_vivante` (D140 G ⑥) : germination férale coupée.
-                  "plante_vivante": _plante_vivante.post_init}
+                  "plante_vivante": _plante_vivante.post_init,
+                  # `stress_au_bilan` (D140 G ⑤) : germination férale coupée.
+                  "stress_au_bilan": _stress_au_bilan.post_init}
 
 # PLAN DE TEST par banc (gestes lisibles ⑤, `plan_test.py`) : liste ordonnée
 # `(verbe, cible[, cible2])` que la vue déroule comme des clics du joueur (touche B).
@@ -198,7 +203,10 @@ BANC_WEEK_DEPART = {"grimpantes": 9, "luxuriance": 9, "diversite_fondatrice": 9,
                     # `plante_vivante` (D140 G ⑥) : début juin, végétation pleine ; sans
                     # warmup (③) la vue ouvre en s12 — consoudes broutées à 0,2, poivrons
                     # à l'ombre morts en s17-s19 [seed 42, n=1].
-                    "plante_vivante": 12}
+                    "plante_vivante": 12,
+                    # `stress_au_bilan` (D140 G ⑤) : même départ que `plante_vivante`
+                    # (début juin, le poivron à l'ombre y meurt de faim), sans warmup.
+                    "stress_au_bilan": 12}
 
 # WARMUP F5 par banc (niche thermique ⑤) : semaines que la vue simule avant le premier
 # dessin, à la place de son défaut (`WorldView.WarmupWeeks`, 12). Le pont le renvoie à
@@ -208,7 +216,7 @@ BANC_WEEK_DEPART = {"grimpantes": 9, "luxuriance": 9, "diversite_fondatrice": 9,
 # `plante_vivante` (③ lisibilité du bilan) : AUCUN warmup — la vue ouvre sur l'état
 # posé par la fabrique (consoudes broutées à 0,2 de feuillage) ; une semaine de warmup
 # les montrait déjà refaites à 0,35 (refeuillaison ≤ 0,15/sem, `sim/bilan.py`).
-BANC_WARMUP = {"niche_thermique": 2, "plante_vivante": 0}
+BANC_WARMUP = {"niche_thermique": 2, "plante_vivante": 0, "stress_au_bilan": 0}
 
 
 def banc_categorie(nom: str) -> str:

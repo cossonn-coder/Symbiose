@@ -49,6 +49,7 @@ from sim.engine.transpiration import feuillage_visible
 # par la liste `leaf_symptoms`. Recalcul pur côté serveur (moteur = source de
 # vérité, zéro recalcul C#) → golden NEUTRE.
 from sim import semiologie
+from sim.causes_bilan import voix_cause   # « desséchée », « gelée au cœur »… (stress au bilan ⑤)
 # Posture thermique par paliers (niche thermique ④, D139) : froid → confort → chaud,
 # lue sur les limites et pentes de dégât du moteur. Lecture pure → golden NEUTRE.
 from sim.engine.posture_thermique import etat_thermique
@@ -224,6 +225,10 @@ class SerializeMixin:
                 # sans chiffre (philo #5). Lecture pure → golden neutre.
                 base["feuillage_bilan"] = round(p.feuillage, 3)
                 base["reserves"] = round(p.reserves, 3)
+                # Stress au bilan ⑤ (0.6.24) : ce qui MINE la plante, en clé de
+                # `voix_cause` (desséchée / gelée / racines / âge), null sinon — la vue
+                # l'écrit sous la voix du bilan. Lecture pure → golden neutre.
+                base["cause_bilan"] = voix_cause(p)
                 # Dossier de plante DEBUG (sprint retours UI/HUD T3, outil de test) :
                 # l'état physiologique COURANT lu par le panneau au clic d'inspection
                 # (WorldView.Dossier.cs → DossierPlantePanel). Trois ajouts LECTURE
@@ -248,6 +253,10 @@ class SerializeMixin:
                     "root_herbivory_memory": round(p.root_herbivory_memory, 3),
                     "pourriture_memory": round(p.pourriture_memory, 3),
                     "stress_memory": round(p.stress_memory, 3),
+                    # Stress au bilan ⑤ (0.6.24) : vaisseaux embolisés (①) et feutrage
+                    # d'oïdium (③), lus par le dossier debug.
+                    "embolie": round(p.embolie, 3),
+                    "oidium": round(p.oidium, 3),
                 }
                 base["expression"] = {g: round(f, 3)
                                       for g, f in p.expression.items() if f != 1.0}
@@ -653,6 +662,7 @@ class SerializeMixin:
                     pd["etat"] = p.etat
                     pd["feuillage_bilan"] = round(p.feuillage, 3)   # bilan (⑥, 0.6.21)
                     pd["reserves"] = round(p.reserves, 3)
+                    pd["cause_bilan"] = voix_cause(p)   # stress au bilan ⑤ (0.6.24)
                     pd["leaf_symptoms"] = semiologie.leaf_symptoms(p, eco, saison)
                     pd["posture_thermique"], pd["palier_thermique"] = etat_thermique(p, eco)
                     pd["plage_thermique"] = plage_thermique(p)   # survol G (debug, ⑤)

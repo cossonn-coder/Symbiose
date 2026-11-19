@@ -17,6 +17,7 @@ from sim import vigueur as V      # état Vigueur joueur (ensure/spend/gain, D11
 from sim import maitrise as M     # amorçage encyclopédie de démarrage (option d'init T2)
 from plants.catalogue import PLANT_CATALOGUE, PERENNIAL_CATALOGUE  # clés d'espèces (encyclo fournie)
 from sim import journal as J      # ledger d'événements hors tick (voix narratives ②)
+from sim.causes_bilan import affiner   # famine → cause amont au carnet (stress au bilan ⑤)
 from sim.seeds import PlayerSeedBank, Seed  # banque-joueur (source de planter, remplie à la récolte)
 # Type de base des champs écologiques (tranche 6·C) : le registre de la
 # commande `fields` se DÉCOUVRE par introspection (tout attribut GridField
@@ -333,7 +334,11 @@ class CommandsMixin:
         # Fleurs fanées sans graines (D139 caractères ⑤) : lignes écrites HORS tick,
         # AVANT `consigner` (le carnet et la maîtrise les lisent dans le même log).
         gs["log"].extend(noter_fanaisons(gs, self._fanaisons))
-        J.consigner(gs, gs["current_player"], gs["log"], gs["week"] - 1)
+        # Stress au bilan ⑤ : une mort de famine est consignée sous la cause qui a
+        # miné la plante (gel, grêle, maladie…) — morts du tick tenues par la chronique.
+        morts = self._chronique.morts_du_tick()
+        J.consigner(gs, gs["current_player"], gs["log"], gs["week"] - 1,
+                    affineur=lambda evs: affiner(evs, morts, gs["eco"]))
         # Chronique (D127) : 3ᵉ lecture du MÊME log (après `consigner` et
         # `observer_apres_tick`) — partager le flux changerait la signature de
         # `sim.journal.consigner` (moteur, hors périmètre) ; coût mesuré au ②.

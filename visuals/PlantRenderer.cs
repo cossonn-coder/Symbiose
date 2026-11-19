@@ -105,6 +105,9 @@ namespace Symbiose
 			// forte) le masque, mais sur une plante sans pathologie le glauque RÉVÈLE
 			// qu'elle s'est endurcie (apprenable, philo #5).
 			["acclimatation"] = Palette16.SymAcclimatation, // glauque (cire) bleu-gris
+			// oïdium (stress au bilan ⑤) : feutrage blanc qui voile la photosynthèse sans
+			// détruire la feuille (moteur : `plant.oidium` rabote la production).
+			["oidium"] = Palette16.SymOidium,           // blanc farineux
 		};
 		// Teinte appliquée à intensité 1 (≤1 pour garder un fond vert lisible même au
 		// pic). Ex-ChloroseAmount=0.6 ; un poil relevé : l'intensité module désormais.
@@ -133,6 +136,7 @@ namespace Symbiose
 			["ombre"] = 0.02f,              // ×4 palette ON
 			["rongeur_racinaire"] = 0.2f,   // ×4 palette ON
 			["acclimatation"] = 0.05f,      // ×4 palette ON
+			["oidium"] = 0.05f,             // NON MESURÉ (stress au bilan ⑤) — à passer au banc seuil
 		};
 		// Vitalité : ApplyVitality ternit un pixel dès un manque de 0,075 (×4 palette
 		// ON ; OFF dès 0,01) → au-dessus de 0,925 le feuillage reste « vert franc ».
