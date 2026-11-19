@@ -37,7 +37,7 @@ Perf de référence à mesurer au ① (tick `full` s10-s30, commit de départ).
 | ① | `01_socle_bilan.md` — bilan en ombre + paramètres 52 espèces + banc | **FAIT** (golden intact, non commité) |
 | ② | `02_bascule_vie.md` — vitalité dérivée, famine, `erode` = tissus | **FAIT** (golden RE-FIGÉ `699edb51…`, non commité) |
 | ③ | `03_herbivorie_atteinte.md` — chaque ravageur mange ce qu'il atteint | **FAIT** (golden RE-FIGÉ `8f2dd7ad…`, non commité) |
-| ④ | `04_souches_reserve.md` — réserve de souche, rejets sans souche propre | à faire |
+| ④ | `04_souches_reserve.md` — réserve de souche, rejets sans souche propre | **FAIT** (golden INTACT `8f2dd7ad…`, non commité) |
 | ⑤ | `05_ouverture_mesure.md` — critères `full` s10→s30 + âge de la chronique | à faire |
 | ⑥ | `06_vue_banc.md` — pont, rendu du feuillage, info-bulle, banc, clôture | à faire |
 
@@ -149,6 +149,30 @@ Perf de référence à mesurer au ① (tick `full` s10-s30, commit de départ).
   `sim.effects.herbivory_pressure` — patch déjà sans effet avant ③ (perturbations lit son nom
   local) ; laissé. Signe `semiologie.ravageurs` lit toujours la densité au plot-foyer (inchangé).
 
+## Acquis du ④ (2026-11-19)
+- `deposer_mort` fige `reserve_souche` (sem) = (`reserves` ou `reserves_detruites`) ×
+  `capacite_reserve`, si `souche_vivante`. **Écart au kickoff (nécessaire)** : le setter
+  `vitalite = 0` (destruction) vide les réserves AVANT `deposer_mort` → toute souche
+  aurait eu 0 ; il garde désormais `reserves_detruites` (la coupe/le gel tuent la tige,
+  pas l'amidon racinaire). Famine/herbivorie (réserves vidées) → 0 → aucun rejet.
+- `COUT_REJET` 3 sem (`sim/souche.py`) = la plus grande réserve de plantule ligneuse
+  (chêne 60 × 0,05) ; le rejet part réserves pleines (`min(1, COUT/C)`). N = min(capacité
+  d'espèce, réserve // COUT) ≤ `N_REJETS_MAX`, réserve débitée.
+- `AGE_SOUCHE_PROPRE` 3 ans dans le critère pur `souche_vivante` (`perturbations.py`) :
+  vaut pour TOUT ligneux jeune (semis compris, pas de drapeau « rejet ») — plus simple,
+  biologiquement défendable (pas de collet lignifié avant 2-4 saisons) ; s'applique aussi
+  à la perte de couronne.
+- Perte de couronne d'un arbre vivant : puise ≤ `REFEUIL_PART_RESERVES` (½) de ses
+  réserves × C (même prudence que la refeuillaison), débite `reserves`.
+- Banc `tests/test_souche_reserve.py` 6/6 ; `test_rejets_souche` 9/9 inchangé ;
+  bois_mort, dormance_clonale, croissance, evenements, figuier_realiste, catalogue_mulch,
+  caracteres_signes, peripherie_{voix,pont,gestes} verts.
+- Contrôle `full` seed 42 s10→s61 [n=1, `mesures/diag_chene.py`] : **0 chêne né, 0 rejet,
+  AVANT comme APRÈS ④** (HEAD ③ en worktree) — depuis l'herbivorie ③, aucun ligneux à
+  souche ne meurt la 1re année : le contrôle n'est pas discriminant, la preuve est le banc.
+  À relire au ⑤ sur un horizon plus long si des arbres meurent.
+- LDC : `perturbations.py` 310 (🟡, était 303), `souche.py` 86, `instance.py` 286.
+
 ## Diagnostic d'origine (2026-11-18, seed 42, n=1 par cas)
 Ouverture s10 → morts des 136 posées à s21 : tel quel 121 ; faune pré-roulée 130 ;
 prédateurs seuls pré-roulés 97 ; `stress_memory` amorcée 0,12 → 49. Semis de
@@ -158,6 +182,6 @@ naissances par espèce/semaine via `SimServer().cmd_init({"config":"full","seed"
 puis `engine.tick_semaine()`.
 
 ## REPRISE
-①②③ faits (③ non commité). Lire `CLAUDE.md`, ce fichier, la conception, puis
-`04_souches_reserve.md` (prochain tronçon).
+①②③④ faits (④ non commité). Lire `CLAUDE.md`, ce fichier, la conception, puis
+`05_ouverture_mesure.md` (prochain tronçon).
 Golden courant `8f2dd7add938b4cb…`. Lancer : `/sprint-auto sprint_plante_vivante`.

@@ -200,6 +200,13 @@ class PlantInstance:
     # rejets a eu lieu (une seule par mort, `sim.souche`). Défauts → golden inchangé.
     souche_vivante: bool = False
     souche_traitee: bool = False
+    # Réserve de la souche (D140 G ④), en semaines d'entretien : figée par
+    # `deposer_mort` (réserves à la mort × capacité), puisée par chaque rejet
+    # (`sim.souche.COUT_REJET`). `reserves_detruites` garde les réserves qu'avait la
+    # plante à l'instant d'une DESTRUCTION (setter `vitalite = 0`) : la coupe ou le
+    # gel tuent la tige, pas l'amidon des racines. Défauts 0 → golden inchangé.
+    reserve_souche: float = 0.0
+    reserves_detruites: float = 0.0
     perte_couronne: float = 0.0     # part de la couronne perdue récemment [0-1] (③) :
                                     # ⊕= bois perdu / bois avant la perte (casse, cladoptose,
                                     # effondrement, taille) ; s'oublie en ~1 an de végétation.
@@ -567,6 +574,8 @@ class PlantInstance:
         réserves, plus de feuilles. Une écriture > 0 (bancs, tests qui posent un état)
         règle des réserves qui RELISENT exactement `v`, feuillage intact."""
         if v <= 0.0:
+            if self.reserves > 0.0:
+                self.reserves_detruites = self.reserves   # la souche s'en souvient (④)
             self.reserves = 0.0
             self.feuillage = 0.0
         else:

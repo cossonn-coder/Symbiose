@@ -21,6 +21,20 @@ Ici, une passe par tick sur la tuile :
     de `sim/clonal.py`) posé dans un disque de RAYON_REJET_CM autour du mort ;
   • une seule vague par mort (`souche_traitee`).
 
+Réserve finie (D140 G ④, `conception_plante_vivante.md` §6) — la souche ne rejette
+qu'avec ce qu'elle a mis de côté :
+  • `reserve_souche` (semaines d'entretien) est figée à la mort par `deposer_mort` =
+    réserves de l'arbre × sa capacité ; une famine la laisse vide → aucun rejet ;
+  • chaque rejet en COÛTE `COUT_REJET` et part avec cette réserve (il est porté par la
+    souche, pas par sa propre photosynthèse) ; N = min(capacité d'espèce, réserve /
+    COUT_REJET), toujours ≤ N_REJETS_MAX ;
+  • un rejet n'a pas de souche propre avant `AGE_SOUCHE_PROPRE` ans (critère pur
+    `souche_vivante`) : s'il meurt jeune, il ne rejette pas → fin de la cascade
+    rejet → mort → rejets (×3 par vague, mesurée le 2026-11-18) ;
+  • perte de couronne d'un arbre vivant : la vague puise dans SES réserves, au plus
+    la moitié (`REFEUIL_PART_RESERVES`, même prudence que la refeuillaison) — la
+    souche ne se suicide pas pour rejeter.
+
 Perte de couronne (③) — l'arbre VIVANT qui perd d'un coup une grosse part de son
 bois (casse de tempête ou de neige, cladoptose, effondrement, taille du joueur)
 perd ses bourgeons et sa dominance apicale : la souche réagit comme à une coupe.
@@ -57,6 +71,8 @@ import math
 from calendrier import saison_de, wiy_de
 from constants import PLOT_CM
 from fields import _hash_noise
+from plants.physiologie import capacite_reserve
+from sim.bilan import REFEUIL_PART_RESERVES
 from sim.capacite import recrutement_bloque
 from sim.effects.perturbations import souche_vivante as souche_saine   # critère pur ②
 
@@ -74,6 +90,13 @@ SEUIL_PERTE_COURONNE = 0.5
 # Part de la mémoire oubliée par semaine de végétation [ordre de grandeur] :
 # ×0,94/sem → ~0,09 après les 39 semaines actives d'une année (« vidée en ~1 an »).
 PERTE_COURONNE_OUBLI = 0.06
+# Coût d'un rejet pour la souche, en semaines d'entretien (D140 G ④). Le rejet part
+# avec une réserve de plantule PLEINE prise sur la souche ; la plus grande capacité
+# d'un ligneux qui vient de naître est celle du chêne, 60 sem × FACTEUR_PLANTULE 0,05
+# = 3 sem (les autres sont au plancher C_PLANTULE_MIN = 2) → 3 sem couvrent tout
+# rejet. Une vague pleine (4 rejets) coûte 12 sem : un chêne adulte (60) la paie
+# dès 20 % de réserves, un figuier (30) dès 40 %, un arbre affamé jamais.
+COUT_REJET = 3.0
 
 
 def nombre_rejets(cls, intensite: float = 1.0) -> int:
@@ -131,6 +154,8 @@ def _vague(tile, souche, seed: int, week: int, n: int) -> list:
         rejet.expression.update(souche.expression)
         rejet.form_seed = souche.form_seed
         rejet.x_cm, rejet.y_cm = tx, ty
+        # Porté par la souche (④) : il démarre avec ce qu'elle lui donne.
+        rejet.reserves = min(1.0, COUT_REJET / capacite_reserve(rejet))
         poses.append((tr, tc))
     return poses
 
@@ -154,7 +179,10 @@ def emettre_rejets_souche(tile, seed: int, week: int) -> list[str]:
             if recrutement_bloque(tile):
                 continue
             souche.souche_traitee = True
-            poses = _vague(tile, souche, seed, week, nombre_rejets(souche.plant_class))
+            n = min(nombre_rejets(souche.plant_class),
+                    int(souche.reserve_souche // COUT_REJET))      # réserve finie (④)
+            poses = _vague(tile, souche, seed, week, n)
+            souche.reserve_souche -= len(poses) * COUT_REJET
             cause = "souche"
         elif souche.perte_couronne >= SEUIL_PERTE_COURONNE:
             if recrutement_bloque(tile):
@@ -163,8 +191,11 @@ def emettre_rejets_souche(tile, seed: int, week: int) -> list[str]:
             souche.perte_couronne = 0.0           # épisode consommé : une seule vague
             if not souche_saine(souche):
                 continue                          # souche épuisée : pas de rejet
-            poses = _vague(tile, souche, seed, week,
-                           nombre_rejets(souche.plant_class, intensite))
+            cap = capacite_reserve(souche)
+            dispo = REFEUIL_PART_RESERVES * souche.reserves * cap     # ④ : sans s'épuiser
+            n = min(nombre_rejets(souche.plant_class, intensite), int(dispo // COUT_REJET))
+            poses = _vague(tile, souche, seed, week, n)
+            souche.reserves -= len(poses) * COUT_REJET / cap
             cause = "perte de couronne"
         else:
             souche.perte_couronne *= 1.0 - PERTE_COURONNE_OUBLI

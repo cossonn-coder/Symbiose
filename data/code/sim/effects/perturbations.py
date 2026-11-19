@@ -33,6 +33,7 @@ from fields.ecofields.litiere import diam_pondere   # grosseur du squelette (⑦
 from .mutations import ReduceHealth, Mutation
 from .resolution import apply_mutations
 from .voisinage import IndexVoisinage
+from plants.physiologie import capacite_reserve   # réserve de souche (D140 G ④)
 
 
 def necromass_biomass(plant: PlantInstance) -> float:
@@ -110,6 +111,11 @@ def deposer_mort(plant: PlantInstance, eco) -> float:
     # plante sont encore celles de sa vie. Figée sur l'instance ; `sim.souche` en
     # tire une vague de rejets à la saison de végétation suivante.
     plant.souche_vivante = souche_vivante(plant)
+    # Réserve de la souche (D140 G ④) : ce que la plante avait mis de côté à sa mort
+    # (une famine la laisse vide → pas de rejet ; une coupe garde l'amidon racinaire).
+    if plant.souche_vivante:
+        plant.reserve_souche = ((plant.reserves or plant.reserves_detruites)
+                                * capacite_reserve(plant))
     return mous
 
 
@@ -394,14 +400,22 @@ def seuil_ombre(plant: PlantInstance) -> float:
 # Les mémoires de la partie AÉRIENNE (froid, vent, infection) et la sénescence
 # n'empêchent pas : la souche survit à une couronne gelée, cassée ou malade.
 SEUIL_RACINES_ATTEINTES = 0.2
+# Âge (vrai, `age_years`) sous lequel un ligneux n'a PAS de souche propre (D140 G ④)
+# [ordre de grandeur] : un collet lignifié et des racines de réserve se constituent
+# en 2-4 saisons ; avant, un rejet ou un semis qui meurt ne rejette pas — c'est ce
+# qui rompt la cascade rejet → mort → rejets (×3 par vague, mesurée le 2026-11-18).
+AGE_SOUCHE_PROPRE = 3.0
 
 
 def souche_vivante(plant: PlantInstance) -> bool:
     """La souche de `plant` peut-elle rejeter ? Vrai ssi l'espèce rejette de souche
-    (`rejet_souche > 0`) ET aucune mémoire de dommage au pied ne dépasse son seuil.
+    (`rejet_souche > 0`), qu'elle est ÉTABLIE (âge ≥ `AGE_SOUCHE_PROPRE`, ④) ET
+    aucune mémoire de dommage au pied ne dépasse son seuil.
     Pure, sans RNG. Lue à la mort (`deposer_mort`), réutilisée au ③ (perte de couronne)."""
     if getattr(plant.plant_class, "rejet_souche", 0.0) <= 0.0:
         return False
+    if plant.age_years < AGE_SOUCHE_PROPRE:
+        return False                     # pas encore de souche propre (④)
     return not (plant.shade_memory > seuil_ombre(plant)
                 or plant.drought_memory > DROUGHT_DAMAGE_THRESHOLD
                 or plant.asphyxie_memory > ASPHYXIE_HEALTH_SEUIL
