@@ -9,7 +9,9 @@ jardin qui VIT déjà quand le joueur arrive, fin mai :
      dans une tuile à sa niche (`PLACEMENTS`) ;
   2. tous les arbres pré-vieillis à l'âge de LEUR première fructification
      (`maturity_years`, au moins `AGE_ARBRES_DEMO`) — structure comprise ;
-  3. quelques graines déjà semées en terre (`SEMIS_OUVERTURE`).
+  3. quelques graines déjà semées en terre (`SEMIS_OUVERTURE`) ;
+  4. quelques pots de tendres DANS la maison (`POTS_INTERIEUR`, départ du jardin ④) :
+     semés à l'abri en mars, ils attendent d'être repiqués (`repiquer`).
 
 📖 Pédagogie (Nico) — pourquoi « pré-croître » plutôt que dérouler la simulation ?
   Dérouler 30 ans de ticks pour avoir un hêtre adulte coûterait des heures. Ici on
@@ -37,6 +39,7 @@ from sim.seeds import semer_fondateur
 from sim.precroissance import pre_croitre
 from sim.growth import grow_plant
 from sim.reproduction import is_seed_bearing
+from world import make_container, planter_dans
 
 # Ouverture juste APRÈS les saints de glace (≈ 22 mai) : la fenêtre « Gelée
 # tardive » de `sim/weather.py` couvre s2-s9 (D140 C.1). Le smoke garde s1.
@@ -110,6 +113,34 @@ PLACEMENTS = [
 # sur sol chaud), carotte et phacélie = semis de pleine terre ordinaires.
 SEMIS_OUVERTURE = [("haricot", 9, 9), ("haricot", 9, 10), ("courgette", 10, 9),
                    ("carotte", 9, 11), ("carotte", 9, 12), ("phacelie", 10, 11)]
+
+
+# Pots de semis d'intérieur à l'ouverture (C.4) : les trois tendres qu'on sème au chaud
+# en mars, sur le rebord de la façade SUD de la maison (emprise 600..1400 cm, mur sud
+# à y = 1400). Godet de terreau de 2 L. (clé catalogue, x_cm, y_cm) monde.
+POTS_INTERIEUR = [("tomate", 900.0, 1375.0), ("basilic", 1000.0, 1375.0),
+                  ("poivron", 1100.0, 1375.0)]
+VOLUME_GODET = 2.0
+# Semaines passées en pot avant l'ouverture : semés début mars (≈ s2). La pousse en pot
+# est TICKÉE (même `Container.tick` que pendant la partie) : lumière de fenêtre, pièce
+# tempérée. Le tick de pot n'avance pas les stades → plant posé au 2ᵉ stade (jeune).
+SEMAINES_EN_POT = 8
+STADE_PLANT = 0
+
+
+def pots_interieur(house, seed: int, semaine: int = SEMAINE_OUVERTURE) -> list:
+    """Les pots de tendres dans la maison à l'ouverture (liste `game_state["containers"]`).
+    Chaque plant a poussé `SEMAINES_EN_POT` semaines dans son pot, à l'intérieur."""
+    pots = []
+    for cle, x, y in POTS_INTERIEUR:
+        ctn = make_container("pot", "terreau", VOLUME_GODET, x, y,
+                             container_id=f"semis_{cle}")
+        plant = planter_dans(ctn, PLANT_CATALOGUE[cle])
+        plant.current_stage = STADE_PLANT
+        for w in range(semaine - SEMAINES_EN_POT, semaine):
+            ctn.tick("printemps", seed, w, house=house)
+        pots.append(ctn)
+    return pots
 
 
 def _classe(cle: str) -> type:

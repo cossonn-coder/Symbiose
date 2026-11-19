@@ -38,6 +38,7 @@ from collections import namedtuple
 
 from plants.catalogue import PLANT_CATALOGUE, PERENNIAL_CATALOGUE
 from sim.lignee import lire_semis   # ressemis d'une graine récoltée (D139 ④), module pur
+from sim.repiquage import lire_repiquage   # repiquage pot → pleine terre (D140 C.5, ④)
 from sim.gout import lire_gout     # bouchée amère/toxique du jardinier (D139 caractères ②), module pur
 from sim.fanaison import lire_fanaison   # fleurs fanées sans graines (D139 caractères ⑤), module pur
 
@@ -284,6 +285,14 @@ def evenements(log: list[str]) -> list[Evenement]:
             t, pos_s, cle, cause = semis
             out.append(Evenement("lignee", t, pos_s, cle if cle in _CATALOGUE else None,
                                  cause))
+            continue
+        # REPIQUAGE (départ du jardin ④, `repiquer`) : ligne écrite hors tick, tuile dans
+        # la ligne ; cause = `motte` (1er repiquage) ou `chignon` (racines à l'étroit).
+        repique = lire_repiquage(line)
+        if repique:
+            t, pos_r, cle, cause = repique
+            out.append(Evenement("repiquage", t, pos_r,
+                                 cle if cle in _CATALOGUE else None, cause))
             continue
         # Bouchée AMÈRE ou TOXIQUE (D139 caractères vivants ②, `manger`) : ligne écrite
         # hors tick, tuile dans la ligne ; cause = `amer_feuille`, `toxique_fruit`…

@@ -202,6 +202,11 @@ CONCEPT_DE: dict[tuple[str, str | None], str] = {
     # comprend au palier de la POLLINISATION (le manque de butineurs).
     ("fanaison", "sans_graines"):   "pollinisation",
     ("fanaison", "sans_graines_vent"): "pollinisation",
+    # REPIQUAGE (départ du jardin ④, `sim/repiquage.py`) : sortir un plant du pot, c'est
+    # l'issue du jardinage HORS-SOL (concept existant) — la leçon : le pot donne de
+    # l'avance, mais un pot trop longtemps habité se paie au repiquage.
+    ("repiquage", "motte"):         "jardinage_hors_sol",
+    ("repiquage", "chignon"):       "jardinage_hors_sol",
 }
 
 # Concept de la « levée (reprise) » : doc §5.0 dit « = la cause (eau / lumière /
@@ -426,6 +431,10 @@ GABARIT: dict[tuple[str, str | None, str], str] = {
     ("gout", "toxique_feuille", _I): "Feuille de {e} {l} : un poison de défense, qui détourne aussi les ravageurs. On ne la mange pas — même si le fruit, lui, peut être délicieux.",
     ("gout", "toxique_fruit", _D): "J'ai goûté un fruit de {e} {l}. J'ai eu mal au ventre, et la force s'en est allée.",
     ("gout", "toxique_fruit", _I): "Fruit de {e} {l} : toxique pour moi, pas pour les oiseaux, qui le mangent et sèment ses graines plus loin.",
+    ("repiquage", "motte", _D): "J'ai mis {e} en pleine terre {l}, avec sa motte. Il pique un peu du nez.",
+    ("repiquage", "motte", _I): "J'ai repiqué {e} {l} : la motte a laissé quelques radicelles au pot. Le temps qu'il refasse son chevelu, il boit mal et pousse peu — puis il repart.",
+    ("repiquage", "chignon", _D): "En dépotant {e} {l}, j'ai trouvé ses racines enroulées contre la paroi. Il a fallu les défaire ; il reste prostré.",
+    ("repiquage", "chignon", _I): "{e} était à l'étroit dans son pot : en défaisant le chignon j'ai cassé la plupart de ses racines. Il lui faudra des semaines pour les refaire ; un pot plus grand, ou un repiquage plus tôt, lui aurait épargné ce choc.",
     ("fanaison", "sans_graines", _D): "{e} {l} a fleuri, mais n'a presque rien grainé : les fleurs ont fané à vide.",
     ("fanaison", "sans_graines", _I): "{e} {l} a fané sans graines : peu de butineurs sont passés, ses fleurs n'ont pas reçu de pollen. Plus de fleurs alentour, un abri pour les abeilles, et elle grainerait.",
     ("fanaison", "sans_graines_vent", _D): "{e} {l} a fleuri, mais n'a presque rien grainé : ses fleurs ont séché à vide.",

@@ -79,6 +79,7 @@ from .version import DEFAULT_REPRO
 from .peripherie_route import ceinture_block
 # Sol-canvas (GESTES LISIBLES ①, 0.6.14) : traces de gestes, plots secs, faune volante.
 from .sol_canvas_pont import habitats_auxiliaires, sol_sec_par_tuile, volants
+from world.interieur import est_interieur   # pot dans la maison (départ du jardin ④)
 from sim.traces_sol import traces_par_tuile
 # Vent au pont (JARDIN VIVANT T3, 0.5.44) : masse d'air `weather.wind` + facteur
 # d'abri par plante (lu SEULEMENT si le champ d'abri est déjà calculé). Pur.
@@ -257,6 +258,9 @@ class SerializeMixin:
                     # d'oïdium (③), lus par le dossier debug.
                     "embolie": round(p.embolie, 3),
                     "oidium": round(p.oidium, 3),
+                    # Départ du jardin ④ (0.6.25) : chevelu laissé au repiquage, pas
+                    # encore refait (`sim/repiquage.py`) — dossier debug / info-bulle ⑥.
+                    "racines_coupees": round(p.racines_coupees, 3),
                 }
                 base["expression"] = {g: round(f, 3)
                                       for g, f in p.expression.items() if f != 1.0}
@@ -680,6 +684,9 @@ class SerializeMixin:
                 "substrat": ctn.substrat, "volume": ctn.volume_litres,
                 "x_cm": ctn.x_cm, "y_cm": ctn.y_cm,
                 "mobile": ctn.mobile, "fond_ouvert": ctn.fond_ouvert,
+                # Départ du jardin ④ (0.6.25) : pot DANS la maison (semis d'intérieur,
+                # lumière de fenêtre, pièce tempérée — `world/interieur.py`).
+                "interieur": est_interieur(ctn.x_cm, ctn.y_cm, gs.get("house")),
                 "rows": ctn.rows, "cols": ctn.cols,
                 "plants": cplants,
                 "eco_summary": {

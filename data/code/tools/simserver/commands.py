@@ -30,7 +30,7 @@ from fields.peripherie import generer_ceinture
 from sim.bois_initial import poser_bois_initial   # D111 ②bis : bois mort dès la semaine 0
 # Ouverture du monde de jeu (D140 C, départ du jardin ③) : 52 espèces mûres, arbres à
 # l'âge de leur 1ʳᵉ fructification, graines semées, départ semaine 10.
-from sim.monde_complet import ouvrir_monde_complet, SEMAINE_OUVERTURE
+from sim.monde_complet import ouvrir_monde_complet, pots_interieur, SEMAINE_OUVERTURE
 # Registre des bancs d'essai (sprint dédié) : mondes paramétrés montés par
 # `init config="<banc>"` pour forcer/observer un signe. Import au niveau module
 # (paquet `bancs/` au sommet, peut tout importer) ; jamais monté pour smoke/full.
@@ -219,6 +219,9 @@ class CommandsMixin:
             # branches isolées, âges variés). Mêmes configs que la ceinture → smoke
             # (golden) et bancs intacts.
             poser_bois_initial(tiles, ecos, seed)
+            # Départ du jardin ④ (D140 C.4) : trois godets de tendres semés au chaud
+            # en mars attendent DANS la maison d'être repiqués (`repiquer`).
+            game_state["containers"] = pots_interieur(house, seed, start_week)
         # Option d'init « carnet interprétatif anticipé » (T2, réglage d'aide
         # CLAUDE.md, défaut NON). Champ OPTIONNEL du message : absent → aucune clé
         # `options` → `sim/carnet._reglage_anticipe` renvoie False → seuil normal

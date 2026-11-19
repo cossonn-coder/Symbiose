@@ -15,11 +15,17 @@ def test_conteneurs():
     s = ServerProc()
     # "full" : monde réel (maison → ombre) + banque de départ (planter_conteneur).
     init = s.send(cmd="init", config="full", seed=42)
-    check("engine_version 0.6.24", init.get("engine_version") == "0.6.24",
+    check("engine_version 0.6.25", init.get("engine_version") == "0.6.25",
           init.get("engine_version"))
     snap0 = s.send(cmd="snapshot")["snapshot"]
-    check("snapshot expose `containers` VIDE à l'init (golden neutre)",
-          snap0.get("containers") == [], snap0.get("containers"))
+    # Départ du jardin ④ (0.6.25) : le monde `full` ouvre avec 3 godets de tendres
+    # DANS la maison (`interieur`) ; les conteneurs posés ci-dessous viennent après.
+    c0 = snap0.get("containers") or []
+    n0 = len(c0)
+    check("snapshot : 3 godets de semis dans la maison à l'init (départ du jardin ④)",
+          n0 == 3 and all(c["interieur"] and len(c["plants"]) == 1 for c in c0)
+          and {c["plants"][0]["species"] for c in c0} == {"Tomato", "Basil", "Pepper"},
+          [(c["id"], c["interieur"]) for c in c0])
     # LOD émetteurs d'ombre (D67, 0.5.21) : chaque plante VIVANTE porte `emitteur`
     # (bool dérivé du pouvoir ombrageant). En config full à l'init on a un mélange de
     # semis sous-seuil (emitteur false) et de plantes plus vigoureuses (true).
@@ -96,9 +102,10 @@ def test_conteneurs():
           (rp["result"]["vigueur"], rp["snapshot"]["player"]["vigueur"]))
     cont = rp["snapshot"]["containers"]
     check("snapshot expose le pot (kind/substrat/mobile/eco_summary)",
-          len(cont) == 1 and cont[0]["kind"] == "pot"
-          and cont[0]["substrat"] == "terreau" and cont[0]["mobile"] is True
-          and cont[0]["x_cm"] == 1000.0 and "eco_summary" in cont[0], cont)
+          len(cont) == n0 + 1 and cont[n0]["kind"] == "pot"
+          and cont[n0]["substrat"] == "terreau" and cont[n0]["mobile"] is True
+          and cont[n0]["x_cm"] == 1000.0 and cont[n0]["interieur"] is False
+          and "eco_summary" in cont[n0], cont[n0:])
 
     # --- poser_bac immobile N×M --------------------------------------------
     rb = s.send(cmd="action", verb="poser_bac_culture",
@@ -106,7 +113,7 @@ def test_conteneurs():
                 params={"substrat": "compost", "volume": 200.0,
                         "rows": 2, "cols": 2})
     check("poser_bac_culture → applied", rb["result"]["applied"])
-    bac = rb["snapshot"]["containers"][1]
+    bac = rb["snapshot"]["containers"][n0 + 1]
     check("le bac est immobile N×M (mobile false, rows/cols 2, fond_ouvert)",
           bac["kind"] == "bac" and bac["mobile"] is False
           and bac["rows"] == 2 and bac["cols"] == 2
@@ -124,7 +131,7 @@ def test_conteneurs():
     check("volume ≤ 0 → applied false sans coût",
           rbadvol["result"]["applied"] is False and rbadvol["result"]["cost"] == 0.0)
     check("toujours 2 conteneurs après refus (rien posé)",
-          len(rbadvol["snapshot"]["containers"]) == 2)
+          len(rbadvol["snapshot"]["containers"]) == n0 + 2)
 
     # --- deplacer_pot : position + lumière recalculée ----------------------
     # Le pot #0 est sous l'ombre maison (1000,400). On le déplace au plein soleil
@@ -132,21 +139,21 @@ def test_conteneurs():
     # tick — ici on prouve la MOBILITÉ + l'exposition de la position). GESTES
     # LISIBLES ① : la cible reste DANS le jardin [0, 2000]² (2500 est refusé).
     rm = s.send(cmd="action", verb="deplacer_pot",
-                target={"container": 0, "x_cm": 1900.0, "y_cm": 1900.0})
+                target={"container": n0, "x_cm": 1900.0, "y_cm": 1900.0})
     check("deplacer_pot → applied + coût > 0",
           rm["result"]["applied"] and rm["result"]["cost"] > 0.0)
-    moved = rm["snapshot"]["containers"][0]
+    moved = rm["snapshot"]["containers"][n0]
     check("position du pot mise à jour au snapshot",
           moved["x_cm"] == 1900.0 and moved["y_cm"] == 1900.0, moved)
 
     # --- bac REFUSE le déplacement (immobile, sans coût) -------------------
     rbacmove = s.send(cmd="action", verb="deplacer_pot",
-                      target={"container": 1, "x_cm": 50.0, "y_cm": 50.0})
+                      target={"container": n0 + 1, "x_cm": 50.0, "y_cm": 50.0})
     check("déplacer un bac → applied false, coût 0 (immobile)",
           rbacmove["result"]["applied"] is False
           and rbacmove["result"]["cost"] == 0.0)
     check("la position du bac est INTACTE après refus",
-          rbacmove["snapshot"]["containers"][1]["x_cm"] == 800.0)
+          rbacmove["snapshot"]["containers"][n0 + 1]["x_cm"] == 800.0)
 
     # --- index de conteneur invalide → refus -------------------------------
     rbadidx = s.send(cmd="action", verb="deplacer_pot",
@@ -156,18 +163,43 @@ def test_conteneurs():
 
     # --- planter_conteneur : place une plante du banc-graines --------------
     rplant = s.send(cmd="action", verb="planter_conteneur",
-                    target={"container": 0}, params={"species": "tomate"})
+                    target={"container": n0}, params={"species": "tomate"})
     check("planter_conteneur (tomate) → applied + coût > 0",
           rplant["result"]["applied"] and rplant["result"]["cost"] > 0.0)
-    pot0 = rplant["snapshot"]["containers"][0]
+    pot0 = rplant["snapshot"]["containers"][n0]
     check("le mini-sol du pot porte la plante au snapshot",
           len(pot0["plants"]) == 1 and pot0["plants"][0]["species"] == "Tomato",
           pot0["plants"])
     # espèce non plantable → refus sans coût
     rbadsp = s.send(cmd="action", verb="planter_conteneur",
-                    target={"container": 0}, params={"species": "licorne"})
+                    target={"container": n0}, params={"species": "licorne"})
     check("espèce non plantable → applied false, coût 0",
           rbadsp["result"]["applied"] is False and rbadsp["result"]["cost"] == 0.0)
+
+    # --- repiquer (départ du jardin ④, 0.6.25) : godet → pleine terre --------
+    rvide = s.send(cmd="action", verb="repiquer",
+                   target={"container": n0 + 1, "tile": "S", "r": 10, "c": 2})
+    check("repiquer un bac vide → refus sans coût",
+          rvide["result"]["applied"] is False and rvide["result"]["cost"] == 0.0,
+          rvide["result"]["message"])
+    rhors = s.send(cmd="action", verb="repiquer",
+                   target={"container": 0, "tile": "S", "r": 99, "c": 2})
+    check("repiquer vers un plot hors tuile → refus sans coût",
+          rhors["result"]["applied"] is False and rhors["result"]["cost"] == 0.0)
+    rrep = s.send(cmd="action", verb="repiquer",
+                  target={"container": 0, "tile": "S", "r": 10, "c": 2})
+    check("repiquer la tomate du godet → applied + coût > 0",
+          rrep["result"]["applied"] and rrep["result"]["cost"] > 0.0,
+          rrep["result"]["message"])
+    snr = rrep["snapshot"]
+    check("le godet reste, vidé", snr["containers"][0]["plants"] == [],
+          snr["containers"][0]["plants"])
+    sol = [p for p in snr["plants"] if p.get("tile") == "S"
+           and p.get("species") == "Tomato" and p.get("x_cm") == 125.0
+           and p.get("y_cm") == 525.0]
+    check("la tomate est en pleine terre en S(10,2), chevelu entamé",
+          len(sol) == 1 and sol[0]["memoires"]["racines_coupees"] > 0.0,
+          sol[0]["memoires"] if sol else [p.get("species") for p in snr["plants"]][:10])
 
     # --- serveur survivant après tous ces refus ----------------------------
     rsurv = s.send(cmd="snapshot")

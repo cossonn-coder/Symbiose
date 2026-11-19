@@ -71,6 +71,7 @@ COUTS = {
     "poser_pot":            MODERE,            # pose un POT mobile rempli (pots/bacs ④ §4)
     "poser_bac_culture":    MODERE,            # pose un BAC immobile N×M rempli (pots/bacs ④ §4)
     "deplacer_pot":         MODERE,            # déplace un pot — effort joueur SEUL (pots/bacs ④ §4)
+    "repiquer":             MODERE,            # pot → pleine terre, motte comprise (départ du jardin ④)
     "creuser":              ELEVE,             # façonne une cuvette (terrassement, hydrologie ⑦) — coût ÉLEVÉ
     "drainer":              MODERE,            # assèche flaque/marais (hydrologie ⑦) — MODÉRÉ-élevé (< creuser, palier existant le plus proche)
     # Couvertures climatiques (effondrement météo ③) — pose en PLANIFICATION, coût
@@ -135,6 +136,7 @@ OBJETS_TOUCHES = {
     "poser_pot":            ("jardinage_hors_sol", "pot"),     # concept sans état moteur → atténuation neutre 1.0
     "poser_bac_culture":    ("jardinage_hors_sol", "bac"),
     "deplacer_pot":         ("jardinage_hors_sol",),
+    "repiquer":             ("jardinage_hors_sol",),      # + l'espèce repiquée (cible vivante, _objets_action)
     "creuser":              ("terrassement", "bêche"),         # technique + outil ; on écrit un CHAMP (altitude), pas de cible vivante — sans état moteur → atténuation neutre 1.0
     "drainer":              ("terrassement", "bêche"),         # technique + outil ; on écrit des CHAMPS (eau_surface/marais_memory), pas de cible vivante
     # Couvertures climatiques (effondrement météo ③) : le savoir-faire `protection-

@@ -453,3 +453,16 @@ class LightField(GridField):
                 v = row_acc[c] / total_w
                 dst[c] = 1.0 if v > 1.0 else (LIGHT_FLOOR if v < LIGHT_FLOOR else v)
         return []
+
+    def filtrer(self, facteur: float) -> None:
+        """Lumière FILTRÉE par une vitre (départ du jardin ④, pot dans la maison) :
+        multiplie la lumière-sol et la lumière reçue par plante du DERNIER `compute`
+        par `facteur` ∈ ]0, 1]. Le cache géométrique est invalidé : le `compute`
+        suivant recalcule la lumière pleine au lieu de re-filtrer un champ déjà
+        filtré. Jamais appelée par la boucle des tuiles (golden NEUTRE)."""
+        for row in self.data:
+            for c in range(len(row)):
+                row[c] *= facteur
+        for k in self.received:
+            self.received[k] *= facteur
+        self._geom_key = None

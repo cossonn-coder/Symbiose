@@ -131,6 +131,11 @@ class PlantInstance:
                                     # bilan ③) : feutrage qui baisse le rendement des feuilles
                                     # sans les tuer (`sim/bilan.py`) ; s'efface au renouvellement
                                     # des feuilles. Hors `_PLANT_ATTRS`, défaut 0 → P inchangé.
+    racines_coupees: float = 0.0    # part du chevelu PERDUE au repiquage [0-1] (départ du
+                                    # jardin ④, `sim/repiquage.py`) : la motte sortie du pot
+                                    # laisse ses radicelles → elle absorbe moins
+                                    # (`bilan.f_eau`), chevelu refait sur le bilan. Hors
+                                    # `_PLANT_ATTRS`, défaut 0 → bit-identique.
     part_racinaire: float = 0.0     # X du dernier bilan (sem. d'entretien) : sucres payés au
                                     # sol et aux mycorhizes (stress au bilan ④) — lu par le
                                     # dépôt d'exsudats. Hors `_PLANT_ATTRS`.

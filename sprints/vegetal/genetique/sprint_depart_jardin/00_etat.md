@@ -34,7 +34,8 @@ A seul et la dérivation `_POLLEN_VIBRE_BOURDON` sont bit-identiques ; coût all
 chez achillée, haricot, phacélie, pommier, tournesol, trèfle (gènes muets `pollen`,
 `limite_froid`, `fixation_azote`, `allelopathie`) ; 1ʳᵉ divergence du log en s9 ;
 `population_hash`/`vigueur_hash` intacts). ① **RE-FIGÉ annoncé** · ② **RE-FIGÉ → `25671775…`** (1ʳᵉ divergence s1 : la tomate du smoke ne gèle plus à une nuit > −0,5 °C — borne de la sève — et le tournesol n'a plus de lésion de froid sans gel ; σ_A des tendres bit-identique sur le smoke, chronique neutre) ·
-③④⑤⑥ **INTACT**.
+③④ **INTACT** (④ vérifié : `bce813af…`, golden courant après les sprints plante vivante /
+stress au bilan) · ⑤⑥ **INTACT** attendus.
 
 ## Tronçons
 | # | Kickoff | État |
@@ -42,7 +43,7 @@ chez achillée, haricot, phacélie, pommier, tournesol, trèfle (gènes muets `p
 | ① | `01_paturin_genes_muets.md` — pâturin + gènes muets | **FAIT** 2026-11-18 (golden re-figé `98a050cf…`) |
 | ② | `02_froid_tendres.md` — borne du gel, audit des tendres, chronique | **FAIT** 2026-11-18 (golden re-figé `25671775…`) |
 | ③ | `03_monde_full_complet.md` — semaine 10, 52 espèces mûres, garde-fou, perf | **FAIT** 2026-11-18 (golden intact) |
-| ④ | `04_semis_interieur_repiquer.md` — pot dans la maison + `repiquer` | à faire |
+| ④ | `04_semis_interieur_repiquer.md` — pot dans la maison + `repiquer` | **FAIT** 2026-11-19 (golden intact `bce813af…`, pont 0.6.25, non commité) |
 | ⑤ | `05_automate_repiquage.md` — repiquage différé par l'automate | à faire |
 | ⑥ | `06_vue_banc.md` — palette, pots visibles, banc `depart_jardin`, clôture | à faire |
 
@@ -105,6 +106,68 @@ chez achillée, haricot, phacélie, pommier, tournesol, trèfle (gènes muets `p
   trancher (amorcer la faune de saison ? la mémoire des plantes ? l'herbivorie selon
   la taille ?) — à verser en dette / conception, pas dans ce sprint sans accord.
 
+## Acquis du ④ (2026-11-19)
+- **Geste `repiquer`** : `sim/actions/conteneurs.repiquer(game_state, player, container,
+  tile, r, c) -> str | None` (ré-exporté `sim.actions.repiquer`) — sort la 1ʳᵉ plante
+  VIVANTE du conteneur, la pose au centre du plot (même objet : gènes, âge, stade,
+  réserves ; segments translatés d'un bloc), le pot reste vidé ; renvoie la cause du choc
+  `motte`/`chignon`, None si refus (plot hors tuile, pot vide, Vigueur) — refus sans coût.
+  Coût MODÉRÉ, objets `("jardinage_hors_sol",)` + l'espèce ; déblocage `[("action",
+  "poser_pot")]` ; famille `semis` ; palette cible `conteneur`. Fiche `geste_corpus`.
+- **Pont 0.6.25** : commande `{"cmd":"action","verb":"repiquer","target":{"container":
+  idx,"tile":"S","r":r,"c":c}}` (`tools/simserver/conteneurs_route._repiquer`) ; snapshot :
+  `containers[].interieur` (bool), `plants[].memoires.racines_coupees`. Comparé avant/après
+  (full seed 42) : seules ces clés ajoutées, valeurs des tuiles identiques.
+- **Choc = bilan** (`sim/repiquage.py`, champ `PlantInstance.racines_coupees` hors
+  `_PLANT_ATTRS`) : coupe = `COUPE_MOTTE` 0,25 + `COUPE_CHIGNON` 0,45 × serrage
+  (`Container.serrage` = signal root-bound EXISTANT de l'effet nain) ; (1) `bilan.f_eau` ×
+  (1 − coupe) — absorption plafonnée (poils absorbants perdus), même en sol frais ;
+  (2) repousse `REPRISE_RACINES` 0,15/sem payée `cout_feuillage` × Δ sur le net, seulement
+  plante active (pas en dormance/froid). **Écart au kickoff (mesuré)** : la 1ʳᵉ version
+  passait par `eau_percue` (comme la pourriture) + coût seul → **inerte en jeu** (sol S
+  1,0-1,5 ≫ seuil sec 0,30 ; surplus > 1 sem sature le `growth_factor`). Effet mesuré après
+  correction (`mesures/effet_repiquage.py`, full seed 42, n=1, 3 godets repiqués s10 en S) :
+  net −0,4 à −0,5 la 1ʳᵉ semaine (témoin +1,6 à +2,0), 2-3 sem de stagnation, passage de
+  stade retardé d'1 sem (basilic, poivron), écart de hauteur à s19 : tomate −1,9 cm,
+  basilic −2,9 cm, poivron −4,3 cm ; aucun mort.
+- **Pot dans la maison** (`world/interieur.py`) : intérieur = toute l'emprise de la maison
+  (choix le plus simple, pas de « rebord » dédié) ; `T_INTERIEUR` 17,5 °C (jour 20 / nuit 15)
+  écrit dans `eco.temperature`, lumière ciel ouvert × `FENETRE` 0,3 (`LightField.filtrer`,
+  invalide le cache géométrique — pas de double filtrage). Pas de pluie (aucun pot n'en
+  reçoit, déjà vrai).
+- **Monde full/propre** : `sim/monde_complet.pots_interieur(house, seed, semaine)` →
+  `game_state["containers"]` = 3 godets 2 L de terreau (tomate, basilic, poivron) au mur sud
+  de la maison, stade 0, 8 semaines de pousse TICKÉE en pot (`Container.tick`). Index 0-2 de
+  `containers` ; un pot posé par le joueur arrive en 3.
+- **Voix** : ligne `🪴 Repiquage [S] @(r, c) : tomate, chignon` (`ligne_repiquage`/
+  `lire_repiquage`) écrite une fois par joueur et par cause (`game_state["repiquages_notes"]`)
+  → `evenements` kind `repiquage` → carnet concept `jardinage_hors_sol`, 4 gabarits D/I.
+- Tests : `tests/test_repiquage.py` 19/19 ; `tests/simserver/conteneurs.py` adapté (3 godets
+  à l'init, indices décalés de n0, section repiquer) ; versions 0.6.25. Vertes : golden,
+  mobilite, confinement, couplage, monde_full_complet, pressentis, encyclopedie,
+  atteignabilite, carnet, bilan, gestes_lisibles (+ bancs), acces_gestes, ouverture_vivante,
+  chronique, maladies_racines, embolie, test_sim_server (367/367).
+- LDC : `geste_corpus.py` 360 (🟡, corpus de données), `carnet.py` 310 (🟡), reste < 300.
+- ⚠️ **Pour Nico / ⑤-⑥** :
+  (a) **le signal root-bound** (`ROOTBOUND_SEUIL` 0,30 cm de hauteur par litre) déclare à
+  l'étroit presque tout plant en pot (godet 2 L : saturé dès 0,6 cm) → en pratique tout
+  repiquage est un `chignon` (choc 0,70) ; la gradation « plus fort si à l'étroit » n'existe
+  que pour de très grands pots. Recalibrer ce seuil change l'effet nain (pots/bacs) —
+  décision de design, pas faite ici.
+  (b) **Étiolement absent chez les tendres** : `est_etiole` exige une tolérance à l'ombre
+  < 1 ; tomate 1,0, poivron 1,0, basilic 1,25 → aucun ne file à la fenêtre ; seul le
+  `growth_factor` (0,6 + 0,4 × lumière) ralentit leur pousse. Non inventé (kickoff).
+  (c) **Pots dehors sans météo** (pré-existant) : `Container.tick` n'écrit jamais T_air ni
+  pluie ni gel pour un pot hors maison (11 °C constants, `T_AMBIENT_INIT`) ; un pot dehors
+  ne gèle donc pas non plus, et aucun pot ne peut être arrosé (pas de route `arroser`).
+  L'intérêt du semis d'intérieur face au pot dehors n'existe pas encore.
+  (d) **Déblocage** : à l'ouverture, `repiquer` est fermé tant que le joueur n'a pas posé
+  un pot (porte `poser_pot`, elle-même gatée par la maîtrise `jardinage_hors_sol`) — il voit
+  les godets sans pouvoir les repiquer. L'automate ⑤ n'est pas concerné ; à trancher pour ⑥.
+  (e) Les plantes en pot n'ont toujours pas de bilan (inchangé) : réserves/feuillage pleins
+  au repiquage.
+
 ## REPRISE
 **SUSPENDU avant ④ (2026-11-18)** : hécatombe par herbivorie à l'ouverture, confirmée au F5 de Nico → DETTE.md D140 (G), CONÇU le 2026-11-18 : attendre la clôture de `sprints/vegetal/sante/sprint_plante_vivante/` puis `sprint_stress_au_bilan/` (les plantes vivent d'un bilan carbone, plus de PV — le choc de repiquage du ④ doit s'exprimer en feuillage/réserves, relire `docs/vegetal/sante/conception_plante_vivante.md`). Noms d'espèces en français → D141 (hors sprint).
-Lire `CLAUDE.md`, ce fichier, puis le kickoff du premier tronçon « à faire » (④).
+④ FAIT (non commité). Lire `CLAUDE.md`, ce fichier (§Acquis du ④ : nom du geste
+`repiquer`, signature, commande de pont), puis le kickoff ⑤ `05_automate_repiquage.md`.

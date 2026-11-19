@@ -36,6 +36,7 @@ from fields.ecofields import EcoFields
 from plants.base import PlantInstance
 from sim.growth import grow_plant
 from world.substrat import get_substrat, SubstratRecette
+from world.interieur import est_interieur, climat_interieur
 
 # Compteur d'IDs déterministe (ordre d'appel stable, zéro RNG) pour des
 # `tile_id` de mini-sol uniques quand l'appelant n'en fournit pas. Le `tile_id`
@@ -145,8 +146,13 @@ class Container:
         recette = get_substrat(self.substrat)
         tile_origin = (self.x_cm, self.y_cm)
 
-        # 2. Lumière directionnelle à la POSITION du conteneur (ombre maison §6).
-        eco.tick_light(self.plants, saison, house=house, tile_origin=tile_origin)
+        # 2. Lumière directionnelle à la POSITION du conteneur (ombre maison §6) —
+        #    SAUF un pot DANS la maison (départ du jardin ④, `world/interieur.py`) :
+        #    lumière de la fenêtre et température de la pièce (pas de gel).
+        if est_interieur(self.x_cm, self.y_cm, house):
+            climat_interieur(eco, self.plants, saison, tile_origin)
+        else:
+            eco.tick_light(self.plants, saison, house=house, tile_origin=tile_origin)
         # 2b. Microclimat T_sol (lit la lumière, précède l'hydrologie).
         eco.tick_thermique(saison, nebulosite)
         # 3. Hydrologie avec le DRAINAGE DU SUBSTRAT (override §2) au lieu du soil_type.
@@ -213,6 +219,13 @@ class Container:
             return 1.0
         return _clamp(1.0 - ROOTBOUND_K * (occupation - ROOTBOUND_SEUIL),
                       CONF_MIN, 1.0)
+
+    def serrage(self, plant: PlantInstance) -> float:
+        """À quel point les racines de `plant` sont À L'ÉTROIT ∈ [0, 1] : 0 tant que
+        le pot n'est pas saturé, 1 au plancher du confinement (`CONF_MIN`). Lu par le
+        geste `repiquer` (choc ∝ racines à l'étroit, `sim/repiquage.py`) — même
+        signal root-bound que l'effet nain, jamais un second calcul."""
+        return (1.0 - self._confinement(plant)) / (1.0 - CONF_MIN)
 
     def _cellules(self) -> list[tuple]:
         """Cellules VALIDES du mini-sol (géométrie du conteneur). Pour un pot 1×1

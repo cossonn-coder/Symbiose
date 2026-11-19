@@ -53,6 +53,7 @@ FAMILLE_CIBLE: dict[str, str] = {
     "retourner": "structure", "epandre": "structure", "recolter_miel": "structure",
     # conteneurs
     "deplacer_pot": "conteneur", "planter_conteneur": "conteneur",
+    "repiquer": "conteneur",   # le pot source ; le plot de destination suit (comme deplacer_pot)
     # SECTEUR de périphérie (paysage, D73 ⑦ — kind 'L' de WorldView.Actions.cs) :
     # la cible est un bord cardinal de la ceinture, pas un plot du jardin. Les six
     # gestes la partagent ⇒ une macro `receper → eteter` sur le même bord est

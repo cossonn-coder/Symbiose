@@ -940,7 +940,15 @@ from __future__ import annotations
 #       le signe `secheresse` lit aussi l'embolie (reste flétri après la pluie). Carnet et
 #       chronique : une mort de famine prend sa cause amont (gel, grêle, maladie, ombre…),
 #       le log du moteur est inchangé. Clés neuves, golden neutre (snapshot comparé).
-ENGINE_VERSION = "0.6.24"
+# 0.6.25 (DÉPART DU JARDIN ④, D140 C.4-C.5) : geste NEUF `repiquer` (famille `semis`,
+#       cible `conteneur`) — target `{container: idx, tile, r, c}` : la plante vivante du
+#       pot descend en pleine terre au centre du plot, avec sa motte (même plante) ; refus
+#       sans coût si tuile/plot invalides ou pot vide. Chaque conteneur gagne `interieur`
+#       (pot dans l'emprise de la maison : lumière × 0,3, pièce à 17,5 °C) ; `memoires`
+#       gagne `racines_coupees` (chevelu perdu au repiquage, refait sur le bilan). Monde
+#       `full`/`propre` : 3 godets (tomate, basilic, poivron) dans la maison à
+#       l'ouverture → `containers` n'est plus vide à l'init. Golden neutre.
+ENGINE_VERSION = "0.6.25"
 
 # Repli pour une espèce absente de REPRO_BY_SEASON (kickoff t6 : « fleur au
 # printemps, fruit mûr en été/automne, rien l'hiver ») — raisonnable pour les

@@ -31,6 +31,7 @@ from __future__ import annotations
 from fields import HUM_NOYE
 from plants.physiologie import parametres_bilan, capacite_reserve
 from sim.embolie import conduction
+from sim.repiquage import reprendre_racines
 
 # --- Entretien ---------------------------------------------------------------
 Q10 = 2.0              # la respiration double tous les 10 °C (ordre de grandeur classique)
@@ -102,6 +103,13 @@ def f_eau(plant, hum_percue: float, hum_sol: float | None = None) -> float:
     # ses stomates plus tôt. Sur sol bien arrosé, une embolie partielle ne coûte rien
     # (marge de sécurité hydraulique) ; c'est au sec qu'elle pèse. Embolie 0 → ×1,0.
     f = _rampe(hum_percue * conduction(plant), seuil_sec, SEC_RAMPE * seuil_sec)
+    # Chevelu laissé au repiquage (départ du jardin ④, `sim/repiquage.py`) : ce sont
+    # les radicelles et leurs poils qui ABSORBENT — les grosses racines restantes ne
+    # font que conduire. Même en sol frais, le plant ne boit qu'au prorata de ce qui
+    # lui reste : ses feuilles ferment leurs stomates, il « pique du nez » jusqu'à ce
+    # que le chevelu repousse. Rien de coupé (cas normal) → f inchangé.
+    if plant.racines_coupees > 0.0:
+        f *= 1.0 - plant.racines_coupees
     if hum_sol > HUM_NOYE:
         tol = (plant.expressed_gene("tolerance_asphyxie")
                * plant.plant_class.asphyxie_tolerance_base)
@@ -234,6 +242,11 @@ def semaine_bilan(plant, *, saison: str, presence: float, light_eff: float,
     plant.part_racinaire = part_racinaire(plant, p)
     net = (p - entretien(t_air, dormante, presence) * (1.0 + VIEIL_ENTRETIEN * vieillesse)
            - plant.part_racinaire)
+    # Choc de repiquage (départ du jardin ④, `sim/repiquage.py`) : le chevelu laissé
+    # dans le pot se refait sur le bilan tant que la plante est active — moins de
+    # surplus, croissance ralentie. Rien à refaire (cas normal) → net inchangé.
+    if plant.racines_coupees > 0.0:
+        net -= reprendre_racines(plant, active=not dormante)
     # Oïdium (③) : la couverture lue ci-dessus s'efface avec le renouvellement des
     # feuilles ; un caduc nu (presence 0) a perdu ses feuilles feutrées.
     if plant.oidium > 0.0:

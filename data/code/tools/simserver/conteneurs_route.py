@@ -6,7 +6,9 @@ vivent dans la liste MONDE `game_state["containers"]` (≠ structures de tuile) 
 
   - `poser_pot` / `poser_bac_culture` : pose par POSITION MONDE (x_cm/y_cm) ;
   - `deplacer_pot` / `planter_conteneur` : désignés par INDEX `target.container`
-    (= ordre du snapshot `containers`).
+    (= ordre du snapshot `containers`) ;
+  - `repiquer` (départ du jardin ④, 0.6.25) : le pot par INDEX + le plot de pleine
+    terre `{tile, r, c}` où la plante descend avec sa motte.
 
 Validation des bornes ICI (refus de désignation → ne coûte rien) ; les façades
 `sim/actions` font foi pour la Vigueur et l'effet. `bilan` est la fabrique de réponse
@@ -22,7 +24,8 @@ from world import planter_dans         # place directe dans le mini-sol
 from world.substrat import SUBSTRATS   # validation du substrat
 from fields.peripherie import MONDE_CM # côté du jardin (cm) : un pot se pose DEDANS
 
-VERBES = ("poser_pot", "poser_bac_culture", "deplacer_pot", "planter_conteneur")
+VERBES = ("poser_pot", "poser_bac_culture", "deplacer_pot", "planter_conteneur",
+          "repiquer")
 
 
 def _num(v) -> bool:
@@ -102,6 +105,9 @@ def route_conteneur(gs: dict, player: str, verb: str,
                      "pot déplacé, sa terre et ses plantes avec lui"
                      if ok else "Vigueur insuffisante — pot non déplacé")
 
+    if verb == "repiquer":
+        return _repiquer(gs, player, ctn, target, bilan)
+
     # planter_conteneur : place DIRECTEMENT une plante dans le mini-sol (un conteneur
     # n'a pas de succession spontanée — la plante est posée, pas semée en attente comme
     # sur une tuile). Source = banque-joueur (symétrie avec `planter` tuile), coût
@@ -119,3 +125,27 @@ def route_conteneur(gs: dict, player: str, verb: str,
     bank.take(species)
     planter_dans(ctn, PLANT_CATALOGUE[species])
     return bilan(True, cost, 0.0, f"{species} planté dans le {ctn.kind}")
+
+
+def _repiquer(gs: dict, player: str, ctn, target: dict, bilan):
+    """`repiquer` : pot (index, déjà validé) → plot `{tile, r, c}`. Refus de
+    désignation SANS coût : tuile inconnue, plot hors tuile, conteneur sans plante
+    vivante. La façade `sim/actions.repiquer` fait foi (Vigueur, choc)."""
+    tile = next((t for t in gs.get("tiles", []) if t.tile_id == target.get("tile")), None)
+    if tile is None:
+        return bilan(False, 0.0, 0.0, f"tuile introuvable : {target.get('tile')!r}")
+    r, c = target.get("r"), target.get("c")
+    if (not isinstance(r, int) or isinstance(r, bool) or not isinstance(c, int)
+            or isinstance(c, bool) or not tile.is_valid_plot(r, c)):
+        return bilan(False, 0.0, 0.0, f"plot hors tuile : r={r!r}, c={c!r}")
+    plante = next((p for p in ctn.plants if p.is_alive), None)
+    if plante is None:
+        return bilan(False, 0.0, 0.0, f"rien à repiquer : le {ctn.kind} est vide")
+    cost = A.cout_action(gs, player, "repiquer", A._objets_action("repiquer", plante))
+    cause = A.repiquer(gs, player, ctn, tile, r, c)
+    if cause is None:
+        return bilan(False, cost, 0.0, "Vigueur insuffisante — plant laissé en pot")
+    return bilan(True, cost, 0.0,
+                 f"{plante.name} repiqué en pleine terre"
+                 + (", racines à l'étroit défaites" if cause == "chignon" else ", avec sa motte"))
+

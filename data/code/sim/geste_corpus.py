@@ -396,6 +396,19 @@ FICHES_GESTE: dict[str, dict[int, str]] = {
            "coupé du grand cycle, il vit de ce qu'on lui apporte.",
     },
 
+    "repiquer": {
+        1: "Sortir un plant de son pot et le mettre en pleine terre, avec sa motte.",
+        2: "La motte part avec la plante, mais le chevelu de radicelles se déchire sur "
+           "ses bords. Le plant ressent un sol plus sec et refait ses racines avant de "
+           "repartir : il marque le pas quelques semaines. S'il était à l'étroit, ses "
+           "racines tournaient contre la paroi — il en perd beaucoup plus.",
+        3: "Repiquer, c'est choisir le moment : assez tard pour que les nuits ne "
+           "saisissent plus une frileuse, assez tôt pour qu'elle n'ait pas filé dans la "
+           "lumière avare d'une fenêtre ni rempli son pot de racines. Un sol froid "
+           "retarde la reprise du chevelu ; un sol frais et meuble l'accueille. Le "
+           "pot gagne du temps sur le printemps, la pleine terre rend l'espace.",
+    },
+
     "poser_tuteur": {
         1: "Planter un pieu fin à la verticale, à côté d'une plante qui a besoin de "
            "s'appuyer pour monter ou pour tenir droit.",

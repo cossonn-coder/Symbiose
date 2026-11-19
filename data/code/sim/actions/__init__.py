@@ -59,7 +59,7 @@ from .ruche import (
 # ré-exportée sous `poser_bac_culture` pour ne PAS écraser `compost.poser_bac` (BAC
 # À COMPOST) — deux objets distincts, un seul espace de noms `ACT.*`.
 from .conteneurs import (
-    poser_pot, poser_bac as poser_bac_culture, deplacer_pot,
+    poser_pot, poser_bac as poser_bac_culture, deplacer_pot, repiquer,
 )
 # Supports de grimpe (grimpantes ④) : pose de structures + palissage manuel.
 from .supports import (
@@ -123,7 +123,7 @@ __all__ = [
     "SEUIL_AUTOPAILLAGE", "nature_autopaillage", "auto_pailler",
     "CONCEPT_ABEILLES", "SEUIL_EQUIPEMENT", "MIEL_VIGUEUR_RATIO", "RECOLTE_SANS_EQUIP",
     "poser_ruche", "equipe", "recolter_miel",
-    "poser_pot", "poser_bac_culture", "deplacer_pot",
+    "poser_pot", "poser_bac_culture", "deplacer_pot", "repiquer",
     "poser_tuteur", "poser_treillis", "poser_pergola", "poser_perchoir", "palisser",
     "GESTES_BASE", "GESTE_UNLOCK", "DECLENCHEURS", "init_gestes_debloques", "est_debloque",
     "marquer_action", "marquer_evenement", "evaluer_deblocages", "gestes_debloques",

@@ -98,6 +98,7 @@ GESTE_UNLOCK: dict[str, list] = {
     "poser_bac_culture": [("maitrise", "jardinage_hors_sol", 1)],
     "deplacer_pot":      [("action", "poser_pot")],
     "planter_conteneur": [("action", "poser_pot")],
+    "repiquer":          [("action", "poser_pot")],   # départ du jardin ④ : même porte
 
     # supports
     "poser_tuteur":   [("maitrise", "palissage", 1)],

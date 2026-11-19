@@ -28,7 +28,7 @@ FAMILLES: tuple[str, ...] = (
 _GESTES_PAR_FAMILLE: dict[str, tuple[str, ...]] = {
     "main":       ("recolter", "manger", "glaner", "ecraser", "favoriser_auxiliaire"),
     "sol":        ("becher", "grelinette", "creuser", "drainer", "deraciner"),
-    "semis":      ("planter", "bouturer", "greffer", "planter_conteneur"),
+    "semis":      ("planter", "bouturer", "greffer", "planter_conteneur", "repiquer"),
     "taille":     ("pincer", "arracher", "couper", "tailler"),
     "eau":        ("arroser",),
     "compost":    ("poser_bac", "poser_pile", "composter", "retourner", "epandre",
