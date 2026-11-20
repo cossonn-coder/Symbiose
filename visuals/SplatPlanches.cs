@@ -11,12 +11,15 @@
 // que le shader de la LUT (palette_indexee.gdshader) éclaire côté soleil réel.
 //
 // CHARGEMENT (choix justifié, ④) : les PNG sont déclarés `importer="keep"`
-// (`*.png.import` à côté de chaque planche) et lus par `Image.LoadFromFile`.
+// (`*.png.import` à côté de chaque planche), lus en octets par FileAccess puis décodés
+// par `Image.LoadPngFromBuffer` (⑤ ; le ④ passait par `Image.LoadFromFile`).
 //  • les octets arrivent INTACTS : c'est le décodeur PNG de Godot sur le fichier
 //    lui-même — aucune compression VRAM, aucun mipmap, aucun filtrage, aucun
 //    `fix_alpha_border` (que l'import « texture » par défaut appliquerait) ;
-//  • à l'export (packaging t7), « keep » copie le fichier TEL QUEL dans le .pck :
-//    `res://…png` reste lisible par FileAccess, donc par LoadFromFile ;
+//  • à l'export (packaging t7), « keep » copie le fichier TEL QUEL dans le .pck —
+//    VÉRIFIÉ au ⑤ (`--export-pack` sur la VM : les 280 planches y sont à l'octet) ;
+//    l'avertissement « will not work on export » de `LoadFromFile` était un faux
+//    positif (il vise les PNG importés en texture), le tampon le fait taire ;
 //  • une planche > 16 384 px (limite d'une texture GPU : `feuille_paume_x32`,
 //    `tete_soleil_x32`…) ne passe jamais par l'importeur de textures : on la
 //    découpe ici en BANDES ≤ 16 384 px, coupées entre deux rangées de pièces
@@ -39,7 +42,7 @@ namespace Symbiose
 {
 	internal static class SplatPlanches
 	{
-		private const string Dossier = "res://assets/splats/";
+		internal const string Dossier = "res://assets/splats/";
 		private const int HauteurMaxTexture = 16384;
 
 		/// <summary>Une pièce prête à poser : texture de codes, rectangle source,
@@ -155,9 +158,8 @@ namespace Symbiose
 			if (_planches.TryGetValue((recette, planche), out var pl)) return pl;
 			long t0 = System.Diagnostics.Stopwatch.GetTimestamp();
 			string chemin = $"{Dossier}{recette}_{planche}.png";
-			var img = Image.LoadFromFile(chemin);
-			if (img == null || img.IsEmpty()) { GD.PushWarning($"[Splats] planche illisible : {chemin}"); _planches[(recette, planche)] = null; return null; }
-			if (img.GetFormat() != Image.Format.Rgba8) img.Convert(Image.Format.Rgba8);
+			var img = LireImage(chemin);
+			if (img == null) { _planches[(recette, planche)] = null; return null; }
 			pl = new Planche { Palier2 = p2 };
 			int w = img.GetWidth(), h = img.GetHeight();
 			byte[] src = img.GetData();
@@ -181,6 +183,24 @@ namespace Symbiose
 			MsChargement += ms;
 			GD.Print($"[Splats] {recette}_{planche} {w}×{h} en {pl.Bandes.Count} bande(s), {ms:F0} ms, total {OctetsCharges / 1048576f:F1} Mo");
 			return pl;
+		}
+
+		/// <summary>Une planche PNG en RGBA8, octets intacts ; null (avec avertissement) si
+		/// illisible. Sert aussi au kit des paliers bas (PlantRenderer.KitSplats.cs, ⑤).</summary>
+		internal static Image LireImage(string chemin)
+		{
+			// Octets du fichier (FileAccess, comme le manifeste) puis décodeur PNG de Godot
+			// sur le tampon : même décodage que `Image.LoadFromFile`, sans son avertissement
+			// « will not work on export » (cf. en-tête, CHARGEMENT).
+			var img = new Image();
+			byte[] octets = FileAccess.GetFileAsBytes(chemin);
+			if (octets.Length == 0 || img.LoadPngFromBuffer(octets) != Error.Ok || img.IsEmpty())
+			{
+				GD.PushWarning($"[Splats] planche illisible : {chemin}");
+				return null;
+			}
+			if (img.GetFormat() != Image.Format.Rgba8) img.Convert(Image.Format.Rgba8);
+			return img;
 		}
 
 		// Bandes ≤ HauteurMaxTexture : chaque coupe tombe sur une ligne qu'aucune pièce

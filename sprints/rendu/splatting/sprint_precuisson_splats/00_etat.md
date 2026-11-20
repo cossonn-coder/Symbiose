@@ -12,7 +12,7 @@ Golden : **INTACT à tous les tronçons** (vue + outillage, `data/code/` jamais 
 | ② | `02_feuilles.md` — bibliothèque des feuilles (formes, variantes, vues, trous D5) | **fait 2026-11-20** (non commité) |
 | ③ | `03_tetes_fruits_bois.md` — têtes, fleurs, fruits, bourgeons, bois (couture mesurée) | **fait 2026-11-20** (non commité) — bois NON livré (couture visible) |
 | ④ | `04_vue_paliers_hauts.md` — vue ×4 → ×32 | **fait 2026-11-20** (`aba3663`, partiel) **+ ④bis fait 2026-11-20** (non commité) : couverture complétée là où une recette existe ; reste dessiné listé au compte rendu ④bis |
-| ⑤ | `05_vue_paliers_bas.md` — vue ×0,5 → ×2 (kit) | à faire |
+| ⑤ | `05_vue_paliers_bas.md` — vue ×0,5 → ×2 (kit) | **fait 2026-11-20** (non commité) — prémisse réfutée : le kit ne sert plus qu'aux plantes SANS fiche ; effet réel = gerbes des arbres (cf. compte rendu ⑤) |
 | ⑥ | `06_portraits.md` — 162 portraits | à faire |
 | ⑦ | `07_vue_encyclopedie.md` — encyclopédie + magazine, clôture | à faire |
 
@@ -350,6 +350,62 @@ Chatons non capturés (aucun banc ne force la floraison du noyer et de ses parei
 image file, this will not work on export » (`Image.LoadFromFile` sur `res://`, depuis le ④) — à
 vérifier au packaging (t7) : l'hypothèse « keep copie le PNG dans le .pck » n'est pas démontrée.
 
+### ⑤ Vue ×0,5 → ×2 : le kit vient des splats (2026-11-20) — FAIT, prémisse réfutée
+**Fait.** `visuals/PlantRenderer.KitSplats.cs` (neuf, 171 LDC) : lit une fois les 6 planches
+`touffe_<forme>_kit` + `fleuron_kit` (manifestes ②③, clé `taille_px` × `variante`) et
+reconstruit l'atlas du kit au **même format** (Rg8 : R = niveau, G = code), aux **mêmes clés**
+(`KitTouffe`, `KitFleuron`) → `Assemblee.cs` **inchangé**. Ancrage : chaque pièce rangée dans une
+case de côté impair dont le CENTRE est son point d'attache (l'assemblage centre la case = pose
+l'attache). Fleurons : couches pétales|cœur fondues (cœur → niveau `KitCoeur`), variante 0.
+Interrupteur = celui du ④ (Maj+F11, `SYMBIOSE_SPLATS=0`) : `AssurerKit` (Kit.cs, +3 lignes)
+prend les splats s'il est allumé, sinon l'ancien générateur, intact (aussi repli si une pièce
+manque) ; `BasculerSplats` appelle `OublierKit` (kit + gerbes reconstruits). Planche du kit
+(`WorldView.PlancheKit.cs`) : loupe et nombre de teintes ramenés à ce qui tient à l'écran
+(cases splat plus grandes : rangée 18 px contre 10 ; 2 teintes au lieu de 3 ; ancien kit
+inchangé : loupe ×10, 3 teintes). **Gerbes des arbres** (`Gerbes.cs`, 2 lignes) : leurs touffes
+viennent de `TouffeGerbe` = la pièce splat en carré centré sur l'attache, ou `PeindreTouffe`.
+
+**Prémisse du kickoff RÉFUTÉE (point transversal vérifié au code + journal).** Depuis FORMES DES
+PLANTES, les herbacées à fiche (`DessinerPort`), la prairie (`DessinerPrairie`) et les lianes
+(`DessinerLiane`) se dessinent par leur PORT à **tous** les paliers (PlantRenderer.cs:516-521),
+les arbres par leurs GERBES (`DrawHouppierBas`) : `DrawPlanteAssemblee` (le kit) n'est atteint
+que par les plantes **sans fiche**. Preuve : `planche_especes` ×0,5/×1/×2 et `full` ×1 → l'atlas
+du kit n'est **jamais construit** (aucun `[Kit]` au journal) ; captures `planche_especes` avant/après
+**identiques à l'octet**. Seuls consommateurs vivants du kit : les **gerbes** (arbres ×0,5 → ×4) et
+l'écran de chargement → d'où le branchement des gerbes (sinon tronçon inerte). **Les herbacées aux
+paliers bas restent dessinées par leur port** (feuilles vectorielles + motifs) : pour les passer en
+splats, il faudrait allumer les crochets du ④ sous ×4 (`SplatsIci` exige `AuPalier(×4)` ; les
+recettes ont pourtant leurs pièces ×0,5/×1/×2 cuites depuis le ①) — **décision orchestrateur**
+(⑤bis ?), non faite ici (« ne pas toucher au ④ »). Effet de bord assumé : les gerbes ×4 (masses des
+arbres, listées « reste dessiné » au ④bis) prennent aussi les touffes splat (même atlas).
+
+**Message « will not work on export » — DIAGNOSTIQUÉ, CORRIGÉ.** Émis par `Image.LoadFromFile` sur
+tout `res://` connu du chargeur de ressources ; il vise les PNG importés en texture (le PNG source
+n'est alors pas exporté). Ici : **faux positif**. Vérifié : `godot --headless --export-pack
+"Windows Desktop"` (VM, sans modèles d'export) → les **280 planches + 46 manifestes** sont dans le
+.pck, **octets identiques** aux fichiers (`touffe_lobee_kit`, `fleuron_kit`, `feuille_paume_x32`
+retrouvés tels quels). Correction quand même (simple, octets intacts) : `SplatPlanches.LireImage` =
+`FileAccess.GetFileAsBytes` + `Image.LoadPngFromBuffer` (même décodeur PNG) ; le ④ et le kit y
+passent. Après : 0 avertissement sur 34 chargements de planches (`planche_especes` ×4). L'export a
+semé 192 `.import` parasites (docs/, sprints/) → supprimés. Reste pour t7 : l'export réel
+(modèles Windows absents de la VM) ; les `.png.import` « keep » doivent rester versionnés.
+
+**Mesures [VM, n=1 image par cas, charge ~1-4].** Atlas du kit splat 120×126 px (ancien 84×70) ;
+lecture des 7 manifestes+planches : non chronométrée à part (≪ 1 s, aucun à-coup visible au
+journal). Poids : **aucune planche régénérée** (`assets/splats/` 26 Mo inchangé) ; code +10 Ko
+(KitSplats.cs) ; captures `mesures/vue5_*` 2,6 Mo.
+
+**Captures (lues au Read)** — `mesures/` : `vue5_{avant,apres}_kit.png` (planche du kit, `-k`),
+`vue5_{avant,apres}_gerbes.png` (atlas des gerbes, `-G`), `vue5_{avant,apres}_full_x1.png` (monde
+`full` ×1, arbres), `vue5_apres_x{0_5,1,2}.png` (`planche_especes` ; les « avant » étaient identiques
+à l'octet, supprimées). Lecture : touffes splat sans contour, plus « tache orientée » que bouquet
+de feuilles (réserves du ①②) ; lancéolée en rubans qui montent de l'attache ; gerbes plus denses,
+moins découpées (plus de feuilles cernées) ; fleuron étoile = tache 5×3 SANS cœur (la couche cœur
+est vide aux pièces du ③ : le cœur jaune des fleurons disparaît).
+
+**Vérif.** Golden `bce813af…` **INTACT**. `dotnet build` vert, 0 avertissement. LDC : KitSplats 171,
+Kit.cs 249, Gerbes 190, SplatPlanches 172, PlancheKit 77, Splats 158 (tous 🟢).
+
 ## F5 (recette pour Nico — complétée par ④⑤⑦)
 **④ (×4 → ×32)** — banc `planche_especes`, zoomer ×4 → ×32 sur tomate, carotte, courgette,
 fraisier, tournesol, poivron ; Maj+F11 pour comparer avec l'ancien dessin.
@@ -369,6 +425,13 @@ fleur, et un pommier en fleur (`verger_floraison`) ; Maj+F11 pour comparer.
 - **À juger** : à ×4 le pommier fleuri est-il assez fleuri (fleurs une à une au lieu des gerbes,
   plus clairsemé) ? Les chatons (noyer, noisetier…) en floraison réelle. La prairie garde ses
   brins et le trèfle ses feuilles dessinés (cf. compte rendu) : le mélange se voit-il ?
+
+**⑤ (×0,5 → ×2)** — monde `full` (et un verger) à ×0,5, ×1, ×2 ; Maj+F11 pour comparer.
+- Les ARBRES (gerbes) : feuillage en touffes splat — la lumière suit-elle le soleil, les essences
+  se distinguent-elles encore de loin ? (gerbes plus pleines, sans contour sombre).
+- Les herbacées ne changent PAS à ces paliers (dessinées par leur port, cf. compte rendu ⑤).
+- Fleurs des plantes sans fiche à ×2 : fleurons sans cœur jaune — gênant ?
+- Planche du kit : `tools/capture_vm.sh -k` (2 teintes au lieu de 3 avec les splats).
 
 # Carnet de conception (historique)
 
@@ -444,9 +507,9 @@ fleur, et un pommier en fleur (`verger_floraison`) ; Maj+F11 pour comparer.
 
 ## §REPRISE
 Lire `CLAUDE.md`, ce fichier, la conception, puis le kickoff du premier tronçon
-« à faire » de la carte. ①②③④ faits, ④bis fait (non commité) : couverture ×4-×32 complétée là où
-une recette existe ; reste dessiné listé au compte rendu ④bis. Outils réutilisables tels quels :
-`SplatPlanches.Trouver`, `PoserPieceSplat`, `PoserPieceFeuille`, `PoserOrganeSplat`. **Prochain :
-⑤** (`05_vue_paliers_bas.md`, paliers ×0,5-×2 : planches `touffe_*_kit` / `fleuron_kit` ; les
-masses ×4 d'arbre et de plantes génériques, sans recette, pourraient y trouver leurs touffes).
-Tailles nominales et densité des fleurs d'arbre ×4 = points F5 ouverts. Golden `bce813af…` intact.
+« à faire » de la carte. ①②③④ faits, ④bis et ⑤ faits (non commités). Outils réutilisables tels
+quels : `SplatPlanches.Trouver` / `LireImage`, `PoserPieceSplat`, `PoserPieceFeuille`,
+`PoserOrganeSplat`, `TouffeGerbe`. **Ouvert pour l'orchestrateur** : les herbacées aux paliers bas
+(×0,5-×2) restent dessinées par leur port — allumer les crochets du ④ sous ×4 = ⑤bis à trancher.
+**Prochain : ⑥** (`06_portraits.md`). Tailles nominales, densité des fleurs d'arbre ×4, fleurons
+sans cœur = points F5 ouverts. Golden `bce813af…` intact.

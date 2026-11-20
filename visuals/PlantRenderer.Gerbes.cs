@@ -212,8 +212,8 @@ namespace Symbiose
 				int taille = k % 3 == 2 && t > KitTailles[0] ? KitTailles[System.Array.IndexOf(KitTailles, t) - 1] : t;
 				int vt = (int)(hg(511, k) * KitVariantes) % KitVariantes;
 				if (!touffes.TryGetValue((forme, taille, vt), out var piece))
-					touffes[(forme, taille, vt)] = piece = PeindreTouffe(forme, taille, vt);
-				EstamperTouffe(rg, h, feuilles, sites[k], piece, taille);
+					touffes[(forme, taille, vt)] = piece = TouffeGerbe(forme, taille, vt);   // splats ou générée (⑤)
+				EstamperTouffe(rg, h, feuilles, sites[k], piece, (int)Mathf.Sqrt(piece.Niv.Length));
 			}
 		}
 

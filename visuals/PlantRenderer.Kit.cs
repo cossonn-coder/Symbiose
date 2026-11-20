@@ -53,8 +53,10 @@ namespace Symbiose
 		private static readonly Dictionary<(LeafShape, int, int), Rect2I> _kitTouffes = new();
 		private static readonly Rect2I[] _kitFleurons = new Rect2I[3];
 
-		/// <summary>Hauteur d'une rangée de l'atlas (planche du kit).</summary>
-		internal const int KitPasRangee = KitPas;
+		/// <summary>Hauteur d'une rangée de l'atlas (planche du kit) : KitPas pour le kit
+		/// généré, la plus haute case + 1 pour le kit splat (PRÉCUISSON SPLATS ⑤).</summary>
+		internal static int KitPasRangee { get { AssurerKit(); return _kitPasRangee; } }
+		private static int _kitPasRangee = KitPas;
 		internal static string[] KitFormes => System.Enum.GetNames(typeof(LeafShape));
 
 		/// <summary>Atlas des niveaux (R) et des codes indexés (G), généré une seule fois.</summary>
@@ -100,6 +102,10 @@ namespace Symbiose
 		private static void AssurerKit()
 		{
 			if (_kitNiveaux != null) return;
+			// PRÉCUISSON SPLATS ⑤ : pièces précuites (KitSplats.cs) ; le générateur ci-dessous
+			// reste l'ancien kit (Maj+F11, SYMBIOSE_SPLATS=0) et le repli si une pièce manque.
+			if (SplatsActifs && ConstruireKitSplats()) return;
+			_kitPasRangee = KitPas;
 			var formes = (LeafShape[])System.Enum.GetValues(typeof(LeafShape));
 			int largeur = 0;
 			foreach (int t in KitTailles) largeur += (t + 1) * KitVariantes;

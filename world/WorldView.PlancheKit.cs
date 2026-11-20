@@ -44,12 +44,16 @@ namespace Symbiose
 			// Grande loupe ×10 sur la 1ʳᵉ teinte (juger au pixel), noms de forme à
 			// gauche ; à droite, les 3 teintes ×4 puis la taille réelle des paliers
 			// bas : ×2 écran (palier ×1) et ×4 écran (palier ×2).
-			const float loupe = 10f, gauche = 130f;
+			// PRÉCUISSON SPLATS ⑤ : le kit splat a des cases plus grandes (attache au centre)
+			// → loupe ramenée à ce qui tient en 1080 px, teintes à droite autant qu'il en tient.
+			const float gauche = 130f;
+			float loupe = Mathf.Min(10f, Mathf.Floor(1048f / (pas * (nbFormes + 1))));
+			int nbTeintes = Mathf.Clamp((int)(1064f / (pas * nbFormes * 4f + 20f)), 1, PlancheKitTeintes.Length);
 			float droite = gauche + atlas.GetWidth() * loupe + 40f;
 			for (int r = 0; r < nbFormes; r++)
 				Etiquette(racine, PlantRenderer.KitFormes[r], new Vector2(8f, 16f + r * pas * loupe));
 			Etiquette(racine, "Fleurons", new Vector2(8f, 16f + nbFormes * pas * loupe));
-			for (int t = 0; t < PlancheKitTeintes.Length; t++)
+			for (int t = 0; t < nbTeintes; t++)
 			{
 				var tex = ImageTexture.CreateFromImage(
 					PlantRenderer.TeindreKit(feuilles, PlantRenderer.RampeKit(PlancheKitTeintes[t])));

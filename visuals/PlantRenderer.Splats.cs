@@ -42,6 +42,7 @@ namespace Symbiose
 		internal static void BasculerSplats()
 		{
 			SplatsActifs = !SplatsActifs;
+			OublierKit();   // le kit des paliers bas change de source (⑤)
 			foreach (var p in BakeQueue.All) p.Invalidate();
 			GD.Print($"[Splats] Maj+F11 → pièces splat {(SplatsActifs ? "ON" : "OFF (dessin vectoriel)")}.");
 		}
