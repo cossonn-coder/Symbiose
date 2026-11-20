@@ -55,6 +55,7 @@ function ranger(pieces) {
         palier: p.palier, ...(p.taille ? { taille_px: p.taille } : {}),
         inclinaison_deg: p.inclinaison, variante: p.variante,
         ...(p.trou ? { trou: p.trou.type, degre: p.trou.degre } : {}), lacet_deg: p.lacet,
+        ...(p.couche ? { couche: p.couche } : {}),
         planche: z, rect: [px, py, p.w, p.h],
         attache: [p.attache[0], p.attache[1]]
       });

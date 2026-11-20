@@ -10,7 +10,7 @@ Golden : **INTACT à tous les tronçons** (vue + outillage, `data/code/` jamais 
 |---|---|---|
 | ① | `01_atelier_cuisson.md` — outil `tools/splat/` + feuille composée, format palette indexée, tous paliers, mesures — **PORTE DE DÉCISION** | **fait 2026-11-20 — porte PASSÉE avec réserves** (cf. compte rendu) |
 | ② | `02_feuilles.md` — bibliothèque des feuilles (formes, variantes, vues, trous D5) | **fait 2026-11-20** (non commité) |
-| ③ | `03_tetes_fruits_bois.md` — têtes, fleurs, fruits, bourgeons, bois (couture mesurée) | à faire |
+| ③ | `03_tetes_fruits_bois.md` — têtes, fleurs, fruits, bourgeons, bois (couture mesurée) | **fait 2026-11-20** (non commité) — bois NON livré (couture visible) |
 | ④ | `04_vue_paliers_hauts.md` — vue ×4 → ×32 | à faire |
 | ⑤ | `05_vue_paliers_bas.md` — vue ×0,5 → ×2 (kit) | à faire |
 | ⑥ | `06_portraits.md` — 162 portraits | à faire |
@@ -158,6 +158,75 @@ montent de 0 à ~50°) ; mêmes réserves qu'au ① (plus claires que le kit, sa
 - Le kit des touffes a la largeur de la taille demandée (±1 px) mais une hauteur
   ~moitié (vue iso), là où le kit actuel est carré : à juger au ⑤.
 
+### ③ Têtes, fleurs, fruits, boutons, bois (2026-11-20) — FAIT, bois non livré
+**Fait.** 22 recettes d'organes cuites dans `assets/splats/` (table « nom vue → recette »
+dans le champ `vue` de chaque manifeste) :
+- têtes (`FormeTete`, 13) : `tete_capitule` · `_bouquet` · `_chapelet` · `_epi` · `_ombelle` ·
+  `_boule` (sert aussi la tête de graines du capitule) · `_grappe` · `_soleil` · `_etoile` ·
+  `_pendante` · `_corolle` (sert aussi PoserFleurSnes et PiecesFleur) · `_trompette` · `_papillon` ;
+- autres fleurs : `chaton` (PoserChaton), `epi_ble`, `epi_barbu` (seigle), `panicule` (pâturin) —
+  dessinés par PortChaume, oubliés du kickoff ;
+- fruits : `fruit_globe` (tous les fruits ronds, herbacées et arbres), `fruit_long` (courgette,
+  `Allonge` > 1), `gousse` (haricot hors fleur) ; `bouton` (boutons floraux) ; `fleuron` (kit
+  D4, tailles 1/2/3 px).
+Briques : `lib/organe.js` (fabrique sans trous + pétale/boule/tige/corolle), `controle_organes.js`
+(planche relue sur disque), `recettes/bois.js` + `couture_bois.js` (mesure). `cuire.js` : recette
+peut fixer ses `paliers` ; **COUCHES** (`couches: [...]`) → une pièce par couche et par vue, même
+attache, champ `couche` du manifeste (`lib/codes.js` : pixel à la couche majoritaire de ses
+échantillons). Non-régression : `feuille_composee` ×0,5/×1/×2 recuite hors dépôt = octets
+identiques ; aucune feuille du ② recuite.
+
+**Couches cuites** (une palette par couche à l'assemblage, comme `CouchePiece`) : corolle et
+fleuron `petales|coeur` · soleil `rayons|coeur|revers` · ombelle `fleurs|rayons` · chapelet
+`fleurs|silicules` · bouton `petales|sepales` · fruits `fruit|pedoncule`. Les autres : une couche
+(le cœur sombre de l'étoile ou le fond de la trompette = le creux, ton 0).
+
+**Vues** : 8 lacets × 3 inclinaisons (V du ①) partout, sauf symétrie de révolution →
+1 vue (`fruit_globe`, `bouton`, `fleuron`) ; `fruit_long` couché : inclinaisons −15/0/15.
+
+**Mesures [VM, n=1 cuisson complète, 11 processus parallèles, charge ~12].**
+- 12 702 pièces (832 vides : surtout couches de cœur aux paliers bas, ×0,5 de profil).
+- Temps : **29 min 44 s** mur, 118 min CPU ; de 1 s (fleuron) à 24 min (tournesol, ×32).
+- **Poids** : `assets/splats/` 14,8 → **24,9 Mo (+10,1 Mo)** ; contrôles `mesures/` +2,0 Mo.
+  Cumul loin de l'alerte 200 Mo.
+- Contrôles (lus au Read) : `mesures/controle_organes.png` (toute la bibliothèque) et
+  `mesures/controle_<recette>.png`. Toutes les formes se lisent dès ×8 ; tournesol, ombelle,
+  capitule, épis, chaton, courgette nets dès ×2 ; papillon et silicules du chapelet les plus faibles.
+
+**Bois — couture MESURÉE, NON LIVRÉ** (`mesures/couture_bois.png`, `couture_bois.js`) :
+5 tronçons de 8 cm posés le long de 3 vrais segments du « Pommier · an 10 » (tronc 15,1 cm
+vertical, branche 7,4 cm, rameau 1,7 cm), ×8 et ×16, en A (direction exacte), B (vue du
+catalogue 8 lacets × 0/30/60/90°) et C (un cylindre d'un tenant). **A montre déjà les joints**
+(anneaux et fissures rompues sur le tronc, bourrelets sur le rameau) ; B y ajoute des marches de
+0 / 1,3-2,7 / 3,2-6,3 px (×8-×16) ; C est propre. → la vue garde son bois dessiné (consigne du
+kickoff, pas de bricolage). Aucune planche `bois_*` dans `assets/`.
+
+**Écarts au kickoff (hypothèses corrigées).**
+1. Liste des fichiers incomplète : les têtes sont dans `PortTetes.cs` (+ PortTigeFormes,
+   PortTapis, PortRampante, PortVolubile, Prairie), fruits de port dans `Ports.cs`, épis de chaume
+   dans `PortChaume.cs`. Inventaire refait au grep (sans DeepSeek).
+2. `FlowerShape` / `DrawFlowerShape` (Flower.cs : Simple, Ombelle, Capitule, Papilionacee, Epi,
+   Clochette) n'a **aucun appelant** = code mort (signalé, non supprimé, non cuit).
+3. « Bourgeons » : la vue ne dessine aucun bourgeon végétatif → servis par `bouton`.
+4. Oblique : ③ **tasse les axes** (× 0,816 en vertical) avant la caméra ortho (`lib/organe.js`)
+   → épis, gousses, chatons tombent sur la projection de la vue ; rayons gardés ronds. Les feuilles
+   du ② ne sont pas tassées (couchées, écart < 1 px jusqu'à ×4) — incohérence mineure assumée.
+5. **Échelle des organes ronds** : la vue dessine un disque de r cm à r × 0,39 px/cm × zoom
+   (PxPerCmX), la caméra (fidèle au losange du sol) à r × 0,55 → les têtes et fruits cuits sont
+   **√2 plus gros** que les disques d'aujourd'hui (même échelle que les feuilles du ②). Le bois,
+   lui, colle (WoodWidthFactor 1,5 → 0,585 contre 0,55).
+
+**Points pour la suite (④ ⑤).**
+- TAILLE NOMINALE par recette (médiane des fiches, en tête de chaque recette) : tête 0,8 à
+  12,5 cm selon l'espèce, épi de 8 cm (la vue le fait suivre la hampe), chapelet sur hampe de
+  20 cm, globe de 2 cm (cerise 1 → pomme 3,5 ; fruit d'arbre qui grossit avec la maturité). Même
+  arbitrage que les feuilles du ② : taille nominale ou classes de taille.
+- Échelle √2 ci-dessus : accepter (cohérent avec les feuilles) ou réduire les rayons nominaux.
+- **Planches trop hautes** : `tete_soleil_x32` 2020×12 375 (25 Mpx, refusée par le lecteur PNG
+  d'ink-studio, sautée par `controle_organes.js`) et, héritée du ②, `feuille_paume_x32`
+  2042×17 394 (> 16 384, limite usuelle d'une texture GPU) → le ④ devra scinder ces planches.
+- Les couches de cœur s'effacent sous ~×2 (pièces vides) : la vue posera alors la couche 0 seule.
+
 ## F5 (recette pour Nico — complétée par ④⑤⑦)
 (à écrire)
 
@@ -235,8 +304,9 @@ montent de 0 à ~50°) ; mêmes réserves qu'au ① (plus claires que le kit, sa
 
 ## §REPRISE
 Lire `CLAUDE.md`, ce fichier, la conception, puis le kickoff du premier tronçon
-« à faire » de la carte. ① et ② faits (non commités par les sous-agents). Prochain :
-③ (`03_tetes_fruits_bois.md`) — réutiliser `cuire.js` + `lib/feuille.js` (fabrique
-`recette`) ; les têtes/fruits n'ont PAS de trous (ne pas poser `trous`). Cuire toute
-une famille en parallèle : commande dans `tools/splat/README.md`. Golden `bce813af…`
-intact.
+« à faire » de la carte. ①②③ faits (③ non commité). Prochain : ④
+(`04_vue_paliers_hauts.md`) — lire le compte rendu ③ : organes = manifestes `tete_*`,
+`fruit_*`, `gousse`, `chaton`, `epi_*`, `panicule`, `bouton`, `fleuron` (champ `vue` = table
+nom vue → recette, champ `couche` = une palette par couche) ; **le bois reste dessiné** (couture
+visible) ; trois arbitrages à remonter à Nico (taille nominale, échelle √2 des organes ronds,
+scission des planches > 16 384 px). Golden `bce813af…` intact.

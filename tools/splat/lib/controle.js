@@ -20,6 +20,10 @@
 const { tonEclaire } = require('./codes');
 
 const RAMPE = [[0x1e, 0x3a, 0x2c], [0x2f, 0x5e, 0x34], [0x4f, 0x8a, 0x3a], [0x86, 0xb8, 0x4a], [0xd8, 0xe6, 0x7a]];
+// ③ : une rampe témoin par COUCHE (0 la rampe verte ci-dessus, 1 or-brun, 2 rose).
+const RAMPES = [RAMPE,
+  [[0x4a, 0x2a, 0x12], [0x7a, 0x4a, 0x1a], [0xb8, 0x80, 0x22], [0xe8, 0xc0, 0x40], [0xff, 0xf0, 0x9a]],
+  [[0x4a, 0x1e, 0x3a], [0x80, 0x34, 0x5a], [0xc0, 0x5a, 0x80], [0xe8, 0x94, 0xb0], [0xff, 0xd8, 0xe8]]];
 const FOND = [0x24, 0x20, 0x2a];
 const SOLEIL = [-0.6, -0.8];   // direction écran vers le soleil : haut-gauche (unitaire)
 const MARGE = 6;
@@ -32,7 +36,7 @@ function poser(img, W, piece, ox, oy, k) {
       const q = (y * piece.w + x) * 4;
       if (!piece.rgba[q + 3]) continue;
       const c = piece.rgba[q + 1];
-      const col = RAMPE[tonEclaire((c >> 4) & 7, c & 15, SOLEIL)];
+      const col = RAMPES[piece.ics ? piece.ics[q >> 2] : 0][tonEclaire((c >> 4) & 7, c & 15, SOLEIL)];
       for (let j = 0; j < k; j++)
         for (let i = 0; i < k; i++) {
           const p = ((oy + y * k + j) * W + ox + x * k + i) * 3;
@@ -66,4 +70,39 @@ function composer(lignes, zooms, annexe) {
   return { w: W, h: H, rgb: img };
 }
 
-module.exports = { composer, agrandi, SOLEIL };
+// ③ COUCHES : les pièces d'une même vue (une par couche) superposées en une
+// pièce de contrôle, alignées sur leur attache ; `ics` = couche de chaque pixel.
+// Les pièces sans couche passent telles quelles.
+function fusionner(pieces) {
+  const sortie = [], groupes = new Map();
+  for (const p of pieces) {
+    if (p.couche === undefined) { sortie.push(p); continue; }
+    const cle = [p.palier, p.taille, p.inclinaison, p.variante, p.lacet].join('|');
+    if (!groupes.has(cle)) { groupes.set(cle, []); sortie.push(cle); }
+    groupes.get(cle).push(p);
+  }
+  return sortie.map(e => (typeof e === 'string' ? fusion(groupes.get(e)) : e));
+}
+
+function fusion(liste) {
+  const pleines = liste.filter(p => p.w > 0);
+  if (!pleines.length) return { ...liste[0], w: 0, h: 0 };
+  const g = Math.min(...pleines.map(p => -p.attache[0])), t = Math.min(...pleines.map(p => -p.attache[1]));
+  const w = Math.max(...pleines.map(p => p.w - p.attache[0])) - g;
+  const h = Math.max(...pleines.map(p => p.h - p.attache[1])) - t;
+  const rgba = new Uint8Array(w * h * 4), ics = new Uint8Array(w * h);
+  for (const p of pleines) {
+    const ox = -p.attache[0] - g, oy = -p.attache[1] - t;
+    for (let y = 0; y < p.h; y++)
+      for (let x = 0; x < p.w; x++) {
+        const s = (y * p.w + x) * 4;
+        if (!p.rgba[s + 3]) continue;
+        const d = (y + oy) * w + x + ox;
+        rgba.set(p.rgba.subarray(s, s + 4), d * 4);
+        ics[d] = p.ic;
+      }
+  }
+  return { ...liste[0], couche: undefined, w, h, rgba, ics, attache: [-g, -t] };
+}
+
+module.exports = { composer, agrandi, fusionner, SOLEIL };

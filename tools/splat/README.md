@@ -31,6 +31,8 @@ node tools/splat/controle_feuilles.js sprints/…/mesures/controle_feuilles.png
 Cuire toute la bibliothèque (② : 24 recettes, ~12 processus en parallèle) :
 `ls tools/splat/recettes | sed 's/\.js$//' | grep -v '^touffe$' | xargs -P 12 -I{} node tools/splat/cuire.js {}`.
 Ne recuire que les recettes modifiées (D2 : chaque régénération grossit l'historique git).
+Organes (③, 22 recettes) : même commande filtrée par
+`grep -E '^(tete_|fruit_|gousse|chaton|epi_|panicule|bouton|fleuron)'`.
 
 Options de `cuire.js` : `--sortie` (défaut `assets/splats`), `--controle DOSSIER`
 (planche de contrôle humaine), `--lacets N` (défaut : la recette, sinon 8),
@@ -55,6 +57,10 @@ collée sous le contrôle). Deux cuissons donnent des fichiers identiques à l'o
 | `lib/trous.js` | degrés de trous D5 : morsures (bord) et grêle (criblage), solides négatifs |
 | `recettes/*.js` | une recette = un organe sculpté (contrat en tête de `feuille_composee.js`) |
 | `recettes/touffe.js` | fabrique des touffes du kit (`touffe_<forme>.js`, une par `LeafShape`) |
+| `lib/organe.js` | ③ fabrique des recettes d'organes (têtes, fruits, boutons, bois) : couches, axe tassé à l'oblique de la vue, briques pétale/boule/tige/corolle |
+| `recettes/tete_*.js`, `fruit_*.js`, `gousse`, `chaton`, `epi_*`, `panicule`, `bouton`, `fleuron` | ③ organes (une recette par forme dessinée par la vue, champ `vue` du manifeste) |
+| `controle_organes.js` | ③ planche de contrôle des organes (relue sur disque, couches superposées) |
+| `recettes/bois.js` + `couture_bois.js` | ③ tronçons d'écorce + MESURE de couture sur le pommier an 10 — bois NON livré (joints visibles), cf. 00_etat ③ |
 
 ## Format d'une pièce (= atlas du kit actuel, `PlantRenderer.Kit.cs`)
 
@@ -67,3 +73,5 @@ recette »), `trous` (paliers, variantes et degrés cuits) ; par pièce `palier`
 `taille_px` (touffes du kit, planche `kit`), `trou` + `degre` (pièces trouées), `inclinaison_deg`, `variante`, `lacet_deg`
 (0 = organe vers l'est, sens trigo vu du dessus), `planche`, `rect` [x, y, w, h],
 `attache` [x, y] en px de la pièce (là où l'organe tient à sa tige).
+③ : `couches` (manifeste) et `couche` (pièce) — un organe multicolore donne une pièce
+PAR COUCHE et par vue, même attache ; la vue pose une palette par couche.

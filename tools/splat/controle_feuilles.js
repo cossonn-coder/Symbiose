@@ -61,4 +61,6 @@ function principal() {
   console.log(`${sortie} : ${img.w}×${img.h}, ${manifestes.length} recettes`);
 }
 
-principal();
+// Lancé → la planche ; requis (controle_organes.js, ③) → le lecteur de pièces.
+if (require.main === module) principal();
+module.exports = { piece, DOSSIER };

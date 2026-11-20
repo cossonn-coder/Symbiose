@@ -29,6 +29,9 @@
 //   • `tailles: [3, 5, 7, 9]` (touffes du kit des paliers bas, D4) → la pièce est
 //     cuite à ces largeurs en px internes au lieu des paliers (zoom déduit de
 //     `empriseCm`, la largeur vue de la pièce, sinon du rayon), rangée dans la planche « kit » ; `lacets`, `inclinaisons` propres.
+// ③ : `paliers` propres (le bois ne se cuit qu'aux paliers où il est large) et
+//   `couches: ['petales', 'coeur']` → une pièce PAR COUCHE et par vue (même
+//   cadrage, champ `couche` du manifeste ; lib/organe.js, lib/codes.js).
 //
 // Déterministe : graines fixes, aucune horloge dans les fichiers écrits (les
 // temps ne vont qu'à la console). Golden non concerné (outil hors moteur).
@@ -58,7 +61,7 @@ const INCLINAISONS = [-30, 0, 30];              // V retenu au ① (8 lacets × 
 
 function options(argv) {
   const o = { recette: argv[0], sortie: 'assets/splats', controle: null, actuel: null, lacets: null,
-    inclinaisons: null, paliers: iso.PALIERS };
+    inclinaisons: null, paliers: null };
   for (let i = 1; i < argv.length; i += 2) {
     const k = argv[i].replace(/^--/, ''), v = argv[i + 1];
     if (k === 'lacets') o.lacets = +v;
@@ -71,17 +74,22 @@ function options(argv) {
   return o;
 }
 
-// Palette du builder : 0 = fond, 1..CRANS = gris croissants.
-const PALETTE = [0x000000, ...Array.from({ length: CRANS }, (_, k) => (12 + k * 24) * 0x010101)];
+// Palette du builder : 0 = fond, puis CRANS gris croissants PAR COUCHE (③) ; la
+// couche c décale le rouge de c (couleurs distinctes, la couche 0 inchangée).
+const COUCHES = 3;
+const PALETTE = [0x000000, ...Array.from({ length: CRANS * COUCHES },
+  (_, i) => (12 + (i % CRANS) * 24) * 0x010101 + ((i / CRANS) | 0) * 0x010000)];
 const RAMPE = Array.from({ length: CRANS }, (_, k) => k + 1);
-const tableTons = () => codes.tableTons(PALETTE, RAMPE, TON_DE);
+const rampeCouche = c => RAMPE.map(i => i + c * CRANS);
+const tableTons = () => new Map(Array.from({ length: COUCHES },
+  (_, c) => [...codes.tableTons(PALETTE, rampeCouche(c), TON_DE, c)]).flat());
 
 // Sculpte et cuit la recette pour une (variante, inclinaison) → monde ink-studio.
 function cuireMonde(L, recette, variante, inclinaisonDeg, trou = null) {
   const B = L.makeBuilder(GRAINE, PALETTE);
   const S = L.KIT.sculpt(L.makeSculpt(B));
   S.sunK = 0; S.amb = AMBIANT; S.sky = CIEL;
-  recette.sculpter({ S, K: L.KIT, M: { organe: { r: RAMPE } }, variante, trou,
+  recette.sculpter({ S, K: L.KIT, M: { organe: { r: RAMPE }, couches: Array.from({ length: COUCHES }, (_, c) => ({ r: rampeCouche(c) })) }, variante, trou,
     inclinaison: (inclinaisonDeg * Math.PI) / 180 });
   S.bake();
   const r = recette.rayonCm / iso.CM_PAR_UNITE + 1;
@@ -122,13 +130,14 @@ function cuireRecette(recette, o) {
         const lacetDeg = (360 * k) / o.lacets;
         t = process.hrtime.bigint();
         const photo = iso.photographier(ink, monde, recette.rayonCm, q.z, (lacetDeg * Math.PI) / 180);
-        const p = codes.piece(photo, monde, tons);
+        const couches = recette.couches || [null];
+        const ps = couches.map((_, c) => codes.piece(photo, monde, tons, c));
         const dt = Number(process.hrtime.bigint() - t) / 1e6;
         const cle = q.taille ? 't' + q.taille : q.z;
         const [n, s] = temps.photo.get(cle) || [0, 0];
         temps.photo.set(cle, [n + 1, s + dt]);
-        pieces.push({ palier: q.z, planche: q.planche, taille: q.taille, trou, inclinaison, variante,
-          lacet: lacetDeg, ...p });
+        ps.forEach((p, c) => pieces.push({ palier: q.z, planche: q.planche, taille: q.taille, trou, inclinaison,
+          variante, lacet: lacetDeg, ...(couches[c] ? { couche: couches[c], ic: c } : {}), ...p }));
       }
   }
   return { pieces, temps };
@@ -144,6 +153,7 @@ function recadrer(spec) {
 }
 
 function ecrireControle(dossier, nom, pieces, o) {
+  pieces = controle.fusionner(pieces);   // ③ : couches d'une même vue superposées
   if (pieces.some(p => p.taille)) return ecrireControleKit(dossier, nom, pieces);
   const lignes = [], zooms = [];
   for (const z of o.paliers)
@@ -186,6 +196,7 @@ function principal() {
   const recette = require(`./recettes/${o.recette}.js`);
   if (o.lacets === null) o.lacets = recette.lacets || 8;
   if (o.inclinaisons === null) o.inclinaisons = recette.inclinaisons || INCLINAISONS;
+  if (o.paliers === null) o.paliers = recette.paliers || iso.PALIERS;
   const t0 = process.hrtime.bigint();
   const { pieces, temps } = cuireRecette(recette, o);
   const meta = {
@@ -193,6 +204,7 @@ function principal() {
     px_par_cm_x1: iso.PX_PAR_CM_X, seuil_plat: codes.SEUIL_PLAT,
     lacets: o.lacets, inclinaisons_deg: o.inclinaisons, variantes: recette.variantes,
     ...(recette.vue ? { vue: recette.vue } : {}), ...(recette.notes ? { notes: recette.notes } : {}),
+    ...(recette.couches ? { couches: recette.couches } : {}),
     ...(recette.trous ? { trous: { paliers: PALIERS_TROUS, variantes: TROUS_VARIANTES,
       degres: TROUS.filter(Boolean) } } : {}),
     attache: 'px de la pièce (coin haut-gauche = 0,0), peut sortir du rectangle'
@@ -209,4 +221,4 @@ function principal() {
 
 // Lancé en ligne de commande → cuisson ; requis (mesurer_vues.js) → la boîte à outils.
 if (require.main === module) principal();
-module.exports = { cuireMonde, tableTons };
+module.exports = { cuireMonde, tableTons, cuireRecette };

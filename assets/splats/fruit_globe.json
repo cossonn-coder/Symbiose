@@ -1,0 +1,788 @@
+{
+ "recette": "fruit_globe",
+ "format": "R = niveau kit (2 ombre, 3 base, 4 lumière) ; G = 128 | ton << 4 | orientation ; A = posé",
+ "px_par_cm_x1": 0.39,
+ "seuil_plat": 0.3,
+ "lacets": 1,
+ "inclinaisons_deg": [
+  0
+ ],
+ "variantes": 3,
+ "vue": [
+  "DrawFruits (globe ×8)",
+  "PoserFruit (Allonge <= 1)",
+  "DrawFruitsHouppier"
+ ],
+ "couches": [
+  "fruit",
+  "pedoncule"
+ ],
+ "attache": "px de la pièce (coin haut-gauche = 0,0), peut sortir du rectangle",
+ "planches": {
+  "x0_5": "fruit_globe_x0_5.png",
+  "x1": "fruit_globe_x1.png",
+  "x2": "fruit_globe_x2.png",
+  "x4": "fruit_globe_x4.png",
+  "x8": "fruit_globe_x8.png",
+  "x16": "fruit_globe_x16.png",
+  "x32": "fruit_globe_x32.png"
+ },
+ "pieces": [
+  {
+   "palier": 0.5,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "couche": "fruit",
+   "planche": "x0_5",
+   "rect": [
+    0,
+    0,
+    1,
+    1
+   ],
+   "attache": [
+    0,
+    0
+   ]
+  },
+  {
+   "palier": 0.5,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "couche": "pedoncule",
+   "planche": "x0_5",
+   "rect": [
+    2,
+    0,
+    0,
+    0
+   ],
+   "attache": [
+    3,
+    3
+   ]
+  },
+  {
+   "palier": 0.5,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "couche": "fruit",
+   "planche": "x0_5",
+   "rect": [
+    3,
+    0,
+    1,
+    1
+   ],
+   "attache": [
+    0,
+    0
+   ]
+  },
+  {
+   "palier": 0.5,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "couche": "pedoncule",
+   "planche": "x0_5",
+   "rect": [
+    5,
+    0,
+    0,
+    0
+   ],
+   "attache": [
+    3,
+    3
+   ]
+  },
+  {
+   "palier": 0.5,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "couche": "fruit",
+   "planche": "x0_5",
+   "rect": [
+    6,
+    0,
+    1,
+    1
+   ],
+   "attache": [
+    0,
+    0
+   ]
+  },
+  {
+   "palier": 0.5,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "couche": "pedoncule",
+   "planche": "x0_5",
+   "rect": [
+    8,
+    0,
+    0,
+    0
+   ],
+   "attache": [
+    3,
+    3
+   ]
+  },
+  {
+   "palier": 1,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "couche": "fruit",
+   "planche": "x1",
+   "rect": [
+    0,
+    0,
+    3,
+    3
+   ],
+   "attache": [
+    1,
+    1
+   ]
+  },
+  {
+   "palier": 1,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "couche": "pedoncule",
+   "planche": "x1",
+   "rect": [
+    4,
+    0,
+    0,
+    0
+   ],
+   "attache": [
+    4,
+    4
+   ]
+  },
+  {
+   "palier": 1,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "couche": "fruit",
+   "planche": "x1",
+   "rect": [
+    5,
+    0,
+    3,
+    3
+   ],
+   "attache": [
+    1,
+    1
+   ]
+  },
+  {
+   "palier": 1,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "couche": "pedoncule",
+   "planche": "x1",
+   "rect": [
+    9,
+    0,
+    0,
+    0
+   ],
+   "attache": [
+    4,
+    4
+   ]
+  },
+  {
+   "palier": 1,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "couche": "fruit",
+   "planche": "x1",
+   "rect": [
+    10,
+    0,
+    3,
+    3
+   ],
+   "attache": [
+    1,
+    1
+   ]
+  },
+  {
+   "palier": 1,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "couche": "pedoncule",
+   "planche": "x1",
+   "rect": [
+    14,
+    0,
+    0,
+    0
+   ],
+   "attache": [
+    4,
+    4
+   ]
+  },
+  {
+   "palier": 2,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "couche": "fruit",
+   "planche": "x2",
+   "rect": [
+    0,
+    0,
+    5,
+    5
+   ],
+   "attache": [
+    2,
+    2
+   ]
+  },
+  {
+   "palier": 2,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "couche": "pedoncule",
+   "planche": "x2",
+   "rect": [
+    6,
+    0,
+    0,
+    0
+   ],
+   "attache": [
+    6,
+    6
+   ]
+  },
+  {
+   "palier": 2,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "couche": "fruit",
+   "planche": "x2",
+   "rect": [
+    7,
+    0,
+    5,
+    5
+   ],
+   "attache": [
+    2,
+    2
+   ]
+  },
+  {
+   "palier": 2,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "couche": "pedoncule",
+   "planche": "x2",
+   "rect": [
+    13,
+    0,
+    0,
+    0
+   ],
+   "attache": [
+    6,
+    6
+   ]
+  },
+  {
+   "palier": 2,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "couche": "fruit",
+   "planche": "x2",
+   "rect": [
+    14,
+    0,
+    5,
+    5
+   ],
+   "attache": [
+    2,
+    2
+   ]
+  },
+  {
+   "palier": 2,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "couche": "pedoncule",
+   "planche": "x2",
+   "rect": [
+    20,
+    0,
+    0,
+    0
+   ],
+   "attache": [
+    6,
+    6
+   ]
+  },
+  {
+   "palier": 4,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "couche": "fruit",
+   "planche": "x4",
+   "rect": [
+    0,
+    0,
+    11,
+    9
+   ],
+   "attache": [
+    5,
+    4
+   ]
+  },
+  {
+   "palier": 4,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "couche": "pedoncule",
+   "planche": "x4",
+   "rect": [
+    12,
+    0,
+    1,
+    1
+   ],
+   "attache": [
+    1,
+    5
+   ]
+  },
+  {
+   "palier": 4,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "couche": "fruit",
+   "planche": "x4",
+   "rect": [
+    14,
+    0,
+    11,
+    9
+   ],
+   "attache": [
+    5,
+    4
+   ]
+  },
+  {
+   "palier": 4,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "couche": "pedoncule",
+   "planche": "x4",
+   "rect": [
+    26,
+    0,
+    1,
+    1
+   ],
+   "attache": [
+    0,
+    4
+   ]
+  },
+  {
+   "palier": 4,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "couche": "fruit",
+   "planche": "x4",
+   "rect": [
+    28,
+    0,
+    11,
+    9
+   ],
+   "attache": [
+    5,
+    4
+   ]
+  },
+  {
+   "palier": 4,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "couche": "pedoncule",
+   "planche": "x4",
+   "rect": [
+    40,
+    0,
+    1,
+    1
+   ],
+   "attache": [
+    0,
+    4
+   ]
+  },
+  {
+   "palier": 8,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "couche": "fruit",
+   "planche": "x8",
+   "rect": [
+    0,
+    0,
+    19,
+    19
+   ],
+   "attache": [
+    9,
+    9
+   ]
+  },
+  {
+   "palier": 8,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "couche": "pedoncule",
+   "planche": "x8",
+   "rect": [
+    20,
+    0,
+    2,
+    3
+   ],
+   "attache": [
+    2,
+    10
+   ]
+  },
+  {
+   "palier": 8,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "couche": "fruit",
+   "planche": "x8",
+   "rect": [
+    23,
+    0,
+    19,
+    19
+   ],
+   "attache": [
+    9,
+    9
+   ]
+  },
+  {
+   "palier": 8,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "couche": "pedoncule",
+   "planche": "x8",
+   "rect": [
+    43,
+    0,
+    2,
+    2
+   ],
+   "attache": [
+    0,
+    8
+   ]
+  },
+  {
+   "palier": 8,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "couche": "fruit",
+   "planche": "x8",
+   "rect": [
+    46,
+    0,
+    19,
+    19
+   ],
+   "attache": [
+    9,
+    9
+   ]
+  },
+  {
+   "palier": 8,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "couche": "pedoncule",
+   "planche": "x8",
+   "rect": [
+    66,
+    0,
+    2,
+    2
+   ],
+   "attache": [
+    1,
+    9
+   ]
+  },
+  {
+   "palier": 16,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "couche": "fruit",
+   "planche": "x16",
+   "rect": [
+    0,
+    0,
+    37,
+    37
+   ],
+   "attache": [
+    18,
+    18
+   ]
+  },
+  {
+   "palier": 16,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "couche": "pedoncule",
+   "planche": "x16",
+   "rect": [
+    38,
+    0,
+    5,
+    5
+   ],
+   "attache": [
+    5,
+    20
+   ]
+  },
+  {
+   "palier": 16,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "couche": "fruit",
+   "planche": "x16",
+   "rect": [
+    44,
+    0,
+    37,
+    35
+   ],
+   "attache": [
+    18,
+    17
+   ]
+  },
+  {
+   "palier": 16,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "couche": "pedoncule",
+   "planche": "x16",
+   "rect": [
+    82,
+    0,
+    3,
+    4
+   ],
+   "attache": [
+    0,
+    17
+   ]
+  },
+  {
+   "palier": 16,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "couche": "fruit",
+   "planche": "x16",
+   "rect": [
+    86,
+    0,
+    37,
+    37
+   ],
+   "attache": [
+    18,
+    18
+   ]
+  },
+  {
+   "palier": 16,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "couche": "pedoncule",
+   "planche": "x16",
+   "rect": [
+    124,
+    0,
+    4,
+    5
+   ],
+   "attache": [
+    2,
+    19
+   ]
+  },
+  {
+   "palier": 32,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "couche": "fruit",
+   "planche": "x32",
+   "rect": [
+    0,
+    0,
+    75,
+    73
+   ],
+   "attache": [
+    37,
+    36
+   ]
+  },
+  {
+   "palier": 32,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "couche": "pedoncule",
+   "planche": "x32",
+   "rect": [
+    76,
+    0,
+    10,
+    10
+   ],
+   "attache": [
+    10,
+    40
+   ]
+  },
+  {
+   "palier": 32,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "couche": "fruit",
+   "planche": "x32",
+   "rect": [
+    87,
+    0,
+    73,
+    69
+   ],
+   "attache": [
+    36,
+    34
+   ]
+  },
+  {
+   "palier": 32,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "couche": "pedoncule",
+   "planche": "x32",
+   "rect": [
+    161,
+    0,
+    7,
+    8
+   ],
+   "attache": [
+    1,
+    34
+   ]
+  },
+  {
+   "palier": 32,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "couche": "fruit",
+   "planche": "x32",
+   "rect": [
+    169,
+    0,
+    75,
+    71
+   ],
+   "attache": [
+    37,
+    35
+   ]
+  },
+  {
+   "palier": 32,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "couche": "pedoncule",
+   "planche": "x32",
+   "rect": [
+    245,
+    0,
+    8,
+    8
+   ],
+   "attache": [
+    5,
+    37
+   ]
+  }
+ ]
+}

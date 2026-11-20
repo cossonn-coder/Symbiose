@@ -63,11 +63,11 @@ function tonEclaire(ton, orient, soleil) {
 // Table couleur emballée (r + g·256 + b·65536, cf. builder.js) → ton. La rampe du
 // matériau a N couleurs distinctes (N crans de volume), `tonDe[k]` dit le ton du
 // cran k : c'est là que se règlent les seuils creux / ombre / base.
-function tableTons(palette, rampe, tonDe) {
+function tableTons(palette, rampe, tonDe, couche = 0) {
   const t = new Map();
   rampe.forEach((idx, k) => {
     const c = palette[idx];
-    t.set(((c >> 16) & 255) + ((c >> 8) & 255) * 256 + (c & 255) * 65536, tonDe[k]);
+    t.set(((c >> 16) & 255) + ((c >> 8) & 255) * 256 + (c & 255) * 65536, tonDe[k] + 8 * couche);
   });
   return t;
 }
@@ -84,24 +84,42 @@ function tableTons(palette, rampe, tonDe) {
 // mesure plusieurs points dans le pixel et on résume, au lieu de n'en garder
 // qu'un. Même idée qu'un filtre de décimation avant de sous-échantillonner un
 // signal (sinon repliement de spectre).
-function piece(photo, monde, tons) {
+// ③ COUCHES : la table code aussi la couche (valeur = ton + 8 × couche). Un
+// pixel posé appartient à la couche MAJORITAIRE de ses échantillons (égalité →
+// la plus basse) ; `couche` choisit celle qu'on extrait (une pièce par couche,
+// même cadrage, attaches cohérentes). Une seule couche = comportement du ①/②.
+function piece(photo, monde, tons, couche = 0) {
   const { passes: P, cote, demi, base, lacet, ss } = photo;
   const grand = cote * ss, n = cote * cote, codes = new Uint8Array(n);
   let x0 = cote, y0 = cote, x1 = -1, y1 = -1, plats = 0, posés = 0;
+  const parCouche = new Int32Array(8);
   for (let i = 0; i < n; i++) {
     const X = i % cote, Y = (i / cote) | 0;
+    let total = 0;
+    parCouche.fill(0);
+    for (let j = 0; j < ss; j++)
+      for (let u = 0; u < ss; u++) {
+        const id = P.splatId[(Y * ss + j) * grand + X * ss + u];
+        if (!id) continue;
+        const v = tons.get(monde.data[(id - 1) * 16 + 7]);
+        if (v === undefined) throw new Error('couleur de splat hors rampe (splat ' + id + ')');
+        total++; parCouche[v >> 3]++;
+      }
+    if (2 * total < ss * ss) continue;
+    let maj = 0;
+    for (let c = 1; c < 8; c++) if (parCouche[c] > parCouche[maj]) maj = c;
+    if (maj !== couche) continue;
     let k = 0, sTon = 0;
     const nv = [0, 0, 0];
     for (let j = 0; j < ss; j++)
       for (let u = 0; u < ss; u++) {
         const q = (Y * ss + j) * grand + X * ss + u, id = P.splatId[q];
         if (!id) continue;
-        const ton = tons.get(monde.data[(id - 1) * 16 + 7]);
-        if (ton === undefined) throw new Error('couleur de splat hors rampe (splat ' + id + ')');
-        k++; sTon += ton;
+        const v = tons.get(monde.data[(id - 1) * 16 + 7]);
+        if (v >> 3 !== couche) continue;
+        k++; sTon += v & 7;
         nv[0] += P.normal[q * 3]; nv[1] += P.normal[q * 3 + 1]; nv[2] += P.normal[q * 3 + 2];
       }
-    if (2 * k < ss * ss) continue;
     const l = Math.hypot(nv[0], nv[1], nv[2]) || 1;
     // Normales qui s'annulent (pli, arête) : moyenne courte → face « plate ».
     const o = l / k < SEUIL_PLAT ? ORIENT_PLAT : orientation([nv[0] / l, nv[1] / l, nv[2] / l], base, lacet);
