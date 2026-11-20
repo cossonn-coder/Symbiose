@@ -1,5 +1,5 @@
 // SYMBIOSE — PlantRenderer.Splats.cs (partial, sprint PRÉCUISSON SPLATS ④)
-// Les PIÈCES SPLAT aux paliers hauts (×4 → ×32) : là où un port dessinait une
+// Les PIÈCES SPLAT à tous les paliers (×4 → ×32 au ④, ×0,5 → ×2 au ⑤bis) : là où un port dessinait une
 // feuille, une tête ou un fruit en triangles, la cuisson pose la pièce précuite
 // (tools/splat/, chargée par SplatPlanches.cs) :
 //  • choisie par FORME (table « nom vue → recette », champ `vue` des manifestes) ;
@@ -34,7 +34,7 @@ namespace Symbiose
 {
 	public partial class PlantRenderer
 	{
-		/// <summary>Pièces splat aux paliers ×4 → ×32 (Maj+F11 ; SYMBIOSE_SPLATS=0 = éteint).</summary>
+		/// <summary>Pièces splat à tous les paliers (Maj+F11 ; SYMBIOSE_SPLATS=0 = éteint).</summary>
 		internal static bool SplatsActifs { get; private set; } =
 			System.Environment.GetEnvironmentVariable("SYMBIOSE_SPLATS") != "0";
 
@@ -52,7 +52,11 @@ namespace Symbiose
 		// à sa fin).
 		private bool _feuillesSplat;
 
-		private bool SplatsIci => SplatsActifs && Indexe && AuPalier(PaliersHautsMinZoom);
+		// ⑤bis (D4 « tous les zooms en splats ») : plus de plancher de palier — les ports
+		// dessinés aux paliers bas (×0,5-×2 : herbacées, prairie, lianes) posent eux aussi
+		// leurs pièces, cuites à ces paliers depuis le ①. Les cas où la pièce devient du
+		// bruit restent dessinés, au cas par cas (PlantRenderer.SplatsBas.cs).
+		private bool SplatsIci => SplatsActifs && Indexe;
 
 		// --- Formes → recettes (table du champ `vue` des manifestes ②③) -------------
 
@@ -169,6 +173,7 @@ namespace Symbiose
 		// Toutes les couches d'une pièce d'organe, chacune avec sa palette.
 		private bool PoserCouches(string recette, Vector2 ancre, int inc, int lacet, int v, Color c, bool fleur)
 		{
+			if (!OrganesSplatIci) return false;   // ⑤bis : têtes et fruits dessinés sous ×2 (SplatsBas.cs)
 			string[] couches = SplatPlanches.Couches(recette);
 			var pal = PaletteIndividu();
 			float z = WorldView.CurrentZoom;

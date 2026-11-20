@@ -73,6 +73,7 @@ namespace Symbiose
 		{
 			if (!AuPalier(PaliersHautsMinZoom))
 			{
+				if (PoserFoliolesSplat(f, fe, col)) return;   // PRÉCUISSON SPLATS ⑤bis (avant la tache)
 				float r = Mathf.Max(fe.Long * 1.05f, PixelInterne / WorldView.PxPerCmX);
 				PoserTacheFeuille(new Vector3(fe.Org.X, fe.Org.Y, fe.BaseZ * AplatMort), r, col, fe.Ton);
 				return;

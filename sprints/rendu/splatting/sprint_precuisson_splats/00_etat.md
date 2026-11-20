@@ -12,7 +12,7 @@ Golden : **INTACT à tous les tronçons** (vue + outillage, `data/code/` jamais 
 | ② | `02_feuilles.md` — bibliothèque des feuilles (formes, variantes, vues, trous D5) | **fait 2026-11-20** (non commité) |
 | ③ | `03_tetes_fruits_bois.md` — têtes, fleurs, fruits, bourgeons, bois (couture mesurée) | **fait 2026-11-20** (non commité) — bois NON livré (couture visible) |
 | ④ | `04_vue_paliers_hauts.md` — vue ×4 → ×32 | **fait 2026-11-20** (`aba3663`, partiel) **+ ④bis fait 2026-11-20** (non commité) : couverture complétée là où une recette existe ; reste dessiné listé au compte rendu ④bis |
-| ⑤ | `05_vue_paliers_bas.md` — vue ×0,5 → ×2 (kit) | **fait 2026-11-20** (non commité) — prémisse réfutée : le kit ne sert plus qu'aux plantes SANS fiche ; effet réel = gerbes des arbres (cf. compte rendu ⑤) |
+| ⑤ | `05_vue_paliers_bas.md` — vue ×0,5 → ×2 (kit) | **fait 2026-11-20** (non commité) — prémisse réfutée : le kit ne sert plus qu'aux plantes SANS fiche ; effet réel = gerbes des arbres (cf. compte rendu ⑤) **+ ⑤bis fait 2026-11-20** (non commité) : ports des herbacées/prairie/lianes en pièces sous ×4 (feuilles à tous les paliers, organes dès ×2) |
 | ⑥ | `06_portraits.md` — 162 portraits | à faire |
 | ⑦ | `07_vue_encyclopedie.md` — encyclopédie + magazine, clôture | à faire |
 
@@ -406,6 +406,51 @@ est vide aux pièces du ③ : le cœur jaune des fleurons disparaît).
 **Vérif.** Golden `bce813af…` **INTACT**. `dotnet build` vert, 0 avertissement. LDC : KitSplats 171,
 Kit.cs 249, Gerbes 190, SplatPlanches 172, PlancheKit 77, Splats 158 (tous 🟢).
 
+### ⑤bis Vue ×0,5 → ×2 : les PORTS en pièces splat (2026-11-20) — FAIT
+**Fait.** Les crochets du ④/④bis valent sous ×4 : `SplatsIci` (Splats.cs) perd son plancher
+`AuPalier(×4)` → feuilles de rosette, tige, liane, volubile, paume, plantain, hampe posées en
+pièces ×0,5/×1/×2 (cuites depuis le ①). Deux raccourcis « de loin » passaient AVANT le crochet :
+`PoserFeuilleTige` (losange) → crochet remonté devant ; `PoserFeuilleTapis` (tache) → nouveau
+crochet `PoserFoliolesSplat` (chaque foliole en pièce, comme au ×4). Nouveau
+`visuals/PlantRenderer.SplatsBas.cs` (19 LDC) : ce crochet + le seuil des organes. Densités et
+simplifications des ports inchangées (`PartFeuillesLoin*`). Même interrupteur (Maj+F11,
+`SYMBIOSE_SPLATS=0`), ancien dessin intact derrière chaque crochet.
+
+**Lisibilité (captures lues) → seuil `OrganesSplatMinZoom = 2`.** Sans seuil, à ×0,5 et ×1 les pièces
+d'ORGANE (têtes, fleurs, fruits, épis, gousses…) font 1-3 px et perdent la tache de couleur qui fait
+reconnaître l'espèce : cœur jaune du tournesol → anneau pâle, ombelles crème de l'achillée → vert,
+grappes jaunes de la moutarde → points, baies de la myrtille et fruits du fraisier effacés
+(`mesures/vue5bis_loupe_x{0_5,1}_organes_sans_seuil.png`). → `PoserCouches` (toutes les pièces
+d'organe) rend `false` sous ×2 : le DESSIN garde ces organes à ×0,5 et ×1. À ×2 les têtes en pièces
+restent lisibles (fleur de courgette nette, `vue5bis_loupe_x2_off_vs_apres.png`). Les fruits d'arbre
+(`DrawFruitsHouppier`, paliers bas) passent en pièce dès ×2 (effet de bord du même seuil).
+
+**Reste DESSINÉ aux paliers bas (et pourquoi).** (1) Organes à ×0,5/×1 (seuil ci-dessus) ;
+(2) tout ce que le ④bis laissait dessiné (brins/rubans des graminées, feuilles du trèfle, masses du
+buisson, panicule de la fétuque, bois, marques) ; (3) folioles du volubile en losange
+(`PoserFoliole` : la feuille entière passe d'abord par le crochet, ce chemin ne sert qu'en repli).
+
+**Mesures [VM, banc planche_especes, n=1 run par palier, charge ~1,5-2].** Pinceau moyen
+(`[Cuisson] file vidée`) : ×1 9,3 ms/plante contre 0,22 [n=71 plantes, 1ʳᵉ lecture des planches
+comprise] ; ×2 8,8 contre 0,17 [n=55] ; ×0,5 11,6 [n=59, avant non journalisé]. Lectures manifestes +
+planches au journal `[Splats]` : 1,1 s par palier [n=66 lectures, à-coup unique au changement de
+palier] — le régime établi n'est pas isolé ici (④ : même ordre que le vectoriel à ×8). Poids :
+aucune planche régénérée ; captures `vue5bis_*` 3,4 Mo.
+
+**Captures** — `mesures/vue5bis_{avant,apres}_x{0_5,1,2}.png` (planche_especes, cadrage par défaut,
+40 images pour que la file de cuisson se vide ; avant = HEAD `03e694d`) et
+`vue5bis_{avant,apres}_full_x1.png` : **toutes DIFFÈRENT** (×0,5 11 804 px, ×1 13 667 px, ×2 3 332 px —
+à ×2 le cadrage par défaut ne montre presque que la maison ; voir la loupe ×2 centrée). `full` ×1 :
+écart réel mais noyé dans la pluie, qui ne se reproduit pas d'un lancement à l'autre [non attribué
+plante par plante]. Loupes : `vue5bis_loupe_x1_tournesol_off_vs_apres.png` (gauche
+`SYMBIOSE_SPLATS=0`, droite après seuil). Lecture : feuilles en volume, revers sombres, plus de
+losanges ; **défauts** : TAILLE nominale amplifiée de loin (myrtille ×2 : ovales ~×3 du dessin ;
+haricot : triades ~×2 ; grande rosette de la molène plus petite que le dessin) — même cause qu'au ④ ;
+teintes d'automne (myrtille, haricot) beaucoup plus visibles qu'avant, la pièce ayant de la surface.
+
+**Vérif.** Golden `bce813af…` **INTACT**. `dotnet build` vert, 0 avertissement. LDC : Splats 159,
+SplatsBas 19, PortTapis 151, PortTigeFormes 122 (tous 🟢).
+
 ## F5 (recette pour Nico — complétée par ④⑤⑦)
 **④ (×4 → ×32)** — banc `planche_especes`, zoomer ×4 → ×32 sur tomate, carotte, courgette,
 fraisier, tournesol, poivron ; Maj+F11 pour comparer avec l'ancien dessin.
@@ -432,6 +477,13 @@ fleur, et un pommier en fleur (`verger_floraison`) ; Maj+F11 pour comparer.
 - Les herbacées ne changent PAS à ces paliers (dessinées par leur port, cf. compte rendu ⑤).
 - Fleurs des plantes sans fiche à ×2 : fleurons sans cœur jaune — gênant ?
 - Planche du kit : `tools/capture_vm.sh -k` (2 teintes au lieu de 3 avec les splats).
+
+**⑤bis (×0,5 → ×2, ports)** — banc `planche_especes` à ×0,5, ×1, ×2 ; Maj+F11 pour comparer.
+- Les herbacées ont des feuilles en volume dès ×0,5 ; se reconnaissent-elles toujours de loin ?
+- Têtes, fleurs, fruits restent DESSINÉS à ×0,5/×1 (choix de lisibilité), en pièces dès ×2 : la
+  bascule ×1 → ×2 se voit-elle trop ?
+- **À calibrer** : la taille des feuilles de loin (myrtille, haricot nettement plus feuillus ;
+  rosette de la molène plus petite) — même réglage que le point TAILLE du ④.
 
 # Carnet de conception (historique)
 
@@ -507,9 +559,9 @@ fleur, et un pommier en fleur (`verger_floraison`) ; Maj+F11 pour comparer.
 
 ## §REPRISE
 Lire `CLAUDE.md`, ce fichier, la conception, puis le kickoff du premier tronçon
-« à faire » de la carte. ①②③④ faits, ④bis et ⑤ faits (non commités). Outils réutilisables tels
+« à faire » de la carte. ①②③④⑤ faits, ④bis/⑤bis faits. Outils réutilisables tels
 quels : `SplatPlanches.Trouver` / `LireImage`, `PoserPieceSplat`, `PoserPieceFeuille`,
-`PoserOrganeSplat`, `TouffeGerbe`. **Ouvert pour l'orchestrateur** : les herbacées aux paliers bas
-(×0,5-×2) restent dessinées par leur port — allumer les crochets du ④ sous ×4 = ⑤bis à trancher.
+`PoserOrganeSplat`, `TouffeGerbe`. **⑤bis fait** (non commité) : ports en pièces sous ×4 (feuilles à tous les paliers, organes dès
+×2, dessinés à ×0,5/×1). `PoserFoliolesSplat`, `OrganesSplatMinZoom` (SplatsBas.cs) s'ajoutent aux outils.
 **Prochain : ⑥** (`06_portraits.md`). Tailles nominales, densité des fleurs d'arbre ×4, fleurons
-sans cœur = points F5 ouverts. Golden `bce813af…` intact.
+sans cœur, taille des feuilles de loin (⑤bis) = points F5 ouverts. Golden `bce813af…` intact.
