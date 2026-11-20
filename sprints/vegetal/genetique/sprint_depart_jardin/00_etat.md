@@ -274,3 +274,6 @@ stress au bilan) · ⑤ **INTACT** (vérifié `bce813af…`) · ⑥ **INTACT** (
 attendu** (recette ci-dessus). Constats ouverts : ③ hécatombe → D140 G (close côté code) ;
 ④ a-e et ⑥ a-d ci-dessus ; Vigueur LIBRE de l'automate → DETTE D81 (c). D140 D, E, F restent
 ouverts.
+
+**F5 de Nico du 2026-11-20** : une plante repiquée à la main meurt → **DETTE D143**
+(non diagnostiqué). Nico passe à la suite.
