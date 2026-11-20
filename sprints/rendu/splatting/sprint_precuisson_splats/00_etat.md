@@ -8,7 +8,7 @@ Golden : **INTACT à tous les tronçons** (vue + outillage, `data/code/` jamais 
 ## Carte des tronçons
 | # | Kickoff | État |
 |---|---|---|
-| ① | `01_atelier_cuisson.md` — outil `tools/splat/` + feuille composée, format palette indexée, tous paliers, mesures — **PORTE DE DÉCISION** | à faire |
+| ① | `01_atelier_cuisson.md` — outil `tools/splat/` + feuille composée, format palette indexée, tous paliers, mesures — **PORTE DE DÉCISION** | **fait 2026-11-20 — porte PASSÉE avec réserves** (cf. compte rendu) |
 | ② | `02_feuilles.md` — bibliothèque des feuilles (formes, variantes, vues, trous D5) | à faire |
 | ③ | `03_tetes_fruits_bois.md` — têtes, fleurs, fruits, bourgeons, bois (couture mesurée) | à faire |
 | ④ | `04_vue_paliers_hauts.md` — vue ×4 → ×32 | à faire |
@@ -27,6 +27,64 @@ Golden : **INTACT à tous les tronçons** (vue + outillage, `data/code/` jamais 
 
 ## Compte rendu des tronçons
 (rempli par chaque tronçon : fait, mesures, chemins des planches et captures)
+
+### ① Atelier de cuisson (2026-11-20) — PORTE PASSÉE avec réserves
+**Fait.** ink-studio copié dans `tools/splat/vendor/ink/` (commit `fb94031…`, MIT,
+11 Mo, 1 004 fichiers ; provenance dans `tools/splat/README.md`) ; `tools/splat/.gdignore`
+(Godot n'importe pas le dossier). Outil JS : `cuire.js` (orchestration),
+`lib/iso.js` (caméra), `lib/codes.js` (passes → codes), `lib/planche.js`,
+`lib/controle.js`, `mesurer_vues.js`, recette `recettes/feuille_composee.js`
+(fonction `feuille` du prototype). Sorties : `assets/splats/feuille_composee_x{0_5,1,2,4,8,16,32}.png`
++ `feuille_composee.json` ; contrôle `mesures/controle_feuille_composee.png`
+(rampe 5 tons + soleil fixe haut-gauche, règle exacte du shader ; en bas, la rangée
+« Composee » du kit actuel capturée par `capture_vm.sh -k`, agrandie ×10).
+**Format = atlas du kit existant** : R = niveau (littéral F11 OFF), G = `128|ton<<4|orient`,
+A = posé. Manifeste : palier, inclinaison, variante, lacet, planche, rect, attache.
+
+**Mesures [VM, n=1 cuisson complète, charge ~1].**
+- Sculpture+bake d'une forme : ~0,18 s. Photo d'une pièce : 84 ms (×0,5) · 130 (×1) ·
+  305 (×2) · 277 (×4) · 267 (×8) · 853 (×16) · 3 140 (×32). Recette entière
+  (504 pièces = 7 paliers × 8 lacets × 3 inclinaisons × 3 variantes) : **6 min 08 s**.
+- Poids : planches 0,84 Mo (dont ×32 469 Ko, ×16 178 Ko) + manifeste 100 Ko ;
+  contrôle 227 Ko ; vendor 11 Mo. Extrapolation ~15 feuilles + ③ ≈ 30-60 Mo [estimation, pas mesurée].
+- Déterminisme : 2 cuissons complètes → sha256 IDENTIQUES sur les 8 fichiers + le contrôle.
+- **V retenu = 8 lacets × 3 inclinaisons (−30°, 0°, +30°)**. Mesure (`mesurer_vues.js`,
+  1 − IoU des silhouettes recalées sur l'attache, 96 photos/tour) : AUCUN coude —
+  le saut entre vues voisines décroît linéairement (×4 : V=4 0,97 · V=8 0,81 · V=12 0,66
+  · V=16 0,58 · V=24 0,49 ; mêmes valeurs ×0,5 → ×16). Inclinaison ±15° ≈ 0,6,
+  ±30° ≈ 0,83 (≈ le pas de 45° en lacet). Donc « aucun saut visible quand l'organe
+  tourne » n'est atteignable par AUCUN V aux paliers ≥ ×4 (une feuille fine qui
+  tourne de 15° change de silhouette à 50 %). V=8 choisi parce que : multiple de 4
+  (rotation D35 = vues exactes), même pas que la quantification des orientations
+  (45°), poids ÷2 vs 16. **Conséquence pour ④** : choisir la vue sur l'azimut AU
+  REPOS de l'organe (pas sur la pose de vent), sinon une feuille proche d'une
+  frontière clignotera entre deux vues.
+- **Lisibilité (regardée au Read, contrôle + comparaison au kit)** :
+  ×0,5 (2-5 px) = une MARQUE orientée (tiret clair/sombre), pas une forme — ni
+  plus ni moins lisible que la touffe 3 px du kit actuel ; ×1 (~8×4 px) = rameau
+  de folioles orienté, lisible comme feuillage ; ×2 (~15×8) = feuille composée
+  reconnaissable ; ×4 → ×32 = nettement plus riche que le kit (folioles,
+  rachis, revers sombres). Réserves : pièces plus CLAIRES que le kit (une feuille
+  couchée regarde « en haut » → +1/+2 ton dès que le soleil est haut ; le kit
+  dôme répartit ses normales sur 8 directions) et sans contour sombre → contraste
+  moindre sur sol ; à juger au F5 (⑤), réglable par `TON_DE` dans `cuire.js`.
+
+**Écarts au kickoff (hypothèses réfutées / corrigées).**
+1. Échelle : CLAUDE.md dit 78×39 px/plot ; le code dit **39×19,5 px INTERNES**
+   (SubViewport ×2) → 0,39 px/cm × palier. Pièces calées sur les px internes.
+2. La vue est une projection OBLIQUE (verticales à l'échelle du sol), une caméra
+   ortho ne la reproduit pas : tangage 30° + lacet 45° = sol exact, verticales
+   **+22 %**. Accepté (< 1 px jusqu'à ×4 sur une feuille) ; l'ORIENTATION, elle,
+   est projetée par la vraie projection oblique (comme `PaletteIndexee.MajSoleil`).
+3. Lire le splat propriétaire pixel par pixel = bruit poivre-et-sel illisible aux
+   paliers bas : ajout d'un **suréchantillonnage** (×4 jusqu'à ×2, ×2 à ×4, ×1 dès
+   ×8) puis moyenne normale/ton par pixel. C'est la « réduction » de D4, pas un
+   contournement.
+4. Ton : cuisson sans soleil (`sunK=0`, ambiant 0,75 + ciel 0,25 → revers ×0,75),
+   10 crans de gris → tons 0/1/2 (seuils 0,2 / 0,5). Tons 3-4 jamais cuits (shader).
+   Seuil « plat » = 0,3 (FacePlate du kit, ~17,5° face caméra).
+5. Les pièces vont dans `assets/splats/` (une planche PAR PALIER : chargement ×16/×32
+   à la demande possible au ④).
 
 ## F5 (recette pour Nico — complétée par ④⑤⑦)
 (à écrire)
@@ -105,4 +163,7 @@ Golden : **INTACT à tous les tronçons** (vue + outillage, `data/code/` jamais 
 
 ## §REPRISE
 Lire `CLAUDE.md`, ce fichier, la conception, puis le kickoff du premier tronçon
-« à faire » de la carte. Prochain : ① (`01_atelier_cuisson.md`).
+« à faire » de la carte. ① fait (porte passée avec réserves, non commité par le
+sous-agent). Prochain : ② (`02_feuilles.md`) — réutiliser `tools/splat/cuire.js`
+(contrat de recette en tête de `recettes/feuille_composee.js`), V = 8 lacets ×
+3 inclinaisons. Golden `bce813af…` intact.

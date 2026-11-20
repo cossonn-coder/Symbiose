@@ -1,0 +1,8 @@
+dist/
+catalog.json
+src/pixel-look.js
+tests/
+lab/assets/
+node_modules/
+*.md
+*.json

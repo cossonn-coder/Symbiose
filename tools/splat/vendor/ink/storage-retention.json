@@ -1,0 +1,346 @@
+{
+  "version": 1,
+  "keep": [
+    {
+      "path": ".gitignore",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": ".prettierignore",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": ".prettierrc",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "README.md",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "catalog.json",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "cli/ink-studio.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "cli/png.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "cli/render.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "cli/selftest.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "demos/labscenes.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "examples/cloth.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "examples/particles.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "examples/puppet.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "examples/scene.json",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "examples/sculpt.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "index.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "lab/assets/totem.mtl",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "lab/assets/totem.obj",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "lab/data-shrine.json",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "lab/example.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "lab/mesh.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "lab/shapes.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "lab/warps.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "package.json",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "scripts/check.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "scripts/lint.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "src/builder.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "src/kit/k0-math.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "src/kit/k1-stage.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "src/kit/k2-motion.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "src/kit/k3-shapes.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "src/kit/k4-art.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "src/kit/k5-fields.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "src/kit/k6-voxels.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "src/kit/k7-particles.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "src/kit/k8-light.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "src/kit/k9-matter.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "src/kit/ka-build.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "src/kit/kb-mesh.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "src/kit/kc-data.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "src/kit/kd-mpm.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "src/kit/ke-volume.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "src/kit/kf-creature.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "src/kit/kg-play.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "src/kit/kh-animate.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "src/kit/ki-deform.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "src/kit/kj-acts.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "src/kit/kk-character.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "src/kit/kl-vox.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "src/kit/km-ramp.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "src/kit/kn-effects.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "src/kit/ko-grow.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "src/kit/kp-curve.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "src/kit/kr-tex.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "src/kit/ks-xpbd.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "src/kit/kt-nodes.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "src/kit/ku-motion.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "src/kit/kv-form.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "src/kit/kw-erode.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "src/kit/kx-life.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "src/kit/ky-built.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "src/kit/kz-weather.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "src/pixel-look.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "src/sculpt.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "storage-retention.json",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    },
+    {
+      "path": "tests/pixel-look.test.js",
+      "reason": "Required package source, documentation, runnable example, asset, configuration or validation input."
+    }
+  ],
+  "safe_to_remove": [
+    {
+      "path": ".validation/ink-studio.config.js",
+      "reason": "Completed validation output or generated bundle; reproducible from retained source and README examples.",
+      "retired": true
+    },
+    {
+      "path": ".validation/snaps/sculpt-example@0.png",
+      "reason": "Completed validation output or generated bundle; reproducible from retained source and README examples.",
+      "retired": true
+    },
+    {
+      "path": "dist/standalone.js",
+      "reason": "Completed validation output or generated bundle; reproducible from retained source and README examples.",
+      "retired": true
+    },
+    {
+      "path": "studio/out/clip.png",
+      "reason": "Completed validation output or generated bundle; reproducible from retained source and README examples.",
+      "retired": true
+    },
+    {
+      "path": "studio/out/cloth.png",
+      "reason": "Completed validation output or generated bundle; reproducible from retained source and README examples.",
+      "retired": true
+    },
+    {
+      "path": "studio/out/colored.png",
+      "reason": "Completed validation output or generated bundle; reproducible from retained source and README examples.",
+      "retired": true
+    },
+    {
+      "path": "studio/out/ember.png",
+      "reason": "Completed validation output or generated bundle; reproducible from retained source and README examples.",
+      "retired": true
+    },
+    {
+      "path": "studio/out/ghost.png",
+      "reason": "Completed validation output or generated bundle; reproducible from retained source and README examples.",
+      "retired": true
+    },
+    {
+      "path": "studio/out/json.png",
+      "reason": "Completed validation output or generated bundle; reproducible from retained source and README examples.",
+      "retired": true
+    },
+    {
+      "path": "studio/out/mesh.png",
+      "reason": "Completed validation output or generated bundle; reproducible from retained source and README examples.",
+      "retired": true
+    },
+    {
+      "path": "studio/out/particles.png",
+      "reason": "Completed validation output or generated bundle; reproducible from retained source and README examples.",
+      "retired": true
+    },
+    {
+      "path": "studio/out/puppet.png",
+      "reason": "Completed validation output or generated bundle; reproducible from retained source and README examples.",
+      "retired": true
+    },
+    {
+      "path": "studio/out/sculpt.png",
+      "reason": "Completed validation output or generated bundle; reproducible from retained source and README examples.",
+      "retired": true
+    },
+    {
+      "path": "studio/out/sheet.png",
+      "reason": "Completed validation output or generated bundle; reproducible from retained source and README examples.",
+      "retired": true
+    },
+    {
+      "path": "studio/out/turn.png",
+      "reason": "Completed validation output or generated bundle; reproducible from retained source and README examples.",
+      "retired": true
+    }
+  ]
+}

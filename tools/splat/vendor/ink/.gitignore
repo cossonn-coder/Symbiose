@@ -1,0 +1,5 @@
+dist/
+studio/out/
+node_modules/
+.validation/
+studio/snaps/

@@ -1,0 +1,153 @@
+#!/usr/bin/env node
+// SYMBIOSE — tools/splat/cuire.js (sprint PRÉCUISSON SPLATS ①)
+// L'ATELIER DE CUISSON : une recette (un organe sculpté en splats, ink-studio) →
+// ses pièces cuites sous V vues (lacet × inclinaison) × variantes × 7 paliers,
+// dans la langue de la palette indexée de la vue (lib/codes.js), rangées en
+// planches PNG + manifeste JSON (lib/planche.js), plus une planche de contrôle.
+//
+// Usage (depuis la racine du dépôt, Node ≥ 18, VM seulement) :
+//   node tools/splat/cuire.js feuille_composee
+//        [--sortie assets/splats] [--controle DOSSIER] [--lacets 8]
+//        [--inclinaisons 0,35] [--paliers 0.5,1,2,4,8,16,32]
+//        [--actuel capture.png:x,y,w,h]   (pièce actuelle de la vue, collée sous
+//                                          la planche de contrôle pour comparer)
+//
+// Cuisson SANS SOLEIL (sunK = 0) : le soleil, c'est le shader de la vue qui le
+// pose en jeu, côté soleil réel (philo « une géométrie, toutes les teintes »).
+// Il ne reste que le volume : occlusion ambiante et ciel (revers plus sombre).
+//
+// 📖 Pédagogie : la boucle est « sculpter une fois, photographier N fois ». La
+// cuisson des splats (S.bake, ~0,2 s) dépend de la forme (variante,
+// inclinaison) ; le lacet et le palier ne sont que des réglages de caméra, donc
+// une même cuisson sert toutes les photos — comme un modèle 3D qu'on tourne.
+//
+// Déterministe : graines fixes, aucune horloge dans les fichiers écrits (les
+// temps ne vont qu'à la console). Golden non concerné (outil hors moteur).
+
+'use strict';
+
+const path = require('path');
+const fs = require('fs');
+const ink = require('./vendor/ink');
+const png = require('./vendor/ink/cli/png.js');
+const iso = require('./lib/iso');
+const codes = require('./lib/codes');
+const planche = require('./lib/planche');
+const controle = require('./lib/controle');
+
+const RACINE = path.resolve(__dirname, '..', '..');
+const GRAINE = 7;
+// Rampe de volume : 10 crans de gris (couleurs distinctes, lues en retour par
+// couleur emballée) ; t = occlusion × (ambiant + ciel·(½ + ½·n_y)).
+const CRANS = 10;
+const TON_DE = [0, 0, 1, 1, 1, 2, 2, 2, 2, 2];   // t < 0,2 creux · < 0,5 ombre · base
+const AMBIANT = 0.75, CIEL = 0.25;              // revers (n_y = −1) : t × 0,75
+
+function options(argv) {
+  const o = { recette: argv[0], sortie: 'assets/splats', controle: null, actuel: null, lacets: 8,
+    inclinaisons: [0], paliers: iso.PALIERS };
+  for (let i = 1; i < argv.length; i += 2) {
+    const k = argv[i].replace(/^--/, ''), v = argv[i + 1];
+    if (k === 'lacets') o.lacets = +v;
+    else if (k === 'inclinaisons') o.inclinaisons = v.split(',').map(Number);
+    else if (k === 'paliers') o.paliers = v.split(',').map(Number);
+    else if (k in o) o[k] = v;
+    else throw new Error('option inconnue --' + k);
+  }
+  if (!o.recette) throw new Error('usage : node tools/splat/cuire.js <recette> [options]');
+  return o;
+}
+
+// Palette du builder : 0 = fond, 1..CRANS = gris croissants.
+const PALETTE = [0x000000, ...Array.from({ length: CRANS }, (_, k) => (12 + k * 24) * 0x010101)];
+const RAMPE = Array.from({ length: CRANS }, (_, k) => k + 1);
+const tableTons = () => codes.tableTons(PALETTE, RAMPE, TON_DE);
+
+// Sculpte et cuit la recette pour une (variante, inclinaison) → monde ink-studio.
+function cuireMonde(L, recette, variante, inclinaisonDeg) {
+  const B = L.makeBuilder(GRAINE, PALETTE);
+  const S = L.KIT.sculpt(L.makeSculpt(B));
+  S.sunK = 0; S.amb = AMBIANT; S.sky = CIEL;
+  recette.sculpter({ S, K: L.KIT, M: { organe: { r: RAMPE } }, variante,
+    inclinaison: (inclinaisonDeg * Math.PI) / 180 });
+  S.bake();
+  const r = recette.rayonCm / iso.CM_PAR_UNITE + 1;
+  return B.finish({ cam: { target: [0, 0, 0], dist: 5, pitch: 0.5, yaw: 0.8 }, detail: 20, dither: 0, radius: r });
+}
+
+// Cuit toutes les pièces d'une recette. Retourne { pieces, temps }.
+function cuireRecette(recette, o) {
+  const L = ink.load();
+  const tons = tableTons();
+  const pieces = [], temps = { monde: [], photo: new Map() };
+  for (const inclinaison of o.inclinaisons)
+    for (let variante = 0; variante < recette.variantes; variante++) {
+      let t = process.hrtime.bigint();
+      const monde = cuireMonde(L, recette, variante, inclinaison);
+      temps.monde.push(Number(process.hrtime.bigint() - t) / 1e6);
+      for (const z of o.paliers)
+        for (let k = 0; k < o.lacets; k++) {
+          const lacetDeg = (360 * k) / o.lacets;
+          t = process.hrtime.bigint();
+          const photo = iso.photographier(ink, monde, recette.rayonCm, z, (lacetDeg * Math.PI) / 180);
+          const p = codes.piece(photo, monde, tons);
+          const dt = Number(process.hrtime.bigint() - t) / 1e6;
+          temps.photo.set(z, (temps.photo.get(z) || 0) + dt);
+          pieces.push({ palier: z, inclinaison, variante, lacet: lacetDeg, ...p });
+        }
+    }
+  return { pieces, temps };
+}
+
+// « capture.png:x,y,w,h » → la région de la capture, { w, h, rgb }.
+function recadrer(spec) {
+  const [f, r] = spec.split(':'), [x, y, w, h] = r.split(',').map(Number);
+  const src = png.read(path.resolve(RACINE, f)), rgb = new Uint8Array(w * h * 3);
+  for (let j = 0; j < h; j++)
+    rgb.set(src.rgb.subarray(((y + j) * src.w + x) * 3, ((y + j) * src.w + x + w) * 3), j * w * 3);
+  return { w, h, rgb };
+}
+
+function ecrireControle(dossier, nom, pieces, o) {
+  const lignes = [], zooms = [];
+  for (const z of o.paliers)
+    for (const inc of o.inclinaisons) {
+      lignes.push(pieces.filter(p => p.palier === z && p.inclinaison === inc && p.variante === 0 && p.w > 0));
+      zooms.push(z);
+    }
+  // Variantes côte à côte aux paliers bas (lacet 0) : le hash change-t-il la pièce ?
+  for (const z of o.paliers.filter(z => z <= 2)) {
+    lignes.push(pieces.filter(p => p.palier === z && p.lacet === 0 && p.w > 0));
+    zooms.push(z);
+  }
+  const img = controle.composer(lignes, zooms, o.actuel && recadrer(o.actuel));
+  fs.mkdirSync(dossier, { recursive: true });
+  const f = path.join(dossier, `controle_${nom}.png`);
+  png.write(f, img.w, img.h, img.rgb);
+  return f;
+}
+
+function principal() {
+  const o = options(process.argv.slice(2));
+  const recette = require(`./recettes/${o.recette}.js`);
+  const t0 = process.hrtime.bigint();
+  const { pieces, temps } = cuireRecette(recette, o);
+  const meta = {
+    format: 'R = niveau kit (2 ombre, 3 base, 4 lumière) ; G = 128 | ton << 4 | orientation ; A = posé',
+    px_par_cm_x1: iso.PX_PAR_CM_X, seuil_plat: codes.SEUIL_PLAT,
+    lacets: o.lacets, inclinaisons_deg: o.inclinaisons, variantes: recette.variantes,
+    attache: 'px de la pièce (coin haut-gauche = 0,0), peut sortir du rectangle'
+  };
+  const fichiers = planche.ecrire(png, path.resolve(RACINE, o.sortie), recette.nom, meta, pieces);
+  if (o.controle) fichiers.push(ecrireControle(path.resolve(RACINE, o.controle), recette.nom, pieces, o));
+  const total = Number(process.hrtime.bigint() - t0) / 1e6;
+  const vides = pieces.filter(p => p.w === 0).length;
+  console.log(`${recette.nom} : ${pieces.length} pièces (${vides} vides), ${total.toFixed(0)} ms au total`);
+  console.log(`  sculpture+bake : ${temps.monde.map(t => t.toFixed(0)).join(', ')} ms`);
+  for (const [z, t] of temps.photo) console.log(`  ×${z} : ${(t / (pieces.length / temps.photo.size)).toFixed(1)} ms/pièce`);
+  for (const f of fichiers) console.log(`  ${path.relative(RACINE, f)} ${fs.statSync(f).size} o`);
+}
+
+// Lancé en ligne de commande → cuisson ; requis (mesurer_vues.js) → la boîte à outils.
+if (require.main === module) principal();
+module.exports = { cuireMonde, tableTons };
