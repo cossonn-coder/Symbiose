@@ -141,9 +141,11 @@ namespace Symbiose
 			int pC = idx ? PaletteIndexee.Palette(FlowerHeart) : -1, pB = idx ? PaletteIndexee.Palette(fiche.Bouton) : -1;
 			Color[] rP = idx ? null : RampeLitterale(pal.Flower, false), rL = idx ? null : RampeLitterale(fiche.Bord, false);
 			Color[] rC = idx ? null : RampeLitterale(FlowerHeart, false), rB = idx ? null : RampeLitterale(fiche.Bouton, false);
+			_lotPrairie?.Vider();   // PRÉCUISSON SPLATS ④bis : pas de lot périmé vidé par la 1ʳᵉ pièce
 			foreach (var f in FleursHouppier(pal))
 			{
 				Vector2 pos = Iso(f.P.X - c.X, f.P.Y - c.Y, f.P.Z);
+				if (PoserFleurArbreSplat(pos, f, pal.Flower, fiche.Bouton)) continue;   // PRÉCUISSON SPLATS ④bis
 				int v = f.K % VariantesPiece;
 				if (f.Bouton) { PoserPieceFleur(_piecesFleur[(g, v, CouchePiece.Bouton)], pos, z, pB, rB, KitContour, KitLumiere); continue; }
 				PoserPieceFleur(_piecesFleur[(g, v, CouchePiece.Petales)], pos, z, pP, rP, KitBase, KitLumiere);

@@ -48,6 +48,7 @@ namespace Symbiose
 				float l = f.RayonCm * Mathf.Lerp(0.5f, 0.12f, t);
 				var fe = new FeuillePosee(new Vector2(Mathf.Cos(a), Mathf.Sin(a)), l, l * f.LargeurFeuille,
 					h * 0.62f * t, l * 0.3f, 0.3f, i % 3 == 0 ? 1 : PaletteIndexee.TonBase, i);
+				if (PoserFeuilleSplat(RecetteFeuille(f.Feuille, f.Marque), fe, col)) continue;   // PRÉCUISSON SPLATS ④bis
 				_contourPrairie.Clear();
 				foreach (Vector2 q in ContourDe(f.Feuille)) _contourPrairie.Add(PointFeuille(fe, q.X, q.Y));
 				PoserEventail(_contourPrairie, Vector2.Zero, Ton(col, fe.Ton));

@@ -36,6 +36,7 @@ namespace Symbiose
 			if (_structure.SpeciesName == "Fig") return;   // sa floraison est dans la figue (fiche)
 			float pix = PixelInterne, r = Mathf.Max(FleurRayonCm * WorldView.PxPerCmX, pix * 2f);
 			if (Chatons.Contains(_structure.SpeciesName)) { PoserChaton(c, col, k); return; }
+			if (PoserCorolleSplat(c, col, k)) return;   // PRÉCUISSON SPLATS ④bis
 			PoserDisque(c, r + pix, Ton(col, 0));   // contour sélectif
 			if (AuPalier(PalierSymptomesZoom))
 				for (int p = 0; p < 5; p++)
@@ -57,6 +58,7 @@ namespace Symbiose
 		// Grains serrés sur un fil qui pend, du plus gros au plus fin.
 		private void PoserChaton(Vector2 c, Color col, int k)
 		{
+			if (PoserChatonSplat(c, col, k)) return;   // PRÉCUISSON SPLATS ④bis
 			float pix = PixelInterne, pas = ChatonCm * WorldView.PxPerCmZ / GrainsChaton;
 			float penche = (Hash01(393, GraineIndividu, k) - 0.5f) * pas;
 			for (int g = 0; g < GrainsChaton; g++)

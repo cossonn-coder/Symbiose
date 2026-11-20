@@ -353,6 +353,7 @@ namespace Symbiose
 		// Une boule : base ombrée, calotte, puis grain de fleurons dès ×8.
 		private void PoserBoule(Vector2 c, float r, Color col, int graine)
 		{
+			if (PoserBouleSplat(c, col, graine)) return;   // PRÉCUISSON SPLATS ④bis
 			float pix = PixelInterne;
 			r = Mathf.Max(r, pix);
 			// Tons d'une fleur claire : le ton de base est la couleur d'espèce, le blanc d'un

@@ -89,7 +89,7 @@ namespace Symbiose
 			FormeTete.Pendante => "tete_pendante",
 			FormeTete.Corolle => "tete_corolle",
 			FormeTete.Trompette => "tete_trompette",
-			FormeTete.Papillon => "tete_papillon",
+			FormeTete.Papillon => fleur ? "tete_papillon" : null,   // gousses : PoserGoussesSplat (④bis)
 			_ => null,
 		};
 
@@ -99,18 +99,27 @@ namespace Symbiose
 		/// vectoriel prend le relais).</summary>
 		private bool PoserFeuilleSplat(string recette, FeuillePosee fe, Color col)
 		{
-			if (!SplatsIci || recette == null
-				|| !SplatPlanches.Vues(recette, out int[] incs, out int lacets, out int variantes)) return false;
+			if (!SplatsIci || recette == null) return false;
 			// Inclinaison au repos : montée du bout (HautZ) sur l'emprise au sol (PointFeuille).
 			float sol = Mathf.Max(fe.Long * (1f - 0.6f * fe.Dressee), 0.01f);
-			int inc = PlusProche(incs, Mathf.RadToDeg(Mathf.Atan2(fe.HautZ, sol)));
-			int lacet = LacetEcran(WorldView.WorldToScreenOffset(fe.U.X, fe.U.Y), lacets);
-			int trou = TrouFeuille(fe.K);
-			int v = trou > 0 ? 0 : Variante(fe.K, variantes);   // trous cuits sur la variante 0 (②)
+			return PoserPieceFeuille(recette, PointFeuille(fe, 0f, 0f), Mathf.RadToDeg(Mathf.Atan2(fe.HautZ, sol)),
+				WorldView.WorldToScreenOffset(fe.U.X, fe.U.Y), fe.K, col);
+		}
+
+		/// <summary>Pose une feuille-pièce à son attache `ancre` : inclinaison cuite la plus proche
+		/// de `incDeg`, lacet de la direction ÉCRAN `dirEcran`, variante et trou au hash de `k`.
+		/// Partagé par les ports (PoserFeuilleSplat) et le chemin générique (④bis).</summary>
+		private bool PoserPieceFeuille(string recette, Vector2 ancre, float incDeg, Vector2 dirEcran, int k, Color col)
+		{
+			if (!SplatPlanches.Vues(recette, out int[] incs, out int lacets, out int variantes)) return false;
+			int inc = PlusProche(incs, incDeg);
+			int lacet = LacetEcran(dirEcran, lacets);
+			int trou = TrouFeuille(k);
+			int v = trou > 0 ? 0 : Variante(k, variantes);   // trous cuits sur la variante 0 (②)
 			float z = WorldView.CurrentZoom;
 			if (!SplatPlanches.Trouver(recette, z, 0, inc, lacet, v, trou, out var p)
 				&& (trou == 0 || !SplatPlanches.Trouver(recette, z, 0, inc, lacet, v, 0, out p))) return false;
-			PoserPieceSplat(p, PointFeuille(fe, 0f, 0f), PaletteIndexee.Palette(col));
+			PoserPieceSplat(p, ancre, PaletteIndexee.Palette(col));
 			_feuillesSplat = true;
 			return true;
 		}

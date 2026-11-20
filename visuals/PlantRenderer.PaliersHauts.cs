@@ -109,12 +109,12 @@ namespace Symbiose
 			if (_structure.Floraison < FloraisonSeuil) return;
 			bool organes = AuPalier(PalierOrganesZoom);
 			var sites = OrganSites();
-			if (organes) { _lotPrairie ??= new LotTriangles(); _lotPrairie.Vider(); }
+			if (organes || SplatsIci) { _lotPrairie ??= new LotTriangles(); _lotPrairie.Vider(); }   // ④bis : lot vide avant toute pièce
 			for (int k = 0; k < sites.Count; k++)
 			{
 				Vector2 c = Iso(sites[k].X - collet.X, sites[k].Y - collet.Y, sites[k].Z);
 				if (organes) PoserFleurSnes(c, pal.Flower, k);   // PlantRenderer.FleurSnes.cs
-				else DrawPoint(c, PointFleurPx, pal.Flower);
+				else if (!PoserCorolleSplat(c, pal.Flower, k)) DrawPoint(c, PointFleurPx, pal.Flower);   // PRÉCUISSON SPLATS ④bis
 			}
 			if (organes) _lotPrairie.DessinerSansMaille(this);
 		}
@@ -128,6 +128,7 @@ namespace Symbiose
 			if (Houppier) { DrawFruitsHouppier(); return; }   // brindilles, taille en cm (HOUPPIER ⑤)
 			bool organes = AuPalier(PalierOrganesZoom);
 			bool pruine = AuPalier(PalierIntimeZoom) && SurfaceDe() == Surface.Pruine;
+			if (SplatsIci) _lotPrairie?.Vider();   // PRÉCUISSON SPLATS ④bis : lot des fleurs déjà envoyé
 			for (int k = 0; k < _structure.Fruits.Count; k++)
 			{
 				var f = _structure.Fruits[k];
@@ -136,6 +137,7 @@ namespace Symbiose
 				// masse → rayon (FRUIT_MASSE=0.15 côté moteur → ~4.5 px ; borné).
 				float rad = 3.0f + Mathf.Min(f.Masse, 0.3f) * 10f;
 				Color col = FruitColor(pal, f.Maturite);
+				if (PoserFruitSplat(c, 1f, col, k)) continue;   // PRÉCUISSON SPLATS ④bis (fruit_globe)
 				if (!organes) { DrawPoint(c, rad * PointFruitPart, col); continue; }
 				// SS② : globe en 2 valeurs, PUIS le reflet spéculaire blanc. ④ indexé :
 				// le globe est un dôme qui s'éclaire côté soleil — pas de reflet fixe.

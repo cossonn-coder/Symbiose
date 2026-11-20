@@ -196,7 +196,8 @@ namespace Symbiose
 				var u = new Vector2(Mathf.Cos(a), Mathf.Sin(a));
 				float l = rayon * Mathf.Lerp(1f, 0.6f, k / (float)n) * Mathf.Lerp(0.85f, 1f, Hash01(263, ig, k));
 				int ton = k < n / 3 ? 1 : k < n * 3 / 4 ? PaletteIndexee.TonBase : 3;
-				PoserFeuillePlantain(u, l, col, ton);
+				if (!PoserPlantainSplat(u, l, col, k))   // PRÉCUISSON SPLATS ④bis
+					PoserFeuillePlantain(u, l, col, ton);
 				if (k >= n / 2)
 					_sitesPrairie.Add((Iso(u.X * l * 0.6f, u.Y * l * 0.6f, 2f), l * 0.2f * WorldView.PxPerCmX, k, 2f));
 			}
@@ -243,6 +244,7 @@ namespace Symbiose
 				_lotPrairie.Ligne(Iso(0f, 0f, 0f), tete, Ton(pal.Leaf, 1), PixelInterne);
 				// Épi court et trapu, plus sombre vers le bas.
 				float rx = Mathf.Max(1.2f * pxx, PixelInterne), ry = Mathf.Max(2.4f * pxx, PixelInterne);
+				if (PoserOrganeSplat("tete_epi", tete + new Vector2(0f, ry), Vector2.Zero, pal.Flower, ig + k)) continue;   // PRÉCUISSON SPLATS ④bis
 				_lotPrairie.Ellipse(tete, rx, ry, Ton(pal.Flower, 1));
 				_lotPrairie.Ellipse(tete - new Vector2(0f, ry * 0.3f), rx * 0.7f, ry * 0.65f,
 					Ton(pal.Flower, PaletteIndexee.TonBase));

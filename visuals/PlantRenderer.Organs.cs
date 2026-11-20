@@ -313,6 +313,7 @@ namespace Symbiose
 					if (!houppier) DrawMassesFeuillage(collet, pal, automne, density);
 				}
 				else if (houppier) DrawFeuillesHouppier(collet, pal, automne, density);
+				if (SplatsIci && !houppier) _lotPrairie?.Vider();   // PRÉCUISSON SPLATS ④bis : lot vide avant toute pièce
 				if (AuPalier(PalierOrganesZoom) && !houppier) foreach (var s in _structure.Segments)
 				{
 					if (!IsLeafy(s)) continue;
@@ -345,7 +346,8 @@ namespace Symbiose
 						// catalogue fermé `LeafProfiles` (PlantRenderer.Leaf.cs). Chaque
 						// sous-élément reste un volume 2 valeurs (E4) ; plancher de rayon
 						// et repli LOD gérés dans DrawLeafShape.
-						DrawLeafShape(c, r * 1.15f, r * 0.65f * LeafOpen, col, i, j);
+						if (!PoserLimbeSplat(insert, c, r * 1.15f, col, i, j))   // PRÉCUISSON SPLATS ④bis
+							DrawLeafShape(c, r * 1.15f, r * 0.65f * LeafOpen, col, i, j);
 						// Canaux TEXTURE additifs (sémiologie ③) : criblage, bords gelés
 						// ou secs, taches — dès ×16 ; poils/pruine dès ×32 (PaliersHauts).
 						DrawDetailsFeuille(c, r, i, j);
@@ -354,6 +356,7 @@ namespace Symbiose
 					}
 				}
 			}
+			_feuillesSplat = false;   // PRÉCUISSON SPLATS ④bis (trous dans la pièce : DrawLeafDamage ne crible plus)
 			// Fin de la fenêtre feuilles : on REMET la calotte par défaut pour que
 			// fleurs/fruits (DrawVolumeCircle, plus bas) ne soient PAS étiolés.
 			_litFactor = LitFactorDefault;

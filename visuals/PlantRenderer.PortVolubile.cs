@@ -225,6 +225,7 @@ namespace Symbiose
 		// Gousse fine qui pend : 15 cm de long [fiche], marque de stade sans état moteur.
 		private void PoserGousses(Vector2 c, float r, Color col, int graine)
 		{
+			if (PoserGoussesSplat(c, r, col, graine)) return;   // PRÉCUISSON SPLATS ④bis
 			float pix = PixelInterne, lg = 15f * WorldView.PxPerCmZ;
 			for (int k = 0; k < 2; k++)
 			{

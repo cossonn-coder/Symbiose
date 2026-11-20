@@ -145,7 +145,8 @@ namespace Symbiose
 		/// <summary>×4 : gerbes de fleurs ; ×8+ : chaque fleur des bouquets en pièce ; chatons pour le noyer et ses pareils.</summary>
 		private void DrawFleursHouppier(Vector3 c, OrganPalette pal)
 		{
-			if (!AuPalier(PalierOrganesZoom)) { DrawGerbesFleurs(pal); return; }
+			// PRÉCUISSON SPLATS ④bis : pièces allumées, la fleur une à une dès ×4 (plus de gerbe).
+			if (!AuPalier(PalierOrganesZoom) && !SplatsIci) { DrawGerbesFleurs(pal); return; }
 			if (_structure.Floraison < FloraisonApparition || FleursCachees) return;
 			FicheFleurArbre fiche = FicheFleurs(pal);
 			if (!Chatons.Contains(_structure.SpeciesName)) { DrawPiecesFleurs(c, pal, fiche); return; }

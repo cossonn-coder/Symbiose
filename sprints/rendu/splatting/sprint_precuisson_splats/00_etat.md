@@ -11,7 +11,7 @@ Golden : **INTACT à tous les tronçons** (vue + outillage, `data/code/` jamais 
 | ① | `01_atelier_cuisson.md` — outil `tools/splat/` + feuille composée, format palette indexée, tous paliers, mesures — **PORTE DE DÉCISION** | **fait 2026-11-20 — porte PASSÉE avec réserves** (cf. compte rendu) |
 | ② | `02_feuilles.md` — bibliothèque des feuilles (formes, variantes, vues, trous D5) | **fait 2026-11-20** (non commité) |
 | ③ | `03_tetes_fruits_bois.md` — têtes, fleurs, fruits, bourgeons, bois (couture mesurée) | **fait 2026-11-20** (non commité) — bois NON livré (couture visible) |
-| ④ | `04_vue_paliers_hauts.md` — vue ×4 → ×32 | **fait 2026-11-20 — PARTIEL** : ports (feuilles, têtes, fruits) + feuilles d'arbre ×8+ ; reste listé au compte rendu (non commité) |
+| ④ | `04_vue_paliers_hauts.md` — vue ×4 → ×32 | **fait 2026-11-20** (`aba3663`, partiel) **+ ④bis fait 2026-11-20** (non commité) : couverture complétée là où une recette existe ; reste dessiné listé au compte rendu ④bis |
 | ⑤ | `05_vue_paliers_bas.md` — vue ×0,5 → ×2 (kit) | à faire |
 | ⑥ | `06_portraits.md` — 162 portraits | à faire |
 | ⑦ | `07_vue_encyclopedie.md` — encyclopédie + magazine, clôture | à faire |
@@ -293,6 +293,63 @@ suivaient la géométrie dessinée, pas celle de la pièce) ; poils ×32 et gel/
    (espèces sans fiche). À trancher par l'orchestrateur : tronçon ④ bis, ou au fil de ⑤.
 4. Bois : dessiné (③). Pas de classe de taille créée (arbitrage) ; écart signalé au F5.
 
+### ④bis Vue ×4 → ×32, couverture complétée (2026-11-20) — FAIT
+**Fait.** `visuals/PlantRenderer.SplatsOrganes.cs` (neuf, 63 LDC) : `PoserOrganeSplat` (organe
+générique : toutes ses couches, lacet écran ou au hash, inclinaison la plus proche de 0, la
+pose naturelle — seigle retombant, gousse et chaton pendants — étant CUITE dans la recette).
+`PlantRenderer.Splats.cs` : la fin de `PoserFeuilleSplat` factorisée en `PoserPieceFeuille`
+(attache + inclinaison + direction écran), partagée avec le chemin générique ; `RecetteTete`
+renvoie `null` pour `Papillon` hors fleur (le ④ posait `tete_papillon` sur les gousses : bogue
+corrigé, les gousses passent par `gousse`). Crochets d'UNE ligne, ancien dessin intact :
+- chaume : `PoserEpis` → `epi_ble` (blé) / `epi_barbu` (seigle), lacet = côté où penche le brin ;
+  `PoserPanicule` → `panicule` (pâturin, teinte des épillets verts) ;
+- haricot : `PoserGousses` → 2 × `gousse` ;
+- arbres et segments : `PoserChaton` → `chaton` ; `PoserFleurSnes` → `tete_corolle` ;
+  `DrawPiecesFleurs` → `bouton` (teinte de bouton d'espèce, sépales du feuillage) ou
+  `tete_corolle` ; **×4 : pièces allumées, la fleur d'arbre est posée une à une** (chemin du ×8,
+  plafond `FleursArbreMax`) au lieu des gerbes de fleurs ; fruits d'arbre : déjà couverts au ④
+  (`DrawFruitsHouppier` → `PoserFruit`) dès ×4 ;
+- prairie : `PoserBoule` → `tete_boule` (pompons du trèfle, glomérules du dactyle ; attache
+  1,8 cm sous le centre de la boule) ; feuilles du plantain → `feuille_lanceolee` ; épi du
+  plantain → `tete_epi` ; feuilles de hampe (molène) → recette de la forme de la fiche ;
+- chemin générique `DrawOrgans` (plantes sans fiche : jeunes arbres, squelettes) : feuilles ×8+
+  → recette de la `LeafShape` d'espèce (Aciculaire→aiguille, Cordée→cœur, Composée, Lancéolée,
+  Lobée→paume, sinon ovale), attache au point d'insertion, sauf feuille naissante sous le
+  plancher de rayon ; fleurs ×4 (points) et ×8 → `tete_corolle` ; fruits ×4+ → `fruit_globe`.
+- **Lot de triangles** : un lot périmé (déjà envoyé, pas vidé) était re-tracé par la 1ʳᵉ pièce
+  qui « vide le lot » → `Vider()` ajouté avant les pièces dans `DrawFleurs`, `DrawFruits`,
+  `DrawPiecesFleurs` et la boucle de feuilles générique.
+
+**Reste DESSINÉ (et pourquoi)** — ni recette à la bonne échelle, ni crochet propre :
+1. feuilles du TRÈFLE (3-4 folioles de 3 cm) : `feuille_triade` est la feuille du haricot,
+   14 cm (~×4 trop grande), et aucune recette à 4 folioles ;
+2. BRINS et RUBANS des graminées (dactyle, fétuque, rubans du chaume) : lanières de 5 à 80 cm
+   que le vent plie point par point ; `feuille_ruban` est fixe (30 cm) et la pièce ne bougerait
+   plus qu'à l'attache, au sol → la prairie ne ploierait plus ;
+3. MASSES du buisson (grains du thym, lames de la lavande) : abstraction de feuillage, sans
+   recette (grain 1,9 cm, lame 8 cm contre aiguille 3 cm / ruban 30 cm) ;
+4. panicule de la FÉTUQUE (épillets roux de 0,5 cm) et anthères du blé : trop fins ;
+5. ARBRES ×4 : masses de feuillage (gerbes de feuilles, `DrawGerbesPalierMasses`) — pas de
+   recette de masse (les `touffe_*_kit` sont le ⑤) ; masses ×4 des plantes génériques
+   (`DrawMassesFeuillage`) idem ;
+6. BOIS (③ : couture visible), et toutes les marques vectorielles déjà listées au ④
+   (duvet, éclat, nervures du plantain, pruine ×32 des fruits génériques).
+
+**Vérif.** Golden `bce813af…` INTACT. `dotnet build` vert, 0 avertissement. Fichiers : Organs.cs
+321 LDC (était 318, 🟡 préexistant), Prairie.cs 303, Splats.cs 157, SplatsOrganes.cs 63.
+**Captures [VM, n=1 image par cas, charge ~2]** `mesures/vue4bis_{avant,apres}_*.png` (avant =
+`SYMBIOSE_SPLATS=0`) : `cereales_x4` (blé, haricot, poivron), `cereales_x8` (épis de blé),
+`seigle_x8`, `haricot_x8` (gousses), `prairie_x4` (trèfle, minette), `prairie_x8` (plantain :
+feuilles + épi), `verger_x4`/`verger_x8` (`verger_floraison -w 0` : pommiers en fleur). Lecture :
+épis bien posés sur leur chaume, seigle retombant dans des directions variées, gousses pendues aux
+mêmes points ; fleurs de pommier à ×8 en corolles volumées un peu plus petites que les pièces
+dessinées (nominal 1,3 cm de rayon contre 2 cm) ; **×4 : fleurs d'arbre plus CLAIRSEMÉES qu'avec
+les gerbes** (fleurs une à une plafonnées) ; jeunes pommes ~×2 (taille nominale, point F5 du ④).
+Chatons non capturés (aucun banc ne force la floraison du noyer et de ses pareils).
+**Signalé** : chaque première lecture d'une planche émet au journal Godot « Loaded resource as
+image file, this will not work on export » (`Image.LoadFromFile` sur `res://`, depuis le ④) — à
+vérifier au packaging (t7) : l'hypothèse « keep copie le PNG dans le .pck » n'est pas démontrée.
+
 ## F5 (recette pour Nico — complétée par ④⑤⑦)
 **④ (×4 → ×32)** — banc `planche_especes`, zoomer ×4 → ×32 sur tomate, carotte, courgette,
 fraisier, tournesol, poivron ; Maj+F11 pour comparer avec l'ancien dessin.
@@ -304,6 +361,14 @@ fraisier, tournesol, poivron ; Maj+F11 pour comparer avec l'ancien dessin.
   garder, réduire les rayons nominaux des recettes, ou classes de taille ×2 de poids) ; la paume
   de courgette trop plate à ×16 ; la perte des marques (duvet, éclat, revers, nervures du lierre).
 - Changement de palier : un court à-coup la 1ʳᵉ fois (lecture des planches) — gênant ou non ?
+
+**④bis** — mêmes gestes, sur blé / seigle / pâturin, haricot en gousses, plantain, trèfle en
+fleur, et un pommier en fleur (`verger_floraison`) ; Maj+F11 pour comparer.
+- Épis, panicule, gousses, pompons, épi du plantain, fleurs et boutons d'arbre en volume ; le
+  seigle retombe toujours, dans des directions variées, et suit la rotation D35.
+- **À juger** : à ×4 le pommier fleuri est-il assez fleuri (fleurs une à une au lieu des gerbes,
+  plus clairsemé) ? Les chatons (noyer, noisetier…) en floraison réelle. La prairie garde ses
+  brins et le trèfle ses feuilles dessinés (cf. compte rendu) : le mélange se voit-il ?
 
 # Carnet de conception (historique)
 
@@ -379,9 +444,9 @@ fraisier, tournesol, poivron ; Maj+F11 pour comparer avec l'ancien dessin.
 
 ## §REPRISE
 Lire `CLAUDE.md`, ce fichier, la conception, puis le kickoff du premier tronçon
-« à faire » de la carte. ①②③ faits ; ④ fait PARTIEL (non commité) : chargeur
-`visuals/SplatPlanches.cs` + pose `visuals/PlantRenderer.Splats.cs` réutilisables tels quels
-(`SplatPlanches.Trouver`, `PoserPieceSplat`) ; périmètre restant listé au compte rendu ④ (écart 3)
-— décider ④ bis ou l'absorber. Prochain : ⑤ (`05_vue_paliers_bas.md`, paliers ×0,5-×2 : mêmes
-outils, planches `touffe_*_kit` / `fleuron_kit`). Taille nominale = point F5 ouvert. Golden
-`bce813af…` intact.
+« à faire » de la carte. ①②③④ faits, ④bis fait (non commité) : couverture ×4-×32 complétée là où
+une recette existe ; reste dessiné listé au compte rendu ④bis. Outils réutilisables tels quels :
+`SplatPlanches.Trouver`, `PoserPieceSplat`, `PoserPieceFeuille`, `PoserOrganeSplat`. **Prochain :
+⑤** (`05_vue_paliers_bas.md`, paliers ×0,5-×2 : planches `touffe_*_kit` / `fleuron_kit` ; les
+masses ×4 d'arbre et de plantes génériques, sans recette, pourraient y trouver leurs touffes).
+Tailles nominales et densité des fleurs d'arbre ×4 = points F5 ouverts. Golden `bce813af…` intact.
