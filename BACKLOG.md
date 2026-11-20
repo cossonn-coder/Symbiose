@@ -153,6 +153,7 @@ du sol D10, migration des arbres D91, lisibilité du décor D83…)
 | `perf/scatter` | [scatter](docs/perf/scatter/backlog_scatter.md) |
 | `rendu/ambiance` | [ambiance](docs/rendu/ambiance/backlog_ambiance.md) |
 | `rendu/spatial` | [modèle spatial & vue](docs/rendu/spatial/backlog_spatial.md) |
+| `rendu/splatting` | [gaussian splats](docs/rendu/splatting/backlog_splatting.md) |
 | `vegetal/allelopathie` | [allélopathie](docs/vegetal/allelopathie/backlog_allelopathie.md) |
 | `vegetal/catalogue` | [catalogue](docs/vegetal/catalogue/backlog_catalogue.md) |
 | `vegetal/croissance` | [croissance](docs/vegetal/croissance/backlog_croissance.md) |
