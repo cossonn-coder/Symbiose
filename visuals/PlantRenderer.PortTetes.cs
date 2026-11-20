@@ -61,6 +61,7 @@ namespace Symbiose
 			// Caractères ⑥ : fleur × √taille_fleur ; tête fanée sans graines brune et rabougrie.
 			float r = Mathf.Max(f.TeteCm * pxx * (fleur ? _echelleFleur : 1f), pix);
 			Faner(ref c, ref r, fleur);
+			if (PoserTeteSplat(f, pied, sommet, c, fleur, graine)) { if (fleur) PoserGuides(sommet, r, c, f.Tete); return; }   // PRÉCUISSON SPLATS ④
 			switch (f.Tete)
 			{
 				case FormeTete.Capitule:

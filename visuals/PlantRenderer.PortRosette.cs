@@ -117,6 +117,7 @@ namespace Symbiose
 
 		private void PoserFeuillePort(FichePort f, FeuillePosee fe, Color col)
 		{
+			if (PoserFeuilleSplat(RecetteFeuille(f.Feuille, f.Marque), fe, col)) return;   // PRÉCUISSON SPLATS ④
 			switch (f.Feuille)
 			{
 				case FormeFeuille.Ruban:

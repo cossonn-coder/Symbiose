@@ -188,6 +188,7 @@ namespace Symbiose
 		// Rond, ou long et couché (courgette), avec son contour sombre, un éclat dès ×4.
 		private void PoserFruit(Vector2 c, float r, float allonge, Color col, int i)
 		{
+			if (PoserFruitSplat(c, allonge, col, i)) return;   // PRÉCUISSON SPLATS ④
 			Color base_ = Ton(col, PaletteIndexee.TonBase), bord = Ton(col, 0), eclat = Ton(col, 4);
 			float pix = PixelInterne;
 			if (allonge <= 1f)

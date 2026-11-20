@@ -57,6 +57,7 @@ namespace Symbiose
 			float pix = PixelInterne;
 			Vector2 attache = PointFeuille(fe, 0f, 0f);
 			_lotPrairie.Ligne(Iso(0f, 0f, 1f), attache, Ton(col, 3), AuPalier(PaliersHautsMinZoom) ? pix * 2f : pix);
+			if (PoserFeuilleSplat("feuille_paume", fe, col)) return;   // PRÉCUISSON SPLATS ④
 			_contourPrairie.Clear();
 			foreach (Vector2 q in ContourPaume) _contourPrairie.Add(PointFeuille(fe, q.X, q.Y));
 			if (AuPalier(PaliersHautsMinZoom)) PoserEventail(_contourPrairie, new Vector2(0f, pix * 2f), Ton(col, 0));

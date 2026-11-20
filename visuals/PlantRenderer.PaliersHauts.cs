@@ -176,6 +176,8 @@ namespace Symbiose
 		{
 			float bite = Mathf.Min(1f, _ravageurs + _grele); // criblage cumulé
 			int holes = Mathf.CeilToInt(bite * 4f);          // 0 à 4 morsures
+			// PRÉCUISSON SPLATS ④ : feuilles en pièces splat → les trous sont DANS la pièce (D5).
+			if (_feuillesSplat) holes = 0;
 			for (int k = 0; k < holes; k++)
 				DrawCircle(PointDansLimbe(c, r, 23 + k, 29 + k, i, j, 0.3f, 0.55f),
 						   r * 0.22f, Trou(LeafHoleColor));

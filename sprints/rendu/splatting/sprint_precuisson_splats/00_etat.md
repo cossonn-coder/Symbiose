@@ -11,7 +11,7 @@ Golden : **INTACT à tous les tronçons** (vue + outillage, `data/code/` jamais 
 | ① | `01_atelier_cuisson.md` — outil `tools/splat/` + feuille composée, format palette indexée, tous paliers, mesures — **PORTE DE DÉCISION** | **fait 2026-11-20 — porte PASSÉE avec réserves** (cf. compte rendu) |
 | ② | `02_feuilles.md` — bibliothèque des feuilles (formes, variantes, vues, trous D5) | **fait 2026-11-20** (non commité) |
 | ③ | `03_tetes_fruits_bois.md` — têtes, fleurs, fruits, bourgeons, bois (couture mesurée) | **fait 2026-11-20** (non commité) — bois NON livré (couture visible) |
-| ④ | `04_vue_paliers_hauts.md` — vue ×4 → ×32 | à faire |
+| ④ | `04_vue_paliers_hauts.md` — vue ×4 → ×32 | **fait 2026-11-20 — PARTIEL** : ports (feuilles, têtes, fruits) + feuilles d'arbre ×8+ ; reste listé au compte rendu (non commité) |
 | ⑤ | `05_vue_paliers_bas.md` — vue ×0,5 → ×2 (kit) | à faire |
 | ⑥ | `06_portraits.md` — 162 portraits | à faire |
 | ⑦ | `07_vue_encyclopedie.md` — encyclopédie + magazine, clôture | à faire |
@@ -227,8 +227,83 @@ kickoff, pas de bricolage). Aucune planche `bois_*` dans `assets/`.
   2042×17 394 (> 16 384, limite usuelle d'une texture GPU) → le ④ devra scinder ces planches.
 - Les couches de cœur s'effacent sous ~×2 (pièces vides) : la vue posera alors la couche 0 seule.
 
+### ④ Vue ×4 → ×32 (2026-11-20) — FAIT, PARTIEL (périmètre ci-dessous)
+**Fait.** `visuals/SplatPlanches.cs` (chargeur : manifestes, planches → textures de CODES
+`(1,1,G,1)`, bandes ≤ 16 384 px, cache du seul palier courant) + `visuals/PlantRenderer.Splats.cs`
+(choix forme → recette, vue, variante, trou ; pose au point d'attache, palette = celle que la vue
+calculait déjà). Crochets d'UNE ligne (ancien dessin intact derrière) : `PoserFeuillePort`
+(rosette), `PoserFeuilleTige` (tige, volubile, **feuilles d'arbre ×8+** via la fiche-limbe),
+`PoserFeuillePaume` (rampante), `PoserFeuilleTapis` (chaque foliole), `PoserTete` (13 têtes,
+une palette par couche), `PoserFruit` (globe / long). Criblage vectoriel coupé quand la feuille
+est une pièce (`_feuillesSplat`, PaliersHauts/Prairie : trous D5 = la pièce, ×16-×32, variante 0).
+**Interrupteur** : Maj+F11 (Controls.cs) ou `SYMBIOSE_SPLATS=0` au lancement ; éteint, F11 OFF,
+dessin direct ou pièce absente/vide → ancien dessin vectoriel.
+
+**Chargement (justification).** `importer="keep"` : 280 `assets/splats/*.png.import` écrits
+(3 lignes chacun) ; lecture par `Image.LoadFromFile` = décodeur PNG de Godot sur le fichier même →
+octets INTACTS (pas de compression VRAM, pas de mipmap, pas de `fix_alpha_border` qu'aurait
+l'import « texture »), et « keep » copie le PNG tel quel dans le .pck à l'export (t7). Testé sur
+la VM : `godot --headless --import` respecte les `keep` (aucun `.ctex` produit pour les planches) ;
+l'import a semé 154 `.import` parasites (docs/, sprints/) → supprimés. Sans ces fichiers, l'éditeur
+Windows importerait les 280 planches en textures (et échouerait sur celles > 16 384 px).
+**Planches > 16 384 px** : découpées EN MÉMOIRE au chargement (coupe entre deux rangées de pièces,
+octets des pièces copiés tels quels) → **aucune planche régénérée** (arbitrage « repack outil »
+non nécessaire, D2 : historique git intact).
+
+**Choix de vue.** Lacet = direction ÉCRAN de l'organe au repos (`WorldToScreenOffset(fe.U)`)
+défaite par la projection d'orientation 0 → angle vu par la caméra, rotation D35 comprise
+(capture `-r 1` : les feuilles changent de vue, restent du même côté). Inclinaison = montée du
+bout (`HautZ` / emprise au sol). Pas la pose de vent (arbitrage) : le vent ne déplace que l'attache.
+Têtes : lacet au hash, inclinaison la plus proche de 0. Fruit long : lacet de l'angle au hash de
+`PoserFruit`. Attaches : base de l'épi (tiers haut de la hampe), foyer de l'ombelle (2,75 cm sous
+le plateau), sommet ailleurs ; centre pour les fruits.
+
+**Mesures [VM, banc planche_especes, n=1 capture par palier, charge ~1-2].**
+- Cuisson, régime établi (planches et manifeste déjà chargés) : carotte ×8 0,68 ms contre
+  0,54 ms vectoriel [n=1 plante] — même ordre. Premier usage d'une recette : lecture du manifeste
+  JSON ≈ 20-70 ms [estimé par différence, tomate 116 ms dont 43 ms de planches] + planche 2 ms (×4)
+  à 153 ms (`feuille_scie_gaufree_x32`, 2028×2145) → **à-coup unique au changement de palier**,
+  chronométré depuis au journal (`[Splats] manifeste … ms`). Tomate ×8 : 116,7 ms 1ʳᵉ cuisson
+  contre 1,3 ms vectoriel.
+- Mémoire vidéo des planches de codes (RGBA8) : ×4 2,7 Mo (13 planches), ×8 5,4 Mo, ×32 17,7 Mo
+  pour UN fraisier (3 planches) [n=1 cadrage par palier]. Plafond théorique si toutes les planches
+  d'un palier servaient : ×16 225 Mo, ×32 835 Mo [somme des planches] → d'où le cache du seul
+  palier courant (les autres sont rendus au changement de palier).
+- Poids dépôt : +280 `.import` (~8 Ko) ; aucune planche touchée ; `assets/splats/` 26 Mo.
+
+**Captures (lues au Read)** : `mesures/vue4_{avant,apres}_x{4,8,16,32}.png` (planche_especes,
+tomate ×4/×8, courgette ×16, fraisier ×32) et `mesures/vue4_{avant,apres}_x8_r1.png` (rotation D35).
+Lecture : volume net (folioles, revers sombres, gaufrage du fraisier, courgettes cylindriques) ;
+ombelle de la carotte et étoile de la tomate en pièces. **Défauts** : (1) TAILLE — pièces à la taille
+nominale de leur recette, plus grandes que le dessin : feuilles de fraisier ~×1,5, fraise et courgette
+~×2 en diamètre (nominal + √2 du ③), plume de carotte plus étalée ; (2) paume de courgette à ×16
+presque plate (2 tons) ; (3) les marques vectorielles (duvet, éclat, revers d'armoise, nervures
+pâles du lierre, gouttes de drosera) ne sont PAS posées sur une feuille-pièce (leurs positions
+suivaient la géométrie dessinée, pas celle de la pièce) ; poils ×32 et gel/taches restent aux sites.
+
+**Écarts au kickoff / hypothèses corrigées.**
+1. Les pièces ne passent pas par l'import Godot (keep + LoadFromFile) : « vérifier qu'un import
+   produit les mêmes octets » devient sans objet — c'est le PNG lui-même qui est lu.
+2. Les organes d'un port sont dans un LOT de triangles (un envoi, peint à la fin) : chaque pièce
+   vide le lot avant d'être tracée (ordre de peinture conservé).
+3. **Périmètre non couvert (toujours dessiné)**, faute de crochet unique : prairie (trèfle, plantain,
+   dactyle, fétuque), chaume (rubans, `epi_ble`/`epi_barbu`/`panicule` pourtant cuits), masses du
+   buisson, feuilles de hampe, gousses (`PoserGousses`), boutons, chatons, ARBRES à ×4 (gerbes)
+   et leurs fleurs/fruits (PiecesFleur, FleursArbre, FruitsArbre), chemin générique `DrawOrgans`
+   (espèces sans fiche). À trancher par l'orchestrateur : tronçon ④ bis, ou au fil de ⑤.
+4. Bois : dessiné (③). Pas de classe de taille créée (arbitrage) ; écart signalé au F5.
+
 ## F5 (recette pour Nico — complétée par ④⑤⑦)
-(à écrire)
+**④ (×4 → ×32)** — banc `planche_especes`, zoomer ×4 → ×32 sur tomate, carotte, courgette,
+fraisier, tournesol, poivron ; Maj+F11 pour comparer avec l'ancien dessin.
+- Les feuilles, têtes et fruits ont du VOLUME ; le côté éclairé suit le soleil (heure qui tourne).
+- PgUp/PgDn (rotation D35) : les feuilles changent de vue sans « sauter » de côté ; vent fort :
+  elles suivent la tige sans clignoter.
+- `tailler` marche toujours au pied (taille au port).
+- **À calibrer** : la TAILLE (feuilles, fraise, courgette, têtes ~×1,5 à ×2 du dessin d'avant —
+  garder, réduire les rayons nominaux des recettes, ou classes de taille ×2 de poids) ; la paume
+  de courgette trop plate à ×16 ; la perte des marques (duvet, éclat, revers, nervures du lierre).
+- Changement de palier : un court à-coup la 1ʳᵉ fois (lecture des planches) — gênant ou non ?
 
 # Carnet de conception (historique)
 
@@ -304,9 +379,9 @@ kickoff, pas de bricolage). Aucune planche `bois_*` dans `assets/`.
 
 ## §REPRISE
 Lire `CLAUDE.md`, ce fichier, la conception, puis le kickoff du premier tronçon
-« à faire » de la carte. ①②③ faits (③ non commité). Prochain : ④
-(`04_vue_paliers_hauts.md`) — lire le compte rendu ③ : organes = manifestes `tete_*`,
-`fruit_*`, `gousse`, `chaton`, `epi_*`, `panicule`, `bouton`, `fleuron` (champ `vue` = table
-nom vue → recette, champ `couche` = une palette par couche) ; **le bois reste dessiné** (couture
-visible) ; trois arbitrages à remonter à Nico (taille nominale, échelle √2 des organes ronds,
-scission des planches > 16 384 px). Golden `bce813af…` intact.
+« à faire » de la carte. ①②③ faits ; ④ fait PARTIEL (non commité) : chargeur
+`visuals/SplatPlanches.cs` + pose `visuals/PlantRenderer.Splats.cs` réutilisables tels quels
+(`SplatPlanches.Trouver`, `PoserPieceSplat`) ; périmètre restant listé au compte rendu ④ (écart 3)
+— décider ④ bis ou l'absorber. Prochain : ⑤ (`05_vue_paliers_bas.md`, paliers ×0,5-×2 : mêmes
+outils, planches `touffe_*_kit` / `fleuron_kit`). Taille nominale = point F5 ouvert. Golden
+`bce813af…` intact.

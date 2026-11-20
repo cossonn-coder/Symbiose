@@ -25,6 +25,7 @@ namespace Symbiose
 			float pix = PixelInterne;
 			Color c = Ton(col, fe.Ton, Orientation(WorldView.WorldToScreenOffset(fe.U.X, fe.U.Y)));
 			if (!AuPalier(PaliersHautsMinZoom)) { PoserLosange(fe, c); return; }
+			if (PoserFeuilleSplat(RecetteFeuille(f.Feuille, f.Marque), fe, col)) return;   // PRÉCUISSON SPLATS ④
 			switch (f.Feuille)
 			{
 				case FormeFeuille.Palmee: PoserPalmee(fe, c); return;

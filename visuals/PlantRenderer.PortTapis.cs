@@ -84,6 +84,7 @@ namespace Symbiose
 			{
 				float a = i * Mathf.Tau / nb;
 				var fo = fe with { U = fe.U.Rotated(a) };
+				if (PoserFeuilleSplat(RecetteFeuille(f.Feuille, f.Marque), fo, col)) continue;   // PRÉCUISSON SPLATS ④
 				_contourPrairie.Clear();
 				foreach (Vector2 q in ContourDe(f.Feuille)) _contourPrairie.Add(PointFeuille(fo, q.X, q.Y));
 				if (pres) PoserEventail(_contourPrairie, new Vector2(0f, PixelInterne), Ton(col, 0));

@@ -411,6 +411,7 @@ namespace Symbiose
 				else if (_snow > 0f && Hash01(47, i, GraineIndividu) < _snow)
 					DrawSnowCrown(c, r, r * 0.6f);
 			}
+			_feuillesSplat = false;   // PRÉCUISSON SPLATS ④ (PlantRenderer.Splats.cs)
 		}
 	}
 }
