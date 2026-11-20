@@ -25,13 +25,15 @@ const JOUR = 1;
 
 const nomPalier = z => 'x' + String(z).replace('.', '_');
 
-// pieces : [{ palier, inclinaison, variante, lacet, w, h, rgba, attache }]
-// → { planches: Map(palier → { w, h, rgba }), entrees: [...] }
+// pieces : [{ palier, planche?, taille?, trou?, inclinaison, variante, lacet, w, h, rgba, attache }]
+// → { planches: Map(nom de planche → { w, h, rgba }), entrees: [...] }
+// Planche = `planche` de la pièce (② : « kit » pour les touffes), sinon son palier.
 function ranger(pieces) {
   const parPalier = new Map();
   for (const p of pieces) {
-    if (!parPalier.has(p.palier)) parPalier.set(p.palier, []);
-    parPalier.get(p.palier).push(p);
+    const cle = p.planche || nomPalier(p.palier);
+    if (!parPalier.has(cle)) parPalier.set(cle, []);
+    parPalier.get(cle).push(p);
   }
   const planches = new Map(), entrees = [];
   for (const [z, liste] of parPalier) {
@@ -50,8 +52,10 @@ function ranger(pieces) {
       for (let j = 0; j < p.h; j++)
         rgba.set(p.rgba.subarray(j * p.w * 4, (j + 1) * p.w * 4), ((py + j) * w + px) * 4);
       entrees.push({
-        palier: z, inclinaison_deg: p.inclinaison, variante: p.variante, lacet_deg: p.lacet,
-        planche: nomPalier(z), rect: [px, py, p.w, p.h],
+        palier: p.palier, ...(p.taille ? { taille_px: p.taille } : {}),
+        inclinaison_deg: p.inclinaison, variante: p.variante,
+        ...(p.trou ? { trou: p.trou.type, degre: p.trou.degre } : {}), lacet_deg: p.lacet,
+        planche: z, rect: [px, py, p.w, p.h],
         attache: [p.attache[0], p.attache[1]]
       });
     });
@@ -60,7 +64,7 @@ function ranger(pieces) {
   return { planches, entrees };
 }
 
-// Écrit `<dossier>/<recette>_<palier>.png` et `<dossier>/<recette>.json`.
+// Écrit `<dossier>/<recette>_<planche>.png` et `<dossier>/<recette>.json`.
 // Retourne la liste des fichiers écrits (chemins absolus).
 function ecrire(png, dossier, recette, meta, pieces) {
   fs.mkdirSync(dossier, { recursive: true });
@@ -68,9 +72,9 @@ function ecrire(png, dossier, recette, meta, pieces) {
   const fichiers = [];
   const noms = {};
   for (const [z, pl] of planches) {
-    const f = path.join(dossier, `${recette}_${nomPalier(z)}.png`);
+    const f = path.join(dossier, `${recette}_${z}.png`);
     fs.writeFileSync(f, png.encode(pl.w, pl.h, pl.rgba, 4));
-    noms[nomPalier(z)] = path.basename(f);
+    noms[z] = path.basename(f);
     fichiers.push(f);
   }
   const manifeste = { recette, ...meta, planches: noms, pieces: entrees };

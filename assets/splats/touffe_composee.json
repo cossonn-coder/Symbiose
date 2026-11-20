@@ -1,0 +1,236 @@
+{
+ "recette": "touffe_composee",
+ "format": "R = niveau kit (2 ombre, 3 base, 4 lumière) ; G = 128 | ton << 4 | orientation ; A = posé",
+ "px_par_cm_x1": 0.39,
+ "seuil_plat": 0.3,
+ "lacets": 1,
+ "inclinaisons_deg": [
+  0
+ ],
+ "variantes": 3,
+ "vue": [
+  "Kit LeafShape.Composee"
+ ],
+ "attache": "px de la pièce (coin haut-gauche = 0,0), peut sortir du rectangle",
+ "planches": {
+  "kit": "touffe_composee_kit.png"
+ },
+ "pieces": [
+  {
+   "palier": 0.45787545787545797,
+   "taille_px": 3,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "planche": "kit",
+   "rect": [
+    0,
+    0,
+    3,
+    2
+   ],
+   "attache": [
+    1,
+    1
+   ]
+  },
+  {
+   "palier": 0.7631257631257633,
+   "taille_px": 5,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "planche": "kit",
+   "rect": [
+    4,
+    0,
+    4,
+    3
+   ],
+   "attache": [
+    1,
+    2
+   ]
+  },
+  {
+   "palier": 1.0683760683760686,
+   "taille_px": 7,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "planche": "kit",
+   "rect": [
+    9,
+    0,
+    7,
+    5
+   ],
+   "attache": [
+    3,
+    4
+   ]
+  },
+  {
+   "palier": 1.3736263736263739,
+   "taille_px": 9,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "planche": "kit",
+   "rect": [
+    17,
+    0,
+    9,
+    6
+   ],
+   "attache": [
+    4,
+    5
+   ]
+  },
+  {
+   "palier": 0.45787545787545797,
+   "taille_px": 3,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "planche": "kit",
+   "rect": [
+    27,
+    0,
+    3,
+    2
+   ],
+   "attache": [
+    1,
+    1
+   ]
+  },
+  {
+   "palier": 0.7631257631257633,
+   "taille_px": 5,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "planche": "kit",
+   "rect": [
+    31,
+    0,
+    5,
+    4
+   ],
+   "attache": [
+    2,
+    3
+   ]
+  },
+  {
+   "palier": 1.0683760683760686,
+   "taille_px": 7,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "planche": "kit",
+   "rect": [
+    37,
+    0,
+    7,
+    5
+   ],
+   "attache": [
+    2,
+    4
+   ]
+  },
+  {
+   "palier": 1.3736263736263739,
+   "taille_px": 9,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "planche": "kit",
+   "rect": [
+    45,
+    0,
+    10,
+    7
+   ],
+   "attache": [
+    4,
+    6
+   ]
+  },
+  {
+   "palier": 0.45787545787545797,
+   "taille_px": 3,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "planche": "kit",
+   "rect": [
+    56,
+    0,
+    3,
+    2
+   ],
+   "attache": [
+    1,
+    1
+   ]
+  },
+  {
+   "palier": 0.7631257631257633,
+   "taille_px": 5,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "planche": "kit",
+   "rect": [
+    60,
+    0,
+    6,
+    3
+   ],
+   "attache": [
+    3,
+    2
+   ]
+  },
+  {
+   "palier": 1.0683760683760686,
+   "taille_px": 7,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "planche": "kit",
+   "rect": [
+    67,
+    0,
+    8,
+    5
+   ],
+   "attache": [
+    4,
+    4
+   ]
+  },
+  {
+   "palier": 1.3736263736263739,
+   "taille_px": 9,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "planche": "kit",
+   "rect": [
+    76,
+    0,
+    10,
+    6
+   ],
+   "attache": [
+    5,
+    5
+   ]
+  }
+ ]
+}

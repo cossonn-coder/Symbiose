@@ -24,10 +24,17 @@ pas dans la copie.
 node tools/splat/cuire.js feuille_composee --controle sprints/…/mesures
 # mesurer le nombre de vues (lacets / inclinaisons) d'une recette
 node tools/splat/mesurer_vues.js feuille_composee
+# planche de contrôle de toute la bibliothèque (relit assets/splats, ne recuit rien)
+node tools/splat/controle_feuilles.js sprints/…/mesures/controle_feuilles.png
 ```
 
+Cuire toute la bibliothèque (② : 24 recettes, ~12 processus en parallèle) :
+`ls tools/splat/recettes | sed 's/\.js$//' | grep -v '^touffe$' | xargs -P 12 -I{} node tools/splat/cuire.js {}`.
+Ne recuire que les recettes modifiées (D2 : chaque régénération grossit l'historique git).
+
 Options de `cuire.js` : `--sortie` (défaut `assets/splats`), `--controle DOSSIER`
-(planche de contrôle humaine), `--lacets N` (défaut 8), `--inclinaisons 0,35`,
+(planche de contrôle humaine), `--lacets N` (défaut : la recette, sinon 8),
+`--inclinaisons` (défaut : la recette, sinon `-30,0,30`),
 `--paliers 0.5,1,…`, `--actuel capture.png:x,y,w,h` (pièce actuelle de la vue
 collée sous le contrôle). Deux cuissons donnent des fichiers identiques à l'octet
 (`sha256sum assets/splats/*`).
@@ -42,7 +49,12 @@ collée sous le contrôle). Deux cuissons donnent des fichiers identiques à l'o
 | `lib/codes.js` | passes ink-studio → codes de palette indexée (ton + orientation) |
 | `lib/planche.js` | rangement en planches (une par palier) + manifeste JSON |
 | `lib/controle.js` | planche de contrôle : rampe 5 tons + soleil fixe (règle du shader) |
-| `recettes/*.js` | une recette = un organe sculpté (contrat en tête de fichier) |
+| `controle_feuilles.js` | planche de contrôle de toute la bibliothèque (relue sur disque) |
+| `lib/limbe.js` | un limbe en volume depuis un contour 2D de la vue (pli, gaufrage, pétiole) |
+| `lib/feuille.js` | fabrique de recettes de feuille (fiche → recette) |
+| `lib/trous.js` | degrés de trous D5 : morsures (bord) et grêle (criblage), solides négatifs |
+| `recettes/*.js` | une recette = un organe sculpté (contrat en tête de `feuille_composee.js`) |
+| `recettes/touffe.js` | fabrique des touffes du kit (`touffe_<forme>.js`, une par `LeafShape`) |
 
 ## Format d'une pièce (= atlas du kit actuel, `PlantRenderer.Kit.cs`)
 
@@ -50,6 +62,8 @@ PNG RGBA8 : **R** = niveau du kit (2 ombre · 3 base · 4 lumière, éclairé ve
 bas — rendu littéral F11 OFF) ; **G** = code indexé `128 | ton << 4 | orientation`
 (`visuals/PaletteIndexee.cs`) ; **B** = 0 ; **A** = 255 posé / 0 vide. Le n° de
 palette (R,G du pixel final) est posé à l'assemblage par `modulate`.
-Manifeste : par pièce `palier`, `inclinaison_deg`, `variante`, `lacet_deg`
+Manifeste : `vue` (noms de la vue servis par la recette = table « nom vue →
+recette »), `trous` (paliers, variantes et degrés cuits) ; par pièce `palier`,
+`taille_px` (touffes du kit, planche `kit`), `trou` + `degre` (pièces trouées), `inclinaison_deg`, `variante`, `lacet_deg`
 (0 = organe vers l'est, sens trigo vu du dessus), `planche`, `rect` [x, y, w, h],
 `attache` [x, y] en px de la pièce (là où l'organe tient à sa tige).

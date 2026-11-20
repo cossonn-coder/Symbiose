@@ -1,0 +1,236 @@
+{
+ "recette": "touffe_cordee",
+ "format": "R = niveau kit (2 ombre, 3 base, 4 lumière) ; G = 128 | ton << 4 | orientation ; A = posé",
+ "px_par_cm_x1": 0.39,
+ "seuil_plat": 0.3,
+ "lacets": 1,
+ "inclinaisons_deg": [
+  0
+ ],
+ "variantes": 3,
+ "vue": [
+  "Kit LeafShape.Cordee"
+ ],
+ "attache": "px de la pièce (coin haut-gauche = 0,0), peut sortir du rectangle",
+ "planches": {
+  "kit": "touffe_cordee_kit.png"
+ },
+ "pieces": [
+  {
+   "palier": 0.7122507122507121,
+   "taille_px": 3,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "planche": "kit",
+   "rect": [
+    0,
+    0,
+    3,
+    2
+   ],
+   "attache": [
+    1,
+    1
+   ]
+  },
+  {
+   "palier": 1.1870845204178535,
+   "taille_px": 5,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "planche": "kit",
+   "rect": [
+    4,
+    0,
+    4,
+    3
+   ],
+   "attache": [
+    1,
+    2
+   ]
+  },
+  {
+   "palier": 1.661918328584995,
+   "taille_px": 7,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "planche": "kit",
+   "rect": [
+    9,
+    0,
+    7,
+    4
+   ],
+   "attache": [
+    3,
+    3
+   ]
+  },
+  {
+   "palier": 2.1367521367521363,
+   "taille_px": 9,
+   "inclinaison_deg": 0,
+   "variante": 0,
+   "lacet_deg": 0,
+   "planche": "kit",
+   "rect": [
+    17,
+    0,
+    8,
+    6
+   ],
+   "attache": [
+    3,
+    4
+   ]
+  },
+  {
+   "palier": 0.7122507122507121,
+   "taille_px": 3,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "planche": "kit",
+   "rect": [
+    26,
+    0,
+    3,
+    2
+   ],
+   "attache": [
+    1,
+    1
+   ]
+  },
+  {
+   "palier": 1.1870845204178535,
+   "taille_px": 5,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "planche": "kit",
+   "rect": [
+    30,
+    0,
+    5,
+    4
+   ],
+   "attache": [
+    2,
+    3
+   ]
+  },
+  {
+   "palier": 1.661918328584995,
+   "taille_px": 7,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "planche": "kit",
+   "rect": [
+    36,
+    0,
+    6,
+    5
+   ],
+   "attache": [
+    2,
+    4
+   ]
+  },
+  {
+   "palier": 2.1367521367521363,
+   "taille_px": 9,
+   "inclinaison_deg": 0,
+   "variante": 1,
+   "lacet_deg": 0,
+   "planche": "kit",
+   "rect": [
+    43,
+    0,
+    9,
+    7
+   ],
+   "attache": [
+    3,
+    5
+   ]
+  },
+  {
+   "palier": 0.7122507122507121,
+   "taille_px": 3,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "planche": "kit",
+   "rect": [
+    53,
+    0,
+    3,
+    2
+   ],
+   "attache": [
+    1,
+    1
+   ]
+  },
+  {
+   "palier": 1.1870845204178535,
+   "taille_px": 5,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "planche": "kit",
+   "rect": [
+    57,
+    0,
+    5,
+    3
+   ],
+   "attache": [
+    2,
+    2
+   ]
+  },
+  {
+   "palier": 1.661918328584995,
+   "taille_px": 7,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "planche": "kit",
+   "rect": [
+    63,
+    0,
+    6,
+    4
+   ],
+   "attache": [
+    3,
+    3
+   ]
+  },
+  {
+   "palier": 2.1367521367521363,
+   "taille_px": 9,
+   "inclinaison_deg": 0,
+   "variante": 2,
+   "lacet_deg": 0,
+   "planche": "kit",
+   "rect": [
+    70,
+    0,
+    9,
+    6
+   ],
+   "attache": [
+    5,
+    4
+   ]
+  }
+ ]
+}

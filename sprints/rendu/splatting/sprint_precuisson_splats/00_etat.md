@@ -9,7 +9,7 @@ Golden : **INTACT à tous les tronçons** (vue + outillage, `data/code/` jamais 
 | # | Kickoff | État |
 |---|---|---|
 | ① | `01_atelier_cuisson.md` — outil `tools/splat/` + feuille composée, format palette indexée, tous paliers, mesures — **PORTE DE DÉCISION** | **fait 2026-11-20 — porte PASSÉE avec réserves** (cf. compte rendu) |
-| ② | `02_feuilles.md` — bibliothèque des feuilles (formes, variantes, vues, trous D5) | à faire |
+| ② | `02_feuilles.md` — bibliothèque des feuilles (formes, variantes, vues, trous D5) | **fait 2026-11-20** (non commité) |
 | ③ | `03_tetes_fruits_bois.md` — têtes, fleurs, fruits, bourgeons, bois (couture mesurée) | à faire |
 | ④ | `04_vue_paliers_hauts.md` — vue ×4 → ×32 | à faire |
 | ⑤ | `05_vue_paliers_bas.md` — vue ×0,5 → ×2 (kit) | à faire |
@@ -85,6 +85,78 @@ A = posé. Manifeste : palier, inclinaison, variante, lacet, planche, rect, atta
    Seuil « plat » = 0,3 (FacePlate du kit, ~17,5° face caméra).
 5. Les pièces vont dans `assets/splats/` (une planche PAR PALIER : chargement ×16/×32
    à la demande possible au ④).
+
+### ② Bibliothèque des feuilles (2026-11-20) — FAIT
+**Fait.** 18 recettes de feuille + 6 touffes, toutes cuites dans `assets/splats/`
+(une planche par palier, `<recette>_kit.png` pour les touffes, un manifeste par recette).
+Briques nouvelles : `tools/splat/lib/limbe.js` (limbe en volume depuis un contour 2D
+de la vue : 2 moitiés en coussin `S.puff` relevées en V autour de la nervure, pétiole,
+gaufrage), `lib/feuille.js` (fabrique fiche → recette), `lib/trous.js` (trous D5 =
+solides négatifs `{ neg: true }`), `recettes/touffe.js` (+ 6 `touffe_<forme>.js`),
+`controle_feuilles.js` (planche de toute la bibliothèque, relue sur disque).
+`cuire.js` : axes `trous`, `tailles` (+ `empriseCm`), lacets/inclinaisons propres à
+la recette, défaut d'inclinaisons = −30,0,30 ; `planche.js` groupe par nom de planche.
+Non-régression : `feuille_composee` recuite → pièces saines IDENTIQUES à l'octet
+(×0,5-×8 inchangées, entrées saines du manifeste égales ; ×16/×32 : pièces trouées
+ajoutées APRÈS les saines).
+
+**Table « nom vue → recette »** (aussi dans le champ `vue` de chaque manifeste) :
+Ovale + `LeafShape.Elliptique` → `feuille_ovale` · Lanceolee + `LeafShape.Lanceolee`
+→ `feuille_lanceolee` · Coeur + `LeafShape.Cordee` → `feuille_coeur` · Composee +
+`LeafShape.Composee` → `feuille_composee` · Paume + `LeafShape.Lobee` (palmilobée :
+courge, figuier, vigne) → `feuille_paume` · `FormeFeuille.Lobee` (lobes PENNÉS :
+chêne, moutarde) → `feuille_lobee` — **même mot, deux formes** : `LeafShape.Lobee`
+couvre aussi chêne et moutarde (Leaf.cs) ; au ④ de choisir par espèce · Dentee →
+`feuille_dentee` · Spatule → `feuille_spatule` · Scie → `feuille_scie` · Lierre →
+`feuille_lierre` · Ruban → `feuille_ruban` · Cuillere → `feuille_cuillere` · Plume →
+`feuille_plume` · Palmee → `feuille_palmee` · Triade → `feuille_triade` ·
+`LeafShape.Aciculaire` → `feuille_aiguille` (absente de `FormeFeuille`) ·
+Scie/Lanceolee + `Gaufre` → `feuille_scie_gaufree` / `feuille_lanceolee_gaufree` ·
+kit `KitTouffe(LeafShape, 3|5|7|9, v)` → `touffe_<forme>` (planche `kit`, `taille_px`).
+Contours RECOPIÉS de la vue (ContourDente, Spatule, Lobe, Ovale, Coeur, Scie, Lierre,
+Paume, ProfilLanceole) ; dispositions de PoserPlume/Palmee/Triade/Cuillere.
+
+**Marques.** Cuites (relief) : `Pli` (gouttière en V de 0,5 rad, dans TOUS les rubans),
+`Gaufre` (sillons négatifs le long des nervures secondaires, 2 recettes `_gaufree` ;
+tomate : la composée garde sa forme du prototype, pas de version gaufrée). Laissées à
+la vue (couleur / brillance) : `Duvet`, `Gouttes`, `Eclat`, `Revers` (dessous argenté =
+palette ; le revers en volume, lui, est déjà cuit via les inclinaisons), `Nervures`
+(lierre : nervures PÂLES, couleur, à plat).
+
+**Trous (D5).** Morsure (bord, degrés 1 = 1 bouchée, 2 = 3) et grêle (criblage,
+1 = 3 trous, 2 = 7, grêlon ≤ 1 cm) ; aux seuls ×16 et ×32 (PaliersHauts.cs), les
+encoches de grêle de Froid.cs sont servies par les morsures. **Décision : trous sur
+la variante 0 seulement** (`TROUS_VARIANTES` = 1 dans cuire.js) — ×3 sur les
+variantes = +~20 min CPU et ~×3 de poids troué par recette ; réversible. Pas de trous
+sur aiguille ni plume (rien à cribler, la vue n'en dessine pas). Manifeste : `trou`,
+`degre`.
+
+**Mesures [VM, n=1 cuisson complète, 12 processus parallèles, charge ~13].**
+- 24 recettes, **11 520 pièces** (dont 2 880 trouées, 72 touffes ; 223 vides : aiguille
+  et cuillère aux paliers bas, quelques vues de profil à ×0,5).
+- Temps : **48 min 44 s** mur, 288 min CPU ; une recette va de 39 s (aiguille) à 49 min
+  (paume, rayon 29 cm : ×32 ≈ 10 s/photo en charge).
+- **Poids** : `assets/splats/` = **14,8 Mo** (planches 12,3 + manifestes 2,5), soit
+  +13,9 Mo au ② ; contrôles `mesures/` +1,8 Mo. Loin de l'alerte 200 Mo.
+- Déterminisme : composée recuite = octets identiques au ① (pièces saines).
+
+**Contrôles** (lus au Read) : `mesures/controle_feuilles.png` (toute la bibliothèque :
+×1 + 8 lacets ×8, puis ×16 saine + 4 degrés de trous ; touffes en bas) et
+`mesures/controle_<recette>.png` (toutes vues). Lecture : toutes les formes se
+distinguent dès ×8, le pli en V donne deux faces (ombre/lumière) très lisibles, les
+trous se lisent à ×16. Les touffes donnent des taches orientées variées (leurs feuilles
+montent de 0 à ~50°) ; mêmes réserves qu'au ① (plus claires que le kit, sans contour).
+
+**Points pour la suite.**
+- **TAILLE** (④ ⑤) : une feuille est cuite à UNE longueur nominale par forme
+  (ovale 9 cm, dentée 15, ruban 30, paume 20 + 6 de pétiole…, cf. `longCm` des
+  recettes) ; la vue a des feuilles de 2 à 30 cm selon espèce et stade. Pas de mise à
+  l'échelle (zooms entiers) → le ④ devra choisir : accepter la taille nominale, ou
+  demander une classe de taille de plus (×2 pièces/poids) — décision à remonter.
+- Largeurs (`large`) fixées par forme (médiane des fiches) : une seule géométrie sert
+  des espèces plus ou moins larges.
+- Le kit des touffes a la largeur de la taille demandée (±1 px) mais une hauteur
+  ~moitié (vue iso), là où le kit actuel est carré : à juger au ⑤.
 
 ## F5 (recette pour Nico — complétée par ④⑤⑦)
 (à écrire)
@@ -163,7 +235,8 @@ A = posé. Manifeste : palier, inclinaison, variante, lacet, planche, rect, atta
 
 ## §REPRISE
 Lire `CLAUDE.md`, ce fichier, la conception, puis le kickoff du premier tronçon
-« à faire » de la carte. ① fait (porte passée avec réserves, non commité par le
-sous-agent). Prochain : ② (`02_feuilles.md`) — réutiliser `tools/splat/cuire.js`
-(contrat de recette en tête de `recettes/feuille_composee.js`), V = 8 lacets ×
-3 inclinaisons. Golden `bce813af…` intact.
+« à faire » de la carte. ① et ② faits (non commités par les sous-agents). Prochain :
+③ (`03_tetes_fruits_bois.md`) — réutiliser `cuire.js` + `lib/feuille.js` (fabrique
+`recette`) ; les têtes/fruits n'ont PAS de trous (ne pas poser `trous`). Cuire toute
+une famille en parallèle : commande dans `tools/splat/README.md`. Golden `bce813af…`
+intact.

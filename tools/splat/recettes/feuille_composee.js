@@ -6,8 +6,9 @@
 //
 // Contrat d'une recette (lu par tools/splat/cuire.js) :
 //   nom, rayonCm (rayon englobant depuis l'attache, borne la toile de rendu),
-//   variantes (nombre de tirages au hash), sculpter(ctx).
-//   ctx = { S, K, M, variante, inclinaison } — S le sculpteur ink-studio, M.organe
+//   variantes (nombre de tirages au hash), sculpter(ctx) ; facultatifs (②) :
+//   vue (noms de la vue servis), trous (degrés D5), tailles/lacets/inclinaisons.
+//   ctx = { S, K, M, variante, inclinaison, trou } — S le sculpteur ink-studio, M.organe
 //   le matériau (rampe des 3 tons de volume), inclinaison en radians (le bout de
 //   la feuille relevé si > 0, tombant si < 0).
 // L'ATTACHE (là où la feuille tient à sa tige) est l'ORIGINE : l'outil la
@@ -26,6 +27,11 @@
 
 'use strict';
 
+const { percer } = require('../lib/trous');
+
+// ② : moitié d'ellipse, pour situer bords et intérieur d'une foliole (trous D5).
+const ELLIPSE = [[0, 0], [0.15, 0.71], [0.5, 1], [0.85, 0.71], [1, 0]];
+
 const LONG = 1.5;          // longueur du pétiole (unités) — feuille basse du prototype
 const NB_PAIRES = 4;       // paires de folioles le long du rachis
 
@@ -33,7 +39,9 @@ module.exports = {
   nom: 'feuille_composee',
   rayonCm: 21,
   variantes: 3,
-  sculpter({ S, K, M, variante, inclinaison }) {
+  trous: true,
+  vue: ['FormeFeuille.Composee', 'LeafShape.Composee'],
+  sculpter({ S, K, M, variante, inclinaison, trou }) {
     const V = K.V;
     const add = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
     const mul = (a, k) => [a[0] * k, a[1] * k, a[2] * k];
@@ -46,6 +54,7 @@ module.exports = {
     const c = Math.cos(inclinaison), s = Math.sin(inclinaison);
     const R = p => [p[0] * c - p[1] * s, p[0] * s + p[1] * c, p[2]];
     const h = (i, j) => K.hash(1000 + variante, i, j);   // aléa de la variante
+    const sites = [];   // folioles, pour les trous (②) — ne change rien à la sculpture
 
     const out = [1, 0, 0];
     const lat = [0, 0, 1];
@@ -63,15 +72,20 @@ module.exports = {
         const dir = V.norm(add(mul(lat, sgn), mul(out, 0.5)));
         const taille = 0.3 * (1.1 - 0.35 * t) * (0.85 + 0.3 * h(i, sgn + 2));
         const ctr = add(p, add(mul(dir, taille * 0.9), [0, -0.05 - 0.08 * h(i, 7), 0]));
-        S.ball(R(ctr), [taille, 0.022, taille * 0.55], M.organe,
-          { res: 0.03, ax: frame(R(dir), R([0.1 * sgn, 1, 0.2])) });
+        const ax = frame(R(dir), R([0.1 * sgn, 1, 0.2]));
+        S.ball(R(ctr), [taille, 0.022, taille * 0.55], M.organe, { res: 0.03, ax });
+        sites.push({ c: add(R(ctr), mul(ax[0], -taille)), U: ax[0], V: ax[2], W: ax[1],
+          long: 2 * taille, large: taille * 0.55, moitie: ELLIPSE });
         // Petite foliole intercalaire à l'aisselle (trait de la tomate).
         S.ball(R(add(p, add(mul(dir, 0.12), [0, -0.03, 0]))), [0.08, 0.015, 0.05], M.organe,
           { res: 0.025, ax: frame(R(dir), R([0, 1, 0])) });
       }
     }
     const fin = pts[4];
-    S.ball(R(add(fin, mul(out, 0.18))), [0.22, 0.022, 0.12], M.organe,
-      { res: 0.03, ax: frame(R(out), R([0, 1, 0])) });
+    const axT = frame(R(out), R([0, 1, 0]));
+    S.ball(R(add(fin, mul(out, 0.18))), [0.22, 0.022, 0.12], M.organe, { res: 0.03, ax: axT });
+    sites.push({ c: add(R(add(fin, mul(out, 0.18))), mul(axT[0], -0.22)), U: axT[0], V: axT[2], W: axT[1],
+      long: 0.44, large: 0.12, moitie: ELLIPSE });
+    percer({ S, K, M }, trou, sites, variante);
   }
 };

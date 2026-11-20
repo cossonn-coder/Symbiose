@@ -8,7 +8,7 @@
 // Usage (depuis la racine du dépôt, Node ≥ 18, VM seulement) :
 //   node tools/splat/cuire.js feuille_composee
 //        [--sortie assets/splats] [--controle DOSSIER] [--lacets 8]
-//        [--inclinaisons 0,35] [--paliers 0.5,1,2,4,8,16,32]
+//        [--inclinaisons -30,0,30] [--paliers 0.5,1,2,4,8,16,32]
 //        [--actuel capture.png:x,y,w,h]   (pièce actuelle de la vue, collée sous
 //                                          la planche de contrôle pour comparer)
 //
@@ -21,6 +21,15 @@
 // inclinaison) ; le lacet et le palier ne sont que des réglages de caméra, donc
 // une même cuisson sert toutes les photos — comme un modèle 3D qu'on tourne.
 //
+// ② : axes propres à une recette (lus dans la recette, sinon les défauts) :
+//   • `trous: true` → en plus, les DEGRÉS DE TROUS (lib/trous.js, D5) aux seuls
+//     paliers où la vue montre les symptômes (PALIERS_TROUS, cf.
+//     PlantRenderer.PaliersHauts.cs), pour les TROUS_VARIANTES premières
+//     variantes ; ajoutés APRÈS les pièces saines (celles-ci gardent leur place) ;
+//   • `tailles: [3, 5, 7, 9]` (touffes du kit des paliers bas, D4) → la pièce est
+//     cuite à ces largeurs en px internes au lieu des paliers (zoom déduit de
+//     `empriseCm`, la largeur vue de la pièce, sinon du rayon), rangée dans la planche « kit » ; `lacets`, `inclinaisons` propres.
+//
 // Déterministe : graines fixes, aucune horloge dans les fichiers écrits (les
 // temps ne vont qu'à la console). Golden non concerné (outil hors moteur).
 
@@ -31,6 +40,7 @@ const fs = require('fs');
 const ink = require('./vendor/ink');
 const png = require('./vendor/ink/cli/png.js');
 const iso = require('./lib/iso');
+const { TROUS } = require('./lib/trous');
 const codes = require('./lib/codes');
 const planche = require('./lib/planche');
 const controle = require('./lib/controle');
@@ -42,10 +52,13 @@ const GRAINE = 7;
 const CRANS = 10;
 const TON_DE = [0, 0, 1, 1, 1, 2, 2, 2, 2, 2];   // t < 0,2 creux · < 0,5 ombre · base
 const AMBIANT = 0.75, CIEL = 0.25;              // revers (n_y = −1) : t × 0,75
+const PALIERS_TROUS = [16, 32];                 // PalierSymptomesZoom et au-delà
+const TROUS_VARIANTES = 1;                      // variantes trouées (poids, cf. 00_etat ②)
+const INCLINAISONS = [-30, 0, 30];              // V retenu au ① (8 lacets × 3)
 
 function options(argv) {
-  const o = { recette: argv[0], sortie: 'assets/splats', controle: null, actuel: null, lacets: 8,
-    inclinaisons: [0], paliers: iso.PALIERS };
+  const o = { recette: argv[0], sortie: 'assets/splats', controle: null, actuel: null, lacets: null,
+    inclinaisons: null, paliers: iso.PALIERS };
   for (let i = 1; i < argv.length; i += 2) {
     const k = argv[i].replace(/^--/, ''), v = argv[i + 1];
     if (k === 'lacets') o.lacets = +v;
@@ -64,15 +77,35 @@ const RAMPE = Array.from({ length: CRANS }, (_, k) => k + 1);
 const tableTons = () => codes.tableTons(PALETTE, RAMPE, TON_DE);
 
 // Sculpte et cuit la recette pour une (variante, inclinaison) → monde ink-studio.
-function cuireMonde(L, recette, variante, inclinaisonDeg) {
+function cuireMonde(L, recette, variante, inclinaisonDeg, trou = null) {
   const B = L.makeBuilder(GRAINE, PALETTE);
   const S = L.KIT.sculpt(L.makeSculpt(B));
   S.sunK = 0; S.amb = AMBIANT; S.sky = CIEL;
-  recette.sculpter({ S, K: L.KIT, M: { organe: { r: RAMPE } }, variante,
+  recette.sculpter({ S, K: L.KIT, M: { organe: { r: RAMPE } }, variante, trou,
     inclinaison: (inclinaisonDeg * Math.PI) / 180 });
   S.bake();
   const r = recette.rayonCm / iso.CM_PAR_UNITE + 1;
   return B.finish({ cam: { target: [0, 0, 0], dist: 5, pitch: 0.5, yaw: 0.8 }, detail: 20, dither: 0, radius: r });
+}
+
+// Les prises de vue d'une recette : [{ trou, variante, inclinaison, zooms }],
+// zooms = [{ z, planche, taille? }]. Pièces saines d'abord, trouées ensuite.
+function plan(recette, o) {
+  const zooms = recette.tailles
+    ? recette.tailles.map(t => ({ z: t / ((recette.empriseCm || 2 * recette.rayonCm) * iso.PX_PAR_CM_X), planche: 'kit', taille: t }))
+    : o.paliers.map(z => ({ z, planche: planche.nomPalier(z) }));
+  const prises = [];
+  for (const inclinaison of o.inclinaisons)
+    for (let variante = 0; variante < recette.variantes; variante++)
+      prises.push({ trou: null, variante, inclinaison, zooms });
+  if (recette.trous) {
+    const zt = zooms.filter(q => PALIERS_TROUS.includes(q.z));
+    for (const trou of TROUS.filter(Boolean))
+      for (const inclinaison of o.inclinaisons)
+        for (let variante = 0; variante < Math.min(TROUS_VARIANTES, recette.variantes); variante++)
+          if (zt.length) prises.push({ trou, variante, inclinaison, zooms: zt });
+  }
+  return prises;
 }
 
 // Cuit toutes les pièces d'une recette. Retourne { pieces, temps }.
@@ -80,22 +113,24 @@ function cuireRecette(recette, o) {
   const L = ink.load();
   const tons = tableTons();
   const pieces = [], temps = { monde: [], photo: new Map() };
-  for (const inclinaison of o.inclinaisons)
-    for (let variante = 0; variante < recette.variantes; variante++) {
-      let t = process.hrtime.bigint();
-      const monde = cuireMonde(L, recette, variante, inclinaison);
-      temps.monde.push(Number(process.hrtime.bigint() - t) / 1e6);
-      for (const z of o.paliers)
-        for (let k = 0; k < o.lacets; k++) {
-          const lacetDeg = (360 * k) / o.lacets;
-          t = process.hrtime.bigint();
-          const photo = iso.photographier(ink, monde, recette.rayonCm, z, (lacetDeg * Math.PI) / 180);
-          const p = codes.piece(photo, monde, tons);
-          const dt = Number(process.hrtime.bigint() - t) / 1e6;
-          temps.photo.set(z, (temps.photo.get(z) || 0) + dt);
-          pieces.push({ palier: z, inclinaison, variante, lacet: lacetDeg, ...p });
-        }
-    }
+  for (const { trou, variante, inclinaison, zooms } of plan(recette, o)) {
+    let t = process.hrtime.bigint();
+    const monde = cuireMonde(L, recette, variante, inclinaison, trou);
+    temps.monde.push(Number(process.hrtime.bigint() - t) / 1e6);
+    for (const q of zooms)
+      for (let k = 0; k < o.lacets; k++) {
+        const lacetDeg = (360 * k) / o.lacets;
+        t = process.hrtime.bigint();
+        const photo = iso.photographier(ink, monde, recette.rayonCm, q.z, (lacetDeg * Math.PI) / 180);
+        const p = codes.piece(photo, monde, tons);
+        const dt = Number(process.hrtime.bigint() - t) / 1e6;
+        const cle = q.taille ? 't' + q.taille : q.z;
+        const [n, s] = temps.photo.get(cle) || [0, 0];
+        temps.photo.set(cle, [n + 1, s + dt]);
+        pieces.push({ palier: q.z, planche: q.planche, taille: q.taille, trou, inclinaison, variante,
+          lacet: lacetDeg, ...p });
+      }
+  }
   return { pieces, temps };
 }
 
@@ -109,18 +144,37 @@ function recadrer(spec) {
 }
 
 function ecrireControle(dossier, nom, pieces, o) {
+  if (pieces.some(p => p.taille)) return ecrireControleKit(dossier, nom, pieces);
   const lignes = [], zooms = [];
   for (const z of o.paliers)
     for (const inc of o.inclinaisons) {
-      lignes.push(pieces.filter(p => p.palier === z && p.inclinaison === inc && p.variante === 0 && p.w > 0));
+      lignes.push(pieces.filter(p => p.palier === z && p.inclinaison === inc && p.variante === 0 && !p.trou && p.w > 0));
       zooms.push(z);
     }
   // Variantes côte à côte aux paliers bas (lacet 0) : le hash change-t-il la pièce ?
   for (const z of o.paliers.filter(z => z <= 2)) {
-    lignes.push(pieces.filter(p => p.palier === z && p.lacet === 0 && p.w > 0));
+    lignes.push(pieces.filter(p => p.palier === z && p.lacet === 0 && !p.trou && p.w > 0));
     zooms.push(z);
   }
-  const img = controle.composer(lignes, zooms, o.actuel && recadrer(o.actuel));
+  // Degrés de trous (lacet 0, inclinaison 0) : ×16, une ligne.
+  const troues = pieces.filter(p => p.trou && p.palier === 16 && p.lacet === 0 && p.inclinaison === 0 && p.w > 0);
+  if (troues.length) {
+    lignes.push([pieces.find(p => !p.trou && p.palier === 16 && p.lacet === 0 && p.inclinaison === 0), ...troues]);
+    zooms.push(16);
+  }
+  // Lignes vides écartées (une aiguille de 3 cm ne fait aucun pixel à ×1).
+  const garde = lignes.map((l, i) => (l.length ? i : -1)).filter(i => i >= 0);
+  const img = controle.composer(garde.map(i => lignes[i]), garde.map(i => zooms[i]), o.actuel && recadrer(o.actuel));
+  fs.mkdirSync(dossier, { recursive: true });
+  const f = path.join(dossier, `controle_${nom}.png`);
+  png.write(f, img.w, img.h, img.rgb);
+  return f;
+}
+
+// Touffes du kit : une ligne par taille (variantes côte à côte), agrandies ×6.
+function ecrireControleKit(dossier, nom, pieces) {
+  const tailles = [...new Set(pieces.map(p => p.taille))];
+  const img = controle.composer(tailles.map(t => pieces.filter(p => p.taille === t && p.w > 0)), tailles.map(() => 1));
   fs.mkdirSync(dossier, { recursive: true });
   const f = path.join(dossier, `controle_${nom}.png`);
   png.write(f, img.w, img.h, img.rgb);
@@ -130,12 +184,17 @@ function ecrireControle(dossier, nom, pieces, o) {
 function principal() {
   const o = options(process.argv.slice(2));
   const recette = require(`./recettes/${o.recette}.js`);
+  if (o.lacets === null) o.lacets = recette.lacets || 8;
+  if (o.inclinaisons === null) o.inclinaisons = recette.inclinaisons || INCLINAISONS;
   const t0 = process.hrtime.bigint();
   const { pieces, temps } = cuireRecette(recette, o);
   const meta = {
     format: 'R = niveau kit (2 ombre, 3 base, 4 lumière) ; G = 128 | ton << 4 | orientation ; A = posé',
     px_par_cm_x1: iso.PX_PAR_CM_X, seuil_plat: codes.SEUIL_PLAT,
     lacets: o.lacets, inclinaisons_deg: o.inclinaisons, variantes: recette.variantes,
+    ...(recette.vue ? { vue: recette.vue } : {}), ...(recette.notes ? { notes: recette.notes } : {}),
+    ...(recette.trous ? { trous: { paliers: PALIERS_TROUS, variantes: TROUS_VARIANTES,
+      degres: TROUS.filter(Boolean) } } : {}),
     attache: 'px de la pièce (coin haut-gauche = 0,0), peut sortir du rectangle'
   };
   const fichiers = planche.ecrire(png, path.resolve(RACINE, o.sortie), recette.nom, meta, pieces);
@@ -144,7 +203,7 @@ function principal() {
   const vides = pieces.filter(p => p.w === 0).length;
   console.log(`${recette.nom} : ${pieces.length} pièces (${vides} vides), ${total.toFixed(0)} ms au total`);
   console.log(`  sculpture+bake : ${temps.monde.map(t => t.toFixed(0)).join(', ')} ms`);
-  for (const [z, t] of temps.photo) console.log(`  ×${z} : ${(t / (pieces.length / temps.photo.size)).toFixed(1)} ms/pièce`);
+  for (const [z, [n, t]] of temps.photo) console.log(`  ${z > 0 ? '×' + z : z} : ${(t / n).toFixed(1)} ms/pièce (${n})`);
   for (const f of fichiers) console.log(`  ${path.relative(RACINE, f)} ${fs.statSync(f).size} o`);
 }
 
