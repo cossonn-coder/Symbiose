@@ -142,6 +142,7 @@ dans la carte : leur nom est déductible du dossier.
 | `ambiance/` | `conception_rendu_ambiance.md` |
 | `feuillage/` | `conception_rendu_feuillage.md` |
 | `spatial/` | `conception_modele_spatial.md` |
+| `splatting/` | `prototype/` (étude 3D + gaussian splats, 2026-11-20) |
 
 ### `perf/` — performance
 
