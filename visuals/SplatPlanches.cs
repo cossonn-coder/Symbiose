@@ -67,6 +67,7 @@ namespace Symbiose
 			public readonly List<(int Y0, int Y1, ImageTexture Tex)> Bandes = new();
 			public int Palier2;
 			public long Octets;
+			public ulong DernierUsage;   // image (process frame) du dernier Trouver, RELIQUATS ①
 		}
 
 		private static readonly Dictionary<string, Recette> _recettes = new();
@@ -105,6 +106,7 @@ namespace Symbiose
 			OublierAutresPaliers(p2);
 			var pl = PlancheDe(recette, b.Planche, p2, r);
 			if (pl == null) return false;
+			pl.DernierUsage = Engine.GetProcessFrames();
 			foreach (var (y0, y1, tex) in pl.Bandes)
 			{
 				if (b.Rect.Position.Y < y0 || b.Rect.End.Y > y1) continue;
@@ -179,6 +181,11 @@ namespace Symbiose
 			_planches[(recette, planche)] = pl;
 			OctetsCharges += pl.Octets;
 			PlanchesChargees++;
+			pl.DernierUsage = Engine.GetProcessFrames();
+			// RELIQUATS ① : au-delà du budget global, on rend les planches les plus
+			// anciennes (jamais celles d'un pinceau des 2 dernières images).
+			long trop = BudgetCuisson.Courant - BudgetCuisson.BudgetOctets;
+			if (trop > 0) OublierPerimees(trop);
 			double ms = System.Diagnostics.Stopwatch.GetElapsedTime(t0).TotalMilliseconds;
 			MsChargement += ms;
 			GD.Print($"[Splats] {recette}_{planche} {w}×{h} en {pl.Bandes.Count} bande(s), {ms:F0} ms, total {OctetsCharges / 1048576f:F1} Mo");
@@ -231,6 +238,34 @@ namespace Symbiose
 			}
 			return res;
 		}
+
+		/// <summary>Rend au GPU les planches non servies depuis 2 images, la plus
+		/// ancienne d'abord, jusqu'à `octets` (RELIQUATS ①, appelé quand un chargement
+		/// fait dépasser le budget de BudgetCuisson). Une planche
+		/// lue par un pinceau en cours de rendu n'est jamais rendue (sa texture doit
+		/// survivre au rendu de la page). Rechargeable à la demande : on ne perd que du
+		/// temps de chargement. Renvoie les octets rendus.</summary>
+		internal static long OublierPerimees(long octets)
+		{
+			ulong seuil = Engine.GetProcessFrames();
+			seuil = seuil > 2 ? seuil - 2 : 0;
+			var vieilles = new List<((string, string) Cle, ulong Usage, long Octets)>();
+			foreach (var (cle, pl) in _planches)
+				if (pl != null && pl.DernierUsage < seuil) vieilles.Add((cle, pl.DernierUsage, pl.Octets));
+			vieilles.Sort((a, b) => a.Usage.CompareTo(b.Usage));
+			long rendu = 0;
+			foreach (var (cle, _, o) in vieilles)
+			{
+				if (rendu >= octets) break;
+				// Dispose = rend la texture tout de suite (sans attendre le ramasse-miettes C#).
+				foreach (var (_, _, tex) in _planches[cle].Bandes) tex.Dispose();
+				_planches.Remove(cle);
+				OctetsCharges -= o;
+				rendu += o;
+			}
+			return rendu;
+		}
+
 
 		// Changement de palier : les planches d'un autre palier ne servent plus à rien (les
 		// images déjà cuites vivent dans AtlasPages) → on les rend au GPU.

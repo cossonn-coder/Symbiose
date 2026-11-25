@@ -37,13 +37,16 @@ namespace Symbiose
 {
 	internal sealed class PlantBaker
 	{
-		// Au-delà de ce côté (px du SubViewport monde), on ne cuit pas : la plante
-		// reste en dessin direct (un grand arbre à ×8 ferait > 15 Mo d'image pour
-		// un objet qui déborde déjà de l'écran — le vectoriel y est moins cher).
-		public const int MaxSidePx = 2048;
-		// T3 : largeur max de l'ATLAS (toutes poses côte à côte). Garde la mémoire
-		// d'une plante ≤ 4096 × 2048 × 4 o = 32 Mo et sous la limite GPU (16384).
-		public const int MaxAtlasPx = 4096;
+		// RELIQUATS ① (E5/E7 : cuire plutôt que dessiner) : la seule borne PAR
+		// PLANTE est la limite GPU d'une texture (16 384 px de côté). Avant ①,
+		// 2048 px de côté et 4096 px d'atlas renvoyaient un tournesol ×32 ou un
+		// arbre ×16 au dessin direct, donc sans splats (conception §4). La mémoire
+		// est désormais bornée GLOBALEMENT par BudgetCuisson (1 Go, E6).
+		public const int MaxSidePx = 16384;
+		// Largeur max de l'ATLAS (poses côte à côte), même limite GPU. Si les poses
+		// n'y tiennent pas toutes, on garde les premières (les moins couchées) :
+		// DrawImage retombe sur la plus couchée cuite — un grand port bouge peu.
+		public const int MaxAtlasPx = 16384;
 
 		// Comptabilité mémoire vidéo de TOUTES les images cuites (rapport F4/log) :
 		// depuis ② ce sont les pages communes (une « image » = une page).
@@ -91,6 +94,9 @@ namespace Symbiose
 		/// cuite aux paliers bas, F11 ON → à lire avec PaletteIndexee.Materiau.</summary>
 		public bool ImageIndexee => _shown != null && _shown.Indexee;
 		public bool InFlight => _next != null;
+		/// <summary>Octets rendus au GPU si on libère l'image affichée : sa page
+		/// DÉDIÉE seulement (un rectangle de page partagée ne rend rien), RELIQUATS ①.</summary>
+		public long OctetsDedies => _shown != null && _shown.Slot.Page.Dediee ? _shown.Slot.Page.Bytes : 0;
 
 		/// <summary>Lance la cuisson au zoom `zoom` (rendue en fin de frame).
 		/// false = rien à cuire ou trop grand → la plante reste en direct.</summary>
@@ -111,21 +117,46 @@ namespace Symbiose
 										  1 - Mathf.FloorToInt(b.Position.Y * zoom));
 				var size = new Vector2I(origin.X + Mathf.CeilToInt(b.End.X * zoom) + 1,
 										origin.Y + Mathf.CeilToInt(b.End.Y * zoom) + 1);
-				if (size.X > MaxSidePx || size.Y > MaxSidePx) { Release(); return false; }
+				if (size.X > MaxSidePx || size.Y > MaxSidePx)
+				{
+					Release();
+					BudgetCuisson.Noter(_owner, $"trop grande ({size.X}×{size.Y} px > {MaxSidePx})", parBudget: false);
+					return false;
+				}
+				// RELIQUATS ① : l'atlas ne tient pas en largeur → moins de poses.
+				if (x + size.X > MaxAtlasPx)
+				{
+					System.Array.Resize(ref cells, k);
+					System.Array.Resize(ref origins, k);
+					poses = k;
+					break;
+				}
 				cells[k] = new Rect2I(x, 0, size.X, size.Y);
 				origins[k] = origin;
 				x += size.X;
 				h = Mathf.Max(h, size.Y);
 			}
-			if (x > MaxAtlasPx) { Release(); return false; }
 
-			Cell cell = _shown != null && _shown.Matches(cells, origins, zoom)
-				? _shown : NewCell(cells, origins, new Vector2I(x, h), zoom);
+			bool memeCellule = _shown != null && _shown.Matches(cells, origins, zoom);
+			// RELIQUATS ① : une nouvelle image doit tenir sous le budget global ; sinon
+			// on rend d'abord la nôtre (périmée), puis on renonce → dessin direct.
+			long besoin = memeCellule ? 0 : 4L * x * h;
+			if (!BudgetCuisson.Reserver(_owner, besoin))
+			{
+				Release();
+				if (!BudgetCuisson.Reserver(_owner, besoin))
+				{
+					BudgetCuisson.Noter(_owner, "budget de précuisson plein", parBudget: true, besoin);
+					return false;
+				}
+			}
+			BudgetCuisson.Sortir(_owner);
+			Cell cell = memeCellule ? _shown : NewCell(cells, origins, new Vector2I(x, h), zoom);
 			// D109 (c) : seules les poses ATTEIGNABLES sont peintes ; les cellules
 			// au-delà restent vides (pinceau masqué), jamais affichées (DrawImage).
 			// Recuisson SUR PLACE : jusqu'au Commit, on n'affiche que les cellules
 			// peintes à la fois avant et après (jamais une cellule vidée cette frame).
-			_nextUtiles = _owner.BakePosesUtiles;
+			_nextUtiles = Mathf.Min(_owner.BakePosesUtiles, poses);
 			_nextIndexee = PaletteIndexee.Active;   // tous paliers depuis CASSÉ À L'ÉCRAN ④
 			cell.Utiles = cell == _shown ? Mathf.Min(cell.Utiles, _nextUtiles) : _nextUtiles;
 			for (int k = 0; k < poses; k++)

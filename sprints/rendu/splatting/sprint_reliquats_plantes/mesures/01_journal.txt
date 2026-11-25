@@ -1,0 +1,28 @@
+# ① journaux de cuisson (VM llvmpipe, charge 3-6, n=1 run par cas)
+## avant_t32c
+## apres_t32c
+[Cuisson] image lente 121,1 ms : rendu→affiché 0,4 ms, libération hors champ 1,1 ms, 1 Begin dont le pire 115,5 ms (20 seg.), 1 page(s) créée(s) en 103,6 ms, 1 pages.
+[Splats] manifeste feuille_coeur : 696 pièces, 39 ms
+[Splats] feuille_coeur_x32 2037×3317 en 1 bande(s), 248 ms, total 25,8 Mo
+[Splats] manifeste tete_soleil : 1512 pièces, 69 ms
+[Splats] tete_soleil_x32 2020×12375 en 1 bande(s), 1139 ms, total 121,1 Mo
+[Cuisson] file vidée : 1 plantes en 1 frames (2069 ms) · cache 33,6 Mo / 1 pages (0 vidanges) · précuisson 155/1024 Mo (pages 34, planches 121) · 0 plante(s) en repli · 0 évincée(s) · pinceau 1513,42 ms/plante (max 1513,42 ms, 1 segments) · 39 sales hors champ.
+## verger32_avant
+## verger32
+[Cuisson] image lente 117,7 ms : rendu→affiché 0,5 ms, libération hors champ 2,1 ms, 1 Begin dont le pire 111,0 ms (10 seg.), 1 page(s) créée(s) en 99,4 ms, 1 pages.
+[Splats] manifeste feuille_dentee : 696 pièces, 46 ms
+[Splats] feuille_dentee_x32 2039×3652 en 1 bande(s), 335 ms, total 28,4 Mo
+[Splats] manifeste tete_corolle : 1008 pièces, 44 ms
+[Splats] tete_corolle_x32 2045×137 en 1 bande(s), 30 ms, total 29,5 Mo
+[Cuisson] image lente 94,8 ms : rendu→affiché 1,7 ms, libération hors champ 0,0 ms, 1 Begin dont le pire 93,0 ms (10 seg.), 1 page(s) créée(s) en 91,8 ms, 2 pages.
+[Cuisson] image lente 124,6 ms : rendu→affiché 0,1 ms, libération hors champ 0,0 ms, 1 Begin dont le pire 124,5 ms (10 seg.), 1 page(s) créée(s) en 120,9 ms, 3 pages.
+[Cuisson] file vidée : 3 plantes en 3 frames (2203 ms) · cache 97,6 Mo / 3 pages (0 vidanges) · précuisson 127/1024 Mo (pages 98, planches 29) · 0 plante(s) en repli · 0 évincée(s) · pinceau 160,14 ms/plante (max 475,64 ms, 10 segments) · 0 sales hors champ.
+## verger32_budget (BudgetOctets abaissé TEMPORAIREMENT à 80 Mo pour exercer le repli, puis remis à 1 Go)
+[Cuisson] image lente 107,7 ms : rendu→affiché 0,4 ms, libération hors champ 2,1 ms, 1 Begin dont le pire 101,0 ms (10 seg.), 1 page(s) créée(s) en 89,5 ms, 1 pages.
+[Splats] manifeste feuille_dentee : 696 pièces, 39 ms
+[Splats] feuille_dentee_x32 2039×3652 en 1 bande(s), 257 ms, total 28,4 Mo
+[Splats] manifeste tete_corolle : 1008 pièces, 45 ms
+[Splats] tete_corolle_x32 2045×137 en 1 bande(s), 9 ms, total 29,5 Mo
+[Cuisson] repli AppleTree : budget de précuisson plein, besoin 32 Mo · précuisson 61/80 Mo · 1 en repli
+[Cuisson] repli AppleTree : budget de précuisson plein, besoin 34 Mo · précuisson 61/80 Mo · 2 en repli
+[Cuisson] file vidée : 1 plantes en 2 frames (1283 ms) · cache 31,5 Mo / 1 pages (0 vidanges) · précuisson 61/80 Mo (pages 31, planches 29) · 2 plante(s) en repli · 0 évincée(s) · pinceau 367,68 ms/plante (max 367,68 ms, 10 segments) · 0 sales hors champ.

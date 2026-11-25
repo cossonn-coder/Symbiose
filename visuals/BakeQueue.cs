@@ -95,6 +95,7 @@ namespace Symbiose
 			_all.Remove(p);
 			_dirty.Remove(p);
 			_eligibles.Remove(p);
+			BudgetCuisson.Sortir(p);
 		}
 
 		/// <summary>La plante passe au tapis de son plot (D106 T5) : plus rien à cuire.</summary>
@@ -102,6 +103,7 @@ namespace Symbiose
 		{
 			_dirty.Remove(p);
 			_eligibles.Remove(p);
+			BudgetCuisson.Sortir(p);
 		}
 
 		/// <summary>Plantes salies depuis le lancement, doublons de la file exclus (HOUPPIER ④) : la
@@ -180,6 +182,7 @@ namespace Symbiose
 			if (frame % ReleaseEveryFrames == 0)
 			{
 				ReleaseOffscreen();
+				BudgetCuisson.Relancer();   // RELIQUATS ① : les replis faute de budget retentent
 				_releaseUs = (long)(Time.GetTicksUsec() - tr);
 			}
 			if (_eligibles.Count == 0) { EndBurst(frame); return; }
@@ -277,6 +280,7 @@ namespace Symbiose
 			GD.Print($"[Cuisson] file vidée : {_burstCount} plantes en "
 				+ $"{frame - _burstStartFrame} frames ({ms:F0} ms) · cache "
 				+ $"{PlantBaker.TotalBytes / 1048576.0:F1} Mo / {PlantBaker.TotalImages} pages ({AtlasPages.Vidanges} vidanges) · "
+				+ $"{BudgetCuisson.Ligne()} · "
 				+ $"pinceau {(_drawCount == 0 ? 0 : _drawMsSum / _drawCount):F2} ms/plante "
 				+ $"(max {_drawMsMax:F2} ms, {_drawMaxSegs} segments) · "
 				+ $"{_dirty.Count} sales hors champ.");

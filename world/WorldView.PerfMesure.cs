@@ -180,10 +180,10 @@ namespace Symbiose
 		// Ligne « rendu » ajoutée à l'overlay F4 et au rapport presse-papier (C).
 		private string LignePerfRendu()
 		{
-			if (_pmFrameMs < 0) return "rendu — mesure en cours… · couches : " + NomCasCouches();
+			if (_pmFrameMs < 0) return "rendu — mesure en cours… · couches : " + NomCasCouches() + " · " + BudgetCuisson.Ligne();
 			return $"rendu — frame {_pmFrameMs:F1} ms (moy. ~1 s) · draw calls "
 				+ $"{_pmDrawMoy:F0} · objets {_pmObjMoy:F0} · primitives {_pmPrimMoy:F0} · "
-				+ $"couches : {NomCasCouches()}";
+				+ $"couches : {NomCasCouches()} · {BudgetCuisson.Ligne()}";   // RELIQUATS ①
 		}
 	}
 }
