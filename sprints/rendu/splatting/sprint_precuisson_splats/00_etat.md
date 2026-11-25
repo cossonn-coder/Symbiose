@@ -13,7 +13,7 @@ Golden : **INTACT à tous les tronçons** (vue + outillage, `data/code/` jamais 
 | ③ | `03_tetes_fruits_bois.md` — têtes, fleurs, fruits, bourgeons, bois (couture mesurée) | **fait 2026-11-20** (non commité) — bois NON livré (couture visible) |
 | ④ | `04_vue_paliers_hauts.md` — vue ×4 → ×32 | **fait 2026-11-20** (`aba3663`, partiel) **+ ④bis fait 2026-11-20** (non commité) : couverture complétée là où une recette existe ; reste dessiné listé au compte rendu ④bis |
 | ⑤ | `05_vue_paliers_bas.md` — vue ×0,5 → ×2 (kit) | **fait 2026-11-20** (non commité) — prémisse réfutée : le kit ne sert plus qu'aux plantes SANS fiche ; effet réel = gerbes des arbres (cf. compte rendu ⑤) **+ ⑤bis fait 2026-11-20** (non commité) : ports des herbacées/prairie/lianes en pièces sous ×4 (feuilles à tous les paliers, organes dès ×2) |
-| ⑥ | `06_portraits.md` — 162 portraits | à faire |
+| ⑥ | `06_portraits.md` — 162 portraits | **fait 2026-11-25** (non commité) — 156 portraits (52 espèces, pas 54), cf. compte rendu ⑥ |
 | ⑦ | `07_vue_encyclopedie.md` — encyclopédie + magazine, clôture | à faire |
 
 ## Règles du sprint
@@ -451,6 +451,53 @@ teintes d'automne (myrtille, haricot) beaucoup plus visibles qu'avant, la pièce
 **Vérif.** Golden `bce813af…` **INTACT**. `dotnet build` vert, 0 avertissement. LDC : Splats 159,
 SplatsBas 19, PortTapis 151, PortTigeFormes 122 (tous 🟢).
 
+### ⑥ Portraits (2026-11-20 → 2026-11-25) — FAIT
+**Fait.** `tools/splat/cuire_portraits.js` (orchestration, caméra ortho trois quarts du prototype,
+cadrage auto sur la boîte englobante) + `tools/splat/portraits/` : `table_cs.js` (**source unique** :
+mini-lecteur de littéraux C# qui lit la table des espèces DANS la vue — FichePort, FicheLiane,
+RecetteRameaux, palettes, prairie — sans toucher la vue ni lancer Godot, échoue bruyamment si la
+syntaxe change), `moteur.py` (cycle de vie, stades, squelettes `_grow` des lianes et arbres, lecture
+seule), `sculpteur.js` (mandataire qui pose les recettes ②③ en pleine couleur), `organes.js` (index
+inversé vue → recette), `etats.js` (3 états D6 depuis `life_cycle`/`deciduous` du moteur), ports
+`ports_bas.js` / `ports_hauts.js` / `arbres.js`. `controle_portraits.js` = planches relues sur disque.
+Sortie : `assets/portraits/<Espece>_{jeune,mure,fin}.png` **240×240, RGBA, fond transparent**
+(l'encyclopédie pose son fond), cadrés chacun sur leur plante (pas d'échelle commune) +
+`assets/portraits/portraits.json` (espèce → port, 3 fichiers + libellés ; niveaux encyclopédie
+1/2/3 = jeune/mûre/fin ; magazine = mûre). Planches : `mesures/controle_portraits_{1..6}.png`.
+
+**Écarts au kickoff.** (a) **52 espèces, pas 54** (recomptées dans toutes les tables de
+`catalogue.py`) → **156 portraits, pas 162**. (b) Bug à la reprise : Raspberry et Vaccinium
+(`Grains = 0`) ne finissaient jamais — `nb(0)` rend 1 → une feuille de masse de 0 cm → `puff`
+d'ink boucle à l'infini (pas d'échantillonnage = étendue/24 = 0). Correctif : garde `Grains > 0`
+dans `ports_hauts.buisson` (n'affecte aucune autre espèce : recuisson complète = octets identiques).
+
+**Mesures [VM 16 cœurs, charge 3→15 pendant la cuisson, n=1].** Cuisson complète
+`xargs -P 10` : **18 min 10 s** mur, 135 min CPU ; médiane 26 s/portrait, 40/156 > 60 s ;
+chemin critique **Fig mûre 879 s** [charge ~15], CherryTree mûre 245 s, BeechTree mûre 195 s.
+Poids : portraits **1,14 Mo** + manifeste 16 Ko ; planches 1,09 Mo — **loin de l'alerte D2**.
+Déterminisme : recuisson complète → **156/156 PNG identiques** octet à octet.
+
+**Relecture des planches (espèce par espèce).** Lisibles et conformes pour la plupart (tomate,
+courgette, carotte, blé, seigle, dactyle, ail, ortie, menthe, moutarde, phacélie, plantain, pissenlit,
+fraisier, piment, achillée, bourrache, trèfle, noyer, chêne, pommier, noisetier, charme).
+**Ratés ou faibles (à voir par Nico)** :
+- **Sapin (FirTree)** : un poteau à touffes éparses, pas de cône de conifère.
+- **Bouleau** : tronc brun, pas d'écorce blanche (même bois pour tous les arbres).
+- **Tournesol** : tête minuscule (bornage de l'échelle des têtes [0,5 ; 2]).
+- **Thym** : bois bas nus + feuilles qui flottent détachées, pas de coussinet.
+- **Molène** : rosette OK mais pas la grande hampe jaune.
+- **Drosera** : rosette verte générique, ni tentacules ni rouge ; disque de sol énorme au jeune.
+- **Cerisier** mûr : ni fleurs ni cerises visibles ; **figuier** : arbre générique.
+- **Chanvre** : tige unique clairsemée, pas de feuilles palmées ; **lavande** : cannes brunes dominent.
+- **Haricot, jasmin, lierre** : tuteur brun très présent ; jasmin « fin » = tige nue.
+- **Myrtille** : pas de baies (pas de `Fruit` dans sa fiche de vue) ; **framboisier** garde ses
+  feuilles l'hiver (le moteur le dit persistant).
+- Jeunes : bourse-à-pasteur et drosera agrandies au cadre (cadrage par plante) — voulu, mais
+  surprend à côté de l'adulte.
+
+**Vérif.** Golden `bce813af…` **INTACT**. Pas de C# touché (pas de build). LDC : cuire_portraits 130,
+controle 33, modules `portraits/` ≤ 166 LDC (table_cs) (tous 🟢).
+
 ## F5 (recette pour Nico — complétée par ④⑤⑦)
 **④ (×4 → ×32)** — banc `planche_especes`, zoomer ×4 → ×32 sur tomate, carotte, courgette,
 fraisier, tournesol, poivron ; Maj+F11 pour comparer avec l'ancien dessin.
@@ -563,5 +610,5 @@ Lire `CLAUDE.md`, ce fichier, la conception, puis le kickoff du premier tronçon
 quels : `SplatPlanches.Trouver` / `LireImage`, `PoserPieceSplat`, `PoserPieceFeuille`,
 `PoserOrganeSplat`, `TouffeGerbe`. **⑤bis fait** (non commité) : ports en pièces sous ×4 (feuilles à tous les paliers, organes dès
 ×2, dessinés à ×0,5/×1). `PoserFoliolesSplat`, `OrganesSplatMinZoom` (SplatsBas.cs) s'ajoutent aux outils.
-**Prochain : ⑥** (`06_portraits.md`). Tailles nominales, densité des fleurs d'arbre ×4, fleurons
+**⑥ fait** (portraits `assets/portraits/` + `portraits.json`, cuisson `tools/splat/cuire_portraits.js`). **Prochain : ⑦** (`07_vue_encyclopedie.md`). Tailles nominales, densité des fleurs d'arbre ×4, fleurons
 sans cœur, taille des feuilles de loin (⑤bis) = points F5 ouverts. Golden `bce813af…` intact.

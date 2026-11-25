@@ -1,0 +1,797 @@
+{
+ "taille_px": 240,
+ "fond": "transparent",
+ "ordre": [
+  "jeune",
+  "mure",
+  "fin"
+ ],
+ "niveaux_encyclopedie": {
+  "1": "jeune",
+  "2": "mure",
+  "3": "fin"
+ },
+ "magazine": "mure",
+ "especes": {
+  "Alder": {
+   "port": "arbre",
+   "jeune": {
+    "fichier": "Alder_jeune.png",
+    "libelle": "jeune"
+   },
+   "mure": {
+    "fichier": "Alder_mure.png",
+    "libelle": "mûre, pleine saison"
+   },
+   "fin": {
+    "fichier": "Alder_fin.png",
+    "libelle": "hiver (nu)"
+   }
+  },
+  "AppleTree": {
+   "port": "arbre",
+   "jeune": {
+    "fichier": "AppleTree_jeune.png",
+    "libelle": "jeune"
+   },
+   "mure": {
+    "fichier": "AppleTree_mure.png",
+    "libelle": "mûre, pleine saison"
+   },
+   "fin": {
+    "fichier": "AppleTree_fin.png",
+    "libelle": "hiver (nu)"
+   }
+  },
+  "Basil": {
+   "port": "Tige",
+   "jeune": {
+    "fichier": "Basil_jeune.png",
+    "libelle": "jeune"
+   },
+   "mure": {
+    "fichier": "Basil_mure.png",
+    "libelle": "mûre, pleine saison"
+   },
+   "fin": {
+    "fichier": "Basil_fin.png",
+    "libelle": "fin de cycle"
+   }
+  },
+  "Bean": {
+   "port": "Volubile",
+   "jeune": {
+    "fichier": "Bean_jeune.png",
+    "libelle": "jeune"
+   },
+   "mure": {
+    "fichier": "Bean_mure.png",
+    "libelle": "mûre, pleine saison"
+   },
+   "fin": {
+    "fichier": "Bean_fin.png",
+    "libelle": "fin de cycle"
+   }
+  },
+  "BeechTree": {
+   "port": "arbre",
+   "jeune": {
+    "fichier": "BeechTree_jeune.png",
+    "libelle": "jeune"
+   },
+   "mure": {
+    "fichier": "BeechTree_mure.png",
+    "libelle": "mûre, pleine saison"
+   },
+   "fin": {
+    "fichier": "BeechTree_fin.png",
+    "libelle": "hiver (nu)"
+   }
+  },
+  "BirchTree": {
+   "port": "arbre",
+   "jeune": {
+    "fichier": "BirchTree_jeune.png",
+    "libelle": "jeune"
+   },
+   "mure": {
+    "fichier": "BirchTree_mure.png",
+    "libelle": "mûre, pleine saison"
+   },
+   "fin": {
+    "fichier": "BirchTree_fin.png",
+    "libelle": "hiver (nu)"
+   }
+  },
+  "Borage": {
+   "port": "Tige",
+   "jeune": {
+    "fichier": "Borage_jeune.png",
+    "libelle": "jeune"
+   },
+   "mure": {
+    "fichier": "Borage_mure.png",
+    "libelle": "mûre, pleine saison"
+   },
+   "fin": {
+    "fichier": "Borage_fin.png",
+    "libelle": "fin de cycle"
+   }
+  },
+  "BursaPastoris": {
+   "port": "Rosette",
+   "jeune": {
+    "fichier": "BursaPastoris_jeune.png",
+    "libelle": "jeune"
+   },
+   "mure": {
+    "fichier": "BursaPastoris_mure.png",
+    "libelle": "mûre, pleine saison"
+   },
+   "fin": {
+    "fichier": "BursaPastoris_fin.png",
+    "libelle": "fin de cycle"
+   }
+  },
+  "Carrot": {
+   "port": "Rosette",
+   "jeune": {
+    "fichier": "Carrot_jeune.png",
+    "libelle": "jeune"
+   },
+   "mure": {
+    "fichier": "Carrot_mure.png",
+    "libelle": "mûre, pleine saison"
+   },
+   "fin": {
+    "fichier": "Carrot_fin.png",
+    "libelle": "fin de cycle"
+   }
+  },
+  "CherryTree": {
+   "port": "arbre",
+   "jeune": {
+    "fichier": "CherryTree_jeune.png",
+    "libelle": "jeune"
+   },
+   "mure": {
+    "fichier": "CherryTree_mure.png",
+    "libelle": "mûre, pleine saison"
+   },
+   "fin": {
+    "fichier": "CherryTree_fin.png",
+    "libelle": "hiver (nu)"
+   }
+  },
+  "Clover": {
+   "port": "Tapis",
+   "jeune": {
+    "fichier": "Clover_jeune.png",
+    "libelle": "jeune"
+   },
+   "mure": {
+    "fichier": "Clover_mure.png",
+    "libelle": "mûre, pleine saison"
+   },
+   "fin": {
+    "fichier": "Clover_fin.png",
+    "libelle": "hiver (persistant)"
+   }
+  },
+  "Comfrey": {
+   "port": "Tige",
+   "jeune": {
+    "fichier": "Comfrey_jeune.png",
+    "libelle": "jeune"
+   },
+   "mure": {
+    "fichier": "Comfrey_mure.png",
+    "libelle": "mûre, pleine saison"
+   },
+   "fin": {
+    "fichier": "Comfrey_fin.png",
+    "libelle": "hiver (persistant)"
+   }
+  },
+  "CornSalad": {
+   "port": "Rosette",
+   "jeune": {
+    "fichier": "CornSalad_jeune.png",
+    "libelle": "jeune"
+   },
+   "mure": {
+    "fichier": "CornSalad_mure.png",
+    "libelle": "mûre, pleine saison"
+   },
+   "fin": {
+    "fichier": "CornSalad_fin.png",
+    "libelle": "fin de cycle"
+   }
+  },
+  "Dactyle": {
+   "port": "Chaume",
+   "jeune": {
+    "fichier": "Dactyle_jeune.png",
+    "libelle": "jeune"
+   },
+   "mure": {
+    "fichier": "Dactyle_mure.png",
+    "libelle": "mûre, pleine saison"
+   },
+   "fin": {
+    "fichier": "Dactyle_fin.png",
+    "libelle": "hiver (persistant)"
+   }
+  },
+  "Drosera": {
+   "port": "Rosette",
+   "jeune": {
+    "fichier": "Drosera_jeune.png",
+    "libelle": "jeune"
+   },
+   "mure": {
+    "fichier": "Drosera_mure.png",
+    "libelle": "mûre, pleine saison"
+   },
+   "fin": {
+    "fichier": "Drosera_fin.png",
+    "libelle": "hiver (persistant)"
+   }
+  },
+  "FetuqueRouge": {
+   "port": "Chaume",
+   "jeune": {
+    "fichier": "FetuqueRouge_jeune.png",
+    "libelle": "jeune"
+   },
+   "mure": {
+    "fichier": "FetuqueRouge_mure.png",
+    "libelle": "mûre, pleine saison"
+   },
+   "fin": {
+    "fichier": "FetuqueRouge_fin.png",
+    "libelle": "hiver (persistant)"
+   }
+  },
+  "Fig": {
+   "port": "arbre",
+   "jeune": {
+    "fichier": "Fig_jeune.png",
+    "libelle": "jeune"
+   },
+   "mure": {
+    "fichier": "Fig_mure.png",
+    "libelle": "mûre, pleine saison"
+   },
+   "fin": {
+    "fichier": "Fig_fin.png",
+    "libelle": "hiver (nu)"
+   }
+  },
+  "FirTree": {
+   "port": "arbre",
+   "jeune": {
+    "fichier": "FirTree_jeune.png",
+    "libelle": "jeune"
+   },
+   "mure": {
+    "fichier": "FirTree_mure.png",
+    "libelle": "mûre, pleine saison"
+   },
+   "fin": {
+    "fichier": "FirTree_fin.png",
+    "libelle": "hiver (persistant)"
+   }
+  },
+  "Garlic": {
+   "port": "Rosette",
+   "jeune": {
+    "fichier": "Garlic_jeune.png",
+    "libelle": "jeune"
+   },
+   "mure": {
+    "fichier": "Garlic_mure.png",
+    "libelle": "mûre, pleine saison"
+   },
+   "fin": {
+    "fichier": "Garlic_fin.png",
+    "libelle": "fin de cycle"
+   }
+  },
+  "HazelTree": {
+   "port": "arbre",
+   "jeune": {
+    "fichier": "HazelTree_jeune.png",
+    "libelle": "jeune"
+   },
+   "mure": {
+    "fichier": "HazelTree_mure.png",
+    "libelle": "mûre, pleine saison"
+   },
+   "fin": {
+    "fichier": "HazelTree_fin.png",
+    "libelle": "hiver (nu)"
+   }
+  },
+  "Hemp": {
+   "port": "Tige",
+   "jeune": {
+    "fichier": "Hemp_jeune.png",
+    "libelle": "jeune"
+   },
+   "mure": {
+    "fichier": "Hemp_mure.png",
+    "libelle": "mûre, pleine saison"
+   },
+   "fin": {
+    "fichier": "Hemp_fin.png",
+    "libelle": "fin de cycle"
+   }
+  },
+  "HornbeamTree": {
+   "port": "arbre",
+   "jeune": {
+    "fichier": "HornbeamTree_jeune.png",
+    "libelle": "jeune"
+   },
+   "mure": {
+    "fichier": "HornbeamTree_mure.png",
+    "libelle": "mûre, pleine saison"
+   },
+   "fin": {
+    "fichier": "HornbeamTree_fin.png",
+    "libelle": "hiver (nu)"
+   }
+  },
+  "Ivy": {
+   "port": "liane",
+   "jeune": {
+    "fichier": "Ivy_jeune.png",
+    "libelle": "jeune"
+   },
+   "mure": {
+    "fichier": "Ivy_mure.png",
+    "libelle": "mûre, pleine saison"
+   },
+   "fin": {
+    "fichier": "Ivy_fin.png",
+    "libelle": "hiver (persistant)"
+   }
+  },
+  "Jasmine": {
+   "port": "liane",
+   "jeune": {
+    "fichier": "Jasmine_jeune.png",
+    "libelle": "jeune"
+   },
+   "mure": {
+    "fichier": "Jasmine_mure.png",
+    "libelle": "mûre, pleine saison"
+   },
+   "fin": {
+    "fichier": "Jasmine_fin.png",
+    "libelle": "hiver (nu)"
+   }
+  },
+  "Lavender": {
+   "port": "Buisson",
+   "jeune": {
+    "fichier": "Lavender_jeune.png",
+    "libelle": "jeune"
+   },
+   "mure": {
+    "fichier": "Lavender_mure.png",
+    "libelle": "mûre, pleine saison"
+   },
+   "fin": {
+    "fichier": "Lavender_fin.png",
+    "libelle": "hiver (persistant)"
+   }
+  },
+  "MedicagoLupulina": {
+   "port": "Tapis",
+   "jeune": {
+    "fichier": "MedicagoLupulina_jeune.png",
+    "libelle": "jeune"
+   },
+   "mure": {
+    "fichier": "MedicagoLupulina_mure.png",
+    "libelle": "mûre, pleine saison"
+   },
+   "fin": {
+    "fichier": "MedicagoLupulina_fin.png",
+    "libelle": "hiver (persistant)"
+   }
+  },
+  "Mint": {
+   "port": "Tige",
+   "jeune": {
+    "fichier": "Mint_jeune.png",
+    "libelle": "jeune"
+   },
+   "mure": {
+    "fichier": "Mint_mure.png",
+    "libelle": "mûre, pleine saison"
+   },
+   "fin": {
+    "fichier": "Mint_fin.png",
+    "libelle": "hiver (persistant)"
+   }
+  },
+  "Molene": {
+   "port": "Rosette",
+   "jeune": {
+    "fichier": "Molene_jeune.png",
+    "libelle": "jeune"
+   },
+   "mure": {
+    "fichier": "Molene_mure.png",
+    "libelle": "mûre, pleine saison"
+   },
+   "fin": {
+    "fichier": "Molene_fin.png",
+    "libelle": "fin de cycle"
+   }
+  },
+  "Mugwort": {
+   "port": "Tige",
+   "jeune": {
+    "fichier": "Mugwort_jeune.png",
+    "libelle": "jeune"
+   },
+   "mure": {
+    "fichier": "Mugwort_mure.png",
+    "libelle": "mûre, pleine saison"
+   },
+   "fin": {
+    "fichier": "Mugwort_fin.png",
+    "libelle": "hiver (persistant)"
+   }
+  },
+  "Mustard": {
+   "port": "Tige",
+   "jeune": {
+    "fichier": "Mustard_jeune.png",
+    "libelle": "jeune"
+   },
+   "mure": {
+    "fichier": "Mustard_mure.png",
+    "libelle": "mûre, pleine saison"
+   },
+   "fin": {
+    "fichier": "Mustard_fin.png",
+    "libelle": "fin de cycle"
+   }
+  },
+  "Nettle": {
+   "port": "Tige",
+   "jeune": {
+    "fichier": "Nettle_jeune.png",
+    "libelle": "jeune"
+   },
+   "mure": {
+    "fichier": "Nettle_mure.png",
+    "libelle": "mûre, pleine saison"
+   },
+   "fin": {
+    "fichier": "Nettle_fin.png",
+    "libelle": "hiver (persistant)"
+   }
+  },
+  "OakTree": {
+   "port": "arbre",
+   "jeune": {
+    "fichier": "OakTree_jeune.png",
+    "libelle": "jeune"
+   },
+   "mure": {
+    "fichier": "OakTree_mure.png",
+    "libelle": "mûre, pleine saison"
+   },
+   "fin": {
+    "fichier": "OakTree_fin.png",
+    "libelle": "hiver (nu)"
+   }
+  },
+  "Pepper": {
+   "port": "Tige",
+   "jeune": {
+    "fichier": "Pepper_jeune.png",
+    "libelle": "jeune"
+   },
+   "mure": {
+    "fichier": "Pepper_mure.png",
+    "libelle": "mûre, pleine saison"
+   },
+   "fin": {
+    "fichier": "Pepper_fin.png",
+    "libelle": "fin de cycle"
+   }
+  },
+  "Phacelia": {
+   "port": "Tige",
+   "jeune": {
+    "fichier": "Phacelia_jeune.png",
+    "libelle": "jeune"
+   },
+   "mure": {
+    "fichier": "Phacelia_mure.png",
+    "libelle": "mûre, pleine saison"
+   },
+   "fin": {
+    "fichier": "Phacelia_fin.png",
+    "libelle": "fin de cycle"
+   }
+  },
+  "PlantainLanceole": {
+   "port": "Rosette",
+   "jeune": {
+    "fichier": "PlantainLanceole_jeune.png",
+    "libelle": "jeune"
+   },
+   "mure": {
+    "fichier": "PlantainLanceole_mure.png",
+    "libelle": "mûre, pleine saison"
+   },
+   "fin": {
+    "fichier": "PlantainLanceole_fin.png",
+    "libelle": "hiver (persistant)"
+   }
+  },
+  "PoaAnnua": {
+   "port": "Chaume",
+   "jeune": {
+    "fichier": "PoaAnnua_jeune.png",
+    "libelle": "jeune"
+   },
+   "mure": {
+    "fichier": "PoaAnnua_mure.png",
+    "libelle": "mûre, pleine saison"
+   },
+   "fin": {
+    "fichier": "PoaAnnua_fin.png",
+    "libelle": "hiver (persistant)"
+   }
+  },
+  "Raspberry": {
+   "port": "Buisson",
+   "jeune": {
+    "fichier": "Raspberry_jeune.png",
+    "libelle": "jeune"
+   },
+   "mure": {
+    "fichier": "Raspberry_mure.png",
+    "libelle": "mûre, pleine saison"
+   },
+   "fin": {
+    "fichier": "Raspberry_fin.png",
+    "libelle": "hiver (persistant)"
+   }
+  },
+  "RunningBamboo": {
+   "port": "Chaume",
+   "jeune": {
+    "fichier": "RunningBamboo_jeune.png",
+    "libelle": "jeune"
+   },
+   "mure": {
+    "fichier": "RunningBamboo_mure.png",
+    "libelle": "mûre, pleine saison"
+   },
+   "fin": {
+    "fichier": "RunningBamboo_fin.png",
+    "libelle": "hiver (persistant)"
+   }
+  },
+  "Rye": {
+   "port": "Chaume",
+   "jeune": {
+    "fichier": "Rye_jeune.png",
+    "libelle": "jeune"
+   },
+   "mure": {
+    "fichier": "Rye_mure.png",
+    "libelle": "mûre, pleine saison"
+   },
+   "fin": {
+    "fichier": "Rye_fin.png",
+    "libelle": "fin de cycle"
+   }
+  },
+  "Sphagnum": {
+   "port": "Tapis",
+   "jeune": {
+    "fichier": "Sphagnum_jeune.png",
+    "libelle": "jeune"
+   },
+   "mure": {
+    "fichier": "Sphagnum_mure.png",
+    "libelle": "mûre, pleine saison"
+   },
+   "fin": {
+    "fichier": "Sphagnum_fin.png",
+    "libelle": "hiver (persistant)"
+   }
+  },
+  "Strawberry": {
+   "port": "Tapis",
+   "jeune": {
+    "fichier": "Strawberry_jeune.png",
+    "libelle": "jeune"
+   },
+   "mure": {
+    "fichier": "Strawberry_mure.png",
+    "libelle": "mûre, pleine saison"
+   },
+   "fin": {
+    "fichier": "Strawberry_fin.png",
+    "libelle": "hiver (persistant)"
+   }
+  },
+  "Sunflower": {
+   "port": "Tige",
+   "jeune": {
+    "fichier": "Sunflower_jeune.png",
+    "libelle": "jeune"
+   },
+   "mure": {
+    "fichier": "Sunflower_mure.png",
+    "libelle": "mûre, pleine saison"
+   },
+   "fin": {
+    "fichier": "Sunflower_fin.png",
+    "libelle": "fin de cycle"
+   }
+  },
+  "SweetViolet": {
+   "port": "Tapis",
+   "jeune": {
+    "fichier": "SweetViolet_jeune.png",
+    "libelle": "jeune"
+   },
+   "mure": {
+    "fichier": "SweetViolet_mure.png",
+    "libelle": "mûre, pleine saison"
+   },
+   "fin": {
+    "fichier": "SweetViolet_fin.png",
+    "libelle": "hiver (persistant)"
+   }
+  },
+  "Taraxacum": {
+   "port": "Rosette",
+   "jeune": {
+    "fichier": "Taraxacum_jeune.png",
+    "libelle": "jeune"
+   },
+   "mure": {
+    "fichier": "Taraxacum_mure.png",
+    "libelle": "mûre, pleine saison"
+   },
+   "fin": {
+    "fichier": "Taraxacum_fin.png",
+    "libelle": "hiver (persistant)"
+   }
+  },
+  "Thyme": {
+   "port": "Buisson",
+   "jeune": {
+    "fichier": "Thyme_jeune.png",
+    "libelle": "jeune"
+   },
+   "mure": {
+    "fichier": "Thyme_mure.png",
+    "libelle": "mûre, pleine saison"
+   },
+   "fin": {
+    "fichier": "Thyme_fin.png",
+    "libelle": "hiver (persistant)"
+   }
+  },
+  "Tomato": {
+   "port": "liane",
+   "jeune": {
+    "fichier": "Tomato_jeune.png",
+    "libelle": "jeune"
+   },
+   "mure": {
+    "fichier": "Tomato_mure.png",
+    "libelle": "mûre, pleine saison"
+   },
+   "fin": {
+    "fichier": "Tomato_fin.png",
+    "libelle": "fin de cycle"
+   }
+  },
+  "Vaccinium": {
+   "port": "Buisson",
+   "jeune": {
+    "fichier": "Vaccinium_jeune.png",
+    "libelle": "jeune"
+   },
+   "mure": {
+    "fichier": "Vaccinium_mure.png",
+    "libelle": "mûre, pleine saison"
+   },
+   "fin": {
+    "fichier": "Vaccinium_fin.png",
+    "libelle": "hiver (nu)"
+   }
+  },
+  "WalnutTree": {
+   "port": "arbre",
+   "jeune": {
+    "fichier": "WalnutTree_jeune.png",
+    "libelle": "jeune"
+   },
+   "mure": {
+    "fichier": "WalnutTree_mure.png",
+    "libelle": "mûre, pleine saison"
+   },
+   "fin": {
+    "fichier": "WalnutTree_fin.png",
+    "libelle": "hiver (nu)"
+   }
+  },
+  "Wheat": {
+   "port": "Chaume",
+   "jeune": {
+    "fichier": "Wheat_jeune.png",
+    "libelle": "jeune"
+   },
+   "mure": {
+    "fichier": "Wheat_mure.png",
+    "libelle": "mûre, pleine saison"
+   },
+   "fin": {
+    "fichier": "Wheat_fin.png",
+    "libelle": "fin de cycle"
+   }
+  },
+  "Willow": {
+   "port": "arbre",
+   "jeune": {
+    "fichier": "Willow_jeune.png",
+    "libelle": "jeune"
+   },
+   "mure": {
+    "fichier": "Willow_mure.png",
+    "libelle": "mûre, pleine saison"
+   },
+   "fin": {
+    "fichier": "Willow_fin.png",
+    "libelle": "hiver (nu)"
+   }
+  },
+  "Yarrow": {
+   "port": "Tige",
+   "jeune": {
+    "fichier": "Yarrow_jeune.png",
+    "libelle": "jeune"
+   },
+   "mure": {
+    "fichier": "Yarrow_mure.png",
+    "libelle": "mûre, pleine saison"
+   },
+   "fin": {
+    "fichier": "Yarrow_fin.png",
+    "libelle": "hiver (persistant)"
+   }
+  },
+  "Zucchini": {
+   "port": "Rampante",
+   "jeune": {
+    "fichier": "Zucchini_jeune.png",
+    "libelle": "jeune"
+   },
+   "mure": {
+    "fichier": "Zucchini_mure.png",
+    "libelle": "mûre, pleine saison"
+   },
+   "fin": {
+    "fichier": "Zucchini_fin.png",
+    "libelle": "fin de cycle"
+   }
+  }
+ }
+}

@@ -28,6 +28,8 @@ node tools/splat/mesurer_vues.js feuille_composee
 node tools/splat/controle_feuilles.js sprints/…/mesures/controle_feuilles.png
 ```
 
+Portraits (⑥, ~10 processus) : `node tools/splat/cuire_portraits.js --liste | xargs -P 10 -n 1 node tools/splat/cuire_portraits.js` puis `node tools/splat/cuire_portraits.js --manifeste` et `node tools/splat/controle_portraits.js <dossier>`.
+
 Cuire toute la bibliothèque (② : 24 recettes, ~12 processus en parallèle) :
 `ls tools/splat/recettes | sed 's/\.js$//' | grep -v '^touffe$' | xargs -P 12 -I{} node tools/splat/cuire.js {}`.
 Ne recuire que les recettes modifiées (D2 : chaque régénération grossit l'historique git).
@@ -61,6 +63,14 @@ collée sous le contrôle). Deux cuissons donnent des fichiers identiques à l'o
 | `recettes/tete_*.js`, `fruit_*.js`, `gousse`, `chaton`, `epi_*`, `panicule`, `bouton`, `fleuron` | ③ organes (une recette par forme dessinée par la vue, champ `vue` du manifeste) |
 | `controle_organes.js` | ③ planche de contrôle des organes (relue sur disque, couches superposées) |
 | `recettes/bois.js` + `couture_bois.js` | ③ tronçons d'écorce + MESURE de couture sur le pommier an 10 — bois NON livré (joints visibles), cf. 00_etat ③ |
+| `cuire_portraits.js` | ⑥ PORTRAITS : 3 par espèce (jeune · mûre · fin de cycle / hiver), plante entière en pleine couleur → `assets/portraits/<Espece>_<etat>.png` + `portraits.json` (`--manifeste`, `--liste`) |
+| `controle_portraits.js` | ⑥ planches de contrôle des portraits (relues sur disque) |
+| `portraits/table_cs.js` | ⑥ lit la table des espèces DANS le C# de la vue (littéraux FichePort, FicheLiane, RecetteRameaux, palettes…) — source unique |
+| `portraits/moteur.py` | ⑥ cycle de vie, stades et squelettes (lianes, arbres) rejoués par le moteur Python, lecture seule |
+| `portraits/sculpteur.js` | ⑥ sculpteur mandataire (pose une recette ②③ déplacée/tournée/à l'échelle) + palettes pleine couleur |
+| `portraits/organes.js` | ⑥ index « nom vue → recette » lu dans les recettes + contexte d'un portrait (boîte englobante) |
+| `portraits/etats.js` | ⑥ les 3 états (D6) depuis `life_cycle` / `deciduous` du moteur, couleurs d'état |
+| `portraits/ports_bas.js`, `ports_hauts.js`, `arbres.js` | ⑥ les ports en 3D : rosette, tapis, rampante, prairie · tige, chaume, buisson, volubile · arbres et lianes sur segments moteur |
 
 ## Format d'une pièce (= atlas du kit actuel, `PlantRenderer.Kit.cs`)
 
