@@ -3,12 +3,23 @@
 Programme « tout en splats » (conception `conception_precuisson_splats.md`, D7,
 Nico 2026-11-20) — un sprint par famille, F5 entre chaque :
 
-- **(a) plantes** — CONÇU le 2026-11-20 → `sprints/rendu/splatting/sprint_precuisson_splats/`
-  (7 tronçons, golden intact), prêt pour `/sprint-auto sprint_precuisson_splats`.
+- **(a) plantes** — **CLOS côté code le 2026-11-25** → `sprints/rendu/splatting/sprint_precuisson_splats/`
+  (①→⑦ + ④bis ⑤bis, golden `bce813af…` intact). Reliquats : bois non livré (couture
+  visible, ③) ; reste dessiné listé au ④bis (trèfle, brins de graminées, masses de
+  buisson…) ; portraits ratés au ⑥ (sapin sans cône, bouleau brun, tournesol à tête
+  minuscule, thym, molène sans hampe, rossolis générique, cerisier sans fleurs ni
+  fruits, myrtille sans baies, chanvre, lavande, tuteur trop présent sur haricot /
+  jasmin / lierre).
   **Retour F5 partiel de Nico (2026-11-25, ④⑤ poussés)** : « les splats sont beaux,
   globalement positif ». Reliquats à reprendre :
-  - **×32 : les splats disparaissent, les anciens dessins reviennent** (cause non
-    cherchée — le ④ couvrait ×4→×32 ; à diagnostiquer au code + capture VM) ;
+  - **×32 : les splats disparaissent, les anciens dessins reviennent**. Piste lue au
+    code (NON vérifiée par capture) : les pièces ne se posent que si la plante est
+    PRÉCUITE (`SplatsIci` = `Indexe` = `IsBrush && PaletteIndexee.Active`,
+    `PlantRenderer.Assemblee.cs:61`) ; or `PlantBaker.Begin` renonce à précuire dès
+    qu'une pose dépasse `MaxSidePx` 2048 px ou que l'atlas des poses dépasse
+    `MaxAtlasPx` 4096 px (`visuals/PlantBaker.cs`) → à ×32 la plante passe en dessin
+    direct, sans splats. À confirmer par une capture ×32, puis décider : poser les
+    pièces aussi en dessin direct, ou relever les plafonds ;
   - **trèfle** : fleurs en splats, mais feuilles toujours dessinées grossièrement sur
     une tache verte (connu : reliquat ④bis n°1, pas de recette 3-4 folioles à 3 cm).
     Les autres reliquats dessinés du ④bis (brins de graminées, masses de buisson,
